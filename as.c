@@ -58,9 +58,21 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.17 2003/02/02 13:00:05 alfred Exp $                          */
+/* $Id: as.c,v 1.21 2003/03/29 18:45:50 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.21  2003/03/29 18:45:50  alfred
+ * - allow source file spec in key files
+ *
+ * Revision 1.20  2003/03/26 20:31:51  alfred
+ * - some Win32 path fixes
+ *
+ * Revision 1.19  2003/03/16 18:53:42  alfred
+ * - created 807x
+ *
+ * Revision 1.18  2003/03/09 10:28:27  alfred
+ * - added KCPSM
+ *
  * Revision 1.17  2003/02/02 13:00:05  alfred
  * - use ReadLnCont()
  *
@@ -118,13 +130,13 @@
 #include "bpemu.h"
 
 #include "stdhandl.h"
-#include "cmdarg.h"
 #include "nls.h"
 #include "nlmessages.h"
 #include "as.rsc"
 #include "ioerrs.h"
 #include "strutil.h"
 #include "stringlists.h"
+#include "cmdarg.h"
 #include "asmitree.h"
 #include "chunks.h"
 #include "asminclist.h"
@@ -174,6 +186,7 @@
 #include "code166.h"
 #include "codez80.h"
 #include "codez8.h"
+#include "codekcpsm.h"
 #include "code96c141.h"
 #include "code90c141.h"
 #include "code87c800.h"
@@ -197,6 +210,7 @@
 #include "code370.h"
 #include "codemsp.h"
 #include "codescmp.h"
+#include "code807x.h"
 #include "codecop8.h"
 #include "codesc14xxx.h"
 #include "codeace.h"
@@ -1668,6 +1682,9 @@ BEGIN
 
    /* Datei oeffnen */
 
+#ifdef _WIN32
+   DeCygwinPath(ArgPart);
+#endif
    Tag->Datei=fopen(ArgPart,"r");
    if (Tag->Datei==Nil) ChkIO(10001);
    setvbuf(Tag->Datei,Tag->Buffer,_IOFBF,BufferArraySize);
@@ -3424,13 +3441,14 @@ BEGIN
      code29k_init();
      code166_init();
      codez80_init(); codez8_init();
+     codekcpsm_init();
      code96c141_init(); code90c141_init(); code87c800_init(); code47c00_init(); code97c241_init();
      code16c5x_init(); code16c8x_init(); code17c4x_init();
      codest6_init(); codest7_init(); codest9_init(); code6804_init();
      code3201x_init(); code3202x_init(); code3203x_init(); code3205x_init(); code32054x_init(); code3206x_init();
      code9900_init(); codetms7_init(); code370_init(); codemsp_init();
      code78c10_init(); code75k0_init(); code78k0_init(); code7720_init(); code77230_init();
-     codescmp_init(); codecop8_init(); codesc14xxx_init();
+     codescmp_init(); code807x_init(); codecop8_init(); codesc14xxx_init();
      codeace_init();
      code53c8xx_init();
      codef2mc8_init(); codef2mc16_init();
@@ -3515,9 +3533,7 @@ BEGIN
     END
    IsErrorOpen=False;
 
-   for (i=1; i<=ParamCount; i++)
-    if (ParUnprocessed[i]) break;
-   if (i>ParamCount)
+   if (StringListEmpty(FileArgList))
     BEGIN
      printf("%s [%s] ",getmessage(Num_InvMsgSource),SrcSuffix); fflush(stdout);
      fgets(FileMask,255,stdin);
@@ -3525,12 +3541,18 @@ BEGIN
      AssembleGroup();
     END
    else
-    for (i=1; i<=ParamCount; i++)
-    if (ParUnprocessed[i])
-     BEGIN
-      strmaxcpy(FileMask,ParamStr[i],255);
-      AssembleGroup();
-     END
+    BEGIN
+     StringRecPtr Lauf;
+     char *pFile;
+
+     pFile = GetStringListFirst(FileArgList, &Lauf);
+     while ((pFile) && (*pFile))
+      BEGIN
+       strmaxcpy(FileMask,pFile,255);
+       AssembleGroup();
+       pFile = GetStringListNext(&Lauf);
+      END
+    END
 
    if ((ErrorPath[0]!='\0') AND (IsErrorOpen))
     BEGIN

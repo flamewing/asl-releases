@@ -6,7 +6,7 @@
 /*                                                                           */
 /* Historie: 15. 5.1996 Grundsteinlegung                                     */
 /*           25. 7.1998 GetFileName jetzt mit int statt Byte                 */
-/*                      Verwaltung Adreﬂbereiche                             */
+/*                      Verwaltung Adressbereiche                            */
 /*                      Caching FileCount                                    */
 /*           16. 8.1998 Ruecksetzen Adressbereiche                           */
 /*                                                                           */

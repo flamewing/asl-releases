@@ -43,7 +43,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand Januar 2002}
+{\large Stand M"arz 2003}
 \end{raggedright}
 
 \clearpage
@@ -60,7 +60,9 @@ sind eingetragene Warenzeichen der Intel Corp. .
 {\em Motorola} und {\em ColdFire} sind eingetragene Warenzeichen von
 Motorola Inc. .
 
-{\em UNIX} ist ein eingetragenes Warenzeichen der X/Open Company.
+{\em PicoBlaze} ist ein eingetragenes Warenzeichen der Xilinx Inc.
+
+{\em UNIX} ist ein eingetragenes Warenzeichen der Open Group.
 
 {\em Linux} ist ein eingetragenes Warenzeichen von Linus Thorvalds.
 
@@ -71,7 +73,7 @@ Alle anderen Warenzeichen, die nicht ausdr"ucklich in diesem Abschnitt
 genannt wurden und in diesem Handbuch verwendet werden, sind Eigentum
 der entsprechenden Eigent"umer.
 
-\vspace{7cm} 
+\vspace{6cm} 
 
 Dieses Dokument wurde mit dem LaTeX-Satzsystem unter dem Betriebssystem
 Linux angefertigt und formatiert.
@@ -226,6 +228,7 @@ folgende Prozessorfamilien implementiert:
 \item{Siemens 80C166/167}
 \item{Zilog Z80, Z180, Z380}
 \item{Zilog Z8}
+\item{Xilinx KCPSM ('PicoBlaze')}
 \item{Toshiba TLCS-900(L)}
 \item{Toshiba TLCS-90}
 \item{Toshiba TLCS-870}
@@ -249,6 +252,7 @@ folgende Prozessorfamilien implementiert:
 \item{Texas Instruments TMS370xxx}
 \item{Texas Instruments MSP430}
 \item{National Semiconductor SC/MP}
+\item{National Semiconductor INS807x}
 \item{National Semiconductor COP8}
 \item{National Semiconductor SC144xx}
 \item{Fairchild ACE}
@@ -2227,10 +2231,10 @@ welche Prozessortypen dieser Befehl erlaubt ist.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-\subsection{SET und EQU}
-\ttindex{SET}\ttindex{EQU}
+\subsection{SET, EQU und CONSTANT}
+\ttindex{SET}\ttindex{EQU}\ttindex{CONSTANT}
 
-{\em G"ultigkeit: alle Prozessoren}
+{\em G"ultigkeit: alle Prozessoren, {\tt CONSTANT} nur KCPSM}
 
 \tty{SET} und \tty{EQU} erlauben die Definition typenloser Konstanten, d.h. sie
 werden keinem Segment zugeordnet und ihre Verwendung erzeugt in keinem
@@ -2266,6 +2270,14 @@ Bei diesen mu"s \tty{EVAL} anstelle von \tty{SET} verwendet werden.
 Anstelle von \tty{EQU} darf auch einfach ein Gleichheitszeichen geschrieben
 werden, analog kann man anstelle von \tty{SET} bzw. \tty{EVAL}
 einfach \tty{:=} schreiben.
+\par
+Aus Kompatibilit"atsgr"unden zum Originalassembler gibt es f"ur das
+KCPSM-Target auch den {\tt CONSTANT}-Befehl, der im Gegensatz zu {\tt EQU}
+Namen und Wert als Argument erwartet, also z.B. so:
+\begin{verbatim}
+      CONSTANT  const1, 2
+\end{verbatim}
+{\tt CONSTANT} ist allerdings auf Integer-Konstanten beschr"ankt.
 \par
 Defaultm"a"sig sind mit \tty{SET} oder \tty{EQU} definierte Symbole
 typenlos, optional kann jedoch als zweites Argument ein Segmentname
@@ -2439,10 +2451,11 @@ PIO_Ctrl   PORT PIO_Port_A+3
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-\subsection{REG}
-\ttindex{REG}      
+\subsection{REG und NAMEREG}
+\ttindex{REG}\ttindex{NAMEREG}
 
-{\em G"ultigkeit: AVR, M*Core, ST9, 80C16x}
+{\em G"ultigkeit: AVR, M*Core, ST9, 80C16x, KCPSM ({\tt NAMEREG} nur
+ f"ur KCPSM)}
 
 Obwohl immer mit gleicher Syntax, hat diese Anweisung von Prozessor
 zu Prozessor eine leicht abweichende Bedeutung: Falls der Zielprozessor
@@ -2450,6 +2463,13 @@ f"ur Register einen eigenen Adre"sraum verwendet, so hat \tty{REG}
 die Wirkung eines simplen \tty{EQU}s f"ur eben diesen Adre"sraum (z.B. beim
 ST9).  F"ur alle anderen Prozessoren definiert \tty{REG} Registersymbole, 
 deren Funktion in Abschnitt \ref{SectRegSyms} beschrieben sind.
+
+{\tt NAMEREG} existiert aus Kompatibilit"atsgr"unden zum Originalassembler
+f"ur den KCPSM.  Es hat die gleiche Funktion, lediglich werden sowohl
+Register- als auch symbolischer Name als Argumente angegeben, z.B. so:
+\begin{verbatim}
+     NAMEREG  s08, treg
+\end{verbatim}
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3007,18 +3027,22 @@ Speicherausbau und Peripherie, d.h. die Wahl hat auf den
 unterst"utzten Befehlssatz keinen Effekt.
 %%-----------
 \begin{quote}
-ae) 96C141, 93C141
+ae) KCPSM
+\end{quote}
+%%-----------
+\begin{quote}
+af) 96C141, 93C141
 \end{quote}
 Diese beiden Prozessoren repr"asentieren die beiden Varianten der
 Prozessorfamilie: TLCS-900 und TLCS-900L.  Die Unterschiede dieser beiden
 Varianten werden in Abschnitt \ref{TLCS900Spec} genauer beleuchtet.
 %%-----------
 \begin{quote}
-af) 90C141
+ag) 90C141
 \end{quote}
 %%-----------
 \begin{quote}
-ag) 87C00, 87C20, 87C40, 87C70
+ah) 87C00, 87C20, 87C40, 87C70
 \end{quote}
 Die Prozessoren der TLCS-870-Reihe haben zwar den identischen CPU-Kern, je
 nach Variante aber eine unterschiedliche Peripherieausstattung.  Zum
@@ -3028,36 +3052,36 @@ m"ogliche Unterscheidung, um automatisch den korrekten Symbolsatz
 bereitzustellen.
 %%-----------
 \begin{quote}
-ah) 47C00 $\rightarrow$ 470C00 $\rightarrow$ 470AC00
+ai) 47C00 $\rightarrow$ 470C00 $\rightarrow$ 470AC00
 \end{quote}
 Diese drei Varianten der TLCS-47-Familie haben unterschiedlich gro"se
 RAM-und ROM-Adre"sbereiche, wodurch jeweils einige Befehle zur
 Bankumschaltung hinzukommen oder wegfallen.
 %%-----------
 \begin{quote}
-ai) 97C241
+aj) 97C241
 \end{quote}
 %%-----------
 \begin{quote}
-aj) 16C54 $\rightarrow$ 16C55 $\rightarrow$ 16C56 $\rightarrow$ 16C57
+ak) 16C54 $\rightarrow$ 16C55 $\rightarrow$ 16C56 $\rightarrow$ 16C57
 \end{quote}
 Diese Prozessoren unterscheiden sich durch den verf"ugbaren
 Adre"sraum im Programmspeicher, d.h. durch die Adresse, ab der
 der AS "Uberl"aufe anmeckert.
 %%-----------
 \begin{quote}
-ak) 16C64, 16C84
+al) 16C64, 16C84
 \end{quote}
 Analog zur MCS-51-Familie findet hier keine Unterscheidung im
 Codegenerator statt, die unterschiedlichen Nummern dienen lediglich
 der Einblendung der korrekten SFRs in STDDEF18.INC.
 %%-----------
 \begin{quote}
-al) 17C42
+am) 17C42
 \end{quote}
 %%-----------
 \begin{quote}
-am) ST6210/ST6215 $\rightarrow$ ST6220/ST6225
+an) ST6210/ST6215 $\rightarrow$ ST6220/ST6225
 \end{quote}
 Die einzige Unterscheidung, die AS zwischen den beiden Paaren vornimmt, ist
 der bei den ersten beiden kleinere Adre"sraum (2K anstelle 4K).  Die
@@ -3065,11 +3089,11 @@ Feinunterscheidung dient zur automatischen Unterscheidung in der Quelldatei,
 welche Hardware jeweils vorhanden ist (analog zum 8051/52/515).
 %%-----------
 \begin{quote}
-an) ST7
+ao) ST7
 \end{quote}
 %%-----------
 \begin{quote}
-ao) ST9020, ST9030, ST9040, ST9050
+ap) ST9020, ST9030, ST9040, ST9050
 \end{quote}
 Diese 4 Namen vetreten die vier ,,Unterfamilien'' der ST9-Familie, die
 sich durch eine unterschiedliche Ausstattung mit On-Chip-Peripherie
@@ -3078,11 +3102,11 @@ Unterscheidung wieder nur im Includefile mit den Peripherieadressen zum
 Zuge kommt.
 %%-----------
 \begin{quote}
-ap) 6804
+aq) 6804
 \end{quote}
 %%-----------
 \begin{quote}
-aq) 32010 $\rightarrow$ 32015
+ar) 32010 $\rightarrow$ 32015
 \end{quote}
 Der TMS32010 besitzt nur 144 Byte internes RAM, weshalb AS Adressen im
 Datensegment auf eben diesen Bereich begrenzt.  F"ur den 32015 gilt diese
@@ -3090,20 +3114,20 @@ Beschr"ankung nicht, es kann der volle Bereich von 0--255 angesprochen
 werden.
 %%-----------
 \begin{quote}
-ar) 320C25 $\rightarrow$ 320C26 $\rightarrow$ 320C28
+as) 320C25 $\rightarrow$ 320C26 $\rightarrow$ 320C28
 \end{quote}
 Diese Prozessoren unterscheiden sich nur leicht in der
 On-Chip-Peripherie sowie den Konfigurationsbefehlen.
 %%-----------
 \begin{quote}
-as) 320C30, 320C31
+at) 320C30, 320C31
 \end{quote}
 Der 320C31 ist eine etwas ,,abgespeckte'' Version mit dem gleichen
 Befehlssatz, jedoch weniger Peripherie.  In STDDEF3X.INC wird diese
 Unterscheidung ausgenutzt.
 %%-----------
 \begin{quote}
-at) 320C203 $\rightarrow$ 320C50, 320C51, 320C53
+au) 320C203 $\rightarrow$ 320C50, 320C51, 320C53
 \end{quote}
 Ersterer ist der generelle Repr"asentant f"ur die
 C20x-Signalprozessorfamilie, die eine Untermenge des C5x-Befehlssatzes
@@ -3111,18 +3135,18 @@ implementieren.  Die Unterscheidung zwischen den verschiedenen
 C5x-Prozessoren wird von AS momentan nicht ausgenutzt.
 %%-----------
 \begin{quote}
-au) 320C541
+av) 320C541
 \end{quote}  
 Dies ist momentan der Pepr"asentant f"ur die TMS320C54x-Familie...
 %%-----------
 \begin{quote}
-av) TMS9900
+aw) TMS9900
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-aw) \> TMS70C00, TMS70C20, TMS70C40, \\
+ax) \> TMS70C00, TMS70C20, TMS70C40, \\
     \> TMS70CT20, TMS70CT40, \\
     \> TMS70C02, TMS70C42, TMS70C82, \\
     \> TMS70C08, TMS70C48 \\
@@ -3137,22 +3161,29 @@ interne RAM-Menge, unterscheiden sich also nur in der Menge
 eingebauten ROMs.
 %%-----------
 \begin{quote}
-ax) 370C010, 370C020, 370C030, 370C040 und 370C050
+ay) 370C010, 370C020, 370C030, 370C040 und 370C050
 \end{quote}
 Analog zur MCS-51-Familie werden die unterschiedlichen Typen nur
 zur Unterscheidung der Peripherie in STDDEF37.INC genutzt, der
 Befehlssatz ist identisch.
 %%-----------
 \begin{quote}
-ay) MSP430
+az) MSP430
 \end{quote}
 %%-----------
 \begin{quote}
-az) SC/MP
+ba) SC/MP
 \end{quote}
 %%-----------
 \begin{quote}
-ba) COP87L84
+ba) 8070
+\end{quote}
+Dieser PRozessor repr"asentiert die gesamte 807x-Familie (die mindestens
+aus den 8070, 8072 und 8073 besteht), der jedoch ein einheitlicher
+CPU-Kern gemeinsam ist.
+%%-----------
+\begin{quote}
+bb) COP87L84
 \end{quote}
 Dies ist das momentan einzige unterst"utzte Mitglied der COP8-Familie 
 von National Semiconductor.  Mir ist bekannt, da"s die Familie 
@@ -3163,7 +3194,7 @@ ein Anfang, und die Dokumentation von National ist ziemlich umfangreich...
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bb) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
+bc) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
     \> SC14420, SC14421, SC14422, SC14424 \\
 \end{tabbing}
 \end{quote}
@@ -3173,7 +3204,7 @@ unterst"utzt werden und deren Architektur im Laufe der Zeit optimiert
 wurde.
 %%-----------
 \begin{quote}
-bc) 7810 $\rightarrow$ 78C10
+bd) 7810 $\rightarrow$ 78C10
 \end{quote}
 Die NMOS-Version besitzt keinen STOP-Modus; der entspechende Befehl sowie
 das ZCM-Register fehlen demzufolge.  \bb{VORSICHT!} NMOS- und CMOS-Version
@@ -3182,7 +3213,7 @@ differieren zum Teil in den Reset-Werten einiger Register!
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bd) \> 75402, \\
+be) \> 75402, \\
     \> 75004, 75006, 75008, \\
     \> 75268, \\
     \> 75304, 75306, 75308, 75312, 75316, \\
@@ -3198,26 +3229,26 @@ unterscheiden sich einmal durch ihre on-chip-Peripherie und
 zum anderen durch die M"achtigkeit des Befehlssatzes.
 %%-----------
 \begin{quote}
-be) 78070
+bf) 78070
 \end{quote}
 Dies ist das einzige, mir momentan vertraute Mitglied der
 78K0-Familie von NEC.  Es gelten "ahnliche Aussagen wie zur
 COP8-Familie!
 %%-----------
 \begin{quote}
-bf) 7720 $\rightarrow$ 7725
+bg) 7720 $\rightarrow$ 7725
 \end{quote}
 Der $\mu$PD7725 bietet im Vergleich zu seinem Vorg"anger gr"o"sere
 Adre"sr"aume und einige zus"atzliche Befehle. {\bf VORSICHT!}  Die
 Prozessoren sind nicht zueinander bin"arkompatibel!
 %%-----------
 \begin{quote}
-bg) 77230
+bh) 77230
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
-bh) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
+bi) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
     \> SYM53C875, SYM53C895
 \end{tabbing}
 \end{quote}
@@ -3226,12 +3257,12 @@ einige Befehlsvarianten nicht, au"serdem unterscheiden sie sich in ihrem
 Satz interner Register.
 %%-----------
 \begin{quote}
-bi) MB89190
+bj) MB89190
 \end{quote}
 Dieser Prozessortyp repr"asentiert die F$^{2}$MC8L-Serie von Fujitsu...
 %%-----------
 \begin{quote}
-bj) MB9500
+bk) MB9500
 \end{quote}
 ...so wie dieser es momentan f"ur die 16-Bit-Varianten von Fujitsu tut!
 
@@ -11150,6 +11181,10 @@ oder ich werde langsam alt...
       \item{verbesserte Behandlung von Strukturen;}
       \item{Funktion EXPRTYPE() hinzugef"ugt;}
       \item{Zeilenfortsetzungszeichen zulassen;}
+      \item{Unterst"utzung f"ur KCPSM/PicoBlaze von Andreass Wassatsch
+            integriert;}
+      \item{unterst"utzt zus"atzlich die 807x-Familie von National
+            Semiconductor;}
       \end{itemize}}
 \end{itemize}
 
@@ -12326,6 +12361,10 @@ damit mit der n"achsten Release alle etwas davon haben :-)
                    {\em SC14xxx DIP commands Reference guide.} \\
                    Application Note AN-D-031, Version 0.4, 28.12.1998
 
+\bibitem{Nat8070} National Semiconductor: \\
+                  {\em INS8070-Series Microprocessor Family.\/}
+                  October 1980
+
 \bibitem{NECV}  NEC Corp.: \\
                 {\em $\mu$pD70108 / $\mu$pD70116 / $\mu$pD70208 /
                 $\mu$pD70216 / $\mu$pD72091 Data Book.\/} \\
@@ -12501,6 +12540,11 @@ damit mit der n"achsten Release alle etwas davon haben :-)
                 {\em Bipolare Mikroprozessoren und bipolare
                 LSI-Schaltungen.\/} \\
                 Datenbuch, 1985, ISBN 3-87095-186-9
+
+\bibitem{Xil213} Ken Chapman (Xilinx Inc.):\\
+                 {\em PicoBlaze 8-Bit Microcontroller for Virtex-E
+                 and Spartan-II/IIE Devices.\/} \\
+                 Application Note XAPP213, Version 2.1, February 2003
                                                       
 \bibitem{Zilog} Datenbl"atter der Firma Zilog zur Z80-Familie
 

@@ -22,6 +22,7 @@
 #include "stdhandl.h"
 #include "bpemu.h"
 #include "strutil.h"
+#include "stringlists.h"
 #include "cmdarg.h"
 #include "toolutils.h"
 #include "nls.h"

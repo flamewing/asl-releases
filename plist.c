@@ -15,9 +15,12 @@
 /*                      DOS platforms                                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: plist.c,v 1.2 2002/03/31 22:59:01 alfred Exp $                       */
+/* $Id: plist.c,v 1.3 2003/03/29 18:45:51 alfred Exp $                       */
 /*****************************************************************************
  * $Log: plist.c,v $
+ * Revision 1.3  2003/03/29 18:45:51  alfred
+ * - allow source file spec in key files
+ *
  * Revision 1.2  2002/03/31 22:59:01  alfred
  * - added CVS header
  *
@@ -30,6 +33,7 @@
 #include "endian.h"
 #include "hex.h"
 #include "bpemu.h"
+#include "stringlists.h"
 #include "cmdarg.h"
 #include "nls.h"
 #include "nlmessages.h"

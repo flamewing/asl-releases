@@ -32,5 +32,11 @@ extern Boolean DirScan(char *Mask, charcallback callback);
 
 extern LongInt GetFileTime(char *Name);
 
+#ifdef _WIN32
+extern char *DeCygWinDirList(char *pStr);
+
+extern char *DeCygwinPath(char *pStr);
+#endif
+
 extern void bpemu_init(void);
 #endif /* _BPEMU_H */

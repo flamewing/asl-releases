@@ -80,6 +80,7 @@ call testall t_77230
 call testall t_7725
 call testall t_78c1x
 call testall t_78k0
+call testall t_807x
 call testall t_85
 call testall t_87c800
 call testall t_8X30x
@@ -96,6 +97,7 @@ call testall t_f2mc8l
 call testall t_fl90
 call testall t_fl900
 call testall t_full09
+call testall t_kcpsm
 call testall t_h8_3
 call testall t_h8_5
 call testall t_m16c

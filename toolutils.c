@@ -23,6 +23,7 @@
 #include <string.h>
 
 #include "strutil.h"
+#include "stringlists.h"
 #include "cmdarg.h"
 #include "stdhandl.h"
 #include "ioerrs.h"

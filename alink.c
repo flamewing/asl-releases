@@ -24,6 +24,7 @@
 #include "strutil.h"
 #include "nls.h"
 #include "nlmessages.h"
+#include "stringlists.h"
 #include "cmdarg.h"
 #include "toolutils.h"
 

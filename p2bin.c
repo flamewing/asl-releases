@@ -27,6 +27,7 @@
 #include "p2bin.rsc"
 #include "ioerrs.h"
 #include "chunks.h"
+#include "stringlists.h"
 #include "cmdarg.h"
 #include "toolutils.h"
 

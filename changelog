@@ -1,4 +1,4 @@
-$Id: changelog,v 1.12 2003/02/26 19:30:51 alfred Exp $
+$Id: changelog,v 1.16 2003/03/29 20:00:33 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -918,3 +918,12 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 2003-02-26 [Bld 26]
 
 - Bugfix      : symbolic displacement with Atmel AVR did not work any more
+
+--- [Bld 27]
+
+- Addition    : integrated support for KCPSM/PicoBlaze provided by Andreas
+                Wassatsch
+
+- Addition    : added support for the INS807x processor family
+
+- Bugfix      : allow source file specification in key file

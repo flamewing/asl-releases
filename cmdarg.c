@@ -16,6 +16,7 @@
 #include <ctype.h>
 
 #include "strutil.h"
+#include "stringlists.h"
 #include "cmdarg.h"
 #include "nls.h"
 #include "nlmessages.h"
@@ -25,6 +26,7 @@ LongInt ParamCount;                   /* Kommandozeilenparameter */
 char **ParamStr;
 
 TMsgCat MsgCat;
+StringList FileArgList;
 
         static void ClrBlanks(char *tmp)
 BEGIN
@@ -130,38 +132,47 @@ END
 
 	static void DecodeLine(CMDRec *Def, Integer Cnt, char *OneLine,
                                CMDErrCallback ErrProc)
-BEGIN
+{
    int z;
-   char *EnvStr[256],*start,*p;
+   char *EnvStr[256], *start, *p;
    int EnvCnt=0;
 
    ClrBlanks(OneLine); 
-   if ((*OneLine!='\0') AND (*OneLine!=';'))
-    BEGIN
-     start=OneLine;
-     while (*start!='\0')
-      BEGIN
-       EnvStr[EnvCnt++]=start;
-       p=strchr(start,' '); if (p==Nil) p=strchr(start, '\t');
-       if (p!=Nil)
-        BEGIN
-         *p='\0'; start=p+1;
-         while (isspace((unsigned int) *start)) start++;
-        END
-       else start+=strlen(start);
-      END
-     EnvStr[EnvCnt]=start;
+   if ((*OneLine != '\0') AND (*OneLine != ';'))
+   {
+     start = OneLine;
+     while (*start != '\0')
+     {
+       EnvStr[EnvCnt++] = start;
+       p=strchr(start, ' '); if (p == Nil) p = strchr(start, '\t');
+       if (p != Nil)
+       {
+         *p = '\0'; start = p + 1;
+         while (isspace((unsigned int) *start))
+           start++;
+       }
+       else
+         start += strlen(start);
+     }
+     EnvStr[EnvCnt] = start;
 
-     for (z=0; z<EnvCnt; z++)
-      switch (ProcessParam(Def, Cnt, EnvStr[z], EnvStr[z+1], False, ErrProc))
-       BEGIN
+     for (z = 0; z < EnvCnt; z++)
+      switch (ProcessParam(Def, Cnt, EnvStr[z], EnvStr[z + 1], False, ErrProc))
+      {
+        case CMDFile:
+          AddStringListLast(&FileArgList, EnvStr[z]);
+          break;
         case CMDErr:
-        case CMDFile: ErrProc(True,EnvStr[z]); break;
-        case CMDArg:  z++; break;
-        case CMDOK: break;
-       END
-    END
-END
+          ErrProc(True, EnvStr[z]);
+          break;
+        case CMDArg:
+          z++;
+          break;
+        case CMDOK:
+          break;
+      }
+   }
+}
 
 	static void ProcessFile(char *Name_O, CMDRec *Def, Integer Cnt, CMDErrCallback ErrProc)
 BEGIN
@@ -206,7 +217,7 @@ BEGIN
        case CMDErr: ErrProc(False,ParamStr[z]); break;
        case CMDOK:  Unprocessed[z]=False; break;
        case CMDArg: Unprocessed[z]=Unprocessed[z+1]=False; break;
-       case CMDFile: break; /** **/
+       case CMDFile: AddStringListLast(&FileArgList, ParamStr[z]); break;
       END
 END
 
@@ -228,6 +239,7 @@ END
 
 	void cmdarg_init(char *ProgPath)
 BEGIN
+   InitStringList(&FileArgList);
    opencatalog(&MsgCat,"cmdarg.msg",ProgPath,MsgId1,MsgId2);
 END
 

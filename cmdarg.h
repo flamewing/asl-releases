@@ -37,7 +37,7 @@ typedef Boolean CMDProcessed[MAXPARAM+1];
 
 extern LongInt ParamCount;
 extern char **ParamStr;
-
+extern StringList FileArgList;
 
 extern Boolean ProcessedEmpty(CMDProcessed Processed);
 

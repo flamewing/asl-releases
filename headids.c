@@ -19,6 +19,19 @@
 /*           2001-07-01 TI 320C54x                                           */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: headids.c,v 1.4 2003/03/16 18:53:43 alfred Exp $                          */
+/*****************************************************************************
+ * $Log: headids.c,v $
+ * Revision 1.4  2003/03/16 18:53:43  alfred
+ * - created 807x
+ *
+ * Revision 1.3  2003/03/09 10:28:28  alfred
+ * - added KCPSM
+ *
+ * Revision 1.2  2003/03/09 09:28:45  alfred
+ * - added KPCSM
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -62,6 +75,7 @@ static TFamilyDescr Descrs[]=
         {"80C166/167", 0x004c, IntHex16},
         {"Zx80"      , 0x0051, IntHex  },
         {"Z8"        , 0x0079, IntHex  },
+        {"KCPSM"     , 0x006b, IntHex  },
         {"TLCS-900"  , 0x0052, MotoS   },
         {"TLCS-90"   , 0x0053, IntHex  },
         {"TLCS-870"  , 0x0054, IntHex  },
@@ -85,6 +99,7 @@ static TFamilyDescr Descrs[]=
         {"TMS370xx"  , 0x0049, IntHex  },
         {"MSP430"    , 0x004a, IntHex  },
         {"SC/MP"     , 0x006e, IntHex  },
+        {"807x"      , 0x006a, IntHex  },
         {"COP8"      , 0x006f, IntHex  },
         {"SC14XXX"   , 0x006d, IntHex  },
         {"ACE"       , 0x0067, IntHex  },

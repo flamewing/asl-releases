@@ -148,6 +148,9 @@ BEGIN
        Save=(*p); *p='\0';
       END
      strmaxcpy(Component,start,255);
+#ifdef _WIN32
+     DeCygwinPath(Component);
+#endif
      strmaxcat(Component,SPATHSEP,255);
      strmaxcat(Component,File,255);
      if (p!=Nil) *p=Save;
@@ -245,6 +248,51 @@ BEGIN
    if (stat(Name,&st)==-1) return 0;
    else return st.st_mtime;
 END
+
+#ifdef _WIN32
+
+/* convert CygWin-style paths back to something usable by other Win32 apps */
+
+char *DeCygWinDirList(char *pStr)
+{
+  char *pRun;
+
+  for (pRun = pStr; *pRun; pRun++)
+    if (*pRun == ':')
+      *pRun = ';';
+
+  return pStr;
+}
+
+char *DeCygwinPath(char *pStr)
+{
+  char *pRun;
+
+  if ((strlen(pStr) >= 4)
+   && (pStr[0] =='/') && (pStr[1] == '/') && (pStr[3] == '/')
+   && (isalpha(pStr[2])))
+  {
+    strcpy(pStr, pStr + 1);
+    pStr[0] = pStr[1];
+    pStr[1] = ':';
+  }
+
+  if ((strlen(pStr) >= 4)
+   && (pStr[0] =='\\') && (pStr[1] == '\\') && (pStr[3] == '\\')
+   && (isalpha(pStr[2])))
+  {
+    strcpy(pStr, pStr + 1);
+    pStr[0] = pStr[1];
+    pStr[1] = ':';
+  }
+
+  for (pRun = pStr; *pRun; pRun++)
+    if (*pRun == '/')
+      *pRun = '\\';
+
+  return pStr;
+}
+#endif
 
 	void bpemu_init(void)
 BEGIN

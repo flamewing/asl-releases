@@ -134,6 +134,9 @@ BEGIN
          else
           BEGIN
            strmaxcpy(str,ptr,255);
+#ifdef _WIN32
+           DeCygWinDirList(str);
+#endif
            ptr=FSearch(File,str);
            MsgFile=(*ptr!='\0') ? myopen(ptr,MsgId1,MsgId2) : Nil;
           END

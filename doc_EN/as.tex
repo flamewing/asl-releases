@@ -63,7 +63,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition Januar 2002}
+{\large Edition March 2003}
 \end{raggedright}
 
 \clearpage
@@ -79,7 +79,9 @@ registered trademarks of Intel Corp. .
 
 {\em Motorola and ColdFire} are registered trademarks of Motorola Inc. .
 
-{\em UNIX} is a registered trademark of X/Open Company.
+{\em PicoBlaze} is a registered trademark of Xilinx Inc.
+
+{\em UNIX} is a registered trademark of the The Open Group.
 
 {\em Linux} is a registered trademark of Linus Thorvalds.
 
@@ -89,7 +91,7 @@ Microsoft Corporation.
 All other trademarks not explicitly mentioned in this section and used in
 this manual are properties of their respective owners.
 
-\vspace{7cm} 
+\vspace{6cm}
 
 This document has been processed with the LaTeX typesetting system, using
 the Linux operating system.
@@ -235,6 +237,7 @@ following processor families have been implemented:
 \item{Siemens 80C166/167}
 \item{Zilog Z80, Z180, Z380}
 \item{Zilog Z8}
+\item{Xilinx KCPSM ('PicoBlaze')}
 \item{Toshiba TLCS-900(L)}
 \item{Toshiba TLCS-90}
 \item{Toshiba TLCS-870}
@@ -258,6 +261,7 @@ following processor families have been implemented:
 \item{Texas Instruments TMS370xxx}
 \item{Texas Instruments MSP430}
 \item{National Semiconductor SC/MP}
+\item{National Semiconductor INS807x}
 \item{National Semiconductor COP8}
 \item{National Semiconductor SC144xx}
 \item{Fairchild ACE}
@@ -2179,10 +2183,10 @@ individual description.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-\subsection{SET and EQU}
-\ttindex{SET}\ttindex{EQU}
+\subsection{SET, EQU, and CONSTANT}
+\ttindex{SET}\ttindex{EQU}\ttindex{CONSTANT}
 
-{\em valid for: all processors}
+{\em valid for: all processors, {\tt CONSTANT} only for KCPSM}
 
 \tty{SET} and \tty{EQU} allow the definition of typeless constants, i.e.  they
 will not be assigned to a segment and their usage will not generate warnings
@@ -2221,6 +2225,14 @@ these targets, \tty{EVAL} must be used instead of \tty{SET}.
 
 A simple equation sign may be used instead of \tty{EQU}.  Similarly, one
 may simply write \tty{:=} instead of \tty{SET} resp. \tty{EVAL}.
+
+For compatibility reasons to the original assembler, the KCPSM target also
+knows the {\tt CONSTANT} statement, which - in contrast to \tty{EQU} -
+takes both name and value as argument.  For example:
+\begin{verbatim}
+      CONSTANT  const1, 2 
+\end{verbatim}
+{\tt CONSTANT} is however limited to integer constants.
 
 Symbols defined with \tty{SET} or \tty{EQU} are typeless by default, but
 optionally a segment name (\tty{CODE, DATA, IDATA, XDATA, YDATA, BITDATA,
@@ -2387,10 +2399,11 @@ PIO_ctrl   port PIO_port_A+3
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-\subsection{REG}
-\ttindex{REG}
+\subsection{REG and NAMEREG}
+\ttindex{REG}\ttindex{NAMEREG}
 
-{\em valid for: AVR, M*Core, ST9, 80C16x}
+{\em valid for: AVR, M*Core, ST9, 80C16x, KCPSM ({\tt NAMEREG} valid only
+ for KCPSM)}
 
 Though it always has the same syntax, this instruction has a slightly
 different meaning from processor to processor:  If the processor uses a
@@ -2398,6 +2411,13 @@ separate addressing space for registers, \tty{REG} has the same effect as
 a simple \tty{EQU} for this address space (e.g. for the ST9).  \tty{REG}
 defines register symbols for all other processors whose function is
 described in section \ref{SectRegSyms}.
+
+{\tt NAMEREG} exists for compatibility reasons to the original KCPSM
+assembler.  It has an identical function, however both register and
+symbolic name are given as arguments, for example:
+\begin{verbatim}
+     NAMEREG  s08, treg
+\end{verbatim}
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -2945,18 +2965,22 @@ on-chip peripherals, i.e. the choice does not have an effect on the
 supported instruction set.
 %%-----------
 \begin{quote}
-ae) 96C141, 93C141
+ae) KCPSM
+\end{quote}  
+%%-----------
+\begin{quote}
+af) 96C141, 93C141
 \end{quote}
 These two processors represent the two variations of the processor 
 family: TLCS-900 and TLCS-900L.  The differences of these two variations 
 will be discussed in detail in section \ref{TLCS900Spec}.
 %%-----------
 \begin{quote}
-af) 90C141
+ag) 90C141
 \end{quote}
 %%-----------
 \begin{quote}
-ag) 87C00, 87C20, 87C40, 87C70
+ah) 87C00, 87C20, 87C40, 87C70
 \end{quote}
 The processors of the TLCS-870 series have an identical CPU core, but
 different peripherals depending on the type.  In part registers with
@@ -2966,35 +2990,35 @@ possible by different types to provide the correct symbol set
 automatically.
 %%-----------
 \begin{quote}
-ah) 47C00 $\rightarrow$ 470C00 $\rightarrow$ 470AC00
+ai) 47C00 $\rightarrow$ 470C00 $\rightarrow$ 470AC00
 \end{quote}
 These three variations of the TLCS-47-family have on-chip RAM and ROM
 of different size, which leads to several bank switching instructions 
 being added or suppressed.
 %%-----------
 \begin{quote}
-ai) 97C241
+aj) 97C241
 \end{quote}
 %%-----------
 \begin{quote}
-aj) 16C54 $\rightarrow$ 16C55 $\rightarrow$ 16C56 $\rightarrow$ 16C57
+ak) 16C54 $\rightarrow$ 16C55 $\rightarrow$ 16C56 $\rightarrow$ 16C57
 \end{quote}
 These processors differ by the available code area, i.e. by the address
 limit after which AS reports overruns.
 %%-----------
 \begin{quote}
-ak) 16C84, 16C64
+al) 16C84, 16C64
 \end{quote}
 Analog to the MCS-51 family, no distinction is made in the code generator,
 the different numbers only serve to include the correct SFRs in
 \tty{STDDEF18.INC}.
 %%-----------
 \begin{quote}
-al) 17C42
+am) 17C42
 \end{quote}
 %%-----------
 \begin{quote}
-am) ST6210/ST6215$\rightarrow$ST6220/ST6225
+an) ST6210/ST6215$\rightarrow$ST6220/ST6225
 \end{quote}
 The only distinction AS makes between the two pairs is the smaller
 addressing space (2K instead 4K) of the first ones.  The detailed
@@ -3002,11 +3026,11 @@ distinction serves to provide an automatic distinction in the source
 file which hardware is available (analog to the 8051/52/515).
 %%-----------
 \begin{quote}
-an) ST7
+ao) ST7
 \end{quote}
 %%-----------
 \begin{quote}
-ao) ST9020, ST9030, ST9040, ST9050
+ap) ST9020, ST9030, ST9040, ST9050
 \end{quote}
 These 4 names represent the four ''sub-families'' of the ST9 family,
 which only differ in their on-chip peripherals.  Their processor
@@ -3014,49 +3038,49 @@ cores are identical, which is why this distinction is again only used
 in the include file containing the peripheral addresses.
 %%-----------
 \begin{quote}
-ap) 6804
+aq) 6804
 \end{quote}
 %%-----------
 \begin{quote}
-aq) 32010$\rightarrow$32015
+ar) 32010$\rightarrow$32015
 \end{quote}
 The TMS32010 owns just 144 bytes of internal RAM, and so AS limits
 addresses in the data segment just up to this amount.  This restriction
 does not apply for the 32015, the full range from 0..255 can be used.
 %%-----------
 \begin{quote}
-ar) 320C25 $\rightarrow$ 320C26 $\rightarrow$ 320C28
+as) 320C25 $\rightarrow$ 320C26 $\rightarrow$ 320C28
 \end{quote}
 These processors only differ slightly in their on-chip peripherals
 and in their configuration instructions.
 %%-----------
 \begin{quote}
-as) 320C30, 320C31
+at) 320C30, 320C31
 \end{quote}
 The 320C31 is a reduced version with the same instruction set,
 however fewer peripherals.  The distinction is exploited in
 \tty{STDDEF3X.INC}.
 %%-----------
 \begin{quote}
-at) 320C203 $\rightarrow$ 320C50, 320C51, 320C53
+au) 320C203 $\rightarrow$ 320C50, 320C51, 320C53
 \end{quote}
 The first one represents the C20x family of signal processors which
 implement a subset of the C5x instruction set.  The distinction among the
 C5x processors is currently not used by AS.
 %%-----------
 \begin{quote}
-au) 320C541  
+av) 320C541  
 \end{quote}  
 This one at the moment represents the TMS320C54x family...
 %%-----------
 \begin{quote}
-av) TMS9900
+aw) TMS9900
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-aw) \> TMS70C00, TMS70C20, TMS70C40,\\
+ax) \> TMS70C00, TMS70C20, TMS70C40,\\
     \> TMS70CT20, TMS70CT40,\\
     \> TMS70C02, TMS70C42, TMS70C82,\\
     \> TMS70C08, TMS70C48\\
@@ -3070,22 +3094,28 @@ RAM and the same on-chip peripherals, they differ only in the amount of
 integrated ROM.
 %%-----------
 \begin{quote}
-ax) 370C010, 370C020, 370C030, 370C040 and 370C050
+ay) 370C010, 370C020, 370C030, 370C040 and 370C050
 \end{quote}
 Similar to the MCS-51 family, the different types are only used to
 differentiate the peripheral equipment in \tty{STDDEF37.INC}; the
 instruction set is always the same.
 %%-----------
 \begin{quote}
-ay) MSP430
+az) MSP430
 \end{quote}
 %%-----------
 \begin{quote}
-az) SC/MP
+ba) SC/MP
 \end{quote}
 %%-----------
 \begin{quote}
-ba) COP87L84
+ba) 8070
+\end{quote}
+This processor represents the whole 807x family (which consists at least
+of the 8070, 8072, and 8073), which however shares identical CPU cores.
+%%-----------
+\begin{quote}
+bb) COP87L84
 \end{quote}
 This is the only member of National Semiconductor's COP8 family that
 is currently supported.  I know that the family is substantially
@@ -3096,7 +3126,7 @@ beginning, and National's documentation is quite extensive...
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bb) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
+bc) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
     \> SC14420, SC14421, SC14422, SC14424 \\
 \end{tabbing}
 \end{quote}
@@ -3105,7 +3135,7 @@ instructions, since each of them supports different B field formats and
 their architecture has been optimized over time.
 %%-----------
 \begin{quote}
-bc) 7810$\rightarrow$78C10
+bd) 7810$\rightarrow$78C10
 \end{quote}
 The NMOS version has no stop-mode; the respective command and the ZCM
 register are omitted.  \bb{CAUTION!}  NMOS and CMOS version partially
@@ -3114,7 +3144,7 @@ differ in the reset values of some registers!
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bd) \> 75402,\\
+be) \> 75402,\\
     \> 75004, 75006, 75008,\\
     \> 75268,\\
     \> 75304, 75306, 75308, 75312, 75316,\\
@@ -3130,25 +3160,25 @@ peripherals on the one hand and by their instruction set's power on
 the other hand.
 %%-----------
 \begin{quote}
-be) 78070
+bf) 78070
 \end{quote}
 This is currently the only member of NEC's 78K0 family I am familiar
 with.  Similar remarks like for the COP8 family apply!
 %%-----------
 \begin{quote}
-bf) 7720 $\rightarrow$ 7725
+bg) 7720 $\rightarrow$ 7725
 \end{quote}
 The $\mu$PD7725 offers larger address spaces and som more instructions
 compared to his predecessor. {\bf CAUTION!}  The processors are not binary
 compatible to each other!
 %%-----------
 \begin{quote}
-bg) 77230
+bh) 77230
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
-bh) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
+bi) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
     \> SYM53C875, SYM53C895
 \end{tabbing}
 \end{quote}
@@ -3157,12 +3187,12 @@ instruction variants, furthermore they are different in their set of
 internal registers.
 %%-----------
 \begin{quote}
-bi) MB89190  
+bj) MB89190  
 \end{quote}  
 This processor type represents Fujitsu's F$^{2}$MC8L series...
 %%-----------
 \begin{quote}
-bj) MB9500
+bk) MB9500
 \end{quote}
 ...just like this one does it currently for the 16-bit variants from
 Fujitsu!
@@ -10905,6 +10935,10 @@ Either that was a long nightshift or I am slowly getting old...
       \item{improved structure handling;}
       \item{added EXPRTYPE() function;}
       \item{allow line continuation;}
+      \item{integrated support for KCPSM/PicoBlaze provided by Andreas
+            Wassatsch;}
+      \item{additionally supports the 807x family from National
+            Semiconductor;}
       \end{itemize}}
 \end{itemize}
 
@@ -12035,6 +12069,10 @@ from this with the next release :-)
                    {\em SC14xxx DIP commands Reference guide.} \\
                    Application Note AN-D-031, Version 0.4, 12-28-1998
 
+\bibitem{Nat8070} National Semiconductor: \\ 
+                  {\em INS8070-Series Microprocessor Family.\/} 
+                  October 1980 
+
 \bibitem{NECV} NEC Corp.: \\
    	       {\em $\mu$pD70108/$\mu$pD70116/$\mu$pD70208/$\mu$pD70216/$\mu$pD72091 
                Data Book.\/} \\
@@ -12209,6 +12247,11 @@ from this with the next release :-)
                 LSI-Schaltungen.\/} \\
                 Datenbuch, 1985, ISBN 3-87095-186-9
 
+\bibitem{Xil213} Ken Chapman (Xilinx Inc.):\\
+                 {\em PicoBlaze 8-Bit Microcontroller for Virtex-E
+                 and Spartan-II/IIE Devices.\/} \\
+                 Application Note XAPP213, Version 2.1, February 2003
+                                                      
 \bibitem{Zilog} data sheets from Zilog about the Z80 family
 
 \bibitem{ZilZ8} Zilog Inc.: \\

@@ -36,6 +36,7 @@
 #include "ioerrs.h"
 #include "strutil.h"
 #include "chunks.h"
+#include "stringlists.h"
 #include "cmdarg.h"
 
 #include "toolutils.h"
