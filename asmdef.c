@@ -28,6 +28,7 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*           27. 3.2001 don't use a number as default PC symbol              */
 /*           2001-09-29 add segment name for STRUCT (just to be sure...)     */
+/*           2001-10-20 added GNU error flag                                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -114,6 +115,7 @@ LongInt Magic=0x12372d44;
    Integer PassNoForMessage;        /* falls ja: ab welchem Pass ? */
    Boolean CaseSensitive;           /* Gross/Kleinschreibung unterscheiden ? */
    LongInt NestMax;                 /* max. nesting level of a macro */
+   Boolean GNUErrors;               /* GNU-error-style messages ? */
 
    FILE *PrgFile;                   /* Codedatei */
 

@@ -346,7 +346,7 @@ BEGIN
          if (AdrWord>0xfff) WrError(1320);
          else
           BEGIN
-           if ((EProgCounter()&0x800)!=(AdrWord&0x800))
+           if ((((int)EProgCounter())&0x800)!=(AdrWord&0x800))
             BEGIN
              BAsmCode[0]=0xe5+((AdrWord&0x800)>>7); CodeLen=1;
             END
@@ -464,7 +464,7 @@ BEGIN
          AdrWord=EvalIntExpression(ArgStr[2],Int16,&OK);
          if (OK)
           BEGIN
-           if (((EProgCounter()+1)&0xff00)!=(AdrWord&0xff00)) WrError(1910);
+           if (((((int)EProgCounter())+1)&0xff00)!=(AdrWord&0xff00)) WrError(1910);
            else
             BEGIN
              CodeLen=2; BAsmCode[0]=0xe8+AdrVal; BAsmCode[1]=AdrWord&0xff;
@@ -565,7 +565,7 @@ BEGIN
        BEGIN
         AdrWord=EvalIntExpression(ArgStr[1],UInt12,&OK);
         if (NOT OK);
-        else if (((EProgCounter()+1)&0xff00)!=(AdrWord&0xff00)) WrError(1910);
+        else if (((((int)EProgCounter())+1)&0xff00)!=(AdrWord&0xff00)) WrError(1910);
         else
          BEGIN
           CodeLen=2; BAsmCode[0]=CondOrders[z].Code; BAsmCode[1]=AdrWord&0xff;
@@ -592,7 +592,7 @@ BEGIN
         BEGIN
          AdrWord=EvalIntExpression(ArgStr[2],UInt12,&OK);
          if (NOT OK);
-         else if (((EProgCounter()+1)&0xff00)!=(AdrWord&0xff00)) WrError(1910);
+         else if (((((int)EProgCounter())+1)&0xff00)!=(AdrWord&0xff00)) WrError(1910);
          else
           BEGIN
            CodeLen=2; BAsmCode[0]=0x12+(AdrVal<<5);

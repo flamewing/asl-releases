@@ -18,6 +18,14 @@
 /*           2001-09-29: AND OR XOR SFTA SFTL                                */
 /*           2001-09-30: FIRS BIT BITF                                       */
 /*           2001-10-03: CMPR                                                */
+/*           2001-10-14: B BD CALL CALLD                                     */
+/*           2001-10-17: B BD CC CCD                                         */
+/*           2001-10-20: FB FBD FCALL FCALLD                                 */
+/*           2001-10-24: RPT RPTB RPTBD                                      */
+/*           2001-10-25: RPTZ                                                */
+/*           2001-10-26: FRAME                                               */
+/*           2001-10-28: PSHM IDLE RSBX SSBX XC                              */
+/*           2001-11-01: remaining non-parallel ops                          */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -36,6 +44,7 @@
 #include "asmpars.h"
 #include "asmallg.h"
 #include "asmrelocs.h"
+#include "asmcode.h"
 #include "codepseudo.h"
 #include "codevars.h"
 #include "asmitree.h"
@@ -49,10 +58,11 @@
 #define AccOrderCnt 16
 #define Acc2OrderCnt 5
 #define MemOrderCnt 9
-#define XYOrderCnt 3
-#define MemAccOrderCnt 16
+#define XYOrderCnt 4
+#define MemAccOrderCnt 17
 #define MemConstOrderCnt 5
 #define MacOrderCnt 3
+#define ConditionCnt 23
 
 typedef struct
         {
@@ -67,6 +77,12 @@ typedef struct
           IntType ConstType;
         } MemConstOrder;
 
+typedef struct
+        {
+          char *Name;
+          Word Class, Code, Mask;
+        } Condition;
+
 typedef enum {ModNone = - 1, ModAcc, ModMem, ModImm, ModAReg} ModType;
 #define MModAcc  (1 << ModAcc)
 #define MModMem  (1 << ModMem)
@@ -75,12 +91,13 @@ typedef enum {ModNone = - 1, ModAcc, ModMem, ModImm, ModAReg} ModType;
 
 static LongInt Reg_CPL, Reg_DP, Reg_SP;
 
-static Boolean ThisRep, LastRep;
+static Boolean ThisRep, LastRep, ForcePageZero;
 
 static PInstTable InstTable;
 static FixedOrder *FixedOrders, *AccOrders, *Acc2Orders, *MemOrders, *XYOrders,
                   *MemAccOrders, *MacOrders;
 static MemConstOrder *MemConstOrders;
+static Condition *Conditions;
 
 static SimpProc SaveInitProc;
 
@@ -90,6 +107,9 @@ static IntType OpSize;
 static ShortInt AdrMode;
 static Word AdrVals[3];
 static int AdrCnt;
+
+static Boolean ThisPar;
+static Word LastOpCode;
 
 /*-------------------------------------------------------------------------*/
 /* Address Decoder */
@@ -104,7 +124,7 @@ static Boolean IsAcc(char *Asc)
 static Boolean DecodeAdr(char *Asc, int Mask)
 {
 #define IndirCnt 16
-  static char *Patterns[IndirCnt] = /* leading star is omitted since constant */
+  static char *Patterns[IndirCnt] = /* leading asterisk is omitted since constant */
               { "ARx",      "ARx-",     "ARx+",      "+ARx",
                 "ARx-0B",   "ARx-0",    "ARx+0",     "ARx+0B",
                 "ARx-%",    "ARx-0%",   "ARx+%",     "ARx+0%",
@@ -133,8 +153,6 @@ static Boolean DecodeAdr(char *Asc, int Mask)
 
   if (*Asc == '#')
   {
-    Boolean OK;
-
     *AdrVals = EvalIntExpression(Asc + 1, OpSize, &OK);
     if (OK)
       AdrMode = ModImm;
@@ -200,12 +218,22 @@ static Boolean DecodeAdr(char *Asc, int Mask)
 
       if (strchr(Patterns[z], 'n'))
       {
-        char Save = *pConstEnd;
-        *pConstEnd = '\0';
-        AdrVals[1] = EvalIntExpression(pConstStart, Int16, &OK);
-        *pConstEnd = Save;
-        if (OK)
-          AdrCnt = 1;
+        /* MMR-style instructions do not allow an extension word */
+
+        if (ForcePageZero)
+        {
+          WrError(1350);
+          OK = False;
+        }
+        else
+        {
+          char Save = *pConstEnd;
+          *pConstEnd = '\0';
+          AdrVals[1] = EvalIntExpression(pConstStart, Int16, &OK);
+          *pConstEnd = Save;
+          if (OK)
+            AdrCnt = 1;
+        }
       }
 
       /* all fine until now? Then do the rest... */
@@ -219,29 +247,38 @@ static Boolean DecodeAdr(char *Asc, int Mask)
     goto done;
   }
 
-  /* then try absolute */
+  /* then try absolute resp. immediate if absolute not allowed */
 
-  FirstPassUnknown = FALSE;
-  *AdrVals = EvalIntExpression(Asc, UInt16, &OK);
-  if (OK)
+  if (Mask & MModMem)
   {
-    if (Reg_CPL) /* short address rel. to SP? */
+    FirstPassUnknown = FALSE;
+    *AdrVals = EvalIntExpression(Asc, UInt16, &OK);
+    if (OK)
     {
-      *AdrVals -= Reg_SP;
-      if ((NOT FirstPassUnknown) && (*AdrVals > 127))
-        WrError(110);
+      if (Reg_CPL) /* short address rel. to SP? */
+      {
+        *AdrVals -= Reg_SP;
+        if ((NOT FirstPassUnknown) && (*AdrVals > 127))
+          WrError(110);
+      }
+      else         /* on DP page ? */
+      {
+        if ((NOT FirstPassUnknown) && ((*AdrVals >> 7) != (Reg_DP)))
+          WrError(110);
+      }
+      AdrVals[0] &= 127;
+      AdrMode = ModMem;
     }
-    else         /* on DP page ? */
-    {
-      if ((NOT FirstPassUnknown) && ((*AdrVals >> 7) != Reg_DP))
-        WrError(110);
-    }
-    AdrVals[0] &= 127;
-    AdrMode = ModMem;
+  }
+  else
+  {
+    *AdrVals = EvalIntExpression(Asc, OpSize, &OK);
+    if (OK)
+      AdrMode = ModImm;
   }
 
 done:
-  if (!(Mask & (1 << AdrMode)))
+  if ((AdrMode != ModNone) && (!(Mask & (1 << AdrMode))))
   {
     AdrMode = ModNone; AdrCnt = 0;
     WrError(1350);
@@ -273,6 +310,40 @@ static Boolean MakeXY(Word *Dest, Boolean Quarrel)
   return Result;
 }
 
+static Boolean DecodeCondition(int StartIndex, Word *Result, int *errindex, Boolean *ErrUnknown)
+{
+  int z, z2;
+  Word CurrClass, CurrMask;
+  
+  *Result = CurrMask = 0; CurrClass = 0xffff; *ErrUnknown = False;
+
+  for (z = StartIndex; z <= ArgCnt; z++)
+  {
+    for (z2 = 0; z2 < ConditionCnt; z2++)
+      if (!strcasecmp(ArgStr[z], Conditions[z2].Name))
+        break;
+    if (z2 >= ConditionCnt)
+    {
+      *ErrUnknown = True;
+      break;
+    }
+
+    if (CurrClass == 0xffff)
+      CurrClass = Conditions[z2].Class;
+    else if (CurrClass != Conditions[z2].Class)
+      break;
+
+    if (Conditions[z2].Mask & CurrMask)
+      break;
+
+    CurrMask |= Conditions[z2].Mask;
+    *Result |= Conditions[z2].Code;
+  }
+
+  *errindex = z;
+  return (CurrClass != 0xffff) && (z > ArgCnt);
+}
+
 /*-------------------------------------------------------------------------*/
 /* Decoders */
 
@@ -281,6 +352,7 @@ static void DecodeFixed(Word Index)
   FixedOrder *POrder = FixedOrders + Index;
 
   if (ArgCnt != 0) WrError(1110);
+  else if (ThisPar) WrError(1950);
   else if ((LastRep) && (!POrder->IsRepeatable)) WrError(1560);
   else
   {
@@ -293,6 +365,7 @@ static void DecodeAcc(Word Index)
   FixedOrder *POrder = AccOrders + Index;
 
   if (ArgCnt != 1) WrError(1110);
+  else if (ThisPar) WrError(1950);
   else if ((LastRep) && (!POrder->IsRepeatable)) WrError(1560);
   else
   {
@@ -309,6 +382,7 @@ static void DecodeAcc2(Word Index)
   Boolean OK;
 
   if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
+  else if (ThisPar) WrError(1950);
   else if ((LastRep) && (!POrder->IsRepeatable)) WrError(1560);
   else
   {
@@ -331,6 +405,7 @@ static void DecodeMem(Word Index)
   FixedOrder *POrder = MemOrders + Index;
 
   if (ArgCnt < 1) WrError(1110);
+  else if (ThisPar) WrError(1950);
   else if ((LastRep) && (!POrder->IsRepeatable)) WrError(1560);
   else if (DecodeAdr(ArgStr[1], MModMem))
   {
@@ -346,6 +421,7 @@ static void DecodeXY(Word Index)
   Word TmpX, TmpY;
 
   if (ArgCnt != 2) WrError(1350);
+  else if (ThisPar) WrError(1950);
   else if ((LastRep) && (!POrder->IsRepeatable)) WrError(1560);
   else
   {
@@ -367,6 +443,7 @@ static void DecodeADDSUB(Word Index)
   Word DestAcc;
 
   if ((ArgCnt < 2) || (ArgCnt > 4)) WrError(1110);
+  else if (ThisPar) WrError(1950);
   else
   {
     OpSize = SInt16;
@@ -601,6 +678,7 @@ static void DecodeMemAcc(Word Index)
   FixedOrder *POrder = MemAccOrders + Index;
 
   if (ArgCnt != 2) WrError(1110);
+  else if (ThisPar) WrError(1950);
   else if ((LastRep) && (!POrder->IsRepeatable)) WrError(1560);
   else if (DecodeAdr(ArgStr[2], MModAcc))
   {
@@ -621,6 +699,7 @@ static void DecodeMemConst(Word Index)
   int HCnt;
 
   if (ArgCnt != 2) WrError(1110);
+  else if (ThisPar) WrError(1950);
   else if ((LastRep) && (!POrder->IsRepeatable)) WrError(1560);
   else if (DecodeAdr(ArgStr[2 - POrder->Swap], MModMem))
   {
@@ -643,6 +722,7 @@ static void DecodeMPY(Word Index)
   (void)Index;
 
   if ((ArgCnt != 2) && (ArgCnt != 3)) WrError(1110);
+  else if (ThisPar) WrError(1950);
   else if (DecodeAdr(ArgStr[ArgCnt], MModAcc))
   {
     DestAcc = (*AdrVals) << 8;
@@ -686,6 +766,7 @@ static void DecodeMPYA(Word Index)
   (void) Index;
 
   if (ArgCnt != 1) WrError(1110);
+  else if (ThisPar) WrError(1950);
   else
   {
     DecodeAdr(ArgStr[1], MModAcc | MModMem);
@@ -710,6 +791,7 @@ static void DecodeSQUR(Word Index)
   (void)Index;
 
   if (ArgCnt != 2) WrError(1110);
+  else if (ThisPar) WrError(1950);
   else if (DecodeAdr(ArgStr[2], MModAcc))
   {
     0[WAsmCode] = *AdrVals << 8;
@@ -739,6 +821,7 @@ static void DecodeMAC(Word Index)
   (void) Index;
 
   if ((ArgCnt < 2) || (ArgCnt > 4)) WrError(1110);
+  else if (ThisPar) WrError(1950);
   else if (DecodeAdr(ArgStr[ArgCnt], MModAcc))
   {
     *WAsmCode = (*AdrVals) << 8;
@@ -830,6 +913,7 @@ static void DecodeMACDP(Word Index)
   Boolean OK;
 
   if (ArgCnt != 3) WrError(1110);
+  else if (ThisPar) WrError(1950);
   else if (DecodeAdr(ArgStr[3], MModAcc))
   {
     *WAsmCode = Index | (0[AdrVals] << 8);
@@ -855,6 +939,7 @@ static void DecodeFIRS(Word Index)
   (void)Index;
  
   if (ArgCnt != 3) WrError(1110);
+  else if (ThisPar) WrError(1950);
   else if (DecodeAdr(ArgStr[1], MModMem))
     if (MakeXY(WAsmCode, TRUE))
     {
@@ -880,6 +965,7 @@ static void DecodeBIT(Word Index)
   (void)Index;
 
   if (ArgCnt != 2) WrError(1110);
+  else if (ThisPar) WrError(1950);
   else if (DecodeAdr(ArgStr[1], MModMem))
     if (MakeXY(AdrVals, TRUE))
     {
@@ -895,6 +981,7 @@ static void DecodeBIT(Word Index)
 static void DecodeBITF(Word Index)
 {
   if (ArgCnt != 2) WrError(1110);
+  else if (ThisPar) WrError(1950);
   else
   {
     OpSize = UInt16;
@@ -915,31 +1002,12 @@ static void DecodeBITF(Word Index)
   }
 }
 
-/*-------------------------------------------------------------------------*/
-/* Pseudo Instructions */
-
-static Boolean DecodePseudo(void)
-{
-#define ASSUME3254xCount 3
-static ASSUMERec ASSUME3254xs[ASSUME3254xCount] = 
-               {{"CPL", &Reg_CPL, 0,      1,       0},
-                {"DP" , &Reg_DP , 0,  0x1ff,   0x200},
-                {"SP" , &Reg_SP , 0, 0xffff, 0x10000}};
-
-  if (Memo("ASSUME"))
-    BEGIN
-     CodeASSUME(ASSUME3254xs,ASSUME3254xCount);
-     return True;
-    END
-
-  return False;
-}
-
 static void DecodeMACR(Word Index)
 {
   (void) Index;
 
   if ((ArgCnt < 2) || (ArgCnt > 4)) WrError(1110);
+  else if (ThisPar) WrError(1950);
   else if (DecodeAdr(ArgStr[ArgCnt], MModAcc))
   {
     *WAsmCode = *AdrVals << 8;
@@ -982,6 +1050,7 @@ static void DecodeMac(Word Index)
   FixedOrder *POrder = MacOrders + Index;
 
   if (!ArgCnt) WrError(1110);
+  else if (ThisPar) WrError(1950);
   else if (!strcasecmp(ArgStr[1], "T"))
   {
     if (ArgCnt > 3) WrError(1110);
@@ -1016,6 +1085,7 @@ static void DecodeMACSU(Word Index)
   (void)Index;
 
   if (ArgCnt != 3) WrError(1110);
+  else if (ThisPar) WrError(1950);
   else if (DecodeAdr(ArgStr[3], MModAcc))
   {
     *WAsmCode = 0xa600 | ((*AdrVals) << 8);
@@ -1036,6 +1106,7 @@ static void DecodeMACSU(Word Index)
 static void DecodeMAS(Word Index)
 {
   if ((ArgCnt < 2) || (ArgCnt > 4)) WrError(1110);
+  else if (ThisPar) WrError(1950);
   else if (DecodeAdr(ArgStr[ArgCnt], MModAcc))
   {
     *WAsmCode = ((*AdrVals) << 8);
@@ -1075,6 +1146,7 @@ static void DecodeMASAR(Word Index)
   (void)Index;
 
   if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
+  else if (ThisPar) WrError(1950);
   else if (strcasecmp(ArgStr[1], "T")) WrError(1350);
   else if (DecodeAdr(ArgStr[ArgCnt], MModAcc))
   {
@@ -1094,6 +1166,7 @@ static void DecodeDADD(Word Index)
   (void)Index;
 
   if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
+  else if (ThisPar) WrError(1950);
   else if (DecodeAdr(ArgStr[ArgCnt], MModAcc))
   {
     WAsmCode[0] = 0x5000 | (AdrVals[0] << 8);
@@ -1119,6 +1192,7 @@ static void DecodeLog(Word Index)
   Boolean OK;
 
   if ((ArgCnt < 1) || (ArgCnt > 4)) WrError(1110);
+  else if (ThisPar) WrError(1950);
   else
   {
     OpSize = UInt16;
@@ -1220,6 +1294,7 @@ static void DecodeSFT(Word Index)
   int Shift;
 
   if ((ArgCnt != 2) && (ArgCnt != 3)) WrError(1110);
+  else if (ThisPar) WrError(1950);
   else if (DecodeAdr(ArgStr[1], MModAcc))
   {
     0[WAsmCode] = Index | ((*AdrVals) << 9);
@@ -1246,6 +1321,7 @@ static void DecodeCMPR(Word Index)
   (void) Index;
 
   if (ArgCnt != 2) WrError(1110);
+  else if (ThisPar) WrError(1950);
   else if (DecodeAdr(ArgStr[2], MModAReg))
   {
     OK = False;
@@ -1263,6 +1339,904 @@ static void DecodeCMPR(Word Index)
       CodeLen = 1;
     }
   }
+}
+
+static void DecodePMAD(Word Index)
+{
+  Boolean OK;
+
+  if (ArgCnt != 1) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else if (LastRep) WrError(1560);
+  else
+  {
+    WAsmCode[1] = EvalIntExpression(ArgStr[1], UInt16, &OK);
+    if (OK)
+    {
+      ChkSpace(SegCode);
+      0[WAsmCode] = Index;
+      CodeLen = 2;
+    }
+  }
+}
+
+static void DecodeBANZ(Word Index)
+{
+  Boolean OK;
+
+  if (ArgCnt != 2) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else if (LastRep) WrError(1560);
+  else if (DecodeAdr(ArgStr[2], MModMem))
+  {
+    if (CodeLen)
+      WAsmCode[1] = 1[AdrVals];
+    WAsmCode[1 + CodeLen] = EvalIntExpression(ArgStr[1], UInt16, &OK);
+    if (OK)
+    {
+      ChkSpace(SegCode);
+      0[WAsmCode] = Index | (*AdrVals);
+      CodeLen = 2 + AdrCnt;
+    }
+  }
+}
+
+static void DecodePMADCond(Word Index)
+{
+  Boolean OK;
+  int index;
+
+  if (ArgCnt < 2) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else if (LastRep) WrError(1560);
+  else if (!DecodeCondition(2, WAsmCode, &index, &OK))
+    WrXError(OK ? 1360 : 1365, ArgStr[index]);
+  else
+  {
+    WAsmCode[1] = EvalIntExpression(ArgStr[1], UInt16, &OK);
+    if (OK)
+    {
+      ChkSpace(SegCode);
+      0[WAsmCode] |= Index;
+      CodeLen = 2;
+    }
+  }
+}
+
+static void DecodeFPMAD(Word Index)
+{
+  Boolean OK;
+  LongWord Addr;
+
+  if (ArgCnt != 1) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else if (LastRep) WrError(1560);
+  else
+  {
+    Addr = EvalIntExpression(ArgStr[1], UInt23, &OK);
+    if (OK)
+    {
+      ChkSpace(SegCode);
+      0[WAsmCode] = Index | (Addr >> 16);
+      1[WAsmCode] = Addr & 0xffff;
+      CodeLen = 2;
+    }
+  }
+}
+
+static void DecodeINTR(Word Index)
+{
+  Boolean OK;
+
+  if (ArgCnt != 1) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else if (LastRep) WrError(1560);
+  else
+  {   
+    *WAsmCode = Index | EvalIntExpression(ArgStr[1], UInt5, &OK);
+    if (OK)
+      CodeLen = 1;
+  }
+}
+
+static void DecodeRPT(Word Index)
+{
+  UNUSED(Index);
+
+  if (ArgCnt != 1) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else if (LastRep) WrError(1560);
+  else
+  {
+    OpSize = UInt16;
+    DecodeAdr(ArgStr[1], MModImm | MModMem);
+    switch (AdrMode)
+    {
+      case ModImm:
+        if (!Hi(*AdrVals))
+        {
+          *WAsmCode = 0xec00 | (*AdrVals);
+          CodeLen = 1;
+        }
+        else
+        {
+          *WAsmCode = 0xf070;
+          WAsmCode[1] = *AdrVals;
+          CodeLen = 2;
+        }
+        ThisRep = True;
+        break;
+      case ModMem:
+        WAsmCode[0] = 0x4700 | (*AdrVals);
+        if (AdrCnt)
+          WAsmCode[1] = AdrVals[1];
+        CodeLen = 1 + AdrCnt;
+        ThisRep = True;
+        break;
+    }
+  }
+}
+
+static void DecodeRPTZ(Word Index)
+{
+  UNUSED(Index);
+
+  if (ArgCnt != 2) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else if (LastRep) WrError(1560);
+  else if (DecodeAdr(ArgStr[1], MModAcc))
+  {
+    *WAsmCode = 0xf071 | (AdrVals[0] << 8);
+    OpSize = UInt16;
+    if (DecodeAdr(ArgStr[2], MModImm))
+    {
+      WAsmCode[1] = *AdrVals;
+      CodeLen = 2;
+      ThisRep = True;
+    }
+  }
+}
+
+static void DecodeFRAME(Word Index)
+{
+  Boolean OK;
+
+  UNUSED(Index);
+
+  if (ArgCnt != 1) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else
+  {
+    *WAsmCode = 0xee00 | (EvalIntExpression(ArgStr[1], SInt8, &OK) & 0xff);
+    if (OK)
+      CodeLen = 1;
+  }
+}
+
+static void DecodeIDLE(Word Index)
+{
+  Boolean OK;
+
+  UNUSED(Index);
+
+  if (ArgCnt != 1) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else if (LastRep) WrError(1560);
+  else
+  {
+    FirstPassUnknown = False;
+    *WAsmCode = EvalIntExpression(ArgStr[1], UInt2, &OK);
+    if (FirstPassUnknown)
+      *WAsmCode = 1;
+    if ((OK) && (ChkRange(*WAsmCode, 1, 3)))
+    {
+      if (*WAsmCode != 2)
+        *WAsmCode = (*WAsmCode) >> 1;
+      *WAsmCode = 0xf4e1 | (*WAsmCode << 8);
+      CodeLen = 1;
+    }
+  }
+}
+
+static void DecodeSBIT(Word Index)
+{
+  Boolean OK;
+  Word Bit;
+
+  if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else if (LastRep) WrError(1560);
+  else
+  {
+    if (ArgCnt == 1)
+      Bit = EvalIntExpression(ArgStr[1], UInt5, &OK);
+    else
+    {
+      Bit = EvalIntExpression(ArgStr[1], UInt1, &OK) << 4;
+      if (OK)
+        Bit |= EvalIntExpression(ArgStr[2], UInt4, &OK);
+    }
+    if (OK)
+    {
+      *WAsmCode = Index | ((Bit & 16) << 5) | (Bit & 15);
+      CodeLen = 1;
+    }
+  }
+}
+
+static void DecodeXC(Word Index)
+{
+  Boolean OK;
+  int errindex;
+
+  UNUSED(Index);
+
+  if (ArgCnt < 2) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else if (LastRep) WrError(1560);
+  else if (!DecodeCondition(2, WAsmCode, &errindex, &OK))
+    WrXError(OK ? 1360 : 1365, ArgStr[errindex]);
+  else
+  {
+    FirstPassUnknown = False;
+    errindex = EvalIntExpression(ArgStr[1], UInt2, &OK);
+    if (FirstPassUnknown)
+      errindex = 1;
+    if ((OK) && (ChkRange(errindex, 1, 2)))
+    {
+      errindex--;
+      0[WAsmCode] |= 0xfd00 | (errindex << 9);
+      CodeLen = 1;
+    }
+  }
+}
+
+static void DecodeLD(Word Index)
+{
+  Integer Shift;
+  Boolean OK;
+
+  UNUSED(Index);
+
+  if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
+
+  else if (!strcasecmp(ArgStr[ArgCnt], "T"))
+  {
+    if (ArgCnt != 2) WrError(1110);
+    else if (DecodeAdr(ArgStr[1], MModMem))
+    {
+      if (ThisPar)
+      {
+        if (MakeXY(AdrVals, TRUE))
+        {
+          /* prev. operation must be STH src,0,Xmem */
+          if ((LastOpCode & 0xfe0f) != 0x9a00) WrError(1950);
+          else
+          {
+            RetractWords(1);
+            *WAsmCode = 0xe400 | ((LastOpCode & 0x0100) << 1)
+                        | ((LastOpCode & 0x00f0) >> 4) | ((*AdrVals) << 4);
+            CodeLen = 1;
+          }
+        }
+      }
+      else
+      {
+        WAsmCode[0] = 0x3000 | AdrVals[0];
+        if (AdrCnt)
+          WAsmCode[1] = AdrVals[1];
+        CodeLen = 1 + AdrCnt;
+      }
+    }
+  }
+  
+  else if (!strcasecmp(ArgStr[ArgCnt], "DP"))
+  {
+    if (ArgCnt != 2) WrError(1110);
+    else if (ThisPar) WrError(1950);
+    else
+    {
+      OpSize = UInt9;
+      DecodeAdr(ArgStr[1], MModMem | MModImm);
+      switch (AdrMode)
+      {
+        case ModMem:
+          WAsmCode[0] = 0x2600 | AdrVals[0];
+          if (AdrCnt)
+            WAsmCode[1] = AdrVals[1];
+          CodeLen = 1 + AdrCnt;
+          break;
+        case ModImm:
+          WAsmCode[0] = 0xea00 | (AdrVals[0] & 0x1ff);
+          CodeLen = 1;
+          break;
+      }
+    }
+  }
+
+  else if (!strcasecmp(ArgStr[ArgCnt], "ARP"))
+  {
+    if (ArgCnt != 2) WrError(1110);
+    else if (ThisPar) WrError(1950);
+    else
+    {   
+      OpSize = UInt3;
+      if (DecodeAdr(ArgStr[1], MModImm))
+      {
+        WAsmCode[0] = 0xf4a0 | (AdrVals[0] & 7);
+        CodeLen = 1;
+      }
+    }
+  }
+
+  else if (!strcasecmp(ArgStr[2], "ASM"))
+  {
+    if (ThisPar) WrError(1950);
+    else
+    {
+      OpSize = SInt5;
+      DecodeAdr(ArgStr[1], MModAcc | MModMem | MModImm);
+      switch (AdrMode)
+      {
+        case ModAcc:
+          WAsmCode[0] = *AdrVals << 9;
+          if (ArgCnt == 3)
+            DecodeAdr(ArgStr[3], MModAcc);
+          if (AdrMode == ModAcc)
+          {
+            WAsmCode[0] |= 0xf482 | (AdrVals[0] << 8);
+            CodeLen = 1;
+          }
+          break;
+        case ModMem:
+          if (ArgCnt != 2) WrError(1110);
+          else
+          {
+            WAsmCode[0] = 0x3200 | AdrVals[0];
+            if (AdrCnt)
+              WAsmCode[1] = AdrVals[1];
+            CodeLen = 1 + AdrCnt;
+          }
+          break;
+        case ModImm:
+          if (ArgCnt != 2) WrError(1110);
+          else
+          {   
+            WAsmCode[0] = 0xed00 | (AdrVals[0] & 0x1f);
+            CodeLen = 1;
+          }
+          break;
+      }
+    }
+  }
+
+  else if (DecodeAdr(ArgStr[ArgCnt], MModAcc))
+  {
+    *WAsmCode = *AdrVals << 8;
+    if (ArgCnt == 3)
+    {
+      if (!strcasecmp(ArgStr[2], "TS"))
+      {
+        Shift = 0xff;
+        OK = True;
+      }
+      else
+      {
+        FirstPassUnknown = 0;
+        Shift = EvalIntExpression(ArgStr[2], SInt6, &OK);
+        if (FirstPassUnknown)
+          Shift = 0;
+        if (OK)
+          OK = ChkRange(Shift, -16, 16);
+      }
+    }
+    else
+      Shift = 0;
+    if (OK)
+    {
+      OpSize = UInt16;
+      DecodeAdr(ArgStr[1], MModAcc | MModMem | MModImm);
+      switch (AdrMode)
+      {
+        case ModAcc:
+          if (ThisPar) WrError(1950);
+          else if (ChkRange(Shift, -16, 15))
+          {
+            *WAsmCode |= 0xf440 | (AdrVals[0] << 9) | (Shift & 0x1f);
+            CodeLen = 1;
+          }
+          break;
+        case ModMem:
+          if (Shift == 0xff) /* TS ? */
+          {
+            if (ThisPar) WrError(1950);
+            else
+            {
+              *WAsmCode |= 0x1400 | AdrVals[0];
+              if (AdrCnt)
+                WAsmCode[1] = AdrVals[1];
+              CodeLen = 1 + AdrCnt;
+            }
+          }
+          else if (Shift == 16)
+          {
+            if (ThisPar) WrError(1950);
+            else
+            {   
+              WAsmCode[0] |= 0x4400 | AdrVals[0];
+              if (AdrCnt)
+                WAsmCode[1] = AdrVals[1];
+              CodeLen = 1 + AdrCnt;
+            }
+          }
+          else if ((Shift >= 0) && (MakeXY(WAsmCode + 1, False)))
+          {
+            if (ThisPar)
+            {
+              if (Shift) WrError(1950);
+              /* prev. operation must be STH src,0,Xmem */
+              else if ((LastOpCode & 0xfe0f) != 0x9a00) WrError(1950);
+              else
+              {
+                RetractWords(1);
+                *WAsmCode |= 0xc800 | ((LastOpCode & 0x0100) << 1)
+                             | ((LastOpCode & 0x00f0) >> 4) | (WAsmCode[1] << 4);
+                CodeLen = 1;
+              }
+            }
+            else
+            {
+              WAsmCode[0] |= 0x9400 | (WAsmCode[1] << 4) | Shift;
+              CodeLen = 1;
+            }
+          }
+          else if (!Shift)
+          {
+            if (ThisPar) WrError(1950);
+            else
+            {
+              WAsmCode[0] |= 0x1000 | AdrVals[0];
+              if (AdrCnt)
+                WAsmCode[1] = AdrVals[1];
+              CodeLen = 1 + AdrCnt;
+            }
+          }
+          else
+          {
+            if (ThisPar) WrError(1950);
+            else
+            {
+              WAsmCode[1 + AdrCnt] = 0x0c40 | WAsmCode[0] | (Shift & 0x1f);
+              WAsmCode[0] = 0x6f00 | AdrVals[0];
+              if (AdrCnt)
+                WAsmCode[1] = AdrVals[1];
+              CodeLen = 2 + AdrCnt;
+            }
+          }
+          break;
+        case ModImm:
+          if (Shift == 0xff) WrError(1350);
+          else if (ThisPar) WrError(1950);
+          else if (ChkRange(Shift, 0, 16))
+          {
+            if ((Hi(AdrVals[0]) == 0) && (!Shift))
+            {
+              WAsmCode[0] |= 0xe800 | Lo(AdrVals[0]);
+              CodeLen = 1;
+            }
+            else if (Shift == 16)
+            {
+              WAsmCode[0] |= 0xf062;
+              WAsmCode[1] = AdrVals[0];
+              CodeLen = 2;
+            }
+            else
+            {
+              WAsmCode[0] |= 0xf020 | (Shift & 15);
+              WAsmCode[1] = AdrVals[0];
+              CodeLen = 2;
+            }
+          }
+          break;
+      }
+    }
+  }
+}
+
+static void DecodePSHM(Word Index)
+{
+  UNUSED(Index);
+
+  if (ArgCnt != 1) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else
+  {
+    ForcePageZero = True;
+    if (DecodeAdr(ArgStr[1], MModMem))
+    {
+      *WAsmCode = 0x4a00 | (*AdrVals);
+      CodeLen = 1;
+    }
+  }
+}
+
+static void DecodeLDM(Word Index)
+{
+  UNUSED(Index);
+
+  if (ArgCnt != 2) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else if (DecodeAdr(ArgStr[2], MModAcc))
+  {
+    *WAsmCode = 0x4800 | (*AdrVals << 8);
+    ForcePageZero = True;
+    if (DecodeAdr(ArgStr[1], MModMem))
+    {
+      *WAsmCode |= *AdrVals;
+      CodeLen = 1;
+    }
+  }
+}
+
+static void DecodeSTLM(Word Index)
+{
+  UNUSED(Index);
+
+  if (ArgCnt != 2) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else if (DecodeAdr(ArgStr[1], MModAcc))
+  {
+    *WAsmCode = 0x8800 | (*AdrVals << 8);
+    ForcePageZero = True;
+    if (DecodeAdr(ArgStr[2], MModMem))
+    {
+      *WAsmCode |= *AdrVals;
+      CodeLen = 1;
+    }
+  }
+}
+
+static void DecodeSTM(Word Index)
+{
+  UNUSED(Index);
+
+  if (ArgCnt != 2) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else if (DecodeAdr(ArgStr[1], MModImm))
+  {
+    WAsmCode[1] = *AdrVals;
+    ForcePageZero = True;
+    if (DecodeAdr(ArgStr[2], MModMem))
+    {
+      *WAsmCode = 0x7700 | (*AdrVals);
+      CodeLen = 2;
+    }
+  }
+}
+
+static void DecodeDST(Word Index)
+{
+  UNUSED(Index);
+
+  if (ArgCnt != 2) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else if (DecodeAdr(ArgStr[1], MModAcc))
+  {
+    *WAsmCode = 0x4e00 | (*AdrVals << 8);
+    if (DecodeAdr(ArgStr[2], MModMem))
+    {
+      *WAsmCode |= *AdrVals;
+      if (AdrCnt)
+       1[WAsmCode] = 1[AdrVals];
+      CodeLen = 1 + AdrCnt;
+    }
+  }
+}
+
+static void DecodeST(Word Index)
+{
+  Word Acc;
+
+  UNUSED(Index);
+
+  /* NOTE: we also allow the form 'ST src,Xmem' as an alias
+     for 'STH src,Ymem' since the first form is used in parallel
+     load-store instructions. */
+
+  if (ArgCnt != 2) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else if (DecodeAdr(ArgStr[2], MModMem))
+  {
+    *WAsmCode = *AdrVals;
+    if (AdrCnt)
+      1[WAsmCode] = 1[AdrVals];
+    CodeLen = 1 + AdrCnt;
+    OpSize = SInt16;
+    if (!strcasecmp(ArgStr[1], "T"))
+      *WAsmCode |= 0x8c00;
+    else if (!strcasecmp(ArgStr[1], "TRN"))
+      *WAsmCode |= 0x8d00;
+    else
+    {
+      DecodeAdr(ArgStr[1], MModImm | MModAcc);
+      switch (AdrMode)
+      {
+        case ModImm:
+          *WAsmCode |= 0x7600;
+          (CodeLen++)[WAsmCode] = *AdrVals;
+          break;
+        case ModAcc:
+          Acc = *AdrVals;
+          *AdrVals = *WAsmCode; AdrMode = ModMem;
+          if (MakeXY(AdrVals, True))
+          {
+            *WAsmCode = 0x9a00 | (Acc << 8) | (*AdrVals << 4);
+            CodeLen = 1;
+          }
+          else
+            CodeLen = 0;
+          break;
+        default:
+          CodeLen = 0;
+      }
+    }
+  }
+}
+
+static void DecodeSTLH(Word Index)
+{
+  Integer Shift;
+  Boolean OK;
+
+  if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else if (DecodeAdr(ArgStr[1], MModAcc))
+  {
+    *WAsmCode = Index | (*AdrVals << 8);
+    OK = True; 
+    if (ArgCnt == 2)
+      Shift = 0;
+    else if (!strcasecmp(ArgStr[2], "ASM"))
+      Shift = 0xff;
+    else
+      Shift = EvalIntExpression(ArgStr[2], SInt5, &OK);
+    if ((OK) && (DecodeAdr(ArgStr[ArgCnt], MModMem)))
+    {
+      if (AdrCnt)
+        1[WAsmCode] = 1[AdrVals];
+      CodeLen = 1 + AdrCnt;
+      if (!Shift)
+        *WAsmCode |= 0x8000 | *AdrVals;
+      else if (Shift == 0xff)
+        *WAsmCode |= 0x8400 | *AdrVals;
+      else if ((MakeXY(WAsmCode + 2, False)) && (Shift > 0))
+        *WAsmCode |= 0x9800 | (2[WAsmCode] << 4) | Shift;
+      else
+      {
+        CodeLen[WAsmCode] = (0x0c80 | ((*WAsmCode) & 0x100) | (Shift & 0x1f)) - (Index >> 4);
+        *WAsmCode = 0x6f00 | *AdrVals;
+        CodeLen++;
+      }
+    }
+  }
+}
+
+static void DecodeCMPS(Word Index)
+{
+  UNUSED(Index);
+
+  if (ArgCnt != 2) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else if (DecodeAdr(ArgStr[1], MModAcc))
+  {
+    *WAsmCode = 0x8e00 | (*AdrVals << 8);
+    if (DecodeAdr(ArgStr[2], MModMem))
+    {
+      *WAsmCode |= *AdrVals;
+      if (AdrCnt)
+       1[WAsmCode] = 1[AdrVals];
+      CodeLen = 1 + AdrCnt;
+    }
+  }
+}
+
+static void DecodeSACCD(Word Index)
+{
+  int index;
+  Boolean OK;
+
+  UNUSED(Index);
+
+  if (ArgCnt != 3) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else if (DecodeAdr(ArgStr[1], MModAcc))
+  {
+    *WAsmCode = 0x9e00 | ((*AdrVals) << 8);
+    if (DecodeAdr(ArgStr[2], MModMem))
+      if (MakeXY(AdrVals, True))
+      {
+        *WAsmCode |= ((*AdrVals) << 4);
+        if (!DecodeCondition(3, WAsmCode + 1, &index, &OK)) WrXError(1360, ArgStr[index]);
+        else if ((WAsmCode[1] & 0xf0) != 0x40) WrXError(1360, ArgStr[index]);
+        else
+        {
+          *WAsmCode |= WAsmCode[1] & 15;
+          CodeLen = 1;
+        }
+      }
+  }
+}
+
+static void DecodeStoreCC(Word Index)
+{
+  int index;
+  Boolean OK;
+
+  UNUSED(Index);
+
+  if (ArgCnt != 2) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else if (DecodeAdr(ArgStr[1], MModMem))
+    if (MakeXY(AdrVals, True))
+    {
+      *WAsmCode = Index | ((*AdrVals) << 4);
+      if (!DecodeCondition(2, WAsmCode + 1, &index, &OK)) WrXError(1360, ArgStr[index]);
+      else if ((WAsmCode[1] & 0xf0) != 0x40) WrXError(1360, ArgStr[index]);
+      else
+      {
+        *WAsmCode |= WAsmCode[1] & 15;
+        CodeLen = 1;
+      }
+    }
+}
+
+static void DecodeMVDabs(Word Index)
+{
+  Boolean OK;
+
+  if (ArgCnt != 2) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else if (DecodeAdr(ArgStr[1], MModMem))
+  {
+    *WAsmCode = Index | *AdrVals;
+    if (AdrCnt)
+      1[WAsmCode] = 1[AdrVals];
+    WAsmCode[1 + AdrCnt] = EvalIntExpression(ArgStr[2], UInt16, &OK);
+    if (OK)
+    {
+      ChkSpace((Index == 0x7100) ? SegData : SegCode);
+      CodeLen = 2 + AdrCnt;
+    }
+  }
+}
+
+static void DecodeMVabsD(Word Index)
+{
+  Boolean OK;
+
+  if (ArgCnt != 2) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else if (DecodeAdr(ArgStr[2], MModMem))
+  {
+    *WAsmCode = Index | *AdrVals;
+    if (AdrCnt)
+      1[WAsmCode] = 1[AdrVals];
+    WAsmCode[1 + AdrCnt] = EvalIntExpression(ArgStr[1], UInt16, &OK);
+    if (OK)
+    {
+      ChkSpace((Index == 0x7000) ? SegData : SegCode);
+      CodeLen = 2 + AdrCnt;
+    }
+  }
+}
+
+static void DecodeMVdmadmmr(Word Index)
+{
+  Boolean OK;
+
+  if (ArgCnt != 2) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else
+  {
+    if (Index & 0x0100)
+    {
+      strcpy(ArgStr[3], ArgStr[1]);
+      strcpy(ArgStr[1], ArgStr[2]);
+      strcpy(ArgStr[2], ArgStr[3]);
+    }
+    ForcePageZero = True;
+    if (DecodeAdr(ArgStr[2], MModMem))
+    {
+      *WAsmCode = Index | *AdrVals;
+      WAsmCode[1] = EvalIntExpression(ArgStr[1], UInt16, &OK);
+      if (OK)
+      { 
+        ChkSpace(SegData);
+        CodeLen = 2;
+      }
+    }
+  }
+}
+
+static Boolean GetReg(char *Asc, Word *Res)
+{
+  Boolean OK;
+
+  FirstPassUnknown = False;
+  *Res = EvalIntExpression(Asc, UInt8, &OK);
+  if (OK)
+  {
+    if (FirstPassUnknown)
+      *Res = 0x10;
+    ChkSpace(SegData);
+    OK = ChkRange(*Res, 0x10, 0x1f);
+    if (OK)
+      *Res -= 0x10;
+  }
+  return OK;
+}
+
+static void DecodeMVMM(Word Index)
+{
+  Word XReg, YReg;
+  UNUSED(Index);
+
+  if (ArgCnt != 2) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else if ((GetReg(ArgStr[1], &XReg)) && (GetReg(ArgStr[2], &YReg)))
+  {
+    *WAsmCode = 0xe700 | (XReg << 4) | YReg;
+    CodeLen = 1;
+  }
+}
+
+static void DecodePort(Word Index)
+{
+  Boolean OK;
+
+  if (ArgCnt != 2) WrError(1110);
+  else if (ThisPar) WrError(1950);
+  else
+  {
+    if (Index & 0x0100)
+    {
+      strcpy(ArgStr[3], ArgStr[1]);
+      strcpy(ArgStr[1], ArgStr[2]);
+      strcpy(ArgStr[2], ArgStr[3]);
+    }
+    if (DecodeAdr(ArgStr[2], MModMem))
+    {
+      *WAsmCode = Index | *AdrVals;
+      if (AdrCnt)
+        1[WAsmCode] = 1[AdrVals];
+      WAsmCode[1 + AdrCnt] = EvalIntExpression(ArgStr[1], UInt16, &OK);
+      if (OK)
+      {
+        ChkSpace(SegIO);
+        CodeLen = 2 + AdrCnt;
+      }
+    }
+  }
+}
+
+/*-------------------------------------------------------------------------*/
+/* Pseudo Instructions */
+
+static Boolean DecodePseudo(void)
+{
+#define ASSUME3254xCount 3
+static ASSUMERec ASSUME3254xs[ASSUME3254xCount] = 
+               {{"CPL", &Reg_CPL, 0,      1,       0},
+                {"DP" , &Reg_DP , 0,  0x1ff,   0x200},
+                {"SP" , &Reg_SP , 0, 0xffff, 0x10000}};
+
+  if (Memo("ASSUME"))
+    BEGIN
+     CodeASSUME(ASSUME3254xs,ASSUME3254xCount);
+     return True;
+    END
+
+  return False;
 }
 
 /*-------------------------------------------------------------------------*/
@@ -1352,9 +2326,24 @@ static void AddMac(char *Name, Word Code, Boolean IsRepeatable)
   AddInstTable(InstTable, Name, InstrZ++, DecodeMac);
 }
 
+static void AddCondition(char *NName, Word NClass, Word NCode, Word NMask)
+{
+  if (InstrZ >= ConditionCnt)
+    exit(0);
+  Conditions[InstrZ  ].Name  = NName;
+  Conditions[InstrZ  ].Class = NClass;
+  Conditions[InstrZ  ].Code  = NCode;
+  Conditions[InstrZ++].Mask  = NMask;
+}
+
 static void InitFields(void)
 {
   InstTable = CreateInstTable(203);
+
+  AddInstTable(InstTable, "LD", 0, DecodeLD);
+  AddInstTable(InstTable, "ST", 0, DecodeST);
+  AddInstTable(InstTable, "STH", 0x200, DecodeSTLH);
+  AddInstTable(InstTable, "STL", 0x000, DecodeSTLH);
 
   FixedOrders = (FixedOrder*) malloc(sizeof(FixedOrder) * FixedOrderCnt); InstrZ = 0;
   AddFixed("FRET"  , 0xf4e4, FALSE);
@@ -1410,6 +2399,7 @@ static void InitFields(void)
   AddXY   ("ABDST" , 0xe300, TRUE );
   AddXY   ("LMS"   , 0xe100, TRUE );
   AddXY   ("SQDST" , 0xe200, TRUE );
+  AddXY   ("MVDD"  , 0xe500, TRUE );
 
   AddInstTable(InstTable, "ADD", 0, DecodeADDSUB);
   AddInstTable(InstTable, "SUB", 1, DecodeADDSUB);
@@ -1430,6 +2420,7 @@ static void InitFields(void)
   AddMemAcc("DSUB" , 0x5400, TRUE );
   AddMemAcc("DSUBT", 0x5c00, TRUE );
   AddMemAcc("DLD"  , 0x5600, TRUE );
+  AddMemAcc("LDR"  , 0x1600, TRUE );
   AddMemAcc("LDU"  , 0x1200, TRUE );
 
   MacOrders = (FixedOrder*) malloc(sizeof(FixedOrder) * MacOrderCnt); InstrZ = 0;
@@ -1465,6 +2456,88 @@ static void InitFields(void)
   AddInstTable(InstTable, "BIT"  , 0, DecodeBIT);
   AddInstTable(InstTable, "BITF" , 0, DecodeBITF);
   AddInstTable(InstTable, "CMPR" , 0, DecodeCMPR);
+
+  AddInstTable(InstTable, "B"    , 0xf073, DecodePMAD);
+  AddInstTable(InstTable, "BD"   , 0xf273, DecodePMAD);
+  AddInstTable(InstTable, "CALL" , 0xf074, DecodePMAD);
+  AddInstTable(InstTable, "CALLD", 0xf274, DecodePMAD);
+  AddInstTable(InstTable, "RPTB" , 0xf072, DecodePMAD);
+  AddInstTable(InstTable, "RPTBD", 0xf272, DecodePMAD);
+
+  AddInstTable(InstTable, "BC"   , 0xf800, DecodePMADCond);
+  AddInstTable(InstTable, "BCD"  , 0xfa00, DecodePMADCond);
+  AddInstTable(InstTable, "CC"   , 0xf900, DecodePMADCond);
+  AddInstTable(InstTable, "CCD"  , 0xfb00, DecodePMADCond);
+
+  AddInstTable(InstTable, "FB"    , 0xf880, DecodeFPMAD);
+  AddInstTable(InstTable, "FBD"   , 0xfa80, DecodeFPMAD);
+  AddInstTable(InstTable, "FCALL" , 0xf980, DecodeFPMAD);
+  AddInstTable(InstTable, "FCALLD", 0xfb80, DecodeFPMAD);
+
+  AddInstTable(InstTable, "BANZ" , 0x6c00, DecodeBANZ);
+  AddInstTable(InstTable, "BANZD", 0x6e00, DecodeBANZ);
+
+  AddInstTable(InstTable, "INTR" , 0xf7c0, DecodeINTR);
+  AddInstTable(InstTable, "TRAP" , 0xf4c0, DecodeINTR);
+  AddInstTable(InstTable, "PSHM" , 0     , DecodePSHM);
+  AddInstTable(InstTable, "LDM"  , 0     , DecodeLDM);
+  AddInstTable(InstTable, "STLM" , 0     , DecodeSTLM);
+  AddInstTable(InstTable, "STM"  , 0     , DecodeSTM);
+  AddInstTable(InstTable, "CMPS" , 0     , DecodeCMPS);
+
+  AddInstTable(InstTable, "RPT"  , 0     , DecodeRPT);
+  AddInstTable(InstTable, "RPTZ" , 0     , DecodeRPTZ);
+
+  AddInstTable(InstTable, "FRAME", 0     , DecodeFRAME);
+  AddInstTable(InstTable, "IDLE" , 0     , DecodeIDLE);
+
+  AddInstTable(InstTable, "RSBX" , 0xf4b0, DecodeSBIT);
+  AddInstTable(InstTable, "SSBX" , 0xf5b0, DecodeSBIT);
+
+  AddInstTable(InstTable, "XC"   , 0     , DecodeXC);
+
+  AddInstTable(InstTable, "DST"  , 0     , DecodeDST);
+
+  AddInstTable(InstTable, "SACCD", 0     , DecodeSACCD);
+
+  AddInstTable(InstTable, "SRCCD", 0x9d00, DecodeStoreCC);
+  AddInstTable(InstTable, "STRCD", 0x9c00, DecodeStoreCC);
+
+  AddInstTable(InstTable, "MVDK" , 0x7100, DecodeMVDabs);
+  AddInstTable(InstTable, "MVDP" , 0x7d00, DecodeMVDabs);
+  AddInstTable(InstTable, "MVKD" , 0x7000, DecodeMVabsD);
+  AddInstTable(InstTable, "MVPD" , 0x7c00, DecodeMVabsD);
+  AddInstTable(InstTable, "MVDM" , 0x7200, DecodeMVdmadmmr);
+  AddInstTable(InstTable, "MVMD" , 0x7300, DecodeMVdmadmmr);
+  AddInstTable(InstTable, "MVMM" , 0x7300, DecodeMVMM);
+
+  AddInstTable(InstTable, "PORTR", 0x7400, DecodePort);
+  AddInstTable(InstTable, "PORTW", 0x7500, DecodePort);
+
+  Conditions = (Condition*) malloc(sizeof(Condition) * ConditionCnt); InstrZ = 0;
+  AddCondition("BIO"  , 0, 0x0003, 0x0003);
+  AddCondition("NBIO" , 0, 0x0002, 0x0003);
+  AddCondition("C"    , 0, 0x000c, 0x000c);
+  AddCondition("NC"   , 0, 0x0008, 0x000c);
+  AddCondition("TC"   , 0, 0x0030, 0x0030);
+  AddCondition("NTC"  , 0, 0x0020, 0x0030);
+  AddCondition("AEQ"  , 1, 0x0045, 0x000f);
+  AddCondition("ANEQ" , 1, 0x0044, 0x000f);
+  AddCondition("AGT"  , 1, 0x0046, 0x000f);
+  AddCondition("AGEQ" , 1, 0x0042, 0x000f);
+  AddCondition("ALT"  , 1, 0x0043, 0x000f);
+  AddCondition("ALEQ" , 1, 0x0047, 0x000f);
+  AddCondition("AOV"  , 1, 0x0070, 0x00f0);
+  AddCondition("ANOV" , 1, 0x0060, 0x00f0);
+  AddCondition("BEQ"  , 2, 0x004d, 0x000f);
+  AddCondition("BNEQ" , 2, 0x004c, 0x000f);
+  AddCondition("BGT"  , 2, 0x004e, 0x000f);
+  AddCondition("BGEQ" , 2, 0x004a, 0x000f);
+  AddCondition("BLT"  , 2, 0x004b, 0x000f);
+  AddCondition("BLEQ" , 2, 0x004f, 0x000f);
+  AddCondition("BOV"  , 2, 0x0078, 0x00f0);
+  AddCondition("BNOV" , 2, 0x0068, 0x00f0);
+  AddCondition("UNC"  , 3, 0x0000, 0x00ff);
 }
 
 static void DeinitFields(void)
@@ -1478,6 +2551,7 @@ static void DeinitFields(void)
   free(MemAccOrders);
   free(MemConstOrders);
   free(MacOrders);
+  free(Conditions);
 }
 
 /*-------------------------------------------------------------------------*/
@@ -1487,17 +2561,25 @@ static void MakeCode_32054x(void)
 {
   CodeLen = 0; DontPrint = False;
 
+   ThisPar = !strcmp(LabPart, "||");
+   if ((strlen(OpPart) > 2) && (!strncmp(OpPart, "||", 2)))
+   {
+     ThisPar = True; strcpy(OpPart, OpPart + 2);
+   }
+
   /* zu ignorierendes */
 
-  if (*OpPart=='\0') return;
+  if (*OpPart == '\0') return;
 
   if (DecodePseudo()) return;
 
   /* search */
 
-  ThisRep = False;
+  ThisRep = False; ForcePageZero = False;
   if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200,OpPart);
+    WrXError(1200, OpPart);
+  else
+    LastOpCode = *WAsmCode;
   LastRep = ThisRep;
 }
 
@@ -1539,6 +2621,7 @@ static void SwitchTo_32054x(void)
   
   InitFields(); SwitchFrom = SwitchFrom_32054x;
   ThisRep = LastRep = False;
+  LastOpCode = 0;
 }
 
 /*-------------------------------------------------------------------------*/

@@ -161,7 +161,7 @@ BEGIN
        errno = 0;
        if (Magic != 0) FoundId = Nil;
        else FoundId = FindFamilyById(CPU);
-       if (FoundId == Nil) printf("???=%02x        ", Header);
+       if (FoundId == Nil) printf("\?\?\?=%02x        ", Header);
        else printf("%-13s ", FoundId->Name);
        ChkIO(OutName);
 

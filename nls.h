@@ -1,3 +1,5 @@
+#ifndef _NLS_H
+#define _NLS_H
 /* nls.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -58,3 +60,4 @@ extern int NLS_StrCmp(const char *s1, const char *s2);
 
 
 extern void nls_init(void);
+#endif /* _NLS_H */

@@ -1,3 +1,5 @@
+#ifndef _ASMSUB_H
+#define _ASMSUB_H
 /* asmsub.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -174,3 +176,4 @@ extern long DTime(long t1, long t2);
 
 
 extern void asmsub_init(void);
+#endif /* _ASMSUB_H */

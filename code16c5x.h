@@ -1,3 +1,5 @@
+#ifndef _CODE16C5X_H
+#define _CODE16C5X_H
 /* code16c5x.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -10,3 +12,4 @@
 
 extern void code16c5x_init(void);
 
+#endif /* _CODE16C5X_H */

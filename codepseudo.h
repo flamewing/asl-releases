@@ -1,3 +1,5 @@
+#ifndef _CODEPSEUDO_H
+#define _CODEPSEUDO_H
 /* codepseudo.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -35,3 +37,4 @@ extern void CodeEquate(ShortInt DestSeg, LargeInt Min, LargeInt Max);
 extern void CodeASSUME(ASSUMERec *Def, Integer Cnt);
 
 extern void codepseudo_init(void);
+#endif /* _CODEPSEUDO_H */

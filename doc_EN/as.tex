@@ -990,6 +990,11 @@ chapters \ref{ChapShareMain} resp. \ref{ChapShareOrder}.
       defines the processor type \tty{$<$new$>$} to be an alias for the
       type \tty{$<$old$>$}.  See section \ref{SectAlias} for the sense of
       processor aliases.}
+\item{{\tt gnuerrors}: display messages about errors resp. warnings not
+      in the As standard format, but instaed in a format similar to the
+      GNU C compiler.  This simplifies the integration of AS into 
+      environments tuned for this format, however also suppresses the
+      display of precise error positions in macro bodies!}
 \end{itemize}
 As long as switches require no arguments and their concatenation does
 not result in a multi-letter switch, it is possible to specify several 
@@ -8941,6 +8946,14 @@ described by:
                 than 0.  Analogous to a count of exactly 0, no data is
                 stored.}
                {none}
+\errentry{ 280}{single X operand interpreted as indexed and not implicit
+                addressing}
+               {warning}
+               {A single X operand may be interpreted either as register X
+                or x-indexed addressing with zero displacement, since 
+                Motorola does not specify this variant.  AS chooses the
+                latter, which may not be the desired one.}
+               {none}
 \errentry{1000}{symbol double defined}
                {error}
                {A new value is assigned to a symbol, using a label or a
@@ -9079,6 +9092,11 @@ described by:
                {The branch condition used for a conditional jump does not
                 exist.}
                {none}
+\errentry{1365}{incompatible conditions}
+               {error}
+               {The used combination of conditions is not poosible
+                in a single instruction.}
+               {the condition where the incompatibility was detected.}
 \errentry{1370}{jump distance too big}
                {error}
                {the jump instruction and destination are too apart to
@@ -9255,6 +9273,11 @@ described by:
                {Only \tty{EXTNAMES} resp. \tty{NOEXTNAMES} are allowed as
                 directives of a \tty{STRUCT} statement.}
                {the unknown directive}
+\errentry{1560}{instruction is not repeatable}
+               {error}
+               {This machine instruction cannot be repeated via a {\tt
+                RPT} construct.}
+               {none}
 \errentry{1600}{unexpected end of file}
                {error}
                {It was tried to read past the end of a file with a 

@@ -1,5 +1,14 @@
-#ifndef _chardefs_h
-#define _chardefs_h
+#ifndef _CHARDEFS_H
+#define _CHARDEFS_H
+/* chardefs.h */
+/*****************************************************************************/
+/* AS-Portierung                                                             */
+/*                                                                           */
+/* system-dependant definition of national-specific characters               */
+/*                                                                           */
+/* History:  2001-10-13 /AArnold - created this header                       */
+/*                                                                           */
+/*****************************************************************************/
 
 #ifdef CHARSET_ISO8859_1
 #define CH_ae "\344"
@@ -233,5 +242,4 @@
 #define CH_iexcl  "?"
 #endif
 
-#endif /* _chardefs_h */
-
+#endif /* _CHARDEFS_H */

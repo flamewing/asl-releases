@@ -1,3 +1,5 @@
+#ifndef _SPECCHARS_H
+#define _SPECCHARS_H
 static unsigned char specchars[][2]=
             {{0204,0344},        /* adieresis */
              {0224,0366},        /* odieresis */
@@ -10,4 +12,4 @@ static unsigned char specchars[][2]=
              {0346,0265},        /* mu */
              {0205,0340},        /* a graph */
              {0000,0000}};
-             
+#endif /* _SPECCHARS_H */

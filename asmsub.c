@@ -22,6 +22,7 @@
 /*           21. 7.2001 added not repeatable message                         */
 /*           2001-08-01 QuotPos also works for ) resp. ] characters          */
 /*           2001-09-03 added warning message about X-indexed conversion     */
+/*           2001-10-21 additions for GNU-style errors                       */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -770,22 +771,33 @@ BEGIN
    String h,h2;
    char *p;
    FILE *errfile;
+   int l;
 
-   strcpy(h,"> > >");
-   strmaxcat(h,p=GetErrorPos(),255); free(p);
-   if (NOT Warning)
+   *h = '\0';
+   if (!GNUErrors)
+     strcpy(h,"> > >");
+   p = GetErrorPos();
+   if (p[l = strlen(p) - 1] == ' ')
+     p[l] = '\0';
+   strmaxcat(h, p, 255); free(p);
+   if (Warning)
     BEGIN
-     strmaxcat(h,getmessage(Num_ErrName),255);
-     strmaxcat(h,Add,255);
      strmaxcat(h,": ",255);
-     ErrorCount++;
-    END
-   else
-    BEGIN
      strmaxcat(h,getmessage(Num_WarnName),255);
      strmaxcat(h,Add,255);
      strmaxcat(h,": ",255);
      WarnCount++;
+    END
+   else
+    BEGIN
+     if (!GNUErrors)
+     {
+       strmaxcat(h,": ",255);
+       strmaxcat(h, getmessage(Num_ErrName), 255); 
+     }
+     strmaxcat(h,Add,255);
+     strmaxcat(h,": ",255);
+     ErrorCount++;
     END
 
    if ((strcmp(LstName, "/dev/null") != 0) AND (NOT Fatal))
@@ -897,6 +909,7 @@ BEGIN
      case 1351: msgno=Num_ErrMsgMustBeEven; break;
      case 1355: msgno=Num_ErrMsgInvParAddrMode; break;
      case 1360: msgno=Num_ErrMsgUndefCond; break;
+     case 1365: msgno=Num_ErrMsgIncompCond; break;
      case 1370: msgno=Num_ErrMsgJmpDistTooBig; break;
      case 1375: msgno=Num_ErrMsgDistIsOdd; break;
      case 1380: msgno=Num_ErrMsgInvShiftArg; break;
@@ -991,7 +1004,7 @@ BEGIN
 
    if (((Num==1910) OR (Num==1370)) AND (NOT Repass)) JmpErrors++;
 
-   if (NumericErrors) sprintf(Add,"#%d", (int)Num); 
+   if (NumericErrors) sprintf(Add," #%d", (int)Num); 
    else *Add='\0';
    WrErrorString(h,Add,Num<1000,Num>=10000);
 END

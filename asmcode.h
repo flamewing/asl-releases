@@ -31,4 +31,4 @@ extern void WriteBytes(void);
 extern void RetractWords(Word Cnt);
  
 extern void asmcode_init(void);
-#endif
+#endif /* _ASMCODE_H */

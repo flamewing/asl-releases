@@ -34,12 +34,13 @@
 /*            1. 7.2001 Build 14                                             */
 /*           20. 8.2001 Build 15                                             */
 /*            7.10.2001 Build 16                                             */
+/*           2001-11-04 Build 17                                             */
 /*                                                                           */
 /*****************************************************************************/
 
 #include "stdinc.h"
 
-char *Version="1.42 Beta [Bld 16]";
+char *Version="1.42 Beta [Bld 17]";
 LongInt VerNo=0x142f;
 
 char *InfoMessCopyright="(C) 1992,2001 Alfred Arnold";

@@ -1,3 +1,5 @@
+#ifndef _BPEMU_H
+#define _BPEMU_H
 /* bpemu.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -31,3 +33,4 @@ extern Boolean DirScan(char *Mask, charcallback callback);
 extern LongInt GetFileTime(char *Name);
 
 extern void bpemu_init(void);
+#endif /* _BPEMU_H */

@@ -996,6 +996,12 @@ bzw. \ref{ChapShareOrder}.
       definiert den Prozessortyp \tty{$<$neu$>$} als einen Alias f"ur den
       Typen \tty{$<$alt$>$}.  Zu den Sinn und Zweck von Aliassen siehe
       Abschnitt \ref{SectAlias}}
+\item{{\tt gnuerrors}: Meldungen "uber Fehler bzw. Warnungen und deren
+      Position nicht im Standardformat von AS, sondern in einem dem GNU
+      C-Compiler entlehnten Format anzeigen.  Dies erleichtert die
+      Integration von AS in f"ur dieses Format ausgelegte Umgebungen,
+      unterdr"uckt aber gleichzeitig die Anzeige der pr"azisen
+      Fehlerposition innerhalb Makror"umpfen!}
 \end{itemize}
 Sofern Schalter keine Argumente ben"otigen und ihre Zusammenziehung
 keinen mehrbuchstabigen Schalter ergibt, k"onnen mehrere Schalter
@@ -9074,6 +9080,15 @@ Angaben:
                 kleiner als 0.  Es werden (analog zu einem Argument von
                 genau 0) keine Daten abgelegt.}
                {keines}
+\errentry{ 280}{einzelner X-Operand wird als indizierte und nicht als
+                implizite Adressierung interpretiert}
+               {Warnung}
+               {Ein einzelner X-Operand kann sowohl als Register X als
+                auch X-inidizierte Adressierung mit Null-Displacement
+                interpretiert werden, da sich Morola hier nicht festlegt.
+                AS w"ahlt die letztere Variante, was m"oglicherweise nicht
+                das erwartete ist.}
+               {keines}
 \errentry{1000}{Symbol doppelt definiert}
                {Fehler}
                {Einem Symbol wurde durch ein Label oder
@@ -9223,6 +9238,12 @@ Angaben:
                {Die benutzte Bedingung f"ur bedingte Spr"unge
                 existiert nicht.}
                {keines}
+\errentry{1365}{inkompatible Bedingungen}
+               {Fehler}
+               {Die benutzte Kombination von Bedingungen kann nicht
+                in einem Befehl verwendet werden.}
+               {die Bedingung, bei der die Unvertr"aglichkeit
+                entdeckt wurde.}
 \errentry{1370}{Sprungdistanz zu gro"s}
                {Fehler}
                {Sprungbefehl und Sprungziel liegen zu weit
@@ -9416,6 +9437,11 @@ Angaben:
                {Als Direktive f"ur \tty{STRUCT} ist nur
                 \tty{EXTNAMES} oder \tty{NOEXTNAMES} zugelassen.}
                {die unbekannte Direktive}
+\errentry{1560}{Anweisung nicht wiederholbar}
+               {Fehler} 
+               {Diese Maschinenanweisung kann nicht mit Hilfe eines
+                {\tt RPT}-Konstruktes wiederholt werden.}
+               {keines}
 \errentry{1600}{vorzeitiges Dateiende}
                {Fehler}
                {Es wurde mit einem \tty{BINCLUDE}-Befehl versucht,

@@ -1,3 +1,5 @@
+#ifndef _CODE3202X_H
+#define _CODE3202X_H
 /*
  * AS-Portierung 
  *
@@ -7,3 +9,4 @@
  */
 
 extern void code3202x_init(void);
+#endif /* _CODE3202X_H */

@@ -1,7 +1,6 @@
-/* codesc14xxx.h */
 #ifndef _CODESC14XXX_H
 #define _CODESC14XXX_H
-
+/* codesc14xxx.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
 /*                                                                           */
@@ -12,5 +11,4 @@
 /*****************************************************************************/
 
 extern void codesc14xxx_init(void);
-
 #endif /* _CODESC14XXX_H */

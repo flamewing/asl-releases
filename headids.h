@@ -1,3 +1,5 @@
+#ifndef _HEADIDS_H
+#define _HEADIDS_H
 /* headids.h */
 /*****************************************************************************/
 /* Makroassembler AS                                                         */
@@ -26,3 +28,4 @@ extern PFamilyDescr FindFamilyByName(char *Name);
 extern PFamilyDescr FindFamilyById(Word Id);
 
 extern void headids_init(void);
+#endif /* _HEADIDS_H */

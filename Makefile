@@ -66,7 +66,7 @@ install: $(ALLTARGETS)
 	./install.sh $(BINDIR) $(INCDIR) $(MANDIR) $(LIBDIR) $(DOCDIR)
 
 clean:
-	rm -f $(ALLTARGETS) $(RESCOMPTARGET) $(TEX2DOCTARGET) $(TEX2HTMLTARGET) *.$(OBJEXTENSION) *.p *.rsc tests/testlog
+	rm -f $(ALLTARGETS) $(RESCOMPTARGET) $(TEX2DOCTARGET) $(TEX2HTMLTARGET) *.$(OBJEXTENSION) *.p *.rsc tests/testlog testlog
 	cd doc_DE; $(MAKE) RM="rm -f" clean
 	cd doc_EN; $(MAKE) RM="rm -f" clean
 
@@ -139,7 +139,7 @@ unjunk:
            nops.asm bind.* asmutils.* asmmessages.* filenums.* includelist.* tests/warnlog_* \
            insttree.* flt1750.* t_65.* test87c8.* testst9.* testst7.* testtms7.* test3203.* \
            ioerrors.new.c codeallg.* ASM*.c *_msg*.h p2BIN.* \
-           decodecmd.* ioerrors.* stringutil.* *split.c marks.c \
+           decodecmd.* ioerrors.* stringutil.* *split.c marks.c equs.h \
 	   `find . -name "testlog" -print` \
 	   `find . -name "*~" -print` \
 	   `find . -name "core" -print` \

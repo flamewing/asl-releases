@@ -1,5 +1,5 @@
-#ifndef _code3254x_h
-#define _code3254x_h
+#ifndef _CODE3254X_H
+#define _CODE3254X_H
 /* code3254x.h */
 /*****************************************************************************/
 /* Macro Assembler AS                                                        */
@@ -11,5 +11,4 @@
 /*****************************************************************************/
 
 extern void code32054x_init(void);
-
-#endif
+#endif /* _CODE3254X_H */

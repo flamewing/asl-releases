@@ -1,3 +1,5 @@
+#ifndef _ASMIF_H
+#define _ASMIF_H
 /* asmif.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -35,3 +37,4 @@ extern void RestoreIFs(Integer Level);
 extern Boolean IFListMask(void);
 
 extern void asmif_init(void);
+#endif /* _ASMIF_H */

@@ -7,7 +7,7 @@
 
 CC = gcc
 LD = gcc
-CFLAGS = -O2 -Wall -Wno-parentheses -Wno-sign-compare
+CFLAGS = -O2 -mcpu=i486 -Wall -Wno-parentheses -Wno-sign-compare
 LDFLAGS =
 
 # -------------------------------------------------------------------------

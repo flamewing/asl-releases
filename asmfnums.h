@@ -1,3 +1,5 @@
+#ifndef _ASMFNUMS_H
+#define _ASMFNUMS_H
 /* asmfnums.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -27,3 +29,4 @@ extern void GetAddressRange(int File, LargeWord *Start, LargeWord *End);
 extern void ResetAddressRanges(void);
 
 extern void asmfnums_init(void);
+#endif /* _ASMFNUMS_H */

@@ -1,3 +1,5 @@
+#ifndef _CODE3206X_H
+#define _CODE3206X_H
 /* code3206x.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -10,3 +12,4 @@
 
 extern void code3206x_init(void);
 
+#endif /* _CODE3206X_H */

@@ -70,6 +70,7 @@ clean:
 	-del $(RESCOMPTARGET)
 	-del *.$(OBJEXTENSION)
 	-del *.p
+	-del tests/testlog
 	-del testlog
 	-del *.rsc
 	cd doc_DE & $(MAKE) RM=del clean

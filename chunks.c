@@ -64,7 +64,7 @@ END
 BEGIN
    Word z,f1=0,f2=0;
    Boolean Found;
-   LongInt PartSum;
+   LongWord PartSum;
    Boolean Result;
 
    Result=False;

@@ -1,3 +1,5 @@
+#ifndef _STDHANDL_H
+#define _STDHANDL_H
 /* stdhandl.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -19,3 +21,4 @@ extern TRedirected Redirected;
 extern void RewriteStandard(FILE **T, char *Path);
 
 extern void stdhandl_init(void);
+#endif /* _STDHANDL_H */

@@ -112,6 +112,13 @@ tools, or a command file suitable for John Hartman's NoICE.  If no argument
 is given, MAP will be chosen.  The file's name is constructed by replacing
 the source file's extension with '.map', '.obj', or '.noi' respectively.
 .TP
+.B -gnuerrors
+
+Output errors and their location in the source code in a format similar
+to the GNU C compiler, thus making it easier to integrate AS into
+environments designed for this format.  Note that in contrast to the
+standard format used by AS, locations inside are not reported!
+.TP
 .B -h
 
 Force AS to print all hexadecimal constants with lowercase letters, rather

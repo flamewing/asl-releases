@@ -40,5 +40,4 @@ extern LargeWord ChunkSum(ChunkList *NChunk);
 
 
 extern void chunks_init(void);
-
 #endif /* _CHUNKS_H */

@@ -1207,7 +1207,7 @@ BEGIN
         AdrLong=EvalIntExpression(ArgStr[1],UInt24,&OK);
         if (OK)
          BEGIN
-          if (((AdrLong >> 16)!=(EProgCounter() >> 16)) AND
+          if (((AdrLong >> 16)!=(((int)EProgCounter()) >> 16)) AND
               (NOT FirstPassUnknown) AND (NOT SymbolQuestionable)) WrError(1910);
           else if ((EProgCounter() & 0xffff)>=0xfffc) WrError(1905);
           else
@@ -1298,7 +1298,7 @@ BEGIN
          AdrLong=EvalIntExpression(ArgStr[2],UInt24,&OK);
          if (OK)
           BEGIN
-           if (((AdrLong >> 16)!=(EProgCounter() >> 16)) AND
+           if (((AdrLong >> 16)!=(((int)EProgCounter()) >> 16)) AND
                (NOT FirstPassUnknown) AND (NOT SymbolQuestionable)) WrError(1910);
            else if ((EProgCounter() & 0xffff)>=0xfffc) WrError(1905);
            else
@@ -1490,7 +1490,7 @@ END
         static Boolean ChkPC_H8_5(LargeWord Addr)
 BEGIN
    if (ActPC==SegCode)
-    return (Addr<(Maximum?0x1000000:0x10000));
+    return (Addr<(Maximum?0x1000000u:0x10000u));
    else return False;
 END
 

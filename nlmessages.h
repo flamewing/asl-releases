@@ -1,3 +1,5 @@
+#ifndef _NLMESSAGES_H
+#define _NLMESSAGES_H
 /* nlmessages.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -22,3 +24,4 @@ extern void opencatalog(PMsgCat Catalog, char *File, char *Path, LongInt MsgId1,
 extern char *getmessage(int Num);
 
 extern void nlmessages_init(char *File, char *Path, LongInt MsgId1, LongInt MsgId2);
+#endif /* _NLMESSAGES_H */

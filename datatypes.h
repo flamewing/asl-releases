@@ -1,3 +1,15 @@
+#ifndef _DATATYPES_H
+#define _DATATYPES_H
+/* datatypes.h */
+/*****************************************************************************/
+/* AS-Port                                                                   */
+/*                                                                           */
+/* define some handy types & constants                                       */
+/*                                                                           */
+/* History:  2001-10-13 /AArnold - created this comment                      */
+/*                                                                           */
+/*****************************************************************************/
+
 #include "sysdefs.h"
 
 typedef Card8 Byte;       /* Integertypen */
@@ -53,3 +65,4 @@ typedef char ShortString[65];
 #define False 0
 #endif
 
+#endif /* _DATATYPES_H */

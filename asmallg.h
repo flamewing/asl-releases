@@ -1,3 +1,5 @@
+#ifndef _ASMALLG_H
+#define _ASMALLG_H
 /* codeallg.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -19,3 +21,4 @@ extern void ClearONOFF(void);
 extern Boolean CodeGlobalPseudo(void);
 
 extern void codeallg_init(void);
+#endif /* _ASMALLG_H */

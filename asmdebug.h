@@ -1,3 +1,5 @@
+#ifndef _ASMDEBUG_H
+#define _ASMDEBUG_H
 /* asmdebug.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -18,3 +20,4 @@ extern void ClearLineInfo(void);
 extern void DumpDebugInfo(void);
 
 extern void asmdebug_init(void);
+#endif /* _ASMDEBUG_H */

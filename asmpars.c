@@ -33,6 +33,7 @@
 /*           25. 5.2001 added UInt21                                         */
 /*            3. 8.2001 added SInt6                                          */
 /*           2001-10-04 better check for ASCII-like integer consts           */
+/*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -76,6 +77,7 @@ LargeWord IntMasks[IntTypeCnt]=
              0x0007ffffl,0x000fffffl,0x000fffffl, /* SInt20 UInt20 Int20 */
              0x001fffffl,                         /* UInt21 */
              0x003fffffl,                         /* UInt22 */
+             0x007fffffl,                         /* UInt23 */
              0x007fffffl,0x00ffffffl,0x00ffffffl, /* SInt24 UInt24 Int24 */
              0xffffffffl,0xffffffffl,0xffffffffl  /* SInt32 UInt32 Int32 */
 #ifdef HAS64
@@ -104,6 +106,7 @@ LargeInt IntMins[IntTypeCnt]=
                  -524288l,          0l,    -524288l,  /* SInt20 UInt20 Int20 */
                        0l,                            /* UInt21 */
                        0l,                            /* UInt22 */
+                       0l,                            /* UInt23 */
                 -8388608l,          0l,   -8388608l,  /* SInt24 UInt24 Int24 */
              -2147483647l,          0l,-2147483647l   /* SInt32 UInt32 Int32 */
 #ifdef HAS64
@@ -133,6 +136,7 @@ LargeInt IntMaxs[IntTypeCnt]=
                  1048575l,    1048575l,               /* UInt20 Int20 */
                  2097151l,                            /* UInt21 */
                  4194303l,                            /* UInt22 */
+                 8388608l,                            /* UInt23 */
 #ifdef __STDC__
                  8388607l,   16777215l,   16777215l,  /* SInt24 UInt24 Int24 */
               2147483647l, 4294967295ul,4294967295ul  /* SInt32 UInt32 Int32 */

@@ -1,3 +1,5 @@
+#ifndef _TOOLUTILS_H
+#define _TOOLUTILS_H
 /* toolutils.c */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -81,3 +83,4 @@ extern Boolean AddressWildcard(char *addr);
 
 
 extern void toolutils_init(char *ProgPath);
+#endif /* _TOOLUTILS_H */

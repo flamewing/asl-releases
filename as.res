@@ -25,6 +25,8 @@
 ;*            1. 6.2000 changed error message 1850                           *
 ;*           21. 7.2001 not repeatable error message                         *
 ;*           2001-10-03 warning implicit X-conversion                        *
+;*           2001-10-17 error conflicting conditions                         *
+;*           2001-10-21 GNU error messages                                   *
 ;*                                                                           *
 ;*****************************************************************************
 
@@ -34,16 +36,24 @@ Include header.res
 ; Fehlermeldungen
 
 Message ErrName
- ": Fehler "
- ": error "
+ "Fehler"
+ "error"
 
 Message WarnName
- ": Warnung "
- ": warning "
+ "Warnung"
+ "warning"
 
 Message InLineName
  " in Zeile "
  " in line "
+
+Message GNUErrorMsg1
+ "In Datei included von"
+ "In file included from"
+
+Message GNUErrorMsgN
+ "                  von"
+ "                 from"
 
 Message ErrMsgUselessDisp
  "Displacement=0, &uuml;berfl&uuml;ssig"
@@ -279,6 +289,10 @@ Message ErrMsgUndefCond
  "undefinierte Bedingung"
  "undefined condition"
 
+Message ErrMsgIncompCond
+ "inkompatible Bedingungen"
+ "incompatible conditions"
+
 Message ErrMsgJmpDistTooBig
  "Sprungdistanz zu gro&szlig;"
  "jump distance too big"
@@ -425,7 +439,7 @@ Message ErrMsgInvStructDir
 
 Message ErrMsgNotRepeatable
  "Anweisung nicht wiederholbar"
- "Instruction is not repeatable"
+ "instruction is not repeatable"
 
 Message ErrMsgShortRead
  "vorzeitiges Dateiende"
@@ -945,6 +959,7 @@ Message InfoMessHelp
  "-l : Listing auf Konsole              -L : Listing auf Datei\n" \
  "-i <Pfad>[:Pfad]... : Pfadliste f&uuml;r Includedateien\n" \
  "-D <Symbol>[,Symbol]... : Symbole vordefinieren\n" \
+ "-gnuerrors: Fehlermeldungen im GNU-Format\n" \
  "-E [Name] : Zieldatei f&uuml;r Fehlerliste,\n" \
  "            !0..!4 f&uuml;r Standardhandles\n" \
  "            Default <Quelldatei>.LOG\n" \
@@ -980,6 +995,7 @@ Message InfoMessHelp
  "-l : listing to console               -L : listing to file\n" \
  "-i <path>[;path]... : list of paths for include files\n" \
  "-D <symbol>[,symbol]... : predefine symbols\n" \
+ "-gnuerrors: error messages in GNU format\n" \
  "-E <name> : target file for error list,\n" \
  "            !0..!4 for standard handles\n" \
  "            default is <srcname>.LOG\n" \

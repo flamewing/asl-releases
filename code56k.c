@@ -101,7 +101,7 @@ static Byte Mac2Table[4]={1,3,2,0};
 
 static CPUVar CPU56000,CPU56002,CPU56300;
 static IntType AdrInt;
-static LargeWord MemLimit;
+static LargeInt MemLimit;
 static ShortInt AdrType;
 static LongInt AdrMode;
 static LongInt AdrVal;

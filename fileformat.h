@@ -1,3 +1,5 @@
+#ifndef _FILEFORMAT_H
+#define _FILEFORMAT_H
 /* fileformat.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -78,3 +80,4 @@
 #define RelFlag_Relative 1
 
 #endif
+#endif /* _FILEFORMAT_H */

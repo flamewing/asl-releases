@@ -2148,7 +2148,7 @@ BEGIN
        if (!( ( strcmp(MomCPUIdent,"M16C") ) && ( strcmp(MomCPUIdent,"M30600M8")))) 
          if (OpSize == 4) 
          BEGIN
-           if ( (AdrLong & 0x0f0000) != (EProgCounter() & 0x0f0000) )
+           if ( (AdrLong & 0x0f0000) != (((int)EProgCounter()) & 0x0f0000) )
              OpSize = 0;
          END            /* NOTE! This not an ASX bug, but rather in the CPU!! */
        switch (OpSize)

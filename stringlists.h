@@ -1,3 +1,5 @@
+#ifndef _STRINGLISTS_H
+#define _STRINGLISTS_H
 /* stringlists.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -41,3 +43,4 @@ extern Boolean StringListPresent(StringList List, char *Search);
 
 
 extern void stringlists_init(void);
+#endif /* _STRINGLISTS_H */

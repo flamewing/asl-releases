@@ -1,3 +1,5 @@
+#ifndef _ASMINCLIST_H
+#define _ASMINCLIST_H
 /* asminclist.c */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -17,3 +19,4 @@ extern void PrintIncludeList(void);
 extern void ClearIncludeList(void);
 
 extern void asminclist_init(void);
+#endif /* _ASMINCLIST_H */

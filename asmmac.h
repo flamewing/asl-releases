@@ -1,3 +1,5 @@
+#ifndef _ASMMAC_H
+#define _ASMMAC_H
 /* asmmac.h  */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -104,3 +106,4 @@ extern void ExpandDefines(char *Line);
 
 
 extern void asmmac_init(void);
+#endif /* _ASMMAC_H */

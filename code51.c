@@ -1280,7 +1280,7 @@ BEGIN
      AdrLong = EvalIntExpression(ArgStr[1], Int24, &OK);
      if (OK)
       BEGIN
-       if ((NOT SymbolQuestionable) AND (((EProgCounter() + 2) >> 11) != (AdrLong >> 11))) WrError(1910);
+       if ((NOT SymbolQuestionable) AND (((((long)EProgCounter()) + 2) >> 11) != (AdrLong >> 11))) WrError(1910);
        else if (Chk504(EProgCounter())) WrError(1900);
        else
         BEGIN
@@ -1322,7 +1322,7 @@ BEGIN
      AdrLong=EvalIntExpression(ArgStr[1],Int24,&OK);
      if (OK)
       BEGIN
-       if ((MomCPU>=CPU80251) AND (((EProgCounter()+3) >> 16)!=(AdrLong >> 16))) WrError(1910);
+       if ((MomCPU>=CPU80251) AND (((((long)EProgCounter())+3) >> 16)!=(AdrLong >> 16))) WrError(1910);
        else
         BEGIN
          ChkSpace(SegCode);
@@ -1403,13 +1403,13 @@ BEGIN
          PutCode(0x80);
          BAsmCode[CodeLen++] = Dist & 0xff;
         END
-       else if ((NOT Chk504(EProgCounter())) AND ((AdrLong >> 11)==((EProgCounter()+2) >> 11)))
+       else if ((NOT Chk504(EProgCounter())) AND ((AdrLong >> 11)==((((long)EProgCounter())+2) >> 11)))
         BEGIN
          PutCode(0x01 + ((Hi(AdrLong) & 7) << 5));
          BAsmCode[CodeLen++] = Lo(AdrLong);
         END
        else if (MomCPU<CPU8051) WrError(1910);
-       else if (((EProgCounter()+3) >> 16)==(AdrLong >> 16))
+       else if (((((long)EProgCounter())+3) >> 16)==(AdrLong >> 16))
         BEGIN
          PutCode(0x02);
          BAsmCode[CodeLen++] = Hi(AdrLong); 
@@ -1450,13 +1450,13 @@ BEGIN
        AdrLong=EvalIntExpression(ArgStr[1],UInt24,&OK);
        if (OK)
         BEGIN
-         if ((NOT Chk504(EProgCounter())) AND ((AdrLong >> 11)==((EProgCounter()+2) >> 11)))
+         if ((NOT Chk504(EProgCounter())) AND ((AdrLong >> 11)==((((long)EProgCounter())+2) >> 11)))
           BEGIN
            PutCode(0x11 + ((Hi(AdrLong) & 7) << 5));
            BAsmCode[CodeLen++] = Lo(AdrLong);
           END
          else if (MomCPU<CPU8051) WrError(1910);
-         else if ((AdrLong >> 16)!=((EProgCounter()+3) >> 16)) WrError(1910);
+         else if ((AdrLong >> 16)!=((((long)EProgCounter())+3) >> 16)) WrError(1910);
          else
           BEGIN
            PutCode(0x12);

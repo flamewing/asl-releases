@@ -846,3 +846,7 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 - Bugfix      : do not allow line debug info in pseudo segments
 
 - Bugfix      : more secure detection of ASCII integer constants
+
+2001-11-04 [Bld 17]
+
+- Extension   : added -gnuerrors command line option

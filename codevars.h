@@ -1,3 +1,5 @@
+#ifndef _CODEVARS_H
+#define _CODEVARS_H
 /* codevars.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -10,3 +12,4 @@
 
 extern int InstrZ;
 extern int AdrCnt;
+#endif /* _CODEVARS_H */

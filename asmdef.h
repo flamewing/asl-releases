@@ -1,3 +1,5 @@
+#ifndef _ASMDEF_H
+#define _ASMDEF_H
 /* asmdef.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -28,6 +30,7 @@
 /*            1.11.2000 added RelSegs flag                                   */
 /*           24.12.2000 added NoICEMask                                      */
 /*           2001-09-29 add segment name for STRUCT (just to be sure...)     */
+/*           2001-10-20 added GNU error flag                                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -111,7 +114,7 @@ typedef struct _TPatchEntry
           struct _TPatchEntry *Next;
           LargeWord Address;
           char *Ref;
-          int len;
+          Word len;
           LongWord RelocType;
         } TPatchEntry, *PPatchEntry;
 
@@ -119,7 +122,7 @@ typedef struct _TExportEntry
         {
           struct _TExportEntry *Next;
           char *Name;
-          int len;
+          Word len;
           LongWord Flags;
           LargeWord Value;
         } TExportEntry, *PExportEntry;
@@ -327,6 +330,7 @@ extern Boolean MsgIfRepass;
 extern Integer PassNoForMessage;
 extern Boolean CaseSensitive;
 extern LongInt NestMax;
+extern Boolean GNUErrors;
 
 extern FILE *PrgFile;
 
@@ -424,3 +428,4 @@ extern void Default_InternSymbol(char *Asc, TempResult *Erg);
 
 
 extern void asmdef_init(void);
+#endif /* _ASMDEF_H */

@@ -1,3 +1,5 @@
+#ifndef _IOERRS_H
+#define _IOERRS_H
 /* ioerrs.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -11,3 +13,4 @@
 extern char *GetErrorMsg(int number);
 
 extern void ioerrs_init(char *ProgPath);
+#endif /* _IOERRS_H */

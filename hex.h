@@ -1,3 +1,5 @@
+#ifndef _HEX_H
+#define _HEX_H
 /* hex.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -17,3 +19,4 @@ extern char *HexWord(Word inp);
 extern char *HexLong(LongWord inp);
 
 extern void hex_init(void);
+#endif /* _HEX_H */

@@ -1,3 +1,5 @@
+#ifndef _ASMITREE_H
+#define _ASMITREE_H
 /* asmitree.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -63,3 +65,4 @@ extern Boolean LookupInstTable(PInstTable tab, char *Name);
 extern void PrintInstTable(FILE *stream, PInstTable tab);
 
 extern void asmitree_init(void);
+#endif /* _ASMITREE_H */

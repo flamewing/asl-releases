@@ -1,3 +1,5 @@
+#ifndef _USHYPH_H
+#define _USHYPH_H
 /* ushyph.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -12,3 +14,4 @@
 extern char *USHyphens[];
 
 extern char *USExceptions[];
+#endif /* _USHYPH_H */

@@ -1,3 +1,5 @@
+#ifndef _PASCSTYLE_H
+#define _PASCSTYLE_H
 #define BEGIN {
 #define END }
 
@@ -15,3 +17,4 @@
 #define Ord(b) ((b)?1L:0L)
 
 #define MaxLongInt 2147483647
+#endif /* _PASCSTYLE_H */

@@ -1,3 +1,5 @@
+#ifndef _CODEMCORE_H
+#define _CODEMCORE_H
 /* codemcore.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -9,3 +11,4 @@
 /*****************************************************************************/
 
 extern void codemcore_init(void);
+#endif /* _CODEMCORE_H */

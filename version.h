@@ -1,3 +1,5 @@
+#ifndef _VERSION_H
+#define _VERSION_H
 /* version.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -12,3 +14,4 @@ extern char *Version;
 extern LongInt VerNo;
 
 extern char *InfoMessCopyright;
+#endif /* _VERSION_H */

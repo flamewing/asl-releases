@@ -9,6 +9,34 @@ t_16c84.asm(50) : warning  : obsolete instruction, usage discouraged
 t_3203x.asm(259) : warning  : multiple use of address register in one instruction
 t_3203x.asm(259) : warning  : unpredictable execution of this instruction
 t_3203x.asm(261) : warning  : multiple use of address register in one instruction
+t_6805.asm(59): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(65): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(71): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(77): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(83): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(89): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(95): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(101): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(107): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(113): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(119): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(141): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(148): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(155): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(162): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(169): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(176): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(183): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(189): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(196): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(203): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(210): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(217): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(223): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(230): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(237): warning: single X operand interpreted as indexed and not implicit addressing
+t_6805.asm(243): warning: single X operand interpreted as indexed and not implicit addressing
+t_6808.asm(208): warning: single X operand interpreted as indexed and not implicit addressing
 t_7000.asm(95) : warning  : possible pipelining effects
 t_7000.asm(96) : warning  : possible pipelining effects
 t_7000.asm(97) : warning  : possible pipelining effects

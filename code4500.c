@@ -281,7 +281,7 @@ BEGIN
        AdrWord=EvalIntExpression(ArgStr[1],UInt13,&OK);
        if (OK)
         BEGIN
-         if ((NOT SymbolQuestionable) AND ((EProgCounter() >> 7)!=(AdrWord >> 7))) WrError(1910);
+         if ((NOT SymbolQuestionable) AND ((((int)EProgCounter()) >> 7)!=(AdrWord >> 7))) WrError(1910);
          else
           BEGIN
            CodeLen=1; WAsmCode[0]=0x180+(AdrWord&0x7f);

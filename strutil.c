@@ -43,10 +43,10 @@ END
 
 #define BufferCnt 8
 
-	char *HexString(LargeWord i, int Stellen)
+	char *HexString(LargeWord i, Byte Stellen)
 BEGIN
    static ShortString h[BufferCnt];
-   static int z = 0;
+   static int z = 0, Cnt;
    LargeWord digit;
    char *ptr;
 
@@ -54,7 +54,7 @@ BEGIN
     Stellen = sizeof(ShortString) - 1;
 
    ptr = h[z] + sizeof(ShortString) - 1;
-   *ptr = '\0';
+   *ptr = '\0'; Cnt = Stellen;
    do
     BEGIN
      digit = i & 15;
@@ -65,19 +65,19 @@ BEGIN
      else
       *(--ptr) = digit - 10 + 'A';
      i = i >> 4;
-     Stellen--;
+     Cnt--;
     END
-   while ((Stellen > 0) OR (i != 0));
+   while ((Cnt > 0) OR (i != 0));
 
    z = (z + 1) % BufferCnt;
 
    return ptr;
 END
 
-	char *SysString(LargeWord i, LargeWord System, int Stellen)
+	char *SysString(LargeWord i, LargeWord System, Byte Stellen)
 BEGIN
    static ShortString h[BufferCnt];
-   static int z = 0;
+   static int z = 0, Cnt;
    LargeWord digit;
    char *ptr;
 
@@ -85,7 +85,7 @@ BEGIN
     Stellen = sizeof(ShortString) - 1;
 
    ptr = h[z] + sizeof(ShortString) - 1;
-   *ptr = '\0';
+   *ptr = '\0'; Cnt = Stellen;
    do
     BEGIN
      digit = i % System;
@@ -96,9 +96,9 @@ BEGIN
      else
       *(--ptr) = digit - 10 + 'A';
      i /= System;
-     Stellen--;
+     Cnt--;
     END
-   while ((Stellen > 0) OR (i != 0));
+   while ((Cnt > 0) OR (i != 0));
 
    z = (z + 1) % BufferCnt;
 
@@ -273,7 +273,7 @@ END
 BEGIN
    int RLen;
    
-   RLen=strlen(Src); if (RLen>MaxLen-strlen(Dest)) RLen=MaxLen-strlen(Dest);
+   RLen = strlen(Src); if ( RLen > MaxLen - ((int)strlen(Dest))) RLen = MaxLen - strlen(Dest);
    memmove(Dest+RLen,Dest,strlen(Dest)+1);
    memmove(Dest,Src,RLen);
 END
@@ -288,7 +288,7 @@ END
 BEGIN
    int RLen;
 
-   RLen=strlen(Src); if (RLen>MaxLen-strlen(Dest)) RLen=MaxLen-strlen(Dest);
+   RLen = strlen(Src); if (RLen > MaxLen - ((int)strlen(Dest))) RLen = MaxLen - strlen(Dest);
    memmove(Dest+Pos+RLen,Dest+Pos,strlen(Dest)+1-Pos);
    memmove(Dest+Pos,Src,RLen);
 END

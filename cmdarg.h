@@ -1,3 +1,5 @@
+#ifndef _CMDARG_H
+#define _CMDARG_H
 /* cmdarg.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -5,6 +7,7 @@
 /* Verarbeitung Kommandozeilenparameter                                      */
 /*                                                                           */
 /* Historie:  4. 5.1996 Grundsteinlegung                                     */
+/*            2001-10-20: option string is pointer instead of array          */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -25,7 +28,7 @@ Boolean InEnv, char *Arg
 
 typedef struct
          {
-          char Ident[11]; 
+          char *Ident; 
           CMDCallback Callback;
          } CMDRec;
          
@@ -44,3 +47,4 @@ extern void ProcessCMD(CMDRec *Def, Integer Cnt, CMDProcessed Unprocessed,
 extern char *GetEXEName(void);
 
 extern void cmdarg_init(char *ProgPath);
+#endif /* _CMDARG_H */

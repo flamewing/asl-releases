@@ -1,3 +1,5 @@
+#ifndef _STRUTIL_H
+#define _STRUTIL_H
 /* strutil.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -15,9 +17,9 @@ extern Boolean HexLowerCase;
 
 extern char *Blanks(int cnt);
 
-extern char *HexString(LargeWord i, int Stellen);
+extern char *HexString(LargeWord i, Byte Stellen);
 
-extern char *SysString(LargeWord i, LargeWord System, int Stellen);
+extern char *SysString(LargeWord i, LargeWord System, Byte Stellen);
 
 extern char *HexBlankString(LargeWord i, Byte Stellen);
 
@@ -68,3 +70,4 @@ extern void KillPostBlanks(char *s);
 extern int strqcmp(const char *s1, const char *s2);
   
 extern void strutil_init(void);
+#endif /* _STRUTIL_H */

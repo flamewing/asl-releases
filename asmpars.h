@@ -1,3 +1,5 @@
+#ifndef _ASMPARS_H
+#define _ASMPARS_H
 /* asmpars.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -12,6 +14,7 @@
 /*           21. 5.2000 added TmpSymCounter                                  */
 /*           24. 5.2001 added UInt21 type                                    */
 /*            3. 8.2001 added SInt6 type                                     */
+/*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -35,6 +38,7 @@ typedef enum {UInt1    ,
               SInt20   ,UInt20   , Int20   ,
               UInt21   ,
               UInt22   ,
+              UInt23   ,
               SInt24   ,UInt24   , Int24   ,
               SInt32   ,UInt32   , Int32   ,
 #ifdef HAS64
@@ -213,3 +217,4 @@ extern void PrintCodepages(void);
 
 extern void asmpars_init(void);
 
+#endif /* _ASMPARS_H */

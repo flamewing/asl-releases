@@ -1,3 +1,5 @@
+#ifndef _MYENDIAN_H
+#define _MYENDIAN_H
 /* endian.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
@@ -87,3 +89,4 @@ extern char *Dec32BlankString(LongInt number, int Stellen);
 
 
 extern void endian_init(void);
+#endif /* _MYENDIAN_H */

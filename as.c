@@ -52,6 +52,7 @@
 /*            9. 6.2001 moved initialization of DoPadding before CPU-specific*/
 /*                      initialization, to allow CPU-specific override       */
 /*           2001-07-07 added intiialization of C54x generator               */
+/*           2001-10-20 GNU error style possible                             */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -1457,25 +1458,26 @@ BEGIN
    String Tmp;
    UNUSED(PInp);
 
-   sprintf(Tmp,LongIntFormat,CurrLine);
-   sprintf(dest,"%s(%s) ",NamePart(CurrFileName),Tmp);
-   return True;
+   sprintf(Tmp, LongIntFormat, PInp->LineZ);
+   sprintf(dest, GNUErrors ? "%s:%s" : "%s(%s) ", NamePart(PInp->SpecName), Tmp);
+   return !GNUErrors;
 END
 
         Boolean INCLUDE_Processor(PInputTag PInp, char *Erg)
 BEGIN
    Boolean Result;
 
-   Result=True;
+   Result = True;
 
-   if (feof(PInp->Datei)) *Erg='\0';
+   if (feof(PInp->Datei))
+    *Erg = '\0';
    else
     BEGIN
-     ReadLn(PInp->Datei,Erg);
+     ReadLn(PInp->Datei, Erg);
      /**ChkIO(10003);**/
     END
-   CurrLine=(++MomLineCounter);
-   if (feof(PInp->Datei)) Result=False;
+   PInp->LineZ = CurrLine = (++MomLineCounter);
+   if (feof(PInp->Datei)) Result = False;
 
    return Result;
 END
@@ -1483,7 +1485,7 @@ END
         static void INCLUDE_Restorer(PInputTag PInp)
 BEGIN
    MomLineCounter=PInp->StartLine;
-   strmaxcpy(CurrFileName,PInp->SpecName,255);
+   strmaxcpy(CurrFileName,PInp->SaveAttr,255);
    IncDepth--;
 END
 
@@ -1520,7 +1522,8 @@ BEGIN
    /* Sicherung alter Daten */
 
    Tag->StartLine=MomLineCounter;
-   strmaxcpy(Tag->SpecName,CurrFileName,255);
+   strmaxcpy(Tag->SpecName, ArgPart, 255);
+   strmaxcpy(Tag->SaveAttr, CurrFileName, 255);
 
    /* Datei oeffnen */
 
@@ -1530,7 +1533,7 @@ BEGIN
 
    /* neu besetzen */
 
-   strmaxcpy(CurrFileName,ArgPart,255); MomLineCounter=0;
+   strmaxcpy(CurrFileName,ArgPart,255); Tag->LineZ = MomLineCounter = 0;
    NextIncDepth++; AddFile(ArgPart);
    PushInclude(ArgPart);
 
@@ -1570,23 +1573,81 @@ BEGIN
 END
 
 	char *GetErrorPos(void)
-BEGIN
+{
    String ActPos;
    PInputTag RunTag;
    char *ErgPos=strdup(""),*tmppos;
    Boolean Last;
    
-   for (RunTag=FirstInputTag; RunTag!=Nil; RunTag=RunTag->Next)
-    BEGIN
-     Last=RunTag->GetPos(RunTag,ActPos);
-     tmppos=(char *) malloc(strlen(ErgPos)+strlen(ActPos)+1);
-     strcpy(tmppos,ActPos); strcat(tmppos,ErgPos);
-     free(ErgPos); ErgPos=tmppos;
-     if (Last) break;
-    END
+   /* for GNU error message style: */
+
+   if (GNUErrors)
+   {
+     PInputTag InnerTag = NULL;
+     Boolean First = TRUE;
+     char *Msg;
+
+     /* we only honor the include positions.  First, print the upper include layers... */
+
+     for (RunTag = FirstInputTag; RunTag; RunTag = RunTag->Next)
+       if (RunTag->GetPos == INCLUDE_GetPos)
+       {
+         if (!InnerTag)
+           InnerTag = RunTag;
+         else
+         {
+           Last = RunTag->GetPos(RunTag, ActPos);
+           if (First)
+           {
+             Msg = getmessage(Num_GNUErrorMsg1);
+             tmppos = (char *) malloc(strlen(Msg) + 1 + strlen(ActPos) + 1);
+             sprintf(tmppos, "%s %s", Msg, ActPos);
+           }
+           else
+           {
+             Msg = getmessage(Num_GNUErrorMsgN);
+             tmppos = (char *) malloc(strlen(ErgPos) + 2 + strlen(Msg) + 1 + strlen(ActPos) + 1);
+             sprintf(tmppos, "%s,\n%s %s", ErgPos, Msg, ActPos);
+           }
+           First = False;
+           free(ErgPos); ErgPos = tmppos;
+         }
+       }
+
+     /* ...append something... */
+
+     if (*ErgPos)
+     {
+       tmppos = (char *) malloc(strlen(ErgPos) + 2);
+       sprintf(tmppos, "%s:\n", ErgPos);
+       free(ErgPos); ErgPos = tmppos;
+     }
+
+     /* ...then the innermost one */
+
+     if (InnerTag)
+     {
+       InnerTag->GetPos(InnerTag, ActPos);
+       tmppos = (char *) malloc(strlen(ErgPos) + strlen(ActPos) + 1);
+       sprintf(tmppos, "%s%s", ErgPos, ActPos);
+       free(ErgPos); ErgPos = tmppos;
+     }
+   }
+
+   /* otherwise the standard AS position generator: */
+
+   else
+     for (RunTag = FirstInputTag; RunTag != Nil; RunTag = RunTag->Next)
+     {
+       Last = RunTag->GetPos(RunTag, ActPos);
+       tmppos = (char *) malloc(strlen(ErgPos) + strlen(ActPos) + 1);
+       strcpy(tmppos, ActPos); strcat(tmppos, ErgPos);
+       free(ErgPos); ErgPos = tmppos;
+       if (Last) break;
+     }
 
    return ErgPos;
-END
+}
 
         static Boolean InputEnd(void)
 BEGIN
@@ -2774,6 +2835,14 @@ BEGIN
    return CMDOK;
 END
 
+        static CMDResult CMD_GNUErrors(Boolean Negate, char *Arg)
+BEGIN
+   UNUSED(Arg);
+
+   GNUErrors = NOT Negate;
+   return CMDOK;
+END
+
         static CMDResult CMD_IncludeList(Boolean Negate, char *Arg)
 BEGIN
    char *p;
@@ -3022,43 +3091,44 @@ BEGIN
    exit(4);
 END
 
-#define ASParamCnt 35
+#define ASParamCnt 36
 static CMDRec ASParams[ASParamCnt]=
-              {{"A"    , CMD_BalanceTree},
-               {"ALIAS", CMD_CPUAlias},
-               {"a"    , CMD_ShareAssembler},
-               {"C"    , CMD_CrossList},
-               {"c"    , CMD_ShareC},
-               {"CPU"  , CMD_SetCPU},
-               {"D"    , CMD_DefSymbol},
-               {"E"    , CMD_ErrorPath},
-               {"g"    , CMD_DebugMode},
-               {"G"    , CMD_CodeOutput},
-               {"h"    , CMD_HexLowerCase},
-               {"i"    , CMD_IncludeList},
-               {"I"    , CMD_MakeIncludeList},
-               {"L"    , CMD_ListFile},
-               {"l"    , CMD_ListConsole},
-               {"M"    , CMD_MacroOutput},
-               {"n"    , CMD_NumericErrors},
-               {"NOICEMASK", CMD_NoICEMask},
-               {"o"    , CMD_OutFile},
-               {"P"    , CMD_MacProOutput},
-               {"p"    , CMD_SharePascal},
-               {"q"    , CMD_QuietMode},
-               {"QUIET", CMD_QuietMode},
-               {"r"    , CMD_MsgIfRepass},
-               {"s"    , CMD_SectionList},
-               {"SHAREOUT", CMD_ShareOutFile},
-               {"OLIST", CMD_ListOutFile},
-               {"t"    , CMD_ListMask},
-               {"u"    , CMD_UseList},
-               {"U"    , CMD_CaseSensitive},
-               {"w"    , CMD_SuppWarns},
-               {"WARNRANGES", CMD_HardRanges},
-               {"x"    , CMD_ExtendErrors},
-               {"X"    , CMD_MakeDebug},
-               {"Y"    , CMD_ThrowErrors}};
+              {{"A"             , CMD_BalanceTree},
+               {"ALIAS"         , CMD_CPUAlias},
+               {"a"             , CMD_ShareAssembler},
+               {"C"             , CMD_CrossList},
+               {"c"             , CMD_ShareC},
+               {"CPU"           , CMD_SetCPU},
+               {"D"             , CMD_DefSymbol},
+               {"E"             , CMD_ErrorPath},
+               {"g"             , CMD_DebugMode},
+               {"G"             , CMD_CodeOutput},
+               {"GNUERRORS"     , CMD_GNUErrors},
+               {"h"             , CMD_HexLowerCase},
+               {"i"             , CMD_IncludeList},
+               {"I"             , CMD_MakeIncludeList},
+               {"L"             , CMD_ListFile},
+               {"l"             , CMD_ListConsole},
+               {"M"             , CMD_MacroOutput},
+               {"n"             , CMD_NumericErrors},  
+               {"NOICEMASK"     , CMD_NoICEMask},
+               {"o"             , CMD_OutFile},
+               {"P"             , CMD_MacProOutput},
+               {"p"             , CMD_SharePascal},
+               {"q"             , CMD_QuietMode},
+               {"QUIET"         , CMD_QuietMode},
+               {"r"             , CMD_MsgIfRepass},
+               {"s"             , CMD_SectionList},
+               {"SHAREOUT"      , CMD_ShareOutFile},
+               {"OLIST"         , CMD_ListOutFile},
+               {"t"             , CMD_ListMask},
+               {"u"             , CMD_UseList},
+               {"U"             , CMD_CaseSensitive},
+               {"w"             , CMD_SuppWarns},
+               {"WARNRANGES"    , CMD_HardRanges},
+               {"x"             , CMD_ExtendErrors},
+               {"X"             , CMD_MakeDebug},
+               {"Y"             , CMD_ThrowErrors}};
 
 /*--------------------------------------------------------------------------*/
 
@@ -3204,6 +3274,7 @@ BEGIN
    NumericErrors = False; DebugMode = DebugNone; CaseSensitive = False;
    ThrowErrors = False; HardRanges = True;
    NoICEMask = 1 << SegCode; 
+   GNUErrors = False;
 
    LineZ=0;
 

@@ -1,3 +1,6 @@
+#ifndef _AS1750_H
+#define _AS1750_H
+
 /* as1750.h  --  exports of as1750.c */
 
 extern void init_as1750 ();
@@ -16,3 +19,5 @@ extern status error (char *layout, ...);
 #define ERROR     0xFFFD
 #define NO_OPCODE 0xFFFE
 #endif
+
+#endif /* _AS1750_H */

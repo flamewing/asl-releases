@@ -33,5 +33,4 @@ extern void TransferRelocs2(PRelocEntry RelocList, LargeWord Addr, LongWord Type
 extern void SubPCRefReloc(void);
 
 extern void AddExport(char *Name, LargeInt Value, LongWord Flags);
-
 #endif /* _ASMRELOCS_H */
