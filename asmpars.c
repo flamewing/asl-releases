@@ -36,9 +36,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.12 2002/11/10 15:08:34 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.13 2003/02/02 12:15:21 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.c,v $
+ * Revision 1.13  2003/02/02 12:15:21  alfred
+ * - added exptype() function
+ *
  * Revision 1.12  2002/11/10 15:08:34  alfred
  * - use tree functions
  *
@@ -1654,6 +1657,21 @@ static Operator Operators[OpCnt+1]=
        else WrXError(1860,ftemp);
        LEAVE;
       END
+
+     /* expression type ? */
+
+     if (!strcmp(ftemp, "EXPRTYPE"))
+     {
+       Erg->Typ=TempInt;
+       switch (LVal.Typ)
+       {
+         case TempInt: Erg->Contents.Int = 0; break;
+         case TempFloat: Erg->Contents.Int = 1; break;
+         case TempString: Erg->Contents.Int = 2; break;
+         default: Erg->Contents.Int = -1;
+       }
+       LEAVE;
+     }
 
      /* Funktionen fuer Stringargumente */
 

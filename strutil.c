@@ -296,31 +296,67 @@ END
 /*---------------------------------------------------------------------------*/
 /* Bis Zeilenende lesen */
 
-        void ReadLn(FILE *Datei, char *Zeile)
-BEGIN
-/*   int Zeichen='\0'; 
-   char *Run=Zeile;
-
-   while ((Zeichen!='\n') AND (Zeichen!=EOF) AND (!feof(Datei)))
-    BEGIN
-     Zeichen=fgetc(Datei);
-     if (Zeichen!=26) *Run++=Zeichen;
-    END
-
-   if ((Run>Zeile) AND ((Zeichen==EOF) OR (Zeichen=='\n'))) Run--;
-   if ((Run>Zeile) AND (Run[-1]==13)) Run--;
-   *Run++='\0';*/
-
+         void ReadLn(FILE *Datei, char *Zeile)
+{
    char *ptr;
    int l;
-
+ 
    *Zeile='\0'; ptr=fgets(Zeile,256,Datei);
    if ((ptr==Nil) AND (ferror(Datei)!=0)) *Zeile='\0';
    l=strlen(Zeile);
    if ((l>0) AND (Zeile[l-1]=='\n')) Zeile[--l]='\0';
    if ((l>0) AND (Zeile[l-1]=='\r')) Zeile[--l]='\0';
    if ((l>0) AND (Zeile[l-1]==26)) Zeile[--l]='\0';
-END
+}
+
+        int ReadLnCont(FILE *Datei, char *Zeile, int MaxLen)
+{
+   char *ptr, *pDest;
+   int l, RemLen, Count;
+   Boolean cont;
+
+   /* read from input until either string has reached maximum length,
+      or no continuation is present */
+
+   RemLen = MaxLen; pDest = Zeile; Count = 0;
+   do
+   {
+     /* get a line from file */
+
+     *pDest = '\0'; ptr = fgets(pDest, RemLen, Datei);
+     if ((ptr==Nil) AND (ferror(Datei) != 0))
+       *pDest = '\0';
+
+     /* strip off trailing CR/LF */
+
+     l = strlen(pDest); cont = False;
+     if ((l > 0) && (pDest[l - 1] == '\n'))
+       pDest[--l] = '\0';
+     if ((l > 0) && (pDest[l - 1] == '\r'))
+       pDest[--l] = '\0';
+
+     /* yes - this is necessary, when we get an old DOS textfile with
+        Ctrl-Z as EOF */
+
+     if ((l > 0) && (pDest[l - 1] == 26))
+       pDest[--l] = '\0';
+
+     /* optional line continuation */
+
+     if ((l > 0) && (pDest[l - 1] == '\\'))
+     {
+       pDest[--l] = '\0';
+       cont = True;
+     }
+
+     /* prepare for next chunk */
+
+     RemLen -= l; pDest += l; Count++;
+   }
+   while ((RemLen > 2) && (cont));
+
+   return Count;
+}
 
 /*--------------------------------------------------------------------*/
 /* Zahlenkonstante umsetzen: $ hex, % binaer, @ oktal */

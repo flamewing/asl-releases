@@ -336,14 +336,12 @@ Nach soviel Lobhudelei ein dicker Wermutstropfen: AS erzeugt keinen
 linkf"ahigen Code.  Eine Erweiterung um einen Linker w"are mit erheblichem
 Aufwand verbunden und ist momentan nicht in Planung.
 \par
-Zum Thema ,,Herausgabe von Sourcen'': Die Sourcen von AS sind nicht
-in einer Form, die ein einfaches Verst"andnis erm"oglicht (== null
-Kommentare).  Sourcen werde ich daher nur f"ur den Fall herausgeben,
-da"s jemand wirklich damit etwas anfangen will (z.B. AS auf
-einen anderen Rechner portieren) und das daraus entstehende wiederum
-Public Domain wird.  Insbesondere will ich verhindern, da"s jemand
-5 Zeilen "andert (bevorzugt den Copyrighteintrag) und das Ergebnis
-dann kommerziell als ,,sein'' Programm vertreibt.
+Wer einen Blick in die Quellen von AS werfen will, besorge sich einfach
+die Unix-Version von AS, die als Quelltext zum Selber"ubersetzen kommt.
+Die Quellen sind mit Sicherheit nicht in einem Format, da"s das
+Verst"andnis m"oglichst leicht macht - an vielen Stellen schaut noch
+der originale Pascal-Quellcode heraus, und ich teile einige h"aufig
+vertretene Ansichten "uber 'guten' C-Stil nicht...
 
 %%----------------------------------------------------------------------
 
@@ -1143,6 +1141,13 @@ Eine einzelne Zeile hat folgendes Format:
 \begin{verbatim}
 [Label[:]]<Befehl>[.Attribut] [Parameter[,Parameter..]] [;Kommentar]
 \end{verbatim}
+Eine Zeile darf dabei auch "uber mehrere Zeilen in der Quelldatei
+verteilt sein, Folgezeichen (\verb!\!) verketten diese Teile dann zu
+einer einzigen Zeile.  Zu beachten ist allerdings, da"s aufgrund der 
+internen Pufferstruktur die Gesamtzeile nicht 256 Zeichen "uberschreiten
+darf.  Zeilenangaben in Fehlermeldungen beziehen sich immer auf die
+letzte Zeile einer solchen zusammengesetzten Zeile.
+\par
 Der Doppelpunkt nach dem Label ist optional, falls das Label in der
 ersten Spalte beginnt (woraus folgt, da"s der Befehl niemals in Spalte
 1 beginnen darf).  Man mu"s ihn aber setzen, falls das Label nicht
@@ -1894,6 +1899,9 @@ STRSTR    & sucht Teilstring in  & String, & Integer \\
           & einem String         & String & \\
 VAL       & evaluiert Stringin-  & String & abh. von \\
           & halt als Ausdruck    &        & Argument \\
+EXPRTYPE  & liefert Typ des      & Integer, & 0 \\
+          & Arguments            & Gleitkomma, & 1 \\
+          &                      & String & 2 \\
 \hline
 \end{tabular}\end{center}
 \caption{vordefinierte Funktionen in AS - Teil 2
@@ -11140,6 +11148,8 @@ oder ich werde langsam alt...
       \item{namenlose tempor"are Symbole hinzugef"ugt;}
       \item{unterst"utzt zus"atzlich die undokumentierten 8085-Befehle;}
       \item{verbesserte Behandlung von Strukturen;}
+      \item{Funktion EXPRTYPE() hinzugef"ugt;}
+      \item{Zeilenfortsetzungszeichen zulassen;}
       \end{itemize}}
 \end{itemize}
 

@@ -343,13 +343,11 @@ After so much praise a bitter pill: AS cannot generate linkable code.
 An extension with a linker needs considerable effort and is not planned 
 at the moment.
 
-As regards ''release of sources'': the sources of AS are not
-presented in a form which allows easy understanding (== no
-comments). So I will emit sources only in case somebody really wants
-to work on it (e.g.  to port AS into another computer system) and the
-derivates become again Public Domain.  Particularly I want to prevent
-that someone changes 5 lines (most popular the copyright entry) and
-sell the result commercially as ''his own'' program.
+Those who want to take a look at the sources of AS can simply get the 
+Unix version of AS, which comes as source for self-compiling.  The sources
+are definitely not in a format that is targeted at easy understanding -
+the original Pascal version still raises its head at a couple of places,
+and I do not share a couple of common opinions about 'good' C coding.
 
 %%---------------------------------------------------------------------------
 
@@ -1124,6 +1122,13 @@ A single line has following format:
 \begin{verbatim}
 [label[:]] <mnemonic>[.attr] [param[,param..]] [;comment]
 \end{verbatim}
+A line may also be split over several lines in the source file,
+continuation characters chain these parts together to a single line.  One
+must however consider that, due to the internal buffer structure, the
+total line must not be longer than 256 characters.  Line references in
+error messages always relate to the last line of such a composed source
+line.
+\par
 The colon for the label is optional, in case the label starts in the
 first column (the consequence is that a mnemonic must not start in
 column 1).  It is necessary to set the colon in case the label does
@@ -1862,6 +1867,9 @@ STRSTR   & searches a substring & string,              & integer \\
          & in a string          & string               & \\
 VAL      & evaluates contents   & string               & depends on \\
          & as expression        &                      & argument \\
+EXPRTYPE & delivers type of     & integer,             & 0 \\
+         & argument             & float,               & 1 \\
+         &                      & string               & 2 \\
 \hline
 \end{tabular}\end{center}
 \caption{Functions Predefined by AS - Part 2 (Integer and
@@ -10895,6 +10903,8 @@ Either that was a long nightshift or I am slowly getting old...
       \item{added nameless temporary smbols;}
       \item{additionally supports the undocumented 8085 instructions;}
       \item{improved structure handling;}
+      \item{added EXPRTYPE() function;}
+      \item{allow line continuation;}
       \end{itemize}}
 \end{itemize}
 

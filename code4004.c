@@ -18,9 +18,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code4004.c,v 1.2 2002/08/14 18:43:48 alfred Exp $                          */
+/* $Id: code4004.c,v 1.3 2003/02/01 18:04:53 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code4004.c,v $
+ * Revision 1.3  2003/02/01 18:04:53  alfred
+ * - fixed JCN arguments
+ *
  * Revision 1.2  2002/08/14 18:43:48  alfred
  * - warn null allocation, remove some warnings
  *
@@ -213,37 +216,42 @@ BEGIN
 END
 
         static void DecodeJCN(Word Index)
-BEGIN
+{
    Word AdrInt;
    Boolean OK;
+   char *pCond;
+
    UNUSED(Index);
 
    if (ArgCnt != 2) WrError(1110);
    else
-    BEGIN
+   {
      BAsmCode[0] = 0x10;
-     if (strcasecmp(ArgStr[1], "Z") == 0) BAsmCode[0] += 4;
-     else if (strcasecmp(ArgStr[1], "NZ") == 0) BAsmCode[0] += 12;
-     else if (strcasecmp(ArgStr[1], "C") == 0) BAsmCode[0] += 2;
-     else if (strcasecmp(ArgStr[1], "NC") == 0) BAsmCode[0] += 10;
-     else if (strcasecmp(ArgStr[1], "T") == 0) BAsmCode[0] += 1;
-     else if (strcasecmp(ArgStr[1], "NT") == 0) BAsmCode[0] += 9;
-     if (BAsmCode[0] == 0x10) WrXError(1360, ArgStr[1]);
+     for (pCond = ArgStr[1]; *pCond; pCond++)
+       switch (toupper(*pCond))
+       {
+         case 'Z': BAsmCode[0] |= 4; break;
+         case 'C': BAsmCode[0] |= 2; break;
+         case 'T': BAsmCode[0] |= 1; break;
+         case 'N': BAsmCode[0] |= 8; break;
+         default: BAsmCode[0] = 0xff;
+       }
+     if (BAsmCode[0] == 0xff) WrXError(1360, ArgStr[1]);
      else
-      BEGIN
+     {
        AdrInt = EvalIntExpression(ArgStr[2], UInt12, &OK);
        if (OK)
-        BEGIN
+       {
          if ((NOT SymbolQuestionable) AND (Hi(EProgCounter() + 2) != Hi(AdrInt))) WrError(1370);
          else
-          BEGIN
+         {
            BAsmCode[1] = Lo(AdrInt);
            CodeLen = 2;
-          END
-        END
-      END
-    END
-END
+         }
+       }
+     }
+   }
+}
 
         static void DecodeFIM(Word Index)
 BEGIN

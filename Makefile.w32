@@ -85,6 +85,7 @@ bindist: $(UNUMLAUTTARGET)
 	mkdir as
 	cmd /cinstw32.cmd as\\bin as\\include as\\man as\\lib as\\doc
 	cd as; zip -9 -r ../as$(VERSION).zip *.*
+	zip -9 -r ../as$(VERSION).zip bin
 	rm -rf as
 
 #---------------------------------------------------------------------------

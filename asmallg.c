@@ -25,9 +25,12 @@
 /*                       to now                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmallg.c,v 1.9 2002/11/23 15:53:27 alfred Exp $                     */
+/* $Id: asmallg.c,v 1.10 2003/02/02 12:05:01 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmallg.c,v $
+ * Revision 1.10  2003/02/02 12:05:01  alfred
+ * - limit BINCLUDE transfer size to 256 bytes
+ *
  * Revision 1.9  2002/11/23 15:53:27  alfred
  * - SegLimits are unsigned now
  *
@@ -1079,7 +1082,7 @@ BEGIN
          OldPC = ProgCounter();
          do
           BEGIN
-           if (Rest < MaxCodeLen) Curr = Rest; else Curr = MaxCodeLen;
+           if (Rest <= 256) Curr = Rest; else Curr = 256;
            errno = 0; RLen = fread(BAsmCode, 1, Curr, F); ChkIO(10003);
            CodeLen = RLen;
            WriteBytes();

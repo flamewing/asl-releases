@@ -59,6 +59,8 @@ extern void strmaxins(char *Dest, const char *Src, int Pos, int MaxLen);
 
 extern void ReadLn(FILE *Datei, char *Zeile);
 
+extern int ReadLnCont(FILE *Datei, char *Zeile, int MaxLen);
+
 extern LongInt ConstLongInt(const char *inp, Boolean *err);
 
 extern void KillBlanks(char *s);

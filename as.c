@@ -58,9 +58,15 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.15 2002/11/20 20:25:04 alfred Exp $                          */
+/* $Id: as.c,v 1.17 2003/02/02 13:00:05 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.17  2003/02/02 13:00:05  alfred
+ * - use ReadLnCont()
+ *
+ * Revision 1.16  2003/01/29 21:25:41  alfred
+ * - do not convert IRP args when in case-sensitive mode
+ *
  * Revision 1.15  2002/11/20 20:25:04  alfred
  * - added unions
  *
@@ -1120,7 +1126,8 @@ BEGIN
 
    for (z1 = ArgCnt; z1 >= 2; z1--)
     BEGIN
-     UpString(ArgStr[z1]);
+     if (!CaseSensitive)
+       UpString(ArgStr[z1]);
      AddStringListFirst(&(Tag->Params), ArgStr[z1]);
     END
 
@@ -1599,6 +1606,7 @@ END
         Boolean INCLUDE_Processor(PInputTag PInp, char *Erg)
 BEGIN
    Boolean Result;
+   int Count = 1;
 
    Result = True;
 
@@ -1606,10 +1614,10 @@ BEGIN
     *Erg = '\0';
    else
     BEGIN
-     ReadLn(PInp->Datei, Erg);
+     Count = ReadLnCont(PInp->Datei, Erg, 256);
      /**ChkIO(10003);**/
     END
-   PInp->LineZ = CurrLine = (++MomLineCounter);
+   PInp->LineZ = CurrLine = (MomLineCounter += Count);
    if (feof(PInp->Datei)) Result = False;
 
    return Result;
