@@ -1,5 +1,9 @@
 include Makefile.def
 
+CURRDIR=./
+TAPE=/dev/ntape
+DATE=`date +"%d%m%Y"`
+
 include makedefs.src
 
 include objdefs.unix
@@ -59,7 +63,7 @@ install: $(ALLTARGETS)
 	./install.sh $(BINDIR) $(INCDIR) $(MANDIR) $(LIBDIR) $(DOCDIR)
 
 clean:
-	rm -f $(ALLTARGETS) *.$(OBJEXTENSION) *.p *.rsc tests/testlog
+	rm -f $(ALLTARGETS) $(RESCOMPTARGET) $(TEX2DOCTARGET) $(TEX2HTMLTARGET) *.$(OBJEXTENSION) *.p *.rsc tests/testlog
 	cd doc_DE; $(MAKE) RM="rm -f" clean
 	cd doc_EN; $(MAKE) RM="rm -f" clean
 
@@ -86,12 +90,12 @@ bindist:
 # for my own use only...
 
 tape: unjunk
-	tar cvf /dev/ntape $(ARCHFILES)
+	tar cvf $(TAPE) $(ARCHFILES)
 
-disk: archive
+disk: unjunk archive
 	mcopy -nvm asport.tar.gz a:ASPORT.TGZ
 
-disks: archives
+disks: unjunk archives
 	echo Insert disk 1...
 	read tmp
 	mcopy -nvm asport1.tar.gz a:ASPORT1.TGZ
@@ -99,40 +103,52 @@ disks: archives
 	read tmp
 	mcopy -nvm asport2.tar.gz a:ASPORT2.TGZ
 
-archive: asport.tar.gz
+archive: unjunk asport.tar.gz
 
-barchive: asport.tar.bz2
+barchive: unjunk asport.tar.bz2
 
-archives: asport1.tar.gz asport2.tar.gz
+archives: unjunk asport1.tar.gz asport2.tar.gz
 
-asport.tar.gz: $(ARCHFILES) unjunk
+asport.tar.gz: $(ARCHFILES)
 	tar cvf asport.tar $(ARCHFILES)
 	gzip -9 -f asport.tar
 
-asport.tar.bz2: $(ARCHFILES) unjunk
+asport.tar.bz2: $(ARCHFILES)
 	tar cvf asport.tar $(ARCHFILES)
 	bzip2 asport.tar
 
-asport1.tar.gz: $(ARCH1FILES) unjunk
+asport1.tar.gz: $(ARCH1FILES)
 	tar cvf asport1.tar $(ARCH1FILES)
 	gzip -9 -f asport1.tar
 
-asport2.tar.gz: $(ARCH2FILES) unjunk
+asport2.tar.gz: $(ARCH2FILES)
 	tar cvf asport2.tar $(ARCH2FILES)
 	gzip -9 -f asport2.tar
 
+snap: unjunk
+	-mount /mo
+	-mkdir -p /mo/public/asport/snap_$(DATE)
+	cp -av $(ARCHFILES) /mo/public/asport/snap_$(DATE)
+	umount /mo
+
 unjunk:
 	rm -f tmp.* n.c include/stddef56.inc asmpars.cas.c include/fileform* config.h test.h loc.c gennop.c \
-           nops.asm bind.* asmutils.* filenums.* includelist.* tests/warnlog_* \
+           nops.asm bind.* asmutils.* asmmessages.* filenums.* includelist.* tests/warnlog_* \
            insttree.* flt1750.* t_65.* test87c8.* testst9.* testst7.* testtms7.* test3203.* \
            ioerrors.new.c codeallg.* ASM*.c *_msg*.h p2BIN.* \
-           decodecmd.* ioerrors.* stringutil.* *split.c \
+           decodecmd.* ioerrors.* stringutil.* *split.c marks.c \
 	   `find . -name "testlog" -print` \
 	   `find . -name "*~" -print` \
 	   `find . -name "core" -print` \
-	   `find . -name "*.lst" -print`
+           `find . -name "*.core" -print` \
+	   `find . -name "*.lst" -print` \
+	   `find . -name "lst" -print` \
+           `find . -name "*.noi" -print`
 	cd doc_DE; $(MAKE) clean RM="rm -f"
 	cd doc_EN; $(MAKE) clean RM="rm -f"
+
+depend:
+	$(CC) $(ALLFLAGS) -MM *.c >depfile
 
 #---------------------------------------------------------------------------
 

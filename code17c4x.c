@@ -5,6 +5,9 @@
 /* Codegenerator PIC17C4x                                                    */
 /*                                                                           */
 /* Historie: 21.8.1996 Grundsteinlegung                                      */
+/*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
+/*           18. 8.1998 Bookkeeping-Aufruf in RES                            */
+/*            3. 1.1999 ChkPC-Anpassung                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -187,8 +190,7 @@ BEGIN
 	BEGIN
 	 DontPrint=True;
 	 CodeLen=Size;
-	 if (MakeUseList)
-	  if (AddChunk(SegChunks+ActPC,ProgCounter(),CodeLen,ActPC==SegCode)) WrError(90);
+	 BookKeeping();
 	END
       END
      return True;
@@ -220,7 +222,7 @@ BEGIN
 	    case TempString:
 	     for (z2=0; z2<strlen(t.Contents.Ascii); z2++)
               BEGIN
-               Size=CharTransTable[(Byte) t.Contents.Ascii[z2]];
+               Size=CharTransTable[((usint) t.Contents.Ascii[z2])&0xff];
                if (ActPC==SegData) BAsmCode[CodeLen++]=Size;
 	       else if ((z2&1)==0) WAsmCode[CodeLen++]=Size;
 	       else WAsmCode[CodeLen-1]+=Size<<8;
@@ -486,19 +488,6 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static Boolean ChkPC_17c4x(void)
-BEGIN
-   Boolean ok;
-
-   switch (ActPC)
-    BEGIN
-     case SegCode: ok=ProgCounter()<=0xffff; break;
-     case SegData: ok=ProgCounter()<=0xff; break;
-     default: ok=False;
-    END
-   return (ok);
-END
-
 	static Boolean IsDef_17c4x(void)
 BEGIN
    return Memo("SFR");
@@ -518,9 +507,11 @@ BEGIN
 
    ValidSegs=(1<<SegCode)+(1<<SegData);
    Grans[SegCode]=2; ListGrans[SegCode]=2; SegInits[SegCode]=0;
+   SegLimits[SegCode] = 0xffff;
    Grans[SegData]=1; ListGrans[SegData]=1; SegInits[SegData]=0;
+   SegLimits[SegData] = 0xff;
 
-   MakeCode=MakeCode_17c4x; ChkPC=ChkPC_17c4x; IsDef=IsDef_17c4x;
+   MakeCode=MakeCode_17c4x; IsDef=IsDef_17c4x;
    SwitchFrom=SwitchFrom_17c4x; InitFields();
 END
 

@@ -5,6 +5,7 @@
 /* Codegenerator ST6-Familie                                                 */
 /*                                                                           */
 /* Historie: 14.11.1996 Grundsteinlegung                                     */
+/*            2. 1.1998 ChkPC ersetzt                                        */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -594,18 +595,6 @@ BEGIN
    WinAssume=0x40;
 END
 
-	static Boolean ChkPC_ST62(void)
-BEGIN
-   switch (ActPC)
-    BEGIN
-     case SegCode:
-      return (ProgCounter()<((MomCPU<CPUST6220)?0x1000:0x800));
-     case SegData:
-      return (ProgCounter()<0x100);
-     default: return False;
-    END
-END
-
 	static Boolean IsDef_ST62(void)
 BEGIN
    return (Memo("SFR"));
@@ -625,9 +614,11 @@ BEGIN
 
    ValidSegs=(1<<SegCode)+(1<<SegData);
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
+   SegLimits[SegCode] = (MomCPU < CPUST6220) ? 0xfff : 0x7ff;
    Grans[SegData]=1; ListGrans[SegData]=1; SegInits[SegData]=0;
+   SegLimits[SegData] = 0xff;
 
-   MakeCode=MakeCode_ST62; ChkPC=ChkPC_ST62; IsDef=IsDef_ST62;
+   MakeCode=MakeCode_ST62; IsDef=IsDef_ST62;
    SwitchFrom=SwitchFrom_ST62; InitFields();
 END
 

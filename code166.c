@@ -6,6 +6,7 @@
 /*                                                                           */
 /* Historie: 11.11.1996 (alaaf) Grundsteinlegung                             */
 /*            9. 5.1998 Registersymbole                                      */
+/*            3. 1.1999 ChkPC angepasst                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -1646,12 +1647,6 @@ BEGIN
    MemMode=MemModeStd; ExtSFRs=False; ExtCounter=(-1);
 END
 
-	static Boolean ChkPC_166(void)
-BEGIN
-   if (ActPC==SegCode) return (ProgCounter()<0x40000);
-   else return False;
-END
-
 	static Boolean IsDef_166(void)
 BEGIN
    return (Memo("BIT")) OR (Memo("REG"));
@@ -1675,16 +1670,18 @@ BEGIN
    ValidSegs=(1<<SegCode);
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
 
-   MakeCode=MakeCode_166; ChkPC=ChkPC_166; IsDef=IsDef_166;
+   MakeCode=MakeCode_166; IsDef=IsDef_166;
    SwitchFrom=SwitchFrom_166;
 
    if (MomCPU==CPU80C166)
     BEGIN
      MemInt=UInt18; MemInt2=UInt2; ASSUME166s[0].Max=15;
+     SegLimits[SegCode] = 0x3ffffl;
     END
    else
     BEGIN
      MemInt=UInt24; MemInt2=UInt8; ASSUME166s[0].Max=1023;
+     SegLimits[SegCode] = 0xffffffl;
     END
    for (z=1; z<4; z++) ASSUME166s[z].Max=ASSUME166s[0].Max;
 

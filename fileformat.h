@@ -5,6 +5,8 @@
 /* Definition von Konstanten fuer das P-Format                               */
 /*                                                                           */
 /* Historie: 3.12.1996 Grundsteinlegung                                      */
+/*           11. 9.1998 ROMDATA-Segment hinzugenommen                        */
+/*           12. 7.1999 RelocRec-Typ hinzugenommen                           */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -13,9 +15,10 @@
 
 #define FileMagic 0x1489
 
-#define FileHeaderEnd      0x00
-#define FileHeaderStartAdr 0x80
-#define FileHeaderDataRec  0x81
+#define FileHeaderEnd      0x00   /* Dateiende */
+#define FileHeaderStartAdr 0x80   /* Einsprungadresse absolut */
+#define FileHeaderDataRec  0x81   /* normaler Datenrecord */
+#define FileHeaderRelocRec 0x82   /* normaler Datenrecord mit Relokationsinformationen */
 
 #define SegNone  0
 #define SegCode  1
@@ -26,7 +29,12 @@
 #define SegBData 6
 #define SegIO    7
 #define SegReg   8
+#define SegRData 9
 
-#define PCMax SegReg
+#define PCMax SegRData
+
+enum {RelocNone, Reloc8, RelocL16, RelocM16, RelocL24, RelocM24,
+                         RelocL32, RelocM32, RelocL64, RelocH64,
+                         RelocVar = 0x80};
 
 #endif

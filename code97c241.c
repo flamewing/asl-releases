@@ -5,6 +5,7 @@
 /* Codegenerator TLCS-9000                                                   */
 /*                                                                           */
 /* Historie:                                                                 */
+/*            2. 1.1999 ChkPC umgebaut                                       */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -2158,15 +2159,6 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static Boolean ChkPC_97C241(void)
-BEGIN
-   switch (ActPC)
-    BEGIN
-     case SegCode: return (ProgCounter()<=0xffffff);
-     default: return False;
-    END
-END
-
 	static Boolean IsDef_97C241(void)
 BEGIN
    return False;
@@ -2186,8 +2178,9 @@ BEGIN
 
    ValidSegs=1<<SegCode;
    Grans[SegCode]=1; ListGrans[SegCode]=2; SegInits[SegCode]=0;
+   SegLimits[SegCode] = 0xffffffl;
 
-   MakeCode=MakeCode_97C241; ChkPC=ChkPC_97C241; IsDef=IsDef_97C241;
+   MakeCode=MakeCode_97C241; IsDef=IsDef_97C241;
    SwitchFrom=SwitchFrom_97C241; InitFields();
 END
 

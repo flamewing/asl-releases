@@ -5,6 +5,9 @@
 /* Codegenerator TMS3201x-Familie                                            */
 /*                                                                           */
 /* Historie: 28.11.1996 Grundsteinlegung                                     */
+/*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
+/*           18. 8.1992 BookKeeping-Aufruf in RES                            */
+/*            2. 1.1999 ChkPC-Anpassung                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -247,8 +250,7 @@ BEGIN
 	BEGIN
 	 DontPrint=True;
 	 CodeLen=Size;
-	 if (MakeUseList)
-	  if (AddChunk(SegChunks+ActPC,ProgCounter(),CodeLen,ActPC==SegCode)) WrError(90);
+	 BookKeeping();
 	END
       END
      return True;
@@ -280,9 +282,9 @@ BEGIN
              for (p=t.Contents.Ascii,z2=0; *p!='\0'; p++,z2++)
               BEGIN
 	       if ((z2&1)==0)
-		WAsmCode[CodeLen]=CharTransTable[(int)*p];
+		WAsmCode[CodeLen]=CharTransTable[((usint)*p)&0xff];
 	       else
-		WAsmCode[CodeLen++]+=((Word) CharTransTable[(int)*p]) << 8;
+		WAsmCode[CodeLen++]+=((Word) CharTransTable[((usint)*p)&0xff]) << 8;
               END
 	     if ((z2&1)==0) CodeLen++;
 	     break;
@@ -515,18 +517,6 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static Boolean ChkPC_3201X(void)
-BEGIN
-   switch (ActPC)
-    BEGIN
-     case SegCode  : return (ProgCounter() <=0xfff);
-     case SegData  : return (ProgCounter()<=((MomCPU==CPU32010) ? 0x8f : 0xff));
-     case SegIO    : return (ProgCounter() <=7);
-     default       : return False;
-    END
-END
-
-
 	static Boolean IsDef_3201X(void)
 BEGIN
    return (Memo("PORT"));
@@ -546,10 +536,13 @@ BEGIN
 
    ValidSegs=(1<<SegCode)|(1<<SegData)|(1<<SegIO);
    Grans[SegCode]=2; ListGrans[SegCode]=2; SegInits[SegCode]=0;
+   SegLimits[SegCode] = 0xfff;
    Grans[SegData]=2; ListGrans[SegData]=2; SegInits[SegData]=0;
+   SegLimits[SegData] = (MomCPU==CPU32010) ? 0x8f : 0xff;
    Grans[SegIO  ]=2; ListGrans[SegIO  ]=2; SegInits[SegIO  ]=0;
+   SegLimits[SegIO  ] = 7;
 
-   MakeCode=MakeCode_3201X; ChkPC=ChkPC_3201X; IsDef=IsDef_3201X;
+   MakeCode=MakeCode_3201X; IsDef=IsDef_3201X;
    SwitchFrom=SwitchFrom_3201X; InitFields();
 END
 

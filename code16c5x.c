@@ -5,6 +5,9 @@
 /* AS - Codegenerator fuer PIC16C5x                                          */
 /*                                                                           */
 /* Historie: 19.8.1996 Grundsteinlegung                                      */
+/*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
+/*           17. 8.1998 RES mit Bookkeeping                                  */
+/*            3. 1.1999 ChkPC-Anpassung                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -183,8 +186,7 @@ BEGIN
 	BEGIN
 	 DontPrint=True;
 	 CodeLen=Size;
-	 if (MakeUseList)
-	  if (AddChunk(SegChunks+ActPC,ProgCounter(),CodeLen,ActPC==SegCode)) WrError(90);
+         BookKeeping();
 	END
       END
      return True;
@@ -216,9 +218,9 @@ BEGIN
 	    case TempString:
 	     for (p=t.Contents.Ascii; *p!='\0'; p++)
               if (ActPC==SegCode)
- 	       WAsmCode[CodeLen++]=CharTransTable[(Byte) *p];
+ 	       WAsmCode[CodeLen++]=CharTransTable[((usint) *p)&0xff];
               else
- 	       BAsmCode[CodeLen++]=CharTransTable[(Byte) *p];
+ 	       BAsmCode[CodeLen++]=CharTransTable[((usint) *p)&0xff];
 	     break;
 	    default:
              ValOK=False;
@@ -410,19 +412,6 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static Boolean ChkPC_16C5X(void)
-BEGIN
-   Boolean ok;
-
-   switch (ActPC)
-    BEGIN
-     case SegCode: ok=ProgCounter()<=ROMEnd(); break;
-     case SegData: ok=ProgCounter()<=0x1f; break;
-     default: ok=False;
-    END
-   return (ok);
-END
-
 	static Boolean IsDef_16C5X(void)
 BEGIN
    return Memo("SFR");
@@ -442,9 +431,11 @@ BEGIN
 
    ValidSegs=(1<<SegCode)+(1<<SegData);
    Grans[SegCode]=2; ListGrans[SegCode]=2; SegInits[SegCode]=0;
+   SegLimits[SegCode] = ROMEnd();
    Grans[SegData]=1; ListGrans[SegData]=1; SegInits[SegCode]=0;
+   SegLimits[SegData] = 0x1f;
 
-   MakeCode=MakeCode_16C5X; ChkPC=ChkPC_16C5X; IsDef=IsDef_16C5X;
+   MakeCode=MakeCode_16C5X; IsDef=IsDef_16C5X;
    SwitchFrom=SwitchFrom_16C5X; InitFields();
 END
 

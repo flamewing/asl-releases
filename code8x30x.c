@@ -4,7 +4,8 @@
 /*                                                                           */
 /* Codegenerator Signetics 8X30x                                             */
 /*                                                                           */
-/* Historie: 25.6.1997 Grundsteinlegung                                      */
+/* Historie: 25. 6.1997 Grundsteinlegung                                     */
+/*            3. 1.1999 ChkPC-Anpassung                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -525,15 +526,6 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-        static Boolean ChkPC_8x30X(void)
-BEGIN
-   switch (ActPC)
-    BEGIN
-     case SegCode  : return (ProgCounter() <=0x1fff);
-     default       : return False;
-    END
-END
-
         static Boolean IsDef_8x30X(void)
 BEGIN
    return (Memo("LIV") OR Memo("RIV"));
@@ -553,8 +545,9 @@ BEGIN
 
    ValidSegs=1<<SegCode;
    Grans[SegCode]=2; ListGrans[SegCode]=2; SegInits[SegCode]=0;
+   SegLimits[SegCode] = 0x1fff;
 
-   MakeCode=MakeCode_8x30X; ChkPC=ChkPC_8x30X; IsDef=IsDef_8x30X;
+   MakeCode=MakeCode_8x30X; IsDef=IsDef_8x30X;
    SwitchFrom=SwitchFrom_8x30X; InitFields();
 END
 

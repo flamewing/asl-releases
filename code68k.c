@@ -7,6 +7,20 @@
 /* Historie:  9. 9.1996 Grundsteinlegung                                     */
 /*           14.11.1997 Coldfire-Erweiterungen                               */
 /*           31. 5.1998 68040-Erweiterungen                                  */
+/*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
+/*            3. 1.1999 ChkPC-Anpassung                                      */
+/*           17. 1.1999 automatische Laengenanpassung OutDisp                */
+/*           23. 1.1999 Einen String an sich selber anzuhaengen, ist keine   */
+/*                      gute Idee gewesen :-)                                */
+/*           25. 1.1999 falscher Code fuer SBCD korrigiert                   */
+/*            5. 7.1999 bei FMOVE FPreg, <ea> war die Modusmaske Humbug...   */
+/*                      FSMOVE/FDMOVE fuer 68040 fehlten noch                */
+/*            9. 7.1999 In der Bitfeld-Dekodierung war bei der Portierung    */
+/*                      ein call-by-reference verlorengegangen               */
+/*            3.11.1999 ...in SplitBitField auch!                            */
+/*            4.11.1999 FSMOVE/DMOVE auch mit FPn als Quelle                 */
+/*                      F(S/D)(ADD/SUB/MUL/DIV)                              */
+/*                      FMOVEM statt FMOVE fpcr<->ea erlaubt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -46,6 +60,7 @@ typedef struct
           char *Name;
           Byte Code;
           Boolean Dya;
+          CPUVar MinCPU;
          } FPUOp;
 
 typedef struct
@@ -57,7 +72,7 @@ typedef struct
 #define FixedOrderCnt 10
 #define CtRegCnt 29
 #define CondCnt 20
-#define FPUOpCnt 35
+#define FPUOpCnt 43
 #define FPUCondCnt 26
 #define PMMUCondCnt 16
 #define PMMURegCnt 13
@@ -292,25 +307,24 @@ BEGIN
     END
 END
 
-	static Boolean SplitBitField(char *Arg_o, Word *Erg)
+	static Boolean SplitBitField(char *Arg, Word *Erg)
 BEGIN
    char *p;
    Word OfsVal;
-   String Desc,Arg;
+   String Desc;
 
-   strmaxcpy(Arg,Arg_o,255);
-   p=strchr(Arg,'{');
-   if (p==Nil) return False;
-   *p='\0'; strcpy(Desc,p+1);
-   if (Desc[strlen(Desc)-1]!='}') return False;
-   Desc[strlen(Desc)-1]='\0';
+   p = strchr(Arg, '{');
+   if (p == Nil) return False;
+   *p = '\0'; strcpy(Desc, p + 1);
+   if (Desc[strlen(Desc) - 1] != '}') return False;
+   Desc[strlen(Desc) - 1] = '\0';
 
-   p=strchr(Desc,':');
-   if (p==Nil) return False;
-   *p='\0';
-   if (NOT OneField(Desc,&OfsVal,False)) return False;
-   if (NOT OneField(p+1,Erg,True)) return False;
-   Erg+=OfsVal << 6;
+   p = strchr(Desc, ':');
+   if (p == Nil) return False;
+   *p = '\0';
+   if (NOT OneField(Desc, &OfsVal, False)) return False;
+   if (NOT OneField(p + 1, Erg, True)) return False;
+   *Erg += OfsVal << 6;
    return True;
 END
 
@@ -330,39 +344,41 @@ BEGIN
 
    sh[0]=C->Name[0]; sh[1]=C->Name[1]; sh[2]='\0';
    if (CodeReg(sh,&C->ANummer)) 
-    if ((C->ANummer>7) AND (strlen(C->Name)==2)) 
-     BEGIN
-      C->Art=AReg; C->ANummer-=8; return True;
-     END
-    else
-     BEGIN
-      if ((strlen(C->Name)>3) AND (C->Name[2]=='.')) 
-       BEGIN
-	switch (toupper(C->Name[3]))
-         BEGIN
-	  case 'L': C->Long=True; break;
-	  case 'W': C->Long=False; break;
-	  default: return False;
-	 END
-	strcpy(C->Name+2,C->Name+4);
-       END
-      else C->Long=(MomCPU==CPUCOLD);
-      if ((strlen(C->Name)>3) AND (C->Name[2]=='*')) 
-       BEGIN
-	switch (C->Name[3])
-         BEGIN
-	  case '1': C->Scale=0; break;
-	  case '2': C->Scale=1; break;
-	  case '4': C->Scale=2; break;
-	  case '8': if (MomCPU==CPUCOLD) return False;
-	            C->Scale=3; break;
-	  default: return False;
-	 END
-	strcpy(C->Name+2,C->Name+4);
-       END
-      else C->Scale=0;
-      C->INummer=C->ANummer; C->Art=Index; return True;
-     END
+    BEGIN
+     if ((C->ANummer>7) AND (strlen(C->Name)==2)) 
+      BEGIN
+       C->Art=AReg; C->ANummer-=8; return True;
+      END
+     else
+      BEGIN
+       if ((strlen(C->Name)>3) AND (C->Name[2]=='.')) 
+        BEGIN
+	 switch (toupper(C->Name[3]))
+          BEGIN
+	   case 'L': C->Long=True; break;
+	   case 'W': C->Long=False; break;
+	   default: return False;
+	  END
+	 strcpy(C->Name+2,C->Name+4);
+        END
+       else C->Long=(MomCPU==CPUCOLD);
+       if ((strlen(C->Name)>3) AND (C->Name[2]=='*')) 
+        BEGIN
+ 	 switch (C->Name[3])
+          BEGIN
+	   case '1': C->Scale=0; break;
+	   case '2': C->Scale=1; break;
+	   case '4': C->Scale=2; break;
+	   case '8': if (MomCPU==CPUCOLD) return False;
+	             C->Scale=3; break;
+	   default: return False;
+	  END
+	 strcpy(C->Name+2,C->Name+4);
+        END
+       else C->Scale=0;
+       C->INummer=C->ANummer; C->Art=Index; return True;
+      END
+    END
 
    C->Art=Disp;
    if (C->Name[strlen(C->Name)-2]=='.') 
@@ -424,7 +440,7 @@ BEGIN
    AdrComp AdrComps[3],OneComp;
    Byte CompCnt;
    String OutDisp;
-   Byte OutDispLen;
+   ShortInt OutDispLen;
    Boolean PreInd;
 
 #ifdef HAS64
@@ -627,7 +643,7 @@ BEGIN
         END
        OutDisp[strlen(OutDisp)-2]='\0';
       END
-     else OutDispLen=0;
+     else OutDispLen=-1;
      Asc[strlen(Asc)-1]='\0';
 
      /* in Komponenten zerteilen: */
@@ -697,18 +713,21 @@ BEGIN
 
 	 else
 	  BEGIN
-	   if (OutDispLen>=2) HVal=EvalIntExpression(OutDisp,Int32,&ValOK);
-           else HVal=EvalIntExpression(OutDisp,SInt16,&ValOK);
+	   if ((OutDispLen < 0) OR (OutDispLen >= 2))
+            HVal = EvalIntExpression(OutDisp, SInt32, &ValOK);
+           else
+            HVal = EvalIntExpression(OutDisp, SInt16, &ValOK);
 	   if (NOT ValOK) 
 	    BEGIN
 	     WrError(1350); return;
 	    END
-	   if ((ValOK) AND (HVal==0) AND ((Madri & Erl)!=0) AND (OutDispLen==0)) 
+	   if ((ValOK) AND (HVal==0) AND ((Madri & Erl)!=0) AND (OutDispLen==-1)) 
 	    BEGIN
              AdrMode=0x10+AdrComps[0].ANummer; AdrNum=3; AdrCnt=0;
 	     ChkAdr(Erl); return;
 	    END
-	   if (OutDispLen==0) OutDispLen=1;
+	   if (OutDispLen == -1)
+            OutDispLen = (IsDisp16(HVal)) ? 1 : 2;
 	   switch (OutDispLen)
             BEGIN
 	     case 1:                   /* d16(An) */
@@ -730,35 +749,43 @@ BEGIN
 	BEGIN
          AdrVals[0]=(AdrComps[1].INummer << 12)+(Ord(AdrComps[1].Long) << 11)+(AdrComps[1].Scale << 9);
 	 AdrMode=0x30+AdrComps[0].ANummer;
-	 switch (OutDispLen)
+         switch (OutDispLen)
           BEGIN
-	   case 0:
-	    HVal8=EvalIntExpression(OutDisp,SInt8,&ValOK);
-	    if (ValOK) 
-	     BEGIN
-	      AdrNum=7; AdrCnt=2; AdrVals[0]+=((Byte)HVal8);
-	      if (AdrComps[1].Scale!=0) ACheckCPU(CPUCOLD);
-	     END
-	    ChkAdr(Erl); return;
-	   case 1:
-	    HVal16=EvalIntExpression(OutDisp,SInt16,&ValOK);
-	    if (ValOK) 
-	     BEGIN
-	      AdrNum=7; AdrCnt=4;
-	      AdrVals[0]+=0x120; AdrVals[1]=HVal16;
-	      ACheckCPU(CPU68332);
-	     END
-	    ChkAdr(Erl); return;
-	   case 2:
-	    HVal=EvalIntExpression(OutDisp,Int32,&ValOK);
-	    if (ValOK) 
-	     BEGIN
-	      AdrNum=7; AdrCnt=6; AdrVals[0]+=0x130;
-	      AdrVals[1]=HVal >> 16; AdrVals[2]=HVal & 0xffff;
-	      ACheckCPU(CPU68332);
-	     END
-	    ChkAdr(Erl); return;
-	  END
+           case 0:
+            HVal = EvalIntExpression(OutDisp, SInt8, &ValOK);
+            break;
+           case 1:
+            HVal = EvalIntExpression(OutDisp, SInt16, &ValOK);
+            break;
+           default:
+            HVal = EvalIntExpression(OutDisp, SInt32, &ValOK);
+          END
+         if (ValOK)
+          BEGIN
+           if (OutDispLen == -1)
+            BEGIN
+             if (IsDisp8(HVal)) OutDispLen = 0;
+             else if (IsDisp16(HVal)) OutDispLen = 1;
+             else OutDispLen = 2;
+            END
+ 	   switch (OutDispLen)
+            BEGIN
+ 	     case 0:
+ 	      AdrNum=7; AdrCnt=2; AdrVals[0]+=(HVal & 0xff);
+ 	      if (AdrComps[1].Scale!=0) ACheckCPU(CPUCOLD);
+              ChkAdr(Erl); return;
+ 	     case 1:
+ 	      AdrNum=7; AdrCnt=4;
+ 	      AdrVals[0]+=0x120; AdrVals[1]=HVal & 0xffff;
+ 	      ACheckCPU(CPU68332);
+ 	      ChkAdr(Erl); return;
+ 	     case 2:
+ 	      AdrNum=7; AdrCnt=6; AdrVals[0]+=0x130;
+ 	      AdrVals[1]=HVal >> 16; AdrVals[2]=HVal & 0xffff;
+ 	      ACheckCPU(CPU68332);
+  	      ChkAdr(Erl); return;
+ 	    END
+          END
 	END
       END
 
@@ -771,22 +798,22 @@ BEGIN
 
        if (CompCnt==1) 
 	BEGIN
-	 if (OutDispLen==0) OutDispLen=1;
 	 HVal=EvalIntExpression(OutDisp,Int32,&ValOK)-(EProgCounter()+RelPos);
 	 if (NOT ValOK) 
 	  BEGIN
 	   WrError(1350); return;
 	  END
+         if (OutDispLen < 0)
+           OutDispLen = (IsDisp16(HVal)) ? 1 : 2;
 	 switch (OutDispLen)
           BEGIN
 	   case 1:
 	    AdrMode=0x3a;
-	    HVal16=HVal;
 	    if (NOT IsDisp16(HVal)) 
 	     BEGIN
 	      WrError(1330); return;
 	     END
-	    AdrNum=8; AdrCnt=2; AdrVals[0]=HVal16;
+	    AdrNum=8; AdrCnt=2; AdrVals[0]=HVal & 0xffff;
 	    ChkAdr(Erl); return;
 	   case 2:
 	    AdrMode=0x3b;
@@ -806,26 +833,30 @@ BEGIN
 	  BEGIN
 	   WrError(1350); return;
 	  END;
+         if (OutDispLen < 0)
+          BEGIN
+           if (IsDisp8(HVal)) OutDispLen = 0;
+           else if (IsDisp16(HVal)) OutDispLen = 1;
+           else OutDispLen = 2;
+          END
 	 AdrMode=0x3b;
 	 switch (OutDispLen)
           BEGIN
 	   case 0:
-	    HVal8=HVal;
 	    if (NOT IsDisp8(HVal)) 
 	     BEGIN
 	      WrError(1330); return;
 	     END
-	    AdrVals[0]+=((Byte)HVal8); AdrCnt=2; AdrNum=9;
+	    AdrVals[0]+=(HVal & 0xff); AdrCnt=2; AdrNum=9;
 	    if (AdrComps[1].Scale!=0) ACheckCPU(CPUCOLD);
 	    ChkAdr(Erl); return;
 	   case 1:
-	    HVal16=HVal;
 	    if (NOT IsDisp16(HVal)) 
 	     BEGIN
 	      WrError(1330); return;
 	     END
 	    AdrVals[0]+=0x120; AdrCnt=4; AdrNum=9;
-	    AdrVals[1]=HVal16;
+	    AdrVals[1]=HVal & 0xffff;
 	    ACheckCPU(CPU68332);
 	    ChkAdr(Erl); return;
 	   case 2:
@@ -848,26 +879,33 @@ BEGIN
 	 AdrVals[0]=AdrVals[0]+0x0010; AdrCnt=2;
 	 AdrNum=7; ACheckCPU(CPU68332); ChkAdr(Erl); return;
 	END
-       else switch (OutDispLen)
+       else
         BEGIN
-         case 0:
-         case 1:
-	  HVal16=EvalIntExpression(OutDisp,Int16,&ValOK);
-	  if (ValOK) 
-	   BEGIN
-	    AdrVals[0]=AdrVals[0]+0x0020; AdrVals[1]=HVal16;
-	    AdrNum=7; AdrCnt=4; ACheckCPU(CPU68332);
-	   END
-	  ChkAdr(Erl); return;
-         case 2:
-	  HVal=EvalIntExpression(OutDisp,Int32,&ValOK);
-	  if (ValOK) 
-	   BEGIN
-	    AdrVals[0]=AdrVals[0]+0x0030; AdrNum=7; AdrCnt=6;
-	    AdrVals[1]=HVal >> 16; AdrVals[2]=HVal & 0xffff;
-	    ACheckCPU(CPU68332);
-	   END
-	  ChkAdr(Erl); return;
+         if (OutDispLen != 1)
+          HVal = EvalIntExpression(OutDisp,SInt32,&ValOK);
+         else
+          HVal = EvalIntExpression(OutDisp,SInt16,&ValOK);
+         if (ValOK)
+          BEGIN
+           if (OutDispLen == -1)
+            BEGIN
+             if (IsDisp16(HVal)) OutDispLen = 1;
+             else OutDispLen = 2;
+            END
+           switch (OutDispLen)
+            BEGIN
+             case 0:
+             case 1:
+ 	      AdrVals[0]=AdrVals[0]+0x0020; AdrVals[1]=HVal & 0xffff;
+	      AdrNum=7; AdrCnt=4; ACheckCPU(CPU68332);
+	      ChkAdr(Erl); return;
+             case 2:
+	      AdrVals[0]=AdrVals[0]+0x0030; AdrNum=7; AdrCnt=6;
+	      AdrVals[1]=HVal >> 16; AdrVals[2]=HVal & 0xffff;
+	      ACheckCPU(CPU68332);
+	      ChkAdr(Erl); return;
+            END
+          END
         END
       END
 
@@ -970,12 +1008,11 @@ BEGIN
 	 switch (AdrComps[0].Size)
           BEGIN
 	   case 1:
-	    HVal16=HVal;
 	    if (NOT IsDisp16(HVal)) 
 	     BEGIN
 	      WrError(1330); return;
 	     END
-	    AdrVals[1]=HVal16; AdrVals[0]+=0x20; AdrNum=7; AdrCnt=4;
+	    AdrVals[1]=HVal & 0xffff; AdrVals[0]+=0x20; AdrNum=7; AdrCnt=4;
 	    break;
 	   case 2:
 	    AdrVals[1]=HVal >> 16; AdrVals[2]=HVal & 0xffff;
@@ -1016,27 +1053,30 @@ BEGIN
 
        /* aeusseres Displacement: */
 
-       if (OutDispLen==0) OutDispLen=1;
+       if (OutDispLen == 1)
+        HVal = EvalIntExpression(OutDisp, SInt16, &ValOK);
+       else
+        HVal = EvalIntExpression(OutDisp, SInt32, &ValOK);
+       if (NOT ValOK)
+        BEGIN
+         AdrNum=0; AdrCnt=0; return;
+        END;
+       if (OutDispLen == -1)
+        BEGIN
+         if (IsDisp16(HVal)) OutDispLen = 1;
+         else OutDispLen = 2;
+        END
        if (*OutDisp=='\0')
 	BEGIN
 	 AdrVals[0]++; ChkAdr(Erl); return;
 	END
        else switch (OutDispLen)
         BEGIN
+         case 0:
          case 1:
-	  HVal16=EvalIntExpression(OutDisp,Int16,&ValOK);
-	  if (NOT ValOK) 
-	   BEGIN
-	    AdrNum=0; AdrCnt=0; return;
-	   END
-	  AdrVals[AdrCnt >> 1]=HVal16; AdrCnt+=2; AdrVals[0]+=2;
+	  AdrVals[AdrCnt >> 1]=HVal & 0xffff; AdrCnt+=2; AdrVals[0]+=2;
 	  break;
          case 2:
-	  HVal=EvalIntExpression(OutDisp,Int32,&ValOK);
-	  if (NOT ValOK) 
-	   BEGIN
-	    AdrNum=0; AdrCnt=0; return;
-	   END
 	  AdrVals[(AdrCnt >> 1)  ]=HVal >> 16;
 	  AdrVals[(AdrCnt >> 1)+1]=HVal & 0xffff;
 	  AdrCnt+=4; AdrVals[0]+=3;
@@ -2101,7 +2141,7 @@ BEGIN
    if (*AttrPart=='\0') OpSize=2;
    if (ArgCnt!=2) WrError(1110);
    else if (OpSize!=2) WrError(1130);
-   else if (NOT CodeRegPair(ArgStr[2],&w1,&w2)) WrError(1760);
+   else if (NOT CodeRegPair(ArgStr[2],&w1,&w2)) WrXError(1760, ArgStr[2]);
    else
     BEGIN
      RelPos=4;
@@ -2329,13 +2369,13 @@ BEGIN
 
    if ((OpSize!=1) AND (OpSize!=2)) WrError(1130);
    else if (ArgCnt!=3) WrError(1110);
-   else if (NOT CodeRegPair(ArgStr[1],WAsmCode+1,WAsmCode+2)) WrError(1760);
-   else if (NOT CodeRegPair(ArgStr[2],&w1,&w2)) WrError(1760);
+   else if (NOT CodeRegPair(ArgStr[1],WAsmCode+1,WAsmCode+2)) WrXError(1760, ArgStr[1]);
+   else if (NOT CodeRegPair(ArgStr[2],&w1,&w2)) WrXError(1760, ArgStr[2]);
    else
     BEGIN
      WAsmCode[1]+=(w1 << 6);
      WAsmCode[2]+=(w2 << 6);
-     if (NOT CodeIndRegPair(ArgStr[3],&w1,&w2)) WrError(1760);
+     if (NOT CodeIndRegPair(ArgStr[3],&w1,&w2)) WrXError(1760, ArgStr[3]);
      else
       BEGIN
        WAsmCode[1]+=(w1 << 12);
@@ -2622,12 +2662,14 @@ BEGIN
         BEGIN
          WAsmCode[1]|=AdrMode << 10;
          if (OpSize==6) CodeLen=4; else WrError(1130);
+         CheckCPU(Op->MinCPU);
         END
        else if (AdrNum!=0)
         BEGIN
          CodeLen=4+AdrCnt; CopyAdrVals(WAsmCode+2);
          WAsmCode[0]|=AdrMode;
          WAsmCode[1]|=0x4000 | (((Word)FSizeCodes[OpSize]) << 10);
+         CheckCPU(Op->MinCPU);
         END
       END
     END
@@ -2662,7 +2704,7 @@ BEGIN
     BEGIN
      PutByte(l-2);
      for (z=1; z<l-1; z++)
-      PutByte(CharTransTable[(unsigned int) ArgStr[1][z]]);
+      PutByte(CharTransTable[((usint) ArgStr[1][z])&0xff]);
      if ((Odd(CodeLen)) AND (DoPadding)) PutByte(0);
     END
 END
@@ -2696,13 +2738,14 @@ BEGIN
    CondVals[InstrZ++]=NCode;
 END
 
-	static void AddFPUOp(char *NName, Byte NCode, Boolean NDya)
+	static void AddFPUOp(char *NName, Byte NCode, Boolean NDya, CPUVar NMin)
 BEGIN
-   if (InstrZ>=FPUOpCnt) exit(255);
-   FPUOps[InstrZ].Name=NName;
-   FPUOps[InstrZ].Code=NCode;
-   FPUOps[InstrZ].Dya=NDya;
-   AddInstTable(FInstTable,NName,InstrZ++,DecodeFPUOp);
+   if (InstrZ >= FPUOpCnt) exit(255);
+   FPUOps[InstrZ].Name = NName;
+   FPUOps[InstrZ].Code = NCode;
+   FPUOps[InstrZ].Dya = NDya;
+   FPUOps[InstrZ].MinCPU = NMin; 
+   AddInstTable(FInstTable, NName, InstrZ++, DecodeFPUOp);
 END
 
 	static void AddFPUCond(char *NName, Byte NCode)
@@ -2790,7 +2833,7 @@ BEGIN
    AddInstTable(InstTable,"DIVUL"  ,0,DecodeDIVL);
    AddInstTable(InstTable,"DIVSL"  ,1,DecodeDIVL);
    AddInstTable(InstTable,"ABCD"   ,1,DecodeASBCD);
-   AddInstTable(InstTable,"SBCD"   ,1,DecodeASBCD);
+   AddInstTable(InstTable,"SBCD"   ,0,DecodeASBCD);
    AddInstTable(InstTable,"CHK"    ,0,DecodeCHK);
    AddInstTable(InstTable,"LINK"   ,0,DecodeLINK);
    AddInstTable(InstTable,"MOVEP"  ,0,DecodeMOVEP);
@@ -2881,24 +2924,28 @@ BEGIN
    AddCond("HS", 4);  AddCond("LO", 5);  AddCond("RA", 0);  AddCond("SR", 1);
 
    FPUOps=(FPUOp *) malloc(sizeof(FPUOp)*FPUOpCnt); InstrZ=0;
-   AddFPUOp("INT"   ,0x01, False);  AddFPUOp("SINH"  ,0x02, False);
-   AddFPUOp("INTRZ" ,0x03, False);  AddFPUOp("SQRT"  ,0x04, False);
-   AddFPUOp("LOGNP1",0x06, False);  AddFPUOp("ETOXM1",0x08, False);
-   AddFPUOp("TANH"  ,0x09, False);  AddFPUOp("ATAN"  ,0x0a, False);
-   AddFPUOp("ASIN"  ,0x0c, False);  AddFPUOp("ATANH" ,0x0d, False);
-   AddFPUOp("SIN"   ,0x0e, False);  AddFPUOp("TAN"   ,0x0f, False);
-   AddFPUOp("ETOX"  ,0x10, False);  AddFPUOp("TWOTOX",0x11, False);
-   AddFPUOp("TENTOX",0x12, False);  AddFPUOp("LOGN"  ,0x14, False);
-   AddFPUOp("LOG10" ,0x15, False);  AddFPUOp("LOG2"  ,0x16, False);
-   AddFPUOp("ABS"   ,0x18, False);  AddFPUOp("COSH"  ,0x19, False);
-   AddFPUOp("NEG"   ,0x1a, False);  AddFPUOp("ACOS"  ,0x1c, False);
-   AddFPUOp("COS"   ,0x1d, False);  AddFPUOp("GETEXP",0x1e, False);
-   AddFPUOp("GETMAN",0x1f, False);  AddFPUOp("DIV"   ,0x20, True );
-   AddFPUOp("MOD"   ,0x21, True );  AddFPUOp("ADD"   ,0x22, True );
-   AddFPUOp("MUL"   ,0x23, True );  AddFPUOp("SGLDIV",0x24, True );
-   AddFPUOp("REM"   ,0x25, True );  AddFPUOp("SCALE" ,0x26, True );
-   AddFPUOp("SGLMUL",0x27, True );  AddFPUOp("SUB"   ,0x28, True );
-   AddFPUOp("CMP"   ,0x38, True );
+   AddFPUOp("INT"   ,0x01, False, CPU68000);  AddFPUOp("SINH"  ,0x02, False, CPU68000);
+   AddFPUOp("INTRZ" ,0x03, False, CPU68000);  AddFPUOp("SQRT"  ,0x04, False, CPU68000);
+   AddFPUOp("LOGNP1",0x06, False, CPU68000);  AddFPUOp("ETOXM1",0x08, False, CPU68000);
+   AddFPUOp("TANH"  ,0x09, False, CPU68000);  AddFPUOp("ATAN"  ,0x0a, False, CPU68000);
+   AddFPUOp("ASIN"  ,0x0c, False, CPU68000);  AddFPUOp("ATANH" ,0x0d, False, CPU68000);
+   AddFPUOp("SIN"   ,0x0e, False, CPU68000);  AddFPUOp("TAN"   ,0x0f, False, CPU68000);
+   AddFPUOp("ETOX"  ,0x10, False, CPU68000);  AddFPUOp("TWOTOX",0x11, False, CPU68000);
+   AddFPUOp("TENTOX",0x12, False, CPU68000);  AddFPUOp("LOGN"  ,0x14, False, CPU68000);
+   AddFPUOp("LOG10" ,0x15, False, CPU68000);  AddFPUOp("LOG2"  ,0x16, False, CPU68000);
+   AddFPUOp("ABS"   ,0x18, False, CPU68000);  AddFPUOp("COSH"  ,0x19, False, CPU68000);
+   AddFPUOp("NEG"   ,0x1a, False, CPU68000);  AddFPUOp("ACOS"  ,0x1c, False, CPU68000);
+   AddFPUOp("COS"   ,0x1d, False, CPU68000);  AddFPUOp("GETEXP",0x1e, False, CPU68000);
+   AddFPUOp("GETMAN",0x1f, False, CPU68000);  AddFPUOp("DIV"   ,0x20, True , CPU68000);
+   AddFPUOp("SDIV"  ,0x60, False, CPU68040);  AddFPUOp("DDIV"  ,0x64, True , CPU68040);
+   AddFPUOp("MOD"   ,0x21, True , CPU68000);  AddFPUOp("ADD"   ,0x22, True , CPU68000);
+   AddFPUOp("SADD"  ,0x62, True , CPU68040);  AddFPUOp("DADD"  ,0x66, True , CPU68040);
+   AddFPUOp("MUL"   ,0x23, True , CPU68000);  AddFPUOp("SMUL"  ,0x63, True , CPU68040);
+   AddFPUOp("DMUL"  ,0x67, True , CPU68040);  AddFPUOp("SGLDIV",0x24, True , CPU68000);
+   AddFPUOp("REM"   ,0x25, True , CPU68000);  AddFPUOp("SCALE" ,0x26, True , CPU68000);
+   AddFPUOp("SGLMUL",0x27, True , CPU68000);  AddFPUOp("SUB"   ,0x28, True , CPU68000);
+   AddFPUOp("SSUB"  ,0x68, True , CPU68040);  AddFPUOp("DSUB"  ,0x6c, True , CPU68040);
+   AddFPUOp("CMP"   ,0x38, True , CPU68000);
 
    FPUConds=(FPUCond *) malloc(sizeof(FPUCond)*FPUCondCnt); InstrZ=0;
    AddFPUCond("EQ"  , 0x01); AddFPUCond("NE"  , 0x0e);
@@ -2977,7 +3024,7 @@ BEGIN
 
    if ((strlen(Asc)==2) AND (*Asc=='D') AND ValReg(Asc[1]))
     BEGIN
-     *Typ=1; *Erg=(Asc[1]-'0') << 4; return;
+     *Typ = 1; *Erg = (Asc[1]-'0') << 4; return;
     END;
 
    hw=0;
@@ -3061,6 +3108,7 @@ BEGIN
    LongInt HVal;
    Integer HVal16;
    Boolean ValOK;
+   Word Mask;
 
    if (LookupInstTable(FInstTable,OpPart)) return;
 
@@ -3161,7 +3209,7 @@ BEGIN
         BEGIN
          WAsmCode[0]=0xf200 | AdrMode;
          CodeLen=4+AdrCnt; CopyAdrVals(WAsmCode+2);
-         DecodeAdr(ArgStr[1],(AdrMode==1)?Mfpcr:Mfpn+Mfpcr);
+         DecodeAdr(ArgStr[1], (AdrNum == 2) ? Mfpcr : Mfpn + Mfpcr);
          if (AdrNum==12)                       /* FMOVE.x FPn,<ea> ? */
           BEGIN
            if (*AttrPart=='\0') OpSize=6;
@@ -3358,6 +3406,40 @@ BEGIN
      return;
     END
 
+   if ((Memo("DMOVE")) OR (Memo("SMOVE")))
+    BEGIN
+     if (ArgCnt != 2) WrError(1110);
+     else if (MomCPU < CPU68040) WrError(1500);
+     else
+      BEGIN
+       DecodeAdr(ArgStr[2], Mfpn);
+       if (AdrNum == 12)
+        BEGIN
+         WAsmCode[0] = 0xf200;
+         WAsmCode[1] = 0x0040 | AdrMode << 7;
+         if (*OpPart == 'D') WAsmCode[1] |= 4;
+         RelPos = 4;
+         if (*AttrPart == '\0') OpSize = 6;
+         Mask = Mfpn+Madri+Mpost+Mpre+Mdadri+Maix+Mpc+Mpcidx+Mabs+Mimm;
+         if ((OpSize <= 2) OR (OpSize == 4))
+          Mask |= Mdata;
+         DecodeAdr(ArgStr[1], Mask);
+         if (AdrNum == 12)
+          BEGIN
+           CodeLen = 4;
+           WAsmCode[1] |= (AdrMode << 10);
+          END
+         else if (AdrNum != 0)
+          BEGIN
+           CodeLen = 4 + AdrCnt; CopyAdrVals(WAsmCode + 2);
+           WAsmCode[0] |= AdrMode;
+           WAsmCode[1] |= 0x4000 | (((Word)FSizeCodes[OpSize]) << 10);
+          END
+        END
+      END
+     return;
+    END
+
    if (*OpPart=='S')
     BEGIN
      for (z=0; z<FPUCondCnt; z++)
@@ -3416,16 +3498,27 @@ BEGIN
      if (ArgCnt!=2) WrError(1110);
      else
       BEGIN
-       DecodeFRegList(ArgStr[2],&z1,&z2);
-       if (z1!=0)
+       DecodeFRegList(ArgStr[2], &z1, &z2);
+       if (z1 != 0)
         BEGIN
-         if ((*AttrPart!='\0') AND (((z1<3) AND (OpSize!=6)) OR ((z1==3) AND (OpSize!=2))))
+         if ((*AttrPart != '\0')
+         AND (((z1 < 3) AND (OpSize != 6))
+           OR ((z1 == 3) AND (OpSize != 2))))
           WrError(1130);
          else
           BEGIN
-           RelPos=4;
-           DecodeAdr(ArgStr[1],Madri+Mpost+(z1==3?0:Mpre)+Mdadri+Maix+Mpc+Mpcidx+Mabs);
-           WAsmCode[1]=0; GenerateMovem(z1,z2);
+           RelPos = 4;
+           Mask = Madri + Mpost + Mdadri + Maix + Mpc + Mpcidx + Mabs + Mimm;
+           if (z1 == 3)   /* Steuerregister auch Predekrement */
+            BEGIN
+             Mask |= Mpre;
+             if ((z2 == 4) | (z2 == 2) | (z2 == 1)) /* nur ein Register */
+              Mask |= Mdata;
+             if (z2 == 1) /* nur FPIAR */
+              Mask |= Madr;
+            END
+           DecodeAdr(ArgStr[1], Mask);
+           WAsmCode[1] = 0; GenerateMovem(z1, z2);
           END
         END
        else
@@ -3437,8 +3530,17 @@ BEGIN
             WrError(1130);
            else
             BEGIN
-             DecodeAdr(ArgStr[2],Madri+Mpost+(z1==3?0:Mpre)+Mdadri+Maix+Mabs);
-             WAsmCode[1]=0x2000; GenerateMovem(z1,z2);
+             Mask = Madri + Mpost + Mdadri + Maix + Mabs;
+             if (z1 == 3)   /* Steuerregister auch Postinkrement */
+              BEGIN
+               Mask |= Mpre;
+               if ((z2 == 4) | (z2 == 2) | (z2 == 1)) /* nur ein Register */
+                Mask |= Mdata;
+               if (z2 == 1) /* nur FPIAR */
+                Mask |= Madr;
+              END
+             DecodeAdr(ArgStr[2], Mask);
+             WAsmCode[1] = 0x2000; GenerateMovem(z1, z2);
             END
           END
          else WrError(1410);
@@ -4039,11 +4141,11 @@ BEGIN
       BEGIN
        if (strchr(ArgStr[2],':')==Nil)
         BEGIN
-         strcat(ArgStr[2],":");
-         strcat(ArgStr[2],ArgStr[2]);
-         ArgStr[2][strlen(ArgStr[2])-1]='\0';
+         strcpy(ArgStr[3], ArgStr[2]);
+         strcat(ArgStr[2], ":");
+         strcat(ArgStr[2], ArgStr[3]);
         END
-       if (NOT CodeRegPair(ArgStr[2],&w1,&w2)) WrError(1760);
+       if (NOT CodeRegPair(ArgStr[2],&w1,&w2)) WrXError(1760, ArgStr[2]);
        else
 	BEGIN
 	 WAsmCode[1]=w1+(w2 << 12); RelPos=4;
@@ -4259,15 +4361,6 @@ BEGIN
    SetFlag(&FullPMMU,FullPMMUName,True);
 END
 
-	static Boolean ChkPC_68K(void)
-BEGIN
-#ifdef HAS64
-   return ((ActPC==SegCode) AND (ProgCounter()<=0xffffffffll)); 
-#else  
-   return (ActPC==SegCode);
-#endif
-END
-
 	static Boolean IsDef_68K(void)
 BEGIN
    return False;
@@ -4287,8 +4380,13 @@ BEGIN
 
    ValidSegs=(1<<SegCode);
    Grans[SegCode]=1; ListGrans[SegCode]=2; SegInits[SegCode]=0;
+#ifdef __STDC__
+   SegLimits[SegCode] = 0xfffffffful;
+#else
+   SegLimits[SegCode] = 0xffffffffl;
+#endif
 
-   MakeCode=MakeCode_68K; ChkPC=ChkPC_68K; IsDef=IsDef_68K;
+   MakeCode=MakeCode_68K; IsDef=IsDef_68K;
 
    SwitchFrom=SwitchFrom_68K; InitFields();
    AddONOFF("PMMU"    , &PMMUAvail , PMMUAvailName, False);

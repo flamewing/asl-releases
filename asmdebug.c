@@ -4,6 +4,12 @@
 /* Verwaltung der Debug-Informationen zur Assemblierzeit                     */
 /*                                                                           */
 /* Historie: 16. 5.1996 Grundsteinlegung                                     */
+/*           24. 7.1998 NoICE-Format                                         */
+/*           25. 7.1998 Adresserfassung Dateien                              */
+/*           16. 8.1998 Case-Sensitivitaet NoICE                             */
+/*                      NoICE-Zeileninfo nach Dateien sortiert               */
+/*           29. 1.1999 uninitialisierten Speicherzugriff beseitigt          */
+/*            2. 5.1999 optional mehrere Records im Atmel-Format schreiben   */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -28,7 +34,7 @@ typedef struct
           LongInt LineNum;
           Integer FileName;
           ShortInt Space;
-          LongInt Address;
+          LargeInt Address;
           Word Code;
          } TLineInfo;
 
@@ -44,30 +50,57 @@ PLineInfoList LineInfoRoot;
 
 
 	void AddLineInfo(Boolean InMacro, LongInt LineNum, char *FileName,
-                         ShortInt Space, LongInt Address)
+                         ShortInt Space, LargeInt Address, LargeInt Len)
 BEGIN
-   PLineInfoList P,Run;
+   PLineInfoList PNeu, PFirst, PLast, Run, Link;
+   int RecCnt, z;
+   Integer FNum;
 
-   P=(PLineInfoList) malloc(sizeof(TLineInfoList));
-   P->Contents.InMacro=InMacro;
-   P->Contents.LineNum=LineNum;
-   P->Contents.FileName=GetFileNum(FileName);
-   P->Contents.Space=Space;
-   P->Contents.Address=Address;
-   P->Contents.Code=(CodeLen<1) ? 0 : WAsmCode[0];
+   /* wieviele Records schreiben ? */
 
-   Run=LineInfoRoot;
-   if (Run==Nil)
-    BEGIN
-     LineInfoRoot=P; P->Next=Nil;
-    END
+   if ((DebugMode == DebugAtmel) AND (CodeLen > 1)) RecCnt = CodeLen;
+   else RecCnt = 1;
+
+   FNum = GetFileNum(FileName);
+
+   /* Einfuegepunkt in Liste finden */
+
+   Run = LineInfoRoot;
+   if (Run == Nil)
+    Link = Nil;
    else
     BEGIN
-     while ((Run->Next!=Nil) AND (Run->Next->Contents.Space<Space)) Run=Run->Next;
-     while ((Run->Next!=Nil) AND (Run->Next->Contents.FileName<P->Contents.FileName)) Run=Run->Next;
-     while ((Run->Next!=Nil) AND (Run->Next->Contents.Address<Address)) Run=Run->Next;
-     P->Next=Run->Next; Run->Next=P;
+     while ((Run->Next != Nil) AND (Run->Next->Contents.Space < Space)) Run = Run->Next;
+     while ((Run->Next != Nil) AND (Run->Next->Contents.FileName < FNum)) Run = Run->Next;
+     while ((Run->Next != Nil) AND (Run->Next->Contents.Address < Address)) Run = Run->Next;
+     Link = Run->Next;
     END
+
+   /* neue Teilliste bilden */
+
+   PLast = PFirst = NULL;
+   for (z = 0; z < RecCnt; z++)
+    BEGIN
+     PNeu = (PLineInfoList) malloc(sizeof(TLineInfoList));
+     PNeu->Contents.InMacro = InMacro;
+     PNeu->Contents.LineNum = LineNum;
+     PNeu->Contents.FileName = FNum;
+     PNeu->Contents.Space = Space;
+     PNeu->Contents.Address = Address + z;
+     PNeu->Contents.Code = ((CodeLen < z + 1) OR (DontPrint)) ? 0 : WAsmCode[z];
+     if (z == 0) PFirst = PNeu;
+     if (PLast != NULL) PLast->Next = PNeu;
+     PLast = PNeu;
+    END
+
+   /* Teilliste einhaengen */
+
+   if (Run == Nil) LineInfoRoot = PFirst;
+   else Run->Next = PFirst;
+   PLast->Next = Link;
+
+   if (Space == SegCode)
+    AddAddressRange(FNum, Address, Len);
 END
 
 
@@ -103,7 +136,7 @@ BEGIN
    int ModZ;
    ShortInt ActSeg;
    FILE *MAPFile;
-   String MAPName;
+   String MAPName,Tmp;
 
    strmaxcpy(MAPName,SourceFile,255); KillSuffix(MAPName); AddSuffix(MAPName,MapSuffix);
    MAPFile=fopen(MAPName,"w"); if (MAPFile==Nil) ChkIO(10001);
@@ -133,7 +166,8 @@ BEGIN
        errno=0; fprintf(MAPFile,"File %s\n",GetFileName(Run->Contents.FileName)); ChkIO(10004);
       END;
      errno=0; 
-     fprintf(MAPFile,"%5d:%08x ",Run->Contents.LineNum,Run->Contents.Address); 
+     sprintf(Tmp,LongIntFormat,Run->Contents.LineNum);
+     fprintf(MAPFile,"%5s:%s ",Tmp,HexString(Run->Contents.Address,8)); 
      ChkIO(10004);
      if (++ModZ==5)
       BEGIN
@@ -217,6 +251,57 @@ BEGIN
    fclose(OBJFile);
 END
 
+	static void DumpDebugInfo_NOICE(void)
+BEGIN
+   PLineInfoList Run;
+   Integer ActFile;
+   FILE *MAPFile;
+   String MAPName,Tmp1,Tmp2;
+   LargeWord Start,End;
+   Boolean HadLines;
+
+   strmaxcpy(MAPName,SourceFile,255); KillSuffix(MAPName); AddSuffix(MAPName,".noi");
+   MAPFile=fopen(MAPName,"w"); if (MAPFile==Nil) ChkIO(10001);
+
+   fprintf(MAPFile,"CASE %d\n",(CaseSensitive) ? 1 : 0);
+
+   PrintNoISymbols(MAPFile);
+
+   for (ActFile=0; ActFile<GetFileCount(); ActFile++)
+    BEGIN
+     HadLines=FALSE;
+     Run=LineInfoRoot;
+     while (Run!=Nil)
+      BEGIN
+       if ((Run->Contents.Space==SegCode) AND (Run->Contents.FileName==ActFile))
+        BEGIN
+         if (NOT HadLines)
+          BEGIN
+           GetAddressRange(ActFile,&Start,&End);
+           sprintf(Tmp1,LargeIntFormat,Start);
+           errno=0; 
+           fprintf(MAPFile,"FILE %s %s\n",GetFileName(Run->Contents.FileName),Tmp1);
+           ChkIO(10004);
+          END
+         errno=0; 
+         sprintf(Tmp1,LongIntFormat,Run->Contents.LineNum);
+         sprintf(Tmp2,LargeIntFormat,Run->Contents.Address-Start);
+         fprintf(MAPFile,"LINE %s %s\n",Tmp1,Tmp2); 
+         ChkIO(10004);
+         HadLines=TRUE;
+        END
+       Run=Run->Next;
+      END
+     if (HadLines)
+      BEGIN
+       sprintf(Tmp1,LongIntFormat,End);
+       errno=0; fprintf(MAPFile,"ENDFILE %s\n",Tmp1); ChkIO(10004);
+      END
+    END
+
+   fclose(MAPFile);
+END
+
 
         void DumpDebugInfo(void)
 BEGIN
@@ -224,6 +309,7 @@ BEGIN
     BEGIN
      case DebugMAP: DumpDebugInfo_MAP(); break;
      case DebugAtmel: DumpDebugInfo_Atmel(); break;
+     case DebugNoICE: DumpDebugInfo_NOICE(); break;
      default: break;
     END
 END

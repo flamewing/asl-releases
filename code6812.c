@@ -5,6 +5,8 @@
 /* Codegeneratormodul CPU12                                                  */
 /*                                                                           */
 /* Historie: 13.10.1996 Grundsteinlegung                                     */
+/*           25.10.1998 dir. 16-Bit-Modus von ...11 auf ...10 korrigiert     */
+/*            2. 1.1999 ChkPC-Anpassung                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -535,7 +537,7 @@ BEGIN
           else
            BEGIN
             if (AdrVals[0]==PCReg) AdrWord-=3;
-            AdrVals[0]=0xe3+(AdrVals[0] << 3);
+            AdrVals[0]=0xe2+(AdrVals[0] << 3);
             AdrVals[1]=(AdrWord >> 8) & 0xff;
             AdrVals[2]=AdrWord & 0xff;
             AdrCnt=3; AdrMode=ModIdx2;
@@ -1107,12 +1109,6 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-        static Boolean ChkPC_6812(void)
-BEGIN
-   if (ActPC==SegCode) return (ProgCounter()<0x10000);
-   else return False;
-END
-
         static Boolean IsDef_6812(void)
 BEGIN
    return False;
@@ -1132,8 +1128,9 @@ BEGIN
 
    ValidSegs=(1<<SegCode);
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
+   SegLimits[SegCode] = 0xffff;
 
-   MakeCode=MakeCode_6812; ChkPC=ChkPC_6812; IsDef=IsDef_6812;
+   MakeCode=MakeCode_6812; IsDef=IsDef_6812;
    SwitchFrom=SwitchFrom_6812; InitFields();
    AddMoto16PseudoONOFF();
 

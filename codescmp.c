@@ -4,7 +4,8 @@
 /*                                                                           */
 /* Codegenerator National SC/MP                                              */
 /*                                                                           */
-/* Historie: 17.2.1996 Grundsteinlegung                                      */
+/* Historie: 17. 2.1996 Grundsteinlegung                                     */
+/*            2. 1.1998 ChkPC umgestellt                                     */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -292,15 +293,6 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-        static Boolean ChkPC_SCMP(void)
-BEGIN
-   switch (ActPC)
-    BEGIN
-     case SegCode: return (ProgCounter()<0x10000);
-     default: return False;
-    END
-END
-
         static Boolean IsDef_SCMP(void)
 BEGIN
    return False;
@@ -320,8 +312,9 @@ BEGIN
 
    ValidSegs=1<<SegCode;
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
+   SegLimits[SegCode] = 0xffff;
 
-   MakeCode=MakeCode_SCMP; ChkPC=ChkPC_SCMP; IsDef=IsDef_SCMP;
+   MakeCode=MakeCode_SCMP; IsDef=IsDef_SCMP;
    SwitchFrom=SwitchFrom_SCMP; InitFields();
 END
 

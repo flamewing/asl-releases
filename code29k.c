@@ -5,6 +5,7 @@
 /* Codegenerator AM29xxx-Familie                                             */
 /*                                                                           */
 /* Historie: 18.11.1996 Grundsteinlegung                                     */
+/*            3. 1.1999 ChkPC-Anpassung                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -841,15 +842,6 @@ BEGIN
    Reg_RBP=0; ClearStringList(&Emulations);
 END
 
-        static Boolean ChkPC_29K(void)
-BEGIN
-#ifdef HAS64
-   return ((ActPC==SegCode) AND (ProgCounter()<=0xffffffffll));
-#else
-   return (ActPC==SegCode);
-#endif
-END
-
         static Boolean IsDef_29K(void)
 BEGIN
    return False;
@@ -869,8 +861,13 @@ BEGIN
 
    ValidSegs=1<<SegCode;
    Grans[SegCode]=1; ListGrans[SegCode]=4; SegInits[SegCode]=0;
+#ifdef __STDC__
+   SegLimits[SegCode] = 0xfffffffful;
+#else
+   SegLimits[SegCode] = 0xffffffffl;
+#endif
 
-   MakeCode=MakeCode_29K; ChkPC=ChkPC_29K; IsDef=IsDef_29K;
+   MakeCode=MakeCode_29K; IsDef=IsDef_29K;
    AddONOFF("SUPMODE", &SupAllowed, SupAllowedName,False);
 
    SwitchFrom=SwitchFrom_29K; InitFields();

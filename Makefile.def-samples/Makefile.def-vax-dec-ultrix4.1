@@ -2,10 +2,10 @@
 # choose your compiler (must be ANSI-compliant!) and linker command, plus
 # any additionally needed flags
 
-CC = cc
-LD = cc
-CFLAGS = -O -Dsigned= -Dconst= -J
-LDFLAGS = -cV
+CC = gcc
+LD = gcc
+CFLAGS = -O3 -fomit-frame-pointer -Wall
+LDFLAGS = -lcV
 
 # -------------------------------------------------------------------------
 # directories where binaries, includes, and manpages should go during

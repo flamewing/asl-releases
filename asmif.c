@@ -370,7 +370,7 @@ BEGIN
       else Result=False;
       break;
      case 'E':
-      if (Memo("ELSEIF")) CodeELSEIF();
+      if ((Memo("ELSE")) OR (Memo("ELSEIF"))) CodeELSEIF();
       else if (Memo("ENDIF")) CodeENDIF();
       else if (Memo("ELSECASE")) CodeELSECASE();
       else if (Memo("ENDCASE")) CodeENDCASE();

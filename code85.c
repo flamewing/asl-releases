@@ -5,6 +5,7 @@
 /* Codegenerator 8080/8085                                                   */
 /*                                                                           */
 /* Historie: 24.10.1996 Grundsteinlegung                                     */
+/*            2. 1.1999 ChkPC-Anpassung                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -388,16 +389,6 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static Boolean ChkPC_85(void)
-BEGIN
-   switch (ActPC)
-    BEGIN
-     case SegCode:  return (ProgCounter() < 0x10000);
-     case SegIO:    return (ProgCounter() < 0x100);
-     default:       return False;
-    END
-END
-
 	static Boolean IsDef_85(void)
 BEGIN
    return (Memo("PORT"));
@@ -417,9 +408,11 @@ BEGIN
 
    ValidSegs=(1<<SegCode)|(1<<SegIO);
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
+   SegLimits[SegCode] = 0xffff;
    Grans[SegIO  ]=1; ListGrans[SegIO  ]=1; SegInits[SegIO  ]=0;
+   SegLimits[SegIO  ] = 0xff;
 
-   MakeCode=MakeCode_85; ChkPC=ChkPC_85; IsDef=IsDef_85;
+   MakeCode=MakeCode_85; IsDef=IsDef_85;
    SwitchFrom=SwitchFrom_85; InitFields();
 END
 

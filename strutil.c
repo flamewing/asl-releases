@@ -6,6 +6,9 @@
 /*                                                                           */
 /* Historie:  5. 5.1996 Grundsteinlegung                                     */
 /*           13. 8.1997 KillBlanks-Funktionen aus asmsub.c heruebergenommen  */
+/*           29. 8.1998 sprintf-Emulation                                    */
+/*           17. 4.1999 strcasecmp gegen Nullzeiger geschuetzt               */
+/*           30. 5.1999 ConstLongInt akzeptiert auf 0x fuer Hex-Zahlen       */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -15,6 +18,9 @@
 
 #include "strutil.h"
 #undef strlen   /* VORSICHT, Rekursion!!! */
+#ifdef BROKEN_SPRINTF
+#undef sprintf
+#endif
 
 Boolean HexLowerCase;	    /* Hex-Konstanten mit Kleinbuchstaben */
 
@@ -37,26 +43,67 @@ END
 
 #define BufferCnt 8
 
-        char *HexString(LargeWord i, Byte Stellen)
+	char *HexString(LargeWord i, int Stellen)
 BEGIN
-   static char *UDigitVals="0123456789ABCDEF",*LDigitVals="0123456789abcdef",*ptr;
-   static String h[BufferCnt];
-   static int z=0;
+   static ShortString h[BufferCnt];
+   static int z = 0;
+   LargeWord digit;
+   char *ptr;
 
-   if (Stellen>8) Stellen=8;
-   h[z][0]='\0';
+   if (Stellen > sizeof(ShortString) - 1)
+    Stellen = sizeof(ShortString) - 1;
+
+   ptr = h[z] + sizeof(ShortString) - 1;
+   *ptr = '\0';
    do
     BEGIN
-     memmove(h[z]+1,h[z],strlen(h[z])+1);
-     h[z][0]=(HexLowerCase)?(LDigitVals[i&15]):(UDigitVals[i&15]);
-     i>>=4;
+     digit = i & 15;
+     if (digit < 10)
+      *(--ptr) = digit + '0';
+     else if (HexLowerCase)
+      *(--ptr) = digit - 10 + 'a';
+     else
+      *(--ptr) = digit - 10 + 'A';
+     i = i >> 4;
+     Stellen--;
     END
-   while ((i!=0) OR (strlen(h[z])<Stellen));
-   ptr=h[z];
-   z=(z+1)%BufferCnt;
+   while ((Stellen > 0) OR (i != 0));
+
+   z = (z + 1) % BufferCnt;
+
    return ptr;
 END
 
+	char *SysString(LargeWord i, LargeWord System, int Stellen)
+BEGIN
+   static ShortString h[BufferCnt];
+   static int z = 0;
+   LargeWord digit;
+   char *ptr;
+
+   if (Stellen > sizeof(ShortString) - 1)
+    Stellen = sizeof(ShortString) - 1;
+
+   ptr = h[z] + sizeof(ShortString) - 1;
+   *ptr = '\0';
+   do
+    BEGIN
+     digit = i % System;
+     if (digit < 10)
+      *(--ptr) = digit + '0';
+     else if (HexLowerCase)
+      *(--ptr) = digit - 10 + 'a';
+     else
+      *(--ptr) = digit - 10 + 'A';
+     i /= System;
+     Stellen--;
+    END
+   while ((Stellen > 0) OR (i != 0));
+
+   z = (z + 1) % BufferCnt;
+
+   return ptr;
+END
 
 /*--------------------------------------------------------------------------*/
 /* dito, nur vorne Leerzeichen */
@@ -126,6 +173,8 @@ END
 #ifdef NEEDS_CASECMP
 	int strcasecmp(const char *src1, const char *src2)
 BEGIN
+   if (src1 == NULL) src1 = "";
+   if (src2 == NULL) src2 = "";
    while (toupper(*src1)==toupper(*src2))
     BEGIN
      if ((NOT *src1) AND (NOT *src2)) return 0;
@@ -136,6 +185,8 @@ END
 
 	int strncasecmp(const char *src1, const char *src2, int len)
 BEGIN
+   if (src1 == NULL) src1 = "";
+   if (src2 == NULL) src2 = "";
    while (toupper(*src1)==toupper(*src2))
     BEGIN
      if (--len==0) return 0;
@@ -156,6 +207,24 @@ BEGIN
    for (z=0; z<=lh-ln; z++)
     if (strncmp(p=haystack+z,needle,ln)==0) return p;
    return Nil;
+END
+#endif
+
+#ifdef BROKEN_SPRINTF
+#include <varargs.h>
+
+	int mysprintf(va_alist) va_dcl
+BEGIN
+   va_list pvar;
+   char *form,*dest,*run;
+
+   va_start(pvar);
+   dest=va_arg(pvar,char*);
+   form=va_arg(pvar,char*);
+   vsprintf(dest,form,pvar);
+
+   for (run=dest; *run!='\0'; run++);
+   return run-dest;
 END
 #endif
 
@@ -268,27 +337,35 @@ BEGIN
 
    /* eventuelles Vorzeichen abspalten */
 
-   if (*inp=='-')
+   if (*inp == '-')
     BEGIN
-     vorz=(-1); inp++;
+     vorz = (-1); inp++;
     END
 
+   /* Sonderbehandlung 0x --> $ */
+
+   if ((strlen(inp) >= 2) && (*inp == '0') && (toupper(inp[1]) == 'X'))
+    BEGIN
+     inp += 2;
+     Base = 16;
+    END
 
    /* Jetzt das Zahlensystem feststellen.  Vorgabe ist dezimal, was
       sich aber durch den Initialwert von Base jederzeit aendern
       laesst.  Der break-Befehl verhindert, dass mehrere Basenzeichen
       hintereinander eingegeben werden koennen */
 
-   for (z=0; z<3; z++)
-    if (*inp==Prefixes[z])
-     BEGIN
-      Base=Bases[z]; inp++; break;
-     END
+   else
+    for (z = 0; z < 3; z++)
+     if (*inp == Prefixes[z])
+      BEGIN
+       Base = Bases[z]; inp++; break;
+      END
 
    /* jetzt die Zahlenzeichen der Reihe nach durchverwursten */
 
    erg=0; *err=False;
-   for(; *inp; inp++)
+   for(; *inp != '\0'; inp++)
     BEGIN
      /* Ziffern 0..9 ergeben selbiges */
 
@@ -304,22 +381,28 @@ BEGIN
 
      /* alles andere ist Schrott */
 
-     else return erg;
+     else break;
 
      /* entsprechend der Basis zulaessige Ziffer ? */
 
-     if (val>=Base) return erg;
+     if (val>=Base) break;
 
      /* Zahl linksschieben, zusammenfassen, naechster bitte */
 
      erg=erg*Base+val;
     END
 
-   /* Vorzeichen beruecksichtigen */
+   /* bis zum Ende durchgelaufen ? */
+   
+   if (*inp == '\0')
+    BEGIN
+     /* Vorzeichen beruecksichtigen */
 
-   erg*=vorz;
+     erg*=vorz;
+     *err=True;
+    END
 
-   *err=True; return erg;
+   return erg;
 END
 
 /*--------------------------------------------------------------------------*/

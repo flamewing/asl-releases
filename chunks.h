@@ -8,6 +8,7 @@
 /* Verwaltung von Adressbereichslisten                                       */
 /*                                                                           */
 /* Historie: 16. 5.1996 Grundsteinlegung                                     */
+/*           16. 8.1998 Min/Max-Ausgabe                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -30,6 +31,12 @@ extern void DeleteChunk(ChunkList *NChunk, LargeWord DelStart, LargeWord DelLen)
 extern void InitChunk(ChunkList *NChunk);
 
 extern void ClearChunk(ChunkList *NChunk);
+
+extern LargeWord ChunkMin(ChunkList *NChunk);
+
+extern LargeWord ChunkMax(ChunkList *NChunk);
+
+extern LargeWord ChunkSum(ChunkList *NChunk);
 
 
 extern void chunks_init(void);

@@ -6,6 +6,7 @@
 /*                                                                           */
 /* Historie:  4. 5.1996 Grundsteinlegung                                     */
 /*            1. 6.1996 Empty-Funktion                                       */
+/*           17. 4.1999 Key-Files in Kommandozeile                           */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -41,8 +42,11 @@ BEGIN
    return True; 
 END
 
-	static CMDResult ProcessParam(CMDRec *Def, Integer Cnt, 
-                                      char *O_Param, char *O_Next)
+        static void ProcessFile(char *Name_O, CMDRec *Def, Integer Cnt, CMDErrCallback ErrProc);
+
+	static CMDResult ProcessParam(CMDRec *Def, Integer Cnt, char *O_Param,
+                                      char *O_Next, Boolean AllowLink,
+                                      CMDErrCallback ErrProc)
 BEGIN
    int Start;
    Boolean Negate;
@@ -53,8 +57,21 @@ BEGIN
    strncpy(Param,O_Param,255); 
    strncpy(Next,O_Next,255);
 
-   if ((*Next=='-') OR (*Next=='+')) *Next='\0';
-   if ((*Param=='-') OR (*Param=='+')) 
+   if ((*Next == '-') OR (*Next == '+') OR (*Next == '@')) *Next = '\0';
+   if (*Param == '@')
+    BEGIN
+     if (AllowLink)
+      BEGIN
+       ProcessFile(Param + 1, Def, Cnt, ErrProc);
+       return CMDOK;
+      END
+     else
+      BEGIN
+       fprintf(stderr, "%s\n", catgetmessage(&MsgCat, Num_ErrMsgNoKeyInFile));
+       return CMDErr;
+      END
+    END
+   if ((*Param == '-') OR (*Param == '+')) 
     BEGIN
      Negate=(*Param=='+'); Start=1;
 
@@ -115,7 +132,7 @@ BEGIN
      while (*start!='\0')
       BEGIN
        EnvStr[EnvCnt++]=start;
-       p=strchr(start,' '); if (p==Nil) p=strchr(start,9);
+       p=strchr(start,' '); if (p==Nil) p=strchr(start, '\t');
        if (p!=Nil)
         BEGIN
          *p='\0'; start=p+1;
@@ -126,7 +143,7 @@ BEGIN
      EnvStr[EnvCnt]=start;
 
      for (z=0; z<EnvCnt; z++)
-      switch (ProcessParam(Def,Cnt,EnvStr[z],EnvStr[z+1]))
+      switch (ProcessParam(Def, Cnt, EnvStr[z], EnvStr[z+1], False, ErrProc))
        BEGIN
         case CMDErr:
         case CMDFile: ErrProc(True,EnvStr[z]); break;
@@ -136,44 +153,50 @@ BEGIN
     END
 END
 
+	static void ProcessFile(char *Name_O, CMDRec *Def, Integer Cnt, CMDErrCallback ErrProc)
+BEGIN
+   FILE *KeyFile;
+   String Name, OneLine;
+
+   strmaxcpy(Name, Name_O, 255);
+   ClrBlanks(OneLine);
+
+   KeyFile=fopen(Name, "r");
+   if (KeyFile == Nil) ErrProc(True, catgetmessage(&MsgCat, Num_ErrMsgKeyFileNotFound));
+   while (NOT feof(KeyFile))
+    BEGIN
+     errno = 0; ReadLn(KeyFile, OneLine);
+     if ((errno != 0) AND (NOT feof(KeyFile)))
+      ErrProc(True, catgetmessage(&MsgCat, Num_ErrMsgKeyFileError));
+     DecodeLine(Def, Cnt, OneLine, ErrProc);
+    END
+   fclose(KeyFile);
+END
+
 	void ProcessCMD(CMDRec *Def, Integer Cnt, CMDProcessed Unprocessed,
                         char *EnvName, CMDErrCallback ErrProc)
 BEGIN
    int z;
    String OneLine;
-   FILE *KeyFile;
 
    if (getenv(EnvName)==Nil) OneLine[0]='\0';
    else strncpy(OneLine,getenv(EnvName),255);
 
    if (OneLine[0]=='@')
-    BEGIN
-     strcpy(OneLine,OneLine+1); ClrBlanks(OneLine);
-     KeyFile=fopen(OneLine,"r");
-     if (KeyFile==Nil) ErrProc(True,catgetmessage(&MsgCat,Num_ErrMsgKeyFileNotFound));
-     while (NOT feof(KeyFile))
-      BEGIN
-       errno=0; ReadLn(KeyFile,OneLine);
-       if ((errno!=0) AND (NOT feof(KeyFile))) ErrProc(True,catgetmessage(&MsgCat,Num_ErrMsgKeyFileError));
-       DecodeLine(Def,Cnt,OneLine,ErrProc);
-      END
-     fclose(KeyFile);
-    END
-
+     ProcessFile(OneLine + 1, Def, Cnt, ErrProc);
    else DecodeLine(Def,Cnt,OneLine,ErrProc);
 
    for (z=0; z<=ParamCount; Unprocessed[z++]=(z!=0));
    for (z=1; z<=ParamCount; z++)
     if (Unprocessed[z])
-     BEGIN
-     switch (ProcessParam(Def,Cnt,ParamStr[z],(z<ParamCount)?ParamStr[z+1]:""))
+     switch (ProcessParam(Def, Cnt, ParamStr[z], (z < ParamCount) ? ParamStr[z + 1] : "",
+                          True, ErrProc))
       BEGIN
        case CMDErr: ErrProc(False,ParamStr[z]); break;
        case CMDOK:  Unprocessed[z]=False; break;
        case CMDArg: Unprocessed[z]=Unprocessed[z+1]=False; break;
        case CMDFile: break; /** **/
       END
-     END
 END
 
         char *GetEXEName(void)

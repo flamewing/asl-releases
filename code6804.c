@@ -5,6 +5,7 @@
 /* AS-Codeenerator Motorola/ST 6804                                          */
 /*                                                                           */
 /* Historie: 17.10.1996 Grundsteinlegung                                     */
+/*            2. 1.1999 ChkPC-Anpassung                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -417,16 +418,6 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static Boolean ChkPC_6804(void)
-BEGIN
-   switch (ActPC)
-    BEGIN
-     case SegCode: return ProgCounter()<=0xfff;
-     case SegData: return ProgCounter()<=0xff;
-     default: return False;
-    END
-END
-
 	static Boolean IsDef_6804(void)
 BEGIN
    return (Memo("SFR"));
@@ -446,9 +437,11 @@ BEGIN
 
    ValidSegs=(1<<SegCode)|(1<<SegData);
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
+   SegLimits[SegCode] = 0xfff;
    Grans[SegData]=1; ListGrans[SegData]=1; SegInits[SegData]=0;
+   SegLimits[SegData] = 0xff;
 
-   MakeCode=MakeCode_6804; ChkPC=ChkPC_6804; IsDef=IsDef_6804;
+   MakeCode=MakeCode_6804; IsDef=IsDef_6804;
    SwitchFrom=SwitchFrom_6804; InitFields();
 END
 

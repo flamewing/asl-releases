@@ -5,6 +5,7 @@
 /* Codegeneratormodul CPU16                                                  */
 /*                                                                           */
 /* Historie: 15.10.1996 Grundsteinlegung                                     */
+/*            2. 1.1999 ChkPC-Anpassung                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -1037,12 +1038,6 @@ BEGIN
    Reg_EK=0;
 END
 
-	static Boolean ChkPC_6816(void)
-BEGIN
-   if (ActPC==SegCode) return (ProgCounter()<0x100000);
-   else return False;
-END
-
 	static Boolean IsDef_6816(void)
 BEGIN
    return False;
@@ -1062,8 +1057,9 @@ BEGIN
 
    ValidSegs=(1<<SegCode);
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
+   SegLimits[SegCode] = 0xfffffl;
 
-   MakeCode=MakeCode_6816; ChkPC=ChkPC_6816; IsDef=IsDef_6816;
+   MakeCode=MakeCode_6816; IsDef=IsDef_6816;
    SwitchFrom=SwitchFrom_6816;
 
    InitFields();

@@ -1,4 +1,4 @@
-
+;
 ; Aufgabe Nr.: Speichermodul fuer uP- Praktikum II
 ; Autor: Joerg Vollandt 
 ; erstellt am : 01.07.1994
@@ -350,6 +350,7 @@ TIEFE_FRS_DO:
 ;        CLR C                                   ; und speichern
 ;        SUBB A,Frs_Ref_Tiefe+1
         MOV Frs_Ref_Tiefe+1,AR7
+;  7
 ;        MOV A,AR6
 ;        SUBB A,Frs_Ref_Tiefe
         MOV Frs_Ref_Tiefe,AR6
@@ -365,7 +366,7 @@ TIEFE_FRS_ENDE:
 ; Funktion : Flags abfragen, nur wenn Ref_Flag und Tiefe_Flag low weiter.
 ;            SetPieceRef Msg. in Speicher ablegen, Drill Marke ablegen,
 ;            Tiefe ablegen.
-; Aufrufparameter : -
+; Aufrrameter : -
 ; Ruechgabeparameter : -
 ; Veraenderte Register :
 ; Stackbedarf :

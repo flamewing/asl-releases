@@ -4,7 +4,7 @@
 
 CC = bcc
 LD = bcc -WX
-CFLAGS =-WX -ml -Oe -k- -Z -d
+CFLAGS =-WX -ml -Oe -k- -Z -d -dc
 
 # -------------------------------------------------------------------------
 # directories where binaries, includes, and manpages should go during

@@ -9,6 +9,7 @@
 ;* 									    *
 ;*   letzte Änderungen : 30. 8.1996                                         *
 ;*                        8. 2.1997 if MomPass...                           *
+;*                        7. 7.1999 added two more M16C family CPU entries  *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -22,8 +23,12 @@ regm16cinc      equ     1
                   fatal   "please be more specific; do not use the generic processor type for this header file!"
                  case    "M30600M8"
                   message "including M30600M8-registers"
+		 case    "M30610"
+		  message "including M30610 registers"
+		 case 	 "M30620"
+		  message "including M30620 registers"
                  elsecase
-                  fatal   "invalid processor type: only M30600M8 allowed!"
+                  fatal   "invalid processor type: only M30600M8, M30610, or M30620 allowed!"
                  endcase
                 endif
 
@@ -337,6 +342,9 @@ VCUT            equ     ADCON1<<3+5
 OPA0            equ     ADCON1<<3+6
 OPA1            equ     ADCON1<<3+7
 
+ADCON2		equ	03d4h
+SMP		equ	ADCON2<<3+0	; A-D Conversion method bit
+
 ;----------------------------------------------------------------------------
 ; D/A-Wandler
 
@@ -393,6 +401,16 @@ IROM            equ     0f0000h         ; 64K ROM am Ende des Speicherraums
 IROMEND         equ     0fffffh
 IRAM            equ     000400h         ; 10K RAM hinter SFRs
 IRAMEND         equ     002c00h
+		case	"M30610"	; 128k ROM
+IROM		equ	0e0000h
+IROMEND		equ	0fffffh
+IRAM		equ	000400h
+IRAMEND		equ	002c00h		; 10k RAM
+		case	"M30620"
+IROM            equ     0e0000h
+IROMEND         equ     0fffffh
+IRAM            equ     000400h
+IRAMEND         equ     002c00h         ; 10k RAM
                 endcase
 
 ;----------------------------------------------------------------------------

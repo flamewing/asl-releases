@@ -1,4 +1,4 @@
-All right, you want to compile AS with a K&R compiler, and i hope you
+All right, you want to compile AS with a K&R compiler, and I hope you
 have really thought about it before attemptimg this.  Think a second
 and third time before you really go this way!  The procedure is
 tedious and error-prone. I really regard K&R C as being obsolete, and
@@ -11,7 +11,7 @@ that built Unix systems, 68k-equipped and with a very bare System V.3
 port) whose compiler is even too stupid to compile GNU-C, so the
 description will orient along the things I had to do for the Cadmus. 
 This scheme however has also already worked for SunOS/Sparc with the
-old 'cc' compiler fom Sun....
+old 'cc' compiler from Sun....
 
 1. remove the '#error' directives from 'sysdefs.h' - K&R
    preprocessors do not know them.

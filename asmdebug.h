@@ -9,7 +9,7 @@
 /*****************************************************************************/
 
 extern void AddLineInfo(Boolean InMacro, LongInt LineNum, char *FileName, 
-                        ShortInt Space, LongInt Address);
+                        ShortInt Space, LargeInt Address, LargeInt Len);
 
 extern void InitLineInfo(void);
 

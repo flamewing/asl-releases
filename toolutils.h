@@ -5,6 +5,7 @@
 /* Unterroutinen fuer die AS-Tools                                           */
 /*                                                                           */
 /* Historie: 31. 5.1996 Grundsteinlegung                                     */
+/*           30. 5.1999 Adresswildcard-Funktion                              */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -43,6 +44,9 @@ extern Boolean RemoveOffset(char *Name, LongWord *Offset);
 
 
 extern void EraseFile(char *FileName, LongWord Offset);
+
+
+extern Boolean AddressWildcard(char *addr);
 
 
 extern void toolutils_init(char *ProgPath);

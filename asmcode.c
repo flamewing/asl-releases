@@ -60,7 +60,7 @@ BEGIN
    int z;
    LongInt l=CodeLen*Granularity();
 
-    switch (ListGran())
+    switch (ActListGran)
      BEGIN
       case 2: 
        for (z=0; z<(l>>1); z++) 
@@ -104,7 +104,7 @@ BEGIN
     END
 END
 
-       	void NewRecord(void)
+       	void NewRecord(LargeWord NStart)
 BEGIN
    LongInt h;
    LongWord PC;
@@ -114,7 +114,7 @@ BEGIN
     BEGIN
      if (fseek(PrgFile,RecPos,SEEK_SET)!=0) ChkIO(10003);
      WrRecHeader();
-     h=PCs[ActPC];
+     h=NStart;
      if (NOT Write4(PrgFile,&h)) ChkIO(10004);
      LenPos=ftell(PrgFile);
      if (NOT Write2(PrgFile,&LenSoFar)) ChkIO(10004);
@@ -128,7 +128,7 @@ BEGIN
 
      RecPos=h; LenSoFar=0;
      WrRecHeader();
-     PC=PCs[ActPC];
+     PC=NStart;
      if (NOT Write4(PrgFile,&PC)) ChkIO(10004);
      LenPos=ftell(PrgFile);
      if (NOT Write2(PrgFile,&LenSoFar)) ChkIO(10004);
@@ -150,7 +150,7 @@ BEGIN
 
    CodeBufferFill=0;
    RecPos=ftell(PrgFile); LenSoFar=0;
-   NewRecord();
+   NewRecord(PCs[ActPC]);
 END
 
 /*---- Codedatei schliessen -------------------------------------------------*/
@@ -163,7 +163,7 @@ BEGIN
 
    sprintf(h,"AS %s/%s-%s",Version,ARCHPRNAME,ARCHSYSNAME);
 
-   NewRecord();
+   NewRecord(PCs[ActPC]);
    fseek(PrgFile,RecPos,SEEK_SET);
 
    if (StartAdrPresent)
@@ -188,7 +188,7 @@ BEGIN
 
    if (CodeLen==0) return; ErgLen=CodeLen*Granularity();
    if ((TurnWords!=0)!=(BigEndian!=0)) DreheCodes();
-   if (((LongInt)LenSoFar)+((LongInt)ErgLen)>0xffff) NewRecord();
+   if (((LongInt)LenSoFar)+((LongInt)ErgLen)>0xffff) NewRecord(PCs[ActPC]);
    if (CodeBufferFill+ErgLen<CodeBufferSize)
     BEGIN
      memcpy(CodeBuffer+CodeBufferFill,BAsmCode,ErgLen);

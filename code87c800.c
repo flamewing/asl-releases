@@ -5,6 +5,7 @@
 /* Codegenerator TLCS-870                                                    */
 /*                                                                           */
 /* Historie: 29.12.1996 Grundsteinlegung                                     */
+/*            2. 1.1999 ChkPC umgebaut                                       */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -1281,15 +1282,6 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static Boolean ChkPC_87C800(void)
-BEGIN
-   switch (ActPC)
-    BEGIN
-     case SegCode: return (ProgCounter()<=0xffff);
-     default: return False;
-    END
-END
-
 	static Boolean IsDef_87C800(void)
 BEGIN
    return False;
@@ -1309,8 +1301,9 @@ BEGIN
 
    ValidSegs=1<<SegCode;
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
+   SegLimits[SegCode] = 0xffff;
 
-   MakeCode=MakeCode_87C800; ChkPC=ChkPC_87C800; IsDef=IsDef_87C800;
+   MakeCode=MakeCode_87C800; IsDef=IsDef_87C800;
    SwitchFrom=SwitchFrom_87C800; InitFields();
 END
 

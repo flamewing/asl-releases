@@ -27,6 +27,7 @@ typedef LongWord LargeWord;
 #endif
 
 typedef signed int sint;
+typedef unsigned int usint;
 
 typedef char Char;
 
@@ -36,6 +37,7 @@ typedef float Single;
 typedef Byte Boolean; 
 
 typedef char String[256];
+typedef char ShortString[65];
 
 #ifndef TRUE
 #define TRUE 1

@@ -4,7 +4,10 @@
 /*                                                                           */
 /* Codegenerator SGS-Thomson ST9                                             */
 /*                                                                           */
-/* Historie: 10.2.1997 Grundsteinlegung                                      */
+/* Historie: 10. 2.1997 Grundsteinlegung                                     */
+/*            1. 7.1998 Warnungen bei is...()-Funktionen beseitigt           */
+/*            2. 1.1999 ChkPC umgestellt                                     */
+/*           30. 1.1999 Formate maschinenunabhaengig gemacht                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -361,7 +364,7 @@ BEGIN
         END
        p--;
       END
-     OK=(level==-1) AND ((p<Asc) OR ((*p=='.') OR (*p=='_') OR (isdigit(*p)) OR (isalpha(*p))));
+     OK=(level==-1) AND ((p<Asc) OR ((*p=='.') OR (*p=='_') OR (isdigit(((unsigned int)*p)&0xff)) OR (isalpha(((unsigned int)*p)&0xff))));
     END
 
    /* indirekt */
@@ -511,7 +514,7 @@ BEGIN
      if (OK) 
       BEGIN
        *Erg=val & 15; if (Inv) *Erg^=1;
-       sprintf(Asc,"r%d",val >> 4);
+       sprintf(Asc, "r%d", (int)(val >> 4));
        return True;
       END
      return False;
@@ -551,7 +554,8 @@ static ASSUMERec ASSUMEST9s[ASSUMEST9Count]=
          PushLocHandle(-1);
          EnterIntSymbol(LabPart,(AdrPart << 4)+Bit,SegNone,False);
          PopLocHandle();
-         sprintf(ListLine,"=r%d.%s%c",AdrPart,(Odd(Bit))?"!":"",(Bit >> 1)+AscOfs);
+         sprintf(ListLine,"=r%d.%s%c", (int)AdrPart,
+                 (Odd(Bit))?"!":"", (Bit >> 1)+AscOfs);
         END
       END
      return True;
@@ -1806,20 +1810,6 @@ BEGIN
    DPAssume=0;
 END
 
-        static Boolean ChkPC_ST9(void)
-BEGIN
-   switch (ActPC)
-    BEGIN
-     case SegCode:
-     case SegData:
-      return (ProgCounter()<0x10000);
-     case SegReg:
-      return (ProgCounter()<0x100);
-     default: 
-      return False;
-    END
-END
-
         static Boolean IsDef_ST9(void)
 BEGIN
    return (Memo("REG") OR Memo("BIT"));
@@ -1864,10 +1854,13 @@ BEGIN
 
    ValidSegs=(1<<SegCode)|(1<<SegData)|(1<<SegReg);
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
+   SegLimits[SegCode] = 0xffff;
    Grans[SegData]=1; ListGrans[SegData]=1; SegInits[SegData]=0;
+   SegLimits[SegData] = 0xffff;
    Grans[SegReg ]=1; ListGrans[SegReg ]=1; SegInits[SegReg ]=0;
+   SegLimits[SegReg ] = 0xff;
 
-   MakeCode=MakeCode_ST9; ChkPC=ChkPC_ST9; IsDef=IsDef_ST9;
+   MakeCode=MakeCode_ST9; IsDef=IsDef_ST9;
    SwitchFrom=SwitchFrom_ST9; InternSymbol=InternSymbol_ST9;
 
    InitFields();

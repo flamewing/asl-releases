@@ -91,22 +91,50 @@ mechanism' to write them as a sequence of standard ASCII characters.
 The message file compiler uses a subset of the sequences used in SGML
 and HTML:
 
-    &auml;  --> lowercase umlauted a
-    &Auml;  --> uppercase umlauted a
-    &ouml;  --> lowercase umlauted o
-    &Ouml;  --> uppercase umlauted o
-    &uuml;  --> lowercase umlauted u
-    &Uuml;  --> uppercase umlauted u
-    &szlig; --> german sharp s
-    \n;     --> newline character
+ &auml; &euml; &iuml; &ouml; &uuml;
+   --> lowercase umlauted characters
+ &Auml; &Euml; &Iuml; &Ouml; &Uuml;
+   --> uppercase umlauted characters
+ &szlig;
+   --> german sharp s
+ &sup2;
+   --> exponential 2
+ &micro;
+   --> micron character
+ &agrave; &egrave; &igrave; &ograve; &ugrave;
+   --> lowercase accent grave characters
+ &Agrave; &Egrave; &Igrave; &Ograve; &Ugrave;
+   --> uppercase accent grave characters
+ &aacute; &eacute; &iacute; &oacute; &uacute;
+   --> lowercase accent acute characters
+ &Aacute; &Eacute; &Iacute; &Oacute; &Uacute;
+   --> uppercase accent acute characters
+ &acirc; &ecirc; &icirc; &ocirc; &ucirc;
+   --> lowercase accent circonflex characters
+ &Acirc; &Ecirc; &Icirc; &Ocirc; &Ucirc;
+   --> uppercase accent circonflex characters
+ &ccedil; &Ccedil;
+   --> lowercase / uppercase cedilla
+ &ntilde; &Ntilde;
+   --> lowercase / uppercase tilded n
+ &aring; &Aring;
+   --> lowercase / uppercase ringed a
+ &aelig; &Aelig;
+   --> lowercase / uppercase ae diphtong
+ &iquest; &iexcl;
+   --> inverted question / exclamation mark
+ \n
+   --> newline character
 
 Upon translation of a message file, the message file compiler will
 replace these sequences with the correct character encodings for the
 target platform.  In the extreme case of a bare 7-bit-ASCII system,
 this may imply the translation to a sequence of ASCII characters that
-'emulate' the non-ASCII character.
+'emulate' the non-ASCII character.  *NEVER* use the special characters
+directly in the message source files, as this would destroy their
+portability!!!
 
-As you see, the number of supported language-specific characters is
+The number of supported language-specific characters used to be
 strongly biased to the german language.  The reason for this is
 simple: german is the only non-english language AS currently
 supports...sorry, but English and German is the amount of languages
@@ -151,7 +179,7 @@ previously only knew MS-LOSS and MS-Windog, and who were told by their
 nearest freak that Unix is a great thing.  Such users typically will not
 accept a system that only speaks english, given that every 500-Dollar-
 Windows PC speaks to them in their native language, so why not this 
-Unix system that is said to be sooo great ?!
+Unix system that claims to be sooo great ?!
 
 Furthermore, do not forget that AS is not a Unix-only tool: It runs
 on MS-DOS and OS/2 too, and a some people try to make it go on Macs
@@ -165,3 +193,5 @@ about gettext...well, I just did not look into it...it might have worked,
 but most of the GNU tools ported to DOS I have seen so far needed 32-bit-
 extenders, which I wanted to avoid.  So I quickly hacked up my own 
 library, but I promise that I will at least reuse it for my own projects!
+
+chardefs.h

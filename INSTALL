@@ -1,0 +1,99 @@
+This file is intended to be a short guide for getting AS compiled on
+a Unix-like operating system.  If you are interested in a more in-depth
+discussion of the source code of AS, take a look in the appropriate chapter
+of the AS user's manual (german resp. english version located in the doc_DE/
+resp. doc_EN/ subdirectory).  I highly recommend reading this chapter before
+you make extensions or modifications to the source code.
+
+The installation process consists of the following steps:
+
+(1) see if there are additional README files for your platform
+(2) create a Makefile.def
+(3) compile
+(4) execute the test suite
+(5) build the documentation
+(6) install into the system directories
+
+Step (1): 
+
+On some (especially non-Unix) platforms, some additional preliminaries 
+are needed: 
+
+--> If you do not have a C compiler conforming to the ANSI standard,
+    take a look into 'README.KR'.
+
+--> For MS-DOS and OS/2 platforms, additionally read README.DOS resp.
+    README.OS2
+
+Step (2):
+
+Settings that may vary from platform to platform are located in a file
+called 'Makefile.def'.  Your task is either to select an approriate file
+from the 'Makefile.def-samples' directory, or to create an own one.  I know
+this is a bit tedious process, and one day I will probably replace this
+scheme with an autoconf-style configuration, but for now we will have to
+live with it.  A good starting point for a gcc-based, 'normal' Unix system
+is the file 'Makefile.def.tmpl'.  The settings to make include:
+
+- CC, LD, CFLAGS, LDFLAGS:  The compiler and linker you want to use (nice
+  if you have more than just 'cc' on your machine), plus flags that should
+  be passed to them. like optimization settings and libraries needed for
+  linking.
+
+- BINDIR, INCDIR, MANDIR, LIBDIR, DOCDIR: directiories where AS should be
+  placed after compilation.
+
+- CHARSET: character encoding for non ASCII national special characters.
+  If your system is absolutely 8-bit-unclean, the ASCII7 setting is a good
+  idea.  Most modern Unix systems default to ISO8859-1, and the IBM437
+  resp. IBM850 settings are only needed for DOS and OS/2 platforms.
+
+Step (3):
+
+Compilation should be a simple matter of saying 'make' and waiting...
+depending on your machine, compliation time can be between a few minutes
+(a modern Pentium-based PC or a fast Alpha) and a day (VAXstation 2000).
+A few compilers (like newer egcs releases or Borland-C) are known to
+generate a lot of warnings about ambigious statements or unused parameters.
+I will try to eliminate them when time permits, but I have no high priority
+for doing this since they are harmless.
+
+If you are compiling AS for a new platform, you will probably run into
+an error message saying that you have to edit 'sysdefs.h'.  This file
+collects information about the anomalies and specialities of certain
+systems.  The include file detects a system by querying macros the compiler
+predefines and makes the appropriate definitions.  The file is sorted by
+
+1. processor architecture
+  2. manufacturer
+    3. operating system
+
+Find out the preprocessor symbols your compiler defines, make a new section
+in 'sysdefs.h' and send it to me so I can include it in the next release of
+AS!
+
+Step (4):
+
+Type 'make test' and the freshly compiled AS will be run on a couple of
+test programs.  For each program, the output is compared to a reference
+binary included in the distribution.  The binary output has to match
+*exactly*, i.e. ther must not be any difference.  Any failed test reported
+by the script has to be investigated, even if it happens for a target
+platform you never intend to use!
+
+Step (5):
+
+The documentation of AS is distributed in LaTeX format.  I chose this format
+because TeX is available on about any platform suitable for AS I can think
+of.  Other formats are created by typing 'make docs': simple ASCII, HTML,
+and Postscript. You need a TeX distribution including dvips for the latter,
+while converters to ASCII and HTML are included.
+
+Step (6):
+
+Type 'make install'.  Depending on the target directories you chose in Step
+(1), you may have to acquire root privileges to install AS.
+
+Have fun!
+
+Alfred Arnold, alfred@ccac.rwth-aachen.de

@@ -5,6 +5,7 @@
 /* Codegenerator Toshiba TLCS-90                                             */
 /*                                                                           */
 /* Historie: 30.10.1996 Grundsteinlegung                                     */
+/*            2. 1.1999 ChkPC umgebaut                                       */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -1261,15 +1262,6 @@ END
 
 /*-------------------------------------------------------------------------*/
 
-	static Boolean ChkPC_90C141(void)
-BEGIN
-   switch (ActPC)
-    BEGIN
-     case SegCode: return (ProgCounter()<=0xffff);
-     default: return False;
-    END
-END
-
 	static Boolean IsDef_90C141(void)
 BEGIN
    return False;
@@ -1289,8 +1281,9 @@ BEGIN
 
    ValidSegs=1<<SegCode;
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
+   SegLimits[SegCode] = 0xffff;
 
-   MakeCode=MakeCode_90C141; ChkPC=ChkPC_90C141; IsDef=IsDef_90C141;
+   MakeCode=MakeCode_90C141; IsDef=IsDef_90C141;
    SwitchFrom=SwitchFrom_90C141; InitFields();
 END
 

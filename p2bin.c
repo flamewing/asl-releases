@@ -5,6 +5,7 @@
 /* Umwandlung von AS-Codefiles in Binaerfiles                                */
 /*                                                                           */
 /* Historie:  3. 6.1996 Grundsteinlegung                                     */
+/*           30. 5.1999 0x statt $ erlaubt                                   */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -322,13 +323,13 @@ BEGIN
      p=strchr(Arg,'-'); if (p==Nil) return CMDErr;
 
      Save=(*p); *p='\0'; 
-     if ((StartAuto=(strcmp(Arg,"$")==0))) err=True;
-     else StartAdr=ConstLongInt(Arg,&err);
-     *p=Save;
+     if ((StartAuto = AddressWildcard(Arg))) err = True;
+     else StartAdr = ConstLongInt(Arg, &err);
+     *p = Save;
      if (NOT err) return CMDErr;
 
-     if ((StopAuto=(strcmp(p+1,"$")==0))) err=True;
-     else StopAdr=ConstLongInt(p+1,&err);
+     if ((StopAuto = AddressWildcard(p + 1))) err = True;
+     else StopAdr = ConstLongInt(p+1, &err);
      if (NOT err) return CMDErr;
 
      if ((NOT StartAuto) AND (NOT StopAuto) AND (StartAdr>StopAdr)) return CMDErr;

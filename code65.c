@@ -4,7 +4,10 @@
 /*                                                                           */
 /* Codegenerator 65xx/MELPS740                                               */
 /*                                                                           */
-/* Historie: 17.8.1996 Grundsteinlegung                                      */
+/* Historie: 17. 8.1996 Grundsteinlegung                                     */
+/*           17.11.1998 ungueltiges Register wurde bei Indizierung nicht ab- */
+/*                      gefangen                                             */
+/*            2. 1.1999 ChkPC umgestellt                                     */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -601,7 +604,9 @@ BEGIN
 	 if (ValOK)
 	  BEGIN
 	   AdrCnt=1;
-           ErgMode=(strcasecmp(ArgStr[2],"X")==0)?ModZIX:ModZIY;
+           if (strcasecmp(ArgStr[2],"X")==0) ErgMode=ModZIX;
+           else if (strcasecmp(ArgStr[2],"Y")==0) ErgMode=ModZIY;
+           else WrXError(1445,ArgStr[2]);
 	  END
 	END
        else
@@ -611,9 +616,14 @@ BEGIN
 	  BEGIN
 	   AdrCnt=2;
            AdrVals[0]=Lo(AdrWord); AdrVals[1]=Hi(AdrWord);
-           ErgMode=(strcasecmp(ArgStr[2],"X")==0)?ModIX:ModIY;
-	   if ((AdrVals[1]==0) AND (ZeroMode==0))
-            ChkZeroMode((strcasecmp(ArgStr[2],"X")==0)?ModZIX:ModZIY);
+           if (strcasecmp(ArgStr[2],"X")==0) ErgMode=ModIX;
+           else if (strcasecmp(ArgStr[2],"Y")==0) ErgMode=ModIY;
+           else WrXError(1445,ArgStr[2]);
+           if (ErgMode != -1)
+            BEGIN
+	     if ((AdrVals[1]==0) AND (ZeroMode==0))
+              ChkZeroMode((strcasecmp(ArgStr[2],"X")==0)?ModZIX:ModZIY);
+            END
 	  END
 	END
       END
@@ -689,12 +699,6 @@ BEGIN
    ADC_SBC_Flag=False;
 END
 
-	static Boolean ChkPC_65(void)
-BEGIN
-   if (ActPC==SegCode) return (ProgCounter()<0x10000);
-   else return False;
-END
-
 	static Boolean IsDef_65(void)
 BEGIN
    return False;
@@ -714,8 +718,9 @@ BEGIN
 
    ValidSegs=1<<SegCode;
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
+   SegLimits[SegCode] = 0xffff;
 
-   MakeCode=MakeCode_65; ChkPC=ChkPC_65; IsDef=IsDef_65;
+   MakeCode=MakeCode_65; IsDef=IsDef_65;
    SwitchFrom=SwitchFrom_65; InitFields();
 END
 

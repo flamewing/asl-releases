@@ -1,0 +1,7 @@
++------------------------- Test Application 3205x ---------------------------+
+|                                                                            |
+|      This is a (synthetic) test of the TMS320C5x instruction set           |
+|      It includes moreover a clear separation between the C20x subset and   |
+|      the full C5x instruction set.                                         |
+|                                                                            |
++----------------------------------------------------------------------------+

@@ -1,10 +1,11 @@
-/* code68.cc */ 
+/* code68.c */ 
 /*****************************************************************************/
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator fuer 68xx Prozessoren                                       */
 /*                                                                           */
-/* Historie:  13.8.1996 Grundsteinlegung                                     */
+/* Historie:  13. 8.1996 Grundsteinlegung                                    */
+/*             2. 1.1998 ChkPC ersetzt                                       */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -810,12 +811,6 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static Boolean ChkPC_68(void)
-BEGIN
-   if (ActPC==SegCode) return (ProgCounter()<0x10000);
-   else return False;
-END
-
 	static Boolean IsDef_68(void)
 BEGIN
    return False;
@@ -835,8 +830,9 @@ BEGIN
 
    ValidSegs=1<<SegCode;
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
+   SegLimits[SegCode] = 0xffff;
 
-   MakeCode=MakeCode_68; ChkPC=ChkPC_68; IsDef=IsDef_68;
+   MakeCode=MakeCode_68; IsDef=IsDef_68;
    SwitchFrom=SwitchFrom_68; InitFields();
    AddMoto16PseudoONOFF();
 

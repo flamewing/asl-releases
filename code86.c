@@ -5,6 +5,7 @@
 /* Codegenerator 8086/V-Serie                                                */
 /*                                                                           */
 /* Historie:                                                                 */
+/*           2. 1.1999 ChkPC-Anpassung                                       */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -2556,20 +2557,6 @@ BEGIN
    SegAssumes[3]=SegData; /* ASSUME DS:DATA */
 END
 
-	static Boolean ChkPC_86(void)
-BEGIN
-   switch (ActPC) 
-    BEGIN
-     case SegCode:
-     case SegData:
-     case SegXData:
-     case SegIO:
-      return (ProgCounter()<0x10000);
-     default:
-      return False;
-    END
-END
-
 	static Boolean IsDef_86(void)
 BEGIN
    return (Memo("PORT"));
@@ -2589,11 +2576,15 @@ BEGIN
 
    ValidSegs=(1<<SegCode)|(1<<SegData)|(1<<SegXData)|(1<<SegIO);
    Grans[SegCode ]=1; ListGrans[SegCode ]=1; SegInits[SegCode ]=0;
+   SegLimits[SegCode ] = 0xffff;
    Grans[SegData ]=1; ListGrans[SegData ]=1; SegInits[SegData ]=0;
+   SegLimits[SegData ] = 0xffff;
    Grans[SegXData]=1; ListGrans[SegXData]=1; SegInits[SegXData]=0;
+   SegLimits[SegXData] = 0xffff;
    Grans[SegIO   ]=1; ListGrans[SegIO   ]=1; SegInits[SegIO   ]=0;
+   SegLimits[SegIO   ] = 0xffff;
 
-   MakeCode=MakeCode_86; ChkPC=ChkPC_86; IsDef=IsDef_86;
+   MakeCode=MakeCode_86; IsDef=IsDef_86;
    SwitchFrom=SwitchFrom_86; InitFields();
    AddONOFF("FPU",&FPUAvail,FPUAvailName,False);
 END

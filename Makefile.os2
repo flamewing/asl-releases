@@ -1,5 +1,7 @@
 include Makefile.def
 
+CURRDIR=.\\
+
 include makedefs.src
 
 include objdefs.unix
@@ -60,6 +62,9 @@ install: $(ALLTARGETS)
 
 clean:
 	-del $(ALLTARGETS)
+	-del $(TEX2DOCTARGET)
+	-del $(TEX2HTMLTARGET)
+	-del $(RESCOMPTARGET)
 	-del *.$(OBJEXTENSION)
 	-del *.p
 	-del testlog
@@ -72,12 +77,12 @@ clean:
 
 bindist: $(UNUMLAUTTARGET)
 	mkdir as & cmd /cinstall as\bin as\include as\man as\lib as\doc
-	cd as & zip -9 -r ..\as$(VERSION) *
-	-del as\bin /n
-	-del as\include /n
-	-del as\man /n
+	cd as & zip -9 -r ..\as2$(VERSION) *
+	-del as\bin\* /n
+	-del as\include\* /n
+	-del as\man\* /n
 	-del as\lib /n
-	-del as\doc /n
+	-del as\doc\* /n
 	-rmdir as\bin
 	-rmdir as\include
 	-rmdir as\man

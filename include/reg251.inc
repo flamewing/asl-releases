@@ -58,7 +58,7 @@ DPH             port    083h            ; Datenzeiger (Bit 8..15)
 DPXL            port    084h            ; Datenzeiger (Bit 15..23)
 
 PCON            port    087h            ; Power-Down-Modi u.a.
-SMOD1           bit     PCON.7          ; Verdopplun Baudrate in Modus 1..3
+SMOD1           bit     PCON.7          ; Verdopplung Baudrate in Modus 1..3
 SMOD0           bit     PCON.6          ; Umschaltung SCON.7 als FE/SM0
 POF             bit     PCON.4          ; war Spannung weg ?
 GF1             bit     PCON.3          ; General Flag 1

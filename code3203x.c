@@ -5,6 +5,9 @@
 /* Codegenerator TMS320C3x-Familie                                           */               
 /*                                                                           */
 /* Historie: 12.12.1996 Grundsteinlegung                                     */               
+/*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
+/*           18. 8.1998 BookKeeping-Aufruf in RES                            */
+/*            3. 1.1998 ChkPC-Anpassung                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -789,7 +792,7 @@ BEGIN
 	      BEGIN
 	       if ((z2 & 3)==0) DAsmCode[CodeLen++]=0;
 	       DAsmCode[CodeLen-1]+=
-		  (((LongWord)CharTransTable[(int)t.Contents.Ascii[z2]])) << (8*(3-(z2 & 3)));
+		  (((LongWord)CharTransTable[((usint)t.Contents.Ascii[z2])&0xff])) << (8*(3-(z2 & 3)));
 	      END
 	     break;
 	    case TempNone:
@@ -813,8 +816,7 @@ BEGIN
 	BEGIN
 	 DontPrint=True;
 	 CodeLen=Size;
-	 if (MakeUseList)
-	  if (AddChunk(SegChunks+ActPC,ProgCounter(),CodeLen,ActPC==SegCode)) WrError(90);
+	 BookKeeping();
 	END
       END
      return True;
@@ -1475,15 +1477,6 @@ BEGIN
    DPValue=0;
 END
 
-	static Boolean ChkPC_3203X(void)
-BEGIN
-    switch (ActPC)
-     BEGIN
-      case SegCode: return (ProgCounter()<=0xffffff);
-      default: return False;
-    END
-END
-
 	static Boolean IsDef_3203X(void)
 BEGIN
    return (strcmp(LabPart,"||")==0);
@@ -1503,8 +1496,9 @@ BEGIN
 
    ValidSegs=1<<SegCode;
    Grans[SegCode]=4; ListGrans[SegCode]=4; SegInits[SegCode]=0;
+   SegLimits[SegCode] = 0xffffffl;
 
-   MakeCode=MakeCode_3203X; ChkPC=ChkPC_3203X; IsDef=IsDef_3203X;
+   MakeCode=MakeCode_3203X; IsDef=IsDef_3203X;
    SwitchFrom=SwitchFrom_3203X; InitFields(); NextPar=False;
 END
 

@@ -1,4 +1,6 @@
-- PATH fuer nlmessages-Dateien abfragen: unter OS/2 prüfen
-- alle tabbing-Programmbeispiele in Doku --> verbatim
-- Beschreibung BITFUNCS.INC in Doku
-
+- Benchmarks Dual-P2 einarbeiten
+- README-Verweise in Anleitung
+- Anleitung: Lieferumfang : Binaer-Basis, Zusatzfiles, Source wird
+  bisheriger Unix-Teil
+- Anleitung: Quellenkapitel neuschreiben
+- Anleitung: FAQ wenn viele Passes

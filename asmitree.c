@@ -6,6 +6,7 @@
 /*                                                                           */
 /* Historie: 30.10.1996 Grundsteinlegung                                     */
 /*            8.10.1997 Hash-Tabelle                                         */
+/*            6.12.1998 dynamisches Kopieren der Namen                       */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -146,16 +147,13 @@ BEGIN
     END
 END
 
-static char Format[20];
-
 	static void PNode(PInstTreeNode Node, Word Lev)
 BEGIN
    ChkStack();
    if (Node!=Nil)
     BEGIN
      PNode(Node->Left,Lev+1);
-     sprintf(Format,"%%%ds %%s %%p %%p %%d\n",5*Lev);
-     printf(Format,"",Node->Name,Node->Left,Node->Right,Node->Balance);
+     printf("%*s %s %p %p %d\n",5*Lev,"",Node->Name,Node->Left,Node->Right,Node->Balance);
      PNode(Node->Right,Lev+1);
     END
 END
@@ -171,7 +169,7 @@ END
 BEGIN
    register unsigned char *p;
    LongWord tmp=0;
-   
+
    for (p=(unsigned char *)Name; *p!='\0'; p++) tmp=(tmp<<2)+((LongWord)*p);
    return tmp%TableSize;
 END
@@ -185,12 +183,23 @@ BEGIN
    tmp=(PInstTableEntry) malloc(sizeof(TInstTableEntry)*TableSize);
    for (z=0; z<TableSize; z++) tmp[z].Name=Nil;
    tab=(PInstTable) malloc(sizeof(TInstTable));
-   tab->Fill=0; tab->Size=TableSize; tab->Entries=tmp;
+   tab->Fill=0; tab->Size=TableSize; tab->Entries=tmp; tab->Dynamic=FALSE;
    return tab;
+END
+
+	void SetDynamicInstTable(PInstTable Table)
+BEGIN
+   Table->Dynamic=TRUE;
 END
 
 	void DestroyInstTable(PInstTable tab)
 BEGIN
+   int z;
+
+   if (tab->Dynamic)
+    for (z=0; z<tab->Size; z++)
+     free(tab->Entries[z].Name);
+
    free(tab->Entries);
    free(tab);
 END
@@ -206,7 +215,7 @@ BEGIN
     BEGIN
      if (tab->Entries[h0].Name==Nil)
       BEGIN
-       tab->Entries[h0].Name=Name;
+       tab->Entries[h0].Name=(tab->Dynamic) ? strdup(Name) : Name;
        tab->Entries[h0].Proc=Proc;
        tab->Entries[h0].Index=Index;
        tab->Entries[h0].Coll=z;

@@ -6,6 +6,8 @@
 /*                                                                           */
 /* Historie:  5. 5.1996 Grundsteinlegung                                     */
 /*           13. 8.1997 KillBlanks-Funktionen aus asmsub.c heruebergenommen  */
+/*           29. 8.1998 sprintf-Emulation                                    */
+/*           29. 5.1999 SysString                                            */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -13,7 +15,9 @@ extern Boolean HexLowerCase;
 
 extern char *Blanks(int cnt);
 
-extern char *HexString(LargeWord i, Byte Stellen);
+extern char *HexString(LargeWord i, int Stellen);
+
+extern char *SysString(LargeWord i, LargeWord System, int Stellen);
 
 extern char *HexBlankString(LargeWord i, Byte Stellen);
 
@@ -34,6 +38,11 @@ extern int strncasecmp(const char *src1, const char *src2, int maxlen);
 
 #ifdef NEEDS_STRSTR
 extern char *strstr(char *haystack, char *needle);
+#endif
+
+#ifdef BROKEN_SPRINTF
+#define sprintf mysprintf
+extern int mysprintf();
 #endif
 
 #undef strlen

@@ -5,6 +5,7 @@
 /* Codegeneratormodul MCS-48-Familie                                         */
 /*                                                                           */
 /* Historie: 16. 5.1996 Grundsteinlegung                                     */
+/*            2. 1.1999 ChkPC-Anpassung                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -950,31 +951,6 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static Boolean ChkPC_48(void)
-BEGIN
-   Boolean ok;
-
-   switch (ActPC)
-    BEGIN
-     case SegCode: 
-      switch (MomCPU-CPU8021)
-       BEGIN
-	case D_CPU8041: ok=(ProgCounter() <  0x400); break;
-	case D_CPU8042: ok=(ProgCounter() <  0x800); break;
-	default       : ok=(ProgCounter() < 0x1000); break;
-       END
-      break;
-     case SegXData:
-     case SegIData: 
-      ok=(ProgCounter() <  0x100);
-      break;
-     default: 
-      ok=False;
-    END
-   return (ok);
-END
-
-
 	static Boolean IsDef_48(void)
 BEGIN
    return False;
@@ -994,10 +970,18 @@ BEGIN
 
    ValidSegs=(1<<SegCode)|(1<<SegIData)|(1<<SegXData);
    Grans[SegCode ]=1; ListGrans[SegCode ]=1; SegInits[SegCode ]=0;
+   switch (MomCPU-CPU8021)
+    BEGIN
+     case D_CPU8041: SegLimits[SegCode] = 0x3ff; break;
+     case D_CPU8042: SegLimits[SegCode] = 0x7ff; break;
+     default       : SegLimits[SegCode] = 0xfff; break;
+    END
    Grans[SegIData]=1; ListGrans[SegIData]=1; SegInits[SegIData]=0x20;
+   SegLimits[SegIData] = 0xff;
    Grans[SegXData]=1; ListGrans[SegXData]=1; SegInits[SegXData]=0;
+   SegLimits[SegXData] = 0xff;
 
-   MakeCode=MakeCode_48; ChkPC=ChkPC_48; IsDef=IsDef_48;
+   MakeCode=MakeCode_48; IsDef=IsDef_48;
    SwitchFrom=SwitchFrom_48; InitFields();
 END
 

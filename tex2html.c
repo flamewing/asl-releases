@@ -4,12 +4,19 @@
 /*                                                                           */
 /* Konverter TeX-->HTML                                                      */
 /*                                                                           */
-/* Historie: 2.4.1998 Grundsteinlegung (Transfer von tex2doc.c)              */
-/*           5.4.1998 Sonderzeichen, Fonts, <>                               */
-/*           6.4.1998 geordnete Listen                                       */
-/*          20.6.1998 Ausrichtung links/rechts/zentriert                     */
-/*                    überlagerte Textattribute                              */
-/*                    mehrspaltiger Index                                    */
+/* Historie: 2. 4.1998 Grundsteinlegung (Transfer von tex2doc.c)             */
+/*           5. 4.1998 Sonderzeichen, Fonts, <>                              */
+/*           6. 4.1998 geordnete Listen                                      */
+/*          20. 6.1998 Ausrichtung links/rechts/zentriert                    */
+/*                     überlagerte Textattribute                             */
+/*                     mehrspaltiger Index                                   */
+/*           5. 7.1998 Korrekturen in der Index-Ausgabe                      */
+/*          11. 7.1998 weitere Landessonderzeichen                           */
+/*          13. 7.1998 Cedilla                                               */
+/*          12. 9.1998 input-Statement                                       */
+/*          12. 1.1999 andere Kapitelhierarchie fuer article                 */
+/*          28. 3.1999 TeX-Kommando Huge ergaenzt                            */
+/*          14. 6.1999 mit optionaler Aufspaltung in Subdateien begonnen     */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -37,8 +44,8 @@ typedef enum{EnvNone,EnvDocument,EnvItemize,EnvEnumerate,EnvDescription,EnvTable
              EnvTabular,EnvRaggedLeft,EnvRaggedRight,EnvCenter,EnvVerbatim,
              EnvQuote,EnvTabbing,EnvBiblio,EnvMarginPar,EnvCaption,EnvHeading,EnvCount} EnvType;
 
-typedef enum{FontStandard,FontEmphasized,FontBold,FontTeletype,FontItalic,FontCnt} TFontType;
-static char *FontNames[FontCnt]={"","EM","B","TT","IT"};
+typedef enum{FontStandard,FontEmphasized,FontBold,FontTeletype,FontItalic,FontSuper,FontCnt} TFontType;
+static char *FontNames[FontCnt]={"","EM","B","TT","I","SUP"};
 #define MFontEmphasized (1<<FontEmphasized)
 #define MFontBold (1<<FontBold)
 #define MFontTeletype (1<<FontTeletype)
@@ -100,8 +107,9 @@ static char *EnvNames[EnvCount]=
              "raggedleft","raggedright","center","verbatim","quote","tabbing",
              "thebibliography","___MARGINPAR___","___CAPTION___","___HEADING___"};
 
-static FILE *infile,*outfile;
-static char *infilename;
+static int IncludeNest;
+static FILE *infiles[50],*outfile;
+static char *infilename, *outfilename;
 static char TocName[200];
 static int CurrLine=0,CurrColumn;
 
@@ -115,6 +123,8 @@ static TTable ThisTable;
 static int CurrRow,CurrCol;
 static Boolean GermanMode;
 
+static int Structured;
+
 static EnvType CurrEnv;
 static int CurrFontFlags;
 static TFontSize CurrFontSize;
@@ -127,6 +137,8 @@ static PRefSave FirstRefSave,FirstCiteSave;
 static PTocSave FirstTocSave;
 static PIndexSave FirstIndex;
 
+static PInstTable TeXTable;
+
 /*--------------------------------------------------------------------------*/
 
 	void ChkStack(void)
@@ -135,8 +147,10 @@ END
 
 	static void error(char *Msg)
 BEGIN
+   int z;
+
    fprintf(stderr,"%s:%d.%d: %s\n",infilename,CurrLine,CurrColumn,Msg);
-   fclose(infile); fclose(outfile);
+   for (z=0; z<IncludeNest; fclose(infiles[z++])); fclose(outfile);
    exit(2);
 END
 
@@ -373,13 +387,21 @@ static PushedToken PushedTokens[16];
 BEGIN
    Boolean Comment;
    static Boolean DidPar=False;
+   char *Result;
 
    if (*BufferPtr=='\0')
     BEGIN
      do
       BEGIN
-       if (feof(infile)) return EOF;
-       if (fgets(BufferLine,TOKLEN,infile)==Nil) return EOF;
+       if (IncludeNest<=0) return EOF;
+       do
+        BEGIN
+         Result=fgets(BufferLine,TOKLEN,infiles[IncludeNest-1]);
+         if (Result!=Nil) break;
+         fclose(infiles[--IncludeNest]);
+         if (IncludeNest<=0) return EOF;
+        END
+       while (True);
        CurrLine++;
        BufferPtr=BufferLine;
        Comment=(strlen(BufferLine)>=2) AND (strncmp(BufferLine,"%%",2)==0);
@@ -429,7 +451,7 @@ BEGIN
     BEGIN
      do
       BEGIN
-       ch=GetChar(); if (ch=='\r') ch=fgetc(infile);
+       ch=GetChar(); if (ch=='\r') ch=GetChar();
        if (issep(ch)) *(run++)=' ';
       END
      while ((issep(ch)) AND (ch!=EOF));
@@ -788,7 +810,7 @@ END
 
 	static void DumpTable(void)
 BEGIN
-   int RowCnt,rowz,rowz2,rowz3,colz,colptr,ml,l,diff,sumlen,firsttext,indent;
+   int TextCnt,RowCnt,rowz,rowz2,rowz3,colz,colptr,ml,l,diff,sumlen,firsttext,indent;
    char *ColTag;
 
    /* compute widths of individual rows */
@@ -812,6 +834,11 @@ BEGIN
       if (firsttext<0) firsttext=colz;
      END
 
+   /* count number of text columns */
+
+   for (colz=TextCnt=0; colz<ThisTable.ColumnCount; colz++)
+    if (ThisTable.ColTypes[colz]!=ColBar) TextCnt++;
+
    /* get total width */
 
    for (colz=sumlen=0; colz<ThisTable.ColumnCount; sumlen+=ThisTable.ColLens[colz++]);
@@ -834,7 +861,7 @@ BEGIN
    
    /* tell browser to switch to table mode */
 
-   fprintf(outfile,"<P><CENTER><TABLE BORDER=1 CELLPADDING=5>\n");
+   fprintf(outfile,"<P><CENTER><TABLE SUMMARY=\"No Summary\" BORDER=1 CELLPADDING=5>\n");
 
    /* print rows */
 
@@ -874,7 +901,7 @@ BEGIN
           /* start a column */
 
           fprintf(outfile,"<%s VALIGN=TOP NOWRAP",ColTag);
-          if (ThisTable.MultiFlags[rowz]) fprintf(outfile," COLSPAN=%d",ThisTable.ColumnCount);
+          if (ThisTable.MultiFlags[rowz]) fprintf(outfile," COLSPAN=%d",TextCnt);
           switch(ThisTable.ColTypes[colz])
            BEGIN
             case ColLeft: fputs(" ALIGN=LEFT>",outfile); break;
@@ -1060,25 +1087,6 @@ BEGIN
    assert_token("\\"); ReadToken(Token);
 END
 
-	static void TeXDocumentStyle(Word Index)
-BEGIN
-   char Token[TOKLEN];
-
-   ReadToken(Token);
-   if (strcmp(Token,"[")==0)
-    BEGIN
-     do
-      BEGIN
-       ReadToken(Token);
-       if (strcmp(Token,"german")==0) SetLang(True);
-      END
-     while (strcmp(Token,"]")!=0);
-     assert_token("{");
-     ReadToken(Token);
-     assert_token("}");
-    END
-END
-
 	static void TeXAppendix(Word Index)
 BEGIN
    int z;
@@ -1113,26 +1121,31 @@ BEGIN
 
    strcpy(Title,OutLineBuffer); *OutLineBuffer='\0';
 
-   run=Line;
-   if (Level<3)
+   fprintf(outfile, "<H%d>", Level + 1);
+
+   run = Line;
+   if (Level < 3)
     BEGIN
      GetSectionName(Ref);
-     for (rep=Ref; *rep!='\0'; rep++)
-      if (*rep=='.') *rep='_';
-     fprintf(outfile,"<A NAME=\"sect_%s\">",Ref);
-     run=GetSectionName(run);
-     run+=sprintf(run," ");
+     for (rep = Ref; *rep != '\0'; rep++)
+      if (*rep == '.') *rep = '_';
+     fprintf(outfile, "<A NAME=\"sect_%s\">", Ref);
+     run = GetSectionName(run);
+     run += sprintf(run, " ");
     END
-   sprintf(run,"%s",Title);
+   sprintf(run, "%s", Title);
 
-   fprintf(outfile,"<P><H%d>%s</H%d><P>\n",Level+1,Line,Level+1);
+   fprintf(outfile, "%s", Line);
 
-   if (Level<3)
+   if (Level < 3)
     BEGIN
-     fputs("</A>\n",outfile);
-     run=Line; run=GetSectionName(run); run+=sprintf(run," "); sprintf(run,"%s",Title);
+     fputs("</A>", outfile);
+     run = Line; run = GetSectionName(run);
+     run += sprintf(run," "); sprintf(run, "%s", Title);
      AddToc(Line);
     END
+
+   fprintf(outfile, "</H%d>\n", Level + 1);
 END
 
 	static EnvType GetEnvType(char *Name)
@@ -1197,7 +1210,7 @@ BEGIN
       break;
      case EnvBiblio:
       FlushLine(); fprintf(outfile,"<P>\n");
-      fprintf(outfile,"<A NAME=\"sect_bib\"><H1>%s<P></H1></A>\n<DL COMPACT>\n",BiblioName);
+      fprintf(outfile,"<H1><A NAME=\"sect_bib\">%s</A></H1>\n<DL COMPACT>\n",BiblioName);
       assert_token("{"); ReadToken(Add); assert_token("}");
       ActLeftMargin=LeftMargin=4+(BibIndent=strlen(Add));
       AddToc(BiblioName);
@@ -1211,7 +1224,7 @@ BEGIN
        END
       do
        BEGIN
-        fgets(Add,TOKLEN-1,infile); CurrLine++;
+        fgets(Add,TOKLEN-1,infiles[IncludeNest-1]); CurrLine++;
         done=strstr(Add,"\\end{verbatim}")!=Nil;
         if (NOT done)
          BEGIN
@@ -1241,7 +1254,7 @@ BEGIN
       RightMargin=70;
       break;
      case EnvTabbing:
-      FlushLine(); fputs("<TABLE CELLPADDING=2>\n",outfile); 
+      FlushLine(); fputs("<TABLE SUMMARY=\"No Summary\" CELLPADDING=2>\n",outfile); 
       TabStopCnt=0; CurrTabStop=0; RightMargin=TOKLEN-1;
       AddLine("<TR><TD NOWRAP>","");
       PrFontDiff(0,CurrFontFlags);
@@ -1319,6 +1332,7 @@ BEGIN
    switch (CurrEnv)
     BEGIN
      case EnvDocument:
+      FlushLine();
       fputs("</BODY>\n",outfile);
       break;
      case EnvItemize:
@@ -1335,6 +1349,7 @@ BEGIN
       break;
      case EnvQuote:
       FlushLine(); fprintf(outfile,"</BLOCKQUOTE>\n");
+      break;
      case EnvBiblio:
       FlushLine(); fprintf(outfile,"</DL>\n");
       break;
@@ -1694,7 +1709,7 @@ BEGIN
    char Rule[200];
    
    GetDim(VFactors);
-   sprintf(Rule,"<HR WIDTH=%d%% ALIGN=LEFT>",(h*100)/70);
+   sprintf(Rule,"<HR WIDTH=\"%d%%\" ALIGN=LEFT>",(h*100)/70);
    DoAddNormal(Rule,BackSepString);
 END
 
@@ -1800,7 +1815,7 @@ BEGIN
     END
    
    AddLabel(Name,Value);
-   sprintf(Value,"<A NAME=\"ref_%s\">",Name);
+   sprintf(Value,"<A NAME=\"ref_%s\"></A>",Name);
    DoAddNormal(Value,"");
 END
 
@@ -1895,13 +1910,13 @@ BEGIN
    int i,rz;
 
    FlushLine();
-   fprintf(outfile,"<A NAME=\"sect_index\"><H1>%s<P></H1></A>\n<DL COMPACT>\n",IndexName);
+   fprintf(outfile,"<H1><A NAME=\"sect_index\">%s</A></H1>\n",IndexName);
    AddToc(IndexName);
 
-   fputs("<TABLE BORDER=0 CELLPADDING=5>\n",outfile); rz=0;
+   fputs("<TABLE SUMMARY=\"Index\" BORDER=0 CELLPADDING=5>\n",outfile); rz=0;
    for (run=FirstIndex; run!=Nil; run=run->Next)
     BEGIN
-     if (!(rz%5)) fputs("<TR ALIGN=LEFT>\n",outfile);
+     if ((rz%5)==0) fputs("<TR ALIGN=LEFT>\n",outfile);
      fputs("<TD VALIGN=TOP NOWRAP>",outfile);
      fputs(run->Name,outfile);
      for (i=0; i<run->RefCnt; i++)
@@ -1910,7 +1925,7 @@ BEGIN
      if ((rz%5)==4) fputs("</TR>\n",outfile);
      rz++;
     END
-   if (!(rz%5)) fputs("</TR>\n",outfile);
+   if ((rz%5)!=0) fputs("</TR>\n",outfile);
    fputs("</TABLE>\n",outfile);
 END
 
@@ -1944,9 +1959,13 @@ BEGIN
     switch (*Token)
      BEGIN
       case 'a': Repl="&auml;"; break;
+      case 'e': Repl="&euml;"; break;
+      case 'i': Repl="&iuml;"; break;
       case 'o': Repl="&ouml;"; break;
       case 'u': Repl="&uuml;"; break;
       case 'A': Repl="&Auml;"; break;
+      case 'E': Repl="&Euml;"; break;
+      case 'I': Repl="&Iuml;"; break;
       case 'O': Repl="&Ouml;"; break;
       case 'U': Repl="&Uuml;"; break;
       case 's': Repl="&szlig;"; break;
@@ -1964,6 +1983,186 @@ BEGIN
    BackToken(Token);
 END
 
+	static void TeXNLSGrave(Word Index)
+BEGIN
+   char Token[TOKLEN],*Repl="";
+   Boolean Found=True;
+
+   *Token='\0';
+   ReadToken(Token);
+   if (*SepString=='\0')
+    switch (*Token)
+     BEGIN
+      case 'a': Repl="&agrave;"; break;
+      case 'e': Repl="&egrave;"; break;
+      case 'i': Repl="&igrave;"; break;
+      case 'o': Repl="&ograve;"; break;
+      case 'u': Repl="&ugrave;"; break;
+      case 'A': Repl="&Agrave;"; break;
+      case 'E': Repl="&Egrave;"; break;
+      case 'I': Repl="&Igrave;"; break;
+      case 'O': Repl="&Ograve;"; break;
+      case 'U': Repl="&Ugrave;"; break;
+      default : Found=False;
+     END
+   else Found=False;
+
+   if (Found)
+    BEGIN
+     if (strlen(Repl)>1) memmove(Token+strlen(Repl),Token+1,strlen(Token));
+     memcpy(Token,Repl,strlen(Repl)); strcpy(SepString,BackSepString);
+    END
+   else DoAddNormal("\"",BackSepString);
+
+   BackToken(Token);
+END
+
+	static void TeXNLSAcute(Word Index)
+BEGIN
+   char Token[TOKLEN],*Repl="";
+   Boolean Found=True;
+
+   *Token='\0';
+   ReadToken(Token);
+   if (*SepString=='\0')
+    switch (*Token)
+     BEGIN
+      case 'a': Repl="&aacute;"; break;
+      case 'e': Repl="&eacute;"; break;
+      case 'i': Repl="&iacute;"; break;
+      case 'o': Repl="&oacute;"; break;
+      case 'u': Repl="&uacute;"; break;
+      case 'A': Repl="&Aacute;"; break;
+      case 'E': Repl="&Eacute;"; break;
+      case 'I': Repl="&Iacute;"; break;
+      case 'O': Repl="&Oacute;"; break;
+      case 'U': Repl="&Uacute;"; break;
+      default : Found=False;
+     END
+   else Found=False;
+
+   if (Found)
+    BEGIN
+     if (strlen(Repl)>1) memmove(Token+strlen(Repl),Token+1,strlen(Token));
+     memcpy(Token,Repl,strlen(Repl)); strcpy(SepString,BackSepString);
+    END
+   else DoAddNormal("\"",BackSepString);
+
+   BackToken(Token);
+END
+
+	static void TeXNLSCirc(Word Index)
+BEGIN
+   char Token[TOKLEN],*Repl="";
+   Boolean Found=True;
+
+   *Token='\0';
+   ReadToken(Token);
+   if (*SepString=='\0')
+    switch (*Token)
+     BEGIN
+      case 'a': Repl="&acirc;"; break;
+      case 'e': Repl="&ecirc;"; break;
+      case 'i': Repl="&icirc;"; break;
+      case 'o': Repl="&ocirc;"; break;
+      case 'u': Repl="&ucirc;"; break;
+      case 'A': Repl="&Acirc;"; break;
+      case 'E': Repl="&Ecirc;"; break;
+      case 'I': Repl="&Icirc;"; break;
+      case 'O': Repl="&Ocirc;"; break;
+      case 'U': Repl="&Ucirc;"; break;
+      default : Found=False;
+     END
+   else Found=False;
+
+   if (Found)
+    BEGIN
+     if (strlen(Repl)>1) memmove(Token+strlen(Repl),Token+1,strlen(Token));
+     memcpy(Token,Repl,strlen(Repl)); strcpy(SepString,BackSepString);
+    END
+   else DoAddNormal("\"",BackSepString);
+
+   BackToken(Token);
+END
+
+	static void TeXNLSTilde(Word Index)
+BEGIN
+   char Token[TOKLEN],*Repl="";
+   Boolean Found=True;
+
+   *Token='\0';
+   ReadToken(Token);
+   if (*SepString=='\0')
+    switch (*Token)
+     BEGIN
+      case 'n': Repl="&ntilde;"; break;
+      case 'N': Repl="&Ntilde;"; break;
+      default : Found=False;
+     END
+   else Found=False;
+
+   if (Found)
+    BEGIN
+     if (strlen(Repl)>1) memmove(Token+strlen(Repl),Token+1,strlen(Token));
+     memcpy(Token,Repl,strlen(Repl)); strcpy(SepString,BackSepString);
+    END
+   else DoAddNormal("\"",BackSepString);
+
+   BackToken(Token);
+END
+
+	static void TeXCedilla(Word Index)
+BEGIN
+   char Token[TOKLEN];
+
+   assert_token("{"); collect_token(Token,"}");
+   if (strcmp(Token,"c")==0) strcpy(Token,"&ccedil;");
+   if (strcmp(Token,"C")==0) strcpy(Token,"&Ccedil;");
+
+   DoAddNormal(Token,BackSepString);
+END
+
+	static Boolean TeXNLSSpec(char *Line)
+BEGIN
+   Boolean Found=True;
+   char *Repl=Nil;
+   int cnt=0;
+
+   if (*SepString=='\0')
+    switch (*Line)
+     BEGIN
+      case 'o': cnt=1; Repl="&oslash;"; break;
+      case 'O': cnt=1; Repl="&Oslash;"; break;
+      case 'a': 
+       switch (Line[1])
+        BEGIN
+         case 'a': cnt=2; Repl="&aring;"; break;
+         case 'e': cnt=2; Repl="&aelig;"; break;
+         default: Found=False;
+        END
+       break;
+      case 'A': 
+       switch (Line[1])
+        BEGIN
+         case 'A': cnt=2; Repl="&Aring;"; break;
+         case 'E': cnt=2; Repl="&AElig;"; break;
+         default: Found=False;
+        END
+       break;
+      default: Found=False;
+     END
+
+   if (Found)
+    BEGIN
+     if (strlen(Repl)!=cnt) memmove(Line+strlen(Repl),Line+cnt,strlen(Line)-cnt+1);
+     memcpy(Line,Repl,strlen(Repl)); strcpy(SepString,BackSepString);
+    END
+   else DoAddNormal("\"",BackSepString);
+
+   BackToken(Line);
+   return Found;
+END
+
 	static void TeXHyphenation(Word Index)
 BEGIN
    char Token[TOKLEN];
@@ -1976,8 +2175,20 @@ BEGIN
    char Token[TOKLEN];
 
    ReadToken(Token);
-   if (strcmp(Token,"2")==0)
+   if (strcmp(Token,"1")==0)
+    DoAddNormal("&sup1;",BackSepString);
+   else if (strcmp(Token,"2")==0)
     DoAddNormal("&sup2;",BackSepString);
+   else if (strcmp(Token,"3")==0)
+    DoAddNormal("&sup3;",BackSepString);
+   else if (strcmp(Token,"{")==0)
+    BEGIN
+     SaveFont();
+     TeXNewFontType(FontSuper);
+     ReadToken(Token);
+     strcpy(SepString,BackSepString);
+     BackToken(Token);
+    END
    else
     BEGIN
      DoAddNormal("^",BackSepString);
@@ -1991,31 +2202,126 @@ BEGIN
    TeXNLS(0);
 END
 
+	static void TeXInclude(Word Index)
+BEGIN
+   char Token[TOKLEN],Msg[TOKLEN];
+
+   assert_token("{"); collect_token(Token,"}");
+   if ((infiles[IncludeNest]=fopen(Token,"r"))==Nil)
+    BEGIN
+     sprintf(Msg,"file %s not found",Token);
+     error(Msg);
+    END
+   else IncludeNest++;
+END
+
+	static void TeXDocumentStyle(Word Index)
+BEGIN
+   char Token[TOKLEN];
+
+   ReadToken(Token);
+   if (strcmp(Token,"[")==0)
+    BEGIN
+     do
+      BEGIN
+       ReadToken(Token);
+       if (strcmp(Token,"german")==0) SetLang(True);
+      END
+     while (strcmp(Token,"]")!=0);
+     assert_token("{");
+     ReadToken(Token);
+     if (strcasecmp(Token, "article") == 0)
+      BEGIN
+       AddInstTable(TeXTable,"section",0,TeXNewSection);
+       AddInstTable(TeXTable,"subsection",1,TeXNewSection);
+       AddInstTable(TeXTable,"subsubsection",3,TeXNewSection);
+      END
+     else
+      BEGIN
+       AddInstTable(TeXTable,"chapter",0,TeXNewSection);
+       AddInstTable(TeXTable,"section",1,TeXNewSection);
+       AddInstTable(TeXTable,"subsection",2,TeXNewSection);
+       AddInstTable(TeXTable,"subsubsection",3,TeXNewSection);
+      END
+     assert_token("}");
+    END
+END
+
+	static void StartFile(char *Name)
+BEGIN
+   char comp[TOKLEN];
+   struct stat st;
+
+   /* create name ? */
+
+   if (Structured)
+    BEGIN
+     sprintf(comp, "%s.dir/%s", outfilename, Name);
+     Name = comp;
+    END
+
+   /* open file */
+
+   if ((outfile = fopen(Name, "w")) == NULL)
+    BEGIN
+     perror(Name); exit(3);
+    END
+
+   /* write head */
+
+   fputs("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n",outfile);
+   fputs("<HTML>\n",outfile);
+   fputs("<HEAD>\n",outfile);
+   fprintf(outfile,"<META NAME=\"Author\" CONTENT=\"automatically generated by tex2html from %s\">\n",infilename);
+   stat(Name, &st);
+   strncpy(comp, ctime(&st.st_mtime), TOKLEN - 1);
+   if (comp[strlen(comp) - 1] == '\n') comp[strlen(comp) - 1] = '\0';
+   fprintf(outfile, "<META NAME=\"Last-modified\" CONTENT=\"%s\">\n", comp);
+END
+
 /*--------------------------------------------------------------------------*/
 
 	int main(int argc, char **argv)
 BEGIN
    char Line[TOKLEN],Comp[TOKLEN],*p,AuxFile[200];
-   PInstTable TeXTable=CreateInstTable(301);
-   struct stat st;
-   int z;
+   int z, ergc;
+
+   /* assume defaults for flags */
+
+   Structured = False;
+
+   /* extract switches */
+
+   ergc = 1;
+   for (z = 1; z < argc; z++)
+    BEGIN
+     if (strcmp(argv[z], "-w") == 0)
+      Structured = True;
+     else
+      argv[ergc++] = argv[z]; 
+    END
+   argc = ergc;
+
+   /* do we want that ? */
 
    if (argc<3)
     BEGIN
-     fprintf(stderr,"calling convention: %s <input file> <output file>\n",*argv);
+     fprintf(stderr, "calling convention: %s [switches] <input file> <output file>\n"
+                     "switches: -w --> create structured document\n", *argv);
      exit(1);
     END
 
-   if ((infile=fopen(argv[1],"r"))==Nil)
+   /* set up inclusion stack */
+
+   IncludeNest=0;
+   if ((*infiles=fopen(argv[1],"r"))==Nil)
     BEGIN
      perror(argv[1]); exit(3);
     END
-   infilename=argv[1];
-   if (strcmp(argv[2],"-")==0) outfile=stdout;
-   else if ((outfile=fopen(argv[2],"w"))==Nil)
-    BEGIN
-     perror(argv[2]); exit(3);
-    END
+   else IncludeNest++;
+   /* set up hash table */
+
+   TeXTable=CreateInstTable(301);
 
    AddInstTable(TeXTable,"\\",0,TeXFlushLine);
    AddInstTable(TeXTable,"par",0,TeXNewParagraph);
@@ -2038,10 +2344,6 @@ BEGIN
    AddInstTable(TeXTable,"def",0,TeXDef);
    AddInstTable(TeXTable,"font",0,TeXFont);
    AddInstTable(TeXTable,"documentstyle",0,TeXDocumentStyle);
-   AddInstTable(TeXTable,"chapter",0,TeXNewSection);
-   AddInstTable(TeXTable,"section",1,TeXNewSection);
-   AddInstTable(TeXTable,"subsection",2,TeXNewSection);
-   AddInstTable(TeXTable,"subsubsection",3,TeXNewSection);
    AddInstTable(TeXTable,"appendix",0,TeXAppendix);
    AddInstTable(TeXTable,"makeindex",0,TeXDummy);
    AddInstTable(TeXTable,"begin",0,TeXBeginEnv);
@@ -2051,7 +2353,6 @@ BEGIN
    AddInstTable(TeXTable,"errentry",0,TeXErrEntry);
    AddInstTable(TeXTable,"$",0,TeXAddDollar);
    AddInstTable(TeXTable,"_",0,TeXAddUnderbar);
-   AddInstTable(TeXTable,"^",0,TeXAddPot);
    AddInstTable(TeXTable,"&",0,TeXAddAmpersand);
    AddInstTable(TeXTable,"@",0,TeXAddAt);
    AddInstTable(TeXTable,"#",0,TeXAddImm);
@@ -2079,6 +2380,7 @@ BEGIN
    AddInstTable(TeXTable,"normalsize",FontNormalSize,TeXNewFontSize);
    AddInstTable(TeXTable,"large",FontLarge,TeXNewFontSize);
    AddInstTable(TeXTable,"huge",FontHuge,TeXNewFontSize);
+   AddInstTable(TeXTable,"Huge",FontHuge,TeXNewFontSize);
    AddInstTable(TeXTable,"tin",FontTiny,TeXEnvNewFontSize);
    AddInstTable(TeXTable,"rightarrow",0,TeXAddRightArrow);
    AddInstTable(TeXTable,"longrightarrow",0,TeXAddLongRightArrow);
@@ -2101,11 +2403,19 @@ BEGIN
    AddInstTable(TeXTable,"tableofcontents",0,TeXContents);
    AddInstTable(TeXTable,"rule",0,TeXRule);
    AddInstTable(TeXTable,"\"",0,TeXNLS);
+   AddInstTable(TeXTable,"`",0,TeXNLSGrave);
+   AddInstTable(TeXTable,"'",0,TeXNLSAcute);
+   AddInstTable(TeXTable,"^",0,TeXNLSCirc);
+   AddInstTable(TeXTable,"~",0,TeXNLSTilde);
+   AddInstTable(TeXTable,"c",0,TeXCedilla);
    AddInstTable(TeXTable,"newif",0,TeXDummy);
    AddInstTable(TeXTable,"fi",0,TeXDummy);
    AddInstTable(TeXTable,"ifelektor",0,TeXDummy);
    AddInstTable(TeXTable,"elektortrue",0,TeXDummy);
    AddInstTable(TeXTable,"elektorfalse",0,TeXDummy);
+   AddInstTable(TeXTable,"input",0,TeXInclude);
+
+   /* preset state variables */
 
    for (z=0; z<CHAPMAX; Chapters[z++]=0);
    TableNum=0; FontNest=0;
@@ -2124,6 +2434,8 @@ BEGIN
    BibIndent=BibCounter=0;
    GermanMode=True; SetLang(False);
 
+   /* open help files */
+
    strcpy(TocName,argv[1]); 
    if ((p=strrchr(TocName,'.'))!=Nil) *p='\0';
    strcat(TocName,".htoc");
@@ -2133,15 +2445,40 @@ BEGIN
    strcat(AuxFile,".haux");
    ReadAuxFile(AuxFile);
 
-   fputs("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n",outfile);
-   fputs("<HTML>\n",outfile);
-   fputs("<HEAD>\n",outfile);
-   fprintf(outfile,"<META NAME=\"Author\" CONTENT=\"automatically generated by tex2html from %s\">\n",argv[1]);
-   stat(argv[1],&st);
-   strncpy(Line,ctime(&st.st_mtime),TOKLEN-1);
-   if (Line[strlen(Line)-1]=='\n') Line[strlen(Line)-1]='\0';
-   fprintf(outfile,"<META NAME=\"Last-modified\" CONTENT=\"%s\">\n",Line);
+   /* save file names */
 
+   infilename = argv[1];
+   outfilename = argv[2];
+   if (strcmp(outfilename, "-")==0)
+    BEGIN
+     if (Structured)
+      BEGIN
+       printf("%s: structured write must be to a directory\n", *argv);
+       exit(1);
+      END
+     else outfile = stdout;
+    END
+
+   /* do we need to make a directory ? */
+
+   else if (Structured)
+    BEGIN
+     sprintf(Line, "%s.dir", outfilename);
+#ifdef __MSDOS__
+     mkdir(Line, 055);
+#else
+     mkdir(Line, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+#endif
+     StartFile("intro.html");
+    END
+
+   /* otherwise open the single file */
+
+   else
+    StartFile(argv[2]);
+
+   /* start to parse */
+   
    while (1)
     BEGIN
      if (NOT ReadToken(Line)) break;
@@ -2151,10 +2488,11 @@ BEGIN
        if (NOT ReadToken(Line)) error("unexpected end of file");
        if (*SepString!='\0') BackToken(Line);
        else if (NOT LookupInstTable(TeXTable,Line))
-        BEGIN
-         sprintf(Comp,"unknown TeX command %s",Line);
-         warning(Comp);
-        END
+        if (NOT TeXNLSSpec(Line))
+         BEGIN
+          sprintf(Comp,"unknown TeX command %s",Line);
+          warning(Comp);
+         END
       END
      else if (strcmp(Line,"$")==0)
       BEGIN
@@ -2191,7 +2529,8 @@ BEGIN
 
    fputs("</HTML>\n",outfile);
 
-   fclose(infile); fclose(outfile);
+   for (z=0; z<IncludeNest; fclose(infiles[z++]));
+   fclose(outfile);
 
    unlink(AuxFile);
    PrintLabels(AuxFile); PrintCites(AuxFile);

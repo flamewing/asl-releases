@@ -1,8 +1,7 @@
 .TH asl 1
 
 .SH NAME
-.B asl 
-\- cross assembler for microprocessors and -controllers
+.B asl \- cross assembler for microprocessors and -controllers
 
 .SH SYNTAX
 .B asl 
@@ -50,6 +49,10 @@ Instruct AS to write out the shared symbol definitions in a format suitable
 for including into an AS assembler program.  The file's name is constructed by
 replacing the source file's extension with '.inc'.  See the user manual for more
 information about symbol sharing.
+.TP
+.B -cpu <name>
+Set the target processor to <name>.  Use this option if the source file does
+not contain a CPU statement.
 .TP
 .B -alias <new name=old name>
 Define a CPU alias.  An alias is a name that can be used as an argument to the
@@ -162,6 +165,11 @@ may also be given multiply.  If there are less output specifications than
 source file names, AS will switch back to the default naming convention after 
 all output specifications have been used up.
 .TP
+.B -shareout <name>
+Tell AS to write shared symbol definitions to a file <name>, instead of
+constructing the name from the source file's name. See the user manual for
+more information about symbol sharing.
+.TP
 .B -P
 
 Turn on generation of a macro output file.  A macro output file contains the
@@ -235,7 +243,8 @@ Suppress output of warnings.
 
 Turn on extended error reporting.  With extended error reporting, several
 error and warning messages will also print the item that created the message,
-e.g. the name of an unknown instruction.
+e.g. the name of an unknown instruction.  When this option is given twice, 
+the erroneous source line is additinally printed.
 
 .SH PRESETTING PARAMETERS
 

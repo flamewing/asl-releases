@@ -34,6 +34,12 @@
 #define __i386   
 #endif
 
+#ifdef __i386__
+#ifndef __i386
+#define __i386
+#endif
+#endif
+
 /*---------------------------------------------------------------------------*/
 /* If the compiler claims to be ANSI, we surely can use prototypes */
 
@@ -89,6 +95,7 @@
 #define OPENUPMODE "r+"
 #define IEEEFLOAT
 #define NEEDS_CASECMP
+#define BROKEN_SPRINTF
 typedef signed char Integ8;
 typedef unsigned char Card8;
 typedef signed short Integ16;
@@ -288,6 +295,7 @@ typedef unsigned long long Card64;
 #define OPENUPMODE "r+"
 #define IEEEFLOAT
 #define NEEDS_STRDUP
+#define BROKEN_SPRINTF
 typedef signed char Integ8;
 typedef unsigned char Card8;
 typedef signed short Integ16;
@@ -441,6 +449,8 @@ typedef unsigned long long Card64;
 #define OPENUPMODE "r+"
 #define VAXFLOAT
 #define NEEDS_STRDUP
+#define NEEDS_CASECMP
+#define BKOKEN_SPRINTF
 typedef signed char Integ8;
 typedef unsigned char Card8;
 typedef signed short Integ16;

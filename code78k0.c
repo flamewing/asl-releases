@@ -5,6 +5,7 @@
 /* Codegenerator 78K0-Familie                                                */
 /*                                                                           */
 /* Historie: 1.12.1996 Grundsteinlegung                                      */
+/*           3. 1.1999 ChkPC-Anpassung                                       */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -1193,16 +1194,6 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-
-        static Boolean ChkPC_78K0(void)
-BEGIN
-   switch (ActPC)
-    BEGIN
-     case SegCode:  return (ProgCounter()<0x10000);
-     default: return False;
-    END
-END
-
         static Boolean IsDef_78K0(void)
 BEGIN
    return False;
@@ -1222,8 +1213,9 @@ BEGIN
 
    ValidSegs=1<<SegCode;
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
+   SegLimits[SegCode] = 0xffff;
 
-   MakeCode=MakeCode_78K0; ChkPC=ChkPC_78K0; IsDef=IsDef_78K0;
+   MakeCode=MakeCode_78K0; IsDef=IsDef_78K0;
    SwitchFrom=SwitchFrom_78K0; InitFields();
 END
 

@@ -5,6 +5,7 @@
 /* AS-Codegeneratormodul MELPS-7700                                          */
 /*                                                                           */
 /* Historie: 5.11.1996 Grundsteinlegung                                      */
+/*           2. 1.1999 ChkPC-Anpassung                                       */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -1265,16 +1266,6 @@ BEGIN
    Reg_DPR=0;
 END
 
-	static Boolean ChkPC_7700(void)
-BEGIN
-   switch (ActPC)
-    BEGIN
-     case SegCode : return (ProgCounter()<=0xffffff);
-     default: return False;
-    END
-END
-
-
 	static Boolean IsDef_7700(void)
 BEGIN
    return False;
@@ -1294,8 +1285,9 @@ BEGIN
 
    ValidSegs=1 << SegCode;
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
+   SegLimits[SegCode] = 0xffffffl;
 
-   MakeCode=MakeCode_7700; ChkPC=ChkPC_7700; IsDef=IsDef_7700;
+   MakeCode=MakeCode_7700; IsDef=IsDef_7700;
    SwitchFrom=SwitchFrom_7700; InitFields();
 END
 

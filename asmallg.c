@@ -5,6 +5,14 @@
 /* von allen Codegeneratoren benutzte Pseudobefehle                          */
 /*                                                                           */
 /* Historie:  10. 5.1996 Grundsteinlegung                                    */
+/*            24. 6.1998 CODEPAGE-Kommando                                   */
+/*            17. 7.1998 CHARSET ohne Argumente                              */
+/*            17. 8.1998 BookKeeping-Aufruf bei ALIGN                        */
+/*            18. 8.1998 RADIX-Kommando                                      */
+/*             2. 1.1999 Standard-ChkPC-Routine                              */
+/*             9. 1.1999 BINCLUDE gefixt...                                  */
+/*            30. 5.1999 OUTRADIX-Kommando                                   */
+/*            12. 7.1999 EXTERN-Kommando                                     */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -34,6 +42,11 @@ static PInstTable PseudoTable=Nil,ONOFFTable;
 
 /*--------------------------------------------------------------------------*/
 
+	static Boolean DefChkPC(LargeWord Addr)
+BEGIN
+   if (((1 << ActPC) & ValidSegs) == 0) return 0;
+   else return (Addr <= SegLimits[ActPC]);
+END
 
 	void SetCPU(CPUVar NewCPU, Boolean NotPrev)
 BEGIN
@@ -67,12 +80,24 @@ BEGIN
     END
 
    InternSymbol=Default_InternSymbol;
-   if (NOT NotPrev) SwitchFrom(); 
+   ChkPC = DefChkPC;
+   if (NOT NotPrev) SwitchFrom();
    Lauf->SwitchProc();
 
    DontPrint=True;
 END
 
+	Boolean SetNCPU(char *Name, Boolean NoPrev)
+BEGIN
+   PCPUDef Lauf;
+
+   Lauf = FirstCPUDef;
+   while ((Lauf != Nil) AND (strcmp(Name, Lauf->Name) != 0))
+    Lauf = Lauf->Next;
+   if (Lauf == Nil) WrXError(1430, Name);
+   else SetCPU(Lauf->Number, NoPrev);
+   return (Lauf != Nil);
+END
 
 	char *IntLine(LongInt Inp)
 BEGIN
@@ -153,21 +178,12 @@ END
 
 	static void CodeCPU(Word Index)
 BEGIN
-   PCPUDef Lauf;
-
    if (ArgCnt!=1) WrError(1110);
    else if (*AttrPart!='\0') WrError(1100);
    else
     BEGIN
      NLS_UpString(ArgStr[1]);
-     Lauf=FirstCPUDef;
-     while ((Lauf!=Nil) AND (strcmp(ArgStr[1],Lauf->Name)!=0))
-      Lauf=Lauf->Next;
-     if (Lauf==Nil) WrXError(1430,ArgStr[1]);
-     else
-      BEGIN
-       SetCPU(Lauf->Number,False); ActPC=SegCode;
-      END
+     if (SetNCPU(ArgStr[1], False)) ActPC = SegCode;
     END
 END
 
@@ -476,35 +492,134 @@ BEGIN
     END
 END
 
-
 	static void CodeCHARSET(Word Index)
 BEGIN
-   Byte w1,w2,w3;
-   Integer ch;
+   TempResult t;
+   FILE *f;
+   unsigned char tfield[256];
+   LongWord Start,l,TStart,Stop,z;
    Boolean OK;
 
-   if ((ArgCnt<2) OR (ArgCnt>3)) WrError(1110);
+   if (ArgCnt>3) WrError(1110);
+   else if (ArgCnt==0)
+    BEGIN
+     for (z=0; z<256; z++) CharTransTable[z]=z;
+    END
    else
     BEGIN
-     w1=EvalIntExpression(ArgStr[1],Int8,&OK);
-     if (OK)
+     FirstPassUnknown=False; EvalExpression(ArgStr[1],&t);
+     switch (t.Typ)
       BEGIN
-       w3=EvalIntExpression(ArgStr[ArgCnt],Int8,&OK);
-       if (OK)
-	BEGIN
-         if (ArgCnt==2)
+       case TempInt:
+        if (FirstPassUnknown) t.Contents.Int&=255;
+        if (ChkRange(t.Contents.Int,0,255))
+         if (ArgCnt<2) WrError(1110);
+         else
           BEGIN
-           w2=w1; OK=True;
+           Start=t.Contents.Int;
+           FirstPassUnknown=False; EvalExpression(ArgStr[2],&t);
+           switch (t.Typ)
+            BEGIN
+             case TempInt: /* Übersetzungsbereich als Character-Angabe */
+              if (FirstPassUnknown) t.Contents.Int&=255;
+              if (ArgCnt==2)
+               BEGIN
+                Stop=Start; TStart=t.Contents.Int;
+                OK=ChkRange(TStart,0,255);
+               END
+              else
+               BEGIN
+                Stop=t.Contents.Int; OK=ChkRange(Stop,Start,255);
+                if (OK) TStart=EvalIntExpression(ArgStr[3],UInt8,&OK);
+                else TStart=0;
+               END
+              if (OK)
+               for (z=Start; z<=Stop; z++) CharTransTable[z]=TStart+(z-Start);
+              break;
+             case TempString:
+              l=strlen(t.Contents.Ascii); /* Übersetzungsstring ab Start */
+              if (Start+l>256) WrError(1320);
+              else
+               for (z=0; z<l; z++)
+                CharTransTable[Start+z]=t.Contents.Ascii[z];
+              break;
+             case TempFloat:
+              WrError(1135);
+              break;
+             default:
+              break;
+            END
           END
-	 else w2=EvalIntExpression(ArgStr[2],Int8,&OK);
-         if (OK)
-          BEGIN
-	   if (w1>w2) WrError(1320);
-	   else
-            for (ch=w1; ch<=w2; ch++)
-	     CharTransTable[ch]=ch-w1+w3;
-	  END
-	END
+        break;
+       case TempString:
+        if (ArgCnt!=1) WrError(1110); /* Tabelle von Datei lesen */
+        else
+         BEGIN
+          f=fopen(t.Contents.Ascii,OPENRDMODE);
+          if (f==Nil) ChkIO(10001);
+          if (fread(tfield,sizeof(char),256,f)!=256) ChkIO(10003);
+          fclose(f); memcpy(CharTransTable,tfield,sizeof(char)*256);
+         END
+        break;
+       case TempFloat:
+        WrError(1135);
+        break;
+       default:
+        break;
+      END
+    END
+END
+
+	static void CodePRSET(Word Index)
+BEGIN
+   int z,z2;
+
+   for (z=0; z<16; z++)
+    BEGIN
+     for (z2=0; z2<16; z2++) printf(" %02x",CharTransTable[z*16+z2]);
+     printf("  ");
+     for (z2=0; z2<16; z2++) printf("%c",CharTransTable[z*16+z2]>' ' ? CharTransTable[z*16+z2] : '.');
+     putchar('\n');
+    END
+END
+
+	static void CodeCODEPAGE(Word Index)
+BEGIN
+   PTransTable Prev,Run,New,Source;
+   int erg=0;
+
+   if ((ArgCnt!=1) AND (ArgCnt!=2)) WrError(1110);
+   else if (NOT ChkSymbName(ArgStr[1])) WrXError(1020,ArgStr[1]);
+   else
+    BEGIN
+     if (NOT CaseSensitive)
+      BEGIN
+       UpString(ArgStr[1]);
+       if (ArgCnt==2) UpString(ArgStr[2]);
+      END
+
+     if (ArgCnt==1) Source=CurrTransTable;
+     else
+      for (Source=TransTables; Source!=Nil; Source=Source->Next)
+       if (strcmp(Source->Name,ArgStr[2])==0) break;
+
+     if (Source==Nil) WrXError(1610,ArgStr[2]);
+     else
+      BEGIN
+       for (Prev=Nil,Run=TransTables; Run!=Nil; Prev=Run,Run=Run->Next)
+        if ((erg=strcmp(ArgStr[1],Run->Name))<=0) break;
+
+       if ((Run==Nil) OR (erg<0))
+        BEGIN
+         New=(PTransTable) malloc(sizeof(TTransTable));
+         New->Next=Run;
+         New->Name=strdup(ArgStr[1]);
+         New->Table=(unsigned char *) malloc(256*sizeof(char));
+         memcpy(New->Table,Source->Table,256*sizeof(char));
+         if (Prev==Nil) TransTables=New; else Prev->Next=New;
+         CurrTransTable=New;
+        END
+       else CurrTransTable=Run;
       END
     END
 END
@@ -551,6 +666,7 @@ BEGIN
      Neu->SavePC=ActPC;
      Neu->SaveListOn=ListOn;
      Neu->SaveLstMacroEx=LstMacroEx;
+     Neu->SaveTransTable=CurrTransTable;
      FirstSaveState=Neu;
     END
 END
@@ -572,6 +688,7 @@ BEGIN
      if (Old->SaveCPU!=MomCPU) SetCPU(Old->SaveCPU,False);
      EnterIntSymbol(ListOnName,ListOn=Old->SaveListOn,0,True); 
      SetFlag(&LstMacroEx,LstMacroExName,Old->SaveLstMacroEx);
+     CurrTransTable=Old->SaveTransTable;
      free(Old);
     END
 END
@@ -664,6 +781,23 @@ BEGIN
     END
 END
 
+	static void CodeRADIX(Word Index)
+BEGIN
+   Boolean OK;
+   LargeWord tmp;
+
+   if (ArgCnt!=1) WrError(1110);
+   else
+    BEGIN
+     tmp=ConstLongInt(ArgStr[1],&OK);
+     if (NOT OK) WrError(1135);
+     else if (ChkRange(tmp,2,36))
+      BEGIN
+       if (Index == 1) OutRadixBase = tmp;
+       else RadixBase = tmp;
+      END
+    END
+END
 
 	static void CodeALIGN(Word Index)
 BEGIN
@@ -684,8 +818,7 @@ BEGIN
 	NewPC-=NewPC%Dummy;
 	CodeLen=NewPC-ProgCounter();
 	DontPrint=(CodeLen!=0);
-	if ((MakeUseList) AND (DontPrint))
-	 if (AddChunk(SegChunks+ActPC,ProgCounter(),CodeLen,ActPC==SegCode)) WrError(90);
+	if (DontPrint) BookKeeping();
        END
     END
 END
@@ -782,10 +915,11 @@ BEGIN
    LongWord Ofs=0,Curr,Rest,FSize;
    Word RLen;
    Boolean OK,SaveTurnWords;
+   LargeWord OldPC;
    String Name;
 
    if ((ArgCnt<1) OR (ArgCnt>3)) WrError(1110);
-   else if (ActPC!=SegCode) WrError(1940);
+   else if (ActPC==StructSeg) WrError(1940);
    else
     BEGIN
      if (ArgCnt==1) OK=True;
@@ -823,19 +957,27 @@ BEGIN
          BEGIN
           fclose(F); WrError(1600); return;
          END
-       fseek(F,Ofs,SEEK_SET); ChkIO(10003);
-       Rest=Len; SaveTurnWords=TurnWords; TurnWords=False;
-       do
+       if (NOT ChkPC(PCs[ActPC]+Len-1)) WrError(1925);
+       else
         BEGIN
-         if (Rest<MaxCodeLen) Curr=Rest; else Curr=MaxCodeLen;
-         RLen=fread(BAsmCode,1,Curr,F); ChkIO(10003);
-         CodeLen=RLen; WriteBytes();
-         Rest-=RLen;
+         fseek(F,Ofs,SEEK_SET); ChkIO(10003);
+         Rest=Len; SaveTurnWords=TurnWords; TurnWords=False;
+         OldPC = ProgCounter();
+         do
+          BEGIN
+           if (Rest<MaxCodeLen) Curr=Rest; else Curr=MaxCodeLen;
+           RLen=fread(BAsmCode,1,Curr,F); ChkIO(10003);
+           CodeLen=RLen;
+           WriteBytes();
+           PCs[ActPC]+=CodeLen;
+           Rest-=RLen;
+          END
+         while ((Rest!=0) AND (RLen==Curr));
+         if (Rest!=0) WrError(1600);
+         TurnWords=SaveTurnWords;
+         DontPrint=True; CodeLen=ProgCounter()-OldPC;
+         PCs[ActPC]=OldPC;
         END
-       while ((Rest!=0) AND (RLen==Curr));
-       if (Rest!=0) WrError(1600);
-       TurnWords=SaveTurnWords;
-       DontPrint=True; CodeLen=Len-Rest;
        fclose(F);
       END
     END
@@ -953,6 +1095,38 @@ BEGIN
     END
 END
 
+	static void CodeEXTERN(Word Index)
+BEGIN
+   char *Split;
+   int i;
+   Boolean OK;
+   Byte Type;
+
+   if (ArgCnt < 1) WrError(1110);
+   else
+    BEGIN
+     i = 1; OK = True;
+     while ((OK) && (i <= ArgCnt))
+      BEGIN
+       Split = strrchr(ArgStr[i], ':');
+       if (Split == NULL)
+        Type = SegNone;
+       else
+        BEGIN
+         for (Type = SegNone + 1; Type <= PCMax; Type++)
+          if (strcasecmp(Split + 1, SegNames[Type]) == 0)
+           break;
+         if (Type > PCMax) WrXError(1961, Split + 1);
+         else
+          BEGIN
+           *Split = '\0';
+           EnterExtSymbol(ArgStr[i], 0, Type, FALSE);
+          END
+        END
+       i++;
+      END
+    END
+END
 
 	static void CodePPSyms(PForwardSymbol *Orig,
                                PForwardSymbol *Alt1,
@@ -1059,6 +1233,7 @@ static PseudoOrder Pseudos[]=
                    {{"ALIGN",      CodeALIGN     },
                     {"BINCLUDE",   CodeBINCLUDE  },
                     {"CHARSET",    CodeCHARSET   },
+                    {"CODEPAGE",   CodeCODEPAGE  },
                     {"CPU",        CodeCPU       },
                     {"DEPHASE",    CodeDEPHASE   },
                     {"END",        CodeEND       },
@@ -1066,6 +1241,7 @@ static PseudoOrder Pseudos[]=
                     {"ENDSTRUCT",  CodeENDSTRUCT },
                     {"ENUM",       CodeENUM      },
                     {"ERROR",      CodeERROR     },
+                    {"EXTERN",     CodeEXTERN    },
                     {"FATAL",      CodeFATAL     },
                     {"FUNCTION",   CodeFUNCTION  },
                     {"LABEL",      CodeLABEL     },
@@ -1076,7 +1252,9 @@ static PseudoOrder Pseudos[]=
                     {"PAGE",       CodePAGE      },
                     {"PHASE",      CodePHASE     },
                     {"POPV",       CodePOPV      },
+                    {"PRSET",      CodePRSET     },
                     {"PUSHV",      CodePUSHV     },
+                    {"RADIX",      CodeRADIX     },
                     {"READ",       CodeREAD      },
                     {"RESTORE",    CodeRESTORE   },
                     {"SAVE",       CodeSAVE      },
@@ -1150,6 +1328,7 @@ BEGIN
    PseudoTable=CreateInstTable(201);
    for (POrder=Pseudos; POrder->Proc!=Nil; POrder++)
     AddInstTable(PseudoTable,POrder->Name,0,POrder->Proc);
+   AddInstTable(PseudoTable,"OUTRADIX", 1, CodeRADIX);
    AddInstTable(PseudoTable,"EQU",0,CodeSETEQU);
    AddInstTable(PseudoTable,"=",0,CodeSETEQU);
    AddInstTable(PseudoTable,":=",0,CodeSETEQU);

@@ -11,4 +11,4 @@
 #include "stdinc.h"
 
 int InstrZ;
-Byte AdrCnt;
+int AdrCnt;

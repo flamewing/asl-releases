@@ -5,6 +5,9 @@
 /* Codegeneratormodul COP8-Familie                                           */
 /*                                                                           */
 /* Historie: 7.10.1996 Grundsteinlegung                                      */
+/*          18. 8.1998 BookKeeping-Aufruf bei DSx                            */
+/*           2. 1.1998 ChkPC umgebaut                                        */
+/*          14. 8.1999 Maskierung in ChkAdr falsch                           */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -131,7 +134,7 @@ END
 
 	static void ChkAdr(Word Mask)
 BEGIN
-   if ((AdrMode!=ModNone) AND ((Mask AND (1 << AdrMode))==0))
+   if ((AdrMode!=ModNone) AND ((Mask & (1 << AdrMode))==0))
     BEGIN
      AdrMode=ModNone; WrError(1350);
     END
@@ -215,8 +218,7 @@ BEGIN
 	 DontPrint=True;
          if (Memo("DSW")) Size+=Size;
          CodeLen=Size;
-	 if (MakeUseList)
-	  if (AddChunk(SegChunks+ActPC,ProgCounter(),CodeLen,ActPC==SegCode)) WrError(90);
+	 BookKeeping();
 	END
       END
      return True;
@@ -690,16 +692,6 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-        static Boolean ChkPC_COP8(void)
-BEGIN
-   switch (ActPC)
-    BEGIN
-     case SegCode  : return (ProgCounter()<0x2000);
-     case SegData  : return (ProgCounter()< 0x100);
-     default: return False;
-    END
-END
-
         static Boolean IsDef_COP8(void)
 BEGIN
    return (Memo("SFR"));
@@ -719,9 +711,11 @@ BEGIN
 
    ValidSegs=(1<<SegCode)|(1<<SegData);
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
+   SegLimits[SegCode] = 0x1fff;
    Grans[SegData]=1; ListGrans[SegData]=1; SegInits[SegData]=0;
+   SegLimits[SegData] = 0xff;
 
-   MakeCode=MakeCode_COP8; ChkPC=ChkPC_COP8; IsDef=IsDef_COP8;
+   MakeCode=MakeCode_COP8; IsDef=IsDef_COP8;
    SwitchFrom=SwitchFrom_COP8; InitFields();
 END
 

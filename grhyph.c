@@ -5,7 +5,8 @@
 /* Trennungsmuster deutsch                                                   */
 /* abgeleitet von 'ghyph31.tex' aus TeX                                      */
 /*                                                                           */
-/* Historie: 16.2.1998 Konvertierung                                         */
+/* Historie: 16. 2.1998 Konvertierung                                        */
+/*            2. 7.1998 für MSDOS auskommentiert                             */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -153,6 +154,7 @@
 \fi
 */
 
+#ifndef __MSDOS__
 char *GRHyphens[]={
  ".aa6l .ab3a4s .ab3ei .abi2 .ab3it .ab1l .ab1r .ab3u .ad3o4r .alti6 .ana3c .an5alg .an1e .ang8s .an1s .ap1p .ar6sc .ar6ta .ar6tei .as2z",
  ".au2f1 .au2s3 .be5erb .be3na .ber6t5r .bie6r5 .bim6s5t .brot3 .bru6s .ch6 .che6f5 .da8c .da2r .dar5in .dar5u .den6ka .de5r6en .des6pe",
@@ -450,6 +452,7 @@ char *GRHyphens[]={
  "2ß1ei 8ßem ß1f8 ß1g ß1h 1ßi ß1k ß1l ß1m ßmana8 ß1n ß1o ß1p8 ß5q ß1r ß1s2 ßst8 ß1ta",
  "ß1te ßt3hei ß1ti ß5to ß1tr 1ßu8 6ß5um ß1v ß1w ß1z ß1z",
  NULL};
+#endif
 
 /*
 \endgroup

@@ -5,6 +5,7 @@
 /* Verwaltung von Adressbereichslisten                                       */
 /*                                                                           */
 /* Historie: 16. 5.1996 Grundsteinlegung                                     */
+/*           16. 8.1998 Min/Max-Ausgabe                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -173,6 +174,53 @@ BEGIN
       END
      z++;
     END
+END
+
+/*--------------------------------------------------------------------------*/
+/* Minimaladresse holen */
+
+	LargeWord ChunkMin(ChunkList *NChunk)
+BEGIN
+   LongInt z;
+   LargeWord t=(LargeWord) -1;
+
+   if (NChunk->RealLen==0) return 0;
+
+   for (z=0; z<NChunk->RealLen; z++)
+    if (NChunk->Chunks[z].Start<t) t=NChunk->Chunks[z].Start;
+
+   return t;
+END
+
+/*--------------------------------------------------------------------------*/
+/* Maximaladresse holen */
+
+	LargeWord ChunkMax(ChunkList *NChunk)
+BEGIN
+   LongInt z;
+   LargeWord t=(LargeWord) 0;
+
+   if (NChunk->RealLen==0) return 0;
+
+   for (z=0; z<NChunk->RealLen; z++)
+    if (NChunk->Chunks[z].Start+NChunk->Chunks[z].Length-1>t)
+     t=NChunk->Chunks[z].Start+NChunk->Chunks[z].Length-1;
+
+   return t;
+END
+
+/*--------------------------------------------------------------------------*/
+/* Menge holen */
+
+	LargeWord ChunkSum(ChunkList *NChunk)
+BEGIN
+   LongInt z;
+   LargeWord Sum=0;
+
+   for (z=0; z<NChunk->RealLen; z++)
+    Sum+=NChunk->Chunks[z].Length;
+
+   return Sum;
 END
 
 	void chunks_init(void)

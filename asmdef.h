@@ -5,6 +5,22 @@
 /* global benutzte Variablen und Definitionen                                */
 /*                                                                           */
 /* Historie:  4. 5.1996 Grundsteinlegung                                     */
+/*           24. 6.1998 Zeichenübersetzungstabellen                          */
+/*           24. 7.1998 Debug-Modus NoICE                                    */
+/*           25. 7.1998 PassNo --> Integer                                   */
+/*           17. 8.1998 InMacroFlag hierher verschoben                       */
+/*           18. 8.1998 RadixBase hinzugenommen                              */
+/*                      ArgStr-Feld war eins zu kurz                         */
+/*           19. 8.1998 BranchExt-Variablen                                  */
+/*           29. 8.1998 ActListGran hinzugenommen                            */
+/*            1. 1.1999 SegLimits dazugenommen                               */
+/*                      SegInits --> LargeInt                                */
+/*            9. 1.1999 ChkPC jetzt mit Adresse als Parameter                */
+/*           17. 4.1999 DefCPU hinzugenommen                                 */
+/*           30. 5.1999 OutRadixBase hinzugenommen                           */
+/*           10. 7.1999 Symbolrecord hierher verschoben                      */
+/*           22. 9.1999 RelocEntry definiert                                 */
+/*            5.11.1999 ExtendErrors von Boolean nach ShortInt               */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -27,9 +43,18 @@ typedef struct _TCPUDef
 	 } TCPUDef,*PCPUDef;
 
 typedef enum {TempInt,TempFloat,TempString,TempNone} TempType;
+
+typedef struct _RelocEntry
+         {
+          struct _RelocEntry *Next;
+          char *Ref;
+          Byte Add;
+         } TRelocEntry, *PRelocEntry;
+
 typedef struct
          {
           TempType Typ;
+          PRelocEntry Relocs;
           union
            {
             LargeInt Int;
@@ -38,7 +63,50 @@ typedef struct
            } Contents;
          } TempResult;
 
-typedef enum {DebugNone,DebugMAP,DebugAOUT,DebugCOFF,DebugELF,DebugAtmel} DebugType;
+typedef struct
+         {
+          TempType Typ;
+          TRelocEntry *Relocs;
+          union
+           {
+            LargeInt IWert;
+            Double FWert;
+            char *SWert;
+           } Contents;
+         } SymbolVal;
+
+typedef struct _TCrossRef
+         {
+          struct _TCrossRef *Next;
+          Byte FileNum;
+          LongInt LineNum;
+          Integer OccNum;
+         } TCrossRef,*PCrossRef;
+
+typedef struct _SymbolEntry
+         {
+          struct _SymbolEntry *Left,*Right;
+          ShortInt Balance;
+          LongInt Attribute;
+          char *SymName;
+          Byte SymType;
+          ShortInt SymSize;
+          Boolean Defined,Used,Changeable;
+          SymbolVal SymWert;
+          PCrossRef RefList;
+          Byte FileNum;
+          LongInt LineNum;
+          TRelocEntry *Relocs;
+         } SymbolEntry,*SymbolPtr;
+
+typedef struct _TPatchEntry
+        {
+          struct _TPatchEntry *Next;
+          LargeWord Address;
+          Byte *RelocType;
+        } TPatchEntry, *PPatchEntry;
+
+typedef enum {DebugNone,DebugMAP,DebugAOUT,DebugCOFF,DebugELF,DebugAtmel,DebugNoICE} DebugType;
 
 #define Char_NUL 0
 #define Char_BEL '\a'
@@ -70,6 +138,7 @@ extern char SrcSuffix[],IncSuffix[],PrgSuffix[],LstSuffix[],
 #define RelaxedName      "RELAXED"    /* alle Zahlenschreibweisen zugelassen */
 #define SrcModeName      "INSRCMODE"  /* CPU im Quellcode-kompatiblen Modus */
 #define BigEndianName    "BIGENDIAN"  /* Datenablage MSB first */
+#define BranchExtName    "BRANCHEXT"  /* Spruenge autom. verlaengern */
 #define FlagTrueName     "TRUE"	      /* Flagkonstanten */
 #define FlagFalseName    "FALSE"
 #define PiName           "CONSTPI"    /* Zahl Pi */
@@ -108,7 +177,7 @@ void
 );
 
 typedef Word WordField[6];          /* fuer Zahlenumwandlung */
-typedef char *ArgStrField[ParMax];  /* Feld mit Befehlsparametern */
+typedef char *ArgStrField[ParMax+1];/* Feld mit Befehlsparametern */
 typedef char *StringPtr;
 
 typedef enum {ConstModeIntel,	    /* Hex xxxxh, Okt xxxxo, Bin xxxxb */
@@ -123,6 +192,13 @@ typedef struct _TFunction
           StringPtr Name,Definition;
 	 } TFunction,*PFunction;
 
+typedef struct _TTransTable
+         {
+          struct _TTransTable *Next;
+          char *Name;
+          unsigned char *Table;
+         } TTransTable,*PTransTable;
+
 typedef struct _TSaveState
 	 {
 	  struct _TSaveState *Next;
@@ -130,6 +206,7 @@ typedef struct _TSaveState
 	  Integer SavePC;
 	  Byte SaveListOn;
 	  Boolean SaveLstMacroEx;
+	  PTransTable SaveTransTable;
 	 } TSaveState,*PSaveState;
 
 typedef struct _TForwardSymbol
@@ -175,7 +252,8 @@ extern Word ListGrans[StructSeg+1];
 extern ChunkList SegChunks[StructSeg+1];
 extern Integer ActPC;
 extern Boolean PCsUsed[StructSeg+1];
-extern LongInt SegInits[PCMax+1]; 
+extern LargeInt SegInits[PCMax+1]; 
+extern LargeInt SegLimits[PCMax+1]; 
 extern LongInt ValidSegs;
 extern Boolean ENDOccured;
 extern Boolean Retracted;
@@ -184,7 +262,7 @@ extern Boolean ListToStdout,ListToNull;
 extern Word TypeFlag;
 extern ShortInt SizeFlag;
 
-extern Byte PassNo;
+extern Integer PassNo;
 extern Integer JmpErrors;
 extern Boolean ThrowErrors;
 extern Boolean Repass;
@@ -199,7 +277,7 @@ extern Boolean MakeSectionList;
 extern Boolean MakeIncludeList;
 extern Boolean RelaxedMode;
 extern Byte ListMask;
-extern Boolean ExtendErrors;
+extern ShortInt ExtendErrors;
 
 extern LongInt MomSectionHandle;
 extern PSaveSection SectionStack;
@@ -210,6 +288,7 @@ extern Word *WAsmCode;
 extern LongWord *DAsmCode;
 
 extern Boolean DontPrint;
+extern Word ActListGran;
 
 extern Boolean NumericErrors;
 extern Boolean CodeOutput;
@@ -242,7 +321,7 @@ extern char *PCSymbol;
 extern TConstMode ConstMode;
 extern Boolean SetIsOccupied;
 extern void (*MakeCode)(void);
-extern Boolean (*ChkPC)(void);
+extern Boolean (*ChkPC)(LargeWord Addr);
 extern Boolean (*IsDef)(void);
 extern void (*SwitchFrom)(void);
 extern void (*InternSymbol)(char *Asc, TempResult *Erg);
@@ -256,10 +335,12 @@ extern FILE *LstFile;
 extern FILE *ShareFile;
 extern FILE *MacProFile;
 extern FILE *MacroFile;
+extern Boolean InMacroFlag;
 extern StringPtr LstName,MacroName,MacProName;
 extern Boolean DoLst,NextDoLst;
 extern StringPtr ShareName;
 extern CPUVar MomCPU,MomVirtCPU;
+extern char DefCPU[20];
 extern char MomCPUIdent[10];
 extern PCPUDef FirstCPUDef;
 extern CPUVar CPUCnt;
@@ -268,6 +349,9 @@ extern Boolean FPUAvail;
 extern Boolean DoPadding;
 extern Boolean SupAllowed;
 extern Boolean Maximum;
+extern Boolean DoBranchExt;
+
+extern LargeWord RadixBase, OutRadixBase;
 
 extern StringPtr LabPart,OpPart,AttrPart,ArgPart,CommPart,LOpPart;
 extern char AttrSplit;
@@ -290,7 +374,8 @@ extern Byte StopfZahl;
 
 extern Boolean SuppWarns;
 
-extern unsigned char *CharTransTable;
+#define CharTransTable CurrTransTable->Table
+extern PTransTable TransTables,CurrTransTable;
 
 extern PFunction FirstFunction;
 

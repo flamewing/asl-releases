@@ -5,6 +5,8 @@
 /* Codegenerator H8/300(L/H)                                                 */
 /*                                                                           */
 /* Historie: 22.11.1996 Grundsteinlegung                                     */
+/*           15.10.1998 TRAPA nachgetragen                                   */
+/*            3. 1.1999 ChkPC-Anpassung                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -1644,15 +1646,23 @@ BEGIN
      return;
     END
 
-   WrXError(1200,OpPart);
-END
+   if (Memo("TRAPA"))
+    BEGIN
+     if (ArgCnt!=1) WrError(1110);
+     else if (MomCPU<CPU6413309) WrError(1500);
+     else
+      BEGIN
+       if (*ArgStr[1]=='#') strcpy(ArgStr[1],ArgStr[1]+1);
+       WAsmCode[0]=EvalIntExpression(ArgStr[1],UInt2,&OK)<<4;
+       if (OK)
+        BEGIN
+         WAsmCode[0]+=0x5700; CodeLen=2;
+        END
+      END
+     return;
+    END
 
-	static Boolean ChkPC_H8_3(void)
-BEGIN
-   if (ActPC==SegCode)
-    if (MomCPU==CPU6413308) return (ProgCounter()<0x10000);
-    else return (ProgCounter()<0x1000000);
-   else return False;
+   WrXError(1200,OpPart);
 END
 
 	static Boolean IsDef_H8_3(void)
@@ -1674,8 +1684,9 @@ BEGIN
 
    ValidSegs=1<<SegCode;
    Grans[SegCode]=1; ListGrans[SegCode]=2; SegInits[SegCode]=0;
+   SegLimits[SegCode] = (MomCPU <= CPUH8_300) ? 0xffff : 0xffffffl;
 
-   MakeCode=MakeCode_H8_3; ChkPC=ChkPC_H8_3; IsDef=IsDef_H8_3;
+   MakeCode=MakeCode_H8_3; IsDef=IsDef_H8_3;
    SwitchFrom=SwitchFrom_H8_3; InitFields();
    AddONOFF("MAXMODE", &Maximum   , MaximumName   ,False);
    AddONOFF("PADDING", &DoPadding , DoPaddingName ,False);

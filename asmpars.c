@@ -7,6 +7,24 @@
 /* Historie:  5. 5.1996 Grundsteinlegung                                     */
 /*            4. 1.1997 Umstellung wg. case-sensitiv                         */
 /*           24. 9.1997 Registersymbole                                      */
+/*           26. 6.1998 Codepages                                            */
+/*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
+/*           17. 7.1998 Korrektur Maskentabellen                             */
+/*           16. 8.1998 NoICE-Symbolausgabe                                  */
+/*           18. 8.1998 Benutzung RadixBase                                  */
+/*           19. 8.1998 == als Alias fuer = - Operator                       */
+/*            1. 9.1998 RefList nicht initialisiert bei Symbolen             */
+/*                      ACOT korrigiert                                      */
+/*            6.12.1998 UInt14                                               */
+/*           30. 1.1999 Formate maschinenunabhaengig gemacht                 */
+/*           12. 2.1999 Compilerwarnungen beseitigt                          */
+/*           17. 4.1999 Abfrage auf PCSymbol gegen Nullzeigerzugriff ge-     */
+/*                      schuetzt.                                            */
+/*           30. 5.1999 OutRadixBase beruecksichtigt                         */
+/*           12. 7.1999 angefangen mit externen Symbolen                     */
+/*           14. 7.1999 Relocs im Parser beruecksichtigt                     */
+/*            1. 8.1999 Relocs im Formelparser durch                         */
+/*            8. 8.1999 Relocs in EvalIntExpression beruecksichtigt          */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -20,51 +38,99 @@
 #include "nlmessages.h"
 #include "as.rsc"
 #include "strutil.h"
-#include "asmfnums.h"
-#include "chunks.h"
+
 #include "asmdef.h"
 #include "asmsub.h"
+#include "asmfnums.h"
+#include "asmrelocs.h"
+#include "chunks.h"
 
 #include "asmpars.h"
 
 LargeWord IntMasks[IntTypeCnt]=
-            {0x00000001l,0x00000002l,0x00000007l,0x00000007l,0x0000000fl,0x0000000fl,
-             0x0000000fl,0x0000001fl,0x0000001fl,0x0000003fl,0x0000007fl,0x0000007fl,0x0000007fl,0x000000ffl,
-             0x000000ffl,0x000001ffl,0x000003ffl,0x000003ffl,0x000007ffl,0x00000fffl,0x00000fffl,
-             0x00001fffl,0x00007fffl,0x00007fffl,0x0000ffffl,0x0000ffffl,0x0003ffffl,0x0007ffffl,
-             0x000fffffl,0x000fffffl,0x003fffffl,0x007fffffl,0x00ffffffl,0x00ffffffl,0xffffffffl,0xffffffffl,
-             0xffffffffl
+            {0x00000001l,                         /* UInt1  */
+             0x00000003l,                         /* UInt2  */
+             0x00000007l,                         /* UInt3  */
+             0x00000007l,0x0000000fl,0x0000000fl, /* SInt4  UInt4  Int4  */
+             0x0000000fl,0x0000001fl,0x0000001fl, /* SInt5  UInt5  Int5  */
+             0x0000003fl,                         /* UInt6  */
+             0x0000003fl,0x0000007fl,             /* SInt7  UInt7  */
+             0x0000007fl,0x000000ffl,0x000000ffl, /* SInt8  UInt8  Int8  */
+             0x000001ffl,                         /* UInt9  */
+             0x000003ffl,0x000003ffl,             /* UInt10 Int10 */
+             0x000007ffl,                         /* UInt11 */
+             0x00000fffl,0x00000fffl,             /* UInt12 Int12 */
+             0x00001fffl,                         /* UInt13 */
+             0x00003fffl,                         /* UInt14 */
+             0x00007fffl,                         /* UInt15 */
+             0x00007fffl,0x0000ffffl,0x0000ffffl, /* SInt16 UInt16 Int16 */
+             0x0003ffffl,                         /* UInt18 */
+             0x0007ffffl,0x000fffffl,0x000fffffl, /* SInt20 UInt20 Int20 */
+             0x003fffffl,                         /* UInt22 */
+             0x007fffffl,0x00ffffffl,0x00ffffffl, /* SInt24 UInt24 Int24 */
+             0xffffffffl,0xffffffffl,0xffffffffl  /* SInt32 UInt32 Int32 */
 #ifdef HAS64
-             ,0xffffffffffffffffllu
+             ,0xffffffffffffffffllu               /* Int64 */
 #endif
             };
 
 LargeInt IntMins[IntTypeCnt]=
-            {          0l,          0l,          0l,         -8l,          0l,         -8l,
-                     -16l,          0l,        -16l,          0l,         -64,          0l,       -128l,          0l,
-                    -128l,          0l,          0l,       -512l,          0l,          0l,      -2047l,
-                       0l,          0l,     -32768l,          0l,     -32768l,          0l,    -524288l,
-                       0l,    -524288l,          0l,   -8388608l,          0l,   -8388608l,-2147483647l,          0l,
-             -2147483647l
+            {          0l,                            /* UInt1  */
+                       0l,                            /* UInt2  */
+                       0l,                            /* UInt3  */
+                      -8l,          0l,         -8l,  /* SInt4  UInt4  Int4  */
+                     -16l,          0l,        -16l,  /* SInt5  UInt5  Int5  */
+                       0l,                            /* UInt6  */
+                      -64,          0l,               /* SInt7  UInt7  */
+                    -128l,          0l,       -128l,  /* SInt8  UInt8  Int8  */
+                       0l,                            /* UInt9  */
+                       0l,       -512l,               /* UInt10 Int10 */
+                       0l,                            /* UInt11 */
+                       0l,      -2047l,               /* UInt12 Int12 */
+                       0l,                            /* UInt13 */
+                       0l,                            /* UInt14 */
+                       0l,                            /* UInt15 */
+                  -32768l,          0l,     -32768l,  /* SInt16 UInt16 Int16 */
+                       0l,                            /* UInt18 */
+                 -524288l,          0l,    -524288l,  /* SInt20 UInt20 Int20 */
+                       0l,                            /* UInt22 */
+                -8388608l,          0l,   -8388608l,  /* SInt24 UInt24 Int24 */
+             -2147483647l,          0l,-2147483647l   /* SInt32 UInt32 Int32 */
 #ifdef HAS64
-             ,-9223372036854775807ll
+             ,-9223372036854775807ll                  /* Int64 */
 #endif
             };
 
 LargeInt IntMaxs[IntTypeCnt]=
-            {          1l,          3l,         7l,          7l,         15l,         15l,
-                      31l,         31l,        31l,         63l,         63l,        127l,        127l,        255l,
-                     255l,        511l,      1023l,       1023l,       2047l,       4095l,       4095l,
-                    8191l,      32767l,     32767l,      65535l,      65535l,     262143l,     524287l,
+            {          1l,                            /* UInt1  */
+                       3l,                            /* UInt2  */
+                       7l,                            /* UInt3  */
+                       7l,         15l,         15l,  /* SInt4  UInt4  Int4  */
+                      15l,         31l,         31l,  /* SInt5  UInt5  Int5  */
+                      63l,                            /* UInt6  */
+                      63l,        127l,               /* SInt7  UInt7  */
+                     127l,        255l,        255l,  /* SInt8  UInt8  Int8  */
+                     511l,                            /* UInt9  */
+                    1023l,       1023l,               /* UInt10 Int10 */
+                    2047l,                            /* UInt11 */
+                    4095l,       4095l,               /* UInt12 Int12 */
+                    8191l,                            /* UInt13 */
+                   16383l,                            /* UInt14 */
+                   32767l,                            /* UInt15 */
+                   32767l,      65535l,      65535l,  /* SInt16 UInt16 Int16 */
+                  262143l,                            /* UInt18 */
+                  524287l,                            /* SInt20 */
+                 1048575l,    1048575l,               /* UInt20 Int20 */
+                 4194303l,                            /* UInt22 */
 #ifdef __STDC__
-                 1048575l,    1048575l,   4194303l,    8388607l,   16777215l,   16777215l, 2147483647l, 4294967295ul,
-              4294967295ul
+                 8388607l,   16777215l,   16777215l,  /* SInt24 UInt24 Int24 */
+              2147483647l, 4294967295ul,4294967295ul  /* SInt32 UInt32 Int32 */
 #else
-                 1048575l,    1048575l,   4194303l,    8388607l,   16777215l,   16777215l, 2147483647l, 4294967295l,
-              4294967295l
+                 8388607l,   16777215l,   16777215l,  /* SInt24 UInt24 Int24 */
+              2147483647l, 4294967295l, 4294967295l   /* SInt32 UInt32 Int32 */
 #endif
 #ifdef HAS64
-             , 9223372036854775807ll
+             , 9223372036854775807ll                  /* Int64 */
 #endif
             };
 
@@ -82,44 +148,9 @@ LongInt LocHandleCnt;          /* mom. verwendeter lokaler Handle */
 Boolean BalanceTree;           /* Symbolbaum ausbalancieren */
 
 
-static char *DigitVals="0123456789ABCDEF";
 static char BaseIds[3]={'%','@','$'};
 static char BaseLetters[3]={'B','O','H'};
 static Byte BaseVals[3]={2,8,16};
-
-typedef struct _TCrossRef
-         {
-          struct _TCrossRef *Next;
-          Byte FileNum;
-          LongInt LineNum;
-          Integer OccNum;
-         } TCrossRef,*PCrossRef;
-
-typedef struct
-         {
-          TempType Typ;
-          union
-           {
-            LargeInt IWert;
-            Double FWert;
-            char *SWert;
-           } Contents;
-         } SymbolVal;
-
-typedef struct _SymbolEntry
-         {
-          struct _SymbolEntry *Left,*Right;
-          ShortInt Balance;
-          LongInt Attribute;
-          char *SymName;
-          Byte SymType;
-          ShortInt SymSize;
-          Boolean Defined,Used,Changeable;
-          SymbolVal SymWert;
-          PCrossRef RefList;
-          Byte FileNum;
-          LongInt LineNum;
-         } SymbolEntry,*SymbolPtr;
 
 typedef struct _TSymbolStackEntry
          {
@@ -184,7 +215,7 @@ typedef struct _TRegDef
 
 static SymbolPtr FirstSymbol,FirstLocSymbol;
 static PDefSymbol FirstDefSymbol;
-static PCToken FirstSection;
+/*static*/ PCToken FirstSection;
 static PRegDef FirstRegDef;
 static Boolean DoRefs;              /* Querverweise protokollieren */
 static PLocHandle FirstLocHandle;
@@ -195,12 +226,14 @@ static PCToken MomSection;
 BEGIN
    FirstSymbol=Nil;
 
-   FirstLocSymbol=Nil; MomLocHandle=(-1); SetMomSection(-1);
-   FirstSection=Nil;
-   FirstLocHandle=Nil;
-   FirstStack=Nil;
-   FirstRegDef=Nil;
-   DoRefs=True;
+   FirstLocSymbol = Nil; MomLocHandle = (-1); SetMomSection(-1);
+   FirstSection = Nil;
+   FirstLocHandle = Nil;
+   FirstStack = Nil;
+   FirstRegDef = Nil;
+   DoRefs = True;
+   RadixBase = 10;
+   OutRadixBase = 16;
 END
 
 
@@ -242,52 +275,73 @@ BEGIN
 END	
 	
 
+	static Boolean ProcessBk(char **Start, char *Erg)
+BEGIN
+   LongInt System=0,Acc=0,Digit=0;
+   char ch;
+   int cnt;
+   Boolean Finish;
+
+   switch (toupper(**Start))
+    BEGIN
+     case '\'': case '\\': case '"':
+      *Erg=**Start; (*Start)++; return True;
+     case 'H':
+      *Erg='\''; (*Start)++; return True;
+     case 'I':
+      *Erg='"'; (*Start)++; return True;
+     case 'B':
+      *Erg=Char_BS; (*Start)++; return True;
+     case 'A':
+      *Erg=Char_BEL; (*Start)++; return True;
+     case 'E':
+      *Erg=Char_ESC; (*Start)++; return True;
+     case 'T':
+      *Erg=Char_HT; (*Start)++; return True;
+     case 'N':
+      *Erg=Char_LF; (*Start)++; return True;
+     case 'R':
+      *Erg=Char_CR; (*Start)++; return True;
+     case 'X':
+      System=16; (*Start)++;
+     case '0': case '1': case '2': case '3': case '4':
+     case '5': case '6': case '7': case '8': case '9':
+      if (System==0) System=(**Start=='0')?8:10;
+      cnt=(System==16) ? 1 : ((System==10) ? 0 : -1);
+      do
+       BEGIN
+        ch=toupper(**Start); Finish=False;
+        if ((ch>='0') AND (ch<='9')) Digit=ch-'0';
+        else if ((System==16) AND (ch>='A') AND (ch<='F')) Digit=(ch-'A')+10;
+        else Finish=True;
+        if (NOT Finish)
+         BEGIN
+          (*Start)++; cnt++;
+          if (Digit>=System)
+           BEGIN
+            WrError(1320); return False;
+           END
+          Acc=(Acc*System)+Digit;
+         END
+       END
+      while ((NOT Finish) AND (cnt<3));
+      if (NOT ChkRange(Acc,0,255)) return False;
+      *Erg=Acc; return True;
+     default:
+      WrError(1135); return False;
+    END
+END
+
         static void ReplaceBkSlashes(char *s)
 BEGIN
-   char *p,Save;
-   int cnt;
-   Boolean OK;
+   char *p,*n;
    char ErgChar;
 
    p=strchr(s,'\\');
    while (p!=Nil)
     BEGIN
-     cnt=1; ErgChar='\\';
-     switch (toupper(*(p+1)))
-      BEGIN
-       case '\'':
-       case '\\':
-       case '"':
-        ErgChar=(*(p+1)); cnt=2; break;
-       case 'H':
-        ErgChar='\''; cnt=2; break;
-       case 'I':
-        ErgChar='"'; cnt=2; break;
-       case 'B':
-        ErgChar=Char_BS; cnt=2; break;
-       case 'A':
-        ErgChar=Char_BEL; cnt=2; break;
-       case 'E':
-        ErgChar=Char_ESC; cnt=2; break;
-       case 'T':
-        ErgChar=Char_HT; cnt=2; break;
-       case 'N':
-        ErgChar=Char_LF; cnt=2; break;
-       case 'R':
-        ErgChar=Char_CR; cnt=2; break;
-       case '0': case '1': case '2': case '3': case '4': case '5':
-       case '6': case '7': case '8': case '9':
-        cnt=2;
-        while ((cnt<4) AND (*(p+cnt)!='\0') AND (*(p+cnt)>='0') AND (*(p+cnt)<='9')) cnt++;
-        Save=(*(p+cnt)); *(p+cnt)='\0';
-        ErgChar=ConstLongInt(p+1,&OK);
-        *(p+cnt)=Save;
-        if (!OK) WrError(1320);
-        break;
-       default:
-         WrError(1135);
-      END;
-     *p=ErgChar; strcpy(p+1,p+cnt);
+     n=p+1; if (ProcessBk(&n,&ErgChar)) *p=ErgChar;
+     strcpy(p+1,n);
      p=strchr(p+1,'\\');
     END
 END
@@ -402,15 +456,27 @@ BEGIN
    return IdentifySection(Part,Erg);
 END
 
+	int DigitVal(char ch, int Base)
+BEGIN
+   static char *DigitVals="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+   char *pos=strchr(DigitVals,ch);
+   int erg;
+
+   if (pos==Nil) return -1;
+   else if ((erg=pos-DigitVals)>=Base) return -1;
+   return erg;
+END
+
         LargeInt ConstIntVal(char *Asc_O, IntType Typ, Boolean *Ok)
 BEGIN
    String Asc;
-   Byte Search,Base,Digit;
+   int Search;
+   Byte Base,Digit;
    LargeInt Wert;
    Boolean NegFlag;
    TConstMode ActMode=ConstModeC;
    Boolean Found;
-   char *z,*h;
+   char *z,ch;
    int l;
 
    *Ok=False; Wert=0; strmaxcpy(Asc,Asc_O,255);
@@ -421,14 +487,14 @@ BEGIN
 
    /* ASCII herausfiltern */
 
-   else if (Asc[0]=='\'')
+   else if (*Asc=='\'')
     BEGIN
      if (Asc[strlen(Asc)-1]!='\'') return -1;
      strcpy(Asc,Asc+1); Asc[strlen(Asc)-1]='\0'; ReplaceBkSlashes(Asc);
      for (Search=0; Search<strlen(Asc); Search++)
       BEGIN
-       Digit=(unsigned int) Asc[Search];
-       Wert=(Wert<<8)+CharTransTable[Digit];
+       Digit=(usint) Asc[Search];
+       Wert=(Wert<<8)+CharTransTable[Digit&0xff];
       END
      NegFlag=False;
     END
@@ -442,6 +508,8 @@ BEGIN
      if (*Asc=='+') strcpy(Asc,Asc+1);
      NegFlag=(*Asc=='-');
      if (NegFlag) strcpy(Asc,Asc+1);
+
+     /* automatische Syntaxermittlung */
 
      if (RelaxedMode)
       BEGIN
@@ -458,13 +526,15 @@ BEGIN
             ActMode=ConstModeMoto; Found=True; break;
            END
         END
-       if ((NOT Found) AND (strlen(Asc)>=2) AND (Asc[0]>='0') AND (Asc[0]<='9'))
+       if ((NOT Found) AND (strlen(Asc)>=2) AND (*Asc>='0') AND (*Asc<='9'))
         BEGIN
-         for (Search=0; Search<3; Search++)
-          if (toupper(Asc[strlen(Asc)-1])==BaseLetters[Search])
-           BEGIN
-            ActMode=ConstModeIntel; Found=True; break;
-           END
+         ch=toupper(Asc[strlen(Asc)-1]);
+         if (DigitVal(ch,RadixBase)==-1)
+          for (Search=0; Search<3; Search++)
+           if (ch==BaseLetters[Search])
+            BEGIN
+             ActMode=ConstModeIntel; Found=True; break;
+            END
         END
        if (NOT Found) ActMode=ConstModeC;
       END
@@ -472,16 +542,17 @@ BEGIN
 
      /* Zahlensystem ermitteln/pruefen */
 
-     Base=10;
+     Base=RadixBase;
      switch (ActMode)
       BEGIN
        case ConstModeIntel:
-        l=strlen(Asc);
-        for (Search=0; Search<3; Search++) 
-         if (toupper(Asc[l-1])==BaseLetters[Search])
-          BEGIN
-           Base=BaseVals[Search]; Asc[l-1]='\0'; break;
-          END
+        l=strlen(Asc); ch=toupper(Asc[l-1]);
+        if (DigitVal(ch,RadixBase)==-1)
+         for (Search=0; Search<3; Search++) 
+          if (ch==BaseLetters[Search])
+           BEGIN
+            Base=BaseVals[Search]; Asc[l-1]='\0'; break;
+           END
         break;
        case ConstModeMoto:
         for (Search=0; Search<3; Search++)
@@ -495,12 +566,14 @@ BEGIN
          BEGIN
           *Ok=True; return 0;
          END
-        else if (Asc[0]!='0') Base=10;
+        else if (*Asc!='0') Base=RadixBase;
         else if (strlen(Asc)<2) return -1;
         else
          BEGIN
           strcpy(Asc,Asc+1);
-          switch (toupper(Asc[0]))
+          ch=toupper(*Asc);
+          if ((RadixBase!=10) && (DigitVal(ch,RadixBase)!=-1)) Base=RadixBase;
+          else switch (toupper(*Asc))
            BEGIN
             case 'X': strcpy(Asc,Asc+1); Base=16; break;
             case 'B': strcpy(Asc,Asc+1); Base=2; break;
@@ -517,9 +590,7 @@ BEGIN
 
      for (z=Asc; *z!='\0'; z++)
       BEGIN
-       if ((h=strchr(DigitVals,toupper(*z)))==Nil) return -1;
-       else Search=h-DigitVals;
-       if (Search>=Base) return -1;
+       Search=DigitVal(toupper(*z),Base); if (Search==-1) return -1;
        Wert=Wert*Base+Search;
       END
     END
@@ -578,60 +649,36 @@ BEGIN
      strmaxcat(tmp,Asc,255); *z=Save; strcpy(Asc,z);
      if (*Asc=='\\')
       BEGIN
-       if (strlen(Asc)<2) return; 
-       l=strlen(tmp); 
-       switch (toupper(Asc[1]))
+       if (Asc[1]=='{')
         BEGIN
-         case '\'':
-         case '\\':
-         case '"':
-          tmp[l++]=Asc[1]; tmp[l++]='\0'; z=Asc+2; break;
-         case 'H':
-          tmp[l++]='\''; tmp[l++]='\0'; z=Asc+2; break;
-         case 'I':
-          tmp[l++]='"'; tmp[l++]='\0'; z=Asc+2; break;
-         case 'B':
-          tmp[l++]=Char_BS; tmp[l++]='\0'; z=Asc+2; break;
-         case 'A':
-          tmp[l++]=Char_BEL; tmp[l++]='\0'; z=Asc+2; break;
-         case 'E':
-          tmp[l++]=Char_ESC; tmp[l++]='\0'; z=Asc+2; break;
-         case 'T':
-          tmp[l++]=Char_HT; tmp[l++]='\0'; z=Asc+2; break;
-         case 'N':
-          tmp[l++]=Char_LF; tmp[l++]='\0'; z=Asc+2; break;
-         case 'R':
-          tmp[l++]=Char_CR; tmp[l++]='\0'; z=Asc+2; break;
-         case '0': case '1': case '2': case '3': case '4':
-         case '5': case '6': case '7': case '8': case '9':
-          z=Asc+1;
-          while ((*z!='\0') AND (z-Asc<4) AND (*z>='0') AND (*z<='9')) z++;
-          Save=(*z); *z='\0'; tmp[l++]=ConstLongInt(Asc+1,&OK2)&0xff; *z=Save;
-          if (tmp[l-1]=='\0') WrError(240);
-          if (NOT OK2) return; tmp[l++]='\0';
-          break;
-         case '{':
-          z=QuotPos(Asc,'}'); if (z==Nil) return;
-          FirstPassUnknown=False;
-          *(z++)='\0'; strmaxcpy(Part,Asc+2,255); KillBlanks(Part);
-          EvalExpression(Part,&t);
-          if (FirstPassUnknown) 
-           BEGIN
-            WrXError(1820,Part); return;
-           END
-          else switch(t.Typ)
-           BEGIN
-            case TempInt: strmaxcat(tmp,HexString(t.Contents.Int,0),255); break;
-            case TempFloat: strmaxcat(tmp,FloatString(t.Contents.Float),255); break;
-            case TempString: strmaxcat(tmp,t.Contents.Ascii,255); break;
-            default: return;
-           END
-          break;
-         default:
-          WrError(1135); z=Asc+2; break;
+         z=QuotPos(Asc,'}'); if (z==Nil) return;
+         FirstPassUnknown=False;
+         *(z++)='\0'; strmaxcpy(Part,Asc+2,255); KillBlanks(Part);
+         EvalExpression(Part,&t);
+         if (FirstPassUnknown) 
+          BEGIN
+           WrXError(1820,Part); return;
+          END
+         else if (t.Relocs != Nil)
+          BEGIN
+           WrError(1150); FreeRelocs(&t.Relocs); return;
+          END
+         else switch(t.Typ)
+          BEGIN
+           case TempInt: strmaxcat(tmp,SysString(t.Contents.Int,OutRadixBase,0),255); break;
+           case TempFloat: strmaxcat(tmp,FloatString(t.Contents.Float),255); break;
+           case TempString: strmaxcat(tmp,t.Contents.Ascii,255); break;
+           default: return;
+          END
         END
-       strcpy(Asc,z);
-      END
+       else
+        BEGIN
+         z=Asc+1; OK2=ProcessBk(&z,&Save);
+         if (NOT OK2) return;
+         l=strlen(tmp); tmp[l++]=Save; tmp[l++]='\0';
+        END
+      strcpy(Asc,z);
+     END
     END
 
    *OK=True; strmaxcpy(Erg,tmp,255);
@@ -657,9 +704,11 @@ BEGIN
    T->Typ=TempFloat; T->Contents.Float=T->Contents.Int;
 END
 
+#define LEAVE goto func_exit
+
         void EvalExpression(char *Asc_O, TempResult *Erg)
 BEGIN
-#define OpCnt 23
+#define OpCnt 24
 static Operator Operators[OpCnt+1]=
                /* Dummynulloperator */
                {{" " ,1 , False,  0, False, False, False, False},
@@ -699,6 +748,7 @@ static Operator Operators[OpCnt+1]=
                {"!!",2 , True , 17, True , False, False, False},
                /* Gleichheit */
                {"=" ,1 , True , 23, True , True , True , False},
+               {"==",2 , True , 23, True , True , True , False},
                /* Groesser als */
                {">" ,1 , True , 23, True , True , True , False},
                /* Kleiner als */
@@ -714,8 +764,8 @@ static Operator Operators[OpCnt+1]=
    LongInt FOpCnt=0;
 
    Boolean OK,FFound;
-   TempResult LVal,RVal;
-   int z1;
+   TempResult LVal,RVal,MVal;
+   int z1,cnt;
    Operator *Op;
    char Save='\0';
    sint LKlamm,RKlamm,WKlamm,zop;
@@ -727,55 +777,68 @@ static Operator Operators[OpCnt+1]=
    PFunction ValFunc;
    String Asc,stemp,ftemp;
    char *KlPos,*zp,*DummyPtr;
+   PRelocEntry TReloc;
 
-   memset(&LVal,0,sizeof(LVal));
-   memset(&RVal,0,sizeof(RVal));
+   memset(&LVal, 0, sizeof(LVal));
+   memset(&RVal, 0, sizeof(RVal));
 
    ChkStack();
 
-   strmaxcpy(Asc,Asc_O,255);
-   strmaxcpy(stemp,Asc,255); KillBlanks(Asc);
-   if (MakeDebug) fprintf(Debug,"Parse %s",Asc);
+   strmaxcpy(Asc, Asc_O, 255);
+   strmaxcpy(stemp, Asc, 255); KillBlanks(Asc);
+   if (MakeDebug) fprintf(Debug, "Parse %s", Asc);
 
    /* Annahme Fehler */
 
-   Erg->Typ=TempNone;
+   Erg->Typ = TempNone;
+   Erg->Relocs = Nil;
 
    /* Programmzaehler ? */
 
-   if (strcasecmp(Asc,PCSymbol)==0)
+   if ((PCSymbol != NULL) AND (strcasecmp(Asc,PCSymbol) == 0))
     BEGIN
-     Erg->Typ=TempInt;
-     Erg->Contents.Int=EProgCounter();
-     return;
+     Erg->Typ = TempInt;
+     Erg->Contents.Int = EProgCounter();
+     Erg->Relocs = Nil;
+     LEAVE;
     END
 
    /* Konstanten ? */
 
-   Erg->Contents.Int=ConstIntVal(Asc,(IntType) (IntTypeCnt-1),&OK);
+   Erg->Contents.Int = ConstIntVal(Asc, (IntType) (IntTypeCnt-1), &OK);
    if (OK)
     BEGIN
-     Erg->Typ=TempInt; return;
+     Erg->Typ = TempInt;
+     Erg->Relocs = Nil;
+     LEAVE;
     END
 
-   Erg->Contents.Float=ConstFloatVal(Asc,Float80,&OK);
+   Erg->Contents.Float = ConstFloatVal(Asc, Float80, &OK);
    if (OK)
     BEGIN
-     Erg->Typ=TempFloat; return;
+     Erg->Typ = TempFloat;
+     Erg->Relocs = Nil;
+     LEAVE;
     END
 
    ConstStringVal(Asc,Erg->Contents.Ascii,&OK);
    if (OK)
     BEGIN
-     Erg->Typ=TempString; return;
+     Erg->Typ = TempString;
+     Erg->Relocs = Nil;
+     LEAVE;
     END
 
-   InternSymbol(Asc,Erg); if (Erg->Typ!=TempNone) return;
+   /* durch Codegenerator gegebene Konstanten ? */
+
+   Erg->Relocs = Nil;
+   InternSymbol(Asc, Erg);
+   if (Erg->Typ != TempNone) LEAVE;
 
    /* Zaehler initialisieren */
 
-   LocOpMax=0; OpMax=0; LKlamm=0; RKlamm=0; WKlamm=0;
-   InHyp=False; InQuot=False;
+   LocOpMax = 0; OpMax = 0; LKlamm = 0; RKlamm = 0; WKlamm = 0;
+   InHyp = False; InQuot = False;
    for (Op=Operators+1; Op<=OpEnd; Op++)
     if (((Op->IdLen==1)?(strchr(Asc,*Op->Id)):(strstr(Asc,Op->Id)))!=Nil) FOps[FOpCnt++]=Op;
 /*    if (strstr(Asc,Op->Id)!=Nil) FOps[FOpCnt++]=Op;*/
@@ -813,79 +876,89 @@ static Operator Operators[OpCnt+1]=
 
    /* Klammerfehler ? */
 
-   if (LKlamm!=RKlamm)
+   if (LKlamm != RKlamm)
     BEGIN
-     WrXError(1300,Asc); return;
+     WrXError(1300, Asc); LEAVE;
     END
 
    /* Operator gefunden ? */
 
    if (OpMax!=0)
     BEGIN
-     Op=Operators+OpMax;
+     Op=Operators + OpMax;
 
      /* Minuszeichen sowohl mit einem als auch 2 Operanden */
 
-     if (strcmp(Op->Id,"-")==0) Op->Dyadic=(OpPos>0);
+     if (strcmp(Op->Id, "-") == 0) Op->Dyadic = (OpPos>0);
 
      /* Operandenzahl pruefen */
 
-     if (((Op->Dyadic) AND (OpPos==0)) OR ((NOT Op->Dyadic) AND (OpPos!=0)) OR (OpPos==strlen(Asc)-1))
+     if (((Op->Dyadic) AND (OpPos == 0)) OR ((NOT Op->Dyadic) AND (OpPos != 0)) OR (OpPos == strlen(Asc)-1))
       BEGIN
-       WrError(1110); return;
+       WrError(1110); LEAVE;
       END
 
      /* Teilausdruecke rekursiv auswerten */
 
-     Save=Asc[OpPos]; Asc[OpPos]='\0';
-     if (Op->Dyadic) EvalExpression(Asc,&LVal);
+     Save = Asc[OpPos]; Asc[OpPos] = '\0';
+     if (Op->Dyadic) EvalExpression(Asc, &LVal);
      else
       BEGIN
-       LVal.Typ=TempInt; LVal.Contents.Int=0;
+       LVal.Typ = TempInt; LVal.Contents.Int = 0; LVal.Relocs = Nil;
       END
-     EvalExpression(Asc+OpPos+strlen(Op->Id),&RVal);
-     Asc[OpPos]=Save;
+     EvalExpression(Asc + OpPos + strlen(Op->Id), &RVal);
+     Asc[OpPos] = Save;
 
      /* Abbruch, falls dabei Fehler */
 
-     if ((LVal.Typ==TempNone) OR (RVal.Typ==TempNone)) return;
+     if ((LVal.Typ == TempNone) OR (RVal.Typ == TempNone)) LEAVE;
+
+     /* relokatible Symbole nur fuer + und - erlaubt */
+
+     if ((OpMax != 12) AND (OpMax != 13) AND ((LVal.Relocs != Nil) OR (RVal.Relocs != Nil)))
+      BEGIN
+       WrError(1150);
+       LEAVE;
+      END
 
      /* Typueberpruefung */
 
-     if ((Op->Dyadic) AND (LVal.Typ!=RVal.Typ))
+     if ((Op->Dyadic) AND (LVal.Typ != RVal.Typ))
       BEGIN
-       if ((LVal.Typ==TempString) OR (RVal.Typ==TempString))
+       if ((LVal.Typ == TempString) OR (RVal.Typ == TempString))
         BEGIN
-         WrError(1135); return;
+         WrError(1135); LEAVE;
         END
-       if (LVal.Typ==TempInt) EvalExpression_ChgFloat(&LVal);
-       if (RVal.Typ==TempInt) EvalExpression_ChgFloat(&RVal);
+       if (LVal.Typ == TempInt) EvalExpression_ChgFloat(&LVal);
+       if (RVal.Typ == TempInt) EvalExpression_ChgFloat(&RVal);
       END
 
      switch (RVal.Typ)
       BEGIN
        case TempInt:
         if (NOT Op->MayInt)
-         if (NOT Op->MayFloat)
-          BEGIN
-           WrError(1135); return;
-          END
-         else
-          BEGIN
-           EvalExpression_ChgFloat(&RVal); 
-           if (Op->Dyadic) EvalExpression_ChgFloat(&LVal);
-          END
+         BEGIN
+          if (NOT Op->MayFloat)
+           BEGIN
+            WrError(1135); LEAVE;
+           END
+          else
+           BEGIN
+            EvalExpression_ChgFloat(&RVal); 
+            if (Op->Dyadic) EvalExpression_ChgFloat(&LVal);
+           END
+         END
         break;
        case TempFloat: 
         if (NOT Op->MayFloat)
          BEGIN
-          WrError(1135); return;
+          WrError(1135); LEAVE;
          END
         break;
        case TempString:
         if (NOT Op->MayString)
          BEGIN
-          WrError(1135); return;
+          WrError(1135); LEAVE;
          END;
         break;
        default:
@@ -897,80 +970,80 @@ static Operator Operators[OpCnt+1]=
      switch (OpMax)
       BEGIN
        case 1:                                            /* ~ */
-        Erg->Typ=TempInt;
-        Erg->Contents.Int=~RVal.Contents.Int;
+        Erg->Typ = TempInt;
+        Erg->Contents.Int = ~RVal.Contents.Int;
         break;
        case 2:                                            /* << */
-        Erg->Typ=TempInt;
-        Erg->Contents.Int=LVal.Contents.Int<<RVal.Contents.Int;
+        Erg->Typ = TempInt;
+        Erg->Contents.Int = LVal.Contents.Int << RVal.Contents.Int;
         break;
        case 3:                                            /* >> */
-        Erg->Typ=TempInt;
-        Erg->Contents.Int=LVal.Contents.Int>>RVal.Contents.Int;
+        Erg->Typ = TempInt;
+        Erg->Contents.Int = LVal.Contents.Int >> RVal.Contents.Int;
         break;
        case 4:                                            /* >< */
-        Erg->Typ=TempInt;
-        if ((RVal.Contents.Int<1) OR (RVal.Contents.Int>32)) WrError(1320);
+        Erg->Typ = TempInt;
+        if ((RVal.Contents.Int < 1) OR (RVal.Contents.Int > 32)) WrError(1320);
         else
          BEGIN
-          Erg->Contents.Int=(LVal.Contents.Int>>RVal.Contents.Int)<<RVal.Contents.Int;
+          Erg->Contents.Int = (LVal.Contents.Int >> RVal.Contents.Int) << RVal.Contents.Int;
           RVal.Contents.Int--;
-          for (z1=0; z1<=RVal.Contents.Int; z1++)
+          for (z1 = 0; z1 <= RVal.Contents.Int; z1++)
            BEGIN
-            if ((LVal.Contents.Int&(1<<(RVal.Contents.Int-z1)))!=0)
-            Erg->Contents.Int+=(1<<z1);
+            if ((LVal.Contents.Int & (1 << (RVal.Contents.Int - z1))) != 0)
+            Erg->Contents.Int += (1 << z1);
            END
          END
         break;
        case 5:                                          /* & */
-        Erg->Typ=TempInt;
-        Erg->Contents.Int=LVal.Contents.Int&RVal.Contents.Int;
+        Erg->Typ = TempInt;
+        Erg->Contents.Int = LVal.Contents.Int & RVal.Contents.Int;
         break;
        case 6:                                          /* | */
-        Erg->Typ=TempInt;
-        Erg->Contents.Int=LVal.Contents.Int|RVal.Contents.Int;
+        Erg->Typ = TempInt;
+        Erg->Contents.Int = LVal.Contents.Int | RVal.Contents.Int;
         break;
-       case 7:
-        Erg->Typ=TempInt;                               /* ! */
-        Erg->Contents.Int=LVal.Contents.Int^RVal.Contents.Int;
+       case 7:                                          /* ! */
+        Erg->Typ = TempInt;
+        Erg->Contents.Int = LVal.Contents.Int ^ RVal.Contents.Int;
         break;
        case 8:                                          /* ^ */
-        switch (Erg->Typ=LVal.Typ)
+        switch (Erg->Typ = LVal.Typ)
          BEGIN
           case TempInt:
-           if (RVal.Contents.Int<0) Erg->Contents.Int=0;
+           if (RVal.Contents.Int < 0) Erg->Contents.Int = 0;
            else
             BEGIN
-             Erg->Contents.Int=1;
-             while (RVal.Contents.Int>0)
+             Erg->Contents.Int = 1;
+             while (RVal.Contents.Int > 0)
               BEGIN
-               if ((RVal.Contents.Int&1)==1) Erg->Contents.Int*=LVal.Contents.Int;
-               RVal.Contents.Int>>=1;
-               if (RVal.Contents.Int!=0) LVal.Contents.Int*=LVal.Contents.Int;
+               if ((RVal.Contents.Int&1) == 1) Erg->Contents.Int *= LVal.Contents.Int;
+               RVal.Contents.Int >>= 1;
+               if (RVal.Contents.Int != 0) LVal.Contents.Int *= LVal.Contents.Int;
               END
             END
            break;
           case TempFloat:
-           if (RVal.Contents.Float==0.0) Erg->Contents.Float=1.0;
-           else if (LVal.Contents.Float==0.0) Erg->Contents.Float=0.0;
-           else if (LVal.Contents.Float>0) Erg->Contents.Float=pow(LVal.Contents.Float,RVal.Contents.Float);
-           else if ((abs(RVal.Contents.Float)<=((double)MaxLongInt)) AND (floor(RVal.Contents.Float)==RVal.Contents.Float))
+           if (RVal.Contents.Float == 0.0) Erg->Contents.Float = 1.0;
+           else if (LVal.Contents.Float == 0.0) Erg->Contents.Float = 0.0;
+           else if (LVal.Contents.Float > 0) Erg->Contents.Float = pow(LVal.Contents.Float, RVal.Contents.Float);
+           else if ((abs(RVal.Contents.Float) <= ((double)MaxLongInt)) AND (floor(RVal.Contents.Float) == RVal.Contents.Float))
             BEGIN
-             HVal=(LongInt) floor(RVal.Contents.Float+0.5);
-             if (HVal<0)
+             HVal = (LongInt) floor(RVal.Contents.Float+0.5);
+             if (HVal < 0)
               BEGIN
-               LVal.Contents.Float=1/LVal.Contents.Float; HVal=(-HVal);
+               LVal.Contents.Float = 1 / LVal.Contents.Float; HVal = (-HVal);
               END
-             Erg->Contents.Float=1.0;
-             while (HVal>0)
+             Erg->Contents.Float = 1.0;
+             while (HVal > 0)
               BEGIN
-               if ((HVal&1)==1) Erg->Contents.Float*=LVal.Contents.Float;
-               LVal.Contents.Float*=LVal.Contents.Float; HVal>>=1;
+               if ((HVal & 1) == 1) Erg->Contents.Float *= LVal.Contents.Float;
+               LVal.Contents.Float *= LVal.Contents.Float; HVal >>= 1;
               END
             END
            else
             BEGIN
-             WrError(1890); Erg->Typ=TempNone;
+             WrError(1890); Erg->Typ = TempNone;
             END
            break;
           default:
@@ -978,153 +1051,181 @@ static Operator Operators[OpCnt+1]=
          END
         break;
        case 9:                                          /* * */
-        switch (Erg->Typ=LVal.Typ)
+        switch (Erg->Typ = LVal.Typ)
          BEGIN
-          case TempInt:Erg->Contents.Int=LVal.Contents.Int*RVal.Contents.Int; break;
-          case TempFloat:Erg->Contents.Float=LVal.Contents.Float*RVal.Contents.Float; break;
-          default: break;
+          case TempInt:
+           Erg->Contents.Int = LVal.Contents.Int * RVal.Contents.Int; break;
+          case TempFloat:
+           Erg->Contents.Float = LVal.Contents.Float * RVal.Contents.Float; break;
+          default:
+           break;
          END
         break; 
        case 10:                                         /* / */
         switch (LVal.Typ)
          BEGIN
           case TempInt:
-           if (RVal.Contents.Int==0) WrError(1310);
+           if (RVal.Contents.Int == 0) WrError(1310);
            else
             BEGIN
-             Erg->Typ=TempInt;
-             Erg->Contents.Int=LVal.Contents.Int/RVal.Contents.Int;
+             Erg->Typ = TempInt;
+             Erg->Contents.Int = LVal.Contents.Int / RVal.Contents.Int;
             END
            break;
           case TempFloat:
-           if (RVal.Contents.Float==0.0) WrError(1310);
+           if (RVal.Contents.Float == 0.0) WrError(1310);
            else
             BEGIN
-             Erg->Typ=TempFloat;
-             Erg->Contents.Float=LVal.Contents.Float/RVal.Contents.Float;
+             Erg->Typ = TempFloat;
+             Erg->Contents.Float = LVal.Contents.Float / RVal.Contents.Float;
             END
           default: 
            break;
          END
         break;
        case 11:                                         /* # */
-        if (RVal.Contents.Int==0) WrError(1310);
+        if (RVal.Contents.Int == 0) WrError(1310);
         else
          BEGIN
-          Erg->Typ=TempInt;
-          Erg->Contents.Int=LVal.Contents.Int%RVal.Contents.Int;
+          Erg->Typ = TempInt;
+          Erg->Contents.Int = LVal.Contents.Int % RVal.Contents.Int;
          END
         break;
        case 12:                                         /* + */
-        switch (Erg->Typ=LVal.Typ)
+        switch (Erg->Typ = LVal.Typ)
          BEGIN
           case TempInt   : 
-           Erg->Contents.Int=LVal.Contents.Int+RVal.Contents.Int; break;
+           Erg->Contents.Int = LVal.Contents.Int + RVal.Contents.Int;
+           Erg->Relocs = MergeRelocs(&(LVal.Relocs), &(RVal.Relocs), TRUE);
+           break;
           case TempFloat :
-            Erg->Contents.Float=LVal.Contents.Float+RVal.Contents.Float; break;
+           Erg->Contents.Float = LVal.Contents.Float + RVal.Contents.Float;
+           break;
           case TempString: 
-           strmaxcpy(Erg->Contents.Ascii,LVal.Contents.Ascii,255);
-           strmaxcat(Erg->Contents.Ascii,RVal.Contents.Ascii,255); break;
-          default: break;
+           strmaxcpy(Erg->Contents.Ascii, LVal.Contents.Ascii, 255);
+           strmaxcat(Erg->Contents.Ascii, RVal.Contents.Ascii, 255);
+           break;
+          default:
+           break;
          END
         break;
        case 13:                                         /* - */
         if (Op->Dyadic)
-         switch (Erg->Typ=LVal.Typ)
+         switch (Erg->Typ = LVal.Typ)
           BEGIN
            case TempInt:
-            Erg->Contents.Int=LVal.Contents.Int-RVal.Contents.Int; break;
+            Erg->Contents.Int = LVal.Contents.Int-RVal.Contents.Int;
+            Erg->Relocs = MergeRelocs(&(LVal.Relocs), &(RVal.Relocs), FALSE);
+            break;
            case TempFloat:
-            Erg->Contents.Float=LVal.Contents.Float-RVal.Contents.Float; break;
-           default: break;
+            Erg->Contents.Float = LVal.Contents.Float - RVal.Contents.Float;
+            break;
+           default:
+            break;
           END
         else
-         switch (Erg->Typ=RVal.Typ)
+         switch (Erg->Typ = RVal.Typ)
           BEGIN
            case TempInt:
-            Erg->Contents.Int=(-RVal.Contents.Int); break;
+            Erg->Contents.Int = (-RVal.Contents.Int);
+            InvertRelocs(&(Erg->Relocs), &(RVal.Relocs));
+            break;
            case TempFloat:
-            Erg->Contents.Float=(-RVal.Contents.Float); break;
-           default: break;
+            Erg->Contents.Float = (-RVal.Contents.Float);
+            break;
+           default:
+            break;
           END
         break;
        case 14:                                         /* ~~ */
-        Erg->Typ=TempInt;
-        Erg->Contents.Int=(RVal.Contents.Int==0)?1:0;
+        Erg->Typ = TempInt;
+        Erg->Contents.Int = (RVal.Contents.Int == 0) ? 1 : 0;
         break;
        case 15:                                         /* && */
-        Erg->Typ=TempInt;
-        Erg->Contents.Int=((LVal.Contents.Int!=0) AND (RVal.Contents.Int!=0))?1:0;
+        Erg->Typ = TempInt;
+        Erg->Contents.Int = ((LVal.Contents.Int != 0) AND (RVal.Contents.Int != 0)) ? 1 : 0;
         break;
        case 16:                                         /* || */
-        Erg->Typ=TempInt;
-        Erg->Contents.Int=((LVal.Contents.Int!=0) OR (RVal.Contents.Int!=0))?1:0;
+        Erg->Typ = TempInt;
+        Erg->Contents.Int = ((LVal.Contents.Int != 0) OR (RVal.Contents.Int != 0)) ? 1 : 0;
         break;
        case 17:                                         /* !! */
-        Erg->Typ=TempInt;
-        if ((LVal.Contents.Int!=0) AND (RVal.Contents.Int==0))
-         Erg->Contents.Int=1;
-        else if ((LVal.Contents.Int==0) AND (RVal.Contents.Int!=0))
-         Erg->Contents.Int=1;
-        else Erg->Contents.Int=0;
+        Erg->Typ = TempInt;
+        if ((LVal.Contents.Int != 0) AND (RVal.Contents.Int == 0))
+         Erg->Contents.Int = 1;
+        else if ((LVal.Contents.Int == 0) AND (RVal.Contents.Int != 0))
+         Erg->Contents.Int = 1;
+        else Erg->Contents.Int = 0;
         break;
        case 18:                                         /* = */
-         Erg->Typ=TempInt;
+       case 19:                                         /* == */
+         Erg->Typ = TempInt;
          switch (LVal.Typ)
           BEGIN
            case TempInt: 
-            Erg->Contents.Int=(LVal.Contents.Int==RVal.Contents.Int)?1:0; break;
+            Erg->Contents.Int = (LVal.Contents.Int == RVal.Contents.Int) ? 1 : 0;
+            break;
            case TempFloat:
-            Erg->Contents.Int=(LVal.Contents.Float==RVal.Contents.Float)?1:0; break;
+            Erg->Contents.Int = (LVal.Contents.Float == RVal.Contents.Float) ? 1 : 0;
+            break;
            case TempString:
-            Erg->Contents.Int=(strcmp(LVal.Contents.Ascii,RVal.Contents.Ascii)==0)?1:0; break;
+            Erg->Contents.Int = (strcmp(LVal.Contents.Ascii, RVal.Contents.Ascii) == 0) ? 1 : 0;
+            break;
            default: 
             break;
           END
          break;
-       case 19:                                         /* > */
-         Erg->Typ=TempInt;
+       case 20:                                         /* > */
+         Erg->Typ = TempInt;
          switch (LVal.Typ)
           BEGIN
            case TempInt: 
-            Erg->Contents.Int=(LVal.Contents.Int>RVal.Contents.Int)?1:0; break;
+            Erg->Contents.Int = (LVal.Contents.Int > RVal.Contents.Int) ? 1 : 0;
+            break;
            case TempFloat:
-            Erg->Contents.Int=(LVal.Contents.Float>RVal.Contents.Float)?1:0; break;
+            Erg->Contents.Int = (LVal.Contents.Float > RVal.Contents.Float) ? 1 : 0;
+            break;
            case TempString:
-            Erg->Contents.Int=(strcmp(LVal.Contents.Ascii,RVal.Contents.Ascii)>0)?1:0; break;
+            Erg->Contents.Int = (strcmp(LVal.Contents.Ascii, RVal.Contents.Ascii) > 0) ? 1 : 0;
+            break;
            default: 
             break;
           END
          break;
-       case 20:                                         /* < */
-         Erg->Typ=TempInt;
+       case 21:                                         /* < */
+         Erg->Typ = TempInt;
          switch (LVal.Typ)
           BEGIN
            case TempInt: 
-            Erg->Contents.Int=(LVal.Contents.Int<RVal.Contents.Int)?1:0; break;
+            Erg->Contents.Int = (LVal.Contents.Int < RVal.Contents.Int) ? 1 : 0;
+            break;
            case TempFloat:
-            Erg->Contents.Int=(LVal.Contents.Float<RVal.Contents.Float)?1:0; break;
+            Erg->Contents.Int = (LVal.Contents.Float < RVal.Contents.Float) ? 1 : 0;
+            break;
            case TempString:
-            Erg->Contents.Int=(strcmp(LVal.Contents.Ascii,RVal.Contents.Ascii)<0)?1:0; break;
+            Erg->Contents.Int = (strcmp(LVal.Contents.Ascii, RVal.Contents.Ascii) < 0) ? 1 : 0;
+            break;
            default: 
             break;
           END
          break;
-       case 21:                                         /* <= */
-         Erg->Typ=TempInt;
+       case 22:                                         /* <= */
+         Erg->Typ = TempInt;
          switch (LVal.Typ)
           BEGIN
            case TempInt: 
-            Erg->Contents.Int=(LVal.Contents.Int<=RVal.Contents.Int)?1:0; break;
+            Erg->Contents.Int = (LVal.Contents.Int <= RVal.Contents.Int) ? 1 : 0;
+            break;
            case TempFloat:
-            Erg->Contents.Int=(LVal.Contents.Float<=RVal.Contents.Float)?1:0; break;
+            Erg->Contents.Int = (LVal.Contents.Float <= RVal.Contents.Float) ? 1 : 0;
+            break;
            case TempString:
-            Erg->Contents.Int=(strcmp(LVal.Contents.Ascii,RVal.Contents.Ascii)<=0)?1:0; break;
+            Erg->Contents.Int = (strcmp(LVal.Contents.Ascii, RVal.Contents.Ascii) <= 0) ? 1 : 0; break;
            default: 
             break;
           END
          break;
-       case 22:                                         /* >= */
+       case 23:                                         /* >= */
          Erg->Typ=TempInt;
          switch (LVal.Typ)
           BEGIN
@@ -1138,7 +1239,7 @@ static Operator Operators[OpCnt+1]=
             break;
           END
          break;
-       case 23:                                         /* <> */
+       case 24:                                         /* <> */
          Erg->Typ=TempInt;
          switch (LVal.Typ)
           BEGIN
@@ -1153,7 +1254,7 @@ static Operator Operators[OpCnt+1]=
           END
          break;
       END
-     return;
+     LEAVE;
     END
 
    /* kein Operator gefunden: Klammerausdruck ? */
@@ -1175,7 +1276,7 @@ static Operator Operators[OpCnt+1]=
      if (ftemp[0]=='\0')
       BEGIN
        EvalExpression(Asc,&LVal);
-       *Erg=LVal; return;
+       *Erg=LVal; LEAVE;
       END
 
      /* selbstdefinierte Funktion ? */
@@ -1187,10 +1288,14 @@ static Operator Operators[OpCnt+1]=
         BEGIN
          if (Asc[0]=='\0')
           BEGIN
-           WrError(1490); return;
+           WrError(1490); LEAVE;
           END;
          KlPos=QuotPos(Asc,','); if (KlPos!=Nil) *KlPos='\0';
          EvalExpression(Asc,&LVal);
+         if (LVal.Relocs != Nil)
+          BEGIN
+           WrError(1150); FreeRelocs(&LVal.Relocs); return;
+          END
          if (KlPos==Nil) Asc[0]='\0'; else strcpy(Asc,KlPos+1);
          switch (LVal.Typ)
           BEGIN
@@ -1207,7 +1312,7 @@ static Operator Operators[OpCnt+1]=
             strmaxcat(stemp,"\"",255);
             break;
            default:
-            return;
+            LEAVE;
           END
          memmove(stemp+1,stemp,strlen(stemp)+1);
          stemp[0]='('; strmaxcat(stemp,")",255);
@@ -1215,10 +1320,10 @@ static Operator Operators[OpCnt+1]=
         END
        if (Asc[0]!='\0')
         BEGIN
-         WrError(1490); return;
+         WrError(1490); LEAVE;
         END
        EvalExpression(ftemp,Erg);
-       return;
+       LEAVE;
       END
 
      /* hier einmal umwandeln ist effizienter */
@@ -1232,16 +1337,80 @@ static Operator Operators[OpCnt+1]=
        Erg->Typ=TempInt;
        if (FindRegDef(Asc,&DummyPtr)) Erg->Contents.Int=0x80;
        else Erg->Contents.Int=GetSymbolType(Asc);
-       return;
+       LEAVE;
       END
 
-     /* Unterausdruck auswerten (interne Funktionen nur mit einem Argument */
+     /* Unterausdruck auswerten (interne Funktionen maxmimal mit drei Argumenten) */
 
-     EvalExpression(Asc,&LVal);
+     z1 = 0; KlPos = Asc;
+     do
+      BEGIN
+       zp = QuotPos(KlPos, ',');
+       if (zp != Nil) *zp = '\0';
+       switch (z1)
+        BEGIN
+         case 0:
+          EvalExpression(KlPos, &LVal);
+          if (LVal.Typ == TempNone) LEAVE;
+          TReloc = LVal.Relocs;
+          break;
+         case 1:
+          EvalExpression(KlPos, &MVal);
+          if (MVal.Typ == TempNone) LEAVE;
+          TReloc = MVal.Relocs;
+          break;
+         case 2:
+          EvalExpression(KlPos, &RVal);
+          if (RVal.Typ == TempNone) LEAVE;
+          TReloc = RVal.Relocs;
+          break;
+         default:
+          WrError(1490); LEAVE;
+        END
+       if (TReloc != Nil)
+        BEGIN
+         WrError(1150); FreeRelocs(&TReloc); LEAVE;
+        END
+       if (zp != Nil) KlPos = zp + 1;
+       z1++;
+      END
+     while (zp!=Nil);
 
-     /* Abbruch bei Fehler */
+     /* ein paar Funktionen mit zwei,drei Argumenten */
 
-     if (LVal.Typ==TempNone) return;
+     if (z1==3)
+      BEGIN
+       if (strcmp(ftemp,"SUBSTR")==0)
+        BEGIN 
+         if ((LVal.Typ!=TempString) OR (MVal.Typ!=TempInt) OR (RVal.Typ!=TempInt)) WrError(1135);
+         else
+          BEGIN
+           cnt=strlen(LVal.Contents.Ascii)-MVal.Contents.Int;
+           if ((RVal.Contents.Int!=0) AND (RVal.Contents.Int<cnt)) cnt=RVal.Contents.Int;
+           if (cnt<0) cnt=0;
+           memcpy(Erg->Contents.Ascii,LVal.Contents.Ascii+MVal.Contents.Int,cnt);
+           Erg->Contents.Ascii[cnt]='\0';
+           Erg->Typ=TempString;
+          END
+        END
+       else WrXError(1860,ftemp);
+       LEAVE;
+      END
+     else if (z1==2)
+      BEGIN 
+       if (strcmp(ftemp,"STRSTR")==0)
+        BEGIN 
+         if ((LVal.Typ!=TempString) OR (MVal.Typ!=TempString)) WrError(1135);
+         else
+          BEGIN
+           zp=strstr(LVal.Contents.Ascii,MVal.Contents.Ascii);
+           Erg->Typ=TempInt;
+           Erg->Contents.Int=(zp==Nil) ? -1 : (zp-LVal.Contents.Ascii);
+          END
+        END
+       else WrXError(1860,ftemp);
+       LEAVE;
+      END
 
      /* Funktionen fuer Stringargumente */
 
@@ -1491,7 +1660,7 @@ static Operator Operators[OpCnt+1]=
            else Erg->Contents.Float=acos(LVal.Contents.Float);
           END
          else if (strcmp(ftemp,"ATAN")==0) Erg->Contents.Float=atan(LVal.Contents.Float);
-         else if (strcmp(ftemp,"ACOT")==0) Erg->Contents.Float=M_PI/2-(LVal.Contents.Float);
+         else if (strcmp(ftemp,"ACOT")==0) Erg->Contents.Float=M_PI/2-atan(LVal.Contents.Float);
 
          /* exponentielle & hyperbolische Funktionen */
 
@@ -1617,7 +1786,7 @@ static Operator Operators[OpCnt+1]=
           END
         END
       END
-     return;
+     LEAVE;
     END
 
    /* nichts dergleichen, dann einfaches Symbol: */
@@ -1630,38 +1799,38 @@ static Operator Operators[OpCnt+1]=
     BEGIN
      Erg->Typ=TempString;
      strmaxcpy(Erg->Contents.Ascii,CurrFileName,255);
-     return;
+     LEAVE;
     END;
 
    if (strcasecmp(Asc,"MOMLINE")==0)
     BEGIN
      Erg->Typ=TempInt;
      Erg->Contents.Int=CurrLine;
-     return;
+     LEAVE;
     END
 
    if (strcasecmp(Asc,"MOMPASS")==0)
     BEGIN
      Erg->Typ=TempInt;
      Erg->Contents.Int=PassNo;
-     return;
+     LEAVE;
     END
 
    if (strcasecmp(Asc,"MOMSECTION")==0)
     BEGIN
      Erg->Typ=TempString;
      strmaxcpy(Erg->Contents.Ascii,GetSectionName(MomSectionHandle),255);
-     return;
+     LEAVE;
     END
 
    if (strcasecmp(Asc,"MOMSEGMENT")==0)
     BEGIN
      Erg->Typ=TempString;
      strmaxcpy(Erg->Contents.Ascii,SegNames[ActPC],255);
-     return;
+     LEAVE;
     END
 
-   if (NOT ExpandSymbol(Asc)) return;
+   if (NOT ExpandSymbol(Asc)) LEAVE;
 
    KlPos=strchr(Asc,'[');
    if (KlPos!=Nil) 
@@ -1672,29 +1841,30 @@ static Operator Operators[OpCnt+1]=
    if (KlPos!=Nil) *KlPos=Save;
    if (NOT OK)
     BEGIN
-     WrXError(1020,Asc); return;
+     WrXError(1020,Asc); LEAVE;
     END;
 
-   Ptr=FindLocNode(Asc,TempNone);
-   if (Ptr==Nil) Ptr=FindNode(Asc,TempNone);
-   if (Ptr!=Nil)
+   Ptr = FindLocNode(Asc, TempNone);
+   if (Ptr == Nil) Ptr=FindNode(Asc, TempNone);
+   if (Ptr != Nil)
     BEGIN
-     switch (Erg->Typ=Ptr->SymWert.Typ)
+     switch (Erg->Typ = Ptr->SymWert.Typ)
       BEGIN
        case TempInt: Erg->Contents.Int=Ptr->SymWert.Contents.IWert; break;
        case TempFloat: Erg->Contents.Float=Ptr->SymWert.Contents.FWert; break;
        case TempString: strmaxcpy(Erg->Contents.Ascii,Ptr->SymWert.Contents.SWert,255);
        default: break;
       END
-     if (Ptr->SymType!=0) TypeFlag|=(1 << Ptr->SymType);
-     if ((Ptr->SymSize!=(-1)) AND (SizeFlag==(-1))) SizeFlag=Ptr->SymSize;
+     if (Erg->Typ != TempNone) Erg->Relocs = DupRelocs(Ptr->Relocs);
+     if (Ptr->SymType != 0) TypeFlag |= (1 << Ptr->SymType);
+     if ((Ptr->SymSize != (-1)) AND (SizeFlag == (-1))) SizeFlag = Ptr->SymSize;
      if (NOT Ptr->Defined)
       BEGIN
-       if (Repass) SymbolQuestionable=True;
-       UsesForwards=True;
+       if (Repass) SymbolQuestionable = True;
+       UsesForwards = True;
       END
-     Ptr->Used=True;
-     return;
+     Ptr->Used = True;
+     LEAVE;
     END
 
    /* Symbol evtl. im ersten Pass unbekannt */
@@ -1710,6 +1880,10 @@ static Operator Operators[OpCnt+1]=
    /* alles war nix, Fehler */
 
    else WrXError(1010,Asc);
+
+func_exit:
+   if (LVal.Relocs != NULL) FreeRelocs(&LVal.Relocs);
+   if (RVal.Relocs != NULL) FreeRelocs(&RVal.Relocs);
 END
 
 
@@ -1717,33 +1891,36 @@ END
 BEGIN
    TempResult t;
 
-   *OK=False;
-   TypeFlag=0; SizeFlag=(-1);
-   UsesForwards=False;
-   SymbolQuestionable=False;
-   FirstPassUnknown=False;
+   *OK = False;
+   TypeFlag = 0; SizeFlag = (-1);
+   UsesForwards = False;
+   SymbolQuestionable = False;
+   FirstPassUnknown = False;
 
-   EvalExpression(Asc,&t);
-   if (t.Typ!=TempInt)
+   EvalExpression(Asc, &t);
+   SetRelocs(t.Relocs);
+   if (t.Typ != TempInt)
     BEGIN
-     if (t.Typ!=TempNone) WrError(1135);
+     if (t.Typ != TempNone) WrError(1135);
+     FreeRelocs(&LastRelocs);
      return -1;
     END
 
-   if (FirstPassUnknown) t.Contents.Int&=IntMasks[(int)Typ];
+   if (FirstPassUnknown) t.Contents.Int &= IntMasks[(int)Typ];
 
    if (NOT RangeCheck(t.Contents.Int,Typ))
     if (HardRanges)
      BEGIN
+      FreeRelocs(&LastRelocs);
       WrError(1320); return -1;
      END
     else
      BEGIN
-      WrError(260); *OK=True; return t.Contents.Int&IntMasks[(int)Typ];
+      WrError(260); *OK = True; return t.Contents.Int&IntMasks[(int)Typ];
      END
    else
     BEGIN
-     *OK=True; return t.Contents.Int;
+     *OK = True; return t.Contents.Int;
     END
 END
 
@@ -1807,17 +1984,19 @@ BEGIN
 
    free((*Node)->SymName);
 
-   if ((*Node)->SymWert.Typ==TempString)
+   if ((*Node)->SymWert.Typ == TempString)
     free((*Node)->SymWert.Contents.SWert);
 
-   while ((*Node)->RefList!=Nil)
+   while ((*Node)->RefList != Nil)
     BEGIN
-     Lauf=(*Node)->RefList->Next;
+     Lauf = (*Node)->RefList->Next;
      free((*Node)->RefList);
-     (*Node)->RefList=Lauf;
+     (*Node)->RefList = Lauf;
     END
 
-   free(*Node); *Node=Nil;
+   FreeRelocs(&((*Node)->Relocs));
+
+   free(*Node); *Node = Nil;
 END
 
 static String serr,snum;
@@ -1830,83 +2009,84 @@ BEGIN
 
    /* Stapelueberlauf pruefen, noch nichts eingefuegt */
 
-   ChkStack(); Result=False;
+   ChkStack(); Result = False;
 
    /* an einem Blatt angelangt--> einfach anfuegen */
 
-   if (*Node==Nil)
+   if (*Node == Nil)
     BEGIN
-     (*Node)=Neu;
-     (*Node)->Balance=0; (*Node)->Left=Nil; (*Node)->Right=Nil;
-     (*Node)->Defined=True; (*Node)->Used=False; (*Node)->Changeable=MayChange;
-     (*Node)->RefList=Nil;
+     (*Node) = Neu;
+     (*Node)->Balance = 0; (*Node)->Left = Nil; (*Node)->Right = Nil;
+     (*Node)->Defined = True; (*Node)->Used = False;
+     (*Node)->Changeable = MayChange; (*Node)->RefList = Nil;
      if (DoCross)
       BEGIN
-       (*Node)->FileNum=GetFileNum(CurrFileName);
-       (*Node)->LineNum=CurrLine;
+       (*Node)->FileNum = GetFileNum(CurrFileName);
+       (*Node)->LineNum = CurrLine;
       END
      return True;
     END
 
-   CompErg=StrCmp(Neu->SymName,(*Node)->SymName,Neu->Attribute,(*Node)->Attribute);
+   CompErg = StrCmp(Neu->SymName, (*Node)->SymName, Neu->Attribute,
+                    (*Node)->Attribute);
 
-   if (CompErg>0)
+   if (CompErg > 0)
     BEGIN
-     Grown=EnterTreeNode(&((*Node)->Right),Neu,MayChange,DoCross);
+     Grown = EnterTreeNode(&((*Node)->Right), Neu, MayChange, DoCross);
      if ((BalanceTree) AND (Grown))
       switch ((*Node)->Balance)
        BEGIN
         case -1:
-         (*Node)->Balance=0; break;
+         (*Node)->Balance = 0; break;
         case 0:
-         (*Node)->Balance=1; Result=True; break;
+         (*Node)->Balance = 1; Result = True; break;
         case 1:
-         p1=(*Node)->Right;
-         if (p1->Balance==1)
+         p1 = (*Node)->Right;
+         if (p1->Balance == 1)
           BEGIN
-           (*Node)->Right=p1->Left; p1->Left=(*Node);
-           (*Node)->Balance=0; *Node=p1;
+           (*Node)->Right = p1->Left; p1->Left = (*Node);
+           (*Node)->Balance = 0; *Node = p1;
           END
          else
           BEGIN
-           p2=p1->Left;
-           p1->Left=p2->Right; p2->Right=p1;
-           (*Node)->Right=p2->Left; p2->Left=(*Node);
-           if (p2->Balance== 1) (*Node)->Balance=(-1); else (*Node)->Balance=0;
-           if (p2->Balance==-1) p1     ->Balance=   1; else p1     ->Balance=0;
-           *Node=p2;
+           p2 = p1->Left;
+           p1->Left = p2->Right; p2->Right = p1;
+           (*Node)->Right = p2->Left; p2->Left = (*Node);
+           if (p2->Balance ==  1) (*Node)->Balance = (-1); else (*Node)->Balance = 0;
+           if (p2->Balance == -1) p1     ->Balance =    1; else p1     ->Balance = 0;
+           *Node = p2;
           END
-         (*Node)->Balance=0;
+         (*Node)->Balance = 0;
          break;
        END
     END
-   else if (CompErg<0)
+   else if (CompErg < 0)
     BEGIN
-     Grown=EnterTreeNode(&((*Node)->Left),Neu,MayChange,DoCross);
+     Grown = EnterTreeNode(&((*Node)->Left), Neu, MayChange, DoCross);
      if ((BalanceTree) AND (Grown))
       switch ((*Node)->Balance)
        BEGIN
         case 1:
-         (*Node)->Balance=0; break;
+         (*Node)->Balance = 0; break;
         case 0:
-         (*Node)->Balance=(-1); Result=True; break;
+         (*Node)->Balance = (-1); Result = True; break;
         case -1:
-         p1=(*Node)->Left;
-         if (p1->Balance==(-1))
+         p1 = (*Node)->Left;
+         if (p1->Balance == (-1))
           BEGIN
-           (*Node)->Left=p1->Right; p1->Right=(*Node);
-           (*Node)->Balance=0; (*Node)=p1;
+           (*Node)->Left = p1->Right; p1->Right = (*Node);
+           (*Node)->Balance = 0; (*Node) = p1;
           END
          else
           BEGIN
-           p2=p1->Right;
-           p1->Right=p2->Left; p2->Left=p1;
-           (*Node)->Left=p2->Right; p2->Right=(*Node);
-           if (p2->Balance==(-1)) (*Node)->Balance=   1; else (*Node)->Balance=0;
-           if (p2->Balance==   1) p1     ->Balance=(-1); else p1     ->Balance=0;
-           *Node=p2;
+           p2 = p1->Right;
+           p1->Right = p2->Left; p2->Left = p1;
+           (*Node)->Left = p2->Right; p2->Right = (*Node);
+           if (p2->Balance == (-1)) (*Node)->Balance =    1; else (*Node)->Balance = 0;
+           if (p2->Balance ==    1) p1     ->Balance = (-1); else p1     ->Balance = 0;
+           *Node = p2;
           END
-         (*Node)->Balance=0;
+         (*Node)->Balance = 0;
          break;
        END
     END  
@@ -1914,52 +2094,53 @@ BEGIN
     BEGIN
      if (((*Node)->Defined) AND (NOT MayChange))
       BEGIN
-       strmaxcpy(serr,(*Node)->SymName,255);
+       strmaxcpy(serr, (*Node)->SymName, 255);
        if (DoCross)
         BEGIN
-         sprintf(snum,",%s %s:%d",getmessage(Num_PrevDefMsg),GetFileName((*Node)->FileNum),(*Node)->LineNum);
-         strmaxcat(serr,snum,255);
+         sprintf(snum, ",%s %s:%ld", getmessage(Num_PrevDefMsg),
+                 GetFileName((*Node)->FileNum), (long)((*Node)->LineNum));
+         strmaxcat(serr, snum, 255);
         END
-       WrXError(1000,serr);
+       WrXError(1000, serr);
        FreeSymbol(&Neu);
       END
      else
       BEGIN
        if (NOT MayChange)
         BEGIN
-         if ((Neu->SymWert.Typ!=(*Node)->SymWert.Typ)
-          OR ((Neu->SymWert.Typ==TempString) AND (strcmp(Neu->SymWert.Contents.SWert,(*Node)->SymWert.Contents.SWert)!=0))
-          OR ((Neu->SymWert.Typ==TempFloat ) AND (Neu->SymWert.Contents.FWert !=(*Node)->SymWert.Contents.FWert ))
-          OR ((Neu->SymWert.Typ==TempInt   ) AND (Neu->SymWert.Contents.IWert !=(*Node)->SymWert.Contents.IWert )))
+         if ((Neu->SymWert.Typ != (*Node)->SymWert.Typ)
+          OR ((Neu->SymWert.Typ == TempString) AND (strcmp(Neu->SymWert.Contents.SWert, (*Node)->SymWert.Contents.SWert) != 0))
+          OR ((Neu->SymWert.Typ == TempFloat ) AND (Neu->SymWert.Contents.FWert != (*Node)->SymWert.Contents.FWert))
+          OR ((Neu->SymWert.Typ == TempInt   ) AND (Neu->SymWert.Contents.IWert != (*Node)->SymWert.Contents.IWert)))
            BEGIN
             if ((NOT Repass) AND (JmpErrors>0))
              BEGIN
-              if (ThrowErrors) ErrorCount-=JmpErrors;
-              JmpErrors=0;
+              if (ThrowErrors) ErrorCount -= JmpErrors;
+              JmpErrors = 0;
              END
-            Repass=True;
-            if ((MsgIfRepass) AND (PassNo>=PassNoForMessage))
+            Repass = True;
+            if ((MsgIfRepass) AND (PassNo >= PassNoForMessage))
              BEGIN
-              strmaxcpy(serr,Neu->SymName,255);
-              if (Neu->Attribute!=(-1)) 
+              strmaxcpy(serr, Neu->SymName, 255);
+              if (Neu->Attribute != (-1)) 
                BEGIN
-                strmaxcat(serr,"[",255);
-                strmaxcat(serr,GetSectionName(Neu->Attribute),255);
-                strmaxcat(serr,"]",255);
+                strmaxcat(serr, "[", 255);
+                strmaxcat(serr, GetSectionName(Neu->Attribute), 255);
+                strmaxcat(serr, "]", 255);
                END
-              WrXError(80,serr);
+              WrXError(80, serr);
              END
            END
         END
-       Neu->Left=(*Node)->Left; Neu->Right=(*Node)->Right; 
-       Neu->Balance=(*Node)->Balance;
+       Neu->Left = (*Node)->Left; Neu->Right = (*Node)->Right; 
+       Neu->Balance = (*Node)->Balance;
        if (DoCross)
         BEGIN
-         Neu->LineNum=(*Node)->LineNum; Neu->FileNum=(*Node)->FileNum;
+         Neu->LineNum = (*Node)->LineNum; Neu->FileNum = (*Node)->FileNum;
         END
-       Neu->RefList=(*Node)->RefList; (*Node)->RefList=Nil;
-       Neu->Defined=True; Neu->Used=(*Node)->Used; Neu->Changeable=MayChange;
-       Hilf=(*Node); *Node=Neu;
+       Neu->RefList = (*Node)->RefList; (*Node)->RefList = Nil;
+       Neu->Defined = True; Neu->Used = (*Node)->Used; Neu->Changeable = MayChange;
+       Hilf = (*Node); *Node = Neu;
        FreeSymbol(&Hilf);
       END
     END
@@ -2014,40 +2195,46 @@ BEGIN
 
    if (NOT CaseSensitive) NLS_UpString(Neu->SymName);
 
-   SearchErg=0;
-   Neu->Attribute=(ResHandle==(-2))?(MomSectionHandle):(ResHandle);
-   if ((SectionStack!=Nil) AND (Neu->Attribute==MomSectionHandle))
+   SearchErg = 0;
+   Neu->Attribute = (ResHandle == (-2)) ? (MomSectionHandle) : (ResHandle);
+   if ((SectionStack != Nil) AND (Neu->Attribute == MomSectionHandle))
     BEGIN
-     EnterSymbol_Search(&Lauf,&Prev,&RRoot,Neu,&(SectionStack->LocSyms),1,&SearchErg);
-     if (Lauf==Nil) EnterSymbol_Search(&Lauf,&Prev,&RRoot,Neu,&(SectionStack->GlobSyms),2,&SearchErg);
-     if (Lauf==Nil) EnterSymbol_Search(&Lauf,&Prev,&RRoot,Neu,&(SectionStack->ExportSyms),3,&SearchErg);
-     if (SearchErg==2) Neu->Attribute=Lauf->DestSection;
-     if (SearchErg==3)
+     EnterSymbol_Search(&Lauf, &Prev, &RRoot, Neu, &(SectionStack->LocSyms),
+                        1, &SearchErg);
+     if (Lauf == Nil)
+      EnterSymbol_Search(&Lauf, &Prev, &RRoot, Neu,
+                         &(SectionStack->GlobSyms), 2, &SearchErg);
+     if (Lauf == Nil)
+      EnterSymbol_Search(&Lauf, &Prev, &RRoot, Neu,
+                         &(SectionStack->ExportSyms), 3, &SearchErg);
+     if (SearchErg == 2) Neu->Attribute = Lauf->DestSection;
+     if (SearchErg == 3)
       BEGIN
-       strmaxcpy(CombName,Neu->SymName,255);
-       RunSect=SectionStack; MSect=MomSectionHandle;
-       while ((MSect!=Lauf->DestSection) AND (RunSect!=Nil))
+       strmaxcpy(CombName, Neu->SymName, 255);
+       RunSect = SectionStack; MSect = MomSectionHandle;
+       while ((MSect != Lauf->DestSection) AND (RunSect != Nil))
         BEGIN
-         strmaxprep(CombName,"_",255);
-         strmaxprep(CombName,GetSectionName(MSect),255);
-         MSect=RunSect->Handle; RunSect=RunSect->Next;
+         strmaxprep(CombName, "_", 255);
+         strmaxprep(CombName, GetSectionName(MSect), 255);
+         MSect = RunSect->Handle; RunSect = RunSect->Next;
         END
-       Copy=(SymbolPtr) malloc(sizeof(SymbolEntry)); *Copy=(*Neu);
-       Copy->SymName=strdup(CombName);
-       Copy->Attribute=Lauf->DestSection;
-       if (Copy->SymWert.Typ==TempString) 
-        Copy->SymWert.Contents.SWert=strdup(Neu->SymWert.Contents.SWert);
-       EnterTreeNode(&FirstSymbol,Copy,MayChange,MakeCrossList);
+       Copy = (SymbolPtr) malloc(sizeof(SymbolEntry)); *Copy = (*Neu);
+       Copy->SymName = strdup(CombName);
+       Copy->Attribute = Lauf->DestSection;
+       Copy->Relocs = DupRelocs(Neu->Relocs);
+       if (Copy->SymWert.Typ == TempString) 
+        Copy->SymWert.Contents.SWert = strdup(Neu->SymWert.Contents.SWert);
+       EnterTreeNode(&FirstSymbol, Copy, MayChange, MakeCrossList);
       END
-     if (Lauf!=Nil)
+     if (Lauf != Nil)
       BEGIN
        free(Lauf->Name);
-       if (Prev==Nil) *RRoot=Lauf->Next;
-       else Prev->Next=Lauf->Next;
+       if (Prev == Nil) *RRoot = Lauf->Next;
+       else Prev->Next = Lauf->Next;
        free(Lauf);
       END
     END
-   EnterTreeNode(&FirstSymbol,Neu,MayChange,MakeCrossList);
+   EnterTreeNode(&FirstSymbol, Neu, MayChange, MakeCrossList);
 END
 
         void PrintSymTree(char *Name)
@@ -2063,24 +2250,60 @@ BEGIN
    LongInt DestHandle;   
    String Name;
 
-   strmaxcpy(Name,Name_O,255);
+   strmaxcpy(Name, Name_O, 255);
    if (NOT ExpandSymbol(Name)) return;
-   if (NOT GetSymSection(Name,&DestHandle)) return;
+   if (NOT GetSymSection(Name, &DestHandle)) return;
    if (NOT ChkSymbName(Name))
     BEGIN
-     WrXError(1020,Name); return;
+     WrXError(1020, Name); return;
     END
 
    Neu=(SymbolPtr) malloc(sizeof(SymbolEntry));
-   Neu->SymName=strdup(Name);
-   Neu->SymWert.Typ=TempInt;
-   Neu->SymWert.Contents.IWert=Wert;
-   Neu->SymType=Typ;
-   Neu->SymSize=(-1);
+   Neu->SymName = strdup(Name);
+   Neu->SymWert.Typ = TempInt;
+   Neu->SymWert.Contents.IWert = Wert;
+   Neu->SymType = Typ;
+   Neu->SymSize = (-1);
+   Neu->RefList = Nil;
+   Neu->Relocs = Nil;
 
-   if ((MomLocHandle==(-1)) OR (DestHandle!=(-2)))
+   if ((MomLocHandle == (-1)) OR (DestHandle != (-2)))
     BEGIN
-     EnterSymbol(Neu,MayChange,DestHandle);
+     EnterSymbol(Neu, MayChange, DestHandle);
+     if (MakeDebug) PrintSymTree(Name);
+    END
+   else EnterLocSymbol(Neu);
+END
+
+        void EnterExtSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange)
+BEGIN
+   SymbolPtr Neu;
+   LongInt DestHandle;
+   String Name;
+
+   strmaxcpy(Name, Name_O, 255);
+   if (NOT ExpandSymbol(Name)) return;
+   if (NOT GetSymSection(Name, &DestHandle)) return;
+   if (NOT ChkSymbName(Name))
+    BEGIN
+     WrXError(1020, Name); return;
+    END
+
+   Neu=(SymbolPtr) malloc(sizeof(SymbolEntry));
+   Neu->SymName = strdup(Name);
+   Neu->SymWert.Typ = TempInt;
+   Neu->SymWert.Contents.IWert = Wert;
+   Neu->SymType = Typ;
+   Neu->SymSize = (-1);
+   Neu->RefList = Nil;
+   Neu->Relocs = (PRelocEntry) malloc(sizeof(TRelocEntry));
+   Neu->Relocs->Next = Nil;
+   Neu->Relocs->Ref = strdup(Name);
+   Neu->Relocs->Add = True;
+
+   if ((MomLocHandle == (-1)) OR (DestHandle != (-2)))
+    BEGIN
+     EnterSymbol(Neu, MayChange, DestHandle);
      if (MakeDebug) PrintSymTree(Name);
     END
    else EnterLocSymbol(Neu);
@@ -2092,23 +2315,25 @@ BEGIN
    LongInt DestHandle;
    String Name;
 
-   strmaxcpy(Name,Name_O,255);
+   strmaxcpy(Name, Name_O,255);
    if (NOT ExpandSymbol(Name)) return;
    if (NOT GetSymSection(Name,&DestHandle)) return;
    if (NOT ChkSymbName(Name))
     BEGIN
-     WrXError(1020,Name); return;
+     WrXError(1020, Name); return;
     END
    Neu=(SymbolPtr) malloc(sizeof(SymbolEntry));
    Neu->SymName=strdup(Name);
-   Neu->SymWert.Typ=TempFloat;
-   Neu->SymWert.Contents.FWert=Wert;
-   Neu->SymType=0;
-   Neu->SymSize=(-1);
+   Neu->SymWert.Typ = TempFloat;
+   Neu->SymWert.Contents.FWert = Wert;
+   Neu->SymType = 0;
+   Neu->SymSize = (-1);
+   Neu->RefList = Nil;
+   Neu->Relocs = Nil;
 
-   if ((MomLocHandle==(-1)) OR (DestHandle!=(-2)))
+   if ((MomLocHandle == (-1)) OR (DestHandle != (-2)))
     BEGIN
-     EnterSymbol(Neu,MayChange,DestHandle);
+     EnterSymbol(Neu, MayChange, DestHandle);
      if (MakeDebug) PrintSymTree(Name);
     END
    else EnterLocSymbol(Neu);
@@ -2120,23 +2345,25 @@ BEGIN
    LongInt DestHandle;
    String Name;
 
-   strmaxcpy(Name,Name_O,255);
+   strmaxcpy(Name, Name_O, 255);
    if (NOT ExpandSymbol(Name)) return;
    if (NOT GetSymSection(Name,&DestHandle)) return;
    if (NOT ChkSymbName(Name))
     BEGIN
-     WrXError(1020,Name); return;
+     WrXError(1020, Name); return;
     END
    Neu=(SymbolPtr) malloc(sizeof(SymbolEntry));
-   Neu->SymName=strdup(Name);
-   Neu->SymWert.Contents.SWert=strdup(Wert);
-   Neu->SymWert.Typ=TempString;
-   Neu->SymType=0;
-   Neu->SymSize=(-1);
+   Neu->SymName = strdup(Name);
+   Neu->SymWert.Contents.SWert = strdup(Wert);
+   Neu->SymWert.Typ = TempString;
+   Neu->SymType = 0;
+   Neu->SymSize = (-1);
+   Neu->RefList = Nil;
+   Neu->Relocs = Nil;
 
-   if ((MomLocHandle==(-1)) OR (DestHandle!=(-2)))
+   if ((MomLocHandle == (-1)) OR (DestHandle != (-2)))
     BEGIN
-     EnterSymbol(Neu,MayChange,DestHandle);
+     EnterSymbol(Neu, MayChange, DestHandle);
      if (MakeDebug) PrintSymTree(Name);
     END
    else EnterLocSymbol(Neu);
@@ -2608,7 +2835,7 @@ BEGIN
    fprintf(f,"%s",Node->SymName); ChkIO(10004); l1=strlen(Node->SymName);
    if (Node->Attribute!=(-1))
     BEGIN
-     sprintf(s,"[%d]",Node->Attribute);
+     sprintf(s,"[%d]", (int)Node->Attribute);
      fprintf(f,"%s",s); ChkIO(10004);
      l1+=strlen(s);
     END
@@ -2642,7 +2869,8 @@ BEGIN
      l1=strlen(s);
      fprintf(f,"%s",s); ChkIO(10004);
     END
-   fprintf(f,"%s %-3d %d\n",Blanks(25-l1),Node->SymSize,Node->Used); ChkIO(10004);
+   fprintf(f,"%s %-3d %d\n",Blanks(25-l1),Node->SymSize,(int)Node->Used);
+   ChkIO(10004);
 END
 
 	static void PrintDebSymbols_PrintNode(FILE *f, SymbolPtr Node)
@@ -2665,6 +2893,37 @@ BEGIN
      HWritten=False;
      PrintDebSymbols_PrintNode(f,FirstSymbol);
     END
+END
+
+	static void PrNoISection(FILE *f, SymbolPtr Node, LongInt Handle)
+BEGIN
+   if (Node->Left!=Nil) PrNoISection(f,Node->Left,Handle);
+   if ((Node->SymType==SegCode) AND (Node->Attribute==Handle) AND (Node->SymWert.Typ==TempInt))
+    BEGIN
+     errno=0; fprintf(f,"DEFINE %s ",Node->SymName); ChkIO(10004);
+     errno=0; fprintf(f,LargeIntFormat,Node->SymWert.Contents.IWert); ChkIO(10004);
+     errno=0; fprintf(f,"\n"); ChkIO(10004);
+    END
+   if (Node->Right!=Nil) PrNoISection(f,Node->Right,Handle);
+END
+
+	void PrintNoISymbols(FILE *f)
+BEGIN
+   PCToken CurrSection;
+   LongInt z;
+
+   PrNoISection(f,FirstSymbol,-1); z=0;
+   for (CurrSection=FirstSection; CurrSection!=Nil; CurrSection=CurrSection->Next)
+    if (ChunkSum(&CurrSection->Usage)>0)
+     BEGIN
+      fprintf(f,"FUNCTION %s ",CurrSection->Name); ChkIO(10004);
+      fprintf(f,LargeIntFormat,ChunkMin(&CurrSection->Usage)); ChkIO(10004);
+      fprintf(f,"\n"); ChkIO(10004);
+      PrNoISection(f,FirstSymbol,z++);
+      fprintf(f,"ENDFUNC "); ChkIO(10004);
+      fprintf(f,LargeIntFormat,ChunkMax(&CurrSection->Usage)); ChkIO(10004);
+      fprintf(f,"\n"); ChkIO(10004);
+     END
 END
 
         static void PrintSymbolTree_PrintNode(SymbolPtr Node, int Shift)
@@ -2819,7 +3078,7 @@ BEGIN
        Elem=Act->Contents; Act->Contents=Elem->Next;
        free(Elem); z++;
       END
-     sprintf(s,"%s(%d)",Act->Name,z);
+     sprintf(s,"%s(%d)", Act->Name, z);
      WrXError(230,s);
      free(Act->Name);
      FirstStack=Act->Next; free(Act);
@@ -3017,8 +3276,8 @@ BEGIN
 
    TreeMin=MaxLongInt; TreeMax=0;
    PrintSymbolDepth_SearchTree(FirstSymbol,0,&TreeMin,&TreeMax);
-   fprintf(Debug," MinTree %d\n",TreeMin);
-   fprintf(Debug," MaxTree %d\n",TreeMax);
+   fprintf(Debug," MinTree %ld\n", (long)TreeMin);
+   fprintf(Debug," MaxTree %ld\n", (long)TreeMax);
 END
 
         LongInt GetSectionHandle(char *SName_O, Boolean AddEmpt, LongInt Parent)
@@ -3122,8 +3381,13 @@ BEGIN
    Lauf=FirstSection; Cnt=0;
    while (Lauf!=Nil)
     BEGIN
-     fprintf(f,"\n"); ChkIO(10004);
-     fprintf(f,"Info for Section %d %s %d\n",Cnt,GetSectionName(Cnt),Lauf->Parent); ChkIO(10004);
+     fputs("\nInfo for Section ", f); ChkIO(10004);
+     fprintf(f, LongIntFormat, Cnt); ChkIO(10004);
+     fputc(' ', f); ChkIO(10004);
+     fputs(GetSectionName(Cnt), f); ChkIO(10004);
+     fputc(' ', f); ChkIO(10004);
+     fprintf(f, LongIntFormat, Lauf->Parent); ChkIO(10004);
+     fputc('\n', f); ChkIO(10004);
      for (z=0; z<Lauf->Usage.RealLen; z++)
       BEGIN
        l=Lauf->Usage.Chunks[z].Length;
@@ -3167,7 +3431,7 @@ BEGIN
    strmaxcat(h,",",255);
    strmaxcat(h,GetFileName(Node->FileNum),255);
    strmaxcat(h,":",255);
-   sprintf(h2,"%d",Node->LineNum); strmaxcat(h,h2,255);
+   sprintf(h2, LongIntFormat, Node->LineNum); strmaxcat(h,h2,255);
    strmaxcat(h,"):",255);
    if (Node->Attribute!=(-1))
     BEGIN
@@ -3196,10 +3460,12 @@ BEGIN
        strcpy(LineAcc,"   ");
        while (Lauf!=Nil)
         BEGIN
-         sprintf(LinePart,"%5d",Lauf->LineNum); strmaxcat(LineAcc,LinePart,255);
+         sprintf(LinePart,"%5ld", (long)Lauf->LineNum);
+         strmaxcat(LineAcc,LinePart,255);
          if (Lauf->OccNum!=1)
           BEGIN
-           sprintf(LinePart,"(%2d)",Lauf->OccNum); strmaxcat(LineAcc,LinePart,255);
+           sprintf(LinePart,"(%2ld)", (long)Lauf->OccNum);
+           strmaxcat(LineAcc,LinePart,255);
           END
          else strmaxcat(LineAcc,"    ",255);
          if (strlen(LineAcc)>=72)
@@ -3491,10 +3757,53 @@ BEGIN
 
    if (*buf!='\0') WrLstLine(buf);
    WrLstLine("");
-   sprintf(buf,"%7d%s",Sum,getmessage((Sum==1)?Num_ListRegDefSumMsg:Num_ListRegDefSumsMsg));
+   sprintf(buf,"%7ld%s",
+           (long) Sum,
+           getmessage((Sum==1)?Num_ListRegDefSumMsg:Num_ListRegDefSumsMsg));
    WrLstLine(buf);
-   sprintf(buf,"%7d%s",USum,getmessage((USum==1)?Num_ListRegDefUSumMsg:Num_ListRegDefUSumsMsg));
+   sprintf(buf,"%7ld%s",
+           (long)USum,
+           getmessage((USum==1)?Num_ListRegDefUSumMsg:Num_ListRegDefUSumsMsg));
    WrLstLine("");
+END
+
+/*--------------------------------------------------------------------------*/
+
+	void ClearCodepages(void)
+BEGIN
+   PTransTable Old;
+
+   while (TransTables!=Nil)
+    BEGIN
+     Old=TransTables; TransTables=Old->Next;
+     free(Old->Name); free(Old->Table); free(Old);
+    END
+END
+
+        void PrintCodepages(void)
+BEGIN
+   char buf[500];
+   PTransTable Table;
+   int z,cnt,cnt2;
+
+   NewPage(ChapDepth,True);
+   WrLstLine(getmessage(Num_ListCodepageListHead1));
+   WrLstLine(getmessage(Num_ListCodepageListHead2));
+   WrLstLine("");
+
+   cnt2=0;
+   for (Table=TransTables; Table!=Nil; Table=Table->Next)
+    BEGIN
+     for (z=cnt=0; z<256; z++)
+      if (Table->Table[z]!=z) cnt++;
+     sprintf(buf,"%s (%d%s)",Table->Name,cnt,
+             getmessage((cnt==1) ? Num_ListCodepageChange : Num_ListCodepagePChange));
+     WrLstLine(buf);
+     cnt2++;
+    END
+   WrLstLine("");
+   sprintf(buf,"%d%s",cnt2,
+           getmessage((cnt2==1) ? Num_ListCodepageSumMsg : Num_ListCodepageSumsMsg));
 END
 
 /*--------------------------------------------------------------------------*/

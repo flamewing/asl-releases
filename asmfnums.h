@@ -16,8 +16,14 @@ extern void AddFile(char *FName);
 
 extern Integer GetFileNum(char *Name);
 
-extern char *GetFileName(Byte Num);
+extern char *GetFileName(int Num);
 
 extern Integer GetFileCount(void);
+
+extern void AddAddressRange(int File, LargeWord Start, LargeWord Len);
+
+extern void GetAddressRange(int File, LargeWord *Start, LargeWord *End);
+
+extern void ResetAddressRanges(void);
 
 extern void asmfnums_init(void);

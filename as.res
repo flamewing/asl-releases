@@ -16,6 +16,11 @@
 ;*            7. 9.1997 Warnung Bereichsueberschreitung                      *
 ;*           24. 9.1997 Kopfzeile Registerdefinitionsliste                   *
 ;*           19.10.1997 Warnung neg. DUP-Anzahl                              *
+;*           26. 6.1998 Fehlermeldung Codepage nicht gefunden                *
+;*           27. 6.1998 Meldungen für Codepage-Liste                         *
+;*           18. 4.1999 Kommandozeilenoptionen cpu, shareout                 *
+;*            2. 5.1999 'order' --> 'instruction'                            *
+;*           13. 7.1999 Fehlermeldungen fuer extern-Symbole                  *
 ;*                                                                           *
 ;*****************************************************************************
 
@@ -364,7 +369,7 @@ Message ErrMsgMissingLTORG
 
 Message ErrMsgNotOnThisCPU1
  "Befehl auf dem "
- "order not allowed on "
+ "instruction not allowed on "
 
 Message ErrMsgNotOnThisCPU2
  " nicht vorhanden"
@@ -413,6 +418,10 @@ Message ErrMsgInvStructDir
 Message ErrMsgShortRead
  "vorzeitiges Dateiende"
  "unexpected end of file"
+
+Message ErrMsgUnknownCodepage
+ "unbekannte Zeichentabelle"
+ "unknown codepage"
 
 Message ErrMsgRomOffs063
  "ROM-Offset geht nur von 0..63"
@@ -492,7 +501,7 @@ Message ErrMsgInvArgPair
 
 Message ErrMsgNotOnThisAddress
  "Befehl darf nicht auf dieser Adresse liegen"
- "order must not start on this address"
+ "instruction must not start on this address"
 
 Message ErrMsgNotFromThisAddress
  "ung&uuml;ltiges Sprungziel"
@@ -610,6 +619,14 @@ Message ErrMsgSwapTooBig
  "zuwenig Platz f&uuml;r Swapfile - Programmabbruch"
  "insufficient space for swap file - program terminated"
 
+Message ErrMsgNoRelocs
+ "relokatible Symbole nicht erlaubt"
+ "relocatable symbols not allowed"
+
+Message ErrMsgUnresRelocs
+ "unverarbeitete externe Referenzen"
+ "unresolved external references"
+
 ;----------------------------------------------------------------------------
 ; Strings in Listingkopfzeile
 
@@ -671,6 +688,30 @@ Message ListRegDefUSumMsg
 Message ListRegDefUSumsMsg
  " unbenutzte Definitionen"
  " unused definitions"
+
+Message ListCodepageListHead1
+ "  Zeichentabellen:"
+ "  codepages:"
+
+Message ListCodepageListHead2
+ "  ----------------"
+ "  ----------"
+
+Message ListCodepageChange
+ " ver&auml;ndertes Zeichen"
+ " changed character"
+
+Message ListCodepagePChange
+ " ver&auml;nderte Zeichen"
+ " changed characters"
+
+Message ListCodepageSumMsg
+ " Zeichentabelle"
+ " code page"
+
+Message ListCodepageSumsMsg
+ " Zeichentabellen"
+ " code pages"
 
 Message ListMacListHead1
  "  definierte Makros:"
@@ -879,9 +920,11 @@ Message InfoMessHelp
  "\n" \
  "-p : Sharefile im Pascal-Format       -c : Sharefile im C-Format\n" \
  "-a : Sharefile im AS-Format\n" \
-               "-o <Name> : Namen der Code-Datei neu setzen\n" \
-               "-q, -quiet : Stille &Uuml;bersetzung\n" \
-               "-alias <neu>=<alt> : Prozessor-Alias definieren\n" \
+ "-o <Name> : Namen der Code-Datei neu setzen\n" \
+ "-shareout <Name> : Namen des Sharefiles neu setzen\n" \
+ "-q, -quiet : Stille &Uuml;bersetzung\n" \
+ "-cpu <Name> : Zielprozessor setzen\n" \
+ "-alias <neu>=<alt> : Prozessor-Alias definieren\n" \
  "-l : Listing auf Konsole              -L : Listing auf Datei\n" \
  "-i <Pfad>[:Pfad]... : Pfadliste f&uuml;r Includedateien\n" \
  "-D <Symbol>[,Symbol]... : Symbole vordefinieren\n" \
@@ -912,7 +955,9 @@ Message InfoMessHelp
  "-p : share file formatted for Pascal  -c : share file formatted for C\n" \
  "-a : share file formatted for AS\n" \
  "-o <name> : change name of code file\n" \
+ "-shareout <nname> : change name of share file\n" \
  "-q,  -quiet : silent compilation\n" \
+ "-cpu <name> : set target processor\n" \
  "-alias <new>=<old> : define processor alias\n" \
  "-l : listing to console               -L : listing to file\n" \
  "-i <path>[;path]... : list of paths for include files\n" \

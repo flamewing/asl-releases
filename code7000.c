@@ -6,6 +6,7 @@
 /*                                                                           */
 /* Historie: 25.12.1996 Grundsteinlegung                                     */
 /*           12. 4.1998 SH7700-Erweiterungen                                 */
+/*            3. 1.1999 ChkPC-Anpassung                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -1265,15 +1266,6 @@ BEGIN
    FirstLiteral=Nil; ForwardCount=0;
 END
 
-	static Boolean ChkPC_7000(void)
-BEGIN
-#ifdef HAS64
-   return ((ActPC==SegCode) AND (ProgCounter()<=0xffffffffll));
-#else
-   return (ActPC==SegCode);
-#endif
-END
-
 	static Boolean IsDef_7000(void)
 BEGIN
    return False;
@@ -1295,8 +1287,13 @@ BEGIN
 
    ValidSegs=1<<SegCode;
    Grans[SegCode]=1; ListGrans[SegCode]=2; SegInits[SegCode]=0;
+#ifdef __STDC__
+   SegLimits[SegCode] = 0xfffffffful;
+#else
+   SegLimits[SegCode] = 0xffffffffl;
+#endif
 
-   MakeCode=MakeCode_7000; ChkPC=ChkPC_7000; IsDef=IsDef_7000;
+   MakeCode=MakeCode_7000; IsDef=IsDef_7000;
    SwitchFrom=SwitchFrom_7000; InitFields();
    AddONOFF("SUPMODE",      &SupAllowed,   SupAllowedName  ,False);
    AddONOFF("COMPLITERALS", &CompLiterals, CompLiteralsName,False);

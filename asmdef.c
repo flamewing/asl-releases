@@ -5,6 +5,21 @@
 /* global benutzte Variablen                                                 */
 /*                                                                           */
 /* Historie:  4. 5.1996 Grundsteinlegung                                     */
+/*           24. 6.1998 Zeichenübersetzungstabellen                          */
+/*           25. 7.1998 PassNo --> Integer                                   */
+/*           17. 8.1998 InMacroFlag hierher verschoben                       */
+/*           18. 8.1998 RadixBase hinzugenommen                              */ 
+/*                      ArgStr-Feld war eins zu kurz                         */
+/*           19. 8.1998 BranchExt-Variablen                                  */
+/*           29. 8.1998 ActListGran hinzugenommen                            */
+/*           11. 9.1998 ROMDATA-Segment hinzugenommen                        */
+/*            1. 1.1999 SegLimits dazugenommen                               */
+/*                      SegInits --> LargeInt                                */
+/*            9. 1.1999 ChkPC jetzt mit Adresse als Parameter                */
+/*           18. 1.1999 PCSymbol initialisiert                               */
+/*           17. 4.1999 DefCPU hinzugenommen                                 */
+/*           30. 5.1999 OutRadixBase hinzugenommen                           */
+/*            5.11.1999 ExtendErrors von Boolean nach ShortInt               */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -30,8 +45,8 @@ char *EnvName="ASCMD";                /* Environment-Variable fuer Default-
 					Parameter */
 
 char *SegNames[PCMax+1]={"NOTHING","CODE","DATA","IDATA","XDATA","YDATA",
-                         "BITDATA","IO","REG"};
-char SegShorts[PCMax+1]={'-','C','D','I','X','Y','B','P','R'};
+                         "BITDATA","IO","REG","ROMDATA"};
+char SegShorts[PCMax+1]={'-','C','D','I','X','Y','B','P','R','O'};
 LongInt Magic=0x1b34244d;
 
 char *InfoMessCopyright="(C) 1992,1998 Alfred Arnold";
@@ -52,7 +67,8 @@ char *InfoMessCopyright="(C) 1992,1998 Alfred Arnold";
    ChunkList SegChunks[StructSeg+1];        /* Belegungen */
    Integer ActPC;                           /* gewaehlter Programmzaehler */
    Boolean PCsUsed[StructSeg+1];            /* PCs bereits initialisiert ? */
-   LongInt SegInits[PCMax+1];               /* Segmentstartwerte */
+   LargeInt SegInits[PCMax+1];              /* Segmentstartwerte */
+   LargeInt SegLimits[PCMax+1];             /* Segmentgrenzwerte */
    LongInt ValidSegs;                       /* erlaubte Segmente */
    Boolean ENDOccured;	                    /* END-Statement aufgetreten ? */
    Boolean Retracted;			    /* Codes zurueckgenommen ? */
@@ -61,7 +77,7 @@ char *InfoMessCopyright="(C) 1992,1998 Alfred Arnold";
    Word TypeFlag;		    /* Welche Adressraeume genutzt ? */
    ShortInt SizeFlag;		    /* Welche Operandengroessen definiert ? */
 
-   Byte PassNo;                     /* Durchlaufsnummer */
+   Integer PassNo;                  /* Durchlaufsnummer */
    Integer JmpErrors;               /* Anzahl fraglicher Sprungfehler */
    Boolean ThrowErrors;             /* Fehler verwerfen bei Repass ? */
    Boolean Repass;		    /* noch ein Durchlauf erforderlich */
@@ -76,7 +92,7 @@ char *InfoMessCopyright="(C) 1992,1998 Alfred Arnold";
    Boolean MakeIncludeList;         /* Includeliste ? */
    Boolean RelaxedMode;		    /* alle Integer-Syntaxen zulassen ? */
    Byte ListMask;		    /* Listingmaske */
-   Boolean ExtendErrors;	    /* erweiterte Fehlermeldungen */
+   ShortInt ExtendErrors;	    /* erweiterte Fehlermeldungen */
    Boolean NumericErrors;	    /* Fehlermeldungen mit Nummer */
    Boolean CodeOutput;		    /* Code erzeugen */
    Boolean MacProOutput;	    /* Makroprozessorausgabe schreiben */
@@ -110,7 +126,7 @@ char *InfoMessCopyright="(C) 1992,1998 Alfred Arnold";
    Boolean SetIsOccupied;           /* TRUE: SET ist Prozessorbefehl */
 #ifdef __PROTOS__
    void (*MakeCode)(void);          /* Codeerzeugungsprozedur */
-   Boolean (*ChkPC)(void);	    /* ueberprueft Codelaengenueberschreitungen */
+   Boolean (*ChkPC)(LargeWord Addr);/* ueberprueft Codelaengenueberschreitungen */
    Boolean (*IsDef)(void);	    /* ist Label nicht als solches zu werten ? */
    void (*SwitchFrom)(void);        /* bevor von einer CPU weggeschaltet wird */
    void (*InternSymbol)(char *Asc, TempResult *Erg); /* vordefinierte Symbole ? */
@@ -133,6 +149,7 @@ char *InfoMessCopyright="(C) 1992,1998 Alfred Arnold";
    FILE *ShareFile;                 /* Sharefile */
    FILE *MacProFile;		    /* Makroprozessorausgabe */
    FILE *MacroFile;		    /* Ausgabedatei Makroliste */
+   Boolean InMacroFlag;             /* momentan wird Makro expandiert */
    StringPtr LstName;		    /* Name der Listdatei */
    StringPtr MacroName,MacProName;   
    Boolean DoLst,NextDoLst;         /* Listing an */
@@ -140,6 +157,7 @@ char *InfoMessCopyright="(C) 1992,1998 Alfred Arnold";
 /**   PrgName:String;                  { Name der Codedatei }**/
 
    CPUVar MomCPU,MomVirtCPU;        /* definierter/vorgegaukelter Prozessortyp */
+   char DefCPU[20];                 /* per Kommandozeile vorgegebene CPU */
    char MomCPUIdent[10];            /* dessen Name in ASCII */
    PCPUDef FirstCPUDef;		    /* Liste mit Prozessordefinitionen */
    CPUVar CPUCnt;	    	    /* Gesamtzahl Prozessoren */
@@ -148,8 +166,12 @@ char *InfoMessCopyright="(C) 1992,1998 Alfred Arnold";
    Boolean DoPadding;		    /* auf gerade Byte-Zahl ausrichten ? */
    Boolean SupAllowed;              /* Supervisormode freigegeben */
    Boolean Maximum;		    /* CPU nicht kastriert */
+   Boolean DoBranchExt;             /* Spruenge automatisch verlaengern */
 
-   StringPtr LabPart,OpPart,AttrPart,  /* Komponenten der Zeile */
+   LargeWord RadixBase;             /* Default-Zahlensystem im Formelparser*/
+   LargeWord OutRadixBase;          /* dito fuer Ausgabe */
+
+   StringPtr LabPart,OpPart,AttrPart, /* Komponenten der Zeile */
           ArgPart,CommPart,LOpPart;
    char AttrSplit;
    ArgStrField ArgStr;              /* Komponenten des Arguments */
@@ -165,7 +187,7 @@ char *InfoMessCopyright="(C) 1992,1998 Alfred Arnold";
    StringPtr PrtInitString;	    /* Druckerinitialisierungsstring */
    StringPtr PrtExitString;	    /* Druckerdeinitialisierungsstring */
    StringPtr PrtTitleString;	    /* Titelzeile */
-   StringPtr ExtendError;              /* erweiterte Fehlermeldung */
+   StringPtr ExtendError;           /* erweiterte Fehlermeldung */
 
    LongInt MomSectionHandle;        /* mom. Namensraum */
    PSaveSection SectionStack;	    /* gespeicherte Sektionshandles */
@@ -176,6 +198,7 @@ char *InfoMessCopyright="(C) 1992,1998 Alfred Arnold";
    Byte *BAsmCode;
 
    Boolean DontPrint;               /* Flag:PC veraendert, aber keinen Code erzeugt */
+   Word ActListGran;                /* uebersteuerte List-Granularitaet */
 /**   MultiFace:RECORD Case Byte OF
 		    0:(Feld:WordField);
 		    1:(Val32:Single);
@@ -190,7 +213,8 @@ char *InfoMessCopyright="(C) 1992,1998 Alfred Arnold";
 
    Boolean SuppWarns;
 
-   unsigned char *CharTransTable;   /* Zeichenuebersetzungstabelle */
+   PTransTable TransTables,         /* Liste mit Codepages */
+               CurrTransTable;      /* aktuelle Codepage */
 
    PFunction FirstFunction;	    /* Liste definierter Funktionen */
 
@@ -248,8 +272,6 @@ BEGIN
    FirstCPUDef=Nil;
    CPUCnt=0;
    SwitchFrom=NullProc;
-   CharTransTable=(unsigned char *) malloc(256*sizeof(char));
-   for (z=0; z<256; z++) CharTransTable[z]=z;
    InternSymbol=Default_InternSymbol;
 
    DAsmCode=(LongWord *) malloc(MaxCodeLen/4);
@@ -258,7 +280,14 @@ BEGIN
 
    RelaxedMode=True; ConstMode=ConstModeC;
 
-   for (z=0; z<ParMax; z++) ArgStr[z]=GetString();
+   /* auf diese Weise wird PCSymbol defaultmaessig nicht erreichbar
+      da das schon von den Konstantenparsern im Formelparser abgefangen
+      wuerde */
+
+   PCSymbol = "1";
+   *DefCPU = '\0';
+
+   for (z=0; z<=ParMax; z++) ArgStr[z]=GetString();
    SourceFile=GetString();
    ClrEol=GetString();
    CursUp=GetString();
@@ -283,5 +312,4 @@ BEGIN
    PrtExitString=GetString();
    PrtTitleString=GetString();
    ExtendError=GetString();
-
 END

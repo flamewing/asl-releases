@@ -271,7 +271,7 @@ END
 
 	static char *AssignSingle(int size)
 BEGIN
-   if (size==sizeof(short)) return "%sd";
+   if (size==sizeof(short)) return "%d";
    else if (size==sizeof(int)) return "%d";
    else if (size==sizeof(long)) return "%ld";
 #ifndef NOLONGLONG

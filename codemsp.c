@@ -5,6 +5,8 @@
 /* Codegenerator MSP430                                                      */
 /*                                                                           */
 /* Historie:                                                                 */
+/*             18. 8.1998 BookKeeping-Aufruf bei BSS                         */
+/*              2. 1.1998 ChkPC umgestellt                                   */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -379,8 +381,7 @@ BEGIN
         BEGIN
          if ((Odd(HVal16)) AND (DoPadding)) HVal16++;
          DontPrint=True; CodeLen=HVal16;
-         if (MakeUseList)
-          if (AddChunk(SegChunks+ActPC,ProgCounter(),HVal16,ActPC==SegCode)) WrError(90);
+         BookKeeping();
          END
       END
      return True;
@@ -505,15 +506,6 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-        static Boolean ChkPC_MSP(void)
-BEGIN
-   switch (ActPC)
-    BEGIN
-     case SegCode  : return ProgCounter()<0x10000;
-     default: return False;
-    END
-END
-
         static Boolean IsDef_MSP(void)
 BEGIN
    return False;
@@ -533,9 +525,11 @@ BEGIN
 
    ValidSegs=1<<SegCode;
    Grans[SegCode]=1; ListGrans[SegCode]=2; SegInits[SegCode]=0;
+   SegLimits[SegCode] = 0xffff;
+
    AddONOFF("PADDING", &DoPadding, DoPaddingName,False);
 
-   MakeCode=MakeCode_MSP; ChkPC=ChkPC_MSP; IsDef=IsDef_MSP;
+   MakeCode=MakeCode_MSP; IsDef=IsDef_MSP;
    SwitchFrom=SwitchFrom_MSP; InitFields();
 END
 

@@ -2,7 +2,7 @@
 /*****************************************************************************/
 /* AS-Portierung                                                             */
 /*                                                                           */
-/* reitstellung von fuer AS benoetigten Handle-Funktionen                    */
+/* Bereitstellung von fuer AS benoetigten Handle-Funktionen                  */
 /*                                                                           */
 /* Historie:  5. 4.1996 Grundsteinlegung                                     */
 /*                                                                           */

@@ -5,6 +5,7 @@
 /* Codegenerator TLCS-900(L)                                                 */
 /*                                                                           */
 /* Historie: 27. 6.1996 Grundsteinlegung                                     */
+/*            9. 1.1999 ChkPC jetzt mit Adresse als Parameter                */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -2278,15 +2279,15 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static Boolean ChkPC_96C141(void)
+	static Boolean ChkPC_96C141(LargeWord Addr)
 BEGIN
    Boolean ok;
 
    switch (ActPC)
     BEGIN
      case SegCode:
-      if (Maximum) ok=(ProgCounter()<=0xffffff);
-	      else ok=(ProgCounter()<=0xffff);
+      if (Maximum) ok=(Addr<=0xffffff);
+	      else ok=(Addr<=0xffff);
       break;
      default: 
       ok=False;

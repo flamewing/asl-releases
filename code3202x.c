@@ -7,6 +7,9 @@
  *
  * 19.08.96: Erstellung
  * 18.01.97: Anpassungen fuer Case-Sensitivitaet
+ *  7.07.1998 Fix Zugriffe auf CharTransTable wg. signed chars
+ * 18.08.1998 BookKeeping-Aufruf bei RES
+ *  9. 1.1999 ChkPC jetzt ueber SegLimits
  */
 
 #include "stdinc.h"
@@ -454,7 +457,7 @@ static void pseudo_store(tcallback callback)
 		case TempString:
 			cp = (unsigned char *)t.Contents.Ascii;
 			while (*cp) 
-				callback(&ok, &adr, CharTransTable[*cp++]);
+				callback(&ok, &adr, CharTransTable[((usint)*cp++)&0xff]);
 			break;
 		default:
 			WrError(1135);
@@ -500,10 +503,7 @@ static Boolean decode_pseudo(void)
 			return True;
 		DontPrint = True;
 		CodeLen = size;
-		if (MakeUseList)
-			if (AddChunk(SegChunks+ActPC, ProgCounter(),
-				     CodeLen, ActPC == SegCode))
-				WrError(90);
+		BookKeeping();
 		return True;
 	}
 
@@ -535,11 +535,11 @@ static Boolean decode_pseudo(void)
 				while (*cp) {
 					if (z2 & 1)
 						WAsmCode[CodeLen++] |= 
-							(CharTransTable[*cp++]
+							(CharTransTable[((usint)*cp++)&0xff]
 							 << 8);
 					else
 						WAsmCode[CodeLen] = 
-							CharTransTable[*cp++];
+							CharTransTable[((usint)*cp++)&0xff];
 					z2++;
 				}
 				if (z2 & 1)
@@ -1060,21 +1060,6 @@ static void make_code_3202x(void)
 
 /* ---------------------------------------------------------------------- */
 
-static Boolean check_pc_3202x(void)
-{
-	switch(ActPC) {
-	case SegCode: 
-	case SegData: 
-		return (ProgCounter() <=0xffff);
-	case SegIO: 
-		return (ProgCounter() <=0xf);
-	default:
-		return False;
-	}
-}
-
-/* ---------------------------------------------------------------------- */
-
 static Boolean is_def_3202x(void)
 {
 	static const char *defs[] = { "BSS", "PORT", "STRING", "RSTRING", 
@@ -1114,10 +1099,13 @@ static void switch_to_3202x(void)
 	
 	ValidSegs = (1 << SegCode) | (1 << SegData) | (1 << SegIO);
 	Grans[SegCode] = 2; ListGrans[SegCode] = 2; SegInits[SegCode] = 0;
+        SegLimits[SegCode] = 0xffff;
 	Grans[SegData] = 2; ListGrans[SegData] = 2; SegInits[SegData] = 0;
+        SegLimits[SegData] = 0xffff;
 	Grans[SegIO  ] = 2; ListGrans[SegIO  ] = 2; SegInits[SegIO  ] = 0;
+        SegLimits[SegIO  ] = 0xf;
 	
-	MakeCode = make_code_3202x; ChkPC = check_pc_3202x; 
+	MakeCode = make_code_3202x; 
 	IsDef = is_def_3202x; SwitchFrom = switch_from_3202x;
 	initfields();
 }

@@ -5,6 +5,19 @@
 /* Codegenerator M16C                                                        */
 /*                                                                           */
 /* Historie: 17.12.1996 Grundsteinlegung                                     */
+/*           21. 9.1998 Kodierungsfehler: mov.b:s #0,...->dests vergessen    */
+/*                                        mov.x:s #imm,reg->OpSize invertiert*/
+/*                                        sub.x:q #imm4,...->falscher Opcode */
+/*            3. 1.1999 ChkPC-Anpassung                                      */
+/*   {RMS}    6. 2.1999 Fixed remaining code generation errors - M16C is now */
+/*                      100% correct, validated against reference assemblers */
+/*                      and official Mitsubishi documentation.               */
+/*                      Search for RMS: tags to see changes                  */
+/*   {RMS}    8. 2.1999 Fixed ChkPC SegLimit typo [M16s have 20 bits]        */
+/*   {RMS}   10. 2.1999 Accomodate JMP.S crossing 64k boundary bug in M16C   */
+/*   {RMS}    2. 4.1999 Made the JMP.S promotion fix CPU-dependent, and made */
+/*                      repairs to the JMP.S handling for forward label refs */
+/*                      so they now work. [JMP.S symbol] now works.          */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -70,7 +83,7 @@ typedef struct
 
 static char *Flags="CDZSBOIU";
 
-static CPUVar CPUM16C,CPUM30600M8;
+static CPUVar CPUM16C,CPUM30600M8,CPUM30610,CPUM30620;
 
 static String Format;
 static Byte FormatCode;
@@ -539,7 +552,7 @@ BEGIN
 
    if (ArgCnt==2)
     BEGIN
-     DispAcc=EvalIntExpression(ArgStr[1],UInt3,&OK);
+     DispAcc=EvalIntExpression(ArgStr[1],UInt16,&OK); /* RMS 02: The displacement can be 16 bits */
      if (NOT OK) return False;
     END
    else DispAcc=0;
@@ -554,7 +567,7 @@ BEGIN
    if (Pos1==Nil)
     BEGIN
      DecodeDisp(Asc,UInt16,UInt13,&DispAcc,&OK);
-     if (OK)
+     if ((OK) && (DispAcc<0x10000))	/* RMS 09: This is optional, it detects rollover of the bit address. */ 
       BEGIN
        AdrMode=15;
        AdrVals[0]=DispAcc & 0xff;
@@ -562,6 +575,7 @@ BEGIN
        AdrCnt=2;
        return True;
       END
+     WrError(1510);			/* RMS 08: Notify user there's a problem with address */
      return False;
     END
 
@@ -576,7 +590,7 @@ BEGIN
    if ((strlen(Reg)==2) AND (toupper(*Reg)=='A') AND (Reg[1]>='0') AND (Reg[1]<='1'))
     BEGIN
      AdrMode=Reg[1]-'0';
-     DecodeDisp(Asc,UInt13,UInt16,&DispAcc,&OK);
+     DecodeDisp(Asc,UInt16,UInt16,&DispAcc,&OK); /* RMS 03: The offset is a full 16 bits */
      if (OK)
       BEGIN
        if (DispAcc==0) AdrMode+=6;
@@ -593,6 +607,7 @@ BEGIN
         END
        return True;
       END
+     WrError(1510);		/* RMS 08: Notify user there's a problem with the offset */
      return False;
     END
    else if (strcasecmp(Reg,"SB")==0)
@@ -618,6 +633,7 @@ BEGIN
         END
        return True;
       END
+     WrError(1510);		/* RMS 08: Notify user there's a problem with the offset */
      return False;
     END
    else if (strcasecmp(Reg,"FB")==0)
@@ -628,6 +644,7 @@ BEGIN
        AdrMode=11; AdrVals[0]=DispAcc & 0xff; AdrCnt=1;
        return True;
       END
+     WrError(1510);		/* RMS 08: Notify user there's a problem with the offset */
      return False;
     END
    else
@@ -770,7 +787,7 @@ BEGIN
                 if (AdrType2!=ModGen) WrError(1350);
                 else if ((AdrMode2 & 14)==4)
                  BEGIN
-                  BAsmCode[0]=0xa2+(OpSize << 6)+((AdrMode2 & 1) << 3);
+                  BAsmCode[0]=0xe2-(OpSize << 6)+((AdrMode2 & 1) << 3);
                   memcpy(BAsmCode+1,AdrVals,AdrCnt);
                   CodeLen=1+AdrCnt;
                  END
@@ -780,7 +797,8 @@ BEGIN
 	          BEGIN
                    BAsmCode[0]=0xc0+SMode;
                    memcpy(BAsmCode+1,AdrVals,AdrCnt);
-                   CodeLen=1+AdrCnt;
+                   memcpy(BAsmCode+1+AdrCnt,AdrVals2,AdrCnt2);
+                   CodeLen=1+AdrCnt+AdrCnt2;
 	          END
 	        else WrError(1350);
                else if ((AdrType==ModGen) AND (IsShort(AdrMode,&SMode)))
@@ -1418,7 +1436,7 @@ BEGIN
                else
                 BEGIN
                  if (SMode==3) SMode++;
-                 BAsmCode[0]=0x20+((AdrMode2 & 1) << 3)+(SMode & 3);
+                 BAsmCode[0]=0x20+((AdrMode2 & 1) << 2)+(SMode & 3);	/* RMS 05: Just like #04 */
                  memcpy(BAsmCode+1,AdrVals,AdrCnt);
                  CodeLen=1+AdrCnt;
                 END
@@ -1486,7 +1504,7 @@ BEGIN
                else
                 BEGIN
                  if (SMode==3) SMode++;
-                 BAsmCode[0]=0x38+((AdrMode2 & 1) << 3)+(SMode & 3);
+                 BAsmCode[0]=0x38+((AdrMode2 & 1) << 2)+(SMode & 3); /* RMS 04: destination reg is bit 2! */
                  memcpy(BAsmCode+1,AdrVals,AdrCnt);
                  CodeLen=1+AdrCnt;
                 END
@@ -1533,7 +1551,7 @@ BEGIN
                  Num1=ImmVal();
                  if (ChkRange(Num1,-7,8))
                   BEGIN
-                   BAsmCode[0]=0xd0+OpSize;
+                   BAsmCode[0]=0xc8+OpSize;
                    BAsmCode[1]=((-Num1) << 4)+AdrMode2;
                    memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
                    CodeLen=2+AdrCnt2;
@@ -1554,7 +1572,7 @@ BEGIN
                else
                 BEGIN
                  if (SMode==3) SMode++;
-                 BAsmCode[0]=0x28+((AdrMode2 & 1) << 3)+(SMode & 3);
+                 BAsmCode[0]=0x28+((AdrMode2 & 1) << 2)+(SMode & 3);	/* RMS 06: just like RMS 04 */
                  memcpy(BAsmCode+1,AdrVals,AdrCnt);
                  CodeLen=1+AdrCnt;
                 END
@@ -1765,7 +1783,7 @@ BEGIN
     BEGIN
      z=Ord(Memo("OR"));
      if (ArgCnt!=2) WrError(1110);
-     else if (CheckFormat("GQ"))
+     else if (CheckFormat("GS"))	/* RMS 01: The format codes are G and S, not G and Q */
       BEGIN
        DecodeAdr(ArgStr[2],MModGen);
        if (AdrType!=ModNone)
@@ -1985,8 +2003,26 @@ BEGIN
      if (ArgCnt!=1) WrError(1110);
      else
       BEGIN
+       FirstPassUnknown=False;     /* RMS 12: Mod to allow JMP.S to work */           
        AdrLong=EvalIntExpression(ArgStr[1],UInt20,&OK);
        Diff=AdrLong-EProgCounter();
+
+/* RMS 12: Repaired JMP.S forward-label as follows:
+
+           If it's an unknown symbol, make PC+2 the "safe" value, otherwise
+           the user will get OUT OF RANGE errors on every attempt to use JMP.S
+           Since the instruction can only branch forward, and AS stuffs the PC
+           back for a "temp" forward reference value, the range-checking will 
+           always fail.
+
+	   One side-effect also is that for auto-determination purposes, one
+	   fewer pass is needed.  Before, the first pass would signal JMP.B,
+	   then once the forward reference is known, it'd signal JMP.S, which
+	   would cause a "phase error" forcing another pass.
+*/
+       if ( (FirstPassUnknown) AND (Diff == 0) )
+         Diff = 2;	 
+
        if (OpSize==-1)
         BEGIN
          if ((Diff>=2) AND (Diff<=9)) OpSize=4;
@@ -1994,10 +2030,35 @@ BEGIN
          else if ((Diff>=-32767) AND (Diff<=32768)) OpSize=1;
          else OpSize=7;
         END
+/*
+   The following code is to deal with a silicon bug in the first generation of
+   M16C CPUs (the so-called M16C/60 group).  It has been observed that this 
+   silicon bug has been fixed as of the M16C/61, so we disable JMP.S promotion
+   to JMP.B when the target crosses a 64k boundary for those CPUs.
+   
+   Since M16C is a "generic" specification, we do JMP.S promotion for that
+   CPU specification, as follows:
+
+     RMS 11: According to Mitsubishi App Note M16C-06-9612 
+     JMP.S cannot cross a 64k boundary.. so trim up to JMP.B
+
+   It is admittedly a very low likelihood of occurrence [JMP.S has only 8
+   possible targets, being a 3 bit "jump addressing mode"], but since the
+   occurrence of this bug could cause such evil debugging issues, I have
+   taken the liberty of addressing it in the assembler.  Heck, it's JUST one
+   extra byte.  One byte's worth the peace of mind, isn't it? :)
+
+*/
+       if (!( ( strcmp(MomCPUIdent,"M16C") ) && ( strcmp(MomCPUIdent,"M30600M8")))) 
+         if (OpSize == 4) 
+         BEGIN
+           if ( (AdrLong & 0x0f0000) != (EProgCounter() & 0x0f0000) )
+             OpSize = 0;
+         END		/* NOTE! This not an ASX bug, but rather in the CPU!! */
        switch (OpSize)
         BEGIN
-         case 4:
-          if (((Diff<2) OR (Diff>9)) AND (NOT SymbolQuestionable)) WrError(1370);
+         case 4:         
+          if (((Diff<2) OR (Diff>9)) AND (NOT SymbolQuestionable) ) WrError(1370);
           else
            BEGIN
             BAsmCode[0]=0x60+((Diff-2) & 7); CodeLen=1;
@@ -2235,7 +2296,7 @@ BEGIN
          BAsmCode[0]=0xeb; BAsmCode[1]=0x20;
          BAsmCode[2]=(AdrLong >> 16) & 0xff; BAsmCode[3]=0;
          BAsmCode[4]=0xeb; BAsmCode[5]=0x10;
-         BAsmCode[6]=(AdrLong >> 8) & 0xff; BAsmCode[7]=AdrLong & 0xff;
+         BAsmCode[7]=(AdrLong >> 8) & 0xff; BAsmCode[6]=AdrLong & 0xff;	/* RMS 07: needs to be LSB, MSB order */
          CodeLen=8;
         END
       END
@@ -2261,15 +2322,6 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-        static Boolean ChkPC_M16C(void)
-BEGIN
-   switch (ActPC)
-    BEGIN
-     case SegCode: return (EProgCounter()<=0xffff);
-     default: return False;
-    END
-END
-
         static Boolean IsDef_M16C(void)
 BEGIN
    return False;
@@ -2289,8 +2341,9 @@ BEGIN
 
    ValidSegs=1<<SegCode;
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
+   SegLimits[SegCode] = 0xfffff;	/* RMS 10: Probably a typo (was 0xffff) */
 
-   MakeCode=MakeCode_M16C; ChkPC=ChkPC_M16C; IsDef=IsDef_M16C;
+   MakeCode=MakeCode_M16C; IsDef=IsDef_M16C;
    SwitchFrom=SwitchFrom_M16C; InitFields();
 END
 
@@ -2298,6 +2351,10 @@ END
 BEGIN
    CPUM16C=AddCPU("M16C",SwitchTo_M16C);
    CPUM30600M8=AddCPU("M30600M8",SwitchTo_M16C);
+   CPUM30610=AddCPU("M30610",SwitchTo_M16C);
+   CPUM30620=AddCPU("M30620",SwitchTo_M16C);
+
+   AddCopyright("Mitsubishi M16C-Generator also (C) 1999 RMS");
 END
 
 

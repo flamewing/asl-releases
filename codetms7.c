@@ -896,15 +896,6 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-        static Boolean ChkPC_TMS7(void)
-BEGIN
-   switch (ActPC)
-    BEGIN
-     case SegCode: return (ProgCounter()<0x10000);
-     default: return False;
-    END
-END
-
         static Boolean IsDef_TMS7(void)
 BEGIN
    return False;
@@ -939,9 +930,10 @@ BEGIN
    DivideChars=","; HasAttrs=False;
 
    ValidSegs=1<<SegCode;
-   Grans[SegCode ]=1; ListGrans[SegCode ]=1; SegInits[SegCode ]=0;
+   Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
+   SegLimits[SegCode] = 0xffff;
 
-   MakeCode=MakeCode_TMS7; ChkPC=ChkPC_TMS7; IsDef=IsDef_TMS7;
+   MakeCode=MakeCode_TMS7; IsDef=IsDef_TMS7;
    SwitchFrom=SwitchFrom_TMS7; InternSymbol=InternSymbol_TMS7;
 
    InitFields();

@@ -5,6 +5,13 @@
 /* Konvertierung von AS-P-Dateien nach Hex                                   */
 /*                                                                           */
 /* Historie:  1. 6.1996 Grundsteinlegung                                     */
+/*           29. 8.1998 HeadIds verwendet fuer Default-Hex-Format            */
+/*           30. 5.1999 0x statt $ erlaubt                                   */
+/*            6. 7.1999 minimal S-Record-Adresslaenge setzbar                */
+/*                      Fehlerabfrage in CMD_Linelen war falsch              */
+/*           12.10.1999 Startadresse 16-Bit-Hex geaendert                    */
+/*           13.10.1999 Startadressen 20+32 Bit Intel korrigiert             */
+/*           24.10.1999 Relokation von Adressen (Thomas Eschenbach)          */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -25,11 +32,11 @@
 #include "cmdarg.h"
 
 #include "toolutils.h"
+#include "headids.h"
 
 static char *HexSuffix=".hex";
 #define MaxLineLen 254
 
-typedef enum {Default,MotoS,IntHex,IntHex16,IntHex32,MOSHex,TekHex,TiDSK,Atmel} OutFormat;
 typedef void (*ProcessProc)(
 #ifdef __PROTOS__
 char *FileName, LongWord Offset
@@ -39,22 +46,24 @@ char *FileName, LongWord Offset
 static CMDProcessed ParProcessed;
 static int z;
 static FILE *TargFile;
-static String SrcName,TargName;
+static String SrcName, TargName;
 
-static LongWord StartAdr,StopAdr,LineLen;
-static LongWord StartData,StopData,EntryAdr;
-static Boolean StartAuto,StopAuto,AutoErase,EntryAdrPresent;
-static Word Seg,Ofs;
+static LongWord StartAdr, StopAdr, LineLen;
+static LongWord StartData, StopData, EntryAdr;
+static LargeInt Relocate;
+static Boolean StartAuto, StopAuto, AutoErase, EntryAdrPresent;
+static Word Seg, Ofs;
 static LongWord Dummy;
 static Byte IntelMode;
 static Byte MultiMode;   /* 0=8M, 1=16, 2=8L, 3=8H */
+static Byte MinMoto;
 static Boolean Rec5;
 static Boolean SepMoto;
 
-static Boolean RelAdr,MotoOccured,IntelOccured,MOSOccured,DSKOccured;
-static Byte MaxMoto,MaxIntel;
+static Boolean RelAdr, MotoOccured, IntelOccured, MOSOccured, DSKOccured;
+static Byte MaxMoto, MaxIntel;
 
-static OutFormat DestFormat;
+static THexFormat DestFormat;
 
 static ChunkList UsedList;
 
@@ -101,7 +110,8 @@ BEGIN
 
    Byte MotRecType=0;
 
-   OutFormat ActFormat;
+   THexFormat ActFormat;
+   PFamilyDescr FoundDscr;
 
    SrcFile=fopen(FileName,OPENRDMODE); 
    if (SrcFile==Nil) ChkIO(FileName);
@@ -129,29 +139,12 @@ BEGIN
        Gran=InpGran;
        
        if ((ActFormat=DestFormat)==Default)
-        switch (InpHeader)
-         BEGIN
-          case 0x01: case 0x03: case 0x05: case 0x09: case 0x52: case 0x56:
-          case 0x61: case 0x62: case 0x63: case 0x64: case 0x65: case 0x66:
-          case 0x68: case 0x69: case 0x6c:
-           ActFormat=MotoS; break;
-          case 0x12: case 0x21: case 0x31: case 0x32: case 0x33: case 0x39: case 0x3a: case 0x41:
-          case 0x48: case 0x49: case 0x51: case 0x53: case 0x54: case 0x55: case 0x6e: case 0x70:
-          case 0x71: case 0x72: case 0x73: case 0x78: case 0x79: case 0x7a: case 0x7b:
-           ActFormat=IntHex; break;
-          case 0x42: case 0x4c:
-           ActFormat=IntHex16; break;
-          case 0x13: case 0x29: case 0x76:
-           ActFormat=IntHex32; break;
-          case 0x11: case 0x19:
-           ActFormat=MOSHex; break;
-          case 0x74: case 0x75: case 0x77:
-           ActFormat=TiDSK; break;
-          case 0x3b:
-           ActFormat=Atmel; break;
-          default: 
-           FormatError(FileName,getmessage(Num_FormatInvRecordHeaderMsg));
-         END
+        BEGIN
+         FoundDscr=FindFamilyById(InpHeader);
+         if (FoundDscr==Nil)
+          FormatError(FileName,getmessage(Num_FormatInvRecordHeaderMsg));
+         else ActFormat=FoundDscr->HexFormat;
+        END
 
        switch (ActFormat)
         BEGIN
@@ -213,7 +206,11 @@ BEGIN
 
  	 /* relative Angaben ? */
 
- 	 if (RelAdr) ErgStart-=StartAdr;
+ 	 if (RelAdr) ErgStart -= StartAdr;
+
+         /* Auf Zieladressbereich verschieben */
+
+         ErgStart += Relocate;
 
  	 /* Kopf einer Datenzeilengruppe */
 
@@ -224,9 +221,10 @@ BEGIN
   	     BEGIN
   	      errno=0; fprintf(TargFile,"S0030000FC\n"); ChkIO(TargName);
   	     END
-  	    if ((ErgStop>>24)!=0) MotRecType=2;
+  	    if ((ErgStop >> 24) != 0) MotRecType=2;
   	    else if ((ErgStop>>16)!=0) MotRecType=1;
   	    else MotRecType=0;
+            if (MotRecType < (MinMoto - 1)) MotRecType = (MinMoto - 1);
             if (MaxMoto<MotRecType) MaxMoto=MotRecType;
   	    if (Rec5)
   	     BEGIN
@@ -593,14 +591,14 @@ BEGIN
     BEGIN
      p=strchr(Arg,'-'); if (p==Nil) return CMDErr;
 
-     Save=(*p); *p='\0'; 
-     if ((StartAuto=(strcmp(Arg,"$")==0))) err=True;
-     else StartAdr=ConstLongInt(Arg,&err);
-     *p=Save;
+     Save = (*p); *p = '\0'; 
+     if ((StartAuto = AddressWildcard(Arg))) err = True;
+     else StartAdr = ConstLongInt(Arg, &err);
+     *p = Save;
      if (NOT err) return CMDErr;
 
-     if ((StopAuto=(strcmp(p+1,"$")==0))) err=True;
-     else StopAdr=ConstLongInt(p+1,&err);
+     if ((StopAuto = AddressWildcard(p + 1))) err = True;
+     else StopAdr = ConstLongInt(p + 1, &err);
      if (NOT err) return CMDErr;
 
      if ((NOT StartAuto) AND (NOT StopAuto) AND (StartAdr>StopAdr)) return CMDErr;
@@ -615,6 +613,24 @@ BEGIN
    return CMDOK;
 END
 
+       static CMDResult CMD_AdrRelocate(Boolean Negate, char *Arg)
+BEGIN
+   Boolean err;
+
+   if (Negate)
+    BEGIN
+     Relocate = 0;
+     return CMDOK;
+    END
+   else
+    BEGIN
+     Relocate = ConstLongInt(Arg,&err);
+     if (NOT err) return CMDErr;
+
+     return CMDArg;
+    END
+END
+   
         static CMDResult CMD_Rec5(Boolean Negate, char *Arg)
 BEGIN
    Rec5=(NOT Negate);
@@ -670,7 +686,7 @@ BEGIN
 #define NameCnt 9
 
    static char *Names[NameCnt]={"DEFAULT","MOTO","INTEL","INTEL16","INTEL32","MOS","TEK","DSK","ATMEL"};
-   static OutFormat Format[NameCnt]={Default,MotoS,IntHex,IntHex16,IntHex32,MOSHex,TekHex,TiDSK,Atmel};
+   static THexFormat Format[NameCnt]={Default,MotoS,IntHex,IntHex16,IntHex32,MOSHex,TekHex,TiDSK,Atmel};
    int z;
 
    for (z=0; z<strlen(Arg); z++) Arg[z]=toupper(Arg[z]);
@@ -744,11 +760,30 @@ BEGIN
    else
     BEGIN
      LineLen=ConstLongInt(Arg,&err);
-     if ((err!=0) OR (LineLen<1) OR (LineLen>MaxLineLen)) return CMDErr;
+     if ((NOT err) OR (LineLen<1) OR (LineLen>MaxLineLen)) return CMDErr;
      else
       BEGIN
        LineLen+=(LineLen&1); return CMDArg;
       END
+    END
+END
+
+        static CMDResult CMD_MinMoto(Boolean Negate, char *Arg)
+BEGIN
+   Boolean err;
+
+   if (Negate)
+    if (*Arg != '\0') return CMDErr;
+    else
+     BEGIN
+      MinMoto = 0; return CMDOK;
+     END
+   else if (*Arg == '\0') return CMDErr;
+   else
+    BEGIN
+     MinMoto = ConstLongInt(Arg,&err);
+     if ((NOT err) OR (MinMoto < 1) OR (MinMoto > 3)) return CMDErr;
+     else return CMDArg;
     END
 END
 
@@ -758,10 +793,11 @@ BEGIN
    return CMDOK;
 END
 
-#define P2HEXParamCnt 12
+#define P2HEXParamCnt 14
 static CMDRec P2HEXParams[P2HEXParamCnt]=
 	       {{"f", CMD_FilterList},
 		{"r", CMD_AdrRange},
+                {"R", CMD_AdrRelocate},
 		{"a", CMD_RelAdr},
 		{"i", CMD_IntelMode},
 		{"m", CMD_MultiMode},
@@ -771,7 +807,8 @@ static CMDRec P2HEXParams[P2HEXParamCnt]=
 		{"d", CMD_DataAdrRange},
                 {"e", CMD_EntryAdr},
                 {"l", CMD_LineLen},
-                {"k", CMD_AutoErase}};
+                {"k", CMD_AutoErase},
+                {"M", CMD_MinMoto}};
 
 static Word ChkSum;
 
@@ -810,14 +847,15 @@ BEGIN
      exit(1);
     END
 
-   StartAdr=0; StopAdr=0x7fff;
-   StartAuto=False; StopAuto=False;
-   StartData=0; StopData=0x1fff;
-   EntryAdr=(-1); EntryAdrPresent=False; AutoErase=False;
-   RelAdr=False; Rec5=True; LineLen=16;
-   IntelMode=0; MultiMode=0; DestFormat=Default;
-   *TargName='\0';
-   ProcessCMD(P2HEXParams,P2HEXParamCnt,ParProcessed,"P2HEXCMD",ParamError);
+   StartAdr = 0; StopAdr = 0x7fff;
+   StartAuto = False; StopAuto = False;
+   StartData = 0; StopData = 0x1fff;
+   EntryAdr = (-1); EntryAdrPresent = False; AutoErase = False;
+   RelAdr = False; Rec5 = True; LineLen = 16;
+   IntelMode = 0; MultiMode = 0; DestFormat = Default; MinMoto = 1;
+   *TargName = '\0';
+   Relocate = 0;
+   ProcessCMD(P2HEXParams, P2HEXParamCnt, ParProcessed, "P2HEXCMD", ParamError);
 
    if (ProcessedEmpty(ParProcessed))
     BEGIN
@@ -887,30 +925,28 @@ BEGIN
     BEGIN
      if (EntryAdrPresent)
       BEGIN
-       if (MaxIntel==2)
+       if (MaxIntel == 2)
         BEGIN
-         errno=0; fprintf(TargFile,":04000003"); ChkIO(TargName); ChkSum=4+3;
-         errno=0; fprintf(TargFile,"%s",HexLong(EntryAdr)); ChkIO(TargName);
-         ChkSum+=((EntryAdr>>24)&0xff)+
-                 ((EntryAdr>>16)&0xff)+
-                 ((EntryAdr>>8) &0xff)+
-                 ( EntryAdr     &0xff);
+         errno = 0; fprintf(TargFile, ":04000005"); ChkIO(TargName); ChkSum = 4 + 5;
+         errno = 0; fprintf(TargFile, "%s", HexLong(EntryAdr)); ChkIO(TargName);
+         ChkSum+=((EntryAdr >> 24)& 0xff) +
+                 ((EntryAdr >> 16)& 0xff) +
+                 ((EntryAdr >> 8) & 0xff) +
+                 ( EntryAdr       & 0xff);
         END
-       else if (MaxIntel==1)
+       else if (MaxIntel == 1)
         BEGIN
-         errno=0; fprintf(TargFile,":04000003"); ChkIO(TargName); ChkSum=4+3;
-         Seg=(EntryAdr>>4)&0xffff;
-         Ofs=EntryAdr&0x000f;
-         errno=0; fprintf(TargFile,"%s%s",HexWord(Seg),HexWord(Ofs));
-         ChkIO(TargName);
-         ChkSum+=Lo(Seg)+Hi(Seg)+Ofs;
+         Seg = (EntryAdr >> 4) & 0xffff;
+         Ofs = EntryAdr & 0x000f;
+         errno = 0; fprintf(TargFile, ":04%s03%s", HexWord(Ofs), HexWord(Seg));
+         ChkIO(TargName); ChkSum = 4 + 3 + Lo(Seg) + Hi(Seg) + Ofs;
         END
        else
         BEGIN
-         errno=0; fprintf(TargFile,":02000003%s",HexWord(EntryAdr&0xffff));
-         ChkIO(TargName); ChkSum=2+3+Lo(EntryAdr)+Hi(EntryAdr);
+         errno = 0; fprintf(TargFile, ":00%s03", HexWord(EntryAdr & 0xffff));
+         ChkIO(TargName); ChkSum = 3 + Lo(EntryAdr) + Hi(EntryAdr);
         END
-       errno=0; fprintf(TargFile,"%s\n",HexByte(0x100-ChkSum)); ChkIO(TargName);
+       errno = 0; fprintf(TargFile, "%s\n", HexByte(0x100 - ChkSum)); ChkIO(TargName);
       END
      errno=0;
      switch (IntelMode)

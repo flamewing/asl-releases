@@ -6,6 +6,9 @@
 /*                                                                           */
 /* Historie: 10. 6.1996 Grundsteinlegung                                     */
 /*            7. 6.1998 563xx-Erweiterungen fertiggestellt                   */
+/*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
+/*           18. 8.1998 BookKeeping-Aufruf bei RES                           */
+/*            2. 1.1999 ChkPC-Anpassung                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -95,7 +98,7 @@ static Byte Mac2Table[4]={1,3,2,0};
 
 static CPUVar CPU56000,CPU56002,CPU56300;
 static IntType AdrInt;
-static LongInt MemLimit;
+static LargeWord MemLimit;
 static ShortInt AdrType;
 static LongInt AdrMode;
 static LongInt AdrVal;
@@ -984,26 +987,6 @@ BEGIN
      return True;
     END
 
-/*  IF (Memo('XSFR')) OR (Memo('YSFR')) THEN
-    BEGIN
-     FirstPassUnknown:=False;
-     IF ArgCnt<>1 THEN WrError(1110)
-     ELSE
-      BEGIN
-       AdrWord:=EvalIntExpression(ArgStr[1],AdrInt,OK);
-       IF (OK) AND (NOT FirstPassUnknown) THEN
-	BEGIN
-	 IF Memo('YSFR') THEN Segment:=SegYData ELSE Segment:=SegXData;
-         PushLocHandle(-1);
-	 EnterIntSymbol(LabPart,AdrWord,Segment,False);
-         PopLocHandle;
-	 IF MakeUseList THEN AddChunk(SegChunks[Segment],AdrWord,1,False);
-	 ListLine:='='+'$'+HexString(AdrWord,4);
-	END;
-      END;
-     return False;
-    END;*/
-
    if (Memo("DS"))
     BEGIN
      if (ArgCnt!=1) WrError(1110);
@@ -1015,8 +998,7 @@ BEGIN
        if ((OK) AND (NOT FirstPassUnknown))
 	BEGIN
 	 CodeLen=AdrWord; DontPrint=True;
-         if (MakeUseList)
-      	  if (AddChunk(SegChunks+ActPC,ProgCounter(),CodeLen,ActPC==SegCode)) WrError(90);
+         BookKeeping();
 	END
       END
      return True;
@@ -1051,7 +1033,7 @@ BEGIN
 	     for (z2=0; z2<strlen(t.Contents.Ascii); z2++)
 	      BEGIN
                HInt=t.Contents.Ascii[z2];
-               HInt=CharTransTable[(Byte) HInt];
+               HInt=CharTransTable[((usint) HInt)&0xff];
                HInt<<=(BCount*8);
                DAsmCode[CodeLen]|=HInt;
 	       if (--BCount<0)
@@ -2537,24 +2519,6 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static Boolean ChkPC_56K(void)
-BEGIN
-   Boolean ok;
-
-   switch (ActPC)
-    BEGIN
-     case SegCode:
-     case SegXData:
-     case SegYData:
-      ok=(ProgCounter() <=MemLimit);
-      break;
-     default:
-      ok=False;
-    END
-   return (ok);
-END
-
-
 	static Boolean IsDef_56K(void)
 BEGIN
    return ((Memo("XSFR")) OR (Memo("YSFR")));
@@ -2571,23 +2535,26 @@ BEGIN
 
    PCSymbol="*"; HeaderID=0x09; NOPCode=0x000000;
    DivideChars=" \009"; HasAttrs=False;
-
-   ValidSegs=(1<<SegCode)|(1<<SegXData)|(1<<SegYData);
-   Grans[SegCode ]=4; ListGrans[SegCode ]=4; SegInits[SegCode ]=0;
-   Grans[SegXData]=4; ListGrans[SegXData]=4; SegInits[SegXData]=0;
-   Grans[SegYData]=4; ListGrans[SegYData]=4; SegInits[SegYData]=0;
-
-   MakeCode=MakeCode_56K; ChkPC=ChkPC_56K; IsDef=IsDef_56K;
-   SwitchFrom=SwitchFrom_56K; InitFields();
    
    if (MomCPU==CPU56300)
     BEGIN
-     AdrInt=UInt24; MemLimit=0xffffff;
+     AdrInt=UInt24; MemLimit=0xffffffl;
     END
    else
     BEGIN
      AdrInt=UInt16; MemLimit=0xffff;
     END
+
+   ValidSegs=(1<<SegCode)|(1<<SegXData)|(1<<SegYData);
+   Grans[SegCode ]=4; ListGrans[SegCode ]=4; SegInits[SegCode ]=0;
+   SegLimits[SegCode ] = MemLimit;
+   Grans[SegXData]=4; ListGrans[SegXData]=4; SegInits[SegXData]=0;
+   SegLimits[SegXData] = MemLimit;
+   Grans[SegYData]=4; ListGrans[SegYData]=4; SegInits[SegYData]=0;
+   SegLimits[SegYData] = MemLimit;
+
+   MakeCode=MakeCode_56K; IsDef=IsDef_56K;
+   SwitchFrom=SwitchFrom_56K; InitFields();
 END
 
 	void code56k_init(void)

@@ -4,7 +4,8 @@
 /*                                                                           */
 /* Codegenerator Zilog Z80/180/380                                           */
 /*                                                                           */
-/* Historie: 26.8.1996 Grundsteinlegung                                      */
+/* Historie: 26. 8.1996 Grundsteinlegung                                     */
+/*            1. 2.1998 ChkPC ersetzt                                        */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -233,23 +234,23 @@ END
 /*==========================================================================*/
 /* Adressbereiche */
 
-	static LongInt CodeEnd(void)
+	static LargeWord CodeEnd(void)
 BEGIN
 #ifdef __STDC__
-   if (ExtFlag) return 0xffffffffu;
+   if (ExtFlag) return 0xfffffffflu;
 #else
-   if (ExtFlag) return 0xffffffff;
+   if (ExtFlag) return 0xffffffffl;
 #endif
-   else if (MomCPU==CPUZ180) return 0x7ffff;
+   else if (MomCPU==CPUZ180) return 0x7ffffl;
    else return 0xffff;
 END
 
-	static LongInt PortEnd(void)
+	static LargeWord PortEnd(void)
 BEGIN
 #ifdef __STDC__
-   if (ExtFlag) return 0xffffffffu;
+   if (ExtFlag) return 0xfffffffflu;
 #else
-   if (ExtFlag) return 0xffffffff;
+   if (ExtFlag) return 0xffffffffl;
 #endif
    else return 0xff;
 END
@@ -2765,16 +2766,6 @@ BEGIN
    SetFlag(&LWordFlag,LWordFlagName,False);
 END
 
-	static Boolean ChkPC_Z80(void)
-BEGIN
-   switch (ActPC)
-    BEGIN
-     case SegCode: return (CodeEnd()>=ProgCounter());
-     case SegIO:   return (PortEnd()>=ProgCounter());
-     default:      return False;
-    END
-END
-
 	static Boolean IsDef_Z80(void)
 BEGIN
    return Memo("PORT");
@@ -2794,9 +2785,11 @@ BEGIN
 
    ValidSegs=(1<<SegCode)+(1<<SegIO);
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
+   SegLimits[SegCode] = CodeEnd();
    Grans[SegIO  ]=1; ListGrans[SegIO  ]=1; SegInits[SegIO  ]=0;
+   SegLimits[SegIO  ] = PortEnd();
 
-   MakeCode=MakeCode_Z80; ChkPC=ChkPC_Z80; IsDef=IsDef_Z80;
+   MakeCode=MakeCode_Z80; IsDef=IsDef_Z80;
    SwitchFrom=SwitchFrom_Z80; InitFields();
 
    /* erweiterte Modi nur bei Z380 */

@@ -5,6 +5,8 @@
 /* Unterroutinen des Makroprozessors                                         */
 /*                                                                           */
 /* Historie: 16. 5.1996 Grundsteinlegung                                     */
+/*            1. 7.1998 Korrektur Boyer-Moore-Algorithmus, wenn Ungleichheit */
+/*                      nicht direkt am Ende                                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -21,6 +23,7 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "asmif.h"
 
 #include "asmmac.h"
 
@@ -81,19 +84,21 @@ BEGIN
    Del=Nil;
 
    if (FirstDefine!=Nil)
-    if (strcmp(FirstDefine->TransFrom,Name)==0)
-     BEGIN
-      Del=FirstDefine; FirstDefine=FirstDefine->Next;
-     END
-    else
-     BEGIN
-      Lauf=FirstDefine;
-      while ((Lauf->Next!=Nil) AND (strcmp(Lauf->Next->TransFrom,Name)!=0))
-       Lauf=Lauf->Next;
-      if (Lauf->Next!=Nil)
-       BEGIN
-	Del=Lauf->Next; Lauf->Next=Del->Next;
-       END
+    BEGIN
+     if (strcmp(FirstDefine->TransFrom,Name)==0)
+      BEGIN
+       Del=FirstDefine; FirstDefine=FirstDefine->Next;
+      END
+     else
+      BEGIN
+       Lauf=FirstDefine;
+       while ((Lauf->Next!=Nil) AND (strcmp(Lauf->Next->TransFrom,Name)!=0))
+        Lauf=Lauf->Next;
+       if (Lauf->Next!=Nil)
+        BEGIN
+ 	Del=Lauf->Next; Lauf->Next=Del->Next;
+        END
+      END
      END
 
     if (Del==Nil) WrXError(1010,Name);
@@ -144,7 +149,8 @@ BEGIN
    String h,Cmd,Arg;
    char *p;
 
-   strmaxcpy(h,OneLine+1,255);
+   p=strchr(OneLine,'#')+1;
+   strmaxcpy(h,p,255);
    p=FirstBlank(h);
    if (p==Nil)
     BEGIN
@@ -153,6 +159,8 @@ BEGIN
    else SplitString(h,Cmd,h,p);
 
    KillPrefBlanks(h); KillPostBlanks(h);
+
+   if (NOT IfAsm) return;
 
    if (strcasecmp(Cmd,"DEFINE")==0)
     BEGIN
@@ -177,7 +185,6 @@ END
 
 	void ExpandDefines(char *Line)
 BEGIN
-
    PDefinement Lauf;
    sint LPos,Diff,p,p2,p3,z,z2,FromLen,ToLen,LineLen;
    
@@ -198,12 +205,12 @@ BEGIN
          z2=0; 
          while ((z2>=0) AND (p2<=p-FromLen))
           BEGIN
-           z2=FromLen-1; z=p2+z2; 
+           z2=FromLen-1; z=p2+z2;
            while ((z2>=0) AND (t_toupper(Line[z])==Lauf->TransFrom[z2]))
             BEGIN
              z2--; z--;
             END
-           if (z2>=0) p2+=Lauf->Compiled[(unsigned int)t_toupper(Line[z])];
+           if (z2>=0) p2+=Lauf->Compiled[(unsigned int)t_toupper(Line[p2+FromLen-1])];
           END
          if (z2==-1)
           BEGIN

@@ -5,6 +5,7 @@
 /* AS-Codegenerator H8/500                                                   */
 /*                                                                           */
 /* Historie: 24.12.1996 Grundsteinlegung                                     */
+/*            9. 1.1999 ChkPC jetzt mit Adresse als Parameter                */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -1454,10 +1455,10 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static Boolean ChkPC_H8_5(void)
+	static Boolean ChkPC_H8_5(LargeWord Addr)
 BEGIN
    if (ActPC==SegCode)
-    return (ProgCounter()<(Maximum?0x1000000:0x10000));
+    return (Addr<(Maximum?0x1000000:0x10000));
    else return False;
 END
 

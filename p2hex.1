@@ -1,8 +1,7 @@
 .TH p2hex 1
 
 .SH NAME
-.B p2hex
-\- convert code files into hex files
+.B p2hex \- convert code files into hex files
 
 .SH SYNTAX
 .B p2hex
@@ -195,6 +194,13 @@ Disable output of Motorola S5-records, which contain the number of
 data records that were sent and therefore allow an additional level
 of checking.  However, they are not understood by all programs and
 therefore might be a source of trouble.
+.TP
+.B -M <1|2|3>
+
+Force P2HEX to use a minimum length for the address fields of Motorola
+S-records.  For example, a value of 2 will effectively disable S1 records,
+and a value of 3 will force usage of S3 records.  The default is 1, which
+enables full automatic setting of the S record length.
 .TP
 .B -k
 

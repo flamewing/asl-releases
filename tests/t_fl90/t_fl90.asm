@@ -1,12 +1,12 @@
 ; FTEST.ASM
 ;******************************************************************************
-;* Testet Gleitkommabibliothek fr TLCS90                                     *
+;* Testet Gleitkommabibliothek für TLCS90                                     *
 ;*                                                                            *
 ;* Hardware: TDB-TMP90                                                        *
-;* Software: AS 1.39p5 oder h”her                                             *
+;* Software: AS 1.39p5 oder höher                                             *
 ;*           Includes MACROS.INC, FLOAT.INC, CPU_TIME.INC                     *
 ;*                                                                            *
-;* šbersetzen mit AS ftest oder beiliegendem Makefile                         *
+;* Übersetzen mit AS ftest oder beiliegendem Makefile                         *
 ;*                                                                            *
 ;******************************************************************************
 
@@ -18,22 +18,22 @@
 
 CR              equ     13
 LF              equ     10
-Format_Tab      equ     0000100000000110b ; fftoa-Format fr tab. Ausgabe
-Format_Min      equ     0010001100000101b ; fftoa-Format fr minimale L„nge
-;                         ³<Â>³³<ÄÄÂÄÄÄ>
-;                         ³ ³ ³³   ³
-;                         ³ ³ ³³   ÀÄÄÄÄÄÄ Maximalzahl Nachkommastellen
-;                         ³ ³ ³ÀÄÄÄÄÄÄÄÄÄÄ Mantissenpluszeichen unterdrcken
-;                         ³ ³ ÀÄÄÄÄÄÄÄÄÄÄÄ Exponentenpluszeichen unterdrcken
-;                         ³ ÀÄÄÄÄÄÄÄÄÄÄÄÄÄ Minimalstellenzahl Exponent
-;                         ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ anh„ngende Nullen in Mantisse l”schen
-Format          equ     Format_Tab      ; gew„hltes fftoa-Format
+Format_Tab      equ     0000100000000110b ; fftoa-Format für tab. Ausgabe
+Format_Min      equ     0010001100000101b ; fftoa-Format für minimale Länge
+;                         ^<+>^^<--+--->
+;                         | | ||   |
+;                         | | ||   +------ Maximalzahl Nachkommastellen
+;                         | | |+---------- Mantissenpluszeichen unterdrücken
+;                         | | +----------- Exponentenpluszeichen unterdrücken
+;                         | +------------- Minimalstellenzahl Exponent
+;                         +--------------- anhängende Nullen in Mantisse löschen
+Format          equ     Format_Tab      ; gewähltes fftoa-Format
 
 ;------------------------------------------------------------------------------
 ; Vorgaben
 
                 include stddef90.inc    ; Registeradressen
-                include macros.inc      ; fr Unterroutinen ben”tigte Makros
+                include macros.inc      ; für Unterroutinen benötigte Makros
                 include mon.inc         ; Einsprungadressen TDBTMP90-Monitor
 
                 section MainProg

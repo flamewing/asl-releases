@@ -1,13 +1,11 @@
-/* asmmessages.h */
+/* code53c8xx.h */
 /*****************************************************************************/
-/* AS-Portierung                                                             */
+/* Makroassembler AS                                                         */
 /*                                                                           */
-/* Einlesen und Verwalten von Meldungs-Strings                               */
+/* Codegenerator SYM53C8xx                                                   */
 /*                                                                           */
-/* Historie: 13. 8.1997 Grundsteinlegung                                     */
+/* Historie: 30. 9.1998 angelegt                                             */
 /*                                                                           */
 /*****************************************************************************/
 
-extern char *getmessage(int Num);
-
-extern void asmmessages_init(char *File, char *Path);
+extern void code53c8xx_init(void);

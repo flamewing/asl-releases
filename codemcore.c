@@ -4,7 +4,8 @@
 /*                                                                           */
 /* Codegenerator MCORE-Familie                                               */
 /*                                                                           */
-/* Historie:  31.1.1998 Grundsteinlegung                                     */
+/* Historie:  31. 1.1998 Grundsteinlegung                                    */
+/*             3. 1.1999 ChkPC-Anpassung                                     */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -762,15 +763,6 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static Boolean ChkPC_MCORE(void)
-BEGIN
-#ifdef HAS64
-   return ((ActPC==SegCode) AND (ProgCounter()<=0xffffffffll)); 
-#else  
-   return (ActPC==SegCode);
-#endif
-END
-
 	static Boolean IsDef_MCORE(void)
 BEGIN
    return Memo("REG");
@@ -790,8 +782,13 @@ BEGIN
 
    ValidSegs=(1<<SegCode);
    Grans[SegCode]=1; ListGrans[SegCode]=2; SegInits[SegCode]=0;
+#ifdef __STDC__
+   SegLimits[SegCode] = 0xfffffffful;
+#else
+   SegLimits[SegCode] = 0xffffffffl;
+#endif
 
-   MakeCode=MakeCode_MCORE; ChkPC=ChkPC_MCORE; IsDef=IsDef_MCORE;
+   MakeCode=MakeCode_MCORE; IsDef=IsDef_MCORE;
 
    SwitchFrom=SwitchFrom_MCORE; InitFields();
    AddONOFF("SUPMODE" , &SupAllowed, SupAllowedName,False);

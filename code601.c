@@ -5,6 +5,13 @@
 /* Codegenerator PowerPC-Familie                                             */
 /*                                                                           */
 /* Historie: 17.10.1996 Grundsteinlegung                                     */
+/*           30. 8.1998 Umstellung auf 32-Bit-Zugriffe                       */
+/*                      Header-ID per Abfrage                                */
+/*            3. 1.1999 ChkPC-Anpassung                                      */
+/*            9. 3.1999 MMU-Instruktionen                                    */
+/*           10. 3.1999 PPC403-MMU-Befehle                                   */
+/*           28. 3.1999 PPC403GB auf GC korrigiert (erst der hat eine MMU)   */
+/*            8. 9.1999 REG-Befehl nachgeruestet                             */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -20,6 +27,7 @@
 #include "asmallg.h"
 #include "codepseudo.h"
 #include "codevars.h"
+#include "headids.h"
 
 typedef struct 
          {
@@ -28,7 +36,7 @@ typedef struct
           Byte CPUMask;
          } BaseOrder;
 
-#define FixedOrderCount      6
+#define FixedOrderCount      8
 #define Reg1OrderCount       4
 #define FReg1OrderCount      2
 #define CReg1OrderCount      1
@@ -39,7 +47,7 @@ typedef struct
 #define Reg2BOrderCount      2
 #define Reg2SwapOrderCount   6
 #define NoDestOrderCount     10
-#define Reg3OrderCount       89
+#define Reg3OrderCount       91
 #define CReg3OrderCount      8
 #define FReg3OrderCount      10
 #define Reg3SwapOrderCount   49
@@ -77,7 +85,13 @@ static BaseOrder *Imm16SwapOrders;
 static SimpProc SaveInitProc;
 static Boolean BigEnd;
 
-static CPUVar CPU403,CPU505,CPU601,CPU6000;
+static CPUVar CPU403, CPU403C, CPU505, CPU601, CPU6000;
+
+#define M_403 0x01
+#define M_403C 0x02
+#define M_505 0x04
+#define M_601 0x08
+#define M_6000 0x10
 
 /*-------------------------------------------------------------------------*/
 /*
@@ -536,277 +550,280 @@ BEGIN
    /* --> 0 0 0 */
 
    FixedOrders=(BaseOrder *) malloc(sizeof(BaseOrder)*FixedOrderCount); InstrZ=0;
-   AddFixed("EIEIO"  ,"EIEIO"  ,(T31 << 26)+(854 << 1),0x0f);
-   AddFixed("ISYNC"  ,"ICS"    ,(T19 << 26)+(150 << 1),0x0f);
-   AddFixed("RFI"    ,"RFI"    ,(T19 << 26)+( 50 << 1),0x0f);
-   AddFixed("SC"     ,"SVCA"   ,(T17 << 26)+(  1 << 1),0x0f);
-   AddFixed("SYNC"   ,"DCS"    ,(T31 << 26)+(598 << 1),0x0f);
-   AddFixed("RFCI"   ,"RFCI"   ,(T19 << 26)+( 51 << 1),0x01);
+   AddFixed("EIEIO"  ,"EIEIO"  ,(T31 << 26)+(854 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddFixed("ISYNC"  ,"ICS"    ,(T19 << 26)+(150 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddFixed("RFI"    ,"RFI"    ,(T19 << 26)+( 50 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddFixed("SC"     ,"SVCA"   ,(T17 << 26)+(  1 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddFixed("SYNC"   ,"DCS"    ,(T31 << 26)+(598 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddFixed("RFCI"   ,"RFCI"   ,(T19 << 26)+( 51 << 1), M_403 | M_403C                         );
+   AddFixed("TLBIA"  ,"TLBIA"  ,(T31 << 26)+(370 << 1),         M_403C                         );
+   AddFixed("TLBSYNC","TLBSYNC",(T31 << 26)+(566 << 1),         M_403C                         );
 
    /* D --> D 0 0 */
 
    Reg1Orders=(BaseOrder *) malloc(sizeof(BaseOrder)*Reg1OrderCount); InstrZ=0;
-   AddReg1("MFCR"   ,"MFCR"    ,(T31 << 26)+( 19 << 1),0x0f);
-   AddReg1("MFMSR"  ,"MFMSR"   ,(T31 << 26)+( 83 << 1),0x0f);
-   AddReg1("MTMSR"  ,"MTMSR"   ,(T31 << 26)+(146 << 1),0x0f);
-   AddReg1("WRTEE"  ,"WRTEE"   ,(T31 << 26)+(131 << 1),0x0f);
+   AddReg1("MFCR"   ,"MFCR"    ,(T31 << 26)+( 19 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddReg1("MFMSR"  ,"MFMSR"   ,(T31 << 26)+( 83 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddReg1("MTMSR"  ,"MTMSR"   ,(T31 << 26)+(146 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddReg1("WRTEE"  ,"WRTEE"   ,(T31 << 26)+(131 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
 
    /* crD --> D 0 0 */
 
    CReg1Orders=(BaseOrder *) malloc(sizeof(BaseOrder)*CReg1OrderCount); InstrZ=0;
-   AddCReg1("MCRXR"  ,"MCRXR"  ,(T31 << 26)+(512 << 1),0x0f);
+   AddCReg1("MCRXR"  ,"MCRXR"  ,(T31 << 26)+(512 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
 
    /* crbD --> D 0 0 */
 
    CBit1Orders=(BaseOrder *) malloc(sizeof(BaseOrder)*CBit1OrderCount); InstrZ=0;
-   AddCBit1("MTFSB0" ,"MTFSB0" ,(T63 << 26)+( 70 << 1)  ,0x0c);
-   AddCBit1("MTFSB0.","MTFSB0.",(T63 << 26)+( 70 << 1)+1,0x0c);
-   AddCBit1("MTFSB1" ,"MTFSB1" ,(T63 << 26)+( 38 << 1)  ,0x0c);
-   AddCBit1("MTFSB1.","MTFSB1.",(T63 << 26)+( 38 << 1)+1,0x0c);
+   AddCBit1("MTFSB0" ,"MTFSB0" ,(T63 << 26)+( 70 << 1)  , M_601 | M_6000);
+   AddCBit1("MTFSB0.","MTFSB0.",(T63 << 26)+( 70 << 1)+1, M_601 | M_6000);
+   AddCBit1("MTFSB1" ,"MTFSB1" ,(T63 << 26)+( 38 << 1)  , M_601 | M_6000);
+   AddCBit1("MTFSB1.","MTFSB1.",(T63 << 26)+( 38 << 1)+1, M_601 | M_6000);
 
    /* frD --> D 0 0 */
 
    FReg1Orders=(BaseOrder *) malloc(sizeof(BaseOrder)*FReg1OrderCount); InstrZ=0;
-   AddFReg1("MFFS"   ,"MFFS"  ,(T63 << 26)+(583 << 1)  ,0x0c);
-   AddFReg1("MFFS."  ,"MFFS." ,(T63 << 26)+(583 << 1)+1,0x0c);
+   AddFReg1("MFFS"   ,"MFFS"  ,(T63 << 26)+(583 << 1)  , M_601 | M_6000);
+   AddFReg1("MFFS."  ,"MFFS." ,(T63 << 26)+(583 << 1)+1, M_601 | M_6000);
 
    /* D,A --> D A 0 */
 
    Reg2Orders=(BaseOrder *) malloc(sizeof(BaseOrder)*Reg2OrderCount); InstrZ=0;
-   AddReg2("ABS"   ,"ABS"  ,(T31 << 26)+(360 << 1),0x08,True ,True );
-   AddReg2("ADDME" ,"AME"  ,(T31 << 26)+(234 << 1),0x0f,True ,True );
-   AddReg2("ADDZE" ,"AZE"  ,(T31 << 26)+(202 << 1),0x0f,True ,True );
-   AddReg2("CLCS"  ,"CLCS" ,(T31 << 26)+(531 << 1),0x08,False,False);
-   AddReg2("NABS"  ,"NABS" ,(T31 << 26)+(488 << 1),0x08,True ,True );
-   AddReg2("NEG"   ,"NEG"  ,(T31 << 26)+(104 << 1),0x0f,True ,True );
-   AddReg2("SUBFME","SFME" ,(T31 << 26)+(232 << 1),0x0f,True ,True );
-   AddReg2("SUBFZE","SFZE" ,(T31 << 26)+(200 << 1),0x0f,True ,True );
+   AddReg2("ABS"   ,"ABS"  ,(T31 << 26)+(360 << 1),                                  M_6000,True ,True );
+   AddReg2("ADDME" ,"AME"  ,(T31 << 26)+(234 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True ,True );
+   AddReg2("ADDZE" ,"AZE"  ,(T31 << 26)+(202 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True ,True );
+   AddReg2("CLCS"  ,"CLCS" ,(T31 << 26)+(531 << 1),                                  M_6000,False,False);
+   AddReg2("NABS"  ,"NABS" ,(T31 << 26)+(488 << 1),                                  M_6000,True ,True );
+   AddReg2("NEG"   ,"NEG"  ,(T31 << 26)+(104 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True ,True );
+   AddReg2("SUBFME","SFME" ,(T31 << 26)+(232 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True ,True );
+   AddReg2("SUBFZE","SFZE" ,(T31 << 26)+(200 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True ,True );
 
    /* cD,cS --> D S 0 */
 
    CReg2Orders=(BaseOrder *) malloc(sizeof(BaseOrder)*CReg2OrderCount); InstrZ=0;
-   AddCReg2("MCRF"  ,"MCRF"  ,(T19 << 26)+(  0 << 1),0x0f);
-   AddCReg2("MCRFS" ,"MCRFS" ,(T63 << 26)+( 64 << 1),0x0c);
+   AddCReg2("MCRF"  ,"MCRF"  ,(T19 << 26)+(  0 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddCReg2("MCRFS" ,"MCRFS" ,(T63 << 26)+( 64 << 1),                          M_601 | M_6000);
 
    /* fD,fB --> D 0 B */
 
    FReg2Orders=(BaseOrder *) malloc(sizeof(BaseOrder)*FReg2OrderCount); InstrZ=0;
-   AddFReg2("FABS"  ,"FABS"  ,(T63 << 26)+(264 << 1),0x0c,True );
-   AddFReg2("FCTIW" ,"FCTIW" ,(T63 << 26)+( 14 << 1),0x0c,True );
-   AddFReg2("FCTIWZ","FCTIWZ",(T63 << 26)+( 15 << 1),0x0c,True );
-   AddFReg2("FMR"   ,"FMR"   ,(T63 << 26)+( 72 << 1),0x0c,True );
-   AddFReg2("FNABS" ,"FNABS" ,(T63 << 26)+(136 << 1),0x0c,True );
-   AddFReg2("FNEG"  ,"FNEG"  ,(T63 << 26)+( 40 << 1),0x0c,True );
-   AddFReg2("FRSP"  ,"FRSP"  ,(T63 << 26)+( 12 << 1),0x0c,True );
+   AddFReg2("FABS"  ,"FABS"  ,(T63 << 26)+(264 << 1), M_601 | M_6000,True );
+   AddFReg2("FCTIW" ,"FCTIW" ,(T63 << 26)+( 14 << 1), M_601 | M_6000,True );
+   AddFReg2("FCTIWZ","FCTIWZ",(T63 << 26)+( 15 << 1), M_601 | M_6000,True );
+   AddFReg2("FMR"   ,"FMR"   ,(T63 << 26)+( 72 << 1), M_601 | M_6000,True );
+   AddFReg2("FNABS" ,"FNABS" ,(T63 << 26)+(136 << 1), M_601 | M_6000,True );
+   AddFReg2("FNEG"  ,"FNEG"  ,(T63 << 26)+( 40 << 1), M_601 | M_6000,True );
+   AddFReg2("FRSP"  ,"FRSP"  ,(T63 << 26)+( 12 << 1), M_601 | M_6000,True );
 
    /* D,B --> D 0 B */
 
    Reg2BOrders=(BaseOrder *) malloc(sizeof(BaseOrder)*Reg2BOrderCount); InstrZ=0;
-   AddReg2B("MFSRIN","MFSRIN",(T31 << 26)+(659 << 1),0x0c);
-   AddReg2B("MTSRIN","MTSRI" ,(T31 << 26)+(242 << 1),0x0c);
+   AddReg2B("MFSRIN","MFSRIN",(T31 << 26)+(659 << 1), M_601 | M_6000);
+   AddReg2B("MTSRIN","MTSRI" ,(T31 << 26)+(242 << 1), M_601 | M_6000);
 
    /* A,S --> S A 0 */
 
    Reg2SwapOrders=(BaseOrder *) malloc(sizeof(BaseOrder)*Reg2SwapOrderCount); InstrZ=0;
-   AddReg2Swap("CNTLZW","CNTLZ" ,(T31 << 26)+( 26 << 1),0x0f,False,True );
-   AddReg2Swap("EXTSB ","EXTSB" ,(T31 << 26)+(954 << 1),0x0f,False,True );
-   AddReg2Swap("EXTSH ","EXTS"  ,(T31 << 26)+(922 << 1),0x0f,False,True );
+   AddReg2Swap("CNTLZW","CNTLZ" ,(T31 << 26)+( 26 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,True );
+   AddReg2Swap("EXTSB ","EXTSB" ,(T31 << 26)+(954 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,True );
+   AddReg2Swap("EXTSH ","EXTS"  ,(T31 << 26)+(922 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,True );
 
    /* A,B --> 0 A B */
 
    NoDestOrders=(BaseOrder *) malloc(sizeof(BaseOrder)*NoDestOrderCount); InstrZ=0;
-   AddNoDest("DCBF"  ,"DCBF"  ,(T31 << 26)+(  86 << 1),0x0f);
-   AddNoDest("DCBI"  ,"DCBI"  ,(T31 << 26)+( 470 << 1),0x0f);
-   AddNoDest("DCBST" ,"DCBST" ,(T31 << 26)+(  54 << 1),0x0f);
-   AddNoDest("DCBT"  ,"DCBT"  ,(T31 << 26)+( 278 << 1),0x0f);
-   AddNoDest("DCBTST","DCBTST",(T31 << 26)+( 246 << 1),0x0f);
-   AddNoDest("DCBZ"  ,"DCLZ"  ,(T31 << 26)+(1014 << 1),0x0f);
-   AddNoDest("DCCCI" ,"DCCCI" ,(T31 << 26)+( 454 << 1),0x01);
-   AddNoDest("ICBI"  ,"ICBI"  ,(T31 << 26)+( 982 << 1),0x0f);
-   AddNoDest("ICBT"  ,"ICBT"  ,(T31 << 26)+( 262 << 1),0x01);
-   AddNoDest("ICCCI" ,"ICCCI" ,(T31 << 26)+( 966 << 1),0x01);
+   AddNoDest("DCBF"  ,"DCBF"  ,(T31 << 26)+(  86 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddNoDest("DCBI"  ,"DCBI"  ,(T31 << 26)+( 470 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddNoDest("DCBST" ,"DCBST" ,(T31 << 26)+(  54 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddNoDest("DCBT"  ,"DCBT"  ,(T31 << 26)+( 278 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddNoDest("DCBTST","DCBTST",(T31 << 26)+( 246 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddNoDest("DCBZ"  ,"DCLZ"  ,(T31 << 26)+(1014 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddNoDest("DCCCI" ,"DCCCI" ,(T31 << 26)+( 454 << 1), M_403 | M_403C                         );
+   AddNoDest("ICBI"  ,"ICBI"  ,(T31 << 26)+( 982 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddNoDest("ICBT"  ,"ICBT"  ,(T31 << 26)+( 262 << 1), M_403 | M_403C                         );
+   AddNoDest("ICCCI" ,"ICCCI" ,(T31 << 26)+( 966 << 1), M_403 | M_403C                         );
 
    /* D,A,B --> D A B */
 
    Reg3Orders=(BaseOrder *) malloc(sizeof(BaseOrder)*Reg3OrderCount); InstrZ=0;
-   AddReg3("ADD"   ,"CAX"   ,(T31 << 26)+(266 << 1),0x0f,True, True );
-   AddReg3("ADDC"  ,"A"     ,(T31 << 26)+( 10 << 1),0x0f,True ,True );
-   AddReg3("ADDE"  ,"AE"    ,(T31 << 26)+(138 << 1),0x0f,True ,True );
-   AddReg3("DIV"   ,"DIV"   ,(T31 << 26)+(331 << 1),0x08,True ,True );
-   AddReg3("DIVS"  ,"DIVS"  ,(T31 << 26)+(363 << 1),0x08,True ,True );
-   AddReg3("DIVW"  ,"DIVW"  ,(T31 << 26)+(491 << 1),0x0f,True ,True );
-   AddReg3("DIVWU" ,"DIVWU" ,(T31 << 26)+(459 << 1),0x0f,True ,True );
-   AddReg3("DOZ"   ,"DOZ"   ,(T31 << 26)+(264 << 1),0x08,True ,True );
-   AddReg3("ECIWX" ,"ECIWX" ,(T31 << 26)+(310 << 1),0x08,False,False);
-   AddReg3("LBZUX" ,"LBZUX" ,(T31 << 26)+(119 << 1),0x0f,False,False);
-   AddReg3("LBZX"  ,"LBZX"  ,(T31 << 26)+( 87 << 1),0x0f,False,False);
-   AddReg3("LHAUX" ,"LHAUX" ,(T31 << 26)+(375 << 1),0x0f,False,False);
-   AddReg3("LHAX"  ,"LHAX"  ,(T31 << 26)+(343 << 1),0x0f,False,False);
-   AddReg3("LHBRX" ,"LHBRX" ,(T31 << 26)+(790 << 1),0x0f,False,False);
-   AddReg3("LHZUX" ,"LHZUX" ,(T31 << 26)+(311 << 1),0x0f,False,False);
-   AddReg3("LHZX"  ,"LHZX"  ,(T31 << 26)+(279 << 1),0x0f,False,False);
-   AddReg3("LSCBX" ,"LSCBX" ,(T31 << 26)+(277 << 1),0x08,False,True );
-   AddReg3("LSWX"  ,"LSX"   ,(T31 << 26)+(533 << 1),0x0f,False,False);
-   AddReg3("LWARX" ,"LWARX" ,(T31 << 26)+( 20 << 1),0x0f,False,False);
-   AddReg3("LWBRX" ,"LBRX"  ,(T31 << 26)+(534 << 1),0x0f,False,False);
-   AddReg3("LWZUX" ,"LUX"   ,(T31 << 26)+( 55 << 1),0x0f,False,False);
-   AddReg3("LWZX"  ,"LX"    ,(T31 << 26)+( 23 << 1),0x0f,False,False);
-   AddReg3("MUL"   ,"MUL"   ,(T31 << 26)+(107 << 1),0x08,True ,True );
-   AddReg3("MULHW" ,"MULHW" ,(T31 << 26)+( 75 << 1),0x0f,False,True );
-   AddReg3("MULHWU","MULHWU",(T31 << 26)+( 11 << 1),0x0f,False,True );
-   AddReg3("MULLW" ,"MULS"  ,(T31 << 26)+(235 << 1),0x0f,True ,True );
-   AddReg3("STBUX" ,"STBUX" ,(T31 << 26)+(247 << 1),0x0f,False,False);
-   AddReg3("STBX"  ,"STBX"  ,(T31 << 26)+(215 << 1),0x0f,False,False);
-   AddReg3("STHBRX","STHBRX",(T31 << 26)+(918 << 1),0x0f,False,False);
-   AddReg3("STHUX" ,"STHUX" ,(T31 << 26)+(439 << 1),0x0f,False,False);
-   AddReg3("STHX"  ,"STHX"  ,(T31 << 26)+(407 << 1),0x0f,False,False);
-   AddReg3("STSWX" ,"STSX"  ,(T31 << 26)+(661 << 1),0x0f,False,False);
-   AddReg3("STWBRX","STBRX" ,(T31 << 26)+(662 << 1),0x0f,False,False);
-   AddReg3("STWCX.","STWCX.",(T31 << 26)+(150 << 1),0x0f,False,False);
-   AddReg3("STWUX" ,"STUX"  ,(T31 << 26)+(183 << 1),0x0f,False,False);
-   AddReg3("STWX"  ,"STX"   ,(T31 << 26)+(151 << 1),0x0f,False,False);
-   AddReg3("SUBF"  ,"SUBF"  ,(T31 << 26)+( 40 << 1),0x0f,True ,True );
-   AddReg3("SUB"   ,"SUB"   ,(T31 << 26)+( 40 << 1),0x0f,True ,True );
-   AddReg3("SUBFC" ,"SF"    ,(T31 << 26)+(  8 << 1),0x0f,True ,True );
-   AddReg3("SUBC"  ,"SUBC"  ,(T31 << 26)+(  8 << 1),0x0f,True ,True );
-   AddReg3("SUBFE" ,"SFE"   ,(T31 << 26)+(136 << 1),0x0f,True ,True );
+   AddReg3("ADD"   ,"CAX"   ,(T31 << 26)+(266 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True, True );
+   AddReg3("ADDC"  ,"A"     ,(T31 << 26)+( 10 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True ,True );
+   AddReg3("ADDE"  ,"AE"    ,(T31 << 26)+(138 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True ,True );
+   AddReg3("DIV"   ,"DIV"   ,(T31 << 26)+(331 << 1),                                  M_6000,True ,True );
+   AddReg3("DIVS"  ,"DIVS"  ,(T31 << 26)+(363 << 1),                                  M_6000,True ,True );
+   AddReg3("DIVW"  ,"DIVW"  ,(T31 << 26)+(491 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True ,True );
+   AddReg3("DIVWU" ,"DIVWU" ,(T31 << 26)+(459 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True ,True );
+   AddReg3("DOZ"   ,"DOZ"   ,(T31 << 26)+(264 << 1),                                  M_6000,True ,True );
+   AddReg3("ECIWX" ,"ECIWX" ,(T31 << 26)+(310 << 1),                                  M_6000,False,False);
+   AddReg3("LBZUX" ,"LBZUX" ,(T31 << 26)+(119 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,False);
+   AddReg3("LBZX"  ,"LBZX"  ,(T31 << 26)+( 87 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,False);
+   AddReg3("LHAUX" ,"LHAUX" ,(T31 << 26)+(375 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,False);
+   AddReg3("LHAX"  ,"LHAX"  ,(T31 << 26)+(343 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,False);
+   AddReg3("LHBRX" ,"LHBRX" ,(T31 << 26)+(790 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,False);
+   AddReg3("LHZUX" ,"LHZUX" ,(T31 << 26)+(311 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,False);
+   AddReg3("LHZX"  ,"LHZX"  ,(T31 << 26)+(279 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,False);
+   AddReg3("LSCBX" ,"LSCBX" ,(T31 << 26)+(277 << 1),                                  M_6000,False,True );
+   AddReg3("LSWX"  ,"LSX"   ,(T31 << 26)+(533 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,False);
+   AddReg3("LWARX" ,"LWARX" ,(T31 << 26)+( 20 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,False);
+   AddReg3("LWBRX" ,"LBRX"  ,(T31 << 26)+(534 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,False);
+   AddReg3("LWZUX" ,"LUX"   ,(T31 << 26)+( 55 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,False);
+   AddReg3("LWZX"  ,"LX"    ,(T31 << 26)+( 23 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,False);
+   AddReg3("MUL"   ,"MUL"   ,(T31 << 26)+(107 << 1),                                  M_6000,True ,True );
+   AddReg3("MULHW" ,"MULHW" ,(T31 << 26)+( 75 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,True );
+   AddReg3("MULHWU","MULHWU",(T31 << 26)+( 11 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,True );
+   AddReg3("MULLW" ,"MULS"  ,(T31 << 26)+(235 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True ,True );
+   AddReg3("STBUX" ,"STBUX" ,(T31 << 26)+(247 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,False);
+   AddReg3("STBX"  ,"STBX"  ,(T31 << 26)+(215 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,False);
+   AddReg3("STHBRX","STHBRX",(T31 << 26)+(918 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,False);
+   AddReg3("STHUX" ,"STHUX" ,(T31 << 26)+(439 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,False);
+   AddReg3("STHX"  ,"STHX"  ,(T31 << 26)+(407 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,False);
+   AddReg3("STSWX" ,"STSX"  ,(T31 << 26)+(661 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,False);
+   AddReg3("STWBRX","STBRX" ,(T31 << 26)+(662 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,False);
+   AddReg3("STWCX.","STWCX.",(T31 << 26)+(150 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,False);
+   AddReg3("STWUX" ,"STUX"  ,(T31 << 26)+(183 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,False);
+   AddReg3("STWX"  ,"STX"   ,(T31 << 26)+(151 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,False,False);
+   AddReg3("SUBF"  ,"SUBF"  ,(T31 << 26)+( 40 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True ,True );
+   AddReg3("SUB"   ,"SUB"   ,(T31 << 26)+( 40 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True ,True );
+   AddReg3("SUBFC" ,"SF"    ,(T31 << 26)+(  8 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True ,True );
+   AddReg3("SUBC"  ,"SUBC"  ,(T31 << 26)+(  8 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True ,True );
+   AddReg3("SUBFE" ,"SFE"   ,(T31 << 26)+(136 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True ,True );
+   AddReg3("TLBSX" ,"TLBSX" ,(T31 << 26)+(914 << 1),         M_403C                         ,False,True );
 
    /* cD,cA,cB --> D A B */
 
    CReg3Orders=(BaseOrder *) malloc(sizeof(BaseOrder)*CReg3OrderCount); InstrZ=0;
-   AddCReg3("CRAND"  ,(T19 << 26)+(257 << 1),0x0f);
-   AddCReg3("CRANDC" ,(T19 << 26)+(129 << 1),0x0f);
-   AddCReg3("CREQV"  ,(T19 << 26)+(289 << 1),0x0f);
-   AddCReg3("CRNAND" ,(T19 << 26)+(225 << 1),0x0f);
-   AddCReg3("CRNOR"  ,(T19 << 26)+( 33 << 1),0x0f);
-   AddCReg3("CROR"   ,(T19 << 26)+(449 << 1),0x0f);
-   AddCReg3("CRORC"  ,(T19 << 26)+(417 << 1),0x0f);
-   AddCReg3("CRXOR"  ,(T19 << 26)+(193 << 1),0x0f);
+   AddCReg3("CRAND"  ,(T19 << 26)+(257 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddCReg3("CRANDC" ,(T19 << 26)+(129 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddCReg3("CREQV"  ,(T19 << 26)+(289 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddCReg3("CRNAND" ,(T19 << 26)+(225 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddCReg3("CRNOR"  ,(T19 << 26)+( 33 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddCReg3("CROR"   ,(T19 << 26)+(449 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddCReg3("CRORC"  ,(T19 << 26)+(417 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddCReg3("CRXOR"  ,(T19 << 26)+(193 << 1), M_403 | M_403C | M_505 | M_601 | M_6000);
 
    /* fD,fA,fB --> D A B */
 
    FReg3Orders=(BaseOrder *) malloc(sizeof(BaseOrder)*FReg3OrderCount); InstrZ=0;
-   AddFReg3("FADD"  ,"FA"    ,(T63 << 26)+(21 << 1),0x0c,True );
-   AddFReg3("FADDS" ,"FADDS" ,(T59 << 26)+(21 << 1),0x0c,True );
-   AddFReg3("FDIV"  ,"FD"    ,(T63 << 26)+(18 << 1),0x0c,True );
-   AddFReg3("FDIVS" ,"FDIVS" ,(T59 << 26)+(18 << 1),0x0c,True );
-   AddFReg3("FSUB"  ,"FS"    ,(T63 << 26)+(20 << 1),0x0c,True );
+   AddFReg3("FADD"  ,"FA"    ,(T63 << 26)+(21 << 1), M_601 | M_6000,True );
+   AddFReg3("FADDS" ,"FADDS" ,(T59 << 26)+(21 << 1), M_601 | M_6000,True );
+   AddFReg3("FDIV"  ,"FD"    ,(T63 << 26)+(18 << 1), M_601 | M_6000,True );
+   AddFReg3("FDIVS" ,"FDIVS" ,(T59 << 26)+(18 << 1), M_601 | M_6000,True );
+   AddFReg3("FSUB"  ,"FS"    ,(T63 << 26)+(20 << 1), M_601 | M_6000,True );
 
    /* A,S,B --> S A B */
 
    Reg3SwapOrders=(BaseOrder *) malloc(sizeof(BaseOrder)*Reg3SwapOrderCount); InstrZ=0;
-   AddReg3Swap("AND"   ,"AND"   ,(T31 << 26)+(  28 << 1),0x0f,True );
-   AddReg3Swap("ANDC"  ,"ANDC"  ,(T31 << 26)+(  60 << 1),0x0f,True );
-   AddReg3Swap("ECOWX" ,"ECOWX" ,(T31 << 26)+( 438 << 1),0x0c,False);
-   AddReg3Swap("EQV"   ,"EQV"   ,(T31 << 26)+( 284 << 1),0x0f,True );
-   AddReg3Swap("MASKG" ,"MASKG" ,(T31 << 26)+(  29 << 1),0x08,True );
-   AddReg3Swap("MASKIR","MASKIR",(T31 << 26)+( 541 << 1),0x08,True );
-   AddReg3Swap("NAND"  ,"NAND"  ,(T31 << 26)+( 476 << 1),0x0f,True );
-   AddReg3Swap("NOR"   ,"NOR"   ,(T31 << 26)+( 124 << 1),0x0f,True );
-   AddReg3Swap("OR"    ,"OR"    ,(T31 << 26)+( 444 << 1),0x0f,True );
-   AddReg3Swap("ORC"   ,"ORC"   ,(T31 << 26)+( 412 << 1),0x0f,True );
-   AddReg3Swap("RRIB"  ,"RRIB"  ,(T31 << 26)+( 537 << 1),0x08,True );
-   AddReg3Swap("SLE"   ,"SLE"   ,(T31 << 26)+( 153 << 1),0x08,True );
-   AddReg3Swap("SLEQ"  ,"SLEQ"  ,(T31 << 26)+( 217 << 1),0x08,True );
-   AddReg3Swap("SLLQ"  ,"SLLQ"  ,(T31 << 26)+( 216 << 1),0x08,True );
-   AddReg3Swap("SLQ"   ,"SLQ"   ,(T31 << 26)+( 152 << 1),0x08,True );
-   AddReg3Swap("SLW"   ,"SL"    ,(T31 << 26)+(  24 << 1),0x0f,True );
-   AddReg3Swap("SRAQ"  ,"SRAQ"  ,(T31 << 26)+( 920 << 1),0x08,True );
-   AddReg3Swap("SRAW"  ,"SRA"   ,(T31 << 26)+( 792 << 1),0x0f,True );
-   AddReg3Swap("SRE"   ,"SRE"   ,(T31 << 26)+( 665 << 1),0x08,True );
-   AddReg3Swap("SREA"  ,"SREA"  ,(T31 << 26)+( 921 << 1),0x08,True );
-   AddReg3Swap("SREQ"  ,"SREQ"  ,(T31 << 26)+( 729 << 1),0x08,True );
-   AddReg3Swap("SRLQ"  ,"SRLQ"  ,(T31 << 26)+( 728 << 1),0x08,True );
-   AddReg3Swap("SRQ"   ,"SRQ"   ,(T31 << 26)+( 664 << 1),0x08,True );
-   AddReg3Swap("SRW"   ,"SR"    ,(T31 << 26)+( 536 << 1),0x0f,True );
-   AddReg3Swap("XOR"   ,"XOR"   ,(T31 << 26)+( 316 << 1),0x0f,True );
+   AddReg3Swap("AND"   ,"AND"   ,(T31 << 26)+(  28 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True );
+   AddReg3Swap("ANDC"  ,"ANDC"  ,(T31 << 26)+(  60 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True );
+   AddReg3Swap("ECOWX" ,"ECOWX" ,(T31 << 26)+( 438 << 1),                          M_601 | M_6000,False);
+   AddReg3Swap("EQV"   ,"EQV"   ,(T31 << 26)+( 284 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True );
+   AddReg3Swap("MASKG" ,"MASKG" ,(T31 << 26)+(  29 << 1),                                  M_6000,True );
+   AddReg3Swap("MASKIR","MASKIR",(T31 << 26)+( 541 << 1),                                  M_6000,True );
+   AddReg3Swap("NAND"  ,"NAND"  ,(T31 << 26)+( 476 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True );
+   AddReg3Swap("NOR"   ,"NOR"   ,(T31 << 26)+( 124 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True );
+   AddReg3Swap("OR"    ,"OR"    ,(T31 << 26)+( 444 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True );
+   AddReg3Swap("ORC"   ,"ORC"   ,(T31 << 26)+( 412 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True );
+   AddReg3Swap("RRIB"  ,"RRIB"  ,(T31 << 26)+( 537 << 1),                                  M_6000,True );
+   AddReg3Swap("SLE"   ,"SLE"   ,(T31 << 26)+( 153 << 1),                                  M_6000,True );
+   AddReg3Swap("SLEQ"  ,"SLEQ"  ,(T31 << 26)+( 217 << 1),                                  M_6000,True );
+   AddReg3Swap("SLLQ"  ,"SLLQ"  ,(T31 << 26)+( 216 << 1),                                  M_6000,True );
+   AddReg3Swap("SLQ"   ,"SLQ"   ,(T31 << 26)+( 152 << 1),                                  M_6000,True );
+   AddReg3Swap("SLW"   ,"SL"    ,(T31 << 26)+(  24 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True );
+   AddReg3Swap("SRAQ"  ,"SRAQ"  ,(T31 << 26)+( 920 << 1),                                  M_6000,True );
+   AddReg3Swap("SRAW"  ,"SRA"   ,(T31 << 26)+( 792 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True );
+   AddReg3Swap("SRE"   ,"SRE"   ,(T31 << 26)+( 665 << 1),                                  M_6000,True );
+   AddReg3Swap("SREA"  ,"SREA"  ,(T31 << 26)+( 921 << 1),                                  M_6000,True );
+   AddReg3Swap("SREQ"  ,"SREQ"  ,(T31 << 26)+( 729 << 1),                                  M_6000,True );
+   AddReg3Swap("SRLQ"  ,"SRLQ"  ,(T31 << 26)+( 728 << 1),                                  M_6000,True );
+   AddReg3Swap("SRQ"   ,"SRQ"   ,(T31 << 26)+( 664 << 1),                                  M_6000,True );
+   AddReg3Swap("SRW"   ,"SR"    ,(T31 << 26)+( 536 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True );
+   AddReg3Swap("XOR"   ,"XOR"   ,(T31 << 26)+( 316 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True );
 
    /* fD,A,B --> D A B */
 
    MixedOrders=(BaseOrder *) malloc(sizeof(BaseOrder)*MixedOrderCount); InstrZ=0;
-   AddMixed("LFDUX" ,"LFDUX" ,(T31 << 26)+(631 << 1),0x0c);
-   AddMixed("LFDX"  ,"LFDX"  ,(T31 << 26)+(599 << 1),0x0c);
-   AddMixed("LFSUX" ,"LFSUX" ,(T31 << 26)+(567 << 1),0x0c);
-   AddMixed("LFSX"  ,"LFSX"  ,(T31 << 26)+(535 << 1),0x0c);
-   AddMixed("STFDUX","STFDUX",(T31 << 26)+(759 << 1),0x0c);
-   AddMixed("STFDX" ,"STFDX" ,(T31 << 26)+(727 << 1),0x0c);
-   AddMixed("STFSUX","STFSUX",(T31 << 26)+(695 << 1),0x0c);
-   AddMixed("STFSX" ,"STFSX" ,(T31 << 26)+(663 << 1),0x0c);
+   AddMixed("LFDUX" ,"LFDUX" ,(T31 << 26)+(631 << 1), M_601 | M_6000);
+   AddMixed("LFDX"  ,"LFDX"  ,(T31 << 26)+(599 << 1), M_601 | M_6000);
+   AddMixed("LFSUX" ,"LFSUX" ,(T31 << 26)+(567 << 1), M_601 | M_6000);
+   AddMixed("LFSX"  ,"LFSX"  ,(T31 << 26)+(535 << 1), M_601 | M_6000);
+   AddMixed("STFDUX","STFDUX",(T31 << 26)+(759 << 1), M_601 | M_6000);
+   AddMixed("STFDX" ,"STFDX" ,(T31 << 26)+(727 << 1), M_601 | M_6000);
+   AddMixed("STFSUX","STFSUX",(T31 << 26)+(695 << 1), M_601 | M_6000);
+   AddMixed("STFSX" ,"STFSX" ,(T31 << 26)+(663 << 1), M_601 | M_6000);
 
    /* fD,fA,fC,fB --> D A B C */
 
    FReg4Orders=(BaseOrder *) malloc(sizeof(BaseOrder)*FReg4OrderCount); InstrZ=0;
-   AddFReg4("FMADD"  ,"FMA"    ,(T63 << 26)+(29 << 1),0x0c,True );
-   AddFReg4("FMADDS" ,"FMADDS" ,(T59 << 26)+(29 << 1),0x0c,True );
-   AddFReg4("FMSUB"  ,"FMS"    ,(T63 << 26)+(28 << 1),0x0c,True );
-   AddFReg4("FMSUBS" ,"FMSUBS" ,(T59 << 26)+(28 << 1),0x0c,True );
-   AddFReg4("FNMADD" ,"FNMA"   ,(T63 << 26)+(31 << 1),0x0c,True );
-   AddFReg4("FNMADDS","FNMADDS",(T59 << 26)+(31 << 1),0x0c,True );
-   AddFReg4("FNMSUB" ,"FNMS"   ,(T63 << 26)+(30 << 1),0x0c,True );
-   AddFReg4("FNMSUBS","FNMSUBS",(T59 << 26)+(30 << 1),0x0c,True );
+   AddFReg4("FMADD"  ,"FMA"    ,(T63 << 26)+(29 << 1), M_601 | M_6000,True );
+   AddFReg4("FMADDS" ,"FMADDS" ,(T59 << 26)+(29 << 1), M_601 | M_6000,True );
+   AddFReg4("FMSUB"  ,"FMS"    ,(T63 << 26)+(28 << 1), M_601 | M_6000,True );
+   AddFReg4("FMSUBS" ,"FMSUBS" ,(T59 << 26)+(28 << 1), M_601 | M_6000,True );
+   AddFReg4("FNMADD" ,"FNMA"   ,(T63 << 26)+(31 << 1), M_601 | M_6000,True );
+   AddFReg4("FNMADDS","FNMADDS",(T59 << 26)+(31 << 1), M_601 | M_6000,True );
+   AddFReg4("FNMSUB" ,"FNMS"   ,(T63 << 26)+(30 << 1), M_601 | M_6000,True );
+   AddFReg4("FNMSUBS","FNMSUBS",(T59 << 26)+(30 << 1), M_601 | M_6000,True );
 
    /* D,d(A) --> D A d */
 
    RegDispOrders=(BaseOrder *) malloc(sizeof(BaseOrder)*RegDispOrderCount); InstrZ=0;
-   AddRegDisp("LBZ"   ,"LBZ"   ,(T34 << 26),0x0f);
-   AddRegDisp("LBZU"  ,"LBZU"  ,(T35 << 26),0x0f);
-   AddRegDisp("LHA"   ,"LHA"   ,(T42 << 26),0x0f);
-   AddRegDisp("LHAU"  ,"LHAU"  ,(T43 << 26),0x0f);
-   AddRegDisp("LHZ"   ,"LHZ"   ,(T40 << 26),0x0f);
-   AddRegDisp("LHZU"  ,"LHZU"  ,(T41 << 26),0x0f);
-   AddRegDisp("LMW"   ,"LM"    ,(T46 << 26),0x0f);
-   AddRegDisp("LWZ"   ,"L"     ,(T32 << 26),0x0f);
-   AddRegDisp("LWZU"  ,"LU"    ,(T33 << 26),0x0f);
-   AddRegDisp("STB"   ,"STB"   ,(T38 << 26),0x0f);
-   AddRegDisp("STBU"  ,"STBU"  ,(T39 << 26),0x0f);
-   AddRegDisp("STH"   ,"STH"   ,(T44 << 26),0x0f);
-   AddRegDisp("STHU"  ,"STHU"  ,(T45 << 26),0x0f);
-   AddRegDisp("STMW"  ,"STM"   ,(T47 << 26),0x0f);
-   AddRegDisp("STW"   ,"ST"    ,(T36 << 26),0x0f);
-   AddRegDisp("STWU"  ,"STU"   ,(T37 << 26),0x0f);
+   AddRegDisp("LBZ"   ,"LBZ"   ,(T34 << 26), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddRegDisp("LBZU"  ,"LBZU"  ,(T35 << 26), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddRegDisp("LHA"   ,"LHA"   ,(T42 << 26), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddRegDisp("LHAU"  ,"LHAU"  ,(T43 << 26), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddRegDisp("LHZ"   ,"LHZ"   ,(T40 << 26), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddRegDisp("LHZU"  ,"LHZU"  ,(T41 << 26), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddRegDisp("LMW"   ,"LM"    ,(T46 << 26), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddRegDisp("LWZ"   ,"L"     ,(T32 << 26), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddRegDisp("LWZU"  ,"LU"    ,(T33 << 26), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddRegDisp("STB"   ,"STB"   ,(T38 << 26), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddRegDisp("STBU"  ,"STBU"  ,(T39 << 26), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddRegDisp("STH"   ,"STH"   ,(T44 << 26), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddRegDisp("STHU"  ,"STHU"  ,(T45 << 26), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddRegDisp("STMW"  ,"STM"   ,(T47 << 26), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddRegDisp("STW"   ,"ST"    ,(T36 << 26), M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddRegDisp("STWU"  ,"STU"   ,(T37 << 26), M_403 | M_403C | M_505 | M_601 | M_6000);
 
    /* fD,d(A) --> D A d */
 
    FRegDispOrders=(BaseOrder *) malloc(sizeof(BaseOrder)*FRegDispOrderCount); InstrZ=0;
-   AddFRegDisp("LFD"   ,"LFD"   ,(T50 << 26),0x0c);
-   AddFRegDisp("LFDU"  ,"LFDU"  ,(T51 << 26),0x0c);
-   AddFRegDisp("LFS"   ,"LFS"   ,(T48 << 26),0x0c);
-   AddFRegDisp("LFSU"  ,"LFSU"  ,(T49 << 26),0x0c);
-   AddFRegDisp("STFD"  ,"STFD"  ,(T54 << 26),0x0c);
-   AddFRegDisp("STFDU" ,"STFDU" ,(T55 << 26),0x0c);
-   AddFRegDisp("STFS"  ,"STFS"  ,(T52 << 26),0x0c);
-   AddFRegDisp("STFSU" ,"STFSU" ,(T53 << 26),0x0c);
+   AddFRegDisp("LFD"   ,"LFD"   ,(T50 << 26), M_601 | M_6000);
+   AddFRegDisp("LFDU"  ,"LFDU"  ,(T51 << 26), M_601 | M_6000);
+   AddFRegDisp("LFS"   ,"LFS"   ,(T48 << 26), M_601 | M_6000);
+   AddFRegDisp("LFSU"  ,"LFSU"  ,(T49 << 26), M_601 | M_6000);
+   AddFRegDisp("STFD"  ,"STFD"  ,(T54 << 26), M_601 | M_6000);
+   AddFRegDisp("STFDU" ,"STFDU" ,(T55 << 26), M_601 | M_6000);
+   AddFRegDisp("STFS"  ,"STFS"  ,(T52 << 26), M_601 | M_6000);
+   AddFRegDisp("STFSU" ,"STFSU" ,(T53 << 26), M_601 | M_6000);
 
    /* A,S,Imm5 --> S A Imm */
 
    Reg2ImmOrders=(BaseOrder *) malloc(sizeof(BaseOrder)*Reg2ImmOrderCount); InstrZ=0;
-   AddReg2Imm("SLIQ"  ,"SLIQ"  ,(T31 << 26)+(184 << 1),0x08,True);
-   AddReg2Imm("SLLIQ" ,"SLLIQ" ,(T31 << 26)+(248 << 1),0x08,True);
-   AddReg2Imm("SRAIQ" ,"SRAIQ" ,(T31 << 26)+(952 << 1),0x08,True);
-   AddReg2Imm("SRAWI" ,"SRAI"  ,(T31 << 26)+(824 << 1),0x0f,True);
-   AddReg2Imm("SRIQ"  ,"SRIQ"  ,(T31 << 26)+(696 << 1),0x08,True);
-   AddReg2Imm("SRLIQ" ,"SRLIQ" ,(T31 << 26)+(760 << 1),0x08,True);
+   AddReg2Imm("SLIQ"  ,"SLIQ"  ,(T31 << 26)+(184 << 1),                                  M_6000,True);
+   AddReg2Imm("SLLIQ" ,"SLLIQ" ,(T31 << 26)+(248 << 1),                                  M_6000,True);
+   AddReg2Imm("SRAIQ" ,"SRAIQ" ,(T31 << 26)+(952 << 1),                                  M_6000,True);
+   AddReg2Imm("SRAWI" ,"SRAI"  ,(T31 << 26)+(824 << 1), M_403 | M_403C | M_505 | M_601 | M_6000,True);
+   AddReg2Imm("SRIQ"  ,"SRIQ"  ,(T31 << 26)+(696 << 1),                                  M_6000,True);
+   AddReg2Imm("SRLIQ" ,"SRLIQ" ,(T31 << 26)+(760 << 1),                                  M_6000,True);
 
    /* D,A,Imm --> D A Imm */
 
    Imm16Orders=(BaseOrder *) malloc(sizeof(BaseOrder)*Imm16OrderCount); InstrZ=0;
-   AddImm16("ADDI"   ,"CAL"    ,T14 << 26,0x0f);
-   AddImm16("ADDIC"  ,"AI"     ,T12 << 26,0x0f);
-   AddImm16("ADDIC." ,"AI."    ,T13 << 26,0x0f);
-   AddImm16("ADDIS"  ,"CAU"    ,T15 << 26,0x0f);
-   AddImm16("DOZI"   ,"DOZI"   , T9 << 26,0x08);
-   AddImm16("MULLI"  ,"MULI"   , T7 << 26,0x0f);
-   AddImm16("SUBFIC" ,"SFI"    , T8 << 26,0x0f);
+   AddImm16("ADDI"   ,"CAL"    ,T14 << 26, M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddImm16("ADDIC"  ,"AI"     ,T12 << 26, M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddImm16("ADDIC." ,"AI."    ,T13 << 26, M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddImm16("ADDIS"  ,"CAU"    ,T15 << 26, M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddImm16("DOZI"   ,"DOZI"   , T9 << 26,                         M_6000);
+   AddImm16("MULLI"  ,"MULI"   , T7 << 26, M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddImm16("SUBFIC" ,"SFI"    , T8 << 26, M_403 | M_403C | M_505 | M_601 | M_6000);
 
    /* A,S,Imm --> S A Imm */
 
    Imm16SwapOrders=(BaseOrder *) malloc(sizeof(BaseOrder)*Imm16SwapOrderCount); InstrZ=0;
-   AddImm16Swap("ANDI."  ,"ANDIL." ,T28 << 26,0x0f);
-   AddImm16Swap("ANDIS." ,"ANDIU." ,T29 << 26,0x0f);
-   AddImm16Swap("ORI"    ,"ORIL"   ,T24 << 26,0x0f);
-   AddImm16Swap("ORIS"   ,"ORIU"   ,T25 << 26,0x0f);
-   AddImm16Swap("XORI"   ,"XORIL"  ,T26 << 26,0x0f);
-   AddImm16Swap("XORIS"  ,"XORIU"  ,T27 << 26,0x0f);
+   AddImm16Swap("ANDI."  ,"ANDIL." ,T28 << 26, M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddImm16Swap("ANDIS." ,"ANDIU." ,T29 << 26, M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddImm16Swap("ORI"    ,"ORIL"   ,T24 << 26, M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddImm16Swap("ORIS"   ,"ORIU"   ,T25 << 26, M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddImm16Swap("XORI"   ,"XORIL"  ,T26 << 26, M_403 | M_403C | M_505 | M_601 | M_6000);
+   AddImm16Swap("XORIS"  ,"XORIU"  ,T27 << 26, M_403 | M_403C | M_505 | M_601 | M_6000);
 END
 
 	static void DeinitNames(BaseOrder *Orders, int OrderCount)
@@ -846,16 +863,22 @@ END
 
         static void PutCode(LongWord Code)
 BEGIN
+#if 0
    memcpy(BAsmCode,&Code,4);
    if (NOT BigEndian) DSwap((void *)BAsmCode,4);
+#endif
+   DAsmCode[0]=Code;
 END
 
         static void IncCode(LongWord Code)
 BEGIN
+#if 0
    BAsmCode[0]+=(Code >> 24) & 0xff;
    BAsmCode[1]+=(Code >> 16) & 0xff;
    BAsmCode[2]+=(Code >>  8) & 0xff;
-   BAsmCode[3]+=(Code       ) & 0xff;
+   BAsmCode[3]+=(Code      ) & 0xff;
+#endif
+   DAsmCode[0]+=Code;
 END
 
 /*-------------------------------------------------------------------------*/
@@ -863,18 +886,24 @@ END
         static Boolean DecodeGenReg(char *Asc, LongWord *Erg)
 BEGIN
    Boolean io;
+   char *s;
 
-   if ((strlen(Asc)<2) OR (toupper(*Asc)!='R')) return False;
+   if (FindRegDef(Asc, &s)) Asc = s;
+
+   if ((strlen(Asc) < 2) OR (toupper(*Asc) != 'R')) return False;
    else
     BEGIN
-     *Erg=ConstLongInt(Asc+1,&io);
-     return ((io) AND (*Erg<=31));
+     *Erg = ConstLongInt(Asc+1,&io);
+     return ((io) AND (*Erg <= 31));
     END
 END
 
 	static Boolean DecodeFPReg(char *Asc, LongWord *Erg)
 BEGIN
    Boolean io;
+   char *s;
+
+   if (FindRegDef(Asc, &s)) Asc = s;
 
    if ((strlen(Asc)<3) OR (toupper(*Asc)!='F') OR (toupper(Asc[1])!='R')) return False;
    else
@@ -961,6 +990,13 @@ END
 
 	static Boolean DecodePseudo(void)
 BEGIN
+   if (Memo("REG"))
+    BEGIN
+     if (ArgCnt!=1) WrError(1110);
+     else AddRegDef(LabPart,ArgStr[1]);
+     return True;
+    END
+
    return False;
 END
 
@@ -1480,7 +1516,7 @@ BEGIN
        strcpy(ArgStr[3],ArgStr[1]); strcpy(ArgStr[1],ArgStr[2]); strcpy(ArgStr[2],ArgStr[3]);
       END
      if (ArgCnt!=2) WrError(1110);
-     else if (MomCPU!=CPU403) WrXError(1500,OpPart);
+     else if (MomCPU>=CPU505) WrXError(1500,OpPart);
      else if (NOT DecodeGenReg(ArgStr[1],&Dest)) WrError(1350);
      else
       BEGIN
@@ -1713,7 +1749,7 @@ BEGIN
    if (Memo("WRTEEI"))
     BEGIN
      if (ArgCnt!=1) WrError(1110);
-     else if (MomCPU!=CPU403) WrXError(1500,OpPart);
+     else if (MomCPU>=CPU505) WrXError(1500,OpPart);
      else
       BEGIN
        Src1=EvalIntExpression(ArgStr[1],UInt1,&OK) << 15;
@@ -1885,23 +1921,34 @@ BEGIN
      return;
     END
 
+   if ((Memo("TLBRE")) OR (Memo("TLBWE")))
+    BEGIN
+     if (ArgCnt!=3) WrError(1110);
+     else if (MomCPU != CPU403C) WrError(1500);
+     else if (NOT DecodeGenReg(ArgStr[1], &Src1)) WrError(1350);
+     else if (NOT DecodeGenReg(ArgStr[2], &Src2)) WrError(1350);
+     else
+      BEGIN
+       Src3 = EvalIntExpression(ArgStr[3], UInt1, &OK);
+       if (OK)
+        BEGIN
+         PutCode((T31 << 26) + (Src1 << 21) + (Src2 << 16) +
+                 (Src3 << 11) + (946 << 1));
+         if (Memo("TLBWE")) IncCode(32 << 1);
+         CodeLen = 4;
+        END
+      END 
+     return;
+    END
+
    /* unbekannter Befehl */
 
    WrXError(1200,OpPart);
 END
 
-	static Boolean ChkPC_601(void)
-BEGIN
-#ifdef HAS64
-   return ((ActPC==SegCode) AND (ProgCounter()<=0xffffffffll));
-#else
-   return (ActPC==SegCode);
-#endif
-END
-
 	static Boolean IsDef_601(void)
 BEGIN
-   return False;
+   return Memo("REG");
 END
 
         static void InitPass_601(void)
@@ -1931,15 +1978,24 @@ END
 
 	static void SwitchTo_601(void)
 BEGIN
-   TurnWords=False; ConstMode=ConstModeC; SetIsOccupied=False;
+   PFamilyDescr FoundDscr;
 
-   PCSymbol="*"; HeaderID=0x05; NOPCode=0x000000000;
+   TurnWords=True; ConstMode=ConstModeC; SetIsOccupied=False;
+
+   FoundDscr=FindFamilyByName("MPC601"); if (FoundDscr==Nil) exit(255);
+
+   PCSymbol="*"; HeaderID=FoundDscr->Id; NOPCode=0x000000000;
    DivideChars=","; HasAttrs=False;
 
    ValidSegs=(1<<SegCode);
-   Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
+   Grans[SegCode]=1; ListGrans[SegCode]=4; SegInits[SegCode]=0;
+#ifdef __STDC__
+   SegLimits[SegCode] = 0xfffffffful;
+#else
+   SegLimits[SegCode] = 0xffffffffl;
+#endif
 
-   MakeCode=MakeCode_601; ChkPC=ChkPC_601; IsDef=IsDef_601;
+   MakeCode=MakeCode_601; IsDef=IsDef_601;
    SwitchFrom=SwitchFrom_601; InternSymbol=InternSymbol_601;
    AddONOFF("SUPMODE",   &SupAllowed, SupAllowedName,False);
    AddONOFF("BIGENDIAN", &BigEnd,     BigEndianName, False);
@@ -1950,10 +2006,12 @@ END
 
 	void code601_init(void)
 BEGIN
-   CPU403 =AddCPU("PPC403",SwitchTo_601);
-   CPU505 =AddCPU("MPC505",SwitchTo_601);
-   CPU601 =AddCPU("MPC601",SwitchTo_601);
-   CPU6000=AddCPU("RS6000",SwitchTo_601);
+   CPU403  =AddCPU("PPC403", SwitchTo_601);
+   CPU403C =AddCPU("PPC403GC", SwitchTo_601);
+   CPU505  =AddCPU("MPC505", SwitchTo_601);
+   CPU601  =AddCPU("MPC601", SwitchTo_601);
+   CPU6000 =AddCPU("RS6000", SwitchTo_601);
 
    SaveInitProc=InitPassProc; InitPassProc=InitPass_601;
 END
+

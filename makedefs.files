@@ -1,13 +1,13 @@
 BASEARCH1FILES = *.c *.h *.1 \
-            README README.OS2 README.DOS README.LANGS README.KR TODO Makefile Makefile.dos Makefile.os2 Makefile.def.tmpl \
-            install.sh install.bat install.cmd \
+            INSTALL README README.OS2 README.DOS README.LANGS README.KR TODO BENCHES Makefile Makefile.dos Makefile.os2 Makefile.def.tmpl \
+            install.sh install.bat install.cmd marks.asm \
             *.res objdefs.* makedefs.* asl.def \
             include/*.inc \
             Makefile.def-samples
 BASEARCH2FILES = doc_DE doc_EN \
             tests
 
-DISTARCHFILES = $(BASEARCH1FILES) $(BASEARCH2FILES) asl-$(VERSION).lsm
+DISTARCHFILES = $(BASEARCH1FILES) $(BASEARCH2FILES) asl-$(VERSION).lsm changelog
 
 ARCH1FILES = $(BASEARCH1FILES)
 ARCH2FILES = $(BASEARCH2FILES) header.tmpl *.lsm changelog

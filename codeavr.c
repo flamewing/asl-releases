@@ -5,6 +5,11 @@
 /* Codegenerator Atmel AVR                                                   */             
 /*                                                                           */
 /* Historie: 26.12.1996 Grundsteinlegung                                     */             
+/*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
+/*           18. 8.1998 BookKeeping-Aufruf bei RES                           */
+/*           15.10.1998 LDD/STD mit <reg>+<symbol> ging nicht                */
+/*            2. 5.1999 JMP/CALL momentan bei keinem Mitglied erlaubt        */
+/*                      WRAPMODE eingebaut                                   */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -19,9 +24,9 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "asmallg.h"
 #include "codepseudo.h"
 #include "codevars.h"
-
 
 typedef struct
          {
@@ -57,6 +62,19 @@ static FixedOrder *ImmOrders;
 static FixedOrder *RelOrders;
 static FixedOrder *BitOrders;
 static FixedOrder *PBitOrders;
+
+static Boolean WrapFlag;
+static LongInt ORMask, SignMask;
+
+static char *WrapFlagName = "WRAPMODE";
+
+/*---------------------------------------------------------------------------*/
+
+	static LongInt CutAdr(LongInt Adr)
+BEGIN
+   if ((Adr & SignMask) != 0) return (Adr | ORMask);
+   else return (Adr & SegLimits[SegCode]);
+END
 
 /*---------------------------------------------------------------------------*/
 
@@ -248,8 +266,7 @@ BEGIN
 	BEGIN
 	 DontPrint=True;
 	 CodeLen=Size;
-	 if (MakeUseList)
-	  if (AddChunk(SegChunks+ActPC,ProgCounter(),CodeLen,ActPC==SegCode)) WrError(90);
+	 BookKeeping();
 	END
       END
      return True;
@@ -280,7 +297,7 @@ BEGIN
 	    case TempString:
              for (z2=0; z2<strlen(t.Contents.Ascii); z2++)
 	      BEGIN
-               Size=CharTransTable[(Byte) t.Contents.Ascii[z2]];
+               Size=CharTransTable[((usint) t.Contents.Ascii[z2])&0xff];
                if (ActPC!=SegCode) BAsmCode[CodeLen++]=Size;
                else if ((z2&1)==0) WAsmCode[CodeLen++]=Size;
                else WAsmCode[CodeLen-1]+=Size<<8;
@@ -471,7 +488,7 @@ BEGIN
        else
         BEGIN
          *ArgStr[2]='0';
-         Reg2=EvalIntExpression(ArgStr[2]+1,UInt6,&OK);
+         Reg2=EvalIntExpression(ArgStr[2],UInt6,&OK);
          if (OK)
           BEGIN
            WAsmCode[0]=0x8000+z+(Reg1 << 4)+(Reg2 & 7)+((Reg2 & 0x18) << 7)+((Reg2 & 0x20) << 8);
@@ -635,13 +652,16 @@ BEGIN
        BEGIN
         AdrInt=EvalIntExpression(ArgStr[1],UInt16,&OK)-(EProgCounter()+1);
         if (OK)
-         if ((NOT SymbolQuestionable) AND ((AdrInt<-64) OR (AdrInt>63))) WrError(1370);
-         else
-          BEGIN
-           ChkSpace(SegCode);
-           WAsmCode[0]=RelOrders[z].Code+((AdrInt & 0x7f) << 3);
-           CodeLen=1;
-          END
+         BEGIN
+          if (WrapFlag) AdrInt = CutAdr(AdrInt);
+          if ((NOT SymbolQuestionable) AND ((AdrInt<-64) OR (AdrInt>63))) WrError(1370);
+          else
+           BEGIN
+            ChkSpace(SegCode);
+            WAsmCode[0]=RelOrders[z].Code+((AdrInt & 0x7f) << 3);
+            CodeLen=1;
+           END
+         END
        END
       return;
      END
@@ -656,13 +676,16 @@ BEGIN
         BEGIN
          AdrInt=EvalIntExpression(ArgStr[2],UInt16,&OK)-(EProgCounter()+1);
          if (OK)
-          if ((NOT SymbolQuestionable) AND ((AdrInt<-64) OR (AdrInt>63))) WrError(1370);
-          else
-           BEGIN
-            ChkSpace(SegCode);
-            WAsmCode[0]=0xf000+(Ord(Memo("BRBC")) << 10)+((AdrInt & 0x7f) << 3)+Reg1;
-            CodeLen=1;
-           END
+          BEGIN
+           if (WrapFlag) AdrInt = CutAdr(AdrInt);
+           if ((NOT SymbolQuestionable) AND ((AdrInt<-64) OR (AdrInt>63))) WrError(1370);
+           else
+            BEGIN
+             ChkSpace(SegCode);
+             WAsmCode[0]=0xf000+(Ord(Memo("BRBC")) << 10)+((AdrInt & 0x7f) << 3)+Reg1;
+             CodeLen=1;
+            END
+          END
         END
       END
      return;
@@ -671,7 +694,7 @@ BEGIN
    if ((Memo("JMP")) OR (Memo("CALL")))
     BEGIN
      if (ArgCnt!=1) WrError(1110);
-     else if (MomCPU<CPU90S2313) WrError(1500);
+     else if (MomCPU<CPU90S8515+1) WrError(1500);
      else
       BEGIN
        AdrInt=EvalIntExpression(ArgStr[1],UInt22,&OK);
@@ -693,38 +716,21 @@ BEGIN
       BEGIN
        AdrInt=EvalIntExpression(ArgStr[1],UInt22,&OK)-(EProgCounter()+1);
        if (OK)
-        if ((NOT SymbolQuestionable) AND ((AdrInt<-2048) OR (AdrInt>2047))) WrError(1370);
-        else
-         BEGIN
-          ChkSpace(SegCode);
-          WAsmCode[0]=0xc000+(Ord(Memo("RCALL")) << 12)+(AdrInt & 0xfff);
-          CodeLen=1;
-         END
+        BEGIN
+         if (WrapFlag) AdrInt = CutAdr(AdrInt);
+         if ((NOT SymbolQuestionable) AND ((AdrInt<-2048) OR (AdrInt>2047))) WrError(1370);
+         else
+          BEGIN
+           ChkSpace(SegCode);
+           WAsmCode[0]=0xc000+(Ord(Memo("RCALL")) << 12)+(AdrInt & 0xfff);
+           CodeLen=1;
+          END
+        END
       END
      return;
     END
 
    WrXError(1200,OpPart);
-END
-
-        static Boolean ChkPC_AVR(void)
-BEGIN
-   switch (ActPC)
-    BEGIN
-     case SegCode:
-      if (MomCPU==CPU90S1200) return (ProgCounter()<=0x03ff);
-      else if (MomCPU==CPU90S2313) return (ProgCounter()<=0x07ff);
-      else if (MomCPU==CPU90S4414) return (ProgCounter()<=0x0fff);
-      else return (ProgCounter()<=0x1fff);
-     case SegData:
-      if (MomCPU==CPU90S1200) return (ProgCounter()<=0x5f);
-      else if (MomCPU==CPU90S2313) return (ProgCounter()<=0xdf);
-      else return (ProgCounter()<0xffff);
-     case SegIO:
-      return (ProgCounter()<0x3f);
-     default:
-      return False;
-    END
 END
 
         static Boolean IsDef_AVR(void)
@@ -734,7 +740,7 @@ END
 
         static void SwitchFrom_AVR(void)
 BEGIN
-   DeinitFields();
+   DeinitFields(); ClearONOFF();
 END
 
         static void SwitchTo_AVR(void)
@@ -747,9 +753,24 @@ BEGIN
    ValidSegs=(1<<SegCode)|(1<<SegData)|(1<<SegIO);
    Grans[SegCode]=2; ListGrans[SegCode]=2; SegInits[SegCode]=0;
    Grans[SegData]=1; ListGrans[SegData]=1; SegInits[SegData]=32;
-   Grans[SegIO  ]=1; ListGrans[SegIO  ]=1; SegInits[SegIO  ]=0;
+   Grans[SegIO  ]=1; ListGrans[SegIO  ]=1; SegInits[SegIO  ]=0; SegLimits[SegIO] = 0x3f;
 
-   MakeCode=MakeCode_AVR; ChkPC=ChkPC_AVR; IsDef=IsDef_AVR;
+   if (MomCPU == CPU90S1200) SegLimits[SegCode] = 0x01ff;
+   else if (MomCPU == CPU90S2313) SegLimits[SegCode] = 0x03ff;
+   else if (MomCPU == CPU90S4414) SegLimits[SegCode] = 0x07ff;
+   else SegLimits[SegCode] = 0xfff;
+
+   if (MomCPU == CPU90S1200) SegLimits[SegData] = 0x5f;
+   else if (MomCPU == CPU90S2313) SegLimits[SegData] = 0xdf;
+   else SegLimits[SegData] = 0xffff;
+
+   SignMask = (SegLimits[SegCode] + 1) >> 1;
+   ORMask = ((LongInt) - 1) - SegLimits[SegCode];
+
+   AddONOFF("WRAPMODE", &WrapFlag, WrapFlagName, False);
+   SetFlag(&WrapFlag, WrapFlagName, False);
+
+   MakeCode=MakeCode_AVR; IsDef=IsDef_AVR;
    SwitchFrom=SwitchFrom_AVR; InitFields();
 END
 

@@ -4,8 +4,19 @@
 /*                                                                           */
 /* Unterfunktionen, vermischtes                                              */
 /*                                                                           */
-/* Historie:  4. 5. 1996  Grundsteinlegung                                   */
-/* Historie: 13. 8.1997 KillBlanks-Funktionen nach stringutil.c geschoben    */
+/* Historie:  4. 5.1996 Grundsteinlegung                                     */
+/*           13. 8.1997 KillBlanks-Funktionen nach stringutil.c geschoben    */
+/*           26. 6.1998 Fehlermeldung Codepage nicht gefunden                */
+/*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
+/*           17. 8.1998 Unterfunktion zur Buchhaltung Adressbereiche         */
+/*            1. 9.1998 FloatString behandelte Sonderwerte nicht korrekt     */
+/*           13. 9.1998 Prozessorliste macht Zeilenvorschub nach 6 Namen     */
+/*           14.10.1998 Fehlerzeilen mit > > >                               */
+/*           30. 1.1999 Formatstrings maschinenunabhaengig gemacht           */
+/*           18. 4.1999 Ausgabeliste Sharefiles                              */
+/*           13. 7.1999 Fehlermeldungen relokatible Symbole                  */
+/*           13. 9.1999 I/O-Fehler 25 ignorieren                             */
+/*            5.11.1999 ExtendErrors ist jetzt ShortInt                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -24,6 +35,8 @@
 #include "chunks.h"
 #include "ioerrs.h"
 #include "asmdef.h"
+#include "asmpars.h"
+#include "asmdebug.h"
 #include "as.h"
 
 #include "asmsub.h"
@@ -39,7 +52,7 @@
 
 
 Word ErrorCount,WarnCount;
-static StringList CopyrightList,OutList;
+static StringList CopyrightList, OutList, ShareOutList;
 
 static LongWord StartStack,MinStack,LowStack;
 
@@ -104,17 +117,18 @@ END
 BEGIN
    PCPUDef Lauf;
    TSwitchProc Proc;
+   int cnt;
 
-   Lauf=FirstCPUDef; Proc=NullProc;
+   Lauf=FirstCPUDef; Proc=NullProc; cnt=0;
    while (Lauf!=Nil)
     BEGIN
      if (Lauf->Number==Lauf->Orig)
       BEGIN
-       if (Lauf->SwitchProc!=Proc)
+       if ((Lauf->SwitchProc!=Proc) OR (cnt==7))
         BEGIN
-         Proc=Lauf->SwitchProc; printf("\n"); NxtProc();
+         Proc=Lauf->SwitchProc; printf("\n"); NxtProc(); cnt=0;
         END
-       printf("%-10s",Lauf->Name);
+       printf("%-10s",Lauf->Name); cnt++;
       END
      Lauf=Lauf->Next;
     END
@@ -203,20 +217,22 @@ BEGIN
    Save=Imp[(unsigned char)Zeichen]; Imp[(unsigned char)Zeichen]=True;
    for (i=s; *i!='\0'; i++)
     if (Imp[(unsigned char)*i])
-     if (*i==Zeichen)
-      BEGIN
-       if ((AngBrack|Brack|Flag)==0)
-        { Imp[(unsigned char)Zeichen]=Save; return i;}
-      END
-     else switch(*i)
-      BEGIN
-       case '"': if (((Brack|AngBrack)==0) AND ((Flag&2)==0)) Flag^=1; break;
-       case '\'':if (((Brack|AngBrack)==0) AND ((Flag&1)==0)) Flag^=2; break;
-       case '(': if ((AngBrack|Flag)==0) Brack++; break;
-       case ')': if ((AngBrack|Flag)==0) Brack--; break;
-       case '[': if ((Brack|Flag)==0) AngBrack++; break;
-       case ']': if ((Brack|Flag)==0) AngBrack--; break;
-      END
+     BEGIN
+      if (*i==Zeichen)
+       BEGIN
+        if ((AngBrack|Brack|Flag)==0)
+         { Imp[(unsigned char)Zeichen]=Save; return i;}
+       END
+      else switch(*i)
+       BEGIN
+        case '"': if (((Brack|AngBrack)==0) AND ((Flag&2)==0)) Flag^=1; break;
+        case '\'':if (((Brack|AngBrack)==0) AND ((Flag&1)==0)) Flag^=2; break;
+        case '(': if ((AngBrack|Flag)==0) Brack++; break;
+        case ')': if ((AngBrack|Flag)==0) Brack--; break;
+        case '[': if ((Brack|Flag)==0) AngBrack++; break;
+        case ']': if ((Brack|Flag)==0) AngBrack--; break;
+       END
+     END
 
    Imp[(unsigned char)Zeichen]=Save; return Nil;    
 END
@@ -300,7 +316,7 @@ END
 BEGIN
    char *z;
 
-   for (z=s; *z!='\0'; z++) *z=CharTransTable[((unsigned int)(*z))&0xff];
+   for (z=s; *z!='\0'; z++) *z=CharTransTable[((usint)(*z))&0xff];
 END
 
 	ShortInt StrCmp(char *s1, char *s2, LongInt Hand1, LongInt Hand2)
@@ -390,11 +406,13 @@ BEGIN
    /* 1. mit Maximallaenge wandeln, fuehrendes Vorzeichen weg */
 
    sprintf(s,"%27.15e",f); 
-   while ((s[0]==' ') OR (s[0]=='+')) strcpy(s,s+1);
+   for (p=s; (*p==' ') OR (*p=='+'); p++);
+   if (p!=s) strcpy(s,p);
 
    /* 2. Exponenten soweit als moeglich kuerzen, evtl. ganz streichen */
 
    p=strchr(s,'e'); 
+   if (p==Nil) return s;
    switch (*(++p))
     BEGIN
      case '+': strcpy(p,p+1); break;
@@ -575,7 +593,8 @@ BEGIN
 
    for (z=ChapDepth; z>=0; z--)
     BEGIN
-     sprintf(s,"%d",PageCounter[z]); strmaxcat(Header,s,255);
+     sprintf(s, IntegerFormat, PageCounter[z]);
+     strmaxcat(Header,s,255);
      if (z!=0) strmaxcat(Header,".",255);
     END
 
@@ -733,8 +752,10 @@ END
 BEGIN
    String h,h2;
    char *p;
+   FILE *errfile;
 
-   strmaxcpy(h,p=GetErrorPos(),255); free(p);
+   strcpy(h,"> > >");
+   strmaxcat(h,p=GetErrorPos(),255); free(p);
    if (NOT Warning)
     BEGIN
      strmaxcat(h,getmessage(Num_ErrName),255);
@@ -750,22 +771,30 @@ BEGIN
      WarnCount++;
     END
 
-   if ((strcmp(LstName,"/dev/null")!=0) AND (NOT Fatal))
+   if ((strcmp(LstName, "/dev/null") != 0) AND (NOT Fatal))
     BEGIN
-     strmaxcpy(h2,h,255); strmaxcat(h2,Message,255); WrLstLine(h2);
-     if ((ExtendErrors) AND (*ExtendError!='\0'))
+     strmaxcpy(h2, h, 255); strmaxcat(h2, Message, 255); WrLstLine(h2);
+     if ((ExtendErrors > 0) AND (*ExtendError != '\0'))
       BEGIN
-       sprintf(h2,"> > > %s",ExtendError); WrLstLine(h2);
+       sprintf(h2, "> > > %s", ExtendError); WrLstLine(h2);
+      END
+     if (ExtendErrors > 1)
+      BEGIN
+       sprintf(h2, "> > > %s", OneLine); WrLstLine(h2);
       END
     END
+
    ForceErrorOpen();
-   if ((strcmp(LstName,"!1")!=0) OR (Fatal))
+   if ((strcmp(LstName, "!1")!=0) OR (Fatal))
     BEGIN
-     fprintf((ErrorFile==Nil)?stdout:ErrorFile,"%s%s%s\n",h,Message,ClrEol);
-     if ((ExtendErrors) AND (*ExtendError!='\0'))
-      fprintf((ErrorFile==Nil)?stdout:ErrorFile,"> > > %s%s\n",ExtendError,ClrEol);
+     errfile = (ErrorFile == Nil) ? stdout : ErrorFile;
+     fprintf(errfile, "%s%s%s\n", h, Message, ClrEol);
+     if ((ExtendErrors > 0) AND (*ExtendError != '\0'))
+      fprintf(errfile, "> > > %s%s\n", ExtendError, ClrEol);
+     if (ExtendErrors > 1)
+      fprintf(errfile, "> > > %s%s\n", OneLine, ClrEol);
     END
-   *ExtendError='\0';
+   *ExtendError = '\0';
 
    if (Fatal)
     BEGIN
@@ -834,6 +863,8 @@ BEGIN
      case 1132: msgno=Num_ErrMsgUndefOpSizes; break;
      case 1135: msgno=Num_ErrMsgInvOpType; break;
      case 1140: msgno=Num_ErrMsgTooMuchArgs; break;
+     case 1150: msgno=Num_ErrMsgNoRelocs; break;
+     case 1155: msgno=Num_ErrMsgUnresRelocs; break;
      case 1200: msgno=Num_ErrMsgUnknownOpcode; break;
      case 1300: msgno=Num_ErrMsgBrackErr; break;
      case 1310: msgno=Num_ErrMsgDivByZero; break;
@@ -889,6 +920,7 @@ BEGIN
      case 1553: msgno=Num_ErrMsgPhaseDisallowed; break;
      case 1554: msgno=Num_ErrMsgInvStructDir; break;
      case 1600: msgno=Num_ErrMsgShortRead; break;
+     case 1610: msgno=Num_ErrMsgUnknownCodepage; break;
      case 1700: msgno=Num_ErrMsgRomOffs063; break;
      case 1710: msgno=Num_ErrMsgInvFCode; break;
      case 1720: msgno=Num_ErrMsgInvFMask; break;
@@ -939,7 +971,7 @@ BEGIN
 
    if (((Num==1910) OR (Num==1370)) AND (NOT Repass)) JmpErrors++;
 
-   if (NumericErrors) sprintf(Add,"#%d",Num); 
+   if (NumericErrors) sprintf(Add,"#%d", (int)Num); 
    else *Add='\0';
    WrErrorString(h,Add,Num<1000,Num>=10000);
 END
@@ -961,7 +993,7 @@ END
 BEGIN
    int io;
 
-   io=errno; if ((io==0) OR (io==19)) return;
+   io=errno; if ((io == 0) OR (io == 19) OR (io == 25)) return;
 
    WrXError(ErrNo,GetErrorMsg(io));
 END
@@ -1186,6 +1218,26 @@ BEGIN
    return GetAndCutStringList(&OutList);
 END
 
+        void ClearShareOutList(void)
+BEGIN
+   ClearStringList(&ShareOutList);
+END
+
+        void AddToShareOutList(char *NewName)
+BEGIN
+   AddStringListLast(&ShareOutList,NewName);
+END
+
+        void RemoveFromShareOutList(char *OldName)
+BEGIN
+   RemoveStringList(&ShareOutList,OldName);
+END
+
+        char *GetFromShareOutList(void)
+BEGIN
+   return GetAndCutStringList(&ShareOutList);
+END
+
 /****************************************************************************/
 /* Tokenverarbeitung */
 
@@ -1245,10 +1297,24 @@ BEGIN
        strcpy(z,z+1);
        strprep(z,Blanks(8-((z-Line)%8)));
       END
-     else if (*z<' ') *z=' ';
+     else if ((*z&0xe0)==0) *z=' ';
      z++;
     END
    while (*z!='\0');
+END
+
+/****************************************************************************/
+/* Buchhaltung */
+
+	void BookKeeping(void)
+BEGIN
+   if (MakeUseList)
+    if (AddChunk(SegChunks+ActPC,ProgCounter(),CodeLen,ActPC==SegCode)) WrError(90);
+   if (DebugMode!=DebugNone)
+    BEGIN
+     AddSectionUsage(ProgCounter(),CodeLen);
+     AddLineInfo(InMacroFlag,CurrLine,CurrFileName,ActPC,PCs[ActPC],CodeLen);
+    END
 END
 
 /****************************************************************************/
@@ -1406,6 +1472,7 @@ BEGIN
 
    InitStringList(&CopyrightList);
    InitStringList(&OutList);
+   InitStringList(&ShareOutList);
 
 #ifdef __TURBOC__
 #ifdef __MSDOS__

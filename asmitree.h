@@ -5,6 +5,7 @@
 /* Opcode-Abfrage als Binaerbaum                                             */
 /*                                                                           */
 /* Historie: 30.10.1996 Grundsteinlegung                                     */
+/*            6.12.1998 dynamische Variante                                  */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -34,6 +35,7 @@ typedef struct _TInstTableEntry
 typedef struct
          {
           int Fill,Size;
+          Boolean Dynamic;
           PInstTableEntry Entries;
          } TInstTable,*PInstTable;
 
@@ -47,6 +49,8 @@ extern void PrintInstTree(PInstTreeNode Root);
 
 
 extern PInstTable CreateInstTable(int TableSize);
+
+extern void SetDynamicInstTable(PInstTable Table);
 
 extern void DestroyInstTable(PInstTable tab);
 

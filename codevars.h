@@ -9,4 +9,4 @@
 /*****************************************************************************/
 
 extern int InstrZ;
-extern Byte AdrCnt;
+extern int AdrCnt;

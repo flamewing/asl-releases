@@ -18,7 +18,7 @@ static chartrans specchars[]=
           {0337,CH_sz},
           {0262,CH_e2},
           {0265,CH_mu},
-          {0340,CH_agraph},
+          {0340,CH_agrave},
           {0000,""}};
 
 #define TMPNAME "tempfile"

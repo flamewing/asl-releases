@@ -5,6 +5,9 @@
 /* Codegenerator MELPS-4500                                                  */
 /*                                                                           */
 /* Historie: 31.12.1996 (23.44!!) Grundsteinlegung                           */
+/*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
+/*           18. 8.1998 BookKeeping-Aufruf bei RES                           */
+/*            3. 1.1999 ChkPC-Anpassung                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -133,8 +136,7 @@ BEGIN
 	BEGIN
 	 DontPrint=True;
 	 CodeLen=Size;
-         if (MakeUseList)
-          if (AddChunk(SegChunks+ActPC,ProgCounter(),CodeLen,ActPC==SegCode)) WrError(90);
+         BookKeeping();
 	END
       END
      return True;
@@ -179,7 +181,7 @@ BEGIN
             case TempString:
              for (z2=0; z2<strlen(t.Contents.Ascii); z2++)
               BEGIN
-               Ch=CharTransTable[(int) t.Contents.Ascii[z2]];
+               Ch=CharTransTable[((usint) t.Contents.Ascii[z2])&0xff];
                if (ActPC==SegCode)
                 WAsmCode[CodeLen++]=Ch;
                else
@@ -360,16 +362,6 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-        static Boolean ChkPC_4500(void)
-BEGIN
-   switch (ActPC)
-    BEGIN
-     case SegCode : return (ProgCounter() < 0x2000);
-     case SegData : return (ProgCounter() < 416);
-     default: return False;
-    END
-END
-
         static Boolean IsDef_4500(void)
 BEGIN
    return (Memo("SFR"));
@@ -389,9 +381,11 @@ BEGIN
 
    ValidSegs=(1<<SegCode)|(1<<SegData);
    Grans[SegCode ]=2; ListGrans[SegCode ]=2; SegInits[SegCode ]=0;
-   Grans[SegData ]=1; ListGrans[SegData ]=1; SegInits[SegCode ]=0;
+   SegLimits[SegCode] = 0x1fff;
+   Grans[SegData ]=1; ListGrans[SegData ]=1; SegInits[SegData ]=0;
+   SegLimits[SegData] = 415;
 
-   MakeCode=MakeCode_4500; ChkPC=ChkPC_4500; IsDef=IsDef_4500;
+   MakeCode=MakeCode_4500; IsDef=IsDef_4500;
    SwitchFrom=SwitchFrom_4500;
 
    InitFields();

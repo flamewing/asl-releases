@@ -5,6 +5,11 @@
 /* Codegenerator fuer MCS-51/252 Prozessoren                                 */
 /*                                                                           */
 /* Historie:  5. 6.1996 Grundsteinlegung                                     */
+/*            9. 8.1998 kurze 8051-Bitadressen wurden im 80251-Sourcemodus   */
+/*                      immer lang gemacht                                   */
+/*           24. 8.1998 Kodierung fuer MOV dir8,Rm war falsch (Fehler im     */
+/*                      Manual!)                                             */
+/*            2. 1.1998 ChkPC-Routine entfernt                               */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -405,7 +410,7 @@ BEGIN
         END
       END
      if (NOT OK) return ModNone;
-     else if ((MayShorten) AND (NOT SrcMode))
+     else if (MayShorten)
       if (((*Erg)&0x87)==0x80)
        BEGIN
         *Erg=((*Erg)&0xf8)+((*Erg)>>24); return ModBit51;
@@ -721,8 +726,8 @@ BEGIN
            else
             BEGIN
              PutCode(0x17a);
-             BAsmCode[CodeLen++] = 0x03 + (AdrPart << 4) + (OpSize << 1);
-             if (OpSize==2) BAsmCode[CodeLen-1]+=6;
+             BAsmCode[CodeLen++] = 0x01 + (AdrPart << 4) + (OpSize << 2);
+             if (OpSize==2) BAsmCode[CodeLen-1]+=4;
              BAsmCode[CodeLen++] = HReg;
             END
            break;
@@ -2217,46 +2222,6 @@ BEGIN
    if (NOT LookupInstTable(InstTable,OpPart)) WrXError(1200,OpPart);
 END
 
-	static Boolean ChkPC_51(void)
-BEGIN
-   Boolean ok;
-
-   if (MomCPU<CPU80251)
-    switch (ActPC)
-     BEGIN
-      case SegCode:
-       if (MomCPU==CPU87C750) ok=(ProgCounter()<0x800);
-       else ok=(ProgCounter()<0x10000);
-       break;
-      case SegXData:
-       ok=(ProgCounter()<0x10000);
-       break;
-      case SegData:
-      case SegBData:
-       ok=(ProgCounter()<0x100);
-       break;
-      case SegIData:
-       ok=(ProgCounter()<0x100);
-       break;
-      default:
-       ok=False;
-     END
-   else
-    switch (ActPC)
-     BEGIN
-      case SegCode:
-       ok=(ProgCounter()<0x1000000);
-       break;
-      case SegIO:
-       ok=(ProgCounter()<0x200);
-       break;
-      default: 
-       ok=False;
-     END
-
-   return (ok);
-END
-
 	static Boolean IsDef_51(void)
 BEGIN
    switch (*OpPart)
@@ -2294,19 +2259,26 @@ BEGIN
     BEGIN
      ValidSegs=(1<<SegCode)|(1<<SegIO);
      Grans[SegCode ]=1; ListGrans[SegCode ]=1; SegInits[SegCode ]=0;
+     SegLimits[SegCode ] = 0xffffffl;
      Grans[SegIO   ]=1; ListGrans[SegIO   ]=1; SegInits[SegIO   ]=0;
+     SegLimits[SegIO   ] = 0x1ff;
     END
    else
     BEGIN
      ValidSegs=(1<<SegCode)|(1<<SegData)|(1<<SegIData)|(1<<SegXData)|(1<<SegBData);
      Grans[SegCode ]=1; ListGrans[SegCode ]=1; SegInits[SegCode ]=0;
+     SegLimits[SegCode ] = (MomCPU == CPU87C750) ? 0x7ff : 0xffff;
      Grans[SegData ]=1; ListGrans[SegData ]=1; SegInits[SegData ]=0x30;
+     SegLimits[SegData ] = 0xff;
      Grans[SegIData]=1; ListGrans[SegIData]=1; SegInits[SegIData]=0x80;
+     SegLimits[SegIData] = 0xff;
      Grans[SegXData]=1; ListGrans[SegXData]=1; SegInits[SegXData]=0;
+     SegLimits[SegXData] = 0xffff;
      Grans[SegBData]=1; ListGrans[SegBData]=1; SegInits[SegBData]=0;
+     SegLimits[SegBData] = 0xff;
     END
 
-   MakeCode=MakeCode_51; ChkPC=ChkPC_51; IsDef=IsDef_51;
+   MakeCode=MakeCode_51; IsDef=IsDef_51;
 
    InitFields(); SwitchFrom=SwitchFrom_51;
    AddONOFF("SRCMODE"  , &SrcMode  , SrcModeName  , False);

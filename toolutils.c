@@ -6,6 +6,8 @@
 /*                                                                           */
 /* Historie: 31. 5.1996 Grundsteinlegung                                     */
 /*           27.10.1997 Routinen aus P2... heruebergenommen                  */
+/*           27. 3.1999 Granularitaet SC144xx                                */
+/*           30. 5.1999 Adresswildcard-Funktion                              */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -97,6 +99,7 @@ BEGIN
     BEGIN
      case 0x09:
      case 0x76:
+     case 0x7d:
       return 4;
      case 0x70:
      case 0x71:
@@ -106,6 +109,7 @@ BEGIN
      case 0x77:
      case 0x12:
      case 0x3b:
+     case 0x6d:
       return 2;
      default:
       return 1;
@@ -252,6 +256,11 @@ BEGIN
      XORVal=XORVal << (((z+1)%4)*8);
      Magic=Magic^XORVal;
     END
+END
+
+	Boolean AddressWildcard(char *addr)
+BEGIN
+   return ((strcmp(addr, "$") == 0) OR (strcasecmp(addr, "0x") == 0));
 END
 
 #ifdef CKMALLOC

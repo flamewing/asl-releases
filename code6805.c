@@ -5,6 +5,7 @@
 /* Codegenerator 68(HC)05/08                                                 */
 /*                                                                           */
 /* Historie:  9.10.1996 Grundsteinlegung                                     */
+/*            2. 1.1999 ChkPC-Anpassung                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -753,12 +754,6 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static Boolean ChkPC_6805(void)
-BEGIN
-   if (ActPC==SegCode) return (ProgCounter()<0x2000);
-   else return False;
-END
-
 	static Boolean IsDef_6805(void)
 BEGIN
    return False;
@@ -778,8 +773,9 @@ BEGIN
 
    ValidSegs=(1<<SegCode);
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
+   SegLimits[SegCode] = 0x1fff;
 
-   MakeCode=MakeCode_6805; ChkPC=ChkPC_6805; IsDef=IsDef_6805;
+   MakeCode=MakeCode_6805; IsDef=IsDef_6805;
    SwitchFrom=SwitchFrom_6805; InitFields();
 END
 

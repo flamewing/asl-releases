@@ -63,7 +63,7 @@ next:
 
 	bst     r1,2
 
-	call    $123456
+;	call    $123456
 
 	cbr     r16,$f0
 
@@ -109,7 +109,7 @@ next:
 
 	inc     r22
 
-	jmp     $123456
+;	jmp     $123456
 
 	ld      r2,x
 	ld      r0,x+

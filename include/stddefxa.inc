@@ -8,6 +8,9 @@
 ;*   Sinn : enthält SFR- und Bitdefinitionen für die XA-Prozessoren         *
 ;* 									    *
 ;*   letzte Änderungen : 29. 6.1996                                         *
+;*                       18. 8.1998 bei P_51, F0_51 und F1_51 den Postfix   *
+;*                                  wieder entfernt, da diese sich mit kei- *
+;*                                  nen XA-Bits namensmaessig "beissen"     *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -59,12 +62,12 @@ tm              bit     pswh.6          ;  CPU im Einzelschritt-Modus
 sm              bit     pswh.7          ;  CPU im Supervisor-Mode
 
 psw51           port    402h            ; emuliertes 8051-PSW:
-p_51            bit     psw51.0         ;  Paritätsbit
-f1_51           bit     psw51.1         ;  User-Flag 1
+p               bit     psw51.0         ;  Paritätsbit
+f1              bit     psw51.1         ;  User-Flag 1
 v_51            bit     psw51.2         ;  Overflow-Flag
 rs0_51          bit     psw51.3         ;  Register-Bank-Auswahl Bit 0
 rs1_51          bit     psw51.4         ;  Register-Bank-Auswahl Bit 1
-f0_51           bit     psw51.5         ;  User-Flag 0
+f0              bit     psw51.5         ;  User-Flag 0
 ac_51           bit     psw51.6         ;  Hilfs-Carry (für DAA)
 c_51            bit     psw51.7         ;  Carry
 

@@ -4,7 +4,11 @@
 /*                                                                           */
 /* Verwaltung von Datei-Nummern                                              */
 /*                                                                           */
-/* Historie: 15. 5.96 Grundsteinlegung                                       */
+/* Historie: 15. 5.1996 Grundsteinlegung                                     */
+/*           25. 7.1998 GetFileName jetzt mit int statt Byte                 */
+/*                      Verwaltung Adreßbereiche                             */
+/*                      Caching FileCount                                    */
+/*           16. 8.1998 Ruecksetzen Adressbereiche                           */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -18,19 +22,26 @@
 
 #include "asmfnums.h"
 
+#ifdef HAS64
+#define ADRMAX 9223372036854775807ll;
+#else
+#define ADRMAX 4294967295l;
+#endif
+
 
 typedef struct _TToken
          {
           struct _TToken *Next;
+          LargeWord FirstAddr,LastAddr;
           char *Name;
          } TToken,*PToken;
 
 static PToken FirstFile;
-
+static int FileCount;
 
         void InitFileList(void)
 BEGIN
-   FirstFile=Nil;
+   FirstFile=Nil; FileCount=0;
 END
 
 
@@ -45,6 +56,20 @@ BEGIN
      free(FirstFile);
      FirstFile=F;
     END
+   FileCount=0;
+END
+
+
+	static PToken SearchToken(int Num)
+BEGIN
+   PToken Lauf=FirstFile;
+
+   while (Num>0)
+    BEGIN
+     if (Lauf==Nil) return Nil;
+     Num--; Lauf=Lauf->Next;
+    END
+   return Lauf;
 END
 
 
@@ -57,6 +82,8 @@ BEGIN
    Neu=(PToken) malloc(sizeof(TToken));
    Neu->Next=Nil;
    Neu->Name=strdup(FName);
+   Neu->FirstAddr=ADRMAX;
+   Neu->LastAddr=0;
    if (FirstFile==Nil) FirstFile=Neu;
    else
     BEGIN
@@ -64,6 +91,7 @@ BEGIN
      while (Lauf->Next!=Nil) Lauf=Lauf->Next;
      Lauf->Next=Neu;
     END
+   FileCount++;
 END
 
 
@@ -81,34 +109,59 @@ BEGIN
 END
 
 
-        char *GetFileName(Byte Num)
+        char *GetFileName(int Num)
 BEGIN
-   PToken Lauf;
-   int z;
+   PToken Lauf=SearchToken(Num);
    static char *Dummy="";
 
-   Lauf=FirstFile;
-   for (z=0; z<Num; z++)
-    if (Lauf!=Nil) Lauf=Lauf->Next;
    return (Lauf==Nil)?(Dummy):(Lauf->Name);
 END
 
 
         Integer GetFileCount(void)
 BEGIN
-   PToken Lauf=FirstFile;
-   int z=0;
-
-   while (Lauf!=Nil)
-    BEGIN
-     z++; Lauf=Lauf->Next;
-    END;
-   return z;
+   return FileCount;
 END
 
 
+	void AddAddressRange(int File, LargeWord Start, LargeWord Len)
+BEGIN
+   PToken Lauf=SearchToken(File);
+
+   if (Lauf==Nil) return;
+
+   if (Start<Lauf->FirstAddr) Lauf->FirstAddr=Start;
+   if ((Len+=Start-1)>Lauf->LastAddr) Lauf->LastAddr=Len;
+END
+
+
+	void GetAddressRange(int File, LargeWord *Start, LargeWord *End)
+BEGIN
+   PToken Lauf=SearchToken(File);
+
+   if (Lauf==Nil)
+    BEGIN
+     *Start=ADRMAX; *End=0;
+    END
+   else
+    BEGIN
+     *Start=Lauf->FirstAddr; *End=Lauf->LastAddr;
+    END
+END
+
+	void ResetAddressRanges(void)
+BEGIN
+   PToken Run;
+
+   for (Run=FirstFile; Run!=Nil; Run=Run->Next)
+    BEGIN
+     Run->FirstAddr=ADRMAX;
+     Run->LastAddr=0;
+    END
+END
+
 	void asmfnums_init(void)
 BEGIN
-   FirstFile=Nil;
+   FirstFile=Nil; FileCount=0;
 END
 

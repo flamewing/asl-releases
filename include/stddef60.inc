@@ -10,6 +10,8 @@
 ;*   letzte Änderungen : 29. 5.1994                                         *
 ;*                       26.12.1994 PPC403-Erweiterungen                    *
 ;*                       28.12.1994 MPC505-Erweiterungen                    *
+;*                       10. 3.1999 PPC403G[BC]-Erweiterungen               *
+;*                       28. 3.1999 Korrektur: MMU erst ab PPC403GC         *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -17,7 +19,7 @@
 
 stddef60inc     equ     1
 
-                if      (MOMCPU<>1537)&&(MOMCPU<>24576)&&(MOMCPU<>1027)&&(MOMCPU<>1285)
+                if      (MOMCPU<>1537)&&(MOMCPU<>24576)&&(MOMCPU<>1027)&&(MOMCPU<>1285)&&(MOMCPU<>16443)&&(MOMCPU<>16444)
                  fatal  "Falscher Prozessortyp eingestellt: nur MPC601, MPC505, PPC403 oder RS6000 erlaubt!"
 		endif
 
@@ -31,11 +33,12 @@ stddef60inc     equ     1
                   message "Zielsystem MPC601"
                  case    0x505
                   message "Zielsystem MPC505"
-                 case    0x403
-                  message "Zielsystem PPC403"
+                 case    0x403,0x403c
+                  message "Zielsystem PPC403Gx"
                  endcase
 		endif
 
+		
 ;============================================================================
 ; Device-Control-Register
 
@@ -49,7 +52,7 @@ mf{"NAME"}      macro      reg
                 endm
 		endm
 
-                if      MOMCPU=0x403
+                if      (MOMCPU=0x403)||(MOMCPU=0x403c)
                  __defdcr BEAR,0x90     ; Adresse Busfehler
                  __defdcr BESR,0x91     ; Syndrom Busfehler
                  __defdcr BR0,0x80      ; Bank-Register 0..7
@@ -106,7 +109,7 @@ mf{"NAME"}      macro      reg
                 __defspr SPRG2,0x112
                 __defspr SPRG3,0x113
                 switch MOMCPU
-                case 0x403
+                case 0x403,0x403c
                  __defspr DAC1,0x3f6    ; Datenadresse Vergleichsregister
                  __defspr DAC2,0x3f7
                  __defspr DBCR,0x3f2    ; Debug-Steuerregister
@@ -130,6 +133,7 @@ mf{"NAME"}      macro      reg
                  __defspr TBLO,0x3dd
                  __defspr TCR,0x3da     ; Timer Steuerregister
                  __defspr TSR,0x3d8     ; Timer Statusregister
+                 __defspr SGR,0x3b9     ; ????
                 case 0x505
                  __defspr TBL,268       ; Zeitbasis
                  __defspr TBU,269
@@ -189,11 +193,14 @@ mf{"NAME"}      macro      reg
                 case 0x6000
                  __defspr MQ,0x000      ; obere Hälfte Divident/Produkt
                 endcase
+                if MOMCPU=0x403c
+                 __defspr pid, 0x3b1
+                endif
 
 ;============================================================================
 ; serieller Port PPC403:
 
-                if      MOMCPU=0x403
+                if      (MOMCPU=0x403)||(MOMCPU=0x403c)
 spls             equ     0x40000000     ; Leitungsstatus
 sphs             equ     0x40000002     ; Status Handshake-Leitungen
 brdh             equ     0x40000004     ; Baudratenteiler
@@ -635,6 +642,29 @@ __deftrap       macro   NAME,mask,{NoExpand}
                 __deftrap twne,24
                 __deftrap twng,20
                 __deftrap twnl,12
+
+;-------------------------------------------------------------------------
+; MMU-Makros PPC403G[BC]
+
+		if (MOMCPU=0x403c)||(MOMCPU=0x403c)
+
+tlbrehi		macro	rt,ra
+		tlbre	rt,ra,0
+		endm
+
+tlbrelo		macro	rt,ra
+		tlbre	rt,ra,1
+		endm
+
+tlbwehi		macro	rt,ra
+		tlbwe	rt,ra,0
+		endm
+
+tlbwelo		macro	rt,ra
+		tlbwe	rt,ra,1
+		endm
+
+		endif
 
 ;=========================================================================
 

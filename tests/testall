@@ -5,11 +5,16 @@ echo "=================================================================" > ../te
 echo "Summaric results:" >> ../testlog
 SUMPASS="0"
 SUMFAIL="0"
-for t in t_*; do
+if [ "$1" = "" ]; then
+ SUBDIRS=t_*
+else
+ SUBDIRS="$1"
+fi
+for t in $SUBDIRS; do
  cd $t
  cat $t.doc
  ../../asl `cat asflags` -i ../../include $t.asm | tee $t.log
- ../../p2bin -k -l 0 -r \$-\$ $t
+ ../../p2bin -k -l 0 -r 0x-0x $t
  echo +---------------------------------------------------------------+
  if cmp $t.ori $t.bin; then
   echo "Test $t succeeded!"

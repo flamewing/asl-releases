@@ -2,10 +2,18 @@
 /*****************************************************************************/
 /* AS-Portierung                                                             */
 /*                                                                           */
-/* <Zweck>                                                                   */
+/* Codegenerator Intel 4004                                                  */
 /*                                                                           */
-/* Historie: 1.2.1998 Grundsteinlegung                                       */
-/*           3.3.1998 weitere Fixed-Befehle hinzugefuegt                     */
+/* Historie:  1. 2.1998 Grundsteinlegung                                     */
+/*            3. 3.1998 weitere Fixed-Befehle hinzugefuegt                   */
+/*           28.11.1998 LookupInstTable ;-)                                  */
+/*                      JCN FIM...                                           */
+/*           29.11.1998 HeaderId symbolisch holen                            */
+/*            3.12.1998 DATA schrieb 16-Bit-Ints statt 8 Bit                 */
+/*            3. 1.1999 ChkPC-Anpassung                                      */
+/*           23. 1.1999 / / entfernt                                         */
+/*            2. 7.1999 Zus. Befehlsvarianten, andere Registersyntax         */
+/*            8. 9.1999 REG fehlte                                           */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -19,12 +27,14 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmitree.h"
+#include "headids.h"
 
 /*---------------------------------------------------------------------------*/
 /* Variablen */
 
-#define FixedOrderCnt 31
+#define FixedOrderCnt 35
 #define OneRegOrderCnt 1
+#define OneRRegOrderCnt 3
 #define AccRegOrderCnt 4
 #define Imm4OrderCnt 2
 
@@ -33,10 +43,11 @@ typedef struct
           Byte Code;
          } FixedOrder;
 
-static CPUVar CPU4004,CPU4040;
+static CPUVar CPU4004/*,CPU4040*/;
 
 static FixedOrder *FixedOrders;
 static FixedOrder *OneRegOrders;
+static FixedOrder *OneRRegOrders;
 static FixedOrder *AccRegOrders;
 static FixedOrder *Imm4Orders;
 static PInstTable InstTable;
@@ -44,17 +55,40 @@ static PInstTable InstTable;
 /*---------------------------------------------------------------------------*/
 /* Parser */
 
+	static Byte RegVal(char Inp)
+BEGIN
+   if ((Inp >='0') AND (Inp <= '9')) return Inp - '0';
+   else if ((Inp >='A') AND (Inp <= 'F')) return Inp - 'A' + 10;
+   else return 0xff;
+END
+
 	static Boolean DecodeReg(char *Asc, Byte *Erg)
 BEGIN
-   char *endptr,*s;
+   char *s;
 
    if (FindRegDef(Asc,&s)) Asc=s;
 
-   if (toupper(*Asc)!='R') return False;
+   if ((strlen(Asc) != 2) OR (toupper(*Asc)!='R')) return False;
    else
     BEGIN
-     *Erg=strtol(Asc+1,&endptr,10);
-     return ((*endptr=='\0') AND (*Erg<=15));
+     *Erg = RegVal(toupper(Asc[1]));
+     return (*Erg != 0xff);
+    END
+END
+
+	static Boolean DecodeRReg(char *Asc, Byte *Erg)
+BEGIN
+   Byte h;
+   char *s;
+
+   if (FindRegDef(Asc,&s)) Asc = s;
+
+   if ((strlen(Asc) != 4) OR (toupper(*Asc) != 'R') OR (toupper(Asc[2]) != 'R')) return False;
+   else
+    BEGIN
+     *Erg = RegVal(toupper(Asc[1]));
+     h = RegVal(toupper(Asc[3]));
+     return ((*Erg != 0xff) AND (h != 0xff) AND (h == (*Erg) + 1) AND (Odd(h)));
     END
 END
 
@@ -85,17 +119,30 @@ BEGIN
     END
 END
 
+	static void DecodeOneRReg(Word Index)
+BEGIN
+   FixedOrder *Instr=OneRRegOrders+Index;
+   Byte Erg;
+
+   if (ArgCnt!=1) WrError(1110);
+   else if (NOT DecodeRReg(ArgStr[1],&Erg)) WrXError(1445,ArgStr[1]);
+   else
+    BEGIN
+     BAsmCode[0]=Instr->Code+Erg; CodeLen=1;
+    END
+END
+
         static void DecodeAccReg(Word Index)
 BEGIN
    FixedOrder *Instr=AccRegOrders+Index;
    Byte Erg;
 
-   if (ArgCnt!=2) WrError(1110);
-   else if (strcasecmp(ArgStr[1],"A")!=0) WrError(1350);
-   else if (NOT DecodeReg(ArgStr[2],&Erg)) WrXError(1445,ArgStr[2]);
+   if ((ArgCnt != 2) AND (ArgCnt != 1)) WrError(1110);
+   else if ((ArgCnt == 2) AND (strcasecmp(ArgStr[1], "A") != 0)) WrError(1350);
+   else if (NOT DecodeReg(ArgStr[ArgCnt], &Erg)) WrXError(1445, ArgStr[ArgCnt]);
    else
     BEGIN
-     BAsmCode[0]=Instr->Code+Erg; CodeLen=1;
+     BAsmCode[0] = Instr->Code + Erg; CodeLen = 1;
     END
 END
 
@@ -143,7 +190,7 @@ BEGIN
    else if (NOT DecodeReg(ArgStr[1],&Erg)) WrXError(1445,ArgStr[1]);
    else
     BEGIN
-     Adr=EvalIntExpression(ArgStr[1],UInt12,&OK);
+     Adr=EvalIntExpression(ArgStr[2],UInt12,&OK);
      if (OK)
       if ((NOT SymbolQuestionable) AND (Hi(EProgCounter()+1)!=Hi(Adr))) WrError(1910);
       else
@@ -153,8 +200,144 @@ BEGIN
     END
 END
 
+	static void DecodeJCN(Word Index)
+BEGIN
+   Word AdrInt;
+   Boolean OK;
+
+   if (ArgCnt != 2) WrError(1110);
+   else
+    BEGIN
+     BAsmCode[0] = 0x10;
+     if (strcasecmp(ArgStr[1], "Z") == 0) BAsmCode[0] += 4;
+     else if (strcasecmp(ArgStr[1], "NZ") == 0) BAsmCode[0] += 12;
+     else if (strcasecmp(ArgStr[1], "C") == 0) BAsmCode[0] += 2;
+     else if (strcasecmp(ArgStr[1], "NC") == 0) BAsmCode[0] += 10;
+     else if (strcasecmp(ArgStr[1], "T") == 0) BAsmCode[0] += 1;
+     else if (strcasecmp(ArgStr[1], "NT") == 0) BAsmCode[0] += 9;
+     if (BAsmCode[0] == 0x10) WrXError(1360, ArgStr[1]);
+     else
+      BEGIN
+       AdrInt = EvalIntExpression(ArgStr[2], UInt12, &OK);
+       if (OK)
+        if ((NOT SymbolQuestionable) AND (Hi(EProgCounter() + 2) != Hi(AdrInt))) WrError(1370);
+        else
+         BEGIN
+          BAsmCode[1] = Lo(AdrInt);
+          CodeLen = 2;
+         END
+      END
+    END
+END
+
+	static void DecodeFIM(Word Index)
+BEGIN
+   Boolean OK;
+
+   if (ArgCnt != 2) WrError(1110);
+   else if (NOT DecodeRReg(ArgStr[1], BAsmCode)) WrXError(1445, ArgStr[1]);
+   else
+    BEGIN
+     BAsmCode[1] = EvalIntExpression(ArgStr[2], Int8, &OK);
+     if (OK)
+      BEGIN
+       BAsmCode[0] |= 0x20;
+       CodeLen = 2;
+      END
+    END
+END
+
 	static Boolean DecodePseudo(void)
 BEGIN
+   Boolean ValOK;
+   Word Size;
+   int z, z2;
+   TempResult t;
+   char Ch;
+
+   if (Memo("DS"))
+    BEGIN
+     if (ArgCnt!=1) WrError(1110);
+     else
+      BEGIN
+       FirstPassUnknown=False;
+       Size=EvalIntExpression(ArgStr[1],Int16,&ValOK);
+       if (FirstPassUnknown) WrError(1820);
+       if ((ValOK) AND (NOT FirstPassUnknown))
+	BEGIN
+	 DontPrint=True;
+	 CodeLen=Size;
+         BookKeeping();
+	END
+      END
+     return True;
+    END
+
+   if (Memo("DATA"))
+    BEGIN
+     if (ArgCnt==0) WrError(1110);
+     else
+      BEGIN
+       ValOK=True;
+       for (z=1; z<=ArgCnt; z++)
+	if (ValOK)
+	 BEGIN
+          FirstPassUnknown=False;
+	  EvalExpression(ArgStr[z],&t);
+          if ((t.Typ==TempInt) AND (FirstPassUnknown))
+           if (ActPC==SegData) t.Contents.Int&=7; else t.Contents.Int&=127;
+	  switch (t.Typ)
+           BEGIN
+            case TempInt:
+             if (ActPC==SegCode)
+              BEGIN
+               if (NOT RangeCheck(t.Contents.Int,Int8))
+                BEGIN
+                 WrError(1320); ValOK=False;
+                END
+               else BAsmCode[CodeLen++]=t.Contents.Int & 0xff;
+              END
+             else
+              BEGIN
+               if (NOT RangeCheck(t.Contents.Int,Int4))
+                BEGIN
+                 WrError(1320); ValOK=False;
+                END
+               else BAsmCode[CodeLen++]=t.Contents.Int & 0x0f;
+              END
+             break;
+            case TempFloat:
+             WrError(1135); ValOK=False;
+             break;
+            case TempString:
+             for (z2=0; z2<strlen(t.Contents.Ascii); z2++)
+              BEGIN
+               Ch=CharTransTable[((usint) t.Contents.Ascii[z2])&0xff];
+               if (ActPC==SegCode)
+                BAsmCode[CodeLen++]=Ch;
+               else
+                BEGIN
+                 BAsmCode[CodeLen++]=Ch >> 4;
+                 BAsmCode[CodeLen++]=Ch & 15;
+                END
+              END
+             break;
+	    default:
+             ValOK=False;
+	   END
+	 END
+       if (NOT ValOK) CodeLen=0;
+      END
+     return True;
+    END
+
+   if (Memo("REG"))
+    BEGIN
+     if (ArgCnt!=1) WrError(1110);
+     else AddRegDef(LabPart,ArgStr[1]);
+     return True;
+    END
+
    return False;
 END
 
@@ -175,6 +358,13 @@ BEGIN
    if (InstrZ>=OneRegOrderCnt) exit(255);
    OneRegOrders[InstrZ].Code=NCode;
    AddInstTable(InstTable,NName,InstrZ++,DecodeOneReg);
+END
+
+	static void AddOneRReg(char *NName, Byte NCode)
+BEGIN
+   if (InstrZ>=OneRRegOrderCnt) exit(255);
+   OneRRegOrders[InstrZ].Code=NCode;
+   AddInstTable(InstTable,NName,InstrZ++,DecodeOneRReg);
 END
 
 	static void AddAccReg(char *NName, Byte NCode)
@@ -211,10 +401,17 @@ BEGIN
    AddFixed("TCC" ,0xf7); AddFixed("DAC" ,0xf8);
    AddFixed("TCS" ,0xf9); AddFixed("STC" ,0xfa);
    AddFixed("DAA" ,0xfb); AddFixed("KBP" ,0xfc);
-   AddFixed("DCL" ,0xfd);
+   AddFixed("DCL" ,0xfd); AddFixed("AD0" ,0xec);
+   AddFixed("AD1" ,0xed); AddFixed("AD2" ,0xee);
+   AddFixed("AD3" ,0xef);
 
    InstrZ=0; OneRegOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*OneRegOrderCnt);
    AddOneReg("INC" ,0x60);
+
+   InstrZ=0; OneRRegOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*OneRRegOrderCnt);
+   AddOneRReg("SRC" ,0x21);
+   AddOneRReg("FIN" ,0x30);
+   AddOneRReg("JIN" ,0x31);
 
    InstrZ=0; AccRegOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*AccRegOrderCnt);
    AddAccReg("ADD" ,0x80); AddAccReg("SUB" ,0x90);
@@ -223,9 +420,12 @@ BEGIN
    InstrZ=0; Imm4Orders=(FixedOrder *) malloc(sizeof(FixedOrder)*Imm4OrderCnt);
    AddImm4("BBL" ,0xc0); AddImm4("LDM" ,0xd0);
 
-   AddInstTable(InstTable,"JUN",0,DecodeFullJmp);
-   AddInstTable(InstTable,"JMS",1,DecodeFullJmp);
-   AddInstTable(InstTable,"ISZ",0,DecodeISZ);
+   AddInstTable(InstTable,"JCN", 0, DecodeJCN);
+   AddInstTable(InstTable,"JCM", 0, DecodeJCN);
+   AddInstTable(InstTable,"JUN", 0, DecodeFullJmp);
+   AddInstTable(InstTable,"JMS", 1, DecodeFullJmp);
+   AddInstTable(InstTable,"ISZ", 0, DecodeISZ);
+   AddInstTable(InstTable,"FIM", 0, DecodeFIM);
 END
 
         static void DeinitFields(void)
@@ -233,6 +433,7 @@ BEGIN
    DestroyInstTable(InstTable);
    free(FixedOrders);
    free(OneRegOrders);
+   free(OneRRegOrders);
    free(AccRegOrders);
    free(Imm4Orders);
 END
@@ -252,22 +453,14 @@ BEGIN
 
    if (DecodePseudo()) return;
 
-   WrXError(1200,OpPart);
-END
+   /* der Rest */
 
-	static Boolean ChkPC_4004(void)
-BEGIN
-   switch (ActPC)
-    BEGIN
-     case SegCode : return (ProgCounter() < 4095);
-     case SegData : return (ProgCounter() < 255);
-     default: return False;
-    END
+   if (NOT LookupInstTable(InstTable, OpPart)) WrXError(1200, OpPart);
 END
 
         static Boolean IsDef_4004(void)
 BEGIN
-   return False;
+   return Memo("REG");
 END
 
         static void SwitchFrom_4004(void)
@@ -277,16 +470,22 @@ END
 
 	static void SwitchTo_4004(void)
 BEGIN
+   PFamilyDescr FoundDescr;
+
+   FoundDescr=FindFamilyByName("4004/4040");
+
    TurnWords=False; ConstMode=ConstModeIntel; SetIsOccupied=False;
 
-   PCSymbol="$"; HeaderID=0x3f; NOPCode=0x00;
+   PCSymbol="$"; HeaderID=FoundDescr->Id; NOPCode=0x00;
    DivideChars=","; HasAttrs=False;
 
    ValidSegs=(1<<SegCode)|(1<<SegData);
    Grans[SegCode ]=1; ListGrans[SegCode ]=1; SegInits[SegCode ]=0;
-   Grans[SegData ]=1; ListGrans[SegData ]=1; SegInits[SegCode ]=0;
+   SegLimits[SegCode] = 0xfff;
+   Grans[SegData ]=1; ListGrans[SegData ]=1; SegInits[SegData ]=0;
+   SegLimits[SegData] = 0xff;
 
-   MakeCode=MakeCode_4004; ChkPC=ChkPC_4004; IsDef=IsDef_4004;
+   MakeCode=MakeCode_4004; IsDef=IsDef_4004;
    SwitchFrom=SwitchFrom_4004;
 
    InitFields();
@@ -298,5 +497,7 @@ END
 	void code4004_init(void)
 BEGIN
    CPU4004=AddCPU("4004",SwitchTo_4004);
+#if 0
    CPU4040=AddCPU("4040",SwitchTo_4004);
+#endif
 END

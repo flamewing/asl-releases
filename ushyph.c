@@ -5,12 +5,14 @@
 /* Trennungsmuster (US-)englisch                                             */
 /* abgeleitet von 'ushyphen.tex' aus TeX                                     */
 /*                                                                           */
-/* Historie: 16.2.1998 Konvertierung                                         */
+/* Historie: 16. 2.1998 Konvertierung                                        */
+/*            2. 7.1998 für MSDOS auskommentiert                             */
 /*                                                                           */
 /*****************************************************************************/
 
 #include <stdio.h>
 
+#ifndef __MSDOS__
 char *USHyphens[]=
 
 /* The Plain TeX hyphenation tables [NOT TO BE CHANGED IN ANY WAY!] */
@@ -671,6 +673,7 @@ char *USHyphens[]=
 #endif
  NULL
 };
+#endif
 
 /* Do NOT make any alterations to this list! --- DEK */
 

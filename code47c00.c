@@ -5,6 +5,7 @@
 /* Codegenerator Toshiba TLCS-47(0(A))                                       */
 /*                                                                           */
 /* Historie: 30.12.1996 Grundsteinlegung                                     */
+/*            3. 1.1999 ChkPC-Anpassung                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -1079,17 +1080,6 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static Boolean ChkPC_47C00(void)
-BEGIN
-   switch (ActPC)
-    BEGIN
-     case SegCode  : return (ProgCounter() <=ROMEnd());
-     case SegData  : return (ProgCounter() <=RAMEnd());
-     case SegIO    : return (ProgCounter() <=PortEnd());
-     default: return False;
-    END
-END
-
 	static Boolean IsDef_47C00(void)
 BEGIN
    return (Memo("PORT"));
@@ -1109,10 +1099,13 @@ BEGIN
 
    ValidSegs=(1<<SegCode)|(1<<SegData)|(1<<SegIO);
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
+   SegLimits[SegCode] = ROMEnd();
    Grans[SegData]=1; ListGrans[SegData]=1; SegInits[SegData]=0;
+   SegLimits[SegData] = RAMEnd();
    Grans[SegIO  ]=1; ListGrans[SegIO  ]=1; SegInits[SegIO  ]=0;
+   SegLimits[SegIO  ] = PortEnd();
 
-   MakeCode=MakeCode_47C00; ChkPC=ChkPC_47C00; IsDef=IsDef_47C00;
+   MakeCode=MakeCode_47C00; IsDef=IsDef_47C00;
    SwitchFrom=SwitchFrom_47C00; InitFields();
 END
 

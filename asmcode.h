@@ -14,7 +14,7 @@ extern LongInt RecPos;
 
 extern void DreheCodes(void);
 
-extern void NewRecord(void);
+extern void NewRecord(LargeWord NStart);
 
 extern void OpenFile(void);
 

@@ -6,6 +6,7 @@
 /*                                                                           */
 /* Historie: 10.11.1996                                                      */
 /*           16. 3.1997 80196N/80296                                         */
+/*            3. 1.1999 ChkPC-Anpassung                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -1211,19 +1212,6 @@ BEGIN
    WSR1Val=0; CalcWSR1Window();
 END
 
-	static Boolean ChkPC_96(void)
-BEGIN
-   switch (ActPC)
-    BEGIN
-     case SegCode:
-      if (MomCPU>=CPU80196N) return (ProgCounter()<0x1000000);
-                        else return (ProgCounter()<0x10000);
-     default:
-      return False;
-    END
-END
-
-
 	static Boolean IsDef_96(void)
 BEGIN
    return False;
@@ -1243,8 +1231,9 @@ BEGIN
 
    ValidSegs=1<<SegCode;
    Grans[SegCode ]=1; ListGrans[SegCode ]=1; SegInits[SegCode ]=0;
+   SegLimits[SegCode] = (MomCPU >= CPU80196N) ? 0xffffffl : 0xffff;
 
-   MakeCode=MakeCode_96; ChkPC=ChkPC_96; IsDef=IsDef_96;
+   MakeCode=MakeCode_96; IsDef=IsDef_96;
    SwitchFrom=SwitchFrom_96;
 
    if (MomCPU>=CPU80196N) MemInt=UInt24;

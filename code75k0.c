@@ -5,6 +5,7 @@
 /* Codegenerator NEC 75K0                                                    */
 /*                                                                           */
 /* Historie: 31.12.1996 Grundsteinlegung                                     */
+/*            3. 1.1999 ChkPC-Anpassung                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -1378,16 +1379,6 @@ BEGIN
    MBSValue=0; MBEValue=0;
 END
 
-        static Boolean ChkPC_75K0(void)
-BEGIN
-   switch (ActPC)
-    BEGIN
-     case SegCode : return (ProgCounter()<=ROMEnd);
-     case SegData : return (ProgCounter()<0x1000);
-     default      : return False;
-    END
-END
-
         static Boolean IsDef_75K0(void)
 BEGIN
    return ((Memo("SFR")) OR (Memo("BIT")));
@@ -1408,9 +1399,11 @@ BEGIN
    ValidSegs=(1<<SegCode)|(1<<SegData);
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
    Grans[SegData]=1; ListGrans[SegData]=1; SegInits[SegData]=0;
+   SegLimits[SegData] = 0xfff;
 
-   MakeCode=MakeCode_75K0; ChkPC=ChkPC_75K0; IsDef=IsDef_75K0;
+   MakeCode=MakeCode_75K0; IsDef=IsDef_75K0;
    SwitchFrom=SwitchFrom_75K0; InitFields();
+   SegLimits[SegCode] = ROMEnd;
 END
 
 	void code75k0_init(void) 

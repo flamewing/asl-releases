@@ -5,6 +5,7 @@
 /* Codegenerator 6809/6309                                                   */
 /*                                                                           */
 /* Historie: 10.10.1996 Grundsteinlegung                                     */
+/*            2. 1.1999 ChkPC-Anpassung                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -1282,11 +1283,6 @@ BEGIN
    DPRValue=0;
 END
 
-	static Boolean ChkPC_6809(void)
-BEGIN
-   return ((ActPC==SegCode) AND (ProgCounter()<0x10000));
-END
-
 	static Boolean IsDef_6809(void)
 BEGIN
    return False;
@@ -1306,8 +1302,9 @@ BEGIN
 
    ValidSegs=(1<<SegCode);
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
+   SegLimits[SegCode] = 0xffff;
 
-   MakeCode=MakeCode_6809; ChkPC=ChkPC_6809; IsDef=IsDef_6809;
+   MakeCode=MakeCode_6809; IsDef=IsDef_6809;
 
    SwitchFrom=SwitchFrom_6809; InitFields();
 END

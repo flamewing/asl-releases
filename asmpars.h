@@ -5,15 +5,34 @@
 /* Verwaltung von Symbolen und das ganze Drumherum...                        */
 /*                                                                           */
 /* Historie:  5. 5.1996 Grundsteinlegung                                     */
+/*           26. 6.1998 Codepages                                            */
+/*           16. 8.1998 NoICE-Symbolausgabe                                  */
+/*            6.12.1998 UInt14                                               */
+/*           12. 7.1999 angefangen mit externen Symbolen                     */
 /*                                                                           */
 /*****************************************************************************/
 
-typedef enum {UInt1    ,UInt2    ,UInt3    ,SInt4    ,UInt4    , Int4    ,
-              SInt5    ,UInt5    , Int5    ,UInt6    ,SInt7    ,UInt7    ,SInt8    ,UInt8    ,
-               Int8    ,UInt9    ,UInt10   , Int10   ,UInt11   ,UInt12   , Int12   ,
-              UInt13   ,UInt15   ,SInt16   ,UInt16   , Int16   ,UInt18   ,SInt20   ,
-              UInt20   , Int20   ,UInt22   ,SInt24   ,UInt24   , Int24   ,SInt32   ,UInt32   ,
-               Int32   ,
+typedef enum {UInt1    ,
+              UInt2    ,
+              UInt3    ,
+              SInt4    ,UInt4    , Int4    ,
+              SInt5    ,UInt5    , Int5    ,
+              UInt6    ,
+              SInt7    ,UInt7    ,
+              SInt8    ,UInt8    , Int8    ,
+              UInt9    ,
+              UInt10   , Int10   ,
+              UInt11   ,
+              UInt12   , Int12   ,
+              UInt13   ,
+              UInt14   ,
+              UInt15   ,
+              SInt16   ,UInt16   , Int16   ,
+              UInt18   ,
+              SInt20   ,UInt20   , Int20   ,
+              UInt22   ,
+              SInt24   ,UInt24   , Int24   ,
+              SInt32   ,UInt32   , Int32   ,
 #ifdef HAS64
                Int64   ,
 #endif
@@ -59,6 +78,8 @@ extern Boolean ExpandSymbol(char *Name);
 
 extern void EnterIntSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange);
 
+extern void EnterExtSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange);
+
 extern void EnterFloatSymbol(char *Name_O, Double Wert, Boolean MayChange);
 
 extern void EnterStringSymbol(char *Name_O, char *Wert, Boolean MayChange);
@@ -72,6 +93,8 @@ extern Boolean GetStringSymbol(char *Name, char *Wert);
 extern void PrintSymbolList(void);
 
 extern void PrintDebSymbols(FILE *f);
+
+extern void PrintNoISymbols(FILE *f);
 
 extern void PrintSymbolTree(void);
 
@@ -173,6 +196,11 @@ extern void CleanupRegDefs(void);
 extern void ClearRegDefs(void);
 
 extern void PrintRegDefs(void);
+
+
+extern void ClearCodepages(void);
+
+extern void PrintCodepages(void);
 
 
 extern void asmpars_init(void);

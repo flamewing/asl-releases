@@ -5,6 +5,8 @@
 /* Haeufiger benutzte Pseudo-Befehle                                         */
 /*                                                                           */
 /* Historie: 23. 5.1996 Grundsteinlegung                                     */
+/*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
+/*           18. 8.1998 BookKeeping-Aufrufe bei SPeicherreservierungen       */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -248,7 +250,7 @@ BEGIN
       return Result;
     END
 
-   if (Turn) DSwap(BAsmCode+CodeLen,4);
+   if (Turn) DSwap(BAsmCode+CodeLen-4,4);
    return True;
 END
 
@@ -310,7 +312,7 @@ BEGIN
       return Result;
     END
  
-   if (Turn) QSwap(BAsmCode+CodeLen,8);
+   if (Turn) QSwap(BAsmCode+CodeLen-8,8);
    return True;
 END
 
@@ -521,8 +523,8 @@ BEGIN
       END
      while ((OK) AND (z<=ArgCnt));
      DontPrint=(DSFlag==DSSpace);
-     if ((MakeUseList) AND (DontPrint))
-      if (AddChunk(SegChunks+ActPC,ProgCounter(),CodeLen,ActPC==SegCode)) WrError(90);
+     if (DontPrint) BookKeeping();
+     if (OK) ActListGran=1;
      return True;
     END
 
@@ -537,8 +539,7 @@ BEGIN
        else if (OK)
         BEGIN
          DontPrint=True; CodeLen=HVal;
-         if (MakeUseList)
-          if (AddChunk(SegChunks+ActPC,ProgCounter(),CodeLen,ActPC==SegCode)) WrError(90);
+         BookKeeping();
         END
       END
      return True;
@@ -735,8 +736,7 @@ BEGIN
      else if (OK)
       BEGIN
        DontPrint=True; CodeLen=HVal16;
-       if (MakeUseList)
-        if (AddChunk(SegChunks+ActPC,ProgCounter(),HVal16,ActPC==SegCode)) WrError(90);
+       BookKeeping();
       END
     END
 END
@@ -891,7 +891,7 @@ BEGIN
 	           END
 		  else 
                    for (z2=0; z2<Rep; z2++)
-	            for (zp=t.Contents.Ascii; *zp!='\0'; EnterByte(CharTransTable[(unsigned int) *(zp++)]));
+	            for (zp=t.Contents.Ascii; *zp!='\0'; EnterByte(CharTransTable[((usint) *(zp++))&0xff]));
                   break;
 	         default: OK=False;
 	        END
@@ -1166,8 +1166,7 @@ BEGIN
 	   if (CodeLen==0) DontPrint=False;
 	  END
 	 else CodeLen=HVal*WSize;
-	 if ((MakeUseList) AND (DontPrint))
-	  if (AddChunk(SegChunks+ActPC,ProgCounter(),CodeLen,ActPC==SegCode)) WrError(90);
+	 if (DontPrint) BookKeeping();
 	END
       END
      return True;
@@ -1196,7 +1195,7 @@ BEGIN
 	PushLocHandle(-1);
 	EnterIntSymbol(LabPart,Erg,DestSeg,False);
 	PopLocHandle();
-	if ((MakeUseList) AND (MakeUseList))
+	if (MakeUseList)
 	 if (AddChunk(SegChunks+DestSeg,Erg,1,False)) WrError(90);
 	t.Typ=TempInt; t.Contents.Int=Erg; SetListLineVal(&t);
        END

@@ -5,6 +5,7 @@
 /* Codegenerator Mitsubishi M16                                              */
 /*                                                                           */
 /* Historie: 27.12.1996 Grundsteinlegung                                     */
+/*            3. 1.1999 ChkPC-Anpassung                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -2782,15 +2783,6 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-        static Boolean ChkPC_M16(void)
-BEGIN
-#ifdef HAS64
-   return ((ActPC==SegCode) AND (ProgCounter()<=0xffffffffll));
-#else
-   return (ActPC==SegCode);
-#endif
-END
-
         static Boolean IsDef_M16(void)
 BEGIN
    return False;
@@ -2810,8 +2802,13 @@ BEGIN
 
    ValidSegs=1<<SegCode;
    Grans[SegCode]=1; ListGrans[SegCode]=2; SegInits[SegCode]=0;
+#ifdef __STDC__
+   SegLimits[SegCode] = 0xfffffffful;
+#else
+   SegLimits[SegCode] = 0xffffffffl;
+#endif
 
-   MakeCode=MakeCode_M16; ChkPC=ChkPC_M16; IsDef=IsDef_M16;
+   MakeCode=MakeCode_M16; IsDef=IsDef_M16;
    SwitchFrom=SwitchFrom_M16; InitFields();
 END
 

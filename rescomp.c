@@ -4,7 +4,8 @@
 /*                                                                           */
 /* Compiler fuer Message-Dateien                                             */
 /*                                                                           */
-/*    17.5.1998  Symbol gegen Mehrfachinklusion eingebaut                    */
+/*    17. 5.1998  Symbol gegen Mehrfachinklusion eingebaut                   */
+/*     5. 7.1998  zusaetzliche Sonderzeichen                                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -52,14 +53,60 @@ static LongInt CatCount,DefCat;
 static FILE *SrcFile,*MsgFile,*HFile;
 static char *IncSym;
 
-static TransRec TransRecs[]=
-                {{"&auml;",CH_ae},
-                 {"&Auml;",CH_Ae},
+static TransRec TransRecs[]={
+                 {"&auml;",CH_ae},
+                 {"&euml;",CH_ee},
+                 {"&iuml;",CH_ie},
                  {"&ouml;",CH_oe},
-                 {"&Ouml;",CH_Oe},
                  {"&uuml;",CH_ue},
+                 {"&Auml;",CH_Ae},
+                 {"&Euml;",CH_Ee},
+                 {"&Iuml;",CH_Ie},
+                 {"&Ouml;",CH_Oe},
                  {"&Uuml;",CH_Ue},
                  {"&szlig;",CH_sz},
+                 {"&sup2;",CH_e2},
+                 {"&micro;",CH_mu},
+                 {"&agrave;",CH_agrave},
+                 {"&Agrave;",CH_Agrave},
+                 {"&egrave;",CH_egrave},
+                 {"&Egrave;",CH_Egrave},
+                 {"&igrave;",CH_igrave},
+                 {"&Igrave;",CH_Igrave},
+                 {"&ograve;",CH_ograve},
+                 {"&Ograve;",CH_Ograve},
+                 {"&ugrave;",CH_ugrave},
+                 {"&Ugrave;",CH_Ugrave},
+                 {"&aacute;",CH_aacute},
+                 {"&Aacute;",CH_Aacute},
+                 {"&eacute;",CH_eacute},
+                 {"&Eacute;",CH_Eacute},
+                 {"&iacute;",CH_iacute},
+                 {"&Iacute;",CH_Iacute},
+                 {"&oacute;",CH_oacute},
+                 {"&Oacute;",CH_Oacute},
+                 {"&uacute;",CH_uacute},
+                 {"&Uacute;",CH_Uacute},
+                 {"&acirc;",CH_acirc},
+                 {"&Acirc;",CH_Acirc},
+                 {"&ecirc;",CH_ecirc},
+                 {"&Ecirc;",CH_Ecirc},
+                 {"&icirc;",CH_icirc},
+                 {"&Icirc;",CH_Icirc},
+                 {"&ocirc;",CH_ocirc},
+                 {"&Ocirc;",CH_Ocirc},
+                 {"&ucirc;",CH_ucirc},
+                 {"&Ucirc;",CH_Ucirc},
+                 {"&ccedil;",CH_ccedil},
+                 {"&Ccedil;",CH_Ccedil},
+                 {"&ntilde;",CH_ntilde},
+                 {"&Ntilde;",CH_Ntilde},
+                 {"&aring;",CH_aring},
+                 {"&Aring;",CH_Aring},
+                 {"&aelig;",CH_aelig},
+                 {"&Aelig;",CH_Aelig},
+                 {"&iquest;",CH_iquest},
+                 {"&iexcl;",CH_iexcl},
                  {"\\n","\n"},
                  {Nil,Nil}};
 

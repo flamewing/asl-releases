@@ -5,6 +5,8 @@
 /* Codegenerator TMS99xx                                                     */     
 /*                                                                           */
 /* Historie:  9. 3.1997 Grundsteinlegung                                     */     
+/*           18. 8.1998 BookKeeping-Aufruf bei BSS                           */
+/*            2. 1.1999 ChkPC angepasst                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -402,8 +404,7 @@ BEGIN
         BEGIN
          if ((DoPadding) AND (Odd(HVal16))) HVal16++;
          DontPrint=True; CodeLen=HVal16;
-         if (MakeUseList)
-          if (AddChunk(SegChunks+ActPC,ProgCounter(),HVal16,ActPC==SegCode)) WrError(90);
+         BookKeeping();
         END
       END
      return True;
@@ -634,11 +635,6 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-        static Boolean ChkPC_9900(void)
-BEGIN
-   return ((ActPC==SegCode) AND (ProgCounter()<0x10000));
-END
-
         static Boolean IsDef_9900(void)
 BEGIN
    return False;
@@ -673,8 +669,9 @@ BEGIN
 
    ValidSegs=1<<SegCode;
    Grans[SegCode]=1; ListGrans[SegCode]=2; SegInits[SegCode]=0;
+   SegLimits[SegCode] = 0xffff;
 
-   MakeCode=MakeCode_9900; ChkPC=ChkPC_9900; IsDef=IsDef_9900;
+   MakeCode=MakeCode_9900; IsDef=IsDef_9900;
    SwitchFrom=SwitchFrom_9900; InternSymbol=InternSymbol_9900;
    AddONOFF("PADDING", &DoPadding , DoPaddingName ,False);
    AddONOFF("SUPMODE", &SupAllowed, SupAllowedName,False);

@@ -5,6 +5,7 @@
 /* Codegenerator NEC uPD78(C)1x                                              */
 /*                                                                           */
 /* Historie: 29.12.1996 Grundsteinlegung                                     */
+/*            2. 1.1999 ChkPC-Anpassung                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -943,15 +944,6 @@ BEGIN
    WorkArea=0x100;
 END
 
-	static Boolean ChkPC_78C10(void)
-BEGIN
-   switch (ActPC)
-    BEGIN
-     case SegCode: return ProgCounter()<0x10000;
-     default: return False;
-    END
-END
-
 	static Boolean IsDef_78C10(void)
 BEGIN
    return False;
@@ -971,8 +963,9 @@ BEGIN
 
    ValidSegs=1<<SegCode;
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
+   SegLimits[SegCode] = 0xffff;
 
-   MakeCode=MakeCode_78C10; ChkPC=ChkPC_78C10; IsDef=IsDef_78C10;
+   MakeCode=MakeCode_78C10; IsDef=IsDef_78C10;
    SwitchFrom=SwitchFrom_78C10; InitFields();
 END
 

@@ -5,6 +5,7 @@
 /* Abhandlung landesspezifischer Unterschiede                                */
 /*                                                                           */
 /* Historie: 16. 5.1996 Grundsteinlegung                                     */
+/*           28. 7.1999 %T ist Abkuerzung fuer %H:%M:%S                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -231,7 +232,7 @@ BEGIN
 
 #ifdef LOCALE_NLS
    tmpstr=nl_langinfo(D_FMT); 
-   if (tmpstr==Nil) tmpstr="%m/%d/%y";
+   if ((tmpstr==Nil) OR (*tmpstr == '\0')) tmpstr="%m/%d/%y";
    DidDate=False;
 #endif
 
@@ -300,7 +301,7 @@ BEGIN
 
 #ifdef LOCALE_NLS 
    tmpstr=nl_langinfo(T_FMT); 
-   if (tmpstr==Nil) tmpstr="%H:%M:%S";
+   if ((tmpstr==Nil) OR (*tmpstr == '\0')) tmpstr="%H:%M:%S";
    DidDate=False;
 #endif
 
@@ -342,11 +343,16 @@ BEGIN
           case 'S': FmtBuffer+=1; break;
           case 'M': FmtBuffer+=2; break;
           case 'H': FmtBuffer+=3; break;
+          case 'T': fprintf(stderr, "\nwarning, detected non-ANSI time format specifier '%%T'");
+                    run = "H:%M:%S"; break;
+          case 'R': fprintf(stderr, "\nwarning, detected non-ANSI time format specifier '%%R'");
+                    run = "H:%M"; break;
          END
         if (NLSInfo.TimeSep==Nil)
          BEGIN
           run++; cpy=NLSInfo.TimeSep=strdup("                  ");
-          while ((*run!=' ') AND (*run!='%')) *(cpy++)=(*(run++));
+          while ((*run != '\0') AND (*run!=' ') AND (*run!='%'))
+           *(cpy++)=(*(run++));
           *cpy='\0';
          END
         else run++;

@@ -19,5 +19,6 @@ for %%i in (*.msg) do copy %%i %1
 
 md %5
 set docdirs=DE EN
-for %%i in (%docdirs%) do unumlaut doc_%%i\as.doc %5\as_%%i.doc
-for %%i in (%docdirs%) do unumlaut doc_%%i\as.tex %5\as_%%i.tex
+for %%i in (%docdirs%) do copy doc_%%i\as.doc %5\as_%%i.doc
+for %%i in (%docdirs%) do copy doc_%%i\as.tex %5\as_%%i.tex
+for %%i in (%docdirs%) do copy doc_%%i\as.htm %5\as_%%i.htm
