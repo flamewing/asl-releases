@@ -8,6 +8,13 @@
 /*           28. 7.1999 %T ist Abkuerzung fuer %H:%M:%S                      */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: nls.c,v 1.2 2002/05/11 20:24:35 alfred Exp $                         */
+/*****************************************************************************
+ * $Log: nls.c,v $
+ * Revision 1.2  2002/05/11 20:24:35  alfred
+ * - flush stdout before printing errors
+ *
+ *****************************************************************************/
 
 #undef DEBUG_NLS
 
@@ -345,9 +352,11 @@ BEGIN
           case 'S': FmtBuffer+=1; break;
           case 'M': FmtBuffer+=2; break;
           case 'H': FmtBuffer+=3; break;
-          case 'T': fprintf(stderr, "\nwarning, detected non-ANSI time format specifier '%%T'");
+          case 'T': fflush(stdout);
+                    fprintf(stderr, "\nwarning, detected non-ANSI time format specifier '%%T'\n");
                     run = "H:%M:%S"; break;
-          case 'R': fprintf(stderr, "\nwarning, detected non-ANSI time format specifier '%%R'");
+          case 'R': fflush(stdout);
+                    fprintf(stderr, "\nwarning, detected non-ANSI time format specifier '%%R'\n");
                     run = "H:%M"; break;
          END
         if (NLSInfo.TimeSep==Nil)

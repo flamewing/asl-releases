@@ -572,6 +572,7 @@ Datei             & Funktion \\
 \hline
 REGAVR.INC        & Register- \& Bitadressen AVR-Familie \\
 REGCOP8.INC       & Registeradressen COP8 \\
+REGGP32.INC       & Registeradressen 68HC908GP32 \\
 REGHC12.INC       & Registeradressen 68HC12 \\
 REGM16C.INC       & Registeradressen Mitsubishi M16C \\
 REGMSP.INC        & Registeradressen TI MSP430 \\
@@ -2943,13 +2944,14 @@ ROMs, die in \tty{STDDEFXA.INC} definiert ist.
 %%-----------
 \begin{quote}
 z) AT90S1200 $\rightarrow$ AT90S2313 $\rightarrow$ AT90S4414 $\rightarrow$
-   AT90S8515
+   AT90S8515 $\rightarrow$ ATMEGA8 $\rightarrow$ ATMEGA16
 \end{quote}
 Der erste Vertreter der AVR-Reihe stellt die Minimalkonfiguration dar,
 ohne RAM-Speicher und demzufolge auch ohne Load/Store-Befehle.  Die
-beiden anderen Prozessoren unterscheiden sich nur im Speicherausbau
+n"achsten drei Prozessoren unterscheiden sich nur im Speicherausbau
 und in der eingebauten Peripherie, was in \tty{REGAVR.INC} differenziert
-wird.
+wird.  "Ahnlich verh"alt es sich mit den Mega-AVRs, die gegen"uber den
+Vorg"angern aber auch neue Maschinenbefehle mitbringen.
 %%-----------
 \begin{quote}
 aa) AM29245 $\rightarrow$ AM29243 $\rightarrow$ AM29240 $\rightarrow$ AM29000
@@ -4299,17 +4301,18 @@ Hinweisen erl"autert).
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-\subsection{SINGLE und EXTENDED}
-\ttindex{SINGLE}\ttindex{EXTENDED}
+\subsection{SINGLE, DOUBLE und EXTENDED}
+\ttindex{SINGLE}\ttindex{DOUBLE}\ttindex{EXTENDED}
 
-{\em G"ultigkeit: 320C3x}
+{\em G"ultigkeit: 320C3x (nicht {\tt DOUBLE}), 320C6x (nicht {\tt
+   EXTENDED})}
 
 Mit diesen Befehlen werden Gleitkomma-Konstanten im Speicher abgelegt,
-jedoch nicht im IEEE-Format, sondern in den vom Prozessor verwendeten
-32- und 40-Bit-Formaten.  Da 40 Bit nicht mehr in eine Speicherzelle
-hineinpassen, werden im Falle von \tty{EXTENDED} immer derer 2 pro Wert
-belegt.  Im ersten Wort finden sich die oberen 8 Bit (der Exponent), der
-Rest (Vorzeichen und Mantisse) in zweiten Wort.
+jedoch beim 320C3x nicht im IEEE-Format, sondern in den vom Prozessor
+verwendeten 32- und 40-Bit-Formaten.  Da 40 Bit nicht mehr in eine
+Speicherzelle hineinpassen, werden im Falle von \tty{EXTENDED} immer derer
+2 pro Wert belegt.  Im ersten Wort finden sich die oberen 8 Bit (der
+Exponent), der Rest (Vorzeichen und Mantisse) in zweiten Wort.
 
 
 
@@ -4509,7 +4512,7 @@ den PICs Bytes, beim 4500er Nibbles sowie bei Texas ebenfalls W"orter.
 \subsection{BSS}
 \ttindex{BSS}
 
-{\em G"ultigkeit: 320C2(0)x, 320C3x, 320C5x, MSP}
+{\em G"ultigkeit: 320C2(0)x, 320C3x, 320C5x, 320C6x, MSP}
 
 \tty{BSS} arbeitet analog zu \tty{RES}, lediglich ein eventuell vor dem
 Befehl stehendes Symbol wird beim 320C2(0)x/5x als untypisiert gespeichert.
@@ -5166,6 +5169,12 @@ Neben \tty{IF} sind noch folgende weitere bedingte Befehle definiert:
 Anstelle von {\tt ELSEIF} darf auch {\tt ELSE} geschrieben werden, weil
 das wohl alle so gewohnt sind....
 
+Zu jeder {\tt IF...}-Anweisung geh"ort ein entsprechendes {\tt ENDIF},
+'offene' Konstrukte f"uhren zu einer Fehlermeldung am Ende des
+Assemblierungslaufes.  Die Zuordnung, welches {\tt ENDIF} AS mit welchem
+{\tt IF...} 'gepaart' hat, l"a"st sich im Listing erkennen: dort wird die
+Zeilennummer des entsprechenden {\tt IF}s angezeigt.
+
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{SWITCH / CASE / ELSECASE / ENDCASE}
@@ -5215,6 +5224,10 @@ nur \ii{ein} Zweig ausgef"uhrt, und zwar bei Mehrdeutigkeiten der erste.
 dem ersten \tty{CASE} darf beliebiger Code stehen (andere \tty{IF}s d"urfen aber nicht
 offen bleiben!), im Sinne eines durchschaubaren Codes sollte davon aber
 kein Gebrauch gemacht werden.
+
+"Ahnlich wie bei {\tt IF...}-Konstrukten, mu"s es f"ur jedes {\tt SWITCH}
+genau ein {\tt ENDCASE} geben.  Analog zu {\tt ENDIF} wird bei {\tt ENDCASE}
+im Listing die Zeilennummer des korrespondierenden {\tt SWITCH} angezeigt.
 
 %%---------------------------------------------------------------------------
 
@@ -9680,16 +9693,65 @@ Angaben:
                {Dieses Register ist nur im Maximum-Modus
                 definiert.}
                {keines}
-\errentry{2000}{ung"ultige Pr"afix-Kombination}
+\errentry{2000}{Anweisungspaket "uberschreitet Adre"sgrenze}
                {Fehler}
-               {Die angegebene Kombination von Pr"afixen
-	        ist nicht zul"assig oder nicht im
-	        Maschinenkode darstellbar.}
+               {Ein Anweisungspaket dard nicht "uber eine
+                32-Byte-Adre"sgrenze reichen.}
                {keines}
+\errentry{2001}{Ausf"uhrungseinheit mehrfach benutzt}
+               {Fehler}
+               {Eine der Ausf"uhrungseinheiten des Prozessors wurde in
+                einem Anweisungspaket mehrfach benutzt.}
+               {der Name der Funktionseinheit}
+\errentry{2002}{mehrfache Lang-Leseoperation}
+               {Fehler}
+               {Ein Ausf"uhrungspaket enth"alt mehr als eine
+                Lang-Leseoperation, was nicht erlaubt ist.}
+               {eine der Funktionseinheiten, auf denen eine
+                Lang-Leseoperation ausgef"uhrt wird}
+\errentry{2003}{mehrfache Lang-Schreiboperation}
+               {Fehler}
+               {Ein Ausf"uhrungspaket enth"alt mehr als eine
+                Lang-Schreiboperation, was nicht erlaubt ist.}
+               {eine der Funktionseinheiten, auf denen eine 
+                Lang-Schreiboperation ausgef"uhrt wird}
+\errentry{2004}{Lang-Lese- mit Schreiboperation}
+               {Fehler}
+               {Ein Ausf"uhrungspaket enth"alt sowohl eine
+                Lang-Leseoperation als auch eine Schreiboperation,
+                was nicht erlaubt ist.}
+               {eine der Funktionseinheiten, deren Operationen im
+                Konflikt stehen.}
+\errentry{2005}{zu viele Lesezugriffe auf ein Register}
+               {Fehler}
+               {Auf das gleiche Register wurde mehr als viermal im
+                gleichen Anweisungspaket Bezug genommen.}
+               {der Name des Registers, das zu oft referenziert wurde}
+\errentry{2006}{"uberlappende Ziele}
+               {Fehler}
+               {Auf das gleiche Register wurde mehrfach im gleichen
+                Ausf"uhrungspaket geschrieben, was nicht erlaubt ist.}
+               {der Name der fraglichen Registers}
+\errentry{2008}{zu viele absolute Spr"unge in einem Anweisungspaket}
+               {Fehler}
+               {Ein Anweisungspaket beinhaltet mehr als einen direkten
+                Sprung, was nicht erlaubt ist.}
+               {keines}
+\errentry{2009}{Anweisung nicht auf diese Funktionseinheit ausf"uhrbar}
+               {Fehler}
+               {Diese Anweisung kann nicht auf dieser Funktionseinheit 
+                ausgef"uhrt werden.}
+               {none}
 \errentry{2010}{Ung"ultige Escape-Sequenz}
                {Fehler}
                {Das mit einem Backslash eingeleitete
 	        Sonderzeichen ist nicht definiert.}
+               {keines}
+\errentry{2020}{ung"ultige Pr"afix-Kombination}
+               {Fehler}
+               {Die angegebene Kombination von Pr"afixen
+	        ist nicht zul"assig oder nicht im
+	        Maschinenkode darstellbar.}
                {keines}
 \errentry{10001}{Fehler bein "Offnen der Datei}
                {fatal}
@@ -10818,6 +10880,10 @@ oder ich werde langsam alt...
       \item{unterst"utzt zus"atzlich die TMS320C54x-Familie von Texas
             Instruments;}
       \item{Neue Makro-Option {\tt INTLABEL};}
+      \item{die neuen Instruktionen und Register der MEGA-AVRs 8/16
+            wurden hinzugef"ugt;}
+      \item{{\tt ENDIF/ENDCASE} zeigen im Listing die Zeilennummer des
+            zugeh"origen "offnenden Befehls an;}
       \end{itemize}}
 \end{itemize}
 

@@ -4,6 +4,7 @@ int main(int argc, char **argv)
 {
   int ch;
   
+  (void)argc; (void)argv;
   while (!feof(stdin))
    {
     ch=fgetc(stdin);

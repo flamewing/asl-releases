@@ -9,7 +9,15 @@
 /* Historie: 15. 5.1996 Grundsteinlegung                                     */
 /*                                                                           */
 /*****************************************************************************/
-
+/* $Id: asmif.h,v 1.2 2002/05/01 15:56:09 alfred Exp $                       */
+/***************************************************************************** 
+ * $Log: asmif.h,v $
+ * Revision 1.2  2002/05/01 15:56:09  alfred
+ * - print start line of IF/SWITCH construct when it ends
+ *
+ *
+ *****************************************************************************/
+     
 typedef struct _TIfSave
          {
 	  struct _TIfSave *Next;
@@ -19,6 +27,7 @@ typedef struct _TIfSave
 	  enum {IfState_IFIF,IfState_IFELSE,
 		   IfState_CASESWITCH,IfState_CASECASE,IfState_CASEELSE} State;
 	  Boolean CaseFound;
+	  LongInt StartLine;
          } TIfSave,*PIfSave;
 
 

@@ -1,4 +1,4 @@
-        cpu     6805
+        cpu     68hc05
         page    0
 
         brset0  $12,*

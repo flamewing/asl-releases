@@ -23,8 +23,20 @@
 /*           2001-08-01 QuotPos also works for ) resp. ] characters          */
 /*           2001-09-03 added warning message about X-indexed conversion     */
 /*           2001-10-21 additions for GNU-style errors                       */
+/*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: asmsub.c,v 1.4 2002/05/13 18:17:13 alfred Exp $                      */
+/*****************************************************************************
+ * $Log: asmsub.c,v $
+ * Revision 1.4  2002/05/13 18:17:13  alfred
+ * - added error 2010/2020
+ *
+ * Revision 1.3  2002/05/12 20:56:28  alfred
+ * - added 3206x error messages
+ *
+ *****************************************************************************/
+
 
 #include "stdinc.h"
 #include <string.h>
@@ -658,7 +670,7 @@ BEGIN
        for (z=0; z<strlen(Line);  z++)
         if (Line[z]==Char_HT)
          BEGIN
-          memset(bbuf+blen,8-(blen&7),' ');
+          memset(bbuf+blen, ' ', 8-(blen&7));
           blen+=8-(blen&7);
          END
         else bbuf[blen++]=Line[z];
@@ -991,6 +1003,17 @@ BEGIN
      case 1995: msgno=Num_ErrMsgNotInThisSegment; break;
      case 1996: msgno=Num_ErrMsgNotInMaxmode; break;
      case 1997: msgno=Num_ErrMsgOnlyInMaxmode; break;
+     case 2000: msgno=Num_ErrMsgPackCrossBoundary; break;
+     case 2001: msgno=Num_ErrMsgUnitMultipleUsed; break;
+     case 2002: msgno=Num_ErrMsgMultipleLongRead; break;
+     case 2003: msgno=Num_ErrMsgMultipleLongWrite; break;
+     case 2004: msgno=Num_ErrMsgLongReadWithStore; break;
+     case 2005: msgno=Num_ErrMsgTooManyRegisterReads; break;
+     case 2006: msgno=Num_ErrMsgOverlapDests; break;
+     case 2008: msgno=Num_ErrMsgTooManyBranchesInExPacket; break;
+     case 2009: msgno=Num_ErrMsgCannotUseUnit; break;
+     case 2010: msgno=Num_ErrMsgInvEscSequence; break;
+     case 2020: msgno=Num_ErrMsgInvPrefixCombination; break;
      case 10001: msgno=Num_ErrMsgOpeningFile; break;
      case 10002: msgno=Num_ErrMsgListWrError; break;
      case 10003: msgno=Num_ErrMsgFileReadError; break;
@@ -1571,7 +1594,7 @@ BEGIN
    /* initialize array of valid characters */
 
    ValidSymChar = (Byte*) malloc(sizeof(Byte) * 256);
-   memset(ValidSymChar, sizeof(Byte) * 256, 0);
+   memset(ValidSymChar, 0, sizeof(Byte) * 256);
    for (z = 'a'; z <= 'z'; z++)
      ValidSymChar[z] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
    for (z = 'A'; z <= 'Z'; z++)

@@ -12,6 +12,13 @@
 /*           2001-09-03 added inx as alias for incx                          */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: code6805.c,v 1.2 2002/03/31 23:09:32 alfred Exp $                    */
+/*****************************************************************************
+ * $Log: code6805.c,v $
+ * Revision 1.2  2002/03/31 23:09:32  alfred
+ * - added 68HC05 CPU type
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -81,7 +88,7 @@ typedef struct
 static ShortInt AdrMode,OpSize;
 static Byte AdrVals[2];
 
-static CPUVar CPU6805,CPU6808;
+static CPUVar CPU6805,CPU68HC05,CPU6808;
 
 static BaseOrder *FixedOrders;
 static BaseOrder *RelOrders;
@@ -147,13 +154,13 @@ BEGIN
    AddFixed("TSTX",CPU6805,0x5d); AddFixed("CLRA",CPU6805,0x4f);
    AddFixed("CLRX",CPU6805,0x5f); AddFixed("CLRH",CPU6808,0x8c);
    AddFixed("DAA" ,CPU6808,0x72); AddFixed("DIV" ,CPU6808,0x52);
-   AddFixed("MUL" ,CPU6805,0x42); AddFixed("NSA" ,CPU6808,0x62);
+   AddFixed("MUL" ,CPU68HC05,0x42); AddFixed("NSA" ,CPU6808,0x62);
    AddFixed("PSHA",CPU6808,0x87); AddFixed("PSHH",CPU6808,0x8b);
    AddFixed("PSHX",CPU6808,0x89); AddFixed("PULA",CPU6808,0x86);
    AddFixed("PULH",CPU6808,0x8a); AddFixed("PULX",CPU6808,0x88);
-   AddFixed("STOP",CPU6805,0x8e); AddFixed("TAP" ,CPU6808,0x84);
+   AddFixed("STOP",CPU68HC05,0x8e); AddFixed("TAP" ,CPU6808,0x84);
    AddFixed("TPA" ,CPU6808,0x85); AddFixed("TSX" ,CPU6808,0x95);
-   AddFixed("TXS" ,CPU6808,0x94); AddFixed("WAIT",CPU6805,0x8f);
+   AddFixed("TXS" ,CPU6808,0x94); AddFixed("WAIT",CPU68HC05,0x8f);
    AddFixed("INX" ,CPU6805,0x5c); 
 
    RelOrders=(BaseOrder *) malloc(sizeof(BaseOrder)*RelOrderCnt); InstrZ=0;
@@ -803,5 +810,6 @@ END
         void code6805_init(void)
 BEGIN
    CPU6805=AddCPU("6805",SwitchTo_6805);
+   CPU68HC05=AddCPU("68HC05",SwitchTo_6805);
    CPU6808=AddCPU("68HC08",SwitchTo_6805);
 END

@@ -5,7 +5,7 @@
 /* Hauptmodul                                                                */
 /*                                                                           */
 /* Historie:  4. 5.1996 Grundsteinlegung                                     */
-/*           24. 6.1998 Zeichen³bersetzungstabellen                          */
+/*           24. 6.1998 Zeichenuebersetzungstabellen                         */
 /*           30. 6.1998 Ausgabe in MacPro-File auch wenn Zeile nur aus       */
 /*                      Kommentar oder Label besteht                         */
 /*           18. 7.1998 IRPC-Statement                                       */
@@ -58,9 +58,15 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.3 2002/03/10 10:47:20 alfred Exp $                          */
+/* $Id: as.c,v 1.5 2002/05/19 13:45:32 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.5  2002/05/19 13:45:32  alfred
+ * - clear section usage before starting new pass
+ *
+ * Revision 1.4  2002/05/01 15:35:46  alfred
+ * - removed umlaut
+ *
  * Revision 1.3  2002/03/10 10:47:20  alfred
  * - add CVS log
  *
@@ -2540,7 +2546,11 @@ BEGIN
        ClearDefineList();
        if (DebugMode!=DebugNone) ClearLineInfo();
        ClearIncludeList();
-       if (DebugMode!=DebugNone) ResetAddressRanges();
+       if (DebugMode!=DebugNone)
+       {
+         ResetAddressRanges();
+         ClearSectionUsage();
+       }
       END
     END
    while ((ErrorCount==0) AND (Repass));

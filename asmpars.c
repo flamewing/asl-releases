@@ -36,9 +36,21 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.2 2002/03/10 11:55:42 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.6 2002/05/25 21:15:20 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.c,v $
+ * Revision 1.6  2002/05/25 21:15:20  alfred
+ * - Fix array definition
+ *
+ * Revision 1.5  2002/05/19 13:44:52  alfred
+ * - added ClearSectionUsage()
+ *
+ * Revision 1.4  2002/05/18 16:10:14  alfred
+ * - optimize search via Find(Loc)Node
+ *
+ * Revision 1.3  2002/05/13 18:14:09  alfred
+ * - use error msg 2010
+ *
  * Revision 1.2  2002/03/10 11:55:42  alfred
  * - state which operand type was expected/got
  *
@@ -352,7 +364,7 @@ BEGIN
       if (NOT ChkRange(Acc,0,255)) return False;
       *Erg=Acc; return True;
      default:
-      WrError(1135); return False;
+      WrError(2010); return False;
     END
 END
 
@@ -481,30 +493,30 @@ BEGIN
 END
 
         static Boolean GetSymSection(char *Name, LongInt *Erg)
-BEGIN
+{
    String Part;
    char *q;
-   int l=strlen(Name);
+   int l = strlen(Name);
 
-   if (Name[l-1]!=']')
-    BEGIN
-     *Erg=(-2); return True;
-    END
+   if (Name[l - 1] != ']')
+   {
+     *Erg = (-2); return True;
+   }
 
-   Name[l-1]='\0';
-   q=RQuotPos(Name,'[');
-   Name[l-1]=']';
-   if (Name+strlen(Name)-q<=2)
-    BEGIN
-     WrXError(1020,Name); return False; 
-    END
+   Name[l - 1] = '\0';
+   q = RQuotPos(Name,'[');
+   Name[l - 1] = ']';
+   if (Name + l - q <= 1)
+   {
+     WrXError(1020, Name); return False; 
+   }
 
-   Name[strlen(Name)-1]='\0';
-   strmaxcpy(Part,q+1,255); 
-   *q='\0';
+   Name[l - 1] = '\0';
+   strmaxcpy(Part, q + 1, 255); 
+   *q = '\0';
 
-   return IdentifySection(Part,Erg);
-END
+   return IdentifySection(Part, Erg);
+}
 
 	int DigitVal(char ch, int Base)
 BEGIN
@@ -1903,8 +1915,8 @@ static Operator Operators[OpCnt+1]=
      WrXError(1020,Asc); LEAVE;
     END;
 
-   Ptr = FindLocNode(Asc, TempNone);
-   if (Ptr == Nil) Ptr=FindNode(Asc, TempNone);
+   Ptr = FindLocNode(Asc, TempAll);
+   if (Ptr == Nil) Ptr=FindNode(Asc, TempAll);
    if (Ptr != Nil)
     BEGIN
      switch (Erg->Typ = Ptr->SymWert.Typ)
@@ -1945,7 +1957,7 @@ func_exit:
    if (RVal.Relocs != NULL) FreeRelocs(&RVal.Relocs);
 END
 
-static int TypeNums[TempNone] = {Num_OpTypeInt, Num_OpTypeInt, Num_OpTypeString};
+static int TypeNums[] = {0, Num_OpTypeInt, Num_OpTypeFloat, 0, Num_OpTypeString, 0, 0, 0};
 
         LargeInt EvalIntExpression(char *Asc, IntType Typ, Boolean *OK)
 BEGIN
@@ -2544,7 +2556,7 @@ BEGIN
      else if (SErg>0) Lauf=Lauf->Right;
     END
    if (Lauf!=Nil)
-    if ((SearchType==TempNone) OR (Lauf->SymWert.Typ==SearchType))
+    if (Lauf->SymWert.Typ & SearchType)
      BEGIN
       *FindNode_Result=Lauf; Result=True;
       if (MakeCrossList AND DoRefs) AddReference(Lauf);
@@ -2604,7 +2616,7 @@ BEGIN
     END
 
    if (Lauf!=Nil)
-    if ((SearchType==TempNone) OR (Lauf->SymWert.Typ==SearchType))
+    if (Lauf->SymWert.Typ & SearchType)
      BEGIN
       *FindLocNode_Result=Lauf; Result=True;
      END
@@ -2783,12 +2795,8 @@ BEGIN
    strmaxcpy(NName,Name,255);
    if (NOT ExpandSymbol(NName)) return False;
 
-   Lauf=FindLocNode(NName,TempInt);
-   if (Lauf==Nil) Lauf=FindLocNode(NName,TempFloat);
-   if (Lauf==Nil) Lauf=FindLocNode(NName,TempString);
-   if (Lauf==Nil) Lauf=FindNode(NName,TempInt);
-   if (Lauf==Nil) Lauf=FindNode(NName,TempFloat);
-   if (Lauf==Nil) Lauf=FindNode(NName,TempString);
+   Lauf = FindLocNode(NName, TempAll);
+   if (Lauf == Nil) Lauf = FindNode(NName, TempAll);
    return ((Lauf!=Nil) AND (Lauf->Defined));
 END
 
@@ -2800,13 +2808,9 @@ BEGIN
    strmaxcpy(NName,Name,255);
    if (NOT ExpandSymbol(NName)) return False;
 
-   Lauf=FindLocNode(NName,TempInt);
-   if (Lauf==Nil) Lauf=FindLocNode(NName,TempFloat);
-   if (Lauf==Nil) Lauf=FindLocNode(NName,TempString);
-   if (Lauf==Nil) Lauf=FindNode(NName,TempInt);
-   if (Lauf==Nil) Lauf=FindNode(NName,TempFloat);
-   if (Lauf==Nil) Lauf=FindNode(NName,TempString);
-   return ((Lauf!=Nil) AND (Lauf->Used));
+   Lauf = FindLocNode(NName, TempAll);
+   if (Lauf == Nil) Lauf = FindNode(NName, TempAll);
+   return ((Lauf != Nil) AND (Lauf->Used));
 END
 
         Boolean IsSymbolChangeable(char *Name)
@@ -2817,13 +2821,9 @@ BEGIN
    strmaxcpy(NName,Name,255);
    if (NOT ExpandSymbol(NName)) return False;
 
-   Lauf=FindLocNode(NName,TempInt);
-   if (Lauf==Nil) Lauf=FindLocNode(NName,TempFloat);
-   if (Lauf==Nil) Lauf=FindLocNode(NName,TempString);
-   if (Lauf==Nil) Lauf=FindNode(NName,TempInt);
-   if (Lauf==Nil) Lauf=FindNode(NName,TempFloat);
-   if (Lauf==Nil) Lauf=FindNode(NName,TempString);
-   return ((Lauf!=Nil) AND (Lauf->Changeable));
+   Lauf = FindLocNode(NName, TempAll);
+   if (Lauf == Nil) Lauf = FindNode(NName, TempAll);
+   return ((Lauf != Nil) AND (Lauf->Changeable));
 END
 
         Integer GetSymbolType(char *Name)
@@ -2834,13 +2834,9 @@ BEGIN
    strmaxcpy(NName,Name,255);
    if (NOT ExpandSymbol(NName)) return -1;
 
-   Lauf=FindLocNode(Name,TempInt);
-   if (Lauf==Nil) Lauf=FindLocNode(Name,TempFloat);
-   if (Lauf==Nil) Lauf=FindLocNode(Name,TempString);
-   if (Lauf==Nil) Lauf=FindNode(Name,TempInt);
-   if (Lauf==Nil) Lauf=FindNode(Name,TempFloat);
-   if (Lauf==Nil) Lauf=FindNode(Name,TempString);
-   return (Lauf==Nil) ? -1 : Lauf->SymType;
+   Lauf = FindLocNode(Name, TempAll);
+   if (Lauf == Nil) Lauf=FindNode(Name, TempAll);
+   return (Lauf == Nil) ? -1 : Lauf->SymType;
 END
 
         static void ConvertSymbolVal(SymbolVal *Inp, TempResult *Outp)
@@ -3096,9 +3092,7 @@ BEGIN
    strmaxcpy(SymName,SymName_O,255);
    if (NOT ExpandSymbol(SymName)) return False;
 
-   Src=FindNode(SymName,TempInt);
-   if (Src==Nil) Src=FindNode(SymName,TempFloat);
-   if (Src==Nil) Src=FindNode(SymName,TempString);
+   Src = FindNode(SymName, TempAll);
    if (Src==Nil)
     BEGIN
      WrXError(1010,SymName); return False;
@@ -3146,9 +3140,7 @@ BEGIN
    strmaxcpy(SymName,SymName_O,255);
    if (NOT ExpandSymbol(SymName)) return False;
 
-   Dest=FindNode(SymName,TempInt);
-   if (Dest==Nil) Dest=FindNode(SymName,TempFloat);
-   if (Dest==Nil) Dest=FindNode(SymName,TempString);
+   Dest = FindNode(SymName, TempAll);
    if (Dest==Nil) 
     BEGIN
      WrXError(1010,SymName); return False;
@@ -3468,6 +3460,14 @@ BEGIN
    if ((ActPC!=SegCode) OR (MomSection==Nil)) return;
    AddChunk(&(MomSection->Usage),Start,Length,False);
 END
+
+        void ClearSectionUsage(void)
+{
+  PCToken Tmp;
+
+  for (Tmp = FirstSection; Tmp; Tmp = Tmp->Next)
+    ClearChunk(&(Tmp->Usage));
+}
 
         static void PrintSectionList_PSection(LongInt Handle, int Indent)
 BEGIN

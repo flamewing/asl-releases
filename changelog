@@ -1,4 +1,4 @@
-$Id: changelog,v 1.2 2002/03/10 12:42:29 alfred Exp $
+$Id: changelog,v 1.4 2002/05/25 20:38:25 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -870,3 +870,20 @@ v1.41r8 Aenderungen: (-->v1.42beta)
                 contents not from file
 
 - Extension   : more precise error messages for type conflicts in some places
+
+2002-05-25 [Bld 21]
+
+- Extension   : added Atmel MEGA8/MEGA16 CPU types & registers
+
+- Bugfix      : data disposal for Atmel did not work correctly
+
+- Extension   : extended the 320C6x target with pseudo instructions and 
+                machine instructions that previously had to be emulated
+                with macros
+
+- Extension   : ENDIF/ENDCASE show the line number of the IF/CASE statement
+                they were matched to in the listing
+
+- Bugfix      : [] as specifier for the root section was not accepted
+
+- Bugfix      : avoid incorrect debug output when addresses of sections vary

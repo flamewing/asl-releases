@@ -60,7 +60,7 @@ include makedefs.str
 # supplementary targets
 
 test: $(ALLTARGETS)
-	cd tests; ./testall
+	cd tests; ./testall $(TESTDIRS)
 
 install: $(ALLTARGETS)
 	./install.sh $(BINDIR) $(INCDIR) $(MANDIR) $(LIBDIR) $(DOCDIR)

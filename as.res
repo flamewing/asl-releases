@@ -29,9 +29,15 @@
 ;*           2001-10-21 GNU error messages                                   *
 ;*                                                                           *
 ;*****************************************************************************
-;* $Id: as.res,v 1.2 2002/03/10 11:55:42 alfred Exp $                        *
+;* $Id: as.res,v 1.4 2002/05/13 18:17:13 alfred Exp $                        *
 ;*****************************************************************************
 ;* $Log: as.res,v $
+;* Revision 1.4  2002/05/13 18:17:13  alfred
+;* - added error 2010/2020
+;*
+;* Revision 1.3  2002/05/12 20:56:28  alfred
+;* - added 3206x error messages
+;*
 ;* Revision 1.2  2002/03/10 11:55:42  alfred
 ;* - state which operand type was expected/got
 ;*
@@ -603,6 +609,50 @@ Message ErrMsgNotInMaxmode
 Message ErrMsgOnlyInMaxmode
  "nicht im Minimum-Modus zul&auml;ssig"
  "not allowed in minimum mode"
+
+Message ErrMsgPackCrossBoundary
+ "Anweisungspaket &uuml;berschreitet Adre&szlig;grenze"
+ "execution packet crosses address boundary"
+
+Message ErrMsgUnitMultipleUsed
+ "Ausf&uuml;hrungseinheit mehrfach benutzt"
+ "multiple use of same execution unit"
+
+Message ErrMsgMultipleLongRead
+ "mehrfache Lang-Leseoperation"
+ "multiple long read operations"
+
+Message ErrMsgMultipleLongWrite
+ "mehrfache Lang-Schreiboperation"
+ "multiple long write operations"
+
+Message ErrMsgLongReadWithStore
+ "Lang-Lese- mit Schreiboperation"
+ "long read with write operation"
+
+Message ErrMsgTooManyRegisterReads
+ "zu viele Lesezugriffe auf ein Register"
+ "too many reads of one register"
+
+Message ErrMsgOverlapDests
+ "&uuml;berlappende Ziele"
+ "overlapping destinations"
+
+Message ErrMsgTooManyBranchesInExPacket
+ "zu viele absolute Spr&uuml;nge in einem Anweisungspaket"
+ "too many absolute branches in one execution packet"
+
+Message ErrMsgCannotUseUnit
+ "Anweisung nicht auf diese Funktionseinheit ausf&uuml;hrbar"
+ "instruction cannot be executed on this unit"
+
+Message ErrMsgInvEscSequence
+ "Ung&uuml;ltige Escape-Sequenz"
+ "invalid escape sequence"
+
+Message ErrMsgInvPrefixCombination
+ "ung&uuml;ltige Pr&auml;fix-Kombination"
+ "invalid combination of prefixes"
 
 Message ErrMsgOpeningFile
  "Fehler beim &Ouml;ffnen der Datei"

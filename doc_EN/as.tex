@@ -567,6 +567,7 @@ REG96.INC         & register addresses MCS-96 \\
 REGACE.INC        & register addresses ACE \\
 REGAVR.INC        & register and bit addresses AVR family \\
 REGCOP8.INC       & register addresses COP8 \\
+REGGP32.INC       & register addresses 68HC908GP32 \\
 REGHC12.INC       & register addresses 68HC12 \\
 REGM16C.INC       & register addresses Mitsubishi M16C \\
 REGMSP.INC        & register addresses TI MSP430 \\
@@ -2878,12 +2879,14 @@ is defined in \tty{STDDEFXA.INC}.
 %%-----------
 \begin{quote}
 z) AT90S1200 $\rightarrow$ AT90S2313 $\rightarrow$ AT90S4414 $\rightarrow$
-   AT90S8515
+   AT90S8515 $\rightarrow$ ATMEGA8 $\rightarrow$ ATMEGA16
 \end{quote}
 The first member of the AVR series represents a minimum configuration
 without RAM memory and therefore lacks load/store instructions.  The
-other two processors only differ in their memory equipment and
-on-chip peripherals, what is differentiated in \tty{REGAVR.INC}.
+next three processors only differ in their memory equipment and
+on-chip peripherals, what is differentiated in \tty{REGAVR.INC}.  The same
+is true for the MEGA AVRs, which also offer new machine instructions
+compared to their predecessors.
 %%-----------
 \begin{quote}
 aa) AM29245 $\rightarrow$ AM29243 $\rightarrow$ AM29240 $\rightarrow$ AM29000
@@ -4203,17 +4206,17 @@ processor-specific hints.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-\subsection{SINGLE and EXTENDED}
-\ttindex{SINGLE}\ttindex{EXTENDED}
+\subsection{SINGLE, DOUBLE, and EXTENDED}
+\ttindex{SINGLE}\ttindex{DOUBLE}\ttindex{EXTENDED}
 
-{\em valid for: 320C3x}
+{\em valid for: 320C3x (not {\tt DOUBLE}), 320C6x (not {\tt EXTENDED})}
 
-Both commands store floating-point constants to memory.  They are \bb{not}
-in IEEE-format.  Instead the processor-specific formats with 32 and 40 bit
-are used.  In case of \tty{EXTENDED} the resulting constant occupies two
-memory words.  The most significant 8 bits (the exponent) are written to
-the first word while the other ones (the mantissa) are copied into the second
-word.
+Both commands store floating-point constants to memory.  In case of the
+320C3x, they are \bb{not} stored in IEEE-format.  Instead the
+processor-specific formats with 32 and 40 bit are used.  In case of
+\tty{EXTENDED} the resulting constant occupies two memory words.  The most
+significant 8 bits (the exponent) are written to the first word while the
+other ones (the mantissa) are copied into the second word.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -4401,7 +4404,7 @@ bytes for PICs, nibbles for 4500's and words for the TI devices.
 \subsection{BSS}
 \ttindex{BSS}
 
-{\em valid for: 320C2(0)x, 320C3x, 320C5x, MSP}
+{\em valid for: 320C2(0)x, 320C3x, 320C5x, 320C6x, MSP}
 
 \tty{BSS} works like \tty{RES}, but when in 320C2(0)x/5x mode, the assembler
 assumes that a label on the left side of this instruction has no type, i.e
@@ -5045,6 +5048,12 @@ defined:
 It is valid to write {\tt ELSE} instead of {\tt ELSEIF} since everybody
 seems to be used to it...
 
+For every {IF...} statement, there has to be a corresponding {\tt ENDIF}. 
+'Open' constructs will lead to an error message at the end of an assembly
+path.  The way AS has 'paired' {\tt ENDIF} statements with {\tt IF}s may
+be deduced from the assembly listing: for {\tt ENDIF}, the line number of
+the corresponding {\tt IF...} will be shown.
+
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{SWITCH / CASE / ELSECASE / ENDCASE}
@@ -5095,6 +5104,10 @@ is executed, which is the first one in case of ambiguities.
 of statements may be between \tty{SWITCH} and the first \tty{CASE} (but
 don't leave other \tty{IF}s open!), for the sake of better readability
 this should however not be done.
+
+Similarly to {\tt IF} constructs, there must be exactly one {\tt ENDCASE}
+for every {\tt SWITCH}.  Analogous to {\tt ENDIF}, for {\tt ENDCASE} the
+line number of the corresponding {\tt SWITCH} is shown in the listing.
 
 %%---------------------------------------------------------------------------
 
@@ -9503,15 +9516,61 @@ described by:
                {error}
                {This register can be used only in maximum mode}
                {none}
-\errentry{2000}{invalid combination of prefixes}
+\errentry{2000}{execution packet crosses address boundary}
                {error}
-               {The prefix combination here defined is not allowed, or it
-                cannot be translated into binary code}
+               {An execution packet must not cross a 32-byte address
+                boundary}
+               {none}
+\errentry{2001}{multiple use of same execution unit}
+               {error}
+               {One of the CPU's execution units was used more than
+                once in an execution packet}
+               {the name of the execution unit}
+\errentry{2002}{multiple long read operations}
+               {error}
+               {An execution packet contains more than one long read
+                operation, which is not allowed}
+               {one of the functional units executing a long read}
+\errentry{2003}{multiple long write operations}
+               {error}
+               {An execution packet contains more than one long write
+                operation, which is not allowed}
+               {one of the functional units executing a long write}
+\errentry{2004}{long read with write operation}
+               {error}
+               {An execution packet contains both a long read and a write
+                operation, which is not allowed.}
+               {one of the execution units executing the conflicting
+                operations}
+\errentry{2005}{too many reads of one register}
+               {error}
+               {The same register was referenced more than four times in
+                the same execution packet.}
+               {the name of the register referenced too often}
+\errentry{2006}{overlapping destinations}
+               {error}
+               {The same register was written more than one time in the
+                same instruction packet, which is not allowed.}
+               {the name of the register in question}
+\errentry{2008}{too many absolute branches in one execution packet}
+               {error}
+               {An execution packet contains more than one direct branch,
+                which is not allowed.}
+               {none}
+\errentry{2009}{instruction cannot be executed on this unit}
+               {error}
+               {This instruction cannot be executed on this functional
+                unit.}
                {none}
 \errentry{2010}{invalid escape sequence}
                {error}
                {The special character defined using a backslash sequence
                 is not defined}
+               {none}
+\errentry{2020}{invalid combination of prefixes}
+               {error}
+               {The prefix combination here defined is not allowed, or it
+                cannot be translated into binary code}
                {none}
 \errentry{10001}{error in opening file}
                {fatal}
@@ -10583,6 +10642,10 @@ Either that was a long nightshift or I am slowly getting old...
       \item{additionally supports the TMS320C54x family from Texas
             Instruments;}
       \item{new macro option {\tt INTLABEL};}
+      \item{added Atmel MegaAVR 8/16 instructions and register
+            definitions;}
+      \item{{\tt ENDIF/ENDCASE} show the line number of the corresponding
+            opening statement in the listing;}
       \end{itemize}}
 \end{itemize}
 

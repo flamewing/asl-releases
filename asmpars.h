@@ -17,7 +17,14 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-
+/* $Id: asmpars.h,v 1.2 2002/05/19 13:44:52 alfred Exp $                     */
+/***************************************************************************** 
+ * $Log: asmpars.h,v $
+ * Revision 1.2  2002/05/19 13:44:52  alfred
+ * - added ClearSectionUsage()
+ *
+ *****************************************************************************/
+           
 typedef enum {UInt1    ,
               UInt2    ,
               UInt3    ,
@@ -177,6 +184,8 @@ extern char *GetSectionName(LongInt Handle);
 extern void SetMomSection(LongInt Handle);
 
 extern void AddSectionUsage(LongInt Start, LongInt Length);
+
+extern void ClearSectionUsage(void);
 
 extern void PrintSectionList(void);
 

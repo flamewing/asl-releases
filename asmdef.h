@@ -33,6 +33,13 @@
 /*           2001-10-20 added GNU error flag                                 */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: asmdef.h,v 1.2 2002/05/18 16:09:49 alfred Exp $                      */
+/*****************************************************************************
+ * $Log: asmdef.h,v $
+ * Revision 1.2  2002/05/18 16:09:49  alfred
+ * - TempTypes are bit masks
+ *
+ *****************************************************************************/
 
 #include "chunks.h"
 
@@ -52,7 +59,7 @@ typedef struct _TCPUDef
                             );
 	 } TCPUDef,*PCPUDef;
 
-typedef enum {TempInt,TempFloat,TempString,TempNone} TempType;
+typedef enum {TempNone = 0, TempInt = 1, TempFloat = 2, TempString = 4, TempAll = 7} TempType;
 
 typedef struct _RelocEntry
          {

@@ -7,6 +7,13 @@
 /* Historie: 15. 5.1996 Grundsteinlegung                                     */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: asmif.c,v 1.2 2002/05/01 15:56:09 alfred Exp $                       */
+/***************************************************************************** 
+ * $Log: asmif.c,v $
+ * Revision 1.2  2002/05/01 15:56:09  alfred
+ * - print start line of IF/SWITCH construct when it ends
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -56,11 +63,14 @@ BEGIN
    PIfSave NewSave;
    
    NewSave=(PIfSave) malloc(sizeof(TIfSave));
-   NewSave->NestLevel=SaveIFs()+1;
-   NewSave->Next=FirstIfSave; NewSave->SaveIfAsm=IfAsm;
-   NewSave->State=IfState_IFIF; NewSave->CaseFound=(IfExpr!=0);
-   FirstIfSave=NewSave;
-   IfAsm=(IfAsm AND (IfExpr!=0));
+   NewSave->NestLevel = SaveIFs() + 1;
+   NewSave->Next = FirstIfSave;
+   NewSave->SaveIfAsm = IfAsm;
+   NewSave->State = IfState_IFIF;
+   NewSave->CaseFound = (IfExpr != 0);
+   NewSave->StartLine = CurrLine;
+   FirstIfSave = NewSave;
+   IfAsm=(IfAsm AND (IfExpr != 0));
 END
 
 
@@ -223,6 +233,7 @@ BEGIN
       BEGIN
        IfAsm=FirstIfSave->SaveIfAsm;
        NewSave=FirstIfSave; FirstIfSave=NewSave->Next;
+       sprintf(ListLine, "[%u]", (unsigned)NewSave->StartLine);
        free(NewSave);
       END
     END
@@ -253,6 +264,7 @@ BEGIN
    NewSave->NestLevel=SaveIFs()+1;
    NewSave->Next=FirstIfSave; NewSave->SaveIfAsm=IfAsm;
    NewSave->CaseFound=False; NewSave->State=IfState_CASESWITCH;
+   NewSave->StartLine = CurrLine;
    if (ArgCnt!=1)
     BEGIN
      NewSave->SaveExpr.Typ=TempInt; 
@@ -345,6 +357,7 @@ BEGIN
        IfAsm=FirstIfSave->SaveIfAsm;
        if (NOT FirstIfSave->CaseFound) WrError(100);
        NewSave=FirstIfSave; FirstIfSave=NewSave->Next;
+       sprintf(ListLine, "[%u]", (unsigned)NewSave->StartLine);
        free(NewSave);
       END
     END
