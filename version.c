@@ -26,12 +26,13 @@
 /*           18. 6.2000 Build 6                                              */
 /*            6. 8.2000 Build 7                                              */
 /*           20. 9.2000 Build 8                                              */
+/*           15.10.2000 Build 9                                              */
 /*                                                                           */
 /*****************************************************************************/
 
 #include "stdinc.h"
 
-char *Version="1.42 Beta [Bld 8]";
-LongInt VerNo=0x1428;
+char *Version="1.42 Beta [Bld 9]";
+LongInt VerNo=0x1429;
 
 char *InfoMessCopyright="(C) 1992,2000 Alfred Arnold";

@@ -24,6 +24,14 @@
 /*           21. 1.2000 ADDX/SUBX vertauscht                                 */
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                      EXG korrigiert                                       */
+/*            1.10.2000 added missing chk.l                                  */
+/*                      differ add(i) sub(i) cmp(i) #imm,dn                  */
+/*            3.10.2000 fixed coding of register lists with start > stop     */
+/*                      better auto-scaling of outer displacements           */
+/*                      fix extension word for 32-bit PC-rel. displacements  */
+/*                      allow PC-rel. addressing for CMP                     */
+/*                      register names must be 2 chars long                  */
+/*           15.10.2000 added handling of outer displacement in ()           */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -216,14 +224,15 @@ END
 
         static Boolean CodeReg(char *s, Word *Erg)
 BEGIN
-   Boolean Result=True;
+   Boolean Result = True;
 
-   if (strcasecmp(s,"SP")==0) *Erg=15;
-   else if (ValReg(s[1])) 
-    if (toupper(*s)=='D') *Erg=s[1]-'0';
-    else if (toupper(*s)=='A') *Erg=s[1]-'0'+8;
-    else Result=False;
-   else Result=False;
+   if (strlen(s) != 2) Result = False;
+   else if (strcasecmp(s,"SP") == 0) *Erg = 15;
+   else if (ValReg(s[1]))
+    if (toupper(*s) == 'D') *Erg = s[1] - '0';
+    else if (toupper(*s) == 'A') *Erg = s[1] - '0' + 8;
+    else Result = False;
+   else Result = False;
 
    return Result;
 END
@@ -331,6 +340,32 @@ BEGIN
    return True;
 END
 
+	static Boolean SplitSize(char *Asc, ShortInt *DispLen)
+BEGIN
+   ShortInt NewLen = (-1);
+   int l = strlen(Asc);
+
+   if ((l > 2) AND (Asc[l - 2] == '.')) 
+    BEGIN
+     switch (toupper(Asc[l - 1]))
+      BEGIN
+       case 'B': NewLen = 0; break;
+       case 'W': NewLen = 1; break;
+       case 'L': NewLen = 2; break;
+       default:
+        WrError(1130); return False;
+      END
+     if ((*DispLen != -1) AND (*DispLen != NewLen))
+      BEGIN
+       WrError(1131); return False;
+      END
+     *DispLen = NewLen;
+     Asc[l - 2] = '\0';
+    END
+
+   return True;
+END
+
         static Boolean ClassComp(AdrComp *C)
 BEGIN
    char sh[10];
@@ -409,10 +444,11 @@ END
 
         static Boolean IsShortAdr(LongInt Adr)
 BEGIN
-   Word WHi=(Adr>>16)&0xffff,WLo=Adr&0xffff;
+   Word WHi = (Adr >> 16) & 0xffff,
+        WLo =  Adr        & 0xffff;
  
-   return ((WHi==0     ) AND (WLo<=0x7fff))
-       OR ((WHi==0xffff) AND (WLo>=0x8000));
+   return ((WHi == 0     ) AND (WLo <= 0x7fff))
+       OR ((WHi == 0xffff) AND (WLo >= 0x8000));
 END
 
         static Boolean IsDisp8(LongInt Disp)
@@ -635,60 +671,72 @@ BEGIN
 
      /* aeusseres Displacement abspalten, Klammern loeschen: */
 
-     p=strchr(Asc,'('); *p='\0'; strmaxcpy(OutDisp,Asc,255); strcpy(Asc,p+1);
-     if ((strlen(OutDisp)>2) AND (OutDisp[strlen(OutDisp)-2]=='.')) 
-      BEGIN
-       switch (toupper(OutDisp[strlen(OutDisp)-1]))
-        BEGIN
-         case 'B': OutDispLen=0; break;
-         case 'W': OutDispLen=1; break;
-         case 'L': OutDispLen=2; break;
-         default:
-          WrError(1130); return;
-        END
-       OutDisp[strlen(OutDisp)-2]='\0';
-      END
-     else OutDispLen=-1;
-     Asc[strlen(Asc)-1]='\0';
+     p = strchr(Asc,'('); *p = '\0';
+     strmaxcpy(OutDisp, Asc, 255); strcpy(Asc, p + 1);
+     OutDispLen = (-1);
+     if (NOT SplitSize(OutDisp, &OutDispLen))
+      return;
+     Asc[strlen(Asc) - 1] = '\0';
 
      /* in Komponenten zerteilen: */
 
-     CompCnt=0;
+     CompCnt = 0;
      do
       BEGIN
-       doklamm=True;
-       p=Asc;
+       doklamm = True;
+       p = Asc;
        do
         BEGIN
-         if (*p=='[') doklamm=False;
-         else if (*p==']') doklamm=True;
+         if (*p == '[') doklamm = False;
+         else if (*p == ']') doklamm = True;
          p++;
         END
-       while (((NOT doklamm) OR (*p!=',')) AND (*p!='\0'));
-       if (*p=='\0')
+       while (((NOT doklamm) OR (*p != ',')) AND (*p != '\0'));
+       if (*p == '\0')
         BEGIN
-         strcpy(AdrComps[CompCnt].Name,Asc); *Asc='\0';
+         strcpy(AdrComps[CompCnt].Name, Asc); *Asc = '\0';
         END
        else
         BEGIN
-         *p='\0'; strcpy(AdrComps[CompCnt].Name,Asc); strcpy(Asc,p+1);
+         *p = '\0'; strcpy(AdrComps[CompCnt].Name, Asc); strcpy(Asc, p + 1);
         END
-       if (NOT ClassComp(AdrComps+CompCnt)) 
+       if (NOT ClassComp(AdrComps + CompCnt)) 
         BEGIN
          WrError(1350); return;
         END
+
+       /* when the base register is already occupied, we have to move a
+          second address register to the index position */
+
        if ((CompCnt==1) AND (AdrComps[CompCnt].Art==AReg)) 
         BEGIN
          AdrComps[CompCnt].Art=Index; 
          AdrComps[CompCnt].INummer=AdrComps[CompCnt].ANummer+8; 
          AdrComps[CompCnt].Long=False; 
          AdrComps[CompCnt].Scale=0;
+         CompCnt++;
         END
-       if ((AdrComps[CompCnt].Art==Disp) OR ((AdrComps[CompCnt].Art!=Index) AND (CompCnt!=0))) 
+
+       /* a displacement found inside (...), but outside [...].  Explicit
+          sizes must be consistent, implicitly checked by SplitSize(). */
+
+       else if (AdrComps[CompCnt].Art == Disp)
+        BEGIN
+         strcpy(OutDisp, AdrComps[CompCnt].Name);
+
+         if (NOT SplitSize(OutDisp, &OutDispLen))
+          return;
+        END
+
+       /* no second index */
+
+       else if ((AdrComps[CompCnt].Art!=Index) AND (CompCnt!=0))
         BEGIN
          WrError(1350); return;
         END
-       CompCnt++;
+
+       else 
+        CompCnt++;
       END
      while (*Asc!='\0');
      if ((CompCnt>2) OR ((AdrComps[0].Art==Index) AND (CompCnt!=1))) 
@@ -752,19 +800,25 @@ BEGIN
 
        else
         BEGIN
-         AdrVals[0]=(AdrComps[1].INummer << 12)+(Ord(AdrComps[1].Long) << 11)+(AdrComps[1].Scale << 9);
-         AdrMode=0x30+AdrComps[0].ANummer;
-         switch (OutDispLen)
-          BEGIN
-           case 0:
-            HVal = EvalIntExpression(OutDisp, SInt8, &ValOK);
+         AdrVals[0] = (AdrComps[1].INummer << 12) + (Ord(AdrComps[1].Long) << 11) + (AdrComps[1].Scale << 9);
+         AdrMode = 0x30 + AdrComps[0].ANummer;
+         HVal = EvalIntExpression(OutDisp, Int32, &ValOK);
+         if (ValOK)
+          switch (OutDispLen)
+           BEGIN
+            case 0:
+             if (NOT IsDisp8(HVal))
+              BEGIN
+               WrError(1320); ValOK = FALSE;
+              END
             break;
-           case 1:
-            HVal = EvalIntExpression(OutDisp, SInt16, &ValOK);
+            case 1:
+             if (NOT IsDisp16(HVal))
+              BEGIN
+               WrError(1320); ValOK = FALSE;
+              END
             break;
-           default:
-            HVal = EvalIntExpression(OutDisp, SInt32, &ValOK);
-          END
+           END
          if (ValOK)
           BEGIN
            if (OutDispLen == -1)
@@ -865,7 +919,7 @@ BEGIN
             ACheckCPU(CPU68332);
             ChkAdr(Erl); return;
            case 2:
-            AdrVals[0]=AdrVals[0]+0x120; AdrCnt=6; AdrNum=9;
+            AdrVals[0]+=0x130; AdrCnt=6; AdrNum=9;
             AdrVals[1]=HVal >> 16; AdrVals[2]=HVal & 0xffff;
             ACheckCPU(CPU68332);
             ChkAdr(Erl); return;
@@ -1176,9 +1230,15 @@ BEGIN
      else
       BEGIN
        *p='\0';
-       if ((h=OneReg(s))==16) return False;
-       if ((h2=OneReg(p+1))==16) return False;
-       for (z=h; z<=h2; *Erg|=Masks[z++]);
+       if ((h = OneReg(s)) == 16) return False;
+       if ((h2 = OneReg(p + 1)) == 16) return False;
+       if (h <= h2)
+        for (z = h; z <= h2; *Erg |= Masks[z++]);
+       else
+        BEGIN
+         for (z = h; z <= 15; *Erg |= Masks[z++]);
+         for (z = 0; z <= h2; *Erg |= Masks[z++]);
+        END
       END
     END    
    while (*Asc!='\0');
@@ -1466,14 +1526,20 @@ END
 
         static void DecodeADDSUBCMP(Word Index)
 BEGIN
-   Word Op=Index&3;
+   Word Op = Index & 3, Reg;
+   char Variant = toupper(OpPart[strlen(OpPart) - 1]);
+   Word PCMask;
+   
+   /* since CMP only reads operands, PC-relative addressing is also
+      allowed for the second operand */
 
+   PCMask = (toupper(*OpPart) == 'C') ? (Mpc+Mpcidx) : 0;
    if (CheckColdSize())
     BEGIN
      if (ArgCnt!=2) WrError(1110);
      else
       BEGIN
-       DecodeAdr(ArgStr[2],Mdata+Madr+Madri+Mpost+Mpre+Mdadri+Maix+Mabs);
+       DecodeAdr(ArgStr[2],Mdata+Madr+Madri+Mpost+Mpre+Mdadri+Maix+Mabs+PCMask);
        if (AdrNum==2)        /* ADDA ? */
         if (OpSize==0) WrError(1130);
        else
@@ -1489,12 +1555,22 @@ BEGIN
         END
        else if (AdrNum==1)      /* ADD <EA>,Dn ? */
         BEGIN
-         WAsmCode[0]=0x9000 | (OpSize << 6) | (AdrMode << 9) | (Op << 13);
-         DecodeAdr(ArgStr[1],Mdata+Madr+Madri+Mpost+Mpre+Mdadri+Maix+Mpc+Mpcidx+Mabs+Mimm);
-         if (AdrNum!=0) 
+         WAsmCode[0]=0x9000 | (OpSize << 6) | ((Reg = AdrMode) << 9) | (Op << 13);
+         if (Variant == 'I')
+          DecodeAdr(ArgStr[1],Mimm);
+         else
+          DecodeAdr(ArgStr[1],Mdata+Madr+Madri+Mpost+Mpre+Mdadri+Maix+Mpc+Mpcidx+Mabs+Mimm);
+         if (AdrNum!=0)
           BEGIN
-           CodeLen=2+AdrCnt; CopyAdrVals(WAsmCode+1);
-           WAsmCode[0]|=AdrMode;
+           if ((AdrNum == 11) AND (Variant == 'I'))
+            BEGIN
+             if (Op == 1) Op = 8;
+             WAsmCode[0]=0x400 | (OpSize << 6) | (Op << 8) | Reg;
+            END
+           else
+            WAsmCode[0]|=AdrMode;
+           CopyAdrVals(WAsmCode + 1);
+           CodeLen = 2 + AdrCnt;
           END
         END
        else
@@ -1507,7 +1583,7 @@ BEGIN
            CodeLen=2+AdrCnt;
            CopyAdrVals(WAsmCode+1);
            if (MomCPU==CPUCOLD) DecodeAdr(ArgStr[2],Mdata);
-           else DecodeAdr(ArgStr[2],Mdata+Madri+Mpost+Mpre+Mdadri+Maix+Mabs);
+           else DecodeAdr(ArgStr[2],Mdata+Madri+Mpost+Mpre+Mdadri+Maix+PCMask+Mabs);
            if (AdrNum!=0) 
             BEGIN
              WAsmCode[0]|=AdrMode;
@@ -1522,7 +1598,7 @@ BEGIN
            else
             BEGIN
              WAsmCode[0]=0x9100 | (OpSize << 6) | (AdrMode << 9) | (Op << 13);
-             DecodeAdr(ArgStr[2],Madri+Mpost+Mpre+Mdadri+Maix+Mabs);
+             DecodeAdr(ArgStr[2],Madri+Mpost+Mpre+Mdadri+Maix+Mabs+PCMask);
              if (AdrNum!=0) 
               BEGIN
                CodeLen=2+AdrCnt; CopyAdrVals(WAsmCode+1);
@@ -1539,7 +1615,8 @@ END
 
         static void DecodeANDOR(Word Index)
 BEGIN
-   Word Op=Index&3;
+   Word Op =Index & 3, Reg;
+   char Variant = toupper(OpPart[strlen(OpPart) - 1]);
 
    if (ArgCnt!=2) WrError(1110);
    else if (CheckColdSize())
@@ -1576,12 +1653,19 @@ BEGIN
       END
      else if (AdrNum==1)                 /* AND <EA>,Dn */
       BEGIN
-       WAsmCode[0]=0x8000 | (OpSize << 6) | (AdrMode << 9) | (Op << 14);
-       DecodeAdr(ArgStr[1],Mdata+Madri+Mpost+Mpre+Mdadri+Maix+Mpc+Mpcidx+Mabs+Mimm);
+       WAsmCode[0]=0x8000 | (OpSize << 6) | ((Reg = AdrMode) << 9) | (Op << 14);
+       if (Variant == 'I')
+        DecodeAdr(ArgStr[1],Mimm);
+       else
+        DecodeAdr(ArgStr[1],Mdata+Madri+Mpost+Mpre+Mdadri+Maix+Mpc+Mpcidx+Mabs+Mimm);
        if (AdrNum!=0) 
         BEGIN
-         WAsmCode[0]|=AdrMode;
-         CodeLen=2+AdrCnt; CopyAdrVals(WAsmCode+1);
+         if ((AdrNum == 11) AND (Variant == 'I'))
+           WAsmCode[0] = (OpSize << 6) | (Op << 9) | Reg;
+         else
+          WAsmCode[0] |= AdrMode;
+         CodeLen = 2 + AdrCnt;
+         CopyAdrVals(WAsmCode + 1);
         END
       END
      else if (AdrNum!=0)                 /* AND ...,<EA> */
@@ -2199,19 +2283,20 @@ END
 
         static void DecodeCHK(Word Index) 
 BEGIN
-   if (OpSize!=1) WrError(1130);
-   else if (ArgCnt!=2) WrError(1110);
-   else if (MomCPU==CPUCOLD) WrError(1500);
+   if ((OpSize != 1) AND (OpSize != 2)) WrError(1130);
+   else if (ArgCnt != 2) WrError(1110);
+   else if (MomCPU == CPUCOLD) WrError(1500);
    else
     BEGIN
-     DecodeAdr(ArgStr[1],Mdata+Madri+Mpost+Mpre+Mdadri+Maix+Mpc+Mpcidx+Mabs+Mimm);
-     if (AdrNum!=0)
+     DecodeAdr(ArgStr[1], Mdata+Madri+Mpost+Mpre+Mdadri+Maix+Mpc+Mpcidx+Mabs+Mimm);
+     if (AdrNum != 0)
       BEGIN
-       WAsmCode[0]=0x4180 | AdrMode; CodeLen=2+AdrCnt;
-       CopyAdrVals(WAsmCode+1);
-       DecodeAdr(ArgStr[2],Mdata);
-       if (AdrNum==1) WAsmCode[0]|=WAsmCode[0] | (AdrMode << 9);
-       else CodeLen=0;
+       WAsmCode[0] = 0x4000 | AdrMode | ((4 - OpSize) << 7);
+       CodeLen = 2 + AdrCnt;
+       CopyAdrVals(WAsmCode + 1);
+       DecodeAdr(ArgStr[2], Mdata);
+       if (AdrNum == 1) WAsmCode[0] |= WAsmCode[0] | (AdrMode << 9);
+       else CodeLen = 0;
       END
     END
 END
