@@ -160,6 +160,8 @@ tlink: all text1.p text2.p alink
 	./alink -vv text1 text2 text
 	./p2bin -r 0-0xff text
 
+#include Makefile.dep
+
 #---------------------------------------------------------------------------
 
 .SUFFIXES: .c .asm

@@ -10,6 +10,13 @@
 /*           11. 5.1997 DOS-Anpassungen                                      */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: stdinc.h,v 1.2 2003/05/03 10:28:30 alfred Exp $                     */
+/***************************************************************************** 
+ * $Log: stdinc.h,v $
+ * Revision 1.2  2003/05/03 10:28:30  alfred
+ * - no malloc.h for OSX
+ *
+ *****************************************************************************/
 
 #include <stdio.h>
 #ifndef __MUNIX__
@@ -25,7 +32,7 @@
 #include <alloc.h>
 #else
 #include <memory.h>
-#ifndef __FreeBSD__
+#if !defined (__FreeBSD__) && !defined(__APPLE__)
 #include <malloc.h>
 #endif
 #endif

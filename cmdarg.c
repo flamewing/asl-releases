@@ -57,8 +57,8 @@ BEGIN
    CMDResult TempRes;
    String s,Param,Next;
 
-   strncpy(Param,O_Param,255); 
-   strncpy(Next,O_Next,255);
+   strncpy(Param, O_Param, 255U); 
+   strncpy(Next, O_Next, 255U);
 
    if ((*Next == '-') OR (*Next == '+')
 #ifdef SLASHARGS
@@ -89,12 +89,12 @@ BEGIN
 
      if (Param[Start]=='#')
       BEGIN
-       for (z=Start+1; z<strlen(Param); z++) Param[z]=toupper(Param[z]);
+       for (z=Start+1; z<(int)strlen(Param); z++) Param[z]=toupper(Param[z]);
        Start++;
       END
      else if (Param[Start]=='~')
       BEGIN
-       for (z=Start+1; z<strlen(Param); z++) Param[z]=tolower(Param[z]);
+       for (z=Start+1; z<(int)strlen(Param); z++) Param[z]=tolower(Param[z]);
        Start++;
       END
 
@@ -102,14 +102,14 @@ BEGIN
 
      Search=0;
      strncpy(s,Param+Start,255);
-     for (z=0; z<strlen(s); z++) s[z]=toupper(s[z]);
+     for (z=0; z<(int)strlen(s); z++) s[z]=toupper(s[z]);
      for (Search=0; Search<Cnt; Search++)
       if ((strlen(Def[Search].Ident)>1) AND (strcmp(s,Def[Search].Ident)==0)) break;
      if (Search<Cnt) 
       TempRes=Def[Search].Callback(Negate,Next);
 
      else
-      for (z=Start; z<strlen(Param); z++) 
+      for (z=Start; z<(int)strlen(Param); z++) 
        if (TempRes!=CMDErr)
         BEGIN
          Search=0;

@@ -25,9 +25,12 @@
 /*                       to now                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmallg.c,v 1.11 2003/02/06 07:38:09 alfred Exp $                     */
+/* $Id: asmallg.c,v 1.12 2003/05/02 21:23:08 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmallg.c,v $
+ * Revision 1.12  2003/05/02 21:23:08  alfred
+ * - strlen() updates
+ *
  * Revision 1.11  2003/02/06 07:38:09  alfred
  * - add missing 'else'
  *
@@ -644,7 +647,7 @@ BEGIN
                 for (z=Start; z<=Stop; z++) CharTransTable[z]=TStart+(z-Start);
                break;
               case TempString:
-               l=strlen(t.Contents.Ascii); /* Übersetzungsstring ab Start */
+               l=strlen(t.Contents.Ascii); /* Uebersetzungsstring ab Start */
                if (Start+l>256) WrError(1320);
                else
                 for (z=0; z<l; z++)
@@ -1065,10 +1068,10 @@ BEGIN
       BEGIN
        strmaxcpy(Name, ArgStr[1], 255);
        if (*Name == '"') strcpy(Name, Name + 1);
-       if (Name[strlen(Name) - 1] == '"') Name[strlen(Name) - 1] = '\0';
+       if ((*Name) && (Name[strlen(Name) - 1] == '"')) Name[strlen(Name) - 1] = '\0';
        strmaxcpy(ArgStr[1], Name, 255);
        strmaxcpy(Name, FExpand(FSearch(Name, IncludeList)), 255);
-       if (Name[strlen(Name) - 1] == '/') strmaxcat(Name, ArgStr[1], 255);
+       if ((*Name) && (Name[strlen(Name) - 1] == '/')) strmaxcat(Name, ArgStr[1], 255);
        F = fopen(Name, OPENRDMODE);
        if (F == NULL) ChkIO(10001);
        errno = 0; FSize = FileSize(F); ChkIO(10003);

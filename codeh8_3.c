@@ -465,7 +465,7 @@ BEGIN
          AdrMode=ModPreDec; ChkAdr(Mask); return;
        END
 
-     if (Asc[l=strlen(Asc)-1]=='+')
+     if ((*Asc) && (Asc[l=strlen(Asc)-1]=='+'))
       BEGIN
        Asc[l]='\0';
        switch (DecodeBaseReg(Asc,&AdrPart))

@@ -330,7 +330,7 @@ BEGIN
    p = strchr(Arg, '{');
    if (p == Nil) return False;
    *p = '\0'; strcpy(Desc, p + 1);
-   if (Desc[strlen(Desc) - 1] != '}') return False;
+   if ((!*Desc) || (Desc[strlen(Desc) - 1] != '}')) return False;
    Desc[strlen(Desc) - 1] = '\0';
 
    p = strchr(Desc, ':');

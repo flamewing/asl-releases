@@ -215,7 +215,7 @@ folgende Prozessorfamilien implementiert:
 \item{Mitsubishi MELPS-4500}
 \item{Mitsubishi M16}
 \item{Mitsubishi M16C}
-\item{Intel 4004}
+\item{Intel 4004/4040}
 \item{Intel MCS-48/41}
 \item{Intel MCS-51/251, Dallas DS80C390}
 \item{Intel MCS-96/196(Nx)/296}
@@ -527,7 +527,6 @@ P2HEX.MSG         & Textresourcen zu P2HEX \\
 P2BIN.MSG         & Textresourcen zu P2BIN \\
 TOOLS.MSG         & gemeinsame Textresourcen zu den Tools \\
 CMDARG.MSG        & gemeinsame Textresourcen zu allen Programmen \\
-DECODECMD.MSG     & \\
 IOERRS.MSG        & \\
 \hline
 \hline
@@ -2106,7 +2105,7 @@ einmal sein.  Was sollte man als Erkenntnis aus diesem Abschnitt mitnehmen?
 \section{Registersymbole}
 \label{SectRegSyms} \ttindex{Registersymbole}
 
-{\em G"ultigkeit: PowerPC, M-Core, 4004, 80C16x, AVR}
+{\em G"ultigkeit: PowerPC, M-Core, 4004/4040, 80C16x, AVR}
 
 Manchmal ist es erw"unscht, nicht nur einer Speicheradresse oder einer
 Konstanten, sondern auch einem Register einen symbolischen Namen zuzuweisen,
@@ -2889,8 +2888,10 @@ p) M16
 \end{quote}
 %%-----------
 \begin{quote}
-q) 4004
+q) 4004 $\rightarrow$ 4040
 \end{quote}
+Der 4040 besitzt gegen"uber seinem Vorg"anger ein gutes Dutzend
+zus"atzlicher Maschineninstruktionen.
 %%-----------
 \begin{quote}
 r) 8021, 8022, 8039, 80C39, 8048, 80C48, 8041, 8042
@@ -4433,7 +4434,7 @@ verrechnet haben sollte...
 \subsection{DATA}
 \ttindex{DATA}
 
-{\em G"ultigkeit: PIC, 320xx, AVR, MELPS-4500, 4004, $\mu$PD772x}
+{\em G"ultigkeit: PIC, 320xx, AVR, MELPS-4500, 4004/4040, $\mu$PD772x}
 
 Mit diesem Befehl werden Daten im aktuellen Segment abgelegt, wobei sowohl
 Integer- als auch Stringwerte zul"assig sind.  Bei Strings belegt beim
@@ -6926,14 +6927,14 @@ Festlegung von Displacement-L"angen mittels der Anh"angsel \tty{:4},
 
 %%---------------------------------------------------------------------------
 
-\section{4004}
+\section{4004/4040}
 
-Noch ein St"uck Geschichte...leider habe ich noch keine offizielle
-Dokumentation zum ersten Mikroprozessor "uberhaupt gefunden, und da gibt
-es noch das eine oder andere Loch: Die Syntax f"ur Registerpaare (f"ur
-8-Bit-Operationen) ist mir noch nicht ganz klar.  Momentan ist die Syntax
-\tty{RnRm}, wobei \tty{n} bzw. \tty{m} gerade Integers im Bereich 0 bis E
-bzw. 1 bis F sind.  Dabei gilt immer \tty{m = n + 1}.
+John Weinrich sei dank, habe ich nun auch die offiziellen Datenbl"atter
+von Intel "uber diese 'Urv"ater' aller Mikroprozessoren, und die
+Unklarheiten "uber die Syntax von Registerpaaren (f"ur 8-Bit-Operationen)
+sind f"urs erste ausger"aumt.  Die Syntax lautet \tty{RnRm}, wobei \tty{n}
+bzw. \tty{m} gerade Integers im Bereich 0 bis E bzw. 1 bis F sind.  Dabei
+gilt immer \tty{m = n + 1}.
 
 %%---------------------------------------------------------------------------
 
@@ -10630,7 +10631,7 @@ Ernst Ahlers, Charles Altmann, Rolf Buchholz, Bernd Casimir,
 Gunther Ewald, Stephan Hruschka, Peter Kliegelh"ofer, Ulf Meinke,
 Matthias Paul, Norbert Rosch, Steffen Schmid, Leonhard Schneider,
 Ernst Schwab, Michael Schwingen, Oliver Sellke, Christian Stelter,
-Oliver Thamm, Thorsten Thiele.
+Oliver Thamm, Thorsten Thiele, John Weinrich.
 \par
 ...und ein geh"assiger Dank an Rolf-Dieter-Klein und Tobias Thiel, die
 mit ihren ASM68K demonstrierten, wie man es \bb{nicht} machen sollte und
@@ -11185,6 +11186,7 @@ oder ich werde langsam alt...
             integriert;}
       \item{unterst"utzt zus"atzlich die 807x-Familie von National
             Semiconductor;}
+      \item{unterst"utzt zus"atzlich den 4040 von Intel;}
       \end{itemize}}
 \end{itemize}
 
@@ -12213,6 +12215,11 @@ damit mit der n"achsten Release alle etwas davon haben :-)
 \bibitem{Int296} Intel Corp.: \\
                  {\em 80296SA Microcontroller User's Manual.\/} \\
                  Sept. 1996
+
+\bibitem{Int4040} Intel Corp.: \\
+                  {\em 4040: Single-Chip 4-Bit P-Channel
+                   Microprocessor.\/} \\
+                  (keine Jahresangabe)
 
 \bibitem{Inters02} Intersil: \\
                  {\em CDP1802A, CDP1802AC, CDP1802BC CMOS 8-Bit

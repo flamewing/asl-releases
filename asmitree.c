@@ -223,7 +223,7 @@ BEGIN
        return;
       END
      z++;
-     if ((++h0)==tab->Size) h0=0;
+     if ((LongInt)(++h0)==tab->Size) h0=0;
     END
 END
 
@@ -241,7 +241,7 @@ BEGIN
        tab->Fill--;
        return;
       END
-     if ((++h0)==tab->Size) h0=0;
+     if ((LongInt)(++h0)==tab->Size) h0=0;
     END
 END
 
@@ -257,7 +257,7 @@ BEGIN
        tab->Entries[h0].Proc(tab->Entries[h0].Index);
        return True;
       END
-     if ((++h0)==tab->Size) h0=0;
+     if ((LongInt)(++h0)==tab->Size) h0=0;
     END
 END
 

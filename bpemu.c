@@ -81,7 +81,7 @@ BEGIN
 #endif   
 #endif
 
-   if (CurrentDir[strlen(CurrentDir)-1]!=PATHSEP)
+   if ((*CurrentDir) && (CurrentDir[strlen(CurrentDir)-1]!=PATHSEP))
      strmaxcat(CurrentDir,SPATHSEP,255);
    if (*CurrentDir!=PATHSEP)
      strmaxprep(CurrentDir,SPATHSEP,255);

@@ -58,9 +58,12 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.21 2003/03/29 18:45:50 alfred Exp $                          */
+/* $Id: as.c,v 1.22 2003/05/02 21:23:08 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.22  2003/05/02 21:23:08  alfred
+ * - strlen() updates
+ *
  * Revision 1.21  2003/03/29 18:45:50  alfred
  * - allow source file spec in key files
  *
@@ -1657,12 +1660,14 @@ BEGIN
 
    strmaxcpy(ArgPart,ArgStr[1],255);
    if (*ArgPart=='"') strcpy(ArgPart,ArgPart+1);
-   if (ArgPart[strlen(ArgPart)-1]=='"') ArgPart[strlen(ArgPart)-1]='\0';
+   if ((*ArgPart) && (ArgPart[strlen(ArgPart)-1]=='"'))
+     ArgPart[strlen(ArgPart)-1]='\0';
    AddSuffix(ArgPart,IncSuffix); strmaxcpy(ArgStr[1],ArgPart,255);
    if (SearchPath)
     BEGIN
      strmaxcpy(ArgPart,FExpand(FSearch(ArgPart,IncludeList)),255);
-     if (ArgPart[strlen(ArgPart)-1]=='/') strmaxcat(ArgPart,ArgStr[1],255);
+     if ((*ArgPart) && (ArgPart[strlen(ArgPart)-1]=='/'))
+       strmaxcat(ArgPart,ArgStr[1],255);
     END
 
    /* Tag erzeugen */
@@ -3238,7 +3243,7 @@ END
 BEGIN
    int z;
 
-   for(z = 0; z < strlen(s); z++)
+   for(z = 0; z < (int)strlen(s); z++)
     if (NOT isalnum((unsigned int) s[z])) return False;
    return True;
 END
@@ -3537,7 +3542,8 @@ BEGIN
     BEGIN
      printf("%s [%s] ",getmessage(Num_InvMsgSource),SrcSuffix); fflush(stdout);
      fgets(FileMask,255,stdin);
-     if (FileMask[strlen(FileMask)-1]=='\n') FileMask[strlen(FileMask)-1]='\0';
+     if ((*FileMask) && (FileMask[strlen(FileMask)-1]=='\n'))
+       FileMask[strlen(FileMask)-1]='\0';
      AssembleGroup();
     END
    else

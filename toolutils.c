@@ -357,7 +357,7 @@ BEGIN
    Boolean err;
 
    *Offset=0;
-   if (Name[strlen(Name)-1]==')')
+   if ((*Name) && (Name[strlen(Name)-1]==')'))
     BEGIN
      z=strlen(Name)-2; Nest=0;
      while ((z>=0) AND (Nest>=0))

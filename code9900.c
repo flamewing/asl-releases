@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code9900.c,v 1.3 2002/08/14 18:43:49 alfred Exp $                    */
+/* $Id: code9900.c,v 1.4 2003/05/02 21:23:11 alfred Exp $                    */
 /***************************************************************************** 
  * $Log: code9900.c,v $
+ * Revision 1.4  2003/05/02 21:23:11  alfred
+ * - strlen() updates
+ *
  * Revision 1.3  2002/08/14 18:43:49  alfred
  * - warn null allocation, remove some warnings
  *
@@ -222,7 +225,7 @@ BEGIN
    char *p;
    int Lev;
 
-   if (Asc[strlen(Asc)-1]==')')
+   if ((*Asc) && (Asc[strlen(Asc)-1]==')'))
     BEGIN
      p=Asc+strlen(Asc)-2; Lev=0;
      while ((p>=Asc) AND (Lev!=-1))

@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3203x.c,v 1.3 2002/08/14 18:17:35 alfred Exp $                       */
+/* $Id: code3203x.c,v 1.4 2003/05/02 21:23:09 alfred Exp $                       */
 /***************************************************************************** 
  * $Log: code3203x.c,v $
+ * Revision 1.4  2003/05/02 21:23:09  alfred
+ * - strlen() updates
+ *
  * Revision 1.3  2002/08/14 18:17:35  alfred
  * - warn about NULL allocation
  *
@@ -799,7 +802,7 @@ BEGIN
              if (NOT ExtToSingle(t.Contents.Float,DAsmCode+(CodeLen++))) OK=False;
              break;
             case TempString:
-             for (z2=0; z2<strlen(t.Contents.Ascii); z2++)
+             for (z2=0; z2<(int)strlen(t.Contents.Ascii); z2++)
               BEGIN
                if ((z2 & 3)==0) DAsmCode[CodeLen++]=0;
                DAsmCode[CodeLen-1]+=

@@ -334,7 +334,8 @@ BEGIN
    while (NOT feof(file))
     BEGIN
      if (fgets(Line,299,file)==Nil) break;
-     if (Line[strlen(Line)-1]=='\n') Line[strlen(Line)-1]='\0';
+     if ((*Line) && (Line[strlen(Line)-1]=='\n'))
+       Line[strlen(Line)-1]='\0';
      GetNext(Line,Cmd);
      if (strcmp(Cmd,"Label")==0)
       BEGIN
@@ -1731,7 +1732,8 @@ BEGIN
    else
     BEGIN
      GetSectionName(Value);
-     if (Value[strlen(Value)-1]=='.') Value[strlen(Value)-1]='\0';
+     if ((*Value) && (Value[strlen(Value)-1]=='.'))
+       Value[strlen(Value)-1]='\0';
     END
    
    AddLabel(Name,Value);

@@ -47,9 +47,6 @@ extern char *strstr(char *haystack, char *needle);
 extern int mysprintf();
 #endif
 
-#undef strlen
-#define strlen(s) strslen(s)
-extern signed int strslen(const char *s);
 extern void strmaxcpy(char *dest, const char *src, int Max);
 extern void strmaxcat(char *Dest, const char *Src, int MaxLen);
 extern void strprep(char *Dest, const char *Src);

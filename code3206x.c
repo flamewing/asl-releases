@@ -15,9 +15,12 @@
 /*           2001-11-26 scaling fix (input from Johannes)                    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3206x.c,v 1.7 2002/08/14 18:43:48 alfred Exp $                   */
+/* $Id: code3206x.c,v 1.8 2003/05/02 21:23:10 alfred Exp $                   */
 /***************************************************************************** 
  * $Log: code3206x.c,v $
+ * Revision 1.8  2003/05/02 21:23:10  alfred
+ * - strlen() updates
+ *
  * Revision 1.7  2002/08/14 18:43:48  alfred
  * - warn null allocation, remove some warnings
  *
@@ -644,7 +647,7 @@ BEGIN
               END
              break;
             case TempString:
-             for (z2 = 0; z2 < strlen(t.Contents.Ascii); z2++)
+             for (z2 = 0; z2 < (int)strlen(t.Contents.Ascii); z2++)
               BEGIN
                if ((z2 & 3) == 0) DAsmCode[cnt++] = 0;
                DAsmCode[cnt - 1] +=
@@ -1597,6 +1600,8 @@ END
         static void DecodeNOT(Word Index)
 BEGIN
    LongWord SReg, DReg;
+
+   UNUSED(Index);
 
    /* NOT src,dst == XOR -1,src,dst */
 

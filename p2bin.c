@@ -369,7 +369,7 @@ BEGIN
     END
    else
     BEGIN
-     for (z=0; z<strlen(Arg); z++) Arg[z]=toupper(Arg[z]);
+     for (z=0; z<(int)strlen(Arg); z++) Arg[z]=toupper(Arg[z]);
      ANDEq=0xff;
      for (z=0; z<ByteModeCnt; z++)
       if (strcmp(Arg,ByteModeStrings[z])==0)

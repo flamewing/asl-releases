@@ -550,7 +550,7 @@ typedef unsigned long long Card64;
 /* POWER with OSX (Macintosh) */
 
 #ifdef __APPLE__
-#define ARCHSYSNAME "unknown-macosx"
+#define ARCHSYSNAME "apple-macosx"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"

@@ -199,7 +199,7 @@ BEGIN
    char *p;
    int Lev;
 
-   if (Asc[strlen(Asc)-1]==')')
+   if ((*Asc) && (Asc[strlen(Asc)-1]==')'))
     BEGIN
      p=Asc+strlen(Asc)-2; Lev=0;
      while ((p>=Asc) AND (Lev!=-1))

@@ -15,9 +15,12 @@
 /*            7. 5.2000 Packing hinzugefuegt                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeavr.c,v 1.8 2003/02/26 19:18:25 alfred Exp $                     */
+/* $Id: codeavr.c,v 1.9 2003/05/02 21:23:11 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codeavr.c,v $
+ * Revision 1.9  2003/05/02 21:23:11  alfred
+ * - strlen() updates
+ *
  * Revision 1.8  2003/02/26 19:18:25  alfred
  * - add/use EvalIntDisplacement()
  *
@@ -174,6 +177,8 @@ END
   Boolean OK;
   Integer Size;
 
+  UNUSED(Index);
+
   FirstPassUnknown = False;
   Size = EvalIntExpression(ArgStr[1], Int16, &OK);
   if (FirstPassUnknown) WrError(1820);
@@ -219,6 +224,8 @@ static Boolean AccFull;
   TempResult t;
   LongInt MinV, MaxV;
 
+  UNUSED(Index);
+
   MaxV = ((ActPC == SegCode) && (NOT Packing)) ? 65535 : 255;
   MinV = (-((MaxV + 1) >> 1));
   AccFull = FALSE;
@@ -241,7 +248,7 @@ static Boolean AccFull;
            WrError(1135); OK = False;
            break;
          case TempString:
-           for (z2 = 0; z2 < strlen(t.Contents.Ascii); z2++)
+           for (z2 = 0; z2 < (int)strlen(t.Contents.Ascii); z2++)
            {
              Trans = CharTransTable[((usint) t.Contents.Ascii[z2]) & 0xff];
              PlaceByte(Trans, TRUE);
@@ -258,6 +265,8 @@ static Boolean AccFull;
 
 	static void DecodeREG(Word Index)
 {
+  UNUSED(Index);
+
   if (ArgCnt!=1) WrError(1110);
   else AddRegDef(LabPart,ArgStr[1]);
 }
@@ -530,6 +539,8 @@ static Boolean AccFull;
   Word Reg, Mask;
   Boolean OK;
 
+  UNUSED(Index);
+
   if (ArgCnt != 2) WrError(1110);
   else if (NOT DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
   else if (Reg < 16) WrXError(1445, ArgStr[1]);
@@ -547,6 +558,8 @@ static Boolean AccFull;
 	static void DecodeSER(Word Index)
 {
   Word Reg;
+
+  UNUSED(Index);
 
   if (ArgCnt != 1) WrError(1110);
   else if (NOT DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
@@ -682,6 +695,8 @@ static Boolean AccFull;
 {
   Word Reg1, Reg2;
 
+  UNUSED(Index);
+
   if (ArgCnt != 2) WrError(1110);
   else if (MomCPU < CPUATMEGA8) WrError(1500);
   else if (!DecodeReg(ArgStr[1], &Reg1)) WrXError(1445, ArgStr[1]);
@@ -716,6 +731,8 @@ static Boolean AccFull;
 {
   Word Reg1, Reg2;
 
+  UNUSED(Index);
+
   if (ArgCnt != 2) WrError(1110);
   else if (MomCPU < CPUATMEGA8) WrError(1500);
   else if (!DecodeReg(ArgStr[1], &Reg1)) WrXError(1445, ArgStr[1]);
@@ -732,6 +749,8 @@ static Boolean AccFull;
 	static void DecodeELPM(Word Index)
 {
   Word Reg, Adr;
+
+  UNUSED(Index);
 
   if (MomCPU < CPUATMEGA8) WrError(1500);
   else if (!ArgCnt)

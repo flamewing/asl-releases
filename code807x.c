@@ -5,9 +5,12 @@
 /* Codegenerator National INS807X.c                                          */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code807x.c,v 1.5 2003/03/30 12:50:21 alfred Exp $                   *
+/* $Id: code807x.c,v 1.6 2003/05/02 21:23:11 alfred Exp $                   *
  *****************************************************************************
  * $Log: code807x.c,v $
+ * Revision 1.6  2003/05/02 21:23:11  alfred
+ * - strlen() updates
+ *
  * Revision 1.5  2003/03/30 12:50:21  alfred
  * - fixed some warnings
  *
@@ -431,6 +434,8 @@ static void DecodeXCH(Word Index)
 
 static void DecodePLI(Word Index)
 {
+  UNUSED(Index);
+
   if (ArgCnt != 2) WrError(1110);
   else
   {

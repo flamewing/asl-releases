@@ -321,7 +321,7 @@ BEGIN
 
    /* Postinkrement */
 
-   if (Asc[strlen(Asc)-1]=='+') 
+   if ((*Asc) && (Asc[strlen(Asc)-1]=='+'))
     BEGIN
      if ((*Asc!='(') OR (Asc[strlen(Asc)-2]!=')')) WrError(1350);
      else
@@ -347,7 +347,7 @@ BEGIN
 
    /* indirekt<->direkt */
 
-   if ((Asc[strlen(Asc)-1]!=')') OR (strlen(Asc)<3))
+   if ((strlen(Asc)<3) || (Asc[strlen(Asc)-1]!=')'))
     BEGIN
      OK=False; p=Asc;
     END

@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code17c4x.c,v 1.2 2002/08/14 18:43:48 alfred Exp $                          */
+/* $Id: code17c4x.c,v 1.3 2003/05/02 21:23:09 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code17c4x.c,v $
+ * Revision 1.3  2003/05/02 21:23:09  alfred
+ * - strlen() updates
+ *
  * Revision 1.2  2002/08/14 18:43:48  alfred
  * - warn null allocation, remove some warnings
  *
@@ -231,7 +234,7 @@ BEGIN
              WrError(1135); ValOK=False;
              break;
             case TempString:
-             for (z2=0; z2<strlen(t.Contents.Ascii); z2++)
+             for (z2=0; z2<(int)strlen(t.Contents.Ascii); z2++)
               BEGIN
                Size=CharTransTable[((usint) t.Contents.Ascii[z2])&0xff];
                if (ActPC==SegData) BAsmCode[CodeLen++]=Size;

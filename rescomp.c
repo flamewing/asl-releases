@@ -185,7 +185,8 @@ BEGIN
        *p2='\0'; strcpy(Part,p);
        for (p=p2+1; ((*p!='\0') AND (isspace((unsigned int) *p2))); p++);
       END
-     if (Part[strlen(Part)-1]!=')') SynError(Part); Part[strlen(Part)-1]='\0';
+     if ((!*Part) || (Part[strlen(Part)-1] != ')')) SynError(Part);
+     Part[strlen(Part)-1]='\0';
      p2=strchr(Part,'(');
      if (p2==Nil) SynError(Part); *p2='\0';
      PCat->CtryName=strdup(Part); p2++;
@@ -313,7 +314,7 @@ BEGIN
 
    stamp=GetFileTime(argv[1]); Id1=stamp&0x7fffffff;
    Id2=0;
-   for (c=0; c<min(strlen(argv[1]),4); c++)
+   for (c=0; c<min((int)strlen(argv[1]),4); c++)
     Id2=(Id2<<8)+((Byte) argv[1][c]);
    if (HFile!=Nil)
     BEGIN

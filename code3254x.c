@@ -1058,6 +1058,8 @@ static void DecodeBIT(Word Index)
 
 static void DecodeBITF(Word Index)
 {
+  UNUSED(Index);
+
   if (ArgCnt != 2) WrError(1110);
   else if (ThisPar) WrError(1950);
   else

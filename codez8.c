@@ -276,7 +276,7 @@ BEGIN
 
    /* indiziert ? */
 
-   if ((Asc[strlen(Asc)-1]==')') AND (strlen(Asc)>4))
+   if ((strlen(Asc)>4) && (Asc[strlen(Asc)-1]==')'))
     BEGIN
      p=Asc+strlen(Asc)-1; *p='\0';
      while ((p>=Asc) AND (*p!='(')) p--;

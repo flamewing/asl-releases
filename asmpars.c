@@ -36,9 +36,15 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.14 2003/02/26 19:18:25 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.16 2003/05/20 17:45:02 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.c,v $
+ * Revision 1.16  2003/05/20 17:45:02  alfred
+ * - StrSym with length spec
+ *
+ * Revision 1.15  2003/05/02 21:23:08  alfred
+ * - strlen() updates
+ *
  * Revision 1.14  2003/02/26 19:18:25  alfred
  * - add/use EvalIntDisplacement()
  *
@@ -733,7 +739,7 @@ BEGIN
      
      strcpy(Asc, Asc + 1); Asc[strlen(Asc) - 1] = '\0'; ReplaceBkSlashes(Asc);
 
-     for (Search = 0; Search < strlen(Asc); Search++)
+     for (Search = 0; Search < (int)strlen(Asc); Search++)
       BEGIN
        Digit = (usint) Asc[Search];
        Wert=(Wert << 8) + CharTransTable[Digit & 0xff];
@@ -1142,7 +1148,7 @@ static Operator Operators[OpCnt+1]=
 
      /* Operandenzahl pruefen */
 
-     if (((Op->Dyadic) AND (OpPos == 0)) OR ((NOT Op->Dyadic) AND (OpPos != 0)) OR (OpPos == strlen(Asc)-1))
+     if (((Op->Dyadic) AND (OpPos == 0)) OR ((NOT Op->Dyadic) AND (OpPos != 0)) OR (OpPos == (int)strlen(Asc)-1))
       BEGIN
        WrError(1110); LEAVE;
       END
@@ -3012,7 +3018,7 @@ typedef struct
 
 static void PrintSymbolList_AddOut(char *s, char *Zeilenrest, int Width)
 {
-   if (strlen(s) + strlen(Zeilenrest) > Width)
+   if ((int)(strlen(s) + strlen(Zeilenrest)) > Width)
    {
      Zeilenrest[strlen(Zeilenrest) - 1] = '\0';
      WrLstLine(Zeilenrest); strmaxcpy(Zeilenrest, s, 255);
@@ -3028,7 +3034,8 @@ static void PrintSymbolList_PNode(PTree Tree, void *pData)
    int l1;
    TempResult t;
 
-   ConvertSymbolVal(&(Node->SymWert), &t); StrSym(&t, False, s1);
+   ConvertSymbolVal(&(Node->SymWert), &t);
+   StrSym(&t, False, s1, sizeof(s1));
 
    strmaxcpy(sh, Tree->Name, 255);
    if (Tree->Attribute != -1) 
@@ -3138,7 +3145,8 @@ BEGIN
     END
    else
     BEGIN
-     ConvertSymbolVal(&(Node->SymWert),&t); StrSym(&t,False,s);
+     ConvertSymbolVal(&(Node->SymWert),&t);
+     StrSym(&t, False, s, sizeof(s));
      l1=strlen(s);
      fprintf(DebContext->f,"%s",s); ChkIO(10004);
     END
@@ -3681,7 +3689,8 @@ static void PrintCrossList_PNode(PTree Node, void *pData)
 
    ConvertSymbolVal(&(SymbolEntry->SymWert),&t);
    strcpy(h," (=");
-   StrSym(&t,False,h2); strmaxcat(h,h2,255);
+   StrSym(&t, False, h2, sizeof(h2));
+   strmaxcat(h,h2,255);
    strmaxcat(h,",",255);
    strmaxcat(h,GetFileName(SymbolEntry->FileNum),255);
    strmaxcat(h,":",255);
@@ -3954,7 +3963,7 @@ BEGIN
      else
       *tmp2='\0';
      sprintf(tmp,"%c%s%s --> %s",(Lauf->Used) ? ' ' : '*',Node->Orig,tmp2,Lauf->Value);
-     if (strlen(tmp)>cwidth-3)
+     if ((int)strlen(tmp)>cwidth-3)
       BEGIN
        if (*buf!='\0') WrLstLine(buf); *buf='\0'; WrLstLine(tmp);
       END

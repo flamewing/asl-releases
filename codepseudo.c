@@ -13,9 +13,12 @@
 /*           2002-01-13 Borland Pascal 3.1 doesn't like empty default clause */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codepseudo.c,v 1.4 2002/10/26 09:57:47 alfred Exp $                          */
+/* $Id: codepseudo.c,v 1.5 2003/05/02 21:23:12 alfred Exp $                          */
 /***************************************************************************** 
  * $Log: codepseudo.c,v $
+ * Revision 1.5  2003/05/02 21:23:12  alfred
+ * - strlen() updates
+ *
  * Revision 1.4  2002/10/26 09:57:47  alfred
  * - allow DC with ? as argument
  *
@@ -455,7 +458,7 @@ BEGIN
           END
          z++;
         END
-       while ((z<strlen(Asc)) AND (Fnd==0));
+       while ((z<(int)strlen(Asc)) AND (Fnd==0));
        if (Fnd==0)
         BEGIN
          strmaxcpy(Part,Asc,255); *Asc='\0';
@@ -833,7 +836,7 @@ BEGIN
    else if (*Exp=='+') strcpy(Exp,Exp+1);
    DigIns(*Man,16,w); strcpy(Man,Man+2);
    if (strlen(Man)>16) Man[16]='\0';
-   for (z=0; z<strlen(Man); z++) DigIns(Man[z],15-z,w);
+   for (z=0; z<(int)strlen(Man); z++) DigIns(Man[z],15-z,w);
    if (strlen(Exp)>4) strcpy(Exp,Exp+strlen(Exp)-4);
    for (z=strlen(Exp)-1; z>=0; z--)
     BEGIN

@@ -229,24 +229,18 @@ END
 #endif
 
 /*---------------------------------------------------------------------------*/
-/* wenn man mit unsigned arbeitet, gibt das boese Seiteneffekte bei direkter
-   Arithmetik mit strlen... */
-
-	signed int strslen(const char *s)
-BEGIN
-   return strlen(s);
-END
-
-/*---------------------------------------------------------------------------*/
 /* das originale strncpy plaettet alle ueberstehenden Zeichen mit Nullen */
 
-	void strmaxcpy(char *dest, const char *src, int Max)
-BEGIN
-   int cnt=strlen(src);
+void strmaxcpy(char *dest, const char *src, int Max)
+{
+  int cnt = strlen(src);
 
-   if (cnt>Max) cnt=Max;
-   memcpy(dest,src,cnt); dest[cnt]='\0';
-END
+  /* leave room for terminating NUL */
+
+  if (cnt > (Max - 1))
+    cnt = Max - 1;
+  memcpy(dest, src, cnt); dest[cnt]='\0';
+}
 
 /*---------------------------------------------------------------------------*/
 /* einfuegen, mit Begrenzung */

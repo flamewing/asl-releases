@@ -592,7 +592,7 @@ BEGIN
 
    /* Register abspalten */
 
-   if (Asc[strlen(Asc)-1]!=']')
+   if ((*Asc) && (Asc[strlen(Asc)-1]!=']'))
     BEGIN
      WrError(1350); return False;
     END

@@ -178,7 +178,7 @@ BEGIN
     END
 
    if (Mask & MModSeg)
-    for (z = 0; z < sizeof(BankNames) / sizeof(char *); z++)
+    for (z = 0; z < (int)sizeof(BankNames) / sizeof(char *); z++)
      if (strcasecmp(Asc, BankNames[z]) == 0)
       BEGIN
        AdrMode = ModSeg;
@@ -187,7 +187,7 @@ BEGIN
       END
 
    if (Mask & MModSpec)
-    for (z = 0; z < sizeof(SpecNames) / sizeof(char *); z++)
+    for (z = 0; z < (int)sizeof(SpecNames) / sizeof(char *); z++)
      if (strcasecmp(Asc, SpecNames[z]) == 0)
       BEGIN
        AdrMode = ModSpec;
@@ -2276,7 +2276,7 @@ BEGIN
    AddString("MOVS" , 0x00); AddString("MOVSI" , 0x00); AddString("MOVSD" , 0x10);
    AddString("MOVSW", 0x20); AddString("MOVSWI", 0x20); AddString("MOVSWD", 0x30);
 
-   for (z = 0; z < sizeof(BankNames) / sizeof(*BankNames); z++)
+   for (z = 0; z < (int)sizeof(BankNames) / sizeof(*BankNames); z++)
      AddInstTable(InstTable, BankNames[z], z, DecodeBank);
 
    AddInstTable(InstTable, "ADDC", 0, DecodeCarry8);

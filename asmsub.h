@@ -68,7 +68,7 @@ extern char *PathPart(char *Name);
 
 extern char *FloatString(Double f);
 
-extern void StrSym(TempResult *t, Boolean WithSystem, char *Dest);
+extern void StrSym(TempResult *t, Boolean WithSystem, char *Dest, int DestLen);
 
 
 extern void ResetPageCounter(void);

@@ -198,7 +198,7 @@ BEGIN
       BEGIN
        /* Stelle, ab der verbatim, suchen -->p */
        p=LPos;
-       while ((p<strlen(Line)) AND (Line[p]!='\'') AND (Line[p]!='"')) p++;
+       while ((p<(int)strlen(Line)) AND (Line[p]!='\'') AND (Line[p]!='"')) p++;
        /* nach Quellstring suchen, ersetzen, bis keine Treffer mehr */
        p2=LPos;
        do

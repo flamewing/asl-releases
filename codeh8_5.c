@@ -424,7 +424,7 @@ BEGIN
 
      /* Postinkrement ? */
 
-     else if (Asc[strlen(Asc)-1]=='+')
+     else if ((*Asc) && (Asc[strlen(Asc)-1]=='+'))
       BEGIN
        strmaxcpy(Part,Asc,255); Part[strlen(Part)-1]='\0';
        if (DecodeReg(Part,&AdrByte))

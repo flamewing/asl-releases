@@ -725,7 +725,7 @@ BEGIN
    static THexFormat Format[NameCnt]={Default,MotoS,IntHex,IntHex16,IntHex32,MOSHex,TekHex,TiDSK,Atmel};
    int z;
 
-   for (z=0; z<strlen(Arg); z++) Arg[z]=toupper(Arg[z]);
+   for (z=0; z<(int)strlen(Arg); z++) Arg[z]=toupper(Arg[z]);
 
    z=0;
    while ((z<NameCnt) AND (strcmp(Arg,Names[z])!=0)) z++;

@@ -18,9 +18,15 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code4004.c,v 1.3 2003/02/01 18:04:53 alfred Exp $                          */
+/* $Id: code4004.c,v 1.5 2003/05/24 21:16:59 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code4004.c,v $
+ * Revision 1.5  2003/05/24 21:16:59  alfred
+ * - added 4040
+ *
+ * Revision 1.4  2003/05/02 21:23:10  alfred
+ * - strlen() updates
+ *
  * Revision 1.3  2003/02/01 18:04:53  alfred
  * - fixed JCN arguments
  *
@@ -44,7 +50,7 @@
 /*---------------------------------------------------------------------------*/
 /* Variablen */
 
-#define FixedOrderCnt 35
+#define FixedOrderCnt (35+14)
 #define OneRegOrderCnt 1
 #define OneRRegOrderCnt 3
 #define AccRegOrderCnt 4
@@ -53,9 +59,10 @@
 typedef struct
          {
           Byte Code;
+          CPUVar MinCPU;
          } FixedOrder;
 
-static CPUVar CPU4004/*,CPU4040*/;
+static CPUVar CPU4004, CPU4040;
 
 static FixedOrder *FixedOrders;
 static FixedOrder *OneRegOrders;
@@ -107,16 +114,17 @@ END
 /*---------------------------------------------------------------------------*/
 /* Hilfsdekoder */
 
-        static void DecodeFixed(Word Index)
-BEGIN
-   FixedOrder *Instr=FixedOrders+Index;
+static void DecodeFixed(Word Index)
+{
+  FixedOrder *Instr=FixedOrders+Index;
 
-   if (ArgCnt!=0) WrError(1110);
-   else
-    BEGIN
-     BAsmCode[0]=Instr->Code; CodeLen=1;
-    END
-END
+  if (ArgCnt != 0) WrError(1110);
+  else if (MomCPU < Instr->MinCPU) WrError(1500);
+  else
+  {
+    BAsmCode[0]=Instr->Code; CodeLen=1;
+  }
+}
 
         static void DecodeOneReg(Word Index)
 BEGIN
@@ -338,7 +346,7 @@ BEGIN
              WrError(1135); ValOK=False;
              break;
             case TempString:
-             for (z2=0; z2<strlen(t.Contents.Ascii); z2++)
+             for (z2=0; z2<(int)strlen(t.Contents.Ascii); z2++)
               BEGIN
                Ch=CharTransTable[((usint) t.Contents.Ascii[z2])&0xff];
                if (ActPC==SegCode)
@@ -374,12 +382,15 @@ END
 
 static int InstrZ;
 
-        static void AddFixed(char *NName, Byte NCode)
-BEGIN
-   if (InstrZ>=FixedOrderCnt) exit(255);
-   FixedOrders[InstrZ].Code=NCode;
-   AddInstTable(InstTable,NName,InstrZ++,DecodeFixed);
-END
+static void AddFixed(char *NName, Byte NCode, CPUVar NMin)
+{
+  if (InstrZ >= FixedOrderCnt) exit(255);
+
+  FixedOrders[InstrZ].Code = NCode;
+  FixedOrders[InstrZ].MinCPU = NMin;
+   
+  AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
+}
 
         static void AddOneReg(char *NName, Byte NCode)
 BEGIN
@@ -414,24 +425,32 @@ BEGIN
    InstTable=CreateInstTable(101);
 
    InstrZ=0; FixedOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*FixedOrderCnt);
-   AddFixed("NOP" ,0x00); AddFixed("WRM" ,0xe0);
-   AddFixed("WMP" ,0xe1); AddFixed("WRR" ,0xe2);
-   AddFixed("WPM" ,0xe3); AddFixed("WR0" ,0xe4);
-   AddFixed("WR1" ,0xe5); AddFixed("WR2" ,0xe6);
-   AddFixed("WR3" ,0xe7); AddFixed("SBM" ,0xe8);    
-   AddFixed("RDM" ,0xe9); AddFixed("RDR" ,0xea);    
-   AddFixed("ADM" ,0xeb); AddFixed("RD0" ,0xec);
-   AddFixed("RD1" ,0xed); AddFixed("RD2" ,0xee);    
-   AddFixed("RD3" ,0xef); AddFixed("CLB" ,0xf0);
-   AddFixed("CLC" ,0xf1); AddFixed("IAC" ,0xf2);
-   AddFixed("CMC" ,0xf3); AddFixed("CMA" ,0xf4);    
-   AddFixed("RAL" ,0xf5); AddFixed("RAR" ,0xf6);
-   AddFixed("TCC" ,0xf7); AddFixed("DAC" ,0xf8);
-   AddFixed("TCS" ,0xf9); AddFixed("STC" ,0xfa);
-   AddFixed("DAA" ,0xfb); AddFixed("KBP" ,0xfc);
-   AddFixed("DCL" ,0xfd); AddFixed("AD0" ,0xec);
-   AddFixed("AD1" ,0xed); AddFixed("AD2" ,0xee);
-   AddFixed("AD3" ,0xef);
+   AddFixed("NOP" ,0x00, CPU4004); AddFixed("WRM" ,0xe0, CPU4004);
+   AddFixed("WMP" ,0xe1, CPU4004); AddFixed("WRR" ,0xe2, CPU4004);
+   AddFixed("WPM" ,0xe3, CPU4004); AddFixed("WR0" ,0xe4, CPU4004);
+   AddFixed("WR1" ,0xe5, CPU4004); AddFixed("WR2" ,0xe6, CPU4004);
+   AddFixed("WR3" ,0xe7, CPU4004); AddFixed("SBM" ,0xe8, CPU4004);
+   AddFixed("RDM" ,0xe9, CPU4004); AddFixed("RDR" ,0xea, CPU4004);
+   AddFixed("ADM" ,0xeb, CPU4004); AddFixed("RD0" ,0xec, CPU4004);
+   AddFixed("RD1" ,0xed, CPU4004); AddFixed("RD2" ,0xee, CPU4004);
+   AddFixed("RD3" ,0xef, CPU4004); AddFixed("CLB" ,0xf0, CPU4004);
+   AddFixed("CLC" ,0xf1, CPU4004); AddFixed("IAC" ,0xf2, CPU4004);
+   AddFixed("CMC" ,0xf3, CPU4004); AddFixed("CMA" ,0xf4, CPU4004);
+   AddFixed("RAL" ,0xf5, CPU4004); AddFixed("RAR" ,0xf6, CPU4004);
+   AddFixed("TCC" ,0xf7, CPU4004); AddFixed("DAC" ,0xf8, CPU4004);
+   AddFixed("TCS" ,0xf9, CPU4004); AddFixed("STC" ,0xfa, CPU4004);
+   AddFixed("DAA" ,0xfb, CPU4004); AddFixed("KBP" ,0xfc, CPU4004);
+   AddFixed("DCL" ,0xfd, CPU4004); AddFixed("AD0" ,0xec, CPU4004);
+   AddFixed("AD1" ,0xed, CPU4004); AddFixed("AD2" ,0xee, CPU4004);
+   AddFixed("AD3" ,0xef, CPU4004);
+
+   AddFixed("HLT" ,0x01, CPU4040); AddFixed("BBS" ,0x02, CPU4040);
+   AddFixed("LCR" ,0x03, CPU4040); AddFixed("OR4" ,0x04, CPU4040);
+   AddFixed("OR5" ,0x05, CPU4040); AddFixed("AN6" ,0x06, CPU4040);
+   AddFixed("AN7" ,0x07, CPU4040); AddFixed("DB0" ,0x08, CPU4040);
+   AddFixed("DB1" ,0x09, CPU4040); AddFixed("SB0" ,0x0a, CPU4040);
+   AddFixed("SB1" ,0x0b, CPU4040); AddFixed("EIN" ,0x0c, CPU4040);
+   AddFixed("DIN" ,0x0d, CPU4040); AddFixed("RPM" ,0x0e, CPU4040);
 
    InstrZ=0; OneRegOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*OneRegOrderCnt);
    AddOneReg("INC" ,0x60);
@@ -525,7 +544,5 @@ END
         void code4004_init(void)
 BEGIN
    CPU4004=AddCPU("4004",SwitchTo_4004);
-#if 0
    CPU4040=AddCPU("4040",SwitchTo_4004);
-#endif
 END

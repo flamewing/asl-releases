@@ -14,9 +14,12 @@
 /*                      ShortMode wird bei absoluter Adressierung gemerkt    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code56k.c,v 1.2 2002/08/14 18:43:48 alfred Exp $                     */
+/* $Id: code56k.c,v 1.3 2003/05/02 21:23:10 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code56k.c,v $
+ * Revision 1.3  2003/05/02 21:23:10  alfred
+ * - strlen() updates
+ *
  * Revision 1.2  2002/08/14 18:43:48  alfred
  * - warn null allocation, remove some warnings
  *
@@ -488,7 +491,7 @@ BEGIN
     if (strlen(Asc)==strlen(ModMasks[z]))
      BEGIN
       AdrMode=0xffff;
-      for (l=0; l<=strlen(Asc); l++)
+      for (l=0; l<=(int)strlen(Asc); l++)
        if (ModMasks[z][l]=='x')
         BEGIN
          OrdVal=Asc[l]-'0';
@@ -500,7 +503,7 @@ BEGIN
           END
         END
        else if (ModMasks[z][l]!=toupper(Asc[l])) break;
-       if (l>strlen(Asc))
+       if (l>(int)strlen(Asc))
         BEGIN
          AdrType=z; AdrMode+=ModCodes[z] << 3;
          ChkMask(Erl,ErlSeg); return;

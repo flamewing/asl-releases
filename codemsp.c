@@ -12,9 +12,12 @@
 /*             2002-01-27 allow immediate addressing for one-op instrs(doj)  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemsp.c,v 1.4 2002/08/14 18:43:49 alfred Exp $                     */
+/* $Id: codemsp.c,v 1.5 2003/05/02 21:23:12 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: codemsp.c,v $
+ * Revision 1.5  2003/05/02 21:23:12  alfred
+ * - strlen() updates
+ *
  * Revision 1.4  2002/08/14 18:43:49  alfred
  * - warn null allocation, remove some warnings
  *
@@ -237,7 +240,7 @@ BEGIN
 
    /* Displacement */
 
-   if (Asc[strlen(Asc)-1]==')')
+   if ((*Asc) && (Asc[strlen(Asc)-1]==')'))
     BEGIN
      Asc[strlen(Asc)-1]='\0';
      p=RQuotPos(Asc,'(');

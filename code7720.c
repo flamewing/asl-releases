@@ -15,9 +15,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code7720.c,v 1.3 2002/08/14 18:43:48 alfred Exp $                    */
+/* $Id: code7720.c,v 1.4 2003/05/02 21:23:11 alfred Exp $                    */
 /***************************************************************************** 
  * $Log: code7720.c,v $
+ * Revision 1.4  2003/05/02 21:23:11  alfred
+ * - strlen() updates
+ *
  * Revision 1.3  2002/08/14 18:43:48  alfred
  * - warn null allocation, remove some warnings
  *
@@ -160,7 +163,7 @@ BEGIN
           break;
          case TempString:
           Max=((ActPC==SegCode) AND (MomCPU>=CPU7725)) ? 3 : 2; Pos=0;
-          for (z2=0; z2<strlen(t.Contents.Ascii); z2++)
+          for (z2=0; z2<(int)strlen(t.Contents.Ascii); z2++)
            BEGIN
             Trans=CharTransTable[((usint) t.Contents.Ascii[z2])&0xff];
             if (ActPC==SegCode)

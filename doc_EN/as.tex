@@ -224,7 +224,7 @@ following processor families have been implemented:
 \item{Mitsubishi MELPS-4500}
 \item{Mitsubishi M16}
 \item{Mitsubishi M16C}
-\item{Intel 4004}
+\item{Intel 4004/4040}
 \item{Intel MCS-48/41}
 \item{Intel MCS-51/251, Dallas DS80C390}
 \item{Intel MCS-96/196(Nx)/296}
@@ -522,7 +522,6 @@ P2HEX.MSG         & text resources for P2HEX \\
 P2BIN.MSG         & text resources for P2BIN \\
 TOOLS.MSG         & common text resources for all tools \\
 CMDARG.MSG        & common text resources for all programs \\
-DECODECMD.MSG     & \\
 IOERRS.MSG        & \\
 \hline
 \hline
@@ -2063,7 +2062,7 @@ necessary.  Which is the essence you should learn from this section?
 \section{Register Symbols}
 \label{SectRegSyms} \ttindex{register symbols}
 
-{\em valid for: PowerPC, M-Core, 4004, 80C16x, AVR}
+{\em valid for: PowerPC, M-Core, 4004/4040, 80C16x, AVR}
 
 Sometimes it is desirable not only to assign symbolic names to memory
 addresses or constants, but also to a register, to emphasize its function
@@ -2826,8 +2825,10 @@ p) M16C
 \end{quote}
 %%-----------
 \begin{quote}
-q) 4004
+q) 4004 $\rightarrow$ 4040
 \end{quote}
+Opposed to its predecessor, the 4040 features about a dozen additional
+machine instructions.
 %%-----------
 \begin{quote}
 r) 8021, 8022, 8039, 80C39, 8048, 80C48, 8041, 8042
@@ -4334,7 +4335,7 @@ HP28...
 \subsection{DATA}
 \ttindex{DATA}
 
-{\em valid for: PIC, 320xx, AVR, MELPS-4500, 4004, $\mu$PD772x}
+{\em valid for: PIC, 320xx, AVR, MELPS-4500, 4004/4040, $\mu$PD772x}
 
 This command stores data in the current segment.  Both integer values as
 well as character strings are supported.  On 16C5x/16C8x, 17C4x in data
@@ -6821,14 +6822,14 @@ lengths by appending \tty{:4, :16} and \tty{:32}.
 
 %%---------------------------------------------------------------------------
 
-\section{4004}
+\section{4004/4040}
 
-Another part of history...unfortunately, I wasn't able up to now to get my
-hands on official documentation for world's first microprocessor, and
-there are some details lacking:  I'm not absolutely sure about the syntax
-for register pairs (for 8-bit operations).  The current syntax is
-\tty{RnRm} with \tty{n} resp. \tty{m} being even integers in the range from
-0 to E resp. 1 to F.  The equation {\tt m = n + 1} has to be true always.
+Thanks to John Weinrich, I now have the official Intel data sheets
+describing these 'grandfathers' of all microprocessors, and the questions
+about the syntax of register pairs (for 8-bit operations) have been weeded
+out for the moment: It is \tty{RnRm} with \tty{n} resp. \tty{m} being even
+integers in the range from 0 to E resp. 1 to F.  The equation {\tt m = n +
+1} must be fulfilled.
 
 %%---------------------------------------------------------------------------
 
@@ -10362,7 +10363,7 @@ Ernst Ahlers, Charles Altmann, Rolf Buchholz, Bernd Casimir,
 Gunther Ewald, Stephan Hruschka, Peter Kliegelh\"ofer, Ulf Meinke,
 Matthias Paul, Norbert Rosch, Steffen Schmid, Leonhard Schneider,
 Ernst Schwab, Michael Schwingen, Oliver Sellke, Christian Stelter,
-Oliver Thamm, Thorsten Thiele.
+Oliver Thamm, Thorsten Thiele, John Weinrich.
 
 ...and an ironic ''thank you'' to Rolf-Dieter-Klein and Tobias Thiel who
 demonstrated with their ASM68K how one should \bb{not} do it and thereby
@@ -10939,6 +10940,7 @@ Either that was a long nightshift or I am slowly getting old...
             Wassatsch;}
       \item{additionally supports the 807x family from National
             Semiconductor;}
+      \item{additionally supports the Intel 4040;}
       \end{itemize}}
 \end{itemize}
 
@@ -11918,6 +11920,11 @@ from this with the next release :-)
 \bibitem{Int296} Intel Corp.: \\
                  {\em 80296SA Microcontroller User's Manual.\/} \\
                  Sept. 1996
+
+\bibitem{Int4040} Intel Corp.: \\
+                  {\em 4040: Single-Chip 4-Bit P-Channel
+                   Microprocessor.\/} \\
+                  (no year of release given)
 
 \bibitem{Inters02} Intersil: \\
                  {\em CDP1802A, CDP1802AC, CDP1802BC CMOS 8-Bit

@@ -26,9 +26,15 @@
 /*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.7 2002/11/16 20:52:18 alfred Exp $                      */
+/* $Id: asmsub.c,v 1.9 2003/05/20 17:45:03 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmsub.c,v $
+ * Revision 1.9  2003/05/20 17:45:03  alfred
+ * - StrSym with length spec
+ *
+ * Revision 1.8  2003/05/02 21:23:09  alfred
+ * - strlen() updates
+ *
  * Revision 1.7  2002/11/16 20:52:18  alfred
  * - added ErrMsgStructNameMissing
  *
@@ -555,27 +561,30 @@ END
 /****************************************************************************/
 /* Symbol in String wandeln */
 
-        void StrSym(TempResult *t, Boolean WithSystem, char *Dest)
-BEGIN
-   switch (t->Typ)
-    BEGIN
-     case TempInt:
-      strcpy(Dest,HexString(t->Contents.Int,1));
+void StrSym(TempResult *t, Boolean WithSystem, char *Dest, int DestLen)
+{
+  switch (t->Typ)
+  {
+    case TempInt:
+      strmaxcpy(Dest, HexString(t->Contents.Int,1), DestLen - 2);
       if (WithSystem)
-       switch (ConstMode)
-        BEGIN
-         case ConstModeIntel : strcat(Dest,"H"); break;
-         case ConstModeMoto  : strprep(Dest,"$"); break;
-         case ConstModeC     : strprep(Dest,"0x"); break;
-        END
+        switch (ConstMode)
+        {
+          case ConstModeIntel : strcat(Dest,"H"); break;
+          case ConstModeMoto  : strprep(Dest,"$"); break;
+          case ConstModeC     : strprep(Dest,"0x"); break;
+        }
       break;
-     case TempFloat:
-      strcpy(Dest,FloatString(t->Contents.Float)); break;
-     case TempString:
-      strcpy(Dest,t->Contents.Ascii); break;
-     default: strcpy(Dest,"???");
-    END
-END
+    case TempFloat:
+      strmaxcpy(Dest, FloatString(t->Contents.Float), DestLen);
+      break;
+    case TempString:
+      strmaxcpy(Dest, t->Contents.Ascii, DestLen);
+      break;
+    default:
+      strmaxcpy(Dest, "???", DestLen);
+  }
+}
 
 /****************************************************************************/
 /* Listingzaehler zuruecksetzen */
@@ -676,7 +685,7 @@ BEGIN
      else
       BEGIN
        blen=0;
-       for (z=0; z<strlen(Line);  z++)
+       for (z=0; z<(int)strlen(Line);  z++)
         if (Line[z]==Char_HT)
          BEGIN
           memset(bbuf+blen, ' ', 8-(blen&7));
@@ -711,7 +720,8 @@ END
 
         void SetListLineVal(TempResult *t)
 BEGIN
-   StrSym(t,True,ListLine); strmaxprep(ListLine,"=",255);
+   StrSym(t,True,ListLine, sizeof(ListLine));
+   strmaxprep(ListLine,"=",255);
    if (strlen(ListLine)>14)
     BEGIN
      ListLine[12]='\0'; strmaxcat(ListLine,"..",255);
@@ -1347,7 +1357,7 @@ BEGIN
                             : (strncasecmp(Line+z,TokNam,tlen)==0);
      if  ( (SFound) 
      AND   ((z==0) OR (NOT CompressLine_NErl(Line[z-1])))
-     AND   ((e>=strlen(Line)) OR (NOT CompressLine_NErl(Line[e]))) )
+     AND   ((e>=(int)strlen(Line)) OR (NOT CompressLine_NErl(Line[e]))) )
       BEGIN
        strcpy(Line+z+1,Line+e); Line[z]=Num;
        llen=strlen(Line);

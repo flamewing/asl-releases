@@ -1,4 +1,4 @@
-$Id: changelog,v 1.16 2003/03/29 20:00:33 alfred Exp $
+$Id: changelog,v 1.17 2003/05/25 13:01:12 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -927,3 +927,7 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 - Addition    : added support for the INS807x processor family
 
 - Bugfix      : allow source file specification in key file
+
+2003-05-25 [Bld 28] 
+
+- Addition    : added 4040 machine instructions

@@ -11,9 +11,12 @@
 /*                                                                           */
 /*****************************************************************************/
 /*****************************************************************************/
-/* $Id: codez80.c,v 1.2 2002/10/20 09:22:25 alfred Exp $                          */
+/* $Id: codez80.c,v 1.3 2003/05/02 21:23:12 alfred Exp $                          */
 /*****************************************************************************
  * $Log: codez80.c,v $
+ * Revision 1.3  2003/05/02 21:23:12  alfred
+ * - strlen() updates
+ *
  * Revision 1.2  2002/10/20 09:22:25  alfred
  * - work around the parser problem related to the ' character
  *
@@ -2088,7 +2091,7 @@ BEGIN
       END
      else
       BEGIN
-       if (ArgStr[2][strlen(ArgStr[2])-1]=='\'')
+       if ((ArgStr[2][0]) && (ArgStr[2][strlen(ArgStr[2])-1]=='\''))
         BEGIN
          OK=True; ArgStr[2][strlen(ArgStr[2])-1]='\0';
         END

@@ -219,7 +219,7 @@ BEGIN
    if (NOT Write4(OBJFile,&RecPos)) ChkIO(10004);
    TByte=9; if (fwrite(&TByte,1,1,OBJFile)!=1) ChkIO(10004);
    NameCnt=GetFileCount()-1; if (fwrite(&NameCnt,1,1,OBJFile)!=1) ChkIO(10004);
-   if ((int)fwrite(OBJString,1,strlen(OBJString)+1,OBJFile)!=strlen(OBJString)+1) ChkIO(10004);
+   if ((int)fwrite(OBJString,1,strlen(OBJString)+1,OBJFile)!=(int)strlen(OBJString)+1) ChkIO(10004);
 
    /* Objekt-Records */
 
@@ -243,7 +243,7 @@ BEGIN
    for (z=1; z<=NameCnt; z++)
     BEGIN
      FName=NamePart(GetFileName(z));
-     if ((int)fwrite(FName,1,strlen(FName)+1,OBJFile)!=strlen(FName)+1) ChkIO(10004);
+     if ((int)fwrite(FName,1,strlen(FName)+1,OBJFile)!=(int)strlen(FName)+1) ChkIO(10004);
     END
    TByte=0;
    if (fwrite(&TByte,1,1,OBJFile)!=1) ChkIO(10004);
