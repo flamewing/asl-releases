@@ -100,6 +100,7 @@ call testall t_fl90
 call testall t_fl900
 call testall t_full09
 call testall t_kcpsm
+call testall t_kcpsm3
 call testall t_h8_3
 call testall t_h8_5
 call testall t_m16c

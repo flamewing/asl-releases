@@ -64,7 +64,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition August 2003}
+{\large Edition March 2005}
 \end{raggedright}
 
 \clearpage
@@ -237,7 +237,7 @@ following processor families have been implemented:
 \item{Siemens 80C166/167}
 \item{Zilog Z80, Z180, Z380}
 \item{Zilog Z8, eZ8}
-\item{Xilinx KCPSM ('PicoBlaze')}
+\item{Xilinx KCPSM/KCPSM3 ('PicoBlaze')}
 \item{Toshiba TLCS-900(L)}
 \item{Toshiba TLCS-90}
 \item{Toshiba TLCS-870}
@@ -2185,7 +2185,7 @@ individual description.
 \subsection{SET, EQU, and CONSTANT}
 \ttindex{SET}\ttindex{EQU}\ttindex{CONSTANT}
 
-{\em valid for: all processors, {\tt CONSTANT} only for KCPSM}
+{\em valid for: all processors, {\tt CONSTANT} only for KCPSM(3)}
 
 \tty{SET} and \tty{EQU} allow the definition of typeless constants, i.e.  they
 will not be assigned to a segment and their usage will not generate warnings
@@ -2402,7 +2402,7 @@ PIO_ctrl   port PIO_port_A+3
 \ttindex{REG}\ttindex{NAMEREG}
 
 {\em valid for: AVR, M*Core, ST9, 80C16x, KCPSM ({\tt NAMEREG} valid only
- for KCPSM)}
+ for KCPSM(3))}
 
 Though it always has the same syntax, this instruction has a slightly
 different meaning from processor to processor:  If the processor uses a
@@ -2970,6 +2970,10 @@ parts only source-level compatible.
 \begin{quote}
 ae) KCPSM
 \end{quote}  
+Both processor cores are not available as standalone components, they are
+provided as logic cores for gate arrays made by Xilinx The -3 variant
+offers a larger address space and some additional instructions.  Note that
+it is not binary upward-compatible!
 %%-----------
 \begin{quote}
 af) 96C141, 93C141
@@ -3171,7 +3175,7 @@ with.  Similar remarks like for the COP8 family apply!
 \begin{quote}
 bg) 78214
 \end{quote}
-This is currently the the representor of NEC's 78K0 family.
+This is currently the the representor of NEC's 78K2 family.
 %%-----------
 \begin{quote}
 bh) 7720 $\rightarrow$ 7725
@@ -3862,6 +3866,17 @@ works with symbols from the correct address space (this of course
 \bb{only} works with absolute accesses!), one has to inform AS whether the
 DP flag is currently 0 (code) or 1 (data).  The initial value of this
 assumption is 0.
+
+%%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+\subsubsection{78K2}
+
+78K2 is an 8/16 bit architecture, which has later been extended to a
+one-megabyte addres space via banking.  Banking is realized with the
+registers PM6 (normal case) resp. P6 (alternate case with \verb!&! as
+prefix) that supply the missing upper four address bits.  At least for
+absolute addresses, AS can check whether the current, linear 20-bit
+address is within the given 64K window.
 
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
@@ -5055,15 +5070,16 @@ instructions that reserve memory may be used, no instructions that dispose
 constants or generate code.
 
 Labels defined inside structures (i.e. the elements' names) are not
-stored as-is.  Instead, the structure's name is prepended to them, liked
-with a special character.  By default, this is the underbasr (\_).  This
-behaviour however may be modified with two arguments passed to the
+stored as-is.  Instead, the structure's name is prepended to them,
+separated with a special character.  By default, this is the underbar
+(\_).  This behaviour however may be modified with two arguments passed
+to the
 \tty{STRUCT} statement:
 \begin{itemize}
 \item{\tty{NOEXTNAMES} suppressed the prepending of the structure's name.
       In this case, it is the programmer's responsibility to assure that
       field names are not used more than once.}
-\item{\tty{DOTS} instructs AS to use the dot as connectin character
+\item{\tty{DOTS} instructs AS to use the dot as connecting character
       instead of the underbar.  It should however be pointed out that
       on certain target architectures, the dot has a special meaning
       for bit addressing, which may lead to problems!}
@@ -5076,7 +5092,7 @@ following structures:
 
 Aside from the element names, AS also defines a further symbol with the
 structure's overall length when the definition has been finished.  This
-symbol has the nsme {\tt LEN}, which is being extended with the
+symbol has the name {\tt LEN}, which is being extended with the
 structure's name via the same rules - or alternitavely with the label name
 given with the \tty{ENDSTRUCT} statement.
 
@@ -10981,7 +10997,8 @@ Either that was a long nightshift or I am slowly getting old...
             Semiconductor;}
       \item{additionally supports the Intel 4040;}
       \item{additionally supports the Zilog eZ8;}
-      \item{additionally supports the 78K0 family from NEC;}
+      \item{additionally supports the 78K2 family from NEC;}
+      \item{additionally supports the KCPSM3 variant from Xilinx;}
       \end{itemize}}
 \end{itemize}
 
@@ -12304,7 +12321,12 @@ from this with the next release :-)
                  {\em PicoBlaze 8-Bit Microcontroller for Virtex-E
                  and Spartan-II/IIE Devices.\/} \\
                  Application Note XAPP213, Version 2.1, February 2003
-                                                      
+
+\bibitem{Xil129} Xilinx Inc.: \\
+                 {\em PicoBlaze 8-bit Embedded Microcontroller User Guide
+                 for Spartan-3, Virtex-II, and Virtex-II Pro FPGAs.\/} \\
+                 UG129 (v1.1) June 10, 2004
+                          
 \bibitem{Zilog} data sheets from Zilog about the Z80 family
 
 \bibitem{ZilZ8} Zilog Inc.: \\

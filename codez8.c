@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codez8.c,v 1.2 2004/05/29 11:33:04 alfred Exp $                          *
+/* $Id: codez8.c,v 1.3 2004/11/21 20:35:29 alfred Exp $                          *
  *****************************************************************************
  * $Log: codez8.c,v $
+ * Revision 1.3  2004/11/21 20:35:29  alfred
+ * - added ATM/LDWX
+ *
  * Revision 1.2  2004/05/29 11:33:04  alfred
  * - relocated DecodeIntelPseudo() into own module
  *
@@ -96,7 +99,7 @@ typedef struct
 
 #define EXTPREFIX 0x1f
 
-#define FixedOrderCnt 12
+#define FixedOrderCnt 13
 
 #define ALU2OrderCnt 11
 
@@ -1198,6 +1201,35 @@ static void DecodeLDX(Word Index)
   }
 }
 
+static void DecodeLDWX(Word Index)
+{
+  UNUSED(Index);
+
+  if (ArgCnt != 2) WrError(1110);
+  else
+  {
+    DecodeAdr(ArgStr[1], MModXReg, False);
+    switch (AdrType)
+    {
+      case ModXReg:
+        BAsmCode[0] = 0x1f;
+        BAsmCode[1] = 0xe8;
+        BAsmCode[3] = Hi(AdrWVal);
+        BAsmCode[4] = Lo(AdrWVal);
+        DecodeAdr(ArgStr[2], MModXReg, False);
+        switch (AdrType)
+        {
+          case ModXReg:
+            BAsmCode[2] = AdrWVal >> 4;
+            BAsmCode[3] |= (AdrWVal & 0x0f) << 4;
+            CodeLen = 5;
+            break;
+        }
+        break;
+    }
+  }  
+}
+
 static void DecodeLEA(Word Index)
 {
   Byte Save;
@@ -1447,6 +1479,7 @@ static void InitFields(void)
    AddFixed("IRET", 0xbf);  AddFixed("NOP" , IsEncore ? 0x0f : 0xff);
    AddFixed("RCF" , 0xcf);  AddFixed("RET" , 0xaf);
    AddFixed("SCF" , 0xdf);  AddFixed("STOP", 0x6f);
+   AddFixed("ATM" , 0x2f);  
    if (IsEncore)
      AddFixed("BRK" , 0x00);
    else
@@ -1513,6 +1546,7 @@ static void InitFields(void)
 
    AddInstTable(InstTable, "LD", 0, DecodeLD);
    AddInstTable(InstTable, "LDX", 0, DecodeLDX);
+   AddInstTable(InstTable, "LDWX", 0, DecodeLDWX);
    AddInstTable(InstTable, "LDC", 0xc2, DecodeLDCE);
    AddInstTable(InstTable, "LDE", 0x82, DecodeLDCE);
    AddInstTable(InstTable, "LDCI", 0xc3, DecodeLDCEI);

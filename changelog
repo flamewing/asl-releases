@@ -1,4 +1,4 @@
-$Id: changelog,v 1.6 2004/09/26 09:40:16 alfred Exp $
+$Id: changelog,v 1.8 2005/03/21 19:28:11 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -959,5 +959,15 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 
 - Bugfix      : setting of entry address in P2BIN did not work
 
-- Bugfix      : fox crashes when programs defined more than 256
+- Bugfix      : fix crashes when programs defined more than 256
                 bytes of code in one line
+
+2004-11-20 [Bld 34]
+
+- Bugfix      : allow double-memory addressing variants on TLCS/900 again
+
+[Bld35]
+
+- Addition    : added ATM & LDWX instructions for Zilog eZ8
+
+- Addition    : added KCPSM3 core

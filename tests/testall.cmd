@@ -94,12 +94,13 @@ call testall t_avr
 call testall t_bas52
 call testall t_buf32
 call testall t_cop8
-capp testall t_ez8
+call testall t_ez8
 call testall t_f2mc8l
 call testall t_fl90
 call testall t_fl900
 call testall t_full09
 call testall t_kcpsm
+call testall t_kcpsm3
 call testall t_h8_3
 call testall t_h8_5
 call testall t_m16c

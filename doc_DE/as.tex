@@ -45,7 +45,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand August 2003}
+{\large Stand M"arz 2005}
 \end{raggedright}
 
 \clearpage
@@ -230,7 +230,7 @@ folgende Prozessorfamilien implementiert:
 \item{Siemens 80C166/167}
 \item{Zilog Z80, Z180, Z380}
 \item{Zilog Z8, eZ8}
-\item{Xilinx KCPSM ('PicoBlaze')}
+\item{Xilinx KCPSM/KCPSM3 ('PicoBlaze')}
 \item{Toshiba TLCS-900(L)}
 \item{Toshiba TLCS-90}
 \item{Toshiba TLCS-870}
@@ -2245,7 +2245,7 @@ welche Prozessortypen dieser Befehl erlaubt ist.
 \subsection{SET, EQU und CONSTANT}
 \ttindex{SET}\ttindex{EQU}\ttindex{CONSTANT}
 
-{\em G"ultigkeit: alle Prozessoren, {\tt CONSTANT} nur KCPSM}
+{\em G"ultigkeit: alle Prozessoren, {\tt CONSTANT} nur KCPSM(3)}
 
 \tty{SET} und \tty{EQU} erlauben die Definition typenloser Konstanten, d.h. sie
 werden keinem Segment zugeordnet und ihre Verwendung erzeugt in keinem
@@ -2466,7 +2466,7 @@ PIO_Ctrl   PORT PIO_Port_A+3
 \ttindex{REG}\ttindex{NAMEREG}
 
 {\em G"ultigkeit: AVR, M*Core, ST9, 80C16x, KCPSM ({\tt NAMEREG} nur
- f"ur KCPSM)}
+ f"ur KCPSM(3))}
 
 Obwohl immer mit gleicher Syntax, hat diese Anweisung von Prozessor
 zu Prozessor eine leicht abweichende Bedeutung: Falls der Zielprozessor
@@ -3040,8 +3040,13 @@ jedoch der eZ8, mit einem stark erweiterten Befehlssatz, der auch
 nur auf Quellebene weitestgehens aufw"arts-kompatibel ist.
 %%-----------
 \begin{quote}
-ae) KCPSM
+ae) KCPSM, KCPSM3
 \end{quote}
+Bei beiden Prozessorkernen handelt es sich um keine eigenst"andigen
+Bausteine, sondern Logik-Kerne f"ur Gate-Arrays der Firma Xilinx.  Die
+3er-Variante bietet einen gr"o"seren Adre"sraum sowie einige zus"atzliche
+Instruktionen.  Es ist zu beachten, da"s sie nicht bin"ar
+aufw"artskompatibel ist!
 %%-----------
 \begin{quote}
 af) 96C141, 93C141
@@ -3971,6 +3976,15 @@ benutzt, so wird "uberpr"uft, ob die obere H"alfte des Adre"sausdrucks
 mit dem angenommenen Inhalt "ubereinstimmt.  Stimmt sie nicht, so erfolgt
 eine Warnung.
 
+\subsubsection{78K2}
+
+78K2 ist eine 8/16-Bit-Architektur, die nachtr"aglich durch Banking auf
+einen (Daten-)Adre"sraum von einem MByte erweitert wurde.  Das Banking
+wird mit den Registern PM6 (Normalfall) bzw. P6 (alternativer Fall mit
+vorangestelltem \verb!&!) realisiert, die die fehlenden oberen vier Bits 
+nachliefern.  Zumindest bei absoluten Adressen kann AS "uberpr"ufen, ob
+die gerade angesprochene, lineare 20-bittige Adresse innerhalb des
+gegebenen 64K-Fensters liegt.   
 
 \subsubsection{320C3x}
 
@@ -11238,7 +11252,8 @@ oder ich werde langsam alt...
             Semiconductor;}
       \item{unterst"utzt zus"atzlich den 4040 von Intel;}
       \item{unterst"utzt zus"atzlich den eZ8 von Zilog;}
-      \item{unterst"utzt zus"atzlich die 78K0-Familie von NEC (r5);}
+      \item{unterst"utzt zus"atzlich die 78K2-Familie von NEC;}
+      \item{unterst"utzt zus"atzlich die KCPSM3-Variante von Xilinx;}
       \end{itemize}}
 \end{itemize}
 
@@ -12609,6 +12624,11 @@ damit mit der n"achsten Release alle etwas davon haben :-)
                  {\em PicoBlaze 8-Bit Microcontroller for Virtex-E
                  and Spartan-II/IIE Devices.\/} \\
                  Application Note XAPP213, Version 2.1, February 2003
+
+\bibitem{Xil129} Xilinx Inc.: \\
+                 {\em PicoBlaze 8-bit Embedded Microcontroller User Guide
+                 for Spartan-3, Virtex-II, and Virtex-II Pro FPGAs.\/} \\
+                 UG129 (v1.1) June 10, 2004
                                                       
 \bibitem{Zilog} Datenbl"atter der Firma Zilog zur Z80-Familie
 

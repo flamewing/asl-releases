@@ -4,7 +4,7 @@
 
 CC = gcc
 LD = gcc
-CFLAGS = -g -O3 -mcpu=i486 -fomit-frame-pointer -Wall
+CFLAGS = -g -O3 -mcpu=i586 -fomit-frame-pointer -Wall
 LDFLAGS =
 #                    ^^^^^
 #                    |||||

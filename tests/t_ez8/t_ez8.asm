@@ -17,6 +17,8 @@
 
 	nop
 
+	atm
+
 	and	r7,r13
 	and	r5,vari
 	and	vari,r4
@@ -184,6 +186,8 @@ test1:	jr	test1
 	ldx	@.RR(13h),@0b4h
 	ldx	351h,456h
 	ldx	364h,#35h
+
+	ldwx	351h,456h
 
 	lea	r11,15h(r3)
 	lea	rr12,79h(rr8)

@@ -12,7 +12,7 @@ CODE_SRCS = codepseudo.c intpseudo.c motpseudo.c tipseudo.c codevars.c \
   	    code29k.c \
   	    code166.c \
   	    codez80.c codez8.c \
-            codekcpsm.c \
+            codekcpsm.c codekcp3.c \
             code96c141.c code90c141.c code87c800.c code47c00.c code97c241.c \
   	    code16c5x.c code16c8x.c code17c4x.c \
   	    codest6.c codest7.c codest9.c code6804.c \

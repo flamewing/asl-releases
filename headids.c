@@ -19,9 +19,12 @@
 /*           2001-07-01 TI 320C54x                                           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: headids.c,v 1.1 2003/11/06 02:49:24 alfred Exp $                          */
+/* $Id: headids.c,v 1.2 2005/02/19 14:10:15 alfred Exp $                          */
 /*****************************************************************************
  * $Log: headids.c,v $
+ * Revision 1.2  2005/02/19 14:10:15  alfred
+ * - added KCPSM3
+ *
  * Revision 1.1  2003/11/06 02:49:24  alfred
  * - recreated
  *
@@ -86,6 +89,7 @@ static TFamilyDescr Descrs[]=
         {"Z8"        , 0x0079, IntHex  },
         {"eZ8"       , 0x0059, IntHex  },
         {"KCPSM"     , 0x006b, IntHex  },
+        {"KCPSM3"    , 0x005b, IntHex  },
         {"TLCS-900"  , 0x0052, MotoS   },
         {"TLCS-90"   , 0x0053, IntHex  },
         {"TLCS-870"  , 0x0054, IntHex  },
