@@ -54,6 +54,7 @@
 /*           2001-07-07 added intiialization of C54x generator               */
 /*           2001-10-20 GNU error style possible                             */
 /*           2001-12-31 added IntLabel directive                             */
+/*           2002-01-26 changed end behaviour of while statement             */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -1336,26 +1337,44 @@ BEGIN
    int z;
    Boolean OK,Result;
 
-   CurrLine=PInp->StartLine+PInp->LineZ;
+   CurrLine = PInp->StartLine + PInp->LineZ;
 
-   if (PInp->LineZ==1)
+   /* if this is the first line of the loop body, open a new handle
+      for macro-local symbols and drop the old one if this was not the
+      first pass through the body. */
+
+   if (PInp->LineZ == 1)
     BEGIN
-     if (NOT PInp->First) PopLocHandle(); PInp->First=False;
+     if (NOT PInp->First) PopLocHandle(); PInp->First = False;
      PushLocHandle(GetLocHandle());
     END
-   else OK=True;
 
-   Lauf=PInp->Lines; for (z=1; z<=PInp->LineZ-1; z++) Lauf=Lauf->Next;
-   strcpy(erg,Lauf->Content);
+   if (PInp->LineZ == 1)
+   {
+     z = EvalIntExpression(PInp->SpecName, Int32, &OK);
+     { char tmp[30]; sprintf(tmp, "Res %d", z); WrLstLine(tmp); }
+     Result = (OK AND (z != 0));
+   }
+   else Result = True;
 
-   if ((++PInp->LineZ)>PInp->LineCnt)
-    BEGIN
-     PInp->LineZ=1; PInp->ParZ++;
-     z=EvalIntExpression(PInp->SpecName,Int32,&OK);
-     OK=(OK AND (z!=0));
-     Result=OK;
-    END
-   else Result=True;
+   if (Result)
+   {
+     /* get line of body */
+
+     Lauf = PInp->Lines;
+     for (z = 1; z <= PInp->LineZ - 1; z++)
+       Lauf = Lauf->Next;
+     strcpy(erg, Lauf->Content);
+
+     /* in case this is the last line of the body, reset counters */
+
+     if ((++PInp->LineZ) > PInp->LineCnt)
+     {
+       PInp->LineZ = 1; PInp->ParZ++;
+     }
+   }
+   else
+     *erg = '\0';
 
    return Result;
 END

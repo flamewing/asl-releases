@@ -856,3 +856,9 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 2002-01-13 [Bld 18]
 
 - Extension   : added INTLABEL option for macros
+
+2002-01-27 [Bld 19]
+
+- Bugfix      : BIT-statements inside macros did not work correctly
+
+- Bugfix      : WHILE-statement evaluates condition after last statement

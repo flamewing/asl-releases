@@ -14,6 +14,7 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*           30.10.2000 started adding immediate relocs                      */
 /*            7. 1.2001 silenced warnings about unused parameters            */
+/*           2002-01-23 symbols defined with BIT must not be macro-local     */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -2208,7 +2209,9 @@ BEGIN
     BEGIN
      if (DecodeBitAdr(ArgStr[1], &AdrLong, False) == ModBit251)
       BEGIN
+       PushLocHandle(-1);
        EnterIntSymbol(LabPart, AdrLong, SegNone, False);
+       PopLocHandle();
        sprintf(ListLine, "=%sH.%s", HexString(AdrLong&0xff, 2), HexString(AdrLong >> 24, 1));
       END
     END
@@ -2216,7 +2219,9 @@ BEGIN
     BEGIN
      if (DecodeBitAdr(ArgStr[1], &AdrLong, False) == ModBit51)
       BEGIN
+       PushLocHandle(-1);
        EnterIntSymbol(LabPart, AdrLong, SegBData, False);
+       PopLocHandle();
        sprintf(ListLine, "=%s", HexString(AdrLong, 2));
       END
     END
