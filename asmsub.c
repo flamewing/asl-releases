@@ -26,9 +26,18 @@
 /*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.4 2002/05/13 18:17:13 alfred Exp $                      */
+/* $Id: asmsub.c,v 1.7 2002/11/16 20:52:18 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmsub.c,v $
+ * Revision 1.7  2002/11/16 20:52:18  alfred
+ * - added ErrMsgStructNameMissing
+ *
+ * Revision 1.6  2002/11/04 19:04:26  alfred
+ * - prevent modification of constants with SET
+ *
+ * Revision 1.5  2002/08/14 18:43:47  alfred
+ * - warn null allocation, remove some warnings
+ *
  * Revision 1.4  2002/05/13 18:17:13  alfred
  * - added error 2010/2020
  *
@@ -890,6 +899,7 @@ BEGIN
      case  260: msgno=Num_ErrMsgWOverRange; break;
      case  270: msgno=Num_ErrMsgNegDUP; break;
      case  280: msgno=Num_ErrMsgConvIndX; break;
+     case  290: msgno=Num_ErrMsgNullResMem; break;
      case 1000: msgno=Num_ErrMsgDoubleDef; break;
      case 1010: msgno=Num_ErrMsgSymbolUndef; break;
      case 1020: msgno=Num_ErrMsgInvSymName; break;
@@ -1014,6 +1024,8 @@ BEGIN
      case 2009: msgno=Num_ErrMsgCannotUseUnit; break;
      case 2010: msgno=Num_ErrMsgInvEscSequence; break;
      case 2020: msgno=Num_ErrMsgInvPrefixCombination; break;
+     case 2030: msgno=Num_ErrMsgNoReassignConstants; break;
+     case 2040: msgno=Num_ErrMsgStructNameMissing; break;
      case 10001: msgno=Num_ErrMsgOpeningFile; break;
      case 10002: msgno=Num_ErrMsgListWrError; break;
      case 10003: msgno=Num_ErrMsgFileReadError; break;

@@ -73,9 +73,8 @@ der entsprechenden Eigent"umer.
 
 \vspace{7cm} 
 
-Dieses Dokument wurde mit dem LaTeX-Satzsystem unter den Betriebssystemen
-Digital Unix, Linux und OS/2 auf AMD K6- und DEC Alpha-Prozessoren
-angefertigt und formatiert.
+Dieses Dokument wurde mit dem LaTeX-Satzsystem unter dem Betriebssystem
+Linux angefertigt und formatiert.
 
 \clearpage
 
@@ -216,13 +215,13 @@ folgende Prozessorfamilien implementiert:
 \item{Mitsubishi M16C}
 \item{Intel 4004}
 \item{Intel MCS-48/41}
-\item{Intel MCS-51/251}
+\item{Intel MCS-51/251, Dallas DS80C390}
 \item{Intel MCS-96/196(Nx)/296}
 \item{Intel 8080/8085}
 \item{Intel i960}
 \item{Signetics 8X30x}
 \item{Philips XA}
-\item{Atmel AVR}
+\item{Atmel (Mega-)AVR}
 \item{AMD 29K}
 \item{Siemens 80C166/167}
 \item{Zilog Z80, Z180, Z380}
@@ -867,9 +866,10 @@ bzw. \ref{ChapShareOrder}.
 \begin{itemize}
 \item{\tty{g [Format]}: Mit diesem Schalter erzeugt AS zus"atzlich eine
       Datei, die Debug-Informationen f"ur dieses Programm enth"alt.
-      Als Format ist dabei entweder ein AS-eigenes \tty{MAP}-Format, eine
-      \tty{NoICE}-kompatible Kommandodatei oder das \tty{ATMEL}-Format
-      der AVR-Tools erlaubt.  Zu den im MAP-Format gespeicherten
+      Als Format ist dabei entweder ein AS-eigenes Format ({\tt
+      Format=MAP}), eine NoICE-kompatible Kommandodatei ({\tt
+      Format=NOICE}) oder das Format der AVR-Tools ({\tt Format=ATMEL})
+      erlaubt.  Zu den im MAP-Format gespeicherten
       Informationen geh"ort zum einen die Symboltabelle, zum anderen eine
       Zuordnung von Quellzeilen zu Maschinenadressen.  Eine genauere
       Beschreibung des benutzten MAP-Dateiformates findet sich in
@@ -1485,21 +1485,24 @@ solange ihre G"ultigkeit behalten, bis ein neues, nicht-tempor"ares Symbol
 definiert wird.  Andere Assembler bieten einen "ahnlichen Mechanismus an,
 der dort unter dem Stichwort 'lokale Symbole' l"auft, zur besseren
 Abgrenzung gegen das Sektionskonzept m"ochte ich aber beim Begriff
-'tempor"are Symbole' bleiben.
+'tempor"are Symbole' bleiben.  AS kennt zwei unterschiedliche Typen von
+tempor"aren Symbolen, solche {\em mit Namen} und {\em namenlose}:
 
-Ein Symbol, dessen Name mit zwei Dollarzeichen beginnt (dies ist weder f"ur
-normale Symbole noch Konstanten zul"assig), ist ein tempor"ares Symbol. 
-AS f"uhrt intern einen Z"ahler mit, der zu Beginn der Assemblierung auf
-Null gesetzt wird und bei jeder Definition eines nicht-tempor"aren Symbols
-inkrementiert wird.  Wird ein tempor"ares Symbol definiert oder
-referenziert, so werden die beiden f"uhrenden Dollarzeichen gestrichen und
-der momentane Stand des Z"ahlers wird angeh"angt.  Auf diese Weise erh"alt
-man mit jedem nicht-tempor"aren Symbol sozusagen die Symbolnamen zur"uck -
-man kommt an die Symbole vor dieser Definition aber auch nicht mehr heran!  
-Tempor"are Symbole bieten sich daher besonders f"ur den Einsatz in kleinen 
-Anweisungsbl"ocken an, typischerweise etwa ein Dutzend Befehle, auf keinen
-Fall mehr als eine Bildschirmseite, sonst kommt man leicht
-durcheinander...
+\subsection{Tempor"are Symbole mit Namen}
+
+Ein Symbol, dessen Name mit zwei Dollarzeichen beginnt (dies ist weder
+f"ur normale Symbole noch Konstanten zul"assig), ist ein tempor"ares
+Symbol mit Namen.  AS f"uhrt intern einen Z"ahler mit, der zu Beginn der
+Assemblierung auf Null gesetzt wird und bei jeder Definition eines
+nicht-tempor"aren Symbols inkrementiert wird.  Wird ein tempor"ares Symbol
+definiert oder referenziert, so werden die beiden f"uhrenden Dollarzeichen
+gestrichen und der momentane Stand des Z"ahlers wird angeh"angt.  Auf
+diese Weise erh"alt man mit jedem nicht-tempor"aren Symbol sozusagen die
+Symbolnamen zur"uck - man kommt an die Symbole vor dieser Definition aber
+auch nicht mehr heran!  Tempor"are Symbole bieten sich daher besonders
+f"ur den Einsatz in kleinen Anweisungsbl"ocken an, typischerweise etwa ein
+Dutzend Befehle, auf keinen Fall mehr als eine Bildschirmseite, sonst
+kommt man leicht durcheinander...
 
 Hier ein kleines Beispiel: 
 \begin{verbatim}
@@ -1514,6 +1517,63 @@ $$loop: nop
 W"are das zwischen den Schleifen liegende nicht-tempor"are Label nicht
 vorhanden, g"abe es nat"urlich eine Fehlermeldung wegen eines doppelt
 definierten Symbols.
+
+{\em Namenlose Tempor"are Symbole}
+
+F"ur all jene, denen tempor"are Symbole mit Namen noch immer zu
+kompliziert sind, gibt es eine noch einfachere Variante: Setzt man als
+Label ein einfaches Plus- oder Minuszeichen, so werden diese in die Namen
+{\tt \_\_forwnn} bzw. {\tt \_\_backmm} umgesetzt, wobei {\tt nn} bzw. {\tt mm}
+von Null an laufende Z"ahler sind.  Referenziert werden diese Symbole
+"uber die Sonderwerte {\tt - -- ---} bzw. {\tt + ++ +++}, womit sich die
+drei letzten 'Minussymbole' bzw die drei n"achsten 'Plussymbole'
+referenzieren lassen.  Welche Variante man benutzt, h"angt also davon ab,
+ob man ein Symbol vorw"arts oder r"uckw"arts referenzieren will.  
+
+Bei der {\em Definition} namenloser tempor"arer Symbole gibt es neben dem
+Plus- und Minuszeichen noch eine dritte Variante, n"amlich einen
+Schr"agstrich (/).  Ein so definiertes tempor"ares Symbol kann
+gleicherma"sen vorw"arts wie r"uckw"arts referenziert werden; d. h. je
+nach Referenzierung wird es wie ein Minus oder Plus behandelt.
+
+Namenlose tempor"are Symbole finden ihre Anwendung "ublicherweise in
+Konstruktionen, die auf eine Bildschirmseite passen, wie das bedingte
+"Uberspringen von ein paar Maschinenbefehlen oder kleinen Schleifen -
+ansonsten w"urde die Sache zu un"ubersichtlich werden (das ist aber nur
+ein gut gemeinter Rat...).  Ein Beispiel daf"ur ist das folgende St"uck
+Code, zur Abwechslung mal als 65xx-Code:
+\begin{verbatim}
+        cpu     6502
+
+-       ldx     #00
+-       dex
+        bne     -            ; springe zu 'dex'
+        lda     RealSymbol
+        beq     +            ; springe zu 'bne --'
+        jsr     SomeRtn
+        iny
++       bne     --           ; springe zu 'ldx #00'
+
+SomeRtn:
+        rts
+
+RealSymbol:
+        dfs     1
+
+  	inc	ptr
+   	bne 	+      	    ; springe zu 'tax'
+   	inc 	ptr+1
++ 	tax
+
+ 	bpl 	++     	    ; springe zu 'dex'
+   	beq 	+      	    ; springe vorwaerts zu 'rts'
+   	lda 	#0
+/  	rts            	    ; Schraegstrich = Wildcard
++ 	dex
+   	beq 	-           ; springe rueckwaerts zu 'rts'
+
+ptr:	dfs	2
+\end{verbatim}
 
 %%---------------------------------------------------------------------------
 
@@ -2183,20 +2243,9 @@ VecCnt  SET     VecCnt+4
         DefVec  Vec2      ; ergibt Vec2=4
 \end{verbatim}
 Intern werden Konstanten und Variablen identisch gespeichert, der
-einzige Unterschied ist, da"s sie mit \tty{SET} umdefiniert werden
-k"onnen und mit \tty{EQU} nicht.  Es ist daher m"oglich, ein Symbol
-mit \tty{EQU} zu definieren und es mit \tty{SET} zu "andern, auch
-wenn das nicht der Sinn der Sache ist.  Aus einem weiteren Grund
-sollte man davon sogar explizit die Finger lassen: Im Gegensatz zu
-\tty{SET} pr"uft \tty{EQU}, ob der neu zugewiesene Wert sich von
-einem evtl. bisher existierenden unterscheidet.  Da sich dieser f"ur
-mit \tty{EQU} definierte Konstanten nicht "andern sollte, vermutet
-AS einen Phasenfehler und legt einen weiteren Pass ein...w"urde man
-in obigem Beispiel z.B. die Initialisierung des Z"ahlers mit \tty{EQU}
-durchf"uhren, so w"urde AS sich zwar nicht beschweren, da eine einmalige
-Neuzuweisung pro Pass erlaubt ist (bei $n$ Durchg"angen kommt man nun
-einmal $n$-mal an dieser Stelle vorbei), aber endlos neue Passes ansto"sen,
-da der Initialwert des Z"ahlers immer vom Endwert verschieden ist.
+einzige Unterschied ist, da"s sie als unver"anderbar markiert werden, wenn
+sie mit \tty{EQU} definiert werden.  Der Versuch, eine Konstante mit
+\tty{SET} zu ver"andern, gibt eine Fehlermeldung.
 \par
 Mit \tty{EQU/SET} lassen sich Konstanten aller Typen definieren, z.B.
 \begin{verbatim}
@@ -2537,56 +2586,6 @@ Wert zuzuweisen.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-\subsection{STRUCT und ENDSTRUCT}
-\ttindex{STRUCT}\ttindex{ENDSTRUCT}
-
-{\em G"ultigkeit: alle Prozessoren}
-
-Auch in Assemblerprogrammen ergibt sich dann und wann die Notwendigkeit,
-analog zu Hochsprachen zusammengesetzte Datenstrukturen zu definieren.
-AS unterst"utzt dies mit den Befehlen \tty{STRUCT} und \tty{ENDSTRUCT},
-die die Definition einer solchen Struktur einleiten bzw. abschlie"sen.
-Das Verfahren ist simpel: Mit einem \tty{STRUCT} wird der momentane
-Programmz"ahler gesichert und auf Null zur"uckgesetzt.  Alle Labels
-ergeben mithin die Offsets der einzelnen Datenfelder in der Struktur. 
-Die Reservierung des Platzes f"ur die einzelnen Felder erfolgt mit den
-f"ur den jeweils aktiven Zielprozessor zul"assigen Befehlen zur
-Speicherplatzreservierung, also z.B. \tty{DS.x} f"ur die Motorolas oder
-\tty{DB} \& Co. f"ur Intels.  Das dem \tty{STRUCT}-Befehl vorangestellte
-(nicht optionale) Label ist der Name des Records und kann optional beim
-\tty{ENDSTRUCT}-Befehl wiederholt werden.  Weiterhin legt \tty{ENDSTRUCT} in
-\tty{$<$Name:  $>$\_len} die Gesamtl"ange der Struktur ab (man kann auch die
-Verwendung eines anderen Symbolnamens erzwingen, indem man dessen
-Name als Argument von \tty{ENDSTRUCT} angibt).  In der Definition
-\begin{verbatim}
-Rec     STRUCT
-Ident   db      ?
-Pad     db      ?
-Pointer dd      ?
-Rec     ENDSTRUCT
-\end{verbatim}
-w"urde also dem Symbol \tty{Rec\_len} der Wert 6 zugewiesen.  \bb{ACHTUNG!}
-Innerhalb einer Strukturdefinition d"urfen keine Befehle verwendet werden,
-die Code erzeugen, da es sich hier um eine reine Anordnung von Elementen
-im Adre"sraum handelt!
-
-\tty{STRUCT}-Definitionen d"urfen auch geschachtelt werden; nach Beendigung
-der inneren \tty{STRUCT}-Definition wird dann der Adre"sz"ahler der "au"seren
-Struktur automatisch um die Gr"o"se der inneren Struktur inkrementiert
-(die Z"ahlung innerhalb der inneren Struktur l"auft nat"urlich ab 0).
-
-Um Mehrdeutigkeiten bei gleichnamigen Feldern in verschiedenen Strukturen
-zu vermeiden, stellt AS den Feldnamen defaultm"a"sig den Namen der Struktur,
-mit einem Unterstrich getrennt, voran.  Im obigen Beispiel w"urden also die
-Symbole \tty{Rec\_Ident, Rec\_Pad} und \tty{Rec\_Pointer} erzeugt.  Diese
-Verhalten l"a"st sich unterbinden, indem man als Parameter der
-\tty{STRUCT}-Anweisung ein \tty{NOEXTNAMES} anbringt.  Bei geschachtelten
-Strukturdefinitionen funktioniert dies sinngem"a"s, d.h Feldnamen werden
-um die Namen aller sie umschlie"senden Strukturen erweitert, die keine
-\tty{NOEXTNAMES}-Direktive bekamen.
-
-%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
 \subsection{PUSHV und POPV}
 \ttindex{PUSHV}\ttindex{POPV}
 
@@ -2883,7 +2882,9 @@ auf 1 bzw. 2 Kbyte begrenzt.
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
 s) \> 87C750 $\rightarrow$ 8051, 8052, 80C320, 80C501, 80C502, \\
-   \> 80C504, 80515, and 80517 $\rightarrow$ 80C251
+   \> 80C504, 80515, and 80517 \\
+   \> $\rightarrow$ 80C390 \\
+   \> $\rightarrow$ 80C251
 \end{tabbing}
 \end{quote}
 Der 87C750 kann nur max. 2 Kbyte Programmspeicher adressieren, weshalb
@@ -2896,7 +2897,10 @@ Maskenfehler zeigt, wenn eine \tty{AJMP}- oder \tty{ACALL}-Anweisung auf der
 vorletzten Adresse einer 2K-Seite steht.  AS benutzt in einem solchen
 Fall automatisch lange Sprungbefehle bzw. gibt eine Fehlermeldung aus.  Der
 80C251 hingegen stellt einen drastischen Fortschritt in Richtung 16/32 Bit,
-gr"o"serer Adre"sr"aume und orthogonalerem Befehlssatz dar.
+gr"o"serer Adre"sr"aume und orthogonalerem Befehlssatz dar.  Den 80C390
+k"onnte man vielleicht als die 'kleine L"osung' bezeichnen:  Dallas
+Semiconductor hat den Befehlssatz und die Architektur nur so weit
+ver"andert, wie es f"ur die 16 MByte gro"sen Adre"sr"aume notwendig war.
 %%-----------
 \begin{quote}
 t) 8096 $\rightarrow$ 80196 $\rightarrow$ 80196N $\rightarrow$ 80296
@@ -2913,10 +2917,12 @@ Peripheral Transaction Server} (PTS) und verliert damit wieder zwei
 Maschinenbefehle.
 %%-----------
 \begin{quote}
-u) 8080 und 8085
+u) 8080 $\rightarrow$ 8085 $\rightarrow$ 8085UNDOC
 \end{quote}
 Der 8085 kennt zus"atzlich die Befehle \tty{RIM} und \tty{SIM} zum Steuern der
-Interruptmaske und der zwei I/O-Pins.
+Interruptmaske und der zwei I/O-Pins.  Der Typ {\tt 8085UNDOC} schaltet
+zus"atzliche, nicht von Intel dokumentierte Befehle ein.  Diese Befehle
+sind in Abschnitt \ref{8085Spec} dokumentiert.
 %%-----------
 \begin{quote}
 v) 8086 $\rightarrow$ 80186 $\rightarrow$ V30 $\rightarrow$ V35
@@ -4073,6 +4079,15 @@ Beim DSP56xxx ist der Datentyp auf Integerzahlen festgelegt (ein
 Attribut ist deshalb weder n"otig noch erlaubt), die im Bereich
 -8M..16M-1 liegen d"urfen.   Stringkonstanten sind ebenfalls erlaubt,
 wobei jeweils drei Zeichen in ein Wort gepackt werden.
+\par
+Es ist im Gegensatz zum Original Motorola-Assembler auch erlaubt, mit
+diesem Kommando Speicher zu reservieren, indem man als Argument ein
+Fragezeichen angibt.  Diese Erweiterung haben wohl einige Drittanbieter
+von 68K-Assemblern eingebaut, in Anlehnung an das, was Intel-Assembler
+machen.  Wer dies benutzt, sollte sich aber im klaren sein, da"s dies
+zu Problemen beim Portieren von Code auf andere Assembler f"uhren kann. 
+Des weiteren d"urfen Fragenzeichen als Operanden nicht mit 'normalen'
+Konstanten in einer Anweisung gemischt werden.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -5092,6 +5107,137 @@ sein, je nach Typ des Arguments!
 Bei der Definition und Ansprache von Funktionen wird im case-sensitiven
 Modus zwischen Gro"s- und Kleinschreibung unterschieden, im Gegensatz
 zu eingebauten Funktionen!
+
+%%---------------------------------------------------------------------------
+
+\section{Strukturen}
+\ttindex{STRUCT}\ttindex{ENDSTRUCT}\ttindex{UNION}
+\ttindex{STRUC}\ttindex{ENDS}
+\ttindex{DOTTEDSTRUCTS}
+
+{\em G"ultigkeit: alle Prozessoren}
+
+Auch in Assemblerprogrammen ergibt sich dann und wann die Notwendigkeit,
+analog zu Hochsprachen zusammengesetzte Datenstrukturen zu definieren.
+AS unterst"utzt sowohl die Definition als auch die Nutzung von Strukturen
+mit einer Reihe von Konstrukten und Anweisungen, die im folgenden
+erl"autert werden sollen:
+
+\subsection{Definition}
+
+Die Definition einer Struktur wird duch den Befehl \tty{STRUCT}
+eingeleitet und durch \tty{ENDSTRUCT} abgeschlossen (schreibfaule
+Zeitgenossen d"urfen aber auch stattdessen {\tt STRUC} bzw. {\tt ENDS}
+schreiben).  Ein diesen Befehlen voranstehendes Label wird als Name der zu
+definierenden Struktur genommen; am Ende der Definition ist der Name
+optional und kann von zur Festlegung des L"angennamens (s.u.) genutzt werden.
+Das restliche Verfahren ist simpel: Mit einem \tty{STRUCT} wird der
+momentane Programmz"ahler gesichert und auf Null zur"uckgesetzt.  Alle
+zwischen \tty{STRUCT} und \tty{ENDSTRUCT} definierten Labels ergeben
+mithin die Offsets der einzelnen Datenfelder in der Struktur. 
+Die Reservierung des Platzes f"ur die einzelnen Felder erfolgt mit den
+f"ur den jeweils aktiven Zielprozessor zul"assigen Befehlen zur
+Speicherplatzreservierung, also z.B. \tty{DS.x} f"ur die Motorolas oder
+\tty{DB} \& Co. f"ur Intels.  Es gelten hier auch gleichfalls die Regeln
+f"ur das Aufrunden von L"angen, um Alignments zu erhalten - wer also
+'gepackte' Strukturen definieren will, mu"s eventuell ein {\tt PADDING
+OFF} voranstellen.  Umgekehrt lassen sich Ausrichtungen nat"urlich mit
+Befehlen wie {\tt ALIGN} erzwingen.  
+
+Da eine solche Definition nur eine Art 'Prototypen' darstellt, k"onnen nur
+Befehle benutzt werden, die Speicherplatz reservieren, aber keine solchen,
+die Konstanten im Speicher ablegen oder Code erzeugen.
+
+Innerhalb von Strukturen definierte Labels (also die Namen der Elemente)
+werden nicht direkt abgespeichert, sondern es wird ihnen der Name der
+Struktur vorangestellt, durch ein Trennzeichen verbunden, bei dem es sich
+defaultm"a"sig um den Unterstrich (\_) handelt.  Dieses Verhalten l"a"st
+sich aber durch dem \tty{STRUCT}-Befehl mitgegebene Argumente steuern:
+\begin{itemize}
+\item{\tty{NOEXTNAMES} unterdr"uckt das Voranstellen des Strukturnamens.
+      Der Programmierer ist in diesem Falle selber daf"ur verantworlich,
+      da"s Feldnamen nicht mehrfach verwendet werden.}
+\item{\tty{DOTS} weist AS an, als verbindendes Zeichen einen Punkt
+      anstelle des Unterstriches zu verwenden.  Es sei jedoch
+      ausdr"ucklich darauf hingewiesen, da"s der Punkt bei vielen
+      Zielprozessoren ein Sonderfunktion zur Bitadressierung hat und
+      diese zu Problemen f"uhren kann!}
+\end{itemize}
+Des weiteren ist es m"oglich, die Verwendung des Punktes durch den Befehl
+\begin{verbatim}
+        dottedstructs <on|off>
+\end{verbatim}
+dauerhaft ein- bzw. auszuschalten.
+
+Neben den Namen der Elemente definiert AS beim Abschlu"s der Definition
+ein weiteres Symbol mit dem Namen {\tt LEN}, das nach dem gleichen Regeln
+um den Namen der Struktur erweitert wird - oder um den Label-Namen, der
+optional bei \tty{ENDSTRUCT} angegeben werden kann.
+
+Das ganze sieht dan in der Praxis z.B. so aus:
+\begin{verbatim}
+Rec     STRUCT
+Ident   db      ?
+Pad     db      ?
+Pointer dd      ?
+Rec     ENDSTRUCT
+\end{verbatim}
+Hier w"urde z.B. dem Symbol {\tt REC\_LEN} der Wert 6 zugewiesen.
+
+\subsection{Nutzung}
+
+Ist eine Struktur einmal definiert, ist die Nutzung denkbar einfach und
+"ahnlich wie ein Makro: ein einfaches
+\begin{verbatim}
+thisrec Rec
+\end{verbatim}
+reserviert Speicher in der Menge, wie er von der Struktur belegt wird, und
+definiert gleichzeitig f"ur jedes Element der Struktur ein passendes
+Symbol mit dessen Adresse, in diesem Falle also {\tt THISREC\_IDENT,
+THISREC\_PAD} und {\tt THISREC\_POINTER}.  Das Label darf bei dem Aufruf
+einer Struktur naturgem"a"s nicht fehlen; wenn doch, gibt's eine
+Fehlermeldung.
+
+{\bf ACHTUNG!} Obwohl AS keine Argumente bei der Definition einer Struktur
+erwartet, werden gegebene Argumente nicht als Fehler gemeldet, sondern
+schlicht ignoriert.  Dies ist vorgesehen, um in Zukunft einer deklarierten
+Struktur direkt Werte zuweisen zu k"onnen.
+
+\subsection{geschachtelte Strukturen}
+
+Es ist ohne weiteres erlaubt, eine bereits definierte Struktur in einer
+anderen Struktur aufzurufen.  Das dabei ablaufende Verfahren ist eine
+Kombination aus den beiden vorigen Punkten: Elemente der Substruktur
+werden definiert, mit dem Namen dieser Instanz vorangestellt, und vor
+diese zusammengesetzten Namen wird wieder der Name der Struktur bzw.
+sp"ater bei einer Benutzung gesetzt.  Das sieht dann z.B. so aus:
+\begin{verbatim}
+TreeRec struct
+left    dd         ?
+right   dd         ?
+data    Rec
+TreeRec endstruct
+\end{verbatim}   
+
+\subsection{Unions}
+
+Eine Union ist eine Sonderform einer Struktur, bei der die einzelnen
+Elemente nicht hintereinander, sondern {\em "ubereinander} liegen, d.h. 
+alle Elemente liegen an Startadresse 0 innerhalb der Struktur und belegen
+den gleichen Speicherplatz.  Naturgem"a"s tut so eine Definition nicht
+mehr, als einer Reihe von Symbolen den Wert Null zuzuweisen, sie kann aber
+sinnvoll sein, um programmtechnisch die "Uberlappung der Elemente zu
+verdeutlichen und den Code so etwas 'lesbarer' zu gestalten.  Die Gr"o"se
+einer Struktur ist das Maximum der Gr"o"sen aller Elemente.
+
+\subsection{Strukturen und Sektionen}
+
+Im Verlaufe der Definition oder der Nutzung von Strukturen definierte
+Symbole werden genauso behandelt wie normale Symbole, d.h. bei der Nutzung
+innerhalb einer Sektion werden diese Symbole als lokal zu dieser Sektion
+definiert.  Analoges gilt aber auch f"ur die Strukturen selber, d.h. eine
+innerhalb einer Sektion definierte Struktur kann nicht au"erhalb der
+Sektion benutzt werden.
 
 %%---------------------------------------------------------------------------
 
@@ -6944,6 +7090,101 @@ treffen veraltete Adressierungsarten (indirekte Adressierung mit
 
 %%---------------------------------------------------------------------------
 
+\section{8085UNDOC}
+\label{8085Spec}
+
+"Ahnlich wie beim Z80 oder 6502, sind auch beim 8085 die undokumentierten 
+Befehle nicht n"aher von Intel spezifiziert worden, weshalb es nicht
+undenkbar ist, da"s andere Assembler andere Mnemonics daf"ur verwenden. 
+Deshalb sollen auch diese Befehle und ihre Funktion hier kurz aufgelistet
+werden.  Und auch hier wieder ist die Verwendung dieser Befehle auf
+eigenes Risiko - schon der an sich zum 8085 aufw"artskompatible Z80
+benutzt diese Opcodes f"ur v"ollig andere Funktionen...
+
+\begin{tabbing}
+Argumente         \= : \= \kill \\
+Anweisung         \> : \> \tty{DSUB [reg]} \\
+Funktion          \> : \> HL $\leftarrow$ HL - reg \\
+Flags             \> : \> CY, S, X5, AC, Z, V, P \\
+Argumente         \> : \> \tty{reg} = B f"ur BC (optional) \\
+\end{tabbing}
+
+\begin{tabbing}
+Argumente         \= : \= \kill \\
+Anweisung         \> : \> \tty{ARHL} \\
+Funktion          \> : \> HL,CY $\leftarrow$ HL $>>$ 1 (arithmetisch) \\
+Flags             \> : \> CY \\
+Argumente         \> : \> keine \\
+\end{tabbing}
+
+\begin{tabbing}
+Argumente         \= : \= \kill \\
+Anweisung         \> : \> \tty{RDEL} \\
+Funktion          \> : \> CY,DE $\leftarrow$ DE $<<$ 1 \\
+Flags             \> : \> CY, V \\
+Argumente         \> : \> keine \\
+\end{tabbing}
+
+\begin{tabbing}
+Argumente         \= : \= \kill \\
+Anweisung         \> : \> \tty{LDHI d8} \\
+Funktion          \> : \> DE $\leftarrow$ HL + {\tt d8} \\
+Flags             \> : \> keine \\
+Argumente         \> : \> {\tt d8} = 8-Bit-Konstante \\
+\end{tabbing}
+
+\begin{tabbing}
+Argumente         \= : \= \kill \\
+Anweisung         \> : \> \tty{LDSI d8} \\
+Funktion          \> : \> DE $\leftarrow$ SP + {\tt d8} \\
+Flags             \> : \> keine \\
+Argumente         \> : \> {\tt d8} = 8-Bit-Konstante \\
+\end{tabbing}
+
+\begin{tabbing}
+Argumente         \= : \= \kill \\
+Anweisung         \> : \> \tty{RST flag} \\
+Funktion          \> : \> Restart zu 40h wenn {\tt flag}=1 \\
+Flags             \> : \> keine \\
+Argumente         \> : \> {\tt flag} = V f"ur Overflow-Bit \\
+\end{tabbing}
+
+\begin{tabbing}
+Argumente         \= : \= \kill \\
+Anweisung         \> : \> \tty{SHLX [reg]} \\
+Funktion          \> : \> [reg] $\leftarrow$ HL \\
+Flags             \> : \> keine \\
+Argumente         \> : \> \tty{reg} = D f"ur DE (optional) \\
+\end{tabbing}
+
+\begin{tabbing}
+Argumente         \= : \= \kill \\
+Anweisung         \> : \> \tty{LHLX [reg]} \\
+Funktion          \> : \> HL $\leftarrow$[reg] \\
+Flags             \> : \> keine \\
+Argumente         \> : \> \tty{reg} = D f"ur DE (optional) \\
+\end{tabbing}
+
+\begin{tabbing}
+Argumente         \= : \= \kill \\
+Anweisung         \> : \> \tty{JNX5 adr} \\
+Funktion          \> : \> springe zu {\tt adr} wenn X5=0 \\
+Flags             \> : \> keine \\
+Argumente         \> : \> {\tt adr} = absolute 16-Bit-Adresse \\
+\end{tabbing}
+
+\begin{tabbing}
+Argumente         \= : \= \kill \\
+Anweisung         \> : \> \tty{JX5 adr} \\
+Funktion          \> : \> springe zu {\tt adr} wenn X5=1 \\
+Flags             \> : \> keine \\
+Argumente         \> : \> {\tt adr} = absolute 16-Bit-Adresse \\
+\end{tabbing}
+
+Mit X5 ist dabei das ansonsten unbenutzte Bit 5 im PSW-Register gemeint.
+
+%%---------------------------------------------------------------------------
+
 \section{8086..V35}
 
 Eigentlich hatte ich mir geschworen, die Segmentseuche der 8086er aus diesem
@@ -8627,7 +8868,7 @@ Kommandozeilenparameter \bb{F} ausgew"ahlt werden k"onnen:
 \item{Intel-Hex (Intellec-8, \tty{-F Intel})}
 \item{16-Bit Intel-Hex (MCS-86, \tty{-F Intel16})}
 \item{32-Bit Intel-Hex (\tty{-F Intel32})}
-\item{Tektronix Hex (\tty{-F Tex})}
+\item{Tektronix Hex (\tty{-F Tek})}
 \item{Texas Instruments DSK (\tty{-F DSK})}
 \item{Atmel AVR Generic (-F Atmel, siehe \cite{AVRObj})}
 \end{itemize}
@@ -8749,8 +8990,12 @@ mit dem Schalter
  -d <Start>-<Ende>
 \end{verbatim}
 festlegen, welche Adre"sbereiche als Daten ausgegeben werden sollen.
-Dollarzeichen sind hier \bb{nicht} zugelassen.  F"ur das DSK-
-sowie Intel- und Motorola-Format relevant ist dagegen die Option
+Dollarzeichen sind hier \bb{nicht} zugelassen.  Diese Option sollte
+nicht mehr in neuen Projekten verwendet werden, da P2HEX inzwischen
+direkt Daten aus dem Datensegment korrekt umsetzen kann.
+
+F"ur das DSK- sowie Intel- und Motorola-Format relevant ist dagegen
+die Option
 \begin{verbatim}
  -e <Adresse> ,
 \end{verbatim}
@@ -9753,6 +9998,12 @@ Angaben:
 	        ist nicht zul"assig oder nicht im
 	        Maschinenkode darstellbar.}
                {keines}
+\errentry{2030}{Konstanten k"onnen nicht ver"andert werden}
+               {Fehler}
+               {Ein einmal mit {\tt EQU} als Konstante\\
+                definiertes Symbol kann nicht nachtr"aglich mit\\
+                {\tt SET} ver"andert werden.}
+               {der Name des fraglichen Symbols}
 \errentry{10001}{Fehler bein "Offnen der Datei}
                {fatal}
                {Beim Versuch, eine Datei zu "offnen, ist ein
@@ -10884,6 +11135,11 @@ oder ich werde langsam alt...
             wurden hinzugef"ugt;}
       \item{{\tt ENDIF/ENDCASE} zeigen im Listing die Zeilennummer des
             zugeh"origen "offnenden Befehls an;}
+      \item{der 8051-Teil unterst"utzt jetzt auch den erweiterten
+            Adre"sraum des Dallas DS80C390;}
+      \item{namenlose tempor"are Symbole hinzugef"ugt;}
+      \item{unterst"utzt zus"atzlich die undokumentierten 8085-Befehle;}
+      \item{verbesserte Behandlung von Strukturen;}
       \end{itemize}}
 \end{itemize}
 

@@ -14,6 +14,13 @@
 /*                      ShortMode wird bei absoluter Adressierung gemerkt    */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: code56k.c,v 1.2 2002/08/14 18:43:48 alfred Exp $                     */
+/*****************************************************************************
+ * $Log: code56k.c,v $
+ * Revision 1.2  2002/08/14 18:43:48  alfred
+ * - warn null allocation, remove some warnings
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -1005,6 +1012,7 @@ BEGIN
        if (FirstPassUnknown) WrError(1820);
        if ((OK) AND (NOT FirstPassUnknown))
         BEGIN
+         if (!AdrWord) WrError(290);
          CodeLen=AdrWord; DontPrint=True;
          BookKeeping();
         END

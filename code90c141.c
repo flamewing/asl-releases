@@ -9,6 +9,14 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: code90c141.c,v 1.2 2002/10/20 09:22:26 alfred Exp $                          */
+/*****************************************************************************
+ * $Log: code90c141.c,v $
+ * Revision 1.2  2002/10/20 09:22:26  alfred
+ * - work around the parser problem related to the ' character
+ *
+ * Revision 1.7  2002/10/07 20:25:01  alfred
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -676,12 +684,17 @@ BEGIN
 
    if (Memo("EX"))
     BEGIN
+     /* work around the parser problem related to the ' character */
+
+     if (!strncasecmp(ArgStr[2], "AF\'", 3))
+       ArgStr[2][3] = '\0';
+
      if (ArgCnt!=2) WrError(1110);
      else if (ArgPair("DE","HL"))
       BEGIN
        CodeLen=1; BAsmCode[0]=0x08;
       END
-     else if ((ArgPair("AF","AF\'") OR ArgPair("AF","AF`")))
+     else if ((ArgPair("AF","AF\'")) OR (ArgPair("AF","AF`")))
       BEGIN
        CodeLen=1; BAsmCode[0]=0x09;
       END

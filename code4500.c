@@ -11,6 +11,13 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: code4500.c,v 1.2 2002/08/14 18:43:48 alfred Exp $                    */
+/*****************************************************************************
+ * $Log: code4500.c,v $
+ * Revision 1.2  2002/08/14 18:43:48  alfred
+ * - warn null allocation, remove some warnings
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -136,6 +143,7 @@ BEGIN
        if ((ValOK) AND (NOT FirstPassUnknown))
         BEGIN
          DontPrint=True;
+         if (!Size) WrError(290);
          CodeLen=Size;
          BookKeeping();
         END

@@ -132,3 +132,29 @@
         rim
         sim
 
+;---------------------------------
+; undocumented 8085 instructions
+
+	cpu	8085undoc
+
+	dsub
+	dsub	b
+
+	arhl
+
+	rdel
+
+	ldhi	12h
+	ldsi	12h
+
+	rst	v
+
+	shlx
+
+	jnx5	1234h
+	jx5	1234h
+
+	shlx
+	shlx	d
+	lhlx
+	lhlx	d

@@ -17,9 +17,12 @@
 /*           2002-01-23 symbols defined with BIT must not be macro-local     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code51.c,v 1.2 2002/03/10 11:55:12 alfred Exp $                      */
+/* $Id: code51.c,v 1.3 2002/05/31 19:19:17 alfred Exp $                      */
 /***************************************************************************** 
  * $Log: code51.c,v $
+ * Revision 1.3  2002/05/31 19:19:17  alfred
+ * - added DS80C390 instruction variations
+ *
  * Revision 1.2  2002/03/10 11:55:12  alfred
  * - do not issue futher error messages after failed address evaluation
  *
@@ -102,6 +105,7 @@ static Boolean SrcMode,BigEndian;
 static SimpProc SaveInitProc;
 static CPUVar CPU87C750, CPU8051, CPU8052, CPU80C320,
        CPU80501, CPU80502, CPU80504, CPU80515, CPU80517,
+       CPU80C390,
        CPU80251;
 
 static PRelocEntry AdrRelocInfo, BackupAdrRelocInfo;
@@ -235,9 +239,9 @@ BEGIN
      ChkMask(Mask,ExtMask); return;
     END
 
-   if (*Asc=='#')
+   if (*Asc == '#')
     BEGIN
-     if ((OpSize==-1) AND (MinOneIs0)) OpSize=0;
+     if ((OpSize == -1) AND (MinOneIs0)) OpSize = 0;
      switch (OpSize)
       BEGIN
        case -1:
@@ -274,6 +278,18 @@ BEGIN
           else WrError(1132);
           if (AdrMode!=ModNone) AdrCnt=2;
           SaveAdrRelocs(RelocTypeB16, 0);
+         END
+        break;
+       case 3:
+        H32 = EvalIntExpression(Asc + 1, Int24, &OK);
+        if (OK)
+         BEGIN
+          AdrVals[0] = (H32 >> 16) & 0xff;
+          AdrVals[1] = (H32 >> 8) & 0xff;
+          AdrVals[2] = H32 & 0xff; 
+          AdrCnt = 3;
+          AdrMode=ModImm;
+          SaveAdrRelocs(RelocTypeB24, 0);
          END
         break;
       END
@@ -591,19 +607,19 @@ BEGIN
         break;
       END
     END
-   else if (strcasecmp(ArgStr[1],"DPTR")==0)
-    BEGIN
-     SetOpSize(1); DecodeAdr(ArgStr[2],MModImm);
+   else if (strcasecmp(ArgStr[1], "DPTR") == 0)
+   {
+     SetOpSize((MomCPU == CPU80C390) ? 3 : 1); DecodeAdr(ArgStr[2], MModImm);
      switch (AdrMode)
-      BEGIN
+     {
        case ModImm:
         PutCode(0x90);
         memcpy(BAsmCode + CodeLen, AdrVals, AdrCnt);
         TransferAdrRelocs(CodeLen);
         CodeLen += AdrCnt;
         break;
-      END
-    END
+     }
+   }
    else
     BEGIN
      DecodeAdr(ArgStr[1],MModAcc+MModReg+MModIReg8+MModIReg+MModInd+MModDir8+MModDir16);
@@ -1318,10 +1334,11 @@ BEGIN
     END
 END
 
-#define RelocTypeABranch (11 | RelocFlagBig | RelocFlagPage | (5 << 8) | (3 << 12))
+#define RelocTypeABranch11 (11 | RelocFlagBig | RelocFlagPage | (5 << 8) | (3 << 12)) | (0 << 16)
+#define RelocTypeABranch19 (19 | RelocFlagBig | RelocFlagPage | (5 << 8) | (3 << 12)) | (0 << 16)
 
         static void DecodeABranch(Word Index)
-BEGIN
+{
    Boolean OK;
    LongInt AdrLong;
 
@@ -1329,64 +1346,90 @@ BEGIN
 
    if (ArgCnt != 1) WrError(1110);
    else
-    BEGIN
+   {
      AdrLong = EvalIntExpression(ArgStr[1], Int24, &OK);
      if (OK)
-      BEGIN
-       if ((NOT SymbolQuestionable) AND (((((long)EProgCounter()) + 2) >> 11) != (AdrLong >> 11))) WrError(1910);
-       else if (Chk504(EProgCounter())) WrError(1900);
+     {
+       ChkSpace(SegCode);
+       if (MomCPU == CPU80C390)
+       {
+         if ((NOT SymbolQuestionable) AND (((((long)EProgCounter()) + 3) >> 19) != (AdrLong >> 19))) WrError(1910);
+         else
+         {
+           PutCode(0x01 + (Index << 4) + (((AdrLong >> 16) & 7) << 5));
+           BAsmCode[CodeLen++] = Hi(AdrLong);
+           BAsmCode[CodeLen++] = Lo(AdrLong);
+           TransferRelocs(ProgCounter() - 3, RelocTypeABranch19);
+         }
+       }
        else
-        BEGIN
-         ChkSpace(SegCode);
-         PutCode(0x01 + (Index << 4) + ((Hi(AdrLong) & 7) << 5));
-         BAsmCode[CodeLen++] = Lo(AdrLong);
-         TransferRelocs(ProgCounter() - 2, RelocTypeABranch);
-        END
-      END
-    END
-END
+       {
+         if ((NOT SymbolQuestionable) AND (((((long)EProgCounter()) + 2) >> 11) != (AdrLong >> 11))) WrError(1910);
+         else if (Chk504(EProgCounter())) WrError(1900);
+         else
+         {
+           PutCode(0x01 + (Index << 4) + ((Hi(AdrLong) & 7) << 5));
+           BAsmCode[CodeLen++] = Lo(AdrLong);
+           TransferRelocs(ProgCounter() - 2, RelocTypeABranch11);
+         }
+       }
+     }
+   }
+}
 
         static void DecodeLBranch(Word Index)
-BEGIN
+{
    LongInt AdrLong;
    Boolean OK;
 
    /* Index: LJMP=0 LCALL=1 */
 
-   if (ArgCnt!=1) WrError(1110);
-   else if (MomCPU<CPU8051) WrError(1500);
-   else if (*ArgStr[1]=='@')
-    BEGIN
-     DecodeAdr(ArgStr[1],MModIReg);
+   if (ArgCnt != 1) WrError(1110);
+   else if (MomCPU < CPU8051) WrError(1500);
+   else if (*ArgStr[1] == '@')
+   {
+     DecodeAdr(ArgStr[1], MModIReg);
      switch (AdrMode)
-      BEGIN
+     {
        case ModIReg:
-        if (AdrSize!=0) WrError(1350);
+        if (AdrSize != 0) WrError(1350);
         else
-         BEGIN
+        {
           PutCode(0x189 + (Index << 4));
           BAsmCode[CodeLen++] = 0x04 + (AdrPart << 4);
-         END
+        }
         break;
-      END
-    END
+     }
+   }
    else
-    BEGIN
-     AdrLong=EvalIntExpression(ArgStr[1],Int24,&OK);
+   {
+     AdrLong = EvalIntExpression(ArgStr[1], (MomCPU < CPU80C390) ? Int16 : Int24, &OK);
      if (OK)
-      BEGIN
-       if ((MomCPU>=CPU80251) AND (((((long)EProgCounter())+3) >> 16)!=(AdrLong >> 16))) WrError(1910);
-       else
-        BEGIN
-         ChkSpace(SegCode);
+     {
+       ChkSpace(SegCode);
+       if (MomCPU == CPU80C390)
+       {
          PutCode(0x02 + (Index << 4));
+         BAsmCode[CodeLen++] = (AdrLong >> 16) & 0xff;
          BAsmCode[CodeLen++] = (AdrLong >> 8) & 0xff;
          BAsmCode[CodeLen++] = AdrLong & 0xff;
-         TransferRelocs(ProgCounter() + 1, RelocTypeB16);
-        END
-      END
-    END
-END
+         TransferRelocs(ProgCounter() + 1, RelocTypeB24);
+       }
+       else
+       {
+         if ((MomCPU >= CPU80251) && (((((long)EProgCounter())+3) >> 16) != (AdrLong >> 16))) WrError(1910);
+         else
+         {
+           ChkSpace(SegCode);
+           PutCode(0x02 + (Index << 4));
+           BAsmCode[CodeLen++] = (AdrLong >> 8) & 0xff;
+           BAsmCode[CodeLen++] = AdrLong & 0xff;
+           TransferRelocs(ProgCounter() + 1, RelocTypeB16);
+         }
+       }
+     }
+   }
+}
 
         static void DecodeEBranch(Word Index)
 BEGIN
@@ -2431,37 +2474,54 @@ END
 
         static void SwitchTo_51(void)
 BEGIN
-   TurnWords=False; ConstMode=ConstModeIntel; SetIsOccupied=False;
+   TurnWords = False; ConstMode = ConstModeIntel; SetIsOccupied = False;
 
-   PCSymbol="$"; HeaderID=0x31; NOPCode=0x00;
-   DivideChars=","; HasAttrs=False;
+   PCSymbol = "$"; HeaderID = 0x31; NOPCode = 0x00;
+   DivideChars = ","; HasAttrs = False;
 
-   if (MomCPU>=CPU80251)
+   /* C251 is entirely different... */
+
+   if (MomCPU >= CPU80251)
     BEGIN
-     ValidSegs=(1<<SegCode)|(1<<SegIO);
-     Grans[SegCode ]=1; ListGrans[SegCode ]=1; SegInits[SegCode ]=0;
+     ValidSegs = (1 << SegCode) | (1 << SegIO);
+     Grans[SegCode ] = 1; ListGrans[SegCode ] = 1; SegInits[SegCode ] = 0;
      SegLimits[SegCode ] = 0xffffffl;
-     Grans[SegIO   ]=1; ListGrans[SegIO   ]=1; SegInits[SegIO   ]=0;
+     Grans[SegIO   ] = 1; ListGrans[SegIO   ] = 1; SegInits[SegIO   ] = 0;
      SegLimits[SegIO   ] = 0x1ff;
     END
+  
+   /* rest of the pack... */
+
    else
     BEGIN
-     ValidSegs=(1<<SegCode)|(1<<SegData)|(1<<SegIData)|(1<<SegXData)|(1<<SegBData);
-     Grans[SegCode ]=1; ListGrans[SegCode ]=1; SegInits[SegCode ]=0;
-     SegLimits[SegCode ] = (MomCPU == CPU87C750) ? 0x7ff : 0xffff;
-     Grans[SegData ]=1; ListGrans[SegData ]=1; SegInits[SegData ]=0x30;
+     ValidSegs=(1 << SegCode) | (1 << SegData) | (1 << SegIData) | (1 << SegXData) | (1 << SegBData);
+
+     Grans[SegCode ] = 1; ListGrans[SegCode ] = 1; SegInits[SegCode ] = 0;
+     if (MomCPU == CPU80C390)
+       SegLimits[SegCode ] = 0xffffff;
+     else if (MomCPU == CPU87C750)
+       SegLimits[SegCode ] = 0x7ff;
+     else
+       SegLimits[SegCode ] = 0xffff;
+
+
+     Grans[SegXData] = 1; ListGrans[SegXData] = 1; SegInits[SegXData] = 0;
+     if (MomCPU == CPU80C390)
+       SegLimits[SegXData] = 0xffffff;
+     else
+       SegLimits[SegXData] = 0xffff;
+
+     Grans[SegData ] = 1; ListGrans[SegData ] = 1; SegInits[SegData ] = 0x30;
      SegLimits[SegData ] = 0xff;
-     Grans[SegIData]=1; ListGrans[SegIData]=1; SegInits[SegIData]=0x80;
+     Grans[SegIData] = 1; ListGrans[SegIData] = 1; SegInits[SegIData] = 0x80;
      SegLimits[SegIData] = 0xff;
-     Grans[SegXData]=1; ListGrans[SegXData]=1; SegInits[SegXData]=0;
-     SegLimits[SegXData] = 0xffff;
-     Grans[SegBData]=1; ListGrans[SegBData]=1; SegInits[SegBData]=0;
+     Grans[SegBData] = 1; ListGrans[SegBData] = 1; SegInits[SegBData] = 0;
      SegLimits[SegBData] = 0xff;
     END
 
-   MakeCode=MakeCode_51; IsDef=IsDef_51;
+   MakeCode = MakeCode_51; IsDef = IsDef_51;
 
-   InitFields(); SwitchFrom=SwitchFrom_51;
+   InitFields(); SwitchFrom = SwitchFrom_51;
    AddONOFF("SRCMODE"  , &SrcMode  , SrcModeName  , False);
    AddONOFF("BIGENDIAN", &BigEndian, BigEndianName, False);
 END
@@ -2469,16 +2529,17 @@ END
 
         void code51_init(void)
 BEGIN
-   CPU87C750 =AddCPU("87C750",SwitchTo_51);
-   CPU8051   =AddCPU("8051"  ,SwitchTo_51);
-   CPU8052   =AddCPU("8052"  ,SwitchTo_51);
-   CPU80C320 =AddCPU("80C320",SwitchTo_51);
-   CPU80501  =AddCPU("80C501",SwitchTo_51);
-   CPU80502  =AddCPU("80C502",SwitchTo_51);
-   CPU80504  =AddCPU("80C504",SwitchTo_51);
-   CPU80515  =AddCPU("80515" ,SwitchTo_51);
-   CPU80517  =AddCPU("80517" ,SwitchTo_51);
-   CPU80251  =AddCPU("80C251",SwitchTo_51);
+   CPU87C750 = AddCPU("87C750", SwitchTo_51);
+   CPU8051   = AddCPU("8051"  , SwitchTo_51);
+   CPU8052   = AddCPU("8052"  , SwitchTo_51);
+   CPU80C320 = AddCPU("80C320", SwitchTo_51);
+   CPU80501  = AddCPU("80C501", SwitchTo_51);
+   CPU80502  = AddCPU("80C502", SwitchTo_51);
+   CPU80504  = AddCPU("80C504", SwitchTo_51);
+   CPU80515  = AddCPU("80515" , SwitchTo_51);
+   CPU80517  = AddCPU("80517" , SwitchTo_51);
+   CPU80C390 = AddCPU("80C390", SwitchTo_51);
+   CPU80251  = AddCPU("80C251", SwitchTo_51);
 
    SaveInitProc=InitPassProc;
    InitPassProc=InitPass_51;

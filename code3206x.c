@@ -15,9 +15,15 @@
 /*           2001-11-26 scaling fix (input from Johannes)                    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3206x.c,v 1.5 2002/05/12 20:57:58 alfred Exp $                   */
+/* $Id: code3206x.c,v 1.7 2002/08/14 18:43:48 alfred Exp $                   */
 /***************************************************************************** 
  * $Log: code3206x.c,v $
+ * Revision 1.7  2002/08/14 18:43:48  alfred
+ * - warn null allocation, remove some warnings
+ *
+ * Revision 1.6  2002/07/14 18:39:58  alfred
+ * - fixed TempAll-related warnings
+ *
  * Revision 1.5  2002/05/12 20:57:58  alfred
  * - error msg 20000 -> 2009
  *
@@ -645,7 +651,7 @@ BEGIN
                   (((LongWord)CharTransTable[((usint)t.Contents.Ascii[z2])&0xff])) << (8*(3-(z2 & 3)));
               END
              break;
-            case TempNone:
+            default:
              OK = False;
            END
         }
@@ -665,6 +671,7 @@ BEGIN
        if ((OK) AND (NOT FirstPassUnknown))
         BEGIN
          DontPrint=True;
+         if (!Size) WrError(290);
          CodeLen=Size;
          BookKeeping();
         END

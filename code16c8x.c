@@ -13,6 +13,13 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: code16c8x.c,v 1.2 2002/08/14 18:43:48 alfred Exp $                   */
+/*****************************************************************************
+ * $Log: code16c8x.c,v $
+ * Revision 1.2  2002/08/14 18:43:48  alfred
+ * - warn null allocation, remove some warnings
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -202,6 +209,7 @@ BEGIN
        if ((ValOK) AND (NOT FirstPassUnknown))
         BEGIN
          DontPrint=True;
+         if (!Size) WrError(290);
          CodeLen=Size;
          BookKeeping();
         END
@@ -441,12 +449,11 @@ END
 
         static Boolean ChkPC_16c8x(LargeWord Addr)
 BEGIN
-
-   if ((ActPC == SegCode) AND (Addr > SegLimits[SegCode]))
+   if ((ActPC == SegCode) AND (Addr > (LargeWord)SegLimits[SegCode]))
     BEGIN
      return ((Addr >= 0x2000) AND (Addr <= 0x2007));
     END
-   else return (Addr <= SegLimits[ActPC]);
+   else return (Addr <= (LargeWord)SegLimits[ActPC]);
 END
 
         static void SwitchFrom_16c8x(void)

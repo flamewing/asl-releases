@@ -11,6 +11,13 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: code3201x.c,v 1.2 2002/08/14 18:43:48 alfred Exp $                          */
+/*****************************************************************************
+ * $Log: code3201x.c,v $
+ * Revision 1.2  2002/08/14 18:43:48  alfred
+ * - warn null allocation, remove some warnings
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -252,6 +259,7 @@ BEGIN
        if ((OK) AND (NOT FirstPassUnknown))
         BEGIN
          DontPrint=True;
+         if (!Size) WrError(290);
          CodeLen=Size;
          BookKeeping();
         END

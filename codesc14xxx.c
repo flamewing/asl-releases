@@ -157,6 +157,7 @@ BEGIN
          if (FirstPassUnknown) WrError(1820);
          else
           BEGIN
+           if (!z) WrError(290);
            CodeLen = (z + 1) >> 1;
            DontPrint = True;
            BookKeeping();
@@ -178,6 +179,7 @@ BEGIN
          if (FirstPassUnknown) WrError(1820);
          else
           BEGIN
+           if (!z) WrError(290);
            CodeLen = z;
            DontPrint = True;
            BookKeeping();

@@ -699,6 +699,31 @@ typedef unsigned long Card64;
 #define ARCHPRNAME "i386"
 
 /*---------------------------------------------------------------------------*/
+/* Intel i386 with NetBSD 1. and GCC: (tested on 1.5.3)
+   
+   principally, a normal 32-bit UNIX */
+
+#ifdef __NetBSD__
+#define ARCHSYSNAME "i386-netbsd"
+#define DEFSMADE
+#define OPENRDMODE "r"
+#define OPENWRMODE "w"
+#define OPENUPMODE "r+"
+#define IEEEFLOAT
+typedef signed char Integ8;
+typedef unsigned char Card8;
+typedef signed short Integ16;
+typedef unsigned short Card16;
+#define HAS16
+typedef signed int Integ32;
+typedef unsigned int Card32;
+typedef signed long long Integ64;
+typedef unsigned long long Card64;
+#define HAS64
+#define LOCALE_NLS
+#endif
+
+/*---------------------------------------------------------------------------*/
 /* Intel i386 with Linux and GCC:
    
    principally, a normal 32-bit *NIX */

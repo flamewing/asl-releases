@@ -15,6 +15,16 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: code7720.c,v 1.3 2002/08/14 18:43:48 alfred Exp $                    */
+/***************************************************************************** 
+ * $Log: code7720.c,v $
+ * Revision 1.3  2002/08/14 18:43:48  alfred
+ * - warn null allocation, remove some warnings
+ *
+ * Revision 1.2  2002/07/14 18:39:58  alfred
+ * - fixed TempAll-related warnings
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -164,7 +174,7 @@ BEGIN
            END
           if (Pos!=0) CodeLen++;
           break;
-         case TempNone:
+         default:
           OK=False;
         END
        z++;
@@ -187,6 +197,7 @@ BEGIN
      if ((OK) AND (NOT FirstPassUnknown))
       BEGIN
        DontPrint=True;
+       if (!Size) WrError(290);
        CodeLen=Size;
        BookKeeping();
       END

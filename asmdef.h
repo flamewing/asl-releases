@@ -7,7 +7,7 @@
 /* global benutzte Variablen und Definitionen                                */
 /*                                                                           */
 /* Historie:  4. 5.1996 Grundsteinlegung                                     */
-/*           24. 6.1998 Zeichenübersetzungstabellen                          */
+/*           24. 6.1998 Zeichenuebersetzungstabellen                         */
 /*           24. 7.1998 Debug-Modus NoICE                                    */
 /*           25. 7.1998 PassNo --> Integer                                   */
 /*           17. 8.1998 InMacroFlag hierher verschoben                       */
@@ -33,9 +33,24 @@
 /*           2001-10-20 added GNU error flag                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmdef.h,v 1.2 2002/05/18 16:09:49 alfred Exp $                      */
+/* $Id: asmdef.h,v 1.7 2002/11/23 15:53:27 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmdef.h,v $
+ * Revision 1.7  2002/11/23 15:53:27  alfred
+ * - SegLimits are unsigned now
+ *
+ * Revision 1.6  2002/11/17 16:09:12  alfred
+ * - added DottedStructs
+ *
+ * Revision 1.5  2002/11/11 21:12:05  alfred
+ * - ListMAsk is 16 bits
+ *
+ * Revision 1.4  2002/11/10 09:43:07  alfred
+ * - relocated symbol node type
+ *
+ * Revision 1.3  2002/11/04 19:19:08  alfred
+ * - add separation character to structs
+ *
  * Revision 1.2  2002/05/18 16:09:49  alfred
  * - TempTypes are bit masks
  *
@@ -100,21 +115,6 @@ typedef struct _TCrossRef
           Integer OccNum;
          } TCrossRef,*PCrossRef;
 
-typedef struct _SymbolEntry
-         {
-          struct _SymbolEntry *Left,*Right;
-          ShortInt Balance;
-          LongInt Attribute;
-          char *SymName;
-          Byte SymType;
-          ShortInt SymSize;
-          Boolean Defined,Used,Changeable;
-          SymbolVal SymWert;
-          PCrossRef RefList;
-          Byte FileNum;
-          LongInt LineNum;
-          TRelocEntry *Relocs;
-         } SymbolEntry,*SymbolPtr;
 
 typedef struct _TPatchEntry
         {
@@ -183,6 +183,7 @@ extern char SrcSuffix[],IncSuffix[],PrgSuffix[],LstSuffix[],
 #define AllArgName       "ALLARGS"    /* Ansprache Argumentliste in Makros */
 #define DefStackName     "DEFSTACK"   /* Default-Stack */
 #define NestMaxName      "NESTMAX"    /* max. nesting level of a macro */
+#define DottedStructsName "DOTTEDSTRUCTS" /* struct elements by default with . */
 
 extern char *EnvName;
 
@@ -261,14 +262,6 @@ typedef struct _TDefinement
           Byte Compiled[256];
 	 } TDefinement,*PDefinement;
 
-typedef struct _TStructure
-         {
-          struct _TStructure *Next;
-          Boolean DoExt;
-          char *Name;
-          LargeWord CurrPC;
-         } TStructure,*PStructure;
-
 extern StringPtr SourceFile;
 
 extern StringPtr ClrEol;
@@ -284,8 +277,8 @@ extern Word ListGrans[StructSeg+1];
 extern ChunkList SegChunks[StructSeg+1];
 extern Integer ActPC;
 extern Boolean PCsUsed[StructSeg+1];
-extern LargeInt SegInits[PCMax+1]; 
-extern LargeInt SegLimits[PCMax+1]; 
+extern LargeWord SegInits[PCMax+1]; 
+extern LargeWord SegLimits[PCMax+1]; 
 extern LongInt ValidSegs;
 extern Boolean ENDOccured;
 extern Boolean Retracted;
@@ -309,7 +302,7 @@ extern Boolean MakeCrossList;
 extern Boolean MakeSectionList;
 extern Boolean MakeIncludeList;
 extern Boolean RelaxedMode;
-extern Byte ListMask;
+extern Word ListMask;
 extern ShortInt ExtendErrors;
 
 extern LongInt MomSectionHandle;
@@ -400,7 +393,7 @@ extern Word PageCounter[ChapMax+1];
 extern Byte ChapDepth;
 extern StringPtr ListLine;
 extern Byte PageLength,PageWidth;
-extern Boolean LstMacroEx;
+extern Boolean LstMacroEx, DottedStructs;
 extern StringPtr PrtInitString;
 extern StringPtr PrtExitString;
 extern StringPtr PrtTitleString;
@@ -416,9 +409,6 @@ extern PTransTable TransTables,CurrTransTable;
 extern PFunction FirstFunction;
 
 extern PDefinement FirstDefine;
-
-extern PStructure StructureStack;
-extern int StructSaveSeg;
 
 extern PSaveState FirstSaveState;
 

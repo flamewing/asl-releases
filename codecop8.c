@@ -11,6 +11,13 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: codecop8.c,v 1.2 2002/08/14 18:43:49 alfred Exp $                    */
+/*****************************************************************************
+ * $Log: codecop8.c,v $
+ * Revision 1.2  2002/08/14 18:43:49  alfred
+ * - warn null allocation, remove some warnings
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -218,6 +225,7 @@ BEGIN
         BEGIN
          DontPrint=True;
          if (Memo("DSW")) Size+=Size;
+         if (!Size) WrError(290);
          CodeLen=Size;
          BookKeeping();
         END

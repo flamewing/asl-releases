@@ -75,8 +75,9 @@ Therefore, addresses in the HEX file again start at 0.
 Tell P2HEX that items in the address range given by the argument
 should be regarded as data rather than code.  This option only has a
 meaning for the TI-DSK format that can differenciate between code and
-data.  It will probably disappear on the day when P2HEX can process
-all address spaces, making a manual distinction unnecessary.
+data.  This option is principally obsolete since P2HEX can now directly
+process data from the DATA segment.  It should not be used in new projects,
+since it may be removed in the near future.
 .TP
 .B -e <address>
 
@@ -296,5 +297,5 @@ segment than CODE are completely ignored.
 
 .SH AUTHOR(S)
 
-Alfred Arnold (a.arnold@kfa-juelich.de)
+Alfred Arnold (alfred@ccac.rwth-aachen.de)
 

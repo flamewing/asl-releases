@@ -36,9 +36,27 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.6 2002/05/25 21:15:20 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.12 2002/11/10 15:08:34 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.c,v $
+ * Revision 1.12  2002/11/10 15:08:34  alfred
+ * - use tree functions
+ *
+ * Revision 1.11  2002/11/10 09:43:07  alfred
+ * - relocated symbol node type
+ *
+ * Revision 1.10  2002/11/04 19:04:26  alfred
+ * - prevent modification of constants with SET
+ *
+ * Revision 1.9  2002/10/10 17:11:33  alfred
+ * - repaired $$ temp symbols
+ *
+ * Revision 1.8  2002/10/07 20:25:01  alfred
+ * - added '/' nameless temporary symbols
+ *
+ * Revision 1.7  2002/09/29 17:05:40  alfred
+ * - ass +/- temporary symbols
+ *
  * Revision 1.6  2002/05/25 21:15:20  alfred
  * - Fix array definition
  *
@@ -72,8 +90,11 @@
 #include "asmfnums.h"
 #include "asmrelocs.h"
 #include "chunks.h"
+#include "trees.h"
 
 #include "asmpars.h"
+
+#define LOCSYMSIGHT 3       /* max. sight for nameless temporary symbols */
 
 LargeWord IntMasks[IntTypeCnt]=
             {0x00000001l,                         /* UInt1  */
@@ -168,6 +189,11 @@ LargeInt IntMaxs[IntTypeCnt]=
 #endif
             };
 
+typedef struct
+        {
+          Boolean Back;
+          LongInt Counter;
+        } TTmpSymLog;
 
 Boolean FirstPassUnknown;      /* Hinweisflag: evtl. im ersten Pass unbe-
                                   kanntes Symbol, Ausdruck nicht ausgewertet */
@@ -176,8 +202,12 @@ Boolean SymbolQuestionable;    /* Hinweisflag:  Dadurch, dass Phasenfehler
                                   nicht mehr aktuell                         */
 Boolean UsesForwards;          /* Hinweisflag: benutzt Vorwaertsdefinitionen */
 LongInt MomLocHandle;          /* Merker, den lokale Symbole erhalten        */
-LongInt TmpSymCounter;         /* counter for local symbols                  */
+LongInt TmpSymCounter,         /* counters for local symbols                 */
+        FwdSymCounter,
+        BackSymCounter;
 char TmpSymCounterVal[10];     /* representation as string                   */
+TTmpSymLog TmpSymLog[LOCSYMSIGHT];
+LongInt TmpSymLogDepth;
 
 LongInt LocHandleCnt;          /* mom. verwendeter lokaler Handle            */
 
@@ -187,6 +217,19 @@ Boolean BalanceTree;           /* Symbolbaum ausbalancieren                  */
 static char BaseIds[3]={'%','@','$'};
 static char BaseLetters[3]={'B','O','H'};
 static Byte BaseVals[3]={2,8,16};
+
+typedef struct _TSymbolEntry
+         {
+          TTree Tree;
+          Byte SymType;
+          ShortInt SymSize;
+          Boolean Defined,Used,Changeable;
+          SymbolVal SymWert;
+          PCrossRef RefList;
+          Byte FileNum;
+          LongInt LineNum;
+          TRelocEntry *Relocs;
+         } TSymbolEntry,*PSymbolEntry;
 
 typedef struct _TSymbolStackEntry
          {
@@ -249,7 +292,7 @@ typedef struct _TRegDef
           PRegDefList Defs,DoneDefs;
          } TRegDef,*PRegDef;
 
-static SymbolPtr FirstSymbol,FirstLocSymbol;
+static PSymbolEntry FirstSymbol,FirstLocSymbol;
 static PDefSymbol FirstDefSymbol;
 /*static*/ PCToken FirstSection;
 static PRegDef FirstRegDef;
@@ -413,30 +456,154 @@ BEGIN
 END
 
 /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-/* check whether this is a local symbol and expand local counter if yes      */
+/* check whether this is a local symbol and expand local counter if yes.  They
+   have to be handled in different places of the parser, therefore two separate 
+   functions */
 
-	void ChkTmp(char *Name, Boolean Define)
-BEGIN
+	void InitTmpSymbols(void)
+{
+   TmpSymCounter = FwdSymCounter = BackSymCounter = 0;
+   *TmpSymCounterVal = '\0';
+   TmpSymLogDepth = 0;
+}
+
+	static void AddTmpSymLog(Boolean Back, LongInt Counter)
+{
+  /* shift out oldest value */
+
+  if (TmpSymLogDepth)
+  {
+    LongInt ShiftCnt = min(TmpSymLogDepth, LOCSYMSIGHT - 1);
+
+    memmove(TmpSymLog + 1, TmpSymLog, sizeof(TTmpSymLog) * (ShiftCnt));
+  }
+
+  /* insert new one */
+
+  TmpSymLog[0].Back = Back;
+  TmpSymLog[0].Counter = Counter;
+  if (TmpSymLogDepth < LOCSYMSIGHT)
+    TmpSymLogDepth++;
+}
+
+	static Boolean ChkTmp(char *Name, Boolean Define)
+{
    char *Src, *Dest;
+   Boolean Result = FALSE;
+
+   /* $$-Symbols: append current $$-counter */
+
    if (strncmp(Name, "$$", 2) == 0)
-    BEGIN
+   {
      /* manually copy since this will implicitly give us the point to append
         the number */
 
      for (Src = Name + 2, Dest = Name; *Src; *(Dest++) = *(Src++));
 
-     /* append number */
+     /* append number. only generate the number once */
 
      if (*TmpSymCounterVal == '\0')
       sprintf(TmpSymCounterVal, "%d", TmpSymCounter);
      strcpy(Dest, TmpSymCounterVal);
-    END
+     Result = TRUE;
+   }
+
+   /* no special local symbol: increment $$-counter */
+
    else if (Define)
-    BEGIN
+   {
      TmpSymCounter++;
      *TmpSymCounterVal = '\0';
-    END
-END
+   }
+
+   return Result;
+}
+
+	static Boolean ChkTmp2(char *Name, Boolean Define)
+{
+   char *Src;
+   int Cnt;
+   Boolean Result = FALSE;
+
+   /* Note: We have to deal with three symbol definitions:
+    
+       "-" for backward-only referencing
+       "+" for forward-only referencing
+       "/" for either way of referencing
+
+       "/" and "+" are both expanded to forward symbol names, so the
+       forward refencing to both types is unproblematic, however
+       only "/" and "-" are stored in the backlog of the three 
+       most-recent symbols for backward referencing.  
+   */
+
+   /* backward references ? */
+
+   if (*Name == '-')
+   {
+     for (Src = Name; *Src; Src++)
+       if (*Src != '-')
+         break;
+     Cnt = Src - Name;
+     if (!*Src)
+     {
+       if ((Define) && (Cnt == 1))
+       {
+         sprintf(Name, "__back%d", BackSymCounter);
+         AddTmpSymLog(TRUE, BackSymCounter);
+         BackSymCounter++;
+         Result = TRUE;
+       }
+
+       /* TmpSymLogDepth cannot become larger than LOCSYMSIGHT, so we only
+          have to check against the log's actual depth. */
+
+       else if (Cnt <= TmpSymLogDepth)
+       {
+         Cnt--;
+         sprintf(Name, "__%s%d", 
+                 TmpSymLog[Cnt].Back ? "back" : "forw",
+                 TmpSymLog[Cnt].Counter);
+         Result = TRUE;
+       }
+     }
+   }
+
+   /* forward references ? */
+
+   else if (*Name == '+')
+   {
+     for (Src = Name; *Src; Src++)
+       if (*Src != '+')
+         break;
+     Cnt = Src - Name;
+     if (!*Src)
+     {
+       if ((Define) && (Cnt == 1))
+       {
+         sprintf(Name, "__forw%d", FwdSymCounter++);
+         Result = TRUE;
+       }
+       else if (Cnt <= LOCSYMSIGHT)
+       {
+         sprintf(Name, "__forw%d", FwdSymCounter + (Cnt - 1));
+         Result = TRUE;
+       }
+     }
+   }
+
+   /* slash: only allowed for definition, but add to log for backward ref. */
+
+   else if ((!strcmp(Name, "/")) && (Define))
+   {
+     AddTmpSymLog(FALSE, FwdSymCounter);
+     sprintf(Name, "__forw%d", FwdSymCounter);
+     FwdSymCounter++;
+     Result = TRUE;
+   }
+
+   return Result;
+}
 
         Boolean IdentifySection(char *Name, LongInt *Erg)
 BEGIN
@@ -755,13 +922,13 @@ BEGIN
 END
 
 
-        static SymbolPtr FindLocNode(
+        static PSymbolEntry FindLocNode(
 #ifdef __PROTOS__
 char *Name, TempType SearchType
 #endif
 );
 
-        static SymbolPtr FindNode(
+        static PSymbolEntry FindNode(
 #ifdef __PROTOS__
 char *Name, TempType SearchType
 #endif
@@ -843,7 +1010,7 @@ static Operator Operators[OpCnt+1]=
    Boolean OpFnd,InHyp,InQuot;
    LargeInt HVal;
    Double  FVal;
-   SymbolPtr Ptr;
+   PSymbolEntry Ptr;
    PFunction ValFunc;
    String Asc,stemp,ftemp;
    char *KlPos,*zp,*DummyPtr;
@@ -862,6 +1029,12 @@ static Operator Operators[OpCnt+1]=
 
    Erg->Typ = TempNone;
    Erg->Relocs = Nil;
+
+   /* sort out local symbols like - and +++.  Do it now to get them out of the
+      formula parser's way. */
+
+   if (ChkTmp2(Asc, FALSE))
+     strmaxcpy(stemp, Asc, 255);
 
    /* Programmzaehler ? */
 
@@ -1859,11 +2032,14 @@ static Operator Operators[OpCnt+1]=
      LEAVE;
     END
 
-   /* nichts dergleichen, dann einfaches Symbol: */
-
-   /* interne Symbole ? */
+   /* nichts dergleichen, dann einfaches Symbol: urspruenglichen Wert wieder
+      herstellen, dann Pruefung auf $$-tempraere Symbole */
 
    strmaxcpy(Asc,stemp,255); KillPrefBlanks(Asc); KillPostBlanks(Asc);
+
+   ChkTmp(Asc, FALSE);
+
+   /* interne Symbole ? */
 
    if (strcasecmp(Asc,"MOMFILE")==0)
     BEGIN
@@ -1902,7 +2078,6 @@ static Operator Operators[OpCnt+1]=
 
    if (NOT ExpandSymbol(Asc)) LEAVE;
 
-   ChkTmp(Asc, FALSE);
    KlPos=strchr(Asc,'[');
    if (KlPos!=Nil) 
     BEGIN
@@ -2074,196 +2249,157 @@ BEGIN
 END
 
 
-        static void FreeSymbol(SymbolPtr *Node)
-BEGIN
+static void FreeSymbolEntry(PSymbolEntry *Node, Boolean Destroy)
+{
    PCrossRef Lauf;
 
-   free((*Node)->SymName);
+   if ((*Node)->Tree.Name)
+   {
+     free((*Node)->Tree.Name); (*Node)->Tree.Name = NULL;
+   }
 
    if ((*Node)->SymWert.Typ == TempString)
     free((*Node)->SymWert.Contents.SWert);
 
    while ((*Node)->RefList != Nil)
-    BEGIN
+   {
      Lauf = (*Node)->RefList->Next;
      free((*Node)->RefList);
      (*Node)->RefList = Lauf;
-    END
+   }
 
    FreeRelocs(&((*Node)->Relocs));
 
-   free(*Node); *Node = Nil;
-END
+   if (Destroy)
+   {
+     free(*Node); Node = NULL;
+   }
+}
 
 static String serr,snum;
+typedef struct
+        {
+          Boolean MayChange, DoCross;
+        } TEnterStruct, *PEnterStruct;
 
-        Boolean EnterTreeNode(SymbolPtr *Node, SymbolPtr Neu, Boolean MayChange, Boolean DoCross)
+static Boolean SymbolAdder(PTree *PDest, PTree Neu, void *pData)
+{
+  PSymbolEntry NewEntry = (PSymbolEntry)Neu, *Node;
+  PEnterStruct EnterStruct = (PEnterStruct) pData;
+
+  /* added to an empty leaf ? */
+
+  if (!PDest)
+  {
+    NewEntry->Defined = True; NewEntry->Used = False;
+    NewEntry->Changeable = EnterStruct->MayChange;
+    NewEntry->RefList = Nil;
+    if (EnterStruct->DoCross)
+    {
+      NewEntry->FileNum = GetFileNum(CurrFileName);
+      NewEntry->LineNum = CurrLine;
+    }
+    return True;
+  }
+
+  /* replace en entry: check for validity */
+
+  Node = (PSymbolEntry*)PDest;
+
+  /* tried to redefine a symbol with EQU ? */
+
+  if (((*Node)->Defined) AND (NOT EnterStruct->MayChange))
+  {
+    strmaxcpy(serr, (*Node)->Tree.Name, 255);
+    if (EnterStruct->DoCross)
+    {
+      sprintf(snum, ",%s %s:%ld", getmessage(Num_PrevDefMsg),
+              GetFileName((*Node)->FileNum), (long)((*Node)->LineNum));
+      strmaxcat(serr, snum, 255);
+    }
+    WrXError(1000, serr);
+    FreeSymbolEntry(&NewEntry, TRUE);
+    return False;
+  }
+
+  /* tried to reassign a constant (EQU) a value with SET ? */
+
+  else if (((*Node)->Defined) AND (EnterStruct->MayChange) AND (NOT (*Node)->Changeable))
+  {
+    strmaxcpy(serr, (*Node)->Tree.Name, 255);
+    if (EnterStruct->DoCross)
+    {
+      sprintf(snum, ",%s %s:%ld", getmessage(Num_PrevDefMsg),
+              GetFileName((*Node)->FileNum), (long)((*Node)->LineNum));
+      strmaxcat(serr, snum, 255);
+    }
+    WrXError(2030, serr);
+    FreeSymbolEntry(&NewEntry, TRUE);
+    return False;
+  }
+
+  else
+  {
+    if (NOT EnterStruct->MayChange)
+    {
+      if ((NewEntry->SymWert.Typ != (*Node)->SymWert.Typ)
+       OR ((NewEntry->SymWert.Typ == TempString) AND (strcmp(NewEntry->SymWert.Contents.SWert, (*Node)->SymWert.Contents.SWert) != 0))
+       OR ((NewEntry->SymWert.Typ == TempFloat ) AND (NewEntry->SymWert.Contents.FWert != (*Node)->SymWert.Contents.FWert))
+       OR ((NewEntry->SymWert.Typ == TempInt   ) AND (NewEntry->SymWert.Contents.IWert != (*Node)->SymWert.Contents.IWert)))
+       {
+         if ((NOT Repass) AND (JmpErrors>0))
+         {
+           if (ThrowErrors) ErrorCount -= JmpErrors;
+           JmpErrors = 0;
+         }
+         Repass = True;
+         if ((MsgIfRepass) AND (PassNo >= PassNoForMessage))
+         {
+           strmaxcpy(serr, Neu->Name, 255);
+           if (Neu->Attribute != (-1)) 
+           {
+             strmaxcat(serr, "[", 255);
+             strmaxcat(serr, GetSectionName(Neu->Attribute), 255);
+             strmaxcat(serr, "]", 255);
+           }
+           WrXError(80, serr);
+         }
+       }
+    }
+    if (EnterStruct->DoCross)
+    {
+      NewEntry->LineNum = (*Node)->LineNum; NewEntry->FileNum = (*Node)->FileNum;
+    }
+    NewEntry->RefList = (*Node)->RefList; (*Node)->RefList = Nil;
+    NewEntry->Defined = True; NewEntry->Used = (*Node)->Used; NewEntry->Changeable = EnterStruct->MayChange;
+    FreeSymbolEntry(Node, False);
+    return True;
+  }
+}
+
+        static void EnterLocSymbol(PSymbolEntry Neu)
 BEGIN
-   SymbolPtr Hilf,p1,p2;
-   Boolean Grown,Result;
-   ShortInt CompErg;
+   TEnterStruct EnterStruct;
 
-   /* Stapelueberlauf pruefen, noch nichts eingefuegt */
-
-   ChkStack(); Result = False;
-
-   /* an einem Blatt angelangt--> einfach anfuegen */
-
-   if (*Node == Nil)
-    BEGIN
-     (*Node) = Neu;
-     (*Node)->Balance = 0; (*Node)->Left = Nil; (*Node)->Right = Nil;
-     (*Node)->Defined = True; (*Node)->Used = False;
-     (*Node)->Changeable = MayChange; (*Node)->RefList = Nil;
-     if (DoCross)
-      BEGIN
-       (*Node)->FileNum = GetFileNum(CurrFileName);
-       (*Node)->LineNum = CurrLine;
-      END
-     return True;
-    END
-
-   CompErg = StrCmp(Neu->SymName, (*Node)->SymName, Neu->Attribute,
-                    (*Node)->Attribute);
-
-   if (CompErg > 0)
-    BEGIN
-     Grown = EnterTreeNode(&((*Node)->Right), Neu, MayChange, DoCross);
-     if ((BalanceTree) AND (Grown))
-      switch ((*Node)->Balance)
-       BEGIN
-        case -1:
-         (*Node)->Balance = 0; break;
-        case 0:
-         (*Node)->Balance = 1; Result = True; break;
-        case 1:
-         p1 = (*Node)->Right;
-         if (p1->Balance == 1)
-          BEGIN
-           (*Node)->Right = p1->Left; p1->Left = (*Node);
-           (*Node)->Balance = 0; *Node = p1;
-          END
-         else
-          BEGIN
-           p2 = p1->Left;
-           p1->Left = p2->Right; p2->Right = p1;
-           (*Node)->Right = p2->Left; p2->Left = (*Node);
-           if (p2->Balance ==  1) (*Node)->Balance = (-1); else (*Node)->Balance = 0;
-           if (p2->Balance == -1) p1     ->Balance =    1; else p1     ->Balance = 0;
-           *Node = p2;
-          END
-         (*Node)->Balance = 0;
-         break;
-       END
-    END
-   else if (CompErg < 0)
-    BEGIN
-     Grown = EnterTreeNode(&((*Node)->Left), Neu, MayChange, DoCross);
-     if ((BalanceTree) AND (Grown))
-      switch ((*Node)->Balance)
-       BEGIN
-        case 1:
-         (*Node)->Balance = 0; break;
-        case 0:
-         (*Node)->Balance = (-1); Result = True; break;
-        case -1:
-         p1 = (*Node)->Left;
-         if (p1->Balance == (-1))
-          BEGIN
-           (*Node)->Left = p1->Right; p1->Right = (*Node);
-           (*Node)->Balance = 0; (*Node) = p1;
-          END
-         else
-          BEGIN
-           p2 = p1->Right;
-           p1->Right = p2->Left; p2->Left = p1;
-           (*Node)->Left = p2->Right; p2->Right = (*Node);
-           if (p2->Balance == (-1)) (*Node)->Balance =    1; else (*Node)->Balance = 0;
-           if (p2->Balance ==    1) p1     ->Balance = (-1); else p1     ->Balance = 0;
-           *Node = p2;
-          END
-         (*Node)->Balance = 0;
-         break;
-       END
-    END  
-   else
-    BEGIN
-     if (((*Node)->Defined) AND (NOT MayChange))
-      BEGIN
-       strmaxcpy(serr, (*Node)->SymName, 255);
-       if (DoCross)
-        BEGIN
-         sprintf(snum, ",%s %s:%ld", getmessage(Num_PrevDefMsg),
-                 GetFileName((*Node)->FileNum), (long)((*Node)->LineNum));
-         strmaxcat(serr, snum, 255);
-        END
-       WrXError(1000, serr);
-       FreeSymbol(&Neu);
-      END
-     else
-      BEGIN
-       if (NOT MayChange)
-        BEGIN
-         if ((Neu->SymWert.Typ != (*Node)->SymWert.Typ)
-          OR ((Neu->SymWert.Typ == TempString) AND (strcmp(Neu->SymWert.Contents.SWert, (*Node)->SymWert.Contents.SWert) != 0))
-          OR ((Neu->SymWert.Typ == TempFloat ) AND (Neu->SymWert.Contents.FWert != (*Node)->SymWert.Contents.FWert))
-          OR ((Neu->SymWert.Typ == TempInt   ) AND (Neu->SymWert.Contents.IWert != (*Node)->SymWert.Contents.IWert)))
-           BEGIN
-            if ((NOT Repass) AND (JmpErrors>0))
-             BEGIN
-              if (ThrowErrors) ErrorCount -= JmpErrors;
-              JmpErrors = 0;
-             END
-            Repass = True;
-            if ((MsgIfRepass) AND (PassNo >= PassNoForMessage))
-             BEGIN
-              strmaxcpy(serr, Neu->SymName, 255);
-              if (Neu->Attribute != (-1)) 
-               BEGIN
-                strmaxcat(serr, "[", 255);
-                strmaxcat(serr, GetSectionName(Neu->Attribute), 255);
-                strmaxcat(serr, "]", 255);
-               END
-              WrXError(80, serr);
-             END
-           END
-        END
-       Neu->Left = (*Node)->Left; Neu->Right = (*Node)->Right; 
-       Neu->Balance = (*Node)->Balance;
-       if (DoCross)
-        BEGIN
-         Neu->LineNum = (*Node)->LineNum; Neu->FileNum = (*Node)->FileNum;
-        END
-       Neu->RefList = (*Node)->RefList; (*Node)->RefList = Nil;
-       Neu->Defined = True; Neu->Used = (*Node)->Used; Neu->Changeable = MayChange;
-       Hilf = (*Node); *Node = Neu;
-       FreeSymbol(&Hilf);
-      END
-    END
-
-   return Result;
-END
-
-        static void EnterLocSymbol(SymbolPtr Neu)
-BEGIN
-   Neu->Attribute=MomLocHandle;
-   if (NOT CaseSensitive) NLS_UpString(Neu->SymName);
-   EnterTreeNode(&FirstLocSymbol,Neu,False,False);
+   Neu->Tree.Attribute = MomLocHandle;
+   if (NOT CaseSensitive) NLS_UpString(Neu->Tree.Name);
+   EnterStruct.MayChange = EnterStruct.DoCross = FALSE;
+   EnterTree((PTree*)&FirstLocSymbol, (&Neu->Tree), SymbolAdder, &EnterStruct);
 END
 
         static void EnterSymbol_Search(PForwardSymbol *Lauf, PForwardSymbol *Prev,
-                                       PForwardSymbol **RRoot, SymbolPtr Neu,
+                                       PForwardSymbol **RRoot, PSymbolEntry Neu,
                                        PForwardSymbol *Root, Byte ResCode, Byte *SearchErg)
 BEGIN
    *Lauf=(*Root); *Prev=Nil; *RRoot=Root;
-   while ((*Lauf!=Nil) AND (strcmp((*Lauf)->Name,Neu->SymName)!=0))
+   while ((*Lauf!=Nil) AND (strcmp((*Lauf)->Name,Neu->Tree.Name)!=0))
     BEGIN
      *Prev=(*Lauf); *Lauf=(*Lauf)->Next;
     END
    if (*Lauf!=Nil) *SearchErg=ResCode;
 END
 
-        static void EnterSymbol(SymbolPtr Neu, Boolean MayChange, LongInt ResHandle)
+        static void EnterSymbol(PSymbolEntry Neu, Boolean MayChange, LongInt ResHandle)
 BEGIN
    PForwardSymbol Lauf,Prev;
    PForwardSymbol *RRoot;
@@ -2271,29 +2407,15 @@ BEGIN
    String CombName;
    PSaveSection RunSect;
    LongInt MSect;
-   SymbolPtr Copy;
+   PSymbolEntry Copy;
+   TEnterStruct EnterStruct;
 
-/*   Neu^.Attribute:=MomSectionHandle;
-   IF SectionStack<>Nil THEN
-    BEGIN
-     Search(SectionStack^.GlobSyms);
-     IF Lauf<>Nil THEN Neu^.Attribute:=Lauf^.DestSection
-     ELSE Search(SectionStack^.LocSyms);
-     IF Lauf<>Nil THEN
-      BEGIN
-       FreeMem(Lauf^.Name,Length(Lauf^.Name^)+1);
-       IF Prev=Nil THEN RRoot^:=Lauf^.Next
-       ELSE Prev^.Next:=Lauf^.Next;
-       Dispose(Lauf);
-      END;
-    END;
-   IF EnterTreeNode(FirstSymbol,Neu,MayChange,MakeCrossList) THEN;*/
-
-   if (NOT CaseSensitive) NLS_UpString(Neu->SymName);
+   if (NOT CaseSensitive) NLS_UpString(Neu->Tree.Name);
 
    SearchErg = 0;
-   Neu->Attribute = (ResHandle == (-2)) ? (MomSectionHandle) : (ResHandle);
-   if ((SectionStack != Nil) AND (Neu->Attribute == MomSectionHandle))
+   EnterStruct.MayChange = MayChange; EnterStruct.DoCross = MakeCrossList;
+   Neu->Tree.Attribute = (ResHandle == (-2)) ? (MomSectionHandle) : (ResHandle);
+   if ((SectionStack != Nil) AND (Neu->Tree.Attribute == MomSectionHandle))
     BEGIN
      EnterSymbol_Search(&Lauf, &Prev, &RRoot, Neu, &(SectionStack->LocSyms),
                         1, &SearchErg);
@@ -2303,10 +2425,10 @@ BEGIN
      if (Lauf == Nil)
       EnterSymbol_Search(&Lauf, &Prev, &RRoot, Neu,
                          &(SectionStack->ExportSyms), 3, &SearchErg);
-     if (SearchErg == 2) Neu->Attribute = Lauf->DestSection;
+     if (SearchErg == 2) Neu->Tree.Attribute = Lauf->DestSection;
      if (SearchErg == 3)
       BEGIN
-       strmaxcpy(CombName, Neu->SymName, 255);
+       strmaxcpy(CombName, Neu->Tree.Name, 255);
        RunSect = SectionStack; MSect = MomSectionHandle;
        while ((MSect != Lauf->DestSection) AND (RunSect != Nil))
         BEGIN
@@ -2314,13 +2436,13 @@ BEGIN
          strmaxprep(CombName, GetSectionName(MSect), 255);
          MSect = RunSect->Handle; RunSect = RunSect->Next;
         END
-       Copy = (SymbolPtr) malloc(sizeof(SymbolEntry)); *Copy = (*Neu);
-       Copy->SymName = strdup(CombName);
-       Copy->Attribute = Lauf->DestSection;
+       Copy = (PSymbolEntry) malloc(sizeof(TSymbolEntry)); *Copy = (*Neu);
+       Copy->Tree.Name = strdup(CombName);
+       Copy->Tree.Attribute = Lauf->DestSection;
        Copy->Relocs = DupRelocs(Neu->Relocs);
        if (Copy->SymWert.Typ == TempString) 
         Copy->SymWert.Contents.SWert = strdup(Neu->SymWert.Contents.SWert);
-       EnterTreeNode(&FirstSymbol, Copy, MayChange, MakeCrossList);
+       EnterTree((PTree*)&FirstSymbol, &(Copy->Tree), SymbolAdder, &EnterStruct);
       END
      if (Lauf != Nil)
       BEGIN
@@ -2330,7 +2452,7 @@ BEGIN
        free(Lauf);
       END
     END
-   EnterTreeNode(&FirstSymbol, Neu, MayChange, MakeCrossList);
+   EnterTree((PTree*)&FirstSymbol, &(Neu->Tree), SymbolAdder, &EnterStruct);
 END
 
         void PrintSymTree(char *Name)
@@ -2342,21 +2464,21 @@ END
 
         void EnterIntSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange)
 BEGIN
-   SymbolPtr Neu;
+   PSymbolEntry Neu;
    LongInt DestHandle;   
    String Name;
 
    strmaxcpy(Name, Name_O, 255);
    if (NOT ExpandSymbol(Name)) return;
    if (NOT GetSymSection(Name, &DestHandle)) return;
-   ChkTmp(Name, TRUE);
+   if (!ChkTmp(Name, TRUE)) ChkTmp2(Name, TRUE);
    if (NOT ChkSymbName(Name))
     BEGIN
      WrXError(1020, Name); return;
     END
 
-   Neu=(SymbolPtr) malloc(sizeof(SymbolEntry));
-   Neu->SymName = strdup(Name);
+   Neu=(PSymbolEntry) malloc(sizeof(TSymbolEntry));
+   Neu->Tree.Name = strdup(Name);
    Neu->SymWert.Typ = TempInt;
    Neu->SymWert.Contents.IWert = Wert;
    Neu->SymType = Typ;
@@ -2374,7 +2496,7 @@ END
 
         void EnterExtSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange)
 BEGIN
-   SymbolPtr Neu;
+   PSymbolEntry Neu;
    LongInt DestHandle;
    String Name;
 
@@ -2386,8 +2508,8 @@ BEGIN
      WrXError(1020, Name); return;
     END
 
-   Neu=(SymbolPtr) malloc(sizeof(SymbolEntry));
-   Neu->SymName = strdup(Name);
+   Neu=(PSymbolEntry) malloc(sizeof(TSymbolEntry));
+   Neu->Tree.Name = strdup(Name);
    Neu->SymWert.Typ = TempInt;
    Neu->SymWert.Contents.IWert = Wert;
    Neu->SymType = Typ;
@@ -2408,7 +2530,7 @@ END
 
         void EnterRelSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange)
 BEGIN
-   SymbolPtr Neu;
+   PSymbolEntry Neu;
    LongInt DestHandle;
    String Name;
 
@@ -2420,8 +2542,8 @@ BEGIN
      WrXError(1020, Name); return;
     END
 
-   Neu=(SymbolPtr) malloc(sizeof(SymbolEntry));
-   Neu->SymName = strdup(Name);
+   Neu=(PSymbolEntry) malloc(sizeof(TSymbolEntry));
+   Neu->Tree.Name = strdup(Name);
    Neu->SymWert.Typ = TempInt;
    Neu->SymWert.Contents.IWert = Wert;
    Neu->SymType = Typ;
@@ -2442,20 +2564,20 @@ END
 
         void EnterFloatSymbol(char *Name_O, Double Wert, Boolean MayChange)
 BEGIN
-   SymbolPtr Neu;
+   PSymbolEntry Neu;
    LongInt DestHandle;
    String Name;
 
    strmaxcpy(Name, Name_O,255);
    if (NOT ExpandSymbol(Name)) return;
    if (NOT GetSymSection(Name,&DestHandle)) return;
-   ChkTmp(Name, TRUE);
+   if (!ChkTmp(Name, TRUE)) ChkTmp2(Name, TRUE);
    if (NOT ChkSymbName(Name))
     BEGIN
      WrXError(1020, Name); return;
     END
-   Neu=(SymbolPtr) malloc(sizeof(SymbolEntry));
-   Neu->SymName=strdup(Name);
+   Neu=(PSymbolEntry) malloc(sizeof(TSymbolEntry));
+   Neu->Tree.Name=strdup(Name);
    Neu->SymWert.Typ = TempFloat;
    Neu->SymWert.Contents.FWert = Wert;
    Neu->SymType = 0;
@@ -2473,20 +2595,20 @@ END
 
         void EnterStringSymbol(char *Name_O, char *Wert, Boolean MayChange)
 BEGIN
-   SymbolPtr Neu;
+   PSymbolEntry Neu;
    LongInt DestHandle;
    String Name;
 
    strmaxcpy(Name, Name_O, 255);
    if (NOT ExpandSymbol(Name)) return;
    if (NOT GetSymSection(Name,&DestHandle)) return;
-   ChkTmp(Name, TRUE);
+   if (!ChkTmp(Name, TRUE)) ChkTmp2(Name, TRUE);
    if (NOT ChkSymbName(Name))
     BEGIN
      WrXError(1020, Name); return;
     END
-   Neu=(SymbolPtr) malloc(sizeof(SymbolEntry));
-   Neu->SymName = strdup(Name);
+   Neu=(PSymbolEntry) malloc(sizeof(TSymbolEntry));
+   Neu->Tree.Name = strdup(Name);
    Neu->SymWert.Contents.SWert = strdup(Wert);
    Neu->SymWert.Typ = TempString;
    Neu->SymType = 0;
@@ -2502,7 +2624,7 @@ BEGIN
    else EnterLocSymbol(Neu);
 END
 
-        static void AddReference(SymbolPtr Node)
+        static void AddReference(PSymbolEntry Node)
 BEGIN
    PCrossRef Lauf,Neu;
 
@@ -2542,28 +2664,24 @@ BEGIN
     END
 END
 
-        static Boolean FindNode_FNode(char *Name, TempType SearchType, 
-                                      SymbolPtr *FindNode_Result, LongInt Handle)
-BEGIN
-   SymbolPtr Lauf=FirstSymbol;
-   ShortInt SErg=(-1);
-   Boolean Result=False;
+static PSymbolEntry FindNode_FNode(char *Name, TempType SearchType, LongInt Handle)
+{
+   PSymbolEntry Lauf;
  
-   while ((Lauf!=Nil) AND (SErg!=0))
-    BEGIN
-     SErg=StrCmp(Name,Lauf->SymName,Handle,Lauf->Attribute);
-     if (SErg<0) Lauf=Lauf->Left;
-     else if (SErg>0) Lauf=Lauf->Right;
-    END
+   Lauf = (PSymbolEntry) SearchTree((PTree)FirstSymbol, Name, Handle);
+
    if (Lauf!=Nil)
-    if (Lauf->SymWert.Typ & SearchType)
-     BEGIN
-      *FindNode_Result=Lauf; Result=True;
-      if (MakeCrossList AND DoRefs) AddReference(Lauf);
-     END
+   {
+     if (Lauf->SymWert.Typ & SearchType)
+     {
+       if (MakeCrossList AND DoRefs) AddReference(Lauf);
+     }
+     else
+       Lauf = NULL;
+   }
    
-   return Result;
-END
+   return Lauf;
+}
 
         static Boolean FindNode_FSpec(char *Name, PForwardSymbol Root)
 BEGIN
@@ -2571,88 +2689,81 @@ BEGIN
    return (Root!=Nil);
 END
 
-        static SymbolPtr FindNode(char *Name_O, TempType SearchType)
-BEGIN
+static PSymbolEntry FindNode(char *Name_O, TempType SearchType)
+{
    PSaveSection Lauf;
    LongInt DestSection;
-   SymbolPtr FindNode_Result;
+   PSymbolEntry Result = NULL;
    String Name;
 
    strmaxcpy(Name,Name_O,255);
-   FindNode_Result=Nil;
-   if (NOT GetSymSection(Name,&DestSection)) return FindNode_Result;
+
+   if (NOT GetSymSection(Name,&DestSection)) return NULL;
+
    if (NOT CaseSensitive) NLS_UpString(Name);
-   if (SectionStack!=Nil)
-    if (PassNo<=MaxSymPass)
-     if (FindNode_FSpec(Name,SectionStack->LocSyms)) DestSection=MomSectionHandle;
-/* if (FSpec(SectionStack->GlobSyms)) return; */
-   if (DestSection==(-2))
-    BEGIN
-     if (FindNode_FNode(Name,SearchType,&FindNode_Result,MomSectionHandle)) return FindNode_Result;
-     Lauf=SectionStack;
-     while (Lauf!=Nil)
-      BEGIN
-       if (FindNode_FNode(Name,SearchType,&FindNode_Result,Lauf->Handle)) return FindNode_Result;
-       Lauf=Lauf->Next;
-      END
-    END
-   else FindNode_FNode(Name,SearchType,&FindNode_Result,DestSection);
 
-   return FindNode_Result;
-END
+   if (SectionStack != Nil)
+     if (PassNo <= MaxSymPass)
+       if (FindNode_FSpec(Name, SectionStack->LocSyms)) DestSection = MomSectionHandle;
 
-        static Boolean FindLocNode_FNode(char *Name, TempType SearchType,
-                                         SymbolPtr *FindLocNode_Result, LongInt Handle)
-BEGIN
-   SymbolPtr Lauf=FirstLocSymbol;
-   ShortInt SErg=(-1);
-   Boolean Result=False;
-
-   while ((Lauf!=Nil) AND (SErg!=0))
-    BEGIN
-     SErg=StrCmp(Name,Lauf->SymName,Handle,Lauf->Attribute);
-     if (SErg<0) Lauf=Lauf->Left;
-     else if (SErg>0) Lauf=Lauf->Right;
-    END
-
-   if (Lauf!=Nil)
-    if (Lauf->SymWert.Typ & SearchType)
-     BEGIN
-      *FindLocNode_Result=Lauf; Result=True;
-     END
+   if (DestSection == (-2))
+   {
+     if ((Result = FindNode_FNode(Name, SearchType, MomSectionHandle))) return Result;
+     Lauf = SectionStack;
+     while (Lauf != Nil)
+     {
+       if ((Result = FindNode_FNode(Name, SearchType, Lauf->Handle))) break;;
+       Lauf = Lauf->Next;
+     }
+   }
+   else
+     Result = FindNode_FNode(Name, SearchType, DestSection);
 
    return Result;
-END
+}
 
-        static SymbolPtr FindLocNode(char *Name_O, TempType SearchType)
-BEGIN
+static PSymbolEntry FindLocNode_FNode(char *Name, TempType SearchType, LongInt Handle)
+{
+   PSymbolEntry Lauf;
+
+   Lauf = (PSymbolEntry) SearchTree((PTree)FirstLocSymbol, Name, Handle);
+
+   if (Lauf)
+   {
+     if (!(Lauf->SymWert.Typ & SearchType))
+       Lauf = NULL;
+   }
+
+   return Lauf;
+}
+
+static PSymbolEntry FindLocNode(char *Name_O, TempType SearchType)
+{
    PLocHandle RunLocHandle;
-   SymbolPtr FindLocNode_Result;
+   PSymbolEntry Result = NULL;
    String Name;
-
-   FindLocNode_Result=Nil;
 
    strmaxcpy(Name,Name_O,255); if (NOT CaseSensitive) NLS_UpString(Name);
 
-   if (MomLocHandle==(-1)) return FindLocNode_Result;
+   if (MomLocHandle == (-1)) return NULL;
 
-   if (FindLocNode_FNode(Name,SearchType,&FindLocNode_Result,MomLocHandle))
-    return FindLocNode_Result;
+   if ((Result = FindLocNode_FNode(Name, SearchType, MomLocHandle)))
+    return Result;
 
-   RunLocHandle=FirstLocHandle;
-   while ((RunLocHandle!=Nil) AND (RunLocHandle->Cont!=(-1)))
-    BEGIN
-     if (FindLocNode_FNode(Name,SearchType,&FindLocNode_Result,RunLocHandle->Cont)) 
-      return FindLocNode_Result;
-     RunLocHandle=RunLocHandle->Next;
-    END
+   RunLocHandle = FirstLocHandle;
+   while ((RunLocHandle != Nil) AND (RunLocHandle->Cont != -1))
+   {
+     if ((Result = FindLocNode_FNode(Name, SearchType, RunLocHandle->Cont)) )
+       break;
+     RunLocHandle = RunLocHandle->Next;
+   }
 
-   return FindLocNode_Result;
-END
+   return Result;
+}
 /**
         void SetSymbolType(char *Name, Byte NTyp)
 BEGIN
-   Lauf:SymbolPtr;
+   Lauf:PSymbolEntry;
    HRef:Boolean;
 
    IF NOT ExpandSymbol(Name) THEN Exit;
@@ -2666,7 +2777,7 @@ END
 
         Boolean GetIntSymbol(char *Name, LargeInt *Wert, PRelocEntry *Relocs)
 BEGIN
-   SymbolPtr Lauf;
+   PSymbolEntry Lauf;
    String NName;
 
    strmaxcpy(NName, Name, 255);
@@ -2692,7 +2803,7 @@ END
 
         Boolean GetFloatSymbol(char *Name, Double *Wert)
 BEGIN
-   SymbolPtr Lauf;
+   PSymbolEntry Lauf;
    String NName;
 
    strmaxcpy(NName,Name,255);
@@ -2714,7 +2825,7 @@ END
 
         Boolean GetStringSymbol(char *Name, char *Wert)
 BEGIN
-   SymbolPtr Lauf;
+   PSymbolEntry Lauf;
    String NName;
 
    strmaxcpy(NName,Name,255);
@@ -2736,7 +2847,7 @@ END
 
         void SetSymbolSize(char *Name, ShortInt Size)
 BEGIN
-   SymbolPtr Lauf;
+   PSymbolEntry Lauf;
    Boolean HRef;
    String NName;
 
@@ -2751,7 +2862,7 @@ END
 
         ShortInt GetSymbolSize(char *Name)
 BEGIN
-   SymbolPtr Lauf;
+   PSymbolEntry Lauf;
    String NName;
    
    strmaxcpy(NName,Name,255);
@@ -2763,7 +2874,7 @@ END
 
         Boolean IsSymbolFloat(char *Name)
 BEGIN
-   SymbolPtr Lauf;
+   PSymbolEntry Lauf;
    String NName;
 
    strmaxcpy(NName,Name,255);
@@ -2776,7 +2887,7 @@ END
 
         Boolean IsSymbolString(char *Name)
 BEGIN
-   SymbolPtr Lauf;
+   PSymbolEntry Lauf;
    String NName;
 
    strmaxcpy(NName,Name,255);
@@ -2789,7 +2900,7 @@ END
 
         Boolean IsSymbolDefined(char *Name)
 BEGIN
-   SymbolPtr Lauf;
+   PSymbolEntry Lauf;
    String NName;
 
    strmaxcpy(NName,Name,255);
@@ -2802,7 +2913,7 @@ END
 
         Boolean IsSymbolUsed(char *Name)
 BEGIN
-   SymbolPtr Lauf;
+   PSymbolEntry Lauf;
    String NName;
 
    strmaxcpy(NName,Name,255);
@@ -2815,7 +2926,7 @@ END
 
         Boolean IsSymbolChangeable(char *Name)
 BEGIN
-   SymbolPtr Lauf;
+   PSymbolEntry Lauf;
    String NName;
 
    strmaxcpy(NName,Name,255);
@@ -2828,7 +2939,7 @@ END
 
         Integer GetSymbolType(char *Name)
 BEGIN
-   SymbolPtr Lauf;
+   PSymbolEntry Lauf;
    String NName;
 
    strmaxcpy(NName,Name,255);
@@ -2850,120 +2961,121 @@ BEGIN
     END
 END
 
-static int ActPageWidth,cwidth;
+typedef struct
+        {
+          int Width, cwidth;
+          LongInt Sum, USum;
+          String Zeilenrest;
+        } TListContext;
 
-        static void PrintSymbolList_AddOut(char *s, char *Zeilenrest, int Width)
-BEGIN
-   if (strlen(s)+strlen(Zeilenrest)>Width)
-    BEGIN
-     Zeilenrest[strlen(Zeilenrest)-1]='\0';
-     WrLstLine(Zeilenrest); strmaxcpy(Zeilenrest,s,255);
-    END
-   else strmaxcat(Zeilenrest,s,255);
-END
+static void PrintSymbolList_AddOut(char *s, char *Zeilenrest, int Width)
+{
+   if (strlen(s) + strlen(Zeilenrest) > Width)
+   {
+     Zeilenrest[strlen(Zeilenrest) - 1] = '\0';
+     WrLstLine(Zeilenrest); strmaxcpy(Zeilenrest, s, 255);
+   }
+   else strmaxcat(Zeilenrest, s, 255);
+}
 
-        static void PrintSymbolList_PNode(SymbolPtr Node, int Width,
-                                          LongInt *Sum, LongInt *USum,
-                                          char *Zeilenrest)
-BEGIN
+static void PrintSymbolList_PNode(PTree Tree, void *pData)
+{
+   PSymbolEntry Node = (PSymbolEntry) Tree;
+   TListContext *pContext = (TListContext*) pData;
    String s1,sh;
    int l1;
    TempResult t;
 
-   ConvertSymbolVal(&(Node->SymWert),&t); StrSym(&t,False,s1);
+   ConvertSymbolVal(&(Node->SymWert), &t); StrSym(&t, False, s1);
 
-   strmaxcpy(sh,Node->SymName,255);
-   if (Node->Attribute!=(-1)) 
-    BEGIN
-     strmaxcat(sh," [",255);
-     strmaxcat(sh,GetSectionName(Node->Attribute),255);
-     strmaxcat(sh,"]",255);
-    END
-   strmaxprep(sh,(Node->Used)?" ":"*",255);
-   l1=(strlen(s1)+strlen(sh)+6)%(cwidth);
-   if (l1<cwidth-2) strmaxprep(s1,Blanks(cwidth-2-l1),255);
-   strmaxprep(s1," : ",255);
-   strmaxprep(s1,sh,255);
-   strmaxcat(s1," ",255);
-   s1[l1=strlen(s1)]=SegShorts[Node->SymType]; s1[l1+1]='\0';
-   strmaxcat(s1," | ",255);
-   PrintSymbolList_AddOut(s1,Zeilenrest,Width); (*Sum)++;
-   if (NOT Node->Used) (*USum)++;
-END
+   strmaxcpy(sh, Tree->Name, 255);
+   if (Tree->Attribute != -1) 
+   {
+     strmaxcat(sh, " [", 255);
+     strmaxcat(sh, GetSectionName(Tree->Attribute), 255);
+     strmaxcat(sh, "]", 255);
+   }
+   strmaxprep(sh, (Node->Used) ? " " : "*", 255);
+   l1 = (strlen(s1) + strlen(sh) + 6) % (pContext->cwidth);
+   if (l1 < pContext->cwidth - 2) strmaxprep(s1, Blanks(pContext->cwidth - 2 - l1), 255);
+   strmaxprep(s1, " : ", 255);
+   strmaxprep(s1, sh, 255);
+   strmaxcat(s1, " ", 255);
+   s1[l1 = strlen(s1)] = SegShorts[Node->SymType]; s1[l1 + 1]='\0';
+   strmaxcat(s1, " | ", 255);
+   PrintSymbolList_AddOut(s1, pContext->Zeilenrest, pContext->Width);
+   pContext->Sum++;
+   if (NOT Node->Used) pContext->USum++;
+}
 
-        static void PrintSymbolList_PrintNode(SymbolPtr Node, int Width,
-                                              LongInt *Sum, LongInt *USum,
-                                              char *Zeilenrest)
-BEGIN
-   ChkStack();
+void PrintSymbolList(void)
+{
+   int ActPageWidth;
+   TListContext Context;
 
-   if (Node==Nil) return;
-
-   PrintSymbolList_PrintNode(Node->Left,Width,Sum,USum,Zeilenrest);
-   PrintSymbolList_PNode(Node,Width,Sum,USum,Zeilenrest);
-   PrintSymbolList_PrintNode(Node->Right,Width,Sum,USum,Zeilenrest);
-END
-
-        void PrintSymbolList(void)
-BEGIN
-   int Width;
-   String Zeilenrest;
-   LongInt Sum,USum;
-
-   Width=(PageWidth==0)?80:PageWidth;
-   NewPage(ChapDepth,True);
+   Context.Width = (PageWidth == 0) ? 80 : PageWidth;
+   NewPage(ChapDepth, True);
    WrLstLine(getmessage(Num_ListSymListHead1));
    WrLstLine(getmessage(Num_ListSymListHead2));
    WrLstLine("");
 
-   Zeilenrest[0]='\0'; Sum=0; USum=0;
-   ActPageWidth=(PageWidth==0) ? 80 : PageWidth; cwidth=ActPageWidth>>1;
-   PrintSymbolList_PrintNode(FirstSymbol,Width,&Sum,&USum,Zeilenrest);
-   if (Zeilenrest[0]!='\0')
-    BEGIN
-     Zeilenrest[strlen(Zeilenrest)-1]='\0';
-     WrLstLine(Zeilenrest);
-    END
+   Context.Zeilenrest[0] = '\0';
+   Context.Sum = Context.USum = 0;
+   ActPageWidth = (PageWidth == 0) ? 80 : PageWidth;
+   Context.cwidth = ActPageWidth >> 1;
+   IterTree((PTree)FirstSymbol, PrintSymbolList_PNode, &Context);
+   if (Context.Zeilenrest[0] != '\0')
+   {
+     Context.Zeilenrest[strlen(Context.Zeilenrest) - 1] = '\0';
+     WrLstLine(Context.Zeilenrest);
+   }
    WrLstLine("");
-   sprintf(Zeilenrest,"%7d",Sum);
-   strmaxcat(Zeilenrest,getmessage((Sum==1)?Num_ListSymSumMsg:Num_ListSymSumsMsg),255);
-   WrLstLine(Zeilenrest);
-   sprintf(Zeilenrest,"%7d",USum);
-   strmaxcat(Zeilenrest,getmessage((USum==1)?Num_ListUSymSumMsg:Num_ListUSymSumsMsg),255);
-   WrLstLine(Zeilenrest);
+   sprintf(Context.Zeilenrest, "%7d%s", Context.Sum, getmessage((Context.Sum == 1) ? Num_ListSymSumMsg : Num_ListSymSumsMsg));
+   WrLstLine(Context.Zeilenrest);
+   sprintf(Context.Zeilenrest,"%7d%s", Context.USum, getmessage((Context.USum == 1) ? Num_ListUSymSumMsg : Num_ListUSymSumsMsg));
+   WrLstLine(Context.Zeilenrest);
    WrLstLine("");
-END
+}
 
-static Boolean HWritten;
-static int Space;
+typedef struct
+        {
+          FILE *f;
+          Boolean HWritten;
+          int Space;
+        } TDebContext;
 
-	static void PrintDebSymbols_PNode(FILE *f, SymbolPtr Node)
+	static void PrintDebSymbols_PNode(PTree Tree, void *pData)
 BEGIN
+   PSymbolEntry Node = (PSymbolEntry) Tree;
+   TDebContext *DebContext = (TDebContext*) pData;
    char *p;
    int l1;
    TempResult t;
    String s;
+ 
+   if (Node->SymType != DebContext->Space) 
+     return;
 
-   if (NOT HWritten)
+   if (NOT DebContext->HWritten)
     BEGIN
-     fprintf(f,"\n"); ChkIO(10004);
-     fprintf(f,"Symbols in Segment %s\n",SegNames[Space]); ChkIO(10004);
-     HWritten=True;
+     fprintf(DebContext->f, "\n"); ChkIO(10004);
+     fprintf(DebContext->f, "Symbols in Segment %s\n",SegNames[DebContext->Space]); ChkIO(10004);
+     DebContext->HWritten=True;
     END
 
-   fprintf(f,"%s",Node->SymName); ChkIO(10004); l1=strlen(Node->SymName);
-   if (Node->Attribute!=(-1))
+   fprintf(DebContext->f,"%s",Node->Tree.Name); ChkIO(10004); l1=strlen(Node->Tree.Name);
+   if (Node->Tree.Attribute!=(-1))
     BEGIN
-     sprintf(s,"[%d]", (int)Node->Attribute);
-     fprintf(f,"%s",s); ChkIO(10004);
+     sprintf(s,"[%d]", (int)Node->Tree.Attribute);
+     fprintf(DebContext->f,"%s",s); ChkIO(10004);
      l1+=strlen(s);
     END
-   fprintf(f,"%s ",Blanks(37-l1)); ChkIO(10004);
+   fprintf(DebContext->f,"%s ",Blanks(37-l1)); ChkIO(10004);
    switch (Node->SymWert.Typ)
     BEGIN
-     case TempInt:    fprintf(f,"Int    "); break;
-     case TempFloat:  fprintf(f,"Float  "); break;
-     case TempString: fprintf(f,"String "); break;
+     case TempInt:    fprintf(DebContext->f,"Int    "); break;
+     case TempFloat:  fprintf(DebContext->f,"Float  "); break;
+     case TempString: fprintf(DebContext->f,"String "); break;
      default: break;
     END
    ChkIO(10004);
@@ -2974,11 +3086,11 @@ BEGIN
       BEGIN
        if ((*p=='\\') OR (*p<=' '))
         BEGIN
-         fprintf(f,"\\%03d",*p); l1+=4;
+         fprintf(DebContext->f,"\\%03d",*p); l1+=4;
         END
        else
         BEGIN
-         fputc(*p,f); ChkIO(10004); l1++;
+         fputc(*p,DebContext->f); ChkIO(10004); l1++;
         END
       END
     END
@@ -2986,97 +3098,83 @@ BEGIN
     BEGIN
      ConvertSymbolVal(&(Node->SymWert),&t); StrSym(&t,False,s);
      l1=strlen(s);
-     fprintf(f,"%s",s); ChkIO(10004);
+     fprintf(DebContext->f,"%s",s); ChkIO(10004);
     END
-   fprintf(f,"%s %-3d %d\n",Blanks(25-l1),Node->SymSize,(int)Node->Used);
+   fprintf(DebContext->f,"%s %-3d %d\n",Blanks(25-l1),Node->SymSize,(int)Node->Used);
    ChkIO(10004);
 END
 
-	static void PrintDebSymbols_PrintNode(FILE *f, SymbolPtr Node)
+void PrintDebSymbols(FILE *f)
+{
+   TDebContext DebContext;
+
+   DebContext.f = f;
+   for (DebContext.Space = 0; DebContext.Space < PCMax; DebContext.Space++)
+   {
+     DebContext.HWritten = False;
+     IterTree((PTree)FirstSymbol, PrintDebSymbols_PNode, &DebContext);
+   }
+}
+
+typedef struct
+        {
+          FILE *f;
+          LongInt Handle;
+        } TNoISymContext;
+
+	static void PrNoISection(PTree Tree, void *pData)
 BEGIN
-   ChkStack();
+   PSymbolEntry Node = (PSymbolEntry)Tree;
+   TNoISymContext *pContext = (TNoISymContext*) pData;
 
-   if (Node==Nil) return;
-
-   PrintDebSymbols_PrintNode(f,Node->Left);
-
-   if (Node->SymType==Space) PrintDebSymbols_PNode(f,Node);
-
-   PrintDebSymbols_PrintNode(f,Node->Right);
-END
-
-	void PrintDebSymbols(FILE *f)
-BEGIN
-   for (Space=0; Space<PCMax; Space++)
+   if (((1 << Node->SymType) & NoICEMask) AND (Node->Tree.Attribute == pContext->Handle) AND (Node->SymWert.Typ == TempInt))
     BEGIN
-     HWritten=False;
-     PrintDebSymbols_PrintNode(f,FirstSymbol);
+     errno = 0; fprintf(pContext->f, "DEFINE %s 0x", Node->Tree.Name); ChkIO(10004);
+     errno = 0; fprintf(pContext->f, LargeHIntFormat, Node->SymWert.Contents.IWert); ChkIO(10004);
+     errno = 0; fprintf(pContext->f, "\n"); ChkIO(10004);
     END
-END
-
-	static void PrNoISection(FILE *f, SymbolPtr Node, LongInt Handle)
-BEGIN
-   if (Node->Left!=Nil) PrNoISection(f,Node->Left,Handle);
-   if (((1 << Node->SymType) & NoICEMask) AND (Node->Attribute == Handle) AND (Node->SymWert.Typ == TempInt))
-    BEGIN
-     errno = 0; fprintf(f, "DEFINE %s 0x", Node->SymName); ChkIO(10004);
-     errno = 0; fprintf(f, LargeHIntFormat, Node->SymWert.Contents.IWert); ChkIO(10004);
-     errno = 0; fprintf(f, "\n"); ChkIO(10004);
-    END
-   if (Node->Right != Nil) PrNoISection(f, Node->Right, Handle);
 END
 
 	void PrintNoISymbols(FILE *f)
 BEGIN
    PCToken CurrSection;
-   LongInt z;
-
-   PrNoISection(f,FirstSymbol,-1); z=0;
+   TNoISymContext Context;
+   
+   Context.f = f;
+   Context.Handle = -1;
+   IterTree((PTree)FirstSymbol, PrNoISection, &Context); 
+   Context.Handle++;
    for (CurrSection=FirstSection; CurrSection!=Nil; CurrSection=CurrSection->Next)
     if (ChunkSum(&CurrSection->Usage)>0)
      BEGIN
       fprintf(f,"FUNCTION %s ",CurrSection->Name); ChkIO(10004);
       fprintf(f,LargeIntFormat,ChunkMin(&CurrSection->Usage)); ChkIO(10004);
       fprintf(f,"\n"); ChkIO(10004);
-      PrNoISection(f,FirstSymbol,z++);
+      IterTree((PTree)FirstSymbol, PrNoISection, &Context);
+      Context.Handle++;
       fprintf(f,"ENDFUNC "); ChkIO(10004);
       fprintf(f,LargeIntFormat,ChunkMax(&CurrSection->Usage)); ChkIO(10004);
       fprintf(f,"\n"); ChkIO(10004);
      END
 END
 
-        static void PrintSymbolTree_PrintNode(SymbolPtr Node, int Shift)
-BEGIN
-   Byte z;
-
-   if (Node==Nil) return;
-
-   PrintSymbolTree_PrintNode(Node->Left,Shift+1);
-
-   for (z=1; z<=Shift; z++) fprintf(Debug,"%6s","");
-   fprintf(Debug,"%s\n",Node->SymName);
-
-   PrintSymbolTree_PrintNode(Node->Right,Shift+1);
-END
-
         void PrintSymbolTree(void)
 BEGIN
-   PrintSymbolTree_PrintNode(FirstSymbol,0);
+   DumpTree((PTree)FirstSymbol);
 END
 
-        static void ClearSymbolList_ClearNode(SymbolPtr *Node)
+        static void ClearSymbolList_ClearNode(PTree Node, void *pData)
 BEGIN
-   if ((*Node)->Left!=Nil) ClearSymbolList_ClearNode(&((*Node)->Left));
-   if ((*Node)->Right!=Nil) ClearSymbolList_ClearNode(&((*Node)->Right));
-   FreeSymbol(Node);
+   PSymbolEntry SymbolEntry = (PSymbolEntry) Node;
+   UNUSED(pData);
+
+   FreeSymbolEntry(&SymbolEntry, FALSE);
 END
 
         void ClearSymbolList(void)
 BEGIN
-
-   if (FirstSymbol!=Nil) ClearSymbolList_ClearNode(&FirstSymbol);
-
-   if (FirstLocSymbol!=Nil) ClearSymbolList_ClearNode(&FirstLocSymbol);
+   DestroyTree((PTree*)&FirstSymbol, ClearSymbolList_ClearNode, NULL);
+   DestroyTree((PTree*)&FirstLocSymbol, ClearSymbolList_ClearNode, NULL);
 END
 
 /*-------------------------------------------------------------------------*/
@@ -3084,7 +3182,7 @@ END
 
         Boolean PushSymbol(char *SymName_O, char *StackName_O)
 BEGIN
-   SymbolPtr Src;
+   PSymbolEntry Src;
    PSymbolStack LStack,NStack,PStack;
    PSymbolStackEntry Elem;
    String SymName,StackName;
@@ -3132,7 +3230,7 @@ END
 
         Boolean PopSymbol(char *SymName_O, char *StackName_O)
 BEGIN
-   SymbolPtr Dest;
+   PSymbolEntry Dest;
    PSymbolStack LStack,PStack;
    PSymbolStackEntry Elem;
    String SymName,StackName;
@@ -3294,20 +3392,20 @@ END
 
 /*-------------------------------------------------------------------------*/
 
-        static void ResetSymbolDefines_ResetNode(SymbolPtr Node)
-BEGIN
-   if (Node->Left !=Nil) ResetSymbolDefines_ResetNode(Node->Left);
-   if (Node->Right!=Nil) ResetSymbolDefines_ResetNode(Node->Right);
-   Node->Defined=False; Node->Used=False;
-END
+static void ResetSymbolDefines_ResetNode(PTree Node, void *pData)
+{
+   PSymbolEntry SymbolEntry = (PSymbolEntry) Node;
+   UNUSED(pData);
 
-        void ResetSymbolDefines(void)
-BEGIN
+   SymbolEntry->Defined=False;
+   SymbolEntry->Used=False;
+}
 
-   if (FirstSymbol!=Nil) ResetSymbolDefines_ResetNode(FirstSymbol);
-
-   if (FirstLocSymbol!=Nil) ResetSymbolDefines_ResetNode(FirstLocSymbol);
-END
+void ResetSymbolDefines(void)
+{
+   IterTree(&(FirstSymbol->Tree), ResetSymbolDefines_ResetNode, NULL);
+   IterTree(&(FirstLocSymbol->Tree), ResetSymbolDefines_ResetNode, NULL);
+}
 
         void SetFlag(Boolean *Flag, char *Name, Boolean Wert)
 BEGIN
@@ -3370,30 +3468,14 @@ BEGIN
     END
 END
 
-        static void PrintSymbolDepth_SearchTree(SymbolPtr Lauf, LongInt SoFar,
-                                                LongInt *TreeMin, LongInt *TreeMax)
-BEGIN
-   if (Lauf==Nil)
-    BEGIN
-     if (SoFar>*TreeMax) *TreeMax=SoFar;
-     if (SoFar<*TreeMin) *TreeMin=SoFar;
-    END
-   else
-    BEGIN
-     PrintSymbolDepth_SearchTree(Lauf->Right,SoFar+1,TreeMin,TreeMax);
-     PrintSymbolDepth_SearchTree(Lauf->Left,SoFar+1,TreeMin,TreeMax);
-    END
-END
+void PrintSymbolDepth(void)
+{
+   LongInt TreeMin, TreeMax;
 
-        void PrintSymbolDepth(void)
-BEGIN
-   LongInt TreeMin,TreeMax;
-
-   TreeMin=MaxLongInt; TreeMax=0;
-   PrintSymbolDepth_SearchTree(FirstSymbol,0,&TreeMin,&TreeMax);
+   GetTreeDepth(&(FirstSymbol->Tree), &TreeMin, &TreeMax);
    fprintf(Debug," MinTree %ld\n", (long)TreeMin);
    fprintf(Debug," MaxTree %ld\n", (long)TreeMax);
-END
+}
 
         LongInt GetSectionHandle(char *SName_O, Boolean AddEmpt, LongInt Parent)
 BEGIN
@@ -3543,43 +3625,45 @@ END
 
 /*---------------------------------------------------------------------------------*/
 
-        static void PrintCrossList_PNode(SymbolPtr Node)
-BEGIN
+static void PrintCrossList_PNode(PTree Node, void *pData)
+{
    int FileZ;
    PCrossRef Lauf;
    String LinePart,LineAcc;
    String h,h2;
    TempResult t;
+   PSymbolEntry SymbolEntry = (PSymbolEntry) Node;
+   UNUSED(pData);
 
-   if (Node->RefList==Nil) return;
+   if (SymbolEntry->RefList==Nil) return;
 
-   ConvertSymbolVal(&(Node->SymWert),&t);
+   ConvertSymbolVal(&(SymbolEntry->SymWert),&t);
    strcpy(h," (=");
    StrSym(&t,False,h2); strmaxcat(h,h2,255);
    strmaxcat(h,",",255);
-   strmaxcat(h,GetFileName(Node->FileNum),255);
+   strmaxcat(h,GetFileName(SymbolEntry->FileNum),255);
    strmaxcat(h,":",255);
-   sprintf(h2, LongIntFormat, Node->LineNum); strmaxcat(h,h2,255);
+   sprintf(h2, LongIntFormat, SymbolEntry->LineNum); strmaxcat(h,h2,255);
    strmaxcat(h,"):",255);
    if (Node->Attribute!=(-1))
-    BEGIN
+   {
      strmaxprep(h,"] ",255);
      strmaxprep(h,GetSectionName(Node->Attribute),255);
      strmaxprep(h," [",255);
-    END
+   }
 
-   strmaxprep(h,Node->SymName,255);
+   strmaxprep(h,Node->Name,255);
    strmaxprep(h,getmessage(Num_ListCrossSymName),255);
    WrLstLine(h);
 
    for (FileZ=0; FileZ<GetFileCount(); FileZ++)
-    BEGIN
-     Lauf=Node->RefList;
+   {
+     Lauf=SymbolEntry->RefList;
 
      while ((Lauf!=Nil) AND (Lauf->FileNum!=FileZ)) Lauf=Lauf->Next;
 
      if (Lauf!=Nil)
-      BEGIN
+     {
        strcpy(h," ");
        strmaxcat(h,getmessage(Num_ListCrossFileName),255);
        strmaxcat(h,GetFileName(FileZ),255);
@@ -3587,70 +3671,57 @@ BEGIN
        WrLstLine(h);
        strcpy(LineAcc,"   ");
        while (Lauf!=Nil)
-        BEGIN
+       {
          sprintf(LinePart,"%5ld", (long)Lauf->LineNum);
          strmaxcat(LineAcc,LinePart,255);
          if (Lauf->OccNum!=1)
-          BEGIN
+         {
            sprintf(LinePart,"(%2ld)", (long)Lauf->OccNum);
            strmaxcat(LineAcc,LinePart,255);
-          END
+         }
          else strmaxcat(LineAcc,"    ",255);
          if (strlen(LineAcc)>=72)
-          BEGIN
+         {
            WrLstLine(LineAcc); strcpy(LineAcc,"  ");
-          END
+         }
          Lauf=Lauf->Next;
-        END
+       }
        if (strcmp(LineAcc,"  ")!=0) WrLstLine(LineAcc);
-      END
-    END
+     }
+   }
    WrLstLine("");
-END
+}
 
-        static void PrintCrossList_PrintNode(SymbolPtr Node)
-BEGIN
-   if (Node==Nil) return;
-
-   PrintCrossList_PrintNode(Node->Left);
-
-   PrintCrossList_PNode(Node);
-
-   PrintCrossList_PrintNode(Node->Right);
-END
-
-        void PrintCrossList(void)
-BEGIN
-
+void PrintCrossList(void)
+{
    WrLstLine("");
    WrLstLine(getmessage(Num_ListCrossListHead1));
    WrLstLine(getmessage(Num_ListCrossListHead2));
    WrLstLine("");
-   PrintCrossList_PrintNode(FirstSymbol);
+   IterTree(&(FirstSymbol->Tree), PrintCrossList_PNode, NULL);
    WrLstLine("");
-END
+}
 
-        static void ClearCrossList_CNode(SymbolPtr Node)
-BEGIN
+static void ClearCrossList_CNode(PTree Tree, void *pData)
+{
    PCrossRef Lauf;
+   PSymbolEntry SymbolEntry = (PSymbolEntry) Tree;
+   UNUSED(pData);
 
-   if (Node->Left!=Nil) ClearCrossList_CNode(Node->Left);
-
-   if (Node!=Nil)
-    while (Node->RefList!=Nil)
-     BEGIN
-      Lauf=Node->RefList->Next;
-      free(Node->RefList);
-      Node->RefList=Lauf;
-     END
-
-   if (Node->Right!=Nil) ClearCrossList_CNode(Node->Right);
+   while (SymbolEntry->RefList)
+   {
+      Lauf = SymbolEntry->RefList->Next;
+      free(SymbolEntry->RefList);
+      SymbolEntry->RefList = Lauf;
+   }
 END
 
-        void ClearCrossList(void)
-BEGIN
-   ClearCrossList_CNode(FirstSymbol);
-END
+void ClearCrossList(void)
+{
+   IterTree(&(FirstSymbol->Tree), ClearCrossList_CNode, NULL);
+}
+
+/*--------------------------------------------------------------------------*/
 
         LongInt GetLocHandle(void)
 BEGIN
@@ -3827,6 +3898,8 @@ BEGIN
    ClearRegDefs_ClearNode(FirstRegDef);
 END
 
+static int cwidth;
+
         static void PrintRegDefs_PNode(PRegDef Node, char *buf, LongInt *Sum, LongInt *USum)
 BEGIN
    PRegDefList Lauf;
@@ -3870,6 +3943,7 @@ END
 BEGIN
    String buf;
    LongInt Sum,USum;
+   LongInt ActPageWidth;
 
    if (FirstRegDef==Nil) return;
 

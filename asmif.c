@@ -7,9 +7,12 @@
 /* Historie: 15. 5.1996 Grundsteinlegung                                     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmif.c,v 1.2 2002/05/01 15:56:09 alfred Exp $                       */
+/* $Id: asmif.c,v 1.3 2002/07/14 18:39:57 alfred Exp $                       */
 /***************************************************************************** 
  * $Log: asmif.c,v $
+ * Revision 1.3  2002/07/14 18:39:57  alfred
+ * - fixed TempAll-related warnings
+ *
  * Revision 1.2  2002/05/01 15:56:09  alfred
  * - print start line of IF/SWITCH construct when it ends
  *
@@ -308,7 +311,7 @@ BEGIN
 	      case TempInt:    eq=(t.Contents.Int==FirstIfSave->SaveExpr.Contents.Int); break;
 	      case TempFloat:  eq=(t.Contents.Float==FirstIfSave->SaveExpr.Contents.Float); break;
 	      case TempString: eq=(strcmp(t.Contents.Ascii,FirstIfSave->SaveExpr.Contents.Ascii)==0); break;
-              case TempNone:   eq=False; break;
+              default:         eq=False; break;
 	     END
 	   z++;
           END

@@ -108,6 +108,7 @@ call testall t_secdrive
 call testall t_st6
 call testall t_st7
 call testall t_st9
+call testall t_tmpsym
 call testall t_tms7
 call testall t_xa
 call testall t_z380

@@ -64,7 +64,7 @@ Message InfoMessHelp
  "          +5                : S5-Records unterdr&uuml;cken\n" \
  "          -s                : S-Record-Gruppen einzeln terminieren\n" \
  "          -M <1|2|3>        : Minimallaenge Adressen S-Records\n" \
- "          -d <Start>-<Stop> : Datenbereich festlegen\n" \
+ "          -d <Start>-<Stop> : Datenbereich festlegen (veraltet, siehe Handbuch)\n" \
  "          -e <Adresse>      : Startadresse festlegen\n" \
  "          -k                : Quelldateien autom. l&ouml;schen\n" \
  "          -avrlen <2|3>     : Adre&szlig;feldl&auml;nge Atmel-Format setzen\n"
@@ -84,7 +84,11 @@ Message InfoMessHelp
  "         +5                : supress S5-records\n" \
  "         -s                : separate terminators for S-record groups\n" \
  "         -M <1|2|3>        : minimum length of S records addresses\n" \
- "         -d <start>-<stop> : set data range\n" \
+ "         -d <start>-<stop> : set data range (obsolete, see manual)\n" \
  "         -e <address>      : set entry address\n" \
  "         -k                : automatically erase source files\n" \
  "         -avrlen <2|3>     : set address field length of Atmel format\n"
+
+Message WarnDOption
+ "Warnung: -d - Option ist veraltet, siehe Handbuch\n"
+ "Warning: -d option is obsolete, see manual\n"

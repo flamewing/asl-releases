@@ -11,7 +11,7 @@
 /*           18. 7.1998 IRPC-Statement                                       */
 /*           24. 7.1998 Debug-Modus NoICE                                    */
 /*           25. 7.1998 Formate glattgezogen                                 */
-/*           16. 8.1998 Datei-Adressbereiche zur³cksetzen                    */
+/*           16. 8.1998 Datei-Adressbereiche zuruecksetzen                   */
 /*           17. 8.1998 InMacroFlag nach asmdef verschoben                   */
 /*           19. 8.1998 BranchExt-Initialisierung                            */
 /*           25. 8.1998 i960-Initialisierung                                 */
@@ -58,9 +58,39 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.5 2002/05/19 13:45:32 alfred Exp $                          */
+/* $Id: as.c,v 1.15 2002/11/20 20:25:04 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.15  2002/11/20 20:25:04  alfred
+ * - added unions
+ *
+ * Revision 1.14  2002/11/16 20:53:11  alfred
+ * - additions for structures
+ *
+ * Revision 1.13  2002/11/15 23:30:53  alfred
+ * - relocated EnterLebel
+ *
+ * Revision 1.12  2002/11/11 21:56:57  alfred
+ * - store/display struct elements
+ *
+ * Revision 1.11  2002/11/11 21:13:54  alfred
+ * - basic structure handling
+ *
+ * Revision 1.10  2002/11/11 19:24:57  alfred
+ * - new module for structs
+ *
+ * Revision 1.9  2002/11/10 16:27:32  alfred
+ * - use free fcns for macros
+ *
+ * Revision 1.8  2002/11/04 19:19:37  alfred
+ * - use struct separation character
+ *
+ * Revision 1.7  2002/10/07 20:25:01  alfred
+ * - added '/' nameless temporary symbols
+ *
+ * Revision 1.6  2002/09/30 17:12:20  alfred
+ * - added nameless symbol counter intialization
+ *
  * Revision 1.5  2002/05/19 13:45:32  alfred
  * - clear section usage before starting new pass
  *
@@ -97,6 +127,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmmac.h"
+#include "asmstructs.h"
 #include "asmif.h"
 #include "asmcode.h"
 #include "asmdebug.h"
@@ -516,7 +547,7 @@ BEGIN
          AddMacro(GMacro,FirstOutputTag->GlobSect,False);
         END
       END
-     else ClearMacroRec(&(FirstOutputTag->Mac));
+     else ClearMacroRec(&(FirstOutputTag->Mac), TRUE);
 
      Tmp=FirstOutputTag; FirstOutputTag=Tmp->Next;
      ClearStringList(&(Tmp->Params)); free(Tmp);
@@ -1788,21 +1819,51 @@ BEGIN
      case 'L':
       return (NOT Memo("LABEL"));
      case 'S':
-      return ((NOT Memo("SET")) OR (SetIsOccupied)) AND (NOT Memo("STRUCT"));
+      return ((NOT Memo("SET")) OR (SetIsOccupied)) AND (NOT (Memo("STRUCT") OR Memo("STRUC")));
      case 'E':
-      return ((NOT Memo("EVAL")) OR (NOT SetIsOccupied)) AND (NOT Memo("EQU")) AND (NOT Memo("ENDSTRUCT"));
+      return ((NOT Memo("EVAL")) OR (NOT SetIsOccupied))
+          AND (NOT Memo("EQU")) AND (NOT (Memo("ENDSTRUCT") OR Memo("ENDS")));
+     case 'U':
+      return (NOT Memo("UNION"));
      default: 
       return True;
     END   
 END
 
+	void HandleLabel(char *Name, LargeWord Value)
+{
+  PStructStack ZStruct;
+   String tmp,tmp2;
+
+  /* structure element ? */
+
+  if (StructStack != Nil)
+  {
+    AddStructElem(StructStack->StructRec, Name, Value);
+    strmaxcpy(tmp, Name, 255);
+    for (ZStruct = StructStack; ZStruct != Nil; ZStruct = ZStruct->Next)
+     if (ZStruct->StructRec->DoExt)
+      BEGIN
+       sprintf(tmp2,"%s%c",ZStruct->Name, ZStruct->StructRec->ExtChar);
+       strmaxprep(tmp, tmp2, 255);
+      END
+    EnterIntSymbol(tmp, Value, SegNone, False);
+  }
+
+  /* normal label */
+
+  else if (RelSegs)
+   EnterRelSymbol(Name, Value, ActPC, False);
+  else
+   EnterIntSymbol(Name, Value, ActPC, False);
+}
+
         static void Produce_Code(void)
 BEGIN
    Byte z;
    PMacroRec OneMacro;
-   Boolean SearchMacros, Found, IsMacro;
-   String tmp,tmp2;
-   PStructure ZStruct;
+   PStructRec OneStruct;
+   Boolean SearchMacros, Found, IsMacro, IsStruct;
 
    ActListGran=ListGran();
 
@@ -1825,32 +1886,19 @@ BEGIN
      FirstOutputTag->Processor(); return;
     END
 
-   /* ansonsten Code erzeugen: check for macro here */
+   /* otherwise generate code: check for macro/structs here */
 
-   IsMacro = (SearchMacros) && (FoundMacro(&OneMacro));
+   if (!(IsMacro = (SearchMacros) && (FoundMacro(&OneMacro))))
+     IsStruct = FoundStruct(&OneStruct);
+   else
+     IsStruct = FALSE;
 
    /* evtl. voranstehendes Label ablegen */
 
    if ((IfAsm) && ((!IsMacro) || (!OneMacro->LocIntLabel)))
     BEGIN
      if (HasLabel())
-      BEGIN 
-       if (StructureStack!=Nil)
-        BEGIN
-         strmaxcpy(tmp,LabPart,255);
-         for (ZStruct=StructureStack; ZStruct!=Nil; ZStruct=ZStruct->Next)
-          if (ZStruct->DoExt)
-           BEGIN
-            sprintf(tmp2,"%s_",ZStruct->Name);
-            strmaxprep(tmp,tmp2,255);
-           END
-         EnterIntSymbol(tmp,EProgCounter(),SegNone,False);
-        END
-       else if (RelSegs)
-        EnterRelSymbol(LabPart,EProgCounter(),ActPC,False);
-       else
-        EnterIntSymbol(LabPart,EProgCounter(),ActPC,False);
-      END
+       HandleLabel(LabPart, EProgCounter());
     END
 
    Found=False;
@@ -1919,10 +1967,25 @@ BEGIN
    /* Makroaufruf ? */
 
    else if (IsMacro)
-    BEGIN
-     if (IfAsm) ExpandMacro(OneMacro);
-     if (IfAsm) strmaxcpy(ListLine,"(MACRO)",255);
-    END
+   {
+     if (IfAsm)
+     {
+       ExpandMacro(OneMacro);
+       strmaxcpy(ListLine,"(MACRO)",255);
+     }
+   }
+
+   /* structure declaration ? */
+
+   else if (IsStruct)
+   {
+     if (IfAsm)
+     {
+       ExpandStruct(OneStruct);
+       strmaxcpy(ListLine, OneStruct->IsUnion ? "(UNION)" : "(STRUCT)", 255);
+       PCs[ActPC] += CodeLen;
+     }
+   }
 
    else
     BEGIN
@@ -1956,6 +2019,11 @@ BEGIN
        if (ActPC==StructSeg)
         BEGIN
          if ((CodeLen!=0) AND (NOT DontPrint)) WrError(1940);
+         if (StructStack->StructRec->IsUnion)
+         {
+           BumpStructLength(StructStack->StructRec, CodeLen);
+           CodeLen = 0;
+         }
         END
        else if (CodeOutput)
         BEGIN
@@ -2277,7 +2345,7 @@ BEGIN
    SectionStack = Nil;
    FirstIfSave = Nil;
    FirstSaveState = Nil;
-   StructureStack = Nil;
+   StructStack = Nil;
 
    InitPassProc();
 
@@ -2306,7 +2374,7 @@ BEGIN
 
    /* Pseudovariablen initialisieren */
    
-   ResetSymbolDefines(); ResetMacroDefines();
+   ResetSymbolDefines(); ResetMacroDefines(); ResetStructDefines();
    EnterIntSymbol(FlagTrueName, 1, 0, True);
    EnterIntSymbol(FlagFalseName, 0, 0, True);
    EnterFloatSymbol(PiName, 4.0 * atan(1.0), True);
@@ -2347,8 +2415,7 @@ BEGIN
    /* initialize counter for temp symbols here after implicit symbols
       have been defined, so counter starts at a value as low as possible */
      
-   TmpSymCounter = 0;
-   *TmpSymCounterVal = '\0';
+   InitTmpSymbols();
 
    ResetPageCounter();
    
@@ -2368,7 +2435,7 @@ BEGIN
    if (FirstIfSave!=Nil) WrError(1470);
    if (FirstSaveState!=Nil) WrError(1460);
    if (SectionStack!=Nil) WrError(1485);
-   if (StructureStack!=Nil) WrXError(1551,StructureStack->Name);
+   if (StructStack!=Nil) WrXError(1551,StructStack->Name);
 END
 
         static void AssembleFile(char *Name)
@@ -2585,6 +2652,8 @@ BEGIN
 
      if ((ListMask&4)!=0) PrintMacroList();
 
+     if ((ListMask&256)!=0) PrintStructList();
+
      if ((ListMask&8)!=0) PrintFunctionList();
 
      if ((ListMask&32)!=0) PrintDefineList();
@@ -2693,6 +2762,7 @@ BEGIN
    ClearFunctionList();
    ClearDefineList();
    ClearFileList();
+   ClearStructList();
 
    dbgentry("AssembleFile");
 END
@@ -3328,7 +3398,8 @@ BEGIN
 
      asmdef_init(); asmsub_init(); asmpars_init(); 
 
-     asmmac_init(); asmif_init(); asmcode_init(); asmdebug_init(); 
+     asmmac_init(); asmstruct_init(); 
+     asmif_init(); asmcode_init(); asmdebug_init(); 
 
      codeallg_init(); codepseudo_init();
 
@@ -3393,7 +3464,7 @@ BEGIN
 
    ShareMode = 0; ListMode = 0; IncludeList[0] = '\0'; SuppWarns = False;
    MakeUseList = False; MakeCrossList = False; MakeSectionList = False;
-   MakeIncludeList = False; ListMask = 0xff;
+   MakeIncludeList = False; ListMask = 0x1ff;
    MakeDebug = False; ExtendErrors = 0;
    MacroOutput = False; MacProOutput = False; CodeOutput = True;
    strcpy(ErrorPath, "!2"); MsgIfRepass = False; QuietMode = False;

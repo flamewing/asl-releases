@@ -17,7 +17,7 @@
 ;*           24. 9.1997 Kopfzeile Registerdefinitionsliste                   *
 ;*           19.10.1997 Warnung neg. DUP-Anzahl                              *
 ;*           26. 6.1998 Fehlermeldung Codepage nicht gefunden                *
-;*           27. 6.1998 Meldungen für Codepage-Liste                         *
+;*           27. 6.1998 Meldungen fuer Codepage-Liste                        *
 ;*           18. 4.1999 Kommandozeilenoptionen cpu, shareout                 *
 ;*            2. 5.1999 'order' --> 'instruction'                            *
 ;*           13. 7.1999 Fehlermeldungen fuer extern-Symbole                  *
@@ -29,9 +29,27 @@
 ;*           2001-10-21 GNU error messages                                   *
 ;*                                                                           *
 ;*****************************************************************************
-;* $Id: as.res,v 1.4 2002/05/13 18:17:13 alfred Exp $                        *
+;* $Id: as.res,v 1.10 2002/11/20 20:25:05 alfred Exp $                        *
 ;*****************************************************************************
 ;* $Log: as.res,v $
+;* Revision 1.10  2002/11/20 20:25:05  alfred
+;* - added unions
+;*
+;* Revision 1.9  2002/11/16 20:52:18  alfred
+;* - added ErrMsgStructNameMissing
+;*
+;* Revision 1.8  2002/11/11 21:13:02  alfred
+;* - messages fro struct list
+;*
+;* Revision 1.7  2002/11/04 19:04:26  alfred
+;* - prevent modification of constants with SET
+;*
+;* Revision 1.6  2002/10/28 19:39:10  alfred
+;* - clarified -g options
+;*
+;* Revision 1.5  2002/08/14 18:43:47  alfred
+;* - warn null allocation, remove some warnings
+;*
 ;* Revision 1.4  2002/05/13 18:17:13  alfred
 ;* - added error 2010/2020
 ;*
@@ -187,6 +205,10 @@ Message ErrMsgNegDUP
 Message ErrMsgConvIndX
  "einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert"
  "single X operand interpreted as indexed and not implicit addressing"
+
+Message ErrMsgNullResMem
+ "kein Speicher reserviert, sind Sie sicher, da&szlig; Sie das wollten?"
+ "no memory reserved, are you sure you wanted that?"
 
 ;*****
 
@@ -654,6 +676,14 @@ Message ErrMsgInvPrefixCombination
  "ung&uuml;ltige Pr&auml;fix-Kombination"
  "invalid combination of prefixes"
 
+Message ErrMsgNoReassignConstants
+ "Konstanten k&ouml;nnen nicht ver&auml;ndert werden"
+ "constants cannot be modifed"
+
+Message ErrMsgStructNameMissing
+ "Strukturname fehlt"
+ "structure name missing"
+
 Message ErrMsgOpeningFile
  "Fehler beim &Ouml;ffnen der Datei"
  "error in opening file"
@@ -835,6 +865,22 @@ Message ListMacSumMsg
 Message ListMacSumsMsg
  " Makros"
  " macros"
+
+Message ListStructListHead1
+ "  definierte Strukturen/Unions:"
+ "  defined structures/unions:"
+
+Message ListStructListHead2
+ "  -----------------------------"
+ "  --------------------------"
+
+Message ListStructSumMsg
+ " Struktur"
+ " structure"
+
+Message ListStructSumsMsg
+ " Strukturen"
+ " structures"
 
 Message ListFuncListHead1
  "  definierte Funktionen:"
@@ -1046,7 +1092,7 @@ Message InfoMessHelp
  "-s : Sektionsliste erzeugen           -t : Listing-Teile ein/ausblenden\n" \
  "-u : Belegungsliste erzeugen          -C : Querverweisliste erzeugen\n" \
  "-I : Include-Verschachtelungsliste ausgeben\n" \
- "-g : Debug-Informationen schreiben\n" \
+ "-g [map|atmel|noice] : Debug-Informationen schreiben\n" \
  "-A : kompaktere Symbolablage\n" \
  "-U : Case-sensitiv arbeiten\n" \
  "-x : erweiterte Fehlermeldungen       -n : Fehlermeldungen mit Nummer\n" \
@@ -1082,7 +1128,7 @@ Message InfoMessHelp
  "-s : generate section list            -t : enable/disable parts of listing\n" \
  "-u : generate usage list              -C : generate cross reference list\n" \
  "-I : generate include nesting list\n" \
- "-g : write debug info\n" \
+ "-g [map|atmel|noice] : write debug info\n" \
  "-A : compact symbol table\n" \
  "-U : case-sensitive operation\n" \
  "-x : extended error messages          -n : add error #s to error messages\n" \

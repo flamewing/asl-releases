@@ -59,6 +59,8 @@
 
 #define CompLiteralsName "COMPRESSEDLITERALS"
 
+#define DSPAvailName "HASDSP"
+
 typedef struct
          {
           char *Name;
@@ -109,7 +111,7 @@ static FixedMinOrder *MulRegOrders;
 static FixedOrder *BWOrders;
 static char **LogOrders;
 
-static Boolean CurrDelayed,PrevDelayed,CompLiterals;
+static Boolean CurrDelayed, PrevDelayed, CompLiterals, DSPAvail;
 static LongInt DelayedAdr;
 
 /*-------------------------------------------------------------------------*/
@@ -1270,7 +1272,8 @@ END
         static void InitCode_7000(void)
 BEGIN
    SaveInitProc();
-   FirstLiteral=Nil; ForwardCount=0;
+   FirstLiteral = Nil; ForwardCount = 0;
+   SetFlag(&DSPAvail, DSPAvailName, False);
 END
 
         static Boolean IsDef_7000(void)
@@ -1305,6 +1308,8 @@ BEGIN
    AddONOFF("SUPMODE",      &SupAllowed,   SupAllowedName  ,False);
    AddONOFF("COMPLITERALS", &CompLiterals, CompLiteralsName,False);
    AddMoto16PseudoONOFF();
+
+   AddONOFF("DSP"     , &DSPAvail  , DSPAvailName , False);
 
    CurrDelayed=False; PrevDelayed=False;
 

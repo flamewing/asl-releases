@@ -12,6 +12,19 @@
 /*             2002-01-27 allow immediate addressing for one-op instrs(doj)  */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: codemsp.c,v 1.4 2002/08/14 18:43:49 alfred Exp $                     */
+/***************************************************************************** 
+ * $Log: codemsp.c,v $
+ * Revision 1.4  2002/08/14 18:43:49  alfred
+ * - warn null allocation, remove some warnings
+ *
+ * Revision 1.3  2002/07/27 17:44:50  alfred
+ * - one more TempAll fix
+ *
+ * Revision 1.2  2002/07/14 18:39:59  alfred
+ * - fixed TempAll-related warnings
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -342,7 +355,7 @@ BEGIN
               for (p=t.Contents.Ascii; *p!='\0'; PutByte(*(p++)));
              END
             break;
-           case TempNone: 
+           default: 
             OK=False; break;
           END
          z++;
@@ -387,6 +400,7 @@ BEGIN
        else if (OK)
         BEGIN
          if ((Odd(HVal16)) AND (DoPadding)) HVal16++;
+         if (!HVal16) WrError(290);
          DontPrint=True; CodeLen=HVal16;
          BookKeeping();
          END

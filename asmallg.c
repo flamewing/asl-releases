@@ -25,6 +25,34 @@
 /*                       to now                                              */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: asmallg.c,v 1.9 2002/11/23 15:53:27 alfred Exp $                     */
+/*****************************************************************************
+ * $Log: asmallg.c,v $
+ * Revision 1.9  2002/11/23 15:53:27  alfred
+ * - SegLimits are unsigned now
+ *
+ * Revision 1.8  2002/11/20 20:25:04  alfred
+ * - added unions
+ *
+ * Revision 1.7  2002/11/17 16:09:12  alfred
+ * - added DottedStructs
+ *
+ * Revision 1.6  2002/11/16 20:51:15  alfred
+ * - adapted to structure changes
+ *
+ * Revision 1.5  2002/11/11 21:13:37  alfred
+ * - add structure storage
+ *
+ * Revision 1.4  2002/11/11 19:24:57  alfred
+ * - new module for structs
+ *
+ * Revision 1.3  2002/11/04 19:18:00  alfred
+ * - add DOTS option for structs
+ *
+ * Revision 1.2  2002/07/14 18:39:57  alfred
+ * - fixed TempAll-related warnings
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -40,6 +68,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmmac.h"
+#include "asmstructs.h"
 #include "asmcode.h"
 #include "asmrelocs.h"
 #include "asmitree.h"
@@ -55,7 +84,7 @@ static PInstTable PseudoTable=Nil,ONOFFTable;
 
 	static Boolean DefChkPC(LargeWord Addr)
 BEGIN
-   if (((1 << ActPC) & ValidSegs) == 0) return 0;
+   if (((1 << ActPC) & ValidSegs) == 0) return False;
    else return (Addr <= SegLimits[ActPC]);
 END
 
@@ -259,7 +288,7 @@ BEGIN
            case TempInt   : EnterIntSymbol   (LabPart,t.Contents.Int,DestSeg,MayChange); break;
            case TempFloat : EnterFloatSymbol (LabPart,t.Contents.Float,MayChange); break;
            case TempString: EnterStringSymbol(LabPart,t.Contents.Ascii,MayChange); break;
-           case TempNone  : break;
+           default        : break;
           END
          PopLocHandle();
         END
@@ -848,7 +877,7 @@ BEGIN
    	   case TempInt   : EnterIntSymbol(ArgStr[ArgCnt],Erg.Contents.Int,SegNone,True); break;
    	   case TempFloat : EnterFloatSymbol(ArgStr[ArgCnt],Erg.Contents.Float,True); break;
    	   case TempString: EnterStringSymbol(ArgStr[ArgCnt],Erg.Contents.Ascii,True); break;
-           case TempNone  : break;
+           default        : break;
 	  END
          MomLocHandle=SaveLocHandle;
 	END
@@ -1107,85 +1136,111 @@ END
 
 
         static void CodeSTRUCT(Word Index)
-BEGIN
-   PStructure NStruct;
+{
+   PStructStack NStruct;
    int z;
-   Boolean OK;
+   Boolean OK, DoExt;
+   char ExtChar;
    UNUSED(Index);
 
-   if (ArgCnt>1) WrError(1110);
-   else if (NOT ChkSymbName(LabPart)) WrXError(1020,LabPart);
+   if (ArgCnt > 1)
+     WrError(1110);
+   else if (!ChkSymbName(LabPart))
+     WrXError(1020,LabPart);
    else
-    BEGIN
-     if (NOT CaseSensitive) NLS_UpString(LabPart);
-     if (StructureStack!=Nil) StructureStack->CurrPC=ProgCounter();
-     NStruct=(PStructure) malloc(sizeof(TStructure));
-     NStruct->Name=strdup(LabPart);
-     NStruct->CurrPC=0; NStruct->DoExt=True;
-     NStruct->Next=StructureStack;
-     OK=True;
-     for (z=1; z<=ArgCnt; z++)
-      if (OK)
-       BEGIN
-        if (strcasecmp(ArgStr[z],"EXTNAMES")==0) NStruct->DoExt=True;
-        else if (strcasecmp(ArgStr[z],"NOEXTNAMES")==0) NStruct->DoExt=False;
-        else
-         BEGIN
-          WrXError(1554,ArgStr[z]); OK=False;
-         END
-       END
+   {
+     if (!CaseSensitive)
+       NLS_UpString(LabPart);
+
+     if (StructStack)
+       StructStack->CurrPC = ProgCounter();
+     NStruct = (PStructStack) malloc(sizeof(TStructStack));
+     NStruct->Name = strdup(LabPart);
+     NStruct->CurrPC = 0; DoExt = True;
+     ExtChar = DottedStructs ? '.' : '_';
+     NStruct->Next = StructStack;
+     OK = True;
+     for (z = 1; z <= ArgCnt; z++)
+       if (OK)
+       {
+         if (!strcasecmp(ArgStr[z], "EXTNAMES"))
+           DoExt = True;
+         else if (!strcasecmp(ArgStr[z],"NOEXTNAMES"))
+           DoExt = False;
+         if (!strcasecmp(ArgStr[z], "DOTS"))
+           ExtChar = '.';
+         else if (!strcasecmp(ArgStr[z],"NODOTS"))
+           ExtChar = '_';
+         else
+         {
+           WrXError(1554,ArgStr[z]); OK = False;
+         }
+       }
      if (OK)
-      BEGIN
-       StructureStack=NStruct;
-       if (ActPC!=StructSeg) StructSaveSeg=ActPC; ActPC=StructSeg;
-       PCs[ActPC]=0;
-       Phases[ActPC]=0;
-       Grans[ActPC]=Grans[SegCode]; ListGrans[ActPC]=ListGrans[SegCode];
-       ClearChunk(SegChunks+StructSeg);
-       CodeLen=0; DontPrint=True;
-      END
+     {
+       NStruct->StructRec = CreateStructRec();
+       NStruct->StructRec->ExtChar = ExtChar;
+       NStruct->StructRec->DoExt = DoExt;
+       NStruct->StructRec->IsUnion = Memo("UNION");
+       StructStack = NStruct;
+       if (ActPC != StructSeg)
+         StructSaveSeg = ActPC;
+       ActPC = StructSeg;
+       PCs[ActPC] = 0;
+       Phases[ActPC] = 0;
+       Grans[ActPC] = Grans[SegCode]; ListGrans[ActPC] = ListGrans[SegCode];
+       ClearChunk(SegChunks + StructSeg);
+       CodeLen = 0; DontPrint = True;
+     }
      else
-      BEGIN
+     {
        free(NStruct->Name); free(NStruct);
-      END
-    END
-END
+     }
+   }
+}
 
         static void CodeENDSTRUCT(Word Index)
-BEGIN
+{
    Boolean OK;
-   PStructure OStruct;
+   PStructStack OStruct;
    TempResult t;
    String tmp;
    UNUSED(Index);
 
    if (ArgCnt>1) WrError(1110);
-   else if (StructureStack==Nil) WrError(1550);
+   else if (!StructStack) WrError(1550);
    else
-    BEGIN
+   {
      if (*LabPart=='\0') OK=True;
      else
-      BEGIN
+     {
        if (NOT CaseSensitive) NLS_UpString(LabPart);
-       OK=(strcmp(LabPart,StructureStack->Name)==0);
+       OK=(strcmp(LabPart, StructStack->Name)==0);
        if (NOT OK) WrError(1552);
-      END
+     }
      if (OK)
-      BEGIN
-       OStruct=StructureStack; StructureStack=OStruct->Next;
-       if (ArgCnt==0) sprintf(tmp,"%s_len",OStruct->Name);
-       else strmaxcpy(tmp,ArgStr[1],255);
-       EnterIntSymbol(tmp,ProgCounter(),SegNone,False);
-       t.Typ=TempInt; t.Contents.Int=ProgCounter(); SetListLineVal(&t);
+     {
+       OStruct = StructStack; StructStack = OStruct->Next;
+       if (ArgCnt == 0)
+         sprintf(tmp, "%s%clen", OStruct->Name, OStruct->StructRec->ExtChar);
+       else
+         strmaxcpy(tmp, ArgStr[1], 255);
+       BumpStructLength(OStruct->StructRec, ProgCounter());
+       EnterIntSymbol(tmp, OStruct->StructRec->TotLen, SegNone, False);
+       t.Typ = TempInt; t.Contents.Int = OStruct->StructRec->TotLen;
+       SetListLineVal(&t);
+
+       AddStruct(OStruct->StructRec, OStruct->Name, True);
+
        free(OStruct->Name);
        free(OStruct);
-       if (StructureStack==Nil) ActPC=StructSaveSeg;
-       else PCs[ActPC]+=StructureStack->CurrPC;
-       ClearChunk(SegChunks+StructSeg);
-       CodeLen=0; DontPrint=True;
-      END
-    END
-END
+       if (StructStack == Nil) ActPC = StructSaveSeg;
+       else PCs[ActPC] += StructStack->CurrPC;
+       ClearChunk(SegChunks + StructSeg);
+       CodeLen = 0; DontPrint = True;
+     }
+   }
+}
 
 	static void CodeEXTERN(Word Index)
 BEGIN
@@ -1359,6 +1414,7 @@ static PseudoOrder Pseudos[]=
                     {"CPU",        CodeCPU       },
                     {"DEPHASE",    CodeDEPHASE   },
                     {"END",        CodeEND       },
+                    {"ENDS",       CodeENDSTRUCT },
                     {"ENDSECTION", CodeENDSECTION},
                     {"ENDSTRUCT",  CodeENDSTRUCT },
                     {"ENUM",       CodeENUM      },
@@ -1386,7 +1442,9 @@ static PseudoOrder Pseudos[]=
                     {"SECTION",    CodeSECTION   },
                     {"SEGMENT",    CodeSEGMENT   },
                     {"SHARED",     CodeSHARED    },
+                    {"STRUC",      CodeSTRUCT    },
                     {"STRUCT",     CodeSTRUCT    },
+                    {"UNION",      CodeSTRUCT    },
                     {"WARNING",    CodeWARNING   },
                     {""       ,    Nil           }};
 
@@ -1461,6 +1519,7 @@ BEGIN
    AddInstTable(PseudoTable,"PRTEXIT",1,CodeString);
    AddInstTable(PseudoTable,"TITLE",2,CodeString);
    ONOFFTable=CreateInstTable(47);
-   AddONOFF("MACEXP",&LstMacroEx,LstMacroExName,True);
-   AddONOFF("RELAXED",&RelaxedMode,RelaxedName,True);
+   AddONOFF("MACEXP", &LstMacroEx, LstMacroExName, True);
+   AddONOFF("RELAXED", &RelaxedMode, RelaxedName, True);
+   AddONOFF("DOTTEDSTRUCTS", &DottedStructs, DottedStructsName,True);
 END

@@ -10,6 +10,15 @@
 /*           2001-12-11 begun with Rabbit2000                                */
 /*                                                                           */
 /*****************************************************************************/
+/*****************************************************************************/
+/* $Id: codez80.c,v 1.2 2002/10/20 09:22:25 alfred Exp $                          */
+/*****************************************************************************
+ * $Log: codez80.c,v $
+ * Revision 1.2  2002/10/20 09:22:25  alfred
+ * - work around the parser problem related to the ' character
+ *
+ * Revision 1.7  2002/10/07 20:25:01  alfred
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -2039,6 +2048,11 @@ BEGIN
 
    if (Memo("EX"))
     BEGIN
+     /* work around the parser problem related to the ' character */ 
+
+     if (!strncasecmp(ArgStr[2], "AF\'", 3))
+       ArgStr[2][3] = '\0';
+
      if (ArgCnt!=2) WrError(1110);
      else if (ParPair("DE","HL"))
       BEGIN

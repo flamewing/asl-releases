@@ -9,6 +9,13 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: code85.c,v 1.2 2002/11/09 13:27:12 alfred Exp $                      */
+/***************************************************************************** 
+ * $Log: code85.c,v $
+ * Revision 1.2  2002/11/09 13:27:12  alfred
+ * - added hash table search, added undocumented 8085 instructions
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -22,119 +29,36 @@
 #include "asmpars.h"
 #include "codepseudo.h"
 #include "codevars.h"
+#include "asmitree.h"
 
 /*--------------------------------------------------------------------------------------------------*/
 
 typedef struct
-         {
-          char *Name;
-          Boolean May80;
+        {
+          CPUVar MinCPU;
           Byte Code;
-         } FixedOrder;
+        } FixedOrder;
 
 typedef struct
-         {
-          char *Name;
+        {
           Byte Code;
-         } BaseOrder;
+        } BaseOrder;
 
-#define FixedOrderCnt 27
-#define Op16OrderCnt 22
-#define Op8OrderCnt 10
+#define FixedOrderCnt 29
+#define Op16OrderCnt 24
+#define Op8OrderCnt 12
 #define ALUOrderCnt 8
 
 static FixedOrder *FixedOrders;
-static BaseOrder *Op16Orders;
-static BaseOrder *Op8Orders;
+static FixedOrder *Op16Orders;
+static FixedOrder *Op8Orders;
 static BaseOrder *ALUOrders;
 
-static CPUVar CPU8080,CPU8085;
+static PInstTable InstTable;
 
-/*--------------------------------------------------------------------------------------------------------*/
+static CPUVar CPU8080, CPU8085, CPU8085U;
 
-        static void AddFixed(char *NName, Boolean NMay, Byte NCode)
-BEGIN
-   if (InstrZ>=FixedOrderCnt) exit(255);
-   FixedOrders[InstrZ].Name=NName;
-   FixedOrders[InstrZ].May80=NMay;
-   FixedOrders[InstrZ++].Code=NCode;
-END
-
-        static void AddOp16(char *NName, Byte NCode)
-BEGIN
-   if (InstrZ>=Op16OrderCnt) exit(255);
-   Op16Orders[InstrZ].Name=NName;
-   Op16Orders[InstrZ++].Code=NCode;
-END
-
-        static void AddOp8(char *NName, Byte NCode)
-BEGIN
-   if (InstrZ>=Op8OrderCnt) exit(255);
-   Op8Orders[InstrZ].Name=NName;
-   Op8Orders[InstrZ++].Code=NCode;
-END                         
-
-        static void AddALU(char *NName, Byte NCode)
-BEGIN
-   if (InstrZ>=ALUOrderCnt) exit(255);
-   ALUOrders[InstrZ].Name=NName;
-   ALUOrders[InstrZ++].Code=NCode;
-END           
-
-        static void InitFields(void)
-BEGIN
-   FixedOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*FixedOrderCnt); InstrZ=0;
-   AddFixed("XCHG", True , 0xeb); AddFixed("XTHL", True , 0xe3);
-   AddFixed("SPHL", True , 0xf9); AddFixed("PCHL", True , 0xe9);
-   AddFixed("RET" , True , 0xc9); AddFixed("RC"  , True , 0xd8);
-   AddFixed("RNC" , True , 0xd0); AddFixed("RZ"  , True , 0xc8);
-   AddFixed("RNZ" , True , 0xc0); AddFixed("RP"  , True , 0xf0);
-   AddFixed("RM"  , True , 0xf8); AddFixed("RPE" , True , 0xe8);
-   AddFixed("RPO" , True , 0xe0); AddFixed("RLC" , True , 0x07);
-   AddFixed("RRC" , True , 0x0f); AddFixed("RAL" , True , 0x17);
-   AddFixed("RAR" , True , 0x1f); AddFixed("CMA" , True , 0x2f);
-   AddFixed("STC" , True , 0x37); AddFixed("CMC" , True , 0x3f);
-   AddFixed("DAA" , True , 0x27); AddFixed("EI"  , True , 0xfb);
-   AddFixed("DI"  , True , 0xf3); AddFixed("NOP" , True , 0x00);
-   AddFixed("HLT" , True , 0x76); AddFixed("RIM" , False, 0x20);
-   AddFixed("SIM" , False, 0x30);
-
-   Op16Orders=(BaseOrder *) malloc(sizeof(BaseOrder)*Op16OrderCnt); InstrZ=0;
-   AddOp16("STA" , 0x32); AddOp16("LDA" , 0x3a);
-   AddOp16("SHLD", 0x22); AddOp16("LHLD", 0x2a);
-   AddOp16("JMP" , 0xc3); AddOp16("JC"  , 0xda);
-   AddOp16("JNC" , 0xd2); AddOp16("JZ"  , 0xca);
-   AddOp16("JNZ" , 0xc2); AddOp16("JP"  , 0xf2);
-   AddOp16("JM"  , 0xfa); AddOp16("JPE" , 0xea);
-   AddOp16("JPO" , 0xe2); AddOp16("CALL", 0xcd);
-   AddOp16("CC"  , 0xdc); AddOp16("CNC" , 0xd4);
-   AddOp16("CZ"  , 0xcc); AddOp16("CNZ" , 0xc4);
-   AddOp16("CP"  , 0xf4); AddOp16("CM"  , 0xfc);
-   AddOp16("CPE" , 0xec); AddOp16("CPO" , 0xe4);
-
-   Op8Orders=(BaseOrder *) malloc(sizeof(BaseOrder)*Op8OrderCnt); InstrZ=0;
-   AddOp8("IN"  , 0xdb); AddOp8("OUT" , 0xd3);
-   AddOp8("ADI" , 0xc6); AddOp8("ACI" , 0xce);
-   AddOp8("SUI" , 0xd6); AddOp8("SBI" , 0xde);
-   AddOp8("ANI" , 0xe6); AddOp8("XRI" , 0xee);
-   AddOp8("ORI" , 0xf6); AddOp8("CPI" , 0xfe);
-
-   ALUOrders=(BaseOrder *) malloc(sizeof(BaseOrder)*ALUOrderCnt); InstrZ=0;
-   AddALU("ADD" , 0x80); AddALU("ADC" , 0x88);
-   AddALU("SUB" , 0x90); AddALU("SBB" , 0x98);
-   AddALU("ANA" , 0xa0); AddALU("XRA" , 0xa8);
-   AddALU("ORA" , 0xb0); AddALU("CMP" , 0xb8);
-END
-
-        static void DeinitFields(void)
-BEGIN
-   free(FixedOrders);
-   free(Op16Orders);
-   free(Op8Orders);
-   free(ALUOrders);
-END
-
-/*--------------------------------------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 
         static Boolean DecodeReg8(char *Asc, Byte *Erg)
 BEGIN
@@ -163,25 +87,406 @@ BEGIN
    return ((*Erg)<4);
 END
 
-        static Boolean DecodePseudo(void)
-BEGIN
-   if (Memo("PORT"))
-    BEGIN
-     CodeEquate(SegIO,0,0xff);
-     return True;
-    END
+/*---------------------------------------------------------------------------*/
 
-   return False;
+/* Anweisungen ohne Operanden */
+
+static void DecodeFixed(Word Index)
+{
+  FixedOrder *POrder = FixedOrders + Index;
+
+  if (ArgCnt != 0) WrError(1110);
+  else if (MomCPU < POrder->MinCPU) WrError(1500);
+  else
+  {
+    CodeLen = 1; BAsmCode[0] = POrder->Code;
+  }
+}
+
+/* ein 16-Bit-Operand */
+
+static void DecodeOp16(Word Index)
+{
+  Boolean OK;
+  Word AdrWord;
+  FixedOrder *POrder = Op16Orders + Index;
+
+  if (ArgCnt!=1) WrError(1110);
+  else if (MomCPU < POrder->MinCPU) WrError(1500);
+  else
+  {
+    AdrWord = EvalIntExpression(ArgStr[1], Int16, &OK);
+    if (OK)
+    {
+      CodeLen = 3; BAsmCode[0] = POrder->Code;
+      BAsmCode[1] = Lo(AdrWord); BAsmCode[2] = Hi(AdrWord);
+      ChkSpace(SegCode);
+    }
+  }
+}
+
+static void DecodeOp8(Word Index)
+{
+  Boolean OK;
+  Byte AdrByte;
+  FixedOrder *POrder = Op8Orders + Index;
+
+  if (ArgCnt!=1) WrError(1110);
+  else if (MomCPU < POrder->MinCPU) WrError(1500);
+  else
+  {
+    AdrByte = EvalIntExpression(ArgStr[1], Int8, &OK);
+    if (OK)
+    {
+      CodeLen = 2; BAsmCode[0] = POrder->Code; BAsmCode[1] = AdrByte;
+      if (Index < 2) ChkSpace(SegIO);
+    }
+  }
+}
+
+static void DecodeALU(Word Index)
+{
+  Byte Reg;
+  BaseOrder *POrder = ALUOrders + Index;
+
+  if (ArgCnt!=1) WrError(1110);
+  else if (NOT DecodeReg8(ArgStr[1], &Reg)) WrXError(1980, ArgStr[1]);
+  else
+  {
+    CodeLen = 1; BAsmCode[0] = POrder->Code + Reg;
+  }
+}
+
+static void DecodeMOV(Word Index)
+{
+  Byte Dest;
+
+  UNUSED(Index);
+
+  if (ArgCnt != 2) WrError(1110);
+  else if (NOT DecodeReg8(ArgStr[1], &Dest)) WrXError(1980, ArgStr[1]);
+  else if (NOT DecodeReg8(ArgStr[2], BAsmCode + 0)) WrXError(1980, ArgStr[2]);
+  else
+  {
+    BAsmCode[0] += 0x40 + (Dest << 3);
+    if (BAsmCode[0] == 0x76)
+      WrError(1760);
+    else
+      CodeLen = 1;
+  }
+}
+
+static void DecodeMVI(Word Index)
+{
+  Boolean OK;
+  Byte Reg;
+
+  UNUSED(Index);
+
+  if (ArgCnt != 2) WrError(1110);
+  else
+  {
+    BAsmCode[1] = EvalIntExpression(ArgStr[2], Int8, &OK);
+    if (OK)
+    {
+      if (NOT DecodeReg8(ArgStr[1], &Reg)) WrXError(1980, ArgStr[1]);
+      else
+      {
+        BAsmCode[0] = 0x06 + (Reg << 3); CodeLen = 2;
+      }
+    }
+  }
+}
+
+static void DecodeLXI(Word Index)
+{
+  Boolean OK;
+  Word AdrWord;
+  Byte Reg;
+
+  UNUSED(Index);
+
+  if (ArgCnt != 2) WrError(1110);
+  else
+  {
+    AdrWord = EvalIntExpression(ArgStr[2], Int16, &OK);
+    if (OK)
+    {
+      if (NOT DecodeReg16(ArgStr[1], &Reg)) WrXError(1980, ArgStr[1]);
+      else
+      {
+        BAsmCode[0] = 0x01 + (Reg << 4);
+        BAsmCode[1] = Lo(AdrWord); BAsmCode[2] = Hi(AdrWord);
+        CodeLen = 3;
+      }
+    }
+  }
+}
+
+static void DecodeLDAX_STAX(Word Index)
+{
+  Byte Reg;
+
+  if (ArgCnt != 1) WrError(1110);
+  else if (NOT DecodeReg16(ArgStr[1], &Reg)) WrXError(1980, ArgStr[1]);
+  else switch (Reg)
+  {
+    case 3:                             /* SP */
+     WrError(1135); break;
+    case 2:                             /* H --> MOV A,M oder M,A */
+     CodeLen = 1;
+     BAsmCode[0] = 0x77 + (Index * 7);
+     break;
+    default:
+     CodeLen = 1;
+     BAsmCode[0] = 0x02 + (Reg << 4) + (Index << 3);
+     break;
+  }
+}
+
+static void DecodePUSH_POP(Word Index)
+{
+  Byte Reg;
+  Boolean OK;
+
+  if (ArgCnt != 1) WrError(1110);
+  else
+  {
+    OK = TRUE;
+    if (!strcasecmp(ArgStr[1], "PSW"))
+      Reg = 3;
+    else if (DecodeReg16(ArgStr[1], &Reg))
+    {
+      if (Reg == 3) OK = FALSE;
+    } 
+    if (!OK) WrXError(1980, ArgStr[1]);
+    else
+    {
+      CodeLen = 1; BAsmCode[0] = 0xc1 + (Reg << 4) + Index;
+    }
+  }
+}
+
+static void DecodeRST(Word Index)
+{
+  Byte AdrByte;
+  Boolean OK;
+
+  UNUSED(Index);
+
+  if (ArgCnt != 1) WrError(1110);
+  else if ((MomCPU >= CPU8085U) && (!strcasecmp(ArgStr[1], "V")))
+  {
+    CodeLen = 1; BAsmCode[0] = 0xcb; 
+  }
+  else
+  {
+    AdrByte = EvalIntExpression(ArgStr[1], UInt3, &OK);
+    if (OK)
+    {
+      CodeLen = 1; BAsmCode[0] = 0xc7 + (AdrByte << 3);
+    }
+  }
+}
+
+static void DecodeINR_DCR(Word Index)
+{
+  Byte Reg;
+
+  if (ArgCnt != 1) WrError(1110);
+  else if (!DecodeReg8(ArgStr[1], &Reg)) WrXError(1980, ArgStr[1]);
+  else
+  {
+    CodeLen = 1; BAsmCode[0] = 0x04 + (Reg << 3) + Index;
+  }
+}
+
+static void DecodeINX_DCX(Word Index)
+{
+  Byte Reg;
+
+  if (ArgCnt != 1) WrError(1110);
+  else if (!DecodeReg16(ArgStr[1], &Reg)) WrXError(1980, ArgStr[1]);
+  else
+  {
+    CodeLen = 1; BAsmCode[0] = 0x03 + (Reg << 4) + Index;
+  }
+}
+
+static void DecodeDAD(Word Index)
+{
+  Byte Reg;
+
+  UNUSED(Index);
+
+  if (ArgCnt != 1) WrError(1110);
+  else if (!DecodeReg16(ArgStr[1], &Reg)) WrXError(1980, ArgStr[1]);
+  else
+  {
+    CodeLen = 1; BAsmCode[0] = 0x09 + (Reg << 4);
+  }
+}
+
+static void DecodeDSUB(Word Index) 
+{
+  Byte Reg;
+
+  UNUSED(Index);
+
+  if (!ArgCnt)
+    strcpy(ArgStr[++ArgCnt], "B");
+
+  if (ArgCnt != 1) WrError(1110);
+  else if (MomCPU < CPU8085U) WrError(1500);
+  else if (!DecodeReg16(ArgStr[1], &Reg)) WrXError(1980, ArgStr[1]);
+  else if (Reg != 0) WrXError(1980, ArgStr[1]);
+  else
+  {   
+    CodeLen = 1; BAsmCode[0] = 0x08;
+  }
+}
+
+static void DecodeLHLX_SHLX(Word Index) 
+{
+  Byte Reg;
+
+  UNUSED(Index);
+
+  if (!ArgCnt)
+    strcpy(ArgStr[++ArgCnt], "D");
+
+  if (ArgCnt != 1) WrError(1110);
+  else if (MomCPU < CPU8085U) WrError(1500);
+  else if (!DecodeReg16(ArgStr[1], &Reg)) WrXError(1980, ArgStr[1]);
+  else if (Reg != 1) WrXError(1980, ArgStr[1]);
+  else
+  {   
+    CodeLen = 1; BAsmCode[0] = Index ? 0xed: 0xd9;
+  }
+}
+
+static void DecodePORT(Word Index)
+{
+  UNUSED(Index);
+              
+  CodeEquate(SegIO, 0, 0xff);
+}
+
+/*--------------------------------------------------------------------------------------------------------*/
+
+        static void AddFixed(char *NName, CPUVar NMinCPU, Byte NCode)
+BEGIN
+   if (InstrZ >= FixedOrderCnt) exit(255);
+   FixedOrders[InstrZ].MinCPU = NMinCPU;
+   FixedOrders[InstrZ].Code = NCode;
+   AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 END
+
+        static void AddOp16(char *NName, CPUVar NMinCPU, Byte NCode)
+BEGIN
+   if (InstrZ >= Op16OrderCnt) exit(255);
+   Op16Orders[InstrZ].MinCPU = NMinCPU;
+   Op16Orders[InstrZ].Code = NCode;
+   AddInstTable(InstTable, NName, InstrZ++, DecodeOp16);
+END
+
+        static void AddOp8(char *NName, CPUVar NMinCPU, Byte NCode)
+BEGIN
+   if (InstrZ >= Op8OrderCnt) exit(255);
+   Op8Orders[InstrZ].MinCPU = NMinCPU;  
+   Op8Orders[InstrZ].Code = NCode;
+   AddInstTable(InstTable, NName, InstrZ++, DecodeOp8);
+END                         
+
+        static void AddALU(char *NName, Byte NCode)
+BEGIN
+   if (InstrZ >= ALUOrderCnt) exit(255);
+   ALUOrders[InstrZ].Code = NCode;
+   AddInstTable(InstTable, NName, InstrZ++, DecodeALU);
+END           
+
+        static void InitFields(void)
+BEGIN
+   InstTable = CreateInstTable(103);
+
+   AddInstTable(InstTable, "MOV" , 0, DecodeMOV);
+   AddInstTable(InstTable, "MVI" , 0, DecodeMVI);
+   AddInstTable(InstTable, "LXI" , 0, DecodeLXI);
+   AddInstTable(InstTable, "STAX", 0, DecodeLDAX_STAX);
+   AddInstTable(InstTable, "LDAX", 1, DecodeLDAX_STAX);
+   AddInstTable(InstTable, "SHLX", 0, DecodeLHLX_SHLX);
+   AddInstTable(InstTable, "LHLX", 1, DecodeLHLX_SHLX);
+   AddInstTable(InstTable, "PUSH", 4, DecodePUSH_POP);
+   AddInstTable(InstTable, "POP" , 0, DecodePUSH_POP);
+   AddInstTable(InstTable, "RST" , 0, DecodeRST);
+   AddInstTable(InstTable, "INR" , 0, DecodeINR_DCR);
+   AddInstTable(InstTable, "DCR" , 1, DecodeINR_DCR);
+   AddInstTable(InstTable, "INX" , 0, DecodeINX_DCX);
+   AddInstTable(InstTable, "DCX" , 8, DecodeINX_DCX);
+   AddInstTable(InstTable, "DAD" , 0, DecodeDAD);
+   AddInstTable(InstTable, "DSUB", 0, DecodeDSUB);
+   AddInstTable(InstTable, "PORT", 0, DecodePORT);
+
+   FixedOrders = (FixedOrder *) malloc(sizeof(FixedOrder) * FixedOrderCnt); InstrZ = 0;
+   AddFixed("XCHG", CPU8080 , 0xeb); AddFixed("XTHL", CPU8080 , 0xe3);
+   AddFixed("SPHL", CPU8080 , 0xf9); AddFixed("PCHL", CPU8080 , 0xe9);
+   AddFixed("RET" , CPU8080 , 0xc9); AddFixed("RC"  , CPU8080 , 0xd8);
+   AddFixed("RNC" , CPU8080 , 0xd0); AddFixed("RZ"  , CPU8080 , 0xc8);
+   AddFixed("RNZ" , CPU8080 , 0xc0); AddFixed("RP"  , CPU8080 , 0xf0);
+   AddFixed("RM"  , CPU8080 , 0xf8); AddFixed("RPE" , CPU8080 , 0xe8);
+   AddFixed("RPO" , CPU8080 , 0xe0); AddFixed("RLC" , CPU8080 , 0x07);
+   AddFixed("RRC" , CPU8080 , 0x0f); AddFixed("RAL" , CPU8080 , 0x17);
+   AddFixed("RAR" , CPU8080 , 0x1f); AddFixed("CMA" , CPU8080 , 0x2f);
+   AddFixed("STC" , CPU8080 , 0x37); AddFixed("CMC" , CPU8080 , 0x3f);
+   AddFixed("DAA" , CPU8080 , 0x27); AddFixed("EI"  , CPU8080 , 0xfb);
+   AddFixed("DI"  , CPU8080 , 0xf3); AddFixed("NOP" , CPU8080 , 0x00);
+   AddFixed("HLT" , CPU8080 , 0x76); AddFixed("RIM" , CPU8085 , 0x20);
+   AddFixed("SIM" , CPU8085 , 0x30); AddFixed("ARHL", CPU8085U, 0x10);
+   AddFixed("RDEL", CPU8085U, 0x18); 
+
+   Op16Orders = (FixedOrder *) malloc(sizeof(FixedOrder) * Op16OrderCnt); InstrZ = 0;
+   AddOp16("STA" , CPU8080 , 0x32); AddOp16("LDA" , CPU8080 , 0x3a);
+   AddOp16("SHLD", CPU8080 , 0x22); AddOp16("LHLD", CPU8080 , 0x2a);
+   AddOp16("JMP" , CPU8080 , 0xc3); AddOp16("JC"  , CPU8080 , 0xda);
+   AddOp16("JNC" , CPU8080 , 0xd2); AddOp16("JZ"  , CPU8080 , 0xca);
+   AddOp16("JNZ" , CPU8080 , 0xc2); AddOp16("JP"  , CPU8080 , 0xf2);
+   AddOp16("JM"  , CPU8080 , 0xfa); AddOp16("JPE" , CPU8080 , 0xea);
+   AddOp16("JPO" , CPU8080 , 0xe2); AddOp16("CALL", CPU8080 , 0xcd);
+   AddOp16("CC"  , CPU8080 , 0xdc); AddOp16("CNC" , CPU8080 , 0xd4);
+   AddOp16("CZ"  , CPU8080 , 0xcc); AddOp16("CNZ" , CPU8080 , 0xc4);
+   AddOp16("CP"  , CPU8080 , 0xf4); AddOp16("CM"  , CPU8080 , 0xfc);
+   AddOp16("CPE" , CPU8080 , 0xec); AddOp16("CPO" , CPU8080 , 0xe4);
+   AddOp16("JNX5", CPU8085U, 0xdd); AddOp16("JX5" , CPU8085U, 0xfd);
+
+   Op8Orders = (FixedOrder *) malloc(sizeof(FixedOrder) * Op8OrderCnt); InstrZ = 0;
+   AddOp8("IN"  , CPU8080 , 0xdb); AddOp8("OUT" , CPU8080 , 0xd3);
+   AddOp8("ADI" , CPU8080 , 0xc6); AddOp8("ACI" , CPU8080 , 0xce);
+   AddOp8("SUI" , CPU8080 , 0xd6); AddOp8("SBI" , CPU8080 , 0xde);
+   AddOp8("ANI" , CPU8080 , 0xe6); AddOp8("XRI" , CPU8080 , 0xee);
+   AddOp8("ORI" , CPU8080 , 0xf6); AddOp8("CPI" , CPU8080 , 0xfe);
+   AddOp8("LDHI", CPU8085U, 0x28); AddOp8("LDSI", CPU8085U, 0x38);
+
+   ALUOrders = (BaseOrder *) malloc(sizeof(BaseOrder) * ALUOrderCnt); InstrZ = 0;
+   AddALU("ADD" , 0x80); AddALU("ADC" , 0x88);
+   AddALU("SUB" , 0x90); AddALU("SBB" , 0x98);
+   AddALU("ANA" , 0xa0); AddALU("XRA" , 0xa8);
+   AddALU("ORA" , 0xb0); AddALU("CMP" , 0xb8);
+END
+
+        static void DeinitFields(void)
+BEGIN
+   DestroyInstTable(InstTable);
+   free(FixedOrders);
+   free(Op16Orders);
+   free(Op8Orders);
+   free(ALUOrders);
+END
+
+/*--------------------------------------------------------------------------------------------------------*/
 
         static void MakeCode_85(void)
 BEGIN
-   Boolean OK;
-   Word AdrWord;
-   Byte AdrByte;
-   int z;
-
-   CodeLen=0; DontPrint=False;
+   CodeLen = 0; DontPrint = False;
 
    /* zu ignorierendes */
 
@@ -189,209 +494,12 @@ BEGIN
 
    /* Pseudoanweisungen */
 
-   if (DecodePseudo()) return;
-
    if (DecodeIntelPseudo(False)) return;
 
-   /* Anweisungen ohne Operanden */
+   /* suchen */
 
-   for (z=0; z<FixedOrderCnt; z++)
-    if (Memo(FixedOrders[z].Name))
-     BEGIN
-      if (ArgCnt!=0) WrError(1110);
-      else if ((MomCPU<CPU8085) AND (NOT FixedOrders[z].May80)) WrError(1500);
-      else
-       BEGIN
-        CodeLen=1; BAsmCode[0]=FixedOrders[z].Code;
-       END
-      return;
-     END
-
-   /* ein 16-Bit-Operand */
-
-   for (z=0; z<Op16OrderCnt; z++)
-    if (Memo(Op16Orders[z].Name))
-     BEGIN
-      if (ArgCnt!=1) WrError(1110);
-      else
-       BEGIN
-        AdrWord=EvalIntExpression(ArgStr[1],Int16,&OK);
-        if (OK)
-         BEGIN
-          CodeLen=3; BAsmCode[0]=Op16Orders[z].Code;
-          BAsmCode[1]=Lo(AdrWord); BAsmCode[2]=Hi(AdrWord);
-          ChkSpace(SegCode);
-         END
-       END
-      return;
-     END
-
-   for (z=0; z<Op8OrderCnt; z++)
-    if (Memo(Op8Orders[z].Name))
-     BEGIN
-      if (ArgCnt!=1) WrError(1110);
-      else
-       BEGIN
-        AdrByte=EvalIntExpression(ArgStr[1],Int8,&OK);
-        if (OK)
-         BEGIN
-          CodeLen=2; BAsmCode[0]=Op8Orders[z].Code; BAsmCode[1]=AdrByte;
-          if (z<2) ChkSpace(SegIO);
-         END
-       END
-      return;
-     END
-
-   if (Memo("MOV"))
-    BEGIN
-     if (ArgCnt!=2) WrError(1110);
-     else if (NOT DecodeReg8(ArgStr[1],&AdrByte)) WrError(1980);
-     else if (NOT DecodeReg8(ArgStr[2],BAsmCode+0)) WrError(1980);
-     else
-      BEGIN
-       BAsmCode[0]+=0x40+(AdrByte << 3);
-       if (BAsmCode[0]==0x76) WrError(1760); else CodeLen=1;
-      END
-     return;
-    END
-
-   if (Memo("MVI"))
-    BEGIN
-     if (ArgCnt!=2) WrError(1110);
-     else
-      BEGIN
-       BAsmCode[1]=EvalIntExpression(ArgStr[2],Int8,&OK);
-       if (OK)
-        BEGIN
-         if (NOT DecodeReg8(ArgStr[1],&AdrByte)) WrError(1980);
-         else
-          BEGIN
-           BAsmCode[0]=0x06+(AdrByte << 3); CodeLen=2;
-          END
-        END
-      END
-     return;
-    END
-
-   if (Memo("LXI"))
-    BEGIN
-     if (ArgCnt!=2) WrError(1110);
-     else
-      BEGIN
-       AdrWord=EvalIntExpression(ArgStr[2],Int16,&OK);
-       if (OK)
-        BEGIN
-         if (NOT DecodeReg16(ArgStr[1],&AdrByte)) WrError(1980);
-         else
-          BEGIN
-           BAsmCode[0]=0x01+(AdrByte << 4);
-           BAsmCode[1]=Lo(AdrWord); BAsmCode[2]=Hi(AdrWord);
-           CodeLen=3;
-          END
-        END
-      END
-     return;
-    END
-
-   if ((Memo("LDAX")) OR (Memo("STAX")))
-    BEGIN
-     if (ArgCnt!=1) WrError(1110);
-     else if (NOT DecodeReg16(ArgStr[1],&AdrByte)) WrError(1980);
-     else switch (AdrByte)
-      BEGIN
-       case 3:                             /* SP */
-        WrError(1135); break;
-       case 2:                             /* H --> MOV A,M oder M,A */
-        CodeLen=1;
-        BAsmCode[0]=(Memo("LDAX")) ? 0x7e : 0x77;
-        break;
-       default:
-        CodeLen=1;
-        BAsmCode[0]=0x02+(AdrByte << 4);
-        if (Memo("LDAX")) BAsmCode[0]+=8;
-        break;
-      END
-     return;
-    END
-
-   if ((Memo("PUSH")) OR (Memo("POP")))
-    BEGIN
-     if (ArgCnt!=1) WrError(1110);
-     else
-      BEGIN
-       if (strcasecmp(ArgStr[1],"PSW")==0) strmaxcpy(ArgStr[1],"SP",255);
-       if (NOT DecodeReg16(ArgStr[1],&AdrByte)) WrError(1980);
-       else
-        BEGIN
-         CodeLen=1; BAsmCode[0]=0xc1+(AdrByte << 4);
-         if (Memo("PUSH")) BAsmCode[0]+=4;
-        END
-      END
-     return;
-    END
-
-   if (Memo("RST"))
-    BEGIN
-     if (ArgCnt!=1) WrError(1110);
-     else
-      BEGIN
-       AdrByte=EvalIntExpression(ArgStr[1],UInt3,&OK);
-       if (OK)
-        BEGIN
-         CodeLen=1; BAsmCode[0]=0xc7+(AdrByte << 3);
-        END
-      END
-     return;
-    END
-
-   if ((Memo("INR")) OR (Memo("DCR")))
-    BEGIN
-     if (ArgCnt!=1) WrError(1110);
-     else if (NOT DecodeReg8(ArgStr[1],&AdrByte)) WrError(1980);
-     else
-      BEGIN
-       CodeLen=1; BAsmCode[0]=0x04+(AdrByte << 3);
-       if (Memo("DCR")) BAsmCode[0]++;
-      END
-     return;
-    END
-
-   if ((Memo("INX")) OR (Memo("DCX")))
-    BEGIN
-     if (ArgCnt!=1) WrError(1110);
-     else if (NOT DecodeReg16(ArgStr[1],&AdrByte)) WrError(1980);
-     else
-      BEGIN
-       CodeLen=1; BAsmCode[0]=0x03+(AdrByte << 4);
-       if (Memo("DCX")) BAsmCode[0]+=8;
-      END
-     return;
-    END
-
-   if (Memo("DAD"))
-    BEGIN
-     if (ArgCnt!=1) WrError(1110);
-     else if (NOT DecodeReg16(ArgStr[1],&AdrByte)) WrError(1980);
-     else
-      BEGIN
-       CodeLen=1; BAsmCode[0]=0x09+(AdrByte << 4);
-      END
-     return;
-    END
-
-   for (z=0; z<ALUOrderCnt; z++)
-    if (Memo(ALUOrders[z].Name))
-     BEGIN
-      if (ArgCnt!=1) WrError(1110);
-      else if (NOT DecodeReg8(ArgStr[1],&AdrByte)) WrError(1980);
-      else
-       BEGIN
-        CodeLen=1; BAsmCode[0]=ALUOrders[z].Code+AdrByte;
-       END
-      return;
-     END
-
-   WrXError(1200,OpPart);
+   if (!LookupInstTable(InstTable, OpPart))
+     WrXError(1200,OpPart);
 END
 
         static Boolean IsDef_85(void)
@@ -406,23 +514,24 @@ END
 
         static void SwitchTo_85(void)
 BEGIN
-   TurnWords=False; ConstMode=ConstModeIntel; SetIsOccupied=False;
+   TurnWords = False; ConstMode = ConstModeIntel; SetIsOccupied = False;
 
-   PCSymbol="$"; HeaderID=0x41; NOPCode=0x00;
-   DivideChars=","; HasAttrs=False;
+   PCSymbol = "$"; HeaderID = 0x41; NOPCode = 0x00;
+   DivideChars = ","; HasAttrs = False;
 
-   ValidSegs=(1<<SegCode)|(1<<SegIO);
-   Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
+   ValidSegs = (1 << SegCode) | (1 << SegIO);
+   Grans[SegCode] = 1; ListGrans[SegCode] = 1; SegInits[SegCode] = 0;
    SegLimits[SegCode] = 0xffff;
-   Grans[SegIO  ]=1; ListGrans[SegIO  ]=1; SegInits[SegIO  ]=0;
+   Grans[SegIO  ] = 1; ListGrans[SegIO  ] = 1; SegInits[SegIO  ] = 0;
    SegLimits[SegIO  ] = 0xff;
 
-   MakeCode=MakeCode_85; IsDef=IsDef_85;
-   SwitchFrom=SwitchFrom_85; InitFields();
+   MakeCode = MakeCode_85; IsDef = IsDef_85;
+   SwitchFrom = SwitchFrom_85; InitFields();
 END
 
         void code85_init(void)
 BEGIN
-   CPU8080=AddCPU("8080",SwitchTo_85);
-   CPU8085=AddCPU("8085",SwitchTo_85);
+   CPU8080 = AddCPU("8080", SwitchTo_85);
+   CPU8085 = AddCPU("8085", SwitchTo_85);
+   CPU8085U = AddCPU("8085UNDOC", SwitchTo_85);
 END

@@ -20,6 +20,13 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: code960.c,v 1.2 2002/08/14 18:43:49 alfred Exp $                     */
+/*****************************************************************************
+ * $Log: code960.c,v $
+ * Revision 1.2  2002/08/14 18:43:49  alfred
+ * - warn null allocation, remove some warnings
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -428,6 +435,7 @@ BEGIN
        if ((OK) AND (NOT FirstPassUnknown))
         BEGIN
          DontPrint=True;
+         if (!Size) WrError(290);
          CodeLen=Size;
          BookKeeping();
         END

@@ -11,4 +11,7 @@
 /*****************************************************************************/
 
 extern char *GetErrorPos(void);
+
+extern void HandleLabel(char *Name, LargeWord Value);
+
 #endif /* _AS_H */

@@ -14,6 +14,14 @@
 /*           19. 8.2001 fixed errors for lower halves of XIX...XSP           */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: code96c141.c,v 1.2 2002/10/20 09:22:25 alfred Exp $                          */
+/*****************************************************************************
+ * $Log: code96c141.c,v $
+ * Revision 1.2  2002/10/20 09:22:25  alfred
+ * - work around the parser problem related to the ' character
+ *
+ * Revision 1.7  2002/10/07 20:25:01  alfred
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -959,6 +967,11 @@ END
 BEGIN
    Byte HReg;
    UNUSED(Index);
+
+   /* work around the parser problem related to the ' character */
+
+   if (!strncasecmp(ArgStr[2], "F\'", 2))
+     ArgStr[2][2] = '\0';
 
    if (ArgCnt!=2) WrError(1110);
    else if ((ArgPair("F","F\'")) OR (ArgPair("F`","F"))) 

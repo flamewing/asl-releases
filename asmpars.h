@@ -17,9 +17,15 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.h,v 1.2 2002/05/19 13:44:52 alfred Exp $                     */
+/* $Id: asmpars.h,v 1.4 2002/10/07 20:25:01 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.h,v $
+ * Revision 1.4  2002/10/07 20:25:01  alfred
+ * - added '/' nameless temporary symbols
+ *
+ * Revision 1.3  2002/09/29 17:05:41  alfred
+ * - ass +/- temporary symbols
+ *
  * Revision 1.2  2002/05/19 13:44:52  alfred
  * - added ClearSectionUsage()
  *
@@ -63,7 +69,9 @@ extern Boolean FirstPassUnknown;
 extern Boolean SymbolQuestionable;
 extern Boolean UsesForwards;
 extern LongInt MomLocHandle;
-extern LongInt TmpSymCounter;
+extern LongInt TmpSymCounter,
+               FwdSymCounter,
+               BackSymCounter;
 extern char TmpSymCounterVal[10];
 extern LongInt LocHandleCnt;
 extern Boolean BalanceTree;
@@ -72,6 +80,7 @@ extern LongInt MomLocHandle;
 
 extern void AsmParsInit(void);
 
+extern void InitTmpSymbols(void);
 
 extern Boolean SingleBit(LargeInt Inp, LargeInt *Erg);
 

@@ -13,6 +13,17 @@
 /*           2002-01-13 Borland Pascal 3.1 doesn't like empty default clause */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: codepseudo.c,v 1.4 2002/10/26 09:57:47 alfred Exp $                          */
+/***************************************************************************** 
+ * $Log: codepseudo.c,v $
+ * Revision 1.4  2002/10/26 09:57:47  alfred
+ * - allow DC with ? as argument
+ *
+ * Revision 1.3  2002/08/14 18:43:49  alfred
+ * - warn null allocation, remove some warnings
+ *
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -142,7 +153,7 @@ BEGIN
       CodeLen+=(*Cnt=strlen(t.Contents.Ascii));
       Result=True;
       break;
-     case TempNone:
+     default:
       break;
     END
 
@@ -223,7 +234,8 @@ BEGIN
    KillBlanks(Asc); EvalExpression(Asc,&erg);
    switch (erg.Typ)
     BEGIN
-     case TempNone: return Result;
+     case TempNone:
+      return Result;
      case TempInt:
       if (RangeCheck(erg.Contents.Int,Int32))
        BEGIN
@@ -252,6 +264,7 @@ BEGIN
        END
       break;
      case TempString:
+     case TempAll:
       WrError(1135);
       return Result;
     END
@@ -314,6 +327,7 @@ BEGIN
       CodeLen+=8;
       break;
      case TempString:
+     case TempAll:
       WrError(1135);
       return Result;
     END
@@ -528,28 +542,33 @@ BEGIN
        z++;
       END
      while ((OK) AND (z<=ArgCnt));
-     DontPrint=(DSFlag==DSSpace);
-     if (DontPrint) BookKeeping();
+     DontPrint = (DSFlag == DSSpace);
+     if (DontPrint)
+     {
+       BookKeeping();
+       if (!CodeLen) WrError(290);
+     }
      if (OK) ActListGran=1;
      return True;
     END
 
-   if (Ident=='S')
-    BEGIN
-     if (ArgCnt!=1) WrError(1110);
+   if (Ident == 'S')
+   {
+     if (ArgCnt != 1) WrError(1110);
      else
-      BEGIN
-       FirstPassUnknown=False;
-       HVal=EvalIntExpression(ArgStr[1],Int32,&OK);
+     {
+       FirstPassUnknown = False;
+       HVal = EvalIntExpression(ArgStr[1], Int32, &OK);
        if (FirstPassUnknown) WrError(1820);
        else if (OK)
-        BEGIN
-         DontPrint=True; CodeLen=HVal;
+       {
+         DontPrint = True; CodeLen = HVal;
+         if (!HVal) WrError(290);
          BookKeeping();
-        END
-      END
+       }
+     }
      return True;
-    END
+   }
 
    return False;
 END
@@ -750,6 +769,7 @@ BEGIN
      else if (OK)
       BEGIN
        DontPrint=True; CodeLen=HVal16;
+       if (!HVal16) WrError(290);
        BookKeeping();
       END
     END
@@ -848,7 +868,7 @@ BEGIN
    Word TurnField[8];
    char *zp;
    LongInt z2;
-   LongInt WSize,Rep=0;
+   LongInt WSize,Rep = 0;
    LongInt NewPC,HVal,WLen;
 #ifdef HAS64
    QuadInt QVal;
@@ -856,34 +876,71 @@ BEGIN
    Integer HVal16;
    Double DVal;
    TempResult t;
-   Boolean OK,ValOK;
+   Boolean OK, ValOK;
+   ShortInt SpaceFlag;
+
    UNUSED(Turn);
 
-   if (OpSize<0) OpSize=1;
+   if (OpSize < 0)
+     OpSize = 1;
 
-   if (*OpPart!='D') return False;
+   switch (OpSize)
+   {
+     case 0: WSize = 1; break;
+     case 1: WSize = 2; break;
+     case 2:
+     case 4: WSize = 4; break;
+     case 3:
+     case 5: WSize = 8; break;
+     case 6:
+     case 7: WSize = 12; break;
+     default: WSize = 0;
+   }
+
+   if (*OpPart != 'D')
+     return False;
 
    if (Memo("DC"))
-    BEGIN
-     if (ArgCnt==0) WrError(1110);
+   {
+     if (ArgCnt == 0) WrError(1110);
      else
-      BEGIN
-       OK=True; z=1; WLen=0;
-       do
-        BEGIN
-         FirstPassUnknown=False;
-         OK=CutRep(ArgStr[z],&Rep);
+     {
+       OK = True; z = 1; WLen = 0; SpaceFlag = -1;
+
+       while ((z <= ArgCnt) && (OK))
+       {
+         FirstPassUnknown = False;
+         OK = CutRep(ArgStr[z], &Rep);
          if (OK)
-          BEGIN
+         {
            if (FirstPassUnknown) WrError(1820);
+           else if (!strcmp(ArgStr[z], "?"))
+           {
+             if (SpaceFlag == 0)
+             {
+               WrError(1930);
+               OK = FALSE;
+             }
+             else
+             {
+               SpaceFlag = 1;
+               CodeLen += (Rep * WSize);
+             }
+           }
+           else if (SpaceFlag == 1)
+           {
+             WrError(1930);
+             OK = FALSE;
+           }
            else
-            BEGIN
+           {
+             SpaceFlag = 0;
              switch (OpSize)
-              BEGIN
+             {
                case 0:
-                FirstPassUnknown=False;
-                EvalExpression(ArgStr[z],&t);
-                if ((FirstPassUnknown) AND (t.Typ==TempInt)) t.Contents.Int&=0xff;
+                FirstPassUnknown = False;
+                EvalExpression(ArgStr[z], &t);
+                if ((FirstPassUnknown) AND (t.Typ == TempInt)) t.Contents.Int &= 0xff;
                 switch (t.Typ)
                  BEGIN
                   case TempInt:
@@ -1154,54 +1211,81 @@ BEGIN
                    END
                  END
                 break;
-              END
-            END
-          END
+             }
+           }
+         }
          z++;
-        END
-       while ((z<=ArgCnt) AND (OK));
-       if (NOT OK) CodeLen=0;
-       if ((DoPadding) AND ((CodeLen&1)==1)) EnterByte(0);
-      END
+       }
+
+       /* purge results if an error occured */
+
+       if (NOT OK) CodeLen = 0;
+
+       /* just space reservation ? */
+
+       else if (SpaceFlag == 1)
+       {
+         DontPrint = True;
+         if ((DoPadding) && (CodeLen & 1))
+           CodeLen++;
+       }
+
+       /* otherwise, we actually disposed values */
+
+       else
+       {
+         if ((DoPadding) && ((CodeLen&1)==1))
+           EnterByte(0);
+       }
+     }
      return True;
-    END
+   }
 
    if (Memo("DS"))
-    BEGIN
-     if (ArgCnt!=1) WrError(1110);
+   {
+     if (ArgCnt != 1) WrError(1110);
      else
-      BEGIN
-       FirstPassUnknown=False;
-       HVal=EvalIntExpression(ArgStr[1],Int32,&ValOK);
+     {
+       FirstPassUnknown = False;
+       HVal=EvalIntExpression(ArgStr[1], Int32, &ValOK);
        if (FirstPassUnknown) WrError(1820);
        if ((ValOK) AND (NOT FirstPassUnknown))
-        BEGIN
-         DontPrint=True;
+       {
+         DontPrint = True;
          switch (OpSize)
-          BEGIN
-           case 0: WSize=1; if (((HVal&1)==1) AND (DoPadding)) HVal++; break;
-           case 1: WSize=2; break;
+         {
+           case 0: WSize = 1; if (((HVal & 1) == 1) AND (DoPadding)) HVal++; break;
+           case 1: WSize = 2; break;
            case 2:
-           case 4: WSize=4; break;
+           case 4: WSize = 4; break;
            case 3:
-           case 5: WSize=8; break;
+           case 5: WSize = 8; break;
            case 6:
-           case 7: WSize=12; break;
-           default: WSize=0;
-          END
-         if (HVal==0)
-          BEGIN
-           NewPC=ProgCounter()+WSize-1;
-           NewPC=NewPC-(NewPC % WSize);
-           CodeLen=NewPC-ProgCounter();
-           if (CodeLen==0) DontPrint=False;
-          END
-         else CodeLen=HVal*WSize;
+           case 7: WSize = 12; break;
+           default: WSize = 0;
+         }
+
+         /* value of 0 means aligning the PC.  Doesn't make sense
+            for bytes, since all adresses are integral numbers :-) */
+
+         if (HVal == 0)
+         {
+           NewPC = ProgCounter() + WSize - 1;
+           NewPC = NewPC-(NewPC % WSize);
+           CodeLen = NewPC - ProgCounter();
+           if (CodeLen == 0)
+           {
+             DontPrint = False;
+             if (WSize == 1) WrError(290);
+           }
+         }
+         else
+           CodeLen = HVal * WSize;
          if (DontPrint) BookKeeping();
-        END
-      END
+       }
+     }
      return True;
-    END
+   }
 
    return False;
 END
@@ -1415,6 +1499,7 @@ Boolean DecodeTIPseudo(void)
     if (!ok) 
       return True;
     DontPrint = True;
+    if (!size) WrError(290);
     CodeLen = size;
     BookKeeping();
     return True;

@@ -20,6 +20,7 @@
 #include "stringlists.h"
 #include "strutil.h"
 #include "chunks.h"
+#include "trees.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
@@ -242,140 +243,65 @@ END
 
 typedef struct _TMacroNode
          {
-	  struct _TMacroNode *Left,*Right; /* Soehne im Baum */
-          ShortInt Balance;
-	  LongInt DefSection;              /* Gueltigkeitssektion */
+          TTree Tree;
 	  Boolean Defined;
 	  PMacroRec Contents;
          } TMacroNode,*PMacroNode;
 
 static PMacroNode MacroRoot;
 
-        static Boolean AddMacro_AddNode(PMacroNode *Node, PMacroRec Neu, 
-                                        LongInt DefSect, Boolean Protest)
-BEGIN
-   Boolean Grown;
-   PMacroNode p1,p2;
-   Boolean Result;
-   int SErg;
+static Boolean MacroAdder(PTree *PDest, PTree Neu, void *pData)
+{
+  PMacroNode NewNode = (PMacroNode) Neu, *Node;
+  Boolean Protest = *((Boolean*)pData), Result = False;
 
-   ChkStack();
+  if (!PDest)
+  {
+    NewNode->Defined = TRUE; 
+    return True;
+  }
 
+  Node = (PMacroNode*) PDest;
+  if ((*Node)->Defined)
+  {
+    if (Protest) WrXError(1815,Neu->Name);
+    else
+    {
+      ClearMacroRec(&((*Node)->Contents), TRUE); (*Node)->Contents = NewNode->Contents;
+    }
+  }
+  else
+  {
+    ClearMacroRec(&((*Node)->Contents), TRUE); (*Node)->Contents = NewNode->Contents;
+    (*Node)->Defined = True;
+    return True;
+  }
+  return Result;
+}
 
-   if (*Node==Nil)
-    BEGIN
-     *Node=(PMacroNode) malloc(sizeof(TMacroNode));
-     (*Node)->Left=Nil; (*Node)->Right=Nil; 
-     (*Node)->Balance=0; (*Node)->Defined=True;
-     (*Node)->DefSection=DefSect; (*Node)->Contents=Neu;
-     return True;
-    END
-   else Result=False;
+void AddMacro(PMacroRec Neu, LongInt DefSect, Boolean Protest)
+{
+   PMacroNode NewNode;
 
-   SErg=StrCmp(Neu->Name,(*Node)->Contents->Name,DefSect,(*Node)->DefSection);
-   if (SErg>0)
-    BEGIN
-     Grown=AddMacro_AddNode(&((*Node)->Right),Neu,DefSect,Protest);
-     if ((BalanceTree) AND (Grown))
-      switch ((*Node)->Balance)
-       BEGIN
-        case -1:
-         (*Node)->Balance=0;
-         break;
-        case 0:
-         (*Node)->Balance=1; Result=True;
-         break;
-        case 1:
-         p1=(*Node)->Right;
-         if (p1->Balance==1)
-          BEGIN
-           (*Node)->Right=p1->Left; p1->Left=(*Node);
-           (*Node)->Balance=0; *Node=p1;
-          END
-         else
-          BEGIN
-           p2=p1->Left;
-           p1->Left=p2->Right; p2->Right=p1;
-           (*Node)->Right=p2->Left; p2->Left=(*Node);
-           if (p2->Balance== 1) (*Node)->Balance=(-1); else (*Node)->Balance=0;
-           if (p2->Balance==-1) p1     ->Balance=   1; else p1     ->Balance=0;
-           *Node=p2;
-          END
-         (*Node)->Balance=0;
-         break;
-       END
-    END
-   else if (SErg<0)
-    BEGIN
-     Grown=AddMacro_AddNode(&((*Node)->Left),Neu,DefSect,Protest);
-     if ((BalanceTree) AND (Grown))
-      switch ((*Node)->Balance)
-       BEGIN
-        case 1:
-         (*Node)->Balance=0;
-         break;
-        case 0:
-         (*Node)->Balance=(-1); Result=True; 
-         break;
-        case -1:
-         p1=(*Node)->Left;
-         if (p1->Balance==-1)
-          BEGIN
-           (*Node)->Left=p1->Right; p1->Right=(*Node);
-           (*Node)->Balance=0; *Node=p1;
-          END
-         else
-          BEGIN
-           p2=p1->Right;
-           p1->Right=p2->Left; p2->Left=p1;
-           (*Node)->Left=p2->Right; p2->Right=(*Node);
-           if (p2->Balance==-1) (*Node)->Balance=   1; else (*Node)->Balance=0;
-           if (p2->Balance== 1) p1     ->Balance=(-1); else p1     ->Balance=0;
-           *Node=p2;
-          END
-         (*Node)->Balance=0;
-         break;
-       END
-    END
-   else
-    BEGIN
-     if ((*Node)->Defined)
-      if (Protest) WrXError(1815,Neu->Name);
-      else
-       BEGIN
-        ClearMacroRec(&((*Node)->Contents)); (*Node)->Contents=Neu;
-        (*Node)->DefSection=DefSect;
-       END
-     else 
-      BEGIN
-       ClearMacroRec(&((*Node)->Contents)); (*Node)->Contents=Neu;
-       (*Node)->DefSection=DefSect; (*Node)->Defined=True;
-      END
-    END
-
-   return Result;
-END
-
-	void AddMacro(PMacroRec Neu, LongInt DefSect, Boolean Protest)
-BEGIN
    if (NOT CaseSensitive) NLS_UpString(Neu->Name);
-   AddMacro_AddNode(&MacroRoot,Neu,DefSect,Protest);
-END
+   NewNode = (PMacroNode) malloc(sizeof(TMacroNode));
+   NewNode->Tree.Left = Nil; NewNode->Tree.Right = Nil;
+   NewNode->Tree.Name = strdup(Neu->Name);
+   NewNode->Tree.Attribute = DefSect;
+   NewNode->Contents = Neu;
+   
+   EnterTree((PTree*)&MacroRoot, &(NewNode->Tree), MacroAdder, &Protest);
+}
 
-	static Boolean FoundMacro_FNode(LongInt Handle,PMacroRec *Erg, char *Part)
-BEGIN
+static PMacroRec FoundMacro_FNode(LongInt Handle, char *Part)
+{
    PMacroNode Lauf;
-   int CErg;
+   PMacroRec Result = NULL;
 
-   Lauf=MacroRoot; CErg=2;
-   while ((Lauf!=Nil) AND (CErg!=0))
-    BEGIN
-     if ((CErg=StrCmp(Part,Lauf->Contents->Name,Handle,Lauf->DefSection))<0) Lauf=Lauf->Left;
-     else if (CErg>0) Lauf=Lauf->Right;
-    END
-   if (Lauf!=Nil) *Erg=Lauf->Contents;
-   return (Lauf!=Nil);
-END
+   Lauf = (PMacroNode) SearchTree((PTree)MacroRoot, Part, Handle);
+   if (Lauf != Nil) Result = Lauf->Contents;
+   return Result;
+}
 
 	Boolean FoundMacro(PMacroRec *Erg)
 BEGIN
@@ -384,115 +310,110 @@ BEGIN
 
    strmaxcpy(Part,LOpPart,255); if (NOT CaseSensitive) NLS_UpString(Part);
 
-   if (FoundMacro_FNode(MomSectionHandle,Erg,Part)) return True;
-   Lauf=SectionStack;
-   while (Lauf!=Nil)
-    BEGIN
-     if (FoundMacro_FNode(Lauf->Handle,Erg,Part)) return True;
-     Lauf=Lauf->Next;
-    END
+   if ((*Erg = FoundMacro_FNode(MomSectionHandle, Part))) return True;
+   Lauf = SectionStack;
+   while (Lauf != Nil)
+   {
+     if ((*Erg = FoundMacro_FNode(Lauf->Handle, Part))) return True;
+     Lauf = Lauf->Next;
+   }
    return False;
 END
 
-	static void ClearMacroList_ClearNode(PMacroNode *Node)
-BEGIN
-   ChkStack();
+	static void ClearMacroList_ClearNode(PTree Tree, void *pData)
+{
+   PMacroNode Node = (PMacroNode) Tree;
+   UNUSED(pData);
 
-   if (*Node==Nil) return;
+   ClearMacroRec(&(Node->Contents), TRUE);
+}
 
-   ClearMacroList_ClearNode(&((*Node)->Left)); 
-   ClearMacroList_ClearNode(&((*Node)->Right));
+void ClearMacroList(void)
+{
+   DestroyTree((PTree*)&MacroRoot, ClearMacroList_ClearNode, NULL);
+}
 
-   ClearMacroRec(&((*Node)->Contents)); free(*Node); *Node=Nil;
-END
+static void ResetMacroDefines_ResetNode(PTree Tree, void *pData)
+{
+   PMacroNode Node = (PMacroNode)Tree;
+   UNUSED(pData);
 
-	void ClearMacroList(void)
-BEGIN
-   ClearMacroList_ClearNode(&MacroRoot);
-END
+   Node->Defined = False;
+}
 
-	static void ResetMacroDefines_ResetNode(PMacroNode Node)
-BEGIN
-   ChkStack();
+void ResetMacroDefines(void)
+{
+   IterTree((PTree)MacroRoot, ResetMacroDefines_ResetNode, NULL);
+}
 
-   if (Node==Nil) return;
-
-   ResetMacroDefines_ResetNode(Node->Left); 
-   ResetMacroDefines_ResetNode(Node->Right);
-   Node->Defined=False;
-END
-
-	void ResetMacroDefines(void)
-BEGIN
-   ResetMacroDefines_ResetNode(MacroRoot);
-END
-
-	void ClearMacroRec(PMacroRec *Alt)
-BEGIN
-   free((*Alt)->Name);
+void ClearMacroRec(PMacroRec *Alt, Boolean Complete)
+{
+   if ((*Alt)->Name)
+   {
+     free((*Alt)->Name); (*Alt)->Name = NULL;
+   }
    ClearStringList(&((*Alt)->FirstLine));
-   free(*Alt); *Alt=Nil;
+
+   if (Complete)
+   {
+     free(*Alt); *Alt = Nil;
+   }
 END
 
-        static void PrintMacroList_PNode(PMacroNode Node, LongInt *Sum, Boolean *cnt, char *OneS)
+typedef struct
+        {
+          LongInt Sum;
+          Boolean cnt;
+          String OneS;
+        } TMacroListContext;
+
+        static void PrintMacroList_PNode(PTree Tree, void *pData)
 BEGIN
+   PMacroNode Node = (PMacroNode)Tree;
+   TMacroListContext *pContext = (TMacroListContext*) pData;
    String h;
 
    strmaxcpy(h,Node->Contents->Name,255);
-   if (Node->DefSection!=-1)
+   if (Node->Tree.Attribute!=-1)
     BEGIN
      strmaxcat(h,"[",255);
-     strmaxcat(h,GetSectionName(Node->DefSection),255);
+     strmaxcat(h,GetSectionName(Node->Tree.Attribute),255);
      strmaxcat(h,"]",255);
     END
-   strmaxcat(OneS,h,255);
-   if (strlen(h)<37) strmaxcat(OneS,Blanks(37-strlen(h)),255);
-   if (NOT (*cnt)) strmaxcat(OneS," | ",255);
+   strmaxcat(pContext->OneS, h, 255);
+   if (strlen(h) < 37) strmaxcat(pContext->OneS, Blanks(37 - strlen(h)), 255);
+   if (NOT (pContext->cnt)) strmaxcat(pContext->OneS, " | ", 255);
    else
     BEGIN
-     WrLstLine(OneS); OneS[0]='\0';
+     WrLstLine(pContext->OneS); pContext->OneS[0]='\0';
     END
-   *cnt=NOT (*cnt); (*Sum)++;
+   pContext->cnt = NOT pContext->cnt;
+   pContext->Sum++;
 END
 
-	static void PrintMacroList_PrintNode(PMacroNode Node, LongInt *Sum, Boolean *cnt, char *OneS)
-BEGIN
-   if (Node==Nil) return;
-   ChkStack();
-
-   PrintMacroList_PrintNode(Node->Left,Sum,cnt,OneS);
-
-   PrintMacroList_PNode(Node,Sum,cnt,OneS);
-
-   PrintMacroList_PrintNode(Node->Right,Sum,cnt,OneS);
-END
-
-	void PrintMacroList(void)
-BEGIN
-   String OneS;
-   Boolean cnt;
-   LongInt Sum;
+void PrintMacroList(void)
+{
+   TMacroListContext Context;
 
    if (MacroRoot==Nil) return;
 
-   NewPage(ChapDepth,True);
+   NewPage(ChapDepth, True);
    WrLstLine(getmessage(Num_ListMacListHead1));
    WrLstLine(getmessage(Num_ListMacListHead2));
    WrLstLine("");
 
-   OneS[0]='\0'; cnt=False; Sum=0; 
-   PrintMacroList_PrintNode(MacroRoot,&Sum,&cnt,OneS);
-   if (cnt)
-    BEGIN
-     OneS[strlen(OneS)-1]='\0';
-     WrLstLine(OneS);
-    END
+   Context.OneS[0] = '\0'; Context.cnt = False; Context.Sum = 0; 
+   IterTree((PTree)MacroRoot, PrintMacroList_PNode, &Context);
+   if (Context.cnt)
+   {
+     Context.OneS[strlen(Context.OneS) - 1] = '\0';
+     WrLstLine(Context.OneS);
+   }
    WrLstLine("");
-   sprintf(OneS,"%7d",Sum);
-   strmaxcat(OneS,getmessage((Sum==1)?Num_ListMacSumMsg:Num_ListMacSumsMsg),255);
-   WrLstLine(OneS);
+   sprintf(Context.OneS, "%7d%s", Context.Sum, getmessage((Context.Sum == 1) ? Num_ListMacSumMsg : Num_ListMacSumsMsg));
+   WrLstLine(Context.OneS);
    WrLstLine("");
-END
+}
 
 /*=== Eingabefilter Makroprozessor ========================================*/
 

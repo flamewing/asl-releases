@@ -82,16 +82,17 @@ static Byte Buffer[BufferSize];
 
         static void OpenTarget(void)
 BEGIN
-   LongWord Rest,Trans;
+   LongWord Rest, Trans, AHeader;
 
    TargFile=fopen(TargName,OPENWRMODE);
    if (TargFile==Nil) ChkIO(TargName); 
    RealFileLen=((StopAdr-StartAdr+1)*MaxGran)/SizeDiv;
 
+   AHeader = abs(StartHeader);
    if (StartHeader!=0)
     BEGIN
-     memset(Buffer,0,abs(StartHeader));
-     if (fwrite(Buffer,1,abs(StartHeader),TargFile)!=abs(StartHeader)) ChkIO(TargName);
+     memset(Buffer,0,AHeader);
+     if (fwrite(Buffer,1,abs(StartHeader),TargFile)!=AHeader) ChkIO(TargName);
     END
 
    memset(Buffer,FillVal,BufferSize);
@@ -107,18 +108,19 @@ END
 
 	static void CloseTarget(void)
 BEGIN
-   LongWord Sum,Rest,Trans,Real,z,bpos;
+   LongWord Sum,Rest,Trans,Real,z,bpos, AHeader;
 
+   AHeader = abs(StartHeader);
    if ((EntryAdrPresent) AND (StartHeader!=0))
     BEGIN
      rewind(TargFile); 
      bpos=((StartHeader>0) ? 0 : -1-StartHeader)<<3;
-     for (z=0; z<abs(StartHeader); z++)
+     for (z=0; z<AHeader; z++)
       BEGIN
        Buffer[z]=(EntryAdr >> bpos) & 0xff;
        bpos += (StartHeader>0) ? 8 : -8;
       END
-     if (fwrite(Buffer,1,abs(StartHeader),TargFile)!=abs(StartHeader)) ChkIO(TargName);
+     if (fwrite(Buffer,1,AHeader,TargFile)!=AHeader) ChkIO(TargName);
     END
 
    if (fclose(TargFile)==EOF) ChkIO(TargName);
@@ -126,7 +128,7 @@ BEGIN
    if (DoCheckSum)
     BEGIN
      TargFile=fopen(TargName,OPENUPMODE); if (TargFile==Nil) ChkIO(TargName);
-     if (fseek(TargFile,abs(StartHeader),SEEK_SET)==-1) ChkIO(TargName);
+     if (fseek(TargFile,AHeader,SEEK_SET)==-1) ChkIO(TargName);
      Rest=FileSize(TargFile)-1;
      Sum=0;
      while (Rest!=0)
@@ -154,7 +156,8 @@ BEGIN
    LongWord InpStart,SumLen;
    Word InpLen,TransLen,ResLen;
    Boolean doit;
-   LongWord ErgStart,ErgStop,NextPos;
+   LongWord ErgStart,ErgStop;
+   LongInt NextPos;
    Word ErgLen=0;
    LongInt z;
    Byte Gran;
@@ -277,7 +280,8 @@ BEGIN
    FILE *f;
    Byte Header, CPU, Gran, Segment;
    Word Length,TestID;
-   LongWord Adr,EndAdr,NextPos;
+   LongWord Adr,EndAdr;
+   LongInt NextPos;
 
    f=fopen(FileName,OPENRDMODE);
    if (f==Nil) ChkIO(FileName);

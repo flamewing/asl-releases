@@ -15,9 +15,15 @@
 /*            7. 5.2000 Packing hinzugefuegt                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeavr.c,v 1.4 2002/05/11 20:12:46 alfred Exp $                     */
+/* $Id: codeavr.c,v 1.6 2002/11/04 19:05:01 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codeavr.c,v $
+ * Revision 1.6  2002/11/04 19:05:01  alfred
+ * - silenced compiler warning
+ *
+ * Revision 1.5  2002/08/14 18:43:49  alfred
+ * - warn null allocation, remove some warnings
+ *
  * Revision 1.4  2002/05/11 20:12:46  alfred
  * - added MEGA instructions
  *
@@ -137,6 +143,8 @@ END
 
 	static void DecodePORT(Word Index)
 {
+  UNUSED(Index);
+
   CodeEquate(SegIO, 0, 0x3f);
 }
 
@@ -166,6 +174,7 @@ END
   if ((OK) AND (NOT FirstPassUnknown))
   {
     DontPrint = True;
+    if (!Size) WrError(290);
     CodeLen = Size;
     BookKeeping();
   }

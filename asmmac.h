@@ -96,7 +96,7 @@ extern void ClearMacroList(void);
 
 extern void ResetMacroDefines(void);
 
-extern void ClearMacroRec(PMacroRec *Alt);
+extern void ClearMacroRec(PMacroRec *Alt, Boolean Complete);
 
 extern void PrintMacroList(void);
 

@@ -16,6 +16,13 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: code77230.c,v 1.2 2002/08/14 18:43:48 alfred Exp $                   */
+/*****************************************************************************
+ * $Log: code77230.c,v $
+ * Revision 1.2  2002/08/14 18:43:48  alfred
+ * - warn null allocation, remove some warnings
+ *
+ *****************************************************************************/
 
 /*---------------------------------------------------------------------------*/
 /* Includes */
@@ -588,6 +595,7 @@ BEGIN
        if ((OK) AND (NOT FirstPassUnknown))
         BEGIN
          DontPrint=True;
+         if (!Size) WrError(290);
          CodeLen=Size;
          BookKeeping();
         END
@@ -867,7 +875,7 @@ BEGIN
 
        Diff=InstrMask^CaseMasks[z];
 
-       /* Fall nur möglich, wenn Bits im aktuellen Fall gesetzt sind, die
+       /* Fall nur moeglich, wenn Bits im aktuellen Fall gesetzt sind, die
           der Fall nicht hat */
 
        if ((Diff&InstrMask)==0)
@@ -875,7 +883,7 @@ BEGIN
          /* ist irgendein Feld unbenutzt, fuer das wir keinen Default haben? */
 
          for (z2=0; z2<InstrCnt; z2++)
-          if (((Diff&(1l<<z2))!=0) AND (InstrDefs[z2]==-1)) break;
+          if (((Diff&(1l<<z2))!=0) AND (InstrDefs[z2]==0xffffffff)) break;
          if (z2==InstrCnt) break;
         END
       END

@@ -11,6 +11,16 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: code3203x.c,v 1.3 2002/08/14 18:17:35 alfred Exp $                       */
+/***************************************************************************** 
+ * $Log: code3203x.c,v $
+ * Revision 1.3  2002/08/14 18:17:35  alfred
+ * - warn about NULL allocation
+ *
+ * Revision 1.2  2002/07/14 18:39:58  alfred
+ * - fixed TempAll-related warnings
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -796,7 +806,7 @@ BEGIN
                   (((LongWord)CharTransTable[((usint)t.Contents.Ascii[z2])&0xff])) << (8*(3-(z2 & 3)));
               END
              break;
-            case TempNone:
+            default:
              OK=False;
            END
          END
@@ -816,6 +826,7 @@ BEGIN
        if ((OK) AND (NOT FirstPassUnknown))
         BEGIN
          DontPrint=True;
+         if (!Size) WrError(290);
          CodeLen=Size;
          BookKeeping();
         END

@@ -91,9 +91,8 @@ this manual are properties of their respective owners.
 
 \vspace{7cm} 
 
-This document has been processed with the LaTeX typesetting system using
-Digital Unix, Linux, and OS/2 operating systems running on AMD K6 and
-DEC Alpha processors.
+This document has been processed with the LaTeX typesetting system, using
+the Linux operating system.
 
 \clearpage
 
@@ -225,13 +224,13 @@ following processor families have been implemented:
 \item{Mitsubishi M16C}
 \item{Intel 4004}
 \item{Intel MCS-48/41}
-\item{Intel MCS-51/251}
+\item{Intel MCS-51/251, Dallas DS80C390}
 \item{Intel MCS-96/196(Nx)/296}
 \item{Intel 8080/8085}
 \item{Intel i960}
 \item{Signetics 8X30x}
 \item{Philips XA}
-\item{Atmel AVR}
+\item{Atmel (Mega-)AVR}
 \item{AMD 29K}
 \item{Siemens 80C166/167}
 \item{Zilog Z80, Z180, Z380}
@@ -874,10 +873,11 @@ At the moment, the following switches are defined:
 Concerning effect and function of the SHARED-symbols please see 
 chapters \ref{ChapShareMain} resp. \ref{ChapShareOrder}.
 \begin{itemize}
-\item{\tty{g}: This switch instructs AS to create an additional file that
-      contains debug information for the program.  Allowed formats are the
-      AS-specific \tty{MAP} format, a \tty{NoICE}-compatible command file,
-      and the \tty{Atmel} format used by the AVR tools. The information
+\item{\tty{g [format]}: This switch instructs AS to create an additional
+      file that contains debug information for the program.  Allowed
+      formats are the AS-specific MAP format ({\tt format=MAP}), a
+      NoICE-compatible command file ({\tt format=NOICE}), and the Atmel
+      format used by the AVR tools ({\tt format=ATMEL}). The information
       stored in the MAP format is comprised of a symbol table and a table
       describing the assignment of source lines to machine addresses.  A
       more detailed description of the MAP format can be found in section
@@ -1456,10 +1456,13 @@ swing the large hammer of sections (see chapter \ref{ChapLocSyms}) are
 non-temporary symbol gets defined.  Othe assemblers offer a similar
 mechanism which is commnoly referred as 'local symbols'; however, for the
 sake of a better distinction, I want to stay with the term 'temporary
-symbols'.
+symbols'.  AS distinguishes between two types of temporary symbols, {\em
+named} and {\em nameless} symbols:
+
+\section{Named Temporary Symbols}
 
 A symbol whose name starts with two dollar signs (something that is
-neither allowed for non-temporary symbols nor for constants) is a
+neither allowed for non-temporary symbols nor for constants) is a named
 temporary symbol.  AS keeps an internal counter which is reset to 0 before
 assembly begins and which gets incremented upon every definition of a
 non-temporary symbol.  When a temporary symbol is defined or referenced,
@@ -1483,6 +1486,63 @@ $$loop: nop
 \end{verbatim}
 Without the non-temporary label between the loops, of course an error
 message about a double-defined symbol would be the result.
+
+\subsection{Nameless Temporary Symbols}
+
+For all those who regard named temporary symbols still as too complicated,
+there is an even simpler variant: If one places a single puls or minus
+sign as a label, this is converted to symbol names of {\tt \_\_forwnn}
+respectively {\tt \_\_backmm}, with {\tt nn} respectively {\tt mm} being
+counters that start counting at zero.  Those symbols are referenced via
+the special names {\tt - -- ---} respectively {\tt + ++ +++}, which refer
+to the three last 'minus symbols' and the next three 'plus symbols'. 
+Therefore, the selection between these two variants depends on whether one
+wants to forward- or backward-reference a symbol.
+
+Apart from plus and minus, {\em defining} nameless temporary symbols also
+exists in a third variant, namely a slash (/).  A temporary symbol defined
+in this way may be referenced both backward and forward, i.e. it is
+treated either as a plus or a minus, depending on the way it is being
+referenced.
+
+Nameless temporary symbols are usually used in constructs that fit on one
+screen page, like skipping a few machine instructions or tight loops -
+things would becone to puzzling otherwise (this only a good advice,
+however...).  An example for this is the following piece of code, this
+time as 65xx code:
+\begin{verbatim}
+        cpu     6502
+
+-       ldx     #00
+-       dex
+        bne     -           ; branch to 'dex'
+        lda     RealSymbol
+        beq     +           ; branch to 'bne --'
+        jsr     SomeRtn
+        iny
++       bne     --          ; branch to 'ldx #00'
+
+SomeRtn:
+        rts
+
+RealSymbol:
+        dfs     1
+
+  	inc	ptr
+   	bne 	+      	    ; branch to 'tax'
+   	inc 	ptr+1
++ 	tax
+
+ 	bpl 	++     	    ; branch to 'dex'
+   	beq 	+      	    ; branch forward to 'rts'
+   	lda 	#0
+/  	rts            	    ; slash used as wildcard.
++ 	dex
+   	beq 	-           ; branch backward to 'rts'
+
+ptr:	dfs	2
+\end{verbatim}
+
 
 %%---------------------------------------------------------------------------
 
@@ -2139,20 +2199,10 @@ VecCnt  set     VecCnt+4
         DefVec  Vec2    ; results in Vec2=4
 \end{verbatim}
 constants and variables are internally stored in the same way, the only
-difference is that they can be modified by \tty{SET} and not by
-\tty{EQU}.  It is therefore possible to define a symbol with \tty{EQU} and
-to change it with \tty{SET} (even if this is not its real business). 
-There is also another reason to avoid this explicitly: In contrast to
-\tty{SET}, \tty{EQU} checks whether the newly assigned value is different
-to from a value that previously might have existed.  As the value should
-not change for constants defined with \tty{EQU}, AS assumes a phase error
-and starts another pass...for example, if one would use \tty{EQU} instead of
-\tty{SET} to initialize the counter in the previous example, AS would not
-quarrel as a single reassignment per pass is valid (this line is executed
-only $n$ times in $n$ passes), but endless repassing would be the result as
-the counter's initial value is always different to the final value in the
-previous pass.
-
+difference is that they are marked as unchangeable if defined via \tty{EQU}.
+Trying to change a constant with \tty{SET} will result in an error
+message.
+ 
 \tty{EQU/SET} allow to define constants of all possible types, e.g.
 \begin{verbatim}
 IntTwo   equ    2
@@ -2479,54 +2529,6 @@ already exists.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-\subsection{STRUCT and ENDSTRUCT}
-\ttindex{STRUCT}\ttindex{ENDSTRUCT}
-
-{\em valid for: all processors}
-
-Even for assembler programs, there is from time to time the need to
-define complex data structures similar to high-level languages.  AS
-supports this via the instructions \tty{STRUCT} and \tty{ENDSTRUCT} that begin
-resp. finish the definition of such a structure.  The operation is
-simple: Upon occurrence of a \tty{STRUCT}, the current value of the program
-counter is saved and the PC is reset to zero.  By doing so, all
-labels placed obtain the offset values of the structure's members. 
-The reservation of space for the individual fields is done with the
-instructions used on the currently active processor to reserve memory
-space, e.g. \tty{DS.x} for Motorolas and \tty{DB} \& co. for Intels.  The label
-prepended to \tty{STRUCT} (not optional) is the record's name and may
-optionally be repeated for the \tty{ENDSTRUCT} statement.  \tty{ENDSTRUCT}
-furthermore places the record's total length in the symbol
-\tty{$<$Name\_len$>$}
-(one may force the usage of another symbol by giving its name as an
-argument to \tty{ENDSTRUCT}).  For example, in the definition
-\begin{verbatim}
-Rec     STRUCT
-Ident   db      ?
-Pad     db      ?
-Pointer dd      ?
-Rec     ENDSTRUCT
-\end{verbatim}
-the symbol \tty{Rec\_len} would obtain the value 6.  \bb{CAUTION!}  Inside
-of a structure definition, no instructions may be used that generate code,
-as this is a pure placement of elements in the address space!
-
-\tty{STRUCT} definitions may be nested; after the inner \tty{STRUCT} definition
-has been ended, the address counter of the outer structure will be
-automatically incremented by the inner structure's size (the counting
-inside the inner structure of course starts at zero).
-
-To avoid ambiguities when fields in different structures have same
-names, AS by default prepends the structures name to the field names,
-separated by an underbar.  For the example listed above, the symbols
-\tty{Rec\_Ident, Rec\_Pad,} and \tty{Rec\_Pointer} would be created.  This
-behaviour can be suppressed by giving \tty{NOEXTNAMES} as a parameter to
-the \tty{STRUCT} statement.  This works in the same sense for nested
-structure definitions, i.e. field names are extended by the names of all
-structures that did not obtain a \tty{NOEXTNAMES} directive.
-
-%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
 \subsection{PUSHV and POPV}
 \ttindex{PUSHV}\ttindex{POPV}
 
@@ -2818,7 +2820,9 @@ Kbytes.
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
 s) \> 87C750 $\rightarrow$ 8051, 8052, 80C320, 80C501, 80C502, \\
-   \> 80C504, 80515, and 80517 $\rightarrow$ 80C251
+   \> 80C504, 80515, and 80517 \\
+   \> $\rightarrow$ 80C390 \\
+   \> $\rightarrow$ 80C251
 \end{tabbing}
 \end{quote}
 The 87C750 can only access a maximum of 2 Kbytes program memory which is
@@ -2831,7 +2835,10 @@ up when an \tty{AJMP} or \tty{ACALL} instruction starts at the second last
 address of a 2K page.  AS will automatically use long instructions or
 issues an error message in such situations.  The 80C251 in contrast
 represents a drastic progress in the the direction 16/32 bits, larger
-address spaces, and a more orthogonal instruction set.
+address spaces, and a more orthogonal instruction set.  One might call the
+80C390 the 'small solution': Dallas Semiconductor modified instruction set
+and architecture only as far as it was necessary for the 16 Mbytes large
+address spaces.
 %%-----------
 \begin{quote}
 t) 8096 $\rightarrow$ 80196 $\rightarrow$ 80196N $\rightarrow$ 80296
@@ -2847,10 +2854,12 @@ Transaction Server (PTS) and therefore looses again two machine
 instructions.
 %%-----------
 \begin{quote}
-u) 8080 and 8085
+u) 8080 $\rightarrow$ 8085 $\rightarrow$ 8085UNDOC
 \end{quote}
 The 8085 knows the additional commands \tty{RIM} and \tty{SIM} for
-controlling the interrupt mask and the two I/O-pins.
+controlling the interrupt mask and the two I/O-pins.  The type {\tt
+8085UNDOC} enables additional instructions that are not documented
+by Intel.  These instructions are documented in section \ref{8085Spec}.
 %%-----------
 \begin{quote}
 v) 8086 $\rightarrow$ 80186 $\rightarrow$ V30 $\rightarrow$ V35
@@ -3954,7 +3963,6 @@ number of parameters which are being processed from left to right.
 
 {\em valid for: 680x0, M*Core, 68xx, H8, SH7x00, DSP56xxx, XA, ST7}
   
-
 This instruction places one or several constants of the type
 specified by the attribute into memory.  The attributes are the same ones as
 defined in section \ref{AttrTypes}, and there is additionally the
@@ -3988,6 +3996,14 @@ For the DSP56xxx, the data type is fixed to integer numbers (an attribute is
 therefore neither necessary nor allowed), which may be in the range
 of -8M up to 16M-1.  String constants are also allowed, whereby three characters 
 are packed into each word.
+
+Opposed to the standar Motorola ssembler, it is also valid to reserve
+memory space with this statement, by using a question mark as operand. 
+This is an extension added by some third-party suppliers for 68K
+assemblers, similar to what Intel assemblers provide.  However, it should
+be clear that usage of this feature may lead to portability problems. 
+Furthermore, question marks as operands must not be mixed with 'normal'
+constants in a single statement.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -4955,6 +4971,131 @@ on the argument's type!
 When AS operates in case-sensitive mode, the case matters when
 defining or referencing user-defined functions, in contrast to
 builtin functions!
+
+%%---------------------------------------------------------------------------
+
+\section{Structures}
+\ttindex{STRUCT}\ttindex{ENDSTRUCT}\ttindex{UNION}
+\ttindex{STRUC}\ttindex{ENDS}
+\ttindex{DOTTEDSTRUCTS}
+
+{\em valid for: all processors}
+
+Even in assembly language programs, there is sometimes the necessity to
+define composed data structures, similar to high-level languages.  AS
+supports both the definition and usage of structures with a couple of
+statements.  These statements shall be explained in the following section.
+
+\subsection{Definition}
+
+The definiton of a structure is begun with the statement \tty{STRUCT} and
+ends with \tty{ENDSTRUCT} (lazy people may also write {\tt STRUC} resp.
+{\tt ENDS} instead).  A label preceding these instructions is taken as
+the name of the structure to be defined; it is optional at the end of the
+definition and may be used to redefine the length symbol's name (see
+below).  The remaining procedure is simple: Together with \tty{STRUCT},
+the cuurent program counter is saved and reset to zero.  All labels
+defined between \tty{STRUCT} and \tty{ENDSTRUCT} therefore are the offsets
+of the structure's data fields.  Reserving space is done via the same
+instructions that are also otherwise used for reserving space, like e.g.
+\tty{DS.x} for Motorola CPUs or \tty{DB} \& co. for Intel-style
+processors.  The rules for rounding up lengths to assure certain
+alignments also apply here - if one wants to define 'packed' structures, a
+preceding {\tt PADDING OFF} may be necessary.  Vice versa, alignments may
+be forced with {\tt ALIGN} or similar instructions.
+
+Since such a definition only represents a sort of 'prototype', only
+instructions that reserve memory may be used, no instructions that dispose
+constants or generate code.
+
+Labels defined inside structures (i.e. the elements' names) are not
+stored as-is.  Instead, the structure's name is prepended to them, liked
+with a special character.  By default, this is the underbasr (\_).  This
+behaviour however may be modified with two arguments passed to the
+\tty{STRUCT} statement:
+\begin{itemize}
+\item{\tty{NOEXTNAMES} suppressed the prepending of the structure's name.
+      In this case, it is the programmer's responsibility to assure that
+      field names are not used more than once.}
+\item{\tty{DOTS} instructs AS to use the dot as connectin character
+      instead of the underbar.  It should however be pointed out that
+      on certain target architectures, the dot has a special meaning
+      for bit addressing, which may lead to problems!}
+\end{itemize}
+It is futhermore possible to turn the usage of a dot on resp. off for all
+following structures:
+\begin{verbatim}
+        dottedstructs <on|off>
+\end{verbatim}
+
+Aside from the element names, AS also defines a further symbol with the
+structure's overall length when the definition has been finished.  This
+symbol has the nsme {\tt LEN}, which is being extended with the
+structure's name via the same rules - or alternitavely with the label name
+given with the \tty{ENDSTRUCT} statement.
+
+In practice, this may things may look like in this example:
+\begin{verbatim}
+Rec     STRUCT  
+Ident   db      ?
+Pad     db      ?
+Pointer dd      ?
+Rec     ENDSTRUCT
+\end{verbatim}   
+In this example, the symbol {\tt REC\_LEN} would be assigned the value 6.
+
+\subsection{Usage}
+
+Once a structure has been assigned, usage is as simple as possible and
+similar to a macro: a simple
+\begin{verbatim}
+thisrec Rec
+\end{verbatim}
+reserves as much memory as needed to hold an instance of the structure,
+and additionally defines a symbol for every element of the structure with
+its address, in this case {\tt THISREC\_IDENT, THISREC\_PAD}, and {\tt
+THISREC\_POINTER}.  A label naturally must not be omitted when calling a
+structure; if it is missing, an error will be emitted.
+
+{\bf ATTENTION!} Though AS does not expect any arguments when calling a
+structure, any arguments given will simply be ignored and not be reported
+as error.  This is a precaution to allow the definition of pre-initialized
+structures in the future.
+
+\subsection{Nested Structures}
+
+Is is perfectly valid to call an already defined structure within the
+definition of another structure.  The procedure that is taking place then
+is a combination of the definition and calling described in the previous
+two sections: elements of the substructure are being defined, the name of
+the instance is being prepended, and the name of the super-structure is
+once again geing prepended to this concatenated name.  This may look like
+the following:
+\begin{verbatim}
+TreeRec struct  
+left    dd         ?
+right   dd         ?
+data    Rec
+TreeRec endstruct
+\end{verbatim}
+
+\subsection{Unions}
+
+A union is a special form of a structure whose elements are not laid out
+sequentially in memory.  Instead all elements occupy the {\em same}
+memory and are located at offset 0 in the structure.  Naturally, suich a
+defnition basically does nothing more than to assign the value of zero to
+a couple of symbols.  It may however be useful to clarify the overlap in a
+program and therefore to make it more 'readable'.  The size of a union is
+the maximum of all elements' lengths.
+
+\subsection{Structures and Sections}
+
+Symbols that are created in the course of defining or usage of structures
+are treated just like normal symbols, i.e. when used within a section,
+these symbols are local to the section.  The same is however also true for
+the structures themselves, i.e. a structure defined within a section
+cannot be used outside of the section.
 
 %%---------------------------------------------------------------------------
 
@@ -6846,6 +6987,101 @@ addressing via 8 bit registers).
 
 %%---------------------------------------------------------------------------
 
+\section{8085UNDOC}
+\label{8085Spec}
+
+Similarly to the Z80 or 6502, Intel did not further specify the
+undocumented 8085 instructions.  This however means that other assemblers
+might use different mnemonics for the same function.  Therefore, I will
+list the nistructions in the following.  Once again, usage of these
+instructions is at one's own risk - even the Z80 which is principally
+upward compatible to the 8085 uses the opcodes for entirely different
+functions...
+
+\begin{tabbing}
+Arguments         \= : \= \kill \\
+Instruction       \> : \> \tty{DSUB [reg]} \\
+Function          \> : \> HL $\leftarrow$ HL - reg \\
+Flags             \> : \> CY, S, X5, AC, Z, V, P \\
+Arguments         \> : \> \tty{reg} = B for BC (optional) \\
+\end{tabbing}
+
+\begin{tabbing}
+Arguments         \= : \= \kill \\
+Instruction       \> : \> \tty{ARHL} \\
+Function          \> : \> HL,CY $\leftarrow$ HL $>>$ 1 (arithmetisch) \\
+Flags             \> : \> CY \\
+Arguments         \> : \> none \\
+\end{tabbing}
+
+\begin{tabbing}
+Arguments         \= : \= \kill \\
+Instruction       \> : \> \tty{RDEL} \\
+Function          \> : \> CY,DE $\leftarrow$ DE $<<$ 1 \\
+Flags             \> : \> CY, V \\
+Arguments         \> : \> none \\
+\end{tabbing}
+
+\begin{tabbing}
+Arguments         \= : \= \kill \\
+Instruction       \> : \> \tty{LDHI d8} \\
+Function          \> : \> DE $\leftarrow$ HL + {\tt d8} \\
+Flags             \> : \> none \\
+Arguments         \> : \> {\tt d8} = 8-bit constant \\
+\end{tabbing}
+
+\begin{tabbing}
+Arguments         \= : \= \kill \\
+Instruction       \> : \> \tty{LDSI d8} \\
+Function          \> : \> DE $\leftarrow$ SP + {\tt d8} \\
+Flags             \> : \> none \\
+Arguments         \> : \> {\tt d8} = 8-bit constant \\
+\end{tabbing}
+
+\begin{tabbing}
+Arguments         \= : \= \kill \\
+Instruction       \> : \> \tty{RST flag} \\
+Function          \> : \> restart to 40h if {\tt flag}=1 \\
+Flags             \> : \> none \\
+Arguments         \> : \> {\tt flag} = V for overflow bit \\
+\end{tabbing}
+
+\begin{tabbing}
+Arguments         \= : \= \kill \\
+Instruction       \> : \> \tty{SHLX [reg]} \\
+Function          \> : \> [reg] $\leftarrow$ HL \\
+Flags             \> : \> none \\
+Arguments         \> : \> \tty{reg} = D for DE (optional) \\
+\end{tabbing}
+
+\begin{tabbing}
+Arguments         \= : \= \kill \\
+Instruction       \> : \> \tty{LHLX [reg]} \\
+Function          \> : \> HL $\leftarrow$ [reg] \\
+Flags             \> : \> none \\
+Arguments         \> : \> \tty{reg} = D for DE (optional) \\
+\end{tabbing}
+
+\begin{tabbing}
+Arguments         \= : \= \kill \\
+Instruction       \> : \> \tty{JNX5 addr} \\
+Function          \> : \> jump to {\tt addr} if X5=0 \\
+Flags             \> : \> none \\
+Arguments         \> : \> {\tt addr} = absolute 16-bit address \\
+\end{tabbing}
+
+\begin{tabbing}
+Arguments         \= : \= \kill \\
+Instruction       \> : \> \tty{JX5 addr} \\
+Function          \> : \> jump to {\tt addr} if X5=1 \\
+Flags             \> : \> none \\
+Arguments         \> : \> {\tt addr} = absolute 16-bit address \\ 
+\end{tabbing}
+
+Mit X5 ist dabei das ansonsten unbenutzte Bit 5 im PSW-Register gemeint.
+
+%%---------------------------------------------------------------------------
+
 \section{8086..V35}
 
 Actually, I had sworn myself to keep the segment disease of Intel's
@@ -8619,8 +8855,11 @@ code, there is a switch
  -d <start>-<end>
 \end{verbatim}
 to designate the address range that should be written as data instead
-of code.  For this option, single dollar signs are \bb{not} allowed!  While
-this switch is only relevant for the DSK format, the option
+of code.  For this option, single dollar signs are \bb{not} allowed!  This
+option should not be used in new projects any more, since P2HEX now can
+directly handle data in the DATA segment.
+
+While this switch is only relevant for the DSK format, the option
 \begin{verbatim}
  -e <address>
 \end{verbatim}
@@ -9572,6 +9811,11 @@ described by:
                {The prefix combination here defined is not allowed, or it
                 cannot be translated into binary code}
                {none}
+\errentry{2030}{constants cannot be modifed}
+               {error}
+               {A symbol that has once been declared as constant with
+                {\tt EQU} must not be modified afterwards with {\tt SET}.}
+               {the name of the symbol in question}
 \errentry{10001}{error in opening file}
                {fatal}
                {An error was detected while trying to open a file for input.}
@@ -10646,6 +10890,11 @@ Either that was a long nightshift or I am slowly getting old...
             definitions;}
       \item{{\tt ENDIF/ENDCASE} show the line number of the corresponding
             opening statement in the listing;}
+      \item{the 8051 part now also supports the extended address space of
+            the Dallas DS80C390;}
+      \item{added nameless temporary smbols;}
+      \item{additionally supports the undocumented 8085 instructions;}
+      \item{improved structure handling;}
       \end{itemize}}
 \end{itemize}
 

@@ -5,7 +5,7 @@
 /* global benutzte Variablen                                                 */
 /*                                                                           */
 /* Historie:  4. 5.1996 Grundsteinlegung                                     */
-/*           24. 6.1998 Zeichenübersetzungstabellen                          */
+/*           24. 6.1998 Zeichenuebersetzungstabellen                         */
 /*           25. 7.1998 PassNo --> Integer                                   */
 /*           17. 8.1998 InMacroFlag hierher verschoben                       */
 /*           18. 8.1998 RadixBase hinzugenommen                              */ 
@@ -31,6 +31,16 @@
 /*           2001-10-20 added GNU error flag                                 */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: asmdef.c,v 1.4 2002/11/23 15:53:27 alfred Exp $                     */
+/***************************************************************************** 
+ * $Log: asmdef.c,v $
+ * Revision 1.4  2002/11/23 15:53:27  alfred
+ * - SegLimits are unsigned now
+ *
+ * Revision 1.3  2002/11/17 16:09:12  alfred
+ * - added DottedStructs
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -74,8 +84,8 @@ char SegShorts[PCMax + 2] = {'-','C','D','I','X','Y','B','P','R','O','S'};
    ChunkList SegChunks[StructSeg+1];        /* Belegungen */
    Integer ActPC;                           /* gewaehlter Programmzaehler */
    Boolean PCsUsed[StructSeg+1];            /* PCs bereits initialisiert ? */
-   LargeInt SegInits[PCMax+1];              /* Segmentstartwerte */
-   LargeInt SegLimits[PCMax+1];             /* Segmentgrenzwerte */
+   LargeWord SegInits[PCMax+1];             /* Segmentstartwerte */
+   LargeWord SegLimits[PCMax+1];            /* Segmentgrenzwerte */
    LongInt ValidSegs;                       /* erlaubte Segmente */
    Boolean ENDOccured;	                    /* END-Statement aufgetreten ? */
    Boolean Retracted;			    /* Codes zurueckgenommen ? */
@@ -99,7 +109,7 @@ char SegShorts[PCMax + 2] = {'-','C','D','I','X','Y','B','P','R','O','S'};
    Boolean MakeSectionList;	    /* Sektionsliste ? */
    Boolean MakeIncludeList;         /* Includeliste ? */
    Boolean RelaxedMode;		    /* alle Integer-Syntaxen zulassen ? */
-   Byte ListMask;		    /* Listingmaske */
+   Word ListMask;		    /* Listingmaske */
    ShortInt ExtendErrors;	    /* erweiterte Fehlermeldungen */
    Boolean NumericErrors;	    /* Fehlermeldungen mit Nummer */
    Boolean CodeOutput;		    /* Code erzeugen */
@@ -194,7 +204,8 @@ char SegShorts[PCMax + 2] = {'-','C','D','I','X','Y','B','P','R','O','S'};
    Byte ChapDepth;                  /* momentane Kapitelverschachtelung */
    StringPtr ListLine;		    /* alternative Ausgabe vor Listing fuer EQU */
    Byte PageLength,PageWidth;       /* Seitenlaenge/breite in Zeilen/Spalten */
-   Boolean LstMacroEx;              /* Makroexpansionen auflisten */
+   Boolean LstMacroEx,              /* Makroexpansionen auflisten */
+           DottedStructs;           /* structure elements with dots */
    StringPtr PrtInitString;	    /* Druckerinitialisierungsstring */
    StringPtr PrtExitString;	    /* Druckerdeinitialisierungsstring */
    StringPtr PrtTitleString;	    /* Titelzeile */
@@ -230,9 +241,6 @@ char SegShorts[PCMax + 2] = {'-','C','D','I','X','Y','B','P','R','O','S'};
    PFunction FirstFunction;	    /* Liste definierter Funktionen */
 
    PDefinement FirstDefine;         /* Liste von Praeprozessor-Defines */
-
-   PStructure StructureStack;       /* momentan offene Strukturen */
-   int StructSaveSeg;               /* gesichertes Segment waehrend Strukturdef.*/
 
    PSaveState FirstSaveState;	    /* gesicherte Zustaende */
 

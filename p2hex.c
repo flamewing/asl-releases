@@ -67,7 +67,7 @@ static Byte MultiMode;   /* 0=8M, 1=16, 2=8L, 3=8H */
 static Byte MinMoto;
 static Boolean Rec5;
 static Boolean SepMoto;
-static LongWord AVRLen;
+static LongWord AVRLen, ValidSegs;
 
 static Boolean RelAdr, MotoOccured, IntelOccured, MOSOccured, DSKOccured;
 static Byte MaxMoto, MaxIntel;
@@ -100,7 +100,7 @@ BEGIN
    FILE *SrcFile;
    Word TestID;
    Byte InpHeader, InpCPU, InpSegment, InpGran, BSwap;
-   LongInt InpStart,SumLen;
+   LongWord InpStart,SumLen;
    int z2;
    Word InpLen,TransLen;
    Boolean doit,FirstBank=0;
@@ -112,7 +112,8 @@ BEGIN
 #else
             ErgStop=0xffffffff,
 #endif
-            NextPos,IntOffset=0,MaxAdr;
+            IntOffset=0,MaxAdr;
+   LongInt NextPos;
    Word ErgLen=0,ChkSum=0,RecCnt,Gran,SwapBase,HSeg;
 
    LongInt z;
@@ -157,6 +158,7 @@ BEGIN
          else ActFormat=FoundDscr->HexFormat;
         END
 
+       ValidSegs = (1 << SegCode);
        switch (ActFormat)
         BEGIN
          case MotoS:
@@ -170,6 +172,9 @@ BEGIN
           MaxAdr=0xffff0+0xffff; break;
          case Atmel:
           MaxAdr = (1 << (AVRLen << 3)) - 1; break;
+         case TiDSK:
+          ValidSegs = (1 << SegCode) | (1 << SegData);
+          /* no break!!! */
          default:
           MaxAdr=0xffff;
         END
@@ -181,7 +186,7 @@ BEGIN
        if (NextPos>=FileSize(SrcFile)-1)
         FormatError(FileName,getmessage(Num_FormatInvRecordLenMsg));
 
-       doit=(FilterOK(InpCPU)) AND (InpSegment==SegCode);
+       doit=(FilterOK(InpCPU)) AND (ValidSegs & (1 << InpSegment));
 
        if (doit)
         BEGIN
@@ -416,7 +421,8 @@ BEGIN
  	     for (z=0; z<(TransLen/2); z++)
  	      BEGIN
                errno=0;
- 	       if ((ErgStart+z >= StartData) AND (ErgStart+z <= StopData))
+ 	       if (((ErgStart+z >= StartData) AND (ErgStart+z <= StopData))
+                OR (InpSegment == SegData))
  	        fprintf(TargFile,"M%s",HexWord(WBuffer[z]));
  	       else
  	        fprintf(TargFile,"B%s",HexWord(WBuffer[z]));
@@ -561,7 +567,8 @@ BEGIN
    FILE *f;
    Byte Header, CPU, Segment, Gran;
    Word Length,TestID;
-   LongWord Adr,EndAdr,NextPos;
+   LongWord Adr,EndAdr;
+   LongInt NextPos;
 
    f=fopen(FileName,OPENRDMODE); if (f==Nil) ChkIO(FileName);
 
@@ -733,6 +740,9 @@ END
 BEGIN
    char *p,Save;
    Boolean ok;
+
+   fprintf(stderr, getmessage(Num_WarnDOption));
+   fflush(stdout);
 
    if (Negate)
     BEGIN

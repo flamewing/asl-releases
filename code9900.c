@@ -1,4 +1,4 @@
-/* code9900.h */
+/* code9900.c */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
 /*                                                                           */
@@ -10,6 +10,16 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: code9900.c,v 1.3 2002/08/14 18:43:49 alfred Exp $                    */
+/***************************************************************************** 
+ * $Log: code9900.c,v $
+ * Revision 1.3  2002/08/14 18:43:49  alfred
+ * - warn null allocation, remove some warnings
+ *
+ * Revision 1.2  2002/07/14 18:39:59  alfred
+ * - fixed TempAll-related warnings
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -360,7 +370,7 @@ BEGIN
               for (p=t.Contents.Ascii; *p!='\0'; PutByte(*(p++)));
              END
             break;
-           case TempNone:
+           default:
             OK=False;
             break;
           END
@@ -406,6 +416,7 @@ BEGIN
        else if (OK)
         BEGIN
          if ((DoPadding) AND (Odd(HVal16))) HVal16++;
+         if (!HVal16) WrError(290);
          DontPrint=True; CodeLen=HVal16;
          BookKeeping();
         END
