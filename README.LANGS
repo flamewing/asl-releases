@@ -1,0 +1,167 @@
+The current version of AS supports the concept loadable language modules,
+i.e. the language AS speaks to you is not set during compile time.  Instead,
+AS tries to detect the language environment at startup and then to load
+the appropriate set of messages dynamically.  The process of detection
+differs depending on the platform: On MS-DOS and OS/2 systems, AS queries
+the COUNTRY setting made from CONFIG.SYS.  On Unix systems, AS looks for
+the environment variables
+
+LC_MESSAGES
+LC_ALL
+LANG
+
+and takes the first two letters from the variable that is found first.
+These two letters are interpreted as a code for the country you live
+in.  
+
+Currently, AS knows the languages 'german' (code 049 resp. DE) and
+english (code 001 resp. EN).  Any other setting leads to the default
+english language.  Sorry, but I do not know more languages good enough
+to do other translations.  You may now ask if you could add more 
+languages to AS, and this is just what I hoped for when I wrote these
+lines ;-)
+
+Messages are stored in text files with the extension '.res'.  Since
+parsing text files at every startup of the assembler would be quite
+inefficient, the '.res' files are transformed into a binary, indexed
+format that can be read with a few block read statements.  The 
+translation is done during the build process with a special tool 
+called 'rescomp' (you might have seen the execution of rescomp while
+you built the C version of AS).  rescomp parses the input file(s),
+assigns a number to each message, packs the messages to a single array
+of chars with an index table, and creates an additional header file
+that contains the numbers assigned to each message.  A run-time
+library then allows to look up the messages via their numbers.
+
+A message source file consists of a couple of control statements.
+Empty lines are ignored; lines that start with a semicolon are
+treated as comments (i.e. they are also ignored).  The first
+control statement a message file contains is the 'Langs' statement,
+which indicates the languages the messages in this file will support.
+This is a *GLOBAL* setting, i.e. you cannot omit languages for single
+messages!  The Command has the following form:
+
+Langs <Code>(<Country-Code(s),...>) ....
+
+'Code' is the two-letter abbreviation for a language, e.g. 'DE' for
+german.  Please use only UPPERcase!  The code is followed by a
+comma-separated list of DOS-style country codes for DOS and OS/2
+environments.  As you see, several country codes may point to a
+single language this way.  For example, if you want to assign the
+english language to both americans and british people, write
+
+Langs EN(001,061) <further languages>
+
+In case AS finds a language environment that was not explicitly
+handled in the message file, the first language given to the 'Langs'
+command is used.  You may override this via the 'Default' statement.
+e.g.
+
+Default DE
+
+Once the language is specified, the 'Message' command is the
+only one left to be explained.  This command starts the definition of
+a message.  The message file compiler reads the next 'n' lines, with
+'n' being the number of languages defined by the 'Langs' command.  A
+sample message definition would look like
+
+Message TestMessage
+ "Dies ist ein Test"
+ "This is a test"
+
+given that you specified german and english language with the 'Langs'
+command. 
+
+In case the messages become longer than a single line (messages may
+contain newline characters, more about this later), the use of a
+backslash (\) as a line continuation parameter is allowed:
+
+Message TestMessage2
+ "Dies ist eine" \
+ "zweizeilige Nachricht"
+ "This is a" \
+ "two-line message"
+
+Since we deal with non-english languages, we also have to deal with
+characters that are not part of the standard ASCII character set - a
+point where UNIX systems are traditionally weak.  Since we cannot
+assume that all terminals have the capability to enter all
+language-specific character directly, there must be an 'escape
+mechanism' to write them as a sequence of standard ASCII characters. 
+The message file compiler uses a subset of the sequences used in SGML
+and HTML:
+
+    &auml;  --> lowercase umlauted a
+    &Auml;  --> uppercase umlauted a
+    &ouml;  --> lowercase umlauted o
+    &Ouml;  --> uppercase umlauted o
+    &uuml;  --> lowercase umlauted u
+    &Uuml;  --> uppercase umlauted u
+    &szlig; --> german sharp s
+    \n;     --> newline character
+
+Upon translation of a message file, the message file compiler will
+replace these sequences with the correct character encodings for the
+target platform.  In the extreme case of a bare 7-bit-ASCII system,
+this may imply the translation to a sequence of ASCII characters that
+'emulate' the non-ASCII character.
+
+As you see, the number of supported language-specific characters is
+strongly biased to the german language.  The reason for this is
+simple: german is the only non-english language AS currently
+supports...sorry, but English and German is the amount of languages
+im am sufficiently fluent in to make a translation...help of others to
+extend the range is mostly welcome, and this is the primary reason
+why I explained the whole stuff ;-)
+
+So, if you feel brave enough to add a language (don't forget that
+there's also an almost-300-page user's manual that waits for
+translation ;-), the following steps have to be taken:
+
+  1. Find out which non-ASCII characters you additionally need.
+     I can then extend the message file compiler appropriately.
+  2. Add your language to the 'Langs' statement in 'header.res'.
+     This file is included into all other message files, so you
+     only have to do this once :-)
+  3. go through all other '.res' files and add the line to all
+     messages........
+  4. recompile AS
+  5. You're done!
+
+That's about everything to be said about the technical side.
+Let's go to the political side.  I'm prepared to get confronted
+with two opinions after you read this:
+
+  "Gee, that's far too much effort for such a tool.  And anyway, who
+   needs anything else than english on a Unix system?  Unix is some-
+   thing that was born to be english, and you better accept that!"
+
+  "Hey, why did you reinvent the wheel?  There's catgets(), there's
+   GNU-gettext, and..."
+
+Well, i'll try to stay polite ;-)
+
+First, the fact that Unix is so biased towards the english language is
+in no way god-given, it's just the way it evolved.  Unix was developed
+in the USA, and the typical Unix users were up to now people who had
+no problems with english - university students, developers etc.  But
+the times have changed: Linux and *BSD have made Unix cheap, and we are
+facing more and more Unix users from other circles - people who 
+previously only knew MS-LOSS and MS-Windog, and who were told by their
+nearest freak that Unix is a great thing.  Such users typically will not
+accept a system that only speaks english, given that every 500-Dollar-
+Windows PC speaks to them in their native language, so why not this 
+Unix system that is said to be sooo great ?!
+
+Furthermore, do not forget that AS is not a Unix-only tool: It runs
+on MS-DOS and OS/2 too, and a some people try to make it go on Macs
+(though this seems to be a much harder piece of work...).  On these
+systems, localization is the standard!
+
+The portability to non-Unix platforms is the reason why I did not choose
+an existing package to manage message catalogs.  catgets() seems to be
+Unix-specific (and it even is not available on all Unix systems!), and
+about gettext...well, I just did not look into it...it might have worked,
+but most of the GNU tools ported to DOS I have seen so far needed 32-bit-
+extenders, which I wanted to avoid.  So I quickly hacked up my own 
+library, but I promise that I will at least reuse it for my own projects!

@@ -15,7 +15,7 @@
 
 #include "bpemu.h"
 #include "nls.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
@@ -193,6 +193,9 @@ END
         static Boolean DecodeReg(char *Asc, Word *Erg)
 BEGIN
    Boolean io;
+   char *s;
+
+   if (FindRegDef(Asc,&s)) Asc=s;
 
    if ((strlen(Asc)<2) OR (strlen(Asc)>3) OR (toupper(*Asc)!='R')) return False;
    else
@@ -221,7 +224,8 @@ END
 
 	static Boolean DecodePseudo(void)
 BEGIN
-   Integer Size,z,z2;
+   Integer Size;
+   int z,z2;
    Boolean ValOK;
    TempResult t;
    LongInt MinV,MaxV;
@@ -258,7 +262,7 @@ BEGIN
      else
       BEGIN
        ValOK=True;
-       for (z=1; z<ArgCnt; z++)
+       for (z=1; z<=ArgCnt; z++)
 	if (ValOK)
 	 BEGIN
 	  EvalExpression(ArgStr[z],&t);
@@ -291,12 +295,19 @@ BEGIN
      return True;
     END
 
+   if (Memo("REG"))
+    BEGIN
+     if (ArgCnt!=1) WrError(1110);
+     else AddRegDef(LabPart,ArgStr[1]);
+     return True;
+    END
+
    return False;
 END
 
         static void MakeCode_AVR(void)
 BEGIN
-   Integer z;
+   int z;
    LongInt AdrInt;
    Word Reg1,Reg2;
    Boolean OK;
@@ -459,6 +470,7 @@ BEGIN
        else if (NOT DecodeReg(ArgStr[1],&Reg1)) WrXError(1445,ArgStr[1]);
        else
         BEGIN
+         *ArgStr[2]='0';
          Reg2=EvalIntExpression(ArgStr[2]+1,UInt6,&OK);
          if (OK)
           BEGIN
@@ -565,6 +577,7 @@ BEGIN
     BEGIN
      if (ArgCnt!=2) WrError(1110);
      else if (NOT DecodeReg(ArgStr[1],&Reg1)) WrXError(1445,ArgStr[1]);
+     else if (Reg1<16) WrXError(1445,ArgStr[1]);
      else
       BEGIN
        Reg2=EvalIntExpression(ArgStr[2],Int8,&OK) ^ 0xff;
@@ -716,7 +729,7 @@ END
 
         static Boolean IsDef_AVR(void)
 BEGIN
-   return (Memo("PORT"));
+   return (Memo("PORT") OR Memo("REG"));
 END
 
         static void SwitchFrom_AVR(void)

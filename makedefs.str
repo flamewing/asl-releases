@@ -1,0 +1,41 @@
+ioerrs.$(OBJEXTENSION): ioerrs.rsc
+
+ioerrs.msg ioerrs.rsc: ioerrs.res header.res $(RESCOMPTARGET)
+	$(RESCOMPTARGET) ioerrs.res ioerrs.msg ioerrs.rsc
+
+cmdarg.$(OBJEXTENSION): cmdarg.rsc
+
+cmdarg.msg cmdarg.rsc: cmdarg.res header.res $(RESCOMPTARGET)
+	$(RESCOMPTARGET) cmdarg.res cmdarg.msg cmdarg.rsc
+
+toolutils.$(OBJEXTENSION): tools.rsc
+
+tools.msg tools.rsc: tools.res header.res $(RESCOMPTARGET)
+	$(RESCOMPTARGET) tools.res tools.msg tools.rsc
+
+as.$(OBJEXTENSION) asminclist.$(OBJEXTENSION) asmmac.$(OBJEXTENSION) asmpars.$(OBJEXTENSION) asmsub.$(OBJEXTENSION): as.rsc
+
+as.msg as.rsc: as.res header.res $(RESCOMPTARGET)
+	$(RESCOMPTARGET) as.res as.msg as.rsc
+
+plist.$(OBJEXTENSION): plist.rsc
+
+plist.msg plist.rsc: plist.res tools2.res header.res $(RESCOMPTARGET)
+	$(RESCOMPTARGET) plist.res plist.msg plist.rsc
+
+pbind.$(OBJEXTENSION): pbind.rsc
+
+pbind.msg pbind.rsc: pbind.res tools2.res header.res $(RESCOMPTARGET)
+	$(RESCOMPTARGET) pbind.res pbind.msg pbind.rsc
+
+p2hex.$(OBJEXTENSION): p2hex.rsc
+
+p2hex.msg p2hex.rsc: p2hex.res tools2.res header.res $(RESCOMPTARGET)
+	$(RESCOMPTARGET) p2hex.res p2hex.msg p2hex.rsc
+
+p2bin.$(OBJEXTENSION): p2bin.rsc
+
+p2bin.msg p2bin.rsc: p2bin.res tools2.res header.res $(RESCOMPTARGET)
+	$(RESCOMPTARGET) p2bin.res p2bin.msg p2bin.rsc
+
+tex2doc.$(OBJEXTENSION): ushyph.h grhyph.h

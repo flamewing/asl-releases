@@ -15,7 +15,7 @@
 #include "nls.h"
 #include "chunks.h"
 #include "bpemu.h"
-#include "stringutil.h"
+#include "strutil.h"
 
 #include "asmdef.h"
 #include "asmsub.h"
@@ -129,7 +129,7 @@ END
 
         static char *HasDisp(char *Asc)
 BEGIN
-   Integer Lev;
+   int Lev;
    char *z;
    int l=strlen(Asc);
 
@@ -208,7 +208,7 @@ BEGIN
    ShortInt SrcLen,DestLen;
    LongInt Op;
    Word Rot,Adr;
-   Integer z;
+   int z;
    char *p;
    String tmp;
 

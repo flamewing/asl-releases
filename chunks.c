@@ -10,7 +10,7 @@
 
 #include "stdinc.h"
 
-#include "stringutil.h"
+#include "strutil.h"
 
 #include "chunks.h"
 

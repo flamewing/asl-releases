@@ -8,6 +8,12 @@
 /*                                                                           */
 /*****************************************************************************/
 
+typedef void (*charcallback)(
+#ifdef __PROTOS__
+char *Name
+#endif
+);
+
 extern char *FExpand(char *Src);
 
 extern char *FSearch(char *File, char *Path);
@@ -19,5 +25,9 @@ extern Byte Lo(Word inp);
 extern Byte Hi(Word inp);
 
 extern Boolean Odd (int inp);
+
+extern Boolean DirScan(char *Mask, charcallback callback);
+
+extern LongInt GetFileTime(char *Name);
 
 extern void bpemu_init(void);

@@ -14,18 +14,17 @@
 #include "chunks.h"
 
 #include "asmdef.h"
+#include "asmsub.h"
 
-char *SrcSuffix=".asm";              /* Standardendungen: Hauptdatei */
-char *IncSuffix=".inc";              /* Includedatei */
-char *PrgSuffix=".p";                /* Programmdatei */
-char *LstSuffix=".lst";              /* Listingdatei */
-char *MacSuffix=".mac";              /* Makroausgabe */
-char *PreSuffix=".i";                /* Ausgabe Makroprozessor */
-char *LogSuffix=".log";              /* Fehlerdatei */
-char *MapSuffix=".map";              /* Debug-Info/Map-Format */
-
-char *Version="1.41r5";
-LongInt VerNo=0x1415;
+char SrcSuffix[]=".asm";             /* Standardendungen: Hauptdatei */
+char IncSuffix[]=".inc";             /* Includedatei */
+char PrgSuffix[]=".p";               /* Programmdatei */
+char LstSuffix[]=".lst";             /* Listingdatei */
+char MacSuffix[]=".mac";             /* Makroausgabe */
+char PreSuffix[]=".i";               /* Ausgabe Makroprozessor */
+char LogSuffix[]=".log";             /* Fehlerdatei */
+char MapSuffix[]=".map";             /* Debug-Info/Map-Format */
+char OBJSuffix[]=".obj";
 
 char *EnvName="ASCMD";                /* Environment-Variable fuer Default-
 					Parameter */
@@ -33,30 +32,31 @@ char *EnvName="ASCMD";                /* Environment-Variable fuer Default-
 char *SegNames[PCMax+1]={"NOTHING","CODE","DATA","IDATA","XDATA","YDATA",
                          "BITDATA","IO","REG"};
 char SegShorts[PCMax+1]={'-','C','D','I','X','Y','B','P','R'};
-LongInt Magic=0x1b342b4d;
+LongInt Magic=0x1b34244d;
 
-char *InfoMessCopyright="(C) 1992,1997 Alfred Arnold";
+char *InfoMessCopyright="(C) 1992,1998 Alfred Arnold";
 
 /** ValidSymChars:SET OF Char=['A'..'Z','a'..'z',#128..#165,'0'..'9','_','.']; **/
 
-   String SourceFile;                       /* Hauptquelldatei */
+   StringPtr SourceFile;                    /* Hauptquelldatei */
 
-   String ClrEol;       	            /* String fuer loeschen bis Zeilenende */
-   String CursUp;		            /*   "     "  Cursor hoch */
+   StringPtr ClrEol;       	            /* String fuer loeschen bis Zeilenende */
+   StringPtr CursUp;		            /*   "     "  Cursor hoch */
 
-   LargeWord PCs[PCMax+1];                  /* Programmzaehler */
+   LargeWord PCs[StructSeg+1];              /* Programmzaehler */
    LargeWord StartAdr;                      /* Programmstartadresse */
    Boolean StartAdrPresent;                 /*          "           definiert? */
-   LargeWord Phases[PCMax+1];               /* Verschiebungen */
-   Word Grans[PCMax+1]; 	            /* Groesse der Adressierungselemente */
-   Word ListGrans[PCMax+1]; 	            /* Wortgroesse im Listing */
-   ChunkList SegChunks[PCMax+1];            /* Belegungen */
+   LargeWord Phases[StructSeg+1];           /* Verschiebungen */
+   Word Grans[StructSeg+1]; 	            /* Groesse der Adressierungselemente */
+   Word ListGrans[StructSeg+1];             /* Wortgroesse im Listing */
+   ChunkList SegChunks[StructSeg+1];        /* Belegungen */
    Integer ActPC;                           /* gewaehlter Programmzaehler */
-   Boolean PCsUsed[PCMax+1];                /* PCs bereits initialisiert ? */
+   Boolean PCsUsed[StructSeg+1];            /* PCs bereits initialisiert ? */
    LongInt SegInits[PCMax+1];               /* Segmentstartwerte */
    LongInt ValidSegs;                       /* erlaubte Segmente */
    Boolean ENDOccured;	                    /* END-Statement aufgetreten ? */
    Boolean Retracted;			    /* Codes zurueckgenommen ? */
+   Boolean ListToStdout,ListToNull;         /* Listing auf Konsole/Nulldevice ? */
 
    Word TypeFlag;		    /* Welche Adressraeume genutzt ? */
    ShortInt SizeFlag;		    /* Welche Operandengroessen definiert ? */
@@ -82,6 +82,7 @@ char *InfoMessCopyright="(C) 1992,1997 Alfred Arnold";
    Boolean MacProOutput;	    /* Makroprozessorausgabe schreiben */
    Boolean MacroOutput;             /* gelesene Makros schreiben */
    Boolean QuietMode;               /* keine Meldungen */
+   Boolean HardRanges;              /* Bereichsfehler echte Fehler ? */
    char *DivideChars;               /* Trennzeichen fuer Parameter. Inhalt Read Only! */
    Boolean HasAttrs;                /* Opcode hat Attribut */
    char *AttrChars;                 /* Zeichen, mit denen Attribut abgetrennt wird */
@@ -91,10 +92,10 @@ char *InfoMessCopyright="(C) 1992,1997 Alfred Arnold";
 
    FILE *PrgFile;                   /* Codedatei */
 
-   String ErrorPath,ErrorName;	    /* Ausgabedatei Fehlermeldungen */
-   String OutName;                  /* Name Code-Datei */
+   StringPtr ErrorPath,ErrorName;   /* Ausgabedatei Fehlermeldungen */
+   StringPtr OutName;               /* Name Code-Datei */
    Boolean IsErrorOpen;
-   String CurrFileName;             /* mom. bearbeitete Datei */
+   StringPtr CurrFileName;          /* mom. bearbeitete Datei */
    LongInt MomLineCounter;          /* Position in mom. Datei */
    LongInt CurrLine;       	    /* virtuelle Position */
    LongInt LineSum;		    /* Gesamtzahl Quellzeilen */
@@ -125,17 +126,17 @@ char *InfoMessCopyright="(C) 1992,1997 Alfred Arnold";
    void (*ClearUpProc)();
 #endif
 
-   String IncludeList;		    /* Suchpfade fuer Includedateien */
+   StringPtr IncludeList;	    /* Suchpfade fuer Includedateien */
    Integer IncDepth,NextIncDepth;   /* Verschachtelungstiefe INCLUDEs */
    FILE *ErrorFile;		    /* Fehlerausgabe */
    FILE *LstFile;                   /* Listdatei */
    FILE *ShareFile;                 /* Sharefile */
    FILE *MacProFile;		    /* Makroprozessorausgabe */
    FILE *MacroFile;		    /* Ausgabedatei Makroliste */
-   String LstName;		    /* Name der Listdatei */
-   String MacroName,MacProName;   
+   StringPtr LstName;		    /* Name der Listdatei */
+   StringPtr MacroName,MacProName;   
    Boolean DoLst,NextDoLst;         /* Listing an */
-   String ShareName;                /* Name des Sharefiles */
+   StringPtr ShareName;             /* Name des Sharefiles */
 /**   PrgName:String;                  { Name der Codedatei }**/
 
    CPUVar MomCPU,MomVirtCPU;        /* definierter/vorgegaukelter Prozessortyp */
@@ -148,24 +149,23 @@ char *InfoMessCopyright="(C) 1992,1997 Alfred Arnold";
    Boolean SupAllowed;              /* Supervisormode freigegeben */
    Boolean Maximum;		    /* CPU nicht kastriert */
 
-   String LabPart,OpPart,AttrPart,  /* Komponenten der Zeile */
+   StringPtr LabPart,OpPart,AttrPart,  /* Komponenten der Zeile */
           ArgPart,CommPart,LOpPart;
    char AttrSplit;
    ArgStrField ArgStr;              /* Komponenten des Arguments */
    Byte ArgCnt;                     /* Argumentzahl */
-   String OneLine;                  /* eingelesene Zeile */
+   StringPtr OneLine;               /* eingelesene Zeile */
 
    Byte LstCounter;                 /* Zeilenzaehler fuer automatischen Umbruch */
    Word PageCounter[ChapMax+1];     /* hierarchische Seitenzaehler */
    Byte ChapDepth;                  /* momentane Kapitelverschachtelung */
-   String ListLine;		    /* alternative Ausgabe vor Listing fuer EQU */
-   String ErrorPos;		    /* zus. Positionsinformation in Makros */
+   StringPtr ListLine;		    /* alternative Ausgabe vor Listing fuer EQU */
    Byte PageLength,PageWidth;       /* Seitenlaenge/breite in Zeilen/Spalten */
    Boolean LstMacroEx;              /* Makroexpansionen auflisten */
-   String PrtInitString;	    /* Druckerinitialisierungsstring */
-   String PrtExitString;	    /* Druckerdeinitialisierungsstring */
-   String PrtTitleString;	    /* Titelzeile */
-   String ExtendError;              /* erweiterte Fehlermeldung */
+   StringPtr PrtInitString;	    /* Druckerinitialisierungsstring */
+   StringPtr PrtExitString;	    /* Druckerdeinitialisierungsstring */
+   StringPtr PrtTitleString;	    /* Titelzeile */
+   StringPtr ExtendError;              /* erweiterte Fehlermeldung */
 
    LongInt MomSectionHandle;        /* mom. Namensraum */
    PSaveSection SectionStack;	    /* gespeicherte Sektionshandles */
@@ -190,11 +190,14 @@ char *InfoMessCopyright="(C) 1992,1997 Alfred Arnold";
 
    Boolean SuppWarns;
 
-   unsigned char CharTransTable[256]; /* Zeichenuebersetzungstabelle */
+   unsigned char *CharTransTable;   /* Zeichenuebersetzungstabelle */
 
    PFunction FirstFunction;	    /* Liste definierter Funktionen */
 
    PDefinement FirstDefine;         /* Liste von Praeprozessor-Defines */
+
+   PStructure StructureStack;       /* momentan offene Strukturen */
+   int StructSaveSeg;               /* gesichertes Segment waehrend Strukturdef.*/
 
    PSaveState FirstSaveState;	    /* gesicherte Zustaende */
 
@@ -228,19 +231,24 @@ END
 
         void Default_InternSymbol(char *Asc, TempResult *Erg)
 BEGIN
-   if (Asc); /* satisfy compiler */
    Erg->Typ=TempNone;
+END
+
+	static char *GetString(void)
+BEGIN
+   return malloc(256*sizeof(char));
 END
 
 	void asmdef_init(void)
 BEGIN
-   Integer z;
+   int z;
 
    InitPassProc=NullProc;
    ClearUpProc=NullProc;
    FirstCPUDef=Nil;
    CPUCnt=0;
    SwitchFrom=NullProc;
+   CharTransTable=(unsigned char *) malloc(256*sizeof(char));
    for (z=0; z<256; z++) CharTransTable[z]=z;
    InternSymbol=Default_InternSymbol;
 
@@ -249,4 +257,31 @@ BEGIN
    BAsmCode=(Byte *) DAsmCode;
 
    RelaxedMode=True; ConstMode=ConstModeC;
+
+   for (z=0; z<ParMax; z++) ArgStr[z]=GetString();
+   SourceFile=GetString();
+   ClrEol=GetString();
+   CursUp=GetString();
+   ErrorPath=GetString();
+   ErrorName=GetString();
+   OutName=GetString();
+   CurrFileName=GetString();
+   IncludeList=GetString();
+   LstName=GetString();
+   MacroName=GetString();
+   MacProName=GetString();
+   ShareName=GetString();
+   LabPart=GetString();
+   OpPart=GetString();
+   AttrPart=GetString();
+   ArgPart=GetString();
+   CommPart=GetString();
+   LOpPart=GetString();
+   OneLine=GetString();
+   ListLine=GetString();
+   PrtInitString=GetString();
+   PrtExitString=GetString();
+   PrtTitleString=GetString();
+   ExtendError=GetString();
+
 END

@@ -1,163 +1,97 @@
 !include Makefile.def
 
-CODE_SRCS = codeallg.c codepseudo.c codevars.c \
-  	    code68k.c \
-            code56k.c \
-  	    code601.c \
-  	    code68.c code6805.c code6809.c code6812.c code6816.c \
-  	    codeh8_3.c codeh8_5.c code7000.c \
-  	    code65.c code7700.c code4500.c codem16.c codem16c.c \
-            code48.c code51.c code96.c code85.c code86.c \
-  	    code8x30x.c codexa.c \
-  	    codeavr.c \
-  	    code29k.c \
-  	    code166.c \
-  	    codez80.c codez8.c \
-            code96c141.c code90c141.c code87c800.c code47c00.c code97c241.c \
-  	    code16c5x.c code16c8x.c code17c4x.c \
-  	    codest6.c codest7.c codest9.c code6804.c \
-            code3201x.c code3202x.c code3203x.c code3205x.c \
-            code9900.c codetms7.c code370.c codemsp.c \
-  	    code78c10.c code75k0.c code78k0.c \
-            codescmp.c codecop8.c \
-            codeflt1750.c
+!include makedefs.src
 
-CODE_OBJECTS = $(CODE_SRCS:.c=.obj)
+!include objdefs.dos
 
-ST_SRCS = stringutil.c stdhandl.c stringlists.c
+!include makedefs.files
 
-ST_OBJECTS = $(ST_SRCS:.c=.obj)
-
-ASM_SRCS = asmdef.c asmsub.c asmpars.c asmmac.c asmcode.c asmdebug.c asmif.c \
-           asmfnums.c asminclist.c asmitree.c \
-           as.c as1750.c
-
-ASM_OBJECTS = $(ASM_SRCS:.c=.obj)
-
-AS_SRCS = endian.c bpemu.c nls.c chunks.c decodecm.c ioerrors.c
-          
-AS_OBJECTS = $(AS_SRCS:.c=.obj)
-
-PLIST_SRCS = endian.c bpemu.c hex.c nls.c stringutil.c decodecmd.c ioerrors.c \
-             toolutils.c \
-             plist.c
-
-PLIST_OBJECTS = $(PLIST_SRCS:.c=.obj)
-
-PBIND_SRCS = endian.c bpemu.c nls.c stringutil.c stdhandl.c decodecmd.c ioerrors.c \
-             toolutils.c \
-	     pbind.c
-
-PBIND_OBJECTS = $(PBIND_SRCS:.c=.obj)
-
-P2HEX_SRCS = endian.c bpemu.c hex.c nls.c stringut.c chunks.c decodecm.c ioerrors.c\
-             toolutil.c\
-             p2hex.c
-
-P2HEX_OBJECTS = $(P2HEX_SRCS:.c=.obj)
-
-P2BIN_SRCS = endian.c bpemu.c hex.c nls.c stringut.c chunks.c decodecm.c ioerrors.c\
-             toolutil.c\
-             p2bin.c
-
-P2BIN_OBJECTS = $(P2BIN_SRCS:.c=.obj)
-
-ARCHFILES = *.c *.h header.tmpl *.1 \
-            README README.OS2 Makefile Makefile.def.tmpl install.sh \
-            lang_DE/*.rsc lang_EN/*.rsc \
-            doc_DE doc_EN \
-            *.asm include/*.inc \
-            tests \
-	    Makefile.def-samples
-
-DISTARCHFILES = *.c *.h asl-$(VERSION).lsm *.1 \
-            README README.OS2 Makefile Makefile.def.tmpl install.sh \
-            lang_DE/*.rsc lang_EN/*.rsc \
-            doc_DE doc_EN \
-            include/*.inc \
-            tests \
-            Makefile.def-samples
-
-ALLOBJECTS = $(CODE_OBJECTS) $(AS_OBJECTS) $(PLIST_OBJECTS) $(P2HEX_OBJECTS) $(P2BIN_OBJECTS)
-
-ALLASMSRCS = $(ALLOBJECTS:.obj=.asm)
-
-# modify this if you need a specific extension for the executables
-# (e.g. .exe for OS/2)
-
-ASLTARGET = asl$(EXEXTENSION)
-PLISTTARGET = plist$(EXEXTENSION)
-PBINDTARGET = pbind$(EXEXTENSION)
-P2HEXTARGET = p2hex$(EXEXTENSION)
-P2BINTARGET = p2bin$(EXEXTENSION)
-
-ALLTARGETS = $(ASLTARGET) $(PLISTTARGET) $(PBINDTARGET) $(P2HEXTARGET) $(P2BINTARGET)
+ALLFLAGS = $(CFLAGS) -D$(CHARSET) -DSTDINCLUDES="$(INCDIR)" -DLIBDIR="$(LIBDIR)"
 
 #---------------------------------------------------------------------------
-
+# primary targets
 
 all: $(ALLTARGETS)
 
-test: $(ALLTARGETS)
-	cd tests; ./testall
+docs: $(TEX2DOCTARGET) $(TEX2HTMLTARGET)
+	cd doc_DE
+	$(MAKE) TEX2DOC=..\$(TEX2DOCTARGET) TEX2HTML=..\$(TEX2HTMLTARGET) RM=del
+	cd ..\doc_EN
+	$(MAKE) TEX2DOC=..\$(TEX2DOCTARGET) TEX2HTML=..\$(TEX2HTMLTARGET) RM=del
+	cd ..
 
-install: $(ALLTARGETS)
-	./install.sh $(BINDIR) $(INCDIR) $(MANDIR)
+$(ASLTARGET): $(AS_OBJECTS) $(ASM_OBJECTS) $(ST_OBJECTS) $(CODE_OBJECTS) $(NLS_OBJECTS)
+	$(LD) -ml $(OVR1FLAG) -e$(ASLTARGET) as*.$(OBJEXTENSION) $(AS_OBJECTS) st*.$(OBJEXTENSION) n*.$(OBJEXTENSION) $(OVR2FLAG) code*.$(OBJEXTENSION)
+
+$(PLISTTARGET): $(PLIST_OBJECTS) $(NLS_OBJECTS)
+	$(LD) -ml $(PLIST_OBJECTS) n*.$(OBJEXTENSION)
+
+$(PBINDTARGET): $(PBIND_OBJECTS) $(NLS_OBJECTS)
+	$(LD) -ml $(PBIND_OBJECTS) n*.$(OBJEXTENSION)
+
+$(P2HEXTARGET): $(P2HEX_OBJECTS) $(NLS_OBJECTS)
+	$(LD) -ml $(P2HEX_OBJECTS) n*.$(OBJEXTENSION)
+
+$(P2BINTARGET): $(P2BIN_OBJECTS) $(NLS_OBJECTS)
+	$(LD) -ml $(P2BIN_OBJECTS) n*.$(OBJEXTENSION)
+
+$(RESCOMPTARGET): $(RESCOMP_OBJECTS)
+	$(LD) -ml -e$(RESCOMPTARGET) $(RESCOMP_OBJECTS) $(LDFLAGS)
+
+$(TEX2DOCTARGET): $(TEX2DOC_OBJECTS)
+	$(LD) -o $(TEX2DOCTARGET) $(TEX2DOC_OBJECTS) $(LDFLAGS)
+
+$(TEX2HTMLTARGET): $(TEX2HTML_OBJECTS)
+	$(LD) -o $(TEX2HTMLTARGET) $(TEX2HTML_OBJECTS) $(LDFLAGS)
+
+$(UNUMLAUTTARGET): $(UNUMLAUT_OBJECTS)
+	$(LD) -ml -e$(UNUMLAUTTARGET) $(UNUMLAUT_OBJECTS) $(LDFLAGS)
+
+#---------------------------------------------------------------------------
+# special rules for objects dependant on string resource files
+
+!include makedefs.str
+
+#---------------------------------------------------------------------------
+# supplementary targets
+
+test: $(ALLTARGETS)
+	cd tests
+	copy t_secdri\wd1003at.inc t_secdri\lowlevel.inc
+	testall
+	cd ..
+
+install: $(ALLTARGETS) $(UNUMLAUTTARGET)
+	install $(BINDIR) $(INCDIR) $(MANDIR) $(LIBDIR) $(DOCDIR)
 
 clean:
-	rm -f $(ALLTARGETS) *.obj *.p *~ DEADJOE `find . -name "*.lst" -print` tests/testlog
-
-$(ASLTARGET): $(ASM_OBJECTS) $(AS_OBJECTS) $(ST_OBJECTS) $(CODE_OBJECTS)
-	$(LD) -mh -Y -e$(ASLTARGET) as*.obj $(AS_OBJECTS) st*.obj -Yo code*.obj
-
-$(PLISTTARGET): $(PLIST_OBJECTS)
-	$(LD) -mh -e$(PLISTTARGET) $(PLIST_OBJECTS)
-
-$(PBINDTARGET): $(PBIND_OBJECTS)
-	$(LD) -mh -e$(PBINDTARGET) $(PBIND_OBJECTS)
-
-$(P2HEXTARGET): $(P2HEX_OBJECTS)
-	$(LD) -mh -e$(P2HEXTARGET) $(P2HEX_OBJECTS)
-
-$(P2BINTARGET): $(P2BIN_OBJECTS)
-	$(LD) -mh -e$(P2BINTARGET) $(P2BIN_OBJECTS)
-
-#asmsrc: $(ALLASMSRCS)
+	del $(ALLTARGETS)
+	del *.$(OBJEXTENSION)
+	del *.p
+	del testlog
+	del *.rsc
+	cd doc_DE
+	$(MAKE) RM=del clean
+	cd ..\doc_EN
+	$(MAKE) RM=del clean
+	cd ..
 
 #---------------------------------------------------------------------------
+# create distributions
 
-
-tape: unjunk
-	tar cvf /dev/ntape $(ARCHFILES)
-
-disk: archive
-	mcopy -nvm asport.tar.gz a:ASPORT.TGZ
-
-archive: asport.tar.gz
-
-distrib: unjunk
-	mkdir ../asl-$(VERSION)
-	tar cf - $(DISTARCHFILES) | (cd ../asl-$(VERSION); tar xvf -)
-	cd ..; tar cvf asport/asl-$(VERSION).tar asl-$(VERSION)
-	rm -rf ../asl-$(VERSION)
-	gzip -9 -f asl-$(VERSION).tar
-
-
-asport.tar.gz: $(ARCHFILES) unjunk
-	tar cvf asport.tar $(ARCHFILES)
-	gzip -9 -f asport.tar
-
-unjunk:
-	rm -f asmpars.cas.c include/fileform* config.h test.h loc.c gennop.c \
-           nops.asm bind.* asmutils.* filenums.* includelist.* tests/warnlog_* \
-           insttree.* flt1750.* \
-	   `find . -name "testlog" -print` \
-	   `find . -name "*~" -print` \
-	   `find . -name "*.lst" -print`
+bindist: $(UNUMLAUTTARGET)
+	mkdir as
+	install as\bin as\include as\man as\lib as\doc
+	cd as
+	zip -9 -r ..\as$(VERSION) *.*
+	cd ..
+	deltree as
 
 #---------------------------------------------------------------------------
+# for my own use only...
 
+#---------------------------------------------------------------------------
 
 .SUFFIXES: .c
-.c.obj: 
-	$(CC) $(CFLAGS) -D$(CHARSET) -I$(LANGRSC) -DSTDINCLUDES="${INCDIR}" -c -o$*.obj $*.c
+.c.$(OBJEXTENSION):
+	$(CC) $(ALLFLAGS) -c $*.c

@@ -15,7 +15,7 @@
 
 #include "nls.h"
 #include "bpemu.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
@@ -154,7 +154,7 @@ BEGIN
 #define AdrRegCnt 5
    static char *AdrRegs[AdrRegCnt]={"HL","DE","C","PC","A"};
 
-   Integer z;
+   int z;
    Byte RegFlag;
    LongInt DispAcc,DispPart;
    String AdrPart;
@@ -329,7 +329,8 @@ END
 
 	static void MakeCode_87C800(void)
 BEGIN
-   Integer z,AdrInt,Condition;
+   int z;
+   Integer AdrInt,Condition;
    Byte HReg,HCnt,HMode,HVal;
    Boolean OK;
 

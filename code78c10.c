@@ -13,7 +13,7 @@
 #include <string.h>
 
 #include "bpemu.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
@@ -268,7 +268,7 @@ BEGIN
 				   "H+A","A+H","H+B","B+H","H+EA","EA+H"};
    static Byte OpCodes[OpCnt]={1,2,3,4,5,6,7,12,12,13,13,14,14};
 
-   Integer z;
+   int z;
    char *p,*pm;
    Boolean OK;
 
@@ -334,7 +334,7 @@ END
 
 	static Boolean Decode_sr0(char *Asc, ShortInt *Erg)
 BEGIN
-   Integer z;
+   int z;
 
    for (z=0; z<SRegCnt; z++)
     if (strcasecmp(Asc,SRegs[z].Name)==0) break;
@@ -437,7 +437,8 @@ END
 
 	static void MakeCode_78C10(void)
 BEGIN
-   Integer z,AdrInt;
+   int z;
+   Integer AdrInt;
    ShortInt HVal8,HReg;
    Boolean OK;
 

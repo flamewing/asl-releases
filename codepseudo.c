@@ -14,11 +14,13 @@
 #include "nls.h"
 #include "bpemu.h"
 #include "endian.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "asmallg.h"
+#include "asmitree.h"
 
 #include "codepseudo.h"
 
@@ -47,7 +49,7 @@ BEGIN
 #else
    int z,res;
 
-   cptr=Field;
+   cptr=(char *) Field;
    for (z=0; z<Count; z++)
     BEGIN
      ptr=(char**) cptr;
@@ -63,7 +65,7 @@ END
 
 	Boolean IsIndirect(char *Asc)
 BEGIN
-   Integer z,Level,l;
+   int z,Level,l;
 
    if (((l=strlen(Asc))<=2) OR (Asc[0]!='(') OR (Asc[l-1]!=')')) return False;
 
@@ -90,8 +92,6 @@ typedef Boolean (*TLayoutFunc)(
 BEGIN
    Boolean Result;
    TempResult t;
-
-   if (Turn);  /* satisfy some compilers */
 
    Result=False;
 
@@ -185,9 +185,6 @@ END
 	static Boolean LayoutDoubleWord(char *Asc, Word *Cnt, Boolean Turn)
 BEGIN
    TempResult erg;
-   Integer z;
-   Byte Exg;
-   Single copy;
    Boolean Result=False;
 
    *Cnt=4;
@@ -237,9 +234,7 @@ BEGIN
      case TempFloat:
       if (FloatRangeCheck(erg.Contents.Float,Float32))
        BEGIN
-	copy=erg.Contents.Float;
-        memcpy(BAsmCode+CodeLen,&copy,4);
-        if (BigEndian) DSwap(BAsmCode+CodeLen,4);
+        Double_2_ieee4(erg.Contents.Float,BAsmCode+CodeLen,False);
 	CodeLen+=4;
        END
       else
@@ -253,13 +248,7 @@ BEGIN
       return Result;
     END
 
-   if (Turn)
-    for (z=0; z<2; z++)
-     BEGIN
-      Exg=BAsmCode[CodeLen-4+z];
-      BAsmCode[CodeLen-4+z]=BAsmCode[CodeLen-1-z];
-      BAsmCode[CodeLen-1-z]=Exg;
-     END
+   if (Turn) DSwap(BAsmCode+CodeLen,4);
    return True;
 END
 
@@ -268,9 +257,9 @@ END
 BEGIN
    Boolean Result;
    TempResult erg;
-   Integer z;
-   Byte Exg;
-   Double Copy;
+#ifndef HAS64
+   int z;
+#endif
 
    Result=False; *Cnt=8;
 
@@ -313,9 +302,7 @@ BEGIN
       CodeLen+=8;
       break;
      case TempFloat:
-      Copy=erg.Contents.Float;
-      memcpy(BAsmCode+CodeLen,&Copy,8);
-      if (BigEndian) QSwap(BAsmCode+CodeLen,8);
+      Double_2_ieee8(erg.Contents.Float,BAsmCode+CodeLen,False);
       CodeLen+=8;
       break;
      case TempString:
@@ -323,13 +310,7 @@ BEGIN
       return Result;
     END
  
-   if (Turn)
-    for (z=0; z<4; z++)
-     BEGIN
-      Exg=BAsmCode[CodeLen-8+z];
-      BAsmCode[CodeLen-8+z]=BAsmCode[CodeLen-1-z];
-      BAsmCode[CodeLen-1-z]=Exg;
-     END
+   if (Turn) QSwap(BAsmCode+CodeLen,8);
    return True;
 END
 
@@ -338,7 +319,7 @@ END
 BEGIN
    Boolean OK,Result;
    Double erg;
-   Integer z;
+   int z;
    Byte Exg;
 
    Result=False; *Cnt=10;
@@ -368,7 +349,7 @@ BEGIN
    erg=EvalFloatExpression(Asc,Float64,&OK);
    if (OK)
     BEGIN
-     Double_2_TenBytes(erg,BAsmCode+CodeLen);
+     Double_2_ieee10(erg,BAsmCode+CodeLen,False);
      CodeLen+=10;
      if (Turn)
       for (z=0; z<5; z++)
@@ -391,9 +372,10 @@ END
                                                     TLayoutFunc LayoutFunc,
                                                     Boolean Turn)
 BEGIN
-   Integer z,Depth,Fnd,ALen;
+   int z,Depth,Fnd,ALen;
    String Asc,Part;
-   Word Rep,SumCnt,ECnt,SInd;
+   Word SumCnt,ECnt,SInd;
+   LongInt Rep;
    Boolean OK,Hyp;
 
    strmaxcpy(Asc,Asc_O,255);
@@ -424,6 +406,11 @@ BEGIN
        WrError(1820); return False;
       END
      if (NOT OK) return False;
+
+     /* Nullargument vergessen, bei negativem warnen */
+
+     if (Rep<0) WrError(270);
+     if (Rep<=0) return True;
 
      /* Einzelteile bilden & evaluieren */
 
@@ -490,38 +477,40 @@ END
 	Boolean DecodeIntelPseudo(Boolean Turn)
 BEGIN
    Word Dummy;
-   Integer z;
+   int z;
    TLayoutFunc LayoutFunc=Nil;
    Boolean OK;
    LongInt HVal;
+   char Ident;
 
-   if ((Memo("DB")) OR (Memo("DW")) OR (Memo("DD")) OR (Memo("DQ")) OR (Memo("DT")))
+   if ((strlen(OpPart)!=2) OR (*OpPart!='D')) return False;
+   Ident=OpPart[1];
+
+   if ((Ident=='B') OR (Ident=='W') OR (Ident=='D') OR (Ident=='Q') OR (Ident=='T'))
     BEGIN
      DSFlag=DSNone;
-     if (Memo("DB"))
+     switch (Ident)
       BEGIN
-       LayoutFunc=LayoutByte;
-       if (*LabPart!='\0') SetSymbolSize(LabPart,0);
-      END
-     else if (Memo("DW"))
-      BEGIN
-       LayoutFunc=LayoutWord;
-       if (*LabPart!='\0') SetSymbolSize(LabPart,1);
-      END
-     else if (Memo("DD"))
-      BEGIN
-       LayoutFunc=LayoutDoubleWord;
-       if (*LabPart!='\0') SetSymbolSize(LabPart,2);
-      END
-     else if (Memo("DQ"))
-      BEGIN
-       LayoutFunc=LayoutQuadWord;
-       if (*LabPart!='\0') SetSymbolSize(LabPart,3);
-      END
-     else if (Memo("DT"))
-      BEGIN
-       LayoutFunc=LayoutTenBytes;
-       if (*LabPart!='\0') SetSymbolSize(LabPart,4);
+       case 'B':
+        LayoutFunc=LayoutByte;
+        if (*LabPart!='\0') SetSymbolSize(LabPart,0);
+        break;
+       case 'W':
+        LayoutFunc=LayoutWord;
+        if (*LabPart!='\0') SetSymbolSize(LabPart,1);
+        break;
+       case 'D':
+        LayoutFunc=LayoutDoubleWord;
+        if (*LabPart!='\0') SetSymbolSize(LabPart,2);
+        break;
+       case 'Q':
+        LayoutFunc=LayoutQuadWord;
+        if (*LabPart!='\0') SetSymbolSize(LabPart,3);
+        break;
+       case 'T':
+        LayoutFunc=LayoutTenBytes;
+        if (*LabPart!='\0') SetSymbolSize(LabPart,4);
+        break;
       END
      z=1;
      do
@@ -537,7 +526,7 @@ BEGIN
      return True;
     END
 
-   if (Memo("DS"))
+   if (Ident=='S')
     BEGIN
      if (ArgCnt!=1) WrError(1110);
      else
@@ -558,23 +547,53 @@ BEGIN
    return False;
 END
 
-	Boolean DecodeMotoPseudo(Boolean Turn)
-BEGIN
-   Boolean OK;
-   Integer z;
-   Word HVal16;
-   TempResult t;
-   String SVal;
+/*--------------------------------------------------------------------------*/
 
-   if ((Memo("BYT")) OR (Memo("FCB")))
+static Boolean M16Turn=False;
+
+	static Boolean CutRep(char *Asc, LongInt *Erg)
+BEGIN
+   char *p;
+   Boolean OK;
+
+   if (*Asc!='[')
     BEGIN
-     if (ArgCnt==0) WrError(1110);
+     *Erg=1; return True;
+    END
+   else
+    BEGIN
+     strcpy(Asc,Asc+1); p=QuotPos(Asc,']');
+     if (p==Nil) 
+      BEGIN
+       WrError(1300); return False;
+      END
      else
       BEGIN
-       z=1; OK=True;
-       do
+       *p='\0';
+       *Erg=EvalIntExpression(Asc,Int32,&OK);
+       strcpy(Asc,p+1); return OK;
+      END
+    END
+END	
+	
+	static void DecodeBYT(Word Index)
+BEGIN
+   int z;
+   Boolean OK;
+   TempResult t;
+   LongInt Rep,z2;
+
+   if (ArgCnt==0) WrError(1110);
+   else
+    BEGIN
+     z=1; OK=True;
+     do
+      BEGIN
+       KillBlanks(ArgStr[z]);
+       OK=CutRep(ArgStr[z],&Rep);
+       if (OK)
         BEGIN
-	 KillBlanks(ArgStr[z]); EvalExpression(ArgStr[z],&t);
+         EvalExpression(ArgStr[z],&t);
          switch (t.Typ)
           BEGIN
            case TempInt:
@@ -582,24 +601,28 @@ BEGIN
              BEGIN
               WrError(1320); OK=False;
              END
-            else if (CodeLen==MaxCodeLen)
+            else if (CodeLen+Rep>MaxCodeLen)
              BEGIN
               WrError(1920); OK=False;
              END
-            else BAsmCode[CodeLen++]=t.Contents.Int;
+            else
+             BEGIN
+              memset(BAsmCode+CodeLen,t.Contents.Int,Rep);
+              CodeLen+=Rep;
+             END
             break;
            case TempFloat:
             WrError(1135); OK=False;
             break;
            case TempString:
             TranslateString(t.Contents.Ascii);
-            if (CodeLen+strlen(t.Contents.Ascii)>MaxCodeLen)
+            if (CodeLen+Rep*strlen(t.Contents.Ascii)>MaxCodeLen)
              BEGIN
               WrError(1920); OK=False;
              END
-            else
+            else for (z2=0; z2<Rep; z2++)
              BEGIN
-	      memcpy(BAsmCode+CodeLen,t.Contents.Ascii,strlen(t.Contents.Ascii));
+              memcpy(BAsmCode+CodeLen,t.Contents.Ascii,strlen(t.Contents.Ascii));
               CodeLen+=strlen(t.Contents.Ascii);
              END
             break;
@@ -607,91 +630,135 @@ BEGIN
             OK=False; 
             break;
           END
-         z++;
-        END
-       while ((z<=ArgCnt) AND (OK));
-       if (NOT OK) CodeLen=0;
+        END  
+       z++;
       END
-     return True;
+     while ((z<=ArgCnt) AND (OK));
+     if (NOT OK) CodeLen=0;
     END
+END
 
-   if ((Memo("ADR")) OR (Memo("FDB")))
+	static void DecodeADR(Word Index)
+BEGIN
+   int z;
+   Word HVal16;
+   Boolean OK;
+   LongInt Rep,z2;
+
+   if (ArgCnt==0) WrError(1110);
+   else
     BEGIN
-     if (ArgCnt==0) WrError(1110);
-     else
+     z=1; OK=True;
+     do
       BEGIN
-       z=1; OK=True;
-       do
-        BEGIN
-         HVal16=EvalIntExpression(ArgStr[z],Int16,&OK);
-         if (OK)
-	  BEGIN
-           if (Turn)
+       OK=CutRep(ArgStr[z],&Rep);
+       if (OK)
+        if (CodeLen+(Rep<<1)>MaxCodeLen)
+         BEGIN
+          WrError(1920); OK=False;
+         END
+        else
+         BEGIN
+          HVal16=EvalIntExpression(ArgStr[z],Int16,&OK);
+          if (OK)
+           for (z2=0; z2<Rep; z2++)
             BEGIN
-             BAsmCode[CodeLen++]=Hi(HVal16);
-             BAsmCode[CodeLen++]=Lo(HVal16);
-            END
-           else
-            BEGIN
-             BAsmCode[CodeLen++]=Lo(HVal16);
-             BAsmCode[CodeLen++]=Hi(HVal16);
-            END
-          END
-         z++;
-        END
-       while ((z<=ArgCnt) AND (OK));
-       if (NOT OK) CodeLen=0;
+             if (M16Turn)
+              BEGIN
+               BAsmCode[CodeLen++]=Hi(HVal16);
+               BAsmCode[CodeLen++]=Lo(HVal16);
+              END
+             else
+              BEGIN
+               BAsmCode[CodeLen++]=Lo(HVal16);
+               BAsmCode[CodeLen++]=Hi(HVal16);
+              END
+           END
+         END
+       z++;
       END
-     return True;
+     while ((z<=ArgCnt) AND (OK));
+     if (NOT OK) CodeLen=0;
     END
+END
 
-   if (Memo("FCC"))
+	static void DecodeFCC(Word Index)
+BEGIN
+   String SVal;
+   Boolean OK;
+   int z;
+   LongInt Rep,z2;
+
+   if (ArgCnt==0) WrError(1110);
+   else
     BEGIN
-     if (ArgCnt==0) WrError(1110);
-     else
+     z=1; OK=True;
+     do
       BEGIN
-       z=1; OK=True;
-       do
+       OK=CutRep(ArgStr[z],&Rep);
+       if (OK)
         BEGIN
          EvalStringExpression(ArgStr[z],&OK,SVal);
          if (OK)
-          if (CodeLen+strlen(SVal)>=MaxCodeLen)
+          if (CodeLen+Rep*strlen(SVal)>=MaxCodeLen)
            BEGIN
             WrError(1920); OK=False;
            END
           else
            BEGIN
             TranslateString(SVal);
-            memcpy(BAsmCode+CodeLen,SVal,strlen(SVal));
-            CodeLen+=strlen(SVal);
+            for (z2=0; z2<Rep; z2++)
+             BEGIN
+              memcpy(BAsmCode+CodeLen,SVal,strlen(SVal));
+              CodeLen+=strlen(SVal);
+             END
            END
-         z++;
-        END
-       while ((z<=ArgCnt) AND (OK));
-       if (NOT OK) CodeLen=0;
+        END   
+       z++;
       END
-     return True;
+     while ((z<=ArgCnt) AND (OK));
+     if (NOT OK) CodeLen=0;
     END
+END
 
-   if ((Memo("DFS")) OR (Memo("RMB")))
+	static void DecodeDFS(Word Index)
+BEGIN
+   Word HVal16;
+   Boolean OK;
+
+   if (ArgCnt!=1) WrError(1110);
+   else
     BEGIN
-     if (ArgCnt!=1) WrError(1110);
-     else
+     FirstPassUnknown=False;
+     HVal16=EvalIntExpression(ArgStr[1],Int16,&OK);
+     if (FirstPassUnknown) WrError(1820);
+     else if (OK)
       BEGIN
-       FirstPassUnknown=False;
-       HVal16=EvalIntExpression(ArgStr[1],Int16,&OK);
-       if (FirstPassUnknown) WrError(1820);
-       else if (OK)
-        BEGIN
-         DontPrint=True; CodeLen=HVal16;
-         if (MakeUseList)
- 	  if (AddChunk(SegChunks+ActPC,ProgCounter(),HVal16,ActPC==SegCode)) WrError(90);
-        END
+       DontPrint=True; CodeLen=HVal16;
+       if (MakeUseList)
+        if (AddChunk(SegChunks+ActPC,ProgCounter(),HVal16,ActPC==SegCode)) WrError(90);
       END
-     return True;
+    END
+END
+
+	Boolean DecodeMotoPseudo(Boolean Turn)
+BEGIN
+   static PInstTable InstTable=Nil;
+
+   if (InstTable==Nil)
+    BEGIN
+     InstTable=CreateInstTable(17);
+     AddInstTable(InstTable,"BYT",0,DecodeBYT);
+     AddInstTable(InstTable,"FCB",0,DecodeBYT);
+     AddInstTable(InstTable,"ADR",0,DecodeADR);
+     AddInstTable(InstTable,"FDB",0,DecodeADR);
+     AddInstTable(InstTable,"FCC",0,DecodeFCC);
+     AddInstTable(InstTable,"DFS",0,DecodeDFS);
+     AddInstTable(InstTable,"RMB",0,DecodeDFS);
     END
 
-   return False;
+   M16Turn=Turn;
+   return LookupInstTable(InstTable,OpPart);
 END
 
 	static void DigIns(char Ch, Byte Pos, Word *w)
@@ -756,15 +823,16 @@ BEGIN
    CodeLen++;
 END
 
+	void AddMoto16PseudoONOFF(void)
+BEGIN
+   AddONOFF("PADDING",&DoPadding,DoPaddingName,False);
+END
+
 	Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
 BEGIN
-#define ONOFFMoto16Count 1
-static ONOFFRec ONOFFMoto16s[ONOFFMoto16Count]=
-             {{"PADDING", &DoPadding, DoPaddingName}};
-
    Byte z;
    Word TurnField[8];
-   char *p,*zp;
+   char *zp;
    LongInt z2;
    LongInt WSize,Rep=0;
    LongInt NewPC,HVal,WLen;
@@ -773,15 +841,12 @@ static ONOFFRec ONOFFMoto16s[ONOFFMoto16Count]=
 #endif
    Integer HVal16;
    Double DVal;
-   Single FVal;
    TempResult t;
    Boolean OK,ValOK;
 
-   if (Turn); /* satisfy some compilers */
- 
    if (OpSize<0) OpSize=1;
 
-   if (CodeONOFF(ONOFFMoto16s,ONOFFMoto16Count)) return True;
+   if (*OpPart!='D') return False;
 
    if (Memo("DC"))
     BEGIN
@@ -792,21 +857,7 @@ static ONOFFRec ONOFFMoto16s[ONOFFMoto16Count]=
        do
         BEGIN
 	 FirstPassUnknown=False;
-	 if (*ArgStr[z]!='[') Rep=1;
-	 else
-	  BEGIN
-	   strcpy(ArgStr[z],ArgStr[z]+1); p=QuotPos(ArgStr[z],']');
-           if (p==Nil) 
-            BEGIN
-             WrError(1300); OK=False;
-            END
-           else
-            BEGIN
-             *p='\0';
-	     Rep=EvalIntExpression(ArgStr[z],Int32,&OK);
-	     strcpy(ArgStr[z],p+1);
-            END
-	  END
+	 OK=CutRep(ArgStr[z],&Rep);
 	 if (OK)
 	  if (FirstPassUnknown) WrError(1820);
 	  else
@@ -929,7 +980,7 @@ static ONOFFRec ONOFFMoto16s[ONOFFMoto16Count]=
 	       break;
 #endif
 	      case 4:
-	       FVal=EvalFloatExpression(ArgStr[z],Float32,&OK);
+	       DVal=EvalFloatExpression(ArgStr[z],Float32,&OK);
 	       if (OK)
 	        if (CodeLen+(Rep<<2)>MaxCodeLen)
 		 BEGIN
@@ -937,7 +988,7 @@ static ONOFFRec ONOFFMoto16s[ONOFFMoto16Count]=
 		 END
 	        else
 		 BEGIN
-                  memcpy(TurnField,&FVal,4); 
+                  Double_2_ieee4(DVal,(Byte *) TurnField,BigEndian); 
                   if (BigEndian) DWSwap((void*) TurnField,4);
                   if (ListGran()==1)
                    for (z2=0; z2<Rep; z2++)
@@ -966,7 +1017,7 @@ static ONOFFRec ONOFFMoto16s[ONOFFMoto16Count]=
 		 END
 	        else
 		 BEGIN
-		  memcpy(TurnField,&DVal,8);
+                  Double_2_ieee8(DVal,(Byte *) TurnField,BigEndian);
                   if (BigEndian) QWSwap((void *) TurnField,8);
                   if (ListGran()==1)
                    for (z2=0; z2<Rep; z2++)   
@@ -1001,7 +1052,7 @@ static ONOFFRec ONOFFMoto16s[ONOFFMoto16Count]=
 		 END
 	        else
 		 BEGIN
-		  Double_2_TenBytes(DVal,(Byte *) TurnField);
+		  Double_2_ieee10(DVal,(Byte *) TurnField,False);
                   if (BigEndian) WSwap((void *) TurnField,10);
                   if (ListGran()==1)
                    for (z2=0; z2<Rep; z2++)
@@ -1154,7 +1205,7 @@ END
 
 	void CodeASSUME(ASSUMERec *Def, Integer Cnt)
 BEGIN
-   Integer z1,z2;
+   int z1,z2;
    Boolean OK;
    LongInt HVal;
    String RegPart,ValPart;
@@ -1190,32 +1241,7 @@ BEGIN
     END
 END
 
-	Boolean CodeONOFF(ONOFFRec *Def, Integer Cnt)
-BEGIN
-   Integer z;
-   Boolean OK;
-
-   for (z=0; z<Cnt; z++)
-    if (Memo(Def[z].Name))
-     BEGIN
-      if (ArgCnt!=1) WrError(1110);
-      else
-       BEGIN
-        NLS_UpString(ArgStr[1]);
-        if (*AttrPart!='\0') WrError(1100);
-        else if ((strcmp(ArgStr[1],"ON")!=0) AND (strcmp(ArgStr[1],"OFF")!=0)) WrError(1520);
-        else
-         BEGIN
-          OK=(strcmp(ArgStr[1],"ON")==0);
-          SetFlag(Def[z].Dest,Def[z].FlagName,OK);
-         END
-       END
-      return True;
-     END
-
-   return False;
-END
-
 	void codepseudo_init(void)
 BEGIN
 END
+

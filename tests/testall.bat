@@ -6,22 +6,19 @@ type %1.doc | ..\..\addcr
 set ASCMD=@asflags
 ..\..\asl -i ..\..\include -L +t 31 %1.asm
 set ASCMD=
-..\..\p2bin -l 0 -r $-$ %1
-echo n >inp
-comp %1.bin %1.ori >nul <inp
+..\..\p2bin -k -l 0 -r $-$ %1
+..\..\bincmp %1.bin %1.ori
 if errorlevel 1 goto errcond
 echo Test %1 succeeded!
 set SUMPASS=%SUMPASS%!
 echo %1 : OK >> ..\..\testlog
 :goon
-del inp >nul
 echo +---------------------------------------------------------------+
-type %1.lst | find "assembly time" >> ..\..\testlog
+type %1.lst | find "assembly" >> ..\..\testlog
 type %1.lst | find "Assemblierzeit" >> ..\..\testlog
 if exist %1.lst del %1.lst >nul
 if exist %1.inc del %1.inc >nul
 if exist %1.bin del %1.bin >nul
-if exist %1.p del %1.p >nul
 cd ..
 goto end
 
@@ -34,7 +31,12 @@ goto goon
 :main
 if exist ..\addcr.exe goto nocomp
 bcc -e..\addcr.exe -ml ..\addcr.c
+del addcr.obj
 :nocomp
+if exist ..\bincmp.exe goto nocomp2
+bcc -e..\bincmp.exe -ml ..\bincmp.c
+del bincmp.obj
+:nocomp2
 echo executing self tests...
 echo ================================================================= >..\testlog
 echo Summaric results: >> ..\testlog
@@ -56,8 +58,11 @@ call testall t_4500
 call testall t_47c00
 call testall t_48
 call testall t_56000
+call testall t_56300
 call testall t_65
+call testall t_6502u
 call testall t_6804
+call testall t_68040
 call testall t_6805
 call testall t_6808
 call testall t_6812
@@ -83,6 +88,7 @@ call testall t_full09
 call testall t_h8_3
 call testall t_h8_5
 call testall t_m16c
+call testall t_mcore
 call testall t_mic51
 call testall t_msp
 call testall t_parsys
@@ -93,8 +99,8 @@ call testall t_st7
 call testall t_st9
 call testall t_tms7
 call testall t_xa
-call testall t_z8
 call testall t_z380
+call testall t_z8
 echo successes: %SUMPASS% >> ..\testlog
 echo failures: %SUMFAIL% >> ..\testlog
 type ..\testlog

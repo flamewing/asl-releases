@@ -13,7 +13,7 @@
 #include <ctype.h>
 
 #include "bpemu.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
@@ -165,7 +165,7 @@ END
 BEGIN
    Word Size;
    Boolean ValOK;
-   Integer z,z2;
+   int z,z2;
    TempResult t;
    LongInt MinV,MaxV;
 
@@ -260,7 +260,7 @@ END
 BEGIN
    Boolean OK;
    Word AdrWord;
-   Integer z;
+   int z;
 
    CodeLen=0; DontPrint=False;
 

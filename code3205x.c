@@ -13,7 +13,7 @@
 #include <ctype.h>
 
 #include "nls.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
@@ -25,125 +25,212 @@
 
 /* ---------------------------------------------------------------------- */
 
-static const struct cmd_fixed_order {
+typedef struct {
 	char *name;
 	Word code;
-} cmd_fixed_order[] = {{"ABS",    0xbe00},
-		       {"ADCB",   0xbe11},
-		       {"ADDB",   0xbe10},
-		       {"ANDB",   0xbe12},
-		       {"CMPL",   0xbe01},
-		       {"CRGT",   0xbe1b},
-		       {"CRLT",   0xbe1c},
-		       {"EXAR",   0xbe1d},
-		       {"LACB",   0xbe1f},
-		       {"NEG",    0xbe02},
-		       {"ORB",    0xbe13},
-		       {"ROL",    0xbe0c},
-		       {"ROLB",   0xbe14},
-		       {"ROR",    0xbe0d},
-		       {"RORB",   0xbe15},
-		       {"SACB",   0xbe1e},
-		       {"SATH",   0xbe5a},
-		       {"SATL",   0xbe5b},
-		       {"SBB",    0xbe18},
-		       {"SBBB",   0xbe19},
-		       {"SFL",    0xbe09},
-		       {"SFLB",   0xbe16},
-		       {"SFR",    0xbe0a},
-		       {"SFRB",   0xbe17},
-		       {"XORB",   0xbe1a},
-		       {"ZAP",    0xbe59},
-		       {"APAC",   0xbe04},
-		       {"PAC",    0xbe03},
-		       {"SPAC",   0xbe05},
-		       {"ZPR",    0xbe58},
-		       {"BACC",   0xbe20},
-		       {"BACCD",  0xbe21},
-		       {"CALA",   0xbe30},
-		       {"CALAD",  0xbe3d},
-		       {"NMI",    0xbe52},
-		       {"RET",    0xef00},
-		       {"RETD",   0xff00},
-		       {"RETE",   0xbe3a},
-		       {"RETI",   0xbe38},
-		       {"TRAP",   0xbe51},
-		       {"IDLE",   0xbe22},
-		       {"NOP",    0x8b00},
-		       {"POP",    0xbe32},
-		       {"PUSH",   0xbe3c},
-		       {"IDLE2",  0xbe23},
-		       {NULL,     0}};
-
-static const struct cmd_fixed_order
-cmd_adr_order[] = {{"ADDC",   0x6000},
-		   {"ADDS",   0x6200},
-		   {"ADDT",   0x6300},
-		   {"AND",    0x6e00},
-		   {"LACL",   0x6900},
-		   {"LACT",   0x6b00},
-		   {"OR",     0x6d00},
-		   {"SUBB",   0x6400},
-		   {"SUBC",   0x0a00},
-		   {"SUBS",   0x6600},
-		   {"SUBT",   0x6700},
-		   {"XOR",    0x6c00},
-		   {"ZALR",   0x6800},
-		   {"LDP",    0x0d00},
-		   {"APL",    0x5a00},
-		   {"CPL",    0x5b00},
-		   {"OPL",    0x5900},
-		   {"XPL",    0x5800},
-		   {"MAR",    0x8b00},
-		   {"LPH",    0x7500},
-		   {"LT",     0x7300},
-		   {"LTA",    0x7000},
-		   {"LTD",    0x7200},
-		   {"LTP",    0x7100},
-		   {"LTS",    0x7400},
-		   {"MADD",   0xab00},
-		   {"MADS",   0xaa00},
-		   {"MPY",    0x5400},
-		   {"MPYA",   0x5000},
-		   {"MPYS",   0x5100},
-		   {"MPYU",   0x5500},
-		   {"SPH",    0x8d00},
-		   {"SPL",    0x8c00},
-		   {"SQRA",   0x5200},
-		   {"SQRS",   0x5300},
-		   {"BLDP",   0x5700},
-		   {"DMOV",   0x7700},
-		   {"TBLR",   0xa600},
-		   {"TBLW",   0xa700},
-		   {"BITT",   0x6f00},
-		   {"POPD",   0x8a00},
-		   {"PSHD",   0x7600},
-		   {"RPT",    0x0b00},
-		   {NULL,     0}};
-
-
-static const struct cmd_jmp_order {
+} cmd_fixed;
+typedef struct {
 	char *name;
 	Word code;
 	Boolean cond;
-} cmd_jmp_order[] = {{"B",      0x7980,  False},
-		     {"BD",     0x7d80,  False},
-		     {"BANZ",   0x7b80,  False},
-		     {"BANZD",  0x7f80,  False},
-		     {"BCND",   0xe000,  True},
-		     {"BCNDD",  0xf000,  True},
-		     {"CALL",   0x7a80,  False},
-		     {"CALLD",  0x7e80,  False},
-		     {"CC",     0xe800,  True},
-		     {"CCD",    0xf800,  True},
-		     {NULL,     0,       False}};
+} cmd_jmp;
+typedef struct {
+	char *name;
+	Word mode;
+} adr_mode_t;
+typedef struct {
+	char *name;
+	Word codeand;
+	Word codeor;
+	Byte iszl;
+	Byte isc;
+	Byte isv;
+	Byte istp;
+} condition;
+typedef struct {
+	char *name;
+	Word code;
+} bit_table_t;
 
-static const struct cmd_fixed_order
-cmd_plu_order[] = {{"APL",   0x5e00},
-		   {"CPL",   0x5f00},
-		   {"OPL",   0x5d00},
-		   {"SPLK",  0xae00},
-		   {"XPL",   0x5c00}};
+static cmd_fixed *cmd_fixed_order;
+#define cmd_fixed_cnt 46	
+static cmd_fixed *cmd_adr_order;
+#define cmd_adr_cnt 44	
+static cmd_jmp *cmd_jmp_order;
+#define cmd_jmp_cnt 11	
+static cmd_fixed *cmd_plu_order;
+#define cmd_plu_cnt 6
+static adr_mode_t *adr_modes;
+#define adr_mode_cnt 10
+static condition *cond_tab;
+#define cond_cnt 15
+static bit_table_t *bit_table;
+#define bit_cnt 9
+
+static int instrz;
+
+static void addfixed(char *nname, Word ncode)
+{
+	if (instrz>=cmd_fixed_cnt) exit(255);
+	cmd_fixed_order[instrz].name=nname;
+	cmd_fixed_order[instrz++].code=ncode;
+}
+
+static void addadr(char *nname, Word ncode)
+{
+	if (instrz>=cmd_adr_cnt) exit(255);
+	cmd_adr_order[instrz].name=nname;
+	cmd_adr_order[instrz++].code=ncode;
+}
+
+static void addjmp(char *nname, Word ncode, Boolean ncond)
+{
+	if (instrz>=cmd_jmp_cnt) exit(255);
+	cmd_jmp_order[instrz].name=nname;
+	cmd_jmp_order[instrz].code=ncode;
+	cmd_jmp_order[instrz++].cond=ncond;
+}
+
+static void addplu(char *nname, Word ncode)
+{
+	if (instrz>=cmd_plu_cnt) exit(255);
+	cmd_plu_order[instrz].name=nname;
+	cmd_plu_order[instrz++].code=ncode;
+}
+
+static void addadrmode(char *nname, Word nmode)
+{
+	if (instrz>=adr_mode_cnt) exit(255);
+	adr_modes[instrz].name=nname;
+	adr_modes[instrz++].mode=nmode;
+}
+
+static void addcond(char *nname, Word ncodeand, Word ncodeor, Byte niszl,
+		    Byte nisc, Byte nisv, Byte nistp)
+{
+	if (instrz>=cond_cnt) exit(255);
+	cond_tab[instrz].name=nname;
+	cond_tab[instrz].codeand=ncodeand;
+	cond_tab[instrz].codeor=ncodeor;
+	cond_tab[instrz].iszl=niszl;
+	cond_tab[instrz].isc=nisc;
+	cond_tab[instrz].isv=nisv;
+	cond_tab[instrz++].istp=nistp;
+}
+
+static void addbit(char *nname, Word ncode)
+{
+	if (instrz>=bit_cnt) exit(255);
+	bit_table[instrz].name=nname;
+	bit_table[instrz++].code=ncode;
+}
+
+static void initfields(void)
+{
+	cmd_fixed_order=(cmd_fixed *) malloc(sizeof(cmd_fixed)*cmd_fixed_cnt); instrz=0;
+	addfixed("ABS",    0xbe00); addfixed("ADCB",   0xbe11);
+	addfixed("ADDB",   0xbe10); addfixed("ANDB",   0xbe12);
+	addfixed("CMPL",   0xbe01); addfixed("CRGT",   0xbe1b);
+	addfixed("CRLT",   0xbe1c); addfixed("EXAR",   0xbe1d);
+	addfixed("LACB",   0xbe1f); addfixed("NEG",    0xbe02);
+	addfixed("ORB",    0xbe13); addfixed("ROL",    0xbe0c);
+	addfixed("ROLB",   0xbe14); addfixed("ROR",    0xbe0d);
+	addfixed("RORB",   0xbe15); addfixed("SACB",   0xbe1e);
+	addfixed("SATH",   0xbe5a); addfixed("SATL",   0xbe5b);
+	addfixed("SBB",    0xbe18); addfixed("SBBB",   0xbe19);
+	addfixed("SFL",    0xbe09); addfixed("SFLB",   0xbe16);
+	addfixed("SFR",    0xbe0a); addfixed("SFRB",   0xbe17);
+	addfixed("XORB",   0xbe1a); addfixed("ZAP",    0xbe59);
+	addfixed("APAC",   0xbe04); addfixed("PAC",    0xbe03);
+	addfixed("SPAC",   0xbe05); addfixed("ZPR",    0xbe58);
+	addfixed("BACC",   0xbe20); addfixed("BACCD",  0xbe21);
+	addfixed("CALA",   0xbe30); addfixed("CALAD",  0xbe3d);
+	addfixed("NMI",    0xbe52); addfixed("RET",    0xef00);
+	addfixed("RETD",   0xff00); addfixed("RETE",   0xbe3a);
+	addfixed("RETI",   0xbe38); addfixed("TRAP",   0xbe51);
+	addfixed("IDLE",   0xbe22); addfixed("NOP",    0x8b00);
+	addfixed("POP",    0xbe32); addfixed("PUSH",   0xbe3c);
+	addfixed("IDLE2",  0xbe23); addfixed(NULL,     0);
+
+	cmd_adr_order=(cmd_fixed *) malloc(sizeof(cmd_fixed)*cmd_adr_cnt); instrz=0;
+	addadr("ADDC",   0x6000); addadr("ADDS",   0x6200);
+	addadr("ADDT",   0x6300); addadr("AND",    0x6e00);
+	addadr("LACL",   0x6900); addadr("LACT",   0x6b00);
+	addadr("OR",     0x6d00); addadr("SUBB",   0x6400);
+	addadr("SUBC",   0x0a00); addadr("SUBS",   0x6600);
+	addadr("SUBT",   0x6700); addadr("XOR",    0x6c00);
+	addadr("ZALR",   0x6800); addadr("LDP",    0x0d00);
+	addadr("APL",    0x5a00); addadr("CPL",    0x5b00);
+	addadr("OPL",    0x5900); addadr("XPL",    0x5800);
+	addadr("MAR",    0x8b00); addadr("LPH",    0x7500);
+	addadr("LT",     0x7300); addadr("LTA",    0x7000);
+	addadr("LTD",    0x7200); addadr("LTP",    0x7100);
+	addadr("LTS",    0x7400); addadr("MADD",   0xab00);
+	addadr("MADS",   0xaa00); addadr("MPY",    0x5400);
+	addadr("MPYA",   0x5000); addadr("MPYS",   0x5100);
+	addadr("MPYU",   0x5500); addadr("SPH",    0x8d00);
+	addadr("SPL",    0x8c00); addadr("SQRA",   0x5200);
+	addadr("SQRS",   0x5300); addadr("BLDP",   0x5700);
+	addadr("DMOV",   0x7700); addadr("TBLR",   0xa600);
+	addadr("TBLW",   0xa700); addadr("BITT",   0x6f00);
+	addadr("POPD",   0x8a00); addadr("PSHD",   0x7600);
+	addadr("RPT",    0x0b00); addadr(NULL,     0);
+
+	cmd_jmp_order=(cmd_jmp *) malloc(sizeof(cmd_jmp)*cmd_jmp_cnt); instrz=0;
+	addjmp("B",      0x7980,  False); addjmp("BD",     0x7d80,  False);
+	addjmp("BANZ",   0x7b80,  False); addjmp("BANZD",  0x7f80,  False);
+	addjmp("BCND",   0xe000,  True);  addjmp("BCNDD",  0xf000,  True);
+	addjmp("CALL",   0x7a80,  False); addjmp("CALLD",  0x7e80,  False);
+	addjmp("CC",     0xe800,  True);  addjmp("CCD",    0xf800,  True);
+	addjmp(NULL,     0,       False);
+
+	cmd_plu_order=(cmd_fixed *) malloc(sizeof(cmd_fixed)*cmd_plu_cnt); instrz=0;
+	addplu("APL",   0x5e00); addplu("CPL",   0x5f00);
+	addplu("OPL",   0x5d00); addplu("SPLK",  0xae00);
+	addplu("XPL",   0x5c00); addplu(NULL,    0     );
+
+	adr_modes=(adr_mode_t *) malloc(sizeof(adr_mode_t)*adr_mode_cnt); instrz=0;
+	addadrmode( "*-",     0x90 ); addadrmode( "*+",     0xa0 );
+	addadrmode( "*BR0-",  0xc0 ); addadrmode( "*0-",    0xd0 );
+	addadrmode( "*AR0-",  0xd0 ); addadrmode( "*0+",    0xe0 );
+	addadrmode( "*AR0+",  0xe0 ); addadrmode( "*BR0+",  0xf0 );
+	addadrmode( "*",      0x80 ); addadrmode( NULL,     0);
+
+	cond_tab=(condition *) malloc(sizeof(condition)*cond_cnt); instrz=0;
+	addcond("EQ",  0xf33, 0x088, 1, 0, 0, 0);
+	addcond("NEQ", 0xf33, 0x008, 1, 0, 0, 0);
+	addcond("LT",  0xf33, 0x044, 1, 0, 0, 0);
+	addcond("LEQ", 0xf33, 0x0cc, 1, 0, 0, 0);
+	addcond("GT",  0xf33, 0x004, 1, 0, 0, 0);
+	addcond("GEQ", 0xf33, 0x08c, 1, 0, 0, 0);
+	addcond("NC",  0xfee, 0x001, 0, 1, 0, 0);
+	addcond("C",   0xfee, 0x011, 0, 1, 0, 0);
+	addcond("NOV", 0xfdd, 0x002, 0, 0, 1, 0);
+	addcond("OV",  0xfdd, 0x022, 0, 0, 1, 0);
+	addcond("BIO", 0x0ff, 0x000, 0, 0, 0, 1);
+	addcond("NTC", 0x0ff, 0x200, 0, 0, 0, 1);
+	addcond("TC",  0x0ff, 0x100, 0, 0, 0, 1);
+	addcond("UNC", 0x0ff, 0x300, 0, 0, 0, 1);
+	addcond(NULL,  0xfff, 0x000, 0, 0, 0, 0);
+	
+	bit_table=(bit_table_t *) malloc(sizeof(bit_table_t)*bit_cnt); instrz=0;
+	addbit("OVM",  0xbe42 ); addbit("SXM",  0xbe46 );
+	addbit("HM",   0xbe48 ); addbit("TC",   0xbe4a );
+	addbit("C",    0xbe4e ); addbit("XF",   0xbe4c );
+	addbit("CNF",  0xbe44 ); addbit("INTM", 0xbe40 );
+	addbit(NULL,   0     );
+}
+
+static void deinitfields(void)
+{
+	free(cmd_fixed_order);
+	free(cmd_adr_order);
+	free(cmd_jmp_order);
+	free(cmd_plu_order);
+	free(adr_modes);
+	free(cond_tab);
+	free(bit_table);
+}
 
 /* ---------------------------------------------------------------------- */
 
@@ -168,23 +255,10 @@ static Word eval_ar_expression(char *asc, Boolean *ok)
 
 /* ---------------------------------------------------------------------- */
 
-static void decode_adr(char *arg, Integer aux, Boolean must1)
+static void decode_adr(char *arg, int aux, Boolean must1)
 {
 	Byte h;
-	static const struct adr_modes {
-		char *name;
-		Word mode;
-	} adr_modes[] = {{ "*-",     0x90 },
-			 { "*+",     0xa0 },
-			 { "*BR0-",  0xc0 },
-			 { "*0-",    0xd0 },
-			 { "*AR0-",  0xd0 },
-			 { "*0+",    0xe0 },
-			 { "*AR0+",  0xe0 },
-			 { "*BR0+",  0xf0 },
-			 { "*",      0x80 },
-			 { NULL,     0}};
-	const struct adr_modes *am = adr_modes;
+	adr_mode_t *am = adr_modes;
 
 	adr_ok = False;
 	while (am->name && strcasecmp(am->name, arg))
@@ -217,32 +291,9 @@ static void decode_adr(char *arg, Integer aux, Boolean must1)
 
 /* ---------------------------------------------------------------------- */
 
-static Word decode_cond(Integer argp)
+static Word decode_cond(int argp)
 {
-	static const struct condition {
-		char *name;
-		Word codeand;
-		Word codeor;
-		Byte iszl;
-		Byte isc;
-		Byte isv;
-		Byte istp;
-	} cond_tab[] = {{"EQ",  0xf33, 0x088, 1, 0, 0, 0},
-			{"NEQ", 0xf33, 0x008, 1, 0, 0, 0},
-			{"LT",  0xf33, 0x044, 1, 0, 0, 0},
-			{"LEQ", 0xf33, 0x0cc, 1, 0, 0, 0},
-			{"GT",  0xf33, 0x004, 1, 0, 0, 0},
-			{"GEQ", 0xf33, 0x08c, 1, 0, 0, 0},
-			{"NC",  0xfee, 0x001, 0, 1, 0, 0},
-			{"C",   0xfee, 0x011, 0, 1, 0, 0},
-			{"NOV", 0xfdd, 0x002, 0, 0, 1, 0},
-			{"OV",  0xfdd, 0x022, 0, 0, 1, 0},
-			{"BIO", 0x0ff, 0x000, 0, 0, 0, 1},
-			{"NTC", 0x0ff, 0x200, 0, 0, 0, 1},
-			{"TC",  0x0ff, 0x100, 0, 0, 0, 1},
-			{"UNC", 0x0ff, 0x300, 0, 0, 0, 1},
-			{NULL,  0xfff, 0x000, 0, 0, 0, 0}};
-	const struct condition *cndp;
+	condition *cndp;
 	Byte cntzl = 0, cntc = 0, cntv = 0, cnttp = 0;
 	Word ret = 0x300;
 
@@ -270,7 +321,7 @@ static Word decode_cond(Integer argp)
 
 static void pseudo_qxx(Integer num)
 {
-	Integer z;
+	int z;
 	Boolean ok;
 	double res;
 
@@ -297,7 +348,7 @@ static void pseudo_qxx(Integer num)
 
 static void pseudo_lqxx(Integer num)
 {
-	Integer z;
+	int z;
 	Boolean ok;
 	double res;
 	LongInt resli;
@@ -336,7 +387,7 @@ static void define_untyped_label(void)
 
 /* ---------------------------------------------------------------------- */
 
-static void wr_code_byte(Boolean *ok, Integer *adr, LongInt val)
+static void wr_code_byte(Boolean *ok, int *adr, LongInt val)
 {
 	if ((val < -128) || (val > 0xff)) {
 		WrError(1320);
@@ -349,7 +400,7 @@ static void wr_code_byte(Boolean *ok, Integer *adr, LongInt val)
 
 /* ---------------------------------------------------------------------- */
 
-static void wr_code_word(Boolean *ok, Integer *adr, LongInt val)
+static void wr_code_word(Boolean *ok, int *adr, LongInt val)
 {
 	if ((val < -32768) || (val > 0xffff)) {
 		WrError(1320);
@@ -362,7 +413,7 @@ static void wr_code_word(Boolean *ok, Integer *adr, LongInt val)
 
 /* ---------------------------------------------------------------------- */
 
-static void wr_code_long(Boolean *ok, Integer *adr, LongInt val)
+static void wr_code_long(Boolean *ok, int *adr, LongInt val)
 {
 	WAsmCode[(*adr)++] = val & 0xffff;
 	WAsmCode[(*adr)++] = val >> 16;
@@ -371,7 +422,7 @@ static void wr_code_long(Boolean *ok, Integer *adr, LongInt val)
 
 /* ---------------------------------------------------------------------- */
 
-static void wr_code_byte_hilo(Boolean *ok, Integer *adr, LongInt val)
+static void wr_code_byte_hilo(Boolean *ok, int *adr, LongInt val)
 {
 	if ((val < -128) || (val > 0xff)) {
 		WrError(1320);
@@ -387,7 +438,7 @@ static void wr_code_byte_hilo(Boolean *ok, Integer *adr, LongInt val)
 
 /* ---------------------------------------------------------------------- */
 
-static void wr_code_byte_lohi(Boolean *ok, Integer *adr, LongInt val)
+static void wr_code_byte_lohi(Boolean *ok, int *adr, LongInt val)
 {
 	if ((val < -128) || (val > 0xff)) {
 		WrError(1320);
@@ -405,15 +456,15 @@ static void wr_code_byte_lohi(Boolean *ok, Integer *adr, LongInt val)
 
 typedef void (*tcallback)(
 #ifdef __PROTOS__
-Boolean *, Integer *, LongInt
+Boolean *, int *, LongInt
 #endif
 );
 
 static void pseudo_store(tcallback callback)
 {
 	Boolean ok = True;
-	Integer adr = 0;
-	Integer z;
+	int adr = 0;
+	int z;
 	TempResult t;
 	unsigned char *cp;
 
@@ -452,7 +503,7 @@ static Boolean decode_pseudo(void)
 	Word size;
 	Boolean ok;
 	TempResult t;
-	Integer z,z2;
+	int z,z2;
 	unsigned char *cp;
 	float flt;
 	double dbl, mant;
@@ -695,21 +746,9 @@ static void make_code_3205x(void)
 	Boolean ok;
 	Word adr_word;
 	LongInt adr_long;
-	const struct cmd_fixed_order *fo;
-	const struct cmd_jmp_order *jo;
-	static const struct bit_table {
-		char *name;
-		Word code;
-	} bit_table[] = {{"OVM",  0xbe42 },
-			 {"SXM",  0xbe46 },
-			 {"HM",   0xbe48 },
-			 {"TC",   0xbe4a },
-			 {"C",    0xbe4e },
-			 {"XF",   0xbe4c },
-			 {"CNF",  0xbe44 },
-			 {"INTM", 0xbe40 },
-			 {NULL,   0      }};
-	const struct bit_table *bitp;
+	const cmd_fixed *fo;
+	const cmd_jmp *jo;
+	bit_table_t *bitp;
 
 	CodeLen = 0; 
 	DontPrint = False;
@@ -1421,6 +1460,7 @@ static Boolean is_def_3205x(void)
 
 static void switch_from_3205x(void)
 {
+	deinitfields();
 }
 
 /* ---------------------------------------------------------------------- */
@@ -1444,6 +1484,7 @@ static void switch_to_3205x(void)
 	
 	MakeCode = make_code_3205x; ChkPC = chk_pc_3205x; 
 	IsDef = is_def_3205x; SwitchFrom = switch_from_3205x;
+	initfields();
 }
 
 /* ---------------------------------------------------------------------- */

@@ -13,7 +13,7 @@
 #ifndef __MUNIX__
 #include <stdlib.h>
 #endif
-#ifndef __MSDOS__
+#if !defined ( __MSDOS__ ) && !defined( __IBMC__ )
 #include <unistd.h>
 #endif
 #include <math.h>

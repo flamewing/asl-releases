@@ -13,11 +13,12 @@
 #include <ctype.h>
 
 #include "nls.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "bpemu.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "asmallg.h"
 #include "codepseudo.h"
 #include "codevars.h"
 
@@ -500,10 +501,6 @@ BEGIN
 #define ASSUMEXACount 1
 static ASSUMERec ASSUMEXAs[ASSUMEXACount]=
              {{"DS", &Reg_DS, 0, 0xff, 0x100}};
-#define ONOFFXACount 1
-static ONOFFRec ONOFFXAs[ONOFFXACount]=
-             {{"SUPMODE", &SupAllowed, SupAllowedName}};
-
    LongInt BAdr;
 
    if (Memo("PORT"))
@@ -535,8 +532,6 @@ static ONOFFRec ONOFFXAs[ONOFFXACount]=
      return True;
     END
 
-   if (CodeONOFF(ONOFFXAs,ONOFFXACount)) return True;
-
    if (Memo("ASSUME"))
     BEGIN
      CodeASSUME(ASSUMEXAs,ASSUMEXACount);
@@ -563,7 +558,7 @@ END
 BEGIN
    Byte HReg,HMem,HCnt,HPart;
    Byte HVals[3];
-   Integer z,i;
+   int z,i;
    Word Mask;
    LongInt AdrLong;
    Boolean OK;
@@ -1742,7 +1737,7 @@ END
 
         static void SwitchFrom_XA(void)
 BEGIN
-   DeinitFields();
+   DeinitFields(); ClearONOFF();
 END
 
 	static void SwitchTo_XA(void)
@@ -1759,6 +1754,10 @@ BEGIN
 
    MakeCode=MakeCode_XA; ChkPC=ChkPC_XA; IsDef=IsDef_XA;
    SwitchFrom=SwitchFrom_XA; InitFields();
+   AddONOFF("SUPMODE", &SupAllowed, SupAllowedName,False);
+   AddMoto16PseudoONOFF();
+
+   SetFlag(&DoPadding,DoPaddingName,False);
 END
 
 	void codexa_init(void)

@@ -1,0 +1,35 @@
+BASEARCH1FILES = *.c *.h *.1 \
+            README README.OS2 README.DOS README.LANGS README.KR TODO Makefile Makefile.dos Makefile.os2 Makefile.def.tmpl \
+            install.sh install.bat install.cmd \
+            *.res objdefs.* makedefs.* asl.def \
+            include/*.inc \
+            Makefile.def-samples
+BASEARCH2FILES = doc_DE doc_EN \
+            tests
+
+DISTARCHFILES = $(BASEARCH1FILES) $(BASEARCH2FILES) asl-$(VERSION).lsm
+
+ARCH1FILES = $(BASEARCH1FILES)
+ARCH2FILES = $(BASEARCH2FILES) header.tmpl *.lsm changelog
+
+ARCHFILES = $(ARCH1FILES) $(ARCH2FILES)
+
+# set EXEXTENSION im Makefile.def if you need a specific extension for 
+# the executables (e.g. .exe for OS/2)
+
+ASLTARGET = asl$(EXEXTENSION)
+PLISTTARGET = plist$(EXEXTENSION)
+PBINDTARGET = pbind$(EXEXTENSION)
+P2HEXTARGET = p2hex$(EXEXTENSION)
+P2BINTARGET = p2bin$(EXEXTENSION)
+RESCOMPTARGET = rescomp$(EXEXTENSION)
+TEX2DOCTARGET = tex2doc$(EXEXTENSION)
+TEX2HTMLTARGET = tex2html$(EXEXTENSION)
+UNUMLAUTTARGET = unumlaut$(EXEXTENSION)
+
+ALLTARGETS = ioerrs.msg cmdarg.msg tools.msg \
+             as.msg $(ASLTARGET) \
+             plist.msg $(PLISTTARGET) \
+             pbind.msg $(PBINDTARGET) \
+             p2hex.msg $(P2HEXTARGET) \
+             p2bin.msg $(P2BINTARGET)

@@ -13,7 +13,7 @@
 #include <sys/stat.h>
 #include "stdhandl.h"
 
-#ifdef __EMX__
+#if defined ( __EMX__ ) || defined ( __IBMC__ )
 #include <os2.h>
 #endif
 
@@ -22,10 +22,18 @@
 #endif
 
 #ifndef S_ISCHR
+#ifdef __IBMC__
+#define S_ISCHR(m)    ((m) & S_IFCHR)
+#else
 #define S_ISCHR(m)    (((m) & S_IFMT) == S_IFCHR)
 #endif
+#endif
 #ifndef S_ISREG
+#ifdef __IBMC__
+#define S_ISREG(m)    ((m) & S_IFREG)
+#else
 #define S_ISREG(m)    (((m) & S_IFMT) == S_IFREG)
+#endif
 #endif
 
 TRedirected Redirected;
@@ -46,7 +54,9 @@ BEGIN
     END
 #else
    *T=fdopen(dup(Num),"w");
+#ifndef _WIN32t
    setbuf(*T,Nil);
+#endif
 #endif
 END
 

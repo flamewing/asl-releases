@@ -344,11 +344,7 @@ T8REL            equ     0f056h         ; Timer 8 Reload Register
 ;-----------------------------------------------------------------------
 ; Capture/Compare-Einheit:
 
-                if      MOMCPU=80C167H
-CAPREL           equ     0fe14h         ; Capture/Reload-Register
-                elseif
-CAPREL           equ     0fe4ah
-                endif
+CAPREL          equ     0fe4ah		; Capture/Reload-Register
 CC0             equ     0fe80h          ; CAPCOM Register
 CC1             equ     0fe82h
 CC2             equ     0fe84h

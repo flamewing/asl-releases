@@ -15,12 +15,13 @@
 
 #include "nls.h"
 #include "endian.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "bpemu.h"
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "asmallg.h"
 #include "codepseudo.h"
 #include "codevars.h"
 
@@ -290,17 +291,11 @@ END
 
 	static Boolean DecodePseudo(void)
 BEGIN
-#define ONOFF430Count 1
-static ONOFFRec ONOFF430s[ONOFF430Count]=
-             {{"PADDING", &DoPadding, DoPaddingName}};
-
    TempResult t;
    Word HVal16;
-   Integer z;
+   int z;
    char *p;
    Boolean OK;
-
-   if (CodeONOFF(ONOFF430s,ONOFF430Count)) return True;
 
    if (Memo("BYTE"))
     BEGIN
@@ -399,7 +394,8 @@ END
 
         static void MakeCode_MSP(void)
 BEGIN
-   Integer z,AdrInt;
+   int z;
+   Integer AdrInt;
    Boolean OK;
 
    CodeLen=0; DontPrint=False;
@@ -525,7 +521,7 @@ END
 
         static void SwitchFrom_MSP(void)
 BEGIN
-   DeinitFields();
+   DeinitFields(); ClearONOFF();
 END
 
         static void SwitchTo_MSP(void)
@@ -537,6 +533,7 @@ BEGIN
 
    ValidSegs=1<<SegCode;
    Grans[SegCode]=1; ListGrans[SegCode]=2; SegInits[SegCode]=0;
+   AddONOFF("PADDING", &DoPadding, DoPaddingName,False);
 
    MakeCode=MakeCode_MSP; ChkPC=ChkPC_MSP; IsDef=IsDef_MSP;
    SwitchFrom=SwitchFrom_MSP; InitFields();

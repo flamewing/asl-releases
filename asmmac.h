@@ -25,14 +25,13 @@ typedef struct _TInputTag
           Boolean IsMacro;
           Integer IfLevel;
           Boolean First;
-          String OrigPos;
           Boolean OrigDoLst;
           LongInt StartLine;
           Boolean (*Processor)(
 #ifdef __PROTOS__
-struct _TInputTag *P, char *erg
+                               struct _TInputTag *P, char *erg
 #endif
-);
+                                                              );
           LongInt ParCnt,ParZ;
           StringList Params;
           LongInt LineCnt,LineZ;
@@ -43,14 +42,19 @@ struct _TInputTag *P, char *erg
           void *Buffer;
           void (*Cleanup)(
 #ifdef __PROTOS__
-struct _TInputTag *P
+                          struct _TInputTag *P
 #endif
-);
+                                              );
           void (*Restorer)(
 #ifdef __PROTOS__
-struct _TInputTag *P
+                           struct _TInputTag *P
 #endif
-);
+                                               );
+          Boolean (*GetPos)(
+#ifdef __PROTOS__
+                            struct _TInputTag *P, char *Dest
+#endif
+                                                            );
          } TInputTag,*PInputTag;
 
 typedef struct _TOutputTag

@@ -14,10 +14,11 @@
 
 #include "nls.h"
 #include "bpemu.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "asmallg.h"
 #include "codepseudo.h"
 #include "codevars.h"
 
@@ -566,19 +567,12 @@ END
 
 	static Boolean DecodePseudo(void)
 BEGIN
-#define ONOFFH8_3Count 2
-static ONOFFRec ONOFFH8_3s[ONOFFH8_3Count]=
-	      {{"MAXMODE", &Maximum   , MaximumName   },
-	       {"PADDING", &DoPadding , DoPaddingName }};
-
-   if (CodeONOFF(ONOFFH8_3s,ONOFFH8_3Count)) return True;
-
    return False;
 END
 
 	static void MakeCode_H8_3(void)
 BEGIN
-   Integer z;
+   int z;
    Word Mask;
    ShortInt HSize;
    LongInt AdrLong;
@@ -1668,7 +1662,7 @@ END
 
 	static void SwitchFrom_H8_3(void)
 BEGIN
-   DeinitFields();
+   DeinitFields(); ClearONOFF();
 END
 
 	static void SwitchTo_H8_3(void)
@@ -1682,11 +1676,14 @@ BEGIN
    Grans[SegCode]=1; ListGrans[SegCode]=2; SegInits[SegCode]=0;
 
    MakeCode=MakeCode_H8_3; ChkPC=ChkPC_H8_3; IsDef=IsDef_H8_3;
-   SwitchFrom=SwitchFrom_H8_3;
+   SwitchFrom=SwitchFrom_H8_3; InitFields();
+   AddONOFF("MAXMODE", &Maximum   , MaximumName   ,False);
+   AddONOFF("PADDING", &DoPadding , DoPaddingName ,False);
+   AddMoto16PseudoONOFF();
 
    CPU16=(MomCPU<=CPUH8_300);
 
-   InitFields();
+   SetFlag(&DoPadding,DoPaddingName,False);
 END
 
 	void codeh8_3_init(void)

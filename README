@@ -10,9 +10,7 @@ This version is still a bit beta!  Use on your own risk!
 
 This file is only for the purpose of getting AS compiled and installed,
 and lists the differences of the C version to the BP version.  It 
-is not meant to be the user's manual for AS.  Unfortunately, the english
-version of this manual currently only exists in ASCII format (see the
-doc_EN directory).
+is not meant to be the user's manual for AS.
 
 LICENSING
 
@@ -90,11 +88,17 @@ the original BP version:
   again, or make a try on your own...
 
   - Mitsubishi M16
+  - Texas TMS320C6x
 
   The following families have to be implemented, in their probable
   order of appearance:
 
   <currently none>
+
+  The following families are additional to the BP version:
+
+  - Motorola M*Core
+  - Intel 4004 (incomplete so far)
 
 ~ most UNIX systems name their own assembler already 'as', so I had
   to modify the name to 'asl'.  The additional letter is to the honor
@@ -114,6 +118,12 @@ the original BP version:
 - the AS2MSG filter does not exist (wouldn't make sense because there
   is no Borland Pascal for Unix.)
 
++ This version now contains dynamic switching of program messages, i.e.
+  you do not have to compile AS any more for a specific language.  Instead,
+  AS will test the LC_MESSAGES, LC_ALL, or LANG environment variables
+  on Unix resp. the COUNTRY settings on OS/2 and MSDOS to dynamically
+  load the correct set of messages at runtime.
+
 
 INSTALLATION
 
@@ -122,6 +132,8 @@ INSTALLATION
 
 *** If you want to compile on an OS/2 system, see also the file ***
 *** README.OS2 for additional information!!!                    ***
+
+*** Additional information for DO die-hards is in README.DOS.   ***
 
 First, you need a file 'Makefile.def' that defines some settings for
 your local system.  I deliberately didn't use GNU autoconfig because I
@@ -169,7 +181,13 @@ a list of warnings that have to occur.  The files are in the tests/
 directory and are named warnlog_xxx, where xxx is the
 abbreviation for the selected language.
 
-Fourth, install everything with 'make install'.  This will place the
+Fourth, if you want to have formatted versions of the AS user's manual,
+do a 'make docs'.  You will need an installed LaTeX system plus the
+'dvips' utility for this step to succeed.  If you omit this step, the
+install script will only install the ASCII and TeX source versions of
+the user's manual.
+
+Fifth, install everything with 'make install'.  This will place the
 binaries and processor include files in the directories you specified
 in 'Makefile.def' .
 
@@ -181,11 +199,12 @@ with some benchmark results for the test applications.  The times are
 the wallclock times AS prints itself, measured three times, averaged
 and rounded to 1/100's of seconds.  As system overhead goes into these
 times, memory size and disk speed play a role, so do not quarrel if
-the results you get vary by a few percent...when measuring, assure
-that your machine is otherwise unloaded and all the files are on a
-local filesystem!  Speed of screen output is also an issue, so it may
-not be a bright idea to do the tests on a Sparc console in single user
-mode...
+the results you get vary by a few percent...  Furthermore, I sometimes
+manage to make AS itself a bit faster, what furtherly distorts the results...
+when measuring, assure that your machine is otherwise unloaded and all
+the files are on a local filesystem!  Speed of screen output is also an
+issue, so it may not be a bright idea to do the tests on a Sparc console
+in single user mode...
 
 Optimization is the highest available, with some CPU-specific optimi-
 zations (e.g. -m486) ...
@@ -195,20 +214,24 @@ Alpha AXP-based systems
 
 Vendor     Machine                 CPU            Clock(MHz)  Cache [on]offchip   Memory(MB)  OS                Compiler     |  BUF32   FL900    MIC51    Index   rel.
 -----------------------------------------------------------------------------------------------------------------------------+-------------------------------------------
-Digital    AlphaStation 500/266    21164          267         [8K+8K/96K]/2M      128         Digital Unix 3.2  DEC-C        |   0.72s   0.42s    2.58s  103.20   0.387
-Digital    DECpc AXP/150           21064          150         [8K+8K]/512K         32         Linux 1.99.12     DEC-C        |   2.02s   1.04s   12.09s   31.40   0.209
-Digital    DEC 3000 Model 400      21064          133         [8K+8K]/512K         64         Digital Unix 4.0  DEC-C        |   2.18s   1.09s   12.79s   29.58   0.222
-Digital    DEC 3000 Model 300X     21064          175         [8K+8K]/256K         64         Digital Unix 4.0  DEC-C        |   2.44s   1.30s   14.80s   25.59   0.093
-Digital    DEC 3000 Model 300      21064          150         [8K+8K]/256K         64         Digital Unix 4.0  DEC-C        |   2.84s   1.42s   15.24s   23.38   0.156
-Digital    DECpc AXP/150           21064          150         [8K+8K]/512K         32         Linux 2.0.27 (1)  gcc 2.7.0    |   2.88s   1.36s   16.18s   23.16   0.154
-Digital    DEC 3000 Model 300LX    21064          125         [8K+8K]/256K         48         Digital Unix 4.0  DEC-C        |   3.34s   1.59s   18.19s   20.11   0.161
+Digital    Pers. Workstation 433au 21164a         433         [8K+8K/96K]/???     128         Digital Unix 4.0  DEC-C 3.11   |   0.25s   0.14s    1.52s  245.48   0.567 [ 4. 8.1997]
+Digital    AlphaStation 500/266    21164          267         [8K+8K/96K]/2M      128         Digital Unix 4.0  DEC-C 3.11   |   0.43s   0.25s    2.76s  138.59   0.521 [ 1.11.1997]
+Digital    PC164 board             21164          500         [8K+8K/96K]/1M      128         Linux 2.1.42      gcc 2.7.2    |   0.62s   0.35s    3.51s  101.08   0.202
+Digital    DECpc AXP/150           21064          150         [8K+8K]/512K         32         Linux 2.1.74      egcs 1.0.1   |   2.05s   0.99s   12.44s   31.51   0.210 [20.06.1998]
+Digital    DECpc AXP/150           21064          150         [8K+8K]/512K         32         Linux 1.99.12     DEC-C 3.11   |   2.02s   1.04s   12.09s   31.40   0.209
+Digital    DEC 3000 Model 400      21064          133         [8K+8K]/512K         64         Digital Unix 4.0  DEC-C 3.11   |   2.18s   1.09s   12.79s   29.58   0.222
+Digital    DEC 3000 Model 300X     21064          175         [8K+8K]/256K         64         Digital Unix 4.0  DEC-C 3.11   |   2.44s   1.30s   14.80s   25.59   0.093
+Digital    DEC 3000 Model 300      21064          150         [8K+8K]/256K         64         Digital Unix 4.0  DEC-C 3.11   |   2.84s   1.42s   15.24s   23.38   0.156
+Digital    DEC 3000 Model 300LX    21064          125         [8K+8K]/256K         48         Digital Unix 4.0  DEC-C 3.11   |   3.34s   1.59s   18.19s   20.11   0.161
 
 
 Sparc-based systems
 
 Vendor     Machine                 CPU            Clock(MHz)  Cache [on]offchip   Memory(MB)  OS                Compiler     |  BUF32   FL900    MIC51    Index   rel.
 -----------------------------------------------------------------------------------------------------------------------------+-------------------------------------------
+Sun        Ultra 1/170             UltraSparc-1   167         [16K+16K]/512K      128         Solaris 2.5.1     gcc 2.7.2    |   1.08s   0.56s    5.89s   60.40   0.362
 Sun        Ultra 1/140             UltraSparc-1   143         [16K+16K]/512K       64         Solaris 2.5       Sun-C 3.0.1  |   1.13s   0.59s    5.55s   59.74   0.418
+Sun        SPARCstation 20/712     2xSuperSparc-2  75         [20K+16K]/1M        256         Solaris 2.5.1     Sun-C 3.0.1  |   1.87s   0.93s    9.78s   35.88   0.478
 Sun        SPARCstation 20/612     2xSuperSparc-2  60         [20K+16K]/1M         64         Solaris 2.4       Sun-C 3.0.1  |   2.24s   1.12s   11.58s   30.01   0.500
 Sun        SPARCstation 20/612     2xSuperSparc-2  50         [20K+16K]/1M         64         Solaris 2.5       Sun-C 3.0.1  |   2.90s   1.41s   14.53s   23.66   0.473
 Sun        SPARCstation 4          MicroSparc-2    85         [16K+8K]            ???         Solaris 2.4       Sun-C 3.0.1  |   3.37s   1.56s   17.23s   20.56   0.242
@@ -222,17 +245,21 @@ Mips-based systems
 
 Vendor     Machine                 CPU            Clock(MHz)  Cache [on]offchip   Memory(MB)  OS                Compiler     |  BUF32   FL900    MIC51    Index   rel.
 -----------------------------------------------------------------------------------------------------------------------------+-------------------------------------------
+SGI        Origin 2000             R10000         200         [32K+32K]/4M        512(?)      Irix 6.4          SGI-C        |   0.64s   0.37s    3.74s   96.16   0.481 [ 4. 8.1997]
 SGI        Indigo 2                R4400          200         [16K+16K]/2M         64         Irix 5.3          SGI-C (2)    |   1.78s   0.88s    9.70s   37.25   0.186
 SGI        Onyx                    R4400          150         [16K+16K]/4M        256         Irix 5.3          SGI-C (2)    |   2.08s   1.07s   11.80s   31.03   0.207
 Digital    DECStation 5000/240     R3000+R3010     40         64K+64K             ???         Ultrix 4.3        gcc 2.7.2    |   3.90s   2.45s   24.45s   15.03   0.376
 Digital    DECStation 5000/200     R3000+R3010     25         64K+64K              32         NetBSD 1.2        gcc 2.7.2 (7)|   8.13s   4.09s   46.93s    7.96   0.318
-Digital    DECStation 3100         R2000+R2010     16.7       64K+64K              24         NetBSD 1.2        gcc 2.7.2    |  13.14s   6.54s   77.32s    4.91   0.297
+Digital    DECStation 3100         R2000+R2010     16.7       64K+64K              24         NetBSD 1.2        gcc 2.7.2    |   9.83s   4.75s   58.99s    6.59   0.396
 
 
 RS/6000 / PowerPC-based systems
 
 Vendor     Machine                 CPU            Clock(MHz)  Cache [on]offchip   Memory(MB)  OS                Compiler     |  BUF32   FL900    MIC51    Index   rel.
 -----------------------------------------------------------------------------------------------------------------------------+-------------------------------------------
+IBM        R50                     8xPPC604e       200        [32K+32K]/2M       4096         AIX 4.2.1         IBM XLC      |   0.85s   0.53s    4.60s   72.67   0.363 [29. 8.1997]
+IBM        43P-140                 PPC604e         166        [32K+32K]/1M        ???         AIX 4.1.3         IBM XLC      |   0.94s   0.60s    5.66s   62.89   0.379 [20. 8.1997]
+IBM        G40                     2xPPC604        112        [16K+16K]/512K      ???         AIX 4.2.1         IBM XLC      |   1.76s   0.97s    9.86s   36.01   0.322 [ 5. 8.1997]
 IBM        RS/6000 Model 390       POWER 2         66.7       [32K+64K]/1M        128         AIX 4.1.3         IBM XLC      |   2.21s   1.14s   11.52s   30.03   0.450
 IBM        RS/6000 Model 250       MPC601          66         [32K]               ???         AIX 4.1           IBM XLC      |   4.27s   2.08s   21.60s   16.00   0.242
 IBM        RS/6000 Model 220       RSC3308         33.3       [8K]                 16         AIX 4.1           IBM XLC      |  11.32s   5.60s   66.56s    5.71   0.172
@@ -243,6 +270,35 @@ PA-Risc-based systems
 Vendor     Machine                 CPU            Clock(MHz)  Cache [on]offchip   Memory(MB)  OS                Compiler     |  BUF32   FL900    MIC51    Index   rel.
 -----------------------------------------------------------------------------------------------------------------------------+-------------------------------------------
 HP         HP9000/715              PA7100          50         64K+64K              32         HP-UX 9.0         HP-C         |   5.63s   2.88s   29.97s   11.72   0.234
+
+
+VAX-based systems
+
+Vendor     Machine                 CPU            Clock(MHz)  Cache [on]offchip   Memory(MB)  OS                Compiler     |  BUF32   FL900    MIC51    Index   rel.
+-----------------------------------------------------------------------------------------------------------------------------+-------------------------------------------
+Digital    VAXstation 3100 M38     CVAX            16.6666    64K                  16         Ultrix 4.5        gcc 2.7.2    |  21.46s  11.07s  139.05s    2.88   0.173 [10.3.1998]
+Digital    VAXstation 2000         MVAX            [0.9VUP]   none                  6         Ultrix 4.1        gcc 2.7.2    |  79.84s  39.90s  508.98s    0.79   ????? [30.11.1997]
+
+68xxx-based systems
+
+Vendor     Machine                 CPU            Clock(MHz)  Cache [on]offchip   Memory(MB)  OS                Compiler     |  BUF32   FL900    MIC51    Index   rel.
+-----------------------------------------------------------------------------------------------------------------------------+-------------------------------------------
+Sun        3/260                   MC68020+MC68881 25+20      [0.25K]/64K          16         NetBSD 1.2        gcc 2.7.2    |  28.98s  13.98s  155.79s    2.32   0.093
+PCS        Cadmus 9600/5           MC68020+MC68881 25+20      [0.25K]/64K           8         Munix V.3.3-1     cc           |  26.12s  14.36s  202.96s    2.20   0.088 [20.06.1998]
+Sun        3/60 (tuned)            MC68030+MC68882 24         [0.25K]              16         NetBSD 1.2        gcc 2.7.2    |  38.29s  19.48s  220.14s    1.68   0.070
+Sun        3/160                   MC68020+MC68881 16.67      [0.25K]              16         NetBSD 1.2        gcc 2.7.2    |  49.58s  24.79s  282.11s    1.31   0.079
+PCS        Cadmus 9600/4           MC68020+MC68881 16.67      [0.25K]/16K           8         Munix V.3.3-1     cc           |  53.49s  29.97s  317.50s    1.16   0.069
+Sun        3/50                    MC68020+MC68881 15.8       [0.25K]               4         NetBSD 1.2        gcc 2.7.2    |  71.01s  47.11s  422.60s    0.83   0.052
+
+
+Pentium-based systems
+
+Vendor     Machine                 CPU            Clock(MHz)  Cache [on]offchip   Memory(MB)  OS                Compiler     |  BUF32   FL900    MIC51    Index   rel.
+-----------------------------------------------------------------------------------------------------------------------------+-------------------------------------------
+<Noname>   Asus T2P4               AMD K6         233         [32K+32K]/512K       64         Linux 2.1.74      gcc 2.7.2    |   0.44s   0.25s    2.69s   138.57  0.595 [20.06.1998]
+<Noname>   Asus T2P4               AMD K6         200         [32K+32K]/512K      128         Linux 2.0.32      gcc 2.7.2    |   0.47s   0.24s    2.77s   136.00  0.680 [20.06.1998]
+<Noname>   Asus T2P4               AMD K6         200         [32K+32K]/512K      128         Linux 2.0.32      emx 0.9      |   0.87s   0.72s    3.65s    73.30  0.367 [20.06.1998]
+<Noname>   Natoma Chipset          PPro           233         [16K+16K]/256K       64         Linux 2.1.42      pent-gcc     |   0.82s   0.45s    4.53s    77.76  0.334
 
 
 486-based systems
@@ -277,6 +333,7 @@ Vendor     Machine                 CPU            Clock(MHz)  Cache [on]offchip 
 <Noname>   SISATQ-Chipset          Cx486DX2        64         [8K]/64K(no dirty)    4         Linux 2.0.27      gcc 2.7.2    |   9.27s   4.64s   51.35s    7.08   0.111
 <Noname>   Eteq 491/492-Chipset    i486SX          33.3       [8K]/256K(WB)         5         Linux 2.0.27      gcc 2.7.2    |   9.49s   5.02s   53.37s    6.75   0.203
 <Noname>   UMC 481A/482A-Chipset   Cx486DX2        72         [8K]                  5         Linux 2.0.27      gcc 2.7.2    |   9.89s   5.03s   51.55s    6.74   0.094
+<Noname>   SIS BTQ Chipset         i486SX          33.333     [8K]                  4         Linux 2.0.27      gcc 2.7.2    |   9.25s   5.76s   50.80s    6.65   0.199 [ 7.12.1997]
 <Noname>   SISATQ-Chipset          i486SX          32         [8K]/256K(no dirty)   4         Linux 2.0.27      gcc 2.7.2    |   9.57s   5.22s   55.42s    6.57   0.205
 <Noname>   UMC 481A/482A-Chipset   i486SX          36         [8K]/256K(WB)         5         Linux 2.0.27      gcc 2.7.2    |   9.83s   5.15s   57.31s    6.47   0.179
 <Noname>   VIA 481/495-Chipset     i486SX          33.3       [8K]/256K(WB)         4         Linux 2.0.27      gcc 2.7.2    |   9.66s   5.45s   55.59s    6.45   0.194
@@ -311,8 +368,12 @@ I will show it in this list because it fits into 386DX sockets.
 
 Vendor     Machine                 CPU            Clock(MHz)  Cache [on]offchip   Memory(MB)  OS                Compiler     |  BUF32   FL900    MIC51    Index   rel.
 -----------------------------------------------------------------------------------------------------------------------------+-------------------------------------------
+<Noname>   Eteq 491/493-Chipset    i386DX          40         64K                   4         Linux 2.0.27      gcc 2.7.2    |  10.08s   5.98s   63.64s    5.90   0.148 [ 1.11.1997]
 <Noname>   UMC 482/391-Chipset     Cx486DLC+Cx83D87 33.3      [1K]/128K(no dirty)   5         Linux 2.0.27      gcc 2.7.2    |  12.37s   6.75s   71.72s    5.08   0.153
+<Noname>   SIS 85C3x0-Chipset      i386DX          25         64K                   4         Linux 2.0.27      gcc 2.7.2    |  13.02s   6.41s   84.31s    4.83   0.193 [ 1.11.1997]
+<Noname>   TI TACT823x-Chipset     i386DX          33         32K(WB)               4         Linux 2.0.27      gcc 2.7.2    |  13.50s   7.22s   81.02s    4.63   0.140 [14.11.1997]
 <Noname>   VIA 481/495-Chipset     Am386DX         40         256K(WB)              5         Linux 2.0.27      gcc 2.7.2    |  14.52s   7.58s   81.18s    4.45   0.111
+IBM        PS/2 Model 70-A16       i386DX          25         64K                   7.875     Linux 2.0.7       gcc 2.7.2    |  13.97s   7.26s   91.47s    4.40   0.176 [23.11.1997]
 <Noname>   VIA 481/495-Chipset     Am386DX         40         128K(WB)              5         Linux 2.0.27      gcc 2.7.2    |  14.79s   7.71s   81.44s    4.39   0.110
 <Noname>   Opti 495-Chipset        i386DX+Cx83D87  40         128K(no dirty)        4         Linux 2.0.27      gcc 2.7.2    |  15.61s   8.16s   82.68s    4.21   0.105
 <Noname>   UMC 482/391-Chipset     Cx486DLC+Cx83D87 33.3      [1K]                  5         Linux 2.0.27      gcc 2.7.2    |  15.38s   8.05s   89.57s    4.14   0.124
@@ -320,6 +381,7 @@ Vendor     Machine                 CPU            Clock(MHz)  Cache [on]offchip 
 <Noname>   AMI MK II               i386DX+Cx83D87  33         64K                   4         Linux 2.0.27      gcc 2.7.2    |  17.19s   9.26s   96.46s    3.71   0.112
 <Noname>   C&T PEAK/DM-Chipset     i386DX+Cx83D87  33.3       64K                   4         Linux 2.0.27      gcc 2.7.2    |  17.35s   9.09s   97.07s    3.71   0.111
 <Noname>   Opti 495-Chipset        i386DX+Cx83D87  33.3       128K(no dirty)        4         Linux 2.0.27      gcc 2.7.2    |  17.96s   9.88s  101.01s    3.52   0.106
+IBM        PS/2 Model 70-A121      i386DX+i387DX   20         none                  5.875     Linux 2.0.7       gcc 2.7.2    |  17.31s   9.34s  117.33s    3.47   0.173 [23.11.1997]
 <Noname>   SIS 85C3x0-Chipset      i386DX+Cx83D87  25         64K                   4         Linux 2.0.27      gcc 2.7.2    |  22.62s  11.47s  120.07s    2.93   0.117
 <Noname>   C&T PEAK/DM-Chipset     i386DX+Cx83D87  25         64K                   4         Linux 2.0.27      gcc 2.7.2    |  23.56s  12.47s  131.00s    2.73   0.109
 <Noname>   VIA 481/495-Chipset     i386DX          40         none                  5         Linux 2.0.27      gcc 2.7.2    |  23.95s  12.23s  136.36s    2.70   0.067
@@ -341,6 +403,7 @@ Vendor     Machine                 CPU            Clock(MHz)  Cache [on]offchip 
 Tandon     TM8000                  i386DX          16         none                  4         Linux 2.0.27      gcc 2.7.2    |  60.64s  32.08s  350.00s    1.05   0.066
 <Noname>   Opti 495-Chipset        i386DX+Cx83D87  25         none                  4         Linux 2.0.27      gcc 2.7.2    |  64.71s  33.80s  359.25s    1.00   0.040
 <Noname>   C&T PEAK/DM-Chipset     i386DX+Cx83D87  16         none                  4         Linux 2.0.27      gcc 2.7.2    |  69.79s  36.19s  399.86s    0.92   0.057
+<Noname>   TI TACT823x-Chipset     i386DX          33         none                  4         Linux 2.0.27      gcc 2.7.2    |  68.13s  34.92s  444.39s    0.91   0.028 [14.11.1997]
 <Noname>   Opti 495-Chipset        i386DX+Cx83D87  20         none                  4         Linux 2.0.27      gcc 2.7.2    |  70.57s  37.94s  405.97s    0.90   0.045
 Tandon     TM8000                  i386DX           8         none                  4         Linux 2.0.27      gcc 2.7.2    |  87.33s  45.53s  504.37s    0.73   0.091
 
@@ -354,35 +417,36 @@ Vendor     Machine                 CPU            Clock(MHz)  Cache [on]offchip 
 <Noname>   Cyclone RC2016-Chipset  Am386SX         33.3       none                  4         Linux 2.0.27      gcc 2.7.2    |  35.91s  18.34s  194.64s    1.83   0.055
 <Noname>   Headland HT18-Chipset   i386SX+IIT3C87SX 25        none                  4         Linux 2.0.27      gcc 2.7.2    |  38.32s  20.84s  217.10s    1.65   0.062
 <Noname>   Cyclone RC2016-Chipset  Am386SX         20         none                  4         Linux 2.0.27      gcc 2.7.2    |  60.41s  30.34s  330.20s    1.09   0.054
+<Noname>   UMC 336-Chipset         i386SX          16         none                  4         Linux 2.0.27      gcc 2.7.2    |  58.28s  30.57s  340.56s    1.09   0.068 [ 9. 8.1997]
 <Noname>   Intel 82335-Chipset     i386SX          16         none                  4         Linux 2.0.27      gcc 2.7.2    |  63.16s  31.86s  350.67s    1.04   0.065
 <Noname>   Cyclone RC2016-Chipset  Am386SX         16.7       none                  4         Linux 2.0.27      gcc 2.7.2    |  65.80s  32.91s  359.98s    1.00   0.060
 <Noname>   C&T 8221-Chipset        i386SX          16         none                  4         Linux 2.0.27      gcc 2.7.2    |  65.12s  33.52s  359.52s    1.00   0.063
 <Noname>   PCChips Chip 2          Am386SX         8          none                  4         Linux 2.0.27      gcc 2.7.2    | 140.13s  71.44s  778.46s    0.47   0.058
+<Noname>   Intel 8234x-Chipset     i386SX          20         none                  4         Linux 2.0.27      gcc 2.7.2    |  24.11s  12.84s  153.16s    2.55   0.128 [31.12.1997]
 
 
-68xxx-based systems
+286-based systems
 
 Vendor     Machine                 CPU            Clock(MHz)  Cache [on]offchip   Memory(MB)  OS                Compiler     |  BUF32   FL900    MIC51    Index   rel.
 -----------------------------------------------------------------------------------------------------------------------------+-------------------------------------------
-Sun        3/260                   MC68020+MC68881 25+20      [0.25K]/64K          16         NetBSD 1.2        gcc 2.7.2    |  28.98s  13.98s  155.79s    2.32   0.093
-Sun        3/60 (tuned)            MC68030+MC68882 24         [0.25K]              16         NetBSD 1.2        gcc 2.7.2    |  38.29s  19.48s  220.14s    1.68   0.070
-PCS        Cadmus 9600/5           MC68020+MC68881 25+20      [0.25K]/64K           8         Munix V.3.3-1     cc           |  40.50s  22.37s  277.42s    1.47   0.058
-Sun        3/160                   MC68020+MC68881 16.67      [0.25K]              16         NetBSD 1.2        gcc 2.7.2    |  49.58s  24.79s  282.11s    1.31   0.079
-PCS        Cadmus 9600/4           MC68020+MC68881 16.67      [0.25K]/16K           8         Munix V.3.3-1     cc           |  53.49s  29.97s  317.50s    1.16   0.069
-Sun        3/50                    MC68020+MC68881 15.8       [0.25K]               4         NetBSD 1.2        gcc 2.7.2    |  71.01s  47.11s  422.60s    0.83   0.052
+<Noname>   Suntac 241/203-Cipset   Am286+i287     16          none                  0.875     MS-DOS 5.0        BC++ 3.1     |  62.00s  36.73s  321.28s    1.03   0.064   [24. 8.1997]
+<Noname>   C&T 8221-Chipset        i286           16          none                  1         MS-DOS 5.0        BC++ 3.1     |  67.80s  39.09s  357.13s    0.94   0.059   [24. 8.1997]
+<Noname>   VLSI VL82C10x-Chipset   i286           12          none                  1         MS-DOS 5.0        BC++ 3.1     |  75.06s  42.86s  407.07s    0.84   0.070   [24. 8.1997]
+<Noname>   Headland HT101/102/113  Am286          16          none                  1.125     MS-DOS 5.0        BC++ 3.1     |  85.33s  51.42s  416.75s    0.76   0.047   [24. 8.1997]
+Toshiba    T1600                   i286+Am80C287  12+8        none                  0.9375    MS-DOS 5.0        BC++ 3.1     |  86.02s  50.26s  471.03s    0.73   0.061   [24. 8.1997]
+<Noname>   C&T 8220-Chipset        i286           12          none                  1         MS-DOS 5.0        BC++ 3.1     |  93.47s  53.05s  510.81s    0.68   0.056   [24. 8.1997]
+<Noname>   G2 GC101/102-Chipset    i286           12.5        none                  1         MS-DOS 5.0        BC++ 3.1     |  92.56s  52.46s  505.70s    0.68   0.055   [24. 8.1997]
+IBM        PS/2 Model 50Z          i286+i287      10          none                  1         MS-DOS 5.0        BC++ 3.1     | 102.50s  59.11s  557.61s    0.62   0.062   [24. 8.1997]
+<Noname>   Suntac ST62-Chipset     i286           10          none                  1         MS-DOS 5.0        BC++ 3.1     | 119.15s  66.87s  651.05s    0.53   0.053   [17. 8.1997]
+<Noname>   Suntac ST62-Chipset     i286            8          none                  1         MS-DOS 5.0        BC++ 3.1     | 153.73s  87.69s  826.73s    0.41   0.052   [17. 8.1997]
 
+8088/8086-based systems (yes I know I'm a pervert...)
 
-some numbers from an older version of AS which is slightly faster (thanks Thomson...):
+Vendor     Machine                 CPU            Clock(MHz)  Cache [on]offchip   Memory(MB)  OS                Compiler     |  BUF32   FL900    MIC51    Index   rel.
+-----------------------------------------------------------------------------------------------------------------------------+-------------------------------------------
+<Noname>   no chipset              V20+i8087      10          none                  0.625+0.5 MS-DOS 3.3        BC++ 3.1     | 225.26s 133.13s 1176.93s    0.28   0.028   [24. 8.1997]
+<Noname>   CBM PC10-I              V20+i8087       4.77       none                  0.6875    MS-DOS 3.3        BC++ 3.1     | 472.15s 276.51s 2500.47s    0.13   0.028   [24. 8.1997]
 
-Vendor     Machine                 CPU            Clock(MHz)  Cache [on]offchip   Memory(MB)  OS                Compiler     |  BUF32   FL900    MIC51
------------------------------------------------------------------------------------------------------------------------------+------------------------
-<Noname>   Natoma-Chipset          PPro           200         [16K+16K]/256K       32         Linux             pent-gcc     |  0.9s    0.4s     4.7s 
-Sun        Ultra 1/170             UltraSparc-1   167         [16K+16K]/512K       64         Solaris 2.5       Sun-C 3.0.1  |  1.0s    0.5s     5.2s 
-Sun        SPARCstation 20/71      SuperSparc-2    75         [20K+16K]/1M         64         Solaris 2.5       gcc 2.7.2    |  2.3s    1.1s    11.7s
-<Noname>   Neptun-Chipset          Pentium         90         [8K+8K]/256K(async)  48         Linux 2.0.20      gcc 2.7.2.1  |  2.8s    1.4s    16.2s 
-Intel      Paragon XPS/10 (4)      2xi860XP        50         [16K+16K]            32         Paragon-OS 1.4    PGC          |  14.6s   12.7s   124.4s 
-CBM        A3000                   MC68030+MC68882 25         [0.25K+0.25K]        14+2       Linux 1.2.13pl9   gcc 2.7.2    |  35.6s   18.8s   184.9s 
-CBM        A2000+68030 Card        MC68030+MC68882 28         [0.25K+0.25K]         8 (5)     Linux 2.0.21      gcc 2.7.2    |  91.37s  39.88s  377.31s
 
 Notes:
 

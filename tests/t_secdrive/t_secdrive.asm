@@ -44,15 +44,16 @@ Diag_ECCError   equ     04h             ; Fehlerkorrektor defekt
 Diag_ProcError  equ     05h             ; Steuerprozessor defekt
 Diag_Timeout    equ     06h             ; Controller antwortet nicht
 
-ParTab_BFlag	equ	0		; Partitionseintrag: Partition aktiv ?
-ParTab_FHead	equ	ParTab_BFlag+1	; Startkopf
-ParTab_FSecCyl	equ	ParTab_FHead+1	; Startzylinder/sektor
-ParTab_Type	equ	ParTab_FSecCyl+2; Partitionstyp
-ParTab_LHead	equ	ParTab_Type+1	; Endkopf
-ParTab_LSecCyl  equ     ParTab_LHead+1  ; Endzylinder/sektor
-ParTab_LinSec   equ     ParTab_LSecCyl+2; Anzahl Sektoren
-ParTab_NSecs    equ     ParTab_LinSec+4 ; linearer Startsektor
-ParTab_Size     equ     ParTab_NSecs+4  ; Gesamtgrî·e Feld
+ParTab		struct
+BFlag		 db	?		; Partitionseintrag: Partition aktiv ?
+FHead		 db	?		; Startkopf
+FSecCyl		 dw	?		; Startzylinder/sektor
+Type		 db	?		; Partitionstyp
+LHead		 db	?		; Endkopf
+LSecCyl  	 dw     ?		; Endzylinder/sektor
+LinSec   	 dd     ?		; Anzahl Sektoren
+NSecs    	 dd     ?		; linearer Startsektor
+		endstruct
 
 DErr_WrProtect  equ     00h             ; Treiberfehlercodes: Schreibschutz
 DErr_InvUnit    equ     01h             ; unbekannte GerÑtenummer
@@ -260,35 +261,37 @@ SectorBuffer:   db      SecSize dup (?) ; Sektorpuffer fÅr Treiber selber
 DriverStack:
 
 BPBSize         equ     36
-DrTab_StartHead equ     0               ; Laufwerkstabelle: Startkopf
-DrTab_StartCyl  equ     DrTab_StartHead+1 ;                 Startzylinder
-DrTab_StartSec  equ     DrTab_StartCyl+2  ;                 Startsektor
-DrTab_LinStart  equ     DrTab_StartSec+1  ;                 lin. Startsektor
-DrTab_SecCnt    equ     DrTab_LinStart+4  ;                 Gesamtsektorzahl
-DrTab_Drive     equ     DrTab_SecCnt+4    ;                 Laufwerk
-DrTab_BPB       equ     DrTab_Drive+1     ;                 BPB
-DrTab_Size      equ     DrTab_BPB+BPBSize ; Grî·e eines Eintrags in Byte
+DrTab		struct			; Laufwerkstabelle:
+StartHead	 db     ?		;  Startkopf
+StartCyl	 dw	?		;  Startzylinder
+StartSec	 db	?		;  Startsektor
+LinStart	 dd	?		;  lin. Startsektor
+SecCnt		 dd	?		;  Gesamtsektorzahl
+Drive		 db	?		;  Laufwerk
+BPB		 db	BPBSize dup (?)	;  BPB
+		endstruct
 
-DrTab           db      DrTab_Size*MaxDrives dup (?)
+DrTab           db      DrTab_Len*MaxDrives dup (?)
 DrTab_BPBs      dd      2*MaxDrives dup (?)
 DrCnt           db      0               ; Anzahl gefundener Laufwerke
 DrOfs           db      0               ; erster freier Laufwerksbuchstabe
 
-DrPar_Cyls      equ     0               ; Plattenparametersatz: Zylinderzahl
-DrPar_Heads     equ     DrPar_Cyls+2    ; Kopfzahl
-DrPar_RedWr     equ     DrPar_Heads+1   ; Startzylinder reduzierter Schreibstrom
-DrPar_PrComp    equ     DrPar_RedWr+2   ; Startzylinder PrÑkompensation
-DrPar_ECCLen    equ     DrPar_PrComp+2  ; max. korrigierbarer Fehlerburst (Bits)
-DrPar_CByte     equ     DrPar_ECCLen+1  ; Wert fÅrs Plattensteuerregister
-DrPar_TOut      equ     DrPar_CByte+1   ; genereller Timeout
-DrPar_FTOut     equ     DrPar_TOut+1    ; Timeout Formatierung
-DrPar_CTOut     equ     DrPar_FTOut+1   ; Timeout fÅr PrÅfung
-DrPar_LZone     equ     DrPar_CTOut+1   ; Landezylinder
-DrPar_NSecs     equ     DrPar_LZone+2   ; Sektorzahl
-DrPar_Dummy     equ     DrPar_NSecs+1   ; unbenutzt
-DrPar_Size      equ     DrPar_Dummy+1   ; GesamtlÑnge Block
+DrPar		struct			; Plattenparametersatz: 
+Cyls		 dw	?		;  Zylinderzahl
+Heads		 db	?		;  Kopfzahl
+RedWr		 dw	?		;  Startzylinder reduzierter Schreibstrom
+PrComp		 dw	?		;  Startzylinder PrÑkompensation
+ECCLen		 db	?		;  max. korrigierbarer Fehlerburst (Bits)
+CByte		 db	?		;  Wert fÅrs Plattensteuerregister
+TOut		 db	?		;  genereller Timeout
+FTOut		 db	?		;  Timeout Formatierung
+CTOut		 db	?		;  Timeout fÅr PrÅfung
+LZone		 dw	?		;  Landezylinder
+NSecs		 db	?		;  Sektorzahl
+Dummy		 db	?		;  unbenutzt
+		endstruct
 
-DrPars          db      DrPar_Size*MaxPDrives dup (0)
+DrPars          db      DrPar_Len*MaxPDrives dup (0)
 
 ;******************************************************************************
 ;* Strategieroutine                                                           *
@@ -302,11 +305,13 @@ StrategyProc:   mov     word ptr [Rh_Ptr],bx ; Zeiger speichern
 ;* Treiberdispatcher                                                          *
 ;******************************************************************************
 
-Rh_Size         equ     0               ; gemeinsame Headerteile: LÑnge Block
-Rh_Unit         equ     Rh_Size+1       ; angesprochenes Laufwerk
-Rh_Func         equ     Rh_Unit+1       ; Treibersubfunktion
-Rh_Status       equ     Rh_Func+1       ; Ergebnis
-Rh_Resvd        equ     Rh_Status+2     ; unbenutzt
+Rh		struct
+Size		 db	?		; gemeinsame Headerteile: LÑnge Block
+Unit		 db	?		; angesprochenes Laufwerk
+Func		 db	?		; Treibersubfunktion
+Status		 dw	?		; Ergebnis
+Resvd		 db	8 dup (?)	; unbenutzt
+		endstruct
 
 InterruptProc:  pusha                   ; alle Register retten
 
@@ -490,7 +495,7 @@ OK:             ret
 
                 proc    GetPTabAdr
 
-                mov     ah,DrPar_Size   ; relative Adresse berechnen
+                mov     ah,DrPar_Len	; relative Adresse berechnen
                 mul     ah
                 lea     di,[DrPars]     ; Offset dazu
                 add     di,ax
@@ -506,7 +511,7 @@ OK:             ret
 
                 proc    GetTabAdr
 
-                mov     ah,DrTab_Size   ; relative Adresse berechnen
+                mov     ah,DrTab_Len    ; relative Adresse berechnen
                 mul     ah
                 lea     di,[DrTab]      ; Offset dazu
                 add     di,ax
@@ -643,9 +648,12 @@ OK:             mov     byte ptr es:[bx+Rh_Return],1 ; nie gewechselt
 
                 proc    BuildBPB
 
-Rh_MediaID      equ     Rh_Resvd+8      ; erwartetes Media-ID
-Rh_FATSector    equ     Rh_MediaID+1    ; Pufferadresse 1. FAT-Sektor
-Rh_BPBAddress   equ     Rh_FATSector+4  ; Adresse neuer BPB
+Rh2		struct
+		 db	Rh_Len dup (?)
+MediaID          db	?		; erwartetes Media-ID
+FATSector	 dd	?		; Pufferadresse 1. FAT-Sektor
+BPBAddress	 dd	?		; Adresse neuer BPB
+		endstruct
 
                 mov     al,es:[bx+Rh_Unit]
 		call    ChkDrive        ; Laufwerksnummer gÅltig ?
@@ -658,8 +666,8 @@ Rh_BPBAddress   equ     Rh_FATSector+4  ; Adresse neuer BPB
 		mov	al,es:[bx+Rh_Unit] ; Tabellenadresse aufbauen
 		call	GetTabAdr
 		lea	di,[di+DrTab_BPB]  ; DI auf BPB-Speicher
-                mov     es:[bx+Rh_BPBAddress],di ; BPB-Zeiger abspeichern
-                mov     es:[bx+Rh_BPBAddress+2],cs
+                mov     es:[bx+Rh2_BPBAddress],di ; BPB-Zeiger abspeichern
+                mov     es:[bx+Rh2_BPBAddress+2],cs
 		
                 mov     si,cs              ; BPB umkopieren
                 mov     es,si
@@ -680,14 +688,17 @@ IOCTLRead:      jmp     Unknown
 ;* Funktion 4: Sektoren lesen                                                 *
 ;******************************************************************************
 
-Rh4_MediaID     equ     Rh_Resvd+8      ; Media-ID Laufwerk
-Rh4_BufOfs      equ     Rh4_MediaID+1   ; Adresse Datenpuffer
-Rh4_BufSeg      equ     Rh4_BufOfs+2
-Rh4_NSecs       equ     Rh4_BufSeg+2    ; Anzahl zu lesender Blîcke
-Rh4_FirstSec    equ     Rh4_NSecs+2     ; Startsektor bzw. $FFFF fÅr 32-Bit-Nummern
-Rh4_VolID       equ     Rh4_FirstSec+2  ; Adresse Laufwerksname
-Rh4_LFirstSec   equ     Rh4_VolID+4     ; lange Startsektornummer
-Rh4_HFirstSec   equ     Rh4_LFirstSec+2
+Rh4		struct
+		 db	Rh_len dup (?)
+MediaID		 db	?		; Media-ID Laufwerk
+BufOfs		 dw	?		; Adresse Datenpuffer
+BufSeg		 dw	?
+NSecs		 dw	?		; Anzahl zu lesender Blîcke
+FirstSec	 dw	?		; Startsektor bzw. $FFFF fÅr 32-Bit-Nummern
+VolID		 dd	?		; Adresse Laufwerksname
+LFirstSec	 dw	?		; lange Startsektornummer
+HFirstSec	 dw	?
+		endstruct
 
 Read:           mov	al,es:[bx+Rh_Unit] ; Laufwerksnummer prÅfen
 		call	ChkDrive
@@ -752,26 +763,29 @@ InputFlush:     jmp     Unknown
 ;* Funktion 8: Sektoren schreiben                                             *
 ;******************************************************************************
 
-Rh8_MediaID     equ     Rh_Resvd+8      ; Media-ID Laufwerk
-Rh8_BufOfs      equ     Rh8_MediaID+1   ; Adresse Datenpuffer
-Rh8_BufSeg      equ     Rh8_BufOfs+2
-Rh8_NSecs       equ     Rh8_BufSeg+2    ; Anzahl zu lesender Blîcke
-Rh8_FirstSec    equ     Rh8_NSecs+2     ; Startsektor bzw. $FFFF fÅr 32-Bit-Nummern
-Rh8_VolID       equ     Rh8_FirstSec+2  ; Adresse Laufwerksname
-Rh8_LFirstSec   equ     Rh8_VolID+4     ; lange Startsektornummer
-Rh8_HFirstSec   equ     Rh8_LFirstSec+2
+Rh8		struct
+		 db	Rh_len dup (?)
+MediaID		 db	?		; Media-ID Laufwerk
+BufOfs		 dw	?		; Adresse Datenpuffer
+BufSeg		 dw	?
+NSecs		 dw	?		; Anzahl zu lesender Blîcke
+FirstSec	 dw	?		; Startsektor bzw. $FFFF fÅr 32-Bit-Nummern
+VolID		 dd	?		; Adresse Laufwerksname
+LFirstSec	 dw	?		; lange Startsektornummer
+HFirstSec	 dw	?
+		endstruct
 
 DoWrite:        if      debug2
                  mov    al,es:[bx+Rh_Unit]
                  call   PrByte
                  mov    al,' '
                  call   PrChar
-                 mov    ax,es:[bx+RH8_FirstSec]
+                 mov    ax,es:[bx+Rh8_FirstSec]
                  call   PrWord
                  mov    al,' '
-                 mov    ax,es:[bx+RH8_HFirstSec]
+                 mov    ax,es:[bx+Rh8_HFirstSec]
                  call   PrWord
-                 mov    ax,es:[bx+RH8_LFirstSec]
+                 mov    ax,es:[bx+Rh8_LFirstSec]
                  call   PrWord
                  call   NxtLine
                 endif
@@ -837,14 +851,17 @@ Write:          mov     al,es:[bx+Rh_Unit] ; Laufwerksnummer prÅfen
 ;* Funktion 9: Sektoren schreiben mit öberprÅfung                             *
 ;******************************************************************************
 
-Rh9_MediaID     equ     Rh_Resvd+8      ; Media-ID Laufwerk
-Rh9_BufOfs      equ     Rh9_MediaID+1   ; Adresse Datenpuffer
-Rh9_BufSeg      equ     Rh9_BufOfs+2
-Rh9_NSecs       equ     Rh9_BufSeg+2    ; Anzahl zu lesender Blîcke
-Rh9_FirstSec    equ     Rh9_NSecs+2     ; Startsektor bzw. $FFFF fÅr 32-Bit-Nummern
-Rh9_VolID       equ     Rh9_FirstSec+2  ; Adresse Laufwerksname
-Rh9_LFirstSec   equ     Rh9_VolID+4     ; lange Startsektornummer
-Rh9_HFirstSec   equ     Rh9_LFirstSec+2
+Rh9		struct
+		 db	Rh_len dup (?)
+MediaID		 db     ?		; Media-ID Laufwerk
+BufOfs		 dw     ?		; Adresse Datenpuffer
+BufSeg		 dw     ?
+NSecs		 dw     ?		; Anzahl zu lesender Blîcke
+FirstSec	 dw     ?		; Startsektor bzw. $FFFF fÅr 32-Bit-Nummern
+VolID		 dd     ?		; Adresse Laufwerksname
+LFirstSec	 dw     ?		; lange Startsektornummer
+HFirstSec	 dw     ?
+		endstruct
 
 Write_Verify:   mov     al,es:[bx+Rh_Unit] ; Laufwerksnummer prÅfen
 		call	ChkDrive
@@ -907,13 +924,16 @@ IOCTLQuery:     jmp     Unknown
 
                 include "secparam.inc"
 
-Rh0_Units       equ     Rh_Resvd+8      ; Zahl bedienter Laufwerke
-Rh0_EndOfs      equ     Rh0_Units+1     ; Endadresse Offset
-Rh0_EndSeg      equ     Rh0_EndOfs+2    ; Endadresse Segment
-Rh0_ParamOfs    equ     Rh0_EndSeg+2    ; Parameter Offsetadresse
-Rh0_ParamSeg    equ     Rh0_ParamOfs+2  ; Parameter Segmentadresse
-Rh0_FirstDrive  equ     Rh0_ParamSeg+2  ; erstes freies Laufwerk
-Rh0_MsgFlag     equ     Rh0_FirstDrive+1; Flag, ob DOS Fehler ausgeben darf
+Rh0		struct
+		 db	Rh_len dup (?)
+Units		 db     ?		; Zahl bedienter Laufwerke
+EndOfs		 dw     ?		; Endadresse Offset
+EndSeg		 dw     ?		; Endadresse Segment
+ParamOfs	 dw     ?		; Parameter Offsetadresse
+ParamSeg	 dw     ?		; Parameter Segmentadresse
+FirstDrive	 db     ?		; erstes freies Laufwerk
+MsgFlag		 db     ?		; Flag, ob DOS Fehler ausgeben darf
+		endstruct
 
 Init:           PrMsg   HelloMsg        ; Meldung ausgeben
                 call    LowLevelIdent   ; Startmeldung des Low-Level-Treibers
@@ -994,11 +1014,11 @@ ReadMaster:     mov     al,[MomDrive]
                 lea     si,[SectorBuffer+DrPar_Offset] ; Quelladresse im Sektor
                 mov     al,[MomDrive]   ; Zieladresse ausrechnen
                 call    GetPTabAdr
-                mov     cx,DrPar_Size
+                mov     cx,DrPar_Len
                 cld
                 rep     movsb
 
-                sub     di,DrPar_Size   ; Laufwerk nicht initialisiert ?
+                sub     di,DrPar_Len    ; Laufwerk nicht initialisiert ?
                 cmp     word ptr[di+DrPar_Cyls],0
                 je      DoQuery
                 cmp     byte ptr[di+DrPar_Heads],0
@@ -1113,7 +1133,7 @@ ScParts_DrHd	equ	12		; Parameteradressen auf Stack
 ScParts_Cyl	equ	10
 ScParts_Sec	equ	8
 ScParts_LinSec	equ	4
-ScParts_ParTab  equ     0-(MaxParts*ParTab_Size)  ; Kopie Partitionstabelle
+ScParts_ParTab  equ     0-(MaxParts*ParTab_Len)   ; Kopie Partitionstabelle
 ScParts_LocSize equ     0-ScParts_ParTab          ; belegter Stack
 
 ScanParts:      enter	ScParts_LocSize,0
@@ -1141,7 +1161,7 @@ ScanParts:      enter	ScParts_LocSize,0
 		mov	di,ss		; Zieladresse auf Stack
 		mov	es,di
                 lea     di,[bp+ScParts_ParTab]
-		mov	cx,MaxParts*ParTab_Size ; LÑnge
+		mov	cx,MaxParts*ParTab_Len  ; LÑnge
 		cld
 		rep	movsb
 
@@ -1210,7 +1230,7 @@ ScanParts_Enter:mov	al,[DrCnt]		; Partition in Tabelle eintragen
 		stosb
 		inc	[DrCnt]			; ein log. Laufwerk mehr
 
-ScanParts_Next:	add	si,ParTab_Size		; auf nÑchste Partition
+ScanParts_Next:	add	si,ParTab_Len		; auf nÑchste Partition
 		pop	cx
                 dec     cx
                 ljnz    ScanParts_Scan

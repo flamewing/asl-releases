@@ -403,7 +403,7 @@ SecInpMsg       db      "Sektorzahl (max. 255) : $"
                 call    GetPTabAdr
                 mov     si,di           ; selbige in MBR einschreiben
                 lea     di,[SectorBuffer+DrPar_Offset]
-                mov     cx,DrPar_Size/2
+                mov     cx,DrPar_Len/2
                 cld
                 rep     movsw
 
@@ -550,7 +550,7 @@ PromptMsg       db      "Laufwerksnummer (1 oder 2) : $"
 CopyTable:      lea     si,[SectorBuffer+DrPar_Offset]
                 mov     al,dl
                 call    GetPTabAdr
-                mov     cx,DrPar_Size/2
+                mov     cx,DrPar_Len/2
                 cld
                 rep     movsw
                 mov     al,dl           ; Geometrie jetzt da ?
@@ -720,7 +720,7 @@ NoFormatError:  PrMsg   WriteMsg
                 call    GetPTabAdr
                 mov     si,di
                 lea     di,[SectorBuffer+DrPar_Offset]
-                mov     cx,DrPar_Size/2
+                mov     cx,DrPar_Len/2
                 rep     movsw
                 mov     al,[MomDrive]   ; Sektor schreiben
                 mov     ah,0            ; MBR auf Kopf 0,
@@ -989,8 +989,8 @@ NoBigDOS:       cmp     ax,32679        ; ab 32680 Sektoren 16-Bit-FAT
                 jmp     TypeFound
 NoFAT16:        mov     bl,1            ; kleine 12-Bit-Partition
 TypeFound:      mov     [di+ParTab_Type],bl
-                add     di,ParTab_Size  ; die anderen 3 Partitionen l”schen
-                mov     cx,3*(ParTab_Size/2)
+                add     di,ParTab_Len   ; die anderen 3 Partitionen l”schen
+                mov     cx,3*(ParTab_Len/2)
                 sub     ax,ax
                 cld
                 rep     stosw

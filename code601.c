@@ -13,10 +13,11 @@
 #include <ctype.h>
 
 #include "endian.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "asmallg.h"
 #include "codepseudo.h"
 #include "codevars.h"
 
@@ -149,7 +150,7 @@ END
 BEGIN
    String NName;
 
-   strcpy(NName,(MomCPU==CPU6000)?NName1:NName2);
+   strcpy(NName,(MomCPU==CPU6000)?NName2:NName1);
    AddSReg2(strdup(NName),NCode,NMask);
    if (WithOE)
     BEGIN
@@ -191,7 +192,7 @@ END
 BEGIN
    String NName;
 
-   strcpy(NName,(MomCPU==CPU6000)?NName1:NName2);
+   strcpy(NName,(MomCPU==CPU6000)?NName2:NName1);
    AddSFReg2(strdup(NName),NCode,NMask);
    if (WithFL)
     BEGIN
@@ -221,7 +222,7 @@ END
 BEGIN
    String NName;
 
-   strcpy(NName,(MomCPU==CPU6000)?NName1:NName2);
+   strcpy(NName,(MomCPU==CPU6000)?NName2:NName1);
    AddSReg2Swap(strdup(NName),NCode,NMask);
    if (WithOE)
     BEGIN
@@ -263,7 +264,7 @@ END
 BEGIN
    String NName;
 
-   strcpy(NName,(MomCPU==CPU6000)?NName1:NName2);
+   strcpy(NName,(MomCPU==CPU6000)?NName2:NName1);
    AddSReg3(strdup(NName),NCode,NMask);
    if (WithOE)
     BEGIN
@@ -305,7 +306,7 @@ END
 BEGIN
    String NName;
 
-   strcpy(NName,(MomCPU==CPU6000)?NName1:NName2);
+   strcpy(NName,(MomCPU==CPU6000)?NName2:NName1);
    AddSFReg3(strdup(NName),NCode,NMask);
    if (WithFL)
     BEGIN
@@ -327,7 +328,7 @@ END
 BEGIN
    String NName;
 
-   strcpy(NName,(MomCPU==CPU6000)?NName1:NName2);
+   strcpy(NName,(MomCPU==CPU6000)?NName2:NName1);
    AddSReg3Swap(strdup(NName),NCode,NMask);
    if (WithFL)
     BEGIN
@@ -339,7 +340,7 @@ END
 	static void AddMixed(char *NName1, char *NName2, LongWord NCode, Byte NMask)
 BEGIN
    if (InstrZ>=MixedOrderCount) exit(255);
-   MixedOrders[InstrZ].Name=(MomCPU==CPU6000)?NName1:NName2;
+   MixedOrders[InstrZ].Name=(MomCPU==CPU6000)?NName2:NName1;
    MixedOrders[InstrZ].Code=NCode;
    MixedOrders[InstrZ++].CPUMask=NMask;
 END
@@ -357,7 +358,7 @@ END
 BEGIN
    String NName;
 
-   strcpy(NName,(MomCPU==CPU6000)?NName1:NName2);
+   strcpy(NName,(MomCPU==CPU6000)?NName2:NName1);
    AddSFReg4(strdup(NName),NCode,NMask);
    if (WithFL)
     BEGIN
@@ -395,7 +396,7 @@ END
 BEGIN
    String NName;
 
-   strcpy(NName,(MomCPU==CPU6000)?NName1:NName2);
+   strcpy(NName,(MomCPU==CPU6000)?NName2:NName1);
    AddSReg2Imm(strdup(NName),NCode,NMask);
    if (WithFL)
     BEGIN
@@ -795,7 +796,7 @@ BEGIN
    AddImm16("ADDIS"  ,"CAU"    ,T15 << 26,0x0f);
    AddImm16("DOZI"   ,"DOZI"   , T9 << 26,0x08);
    AddImm16("MULLI"  ,"MULI"   , T7 << 26,0x0f);
-   AddImm16("SUBFIC" ,"SFI"    , T8 << 26,0x0c);
+   AddImm16("SUBFIC" ,"SFI"    , T8 << 26,0x0f);
 
    /* A,S,Imm --> S A Imm */
 
@@ -903,7 +904,7 @@ END
 BEGIN
    char *p;
    int l=strlen(Asc);
-   Integer Disp;
+   LongInt Disp;
    Boolean OK;
 
    if (Asc[l-1]!=')') return False; Asc[l-1]='\0';  l--;
@@ -960,13 +961,6 @@ END
 
 	static Boolean DecodePseudo(void)
 BEGIN
-#define ONOFF601Count 2
-   static ONOFFRec ONOFF601s[ONOFF601Count]=
-             {{"SUPMODE", &SupAllowed, SupAllowedName},
-              {"BIGENDIAN", &BigEnd, BigEndianName}};
-
-   if (CodeONOFF(ONOFF601s,ONOFF601Count)) return True;
-
    return False;
 END
 
@@ -977,7 +971,8 @@ END
 
 	static void MakeCode_601(void)
 BEGIN
-   Integer z,Imm;
+   int z;
+   Integer Imm;
    LongWord Dest,Src1,Src2,Src3;
    LongInt Dist;
    Boolean OK;
@@ -1380,7 +1375,7 @@ BEGIN
 	Imm=EvalIntExpression(ArgStr[3],Int16,&OK);
 	if (OK)
 	 BEGIN
-          CodeLen=4; PutCode(Imm16Orders[z].Code+(Dest << 21)+(Src1 << 16)+(Imm AND 0xffff));
+          CodeLen=4; PutCode(Imm16Orders[z].Code+(Dest << 21)+(Src1 << 16)+(Imm & 0xffff));
 	 END
        END
       return;
@@ -1404,7 +1399,7 @@ BEGIN
 	Imm=EvalIntExpression(ArgStr[3],Int16,&OK);
 	if (OK)
 	 BEGIN
-          CodeLen=4; PutCode(Imm16SwapOrders[z].Code+(Dest << 16)+(Src1 << 21)+(Imm AND 0xffff));
+          CodeLen=4; PutCode(Imm16SwapOrders[z].Code+(Dest << 16)+(Src1 << 21)+(Imm & 0xffff));
 	 END
        END
       return;
@@ -1524,18 +1519,18 @@ BEGIN
 
    if (Memo("MTCRF"))
     BEGIN
-     if (ArgCnt!=2) WrError(1110);
-     else if (NOT DecodeGenReg(ArgStr[2],&Src1)) WrError(1350);
+     if ((ArgCnt<1) OR (ArgCnt>2)) WrError(1110);
+     else if (NOT DecodeGenReg(ArgStr[ArgCnt],&Src1)) WrError(1350);
      else
       BEGIN
-       Dest=EvalIntExpression(ArgStr[1],UInt9,&OK);
+       OK=True;
+       if (ArgCnt==1) Dest=0xff;
+       else Dest=EvalIntExpression(ArgStr[1],UInt8,&OK);
        if (OK)
-	if ((Dest&1)==1) WrError(1351);
-	else
-	 BEGIN
-          PutCode((T31 << 26)+(Src1 << 26)+(Dest << 11)+(144 << 1));
-	  CodeLen=4;
-	 END
+        BEGIN
+         PutCode((T31 << 26)+(Src1 << 21)+(Dest << 12)+(144 << 1));
+         CodeLen=4;
+        END
       END
      return;
     END
@@ -1794,7 +1789,7 @@ BEGIN
 	  if (OK)
 	   BEGIN
             PutCode((T10 << 26)+(Dest << 21)+(Src3 << 21)
-                        +(Src1 << 16)+(Src2 AND 0xffff));
+                        +(Src1 << 16)+(Src2 & 0xffff));
             if (Memo("CMPI")) IncCode(T1 << 26);
 	    CodeLen=4;
 	   END
@@ -1814,7 +1809,7 @@ BEGIN
        if (OK)
 	BEGIN
 	 if ((Memo("B")) OR (Memo("BL"))) Dist-=EProgCounter();
-	 if ((NOT SymbolQuestionable) AND (Dest>0x1ffffff)) WrError(1320);
+	 if ((NOT SymbolQuestionable) AND (Dist>0x1ffffff)) WrError(1320);
 	 else if ((NOT SymbolQuestionable) AND (Dist<-0x2000000l)) WrError(1315);
 	 else if ((Dist & 3)!=0) WrError(1375);
 	 else
@@ -1931,7 +1926,7 @@ END
 
 	static void SwitchFrom_601(void)
 BEGIN
-   DeinitFields();
+   DeinitFields(); ClearONOFF();
 END
 
 	static void SwitchTo_601(void)
@@ -1946,6 +1941,8 @@ BEGIN
 
    MakeCode=MakeCode_601; ChkPC=ChkPC_601; IsDef=IsDef_601;
    SwitchFrom=SwitchFrom_601; InternSymbol=InternSymbol_601;
+   AddONOFF("SUPMODE",   &SupAllowed, SupAllowedName,False);
+   AddONOFF("BIGENDIAN", &BigEnd,     BigEndianName, False);
 
    InitFields();
 END

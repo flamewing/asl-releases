@@ -14,7 +14,7 @@
 #include <ctype.h>
 
 #include "nls.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "bpemu.h"
 #include "asmdef.h"
 #include "asmsub.h"
@@ -64,14 +64,14 @@ typedef struct
 
 static CPUVar CPU97C241;
 
-static Integer OpSize,OpSize2;
+static int OpSize,OpSize2;
 static Integer LowLim4,LowLim8;
 
 static Boolean AdrOK;
 static Byte AdrMode,AdrMode2;
 static Byte AdrCnt2;
 static Word AdrVals[2],AdrVals2[2];
-static Integer AdrInc;
+static int AdrInc;
 static Word Prefs[2];
 static Boolean PrefUsed[2];
 static char Format;
@@ -886,7 +886,7 @@ END
 
 	static Boolean CodeAri(void)
 BEGIN
-   Integer z,Cnt;
+   int z,Cnt;
    Byte Reg;
 
    for (z=0; z<GASI1OrderCount; z++)
@@ -1151,7 +1151,7 @@ END
 
 	static void MakeCode_97C241(void)
 BEGIN
-   Integer z,Cnt;
+   int z,Cnt;
    Byte Reg,Num1,Num2;
    char *p;
    LongInt AdrInt,AdrLong;

@@ -1,0 +1,15 @@
+Begin3
+Title:          asl
+Version:        1.41r7
+Entered-date:   23JUN98
+Description:    A cross assembler for a variety of microcontrollers/-processors, ported from the same author's Borland-Pascal version
+Keywords:       assembler microcontroller 
+Author:         alfred@ccac.rwth-aachen.de (Alfred Arnold)
+Maintained-by:  alfred@ccac.rwth-aachen.de (Alfred Arnold)
+Primary-site:   sunsite.unc.edu /pub/Linux/devel/lang/assemblers
+		XXXXX asl-1.41r7.tar.gz
+Alternate-site: john.ccac.rwth-aachen.de /pub/as/source/c_version
+Original-site:  john.ccac.rwth-aachen.de /pub/as/source/1.41r7
+Platforms:	any Unix system (hopefully), OS/2 with emx C compiler, MSDOS with BC++ 3.1
+Copying-policy: GPL
+End

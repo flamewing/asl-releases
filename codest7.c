@@ -14,7 +14,7 @@
 #include <string.h>
 
 #include "bpemu.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "nls.h"
 #include "asmdef.h"
 #include "asmsub.h"
@@ -385,7 +385,8 @@ END
 
         static void MakeCode_ST7(void)
 BEGIN
-   Integer z,AdrInt;
+   Integer AdrInt;
+   int z;
    LongInt Mask;
    Boolean OK;
 
@@ -870,9 +871,10 @@ BEGIN
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
 
    MakeCode=MakeCode_ST7; ChkPC=ChkPC_ST7; IsDef=IsDef_ST7;
-   SwitchFrom=SwitchFrom_ST7;
+   SwitchFrom=SwitchFrom_ST7; InitFields();
+   AddMoto16PseudoONOFF();
 
-   InitFields();
+   SetFlag(&DoPadding,DoPaddingName,False);
 END
 
 	void codest7_init(void)

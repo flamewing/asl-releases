@@ -14,7 +14,7 @@
 #include <string.h>
 
 #include "bpemu.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
@@ -195,7 +195,7 @@ END
 	static char *HasDisp(char *Asc)
 BEGIN
    char *p;
-   Integer Lev;
+   int Lev;
 
    if (Asc[strlen(Asc)-1]==')')
     BEGIN
@@ -429,7 +429,8 @@ END
 
 	static void MakeCode_370(void)
 BEGIN
-   Integer z,AdrInt;
+   int z;
+   Integer AdrInt;
    LongInt Bit;
    Boolean OK,Rela;
 

@@ -14,7 +14,7 @@
 
 #include "nls.h"
 #include "bpemu.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
@@ -362,7 +362,7 @@ BEGIN
    else *Erg=NoDisp;
 END
 
-	static void DecodeAdr(Integer Start, Integer Stop, Boolean LongAdr, Byte Mask)
+	static void DecodeAdr(int Start, int Stop, Boolean LongAdr, Byte Mask)
 BEGIN
    Integer V16;
    LongInt V32;
@@ -516,7 +516,7 @@ END
 
 	static void MakeCode_6816(void)
 BEGIN
-   Integer z,z2;
+   int z,z2;
    Boolean OK;
    Byte Mask;
    LongInt AdrLong;

@@ -12,7 +12,7 @@
 
 #include <string.h>
 
-#include "stringutil.h"
+#include "strutil.h"
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
@@ -160,7 +160,7 @@ END
 BEGIN
    Word Size;
    Boolean ValOK;
-   Integer z;
+   int z;
    TempResult t;
    char *p;
    LongInt MinV,MaxV;
@@ -202,7 +202,7 @@ BEGIN
 	 BEGIN
           FirstPassUnknown=False;
 	  EvalExpression(ArgStr[z],&t);
-          if ((FirstPassUnknown) AND (t.Typ==TempInt)) t.Typ&=MaxV;
+          if ((FirstPassUnknown) AND (t.Typ==TempInt)) t.Contents.Int&=MaxV;
 	  switch (t.Typ)
            BEGIN
 	    case TempInt:
@@ -255,7 +255,7 @@ END
 BEGIN
    Boolean OK;
    Word AdrWord;
-   Integer z;
+   int z;
 
    CodeLen=0; DontPrint=False;
 

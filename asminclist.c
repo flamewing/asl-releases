@@ -11,15 +11,16 @@
 #include "stdinc.h"
 #include <string.h>
 
-#include "stringutil.h"
+#include "strutil.h"
 #include "chunks.h"
+#include "nls.h"
+#include "nlmessages.h"
+#include "as.rsc"
 #include "asmfnums.h"
 #include "asmdef.h"
 #include "asmsub.h"
 
 #include "asminclist.h"
-
-#include "as.rsc"
 
 
 typedef void **PFileArray;
@@ -50,7 +51,7 @@ BEGIN
       Curr->Subs=(PFileArray) malloc(sizeof(void *));
      else
       Curr->Subs=(PFileArray) realloc(Curr->Subs,sizeof(void *)*(Curr->Len+1));
-     Curr->Subs[Curr->Len++]=Neu;
+     Curr->Subs[Curr->Len++]=(void *)Neu;
      Curr=Neu;
     END
 END
@@ -62,9 +63,9 @@ BEGIN
 END
 
 
-        static void PrintIncludeList_PrintNode(PFileNode Node, Integer Indent)
+        static void PrintIncludeList_PrintNode(PFileNode Node, int Indent)
 BEGIN
-   Integer z;
+   int z;
    String h;
 
    ChkStack();
@@ -81,8 +82,8 @@ END
 	void PrintIncludeList(void)
 BEGIN
    NewPage(ChapDepth,True);
-   WrLstLine(ListIncludeListHead1);
-   WrLstLine(ListIncludeListHead2);
+   WrLstLine(getmessage(Num_ListIncludeListHead1));
+   WrLstLine(getmessage(Num_ListIncludeListHead2));
    WrLstLine("");
    PrintIncludeList_PrintNode(Root,0);
 END
@@ -90,7 +91,7 @@ END
 
         static void ClearIncludeList_ClearNode(PFileNode Node)
 BEGIN
-   Integer z; 
+   int z; 
 
    ChkStack();
 

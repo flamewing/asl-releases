@@ -13,12 +13,13 @@
 #include <ctype.h>
 
 #include "nls.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "bpemu.h"
 #include "stringlists.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "asmallg.h"
 #include "codepseudo.h"
 #include "codevars.h"
 
@@ -301,16 +302,11 @@ END
 
 	static Boolean DecodePseudo(void)
 BEGIN
-#define ONOFF29KCount 1
-   static ONOFFRec ONOFF29Ks[ONOFF29KCount]=
-             {{"SUPMODE", &SupAllowed, SupAllowedName}};
 #define ASSUME29KCount 1
    static ASSUMERec ASSUME29Ks[ASSUME29KCount]=
              {{"RBP", &Reg_RBP, 0, 0xff, 0x00000000}};
 
-   Integer z;
-
-   if (CodeONOFF(ONOFF29Ks,ONOFF29KCount)) return True;
+   int z;
 
    if (Memo("ASSUME"))
     BEGIN
@@ -336,8 +332,7 @@ END
 
 	static void MakeCode_29K(void)
 BEGIN
-   Integer z;
-   int l;
+   int z,l;
    LongWord Dest,Src1,Src2,Src3,AdrLong;
    LongInt AdrInt;
    Boolean OK;
@@ -862,7 +857,7 @@ END
 
         static void SwitchFrom_29K(void)
 BEGIN
-   DeinitFields();
+   DeinitFields(); ClearONOFF();
 END
 
         static void SwitchTo_29K(void)
@@ -876,6 +871,7 @@ BEGIN
    Grans[SegCode]=1; ListGrans[SegCode]=4; SegInits[SegCode]=0;
 
    MakeCode=MakeCode_29K; ChkPC=ChkPC_29K; IsDef=IsDef_29K;
+   AddONOFF("SUPMODE", &SupAllowed, SupAllowedName,False);
 
    SwitchFrom=SwitchFrom_29K; InitFields();
 END

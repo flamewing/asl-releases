@@ -13,7 +13,7 @@
 #include <string.h>
 
 #include "nls.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
@@ -196,7 +196,7 @@ END
 
         static void MakeCode_SCMP(void)
 BEGIN
-   Integer z;
+   int z;
    Boolean OK;
 
    CodeLen=0; DontPrint=False;

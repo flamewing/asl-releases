@@ -3,28 +3,27 @@
 echo executing self tests...
 echo "=================================================================" > ../testlog
 echo "Summaric results:" >> ../testlog
-SUMPASS=
-SUMFAIL=
+SUMPASS="0"
+SUMFAIL="0"
 for t in t_*; do
  cd $t
  cat $t.doc
  ../../asl `cat asflags` -i ../../include $t.asm | tee $t.log
- ../../p2bin -l 0 -r \$-\$ $t
+ ../../p2bin -k -l 0 -r \$-\$ $t
  echo +---------------------------------------------------------------+
  if cmp $t.ori $t.bin; then
   echo "Test $t succeeded!"
-  SUMPASS="$SUMPASS"+
+  SUMPASS=`expr $SUMPASS + 1`
   echo "$t : OK" >> ../../testlog
  else
   echo "Test $t failed!"
-  SUMFAIL="$SUMFAIL"-
+  SUMFAIL=`expr $SUMFAIL + 1`
   echo "$t : failed" >> ../../testlog
  fi
  grep assembly $t.log >> ../../testlog
  grep Assemblierzeit $t.log >> ../../testlog
  echo +---------------------------------------------------------------+
  rm -f $t.bin
- rm -f $t.p
  rm -f $t.log
  rm -f $t.h
  cd ..

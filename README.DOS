@@ -1,0 +1,26 @@
+All right, I couldn't resist to port the C version back to DOS.  It was
+tricky, and I had to fight again all the limitations and bullshit MS-DOS
+brings.  For porting, I used Borland C in version 3.1 .  Older versions
+might work also, but you will probably have to take out a lot of code
+generator modules if your version of Turbo/Borland-C does not offer
+overlays.  Porting to compilers from other manufacturers is probably not
+impossible, but surely more effort than buying a used copy of BC3.1...
+
+Don't bother with the dozens of warnings issued by the compiler concerning
+unused parameters: Things have to be like that since functions are called 
+via pointers and some functions need the parameters and some not.  There
+must be a switch somewhere to silence the compiler..
+
+Copy 'Makefile.dos' to 'Makefile' and move the 'makedef.dos' (I hate this
+8+3 limit!) to 'Makefile.def'.  Compiling and test run should then work
+as usual.  Assure that you have at least 600 Kbytes of free DOS memory
+or otherwise the larger tests might fail!  For the DOS platform, the 
+CKMALLOC symbol is defined to automatically check for out-of-memory
+conditions.  The 'wrapped' functions are malloc(), realloc(), and strdup().
+There must be a function missing, since AS still occasionally crashes when
+he runs out of memory....
+
+Compiling for DOS protected mode is also possible.  Use the 'makedef.dpmi'
+as 'Makefile.def'.  I tested this with Borland-C 4.5 and the Powerpack for
+BC 4.X .
+

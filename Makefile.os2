@@ -1,0 +1,95 @@
+include Makefile.def
+
+include makedefs.src
+
+include objdefs.unix
+
+include makedefs.files
+
+ALLFLAGS = $(CFLAGS) -D$(CHARSET) -DSTDINCLUDES=\"$(INCDIR)\" -DLIBDIR=\"$(LIBDIR)\"
+
+#---------------------------------------------------------------------------
+# primary targets
+
+all: $(ALLTARGETS)
+
+docs: $(TEX2DOCTARGET) $(TEX2HTMLTARGET)
+	cd doc_DE & $(MAKE) TEX2DOC=..\$(TEX2DOCTARGET) TEX2HTML=..\$(TEX2HTMLTARGET) RM=del
+	cd doc_EN & $(MAKE) TEX2DOC=..\$(TEX2DOCTARGET) TEX2HTML=..\$(TEX2HTMLTARGET) RM=del
+
+$(ASLTARGET): $(AS_OBJECTS) $(ASM_OBJECTS) $(ST_OBJECTS) $(CODE_OBJECTS) $(NLS_OBJECTS)
+	$(LD) -o $(ASLTARGET) $(ASM_OBJECTS) $(AS_OBJECTS) $(ST_OBJECTS) $(CODE_OBJECTS) $(NLS_OBJECTS) -lm $(LDFLAGS)
+
+$(PLISTTARGET): $(PLIST_OBJECTS) $(NLS_OBJECTS)
+	$(LD) -o $(PLISTTARGET) $(PLIST_OBJECTS) $(NLS_OBJECTS) -lm $(LDFLAGS)
+
+$(PBINDTARGET): $(PBIND_OBJECTS) $(NLS_OBJECTS)
+	$(LD) -o $(PBINDTARGET) $(PBIND_OBJECTS) $(NLS_OBJECTS) -lm $(LDFLAGS)
+
+$(P2HEXTARGET): $(P2HEX_OBJECTS) $(NLS_OBJECTS)
+	$(LD) -o $(P2HEXTARGET) $(P2HEX_OBJECTS) $(NLS_OBJECTS) -lm $(LDFLAGS)
+
+$(P2BINTARGET): $(P2BIN_OBJECTS) $(NLS_OBJECTS)
+	$(LD) -o $(P2BINTARGET) $(P2BIN_OBJECTS) $(NLS_OBJECTS) -lm $(LDFLAGS)
+
+$(RESCOMPTARGET): $(RESCOMP_OBJECTS)
+	$(LD) -o $(RESCOMPTARGET) $(RESCOMP_OBJECTS) $(LDFLAGS)
+
+$(TEX2DOCTARGET): $(TEX2DOC_OBJECTS)
+	$(LD) -o $(TEX2DOCTARGET) $(TEX2DOC_OBJECTS) $(LDFLAGS) -lm
+
+$(TEX2HTMLTARGET): $(TEX2HTML_OBJECTS)
+	$(LD) -o $(TEX2HTMLTARGET) $(TEX2HTML_OBJECTS) $(LDFLAGS) -lm
+
+$(UNUMLAUTTARGET): $(UNUMLAUT_OBJECTS)
+	$(LD) -o $(UNUMLAUTTARGET) $(UNUMLAUT_OBJECTS) $(LDFLAGS)
+
+#---------------------------------------------------------------------------
+# special rules for objects dependant on string resource files
+
+include makedefs.str
+
+#---------------------------------------------------------------------------
+# supplementary targets
+
+test: $(ALLTARGETS)
+	cd tests & copy t_secdrive\wd1003at.inc t_secdrive\lowlevel.inc & .\testall
+
+install: $(ALLTARGETS)
+	.\install $(BINDIR) $(INCDIR) $(MANDIR) $(LIBDIR) $(DOCDIR)
+
+clean:
+	-del $(ALLTARGETS)
+	-del *.$(OBJEXTENSION)
+	-del *.p
+	-del testlog
+	-del *.rsc
+	cd doc_DE & $(MAKE) RM=del clean
+	cd doc_EN & $(MAKE) RM=del clean
+
+#---------------------------------------------------------------------------
+# create distributions
+
+bindist: $(UNUMLAUTTARGET)
+	mkdir as & cmd /cinstall as\bin as\include as\man as\lib as\doc
+	cd as & zip -9 -r ..\as$(VERSION) *
+	-del as\bin /n
+	-del as\include /n
+	-del as\man /n
+	-del as\lib /n
+	-del as\doc /n
+	-rmdir as\bin
+	-rmdir as\include
+	-rmdir as\man
+	-rmdir as\lib
+	-rmdir as\doc
+	-rmdir as
+
+#---------------------------------------------------------------------------
+# for my own use only...
+
+#---------------------------------------------------------------------------
+
+.SUFFIXES: .c
+.c.$(OBJEXTENSION):
+	$(CC) $(ALLFLAGS) -c $*.c

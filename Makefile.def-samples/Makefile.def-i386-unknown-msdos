@@ -4,19 +4,19 @@
 
 CC = bcc
 LD = bcc
-CFLAGS = -mh -Y
+CFLAGS =-ml -Y -Oe -k- -Z -d
+OVR1FLAG=-Y
+OVR2FLAG=-Yo
+
 # -------------------------------------------------------------------------
 # directories where binaries, includes, and manpages should go during
 # installation
 
-BINDIR = /usr/local/bin
-INCDIR = /usr/local/include/asl
-MANDIR = /usr/local/man
-
-# -------------------------------------------------------------------------
-# language AS will speak to you
-
-LANGRSC = lang_EN
+BINDIR = c:\as\bin
+INCDIR = c:\as\include
+MANDIR = c:\as\man
+LIBDIR = c:\as\lib
+DOCDIR = c:\as\doc
 
 # -------------------------------------------------------------------------
 # character encoding to use (choose one of them)

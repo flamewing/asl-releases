@@ -13,7 +13,7 @@
 #include <string.h>
 
 #include "bpemu.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
@@ -142,7 +142,7 @@ BEGIN
    static char *ModStrings[ModXDec+1]=
               {"A","[B]","[B+]","[B-]","[X]","[X+]","[X-]"};
 
-   Integer z;
+   int z;
    Boolean OK;
 
    AdrMode=ModNone;
@@ -276,7 +276,8 @@ END
 
         static void MakeCode_COP8(void)
 BEGIN
-   Integer z,AdrInt;
+   Integer AdrInt;
+   int z;
    Byte HReg;
    Boolean OK;
    Word AdrWord;

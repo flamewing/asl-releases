@@ -19,10 +19,14 @@ typedef Integ64 QuadInt;
 #ifdef HAS64
 typedef QuadInt LargeInt;
 typedef QuadWord LargeWord;
+#define LARGEBITS 64
 #else
 typedef LongInt LargeInt;
 typedef LongWord LargeWord;
+#define LARGEBITS 32
 #endif
+
+typedef signed int sint;
 
 typedef char Char;
 

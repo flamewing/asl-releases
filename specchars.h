@@ -8,5 +8,6 @@ static unsigned char specchars[][2]=
              {0341,0337},        /* ssharp */
              {0375,0262},        /* 2-exp */
              {0346,0265},        /* mu */
+             {0205,0340},        /* a graph */
              {0000,0000}};
              

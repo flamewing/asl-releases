@@ -47,7 +47,7 @@ hi              function x,(x>>8)&255
 
 lo              function x,x&255
 
-; obere Hälftes aus einem 32-Bit-Wort:
+; obere Hälfte aus einem 32-Bit-Wort:
 
 hiword          function x,(x>>16)&65535
 

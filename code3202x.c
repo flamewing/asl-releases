@@ -13,7 +13,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "stringutil.h"
+#include "strutil.h"
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
@@ -25,161 +25,210 @@
 
 /* ---------------------------------------------------------------------- */
 
-static const struct cmd_fixed_order {
+typedef struct {
 	char *name;
 	Word code;
-} cmd_fixed_order[] = {{"ABS",    0xce1b},
-		       {"CMPL",   0xce27},
-		       {"NEG",    0xce23},
-		       {"ROL",    0xce34},
-		       {"ROR",    0xce35},
-		       {"SFL",    0xce18},
-		       {"SFR",    0xce19},
-		       {"ZAC",    0xca00},
-		       {"APAC",   0xce15},
-		       {"PAC",    0xce14},
-		       {"SPAC",   0xce16},
-		       {"BACC",   0xce25},
-		       {"CALA",   0xce24},
-		       {"RET",    0xce26},
-		       {"RFSM",   0xce36},
-		       {"RTXM",   0xce20},
-		       {"RXF",    0xce0c},
-		       {"SFSM",   0xce37},
-		       {"STXM",   0xce21},
-		       {"SXF",    0xce0d},
-		       {"DINT",   0xce01},
-		       {"EINT",   0xce00},
-		       {"IDLE",   0xce1f},
-		       {"NOP",    0x5500},
-		       {"POP",    0xce1d},
-		       {"PUSH",   0xce1c},
-		       {"RC",     0xce30},
-		       {"RHM",    0xce38},
-		       {"ROVM",   0xce02},
-		       {"RSXM",   0xce06},
-		       {"RTC",    0xce32},
-		       {"SC",     0xce31},
-		       {"SHM",    0xce39},
-		       {"SOVM",   0xce03},
-		       {"SSXM",   0xce07},
-		       {"STC",    0xce33},
-		       {"TRAP",   0xce1e},
-		       {NULL, 0}};
-
-
-static const struct cmd_fixed_order 
-cmd_jmp_order[] = {{"B",      0xff80},
-		   {"BANZ",   0xfb80},
-		   {"BBNZ",   0xf980},
-		   {"BBZ",    0xf880},
-		   {"BC",     0x5e80},
-		   {"BGEZ",   0xf480},
-		   {"BGZ",    0xf180},
-		   {"BIOZ",   0xfa80},
-		   {"BLEZ",   0xf280},
-		   {"BLZ",    0xf380},
-		   {"BNC",    0x5f80},
-		   {"BNV",    0xf780},
-		   {"BNZ",    0xf580},
-		   {"BV",     0xf080},
-		   {"BZ",     0xf680},
-		   {"CALL",   0xfe80},
-		   {NULL,     0}};
-
-
-
-static const struct cmd_adr_order {
+} cmd_fixed;
+typedef struct {
 	char *name;
 	Word code;
 	Boolean must1;
-} cmd_adr_order[] = {{"ADDC",   0x4300, False},
-		     {"ADDH",   0x4800, False},
-		     {"ADDS",   0x4900, False},
-		     {"ADDT",   0x4a00, False},
-		     {"AND",    0x4e00, False},
-		     {"LACT",   0x4200, False},
-		     {"OR",     0x4d00, False},
-		     {"SUBB",   0x4f00, False},
-		     {"SUBC",   0x4700, False},
-		     {"SUBH",   0x4400, False},
-		     {"SUBS",   0x4500, False},
-		     {"SUBT",   0x4600, False},
-		     {"XOR",    0x4c00, False},
-		     {"ZALH",   0x4000, False},
-		     {"ZALR",   0x7b00, False},
-		     {"ZALS",   0x4100, False},
-		     {"LDP",    0x5200, False},
-		     {"MAR",    0x5500, False},
-		     {"LPH",    0x5300, False},
-		     {"LT",     0x3c00, False},
-		     {"LTA",    0x3d00, False},
-		     {"LTD",    0x3f00, False},
-		     {"LTP",    0x3e00, False},
-		     {"LTS",    0x5b00, False},
-		     {"MPY",    0x3800, False},
-		     {"MPYA",   0x3a00, False},
-		     {"MPYS",   0x3b00, False},
-		     {"MPYU",   0xcf00, False},
-		     {"SPH",    0x7d00, False},
-		     {"SPL",    0x7c00, False},
-		     {"SQRA",   0x3900, False},
-		     {"SQRS",   0x5a00, False},
-		     {"DMOV",   0x5600, False},
-		     {"TBLR",   0x5800, False},
-		     {"TBLW",   0x5900, False},
-		     {"BITT",   0x5700, False},
-		     {"LST",    0x5000, False},
-		     {"LST1",   0x5100, False},
-		     {"POPD",   0x7a00, False},
-		     {"PSHD",   0x5400, False},
-		     {"RPT",    0x4b00, False},
-		     {"SST",    0x7800, True},
-		     {"SST1",   0x7900, True},
-		     {NULL,     0,      False}};
-
-static const struct cmd_adr_order 
-cmd_adr_2ndadr_order[] = {{"BLKD",   0xfd00, False},
-			  {"BLKP",   0xfc00, False},
-			  {"MAC",    0x5d00, False},
-			  {"MACD",   0x5c00, False},
-			  {NULL,     0,      False}};
-
-static const struct cmd_adr_shift_order {
+} cmd_adr;
+typedef struct {
 	char *name;
 	Word code;
 	Word allow_shifts;
-} cmd_adr_shift_order[] = {{"ADD",    0x0000, 0xf},
-			   {"LAC",    0x2000, 0xf},
-			   {"SACH",   0x6800, 0x7},
-			   {"SACL",   0x6000, 0x7},
-			   {"SUB",    0x1000, 0xf},
-			   {"BIT",    0x9000, 0xf},
-			   {NULL,     0,      0}};
-
-static const struct cmd_imm_order {
+} cmd_adr_shift;
+typedef struct {
 	char *name;
 	Word code;
 	Integer Min;
 	Integer Max;
 	Word mask;
-} cmd_imm_order[] = {{"ADDK",   0xcc00,     0,    255,   0xff},
-		     {"LACK",   0xca00,     0,    255,   0xff},
-		     {"SUBK",   0xcd00,     0,    255,   0xff},
-		     {"ADRK",   0x7e00,     0,    255,   0xff},
-		     {"SBRK",   0x7f00,     0,    255,   0xff},
-		     {"RPTK",   0xcb00,     0,    255,   0xff},
-		     {"MPYK",   0xa000, -4096,   4095, 0x1fff},
-		     {"SPM",    0xce08,     0,      3,    0x3},
-		     {"CMPR",   0xce50,     0,      3,    0x3},
-		     {"FORT",   0xce0e,     0,      1,    0x1},
-		     {"ADLK",   0xd002,     0, 0x7fff, 0xffff},
-		     {"ANDK",   0xd004,     0, 0x7fff, 0xffff},
-		     {"LALK",   0xd001,     0, 0x7fff, 0xffff},
-		     {"ORK",    0xd005,     0, 0x7fff, 0xffff},
-		     {"SBLK",   0xd003,     0, 0x7fff, 0xffff},
-		     {"XORK",   0xd006,     0, 0x7fff, 0xffff},
-		     {NULL,     0,          0, 0,      0}};
+} cmd_imm;
+typedef struct {
+	char *name;
+	Word mode;
+} adr_mode_t;
+
+static cmd_fixed *cmd_fixed_order;
+#define cmd_fixed_cnt 38
+static cmd_fixed *cmd_jmp_order;
+#define cmd_jmp_cnt 17
+static cmd_adr *cmd_adr_order;
+#define cmd_adr_cnt 44
+static cmd_adr *cmd_adr_2ndadr_order;
+#define cmd_adr_2ndadr_cnt 5
+static cmd_adr_shift *cmd_adr_shift_order;
+#define cmd_adr_shift_cnt 7
+static cmd_imm *cmd_imm_order;
+#define cmd_imm_cnt 17
+static adr_mode_t *adr_modes;
+#define adr_mode_cnt 10
+
+static int instrz;
+
+static void addfixed(char *nname, Word ncode)
+{
+	if (instrz>=cmd_fixed_cnt) exit(255);
+	cmd_fixed_order[instrz].name=nname;
+	cmd_fixed_order[instrz++].code=ncode;
+}
+
+static void addjmp(char *nname, Word ncode)
+{
+	if (instrz>=cmd_jmp_cnt) exit(255);
+	cmd_jmp_order[instrz].name=nname;
+	cmd_jmp_order[instrz++].code=ncode;
+}
+
+static void addadr(char *nname, Word ncode, Boolean nmust1)
+{
+	if (instrz>=cmd_adr_cnt) exit(255);
+	cmd_adr_order[instrz].name=nname;
+	cmd_adr_order[instrz].code=ncode;
+	cmd_adr_order[instrz++].must1=nmust1;
+}
+
+static void add2ndadr(char *nname, Word ncode, Boolean nmust1)
+{
+	if (instrz>=cmd_adr_2ndadr_cnt) exit(255);
+	cmd_adr_2ndadr_order[instrz].name=nname;
+	cmd_adr_2ndadr_order[instrz].code=ncode;
+	cmd_adr_2ndadr_order[instrz++].must1=nmust1;
+}
+
+static void addshiftadr(char *nname, Word ncode, Word nallow)
+{
+	if (instrz>=cmd_adr_shift_cnt) exit(255);
+	cmd_adr_shift_order[instrz].name=nname;
+	cmd_adr_shift_order[instrz].code=ncode;
+	cmd_adr_shift_order[instrz++].allow_shifts=nallow;
+}
+
+static void addimm(char *nname, Word ncode, Integer nmin, Integer nmax,Word nmask)
+{
+	if (instrz>=cmd_imm_cnt) exit(255);
+	cmd_imm_order[instrz].name=nname;
+	cmd_imm_order[instrz].code=ncode;
+	cmd_imm_order[instrz].Min=nmin;
+	cmd_imm_order[instrz].Max=nmax;
+	cmd_imm_order[instrz++].mask=nmask;
+}
+
+static void addadrmode(char *nname, Word nmode)
+{
+	if (instrz>=adr_mode_cnt) exit(255);
+	adr_modes[instrz].name=nname;
+	adr_modes[instrz++].mode=nmode;
+}
+
+static void initfields(void)
+{
+	cmd_fixed_order=(cmd_fixed *) malloc(sizeof(cmd_fixed)*cmd_fixed_cnt); instrz=0;
+	addfixed("ABS",    0xce1b); addfixed("CMPL",   0xce27);
+	addfixed("NEG",    0xce23); addfixed("ROL",    0xce34);
+	addfixed("ROR",    0xce35); addfixed("SFL",    0xce18);
+	addfixed("SFR",    0xce19); addfixed("ZAC",    0xca00);
+	addfixed("APAC",   0xce15); addfixed("PAC",    0xce14);
+	addfixed("SPAC",   0xce16); addfixed("BACC",   0xce25);
+	addfixed("CALA",   0xce24); addfixed("RET",    0xce26);
+	addfixed("RFSM",   0xce36); addfixed("RTXM",   0xce20);
+	addfixed("RXF",    0xce0c); addfixed("SFSM",   0xce37);
+	addfixed("STXM",   0xce21); addfixed("SXF",    0xce0d);
+	addfixed("DINT",   0xce01); addfixed("EINT",   0xce00);
+	addfixed("IDLE",   0xce1f); addfixed("NOP",    0x5500);
+	addfixed("POP",    0xce1d); addfixed("PUSH",   0xce1c);
+	addfixed("RC",     0xce30); addfixed("RHM",    0xce38);
+	addfixed("ROVM",   0xce02); addfixed("RSXM",   0xce06);
+	addfixed("RTC",    0xce32); addfixed("SC",     0xce31);
+	addfixed("SHM",    0xce39); addfixed("SOVM",   0xce03);
+	addfixed("SSXM",   0xce07); addfixed("STC",    0xce33);
+	addfixed("TRAP",   0xce1e); addfixed(NULL, 0);
+
+	cmd_jmp_order=(cmd_fixed *) malloc(sizeof(cmd_fixed)*cmd_jmp_cnt); instrz=0;
+        addjmp("B",      0xff80); addjmp("BANZ",   0xfb80);
+	addjmp("BBNZ",   0xf980); addjmp("BBZ",    0xf880);
+	addjmp("BC",     0x5e80); addjmp("BGEZ",   0xf480);
+	addjmp("BGZ",    0xf180); addjmp("BIOZ",   0xfa80);
+	addjmp("BLEZ",   0xf280); addjmp("BLZ",    0xf380);
+	addjmp("BNC",    0x5f80); addjmp("BNV",    0xf780);
+	addjmp("BNZ",    0xf580); addjmp("BV",     0xf080);
+	addjmp("BZ",     0xf680); addjmp("CALL",   0xfe80);
+	addjmp(NULL,     0);
+
+	cmd_adr_order=(cmd_adr *) malloc(sizeof(cmd_adr)*cmd_adr_cnt); instrz=0;
+	addadr("ADDC",   0x4300, False); addadr("ADDH",   0x4800, False);
+	addadr("ADDS",   0x4900, False); addadr("ADDT",   0x4a00, False);
+	addadr("AND",    0x4e00, False); addadr("LACT",   0x4200, False);
+	addadr("OR",     0x4d00, False); addadr("SUBB",   0x4f00, False);
+	addadr("SUBC",   0x4700, False); addadr("SUBH",   0x4400, False);
+	addadr("SUBS",   0x4500, False); addadr("SUBT",   0x4600, False);
+	addadr("XOR",    0x4c00, False); addadr("ZALH",   0x4000, False);
+	addadr("ZALR",   0x7b00, False); addadr("ZALS",   0x4100, False);
+	addadr("LDP",    0x5200, False); addadr("MAR",    0x5500, False);
+	addadr("LPH",    0x5300, False); addadr("LT",     0x3c00, False);
+	addadr("LTA",    0x3d00, False); addadr("LTD",    0x3f00, False);
+	addadr("LTP",    0x3e00, False); addadr("LTS",    0x5b00, False);
+	addadr("MPY",    0x3800, False); addadr("MPYA",   0x3a00, False);
+	addadr("MPYS",   0x3b00, False); addadr("MPYU",   0xcf00, False);
+	addadr("SPH",    0x7d00, False); addadr("SPL",    0x7c00, False);
+	addadr("SQRA",   0x3900, False); addadr("SQRS",   0x5a00, False);
+	addadr("DMOV",   0x5600, False); addadr("TBLR",   0x5800, False);
+	addadr("TBLW",   0x5900, False); addadr("BITT",   0x5700, False);
+	addadr("LST",    0x5000, False); addadr("LST1",   0x5100, False);
+	addadr("POPD",   0x7a00, False); addadr("PSHD",   0x5400, False);
+	addadr("RPT",    0x4b00, False); addadr("SST",    0x7800, True);
+	addadr("SST1",   0x7900, True);  addadr(NULL,     0,      False);
+
+	cmd_adr_2ndadr_order=(cmd_adr *) malloc(sizeof(cmd_adr)*cmd_adr_2ndadr_cnt); instrz=0;
+	add2ndadr("BLKD",   0xfd00, False); add2ndadr("BLKP",   0xfc00, False);
+	add2ndadr("MAC",    0x5d00, False); add2ndadr("MACD",   0x5c00, False);
+	add2ndadr(NULL,     0,      False);
+
+	cmd_adr_shift_order=(cmd_adr_shift *) malloc(sizeof(cmd_adr_shift)*cmd_adr_shift_cnt); instrz=0;
+	addshiftadr("ADD",    0x0000, 0xf); addshiftadr("LAC",    0x2000, 0xf);
+	addshiftadr("SACH",   0x6800, 0x7); addshiftadr("SACL",   0x6000, 0x7);
+	addshiftadr("SUB",    0x1000, 0xf); addshiftadr("BIT",    0x9000, 0xf);
+	addshiftadr(NULL,     0,      0);
+
+	cmd_imm_order=(cmd_imm *) malloc(sizeof(cmd_imm)*cmd_imm_cnt); instrz=0;
+	addimm("ADDK",   0xcc00,     0,    255,   0xff);
+	addimm("LACK",   0xca00,     0,    255,   0xff);
+	addimm("SUBK",   0xcd00,     0,    255,   0xff);
+	addimm("ADRK",   0x7e00,     0,    255,   0xff);
+	addimm("SBRK",   0x7f00,     0,    255,   0xff);
+	addimm("RPTK",   0xcb00,     0,    255,   0xff);
+	addimm("MPYK",   0xa000, -4096,   4095, 0x1fff);
+	addimm("SPM",    0xce08,     0,      3,    0x3);
+	addimm("CMPR",   0xce50,     0,      3,    0x3);
+	addimm("FORT",   0xce0e,     0,      1,    0x1);
+	addimm("ADLK",   0xd002,     0, 0x7fff, 0xffff);
+	addimm("ANDK",   0xd004,     0, 0x7fff, 0xffff);
+	addimm("LALK",   0xd001,     0, 0x7fff, 0xffff);
+	addimm("ORK",    0xd005,     0, 0x7fff, 0xffff);
+	addimm("SBLK",   0xd003,     0, 0x7fff, 0xffff);
+	addimm("XORK",   0xd006,     0, 0x7fff, 0xffff);
+	addimm(NULL,     0,          0, 0,      0);
+
+	adr_modes=(adr_mode_t *) malloc(sizeof(adr_mode_t)*adr_mode_cnt); instrz=0;
+	addadrmode( "*-",     0x90 ); addadrmode( "*+",     0xa0 );
+	addadrmode( "*BR0-",  0xc0 ); addadrmode( "*0-",    0xd0 );
+	addadrmode( "*AR0-",  0xd0 ); addadrmode( "*0+",    0xe0 );
+	addadrmode( "*AR0+",  0xe0 ); addadrmode( "*BR0+",  0xf0 );
+	addadrmode( "*",      0x80 ); addadrmode( NULL,     0);
+}
+
+static void deinitfields(void)
+{
+	free(cmd_fixed_order);
+	free(cmd_jmp_order);
+	free(cmd_adr_order);
+	free(cmd_adr_2ndadr_order);
+	free(cmd_adr_shift_order);
+	free(cmd_imm_order);
+	free(adr_modes);
+}
 
 /* ---------------------------------------------------------------------- */
 
@@ -201,22 +250,9 @@ static Word eval_ar_expression(char *asc, Boolean *ok)
 
 /* ---------------------------------------------------------------------- */
 
-static void decode_adr(char *arg, Integer aux, Boolean must1)
+static void decode_adr(char *arg, int aux, Boolean must1)
 {
-	static const struct adr_modes {
-		char *name;
-		Word mode;
-	} adr_modes[] = {{ "*-",     0x90 },
-			 { "*+",     0xa0 },
-			 { "*BR0-",  0xc0 },
-			 { "*0-",    0xd0 },
-			 { "*AR0-",  0xd0 },
-			 { "*0+",    0xe0 },
-			 { "*AR0+",  0xe0 },
-			 { "*BR0+",  0xf0 },
-			 { "*",      0x80 },
-			 { NULL,     0}};
-	const struct adr_modes *am = adr_modes;
+	const adr_mode_t *am = adr_modes;
 	Byte h;
 
 	adr_ok = False;
@@ -252,7 +288,7 @@ static void decode_adr(char *arg, Integer aux, Boolean must1)
 
 static void pseudo_qxx(Integer num)
 {
-	Integer z;
+	int z;
 	Boolean ok;
 	double res;
 
@@ -277,9 +313,9 @@ static void pseudo_qxx(Integer num)
 
 /* ---------------------------------------------------------------------- */
 
-static void pseudo_lqxx(Integer num)
+static void pseudo_lqxx(int num)
 {
-	Integer z;
+	int z;
 	Boolean ok;
 	double res;
 	LongInt resli;
@@ -318,7 +354,7 @@ static void define_untyped_label(void)
 
 /* ---------------------------------------------------------------------- */
 
-static void wr_code_byte(Boolean *ok, Integer *adr, LongInt val)
+static void wr_code_byte(Boolean *ok, int *adr, LongInt val)
 {
 	if ((val < -128) || (val > 0xff)) {
 		WrError(1320);
@@ -331,7 +367,7 @@ static void wr_code_byte(Boolean *ok, Integer *adr, LongInt val)
 
 /* ---------------------------------------------------------------------- */
 
-static void wr_code_word(Boolean *ok, Integer *adr, LongInt val)
+static void wr_code_word(Boolean *ok, int *adr, LongInt val)
 {
 	if ((val < -32768) || (val > 0xffff)) {
 		WrError(1320);
@@ -344,7 +380,7 @@ static void wr_code_word(Boolean *ok, Integer *adr, LongInt val)
 
 /* ---------------------------------------------------------------------- */
 
-static void wr_code_long(Boolean *ok, Integer *adr, LongInt val)
+static void wr_code_long(Boolean *ok, int *adr, LongInt val)
 {
 	WAsmCode[(*adr)++] = val & 0xffff;
 	WAsmCode[(*adr)++] = val >> 16;
@@ -353,7 +389,7 @@ static void wr_code_long(Boolean *ok, Integer *adr, LongInt val)
 
 /* ---------------------------------------------------------------------- */
 
-static void wr_code_byte_hilo(Boolean *ok, Integer *adr, LongInt val)
+static void wr_code_byte_hilo(Boolean *ok, int *adr, LongInt val)
 {
 	if ((val < -128) || (val > 0xff)) {
 		WrError(1320);
@@ -369,7 +405,7 @@ static void wr_code_byte_hilo(Boolean *ok, Integer *adr, LongInt val)
 
 /* ---------------------------------------------------------------------- */
 
-static void wr_code_byte_lohi(Boolean *ok, Integer *adr, LongInt val)
+static void wr_code_byte_lohi(Boolean *ok, int *adr, LongInt val)
 {
 	if ((val < -128) || (val > 0xff)) {
 		WrError(1320);
@@ -387,15 +423,15 @@ static void wr_code_byte_lohi(Boolean *ok, Integer *adr, LongInt val)
 
 typedef void (*tcallback)(
 #ifdef __PROTOS__
-Boolean *, Integer *, LongInt
+Boolean *, int *, LongInt
 #endif
 );
 
 static void pseudo_store(tcallback callback)
 {
 	Boolean ok = True;
-	Integer adr = 0;
-	Integer z;
+	int adr = 0;
+	int z;
 	TempResult t;
 	unsigned char *cp;
 
@@ -434,7 +470,7 @@ static Boolean decode_pseudo(void)
 	Word size;
 	Boolean ok;
 	TempResult t;
-	Integer z,z2;
+	int z,z2;
 	unsigned char *cp;
 	float flt;
 	double dbl, mant;
@@ -677,10 +713,10 @@ static void make_code_3202x(void)
 	Boolean ok;
 	Word adr_word;
 	LongInt adr_long;
-	const struct cmd_fixed_order *fo;
-	const struct cmd_adr_order *ao;
-	const struct cmd_adr_shift_order *aso;
-	const struct cmd_imm_order *io;
+	const cmd_fixed *fo;
+	const cmd_adr *ao;
+	const cmd_adr_shift *aso;
+	const cmd_imm *io;
 
 	CodeLen = 0; 
 	DontPrint = False;
@@ -1059,6 +1095,7 @@ static Boolean is_def_3202x(void)
 
 static void switch_from_3202x(void)
 {
+	deinitfields();
 }
 
 /* ---------------------------------------------------------------------- */
@@ -1082,6 +1119,7 @@ static void switch_to_3202x(void)
 	
 	MakeCode = make_code_3202x; ChkPC = check_pc_3202x; 
 	IsDef = is_def_3202x; SwitchFrom = switch_from_3202x;
+	initfields();
 }
 
 /* ---------------------------------------------------------------------- */

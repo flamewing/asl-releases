@@ -38,7 +38,7 @@ typedef struct
            } Contents;
          } TempResult;
 
-typedef enum {DebugNone,DebugMAP,DebugAOUT,DebugCOFF,DebugELF} DebugType;
+typedef enum {DebugNone,DebugMAP,DebugAOUT,DebugCOFF,DebugELF,DebugAtmel} DebugType;
 
 #define Char_NUL 0
 #define Char_BEL '\a'
@@ -55,8 +55,9 @@ typedef enum {DebugNone,DebugMAP,DebugAOUT,DebugCOFF,DebugELF} DebugType;
 #define MaxLargeInt 0x7fffffffl
 #endif
 
-extern char *SrcSuffix,*IncSuffix,*PrgSuffix,*LstSuffix,
-            *MacSuffix,*PreSuffix,*LogSuffix,*MapSuffix;
+extern char SrcSuffix[],IncSuffix[],PrgSuffix[],LstSuffix[],
+            MacSuffix[],PreSuffix[],LogSuffix[],MapSuffix[],
+            OBJSuffix[];
             
 #define MomCPUName       "MOMCPU"     /* mom. Prozessortyp */
 #define MomCPUIdentName  "MOMCPUNAME" /* mom. Prozessortyp */
@@ -76,18 +77,18 @@ extern char *SrcSuffix,*IncSuffix,*PrgSuffix,*LstSuffix,
 #define TimeName         "TIME"
 #define VerName          "VERSION"    /* speichert Versionsnummer */
 #define CaseSensName     "CASESENSITIVE" /* zeigt Gross/Kleinunterscheidung an */
-#define Has64Name        "HAS64"      /* arbeitet Parser mit 64-Bit-Integers ? */
+#define Has64Name        "HAS64"         /* arbeitet Parser mit 64-Bit-Integers ? */
+#define ArchName         "ARCHITECTURE"  /* Zielarchitektur von AS */
 #define AttrName         "ATTRIBUTE"  /* Attributansprache in Makros */
 #define DefStackName     "DEFSTACK"   /* Default-Stack */
-
-extern char *Version;
-extern LongInt VerNo;
 
 extern char *EnvName;
 
 #define ParMax 20
 
 #define ChapMax 4
+
+#define StructSeg (PCMax+1)
 
 extern char *SegNames[PCMax+1];
 extern char SegShorts[PCMax+1];
@@ -107,7 +108,7 @@ void
 );
 
 typedef Word WordField[6];          /* fuer Zahlenumwandlung */
-typedef String ArgStrField[ParMax]; /* Feld mit Befehlsparametern */
+typedef char *ArgStrField[ParMax];  /* Feld mit Befehlsparametern */
 typedef char *StringPtr;
 
 typedef enum {ConstModeIntel,	    /* Hex xxxxh, Okt xxxxo, Bin xxxxb */
@@ -152,25 +153,33 @@ typedef struct _TDefinement
           Byte Compiled[256];
 	 } TDefinement,*PDefinement;
 
+typedef struct _TStructure
+         {
+          struct _TStructure *Next;
+          Boolean DoExt;
+          char *Name;
+          LargeWord CurrPC;
+         } TStructure,*PStructure;
 
-extern String SourceFile;
+extern StringPtr SourceFile;
 
-extern String ClrEol;
-extern String CursUp;
+extern StringPtr ClrEol;
+extern StringPtr CursUp;
 
-extern LargeWord PCs[PCMax+1];
+extern LargeWord PCs[StructSeg+1];
 extern LargeWord StartAdr;
 extern Boolean StartAdrPresent;
-extern LargeWord Phases[PCMax+1];
-extern Word Grans[PCMax+1];
-extern Word ListGrans[PCMax+1];
-extern ChunkList SegChunks[PCMax+1];
+extern LargeWord Phases[StructSeg+1];
+extern Word Grans[StructSeg+1];
+extern Word ListGrans[StructSeg+1];
+extern ChunkList SegChunks[StructSeg+1];
 extern Integer ActPC;
-extern Boolean PCsUsed[PCMax+1];
+extern Boolean PCsUsed[StructSeg+1];
 extern LongInt SegInits[PCMax+1]; 
 extern LongInt ValidSegs;
 extern Boolean ENDOccured;
 extern Boolean Retracted;
+extern Boolean ListToStdout,ListToNull;
 
 extern Word TypeFlag;
 extern ShortInt SizeFlag;
@@ -207,6 +216,7 @@ extern Boolean CodeOutput;
 extern Boolean MacProOutput;
 extern Boolean MacroOutput;
 extern Boolean QuietMode;
+extern Boolean HardRanges;
 extern char *DivideChars;
 extern Boolean HasAttrs;
 extern char *AttrChars;
@@ -216,10 +226,10 @@ extern Boolean CaseSensitive;
 
 extern FILE *PrgFile;
 
-extern String ErrorPath,ErrorName;
-extern String OutName;
+extern StringPtr ErrorPath,ErrorName;
+extern StringPtr OutName;
 extern Boolean IsErrorOpen;
-extern String CurrFileName;
+extern StringPtr CurrFileName;
 extern LongInt CurrLine;
 extern LongInt MomLineCounter;
 extern LongInt LineSum;
@@ -239,16 +249,16 @@ extern void (*InternSymbol)(char *Asc, TempResult *Erg);
 extern void (*InitPassProc)(void);
 extern void (*ClearUpProc)(void);
 
-extern String IncludeList;
+extern StringPtr IncludeList;
 extern Integer IncDepth,NextIncDepth;
 extern FILE *ErrorFile;
 extern FILE *LstFile;
 extern FILE *ShareFile;
 extern FILE *MacProFile;
 extern FILE *MacroFile;
-extern String LstName,MacroName,MacProName;
+extern StringPtr LstName,MacroName,MacProName;
 extern Boolean DoLst,NextDoLst;
-extern String ShareName;
+extern StringPtr ShareName;
 extern CPUVar MomCPU,MomVirtCPU;
 extern char MomCPUIdent[10];
 extern PCPUDef FirstCPUDef;
@@ -259,33 +269,35 @@ extern Boolean DoPadding;
 extern Boolean SupAllowed;
 extern Boolean Maximum;
 
-extern String LabPart,OpPart,AttrPart,ArgPart,CommPart,LOpPart;
+extern StringPtr LabPart,OpPart,AttrPart,ArgPart,CommPart,LOpPart;
 extern char AttrSplit;
 extern ArgStrField ArgStr;
 extern Byte ArgCnt;
-extern String OneLine;
+extern StringPtr OneLine;
 
 extern Byte LstCounter;
 extern Word PageCounter[ChapMax+1];
 extern Byte ChapDepth;
-extern String ListLine;
-extern String ErrorPos;
+extern StringPtr ListLine;
 extern Byte PageLength,PageWidth;
 extern Boolean LstMacroEx;
-extern String PrtInitString;
-extern String PrtExitString;
-extern String PrtTitleString;
-extern String ExtendError;
+extern StringPtr PrtInitString;
+extern StringPtr PrtExitString;
+extern StringPtr PrtTitleString;
+extern StringPtr ExtendError;
 
 extern Byte StopfZahl;
 
 extern Boolean SuppWarns;
 
-extern unsigned char CharTransTable[256];
+extern unsigned char *CharTransTable;
 
 extern PFunction FirstFunction;
 
 extern PDefinement FirstDefine;
+
+extern PStructure StructureStack;
+extern int StructSaveSeg;
 
 extern PSaveState FirstSaveState;
 

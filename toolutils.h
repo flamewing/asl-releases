@@ -41,4 +41,8 @@ extern Boolean FilterOK(Byte Header);
 
 extern Boolean RemoveOffset(char *Name, LongWord *Offset);
 
-extern void toolutils_init(void);
+
+extern void EraseFile(char *FileName, LongWord Offset);
+
+
+extern void toolutils_init(char *ProgPath);

@@ -88,11 +88,65 @@ BEGIN
     END
 END
 
-	void Double_2_TenBytes(Double inp, Byte *dest)
+	void Double_2_ieee4(Double inp, Byte *dest, Boolean NeedsBig)
+BEGIN
+#ifdef IEEEFLOAT
+   Single tmp=inp;
+   memcpy(dest,&tmp,4);
+   if (BigEndian!=NeedsBig) DSwap(dest,4);
+#endif
+#ifdef VAXFLOAT
+   Single tmp=inp/4;
+   memcpy(dest,&tmp,4);
+   WSwap(dest,4); 
+   if (NOT NeedsBig) DSwap(dest,4);
+#endif
+END
+
+	void Double_2_ieee8(Double inp, Byte *dest, Boolean NeedsBig)
+BEGIN
+#ifdef IEEEFLOAT
+   memcpy(dest,&inp,8);
+   if (BigEndian!=NeedsBig) QSwap(dest,8);
+#endif
+#ifdef VAXFLOAT
+   Byte tmp[8];
+   Word Exp;
+   int z;
+   Boolean cont;
+
+   memcpy(tmp,&inp,8);
+   WSwap(tmp,8);
+   Exp=((tmp[0]<<1)&0xfe)+(tmp[1]>>7);
+   Exp+=894; /* =1023-192 */
+   tmp[1]&=0x7f;
+   if ((tmp[7]&7)>4)
+    BEGIN
+     for (tmp[7]+=8,cont=tmp[7]<8,z=0; cont AND z>1; z--)
+      BEGIN
+       tmp[z]++; cont=(tmp[z]==0);
+      END
+     if (cont)
+      BEGIN
+       tmp[1]++; if (tmp[1]>127) Exp++;
+      END
+    END
+   dest[7]=(tmp[0]&0x80)+((Exp>>4)&0x7f);
+   dest[6]=((Exp&0x0f)<<4)+((tmp[1]>>3)&0x0f);
+   for (z=5; z>=0; z--)
+    dest[z]=((tmp[6-z]&7)<<5)|((tmp[7-z]>>3)&0x1f);
+   if (NeedsBig) QSwap(dest,8);
+#endif
+END
+
+	void Double_2_ieee10(Double inp, Byte *dest, Boolean NeedsBig)
 BEGIN
    Byte Buffer[8];
-   Byte Sign,z;
+   Byte Sign;
    Word Exponent;
+   int z;
+
+#ifdef IEEEFLOAT
    Boolean Denormal;
 
    memcpy(Buffer,&inp,8); if (BigEndian) QSwap(Buffer,8);
@@ -101,13 +155,28 @@ BEGIN
    Denormal=(Exponent==0);
    if (Exponent==2047) Exponent=32767;
    else Exponent+=(16383-1023);
-   dest[9]=Sign|((Exponent>>8)&0x7f);
-   dest[8]=Exponent&0xff;
    Buffer[6]&=0x0f; if (NOT Denormal) Buffer[6]|=0x10;
    for (z=7; z>=2; z--)
     dest[z]=((Buffer[z-1]&0x1f)<<3)|((Buffer[z-2]&0xe0)>>5);
    dest[1]=(Buffer[0]&0x1f)<<3;
    dest[0]=0;   
+#endif
+#ifdef VAXFLOAT
+   memcpy(Buffer,&inp,8); WSwap(Buffer,8);
+   Sign=(*Buffer)&0x80;
+   Exponent=((*Buffer)<<1)+((Buffer[1]&0x80)>>7);
+   Exponent+=(16383-129);
+   Buffer[1]|=0x80;
+   for (z=1; z<8; z++) dest[z]=Buffer[8-z];
+   dest[0]=0;
+#endif
+   dest[9]=Sign|((Exponent>>8)&0x7f);
+   dest[8]=Exponent&0xff;
+   if (NeedsBig)
+    for (z=0; z<5; z++)
+     BEGIN
+      Sign=dest[z]; dest[z]=dest[9-z]; dest[9-z]=Sign;
+     END
 END
 
 
@@ -177,6 +246,12 @@ END
 
         static void CheckDataTypes(void)
 BEGIN
+   if (sizeof(int)<2)
+    BEGIN
+     fprintf(stderr,"Configuration error: Sizeof(int) is %d, should be >=2\n",
+             (int) sizeof(int));
+     exit(255);
+    END
    CheckSingle(sizeof(Byte),    1,"Byte");
    CheckSingle(sizeof(ShortInt),1,"ShortInt");
 #ifdef HAS16

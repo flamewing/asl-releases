@@ -5,6 +5,7 @@
 /* Codegenerator SH7x00                                                      */
 /*                                                                           */
 /* Historie: 25.12.1996 Grundsteinlegung                                     */
+/*           12. 4.1998 SH7700-Erweiterungen                                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -14,17 +15,18 @@
 #include <string.h>
 
 #include "bpemu.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "asmallg.h"
 #include "codepseudo.h"
 #include "codevars.h"
 
 
-#define FixedOrderCount 10
+#define FixedOrderCount 13
 #define OneRegOrderCount 22
-#define TwoRegOrderCount 18
+#define TwoRegOrderCount 20
 #define MulRegOrderCount 3
 #define BWOrderCount 3
 #define LogOrderCount 4
@@ -58,8 +60,19 @@
 typedef struct
          {
           char *Name;
+          CPUVar MinCPU;
+          Boolean Priv;
           Word Code;
          } FixedOrder;
+
+typedef struct
+         {
+          char *Name;
+          CPUVar MinCPU;
+          Boolean Priv;
+          Word Code;
+          ShortInt DefSize;
+         } TwoRegOrder;
 
 typedef struct
          {
@@ -85,11 +98,11 @@ static PLiteral FirstLiteral;
 static LongInt ForwardCount;
 static SimpProc SaveInitProc;
 
-static CPUVar CPU7000,CPU7600;
+static CPUVar CPU7000,CPU7600,CPU7700;
 
 static FixedOrder *FixedOrders;
 static FixedMinOrder *OneRegOrders;
-static FixedOrder *TwoRegOrders;
+static TwoRegOrder *TwoRegOrders;
 static FixedMinOrder *MulRegOrders;
 static FixedOrder *BWOrders;
 static char **LogOrders;
@@ -100,10 +113,12 @@ static LongInt DelayedAdr;
 /*-------------------------------------------------------------------------*/
 /* dynamische Belegung/Freigabe Codetabellen */
 
-	static void AddFixed(char *NName, Word NCode)
+	static void AddFixed(char *NName, Word NCode, Boolean NPriv, CPUVar NMin)
 BEGIN
    if (InstrZ>=FixedOrderCount) exit(255);
    FixedOrders[InstrZ].Name=NName;
+   FixedOrders[InstrZ].Priv=NPriv;
+   FixedOrders[InstrZ].MinCPU=NMin;
    FixedOrders[InstrZ++].Code=NCode;
 END
 
@@ -115,10 +130,13 @@ BEGIN
    OneRegOrders[InstrZ++].MinCPU=NMin;
 END
 
-	static void AddTwoReg(char *NName, Word NCode)
+	static void AddTwoReg(char *NName, Word NCode, Boolean NPriv, CPUVar NMin, ShortInt NDef)
 BEGIN
    if (InstrZ>=TwoRegOrderCount) exit(255);
    TwoRegOrders[InstrZ].Name=NName;
+   TwoRegOrders[InstrZ].Priv=NPriv;
+   TwoRegOrders[InstrZ].DefSize=NDef;
+   TwoRegOrders[InstrZ].MinCPU=NMin;
    TwoRegOrders[InstrZ++].Code=NCode;
 END
 
@@ -140,11 +158,19 @@ END
 	static void InitFields(void)
 BEGIN
    FixedOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*FixedOrderCount); InstrZ=0;
-   AddFixed("CLRT"  ,0x0008); AddFixed("CLRMAC",0x0028);
-   AddFixed("NOP"   ,0x0009); AddFixed("RTE"   ,0x002b);
-   AddFixed("SETT"  ,0x0018); AddFixed("SLEEP" ,0x001b);
-   AddFixed("RTS"   ,0x000b); AddFixed("DIV0U" ,0x0019);
-   AddFixed("BRK"   ,0x0000); AddFixed("RTB"   ,0x0001);
+   AddFixed("CLRT"  ,0x0008,False,CPU7000);
+   AddFixed("CLRMAC",0x0028,False,CPU7000);
+   AddFixed("NOP"   ,0x0009,False,CPU7000);
+   AddFixed("RTE"   ,0x002b,False,CPU7000);
+   AddFixed("SETT"  ,0x0018,False,CPU7000);
+   AddFixed("SLEEP" ,0x001b,False,CPU7000);
+   AddFixed("RTS"   ,0x000b,False,CPU7000);
+   AddFixed("DIV0U" ,0x0019,False,CPU7000);
+   AddFixed("BRK"   ,0x0000,True ,CPU7000);
+   AddFixed("RTB"   ,0x0001,True ,CPU7000);
+   AddFixed("CLRS"  ,0x0048,False,CPU7700);
+   AddFixed("SETS"  ,0x0058,False,CPU7700);
+   AddFixed("LDTLB" ,0x0038,True ,CPU7700);
 
    OneRegOrders=(FixedMinOrder *) malloc(sizeof(FixedMinOrder)*OneRegOrderCount); InstrZ=0;
    AddOneReg("MOVT"  ,0x0029,CPU7000); AddOneReg("CMP/PZ",0x4011,CPU7000);
@@ -159,16 +185,27 @@ BEGIN
    AddOneReg("STBR"  ,0x0020,CPU7000); AddOneReg("DT"    ,0x4010,CPU7600);
    AddOneReg("BRAF"  ,0x0032,CPU7600); AddOneReg("BSRF"  ,0x0003,CPU7600);
 
-   TwoRegOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*TwoRegOrderCount); InstrZ=0;
-   AddTwoReg("XTRCT" ,0x200d); AddTwoReg("ADDC"  ,0x300e);
-   AddTwoReg("ADDV"  ,0x300f); AddTwoReg("CMP/HS",0x3002);
-   AddTwoReg("CMP/GE",0x3003); AddTwoReg("CMP/HI",0x3006);
-   AddTwoReg("CMP/GT",0x3007); AddTwoReg("CMP/STR",0x200c);
-   AddTwoReg("DIV1"  ,0x3004); AddTwoReg("DIV0S" ,0x2007);
-   AddTwoReg("MULS"  ,0x200f); AddTwoReg("MULU"  ,0x200e);
-   AddTwoReg("NEG"   ,0x600b); AddTwoReg("NEGC"  ,0x600a);
-   AddTwoReg("SUB"   ,0x3008); AddTwoReg("SUBC"  ,0x300a);
-   AddTwoReg("SUBV"  ,0x300b); AddTwoReg("NOT"   ,0x6007);
+   TwoRegOrders=(TwoRegOrder *) malloc(sizeof(TwoRegOrder)*TwoRegOrderCount); InstrZ=0;
+   AddTwoReg("XTRCT" ,0x200d,False,CPU7000,2);
+   AddTwoReg("ADDC"  ,0x300e,False,CPU7000,2);
+   AddTwoReg("ADDV"  ,0x300f,False,CPU7000,2);
+   AddTwoReg("CMP/HS",0x3002,False,CPU7000,2);
+   AddTwoReg("CMP/GE",0x3003,False,CPU7000,2);
+   AddTwoReg("CMP/HI",0x3006,False,CPU7000,2);
+   AddTwoReg("CMP/GT",0x3007,False,CPU7000,2);
+   AddTwoReg("CMP/STR",0x200c,False,CPU7000,2);
+   AddTwoReg("DIV1"  ,0x3004,False,CPU7000,2);
+   AddTwoReg("DIV0S" ,0x2007,False,CPU7000,-1);
+   AddTwoReg("MULS"  ,0x200f,False,CPU7000,1);
+   AddTwoReg("MULU"  ,0x200e,False,CPU7000,1);
+   AddTwoReg("NEG"   ,0x600b,False,CPU7000,2);
+   AddTwoReg("NEGC"  ,0x600a,False,CPU7000,2);
+   AddTwoReg("SUB"   ,0x3008,False,CPU7000,2);
+   AddTwoReg("SUBC"  ,0x300a,False,CPU7000,2);
+   AddTwoReg("SUBV"  ,0x300b,False,CPU7000,2);
+   AddTwoReg("NOT"   ,0x6007,False,CPU7000,2);
+   AddTwoReg("SHAD"  ,0x400c,False,CPU7700,2);
+   AddTwoReg("SHLD"  ,0x400d,False,CPU7700,2);
 
    MulRegOrders=(FixedMinOrder *) malloc(sizeof(FixedMinOrder)*MulRegOrderCount); InstrZ=0;
    AddMulReg("MUL"   ,0x0007,CPU7600);
@@ -257,6 +294,35 @@ BEGIN
      *Erg=ConstLongInt(Asc+1,&Err);
      return (Err AND (*Erg<=15));
     END
+END
+
+	static Boolean DecodeCtrlReg(char *Asc, Byte *Erg)
+BEGIN
+   CPUVar MinCPU=CPU7000;
+
+   *Erg=0xff;
+   if (strcasecmp(Asc,"SR")==0) *Erg=0;
+   else if (strcasecmp(Asc,"GBR")==0) *Erg=1;
+   else if (strcasecmp(Asc,"VBR")==0) *Erg=2;
+   else if (strcasecmp(Asc,"SSR")==0)
+    BEGIN
+     *Erg=3; MinCPU=CPU7700;
+    END
+   else if (strcasecmp(Asc,"SPC")==0)
+    BEGIN
+     *Erg=4; MinCPU=CPU7700;
+    END
+   else if ((strlen(Asc)==7) AND (toupper(*Asc)=='R')
+       AND (strcasecmp(Asc+2,"_BANK")==0)
+       AND (Asc[1]>='0') AND (Asc[1]<='7'))
+    BEGIN
+     *Erg=Asc[1]-'0'+8; MinCPU=CPU7700;
+    END
+   if ((*Erg==0xff) OR (MomCPU<MinCPU))
+    BEGIN
+     WrXError(1440,Asc); return False;
+    END
+   else return True;
 END
 
 	static void ChkAdr(Word Mask)
@@ -613,12 +679,7 @@ END
 
 	static Boolean DecodePseudo(void)
 BEGIN
-#define ONOFF7000Count 2
-   static ONOFFRec ONOFF7000s[ONOFF7000Count]=
-  	          {{"SUPMODE",      &SupAllowed,   SupAllowedName},
-	           {"COMPLITERALS", &CompLiterals, CompLiteralsName}};
    PLiteral Lauf,Tmp,Last;
-   if (CodeONOFF(ONOFF7000s,ONOFF7000Count)) return True;
 
    /* ab hier (und weiter in der Hauptroutine) stehen die Befehle,
       die Code erzeugen, deshalb wird der Merker fuer verzoegerte
@@ -668,7 +729,7 @@ END
 
 	static void MakeCode_7000(void)
 BEGIN
-   Integer z;
+   int z;
    LongInt AdrLong;
    Boolean OK;
    Byte HReg;
@@ -715,8 +776,12 @@ BEGIN
      BEGIN
       if (ArgCnt!=0) WrError(1110);
       else if (*AttrPart!='\0') WrError(1100);
-      else SetCode(FixedOrders[z].Code);
-      if ((NOT SupAllowed) AND ((Memo("RTB")) OR (Memo("BRK")))) WrError(50);
+      else if (MomCPU<FixedOrders[z].MinCPU) WrError(1500);
+      else
+       BEGIN
+        SetCode(FixedOrders[z].Code);
+        if ((NOT SupAllowed) AND (FixedOrders[z].Priv)) WrError(50);
+       END
       return;
      END
 
@@ -811,6 +876,21 @@ BEGIN
      return;
     END
 
+   if (Memo("PREF"))
+    BEGIN
+     if (ArgCnt!=1) WrError(1110);
+     else if (*AttrPart!='\0') WrError(1100);
+     else
+      BEGIN
+       DecodeAdr(ArgStr[1],MModIReg,False);
+       if (AdrMode!=ModNone)
+        BEGIN
+         CodeLen=2; WAsmCode[0]=0x0083+(AdrPart << 8);
+        END;
+      END;
+     return;
+    END
+
    if ((Memo("LDC")) OR (Memo("STC")))
     BEGIN
      if (OpSize==-1) SetOpSize(2);
@@ -823,14 +903,7 @@ BEGIN
          strcpy(ArgStr[1],ArgStr[2]);
          strcpy(ArgStr[2],ArgStr[3]);
 	END
-       if (strcasecmp(ArgStr[1],"SR")==0) HReg=0;
-       else if (strcasecmp(ArgStr[1],"GBR")==0) HReg=1;
-       else if (strcasecmp(ArgStr[1],"VBR")==0) HReg=2;
-       else
-	BEGIN
-	 WrError(1440); HReg=0xff;
-	END
-       if (HReg<0xff)
+       if (DecodeCtrlReg(ArgStr[1],&HReg))
 	BEGIN
          DecodeAdr(ArgStr[2],MModReg+((Memo("LDC"))?MModPostInc:MModPreDec),False);
 	 switch (AdrMode)
@@ -846,6 +919,7 @@ BEGIN
 	    SetCode(0x4003+(AdrPart << 8)+(HReg << 4));
             break;
 	  END
+         if ((AdrMode!=ModNone) AND (NOT SupAllowed)) WrError(50);
 	END
       END
      return;
@@ -933,7 +1007,8 @@ BEGIN
     if (Memo(TwoRegOrders[z].Name))
      BEGIN
       if (ArgCnt!=2) WrError(1110);
-      else if (*AttrPart!='\0') WrError(1100);
+      else if ((*AttrPart!='\0') AND (OpSize!=TwoRegOrders[z].DefSize)) WrError(1100);
+      else if (MomCPU<TwoRegOrders[z].MinCPU) WrError(1500);
       else
        BEGIN
         DecodeAdr(ArgStr[1],MModReg,False);
@@ -942,6 +1017,7 @@ BEGIN
           WAsmCode[0]=TwoRegOrders[z].Code+(AdrPart << 4);
           DecodeAdr(ArgStr[2],MModReg,False);
           if (AdrMode!=ModNone) SetCode(WAsmCode[0]+(((Word)AdrPart) << 8));
+          if ((NOT SupAllowed) AND (TwoRegOrders[z].Priv)) WrError(50);
          END
        END
       return;
@@ -1207,6 +1283,7 @@ END
 BEGIN
    DeinitFields();
    if (FirstLiteral!=Nil) WrError(1495);
+   ClearONOFF();
 END
 
 	static void SwitchTo_7000(void)
@@ -1220,17 +1297,21 @@ BEGIN
    Grans[SegCode]=1; ListGrans[SegCode]=2; SegInits[SegCode]=0;
 
    MakeCode=MakeCode_7000; ChkPC=ChkPC_7000; IsDef=IsDef_7000;
-   SwitchFrom=SwitchFrom_7000;
+   SwitchFrom=SwitchFrom_7000; InitFields();
+   AddONOFF("SUPMODE",      &SupAllowed,   SupAllowedName  ,False);
+   AddONOFF("COMPLITERALS", &CompLiterals, CompLiteralsName,False);
+   AddMoto16PseudoONOFF();
 
    CurrDelayed=False; PrevDelayed=False;
 
-   InitFields();
+   SetFlag(&DoPadding,DoPaddingName,False);
 END
 
 	void code7000_init(void)
 BEGIN
    CPU7000=AddCPU("SH7000",SwitchTo_7000);
    CPU7600=AddCPU("SH7600",SwitchTo_7000);
+   CPU7700=AddCPU("SH7700",SwitchTo_7000);
 
    SaveInitProc=InitPassProc; InitPassProc=InitCode_7000;
    FirstLiteral=Nil;

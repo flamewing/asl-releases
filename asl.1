@@ -99,12 +99,15 @@ by replacing the source file's extension with '.log'.
 Supress code generation, reducing the functionality of AS to macro
 preprocessing.
 .TP
-.B -g
+.B -g [MAP/Atmel]
 
 Instruct AS to write an additional file containing debug information. This
 information covers the symbol table and the relation between source line
-numbers and machine addresses.  The file's name is constructed by replacing
-the source file's extension with '.map'.
+numbers and machine addresses.  The argument specifies whether debug info
+shall be written in AS's own MAP format or the object format for Atmel's AVR
+tools.  If no argument is given, MAP will be chosen.  The file's name is 
+constructed by replacing the source file's extension with '.map' or '.obj'
+respectively.
 .TP
 .B -h
 
@@ -254,6 +257,32 @@ As parameters given in the
 .B ASCMD
 environment variable or a key file are processed prior to the command line
 itself, and can therefore be overridden by command line parameters.
+
+.SH NATIONAL LANGUAGE SUPPORT
+
+AS supports the needs of different languages and countries in the sense that
+it will try to adapt to the language and date/time formats valid for the
+current environment.  Upon startup, the COUNTRY setting made in the
+CONFIG.SYS file is queried for DOS and OS/2 implementations of AS.  For
+UNIX systems, AS tries to read the LC_TIME resp. LC_MESSAGES environment
+variables to find out the correct format for date/time outputs resp. the
+local language.  If this fails, the LC_ALL and finally LANG variables are
+probed.  If none of these environment variables points to a specific local
+environment resp. contains a locale specification unknown to AS, the
+standard english/C locale is used.
+
+The messages AS can output in different languages are stored in separate
+files with the extension '.msg' .  AS will search for these files in the
+following directories:
+
+- The current directory
+
+- The directory the executable of AS was loaded from (only on DOS platforms version >=3.0 or if path was explicitly specified)
+
+- The directory specified in the AS_MSGPATH environment variable resp. the directories listed in the PATH environment variable if AS_MSGPATH does not exist.
+
+- The LIBDIR directory set at compile time from the Makefile.
+
 
 .SH RETURN CODES
 

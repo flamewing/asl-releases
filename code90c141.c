@@ -14,7 +14,7 @@
 
 #include "nls.h"
 #include "bpemu.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
@@ -118,7 +118,7 @@ BEGIN
 #define IReg16Cnt 3
    static char *IReg16Names[IReg16Cnt]={"IX","IY","SP"};
 
-   Integer z;
+   int z;
    char *p,*ppos,*mpos;
    LongInt DispAcc,DispVal;
    Byte OccFlag,BaseReg;
@@ -419,7 +419,7 @@ END
 
         static void MakeCode_90C141(void)
 BEGIN
-   Integer z;
+   int z;
    Integer AdrInt;
    Boolean OK;
    Byte HReg;
@@ -436,7 +436,7 @@ BEGIN
 
    if (DecodeIntelPseudo(False)) return;
 
-   if (SearchInstTree(ITree)) return;
+   if (SearchInstTree(ITree,OpPart)) return;
 
    /* Datentransfer */
 

@@ -21,6 +21,7 @@
 %% 
 %% ------------------------------------------------------------------------------
 
+%%TITLE User's Manual for Macro Assembler AS
 \documentstyle[12pt,twoside,makeidx]{report}
 \pagestyle{headings}
 \sloppy
@@ -55,14 +56,14 @@
 {\large Alfred Arnold, Stefan Hilse, Stephan Kanthak, Oliver
  Sellke, Vittorio De Tomasi}
 \vspace{1cm}\par
-{\huge Macro Assembler AS V1.41}\\
+{\huge Macro Assembler AS V1.41r7}\\
 \rule{9.5cm}{0.3mm}\\
 \vspace{2mm}\par
 {\huge User's Manual}
 
 \vspace{1cm}\par
 
-{\large Edition July 1997}
+{\large Edition June 1998}
 \end{raggedright}
 
 \clearpage
@@ -70,7 +71,9 @@
 
 \ \vspace{5cm}
 
-{\em IBM, PPC403GA, and PowerPC} are trademarks of IBM Corporation.
+{\em IBM, PPC403GA, OS/2, and PowerPC} are trademarks of IBM Corporation.
+
+{\em ColdFire} is a registered trademark of Motorola Inc. .
 
 {\em UNIX} is a registered trademark of X/Open Company.
 
@@ -78,17 +81,17 @@
 
 All other trademarks are properties of their respective holders.
 
-\vspace{8cm} 
+\vspace{7cm} 
 
 This document has been processed with the LaTeX typesetting system using
-Digital Unix, Linux, and OS/2 operating systems running on AMD 5x86 and
+Digital Unix, Linux, and OS/2 operating systems running on AMD 5x86/K6 and
 DEC Alpha processors.
 
 \clearpage
 
 %%===========================================================================
 
-{\parskip 0cm plus 0.1cm \tableofcontents}
+{\parskip 0cm plus0.1cm \tableofcontents}
 
 %%===========================================================================
 
@@ -171,7 +174,7 @@ You can contact me as follows:
                \item{D-53773 Hennef (Sieg)}
                \item{Germany}
                \end{description}}
-\item{by E-Mail: \tty{a.arnold@kfa-juelich.de}}
+\item{by E-Mail: \tty{alfred@ccac.rwth-aachen.de}}
 \end{itemize}
 If someone likes to meet me personally to ask questions and lives
 near Aachen (= Aix-la-Chapelle), you will be able to meet me there. 
@@ -189,7 +192,7 @@ the following FTP-Server:
  ftp.uni-stuttgart.de, directory
      pub/systems/msdos/programming/as
 \end{verbatim}
-The C version can be fetched from the following server:
+The sources of the C version can be fetched from the following server:
 \begin{verbatim}
  sunsite.unc.edu, directory
    pub/Linux/devel/lang/assemblers/asl-<version>.tar.gz
@@ -197,7 +200,7 @@ The C version can be fetched from the following server:
 ..and of course thereby from every Sunsite mirror of the world!
 
 Whoever has no access to an FTP-Server can ask me to send the assembler
-bxy mail.  Only requests containing floppies (2 pieces 1.44 Mbytes, for
+by mail.  Only requests containing floppies (2 pieces 1.44 Mbytes, for
 720Kbytes/1.2Mbytes format 4/3 pieces) and a self-addressed, (correctly)
 stamped envelope will be answered.  Don't send any money!
 
@@ -212,15 +215,17 @@ In contrast to ordinary assemblers, AS offers the possibility to
 generate code for totally different processors.  At the moment, the 
 following processor families have been implemented:
 \begin{itemize}
-\item{Motorola 68000..68030,683xx incl. coprocessor and MMU}
-\item{Motorola DSP56000}
+\item{Motorola 68000..68040,683xx incl. coprocessor and MMU}
+\item{Motorola ColdFire}
+\item{Motorola DSP5600x,DSP56300}
+\item{Motorola M-Core}
 \item{Motorola/IBM MPC601/MPC505/PPC403}
 \item{Motorola 6800, 6805, 68HC08, 6809, 68(HC)11 68HC12, 68HC16, and Hitachi
       6301}
 \item{Hitachi 6309}
 \item{Hitachi H8/300(H)}
 \item{Hitachi H8/500}
-\item{Hitachi SH7000/7600}
+\item{Hitachi SH7000/7600/7700}
 \item{Rockwell 6502 and 65(S)C02}
 \item{CMD 65816}
 \item{Mitsubishi MELPS-740}
@@ -255,6 +260,7 @@ following processor families have been implemented:
 \item{Texas Instruments TMS3202x}
 \item{Texas Instruments TMS320C3x}
 \item{Texas Instruments TMS320C5x}
+\item{Texas Instruments TMS320C6x}
 \item{Texas Instruments TMS9900}
 \item{Texas Instruments TMS7000}
 \item{Texas Instruments TMS370xxx}
@@ -267,18 +273,18 @@ following processor families have been implemented:
 \end{itemize}
 under work / planned / in consideration :
 \begin{itemize}
+\item{Fujitsu F$^2$MC}
+\item{NEC $\mu$PD7220}
+\item{Intel i960}
+\item{Analog Devices ADSP21xx}
 \item{SGS-Thomson ST20}
-\item{Texas Instruments TMS320C6x}
 \item{Texas Instruments TMS320C4x}
 \item{Texas Instruments TMS320C8x}
 \item{Toshiba TC9331}
-\item{Intel i960}
-\item{Analog Devices ADSP21xx}
 \end{itemize}
 I'm currently searching for documentation about the following
 families:
 \begin{itemize}
-\item{Fujitsu F$^2$MC}
 \item{NEC 78K4}
 \item{the complete set of OKI controllers}
 \end{itemize}
@@ -295,10 +301,12 @@ extension of a macro assembler for the 68000 family. On special request, I
 extended the original assembler so that it was able to translate 8051
 mnemonics.  On this way (decline ?!) from the 68000 to 8051, some other
 processors were created as by-products.  All others were added over time
-due to user requests.  So, the version number is not only marketing, but
-expresses really that this is no 1.0 version with beta-version bugs like
-MS-DOS 6.0 (which does not reduce the importance of what has been said in
-part \ref{SectLicense}).
+due to user requests.  So At least for the processor-independent core of
+AS, one may assume that it is well-tested and free of obvious bugs. 
+However, I often do not have the chance to test a new code generator in
+practice (due to lack of appropriate hardware), so surprises are not
+impossible when working with new features.  You see, the things stated in
+section \ref{SectLicense} have a reason...
 
 This flexibility implies a somewhat exotic code format, therefore I
 added some tools to work with it. Their description can be found in
@@ -419,7 +427,7 @@ Sulu:   Aye aye, sir, going to pass two. \\
 The hardware requirements of AS vary substantially from version to
 version:
 
-The DOS version \marginpar{{\em DOS}} will run principally run on any
+The DOS version \marginpar{{\em DOS}} will principally run on any
 IBM-compatible PC, ranging from a PC/XT with 4-dot-little megahertz up to
 a Pentium.  However, similar to other programs, the fun using AS increases
 the better your hardware is.  An XT user without a hard drive will
@@ -682,10 +690,10 @@ are still required:
 
 The installation of the OS/2 version \marginpar{{\em OS/2}} can generally
 be done just like for the DOS version, with the difference that all
-\tty{EXE} and \tty{OVR} can rightaway be deleted and replaced by the OS/2
-counterparts.  In contrast to DOS, the setting of the \tty{ASCMD} variable
-has to be done from \tty{CONFIG.SYS} (the position of the statement is
-however again arbitrary).
+\tty{EXE} and \tty{OVR} files can rightaway be deleted and replaced by the
+OS/2 counterparts.  In contrast to DOS, the setting of the \tty{ASCMD}
+variable has to be done from \tty{CONFIG.SYS} (the position of the
+statement is however again arbitrary).
 
 As the C version \marginpar{{\em UNIX}} comes in source code, the
 installation is naturally a bit more complicated.  Roughly said, the
@@ -720,7 +728,6 @@ Since AS performs all in- and output via the operating system (and
 therefore it should run also on not 100\% compatible DOS-PC's) and
 needs some basic display control, it emits ANSI control sequences
 during the assembly.  
-
 In case you \marginpar{{\em DOS/}} should see strange characters in the
 messages displayed by AS, your \tty{CONFIG.SYS} is obviously lacking a
 line like this:
@@ -741,8 +748,8 @@ memory by a swap file.  To do this, set up an environment variable
 \begin{verbatim}
   SET ASXSWAP=<size>[,file name]
 \end{verbatim}
-The size specification is done in megabytes and \bb{has} to be done.  The
-file name in contrast is optional; if it is missing, the file is
+The size specification has to be done in megabytes and \bb{has} to be done.
+The file name in contrast is optional; if it is missing, the file is
 named \tty{ASX.TMP} and placed in the current directory.  In any case, the
 swap file is deleted after program end.
 
@@ -751,11 +758,25 @@ using the program \tty{RTMRES}.  It loads the control programs residently and
 starts a new shell, resulting in a reduced loading overhead for subsequent
 calls.  A simple \tty{EXIT} from the shell removes the control programs again.
 
-The parameters can be divided roughly into two categories: switches
-and file specifications.  Parameters of these two categories may be
-arbitrarily mixed in the command line.  The assembler evaluates at
-first all parameters and then assembles the specified files.  From
-this follow two things:
+In contrast to all other versions \marginpar{{\em UNIX}}, the language of
+the C version is not compiled into the program.  The fitting set of
+messages is instead loaded from a set of message files at runtime.  AS
+searches the following directories for these files:
+\begin{enumerate}
+\item{the current directory}
+\item{the directory AS was loaded from (only for DOS)}
+\item{the directory specified via the {\tt AS\_MSGPATH} environment variable
+      respectively the {\tt PATH} list if the variable does not exist}
+\item{in the diorectory set via the {\tt LIBDIR} variable at compile time}
+\end{enumerate}
+If no file is found or the found message file is incompatible with the
+version of AS, program execution is terminated.
+
+The command line parameters can roughly be divided into two categories:
+switches and file specifications.  Parameters of these two categories may
+be arbitrarily mixed in the command line.  The assembler evaluates at
+first all parameters and then assembles the specified files.  From this
+follow two things:
 \begin{itemize}
 \item{the specified switches affect all specified source files. If 
       several source files shall be assembled with different switches,
@@ -813,11 +834,14 @@ Concerning effect and function of the SHARED-symbols please see
 chapters \ref{ChapShareMain} resp. \ref{ChapShareOrder}.
 \begin{itemize}
 \item{\tty{g}: This switch instructs AS to create an additional file that
-      contains debug information for the program.  This info is
-      comprised of a symbol table and a table describing the
-      assignment of source lines to machine addresses.  A more
-      detailed description of the used file format can be found
-      in section \ref{SectDebugFormat}.  The file's extension is \tty{MAP}.}
+      contains debug information for the program.  Allowed formats are the
+      AS-specific \tty{MAP} format and the \tty{Atmel} format used by the
+      AVR tools. The information stored in the MAP format is comprised of
+      a symbol table and a table describing the assignment of source lines
+      to machine addresses.  A more detailed description of the MAP format
+      can be found in section 5.2.  The file's extension is \tty{MAP} resp.
+      \tty{OBJ}, depending on the chosen format.  If no explicit format
+      specification is done, the MAP format is chosen.}
 \item{\tty{w}: suppress issue of warnings;}
 \item{\tty{E [file]}: error messages and warnings produced by AS will be 
       redirected to a file. Instead of a file, the 5 standard 
@@ -928,6 +952,17 @@ in the directory \verb!C:\AS\8051\INCLUDE!.
 This example shows that the assembler assumes \tty{ASM} as the default 
 extension for source files.
 
+A bit of caution should be applied when using switches that have
+optional arguments: if a file specification immediately follows such 
+aswitch without the optional argument, AS will try to interprete the
+file specification as argument - what of course fails:
+\begin{verbatim}
+ as -g test.asm
+\end{verbatim}
+The solution in this case would either be to move the -g option the  
+end or to specify an explicit MAP argument.
+
+
 Beside from specifying options in the command line, permanently
 needed options may be placed in the environment variable \tty{ASCMD}.  For
 example, if someone always wants to have assembly listings and has a
@@ -1025,32 +1060,49 @@ separated from the mnemonic by a colon.  This restriction is
 necessary to avoid ambiguities: a distinction between a mnemonic with
 format and a label with mnemonic would otherwise be impossible.
 
-In the case of 680x0, SH7000, TLCS-9000, M16(C), XA, MSP430 and H8,
-an attribute attached to a mnemonic with a dot serves as a description
-of the operand length.  Table \ref{TabAttrs} shows the allowed attribute
-letters.
+Some signal processor families from Texas Instruments optionally use a
+double line (\verb!||!) in place of the label to signify the prallel
+execution with the previous instruction(s).  If these two assembler
+instructions become a single instruction word at machine level (C3x), an
+additional label in front of the second instruction of course does not
+make sense and is not allowed.  The situation is different for the C6x
+with its instruction packets of variable length: If someone wants to jump
+into the middle of an instruction packet (bad style, if you ask me...), he
+has to place the necessary label {\em before} into a separate line.  The
+same is valid for conditions, which however may be combined with the
+double line in a single source line.
+
+The attribute is used by a couple of processors to specify variations or
+different codings of a certain instruction.  The most prominent usage of
+the attibute is is the specification of the operand size, for example in
+the case of the 680x0 family (table \ref{TabAttrs}).
 \begin{table*}[htb]
 \begin{center}\begin{tabular}{|l|l|l|}
 \hline
-attribute & arithmetical-logic instruction & jump instruction\\
+attribute & arithmetic-logic instruction & jump instruction\\
 \hline
 \hline
-B     & byte (8 bit)                       &  --------- \\
-W/H   & word (16 bit)                      &  --------- \\
-L/D/W & longword (32 bit)                  &  16-bit-displacement \\
-Q     & quad word (64 bit)                 &  --------- \\
-S     & single precision (32 bit)          &  8-bit-displacement \\
-D     & double precision (64 bit)          &  --------- \\
-X     & extended precision (80/96 bit)     &  32-bit-displacement \\
-P     & decimal floating point (80/96 bit) &  --------- \\
+B     & byte (8 bits)                       &  --------- \\
+W     & word (16 bits)                      &  --------- \\
+L     & long word (32 bits)                 &  16-bit-displacement \\
+Q     & quad word (64 bits)                 &  --------- \\
+S     & single precision (32 bits)          &  8-bit-displacement \\
+D     & double precision (64 bits)          &  --------- \\
+X     & extended precision (80/96 bits)     &  32-bit-displacement \\
+P     & decimal floating point (80/96 bits) &  --------- \\
 \hline
 \end{tabular}\end{center}
-\caption{Allowed Attribute Letters \label{TabAttrs}}
+\caption{Allowed Attributes (Example 680x0) \label{TabAttrs}}
 \end{table*}
 \par
-\bb{CAUTION:} not all instructions allow any operand length, and some
-instructionss have no attribute at all. For more exact studies consult a
-reasonable programmer's manual, e.g. \cite{Williams} or equivalent.
+Since this manual is not also meant as a user's manual for the processor
+families supported by AS, this is unfortunately not the place to enumerate
+all possible attributes for all families.  It should however be mentioned
+that in general, not all instructions of a given instruction set allow all
+attributes and that the omission of an attribute generally leads to the
+usage of the ''natural'' operand size of a processor family. For more
+thorough studies, consult a reasonable programmer's manual, e.g.
+\cite{Williams} for the 68K's.
 
 In the case of TLCS-9000, H8/500, and M16(C), the attribute serves
 both as an operand size specifier (if it is not obvious from the
@@ -1069,7 +1121,7 @@ again depend on the machine instruction and may be looked up e.g. in
 
 The number of instruction parameters depends on the mnemonic and is 
 principally located between 0 and 20.  The separation of the parameters 
-from each other is to be performed only by commas (exception: DSP56000, 
+from each other is to be performed only by commas (exception: DSP56xxx, 
 its parallel data transfers are separated with blanks).  Commas that 
 are included in brackets or quotes, of course, are not taken into 
 consideration.  
@@ -1145,6 +1197,7 @@ bit &  part \\
 2   & macro list \\
 3   & function list \\
 4   & line numbering \\
+5   & register symbol list \\
 \hline
 \end{tabular}\end{center}
 \caption{Assignment of Bits to Listing Components\label{TabTBits}}
@@ -1224,6 +1277,9 @@ FALSE         & logically ''false'' \\
 CONSTPI       & Pi (3.1415.....) \\
 VERSION       & version of AS in BCD-coding, \\
               & e.g. 1331 hex for version 1.33p1 \\
+ARCHITECTURE  & target platform AS was compiled for, in \\
+              & the style processor-manufacturer-operating \\
+              & system \\
 DATE          & date and \\
 TIME          & time of the assembly (start) \\
 MOMCPU        & current target CPU \\
@@ -1265,6 +1321,49 @@ are generated!
 
 A complete list of all symbols predefined by AS can be found in
 appendix \ref{AppInternSyms}.
+
+Apart from its value, every symbol also owns a marker which signifies to
+which {\em segment} it belongs.  Such a distinction is mainly needed for
+processors that have more than one address space.  The additional
+information allows AS to issue a warning when a wrong instruction is used
+to access a symbol from a certain address space.  A segment attribute is
+automatically added to a symbol when is gets defined via a label or a
+special instruction like \tty{BIT}; a symbol defined via the ''allround
+instructions'' \tty{SET} resp. \tty{EQU} is however ''typeless'', i.e. its
+usage will never trigger warnings.  A symbol's segment attribute may be
+queried via the buit-in function \tty{SYMTYPE}, e.g.:
+\begin{verbatim}
+Label:
+        .
+        .
+Attr    equ     symtype(Label)  ; results in 1
+\end{verbatim}
+The individual segment types have the assigned numbers listed in table
+\ref{TabSegNums}.  Register symbols which do not really fit into the order
+of normal symbols are explained in section \ref{SectRegSyms}.  The
+\tty{SYMTYPE} function delivers -1 as result when called with an undefined
+symbol as argument.
+\begin{table}[htb]
+\begin{center}
+\begin{tabular}{|l|c|}
+\hline      
+segment & return value \\
+\hline      
+$<$none$>$ & 0 \\
+CODE & 1 \\ 
+DATA & 2 \\                                       
+IDATA & 3 \\
+XDATA & 4 \\                                      
+YDATA & 5 \\                                      
+BITDATA & 6 \\
+IO & 7 \\
+REG & 8 \\                                        
+$<$register symbol$>$ & 128 \\                     
+\hline                                            
+\end{tabular}                                     
+\end{center}                                      
+\caption{return values of the \tty{SYMTYPE} function\label{TabSegNums}}
+\end{table}
 
 %%---------------------------------------------------------------------------
 
@@ -1448,6 +1547,12 @@ operator mirrors the lowest bits in the first operand and leaves the
 higher priority bits unchanged.  The number of bits which is to be 
 mirrored is given by the right operand and may be between 1 and 32 .
 
+A small pitfall is hidden in the binary complement: As the
+computation is always done with 32 resp. 64 bits, its application on
+e.g. 8-bit masks usually results in values taht do not fit into 8-bit
+numbers any more due to the leading ones.  A binary AND with a
+fitting mask is therefore unavoidable!
+
 In addition to the operators, the assembler defines another line of 
 primarily transcendental functions with floating point arguments which are
 listed in tables \ref{TabFuncs1} and \ref{TabFuncs2}.
@@ -1494,7 +1599,7 @@ FIRSTBIT & lowest 1-bit         & integer              & integer \\
 \caption{Functions Predefined by AS - Part 1 (Integer and
          Floating Point Functions \label{TabFuncs1}}
 \end{table*}
-\begin{table*}[htb]
+\begin{table*}[htbp]
 \begin{center}\begin{tabular}{|l|l|l|l|}
 \hline
 name     & meaning              & argument & result \\
@@ -1517,6 +1622,9 @@ UPSTRING & changes all          & string               & string \\
 LOWSTRING & changes all         & string               & string \\
          & characters           &                      & \\
          & into to lower case   &                      & \\
+         &                      &                      & \\
+STRLEN   & returns the length   & string               & integer \\
+         & of a string          &                      & \\
          &                      &                      & \\
 VAL      & evaluates contents   & string               & depends on \\
          & as expression        &                      & argument \\
@@ -1622,7 +1730,7 @@ second pass.  AS versions up to 1.37 did the same before I switched
 to the multipass principle that removes the strict separation into
 two passes and allows an arbitrary number of passes.  Said in detail,
 the optimal code for the assumed values is generated in the first
-pass.  If AS detects that values of symbols changed in the second
+pass.  In case AS detects that values of symbols changed in the second
 pass due to changes in code lengths, simply a third pass is done, and
 as the second pass'es new symbol values might again shorten or
 lengthen the code, a further pass is not impossible.  I have seen
@@ -1696,6 +1804,48 @@ necessary.  Which is the essence you should learn from this section?
 \item{Limit forward references to what is absolutely needed.  You make
       your and AS's live much easier this way!}
 \end{enumerate}
+
+%%---------------------------------------------------------------------------
+
+\section{Register Symbols}
+\label{SectRegSyms} \ttindex{register symbols}
+
+Sometimes it is desirable not only to assign symbolic names to memory
+addresses or constants, but also to a register, to emphasize its function
+in a certain program section.  This is no problem for processors that
+treat registers simply as another address space, as this allows to use
+numeric expressions and one can use simple \tty{EQU}s to define such
+symbols.  (e.g. for the MCS-96 or TMS70000).  However, for most
+processors, register identifiers are fixed literals which are seperately
+treated by AS for speed reasons.  A special mechanism is therefore
+necessary to define symbolic register names.  A register symbol is usually
+defined via the \tty{REG} instruction, which has otherwise the same syntax
+as an \tty{EQU} definition.  This however has a couple of restrictions: A
+register symbol is a pure character string stored 'as is' which may
+exclusively be used this way.  For example, no arithmetic is allowed to
+calculate a register's successor, like in the following example:
+\begin{verbatim}
+myreg   reg     r17         ; definition of register symbol
+        addi    myreg+1,3   ; does not work!
+\end{verbatim}
+Additionally, a register symbol has to be defined prior to ist first
+usage; a forward reference would have the result that AS suspects a
+forward reference to a memory location in case a register symbol is not
+found.  Since the usage of memory operands is far more limited on most
+processors, a bunch of errors would be the result...
+
+Analogous to ordinary symbols, register symbols are local to sections and
+it is possible to access a register symbol from a specific section by
+appending the section's name enclosed in brackets.  Due to the missing
+ability to do forward references, there is nothing like a \tty{FORWARD}
+directive, and an export by something comparable to \tty{PUBLIC} or
+\tty{GLOBAL} is also not possible since register symbols generally have
+their meaning in a small context.
+
+If there is both an ordinary and a register symbol of same name present in
+a context, the register symbol will be preferred.  This is however not the
+case when the name is embedded into a complex expression (parentheses are
+sufficient!), the normal symbol will be used then.
 
 %%---------------------------------------------------------------------------
 
@@ -1835,7 +1985,8 @@ Symbols defined with \tty{SET} or \tty{EQU} are typeless by default, but
 optionally a segment name (\tty{CODE, DATA, IDATA, XDATA, YDATA, BITDATA,
 IO}, or \tty{REG}) or \tty{MOMSEGMENT} for the currently active segment
 may be given as a second parameter, allowing to assign the symbol to a
-specific address space.
+specific address space.  AS does not check at this point if the used 
+address space exists on the currently active target processor!
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1873,7 +2024,7 @@ the generated bit symbols are undefined.
 \subsection{XSFR and YSFR}
 \ttindex{XSFR}\ttindex{YSFR}
 
-{\em valid for: DSP56000}
+{\em valid for: DSP56xxx}
 
 Also the DSP56000 has a few peripheral registers memory-mapped to the RAM,
 but the affair becomes complicated because there are two data areas, the
@@ -1997,10 +2148,14 @@ PIO_ctrl   port PIO_port_A+3
 \subsection{REG}
 \ttindex{REG}
 
-{\em valid for: ST9}
+{\em valid for: AVR, M*Core, ST9, 80C16x}
 
-\tty{REG} works similar to \tty{SFR}, but the symbol is assigned to the
-register address space.  Allowed values range from 0 to 255.
+Though it always has the same syntax, this instruction has a slightly
+different meaning from processor to processor:  If the processor uses a
+separate addressing space for registers, \tty{REG} has the same effect as
+a simple \tty{EQU} for this address space (e.g. for the ST9).  \tty{REG}
+defines register symbols for all other processors whose function is
+described in section \ref{SectRegSyms}.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -2093,6 +2248,54 @@ already exists.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+\subsection{STRUCT and ENDSTRUCT}
+\ttindex{STRUCT}\ttindex{ENDSTRUCT}
+
+{\em valid for: all processors}
+
+Even for assembler programs, there is from time to time the need to
+define complex data structures similar to high-level languages.  AS
+supports this via the instructions \tty{STRUCT} and \tty{ENDSTRUCT} that begin
+resp. finish the definition of such a structure.  The operation is
+simple: Upon occurrence of a \tty{STRUCT}, the current value of the program
+counter is saved and the PC is reset to zero.  By doing so, all
+labels placed obtain the offset values of the structure's members. 
+The reservation of space for the individual fields is done with the
+instructions used on the currently active processor to reserve memory
+space, e.g. \tty{DS.x} for Motorolas and \tty{DB} \& co. for Intels.  The label
+prepended to \tty{STRUCT} (not optional) is the record's name and may
+optionally be repeated for the \tty{ENDSTRUCT} statement.  \tty{ENDSTRUCT}
+furthermore places the record's total length in the symbol
+\tty{$<$Name\_len$>$}
+(one may force the usage of another symbol by giving its name as an
+argument to \tty{ENDSTRUCT}).  For example, in the definition
+\begin{verbatim}
+Rec     STRUCT
+Ident   db      ?
+Pad     db      ?
+Pointer dd      ?
+Rec     ENDSTRUCT
+\end{verbatim}
+the symbol \tty{Rec\_len} would obtain the value 6.  \bb{CAUTION!}  Inside
+of a structure definition, no instructions may be used that generate code,
+as this is a pure placement of elements in the address space!
+
+\tty{STRUCT} definitions may be nested; after the inner \tty{STRUCT} definition
+has been ended, the address counter of the outer structure will be
+automatically incremented by the inner structure's size (the counting
+inside the inner structure of course starts at zero).
+
+To avoid ambiguities when fields in different structures have same
+names, AS by default prepends the structures name to the field names,
+separated by an underbar.  For the example listed above, the symbols
+\tty{Rec\_Ident, Rec\_Pad,} and \tty{Rec\_Pointer} would be created.  This
+behaviour can be suppressed by giving \tty{NOEXTNAMES} as a parameter to
+the \tty{STRUCT} statement.  This works in the same sense for nested
+structure definitions, i.e. field names are extended by the names of all
+structures that did not obtain a \tty{NOEXTNAMES} directive.
+
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 \subsection{PUSHV and POPV}
 \ttindex{PUSHV}\ttindex{POPV}
 
@@ -2161,17 +2364,21 @@ minus 1:
 68xx0      & 4G     &   ---   &   ---   &   ---   &   ---   &   ---   &   ---   &   --- \\
            & In.0   &         &         &         &         &         &         &       \\
 \hline
-DSP56000   & 64K    &   ---   &   ---   & 64K     & 64K     &   ---   &   ---   &   --- \\ 
-           & In.0   &         &         & In.0    & In.0    &         &         &       \\
+DSP56000   & 64K     &  ---   &   ---   & 64K     & 64K     &   ---   &   ---   &   --- \\ 
+DSP56300   & 16M     &        &         & 16M     & 16M     &         &         &       \\
+           & In.0    &        &         & In.0    & In.0    &         &         &       \\
 \hline
 PowerPC    & 4G     &   ---   &   ---   &   ---   &   ---   &   ---   &   ---   &   --- \\ 
+           & In.0   &         &         &         &         &         &         &       \\
+\hline
+M*Core     & 4G     &   ---   &   ---   &   ---   &   ---   &   ---   &   ---   &   --- \\
            & In.0   &         &         &         &         &         &         &       \\
 \hline
 6800,6301, & 64K    &   ---   &   ---   &   ---   &   ---   &   ---   &   ---   &   --- \\
 6811       & In.0   &         &         &         &         &         &         &       \\
 \hline
-6805/HC08  & 8K     &   ---   &   ---   &   ---   &   ---   &   ---   &   ---   &   --- \\ 
-           & In.0   &         &         &         &         &         &         &       \\
+6805       & 8K     &   ---   &   ---   &   ---   &   ---   &   ---   &   ---   &   --- \\ 
+HC08       & In.0   &         &         &         &         &         &         &       \\
 \hline
 6809,      & 64K    &   ---   &   ---   &   ---   &   ---   &   ---   &   ---   &   --- \\
 6309       & In.0   &         &         &         &         &         &         &       \\
@@ -2193,7 +2400,7 @@ H8/500     & 16M    &   ---   &   ---   &   ---   &   ---   &   ---   &   ---   
 (Max)      & In.0   &         &         &         &         &         &         &       \\
 \hline
 SH7000/    & 4G     &   ---   &   ---   &   ---   &   ---   &   ---   &   ---   &   --- \\
-7600       & In.0   &         &         &         &         &         &         &       \\
+7600/7700  & In.0   &         &         &         &         &         &         &       \\
 \hline
 6502,      & 64K    &   ---   &   ---   &   ---   &   ---   &   ---   &   ---   &   --- \\
 MELPS740   & In.0   &         &         &         &         &         &         &       \\
@@ -2204,12 +2411,6 @@ MELPS7700  & In.0   &         &         &         &         &         &         
 MELPS4500  & 8K     & 416     &   ---   &   ---   &   ---   &   ---   &   ---   &   --- \\
            & In.0   & In.0    &         &         &         &         &         &       \\
 \hline
-M16        & 4G     &   ---   &   ---   &   ---   &   ---   &   ---   &   ---   &   --- \\
-           & In.0   &         &         &         &         &         &         &       \\
-\hline
-M16C       & 1M     &   ---   &   ---   &   ---   &   ---   &   ---   &   ---   &   --- \\
-           & In.0   &         &         &         &         &         &         &       \\
-\hline
 \end{tabular}\end{center}
 \caption{Address Ranges for \tty{ORG} --- Part 1\label{TabORG1}}
 \end{table*}
@@ -2218,6 +2419,12 @@ M16C       & 1M     &   ---   &   ---   &   ---   &   ---   &   ---   &   ---   
 \hline
 \tin{processor} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BITDATA} & \tin{IO} & \tin{REG} \\
 \hline
+\hline
+M16        & 4G     &   ---   &   ---   &   ---   &   ---   &   ---   &   ---   &   --- \\
+           & In.0   &         &         &         &         &         &         &       \\
+\hline
+M16C       & 1M     &   ---   &   ---   &   ---   &   ---   &   ---   &   ---   &   --- \\
+           & In.0   &         &         &         &         &         &         &       \\
 \hline
 MCS-48,    & 4K     &   ---   & 256     & 256     &   ---   &   ---   &   ---   &   --- \\ 
 MCS-41     & In.0   &         & In.0    & In.0    &         &         &         &       \\
@@ -2254,19 +2461,8 @@ AVR        & 8K     & 64K     &   ---   &   ---   &   ---   &   ---   & 64      
 80C167     & 16M    &         &         &         &         &         &         &       \\
            & In.0   &         &         &         &         &         &         &       \\
 \hline
-Z80,       & 64K    &   ---   &   ---   &   ---   &   ---   &   ---   & 256     &   --- \\
-Z180+),    & 512K   &         &         &         &         &         & 256     &       \\
-Z380       & 4G     &         &         &         &         &         & 4G      &       \\
-           & In.0   &         &         &         &         &         & In.0    &       \\
-\hline
-Z8         & 64K    & 256     &   ---   & 64K     &   ---   &   ---   &   ---   &   --- \\
-           & In.0   & In.0    &         & In.0    &         &         &         &       \\
-\hline
 \multicolumn{9}{|l|}{*) As the 8051 does not have any RAM beyond 80h, this value has to be} \\
 \multicolumn{9}{|l|}{   adapted with ORG for the 8051 as target processor!!}\\
-\hline
-\multicolumn{9}{|l|}{+) As the Z180 still can address only 64K logically, the whole}\\
-\multicolumn{9}{|l|}{   address space can only be reached via \tty{PHASE} instructions!}\\
 \hline
 \end{tabular}\end{center}
 \caption{Address Ranges for \tty{ORG} --- Part 2\label{TabORG2}}
@@ -2276,6 +2472,14 @@ Z8         & 64K    & 256     &   ---   & 64K     &   ---   &   ---   &   ---   
 \hline
 \tin{processor} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BITDATA} & \tin{IO} & \tin{REG} \\
 \hline
+\hline
+Z80,       & 64K    &   ---   &   ---   &   ---   &   ---   &   ---   & 256     &   --- \\
+Z180+),    & 512K   &         &         &         &         &         & 256     &       \\
+Z380       & 4G     &         &         &         &         &         & 4G      &       \\
+           & In.0   &         &         &         &         &         & In.0    &       \\
+\hline
+Z8         & 64K    & 256     &   ---   & 64K     &   ---   &   ---   &   ---   &   --- \\
+           & In.0   & In.0    &         & In.0    &         &         &         &       \\
 \hline
 TLCS-      & 16M    &   ---   &   ---   &   ---   &   ---   &   ---   &   ---   &   --- \\
 900(L)     & In.0   &         &         &         &         &         &         &       \\
@@ -2317,6 +2521,18 @@ ST9        & 64K    & 64K     &   ---   &   ---   &   ---   &   ---   &   ---   
 32015      & 4K     & 256     &         &         &         &         & 8       &       \\
            & In.0   & In.0    &         &         &         &         & In.0    &       \\
 \hline
+\multicolumn{9}{|l|}{+) As the Z180 still can address only 64K logically, the whole}\\
+\multicolumn{9}{|l|}{   address space can only be reached via \tty{PHASE} instructions!}\\
+\hline
+\end{tabular}\end{center}
+\caption{Address Ranges for \tty{ORG} --- Part 3\label{TabORG3}}
+\end{table*}
+\begin{table*}[htbp]
+\begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|}
+\hline
+\tin{processor} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BITDATA} & \tin{IO} & \tin{REG} \\
+\hline
+\hline
 320C2x     & 64K    & 64K     &   ---   &   ---   &   ---   &   ---   & 16      &   --- \\
            & In.0   & In.0    &         &         &         &         & In.0    &       \\ 
 \hline
@@ -2328,15 +2544,6 @@ ST9        & 64K    & 64K     &   ---   &   ---   &   ---   &   ---   &   ---   
 \hline
 TMS9900    & 64K    &   ---   &   ---   &   ---   &   ---   &   ---   &   ---   &   --- \\
            & In.0   &         &         &         &         &         &         &       \\
-\hline
-\end{tabular}\end{center}
-\caption{Address Ranges for \tty{ORG} --- Part 3\label{TabORG3}}
-\end{table*}
-\begin{table*}[htbp]
-\begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|}
-\hline
-\tin{processor} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BITDATA} & \tin{IO} & \tin{REG} \\
-\hline
 \hline
 TMS70Cxx   & 64K    &   ---   &   ---   &   ---   &   ---   &   ---   &   ---   &   --- \\
            & In.0   &         &         &         &         &         &         &       \\
@@ -2384,22 +2591,35 @@ This command rules for which processor the further code shall be
 generated.  Instructions of other processor families are not
 accessible afterwards and will produce error messages!
 
-The processors can be distinguished roughly in families, inside the
+The processors can roughly be distinguished in families, inside the
 families different types additionally serve for a detailed
 distinction:
 %%-----------
 \begin{quote}
-a) 68008 $\rightarrow$ 68000 $\rightarrow$ 68010 $\rightarrow$ 68012 $\rightarrow$ 68020 $\rightarrow$ 68030
+\begin{tabbing}
+\hspace{0.7cm} \= \kill
+a) \> 68008 $\rightarrow$ 68000 $\rightarrow$ 68010 $\rightarrow$ 68012 $\rightarrow$ \\
+   \> MCF5200 $\rightarrow$ 68332 $\rightarrow$ 68340 $\rightarrow$ 68360 $\rightarrow$ \\
+   \> 68020 $\rightarrow$ 68030 $\rightarrow$ 68040
+\end{tabbing}
 \end{quote}
 The differences in this family lie in additional instructions and
-addressing modes (starting from the 68020).  A small exception is the
-68030 that misses two instructions: \tty{CALLM} and \tty{RTM}.  The three
-representors of the 683xx family have the same processor core (a slightly
-reduced 68020 CPU), however completely different peripherals.
+addressing modes (starting from the 68020).  A small exception is the step
+to the 68030 that misses two instructions: \tty{CALLM} and \tty{RTM}.  The
+three representors of the 683xx family have the same processor core (a
+slightly reduced 68020 CPU), however completely different peripherals. 
+MCF5200 represents the ColdFire family from Motorola, RISC processors
+downwardly binary compatible to the 680x0.  For the 68040, additional
+control registers (reachable via \tty{MOVEC}) and instructions for control
+of the on-chip MMU and caches were added.
 %%-----------
 \begin{quote}
-b) 56000
+b) 56000 $\longrightarrow$ 56002 $\longrightarrow$ 56300
 \end{quote}
+While the 56002 only adds instructions for incrementing and decrementing
+the accumulators, the 56300 core is almost a new processor: all address
+spaces are enlarged from 64K words to 16M and the number of instructions
+almost has been doubled.
 %%-----------
 \begin{quote}
 c) PPC403 $\rightarrow$ MPC505 $\rightarrow$ MPC601 $\rightarrow$ RS6000
@@ -2416,13 +2636,17 @@ mnemonics for their pure workstation processors, as a reminiscence of 370
 mainframes...
 %%-----------
 \begin{quote}
-d) 6800 $\rightarrow$ 6301 $\rightarrow$ 6811
+d) MCORE
+\end{quote}
+%%-----------
+\begin{quote}
+e) 6800 $\rightarrow$ 6301 $\rightarrow$ 6811
 \end{quote}
 While the 6301 only offers a few additional instructions, the 6811
 delivers a second index register and much more instructions.
 %%-----------
 \begin{quote}
-e) 6809/6309 and 6805/68HC08
+f) 6809/6309 and 6805/68HC08
 \end{quote}
 These processors are partially source-code compatible to the other
 68xx processors, but they have a different binary code format and a
@@ -2432,15 +2656,15 @@ compatible to the 6809, but inofficially offers more registers and a
 lot of new instructions (see \cite{Kaku}).
 %%-----------
 \begin{quote}
-f) 68HC12
+g) 68HC12
 \end{quote}
 %%-----------
 \begin{quote}
-g) 68HC16
+h) 68HC16
 \end{quote}
 %%-----------
 \begin{quote}
-h) HD6413308 $\rightarrow$ HD6413309
+i) HD6413308 $\rightarrow$ HD6413309
 \end{quote}
 These both names represent the 300 and 300H variants of the H8
 family; the H version owns a larger address space (16Mbytes instead
@@ -2449,22 +2673,24 @@ instructions and addressing modes.  It is still binary upward
 compatible.
 %%-----------
 \begin{quote}
-i) HD6475328 $\rightarrow$ HD6475348 $\rightarrow$ HD6475368 $\rightarrow$ HD6475388
+j) HD6475328 $\rightarrow$ HD6475348 $\rightarrow$ HD6475368 $\rightarrow$ HD6475388
 \end{quote}
 These processors all share the same CPU core; the different types are
 only needed to include the correct subset of registers in the file
 \tty{REG53X.INC}.
 %%-----------
 \begin{quote}
-j) SH7000 $\rightarrow$ SH7600
+k) SH7000 $\rightarrow$ SH7600 $\longrightarrow$ SH7700
 \end{quote}
 The processor core of the 7600 offers a few more instructions that
 close gaps in the 7000's instruction set (delayed conditional and
 relative and indirect jumps, multiplications with 32-bit operands and
-multiply/add instructions).
+multiply/add instructions).  The 7700 series (also known as SH3)
+furthermore offers a second register bank, better shift instructions, and
+instructions to control the cache.
 %%-----------
 \begin{quote}
-k) 6502 $\rightarrow$ 65(S)C02 / MELPS740
+l) 6502 $\rightarrow$ 65(S)C02 / MELPS740 / 6502UNDOC
 \end{quote}
 The CMOS version defines some additional instructions, as well as a number of
 some instruction/addressing mode combinations were added which were not
@@ -2473,10 +2699,14 @@ the 6502 instruction set primarily to bit operations and multiplication /
 division instructions.  Except for the unconditional jump and instructions
 to increment/decrement the accumulator, the instruction extensions are
 orthogonal.  The 65SC02 lacks the bit manipulation instructions of the
-65C02.
+65C02.  The 6502UNDOC processor type enables access to the "undocumented"
+6502 instructions, i.e. the operations that result from the usage of bit
+combinations in the opcode that are not defined as instructions.  The 
+variants supported by AS are listed in the appendix containing processor-specific
+hints.
 %%-----------
 \begin{quote}
-l) MELPS7700, 65816
+m) MELPS7700, 65816
 \end{quote}
 Apart from a '16-bit-version' of the 6502's instruction set, these
 processors both offer some instruction set extensions.  These are
@@ -2485,19 +2715,19 @@ predecessors (65C02 resp. MELPS-740).  Partially, different
 mnemonics are used for the same operations.
 %%-----------
 \begin{quote}
-m) MELPS4500
+n) MELPS4500
 \end{quote}
 %%-----------
 \begin{quote}
-n) M16
+o) M16
 \end{quote}
 %%-----------
 \begin{quote}
-o) M16C
+p) M16C
 \end{quote}
 %%-----------
 \begin{quote}
-p) 8021, 8022, 8039, 80C39, 8048, 80C48, 8041, 8042
+q) 8021, 8022, 8039, 80C39, 8048, 80C48, 8041, 8042
 \end{quote}
 For the ROM-less versions 8039 and 80C39, the commands which are
 using the BUS (port 0) are forbidden.  The 8021 and 8022 are special
@@ -2512,8 +2742,11 @@ and so AS limits the code segment of these processors to 1 resp. 2
 Kbytes.
 %%-----------
 \begin{quote}
-q) 87C750 $\rightarrow$ 8051, 8052, 80C320, 80C501, 80C502, 80C504, 80515, and\\
-   80517$\rightarrow$ 80C251
+\begin{tabbing}
+\hspace{0.7cm} \= \kill
+r) \> 87C750 $\rightarrow$ 8051, 8052, 80C320, 80C501, 80C502, \\
+   \> 80C504, 80515, and 80517 $\rightarrow$ 80C251
+\end{tabbing}
 \end{quote}
 The 87C750 can only access a maximum of 2 Kbytes program memory which is
 why it lacks the \tty{LCALL} and \tty{LJMP} instructions.  AS does not
@@ -2528,7 +2761,7 @@ represents a drastic progress in the the direction 16/32 bits, larger
 address spaces, and a more orthogonal instruction set.
 %%-----------
 \begin{quote}
-r) 8096 $\rightarrow$ 80196 $\rightarrow$ 80196N $\rightarrow$ 80296
+s) 8096 $\rightarrow$ 80196 $\rightarrow$ 80196N $\rightarrow$ 80296
 \end{quote}
 Apart from a different set of SFRs (which however strongly vary from
 version to version), the 80196 knows several new instructions and
@@ -2541,13 +2774,13 @@ Transaction Server (PTS) and therefore looses again two machine
 instructions.
 %%-----------
 \begin{quote}
-s) 8080 and 8085
+t) 8080 and 8085
 \end{quote}
 The 8085 knows the additional commands \tty{RIM} and \tty{SIM} for
 controlling the interrupt mask and the two I/O-pins.
 %%-----------
 \begin{quote}
-t) 8086 $\rightarrow$ 80186 $\rightarrow$ V30 $\rightarrow$ V35
+u) 8086 $\rightarrow$ 80186 $\rightarrow$ V30 $\rightarrow$ V35
 \end{quote}
 Only new instructions are added in this family.  The corresponding
 8-bit versions are not mentioned due to their instruction
@@ -2555,20 +2788,20 @@ compatibility, so one e.g. has to choose 8086 for an 8088-based
 system.
 %%-----------
 \begin{quote}
-u) 8X300 $\rightarrow$ 8X305
+v) 8X300 $\rightarrow$ 8X305
 \end{quote}
 The 8X305 features a couple of additional registers that miss on the
 8X300.  Additionally, it can do new operations with these registers
 (like direct writing of 8 bit values to peripheral addresses).
 %%-----------
 \begin{quote}
-u) XAG1, XAG2, XAG3
+w) XAG1, XAG2, XAG3
 \end{quote}
 These processors only differ in the size of their internal ROM which
 is defined in \tty{STDDEFXA.INC}.
 %%-----------
 \begin{quote}
-v) AT90S1200 $\rightarrow$ AT90S2313 $\rightarrow$ AT90S4414 $\rightarrow$
+x) AT90S1200 $\rightarrow$ AT90S2313 $\rightarrow$ AT90S4414 $\rightarrow$
    AT90S8515
 \end{quote}
 The first member of the AVR series represents a minimum configuration
@@ -2577,7 +2810,7 @@ other two processors only differ in their memory equipment and
 on-chip peripherals, what is differentiated in \tty{REGAVR.INC}.
 %%-----------
 \begin{quote}
-w) AM29245 $\rightarrow$ AM29243 $\rightarrow$ AM29240 $\rightarrow$ AM29000
+y) AM29245 $\rightarrow$ AM29243 $\rightarrow$ AM29240 $\rightarrow$ AM29000
 \end{quote}
 The further one moves to the right in this list, the fewer the
 instructions become that have to be emulated in software.  While e.g.
@@ -2587,7 +2820,7 @@ serves as a 'generic' type that understands all instructions in
 hardware.
 %%-----------
 \begin{quote}
-x) 80C166 $\rightarrow$ 80C167,80C165,80C163
+z) 80C166 $\rightarrow$ 80C167,80C165,80C163
 \end{quote}
 80C167 and 80C165/163 have an address space of 16 Mbytes instead of 256
 Kbytes, and furthermore they know some additional instructions for
@@ -2596,7 +2829,7 @@ extended addressing modes and atomic instruction sequences.  They are
 amount of on-chip peripherals.
 %%-----------
 \begin{quote}
-y) Z80 $\rightarrow$ Z80UNDOC $\rightarrow$ Z180 $\rightarrow$ Z380
+aa) Z80 $\rightarrow$ Z80UNDOC $\rightarrow$ Z180 $\rightarrow$ Z380
 \end{quote}
 While there are only a few additional instructions for the Z180, the
 Z380 owns 32-bit registers, a linear address space of 4 Gbytes, a
@@ -2609,25 +2842,25 @@ with the additional instructions can be found in the chapter
 with processor specific hints.
 %%-----------
 \begin{quote}
-z) Z8601, Z8604, Z8608, Z8630, Z8631
+ab) Z8601, Z8604, Z8608, Z8630, Z8631
 \end{quote}
 These processors again only differ in internal memory size and
 on-chip peripherals, i.e. the choice does not have an effect on the
 supported instruction set.
 %%-----------
 \begin{quote}
-aa) 96C141, 93C141
+ac) 96C141, 93C141
 \end{quote}
 These two processors represent the two variations of the processor 
 family: TLCS-900 and TLCS-900L.  The differences of these two variations 
 will be discussed in detail in section \ref{TLCS900Spec}.
 %%-----------
 \begin{quote}
-ab) 90C141
+ad) 90C141
 \end{quote}
 %%-----------
 \begin{quote}
-ac) 87C00, 87C20, 87C40, 87C70
+ae) 87C00, 87C20, 87C40, 87C70
 \end{quote}
 The processors of the TLCS-870 series have an identical CPU core, but
 different peripherals depending on the type.  In part registers with
@@ -2637,35 +2870,35 @@ possible by different types to provide the correct symbol set
 automatically.
 %%-----------
 \begin{quote}
-ad) 47C00 $\rightarrow$ 470C00 $\rightarrow$ 470AC00
+af) 47C00 $\rightarrow$ 470C00 $\rightarrow$ 470AC00
 \end{quote}
 These three variations of the TLCS-47-family have on-chip RAM and ROM
 of different size, which leads to several bank switching instructions 
 being added or suppressed.
 %%-----------
 \begin{quote}
-ae) 97C241
+ag) 97C241
 \end{quote}
 %%-----------
 \begin{quote}
-af) 16C54 $\rightarrow$ 16C55 $\rightarrow$ 16C56 $\rightarrow$ 16C57
+ah) 16C54 $\rightarrow$ 16C55 $\rightarrow$ 16C56 $\rightarrow$ 16C57
 \end{quote}
 These processors differ by the available code area, i.e. by the address
 limit after which AS reports overruns.
 %%-----------
 \begin{quote}
-ag) 16C84, 16C64
+ai) 16C84, 16C64
 \end{quote}
 Analog to the MCS-51 family, no distinction is made in the code generator,
 the different numbers only serve to include the correct SFRs in
 \tty{STDDEF18.INC}.
 %%-----------
 \begin{quote}
-ah) 17C42
+aj) 17C42
 \end{quote}
 %%-----------
 \begin{quote}
-ai) ST6210/ST6215$\rightarrow$ST6220/ST6225
+ak) ST6210/ST6215$\rightarrow$ST6220/ST6225
 \end{quote}
 The only distinction AS makes between the two pairs is the smaller
 addressing space (2K instead 4K) of the first ones.  The detailed
@@ -2673,11 +2906,11 @@ distinction serves to provide an automatic distinction in the source
 file which hardware is available (analog to the 8051/52/515).
 %%-----------
 \begin{quote}
-aj) ST7
+al) ST7
 \end{quote}
 %%-----------
 \begin{quote}
-ak) ST9020, ST9030, ST9040, ST9050
+am) ST9020, ST9030, ST9040, ST9050
 \end{quote}
 These 4 names represent the four ''sub-families'' of the ST9 family,
 which only differ in their on-chip peripherals.  Their processor
@@ -2685,42 +2918,42 @@ cores are identical, which is why this distinction is again only used
 in the include file containing the peripheral addresses.
 %%-----------
 \begin{quote}
-al) 6804
+an) 6804
 \end{quote}
 %%-----------
 \begin{quote}
-am) 32010$\rightarrow$32015
+ao) 32010$\rightarrow$32015
 \end{quote}
 The TMS32010 owns just 144 bytes of internal RAM, and so AS limits
 addresses in the data segment just up to this amount.  This restriction
 does not apply for the 32015, the full range from 0..255 can be used.
 %%-----------
 \begin{quote}
-an) 320C25 $\rightarrow$ 320C26 $\rightarrow$ 320C28
+ap) 320C25 $\rightarrow$ 320C26 $\rightarrow$ 320C28
 \end{quote}
 These processors only differ slightly in their on-chip peripherals
 and in their configuration instructions.
 %%-----------
 \begin{quote}
-ao) 320C30, 320C31
+aq) 320C30, 320C31
 \end{quote}
 The 320C31 is a reduced version with the same instruction set,
 however fewer peripherals.  The distinction is exploited in
 \tty{STDDEF3X.INC}.
 %%-----------
 \begin{quote}
-ap) 320C50, 320C51, 320C53
+ar) 320C50, 320C51, 320C53
 \end{quote}
 The distinction between these processors is currently not used by AS.
 %%-----------
 \begin{quote}
-aq) TMS9900
+as) TMS9900
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-ar) \> TMS70C00, TMS70C20, TMS70C40,\\
+at) \> TMS70C00, TMS70C20, TMS70C40,\\
     \> TMS70CT20, TMS70CT40,\\
     \> TMS70C02, TMS70C42, TMS70C82,\\
     \> TMS70C08, TMS70C48\\
@@ -2734,22 +2967,22 @@ RAM and the same on-chip peripherals, they differ only in the amount of
 integrated ROM.
 %%-----------
 \begin{quote}
-as) 370C010, 370C020, 370C030, 370C040 and 370C050
+au) 370C010, 370C020, 370C030, 370C040 and 370C050
 \end{quote}
 Similar to the MCS-51 family, the different types are only used to
 differentiate the peripheral equipment in \tty{STDDEF37.INC}; the
 instruction set is always the same.
 %%-----------
 \begin{quote}
-at) MSP430
+av) MSP430
 \end{quote}
 %%-----------
 \begin{quote}
-au) SC/MP
+aw) SC/MP
 \end{quote}
 %%-----------
 \begin{quote}
-av) COP87L84
+ax) COP87L84
 \end{quote}
 This is the only member of National Semiconductor's COP8 family that
 is currently supported.  I know that the family is substantially
@@ -2758,7 +2991,7 @@ instruction sets which will be added when a need occurs.  It is a
 beginning, and National's documentation is quite extensive... 
 %%-----------
 \begin{quote}
-aw) 7810$\rightarrow$78C10
+ay) 7810$\rightarrow$78C10
 \end{quote}
 The NMOS version has no stop-mode; the respective command and the ZCM
 register are omitted.  \bb{CAUTION!}  NMOS and CMOS version partially
@@ -2767,7 +3000,7 @@ differ in the reset values of some registers!
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-ax) \> 75402,\\
+az) \> 75402,\\
     \> 75004, 75006, 75008,\\
     \> 75268,\\
     \> 75304, 75306, 75308, 75312, 75316,\\
@@ -2783,7 +3016,7 @@ peripherals on the one hand and by their instruction set's power on
 the other hand.
 %%-----------
 \begin{quote}
-ay) 78070
+ba) 78070
 \end{quote}
 This is currently the only member of NEC's 78K0 family I am familiar
 with.  Similar remarks like for the COP8 family apply!
@@ -2848,7 +3081,7 @@ The default processor type is 68008.
 
 {\em\begin{tabbing}
  valid for: \= 680x0, FPU also for 8086..V35, SUPMODE also for TLCS-900, \\
-            \> SH7000, 29K, XA and PowerPC
+            \> SH7000, 29K, XA, PowerPC, M*Core, and TMS9900
 \end{tabbing}}
 
 These three switches allow to define which parts of the instruction set
@@ -2903,7 +3136,7 @@ instruction!
 \subsection{PADDING}
 \ttindex{PADDING}
 
-{\em valid for: 680x0, XA, H8, SH7000, MSP430, TMS9900, ST7}
+{\em valid for: 680x0, M*Core, XA, H8, SH7000, MSP430, TMS9900, ST7}
 
 Processors of the 680x0 family are quite critical regarding odd addresses:
 instructions must not start on an odd address, and data accesses to odd
@@ -2915,7 +3148,9 @@ of bytes.  This however means for \tty{DC.B} and \tty{DS.B} that a padding
 byte may have to be added.  This behaviour can be turned on and off via
 the \tty{PADDING} instruction.  Similar to the previous instructions, the
 argument may be either \tty{ON} or \tty{OFF}, and the current setting may
-be read from a symbol with the same name.
+be read from a symbol with the same name.  \tty{PADDING} is by default only
+enabled for the 680x0 family, it has to be turned on explicitly for all
+other families!
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3015,8 +3250,8 @@ the following segments with the following names are supported:
 \item{\tty{CODE}: program code;}
 \item{\tty{DATA}: directly addressable data (including SFRs);}
 \item{\tty{XDATA}: data in externally connected RAM or 
-      X-addressing space of the DSP56000;}
-\item{\tty{YDATA}: Y-addressing space of the DSP56000;}
+      X-addressing space of the DSP56xxx;}
+\item{\tty{YDATA}: Y-addressing space of the DSP56xxx;}
 \item{\tty{IDATA}: indirectly addressable (internal) data; }
 \item{\tty{BITDATA}: the part of the 8051-internal RAM that is bitwise
       addressable;}
@@ -3461,13 +3696,18 @@ functionality, but each processor family defines other names for the
 same function.  To stay compatible with the standard assemblers, this
 way of implementation was chosen.
 
+If not explicitly mentioned otherwise, all instructions for data
+deposition (not those for reservation of memory!) allow an arbitrary
+number of parameters which are being processed from left to right.
+
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{DC[.Size]}
 \ttindex{DC}
 
-{\em valid for: 680x0, H8, SH7x00, DSP56000, XA, ST7}
+{\em valid for: 680x0, M*Core, 68xx, H8, SH7x00, DSP56xxx, XA, ST7}
   
+
 This instruction places one or several constants of the type
 specified by the attribute into memory.  The attributes are the same ones as
 defined in section \ref{AttrTypes}, and there is additionally the
@@ -3485,7 +3725,7 @@ boundary with zeroes with a statement like
 \bb{CAUTION!}  This function easily allows to reach the limit of 1 Kbyte
 of generated code per line!
 
-The assembler automatically adds another byte of data in case the byte sum
+The assembler can automatically add another byte of data in case the byte sum
 should become odd, to keep the word alignment.  This behaviour may be
 turned on and off via the \tty{PADDING} instruction.
 
@@ -3497,7 +3737,7 @@ exponent at the read of such constants!
 
 The default attribute is \tty{W}, that means 16-bit-integer numbers.
 
-For the DSP56000, the data type is fixed to integer numbers (an attribute is 
+For the DSP56xxx, the data type is fixed to integer numbers (an attribute is 
 therefore neither necessary nor allowed), which may be in the range
 of -8M up to 16M-1.  String constants are also allowed, whereby three characters 
 are packed into each word.
@@ -3507,7 +3747,7 @@ are packed into each word.
 \subsection{DS[.Size]}
 \ttindex{DS}
 
-{\em valid for: 680x0, H8, SH7x00, DSP56000, XA,, ST7}
+{\em valid for: 680x0, M*Core, 68xx, H8, SH7x00, DSP56xxx, XA,, ST7}
 
 On the one hand, this instruction enables to reserve memory space for
 the specified count of numbers of the type given by the attribute. 
@@ -3537,7 +3777,7 @@ simply stay undefined.
 
 The default for the operand length is - as usual - \tty{W}, i.e. 16 bits.
 
-For the 56000, the operand length is fixed to words (of 24 bit),
+For the 56xxx, the operand length is fixed to words (of 24 bit),
 attributes therefore do not exist just as in the case of \tty{DC}.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3597,7 +3837,7 @@ instructions defined by National for address storage use big endian,
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-\subsection{3.3.4. DS}
+\subsection{DS}
 \ttindex{DS}
 
 {\em\begin{tabbing}
@@ -3626,7 +3866,8 @@ instruction...I hope they are satisfied now \tty{;-)}
 
 By this instruction, byte constants or ASCII strings are placed in
 65xx/68xx-mode, it therefore corresponds to \tty{DC.B} on the 68000 or
-\tty{DB} on Intel.
+\tty{DB} on Intel.  Similarly to \tty{DC}, a repetition factor enclosed
+in brackets ([..]) may be prepended to every single parameter.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3652,7 +3893,8 @@ shall be padded with a zero byte in MSP/TMS9900 mode.
 
 \tty{ADR} resp. \tty{FDB} stores word constants when in 65xx/68xx mode. 
 It is therefore the equivalent to \tty{DC.W} on the 68000 or \tty{DW} on
-Intel platforms.
+Intel platforms.  Similarly to \tty{DC}, a repetition factor enclosed
+in brackets ([..]) may be prepended to every single parameter.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3831,8 +4073,9 @@ When in 65xx/68xx mode, string constants are generated using this
 instruction. In contrast to the original assembler AS11 from Motorola
 (this is the main reason why AS understands this command, the
 functionality is contained within the \tty{BYT} instruction) you must
-enclose the string argument by double quotation marks instead of
-single quotation marks or slashes.
+enclose the string argument by double quotation marks instead of single
+quotation marks or slashes.  Similarly to \tty{DC}, a repetition factor
+enclosed in brackets ([..]) may be prepended to every single parameter.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -4767,10 +5010,15 @@ section        &   value &   from section... \\
 \hline
 \hline
 Global         &     0   &   Global \\
+\hline
 \tty{ModuleA}  &     0   &   Global \\
+\hline
 \tty{ProcA1}   &     5   &   \tty{ProcA1} \\
+\hline
 \tty{ProcA2}   &    10   &   \tty{ProcA2} \\
+\hline
 \tty{ModuleB}  &    15   &   \tty{ModuleB} \\
+\hline
 \tty{ProcB}    &    15   &   \tty{ModuleB} \\
 \hline
 \end{tabular}\end{center}
@@ -5274,7 +5522,7 @@ as information about them is available!
 
 %%---------------------------------------------------------------------------
 
-\section{DSP56000}
+\section{DSP56xxx}
 
 Motorola, which devil rode you!  Which person in your company had the
 ''brilliant'' idea to separate the parallel data transfers with spaces!
@@ -5313,7 +5561,7 @@ dollar sign.
 
 %%---------------------------------------------------------------------------
 
-\section{SH7000/7600}
+\section{SH7000/7600/7700}
 
 Unfortunately, Hitachi once again used their own format for
 hexadecimal numbers, and once again I was not able to reproduce this
@@ -5479,6 +5727,132 @@ instead of
 \begin{verbatim}
         bl      $24,$34 .
 \end{verbatim}
+
+%%---------------------------------------------------------------------------
+
+\section{6502UNDOC}
+
+Since the 6502's undocumented instructions naturally aren't listed in
+any data book, they shall be listed shortly at this place.  Of
+course, you are using them on your own risk.  There is no guarantee
+that all mask revisions will support all variants!  They anyhow do 
+not work for the CMOS successors of the 6502, since they allocated 
+the corresponding bit combinations with "official" instructions... 
+
+The following symbols are used:
+
+\begin{tabbing}
+\hspace{2cm} \= \kill
+\&           \> binary AND \\
+|            \> binary OR \\
+\verb!^!     \> binary XOR \\
+$<<$         \> logical shift left \\
+$>>$         \> logical shift right \\
+$<<<$        \> rotate left \\
+$>>>$        \> rotate right \\
+$\leftarrow$ \> assignment \\
+ (..)        \> contents of .. \\
+ {..}        \> bits .. \\
+ A           \> accumulator \\
+ X,Y         \> index registers X,Y \\
+ S           \> stack pointer \\
+ An          \> accumulator bit n \\
+ M           \> operand \\
+ C           \> carry \\
+ PCH         \> upper half of program counter \\
+\end{tabbing}
+
+\begin{tabbing}
+Addressing Modes \= : \= \kill 
+Instruction      \> : \> \tty{JAM} or \tty{KIL} or \tty{CRS} \\
+Function         \> : \> none, prozessor is halted \\
+Addressing Modes \> : \> implicit \\
+\\
+Instruction      \> : \> \tty{SLO} \\
+Function         \> : \> $M\leftarrow((M)<<1)|(A)$ \\
+Addressing Modes \> : \> absolute long/short, X-indexed long/short, \\
+                 \>   \> Y-indexed long, X/Y-indirect \\
+\\
+Instruction      \> : \> \tty{ANC} \\
+Function         \> : \> $A\leftarrow(A)\&(M), C\leftarrow A7$ \\
+Addressing Modes \> : \> immediate \\
+\\
+Instruction      \> : \> \tty{RLA} \\
+Function         \> : \> $M\leftarrow((M)<<1)\&(A)$ \\
+Addressing Modes \> : \> absolute long/short, X-indexed long/short, \\
+                 \>   \> Y-indexed long, X/Y-indirect \\
+\\
+Instruction      \> : \> \tty{SRE} \\
+Function         \> : \> $M\leftarrow((M)>>1)$\verb!^!$(A)$ \\
+Addressing Modes \> : \> absolute long/short, X-indexed long/short, \\
+                 \>   \> Y-indexed long, X/Y-indirect \\
+\\
+Instruction      \> : \> \tty{ASR} \\
+Function         \> : \> $A\leftarrow((A)\&(M))>>1$ \\
+Addressing Modes \> : \> immediate \\
+\\
+Instruction      \> : \> \tty{RRA} \\
+Function         \> : \> $M\leftarrow((M)>>>1)+(A)+(C)$ \\
+Addressing Modes \> : \> absolute long/short, X-indexed long/short, \\
+                 \>   \> Y-indexed long, X/Y-indirect \\
+\\
+Instruction      \> : \> \tty{ARR} \\
+Function         \> : \> $A\leftarrow((A)\&(M))>>>1$ \\
+Addressing Modes \> : \> immediate \\
+\\
+Instruction      \> : \> \tty{SAX} \\
+Function         \> : \> $M\leftarrow(A)\&(X)$ \\
+Addressing Modes \> : \> absolute long/short, Y-indexed short, \\
+                 \>   \> Y-indirect \\
+\\
+Instruction      \> : \> \tty{ANE} \\
+Function         \> : \> $M\leftarrow((A)\&\$ee)|((X)\&(M))$ \\
+Addressing Modes \> : \> immediate \\
+\\
+Instruction      \> : \> \tty{SHA} \\
+Function         \> : \> $M\leftarrow(A)\&(X)\&(PCH+1)$ \\
+Addressing Modes \> : \> X/Y-indexed long \\
+\\
+Instruction      \> : \> \tty{SHS} \\
+Function         \> : \> $X\leftarrow(A)\&(X), S\leftarrow(X), M\leftarrow(X)\&(PCH+1)$ \\
+Addressing Modes \> : \> Y-indexed long \\
+\\
+Instruction      \> : \> \tty{SHY} \\
+Function         \> : \> $M\leftarrow(Y)\&(PCH+1)$ \\
+Addressing Modes \> : \> Y-indexed long \\
+\\
+Instruction      \> : \> \tty{SHX} \\
+Function         \> : \> $M\leftarrow(X)\&(PCH+1)$ \\
+Addressing Modes \> : \> X-indexed long \\
+\\
+Instruction      \> : \> \tty{LAX} \\
+Function         \> : \> $A,X\leftarrow(M)$ \\
+Addressing Modes \> : \> absolute long/short, Y-indexed long/short, \\
+                 \>   \> X/Y-indirect \\
+\\
+Instruction      \> : \> \tty{LXA} \\
+Function         \> : \> $X{04}\leftarrow(X){04}\&(M){04}$, \\
+                 \>   \> $A{04}\leftarrow(A){04}\&(M){04}$ \\
+Addressing Modes \> : \> immediate \\
+\\
+Instruction      \> : \> \tty{LAE} \\
+Function         \> : \> $X,S,A\leftarrow((S)\&(M))$ \\
+Addressing Modes \> : \> Y-indexed long \\
+\\
+Instruction      \> : \> \tty{DCP} \\
+Function         \> : \> $M\leftarrow(M)-1, Flags\leftarrow((A)-(M))$ \\
+Addressing Modes \> : \> absolute long/short, X-indexed long/short, \\
+                 \>   \> Y-indexed long, X/Y-indirect \\
+\\
+Instruction      \> : \> \tty{SBX} \\
+Function         \> : \> $X\leftarrow((X)\&(A))-(M)$ \\
+Addressing Modes \> : \> immediate \\
+\\
+Instruction      \> : \> \tty{ISB} \\
+Function         \> : \> $M\leftarrow(M)+1, A\leftarrow(A)-(M)-(C)$ \\
+Addressing Modes \> : \> absolute long/short, X-indexed long/short, \\
+                 \>   \> Y-indexed long, X/Y-indirect \\
+\end{tabbing}
 
 %%---------------------------------------------------------------------------
 
@@ -6068,12 +6442,6 @@ address of the 64K-bank is also stored.  This way, AS can check
 whether the DS register has previously be assigned a correct value
 with an \tty{ASSUME} instruction.
 
-The XA uses the same instructions for storage of constants like the
-68000 family.  This however means that by default, the number of
-bytes stored will be rounded up to an even value.  Even addresses are
-not a must on the XA, so a \tty{PADDING OFF} instruction right at the
-beginning of a program is almost obligatory...
-
 In contrast, nothing can stop AS's efforts to align potential branch
 targets to even addresses.  Like other XA assemblers, AS does this by
 inserting \tty{NOP}s right before the instruction in question.
@@ -6123,6 +6491,29 @@ Their operation should be clear.  \bb{CAUTION!}  Noone can
 guarantee that all mask revisions of the Z80 execute these
 instructions, and the Z80's successors will react with traps if they
 find one of these instructions.  Use them on your own risk...
+
+%%---------------------------------------------------------------------------
+
+\section{Z80UNDOC}
+
+In contrast to the AVR assembler, AS by default uses the Intel format
+to write hexadecimal contants instead of the C syntax.  All right, I
+did not look into the (free) AVR assembler before, but when I started
+with the AVR part, there was hardly mor einformation about the AVR
+than a preliminary manual describing processor types that were never
+sold...this problem can be solved with a simple RELAXED ON.
+
+Optionally, AS can generate so-called "object files" for the AVRs (it
+also works for other CPUs, but it does not make any sense for them...).
+These are files containing code and source line info what e.g. allows
+a step-by-step execution on source level with the WAVRSIM simulator
+delivered by Atmel.  Unfortunately, the simulator seems to have
+trouble with source file names longer than approx. 20 characters:
+Names are truncated and/or extended by strange special characters
+when the maximum length is exceeded.  AS therefore stores file name
+specifications in object files without a path specification. 
+Therefore, problems may arise when files like includes are not in the
+current directory.
 
 %%---------------------------------------------------------------------------
 
@@ -6300,19 +6691,29 @@ TAS900           & AS                  &     meaning/function \\
 \hline
 \hline
 \tty{DL} $<$Data$>$    & \tty{DD} $<$Data$>$           & define longword constants \\
+\hline
 \tty{DSB} $<$number$>$ & \tty{DB} $<$number$>$ \tty{DUP} (?) & reserve bytes of memory \\
+\hline
 \tty{DSW} $<$number$>$ & \tty{DW} $<$number$>$ \tty{DUP} (?) & reserve words of memory \\
+\hline
 \tty{DSD} $<$number$>$ & \tty{DD} $<$number$>$ \tty{DUP} (?) & reserve longwords of memory \\
+\hline
 \tty{\$MIN[IMUM]}      & \tty{MAXMODE OFF}             & following code runs \\
                        &                               & in minimum mode \\
+\hline
 \tty{\$MAX[IMUM]}      & \tty{MAXMODE ON}              & following code runs \\
                        &                               & in maximum mode \\
+\hline
 \tty{\$SYS[TEM]}       & \tty{SUPMODE ON}              & following code runs \\
                        &                               & in system mode \\
+\hline
 \tty{\$NOR[MAL]}       & \tty{SUPMODE OFF}             & following code runs \\
                        &                               & in user mode \\
+\hline
 \tty{\$NOLIST}         & \tty{LISTING OFF}             & turn off assembly listing \\
+\hline
 \tty{\$LIST}           & \tty{LISTING ON}              & turn on assembly listing \\
+\hline
 \tty{\$EJECT}          & \tty{NEWPAGE}                 & start new page in listing \\
 \hline
 \end{tabular}\end{center}
@@ -6644,15 +7045,25 @@ AST6            & AS                     & meaning/function \\
 \hline
 \hline
 \tty{.DISPLAY}  & \tty{MESSAGE}          & output message \\
+\hline
 \tty{.EJECT}    & \tty{NEWPAGE}          & new page in assembly listing \\
+\hline
 \tty{.ELSE}     & \tty{ELSEIF}           & conditional assembly \\
+\hline
 \tty{.ENDC}     & \tty{ENDIF}            & conditional assembly \\
+\hline
 \tty{.IFC}      & \tty{IF...}            & conditional assembly \\
+\hline
 \tty{.INPUT}    & \tty{INCLUDE}          & insert include file \\
+\hline
 \tty{.LIST}     & \tty{LISTING, MACEXP}  & settings for listing \\
+\hline
 \tty{.PL}       & \tty{PAGE}             & page length of listing \\
+\hline
 \tty{.ROMSIZE}  & \tty{CPU}              & set target processor \\
-\tty{.VERS}     & \tty{VERSION} (symbol) & \\
+\hline
+\tty{.VERS}     & \tty{VERSION} (symbol) & query version \\
+\hline
 \tty{.SET}      & \tty{EVAL}             & redefine variables \\
 \hline
 \end{tabular}\end{center}                                   
@@ -6821,13 +7232,21 @@ format for hexadecimal and binary constants.  AS instead favours the
 Intel syntax which is also common for newer processor designs from
 TI.
 
-The documentation I had available \cite{Ti9900} unfortunately discussed
-the processor's assembly syntax only as a side issue.  I therefore
-had to guess at some places...for example the order of operands: I
-selected to assume the source as first operand; this is the way other
-TI microcontrollers also do it.  Further more, TI sometimes uses \tty{Rx}
-to name registers and \tty{WRx} at other places...currently both variants
-are recognized by AS.
+The TI syntax for registers allows to use a simple integer number
+between 0 and 15 instead of a real name (\tty{Rx} or \tty{WRx}).
+This has two consequences:
+\begin{itemize}
+\item{\tty{R0...R15} resp. \tty{WR0..WR15} are simple predefined integer
+      symbols with values from 0 to 15, and the definition of register
+      aliases is a simple matter of \tty{EQU}.}
+\item{In contrast to several other processors, I cannot offer the
+      additional AS feature that allows to omit the character sigifying
+      absolute addressing (a \@ sign in this case).  As a missing
+      character would mean register numbers (from 0 to 15) in this case,
+      it was not possible to offer the optional omission.}
+\end{itemize}
+Furthermore, TI sometimes uses \tty{Rx} to name registers and \tty{WRx}
+at other places...currently both variants are recognized by AS.
 
 %%---------------------------------------------------------------------------
 
@@ -7049,33 +7468,33 @@ table \ref{TabHeader}).
 header  & family & header  & family \\
 \hline
 \hline
-\$01 &    680x0, 6833x         & \$05 &    PowerPC \\
-\$09 &    DSP56000             & \$11 &    65xx/MELPS-740 \\
-\$12 &    MELPS-4500           & \$13 &    M16 \\
-\$14 &    M16C                 & \$19 &    65816/MELPS-7700 \\
-\$21 &    MCS-48               & \$29 &    29xxx \\
-\$31 &    MCS-51               & \$32 &    ST9 \\
-\$33 &    ST7                  & \$39 &    MCS-96/196/296 \\
-\$3a &    8X30x                & \$3b &    AVR \\
-\$3c &    XA                   & \$41 &    8080/8085 \\
-\$42 &    8086..V35            & \$48 &    TMS9900 \\
-\$49 &    TMS370xxx            & \$4a &    MSP430 \\
-\$4c &    80C166/167           & \$51 &    Z80/180/380 \\
-\$52 &    TLCS-900             & \$53 &    TLCS-90 \\
-\$54 &    TLCS-870             & \$55 &    TLCS-47 \\
-\$56 &    TLCS-9000            & \$61 &    6800, 6301 or 6811 \\
-\$62 &    6805/HC08            & \$63 &    6809 \\
-\$64 &    6804                 & \$65 &    68HC16 \\
-\$66 &    68HC12               & \$68 &    H8/300(H) \\
-\$69 &    H8/500               & \$6c &    SH7000 \\
-\$6e &    SC/MP                & \$6f &    COP8 \\
-\$70 &    PIC16C8x             & \$71 &    PIC16C5x \\
-\$72 &    PIC17C4x             & \$73 &    TMS-7000 \\
-\$74 &    TMS3201x             & \$75 &    TMS320C2x \\
-\$76 &    TMS320C3x            & \$77 &    TMS320C5x \\
-\$78 &    ST62xx               & \$79 &    Z8 \\
-\$7a &    $\mu$PD78(C)10       & \$7b &    75K0 \\
-\$7c &    78K0 \\  
+\$01 &    680x0, 6833x         & \$03 &    M*Core \\
+\$05 &    PowerPC              & \$09 &    DSP56xxx \\
+\$11 &    65xx/MELPS-740       & \$12 &    MELPS-4500 \\
+\$13 &    M16                  & \$14 &    M16C \\
+\$19 &    65816/MELPS-7700     & \$21 &    MCS-48 \\
+\$29 &    29xxx                & \$31 &    MCS-51 \\
+\$32 &    ST9                  & \$33 &    ST7 \\
+\$39 &    MCS-96/196/296       & \$3a &    8X30x \\
+\$3b &    AVR                  & \$3c &    XA \\
+\$41 &    8080/8085            & \$42 &    8086..V35 \\
+\$48 &    TMS9900              & \$49 &    TMS370xxx \\
+\$4a &    MSP430               & \$4c &    80C166/167 \\
+\$51 &    Z80/180/380          & \$52 &    TLCS-900 \\
+\$53 &    TLCS-90              & \$54 &    TLCS-870 \\
+\$55 &    TLCS-47              & \$56 &    TLCS-9000 \\
+\$61 &    6800, 6301 oder 6811 & \$62 &    6805/HC08 \\
+\$63 &    6809                 & \$64 &    6804 \\
+\$65 &    68HC16               & \$66 &    68HC12 \\
+\$68 &    H8/300(H)            & \$69 &    H8/500 \\
+\$6c &    SH7000               & \$6e &    SC/MP \\
+\$6f &    COP8                 & \$70 &    PIC16C8x \\
+\$71 &    PIC16C5x             & \$72 &    PIC17C4x \\
+\$73 &    TMS-7000             & \$74 &    TMS3201x \\
+\$75 &    TMS320C2x            & \$76 &    TMS320C3x \\
+\$77 &    TMS320C5x            & \$78 &    ST62xx \\
+\$79 &    Z8                   & \$7a &    $\mu$PD78(C)10 \\
+\$7b &    75K0                 & \$7c &    78K0 \\  
 \hline
 \end{tabular}\end{center}
 \caption{Header Bytes for the Different Processor
@@ -7143,9 +7562,14 @@ no further meaning.
 \label{SectDebugFormat}
 
 Debug files may optionally be generated by AS.  They deliver
-important information for tools used after assembly, like
-disassemblers or debuggers.  This information is split into three
-groups:
+important information for tools used after assembly, like   
+disassemblers or debuggers.  AS can generate debug files in one of
+two formats: On the one hand, the object format used by the AVR tools
+from Atmel, and on the other hand an own format.  The first one is   
+described in detail in [AVRObj], which is why the following
+description limits itself to the AS-specific MAP format:   
+
+The information in a MAP file is split into three groups:
 \begin{itemize}
 \item{symbol table}
 \item{memory usage per section}
@@ -7401,7 +7825,7 @@ uses the same conventions for file names.  In contrary to BIND, the
 target file is written as a Hex file, i.e. as a sequence of lines
 which represent the code as ASCII hex numbers.
 
-P2HEX knows 7 different target formats, which can be selected via the
+P2HEX knows 8 different target formats, which can be selected via the
 command line parameter \tty{F}:
 \begin{itemize}
 \item{Motorola S-Records \tty{(-F Moto)}}
@@ -7411,15 +7835,17 @@ command line parameter \tty{F}:
 \item{32-Bit Intel Hex \tty{(-F Intel32)}}
 \item{Tektronix Hex \tty{(-F Tek)}}
 \item{Texas Instruments DSK \tty{(-F DSK)}}
+\item{Atmel AVR Generic (-F Atmel, see \cite{AVRObj})}
 \end{itemize}
 If no target format is explicitly specified, P2HEX will automatically
 choose one depending in the processor type:  S-Records for Motorola
 CPUs, Hitachi, and TLCS-900, MOS for 65xx/MELPS, DSK for the 16 bit
-signal processors from Texas and Intel Hex for the rest.  Depending
-on the start addresses width, the S-Record format will use Records of
-type 1, 2, or 3, however, records in one group will always be of the
-same type.  The Intel, MOS and Tektronix formats are limited to 16
-bit addresses, the 16-bit Intel format reaches 4 bits further. 
+signal processors from Texas, Atmel Generic for the AVRs, and Intel Hex
+for the rest.  Depending on the start addresses width, the S-Record
+format will use Records of type 1, 2, or 3, however, records in one
+group will always be of the same type.  The Intel, MOS and Tektronix
+formats are limited to 16 bit addresses, the 16-bit Intel format reaches
+4 bits further. 
 Addresses that are to long for a given format will be reported by
 P2HEX with a warning; afterwards, they will be truncated (!).
 
@@ -7543,6 +7969,14 @@ change this, you may use the switch
 The allowed range of values goes from 2 to 254 data bytes; odd values
 will implicitly be rounded down to an even count.
 
+In most cases, the temporary code files generated by AS are not of
+any further need after P2HEX has been run.  The command line option
+\begin{verbatim}
+-k
+\end{verbatim}
+allows to instruct P2HEX to erase them automatically after
+conversion.
+
 In contrast to BIND, P2HEX will not produce an empty target file if
 only one file name (i.e. the target name) has been given.  Instead,
 P2HEX will use the corresponding code file.  Therefore, a minimal
@@ -7599,6 +8033,21 @@ To avoid confusions: If you use this option, the resulting binary file
 will become smaller because only a part of the source will be copied. 
 Therefore, the resulting file will be smaller by a factor of 2 or 4
 compared to \tty{ALL}.  This is just natural...
+
+In case the code file does not contain an entry address, one may set
+it via the \tty{-e} command line option just like with P2HEX.  Upon
+request, P2BIN prepends the resulting image with this address.  The
+command line option
+\begin{verbatim}
+-S 
+\end{verbatim}
+activates this function.  It expects a numeric specification ranging
+from 1 to 4 as parameter which specifies the length of the address
+field in bytes.  This number may optionally be prepended wit a \tty{L} or
+\tty{B} letter to set the endian order of the address.  For example, the
+specification \tty{B4} generates a 4 byte address in big endian order,
+while a specification of \tty{L2} or simply \tty{2} creates a 2 byte address
+in little endian order.
 
 %%---------------------------------------------------------------------------
 
@@ -7670,9 +8119,9 @@ described by:
 \newcommand{\errentry}[5]
            {\item[#1]{#2
                       \begin{description}
-                      \item[Type]{:\\#3}
-                      \item[Reason]{:\\#4}
-                      \item[Argument]{:\\#5}
+                      \item[Type:]{\ \\#3}
+                      \item[Reason:]{\ \\#4}
+                      \item[Argument:]{\ \\#5}
                       \end{description}}
            }
 
@@ -7749,7 +8198,7 @@ described by:
                {none}
 \errentry{ 100}{none of the CASE conditions was true}
                {warning}
-               {A \tty{SWITCH...CASE }directive without \tty{ELSECASE} clause was
+               {A \tty{SWITCH...CASE} directive without \tty{ELSECASE} clause was
                 executed, and none of the \tty{CASE} conditions was found
                 to be true.}
                {none}
@@ -7819,11 +8268,52 @@ described by:
                {the register probably causing the problem.}
 \errentry{ 210}{multiple use of address register in one instruction}
                {warning}
-               {An register used for the addressing is used once more in the
+               {A register used for the addressing is used once more in the
                 same instruction, in a way that results in a modification
                 of the register value. The resulting address does not have a
                 well defined value.}
                {the register used more than once.}
+\errentry{ 220}{memory location is not bit addressable}
+               {warning}
+               {Via a \tty{SFRB} statement, it was tried to declare a memory cell
+                as bit addressable which is not bit addressable due to the
+                8051's architectural limits.}
+               {none}
+\errentry{ 230}{stack is not empty}
+               {warning}
+               {At the end of a pass, a stack defined by the program is
+                not empty.}
+               {the name of the stack and its remaining depth}
+\errentry{ 240}{NUL character in string, result is undefined}
+               {warning}
+               {A string constant contains a NUL character. Though this
+                works with the Pascal version, it is a problem for the 
+                C version of AS since C itself terminates strings with
+                a NUL character. i.e. the string would have its end for
+                C just at this point...}
+               {none}
+\errentry{ 250}{instruction crosses page boundary}
+               {warning}
+               {The parts of a machine statement partiallly lie on
+                different pages.  As the CPU's instruction counter does
+                not get incremented across page boundaries, the processor
+                would fetch at runtime the first byte of the old page
+                instead of the instruction's following byte; the program
+                would execute incorrectly.}
+               {none}
+\errentry{ 260}{range overflow}
+               {warning}
+               {A numeric value was out of the allowed range.  AS brought
+                the value back into the allowed range by truncating upper
+                bits, but it is not guaranteed that meaningful and correct
+                code is generated by this.}
+               {none}
+\errentry{ 270}{negative argument for DUP}
+               {warning}
+               {The repetition argument of a DUP directive was smaller
+                than 0.  Analogous to a count of exactly 0, no data is
+                stored.}
+               {none}
 \errentry{1000}{symbol double defined}
                {error}
                {A new value is assigned to a symbol, using a label or a
@@ -8101,6 +8591,43 @@ described by:
                {This pseudo command accepts as argument either \tty{ON} or
                 \tty{OFF}}
                {none}
+\errentry{1530}{stack is empty or undefined}
+               {error}
+               {It was tried to access a stack via a \tty{POPV} instruction
+                that was either never defined or already emptied.}
+               {the name of the stack in question}
+\errentry{1540}{not exactly one bit set}
+               {error}
+               {Not exactly one bit was set in a mask passed to the
+                \tty{BITPOS} function.}
+               {none}
+\errentry{1550}{ENDSTRUCT without STRUCT}
+               {error}
+               {An \tty{ENDSTRUCT} instruction was found though there is
+                currently no structure definition in progress.}
+               {none}
+\errentry{1551}{open structure definition}
+               {error}
+               {After end of assembly, not all \tty{STRUCT} instructions
+                have been closed with appropriate \tty{ENDSTRUCT}s.}
+               {the innermost, unfinished structure definition}
+\errentry{1552}{wrong ENDSTRUCT}
+               {error}
+               {the name parameter of an \tty{ENDSTRUCT} instruction does
+                not correspond to the innermost open structure
+                definition.}
+               {none}
+\errentry{1553}{phase definition not allowed in structure definition}
+               {error}
+               {What should I say about that?  \tty{PHASE} inside a record
+                simply does not make sense and only leads to
+                confusion...}
+               {none}
+\errentry{1554}{invalid \tty{STRUCT} directive}
+               {error}
+               {Only \tty{EXTNAMES} resp. \tty{NOEXTNAMES} are allowed as
+                directives of a \tty{STRUCT} statement.}
+               {the unknown directive}
 \errentry{1600}{unexpected end of file}
                {error}
                {It was tried to read past the end of a file with a 
@@ -8228,11 +8755,11 @@ described by:
                {Instructions that reserve memory, and instructions that define
                 constants cannot be mixed in a single pseudo instruction.}
                {none}
-\errentry{1940}{code may only be generated in code segment}
+\errentry{1940}{code must not be generated in structure definition}
                {error}
-               {Segments not used for code can be used only for reserving
-                memory. Inside them neither code nor data can be stored.
-                (not used anymore)}
+               {a \tty{STRUCT} construct is only designed to describe a
+                data structure and not to create one; therefore, no
+                instructions are allowed that generate code.}
                {none}
 \errentry{1950}{parallel construct not possible here}
                {error}
@@ -8517,18 +9044,19 @@ additionally available for a certain processor family.
 \subsubsection{Instructions that are always available}
 {\tt\begin{tabbing}   
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
-=         \> :=         \> ALIGN     \> BINCLUDE   \> CASE \\
-CHARSET   \> CPU        \> DEPHASE   \> ELSECASE   \> ELSEIF \\
-END       \> ENDCASE    \> ENDIF     \> ENDM       \> ENDSECTION \\
-ENUM      \> ERROR      \> EQU       \> EXITM      \> FATAL \\
-FORWARD   \> FUNCTION   \> GLOBAL    \> IF         \> IFB \\
-IFDEF     \> IFEXIST    \> IFNB      \> IFNDEF     \> IFNEXIST \\
-IFNUSED   \> IFUSED     \> INCLUDE   \> IRP        \> LABEL \\
-LISTING   \> MACEXP     \> MACRO     \> MESSAGE    \> NEWPAGE \\
-ORG       \> PAGE       \> PHASE     \> POPV       \> PUSHV \\
-PRTEXIT   \> PRTINIT    \> PUBLIC    \> READ       \> RELAXED \\
-REPT      \> RESTORE    \> SAVE      \> SECTION    \> SEGMENT \\
-SHARED    \> SWITCH     \> TITLE     \> WARNING    \> WHILE \\
+=          \> :=          \> ALIGN       \> BINCLUDE    \> CASE \\
+CHARSET    \> CPU         \> DEPHASE     \> ELSECASE    \> ELSEIF \\
+END        \> ENDCASE     \> ENDIF       \> ENDM        \> ENDSECTION \\
+ENDSTRUCT  \> ENUM        \> ERROR       \> EQU         \> EXITM \\
+FATAL      \> FORWARD     \> FUNCTION    \> GLOBAL      \> IF \\
+IFB        \> IFDEF       \> IFEXIST     \> IFNB        \> IFNDEF \\
+IFNEXIST   \> IFNUSED     \> IFUSED      \> INCLUDE     \> IRP \\
+LABEL      \> LISTING     \> MACEXP      \> MACRO       \> MESSAGE \\
+NEWPAGE    \> ORG         \> PAGE        \> PHASE       \> POPV \\
+PUSHV      \> PRTEXIT     \> PRTINIT     \> PUBLIC      \> READ \\
+RELAXED    \> REPT        \> RESTORE     \> SAVE        \> SECTION \\
+SEGMENT    \> SHARED      \> STRUCT      \> SWITCH      \> TITLE \\
+WARNING    \> WHILE \\ 
 \end{tabbing}}
 There is an additional \tty{SET} resp. \tty{EVAL} instruction (in case
 \tty{SET} is already a machine instruction).
@@ -8540,7 +9068,7 @@ DC[.$<$size$>$]\> DS[.$<$size$>$] \> FULLPMMU    \> FPU         \> PADDING \\
 PMMU       \> SUPMODE \\
 \end{tabbing}}
 
-\subsubsection{Motorola 56000}
+\subsubsection{Motorola 56xxx}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
 DC         \> DS          \> XSFR        \> YSFR \\
@@ -8551,6 +9079,12 @@ DC         \> DS          \> XSFR        \> YSFR \\
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
 BIGENDIAN  \> DB          \> DD          \> DQ          \> DS \\
 DT         \> DW          \> SUPMODE \\
+\end{tabbing}}
+
+\subsubsection{Motorola M*Core}
+{\tt\begin{tabbing}
+\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
+DC[.$<$size$>$] \> DS[.$<$size$>$] \> REG \> SUPMODE \\                      
 \end{tabbing}}
 
 \subsubsection{Motorola 68xx/Hitachi 6309}
@@ -8896,6 +9430,10 @@ DW \\
 name          & data type & definition & meaning \\
 \hline
 \hline
+ARCHITECTURE  & string    & predef.    & target platform AS was \\
+              &           &            & compiled for, in the style \\
+              &           &            & processor-manufacturer- \\
+              &           &            & operating system \\
 BIGENDIAN     & boolean   & dyn.(0)    & storage of constants MSB \\
               &           &            & first ? \\
 CASESENSITIVE & boolean   & normal     & case sensitivity in symbol \\
@@ -9002,6 +9540,82 @@ pass leads to a phase error and an infinite loop...
 %%===========================================================================
 
 \cleardoublepage
+\chapter{Shipped Include Files}
+
+The distribution of AS contains a couple of include files.  Apart from
+include files that only refer to a specific processor family (and whose
+function should be immediately clear to someone who works with this
+family), there are a few processor-independent files which include useful
+functions.  The functions defined in these files shall be explained
+briefly in the following sections:
+
+\section{BITFUNCS.INC}
+
+This file defines a couple of bit-oriented functions that might be
+hardwired for other assemblers.  In the case of AS however, thaey are
+implemented with the help of user-defined functions:
+
+\begin{itemize}
+\item{{\em mask(start,bits)} returns an integer with {\em bits} bits set
+      starting at position {\em start};}
+\item{{\em invmask(start,bits)} returns one's complement to {\em
+      mask()};}
+\item{{\em cutout(x,start,bits)} returns {\em bits} bits masked out from
+      {\em x} starting at position {\em start} without shifting them to 
+      position 0;}
+\item{{\em hi(x)} returns the second lowest byte (bits 8..15) of {\em
+      x};}
+\item{{\em lo(x)} returns the lowest byte (bits 8..15) of {\em x};}
+\item{{\em hiword(x)} returns the second lowest word (bits 16..31) of
+      {\em x};}
+\item{{\em loword(x)} returns the lowest word (bits 0..15) of {\em x};}
+\item{{\em odd(x)} returns TRUE if {\em x} is odd;}
+\item{{\em even(x)} returns TRUE if {\em x} is even;}
+\item{{\em getbit(x,n)} extracts bit {\em n} out of {\em x} and returns
+      it as 0 or 1;}
+\item{{\em shln(x,size,n)} shifts a word {\em x} of length {\em size} to
+      the left by {\em n} places;}
+\item{{\em shrn(x,size,n)} shifts a word {\em x} of length {\em size} to
+      the right by {\em n} places;}
+\item{{\em rotln(x,size,n)} rotates the lowest {\em size} bits of an
+      integer {\em x} to the left by {\em n} places;}
+\item{{\em rotrn(x,size,n)} rotates the lowest {\em size} bits of an
+      integer {\em x} to the right by {\em n} places;}
+\end{itemize}
+
+\section{CTYPE.INC}
+
+This include file is similar to the C include file {\tt ctype.h} which
+offers functions to classify characters.  All functions deliver either
+TRUE or FALSE:
+
+\begin{itemize}
+\item{{\em isdigit(ch)} becomes TRUE if {\em ch} is a valid decimal
+      digit (0..9);}
+\item{{\em isxdigit(ch)} becomes TRUE if {\em ch} is a valid hexadecimal
+      digit (0..9, A..F, a..f);}
+\item{{\em isupper(ch)} becomes TRUE if {\em ch} is an uppercase
+      letter, excluding special national characters);}
+\item{{\em islower(ch)} becomes TRUE if {\em ch} is a lowercase
+      letter, excluding special national characters);}
+\item{{\em isalpha(ch)} becomes TRUE if {\em ch} is a letter, excluding
+      special national characters);}
+\item{{\em isalnum(ch)} becomes TRUE if {\em ch} is either a letter or
+      a valid decimal digit;}
+\item{{\em isspace(ch)} becomes TRUE if {\em ch} is an 'empty' character
+      (space, form feed, line feed, carriage return, tabulator);}
+\item{{\em isprint(ch)} becomes TRUE if {\em ch} is a printable character,
+      i.e. no control character up to code 31;}
+\item{{\em iscntrl(ch)} is the opposite to {\em isprint()};}
+\item{{\em isgraph(ch)} becomes TRUE if {\em ch} is a printable and
+      visible character;}
+\item{{\em ispunct(ch)} becomes TRUE if {\em ch} is a printable special
+      character (i.e. neither space nor letter nor number);}
+\end{itemize}
+
+%%===========================================================================
+
+\cleardoublepage
 \chapter{Acknowledgments}
 
 \begin{quote}\it
@@ -9045,10 +9659,11 @@ documentation.  I received information from an enormous amount of
 people, ranging from tips up to complete data books.  An enumeration
 follows (as stated before, without guarantee for completelessness!):
 
-Ernst Ahlers, Charles Altmann, Bernd Casimir, Gunther Ewald,
-Stephan Hruschka, Peter Kliegelh\"ofer, Ulf Meinke, Matthias Paul,
-Norbert Rosch, Steffen Schmid, Leonhard Schneider, Oliver Sellke,   
-Christian Stelter, Oliver Thamm, Thorsten Thiele.
+Ernst Ahlers, Charles Altmann, Rolf Buchholz, Bernd Casimir,
+Gunther Ewald, Stephan Hruschka, Peter Kliegelh\"ofer, Ulf Meinke,
+Matthias Paul, Norbert Rosch, Steffen Schmid, Leonhard Schneider,
+Michael Schwingen, Oliver Sellke, Christian Stelter, Oliver Thamm,
+Thorsten Thiele.
 
 ...and an ironic ''thank you'' to Rolf-Dieter-Klein and Tobias Thiel who
 demonstrated with their ASM68K how one should \bb{not} do it and thereby
@@ -9504,6 +10119,36 @@ Either that was a long nightshift or I am slowly getting old...
             be set explicitly via prefixes (r6);}
       \item{additionally supports the 8X30x family from Signetics
             (r6);}
+      \item{from now on, \tty{PADDING} is enabled by default only
+            for the 680x0 family (r7);}
+      \item{the new predefined symbol \tty{ARCHITECTURE} can now be
+            used to query the platform AS was compiled for (r7);}
+      \item{additional statements \tty{STRUCT} and \tty{ENDSTRUCT}
+            to define data structures (r7);}
+      \item{hex and object files for the AVR tools may now be generated
+            directly (r7);}
+      \item{\tty{MOVEC} now also knows the 68040's control registers
+            (r7);}
+      \item{additional \tty{STRLEN} function to calculate the length
+            of a string (r7);}
+      \item{additional ability to define register symbols (r7 currently
+            only Atmel AVR);}
+      \item{additionally knows the 6502's undocumented instructions (r7);}
+      \item{P2HEX and P2BIN now optionally can erase the input files
+            automatically (r7);}
+      \item{P2BIN can additionally prepend the entry address to the
+            resulting image (r7);}
+      \item{additionally supports the ColdFire family from Motorola as a
+            variation of the 680x0 core (r7);}
+      \item{\tty{BYT/FCB, ADR/FDB}, and \tty{FCC} now also allow the
+            repetition factor known from DC (r7);}
+      \item{additionally supports Motorola's M*Core (r7);}
+      \item{the SH7000 part now also knows the SH7700's
+            extensions (r7);}
+      \item{the 680x0 part now also knows the 68040's additional
+            instructions (r7);}
+      \item{the 56K part now also knows the instruction set extensions
+            up to the 56300 (r7).}
       \end{itemize}}
 \end{itemize}
 
@@ -10104,6 +10749,11 @@ translate as to another language.
                 {\em AVR Enhanced RISC Microcontroller Data Book.\/}
                 May 1996
 
+\bibitem{AVRObj} Atmel Corp.:
+                 {\em 8-Bit AVR Assembler and Simulator Object File
+                  Formats (Preliminary).\/}
+                 (part of the AVR tools documentation)
+
 \bibitem{CMD816} CMD Microcircuits: \\
                 {\em G65SC802/G65SC816 CMOS 8/16-Bit Microprocessor.\/}
 		Family Data Sheet.
@@ -10136,7 +10786,11 @@ translate as to another language.
 \bibitem{SH7000} Hitachi Semiconductor Design \& Development Center: \\
                  {\em SH Microcomputer Hardware Manual (Preliminary).\/}
 
-\bibitem{HitH8_5} Hitachi Semiconductor and IC Div: \\
+\bibitem{SH7700} Hitachi Semiconductor and IC Div.:
+                 {\em SH7700 Series Programming Manual.\/}
+                 1st Edition, September 1995
+
+\bibitem{HitH8_5} Hitachi Semiconductor and IC Div.: \\
                   {\em H8/500 Series Programming Manual.\/}
         	  (21-20, 1st Edition Feb. 1989)
 
@@ -10242,6 +10896,11 @@ translate as to another language.
                 {\em CPU16 Reference Manual.\/}
                 Rev. 1, 1991
 
+\bibitem{Mot68K} Motorola Inc.:
+                 {\em Motorola M68000 Family Programmer's
+                  Reference Manual.\/}
+                 1992
+
 \bibitem{Mot332} Motorola Inc.: \\
                  {\em MC68332 Technical Summary.\/}
                  Rev. 2, 1993
@@ -10262,8 +10921,22 @@ translate as to another language.
                 {\em CPU08 Reference Manual.\/}
                 Rev. 1 (no year of release given im PDF-File)
 
-\bibitem{Mot360} Motorola Inc: \\
+\bibitem{Mot360} Motorola Inc.: \\
                  {\em MC68360 User's Manual.\/}
+
+\bibitem{MotCold} Motorola Inc.:
+                  {\em MCF 5200 ColdFire Family Programmer's Reference
+                   Manual.\/} 
+                  1995
+
+\bibitem{MotMCore} Motorola Inc.:
+                   {\em M*Core Programmer's Reference Manual.\/}
+                   1997
+
+\bibitem{Mot56300} Motorola Inc.:
+                   {\em DSP56300 24-Bit Digital Signal Processor
+                    Family Manual.\/}
+                   Rev. 0 (no year of release given im PDF-File)
 
 \bibitem{SCMP} National Semiconductor: \\
                {\em SC/MP Program\-mier- und As\-sem\-bler-Hand\-buch.\/}
@@ -10349,6 +11022,11 @@ translate as to another language.
                  {\em Programmierung des 68000.\/}
                  Sybex-Verlag D\"usseldorf, 1985
 
+\bibitem{Ti990}  Texas Instruments: \\
+                 {\em Model 990 Computer/TMS9900 Microprocessor
+                      Assembly Language Programmer's Guide.\/} \\
+                 1977, Manual No. 943441-9701
+
 \bibitem{Ti9900} Texas Instruments: \\
                  {\em TMS9995 16-Bit Microcomputer.\/}
                  Preliminary Data Manual
@@ -10385,6 +11063,11 @@ translate as to another language.
 \bibitem{Ti430FamArch} Texas Instruments: \\
                        {\em MSP430 Family Architecture User's Guide.\/}
                        1995, SLAUE10A
+
+\bibitem{TiC60} Texas Instruments: 
+                {\em TMS320C62xx CPU and Instruction Set Reference
+                 Manual.\/}
+                Jan. 1997, SPRU189A
 
 \bibitem{Tosh90} Toshiba Corp.: \\
                  {\em 8-Bit Microcontroller TLCS-90 Development System Manual.\/}

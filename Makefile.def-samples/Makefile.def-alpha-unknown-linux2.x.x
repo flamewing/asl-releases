@@ -4,7 +4,7 @@
 
 CC = gcc
 LD = gcc
-CFLAGS = -O3 -fomit-frame-pointer -D__USE_GNU -Wall 
+CFLAGS = -O3 -fomit-frame-pointer -Wall 
 LDFLAGS =
 
 # -------------------------------------------------------------------------
@@ -14,11 +14,8 @@ LDFLAGS =
 BINDIR = /usr/local/bin
 INCDIR = /usr/local/include/asl
 MANDIR = /usr/local/man
-
-# -------------------------------------------------------------------------
-# language AS will speak to you
-
-LANGRSC = lang_DE
+LIBDIR = /usr/local/lib/asl
+DOCDIR = /usr/local/doc/asl
 
 # -------------------------------------------------------------------------
 # character encoding to use (choose one of them)

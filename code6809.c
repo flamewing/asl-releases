@@ -13,7 +13,7 @@
 #include <string.h>
 
 #include "nls.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "bpemu.h"
 
 #include "asmdef.h"
@@ -786,7 +786,7 @@ BEGIN
    static char *RegNames[RegCnt]={"D","X","Y","U","S","SP","PC","W","V","A","B","CCR","DPR","CC","DP","Z","E","F"};
    static Byte RegVals[RegCnt]  ={0  ,1  ,2  ,3  ,4  ,4   ,5   ,6  ,7  ,8  ,9  ,10   ,11   ,10  ,11  ,13 ,14 ,15 };
 
-   Integer z;
+   int z;
    String Asc_N;
 
    strmaxcpy(Asc_N,Asc,255); NLS_UpString(Asc_N); Asc=Asc_N;
@@ -816,7 +816,7 @@ static ASSUMERec ASSUME09s[ASSUME09Count]=
    return False;
 END
 
-	static void SplitPM(char *s, Integer *Erg)
+	static void SplitPM(char *s, int *Erg)
 BEGIN
    int l=strlen(s);
 
@@ -832,7 +832,7 @@ BEGIN
    else *Erg=0;
 END
 
-	static Boolean SplitBit(char *Asc, Integer *Erg)
+	static Boolean SplitBit(char *Asc, int *Erg)
 BEGIN
    char *p;
    Boolean OK;
@@ -851,7 +851,8 @@ END
 	static void MakeCode_6809(void)
 BEGIN
    char *p;
-   Integer z,z2,z3,AdrInt;
+   int z,z2,z3;
+   Integer AdrInt;
    Boolean LongFlag,OK,Extent;
 
    CodeLen=0; DontPrint=False; OpSize=0; ExtFlag=False;

@@ -1,10 +1,34 @@
+all: as.doc as.html as.ps
+
 as.ps: as.dvi
 	dvips as -o
 
 as.dvi: as.tex
 	latex as
+	latex as
 	makeindex as
 	latex as
 
+as.doc: as.tex $(TEX2DOC)
+	$(TEX2DOC) as.tex as.doc
+	$(TEX2DOC) as.tex as.doc
+
+as.html: as.tex $(TEX2HTML)
+	$(TEX2HTML) as.tex as.html
+	$(TEX2HTML) as.tex as.html
+
 clean:
-	rm -f as.dvi as.ps as.i* *log as.aux as.toc *~
+	$(RM) as.dvi
+	$(RM) as.ps
+	$(RM) as.i*
+	$(RM) *log
+	$(RM) as.aux
+	$(RM) as.toc
+	$(RM) *~
+	$(RM) DEADJOE
+	$(RM) as.doc
+	$(RM) as.dtoc
+	$(RM) as.daux
+	$(RM) as.html
+	$(RM) as.htoc
+	$(RM) as.haux

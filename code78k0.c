@@ -13,7 +13,7 @@
 #include <ctype.h>
 
 #include "bpemu.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
@@ -182,7 +182,7 @@ BEGIN
    static char *RegNames[8]={"X","A","C","B","E","D","L","H"};
 
    Word AdrWord;
-   Integer z;
+   int z;
    Boolean OK,LongFlag;
 
    AdrMode=ModNone; AdrCnt=0;
@@ -371,7 +371,7 @@ END
 
         static void MakeCode_78K0(void)
 BEGIN
-   Integer z;
+   int z;
    Byte HReg;
    Word AdrWord;
    Integer AdrInt;

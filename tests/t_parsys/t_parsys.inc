@@ -1,4 +1,4 @@
-(* t_parsys.asm-Includefile für CONST-Sektion *)
+(* tests/t_parsys/t_parsys.asm-Includefile für CONST-Sektion *)
 S_RegSave = $608;
 S_MemEnd = $400;
 S_ParNo = $408;

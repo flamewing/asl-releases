@@ -203,7 +203,7 @@ END
 
         static void MakeCode_4500(void)
 BEGIN
-   Integer z;
+   int z;
    Word AdrWord;
    Boolean OK;
 

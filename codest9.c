@@ -13,7 +13,7 @@
 #include <string.h>
 
 #include "bpemu.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
@@ -266,7 +266,7 @@ END
 	static void DecodeAdr(char *Asc_O, LongWord Mask)
 BEGIN
    Word AdrWord;
-   Integer level;
+   int level;
    Byte flg,Size;
    Boolean OK;
    String Reg,Asc;
@@ -568,7 +568,8 @@ END
 
         static void MakeCode_ST9(void)
 BEGIN
-   Integer z,AdrInt;
+   Integer AdrInt;
+   int z;
    Boolean OK;
    Byte HReg,HPart;
    Word Mask1,Mask2,AdrWord;
@@ -772,7 +773,7 @@ BEGIN
             case ModImm:
              BAsmCode[0]=0xf5-(OpSize*0x36);
              BAsmCode[1]=HReg;
-             memcpy(BAsmCode+2,AdrVals,BAsmCode[2]); CodeLen=2+AdrCnt;
+             memcpy(BAsmCode+2,AdrVals,2); CodeLen=2+AdrCnt;
              break;
            END
           break;

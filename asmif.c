@@ -10,11 +10,11 @@
 
 #include "stdinc.h"
 #include <string.h>
+#include <ctype.h>
 
 #include "bpemu.h"
 #include "chunks.h"
-#include "stringutil.h"
-#include "decodecmd.h"
+#include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
@@ -163,7 +163,7 @@ END
 BEGIN
    Boolean Blank=True;
    LongInt IfExpr;
-   Integer z;
+   int z;
    
    ActiveIF=IfAsm;
 
@@ -271,7 +271,7 @@ END
 	static void CodeCASE(void)
 BEGIN
    Boolean eq;
-   Integer z;
+   int z;
    TempResult t;
 
    if (FirstIfSave==Nil) WrError(1840);
@@ -359,18 +359,34 @@ BEGIN
 
    ActiveIF=False;
 
-   if (Memo("IF")) CodeIF();
-   else if ((Memo("IFDEF")) OR (Memo("IFNDEF"))) CodeIFDEF();
-   else if ((Memo("IFUSED")) OR (Memo("IFNUSED"))) CodeIFUSED();
-   else if ((Memo("IFEXIST")) OR (Memo("IFNEXIST"))) CodeIFEXIST();
-   else if ((Memo("IFB")) OR (Memo("IFNB"))) CodeIFB();
-   else if (Memo("ELSEIF")) CodeELSEIF();
-   else if (Memo("ENDIF")) CodeENDIF();
-   else if (Memo("SWITCH")) CodeSWITCH();
-   else if (Memo("CASE")) CodeCASE();
-   else if (Memo("ELSECASE")) CodeELSECASE();
-   else if (Memo("ENDCASE")) CodeENDCASE();
-   else Result=False;
+   switch (toupper(*OpPart))
+    BEGIN
+     case 'I':
+      if (Memo("IF")) CodeIF();
+      else if ((Memo("IFDEF")) OR (Memo("IFNDEF"))) CodeIFDEF();
+      else if ((Memo("IFUSED")) OR (Memo("IFNUSED"))) CodeIFUSED();
+      else if ((Memo("IFEXIST")) OR (Memo("IFNEXIST"))) CodeIFEXIST();
+      else if ((Memo("IFB")) OR (Memo("IFNB"))) CodeIFB();
+      else Result=False;
+      break;
+     case 'E':
+      if (Memo("ELSEIF")) CodeELSEIF();
+      else if (Memo("ENDIF")) CodeENDIF();
+      else if (Memo("ELSECASE")) CodeELSECASE();
+      else if (Memo("ENDCASE")) CodeENDCASE();
+      else Result=False;
+      break;
+     case 'S':
+      if (Memo("SWITCH")) CodeSWITCH();
+      else Result=False;
+      break;
+     case 'C':
+      if (Memo("CASE")) CodeCASE();
+      else Result=False;
+      break;
+     default:
+      Result=False;
+    END
 
    return Result;
 END

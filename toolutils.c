@@ -5,33 +5,38 @@
 /* Unterroutinen fuer die AS-Tools                                           */
 /*                                                                           */
 /* Historie: 31. 5.1996 Grundsteinlegung                                     */
+/*           27.10.1997 Routinen aus P2... heruebergenommen                  */
 /*                                                                           */
 /*****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
 
-#include "stringutil.h"
-#include "decodecmd.h"
+#include "strutil.h"
+#include "cmdarg.h"
 #include "stdhandl.h"
-#include "ioerrors.h"
+#include "ioerrs.h"
+
+#include "nls.h"
+#include "nlmessages.h"
+#include "tools.rsc"
 
 #include "toolutils.h"
 
-LongWord Magic=0x1b342b4d;
-
-#include "tools.rsc"
+LongWord Magic=0x1b34244d;
 
 /****************************************************************************/
 
 static Boolean DoFilter;
-static Integer FilterCnt;
+static int FilterCnt;
 static Byte FilterBytes[100];
 
-static char *InfoMessCopyright="(C) 1992,1997 Alfred Arnold";
+static char *InfoMessCopyright="(C) 1992,1998 Alfred Arnold";
 
 Word FileID=0x1489;       /* Dateiheader Eingabedateien */
 char *OutName="STDOUT";   /* Pseudoname Output */
+
+static TMsgCat MsgCat;
 
 /****************************************************************************/
 
@@ -63,8 +68,9 @@ END
 
 	void FormatError(char *Name, char *Detail)
 BEGIN
-   fprintf(stderr,"%s%s%s (%s)\n",FormatErr1aMsg,Name,FormatErr1bMsg,Detail);
-   fprintf(stderr,"%s\n",FormatErr2Msg);
+   fprintf(stderr,"%s%s%s (%s)\n",catgetmessage(&MsgCat,Num_FormatErr1aMsg),
+                                  Name,catgetmessage(&MsgCat,Num_FormatErr1bMsg),Detail);
+   fprintf(stderr,"%s\n",catgetmessage(&MsgCat,Num_FormatErr2Msg));
    exit(3);
 END
 
@@ -76,11 +82,11 @@ BEGIN
 
    if (io==0) return;
 
-   fprintf(stderr,"%s%s%s\n",IOErrAHeaderMsg,Name,IOErrBHeaderMsg);
+   fprintf(stderr,"%s%s%s\n",catgetmessage(&MsgCat,Num_IOErrAHeaderMsg),Name,catgetmessage(&MsgCat,Num_IOErrBHeaderMsg));
 
    fprintf(stderr,"%s.\n",GetErrorMsg(io));
 
-   fprintf(stderr,"%s\n",ErrMsgTerminating);
+   fprintf(stderr,"%s\n",catgetmessage(&MsgCat,Num_ErrMsgTerminating));
 
    exit(2);
 END
@@ -152,7 +158,7 @@ BEGIN
    Byte FTemp;
    Boolean err;
    char *p;
-   Integer Search;
+   int Search;
    String Copy;
 
    if (*Arg=='\0') return CMDErr;
@@ -184,7 +190,7 @@ END
 
 	Boolean FilterOK(Byte Header)
 BEGIN
-   Integer z;
+   int z;
 
    if (DoFilter)
     BEGIN
@@ -197,7 +203,7 @@ END
 
         Boolean RemoveOffset(char *Name, LongWord *Offset)
 BEGIN
-   Integer z,Nest;
+   int z,Nest;
    Boolean err;
 
    *Offset=0;
@@ -225,10 +231,19 @@ BEGIN
    else return True;
 END
 
-	void toolutils_init(void)
+	void EraseFile(char *FileName, LongWord Offset)
+BEGIN
+   if (Offset==0); /* satisfy some compilers */
+   
+   if (unlink(FileName)==-1) ChkIO(FileName);
+END
+
+	void toolutils_init(char *ProgPath)
 BEGIN
    Word z;
    LongWord XORVal;
+
+   opencatalog(&MsgCat,"tools.msg",ProgPath,MsgId1,MsgId2);
 
    FilterCnt=0; DoFilter=False;
    for (z=0; z<strlen(InfoMessCopyright); z++)
@@ -238,3 +253,32 @@ BEGIN
      Magic=Magic^XORVal;
     END
 END
+
+#ifdef CKMALLOC
+#undef malloc
+#undef realloc
+
+        void *ckmalloc(size_t s)
+BEGIN
+   void *tmp=malloc(s);
+   if (tmp==NULL) 
+    BEGIN
+     fprintf(stderr,"allocation error(malloc): out of memory");
+     exit(255);
+    END
+   return tmp;
+END
+
+        void *ckrealloc(void *p, size_t s)
+BEGIN
+   void *tmp=realloc(p,s);
+   if (tmp==NULL)
+    BEGIN
+     fprintf(stderr,"allocation error(realloc): out of memory");
+     exit(255);
+    END
+   return tmp;
+END
+#endif
+
+

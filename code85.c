@@ -14,7 +14,7 @@
 
 #include "nls.h"
 #include "bpemu.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
@@ -177,7 +177,7 @@ BEGIN
    Boolean OK;
    Word AdrWord;
    Byte AdrByte;
-   Integer z;
+   int z;
 
    CodeLen=0; DontPrint=False;
 

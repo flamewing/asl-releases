@@ -13,7 +13,7 @@
 #include <ctype.h>
 
 #include "nls.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "stringlists.h"
 #include "asmdef.h"
 #include "asmsub.h"
@@ -240,7 +240,7 @@ END
 BEGIN
    Boolean OK;
    Word AdrWord;
-   Integer z;
+   int z;
 
    CodeLen=0; DontPrint=False;
 

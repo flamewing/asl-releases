@@ -99,7 +99,7 @@ char **argv;
          p=lines[z]; while (isspace(*p)) p++; strcat(orig,p);
          if (z!=BufferFill-2) strcat(orig," ");
         }
-       
+
        /* cut function name+prefixes: parameter list starts at first '(' */
 
        p=strchr(orig,'('); *p='\0';

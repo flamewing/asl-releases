@@ -13,7 +13,7 @@
 #include <string.h>
 
 #include "bpemu.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
@@ -244,7 +244,7 @@ END
 BEGIN
    Boolean OK;
    Word AdrWord;
-   Integer z;
+   int z;
    Byte HReg;
 
    CodeLen=0; DontPrint=False; OpSize=(-1);

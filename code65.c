@@ -13,7 +13,7 @@
 #include <ctype.h>
 
 #include "bpemu.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "asmdef.h"
 #include "asmpars.h"
 #include "asmsub.h"
@@ -57,8 +57,8 @@ typedef struct
 	  Byte Code;
 	 } CondOrder;
 
-#define FixedOrderCount 35
-#define NormOrderCount 31
+#define FixedOrderCount 37
+#define NormOrderCount 51
 #define CondOrderCount 9
 
 
@@ -69,7 +69,7 @@ static NormOrder *NormOrders;
 static CondOrder *CondOrders;
 
 static SimpProc SaveInitProc;
-static CPUVar CPU6502,CPU65SC02,CPU65C02,CPUM740;
+static CPUVar CPU6502,CPU65SC02,CPU65C02,CPUM740,CPU6502U;
 static LongInt SpecPage;
 
 static ShortInt ErgMode;
@@ -121,73 +121,94 @@ BEGIN
    Boolean Is740=(MomCPU==CPUM740);
 
    FixedOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*FixedOrderCount); InstrZ=0;
-   AddFixed("RTS", 15, 0x60);  AddFixed("RTI", 15, 0x40);
-   AddFixed("TAX", 15, 0xaa);  AddFixed("TXA", 15, 0x8a);
-   AddFixed("TAY", 15, 0xa8);  AddFixed("TYA", 15, 0x98);
-   AddFixed("TXS", 15, 0x9a);  AddFixed("TSX", 15, 0xba);
-   AddFixed("DEX", 15, 0xca);  AddFixed("DEY", 15, 0x88);
-   AddFixed("INX", 15, 0xe8);  AddFixed("INY", 15, 0xc8);
-   AddFixed("PHA", 15, 0x48);  AddFixed("PLA", 15, 0x68);
-   AddFixed("PHP", 15, 0x08);  AddFixed("PLP", 15, 0x28);
+   AddFixed("RTS", 31, 0x60);  AddFixed("RTI", 31, 0x40);
+   AddFixed("TAX", 31, 0xaa);  AddFixed("TXA", 31, 0x8a);
+   AddFixed("TAY", 31, 0xa8);  AddFixed("TYA", 31, 0x98);
+   AddFixed("TXS", 31, 0x9a);  AddFixed("TSX", 31, 0xba);
+   AddFixed("DEX", 31, 0xca);  AddFixed("DEY", 31, 0x88);
+   AddFixed("INX", 31, 0xe8);  AddFixed("INY", 31, 0xc8);
+   AddFixed("PHA", 31, 0x48);  AddFixed("PLA", 31, 0x68);
+   AddFixed("PHP", 31, 0x08);  AddFixed("PLP", 31, 0x28);
    AddFixed("PHX",  6, 0xda);  AddFixed("PLX",  6, 0xfa);
    AddFixed("PHY",  6, 0x5a);  AddFixed("PLY",  6, 0x7a);
-   AddFixed("BRK", 15, 0x00);  AddFixed("STP",  8, 0x42);
+   AddFixed("BRK", 31, 0x00);  AddFixed("STP",  8, 0x42);
    AddFixed("SLW",  8, 0xc2);  AddFixed("FST",  8, 0xe2);
-   AddFixed("WIT",  8, 0xc2);  AddFixed("NOP", 15, 0xea);
-   AddFixed("CLI", 15, 0x58);  AddFixed("SEI", 15, 0x78);
-   AddFixed("CLC", 15, 0x18);  AddFixed("SEC", 15, 0x38);
-   AddFixed("CLD", 15, 0xd8);  AddFixed("SED", 15, 0xf8);
-   AddFixed("CLV", 15, 0xb8);  AddFixed("CLT",  8, 0x12);
-   AddFixed("SET",  8, 0x32);
+   AddFixed("WIT",  8, 0xc2);  AddFixed("CLI", 31, 0x58);
+   AddFixed("SEI", 31, 0x78);  AddFixed("CLC", 31, 0x18);
+   AddFixed("SEC", 31, 0x38);  AddFixed("CLD", 31, 0xd8);
+   AddFixed("SED", 31, 0xf8);  AddFixed("CLV", 31, 0xb8);
+   AddFixed("CLT",  8, 0x12);  AddFixed("SET",  8, 0x32);
+   AddFixed("JAM", 16, 0x02);  AddFixed("CRS", 16, 0x02);
+   AddFixed("KIL", 16, 0x02);
+
 
    NormOrders=(NormOrder *) malloc(sizeof(NormOrder)*NormOrderCount); InstrZ=0;
 	       /*    ZA      A    ZIX     IX    ZIY     IY     @X     @Y  (n16)    imm    ACC    NON   (n8)   spec */
-   AddNorm("LDA",0x0fa5,0x0fad,0x0fb5,0x0fbd,    -1,0x0fb9,0x0fa1,0x0fb1,    -1,0x0fa9,    -1,    -1,0x06b2,    -1);
-   AddNorm("LDX",0x0fa6,0x0fae,    -1,    -1,0x0fb6,0x0fbe,    -1,    -1,    -1,0x0fa2,    -1,    -1,    -1,    -1);
-   AddNorm("LDY",0x0fa4,0x0fac,0x0fb4,0x0fbc,    -1,    -1,    -1,    -1,    -1,0x0fa0,    -1,    -1,    -1,    -1);
-   AddNorm("STA",0x0f85,0x0f8d,0x0f95,0x0f9d,    -1,0x0f99,0x0f81,0x0f91,    -1,    -1,    -1,    -1,0x0692,    -1);
-   AddNorm("STX",0x0f86,0x0f8e,    -1,    -1,0x0f96,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1);
-   AddNorm("STY",0x0f84,0x0f8c,0x0f94,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1);
+   AddNorm("NOP",0x1004,0x100c,0x1014,0x101c,    -1,    -1,    -1,    -1,    -1,0x1080,    -1,0x1fea,    -1,    -1);
+   AddNorm("LDA",0x1fa5,0x1fad,0x1fb5,0x1fbd,    -1,0x1fb9,0x1fa1,0x1fb1,    -1,0x1fa9,    -1,    -1,0x06b2,    -1);
+   AddNorm("LDX",0x1fa6,0x1fae,    -1,    -1,0x1fb6,0x1fbe,    -1,    -1,    -1,0x1fa2,    -1,    -1,    -1,    -1);
+   AddNorm("LDY",0x1fa4,0x1fac,0x1fb4,0x1fbc,    -1,    -1,    -1,    -1,    -1,0x1fa0,    -1,    -1,    -1,    -1);
+   AddNorm("STA",0x1f85,0x1f8d,0x1f95,0x1f9d,    -1,0x1f99,0x1f81,0x1f91,    -1,    -1,    -1,    -1,0x0692,    -1);
+   AddNorm("STX",0x1f86,0x1f8e,    -1,    -1,0x1f96,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1);
+   AddNorm("STY",0x1f84,0x1f8c,0x1f94,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1);
    AddNorm("STZ",0x0664,0x069c,0x0674,0x069e,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1);
-   AddNorm("ADC",0x0f65,0x0f6d,0x0f75,0x0f7d,    -1,0x0f79,0x0f61,0x0f71,    -1,0x0f69,    -1,    -1,0x0672,    -1);
-   AddNorm("SBC",0x0fe5,0x0fed,0x0ff5,0x0ffd,    -1,0x0ff9,0x0fe1,0x0ff1,    -1,0x0fe9,    -1,    -1,0x06f2,    -1);
+   AddNorm("ADC",0x1f65,0x1f6d,0x1f75,0x1f7d,    -1,0x1f79,0x1f61,0x1f71,    -1,0x1f69,    -1,    -1,0x0672,    -1);
+   AddNorm("SBC",0x1fe5,0x1fed,0x1ff5,0x1ffd,    -1,0x1ff9,0x1fe1,0x1ff1,    -1,0x1fe9,    -1,    -1,0x06f2,    -1);
    AddNorm("MUL",    -1,    -1,0x0862,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1);
    AddNorm("DIV",    -1,    -1,0x08e2,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1);
-   AddNorm("AND",0x0f25,0x0f2d,0x0f35,0x0f3d,    -1,0x0f39,0x0f21,0x0f31,    -1,0x0f29,    -1,    -1,0x0632,    -1);
-   AddNorm("ORA",0x0f05,0x0f0d,0x0f15,0x0f1d,    -1,0x0f19,0x0f01,0x0f11,    -1,0x0f09,    -1,    -1,0x0612,    -1);
-   AddNorm("EOR",0x0f45,0x0f4d,0x0f55,0x0f5d,    -1,0x0f59,0x0f41,0x0f51,    -1,0x0f49,    -1,    -1,0x0652,    -1);
+   AddNorm("AND",0x1f25,0x1f2d,0x1f35,0x1f3d,    -1,0x1f39,0x1f21,0x1f31,    -1,0x1f29,    -1,    -1,0x0632,    -1);
+   AddNorm("ORA",0x1f05,0x1f0d,0x1f15,0x1f1d,    -1,0x1f19,0x1f01,0x1f11,    -1,0x1f09,    -1,    -1,0x0612,    -1);
+   AddNorm("EOR",0x1f45,0x1f4d,0x1f55,0x1f5d,    -1,0x1f59,0x1f41,0x1f51,    -1,0x1f49,    -1,    -1,0x0652,    -1);
    AddNorm("COM",0x0844,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1);
-   AddNorm("BIT",0x0f24,0x0f2c,0x0634,0x063c,    -1,    -1,    -1,    -1,    -1,0x0689,    -1,    -1,    -1,    -1);
+   AddNorm("BIT",0x1f24,0x1f2c,0x0634,0x063c,    -1,    -1,    -1,    -1,    -1,0x0689,    -1,    -1,    -1,    -1);
    AddNorm("TST",0x0864,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1);
-   AddNorm("ASL",0x0f06,0x0f0e,0x0f16,0x0f1e,    -1,    -1,    -1,    -1,    -1,    -1,0x0f0a,0x0f0a,    -1,    -1);
-   AddNorm("LSR",0x0f46,0x0f4e,0x0f56,0x0f5e,    -1,    -1,    -1,    -1,    -1,    -1,0x0f4a,0x0f4a,    -1,    -1);
-   AddNorm("ROL",0x0f26,0x0f2e,0x0f36,0x0f3e,    -1,    -1,    -1,    -1,    -1,    -1,0x0f2a,0x0f2a,    -1,    -1);
-   AddNorm("ROR",0x0f66,0x0f6e,0x0f76,0x0f7e,    -1,    -1,    -1,    -1,    -1,    -1,0x0f6a,0x0f6a,    -1,    -1);
+   AddNorm("ASL",0x1f06,0x1f0e,0x1f16,0x1f1e,    -1,    -1,    -1,    -1,    -1,    -1,0x1f0a,0x1f0a,    -1,    -1);
+   AddNorm("LSR",0x1f46,0x1f4e,0x1f56,0x1f5e,    -1,    -1,    -1,    -1,    -1,    -1,0x1f4a,0x1f4a,    -1,    -1);
+   AddNorm("ROL",0x1f26,0x1f2e,0x1f36,0x1f3e,    -1,    -1,    -1,    -1,    -1,    -1,0x1f2a,0x1f2a,    -1,    -1);
+   AddNorm("ROR",0x1f66,0x1f6e,0x1f76,0x1f7e,    -1,    -1,    -1,    -1,    -1,    -1,0x1f6a,0x1f6a,    -1,    -1);
    AddNorm("RRF",0x0882,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1);
    AddNorm("TSB",0x0604,0x060c,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1);
    AddNorm("TRB",0x0614,0x061c,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1);
-   AddNorm("INC",0x0fe6,0x0fee,0x0ff6,0x0ffe,    -1,    -1,    -1,    -1,    -1,    -1,
-                                                                                       (Is740)?0x0e3a:0x0e1a,
+   AddNorm("INC",0x1fe6,0x1fee,0x1ff6,0x1ffe,    -1,    -1,    -1,    -1,    -1,    -1,(Is740)?0x0e3a:0x0e1a,
                                                                                               (Is740)?0x0e3a:0x0e1a,
                                                                                                          -1,    -1);
-   AddNorm("DEC",0x0fc6,0x0fce,0x0fd6,0x0fde,    -1,    -1,    -1,    -1,    -1,    -1,(Is740)?0x0e1a:0x0e3a,
+   AddNorm("DEC",0x1fc6,0x1fce,0x1fd6,0x1fde,    -1,    -1,    -1,    -1,    -1,    -1,(Is740)?0x0e1a:0x0e3a,
                                                                                               (Is740)?0x0e1a:0x0e3a,
                                                                                                          -1,    -1);
-   AddNorm("CMP",0x0fc5,0x0fcd,0x0fd5,0x0fdd,    -1,0x0fd9,0x0fc1,0x0fd1,    -1,0x0fc9,    -1,    -1,0x06d2,    -1);
-   AddNorm("CPX",0x0fe4,0x0fec,    -1,    -1,    -1,    -1,    -1,    -1,    -1,0x0fe0,    -1,    -1,    -1,    -1);
-   AddNorm("CPY",0x0fc4,0x0fcc,    -1,    -1,    -1,    -1,    -1,    -1,    -1,0x0fc0,    -1,    -1,    -1,    -1);
-   AddNorm("JMP",    -1,0x0f4c,    -1,    -1,    -1,    -1,0x067c,    -1,0x0f6c,    -1,    -1,    -1,0x08b2,    -1);
-   AddNorm("JSR",    -1,0x0f20,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,0x0802,0x0822);
+   AddNorm("CMP",0x1fc5,0x1fcd,0x1fd5,0x1fdd,    -1,0x1fd9,0x1fc1,0x1fd1,    -1,0x1fc9,    -1,    -1,0x06d2,    -1);
+   AddNorm("CPX",0x1fe4,0x1fec,    -1,    -1,    -1,    -1,    -1,    -1,    -1,0x1fe0,    -1,    -1,    -1,    -1);
+   AddNorm("CPY",0x1fc4,0x1fcc,    -1,    -1,    -1,    -1,    -1,    -1,    -1,0x1fc0,    -1,    -1,    -1,    -1);
+   AddNorm("JMP",    -1,0x1f4c,    -1,    -1,    -1,    -1,0x067c,    -1,0x1f6c,    -1,    -1,    -1,0x08b2,    -1);
+   AddNorm("JSR",    -1,0x1f20,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,0x0802,0x0822);
+   AddNorm("SLO",0x1007,0x100f,0x1017,0x101f,    -1,0x101b,0x1003,0x1013,    -1,    -1,    -1,    -1,    -1,    -1);
+   AddNorm("ANC",    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,0x100b,    -1,    -1,    -1,    -1);
+   AddNorm("RLA",0x1027,0x102f,0x1037,0x103f,    -1,0x103b,0x1023,0x1033,    -1,    -1,    -1,    -1,    -1,    -1);
+   AddNorm("SRE",0x1047,0x104f,0x1057,0x105f,    -1,0x105b,0x1043,0x1053,    -1,    -1,    -1,    -1,    -1,    -1);
+   AddNorm("ASR",    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,0x104b,   -1,    -1,    -1,    -1);
+   AddNorm("RRA",0x1067,0x106f,0x1077,0x107f,    -1,0x107b,0x1063,0x1073,    -1,    -1,    -1,    -1,    -1,    -1);
+   AddNorm("ARR",    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,0x106b,    -1,    -1,    -1,    -1);
+   AddNorm("SAX",0x1087,0x108f,    -1,    -1,0x1097,    -1,0x1083,    -1,    -1,    -1,    -1,    -1,    -1,    -1);
+   AddNorm("ANE",    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,0x108b,    -1,    -1,    -1,    -1);
+   AddNorm("SHA",    -1,    -1,    -1,0x1093,    -1,0x109f,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1);
+   AddNorm("SHS",    -1,    -1,    -1,    -1,    -1,0x109b,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1);
+   AddNorm("SHY",    -1,    -1,    -1,    -1,    -1,0x109c,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1);
+   AddNorm("SHX",    -1,    -1,    -1,0x109e,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1);
+   AddNorm("LAX",0x10a7,0x10af,    -1,    -1,0x10b7,0x10bf,0x10a3,0x10b3,    -1,    -1,    -1,    -1,    -1,    -1);
+   AddNorm("LXA",    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,0x10ab,    -1,    -1,    -1,    -1);
+   AddNorm("LAE",    -1,    -1,    -1,    -1,    -1,0x10bb,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1);
+   AddNorm("DCP",0x10c7,0x10cf,0x10d7,0x10df,    -1,0x10db,0x10c3,0x10d3,    -1,    -1,    -1,    -1,    -1,    -1);
+   AddNorm("SBX",    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,0x10cb,    -1,    -1,    -1,    -1);
+   AddNorm("ISB",0x10e7,0x10ef,0x10f7,0x10ff,    -1,0x10fb,0x10e3,0x10f3,    -1,    -1,    -1,    -1,    -1,    -1);
 
    CondOrders=(CondOrder *) malloc(sizeof(CondOrder)*CondOrderCount); InstrZ=0;
-   AddCond("BEQ", 15, 0xf0);
-   AddCond("BNE", 15, 0xd0);
-   AddCond("BPL", 15, 0x10);
-   AddCond("BMI", 15, 0x30);
-   AddCond("BCC", 15, 0x90);
-   AddCond("BCS", 15, 0xb0);
-   AddCond("BVC", 15, 0x50);
-   AddCond("BVS", 15, 0x70);
+   AddCond("BEQ", 31, 0xf0);
+   AddCond("BNE", 31, 0xd0);
+   AddCond("BPL", 31, 0x10);
+   AddCond("BMI", 31, 0x30);
+   AddCond("BCC", 31, 0x90);
+   AddCond("BCS", 31, 0xb0);
+   AddCond("BVC", 31, 0x50);
+   AddCond("BVS", 31, 0x70);
    AddCond("BRA", 14, 0x80);
 END
 
@@ -251,7 +272,7 @@ END
 
 	static void ChkZeroMode(ShortInt Mode)
 BEGIN
-   Integer OrderZ;
+   int OrderZ;
 
    for (OrderZ=0; OrderZ<NormOrderCount; OrderZ++)
     if (Memo(NormOrders[OrderZ].Name))
@@ -700,10 +721,11 @@ END
 
 	void code65_init(void)
 BEGIN
-   CPU6502  =AddCPU("6502"    ,SwitchTo_65);
-   CPU65SC02=AddCPU("65SC02"  ,SwitchTo_65);
-   CPU65C02 =AddCPU("65C02"   ,SwitchTo_65);
-   CPUM740  =AddCPU("MELPS740",SwitchTo_65);
+   CPU6502  =AddCPU("6502"     ,SwitchTo_65);
+   CPU65SC02=AddCPU("65SC02"   ,SwitchTo_65);
+   CPU65C02 =AddCPU("65C02"    ,SwitchTo_65);
+   CPUM740  =AddCPU("MELPS740" ,SwitchTo_65);
+   CPU6502U =AddCPU("6502UNDOC",SwitchTo_65);
 
    SaveInitProc=InitPassProc; InitPassProc=InitCode_65;
 END

@@ -1,4 +1,4 @@
-; tests/t_mic51/t_mic51.asm-Includefile für Assembler-Programm
+; t_mic51.asm-Includefile für Assembler-Programm
 ROB equ 10H
 UC_ROB equ 1H
 FRS equ 11H

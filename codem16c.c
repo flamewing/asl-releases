@@ -14,7 +14,7 @@
 
 #include "nls.h"
 #include "bpemu.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
@@ -712,7 +712,8 @@ END
 
 	static Boolean CodeData(void)
 BEGIN
-   Integer z,Num1;
+   Integer Num1;
+   int z;
    Boolean OK;
    Byte SMode;
 
@@ -1213,7 +1214,8 @@ END
 
         static void MakeCode_M16C(void)
 BEGIN
-   Integer z,Num1;
+   Integer Num1;
+   int z;
    char *p;
    LongInt AdrLong,Diff;
    Boolean OK,MayShort;

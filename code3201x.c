@@ -13,7 +13,7 @@
 #include <ctype.h>
 
 #include "bpemu.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
@@ -175,7 +175,7 @@ BEGIN
    return EvalIntExpression(Asc,UInt1,OK);
 END
 
-	static void DecodeAdr(char *Arg, Integer Aux, Boolean Must1)
+	static void DecodeAdr(char *Arg, int Aux, Boolean Must1)
 BEGIN
    Byte h;
    char *p;
@@ -224,7 +224,7 @@ END
 	static Boolean DecodePseudo(void)
 BEGIN
    Word Size;
-   Integer z,z2;
+   int z,z2;
    char *p;
    TempResult t;
    Boolean OK;
@@ -303,7 +303,7 @@ BEGIN
    Boolean OK,HasSh;
    Word AdrWord;
    LongInt AdrLong;
-   Integer z,Cnt;
+   int z,Cnt;
 
    CodeLen=0; DontPrint=False;
 

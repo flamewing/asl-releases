@@ -122,10 +122,10 @@ mf{"NAME"}      macro      reg
                  __defspr PBL2,0x3fe
                  __defspr PBU1,0x3fd    ; Obergrenzen
                  __defspr PBU2,0x3ff
-                 __defspr PIT,0x3d8     ; Timer
+                 __defspr PIT,0x3db     ; Timer
                  __defspr PVR,0x11f     ; Prozessorversion
-                 __defspr SRR2,0x01e    ; Save/Restore-Register
-                 __defspr SRR3,0x01f
+                 __defspr SRR2,0x3de    ; Save/Restore-Register
+                 __defspr SRR3,0x3df
                  __defspr TBHI,0x3dc    ; Zeitbasis
                  __defspr TBLO,0x3dd
                  __defspr TCR,0x3da     ; Timer Steuerregister

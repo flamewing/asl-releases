@@ -9,9 +9,9 @@
 /*****************************************************************************/
 
 typedef enum {UInt1    ,UInt2    ,UInt3    ,SInt4    ,UInt4    , Int4    ,
-              SInt5    ,UInt5    , Int5    ,UInt6    ,UInt7    ,SInt8    ,UInt8    ,
+              SInt5    ,UInt5    , Int5    ,UInt6    ,SInt7    ,UInt7    ,SInt8    ,UInt8    ,
                Int8    ,UInt9    ,UInt10   , Int10   ,UInt11   ,UInt12   , Int12   ,
-              UInt13   ,SInt16   ,UInt16   , Int16   ,UInt18   ,SInt20   ,
+              UInt13   ,UInt15   ,SInt16   ,UInt16   , Int16   ,UInt18   ,SInt20   ,
               UInt20   , Int20   ,UInt22   ,SInt24   ,UInt24   , Int24   ,SInt32   ,UInt32   ,
                Int32   ,
 #ifdef HAS64
@@ -35,6 +35,9 @@ extern LongInt MomLocHandle;
 
 
 extern void AsmParsInit(void);
+
+
+extern Boolean SingleBit(LargeInt Inp, LargeInt *Erg);
 
 
 extern LargeInt ConstIntVal(char *Asc_O, IntType Typ, Boolean *Ok);
@@ -93,6 +96,7 @@ extern Boolean IsSymbolUsed(char *Name);
 
 extern Boolean IsSymbolChangeable(char *Name);
 
+extern Integer GetSymbolType(char *Name);
 
 extern void EvalExpression(char *Asc_O, TempResult *Erg);
 
@@ -158,4 +162,18 @@ extern void PopLocHandle(void);
 extern void ClearLocStack(void);
 
 
+extern void AddRegDef(char *Orig, char *Repl);
+
+extern Boolean FindRegDef(char *Name, char **Erg);
+
+extern void TossRegDefs(LongInt Sect);
+
+extern void CleanupRegDefs(void);
+
+extern void ClearRegDefs(void);
+
+extern void PrintRegDefs(void);
+
+
 extern void asmpars_init(void);
+

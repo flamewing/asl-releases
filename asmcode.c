@@ -11,6 +11,7 @@
 #include "stdinc.h"
 #include <string.h>
 
+#include "version.h"
 #include "endian.h"
 #include "chunks.h"
 #include "asmdef.h"
@@ -56,7 +57,7 @@ END
 
 	void DreheCodes(void)
 BEGIN
-   Integer z;
+   int z;
    LongInt l=CodeLen*Granularity();
 
     switch (ListGran())
@@ -157,9 +158,10 @@ END
         void CloseFile(void)
 BEGIN
    Byte Head;
-   char h[20];
+   String h;
    LongWord Adr;
-   strcpy(h,"AS ");
+
+   sprintf(h,"AS %s/%s-%s",Version,ARCHPRNAME,ARCHSYSNAME);
 
    NewRecord();
    fseek(PrgFile,RecPos,SEEK_SET);
@@ -172,7 +174,6 @@ BEGIN
      if (NOT Write4(PrgFile,&Adr)) ChkIO(10004);
     END
 
-   strcat(h,Version);
    Head=FileHeaderEnd;
    if (fwrite(&Head,sizeof(Head),1,PrgFile)!=1) ChkIO(10004);
    if (fwrite(h,1,strlen(h),PrgFile)!=strlen(h)) ChkIO(10004);
@@ -223,7 +224,7 @@ BEGIN
    if (CodeBufferFill>=ErgLen) CodeBufferFill-=ErgLen;
    else
     BEGIN
-     if (fseek(PrgFile,SEEK_CUR,-(ErgLen-CodeBufferFill))==-1)
+     if (fseek(PrgFile,-(ErgLen-CodeBufferFill),SEEK_CUR)==-1)
       ChkIO(10004);
      CodeBufferFill=0;
     END

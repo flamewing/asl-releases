@@ -16,13 +16,6 @@ typedef struct
           LongInt NothingVal;
          } ASSUMERec;
 
-typedef struct
-         {
-          char *Name;
-          Boolean *Dest;
-          char *FlagName;
-         } ONOFFRec;
-
 extern int FindInst(void *Field, int Size, int Count);
 
 extern Boolean IsIndirect(char *Asc);
@@ -33,12 +26,12 @@ extern Boolean DecodeIntelPseudo(Boolean Turn);
 
 extern Boolean DecodeMotoPseudo(Boolean Turn);
 
+extern void AddMoto16PseudoONOFF(void);
+
 extern Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn);
 
 extern void CodeEquate(ShortInt DestSeg, LargeInt Min, LargeInt Max);
 
 extern void CodeASSUME(ASSUMERec *Def, Integer Cnt);
-
-extern Boolean CodeONOFF(ONOFFRec *Def, Integer Cnt);
 
 extern void codepseudo_init(void);

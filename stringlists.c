@@ -10,7 +10,7 @@
 
 #include "stdinc.h"
 #include <string.h>
-#include "stringutil.h"
+#include "strutil.h"
 #include "stringlists.h"
 
 	void InitStringList(StringList *List)

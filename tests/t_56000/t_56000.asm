@@ -2,7 +2,7 @@
 
 		cpu	56000
 
-                include stddef56.inc
+                include stddef56k.inc
 
 		segment	code
 		org	$300
@@ -201,7 +201,7 @@
 		rep	x:$12
 		rep	y:$23
 		rep	x:(r3)
-		rep	y:$4576
+		rep	y:$12
 
 		movep	x:(r3),x:$ffe0
 		movep	y:(r3),x:$ffe1

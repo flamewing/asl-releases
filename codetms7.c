@@ -12,7 +12,7 @@
 #include <ctype.h>
 #include <string.h>
 
-#include "stringutil.h"
+#include "strutil.h"
 #include "bpemu.h"
 #include "nls.h"
 #include "asmdef.h"
@@ -185,7 +185,8 @@ END
 
 	static void DecodeAdr(char *Asc, Word Mask)
 BEGIN
-   Integer HVal,Lev;
+   Integer HVal;
+   int Lev,l;
    char *p;
    Boolean OK;
 
@@ -221,10 +222,10 @@ BEGIN
 
    if ((*Asc=='#') OR (*Asc=='%'))
     BEGIN
-     strcpy(Asc,Asc+1);
-     if (strcasecmp(Asc+strlen(Asc)-3,"(B)")==0)
+     strcpy(Asc,Asc+1); l=strlen(Asc);
+     if ((l>=3) AND (strcasecmp(Asc+l-3,"(B)")==0))
       BEGIN
-       Asc[strlen(Asc)-3]='\0';
+       Asc[l-3]='\0';
        HVal=EvalIntExpression(Asc,Int16,&OK);
        if (OK)
         BEGIN
@@ -332,7 +333,8 @@ END
 
         static void MakeCode_TMS7(void)
 BEGIN
-   Integer z,AdrInt;
+   Integer AdrInt;
+   int z;
    Boolean OK,Rela;
 
    CodeLen=0; DontPrint=False; OpSize=0;

@@ -1,0 +1,31 @@
+# -------------------------------------------------------------------------
+# choose your compiler (must be ANSI-compliant!) and linker command, plus
+# any additionally needed flags
+
+CC = vicc
+LD = vlink
+OBJOPT = "/Fo"
+CFLAGS =
+OUTOPT = "/O:"
+LDFLAGS = /PM:VIO
+
+# -------------------------------------------------------------------------
+# directories where binaries, includes, and manpages should go during
+# installation
+
+BINDIR = .
+INCDIR = m:/as/include
+MANDIR = .
+
+# -------------------------------------------------------------------------
+# character encoding to use (choose one of them)
+
+# CHARSET = CHARSET_ISO8859_1
+# CHARSET = CHARSET_ASCII7   
+# CHARSET = CHARSET_IBM437
+CHARSET = CHARSET_IBM850
+
+# -------------------------------------------------------------------------
+# OS/2 special...
+
+EXEXTENSION = .exe

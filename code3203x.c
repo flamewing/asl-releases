@@ -15,7 +15,7 @@
 #include "nls.h"
 #include "endian.h"
 #include "bpemu.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
@@ -72,7 +72,7 @@ static SimpProc SaveInitProc;
 static Boolean NextPar,ThisPar;
 static Byte PrevARs,ARs;
 static char PrevOp[7];
-static Integer z2;
+static int z2;
 static ShortInt PrevSrc1Mode,PrevSrc2Mode,PrevDestMode;
 static ShortInt CurrSrc1Mode,CurrSrc2Mode,CurrDestMode;
 static Word PrevSrc1Part,PrevSrc2Part,PrevDestPart;
@@ -288,7 +288,7 @@ BEGIN
    Boolean Sign;
    int z;
 
-   memcpy(Field,&Inp,8); if (BigEndian) QSwap(Field,8);
+   Double_2_ieee8(Inp,Field,False);
    Sign=(Field[7]>0x7f);
    *Expo=(((LongWord) Field[7]&0x7f)<<4)+(Field[6]>>4);
    *Mant=Field[6]&0x0f; if (*Expo!=0) *Mant|=0x10;
@@ -698,7 +698,7 @@ BEGIN
                  {{"DP", &DPValue, -1, 0xff, 0x100}};
 
    Boolean OK;
-   Integer z,z2;
+   int z,z2;
    LongInt Size;
    Double f;
    TempResult t;
@@ -823,7 +823,7 @@ BEGIN
    return False;
 END
 
-	static void JudgePar(GenOrder *Prim, Integer Sec, Byte *ErgMode, Byte *ErgCode)
+	static void JudgePar(GenOrder *Prim, int Sec, Byte *ErgMode, Byte *ErgCode)
 BEGIN
    if (Sec>3) *ErgMode=3;
    else if (Prim->May3) *ErgMode=1;
@@ -852,7 +852,7 @@ END
 BEGIN
    Boolean OK,Is3;
    Byte HReg,HReg2,Sum;
-   Integer z,z3;
+   int z,z3,l;
    LongInt AdrLong,DFlag,Disp;
    String HOp,Form;
 
@@ -1306,9 +1306,10 @@ BEGIN
     BEGIN
      strcpy(HOp,OpPart);
      strcpy(OpPart,OpPart+1);
-     if (OpPart[strlen(OpPart)-1]=='D')
+     l=strlen(OpPart);
+     if ((l>=1) AND (OpPart[l-1]=='D'))
       BEGIN
-       OpPart[strlen(OpPart)-1]='\0'; DFlag=1l << 21;
+       OpPart[l-1]='\0'; DFlag=1l << 21;
        Disp=3;
       END
      else
@@ -1374,9 +1375,10 @@ BEGIN
     BEGIN
      strcpy(HOp,OpPart);
      strcpy(OpPart,OpPart+2);
-     if (OpPart[strlen(OpPart)-1]=='D')
+     l=strlen(OpPart);
+     if ((l>=1) AND (OpPart[l-1]=='D'))
       BEGIN
-       OpPart[strlen(OpPart)-1]='\0'; DFlag=1l << 21;
+       OpPart[l-1]='\0'; DFlag=1l << 21;
        Disp=3;
       END
      else

@@ -5,6 +5,7 @@
 /* Unterfunktionen, vermischtes                                              */
 /*                                                                           */
 /* Historie:  4. 5. 1996  Grundsteinlegung                                   */
+/* Historie: 13. 8.1997 KillBlanks-Funktionen nach stringutil.c geschoben    */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -12,16 +13,29 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "version.h"
 #include "endian.h"
 #include "stdhandl.h"
 #include "nls.h"
-#include "stringutil.h"
+#include "nlmessages.h"
+#include "as.rsc"
+#include "strutil.h"
 #include "stringlists.h"
 #include "chunks.h"
-#include "ioerrors.h"
+#include "ioerrs.h"
 #include "asmdef.h"
+#include "as.h"
 
 #include "asmsub.h"
+
+
+#ifdef __TURBOC__
+#ifdef __DPMI16__
+#define STKSIZE 40960
+#else
+#define STKSIZE 49152
+#endif
+#endif
 
 
 Word ErrorCount,WarnCount;
@@ -29,13 +43,8 @@ static StringList CopyrightList,OutList;
 
 static LongWord StartStack,MinStack,LowStack;
 
-#define ERRMSG
-#include "as.rsc"
-#include "ioerrors.rsc"
-
 /****************************************************************************/
 /* Modulinitialisierung */
-
 
         void AsmSubInit(void)
 BEGIN
@@ -149,30 +158,69 @@ END
 /* ermittelt das erste/letzte Auftauchen eines Zeichens ausserhalb */
 /* "geschuetzten" Bereichen */
 
+#if 0
+	char *QuotPos(char *s, char Zeichen)
+BEGIN
+   register int Cnt=0;
+   register char *i;
+   register char ch,Cmp2,Cmp3;
+
+   for (i=s; (ch=*i)!='\0'; i++)
+    if (Cnt==0)
+     BEGIN
+      if (ch==Zeichen) return i;
+      else switch (ch)
+       BEGIN
+        case '"':
+        case '\'': Cmp2='\0'; Cmp3=ch; Cnt=1; break;
+        case '(': Cmp2='('; Cmp3=')'; Cnt=1; break;
+        case '[': Cmp2='['; Cmp3=']'; Cnt=1; break;
+       END
+     END
+    else
+     BEGIN
+      if (ch==Cmp2) Cnt++;
+      else if (ch==Cmp3) Cnt--;
+     END
+
+   return Nil;
+END
+#else
         char *QuotPos(char *s, char Zeichen)
 BEGIN
    register ShortInt Brack=0,AngBrack=0;
-   char *i;
+   register char *i;
    register LongWord Flag=0;
+   static Boolean First=True,Imp[256],Save;
 
+   if (First)
+    BEGIN
+     memset(Imp,False,256);
+     Imp['"']=Imp['\'']=Imp['(']=Imp[')']=Imp['[']=Imp[']']=True;
+     First=False;
+    END
+   
+   Save=Imp[(unsigned char)Zeichen]; Imp[(unsigned char)Zeichen]=True;
    for (i=s; *i!='\0'; i++)
-    if (*i==Zeichen)
-     BEGIN
-      if ((AngBrack|Brack|Flag)==0) return i;
-     END
-    else switch(*i)
-     BEGIN
-      case '"': if ((Brack==0) AND (AngBrack==0) AND ((Flag&2)==0)) Flag^=1; break;
-      case '\'':if ((Brack==0) AND (AngBrack==0) AND ((Flag&1)==0)) Flag^=2; break;
-      case '(': if ((AngBrack|Flag)==0) Brack++; break;
-      case ')': if ((AngBrack|Flag)==0) Brack--; break;
-      case '[': if ((Brack|Flag)==0) AngBrack++; break;
-      case ']': if ((Brack|Flag)==0) AngBrack--; break;
-     END
+    if (Imp[(unsigned char)*i])
+     if (*i==Zeichen)
+      BEGIN
+       if ((AngBrack|Brack|Flag)==0)
+        { Imp[(unsigned char)Zeichen]=Save; return i;}
+      END
+     else switch(*i)
+      BEGIN
+       case '"': if (((Brack|AngBrack)==0) AND ((Flag&2)==0)) Flag^=1; break;
+       case '\'':if (((Brack|AngBrack)==0) AND ((Flag&1)==0)) Flag^=2; break;
+       case '(': if ((AngBrack|Flag)==0) Brack++; break;
+       case ')': if ((AngBrack|Flag)==0) Brack--; break;
+       case '[': if ((Brack|Flag)==0) AngBrack++; break;
+       case ']': if ((Brack|Flag)==0) AngBrack--; break;
+      END
 
-   return Nil;    
+   Imp[(unsigned char)Zeichen]=Save; return Nil;    
 END
-
+#endif
         char *RQuotPos(char *s, char Zeichen)
 BEGIN
    ShortInt Brack=0,AngBrack=0;
@@ -236,57 +284,14 @@ END
 	void UpString(char *s)
 BEGIN
    char *z;
-   Integer hyp=0,quot=0;
+   int hypquot=0;
 
    for (z=s; *z!='\0'; z++)
     BEGIN
-     if ((*z=='\'') AND ((quot&1)==0)) hyp^=1;
-     else if ((*z=='"') AND ((hyp&1)==0)) quot^=1;
-     else if ((quot|hyp)==0) *z=UpCaseTable[(int)*z];
+     if ((*z=='\'') AND ((hypquot&2)==0)) hypquot^=1;
+     else if ((*z=='"') AND ((hypquot&1)==0)) hypquot^=2;
+     else if (hypquot==0) *z=UpCaseTable[(int)*z];
     END
-END
-
-/*--------------------------------------------------------------------------*/
-/* alle Leerzeichen aus einem String loeschen */
-
-        void KillBlanks(char *s)
-BEGIN
-   char *z;
-   Integer dest=0;
-   Boolean InHyp=False,InQuot=False;
-
-   for (z=s; *z!='\0'; z++)
-    BEGIN
-     switch (*z)
-      BEGIN
-       case '\'': if (NOT InQuot) InHyp=NOT InHyp; break;
-       case '"': if (NOT InHyp) InQuot=NOT InQuot; break;
-      END
-     if ((NOT isspace(*z)) OR (InHyp) OR (InQuot)) s[dest++]=(*z);
-    END
-   s[dest]='\0';
-END
-
-
-/*--------------------------------------------------------------------------*/
-/* fuehrende Leerzeichen loeschen */
-
-        void KillPrefBlanks(char *s)
-BEGIN
-   char *z=s;
-
-   while ((*z!='\0') AND (isspace(*z))) z++;
-   if (z!=s) strcpy(s,z);
-END
-
-/*--------------------------------------------------------------------------*/
-/* anhaengende Leerzeichen loeschen */
-
-        void KillPostBlanks(char *s)
-BEGIN
-   char *z=s+strlen(s)-1;
-
-   while ((z>=s) AND (isspace(*z))) *(z--)='\0';
 END
 
 /****************************************************************************/
@@ -300,14 +305,14 @@ END
 
 	ShortInt StrCmp(char *s1, char *s2, LongInt Hand1, LongInt Hand2)
 BEGIN
-   ShortInt tmp;
+   int tmp;
 
-   tmp=strcmp(s1,s2); 
-   if (tmp<0) return -1; 
-   else if (tmp>0) return 1;
-   else if (Hand1<Hand2) return -1;
-   else if (Hand1>Hand2) return 1;
-   else return 0;
+   tmp=(*s1)-(*s2);
+   if (tmp==0) tmp=strcmp(s1,s2);
+   if (tmp==0) tmp=Hand1-Hand2;
+   if (tmp<0) return -1;
+   if (tmp>0) return 1;
+   return 0;
 END
 
 /****************************************************************************/
@@ -379,7 +384,7 @@ BEGIN
 #define MaxLen 18
    static String s;
    char *p,*d;
-   Integer n,ExpVal,nzeroes;
+   sint n,ExpVal,nzeroes;
    Boolean WithE,OK;
 
    /* 1. mit Maximallaenge wandeln, fuehrendes Vorzeichen weg */
@@ -526,7 +531,7 @@ END
 
         void ResetPageCounter(void)
 BEGIN
-   Integer z;
+   int z;
 
    for (z=0; z<=ChapMax; z++) PageCounter[z]=0;
    LstCounter=0; ChapDepth=0;
@@ -559,14 +564,14 @@ BEGIN
      errno=0; fprintf(LstFile,"%c",Char_FF); ChkIO(10002);
     END
 
-   sprintf(Header," AS V%s%s%s",Version,HeadingFileNameLab,NamePart(SourceFile));
+   sprintf(Header," AS V%s%s%s",Version,getmessage(Num_HeadingFileNameLab),NamePart(SourceFile));
    if ((strcmp(CurrFileName,"INTERNAL")!=0) AND (strcmp(NamePart(CurrFileName),NamePart(SourceFile))!=0))
     BEGIN
      strmaxcat(Header,"(",255);
      strmaxcat(Header,NamePart(CurrFileName),255);
      strmaxcat(Header,")",255);
     END
-   strmaxcat(Header,HeadingPageLab,255);
+   strmaxcat(Header,getmessage(Num_HeadingPageLab),255);
 
    for (z=ChapDepth; z>=0; z--)
     BEGIN
@@ -602,10 +607,10 @@ END
 
         void WrLstLine(char *Line)
 BEGIN
-   Integer LLength;
+   int LLength;
    char bbuf[2500];
    String LLine;
-   Integer blen=0,hlen,z,Start;
+   int blen=0,hlen,z,Start;
 
    if (ListOn==0) return;
 
@@ -669,20 +674,20 @@ BEGIN
    char *z;
 
    if (*sym=='\0') return False;
-   if (NOT (isalpha(*sym) OR (*sym=='_') OR (*sym=='.'))) return False;
+   if (NOT (isalpha((unsigned int) *sym) OR (*sym=='_') OR (*sym=='.'))) return False;
    for (z=sym; *z!='\0'; z++)
-    if (NOT (isalnum(*z) OR (*z=='_') OR (*z=='.'))) return False;
+    if (NOT (isalnum((unsigned int) *z) OR (*z=='_') OR (*z=='.'))) return False;
    return True;
 END
 
         Boolean ChkMacSymbName(char *sym)
 BEGIN
-   Integer z;
+   char *z;
 
    if (*sym=='\0') return False;
-   if (NOT isalpha(*sym)) return False;
-   for (z=1; z<strlen(sym); z++)
-    if (NOT isalnum(sym[z])) return False;
+   if (NOT isalpha((unsigned int) *sym)) return False;
+   for (z=sym; *z!='\0'; z++)
+    if (NOT isalnum((unsigned int) *z)) return False;
    return True;
 END
 
@@ -727,20 +732,21 @@ END
         void WrErrorString(char *Message, char *Add, Boolean Warning, Boolean Fatal)
 BEGIN
    String h,h2;
+   char *p;
 
-   strmaxcpy(h,ErrorPos,255);
+   strmaxcpy(h,p=GetErrorPos(),255); free(p);
    if (NOT Warning)
     BEGIN
-     strmaxcat(h,ErrName,255);
+     strmaxcat(h,getmessage(Num_ErrName),255);
      strmaxcat(h,Add,255);
-     strmaxcat(h," : ",255);
+     strmaxcat(h,": ",255);
      ErrorCount++;
     END
    else
     BEGIN
-     strmaxcat(h,WarnName,255);
+     strmaxcat(h,getmessage(Num_WarnName),255);
      strmaxcat(h,Add,255);
-     strmaxcat(h," : ",255);
+     strmaxcat(h,": ",255);
      WarnCount++;
     END
 
@@ -763,7 +769,7 @@ BEGIN
 
    if (Fatal)
     BEGIN
-     fprintf((ErrorFile==Nil)?stdout:ErrorFile,"%s\n",ErrMsgIsFatal);
+     fprintf((ErrorFile==Nil)?stdout:ErrorFile,"%s\n",getmessage(Num_ErrMsgIsFatal));
      EmergencyStop();
      exit(3);
     END
@@ -776,6 +782,7 @@ END
 BEGIN
    String h;
    char Add[11];
+   int msgno;
    
    if ((NOT CodeOutput) AND (Num==1200)) return;
 
@@ -783,139 +790,152 @@ BEGIN
 
    switch (Num)
     BEGIN
-     case    0: strmaxcpy(h,ErrMsgUselessDisp,255); break;
-     case   10: strmaxcpy(h,ErrMsgShortAddrPossible,255); break;
-     case   20: strmaxcpy(h,ErrMsgShortJumpPossible,255); break;
-     case   30: strmaxcpy(h,ErrMsgNoShareFile,255); break;
-     case   40: strmaxcpy(h,ErrMsgBigDecFloat,255); break;
-     case   50: strmaxcpy(h,ErrMsgPrivOrder,255); break;
-     case   60: strmaxcpy(h,ErrMsgDistNull,255); break;
-     case   70: strmaxcpy(h,ErrMsgWrongSegment,255); break;
-     case   75: strmaxcpy(h,ErrMsgInAccSegment,255); break;
-     case   80: strmaxcpy(h,ErrMsgPhaseErr,255); break;
-     case   90: strmaxcpy(h,ErrMsgOverlap,255); break;
-     case  100: strmaxcpy(h,ErrMsgNoCaseHit,255); break;
-     case  110: strmaxcpy(h,ErrMsgInAccPage,255); break;
-     case  120: strmaxcpy(h,ErrMsgRMustBeEven,255); break;
-     case  130: strmaxcpy(h,ErrMsgObsolete,255); break;
-     case  140: strmaxcpy(h,ErrMsgUnpredictable,255); break;
-     case  150: strmaxcpy(h,ErrMsgAlphaNoSense,255); break;
-     case  160: strmaxcpy(h,ErrMsgSenseless,255); break;
-     case  170: strmaxcpy(h,ErrMsgRepassUnknown,255); break;
-     case  180: strmaxcpy(h,ErrMsgAddrNotAligned,255); break;
-     case  190: strmaxcpy(h,ErrMsgIOAddrNotAllowed,255); break;
-     case  200: strmaxcpy(h,ErrMsgPipeline,255); break;
-     case  210: strmaxcpy(h,ErrMsgDoubleAdrRegUse,255); break;
-     case  220: strmaxcpy(h,ErrMsgNotBitAddressable,255); break;
-     case  230: strmaxcpy(h,ErrMsgStackNotEmpty,255); break;
-     case  240: strmaxcpy(h,ErrMsgNULCharacter ,255); break;
-     case 1000: strmaxcpy(h,ErrMsgDoubleDef,255); break;
-     case 1010: strmaxcpy(h,ErrMsgSymbolUndef,255); break;
-     case 1020: strmaxcpy(h,ErrMsgInvSymName,255); break;
-     case 1090: strmaxcpy(h,ErrMsgInvFormat,255); break;
-     case 1100: strmaxcpy(h,ErrMsgUseLessAttr,255); break;
-     case 1105: strmaxcpy(h,ErrMsgTooLongAttr,255); break;
-     case 1107: strmaxcpy(h,ErrMsgUndefAttr,255); break;
-     case 1110: strmaxcpy(h,ErrMsgWrongArgCnt,255); break;
-     case 1115: strmaxcpy(h,ErrMsgWrongOptCnt,255); break;
-     case 1120: strmaxcpy(h,ErrMsgOnlyImmAddr,255); break;
-     case 1130: strmaxcpy(h,ErrMsgInvOpsize,255); break;
-     case 1131: strmaxcpy(h,ErrMsgConfOpSizes,255); break;
-     case 1132: strmaxcpy(h,ErrMsgUndefOpSizes,255); break;
-     case 1135: strmaxcpy(h,ErrMsgInvOpType,255); break;
-     case 1140: strmaxcpy(h,ErrMsgTooMuchArgs,255); break;
-     case 1200: strmaxcpy(h,ErrMsgUnknownOpcode,255); break;
-     case 1300: strmaxcpy(h,ErrMsgBrackErr,255); break;
-     case 1310: strmaxcpy(h,ErrMsgDivByZero,255); break;
-     case 1315: strmaxcpy(h,ErrMsgUnderRange,255); break;
-     case 1320: strmaxcpy(h,ErrMsgOverRange,255); break;
-     case 1325: strmaxcpy(h,ErrMsgNotAligned,255); break;
-     case 1330: strmaxcpy(h,ErrMsgDistTooBig,255); break;
-     case 1335: strmaxcpy(h,ErrMsgInAccReg,255); break;
-     case 1340: strmaxcpy(h,ErrMsgNoShortAddr,255); break;
-     case 1350: strmaxcpy(h,ErrMsgInvAddrMode,255); break;
-     case 1351: strmaxcpy(h,ErrMsgMustBeEven,255); break;
-     case 1355: strmaxcpy(h,ErrMsgInvParAddrMode,255); break;
-     case 1360: strmaxcpy(h,ErrMsgUndefCond,255); break;
-     case 1370: strmaxcpy(h,ErrMsgJmpDistTooBig,255); break;
-     case 1375: strmaxcpy(h,ErrMsgDistIsOdd,255); break;
-     case 1380: strmaxcpy(h,ErrMsgInvShiftArg,255); break;
-     case 1390: strmaxcpy(h,ErrMsgRange18,255); break;
-     case 1400: strmaxcpy(h,ErrMsgShiftCntTooBig,255); break;
-     case 1410: strmaxcpy(h,ErrMsgInvRegList,255); break;
-     case 1420: strmaxcpy(h,ErrMsgInvCmpMode,255); break;
-     case 1430: strmaxcpy(h,ErrMsgInvCPUType,255); break;
-     case 1440: strmaxcpy(h,ErrMsgInvCtrlReg,255); break;
-     case 1445: strmaxcpy(h,ErrMsgInvReg,255); break;
-     case 1450: strmaxcpy(h,ErrMsgNoSaveFrame,255); break;
-     case 1460: strmaxcpy(h,ErrMsgNoRestoreFrame,255); break;
-     case 1465: strmaxcpy(h,ErrMsgUnknownMacArg,255); break;
-     case 1470: strmaxcpy(h,ErrMsgMissEndif,255); break;
-     case 1480: strmaxcpy(h,ErrMsgInvIfConst,255); break;
-     case 1483: strmaxcpy(h,ErrMsgDoubleSection,255); break;
-     case 1484: strmaxcpy(h,ErrMsgInvSection,255); break;
-     case 1485: strmaxcpy(h,ErrMsgMissingEndSect,255); break;
-     case 1486: strmaxcpy(h,ErrMsgWrongEndSect,255); break;
-     case 1487: strmaxcpy(h,ErrMsgNotInSection,255); break;
-     case 1488: strmaxcpy(h,ErrMsgUndefdForward,255); break;
-     case 1489: strmaxcpy(h,ErrMsgContForward,255); break;
-     case 1490: strmaxcpy(h,ErrMsgInvFuncArgCnt,255); break;
-     case 1495: strmaxcpy(h,ErrMsgMissingLTORG,255); break;
-     case 1500: strmaxcpy(h,ErrMsgNotOnThisCPU1,255); 
-                strmaxcat(h,MomCPUIdent,255); 
-                strmaxcat(h,ErrMsgNotOnThisCPU2,255); break;
-     case 1505: strmaxcpy(h,ErrMsgNotOnThisCPU3,255);
-                strmaxcat(h,MomCPUIdent,255);
-                strmaxcat(h,ErrMsgNotOnThisCPU2,255); break;
-     case 1510: strmaxcpy(h,ErrMsgInvBitPos,255); break;
-     case 1520: strmaxcpy(h,ErrMsgOnlyOnOff,255); break;
-     case 1530: strmaxcpy(h,ErrMsgStackEmpty,255); break;
-     case 1600: strmaxcpy(h,ErrMsgShortRead,255); break;
-     case 1700: strmaxcpy(h,ErrMsgRomOffs063,255); break;
-     case 1710: strmaxcpy(h,ErrMsgInvFCode,255); break;
-     case 1720: strmaxcpy(h,ErrMsgInvFMask,255); break;
-     case 1730: strmaxcpy(h,ErrMsgInvMMUReg,255); break;
-     case 1740: strmaxcpy(h,ErrMsgLevel07,255); break;
-     case 1750: strmaxcpy(h,ErrMsgInvBitMask,255); break;
-     case 1760: strmaxcpy(h,ErrMsgInvRegPair,255); break;
-     case 1800: strmaxcpy(h,ErrMsgOpenMacro,255); break;
-     case 1805: strmaxcpy(h,ErrMsgEXITMOutsideMacro,255); break;
-     case 1810: strmaxcpy(h,ErrMsgTooManyMacParams,255); break;
-     case 1815: strmaxcpy(h,ErrMsgDoubleMacro,255); break;
-     case 1820: strmaxcpy(h,ErrMsgFirstPassCalc,255); break;
-     case 1830: strmaxcpy(h,ErrMsgTooManyNestedIfs,255); break;
-     case 1840: strmaxcpy(h,ErrMsgMissingIf,255); break;
-     case 1850: strmaxcpy(h,ErrMsgRekMacro,255); break;
-     case 1860: strmaxcpy(h,ErrMsgUnknownFunc,255); break;
-     case 1870: strmaxcpy(h,ErrMsgInvFuncArg,255); break;
-     case 1880: strmaxcpy(h,ErrMsgFloatOverflow,255); break;
-     case 1890: strmaxcpy(h,ErrMsgInvArgPair,255); break;
-     case 1900: strmaxcpy(h,ErrMsgNotOnThisAddress,255); break;
-     case 1905: strmaxcpy(h,ErrMsgNotFromThisAddress,255); break;
-     case 1910: strmaxcpy(h,ErrMsgTargOnDiffPage,255); break;
-     case 1920: strmaxcpy(h,ErrMsgCodeOverflow,255); break;
-     case 1925: strmaxcpy(h,ErrMsgAdrOverflow,255); break;
-     case 1930: strmaxcpy(h,ErrMsgMixDBDS,255); break;
-     case 1940: strmaxcpy(h,ErrMsgOnlyInCode,255); break;
-     case 1950: strmaxcpy(h,ErrMsgParNotPossible,255); break;
-     case 1960: strmaxcpy(h,ErrMsgInvSegment,255); break;
-     case 1961: strmaxcpy(h,ErrMsgUnknownSegment,255); break;
-     case 1962: strmaxcpy(h,ErrMsgUnknownSegReg,255); break;
-     case 1970: strmaxcpy(h,ErrMsgInvString,255); break;
-     case 1980: strmaxcpy(h,ErrMsgInvRegName,255); break;
-     case 1985: strmaxcpy(h,ErrMsgInvArg,255); break;
-     case 1990: strmaxcpy(h,ErrMsgNoIndir,255); break;
-     case 1995: strmaxcpy(h,ErrMsgNotInThisSegment,255); break;
-     case 1996: strmaxcpy(h,ErrMsgNotInMaxmode,255); break;
-     case 1997: strmaxcpy(h,ErrMsgOnlyInMaxmode,255); break;
-     case 10001: strmaxcpy(h,ErrMsgOpeningFile,255); break;
-     case 10002: strmaxcpy(h,ErrMsgListWrError,255); break;
-     case 10003: strmaxcpy(h,ErrMsgFileReadError,255); break;
-     case 10004: strmaxcpy(h,ErrMsgFileWriteError,255); break;
-     case 10006: strmaxcpy(h,ErrMsgHeapOvfl,255); break;
-     case 10007: strmaxcpy(h,ErrMsgStackOvfl,255); break;
-     default  : strmaxcpy(h,ErrMsgIntError,255);
+     case    0: msgno=Num_ErrMsgUselessDisp; break;
+     case   10: msgno=Num_ErrMsgShortAddrPossible; break;
+     case   20: msgno=Num_ErrMsgShortJumpPossible; break;
+     case   30: msgno=Num_ErrMsgNoShareFile; break;
+     case   40: msgno=Num_ErrMsgBigDecFloat; break;
+     case   50: msgno=Num_ErrMsgPrivOrder; break;
+     case   60: msgno=Num_ErrMsgDistNull; break;
+     case   70: msgno=Num_ErrMsgWrongSegment; break;
+     case   75: msgno=Num_ErrMsgInAccSegment; break;
+     case   80: msgno=Num_ErrMsgPhaseErr; break;
+     case   90: msgno=Num_ErrMsgOverlap; break;
+     case  100: msgno=Num_ErrMsgNoCaseHit; break;
+     case  110: msgno=Num_ErrMsgInAccPage; break;
+     case  120: msgno=Num_ErrMsgRMustBeEven; break;
+     case  130: msgno=Num_ErrMsgObsolete; break;
+     case  140: msgno=Num_ErrMsgUnpredictable; break;
+     case  150: msgno=Num_ErrMsgAlphaNoSense; break;
+     case  160: msgno=Num_ErrMsgSenseless; break;
+     case  170: msgno=Num_ErrMsgRepassUnknown; break;
+     case  180: msgno=Num_ErrMsgAddrNotAligned; break;
+     case  190: msgno=Num_ErrMsgIOAddrNotAllowed; break;
+     case  200: msgno=Num_ErrMsgPipeline; break;
+     case  210: msgno=Num_ErrMsgDoubleAdrRegUse; break;
+     case  220: msgno=Num_ErrMsgNotBitAddressable; break;
+     case  230: msgno=Num_ErrMsgStackNotEmpty; break;
+     case  240: msgno=Num_ErrMsgNULCharacter; break;
+     case  250: msgno=Num_ErrMsgPageCrossing; break;
+     case  260: msgno=Num_ErrMsgWOverRange; break;
+     case  270: msgno=Num_ErrMsgNegDUP; break;
+     case 1000: msgno=Num_ErrMsgDoubleDef; break;
+     case 1010: msgno=Num_ErrMsgSymbolUndef; break;
+     case 1020: msgno=Num_ErrMsgInvSymName; break;
+     case 1090: msgno=Num_ErrMsgInvFormat; break;
+     case 1100: msgno=Num_ErrMsgUseLessAttr; break;
+     case 1105: msgno=Num_ErrMsgTooLongAttr; break;
+     case 1107: msgno=Num_ErrMsgUndefAttr; break;
+     case 1110: msgno=Num_ErrMsgWrongArgCnt; break;
+     case 1115: msgno=Num_ErrMsgWrongOptCnt; break;
+     case 1120: msgno=Num_ErrMsgOnlyImmAddr; break;
+     case 1130: msgno=Num_ErrMsgInvOpsize; break;
+     case 1131: msgno=Num_ErrMsgConfOpSizes; break;
+     case 1132: msgno=Num_ErrMsgUndefOpSizes; break;
+     case 1135: msgno=Num_ErrMsgInvOpType; break;
+     case 1140: msgno=Num_ErrMsgTooMuchArgs; break;
+     case 1200: msgno=Num_ErrMsgUnknownOpcode; break;
+     case 1300: msgno=Num_ErrMsgBrackErr; break;
+     case 1310: msgno=Num_ErrMsgDivByZero; break;
+     case 1315: msgno=Num_ErrMsgUnderRange; break;
+     case 1320: msgno=Num_ErrMsgOverRange; break;
+     case 1325: msgno=Num_ErrMsgNotAligned; break;
+     case 1330: msgno=Num_ErrMsgDistTooBig; break;
+     case 1335: msgno=Num_ErrMsgInAccReg; break;
+     case 1340: msgno=Num_ErrMsgNoShortAddr; break;
+     case 1350: msgno=Num_ErrMsgInvAddrMode; break;
+     case 1351: msgno=Num_ErrMsgMustBeEven; break;
+     case 1355: msgno=Num_ErrMsgInvParAddrMode; break;
+     case 1360: msgno=Num_ErrMsgUndefCond; break;
+     case 1370: msgno=Num_ErrMsgJmpDistTooBig; break;
+     case 1375: msgno=Num_ErrMsgDistIsOdd; break;
+     case 1380: msgno=Num_ErrMsgInvShiftArg; break;
+     case 1390: msgno=Num_ErrMsgRange18; break;
+     case 1400: msgno=Num_ErrMsgShiftCntTooBig; break;
+     case 1410: msgno=Num_ErrMsgInvRegList; break;
+     case 1420: msgno=Num_ErrMsgInvCmpMode; break;
+     case 1430: msgno=Num_ErrMsgInvCPUType; break;
+     case 1440: msgno=Num_ErrMsgInvCtrlReg; break;
+     case 1445: msgno=Num_ErrMsgInvReg; break;
+     case 1450: msgno=Num_ErrMsgNoSaveFrame; break;
+     case 1460: msgno=Num_ErrMsgNoRestoreFrame; break;
+     case 1465: msgno=Num_ErrMsgUnknownMacArg; break;
+     case 1470: msgno=Num_ErrMsgMissEndif; break;
+     case 1480: msgno=Num_ErrMsgInvIfConst; break;
+     case 1483: msgno=Num_ErrMsgDoubleSection; break;
+     case 1484: msgno=Num_ErrMsgInvSection; break;
+     case 1485: msgno=Num_ErrMsgMissingEndSect; break;
+     case 1486: msgno=Num_ErrMsgWrongEndSect; break;
+     case 1487: msgno=Num_ErrMsgNotInSection; break;
+     case 1488: msgno=Num_ErrMsgUndefdForward; break;
+     case 1489: msgno=Num_ErrMsgContForward; break;
+     case 1490: msgno=Num_ErrMsgInvFuncArgCnt; break;
+     case 1495: msgno=Num_ErrMsgMissingLTORG; break;
+     case 1500: msgno= -1;
+                sprintf(h,"%s%s%s",getmessage(Num_ErrMsgNotOnThisCPU1), 
+                        MomCPUIdent,getmessage(Num_ErrMsgNotOnThisCPU2));
+                break;
+     case 1505: msgno= -1;
+                sprintf(h,"%s%s%s",getmessage(Num_ErrMsgNotOnThisCPU3),
+                        MomCPUIdent,getmessage(Num_ErrMsgNotOnThisCPU2));
+                break;
+     case 1510: msgno=Num_ErrMsgInvBitPos; break;
+     case 1520: msgno=Num_ErrMsgOnlyOnOff; break;
+     case 1530: msgno=Num_ErrMsgStackEmpty; break;
+     case 1540: msgno=Num_ErrMsgNotOneBit; break;
+     case 1550: msgno=Num_ErrMsgMissingStruct; break;
+     case 1551: msgno=Num_ErrMsgOpenStruct; break;
+     case 1552: msgno=Num_ErrMsgWrongStruct; break;
+     case 1553: msgno=Num_ErrMsgPhaseDisallowed; break;
+     case 1554: msgno=Num_ErrMsgInvStructDir; break;
+     case 1600: msgno=Num_ErrMsgShortRead; break;
+     case 1700: msgno=Num_ErrMsgRomOffs063; break;
+     case 1710: msgno=Num_ErrMsgInvFCode; break;
+     case 1720: msgno=Num_ErrMsgInvFMask; break;
+     case 1730: msgno=Num_ErrMsgInvMMUReg; break;
+     case 1740: msgno=Num_ErrMsgLevel07; break;
+     case 1750: msgno=Num_ErrMsgInvBitMask; break;
+     case 1760: msgno=Num_ErrMsgInvRegPair; break;
+     case 1800: msgno=Num_ErrMsgOpenMacro; break;
+     case 1805: msgno=Num_ErrMsgEXITMOutsideMacro; break;
+     case 1810: msgno=Num_ErrMsgTooManyMacParams; break;
+     case 1815: msgno=Num_ErrMsgDoubleMacro; break;
+     case 1820: msgno=Num_ErrMsgFirstPassCalc; break;
+     case 1830: msgno=Num_ErrMsgTooManyNestedIfs; break;
+     case 1840: msgno=Num_ErrMsgMissingIf; break;
+     case 1850: msgno=Num_ErrMsgRekMacro; break;
+     case 1860: msgno=Num_ErrMsgUnknownFunc; break;
+     case 1870: msgno=Num_ErrMsgInvFuncArg; break;
+     case 1880: msgno=Num_ErrMsgFloatOverflow; break;
+     case 1890: msgno=Num_ErrMsgInvArgPair; break;
+     case 1900: msgno=Num_ErrMsgNotOnThisAddress; break;
+     case 1905: msgno=Num_ErrMsgNotFromThisAddress; break;
+     case 1910: msgno=Num_ErrMsgTargOnDiffPage; break;
+     case 1920: msgno=Num_ErrMsgCodeOverflow; break;
+     case 1925: msgno=Num_ErrMsgAdrOverflow; break;
+     case 1930: msgno=Num_ErrMsgMixDBDS; break;
+     case 1940: msgno=Num_ErrMsgNotInStruct; break;
+     case 1950: msgno=Num_ErrMsgParNotPossible; break;
+     case 1960: msgno=Num_ErrMsgInvSegment; break;
+     case 1961: msgno=Num_ErrMsgUnknownSegment; break;
+     case 1962: msgno=Num_ErrMsgUnknownSegReg; break;
+     case 1970: msgno=Num_ErrMsgInvString; break;
+     case 1980: msgno=Num_ErrMsgInvRegName; break;
+     case 1985: msgno=Num_ErrMsgInvArg; break;
+     case 1990: msgno=Num_ErrMsgNoIndir; break;
+     case 1995: msgno=Num_ErrMsgNotInThisSegment; break;
+     case 1996: msgno=Num_ErrMsgNotInMaxmode; break;
+     case 1997: msgno=Num_ErrMsgOnlyInMaxmode; break;
+     case 10001: msgno=Num_ErrMsgOpeningFile; break;
+     case 10002: msgno=Num_ErrMsgListWrError; break;
+     case 10003: msgno=Num_ErrMsgFileReadError; break;
+     case 10004: msgno=Num_ErrMsgFileWriteError; break;
+     case 10006: msgno=Num_ErrMsgHeapOvfl; break;
+     case 10007: msgno=Num_ErrMsgStackOvfl; break;
+     default  : msgno= -1;
+                sprintf(h,"%s %d",getmessage(Num_ErrMsgIntError),(int) Num);
     END
+   if (msgno!=-1) strmaxcpy(h,getmessage(msgno),255);   
 
    if (((Num==1910) OR (Num==1370)) AND (NOT Repass)) JmpErrors++;
 
@@ -1020,7 +1040,7 @@ BEGIN
    LargeWord NewMin,FMin;
    Boolean Found;
    Word p=0,z;
-   Integer BufferZ;
+   int BufferZ;
    String BufferS;
 
    NewMin=0; BufferZ=0; *BufferS='\0';
@@ -1067,16 +1087,17 @@ END
 
         void PrintUseList(void)
 BEGIN
-   Integer z,z2,l;
+   int z,z2,l;
    String s;
 
    for (z=1; z<=PCMax; z++)
     if (SegChunks[z].Chunks!=Nil)
      BEGIN
-      sprintf(s,"  %s%s%s",ListSegListHead1,SegNames[z],ListSegListHead2);
+      sprintf(s,"  %s%s%s",getmessage(Num_ListSegListHead1),SegNames[z],
+                           getmessage(Num_ListSegListHead2));
       WrLstLine(s);
       strcpy(s,"  ");
-      l=strlen(SegNames[z])+strlen(ListSegListHead1)+strlen(ListSegListHead2);
+      l=strlen(SegNames[z])+strlen(getmessage(Num_ListSegListHead1))+strlen(getmessage(Num_ListSegListHead2));
       for (z2=0; z2<l; z2++) strmaxcat(s,"-",255);
       WrLstLine(s);
       WrLstLine("");
@@ -1087,7 +1108,7 @@ END
 
         void ClearUseList(void)
 BEGIN
-   Integer z;
+   int z;
 
    for (z=1; z<=PCMax; z++)
     ClearChunk(SegChunks+z);
@@ -1101,7 +1122,7 @@ BEGIN
    char *p;
    static String tmp;
 
-   p=strchr(Acc,':');
+   p=strchr(Acc,DIRSEP);
    if (p==Nil)
     BEGIN
      strmaxcpy(tmp,Acc,255); Acc[0]='\0';
@@ -1120,7 +1141,7 @@ BEGIN
    strmaxcpy(Test,IncludeList,255);
    while (*Test!='\0')
     if (strcmp(GetPath(Test),NewPath)==0) return;
-   if (*IncludeList!='\0') strmaxprep(IncludeList,":",255);
+   if (*IncludeList!='\0') strmaxprep(IncludeList,SDIRSEP,255);
    strmaxprep(IncludeList,NewPath,255);
 END
 
@@ -1136,7 +1157,7 @@ BEGIN
      Part=GetPath(Save);
      if (strcmp(Part,RemPath)!=0)
       BEGIN
-       if (IncludeList[0]!='\0') strmaxcat(IncludeList,":",255);
+       if (IncludeList[0]!='\0') strmaxcat(IncludeList,SDIRSEP,255);
        strmaxcat(IncludeList,Part,255);
       END
     END
@@ -1175,7 +1196,7 @@ END
 
         void CompressLine(char *TokNam, Byte Num, char *Line)
 BEGIN
-   Integer z,e,tlen,llen;
+   int z,e,tlen,llen;
    Boolean SFound;
 
    z=0; tlen=strlen(TokNam); llen=strlen(Line);
@@ -1250,11 +1271,31 @@ END
 
         long GTime(void)
 BEGIN
-   struct time ti;
-   struct date da;
+   static unsigned long *tick=MK_FP(0x40,0x6c);
+   double tmp=*tick;
 
-   gettime(&ti); getdate (&da);
-   return (dostounix(&da,&ti)*100)+ti.ti_hund;
+   return ((long) (tmp*5.4931641));
+END
+
+#elif __IBMC__
+
+#include <time.h>
+#define INCL_DOSDATETIME
+#include <os2.h>
+
+        long GTime(void)
+BEGINM
+   DATETIME dt;
+   struct tm ts;
+   DosGetDateTime(&dt);
+   memset(&ts,0,sizeof(ts));
+   ts.tm_year = dt.year-1900;
+   ts.tm_mon  = dt.month-1;  
+   ts.tm_mday = dt.day;
+   ts.tm_hour = dt.hours;
+   ts.tm_min  = dt.minutes;
+   ts.tm_sec  = dt.seconds;
+   return (mktime(&ts)*100)+(dt.hundredths);
 END
 
 #else
@@ -1285,7 +1326,11 @@ END;
 /* Stackfehler abfangen - bis auf DOS nur Dummies */
 
 #ifdef __TURBOC__
-unsigned _stklen=65520;
+#ifdef __DPMI16__
+#else
+unsigned _stklen=STKSIZE;
+unsigned _ovrbuffer=64*48;
+#endif
 #include <malloc.h>
 #endif
 
@@ -1314,21 +1359,24 @@ BEGIN
 #endif
 END
 
-/****************************************************************************/
-/**
-{$IFDEF DPMI}
-        FUNCTION MemInitSwapFile(FileName: pChar; FileSize: LongInt): INTEGER;
-        EXTERNAL 'RTM' INDEX 35;
+#ifdef CKMALLOC
+#undef malloc
+#undef realloc
 
-        FUNCTION MemCloseSwapFile(Delete: INTEGER): INTEGER;
-        EXTERNAL 'RTM' INDEX 36;
-{$ENDIF}
+        void *ckmalloc(size_t s)
+BEGIN
+   void *tmp=malloc(s);
+   if (tmp==NULL) WrError(10006);
+   return tmp;
+END
 
-VAR
-   Cnt:Char;
-   FileLen:LongInt;
-   p,err:Integer;
-   MemFlag,TempName:String;**/
+        void *ckrealloc(void *p, size_t s)
+BEGIN
+   void *tmp=realloc(p,s);
+   if (tmp==NULL) WrError(10006);
+   return tmp;
+END
+#endif
 
 	void asmsub_init(void)
 BEGIN
@@ -1336,36 +1384,18 @@ BEGIN
    Word z;
    LongWord XORVal;
 
-/**
-   { Fuer DPMI evtl. Swapfile anlegen }
-
-{$IFDEF DPMI}
-   MemFlag:=GetEnv('ASXSWAP');
-   IF MemFlag<>'' THEN
-    BEGIN
-     p:=Pos(',',MemFlag);
-     IF p=0 THEN TempName:='ASX.TMP'
-     ELSE
-      BEGIN
-       TempName:=Copy(MemFlag,p+1,Length(MemFlag)-p);
-       MemFlag:=Copy(MemFlag,1,p-1);
-      END;
-     KillBlanks(TempName); KillBlanks(MemFlag);
-     TempName:=TempName+#0;
-     Val(MemFlag,FileLen,Err);
-     IF Err<>0 THEN
-      BEGIN
-       WriteLn(StdErr,ErrMsgInvSwapSize); Halt(4);
-      END;
-     IF MemInitSwapFile(@TempName[1],FileLen SHL 20)<>0 THEN
-      BEGIN
-       WriteLn(StdErr,ErrMsgSwapTooBig); Halt(4);
-      END;
-    END;
-{$ENDIF}
-
-   HeapError:=@MyHeapError;
-**/
+#ifdef __TURBOC__
+#ifdef __MSDOS__
+#ifdef __DPMI16__
+   char *MemFlag,*p;
+   String MemVal,TempName;
+   unsigned long FileLen;
+#else
+   char *envval;
+   int ovrerg;
+#endif
+#endif
+#endif
 
    for (z=0; z<strlen(CMess); z++)
     BEGIN
@@ -1378,8 +1408,50 @@ BEGIN
    InitStringList(&OutList);
 
 #ifdef __TURBOC__
+#ifdef __MSDOS__
+#ifdef __DPMI16__
+   /* Fuer DPMI evtl. Swapfile anlegen */
+
+   MemFlag=getenv("ASXSWAP");
+   if (MemFlag!=Nil)
+    BEGIN
+     strmaxcpy(MemVal,MemFlag,255);
+     p=strchr(MemVal,',');
+     if (p==Nil) strcpy(TempName,"ASX.TMP");
+     else
+      BEGIN
+       *p=Nil; strcpy(TempName,MemVal);
+       strcpy(MemVal,p+1);
+      END;
+     KillBlanks(TempName); KillBlanks(MemVal);
+     FileLen=strtol(MemFlag,&p,0);
+     if (*p!='\0')
+      BEGIN
+       fputs(getmessage(Num_ErrMsgInvSwapSize),stderr); exit(4);
+      END;
+     if (MEMinitSwapFile(TempName,FileLen << 20)!=RTM_OK)
+      BEGIN
+       fputs(getmessage(Num_ErrMsgSwapTooBig),stderr); exit(4);
+      END
+    END
+#else
+   /* Bei DOS Auslagerung Overlays in XMS/EMS versuchen */
+
+   envval=getenv("USEXMS");
+   if ((envval!=Nil) AND (toupper(*envval)=='N')) ovrerg=-1;
+   else ovrerg=_OvrInitExt(0,0);
+   if (ovrerg!=0)
+    BEGIN
+     envval=getenv("USEEMS");
+     if ((envval==Nil) OR (toupper(*envval)!='N')) _OvrInitEms(0,0,0);
+    END
+#endif
+#endif
+#endif
+
+#ifdef __TURBOC__
    StartStack=stackavail(); LowStack=stackavail();
-   MinStack=StartStack-65520+0x800;
+   MinStack=StartStack-STKSIZE+0x800;
 #else
    StartStack=LowStack=MinStack=0;
 #endif

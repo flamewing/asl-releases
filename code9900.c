@@ -12,7 +12,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "stringutil.h"
+#include "strutil.h"
 #include "endian.h"
 #include "bpemu.h"
 #include "nls.h"
@@ -20,13 +20,14 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "asmallg.h"
 #include "codepseudo.h"
 #include "codevars.h"
 
 
 #define TwoOrderCount 6
 #define OneOrderCount 6
-#define SingOrderCount 14
+#define SingOrderCount 16
 #define SBitOrderCount 3
 #define JmpOrderCount 13
 #define ShiftOrderCount 4
@@ -42,6 +43,14 @@ typedef struct
           Word Code;
          } FixedOrder;
 
+typedef struct
+         {
+          char *Name;
+          int NameLen;
+          Word Code;
+          Boolean MustSup;
+         } SupOrder;
+
 
 static CPUVar CPU9900;
 
@@ -50,13 +59,13 @@ static Word AdrVal,AdrPart;
 
 static FixedOrder *TwoOrders;
 static FixedOrder *OneOrders;
-static FixedOrder *SingOrders;
+static SupOrder *SingOrders;
 static FixedOrder *SBitOrders;
 static FixedOrder *JmpOrders;
 static FixedOrder *ShiftOrders;
 static FixedOrder *ImmOrders;
 static FixedOrder *RegOrders;
-static FixedOrder *FixedOrders;
+static SupOrder *FixedOrders;
 
 /*-------------------------------------------------------------------------*/
 /* dynamische Belegung/Freigabe Codetabellen */
@@ -76,10 +85,11 @@ BEGIN
    OneOrders[InstrZ++].Code=NCode;
 END
 
-        static void AddSing(char *NName, Word NCode)
+        static void AddSing(char *NName, Word NCode,Boolean NSup)
 BEGIN
    if (InstrZ>=SingOrderCount) exit(255);
    SingOrders[InstrZ].Name=NName;
+   SingOrders[InstrZ].MustSup=NSup;
    SingOrders[InstrZ++].Code=NCode;
 END
 
@@ -118,10 +128,11 @@ BEGIN
    RegOrders[InstrZ++].Code=NCode;
 END
 
-        static void AddFixed(char *NName, Word NCode)
+        static void AddFixed(char *NName, Word NCode, Boolean NSup)
 BEGIN
    if (InstrZ>=FixedOrderCount) exit(255);
    FixedOrders[InstrZ].Name=NName;
+   FixedOrders[InstrZ].MustSup=NSup;
    FixedOrders[InstrZ++].Code=NCode;
 END
 
@@ -135,12 +146,13 @@ BEGIN
    AddOne("COC" ,0x08); AddOne("CZC" ,0x09); AddOne("XOR" ,0x0a);
    AddOne("MPY" ,0x0e); AddOne("DIV" ,0x0f); AddOne("XOP" ,0x0b);
 
-   SingOrders=(FixedOrder *) malloc(SingOrderCount*sizeof(FixedOrder)); InstrZ=0;
-   AddSing("B"   ,0x0440); AddSing("BL"  ,0x0680); AddSing("BLWP",0x0400);
-   AddSing("CLR" ,0x04c0); AddSing("SETO",0x0700); AddSing("INV" ,0x0540);
-   AddSing("NEG" ,0x0500); AddSing("ABS" ,0x0740); AddSing("SWPB",0x06c0);
-   AddSing("INC" ,0x0580); AddSing("INCT",0x05c0); AddSing("DEC" ,0x0600);
-   AddSing("DECT",0x0640); AddSing("X"   ,0x0480);
+   SingOrders=(SupOrder *) malloc(SingOrderCount*sizeof(SupOrder)); InstrZ=0;
+   AddSing("B"   ,0x0440,False); AddSing("BL"  ,0x0680,False); AddSing("BLWP",0x0400,False);
+   AddSing("CLR" ,0x04c0,False); AddSing("SETO",0x0700,False); AddSing("INV" ,0x0540,False);
+   AddSing("NEG" ,0x0500,False); AddSing("ABS" ,0x0740,False); AddSing("SWPB",0x06c0,False);
+   AddSing("INC" ,0x0580,False); AddSing("INCT",0x05c0,False); AddSing("DEC" ,0x0600,False);
+   AddSing("DECT",0x0640,True ); AddSing("X"   ,0x0480,False); AddSing("LDS" ,0x0780,True );
+   AddSing("LDD" ,0x07c0,True );
 
    SBitOrders=(FixedOrder *) malloc(SBitOrderCount*sizeof(FixedOrder)); InstrZ=0;
    AddSBit("SBO" ,0x1d); AddSBit("SBZ",0x1e); AddSBit("TB" ,0x1f);
@@ -164,10 +176,10 @@ BEGIN
    AddReg("STST",0x02c); AddReg("LST",0x008);
    AddReg("STWP",0x02a); AddReg("LWP",0x009);
 
-   FixedOrders=(FixedOrder *) malloc(FixedOrderCount*sizeof(FixedOrder)); InstrZ=0;
-   AddFixed("RTWP",0x0380); AddFixed("IDLE",0x0340);
-   AddFixed("RSET",0x0360); AddFixed("CKOF",0x03c0);
-   AddFixed("CKON",0x03a0); AddFixed("LREX",0x03e0);
+   FixedOrders=(SupOrder *) malloc(FixedOrderCount*sizeof(SupOrder)); InstrZ=0;
+   AddFixed("RTWP",0x0380,False); AddFixed("IDLE",0x0340,True );
+   AddFixed("RSET",0x0360,True ); AddFixed("CKOF",0x03c0,True );
+   AddFixed("CKON",0x03a0,True ); AddFixed("LREX",0x03e0,True );
 END
 
 	static void DeinitFields(void)
@@ -188,26 +200,14 @@ END
 
         static Boolean DecodeReg(char *Asc, Word *Erg)
 BEGIN
-   Boolean Err;
-   int l=strlen(Asc);
-
-   if ((l>=2) AND (toupper(*Asc)=='R'))
-    BEGIN
-     *Erg=ConstLongInt(Asc+1,&Err);
-     return ((Err) AND (*Erg<=15));
-    END
-   else if ((l>=3) AND (toupper(*Asc)=='W') AND (toupper(Asc[1])=='R'))
-    BEGIN
-     *Erg=ConstLongInt(Asc+2,&Err);
-     return ((Err) AND (*Erg<=15));
-    END
-   else return False;
+   Boolean OK;
+   *Erg=EvalIntExpression(Asc,UInt4,&OK); return OK;
 END
 
         static char *HasDisp(char *Asc)
 BEGIN
    char *p;
-   Integer Lev;
+   int Lev;
 
    if (Asc[strlen(Asc)-1]==')')
     BEGIN
@@ -240,8 +240,6 @@ BEGIN
 
    AdrCnt=0;
 
-   if (DecodeReg(Asc,&AdrPart)) return True;
-
    if (*Asc=='*')
     BEGIN
      Asc++;
@@ -250,8 +248,7 @@ BEGIN
        IncFlag=True; Asc[strlen(Asc)-1]='\0';
       END
      else IncFlag=False;
-     if (NOT DecodeReg(Asc,&AdrPart)) WrXError(1445,Asc);
-     else
+     if (DecodeReg(Asc,&AdrPart))
       BEGIN
        AdrPart+=0x10+(Ord(IncFlag) << 5);
        return True;
@@ -259,37 +256,43 @@ BEGIN
      return False;
     END
 
-   if (*Asc=='@') Asc++;
-
-   p=HasDisp(Asc);
-   if (p==Nil)
+   if (*Asc=='@')
     BEGIN
-     FirstPassUnknown=False;
-     AdrVal=EvalIntExpression(Asc,UInt16,&OK);
-     if (OK)
+     Asc++; p=HasDisp(Asc);
+     if (p==Nil)
       BEGIN
-       AdrPart=0x20; AdrCnt=1;
-       if ((NOT FirstPassUnknown) AND (IsWord) AND (Odd(AdrVal))) WrError(180);
-       return True;
-      END
-    END
-   else
-    BEGIN
-     strmaxcpy(Reg,p+1,255); Reg[strlen(Reg)-1]='\0';
-     if (NOT DecodeReg(Reg,&AdrPart)) WrXError(1445,Reg);
-     else if (AdrPart==0) WrXError(1445,Reg);
-     else
-      BEGIN
-       *p='\0';
-       AdrVal=EvalIntExpression(Asc,Int16,&OK);
+       FirstPassUnknown=False;
+       AdrVal=EvalIntExpression(Asc,UInt16,&OK);
        if (OK)
         BEGIN
-         AdrPart+=0x20; AdrCnt=1; return True;
+         AdrPart=0x20; AdrCnt=1;
+         if ((NOT FirstPassUnknown) AND (IsWord) AND (Odd(AdrVal))) WrError(180);
+         return True;
         END
       END
-    END
+     else
+      BEGIN
+       strmaxcpy(Reg,p+1,255); Reg[strlen(Reg)-1]='\0';
+       if (DecodeReg(Reg,&AdrPart))
+        if (AdrPart==0) WrXError(1445,Reg);
+        else
+         BEGIN
+          *p='\0';
+          AdrVal=EvalIntExpression(Asc,Int16,&OK);
+          if (OK)
+           BEGIN
+            AdrPart+=0x20; AdrCnt=1; return True;
+           END
+         END
+      END
+     return False;
+    END  
 
-   return False;
+   if (DecodeReg(Asc,&AdrPart)) return True;
+   else
+    BEGIN
+     WrError(1350); return False;
+    END
 END
 
 /*-------------------------------------------------------------------------*/
@@ -310,17 +313,11 @@ END
 
 	static Boolean DecodePseudo(void)
 BEGIN
-#define ONOFF9900Count 1
-static ONOFFRec ONOFF9900s[ONOFF9900Count]=
-              {{"PADDING", &DoPadding , DoPaddingName }};
-
-   Integer z;
+   int z;
    char *p;
    Boolean OK;
    TempResult t;
    Word HVal16;
-
-   if (CodeONOFF(ONOFF9900s,ONOFF9900Count)) return True;
 
    if (Memo("BYTE"))
     BEGIN
@@ -419,7 +416,7 @@ END
 BEGIN
    Word HPart;
    Integer AdrInt;
-   Integer z;
+   int z;
    Boolean OK;
 
    CodeLen=0; DontPrint=False; IsWord=False;
@@ -460,8 +457,7 @@ BEGIN
       else if (DecodeAdr(ArgStr[1]))
        BEGIN
         WAsmCode[0]=AdrPart; WAsmCode[1]=AdrVal;
-        if (NOT DecodeReg(ArgStr[2],&HPart)) WrXError(1445,ArgStr[2]);
-        else
+        if (DecodeReg(ArgStr[2],&HPart))
          BEGIN
           WAsmCode[0]+=(HPart << 6)+(OneOrders[z].Code << 10);
           CodeLen=(1+AdrCnt) << 1;
@@ -494,24 +490,9 @@ BEGIN
     if (Memo(ShiftOrders[z].Name))
      BEGIN
       if (ArgCnt!=2) WrError(1110);
-      else if (NOT DecodeReg(ArgStr[2],WAsmCode+0)) WrXError(1445,ArgStr[2]);
-      else
+      else if (DecodeReg(ArgStr[1],WAsmCode+0))
        BEGIN
-        if (DecodeReg(ArgStr[1],&HPart))
-         BEGIN
-          OK=HPart==0;
-          if (NOT OK) WrXError(1445,ArgStr[1]);
-         END
-        else
-         BEGIN
-          FirstPassUnknown=False;
-          HPart=EvalIntExpression(ArgStr[1],UInt4,&OK);
-          if ((OK) AND (NOT FirstPassUnknown) AND (HPart==0))
-           BEGIN
-            WrError(1315); OK=False;
-           END
-         END
-        if (OK)
+        if (DecodeReg(ArgStr[2],&HPart))
          BEGIN
           WAsmCode[0]+=(HPart << 4)+(ShiftOrders[z].Code << 8);
           CodeLen=2;
@@ -524,10 +505,9 @@ BEGIN
     if (Memo(ImmOrders[z].Name))
      BEGIN
       if (ArgCnt!=2) WrError(1110);
-      else if (NOT DecodeReg(ArgStr[2],WAsmCode+0)) WrXError(1445,ArgStr[2]);
-      else
+      else if (DecodeReg(ArgStr[1],WAsmCode+0))
        BEGIN
-        WAsmCode[1]=EvalIntExpression(ArgStr[1],Int16,&OK);
+        WAsmCode[1]=EvalIntExpression(ArgStr[2],Int16,&OK);
         if (OK)
          BEGIN
           WAsmCode[0]+=(ImmOrders[z].Code << 5); CodeLen=4;
@@ -540,13 +520,24 @@ BEGIN
     if (Memo(RegOrders[z].Name))
      BEGIN
       if (ArgCnt!=1) WrError(1110);
-      else if (NOT DecodeReg(ArgStr[1],WAsmCode+0)) WrXError(1445,ArgStr[1]);
-      else
+      else if (DecodeReg(ArgStr[1],WAsmCode+0))
        BEGIN
         WAsmCode[0]+=RegOrders[z].Code << 4; CodeLen=2;
        END
       return;
      END;
+
+   if (Memo("LMF"))
+    BEGIN
+     if (ArgCnt!=2) WrError(1110);
+     else if (DecodeReg(ArgStr[1],WAsmCode+0))
+      BEGIN
+       WAsmCode[0]+=0x320+(EvalIntExpression(ArgStr[2],UInt1,&OK) << 4);
+       if (OK) CodeLen=2;
+       if (NOT SupAllowed) WrError(50);
+      END
+     return;
+    END
 
    /* ein Operand */
 
@@ -571,6 +562,7 @@ BEGIN
         WAsmCode[0]=SingOrders[z].Code+AdrPart;
         WAsmCode[1]=AdrVal;
         CodeLen=(1+AdrCnt) << 1;
+        if ((SingOrders[z].MustSup) AND (NOT SupAllowed)) WrError(50);
        END
       return;
      END
@@ -634,6 +626,7 @@ BEGIN
       else
        BEGIN
         WAsmCode[0]=FixedOrders[z].Code; CodeLen=2;
+        if ((FixedOrders[z].MustSup) AND (NOT SupAllowed)) WrError(50);
        END
       return;
      END
@@ -653,7 +646,22 @@ END
 
         static void SwitchFrom_9900(void)
 BEGIN
-   DeinitFields();
+   DeinitFields(); ClearONOFF();
+END
+
+	static void InternSymbol_9900(char *Asc, TempResult*Erg)
+BEGIN
+   Boolean err;
+   char *h=Asc;
+
+   Erg->Typ=TempNone;
+   if ((strlen(Asc)>=2) AND (toupper(*Asc)=='R')) h=Asc+1;
+   else if ((strlen(Asc)>=3) AND (toupper(*Asc)=='W') AND (toupper(Asc[1])=='R')) h=Asc+2;
+
+   Erg->Contents.Int=ConstLongInt(h,&err);
+   if ((NOT err) OR (Erg->Contents.Int<0) OR (Erg->Contents.Int>15)) return;
+
+   Erg->Typ=TempInt;
 END
 
         static void SwitchTo_9900()
@@ -667,7 +675,9 @@ BEGIN
    Grans[SegCode]=1; ListGrans[SegCode]=2; SegInits[SegCode]=0;
 
    MakeCode=MakeCode_9900; ChkPC=ChkPC_9900; IsDef=IsDef_9900;
-   SwitchFrom=SwitchFrom_9900;
+   SwitchFrom=SwitchFrom_9900; InternSymbol=InternSymbol_9900;
+   AddONOFF("PADDING", &DoPadding , DoPaddingName ,False);
+   AddONOFF("SUPMODE", &SupAllowed, SupAllowedName,False);
 
    InitFields();
 END

@@ -12,7 +12,7 @@
 #include <string.h>
 
 #include "bpemu.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
@@ -578,7 +578,8 @@ END
 
 	static void MakeCode_7700(void)
 BEGIN
-   Integer z,Start;
+   int z;
+   Integer Start;
    LongInt AdrLong,Mask;
    Boolean OK,Rel;
 

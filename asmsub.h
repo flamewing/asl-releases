@@ -5,6 +5,7 @@
 /* Unterfunktionen, vermischtes                                              */
 /*                                                                           */
 /* Historie:  4. 5. 1996  Grundsteinlegung                                   */
+/* Historie: 13. 8.1997 KillBlanks-Funktionen nach stringutil.c geschoben    */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -43,16 +44,11 @@ extern char *FirstBlank(char *s);
 
 extern void SplitString(char *Source, char *Left, char *Right, char *Trenner);
 
-extern void KillBlanks(char *s);
-
-extern void KillPrefBlanks(char *s);
-
-extern void KillPostBlanks(char *s);
-
 extern void TranslateString(char *s);
 
 extern ShortInt StrCmp(char *s1, char *s2, LongInt Hand1, LongInt Hand2);
 
+/*#define Memo(s) ((*OpPart==*(s)) AND (strcmp(OpPart,(s))==0))*/
 #define Memo(s) (strcmp(OpPart,(s))==0)
 
 
@@ -149,6 +145,8 @@ extern char *GetFromOutList(void);
 
 
 extern long DTime(long t1, long t2);
+
+
 
 
 extern void asmsub_init(void);

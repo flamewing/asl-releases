@@ -13,12 +13,13 @@
 #include <string.h>
 
 #include "nls.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "bpemu.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmcode.h"
+#include "asmallg.h"
 #include "codepseudo.h"
 #include "codevars.h"
 
@@ -313,9 +314,9 @@ END
 
 	static void GetPrefixCode(PrefType inp, Byte *b1 ,Byte *b2)
 BEGIN
-   Integer z;
+   int z;
 
-   z=inp-1;
+   z=((int)inp)-1;
    *b1=0xdd+((z & 4) << 3);
    *b2=0xc0+(z & 3);
 END
@@ -326,7 +327,7 @@ END
 	static void ChangeDDPrefix(char *Add)
 BEGIN
    PrefType ActPrefix;
-   Integer z;
+   int z;
 
    ActPrefix=LastPrefix;
    if (ExtendPrefix(&ActPrefix,Add))
@@ -371,7 +372,7 @@ END
 BEGIN
 #define Reg8Cnt 7
    static char *Reg8Names[Reg8Cnt]={"B","C","D","E","H","L","A"};
-   Integer z;
+   int z;
 
    for (z=0; z<Reg8Cnt; z++)
     if (strcasecmp(Asc,Reg8Names[z])==0)
@@ -395,7 +396,8 @@ BEGIN
 #define Reg16Cnt 6
    static char *Reg16Names[Reg16Cnt]={"BC","DE","HL","SP","IX","IY"};
 
-   Integer z,AdrInt;
+   int z;
+   Integer AdrInt;
    LongInt AdrLong;
    Boolean OK;
    String Asc;
@@ -597,9 +599,9 @@ END
 /*-------------------------------------------------------------------------*/
 /* Bedingung entschluesseln */
 
-	static Boolean DecodeCondition(char *Name, Integer *Erg)
+	static Boolean DecodeCondition(char *Name, int *Erg)
 BEGIN
-   Integer z;
+   int z;
    String Name_N;
 
    strmaxcpy(Name_N,Name,255); NLS_UpString(Name_N);
@@ -630,27 +632,9 @@ END
 
 	static Boolean DecodePseudo(void)
 BEGIN
-#define ONOFFZ80Count 2
-static ONOFFRec ONOFFZ80s[ONOFFZ80Count]=
-	    {{"EXTMODE",   &ExtFlag   , ExtFlagName   },
-	     {"LWORDMODE", &LWordFlag , LWordFlagName }};
-
    if (Memo("PORT"))
     BEGIN
      CodeEquate(SegIO,0,PortEnd());
-     return True;
-    END
-
-   /* erweiterte Modi nur bei Z380 */
-
-   if (CodeONOFF(ONOFFZ80s,ONOFFZ80Count))
-    BEGIN
-     if (MomCPU<CPUZ380)
-      BEGIN
-       WrError(1500);
-       SetFlag(&ExtFlag,ExtFlagName,False);
-       SetFlag(&LWordFlag,LWordFlagName,False);
-      END
      return True;
     END
 
@@ -665,7 +649,7 @@ END
 	static void DecodeLD(void)
 BEGIN
    Byte AdrByte,HLen;
-   Integer z;
+   int z;
    Byte HVals[5];
 
    if (ArgCnt!=2) WrError(1110);
@@ -1155,14 +1139,18 @@ END
 
 	static Boolean ImmIs8(void)
 BEGIN
-   Word tmp=(Word) AdrVals[AdrCnt-2];
+   Word tmp;
+
+   if (AdrCnt<2) return True;
+
+   tmp=(Word) AdrVals[AdrCnt-2];
 
    return ((tmp<=255) OR (tmp>=0xff80));
 END
 
 	static Boolean CodeAri(void)
 BEGIN
-   Integer z;
+   int z;
    Byte AdrByte;
    Boolean OK;
 
@@ -1791,7 +1779,7 @@ BEGIN
    LongWord AdrLong;
    LongInt AdrLInt;
    Byte AdrByte;
-   Integer z;
+   int z;
 
    CodeLen=0; DontPrint=False; PrefixCnt=0; OpSize=0xff; MayLW=False;
 
@@ -2794,7 +2782,7 @@ END
 
 	static void SwitchFrom_Z80(void)
 BEGIN
-   DeinitFields();
+   DeinitFields(); ClearONOFF();
 END
 
 	static void SwitchTo_Z80(void)
@@ -2810,6 +2798,16 @@ BEGIN
 
    MakeCode=MakeCode_Z80; ChkPC=ChkPC_Z80; IsDef=IsDef_Z80;
    SwitchFrom=SwitchFrom_Z80; InitFields();
+
+   /* erweiterte Modi nur bei Z380 */
+
+   if (MomCPU>=CPUZ380)
+    BEGIN
+     AddONOFF("EXTMODE",   &ExtFlag   , ExtFlagName   ,False);
+     AddONOFF("LWORDMODE", &LWordFlag , LWordFlagName ,False);
+    END
+   SetFlag(&ExtFlag,ExtFlagName,False);
+   SetFlag(&LWordFlag,LWordFlagName,False);
 END
 
 	void codez80_init(void)

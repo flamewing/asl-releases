@@ -15,11 +15,11 @@
 
 stddef56inc     equ     1
 
-                if      (MomCPU<>352256)
+                if      (MOMCPU<>352256)
                  fatal  "Falscher Prozessortyp eingestellt: nur 56000 erlaubt!"
 		endif
 
-		if      mompass=1
+                if      MOMPASS=1
                  message "DSP56000-SFR-Definitionen (C) 1993 Alfred Arnold"
 		endif
 

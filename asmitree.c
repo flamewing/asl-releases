@@ -5,6 +5,7 @@
 /* Opcode-Abfrage als Binaerbaum                                             */
 /*                                                                           */
 /* Historie: 30.10.1996 Grundsteinlegung                                     */
+/*            8.10.1997 Hash-Tabelle                                         */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -12,7 +13,7 @@
 #include <string.h>
 
 #include "chunks.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 
@@ -126,12 +127,12 @@ BEGIN
    ClearSingle(Root);
 END
 
-        Boolean SearchInstTree(PInstTreeNode Root)
+        Boolean SearchInstTree(PInstTreeNode Root, char *OpPart)
 BEGIN
-   Integer z;
+   int z;
 
    z=0;
-   while ((Root!=Nil) AND (NOT Memo(Root->Name)))
+   while ((Root!=Nil) AND (strcmp(Root->Name,OpPart)!=0))
     BEGIN
      Root=(strcmp(OpPart,Root->Name)<0)? Root->Left : Root->Right;
      z++;
@@ -163,6 +164,104 @@ END
 BEGIN
    PNode(Root,0);
 END
+
+/*----------------------------------------------------------------------------*/
+
+    static int GetKey(char *Name, LongWord TableSize)
+BEGIN
+   register unsigned char *p;
+   LongWord tmp=0;
+   
+   for (p=(unsigned char *)Name; *p!='\0'; p++) tmp=(tmp<<2)+((LongWord)*p);
+   return tmp%TableSize;
+END
+
+	PInstTable CreateInstTable(int TableSize)
+BEGIN
+   int z;
+   PInstTableEntry tmp;
+   PInstTable tab;
+   
+   tmp=(PInstTableEntry) malloc(sizeof(TInstTableEntry)*TableSize);
+   for (z=0; z<TableSize; z++) tmp[z].Name=Nil;
+   tab=(PInstTable) malloc(sizeof(TInstTable));
+   tab->Fill=0; tab->Size=TableSize; tab->Entries=tmp;
+   return tab;
+END
+
+	void DestroyInstTable(PInstTable tab)
+BEGIN
+   free(tab->Entries);
+   free(tab);
+END
+
+	void AddInstTable(PInstTable tab, char *Name, Word Index, InstProc Proc)
+BEGIN
+   LongWord h0=GetKey(Name,tab->Size),z=0;
+
+   /* mindestens ein freies Element lassen, damit der Sucher garantiert terminiert */
+ 
+   if (tab->Size-1<=tab->Fill) exit(255);
+   while (1)
+    BEGIN
+     if (tab->Entries[h0].Name==Nil)
+      BEGIN
+       tab->Entries[h0].Name=Name;
+       tab->Entries[h0].Proc=Proc;
+       tab->Entries[h0].Index=Index;
+       tab->Entries[h0].Coll=z;
+       tab->Fill++;
+       return;
+      END
+     z++;
+     if ((++h0)==tab->Size) h0=0;
+    END
+END
+
+	void RemoveInstTable(PInstTable tab, char *Name)
+BEGIN
+   LongWord h0=GetKey(Name,tab->Size);
+
+   while (1)
+    BEGIN
+     if (tab->Entries[h0].Name==Nil) return;
+     else if (strcmp(tab->Entries[h0].Name,Name)==0)
+      BEGIN
+       tab->Entries[h0].Name=Nil;
+       tab->Entries[h0].Proc=Nil;
+       tab->Fill--;
+       return;
+      END
+     if ((++h0)==tab->Size) h0=0;
+    END
+END
+
+	Boolean LookupInstTable(PInstTable tab, char *Name)
+BEGIN
+   LongWord h0=GetKey(Name,tab->Size);
+
+   while (1)
+    BEGIN
+     if (tab->Entries[h0].Name==Nil) return False;
+     else if (strcmp(tab->Entries[h0].Name,Name)==0)
+      BEGIN
+       tab->Entries[h0].Proc(tab->Entries[h0].Index);
+       return True;
+      END
+     if ((++h0)==tab->Size) h0=0;
+    END
+END
+
+	void PrintInstTable(FILE *stream, PInstTable tab)
+BEGIN
+   int z;
+
+   for (z=0; z<tab->Size; z++)
+    if (tab->Entries[z].Name!=Nil)
+     fprintf(stream,"[%3d]: %-10s Index %4d Coll %2d\n",z,tab->Entries[z].Name,tab->Entries[z].Index,tab->Entries[z].Coll);
+END
+
+/*----------------------------------------------------------------------------*/ 
 
 	void asmitree_init(void)
 BEGIN

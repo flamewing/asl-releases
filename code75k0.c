@@ -13,7 +13,7 @@
 #include <ctype.h>
 
 #include "nls.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "bpemu.h"
 #include "asmdef.h"
 #include "asmsub.h"
@@ -426,7 +426,8 @@ END
 
         static void MakeCode_75K0(void)
 BEGIN
-   Integer z,AdrInt,Dist;
+   Integer AdrInt,Dist;
+   int z;
    Byte HReg;
    Word BVal;
    Boolean OK,BrRel,BrLong;

@@ -12,20 +12,24 @@
 #include <ctype.h>
 #include <string.h>
 
+#include "version.h"
 #include "endian.h"
 #include "bpemu.h"
 #include "hex.h"
 #include "nls.h"
-#include "stringutil.h"
+#include "nlmessages.h"
+#include "p2hex.rsc"
+#include "ioerrs.h"
+#include "strutil.h"
 #include "chunks.h"
-#include "decodecmd.h"
+#include "cmdarg.h"
 
 #include "toolutils.h"
 
 static char *HexSuffix=".hex";
 #define MaxLineLen 254
 
-typedef enum {Default,MotoS,IntHex,IntHex16,IntHex32,MOSHex,TekHex,TiDSK} OutFormat;
+typedef enum {Default,MotoS,IntHex,IntHex16,IntHex32,MOSHex,TekHex,TiDSK,Atmel} OutFormat;
 typedef void (*ProcessProc)(
 #ifdef __PROTOS__
 char *FileName, LongWord Offset
@@ -33,13 +37,13 @@ char *FileName, LongWord Offset
 );
 
 static CMDProcessed ParProcessed;
-static Integer z,z2;
+static int z;
 static FILE *TargFile;
 static String SrcName,TargName;
 
 static LongWord StartAdr,StopAdr,LineLen;
 static LongWord StartData,StopData,EntryAdr;
-static Boolean StartAuto,StopAuto,EntryAdrPresent;
+static Boolean StartAuto,StopAuto,AutoErase,EntryAdrPresent;
 static Word Seg,Ofs;
 static LongWord Dummy;
 static Byte IntelMode;
@@ -54,13 +58,10 @@ static OutFormat DestFormat;
 
 static ChunkList UsedList;
 
-#include "tools.rsc"
-#include "p2hex.rsc"
-
         static void ParamError(Boolean InEnv, char *Arg)
 BEGIN
-   printf("%s%s\n",InEnv?ErrMsgInvEnvParam:ErrMsgInvParam,Arg);
-   printf("%s\n",ErrMsgProgTerm);
+   printf("%s%s\n",getmessage(InEnv?Num_ErrMsgInvEnvParam:Num_ErrMsgInvParam),Arg);
+   printf("%s\n",getmessage(Num_ErrMsgProgTerm));
    exit(1);
 END
 
@@ -82,6 +83,7 @@ BEGIN
    Word TestID;
    Byte InpHeader,InpSegment,InpGran,BSwap;
    LongInt InpStart,SumLen;
+   int z2;
    Word InpLen,TransLen;
    Boolean doit,FirstBank=0;
    Byte Buffer[MaxLineLen];
@@ -105,7 +107,7 @@ BEGIN
    if (SrcFile==Nil) ChkIO(FileName);
 
    if (NOT Read2(SrcFile,&TestID)) ChkIO(FileName);
-   if (TestID!=FileMagic) FormatError(FileName,FormatInvHeaderMsg);
+   if (TestID!=FileMagic) FormatError(FileName,getmessage(Num_FormatInvHeaderMsg));
 
    errno=0; printf("%s==>>%s",FileName,TargName); ChkIO(OutName);
 
@@ -129,9 +131,9 @@ BEGIN
        if ((ActFormat=DestFormat)==Default)
         switch (InpHeader)
          BEGIN
-          case 0x01: case 0x05: case 0x09: case 0x52: case 0x56: case 0x61:
-          case 0x62: case 0x63: case 0x64: case 0x65: case 0x68: case 0x69:
-          case 0x6c:
+          case 0x01: case 0x03: case 0x05: case 0x09: case 0x52: case 0x56:
+          case 0x61: case 0x62: case 0x63: case 0x64: case 0x65: case 0x66:
+          case 0x68: case 0x69: case 0x6c:
            ActFormat=MotoS; break;
           case 0x12: case 0x21: case 0x31: case 0x32: case 0x33: case 0x39: case 0x3a: case 0x41:
           case 0x48: case 0x49: case 0x51: case 0x53: case 0x54: case 0x55: case 0x6e: case 0x70:
@@ -145,8 +147,10 @@ BEGIN
            ActFormat=MOSHex; break;
           case 0x74: case 0x75: case 0x77:
            ActFormat=TiDSK; break;
+          case 0x3b:
+           ActFormat=Atmel; break;
           default: 
-           FormatError(FileName,FormatInvRecordHeaderMsg);
+           FormatError(FileName,getmessage(Num_FormatInvRecordHeaderMsg));
          END
 
        switch (ActFormat)
@@ -160,6 +164,8 @@ BEGIN
 #endif
          case IntHex16:
           MaxAdr=0xffff0+0xffff; break;
+         case Atmel:
+          MaxAdr=0xffffff; break;
          default:
           MaxAdr=0xffff;
         END
@@ -169,7 +175,7 @@ BEGIN
 
        NextPos=ftell(SrcFile)+InpLen;
        if (NextPos>=FileSize(SrcFile)-1)
-        FormatError(FileName,FormatInvRecordLenMsg);
+        FormatError(FileName,getmessage(Num_FormatInvRecordLenMsg));
 
        doit=(FilterOK(InpHeader)) AND (InpSegment==SegCode);
 
@@ -184,14 +190,14 @@ BEGIN
  	   ErgLen=(ErgStop+1-ErgStart)*Gran;
            if (AddChunk(&UsedList,ErgStart,ErgStop-ErgStart+1,True))
             BEGIN
-             errno=0; printf(" %s\n",ErrMsgOverlap); ChkIO(OutName);
+             errno=0; printf(" %s\n",getmessage(Num_ErrMsgOverlap)); ChkIO(OutName);
             END
           END
         END
 
        if (ErgStop>MaxAdr)
         BEGIN
-         errno=0; printf(" %s\n",ErrMsgAdrOverflow); ChkIO(OutName);
+         errno=0; printf(" %s\n",getmessage(Num_ErrMsgAdrOverflow)); ChkIO(OutName);
         END
 
        if (doit)
@@ -266,11 +272,13 @@ BEGIN
             break;
            case TekHex:
             break;
+           case Atmel:
+            break;
   	   case TiDSK:
   	    if (NOT DSKOccured)
   	     BEGIN
   	      DSKOccured=True;
-              errno=0; fprintf(TargFile,"%s%s\n",DSKHeaderLine,TargName); ChkIO(TargName);
+              errno=0; fprintf(TargFile,"%s%s\n",getmessage(Num_DSKHeaderLine),TargName); ChkIO(TargName);
   	     END
             break;
            default: 
@@ -293,7 +301,8 @@ BEGIN
              FirstBank=False;
             END
 
-           /* Recordlaenge ausrechnen, fuer Intel32 auf 64K-Grenze begrenzen */
+           /* Recordlaenge ausrechnen, fuer Intel32 auf 64K-Grenze begrenzen
+              bei Atmel nur 2 Byte pro Zeile! */
 
            TransLen=min(LineLen,ErgLen);
            if ((ActFormat==IntHex32) AND ((ErgStart&0xffff)+(TransLen/Gran)>=0x10000))
@@ -301,6 +310,7 @@ BEGIN
              TransLen=Gran*(0x10000-(ErgStart&0xffff));
              FirstBank=True;
             END
+           else if (ActFormat==Atmel) TransLen=min(2,TransLen);
 
  	   /* Start der Datenzeile */
 
@@ -362,6 +372,9 @@ BEGIN
  	      ChkIO(TargName);
  	      ChkSum=0;
  	      break;
+             case Atmel:
+              errno=0; fprintf(TargFile,"%s%s:",HexByte(ErgStart >> 16),HexWord(ErgStart & 0xffff));
+              ChkIO(TargName);
              default:
               break;
  	    END
@@ -394,6 +407,13 @@ BEGIN
  	       ChkSum+=WBuffer[z];
  	       SumLen+=Gran;
  	      END
+            END
+           else if (ActFormat==Atmel)
+            BEGIN
+             if (TransLen>=2)
+              BEGIN
+               fprintf(TargFile,"%s",HexWord(WBuffer[0])); SumLen+=2;
+              END
             END
  	   else
  	    for (z=0; z<(LongInt)TransLen; z++)
@@ -434,6 +454,11 @@ BEGIN
               fprintf(TargFile,"7%sF\n",HexWord(ChkSum));
  	      ChkIO(TargName);
  	      break;
+             case Atmel:
+              errno=0;
+              fprintf(TargFile,"\n");
+              ChkIO(TargName);
+              break;
              default:
               break;
  	    END
@@ -473,6 +498,8 @@ BEGIN
             break;
            case TiDSK:
             break;
+           case Atmel:
+            break;
            default:
             break;
           END;
@@ -487,28 +514,25 @@ BEGIN
    errno=0; fclose(SrcFile); ChkIO(FileName);
 END
 
+static ProcessProc CurrProcessor;
+static LongWord CurrOffset;
+
+	static void Callback(char *Name)
+BEGIN
+   CurrProcessor(Name,CurrOffset);
+END
+
 	static void ProcessGroup(char *GroupName_O, ProcessProc Processor)
 BEGIN
-/**   s:SearchRec;**/
-   String /**Path,Name,**/Ext,GroupName;
-   LongWord Offset;
+   String Ext,GroupName;
 
+   CurrProcessor=Processor;
    strmaxcpy(GroupName,GroupName_O,255); strmaxcpy(Ext,GroupName,255);
-   if (NOT RemoveOffset(GroupName,&Offset)) ParamError(False,Ext);
-   AddSuffix(GroupName,Suffix);
+   if (NOT RemoveOffset(GroupName,&CurrOffset)) ParamError(False,Ext);
+   AddSuffix(GroupName,getmessage(Num_Suffix));
 
-   Processor(GroupName,Offset);
-/**   FSplit(GroupName,Path,Name,Ext);
-
-   FindFirst(GroupName,Archive,s);
-   IF DosError<>0 THEN
-    WriteLn(ErrMsgNullMaskA,GroupName,ErrMsgNullMaskB)
-   ELSE
-    WHILE DosError=0 DO
-     BEGIN
-      Processor(Path+s.Name,Offset);
-      FindNext(s);
-     END;**/
+   if (NOT DirScan(GroupName,Callback))
+    fprintf(stderr,"%s%s%s\n",getmessage(Num_ErrMsgNullMaskA),GroupName,getmessage(Num_ErrMsgNullMaskB));
 END
 
         static void MeasureFile(char *FileName, LongWord Offset)
@@ -521,7 +545,7 @@ BEGIN
    f=fopen(FileName,OPENRDMODE); if (f==Nil) ChkIO(FileName);
 
    if (NOT Read2(f,&TestID)) ChkIO(FileName); 
-   if (TestID!=FileMagic) FormatError(FileName,FormatInvHeaderMsg);
+   if (TestID!=FileMagic) FormatError(FileName,getmessage(Num_FormatInvHeaderMsg));
 
    do
     BEGIN 
@@ -537,7 +561,7 @@ BEGIN
        if (NOT Read2(f,&Length)) ChkIO(FileName);
        NextPos=ftell(f)+Length;
        if (NextPos>FileSize(f))
-        FormatError(FileName,FormatInvRecordLenMsg);
+        FormatError(FileName,getmessage(Num_FormatInvRecordLenMsg));
 
        if (FilterOK(Header))
         BEGIN
@@ -587,31 +611,25 @@ END
 
 	static CMDResult CMD_RelAdr(Boolean Negate, char *Arg)
 BEGIN
-   if (Arg==Nil); /* satisfy some compilers */
-
    RelAdr=(NOT Negate);
    return CMDOK;
 END
 
         static CMDResult CMD_Rec5(Boolean Negate, char *Arg)
 BEGIN
-   if (Arg==Nil); /* satisfy some compilers */
-
    Rec5=(NOT Negate);
    return CMDOK;
 END
 
         static CMDResult CMD_SepMoto(Boolean Negate, char *Arg)
 BEGIN
-   if (Arg==Nil); /* satisfy some compilers */
-
    SepMoto=(NOT Negate);
    return CMDOK;
 END
 
         static CMDResult CMD_IntelMode(Boolean Negate, char *Arg)
 BEGIN
-   Integer Mode;
+   int Mode;
    Boolean err;
 
    if (*Arg=='\0') return CMDErr;
@@ -630,7 +648,7 @@ END
 
 	static CMDResult CMD_MultiMode(Boolean Negate, char *Arg)
 BEGIN
-   Integer Mode;
+   int Mode;
    Boolean err;
 
    if (*Arg=='\0') return CMDErr;
@@ -649,11 +667,11 @@ END
 
         static CMDResult CMD_DestFormat(Boolean Negate, char *Arg)
 BEGIN
-#define NameCnt 8
+#define NameCnt 9
 
-   static char *Names[NameCnt]={"DEFAULT","MOTO","INTEL","INTEL16","INTEL32","MOS","TEK","DSK"};
-   static OutFormat Format[NameCnt]={Default,MotoS,IntHex,IntHex16,IntHex32,MOSHex,TekHex,TiDSK};
-   Integer z;
+   static char *Names[NameCnt]={"DEFAULT","MOTO","INTEL","INTEL16","INTEL32","MOS","TEK","DSK","ATMEL"};
+   static OutFormat Format[NameCnt]={Default,MotoS,IntHex,IntHex16,IntHex32,MOSHex,TekHex,TiDSK,Atmel};
+   int z;
 
    for (z=0; z<strlen(Arg); z++) Arg[z]=toupper(Arg[z]);
 
@@ -734,7 +752,13 @@ BEGIN
     END
 END
 
-#define P2HEXParamCnt 11
+	static CMDResult CMD_AutoErase(Boolean Negate, char *Arg)
+BEGIN
+   AutoErase=NOT Negate;
+   return CMDOK;
+END
+
+#define P2HEXParamCnt 12
 static CMDRec P2HEXParams[P2HEXParamCnt]=
 	       {{"f", CMD_FilterList},
 		{"r", CMD_AdrRange},
@@ -746,32 +770,42 @@ static CMDRec P2HEXParams[P2HEXParamCnt]=
 		{"s", CMD_SepMoto},
 		{"d", CMD_DataAdrRange},
                 {"e", CMD_EntryAdr},
-                {"l", CMD_LineLen}};
+                {"l", CMD_LineLen},
+                {"k", CMD_AutoErase}};
 
 static Word ChkSum;
 
 	int main(int argc, char **argv)
 BEGIN
+   char *ph1,*ph2;
+   String Ver;
+
    ParamCount=argc-1; ParamStr=argv;
+
+   nls_init(); NLS_Initialize();
+
    hex_init();
    endian_init();
    bpemu_init();
    hex_init();
-   nls_init();
    chunks_init();
-   decodecmd_init();
-   toolutils_init();
+   cmdarg_init(*argv);
+   toolutils_init(*argv);
+   nlmessages_init("p2hex.msg",*argv,MsgId1,MsgId2); ioerrs_init(*argv);
 
-   NLS_Initialize(); WrCopyRight("P2HEX/C V1.41r5");
+   sprintf(Ver,"P2HEX/C V%s",Version);
+   WrCopyRight(Ver);
 
    InitChunk(&UsedList);
 
    if (ParamCount==0)
     BEGIN
-     errno=0; printf("%s%s%s\n",InfoMessHead1,GetEXEName(),InfoMessHead2); ChkIO(OutName);
-     for (z=0; z<InfoMessHelpCnt; z++)
+     errno=0; printf("%s%s%s\n",getmessage(Num_InfoMessHead1),GetEXEName(),getmessage(Num_InfoMessHead2)); ChkIO(OutName);
+     for (ph1=getmessage(Num_InfoMessHelp),ph2=strchr(ph1,'\n'); ph2!=Nil; ph1=ph2+1,ph2=strchr(ph1,'\n'))
       BEGIN
-       errno=0; printf("%s\n",InfoMessHelp[z]); ChkIO(OutName);
+       *ph2='\0';
+       printf("%s\n",ph1);
+       *ph2='\n';
       END
      exit(1);
     END
@@ -779,7 +813,7 @@ BEGIN
    StartAdr=0; StopAdr=0x7fff;
    StartAuto=False; StopAuto=False;
    StartData=0; StopData=0x1fff;
-   EntryAdr=(-1); EntryAdrPresent=False;
+   EntryAdr=(-1); EntryAdrPresent=False; AutoErase=False;
    RelAdr=False; Rec5=True; LineLen=16;
    IntelMode=0; MultiMode=0; DestFormat=Default;
    *TargName='\0';
@@ -787,7 +821,7 @@ BEGIN
 
    if (ProcessedEmpty(ParProcessed))
     BEGIN
-     errno=0; printf("%s\n",ErrMsgTargMissing); ChkIO(OutName);
+     errno=0; printf("%s\n",getmessage(Num_ErrMsgTargMissing)); ChkIO(OutName);
      exit(1);
     END
 
@@ -815,7 +849,7 @@ BEGIN
       if (ParProcessed[z]) ProcessGroup(ParamStr[z],MeasureFile);
      if (StartAdr>StopAdr)
       BEGIN
-       errno=0; printf("%s\n",ErrMsgAutoFailed); ChkIO(OutName); exit(1);
+       errno=0; printf("%s\n",getmessage(Num_ErrMsgAutoFailed)); ChkIO(OutName); exit(1);
       END
     END
 
@@ -905,5 +939,13 @@ BEGIN
     END
 
    CloseTarget();
+
+   if (AutoErase)
+    BEGIN
+     if (ProcessedEmpty(ParProcessed)) ProcessGroup(SrcName,EraseFile);
+     else for (z=1; z<=ParamCount; z++)
+      if (ParProcessed[z]) ProcessGroup(ParamStr[z],EraseFile);
+    END
+
    return 0;
 END

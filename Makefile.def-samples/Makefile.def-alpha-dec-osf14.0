@@ -16,11 +16,8 @@ CFLAGS = -std1 -O5 -Olimit 3000 -tune ev5 -fast
 BINDIR = /usr/local/bin
 INCDIR = /usr/local/include/asl
 MANDIR = /usr/local/man
-
-# -------------------------------------------------------------------------
-# language AS will speak to you
-
-LANGRSC = lang_EN
+LIBDIR = /usr/local/lib/asl
+DOCDIR = /usr/local/doc/asl
 
 # -------------------------------------------------------------------------
 # character encoding to use (choose one of them)

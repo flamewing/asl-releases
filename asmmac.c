@@ -13,8 +13,10 @@
 #include <ctype.h>
 
 #include "nls.h"
+#include "nlmessages.h"
+#include "as.rsc"
 #include "stringlists.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
@@ -25,8 +27,6 @@
 
 PInputTag FirstInputTag;
 POutputTag FirstOutputTag;
-
-#include "as.rsc"
 
 /*=== Praeprozessor =======================================================*/
 
@@ -43,7 +43,7 @@ END
 	static void EnterDefine(char *Name, char *Definition)
 BEGIN
    PDefinement Neu;
-   Integer z,l;
+   int z,l;
 
    if (NOT ChkSymbName(Name))
     BEGIN
@@ -108,8 +108,8 @@ BEGIN
    if (FirstDefine==Nil) return;
 
    NewPage(ChapDepth,True);
-   WrLstLine(ListDefListHead1);
-   WrLstLine(ListDefListHead2);
+   WrLstLine(getmessage(Num_ListDefListHead1));
+   WrLstLine(getmessage(Num_ListDefListHead2));
    WrLstLine("");
 
    Lauf=FirstDefine;
@@ -179,7 +179,7 @@ END
 BEGIN
 
    PDefinement Lauf;
-   Integer LPos,Diff,p,p2,p3,z,z2,FromLen,ToLen,LineLen;
+   sint LPos,Diff,p,p2,p3,z,z2,FromLen,ToLen,LineLen;
    
    Lauf=FirstDefine;
    while (Lauf!=Nil)
@@ -250,6 +250,7 @@ BEGIN
    Boolean Grown;
    PMacroNode p1,p2;
    Boolean Result;
+   int SErg;
 
    ChkStack();
 
@@ -264,83 +265,85 @@ BEGIN
     END
    else Result=False;
 
-   switch (StrCmp(Neu->Name,(*Node)->Contents->Name,DefSect,(*Node)->DefSection))
+   SErg=StrCmp(Neu->Name,(*Node)->Contents->Name,DefSect,(*Node)->DefSection);
+   if (SErg>0)
     BEGIN
-     case 1:
-      Grown=AddMacro_AddNode(&((*Node)->Right),Neu,DefSect,Protest);
-      if ((BalanceTree) AND (Grown))
-       switch ((*Node)->Balance)
-        BEGIN
-         case -1:
-          (*Node)->Balance=0;
-          break;
-         case 0:
-          (*Node)->Balance=1; Result=True;
-          break;
-         case 1:
-          p1=(*Node)->Right;
-          if (p1->Balance==1)
-           BEGIN
-            (*Node)->Right=p1->Left; p1->Left=(*Node);
-            (*Node)->Balance=0; *Node=p1;
-           END
-          else
-           BEGIN
-            p2=p1->Left;
-            p1->Left=p2->Right; p2->Right=p1;
-            (*Node)->Right=p2->Left; p2->Left=(*Node);
-            if (p2->Balance== 1) (*Node)->Balance=(-1); else (*Node)->Balance=0;
-            if (p2->Balance==-1) p1     ->Balance=   1; else p1     ->Balance=0;
-            *Node=p2;
-           END
-          (*Node)->Balance=0;
-          break;
-        END
-      break;
-     case -1:
-      Grown=AddMacro_AddNode(&((*Node)->Left),Neu,DefSect,Protest);
-      if ((BalanceTree) AND (Grown))
-       switch ((*Node)->Balance)
-        BEGIN
-         case 1:
-          (*Node)->Balance=0;
-          break;
-         case 0:
-          (*Node)->Balance=(-1); Result=True; 
-          break;
-         case -1:
-          p1=(*Node)->Left;
-          if (p1->Balance==-1)
-           BEGIN
-            (*Node)->Left=p1->Right; p1->Right=(*Node);
-            (*Node)->Balance=0; *Node=p1;
-           END
-          else
-           BEGIN
-            p2=p1->Right;
-            p1->Right=p2->Left; p2->Left=p1;
-            (*Node)->Left=p2->Right; p2->Right=(*Node);
-            if (p2->Balance==-1) (*Node)->Balance=   1; else (*Node)->Balance=0;
-            if (p2->Balance== 1) p1     ->Balance=(-1); else p1     ->Balance=0;
-            *Node=p2;
-           END
-          (*Node)->Balance=0;
-          break;
-        END
-      break;
-     case 0:
-      if ((*Node)->Defined)
-       if (Protest) WrXError(1815,Neu->Name);
-       else
-        BEGIN
-	 ClearMacroRec(&((*Node)->Contents)); (*Node)->Contents=Neu;
-	 (*Node)->DefSection=DefSect;
-        END
-      else 
+     Grown=AddMacro_AddNode(&((*Node)->Right),Neu,DefSect,Protest);
+     if ((BalanceTree) AND (Grown))
+      switch ((*Node)->Balance)
+       BEGIN
+        case -1:
+         (*Node)->Balance=0;
+         break;
+        case 0:
+         (*Node)->Balance=1; Result=True;
+         break;
+        case 1:
+         p1=(*Node)->Right;
+         if (p1->Balance==1)
+          BEGIN
+           (*Node)->Right=p1->Left; p1->Left=(*Node);
+           (*Node)->Balance=0; *Node=p1;
+          END
+         else
+          BEGIN
+           p2=p1->Left;
+           p1->Left=p2->Right; p2->Right=p1;
+           (*Node)->Right=p2->Left; p2->Left=(*Node);
+           if (p2->Balance== 1) (*Node)->Balance=(-1); else (*Node)->Balance=0;
+           if (p2->Balance==-1) p1     ->Balance=   1; else p1     ->Balance=0;
+           *Node=p2;
+          END
+         (*Node)->Balance=0;
+         break;
+       END
+    END
+   else if (SErg<0)
+    BEGIN
+     Grown=AddMacro_AddNode(&((*Node)->Left),Neu,DefSect,Protest);
+     if ((BalanceTree) AND (Grown))
+      switch ((*Node)->Balance)
+       BEGIN
+        case 1:
+         (*Node)->Balance=0;
+         break;
+        case 0:
+         (*Node)->Balance=(-1); Result=True; 
+         break;
+        case -1:
+         p1=(*Node)->Left;
+         if (p1->Balance==-1)
+          BEGIN
+           (*Node)->Left=p1->Right; p1->Right=(*Node);
+           (*Node)->Balance=0; *Node=p1;
+          END
+         else
+          BEGIN
+           p2=p1->Right;
+           p1->Right=p2->Left; p2->Left=p1;
+           (*Node)->Left=p2->Right; p2->Right=(*Node);
+           if (p2->Balance==-1) (*Node)->Balance=   1; else (*Node)->Balance=0;
+           if (p2->Balance== 1) p1     ->Balance=(-1); else p1     ->Balance=0;
+           *Node=p2;
+          END
+         (*Node)->Balance=0;
+         break;
+       END
+    END
+   else
+    BEGIN
+     if ((*Node)->Defined)
+      if (Protest) WrXError(1815,Neu->Name);
+      else
        BEGIN
         ClearMacroRec(&((*Node)->Contents)); (*Node)->Contents=Neu;
-        (*Node)->DefSection=DefSect; (*Node)->Defined=True;
+        (*Node)->DefSection=DefSect;
        END
+     else 
+      BEGIN
+       ClearMacroRec(&((*Node)->Contents)); (*Node)->Contents=Neu;
+       (*Node)->DefSection=DefSect; (*Node)->Defined=True;
+      END
     END
 
    return Result;
@@ -355,16 +358,13 @@ END
 	static Boolean FoundMacro_FNode(LongInt Handle,PMacroRec *Erg, char *Part)
 BEGIN
    PMacroNode Lauf;
-   ShortInt CErg;
+   int CErg;
 
    Lauf=MacroRoot; CErg=2;
    while ((Lauf!=Nil) AND (CErg!=0))
     BEGIN
-     switch (CErg=StrCmp(Part,Lauf->Contents->Name,Handle,Lauf->DefSection))
-      BEGIN
-       case -1: Lauf=Lauf->Left; break;
-       case  1: Lauf=Lauf->Right; break;
-      END
+     if ((CErg=StrCmp(Part,Lauf->Contents->Name,Handle,Lauf->DefSection))<0) Lauf=Lauf->Left;
+     else if (CErg>0) Lauf=Lauf->Right;
     END
    if (Lauf!=Nil) *Erg=Lauf->Contents;
    return (Lauf!=Nil);
@@ -469,8 +469,8 @@ BEGIN
    if (MacroRoot==Nil) return;
 
    NewPage(ChapDepth,True);
-   WrLstLine(ListMacListHead1);
-   WrLstLine(ListMacListHead2);
+   WrLstLine(getmessage(Num_ListMacListHead1));
+   WrLstLine(getmessage(Num_ListMacListHead2));
    WrLstLine("");
 
    OneS[0]='\0'; cnt=False; Sum=0; 
@@ -481,7 +481,8 @@ BEGIN
      WrLstLine(OneS);
     END
    WrLstLine("");
-   sprintf(OneS,"%7d%s",Sum,(Sum==1)?ListMacSumMsg:ListMacSumsMsg);
+   sprintf(OneS,"%7d",Sum);
+   strmaxcat(OneS,getmessage((Sum==1)?Num_ListMacSumMsg:Num_ListMacSumsMsg),255);
    WrLstLine(OneS);
    WrLstLine("");
 END

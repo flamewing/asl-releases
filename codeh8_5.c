@@ -14,10 +14,11 @@
 
 #include "nls.h"
 #include "bpemu.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "asmallg.h"
 #include "codepseudo.h"
 #include "codevars.h"
 
@@ -557,17 +558,12 @@ END
 
 	static Boolean DecodePseudo(void)
 BEGIN
-#define ONOFFH8_5Count 1
-static ONOFFRec ONOFFH8_5s[ONOFFH8_5Count]=
-	      {{"MAXMODE", &Maximum   , MaximumName   }};
 #define ASSUMEH8_5Count 4
 static ASSUMERec ASSUMEH8_5s[ASSUMEH8_5Count]=
 	       {{"DP", &Reg_DP, 0, 0xff, -1},
 		{"EP", &Reg_EP, 0, 0xff, -1},
 		{"TP", &Reg_TP, 0, 0xff, -1},
 		{"BR", &Reg_BR, 0, 0xff, -1}};
-
-   if (CodeONOFF(ONOFFH8_5s,ONOFFH8_5Count)) return True;
 
    if (Memo("ASSUME"))
     BEGIN
@@ -592,7 +588,8 @@ END
 
 	static void MakeCode_H8_5(void)
 BEGIN
-   Integer z,AdrInt;
+   Integer AdrInt;
+   int z;
    char *p;
    Boolean OK;
    LongInt AdrLong;
@@ -1471,7 +1468,7 @@ END
 
 	static void SwitchFrom_H8_5(void)
 BEGIN
-   DeinitFields();
+   DeinitFields(); ClearONOFF();
 END
 
 	static void InitCode_H8_5(void)
@@ -1494,9 +1491,11 @@ BEGIN
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
 
    MakeCode=MakeCode_H8_5; ChkPC=ChkPC_H8_5; IsDef=IsDef_H8_5;
-   SwitchFrom=SwitchFrom_H8_5;
+   SwitchFrom=SwitchFrom_H8_5; InitFields();
+   AddONOFF("MAXMODE", &Maximum   , MaximumName   ,False);
+   AddMoto16PseudoONOFF();
 
-   InitFields();
+   SetFlag(&DoPadding,DoPaddingName,False);
 END
 
 	void codeh8_5_init(void)

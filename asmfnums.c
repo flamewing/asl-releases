@@ -11,9 +11,10 @@
 #include "stdinc.h"
 #include <string.h>
 
-#include "stringutil.h"
+#include "strutil.h"
 #include "chunks.h"
 #include "asmdef.h"
+#include "asmsub.h"
 
 #include "asmfnums.h"
 
@@ -69,7 +70,7 @@ END
         Integer GetFileNum(char *Name)
 BEGIN
    PToken FLauf=FirstFile;
-   Integer Cnt=0;
+   int Cnt=0;
 
    while ((FLauf!=Nil) AND (strcmp(FLauf->Name,Name)!=0))
     BEGIN
@@ -83,7 +84,7 @@ END
         char *GetFileName(Byte Num)
 BEGIN
    PToken Lauf;
-   Integer z;
+   int z;
    static char *Dummy="";
 
    Lauf=FirstFile;
@@ -96,7 +97,7 @@ END
         Integer GetFileCount(void)
 BEGIN
    PToken Lauf=FirstFile;
-   Integer z=0;
+   int z=0;
 
    while (Lauf!=Nil)
     BEGIN

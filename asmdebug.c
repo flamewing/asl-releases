@@ -1,4 +1,3 @@
-/* asmdebug.c */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
 /*                                                                           */
@@ -12,7 +11,8 @@
 #include "stdinc.h"
 #include <string.h>
 
-#include "stringutil.h"
+#include "endian.h"
+#include "strutil.h"
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
@@ -24,11 +24,12 @@
 
 typedef struct 
          {
-          Boolean InASM;
+          Boolean InMacro;
           LongInt LineNum;
           Integer FileName;
           ShortInt Space;
           LongInt Address;
+          Word Code;
          } TLineInfo;
 
 typedef struct _TLineInfoList
@@ -42,17 +43,18 @@ FILE *TempFile;
 PLineInfoList LineInfoRoot;
 
 
-	void AddLineInfo(Boolean InASM, LongInt LineNum, char *FileName,
+	void AddLineInfo(Boolean InMacro, LongInt LineNum, char *FileName,
                          ShortInt Space, LongInt Address)
 BEGIN
    PLineInfoList P,Run;
 
    P=(PLineInfoList) malloc(sizeof(TLineInfoList));
-   P->Contents.InASM=InASM;
+   P->Contents.InMacro=InMacro;
    P->Contents.LineNum=LineNum;
    P->Contents.FileName=GetFileNum(FileName);
    P->Contents.Space=Space;
    P->Contents.Address=Address;
+   P->Contents.Code=(CodeLen<1) ? 0 : WAsmCode[0];
 
    Run=LineInfoRoot;
    if (Run==Nil)
@@ -97,7 +99,8 @@ END
 	static void DumpDebugInfo_MAP(void)
 BEGIN
    PLineInfoList Run;
-   Integer ActFile,ModZ;
+   Integer ActFile;
+   int ModZ;
    ShortInt ActSeg;
    FILE *MAPFile;
    String MAPName;
@@ -150,12 +153,77 @@ BEGIN
    fclose(MAPFile);
 END
 
+        static void DumpDebugInfo_Atmel(void)
+BEGIN
+   static char *OBJString="AVR Object File";
+   PLineInfoList Run;
+   LongInt FNamePos,RecPos;
+   FILE *OBJFile;
+   String OBJName;
+   char *FName;
+   Byte TByte,TNum,NameCnt;
+   int z;
+   LongInt LTurn;
+   Word WTurn;
+
+   strmaxcpy(OBJName,SourceFile,255);
+   KillSuffix(OBJName); AddSuffix(OBJName,OBJSuffix);
+   OBJFile=fopen(OBJName,OPENWRMODE); if (OBJFile==Nil) ChkIO(10001);
+
+   /* initialer Kopf, Positionen noch unbekannt */
+
+   FNamePos=0; RecPos=0;
+   if (NOT Write4(OBJFile,&FNamePos)) ChkIO(10004);
+   if (NOT Write4(OBJFile,&RecPos)) ChkIO(10004);
+   TByte=9; if (fwrite(&TByte,1,1,OBJFile)!=1) ChkIO(10004);
+   NameCnt=GetFileCount()-1; if (fwrite(&NameCnt,1,1,OBJFile)!=1) ChkIO(10004);
+   if (fwrite(OBJString,1,strlen(OBJString)+1,OBJFile)!=strlen(OBJString)+1) ChkIO(10004);
+
+   /* Objekt-Records */
+
+   RecPos=ftell(OBJFile);
+   for (Run=LineInfoRoot; Run!=Nil; Run=Run->Next)
+    if (Run->Contents.Space==SegCode)
+     BEGIN
+      LTurn=Run->Contents.Address; if (NOT BigEndian) DSwap(&LTurn,4);
+      if (fwrite(((Byte *) &LTurn)+1,1,3,OBJFile)!=3) ChkIO(10004);
+      WTurn=Run->Contents.Code; if (NOT BigEndian) WSwap(&WTurn,2);
+      if (fwrite(&WTurn,1,2,OBJFile)!=2) ChkIO(10004);
+      TNum=Run->Contents.FileName-1; if (fwrite(&TNum,1,1,OBJFile)!=1) ChkIO(10004);
+      WTurn=Run->Contents.LineNum; if (NOT BigEndian) WSwap(&WTurn,2);
+      if (fwrite(&WTurn,1,2,OBJFile)!=2) ChkIO(10004);
+      TNum=Ord(Run->Contents.InMacro); if (fwrite(&TNum,1,1,OBJFile)!=1) ChkIO(10004);
+     END
+
+   /* Dateinamen */
+
+   FNamePos=ftell(OBJFile);
+   for (z=1; z<=NameCnt; z++)
+    BEGIN
+     FName=NamePart(GetFileName(z));
+     if (fwrite(FName,1,strlen(FName)+1,OBJFile)!=strlen(FName)+1) ChkIO(10004);
+    END
+   TByte=0;
+   if (fwrite(&TByte,1,1,OBJFile)!=1) ChkIO(10004);
+
+   /* korrekte Positionen in Kopf schreiben */
+
+   rewind(OBJFile);
+   if (NOT BigEndian) DSwap(&FNamePos,4);
+   if (fwrite(&FNamePos,1,4,OBJFile)!=4) ChkIO(10004);
+   if (NOT BigEndian) DSwap(&RecPos,4);
+   if (fwrite(&RecPos,1,4,OBJFile)!=4) ChkIO(10004);
+
+   fclose(OBJFile);
+END
+
 
         void DumpDebugInfo(void)
 BEGIN
    switch (DebugMode)
     BEGIN
      case DebugMAP: DumpDebugInfo_MAP(); break;
+     case DebugAtmel: DumpDebugInfo_Atmel(); break;
      default: break;
     END
 END

@@ -46,8 +46,8 @@
 	cmp/str	r7,r8
 	div1	r8,r9
 	div0s	r9,r10
-	muls	r10,r11
-	mulu	r11,r12
+	muls.w	r10,r11
+	mulu.w	r11,r12
 	neg	r12,r13
 	negc	r13,r14
 	sub	r14,r15
@@ -194,3 +194,56 @@ ldata:	dc.l	$12345678
 wdata:	dc.w	$1234
 
 	ltorg
+
+        cpu	sh7700
+
+        clrs
+        sets
+        ldtlb
+
+        ldc	r4,ssr
+        ldc	r4,spc
+        ldc	r4,r0_bank
+        ldc	r4,r1_bank
+        ldc	r4,r2_bank
+        ldc	r4,r3_bank
+        ldc	r4,r4_bank
+        ldc	r4,r5_bank
+        ldc	r4,r6_bank
+        ldc	r4,r7_bank
+        ldc.l	@r4+,ssr
+        ldc.l	@r4+,spc
+        ldc.l	@r4+,r0_bank
+        ldc.l	@r4+,r1_bank
+        ldc.l	@r4+,r2_bank
+        ldc.l	@r4+,r3_bank
+        ldc.l	@r4+,r4_bank
+        ldc.l	@r4+,r5_bank
+        ldc.l	@r4+,r6_bank
+        ldc.l	@r4+,r7_bank
+        stc	ssr,r4
+        stc	spc,r4
+        stc	r0_bank,r4
+        stc	r1_bank,r4
+        stc	r2_bank,r4
+        stc	r3_bank,r4
+        stc	r4_bank,r4
+        stc	r5_bank,r4
+        stc	r6_bank,r4
+        stc	r7_bank,r4
+        stc.l	ssr,@-r4
+        stc.l	spc,@-r4
+        stc.l	r0_bank,@-r4
+        stc.l	r1_bank,@-r4
+        stc.l	r2_bank,@-r4
+        stc.l	r3_bank,@-r4
+        stc.l	r4_bank,@-r4
+        stc.l	r5_bank,@-r4
+        stc.l	r6_bank,@-r4
+        stc.l	r7_bank,@-r4
+
+        pref	@r5
+
+        shad	r3,r7
+        shld	r12,sp
+

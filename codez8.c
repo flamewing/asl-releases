@@ -13,7 +13,7 @@
 #include <ctype.h>
 
 #include "nls.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "bpemu.h"
 #include "asmdef.h"
 #include "asmsub.h"
@@ -321,7 +321,8 @@ END
 
 	static void MakeCode_Z8(void)
 BEGIN
-   Integer z,AdrInt;
+   Integer AdrInt;
+   int z;
    Byte Save;
    Boolean OK;
 

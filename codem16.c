@@ -15,7 +15,7 @@
 
 #include "bpemu.h"
 #include "nls.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
@@ -318,7 +318,7 @@ END
 
    	static void SplitSize(char *s, DispSize *Erg)
 BEGIN
-   Integer l=strlen(s);
+   int l=strlen(s);
 
    if ((l>2) AND (s[l-1]=='4') AND (s[l-2]==':'))
     BEGIN
@@ -337,7 +337,7 @@ BEGIN
     END
 END
 
-   	static void DecideAbs(LongInt Disp, DispSize Size, Word Mask, Integer Index)
+   	static void DecideAbs(LongInt Disp, DispSize Size, Word Mask, int Index)
 BEGIN
    switch (Size)
     BEGIN
@@ -379,7 +379,7 @@ END
 BEGIN
    PChainRec Rec;
    String Part,SReg;
-   Integer z;
+   int z;
    char *p;
    Boolean OK;
    Byte Scale;
@@ -500,7 +500,7 @@ BEGIN
    else return Rec;
 END
 
-	static Boolean ChkAdr(Word Mask, Integer Index)
+	static Boolean ChkAdr(Word Mask, int Index)
 BEGIN
    AdrCnt2[Index]=AdrCnt1[Index] >> 1;
    if ((AdrType[Index]!=-1) AND ((Mask & (1 << AdrType[Index]))==0))
@@ -513,10 +513,10 @@ BEGIN
    else return (AdrType[Index]!=ModNone);
 END
 
-	static Boolean DecodeAdr(char *Asc, Integer Index, Word Mask)
+	static Boolean DecodeAdr(char *Asc, int Index, Word Mask)
 BEGIN
    LongInt AdrLong,MinReserve,MaxReserve;
-   Integer z,z2,LastChain;
+   int z,z2,LastChain;
    Boolean OK;
    PChainRec RootChain,RunChain,PrevChain;
    DispSize DSize;
@@ -876,7 +876,7 @@ BEGIN
    return ChkAdr(Mask,Index);
 END
 
-	static LongInt ImmVal(Integer Index)
+	static LongInt ImmVal(int Index)
 BEGIN
    switch (OpSize[Index])
     BEGIN
@@ -887,12 +887,12 @@ BEGIN
     END
 END
 
-	static Boolean IsShort(Integer Index)
+	static Boolean IsShort(int Index)
 BEGIN
    return ((AdrMode[Index] & 0xc0)==0);
 END
 
-	static void AdaptImm(Integer Index, Byte NSize, Boolean Signed)
+	static void AdaptImm(int Index, Byte NSize, Boolean Signed)
 BEGIN
    switch (OpSize[Index])
     BEGIN
@@ -1006,7 +1006,7 @@ END
 
 	static Boolean DecodeCondition(char *Asc, Word *Erg)
 BEGIN
-   Integer z;
+   int z;
    String Asc_N;
 
    strmaxcpy(Asc_N,Asc,255); NLS_UpString(Asc_N); Asc=Asc_N;
@@ -1078,7 +1078,7 @@ END
 	static void SplitOptions(void)
 BEGIN
    char *p;
-   Integer z;
+   int z;
 
    OptionCnt=0; *Options[0]='\0'; *Options[1]='\0';
    do
@@ -1123,7 +1123,7 @@ BEGIN
     else OpSize[Index]=2;
 END
 
-	static Boolean DecideBranchLength(LongInt *Addr, Integer Index)
+	static Boolean DecideBranchLength(LongInt *Addr, int Index)
 BEGIN
    *Addr-=EProgCounter();
    if (OpSize[Index]==-1)
@@ -1185,7 +1185,7 @@ END
 
 	static Boolean CodeAri(void)
 BEGIN
-    Integer z;
+    int z;
     Word AdrWord,Mask,Mask2;
     char Form[6];
     LongInt HVal;
@@ -1663,7 +1663,7 @@ END
 
 	static Boolean CodeBits(void)
 BEGIN
-   Integer z;
+   int z;
    char Form[6];
    LongInt HVal,AdrLong;
    Word Mask;
@@ -1937,7 +1937,7 @@ END
 
         static void MakeCode_M16(void)
 BEGIN
-   Integer z;
+   int z;
    char *p;
    Word AdrWord,HReg,Mask;
    LongInt AdrLong,HVal;

@@ -8,7 +8,7 @@
 /*                                                                           */
 /*****************************************************************************/
 
-extern void AddLineInfo(Boolean InAsm, LongInt LineNum, char *FileName, 
+extern void AddLineInfo(Boolean InMacro, LongInt LineNum, char *FileName, 
                         ShortInt Space, LongInt Address);
 
 extern void InitLineInfo(void);

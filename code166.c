@@ -5,6 +5,7 @@
 /* AS-Codegenerator Siemens 80C16x                                           */
 /*                                                                           */
 /* Historie: 11.11.1996 (alaaf) Grundsteinlegung                             */
+/*            9. 5.1998 Registersymbole                                      */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -13,7 +14,7 @@
 #include <ctype.h>
 
 #include "nls.h"
-#include "stringutil.h"
+#include "strutil.h"
 #include "bpemu.h"
 #include "asmdef.h"
 #include "asmsub.h"
@@ -221,6 +222,9 @@ static ShortInt AdrType;
 	static Boolean IsReg(char *Asc, Byte *Erg, Boolean WordWise)
 BEGIN
    Boolean err;
+   char *s;
+
+   if (FindRegDef(Asc,&s)) Asc=s;
 
    if ((strlen(Asc)<2) OR (toupper(*Asc)!='R')) return False;
    else if ((strlen(Asc)>2) AND (toupper(Asc[1])=='L') AND (NOT WordWise))
@@ -268,7 +272,7 @@ END
 
 	static Boolean CalcPage(LongInt *Adr, Boolean DoAnyway)
 BEGIN
-   Integer z;
+   int z;
    Word Bank;
 
    switch (MemMode)
@@ -317,7 +321,7 @@ BEGIN
 #define SPAdr 0xfe12
 #define CPAdr 0xfe10
 
-   Integer z;
+   int z;
 
    if (InCode)
     if (((EProgCounter() >> 16)==(DispAcc >> 16)) AND ((Mask & MModAbs)!=0))
@@ -497,9 +501,9 @@ BEGIN
     END
 END
 
-	static Integer DecodeCondition(char *Name)
+	static int DecodeCondition(char *Name)
 BEGIN
-   Integer z;
+   int z;
 
    NLS_UpString(Name);
    for (z=0; z<ConditionCount; z++)
@@ -530,7 +534,10 @@ BEGIN
       END
      else return False;
     END
-   else if (p<=Asc+1) return False;
+   else if (p==Asc)
+    BEGIN
+     WrError(1350); return False;
+    END
    else
     BEGIN
      *p='\0';
@@ -633,6 +640,13 @@ BEGIN
      return True;
     END
 
+   if (Memo("REG"))
+    BEGIN
+     if (ArgCnt!=1) WrError(1110);
+     else AddRegDef(LabPart,ArgStr[1]);
+     return True;
+    END
+
    return False;
 END
 
@@ -658,7 +672,7 @@ END
 
 	static void MakeCode_166(void)
 BEGIN
-   Integer z,Cond;
+   int z,Cond;
    Word AdrWord;
    Byte AdrBank,HReg;
    Byte BOfs1,BOfs2;
@@ -888,13 +902,18 @@ BEGIN
        switch (AdrType)
         BEGIN
          case ModReg:
-	  HReg=AdrMode; DecodeAdr(ArgStr[2],MModReg,False,False);
+	  HReg=AdrMode; DecodeAdr(ArgStr[2],MModReg+MModAbs,False,False);
 	  switch (AdrType)
            BEGIN
 	    case ModReg:
 	     CodeLen=2; BAsmCode[0]=0xc0+Cond;
 	     BAsmCode[1]=HReg+(AdrMode << 4);
 	     break;
+            case ModAbs:
+             CodeLen=4; BAsmCode[0]=0xc2+Cond;
+             BAsmCode[1]=0xf0+HReg;
+             memcpy(BAsmCode+2,AdrVals,2); 
+             break;
 	   END
 	  break;
          case ModMReg:
@@ -1330,7 +1349,7 @@ BEGIN
 	    else
 	     BEGIN
 	      CodeLen=2+AdrCnt; BAsmCode[0]=0xca;
-	      BAsmCode[1]=0xc0+(Conditions[Cond].Code << 4);
+	      BAsmCode[1]=0x00+(Conditions[Cond].Code << 4);
 	      memcpy(BAsmCode+2,AdrVals,AdrCnt);
 	     END
 	    break;
@@ -1576,7 +1595,7 @@ BEGIN
          case ModImm:
 	  CodeLen=4; BAsmCode[0]=0xd7; BAsmCode[1]=0x40+(HReg << 4);
 	  if (Memo("EXTPR")) BAsmCode[1]+=0x80;
-	  BAsmCode[2]=(WordVal() >> 2) & 0x7f; BAsmCode[3]=WordVal() & 3;
+	  BAsmCode[2]=WordVal() & 0xff; BAsmCode[3]=(WordVal() >> 8) & 3;
 	  ExtCounter=HReg+1; MemMode=MemModeFixedPage; MemPage=WordVal() & 0x3ff;
 	  break;
         END
@@ -1615,7 +1634,7 @@ END
 
 	static void InitCode_166(void)
 BEGIN
-   Integer z;
+   int z;
 
    SaveInitProc();
    for (z=0; z<DPPCount; z++)
@@ -1635,7 +1654,7 @@ END
 
 	static Boolean IsDef_166(void)
 BEGIN
-   return (Memo("BIT"));
+   return (Memo("BIT")) OR (Memo("REG"));
 END
 
 	static void SwitchFrom_166(void)

@@ -1,4 +1,4 @@
-/* bpemu.c */
+
 /*****************************************************************************/
 /* AS-Portierung                                                             */
 /*                                                                           */
@@ -11,15 +11,18 @@
 #include "stdinc.h"
 #include <string.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <ctype.h>
 
-#include "stringutil.h"
+#include "strutil.h"
+#include "bpemu.h"
 
 #ifdef __MSDOS__
+#include <dos.h>
 #include <dir.h>
 #endif
 
-#ifdef __EMX__
+#if defined( __EMX__ ) || defined( __IBMC__ )
 #include <os2.h>
 #endif
 
@@ -29,7 +32,7 @@ BEGIN
    String Copy;
 #ifdef DRSEP
    String DrvPart;
-#ifdef __EMX__
+#if defined( __EMX__ ) || defined( __IBMC__ )
    ULONG DrvNum,Dummy;
 #else      
    int DrvNum;
@@ -56,7 +59,7 @@ BEGIN
    else DrvNum=toupper(*DrvPart)-'@';
    getcurdir(DrvNum,CurrentDir);
 #else
-#ifdef __EMX__
+#if defined( __EMX__ ) || defined( __IBMC__ )
    if (*DrvPart=='\0')
     BEGIN
      DosQueryCurrentDisk(&DrvNum,&Dummy);
@@ -65,7 +68,13 @@ BEGIN
    else DrvNum=toupper(*DrvPart)-'@';
    Dummy=255; DosQueryCurrentDir(DrvNum,(PBYTE) CurrentDir,&Dummy);
 #else
+#ifdef _WIN32
    getcwd(CurrentDir,255);
+   for (p=CurrentDir; *p!='\0'; p++)
+    if (*p=='/') *p='\\';
+#else
+   getcwd(CurrentDir,255);
+#endif
 #endif   
 #endif
 
@@ -107,7 +116,7 @@ END
 BEGIN
    static String Component;
    char *p,*start,Save='\0';
-   FILE *Dummy; 
+   FILE *Dummy;
    Boolean OK;  
 
    Dummy=fopen(File,"r"); OK=(Dummy!=Nil);
@@ -121,7 +130,7 @@ BEGIN
    do
     BEGIN
      if (*start=='\0') break;
-     p=strchr(start,':');
+     p=strchr(start,DIRSEP);
      if (p!=Nil) 
       BEGIN
        Save=(*p); *p='\0';
@@ -166,6 +175,63 @@ END
 	Boolean Odd(int inp)
 BEGIN
    return ((inp&1)==1);
+END
+
+	Boolean DirScan(char *Mask, charcallback callback)
+BEGIN
+   char Name[1024];
+
+#ifdef __MSDOS__
+   struct ffblk blk;
+   int res;
+   char *pos;
+
+   res=findfirst(Mask,&blk,FA_RDONLY|FA_HIDDEN|FA_SYSTEM|FA_LABEL|FA_DIREC|FA_ARCH);
+   if (res<0) return False;
+   pos=strrchr(Mask,PATHSEP); if (pos==Nil) pos=strrchr(Mask,DRSEP);
+   if (pos==Nil) pos=Mask; else pos++;
+   memcpy(Name,Mask,pos-Mask);
+   while (res==0)
+    BEGIN
+     if ((blk.ff_attrib&(FA_LABEL|FA_DIREC))==0)
+      BEGIN
+       strcpy(Name+(pos-Mask),blk.ff_name);
+       callback(Name);
+      END
+     res=findnext(&blk);
+    END
+   return True;
+#else
+#if defined ( __EMX__ ) || defined ( __IBMC__ )
+   HDIR hdir=1;
+   FILEFINDBUF3 buf;
+   ULONG rescnt;
+   USHORT res;
+   char *pos;
+
+   rescnt=1; res=DosFindFirst(Mask,&hdir,0x16,&buf,sizeof(buf),&rescnt,1);
+   if (res!=0) return False;
+   pos=strrchr(Mask,PATHSEP); if (pos==Nil) pos=strrchr(Mask,DRSEP);
+   if (pos==Nil) pos=Mask; else pos++;
+   memcpy(Name,Mask,pos-Mask);
+   while (res==0)
+    BEGIN
+     strcpy(Name+(pos-Mask),buf.achName); callback(Name);
+     res=DosFindNext(hdir,&buf,sizeof(buf),&rescnt);
+    END
+   return True;
+#else
+   strmaxcpy(Name,Mask,255); callback(Name); return True;
+#endif
+#endif
+END
+
+	LongInt GetFileTime(char *Name)
+BEGIN
+   struct stat st;
+
+   if (stat(Name,&st)==-1) return 0;
+   else return st.st_mtime;
 END
 
 	void bpemu_init(void)

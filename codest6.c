@@ -11,7 +11,7 @@
 #include "stdinc.h"
 #include <string.h>
 
-#include "stringutil.h"
+#include "strutil.h"
 #include "bpemu.h"
 #include "asmdef.h"
 #include "asmsub.h"
@@ -152,7 +152,8 @@ BEGIN
    static Byte RegCodes[RegCnt+1]={0xff,0x82,0x83,0x80,0x81};
 
    Boolean OK;
-   Integer z,AdrInt;
+   int z;
+   Integer AdrInt;
 
    ResetAdr();
 
@@ -206,7 +207,7 @@ BEGIN
    	            {{"ROMBASE", &WinAssume, 0, 0x3f, 0x40}};
 
    Boolean OK,Flag;
-   Integer z;
+   int z;
    String s;
 
    if (Memo("SFR"))
@@ -284,7 +285,8 @@ END
 
 	static void MakeCode_ST62(void)
 BEGIN
-   Integer z,AdrInt;
+   Integer AdrInt;
+   int z;
    Boolean OK;
 
    CodeLen=0; DontPrint=False;

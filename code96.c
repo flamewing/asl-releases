@@ -557,7 +557,7 @@ END
 BEGIN
    Boolean OK,Special,IsShort;
    Word AdrWord;
-   Integer z;
+   int z;
    LongInt AdrInt;
    Byte Start,HReg,Mask;
 

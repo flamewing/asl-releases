@@ -27,7 +27,11 @@ extern void DWSwap(void *Field, int Cnt);
 extern void QWSwap(void *Field, int Cnt);
 
 
-extern void Double_2_TenBytes(Double inp, Byte *dest);
+extern void Double_2_ieee4(Double inp, Byte *dest, Boolean NeedsBig);
+
+extern void Double_2_ieee8(Double inp, Byte *dest, Boolean NeedsBig);
+
+extern void Double_2_ieee10(Double inp, Byte *dest, Boolean NeedsBig);
 
 
 extern Boolean Read2(FILE *file, void *Ptr);

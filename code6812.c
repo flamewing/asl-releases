@@ -13,7 +13,7 @@
 #include <ctype.h>
 #include <string.h>
 
-#include "stringutil.h"
+#include "strutil.h"
 #include "bpemu.h"
 #include "asmdef.h"
 #include "asmpars.h"
@@ -297,7 +297,7 @@ END
 BEGIN
    Byte Dummy;
    String Asc;
-   Integer l=strlen(Asc_o);
+   int l=strlen(Asc_o);
 
    strmaxcpy(Asc,Asc_o,255);
 
@@ -366,9 +366,10 @@ BEGIN
    END
 END
 	
-        static void DecodeAdr(Integer Start, Integer Stop, Word Mask)
+        static void DecodeAdr(int Start, int Stop, Word Mask)
 BEGIN
-   Integer AdrWord,ShortMode,l;
+   Integer AdrWord,ShortMode;
+   int l;
    char *p;
    Boolean OK;
    Boolean DecFlag,AutoFlag,PostFlag;
@@ -556,14 +557,14 @@ BEGIN
    return False;
 END
 
-	static void Try2Split(Integer Src)
+	static void Try2Split(int Src)
 BEGIN
    char *p;
-   Integer z;
+   int z;
 
    KillPrefBlanks(ArgStr[Src]); KillPostBlanks(ArgStr[Src]);
    p=ArgStr[Src]+strlen(ArgStr[Src])-1;
-   while ((p>=ArgStr[Src]) AND (NOT isspace(*p))) p--;
+   while ((p>=ArgStr[Src]) AND (NOT isspace(((unsigned int) *p)&0xff))) p--;
    if (p>=ArgStr[Src])
     BEGIN
      for (z=ArgCnt; z>=Src; z--) strcpy(ArgStr[z+1],ArgStr[z]); ArgCnt++;
@@ -574,7 +575,7 @@ END
 
         static void MakeCode_6812(void)
 BEGIN
-   Integer z;
+   int z;
    LongInt Address;
    Byte HReg,HCnt;
    Boolean OK;
@@ -1134,6 +1135,9 @@ BEGIN
 
    MakeCode=MakeCode_6812; ChkPC=ChkPC_6812; IsDef=IsDef_6812;
    SwitchFrom=SwitchFrom_6812; InitFields();
+   AddMoto16PseudoONOFF();
+
+   SetFlag(&DoPadding,DoPaddingName,False);
 END
 
 	void code6812_init(void)
