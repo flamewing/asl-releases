@@ -10,6 +10,7 @@
 /*                      NoICE-Zeileninfo nach Dateien sortiert               */
 /*           29. 1.1999 uninitialisierten Speicherzugriff beseitigt          */
 /*            2. 5.1999 optional mehrere Records im Atmel-Format schreiben   */
+/*            1. 6.2000 explicitly write addresses as hex numbers for NoICE  */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -260,42 +261,42 @@ BEGIN
    LargeWord Start,End;
    Boolean HadLines;
 
-   strmaxcpy(MAPName,SourceFile,255); KillSuffix(MAPName); AddSuffix(MAPName,".noi");
-   MAPFile=fopen(MAPName,"w"); if (MAPFile==Nil) ChkIO(10001);
+   strmaxcpy(MAPName, SourceFile, 255); KillSuffix(MAPName); AddSuffix(MAPName, ".noi");
+   MAPFile = fopen(MAPName, "w"); if (MAPFile == Nil) ChkIO(10001);
 
-   fprintf(MAPFile,"CASE %d\n",(CaseSensitive) ? 1 : 0);
+   fprintf(MAPFile, "CASE %d\n", (CaseSensitive) ? 1 : 0);
 
    PrintNoISymbols(MAPFile);
 
-   for (ActFile=0; ActFile<GetFileCount(); ActFile++)
+   for (ActFile = 0; ActFile < GetFileCount(); ActFile++)
     BEGIN
-     HadLines=FALSE;
-     Run=LineInfoRoot;
-     while (Run!=Nil)
+     HadLines = FALSE;
+     Run = LineInfoRoot;
+     while (Run != Nil)
       BEGIN
-       if ((Run->Contents.Space==SegCode) AND (Run->Contents.FileName==ActFile))
+       if ((Run->Contents.Space == SegCode) AND (Run->Contents.FileName == ActFile))
         BEGIN
          if (NOT HadLines)
           BEGIN
-           GetAddressRange(ActFile,&Start,&End);
-           sprintf(Tmp1,LargeIntFormat,Start);
-           errno=0; 
-           fprintf(MAPFile,"FILE %s %s\n",GetFileName(Run->Contents.FileName),Tmp1);
+           GetAddressRange(ActFile, &Start, &End);
+           sprintf(Tmp1, LargeHIntFormat, Start);
+           errno = 0; 
+           fprintf(MAPFile,"FILE %s 0x%s\n", GetFileName(Run->Contents.FileName), Tmp1);
            ChkIO(10004);
           END
-         errno=0; 
-         sprintf(Tmp1,LongIntFormat,Run->Contents.LineNum);
-         sprintf(Tmp2,LargeIntFormat,Run->Contents.Address-Start);
-         fprintf(MAPFile,"LINE %s %s\n",Tmp1,Tmp2); 
+         errno = 0; 
+         sprintf(Tmp1, LongIntFormat, Run->Contents.LineNum);
+         sprintf(Tmp2, LargeHIntFormat, Run->Contents.Address - Start);
+         fprintf(MAPFile, "LINE %s 0x%s\n", Tmp1, Tmp2); 
          ChkIO(10004);
-         HadLines=TRUE;
+         HadLines = TRUE;
         END
-       Run=Run->Next;
+       Run = Run->Next;
       END
      if (HadLines)
       BEGIN
-       sprintf(Tmp1,LongIntFormat,End);
-       errno=0; fprintf(MAPFile,"ENDFILE %s\n",Tmp1); ChkIO(10004);
+       sprintf(Tmp1, LargeHIntFormat, End);
+       errno = 0; fprintf(MAPFile, "ENDFILE 0x%s\n", Tmp1); ChkIO(10004);
       END
     END
 

@@ -13,9 +13,9 @@ typedef struct _MacroRec
           char *Name;            /* Name des Makros */
           Byte ParamCount;       /* Anzahl Parameter */
           StringList FirstLine;  /* Zeiger auf erste Zeile */
-          Boolean Used;          /* wird gerade benutzt-verhindert Rekusion */
+          LongInt UseCounter;    /* to limit recursive calls */
           Boolean LocMacExp;     /* Makroexpansion wird aufgelistet */
-         } MacroRec,*PMacroRec;
+         } MacroRec, *PMacroRec;
 
 #define BufferArraySize 1024
 
@@ -36,7 +36,7 @@ typedef struct _TInputTag
           StringList Params;
           LongInt LineCnt,LineZ;
           StringRecPtr Lines;
-          String SpecName,SaveAttr;
+          String SpecName,SaveAttr,AllArgs,NumArgs;
           Boolean IsEmpty;
           FILE *Datei;
           void *Buffer;
@@ -55,7 +55,8 @@ typedef struct _TInputTag
                             struct _TInputTag *P, char *Dest
 #endif
                                                             );
-         } TInputTag,*PInputTag;
+          PMacroRec Macro;
+         } TInputTag, *PInputTag;
 
 typedef struct _TOutputTag
          {
@@ -72,7 +73,7 @@ void
           LongInt PubSect,GlobSect;
           Boolean DoExport,DoGlobCopy;
           String GName;
-         } TOutputTag,*POutputTag;
+         } TOutputTag, *POutputTag;
 
 
 extern PInputTag FirstInputTag;

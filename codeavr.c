@@ -10,6 +10,9 @@
 /*           15.10.1998 LDD/STD mit <reg>+<symbol> ging nicht                */
 /*            2. 5.1999 JMP/CALL momentan bei keinem Mitglied erlaubt        */
 /*                      WRAPMODE eingebaut                                   */
+/*           19.11.1999 Default-Hexmodus ist jetzt C                         */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
+/*            7. 5.2000 Packing hinzugefuegt                                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -52,6 +55,8 @@ typedef struct
 #define PBitOrderCnt 4
 
 
+static SimpProc SaveInitProc;
+
 static CPUVar CPU90S1200,CPU90S2313,CPU90S4414,CPU90S8515;
 
 static ArchOrder *FixedOrders;
@@ -70,7 +75,7 @@ static char *WrapFlagName = "WRAPMODE";
 
 /*---------------------------------------------------------------------------*/
 
-	static LongInt CutAdr(LongInt Adr)
+        static LongInt CutAdr(LongInt Adr)
 BEGIN
    if ((Adr & SignMask) != 0) return (Adr | ORMask);
    else return (Adr & SegLimits[SegCode]);
@@ -223,7 +228,7 @@ BEGIN
     END
 END
 
-	static Boolean DecodeMem(char * Asc, Word *Erg)
+        static Boolean DecodeMem(char * Asc, Word *Erg)
 BEGIN
    if (strcasecmp(Asc,"X")==0) *Erg=0x1c;
    else if (strcasecmp(Asc,"X+")==0) *Erg=0x1d;
@@ -240,7 +245,31 @@ END
 
 /*---------------------------------------------------------------------------*/
 
-	static Boolean DecodePseudo(void)
+static Boolean AccFull;
+
+	static void PlaceByte(Word Value, Boolean Pack)
+BEGIN
+   if (ActPC == SegCode)
+    BEGIN
+     if (Pack)
+      BEGIN
+       Value &= 0xff;
+       if (AccFull)
+        BEGIN
+         WAsmCode[CodeLen] |= (Value << 8);
+         CodeLen++;
+        END
+       else
+        WAsmCode[CodeLen] = Value;
+       AccFull = NOT AccFull;
+      END
+     else
+      WAsmCode[CodeLen++] = Value;
+    END
+   else BAsmCode[CodeLen++] = Value;
+END
+
+        static Boolean DecodePseudo(void)
 BEGIN
    Integer Size;
    int z,z2;
@@ -263,51 +292,51 @@ BEGIN
        Size=EvalIntExpression(ArgStr[1],Int16,&ValOK);
        if (FirstPassUnknown) WrError(1820);
        if ((ValOK) AND (NOT FirstPassUnknown))
-	BEGIN
-	 DontPrint=True;
-	 CodeLen=Size;
-	 BookKeeping();
-	END
+        BEGIN
+         DontPrint=True;
+         CodeLen=Size;
+         BookKeeping();
+        END
       END
      return True;
     END
 
    if (Memo("DATA"))
     BEGIN
-     MaxV=(ActPC==SegCode)?65535:255; MinV=(-((MaxV+1) >> 1));
-     if (ArgCnt==0) WrError(1110);
+     MaxV = ((ActPC == SegCode) && (NOT Packing)) ? 65535 : 255;
+     MinV = (-((MaxV + 1) >> 1));
+     AccFull = FALSE;
+     if (ArgCnt == 0) WrError(1110);
      else
       BEGIN
-       ValOK=True;
-       for (z=1; z<=ArgCnt; z++)
-	if (ValOK)
-	 BEGIN
-	  EvalExpression(ArgStr[z],&t);
-          if ((FirstPassUnknown) AND (t.Typ==TempInt)) t.Contents.Int&=MaxV;
-	  switch (t.Typ)
+       ValOK = True;
+       for (z = 1; z <= ArgCnt; z++)
+        if (ValOK)
+         BEGIN
+          EvalExpression(ArgStr[z], &t);
+          if ((FirstPassUnknown) AND (t.Typ == TempInt)) t.Contents.Int &= MaxV;
+          switch (t.Typ)
            BEGIN
-	    case TempInt:
-             if (ChkRange(t.Contents.Int,MinV,MaxV))
-              if (ActPC==SegCode) WAsmCode[CodeLen++]=t.Contents.Int;
-              else BAsmCode[CodeLen++]=t.Contents.Int;
+            case TempInt:
+             if (ChkRange(t.Contents.Int, MinV, MaxV))
+              PlaceByte(t.Contents.Int, Packing);
              break;
-	    case TempFloat:
-             WrError(1135); ValOK=False;
-	     break;
-	    case TempString:
-             for (z2=0; z2<strlen(t.Contents.Ascii); z2++)
-	      BEGIN
-               Size=CharTransTable[((usint) t.Contents.Ascii[z2])&0xff];
-               if (ActPC!=SegCode) BAsmCode[CodeLen++]=Size;
-               else if ((z2&1)==0) WAsmCode[CodeLen++]=Size;
-               else WAsmCode[CodeLen-1]+=Size<<8;
-	      END
+            case TempFloat:
+             WrError(1135); ValOK = False;
              break;
-	    default:
-             ValOK=False;
-	   END
-	 END
-       if (NOT ValOK) CodeLen=0;
+            case TempString:
+             for (z2 = 0; z2 < strlen(t.Contents.Ascii); z2++)
+              BEGIN
+               Size = CharTransTable[((usint) t.Contents.Ascii[z2]) & 0xff];
+               PlaceByte(Size, TRUE);
+              END
+             break;
+            default:
+             ValOK = False;
+           END
+         END
+       if (NOT ValOK) CodeLen = 0;
+       else if (AccFull) CodeLen++;
       END
      return True;
     END
@@ -429,11 +458,11 @@ BEGIN
       BEGIN
        Reg2=EvalIntExpression(ArgStr[2],UInt6,&OK);
        if (OK)
-	BEGIN
-	 WAsmCode[0]=0x9600+(Ord(Memo("SBIW")) << 8)+((Reg1 & 6) << 3)+
-		     (Reg2 & 15)+((Reg2 & 0x30) << 2);
-	 CodeLen=1;
-	END
+        BEGIN
+         WAsmCode[0]=0x9600+(Ord(Memo("SBIW")) << 8)+((Reg1 & 6) << 3)+
+                     (Reg2 & 15)+((Reg2 & 0x30) << 2);
+         CodeLen=1;
+        END
       END
      return;
     END
@@ -492,7 +521,7 @@ BEGIN
          if (OK)
           BEGIN
            WAsmCode[0]=0x8000+z+(Reg1 << 4)+(Reg2 & 7)+((Reg2 & 0x18) << 7)+((Reg2 & 0x20) << 8);
-	   CodeLen=1;
+           CodeLen=1;
           END
         END
       END
@@ -534,24 +563,24 @@ BEGIN
      else
       BEGIN
        if (Memo("STS"))
-	BEGIN
-	 strcpy(ArgStr[3],ArgStr[1]);
+        BEGIN
+         strcpy(ArgStr[3],ArgStr[1]);
          strcpy(ArgStr[1],ArgStr[2]);
          strcpy(ArgStr[2],ArgStr[3]);
-	 z=0x200;
-	END
+         z=0x200;
+        END
        else z=0;
        if (NOT DecodeReg(ArgStr[1],&Reg1)) WrXError(1445,ArgStr[1]);
        else
-	BEGIN
-	 WAsmCode[1]=EvalIntExpression(ArgStr[2],UInt16,&OK);
-	 if (OK)
-	  BEGIN
+        BEGIN
+         WAsmCode[1]=EvalIntExpression(ArgStr[2],UInt16,&OK);
+         if (OK)
+          BEGIN
            ChkSpace(SegData);
-	   WAsmCode[0]=0x9000+z+(Reg1 << 4); 
-	   CodeLen=2;
-	  END
-	END
+           WAsmCode[0]=0x9000+z+(Reg1 << 4); 
+           CodeLen=2;
+          END
+        END
       END
      return;
     END
@@ -627,17 +656,17 @@ BEGIN
       if (ArgCnt!=2) WrError(1110);
       else
        BEGIN
-	Reg1=EvalIntExpression(ArgStr[1],UInt5,&OK);
-	if (OK)
-	 BEGIN
-	  ChkSpace(SegIO);
-	  Reg2=EvalIntExpression(ArgStr[2],UInt3,&OK);
-	  if (OK)
-	   BEGIN
-	    WAsmCode[0]=PBitOrders[z].Code+Reg2+(Reg1 << 3);
-	    CodeLen=1;
+        Reg1=EvalIntExpression(ArgStr[1],UInt5,&OK);
+        if (OK)
+         BEGIN
+          ChkSpace(SegIO);
+          Reg2=EvalIntExpression(ArgStr[2],UInt3,&OK);
+          if (OK)
+           BEGIN
+            WAsmCode[0]=PBitOrders[z].Code+Reg2+(Reg1 << 3);
+            CodeLen=1;
            END
-	 END
+         END
        END
       return;
      END
@@ -733,6 +762,12 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
+        static void InitCode_AVR(void)
+BEGIN
+   SaveInitProc();
+   SetFlag(&Packing, PackingName, False);
+END
+
         static Boolean IsDef_AVR(void)
 BEGIN
    return (Memo("PORT") OR Memo("REG"));
@@ -745,7 +780,7 @@ END
 
         static void SwitchTo_AVR(void)
 BEGIN
-   TurnWords=False; ConstMode=ConstModeMoto; SetIsOccupied=True;
+   TurnWords=False; ConstMode=ConstModeC; SetIsOccupied=True;
 
    PCSymbol="*"; HeaderID=0x3b; NOPCode=0x0000;
    DivideChars=","; HasAttrs=False;
@@ -768,17 +803,20 @@ BEGIN
    ORMask = ((LongInt) - 1) - SegLimits[SegCode];
 
    AddONOFF("WRAPMODE", &WrapFlag, WrapFlagName, False);
+   AddONOFF("PACKING", &Packing, PackingName, False);
    SetFlag(&WrapFlag, WrapFlagName, False);
 
    MakeCode=MakeCode_AVR; IsDef=IsDef_AVR;
    SwitchFrom=SwitchFrom_AVR; InitFields();
 END
 
-	void codeavr_init(void)
+        void codeavr_init(void)
 BEGIN
    CPU90S1200=AddCPU("AT90S1200",SwitchTo_AVR);
    CPU90S2313=AddCPU("AT90S2313",SwitchTo_AVR);
    CPU90S4414=AddCPU("AT90S4414",SwitchTo_AVR);
    CPU90S8515=AddCPU("AT90S8515",SwitchTo_AVR);
+
+   SaveInitProc = InitPassProc; InitPassProc = InitCode_AVR;
 END
 

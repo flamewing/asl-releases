@@ -10,6 +10,8 @@
 /*           24. 8.1998 Kodierung fuer MOV dir8,Rm war falsch (Fehler im     */
 /*                      Manual!)                                             */
 /*            2. 1.1998 ChkPC-Routine entfernt                               */
+/*           19. 1.1999 Angefangen, Relocs zu uebertragen                    */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -24,9 +26,11 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmallg.h"
+#include "asmrelocs.h"
 #include "codepseudo.h"
 #include "codevars.h"
 #include "asmitree.h"
+#include "fileformat.h"
 
 /*-------------------------------------------------------------------------*/
 /* Daten */
@@ -93,7 +97,7 @@ static CPUVar CPU87C750,CPU8051,CPU8052,CPU80C320,
 /*-------------------------------------------------------------------------*/
 /* Adressparser */
 
-   	static void SetOpSize(ShortInt NewSize)
+        static void SetOpSize(ShortInt NewSize)
 BEGIN
    if (OpSize==-1) OpSize=NewSize;
    else if (OpSize!=NewSize)
@@ -102,7 +106,7 @@ BEGIN
     END
 END
 
-	static Boolean DecodeReg(char *Asc, Byte *Erg,Byte *Size)
+        static Boolean DecodeReg(char *Asc, Byte *Erg,Byte *Size)
 BEGIN
    static Byte Masks[3]={0,1,3};
 
@@ -150,7 +154,7 @@ BEGIN
     END
 END
 
-	static void ChkMask(Word Mask, Word ExtMask)
+        static void ChkMask(Word Mask, Word ExtMask)
 BEGIN
    if ((AdrMode!=ModNone) AND ((Mask & (1 << AdrMode))==0))
     BEGIN
@@ -159,7 +163,7 @@ BEGIN
     END
 END
 
-   	static void DecodeAdr(char *Asc_O, Word Mask)
+        static void DecodeAdr(char *Asc_O, Word Mask)
 BEGIN
    Boolean OK,FirstFlag;
    Byte HSize;
@@ -270,8 +274,8 @@ BEGIN
            break;
           case 1:
            if (H32==0)
-	    BEGIN
-	     AdrMode=ModIReg; AdrSize=0;
+            BEGIN
+             AdrMode=ModIReg; AdrSize=0;
             END
            else
             BEGIN
@@ -283,8 +287,8 @@ BEGIN
            break;
           case 2:
            if (H32==0)
-	    BEGIN
-	     AdrMode=ModIReg; AdrSize=2;
+            BEGIN
+             AdrMode=ModIReg; AdrSize=2;
             END
            else
             BEGIN
@@ -304,22 +308,24 @@ BEGIN
    FirstFlag=False;
    SegType=(-1); PPos=QuotPos(Asc,':');
    if (PPos!=Nil)
-    if (MomCPU<CPU80251)
-     BEGIN
-      WrError(1350); return;
-     END
-    else
-     BEGIN
-      SplitString(Asc,Part,Asc,PPos);
-      if (strcasecmp(Part,"S")==0) SegType=(-2);
-      else
-       BEGIN
-        FirstPassUnknown=False;
-        SegType=EvalIntExpression(Asc,UInt8,&OK);
-        if (NOT OK) return;
-        if (FirstPassUnknown) FirstFlag=True;
-       END
-     END
+    BEGIN
+     if (MomCPU<CPU80251)
+      BEGIN
+       WrError(1350); return;
+      END
+     else
+      BEGIN
+       SplitString(Asc,Part,Asc,PPos);
+       if (strcasecmp(Part,"S")==0) SegType=(-2);
+       else
+        BEGIN
+         FirstPassUnknown=False;
+         SegType=EvalIntExpression(Asc,UInt8,&OK);
+         if (NOT OK) return;
+         if (FirstPassUnknown) FirstFlag=True;
+        END
+      END
+    END
 
    FirstPassUnknown=False;
    switch (SegType)
@@ -348,8 +354,10 @@ BEGIN
     BEGIN
      if (SegType>=0) H32 += ((LongWord)SegType) << 16;
      if (FirstFlag)
-      if ((MomCPU<CPU80251) OR ((Mask & ModDir16)==0)) H32 &= 0xff;
-      else H32 &= 0xffff;
+      BEGIN
+       if ((MomCPU<CPU80251) OR ((Mask & ModDir16)==0)) H32 &= 0xff;
+       else H32 &= 0xffff;
+      END
      if (((H32<128) OR ((H32<256) AND (MomCPU<CPU80251))) AND ((Mask & MModDir8)!=0))
       BEGIN
        if (MomCPU<CPU80251) ChkSpace(SegData);
@@ -367,7 +375,7 @@ BEGIN
    ChkMask(Mask,ExtMask);
 END
 
-	static ShortInt DecodeBitAdr(char *Asc, LongInt *Erg, Boolean MayShorten)
+        static ShortInt DecodeBitAdr(char *Asc, LongInt *Erg, Boolean MayShorten)
 BEGIN
    Boolean OK;
    char *PPos,Save;
@@ -396,7 +404,7 @@ BEGIN
        if (((*Erg)&0xf8ffff00)!=0)
 #endif
         BEGIN
-	 WrError(1510); OK=False;
+         WrError(1510); OK=False;
         END
       END
      else
@@ -429,12 +437,12 @@ BEGIN
    return ((MomCPU==CPU80504) AND ((Adr & 0x7ff)==0x7fe));
 END
 
-	static Boolean NeedsPrefix(Word Opcode)
+        static Boolean NeedsPrefix(Word Opcode)
 BEGIN
    return (((Opcode&0x0f)>=6) AND ((SrcMode!=0)!=((Hi(Opcode)!=0)!=0)));
 END
 
-	static void PutCode(Word Opcode)
+        static void PutCode(Word Opcode)
 BEGIN
    if (((Opcode&0x0f)<6) OR ((SrcMode!=0)!=((Hi(Opcode)==0)!=0)))
     BEGIN
@@ -765,7 +773,7 @@ BEGIN
     END
 END
 
-	static void DecodeLogic(Word Index)
+        static void DecodeLogic(Word Index)
 BEGIN
    Boolean InvFlag;
    Byte HReg;
@@ -930,7 +938,7 @@ BEGIN
     END
 END
 
-	static void DecodeMOVC(Word Index)
+        static void DecodeMOVC(Word Index)
 BEGIN
    if (ArgCnt!=2) WrError(1110);
    else
@@ -947,7 +955,7 @@ BEGIN
     END
 END
 
-	static void DecodeMOVH(Word Index)
+        static void DecodeMOVH(Word Index)
 BEGIN
    Byte HReg;
 
@@ -979,7 +987,7 @@ BEGIN
     END
 END
 
-	static void DecodeMOVZS(Word Index)
+        static void DecodeMOVZS(Word Index)
 BEGIN
    Byte HReg;
    int z;
@@ -1012,7 +1020,7 @@ BEGIN
    return;
 END
 
-	static void DecodeMOVX(Word Index)
+        static void DecodeMOVX(Word Index)
 BEGIN
    int z;
 
@@ -1039,7 +1047,7 @@ BEGIN
     END
 END
 
-	static void DecodeStack(Word Index)
+        static void DecodeStack(Word Index)
 BEGIN
    int z;
 
@@ -1080,7 +1088,7 @@ BEGIN
     END
 END
 
-	static void DecodeXCH(Word Index)
+        static void DecodeXCH(Word Index)
 BEGIN
    Byte HReg;
 
@@ -1146,7 +1154,7 @@ BEGIN
     END
 END
 
-	static void DecodeXCHD(Word Index)
+        static void DecodeXCHD(Word Index)
 BEGIN
    Byte HReg;
 
@@ -1179,30 +1187,35 @@ BEGIN
     END
 END
 
-	static void DecodeABranch(Word Index)
+#define RelocTypeABranch (11 | RelocFlagBig | RelocFlagPage | (5 << 8) | (3 << 12))
+
+        static void DecodeABranch(Word Index)
 BEGIN
    Boolean OK;
    LongInt AdrLong;
 
-   /* Index: AJMP=0 ACALL=1 */
+   /* Index: AJMP = 0 ACALL = 1 */
 
-   if (ArgCnt!=1) WrError(1110);
+   if (ArgCnt != 1) WrError(1110);
    else
     BEGIN
-     AdrLong=EvalIntExpression(ArgStr[1],Int24,&OK);
+     AdrLong = EvalIntExpression(ArgStr[1], Int24, &OK);
      if (OK)
-      if ((NOT SymbolQuestionable) AND (((EProgCounter()+2) >> 11)!=(AdrLong >> 11))) WrError(1910);
-      else if (Chk504(EProgCounter())) WrError(1900);
-      else
-       BEGIN
-        ChkSpace(SegCode);
-        PutCode(0x01 + (Index << 4) + ((Hi(AdrLong) & 7) << 5));
-        BAsmCode[CodeLen++]=Lo(AdrLong);
-       END
+      BEGIN
+       if ((NOT SymbolQuestionable) AND (((EProgCounter() + 2) >> 11) != (AdrLong >> 11))) WrError(1910);
+       else if (Chk504(EProgCounter())) WrError(1900);
+       else
+        BEGIN
+         ChkSpace(SegCode);
+         PutCode(0x01 + (Index << 4) + ((Hi(AdrLong) & 7) << 5));
+         BAsmCode[CodeLen++] = Lo(AdrLong);
+         TransferRelocs(ProgCounter() - 2, RelocTypeABranch);
+        END
+      END
     END
 END
 
-	static void DecodeLBranch(Word Index)
+        static void DecodeLBranch(Word Index)
 BEGIN
    LongInt AdrLong;
    Boolean OK;
@@ -1230,14 +1243,17 @@ BEGIN
     BEGIN
      AdrLong=EvalIntExpression(ArgStr[1],Int24,&OK);
      if (OK)
-      if ((MomCPU>=CPU80251) AND (((EProgCounter()+3) >> 16)!=(AdrLong >> 16))) WrError(1910);
-      else
-       BEGIN
-        ChkSpace(SegCode);
-        PutCode(0x02 + (Index << 4));
-        BAsmCode[CodeLen++] = (AdrLong >> 8) & 0xff;
-        BAsmCode[CodeLen++] = AdrLong & 0xff;
-       END
+      BEGIN
+       if ((MomCPU>=CPU80251) AND (((EProgCounter()+3) >> 16)!=(AdrLong >> 16))) WrError(1910);
+       else
+        BEGIN
+         ChkSpace(SegCode);
+         PutCode(0x02 + (Index << 4));
+         BAsmCode[CodeLen++] = (AdrLong >> 8) & 0xff;
+         BAsmCode[CodeLen++] = AdrLong & 0xff;
+         TransferRelocs(ProgCounter() + 1, RelocTypeB16);
+        END
+      END
     END
 END
 
@@ -1279,7 +1295,7 @@ BEGIN
     END
 END
 
-	static void DecodeJMP(Word Index)
+        static void DecodeJMP(Word Index)
 BEGIN
    LongInt AdrLong,Dist;
    Boolean OK;
@@ -1332,7 +1348,7 @@ BEGIN
     END
 END
 
-	static void DecodeCALL(Word Index)
+        static void DecodeCALL(Word Index)
 BEGIN
    LongInt AdrLong;
    Boolean OK;
@@ -1353,25 +1369,25 @@ BEGIN
       BEGIN
        AdrLong=EvalIntExpression(ArgStr[1],UInt24,&OK);
        if (OK)
-	BEGIN
-	 if ((NOT Chk504(EProgCounter())) AND ((AdrLong >> 11)==((EProgCounter()+2) >> 11)))
-	  BEGIN
-	   PutCode(0x11 + ((Hi(AdrLong) & 7) << 5));
-	   BAsmCode[CodeLen++] = Lo(AdrLong);
-	  END
+        BEGIN
+         if ((NOT Chk504(EProgCounter())) AND ((AdrLong >> 11)==((EProgCounter()+2) >> 11)))
+          BEGIN
+           PutCode(0x11 + ((Hi(AdrLong) & 7) << 5));
+           BAsmCode[CodeLen++] = Lo(AdrLong);
+          END
          else if (MomCPU<CPU8051) WrError(1910);
          else if ((AdrLong >> 16)!=((EProgCounter()+3) >> 16)) WrError(1910);
          else
-	  BEGIN
-	   PutCode(0x12);
-	   BAsmCode[CodeLen++] = Hi(AdrLong);
-	   BAsmCode[CodeLen++] = Lo(AdrLong);
-	  END
-	END
+          BEGIN
+           PutCode(0x12);
+           BAsmCode[CodeLen++] = Hi(AdrLong);
+           BAsmCode[CodeLen++] = Lo(AdrLong);
+          END
+        END
       END
 END
 
-	static void DecodeDJNZ(Word Index)
+        static void DecodeDJNZ(Word Index)
 BEGIN
    LongInt AdrLong;
    Boolean OK,Questionable;
@@ -1414,7 +1430,7 @@ BEGIN
     END
 END
 
-	static void DecodeCJNE(Word Index)
+        static void DecodeCJNE(Word Index)
 BEGIN
    LongInt AdrLong;
    Boolean OK,Questionable;
@@ -1499,7 +1515,7 @@ BEGIN
     END
 END
 
-	static void DecodeADD(Word Index)
+        static void DecodeADD(Word Index)
 BEGIN
    Byte HReg;
 
@@ -1615,7 +1631,7 @@ BEGIN
     END
 END
 
-	static void DecodeSUBCMP(Word Index)
+        static void DecodeSUBCMP(Word Index)
 BEGIN
    int z;
    Byte HReg;
@@ -1689,7 +1705,7 @@ BEGIN
     END
 END
 
-	static void DecodeADDCSUBB(Word Index)
+        static void DecodeADDCSUBB(Word Index)
 BEGIN
    Byte HReg;
 
@@ -1727,7 +1743,7 @@ BEGIN
     END
 END
 
-	static void DecodeINCDEC(Word Index)
+        static void DecodeINCDEC(Word Index)
 BEGIN
    Byte HReg;
    int z;
@@ -1801,7 +1817,7 @@ BEGIN
     END
 END
 
-	static void DecodeMULDIV(Word Index)
+        static void DecodeMULDIV(Word Index)
 BEGIN
    int z;
    Byte HReg;
@@ -1840,7 +1856,7 @@ BEGIN
     END
 END
 
-	static void DecodeBits(Word Index)
+        static void DecodeBits(Word Index)
 BEGIN
    LongInt AdrLong;
    int z;
@@ -1871,7 +1887,7 @@ BEGIN
      END
 END
 
-	static void DecodeShift(Word Index)
+        static void DecodeShift(Word Index)
 BEGIN
    int z;
 
@@ -1897,7 +1913,7 @@ BEGIN
     END
 END
 
-	static void DecodeCond(Word Index)
+        static void DecodeCond(Word Index)
 BEGIN
    FixedOrder *FixedZ=CondOrders+Index;
    LongInt AdrLong;
@@ -1964,7 +1980,7 @@ BEGIN
     END
 END
 
-	static void DecodeAcc(Word Index)
+        static void DecodeAcc(Word Index)
 BEGIN
    FixedOrder *FixedZ=AccOrders+Index;
 
@@ -1982,7 +1998,7 @@ BEGIN
     END;
 END
 
-	static void DecodeFixed(Word Index)
+        static void DecodeFixed(Word Index)
 BEGIN
    FixedOrder *FixedZ=FixedOrders+Index;
 
@@ -1992,7 +2008,7 @@ BEGIN
 END
 
 
-	static void DecodeSFR(Word Index)
+        static void DecodeSFR(Word Index)
 BEGIN
    Word AdrByte;
    Boolean OK;
@@ -2041,7 +2057,7 @@ BEGIN
     END
 END
 
-	static void DecodeBIT(Word Index)
+        static void DecodeBIT(Word Index)
 BEGIN
    LongInt AdrLong;
 
@@ -2057,7 +2073,7 @@ BEGIN
    else CodeEquate(SegBData,0,0xff);
 END
 
-	static void DecodePORT(Word Index)
+        static void DecodePORT(Word Index)
 BEGIN
    if (MomCPU<CPU80251) WrError(1500);
    else CodeEquate(SegIO,0,0x1ff);
@@ -2066,7 +2082,7 @@ END
 /*-------------------------------------------------------------------------*/
 /* dynamische Codetabellenverwaltung */
 
-   	static void AddFixed(char *NName, Word NCode, CPUVar NCPU)
+        static void AddFixed(char *NName, Word NCode, CPUVar NCPU)
 BEGIN
    if (InstrZ>=FixedOrderCnt) exit(255);
    FixedOrders[InstrZ].Code=NCode; 
@@ -2074,7 +2090,7 @@ BEGIN
    AddInstTable(InstTable,NName,InstrZ++,DecodeFixed);
 END
 
-   	static void AddAcc(char *NName, Word NCode, CPUVar NCPU)
+        static void AddAcc(char *NName, Word NCode, CPUVar NCPU)
 BEGIN
    if (InstrZ>=AccOrderCnt) exit(255);
    AccOrders[InstrZ].Code=NCode; 
@@ -2082,7 +2098,7 @@ BEGIN
    AddInstTable(InstTable,NName,InstrZ++,DecodeAcc);
 END
 
-   	static void AddCond(char *NName, Word NCode, CPUVar NCPU)
+        static void AddCond(char *NName, Word NCode, CPUVar NCPU)
 BEGIN
    if (InstrZ>=CondOrderCnt) exit(255);
    CondOrders[InstrZ].Code=NCode;
@@ -2090,7 +2106,7 @@ BEGIN
    AddInstTable(InstTable,NName,InstrZ++,DecodeCond);
 END
 
-   	static void AddBCond(char *NName, Word NCode, CPUVar NCPU)
+        static void AddBCond(char *NName, Word NCode, CPUVar NCPU)
 BEGIN
    if (InstrZ>=BCondOrderCnt) exit(255);
    BCondOrders[InstrZ].Code=NCode;
@@ -2098,7 +2114,7 @@ BEGIN
    AddInstTable(InstTable,NName,InstrZ++,DecodeBCond);
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    InstTable=CreateInstTable(203);
    AddInstTable(InstTable,"MOV"  , 0,DecodeMOV);
@@ -2185,7 +2201,7 @@ BEGIN
    AddBCond("JNB",0x0030,CPU87C750);
 END
 
-	static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    DestroyInstTable(InstTable);
    free(FixedOrders);
@@ -2197,13 +2213,13 @@ END
 /*-------------------------------------------------------------------------*/
 /* Instruktionsdecoder */
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
 
    return False;
 END
 
-	static void MakeCode_51(void)
+        static void MakeCode_51(void)
 BEGIN
    CodeLen=0; DontPrint=False; OpSize=(-1); MinOneIs0=False;
 
@@ -2222,7 +2238,7 @@ BEGIN
    if (NOT LookupInstTable(InstTable,OpPart)) WrXError(1200,OpPart);
 END
 
-	static Boolean IsDef_51(void)
+        static Boolean IsDef_51(void)
 BEGIN
    switch (*OpPart)
     BEGIN
@@ -2248,7 +2264,7 @@ BEGIN
    DeinitFields(); ClearONOFF();
 END
 
-	static void SwitchTo_51(void)
+        static void SwitchTo_51(void)
 BEGIN
    TurnWords=False; ConstMode=ConstModeIntel; SetIsOccupied=False;
 
@@ -2286,7 +2302,7 @@ BEGIN
 END
 
 
-	void code51_init(void)
+        void code51_init(void)
 BEGIN
    CPU87C750 =AddCPU("87C750",SwitchTo_51);
    CPU8051   =AddCPU("8051"  ,SwitchTo_51);

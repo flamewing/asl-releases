@@ -4048,4 +4048,15 @@
 	XOR.W	R0,2345H[SB]
 	XOR.W	R0,A0
 	XOR.W	R0,R0
+;
+; here are some problematic cases which have reared their ugly little heads
+; in some of the most surprising instances. :)
+;
+; =RMS=
+	JMP	x2
+x2:
+	JMP.S	x3
+x3:
+	JMP	x3
+
 	END

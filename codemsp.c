@@ -7,6 +7,7 @@
 /* Historie:                                                                 */
 /*             18. 8.1998 BookKeeping-Aufruf bei BSS                         */
 /*              2. 1.1998 ChkPC umgestellt                                   */
+/*              9. 3.2000 'ambiguous else'-Warnungen beseitigt               */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -118,7 +119,7 @@ BEGIN
    AdrMode=0xff; AdrCnt=0;
 END
 
-	static void ChkAdr(Byte Mask)
+        static void ChkAdr(Byte Mask)
 BEGIN
     if ((AdrMode!=0xff) AND ((Mask & (1 << AdrMode))==0))
     BEGIN
@@ -232,12 +233,14 @@ BEGIN
          *p='\0';
          AdrVal=EvalIntExpression(Asc,Int16,&OK);
          if (OK)
-          if ((AdrPart==2) OR (AdrPart==3)) WrXError(1445,Asc);
-          else if ((AdrVal==0) AND ((Mask & 4)!=0)) AdrMode=2;
-          else
-           BEGIN
-            AdrCnt=1; AdrMode=1;
-           END
+          BEGIN
+           if ((AdrPart==2) OR (AdrPart==3)) WrXError(1445,Asc);
+           else if ((AdrVal==0) AND ((Mask & 4)!=0)) AdrMode=2;
+           else
+            BEGIN
+             AdrCnt=1; AdrMode=1;
+            END
+          END
          *p='(';
          ChkAdr(Mask); return;
         END
@@ -277,7 +280,7 @@ END
 
 /*-------------------------------------------------------------------------*/
 
-	static void PutByte(Byte Value)
+        static void PutByte(Byte Value)
 BEGIN
    if (((CodeLen&1)==1) AND (NOT BigEndian))
     BEGIN
@@ -291,7 +294,7 @@ BEGIN
    CodeLen++;
 END
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
    TempResult t;
    Word HVal16;
@@ -357,9 +360,9 @@ BEGIN
         BEGIN
          HVal16=EvalIntExpression(ArgStr[z],Int16,&OK);
          if (OK)
-	  BEGIN
-	   WAsmCode[CodeLen >> 1]=HVal16;
-	   CodeLen+=2;
+          BEGIN
+           WAsmCode[CodeLen >> 1]=HVal16;
+           CodeLen+=2;
           END
          z++;
         END
@@ -492,13 +495,15 @@ BEGIN
        BEGIN
         AdrInt=EvalIntExpression(ArgStr[1],UInt16,&OK)-(EProgCounter()+2);
         if (OK)
-         if (Odd(AdrInt)) WrError(1375);
-         else if ((NOT SymbolQuestionable) AND ((AdrInt<-1024) OR (AdrInt>1022))) WrError(1370);
-         else
-          BEGIN
-           WAsmCode[0]=JmpOrders[z].Code+((AdrInt >> 1) & 0x3ff);
-           CodeLen=2;
-          END
+         BEGIN
+          if (Odd(AdrInt)) WrError(1375);
+          else if ((NOT SymbolQuestionable) AND ((AdrInt<-1024) OR (AdrInt>1022))) WrError(1370);
+          else
+           BEGIN
+            WAsmCode[0]=JmpOrders[z].Code+((AdrInt >> 1) & 0x3ff);
+            CodeLen=2;
+           END
+         END
        END
       return;
      END
@@ -533,7 +538,7 @@ BEGIN
    SwitchFrom=SwitchFrom_MSP; InitFields();
 END
 
-	void codemsp_init(void)
+        void codemsp_init(void)
 BEGIN
    CPUMSP430=AddCPU("MSP430",SwitchTo_MSP);
 END

@@ -6,6 +6,7 @@
 /*                                                                           */
 /* Historie: 24.10.1996 Grundsteinlegung                                     */
 /*            2. 1.1999 ChkPC-Anpassung                                      */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -34,7 +35,7 @@ typedef struct
 typedef struct
          {
           char *Name;
-	  Byte Code;
+          Byte Code;
          } BaseOrder;
 
 #define FixedOrderCnt 27
@@ -51,7 +52,7 @@ static CPUVar CPU8080,CPU8085;
 
 /*--------------------------------------------------------------------------------------------------------*/
 
-	static void AddFixed(char *NName, Boolean NMay, Byte NCode)
+        static void AddFixed(char *NName, Boolean NMay, Byte NCode)
 BEGIN
    if (InstrZ>=FixedOrderCnt) exit(255);
    FixedOrders[InstrZ].Name=NName;
@@ -80,7 +81,7 @@ BEGIN
    ALUOrders[InstrZ++].Code=NCode;
 END           
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    FixedOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*FixedOrderCnt); InstrZ=0;
    AddFixed("XCHG", True , 0xeb); AddFixed("XTHL", True , 0xe3);
@@ -125,7 +126,7 @@ BEGIN
    AddALU("ORA" , 0xb0); AddALU("CMP" , 0xb8);
 END
 
-	static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    free(FixedOrders);
    free(Op16Orders);
@@ -152,7 +153,7 @@ BEGIN
     END
 END
 
-	static Boolean DecodeReg16(char *Asc, Byte *Erg)
+        static Boolean DecodeReg16(char *Asc, Byte *Erg)
 BEGIN
    static char *RegNames[4]={"B","D","H","SP"};
 
@@ -162,7 +163,7 @@ BEGIN
    return ((*Erg)<4);
 END
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
    if (Memo("PORT"))
     BEGIN
@@ -173,7 +174,7 @@ BEGIN
    return False;
 END
 
-	static void MakeCode_85(void)
+        static void MakeCode_85(void)
 BEGIN
    Boolean OK;
    Word AdrWord;
@@ -261,11 +262,13 @@ BEGIN
       BEGIN
        BAsmCode[1]=EvalIntExpression(ArgStr[2],Int8,&OK);
        if (OK)
-        if (NOT DecodeReg8(ArgStr[1],&AdrByte)) WrError(1980);
-        else
-         BEGIN
-          BAsmCode[0]=0x06+(AdrByte << 3); CodeLen=2;
-         END
+        BEGIN
+         if (NOT DecodeReg8(ArgStr[1],&AdrByte)) WrError(1980);
+         else
+          BEGIN
+           BAsmCode[0]=0x06+(AdrByte << 3); CodeLen=2;
+          END
+        END
       END
      return;
     END
@@ -277,13 +280,15 @@ BEGIN
       BEGIN
        AdrWord=EvalIntExpression(ArgStr[2],Int16,&OK);
        if (OK)
-        if (NOT DecodeReg16(ArgStr[1],&AdrByte)) WrError(1980);
-        else
-         BEGIN
-          BAsmCode[0]=0x01+(AdrByte << 4);
-          BAsmCode[1]=Lo(AdrWord); BAsmCode[2]=Hi(AdrWord);
-	  CodeLen=3;
-         END
+        BEGIN
+         if (NOT DecodeReg16(ArgStr[1],&AdrByte)) WrError(1980);
+         else
+          BEGIN
+           BAsmCode[0]=0x01+(AdrByte << 4);
+           BAsmCode[1]=Lo(AdrWord); BAsmCode[2]=Hi(AdrWord);
+           CodeLen=3;
+          END
+        END
       END
      return;
     END
@@ -389,7 +394,7 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static Boolean IsDef_85(void)
+        static Boolean IsDef_85(void)
 BEGIN
    return (Memo("PORT"));
 END
@@ -399,7 +404,7 @@ BEGIN
    DeinitFields();
 END
 
-	static void SwitchTo_85(void)
+        static void SwitchTo_85(void)
 BEGIN
    TurnWords=False; ConstMode=ConstModeIntel; SetIsOccupied=False;
 
@@ -416,7 +421,7 @@ BEGIN
    SwitchFrom=SwitchFrom_85; InitFields();
 END
 
-	void code85_init(void)
+        void code85_init(void)
 BEGIN
    CPU8080=AddCPU("8080",SwitchTo_85);
    CPU8085=AddCPU("8085",SwitchTo_85);

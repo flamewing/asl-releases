@@ -1,5 +1,5 @@
 md %1
-set binfiles=asl.exe plist.exe pbind.exe p2hex.exe p2bin.exe
+set binfiles=asl.exe plist.exe alink.exe pbind.exe p2hex.exe p2bin.exe
 rem for %%i in (%binfiles%) do strip %%i
 for %%i in (%binfiles%) do copy %%i %1
 ren %1\asl.exe as2.exe
@@ -21,4 +21,6 @@ set docdirs=DE EN
 for %%i in (%docdirs%) do copy doc_%%i\as.doc %5\as_%%i.doc
 for %%i in (%docdirs%) do copy doc_%%i\as.tex %5\as_%%i.tex
 for %%i in (%docdirs%) do copy doc_%%i\as.html %5\as_%%i.html
- 
+copy doc_DE\taborg*.tex %5
+copy doc_DE\ps*.tex %5
+copy COPYING %5

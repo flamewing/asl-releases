@@ -8,6 +8,7 @@
 /*            1. 7.1998 Warnungen bei is...()-Funktionen beseitigt           */
 /*            2. 1.1999 ChkPC umgestellt                                     */
 /*           30. 1.1999 Formate maschinenunabhaengig gemacht                 */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -110,14 +111,14 @@ static LongInt DPAssume;
 
 /*--------------------------------------------------------------------------*/
 
-   	static void AddFixed(char *NName, Word NCode)
+        static void AddFixed(char *NName, Word NCode)
 BEGIN
    if (InstrZ>=FixedOrderCnt) exit(255);
    FixedOrders[InstrZ].Name=NName;
    FixedOrders[InstrZ++].Code=NCode;
 END
 
-   	static void AddALU(char *NName, Word NCode)
+        static void AddALU(char *NName, Word NCode)
 BEGIN
    if (InstrZ>=ALUOrderCnt) exit(255);
    ALUOrders[InstrZ].Name=NName;
@@ -167,7 +168,7 @@ BEGIN
    LoadOrders[InstrZ++].Code=NCode;
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    FixedOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*FixedOrderCnt); InstrZ=0;
    AddFixed("CCF" ,0x0061); AddFixed("DI"  ,0x0010);
@@ -221,7 +222,7 @@ BEGIN
    AddLoad("LDPD",0x01); AddLoad("LDDD",0x11);
 END
 
-	static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    free(FixedOrders);
    free(ALUOrders);
@@ -235,7 +236,7 @@ END
 
 /*--------------------------------------------------------------------------*/
 
-	static Boolean DecodeReg(char *Asc_O, Byte *Erg, Byte *Size)
+        static Boolean DecodeReg(char *Asc_O, Byte *Erg, Byte *Size)
 BEGIN
    Boolean Res;
    char *Asc;
@@ -258,7 +259,7 @@ BEGIN
    return True;
 END
 
-	static void ChkAdr(LongWord Mask)
+        static void ChkAdr(LongWord Mask)
 BEGIN
    if ((AdrMode!=ModNone) AND (((1l << AdrMode) & Mask)==0)) 
     BEGIN
@@ -266,7 +267,7 @@ BEGIN
     END
 END
 
-	static void DecodeAdr(char *Asc_O, LongWord Mask)
+        static void DecodeAdr(char *Asc_O, LongWord Mask)
 BEGIN
    Word AdrWord;
    int level;
@@ -425,7 +426,7 @@ BEGIN
           else if (((Mask & MModDisp16WRReg)!=0)) 
            BEGIN
             AdrVals[0]=Hi(AdrWord); AdrVals[1]=Lo(AdrWord);
-	    AdrCnt=2; AdrMode=ModDisp16WRReg;
+            AdrCnt=2; AdrMode=ModDisp16WRReg;
            END
           else
            BEGIN
@@ -476,22 +477,24 @@ BEGIN
    /* direkt */
 
    AdrWord=EvalIntExpression(Asc,UInt16,&OK);
-   if (OK) 
-    if (((TypeFlag & (1 << SegReg)))==0) 
-     BEGIN
-      AdrMode=ModAbs;
-      AdrVals[0]=Hi(AdrWord); AdrVals[1]=Lo(AdrWord);
-      AdrCnt=2; ChkSpace(AbsSeg);
-     END
-    else if (AdrWord<0xff) 
-     BEGIN
-      AdrMode=ModReg; AdrVals[0]=Lo(AdrWord); AdrCnt=1;
-     END
-    else if ((AdrWord>0x1ff) OR (Odd(AdrWord))) WrError(1350);
-    else
-     BEGIN
-      AdrMode=ModRReg; AdrVals[0]=Lo(AdrWord); AdrCnt=1;
-     END
+   if (OK)
+    BEGIN 
+     if (((TypeFlag & (1 << SegReg)))==0) 
+      BEGIN
+       AdrMode=ModAbs;
+       AdrVals[0]=Hi(AdrWord); AdrVals[1]=Lo(AdrWord);
+       AdrCnt=2; ChkSpace(AbsSeg);
+      END
+     else if (AdrWord<0xff) 
+      BEGIN
+       AdrMode=ModReg; AdrVals[0]=Lo(AdrWord); AdrCnt=1;
+      END
+     else if ((AdrWord>0x1ff) OR (Odd(AdrWord))) WrError(1350);
+     else
+      BEGIN
+       AdrMode=ModRReg; AdrVals[0]=Lo(AdrWord); AdrCnt=1;
+      END
+    END
 
    ChkAdr(Mask);
 END
@@ -530,7 +533,7 @@ END
 
 /*--------------------------------------------------------------------------*/
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
 #define ASSUMEST9Count 1
 static ASSUMERec ASSUMEST9s[ASSUMEST9Count]=
@@ -1144,7 +1147,7 @@ BEGIN
               if (OpSize==0) 
                BEGIN
                 BAsmCode[0]=0x72; BAsmCode[1]=(ALUOrders[z].Code << 4)+AdrPart+1;
-     	        BAsmCode[2]=HReg+WorkOfs;
+                BAsmCode[2]=HReg+WorkOfs;
                 CodeLen=3;
                END
               else
@@ -1495,37 +1498,39 @@ BEGIN
      BEGIN
       if (ArgCnt!=2) WrError(1110);
       else if (SplitBit(ArgStr[1],&HReg))
-       if (Odd(HReg)) WrError(1350);
-       else
-        BEGIN
-         DecodeAdr(ArgStr[1],MModWReg);
-         if (AdrMode==ModWReg)
-          BEGIN
-           HReg=(HReg << 4)+AdrPart;
-           if (SplitBit(ArgStr[2],&HPart))
-            BEGIN
-             DecodeAdr(ArgStr[2],MModWReg);
-             if (AdrMode==ModWReg)
-              BEGIN
-               HPart=(HPart << 4)+AdrPart;
-               BAsmCode[0]=Bit2Orders[z].Code;
-               if (Memo("BLD"))
-                BEGIN
-                 BAsmCode[1]=HPart | 0x10; BAsmCode[2]=HReg | (HPart & 0x10);
-                END
-               else if (Memo("BXOR"))
-                BEGIN
-                 BAsmCode[1]=0x10+HReg; BAsmCode[2]=HPart;
-                END
-               else
-                BEGIN
-                 BAsmCode[1]=0x10+HReg; BAsmCode[2]=HPart ^ 0x10;
-                END
-               CodeLen=3;
-              END
-            END
-          END
-        END
+       BEGIN
+        if (Odd(HReg)) WrError(1350);
+        else
+         BEGIN
+          DecodeAdr(ArgStr[1],MModWReg);
+          if (AdrMode==ModWReg)
+           BEGIN
+            HReg=(HReg << 4)+AdrPart;
+            if (SplitBit(ArgStr[2],&HPart))
+             BEGIN
+              DecodeAdr(ArgStr[2],MModWReg);
+              if (AdrMode==ModWReg)
+               BEGIN
+                HPart=(HPart << 4)+AdrPart;
+                BAsmCode[0]=Bit2Orders[z].Code;
+                if (Memo("BLD"))
+                 BEGIN
+                  BAsmCode[1]=HPart | 0x10; BAsmCode[2]=HReg | (HPart & 0x10);
+                 END
+                else if (Memo("BXOR"))
+                 BEGIN
+                  BAsmCode[1]=0x10+HReg; BAsmCode[2]=HPart;
+                 END
+                else
+                 BEGIN
+                  BAsmCode[1]=0x10+HReg; BAsmCode[2]=HPart ^ 0x10;
+                 END
+                CodeLen=3;
+               END
+             END
+           END
+         END
+       END
       return;
      END
 
@@ -1534,22 +1539,24 @@ BEGIN
      BEGIN
       if (ArgCnt!=1) WrError(1110);
       else if (SplitBit(ArgStr[1],&HReg))
-       if (Odd(HReg)) WrError(1350);
-       else
-        BEGIN
-         DecodeAdr(ArgStr[1],MModWReg+(Ord(Memo("BTSET"))*MModIWRReg));
-         switch (AdrMode)
-          BEGIN
-           case ModWReg:
-            BAsmCode[0]=Bit1Orders[z].Code; BAsmCode[1]=(HReg << 4)+AdrPart;
-            CodeLen=2;
-            break;
-           case ModIWRReg:
-            BAsmCode[0]=0xf6; BAsmCode[1]=(HReg << 4)+AdrPart;
-            CodeLen=2;
-            break;
-          END
-        END
+       BEGIN
+        if (Odd(HReg)) WrError(1350);
+        else
+         BEGIN
+          DecodeAdr(ArgStr[1],MModWReg+(Ord(Memo("BTSET"))*MModIWRReg));
+          switch (AdrMode)
+           BEGIN
+            case ModWReg:
+             BAsmCode[0]=Bit1Orders[z].Code; BAsmCode[1]=(HReg << 4)+AdrPart;
+             CodeLen=2;
+             break;
+            case ModIWRReg:
+             BAsmCode[0]=0xf6; BAsmCode[1]=(HReg << 4)+AdrPart;
+             CodeLen=2;
+             break;
+           END
+         END
+       END
       return;
      END
 
@@ -1559,23 +1566,27 @@ BEGIN
     BEGIN
      if (ArgCnt!=2) WrError(1110);
      else if (SplitBit(ArgStr[1],&HReg)) 
-      if (Odd(HReg)) WrError(1350);
-      else
-       BEGIN
-        DecodeAdr(ArgStr[1],MModWReg);
-        if (AdrMode==ModWReg) 
-         BEGIN
-          BAsmCode[1]=(HReg << 4)+AdrPart+(Ord(Memo("BTJF")) << 4);
-          AdrInt=EvalIntExpression(ArgStr[2],UInt16,&OK)-(EProgCounter()+3);
-          if (OK) 
-           if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
-           else
+      BEGIN
+       if (Odd(HReg)) WrError(1350);
+       else
+        BEGIN
+         DecodeAdr(ArgStr[1],MModWReg);
+         if (AdrMode==ModWReg) 
+          BEGIN
+           BAsmCode[1]=(HReg << 4)+AdrPart+(Ord(Memo("BTJF")) << 4);
+           AdrInt=EvalIntExpression(ArgStr[2],UInt16,&OK)-(EProgCounter()+3);
+           if (OK) 
             BEGIN
-             BAsmCode[0]=0xaf; BAsmCode[2]=AdrInt & 0xff; CodeLen=3;
-             ChkSpace(SegCode);
+             if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
+             else
+              BEGIN
+               BAsmCode[0]=0xaf; BAsmCode[2]=AdrInt & 0xff; CodeLen=3;
+               ChkSpace(SegCode);
+              END
             END
-         END
-       END
+          END
+        END
+      END
      return;
     END
 
@@ -1616,13 +1627,15 @@ BEGIN
            BAsmCode[1]=(AdrPart << 4)+(Ord(Memo("CPJTI")) << 4)+HReg;
            AdrInt=EvalIntExpression(ArgStr[3],UInt16,&OK)-(EProgCounter()+3);
            if (OK) 
-            if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
-            else
-             BEGIN
-              ChkSpace(SegCode);
-              BAsmCode[0]=0x9f; BAsmCode[2]=AdrInt & 0xff;
-              CodeLen=3;
-             END
+            BEGIN
+             if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
+             else
+              BEGIN
+               ChkSpace(SegCode);
+               BAsmCode[0]=0x9f; BAsmCode[2]=AdrInt & 0xff;
+               CodeLen=3;
+              END
+            END
           END
         END
       END
@@ -1640,13 +1653,15 @@ BEGIN
          BAsmCode[0]=(AdrPart << 4)+0x0a;
          AdrInt=EvalIntExpression(ArgStr[2],UInt16,&OK)-(EProgCounter()+2);
          if (OK) 
-          if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
-          else
-           BEGIN
-            ChkSpace(SegCode);
-            BAsmCode[1]=AdrInt & 0xff;
-            CodeLen=2;
-           END
+          BEGIN
+           if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
+           else
+            BEGIN
+             ChkSpace(SegCode);
+             BAsmCode[1]=AdrInt & 0xff;
+             CodeLen=2;
+            END
+          END
         END
       END
      return;
@@ -1663,13 +1678,15 @@ BEGIN
          BAsmCode[1]=AdrVals[0];
          AdrInt=EvalIntExpression(ArgStr[2],UInt16,&OK)-(EProgCounter()+3);
          if (OK) 
-          if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
-          else
-           BEGIN
-            ChkSpace(SegCode);
-            BAsmCode[0]=0xc6; BAsmCode[2]=AdrInt & 0xff;
-            CodeLen=3;
-           END
+          BEGIN
+           if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
+           else
+            BEGIN
+             ChkSpace(SegCode);
+             BAsmCode[0]=0xc6; BAsmCode[2]=AdrInt & 0xff;
+             CodeLen=3;
+            END
+          END
         END
       END
      return;
@@ -1699,13 +1716,15 @@ BEGIN
        BEGIN
         AdrInt=EvalIntExpression(ArgStr[1],UInt16,&OK)-(EProgCounter()+2);
         if (OK)
-         if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
-         else
-          BEGIN
-           ChkSpace(SegCode);
-           BAsmCode[0]=0x0b+(Conditions[z].Code << 4); BAsmCode[1]=AdrInt & 0xff;
-           CodeLen=2;
-          END
+         BEGIN
+          if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
+          else
+           BEGIN
+            ChkSpace(SegCode);
+            BAsmCode[0]=0x0b+(Conditions[z].Code << 4); BAsmCode[1]=AdrInt & 0xff;
+            CodeLen=2;
+           END
+         END
        END
       return;
      END
@@ -1866,7 +1885,7 @@ BEGIN
    InitFields();
 END
 
-	void codest9_init(void)
+        void codest9_init(void)
 BEGIN
    CPUST9020=AddCPU("ST9020",SwitchTo_ST9);
    CPUST9030=AddCPU("ST9030",SwitchTo_ST9);

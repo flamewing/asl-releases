@@ -5,6 +5,10 @@
 /* Verwaltung der Code-Datei                                                 */
 /*                                                                           */
 /* Historie: 18. 5.1996 Grundsteinlegung                                     */
+/*           19. 1.2000 Patchlistenverarbeitung begonnen                     */
+/*           18. 6.2000 moved code buffer to heap                            */
+/*           26. 6.2000 added export list                                    */
+/*            4. 7.2000 only write data records in extended format           */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -17,35 +21,17 @@
 #include "asmdef.h"
 #include "asmsub.h"
 
+#define CodeBufferSize 512
+
 static Word LenSoFar;
 static LongInt RecPos,LenPos;
 
-#define CodeBufferSize 512
-
 static Word CodeBufferFill;
-static Byte CodeBuffer[CodeBufferSize+1];
+static Byte *CodeBuffer;
 
-/**
-	static Boolean Write2(void *Buffer)
-BEGIN
-   Boolean OK;
+PPatchEntry PatchList, PatchLast;
+PExportEntry ExportList, ExportLast;
 
-   if (BigEndian) WSwap(Buffer,2);
-   OK=(fwrite(Buffer,1,2,PrgFile)==2);
-   if (BigEndian) WSwap(Buffer,2);
-   return OK;
-END
-
-	static Boolean Write4(void *Buffer)
-BEGIN
-   Boolean OK;
-
-   if (BigEndian) DSwap(Buffer,4);
-   OK=(fwrite(Buffer,1,4,PrgFile)==4);
-   if (BigEndian) DSwap(Buffer,4);
-   return OK;
-END
-**/
         static void FlushBuffer(void)
 BEGIN
    if (CodeBufferFill>0)
@@ -85,6 +71,79 @@ BEGIN
      END
 END
 
+	static void WrPatches(void)
+BEGIN
+   LongWord Cnt, ExportCnt, StrLen;
+   Byte T8;
+
+   if (PatchList != Nil)
+    BEGIN
+     /* find out length of string field */
+
+     Cnt = StrLen = 0;
+     for (PatchLast = PatchList; PatchLast != Nil; PatchLast = PatchLast->Next)
+      BEGIN
+       Cnt++;
+       StrLen += (PatchLast->len = strlen(PatchLast->Ref) + 1);
+      END
+     ExportCnt = 0;
+     for (ExportLast = ExportList; ExportLast != Nil; ExportLast = ExportLast->Next)
+      BEGIN
+       ExportCnt++;
+       StrLen += (ExportLast->len = strlen(ExportLast->Name) + 1);
+      END
+
+     /* write header */
+
+     T8 = FileHeaderRelocInfo; if (fwrite(&T8, 1, 1, PrgFile) != 1) ChkIO(10004);
+     if (NOT Write4(PrgFile, &Cnt)) ChkIO(10004);
+     if (NOT Write4(PrgFile, &ExportCnt)) ChkIO(10004);
+     if (NOT Write4(PrgFile, &StrLen)) ChkIO(10004);
+
+     /* write patch entries */
+
+     StrLen = 0;
+     for (PatchLast = PatchList; PatchLast != Nil; PatchLast = PatchLast->Next)
+      BEGIN
+       if (NOT Write8(PrgFile, &(PatchLast->Address))) ChkIO(10004);
+       if (NOT Write4(PrgFile, &StrLen)) ChkIO(10004);
+       if (NOT Write4(PrgFile, &(PatchLast->RelocType))) ChkIO(10004);
+       StrLen += PatchLast->len;
+      END
+
+     /* write export entries */
+
+     for (ExportLast = ExportList; ExportLast != Nil; ExportLast = ExportLast->Next)
+      BEGIN
+       if (NOT Write4(PrgFile, &StrLen)) ChkIO(10004);
+       if (NOT Write8(PrgFile, &(ExportLast->Value))) ChkIO(10004);
+       StrLen += ExportLast->len;
+      END
+
+     /* write string table, free structures */
+
+     while (PatchList != Nil)
+      BEGIN
+       PatchLast = PatchList;
+       if (fwrite(PatchLast->Ref, 1, PatchLast->len, PrgFile) != PatchLast->len) ChkIO(10004);
+       free(PatchLast->Ref);
+       PatchList = PatchLast->Next;
+       free(PatchLast);
+      END
+     PatchLast = Nil;
+
+     while (ExportList != Nil)
+      BEGIN
+       ExportLast = ExportList;
+       if (fwrite(ExportLast->Name, 1, ExportLast->len, PrgFile) != ExportLast->len) ChkIO(10004);
+       free(ExportLast->Name);
+       ExportList = ExportLast->Next;
+       free(ExportLast);
+      END
+     ExportLast = Nil;
+    END
+END
+
 /*--- neuen Record in Codedatei anlegen.  War der bisherige leer, so wird ---
  ---- dieser ueberschrieben. ------------------------------------------------*/
 
@@ -92,46 +151,77 @@ END
 BEGIN
    Byte b;
 
-   if (ActPC!=SegCode)
-    BEGIN
-     b=FileHeaderDataRec; if (fwrite(&b,1,1,PrgFile)!=1) ChkIO(10004);
-    END
-   if (fwrite(&HeaderID,1,1,PrgFile)!=1) ChkIO(10004);
-   if (ActPC!=SegCode)
-    BEGIN
-     b=ActPC; if (fwrite(&b,1,1,PrgFile)!=1) ChkIO(10004);
-     b=Grans[ActPC]; if (fwrite(&b,1,1,PrgFile)!=1) ChkIO(10004);
-    END
+   /* assume simple record without relocation info */
+
+   b = FileHeaderDataRec; if (fwrite(&b, 1, 1, PrgFile) != 1) ChkIO(10004);
+   if (fwrite(&HeaderID, 1, 1, PrgFile) != 1) ChkIO(10004);
+   b = ActPC; if (fwrite(&b, 1, 1, PrgFile) != 1) ChkIO(10004);
+   b = Grans[ActPC]; if (fwrite(&b, 1, 1, PrgFile) != 1) ChkIO(10004);
 END
 
        	void NewRecord(LargeWord NStart)
 BEGIN
    LongInt h;
    LongWord PC;
+   Byte Header;
+
+   /* flush remaining code in buffer */
 
    FlushBuffer();
-   if (LenSoFar==0)
+
+   /* zero length record which may be deleted ? */
+
+   if (LenSoFar == 0)
     BEGIN
-     if (fseek(PrgFile,RecPos,SEEK_SET)!=0) ChkIO(10003);
+     if (fseek(PrgFile, RecPos, SEEK_SET) != 0) ChkIO(10003);
+     WrPatches();
      WrRecHeader();
-     h=NStart;
-     if (NOT Write4(PrgFile,&h)) ChkIO(10004);
-     LenPos=ftell(PrgFile);
-     if (NOT Write2(PrgFile,&LenSoFar)) ChkIO(10004);
+     h = NStart;
+     if (NOT Write4(PrgFile, &h)) ChkIO(10004);
+     LenPos = ftell(PrgFile);
+     if (NOT Write2(PrgFile, &LenSoFar)) ChkIO(10004);
     END
+
+   /* otherwise full record */
+
    else
     BEGIN
-     h=ftell(PrgFile);
-     if (fseek(PrgFile,LenPos,SEEK_SET)!=0) ChkIO(10003);
-     if (NOT Write2(PrgFile,&LenSoFar)) ChkIO(10004);
-     if (fseek(PrgFile,h,SEEK_SET)!=0) ChkIO(10003);
+     /* store current position (=end of file) */
 
-     RecPos=h; LenSoFar=0;
+     h = ftell(PrgFile);
+
+     /* do we have reloc. info? - then change record type */
+
+     if ((PatchList != Nil) OR (ExportList != Nil))
+      BEGIN
+       if (fseek(PrgFile, RecPos, SEEK_SET) != 0) ChkIO(10003);
+       Header = FileHeaderRDataRec;
+       if (fwrite(&Header, 1, 1, PrgFile) != 1) ChkIO(10004);
+      END
+
+     /* fill in length of record */
+
+     if (fseek(PrgFile, LenPos, SEEK_SET) != 0) ChkIO(10003);
+     if (NOT Write2(PrgFile, &LenSoFar)) ChkIO(10004);
+
+     /* go back to end of file */
+
+     if (fseek(PrgFile, h, SEEK_SET) != 0) ChkIO(10003);
+
+     /* write out reloc info */
+
+     WrPatches();
+
+     /* store begin of new code record */
+
+     RecPos = ftell(PrgFile);
+
+     LenSoFar = 0;
      WrRecHeader();
-     PC=NStart;
-     if (NOT Write4(PrgFile,&PC)) ChkIO(10004);
-     LenPos=ftell(PrgFile);
-     if (NOT Write2(PrgFile,&LenSoFar)) ChkIO(10004);
+     PC = NStart;
+     if (NOT Write4(PrgFile, &PC)) ChkIO(10004);
+     LenPos = ftell(PrgFile);
+     if (NOT Write2(PrgFile, &LenSoFar)) ChkIO(10004);
     END
 END
 
@@ -186,25 +276,26 @@ END
 BEGIN
    Word ErgLen;
 
-   if (CodeLen==0) return; ErgLen=CodeLen*Granularity();
-   if ((TurnWords!=0)!=(BigEndian!=0)) DreheCodes();
-   if (((LongInt)LenSoFar)+((LongInt)ErgLen)>0xffff) NewRecord(PCs[ActPC]);
-   if (CodeBufferFill+ErgLen<CodeBufferSize)
+   if (CodeLen == 0) return;
+   ErgLen = CodeLen * Granularity();
+   if ((TurnWords != 0) != (BigEndian != 0)) DreheCodes();
+   if (((LongInt)LenSoFar) + ((LongInt)ErgLen) > 0xffff) NewRecord(PCs[ActPC]);
+   if (CodeBufferFill + ErgLen < CodeBufferSize)
     BEGIN
-     memcpy(CodeBuffer+CodeBufferFill,BAsmCode,ErgLen);
-     CodeBufferFill+=ErgLen;
+     memcpy(CodeBuffer + CodeBufferFill, BAsmCode, ErgLen);
+     CodeBufferFill += ErgLen;
     END
    else
     BEGIN
      FlushBuffer();
-     if (ErgLen<CodeBufferSize)
+     if (ErgLen < CodeBufferSize)
       BEGIN
-       memcpy(CodeBuffer,BAsmCode,ErgLen); CodeBufferFill=ErgLen;
+       memcpy(CodeBuffer, BAsmCode, ErgLen); CodeBufferFill = ErgLen;
       END
-     else if (fwrite(BAsmCode,1,ErgLen,PrgFile)!=ErgLen) ChkIO(10004);
+     else if (fwrite(BAsmCode, 1, ErgLen, PrgFile) != ErgLen) ChkIO(10004);
     END
-   LenSoFar+=ErgLen;
-   if ((TurnWords!=0)!=(BigEndian!=0)) DreheCodes();
+   LenSoFar += ErgLen;
+   if ((TurnWords != 0) != (BigEndian != 0)) DreheCodes();
 END
 
         void RetractWords(Word Cnt)
@@ -236,4 +327,7 @@ END
 
 	void asmcode_init(void)
 BEGIN
+   PatchList = PatchLast = Nil;
+   ExportList = ExportLast = Nil;
+   CodeBuffer = (Byte*) malloc(sizeof(Byte) * (CodeBufferSize + 1));
 END

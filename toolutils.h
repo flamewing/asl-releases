@@ -6,10 +6,34 @@
 /*                                                                           */
 /* Historie: 31. 5.1996 Grundsteinlegung                                     */
 /*           30. 5.1999 Adresswildcard-Funktion                              */
+/*           22. 1.2000 Funktion zum Lesen von RelocInfos                    */
+/*           26. 6.2000 added exports                                        */
+/*            4. 7.2000 ReadRecordHeader transports record type              */
 /*                                                                           */
 /*****************************************************************************/
 
 #include "fileformat.h"
+
+typedef struct
+         {
+           LargeInt Addr;
+           LongInt Type;
+           char *Name;
+         } TRelocEntry, *PRelocEntry;
+
+typedef struct
+         {
+           char *Name;
+           LargeInt Value;
+         } TExportEntry, *PExportEntry;
+
+typedef struct
+         {
+          LongInt RelocCount, ExportCount;
+          PRelocEntry RelocEntries;
+          PExportEntry ExportEntries;
+          char *Strings;
+         } TRelocInfo, *PRelocInfo;
 
 extern LongWord Magic;
 
@@ -30,11 +54,17 @@ extern void ChkIO(char *Name);
 
 extern Word Granularity(Byte Header);
 
-extern void ReadRecordHeader(Byte *Header, Byte* Segment, Byte *Gran,
-                             char *Name, FILE *f);
+extern void ReadRecordHeader(Byte *Header, Byte *Target, Byte* Segment,
+                             Byte *Gran, char *Name, FILE *f);
 
-extern void WriteRecordHeader(Byte *Header, Byte* Segment, Byte *Gran,
-                              char *Name, FILE *f);
+extern void WriteRecordHeader(Byte *Header, Byte *Target, Byte* Segment,
+                              Byte *Gran, char *Name, FILE *f);
+
+extern void SkipRecord(Byte Header, char *Name, FILE *f);
+
+extern PRelocInfo ReadRelocInfo(FILE *f);
+
+extern void DestroyRelocInfo(PRelocInfo PInfo);
 
 extern CMDResult CMD_FilterList(Boolean Negate, char *Arg);
 

@@ -23,6 +23,11 @@ plist.$(OBJEXTENSION): plist.rsc
 plist.msg plist.rsc: plist.res tools2.res header.res $(RESCOMPTARGET)
 	$(CURRDIR)$(RESCOMPTARGET) plist.res plist.msg plist.rsc
 
+alink.$(OBJEXTENSION): alink.rsc
+
+alink.msg alink.rsc: alink.res tools2.res header.res $(RESCOMPTARGET)
+	$(CURRDIR)$(RESCOMPTARGET) alink.res alink.msg alink.rsc
+
 pbind.$(OBJEXTENSION): pbind.rsc
 
 pbind.msg pbind.rsc: pbind.res tools2.res header.res $(RESCOMPTARGET)

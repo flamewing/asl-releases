@@ -23,9 +23,17 @@
 #include "asmfnums.h"
 
 #ifdef HAS64
-#define ADRMAX 9223372036854775807ll;
+#ifdef _STDC_
+#define ADRMAX 9223372036854775807ull
 #else
-#define ADRMAX 4294967295l;
+#define ADRMAX 9223372036854775807ll
+#endif
+#else
+#ifdef _STDC_
+#define ADRMAX 4294967295ul
+#else
+#define ADRMAX 4294967295l
+#endif
 #endif
 
 

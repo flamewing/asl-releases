@@ -21,6 +21,8 @@
 ;*           18. 4.1999 Kommandozeilenoptionen cpu, shareout                 *
 ;*            2. 5.1999 'order' --> 'instruction'                            *
 ;*           13. 7.1999 Fehlermeldungen fuer extern-Symbole                  *
+;*           13. 2.2000 Kommandozeilenoption olist                           *
+;*            1. 6.2000 changed error message 1850                           *
 ;*                                                                           *
 ;*****************************************************************************
 
@@ -480,8 +482,8 @@ Message ErrMsgMissingIf
  "ELSEIF/ENDIF without IF"
 
 Message ErrMsgRekMacro
- "verschachtelter/rekursiver Makroaufruf"
- "nested/recursive makro call"
+ "zu tief verschachtelter/rekursiver Makroaufruf"
+ "too deeply nested/recursive makro call"
 
 Message ErrMsgUnknownFunc
  "unbekannte Funktion"
@@ -921,6 +923,7 @@ Message InfoMessHelp
  "-p : Sharefile im Pascal-Format       -c : Sharefile im C-Format\n" \
  "-a : Sharefile im AS-Format\n" \
  "-o <Name> : Namen der Code-Datei neu setzen\n" \
+ "-olist <Name> : Namen der Listdatei neu setzen\n" \
  "-shareout <Name> : Namen des Sharefiles neu setzen\n" \
  "-q, -quiet : Stille &Uuml;bersetzung\n" \
  "-cpu <Name> : Zielprozessor setzen\n" \
@@ -955,6 +958,7 @@ Message InfoMessHelp
  "-p : share file formatted for Pascal  -c : share file formatted for C\n" \
  "-a : share file formatted for AS\n" \
  "-o <name> : change name of code file\n" \
+ "-olist <nname> : change name of list file\n" \
  "-shareout <nname> : change name of share file\n" \
  "-q,  -quiet : silent compilation\n" \
  "-cpu <name> : set target processor\n" \

@@ -18,6 +18,11 @@
 /*   {RMS}    2. 4.1999 Made the JMP.S promotion fix CPU-dependent, and made */
 /*                      repairs to the JMP.S handling for forward label refs */
 /*                      so they now work. [JMP.S symbol] now works.          */
+/*   {RMS}   13.12.1999 One MORE fix to JMP[.S] - this time for something    */
+/*                      silly, and probably not that common.  But it caused  */
+/*                      a very annoying bug all the same: infinite phase     */
+/*                      errors causing an infinite number of passes! Oops. :)*/
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -66,7 +71,7 @@ typedef struct
          {
           char *Name;
           Word Code;
-	 } FixedOrder;
+         } FixedOrder;
 
 typedef struct
          {
@@ -151,13 +156,13 @@ BEGIN
    Conditions[InstrZ++].Code=NCode;
 END
 
-	static void AddBCD(char *NName)
+        static void AddBCD(char *NName)
 BEGIN
    if (InstrZ>=BCDOrderCnt) exit(255);
    BCDOrders[InstrZ++]=NName;
 END
 
-	static void AddDir(char *NName)
+        static void AddDir(char *NName)
 BEGIN
    if (InstrZ>=DirOrderCnt) exit(255);
    DirOrders[InstrZ++]=NName;
@@ -170,7 +175,7 @@ BEGIN
    BitOrders[InstrZ++].Code=NCode;
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    InstrZ=0; FixedOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*FixedOrderCnt);
    AddFixed("BRK"   ,0x0000);
@@ -235,7 +240,7 @@ BEGIN
    AddBit("BTST"  ,11);
 END
 
-	static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    free(FixedOrders);
    free(StringOrders);
@@ -261,7 +266,7 @@ BEGIN
     END
 END
 
-	static void ChkAdr(Word Mask)
+        static void ChkAdr(Word Mask)
 BEGIN
    if ((AdrType!=ModNone) AND ((Mask & (1 << AdrType))==0))
     BEGIN
@@ -344,55 +349,59 @@ BEGIN
        *p='\0';
        DispAcc=EvalIntExpression(Asc,((Mask & MModDisp20)==0)?Int16:Int20,&OK);
        if (OK)
-        if ((DispAcc==0) AND ((Mask & MModGen)!=0))
-         BEGIN
-          AdrType=ModGen;
-          AdrMode=RegPart[1]-'0'+6;
-         END
-        else if ((DispAcc>=0) AND (DispAcc<=255) AND ((Mask & MModGen)!=0))
-         BEGIN
-          AdrType=ModGen;
-          AdrVals[0]=DispAcc & 0xff;
-          AdrCnt=1;
-          AdrMode=RegPart[1]-'0'+8;
-         END
-        else if ((DispAcc>=-32768) AND (DispAcc<=65535) AND ((Mask & MModGen)!=0))
-         BEGIN
-          AdrType=ModGen;
-          AdrVals[0]=DispAcc & 0xff; AdrVals[1]=(DispAcc >> 8) & 0xff;
-          AdrCnt=2;
-          AdrMode=RegPart[1]-'0'+12;
-         END
-        else if (strcasecmp(RegPart,"A0")!=0) WrError(1350);
-        else
-         BEGIN
-          AdrType=ModDisp20;
-          AdrVals[0]=DispAcc & 0xff;
-          AdrVals[1]=(DispAcc >> 8) & 0xff;
-          AdrVals[2]=(DispAcc >> 16) & 0x0f;
-          AdrCnt=3;
-          AdrMode=RegPart[1]-'0';
-         END
+        BEGIN
+         if ((DispAcc==0) AND ((Mask & MModGen)!=0))
+          BEGIN
+           AdrType=ModGen;
+           AdrMode=RegPart[1]-'0'+6;
+          END
+         else if ((DispAcc>=0) AND (DispAcc<=255) AND ((Mask & MModGen)!=0))
+          BEGIN
+           AdrType=ModGen;
+           AdrVals[0]=DispAcc & 0xff;
+           AdrCnt=1;
+           AdrMode=RegPart[1]-'0'+8;
+          END
+         else if ((DispAcc>=-32768) AND (DispAcc<=65535) AND ((Mask & MModGen)!=0))
+          BEGIN
+           AdrType=ModGen;
+           AdrVals[0]=DispAcc & 0xff; AdrVals[1]=(DispAcc >> 8) & 0xff;
+           AdrCnt=2;
+           AdrMode=RegPart[1]-'0'+12;
+          END
+         else if (strcasecmp(RegPart,"A0")!=0) WrError(1350);
+         else
+          BEGIN
+           AdrType=ModDisp20;
+           AdrVals[0]=DispAcc & 0xff;
+           AdrVals[1]=(DispAcc >> 8) & 0xff;
+           AdrVals[2]=(DispAcc >> 16) & 0x0f;
+           AdrCnt=3;
+           AdrMode=RegPart[1]-'0';
+          END
+        END
       END
      else if (strcasecmp(RegPart,"SB")==0)
       BEGIN
        *p='\0';
        DispAcc=EvalIntExpression(Asc,Int16,&OK);
        if (OK)
-        if ((DispAcc>=0) AND (DispAcc<=255))
-         BEGIN
-          AdrType=ModGen;
-          AdrVals[0]=DispAcc & 0xff;
-          AdrCnt=1;
-          AdrMode=10;
-         END
-        else
-         BEGIN
-          AdrType=ModGen;
-          AdrVals[0]=DispAcc & 0xff; AdrVals[1]=(DispAcc >> 8) & 0xff;
-          AdrCnt=2;
-          AdrMode=14;
-         END
+        BEGIN
+         if ((DispAcc>=0) AND (DispAcc<=255))
+          BEGIN
+           AdrType=ModGen;
+           AdrVals[0]=DispAcc & 0xff;
+           AdrCnt=1;
+           AdrMode=10;
+          END
+         else
+          BEGIN
+           AdrType=ModGen;
+           AdrVals[0]=DispAcc & 0xff; AdrVals[1]=(DispAcc >> 8) & 0xff;
+           AdrCnt=2;
+           AdrMode=14;
+          END
+        END
       END
      else if (strcasecmp(RegPart,"FB")==0)
       BEGIN
@@ -422,8 +431,10 @@ BEGIN
        *p='\0';
        DispAcc=EvalIntExpression(Asc,SInt8,&OK);
        if (OK)
-        if (DispAcc!=0) WrError(1320);
-        else AdrType=ModIReg32;
+        BEGIN
+         if (DispAcc!=0) WrError(1320);
+         else AdrType=ModIReg32;
+        END
       END
      ChkAdr(Mask); return;
     END
@@ -481,7 +492,7 @@ BEGIN
    ChkAdr(Mask);
 END
 
-	static Boolean DecodeReg(char *Asc, Byte *Erg)
+        static Boolean DecodeReg(char *Asc, Byte *Erg)
 BEGIN
    if (strcasecmp(Asc,"FB")==0) *Erg=7;
    else if (strcasecmp(Asc,"SB")==0) *Erg=6;
@@ -493,7 +504,7 @@ BEGIN
    return True;
 END
 
-	static Boolean DecodeCReg(char *Asc, Byte *Erg)
+        static Boolean DecodeCReg(char *Asc, Byte *Erg)
 BEGIN
    if (strcasecmp(Asc,"INTBL")==0) *Erg=1;
    else if (strcasecmp(Asc,"INTBH")==0) *Erg=2;
@@ -509,13 +520,13 @@ BEGIN
    return True;
 END
 
-   	static void DecodeDisp(char *Asc, IntType Type1, IntType Type2, LongInt *DispAcc, Boolean *OK)
+        static void DecodeDisp(char *Asc, IntType Type1, IntType Type2, LongInt *DispAcc, Boolean *OK)
 BEGIN
    if (ArgCnt==2) *DispAcc+=EvalIntExpression(Asc,Type2,OK)*8;
    else *DispAcc=EvalIntExpression(Asc,Type1,OK);
 END
 
-	static Boolean DecodeBitAdr(Boolean MayShort)
+        static Boolean DecodeBitAdr(Boolean MayShort)
 BEGIN
    LongInt DispAcc;
    Boolean OK;
@@ -567,7 +578,7 @@ BEGIN
    if (Pos1==Nil)
     BEGIN
      DecodeDisp(Asc,UInt16,UInt13,&DispAcc,&OK);
-     if ((OK) && (DispAcc<0x10000))	/* RMS 09: This is optional, it detects rollover of the bit address. */ 
+     if ((OK) && (DispAcc<0x10000))     /* RMS 09: This is optional, it detects rollover of the bit address. */ 
       BEGIN
        AdrMode=15;
        AdrVals[0]=DispAcc & 0xff;
@@ -575,7 +586,7 @@ BEGIN
        AdrCnt=2;
        return True;
       END
-     WrError(1510);			/* RMS 08: Notify user there's a problem with address */
+     WrError(1510);                     /* RMS 08: Notify user there's a problem with address */
      return False;
     END
 
@@ -607,7 +618,7 @@ BEGIN
         END
        return True;
       END
-     WrError(1510);		/* RMS 08: Notify user there's a problem with the offset */
+     WrError(1510);             /* RMS 08: Notify user there's a problem with the offset */
      return False;
     END
    else if (strcasecmp(Reg,"SB")==0)
@@ -618,7 +629,7 @@ BEGIN
        if ((MayShort) AND (DispAcc<0x7ff))
         BEGIN
          AdrMode=16+(DispAcc & 7);
-	 AdrVals[0]=DispAcc >> 3; AdrCnt=1;
+         AdrVals[0]=DispAcc >> 3; AdrCnt=1;
         END
        else if ((DispAcc>0) AND (DispAcc<256))
         BEGIN
@@ -633,7 +644,7 @@ BEGIN
         END
        return True;
       END
-     WrError(1510);		/* RMS 08: Notify user there's a problem with the offset */
+     WrError(1510);             /* RMS 08: Notify user there's a problem with the offset */
      return False;
     END
    else if (strcasecmp(Reg,"FB")==0)
@@ -644,7 +655,7 @@ BEGIN
        AdrMode=11; AdrVals[0]=DispAcc & 0xff; AdrCnt=1;
        return True;
       END
-     WrError(1510);		/* RMS 08: Notify user there's a problem with the offset */
+     WrError(1510);             /* RMS 08: Notify user there's a problem with the offset */
      return False;
     END
    else
@@ -656,7 +667,7 @@ END
 
 /*------------------------------------------------------------------------*/
 
-	static Boolean CheckFormat(char *FSet)
+        static Boolean CheckFormat(char *FSet)
 BEGIN
    char *p;
 
@@ -695,7 +706,7 @@ END
 
 /*------------------------------------------------------------------------*/
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
    return False;
 END
@@ -727,7 +738,7 @@ BEGIN
    CodeLen=2+AdrCnt+AdrCnt2;
 END
 
-	static Boolean CodeData(void)
+        static Boolean CodeData(void)
 BEGIN
    Integer Num1;
    int z;
@@ -744,126 +755,130 @@ BEGIN
         BEGIN
          CopyAdr(); DecodeAdr(ArgStr[1],MModGen+MModSPRel+MModImm);
          if (AdrType!=ModNone)
-          if (OpSize==-1) WrError(1132);
-          else if ((OpSize!=0) AND (OpSize!=1)) WrError(1130);
-          else
-           BEGIN
-            if (FormatCode==0)
-             if ((AdrType2==ModSPRel) OR (AdrType==ModSPRel)) FormatCode=1;
-             else if ((OpSize==0) AND (AdrType==ModImm) AND (IsShort(AdrMode2,&SMode)))
-              FormatCode=(ImmVal()==0) ? 4 : 2;
-             else if ((AdrType==ModImm) AND (ImmVal()>=-8) AND (ImmVal()<=7)) FormatCode=3;
-             else if ((AdrType==ModImm) AND ((AdrMode2 & 14)==4)) FormatCode=2;
-             else if ((OpSize==0) AND (AdrType==ModGen) AND (IsShort(AdrMode,&SMode)) AND ((AdrMode2 & 14)==4)
-                  AND ((AdrMode>=2) OR (Odd(AdrMode ^ AdrMode2)))) FormatCode=2;
-             else if ((OpSize==0) AND (AdrType==ModGen) AND (AdrMode<=1) AND (IsShort(AdrMode2,&SMode))
-                 AND ((AdrMode2>=2) OR (Odd(AdrMode ^ AdrMode2)))) FormatCode=2;
-             else if ((OpSize==0) AND (AdrMode2<=1) AND (AdrType==ModGen) AND (IsShort(AdrMode,&SMode))
-                 AND ((AdrMode>=2) OR (Odd(AdrMode ^ AdrMode2)))) FormatCode=2;
-             else FormatCode=1;
-            switch (FormatCode)
-             BEGIN
-              case 1:
-               if (AdrType==ModSPRel)
-                BEGIN
-                 BAsmCode[0]=0x74+OpSize;
-                 BAsmCode[1]=0xb0+AdrMode2;
-                 memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
-                 memcpy(BAsmCode+2+AdrCnt2,AdrVals,AdrCnt);
-                 CodeLen=2+AdrCnt+AdrCnt2;
-                END
-	       else if (AdrType2==ModSPRel)
-                BEGIN
-                 BAsmCode[0]=0x74+OpSize;
-                 BAsmCode[1]=0x30+AdrMode;
-                 memcpy(BAsmCode+2,AdrVals,AdrCnt);
-                 memcpy(BAsmCode+2+AdrCnt,AdrVals2,AdrCnt2);
-                 CodeLen=2+AdrCnt2+AdrCnt;
-                END
-	       else CodeGen(0x72,0x74,0xc0);
-               break;
-              case 2:
-               if (AdrType==ModImm)
-                if (AdrType2!=ModGen) WrError(1350);
-                else if ((AdrMode2 & 14)==4)
+          BEGIN
+           if (OpSize==-1) WrError(1132);
+           else if ((OpSize!=0) AND (OpSize!=1)) WrError(1130);
+           else
+            BEGIN
+             if (FormatCode==0)
+              BEGIN
+               if ((AdrType2==ModSPRel) OR (AdrType==ModSPRel)) FormatCode=1;
+               else if ((OpSize==0) AND (AdrType==ModImm) AND (IsShort(AdrMode2,&SMode)))
+                FormatCode=(ImmVal()==0) ? 4 : 2;
+               else if ((AdrType==ModImm) AND (ImmVal()>=-8) AND (ImmVal()<=7)) FormatCode=3;
+               else if ((AdrType==ModImm) AND ((AdrMode2 & 14)==4)) FormatCode=2;
+               else if ((OpSize==0) AND (AdrType==ModGen) AND (IsShort(AdrMode,&SMode)) AND ((AdrMode2 & 14)==4)
+                    AND ((AdrMode>=2) OR (Odd(AdrMode ^ AdrMode2)))) FormatCode=2;
+               else if ((OpSize==0) AND (AdrType==ModGen) AND (AdrMode<=1) AND (IsShort(AdrMode2,&SMode))
+                   AND ((AdrMode2>=2) OR (Odd(AdrMode ^ AdrMode2)))) FormatCode=2;
+               else if ((OpSize==0) AND (AdrMode2<=1) AND (AdrType==ModGen) AND (IsShort(AdrMode,&SMode))
+                   AND ((AdrMode>=2) OR (Odd(AdrMode ^ AdrMode2)))) FormatCode=2;
+               else FormatCode=1;
+              END
+             switch (FormatCode)
+              BEGIN
+               case 1:
+                if (AdrType==ModSPRel)
                  BEGIN
-                  BAsmCode[0]=0xe2-(OpSize << 6)+((AdrMode2 & 1) << 3);
-                  memcpy(BAsmCode+1,AdrVals,AdrCnt);
-                  CodeLen=1+AdrCnt;
+                  BAsmCode[0]=0x74+OpSize;
+                  BAsmCode[1]=0xb0+AdrMode2;
+                  memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
+                  memcpy(BAsmCode+2+AdrCnt2,AdrVals,AdrCnt);
+                  CodeLen=2+AdrCnt+AdrCnt2;
                  END
-                else if (IsShort(AdrMode2,&SMode))
-                 if (OpSize!=0) WrError(1130);
-                 else
-	          BEGIN
-                   BAsmCode[0]=0xc0+SMode;
-                   memcpy(BAsmCode+1,AdrVals,AdrCnt);
-                   memcpy(BAsmCode+1+AdrCnt,AdrVals2,AdrCnt2);
-                   CodeLen=1+AdrCnt+AdrCnt2;
-	          END
-	        else WrError(1350);
-               else if ((AdrType==ModGen) AND (IsShort(AdrMode,&SMode)))
-                if (AdrType2!=ModGen) WrError(1350);
-                else if ((AdrMode2 & 14)==4)
-                 if ((AdrMode<=1) AND (NOT Odd(AdrMode ^ AdrMode2))) WrError(1350);
-                 else
+                else if (AdrType2==ModSPRel)
+                 BEGIN
+                  BAsmCode[0]=0x74+OpSize;
+                  BAsmCode[1]=0x30+AdrMode;
+                  memcpy(BAsmCode+2,AdrVals,AdrCnt);
+                  memcpy(BAsmCode+2+AdrCnt,AdrVals2,AdrCnt2);
+                  CodeLen=2+AdrCnt2+AdrCnt;
+                 END
+                else CodeGen(0x72,0x74,0xc0);
+                break;
+               case 2:
+                if (AdrType==ModImm)
+                 if (AdrType2!=ModGen) WrError(1350);
+                 else if ((AdrMode2 & 14)==4)
                   BEGIN
-                   if (SMode==3) SMode++;
-                   BAsmCode[0]=0x30+((AdrMode2 & 1) << 2)+(SMode & 3);
+                   BAsmCode[0]=0xe2-(OpSize << 6)+((AdrMode2 & 1) << 3);
                    memcpy(BAsmCode+1,AdrVals,AdrCnt);
                    CodeLen=1+AdrCnt;
                   END
-                else if ((AdrMode2 & 14)==0)
-                 if ((AdrMode<=1) AND (NOT Odd(AdrMode ^ AdrMode2))) WrError(1350);
+                 else if (IsShort(AdrMode2,&SMode))
+                  if (OpSize!=0) WrError(1130);
+                  else
+                   BEGIN
+                    BAsmCode[0]=0xc0+SMode;
+                    memcpy(BAsmCode+1,AdrVals,AdrCnt);
+                    memcpy(BAsmCode+1+AdrCnt,AdrVals2,AdrCnt2);
+                    CodeLen=1+AdrCnt+AdrCnt2;
+                   END
+                 else WrError(1350);
+                else if ((AdrType==ModGen) AND (IsShort(AdrMode,&SMode)))
+                 if (AdrType2!=ModGen) WrError(1350);
+                 else if ((AdrMode2 & 14)==4)
+                  if ((AdrMode<=1) AND (NOT Odd(AdrMode ^ AdrMode2))) WrError(1350);
+                  else
+                   BEGIN
+                    if (SMode==3) SMode++;
+                    BAsmCode[0]=0x30+((AdrMode2 & 1) << 2)+(SMode & 3);
+                    memcpy(BAsmCode+1,AdrVals,AdrCnt);
+                    CodeLen=1+AdrCnt;
+                   END
+                 else if ((AdrMode2 & 14)==0)
+                  if ((AdrMode<=1) AND (NOT Odd(AdrMode ^ AdrMode2))) WrError(1350);
+                  else
+                   BEGIN
+                    if (SMode==3) SMode++;
+                    BAsmCode[0]=0x08+((AdrMode2 & 1) << 2)+(SMode & 3);
+                    memcpy(BAsmCode+1,AdrVals,AdrCnt);
+                    CodeLen=1+AdrCnt;
+                   END
+                 else if (((AdrMode & 14)!=0) OR (NOT IsShort(AdrMode2,&SMode))) WrError(1350);
+                 else if ((AdrMode2<=1) AND (NOT Odd(AdrMode ^ AdrMode2))) WrError(1350);
                  else
                   BEGIN
                    if (SMode==3) SMode++;
-                   BAsmCode[0]=0x08+((AdrMode2 & 1) << 2)+(SMode & 3);
-                   memcpy(BAsmCode+1,AdrVals,AdrCnt);
-                   CodeLen=1+AdrCnt;
-                  END
-                else if (((AdrMode & 14)!=0) OR (NOT IsShort(AdrMode2,&SMode))) WrError(1350);
-                else if ((AdrMode2<=1) AND (NOT Odd(AdrMode ^ AdrMode2))) WrError(1350);
-                else
-                 BEGIN
-                  if (SMode==3) SMode++;
-                  BAsmCode[0]=0x00+((AdrMode & 1) << 2)+(SMode & 3);
-                  memcpy(BAsmCode+1,AdrVals,AdrCnt2);
-                  CodeLen=1+AdrCnt2;
-                 END
-               else WrError(1350);
-               break;
-              case 3:
-               if (AdrType!=ModImm) WrError(1350);
-               else
-                BEGIN
-                 Num1=ImmVal();
-                 if (ChkRange(Num1,-8,7))
-                  BEGIN
-                   BAsmCode[0]=0xd8+OpSize;
-                   BAsmCode[1]=(Num1 << 4)+AdrMode2;
-                   memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
-                   CodeLen=2+AdrCnt2;
-                  END
-                END
-               break;
-              case 4:
-               if (OpSize!=0) WrError(1130);
-	       else if (AdrType!=ModImm) WrError(1350);
-               else if (NOT IsShort(AdrMode2,&SMode)) WrError(1350);
-               else
-                BEGIN
-                 Num1=ImmVal();
-                 if (ChkRange(Num1,0,0))
-                  BEGIN
-                   BAsmCode[0]=0xb0+SMode;
-                   memcpy(BAsmCode+1,AdrVals2,AdrCnt2);
+                   BAsmCode[0]=0x00+((AdrMode & 1) << 2)+(SMode & 3);
+                   memcpy(BAsmCode+1,AdrVals,AdrCnt2);
                    CodeLen=1+AdrCnt2;
                   END
-                END
-               break;
-             END
-           END;
-        END;
+                else WrError(1350);
+                break;
+               case 3:
+                if (AdrType!=ModImm) WrError(1350);
+                else
+                 BEGIN
+                  Num1=ImmVal();
+                  if (ChkRange(Num1,-8,7))
+                   BEGIN
+                    BAsmCode[0]=0xd8+OpSize;
+                    BAsmCode[1]=(Num1 << 4)+AdrMode2;
+                    memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
+                    CodeLen=2+AdrCnt2;
+                   END
+                 END
+                break;
+               case 4:
+                if (OpSize!=0) WrError(1130);
+                else if (AdrType!=ModImm) WrError(1350);
+                else if (NOT IsShort(AdrMode2,&SMode)) WrError(1350);
+                else
+                 BEGIN
+                  Num1=ImmVal();
+                  if (ChkRange(Num1,0,0))
+                   BEGIN
+                    BAsmCode[0]=0xb0+SMode;
+                    memcpy(BAsmCode+1,AdrVals2,AdrCnt2);
+                    CodeLen=1+AdrCnt2;
+                   END
+                 END
+                break;
+              END
+            END
+          END
+        END
       END
      return True;
     END
@@ -924,19 +939,21 @@ BEGIN
       BEGIN
        DecodeAdr(ArgStr[1],MModGen);
        if (AdrType==ModGen)
-        if (AdrMode!=15) WrError(1350);
-        else
-         BEGIN
-          memcpy(BAsmCode+2,AdrVals,AdrCnt);
-          DecodeAdr(ArgStr[2],MModAbs20);
-          if (AdrType==ModAbs20)
-           BEGIN
-            memcpy(BAsmCode+4,AdrVals,AdrCnt);
-            BAsmCode[0]=0x7c+Ord(Memo("STCTX"));
-            BAsmCode[1]=0xf0;
-            CodeLen=7;
-           END
-         END
+        BEGIN
+         if (AdrMode!=15) WrError(1350);
+         else
+          BEGIN
+           memcpy(BAsmCode+2,AdrVals,AdrCnt);
+           DecodeAdr(ArgStr[2],MModAbs20);
+           if (AdrType==ModAbs20)
+            BEGIN
+             memcpy(BAsmCode+4,AdrVals,AdrCnt);
+             BAsmCode[0]=0x7c+Ord(Memo("STCTX"));
+             BAsmCode[1]=0xf0;
+             CodeLen=7;
+            END
+          END
+        END
       END
      return True;
     END
@@ -956,25 +973,27 @@ BEGIN
        else z=0;
        DecodeAdr(ArgStr[1],MModGen);
        if (AdrType!=ModNone)
-        if (OpSize==-1) WrError(1132);
-        else if (OpSize>1) WrError(1130);
-        else
-         BEGIN
-          CopyAdr(); DecodeAdr(ArgStr[2],MModAbs20+MModDisp20+MModIReg32);
-          if (AdrType!=ModNone)
-           BEGIN
-            BAsmCode[0]=0x74+OpSize;
-            BAsmCode[1]=(z << 7)+AdrMode2;
-            switch (AdrType)
-             BEGIN
-              case ModDisp20: BAsmCode[1]+=0x10; break;
-              case ModIReg32: BAsmCode[1]+=0x20; break;
-             END
-            memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
-            memcpy(BAsmCode+2+AdrCnt2,AdrVals,AdrCnt);
-            CodeLen=2+AdrCnt2+AdrCnt;
-           END
-         END
+        BEGIN
+         if (OpSize==-1) WrError(1132);
+         else if (OpSize>1) WrError(1130);
+         else
+          BEGIN
+           CopyAdr(); DecodeAdr(ArgStr[2],MModAbs20+MModDisp20+MModIReg32);
+           if (AdrType!=ModNone)
+            BEGIN
+             BAsmCode[0]=0x74+OpSize;
+             BAsmCode[1]=(z << 7)+AdrMode2;
+             switch (AdrType)
+              BEGIN
+               case ModDisp20: BAsmCode[1]+=0x10; break;
+               case ModIReg32: BAsmCode[1]+=0x20; break;
+              END
+             memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
+             memcpy(BAsmCode+2+AdrCnt2,AdrVals,AdrCnt);
+             CodeLen=2+AdrCnt2+AdrCnt;
+            END
+          END
+        END
       END
      return True;
     END
@@ -986,20 +1005,24 @@ BEGIN
       BEGIN
        DecodeAdr(ArgStr[1],MModGen);
        if (AdrType!=ModNone)
-        if (AdrMode<8) WrError(1350);
-        else
-         BEGIN
-          CopyAdr(); DecodeAdr(ArgStr[2],MModGen);
-          if (AdrType!=ModNone)
-           if (AdrMode>5) WrError(1350);
-           else
+        BEGIN
+         if (AdrMode<8) WrError(1350);
+         else
+          BEGIN
+           CopyAdr(); DecodeAdr(ArgStr[2],MModGen);
+           if (AdrType!=ModNone)
             BEGIN
-             BAsmCode[0]=0xeb;
-             BAsmCode[1]=(AdrMode << 4)+AdrMode2;
-             memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
-             CodeLen=2+AdrCnt2;
+             if (AdrMode>5) WrError(1350);
+             else
+              BEGIN
+               BAsmCode[0]=0xeb;
+               BAsmCode[1]=(AdrMode << 4)+AdrMode2;
+               memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
+               CodeLen=2+AdrCnt2;
+              END
             END
-         END
+          END
+        END
       END
      return True;
     END
@@ -1020,13 +1043,15 @@ BEGIN
          BEGIN
           DecodeAdr(ArgStr[Num1+1],MModGen);
           if (AdrType!=ModNone)
-           if (((AdrMode & 14)==4) OR ((AdrMode==0) AND (Num1==1))) WrError(1350);
-           else
-            BEGIN
-             BAsmCode[0]=0x7c; BAsmCode[1]=(Num1 << 7)+(z << 4)+AdrMode;
-             memcpy(BAsmCode+2,AdrVals,AdrCnt);
-             CodeLen=2+AdrCnt;
-            END
+           BEGIN
+            if (((AdrMode & 14)==4) OR ((AdrMode==0) AND (Num1==1))) WrError(1350);
+            else
+             BEGIN
+              BAsmCode[0]=0x7c; BAsmCode[1]=(Num1 << 7)+(z << 4)+AdrMode;
+              memcpy(BAsmCode+2,AdrVals,AdrCnt);
+              CodeLen=2+AdrCnt;
+             END
+           END
          END
        END
       return True;
@@ -1040,47 +1065,51 @@ BEGIN
        z=Ord(Memo("POP"));
        DecodeAdr(ArgStr[1],MModGen+((Memo("PUSH"))?MModImm:0));
        if (AdrType!=ModNone)
-        if (OpSize==-1) WrError(1132);
-        else if (OpSize>1) WrError(1130);
-        else
-         BEGIN
-          if (FormatCode==0)
-           if ((AdrType!=ModGen)) FormatCode=1;
-           else if ((OpSize==0) AND (AdrMode<2)) FormatCode=2;
-           else if ((OpSize==1) AND ((AdrMode & 14)==4)) FormatCode=2;
-           else FormatCode=1;
-          switch (FormatCode)
-           BEGIN
-            case 1:
-	     if (AdrType==ModImm)
-              BEGIN
-               BAsmCode[0]=0x7c+OpSize;
-               BAsmCode[1]=0xe2;
-              END
-             else
-              BEGIN
-               BAsmCode[0]=0x74+OpSize;
-               BAsmCode[1]=0x40+(z*0x90)+AdrMode;
-              END
-             memcpy(BAsmCode+2,AdrVals,AdrCnt);
-             CodeLen=2+AdrCnt;
-             break;
-            case 2:
-             if (AdrType!=ModGen) WrError(1350);
-             else if ((OpSize==0) AND (AdrMode<2))
-              BEGIN
-               BAsmCode[0]=0x82+(AdrMode << 3)+(z << 4);
-               CodeLen=1;
-              END
-             else if ((OpSize==1) AND ((AdrMode & 14)==4))
-              BEGIN
-               BAsmCode[0]=0xc2+((AdrMode & 1) << 3)+(z << 4);
-               CodeLen=1;
-              END
-             else WrError(1350);
-             break;
-           END
-         END
+        BEGIN
+         if (OpSize==-1) WrError(1132);
+         else if (OpSize>1) WrError(1130);
+         else
+          BEGIN
+           if (FormatCode==0)
+            BEGIN
+             if ((AdrType!=ModGen)) FormatCode=1;
+             else if ((OpSize==0) AND (AdrMode<2)) FormatCode=2;
+             else if ((OpSize==1) AND ((AdrMode & 14)==4)) FormatCode=2;
+             else FormatCode=1;
+            END
+           switch (FormatCode)
+            BEGIN
+             case 1:
+              if (AdrType==ModImm)
+               BEGIN
+                BAsmCode[0]=0x7c+OpSize;
+                BAsmCode[1]=0xe2;
+               END
+              else
+               BEGIN
+                BAsmCode[0]=0x74+OpSize;
+                BAsmCode[1]=0x40+(z*0x90)+AdrMode;
+               END
+              memcpy(BAsmCode+2,AdrVals,AdrCnt);
+              CodeLen=2+AdrCnt;
+              break;
+             case 2:
+              if (AdrType!=ModGen) WrError(1350);
+              else if ((OpSize==0) AND (AdrMode<2))
+               BEGIN
+                BAsmCode[0]=0x82+(AdrMode << 3)+(z << 4);
+                CodeLen=1;
+               END
+              else if ((OpSize==1) AND ((AdrMode & 14)==4))
+               BEGIN
+                BAsmCode[0]=0xc2+((AdrMode & 1) << 3)+(z << 4);
+                CodeLen=1;
+               END
+              else WrError(1350);
+              break;
+            END
+          END
+        END
       END
      return True;
     END
@@ -1130,14 +1159,16 @@ BEGIN
       BEGIN
        DecodeAdr(ArgStr[1],MModGen);
        if (AdrType!=ModNone)
-        if (AdrMode<8) WrError(1350);
-        else
-         BEGIN
-          BAsmCode[0]=0x7d;
-          BAsmCode[1]=0x90+AdrMode;
-          memcpy(BAsmCode+2,AdrVals,AdrCnt);
-          CodeLen=2+AdrCnt;
-         END
+        BEGIN
+         if (AdrMode<8) WrError(1350);
+         else
+          BEGIN
+           BAsmCode[0]=0x7d;
+           BAsmCode[1]=0x90+AdrMode;
+           memcpy(BAsmCode+2,AdrVals,AdrCnt);
+           CodeLen=2+AdrCnt;
+          END
+        END
       END
      return True;
     END
@@ -1152,23 +1183,25 @@ BEGIN
         BEGIN
          CopyAdr(); DecodeAdr(ArgStr[2],MModGen);
          if (AdrType!=ModNone)
-          if (OpSize==-1) WrError(1132);
-          else if (OpSize>1) WrError(1130);
-          else if (AdrMode<4)
-           BEGIN
-            BAsmCode[0]=0x7a+OpSize;
-            BAsmCode[1]=(AdrMode << 4)+AdrMode2;
-            memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
-            CodeLen=2+AdrCnt2;
-           END
-          else if (AdrMode2<4)
-           BEGIN
-            BAsmCode[0]=0x7a+OpSize;
-            BAsmCode[1]=(AdrMode2 << 4)+AdrMode;
-            memcpy(BAsmCode+2,AdrVals,AdrCnt);
-            CodeLen=2+AdrCnt;
-           END
-          else WrError(1350);
+          BEGIN
+           if (OpSize==-1) WrError(1132);
+           else if (OpSize>1) WrError(1130);
+           else if (AdrMode<4)
+            BEGIN
+             BAsmCode[0]=0x7a+OpSize;
+             BAsmCode[1]=(AdrMode << 4)+AdrMode2;
+             memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
+             CodeLen=2+AdrCnt2;
+            END
+           else if (AdrMode2<4)
+            BEGIN
+             BAsmCode[0]=0x7a+OpSize;
+             BAsmCode[1]=(AdrMode2 << 4)+AdrMode;
+             memcpy(BAsmCode+2,AdrVals,AdrCnt);
+             CodeLen=2+AdrCnt;
+            END
+           else WrError(1350);
+          END
         END
       END
      return True;
@@ -1182,18 +1215,20 @@ BEGIN
        if (OpSize==-1) OpSize++;
        DecodeAdr(ArgStr[2],MModGen);
        if (AdrType!=ModNone)
-        if (NOT IsShort(AdrMode,&SMode)) WrError(1350);
-        else
-         BEGIN
-          CopyAdr(); DecodeAdr(ArgStr[1],MModImm);
-          if (AdrType!=ModNone)
-           BEGIN
-            BAsmCode[0]=0xc8+(Ord(Memo("STNZ")) << 3)+SMode;
-            BAsmCode[1]=AdrVals[0];
-            memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
-            CodeLen=2+AdrCnt2;
-           END
-         END
+        BEGIN
+         if (NOT IsShort(AdrMode,&SMode)) WrError(1350);
+         else
+          BEGIN
+           CopyAdr(); DecodeAdr(ArgStr[1],MModImm);
+           if (AdrType!=ModNone)
+            BEGIN
+             BAsmCode[0]=0xc8+(Ord(Memo("STNZ")) << 3)+SMode;
+             BAsmCode[1]=AdrVals[0];
+             memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
+             CodeLen=2+AdrCnt2;
+            END
+          END
+        END
       END
      return True;
     END
@@ -1206,23 +1241,25 @@ BEGIN
        if (OpSize==-1) OpSize++;
        DecodeAdr(ArgStr[3],MModGen);
        if (AdrType!=ModNone)
-        if (NOT IsShort(AdrMode,&SMode)) WrError(1350);
-        else
-         BEGIN
-          CopyAdr(); DecodeAdr(ArgStr[1],MModImm);
-          if (AdrType!=ModNone)
-           BEGIN
-            Num1=AdrVals[0]; DecodeAdr(ArgStr[2],MModImm);
-            if (AdrType!=ModNone)
-             BEGIN
-              BAsmCode[0]=0xd8+SMode;
-              BAsmCode[1]=Num1;
-              memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
-              BAsmCode[2+AdrCnt2]=AdrVals[0];
-              CodeLen=3+AdrCnt2;
-             END
-           END
-         END
+        BEGIN
+         if (NOT IsShort(AdrMode,&SMode)) WrError(1350);
+         else
+          BEGIN
+           CopyAdr(); DecodeAdr(ArgStr[1],MModImm);
+           if (AdrType!=ModNone)
+            BEGIN
+             Num1=AdrVals[0]; DecodeAdr(ArgStr[2],MModImm);
+             if (AdrType!=ModNone)
+              BEGIN
+               BAsmCode[0]=0xd8+SMode;
+               BAsmCode[1]=Num1;
+               memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
+               BAsmCode[2+AdrCnt2]=AdrVals[0];
+               CodeLen=3+AdrCnt2;
+              END
+            END
+          END
+        END
       END
      return True;
     END
@@ -1354,32 +1391,36 @@ BEGIN
         BEGIN
          DecodeAdr(ArgStr[1],MModImm);
          if (AdrType!=ModNone)
-          if (OpSize==-1) WrError(1132);
-          else if (OpSize>1) WrError(1130);
-          else
-           BEGIN
-            AdrLong=ImmVal();
-            if (FormatCode==0)
-             if ((AdrLong>=-8) AND (AdrLong<=7)) FormatCode=2;
-             else FormatCode=1;
-            switch (FormatCode)
-             BEGIN
-              case 1:
-               BAsmCode[0]=0x7c+OpSize;
-               BAsmCode[1]=0xeb;
-               memcpy(BAsmCode+2,AdrVals,AdrCnt);
-               CodeLen=2+AdrCnt;
-               break;
-              case 2:
-               if (ChkRange(AdrLong,-8,7))
-                BEGIN
-                 BAsmCode[0]=0x7d;
-                 BAsmCode[1]=0xb0+(AdrLong & 15);
-                 CodeLen=2;
-                END
-               break;
-             END
-           END
+          BEGIN
+           if (OpSize==-1) WrError(1132);
+           else if (OpSize>1) WrError(1130);
+           else
+            BEGIN
+             AdrLong=ImmVal();
+             if (FormatCode==0)
+              BEGIN
+               if ((AdrLong>=-8) AND (AdrLong<=7)) FormatCode=2;
+               else FormatCode=1;
+              END
+             switch (FormatCode)
+              BEGIN
+               case 1:
+                BAsmCode[0]=0x7c+OpSize;
+                BAsmCode[1]=0xeb;
+                memcpy(BAsmCode+2,AdrVals,AdrCnt);
+                CodeLen=2+AdrCnt;
+                break;
+               case 2:
+                if (ChkRange(AdrLong,-8,7))
+                 BEGIN
+                  BAsmCode[0]=0x7d;
+                  BAsmCode[1]=0xb0+(AdrLong & 15);
+                  CodeLen=2;
+                 END
+                break;
+              END
+            END
+          END
         END
       END
      else if (CheckFormat("GQS"))
@@ -1390,59 +1431,67 @@ BEGIN
          CopyAdr();
          DecodeAdr(ArgStr[1],MModImm+MModGen);
          if (AdrType!=ModNone)
-          if (OpSize==-1) WrError(1132);
-          else if ((OpSize!=0) AND (OpSize!=1)) WrError(1130);
-          else
-           BEGIN
-            if (FormatCode==0)
-             if (AdrType==ModImm)
-              if ((ImmVal()>=-8) AND (ImmVal()<=7)) FormatCode=2;
-              else if ((IsShort(AdrMode2,&SMode)) AND (OpSize==0)) FormatCode=3;
-	      else FormatCode=1;
-             else
-              if ((OpSize==0) AND (IsShort(AdrMode,&SMode)) AND (AdrMode2<=1) AND
-	          ((AdrMode>1) OR (Odd(AdrMode ^ AdrMode2)))) FormatCode=3;
-	      else FormatCode=1;
-	    switch (FormatCode)
-             BEGIN
-              case 1:
-               CodeGen(0xa0,0x76,0x40);
-               break;
-              case 2:
-               if (AdrType!=ModImm) WrError(1350);
+          BEGIN
+           if (OpSize==-1) WrError(1132);
+           else if ((OpSize!=0) AND (OpSize!=1)) WrError(1130);
+           else
+            BEGIN
+             if (FormatCode==0)
+              BEGIN
+               if (AdrType==ModImm)
+                BEGIN
+                 if ((ImmVal()>=-8) AND (ImmVal()<=7)) FormatCode=2;
+                 else if ((IsShort(AdrMode2,&SMode)) AND (OpSize==0)) FormatCode=3;
+                 else FormatCode=1;
+                END
                else
                 BEGIN
-                 Num1=ImmVal();
-                 if (ChkRange(Num1,-8,7))
-                  BEGIN
-                   BAsmCode[0]=0xc8+OpSize;
-                   BAsmCode[1]=(Num1 << 4)+AdrMode2;
-                   memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
-                   CodeLen=2+AdrCnt2;
-                  END
+                 if ((OpSize==0) AND (IsShort(AdrMode,&SMode)) AND (AdrMode2<=1) AND
+                     ((AdrMode>1) OR (Odd(AdrMode ^ AdrMode2)))) FormatCode=3;
+                 else FormatCode=1;
                 END
-               break;
-              case 3:
-               if (OpSize!=0) WrError(1130);
-               else if (NOT IsShort(AdrMode2,&SMode)) WrError(1350);
-               else if (AdrType==ModImm)
-                BEGIN
-                 BAsmCode[0]=0x80+SMode; BAsmCode[1]=AdrVals[0];
-                 memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
-                 CodeLen=2+AdrCnt2;
-                END
-               else if ((AdrMode2>=2) OR (NOT IsShort(AdrMode,&SMode))) WrError(1350);
-               else if ((AdrMode<2) AND (NOT Odd(AdrMode ^ AdrMode2))) WrError(1350);
-               else
-                BEGIN
-                 if (SMode==3) SMode++;
-                 BAsmCode[0]=0x20+((AdrMode2 & 1) << 2)+(SMode & 3);	/* RMS 05: Just like #04 */
-                 memcpy(BAsmCode+1,AdrVals,AdrCnt);
-                 CodeLen=1+AdrCnt;
-                END
-               break;
-	     END
-           END
+              END
+             switch (FormatCode)
+              BEGIN
+               case 1:
+                CodeGen(0xa0,0x76,0x40);
+                break;
+               case 2:
+                if (AdrType!=ModImm) WrError(1350);
+                else
+                 BEGIN
+                  Num1=ImmVal();
+                  if (ChkRange(Num1,-8,7))
+                   BEGIN
+                    BAsmCode[0]=0xc8+OpSize;
+                    BAsmCode[1]=(Num1 << 4)+AdrMode2;
+                    memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
+                    CodeLen=2+AdrCnt2;
+                   END
+                 END
+                break;
+               case 3:
+                if (OpSize!=0) WrError(1130);
+                else if (NOT IsShort(AdrMode2,&SMode)) WrError(1350);
+                else if (AdrType==ModImm)
+                 BEGIN
+                  BAsmCode[0]=0x80+SMode; BAsmCode[1]=AdrVals[0];
+                  memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
+                  CodeLen=2+AdrCnt2;
+                 END
+                else if ((AdrMode2>=2) OR (NOT IsShort(AdrMode,&SMode))) WrError(1350);
+                else if ((AdrMode<2) AND (NOT Odd(AdrMode ^ AdrMode2))) WrError(1350);
+                else
+                 BEGIN
+                  if (SMode==3) SMode++;
+                  BAsmCode[0]=0x20+((AdrMode2 & 1) << 2)+(SMode & 3);    /* RMS 05: Just like #04 */
+                  memcpy(BAsmCode+1,AdrVals,AdrCnt);
+                  CodeLen=1+AdrCnt;
+                 END
+                break;
+              END
+            END
+          END
         END
       END
      return;
@@ -1458,59 +1507,67 @@ BEGIN
         BEGIN
          CopyAdr(); DecodeAdr(ArgStr[1],MModImm+MModGen);
          if (AdrType!=ModNone)
-          if (OpSize==-1) WrError(1132);
-          else if ((OpSize!=0) AND (OpSize!=1)) WrError(1130);
-          else
-           BEGIN
-            if (FormatCode==0)
-             if (AdrType==ModImm)
-              if ((ImmVal()>=-8) AND (ImmVal()<=7)) FormatCode=2;
-              else if ((IsShort(AdrMode2,&SMode)) AND (OpSize==0)) FormatCode=3;
-	      else FormatCode=1;
-             else
-              if ((OpSize==0) AND (IsShort(AdrMode,&SMode)) AND (AdrMode2<=1) AND
-	          ((AdrMode>1) OR (Odd(AdrMode ^ AdrMode2)))) FormatCode=3;
-	      else FormatCode=1;
-	    switch (FormatCode)
-             BEGIN
-              case 1:
-               CodeGen(0xc0,0x76,0x80);
-               break;
-              case 2:
-               if (AdrType!=ModImm) WrError(1350);
+          BEGIN
+           if (OpSize==-1) WrError(1132);
+           else if ((OpSize!=0) AND (OpSize!=1)) WrError(1130);
+           else
+            BEGIN
+             if (FormatCode==0)
+              BEGIN
+               if (AdrType==ModImm)
+                BEGIN
+                 if ((ImmVal()>=-8) AND (ImmVal()<=7)) FormatCode=2;
+                 else if ((IsShort(AdrMode2,&SMode)) AND (OpSize==0)) FormatCode=3;
+                 else FormatCode=1;
+                END
                else
                 BEGIN
-                 Num1=ImmVal();
-                 if (ChkRange(Num1,-8,7))
-                  BEGIN
-                   BAsmCode[0]=0xd0+OpSize;
-                   BAsmCode[1]=(Num1 << 4)+AdrMode2;
-                   memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
-                   CodeLen=2+AdrCnt2;
-                  END
+                 if ((OpSize==0) AND (IsShort(AdrMode,&SMode)) AND (AdrMode2<=1) AND
+                     ((AdrMode>1) OR (Odd(AdrMode ^ AdrMode2)))) FormatCode=3;
+                 else FormatCode=1;
                 END
-               break; 
-              case 3:
-               if (OpSize!=0) WrError(1130);
-               else if (NOT IsShort(AdrMode2,&SMode)) WrError(1350);
-               else if (AdrType==ModImm)
-                BEGIN
-                 BAsmCode[0]=0xe0+SMode; BAsmCode[1]=AdrVals[0];
-                 memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
-                 CodeLen=2+AdrCnt2;
-                END
-               else if ((AdrMode2>=2) OR (NOT IsShort(AdrMode,&SMode))) WrError(1350);
-               else if ((AdrMode<2) AND (NOT Odd(AdrMode ^ AdrMode2))) WrError(1350);
-               else
-                BEGIN
-                 if (SMode==3) SMode++;
-                 BAsmCode[0]=0x38+((AdrMode2 & 1) << 2)+(SMode & 3); /* RMS 04: destination reg is bit 2! */
-                 memcpy(BAsmCode+1,AdrVals,AdrCnt);
-                 CodeLen=1+AdrCnt;
-                END
-               break;
-	     END
-           END
+              END
+             switch (FormatCode)
+              BEGIN
+               case 1:
+                CodeGen(0xc0,0x76,0x80);
+                break;
+               case 2:
+                if (AdrType!=ModImm) WrError(1350);
+                else
+                 BEGIN
+                  Num1=ImmVal();
+                  if (ChkRange(Num1,-8,7))
+                   BEGIN
+                    BAsmCode[0]=0xd0+OpSize;
+                    BAsmCode[1]=(Num1 << 4)+AdrMode2;
+                    memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
+                    CodeLen=2+AdrCnt2;
+                   END
+                 END
+                break; 
+               case 3:
+                if (OpSize!=0) WrError(1130);
+                else if (NOT IsShort(AdrMode2,&SMode)) WrError(1350);
+                else if (AdrType==ModImm)
+                 BEGIN
+                  BAsmCode[0]=0xe0+SMode; BAsmCode[1]=AdrVals[0];
+                  memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
+                  CodeLen=2+AdrCnt2;
+                 END
+                else if ((AdrMode2>=2) OR (NOT IsShort(AdrMode,&SMode))) WrError(1350);
+                else if ((AdrMode<2) AND (NOT Odd(AdrMode ^ AdrMode2))) WrError(1350);
+                else
+                 BEGIN
+                  if (SMode==3) SMode++;
+                  BAsmCode[0]=0x38+((AdrMode2 & 1) << 2)+(SMode & 3); /* RMS 04: destination reg is bit 2! */
+                  memcpy(BAsmCode+1,AdrVals,AdrCnt);
+                  CodeLen=1+AdrCnt;
+                 END
+                break;
+              END
+            END
+          END
         END
       END
      return;
@@ -1526,59 +1583,67 @@ BEGIN
         BEGIN
          CopyAdr(); DecodeAdr(ArgStr[1],MModImm+MModGen);
          if (AdrType!=ModNone)
-          if (OpSize==-1) WrError(1132);
-          else if ((OpSize!=0) AND (OpSize!=1)) WrError(1130);
-          else
-           BEGIN
-            if (FormatCode==0)
-             if (AdrType==ModImm)
-              if ((ImmVal()>=-7) AND (ImmVal()<=8)) FormatCode=2;
-              else if ((IsShort(AdrMode2,&SMode)) AND (OpSize==0)) FormatCode=3;
-	      else FormatCode=1;
-             else
-              if ((OpSize==0) AND (IsShort(AdrMode,&SMode)) AND (AdrMode2<=1) AND
-	          ((AdrMode>1) OR (Odd(AdrMode ^ AdrMode2)))) FormatCode=3;
-	      else FormatCode=1;
-	    switch (FormatCode)
-             BEGIN
-              case 1:
-               CodeGen(0xa8,0x76,0x50);
-               break;
-              case 2:
-               if (AdrType!=ModImm) WrError(1350);
+          BEGIN
+           if (OpSize==-1) WrError(1132);
+           else if ((OpSize!=0) AND (OpSize!=1)) WrError(1130);
+           else
+            BEGIN
+             if (FormatCode==0)
+              BEGIN
+               if (AdrType==ModImm)
+                BEGIN
+                 if ((ImmVal()>=-7) AND (ImmVal()<=8)) FormatCode=2;
+                 else if ((IsShort(AdrMode2,&SMode)) AND (OpSize==0)) FormatCode=3;
+                 else FormatCode=1;
+                END
                else
                 BEGIN
-                 Num1=ImmVal();
-                 if (ChkRange(Num1,-7,8))
-                  BEGIN
-                   BAsmCode[0]=0xc8+OpSize;
-                   BAsmCode[1]=((-Num1) << 4)+AdrMode2;
-                   memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
-                   CodeLen=2+AdrCnt2;
-                  END
+                 if ((OpSize==0) AND (IsShort(AdrMode,&SMode)) AND (AdrMode2<=1) AND
+                     ((AdrMode>1) OR (Odd(AdrMode ^ AdrMode2)))) FormatCode=3;
+                 else FormatCode=1;
                 END
-               break;
-              case 3:
-               if (OpSize!=0) WrError(1130);
-               else if (NOT IsShort(AdrMode2,&SMode)) WrError(1350);
-               else if (AdrType==ModImm)
-                BEGIN
-                 BAsmCode[0]=0x88+SMode; BAsmCode[1]=AdrVals[0];
-                 memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
-                 CodeLen=2+AdrCnt2;
-                END
-               else if ((AdrMode2>=2) OR (NOT IsShort(AdrMode,&SMode))) WrError(1350);
-               else if ((AdrMode<2) AND (NOT Odd(AdrMode ^ AdrMode2))) WrError(1350);
-               else
-                BEGIN
-                 if (SMode==3) SMode++;
-                 BAsmCode[0]=0x28+((AdrMode2 & 1) << 2)+(SMode & 3);	/* RMS 06: just like RMS 04 */
-                 memcpy(BAsmCode+1,AdrVals,AdrCnt);
-                 CodeLen=1+AdrCnt;
-                END
-               break;
-	     END
-           END
+              END
+             switch (FormatCode)
+              BEGIN
+               case 1:
+                CodeGen(0xa8,0x76,0x50);
+                break;
+               case 2:
+                if (AdrType!=ModImm) WrError(1350);
+                else
+                 BEGIN
+                  Num1=ImmVal();
+                  if (ChkRange(Num1,-7,8))
+                   BEGIN
+                    BAsmCode[0]=0xc8+OpSize;
+                    BAsmCode[1]=((-Num1) << 4)+AdrMode2;
+                    memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
+                    CodeLen=2+AdrCnt2;
+                   END
+                 END
+                break;
+               case 3:
+                if (OpSize!=0) WrError(1130);
+                else if (NOT IsShort(AdrMode2,&SMode)) WrError(1350);
+                else if (AdrType==ModImm)
+                 BEGIN
+                  BAsmCode[0]=0x88+SMode; BAsmCode[1]=AdrVals[0];
+                  memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
+                  CodeLen=2+AdrCnt2;
+                 END
+                else if ((AdrMode2>=2) OR (NOT IsShort(AdrMode,&SMode))) WrError(1350);
+                else if ((AdrMode<2) AND (NOT Odd(AdrMode ^ AdrMode2))) WrError(1350);
+                else
+                 BEGIN
+                  if (SMode==3) SMode++;
+                  BAsmCode[0]=0x28+((AdrMode2 & 1) << 2)+(SMode & 3);    /* RMS 06: just like RMS 04 */
+                  memcpy(BAsmCode+1,AdrVals,AdrCnt);
+                  CodeLen=1+AdrCnt;
+                 END
+                break;
+              END
+            END
+          END
         END
       END
      return;
@@ -1592,15 +1657,17 @@ BEGIN
        BEGIN
         DecodeAdr(ArgStr[1],MModGen);
         if (AdrType!=ModNone)
-         if (OpSize==-1) WrError(1132);
-         else if ((OpSize!=0) AND (OpSize!=1)) WrError(1130);
-         else
-          BEGIN
-           BAsmCode[0]=Hi(Gen1Orders[z].Code)+OpSize;
-           BAsmCode[1]=Lo(Gen1Orders[z].Code)+AdrMode;
-           memcpy(BAsmCode+2,AdrVals,AdrCnt);
-           CodeLen=2+AdrCnt;
-          END
+         BEGIN
+          if (OpSize==-1) WrError(1132);
+          else if ((OpSize!=0) AND (OpSize!=1)) WrError(1130);
+          else
+           BEGIN
+            BAsmCode[0]=Hi(Gen1Orders[z].Code)+OpSize;
+            BAsmCode[1]=Lo(Gen1Orders[z].Code)+AdrMode;
+            memcpy(BAsmCode+2,AdrVals,AdrCnt);
+            CodeLen=2+AdrCnt;
+           END
+         END
        END
       return;
      END
@@ -1616,10 +1683,12 @@ BEGIN
          BEGIN
           CopyAdr(); DecodeAdr(ArgStr[1],MModGen+MModImm);
           if (AdrType!=ModNone)
-           if (OpSize==-1) WrError(1132);
-           else if ((OpSize!=0) AND (OpSize!=1)) WrError(1130);
-           else if ((*OpPart=='M') AND ((AdrMode2==3) OR (AdrMode2==5) OR (AdrMode2-OpSize==1))) WrError(1350);
-           else CodeGen(Gen2Orders[z].Code1,Gen2Orders[z].Code2,Gen2Orders[z].Code3);
+           BEGIN
+            if (OpSize==-1) WrError(1132);
+            else if ((OpSize!=0) AND (OpSize!=1)) WrError(1130);
+            else if ((*OpPart=='M') AND ((AdrMode2==3) OR (AdrMode2==5) OR (AdrMode2-OpSize==1))) WrError(1350);
+            else CodeGen(Gen2Orders[z].Code1,Gen2Orders[z].Code2,Gen2Orders[z].Code3);
+           END
          END
        END
       return;
@@ -1632,20 +1701,22 @@ BEGIN
       BEGIN
        DecodeAdr(ArgStr[1],MModGen);
        if (AdrType!=ModNone)
-        if (OpSize==-1) WrError(1132);
-        else if ((OpSize==1) AND ((AdrMode & 14)==4))
-         BEGIN
-          BAsmCode[0]=0xb2+(Ord(Memo("DEC")) << 6)+((AdrMode & 1) << 3);
-	  CodeLen=1;
-         END
-        else if (NOT IsShort(AdrMode,&SMode)) WrError(1350);
-        else if (OpSize!=0) WrError(1130);
-        else
-         BEGIN
-          BAsmCode[0]=0xa0+(Ord(Memo("DEC")) << 3)+SMode;
-          memcpy(BAsmCode+1,AdrVals,AdrCnt);
-          CodeLen=1+AdrCnt;
-         END
+        BEGIN
+         if (OpSize==-1) WrError(1132);
+         else if ((OpSize==1) AND ((AdrMode & 14)==4))
+          BEGIN
+           BAsmCode[0]=0xb2+(Ord(Memo("DEC")) << 6)+((AdrMode & 1) << 3);
+           CodeLen=1;
+          END
+         else if (NOT IsShort(AdrMode,&SMode)) WrError(1350);
+         else if (OpSize!=0) WrError(1130);
+         else
+          BEGIN
+           BAsmCode[0]=0xa0+(Ord(Memo("DEC")) << 3)+SMode;
+           memcpy(BAsmCode+1,AdrVals,AdrCnt);
+           CodeLen=1+AdrCnt;
+          END
+        END
       END
      return;
     END
@@ -1658,22 +1729,24 @@ BEGIN
        BEGIN
         DecodeAdr(ArgStr[1],MModImm+MModGen);
         if (AdrType!=ModNone)
-         if (OpSize==-1) WrError(1132);
-         else if ((OpSize!=0) AND (OpSize!=1)) WrError(1130);
-         else if (AdrType==ModImm)
-          BEGIN
-           BAsmCode[0]=0x7c+OpSize;
-           BAsmCode[1]=DivOrders[z].Code1;
-           memcpy(BAsmCode+2,AdrVals,AdrCnt);
-           CodeLen=2+AdrCnt;
-          END
-         else
-          BEGIN
-           BAsmCode[0]=DivOrders[z].Code2+OpSize;
-           BAsmCode[1]=DivOrders[z].Code3+AdrMode;
-           memcpy(BAsmCode+2,AdrVals,AdrCnt);
-           CodeLen=2+AdrCnt;
-          END
+         BEGIN
+          if (OpSize==-1) WrError(1132);
+          else if ((OpSize!=0) AND (OpSize!=1)) WrError(1130);
+          else if (AdrType==ModImm)
+           BEGIN
+            BAsmCode[0]=0x7c+OpSize;
+            BAsmCode[1]=DivOrders[z].Code1;
+            memcpy(BAsmCode+2,AdrVals,AdrCnt);
+            CodeLen=2+AdrCnt;
+           END
+          else
+           BEGIN
+            BAsmCode[0]=DivOrders[z].Code2+OpSize;
+            BAsmCode[1]=DivOrders[z].Code3+AdrMode;
+            memcpy(BAsmCode+2,AdrVals,AdrCnt);
+            CodeLen=2+AdrCnt;
+           END
+         END
        END
       return;
      END
@@ -1686,26 +1759,30 @@ BEGIN
        BEGIN
         DecodeAdr(ArgStr[2],MModGen);
         if (AdrType!=ModNone)
-         if (AdrMode!=0) WrError(1350);
-         else
-          BEGIN
-           DecodeAdr(ArgStr[1],MModGen+MModImm);
-           if (AdrType!=ModNone)
-            if (AdrType==ModImm)
+         BEGIN
+          if (AdrMode!=0) WrError(1350);
+          else
+           BEGIN
+            DecodeAdr(ArgStr[1],MModGen+MModImm);
+            if (AdrType!=ModNone)
              BEGIN
-              BAsmCode[0]=0x7c+OpSize;
-              BAsmCode[1]=0xec+z;
-              memcpy(BAsmCode+2,AdrVals,AdrCnt);
-              CodeLen=2+AdrCnt;
+              if (AdrType==ModImm)
+               BEGIN
+                BAsmCode[0]=0x7c+OpSize;
+                BAsmCode[1]=0xec+z;
+                memcpy(BAsmCode+2,AdrVals,AdrCnt);
+                CodeLen=2+AdrCnt;
+               END
+              else if (AdrMode!=1) WrError(1350);
+              else
+               BEGIN
+                BAsmCode[0]=0x7c+OpSize;
+                BAsmCode[1]=0xe4+z;
+                CodeLen=2;
+               END
              END
-            else if (AdrMode!=1) WrError(1350);
-            else
-             BEGIN
-              BAsmCode[0]=0x7c+OpSize;
-              BAsmCode[1]=0xe4+z;
-              CodeLen=2;
-             END
-          END
+           END
+         END
        END
       return;
      END
@@ -1718,23 +1795,29 @@ BEGIN
        DecodeAdr(ArgStr[1],MModGen);
        if (OpSize==-1) OpSize=0;
        if (AdrType!=ModNone)
-        if (OpSize==0)
-         if ((AdrMode==1) OR ((AdrMode>=3) AND (AdrMode<=5))) WrError(1350);
-         else
+        BEGIN
+         if (OpSize==0)
           BEGIN
-           BAsmCode[0]=0x7c;
-           BAsmCode[1]=0x60+AdrMode;
-           memcpy(BAsmCode+2,AdrVals,AdrCnt);
-           CodeLen=2+AdrCnt;
+           if ((AdrMode==1) OR ((AdrMode>=3) AND (AdrMode<=5))) WrError(1350);
+           else
+            BEGIN
+             BAsmCode[0]=0x7c;
+             BAsmCode[1]=0x60+AdrMode;
+             memcpy(BAsmCode+2,AdrVals,AdrCnt);
+             CodeLen=2+AdrCnt;
+            END
           END
-	else if (OpSize==1)
-         if (AdrMode!=0) WrError(1350);
-         else
+         else if (OpSize==1)
           BEGIN
-           BAsmCode[0]=0x7c; BAsmCode[1]=0xf3;
-           CodeLen=2;
+           if (AdrMode!=0) WrError(1350);
+           else
+            BEGIN
+             BAsmCode[0]=0x7c; BAsmCode[1]=0xf3;
+             CodeLen=2;
+            END
           END
-	else WrError(1130);
+         else WrError(1130);
+        END
       END
      return;
     END
@@ -1746,33 +1829,37 @@ BEGIN
       BEGIN
        DecodeAdr(ArgStr[1],MModGen);
        if (AdrType!=ModNone)
-        if (OpSize==-1) WrError(1132);
-        else if (OpSize>1) WrError(1130);
-        else
-         BEGIN
-          if (FormatCode==0)
-           if ((OpSize==0) AND (IsShort(AdrMode,&SMode))) FormatCode=2;
-           else FormatCode=1;
-          switch (FormatCode)
-           BEGIN
-            case 1:
-             BAsmCode[0]=0x74+OpSize;
-             BAsmCode[1]=0x70+AdrMode;
-             memcpy(BAsmCode+2,AdrVals,AdrCnt);
-             CodeLen=2+AdrCnt;
-             break;
-            case 2:
-             if (OpSize!=0) WrError(1130);
-             else if (NOT IsShort(AdrMode,&SMode)) WrError(1350);
-             else
-              BEGIN
-               BAsmCode[0]=0xb8+SMode;
-               memcpy(BAsmCode+1,AdrVals,AdrCnt);
-               CodeLen=1+AdrCnt;
-              END
-             break;
-           END
-         END
+        BEGIN
+         if (OpSize==-1) WrError(1132);
+         else if (OpSize>1) WrError(1130);
+         else
+          BEGIN
+           if (FormatCode==0)
+            BEGIN
+             if ((OpSize==0) AND (IsShort(AdrMode,&SMode))) FormatCode=2;
+             else FormatCode=1;
+            END
+           switch (FormatCode)
+            BEGIN
+             case 1:
+              BAsmCode[0]=0x74+OpSize;
+              BAsmCode[1]=0x70+AdrMode;
+              memcpy(BAsmCode+2,AdrVals,AdrCnt);
+              CodeLen=2+AdrCnt;
+              break;
+             case 2:
+              if (OpSize!=0) WrError(1130);
+              else if (NOT IsShort(AdrMode,&SMode)) WrError(1350);
+              else
+               BEGIN
+                BAsmCode[0]=0xb8+SMode;
+                memcpy(BAsmCode+1,AdrVals,AdrCnt);
+                CodeLen=1+AdrCnt;
+               END
+              break;
+            END
+          END
+        END
       END
      return;
     END
@@ -1783,51 +1870,55 @@ BEGIN
     BEGIN
      z=Ord(Memo("OR"));
      if (ArgCnt!=2) WrError(1110);
-     else if (CheckFormat("GS"))	/* RMS 01: The format codes are G and S, not G and Q */
+     else if (CheckFormat("GS"))        /* RMS 01: The format codes are G and S, not G and Q */
       BEGIN
        DecodeAdr(ArgStr[2],MModGen);
        if (AdrType!=ModNone)
         BEGIN
          CopyAdr(); DecodeAdr(ArgStr[1],MModGen+MModImm);
          if (AdrType!=ModNone)
-          if (OpSize==-1) WrError(1132);
-          else if (OpSize>1) WrError(1130);
-          else
-           BEGIN
-            if (FormatCode==0)
-             if (AdrType==ModImm)
-              if ((OpSize==0) AND (IsShort(AdrMode2,&SMode))) FormatCode=2;
-              else FormatCode=1;
-             else
-              if ((AdrMode2<=1) AND (IsShort(AdrMode,&SMode)) AND ((AdrMode>1) OR Odd(AdrMode ^ AdrMode2))) FormatCode=2;
-              else FormatCode=1;
-            switch (FormatCode)
-             BEGIN
-              case 1:
-               CodeGen(0x90+(z << 3),0x76,0x20+(z << 4));
-               break;
-              case 2:
-               if (OpSize!=0) WrError(1130);
-               else if (AdrType==ModImm)
-               if (NOT IsShort(AdrMode2,&SMode)) WrError(1350);
+          BEGIN
+           if (OpSize==-1) WrError(1132);
+           else if (OpSize>1) WrError(1130);
+           else
+            BEGIN
+             if (FormatCode==0)
+              BEGIN
+               if (AdrType==ModImm)
+                if ((OpSize==0) AND (IsShort(AdrMode2,&SMode))) FormatCode=2;
+                else FormatCode=1;
+               else
+                if ((AdrMode2<=1) AND (IsShort(AdrMode,&SMode)) AND ((AdrMode>1) OR Odd(AdrMode ^ AdrMode2))) FormatCode=2;
+                else FormatCode=1;
+              END
+             switch (FormatCode)
+              BEGIN
+               case 1:
+                CodeGen(0x90+(z << 3),0x76,0x20+(z << 4));
+                break;
+               case 2:
+                if (OpSize!=0) WrError(1130);
+                else if (AdrType==ModImm)
+                if (NOT IsShort(AdrMode2,&SMode)) WrError(1350);
+                else
+                 BEGIN
+                  BAsmCode[0]=0x90+(z << 3)+SMode;
+                  BAsmCode[1]=ImmVal();
+                  memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
+                  CodeLen=2+AdrCnt2;
+                 END
+               else if ((NOT IsShort(AdrMode,&SMode)) OR (AdrMode2>1)) WrError(1350);
+               else if ((AdrMode<=1) AND (NOT Odd(AdrMode ^ AdrMode2))) WrError(1350);
                else
                 BEGIN
-                 BAsmCode[0]=0x90+(z << 3)+SMode;
-                 BAsmCode[1]=ImmVal();
-                 memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
-                 CodeLen=2+AdrCnt2;
+                 if (SMode==3) SMode++;
+                 BAsmCode[0]=0x10+(z << 3)+((AdrMode2 & 1) << 2)+(SMode & 3);
+                 memcpy(BAsmCode+1,AdrVals,AdrCnt);
+                 CodeLen=1+AdrCnt;
                 END
-              else if ((NOT IsShort(AdrMode,&SMode)) OR (AdrMode2>1)) WrError(1350);
-              else if ((AdrMode<=1) AND (NOT Odd(AdrMode ^ AdrMode2))) WrError(1350);
-              else
-               BEGIN
-                if (SMode==3) SMode++;
-                BAsmCode[0]=0x10+(z << 3)+((AdrMode2 & 1) << 2)+(SMode & 3);
-                memcpy(BAsmCode+1,AdrVals,AdrCnt);
-                CodeLen=1+AdrCnt;
-               END
-             END
-           END
+              END
+            END
+          END
         END
       END
      return;
@@ -1840,36 +1931,38 @@ BEGIN
       BEGIN
        DecodeAdr(ArgStr[2],MModGen);
        if (AdrType!=ModNone)
-        if (OpSize==-1) WrError(1132);
-        else if (OpSize>1) WrError(1130);
-        else
-         BEGIN
-          OpSize2=OpSize; OpSize=0; CopyAdr();
-          DecodeAdr(ArgStr[1],MModGen+MModImm);
-          if (AdrType==ModGen)
-           if (AdrMode!=3) WrError(1350);
-           else if (AdrMode2+2*OpSize2==3) WrError(1350);
-           else
-            BEGIN
-             BAsmCode[0]=0x74+OpSize2;
-             BAsmCode[1]=0x60+AdrMode2;
-             memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
-             CodeLen=2+AdrCnt2;
-            END
-          else if (AdrType==ModImm)
-           BEGIN
-            Num1=ImmVal();
-            if (Num1==0) WrError(1315);
-            else if (ChkRange(Num1,-8,8))
+        BEGIN
+         if (OpSize==-1) WrError(1132);
+         else if (OpSize>1) WrError(1130);
+         else
+          BEGIN
+           OpSize2=OpSize; OpSize=0; CopyAdr();
+           DecodeAdr(ArgStr[1],MModGen+MModImm);
+           if (AdrType==ModGen)
+            if (AdrMode!=3) WrError(1350);
+            else if (AdrMode2+2*OpSize2==3) WrError(1350);
+            else
              BEGIN
-              if (Num1>0) Num1--; else Num1=(-9)-Num1;
-              BAsmCode[0]=0xe0+OpSize2;
-              BAsmCode[1]=(Num1 << 4)+AdrMode2;
-              memcpy(BAsmCode+2,AdrVals2,AdrCnt);
+              BAsmCode[0]=0x74+OpSize2;
+              BAsmCode[1]=0x60+AdrMode2;
+              memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
               CodeLen=2+AdrCnt2;
              END
-           END
-         END
+           else if (AdrType==ModImm)
+            BEGIN
+             Num1=ImmVal();
+             if (Num1==0) WrError(1315);
+             else if (ChkRange(Num1,-8,8))
+              BEGIN
+               if (Num1>0) Num1--; else Num1=(-9)-Num1;
+               BAsmCode[0]=0xe0+OpSize2;
+               BAsmCode[1]=(Num1 << 4)+AdrMode2;
+               memcpy(BAsmCode+2,AdrVals2,AdrCnt);
+               CodeLen=2+AdrCnt2;
+              END
+            END
+          END
+        END
       END
      return;
     END
@@ -1882,52 +1975,54 @@ BEGIN
        z=Ord(Memo("SHA"));
        DecodeAdr(ArgStr[2],MModGen+MModReg32);
        if (AdrType!=ModNone)
-        if (OpSize==-1) WrError(1132);
-        else if ((OpSize>2) OR ((OpSize==2) AND (AdrType==ModGen))) WrError(1130);
-        else
-         BEGIN
-          CopyAdr(); OpSize2=OpSize; OpSize=0;
-          DecodeAdr(ArgStr[1],MModImm+MModGen);
-          if (AdrType==ModGen)
-           if (AdrMode!=3) WrError(1350);
-           else if (AdrMode2*2+OpSize2==3) WrError(1350);
-           else
-            BEGIN
-             if (OpSize2==2)
-              BEGIN
-               BAsmCode[0]=0xeb;
-               BAsmCode[1]=0x01+(AdrMode2 << 4)+(z << 5);
-              END
-             else
-              BEGIN
-               BAsmCode[0]=0x74+OpSize2;
-               BAsmCode[1]=0xe0+(z << 4)+AdrMode2;
-              END
-             memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
-             CodeLen=2+AdrCnt2;
-            END
-          else if (AdrType==ModImm)
-           BEGIN
-            Num1=ImmVal();
-            if (Num1==0) WrError(1315);
-            else if (ChkRange(Num1,-8,8))
+        BEGIN
+         if (OpSize==-1) WrError(1132);
+         else if ((OpSize>2) OR ((OpSize==2) AND (AdrType==ModGen))) WrError(1130);
+         else
+          BEGIN
+           CopyAdr(); OpSize2=OpSize; OpSize=0;
+           DecodeAdr(ArgStr[1],MModImm+MModGen);
+           if (AdrType==ModGen)
+            if (AdrMode!=3) WrError(1350);
+            else if (AdrMode2*2+OpSize2==3) WrError(1350);
+            else
              BEGIN
-              if (Num1>0) Num1--; else Num1=(-9)-Num1;
               if (OpSize2==2)
                BEGIN
                 BAsmCode[0]=0xeb;
-                BAsmCode[1]=0x80+(AdrMode2 << 4)+(z << 5)+(Num1 & 15);
+                BAsmCode[1]=0x01+(AdrMode2 << 4)+(z << 5);
                END
               else
                BEGIN
-                BAsmCode[0]=0xe8+(z << 3)+OpSize2;
-                BAsmCode[1]=(Num1 << 4)+AdrMode2;
+                BAsmCode[0]=0x74+OpSize2;
+                BAsmCode[1]=0xe0+(z << 4)+AdrMode2;
                END
               memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
               CodeLen=2+AdrCnt2;
              END
-           END
-         END
+           else if (AdrType==ModImm)
+            BEGIN
+             Num1=ImmVal();
+             if (Num1==0) WrError(1315);
+             else if (ChkRange(Num1,-8,8))
+              BEGIN
+               if (Num1>0) Num1--; else Num1=(-9)-Num1;
+               if (OpSize2==2)
+                BEGIN
+                 BAsmCode[0]=0xeb;
+                 BAsmCode[1]=0x80+(AdrMode2 << 4)+(z << 5)+(Num1 & 15);
+                END
+               else
+                BEGIN
+                 BAsmCode[0]=0xe8+(z << 3)+OpSize2;
+                 BAsmCode[1]=(Num1 << 4)+AdrMode2;
+                END
+               memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
+               CodeLen=2+AdrCnt2;
+              END
+            END
+          END
+        END
       END
      return;
     END
@@ -1940,19 +2035,21 @@ BEGIN
       MayShort=(BitOrders[z].Code & 12)==8;
       if (CheckFormat(MayShort?"GS":"G"))
        if (DecodeBitAdr((FormatCode!=1) AND (MayShort)))
-        if (AdrMode>=16)
-         BEGIN
-          BAsmCode[0]=0x40+((BitOrders[z].Code-8) << 3)+(AdrMode & 7);
-          BAsmCode[1]=AdrVals[0];
-          CodeLen=2;
-         END
-        else
-         BEGIN
-          BAsmCode[0]=0x7e;
-          BAsmCode[1]=(BitOrders[z].Code << 4)+AdrMode;
-          memcpy(BAsmCode+2,AdrVals,AdrCnt);
-          CodeLen=2+AdrCnt;
-         END
+        BEGIN
+         if (AdrMode>=16)
+          BEGIN
+           BAsmCode[0]=0x40+((BitOrders[z].Code-8) << 3)+(AdrMode & 7);
+           BAsmCode[1]=AdrVals[0];
+           CodeLen=2;
+          END
+         else
+          BEGIN
+           BAsmCode[0]=0x7e;
+           BAsmCode[1]=(BitOrders[z].Code << 4)+AdrMode;
+           memcpy(BAsmCode+2,AdrVals,AdrCnt);
+           CodeLen=2+AdrCnt;
+          END
+        END
       return;
      END
 
@@ -1963,7 +2060,7 @@ BEGIN
         if ((ArgCnt==1) AND (strcasecmp(ArgStr[1],"C")==0))
          BEGIN
           BAsmCode[0]=0x7d; BAsmCode[1]=0xd0+Conditions[z].Code;
-	  CodeLen=2;
+          CodeLen=2;
          END
         else if (DecodeBitAdr(False))
          BEGIN
@@ -1971,7 +2068,7 @@ BEGIN
           BAsmCode[1]=0x20+AdrMode;
           memcpy(BAsmCode+2,AdrVals,AdrCnt); z=Conditions[z].Code;
           if ((z>=4) AND (z<12)) z^=12;
-	  if (z>=8) z+=0xf0;
+          if (z>=8) z+=0xf0;
           BAsmCode[2+AdrCnt]=z;
           CodeLen=3+AdrCnt;
          END
@@ -2009,23 +2106,23 @@ BEGIN
 
 /* RMS 12: Repaired JMP.S forward-label as follows:
 
-           If it's an unknown symbol, make PC+2 the "safe" value, otherwise
+           If it's an unknown symbol, make PC+1 the "safe" value, otherwise
            the user will get OUT OF RANGE errors on every attempt to use JMP.S
            Since the instruction can only branch forward, and AS stuffs the PC
            back for a "temp" forward reference value, the range-checking will 
            always fail.
 
-	   One side-effect also is that for auto-determination purposes, one
-	   fewer pass is needed.  Before, the first pass would signal JMP.B,
-	   then once the forward reference is known, it'd signal JMP.S, which
-	   would cause a "phase error" forcing another pass.
+           One side-effect also is that for auto-determination purposes, one
+           fewer pass is needed.  Before, the first pass would signal JMP.B,
+           then once the forward reference is known, it'd signal JMP.S, which
+           would cause a "phase error" forcing another pass.
 */
        if ( (FirstPassUnknown) AND (Diff == 0) )
-         Diff = 2;	 
+         Diff = 1;
 
        if (OpSize==-1)
-        BEGIN
-         if ((Diff>=2) AND (Diff<=9)) OpSize=4;
+        BEGIN                                                   /* RMS 13: The other part of the */
+         if ((Diff>=1) AND (Diff<=9)) OpSize=4;                 /* "looping phase error" fix  */
          else if ((Diff>=-127) AND (Diff<=128)) OpSize=0;
          else if ((Diff>=-32767) AND (Diff<=32768)) OpSize=1;
          else OpSize=7;
@@ -2047,21 +2144,28 @@ BEGIN
    occurrence of this bug could cause such evil debugging issues, I have
    taken the liberty of addressing it in the assembler.  Heck, it's JUST one
    extra byte.  One byte's worth the peace of mind, isn't it? :)
-
 */
        if (!( ( strcmp(MomCPUIdent,"M16C") ) && ( strcmp(MomCPUIdent,"M30600M8")))) 
          if (OpSize == 4) 
          BEGIN
            if ( (AdrLong & 0x0f0000) != (EProgCounter() & 0x0f0000) )
              OpSize = 0;
-         END		/* NOTE! This not an ASX bug, but rather in the CPU!! */
+         END            /* NOTE! This not an ASX bug, but rather in the CPU!! */
        switch (OpSize)
         BEGIN
          case 4:         
-          if (((Diff<2) OR (Diff>9)) AND (NOT SymbolQuestionable) ) WrError(1370);
+          if (((Diff<1) OR (Diff>9)) AND (NOT SymbolQuestionable) ) WrError(1370); 
           else
            BEGIN
-            BAsmCode[0]=0x60+((Diff-2) & 7); CodeLen=1;
+                if (Diff == 1)
+                BEGIN                           /* RMS 13: To avoid infinite loop phase errors... Turn a */
+                        BAsmCode[0] = 0x04;     /* JMP (or JMP.S) to following instruction into a NOP */
+                END
+                else
+                BEGIN
+                        BAsmCode[0]=0x60+((Diff-2) & 7);
+                END 
+            CodeLen=1;
            END
           break;
          case 0:
@@ -2069,8 +2173,8 @@ BEGIN
           else
            BEGIN
             BAsmCode[0]=0xfe;
-	    BAsmCode[1]=(Diff-1) & 0xff;
-	    CodeLen=2;
+            BAsmCode[1]=(Diff-1) & 0xff;
+            CodeLen=2;
            END
           break;
          case 1:
@@ -2078,9 +2182,9 @@ BEGIN
           else
            BEGIN
             BAsmCode[0]=0xf4; Diff--;
-	    BAsmCode[1]=Diff & 0xff;
+            BAsmCode[1]=Diff & 0xff;
             BAsmCode[2]=(Diff >> 8) & 0xff;
-	    CodeLen=3;
+            CodeLen=3;
            END
           break;
          case 7:
@@ -2116,9 +2220,9 @@ BEGIN
           else
            BEGIN
             BAsmCode[0]=0xf5; Diff--;
-	    BAsmCode[1]=Diff & 0xff;
+            BAsmCode[1]=Diff & 0xff;
             BAsmCode[2]=(Diff >> 8) & 0xff;
-	    CodeLen=3;
+            CodeLen=3;
            END
           break;
          case 7:
@@ -2145,22 +2249,26 @@ BEGIN
        if ((AdrType==ModGen) AND ((AdrMode & 14)==12))
         AdrVals[AdrCnt++]=0;
        if ((AdrType==ModGen) AND ((AdrMode & 14)==4))
-        if (OpSize==-1) OpSize=1;
-        else if (OpSize!=1)
-	 BEGIN
-	  AdrType=ModNone; WrError(1131);
-	 END
+        BEGIN
+         if (OpSize==-1) OpSize=1;
+         else if (OpSize!=1)
+          BEGIN
+           AdrType=ModNone; WrError(1131);
+          END
+        END
        if (AdrType==ModAReg32) AdrMode=4;
        if (AdrType!=ModNone)
-        if (OpSize==-1) WrError(1132);
-        else if ((OpSize!=1) AND (OpSize!=2)) WrError(1130);
-        else
-         BEGIN
-          BAsmCode[0]=0x7d;
-          BAsmCode[1]=(Ord(Memo("JSRI")) << 4)+(Ord(OpSize==1) << 5)+AdrMode;
-          memcpy(BAsmCode+2,AdrVals,AdrCnt);
-          CodeLen=2+AdrCnt;
-         END
+        BEGIN
+         if (OpSize==-1) WrError(1132);
+         else if ((OpSize!=1) AND (OpSize!=2)) WrError(1130);
+         else
+          BEGIN
+           BAsmCode[0]=0x7d;
+           BAsmCode[1]=(Ord(Memo("JSRI")) << 4)+(Ord(OpSize==1) << 5)+AdrMode;
+           memcpy(BAsmCode+2,AdrVals,AdrCnt);
+           CodeLen=2+AdrCnt;
+          END
+        END
       END
      return;
     END
@@ -2175,13 +2283,15 @@ BEGIN
        DecodeAdr(ArgStr[1],MModImm);
        if ((FirstPassUnknown) AND (AdrVals[0]<18)) AdrVals[0]=18;
        if (AdrType!=ModNone)
-        if (AdrVals[0]<18) WrError(1315);
-        else
-         BEGIN
-          BAsmCode[0]=0xee + Ord(Memo("JSRS")); /* ANSI :-O */
-          BAsmCode[1]=AdrVals[0];
-          CodeLen=2;
-         END
+        BEGIN
+         if (AdrVals[0]<18) WrError(1315);
+         else
+          BEGIN
+           BAsmCode[0]=0xee + Ord(Memo("JSRS")); /* ANSI :-O */
+           BAsmCode[1]=AdrVals[0];
+           CodeLen=2;
+          END
+        END
       END
      return;
     END
@@ -2198,18 +2308,20 @@ BEGIN
         BEGIN
          AdrLong=EvalIntExpression(ArgStr[1],UInt20,&OK)-(EProgCounter()+Num1);
          if (OK)
-          if ((NOT SymbolQuestionable) AND ((AdrLong>127) OR (AdrLong<-128))) WrError(1370);
-          else if (Conditions[z].Code>=8)
-           BEGIN
-            BAsmCode[0]=0x7d; BAsmCode[1]=0xc0+Conditions[z].Code;
-            BAsmCode[2]=AdrLong & 0xff;
-            CodeLen=3;
-           END
-          else
-           BEGIN
-            BAsmCode[0]=0x68+Conditions[z].Code; BAsmCode[1]=AdrLong & 0xff;
-            CodeLen=2;
-           END
+          BEGIN
+           if ((NOT SymbolQuestionable) AND ((AdrLong>127) OR (AdrLong<-128))) WrError(1370);
+           else if (Conditions[z].Code>=8)
+            BEGIN
+             BAsmCode[0]=0x7d; BAsmCode[1]=0xc0+Conditions[z].Code;
+             BAsmCode[2]=AdrLong & 0xff;
+             CodeLen=3;
+            END
+           else
+            BEGIN
+             BAsmCode[0]=0x68+Conditions[z].Code; BAsmCode[1]=AdrLong & 0xff;
+             CodeLen=2;
+            END
+          END
         END
        return;
       END
@@ -2221,30 +2333,34 @@ BEGIN
       BEGIN
        DecodeAdr(ArgStr[2],MModGen);
        if (AdrType!=ModNone)
-        if (OpSize==-1) WrError(1132);
-        else if (OpSize>1) WrError(1130);
-        else
-         BEGIN
-          CopyAdr(); OpSize2=OpSize; OpSize=0;
-          FirstPassUnknown=False;
-	  DecodeAdr(ArgStr[1],MModImm); Num1=ImmVal();
-          if (FirstPassUnknown) Num1=0;
-          if (Memo("SBJNZ")) Num1=(-Num1);
-          if (ChkRange(Num1,-8,7))
-           BEGIN
-            AdrLong=EvalIntExpression(ArgStr[3],UInt20,&OK)-(EProgCounter()+2);
-            if (OK)
-             if (((AdrLong<-128) OR (AdrLong>127)) AND (NOT SymbolQuestionable)) WrError(1370);
-             else
+        BEGIN
+         if (OpSize==-1) WrError(1132);
+         else if (OpSize>1) WrError(1130);
+         else
+          BEGIN
+           CopyAdr(); OpSize2=OpSize; OpSize=0;
+           FirstPassUnknown=False;
+           DecodeAdr(ArgStr[1],MModImm); Num1=ImmVal();
+           if (FirstPassUnknown) Num1=0;
+           if (Memo("SBJNZ")) Num1=(-Num1);
+           if (ChkRange(Num1,-8,7))
+            BEGIN
+             AdrLong=EvalIntExpression(ArgStr[3],UInt20,&OK)-(EProgCounter()+2);
+             if (OK)
               BEGIN
-               BAsmCode[0]=0xf8+OpSize2;
-               BAsmCode[1]=(Num1 << 4)+AdrMode2;
-               memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
-               BAsmCode[2+AdrCnt2]=AdrLong & 0xff;
-               CodeLen=3+AdrCnt2;
+               if (((AdrLong<-128) OR (AdrLong>127)) AND (NOT SymbolQuestionable)) WrError(1370);
+               else
+                BEGIN
+                 BAsmCode[0]=0xf8+OpSize2;
+                 BAsmCode[1]=(Num1 << 4)+AdrMode2;
+                 memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
+                 BAsmCode[2+AdrCnt2]=AdrLong & 0xff;
+                 CodeLen=3+AdrCnt2;
+                END
               END
-           END
-         END
+            END
+          END
+        END
       END
      return;
     END
@@ -2296,7 +2412,7 @@ BEGIN
          BAsmCode[0]=0xeb; BAsmCode[1]=0x20;
          BAsmCode[2]=(AdrLong >> 16) & 0xff; BAsmCode[3]=0;
          BAsmCode[4]=0xeb; BAsmCode[5]=0x10;
-         BAsmCode[7]=(AdrLong >> 8) & 0xff; BAsmCode[6]=AdrLong & 0xff;	/* RMS 07: needs to be LSB, MSB order */
+         BAsmCode[7]=(AdrLong >> 8) & 0xff; BAsmCode[6]=AdrLong & 0xff; /* RMS 07: needs to be LSB, MSB order */
          CodeLen=8;
         END
       END
@@ -2341,13 +2457,13 @@ BEGIN
 
    ValidSegs=1<<SegCode;
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
-   SegLimits[SegCode] = 0xfffff;	/* RMS 10: Probably a typo (was 0xffff) */
+   SegLimits[SegCode] = 0xfffff;        /* RMS 10: Probably a typo (was 0xffff) */
 
    MakeCode=MakeCode_M16C; IsDef=IsDef_M16C;
    SwitchFrom=SwitchFrom_M16C; InitFields();
 END
 
-	void codem16c_init(void)
+        void codem16c_init(void)
 BEGIN
    CPUM16C=AddCPU("M16C",SwitchTo_M16C);
    CPUM30600M8=AddCPU("M30600M8",SwitchTo_M16C);

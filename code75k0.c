@@ -6,6 +6,7 @@
 /*                                                                           */
 /* Historie: 31.12.1996 Grundsteinlegung                                     */
 /*            3. 1.1999 ChkPC-Anpassung                                      */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -70,14 +71,14 @@ static ShortInt AdrMode;
 /*-------------------------------------------------------------------------*/
 /* dynamische Codetabellenverwaltung */
 
-   	static void AddFixed(char *NewName, Word NewCode)
+        static void AddFixed(char *NewName, Word NewCode)
 BEGIN
    if (InstrZ>=FixedOrderCount) exit(255);
    FixedOrders[InstrZ].Name=NewName;
    FixedOrders[InstrZ++].Code=NewCode;
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    Boolean Err;
 
@@ -104,7 +105,7 @@ BEGIN
    LogOrders[InstrZ++]="XOR";
 END
 
-	static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    free(FixedOrders);
    free(AriOrders);
@@ -114,7 +115,7 @@ END
 /*-------------------------------------------------------------------------*/
 /* Untermengen von Befehlssatz abpruefen */
 
-	static void CheckCPU(CPUVar MinCPU)
+        static void CheckCPU(CPUVar MinCPU)
 BEGIN
    if (MomCPU<MinCPU)
     BEGIN
@@ -125,7 +126,7 @@ END
 /*-------------------------------------------------------------------------*/
 /* Adressausdruck parsen */
 
-	static Boolean SetOpSize(ShortInt NewSize)
+        static Boolean SetOpSize(ShortInt NewSize)
 BEGIN
    if (OpSize==-1) OpSize=NewSize;
    else if (NewSize!=OpSize)
@@ -135,7 +136,7 @@ BEGIN
    return True;
 END
 
-	static void ChkDataPage(Word Adr)
+        static void ChkDataPage(Word Adr)
 BEGIN
    switch (MBEValue)
     BEGIN
@@ -144,7 +145,7 @@ BEGIN
     END
 END
 
-	static void ChkAdr(Byte Mask)
+        static void ChkAdr(Byte Mask)
 BEGIN
    if ((AdrMode!=ModNone) AND ((Mask & (1 << AdrMode))==0))
     BEGIN
@@ -152,7 +153,7 @@ BEGIN
     END
 END 
 
-	static void DecodeAdr(char *Asc, Byte Mask)
+        static void DecodeAdr(char *Asc, Byte Mask)
 BEGIN
    static char *RegNames="XAHLDEBC";
 
@@ -178,8 +179,10 @@ BEGIN
       BEGIN
        AdrPart=pos ^ 1;
        if (SetOpSize(0))
-        if ((AdrPart>4) AND (MomCPU<CPU75004)) WrError(1505);
-	else AdrMode=ModReg4;
+        BEGIN
+         if ((AdrPart>4) AND (MomCPU<CPU75004)) WrError(1505);
+         else AdrMode=ModReg4;
+        END
        ChkAdr(Mask); return;
       END
 
@@ -189,8 +192,10 @@ BEGIN
       BEGIN
        AdrPart=pos;
        if (SetOpSize(1))
-        if ((AdrPart>2) AND (MomCPU<CPU75004)) WrError(1505);
-	else AdrMode=ModReg8;
+        BEGIN
+         if ((AdrPart>2) AND (MomCPU<CPU75004)) WrError(1505);
+         else AdrMode=ModReg8;
+        END
        ChkAdr(Mask); return;
       END
 
@@ -200,7 +205,10 @@ BEGIN
       BEGIN
        AdrPart=pos+1;
        if (SetOpSize(1))
-        if (MomCPU<CPU75104) WrError(1505); else AdrMode=ModReg8;
+        BEGIN
+         if (MomCPU<CPU75104) WrError(1505);
+         else AdrMode=ModReg8;
+        END
        ChkAdr(Mask); return;
       END
     END
@@ -257,7 +265,7 @@ END
 
 static String BName;
 
-	static Boolean DecodeBitAddr(char *Asc, Word *Erg)
+        static Boolean DecodeBitAddr(char *Asc, Word *Erg)
 BEGIN
    char *p;
    int Num;
@@ -299,41 +307,45 @@ BEGIN
     BEGIN
      Num=EvalIntExpression(bpart,UInt2,&OK);
      if (OK)
-      if (strncasecmp(Asc,"@H",2)==0)
-       BEGIN
-        Adr=EvalIntExpression(Asc+2,UInt4,&OK);
-        if (OK)
-         if (MomCPU<CPU75004) WrError(1505);
-         else
+      BEGIN
+       if (strncasecmp(Asc,"@H",2)==0)
+        BEGIN
+         Adr=EvalIntExpression(Asc+2,UInt4,&OK);
+         if (OK)
           BEGIN
-           *Erg=(Num << 4)+Adr;
-           sprintf(BName,"@H%s.%c",HexString(Adr,1),Num+'0');
+           if (MomCPU<CPU75004) WrError(1505);
+           else
+            BEGIN
+             *Erg=(Num << 4)+Adr;
+             sprintf(BName,"@H%s.%c",HexString(Adr,1),Num+'0');
+             return True;
+            END
+          END
+        END
+       else
+        BEGIN
+         FirstPassUnknown=False;
+         Adr=EvalIntExpression(Asc,UInt12,&OK);
+         if (FirstPassUnknown) Adr=(Adr | 0xff0);
+         if (OK)
+          BEGIN
+           ChkSpace(SegData);
+           if ((Adr>=0xfb0) AND (Adr<0xfc0))
+            *Erg=0x80+(Num << 4)+(Adr & 15);
+           else if (Adr>=0xff0)
+            *Erg=0xc0+(Num << 4)+(Adr & 15);
+           else
+            *Erg=0x400+(((Word)Num) << 8)+Lo(Adr)+(Hi(Adr) << 12);
+           sprintf(BName,"%sH.%c",HexString(Adr,3),'0'+Num);
            return True;
           END
-       END
-      else
-       BEGIN
-        FirstPassUnknown=False;
-        Adr=EvalIntExpression(Asc,UInt12,&OK);
-        if (FirstPassUnknown) Adr=(Adr | 0xff0);
-        if (OK)
-         BEGIN
-          ChkSpace(SegData);
-	  if ((Adr>=0xfb0) AND (Adr<0xfc0))
-           *Erg=0x80+(Num << 4)+(Adr & 15);
-          else if (Adr>=0xff0)
-           *Erg=0xc0+(Num << 4)+(Adr & 15);
-          else
-           *Erg=0x400+(((Word)Num) << 8)+Lo(Adr)+(Hi(Adr) << 12);
-          sprintf(BName,"%sH.%c",HexString(Adr,3),'0'+Num);
-          return True;
-         END
-       END
+        END
+      END
     END
    return False;
 END
 
-	static Boolean DecodeIntName(char *Asc, Byte *Erg)
+        static Boolean DecodeIntName(char *Asc, Byte *Erg)
 BEGIN
    Word HErg;
    Byte LPart;
@@ -369,12 +381,12 @@ END
 
 /*-------------------------------------------------------------------------*/
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
 #define ASSUME75Count 2
    static ASSUMERec ASSUME75s[ASSUME75Count]=
-	     {{"MBS", &MBSValue, 0, 0x0f, 0x10},
-	      {"MBE", &MBEValue, 0, 0x01, 0x01}};
+             {{"MBS", &MBSValue, 0, 0x0f, 0x10},
+              {"MBE", &MBEValue, 0, 0x01, 0x01}};
 
    Word BErg;
 
@@ -402,9 +414,9 @@ BEGIN
        FirstPassUnknown=False;
        if (DecodeBitAddr(ArgStr[1],&BErg))
         if (NOT FirstPassUnknown)
-	 BEGIN
+         BEGIN
           PushLocHandle(-1);
-	  EnterIntSymbol(LabPart,BErg,SegNone,False);
+          EnterIntSymbol(LabPart,BErg,SegNone,False);
           sprintf(ListLine,"=%s",BName);
           PopLocHandle();
          END
@@ -415,7 +427,7 @@ BEGIN
    return False;
 END
 
-	static void PutCode(Word Code)
+        static void PutCode(Word Code)
 BEGIN
    BAsmCode[0]=Lo(Code);
    if (Hi(Code)==0) CodeLen=1;
@@ -472,11 +484,11 @@ BEGIN
            BEGIN
             case ModReg4:
              if (HReg==0)
-	      BEGIN
+              BEGIN
                PutCode(0x7899+(((Word)AdrPart) << 8)); CheckCPU(CPU75004);
               END
              else if (AdrPart==0)
-	      BEGIN
+              BEGIN
                PutCode(0x7099+(((Word)HReg) << 8)); CheckCPU(CPU75004);
               END
              else WrError(1350);
@@ -495,8 +507,8 @@ BEGIN
             case ModImm:
              if (HReg==0) PutCode(0x70+AdrPart);
              else
-	      BEGIN
-	       PutCode(0x089a+(((Word)AdrPart) << 12)+(((Word)HReg) << 8));
+              BEGIN
+               PutCode(0x089a+(((Word)AdrPart) << 12)+(((Word)HReg) << 8));
                CheckCPU(CPU75004);
               END
              break;
@@ -509,14 +521,14 @@ BEGIN
            BEGIN
             case ModReg8:
              if (HReg==0)
-	      BEGIN
+              BEGIN
                PutCode(0x58aa+(((Word)AdrPart) << 8)); CheckCPU(CPU75004);
               END
-	     else if (AdrPart==0)
-	      BEGIN
+             else if (AdrPart==0)
+              BEGIN
                PutCode(0x50aa+(((Word)HReg) << 8)); CheckCPU(CPU75004);
               END
-	     else WrError(1350);
+             else WrError(1350);
              break;
             case ModAbs:
              if (HReg!=0) WrError(1350);
@@ -529,7 +541,7 @@ BEGIN
             case ModInd:
              if ((HReg!=0) OR (AdrPart!=1)) WrError(1350);
              else
-  	      BEGIN
+              BEGIN
                PutCode(0x18aa); CheckCPU(CPU75004);
               END
              break;
@@ -551,15 +563,15 @@ BEGIN
              BEGIN
               case ModReg4:
                if (AdrPart!=0) WrError(1350);
-	       else
-	        BEGIN
+               else
+                BEGIN
                  PutCode(0xe8); CheckCPU(CPU75004);
                 END
                break;
               case ModReg8:
                if (AdrPart!=0) WrError(1350);
-	       else
-	        BEGIN
+               else
+                BEGIN
                  PutCode(0x10aa); CheckCPU(CPU75004);
                 END
                break;
@@ -573,18 +585,18 @@ BEGIN
            BEGIN
             case ModReg4:
              if (AdrPart!=0) WrError(1350);
-	     else
-	      BEGIN
-	       BAsmCode[0]=0x93; BAsmCode[1]=HReg; CodeLen=2;
+             else
+              BEGIN
+               BAsmCode[0]=0x93; BAsmCode[1]=HReg; CodeLen=2;
               END
              break; 
             case ModReg8:
              if (AdrPart!=0) WrError(1350);
-	     else
-	      BEGIN
-	       BAsmCode[0]=0x92; BAsmCode[1]=HReg; CodeLen=2;
+             else
+              BEGIN
+               BAsmCode[0]=0x92; BAsmCode[1]=HReg; CodeLen=2;
                if ((NOT FirstPassUnknown) AND (Odd(HReg))) WrError(180);
-	      END
+              END
              break;
            END
           break;
@@ -631,11 +643,11 @@ BEGIN
            BEGIN 
             case ModReg8:
              if (HReg==0)
-	      BEGIN
+              BEGIN
                PutCode(0x40aa+(((Word)AdrPart) << 8)); CheckCPU(CPU75004);
               END
              else if (AdrPart==0)
-	      BEGIN
+              BEGIN
                PutCode(0x40aa+(((Word)HReg) << 8)); CheckCPU(CPU75004);
               END
              else WrError(1350);
@@ -651,7 +663,7 @@ BEGIN
             case ModInd:
              if ((AdrPart!=1) OR (HReg!=0)) WrError(1350);
              else
-	      BEGIN
+              BEGIN
                PutCode(0x11aa); CheckCPU(CPU75004);
               END
              break;
@@ -691,7 +703,7 @@ BEGIN
             case ModReg8:
              if ((AdrPart!=0) OR (HReg!=1)) WrError(1350);
              else
-	      BEGIN
+              BEGIN
                PutCode(0x11aa); CheckCPU(CPU75004);
               END;
              break;
@@ -812,7 +824,7 @@ BEGIN
             switch (AdrMode)
              BEGIN
               case ModReg8:
-	       PutCode(0xc8aa+(((Word)AdrPart) << 8));
+               PutCode(0xc8aa+(((Word)AdrPart) << 8));
                CheckCPU(CPU75104);
                break;
               case ModImm:
@@ -824,8 +836,8 @@ BEGIN
            END
           else if (strcasecmp(ArgStr[2],"XA")!=0) WrError(1350);
           else
-  	   BEGIN
-	    PutCode(0xc0aa+(((Word)AdrPart) << 8));
+           BEGIN
+            PutCode(0xc0aa+(((Word)AdrPart) << 8));
             CheckCPU(CPU75104);
            END
           break;
@@ -851,7 +863,7 @@ BEGIN
              switch (AdrMode)
               BEGIN
                case ModInd:
-	        if (AdrPart==1)
+                if (AdrPart==1)
                  BEGIN
                   BAsmCode[0]=0xa8;
                   if (z==0) BAsmCode[0]++;
@@ -859,7 +871,7 @@ BEGIN
                   CodeLen=1;
                   if (NOT Memo("ADDC")) CheckCPU(CPU75004);
                  END
-	        else WrError(1350);
+                else WrError(1350);
                break;
               END
             END
@@ -871,15 +883,15 @@ BEGIN
              switch (AdrMode)
               BEGIN
                case ModReg8:
-	        PutCode(0xc8aa+((z+1) << 12)+(((Word)AdrPart) << 8));
+                PutCode(0xc8aa+((z+1) << 12)+(((Word)AdrPart) << 8));
                 CheckCPU(CPU75104);
                 break;
               END
             END
            else if (strcasecmp(ArgStr[2],"XA")!=0) WrError(1350);
            else
-	    BEGIN
-	     PutCode(0xc0aa+((z+1) << 12)+(((Word)AdrPart) << 8));
+            BEGIN
+             PutCode(0xc0aa+((z+1) << 12)+(((Word)AdrPart) << 8));
              CheckCPU(CPU75104);
             END
            break;
@@ -905,11 +917,11 @@ BEGIN
              switch (AdrMode)
               BEGIN
                case ModImm:
-	        PutCode(0x2099+(((Word)AdrPart & 15) << 8)+((z+1) << 12));
+                PutCode(0x2099+(((Word)AdrPart & 15) << 8)+((z+1) << 12));
                 CheckCPU(CPU75004);
                 break;
                case ModInd:
-	        if (AdrPart==1) PutCode(0x80+((z+1) << 4)); else WrError(1350);
+                if (AdrPart==1) PutCode(0x80+((z+1) << 4)); else WrError(1350);
                 break;
               END
             END
@@ -921,15 +933,15 @@ BEGIN
              switch (AdrMode)
               BEGIN
                case ModReg8:
-	        PutCode(0x88aa+(((Word)AdrPart) << 8)+((z+1) << 12));
+                PutCode(0x88aa+(((Word)AdrPart) << 8)+((z+1) << 12));
                 CheckCPU(CPU75104);
                 break;
               END
             END
            else if (strcasecmp(ArgStr[2],"XA")!=0) WrError(1350);
            else
-	    BEGIN
-	     PutCode(0x80aa+(((Word)AdrPart) << 8)+((z+1) << 12));
+            BEGIN
+             PutCode(0x80aa+(((Word)AdrPart) << 8)+((z+1) << 12));
              CheckCPU(CPU75104);
             END
            break;
@@ -958,10 +970,10 @@ BEGIN
           break;
          case ModInd:
           if (AdrPart==1)
-	   BEGIN
+           BEGIN
             PutCode(0x0299); CheckCPU(CPU75004);
-	   END
-	  else WrError(1350);
+           END
+          else WrError(1350);
           break;
          case ModAbs:
           BAsmCode[0]=0x82; BAsmCode[1]=AdrPart; CodeLen=2;
@@ -1006,22 +1018,22 @@ BEGIN
            BEGIN
             case ModReg4:
              if (HReg==0)
-	      BEGIN
+              BEGIN
                PutCode(0x0899+(((Word)AdrPart) << 8)); CheckCPU(CPU75004);
               END
              else if (AdrPart==0)
-	      BEGIN
+              BEGIN
                PutCode(0x0899+(((Word)HReg) << 8)); CheckCPU(CPU75004);
               END
              else WrError(1350);
              break;
             case ModImm:
-	     BAsmCode[0]=0x9a; BAsmCode[1]=(AdrPart << 4)+HReg;
+             BAsmCode[0]=0x9a; BAsmCode[1]=(AdrPart << 4)+HReg;
              CodeLen=2;
              break;
             case ModInd:
-	     if ((AdrPart==1) AND (HReg==0)) PutCode(0x80);
-	     else WrError(1350);
+             if ((AdrPart==1) AND (HReg==0)) PutCode(0x80);
+             else WrError(1350);
              break;
            END
           break;
@@ -1031,22 +1043,22 @@ BEGIN
           switch (AdrMode)
            BEGIN
             case ModReg8:
-	     if (HReg==0)
-	      BEGIN
+             if (HReg==0)
+              BEGIN
                PutCode(0x48aa+(((Word)AdrPart) << 8)); CheckCPU(CPU75104);
               END
-	     else if (AdrPart==0)
-	      BEGIN
+             else if (AdrPart==0)
+              BEGIN
                PutCode(0x48aa+(((Word)HReg) << 8)); CheckCPU(CPU75104);
               END
              else WrError(1350);
              break;
             case ModInd:
              if (AdrPart==1)
-	      BEGIN
+              BEGIN
                PutCode(0x19aa); CheckCPU(CPU75104);
-	      END
-	     else WrError(1350);
+              END
+             else WrError(1350);
              break;
            END
           break;
@@ -1066,10 +1078,10 @@ BEGIN
                break;
               case ModReg8:
                if (AdrPart==0)
-	        BEGIN
+                BEGIN
                  PutCode(0x19aa); CheckCPU(CPU75004);
-	        END
-	       else WrError(1350);
+                END
+               else WrError(1350);
                break;
              END
            END
@@ -1101,12 +1113,14 @@ BEGIN
        else OK=False;
        if (NOT OK) WrError(1350);
        else if (DecodeBitAddr(ArgStr[((z >> 2) & 3)-1],&BVal))
-        if (Hi(BVal)!=0) WrError(1350);
-        else
-         BEGIN
-          BAsmCode[0]=z; BAsmCode[1]=BVal; CodeLen=2;
-          CheckCPU(CPU75104);
-         END
+        BEGIN
+         if (Hi(BVal)!=0) WrError(1350);
+         else
+          BEGIN
+           BAsmCode[0]=z; BAsmCode[1]=BVal; CodeLen=2;
+           CheckCPU(CPU75104);
+          END
+        END
       END
      return;
     END
@@ -1117,15 +1131,17 @@ BEGIN
      if (ArgCnt!=1) WrError(1110);
      else if (strcasecmp(ArgStr[1],"CY")==0) PutCode(0xe6+Ord(OK));
      else if (DecodeBitAddr(ArgStr[1],&BVal))
-      if (Hi(BVal)!=0)
-       BEGIN
-        BAsmCode[0]=0x84+Ord(OK)+(Hi(BVal & 0x300) << 4);
-	BAsmCode[1]=Lo(BVal); CodeLen=2;
-       END
-      else
-       BEGIN
-        BAsmCode[0]=0x9c+Ord(OK); BAsmCode[1]=BVal; CodeLen=2;
-       END
+      BEGIN
+       if (Hi(BVal)!=0)
+        BEGIN
+         BAsmCode[0]=0x84+Ord(OK)+(Hi(BVal & 0x300) << 4);
+         BAsmCode[1]=Lo(BVal); CodeLen=2;
+        END
+       else
+        BEGIN
+         BAsmCode[0]=0x9c+Ord(OK); BAsmCode[1]=BVal; CodeLen=2;
+        END
+      END
      return;
     END
 
@@ -1134,19 +1150,23 @@ BEGIN
      OK=Memo("SKT");
      if (ArgCnt!=1) WrError(1110);
      else if (strcasecmp(ArgStr[1],"CY")==0)
-      if (Memo("SKT")) PutCode(0xd7);
-      else WrError(1350);
+      BEGIN
+       if (Memo("SKT")) PutCode(0xd7);
+       else WrError(1350);
+      END
      else if (DecodeBitAddr(ArgStr[1],&BVal))
-      if (Hi(BVal)!=0)
-       BEGIN
-        BAsmCode[0]=0x86+Ord(OK)+(Hi(BVal & 0x300) << 4);
-	BAsmCode[1]=Lo(BVal); CodeLen=2;
-       END
-      else
-       BEGIN
-        BAsmCode[0]=0xbe + Ord(OK); /* ANSI :-0 */
-        BAsmCode[1]=BVal; CodeLen=2;
-       END
+      BEGIN
+       if (Hi(BVal)!=0)
+        BEGIN
+         BAsmCode[0]=0x86+Ord(OK)+(Hi(BVal & 0x300) << 4);
+         BAsmCode[1]=Lo(BVal); CodeLen=2;
+        END
+       else
+        BEGIN
+         BAsmCode[0]=0xbe + Ord(OK); /* ANSI :-0 */
+         BAsmCode[1]=BVal; CodeLen=2;
+        END
+      END
      return;
     END
 
@@ -1162,11 +1182,13 @@ BEGIN
     BEGIN
      if (ArgCnt!=1) WrError(1110);
      else if (DecodeBitAddr(ArgStr[1],&BVal))
-      if (Hi(BVal)!=0) WrError(1350);
-      else
-       BEGIN
-        BAsmCode[0]=0x9f; BAsmCode[1]=BVal; CodeLen=2;
-       END
+      BEGIN
+       if (Hi(BVal)!=0) WrError(1350);
+       else
+        BEGIN
+         BAsmCode[0]=0x9f; BAsmCode[1]=BVal; CodeLen=2;
+        END
+      END
      return;
     END
 
@@ -1177,12 +1199,14 @@ BEGIN
       if (ArgCnt!=2) WrError(1110);
       else if (strcasecmp(ArgStr[1],"CY")!=0) WrError(1350);
       else if (DecodeBitAddr(ArgStr[2],&BVal))
-       if (Hi(BVal)!=0) WrError(1350);
-       else
-        BEGIN
-         BAsmCode[0]=0xac+((z & 1) << 1)+((z & 2) << 3);
-         BAsmCode[1]=BVal; CodeLen=2;
-        END
+       BEGIN
+        if (Hi(BVal)!=0) WrError(1350);
+        else
+         BEGIN
+          BAsmCode[0]=0xac+((z & 1) << 1)+((z & 2) << 3);
+          BAsmCode[1]=BVal; CodeLen=2;
+         END
+       END
       return;
      END
 
@@ -1231,7 +1255,7 @@ BEGIN
           END
          else if ((NOT BrLong) AND ((AdrInt >> 12)==(EProgCounter() >> 12)) AND ((EProgCounter() & 0xfff)<0xffe))
           BEGIN
-	   BAsmCode[0]=0x50+((AdrInt >> 8) & 15);
+           BAsmCode[0]=0x50+((AdrInt >> 8) & 15);
            BAsmCode[1]=Lo(AdrInt);
            CodeLen=2;
           END
@@ -1239,7 +1263,7 @@ BEGIN
           BEGIN
            BAsmCode[0]=0xab;
            BAsmCode[1]=Hi(AdrInt & 0x3fff);
-	   BAsmCode[2]=Lo(AdrInt);
+           BAsmCode[2]=Lo(AdrInt);
            CodeLen=3;
            CheckCPU(CPU75004);
           END
@@ -1256,15 +1280,17 @@ BEGIN
       BEGIN
        AdrInt=EvalIntExpression(ArgStr[1],UInt16,&OK);
        if (OK)
-        if ((AdrInt >> 12)!=(EProgCounter() >> 12)) WrError(1910);
-	else if ((EProgCounter() & 0xfff)>=0xffe) WrError(1905);
-        else
-         BEGIN
-	  BAsmCode[0]=0x50+((AdrInt >> 8) & 15);
-          BAsmCode[1]=Lo(AdrInt);
-          CodeLen=2;
-          ChkSpace(SegCode);
-         END
+        BEGIN
+         if ((AdrInt >> 12)!=(EProgCounter() >> 12)) WrError(1910);
+         else if ((EProgCounter() & 0xfff)>=0xffe) WrError(1905);
+         else
+          BEGIN
+           BAsmCode[0]=0x50+((AdrInt >> 8) & 15);
+           BAsmCode[1]=Lo(AdrInt);
+           CodeLen=2;
+           ChkSpace(SegCode);
+          END
+        END
       END
      return;
     END
@@ -1292,12 +1318,12 @@ BEGIN
            CodeLen=3;
            CheckCPU(CPU75004);
           END
-	 else
-	  BEGIN
+         else
+          BEGIN
            BAsmCode[0]=0x40+Hi(AdrInt & 0x7ff);
            BAsmCode[1]=Lo(AdrInt);
            CodeLen=2;
-	  END
+          END
          ChkSpace(SegCode);
         END
       END
@@ -1406,7 +1432,7 @@ BEGIN
    SegLimits[SegCode] = ROMEnd;
 END
 
-	void code75k0_init(void) 
+        void code75k0_init(void) 
 BEGIN
    CPU75402=AddCPU("75402",SwitchTo_75K0);
    CPU75004=AddCPU("75004",SwitchTo_75K0);

@@ -12,6 +12,10 @@
 /*           12.10.1999 Startadresse 16-Bit-Hex geaendert                    */
 /*           13.10.1999 Startadressen 20+32 Bit Intel korrigiert             */
 /*           24.10.1999 Relokation von Adressen (Thomas Eschenbach)          */
+/*           16.11.1999 CS:IP-Intel-Record korrigiert                        */
+/*            9. 1.2000 plattformabhaengige Formatstrings benutzen           */
+/*           24. 3.2000 added symbolic string for byte message               */
+/*            4. 7.2000 renamed ParProcessed to ParUnprocessed               */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -43,7 +47,7 @@ char *FileName, LongWord Offset
 #endif
 );
 
-static CMDProcessed ParProcessed;
+static CMDProcessed ParUnprocessed;
 static int z;
 static FILE *TargFile;
 static String SrcName, TargName;
@@ -90,7 +94,7 @@ END
 BEGIN
    FILE *SrcFile;
    Word TestID;
-   Byte InpHeader,InpSegment,InpGran,BSwap;
+   Byte InpHeader, InpCPU, InpSegment, InpGran, BSwap;
    LongInt InpStart,SumLen;
    int z2;
    Word InpLen,TransLen;
@@ -125,8 +129,9 @@ BEGIN
 
    do
     BEGIN
-     ReadRecordHeader(&InpHeader,&InpSegment,&InpGran,FileName,SrcFile);
-     if (InpHeader==FileHeaderStartAdr)
+     ReadRecordHeader(&InpHeader, &InpCPU, &InpSegment, &InpGran, FileName, SrcFile);
+
+     if (InpHeader == FileHeaderStartAdr)
       BEGIN
        if (NOT Read4(SrcFile,&ErgStart)) ChkIO(FileName);
        if (NOT EntryAdrPresent)
@@ -134,13 +139,14 @@ BEGIN
          EntryAdr=ErgStart; EntryAdrPresent=True;
         END
       END
-     else if (InpHeader!=FileHeaderEnd)
+
+     else if (InpHeader == FileHeaderDataRec)
       BEGIN
        Gran=InpGran;
        
        if ((ActFormat=DestFormat)==Default)
         BEGIN
-         FoundDscr=FindFamilyById(InpHeader);
+         FoundDscr=FindFamilyById(InpCPU);
          if (FoundDscr==Nil)
           FormatError(FileName,getmessage(Num_FormatInvRecordHeaderMsg));
          else ActFormat=FoundDscr->HexFormat;
@@ -170,7 +176,7 @@ BEGIN
        if (NextPos>=FileSize(SrcFile)-1)
         FormatError(FileName,getmessage(Num_FormatInvRecordLenMsg));
 
-       doit=(FilterOK(InpHeader)) AND (InpSegment==SegCode);
+       doit=(FilterOK(InpCPU)) AND (InpSegment==SegCode);
 
        if (doit)
         BEGIN
@@ -504,10 +510,14 @@ BEGIN
         END
        if (fseek(SrcFile,NextPos,SEEK_SET)==-1) ChkIO(FileName);
       END
+     else
+      SkipRecord(InpHeader, FileName, SrcFile);
     END
    while (InpHeader!=0);
 
-   errno=0; printf("  (%d Byte)\n",SumLen); ChkIO(OutName);
+   errno = 0; printf("  ("); ChkIO(OutName);
+   errno = 0; printf(Integ32Format, SumLen); ChkIO(OutName);
+   errno = 0; printf(" %s)\n", getmessage((SumLen == 1) ? Num_Byte : Num_Bytes)); ChkIO(OutName);
 
    errno=0; fclose(SrcFile); ChkIO(FileName);
 END
@@ -536,7 +546,7 @@ END
         static void MeasureFile(char *FileName, LongWord Offset)
 BEGIN
    FILE *f;
-   Byte Header,Segment,Gran;
+   Byte Header, CPU, Segment, Gran;
    Word Length,TestID;
    LongWord Adr,EndAdr,NextPos;
 
@@ -547,13 +557,9 @@ BEGIN
 
    do
     BEGIN 
-     ReadRecordHeader(&Header,&Segment,&Gran,FileName,f);
+     ReadRecordHeader(&Header, &CPU, &Segment, &Gran, FileName, f);
 
-     if (Header==FileHeaderStartAdr)
-      BEGIN
-       if (fseek(f,sizeof(LongWord),SEEK_CUR)==-1) ChkIO(FileName);
-      END
-     else if (Header!=FileHeaderEnd)
+     if (Header == FileHeaderDataRec)
       BEGIN
        if (NOT Read4(f,&Adr)) ChkIO(FileName);
        if (NOT Read2(f,&Length)) ChkIO(FileName);
@@ -571,6 +577,8 @@ BEGIN
 
        fseek(f,NextPos,SEEK_SET);
       END
+     else
+      SkipRecord(Header, FileName, f);
     END
    while(Header!=0);
 
@@ -855,20 +863,20 @@ BEGIN
    IntelMode = 0; MultiMode = 0; DestFormat = Default; MinMoto = 1;
    *TargName = '\0';
    Relocate = 0;
-   ProcessCMD(P2HEXParams, P2HEXParamCnt, ParProcessed, "P2HEXCMD", ParamError);
+   ProcessCMD(P2HEXParams, P2HEXParamCnt, ParUnprocessed, "P2HEXCMD", ParamError);
 
-   if (ProcessedEmpty(ParProcessed))
+   if (ProcessedEmpty(ParUnprocessed))
     BEGIN
      errno=0; printf("%s\n",getmessage(Num_ErrMsgTargMissing)); ChkIO(OutName);
      exit(1);
     END
 
    z=ParamCount;
-   while ((z>0) AND (NOT ParProcessed[z])) z--;
+   while ((z>0) AND (NOT ParUnprocessed[z])) z--;
    strmaxcpy(TargName,ParamStr[z],255);
    if (NOT RemoveOffset(TargName,&Dummy)) ParamError(False,ParamStr[z]);
-   ParProcessed[z]=False;
-   if (ProcessedEmpty(ParProcessed))
+   ParUnprocessed[z]=False;
+   if (ProcessedEmpty(ParUnprocessed))
     BEGIN
      strmaxcpy(SrcName,ParamStr[z],255); DelSuffix(TargName);
     END
@@ -882,9 +890,9 @@ BEGIN
      if (StartAuto) StartAdr=0xffffffff;
 #endif
      if (StopAuto) StopAdr=0;
-     if (ProcessedEmpty(ParProcessed)) ProcessGroup(SrcName,MeasureFile);
+     if (ProcessedEmpty(ParUnprocessed)) ProcessGroup(SrcName,MeasureFile);
      else for (z=1; z<=ParamCount; z++)
-      if (ParProcessed[z]) ProcessGroup(ParamStr[z],MeasureFile);
+      if (ParUnprocessed[z]) ProcessGroup(ParamStr[z],MeasureFile);
      if (StartAdr>StopAdr)
       BEGIN
        errno=0; printf("%s\n",getmessage(Num_ErrMsgAutoFailed)); ChkIO(OutName); exit(1);
@@ -896,9 +904,9 @@ BEGIN
    MOSOccured=False;  DSKOccured=False;
    MaxMoto=0; MaxIntel=0;
 
-   if (ProcessedEmpty(ParProcessed)) ProcessGroup(SrcName,ProcessFile);
+   if (ProcessedEmpty(ParUnprocessed)) ProcessGroup(SrcName,ProcessFile);
    else for (z=1; z<=ParamCount; z++)
-    if (ParProcessed[z]) ProcessGroup(ParamStr[z],ProcessFile);
+    if (ParUnprocessed[z]) ProcessGroup(ParamStr[z],ProcessFile);
 
    if ((MotoOccured) AND (NOT SepMoto))
     BEGIN
@@ -938,7 +946,7 @@ BEGIN
         BEGIN
          Seg = (EntryAdr >> 4) & 0xffff;
          Ofs = EntryAdr & 0x000f;
-         errno = 0; fprintf(TargFile, ":04%s03%s", HexWord(Ofs), HexWord(Seg));
+         errno = 0; fprintf(TargFile, ":04000003%s%s", HexWord(Seg), HexWord(Ofs));
          ChkIO(TargName); ChkSum = 4 + 3 + Lo(Seg) + Hi(Seg) + Ofs;
         END
        else
@@ -978,9 +986,9 @@ BEGIN
 
    if (AutoErase)
     BEGIN
-     if (ProcessedEmpty(ParProcessed)) ProcessGroup(SrcName,EraseFile);
+     if (ProcessedEmpty(ParUnprocessed)) ProcessGroup(SrcName,EraseFile);
      else for (z=1; z<=ParamCount; z++)
-      if (ParProcessed[z]) ProcessGroup(ParamStr[z],EraseFile);
+      if (ParUnprocessed[z]) ProcessGroup(ParamStr[z],EraseFile);
     END
 
    return 0;

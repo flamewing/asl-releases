@@ -6,6 +6,7 @@
 /*                                                                           */
 /* Historie: 25. 6.1997 Grundsteinlegung                                     */
 /*            3. 1.1999 ChkPC-Anpassung                                      */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -46,13 +47,13 @@ BEGIN
    AriOrders[InstrZ++].Code=NCode;
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    AriOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*AriOrderCnt); InstrZ=0;
    AddAri("MOVE",0); AddAri("ADD",1); AddAri("AND",2); AddAri("XOR",3);
 END
 
-	static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    free(AriOrders);
 END
@@ -93,8 +94,10 @@ BEGIN
      Acc=0; OK=True;
      for (z=Asc+1; *z!='\0'; z++)
       if (OK)
-       if ((*z<'0') OR (*z>'7')) OK=False;
-       else Acc=(Acc << 3)+(*z-'0');
+       BEGIN
+        if ((*z<'0') OR (*z>'7')) OK=False;
+        else Acc=(Acc << 3)+(*z-'0');
+       END
      if ((OK) AND (Acc<32))
       BEGIN
        if ((MomCPU==CPU8x300) AND (Acc>9) AND (Acc<15))
@@ -107,14 +110,16 @@ BEGIN
     END
 
    if ((strlen(Asc)==4) AND (strncasecmp(Asc+1,"IV",2)==0) AND (Asc[3]>='0') AND (Asc[3]<='7'))
-    if (toupper(*Asc)=='L')
-     BEGIN
-      *Erg=Asc[3]-'0'+0x10; return True;
-     END
-    else if (toupper(*Asc)=='R')
-     BEGIN
-      *Erg=Asc[3]-'0'+0x18; return True;
-     END
+    BEGIN
+     if (toupper(*Asc)=='L')
+      BEGIN
+       *Erg=Asc[3]-'0'+0x10; return True;
+      END
+     else if (toupper(*Asc)=='R')
+      BEGIN
+       *Erg=Asc[3]-'0'+0x18; return True;
+      END
+    END
 
    /* IV - Objekte */
 
@@ -171,7 +176,7 @@ END
 
 /* Symbol: 00AA0ORL */
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
    LongInt Adr,Ofs,Erg;
    Word Len;
@@ -282,42 +287,44 @@ BEGIN
     BEGIN
      if ((ArgCnt!=2) AND (ArgCnt!=3)) WrError(1110);
      else if (DecodeReg(ArgStr[2],&SrcReg,&SrcLen))
-      if (SrcReg<16)
-       BEGIN
-        if (ArgCnt!=2) WrError(1110);
-        else
-         BEGIN
-          Adr=EvalIntExpression(ArgStr[1],Int8,&OK);
-          if (OK)
-           BEGIN
-            WAsmCode[0]=0xc000+(SrcReg << 8)+(Adr & 0xff);
-            CodeLen=1;
-           END
-         END
-       END
-      else
-       BEGIN
-        if (ArgCnt==2)
-	 BEGIN
-	  Rot=0xffff; OK=True;
-         END
-        else OK=GetLen(ArgStr[3],&Rot);
-        if (OK)
-         BEGIN
-          if (Rot==0xffff)
-           Rot=(SrcLen==-1) ? 0 : SrcLen;
-          if ((SrcLen!=-1) AND (Rot!=SrcLen)) WrError(1131);
-          else
-           BEGIN
-            Adr=EvalIntExpression(ArgStr[1],Int5,&OK);
-            if (OK)
-             BEGIN
-              WAsmCode[0]=0xc000+(SrcReg << 8)+(Rot << 5)+(Adr & 0x1f);
-              CodeLen=1;
-             END
-           END
-         END
-       END
+      BEGIN
+       if (SrcReg<16)
+        BEGIN
+         if (ArgCnt!=2) WrError(1110);
+         else
+          BEGIN
+           Adr=EvalIntExpression(ArgStr[1],Int8,&OK);
+           if (OK)
+            BEGIN
+             WAsmCode[0]=0xc000+(SrcReg << 8)+(Adr & 0xff);
+             CodeLen=1;
+            END
+          END
+        END
+       else
+        BEGIN
+         if (ArgCnt==2)
+          BEGIN
+           Rot=0xffff; OK=True;
+          END
+         else OK=GetLen(ArgStr[3],&Rot);
+         if (OK)
+          BEGIN
+           if (Rot==0xffff)
+            Rot=(SrcLen==-1) ? 0 : SrcLen;
+           if ((SrcLen!=-1) AND (Rot!=SrcLen)) WrError(1131);
+           else
+            BEGIN
+             Adr=EvalIntExpression(ArgStr[1],Int5,&OK);
+             if (OK)
+              BEGIN
+               WAsmCode[0]=0xc000+(SrcReg << 8)+(Rot << 5)+(Adr & 0x1f);
+               CodeLen=1;
+              END
+            END
+          END
+        END
+      END
      return;
     END
 
@@ -328,80 +335,86 @@ BEGIN
      BEGIN
       if ((ArgCnt!=2) AND (ArgCnt!=3)) WrError(1110);
       else if (DecodeReg(ArgStr[ArgCnt],&DestReg,&DestLen))
-       if (DestReg<16)         /* Ziel Register */
-        BEGIN
-         if (ArgCnt==2)        /* wenn nur zwei Operanden und Ziel Register... */
-          BEGIN
-           p=HasDisp(ArgStr[1]); /* kann eine Rotation dabei sein */
-           if (p!=Nil)
-            BEGIN                 /* jau! */
-             strcpy(tmp,p+1); tmp[strlen(tmp)-1]='\0';
-             Rot=EvalIntExpression(tmp,UInt3,&OK);
-             if (OK)
-              BEGIN
-               *p='\0';
-               if (DecodeReg(ArgStr[1],&SrcReg,&SrcLen))
-                if (SrcReg>=16) WrXError(1445,ArgStr[1]);
-                else
+       BEGIN      
+        if (DestReg<16)         /* Ziel Register */
+         BEGIN
+          if (ArgCnt==2)        /* wenn nur zwei Operanden und Ziel Register... */
+           BEGIN
+            p=HasDisp(ArgStr[1]); /* kann eine Rotation dabei sein */
+            if (p!=Nil)
+             BEGIN                 /* jau! */
+              strcpy(tmp,p+1); tmp[strlen(tmp)-1]='\0';
+              Rot=EvalIntExpression(tmp,UInt3,&OK);
+              if (OK)
+               BEGIN
+                *p='\0';
+                if (DecodeReg(ArgStr[1],&SrcReg,&SrcLen))
                  BEGIN
-                  WAsmCode[0]=(AriOrders[z].Code << 13)+(SrcReg << 8)+(Rot << 5)+DestReg;
-                  CodeLen=1;
+                  if (SrcReg>=16) WrXError(1445,ArgStr[1]);
+                  else
+                   BEGIN
+                    WAsmCode[0]=(AriOrders[z].Code << 13)+(SrcReg << 8)+(Rot << 5)+DestReg;
+                    CodeLen=1;
+                   END
                  END
-              END
-            END
-           else                   /* noi! */
-            BEGIN
+               END
+             END
+            else                   /* noi! */
+             BEGIN
+              if (DecodeReg(ArgStr[1],&SrcReg,&SrcLen))
+               BEGIN
+                WAsmCode[0]=(AriOrders[z].Code << 13)+(SrcReg << 8)+DestReg;
+                if ((SrcReg>=16) AND (SrcLen!=-1)) WAsmCode[0]+=SrcLen << 5;
+                CodeLen=1;
+               END
+             END
+           END
+          else                     /* 3 Operanden --> Quelle ist I/O */
+           BEGIN
+            if (GetLen(ArgStr[2],&Rot))
              if (DecodeReg(ArgStr[1],&SrcReg,&SrcLen))
               BEGIN
-               WAsmCode[0]=(AriOrders[z].Code << 13)+(SrcReg << 8)+DestReg;
-               if ((SrcReg>=16) AND (SrcLen!=-1)) WAsmCode[0]+=SrcLen << 5;
-               CodeLen=1;
+               if (SrcReg<16) WrXError(1445,ArgStr[1]);
+               else if ((SrcLen!=-1) AND (SrcLen!=Rot)) WrError(1131);
+               else
+                BEGIN
+                 WAsmCode[0]=(AriOrders[z].Code << 13)+(SrcReg << 8)+(Rot << 5)+DestReg;
+                 CodeLen=1;
+                END
               END
-            END
-          END
-         else                     /* 3 Operanden --> Quelle ist I/O */
-          BEGIN
-           if (GetLen(ArgStr[2],&Rot))
-            if (DecodeReg(ArgStr[1],&SrcReg,&SrcLen))
-             if (SrcReg<16) WrXError(1445,ArgStr[1]);
-             else if ((SrcLen!=-1) AND (SrcLen!=Rot)) WrError(1131);
+           END
+         END
+        else                       /* Ziel I/O */
+         BEGIN
+          if (ArgCnt==2)           /* 2 Argumente: Laenge=Laenge Ziel */
+           BEGIN
+            Rot=DestLen; OK=True;
+           END
+          else                     /* 3 Argumente: Laenge=Laenge Ziel+Angabe */
+           BEGIN
+            OK=GetLen(ArgStr[2],&Rot);
+            if (OK)
+             BEGIN
+              if (FirstPassUnknown) Rot=DestLen;
+              if (DestLen==-1) DestLen=Rot;
+              OK=Rot==DestLen;
+              if (NOT OK) WrError(1131);
+             END
+           END
+          if (OK)
+           if (DecodeReg(ArgStr[1],&SrcReg,&SrcLen))
+            BEGIN
+             if ((Rot==0xffff))
+              Rot=((SrcLen==-1)) ? 0 : SrcLen;
+             if ((DestReg>=16) AND (SrcLen!=-1) AND (SrcLen!=Rot)) WrError(1131);
              else
               BEGIN
                WAsmCode[0]=(AriOrders[z].Code << 13)+(SrcReg << 8)+(Rot << 5)+DestReg;
                CodeLen=1;
               END
-          END
-        END
-       else                       /* Ziel I/O */
-        BEGIN
-         if (ArgCnt==2)           /* 2 Argumente: Laenge=Laenge Ziel */
-          BEGIN
-           Rot=DestLen; OK=True;
-          END
-         else                     /* 3 Argumente: Laenge=Laenge Ziel+Angabe */
-          BEGIN
-           OK=GetLen(ArgStr[2],&Rot);
-           if (OK)
-            BEGIN
-             if (FirstPassUnknown) Rot=DestLen;
-             if (DestLen==-1) DestLen=Rot;
-             OK=Rot==DestLen;
-             if (NOT OK) WrError(1131);
             END
-          END
-         if (OK)
-          if (DecodeReg(ArgStr[1],&SrcReg,&SrcLen))
-           BEGIN
-            if ((Rot==0xffff))
-             Rot=((SrcLen==-1)) ? 0 : SrcLen;
-            if ((DestReg>=16) AND (SrcLen!=-1) AND (SrcLen!=Rot)) WrError(1131);
-            else
-             BEGIN
-              WAsmCode[0]=(AriOrders[z].Code << 13)+(SrcReg << 8)+(Rot << 5)+DestReg;
-              CodeLen=1;
-             END
-           END
-        END
+         END
+       END
       return;
      END
 
@@ -434,8 +447,8 @@ BEGIN
            else
             BEGIN
              if (ArgCnt==1)
-	      BEGIN
-	       Rot=0xffff; OK=True;
+              BEGIN
+               Rot=0xffff; OK=True;
               END
              else OK=GetLen(ArgStr[2],&Rot);
              if (OK)
@@ -480,46 +493,52 @@ BEGIN
     BEGIN
      if ((ArgCnt!=2) AND (ArgCnt!=3)) WrError(1110);
      else if (DecodeReg(ArgStr[1],&SrcReg,&SrcLen))
-      if (SrcReg<16)
-       BEGIN
-        if (ArgCnt!=2) WrError(1110);
-        else
-         BEGIN
-          Adr=EvalIntExpression(ArgStr[2],UInt13,&OK);
-          if (OK)
-           if ((NOT SymbolQuestionable) AND ((Adr >> 8)!=(EProgCounter() >> 8))) WrError(1910);
-           else
+      BEGIN
+       if (SrcReg<16)
+        BEGIN
+         if (ArgCnt!=2) WrError(1110);
+         else
+          BEGIN
+           Adr=EvalIntExpression(ArgStr[2],UInt13,&OK);
+           if (OK)
             BEGIN
-             WAsmCode[0]=0xa000+(SrcReg << 8)+(Adr & 0xff);
-             CodeLen=1;
-            END
-         END
-       END
-      else
-       BEGIN
-        if (ArgCnt==2)
-	 BEGIN
-	  Rot=0xffff; OK=True;
-         END
-        else OK=GetLen(ArgStr[2],&Rot);
-        if (OK)
-         BEGIN
-          if (Rot==0xffff)
-           Rot=(SrcLen==-1) ? 0 : SrcLen;
-          if ((SrcLen!=-1) AND (Rot!=SrcLen)) WrError(1131);
-          else
-           BEGIN
-            Adr=EvalIntExpression(ArgStr[ArgCnt],UInt13,&OK);
-            if (OK)
-             if ((NOT SymbolQuestionable) AND ((Adr >> 5)!=(EProgCounter() >> 5))) WrError(1910);
+             if ((NOT SymbolQuestionable) AND ((Adr >> 8)!=(EProgCounter() >> 8))) WrError(1910);
              else
               BEGIN
-               WAsmCode[0]=0xa000+(SrcReg << 8)+(Rot << 5)+(Adr & 0x1f);
+               WAsmCode[0]=0xa000+(SrcReg << 8)+(Adr & 0xff);
                CodeLen=1;
               END
-           END
-         END
-       END
+            END
+          END
+        END
+       else
+        BEGIN
+         if (ArgCnt==2)
+          BEGIN
+           Rot=0xffff; OK=True;
+          END
+         else OK=GetLen(ArgStr[2],&Rot);
+         if (OK)
+          BEGIN
+           if (Rot==0xffff)
+            Rot=(SrcLen==-1) ? 0 : SrcLen;
+           if ((SrcLen!=-1) AND (Rot!=SrcLen)) WrError(1131);
+           else
+            BEGIN
+             Adr=EvalIntExpression(ArgStr[ArgCnt],UInt13,&OK);
+             if (OK)
+              BEGIN
+               if ((NOT SymbolQuestionable) AND ((Adr >> 5)!=(EProgCounter() >> 5))) WrError(1910);
+               else
+                BEGIN
+                 WAsmCode[0]=0xa000+(SrcReg << 8)+(Rot << 5)+(Adr & 0x1f);
+                 CodeLen=1;
+                END
+              END
+            END
+          END
+        END
+      END
      return;
     END;
 
@@ -551,7 +570,7 @@ BEGIN
    SwitchFrom=SwitchFrom_8x30X; InitFields();
 END
 
-	void code8x30x_init(void)
+        void code8x30x_init(void)
 BEGIN
    CPU8x300=AddCPU("8x300",SwitchTo_8x30X);
    CPU8x305=AddCPU("8x305",SwitchTo_8x30X);

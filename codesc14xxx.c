@@ -9,6 +9,7 @@
 /*           27. 3.1999 Durch die Befehle durch                              */
 /*           19. 4.1999 Argumentbereich B_BR korrigiert                      */
 /*           20. 4.1999 Argumentbereich B_RST korrigiert                     */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -50,7 +51,7 @@ static Word CurrMask;
 
 /*---------------------------------------------------------------------------*/
 
-	static void DecodeFixed(Word Index)
+        static void DecodeFixed(Word Index)
 BEGIN
    FixedOrder *POp = FixedOrders + Index;
    Boolean OK;
@@ -81,14 +82,14 @@ END
 
 static Boolean Toggle;
 
-	static void PutByte(Byte Val)
+        static void PutByte(Byte Val)
 BEGIN
    if (Toggle) WAsmCode[CodeLen++] |= ((Word) Val) << 8;
    else WAsmCode[CodeLen] = Val & 0xff;
    Toggle = NOT Toggle;
 END
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
    int z;
    Boolean OK;
@@ -152,13 +153,15 @@ BEGIN
        FirstPassUnknown = False;
        z = EvalIntExpression(ArgStr[1], UInt16, &OK);
        if (OK)
-        if (FirstPassUnknown) WrError(1820);
-        else
-         BEGIN
-          CodeLen = (z + 1) >> 1;
-          DontPrint = True;
-          BookKeeping();
-         END
+        BEGIN
+         if (FirstPassUnknown) WrError(1820);
+         else
+          BEGIN
+           CodeLen = (z + 1) >> 1;
+           DontPrint = True;
+           BookKeeping();
+          END
+        END
       END
      return True;
     END
@@ -171,13 +174,15 @@ BEGIN
        FirstPassUnknown = False;
        z = EvalIntExpression(ArgStr[1], UInt16, &OK);
        if (OK)
-        if (FirstPassUnknown) WrError(1820);
-        else
-         BEGIN
-          CodeLen = z;
-          DontPrint = True;
-          BookKeeping();
-         END
+        BEGIN
+         if (FirstPassUnknown) WrError(1820);
+         else
+          BEGIN
+           CodeLen = z;
+           DontPrint = True;
+           BookKeeping();
+          END
+        END
       END
      return True;
     END
@@ -189,7 +194,7 @@ END
 
 static int InstrZ;
 
-	static void AddFixed(char *NName, Byte NCode, Word NMask,
+        static void AddFixed(char *NName, Byte NCode, Word NMask,
                              Byte NMin, Byte NMax)
 BEGIN
    if (InstrZ >= FixedOrderCnt) exit(255);
@@ -200,7 +205,7 @@ BEGIN
    AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    InstTable = CreateInstTable(301);
 
@@ -372,7 +377,7 @@ BEGIN
    AddFixed("B_ON"     , 0x27, M_14400 | M_14401 | M_14402 | M_14404 | M_14405 | M_14420 | M_14421 | M_14422 | M_14424, 0x00, 0x00);
 END
 
-	static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    DestroyInstTable(InstTable);
    free(FixedOrders);
@@ -380,7 +385,7 @@ END
 
 /*---------------------------------------------------------------------------*/
 
-	static void MakeCode_sc14xxx(void)
+        static void MakeCode_sc14xxx(void)
 BEGIN
    /* Leeranweisung ignorieren */
 
@@ -394,17 +399,17 @@ BEGIN
      WrXError(1200, OpPart);
 END
 
-	static Boolean IsDef_sc14xxx(void)
+        static Boolean IsDef_sc14xxx(void)
 BEGIN
    return FALSE;
 END
 
-	static void SwitchFrom_sc14xxx(void)
+        static void SwitchFrom_sc14xxx(void)
 BEGIN
    DeinitFields();
 END
 
-	static void SwitchTo_sc14xxx(void)
+        static void SwitchTo_sc14xxx(void)
 BEGIN
    PFamilyDescr FoundDescr;
 
@@ -427,7 +432,7 @@ END
 
 /*---------------------------------------------------------------------------*/
 
-	void codesc14xxx_init(void)
+        void codesc14xxx_init(void)
 BEGIN
    CPU14400 = AddCPU("SC14400", SwitchTo_sc14xxx);
    CPU14401 = AddCPU("SC14401", SwitchTo_sc14xxx);

@@ -2,9 +2,12 @@
 # choose your compiler (must be ANSI-compliant!) and linker command, plus
 # any additionally needed flags
 
+# NOTE: The egcs version shipped with Cygwin B20 seems to have trouble with
+#       optimization level 3, don't use it :-/
+
 CC = gcc
 LD = gcc
-CFLAGS = -O0 -g -Wall -Wno-parentheses -Wno-sign-compare
+CFLAGS = -O2 -Wall -Wno-parentheses -Wno-sign-compare
 LDFLAGS =
 
 # -------------------------------------------------------------------------

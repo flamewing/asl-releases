@@ -727,3 +727,70 @@ v1.41r7 Aenderungen: (-->v1.41r8beta)
 
 - Erweiterung : Minimalrecordlaenge fuer P2HEX
 
+------------------------------------------------------------------------------
+v1.41r8 Aenderungen: (-->v1.42beta)
+
+9.1.2000 [Bld 1]
+
+- Bugfix      : ADDX/SUBX beim 68000 funktionierten nicht
+
+- Bugfix      : Im Listing und bei P2BIN/P2HEX/PBIND waren noch einige
+                Formatstrings nicht plattformabhängig, was bei Werten über 
+                32K merkwürdige Effekte ergab...
+
+- Bugfix      : PC-relative Adressierung für 56300 benutzte falschen Offset
+
+- Erweiterung : Längenoptionierung bei absoluter Adressierung im 56xxx
+                läßt sich per '>' ausschalten
+
+13.2.2000 [Bld 2]
+
+- Bugfix      : ADDX/SUBX beim 68000 waren vertauscht
+
+
+13.3.2000 [Bld 3]
+
+- Bugfix      : 'ambiguous' Warnungen bei egcs beseitigt
+
+- Bugfix      : EXG beim 680x0 korrigiert
+
+- Aenderung   : Adressraum des 68HC08 ist jetzt 64K
+
+29.5.2000 [Bld 4]
+
+- Erweiterung : Packing-Befehl für AVR eingeführt
+
+- Erweiterung : ALLARGS/ARGCOUNT für Makros
+
+- Bugfix      : Bankregister-Parser TLCS-900 repariert
+
+- Erweiterung : temporäre Symbole
+
+[Bld 5]
+
+- Bugfix      : REPT/IRP(C)/WHILE-Statement in IF-geklammerten Zweigen werden komplett
+                übersprungen
+
+- Bugfix      : Adressen NoICE-Debugfiles werden jetzt als Hex ausgegeben und auch so
+                gekennzeichnet
+
+- Erweiterung : die maximale Verschachtelungstiefe für Aufrufe eines Makros ist jetzt auf
+                einen per NESTMAX einstellbaren Wert begrenzt
+
+- Bugfix      : weitere Fixes in Bankregister-Parser TLCS-900
+
+[Bld 6]
+
+- Bugfix      : Kodierungsfehler TLCS-900(MINC/MDEC, BS1B/BS1F) behoben
+
+- Bugfix      : Abstürze bei BINCLUDE größerer Dateien unter DPMI behoben
+
+[Bld 7]
+
+- Bugfix      : / als Parameterzeichen funktioniert wieder
+
+[Bld 8]
+
+- Erweiterung : DC.x / DS.x funktionieren auch für 68HC16
+
+- Änderung    : Lizenz jetzt GPL

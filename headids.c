@@ -14,6 +14,7 @@
 /*           25. 3.1999 National SC14xxx                                     */
 /*            4. 7.1999 Fujitsu F2MC                                         */
 /*           10. 8.1999 Fairchild ACE                                        */
+/*           19.11.1999 Fujitsu F2MC16                                       */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -92,6 +93,7 @@ static TFamilyDescr Descrs[]=
         {"77230"     , 0x007f, IntHex  },
         {"SYM53C8xx" , 0x0025, IntHex  },
         {"F2MC8"     , 0x0015, IntHex  },
+        {"F2MC16"    , 0x0016, IntHex  },
         {Nil         , 0xffff, Default }
        };
 

@@ -6,6 +6,7 @@
 /*                                                                          */
 /* Historie:   4. 7.1999 Grundsteinlegung                                   */
 /*            29. 7.1999 doppelte Variable entfernt                         */
+/*             9. 3.2000 'ambiguous else'-Warnungen beseitigt               */
 /*                                                                          */
 /****************************************************************************/
 
@@ -64,7 +65,7 @@ static int OpSize;
 /*--------------------------------------------------------------------------*/
 /* Adressdekoder */
 
-	static void DecodeAdr(char *Asc, unsigned Mask)
+        static void DecodeAdr(char *Asc, unsigned Mask)
 BEGIN
    Boolean OK;
    Word Address;
@@ -170,21 +171,23 @@ BEGIN
     BEGIN
      Address = EvalIntExpression(Asc, (Mask & MModExt) ? UInt16 : UInt8, &OK);
      if (OK)
-      if ((Mask & MModDir) AND (Hi(Address) == 0))
-       BEGIN
-        AdrVals[0] = Lo(Address);
-        AdrMode = ModDir;
-        AdrCnt = 1;
-        AdrPart = 5;
-       END
-      else
-       BEGIN
-        AdrMode = ModExt;
-        AdrCnt = 2;
-        /***Problem: Byte order? */
-        AdrVals[0] = Lo(Address);
-        AdrVals[1] = Hi(Address);
-       END
+      BEGIN
+       if ((Mask & MModDir) AND (Hi(Address) == 0))
+        BEGIN
+         AdrVals[0] = Lo(Address);
+         AdrMode = ModDir;
+         AdrCnt = 1;
+         AdrPart = 5;
+        END
+       else
+        BEGIN
+         AdrMode = ModExt;
+         AdrCnt = 2;
+         /***Problem: Byte order? */
+         AdrVals[0] = Lo(Address);
+         AdrVals[1] = Hi(Address);
+        END
+      END
     END
 
    /* erlaubt ? */
@@ -197,7 +200,7 @@ BEGIN
     END
 END
 
-	static Boolean DecodeBitAdr(char *Asc, Byte *Adr, Byte *Bit)
+        static Boolean DecodeBitAdr(char *Asc, Byte *Adr, Byte *Bit)
 BEGIN
    char *sep;
    Boolean OK;
@@ -218,7 +221,7 @@ END
 /*--------------------------------------------------------------------------*/
 /* ind. Decoder */
 
-	static void DecodeFixed(Word Index)
+        static void DecodeFixed(Word Index)
 BEGIN
    FixedOrder *porder = FixedOrders + Index;
 
@@ -230,7 +233,7 @@ BEGIN
     END
 END
 
-	static void DecodeAcc(Word Index)
+        static void DecodeAcc(Word Index)
 BEGIN
    FixedOrder *porder = AccOrders + Index;
 
@@ -246,7 +249,7 @@ BEGIN
     END
 END
 
-	static void DecodeALU(Word Index)
+        static void DecodeALU(Word Index)
 BEGIN
    FixedOrder *porder = ALUOrders + Index;
 
@@ -255,26 +258,28 @@ BEGIN
     BEGIN
      DecodeAdr(ArgStr[1], MModAcc);
      if (AdrMode != ModNone)
-      if (ArgCnt == 1)
-       BEGIN
-        BAsmCode[0] = porder->Code + 2;
-        CodeLen = 1;
-       END
-      else
-       BEGIN
-        OpSize = 0;
-        DecodeAdr(ArgStr[2], MModDir | MModIIX | MModIEP | MModReg | MModImm);
-        if (AdrMode != ModNone)
-         BEGIN
-          BAsmCode[0] = porder->Code + AdrPart;
-          memcpy(BAsmCode + 1, AdrVals, AdrCnt);
-          CodeLen = 1 + AdrCnt;
-         END
-       END
+      BEGIN
+       if (ArgCnt == 1)
+        BEGIN
+         BAsmCode[0] = porder->Code + 2;
+         CodeLen = 1;
+        END
+       else
+        BEGIN
+         OpSize = 0;
+         DecodeAdr(ArgStr[2], MModDir | MModIIX | MModIEP | MModReg | MModImm);
+         if (AdrMode != ModNone)
+          BEGIN
+           BAsmCode[0] = porder->Code + AdrPart;
+           memcpy(BAsmCode + 1, AdrVals, AdrCnt);
+           CodeLen = 1 + AdrCnt;
+          END
+        END
+      END
     END
 END
 
-	static void DecodeRel(Word Index)
+        static void DecodeRel(Word Index)
 BEGIN
    Integer Adr;
    Boolean OK;
@@ -285,17 +290,19 @@ BEGIN
     BEGIN
      Adr = EvalIntExpression(ArgStr[1], UInt16, &OK) - (EProgCounter() + 2);
      if (OK)
-      if (((Adr < -128) OR (Adr > 127)) AND (NOT SymbolQuestionable)) WrError(1370);
-      else
-       BEGIN
-        BAsmCode[0] = porder->Code; 
-        BAsmCode[1] = Adr & 0xff;
-        CodeLen = 2;
-       END
+      BEGIN
+       if (((Adr < -128) OR (Adr > 127)) AND (NOT SymbolQuestionable)) WrError(1370);
+       else
+        BEGIN
+         BAsmCode[0] = porder->Code; 
+         BAsmCode[1] = Adr & 0xff;
+         CodeLen = 2;
+        END
+      END
     END
 END
 
-	static void DecodeMOV(Word Index)
+        static void DecodeMOV(Word Index)
 BEGIN
    Byte HReg;
    
@@ -424,7 +431,7 @@ BEGIN
     END
 END
 
-	static void DecodeMOVW(Word Index)
+        static void DecodeMOVW(Word Index)
 BEGIN
    Byte HReg;
 
@@ -563,8 +570,8 @@ BEGIN
       END
     END
 END
-	
-	static void DecodeBit(Word Index)
+        
+        static void DecodeBit(Word Index)
 BEGIN
    Byte Adr, Bit;
 
@@ -578,7 +585,7 @@ BEGIN
     END;
 END
 
-	static void DecodeXCH(Word Index)
+        static void DecodeXCH(Word Index)
 BEGIN
    if (ArgCnt != 2) WrError(1110);
    else
@@ -606,7 +613,7 @@ BEGIN
     END
 END
 
-	static void DecodeXCHW(Word Index)
+        static void DecodeXCHW(Word Index)
 BEGIN
    Byte HReg;
 
@@ -662,7 +669,7 @@ BEGIN
     END
 END
 
-	static void DecodeINCDEC(Word Index)
+        static void DecodeINCDEC(Word Index)
 BEGIN
    if (ArgCnt != 1) WrError(1110);
    else
@@ -676,7 +683,7 @@ BEGIN
     END
 END
 
-	static void DecodeINCDECW(Word Index)
+        static void DecodeINCDECW(Word Index)
 BEGIN
    if (ArgCnt != 1) WrError(1110);
    else
@@ -696,7 +703,7 @@ BEGIN
     END
 END
 
-	static void DecodeCMP(Word Index)
+        static void DecodeCMP(Word Index)
 BEGIN
    Byte HReg;
 
@@ -782,7 +789,7 @@ BEGIN
     END
 END
 
-	static void DecodeBitBr(Word Index)
+        static void DecodeBitBr(Word Index)
 BEGIN
    Byte Bit, BAdr;
    Boolean OK;
@@ -794,18 +801,20 @@ BEGIN
     BEGIN
      Adr = EvalIntExpression(ArgStr[2], UInt16, &OK) - (EProgCounter() + 3);
      if (OK)
-      if (((Adr < -128) OR (Adr > 127)) AND (NOT SymbolQuestionable)) WrError(1370);
-      else
-       BEGIN
-        BAsmCode[0] = 0xb0 + (Index << 3) + Bit;
-        BAsmCode[1] = BAdr; /* reverse for F2MC8? */
-        BAsmCode[2] = Adr & 0xff;
-        CodeLen = 3;
-       END
+      BEGIN
+       if (((Adr < -128) OR (Adr > 127)) AND (NOT SymbolQuestionable)) WrError(1370);
+       else
+        BEGIN
+         BAsmCode[0] = 0xb0 + (Index << 3) + Bit;
+         BAsmCode[1] = BAdr; /* reverse for F2MC8? */
+         BAsmCode[2] = Adr & 0xff;
+         CodeLen = 3;
+        END
+      END
     END
 END
 
-	static void DecodeJmp(Word Index)
+        static void DecodeJmp(Word Index)
 BEGIN
    if (ArgCnt != 1) WrError(1110);
    else
@@ -826,7 +835,7 @@ BEGIN
     END
 END
 
-	static void DecodeCALLV(Word Index)
+        static void DecodeCALLV(Word Index)
 BEGIN
    Boolean OK;
 
@@ -839,7 +848,7 @@ BEGIN
     END
 END
 
-	static void DecodeStack(Word Index)
+        static void DecodeStack(Word Index)
 BEGIN
    if (ArgCnt != 1) WrError(1110);
    else  
@@ -866,7 +875,7 @@ END
 /*--------------------------------------------------------------------------*/
 /* Codetabellen */
 
-	static void AddFixed(char *NName, Byte NCode)
+        static void AddFixed(char *NName, Byte NCode)
 BEGIN
    if (InstrZ > FixedOrderCnt) exit(255);
 
@@ -874,7 +883,7 @@ BEGIN
    AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 END
 
-	static void AddALU(char *NName, Byte NCode)
+        static void AddALU(char *NName, Byte NCode)
 BEGIN
    if (InstrZ > ALUOrderCnt) exit(255);
 
@@ -898,7 +907,7 @@ BEGIN
    AddInstTable(InstTable, NName, InstrZ++, DecodeRel);
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    InstTable = CreateInstTable(201);
 
@@ -953,7 +962,7 @@ BEGIN
    AddInstTable(InstTable, "POPW", 1, DecodeStack);
 END
 
-	static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    free(FixedOrders);
    free(ALUOrders);
@@ -965,7 +974,7 @@ END
 /*--------------------------------------------------------------------------*/
 /* Interface zu AS */
 
-	static void MakeCode_F2MC8(void)
+        static void MakeCode_F2MC8(void)
 BEGIN
    /* Leeranweisung ignorieren */
 
@@ -979,17 +988,17 @@ BEGIN
      WrXError(1200, OpPart);
 END
 
-	static Boolean IsDef_F2MC8(void)
+        static Boolean IsDef_F2MC8(void)
 BEGIN
    return FALSE;
 END
 
-	static void SwitchFrom_F2MC8(void)
+        static void SwitchFrom_F2MC8(void)
 BEGIN
    DeinitFields();
 END
 
-	static void SwitchTo_F2MC8(void)
+        static void SwitchTo_F2MC8(void)
 BEGIN
    PFamilyDescr FoundDescr;
 
@@ -1011,7 +1020,7 @@ END
 /*--------------------------------------------------------------------------*/
 /* Initialisierung */
 
-	void codef2mc8_init(void)
+        void codef2mc8_init(void)
 BEGIN
    CPU89190 = AddCPU("MB89190", SwitchTo_F2MC8);
 END

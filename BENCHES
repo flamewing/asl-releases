@@ -42,8 +42,12 @@ Sun        SPARCstation 20/712     2xSuperSparc-2  75         [20K+16K]/1M      
 Sun        SPARCstation 20/612     2xSuperSparc-2  60         [20K+16K]/1M         64         Solaris 2.4       Sun-C 3.0.1  |   2.24s   1.12s   11.58s   30.01   0.500
 Sun        SPARCstation 20/612     2xSuperSparc-2  50         [20K+16K]/1M         64         Solaris 2.5       Sun-C 3.0.1  |   2.90s   1.41s   14.53s   23.66   0.473
 Sun        SPARCstation 4          MicroSparc-2    85         [16K+8K]            ???         Solaris 2.4       Sun-C 3.0.1  |   3.37s   1.56s   17.23s   20.56   0.242
+Sun        SPARCstation 10         TMZ30Z50        50         20K+16K              64         NetBSD 1.4.2      egcs 1.1.1   |   3.39s   1.66s   20.10s   19.10   0.382 [18. 6.2000 comp 121min]
 Sun        SPARCstation 10/20      SuperSparc-1    33         [20K+16K]            64         Solaris 2.5       Sun-C 3.0.1  |   4.54s   2.23s   22.54s   15.11   0.458
+Sun        SPARCstation IPX        WTL3172         40         64K                  16         NetBSD 1.4.2      egcs 1.1.1   |   5.33s   2.54s   31.25s   12.32   0.350 [ 5. 6.2000 comp 167min]
 Sun        SPARCstation Classic    MicroSparc      50         [4K+2K]              24         Solaris 2.5.1     Sun-C 3.0.1  |   6.92s   3.22s   37.45s    9.81   0.196
+Sun        SPARCstation ELC        MB89603         33         64K                  16         NetBSD 1.3.2      gcc 2.7.2.2  |   7.15s   3.31s   39.19s    9.47   0.286 [19. 1.2000 comp 165min]
+Sun        SPARCstation IPC        WTL3172         25         64K                  24         NetBSD 1.4.2      egcs 1.1.1   |   7.34s   3.57s   44.86s    8.75   0.350 [ 5. 6.2000 comp 244min]
 Sun        SPARCstation 1+         LSI L64801      25         64K                  16         Solaris 2.4       Sun-C 3.0.1  |   9.16s   4.51s   48.96s    7.30   0.292
 Sun        4/670MP                 ???             40(?)      64K(?)              ???         SunOS 4.1.3       gcc 2.6.3    |   8.29s   4.87s   51.48s    7.24   0.181
 
@@ -85,7 +89,7 @@ VAX-based systems
 Vendor     Machine                 CPU            Clock(MHz)  Cache [on]offchip   Memory(MB)  OS                Compiler     |  BUF32   FL900    MIC51    Index   rel.
 -----------------------------------------------------------------------------------------------------------------------------+-------------------------------------------
 Digital    VAXstation 3100 M38     CVAX            16.6666    [???]/64K            16         Ultrix 4.5        gcc 2.7.2    |  22.74s  11.71s  147.15s    2.72   0.163 [ 9. 2.1999 comp 352min]
-Digital    MicroVAX 3100 (1) (2)   CVAX            11.1111    [???]                16         NetBSD 1.3I       egcs 1.1     |  39.59s  20.09s  260.70s    1.56   0.141 [14. 2.1999]
+Digital    MicroVAX 3100 (1) (2)   CVAX            11.1111    [???]                16         NetBSD 1.3I       egcs 1.1     |  43.89s  20.89s  275.29s    1.47   0.132 [14. 2.1999 comp 741min]
 Digital    VAXstation 2000         MVAX            [0.9VUP]   none                  6         Ultrix 4.1        gcc 2.7.2    |  79.66s  40.43s  512.77s    0.78   ????? [12. 7.1998]
 
 68xxx-based systems
@@ -105,15 +109,23 @@ Pentium-based systems
 
 Vendor     Machine                 CPU            Clock(MHz)  Cache [on]offchip   Memory(MB)  OS                Compiler     |  BUF32   FL900    MIC51    Index   rel.
 -----------------------------------------------------------------------------------------------------------------------------+-------------------------------------------
+<Noname>   Asus T2P4               AMD K6-3       400         [32K+32K/128K]/512K 128         Linux 2.2.10      gcc 2.7.2    |   0.19s   0.10s    1.22s   320.87  0.802 [ 8. 3.2000 comp 4min 17sec]
 <Noname>                           2*Pentium2     450                                         Linux             gcc          |   0.28s   0.14s    1.62s   231.31  0.514
-<Noname>   Asus T2P4               AMD K6         233         [32K+32K]/512K       64         Linux 2.1.74      gcc 2.7.2    |   0.44s   0.25s    2.69s   138.57  0.595 [20.06.1998]
-<Noname>   Asus T2P4               AMD K6         200         [32K+32K]/512K      128         Linux 2.0.32      gcc 2.7.2    |   0.47s   0.24s    2.77s   136.00  0.680 [20.06.1998]
+<Noname>   Asus T2P4               AMD K6         233         [32K+32K]/512K       64         Linux 2.1.74      gcc 2.7.2    |   0.44s   0.25s    2.69s   138.57  0.595 [20. 6.1998]
+<Noname>   Asus T2P4               AMD K6         200         [32K+32K]/512K      128         Linux 2.0.32      gcc 2.7.2    |   0.47s   0.24s    2.77s   136.00  0.680 [20. 6.1998]
+<Noname>   Asus T2P4               AMD K6         200         [32K+32K]/256K       16         Linux 2.2.10      gcc 2.7.2.3  |   0.52s   0.32s    3.22s   113.21  0.566 [20. 5.2000 comp 12min]
 <Noname>   Natoma Chipset          PPro           233         [16K+16K]/256K       64         Linux 2.1.42      pent-gcc     |   0.82s   0.45s    4.53s    77.76  0.334
-<Noname>   Asus T2P4               AMD K6         200         [32K+32K]/512K      128         Linux 2.0.32      emx 0.9      |   0.87s   0.72s    3.65s    73.30  0.367 [20.06.1998]
+<Noname>   Asus T2P4               AMD K6         200         [32K+32K]/512K      128         OS/2 Warp         emx 0.9      |   0.87s   0.72s    3.65s    73.30  0.367 [20. 6.1998]
+<Noname>   Asus T2P4               Intel Pentium  133         [8K+8K]/256K         16         Linux 2.2.10      gcc 2.7.2.3  |   1.01s   0.57s    6.01s    61.14  0.460 [20. 5.2000 comp 25min]
+<Noname>   Asus T2P4               Intel Pentium  100         [8K+8K]/256K         16         Linux 2.2.10      gcc 2.7.2.3  |   1.20s   0.65s    7.11s    52.26  0.523 [ 2. 6.2000 comp 30min]
 <Noname>   SIS551x Chipset         Intel Pentium  100         [8K+8K]/256K         16         Linux 2.0.35      gcc 2.7.2.3  |   1.49s   0.73s    8.89s    43.31  0.433 [25. 7.1999 comp 36min]
+<Noname>   Asus T2P4               Intel Pentium   75         [8K+8K]/256K         16         Linux 2.0.35      gcc 2.7.2.3  |   1.59s   0.80s    9.44s    40.40  0.539 [20. 5.2000 comp 39min]
+<Noname>   Chaintech 5IFM          Intel Pentium   75         [8K+8K]/256K         16         Linux 2.2.10      gcc 2.7.2.3  |   1.63s   1.02s   10.23s    39.58  0.479 [ 4. 6.2000 comp 36min]
+IBM        PS/2 Server 9595-S20    Intel Pentium   60         [8K+8K]/256K         64         Linux 2.2.10      gcc 2.7.2.3  |   0.82s   0.82s   10.31s    38.35  0.640 [ 2.12.1999 comp 38min]
 <Noname>   Asus PCI/I-P5MP3        Intel Pentium   66.6666    [8K+8K]/256K         32         Linux 2.0.27      gcc 2.7.2    |   1.82s   0.93s   11.78s    34.11  0.512 [17. 1.1999]
 <Noname>   SIS551x Chipset         Intel Pentium   75         [8K+8K]/256K         16         Linux 2.0.35      gcc 2.7.2.3  |   2.02s   0.97s   11.63s    32.51  0.433 [25. 7.1999 comp 47min]
 <Noname>   Asus PCI/I-P5MP3        Intel Pentium   60         [8K+8K]/256K         32         Linux 2.0.27      gcc 2.7.2    |   2.03s   1.05s   12.18s    31.17  0.520 [17. 1.1999]
+<Noname>   Intel Zappa             Intel Pentium   75         [8K+8K]               6         Linux 2.0.27      gcc 2.7.2    |   2.83s   1.16s   13.82s    26.00  0.347 [10. 7.2000 comp 58min]
 <Noname>   FIC PA-2002             Intel Pentium   75         [8K+8K]               6         Linux 2.0.27      gcc 2.7.2    |   4.74s   2.15s   23.77s    14.82  0.198 [30. 1.1999]
 
 
@@ -127,50 +139,97 @@ Am486DX4!
 
 Vendor     Machine                 CPU            Clock(MHz)  Cache [on]offchip   Memory(MB)  OS                Compiler     |  BUF32   FL900    MIC51    Index   rel.
 -----------------------------------------------------------------------------------------------------------------------------+-------------------------------------------
+<Noname>   Asus SP3G-PVI           Am486DX4       133.3333    [16K]/256K           16         Linux 2.2.10      gcc 2.7.2.3  |   1.81s   0.85s    9.60s   37.62   0.282 [10. 2.2000 comp 38min]
+<Noname>   Asus SP3G-PVI           i486DX3        100         [16K]/256K           16         Linux 2.2.10      gcc 2.7.2.3  |   2.01s   1.00s   11.86s   32.11   0.321 [10. 2.2000 comp 46min]
 <Noname>   Eteq 491/493-Chipset    Am486DX4       133         [16K(WT)]/256K        20        Linux 2.2.6       gcc 2.7.2.3  |   2.23s   1.09s   12.28s   29.76   0.223 [19. 9.1999 comp 56min]
 <Noname>   Eteq 491/493-Chipset    i486DX3        100         [16K(WT)]/256K        20        Linux 2.2.6       gcc 2.7.2.3  |   2.51s   1.14s   13.35s   27.47   0.275 [19. 9.1999 comp 58min] 
+IBM        PS/2 Model 77s          i486DX3        100         [16K]/128K            24        Linux 2.2.10      gcc 2.7.2.3  |   2.58s   1.18s   14.08s   26.40   0.264 [10.11.1999 comp 53min]
+IBM        PS/2 Model 76i          i486DX3        100         [16K]/128K            32        Linux 2.2.10      gcc 2.7.2.3  |   2.56s   1.21s   14.51s   25.99   0.260 [28. 5.2000 comp 53min]
 <Noname>   SISATQ-Chipset          Am486DX4       112         [16K]/256K(no dirty)  7.875     Linux 2.2.10      gcc 2.7.2.3  |   2.67s   1.33s   12.73s   25.92   0.231 [15.10.1999 comp 62min]
+<Noname>   Asus SP3G-PVI           Am486DX3       100         [8K]/256K            16         Linux 2.2.10      gcc 2.7.2    |   2.68s   1.26s   14.57s   25.22   0.252 [ 4. 4.2000 comp 57min]
 <Noname>   SISATQ-Chipset          i486DX3         96         [16K]/256K(no dirty)  7.875     Linux 2.2.10      gcc 2.7.2.3  |   2.60s   1.50s   14.04s   24.35   0.254 [14.10.1999 comp 65min]
+<Noname>   SIS BTQ Chipset         Am486DX4       133.333     [16K]/256K            7.875     Linux 2.2.10      gcc 2.7.2.3  |   2.94s   1.41s   14.87s   23.33   0.175 [12.12.1999 comp 95min]
+<Noname>   Asus SP3G-PVI           i486DX2         66.7       [8K]/256K            16         Linux 2.2.10      gcc 2.7.2.3  |   2.94s   1.42s   17.63s   22.05   0.331 [ 9. 2.2000 comp 69min]
+<Noname>   Eteq 491/493-Chipset    Am486DX3       100         [8K]/256K             32        Linux 2.2.6       gcc 2.7.2.3  |   3.03s   1.44s   17.02s   21.95   0.219 [22. 4.2000 comp 68min]
+<Noname>   SIS BTQ Chipset         i486DX3        100         [16K]/256K            7.875     Linux 2.2.10      gcc 2.7.2.3  |   2.93s   1.78s   15.71s   21.31   0.213 [11.12.1999 comp 69min]
+<Noname>   Eteq 491/493-Chipset    Cx486DX3       100         [8K]/256K             32        Linux 2.2.6       gcc 2.7.2.3  |   3.17s   1.52s   18.21s   20.77   0.208 [22. 4.2000 comp 69min]
+<Noname>   Eteq 491/492-Chipset    Am486DX4        133.333    [8K]/64K              7.875     Linux 2.2.10      gcc 2.7.2.3  |   3.14s   1.66s   16.48s   20.90   0.157 [13.11.1999 comp 79min]
+IBM        PS/2 Model 76i          i486DX3        100         [16K]                 28        Linux 2.2.10      gcc 2.7.2.3  |   3.49s   1.56s   17.74s   20.12   0.201 [ 8.11.1999 comp 75min]
 IBM        PS/2 Model 85           i486DX2         66.666     [8K]/256K             16        Linux 2.2.10      gcc 2.7.2.3  |   3.22s   1.68s   18.76s   19.79   0.297 [16.10.1999 comp 70min]
 <Noname>   UMC 481A/482A-Chipset   Am486DX4       144         [16K(WT)]/128K(WB)    7.875     Linux 2.2.6       gcc 2.7.2.3  |   3.25s   1.92s   16.62s   19.69   0.137 [16. 9.1999 comp 85min]
 <Noname>   Eteq 491/493-Chipset    i486DX2         66.7       [8K]/256K             20        Linux 2.2.6       gcc 2.7.2.3  |   3.31s   1.70s   19.43s   19.29   0.289 [18. 9.1999 comp 82min]
+<Noname>   Eteq 491/492-Chipset    i486DX3         100        [8K]/64K              7.875     Linux 2.2.10      gcc 2.7.2.3  |   3.41s   1.85s   17.40s   19.29   0.193 [13.11.1999 comp 80min]
 <Noname>   UMC 481A/482A-Chipset   i486DX3        108         [16K(WT)]/128K(WB)    7.875     Linux 2.2.6       gcc 2.7.2.3  |   3.51s   1.88s   17.17s   19.10   0.177 [12. 9.1999 comp 85min]
 IBM        PS/2 Model 77s          i486DX2         66.666     [8K]/128K             32        Linux 2.2.10      gcc 2.7.2.3  |   3.57s   1.64s   20.24s   18.83   0.283 [19. 9.1999 comp 72min]
+IBM        PS/2 Model 76i          i486DX2         66.666     [8K]/128K             32        Linux 2.2.10      gcc 2.7.2.3  |   3.53s   1.67s   20.75s   18.62   0.279 [28. 5.2000 comp  73min]
+<Noname>   Asus SP3G-PVI           i486DX          50         [8K]/256K            16         Linux 2.2.10      gcc 2.7.2.3  |   3.52s   1.72s   21.43s   18.24   0.365 [ 3. 6.2000 comp 78min]
 <Noname>   Eteq 491/493-Chipset    Cx486DX2        66.7       [8K]/256K             20        Linux 2.2.6       gcc 2.7.2.3  |   3.60s   1.80s   21.65s   17.77   0.266 [18. 9.1999 comp 87min]
+IBM        PS/2 Model 90 (T1)      i486DX2         66         [8K]/256K            16         Linux 2.2.13      egcs 1.1.2   |   3.79s   1.70s   22.29s   17.69   0.268 [23. 8.2000 comp 120min]
 <Noname>   SISATQ-Chipset          i486DX2         64         [8K]/256K(no dirty)   7.875     Linux 2.2.10      gcc 2.7.2.3  |   3.74s   1.83s   20.79s   17.68   0.276 [14.10.1999 comp 84min]
 <Noname>   Eteq 491/493-Chipset    Am486DX4       133         [16K(WT)]             20        Linux 2.2.6       gcc 2.7.2.3  |   4.19s   1.81s   19.98s   17.35   0.130 [19. 9.1999 comp 95min]
+<Noname>   SIS BTQ Chipset         Am486DX4       133.333     [16K]                 7.875     Linux 2.2.10      gcc 2.7.2.3  |   4.07s   2.00s   19.58s   17.03   0.128 [12.12.1999 comp 95min]
 <Noname>   Eteq 491/493-Chipset    i486DX3        100         [16K(WT)]            20         Linux 2.2.6       gcc 2.7.2.3  |   4.25s   1.87s   20.64s   16.90   0.169 [19. 9.1999 comp 97min] 
+<Noname>   Asus SP3G-PVI           Am486DX2        50         [8K]/256K            16         Linux 2.2.10      gcc 2.7.2.3  |   3.90s   1.86s   23.34s   16.70   0.334 [ 3. 6.2000 comp 84min]
+<Noname>   SIS BTQ Chipset         i486DX3        100         [16K]                 7.875     Linux 2.2.10      gcc 2.7.2.3  |   4.08s   2.02s   20.83s   16.60   0.160 [12.12.1999 comp 96min]
+<Noname>   Asus SP3-AP4            i486DX2         66.7       [8K]/256K            16         Linux 2.2.10      gcc 2.7.2.3  |   4.06s   1.92s   22.71s   16.44   0.247 [17. 6.2000 comp 90min]
 <Noname>   VIA 486/482-Chipset     i486DX2         66.7       [8K]/256K            15.625     Linux 2.2.10      gcc 2.7.2.3  |   4.10s   1.91s   22.94s   16.37   0.246 [ 6.11.1999 comp 97min]
+IBM        PS/2 9595-AMT (T3)      i486DX          50         [8K]/256K            16         Linux 2.2.13      egcs 1.1.2   |   4.11s   1.86s   24.72s   16.13   0.323 [10. 3.2000 comp 137min]
+<Noname>   SIS BTQ Chipset         i486DX2         66.7       [8K]/256K             7.875     Linux 2.2.10      gcc 2.7.2.3  |   4.11s   2.00s   23.34s   16.01   0.240 [11.12.1999 comp 95min]
 <Noname>   VIA 486/482-Chipset     Cx486DX2        66.7       [8K]/256K            15.625     Linux 2.2.10      gcc 2.7.2.3  |   4.20s   1.97s   24.01s   15.82   0.237 [ 5.11.1999 comp 100min]
 <Noname>   UM8498-Chipset          Am486DX4       133         [16K(WT)]/256K       12         Linux 2.0.27      gcc 2.7.2    |   4.19s   2.17s   23.00s   15.54   0.116
 <Noname>   VIA 481/495-Chipset     i486DX2         66.7       [8K]/256K(WB)         7.625     Linux 2.2.10      gcc 2.7.2.3  |   3.07s   2.09s   26.85s   15.41   0.231 [ 3.10.1999 comp 116min]
 <Noname>   SISATQ-Chipset          Cx486DX2        64         [8K]/256K(no dirty)   7.875     Linux 2.2.10      gcc 2.7.2.3  |   4.35s   2.11s   24.50s   15.18   0.237 [13.10.1999 comp 94min]
 <Noname>   VIA 481/495-Chipset     Cx486DX2        66.7       [8K]/256K(WB)         7.625     Linux 2.2.10      gcc 2.7.2.3  |   4.17s   2.49s   23.31s   14.82   0.222 [ 3.10.1999 comp 98min]
+<Noname>   Asus SP3G-PVI           Am486DX         40         [8K]/256K            16         Linux 2.2.10      gcc 2.7.2.3  |   4.40s   2.11s   26.97s   14.68   0.367 [ 3. 6.2000 comp 94min]
 <Noname>   UMC 481A/482A-Chipset   i486DX2         72         [8K]/128K(WB)         7.875     Linux 2.2.6       gcc 2.7.2.3  |   4.77s   2.20s   25.32s   14.35   0.199 [17. 9.1999 comp 109min]
+IBM        PS/2 8595-AKF (T1)      i486DX2         66         [8K]                 48         Linux 2.2.10      gcc 2.7.2.3  |   4.88s   2.17s   27.39s   13.98   0.212 [18.12.1999 comp 109min]
+<Noname>   Asus SP3G-PVI           i486DX          33.3       [8K]/256K            16         Linux 2.2.10      gcc 2.7.2.3  |   4.48s   2.37s   28.14s   13.82   0.415 [ 9. 2.2000 comp 97min]
 <Noname>   UMC 481A/482A-Chipset   Cx486DX2        72         [8K]/128K(WB)         7.875     Linux 2.2.6       gcc 2.7.2.3  |   4.79s   2.31s   27.63s   13.71   0.190 [11. 9.1999 comp 114min]
-IBM        PS/2 Model 76i          i486DX2         66.666     [8K]                  16        Linux 2.2.10      gcc 2.7.2.3  |   5.31s   2.35s   28.64s   13.03   0.195 [ 9.10.1999 comp 118min]
+<Noname>   Eteq 491/492-Chipset    Cx486DX2        66.7       [8K]/64K              7.875     Linux 2.2.10      gcc 2.7.2.3  |   4.80s   2.39s   26.90s   13.66   0.205 [13.11.1999 comp 93min]
+<Noname>   Asus SP3G-PVI           Am486DX3       100         [8K]                 16         Linux 2.2.10      gcc 2.7.2.3  |   5.20s   2.26s   26.80s   13.57   0.136 [ 3. 4.2000 comp 108min]
+<Noname>   Eteq 491/492-Chipset    i486DX2         66.7       [8K]/64K              7.875     Linux 2.2.10      gcc 2.7.2.3  |   4.73s   2.72s   24.52s   13.56   0.203 [14.11.1999 comp 110min]
+IBM        PS/2 Model 77           i486DXODP       66         [8K]                 16         Linux 2.2.10      gcc 2.7.2.3  |   5.23s   2.32s   28.55s   13.16   0.197 [26.12.1999 comp 117min]
+IBM/Reply  PS/2 Model 80 (Upgrade) i486DX          33         [8K]                 32         Linux 2.2.13      gcc 2.7.2.3  |   4.77s   2.42s   29.15s   13.46   0.408 [26. 3.2000 comp 103min]  
+IBM        PS/2 Model 76i          i486DX2         66.666     [8K]                 16         Linux 2.2.10      gcc 2.7.2.3  |   5.31s   2.35s   28.64s   13.03   0.195 [ 9.10.1999 comp 118min]
+IBM        PS/2 Model 90 (T1)      i486DX2         66         [8K]                 16         Linux 2.2.13      egcs 1.1.2   |   5.33s   2.32s   29.92s   12.89   0.195 [23. 8.2000 comp 157min]
 <Noname>   Eteq 491/492-Chipset    Am486DX4       133         [16K(WT)]/256K       20         OS/2 Warp 3       emx 0.99     |   5.10s   2.92s   24.96s   12.88   0.097
 <Noname>   Asus SP3G               Am486DX3       100         [8K]/256K            32         Linux 2.0.7       gcc 2.7.2    |   5.16s   2.45s   29.16s   12.88   0.129
+IBM        PS/2 Model 90 (T1)      i486DX          33         [8K]/256K            16         Linux 2.2.13      egcs 1.1.2   |   5.02s   2.36s   31.47s   12.87   0.390 [23. 8.2000 comp 153min]
+<Noname>   Asus SP3G-PVI           Cx486DX3       100         [8K]/256K            16         Linux 2.2.10      gcc 2.7.2.3  |   5.59s   2.48s   29.18s   12.50   0.125 [ 5. 4.2000 comp 84min]
+<Noname>   Asus SP3G-PVI           Cx486DX3       100         [8K]                 16         Linux 2.2.10      gcc 2.7.2.3  |   5.59s   2.48s   29.18s   12.50   0.125 [ 4. 4.2000 comp 121min]
 <Noname>   Eteq 491/493-Chipset    i486SX          33.3       [8K]/256K(WB)         7.875     Linux 2.2.6       gcc 2.7.2.3  |   5.35s   2.49s   32.14s   12.28   0.368 [18. 9.1999 comp 111min]
-<Noname>   Asus SP3G-PVI           Am486DX3       100         [8K]/256K            32         Linux 2.0.21      gcc 2.7.2    |   5.77s   2.77s   32.32s   11.50   0.115
+IBM        PS/2 9595-ALF (T2)      i486DX2         50         [8K]                 16         Linux 2.2.13      egcs 1.1.2   |   5.66s   2.53s   31.77s   12.02   0.240 [12. 3.2000 comp 125min]
+IBM        PS/2 9590-ALF (T2)      i486DX2         50         [8K]                 48         Linux 2.2.10      gcc 2.7.2.3  |   5.63s   2.55s   31.84s   12.00   0.240 [18.12.1999 comp 125min]
 <Noname>   SISATQ-Chipset          i486SX          32         [8K]/256K(no dirty)   7.875     Linux 2.2.10      gcc 2.7.2.3  |   5.41s   2.89s   33.26s   11.47   0.359 [12.10.1999 comp 115min]
+<Noname>   Eteq 491/493-Chipset    Cx486DX3       100         [8K]                  32        Linux 2.2.10      gcc 2.7.2.3  |   5.92s   2.80s   31.54s   11.46   0.115 [22. 4.2000 comp 133min]
+<Noname>   Eteq 491/493-Chipset    Cx486DX         33.3       [8K]/256K             32        Linux 2.2.10      gcc 2.7.2.3  |   5.49s   2.74s   34.99s   11.45   0.344 [21. 4.2000 comp 120min]
 <Noname>   SISATQ-Chipset          Am486DX4       112         [16K]                 7.875     Linux 2.2.10      gcc 2.7.2.3  |   6.25s   2.92s   29.71s   11.33   0.101 [15.10.1999 comp 151min]
+<Noname>   Eteq 491/493-Chipset    Am486DX3       100         [8K]                  32        Linux 2.2.6       gcc 2.7.2.3  |   6.33s   2.74s   32.88s   11.15   0.112 [22. 4.2000 comp 139min]
+<Noname>   Asus SP3-AP4            i486SX          33.3       [8K]/256K            16         Linux 2.2.10      gcc 2.7.2.3  |   5.89s   2.78s   35.17s   11.12   0.334 [15. 6.2000 comp 117min]
 <Noname>   SISATQ-Chipset          i486DX3         96         [16K]                 7.875     Linux 2.2.10      gcc 2.7.2.3  |   6.35s   2.98s   30.38s   11.11   0.116 [14.10.1999 comp 152min]
 <Noname>   VIA 486/482-Chipset     i486SX          33.3       [8K]/256K            15.625     Linux 2.2.10      gcc 2.7.2.3  |   5.93s   2.79s   35.15s   11.07   0.332 [ 4.11.1999 comp 122min]
+IBM        PS/2 8595-AK9 (T1)      i486DX          33         [8K]/256K            24         Linux 2.2.10      gcc 2.7.2.3  |                                          [22. 5.2000 comp 150min]
+IBM        PS/2 8595-AKF (T1)      i486DX          33         [8K]                 48         Linux 2.2.10      gcc 2.7.2.3  |   5.99s   2.78s   35.51s   11.01   0.334 [18.12.1999 comp 129min]
 <Noname>   UMC 481A/482A-Chipset   i486DX3        108         [16K(WT)]             7.875     Linux 2.2.6       gcc 2.7.2.3  |   6.48s   2.99s   31.14s   10.93   0.101 [12. 9.1999 comp 151min]
 <Noname>   UMC 481A/482A-Chipset   Am486DX4       144         [16K(WT)]             7.875     Linux 2.2.6       gcc 2.7.2.3  |   6.31s   3.15s   30.83s   10.88   0.076 [16. 9.1999 comp 151min]
+<Noname>   SIS BTQ Chipset         i486DX2         66.7       [8K]                  7.875     Linux 2.2.10      gcc 2.7.2.3  |   6.28s   2.92s   33.93s   10.81   0.162 [11.12.1999 comp 143min]
+<Noname>   SIS BTQ Chipset         i486SX          33.333     [8K]/256K             7.875     Linux 2.2.10      gcc 2.7.2.3  |   6.01s   3.02s   35.40s   10.69   0.321 [11.12.1999 comp 120min]
 <Noname>   Eteq 491/493-Chipset    Cx486DX2        66.7       [8K]                  20        Linux 2.2.6       gcc 2.7.2.3  |   6.42s   2.86s   35.35s   10.67   0.160 [18. 9.1999 comp 146min]
+<Noname>   Asus SP3-AP4            Cx486DX         33.3       [8K]/256K            16         Linux 2.2.10      gcc 2.7.2.3  |   5.95s   2.96s   37.06s   10.65   0.320 [16. 6.2000 comp 133min]
 <Noname>   Eteq 491/493-Chipset    i486DX2         66.7       [8K]                  20        Linux 2.2.6       gcc 2.7.2.3  |   6.53s   2.97s   34.98s   10.51   0.158 [18. 7.1999 comp 149min]
+IBM        PS/2 Model 90 (T1)      i486DX          33         [8K]                 16         Linux 2.2.13      egcs 1.1.2   |   6.45s   2.92s   38.54s   10.29   0.312 [23. 8.2000 comp 187min]
 <Noname>   UMC 481A/482A-Chipset   i486SX          36         [8K]/128K(WB)         7.875     Linux 2.2.6       gcc 2.7.2.3  |   6.94s   2.99s   36.46s   10.15   0.282 [11. 9.1999 comp 132min]
 <Noname>   VIA 486/482-Chipset     Cx486DX2        66.7       [8K]                 15.625     Linux 2.2.10      gcc 2.7.2.3  |   7.23s   3.18s   38.93s    9.59   0.144 [ 4.11.1999 comp 166min]
 <Noname>   VIA 481/495-Chipset     i486SX          33.3       [8K]/256K(WB)         7.625     Linux 2.2.10      gcc 2.7.2.3  |   7.45s   3.36s   39.12s    9.29   0.279 [ 2.10.1999 comp 122min]
+<Noname>   Eteq 491/492-Chipset    i486SX          33.3       [8K]/64K              5         Linux 2.0.27      gcc 2.7.2    |   7.29s   3.50s   41.29s    9.07   0.363 [13.11.1999 comp 137min]
 IBM        PS/2 Model 76           i486SX          33         [8K]                  7.875     Linux 2.0.35      gcc 2.7.2.3  |   7.52s   3.66s   44.65s    8.62   0.261 [24. 7.1999 comp 151min]
 <Noname>   VIA 486/482-Chipset     i486DX2         66.7       [8K]                 15.625     Linux 2.2.10      gcc 2.7.2.3  |   7.58s   3.28s   39.82s    9.27   0.139 [ 6.11.1999 comp 169min]
+<Noname>   Eteq 491/493-Chipset    Cx486DX         33.3       [8K]                  32        Linux 2.2.10      gcc 2.7.2.3  |   7.82s   3.69s   45.89s    8.41   0.252 [21. 4.2000 comp 172min]
+<Noname>   SIS BTQ Chipset         i486SX          33.333     [8K]                  7.875     Linux 2.2.10      gcc 2.7.2.3  |   8.27s   3.78s   47.15s    8.12   0.244 [10.12.1999 comp 165min]
+IBM        PS/2 Model 90-AJ9       i486DX          25         [8K]                 24         Linux 2.2.13      egcs-1.1.2   |   8.30s   3.77s   49.81s    7.99   0.320 [16. 9.2000 comp 237min]
 <Noname>   Eteq 491/493-Chipset    i486SX          33.3       [8K]                 20         Linux 2.2.6       gcc 2.7.2.3  |   8.58s   3.92s   48.60s    7.85   0.235 [19. 7.1999 comp 169min]
 <Noname>   VIA 481/495-Chipset     Cx486DX2        66.7       [8K]                  7.625     Linux 2.2.10      gcc 2.7.2.3  |   8.76s   3.87s   51.85s    7.67   0.115 [ 3.10.1999 comp 209min]
-<Noname>   Eteq 491/492-Chipset    i486DX2         66.7       [8K]/64K              5         Linux 2.0.27      gcc 2.7.2    |   8.61s   4.52s   46.33s    7.58   0.114
 <Noname>   VIA 481/495-Chipset     i486DX2         66.7       [8K]                  7.625     Linux 2.2.10      gcc 2.7.2.3  |   9.23s   4.10s   47.81s    7.58   0.114 [ 3.10.1999 comp 219min]
-<Noname>   Eteq 491/492-Chipset    Cx486DX2        66.7       [8K]/64K              5         Linux 2.0.27      gcc 2.7.2    |   9.03s   4.46s   46.73s    7.47   0.112
 <Noname>   UMC 481A/482A-Chipset   Cx486DX2        72         [8K]                  7.875     Linux 2.2.6       gcc 2.7.2.3  |   9.14s   4.28s   48.42s    7.46   0.104 [11. 9.1999 comp 214min]
 <Noname>   No Chipset              Am486DX4       100         [16K(WT)]            16         Linux 1.99.12     gcc 2.7.2    |   9.18s   4.36s   48.27s    7.41   0.074
 <Noname>   UMC 481A/482A-Chipset   i486DX2         72         [8K]                  7.875     Linux 2.2.6       gcc 2.7.2.3  |   9.60s   4.36s   49.99s    7.22   0.100 [17. 9.1999 comp 220min]
@@ -179,20 +238,19 @@ IBM        PS/2 Model 76           i486SX          33         [8K]              
 <Noname>   SISATQ-Chipset          Cx486DX2        64         [8K]/64K(no dirty)    4         Linux 2.0.27      gcc 2.7.2    |   9.27s   4.64s   51.35s    7.08   0.111
 <Noname>   VIA 486/482-Chipset     i486SX          33.3       [8K]                 15.625     Linux 2.0.27      gcc 2.7.2    |   9.79s   4.23s   54.60s    7.05   0.212 [ 3.11.1999 comp 189min]
 IBM        PS/2 Model 70-R21       i486DX          25         [8K]                  8         Linux 2.0.35      gcc 2.7.2.3  |   9.26s   4.70s   53.86s    6.95   0.278 [ 2. 3.1999 comp 206min]
-<Noname>   SIS BTQ Chipset         i486SX          33.333     [8K]                  4         Linux 2.0.27      gcc 2.7.2    |   9.25s   5.76s   50.80s    6.65   0.199 [ 7.12.1997]
+IBM        PS/2 Model 90 (T2)      i486DX2         50         [8K]                 20         Linux 2.2.10      gcc 2.7.2.3  |   6.98s   3.22s   39.16s    9.64   0.192 [10. 2.2000 comp 146min]
+IBM        PS/2 Model 90 (T2)      i486SX          25         [8K]                 20         Linux 2.2.10      gcc 2.7.2.3  |   9.52s   4.49s   56.59s    6.89   0.275 [ 9. 2.2000 comp 181min]
 <Noname>   UMC 481A/482A-Chipset   i486SX          36         [8K]/256K(WB)         5         Linux 2.0.27      gcc 2.7.2    |   9.83s   5.15s   57.31s    6.47   0.179
 <Noname>   UMC 481/482-Chipset     i486SX          36         [8K]                  7.875     Linux 2.2.6       gcc 2.7.2.3  |  11.49s   5.09s   62.54s    6.00   0.167 [11. 9.1999 comp 233min]
 <Noname>   No Chipset              i486DX2         50         [8K]                 16         Linux 2.0.27      gcc 2.7.2    |  11.53s   5.41s   66.61s    5.75   0.115  
 <Noname>   VIA 486/482-Chipset     i486DX2         66.7       [8K]/64K              4         Linux 2.0.27      gcc 2.7.2    |  11.72s   6.00s   62.43s    5.63   0.085
 <Noname>   VIA 481/495-Chipset     i486SX          33.3       [8K]                  7.625     Linux 2.2.10      gcc 2.7.2.3  |  12.35s   5.42s   66.84s    5.61   0.168 [ 2.10.1999 comp 244min]
-<Noname>   Eteq 491/492-Chipset    i486SX          33.3       [8K]/64K              5         Linux 2.0.27      gcc 2.7.2    |  11.79s   5.93s   65.39s    5.55   0.167
 <Noname>   SISATQ-Chipset          i486DX2         64         [8K]                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  10.30s   4.85s   52.87s    6.68   0.104 [13.10.1999 comp 237min]
 <Noname>   VIA 486/482-Chipset     Cx486DX2        66.7       [8K]/64K              4         Linux 2.0.27      gcc 2.7.2    |  11.90s   6.26s   67.01s    5.39   0.081
 <Noname>   SISATQ-Chipset          i486SX          32         [8K]/64K(no dirty)    4         Linux 2.0.27      gcc 2.7.2    |  12.03s   6.32s   67.79s    5.34   0.167
 <Noname>   SISATQ-Chipset          i486SX          32         [8K]                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  12.94s   5.70s   70.58s    5.33   0.166 [11.10.1999 comp 260min]
 <Noname>   UMC 481/482-Chipset     i486DX          33         [8K]/256K            16         Linux 2.0.18      gcc 2.7.2    |  16.19s   7.59s   91.05s    4.13   0.125
 <Noname>   VIA 486/482-Chipset     i486SX          33.3       [8K]/64K              4         Linux 2.0.27      gcc 2.7.2    |  15.86s   7.83s   97.15s    4.03   0.121
-
 
 386DX-based systems
 
@@ -202,71 +260,108 @@ is valid for the IBM chips.
 
 Vendor     Machine                 CPU            Clock(MHz)  Cache [on]offchip   Memory(MB)  OS                Compiler     |  BUF32   FL900    MIC51    Index   rel.
 -----------------------------------------------------------------------------------------------------------------------------+-------------------------------------------
+IBM        PS/2 Model 56SLC3       IBM486DLC3      75         [16K]                15.875     Linux 2.2.10      gcc 2.7.2.3  |   8.00s   3.34s   41.61s    8.93   0.119 [21. 1.2000 comp 156min]
 IBM        PS/2 Model 57SLC3       IBM486DLC3      75         [16K]                11.875     Linux 2.0.35      gcc 2.7.2.3  |   8.24s   3.63s   44.14s    8.42   0.112 [ 4. 9.1999 comp 161min]
+<Noname>   SIS461-Chipset          Am386DX+Cx83D87 40         256K                  7.875     Linux 2.2.10      gcc 2.7.2.3  |   7.90s   4.11s   51.52s    7.79   0.195 [ 7.12.1999 comp 169min]
+<Noname>   Symphony 461-Chipset    Am386DX+IIT3C87 40         128K                  7.625     Linux 2.2.10      gcc 2.7.2.3  |   7.87s   4.43s   52.66s    7.56   0.189 [ 4.12.1999 comp 182min]
+<Noname>   Eteq 491/493-Chipset    i386DX+IIT3C87  40         64K                   7.875     Linux 2.2.10      gcc 2.7.2.3  |   8.09s   4.34s   52.27s    7.55   0.189 [13.11.1999 comp 184min]
 <Noname>   OPTi 391/392-Chipset    Am386DX+Cx83D87DX 40       64K                   7,875     Linux 2.2.6       gcc 2.7.2.3  |   8.34s   4.28s   52.53s    7.50   0.187 [ 3. 9.9999 comp 193min]
 <Noname>   Opti 495-Chipset        Am386DX+Cx83D87 40         128K(no dirty)        7.625     Linux 2.2.10      gcc 2.7.2.3  |   8.17s   4.44s   54.11s    7.39   0.185 [30. 9.1999 comp 199min] 
 <Noname>   VIA 481/495-Chipset     Am386DX         40         128K(WB)              7.625     Linux 2.2.10      gcc 2.7.2.3  |   8.85s   4.58s   57.33s    6.98   0.174 [ 4.10.1999 comp 196min]
 <Noname>   Bioteq 3491-Chipset     Am386DX         40         128K(no dirty)        7.875     Linux 2.2.10      gcc 2.7.2.3  |   8.83s   4.71s   56.70s    6.94   0.174 [28.10.1999 comp 190min]
+<Noname>   AMI MK II               i386DX+ULSI87   33         64K                   7.875     Linux 2.2.10      gcc 2.7.2.3  |   8.98s   4.74s   61.22s    6.73   0.204 [27.12.1999 comp 215min] 
+<Noname>   Eteq 491/493-Chipset    i386DX+IIT3C87  33.3       64K                   7.875     Linux 2.2.10      gcc 2.7.2.3  |   9.31s   4.87s   61.52s    6.57   0.197 [12.11.1999 comp 217min]
+<Noname>   Symphony 461-Chipset    Am386DX+IIT3C87 33.333     128K                  7.625     Linux 2.2.10      gcc 2.7.2.3  |   9.39s   4.93s   62.24s    6.50   0.195 [ 4.12.1999 comp 218min]
+<Noname>   SIS461-Chipset          Am386DX+Cx83D87 33         256K                  7.875     Linux 2.2.10      gcc 2.7.2.3  |   9.47s   4.89s   62.79s    6.49   0.197 [ 7.12.1999 comp 203min]
 <Noname>   UMC 482/391-Chipset     i386DX+Cx83D87  33.3       128K(no dirty)        5         Linux 2.0.27      gcc 2.7.2    |   9.56s   4.91s   62.83s    6.45   0.194 [ 2.11.1999 comp 232min]
+<Noname>   SARC RC4018-Chipset     Am386DX         40         128K                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  10.00s   4.81s   61.18s    6.45   0.161 [ 1.12.1999 comp 205min]
+<Noname>   C&T PEAK/DM-Chipset     i386DX          33.3       64K                   7.875     Linux 2.2.10      gcc 2.7.2.3  |  10.09s   5.24s   65.26s    6.12   0.184 [ 7.11.1999 comp 215min]
 <Noname>   Opti 495-Chipset        Am386DX+Cx83D87 33.3       128K(no dirty)        7.625     Linux 2.2.10      gcc 2.7.2.3  |  10.13s   5.22s   66.24s    6.09   0.183 [28. 9.1999 comp 242min]
-<Noname>   Eteq 491/493-Chipset    i386DX          40         64K                   4         Linux 2.0.27      gcc 2.7.2    |  10.08s   5.98s   63.64s    5.90   0.148 [ 1.11.1997]
+<Noname>   VIA 481/495-Chipset     Am386DX         33.333     256K                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  10.42s   5.17s   67.67s    6.01   0.180 [24.11.1999 comp 219min]
 <Noname>   Bioteq 3491-Chipset     Am386DX         33         128K(no dirty)        7.875     Linux 2.2.10      gcc 2.7.2.3  |  10.59s   5.47s   69.72s    5.81   0.176 [28.10.1999 comp 227min]
+<Noname>   SIS 85C3x0-Chipset      i386DX+ULSI87   25         64K                   7.625     Linux 2.2.10      gcc 2.7.2    |  11.09s   5.84s   75.08s    5.47   0.219 [ 1. 1.2000 comp 254min]
+<Noname>   SARC RC4018-Chipset     Am386DX+IIT3C87 33.333     128K                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  12.14s   5.79s   71.40s    5.40   0.162 [29.11.1999 comp 245min]
+<Noname>   Symphony 461-Chipset    Am386DX+IIT3C87 25         128K                  7.625     Linux 2.2.10      gcc 2.7.2.3  |  11.73s   6.28s   80.19s    5.12   0.205 [ 3.12.1999 comp 275min]
+<Noname>   SIS461-Chipset          Am386DX+Cx83D87 25         256K                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  12.03s   6.14s   80.94s    5.11   0.204 [ 6.12.1999 comp 264min]
+<Noname>   SIS461-Chipset          Am386DX+Cx83D87 25         256K                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  12.03s   6.14s   80.94s    5.11   0.204 [ 6.12.1999 comp 264min]
 <Noname>   UMC 482/391-Chipset     Cx486DLC+Cx83D87 33.3      [1K]/128K(no dirty)   5         Linux 2.0.27      gcc 2.7.2    |  12.37s   6.75s   71.72s    5.08   0.153
-IBM        PS/2 Model 80-A21       i386DX+i387DX   25         64K                   7.875     Linux 2.0.35      gcc 2.7.2.3  |  11.99s   6.62s   81.10s    4.98   0.199 [19. 5.1999, comp 258min]
-IBM        PS/2 Model 70-A16       i386DX          25         64K                   7.875     Linux 2.0.30      gcc 2.7.2    |  12.10s   6.62s   81.14s    4.96   0.198 [ 7. 2.1999, comp 232min]
-<Noname>   SIS 85C3x0-Chipset      i386DX          25         64K                   4         Linux 2.0.27      gcc 2.7.2    |  13.02s   6.41s   84.31s    4.83   0.193 [ 1.11.1997]
-IBM        PS/2 Model P70-386      Cx486DLC+Cx83D87 20        [1K]                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  13.11s   6.92s   84.75s    4.69   0.234 [20. 7.1999, comp 329min]
+IBM        PS/2 Model 80-A21       i386DX+i387DX   25         64K                   7.875     Linux 2.0.35      gcc 2.7.2.3  |  11.99s   6.62s   81.10s    4.98   0.199 [19. 5.1999 comp 258min]
+IBM        PS/2 Model 70-A16       i386DX          25         64K                   7.875     Linux 2.0.30      gcc 2.7.2    |  12.10s   6.62s   81.14s    4.96   0.198 [ 7. 2.1999 comp 232min]
+<Noname>   Eteq 491/493-Chipset    i386DX+IIT3C87  25         64K                   7.875     Linux 2.2.10      gcc 2.7.2.3  |  12.49s   6.44s   82.60s    4.92   0.197 [11.11.1999 comp 291min]
+<Noname>   SIS 85C3x0-Chipset      Am386DX         25         64K                   7.875     Linux 2.2.10      gcc 2.7.2.3  |  12.57s   6.52s   83.54s    4.87   0.195 [16.11.1999 comp 282min]
+<Noname>   SIS 85C3x0-Chipset      Am386DX         25         32K                   7.875     Linux 2.2.10      gcc 2.7.2.3  |  13.13s   6.57s   86.09s    4.75   0.190 [15.11.1999 comp 283min]
+IBM        PS/2 Model P70-386      Cx486DLC+Cx83D87 20        [1K]                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  13.11s   6.92s   84.75s    4.69   0.234 [20. 7.1999 comp 329min]
+<Noname>   VIA 481/495-Chipset     Am386DX         25         256K                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  13.27s   6.73s   89.00s    4.64   0.186 [23.11.1999 comp 287min]
 <Noname>   TI TACT823x-Chipset     i386DX          33         32K(WB)               4         Linux 2.0.27      gcc 2.7.2    |  13.50s   7.22s   81.02s    4.63   0.140 [14.11.1997]
+<Noname>   C&T PEAK/DM-Chipset     i386DX          25         64K                   7.625     Linux 2.2.10      gcc 2.7.2.3  |  13.53s   6.98s   88.92s    4.55   0.182 [ 2. 1.2000 comp 229min]
 <Noname>   Bioteq 3491-Chipset     Am386DX         25         128K(no dirty)        7.875     Linux 2.2.10      gcc 2.7.2.3  |  14.48s   6.96s   91.47s    4.41   0.177 [28.10.1999 comp 301min]
 <Noname>   Opti 495-Chipset        Am386DX+Cx83D87 25         128K(no dirty)        7.625     Linux 2.2.10      gcc 2.7.2.3  |  13.77s   7.32s   91.80s    4.41   0.176 [28. 9.1999 comp 323min]
 <Noname>   UMC 482/391-Chipset     Cx486DLC+Cx83D87 33.3      [1K]                  5         Linux 2.0.27      gcc 2.7.2    |  15.38s   8.05s   89.57s    4.14   0.124
+<Noname>   Symphony 461-Chipset    Am386DX+IIT3C87 20         128K                  7.625     Linux 2.2.10      gcc 2.7.2.3  |  15.07s   8.10s  102.83s    3.98   0.199 [ 2.12.1999 comp 352min]
 <Noname>   VIA 481/495-Chipset     i386DX          40         none                  7.625     Linux 2.2.10      gcc 2.7.2.3  |  15.27s   8.09s  103.11s    3.97   0.099 [ 4.10.1999 comp 365min]
-<Noname>   AMI MK II               i386DX+Cx83D87  33         64K                   4         Linux 2.0.27      gcc 2.7.2    |  17.19s   9.26s   96.46s    3.71   0.112
-<Noname>   C&T PEAK/DM-Chipset     i386DX+Cx83D87  33.3       64K                   4         Linux 2.0.27      gcc 2.7.2    |  17.35s   9.09s   97.07s    3.71   0.111
+<Noname>   SIS461-Chipset          Am386DX+Cx83D87 20         256K                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  15.84s   7.93s  101.92s    3.95   0.198 [ 5.12.1999 comp 330min]
+<Noname>   VIA 481/495-Chipset     Am386DX         20         256K                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  15.81s   8.18s  106.55s    3.86   0.193 [21.11.1999 comp 350min]
+<Noname>   Eteq 491/493-Chipset    i386DX+IIT3C87  20         64K                   7.875     Linux 2.2.10      gcc 2.7.2.3  |  15.91s   8.32s  106.25s    3.84   0.192 [10.11.1999 comp 362min]
+<Noname>   C&T 8230-Chipset        i386DX          25         none                  8         Linux 2.0.27      gcc 2.7.2    |  16.13s   8.20s  108.08s    3.82   0.153 [20.12.1999 comp 350min]
+<Noname>   Eteq 491/493-Chipset    i386DX+IIT3C87  40         none                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  15.91s   8.26s  109.21s    3.81   0.095 [13.11.1999 comp 410min]
+<Noname>   Eteq 491/492-Chipset    Am386DX+IIT3C87 40         none                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  16.37s   8.79s  113.15s    3.66   0.091 [11. 3.2000 comp 413min]
+<Noname>   C&T PEAK/DM-Chipset     i386DX          20         64K                   7.625     Linux 2.2.10      gcc 2.7.2.3  |  17.38s   8.92s  112.17s    3.57   0.178 [ 2. 1.2000 comp 365min]
 <Noname>   Opti 495-Chipset        Am386DX+Cx83D87 20         128K(no dirty)        7.625     Linux 2.2.10      gcc 2.7.2.3  |  16.94s   8.85s  117.47s    3.56   0.178 [26. 9.1999 comp 399min]
 IBM        PS/2 Model 70-121       i386DX+i387DX   20         none                  5.875     Linux 2.0.7       gcc 2.7.2    |  17.26s   9.57s  108.70s    3.53   0.176 [23.11.1997 comp 362min]
 <Noname>   Bioteq 3491-Chipset     Am386DX         20         128K(no dirty)        7.875     Linux 2.2.10      gcc 2.7.2.3  |  17.92s   8.85s  115.57s    3.51   0.176 [26.10.1999 comp 388min]
 <Noname>   C&T PEAK/DM-Chipset     i386DX          33.3       none                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  17.64s   9.00s  118.49s    3.48   0.105 [ 7.11.1999 comp 401min]
+<Noname>   C&T 8230-Chipset        i386DX+Cx83D87  20         none                  7.625     Linux 2.2.10      gcc 2.7.2.3  |  18.31s   9.61s  125.14s    3.31   0.165 [10.12.1999 comp 427min]
+<Noname>   VIA 481/495-Chipset     Am386DX         40         none                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  18.83s   9.51s  127.16s    3.27   0.082 [24.11.1999 comp 439min]
 IBM        PS/2 Model P70-386      i386DX+i387DX   20         none                  7.875     Linux 2.0.35      gcc 2.7.2.3  |  18.22s  10.22s  123.62s    3.25   0.163 [18. 4.1999 comp 425min]
+<Noname>   Symphony 461-Chipset    Am386DX+IIT3C87 16         128K                  7.625     Linux 2.2.10      gcc 2.7.2.3  |  18.63s   9.93s  130.02s    3.21   0.201 [ 2.12.1999 comp 439min]
 <Noname>   UMC 482/391-Chipset     i386DX+IIT3C87  16.7       128K(no dirty)        7.875     Linux 2.2.10      gcc 2.7.2.3  |  19.07s  10.07s  127.44s    3.19   0.191 [ 1.11.1999 comp 463min]
+<Noname>   OPTi 381/382-Chipset    i386DX+Cx83D87  25         none                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  19.37s   9.98s  131.12s    3.15   0.126 [13.12.1999 comp 428min]
+<Noname>   SIS461-Chipset          Am386DX+Cx83D87 16         256K                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  20.52s   9.96s  128.03s    3.12   0.195 [ 5.12.1999 comp 473min]
+<Noname>   Eteq 491/493-Chipset    i386DX+IIT3C87  16         64K                   7.875     Linux 2.2.10      gcc 2.7.2.3  |  19.74s  10.27s  131.51s    3.10   0.194 [ 9.11.1999 comp 463min]
 <Noname>   Opti 495-Chipset        Am386DX+Cx83D87 40         none                  7.625     Linux 2.2.10      gcc 2.7.2.3  |  19.88s  10.40s  133.73s    3.06   0.076 [29. 9.1999 comp 494min]
-<Noname>   SIS 85C3x0-Chipset      i386DX+Cx83D87  25         64K                   4         Linux 2.0.27      gcc 2.7.2    |  22.62s  11.47s  120.07s    2.93   0.117
+<Noname>   Eteq 491/493-Chipset    i386DX+IIT3C87  33.3       none                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  19.93s  10.52s  133.61s    3.05   0.091 [12.11.1999 comp 486min]
+<Noname>   VIA 481/495-Chipset     Am386DX         16         256K                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  21.12s  10.36s  137.39s    2.98   0.186 [21.11.1999 comp 489min]
+<Noname>   C&T PEAK/DM-Chipset     i386DX+Cx83D87  16         64K                   7.625     Linux 2.2.10      gcc 2.7.2.3  |  20.76s  10.60s  138.51s    2.97   0.185 [ 3. 1.2000 comp 445min]
+<Noname>   SIS 85C3x0-Chipset      i386DX          25         none                  4         Linux 2.2.10      gcc 2.7.2.3  |  20.80s  10.54s  139.63s    2.96   0.118 [15.11.1999 comp 479min]
 IBM        PS/2 Model 80-311       i386DX+i387DX   20         none                  9.875     Linus 2.0.35      gcc 2.7.2.3  |  21.69s  10.99s  141.28s    2.87   0.143
 <Noname>   Bioteq 3491-Chipset     Am386DX         40         none                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  21.44s  10.96s  142.41s    2.87   0.072 [29.10.1999 comp 502min]
-<Noname>   C&T PEAK/DM-Chipset     i386DX+Cx83D87  25         64K                   4         Linux 2.0.27      gcc 2.7.2    |  23.56s  12.47s  131.00s    2.73   0.109
+<Noname>   VIA 481/495-Chipset     Am386DX         33         none                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  21.82s  12.08s  155.39s    2.69   0.081 [24.11.1999 comp 535min]
+<Noname>   C&T 8230-Chipset        i386DX+Cx83D87  16         none                  7.625     Linux 2.2.10      gcc 2.7.2.3  |  23.21s  12.24s  158.63s    2.60   0.163 [10.12.1999 comp 540min]
+<Noname>   C&T PEAK/DM-Chipset     i386DX          25         none                  7.625     Linux 2.2.10      gcc 2.7.2.3  |  23.83s  12.00s  159.87s    2.59   0.104 [ 4. 1.1999 comp 538min]
 <Noname>   Opti 495-Chipset        Am386DX+Cx83D87 33.3       none                  7.625     Linux 2.2.10      gcc 2.7.2.3  |  23.70s  13.44s  160.44s    2.50   0.074 [28. 9.1999 comp 591min]
 <Noname>   UMC 482/391-Chipset     i386DX+IIT3C87  33.3       none                  5         Linux 2.0.27      gcc 2.7.2    |  24.34s  12.82s  166.97s    2.48   0.074 [ 2.11.1999 comp 598min]
+<Noname>   SARC RC4018-Chipset     Am386DX+Cx83D87 40         none                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  26.29s  13.38s  175.69s    2.34   0.059 [30.11.1999 comp 618min]
+<Noname>   Eteq 491/493-Chipset    i386DX+IIT3C87  25         none                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  26.63s  13.82s  179.86s    2.29   0.091 [11.11.1999 comp 660min]
 <Noname>   Bioteq 3491-Chipset     Am386DX         33         none                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  26.02s  14.55s  174.90s    2.29   0.069 [28.10.1999 comp 609min]
-<Noname>   C&T 8230-Chipset        i386DX+i387DX   25         none                  8         Linux 2.0.27      gcc 2.7.2    |  27.57s  14.97s  162.15s    2.27   0.091
-<Noname>   C&T PEAK/DM-Chipset     i386DX+Cx83D87  20         64K                   4         Linux 2.0.27      gcc 2.7.2    |  29.10s  15.34s  165.43s    2.19   0.110
-<Noname>   OPTi 381/382-Chipset    i386DX+Cx83D87  25         none                  4         Linux 2.0.27      gcc 2.7.2    |  30.57s  15.83s  168.03s    2.13   0.085
-<Noname>   SIS 85C3x0-Chipset      i386DX+Cx83D87  25         none                  4         Linux 2.0.27      gcc 2.7.2    |  32.94s  16.95s  180.37s    1.98   0.079
+<Noname>   VIA 481/495-Chipset     Am386DX         25         none                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  30.48s  15.58s  206.46s    2.01   0.080 [22.11.1999 comp 723min]
+<Noname>   C&T PEAK/DM-Chipset     i386DX          20         none                  7.625     Linux 2.2.10      gcc 2.7.2    |  31.63s  15.40s  203.71s    2.00   0.100 [ 5. 1.2000 comp 689min]
+<Noname>   SARC RC4018-Chipset     Am386DX+IIT3C87 33.333     none                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  32.20s  16.19s  214.58s    1.92   0.058 [28.11.1999 comp 750min]
 <Noname>   Opti 495-Chipset        Am386DX+Cx83D87 25         none                  7.625     Linux 2.2.10      gcc 2.7.2.3  |  32.64s  16.63s  220.51s    1.88   0.075 [27. 9.1999 comp 794min]
-<Noname>   C&T PEAK/DM-Chipset     i386DX+Cx83D87  16         64K                   4         Linux 2.0.27      gcc 2.7.2    |  37.12s  19.37s  206.50s    1.74   0.109
+<Noname>   Eteq 491/493-Chipset    i386DX+IIT3C87  20         none                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  33.70s  17.40s  225.16s    1.82   0.091 [ 9.11.1999 comp 829min]
 <Noname>   Bioteq 3491-Chipset     Am386DX         25         none                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  35.59s  18.00s  236.35s    1.74   0.070 [27.10.1999 comp 824min]
-<Noname>   C&T 8230-Chipset        i386DX+Cx83D87  20         none                  4         Linux 2.0.27      gcc 2.7.2    |  40.56s  22.26s  220.02s    1.63   0.082
-<Noname>   C&T PEAK/DM-Chipset     i386DX+Cx83D87  25         none                  4         Linux 2.0.27      gcc 2.7.2    |  42.91s  22.23s  244.48s    1.50   0.060
+<Noname>   C&T PEAK/DM-Chipset     i386DX          16         none                  7.625     Linux 2.2.10      gcc 2.7.2.3  |  37.56s  19.03s  254.34s    1.64   0.102 [ 6. 1.2000 comp 852min]
+<Noname>   VIA 481/495-Chipset     Am386DX         20         none                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  38.13s  20.68s  256.57s    1.58   0.079 [21.11.1999 comp 906min]
 <Noname>   Opti 495-Chipset        Am386DX+Cx83D87 20         none                  7.625     Linux 2.2.10      gcc 2.7.2.3  |  40.97s  21.04s  276.59s    1.49   0.074 [26. 9.1999 comp 1020min]
+<Noname>   Eteq 491/493-Chipset    i386DX+IIT3C87  16         none                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  41.98s  22.11s  288.66s    1.44   0.090 [ 8.11.1999 comp 1057min]
 <Noname>   Bioteq 3491-Chipset     Am386DX         20         none                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  45.58s  22.78s  304.22s    1.36   0.068 [24.10.1999 comp 1052min]
-<Noname>   C&T 8230-Chipset        i386DX+Cx83D87  16         none                  4         Linux 2.0.27      gcc 2.7.2    |  48.10s  25.91s  274.92s    1.32   0.082
-<Noname>   C&T PEAK/DM-Chipset     i386DX+Cx83D87  20         none                  4         Linux 2.0.27      gcc 2.7.2    |  53.93s  28.07s  310.04s    1.19   0.059
+<Noname>   VIA 481/495-Chipset     Am386DX         16         none                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  49.25s  24.79s  330.80s    1.25   0.078 [18.11.1999 comp 1132min]
 <Noname>   UMC 482/391-Chipset     i386DX+IIT3C87  16.7       none                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  52.42s  26.57s  345.95s    1.18   0.071 [ 1.11.1999 comp 1229min]
 Tandon     TM8000                  i386DX          16         none                  4         Linux 2.0.27      gcc 2.7.2    |  60.64s  32.08s  350.00s    1.05   0.066
-<Noname>   C&T PEAK/DM-Chipset     i386DX+Cx83D87  16         none                  4         Linux 2.0.27      gcc 2.7.2    |  69.79s  36.19s  399.86s    0.92   0.057
 <Noname>   TI TACT823x-Chipset     i386DX          33         none                  4         Linux 2.0.27      gcc 2.7.2    |  68.13s  34.92s  444.39s    0.91   0.028 [14.11.1997]
 Tandon     TM8000                  i386DX           8         none                  4         Linux 2.0.27      gcc 2.7.2    |  87.33s  45.53s  504.37s    0.73   0.091
-
 
 386SX-based systems
 
 Vendor     Machine                 CPU            Clock(MHz)  Cache [on]offchip   Memory(MB)  OS                Compiler     |  BUF32   FL900    MIC51    Index   rel.
 -----------------------------------------------------------------------------------------------------------------------------+-------------------------------------------
+<Noname>   OPTi 295-Chipset        IBM 486SLC2     66         [16K]/128K            7.875     Linux 2.0.35      gcc 2.7.2.3  |   5.69s   2.93s   33.08s   11.26   0.171 [27.12.1999 comp 138min]
 IBM        PS/2 Model 56SLC2       IBM 486SLC2     50         [16K]                 11.875    Linux 2.0.35      gcc 2.7.2.3  |   7.44s   3.73s   43.22s    8.69   0.173 [ 8. 4.1999 comp 161min]
+<Noname>   OPTi 295-Chipset        IBM 486SLC2     66         [16K]                 7.875     Linux 2.0.35      gcc 2.7.2.3  |   9.28s   4.08s   46.90s    7.63   0.116 [26.12.1999 comp 251min]
 IBM        PS/2 Model 56SLC        IBM 386SLC      20         [8K]                  7.875     Linux 2.0.35      gcc 2.7.2.3  |  17.56s   8.89s  106.39s    3.63   0.181 [ 9. 5.1999 comp 363min]
 <Noname>   Cyclone RC2016-Chipset  Am386SX         33.3       none                  7.625     Linux 2.2.6       gcc 2.7.2.3  |  19.05s   9.70s  128.13s    3.23   0.097 [15. 9.1999 comp 449min]
 <Noname>   Headland HT18-Chipset   i386SX          25         none                  7.625     Linux 2.2.10      gcc 2.7.2.3  |  21.84s  12.00s  146.17s    2.74   0.110 [ 9.10.1999 comp 507min]
-<Noname>   Intel 8234x-Chipset     i386SX          20         none                  4         Linux 2.0.27      gcc 2.7.2    |  24.11s  12.84s  153.16s    2.55   0.128 [31.12.1997]
 IBM        PS/2 Model 56SX         i386SX          20         none                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  24.76s  12.27s  164.25s    2.52   0.126 [ 3.10.1999 comp 565min]
+<Noname>   Intel 8234x-Chipset     i386SX          20         none                  7.625     Linux 2.2.10      gcc 2.7.2.3  |  24.87s  12.57s  166.39s    2.48   0.124 [14.12.1999 comp 579min]
 IBM        PS/2 Model 57SX         i386SX          20         none                  7.875     Linux 2.0.35      gcc 2.7.2.3  |  26.61s  13.55s  178.55s    2.31   0.116 [ 8. 4.1999 comp 564min]
 <Noname>   VLSI-82C33x-Chipset     i386SX          20         none                  7.625     Linux 2.2.6       gcc 2.7.2.3  |  27.41s  13.93s  183.47s    2.25   0.112 [30. 9.1999 comp 641min]
 <Noname>   Cyclone RC2016-Chipset  Am386SX         40         none                  4         Linux 2.0.27      gcc 2.7.2    |  28.41s  14.92s  162.07s    2.25   0.056
@@ -275,7 +370,8 @@ IBM        PS/2 Model 57SX         i386SX          20         none              
 <Noname>   UMC 336-Chipset         i386SX          16         none                  7.875     Linux 2.2.10      gcc 2.7.2.3  |  30.23s  15.31s  202.86s    2.04   0.127 [10.10.1999 comp 692min]
 <Noname>   Cyclone RC2016-Chipset  Am386SX         20         none                  7.625     Linux 2.2.6       gcc 2.7.2.3  |  32.42s  16.55s  218.44s    1.89   0.095 [14. 9.1999 comp 758min]
 <Noname>   Cyclone RC2016-Chipset  Am386SX         16.7       none                  7.625     Linux 2.2.6       gcc 2.7.2.3  |  35.68s  17.79s  237.24s    1.74   0.104 [14. 9.1999 comp 817min]
-<Noname>   Intel 82335-Chipset     i386SX          16         none                  4         Linux 2.0.27      gcc 2.7.2    |  63.16s  31.86s  350.67s    1.04   0.065
+<Noname>   Intel 82335-Chipset     i386SX          16         none                  7.750     Linux 2.2.10      gcc 2.7.2.3  |  31.16s  15.99s  207.56s    1.97   0.123 [26.11.1999 comp 713min]
+IBM        PS/2 Model 65SX         i386SX          16         none                 13.875     Linux 2.2.10      gcc 2.7.2.3  |  37.71s  18.91s  256.11s    1.63   0.102 [27.11.1999 comp 959min]
 <Noname>   PCChips Chip 2          Am386SX         8          none                  4         Linux 2.0.27      gcc 2.7.2    | 140.13s  71.44s  778.46s    0.47   0.058
 
 

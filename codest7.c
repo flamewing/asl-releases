@@ -6,6 +6,7 @@
 /*                                                                           */
 /* Historie: 21. 5.1997 Grundsteinlegung                                     */
 /*            2. 1.1999 ChkPC ersetzt                                        */ 
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -100,14 +101,14 @@ static Byte AdrVals[3];
 
 /*--------------------------------------------------------------------------*/
 
-   	static void AddFixed(char *NName, Byte NCode)
+        static void AddFixed(char *NName, Byte NCode)
 BEGIN
    if (InstrZ>=FixedOrderCnt) exit(255);
    FixedOrders[InstrZ].Name=NName;
    FixedOrders[InstrZ++].Code=NCode;
 END
 
-   	static void AddAri(char *NName, Byte NCode, Boolean NMay)
+        static void AddAri(char *NName, Byte NCode, Boolean NMay)
 BEGIN
    if (InstrZ>=AriOrderCnt) exit(255);
    AriOrders[InstrZ].Name=NName;
@@ -115,7 +116,7 @@ BEGIN
    AriOrders[InstrZ++].MayImm=NMay;
 END
 
-   	static void AddRMW(char *NName, Byte NCode)
+        static void AddRMW(char *NName, Byte NCode)
 BEGIN
    if (InstrZ>=RMWOrderCnt) exit(255);
    RMWOrders[InstrZ].Name=NName;
@@ -129,7 +130,7 @@ BEGIN
    RelOrders[InstrZ++].Code=NCode;
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    InstrZ=0; FixedOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*FixedOrderCnt);
    AddFixed("HALT" ,0x8e); AddFixed("IRET" ,0x80); AddFixed("NOP"  ,0x9d);
@@ -159,7 +160,7 @@ BEGIN
    AddRel("JRULE",0x23); AddRel("JRULT",0x25);
 END
 
-	static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    free(FixedOrders);
    free(AriOrders);
@@ -169,7 +170,7 @@ END
 
 /*--------------------------------------------------------------------------*/
 
-	static void AddPrefix(Byte Pref)
+        static void AddPrefix(Byte Pref)
 BEGIN
    BAsmCode[PrefixCnt++]=Pref;
 END
@@ -199,16 +200,18 @@ BEGIN
    else Value=EvalIntExpression(Asc,Int16,&OK);
 
    if (OK)
-    if ((Size==I8) OR (((Mask & (1l << Type1))!=0) AND (Size==None) AND (Hi(Value)==0)))
-     BEGIN
-      AdrVals[0]=Lo(Value); AdrCnt=1;
-      AdrPart=Part1; AdrType=Type1;
-     END
-    else
-     BEGIN
-      AdrVals[0]=Hi(Value); AdrVals[1]=Lo(Value); AdrCnt=2;
-      AdrPart=Part2; AdrType=Type2;
-     END
+    BEGIN
+     if ((Size==I8) OR (((Mask & (1l << Type1))!=0) AND (Size==None) AND (Hi(Value)==0)))
+      BEGIN
+       AdrVals[0]=Lo(Value); AdrCnt=1;
+       AdrPart=Part1; AdrType=Type1;
+      END
+     else
+      BEGIN
+       AdrVals[0]=Hi(Value); AdrVals[1]=Lo(Value); AdrCnt=2;
+       AdrPart=Part2; AdrType=Type2;
+      END
+    END
 END
 
         static void DecideASize(LongInt Mask, char *Asc, LongInt Type1, LongInt Type2, Byte Part1, Byte Part2)
@@ -239,7 +242,7 @@ BEGIN
     END
 END
 
-	static void ChkAdr(LongInt Mask)
+        static void ChkAdr(LongInt Mask)
 BEGIN
    if ( (AdrType!=ModNone) AND ((Mask & (1l << AdrType))==0) )
     BEGIN
@@ -247,7 +250,7 @@ BEGIN
     END
 END
 
-	static void DecodeAdr(char *Asc_O, LongInt Mask)
+        static void DecodeAdr(char *Asc_O, LongInt Mask)
 BEGIN
    Boolean OK,YReg;
    String Asc,Asc2;
@@ -321,7 +324,7 @@ BEGIN
        if (strcasecmp(Asc,"X")==0) AdrType=ModIX;
        else if (strcasecmp(Asc,"Y")==0)
         BEGIN
-	 AdrType=ModIY; AddPrefix(0x90);
+         AdrType=ModIY; AddPrefix(0x90);
         END
        else WrXError(1445,Asc);
        ChkAdr(Mask); return;
@@ -379,7 +382,7 @@ END
 
 /*--------------------------------------------------------------------------*/
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
    return False;
 END
@@ -774,12 +777,14 @@ BEGIN
            memcpy(BAsmCode+1+PrefixCnt,AdrVals,AdrCnt);
            AdrInt=EvalIntExpression(ArgStr[3],UInt16,&OK)-(EProgCounter()+PrefixCnt+1+AdrCnt);
            if (OK)
-            if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
-            else
-             BEGIN
-              BAsmCode[PrefixCnt+1+AdrCnt]=AdrInt & 0xff;
-              CodeLen=PrefixCnt+1+AdrCnt+1;
-             END
+            BEGIN
+             if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
+             else
+              BEGIN
+               BAsmCode[PrefixCnt+1+AdrCnt]=AdrInt & 0xff;
+               CodeLen=PrefixCnt+1+AdrCnt+1;
+              END
+            END
           END
         END
       END
@@ -827,12 +832,14 @@ BEGIN
        BEGIN
         AdrInt=EvalIntExpression(ArgStr[1],UInt16,&OK)-(EProgCounter()+2);
         if (OK)
-         if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
-         else
-          BEGIN
-           BAsmCode[0]=RelOrders[z].Code; BAsmCode[1]=AdrInt & 0xff;
-           CodeLen=2;
-          END
+         BEGIN
+          if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
+          else
+           BEGIN
+            BAsmCode[0]=RelOrders[z].Code; BAsmCode[1]=AdrInt & 0xff;
+            CodeLen=2;
+           END
+         END
        END
       return;
      END
@@ -870,7 +877,7 @@ BEGIN
    SetFlag(&DoPadding,DoPaddingName,False);
 END
 
-	void codest7_init(void)
+        void codest7_init(void)
 BEGIN
    CPUST7=AddCPU("ST7",SwitchTo_ST7);
 END

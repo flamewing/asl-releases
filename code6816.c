@@ -6,12 +6,15 @@
 /*                                                                           */
 /* Historie: 15.10.1996 Grundsteinlegung                                     */
 /*            2. 1.1999 ChkPC-Anpassung                                      */
+/*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
+/*           30. 8.2000 added Moto16 Pseudos                                 */
 /*                                                                           */
 /*****************************************************************************/
 
 #include "stdinc.h"
 
 #include <string.h>
+#include <ctype.h>
 
 #include "nls.h"
 #include "bpemu.h"
@@ -156,7 +159,7 @@ BEGIN
    EmuOrders[InstrZ++].Code2=NCode2;
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    FixedOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*FixedOrderCnt); InstrZ=0;
    AddFixed("ABA"   ,0x370b); AddFixed("ABX"   ,0x374f);
@@ -329,7 +332,7 @@ BEGIN
    Regs[4]="Z"; Regs[5]="K"; Regs[6]="CCR";
 END
 
-	static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    free(FixedOrders);
    free(RelOrders);
@@ -346,7 +349,7 @@ END
 
 typedef enum {ShortDisp,LongDisp,NoDisp} DispType;
 
-	static void ChkAdr(Byte Mask)
+        static void ChkAdr(Byte Mask)
 BEGIN
    if ((AdrMode!=ModNone) AND ((Mask AND (1 << AdrMode))==0))
     BEGIN
@@ -355,7 +358,7 @@ BEGIN
     END
 END
 
-   	static void SplitSize(char *Asc, DispType *Erg)
+        static void SplitSize(char *Asc, DispType *Erg)
 BEGIN
    if (strlen(Asc)<1) *Erg=NoDisp;
    else if (*Asc=='>') *Erg=LongDisp;
@@ -363,7 +366,7 @@ BEGIN
    else *Erg=NoDisp;
 END
 
-	static void DecodeAdr(int Start, int Stop, Boolean LongAdr, Byte Mask)
+        static void DecodeAdr(int Start, int Stop, Boolean LongAdr, Byte Mask)
 BEGIN
    Integer V16;
    LongInt V32;
@@ -399,17 +402,19 @@ BEGIN
         if ((Size==NoDisp) AND (V16>=-128) AND (V16<=127) AND ((Mask & MModImmExt)!=0))
          Size=ShortDisp;
         if (OK)
-         if (Size==ShortDisp)
-          BEGIN
-           AdrVals[0]=Lo(V16);
-           AdrCnt=1; AdrMode=ModImmExt;
-          END
-         else
-          BEGIN
-           AdrVals[0]=Hi(V16);
-           AdrVals[1]=Lo(V16);
-           AdrCnt=2; AdrMode=ModImm;
-          END
+         BEGIN
+          if (Size==ShortDisp)
+           BEGIN
+            AdrVals[0]=Lo(V16);
+            AdrCnt=1; AdrMode=ModImmExt;
+           END
+          else
+           BEGIN
+            AdrVals[0]=Hi(V16);
+            AdrVals[1]=Lo(V16);
+            AdrCnt=2; AdrMode=ModImm;
+           END
+         END
         break;
        case 2:
         V32=EvalIntExpression(s,Int32,&OK);
@@ -436,40 +441,42 @@ BEGIN
      else if (strcasecmp(ArgStr[Start+1],"Z")==0) AdrPart=0x20;
      else WrXError(1445,ArgStr[Start+1]);
      if (AdrPart!=0xff)
-      if (strcasecmp(ArgStr[Start],"E")==0) AdrMode=ModDispE;
-      else
-       BEGIN
-        SplitSize(ArgStr[Start],&Size);
-        if (Size==ShortDisp)
-	 V32=EvalIntExpression(ArgStr[Start],UInt8,&OK);
-        else if (LongAdr)
-         V32=EvalIntExpression(ArgStr[Start],SInt20,&OK);
-        else
-         V32=EvalIntExpression(ArgStr[Start],SInt16,&OK);
-        if (OK)
-         BEGIN
-          if (Size==NoDisp)
-           if ((V32>=0) AND (V32<=255) AND ((Mask & MModDisp8)!=0)) Size=ShortDisp;
-          if (Size==ShortDisp)
-           BEGIN
-            AdrVals[0]=V32 & 0xff;
-	    AdrCnt=1; AdrMode=ModDisp8;
-           END
-          else if (LongAdr)
-	   BEGIN
-            AdrVals[0]=(V32 >> 16) & 0x0f;
-            AdrVals[1]=(V32 >> 8) & 0xff;
-            AdrVals[2]=V32 & 0xff;
-            AdrCnt=3; AdrMode=ModDisp16;
-           END
-          else
-           BEGIN
-            AdrVals[0]=(V32 >> 8) & 0xff;
-            AdrVals[1]=V32 & 0xff;
-            AdrCnt=2; AdrMode=ModDisp16;
-           END
-         END
-       END
+      BEGIN
+       if (strcasecmp(ArgStr[Start],"E")==0) AdrMode=ModDispE;
+       else
+        BEGIN
+         SplitSize(ArgStr[Start],&Size);
+         if (Size==ShortDisp)
+          V32=EvalIntExpression(ArgStr[Start],UInt8,&OK);
+         else if (LongAdr)
+          V32=EvalIntExpression(ArgStr[Start],SInt20,&OK);
+         else
+          V32=EvalIntExpression(ArgStr[Start],SInt16,&OK);
+         if (OK)
+          BEGIN
+           if (Size==NoDisp)
+            if ((V32>=0) AND (V32<=255) AND ((Mask & MModDisp8)!=0)) Size=ShortDisp;
+           if (Size==ShortDisp)
+            BEGIN
+             AdrVals[0]=V32 & 0xff;
+             AdrCnt=1; AdrMode=ModDisp8;
+            END
+           else if (LongAdr)
+            BEGIN
+             AdrVals[0]=(V32 >> 16) & 0x0f;
+             AdrVals[1]=(V32 >> 8) & 0xff;
+             AdrVals[2]=V32 & 0xff;
+             AdrCnt=3; AdrMode=ModDisp16;
+            END
+           else
+            BEGIN
+             AdrVals[0]=(V32 >> 8) & 0xff;
+             AdrVals[1]=V32 & 0xff;
+             AdrCnt=2; AdrMode=ModDisp16;
+            END
+          END
+        END
+      END
      ChkAdr(Mask); return;
     END
 
@@ -480,31 +487,33 @@ BEGIN
      SplitSize(ArgStr[Start],&Size);
      V32=EvalIntExpression(ArgStr[Start],UInt20,&OK);
      if (OK)
-      if (LongAdr)
-       BEGIN
-        AdrVals[0]=(V32 >> 16) & 0xff;
-        AdrVals[1]=(V32 >> 8) & 0xff;
-        AdrVals[2]=V32 & 0xff;
-        AdrMode=ModAbs; AdrCnt=3;
-       END
-      else
-       BEGIN
-        if ((V32 >> 16)!=Reg_EK) WrError(110);
-        AdrVals[0]=(V32 >> 8) & 0xff;
-        AdrVals[1]=V32 & 0xff;
-        AdrMode=ModAbs; AdrCnt=2;
-       END
+      BEGIN
+       if (LongAdr)
+        BEGIN
+         AdrVals[0]=(V32 >> 16) & 0xff;
+         AdrVals[1]=(V32 >> 8) & 0xff;
+         AdrVals[2]=V32 & 0xff;
+         AdrMode=ModAbs; AdrCnt=3;
+        END
+       else
+        BEGIN
+         if ((V32 >> 16)!=Reg_EK) WrError(110);
+         AdrVals[0]=(V32 >> 8) & 0xff;
+         AdrVals[1]=V32 & 0xff;
+         AdrMode=ModAbs; AdrCnt=2;
+        END
+      END
      ChkAdr(Mask); return;
     END
 END
 
 /*-------------------------------------------------------------------------*/
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
 #define ASSUME6816Count 1
    static ASSUMERec ASSUME6816s[ASSUME6816Count]=
-	       {{"EK" , &Reg_EK , 0 , 0xff , 0x100}};
+               {{"EK" , &Reg_EK , 0 , 0xff , 0x100}};
 
    if (Memo("ASSUME"))
     BEGIN
@@ -515,7 +524,7 @@ BEGIN
    return False;
 END
 
-	static void MakeCode_6816(void)
+        static void MakeCode_6816(void)
 BEGIN
    int z,z2;
    Boolean OK;
@@ -523,6 +532,24 @@ BEGIN
    LongInt AdrLong;
 
    CodeLen=0; DontPrint=False; AdrCnt=0; OpSize=(-1);
+
+   /* Operandengroesse festlegen. ACHTUNG! Das gilt nur fuer die folgenden
+      Pseudobefehle! Die Maschinenbefehle ueberschreiben diesen Wert! */
+
+   if (*AttrPart!='\0')
+    switch (toupper(*AttrPart))
+     BEGIN
+      case 'B':OpSize=0; break;
+      case 'W':OpSize=1; break;
+      case 'L':OpSize=2; break;
+      case 'Q':OpSize=3; break;
+      case 'S':OpSize=4; break;
+      case 'D':OpSize=5; break;
+      case 'X':OpSize=6; break;
+      case 'P':OpSize=7; break;
+      default:
+       WrError(1107); return;
+     END
 
    /* zu ignorierendes */
 
@@ -533,6 +560,7 @@ BEGIN
    if (DecodePseudo()) return;
 
    if (DecodeMotoPseudo(True)) return;
+   if (DecodeMoto16Pseudo(OpSize, True)) return;
 
    /* Anweisungen ohne Argument */
 
@@ -625,7 +653,7 @@ BEGIN
         if (OK)
          BEGIN
           z2=0; NLS_UpString(ArgStr[z]);
-	  while ((z2<RegCnt) AND (strcmp(ArgStr[z],Regs[z2])!=0)) z2++;
+          while ((z2<RegCnt) AND (strcmp(ArgStr[z],Regs[z2])!=0)) z2++;
           if (z2>=RegCnt)
            BEGIN
             WrXError(1445,ArgStr[z]); OK=False;
@@ -825,12 +853,12 @@ BEGIN
              break;
             case ModDisp16:
              BAsmCode[0]=0x08+z+AdrPart; BAsmCode[1]=Mask;
-	     memcpy(BAsmCode+2,AdrVals,AdrCnt);
+             memcpy(BAsmCode+2,AdrVals,AdrCnt);
              CodeLen=2+AdrCnt;
              break;
             case ModAbs:
              BAsmCode[0]=0x38+z; BAsmCode[1]=Mask;
-	     memcpy(BAsmCode+2,AdrVals,AdrCnt);
+             memcpy(BAsmCode+2,AdrVals,AdrCnt);
              CodeLen=2+AdrCnt;
              break;
            END
@@ -856,12 +884,12 @@ BEGIN
            BEGIN
             case ModDisp16:
              BAsmCode[0]=0x27; BAsmCode[1]=0x08+z+AdrPart;
-  	     memcpy(BAsmCode+4,AdrVals,AdrCnt);
+             memcpy(BAsmCode+4,AdrVals,AdrCnt);
              CodeLen=4+AdrCnt;
              break;
             case ModAbs:
              BAsmCode[0]=0x27; BAsmCode[1]=0x38+z;
-  	     memcpy(BAsmCode+4,AdrVals,AdrCnt);
+             memcpy(BAsmCode+4,AdrVals,AdrCnt);
              CodeLen=4+AdrCnt;
              break;
            END
@@ -902,8 +930,8 @@ BEGIN
                 BAsmCode[2]=0;
                 BAsmCode[3]=AdrVals[0];
                 BAsmCode[4]=(AdrLong >> 8) & 0xff;
-	        BAsmCode[5]=AdrLong & 0xff;
-	        CodeLen=6;
+                BAsmCode[5]=AdrLong & 0xff;
+                CodeLen=6;
                END
               break;
              case ModDisp16:
@@ -913,8 +941,8 @@ BEGIN
                 BAsmCode[0]=0x0a+AdrPart+z;
                 memcpy(BAsmCode+2,AdrVals,2);
                 BAsmCode[4]=(AdrLong >> 8) & 0xff;
-	        BAsmCode[5]=AdrLong & 0xff;
-	        CodeLen=6;
+                BAsmCode[5]=AdrLong & 0xff;
+                CodeLen=6;
                END
               break;
              case ModAbs:
@@ -924,8 +952,8 @@ BEGIN
                 BAsmCode[0]=0x3a+z;
                 memcpy(BAsmCode+2,AdrVals,2);
                 BAsmCode[4]=(AdrLong >> 8) & 0xff;
-	        BAsmCode[5]=AdrLong & 0xff;
-	        CodeLen=6;
+                BAsmCode[5]=AdrLong & 0xff;
+                CodeLen=6;
                END
               break;
             END
@@ -953,7 +981,7 @@ BEGIN
           break;
          case ModDisp20:
           BAsmCode[0]=(Memo("JMP"))?0x4b:0x89;
-	  BAsmCode[0]+=AdrPart;
+          BAsmCode[0]+=AdrPart;
           memcpy(BAsmCode+1,AdrVals,AdrCnt);
           CodeLen=1+AdrCnt;
           break;
@@ -1032,13 +1060,13 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static void InitCode_6816(void)
+        static void InitCode_6816(void)
 BEGIN
    SaveInitProc();
    Reg_EK=0;
 END
 
-	static Boolean IsDef_6816(void)
+        static Boolean IsDef_6816(void)
 BEGIN
    return False;
 END
@@ -1048,12 +1076,12 @@ BEGIN
    DeinitFields();
 END
 
-	static void SwitchTo_6816(void)
+        static void SwitchTo_6816(void)
 BEGIN
    TurnWords=False; ConstMode=ConstModeMoto; SetIsOccupied=False;
 
    PCSymbol="*"; HeaderID=0x65; NOPCode=0x274c;
-   DivideChars=","; HasAttrs=False;
+   DivideChars=","; HasAttrs=True;
 
    ValidSegs=(1<<SegCode);
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
@@ -1061,11 +1089,12 @@ BEGIN
 
    MakeCode=MakeCode_6816; IsDef=IsDef_6816;
    SwitchFrom=SwitchFrom_6816;
+   AddMoto16PseudoONOFF();
 
    InitFields();
 END
 
-	void code6816_init(void)
+        void code6816_init(void)
 BEGIN
    CPU6816=AddCPU("68HC16",SwitchTo_6816);
 

@@ -8,6 +8,7 @@
 /*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
 /*           18. 8.1992 BookKeeping-Aufruf in RES                            */
 /*            2. 1.1999 ChkPC-Anpassung                                      */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -74,7 +75,7 @@ static ImmOrder *ImmOrders;
 
 /*----------------------------------------------------------------------------*/
 
-	static void AddFixed(char *NName, Word NCode)
+        static void AddFixed(char *NName, Word NCode)
 BEGIN
    if (InstrZ>=FixedOrderCnt) exit(255);
    FixedOrders[InstrZ].Name=NName;
@@ -114,7 +115,7 @@ BEGIN
    ImmOrders[InstrZ++].Mask=NMask;
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    FixedOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*FixedOrderCnt); InstrZ=0;
    AddFixed("ABS"   , 0x7f88);  AddFixed("APAC"  , 0x7f8f);
@@ -159,7 +160,7 @@ BEGIN
    AddImm("MPYK", 0x8000, -4096, 4095, 0x1fff);
 END
 
-	static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    free(FixedOrders);
    free(JmpOrders);
@@ -170,7 +171,7 @@ END
 
 /*----------------------------------------------------------------------------*/
 
-	static Word EvalARExpression(char *Asc, Boolean *OK)
+        static Word EvalARExpression(char *Asc, Boolean *OK)
 BEGIN
    *OK=True;
    if (strcasecmp(Asc,"AR0")==0) return 0;
@@ -178,7 +179,7 @@ BEGIN
    return EvalIntExpression(Asc,UInt1,OK);
 END
 
-	static void DecodeAdr(char *Arg, int Aux, Boolean Must1)
+        static void DecodeAdr(char *Arg, int Aux, Boolean Must1)
 BEGIN
    Byte h;
    char *p;
@@ -194,9 +195,9 @@ BEGIN
       BEGIN
        h=EvalARExpression(ArgStr[Aux],&AdrOK);
        if (AdrOK)
-	BEGIN
-	 AdrMode&=0xf7; AdrMode+=h;
-	END
+        BEGIN
+         AdrMode&=0xf7; AdrMode+=h;
+        END
       END
      else AdrOK=True;
     END
@@ -208,23 +209,25 @@ BEGIN
       BEGIN
        AdrOK=True;
        for (p=Arg+3; *p!='\0'; p++)
-	if ((*p>'9') OR (*p<'0')) AdrOK=False;
+        if ((*p>'9') OR (*p<'0')) AdrOK=False;
        if (AdrOK) h=EvalIntExpression(Arg+3,UInt8,&AdrOK);
       END
      if (NOT AdrOK) h=EvalIntExpression(Arg,Int8,&AdrOK);
      if (AdrOK)
-      if ((Must1) AND (h<0x80) AND (NOT FirstPassUnknown))
-       BEGIN
-	WrError(1315); AdrOK=False;
-       END
-      else
-       BEGIN
-	AdrMode=h & 0x7f; ChkSpace(SegData);
-       END
+      BEGIN
+       if ((Must1) AND (h<0x80) AND (NOT FirstPassUnknown))
+        BEGIN
+         WrError(1315); AdrOK=False;
+        END
+       else
+        BEGIN
+         AdrMode=h & 0x7f; ChkSpace(SegData);
+        END
+      END
     END
 END
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
    Word Size;
    int z,z2;
@@ -247,11 +250,11 @@ BEGIN
        Size=EvalIntExpression(ArgStr[1],Int16,&OK);
        if (FirstPassUnknown) WrError(1820);
        if ((OK) AND (NOT FirstPassUnknown))
-	BEGIN
-	 DontPrint=True;
-	 CodeLen=Size;
-	 BookKeeping();
-	END
+        BEGIN
+         DontPrint=True;
+         CodeLen=Size;
+         BookKeeping();
+        END
       END
      return True;
     END
@@ -263,35 +266,35 @@ BEGIN
       BEGIN
        OK=True;
        for (z=1; z<=ArgCnt; z++)
-	if (OK)
-	 BEGIN
-	  EvalExpression(ArgStr[z],&t);
-	  switch (t.Typ)
+        if (OK)
+         BEGIN
+          EvalExpression(ArgStr[z],&t);
+          switch (t.Typ)
            BEGIN
-	    case TempInt:
+            case TempInt:
              if ((t.Contents.Int<-32768) OR (t.Contents.Int>0xffff))
-	      BEGIN
-	       WrError(1320); OK=False;
-	      END
-	     else WAsmCode[CodeLen++]=t.Contents.Int;
-	     break;
-	    case TempFloat:
+              BEGIN
+               WrError(1320); OK=False;
+              END
+             else WAsmCode[CodeLen++]=t.Contents.Int;
+             break;
+            case TempFloat:
              WrError(1135); OK=False;
-	     break;
-	    case TempString:
+             break;
+            case TempString:
              for (p=t.Contents.Ascii,z2=0; *p!='\0'; p++,z2++)
               BEGIN
-	       if ((z2&1)==0)
-		WAsmCode[CodeLen]=CharTransTable[((usint)*p)&0xff];
-	       else
-		WAsmCode[CodeLen++]+=((Word) CharTransTable[((usint)*p)&0xff]) << 8;
+               if ((z2&1)==0)
+                WAsmCode[CodeLen]=CharTransTable[((usint)*p)&0xff];
+               else
+                WAsmCode[CodeLen++]+=((Word) CharTransTable[((usint)*p)&0xff]) << 8;
               END
-	     if ((z2&1)==0) CodeLen++;
-	     break;
-	    default:
+             if ((z2&1)==0) CodeLen++;
+             break;
+            default:
              OK=False;
-	   END
-	 END
+           END
+         END
        if (NOT OK) CodeLen=0;
       END
      return True;
@@ -300,7 +303,7 @@ BEGIN
    return False;
 END
 
-	static void MakeCode_3201X(void)
+        static void MakeCode_3201X(void)
 BEGIN
    Boolean OK,HasSh;
    Word AdrWord;
@@ -355,11 +358,11 @@ BEGIN
       if ((ArgCnt<1) OR (ArgCnt>2)) WrError(1110);
       else
        BEGIN
-	DecodeAdr(ArgStr[1],2,AdrOrders[z].Must1);
-	if (AdrOK)
-	 BEGIN
-	  CodeLen=1; WAsmCode[0]=AdrOrders[z].Code+AdrMode;
-	 END
+        DecodeAdr(ArgStr[1],2,AdrOrders[z].Must1);
+        if (AdrOK)
+         BEGIN
+          CodeLen=1; WAsmCode[0]=AdrOrders[z].Code+AdrMode;
+         END
        END
       return;
      END
@@ -403,11 +406,13 @@ BEGIN
             if ((OK) AND (FirstPassUnknown)) AdrWord=0;
            END
           if (OK)
-           if ((AdrShiftOrders[z].AllowShifts & (1 << AdrWord))==0) WrError(1380);
-           else
-            BEGIN
-             CodeLen=1; WAsmCode[0]=AdrShiftOrders[z].Code+AdrMode+(AdrWord << 8);
-            END
+           BEGIN
+            if ((AdrShiftOrders[z].AllowShifts & (1 << AdrWord))==0) WrError(1380);
+            else
+             BEGIN
+              CodeLen=1; WAsmCode[0]=AdrShiftOrders[z].Code+AdrMode+(AdrWord << 8);
+             END
+           END
          END
        END
       return;
@@ -422,16 +427,16 @@ BEGIN
       BEGIN
        DecodeAdr(ArgStr[1],3,False);
        if (AdrOK)
-	BEGIN
-	 AdrWord=EvalIntExpression(ArgStr[2],UInt3,&OK);
-	 if (OK)
-	  BEGIN
-	   ChkSpace(SegIO);
-	   CodeLen=1;
-	   WAsmCode[0]=0x4000+AdrMode+(AdrWord << 8);
-	   if (Memo("OUT")) WAsmCode[0]+=0x800;
-	  END
-	END
+        BEGIN
+         AdrWord=EvalIntExpression(ArgStr[2],UInt3,&OK);
+         if (OK)
+          BEGIN
+           ChkSpace(SegIO);
+           CodeLen=1;
+           WAsmCode[0]=0x4000+AdrMode+(AdrWord << 8);
+           if (Memo("OUT")) WAsmCode[0]+=0x800;
+          END
+        END
       END
      return;
     END
@@ -468,9 +473,9 @@ BEGIN
       BEGIN
        AdrWord=EvalARExpression(ArgStr[1],&OK);
        if (OK)
-	BEGIN
-	 CodeLen=1; WAsmCode[0]=0x6880+AdrWord;
-	END
+        BEGIN
+         CodeLen=1; WAsmCode[0]=0x6880+AdrWord;
+        END
       END
      return;
     END
@@ -482,15 +487,15 @@ BEGIN
       BEGIN
        AdrWord=EvalARExpression(ArgStr[1],&OK);
        if (OK)
-	BEGIN
-	 DecodeAdr(ArgStr[2],3,False);
-	 if (AdrOK)
-	  BEGIN
-	   CodeLen=1;
-	   WAsmCode[0]=0x3000+AdrMode+(AdrWord << 8);
-	   if (Memo("LAR")) WAsmCode[0]+=0x800;
-	  END
-	END
+        BEGIN
+         DecodeAdr(ArgStr[2],3,False);
+         if (AdrOK)
+          BEGIN
+           CodeLen=1;
+           WAsmCode[0]=0x3000+AdrMode+(AdrWord << 8);
+           if (Memo("LAR")) WAsmCode[0]+=0x800;
+          END
+        END
       END
      return;
     END
@@ -502,14 +507,14 @@ BEGIN
       BEGIN
        AdrWord=EvalARExpression(ArgStr[1],&OK);
        if (OK)
-	BEGIN
-	 WAsmCode[0]=EvalIntExpression(ArgStr[2],Int8,&OK);
-	 if (OK)
-	  BEGIN
-	   CodeLen=1;
-	   WAsmCode[0]=Lo(WAsmCode[0])+0x7000+(AdrWord << 8);
-	  END
-	END
+        BEGIN
+         WAsmCode[0]=EvalIntExpression(ArgStr[2],Int8,&OK);
+         if (OK)
+          BEGIN
+           CodeLen=1;
+           WAsmCode[0]=Lo(WAsmCode[0])+0x7000+(AdrWord << 8);
+          END
+        END
       END
      return;
     END
@@ -517,7 +522,7 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static Boolean IsDef_3201X(void)
+        static Boolean IsDef_3201X(void)
 BEGIN
    return (Memo("PORT"));
 END
@@ -527,7 +532,7 @@ BEGIN
    DeinitFields();
 END
 
-	static void SwitchTo_3201X(void)
+        static void SwitchTo_3201X(void)
 BEGIN
    TurnWords=False; ConstMode=ConstModeIntel; SetIsOccupied=False;
 
@@ -546,7 +551,7 @@ BEGIN
    SwitchFrom=SwitchFrom_3201X; InitFields();
 END
 
-	void code3201x_init(void)
+        void code3201x_init(void)
 BEGIN
    CPU32010=AddCPU("32010",SwitchTo_3201X);
    CPU32015=AddCPU("32015",SwitchTo_3201X);

@@ -12,6 +12,7 @@
 /*           10. 3.1999 PPC403-MMU-Befehle                                   */
 /*           28. 3.1999 PPC403GB auf GC korrigiert (erst der hat eine MMU)   */
 /*            8. 9.1999 REG-Befehl nachgeruestet                             */
+/*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -111,7 +112,7 @@ END;
 */
 /*-------------------------------------------------------------------------*/
 
-	static void AddFixed(char *NName1, char *NName2, LongInt NCode, Byte NMask)
+        static void AddFixed(char *NName1, char *NName2, LongInt NCode, Byte NMask)
 BEGIN
    if (InstrZ>=FixedOrderCount) exit(255);
    FixedOrders[InstrZ].Name=(MomCPU==CPU6000)?NName2:NName1;
@@ -151,7 +152,7 @@ BEGIN
    FReg1Orders[InstrZ++].CPUMask=NMask;
 END
 
-	static void AddSReg2(char *NName, LongInt NCode, Byte NMask)
+        static void AddSReg2(char *NName, LongInt NCode, Byte NMask)
 BEGIN
    if (InstrZ>=Reg2OrderCount) exit(255);
    if (NName==Nil) exit(255);
@@ -160,7 +161,7 @@ BEGIN
    Reg2Orders[InstrZ++].CPUMask=NMask;
 END
 
-	static void AddReg2(char *NName1, char *NName2, LongInt NCode, Byte NMask, Boolean WithOE, Boolean WithFL)
+        static void AddReg2(char *NName1, char *NName2, LongInt NCode, Byte NMask, Boolean WithOE, Boolean WithFL)
 BEGIN
    String NName;
 
@@ -185,7 +186,7 @@ BEGIN
     END
 END
 
-	static void AddCReg2(char *NName1, char *NName2, LongWord NCode, Byte NMask)
+        static void AddCReg2(char *NName1, char *NName2, LongWord NCode, Byte NMask)
 BEGIN
    if (InstrZ>=CReg2OrderCount) exit(255);
    CReg2Orders[InstrZ].Name=(MomCPU==CPU6000)?NName2:NName1;
@@ -193,7 +194,7 @@ BEGIN
    CReg2Orders[InstrZ++].CPUMask=NMask;
 END
 
-	static void AddSFReg2(char *NName, LongInt NCode, Byte NMask)
+        static void AddSFReg2(char *NName, LongInt NCode, Byte NMask)
 BEGIN
    if (InstrZ>=FReg2OrderCount) exit(255);
    if (NName==Nil) exit(255);
@@ -202,7 +203,7 @@ BEGIN
    FReg2Orders[InstrZ++].CPUMask=NMask;
 END
 
-	static void AddFReg2(char *NName1, char *NName2, LongInt NCode, Byte NMask, Boolean WithFL)
+        static void AddFReg2(char *NName1, char *NName2, LongInt NCode, Byte NMask, Boolean WithFL)
 BEGIN
    String NName;
 
@@ -223,7 +224,7 @@ BEGIN
    Reg2BOrders[InstrZ++].CPUMask=NMask;
 END
 
-	static void AddSReg2Swap(char *NName, LongInt NCode, Byte NMask)
+        static void AddSReg2Swap(char *NName, LongInt NCode, Byte NMask)
 BEGIN
    if (InstrZ>=Reg2SwapOrderCount) exit(255);
    if (NName==Nil) exit(255);
@@ -232,7 +233,7 @@ BEGIN
    Reg2SwapOrders[InstrZ++].CPUMask=NMask;
 END
 
-	static void AddReg2Swap(char *NName1, char *NName2, LongInt NCode, Byte NMask, Boolean WithOE, Boolean WithFL)
+        static void AddReg2Swap(char *NName1, char *NName2, LongInt NCode, Byte NMask, Boolean WithOE, Boolean WithFL)
 BEGIN
    String NName;
 
@@ -265,7 +266,7 @@ BEGIN
    NoDestOrders[InstrZ++].CPUMask=NMask;
 END
 
-	static void AddSReg3(char *NName, LongInt NCode, Byte NMask)
+        static void AddSReg3(char *NName, LongInt NCode, Byte NMask)
 BEGIN
    if (InstrZ>=Reg3OrderCount) exit(255);
    if (NName==Nil) exit(255);
@@ -274,7 +275,7 @@ BEGIN
    Reg3Orders[InstrZ++].CPUMask=NMask;
 END
 
-	static void AddReg3(char *NName1, char *NName2, LongInt NCode, Byte NMask, Boolean WithOE, Boolean WithFL)
+        static void AddReg3(char *NName1, char *NName2, LongInt NCode, Byte NMask, Boolean WithOE, Boolean WithFL)
 BEGIN
    String NName;
 
@@ -299,7 +300,7 @@ BEGIN
     END
 END
 
-	static void AddCReg3(char *NName, LongWord NCode, CPUVar NMask)
+        static void AddCReg3(char *NName, LongWord NCode, CPUVar NMask)
 BEGIN
    if (InstrZ>=CReg3OrderCount) exit(255);
    CReg3Orders[InstrZ].Name=NName;
@@ -307,7 +308,7 @@ BEGIN
    CReg3Orders[InstrZ++].CPUMask=NMask;
 END
 
-	static void AddSFReg3(char *NName, LongInt NCode, Byte NMask)
+        static void AddSFReg3(char *NName, LongInt NCode, Byte NMask)
 BEGIN
    if (InstrZ>=FReg3OrderCount) exit(255);
    if (NName==Nil) exit(255);
@@ -316,7 +317,7 @@ BEGIN
    FReg3Orders[InstrZ++].CPUMask=NMask;
 END
 
-	static void AddFReg3(char *NName1, char *NName2, LongInt NCode, Byte NMask, Boolean WithFL)
+        static void AddFReg3(char *NName1, char *NName2, LongInt NCode, Byte NMask, Boolean WithFL)
 BEGIN
    String NName;
 
@@ -329,7 +330,7 @@ BEGIN
     END
 END
 
-	static void AddSReg3Swap(char *NName, LongInt NCode, Byte NMask)
+        static void AddSReg3Swap(char *NName, LongInt NCode, Byte NMask)
 BEGIN
    if (InstrZ>=Reg3SwapOrderCount) exit(255);
    if (NName==Nil) exit(255);
@@ -338,7 +339,7 @@ BEGIN
    Reg3SwapOrders[InstrZ++].CPUMask=NMask;
 END
 
-	static void AddReg3Swap(char *NName1, char *NName2, LongInt NCode, Byte NMask, Boolean WithFL)
+        static void AddReg3Swap(char *NName1, char *NName2, LongInt NCode, Byte NMask, Boolean WithFL)
 BEGIN
    String NName;
 
@@ -351,7 +352,7 @@ BEGIN
     END
 END
 
-	static void AddMixed(char *NName1, char *NName2, LongWord NCode, Byte NMask)
+        static void AddMixed(char *NName1, char *NName2, LongWord NCode, Byte NMask)
 BEGIN
    if (InstrZ>=MixedOrderCount) exit(255);
    MixedOrders[InstrZ].Name=(MomCPU==CPU6000)?NName2:NName1;
@@ -359,7 +360,7 @@ BEGIN
    MixedOrders[InstrZ++].CPUMask=NMask;
 END
 
-	static void AddSFReg4(char *NName, LongWord NCode, Byte NMask)
+        static void AddSFReg4(char *NName, LongWord NCode, Byte NMask)
 BEGIN
    if (InstrZ>=FReg4OrderCount) exit(255);
    if (NName==Nil) exit(255);
@@ -368,7 +369,7 @@ BEGIN
    FReg4Orders[InstrZ++].CPUMask=NMask;
 END
 
-	static void AddFReg4(char *NName1, char *NName2, LongWord NCode, Byte NMask, Boolean WithFL)
+        static void AddFReg4(char *NName1, char *NName2, LongWord NCode, Byte NMask, Boolean WithFL)
 BEGIN
    String NName;
 
@@ -381,7 +382,7 @@ BEGIN
     END
 END
 
-	static void AddRegDisp(char *NName1, char *NName2, LongWord NCode, Byte NMask)
+        static void AddRegDisp(char *NName1, char *NName2, LongWord NCode, Byte NMask)
 BEGIN
    if (InstrZ>=RegDispOrderCount) exit(255);
    RegDispOrders[InstrZ].Name=(MomCPU==CPU6000)?NName2:NName1;
@@ -389,7 +390,7 @@ BEGIN
    RegDispOrders[InstrZ++].CPUMask=NMask;
 END
 
-	static void AddFRegDisp(char *NName1, char *NName2, LongWord NCode, Byte NMask)
+        static void AddFRegDisp(char *NName1, char *NName2, LongWord NCode, Byte NMask)
 BEGIN
    if (InstrZ>=FRegDispOrderCount) exit(255);
    FRegDispOrders[InstrZ].Name=(MomCPU==CPU6000)?NName2:NName1;
@@ -397,7 +398,7 @@ BEGIN
    FRegDispOrders[InstrZ++].CPUMask=NMask;
 END
 
-	static void AddSReg2Imm(char *NName, LongWord NCode, Byte NMask)
+        static void AddSReg2Imm(char *NName, LongWord NCode, Byte NMask)
 BEGIN
    if (InstrZ>=Reg2ImmOrderCount) exit(255);
    if (NName==Nil) exit(255);
@@ -406,7 +407,7 @@ BEGIN
    Reg2ImmOrders[InstrZ++].CPUMask=NMask;
 END
 
-	static void AddReg2Imm(char *NName1, char *NName2, LongWord NCode, Byte NMask, Boolean WithFL)
+        static void AddReg2Imm(char *NName1, char *NName2, LongWord NCode, Byte NMask, Boolean WithFL)
 BEGIN
    String NName;
 
@@ -419,7 +420,7 @@ BEGIN
     END
 END
 
-	static void AddImm16(char *NName1, char *NName2, LongWord NCode, Byte NMask)
+        static void AddImm16(char *NName1, char *NName2, LongWord NCode, Byte NMask)
 BEGIN
    if (InstrZ>=Imm16OrderCount) exit(255);
    Imm16Orders[InstrZ].Name=(MomCPU==CPU6000)?NName2:NName1;
@@ -427,7 +428,7 @@ BEGIN
    Imm16Orders[InstrZ++].CPUMask=NMask;
 END
 
-	static void AddImm16Swap(char *NName1, char *NName2, LongWord NCode, Byte NMask)
+        static void AddImm16Swap(char *NName1, char *NName2, LongWord NCode, Byte NMask)
 BEGIN
    if (InstrZ>=Imm16SwapOrderCount) exit(255);
    Imm16SwapOrders[InstrZ].Name=(MomCPU==CPU6000)?NName2:NName1;
@@ -545,7 +546,7 @@ END
 #define T63 63l
 #endif
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    /* --> 0 0 0 */
 
@@ -826,14 +827,14 @@ BEGIN
    AddImm16Swap("XORIS"  ,"XORIU"  ,T27 << 26, M_403 | M_403C | M_505 | M_601 | M_6000);
 END
 
-	static void DeinitNames(BaseOrder *Orders, int OrderCount)
+        static void DeinitNames(BaseOrder *Orders, int OrderCount)
 BEGIN
    int z;
 
    for (z=0; z<OrderCount; free(Orders[z++].Name));
 END
 
-	static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    free(FixedOrders);
    free(Reg1Orders);
@@ -898,7 +899,7 @@ BEGIN
     END
 END
 
-	static Boolean DecodeFPReg(char *Asc, LongWord *Erg)
+        static Boolean DecodeFPReg(char *Asc, LongWord *Erg)
 BEGIN
    Boolean io;
    char *s;
@@ -913,7 +914,7 @@ BEGIN
     END
 END
 
-	static Boolean DecodeCondReg(char *Asc, LongWord *Erg)
+        static Boolean DecodeCondReg(char *Asc, LongWord *Erg)
 BEGIN
    Boolean OK;
 
@@ -921,7 +922,7 @@ BEGIN
    return ((OK) AND (*Erg<=31));
 END
 
-	static Boolean  DecodeCondBit(char *Asc, LongWord *Erg)
+        static Boolean  DecodeCondBit(char *Asc, LongWord *Erg)
 BEGIN
    Boolean OK;
 
@@ -929,7 +930,7 @@ BEGIN
    return ((OK) AND (*Erg<=31));
 END
 
-	static Boolean DecodeRegDisp(char *Asc, LongWord *Erg)
+        static Boolean DecodeRegDisp(char *Asc, LongWord *Erg)
 BEGIN
    char *p;
    int l=strlen(Asc);
@@ -947,7 +948,7 @@ END
 
 /*-------------------------------------------------------------------------*/
 
-	static Boolean Convert6000(char *Name1, char *Name2)
+        static Boolean Convert6000(char *Name1, char *Name2)
 BEGIN
    if (NOT Memo(Name1)) return True;
    if (MomCPU==CPU6000)
@@ -961,7 +962,7 @@ BEGIN
     END
 END
 
-	static Boolean PMemo(char *Name)
+        static Boolean PMemo(char *Name)
 BEGIN
    String tmp;
 
@@ -971,24 +972,24 @@ BEGIN
    return (Memo(tmp));
 END
 
-	static void IncPoint(void)
+        static void IncPoint(void)
 BEGIN
    if (OpPart[strlen(OpPart)-1]=='.') IncCode(1);
 END
 
-	static void ChkSup(void)
+        static void ChkSup(void)
 BEGIN
    if (NOT SupAllowed) WrError(50);
 END
 
-	static Boolean ChkCPU(Byte Mask)
+        static Boolean ChkCPU(Byte Mask)
 BEGIN
    return (((Mask >> (MomCPU-CPU403))&1)==1);
 END
 
 /*-------------------------------------------------------------------------*/
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
    if (Memo("REG"))
     BEGIN
@@ -1000,12 +1001,12 @@ BEGIN
    return False;
 END
 
-	static void SwapCode(LongWord *Code)
+        static void SwapCode(LongWord *Code)
 BEGIN
    *Code=((*Code & 0x1f) << 5) | ((*Code >> 5) & 0x1f);
 END
 
-	static void MakeCode_601(void)
+        static void MakeCode_601(void)
 BEGIN
    int z;
    Integer Imm;
@@ -1211,9 +1212,9 @@ BEGIN
        else if (NOT DecodeGenReg(ArgStr[1],&Src1)) WrError(1350);
        else if (NOT DecodeGenReg(ArgStr[2],&Src2)) WrError(1350);
        else
-	BEGIN
+        BEGIN
          CodeLen=4; PutCode(NoDestOrders[z].Code+(Src1 << 16)+(Src2 << 11));
-	END
+        END
        return;
       END
 
@@ -1312,9 +1313,9 @@ BEGIN
       else if (NOT DecodeGenReg(ArgStr[2],&Src1)) WrError(1350);
       else if (NOT DecodeGenReg(ArgStr[3],&Src2)) WrError(1350);
       else
-	BEGIN
+        BEGIN
          CodeLen=4; PutCode(MixedOrders[z].Code+(Dest << 21)+(Src1 << 16)+(Src2 << 11));
-	END
+        END
        return;
       END
 
@@ -1383,12 +1384,12 @@ BEGIN
       else if (NOT DecodeGenReg(ArgStr[2],&Src1)) WrError(1350);
       else
        BEGIN
-	Src2=EvalIntExpression(ArgStr[3],UInt5,&OK);
-	if (OK)
-	 BEGIN
+        Src2=EvalIntExpression(ArgStr[3],UInt5,&OK);
+        if (OK)
+         BEGIN
           PutCode(Reg2ImmOrders[z].Code+(Src1 << 21)+(Dest << 16)+(Src2 << 11));
-	  CodeLen=4;
-	 END
+          CodeLen=4;
+         END
        END
       return;
      END
@@ -1400,7 +1401,7 @@ BEGIN
      BEGIN
       if (ArgCnt==2)
        BEGIN
-	ArgCnt=3; strcpy(ArgStr[3],ArgStr[2]); strcpy(ArgStr[2],ArgStr[1]);
+        ArgCnt=3; strcpy(ArgStr[3],ArgStr[2]); strcpy(ArgStr[2],ArgStr[1]);
        END
       if (ArgCnt!=3) WrError(1110);
       else if (NOT ChkCPU(Imm16Orders[z].CPUMask)) WrXError(1500,OpPart);
@@ -1408,11 +1409,11 @@ BEGIN
       else if (NOT DecodeGenReg(ArgStr[2],&Src1)) WrError(1350);
       else
        BEGIN
-	Imm=EvalIntExpression(ArgStr[3],Int16,&OK);
-	if (OK)
-	 BEGIN
+        Imm=EvalIntExpression(ArgStr[3],Int16,&OK);
+        if (OK)
+         BEGIN
           CodeLen=4; PutCode(Imm16Orders[z].Code+(Dest << 21)+(Src1 << 16)+(Imm & 0xffff));
-	 END
+         END
        END
       return;
      END
@@ -1424,7 +1425,7 @@ BEGIN
      BEGIN
       if (ArgCnt==2)
        BEGIN
-	ArgCnt=3; strcpy(ArgStr[3],ArgStr[2]); strcpy(ArgStr[2],ArgStr[1]);
+        ArgCnt=3; strcpy(ArgStr[3],ArgStr[2]); strcpy(ArgStr[2],ArgStr[1]);
        END
       if (ArgCnt!=3) WrError(1110);
       else if (NOT ChkCPU(Imm16SwapOrders[z].CPUMask)) WrXError(1500,OpPart);
@@ -1432,11 +1433,11 @@ BEGIN
       else if (NOT DecodeGenReg(ArgStr[2],&Src1)) WrError(1350);
       else
        BEGIN
-	Imm=EvalIntExpression(ArgStr[3],Int16,&OK);
-	if (OK)
-	 BEGIN
+        Imm=EvalIntExpression(ArgStr[3],Int16,&OK);
+        if (OK)
+         BEGIN
           CodeLen=4; PutCode(Imm16SwapOrders[z].Code+(Dest << 16)+(Src1 << 21)+(Imm & 0xffff));
-	 END
+         END
        END
       return;
      END
@@ -1478,11 +1479,11 @@ BEGIN
       BEGIN
        Src2=EvalIntExpression(ArgStr[3],UInt5,&OK);
        if (OK)
-	BEGIN
+        BEGIN
          PutCode((T31 << 26)+(597 << 1)+(Dest << 21)+(Src1 << 16)+(Src2 << 11));
          if (Memo("STSWI")) IncCode(128 << 1);
-	 CodeLen=4;
-	END
+         CodeLen=4;
+        END
       END
      return;
     END
@@ -1544,11 +1545,11 @@ BEGIN
       BEGIN
        Src1=EvalIntExpression(ArgStr[2],UInt4,&OK);
        if (OK)
-	BEGIN
+        BEGIN
          PutCode((T31 << 26)+(Dest << 21)+(Src1 << 16));
          IncCode((Memo("MFSR") ? 595 : 210) << 1);
-	 CodeLen=4; ChkSup();
-	END
+         CodeLen=4; ChkSup();
+        END
       END
      return;
     END
@@ -1579,11 +1580,11 @@ BEGIN
       BEGIN
        Dest=EvalIntExpression(ArgStr[1],UInt8,&OK);
        if (OK)
-	BEGIN
+        BEGIN
          PutCode((T63 << 26)+(Dest << 17)+(Src1 << 11)+(711 << 1));
-	 IncPoint();
-	 CodeLen=4;
-	END
+         IncPoint();
+         CodeLen=4;
+        END
       END
      return;
     END
@@ -1597,11 +1598,11 @@ BEGIN
       BEGIN
        Src1=EvalIntExpression(ArgStr[2],UInt4,&OK);
        if (OK)
-	BEGIN
+        BEGIN
          PutCode((T63 << 26)+(Dest << 21)+(Src1 << 12)+(134 << 1));
-	 IncPoint();
-	 CodeLen=4;
-	END
+         IncPoint();
+         CodeLen=4;
+        END
       END
      return;
     END
@@ -1617,16 +1618,16 @@ BEGIN
       BEGIN
        Src3=EvalIntExpression(ArgStr[4],UInt5,&OK);
        if (OK)
-	BEGIN
-	 Imm=EvalIntExpression(ArgStr[5],UInt5,&OK);
-	 if (OK)
-	  BEGIN
+        BEGIN
+         Imm=EvalIntExpression(ArgStr[5],UInt5,&OK);
+         if (OK)
+          BEGIN
            PutCode((T22 << 26)+(Src1 << 21)+(Dest << 16)
                        +(Src2 << 11)+(Src3 << 6)+(Imm << 1));
-	   IncPoint();
-	   CodeLen=4;
-	  END
-	END
+           IncPoint();
+           CodeLen=4;
+          END
+        END
       END
      return;
     END
@@ -1644,16 +1645,16 @@ BEGIN
       BEGIN
        Src3=EvalIntExpression(ArgStr[4],UInt5,&OK);
        if (OK)
-	BEGIN
-	 Imm=EvalIntExpression(ArgStr[5],UInt5,&OK);
-	 if (OK)
-	  BEGIN
+        BEGIN
+         Imm=EvalIntExpression(ArgStr[5],UInt5,&OK);
+         if (OK)
+          BEGIN
            PutCode((T23 << 26)+(Src1 << 21)+(Dest << 16)
                        +(Src2 << 11)+(Src3 << 6)+(Imm << 1));
-	   IncPoint();
-	   CodeLen=4;
-	  END
-	END
+           IncPoint();
+           CodeLen=4;
+          END
+        END
       END
      return;
     END
@@ -1672,21 +1673,21 @@ BEGIN
       BEGIN
        Src2=EvalIntExpression(ArgStr[3],UInt5,&OK);
        if (OK)
-	BEGIN
-	 Src3=EvalIntExpression(ArgStr[4],UInt5,&OK);
-	 if (OK)
-	  BEGIN
-	   Imm=EvalIntExpression(ArgStr[5],UInt5,&OK);
-	   if (OK)
-	    BEGIN
+        BEGIN
+         Src3=EvalIntExpression(ArgStr[4],UInt5,&OK);
+         if (OK)
+          BEGIN
+           Imm=EvalIntExpression(ArgStr[5],UInt5,&OK);
+           if (OK)
+            BEGIN
              PutCode((T20 << 26)+(Dest << 16)+(Src1 << 21)
                          +(Src2 << 11)+(Src3 << 6)+(Imm << 1));
              if (PMemo("RLWINM")) IncCode(T1 << 26);
-	     IncPoint();
-	     CodeLen=4;
-	    END
-	  END
-	END
+             IncPoint();
+             CodeLen=4;
+            END
+          END
+        END
       END
      return;
     END
@@ -1716,10 +1717,10 @@ BEGIN
       BEGIN
        Dest=EvalIntExpression(ArgStr[1],UInt5,&OK);
        if (OK)
-	BEGIN
+        BEGIN
          PutCode((T31 << 26)+(Dest << 21)+(Src1 << 16)+(Src2 << 11)+(4 << 1));
-	 CodeLen=4;
-	END
+         CodeLen=4;
+        END
       END
      return;
     END
@@ -1734,14 +1735,14 @@ BEGIN
       BEGIN
        Imm=EvalIntExpression(ArgStr[3],Int16,&OK);
        if (OK)
-	BEGIN
-	 Dest=EvalIntExpression(ArgStr[1],UInt5,&OK);
-	 if (OK)
-	  BEGIN
+        BEGIN
+         Dest=EvalIntExpression(ArgStr[1],UInt5,&OK);
+         if (OK)
+          BEGIN
            PutCode((T3 << 26)+(Dest << 21)+(Src1 << 16)+(Imm & 0xffff));
-	   CodeLen=4;
-	  END
-	END
+           CodeLen=4;
+          END
+        END
       END
      return;
     END
@@ -1779,12 +1780,12 @@ BEGIN
       BEGIN
        Src3=EvalIntExpression(ArgStr[2],UInt1,&OK);
        if (OK)
-	BEGIN
+        BEGIN
          PutCode((T31 << 26)+(Dest << 21)+(Src3 << 21)+(Src1 << 16)
                      +(Src2 << 11));
          if (Memo("CMPL")) IncCode(32 << 1);
-	 CodeLen=4;
-	END
+         CodeLen=4;
+        END
       END
      return;
     END
@@ -1816,20 +1817,22 @@ BEGIN
       BEGIN
        Src2=EvalIntExpression(ArgStr[4],Int16,&OK);
        if (OK)
-	if (NOT DecodeGenReg(ArgStr[3],&Src1)) WrError(1350);
-	else if (NOT DecodeCondReg(ArgStr[1],&Dest)) WrError(1350);
-	else if ((Dest & 3)!=0) WrError(1351);
-	else
-	 BEGIN
-	  Src3=EvalIntExpression(ArgStr[2],UInt1,&OK);
-	  if (OK)
-	   BEGIN
-            PutCode((T10 << 26)+(Dest << 21)+(Src3 << 21)
-                        +(Src1 << 16)+(Src2 & 0xffff));
-            if (Memo("CMPI")) IncCode(T1 << 26);
-	    CodeLen=4;
-	   END
-	 END
+        BEGIN
+         if (NOT DecodeGenReg(ArgStr[3],&Src1)) WrError(1350);
+         else if (NOT DecodeCondReg(ArgStr[1],&Dest)) WrError(1350);
+         else if ((Dest & 3)!=0) WrError(1351);
+         else
+          BEGIN
+           Src3=EvalIntExpression(ArgStr[2],UInt1,&OK);
+           if (OK)
+            BEGIN
+             PutCode((T10 << 26)+(Dest << 21)+(Src3 << 21)
+                         +(Src1 << 16)+(Src2 & 0xffff));
+             if (Memo("CMPI")) IncCode(T1 << 26);
+             CodeLen=4;
+            END
+          END
+        END
       END
      return;
     END
@@ -1843,19 +1846,19 @@ BEGIN
       BEGIN
        Dist=EvalIntExpression(ArgStr[1],Int32,&OK);
        if (OK)
-	BEGIN
-	 if ((Memo("B")) OR (Memo("BL"))) Dist-=EProgCounter();
-	 if ((NOT SymbolQuestionable) AND (Dist>0x1ffffff)) WrError(1320);
-	 else if ((NOT SymbolQuestionable) AND (Dist<-0x2000000l)) WrError(1315);
-	 else if ((Dist & 3)!=0) WrError(1375);
-	 else
-	  BEGIN
+        BEGIN
+         if ((Memo("B")) OR (Memo("BL"))) Dist-=EProgCounter();
+         if ((NOT SymbolQuestionable) AND (Dist>0x1ffffff)) WrError(1320);
+         else if ((NOT SymbolQuestionable) AND (Dist<-0x2000000l)) WrError(1315);
+         else if ((Dist & 3)!=0) WrError(1375);
+         else
+          BEGIN
            PutCode((T18 << 26)+(Dist & 0x03fffffc));
            if ((Memo("BA")) OR (Memo("BLA"))) IncCode(2);
            if ((Memo("BL")) OR (Memo("BLA"))) IncCode(1);
-	   CodeLen=4;
-	  END
-	END
+           CodeLen=4;
+          END
+        END
       END
      return;
     END
@@ -1867,27 +1870,27 @@ BEGIN
       BEGIN
        Src1=EvalIntExpression(ArgStr[1],UInt5,&OK); /* BO */
        if (OK)
-	BEGIN
+        BEGIN
          Src2=EvalIntExpression(ArgStr[2],UInt5,&OK); /* BI */
-	 if (OK)
-	  BEGIN
+         if (OK)
+          BEGIN
            Dist=EvalIntExpression(ArgStr[3],Int32,&OK); /* ADR */
-	   if (OK)
-	    BEGIN
-	     if ((Memo("BC")) OR (Memo("BCL"))) Dist-=EProgCounter();
-	     if ((NOT SymbolQuestionable) AND (Dist>0x7fff)) WrError(1320);
-	     else if ((NOT SymbolQuestionable) AND (Dist<-0x8000l)) WrError(1315);
-	     else if ((Dist & 3)!=0) WrError(1375);
-	     else
-	      BEGIN
+           if (OK)
+            BEGIN
+             if ((Memo("BC")) OR (Memo("BCL"))) Dist-=EProgCounter();
+             if ((NOT SymbolQuestionable) AND (Dist>0x7fff)) WrError(1320);
+             else if ((NOT SymbolQuestionable) AND (Dist<-0x8000l)) WrError(1315);
+             else if ((Dist & 3)!=0) WrError(1375);
+             else
+              BEGIN
                PutCode((T16 << 26)+(Src1 << 21)+(Src2 << 16)+(Dist & 0xfffc));
                if ((Memo("BCA")) OR (Memo("BCLA"))) IncCode(2);
                if ((Memo("BCL")) OR (Memo("BCLA"))) IncCode(1);
-	       CodeLen=4;
-	      END
-	    END
-	  END
-	END
+               CodeLen=4;
+              END
+            END
+          END
+        END
       END
      return;
     END
@@ -1904,19 +1907,19 @@ BEGIN
       BEGIN
        Src1=EvalIntExpression(ArgStr[1],UInt5,&OK);
        if (OK)
-	BEGIN
-	 Src2=EvalIntExpression(ArgStr[2],UInt5,&OK);
-	 if (OK)
-	  BEGIN
+        BEGIN
+         Src2=EvalIntExpression(ArgStr[2],UInt5,&OK);
+         if (OK)
+          BEGIN
            PutCode((T19 << 26)+(Src1 << 21)+(Src2 << 16));
-	   if ((Memo("BCCTR")) OR (Memo("BCCTRL")))
+           if ((Memo("BCCTR")) OR (Memo("BCCTRL")))
             IncCode(528 << 1);
-	   else
+           else
             IncCode(16 << 1);
            if ((Memo("BCCTRL")) OR (Memo("BCLRL"))) IncCode(1);
-	   CodeLen=4;
-	  END
-	END
+           CodeLen=4;
+          END
+        END
       END
      return;
     END
@@ -1946,7 +1949,7 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static Boolean IsDef_601(void)
+        static Boolean IsDef_601(void)
 BEGIN
    return Memo("REG");
 END
@@ -1957,7 +1960,7 @@ BEGIN
    SetFlag(&BigEnd,BigEndianName,False);
 END
 
-	static void InternSymbol_601(char *Asc, TempResult *Erg)
+        static void InternSymbol_601(char *Asc, TempResult *Erg)
 BEGIN
    int l=strlen(Asc);
 
@@ -1971,12 +1974,12 @@ BEGIN
        END
 END
 
-	static void SwitchFrom_601(void)
+        static void SwitchFrom_601(void)
 BEGIN
    DeinitFields(); ClearONOFF();
 END
 
-	static void SwitchTo_601(void)
+        static void SwitchTo_601(void)
 BEGIN
    PFamilyDescr FoundDscr;
 
@@ -2004,7 +2007,7 @@ BEGIN
 END
 
 
-	void code601_init(void)
+        void code601_init(void)
 BEGIN
    CPU403  =AddCPU("PPC403", SwitchTo_601);
    CPU403C =AddCPU("PPC403GC", SwitchTo_601);

@@ -6,6 +6,7 @@
 /*                                                                           */
 /* Historie: 18.11.1996 Grundsteinlegung                                     */
 /*            3. 1.1999 ChkPC-Anpassung                                      */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -125,14 +126,14 @@ BEGIN
    MemOrders[InstrZ++].MinCPU=NMin;
 END
 
-	static void AddSP(char *NName, LongWord NCode)
+        static void AddSP(char *NName, LongWord NCode)
 BEGIN
    if (InstrZ>=SPRegCount) exit(255);
    SPRegs[InstrZ].Name=NName;
    SPRegs[InstrZ++].Code=NCode;
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    StdOrders=(StdOrder *) malloc(sizeof(StdOrder)*StdOrderCount); InstrZ=0;
    AddStd("ADD"    ,CPU29245,False,0x14); AddStd("ADDC"   ,CPU29245,False,0x1c);
@@ -227,7 +228,7 @@ BEGIN
    AddSP("FPS", 162);
 END
 
-	static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    free(StdOrders);
    free(NoImmOrders);
@@ -240,17 +241,17 @@ END
 
 /*-------------------------------------------------------------------------*/
 
-	static void ChkSup(void)
+        static void ChkSup(void)
 BEGIN
    if (NOT SupAllowed) WrError(50);
 END
 
-	static Boolean IsSup(LongWord RegNo)
+        static Boolean IsSup(LongWord RegNo)
 BEGIN
    return ((RegNo<0x80) OR (RegNo>=0xa0));
 END
 
-	static Boolean ChkCPU(CPUVar Min)
+        static Boolean ChkCPU(CPUVar Min)
 BEGIN
    if (MomCPU>=Min) return True;
    else return (StringListPresent(Emulations,OpPart));
@@ -258,7 +259,7 @@ END
 
 /*-------------------------------------------------------------------------*/
 
-	static Boolean DecodeReg(char *Asc, LongWord *Erg)
+        static Boolean DecodeReg(char *Asc, LongWord *Erg)
 BEGIN
    Boolean io,OK;
 
@@ -284,7 +285,7 @@ BEGIN
    return OK;
 END
 
-	static Boolean DecodeSpReg(char *Asc_O, LongWord *Erg)
+        static Boolean DecodeSpReg(char *Asc_O, LongWord *Erg)
 BEGIN
    int z;
    String Asc;
@@ -301,7 +302,7 @@ END
 
 /*-------------------------------------------------------------------------*/
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
 #define ASSUME29KCount 1
    static ASSUMERec ASSUME29Ks[ASSUME29KCount]=
@@ -331,7 +332,7 @@ BEGIN
    return False;
 END
 
-	static void MakeCode_29K(void)
+        static void MakeCode_29K(void)
 BEGIN
    int z,l;
    LongWord Dest,Src1,Src2,Src3,AdrLong;
@@ -421,25 +422,27 @@ BEGIN
         Dest=EvalIntExpression(ArgStr[1],UInt8,&OK);
         if (FirstPassUnknown) Dest=64;
         if (OK)
-         if (NOT DecodeReg(ArgStr[2],&Src1)) WrError(1445);
-         else
-          BEGIN
-           if (DecodeReg(ArgStr[ArgCnt],&Src2))
-            BEGIN
-             OK=True; Src3=0;
-            END
-           else
-            BEGIN
-             Src2=EvalIntExpression(ArgStr[ArgCnt],UInt8,&OK);
-             Src3=0x1000000;
-            END
-           if (OK)
-            BEGIN
-             CodeLen=4;
-             DAsmCode[0]=(VecOrders[z].Code << 24)+Src3+(Dest << 16)+(Src1 << 8)+Src2;
-             if ((VecOrders[z].MustSup) OR (Dest<=63)) ChkSup();
-            END
-          END
+         BEGIN
+          if (NOT DecodeReg(ArgStr[2],&Src1)) WrError(1445);
+          else
+           BEGIN
+            if (DecodeReg(ArgStr[ArgCnt],&Src2))
+             BEGIN
+              OK=True; Src3=0;
+             END
+            else
+             BEGIN
+              Src2=EvalIntExpression(ArgStr[ArgCnt],UInt8,&OK);
+              Src3=0x1000000;
+             END
+            if (OK)
+             BEGIN
+              CodeLen=4;
+              DAsmCode[0]=(VecOrders[z].Code << 24)+Src3+(Dest << 16)+(Src1 << 8)+Src2;
+              if ((VecOrders[z].MustSup) OR (Dest<=63)) ChkSup();
+             END
+           END
+         END
        END
       return;
      END
@@ -536,23 +539,25 @@ BEGIN
            AdrLong=EvalIntExpression(ArgStr[ArgCnt],Int32,&OK); 
            AdrInt=AdrLong-EProgCounter();
            if (OK)
-            if ((AdrLong & 3)!=0) WrError(1325);
-             else if ((AdrInt<=0x1ffff) AND (AdrInt>=-0x20000))
-             BEGIN
-              CodeLen=4;
-              AdrLong-=EProgCounter();
-              DAsmCode[0]=(JmpOrders[z].Code << 24)
-                         +((AdrLong & 0x3fc00) << 6)
-                         +(Dest << 8)+((AdrLong & 0x3fc) >> 2);
-             END
-            else if ((NOT SymbolQuestionable) AND (AdrLong>0x3fffff)) WrError(1370);
-            else
-             BEGIN
-              CodeLen=4;
-              DAsmCode[0]=((JmpOrders[z].Code+1) << 24)
-                         +((AdrLong & 0x3fc00) << 6)
-                         +(Dest << 8)+((AdrLong & 0x3fc) >> 2);
-             END
+            BEGIN
+             if ((AdrLong & 3)!=0) WrError(1325);
+              else if ((AdrInt<=0x1ffff) AND (AdrInt>=-0x20000))
+              BEGIN
+               CodeLen=4;
+               AdrLong-=EProgCounter();
+               DAsmCode[0]=(JmpOrders[z].Code << 24)
+                          +((AdrLong & 0x3fc00) << 6)
+                          +(Dest << 8)+((AdrLong & 0x3fc) >> 2);
+              END
+             else if ((NOT SymbolQuestionable) AND (AdrLong>0x3fffff)) WrError(1370);
+             else
+              BEGIN
+               CodeLen=4;
+               DAsmCode[0]=((JmpOrders[z].Code+1) << 24)
+                          +((AdrLong & 0x3fc00) << 6)
+                          +(Dest << 8)+((AdrLong & 0x3fc) >> 2);
+              END
+            END
           END
         END
        return;
@@ -588,14 +593,16 @@ BEGIN
        Dest=EvalIntExpression(ArgStr[1],UInt8,&OK);
        if (FirstPassUnknown) Dest=64;
        if (OK)
-        if (NOT DecodeReg(ArgStr[2],&Src1)) WrError(1445);
-        else if (NOT DecodeReg(ArgStr[ArgCnt],&Src2)) WrError(1445);
-        else
-         BEGIN
-          CodeLen=4;
-	  DAsmCode[0]=0xd7000000+(Dest << 16)+(Src1 << 8)+Src2;
-          if (Dest<=63) ChkSup();
-         END
+        BEGIN
+         if (NOT DecodeReg(ArgStr[2],&Src1)) WrError(1445);
+         else if (NOT DecodeReg(ArgStr[ArgCnt],&Src2)) WrError(1445);
+         else
+          BEGIN
+           CodeLen=4;
+           DAsmCode[0]=0xd7000000+(Dest << 16)+(Src1 << 8)+Src2;
+           if (Dest<=63) ChkSup();
+          END
+        END
       END
      return;
     END
@@ -635,16 +642,16 @@ BEGIN
        if (DecodeReg(ArgStr[2],&Src1))
         BEGIN
          OK=True; Src3=0;
-	END
+        END
        else
-	BEGIN
-	 Src1=EvalIntExpression(ArgStr[2],UInt8,&OK);
+        BEGIN
+         Src1=EvalIntExpression(ArgStr[2],UInt8,&OK);
          Src3=0x1000000;
         END
        if (OK)
         BEGIN
          CodeLen=4;
-	 DAsmCode[0]=0x08000000+Src3+(Dest << 16)+Src1;
+         DAsmCode[0]=0x08000000+Src3+(Dest << 16)+Src1;
         END
       END
      return;
@@ -660,7 +667,7 @@ BEGIN
        if (OK)
         BEGIN
          CodeLen=4;
-	 DAsmCode[0]=((AdrLong & 0xff00) << 8)+(Dest << 8)+(AdrLong & 0xff);
+         DAsmCode[0]=((AdrLong & 0xff00) << 8)+(Dest << 8)+(AdrLong & 0xff);
          AdrLong=AdrLong >> 16;
          if (AdrLong==0xffff) DAsmCode[0]+=0x01000000;
          else
@@ -692,7 +699,7 @@ BEGIN
          CodeLen=4;
          DAsmCode[0]=0x1000000+((AdrLong & 0xff00) << 8)+(Dest << 8)+(AdrLong & 0xff);
          if (Memo("CONSTH")) DAsmCode[0]+=0x1000000;
-	END
+        END
       END
      return;
     END
@@ -836,7 +843,7 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static void InitCode_29K(void)
+        static void InitCode_29K(void)
 BEGIN
    SaveInitProc();
    Reg_RBP=0; ClearStringList(&Emulations);
@@ -873,7 +880,7 @@ BEGIN
    SwitchFrom=SwitchFrom_29K; InitFields();
 END
 
-	void code29k_init(void)
+        void code29k_init(void)
 BEGIN
    CPU29245=AddCPU("AM29245",SwitchTo_29K);
    CPU29243=AddCPU("AM29243",SwitchTo_29K);

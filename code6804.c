@@ -6,6 +6,7 @@
 /*                                                                           */
 /* Historie: 17.10.1996 Grundsteinlegung                                     */
 /*            2. 1.1999 ChkPC-Anpassung                                      */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -50,7 +51,7 @@ static BaseOrder *ALUOrders;
 
 /*--------------------------------------------------------------------------*/
 
-	static void AddFixed(char *NName, LongInt NCode)
+        static void AddFixed(char *NName, LongInt NCode)
 BEGIN
    if (InstrZ>=FixedOrderCnt) exit(255);
    FixedOrders[InstrZ].Name=NName;
@@ -71,7 +72,7 @@ BEGIN
    ALUOrders[InstrZ++].Code=NCode;
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    FixedOrders=(BaseOrder *) malloc(sizeof(BaseOrder)*FixedOrderCnt); InstrZ=0;
    AddFixed("CLRA", 0x00fbff);
@@ -109,7 +110,7 @@ BEGIN
    AddALU("AND", 0x05);
 END
 
-	static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    free(FixedOrders);
    free(RelOrders);
@@ -118,7 +119,7 @@ END
 
 /*--------------------------------------------------------------------------*/
 
-	static void ChkAdr(Boolean MayImm)
+        static void ChkAdr(Boolean MayImm)
 BEGIN
    if ((AdrMode==ModImm) AND (NOT MayImm))
     BEGIN
@@ -126,7 +127,7 @@ BEGIN
     END
 END
 
-	static void DecodeAdr(char *Asc, Boolean MayImm)
+        static void DecodeAdr(char *Asc, Boolean MayImm)
 BEGIN
    Boolean OK;
 
@@ -158,7 +159,7 @@ END
 
 /*--------------------------------------------------------------------------*/
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
    if (Memo("SFR"))
     BEGIN
@@ -169,12 +170,12 @@ BEGIN
    return False;
 END
 
-	static Boolean IsShort(Byte Adr)
+        static Boolean IsShort(Byte Adr)
 BEGIN
    return ((Adr & 0xfc)==0x80);
 END
 
-	static void MakeCode_6804(void)
+        static void MakeCode_6804(void)
 BEGIN
    int z;
    Integer AdrInt;
@@ -219,12 +220,14 @@ BEGIN
        BEGIN
         AdrInt=EvalIntExpression(ArgStr[1],Int16,&OK)-(EProgCounter()+1);
         if (OK)
-         if ((NOT SymbolQuestionable) AND ((AdrInt<-16) OR (AdrInt>15))) WrError(1370);
-         else
-          BEGIN
-           CodeLen=1; BAsmCode[0]=RelOrders[z].Code+(AdrInt & 0x1f);
-           ChkSpace(SegCode);
-          END
+         BEGIN
+          if ((NOT SymbolQuestionable) AND ((AdrInt<-16) OR (AdrInt>15))) WrError(1370);
+          else
+           BEGIN
+            CodeLen=1; BAsmCode[0]=RelOrders[z].Code+(AdrInt & 0x1f);
+            ChkSpace(SegCode);
+           END
+         END
        END
       return;
      END
@@ -236,11 +239,11 @@ BEGIN
       BEGIN
        AdrInt=EvalIntExpression(ArgStr[1],UInt12,&OK);
        if (OK)
-	BEGIN
-	 CodeLen=2; BAsmCode[1]=Lo(AdrInt);
-	 BAsmCode[0]=0x80+(Ord(Memo("JMP")) << 4)+(Hi(AdrInt) & 15);
+        BEGIN
+         CodeLen=2; BAsmCode[1]=Lo(AdrInt);
+         BAsmCode[0]=0x80+(Ord(Memo("JMP")) << 4)+(Hi(AdrInt) & 15);
          ChkSpace(SegCode);
-	END
+        END
       END
      return;
     END
@@ -257,15 +260,15 @@ BEGIN
         switch (AdrMode)
          BEGIN
           case ModInd:
-       	   CodeLen=1; BAsmCode[0]=0xe0+AdrVal+ALUOrders[z].Code;
+           CodeLen=1; BAsmCode[0]=0xe0+AdrVal+ALUOrders[z].Code;
            break;
           case ModDir:
-       	   CodeLen=2; BAsmCode[0]=0xf8+ALUOrders[z].Code; BAsmCode[1]=AdrVal;
+           CodeLen=2; BAsmCode[0]=0xf8+ALUOrders[z].Code; BAsmCode[1]=AdrVal;
            break;
           case ModImm:
-       	   CodeLen=2; BAsmCode[0]=0xe8+ALUOrders[z].Code; BAsmCode[1]=AdrVal;
+           CodeLen=2; BAsmCode[0]=0xe8+ALUOrders[z].Code; BAsmCode[1]=AdrVal;
            break;
-       	 END
+         END
        END
       return;
      END
@@ -282,21 +285,21 @@ BEGIN
        switch (AdrMode)
         BEGIN
          case ModInd:
-	  CodeLen=1; BAsmCode[0]=0xe0+AdrInt+AdrVal;
-	  break;
+          CodeLen=1; BAsmCode[0]=0xe0+AdrInt+AdrVal;
+          break;
          case ModDir:
           if (IsShort(AdrVal))
-	   BEGIN
-	    CodeLen=1; BAsmCode[0]=0xac+(AdrInt << 4)+(AdrVal & 3);
-	   END
-	  else
-	   BEGIN
-	    CodeLen=2; BAsmCode[0]=0xf8+AdrInt; BAsmCode[1]=AdrVal;
-	   END
+           BEGIN
+            CodeLen=1; BAsmCode[0]=0xac+(AdrInt << 4)+(AdrVal & 3);
+           END
+          else
+           BEGIN
+            CodeLen=2; BAsmCode[0]=0xf8+AdrInt; BAsmCode[1]=AdrVal;
+           END
           break;
          case ModImm:
-	  CodeLen=2; BAsmCode[0]=0xe8+AdrInt; BAsmCode[1]=AdrVal;
-	  break;
+          CodeLen=2; BAsmCode[0]=0xe8+AdrInt; BAsmCode[1]=AdrVal;
+          break;
         END
       END
      return;
@@ -310,10 +313,10 @@ BEGIN
       BEGIN
        BAsmCode[2]=EvalIntExpression(ArgStr[1]+1,Int8,&OK);
        if (OK)
-	BEGIN
-	 CodeLen=3; BAsmCode[0]=0xb0;
-	 BAsmCode[1]=0x80+Ord(Memo("LDYI"));
-	END
+        BEGIN
+         CodeLen=3; BAsmCode[0]=0xb0;
+         BAsmCode[1]=0x80+Ord(Memo("LDYI"));
+        END
       END
      return;
     END
@@ -326,14 +329,14 @@ BEGIN
       BEGIN
        BAsmCode[1]=EvalIntExpression(ArgStr[1],Int8,&OK);
        if (OK)
-	BEGIN
-	 ChkSpace(SegData);
-	 BAsmCode[2]=EvalIntExpression(ArgStr[2]+1,Int8,&OK);
-	 if (OK)
-	  BEGIN
-	   BAsmCode[0]=0xb0; CodeLen=3;
-	  END
-	END
+        BEGIN
+         ChkSpace(SegData);
+         BAsmCode[2]=EvalIntExpression(ArgStr[2]+1,Int8,&OK);
+         if (OK)
+          BEGIN
+           BAsmCode[0]=0xb0; CodeLen=3;
+          END
+        END
       END
      return;
     END
@@ -350,18 +353,18 @@ BEGIN
        switch (AdrMode)
         BEGIN
          case ModInd:
-	  CodeLen=1; BAsmCode[0]=0xe6+AdrInt+AdrVal;
-	  break;
+          CodeLen=1; BAsmCode[0]=0xe6+AdrInt+AdrVal;
+          break;
          case ModDir:
           if (IsShort(AdrVal))
-	   BEGIN
-	    CodeLen=1; BAsmCode[0]=0xa8+(AdrInt << 4)+(AdrVal & 3);
-	   END
-	  else
-	   BEGIN
-	    CodeLen=2; BAsmCode[0]=0xfe + AdrInt;  /* ANSI :-O */
+           BEGIN
+            CodeLen=1; BAsmCode[0]=0xa8+(AdrInt << 4)+(AdrVal & 3);
+           END
+          else
+           BEGIN
+            CodeLen=2; BAsmCode[0]=0xfe + AdrInt;  /* ANSI :-O */
             BAsmCode[1]=AdrVal;
-	   END
+           END
           break;
         END
       END
@@ -377,14 +380,14 @@ BEGIN
       BEGIN
        AdrVal=EvalIntExpression(ArgStr[1],UInt3,&OK);
        if (OK)
-	BEGIN
-	 BAsmCode[0]=0xd0+(Ord(Memo("BSET")) << 3)+AdrVal;
-	 BAsmCode[1]=EvalIntExpression(ArgStr[2],Int8,&OK);
-	 if (OK)
-	  BEGIN
-	   CodeLen=2; ChkSpace(SegData);
-	  END
-	END
+        BEGIN
+         BAsmCode[0]=0xd0+(Ord(Memo("BSET")) << 3)+AdrVal;
+         BAsmCode[1]=EvalIntExpression(ArgStr[2],Int8,&OK);
+         if (OK)
+          BEGIN
+           CodeLen=2; ChkSpace(SegData);
+          END
+        END
       END
      return;
     END
@@ -396,21 +399,23 @@ BEGIN
       BEGIN
        AdrVal=EvalIntExpression(ArgStr[1],UInt3,&OK);
        if (OK)
-	BEGIN
-	 BAsmCode[0]=0xc0+(Ord(Memo("BRSET")) << 3)+AdrVal;
-	 BAsmCode[1]=EvalIntExpression(ArgStr[2],Int8,&OK);
-	 if (OK)
-	  BEGIN
-	   ChkSpace(SegData);
-	   AdrInt=EvalIntExpression(ArgStr[3],Int16,&OK)-(EProgCounter()+3);
-	   if (OK)
-	    if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
-	    else
-	     BEGIN
-	      ChkSpace(SegCode); BAsmCode[2]=AdrInt & 0xff; CodeLen=3;
-	     END
-	  END
-	END
+        BEGIN
+         BAsmCode[0]=0xc0+(Ord(Memo("BRSET")) << 3)+AdrVal;
+         BAsmCode[1]=EvalIntExpression(ArgStr[2],Int8,&OK);
+         if (OK)
+          BEGIN
+           ChkSpace(SegData);
+           AdrInt=EvalIntExpression(ArgStr[3],Int16,&OK)-(EProgCounter()+3);
+           if (OK)
+            BEGIN
+             if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
+             else
+              BEGIN
+               ChkSpace(SegCode); BAsmCode[2]=AdrInt & 0xff; CodeLen=3;
+              END
+            END
+          END
+        END
       END
      return;
     END
@@ -418,7 +423,7 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static Boolean IsDef_6804(void)
+        static Boolean IsDef_6804(void)
 BEGIN
    return (Memo("SFR"));
 END
@@ -428,7 +433,7 @@ BEGIN
    DeinitFields();
 END
 
-	static void SwitchTo_6804(void)
+        static void SwitchTo_6804(void)
 BEGIN
    TurnWords=False; ConstMode=ConstModeMoto; SetIsOccupied=False;
 
@@ -445,7 +450,7 @@ BEGIN
    SwitchFrom=SwitchFrom_6804; InitFields();
 END
 
-	void code6804_init(void)
+        void code6804_init(void)
 BEGIN
    CPU6804=AddCPU("6804",SwitchTo_6804);
 END

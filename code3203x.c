@@ -8,6 +8,7 @@
 /*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
 /*           18. 8.1998 BookKeeping-Aufruf in RES                            */
 /*            3. 1.1998 ChkPC-Anpassung                                      */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -94,21 +95,21 @@ static LongInt DPValue;
 /*-------------------------------------------------------------------------*/
 /* Befehlstabellenverwaltung */
 
-	static void AddCondition(char *NName, Byte NCode)
+        static void AddCondition(char *NName, Byte NCode)
 BEGIN
    if (InstrZ>=ConditionCount) exit(255);
    Conditions[InstrZ].Name=NName;
    Conditions[InstrZ++].Code=NCode;
 END
 
-	static void AddFixed(char *NName, LongWord NCode)
+        static void AddFixed(char *NName, LongWord NCode)
 BEGIN
    if (InstrZ>=FixedOrderCount) exit(255);
    FixedOrders[InstrZ].Name=NName;
    FixedOrders[InstrZ++].Code=NCode;
 END
 
-	static void AddSing(char *NName, LongWord NCode, Byte NMask)
+        static void AddSing(char *NName, LongWord NCode, Byte NMask)
 BEGIN
    if (InstrZ>=SingOrderCount) exit(255);
    SingOrders[InstrZ].Name=NName;
@@ -116,11 +117,11 @@ BEGIN
    SingOrders[InstrZ++].Mask=NMask;
 END
 
-	static void AddGen(char *NName, Boolean NMay1, Boolean NMay3,
+        static void AddGen(char *NName, Boolean NMay1, Boolean NMay3,
                            Byte NCode, Byte NCode3,
-			   Boolean NOnly, Boolean NSwap, Boolean NImm,
+                           Boolean NOnly, Boolean NSwap, Boolean NImm,
                            Byte NMask1, Byte NMask3,
-			   Byte C20, Byte C21, Byte C22, Byte C23, Byte C24,
+                           Byte C20, Byte C21, Byte C22, Byte C23, Byte C24,
                            Byte C25, Byte C26, Byte C27, Byte C30, Byte C31,
                            Byte C32, Byte C33, Byte C34, Byte C35, Byte C36,
                            Byte C37)
@@ -143,7 +144,7 @@ BEGIN
    GenOrders[InstrZ].P3Codes[6]=C36; GenOrders[InstrZ++].P3Codes[7]=C37;
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    Conditions=(Condition *) malloc(sizeof(Condition)*ConditionCount); InstrZ=0;
    AddCondition("U"  ,0x00); AddCondition("LO" ,0x01);
@@ -177,87 +178,87 @@ BEGIN
 /*         Name         May3      Cd3       Swap       PM1                                              PCodes3     */
 /*                May1        Cd1     OMem        ImmF     PM3           PCodes1                                    */
    AddGen("ABSF" ,True ,False,0x00,0xff,False,False,True , 4, 0,
-	  0xff,0xff,0x04,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0x04,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("ABSI" ,True ,False,0x01,0xff,False,False,False, 8, 0,
-	  0xff,0xff,0xff,0x05,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0x05,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("ADDC" ,False,True ,0x02,0x00,False,False,False, 0, 0,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("ADDF" ,False,True ,0x03,0x01,False,False,True , 0, 4,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0x06,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0x06,0xff,0xff,0xff,0xff,0xff);
    AddGen("ADDI" ,False,True ,0x04,0x02,False,False,False, 0, 8,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0x07,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0x07,0xff,0xff,0xff,0xff);
    AddGen("AND"  ,False,True ,0x05,0x03,False,False,False, 0, 8,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0x08,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0x08,0xff,0xff,0xff,0xff);
    AddGen("ANDN" ,False,True ,0x06,0x04,False,False,False, 0, 0,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("ASH"  ,False,True ,0x07,0x05,False,False,False, 0, 8,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0x09,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0x09,0xff,0xff,0xff,0xff);
    AddGen("CMPF" ,False,True ,0x08,0x06,False,False,True , 0, 0,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("CMPI" ,False,True ,0x09,0x07,False,False,False, 0, 0,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("FIX"  ,True ,False,0x0a,0xff,False,False,True , 8, 0,
-	  0xff,0xff,0xff,0x0a,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0x0a,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("FLOAT",True ,False,0x0b,0xff,False,False,False, 4, 0,
-	  0xff,0xff,0x0b,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0x0b,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("LDE"  ,False,False,0x0d,0xff,False,False,True , 0, 0,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("LDF"  ,False,False,0x0e,0xff,False,False,True , 5, 0,
-	  0x02,0xff,0x0c,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0x02,0xff,0x0c,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("LDFI" ,False,False,0x0f,0xff,True ,False,True , 0, 0,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("LDI"  ,False,False,0x10,0xff,False,False,False,10, 0,
-	  0xff,0x03,0xff,0x0d,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0x03,0xff,0x0d,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("LDII" ,False,False,0x11,0xff,True ,False,False, 0, 0,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("LDM"  ,False,False,0x12,0xff,False,False,True , 0, 0,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("LSH"  ,False,True ,0x13,0x08,False,False,False, 0, 8,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0x0e,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0x0e,0xff,0xff,0xff,0xff);
    AddGen("MPYF" ,False,True ,0x14,0x09,False,False,True , 0,52,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0x0f,0xff,0x00,0x01,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0x0f,0xff,0x00,0x01,0xff,0xff);
    AddGen("MPYI" ,False,True ,0x15,0x0a,False,False,False, 0,200,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0x10,0xff,0xff,0x02,0x03);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0x10,0xff,0xff,0x02,0x03);
    AddGen("NEGB" ,True ,False,0x16,0xff,False,False,False, 0, 0,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("NEGF" ,True ,False,0x17,0xff,False,False,True , 4, 0,
-	  0xff,0xff,0x11,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0x11,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("NEGI" ,True ,False,0x18,0xff,False,False,False, 8, 0,
-	  0xff,0xff,0xff,0x12,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0x12,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("NORM" ,True ,False,0x1a,0xff,False,False,True , 0, 0,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("NOT"  ,True ,False,0x1b,0xff,False,False,False, 8, 0,
-	  0xff,0xff,0xff,0x13,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0x13,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("OR"   ,False,True ,0x20,0x0b,False,False,False, 0, 8,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0x14,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0x14,0xff,0xff,0xff,0xff);
    AddGen("RND"  ,True ,False,0x22,0xff,False,False,True , 0, 0,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("STF"  ,False,False,0x28,0xff,True ,True ,True , 4, 0,
-	  0xff,0xff,0x00,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0x00,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("STFI" ,False,False,0x29,0xff,True ,True ,True , 0, 0,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("STI"  ,False,False,0x2a,0xff,True ,True ,False, 8, 0,
-	  0xff,0xff,0xff,0x01,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0x01,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("STII" ,False,False,0x2b,0xff,True ,True ,False, 0, 0,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("SUBB" ,False,True ,0x2d,0x0c,False,False,False, 0, 0,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("SUBC" ,False,False,0x2e,0xff,False,False,False, 0, 0,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("SUBF" ,False,True ,0x2f,0x0d,False,False,True , 0, 4,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0x15,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0x15,0xff,0xff,0xff,0xff,0xff);
    AddGen("SUBI" ,False,True ,0x30,0x0e,False,False,False, 0, 8,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0x16,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0x16,0xff,0xff,0xff,0xff);
    AddGen("SUBRB",False,False,0x31,0xff,False,False,False, 0, 0,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("SUBRF",False,False,0x32,0xff,False,False,True , 0, 0,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("SUBRI",False,False,0x33,0xff,False,False,False, 0, 0,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("TSTB" ,False,True ,0x34,0x0f,False,False,False, 0, 0,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff);
    AddGen("XOR"  ,False,True ,0x35,0x10,False,False,False, 0, 8,
-	  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0x17,0xff,0xff,0xff,0xff);
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0x17,0xff,0xff,0xff,0xff);
 
    ParOrders=(char **) malloc(sizeof(char *)*ParOrderCount); InstrZ=0;
    ParOrders[InstrZ++]="LDF";   ParOrders[InstrZ++]="LDI";
@@ -271,7 +272,7 @@ BEGIN
    AddSing("RPTS",0x139b0000,15);
 END
 
-	static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    free(Conditions);
    free(FixedOrders);
@@ -285,7 +286,7 @@ END
 /*-------------------------------------------------------------------------*/
 /* Gleitkommawandler */
 
-	static void SplitExt(Double Inp, LongInt *Expo, LongWord *Mant)
+        static void SplitExt(Double Inp, LongInt *Expo, LongWord *Mant)
 BEGIN
    Byte Field[8];
    Boolean Sign;
@@ -302,7 +303,7 @@ BEGIN
    *Mant=(*Mant)^0x80000000;
 END
 
-	static Boolean ExtToShort(Double Inp, Word *Erg)
+        static Boolean ExtToShort(Double Inp, Word *Erg)
 BEGIN
    LongInt Expo;
    LongWord Mant;
@@ -321,7 +322,7 @@ BEGIN
    return True;
 END
 
-	static Boolean ExtToSingle(Double Inp, LongWord *Erg)
+        static Boolean ExtToSingle(Double Inp, LongWord *Erg)
 BEGIN
    LongInt Expo;
    LongWord Mant;
@@ -340,7 +341,7 @@ BEGIN
    return True;
 END
 
-	static Boolean ExtToExt(Double Inp, LongWord *ErgL, LongWord *ErgH)
+        static Boolean ExtToExt(Double Inp, LongWord *ErgL, LongWord *ErgH)
 BEGIN
    LongInt Exp;
 
@@ -377,12 +378,12 @@ END
 static ShortInt AdrMode;
 static LongInt AdrPart;
 
-	static Boolean DecodeReg(char *Asc, Byte *Erg)
+        static Boolean DecodeReg(char *Asc, Byte *Erg)
 BEGIN
 #define RegCnt 12
 #define RegStart 0x10
     static char *Regs[RegCnt]=
-	{"DP","IR0","IR1","BK","SP","ST","IE","IF","IOF","RS","RE","RC"};
+        {"DP","IR0","IR1","BK","SP","ST","IE","IF","IOF","RS","RE","RC"};
     Boolean Err;
 
    if ((toupper(*Asc)=='R') AND (strlen(Asc)<=3) AND (strlen(Asc)>=2))
@@ -406,7 +407,7 @@ BEGIN
    return False;
 END
 
-	static void ChkAdr(Byte Erl)
+        static void ChkAdr(Byte Erl)
 BEGIN
    if ((AdrMode!=ModNone) AND ((Erl & (1 << AdrMode))==0))
     BEGIN
@@ -414,7 +415,7 @@ BEGIN
     END
 END
 
-	static void DecodeAdr(char *Asc, Byte Erl, Boolean ImmFloat)
+        static void DecodeAdr(char *Asc, Byte Erl, Boolean ImmFloat)
 BEGIN
    Byte HReg;
    Integer Disp;
@@ -460,25 +461,25 @@ BEGIN
       END
 
      /* II.3. Displacement entfernen und auswerten:
-	     0..255-->Displacement
-	     -1,-2 -->IR0,IR1
-	     -3    -->Default */
+             0..255-->Displacement
+             -1,-2 -->IR0,IR1
+             -3    -->Default */
 
      p=QuotPos(Asc,'(');
      if (p!=Nil)
       BEGIN
        if (Asc[strlen(Asc)-1]!=')')
-	BEGIN
-	 WrError(1350); return;
-	END
+        BEGIN
+         WrError(1350); return;
+        END
        *p='\0'; strmaxcpy(NDisp,p+1,255); NDisp[strlen(NDisp)-1]='\0';
        if (strcasecmp(NDisp,"IR0")==0) Disp=(-1);
        else if (strcasecmp(NDisp,"IR1")==0) Disp=(-2);
        else
-	BEGIN
-	 Disp=EvalIntExpression(NDisp,UInt8,&OK);
-	 if (NOT OK) return;
-	END
+        BEGIN
+         Disp=EvalIntExpression(NDisp,UInt8,&OK);
+         if (NOT OK) return;
+        END
       END
      else Disp=(-3);
 
@@ -488,46 +489,46 @@ BEGIN
      if (*Asc=='-')
       BEGIN
        if (Asc[1]=='-')
-	BEGIN
-	 Mode=ModPreDec; strcpy(Asc,Asc+2);
-	END
+        BEGIN
+         Mode=ModPreDec; strcpy(Asc,Asc+2);
+        END
        else
-	BEGIN
-	 Mode=ModSub; strcpy(Asc,Asc+1);
-	END
+        BEGIN
+         Mode=ModSub; strcpy(Asc,Asc+1);
+        END
       END
      else if (*Asc=='+')
       BEGIN
        if (Asc[1]=='+')
-	BEGIN
-	 Mode=ModPreInc; strcpy(Asc,Asc+2);
-	END
+        BEGIN
+         Mode=ModPreInc; strcpy(Asc,Asc+2);
+        END
        else
-	BEGIN
-	 Mode=ModAdd; strcpy(Asc,Asc+1);
-	END
+        BEGIN
+         Mode=ModAdd; strcpy(Asc,Asc+1);
+        END
       END
      else if (Asc[l-1]=='-')
       BEGIN
        if (Asc[l-2]=='-')
-	BEGIN
-	 Mode=ModPostDec; Asc[l-2]='\0';
-	END
+        BEGIN
+         Mode=ModPostDec; Asc[l-2]='\0';
+        END
        else
-	BEGIN
-	 WrError(1350); return;
-	END
+        BEGIN
+         WrError(1350); return;
+        END
       END
      else if (Asc[l-1]=='+')
       BEGIN
        if (Asc[l-2]=='+')
-	BEGIN
-	 Mode=ModPostInc; Asc[l-2]='\0';
-	END
+        BEGIN
+         Mode=ModPostInc; Asc[l-2]='\0';
+        END
        else
-	BEGIN
-	 WrError(1350); return;
-	END
+        BEGIN
+         WrError(1350); return;
+        END
       END
      else Mode=ModBase;
 
@@ -555,89 +556,89 @@ BEGIN
         if ((Circ) OR (BitRev)) WrError(1350);
         else
          BEGIN
-	  switch (Disp)
+          switch (Disp)
            BEGIN
-	    case -2: AdrPart=0x8000; break;
-	    case -1: AdrPart=0x4000; break;
-	    case  0: AdrPart=0xc000; break;
-	    default: AdrPart=Disp;
-	   END
-	  AdrPart+=((Word)HReg) << 8; AdrMode=ModInd;
+            case -2: AdrPart=0x8000; break;
+            case -1: AdrPart=0x4000; break;
+            case  0: AdrPart=0xc000; break;
+            default: AdrPart=Disp;
+           END
+          AdrPart+=((Word)HReg) << 8; AdrMode=ModInd;
          END
         break;
        case ModSub:
         if ((Circ) OR (BitRev)) WrError(1350);
         else
          BEGIN
-	  switch (Disp)
+          switch (Disp)
            BEGIN
-	    case -2: AdrPart=0x8800; break;
-	    case -1: AdrPart=0x4800; break;
-	    case  0: AdrPart=0xc000; break;
-	    default: AdrPart=0x0800+Disp;
-	   END
-	  AdrPart+=((Word)HReg) << 8; AdrMode=ModInd;
+            case -2: AdrPart=0x8800; break;
+            case -1: AdrPart=0x4800; break;
+            case  0: AdrPart=0xc000; break;
+            default: AdrPart=0x0800+Disp;
+           END
+          AdrPart+=((Word)HReg) << 8; AdrMode=ModInd;
          END
         break;
        case ModPreInc:
         if ((Circ) OR (BitRev)) WrError(1350);
         else
          BEGIN
-	  switch (Disp)
+          switch (Disp)
            BEGIN
-	    case -2: AdrPart=0x9000; break;
-	    case -1: AdrPart=0x5000; break;
-	    default: AdrPart=0x1000+Disp;
-	   END
-	  AdrPart+=((Word)HReg) << 8; AdrMode=ModInd;
+            case -2: AdrPart=0x9000; break;
+            case -1: AdrPart=0x5000; break;
+            default: AdrPart=0x1000+Disp;
+           END
+          AdrPart+=((Word)HReg) << 8; AdrMode=ModInd;
          END
         break;
        case ModPreDec:
         if ((Circ) OR (BitRev)) WrError(1350);
         else
          BEGIN
-	  switch (Disp)
+          switch (Disp)
            BEGIN
-	    case -2: AdrPart=0x9800; break;
-	    case -1: AdrPart=0x5800; break;
-	    default: AdrPart=0x1800+Disp;
-	   END
-	  AdrPart+=((Word)HReg) << 8; AdrMode=ModInd;
+            case -2: AdrPart=0x9800; break;
+            case -1: AdrPart=0x5800; break;
+            default: AdrPart=0x1800+Disp;
+           END
+          AdrPart+=((Word)HReg) << 8; AdrMode=ModInd;
          END
         break;
        case ModPostInc:
         if (BitRev)
          BEGIN
-  	  if (Disp!=-1) WrError(1350);
- 	  else
- 	   BEGIN
- 	    AdrPart=0xc800+(((Word)HReg) << 8); AdrMode=ModInd;
- 	   END
+          if (Disp!=-1) WrError(1350);
+          else
+           BEGIN
+            AdrPart=0xc800+(((Word)HReg) << 8); AdrMode=ModInd;
+           END
          END
         else
          BEGIN
- 	  switch (Disp)
+          switch (Disp)
            BEGIN
- 	    case -2: AdrPart=0xa000; break;
- 	    case -1: AdrPart=0x6000; break;
- 	    default: AdrPart=0x2000+Disp;
- 	   END
- 	  if (Circ) AdrPart+=0x1000;
- 	  AdrPart+=((Word)HReg) << 8; AdrMode=ModInd;
+            case -2: AdrPart=0xa000; break;
+            case -1: AdrPart=0x6000; break;
+            default: AdrPart=0x2000+Disp;
+           END
+          if (Circ) AdrPart+=0x1000;
+          AdrPart+=((Word)HReg) << 8; AdrMode=ModInd;
          END
         break;
        case ModPostDec:
         if (BitRev) WrError(1350);
         else
          BEGIN
-  	  switch (Disp)
+          switch (Disp)
            BEGIN
- 	    case -2: AdrPart=0xa800; break;
- 	    case -1: AdrPart=0x6800; break;
- 	    default: AdrPart=0x2800+Disp; break;
- 	   END
- 	  if (Circ) AdrPart+=0x1000;
- 	  AdrPart+=((Word)HReg) << 8; AdrMode=ModInd;
+            case -2: AdrPart=0xa800; break;
+            case -1: AdrPart=0x6800; break;
+            default: AdrPart=0x2800+Disp; break;
+           END
+          if (Circ) AdrPart+=0x1000;
+          AdrPart+=((Word)HReg) << 8; AdrMode=ModInd;
          END
         break;
       END
@@ -666,7 +667,7 @@ BEGIN
      if (OK)
       if (ExtToShort(f,&fi))
        BEGIN
-	AdrPart=fi; AdrMode=ModImm;
+        AdrPart=fi; AdrMode=ModImm;
        END
     END
    else
@@ -681,7 +682,7 @@ BEGIN
    ChkAdr(Erl);
 END
 
-	static Word EffPart(Byte Mode, Word Part)
+        static Word EffPart(Byte Mode, Word Part)
 BEGIN
    switch (Mode)
     BEGIN
@@ -694,7 +695,7 @@ END
 /*-------------------------------------------------------------------------*/
 /* Code-Erzeugung */
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
 #define ASSUME3203Count 1
    static ASSUMERec ASSUME3203s[ASSUME3203Count]=
@@ -719,12 +720,12 @@ BEGIN
       BEGIN
        OK=True;
        for (z=1; z<=ArgCnt; z++)
-	if (OK)
-	 BEGIN
-	  f=EvalFloatExpression(ArgStr[z],Float64,&OK);
-	  if (OK)
-	   OK=OK AND ExtToSingle(f,DAsmCode+(CodeLen++));
-	 END
+        if (OK)
+         BEGIN
+          f=EvalFloatExpression(ArgStr[z],Float64,&OK);
+          if (OK)
+           OK=OK AND ExtToSingle(f,DAsmCode+(CodeLen++));
+         END
        if (NOT OK) CodeLen=0;
       END
      return True;
@@ -737,13 +738,13 @@ BEGIN
       BEGIN
        OK=True;
        for (z=1; z<=ArgCnt; z++)
-	if (OK)
-	 BEGIN
-	  f=EvalFloatExpression(ArgStr[z],Float64,&OK);
-	  if (OK)
-	   OK=OK AND ExtToExt(f,DAsmCode+CodeLen+1,DAsmCode+CodeLen);
-	  CodeLen+=2;
-	 END
+        if (OK)
+         BEGIN
+          f=EvalFloatExpression(ArgStr[z],Float64,&OK);
+          if (OK)
+           OK=OK AND ExtToExt(f,DAsmCode+CodeLen+1,DAsmCode+CodeLen);
+          CodeLen+=2;
+         END
        if (NOT OK) CodeLen=0;
       END
      return True;
@@ -756,7 +757,7 @@ BEGIN
       BEGIN
        OK=True;
        for (z=1; z<=ArgCnt; z++)
-	if (OK) DAsmCode[CodeLen++]=EvalIntExpression(ArgStr[z],Int32,&OK);
+        if (OK) DAsmCode[CodeLen++]=EvalIntExpression(ArgStr[z],Int32,&OK);
        if (NOT OK) CodeLen=0;
       END
      return True;
@@ -769,12 +770,12 @@ BEGIN
       BEGIN
        OK=True;
        for (z=1; z<=ArgCnt; z++)
-	if (OK)
-	 BEGIN
-	  EvalExpression(ArgStr[z],&t);
-	  switch (t.Typ)
+        if (OK)
+         BEGIN
+          EvalExpression(ArgStr[z],&t);
+          switch (t.Typ)
            BEGIN
-	    case TempInt:
+            case TempInt:
 #ifdef HAS64
              if (NOT RangeCheck(t.Contents.Int,Int32))
               BEGIN
@@ -782,23 +783,23 @@ BEGIN
               END
              else
 #endif
-	      DAsmCode[CodeLen++]=t.Contents.Int;
-	     break;
-	    case TempFloat:
-	     if (NOT ExtToSingle(t.Contents.Float,DAsmCode+(CodeLen++))) OK=False;
+              DAsmCode[CodeLen++]=t.Contents.Int;
              break;
-	    case TempString:
-	     for (z2=0; z2<strlen(t.Contents.Ascii); z2++)
-	      BEGIN
-	       if ((z2 & 3)==0) DAsmCode[CodeLen++]=0;
-	       DAsmCode[CodeLen-1]+=
-		  (((LongWord)CharTransTable[((usint)t.Contents.Ascii[z2])&0xff])) << (8*(3-(z2 & 3)));
-	      END
-	     break;
-	    case TempNone:
+            case TempFloat:
+             if (NOT ExtToSingle(t.Contents.Float,DAsmCode+(CodeLen++))) OK=False;
+             break;
+            case TempString:
+             for (z2=0; z2<strlen(t.Contents.Ascii); z2++)
+              BEGIN
+               if ((z2 & 3)==0) DAsmCode[CodeLen++]=0;
+               DAsmCode[CodeLen-1]+=
+                  (((LongWord)CharTransTable[((usint)t.Contents.Ascii[z2])&0xff])) << (8*(3-(z2 & 3)));
+              END
+             break;
+            case TempNone:
              OK=False;
-	   END
-	 END
+           END
+         END
        if (NOT OK) CodeLen=0;
       END
      return True;
@@ -813,11 +814,11 @@ BEGIN
        Size=EvalIntExpression(ArgStr[1],UInt24,&OK);
        if (FirstPassUnknown) WrError(1820);
        if ((OK) AND (NOT FirstPassUnknown))
-	BEGIN
-	 DontPrint=True;
-	 CodeLen=Size;
-	 BookKeeping();
-	END
+        BEGIN
+         DontPrint=True;
+         CodeLen=Size;
+         BookKeeping();
+        END
       END
      return True;
     END
@@ -825,32 +826,32 @@ BEGIN
    return False;
 END
 
-	static void JudgePar(GenOrder *Prim, int Sec, Byte *ErgMode, Byte *ErgCode)
+        static void JudgePar(GenOrder *Prim, int Sec, Byte *ErgMode, Byte *ErgCode)
 BEGIN
    if (Sec>3) *ErgMode=3;
    else if (Prim->May3) *ErgMode=1;
    else *ErgMode=2;
    if (*ErgMode==2) *ErgCode=Prim->PCodes[Sec];
-	       else *ErgCode=Prim->P3Codes[Sec];
+               else *ErgCode=Prim->P3Codes[Sec];
 END
 
-	static LongWord EvalAdrExpression(char *Asc, Boolean *OK)
+        static LongWord EvalAdrExpression(char *Asc, Boolean *OK)
 BEGIN
    if (*Asc=='@') strcpy(Asc,Asc+1);
    return EvalIntExpression(Asc,UInt24,OK);
 END
 
-	static void SwapMode(ShortInt *M1, ShortInt *M2)
+        static void SwapMode(ShortInt *M1, ShortInt *M2)
 BEGIN
    AdrMode=(*M1); *M1=(*M2); *M2=AdrMode;
 END
 
-	static void SwapPart(Word *P1, Word *P2)
+        static void SwapPart(Word *P1, Word *P2)
 BEGIN
    AdrPart=(*P1); *P1=(*P2); *P2=AdrPart;
 END
 
-	static void MakeCode_3203X(void)
+        static void MakeCode_3203X(void)
 BEGIN
    Boolean OK,Is3;
    Byte HReg,HReg2,Sum;
@@ -902,14 +903,16 @@ BEGIN
       NextPar=False;
       /* Argumentzahl abgleichen */
       if (ArgCnt==1)
-       if (GenOrders[z].May1)
-        BEGIN
-         ArgCnt=2; strcpy(ArgStr[2],ArgStr[1]);
-        END
-       else
-        BEGIN
-         WrError(1110); return;
-        END
+       BEGIN
+        if (GenOrders[z].May1)
+         BEGIN
+          ArgCnt=2; strcpy(ArgStr[2],ArgStr[1]);
+         END
+        else
+         BEGIN
+          WrError(1110); return;
+         END
+       END
       if ((ArgCnt==3) AND (OpPart[strlen(OpPart)-1]!='3')) strcat(OpPart,"3");
       Is3=(OpPart[strlen(OpPart)-1]=='3');
       if ((GenOrders[z].SwapOps) AND (NOT Is3))
@@ -1056,10 +1059,10 @@ BEGIN
             END
            RetractWords(1);
            DAsmCode[0]=0xc0000000+(((LongWord)HReg2) << 25)
-		      +(((LongWord)PrevDestPart) << 22)
-		      +(((LongWord)PrevSrc2Part) << 19)
-		      +(((LongWord)CurrDestPart) << 16)
-		      +(CurrSrc1Part & 0xff00)+Hi(PrevSrc1Part);
+                      +(((LongWord)PrevDestPart) << 22)
+                      +(((LongWord)PrevSrc2Part) << 19)
+                      +(((LongWord)CurrDestPart) << 16)
+                      +(CurrSrc1Part & 0xff00)+Hi(PrevSrc1Part);
            CodeLen=1; NextPar=False;
            break;
           case 2:
@@ -1073,8 +1076,8 @@ BEGIN
             END
            RetractWords(1);
            DAsmCode[0]=0xc0000000+(((LongWord)HReg2) << 25)
-		      +(((LongWord)PrevDestPart) << 22)
-		      +(CurrSrc1Part & 0xff00)+Hi(PrevSrc1Part);
+                      +(((LongWord)PrevDestPart) << 22)
+                      +(CurrSrc1Part & 0xff00)+Hi(PrevSrc1Part);
            if ((strcmp(PrevOp,OpPart)==0) AND (*OpPart=='L'))
             BEGIN
              DAsmCode[0]+=((LongWord)CurrDestPart) << 19;
@@ -1100,8 +1103,8 @@ BEGIN
             END
            RetractWords(1);
            DAsmCode[0]=0x80000000+(((LongWord)HReg2) << 26)
-	     	      +(((LongWord)PrevDestPart & 1) << 23)
-		      +(((LongWord)CurrDestPart & 1) << 22);
+                      +(((LongWord)PrevDestPart & 1) << 23)
+                      +(((LongWord)CurrDestPart & 1) << 22);
            CodeLen=1;
            if (CurrSrc2Mode==ModReg)
             if (CurrSrc1Mode==ModReg)
@@ -1152,12 +1155,12 @@ BEGIN
         if (Is3)
          DAsmCode[0]=0x20000000+(((LongWord)GenOrders[z].Code3) << 23)
                     +(((LongWord)CurrDestPart) << 16)
-       	            +(((LongWord)CurrSrc2Mode) << 20)+(EffPart(CurrSrc2Mode,CurrSrc2Part) << 8)
-       	            +(((LongWord)CurrSrc1Mode) << 21)+EffPart(CurrSrc1Mode,CurrSrc1Part);
+                    +(((LongWord)CurrSrc2Mode) << 20)+(EffPart(CurrSrc2Mode,CurrSrc2Part) << 8)
+                    +(((LongWord)CurrSrc1Mode) << 21)+EffPart(CurrSrc1Mode,CurrSrc1Part);
         else
          DAsmCode[0]=0x00000000+(((LongWord)GenOrders[z].Code) << 23)
-       	            +(((LongWord)CurrSrc1Mode) << 21)+CurrSrc1Part
-       	            +(((LongWord)CurrDestPart) << 16);
+                    +(((LongWord)CurrSrc1Mode) << 21)+CurrSrc1Part
+                    +(((LongWord)CurrDestPart) << 16);
         CodeLen=1; NextPar=True;
        END
       return;
@@ -1171,8 +1174,8 @@ BEGIN
       else if (NOT DecodeReg(ArgStr[1],&HReg)) WrError(1350);
       else
        BEGIN
-	DAsmCode[0]=0x11e00000+(((LongWord)z) << 23)+(((LongWord)HReg) << 16);
-	CodeLen=1;
+        DAsmCode[0]=0x11e00000+(((LongWord)z) << 23)+(((LongWord)HReg) << 16);
+        CodeLen=1;
        END
       NextPar=False; return;
      END
@@ -1185,8 +1188,8 @@ BEGIN
       else if (NOT DecodeReg(ArgStr[1],&HReg)) WrError(1350);
       else
        BEGIN
-	DAsmCode[0]=0x0e200000+(((LongWord)z) << 23)+(((LongWord)HReg) << 16);
-	CodeLen=1;
+        DAsmCode[0]=0x0e200000+(((LongWord)z) << 23)+(((LongWord)HReg) << 16);
+        CodeLen=1;
        END
       NextPar=False; return;
      END
@@ -1199,26 +1202,26 @@ BEGIN
      for (z=0; z<ConditionCount; z++)
       if (Memo(Conditions[z].Name))
        BEGIN
-	if (ArgCnt!=2) WrError(1110);
-	else if (ThisPar) WrError(1950);
-	else
-	 BEGIN
-	  DecodeAdr(ArgStr[2],MModReg,False);
-	  if (AdrMode!=ModNone)
-	   BEGIN
-	    HReg=AdrPart;
-	    DecodeAdr(ArgStr[1],MModReg+MModDir+MModInd+MModImm,HOp[2]=='F');
-	    if (AdrMode!=ModNone)
-	     BEGIN
-	      DAsmCode[0]=0x40000000+(((LongWord)HReg) << 16)
-			 +(((LongWord)Conditions[z].Code) << 23)
-			 +(((LongWord)AdrMode) << 21)+AdrPart;
-	      if (HOp[2]=='I') DAsmCode[0]+=0x10000000;
-	      CodeLen=1;
-	     END
-	   END
-	 END
-	NextPar=False; return;
+        if (ArgCnt!=2) WrError(1110);
+        else if (ThisPar) WrError(1950);
+        else
+         BEGIN
+          DecodeAdr(ArgStr[2],MModReg,False);
+          if (AdrMode!=ModNone)
+           BEGIN
+            HReg=AdrPart;
+            DecodeAdr(ArgStr[1],MModReg+MModDir+MModInd+MModImm,HOp[2]=='F');
+            if (AdrMode!=ModNone)
+             BEGIN
+              DAsmCode[0]=0x40000000+(((LongWord)HReg) << 16)
+                         +(((LongWord)Conditions[z].Code) << 23)
+                         +(((LongWord)AdrMode) << 21)+AdrPart;
+              if (HOp[2]=='I') DAsmCode[0]+=0x10000000;
+              CodeLen=1;
+             END
+           END
+         END
+        NextPar=False; return;
        END
      WrXError(1200,HOp); NextPar=False; return;
     END
@@ -1239,12 +1242,12 @@ BEGIN
       else if (ThisPar) WrError(1950);
       else
        BEGIN
-	DecodeAdr(ArgStr[1],SingOrders[z].Mask,False);
-	if (AdrMode!=ModNone)
-	 BEGIN
-	  DAsmCode[0]=SingOrders[z].Code+(((LongWord)AdrMode) << 21)+AdrPart;
-	  CodeLen=1;
-	 END
+        DecodeAdr(ArgStr[1],SingOrders[z].Mask,False);
+        if (AdrMode!=ModNone)
+         BEGIN
+          DAsmCode[0]=SingOrders[z].Code+(((LongWord)AdrMode) << 21)+AdrPart;
+          CodeLen=1;
+         END
        END;
       NextPar=False; return;
      END
@@ -1258,10 +1261,10 @@ BEGIN
       BEGIN
        AdrLong=EvalAdrExpression(ArgStr[1],&OK);
        if (OK)
-	BEGIN
-	 DAsmCode[0]=0x08700000+(AdrLong >> 16);
-	 CodeLen=1;
-	END
+        BEGIN
+         DAsmCode[0]=0x08700000+(AdrLong >> 16);
+         CodeLen=1;
+        END
       END
      NextPar=False; return;
     END
@@ -1276,10 +1279,10 @@ BEGIN
       BEGIN
        AdrLong=EvalAdrExpression(ArgStr[1],&OK);
        if (OK)
-	BEGIN
-	 DAsmCode[0]=0x64000000+AdrLong;
-	 CodeLen=1;
-	END
+        BEGIN
+         DAsmCode[0]=0x64000000+AdrLong;
+         CodeLen=1;
+        END
       END
      NextPar=False; return;
     END
@@ -1294,12 +1297,12 @@ BEGIN
       BEGIN
        AdrLong=EvalAdrExpression(ArgStr[1],&OK);
        if (OK)
-	BEGIN
-	 DAsmCode[0]=0x60000000+AdrLong;
-	 if (Memo("BRD")) DAsmCode[0]+=0x01000000;
-	 else if (Memo("CALL")) DAsmCode[0]+=0x02000000;
-	 CodeLen=1;
-	END
+        BEGIN
+         DAsmCode[0]=0x60000000+AdrLong;
+         if (Memo("BRD")) DAsmCode[0]+=0x01000000;
+         else if (Memo("CALL")) DAsmCode[0]+=0x02000000;
+         CodeLen=1;
+        END
       END
      NextPar=False; return;
     END
@@ -1321,25 +1324,27 @@ BEGIN
      for (z=0; z<ConditionCount; z++)
       if (Memo(Conditions[z].Name))
        BEGIN
-	if (ArgCnt!=1) WrError(1110);
+        if (ArgCnt!=1) WrError(1110);
         else if (ThisPar) WrError(1950);
-	else if (DecodeReg(ArgStr[1],&HReg))
-	 BEGIN
-	  DAsmCode[0]=0x68000000+(((LongWord)Conditions[z].Code) << 16)+DFlag+HReg;
-	  CodeLen=1;
-	 END
-	else
-	 BEGIN
+        else if (DecodeReg(ArgStr[1],&HReg))
+         BEGIN
+          DAsmCode[0]=0x68000000+(((LongWord)Conditions[z].Code) << 16)+DFlag+HReg;
+          CodeLen=1;
+         END
+        else
+         BEGIN
           AdrLong=EvalAdrExpression(ArgStr[1],&OK)-(EProgCounter()+Disp);
-	  if (OK)
-	   if ((NOT SymbolQuestionable) AND ((AdrLong>0x7fffl) OR (AdrLong<-0x8000l))) WrError(1370);
-	   else
-	    BEGIN
-	     DAsmCode[0]=0x6a000000+(((LongWord)Conditions[z].Code) << 16)+DFlag+(AdrLong & 0xffff);
-	     CodeLen=1;
-	    END
-	 END
-	NextPar=False; return;
+          if (OK)
+           BEGIN
+            if ((NOT SymbolQuestionable) AND ((AdrLong>0x7fffl) OR (AdrLong<-0x8000l))) WrError(1370);
+            else
+             BEGIN
+              DAsmCode[0]=0x6a000000+(((LongWord)Conditions[z].Code) << 16)+DFlag+(AdrLong & 0xffff);
+              CodeLen=1;
+             END
+           END
+         END
+        NextPar=False; return;
        END
      WrXError(1200,HOp); NextPar=False; return;
     END
@@ -1350,25 +1355,27 @@ BEGIN
      for (z=0; z<ConditionCount; z++)
       if (Memo(Conditions[z].Name))
        BEGIN
-	if (ArgCnt!=1) WrError(1110);
-	else if (ThisPar) WrError(1950);
-	else if (DecodeReg(ArgStr[1],&HReg))
-	 BEGIN
-	  DAsmCode[0]=0x70000000+(((LongWord)Conditions[z].Code) << 16)+HReg;
-	  CodeLen=1;
-	 END
-	else
-	 BEGIN
-	  AdrLong=EvalAdrExpression(ArgStr[1],&OK)-(EProgCounter()+1);
-	  if (OK)
-	   if ((NOT SymbolQuestionable) AND ((AdrLong>0x7fffl) OR (AdrLong<-0x8000l))) WrError(1370);
-	   else
-	    BEGIN
-	     DAsmCode[0]=0x72000000+(((LongWord)Conditions[z].Code) << 16)+(AdrLong & 0xffff);
-	     CodeLen=1;
-	    END
-	 END
-	NextPar=False; return;
+        if (ArgCnt!=1) WrError(1110);
+        else if (ThisPar) WrError(1950);
+        else if (DecodeReg(ArgStr[1],&HReg))
+         BEGIN
+          DAsmCode[0]=0x70000000+(((LongWord)Conditions[z].Code) << 16)+HReg;
+          CodeLen=1;
+         END
+        else
+         BEGIN
+          AdrLong=EvalAdrExpression(ArgStr[1],&OK)-(EProgCounter()+1);
+          if (OK)
+           BEGIN
+            if ((NOT SymbolQuestionable) AND ((AdrLong>0x7fffl) OR (AdrLong<-0x8000l))) WrError(1370);
+            else
+             BEGIN
+              DAsmCode[0]=0x72000000+(((LongWord)Conditions[z].Code) << 16)+(AdrLong & 0xffff);
+              CodeLen=1;
+             END
+           END
+         END
+        NextPar=False; return;
        END
      WrXError(1200,HOp); NextPar=False; return;
     END
@@ -1390,39 +1397,41 @@ BEGIN
      for (z=0; z<ConditionCount; z++)
       if (Memo(Conditions[z].Name))
        BEGIN
-	if (ArgCnt!=2) WrError(1110);
-	else if (ThisPar) WrError(1950);
-	else if (NOT DecodeReg(ArgStr[1],&HReg2)) WrError(1350);
-	else if ((HReg2<8) OR (HReg2>15)) WrError(1350);
-	else
-	 BEGIN
-	  HReg2-=8;
-	  if (DecodeReg(ArgStr[2],&HReg))
-	   BEGIN
-	    DAsmCode[0]=0x6c000000
-		       +(((LongWord)Conditions[z].Code) << 16)
-		       +DFlag
-		       +(((LongWord)HReg2) << 22)
-		       +HReg;
-	    CodeLen=1;
-	   END
-	  else
-	   BEGIN
+        if (ArgCnt!=2) WrError(1110);
+        else if (ThisPar) WrError(1950);
+        else if (NOT DecodeReg(ArgStr[1],&HReg2)) WrError(1350);
+        else if ((HReg2<8) OR (HReg2>15)) WrError(1350);
+        else
+         BEGIN
+          HReg2-=8;
+          if (DecodeReg(ArgStr[2],&HReg))
+           BEGIN
+            DAsmCode[0]=0x6c000000
+                       +(((LongWord)Conditions[z].Code) << 16)
+                       +DFlag
+                       +(((LongWord)HReg2) << 22)
+                       +HReg;
+            CodeLen=1;
+           END
+          else
+           BEGIN
             AdrLong=EvalAdrExpression(ArgStr[2],&OK)-(EProgCounter()+Disp);
-	    if (OK)
-	     if ((NOT SymbolQuestionable) AND ((AdrLong>0x7fffl) OR (AdrLong<-0x8000l))) WrError(1370);
-	     else
-	      BEGIN
-	       DAsmCode[0]=0x6e000000
-			  +(((LongWord)Conditions[z].Code) << 16)
-			  +DFlag
-			  +(((LongWord)HReg2) << 22)
-			  +(AdrLong & 0xffff);
-	       CodeLen=1;
-	      END
-	   END
-	 END
-	NextPar=False; return;
+            if (OK)
+             BEGIN
+              if ((NOT SymbolQuestionable) AND ((AdrLong>0x7fffl) OR (AdrLong<-0x8000l))) WrError(1370);
+              else
+               BEGIN
+                DAsmCode[0]=0x6e000000
+                           +(((LongWord)Conditions[z].Code) << 16)
+                           +DFlag
+                           +(((LongWord)HReg2) << 22)
+                           +(AdrLong & 0xffff);
+                CodeLen=1;
+               END
+             END
+           END
+         END
+        NextPar=False; return;
        END
      WrXError(1200,HOp); NextPar=False; return;
     END
@@ -1434,14 +1443,14 @@ BEGIN
      for (z=0; z<ConditionCount; z++)
       if (Memo(Conditions[z].Name))
        BEGIN
-	if (ArgCnt!=0) WrError(1110);
-	else if (ThisPar) WrError(1950);
-	else
-	 BEGIN
-	  DAsmCode[0]=0x78000000+DFlag+(((LongWord)Conditions[z].Code) << 16);
-	  CodeLen=1;
-	 END
-	NextPar=False; return;
+        if (ArgCnt!=0) WrError(1110);
+        else if (ThisPar) WrError(1950);
+        else
+         BEGIN
+          DAsmCode[0]=0x78000000+DFlag+(((LongWord)Conditions[z].Code) << 16);
+          CodeLen=1;
+         END
+        NextPar=False; return;
        END
      WrXError(1200,HOp); NextPar=False; return;
     END
@@ -1452,18 +1461,18 @@ BEGIN
      for (z=0; z<ConditionCount; z++)
       if (Memo(Conditions[z].Name))
        BEGIN
-	if (ArgCnt!=1) WrError(1110);
-	else if (ThisPar) WrError(1950);
-	else
-	 BEGIN
-	  HReg=EvalIntExpression(ArgStr[1],UInt4,&OK);
-	  if (OK)
-	   BEGIN
-	    DAsmCode[0]=0x74000000+HReg+(((LongWord)Conditions[z].Code) << 16);
-	    CodeLen=1;
-	   END
-	 END
-	NextPar=False; return;
+        if (ArgCnt!=1) WrError(1110);
+        else if (ThisPar) WrError(1950);
+        else
+         BEGIN
+          HReg=EvalIntExpression(ArgStr[1],UInt4,&OK);
+          if (OK)
+           BEGIN
+            DAsmCode[0]=0x74000000+HReg+(((LongWord)Conditions[z].Code) << 16);
+            CodeLen=1;
+           END
+         END
+        NextPar=False; return;
        END
      WrXError(1200,HOp); NextPar=False; return;
     END
@@ -1471,23 +1480,23 @@ BEGIN
    WrXError(1200,OpPart); NextPar=False;
 END
 
-	static void InitCode_3203x(void)
+        static void InitCode_3203x(void)
 BEGIN
    SaveInitProc();
    DPValue=0;
 END
 
-	static Boolean IsDef_3203X(void)
+        static Boolean IsDef_3203X(void)
 BEGIN
    return (strcmp(LabPart,"||")==0);
 END
 
-	static void SwitchFrom_3203X(void)
+        static void SwitchFrom_3203X(void)
 BEGIN
    DeinitFields();
 END
 
-	static void SwitchTo_3203X(void)
+        static void SwitchTo_3203X(void)
 BEGIN
    TurnWords=False; ConstMode=ConstModeIntel; SetIsOccupied=False;
 
@@ -1502,7 +1511,7 @@ BEGIN
    SwitchFrom=SwitchFrom_3203X; InitFields(); NextPar=False;
 END
 
-	void code3203x_init(void)
+        void code3203x_init(void)
 BEGIN
    CPU32030=AddCPU("320C30",SwitchTo_3203X);
    CPU32031=AddCPU("320C31",SwitchTo_3203X);

@@ -12,6 +12,7 @@
 /*           28. 9.1998 String-Argument fuer DW                              */
 /*                      DS                                                   */
 /*            2. 1.1999 ChkPC-Anpassung                                      */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -100,7 +101,7 @@ static FixedOrder *JmpOrders,*ALU1Orders,*ALU2Orders;
 static int DiscCnt,SplittedArg;
 static char *DiscPtr;
 
-	static Boolean SplitArgs(int Count)
+        static Boolean SplitArgs(int Count)
 BEGIN
    char *p,*p1,*p2;
 
@@ -132,7 +133,7 @@ BEGIN
    return True;
 END
 
-	static void DiscardArgs(void)
+        static void DiscardArgs(void)
 BEGIN
    char *p,*p2;
    int z;
@@ -168,7 +169,7 @@ BEGIN
     END
 END
 
-	static void AddComp(int Index, LongWord Value)
+        static void AddComp(int Index, LongWord Value)
 BEGIN
    if ((InstrMask&(1l<<Index))!=0)
     BEGIN
@@ -180,7 +181,7 @@ BEGIN
     END;
 END
 
-	static Boolean DecodeReg(char *Asc, LongWord *Erg, Register *Regs, int Cnt)
+        static Boolean DecodeReg(char *Asc, LongWord *Erg, Register *Regs, int Cnt)
 BEGIN
    int z;
 
@@ -195,7 +196,7 @@ END
 /*---------------------------------------------------------------------------*/
 /* Dekoder fuer Routinen */
 
-	static void DecodeJmp(Word Index)
+        static void DecodeJmp(Word Index)
 BEGIN
    FixedOrder *Op=JmpOrders+Index;
    int acnt=(Memo("RET")) ? 0 : 1;
@@ -212,7 +213,7 @@ BEGIN
    DiscardArgs();
 END
 
-	static void DecodeMOV(Word Index)
+        static void DecodeMOV(Word Index)
 BEGIN
    LongWord DReg,SReg;
 
@@ -229,7 +230,7 @@ BEGIN
    DiscardArgs();
 END
 
-	static void DecodeLDI(Word Index)
+        static void DecodeLDI(Word Index)
 BEGIN
    LongWord DReg,Src=0;
 
@@ -244,14 +245,14 @@ BEGIN
    DiscardArgs();
 END
 
-	static void DecodeNOP(Word Index)
+        static void DecodeNOP(Word Index)
 BEGIN
    if (NOT SplitArgs(0)) return;
    AddComp(InstrALU,0);
    DiscardArgs();
 END
 
-	static void DecodeALU1(Word Index)
+        static void DecodeALU1(Word Index)
 BEGIN
    FixedOrder *Op=ALU1Orders+Index;
    LongWord DReg;
@@ -266,7 +267,7 @@ BEGIN
    DiscardArgs();
 END
 
-	static void DecodeALU2(Word Index)             
+        static void DecodeALU2(Word Index)             
 BEGIN                                                  
    FixedOrder *Op=ALU2Orders+Index;                    
    LongWord DReg,SReg;                                      
@@ -285,35 +286,35 @@ BEGIN
    DiscardArgs();                                      
 END
 
-	static void DecodeM0(Word Index)
+        static void DecodeM0(Word Index)
 BEGIN
    if (NOT SplitArgs(0)) return;
    AddComp(InstrM0,Index);
    DiscardArgs();
 END
 
-	static void DecodeM1(Word Index)
+        static void DecodeM1(Word Index)
 BEGIN
    if (NOT SplitArgs(0)) return;
    AddComp(InstrM1,Index);
    DiscardArgs();
 END
 
-	static void DecodeDP0(Word Index)
+        static void DecodeDP0(Word Index)
 BEGIN
    if (NOT SplitArgs(0)) return;
    AddComp(InstrDP0,Index);
    DiscardArgs();
 END  
 
-	static void DecodeDP1(Word Index)
+        static void DecodeDP1(Word Index)
 BEGIN
    if (NOT SplitArgs(0)) return;
    AddComp(InstrDP1,Index);
    DiscardArgs();
 END
 
-	static void DecodeEA(Word Index)
+        static void DecodeEA(Word Index)
 BEGIN
    if (NOT SplitArgs(0)) return;
    AddComp(InstrEA,Index);
@@ -327,7 +328,7 @@ BEGIN
    DiscardArgs();
 END
 
-	static void DecodeRP(Word Index)
+        static void DecodeRP(Word Index)
 BEGIN
    if (NOT SplitArgs(0)) return;
    AddComp(InstrRP,Index);
@@ -341,7 +342,7 @@ BEGIN
    DiscardArgs();
 END
 
-	static void DecodeBASE(Word Index)
+        static void DecodeBASE(Word Index)
 BEGIN
    LongWord Value;
 
@@ -351,7 +352,7 @@ BEGIN
    DiscardArgs();
 END
 
-	static void DecodeRPC(Word Index)
+        static void DecodeRPC(Word Index)
 BEGIN
    LongWord Value;
 
@@ -378,7 +379,7 @@ BEGIN
    DiscardArgs();
 END
 
-	static void DecodeBM(Word Index)
+        static void DecodeBM(Word Index)
 BEGIN
    /* Wenn EM-Feld schon da war, muss es EI gewesen sein */
 
@@ -393,7 +394,7 @@ BEGIN
    DiscardArgs();
 END
 
-	static void DecodeEM(Word Index)
+        static void DecodeEM(Word Index)
 BEGIN
    /* Wenn BM-Feld schon da war, muss es EI sein */
 
@@ -412,49 +413,49 @@ BEGIN
    DiscardArgs();
 END
 
-	static void DecodeRW(Word Index)
+        static void DecodeRW(Word Index)
 BEGIN
    if (NOT SplitArgs(0)) return;   
    AddComp(InstrRW,Index);
    DiscardArgs();
 END
 
-	static void DecodeWT(Word Index)
+        static void DecodeWT(Word Index)
 BEGIN
    if (NOT SplitArgs(0)) return; 
    AddComp(InstrWT,Index);
    DiscardArgs();
 END
 
-	static void DecodeNF(Word Index)
+        static void DecodeNF(Word Index)
 BEGIN
    if (NOT SplitArgs(0)) return; 
    AddComp(InstrNF,Index);
    DiscardArgs();
 END
 
-	static void DecodeWI(Word Index)
+        static void DecodeWI(Word Index)
 BEGIN
    if (NOT SplitArgs(0)) return; 
    AddComp(InstrWI,Index);
    DiscardArgs();
 END
 
-	static void DecodeFIS(Word Index)
+        static void DecodeFIS(Word Index)
 BEGIN
    if (NOT SplitArgs(0)) return; 
    AddComp(InstrFIS,Index);
    DiscardArgs();
 END
 
-	static void DecodeFD(Word Index)
+        static void DecodeFD(Word Index)
 BEGIN
    if (NOT SplitArgs(0)) return; 
    AddComp(InstrFD,Index);
    DiscardArgs();
 END
 
-	static void DecodeSHV(Word Index)
+        static void DecodeSHV(Word Index)
 BEGIN
    LongWord Value;
 
@@ -467,7 +468,7 @@ BEGIN
    DiscardArgs();
 END
 
-	static void DecodeRPS(Word Index)
+        static void DecodeRPS(Word Index)
 BEGIN
    LongWord Value;
    
@@ -478,7 +479,7 @@ BEGIN
    DiscardArgs();
 END
 
-	static void DecodeNAL(Word Index)
+        static void DecodeNAL(Word Index)
 BEGIN
    LongWord Value;
  
@@ -488,12 +489,14 @@ BEGIN
    if (FirstPassUnknown) Value=(Value&0x1ff)|(EProgCounter()&0x1e00);
    Error=NOT Error;
    if (NOT Error)
-    if ((NOT SymbolQuestionable) AND ((Value^EProgCounter())&0x1e00)) WrError(1910);
-    else AddComp(InstrNAL,Value&0x1ff);
+    BEGIN
+     if ((NOT SymbolQuestionable) AND ((Value^EProgCounter())&0x1e00)) WrError(1910);
+     else AddComp(InstrNAL,Value&0x1ff);
+    END
    DiscardArgs();  
 END
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
    int z;
    Boolean OK;
@@ -592,49 +595,49 @@ END
 
 static int InstrZ;
 
-	static void AddJmp(char *NName, LongWord NCode)
+        static void AddJmp(char *NName, LongWord NCode)
 BEGIN
    if (InstrZ>=JmpOrderCnt) exit(255);
    JmpOrders[InstrZ].Code=NCode;
    AddInstTable(InstTable,NName,InstrZ++,DecodeJmp);
 END
 
-	static void AddALU1(char *NName, LongWord NCode)
+        static void AddALU1(char *NName, LongWord NCode)
 BEGIN
    if (InstrZ>=ALU1OrderCnt) exit(255);
    ALU1Orders[InstrZ].Code=NCode;
    AddInstTable(InstTable,NName,InstrZ++,DecodeALU1);
 END
 
-	static void AddALU2(char *NName, LongWord NCode)
+        static void AddALU2(char *NName, LongWord NCode)
 BEGIN
    if (InstrZ>=ALU2OrderCnt) exit(255);
    ALU2Orders[InstrZ].Code=NCode;
    AddInstTable(InstTable,NName,InstrZ++,DecodeALU2);
 END
 
-	static void AddSrcReg(char *NName, LongWord NCode)
+        static void AddSrcReg(char *NName, LongWord NCode)
 BEGIN
    if (InstrZ>=SrcRegCnt) exit(255);
    SrcRegs[InstrZ].Name=NName;
    SrcRegs[InstrZ++].Code=NCode;
 END
 
-	static void AddALUSrcReg(char *NName, LongWord NCode)
+        static void AddALUSrcReg(char *NName, LongWord NCode)
 BEGIN
    if (InstrZ>=ALUSrcRegCnt) exit(255);
    ALUSrcRegs[InstrZ].Name=NName;
    ALUSrcRegs[InstrZ++].Code=NCode;
 END
 
-	static void AddDestReg(char *NName, LongWord NCode)
+        static void AddDestReg(char *NName, LongWord NCode)
 BEGIN
    if (InstrZ>=DestRegCnt) exit(255);
    DestRegs[InstrZ].Name=NName;
    DestRegs[InstrZ++].Code=NCode;
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    InstTable=CreateInstTable(201);
 
@@ -806,7 +809,7 @@ BEGIN
    InstrDefs[InstrWT]=0;
 END
 
-	static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    DestroyInstTable(InstTable);
 
@@ -820,7 +823,7 @@ END
 /*---------------------------------------------------------------------------*/
 /* Callbacks */
 
-	static void MakeCode_77230(void)
+        static void MakeCode_77230(void)
 BEGIN
    int z,z2;
    LongWord Diff;
@@ -979,17 +982,17 @@ BEGIN
     END
 END
 
-	static Boolean IsDef_77230(void)
+        static Boolean IsDef_77230(void)
 BEGIN
    return False;
 END
 
-	static void SwitchFrom_77230(void)
+        static void SwitchFrom_77230(void)
 BEGIN
    DeinitFields();
 END
 
-	static void SwitchTo_77230(void)
+        static void SwitchTo_77230(void)
 BEGIN
    PFamilyDescr FoundDescr;
 
@@ -1018,7 +1021,7 @@ END
 /*---------------------------------------------------------------------------*/
 /* Initialisierung */
 
-	void code77230_init(void)
+        void code77230_init(void)
 BEGIN  
    CPU77230=AddCPU("77230",SwitchTo_77230);
 END

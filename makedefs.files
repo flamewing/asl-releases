@@ -1,6 +1,6 @@
 BASEARCH1FILES = *.c *.h *.1 \
-            INSTALL README README.OS2 README.DOS README.LANGS README.KR TODO BENCHES Makefile Makefile.dos Makefile.os2 Makefile.def.tmpl \
-            install.sh install.bat install.cmd marks.asm \
+            INSTALL README README.OS2 README.DOS README.LANGS README.KR TODO BENCHES Makefile Makefile.dos Makefile.os2 Makefile.w32 Makefile.def.tmpl \
+            COPYING install.sh install.bat install.cmd instw32.cmd marks.asm \
             *.res objdefs.* makedefs.* asl.def \
             include/*.inc \
             Makefile.def-samples
@@ -19,6 +19,7 @@ ARCHFILES = $(ARCH1FILES) $(ARCH2FILES)
 
 ASLTARGET = asl$(EXEXTENSION)
 PLISTTARGET = plist$(EXEXTENSION)
+ALINKTARGET = alink$(EXEXTENSION)
 PBINDTARGET = pbind$(EXEXTENSION)
 P2HEXTARGET = p2hex$(EXEXTENSION)
 P2BINTARGET = p2bin$(EXEXTENSION)
@@ -30,6 +31,7 @@ UNUMLAUTTARGET = unumlaut$(EXEXTENSION)
 ALLTARGETS = ioerrs.msg cmdarg.msg tools.msg \
              as.msg $(ASLTARGET) \
              plist.msg $(PLISTTARGET) \
+             alink.msg $(ALINKTARGET) \
              pbind.msg $(PBINDTARGET) \
              p2hex.msg $(P2HEXTARGET) \
              p2bin.msg $(P2BINTARGET)

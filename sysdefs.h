@@ -41,6 +41,22 @@
 #endif
 
 /*---------------------------------------------------------------------------*/
+/* ditto for VAX platforms */
+
+#ifdef vax
+#define __vax__
+#endif
+
+/*---------------------------------------------------------------------------*/
+/* ditto for PPC platforms */
+
+#ifdef __PPC
+#ifndef _POWER
+#define _POWER
+#endif
+#endif
+
+/*---------------------------------------------------------------------------*/
 /* If the compiler claims to be ANSI, we surely can use prototypes */
 
 #ifdef __STDC__
@@ -57,10 +73,18 @@
 #endif
 
 #ifdef __sparc
+#ifndef __NetBSD__
 #ifndef __SVR4
 #define __sunos__
-#else
+#else /* __SVR4 */
 #define __solaris__
+#endif /* __SVR4 */
+#endif /* __NetBSD */
+#endif /* __sparc */
+
+#ifdef __sparc__
+#ifndef __sparc
+#define __sparc
 #endif
 #endif
 
@@ -271,6 +295,54 @@ typedef unsigned long long Card64;
 #define LOCALE_NLS
 #endif
 
+/*---------------------------------------------------------------------------*/
+/* Sparc with NetBSD 1.x:
+
+   quite a normal 32-Bit-UNIX system */
+   
+#ifdef __NetBSD__
+#define ARCHSYSNAME "sun-netbsd"
+#define DEFSMADE
+#define OPENRDMODE "r"
+#define OPENWRMODE "w"
+#define OPENUPMODE "r+"
+#define IEEEFLOAT
+typedef signed char Integ8;
+typedef unsigned char Card8;
+typedef signed short Integ16;
+typedef unsigned short Card16;
+#define HAS16
+typedef signed int Integ32;
+typedef unsigned int Card32;
+typedef signed long long Integ64;
+typedef unsigned long long Card64;
+#define HAS64
+#define LOCALE_NLS
+#endif
+   
+/*---------------------------------------------------------------------------*/
+/* Sparc with Linux                                                          */
+
+#ifdef __linux__
+#define ARCHSYSNAME "unknown-linux"
+#define DEFSMADE
+#define OPENRDMODE "r"
+#define OPENWRMODE "w"
+#define OPENUPMODE "r+"
+#define IEEEFLOAT
+typedef signed char Integ8;
+typedef unsigned char Card8;
+typedef signed short Integ16;
+typedef unsigned short Card16;
+#define HAS16
+typedef signed int Integ32;
+typedef unsigned int Card32;
+typedef signed long long Integ64;
+typedef unsigned long long Card64;
+#define HAS64
+#define LOCALE_NLS
+#endif
+
 #endif /* __sparc */
 
 /*===========================================================================*/
@@ -403,10 +475,10 @@ typedef unsigned long long Card64;
 
 #ifdef _POWER
 
-#define ARCHPRNAME "rs6000"
+#define ARCHPRNAME "ppc"
 
 /*---------------------------------------------------------------------------*/
-/* POWER with AIX 4.1: */
+/* POWER with AIX 4.1: rs6000 */
 
 #ifdef _AIX
 #define ARCHSYSNAME "ibm-aix"
@@ -428,13 +500,35 @@ typedef unsigned long long Card64;
 #define LOCALE_NLS
 #endif
 
-#endif /* _POWER */ 
+/*---------------------------------------------------------------------------*/
+/* POWER with Linux (Macintosh) */
 
+#ifdef __linux__
+#define ARCHSYSNAME "unknown-linux"
+#define DEFSMADE
+#define OPENRDMODE "r"
+#define OPENWRMODE "w"
+#define OPENUPMODE "r+"
+#define IEEEFLOAT
+typedef signed char Integ8;
+typedef unsigned char Card8;
+typedef signed short Integ16;
+typedef unsigned short Card16;
+#define HAS16
+typedef signed int Integ32;
+typedef unsigned int Card32;
+typedef signed long long Integ64;
+typedef unsigned long long Card64;
+#define HAS64
+#define LOCALE_NLS
+#endif
+
+#endif /* _POWER */ 
 
 /*===========================================================================*/
 /* VAX platforms */
 
-#ifdef vax
+#ifdef __vax__
 
 #define ARCHPRNAME "vax"
 
@@ -462,7 +556,32 @@ typedef unsigned int Card32;
 #define NO_NLS
 #endif
 
+/*---------------------------------------------------------------------------*/
+/* VAX with NetBSD 1.x: 
+
+   quite a normal 32-Bit-UNIX system - apart from the float format... */
+
+#ifdef __NetBSD__
+#define ARCHSYSNAME "vax-netbsd"
+#define DEFSMADE
+#define OPENRDMODE "r"
+#define OPENWRMODE "w"
+#define OPENUPMODE "r+"
+#define VAXFLOAT
+typedef signed char Integ8;
+typedef unsigned char Card8;
+typedef signed short Integ16;
+typedef unsigned short Card16;
+#define HAS16
+typedef signed int Integ32;
+typedef unsigned int Card32;
+typedef signed long long Integ64;
+typedef unsigned long long Card64;
+#define HAS64
+#define LOCALE_NLS
 #endif
+
+#endif /* vax */
 
 /*===========================================================================*/
 /* DEC Alpha platforms */
@@ -595,6 +714,7 @@ typedef unsigned long long Card64;
 #define OPENWRMODE "wb"
 #define OPENUPMODE "rb+"
 #define IEEEFLOAT
+#define SLASHARGS
 #define PATHSEP '\\'
 #define SPATHSEP "\\"
 #define DIRSEP ';'
@@ -627,6 +747,7 @@ typedef unsigned long long Card64;
 #define OPENWRMODE "wb"
 #define OPENUPMODE "rb+"
 #define IEEEFLOAT
+#define SLASHARGS
 #define PATHSEP '\\'
 #define SPATHSEP "\\"
 #define DIRSEP ';'
@@ -659,6 +780,8 @@ well, not really a UNIX... */
 #define OPENRDMODE "rb"
 #define OPENWRMODE "wb"
 #define OPENUPMODE "rb+"
+#define IEEEFLOAT
+#define SLASHARGS
 #define PATHSEP '\\'
 #define SPATHSEP "\\"
 #define DRSEP ':'
@@ -701,6 +824,7 @@ typedef unsigned int Card32;
 #define OPENWRMODE "wb"
 #define OPENUPMODE "rb+"
 #define IEEEFLOAT
+#define SLASHARGS
 #define PATHSEP '\\'
 #define SPATHSEP "\\"
 #define DIRSEP ';'

@@ -7,6 +7,7 @@
 /* Historie:  3.12.1998 Grundsteinlegung                                     */
 /*            4.12.1998 FixedOrders begonnen                                 */
 /*            3. 1.1999 ChkPC-Anpassung                                      */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -44,7 +45,8 @@ static char *RegNames = "ABCDEHLM";
 /*---------------------------------------------------------------------------*/
 /* Parser */
 
-	static Boolean DecodeReg(char *Asc, Byte *Erg)
+#if 0
+        static Boolean DecodeReg(char *Asc, Byte *Erg)
 BEGIN
    char *p;
 
@@ -54,11 +56,12 @@ BEGIN
    if (p != NULL) *Erg = p - RegNames;
    return (p!= NULL);
 END
+#endif
 
 /*---------------------------------------------------------------------------*/
 /* Hilfsdekoder */
 
-	static void DecodeFixed(Word Index)
+        static void DecodeFixed(Word Index)
 BEGIN
    if (ArgCnt != 0) WrError(1110);
    else
@@ -68,7 +71,7 @@ BEGIN
     END
 END
 
-	static void DecodeImm(Word Index)
+        static void DecodeImm(Word Index)
 BEGIN
    Boolean OK;
 
@@ -84,7 +87,7 @@ BEGIN
     END
 END
 
-	static void DecodeJmp(Word Index)
+        static void DecodeJmp(Word Index)
 BEGIN
    Boolean OK;
    Word AdrWord;
@@ -104,7 +107,7 @@ BEGIN
     END
 END
 
-	static void DecodeRST(Word Index)
+        static void DecodeRST(Word Index)
 BEGIN
    Boolean OK;
    Word AdrWord;
@@ -116,18 +119,22 @@ BEGIN
      AdrWord = EvalIntExpression(ArgStr[1], UInt14, &OK);
      if (FirstPassUnknown) AdrWord &= 0x38;
      if (OK)
-      if (ChkRange(AdrWord, 0, 0x38))
-       if ((AdrWord & 7) != 0) WrError(1325);
-       else
+      BEGIN
+       if (ChkRange(AdrWord, 0, 0x38))
         BEGIN
-         BAsmCode[0] = AdrWord + 0x05;
-         CodeLen = 1;
-         ChkSpace(SegCode);
+         if ((AdrWord & 7) != 0) WrError(1325);
+         else
+          BEGIN
+           BAsmCode[0] = AdrWord + 0x05;
+           CodeLen = 1;
+           ChkSpace(SegCode);
+          END
         END
+      END
     END
 END
 
-	static void DecodeINP(Word Index)
+        static void DecodeINP(Word Index)
 BEGIN
    Boolean OK;
 
@@ -143,7 +150,7 @@ BEGIN
     END
 END
 
-	static void DecodeOUT(Word Index)
+        static void DecodeOUT(Word Index)
 BEGIN
    Boolean OK;
 
@@ -159,7 +166,7 @@ BEGIN
     END
 END
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
    return False;
 END
@@ -170,14 +177,14 @@ END
 static int InstrZ;
 static char *FlagNames = "CZSP";
 
-	static void AddFixed(char *NName, Byte NCode)
+        static void AddFixed(char *NName, Byte NCode)
 BEGIN
    if (InstrZ >= FixedOrderCnt) exit(255);
    FixedOrders[InstrZ].Code = NCode;
    AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 END
 
-	static void AddFixeds(char *NName, Byte NCode, int Pos)
+        static void AddFixeds(char *NName, Byte NCode, int Pos)
 BEGIN
    char Memo[10], *p;
    int z;
@@ -190,14 +197,14 @@ BEGIN
     END
 END
 
-	static void AddImm(char *NName, Byte NCode)
+        static void AddImm(char *NName, Byte NCode)
 BEGIN
    if (InstrZ >= ImmOrderCnt) exit(255);
    ImmOrders[InstrZ].Code = NCode;
    AddInstTable(InstTable, NName, InstrZ++, DecodeImm);
 END
 
-	static void AddImms(char *NName, Byte NCode, int Pos)
+        static void AddImms(char *NName, Byte NCode, int Pos)
 BEGIN
    char Memo[10], *p;
    int z;
@@ -210,7 +217,7 @@ BEGIN
     END
 END
 
-	static void AddJmp(char *NName, Byte NCode)
+        static void AddJmp(char *NName, Byte NCode)
 BEGIN
    if (InstrZ >= JmpOrderCnt) exit(255);
    JmpOrders[InstrZ].Code = NCode;
@@ -230,7 +237,7 @@ BEGIN
     END
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    SetDynamicInstTable(InstTable=CreateInstTable(401));
 
@@ -297,7 +304,7 @@ END
 /*---------------------------------------------------------------------------*/
 /* Callbacks */
 
-	static void MakeCode_8008(void)
+        static void MakeCode_8008(void)
 BEGIN
    CodeLen=0; DontPrint=False;
 
@@ -324,7 +331,7 @@ BEGIN
    DeinitFields();
 END
 
-	static void SwitchTo_8008(void)
+        static void SwitchTo_8008(void)
 BEGIN
    PFamilyDescr FoundDescr;
 
@@ -350,7 +357,7 @@ END
 /*---------------------------------------------------------------------------*/
 /* Initialisierung */
 
-	void code8008_init(void)
+        void code8008_init(void)
 BEGIN
    CPU8008=AddCPU("8008",SwitchTo_8008);
 END

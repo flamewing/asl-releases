@@ -5,6 +5,7 @@
 ;* Headerdatei BIND.RSC - enthaelt Stringdefinitionen fuer BIND             *
 ;* 									    *
 ;* Historie : 28.1.1997 Grundsteinlegung                                    *
+;*           24. 3.2000 added byte messages                                  *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -25,6 +26,14 @@ Message ErrMsgTargetMissing
 Message InfoMessHead2
  " <Quelldatei(en)> <Zieldatei> [Optionen]"
  " <source file(s)> <target file> [options]"
+
+Message Byte
+ "byte"
+ "Byte"
+
+Message Bytes
+ "bytes"
+ "Bytes"
 
 Message InfoMessHelp
  "\n" \

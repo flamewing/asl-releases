@@ -6,6 +6,7 @@
 /*                                                                           */
 /* Historie:  31. 1.1998 Grundsteinlegung                                    */
 /*             3. 1.1999 ChkPC-Anpassung                                     */
+/*             9. 3.2000 'ambigious else'-Warnungen beseitigt                */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -233,18 +234,22 @@ BEGIN
      FirstPassUnknown=False;
      ImmV=EvalIntExpression(ArgStr[2],(Instr->Ofs>0) ? UInt6 : UInt5,&OK);
      if ((Instr->Min>0) AND (ImmV<Instr->Min))
-      if (FirstPassUnknown) ImmV=Instr->Min;
-      else
-       BEGIN
-        WrError(1315); OK=False;
-       END
+      BEGIN
+       if (FirstPassUnknown) ImmV=Instr->Min;
+       else
+        BEGIN
+         WrError(1315); OK=False;
+        END
+      END
      if ((Instr->Ofs>0) AND ((ImmV<Instr->Ofs) OR (ImmV>31+Instr->Ofs)))
-      if (FirstPassUnknown) ImmV=Instr->Ofs;
-      else
-       BEGIN
-        WrError((ImmV<Instr->Ofs) ? 1315 : 1320); 
-        OK=False;
-       END
+      BEGIN
+       if (FirstPassUnknown) ImmV=Instr->Ofs;
+       else
+        BEGIN
+         WrError((ImmV<Instr->Ofs) ? 1315 : 1320); 
+         OK=False;
+        END
+      END
      if (OK)
       BEGIN
        WAsmCode[0]=Instr->Code+((ImmV-Instr->Ofs)<<4)+RegX; CodeLen=2;
@@ -264,14 +269,16 @@ BEGIN
     BEGIN
      Dest=EvalIntExpression(ArgStr[1],UInt32,&OK)-(EProgCounter()+2);
      if (OK)
-      if ((NOT SymbolQuestionable) AND ((Dest&1)==1)) WrError(1375);
-      else if ((NOT SymbolQuestionable) AND ((Dest>2046) OR (Dest<-2048))) WrError(1370);
-      else
-       BEGIN
-        if ((Instr->Priv) AND (NOT SupAllowed)) WrError(50);
-        WAsmCode[0]=Instr->Code+((Dest>>1)&0x7ff);
-        CodeLen=2;
-       END
+      BEGIN
+       if ((NOT SymbolQuestionable) AND ((Dest&1)==1)) WrError(1375);
+       else if ((NOT SymbolQuestionable) AND ((Dest>2046) OR (Dest<-2048))) WrError(1370);
+       else
+        BEGIN
+         if ((Instr->Priv) AND (NOT SupAllowed)) WrError(50);
+         WAsmCode[0]=Instr->Code+((Dest>>1)&0x7ff);
+         CodeLen=2;
+        END
+      END
     END
 END
 
@@ -289,18 +296,20 @@ BEGIN
      ArgStr[1][l]='\0';
      Dest=EvalIntExpression(ArgStr[1]+1,UInt32,&OK);
      if (OK)
-      if ((NOT SymbolQuestionable) AND ((Dest&3)!=0)) WrError(1325);
-      else
-       BEGIN
-        Dest=(Dest-(EProgCounter()+2))>>2;
-        if ((EProgCounter()&3)<2) Dest++;
-        if ((NOT SymbolQuestionable) AND ((Dest<0) OR (Dest>255))) WrError(1370);
-        else
-         BEGIN
-          WAsmCode[0]=0x7000+(Index<<8)+(Dest&0xff);
-          CodeLen=2;
-         END
-       END
+      BEGIN
+       if ((NOT SymbolQuestionable) AND ((Dest&3)!=0)) WrError(1325);
+       else
+        BEGIN
+         Dest=(Dest-(EProgCounter()+2))>>2;
+         if ((EProgCounter()&3)<2) Dest++;
+         if ((NOT SymbolQuestionable) AND ((Dest<0) OR (Dest>255))) WrError(1370);
+         else
+          BEGIN
+           WAsmCode[0]=0x7000+(Index<<8)+(Dest&0xff);
+           CodeLen=2;
+          END
+        END
+      END
     END
 END
 
@@ -447,13 +456,15 @@ BEGIN
     BEGIN
      Dest=EvalIntExpression(ArgStr[2],UInt32,&OK)-(EProgCounter()+2);
      if (OK)
-      if ((NOT SymbolQuestionable) AND ((Dest&1)==1)) WrError(1375);
-      else if ((NOT SymbolQuestionable) AND ((Dest>-2) OR (Dest<-32))) WrError(1370);
-      else
-       BEGIN
-        WAsmCode[0]=0x0400+(RegY<<4)+((Dest>>1)&15);
-        CodeLen=2;
-       END
+      BEGIN
+       if ((NOT SymbolQuestionable) AND ((Dest&1)==1)) WrError(1375);
+       else if ((NOT SymbolQuestionable) AND ((Dest>-2) OR (Dest<-32))) WrError(1370);
+       else
+        BEGIN
+         WAsmCode[0]=0x0400+(RegY<<4)+((Dest>>1)&15);
+         CodeLen=2;
+        END
+      END
     END
 END
 
@@ -474,18 +485,20 @@ BEGIN
      ArgStr[2][l]='\0';
      Dest=EvalIntExpression(ArgStr[2]+1,UInt32,&OK);
      if (OK)
-      if ((NOT SymbolQuestionable) AND ((Dest&3)!=0)) WrError(1325);
-      else
-       BEGIN
-        Dest=(Dest-(EProgCounter()+2))>>2;
-        if ((EProgCounter()&3)<2) Dest++;
-        if ((NOT SymbolQuestionable) AND ((Dest<0) OR (Dest>255))) WrError(1370);
-        else
-         BEGIN
-          WAsmCode[0]=0x7000+(RegZ<<8)+(Dest&0xff);
-          CodeLen=2;
-         END
-       END
+      BEGIN
+       if ((NOT SymbolQuestionable) AND ((Dest&3)!=0)) WrError(1325);
+       else
+        BEGIN
+         Dest=(Dest-(EProgCounter()+2))>>2;
+         if ((EProgCounter()&3)<2) Dest++;
+         if ((NOT SymbolQuestionable) AND ((Dest<0) OR (Dest>255))) WrError(1370);
+         else
+          BEGIN
+           WAsmCode[0]=0x7000+(RegZ<<8)+(Dest&0xff);
+           CodeLen=2;
+          END
+        END
+      END
     END
 END
 

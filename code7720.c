@@ -11,6 +11,7 @@
 /*           11. 9.1998 ROMData-Segment angelegt                             */
 /*           24. 9.1998 Korrekturen fuer DOS-Compiler                        */
 /*            2. 1.1999 ChkPC-Anpassung                                      */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -70,7 +71,7 @@ static PInstTable InstTable, OpTable;
 /*---------------------------------------------------------------------------*/
 /* Hilfsroutinen */
 
-	static Boolean DecodeReg(char *Asc, LongWord *Code, TReg *Regs, int Cnt)
+        static Boolean DecodeReg(char *Asc, LongWord *Code, TReg *Regs, int Cnt)
 BEGIN
    int z;
 
@@ -81,7 +82,7 @@ BEGIN
    return z<Cnt;
 END
 
-	static Boolean ChkOpPresent(OpComps Comp)
+        static Boolean ChkOpPresent(OpComps Comp)
 BEGIN
    if ((UsedOpFields&(1l<<Comp))!=0)
     BEGIN
@@ -96,7 +97,7 @@ END
 /*---------------------------------------------------------------------------*/
 /* Dekoder */                               
 
-	static void DecodeJmp(Word Index)
+        static void DecodeJmp(Word Index)
 BEGIN
    Word Dest;
    Boolean OK;
@@ -114,7 +115,7 @@ BEGIN
     END
 END
 
-	static void DecodeDATA(Word Index)
+        static void DecodeDATA(Word Index)
 BEGIN
    LongInt MinV,MaxV,Trans;
    TempResult t;
@@ -137,8 +138,10 @@ BEGIN
         BEGIN
          case TempInt:
           if (ChkRange(t.Contents.Int,MinV,MaxV))
-           if (ActPC==SegCode) DAsmCode[CodeLen++]=t.Contents.Int;
-           else WAsmCode[CodeLen++]=t.Contents.Int;
+           BEGIN
+            if (ActPC==SegCode) DAsmCode[CodeLen++]=t.Contents.Int;
+            else WAsmCode[CodeLen++]=t.Contents.Int;
+           END
           break;
          case TempFloat:
           WrError(1135); OK=False;
@@ -167,7 +170,7 @@ BEGIN
     END
 END
 
-	static void DecodeRES(Word Index)
+        static void DecodeRES(Word Index)
 BEGIN
    Word Size;
    Boolean OK;
@@ -187,7 +190,7 @@ BEGIN
     END
 END
 
-	static void DecodeALU2(Word Index)
+        static void DecodeALU2(Word Index)
 BEGIN
    LongWord Acc=0xff,Src;
    FixedOrder *Op=ALU2Orders+Index;
@@ -209,7 +212,7 @@ BEGIN
     END
 END
 
-	static void DecodeALU1(Word Index)
+        static void DecodeALU1(Word Index)
 BEGIN
    LongWord Acc=0xff;
    FixedOrder *Op=ALU1Orders+Index;
@@ -230,12 +233,12 @@ BEGIN
     END
 END
 
-	static void DecodeNOP(Word Index)
+        static void DecodeNOP(Word Index)
 BEGIN
    if (NOT ChkOpPresent(ALUField)) return;
 END
 
-	static void DecodeDPL(Word Index)
+        static void DecodeDPL(Word Index)
 BEGIN
    if (NOT ChkOpPresent(DPLField)) return;
 
@@ -243,7 +246,7 @@ BEGIN
    else ActCode|=(((LongWord)Index)<<DPLPos);
 END
 
-	static void DecodeDPH(Word Index)
+        static void DecodeDPH(Word Index)
 BEGIN
    if (NOT ChkOpPresent(DPHField)) return;
 
@@ -251,7 +254,7 @@ BEGIN
    else ActCode|=(((LongWord)Index)<<9);
 END
 
-	static void DecodeRP(Word Index)
+        static void DecodeRP(Word Index)
 BEGIN
    if (NOT ChkOpPresent(RPField)) return;
 
@@ -259,7 +262,7 @@ BEGIN
    else ActCode|=(((LongWord)Index)<<8);
 END
 
-	static void DecodeRET(Word Index)
+        static void DecodeRET(Word Index)
 BEGIN
    if (NOT ChkOpPresent(RetField)) return;
 
@@ -267,7 +270,7 @@ BEGIN
    else ActCode|=(1l<<TypePos);
 END
 
-	static void DecodeLDI(Word Index)
+        static void DecodeLDI(Word Index)
 BEGIN
    LongWord Value;
    LongWord Reg;
@@ -286,7 +289,7 @@ BEGIN
     END
 END
 
-	static void DecodeOP(Word Index)
+        static void DecodeOP(Word Index)
 BEGIN
    char *p;
    int z;
@@ -315,7 +318,7 @@ BEGIN
     DAsmCode[0]=ActCode; CodeLen=1;
 END
 
-	static void DecodeMOV(Word Index)
+        static void DecodeMOV(Word Index)
 BEGIN
    LongWord Dest,Src;
 
@@ -332,7 +335,7 @@ END
 
 static int InstrZ;
 
-	static void AddJmp(char *NName, LongWord NCode)
+        static void AddJmp(char *NName, LongWord NCode)
 BEGIN
    if (InstrZ>=JmpOrderCnt) exit(255);
    if ((MomCPU<CPU7725) AND (Odd(NCode))) return;
@@ -340,42 +343,42 @@ BEGIN
    AddInstTable(InstTable, NName, InstrZ++, DecodeJmp);
 END
 
-	static void AddALU2(char *NName, LongWord NCode)
+        static void AddALU2(char *NName, LongWord NCode)
 BEGIN
    if (InstrZ>=ALU2OrderCnt) exit(255);
    ALU2Orders[InstrZ].Code=NCode;
    AddInstTable(OpTable, NName, InstrZ++, DecodeALU2);
 END
 
-	static void AddALU1(char *NName, LongWord NCode)
+        static void AddALU1(char *NName, LongWord NCode)
 BEGIN
    if (InstrZ>=ALU1OrderCnt) exit(255);
    ALU1Orders[InstrZ].Code=NCode;
    AddInstTable(OpTable, NName, InstrZ++, DecodeALU1);
 END
 
-	static void AddDestReg(char *NName, LongWord NCode)
+        static void AddDestReg(char *NName, LongWord NCode)
 BEGIN
    if (InstrZ>=DestRegCnt) exit(255);
    DestRegs[InstrZ].Name=NName;
    DestRegs[InstrZ++].Code=NCode;
 END
 
-	static void AddSrcReg(char *NName, LongWord NCode)
+        static void AddSrcReg(char *NName, LongWord NCode)
 BEGIN
    if (InstrZ>=SrcRegCnt) exit(255);
    SrcRegs[InstrZ].Name=NName;
    SrcRegs[InstrZ++].Code=NCode;
 END
 
-	static void AddALUSrcReg(char *NName, LongWord NCode)
+        static void AddALUSrcReg(char *NName, LongWord NCode)
 BEGIN
    if (InstrZ>=ALUSrcRegCnt) exit(255);
    ALUSrcRegs[InstrZ].Name=NName;
    ALUSrcRegs[InstrZ++].Code=NCode;
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    InstTable=CreateInstTable(101);
    OpTable=CreateInstTable(79);
@@ -471,7 +474,7 @@ BEGIN
    AddALUSrcReg("M"  , 2); AddALUSrcReg("N"  , 3);
 END
 
-	static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    DestroyInstTable(InstTable);
    DestroyInstTable(OpTable);
@@ -486,7 +489,7 @@ END
 /*---------------------------------------------------------------------------*/
 /* Callbacks */
 
-	static void MakeCode_7720(void)
+        static void MakeCode_7720(void)
 BEGIN
    Boolean NextOp;
 
@@ -516,17 +519,17 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static Boolean IsDef_7720(void)
+        static Boolean IsDef_7720(void)
 BEGIN
    return False;
 END
 
-	static void SwitchFrom_7720(void)
+        static void SwitchFrom_7720(void)
 BEGIN
    DeinitFields();
 END
 
-	static void SwitchTo_7720(void)
+        static void SwitchTo_7720(void)
 BEGIN
    PFamilyDescr FoundDescr;
 
@@ -580,7 +583,7 @@ END
 /*---------------------------------------------------------------------------*/
 /* Initialisierung */
 
-	void code7720_init(void)
+        void code7720_init(void)
 BEGIN
    CPU7720=AddCPU("7720",SwitchTo_7720);
    CPU7725=AddCPU("7725",SwitchTo_7720);

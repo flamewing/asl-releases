@@ -6,6 +6,7 @@
 /*                                                                           */
 /* Historie: 16. 5.1996 Grundsteinlegung                                     */
 /*            2. 1.1999 ChkPC-Anpassung                                      */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -76,7 +77,7 @@ static SelOrder *SelOrders;
 
 /****************************************************************************/
 
-	static void AddAcc(char *Name, Byte Code)
+        static void AddAcc(char *Name, Byte Code)
 BEGIN
    if (InstrZ==AccOrderCnt) exit(255);
    AccOrders[InstrZ].Name=Name;
@@ -101,7 +102,7 @@ BEGIN
    SelOrders[InstrZ++].IsNUPI=IsNUPI;
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    ClrCplVals=(char **) malloc(sizeof(char *)*ClrCplCnt);
    ClrCplCodes=(Byte *) malloc(sizeof(Byte)*ClrCplCnt);
@@ -138,7 +139,7 @@ BEGIN
    AddSel("AN1" ,0x85, True , False);
 END
 
-	static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    free(ClrCplVals); 
    free(ClrCplCodes);
@@ -149,7 +150,7 @@ END
 
 /****************************************************************************/
 
-	static void DecodeAdr(char *Asc_O)
+        static void DecodeAdr(char *Asc_O)
 BEGIN
    Boolean OK;
    String Asc;
@@ -187,7 +188,7 @@ BEGIN
     END
 END
 
-	static void ChkN802X(void)
+        static void ChkN802X(void)
 BEGIN
    if (CodeLen==0) return;
    if ((MomCPU==CPU8021) OR (MomCPU==CPU8022))
@@ -196,7 +197,7 @@ BEGIN
     END
 END
 
-	static void Chk802X(void)
+        static void Chk802X(void)
 BEGIN
    if (CodeLen==0) return;
    if ((MomCPU!=CPU8021) AND (MomCPU!=CPU8022))
@@ -205,7 +206,7 @@ BEGIN
     END
 END
 
-	static void ChkNUPI(void)
+        static void ChkNUPI(void)
 BEGIN
    if (CodeLen==0) return;
    if ((MomCPU==CPU8041) OR (MomCPU==CPU8042))
@@ -214,7 +215,7 @@ BEGIN
     END
 END
 
-	static void ChkUPI(void)
+        static void ChkUPI(void)
 BEGIN
    if (CodeLen==0) return;
    if ((MomCPU!=CPU8041) AND (MomCPU!=CPU8042))
@@ -223,7 +224,7 @@ BEGIN
     END
 END
 
-	static void ChkExt(void)
+        static void ChkExt(void)
 BEGIN
    if (CodeLen==0) return;
    if ((MomCPU==CPU8039) OR (MomCPU==CPU80C39))
@@ -232,12 +233,12 @@ BEGIN
     END
 END
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
    return False;
 END
 
-	void MakeCode_48(void)
+        void MakeCode_48(void)
 BEGIN
    Boolean OK;
    Word AdrWord;
@@ -264,14 +265,14 @@ BEGIN
        DecodeAdr(ArgStr[2]);
        if ((AdrMode==ModNone) OR (AdrMode==ModAcc)) WrError(1350);
        else
-	BEGIN
+        BEGIN
          switch (AdrMode)
           BEGIN
            case ModImm:
             CodeLen=2; BAsmCode[0]=0x03;
             break;
-	   case ModReg:
-	    CodeLen=1; BAsmCode[0]=0x68+AdrVal;
+           case ModReg:
+            CodeLen=1; BAsmCode[0]=0x68+AdrVal;
             break;
            case ModInd:
             CodeLen=1; BAsmCode[0]=0x60+AdrVal;
@@ -291,42 +292,42 @@ BEGIN
        DecodeAdr(ArgStr[2]);
        if ((AdrMode==-1) OR (AdrMode==ModAcc)) WrError(1350);
        else
-	BEGIN
-	 switch (AdrMode)
+        BEGIN
+         switch (AdrMode)
           BEGIN
-	   case ModImm:
+           case ModImm:
             CodeLen=2; BAsmCode[0]=0x43;
             break;
-	   case ModReg:
+           case ModReg:
             CodeLen=1; BAsmCode[0]=0x48+AdrVal;
             break;
-	   case ModInd:
-	    CodeLen=1; BAsmCode[0]=0x40+AdrVal;
-	    break;
-	  END
-	 if (Memo("ANL")) BAsmCode[0]+=0x10;
-	 else if (Memo("XRL")) BAsmCode[0]+=0x90;
-	END
+           case ModInd:
+            CodeLen=1; BAsmCode[0]=0x40+AdrVal;
+            break;
+          END
+         if (Memo("ANL")) BAsmCode[0]+=0x10;
+         else if (Memo("XRL")) BAsmCode[0]+=0x90;
+        END
       END
      else if ((strcasecmp(ArgStr[1],"BUS")==0) OR (strcmp(ArgStr[1],"P1")==0) OR (strcmp(ArgStr[1],"P2")==0))
       BEGIN
        if (Memo("XRL")) WrError(1350);
        else
-	BEGIN
-	 DecodeAdr(ArgStr[2]);
-	 if (AdrMode!=ModImm) WrError(1350);
-	 else
-	  BEGIN
-	   CodeLen=2; BAsmCode[0]=0x88;
-	   if (toupper(*ArgStr[1])=='P') BAsmCode[0]+=ArgStr[1][1]-'0';
-	   if (Memo("ANL")) BAsmCode[0]+=0x10;
-	   if (strcasecmp(ArgStr[1],"BUS")==0)
-	    BEGIN
-	     ChkExt(); ChkNUPI();
-	    END
-	   ChkN802X();
-	  END
-	END
+        BEGIN
+         DecodeAdr(ArgStr[2]);
+         if (AdrMode!=ModImm) WrError(1350);
+         else
+          BEGIN
+           CodeLen=2; BAsmCode[0]=0x88;
+           if (toupper(*ArgStr[1])=='P') BAsmCode[0]+=ArgStr[1][1]-'0';
+           if (Memo("ANL")) BAsmCode[0]+=0x10;
+           if (strcasecmp(ArgStr[1],"BUS")==0)
+            BEGIN
+             ChkExt(); ChkNUPI();
+            END
+           ChkN802X();
+          END
+        END
       END
      else WrError(1350);
      return;
@@ -340,18 +341,20 @@ BEGIN
       BEGIN
        AdrWord=EvalIntExpression(ArgStr[1],Int16,&OK);
        if (OK)
-        if (AdrWord>0xfff) WrError(1320);
-        else
-         BEGIN
-          if ((EProgCounter()&0x800)!=(AdrWord&0x800))
-	   BEGIN
-            BAsmCode[0]=0xe5+((AdrWord&0x800)>>7); CodeLen=1;
-           END
-          BAsmCode[CodeLen+1]=AdrWord&0xff;
-          BAsmCode[CodeLen]=0x04+((AdrWord&0x700)>>3);
-          if (Memo("CALL")) BAsmCode[CodeLen]+=0x10;
-	  CodeLen+=2; ChkSpace(SegCode);
-         END
+        BEGIN
+         if (AdrWord>0xfff) WrError(1320);
+         else
+          BEGIN
+           if ((EProgCounter()&0x800)!=(AdrWord&0x800))
+            BEGIN
+             BAsmCode[0]=0xe5+((AdrWord&0x800)>>7); CodeLen=1;
+            END
+           BAsmCode[CodeLen+1]=AdrWord&0xff;
+           BAsmCode[CodeLen]=0x04+((AdrWord&0x700)>>3);
+           if (Memo("CALL")) BAsmCode[CodeLen]+=0x10;
+           CodeLen+=2; ChkSpace(SegCode);
+          END
+        END
       END
      return;
     END
@@ -365,7 +368,7 @@ BEGIN
        do
         BEGIN
          if (strcmp(ClrCplVals[z],ArgStr[1])==0)
- 	  BEGIN
+          BEGIN
            CodeLen=1; BAsmCode[0]=ClrCplCodes[z]; OK=True;
            if (*ArgStr[1]=='F') ChkN802X();
           END
@@ -385,7 +388,7 @@ BEGIN
       else if (strcasecmp(ArgStr[1],"A")!=0) WrError(1350);
       else
        BEGIN
-	CodeLen=1; BAsmCode[0]=AccOrders[z].Code;
+        CodeLen=1; BAsmCode[0]=AccOrders[z].Code;
        END
       return;
      END
@@ -403,7 +406,7 @@ BEGIN
           break;
          case ModReg:
           CodeLen=1; BAsmCode[0]=0xc8+AdrVal;
-	  ChkN802X();
+          ChkN802X();
           break;
          default:
           WrError(1350);
@@ -462,7 +465,7 @@ BEGIN
           BEGIN
            if (((EProgCounter()+1)&0xff00)!=(AdrWord&0xff00)) WrError(1910);
            else
-	    BEGIN
+            BEGIN
              CodeLen=2; BAsmCode[0]=0xe8+AdrVal; BAsmCode[1]=AdrWord&0xff;
             END
           END
@@ -493,7 +496,7 @@ BEGIN
         BEGIN
          case ModAcc:
           CodeLen=1; BAsmCode[0]=0x17;
-	  break;
+          break;
          case ModReg:
           CodeLen=1; BAsmCode[0]=0x18+AdrVal;
           break;
@@ -585,17 +588,17 @@ BEGIN
       BEGIN
        AdrVal=EvalIntExpression(ArgStr[1],UInt3,&OK);
        if (OK)
-	BEGIN
-	 AdrWord=EvalIntExpression(ArgStr[2],UInt12,&OK);
-	 if (NOT OK);
-	 else if (((EProgCounter()+1)&0xff00)!=(AdrWord&0xff00)) WrError(1910);
-	 else
-	  BEGIN
-	   CodeLen=2; BAsmCode[0]=0x12+(AdrVal<<5);
-	   BAsmCode[1]=AdrWord&0xff;
-	   ChkN802X();
-	  END
-	END
+        BEGIN
+         AdrWord=EvalIntExpression(ArgStr[2],UInt12,&OK);
+         if (NOT OK);
+         else if (((EProgCounter()+1)&0xff00)!=(AdrWord&0xff00)) WrError(1910);
+         else
+          BEGIN
+           CodeLen=2; BAsmCode[0]=0x12+(AdrVal<<5);
+           BAsmCode[1]=AdrWord&0xff;
+           ChkN802X();
+          END
+        END
       END
      return;
     END
@@ -606,61 +609,61 @@ BEGIN
      else if (strcasecmp(ArgStr[1],"A")==0)
       BEGIN
        if (strcasecmp(ArgStr[2],"T")==0)
-	BEGIN
-	 CodeLen=1; BAsmCode[0]=0x42;
-	END
+        BEGIN
+         CodeLen=1; BAsmCode[0]=0x42;
+        END
        else if (strcasecmp(ArgStr[2],"PSW")==0)
-	BEGIN
-	 CodeLen=1; BAsmCode[0]=0xc7; ChkN802X();
-	END
+        BEGIN
+         CodeLen=1; BAsmCode[0]=0xc7; ChkN802X();
+        END
        else
-	BEGIN
-	  DecodeAdr(ArgStr[2]);
-	  switch (AdrMode)
+        BEGIN
+          DecodeAdr(ArgStr[2]);
+          switch (AdrMode)
            BEGIN
-	    case ModReg:
-	     CodeLen=1; BAsmCode[0]=0xf8+AdrVal;
-	     break;
-	    case ModInd:
-	     CodeLen=1; BAsmCode[0]=0xf0+AdrVal;
-	     break;
-	    case ModImm:
-	     CodeLen=2; BAsmCode[0]=0x23;
-	     break;
-	    default:
+            case ModReg:
+             CodeLen=1; BAsmCode[0]=0xf8+AdrVal;
+             break;
+            case ModInd:
+             CodeLen=1; BAsmCode[0]=0xf0+AdrVal;
+             break;
+            case ModImm:
+             CodeLen=2; BAsmCode[0]=0x23;
+             break;
+            default:
              WrError(1350);
-	   END
-	END
+           END
+        END
       END
      else if (strcasecmp(ArgStr[2],"A")==0)
       BEGIN
        if (strcasecmp(ArgStr[1],"STS")==0)
-	BEGIN
-	 CodeLen=1; BAsmCode[0]=0x90; ChkUPI();
-	END
+        BEGIN
+         CodeLen=1; BAsmCode[0]=0x90; ChkUPI();
+        END
        else if (strcasecmp(ArgStr[1],"T")==0)
-	BEGIN
-	 CodeLen=1; BAsmCode[0]=0x62;
-	END
+        BEGIN
+         CodeLen=1; BAsmCode[0]=0x62;
+        END
        else if (strcasecmp(ArgStr[1],"PSW")==0)
-	BEGIN
-	 CodeLen=1; BAsmCode[0]=0xd7; ChkN802X();
-	END
+        BEGIN
+         CodeLen=1; BAsmCode[0]=0xd7; ChkN802X();
+        END
        else
-	BEGIN
-	 DecodeAdr(ArgStr[1]);
-	  switch (AdrMode)
-	   BEGIN
+        BEGIN
+         DecodeAdr(ArgStr[1]);
+          switch (AdrMode)
+           BEGIN
             case ModReg:
-	     CodeLen=1; BAsmCode[0]=0xa8+AdrVal;
-	     break;
-	    case ModInd:
-	     CodeLen=1; BAsmCode[0]=0xa0+AdrVal;
-	     break;
-	    default:
+             CodeLen=1; BAsmCode[0]=0xa8+AdrVal;
+             break;
+            case ModInd:
+             CodeLen=1; BAsmCode[0]=0xa0+AdrVal;
+             break;
+            default:
              WrError(1350);
-	   END
-	END
+           END
+        END
       END
      else if (*ArgStr[2]=='#')
       BEGIN
@@ -673,12 +676,12 @@ BEGIN
            case ModReg:
             CodeLen=2; BAsmCode[0]=0xb8+AdrVal; BAsmCode[1]=AdrWord;
             break;
-	   case ModInd:
+           case ModInd:
             CodeLen=2; BAsmCode[0]=0xb0+AdrVal; BAsmCode[1]=AdrWord;
             break;
-	   default:
+           default:
             WrError(1350);
-	  END
+          END
         END
       END
      else WrError(1135);
@@ -730,20 +733,20 @@ BEGIN
       BEGIN
        OK=False;
        if (strcasecmp(ArgStr[2],"A")==0)
-	BEGIN
-	 strcpy(ArgStr[2],ArgStr[1]); strmaxcpy(ArgStr[1],"A",255); OK=True;
-	END
+        BEGIN
+         strcpy(ArgStr[2],ArgStr[1]); strmaxcpy(ArgStr[1],"A",255); OK=True;
+        END
        if (strcasecmp(ArgStr[1],"A")!=0) WrError(1350);
        else
-	BEGIN
-	 DecodeAdr(ArgStr[2]);
-	 if (AdrMode!=ModInd) WrError(1350);
-	 else
-	  BEGIN
-	   CodeLen=1; BAsmCode[0]=0x80+AdrVal;
-	   if (OK) BAsmCode[0]+=0x10;
-	   ChkN802X(); ChkNUPI();
-	  END
+        BEGIN
+         DecodeAdr(ArgStr[2]);
+         if (AdrMode!=ModInd) WrError(1350);
+         else
+          BEGIN
+           CodeLen=1; BAsmCode[0]=0x80+AdrVal;
+           if (OK) BAsmCode[0]+=0x10;
+           ChkN802X(); ChkNUPI();
+          END
         END
       END
      return;
@@ -805,7 +808,7 @@ BEGIN
        CodeLen=1; BAsmCode[0]=0x83;
        if (strlen(OpPart)==4)
         BEGIN
-	 BAsmCode[0]+=0x10; ChkN802X();
+         BAsmCode[0]+=0x10; ChkN802X();
         END
       END
      return;
@@ -820,13 +823,13 @@ BEGIN
        OK=False; NLS_UpString(ArgStr[1]);
        for (z=0; z<SelOrderCnt; z++)
        if (strcmp(ArgStr[1],SelOrders[z].Name)==0)
-	BEGIN
-	 CodeLen=1; BAsmCode[0]=SelOrders[z].Code; OK=True;
-	 if ((SelOrders[z].Is22) AND (MomCPU!=CPU8022))
-	  BEGIN
-	   CodeLen=0; WrError(1500);
-	  END
-	 if (SelOrders[z].IsNUPI) ChkNUPI();
+        BEGIN
+         CodeLen=1; BAsmCode[0]=SelOrders[z].Code; OK=True;
+         if ((SelOrders[z].Is22) AND (MomCPU!=CPU8022))
+          BEGIN
+           CodeLen=0; WrError(1500);
+          END
+         if (SelOrders[z].IsNUPI) ChkNUPI();
         END
        if (NOT OK) WrError(1350);
       END
@@ -874,19 +877,19 @@ BEGIN
         END
        if (strcasecmp(ArgStr[1],"A")!=0) WrError(1350);
        else
-	BEGIN
-	 DecodeAdr(ArgStr[2]);
+        BEGIN
+         DecodeAdr(ArgStr[2]);
          switch (AdrMode)
           BEGIN
            case ModReg:
-	    CodeLen=1; BAsmCode[0]=0x28+AdrVal;
+            CodeLen=1; BAsmCode[0]=0x28+AdrVal;
             break;
-	   case ModInd:
-	    CodeLen=1; BAsmCode[0]=0x20+AdrVal;
-	    break;
-	   default:
+           case ModInd:
+            CodeLen=1; BAsmCode[0]=0x20+AdrVal;
+            break;
+           default:
             WrError(1350);
-	  END
+          END
         END
       END
      return;
@@ -904,12 +907,12 @@ BEGIN
        if (strcasecmp(ArgStr[1],"A")!=0) WrError(1350);
        else
         BEGIN
-	 DecodeAdr(ArgStr[2]);
+         DecodeAdr(ArgStr[2]);
          if (AdrMode!=ModInd) WrError(1350);
          else
           BEGIN
            CodeLen=1; BAsmCode[0]=0x30+AdrVal;
-  	  END
+          END
         END
       END
      return;
@@ -951,7 +954,7 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static Boolean IsDef_48(void)
+        static Boolean IsDef_48(void)
 BEGIN
    return False;
 END
@@ -961,7 +964,7 @@ BEGIN
    DeinitFields();
 END
 
-	static void SwitchTo_48(void)
+        static void SwitchTo_48(void)
 BEGIN
    TurnWords=False; ConstMode=ConstModeIntel; SetIsOccupied=False;
 
@@ -985,7 +988,7 @@ BEGIN
    SwitchFrom=SwitchFrom_48; InitFields();
 END
 
-	void code48_init(void)
+        void code48_init(void)
 BEGIN
    CPU8021 =AddCPU("8021" ,SwitchTo_48);
    CPU8022 =AddCPU("8022" ,SwitchTo_48);

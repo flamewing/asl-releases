@@ -8,6 +8,8 @@
 ;*           26.10.1997 kill-Option                                          *
 ;*            6. 7.1999 Minimalparameter Motorola S-Records                  *
 ;*           24.10.1999 Parameter Relokation                                 *
+;*           16.11.1999 Atmel-Format                                         *
+;*           24. 3.2000 added byte messages                                  *
 ;*                                                                           *
 ;*****************************************************************************
 
@@ -36,6 +38,14 @@ Message InfoMessHead2
  " <Quelldatei(en)> <Zieldatei> [Optionen]"
  " <source file(s)> <target file> [options]"
 
+Message Byte
+ "byte"
+ "Byte"
+
+Message Bytes
+ "bytes"
+ "Bytes"
+
 Message InfoMessHelp
  "\n" \
  "Optionen: -f <Headerliste>  : auszufilternde Records\n" \
@@ -49,7 +59,7 @@ Message InfoMessHelp
  "          -F <Default|Moto|\n" \
  "              Intel|MOS|Tek|\n" \
  "              Intel16|DSK|\n" \
- "              Intel32>      : Zielformat\n" \
+ "              Intel32|Atmel>: Zielformat\n" \
  "          +5                : S5-Records unterdr&uuml;cken\n" \
  "          -s                : S-Record-Gruppen einzeln terminieren\n" \
  "          -M <1|2|3>        : Minimallaenge Adressen S-Records\n" \
@@ -68,7 +78,7 @@ Message InfoMessHelp
  "         -F <Default|Moto|\n" \
  "             Intel|MOS|Tek|\n" \
  "             Intel16|DSK|\n" \
- "             Intel32>      : target format\n" \
+ "             Intel32|Atmel>: target format\n" \
  "         +5                : supress S5-records\n" \
  "         -s                : separate terminators for S-record groups\n" \
  "         -M <1|2|3>        : minimum length of S records addresses\n" \

@@ -8,6 +8,7 @@
 /*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
 /*           18. 8.1998 BookKeeping-Aufruf bei RES                           */
 /*            3. 1.1999 ChkPC-Anpassung                                      */
+/*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -48,14 +49,14 @@ static ConstOrder *ConstOrders;
 
 /*---------------------------------------------------------------------------*/
 
-	static void AddFixed(char *NName, Word NCode)
+        static void AddFixed(char *NName, Word NCode)
 BEGIN
    if (InstrZ>=FixedOrderCount) exit(255);
    FixedOrders[InstrZ].Name=NName;
    FixedOrders[InstrZ++].Code=NCode;
 END
 
-	static void AddConst(char *NName, Word NCode, IntType NMax)
+        static void AddConst(char *NName, Word NCode, IntType NMax)
 BEGIN
    if (InstrZ>=ConstOrderCount) exit(255);
    ConstOrders[InstrZ].Name=NName;
@@ -63,7 +64,7 @@ BEGIN
    ConstOrders[InstrZ++].Max=NMax;
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    FixedOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*FixedOrderCount); InstrZ=0;
    AddFixed("AM"  ,0x00a);  AddFixed("AMC" ,0x00b);  AddFixed("AND" ,0x018);
@@ -111,7 +112,7 @@ END
 
 /*-------------------------------------------------------------------------*/
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
    Boolean ValOK;
    Word Size,z,z2;
@@ -133,11 +134,11 @@ BEGIN
        Size=EvalIntExpression(ArgStr[1],Int16,&ValOK);
        if (FirstPassUnknown) WrError(1820);
        if ((ValOK) AND (NOT FirstPassUnknown))
-	BEGIN
-	 DontPrint=True;
-	 CodeLen=Size;
+        BEGIN
+         DontPrint=True;
+         CodeLen=Size;
          BookKeeping();
-	END
+        END
       END
      return True;
     END
@@ -149,13 +150,16 @@ BEGIN
       BEGIN
        ValOK=True;
        for (z=1; z<=ArgCnt; z++)
-	if (ValOK)
-	 BEGIN
+        if (ValOK)
+         BEGIN
           FirstPassUnknown=False;
-	  EvalExpression(ArgStr[z],&t);
+          EvalExpression(ArgStr[z],&t);
           if ((t.Typ==TempInt) AND (FirstPassUnknown))
-           if (ActPC==SegData) t.Contents.Int&=7; else t.Contents.Int&=511;
-	  switch (t.Typ)
+           BEGIN
+            if (ActPC==SegData) t.Contents.Int&=7;
+            else t.Contents.Int&=511;
+           END
+          switch (t.Typ)
            BEGIN
             case TempInt:
              if (ActPC==SegCode)
@@ -191,10 +195,10 @@ BEGIN
                 END
               END
              break;
-	    default:
+            default:
              ValOK=False;
-	   END
-	 END
+           END
+         END
        if (NOT ValOK) CodeLen=0;
       END
      return True;
@@ -276,11 +280,13 @@ BEGIN
       BEGIN
        AdrWord=EvalIntExpression(ArgStr[1],UInt13,&OK);
        if (OK)
-        if ((NOT SymbolQuestionable) AND ((EProgCounter() >> 7)!=(AdrWord >> 7))) WrError(1910);
-        else
-         BEGIN
-          CodeLen=1; WAsmCode[0]=0x180+(AdrWord&0x7f);
-         END
+        BEGIN
+         if ((NOT SymbolQuestionable) AND ((EProgCounter() >> 7)!=(AdrWord >> 7))) WrError(1910);
+         else
+          BEGIN
+           CodeLen=1; WAsmCode[0]=0x180+(AdrWord&0x7f);
+          END
+        END
       END
      return;
     END
@@ -299,8 +305,8 @@ BEGIN
        if (OK)
         BEGIN
          CodeLen=2;
-	 WAsmCode[1]=0x200+(AdrWord & 0x7f)+((AdrWord >> 12) << 7);
-	 WAsmCode[0]=0x0c0+(Ord(Memo("BL")) << 5)+((AdrWord >> 7) & 0x1f);
+         WAsmCode[1]=0x200+(AdrWord & 0x7f)+((AdrWord >> 12) << 7);
+         WAsmCode[0]=0x0c0+(Ord(Memo("BL")) << 5)+((AdrWord >> 7) & 0x1f);
         END
       END
      return;
@@ -315,8 +321,8 @@ BEGIN
        if (OK)
         BEGIN
          CodeLen=2;
-	 WAsmCode[1]=0x200+(AdrWord & 0x0f)+((AdrWord & 0x30) << 2);
-	 WAsmCode[0]=0x010+(Ord(Memo("BMLA")) << 5);
+         WAsmCode[1]=0x200+(AdrWord & 0x0f)+((AdrWord & 0x30) << 2);
+         WAsmCode[0]=0x010+(Ord(Memo("BMLA")) << 5);
         END
       END
      return;
@@ -329,11 +335,13 @@ BEGIN
       BEGIN
        AdrWord=EvalIntExpression(ArgStr[1],UInt13,&OK);
        if (OK)
-	if ((AdrWord >> 7)!=2) WrError(1905);
-        else
-         BEGIN
-         CodeLen=1;
-	 WAsmCode[0]=0x100+(AdrWord & 0x7f);
+        BEGIN
+         if ((AdrWord >> 7)!=2) WrError(1905);
+         else
+          BEGIN
+           CodeLen=1;
+           WAsmCode[0]=0x100+(AdrWord & 0x7f);
+          END
         END
       END
      return;
@@ -349,7 +357,7 @@ BEGIN
         BEGIN
          AdrWord=EvalIntExpression(ArgStr[1],Int4,&OK) << 4;
          if (OK) AdrWord+=EvalIntExpression(ArgStr[2],Int4,&OK);
-	END
+        END
        if (OK)
         BEGIN
          CodeLen=1;
@@ -391,7 +399,7 @@ BEGIN
    InitFields();
 END
 
-	void code4500_init(void)
+        void code4500_init(void)
 BEGIN
    CPU4500=AddCPU("MELPS4500" ,SwitchTo_4500);
 END

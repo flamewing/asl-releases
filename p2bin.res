@@ -5,6 +5,7 @@
 ;* Stringdefinitionen fuer P2BIN                                             *
 ;*                                                                           *
 ;* Historie:  3. 6.1996 Grundsteinlegung                                     *
+;*           24. 3.2000 added byte messages                                  *
 ;*                                                                           *
 ;*****************************************************************************
 
@@ -22,6 +23,14 @@ Message InfoMessChecksum
 Message InfoMessHead2
  " <Quelldatei(en)> <Zieldatei> [Optionen]"
  " <source file(s)> <target file> [options]"
+
+Message Byte
+ "byte"
+ "Byte"
+
+Message Bytes
+ "bytes"
+ "Bytes"
 
 Message InfoMessHelp
  "\n" \

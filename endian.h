@@ -6,14 +6,16 @@
 /*                                                                           */
 /* Historie: 30. 5.1996 Grundsteinlegung                                     */
 /*            6. 7.1997 Dec32BlankString dazu                                */
+/*            1. 6.2000 added LargeHIntFormat                                */
+/*            7. 7.2000 added memory read/write functions                    */
 /*                                                                           */
 /*****************************************************************************/
 
 extern Boolean BigEndian;
 
-extern char *Integ16Format,*Integ32Format,*Integ64Format;
-extern char *IntegerFormat,*LongIntFormat,*QuadIntFormat;
-extern char *LargeIntFormat;
+extern char *Integ16Format, *Integ32Format, *Integ64Format;
+extern char *IntegerFormat, *LongIntFormat, *QuadIntFormat;
+extern char *LargeIntFormat, *LargeHIntFormat;
 
 
 extern void WSwap(void *Field, int Cnt);
@@ -47,6 +49,32 @@ extern Boolean Write4(FILE *file, void *Ptr);
 
 extern Boolean Write8(FILE *file, void *Ptr);
 
+
+extern Word MRead2L(Byte *Buffer);
+
+extern Word MRead2B(Byte *Buffer);
+
+extern void MWrite2L(Byte *Buffer, Word Value);
+
+extern void MWrite2B(Byte *Buffer, Word Value);
+
+extern LongWord MRead4L(Byte *Buffer);
+
+extern LongWord MRead4B(Byte *Buffer);
+
+extern void MWrite4L(Byte *Buffer, LongWord Value);
+
+extern void MWrite4B(Byte *Buffer, LongWord Value);
+
+#ifdef HAS64
+extern QuadWord MRead8L(Byte *Buffer);
+
+extern QuadWord MRead8B(Byte *Buffer);
+
+extern void MWrite8L(Byte *Buffer, QuadWord Value);
+
+extern void MWrite8B(Byte *Buffer, QuadWord Value);
+#endif
 
 extern char *Dec32BlankString(LongInt number, int Stellen);
 

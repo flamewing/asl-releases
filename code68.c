@@ -6,6 +6,7 @@
 /*                                                                           */
 /* Historie:  13. 8.1996 Grundsteinlegung                                    */
 /*             2. 1.1998 ChkPC ersetzt                                       */
+/*             9. 3.2000 'ambigious else'-Warnungen beseitigt                */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -27,7 +28,7 @@
 typedef struct
          {
           char *Name;
-	  CPUVar MinCPU,MaxCPU;
+          CPUVar MinCPU,MaxCPU;
           Word Code;
          } FixedOrder;
 
@@ -41,17 +42,17 @@ typedef struct
          {
           char *Name;
           Boolean MayImm;
-	  Byte Code;
-	 } ALU8Order;
+          Byte Code;
+         } ALU8Order;
 
 typedef struct 
          {
           Boolean MayImm;
-	  CPUVar MinCPU;    /* Shift  andere   ,Y   */
+          CPUVar MinCPU;    /* Shift  andere   ,Y   */
           Byte PageShift;   /* 0 :     nix    Pg 2  */
-	  Byte Code;        /* 1 :     Pg 3   Pg 4  */
-	 } ALU16Order;      /* 2 :     nix    Pg 4  */
-			    /* 3 :     Pg 2   Pg 3  */
+          Byte Code;        /* 1 :     Pg 3   Pg 4  */
+         } ALU16Order;      /* 2 :     nix    Pg 4  */
+                            /* 3 :     Pg 2   Pg 3  */
 
 
 #define ModNone (-1)
@@ -79,7 +80,7 @@ typedef struct
 
 
 static ShortInt OpSize;
-static Byte PrefCnt;	       /* Anzahl Befehlspraefixe */
+static Byte PrefCnt;           /* Anzahl Befehlspraefixe */
 static ShortInt AdrMode;       /* Ergebnisadressmodus */
 static Byte AdrPart;           /* Adressierungsmodusbits im Opcode */
 static Byte AdrVals[4];        /* Adressargument */
@@ -96,7 +97,7 @@ static CPUVar CPU6800,CPU6301,CPU6811;
 
 /*---------------------------------------------------------------------------*/
 
-	static void DecodeAdr(int StartInd, int StopInd, Byte Erl)
+        static void DecodeAdr(int StartInd, int StopInd, Byte Erl)
 BEGIN
    String Asc;
    Boolean OK,ErrOcc;
@@ -136,7 +137,7 @@ BEGIN
            if (OK)
             BEGIN
              AdrMode=ModImm;
-  	   AdrVals[AdrCnt++]=Hi(AdrWord); AdrVals[AdrCnt++]=Lo(AdrWord);
+           AdrVals[AdrCnt++]=Hi(AdrWord); AdrVals[AdrCnt++]=Lo(AdrWord);
             END
            else ErrOcc=True;
           END
@@ -172,15 +173,15 @@ BEGIN
        if (OK)
         BEGIN
          if (((MModDir & Erl)!=0) AND (Bit8!=1) AND ((Bit8==2) OR ((MModExt & Erl)==0) OR (Hi(AdrWord)==0)))
-  	  BEGIN
-  	   if (Hi(AdrWord)!=0)
-  	    BEGIN
-  	     WrError(1340); ErrOcc=True;
-  	    END
-  	   else
-  	    BEGIN
-  	     AdrMode=ModDir; AdrPart=1;
-  	     AdrVals[AdrCnt++]=Lo(AdrWord);
+          BEGIN
+           if (Hi(AdrWord)!=0)
+            BEGIN
+             WrError(1340); ErrOcc=True;
+            END
+           else
+            BEGIN
+             AdrMode=ModDir; AdrPart=1;
+             AdrVals[AdrCnt++]=Lo(AdrWord);
             END
           END
          else if ((MModExt & Erl)!=0)
@@ -207,8 +208,8 @@ BEGIN
          AdrWord=EvalIntExpression(Asc,Int8,&OK);
          if (OK)
           if ((MomCPU<CPU6811) AND (strcasecmp(ArgStr[StartInd+1],"Y")==0))
-  	 BEGIN
-  	  WrError(1505); ErrOcc=True;
+         BEGIN
+          WrError(1505); ErrOcc=True;
            END
           else
            BEGIN
@@ -236,12 +237,12 @@ BEGIN
    if ((NOT ErrOcc) AND (AdrMode==ModNone)) WrError(1350);
 END
 
-	static void AddPrefix(Byte Prefix)
+        static void AddPrefix(Byte Prefix)
 BEGIN
    BAsmCode[PrefCnt++]=Prefix;
 END
 
-	static void Try2Split(int Src)
+        static void Try2Split(int Src)
 BEGIN
    Integer z;
    char *p;
@@ -259,7 +260,7 @@ END
 
 /*---------------------------------------------------------------------------*/
 
-	static void DecodeFixed(Word Index)
+        static void DecodeFixed(Word Index)
 BEGIN
    FixedOrder *forder=FixedOrders+Index;
 
@@ -278,7 +279,7 @@ BEGIN
     END
 END
 
-	static void DecodeRel(Word Index)
+        static void DecodeRel(Word Index)
 BEGIN
    BaseOrder *forder=RelOrders+Index;
    Integer AdrInt;
@@ -300,7 +301,7 @@ BEGIN
     END
 END
 
-	static void DecodeALU16(Word Index)
+        static void DecodeALU16(Word Index)
 BEGIN
     ALU16Order *forder=ALU16Orders+Index;
 
@@ -332,7 +333,7 @@ BEGIN
      END
 END
 
-	static void DecodeBit63(Word Index)
+        static void DecodeBit63(Word Index)
 BEGIN
    BaseOrder *forder=Bit63Orders+Index;
 
@@ -355,7 +356,7 @@ BEGIN
      END
 END
 
-	static void DecodeJMP(Word Index)
+        static void DecodeJMP(Word Index)
 BEGIN
    if ((ArgCnt<1) OR (ArgCnt>2)) WrError(1110);
    else
@@ -370,7 +371,7 @@ BEGIN
     END
 END
 
-	static void DecodeJSR(Word Index)
+        static void DecodeJSR(Word Index)
 BEGIN
    if ((ArgCnt<1) OR (ArgCnt>2)) WrError(1110);
    else
@@ -385,7 +386,7 @@ BEGIN
     END
 END
 
-	static void DecodeBRxx(Word Index)
+        static void DecodeBRxx(Word Index)
 BEGIN
    Boolean OK;
    Byte Mask;
@@ -450,15 +451,17 @@ BEGIN
       if (*ArgStr[ArgCnt]=='#') strcpy(ArgStr[ArgCnt],ArgStr[ArgCnt]+1);
       Mask=EvalIntExpression(ArgStr[ArgCnt],Int8,&OK);
       if ((OK) AND (MomCPU==CPU6301))
-       if (Mask>7)
-        BEGIN
-         WrError(1320); OK=False;
-        END
-       else
-        BEGIN
-         Mask=1 << Mask;
-         if (Index==1) Mask=0xff-Mask;
-        END
+       BEGIN
+        if (Mask>7)
+         BEGIN
+          WrError(1320); OK=False;
+         END
+        else
+         BEGIN
+          Mask=1 << Mask;
+          if (Index==1) Mask=0xff-Mask;
+         END
+       END
       if (OK)
        BEGIN
         DecodeAdr(1,ArgCnt-1,MModDir+MModInd);
@@ -484,7 +487,7 @@ BEGIN
      END
 END
 
-	static void DecodeBTxx(Word Index)
+        static void DecodeBTxx(Word Index)
 BEGIN
    Boolean OK;
    Byte AdrByte;
@@ -495,26 +498,28 @@ BEGIN
     BEGIN
      AdrByte=EvalIntExpression(ArgStr[1],Int8,&OK);
      if (OK)
-      if (AdrByte>7) WrError(1320);
-      else
-       BEGIN
-        DecodeAdr(2,ArgCnt,MModDir+MModInd);
-        if (AdrMode!=ModNone)
-         BEGIN
-          CodeLen=PrefCnt+2+AdrCnt;
-          BAsmCode[1+PrefCnt]=1 << AdrByte;
-          memcpy(BAsmCode+2+PrefCnt,AdrVals,AdrCnt);
-          BAsmCode[PrefCnt]=0x65;
-          BAsmCode[PrefCnt]+=Index;
-          if (AdrMode==ModDir) BAsmCode[PrefCnt]+=0x10;
-         END
-       END
+      BEGIN
+       if (AdrByte>7) WrError(1320);
+       else
+        BEGIN
+         DecodeAdr(2,ArgCnt,MModDir+MModInd);
+         if (AdrMode!=ModNone)
+          BEGIN
+           CodeLen=PrefCnt+2+AdrCnt;
+           BAsmCode[1+PrefCnt]=1 << AdrByte;
+           memcpy(BAsmCode+2+PrefCnt,AdrVals,AdrCnt);
+           BAsmCode[PrefCnt]=0x65;
+           BAsmCode[PrefCnt]+=Index;
+           if (AdrMode==ModDir) BAsmCode[PrefCnt]+=0x10;
+          END
+        END
+      END
     END
 END
 
 /*---------------------------------------------------------------------------*/
 
-	static void AddFixed(char *NName, CPUVar NMin, CPUVar NMax, Word NCode)
+        static void AddFixed(char *NName, CPUVar NMin, CPUVar NMax, Word NCode)
 BEGIN
    if (InstrZ>=FixedOrderCnt) exit(255);
 
@@ -525,7 +530,7 @@ BEGIN
    AddInstTable(InstTable,NName,InstrZ++,DecodeFixed);
 END
 
-	static void AddRel(char *NName, Byte NCode)
+        static void AddRel(char *NName, Byte NCode)
 BEGIN
    if (InstrZ>=RelOrderCnt) exit(255);
 
@@ -534,7 +539,7 @@ BEGIN
    AddInstTable(InstTable,NName,InstrZ++,DecodeRel);
 END
 
-	static void AddALU8(char *NName, Boolean NMay, Byte NCode)
+        static void AddALU8(char *NName, Boolean NMay, Byte NCode)
 BEGIN
    if (InstrZ>=ALU8OrderCnt) exit(255);
 
@@ -543,7 +548,7 @@ BEGIN
    ALU8Orders[InstrZ++].Code=NCode;
 END
 
-	static void AddALU16(char *NName, Boolean NMay, CPUVar NMin, Byte NShift, Byte NCode)
+        static void AddALU16(char *NName, Boolean NMay, CPUVar NMin, Byte NShift, Byte NCode)
 BEGIN
    if (InstrZ>=ALU16OrderCnt) exit(255);
 
@@ -562,7 +567,7 @@ BEGIN
    Sing8Orders[InstrZ++].Code=NCode;
 END
 
-	static void AddBit63(char *NName, Byte NCode)
+        static void AddBit63(char *NName, Byte NCode)
 BEGIN
    if (InstrZ>=Bit63OrderCnt) exit(255);
 
@@ -571,7 +576,7 @@ BEGIN
    AddInstTable(InstTable,NName,InstrZ++,DecodeBit63);
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    InstTable=CreateInstTable(201);
    AddInstTable(InstTable,"JMP",0,DecodeJMP);
@@ -667,7 +672,7 @@ BEGIN
    AddBit63("OIM", 0x62); AddBit63("TIM", 0x6b);
 END
 
-	static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    DestroyInstTable(InstTable);
    free(FixedOrders);
@@ -696,12 +701,12 @@ BEGIN
    return (Memo(Op));
 END
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
    return False;
 END
 
-	static void MakeCode_68(void)
+        static void MakeCode_68(void)
 BEGIN
    int z;
 
@@ -811,7 +816,7 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static Boolean IsDef_68(void)
+        static Boolean IsDef_68(void)
 BEGIN
    return False;
 END
@@ -821,7 +826,7 @@ BEGIN
    DeinitFields();
 END
 
-	static void SwitchTo_68(void)
+        static void SwitchTo_68(void)
 BEGIN
    TurnWords=False; ConstMode=ConstModeMoto; SetIsOccupied=False;
 
@@ -839,7 +844,7 @@ BEGIN
    SetFlag(&DoPadding,DoPaddingName,False);
 END
 
-	void code68_init(void)
+        void code68_init(void)
 BEGIN
    CPU6800=AddCPU("6800",SwitchTo_68);
    CPU6301=AddCPU("6301",SwitchTo_68);

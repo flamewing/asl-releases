@@ -6,6 +6,7 @@
 /*                                                                           */
 /* Historie: 17. 2.1996 Grundsteinlegung                                     */
 /*            2. 1.1998 ChkPC umgestellt                                     */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -121,7 +122,7 @@ END
 
 /*---------------------------------------------------------------------------*/
 
-	static Boolean DecodeReg(char *Asc, Byte *Erg)
+        static Boolean DecodeReg(char *Asc, Byte *Erg)
 BEGIN
    if ((strlen(Asc)!=2) OR (toupper(*Asc)!='P')) return False;
 
@@ -136,7 +137,7 @@ BEGIN
    return True;
 END
 
-	static Boolean DecodeAdr(char *Asc, Boolean MayInc, Byte PCDisp, Byte *Arg)
+        static Boolean DecodeAdr(char *Asc, Boolean MayInc, Byte PCDisp, Byte *Arg)
 BEGIN
    Integer Disp;
    Word PCVal;
@@ -175,17 +176,19 @@ BEGIN
    PCVal=(EProgCounter() & 0xf000)+((EProgCounter()+1) & 0xfff);
    Disp=EvalIntExpression(Asc,UInt16,&OK)-PCDisp-PCVal;
    if (OK)
-    if ((NOT SymbolQuestionable) AND ((Disp<-128) OR (Disp>127))) WrError(1370);
-    else
-     BEGIN
-      BAsmCode[1]=Disp & 0xff; *Arg=0; return True;
-     END
+    BEGIN
+     if ((NOT SymbolQuestionable) AND ((Disp<-128) OR (Disp>127))) WrError(1370);
+     else
+      BEGIN
+       BAsmCode[1]=Disp & 0xff; *Arg=0; return True;
+      END
+    END
    return False;
 END
 
 /*---------------------------------------------------------------------------*/
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
    return False;
 END
@@ -318,7 +321,7 @@ BEGIN
    SwitchFrom=SwitchFrom_SCMP; InitFields();
 END
 
-	void codescmp_init(void)
+        void codescmp_init(void)
 BEGIN
    CPUSCMP=AddCPU("SC/MP",SwitchTo_SCMP);
 END

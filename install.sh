@@ -6,7 +6,7 @@ echo "Installing files:"
 if [ "$1" != "" ]; then
  mkdirhier $1
  chmod 755 $1
- for i in asl plist pbind p2hex p2bin; do
+ for i in asl plist alink pbind p2hex p2bin; do
   echo $1/$i
   strip $i
   cp $i $1
@@ -63,4 +63,10 @@ if [ "$5" != "" ]; then
   fi
   chmod 644 $5/as-$i.*
  done
+ cp doc_DE/taborg*.tex $5
+ chmod 644 $5/taborg*.tex
+ cp doc_DE/ps*.tex $5
+ chmod 644 $5/ps*.tex
+ cp COPYING $5
+ chmod 644 $5/COPYING
 fi

@@ -8,18 +8,9 @@ a bit faster than the original Pascal version.
 
 LICENSING
 
-Those who have already used the original DOS/Pascal version of AS
-will know that AS is completely free: you may use and modify AS for
-whatever purpose you like (regardless whether it is commercial or
-not), given that you do not remove my copyright from the sources and
-that programs that build upon the AS sources are given out under the
-same license terms.  Of course, if you add something significant,
-you may also add your own name to the copyright list!
-
-To make things a bit more interesting (for me), I have added a detail
-to the license terms of the C version: it is wineware!  If you want
-and have time, you may send me a bottle of your favourite wine...
-
+AS is based upon the Gnu General Public License (GPL); read the file
+COPYING for its details.  You should have received a copy of this file
+together with AS; if not, someone sneaked in!
 
 PLATFORMS
 

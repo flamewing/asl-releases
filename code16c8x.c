@@ -10,6 +10,7 @@
 /*            3. 1.1999 ChkPC-Anpassung                                      */
 /*                      Sonderadressbereich PIC16C84                         */
 /*           2. 10.1999 ChkPC wurde nicht angebunden...                      */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -59,21 +60,21 @@ static CPUVar CPU16C64,CPU16C84;
 
 /*--------------------------------------------------------------------------*/
 
-	static void AddFixed(char *NName, Word NCode)
+        static void AddFixed(char *NName, Word NCode)
 BEGIN
    if (InstrZ>=FixedOrderCnt) exit(255);
    FixedOrders[InstrZ].Name=NName;
    FixedOrders[InstrZ++].Code=NCode;
 END
 
-	static void AddLit(char *NName, Word NCode)
+        static void AddLit(char *NName, Word NCode)
 BEGIN
    if (InstrZ>=LitOrderCnt) exit(255);
    LitOrders[InstrZ].Name=NName;
    LitOrders[InstrZ++].Code=NCode;
 END
 
-	static void AddAri(char *NName, Word NCode, Byte NDir)
+        static void AddAri(char *NName, Word NCode, Byte NDir)
 BEGIN
    if (InstrZ>=AriOrderCnt) exit(255);
    AriOrders[InstrZ].Name=NName;
@@ -81,21 +82,21 @@ BEGIN
    AriOrders[InstrZ++].DefaultDir=NDir;
 END
 
-	static void AddBit(char *NName, Word NCode)
+        static void AddBit(char *NName, Word NCode)
 BEGIN
    if (InstrZ>=BitOrderCnt) exit(255);
    BitOrders[InstrZ].Name=NName;
    BitOrders[InstrZ++].Code=NCode;
 END
 
-	static void AddF(char *NName, Word NCode)
+        static void AddF(char *NName, Word NCode)
 BEGIN
    if (InstrZ>=FOrderCnt) exit(255);
    FOrders[InstrZ].Name=NName;
    FOrders[InstrZ++].Code=NCode;
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    FixedOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*FixedOrderCnt); InstrZ=0;
    AddFixed("CLRW"  , 0x0100);
@@ -142,7 +143,7 @@ BEGIN
    AddF("MOVWF", 0x0080);
 END
 
-	static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    free(FixedOrders);
    free(LitOrders);
@@ -153,7 +154,7 @@ END
 
 /*--------------------------------------------------------------------------*/
 
-	static Word ROMEnd(void)
+        static Word ROMEnd(void)
 BEGIN
    switch (MomCPU-CPU16C64)
     BEGIN
@@ -163,7 +164,7 @@ BEGIN
     END
 END
 
-	static Word EvalFExpression(char *Asc, Boolean *OK)
+        static Word EvalFExpression(char *Asc, Boolean *OK)
 BEGIN
    LongInt h;
 
@@ -175,7 +176,7 @@ BEGIN
    else return 0;
 END
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
    Word Size;
    Boolean ValOK;
@@ -199,11 +200,11 @@ BEGIN
        Size=EvalIntExpression(ArgStr[1],Int16,&ValOK);
        if (FirstPassUnknown) WrError(1820);
        if ((ValOK) AND (NOT FirstPassUnknown))
-	BEGIN
-	 DontPrint=True;
-	 CodeLen=Size;
-	 BookKeeping();
-	END
+        BEGIN
+         DontPrint=True;
+         CodeLen=Size;
+         BookKeeping();
+        END
       END
      return True;
     END
@@ -216,32 +217,34 @@ BEGIN
       BEGIN
        ValOK=True;
        for (z=1; z<=ArgCnt; z++)
-	if (ValOK)
-	 BEGIN
+        if (ValOK)
+         BEGIN
           FirstPassUnknown=False;
-	  EvalExpression(ArgStr[z],&t);
+          EvalExpression(ArgStr[z],&t);
           if ((FirstPassUnknown) AND (t.Typ==TempInt)) t.Contents.Int&=MaxV;
-	  switch (t.Typ)
+          switch (t.Typ)
            BEGIN
-	    case TempInt:
+            case TempInt:
              if (ChkRange(t.Contents.Int,MinV,MaxV))
-              if (ActPC==SegCode) WAsmCode[CodeLen++]=t.Contents.Int & MaxV;
-	      else BAsmCode[CodeLen++]=t.Contents.Int & MaxV;
+              BEGIN
+               if (ActPC==SegCode) WAsmCode[CodeLen++]=t.Contents.Int & MaxV;
+               else BAsmCode[CodeLen++]=t.Contents.Int & MaxV;
+              END
              break;
-	    case TempFloat:
-	     WrError(1135); ValOK=False; 
+            case TempFloat:
+             WrError(1135); ValOK=False; 
              break;
-	    case TempString:
-	     for (p=t.Contents.Ascii; *p!='\0'; p++)
+            case TempString:
+             for (p=t.Contents.Ascii; *p!='\0'; p++)
               if (ActPC==SegCode)
- 	       WAsmCode[CodeLen++]=CharTransTable[((usint) *p)&0xff];
+               WAsmCode[CodeLen++]=CharTransTable[((usint) *p)&0xff];
               else
- 	       BAsmCode[CodeLen++]=CharTransTable[((usint) *p)&0xff];
-	     break;
-	    default:
+               BAsmCode[CodeLen++]=CharTransTable[((usint) *p)&0xff];
+             break;
+            default:
              ValOK=False;
-	   END
-	 END
+           END
+         END
        if (NOT ValOK) CodeLen=0;
       END
      return True;
@@ -256,12 +259,14 @@ BEGIN
        Size=EvalIntExpression(ArgStr[1],Int16,&ValOK);
        if (FirstPassUnknown) WrError(1820);
        if ((ValOK) AND (NOT FirstPassUnknown))
-	if (Size << 1>MaxCodeLen) WrError(1920);
-	else
-	 BEGIN
-	  CodeLen=Size;
-	  memset(WAsmCode,0,2*Size);
-	 END
+        BEGIN
+         if (Size << 1>MaxCodeLen) WrError(1920);
+         else
+          BEGIN
+           CodeLen=Size;
+           memset(WAsmCode,0,2*Size);
+          END
+        END
       END
      return True;
     END
@@ -269,7 +274,7 @@ BEGIN
    return False;
 END
 
-	static void MakeCode_16c8x(void)
+        static void MakeCode_16c8x(void)
 BEGIN
    Boolean OK;
    Word AdrWord;
@@ -293,8 +298,8 @@ BEGIN
       if (ArgCnt!=0) WrError(1110);
       else
        BEGIN
-	CodeLen=1; WAsmCode[0]=FixedOrders[z].Code;
-	if (Memo("OPTION")) WrError(130);
+        CodeLen=1; WAsmCode[0]=FixedOrders[z].Code;
+        if (Memo("OPTION")) WrError(130);
        END
       return;
      END
@@ -307,11 +312,11 @@ BEGIN
       if (ArgCnt!=1) WrError(1110);
       else
        BEGIN
-	AdrWord=EvalIntExpression(ArgStr[1],Int8,&OK);
-	if (OK)
-	 BEGIN
-	  CodeLen=1; WAsmCode[0]=LitOrders[z].Code+(AdrWord & 0xff);
-	 END
+        AdrWord=EvalIntExpression(ArgStr[1],Int8,&OK);
+        if (OK)
+         BEGIN
+          CodeLen=1; WAsmCode[0]=LitOrders[z].Code+(AdrWord & 0xff);
+         END
        END
       return;
      END
@@ -324,28 +329,28 @@ BEGIN
       if ((ArgCnt==0) OR (ArgCnt>2)) WrError(1110);
       else
        BEGIN
-	AdrWord=EvalFExpression(ArgStr[1],&OK);
-	if (OK)
-	 BEGIN
-	  WAsmCode[0]=AriOrders[z].Code+AdrWord;
-	  if (ArgCnt==1)
-	   BEGIN
-	    CodeLen=1; WAsmCode[0]+=AriOrders[z].DefaultDir << 7;
-	   END
-	  else if (strcasecmp(ArgStr[2],"W")==0) CodeLen=1;
-	  else if (strcasecmp(ArgStr[2],"F")==0)
-	   BEGIN
-	    CodeLen=1; WAsmCode[0]+=0x80;
-	   END
-	  else
-	   BEGIN
-	    AdrWord=EvalIntExpression(ArgStr[2],UInt1,&OK);
-	    if (OK)
-	     BEGIN
-	      CodeLen=1; WAsmCode[0]+=AdrWord << 7;
-	     END
-	   END
-	 END
+        AdrWord=EvalFExpression(ArgStr[1],&OK);
+        if (OK)
+         BEGIN
+          WAsmCode[0]=AriOrders[z].Code+AdrWord;
+          if (ArgCnt==1)
+           BEGIN
+            CodeLen=1; WAsmCode[0]+=AriOrders[z].DefaultDir << 7;
+           END
+          else if (strcasecmp(ArgStr[2],"W")==0) CodeLen=1;
+          else if (strcasecmp(ArgStr[2],"F")==0)
+           BEGIN
+            CodeLen=1; WAsmCode[0]+=0x80;
+           END
+          else
+           BEGIN
+            AdrWord=EvalIntExpression(ArgStr[2],UInt1,&OK);
+            if (OK)
+             BEGIN
+              CodeLen=1; WAsmCode[0]+=AdrWord << 7;
+             END
+           END
+         END
        END
       return;
      END
@@ -356,15 +361,15 @@ BEGIN
       if (ArgCnt!=2) WrError(1110);
       else
        BEGIN
-	AdrWord=EvalIntExpression(ArgStr[2],UInt3,&OK);
-	if (OK)
-	 BEGIN
-	  WAsmCode[0]=EvalFExpression(ArgStr[1],&OK);
-	  if (OK)
-	   BEGIN
-	    CodeLen=1; WAsmCode[0]+=BitOrders[z].Code+(AdrWord << 7);
-	   END
-	 END
+        AdrWord=EvalIntExpression(ArgStr[2],UInt3,&OK);
+        if (OK)
+         BEGIN
+          WAsmCode[0]=EvalFExpression(ArgStr[1],&OK);
+          if (OK)
+           BEGIN
+            CodeLen=1; WAsmCode[0]+=BitOrders[z].Code+(AdrWord << 7);
+           END
+         END
        END
       return;
      END
@@ -375,11 +380,11 @@ BEGIN
       if (ArgCnt!=1) WrError(1110);
       else
        BEGIN
-	AdrWord=EvalFExpression(ArgStr[1],&OK);
-	if (OK)
-	 BEGIN
-	  CodeLen=1; WAsmCode[0]=FOrders[z].Code+AdrWord;
-	 END
+        AdrWord=EvalFExpression(ArgStr[1],&OK);
+        if (OK)
+         BEGIN
+          CodeLen=1; WAsmCode[0]=FOrders[z].Code+AdrWord;
+         END
        END
       return;
      END
@@ -393,11 +398,11 @@ BEGIN
        AdrWord=EvalIntExpression(ArgStr[1],UInt3,&OK);
        if (FirstPassUnknown) AdrWord=5;
        if (OK)
-	if (ChkRange(AdrWord,5,6))
-	 BEGIN
-	  CodeLen=1; WAsmCode[0]=0x0060+AdrWord;
-	  ChkSpace(SegData); WrError(130);
-	 END
+        if (ChkRange(AdrWord,5,6))
+         BEGIN
+          CodeLen=1; WAsmCode[0]=0x0060+AdrWord;
+          ChkSpace(SegData); WrError(130);
+         END
       END
      return;
     END
@@ -409,17 +414,19 @@ BEGIN
       BEGIN
        AdrWord=EvalIntExpression(ArgStr[1],Int16,&OK);
        if (OK)
-	if (AdrWord>ROMEnd()) WrError(1320);
-	else
-	 BEGIN
-	  ChkSpace(SegCode);
-	  if (((ProgCounter() ^ AdrWord) & 0x800)!=0)
-	   WAsmCode[CodeLen++]=0x118a+((AdrWord & 0x800) >> 1); /* BCF/BSF 10,3 */
-	  if (((ProgCounter() ^ AdrWord) & 0x1000)!=0)
-	   WAsmCode[CodeLen++]=0x120a+((AdrWord & 0x400) >> 2); /* BCF/BSF 10,4 */
-	  if (Memo("CALL")) WAsmCode[CodeLen++]=0x2000+(AdrWord & 0x7ff);
-	  else WAsmCode[CodeLen++]=0x2800+(AdrWord & 0x7ff);
-	 END
+        BEGIN
+         if (AdrWord>ROMEnd()) WrError(1320);
+         else
+          BEGIN
+           ChkSpace(SegCode);
+           if (((ProgCounter() ^ AdrWord) & 0x800)!=0)
+            WAsmCode[CodeLen++]=0x118a+((AdrWord & 0x800) >> 1); /* BCF/BSF 10,3 */
+           if (((ProgCounter() ^ AdrWord) & 0x1000)!=0)
+            WAsmCode[CodeLen++]=0x120a+((AdrWord & 0x400) >> 2); /* BCF/BSF 10,4 */
+           if (Memo("CALL")) WAsmCode[CodeLen++]=0x2000+(AdrWord & 0x7ff);
+           else WAsmCode[CodeLen++]=0x2800+(AdrWord & 0x7ff);
+          END
+        END
       END
      return;
     END
@@ -427,12 +434,12 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static Boolean IsDef_16c8x(void)
+        static Boolean IsDef_16c8x(void)
 BEGIN
    return (Memo("SFR"));
 END
 
-	static Boolean ChkPC_16c8x(LargeWord Addr)
+        static Boolean ChkPC_16c8x(LargeWord Addr)
 BEGIN
 
    if ((ActPC == SegCode) AND (Addr > SegLimits[SegCode]))
@@ -447,7 +454,7 @@ BEGIN
    DeinitFields();
 END
 
-	static void SwitchTo_16c8x(void)
+        static void SwitchTo_16c8x(void)
 BEGIN
    TurnWords=False; ConstMode=ConstModeMoto; SetIsOccupied=False;
 
@@ -465,7 +472,7 @@ BEGIN
    SwitchFrom=SwitchFrom_16c8x; InitFields();
 END
 
-	void code16c8x_init(void)
+        void code16c8x_init(void)
 BEGIN
    CPU16C64=AddCPU("16C64",SwitchTo_16c8x);
    CPU16C84=AddCPU("16C84",SwitchTo_16c8x);

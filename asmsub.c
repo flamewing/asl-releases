@@ -17,6 +17,8 @@
 /*           13. 7.1999 Fehlermeldungen relokatible Symbole                  */
 /*           13. 9.1999 I/O-Fehler 25 ignorieren                             */
 /*            5.11.1999 ExtendErrors ist jetzt ShortInt                      */
+/*           13. 2.2000 Ausgabeliste Listing                                 */
+/*            6. 8.2000 added ValidSymChar array                             */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -50,11 +52,17 @@
 #endif
 #endif
 
+#define VALID_S1 1
+#define VALID_SN 2
+#define VALID_M1 4
+#define VALID_MN 8
 
 Word ErrorCount,WarnCount;
-static StringList CopyrightList, OutList, ShareOutList;
+static StringList CopyrightList, OutList, ShareOutList, ListOutList;
 
 static LongWord StartStack,MinStack,LowStack;
+
+static Byte *ValidSymChar;
 
 /****************************************************************************/
 /* Modulinitialisierung */
@@ -692,10 +700,13 @@ END
 BEGIN
    char *z;
 
-   if (*sym=='\0') return False;
-   if (NOT (isalpha((unsigned int) *sym) OR (*sym=='_') OR (*sym=='.'))) return False;
-   for (z=sym; *z!='\0'; z++)
-    if (NOT (isalnum((unsigned int) *z) OR (*z=='_') OR (*z=='.'))) return False;
+   if (!(ValidSymChar[((unsigned int) *sym) & 0xff] & VALID_S1))
+    return False;
+
+   for (z = sym + 1; *z != '\0'; z++)
+    if (!(ValidSymChar[((unsigned int) *z) & 0xff] & VALID_SN))
+     return False;
+
    return True;
 END
 
@@ -703,10 +714,13 @@ END
 BEGIN
    char *z;
 
-   if (*sym=='\0') return False;
-   if (NOT isalpha((unsigned int) *sym)) return False;
-   for (z=sym; *z!='\0'; z++)
-    if (NOT isalnum((unsigned int) *z)) return False;
+   if (!(ValidSymChar[((unsigned int) *sym) & 0xff] & VALID_M1))
+    return False;
+
+   for (z = sym + 1; *z != '\0'; z++)
+    if (!(ValidSymChar[((unsigned int) *z) & 0xff] & VALID_MN))
+     return False;
+
    return True;
 END
 
@@ -1196,7 +1210,7 @@ BEGIN
 END
 
 /****************************************************************************/
-/* Liste mit Ausgabedateien */
+/* Listen mit Ausgabedateien */
 
         void ClearOutList(void)
 BEGIN
@@ -1236,6 +1250,26 @@ END
         char *GetFromShareOutList(void)
 BEGIN
    return GetAndCutStringList(&ShareOutList);
+END
+
+        void ClearListOutList(void)
+BEGIN
+   ClearStringList(&ListOutList);
+END
+
+        void AddToListOutList(char *NewName)
+BEGIN
+   AddStringListLast(&ListOutList,NewName);
+END
+
+        void RemoveFromListOutList(char *OldName)
+BEGIN
+   RemoveStringList(&ListOutList,OldName);
+END
+
+        char *GetFromListOutList(void)
+BEGIN
+   return GetAndCutStringList(&ListOutList);
 END
 
 /****************************************************************************/
@@ -1473,6 +1507,7 @@ BEGIN
    InitStringList(&CopyrightList);
    InitStringList(&OutList);
    InitStringList(&ShareOutList);
+   InitStringList(&ListOutList);
 
 #ifdef __TURBOC__
 #ifdef __MSDOS__
@@ -1521,6 +1556,30 @@ BEGIN
    MinStack=StartStack-STKSIZE+0x800;
 #else
    StartStack=LowStack=MinStack=0;
+#endif
+
+   /* initialize array of valid characters */
+
+   ValidSymChar = (Byte*) malloc(sizeof(Byte) * 256);
+   memset(ValidSymChar, sizeof(Byte) * 256, 0);
+   for (z = 'a'; z <= 'z'; z++)
+     ValidSymChar[z] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
+   for (z = 'A'; z <= 'Z'; z++)
+     ValidSymChar[z] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
+   for (z = '0'; z <= '9'; z++)
+     ValidSymChar[z] =            VALID_SN |            VALID_MN;
+   ValidSymChar[(unsigned int) '.'] = VALID_S1 | VALID_SN;
+   ValidSymChar[(unsigned int) '_'] = VALID_S1 | VALID_SN;
+#if (defined CHARSET_IBM437) || (defined CHARSET_IBM850)
+   for (z = 128; z <= 165; z++)
+     ValidSymChar[z] = VALID_S1 | VALID_SN;
+   ValidSymChar[225] = VALID_S1 | VALID_SN;
+#elif defined CHARSET_ISO8859_1
+   for (z = 192; z <= 255; z++)
+     ValidSymChar[z] = VALID_S1 | VALID_SN;
+#elif defined CHARSET_ASCII7
+#else
+#error Oops, unkown charset - you will have to add some work here...
 #endif
 END
 

@@ -8,6 +8,7 @@
 /* Historie: 13. 8.1997 KillBlanks-Funktionen nach stringutil.c geschoben    */
 /*           17. 8.1998 Unterfunktion zur Buchhaltung Adressbereiche         */
 /*           18. 4.1999 Ausgabeliste Sharefiles                              */
+/*           13. 2.2000 Ausgabeliste Listing                                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -153,6 +154,15 @@ extern void AddToShareOutList(char *NewName);
 extern void RemoveFromShareOutList(char *OldName);
 
 extern char *GetFromShareOutList(void);
+
+
+extern void ClearListOutList(void);
+
+extern void AddToListOutList(char *NewName);
+
+extern void RemoveFromListOutList(char *OldName);
+
+extern char *GetFromListOutList(void);
 
 
 extern void BookKeeping(void);

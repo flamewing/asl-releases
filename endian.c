@@ -6,6 +6,8 @@
 /*                                                                           */
 /* Historie: 30. 5.1996 Grundsteinlegung                                     */
 /*            6. 7.1997 Dec32BlankString dazu                                */
+/*            1. 6.2000 added LargeHIntFormat                                */
+/*            7. 7.2000 added memory read/write functions                    */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -19,9 +21,9 @@
 
 Boolean BigEndian;
 
-char *Integ16Format,*Integ32Format,*Integ64Format;
-char *IntegerFormat,*LongIntFormat,*QuadIntFormat;
-char *LargeIntFormat;
+char *Integ16Format, *Integ32Format, *Integ64Format;
+char *IntegerFormat, *LongIntFormat, *QuadIntFormat;
+char *LargeIntFormat, *LargeHIntFormat;
 
 /*****************************************************************************/
 
@@ -234,6 +236,107 @@ BEGIN
 END
 
 
+	Word MRead2L(Byte *Buffer)
+BEGIN
+   return (((Word) Buffer[1]) << 8) | Buffer[0];
+END
+
+	Word MRead2B(Byte *Buffer)
+BEGIN
+   return (((Word) Buffer[0]) << 8) | Buffer[1];
+END
+
+	void MWrite2L(Byte *Buffer, Word Value)
+BEGIN
+   Buffer[0] = Value & 0xff;
+   Buffer[1] = (Value >> 8) & 0xff;
+END
+
+	void MWrite2B(Byte *Buffer, Word Value)
+BEGIN
+   Buffer[1] = Value & 0xff;
+   Buffer[0] = (Value >> 8) & 0xff;
+END
+
+	LongWord MRead4L(Byte *Buffer)
+BEGIN
+   return (((LongWord) Buffer[3]) << 24) |
+          (((LongWord) Buffer[2]) << 16) |
+          (((LongWord) Buffer[1]) << 8)  | Buffer[0];
+END
+
+	LongWord MRead4B(Byte *Buffer)
+BEGIN
+   return (((LongWord) Buffer[0]) << 24) | 
+          (((LongWord) Buffer[1]) << 16) | 
+          (((LongWord) Buffer[2]) << 8) | Buffer[3];
+END
+
+	void MWrite4L(Byte *Buffer, LongWord Value)
+BEGIN
+   Buffer[0] = Value & 0xff;
+   Buffer[1] = (Value >> 8) & 0xff;
+   Buffer[2] = (Value >> 16) & 0xff;
+   Buffer[3] = (Value >> 24) & 0xff;
+END
+
+	void MWrite4B(Byte *Buffer, LongWord Value)
+BEGIN
+   Buffer[3] = Value & 0xff;
+   Buffer[2] = (Value >> 8) & 0xff;
+   Buffer[1] = (Value >> 16) & 0xff;
+   Buffer[0] = (Value >> 24) & 0xff;
+END
+
+#ifdef HAS64
+	QuadWord MRead8L(Byte *Buffer)
+BEGIN
+   return (((LargeWord) Buffer[7]) << 56) |
+          (((LargeWord) Buffer[6]) << 48) |
+          (((LargeWord) Buffer[5]) << 40) |
+          (((LargeWord) Buffer[4]) << 32) |
+          (((LargeWord) Buffer[3]) << 24) |
+          (((LargeWord) Buffer[2]) << 16) |
+          (((LargeWord) Buffer[1]) << 8)  | Buffer[0];
+END
+
+	QuadWord MRead8B(Byte *Buffer)
+BEGIN
+   return (((LargeWord) Buffer[0]) << 56) |
+          (((LargeWord) Buffer[1]) << 48) |
+          (((LargeWord) Buffer[2]) << 40) |
+          (((LargeWord) Buffer[3]) << 32) |
+          (((LargeWord) Buffer[4]) << 24) |
+          (((LargeWord) Buffer[6]) << 16) |
+          (((LargeWord) Buffer[6]) << 8) | Buffer[7];
+END
+
+	void MWrite8L(Byte *Buffer, QuadWord Value)
+BEGIN
+   Buffer[0] = Value & 0xff;
+   Buffer[1] = (Value >> 8) & 0xff;
+   Buffer[2] = (Value >> 16) & 0xff;
+   Buffer[3] = (Value >> 24) & 0xff;
+   Buffer[4] = (Value >> 32) & 0xff;
+   Buffer[5] = (Value >> 40) & 0xff;
+   Buffer[6] = (Value >> 48) & 0xff;
+   Buffer[7] = (Value >> 56) & 0xff;
+END
+
+	void MWrite8B(Byte *Buffer, QuadWord Value)
+BEGIN
+   Buffer[7] = Value & 0xff;
+   Buffer[6] = (Value >> 8) & 0xff;
+   Buffer[5] = (Value >> 16) & 0xff;
+   Buffer[4] = (Value >> 24) & 0xff;
+   Buffer[3] = (Value >> 32) & 0xff;
+   Buffer[2] = (Value >> 40) & 0xff;
+   Buffer[1] = (Value >> 48) & 0xff;
+   Buffer[0] = (Value >> 56) & 0xff;
+END
+#endif
+
+
 	static void CheckSingle(int Is, int Should, char *Name)
 BEGIN
    if (Is!=Should)
@@ -271,11 +374,28 @@ END
 
 	static char *AssignSingle(int size)
 BEGIN
-   if (size==sizeof(short)) return "%d";
-   else if (size==sizeof(int)) return "%d";
-   else if (size==sizeof(long)) return "%ld";
+   if (size == sizeof(short)) return "%d";
+   else if (size == sizeof(int)) return "%d";
+   else if (size == sizeof(long)) return "%ld";
 #ifndef NOLONGLONG
-   else if (size==sizeof(long long)) return "%lld";
+   else if (size == sizeof(long long)) return "%lld";
+#endif
+   else
+    BEGIN
+     fprintf(stderr,
+             "Configuration error: cannot assign format string for integer of size %d\n",size);
+     exit(255);
+     return "";
+    END               
+END
+
+	static char *AssignHSingle(int size)
+BEGIN
+   if (size == sizeof(short)) return "%x";
+   else if (size == sizeof(int)) return "%x";
+   else if (size == sizeof(long)) return "%lx";
+#ifndef NOLONGLONG
+   else if (size == sizeof(long long)) return "%llx";
 #endif
    else
     BEGIN
@@ -289,13 +409,14 @@ END
 	static void AssignFormats(void)
 BEGIN
 #ifdef HAS16   
-   IntegerFormat=Integ16Format=AssignSingle(2);
+   IntegerFormat = Integ16Format=AssignSingle(2);
 #endif
-   LongIntFormat=Integ32Format=AssignSingle(4);
+   LongIntFormat = Integ32Format=AssignSingle(4);
 #ifdef HAS64
-   QuadIntFormat=Integ64Format=AssignSingle(8);
+   QuadIntFormat = Integ64Format=AssignSingle(8);
 #endif
-   LargeIntFormat=AssignSingle(sizeof(LargeInt));
+   LargeIntFormat = AssignSingle(sizeof(LargeInt));
+   LargeHIntFormat = AssignHSingle(sizeof(LargeInt));
 END
 
 	char *Dec32BlankString(LongInt number, int Stellen)

@@ -4,10 +4,11 @@
 /*                                                                           */
 /* Codegeneratormodul COP8-Familie                                           */
 /*                                                                           */
-/* Historie: 7.10.1996 Grundsteinlegung                                      */
-/*          18. 8.1998 BookKeeping-Aufruf bei DSx                            */
-/*           2. 1.1998 ChkPC umgebaut                                        */
-/*          14. 8.1999 Maskierung in ChkAdr falsch                           */
+/* Historie:  7.10.1996 Grundsteinlegung                                     */
+/*           18. 8.1998 BookKeeping-Aufruf bei DSx                           */
+/*            2. 1.1998 ChkPC umgebaut                                       */
+/*           14. 8.1999 Maskierung in ChkAdr falsch                          */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -132,7 +133,7 @@ END
 
 /*---------------------------------------------------------------------------*/
 
-	static void ChkAdr(Word Mask)
+        static void ChkAdr(Word Mask)
 BEGIN
    if ((AdrMode!=ModNone) AND ((Mask & (1 << AdrMode))==0))
     BEGIN
@@ -180,7 +181,7 @@ END
 
 /*---------------------------------------------------------------------------*/
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
    Boolean ValOK;
    Word Size,Value,t,z;
@@ -214,12 +215,12 @@ BEGIN
        Size=EvalIntExpression(ArgStr[1],UInt16,&ValOK);
        if (FirstPassUnknown) WrError(1820);
        if ((ValOK) AND (NOT FirstPassUnknown))
-	BEGIN
-	 DontPrint=True;
+        BEGIN
+         DontPrint=True;
          if (Memo("DSW")) Size+=Size;
          CodeLen=Size;
-	 BookKeeping();
-	END
+         BookKeeping();
+        END
       END
      return True;
     END
@@ -233,16 +234,18 @@ BEGIN
        Size=EvalIntExpression(ArgStr[1],UInt16,&ValOK);
        if (FirstPassUnknown) WrError(1820);
        if ((ValOK) AND (NOT FirstPassUnknown))
-        if (Size>MaxCodeLen) WrError(1920);
-	else
-	 BEGIN
-          BAsmCode[0]=EvalIntExpression(ArgStr[2],Int8,&ValOK);
-          if (ValOK)
-           BEGIN
-            CodeLen=Size;
-            memset(BAsmCode+1,BAsmCode[0],Size-1);
-           END
-	 END
+        BEGIN
+         if (Size>MaxCodeLen) WrError(1920);
+         else
+          BEGIN
+           BAsmCode[0]=EvalIntExpression(ArgStr[2],Int8,&ValOK);
+           if (ValOK)
+            BEGIN
+             CodeLen=Size;
+             memset(BAsmCode+1,BAsmCode[0],Size-1);
+            END
+          END
+        END
       END
      return True;
     END
@@ -256,19 +259,21 @@ BEGIN
        Size=EvalIntExpression(ArgStr[1],UInt16,&ValOK);
        if (FirstPassUnknown) WrError(1820);
        if ((ValOK) AND (NOT FirstPassUnknown))
-        if ((Size << 1)>MaxCodeLen) WrError(1920);
-	else
-	 BEGIN
-          Value=EvalIntExpression(ArgStr[2],Int16,&ValOK);
-          if (ValOK)
-           BEGIN
-            CodeLen=Size << 1; t=0;
-            for (z=0; z<Size; z++)
-             BEGIN
-              BAsmCode[t++]=Lo(Value); BAsmCode[t++]=Hi(Value);
-             END
-           END
-	 END
+        BEGIN
+         if ((Size << 1)>MaxCodeLen) WrError(1920);
+         else
+          BEGIN
+           Value=EvalIntExpression(ArgStr[2],Int16,&ValOK);
+           if (ValOK)
+            BEGIN
+             CodeLen=Size << 1; t=0;
+             for (z=0; z<Size; z++)
+              BEGIN
+               BAsmCode[t++]=Lo(Value); BAsmCode[t++]=Hi(Value);
+              END
+            END
+          END
+        END
       END
      return True;
     END
@@ -352,23 +357,27 @@ BEGIN
          case ModDir:
           HReg=AdrVal; DecodeAdr(ArgStr[2],MModImm);
           if (AdrMode==ModImm)
-           if (HReg==BReg)
-            if (AdrVal<=15)
+           BEGIN
+            if (HReg==BReg)
              BEGIN
-              BAsmCode[0]=0x5f-AdrVal; CodeLen=1;
+              if (AdrVal<=15)
+               BEGIN
+                BAsmCode[0]=0x5f-AdrVal; CodeLen=1;
+               END
+              else
+               BEGIN
+                BAsmCode[0]=0x9f; BAsmCode[1]=AdrVal; CodeLen=2;
+               END
+             END
+            else if (HReg>=0xf0)
+             BEGIN
+              BAsmCode[0]=HReg-0x20; BAsmCode[1]=AdrVal; CodeLen=2;
              END
             else
              BEGIN
-              BAsmCode[0]=0x9f; BAsmCode[1]=AdrVal; CodeLen=2;
+              BAsmCode[0]=0xbc; BAsmCode[1]=HReg; BAsmCode[2]=AdrVal; CodeLen=3;
              END
-           else if (HReg>=0xf0)
-            BEGIN
-             BAsmCode[0]=HReg-0x20; BAsmCode[1]=AdrVal; CodeLen=2;
-            END
-           else
-            BEGIN
-             BAsmCode[0]=0xbc; BAsmCode[1]=HReg; BAsmCode[2]=AdrVal; CodeLen=3;
-            END
+           END
           break;
          case ModBInd:
           DecodeAdr(ArgStr[2],MModImm);
@@ -622,14 +631,16 @@ BEGIN
       BEGIN
        AdrWord=EvalIntExpression(ArgStr[1],UInt16,&OK);
        if (OK)
-        if (((EProgCounter()+2) >> 12)!=(AdrWord >> 12)) WrError(1910);
-        else
-         BEGIN
-          ChkSpace(SegCode);
-          BAsmCode[0]=0x20+(Ord(Memo("JSR")) << 4)+((AdrWord >> 8) & 15);
-          BAsmCode[1]=Lo(AdrWord);
-          CodeLen=2;
-         END
+        BEGIN
+         if (((EProgCounter()+2) >> 12)!=(AdrWord >> 12)) WrError(1910);
+         else
+          BEGIN
+           ChkSpace(SegCode);
+           BAsmCode[0]=0x20+(Ord(Memo("JSR")) << 4)+((AdrWord >> 8) & 15);
+           BAsmCode[1]=Lo(AdrWord);
+           CodeLen=2;
+          END
+        END
       END
      return;
     END
@@ -659,15 +670,17 @@ BEGIN
       BEGIN
        AdrInt=EvalIntExpression(ArgStr[1],UInt16,&OK)-(EProgCounter()+1);
        if (OK)
-        if (AdrInt==0)
-         BEGIN
-          BAsmCode[0]=NOPCode; CodeLen=1; WrError(60);
-         END
-        else if (((AdrInt>31) OR (AdrInt<-32)) AND (NOT SymbolQuestionable)) WrError(1370);
-        else
-         BEGIN
-          BAsmCode[0]=AdrInt & 0xff; CodeLen=1;
-         END
+        BEGIN
+         if (AdrInt==0)
+          BEGIN
+           BAsmCode[0]=NOPCode; CodeLen=1; WrError(60);
+          END
+         else if (((AdrInt>31) OR (AdrInt<-32)) AND (NOT SymbolQuestionable)) WrError(1370);
+         else
+          BEGIN
+           BAsmCode[0]=AdrInt & 0xff; CodeLen=1;
+          END
+        END
       END
      return;
     END
@@ -719,7 +732,7 @@ BEGIN
    SwitchFrom=SwitchFrom_COP8; InitFields();
 END
 
-	void codecop8_init(void)
+        void codecop8_init(void)
 BEGIN
    CPUCOP87L84=AddCPU("COP87L84",SwitchTo_COP8);
 END

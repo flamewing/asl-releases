@@ -10,6 +10,7 @@
 /*            7.10.1998 MOVE begonnen                                        */
 /*           15.11.1998 SELECT/RESELECT, WAIT                                */
 /*            3. 1.1999 ChkPC-Anpassung                                      */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -50,12 +51,12 @@ static PReg Regs;
 
 /*---------------------------------------------------------------------------*/
 
-	static Boolean IsInToken(char Inp)
+        static Boolean IsInToken(char Inp)
 BEGIN
    return ((Inp == '_') OR (isalnum(((usint) Inp) & 0xff)));
 END
 
-	static void GetToken(char *Src, char *Dest)
+        static void GetToken(char *Src, char *Dest)
 BEGIN
    char *p, *start, Save;
 
@@ -107,7 +108,7 @@ BEGIN
 END
 
 #if 0
-	static void GetRToken(char *Src, char *Dest)
+        static void GetRToken(char *Src, char *Dest)
 BEGIN
    char *p;
 
@@ -148,7 +149,7 @@ BEGIN
 END
 #endif
 
-	static Boolean DecodePhase(char *Name, LongWord *Result)
+        static Boolean DecodePhase(char *Name, LongWord *Result)
 BEGIN
    *Result = 8;
    if (strcasecmp(Name, "DATA_OUT") == 0) *Result = 0;
@@ -162,7 +163,7 @@ BEGIN
    return (*Result < 8);
 END
 
-	static Boolean DecodeReg(char *Name, LongWord *Result)
+        static Boolean DecodeReg(char *Name, LongWord *Result)
 BEGIN
    int z;
    Integer Mask = 1 << (MomCPU - CPU53C810);
@@ -177,13 +178,13 @@ BEGIN
    return False;
 END
 
-	static Boolean Err(int Num, char *Msg)
+        static Boolean Err(int Num, char *Msg)
 BEGIN
    WrXError(Num, Msg);
    return False;
 END
 
-	static Boolean DecodeCond(char *Src, LongWord *Dest)
+        static Boolean DecodeCond(char *Src, LongWord *Dest)
 BEGIN
    String Tok;
    Boolean PhaseATNUsed, DataUsed, CarryUsed, MaskUsed;
@@ -266,7 +267,7 @@ END
 
 typedef enum {NONE, SFBR, REGISTER, IMM8} CompType;
 
-	CompType DecodeComp(char *Inp, LongWord *Outp)
+        CompType DecodeComp(char *Inp, LongWord *Outp)
 BEGIN
    Boolean OK;
 
@@ -283,7 +284,7 @@ END
 
 static int InstrZ;
 
-	static void DecodeFixed(Word Index)
+        static void DecodeFixed(Word Index)
 BEGIN
    if (ArgCnt != 0) WrError(1110);
    else
@@ -294,7 +295,7 @@ BEGIN
     END
 END
 
-	static void DecodeJmps(Word Index)
+        static void DecodeJmps(Word Index)
 BEGIN
    LongWord Buf;
    LongInt Adr;
@@ -302,20 +303,24 @@ BEGIN
    Boolean OK;
 
    if (ArgCnt == 0)
-    if (Memo("INTFLY"))
-     BEGIN
-      ArgCnt = 1; strcpy(ArgStr[1], "0");
-     END
-    else if (Memo("RETURN"))
-     BEGIN
-      ArgCnt = 1; *ArgStr[1] = '\0';
-     END
+    BEGIN
+     if (Memo("INTFLY"))
+      BEGIN
+       ArgCnt = 1; strcpy(ArgStr[1], "0");
+      END
+     else if (Memo("RETURN"))
+      BEGIN
+       ArgCnt = 1; *ArgStr[1] = '\0';
+      END
+    END
    if ((ArgCnt != 2) AND (ArgCnt!= 1)) WrError(1110);
    else
     BEGIN
      if (ArgCnt == 1)
-      if (Memo("RETURN")) strcpy(ArgStr[2], ArgStr[1]);
-      else *ArgStr[2] = '\0';
+      BEGIN
+       if (Memo("RETURN")) strcpy(ArgStr[2], ArgStr[1]);
+       else *ArgStr[2] = '\0';
+      END
      Buf = 0;
      if (Memo("RETURN")) Adr = 0;
      else
@@ -350,7 +355,7 @@ BEGIN
     END
 END
 
-	static void DecodeCHMOV(Word Index)
+        static void DecodeCHMOV(Word Index)
 BEGIN
    String Token;
    char *Adr = Nil;
@@ -409,7 +414,7 @@ BEGIN
     END
 END
 
-	static void DecodeFlags(Word Index)
+        static void DecodeFlags(Word Index)
 BEGIN
    Boolean OK;
    String Token;
@@ -444,7 +449,7 @@ BEGIN
     END
 END
 
-	static void DecodeRegTrans(Word Index)
+        static void DecodeRegTrans(Word Index)
 BEGIN
    LongWord Reg, Cnt;
    Boolean OK;
@@ -472,7 +477,7 @@ BEGIN
     END
 END
 
-	static void DecodeMOVE(Word Index)
+        static void DecodeMOVE(Word Index)
 BEGIN
    Boolean WithCarry, BigCPU;
    String Token;
@@ -795,7 +800,7 @@ BEGIN
    else WrError(1110);
 END
 
-	static void DecodeSELECT(Word MayATN)
+        static void DecodeSELECT(Word MayATN)
 BEGIN
    Boolean OK;
    LongInt Dist;
@@ -828,8 +833,10 @@ BEGIN
            DAsmCode[0] |= 0x04000000; ArgStr[2][l - 1] = '\0';
            Dist = EvalIntExpression(ArgStr[2] + 4, UInt32, &OK) - (EProgCounter() + 8);
            if (OK)
-            if ((NOT SymbolQuestionable) AND ((Dist > 0x7fffff) OR (Dist < -0x800000))) WrError(1370);
-            else DAsmCode[1] = Dist & 0xffffff;
+            BEGIN
+             if ((NOT SymbolQuestionable) AND ((Dist > 0x7fffff) OR (Dist < -0x800000))) WrError(1370);
+             else DAsmCode[1] = Dist & 0xffffff;
+            END
           END
          else DAsmCode[1] = EvalIntExpression(ArgStr[2], UInt32, &OK);
          if (OK) CodeLen = 8;
@@ -838,7 +845,7 @@ BEGIN
     END
 END
 
-	static void DecodeWAIT(Word Index)
+        static void DecodeWAIT(Word Index)
 BEGIN
    String Token;
    int l;
@@ -868,8 +875,10 @@ BEGIN
          DAsmCode[0] = 0x54000000;
          Dist = EvalIntExpression(ArgStr[1] + 4, UInt32, &OK) - (EProgCounter() + 8);
          if (OK)
-          if ((NOT SymbolQuestionable) AND ((Dist > 0x7fffff) OR (Dist < -0x800000))) WrError(1370);
-          else DAsmCode[1] = Dist & 0xffffff;
+          BEGIN
+           if ((NOT SymbolQuestionable) AND ((Dist > 0x7fffff) OR (Dist < -0x800000))) WrError(1370);
+           else DAsmCode[1] = Dist & 0xffffff;
+          END
         END
        else
         BEGIN
@@ -889,7 +898,7 @@ END
 
 static int InstrZ;
 
-	static void AddReg(char *NName, LargeWord Adr, Word Mask)
+        static void AddReg(char *NName, LargeWord Adr, Word Mask)
 BEGIN
    if (InstrZ >= RegCnt) exit(255);
    Regs[InstrZ].Name = NName;
@@ -897,7 +906,7 @@ BEGIN
    Regs[InstrZ++].Mask = Mask;
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    InstTable = CreateInstTable(51);
    AddInstTable(InstTable, "NOP"     , 0x80, DecodeFixed);
@@ -989,7 +998,7 @@ BEGIN
    AddReg("SCRATCHJ" , 0x7c,                                             M_53C875 + M_53C895);
 END
 
-	static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    DestroyInstTable(InstTable);
    free(Regs);
@@ -997,7 +1006,7 @@ END
 
 /*---------------------------------------------------------------------------*/
 
-	static void MakeCode_53c8xx(void)
+        static void MakeCode_53c8xx(void)
 BEGIN
    CodeLen=0; DontPrint=False;
 
@@ -1008,12 +1017,12 @@ BEGIN
    if (NOT LookupInstTable(InstTable,OpPart)) WrXError(1200, OpPart);
 END
 
-	static Boolean IsDef_53c8xx(void)
+        static Boolean IsDef_53c8xx(void)
 BEGIN
    return False;
 END
 
-	static void SwitchFrom_53c8xx(void)
+        static void SwitchFrom_53c8xx(void)
 BEGIN
    DeinitFields();
 END
@@ -1044,7 +1053,7 @@ END
 
 /*---------------------------------------------------------------------------*/
 
-	void code53c8xx_init(void)
+        void code53c8xx_init(void)
 BEGIN
    CPU53C810 = AddCPU("SYM53C810", SwitchTo_53c8xx);
    CPU53C860 = AddCPU("SYM53C860", SwitchTo_53c8xx);

@@ -8,6 +8,7 @@
 /*           17.11.1998 ungueltiges Register wurde bei Indizierung nicht ab- */
 /*                      gefangen                                             */
 /*            2. 1.1999 ChkPC umgestellt                                     */
+/*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -42,23 +43,23 @@
 
 typedef struct
          {
-	  char *Name;
-	  Byte CPUFlag;
-	  Byte Code;
-	 } FixedOrder;
+          char *Name;
+          Byte CPUFlag;
+          Byte Code;
+         } FixedOrder;
 
 typedef struct
          {
-	  char *Name;
-	  Integer Codes[ModSpec+1];
-	 } NormOrder;
+          char *Name;
+          Integer Codes[ModSpec+1];
+         } NormOrder;
 
 typedef struct
          {
-	  char *Name;
-	  Byte CPUFlag;
-	  Byte Code;
-	 } CondOrder;
+          char *Name;
+          Byte CPUFlag;
+          Byte Code;
+         } CondOrder;
 
 #define FixedOrderCount 37
 #define NormOrderCount 51
@@ -80,7 +81,7 @@ static Byte AdrVals[2];
 
 /*---------------------------------------------------------------------------*/
 
-	static void AddFixed(char *NName, Byte NFlag, Byte NCode)
+        static void AddFixed(char *NName, Byte NFlag, Byte NCode)
 BEGIN
    if (InstrZ>=FixedOrderCount) exit(255);
    FixedOrders[InstrZ].Name=NName;
@@ -88,7 +89,7 @@ BEGIN
    FixedOrders[InstrZ++].Code=NCode;
 END
 
-	static void AddNorm(char *NName, Word ZACode, Word ACode, Word ZIXCode,
+        static void AddNorm(char *NName, Word ZACode, Word ACode, Word ZIXCode,
                             Word IXCode, Word ZIYCode, Word IYCode, Word IndXCode,
                             Word IndYCode, Word Ind16Code, Word ImmCode, Word AccCode,
                             Word NoneCode, Word Ind8Code, Word SpecCode)
@@ -119,7 +120,7 @@ BEGIN
    CondOrders[InstrZ++].Code=NCode;
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    Boolean Is740=(MomCPU==CPUM740);
 
@@ -146,7 +147,7 @@ BEGIN
 
 
    NormOrders=(NormOrder *) malloc(sizeof(NormOrder)*NormOrderCount); InstrZ=0;
-	       /*    ZA      A    ZIX     IX    ZIY     IY     @X     @Y  (n16)    imm    ACC    NON   (n8)   spec */
+               /*    ZA      A    ZIX     IX    ZIY     IY     @X     @Y  (n16)    imm    ACC    NON   (n8)   spec */
    AddNorm("NOP",0x1004,0x100c,0x1014,0x101c,    -1,    -1,    -1,    -1,    -1,0x1080,    -1,0x1fea,    -1,    -1);
    AddNorm("LDA",0x1fa5,0x1fad,0x1fb5,0x1fbd,    -1,0x1fb9,0x1fa1,0x1fb1,    -1,0x1fa9,    -1,    -1,0x06b2,    -1);
    AddNorm("LDX",0x1fa6,0x1fae,    -1,    -1,0x1fb6,0x1fbe,    -1,    -1,    -1,0x1fa2,    -1,    -1,    -1,    -1);
@@ -215,7 +216,7 @@ BEGIN
    AddCond("BRA", 14, 0x80);
 END
 
-	static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    free(FixedOrders);
    free(NormOrders);
@@ -224,7 +225,7 @@ END
 
 /*---------------------------------------------------------------------------*/
 
-	static void ChkZero(char *Asc, Byte *erg)
+        static void ChkZero(char *Asc, Byte *erg)
 BEGIN
    if ((strlen(Asc)>1) AND ((*Asc=='<') OR (*Asc=='>')))
     BEGIN
@@ -233,11 +234,11 @@ BEGIN
    else *erg=0;
 END
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
 #define ASSUME740Count 1
    static ASSUMERec ASSUME740s[ASSUME740Count]=
- 	            {{"SP", &SpecPage, 0, 0xff, -1}};
+                    {{"SP", &SpecPage, 0, 0xff, -1}};
 
    if (Memo("ASSUME"))
     BEGIN
@@ -249,7 +250,7 @@ BEGIN
    return False;
 END
 
-	static void ChkFlags(void)
+        static void ChkFlags(void)
 BEGIN
    /* Spezialflags ? */
 
@@ -257,23 +258,23 @@ BEGIN
    ADC_SBC_Flag=(Memo("ADC") OR Memo("SBC"));
 END
 
-	static Boolean CPUAllowed(Byte Flag)
+        static Boolean CPUAllowed(Byte Flag)
 BEGIN
    return (((Flag >> (MomCPU-CPU6502))&1)==1);
 END
 
-	static void InsNOP(void)
+        static void InsNOP(void)
 BEGIN
    memmove(BAsmCode,BAsmCode+1,CodeLen);
    CodeLen++; BAsmCode[0]=NOPCode;
 END
 
-	static Boolean IsAllowed(Word Val)
+        static Boolean IsAllowed(Word Val)
 BEGIN
    return (CPUAllowed(Hi(Val)) AND (Val!=0xffff));
 END
 
-	static void ChkZeroMode(ShortInt Mode)
+        static void ChkZeroMode(ShortInt Mode)
 BEGIN
    int OrderZ;
 
@@ -282,13 +283,13 @@ BEGIN
      BEGIN
       if (IsAllowed(NormOrders[OrderZ].Codes[Mode]))
        BEGIN
-	ErgMode=Mode; AdrCnt--;
+        ErgMode=Mode; AdrCnt--;
        END
       return;
      END
 END
 
-	static void MakeCode_65(void)
+        static void MakeCode_65(void)
 BEGIN
    Word OrderZ;
    Byte AdrByte;
@@ -323,10 +324,10 @@ BEGIN
         BAsmCode[0]=FixedOrders[OrderZ].Code;
         if (Memo("BRK")) BAsmCode[CodeLen++]=NOPCode;
         else if (MomCPU==CPUM740)
-	 BEGIN
+         BEGIN
           if (Memo("PLP")) BAsmCode[CodeLen++]=NOPCode; 
-	  if ((ADC_SBC_Flag) AND (Memo("SEC") OR Memo("CLC") OR Memo("CLD"))) InsNOP();
-	 END
+          if ((ADC_SBC_Flag) AND (Memo("SEC") OR Memo("CLC") OR Memo("CLD"))) InsNOP();
+         END
        END
       ChkFlags(); return;
      END
@@ -337,20 +338,20 @@ BEGIN
       else if (MomCPU!=CPUM740) WrError(1500);
       else
        BEGIN
-	AdrByte=EvalIntExpression(ArgStr[1],UInt3,&ValOK);
-	if (ValOK)
-	 BEGIN
-	  BAsmCode[0]=0x0b+(AdrByte << 5)+(Ord(Memo("CLB")) << 4);
-	  if (strcasecmp(ArgStr[2],"A")==0) CodeLen=1;
-	  else
-	   BEGIN
+        AdrByte=EvalIntExpression(ArgStr[1],UInt3,&ValOK);
+        if (ValOK)
+         BEGIN
+          BAsmCode[0]=0x0b+(AdrByte << 5)+(Ord(Memo("CLB")) << 4);
+          if (strcasecmp(ArgStr[2],"A")==0) CodeLen=1;
+          else
+           BEGIN
             BAsmCode[1]=EvalIntExpression(ArgStr[2],UInt8,&ValOK);
-	    if (ValOK)
-	     BEGIN
-	      CodeLen=2; BAsmCode[0]+=4;
-	     END
-	   END
-	 END
+            if (ValOK)
+             BEGIN
+              CodeLen=2; BAsmCode[0]+=4;
+             END
+           END
+         END
        END
       ChkFlags(); return;
      END
@@ -361,30 +362,32 @@ BEGIN
       else if (MomCPU!=CPUM740) WrError(1500);
       else
        BEGIN
-	BAsmCode[0]=EvalIntExpression(ArgStr[1],UInt3,&ValOK);
-	if (ValOK)
-	 BEGIN
-	  BAsmCode[0]=(BAsmCode[0] << 5)+(Ord(Memo("BBC")) << 4)+3;
-	  b=(strcasecmp(ArgStr[2],"A")!=0);
-	  if (NOT b) ValOK=True;
-	  else
-	   BEGIN
-	    BAsmCode[0]+=4;
+        BAsmCode[0]=EvalIntExpression(ArgStr[1],UInt3,&ValOK);
+        if (ValOK)
+         BEGIN
+          BAsmCode[0]=(BAsmCode[0] << 5)+(Ord(Memo("BBC")) << 4)+3;
+          b=(strcasecmp(ArgStr[2],"A")!=0);
+          if (NOT b) ValOK=True;
+          else
+           BEGIN
+            BAsmCode[0]+=4;
             BAsmCode[1]=EvalIntExpression(ArgStr[2],UInt8,&ValOK);
-	   END
-	  if (ValOK)
-	   BEGIN
-	    AdrInt=EvalIntExpression(ArgStr[3],Int16,&ValOK)-(EProgCounter()+2+Ord(b)+Ord(CLI_SEI_Flag));
-	    if (ValOK)
-	     if (((AdrInt>127) OR (AdrInt<-128)) AND (NOT SymbolQuestionable)) WrError(1370);
-	     else
-	      BEGIN
-	       CodeLen=2+Ord(b);
-	       BAsmCode[CodeLen-1]=AdrInt & 0xff;
-	       if (CLI_SEI_Flag) InsNOP();
-	      END
-	   END
-	 END
+           END
+          if (ValOK)
+           BEGIN
+            AdrInt=EvalIntExpression(ArgStr[3],Int16,&ValOK)-(EProgCounter()+2+Ord(b)+Ord(CLI_SEI_Flag));
+            if (ValOK)
+             BEGIN
+              if (((AdrInt>127) OR (AdrInt<-128)) AND (NOT SymbolQuestionable)) WrError(1370);
+              else
+               BEGIN
+                CodeLen=2+Ord(b);
+                BAsmCode[CodeLen-1]=AdrInt & 0xff;
+                if (CLI_SEI_Flag) InsNOP();
+               END
+             END
+           END
+         END
        END
       ChkFlags(); return;
      END
@@ -397,19 +400,21 @@ BEGIN
       else if (MomCPU!=CPU65C02) WrError(1500);
       else
        BEGIN
-	BAsmCode[1]=EvalIntExpression(ArgStr[1],UInt8,&ValOK);
-	if (ValOK)
-	 BEGIN
-	  BAsmCode[0]=((OpPart[3]-'0') << 4)+(Ord(OpPart[2]=='S') << 7)+15;
+        BAsmCode[1]=EvalIntExpression(ArgStr[1],UInt8,&ValOK);
+        if (ValOK)
+         BEGIN
+          BAsmCode[0]=((OpPart[3]-'0') << 4)+(Ord(OpPart[2]=='S') << 7)+15;
           AdrInt=EvalIntExpression(ArgStr[2],UInt16,&ValOK)-(EProgCounter()+3);
-	  if (ValOK)
-	   if (((AdrInt>127) OR (AdrInt<-128)) AND (NOT SymbolQuestionable)) WrError(1370);
-	   else
-	    BEGIN
-	     CodeLen=3;
-	     BAsmCode[2]=AdrInt & 0xff;
-	    END
-	 END
+          if (ValOK)
+           BEGIN
+            if (((AdrInt>127) OR (AdrInt<-128)) AND (NOT SymbolQuestionable)) WrError(1370);
+            else
+             BEGIN
+              CodeLen=3;
+              BAsmCode[2]=AdrInt & 0xff;
+             END
+           END
+         END
        END
       ChkFlags(); return;
      END
@@ -422,12 +427,12 @@ BEGIN
       else if (MomCPU!=CPU65C02) WrError(1500);
       else
        BEGIN
-	BAsmCode[1]=EvalIntExpression(ArgStr[1],UInt8,&ValOK);
-	if (ValOK)
-	 BEGIN
-	  BAsmCode[0]=((OpPart[3]-'0') << 4)+(Ord(*OpPart=='S') << 7)+7;
+        BAsmCode[1]=EvalIntExpression(ArgStr[1],UInt8,&ValOK);
+        if (ValOK)
+         BEGIN
+          BAsmCode[0]=((OpPart[3]-'0') << 4)+(Ord(*OpPart=='S') << 7)+7;
           CodeLen=2;
-	 END
+         END
        END
       ChkFlags(); return;
      END
@@ -441,12 +446,14 @@ BEGIN
        BAsmCode[0]=0x3c;
        BAsmCode[2]=EvalIntExpression(ArgStr[2],UInt8,&ValOK);
        if (ValOK)
-	if (*ArgStr[1]!='#') WrError(1350);
-	else
-	 BEGIN
-          BAsmCode[1]=EvalIntExpression(ArgStr[1]+1,Int8,&ValOK);
-	  if (ValOK) CodeLen=3;
-	 END
+        BEGIN
+         if (*ArgStr[1]!='#') WrError(1350);
+         else
+          BEGIN
+           BAsmCode[1]=EvalIntExpression(ArgStr[1]+1,Int8,&ValOK);
+           if (ValOK) CodeLen=3;
+          END
+        END
       END
      ChkFlags(); return;
     END
@@ -475,9 +482,9 @@ BEGIN
       BEGIN
        AdrVals[0]=EvalIntExpression(ArgStr[1]+1,Int8,&ValOK);
        if (ValOK)
-	BEGIN
-	 ErgMode=ModImm; AdrCnt=1;
-	END
+        BEGIN
+         ErgMode=ModImm; AdrCnt=1;
+        END
       END
 
      /* 3. Special Page ? */
@@ -486,11 +493,13 @@ BEGIN
       BEGIN
        AdrWord=EvalIntExpression(ArgStr[1]+1,UInt16,&ValOK);
        if (ValOK)
-	if (Hi(AdrWord)!=SpecPage) WrError(1315);
-	else
-	 BEGIN
-	  ErgMode=ModSpec; AdrVals[0]=Lo(AdrWord); AdrCnt=1;
-	 END
+        BEGIN
+         if (Hi(AdrWord)!=SpecPage) WrError(1315);
+         else
+          BEGIN
+           ErgMode=ModSpec; AdrVals[0]=Lo(AdrWord); AdrCnt=1;
+          END
+        END
       END
 
      /* 4. X-indirekt ? */
@@ -499,9 +508,9 @@ BEGIN
       BEGIN
        if (*ArgStr[1]!='(') WrError(1350);
        else
-	BEGIN
+        BEGIN
          strmaxcpy(s1,ArgStr[1]+1,255); s1[strlen(s1)-3]='\0';
-	 ChkZero(s1,&ZeroMode);
+         ChkZero(s1,&ZeroMode);
          if (Memo("JMP"))
           BEGIN
            AdrWord=EvalIntExpression(s1,UInt16,&ValOK);
@@ -519,7 +528,7 @@ BEGIN
              ErgMode=ModIndX; AdrCnt=1;
             END
           END
-	END
+        END
       END
 
      else
@@ -527,53 +536,53 @@ BEGIN
        /* 5. indirekt absolut ? */
 
        if (IsIndirect(ArgStr[1]))
-	BEGIN
+        BEGIN
          strcpy(s1,ArgStr[1]+1); s1[strlen(s1)-1]='\0';
-	 ChkZero(s1,&ZeroMode);
-	 if (ZeroMode==2)
-	  BEGIN
+         ChkZero(s1,&ZeroMode);
+         if (ZeroMode==2)
+          BEGIN
            AdrVals[0]=EvalIntExpression(s1,UInt8,&ValOK);
-	   if (ValOK)
-	    BEGIN
-	     ErgMode=ModInd8; AdrCnt=1;
-	    END
-	  END
-	 else
-	  BEGIN
-	   AdrWord=EvalIntExpression(s1,UInt16,&ValOK);
-	   if (ValOK)
-	    BEGIN
-	     ErgMode=ModInd16; AdrCnt=2;
+           if (ValOK)
+            BEGIN
+             ErgMode=ModInd8; AdrCnt=1;
+            END
+          END
+         else
+          BEGIN
+           AdrWord=EvalIntExpression(s1,UInt16,&ValOK);
+           if (ValOK)
+            BEGIN
+             ErgMode=ModInd16; AdrCnt=2;
              AdrVals[0]=Lo(AdrWord); AdrVals[1]=Hi(AdrWord);
-	     if ((ZeroMode==0) AND (AdrVals[1]==0)) ChkZeroMode(ModInd8);
-	    END
-	  END
-	END
+             if ((ZeroMode==0) AND (AdrVals[1]==0)) ChkZeroMode(ModInd8);
+            END
+          END
+        END
 
        /* 6. absolut */
 
        else
-	BEGIN
-	 ChkZero(ArgStr[1],&ZeroMode);
-	 if (ZeroMode==2)
-	  BEGIN
+        BEGIN
+         ChkZero(ArgStr[1],&ZeroMode);
+         if (ZeroMode==2)
+          BEGIN
            AdrVals[0]=EvalIntExpression(ArgStr[1],UInt8,&ValOK);
-	   if (ValOK)
-	    BEGIN
-	     ErgMode=ModZA; AdrCnt=1;
-	    END
-	  END
-	 else
-	  BEGIN
-	   AdrWord=EvalIntExpression(ArgStr[1],UInt16,&ValOK);
-	   if (ValOK)
-	    BEGIN
-	     ErgMode=ModA; AdrCnt=2;
+           if (ValOK)
+            BEGIN
+             ErgMode=ModZA; AdrCnt=1;
+            END
+          END
+         else
+          BEGIN
+           AdrWord=EvalIntExpression(ArgStr[1],UInt16,&ValOK);
+           if (ValOK)
+            BEGIN
+             ErgMode=ModA; AdrCnt=2;
              AdrVals[0]=Lo(AdrWord); AdrVals[1]=Hi(AdrWord);
-	     if ((ZeroMode==0) AND (AdrVals[1]==0)) ChkZeroMode(ModZA);
-	    END
-	  END
-	END
+             if ((ZeroMode==0) AND (AdrVals[1]==0)) ChkZeroMode(ModZA);
+            END
+          END
+        END
       END
     END
 
@@ -587,9 +596,9 @@ BEGIN
        ChkZero(s1,&ZeroMode);
        AdrVals[0]=EvalIntExpression(s1,UInt8,&ValOK);
        if (ValOK)
-	BEGIN
-	 ErgMode=ModIndY; AdrCnt=1;
-	END
+        BEGIN
+         ErgMode=ModIndY; AdrCnt=1;
+        END
       END
 
      /* 8. X,Y-indiziert ? */
@@ -599,33 +608,33 @@ BEGIN
        strcpy(s1,ArgStr[1]); 
        ChkZero(s1,&ZeroMode);
        if (ZeroMode==2)
-	BEGIN
+        BEGIN
          AdrVals[0]=EvalIntExpression(s1,UInt8,&ValOK);
-	 if (ValOK)
-	  BEGIN
-	   AdrCnt=1;
+         if (ValOK)
+          BEGIN
+           AdrCnt=1;
            if (strcasecmp(ArgStr[2],"X")==0) ErgMode=ModZIX;
            else if (strcasecmp(ArgStr[2],"Y")==0) ErgMode=ModZIY;
            else WrXError(1445,ArgStr[2]);
-	  END
-	END
+          END
+        END
        else
-	BEGIN
-	 AdrWord=EvalIntExpression(s1,Int16,&ValOK);
-	 if (ValOK)
-	  BEGIN
-	   AdrCnt=2;
+        BEGIN
+         AdrWord=EvalIntExpression(s1,Int16,&ValOK);
+         if (ValOK)
+          BEGIN
+           AdrCnt=2;
            AdrVals[0]=Lo(AdrWord); AdrVals[1]=Hi(AdrWord);
            if (strcasecmp(ArgStr[2],"X")==0) ErgMode=ModIX;
            else if (strcasecmp(ArgStr[2],"Y")==0) ErgMode=ModIY;
            else WrXError(1445,ArgStr[2]);
            if (ErgMode != -1)
             BEGIN
-	     if ((AdrVals[1]==0) AND (ZeroMode==0))
+             if ((AdrVals[1]==0) AND (ZeroMode==0))
               ChkZeroMode((strcasecmp(ArgStr[2],"X")==0)?ModZIX:ModZIY);
             END
-	  END
-	END
+          END
+        END
       END
     END
 
@@ -643,26 +652,26 @@ BEGIN
       if ((ErgMode==-1)) WrError(1350);
       else
        BEGIN
-	if (NormOrders[OrderZ].Codes[ErgMode]==-1)
-	 BEGIN
-	  if (ErgMode==ModZA) ErgMode=ModA;
-	  if (ErgMode==ModZIX) ErgMode=ModIX;
-	  if (ErgMode==ModZIY) ErgMode=ModIY;
-	  if (ErgMode==ModInd8) ErgMode=ModInd16;
-	  AdrVals[AdrCnt++]=0;
-	 END
-	if (NormOrders[OrderZ].Codes[ErgMode]==-1) WrError(1350);
-	else if (NOT CPUAllowed(Hi(NormOrders[OrderZ].Codes[ErgMode]))) WrError(1500);
-	else
-	 BEGIN
-	  BAsmCode[0]=Lo(NormOrders[OrderZ].Codes[ErgMode]); 
+        if (NormOrders[OrderZ].Codes[ErgMode]==-1)
+         BEGIN
+          if (ErgMode==ModZA) ErgMode=ModA;
+          if (ErgMode==ModZIX) ErgMode=ModIX;
+          if (ErgMode==ModZIY) ErgMode=ModIY;
+          if (ErgMode==ModInd8) ErgMode=ModInd16;
+          AdrVals[AdrCnt++]=0;
+         END
+        if (NormOrders[OrderZ].Codes[ErgMode]==-1) WrError(1350);
+        else if (NOT CPUAllowed(Hi(NormOrders[OrderZ].Codes[ErgMode]))) WrError(1500);
+        else
+         BEGIN
+          BAsmCode[0]=Lo(NormOrders[OrderZ].Codes[ErgMode]); 
           memcpy(BAsmCode+1,AdrVals,AdrCnt);
-	  CodeLen=AdrCnt+1;
-	  if ((ErgMode==ModInd16) AND (MomCPU!=CPU65C02) AND (BAsmCode[1]==0xff))
-	   BEGIN
-	    WrError(1900); CodeLen=0;
-	   END
-	 END
+          CodeLen=AdrCnt+1;
+          if ((ErgMode==ModInd16) AND (MomCPU!=CPU65C02) AND (BAsmCode[1]==0xff))
+           BEGIN
+            WrError(1900); CodeLen=0;
+           END
+         END
        END
       ChkFlags(); return;
      END
@@ -692,14 +701,14 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static void InitCode_65(void)
+        static void InitCode_65(void)
 BEGIN
    SaveInitProc();
    CLI_SEI_Flag=False;
    ADC_SBC_Flag=False;
 END
 
-	static Boolean IsDef_65(void)
+        static Boolean IsDef_65(void)
 BEGIN
    return False;
 END
@@ -709,7 +718,7 @@ BEGIN
    DeinitFields();
 END
 
-	static void SwitchTo_65(void)
+        static void SwitchTo_65(void)
 BEGIN
    TurnWords=False; ConstMode=ConstModeMoto; SetIsOccupied=(MomCPU==CPUM740);
 
@@ -724,7 +733,7 @@ BEGIN
    SwitchFrom=SwitchFrom_65; InitFields();
 END
 
-	void code65_init(void)
+        void code65_init(void)
 BEGIN
    CPU6502  =AddCPU("6502"     ,SwitchTo_65);
    CPU65SC02=AddCPU("65SC02"   ,SwitchTo_65);

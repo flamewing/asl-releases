@@ -21,6 +21,10 @@
 /*           10. 7.1999 Symbolrecord hierher verschoben                      */
 /*           22. 9.1999 RelocEntry definiert                                 */
 /*            5.11.1999 ExtendErrors von Boolean nach ShortInt               */
+/*            7. 5.2000 Packing hinzugefuegt                                 */
+/*           20. 5.2000 added ArgCName, AllArgName                           */
+/*            1. 6.2000 added NestMax                                        */
+/*           26. 6.2000 added exports                                        */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -103,8 +107,18 @@ typedef struct _TPatchEntry
         {
           struct _TPatchEntry *Next;
           LargeWord Address;
-          Byte *RelocType;
+          char *Ref;
+          int len;
+          LongWord RelocType;
         } TPatchEntry, *PPatchEntry;
+
+typedef struct _TExportEntry
+        {
+          struct _TExportEntry *Next;
+          char *Name;
+          int len;
+          LargeWord Value;
+        } TExportEntry, *PExportEntry;
 
 typedef enum {DebugNone,DebugMAP,DebugAOUT,DebugCOFF,DebugELF,DebugAtmel,DebugNoICE} DebugType;
 
@@ -131,6 +145,7 @@ extern char SrcSuffix[],IncSuffix[],PrgSuffix[],LstSuffix[],
 #define MomCPUIdentName  "MOMCPUNAME" /* mom. Prozessortyp */
 #define SupAllowedName   "INSUPMODE"  /* privilegierte Befehle erlaubt */
 #define DoPaddingName    "PADDING"    /* Padding an */
+#define PackingName      "PACKING"    /* gepackte Ablage an */
 #define MaximumName      "INMAXMODE"  /* CPU im Maximum-Modus */
 #define FPUAvailName     "HASFPU"     /* FPU-Befehle erlaubt */
 #define LstMacroExName   "MACEXP"     /* expandierte Makros anzeigen */
@@ -149,7 +164,10 @@ extern char SrcSuffix[],IncSuffix[],PrgSuffix[],LstSuffix[],
 #define Has64Name        "HAS64"         /* arbeitet Parser mit 64-Bit-Integers ? */
 #define ArchName         "ARCHITECTURE"  /* Zielarchitektur von AS */
 #define AttrName         "ATTRIBUTE"  /* Attributansprache in Makros */
+#define ArgCName         "ARGCOUNT"   /* Argumentzahlansprache in Makros */
+#define AllArgName       "ALLARGS"    /* Ansprache Argumentliste in Makros */
 #define DefStackName     "DEFSTACK"   /* Default-Stack */
+#define NestMaxName      "NESTMAX"    /* max. nesting level of a macro */
 
 extern char *EnvName;
 
@@ -168,7 +186,7 @@ extern LongInt Magic;
 
 #define MaxCodeLen 1024
 
-extern char *InfoMessCopyright;
+#define DEF_NESTMAX 256
 
 typedef void (*SimpProc)(
 #ifdef __PROTOS__
@@ -302,6 +320,7 @@ extern char *AttrChars;
 extern Boolean MsgIfRepass;
 extern Integer PassNoForMessage;
 extern Boolean CaseSensitive;
+extern LongInt NestMax;
 
 extern FILE *PrgFile;
 
@@ -347,6 +366,7 @@ extern CPUVar CPUCnt;
 
 extern Boolean FPUAvail;
 extern Boolean DoPadding;
+extern Boolean Packing;
 extern Boolean SupAllowed;
 extern Boolean Maximum;
 extern Boolean DoBranchExt;

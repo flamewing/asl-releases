@@ -42,12 +42,14 @@ static CharTable CollateTable;
 
 /*-------------------------------------------------------------------------------*/
 
+#if 0
 /* einen String anhand einer Tabelle uebersetzen: */
 
 	static void TranslateString(char *s, CharTable Table)
 BEGIN
    for (; *s!='\0'; s++) *s=Table[((unsigned int) *s)&0xff];
 END
+#endif
 
 /*-------------------------------------------------------------------------------*/
 /* Da es moeglich ist, die aktuelle Codeseite im Programmlauf zu wechseln,

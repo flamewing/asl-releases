@@ -55,8 +55,9 @@ FCB        \> FCC         \> FDB         \> PADDING     \> RMB \\
 \subsubsection{Motorola 68HC16}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
-ADR        \> ASSUME      \> BYT         \> DFS         \> FCB \\
-FCC        \> FDB         \> RMB \\
+ADR        \> ASSUME      \> BYT         \> DC[.$<$size$>$] \> DFS \\
+DS[.$<$size$>$] FCB       \> FCC         \> FDB         \> PADDING \\
+RMB \\
 \end{tabbing}}
 
 \subsubsection{Hitachi H8/300(L/H)}
@@ -179,7 +180,7 @@ PORT       \> SUPMODE \\
 \subsubsection{Atmel AVR}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
-DATA       \> PORT        \> REG         \> RES \\
+DATA       \> PACKING     \> PORT        \> REG         \> RES \\
 \end{tabbing}}
 
 \subsubsection{AMD 29K}

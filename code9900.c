@@ -7,6 +7,7 @@
 /* Historie:  9. 3.1997 Grundsteinlegung                                     */     
 /*           18. 8.1998 BookKeeping-Aufruf bei BSS                           */
 /*            2. 1.1999 ChkPC angepasst                                      */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -138,7 +139,7 @@ BEGIN
    FixedOrders[InstrZ++].Code=NCode;
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    TwoOrders=(FixedOrder *) malloc(TwoOrderCount*sizeof(FixedOrder)); InstrZ=0;
    AddTwo("A"   ,5); AddTwo("C"   ,4); AddTwo("S"   ,3);
@@ -184,7 +185,7 @@ BEGIN
    AddFixed("CKON",0x03a0,True ); AddFixed("LREX",0x03e0,True );
 END
 
-	static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    free(TwoOrders);
    free(OneOrders);
@@ -276,16 +277,18 @@ BEGIN
       BEGIN
        strmaxcpy(Reg,p+1,255); Reg[strlen(Reg)-1]='\0';
        if (DecodeReg(Reg,&AdrPart))
-        if (AdrPart==0) WrXError(1445,Reg);
-        else
-         BEGIN
-          *p='\0';
-          AdrVal=EvalIntExpression(Asc,Int16,&OK);
-          if (OK)
-           BEGIN
-            AdrPart+=0x20; AdrCnt=1; return True;
-           END
-         END
+        BEGIN
+         if (AdrPart==0) WrXError(1445,Reg);
+         else
+          BEGIN
+           *p='\0';
+           AdrVal=EvalIntExpression(Asc,Int16,&OK);
+           if (OK)
+            BEGIN
+             AdrPart+=0x20; AdrCnt=1; return True;
+            END
+          END
+        END
       END
      return False;
     END  
@@ -313,7 +316,7 @@ BEGIN
    CodeLen++;
 END
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
    int z;
    char *p;
@@ -380,9 +383,9 @@ BEGIN
         BEGIN
          HVal16=EvalIntExpression(ArgStr[z],Int16,&OK);
          if (OK)
-	  BEGIN
-	   WAsmCode[CodeLen >> 1]=HVal16;
-	   CodeLen+=2;
+          BEGIN
+           WAsmCode[CodeLen >> 1]=HVal16;
+           CodeLen+=2;
           END
          z++;
         END
@@ -482,7 +485,7 @@ BEGIN
          BEGIN
           WAsmCode[0]+=(HPart & 15) << 6;
           CodeLen=(1+AdrCnt) << 1;
-	 END
+         END
       END
      return;
     END
@@ -592,14 +595,16 @@ BEGIN
        BEGIN
         AdrInt=EvalIntExpression(ArgStr[1],UInt16,&OK)-(EProgCounter()+2);
         if (OK)
-         if (Odd(AdrInt)) WrError(1375);
-         else if ((NOT SymbolQuestionable) AND ((AdrInt<-256) OR (AdrInt>254))) WrError(1370);
-         else
-          BEGIN
-           WAsmCode[0]=((AdrInt>>1) & 0xff) | (JmpOrders[z].Code << 8);
-           CodeLen=2;
-          END
-       END;
+         BEGIN
+          if (Odd(AdrInt)) WrError(1375);
+          else if ((NOT SymbolQuestionable) AND ((AdrInt<-256) OR (AdrInt>254))) WrError(1370);
+          else
+           BEGIN
+            WAsmCode[0]=((AdrInt>>1) & 0xff) | (JmpOrders[z].Code << 8);
+            CodeLen=2;
+           END
+         END
+       END
       return;
      END
 
@@ -645,7 +650,7 @@ BEGIN
    DeinitFields(); ClearONOFF();
 END
 
-	static void InternSymbol_9900(char *Asc, TempResult*Erg)
+        static void InternSymbol_9900(char *Asc, TempResult*Erg)
 BEGIN
    Boolean err;
    char *h=Asc;
@@ -679,7 +684,7 @@ BEGIN
    InitFields();
 END
 
-	void code9900_init(void)
+        void code9900_init(void)
 BEGIN
    CPU9900=AddCPU("TMS9900",SwitchTo_9900);
 END

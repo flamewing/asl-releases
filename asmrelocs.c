@@ -1,22 +1,27 @@
 /* asmrelocs.c */
-/*****************************************************************************/
-/* AS-Portierung                                                             */
-/*                                                                           */
-/* Verwaltung von Relokationslisten                                          */
-/*                                                                           */
-/* Historie: 25. 7.1999 Grundsteinlegung                                     */
-/*            1. 8.1999 Merge-Funktion implementiert                         */
-/*            8. 8.1999 Reloc-Liste gespeichert                              */
-/*           15. 9.1999 fehlende Includes                                    */
-/*                      Add in Merge                                         */
-/*****************************************************************************/
+/****************************************************************************/
+/* AS-Portierung                                                            */
+/*                                                                          */
+/* Verwaltung von Relokationslisten                                         */
+/*                                                                          */
+/* Historie: 25. 7.1999 Grundsteinlegung                                    */
+/*            1. 8.1999 Merge-Funktion implementiert                        */
+/*            8. 8.1999 Reloc-Liste gespeichert                             */
+/*           15. 9.1999 fehlende Includes                                   */
+/*                      Add in Merge                                        */
+/*           19. 1.2000 TransferRelocs begonnen                             */
+/*            8. 3.2000 'ambigious else'-Warnungen beseitigt                */
+/*                                                                          */
+/****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
 #include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
+#include "asmcode.h"
 #include "asmrelocs.h"
+#include "fileformat.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -58,11 +63,13 @@ BEGIN
      /* ansonsten an Ergebnisliste anhaengen */
 
      if (PRun1 != Nil)
-      if (PLast == Nil) PRes = PLast = PRun1;
-      else 
-       BEGIN
-        PLast->Next = PRun1; PLast = PRun1;
-       END
+      BEGIN
+       if (PLast == Nil) PRes = PLast = PRun1;
+       else 
+        BEGIN
+         PLast->Next = PRun1; PLast = PRun1;
+        END
+      END
      PRun1 = PNext;
     END
 
@@ -130,4 +137,39 @@ BEGIN
      FreeRelocs(&LastRelocs);
     END
    LastRelocs = List;
+END
+
+	void TransferRelocs(LargeWord Addr, LongWord Type)
+BEGIN
+   PPatchEntry NewPatch;
+   PRelocEntry Curr;
+
+   while (LastRelocs != Nil)
+    BEGIN
+     Curr = LastRelocs;
+     NewPatch = (PPatchEntry) malloc(sizeof(TPatchEntry));
+     NewPatch->Next = Nil;
+     NewPatch->Address = Addr;
+     NewPatch->Ref = Curr->Ref;
+     NewPatch->RelocType = Type;
+     if (NOT Curr->Add) NewPatch->RelocType |= RelocFlagSUB;
+     if (PatchLast == NULL) PatchList = NewPatch;
+     else PatchLast->Next = NewPatch;
+     PatchLast = NewPatch;
+     LastRelocs = Curr->Next;
+     free(Curr);
+    END
+END
+
+	void AddExport(char *Name, LargeInt Value)
+BEGIN
+   PExportEntry PNew;
+
+   PNew = (PExportEntry) malloc(sizeof(TExportEntry));
+   PNew->Next = Nil;
+   PNew->Name = strdup(Name);
+   PNew->Value = Value;
+   if (ExportList == Nil) ExportList = PNew;
+   else ExportLast->Next = PNew;
+   ExportLast = PNew;
 END

@@ -8,10 +8,16 @@
 /*           27.10.1997 Routinen aus P2... heruebergenommen                  */
 /*           27. 3.1999 Granularitaet SC144xx                                */
 /*           30. 5.1999 Adresswildcard-Funktion                              */
+/*           22. 1.2000 Funktion zum Lesen von RelocInfos                    */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
+/*           26. 6.2000 added reading of export entries                      */
+/*            2. 7.2000 updated copyright year                               */
+/*            4. 7.2000 ReadRecordHeader transports record type              */
 /*                                                                           */
 /*****************************************************************************/
 
 #include "stdinc.h"
+#include "endian.h"
 #include <string.h>
 
 #include "strutil.h"
@@ -25,15 +31,15 @@
 
 #include "toolutils.h"
 
-LongWord Magic=0x1b34244d;
+#include "version.h"
+
+LongWord Magic=0x12372c44;
 
 /****************************************************************************/
 
 static Boolean DoFilter;
 static int FilterCnt;
 static Byte FilterBytes[100];
-
-static char *InfoMessCopyright="(C) 1992,1998 Alfred Arnold";
 
 Word FileID=0x1489;       /* Dateiheader Eingabedateien */
 char *OutName="STDOUT";   /* Pseudoname Output */
@@ -116,45 +122,168 @@ BEGIN
     END
 END
 
-	void ReadRecordHeader(Byte *Header, Byte* Segment, Byte *Gran,
-                              char *Name, FILE *f)
+	void ReadRecordHeader(Byte *Header, Byte *CPU, Byte* Segment,
+                              Byte *Gran, char *Name, FILE *f)
 BEGIN
-   if (fread(Header,1,1,f)!=1) ChkIO(Name);
-   if ((*Header!=FileHeaderEnd) AND (*Header!=FileHeaderStartAdr))
-    if (*Header==FileHeaderDataRec)
-     BEGIN
-      if (fread(Header,1,1,f)!=1) ChkIO(Name);
-      if (fread(Segment,1,1,f)!=1) ChkIO(Name);
-      if (fread(Gran,1,1,f)!=1) ChkIO(Name);
-     END
-    else
-     BEGIN
-      *Segment=SegCode;
-      *Gran=Granularity(*Header);
-     END
+   if (fread(Header, 1, 1, f) != 1) ChkIO(Name);
+   if ((*Header != FileHeaderEnd) AND (*Header != FileHeaderStartAdr))
+    BEGIN
+     if ((*Header == FileHeaderDataRec) OR (*Header == FileHeaderRDataRec))
+      BEGIN
+       if (fread(CPU, 1, 1, f) != 1) ChkIO(Name);
+       if (fread(Segment, 1, 1, f) != 1) ChkIO(Name);
+       if (fread(Gran, 1, 1, f) != 1) ChkIO(Name);
+      END
+     else if (*Header <= 0x7f)
+      BEGIN
+       *CPU = *Header;
+       *Header = FileHeaderDataRec;
+       *Segment = SegCode;
+       *Gran = Granularity(*CPU);
+      END
+    END
 END
 
-        void WriteRecordHeader(Byte *Header, Byte *Segment, Byte *Gran,
-                               char *Name, FILE *f)
+        void WriteRecordHeader(Byte *Header, Byte *CPU, Byte *Segment,
+                               Byte *Gran, char *Name, FILE *f)
 BEGIN
-   Byte h;
-
-   if ((*Header==FileHeaderEnd) OR (*Header==FileHeaderStartAdr))
+   if ((*Header == FileHeaderEnd) OR (*Header == FileHeaderStartAdr))
     BEGIN
-     if (fwrite(Header,1,1,f)!=1) ChkIO(Name);
+     if (fwrite(Header, 1, 1, f) != 1) ChkIO(Name);
     END
-   else if ((*Segment!=SegCode) OR (*Gran!=Granularity(*Header)))
+   else if ((*Header == FileHeaderDataRec) OR (*Header == FileHeaderRDataRec))
     BEGIN
-     h=FileHeaderDataRec;
-     if (fwrite(&h,1,1,f)) ChkIO(Name);
-     if (fwrite(Header,1,1,f)) ChkIO(Name);
-     if (fwrite(Segment,1,1,f)) ChkIO(Name);
-     if (fwrite(Gran,1,1,f)) ChkIO(Name);
+     if ((*Segment != SegCode) OR (*Gran != Granularity(*CPU)) OR (*CPU >= 0x80))
+      BEGIN
+       if (fwrite(Header, 1, 1, f)) ChkIO(Name);
+       if (fwrite(CPU, 1, 1, f)) ChkIO(Name);
+       if (fwrite(Segment, 1, 1, f)) ChkIO(Name);
+       if (fwrite(Gran, 1, 1, f)) ChkIO(Name);
+      END
+     else
+      BEGIN
+       if (fwrite(CPU,1,1,f)) ChkIO(Name);
+      END
     END
    else
     BEGIN
-     if (fwrite(Header,1,1,f)) ChkIO(Name);
+     if (fwrite(CPU,1,1,f)) ChkIO(Name);
     END
+END
+
+	void SkipRecord(Byte Header, char *Name, FILE *f)
+BEGIN
+   int Length;
+   LongWord Addr, RelocCount, ExportCount, StringLen;
+   Word Len;
+
+   switch (Header)
+    BEGIN
+     case FileHeaderStartAdr:
+      Length = 4;
+      break;
+     case FileHeaderEnd:
+      Length = 0;
+      break;
+     case FileHeaderRelocInfo:
+      if (NOT Read4(f, &RelocCount)) ChkIO(Name);
+      if (NOT Read4(f, &ExportCount)) ChkIO(Name);
+      if (NOT Read4(f, &StringLen)) ChkIO(Name);
+      Length = (16 * RelocCount) + (12 * ExportCount) + StringLen;
+      break;
+     default:
+      if (NOT Read4(f, &Addr)) ChkIO(Name);
+      if (NOT Read2(f, &Len)) ChkIO(Name);
+      Length = Len;
+      break;
+    END
+
+   if (fseek(f, Length, SEEK_CUR) != 0) ChkIO(Name);
+END
+
+	PRelocInfo ReadRelocInfo(FILE *f)
+BEGIN
+   PRelocInfo PInfo;
+   PRelocEntry PEntry;
+   PExportEntry PExp;
+   Boolean OK = FALSE;
+   LongWord StringLen, StringPos, z;
+   
+   /* get memory for structure */
+
+   PInfo = (PRelocInfo) malloc(sizeof(TRelocInfo));
+   if (PInfo != Nil)
+    BEGIN
+     PInfo->RelocEntries = Nil;
+     PInfo->ExportEntries = Nil;
+     PInfo->Strings = Nil;
+
+     /* read global numbers */
+
+     if ((Read4(f, &PInfo->RelocCount))
+     AND (Read4(f, &PInfo->ExportCount))
+     AND (Read4(f, &StringLen)))
+      BEGIN
+       /* allocate memory */
+
+       PInfo->RelocEntries = (PRelocEntry) malloc(sizeof(TRelocEntry) * PInfo->RelocCount);
+       if ((PInfo->RelocCount == 0) || (PInfo->RelocEntries != Nil))
+        BEGIN
+         PInfo->ExportEntries = (PExportEntry) malloc(sizeof(TExportEntry) * PInfo->ExportCount);
+         if ((PInfo->ExportCount == 0) || (PInfo->ExportEntries != Nil))
+          BEGIN
+           PInfo->Strings = (char*) malloc(sizeof(char) * StringLen);
+           if ((StringLen == 0) || (PInfo->Strings != Nil))
+            BEGIN
+             /* read relocation entries */
+
+             for (z = 0, PEntry = PInfo->RelocEntries; z < PInfo->RelocCount; z++, PEntry++)
+              BEGIN
+               if (!Read8(f, &PEntry->Addr)) break;
+               if (!Read4(f, &StringPos)) break; 
+               PEntry->Name = PInfo->Strings + StringPos;
+               if (!Read4(f, &PEntry->Type)) break;
+              END
+
+             /* read export entries */
+
+             for (z = 0, PExp = PInfo->ExportEntries; z < PInfo->ExportCount; z++, PExp++)
+              BEGIN
+               if (!Read4(f, &StringPos)) break; 
+               PExp->Name = PInfo->Strings + StringPos;
+               if (!Read8(f, &PExp->Value)) break;
+              END
+
+             /* read strings */
+
+             if (z == PInfo->ExportCount)
+              OK = ((fread(PInfo->Strings, 1, StringLen, f)) == StringLen);
+            END
+          END
+        END
+      END
+    END
+
+   if (NOT OK)
+    BEGIN
+     if (PInfo != Nil)
+      BEGIN
+       if ((StringLen > 0) && (PInfo->Strings != Nil))
+        free(PInfo->Strings);
+       if ((PInfo->ExportCount > 0) && (PInfo->RelocEntries != Nil))
+        free(PInfo->RelocEntries);
+       if ((PInfo->RelocCount > 0) && (PInfo->ExportEntries != Nil))
+        free(PInfo->ExportEntries);
+       free (PInfo);
+       PInfo = Nil;
+      END
+    END
+
+   return PInfo;
+END
+
+	void DestroyRelocInfo(PRelocInfo PInfo)
+BEGIN
 END
 
 	CMDResult CMD_FilterList(Boolean Negate, char *Arg)

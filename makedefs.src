@@ -21,7 +21,7 @@ CODE_SRCS = codepseudo.c codevars.c \
             codescmp.c codecop8.c codesc14xxx.c \
             codeace.c \
             code53c8xx.c \
-            codefmc8.c
+            codefmc8.c codefmc16.c
 
 ST_SRCS = strutil.c stdhandl.c stringlists.c
 
@@ -34,6 +34,9 @@ AS_SRCS = version.c endian.c bpemu.c chunks.c cmdarg.c ioerrs.c headids.c
           
 PLIST_SRCS = plist.c version.c toolutils.c headids.c\
 	     endian.c bpemu.c hex.c strutil.c cmdarg.c ioerrs.c
+
+ALINK_SRCS = alink.c version.c toolutils.c\
+             endian.c bpemu.c strutil.c cmdarg.c ioerrs.c
 
 PBIND_SRCS = pbind.c version.c toolutils.c\
 	     endian.c bpemu.c strutil.c stdhandl.c cmdarg.c ioerrs.c

@@ -7,6 +7,7 @@
 /* Historie: 13.10.1996 Grundsteinlegung                                     */
 /*           25.10.1998 dir. 16-Bit-Modus von ...11 auf ...10 korrigiert     */
 /*            2. 1.1999 ChkPC-Anpassung                                      */
+/*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -285,7 +286,7 @@ END
 
 #define PCReg 3
 
-	static Boolean DecodeReg16(char *Asc, Byte *Erg)
+        static Boolean DecodeReg16(char *Asc, Byte *Erg)
 BEGIN
    *Erg=0xff;
    if (strcasecmp(Asc,"X")==0) *Erg=0;
@@ -295,7 +296,7 @@ BEGIN
    return (*Erg!=0xff);
 END
 
-	static Boolean ValidReg(char *Asc_o)
+        static Boolean ValidReg(char *Asc_o)
 BEGIN
    Byte Dummy;
    String Asc;
@@ -308,7 +309,7 @@ BEGIN
    return DecodeReg16(Asc,&Dummy);
 END
 
-	static Boolean DecodeReg8(char *Asc, Byte *Erg)
+        static Boolean DecodeReg8(char *Asc, Byte *Erg)
 BEGIN
    *Erg=0xff;
    if (strcasecmp(Asc,"A")==0) *Erg=0;
@@ -317,7 +318,7 @@ BEGIN
    return (*Erg!=0xff);
 END
 
-	static Boolean DecodeReg(char *Asc, Byte *Erg)
+        static Boolean DecodeReg(char *Asc, Byte *Erg)
 BEGIN
    if (DecodeReg8(Asc,Erg))
     BEGIN
@@ -334,7 +335,7 @@ BEGIN
    else return False;
 END
 
-	static void CutShort(char *Asc, Integer *ShortMode)
+        static void CutShort(char *Asc, Integer *ShortMode)
 BEGIN
    if (*Asc=='>')
     BEGIN
@@ -354,20 +355,20 @@ BEGIN
    else *ShortMode=0;
 END
 
-	static Boolean DistFits(Byte Reg, Integer Dist, Integer Offs, LongInt Min, LongInt Max)
+        static Boolean DistFits(Byte Reg, Integer Dist, Integer Offs, LongInt Min, LongInt Max)
 BEGIN
    if (Reg==PCReg) Dist-=Offs;
    return (((Dist>=Min) AND (Dist<=Max)) OR ((Reg==PCReg) AND SymbolQuestionable));
 END
 
-	static void ChkAdr(Word Mask)
+        static void ChkAdr(Word Mask)
 BEGIN
   if ((AdrMode!=ModNone) AND (((1 << AdrMode) & Mask)==0))
    BEGIN
     AdrMode=ModNone; AdrCnt=0; WrError(1350);
    END
 END
-	
+        
         static void DecodeAdr(int Start, int Stop, Word Mask)
 BEGIN
    Integer AdrWord,ShortMode;
@@ -447,16 +448,18 @@ BEGIN
       AdrWord=EvalIntExpression(ArgStr[Start],UInt16,&OK);
 
      if (OK)
-      if ((ShortMode!=1) AND ((AdrWord & 0xff00)==0) AND ((Mask & MModDir)!=0))
-       BEGIN
-        AdrMode=ModDir; AdrVals[0]=AdrWord & 0xff; AdrCnt=1;
-       END
-      else
-       BEGIN
-        AdrMode=ModExt;
-	AdrVals[0]=(AdrWord >> 8) & 0xff; AdrVals[1]=AdrWord & 0xff;
-	AdrCnt=2;
-       END
+      BEGIN
+       if ((ShortMode!=1) AND ((AdrWord & 0xff00)==0) AND ((Mask & MModDir)!=0))
+        BEGIN
+         AdrMode=ModDir; AdrVals[0]=AdrWord & 0xff; AdrCnt=1;
+        END
+       else
+        BEGIN
+         AdrMode=ModExt;
+         AdrVals[0]=(AdrWord >> 8) & 0xff; AdrVals[1]=AdrWord & 0xff;
+         AdrCnt=2;
+        END
+      END
      ChkAdr(Mask); return;
     END
 
@@ -521,27 +524,29 @@ BEGIN
          AdrWord=EvalIntExpression(ArgStr[Start],Int16,&OK);
          if (AdrVals[0]==PCReg) AdrWord-=EProgCounter()+ExPos;
          if (OK)
-          if ((ShortMode!=1) AND (ShortMode!=2) AND ((Mask & MModIdx)!=0) AND (DistFits(AdrVals[0],AdrWord,1,-16,15)))
-           BEGIN
-            if (AdrVals[0]==PCReg) AdrWord--;
-            AdrVals[0]=(AdrVals[0] << 6)+(AdrWord & 0x1f);
-            AdrCnt=1; AdrMode=ModIdx;
-           END
-          else if ((ShortMode!=1) AND (ShortMode!=3) AND ((Mask & MModIdx1)!=0) AND DistFits(AdrVals[0],AdrWord,2,-256,255))
-           BEGIN
-            if (AdrVals[0]==PCReg) AdrWord-=2;
-            AdrVals[0]=0xe0+(AdrVals[0] << 3)+((AdrWord >> 8) & 1);
-            AdrVals[1]=AdrWord & 0xff;
-            AdrCnt=2; AdrMode=ModIdx1;
-           END
-          else
-           BEGIN
-            if (AdrVals[0]==PCReg) AdrWord-=3;
-            AdrVals[0]=0xe2+(AdrVals[0] << 3);
-            AdrVals[1]=(AdrWord >> 8) & 0xff;
-            AdrVals[2]=AdrWord & 0xff;
-            AdrCnt=3; AdrMode=ModIdx2;
-           END
+          BEGIN
+           if ((ShortMode!=1) AND (ShortMode!=2) AND ((Mask & MModIdx)!=0) AND (DistFits(AdrVals[0],AdrWord,1,-16,15)))
+            BEGIN
+             if (AdrVals[0]==PCReg) AdrWord--;
+             AdrVals[0]=(AdrVals[0] << 6)+(AdrWord & 0x1f);
+             AdrCnt=1; AdrMode=ModIdx;
+            END
+           else if ((ShortMode!=1) AND (ShortMode!=3) AND ((Mask & MModIdx1)!=0) AND DistFits(AdrVals[0],AdrWord,2,-256,255))
+            BEGIN
+             if (AdrVals[0]==PCReg) AdrWord-=2;
+             AdrVals[0]=0xe0+(AdrVals[0] << 3)+((AdrWord >> 8) & 1);
+             AdrVals[1]=AdrWord & 0xff;
+             AdrCnt=2; AdrMode=ModIdx1;
+            END
+           else
+            BEGIN
+             if (AdrVals[0]==PCReg) AdrWord-=3;
+             AdrVals[0]=0xe2+(AdrVals[0] << 3);
+             AdrVals[1]=(AdrWord >> 8) & 0xff;
+             AdrVals[2]=AdrWord & 0xff;
+             AdrCnt=3; AdrMode=ModIdx2;
+            END
+          END
         END
        ChkAdr(Mask); return;
       END
@@ -554,12 +559,12 @@ END
 
 /*---------------------------------------------------------------------------*/
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
    return False;
 END
 
-	static void Try2Split(int Src)
+        static void Try2Split(int Src)
 BEGIN
    char *p;
    int z;
@@ -645,15 +650,17 @@ BEGIN
         if (GenOrders[z].MayExt) Mask+=MModExt;
         DecodeAdr(1,ArgCnt,Mask);
         if (AdrMode!=ModNone)
-         if (Hi(GenOrders[z].Code)==0)
-          BEGIN
-           BAsmCode[0]=GenOrders[z].Code; CodeLen=1;
-          END
-         else
-          BEGIN
-           BAsmCode[0]=Hi(GenOrders[z].Code); 
-           BAsmCode[1]=Lo(GenOrders[z].Code); CodeLen=2;
-          END;
+         BEGIN
+          if (Hi(GenOrders[z].Code)==0)
+           BEGIN
+            BAsmCode[0]=GenOrders[z].Code; CodeLen=1;
+           END
+          else
+           BEGIN
+            BAsmCode[0]=Hi(GenOrders[z].Code); 
+            BAsmCode[1]=Lo(GenOrders[z].Code); CodeLen=2;
+           END
+         END
         switch (AdrMode)
          BEGIN
           case ModImm: break;
@@ -909,11 +916,13 @@ BEGIN
        BEGIN
         Address=EvalIntExpression(ArgStr[1],UInt16,&OK)-EProgCounter()-2;
         if (OK)
-         if (((Address<-128) OR (Address>127)) AND (NOT SymbolQuestionable)) WrError(1370);
-         else
-          BEGIN
-           BAsmCode[0]=BranchOrders[z].Code; BAsmCode[1]=Address & 0xff; CodeLen=2;
-          END
+         BEGIN
+          if (((Address<-128) OR (Address>127)) AND (NOT SymbolQuestionable)) WrError(1370);
+          else
+           BEGIN
+            BAsmCode[0]=BranchOrders[z].Code; BAsmCode[1]=Address & 0xff; CodeLen=2;
+           END
+         END
        END
       return;
      END
@@ -957,14 +966,16 @@ BEGIN
          BEGIN
           Address=EvalIntExpression(ArgStr[2],UInt16,&OK)-(EProgCounter()+3);
           if (OK)
-           if (((Address<-256) OR (Address>255)) AND (NOT SymbolQuestionable)) WrError(1370);
-           else
-            BEGIN
-             BAsmCode[0]=0x04;
-             BAsmCode[1]=LoopOrders[z].Code+HReg+((Address >> 4) & 0x10);
-             BAsmCode[2]=Address & 0xff;
-             CodeLen=3;
-            END
+           BEGIN
+            if (((Address<-256) OR (Address>255)) AND (NOT SymbolQuestionable)) WrError(1370);
+            else
+             BEGIN
+              BAsmCode[0]=0x04;
+              BAsmCode[1]=LoopOrders[z].Code+HReg+((Address >> 4) & 0x10);
+              BAsmCode[2]=Address & 0xff;
+              CodeLen=3;
+             END
+           END
          END
        END
       return;
@@ -1097,11 +1108,13 @@ BEGIN
        BAsmCode[1]=EvalIntExpression(ArgStr[1],UInt8,&OK);
        if (FirstPassUnknown) BAsmCode[1]=0x30;
        if (OK)
-        if ((BAsmCode[1]<0x30) OR ((BAsmCode[1]>0x39) AND (BAsmCode[1]<0x40))) WrError(1320);
-        else
-         BEGIN
-          BAsmCode[0]=0x18; CodeLen=2;
-         END
+        BEGIN
+         if ((BAsmCode[1]<0x30) OR ((BAsmCode[1]>0x39) AND (BAsmCode[1]<0x40))) WrError(1320);
+         else
+          BEGIN
+           BAsmCode[0]=0x18; CodeLen=2;
+          END
+        END
       END
      return;
     END
@@ -1137,7 +1150,7 @@ BEGIN
    SetFlag(&DoPadding,DoPaddingName,False);
 END
 
-	void code6812_init(void)
+        void code6812_init(void)
 BEGIN
    CPU6812=AddCPU("68HC12",SwitchTo_6812);
 END

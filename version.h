@@ -10,3 +10,5 @@
 
 extern char *Version;
 extern LongInt VerNo;
+
+extern char *InfoMessCopyright;

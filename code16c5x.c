@@ -8,6 +8,7 @@
 /*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
 /*           17. 8.1998 RES mit Bookkeeping                                  */
 /*            3. 1.1999 ChkPC-Anpassung                                      */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -209,8 +210,10 @@ BEGIN
            BEGIN
 	    case TempInt:
              if (ChkRange(t.Contents.Int,MinV,MaxV))
-              if (ActPC==SegCode) WAsmCode[CodeLen++]=t.Contents.Int & MaxV;
-	      else BAsmCode[CodeLen++]=t.Contents.Int & MaxV;
+              BEGIN
+               if (ActPC==SegCode) WAsmCode[CodeLen++]=t.Contents.Int & MaxV;
+  	       else BAsmCode[CodeLen++]=t.Contents.Int & MaxV;
+              END
              break;
 	    case TempFloat:
 	     WrError(1135); ValOK=False; 
@@ -240,12 +243,14 @@ BEGIN
        Size=EvalIntExpression(ArgStr[1],Int16,&ValOK);
        if (FirstPassUnknown) WrError(1820);
        if ((ValOK) AND (NOT FirstPassUnknown)) 
-        if ((Size << 1)>MaxCodeLen) WrError(1920);
-	else
-	 BEGIN
-	  CodeLen=Size;
-	  memset(WAsmCode,0,2*Size);
-	 END
+        BEGIN
+         if ((Size << 1)>MaxCodeLen) WrError(1920);
+ 	 else
+	  BEGIN
+	   CodeLen=Size;
+	   memset(WAsmCode,0,2*Size);
+	  END
+        END
       END
      return True;
     END
@@ -393,18 +398,20 @@ BEGIN
       BEGIN
        AdrWord=EvalIntExpression(ArgStr[1],UInt16,&OK);
        if (OK)
-	if (AdrWord>ROMEnd()) WrError(1320);
-	else if ((Memo("CALL")) AND ((AdrWord & 0x100)!=0)) WrError(1905);
-	else
-	 BEGIN
-	  ChkSpace(SegCode);
-	  if (((ProgCounter() ^ AdrWord) & 0x200)!=0)
-	   WAsmCode[CodeLen++]=0x4a3+((AdrWord & 0x200) >> 1); /* BCF/BSF 3,5 */
-	  if (((ProgCounter() ^ AdrWord) & 0x400)!=0)
-	   WAsmCode[CodeLen++]=0x4c3+((AdrWord & 0x400) >> 2); /* BCF/BSF 3,6 */
-	  if (Memo("CALL")) WAsmCode[CodeLen++]=0x900+(AdrWord & 0xff);
-	  else WAsmCode[CodeLen++]=0xa00+(AdrWord & 0x1ff);
-	 END
+        BEGIN
+	 if (AdrWord>ROMEnd()) WrError(1320);
+	 else if ((Memo("CALL")) AND ((AdrWord & 0x100)!=0)) WrError(1905);
+	 else
+	  BEGIN
+	   ChkSpace(SegCode);
+	   if (((ProgCounter() ^ AdrWord) & 0x200)!=0)
+	    WAsmCode[CodeLen++]=0x4a3+((AdrWord & 0x200) >> 1); /* BCF/BSF 3,5 */
+	   if (((ProgCounter() ^ AdrWord) & 0x400)!=0)
+	    WAsmCode[CodeLen++]=0x4c3+((AdrWord & 0x400) >> 2); /* BCF/BSF 3,6 */
+	   if (Memo("CALL")) WAsmCode[CodeLen++]=0x900+(AdrWord & 0xff);
+	   else WAsmCode[CodeLen++]=0xa00+(AdrWord & 0x1ff);
+	  END
+        END
       END
      return;
     END;

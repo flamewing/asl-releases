@@ -4,11 +4,12 @@
 /*                                                                           */
 /* Codegeneratormodul ACE-Familie                                            */
 /*                                                                           */
-/* Historie:14. 8.1999 Grundsteinlegung                                      */
-/*          15. 8.1999 Datensegment immer 256 Byte                           */
-/*                     angekuendigte Typen                                   */
-/*                     nur noch Intel-Pseudos                                */
-/*          16. 8.1999 Fehler beseitigt                                      */
+/* Historie: 14. 8.1999 Grundsteinlegung                                     */
+/*           15. 8.1999 Datensegment immer 256 Byte                          */
+/*                      angekuendigte Typen                                  */
+/*                      nur noch Intel-Pseudos                               */
+/*           16. 8.1999 Fehler beseitigt                                     */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -86,7 +87,7 @@ static IntType XType, CodeType;
 
 /*---------------------------------------------------------------------------*/
 
-	static void ChkAdr(Word Mask)
+        static void ChkAdr(Word Mask)
 BEGIN
    if ((AdrMode == ModXDisp) AND (MomCPU < CPUACE1202))
     BEGIN
@@ -183,7 +184,7 @@ END
 
 /*---------------------------------------------------------------------------*/
 
-	static void DecodeFixed(Word Index)
+        static void DecodeFixed(Word Index)
 BEGIN
    FixedOrder *porder = FixedOrders + Index;
 
@@ -195,7 +196,7 @@ BEGIN
     END
 END
 
-	static void DecodeAri(Word Index)
+        static void DecodeAri(Word Index)
 BEGIN
    AriOrder *porder = AriOrders + Index;
 
@@ -229,7 +230,7 @@ BEGIN
     END
 END
 
-	static void DecodeSing(Word Index)
+        static void DecodeSing(Word Index)
 BEGIN
    SingOrder *porder = SingOrders + Index;
 
@@ -255,7 +256,7 @@ BEGIN
     END
 END
 
-	static void DecodeBit(Word Index)
+        static void DecodeBit(Word Index)
 BEGIN
    Byte Bit, Mask;
    BitOrder *porder = BitOrders + Index;
@@ -300,7 +301,7 @@ BEGIN
     END
 END
 
-	static void DecodeIFEQ(Word Index)
+        static void DecodeIFEQ(Word Index)
 BEGIN
    if (ArgCnt != 2) WrError(1110);
    else
@@ -358,7 +359,7 @@ BEGIN
     END
 END
 
-	static void DecodeIFGT(Word Index)
+        static void DecodeIFGT(Word Index)
 BEGIN
    if (ArgCnt != 2) WrError(1110);
    else
@@ -404,7 +405,7 @@ BEGIN
     END
 END
 
-	static void DecodeIFLT(Word Index)
+        static void DecodeIFLT(Word Index)
 BEGIN
    if (ArgCnt != 2) WrError(1110);
    else
@@ -428,7 +429,7 @@ BEGIN
     END
 END
 
-	static void DecodeJMPJSR(Word Index)
+        static void DecodeJMPJSR(Word Index)
 BEGIN
    if (ArgCnt != 1) WrError(1110);
    else
@@ -450,7 +451,7 @@ BEGIN
     END
 END
 
-	static void DecodeJP(Word Index)
+        static void DecodeJP(Word Index)
 BEGIN
    LongInt Dist;
    Boolean OK;
@@ -460,17 +461,19 @@ BEGIN
     BEGIN
      Dist = EvalIntExpression(ArgStr[1], CodeType, &OK) - (EProgCounter() + 1);
      if (OK)
-      if ((NOT SymbolQuestionable) AND ((Dist > 31) OR (Dist < -31))) WrError(1370);
-      else
-       BEGIN
-        if (Dist >= 0) BAsmCode[0] = 0xe0 + Dist;
-        else BAsmCode[0] = 0xc0 - Dist;
-        CodeLen = 1;
-       END 
+      BEGIN
+       if ((NOT SymbolQuestionable) AND ((Dist > 31) OR (Dist < -31))) WrError(1370);
+       else
+        BEGIN
+         if (Dist >= 0) BAsmCode[0] = 0xe0 + Dist;
+         else BAsmCode[0] = 0xc0 - Dist;
+         CodeLen = 1;
+        END 
+      END
     END
 END
 
-	static void DecodeLD(Word Index)
+        static void DecodeLD(Word Index)
 BEGIN
    if (ArgCnt != 2) WrError(1110);
    else
@@ -534,7 +537,7 @@ BEGIN
     END
 END
 
-	static void DecodeRotate(Word Index)
+        static void DecodeRotate(Word Index)
 BEGIN
    if (ArgCnt != 1) WrError(1110);
    else
@@ -554,7 +557,7 @@ BEGIN
     END
 END
 
-	static void DecodeST(Word Index)
+        static void DecodeST(Word Index)
 BEGIN
    if (ArgCnt != 2) WrError(1110);
    else
@@ -678,7 +681,7 @@ END
 
 /*---------------------------------------------------------------------------*/
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
 
    if (Memo("SFR"))
@@ -756,7 +759,7 @@ BEGIN
    SwitchFrom = SwitchFrom_ACE; InitFields();
 END
 
-	void codeace_init(void)
+        void codeace_init(void)
 BEGIN
    CPUACE1001 = AddCPU("ACE1001", SwitchTo_ACE);
    CPUACE1101 = AddCPU("ACE1101", SwitchTo_ACE);

@@ -13,12 +13,16 @@
 /*             9. 1.1999 BINCLUDE gefixt...                                  */
 /*            30. 5.1999 OUTRADIX-Kommando                                   */
 /*            12. 7.1999 EXTERN-Kommando                                     */
+/*             8. 3.2000 'ambigious else'-Warnungen beseitigt                */
+/*             1. 6.2000 reset error flag before checks in BINCLUDE          */
+/*                       added NESTMAX instruction                           */
+/*            26. 6.2000 added EXPORT instruction                            */
+/*             6. 7.2000 unknown symbol in EXPORT triggers repassing         */
 /*                                                                           */
 /*****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
-
 
 #include "nls.h"
 #include "strutil.h"
@@ -31,6 +35,7 @@
 #include "asmpars.h"
 #include "asmmac.h"
 #include "asmcode.h"
+#include "asmrelocs.h"
 #include "asmitree.h"
 #include "codepseudo.h"
 
@@ -127,17 +132,19 @@ BEGIN
 
    if (ArgCnt!=1) WrError(1110);
    else if (ExpandSymbol(ArgStr[1]))
-    if (NOT ChkSymbName(ArgStr[1])) WrXError(1020,ArgStr[1]);
-    else if ((PassNo==1) AND (GetSectionHandle(ArgStr[1],False,MomSectionHandle)!=-2)) WrError(1483);
-    else
-     BEGIN
-      Neu=(PSaveSection) malloc(sizeof(TSaveSection));
-      Neu->Next=SectionStack;
-      Neu->Handle=MomSectionHandle;
-      Neu->LocSyms=Nil; Neu->GlobSyms=Nil; Neu->ExportSyms=Nil;
-      SetMomSection(GetSectionHandle(ArgStr[1],True,MomSectionHandle));
-      SectionStack=Neu;
-     END
+    BEGIN
+     if (NOT ChkSymbName(ArgStr[1])) WrXError(1020,ArgStr[1]);
+     else if ((PassNo==1) AND (GetSectionHandle(ArgStr[1],False,MomSectionHandle)!=-2)) WrError(1483);
+     else
+      BEGIN
+       Neu=(PSaveSection) malloc(sizeof(TSaveSection));
+       Neu->Next=SectionStack;
+       Neu->Handle=MomSectionHandle;
+       Neu->LocSyms=Nil; Neu->GlobSyms=Nil; Neu->ExportSyms=Nil;
+       SetMomSection(GetSectionHandle(ArgStr[1],True,MomSectionHandle));
+       SectionStack=Neu;
+      END
+    END
 END
 
 
@@ -160,19 +167,21 @@ BEGIN
    if (ArgCnt>1) WrError(1110);
    else if (SectionStack==Nil) WrError(1487);
    else if ((ArgCnt==0) OR (ExpandSymbol(ArgStr[1])))
-    if ((ArgCnt==1) AND (GetSectionHandle(ArgStr[1],False,SectionStack->Handle)!=MomSectionHandle)) WrError(1486);
-    else
-     BEGIN
-      Tmp=SectionStack; SectionStack=Tmp->Next;
-      CodeENDSECTION_ChkEmptList(&(Tmp->LocSyms));
-      CodeENDSECTION_ChkEmptList(&(Tmp->GlobSyms));
-      CodeENDSECTION_ChkEmptList(&(Tmp->ExportSyms));
-      TossRegDefs(MomSectionHandle);
-      if (ArgCnt==0)
-       sprintf(ListLine,"[%s]",GetSectionName(MomSectionHandle));
-      SetMomSection(Tmp->Handle);
-      free(Tmp);
-     END
+    BEGIN
+     if ((ArgCnt==1) AND (GetSectionHandle(ArgStr[1],False,SectionStack->Handle)!=MomSectionHandle)) WrError(1486);
+     else
+      BEGIN
+       Tmp=SectionStack; SectionStack=Tmp->Next;
+       CodeENDSECTION_ChkEmptList(&(Tmp->LocSyms));
+       CodeENDSECTION_ChkEmptList(&(Tmp->GlobSyms));
+       CodeENDSECTION_ChkEmptList(&(Tmp->ExportSyms));
+       TossRegDefs(MomSectionHandle);
+       if (ArgCnt==0)
+        sprintf(ListLine,"[%s]",GetSectionName(MomSectionHandle));
+       SetMomSection(Tmp->Handle);
+       free(Tmp);
+      END
+    END
 END
 
 
@@ -342,6 +351,24 @@ BEGIN
      END
 END
 
+	static void CodeEXPORT(Word Index)
+BEGIN
+   int z;
+   LargeInt Value;
+
+   for (z = 1; z <= ArgCnt; z++)
+    BEGIN
+     FirstPassUnknown = True;
+     if (GetIntSymbol(ArgStr[z], &Value))
+      AddExport(ArgStr[z], Value);
+     else
+      BEGIN
+       Repass = True;
+       if ((MsgIfRepass) AND (PassNo >= PassNoForMessage))
+        WrXError(170,ArgStr[z]);
+      END
+    END
+END
 
 	static void CodePAGE(Word Index)
 BEGIN
@@ -513,43 +540,45 @@ BEGIN
        case TempInt:
         if (FirstPassUnknown) t.Contents.Int&=255;
         if (ChkRange(t.Contents.Int,0,255))
-         if (ArgCnt<2) WrError(1110);
-         else
-          BEGIN
-           Start=t.Contents.Int;
-           FirstPassUnknown=False; EvalExpression(ArgStr[2],&t);
-           switch (t.Typ)
-            BEGIN
-             case TempInt: /* Übersetzungsbereich als Character-Angabe */
-              if (FirstPassUnknown) t.Contents.Int&=255;
-              if (ArgCnt==2)
-               BEGIN
-                Stop=Start; TStart=t.Contents.Int;
-                OK=ChkRange(TStart,0,255);
-               END
-              else
-               BEGIN
-                Stop=t.Contents.Int; OK=ChkRange(Stop,Start,255);
-                if (OK) TStart=EvalIntExpression(ArgStr[3],UInt8,&OK);
-                else TStart=0;
-               END
-              if (OK)
-               for (z=Start; z<=Stop; z++) CharTransTable[z]=TStart+(z-Start);
-              break;
-             case TempString:
-              l=strlen(t.Contents.Ascii); /* Übersetzungsstring ab Start */
-              if (Start+l>256) WrError(1320);
-              else
-               for (z=0; z<l; z++)
-                CharTransTable[Start+z]=t.Contents.Ascii[z];
-              break;
-             case TempFloat:
-              WrError(1135);
-              break;
-             default:
-              break;
-            END
-          END
+         BEGIN
+          if (ArgCnt<2) WrError(1110);
+          else
+           BEGIN
+            Start=t.Contents.Int;
+            FirstPassUnknown=False; EvalExpression(ArgStr[2],&t);
+            switch (t.Typ)
+             BEGIN
+              case TempInt: /* Übersetzungsbereich als Character-Angabe */
+               if (FirstPassUnknown) t.Contents.Int&=255;
+               if (ArgCnt==2)
+                BEGIN
+                 Stop=Start; TStart=t.Contents.Int;
+                 OK=ChkRange(TStart,0,255);
+                END
+               else
+                BEGIN
+                 Stop=t.Contents.Int; OK=ChkRange(Stop,Start,255);
+                 if (OK) TStart=EvalIntExpression(ArgStr[3],UInt8,&OK);
+                 else TStart=0;
+                END
+               if (OK)
+                for (z=Start; z<=Stop; z++) CharTransTable[z]=TStart+(z-Start);
+               break;
+              case TempString:
+               l=strlen(t.Contents.Ascii); /* Übersetzungsstring ab Start */
+               if (Start+l>256) WrError(1320);
+               else
+                for (z=0; z<l; z++)
+                 CharTransTable[Start+z]=t.Contents.Ascii[z];
+               break;
+              case TempFloat:
+               WrError(1135);
+               break;
+              default:
+               break;
+             END
+           END
+         END
         break;
        case TempString:
         if (ArgCnt!=1) WrError(1110); /* Tabelle von Datei lesen */
@@ -811,15 +840,17 @@ BEGIN
      FirstPassUnknown=False;
      Dummy=EvalIntExpression(ArgStr[1],Int16,&OK);
      if (OK)
-      if (FirstPassUnknown) WrError(1820);
-      else
-       BEGIN
-	NewPC=ProgCounter()+Dummy-1;
-	NewPC-=NewPC%Dummy;
-	CodeLen=NewPC-ProgCounter();
-	DontPrint=(CodeLen!=0);
-	if (DontPrint) BookKeeping();
-       END
+      BEGIN
+       if (FirstPassUnknown) WrError(1820);
+       else
+        BEGIN
+         NewPC=ProgCounter()+Dummy-1;
+         NewPC-=NewPC%Dummy;
+         CodeLen=NewPC-ProgCounter();
+         DontPrint=(CodeLen!=0);
+         if (DontPrint) BookKeeping();
+        END
+      END
     END
 END
 
@@ -911,72 +942,75 @@ END
         static void CodeBINCLUDE(Word Index)
 BEGIN
    FILE *F;
-   LongInt Len=(-1);
-   LongWord Ofs=0,Curr,Rest,FSize;
+   LongInt Len = (-1);
+   LongWord Ofs = 0, Curr, Rest, FSize;
    Word RLen;
-   Boolean OK,SaveTurnWords;
+   Boolean OK, SaveTurnWords;
    LargeWord OldPC;
    String Name;
 
-   if ((ArgCnt<1) OR (ArgCnt>3)) WrError(1110);
-   else if (ActPC==StructSeg) WrError(1940);
+   if ((ArgCnt < 1) OR (ArgCnt > 3)) WrError(1110);
+   else if (ActPC == StructSeg) WrError(1940);
    else
     BEGIN
-     if (ArgCnt==1) OK=True;
+     if (ArgCnt == 1) OK = True;
      else
       BEGIN
-       FirstPassUnknown=False;
-       Ofs=EvalIntExpression(ArgStr[2],Int32,&OK);
+       FirstPassUnknown = False;
+       Ofs = EvalIntExpression(ArgStr[2], Int32, &OK);
        if (FirstPassUnknown)
         BEGIN
-         WrError(1820); OK=False;
+         WrError(1820); OK = False;
         END
        if (OK)
-        if (ArgCnt==2) Len=(-1);
-        else
-         BEGIN
-          Len=EvalIntExpression(ArgStr[3],Int32,&OK);
-          if (FirstPassUnknown)
-           BEGIN
-            WrError(1820); OK=False;
-           END
-         END
+        BEGIN
+         if (ArgCnt == 2) Len = (-1);
+         else
+          BEGIN
+           Len = EvalIntExpression(ArgStr[3], Int32, &OK);
+           if (FirstPassUnknown)
+            BEGIN
+             WrError(1820); OK = False;
+            END
+          END
+        END
       END
      if (OK)
       BEGIN
-       strmaxcpy(Name,ArgStr[1],255);
-       if (*Name=='"') strcpy(Name,Name+1);
-       if (Name[strlen(Name)-1]=='"') Name[strlen(Name)-1]='\0';
-       strmaxcpy(ArgStr[1],Name,255);
-       strmaxcpy(Name,FExpand(FSearch(Name,IncludeList)),255);
-       if (Name[strlen(Name)-1]=='/') strmaxcat(Name,ArgStr[1],255);
-       F=fopen(Name,OPENRDMODE); ChkIO(10001);
-       FSize=FileSize(F); ChkIO(10003);
-       if (Len==-1)
-        if ((Len=FSize-Ofs)<0)
+       strmaxcpy(Name, ArgStr[1], 255);
+       if (*Name == '"') strcpy(Name, Name + 1);
+       if (Name[strlen(Name) - 1] == '"') Name[strlen(Name) - 1] = '\0';
+       strmaxcpy(ArgStr[1], Name, 255);
+       strmaxcpy(Name, FExpand(FSearch(Name, IncludeList)), 255);
+       if (Name[strlen(Name) - 1] == '/') strmaxcat(Name, ArgStr[1], 255);
+       F = fopen(Name, OPENRDMODE);
+       if (F == NULL) ChkIO(10001);
+       errno = 0; FSize = FileSize(F); ChkIO(10003);
+       if (Len == -1)
+        if ((Len = FSize - Ofs) < 0)
          BEGIN
           fclose(F); WrError(1600); return;
          END
-       if (NOT ChkPC(PCs[ActPC]+Len-1)) WrError(1925);
+       if (NOT ChkPC(PCs[ActPC] + Len - 1)) WrError(1925);
        else
         BEGIN
-         fseek(F,Ofs,SEEK_SET); ChkIO(10003);
-         Rest=Len; SaveTurnWords=TurnWords; TurnWords=False;
+         errno = 0; fseek(F, Ofs, SEEK_SET); ChkIO(10003);
+         Rest = Len; SaveTurnWords = TurnWords; TurnWords = False;
          OldPC = ProgCounter();
          do
           BEGIN
-           if (Rest<MaxCodeLen) Curr=Rest; else Curr=MaxCodeLen;
-           RLen=fread(BAsmCode,1,Curr,F); ChkIO(10003);
-           CodeLen=RLen;
+           if (Rest < MaxCodeLen) Curr = Rest; else Curr = MaxCodeLen;
+           errno = 0; RLen = fread(BAsmCode, 1, Curr, F); ChkIO(10003);
+           CodeLen = RLen;
            WriteBytes();
-           PCs[ActPC]+=CodeLen;
-           Rest-=RLen;
+           PCs[ActPC] += CodeLen;
+           Rest -= RLen;
           END
-         while ((Rest!=0) AND (RLen==Curr));
-         if (Rest!=0) WrError(1600);
-         TurnWords=SaveTurnWords;
-         DontPrint=True; CodeLen=ProgCounter()-OldPC;
-         PCs[ActPC]=OldPC;
+         while ((Rest != 0) AND (RLen == Curr));
+         if (Rest != 0) WrError(1600);
+         TurnWords = SaveTurnWords;
+         DontPrint = True; CodeLen = ProgCounter() - OldPC;
+         PCs[ActPC] = OldPC;
         END
        fclose(F);
       END
@@ -1037,12 +1071,14 @@ BEGIN
      OK=True;
      for (z=1; z<=ArgCnt; z++)
       if (OK)
-       if (strcasecmp(ArgStr[z],"EXTNAMES")==0) NStruct->DoExt=True;
-       else if (strcasecmp(ArgStr[z],"NOEXTNAMES")==0) NStruct->DoExt=False;
-       else
-        BEGIN
-         WrXError(1554,ArgStr[z]); OK=False;
-        END
+       BEGIN
+        if (strcasecmp(ArgStr[z],"EXTNAMES")==0) NStruct->DoExt=True;
+        else if (strcasecmp(ArgStr[z],"NOEXTNAMES")==0) NStruct->DoExt=False;
+        else
+         BEGIN
+          WrXError(1554,ArgStr[z]); OK=False;
+         END
+       END
      if (OK)
       BEGIN
        StructureStack=NStruct;
@@ -1124,6 +1160,24 @@ BEGIN
           END
         END
        i++;
+      END
+    END
+END
+
+	static void CodeNESTMAX(Word Index)
+BEGIN
+   LongInt Temp;
+   Boolean OK;
+
+   if (ArgCnt != 1) WrError(1110);
+   else
+    BEGIN
+     FirstPassUnknown = False;
+     Temp = EvalIntExpression(ArgStr[1], UInt32, &OK);
+     if (OK)
+      BEGIN
+       if (FirstPassUnknown) WrError(1820);
+       else NestMax = Temp;
       END
     END
 END
@@ -1241,6 +1295,7 @@ static PseudoOrder Pseudos[]=
                     {"ENDSTRUCT",  CodeENDSTRUCT },
                     {"ENUM",       CodeENUM      },
                     {"ERROR",      CodeERROR     },
+                    {"EXPORT",     CodeEXPORT    },
                     {"EXTERN",     CodeEXTERN    },
                     {"FATAL",      CodeFATAL     },
                     {"FUNCTION",   CodeFUNCTION  },
@@ -1248,6 +1303,7 @@ static PseudoOrder Pseudos[]=
 		    {"LISTING",    CodeLISTING   },
                     {"MESSAGE",    CodeMESSAGE   },
                     {"NEWPAGE",    CodeNEWPAGE   },
+                    {"NESTMAX",    CodeNESTMAX   },
                     {"ORG",        CodeORG       },
                     {"PAGE",       CodePAGE      },
                     {"PHASE",      CodePHASE     },

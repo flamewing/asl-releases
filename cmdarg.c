@@ -7,6 +7,7 @@
 /* Historie:  4. 5.1996 Grundsteinlegung                                     */
 /*            1. 6.1996 Empty-Funktion                                       */
 /*           17. 4.1999 Key-Files in Kommandozeile                           */
+/*            3. 8.2000 added command line args as slashes                   */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -57,7 +58,12 @@ BEGIN
    strncpy(Param,O_Param,255); 
    strncpy(Next,O_Next,255);
 
-   if ((*Next == '-') OR (*Next == '+') OR (*Next == '@')) *Next = '\0';
+   if ((*Next == '-') OR (*Next == '+')
+#ifdef SLASHARGS
+    OR (*Next == '/')
+#endif
+    OR (*Next == '@'))
+    *Next = '\0';
    if (*Param == '@')
     BEGIN
      if (AllowLink)
@@ -71,7 +77,11 @@ BEGIN
        return CMDErr;
       END
     END
-   if ((*Param == '-') OR (*Param == '+')) 
+   if ((*Param == '-')
+#ifdef SLASHARGS
+    OR (*Param == '/')
+#endif
+    OR (*Param == '+')) 
     BEGIN
      Negate=(*Param=='+'); Start=1;
 
@@ -186,8 +196,9 @@ BEGIN
      ProcessFile(OneLine + 1, Def, Cnt, ErrProc);
    else DecodeLine(Def,Cnt,OneLine,ErrProc);
 
-   for (z=0; z<=ParamCount; Unprocessed[z++]=(z!=0));
-   for (z=1; z<=ParamCount; z++)
+   for (z = 0; z <= ParamCount; z++)
+    Unprocessed[z] = (z != 0);
+   for (z = 1; z <= ParamCount; z++)
     if (Unprocessed[z])
      switch (ProcessParam(Def, Cnt, ParamStr[z], (z < ParamCount) ? ParamStr[z + 1] : "",
                           True, ErrProc))

@@ -165,7 +165,14 @@ may also be given multiply.  If there are less output specifications than
 source file names, AS will switch back to the default naming convention after 
 all output specifications have been used up.
 .TP
+.B -olist <name>
+
+Tell AS to write the assembly lsting to a file <name>, instead of a file
+with the standard name in the source file's directory.  This option only
+makes sense when an assembly listing has been requested via the '-L' option.
+.TP
 .B -shareout <name>
+
 Tell AS to write shared symbol definitions to a file <name>, instead of
 constructing the name from the source file's name. See the user manual for
 more information about symbol sharing.

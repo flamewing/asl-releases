@@ -20,6 +20,9 @@
 /*           17. 4.1999 DefCPU hinzugenommen                                 */
 /*           30. 5.1999 OutRadixBase hinzugenommen                           */
 /*            5.11.1999 ExtendErrors von Boolean nach ShortInt               */
+/*            7. 5.2000 Packing hinzugefuegt                                 */
+/*            1. 6.2000 added NestMax                                        */
+/*            2. 7.2000 updated year in copyright                            */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -47,9 +50,7 @@ char *EnvName="ASCMD";                /* Environment-Variable fuer Default-
 char *SegNames[PCMax+1]={"NOTHING","CODE","DATA","IDATA","XDATA","YDATA",
                          "BITDATA","IO","REG","ROMDATA"};
 char SegShorts[PCMax+1]={'-','C','D','I','X','Y','B','P','R','O'};
-LongInt Magic=0x1b34244d;
-
-char *InfoMessCopyright="(C) 1992,1998 Alfred Arnold";
+LongInt Magic=0x12372c44;
 
 /** ValidSymChars:SET OF Char=['A'..'Z','a'..'z',#128..#165,'0'..'9','_','.']; **/
 
@@ -105,6 +106,7 @@ char *InfoMessCopyright="(C) 1992,1998 Alfred Arnold";
    Boolean MsgIfRepass;		    /* Meldungen, falls neuer Pass erforderlich */
    Integer PassNoForMessage;        /* falls ja: ab welchem Pass ? */
    Boolean CaseSensitive;           /* Gross/Kleinschreibung unterscheiden ? */
+   LongInt NestMax;                 /* max. nesting level of a macro */
 
    FILE *PrgFile;                   /* Codedatei */
 
@@ -164,6 +166,7 @@ char *InfoMessCopyright="(C) 1992,1998 Alfred Arnold";
 
    Boolean FPUAvail;		    /* Koprozessor erlaubt ? */
    Boolean DoPadding;		    /* auf gerade Byte-Zahl ausrichten ? */
+   Boolean Packing;                 /* gepackte Ablage ? */
    Boolean SupAllowed;              /* Supervisormode freigegeben */
    Boolean Maximum;		    /* CPU nicht kastriert */
    Boolean DoBranchExt;             /* Spruenge automatisch verlaengern */

@@ -25,6 +25,10 @@
 /*           14. 7.1999 Relocs im Parser beruecksichtigt                     */
 /*            1. 8.1999 Relocs im Formelparser durch                         */
 /*            8. 8.1999 Relocs in EvalIntExpression beruecksichtigt          */
+/*            8. 3.2000 'ambigious else'-Warnungen beseitigt                 */
+/*           21. 5.2000 added TmpSymCounter                                  */
+/*            1. 6.2000 dump symbols explicitly as hex for NoICE             */
+/*           26. 6.2000 GetIntSymbol sets FirstPassUnknown                   */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -139,13 +143,15 @@ Boolean FirstPassUnknown;      /* Hinweisflag: evtl. im ersten Pass unbe-
                                   kanntes Symbol, Ausdruck nicht ausgewertet */
 Boolean SymbolQuestionable;    /* Hinweisflag:  Dadurch, dass Phasenfehler
                                   aufgetreten sind, ist dieser Symbolwert evtl.
-                                  nicht mehr aktuell */
+                                  nicht mehr aktuell                         */
 Boolean UsesForwards;          /* Hinweisflag: benutzt Vorwaertsdefinitionen */
-LongInt MomLocHandle;          /* Merker, den lokale Symbole erhalten */
+LongInt MomLocHandle;          /* Merker, den lokale Symbole erhalten        */
+LongInt TmpSymCounter;         /* counter for local symbols                  */
+char TmpSymCounterVal[10];     /* representation as string                   */
 
-LongInt LocHandleCnt;          /* mom. verwendeter lokaler Handle */
+LongInt LocHandleCnt;          /* mom. verwendeter lokaler Handle            */
 
-Boolean BalanceTree;           /* Symbolbaum ausbalancieren */
+Boolean BalanceTree;           /* Symbolbaum ausbalancieren                  */
 
 
 static char BaseIds[3]={'%','@','$'};
@@ -374,6 +380,32 @@ BEGIN
     END
    while (p1!=Nil);
    return True;
+END
+
+/*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+/* check whether this is a local symbol and expand local counter if yes      */
+
+	void ChkTmp(char *Name, Boolean Define)
+BEGIN
+   char *Src, *Dest;
+   if (strncmp(Name, "$$", 2) == 0)
+    BEGIN
+     /* manually copy since this will implicitly give us the point to append
+        the number */
+
+     for (Src = Name + 2, Dest = Name; *Src; *(Dest++) = *(Src++));
+
+     /* append number */
+
+     if (*TmpSymCounterVal == '\0')
+      sprintf(TmpSymCounterVal, "%d", TmpSymCounter);
+     strcpy(Dest, TmpSymCounterVal);
+    END
+   else if (Define)
+    BEGIN
+     TmpSymCounter++;
+     *TmpSymCounterVal = '\0';
+    END
 END
 
         Boolean IdentifySection(char *Name, LongInt *Erg)
@@ -1832,6 +1864,7 @@ static Operator Operators[OpCnt+1]=
 
    if (NOT ExpandSymbol(Asc)) LEAVE;
 
+   ChkTmp(Asc, FALSE);
    KlPos=strchr(Asc,'[');
    if (KlPos!=Nil) 
     BEGIN
@@ -2253,6 +2286,7 @@ BEGIN
    strmaxcpy(Name, Name_O, 255);
    if (NOT ExpandSymbol(Name)) return;
    if (NOT GetSymSection(Name, &DestHandle)) return;
+   ChkTmp(Name, TRUE);
    if (NOT ChkSymbName(Name))
     BEGIN
      WrXError(1020, Name); return;
@@ -2318,6 +2352,7 @@ BEGIN
    strmaxcpy(Name, Name_O,255);
    if (NOT ExpandSymbol(Name)) return;
    if (NOT GetSymSection(Name,&DestHandle)) return;
+   ChkTmp(Name, TRUE);
    if (NOT ChkSymbName(Name))
     BEGIN
      WrXError(1020, Name); return;
@@ -2348,6 +2383,7 @@ BEGIN
    strmaxcpy(Name, Name_O, 255);
    if (NOT ExpandSymbol(Name)) return;
    if (NOT GetSymSection(Name,&DestHandle)) return;
+   ChkTmp(Name, TRUE);
    if (NOT ChkSymbName(Name))
     BEGIN
      WrXError(1020, Name); return;
@@ -2550,6 +2586,7 @@ BEGIN
    else
     BEGIN
      if (PassNo>MaxSymPass) WrXError(1010,Name);
+     else FirstPassUnknown = True;
      *Wert=EProgCounter();
     END
    return (Lauf!=Nil);
@@ -2900,8 +2937,8 @@ BEGIN
    if (Node->Left!=Nil) PrNoISection(f,Node->Left,Handle);
    if ((Node->SymType==SegCode) AND (Node->Attribute==Handle) AND (Node->SymWert.Typ==TempInt))
     BEGIN
-     errno=0; fprintf(f,"DEFINE %s ",Node->SymName); ChkIO(10004);
-     errno=0; fprintf(f,LargeIntFormat,Node->SymWert.Contents.IWert); ChkIO(10004);
+     errno=0; fprintf(f,"DEFINE %s 0x",Node->SymName); ChkIO(10004);
+     errno=0; fprintf(f,LargeHIntFormat,Node->SymWert.Contents.IWert); ChkIO(10004);
      errno=0; fprintf(f,"\n"); ChkIO(10004);
     END
    if (Node->Right!=Nil) PrNoISection(f,Node->Right,Handle);
@@ -3294,17 +3331,22 @@ BEGIN
      z++; Prev=Lauf; Lauf=Lauf->Next;
     END
 
-   if (Lauf==Nil)
-    if (AddEmpt)
-     BEGIN
-      Lauf=(PCToken) malloc(sizeof(TCToken));
-      Lauf->Parent=MomSectionHandle;
-      Lauf->Name=strdup(SName);
-      Lauf->Next=Nil;
-      InitChunk(&(Lauf->Usage));
-      if (Prev==Nil) FirstSection=Lauf; else Prev->Next=Lauf;
-     END
-    else z=(-2);
+   if (Lauf == Nil)
+    BEGIN
+     if (AddEmpt)
+      BEGIN
+       Lauf = (PCToken) malloc(sizeof(TCToken));
+       Lauf->Parent = MomSectionHandle;
+       Lauf->Name = strdup(SName);
+       Lauf->Next = Nil;
+       InitChunk(&(Lauf->Usage));
+       if (Prev == Nil)
+        FirstSection = Lauf;
+       else
+        Prev->Next = Lauf;
+      END
+     else z = (-2);
+    END
    return z;
 END
 

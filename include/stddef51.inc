@@ -21,6 +21,7 @@
 ;*                                  (von Gabriel Jager)                     *
 ;*                       14. 6.1996 80517-Korrekturen wg. Klammerung        *
 ;*                       26. 3.1997 Abfrage auf MOMCPU                      *
+;*                       19. 9.2000 added P6 for 515/517                    *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -190,6 +191,7 @@ SADEN1           SFR    0bah            ; Bits in SADDR1 freigeben
                 if      (MOMCPU=80515h)||(MOMCPU=80517h)
 P4		 SFRB	0e8h
 P5		 SFRB   0f8h
+P6               SFR    0DBh
 
 CCEN		 SFR	0c1h
 CCH3		 SFR	0c7h

@@ -16,6 +16,7 @@
 /*           29. 8.1998 Abfrage Id per headerid-Modul                        */
 /*            3. 1.1999 ChkPC-Anpassung                                      */
 /*           23. 1.1999 Unsauberkeit in Zuweisung (-1 an unsigned) beseitigt */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -81,7 +82,7 @@ typedef struct
          } MemOrder;
 
 typedef struct
-	 {
+         {
           char *Name;
           LongWord Code;
          } SpecReg;
@@ -99,7 +100,7 @@ static TSwitchProc SaveInitProc;
 
 /*--------------------------------------------------------------------------*/
 
-	static Boolean ChkAdr(int AMode, Byte Mask, LongWord *Erg, LongWord *Mode)
+        static Boolean ChkAdr(int AMode, Byte Mask, LongWord *Erg, LongWord *Mode)
 BEGIN
    if ((Mask & (1<<AMode))==0)
     BEGIN
@@ -111,7 +112,7 @@ BEGIN
     END
 END
 
-	static Boolean DecodeIReg(char *Asc, LongWord *Erg)
+        static Boolean DecodeIReg(char *Asc, LongWord *Erg)
 BEGIN
    int z;
    char *end;
@@ -135,7 +136,7 @@ BEGIN
    return False;
 END
 
-	static Boolean DecodeAdr(char *Asc, Byte Mask, OpType Type, LongWord *Erg, LongWord *Mode)
+        static Boolean DecodeAdr(char *Asc, Byte Mask, OpType Type, LongWord *Erg, LongWord *Mode)
 BEGIN
    char *end;
    Double FVal;
@@ -183,17 +184,17 @@ END
 #define NOREG 33
 #define IPREG 32
 
-	static int AddrError(int Num)
+        static int AddrError(int Num)
 BEGIN
    WrError(Num); return -1;
 END
 
-	static int AddrXError(int Num, char *Param)
+        static int AddrXError(int Num, char *Param)
 BEGIN
    WrXError(Num,Param); return -1;
 END
 
-	static int DecodeMem(char *Asc, LongWord *Erg, LongWord *Ext)
+        static int DecodeMem(char *Asc, LongWord *Erg, LongWord *Ext)
 BEGIN
    LongInt DispAcc;
    LongWord Base,Index,Scale,Mode;
@@ -280,7 +281,7 @@ END
 
 /*--------------------------------------------------------------------------*/
 
-	static void DecodeFixed(Word Index)
+        static void DecodeFixed(Word Index)
 BEGIN
    FixedOrder *Op=FixedOrders+Index;
    
@@ -292,7 +293,7 @@ BEGIN
     END
 END
 
-	static void DecodeReg(Word Index)
+        static void DecodeReg(Word Index)
 BEGIN
    RegOrder *Op=RegOrders+Index;
    LongWord DReg=0,DMode=0;
@@ -319,7 +320,7 @@ BEGIN
       END
 END
 
-	static void DecodeCobr(Word Index)
+        static void DecodeCobr(Word Index)
 BEGIN
    CobrOrder *Op=CobrOrders+Index;
    LongWord S1Reg,S1Mode;
@@ -336,18 +337,20 @@ BEGIN
       else AdrInt=0;
       if (FirstPassUnknown) AdrInt &= (~3);
       if (OK)
-       if ((AdrInt&3)!=0) WrError(1325);
-       else if ((NOT SymbolQuestionable) AND ((AdrInt<-4096) OR (AdrInt>4090))) WrError(1370);
-       else
-        BEGIN
-         DAsmCode[0]= (Op->Code<<24) + (S1Reg<<19) + (S2Reg<<14) + (S1Mode<<13)
-                    + (AdrInt & 0x1ffc);
-         CodeLen=4;
-        END
+       BEGIN
+        if ((AdrInt&3)!=0) WrError(1325);
+        else if ((NOT SymbolQuestionable) AND ((AdrInt<-4096) OR (AdrInt>4090))) WrError(1370);
+        else
+         BEGIN
+          DAsmCode[0]= (Op->Code<<24) + (S1Reg<<19) + (S2Reg<<14) + (S1Mode<<13)
+                     + (AdrInt & 0x1ffc);
+          CodeLen=4;
+         END
+       END
      END
 END
 
-	static void DecodeCtrl(Word Index)
+        static void DecodeCtrl(Word Index)
 BEGIN
    FixedOrder *Op=CtrlOrders+Index;
    LongInt AdrInt;
@@ -360,17 +363,19 @@ BEGIN
      AdrInt=EvalIntExpression(ArgStr[1],UInt32,&OK)-EProgCounter();
      if (FirstPassUnknown) AdrInt &= (~3);
      if (OK)
-      if ((AdrInt&3)!=0) WrError(1325);
-      else if ((NOT SymbolQuestionable) AND ((AdrInt<-8388608) OR (AdrInt>8388604))) WrError(1370);
-      else
-       BEGIN
-        DAsmCode[0]=(Op->Code<<24)+(AdrInt & 0xfffffc);
-        CodeLen=4;
-       END
+      BEGIN
+       if ((AdrInt&3)!=0) WrError(1325);
+       else if ((NOT SymbolQuestionable) AND ((AdrInt<-8388608) OR (AdrInt>8388604))) WrError(1370);
+       else
+        BEGIN
+         DAsmCode[0]=(Op->Code<<24)+(AdrInt & 0xfffffc);
+         CodeLen=4;
+        END
+      END
     END
 END
 
-	static void DecodeMemO(Word Index)
+        static void DecodeMemO(Word Index)
 BEGIN
    MemOrder *Op=MemOrders+Index;
    LongWord Reg=0,Mem;
@@ -387,7 +392,7 @@ BEGIN
     END
 END
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
    int z;
    Boolean OK;
@@ -418,11 +423,11 @@ BEGIN
        Size=EvalIntExpression(ArgStr[1],Int16,&OK);
        if (FirstPassUnknown) WrError(1820);
        if ((OK) AND (NOT FirstPassUnknown))
-	BEGIN
-	 DontPrint=True;
-	 CodeLen=Size;
-	 BookKeeping();
-	END
+        BEGIN
+         DontPrint=True;
+         CodeLen=Size;
+         BookKeeping();
+        END
       END
      return True;
     END
@@ -432,7 +437,7 @@ END
 
 /*--------------------------------------------------------------------------*/
 
-	static void MakeCode_960(void)
+        static void MakeCode_960(void)
 BEGIN
    CodeLen=0; DontPrint=False;
 
@@ -463,14 +468,14 @@ END
 
 static int InstrZ;
 
-	static void AddFixed(char *NName, LongWord NCode)
+        static void AddFixed(char *NName, LongWord NCode)
 BEGIN
    if (InstrZ>=FixedOrderCnt) exit(255);
    FixedOrders[InstrZ].Code=NCode;
    AddInstTable(InstTable,NName,InstrZ++,DecodeFixed);
 END
 
-	static void AddReg(char *NName, LongWord NCode,
+        static void AddReg(char *NName, LongWord NCode,
                            OpType NSrc1, OpType NSrc2, OpType NDest,
                            Boolean NImm1, Boolean NImm2)
 BEGIN
@@ -484,7 +489,7 @@ BEGIN
    AddInstTable(InstTable,NName,InstrZ++,DecodeReg);
 END
 
-	static void AddCobr(char *NName, LongWord NCode, Boolean NHas)
+        static void AddCobr(char *NName, LongWord NCode, Boolean NHas)
 BEGIN
    if (InstrZ>=CobrOrderCnt) exit(255);
    CobrOrders[InstrZ].Code=NCode;
@@ -492,14 +497,14 @@ BEGIN
    AddInstTable(InstTable,NName,InstrZ++,DecodeCobr);
 END
 
-	static void AddCtrl(char *NName, LongWord NCode)
+        static void AddCtrl(char *NName, LongWord NCode)
 BEGIN
    if (InstrZ>=CtrlOrderCnt) exit(255);
    CtrlOrders[InstrZ].Code=NCode;
    AddInstTable(InstTable,NName,InstrZ++,DecodeCtrl);
 END
 
-	static void AddMem(char *NName, LongWord NCode, OpType NType, int NPos)
+        static void AddMem(char *NName, LongWord NCode, OpType NType, int NPos)
 BEGIN
    if (InstrZ>=MemOrderCnt) exit(255);
    MemOrders[InstrZ].Code=NCode;
@@ -508,14 +513,14 @@ BEGIN
    AddInstTable(InstTable,NName,InstrZ++,DecodeMemO);
 END
 
-	static void AddSpecReg(char *NName, LongWord NCode)
+        static void AddSpecReg(char *NName, LongWord NCode)
 BEGIN
    if (InstrZ>=SpecRegCnt) exit(255);
    SpecRegs[InstrZ].Code=NCode;
    SpecRegs[InstrZ++].Name=NName;
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    InstTable=CreateInstTable(301);
    
@@ -704,7 +709,7 @@ BEGIN
    AddSpecReg("SP" , 1); AddSpecReg("RIP", 2);
 END
 
-	static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    DestroyInstTable(InstTable);
    free(FixedOrders);
@@ -728,12 +733,12 @@ BEGIN
    SetFlag(&FPUAvail,FPUAvailName,False);
 END
 
-	static void SwitchFrom_960(void)
+        static void SwitchFrom_960(void)
 BEGIN
    DeinitFields(); ClearONOFF();
 END
 
-	static void SwitchTo_960(void)
+        static void SwitchTo_960(void)
 BEGIN
    PFamilyDescr FoundId;
 
@@ -759,7 +764,7 @@ BEGIN
    InitFields();
 END
 
-	void code960_init(void)
+        void code960_init(void)
 BEGIN
    CPU80960=AddCPU("80960",SwitchTo_960);
    

@@ -5,6 +5,9 @@
 /* Bearbeitung von AS-P-Dateien                                              */
 /*                                                                           */
 /* Historie:  1. 6.1996 Grundsteinlegung                                     */
+/*            9. 1.2000 plattformabhaengige Formatstrings benutzen           */
+/*           24. 3.2000 added symbolic string for byte message               */
+/*            4. 7.2000 renamed ParProcessed to ParUnprocessed               */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -27,7 +30,7 @@
 static char *Creator="BIND/C 1.41r6";
 
 
-static CMDProcessed ParProcessed;
+static CMDProcessed ParUnprocessed;
 
 static FILE *TargFile;
 static String TargName;
@@ -54,7 +57,7 @@ BEGIN
 #define BufferSize 8192
    FILE *SrcFile;
    Word TestID;
-   Byte InpHeader,InpSegment,InpGran;
+   Byte InpHeader, InpCPU, InpSegment, InpGran;
    LongInt InpStart,SumLen;
    Word InpLen,TransLen;
    Boolean doit;
@@ -72,14 +75,16 @@ BEGIN
 
    do
     BEGIN
-     ReadRecordHeader(&InpHeader,&InpSegment,&InpGran,FileName,SrcFile);
-     if (InpHeader==FileHeaderStartAdr)
+     ReadRecordHeader(&InpHeader, &InpCPU, &InpSegment, &InpGran, FileName, SrcFile);
+
+     if (InpHeader == FileHeaderStartAdr)
       BEGIN
        if (NOT Read4(SrcFile,&InpStart)) ChkIO(FileName);
-       WriteRecordHeader(&InpHeader,&InpSegment,&InpGran,TargName,TargFile);
+       WriteRecordHeader(&InpHeader, &InpCPU, &InpSegment, &InpGran, TargName, TargFile);
        if (NOT Write4(TargFile,&InpStart)) ChkIO(TargName);
       END
-     else if (InpHeader!=FileHeaderEnd)
+
+     else if (InpHeader == FileHeaderDataRec)
       BEGIN
        if (NOT Read4(SrcFile,&InpStart)) ChkIO(FileName);
        if (NOT Read2(SrcFile,&InpLen)) ChkIO(FileName);
@@ -87,12 +92,12 @@ BEGIN
        if (ftell(SrcFile)+InpLen>=FileSize(SrcFile)-1)
         FormatError(FileName,getmessage(Num_FormatInvRecordLenMsg));
 
-       doit=FilterOK(InpHeader);
+       doit=FilterOK(InpCPU);
 
        if (doit)
         BEGIN
 	 SumLen+=InpLen;
-         WriteRecordHeader(&InpHeader,&InpSegment,&InpGran,TargName,TargFile);
+         WriteRecordHeader(&InpHeader, &InpCPU, &InpSegment, &InpGran, TargName, TargFile);
 	 if (NOT Write4(TargFile,&InpStart)) ChkIO(TargName);
 	 if (NOT Write2(TargFile,&InpLen)) ChkIO(TargName);
 	 while (InpLen>0)
@@ -108,10 +113,14 @@ BEGIN
          if (fseek(SrcFile,InpLen,SEEK_CUR)==-1) ChkIO(FileName);
         END
       END
+     else
+      SkipRecord(InpHeader, FileName, SrcFile);
     END 
    while (InpHeader!=FileHeaderEnd);
 
-   errno=0; printf("  (%d Byte",SumLen); ChkIO(OutName);
+   errno = 0; printf("  ("); ChkIO(OutName);
+   errno = 0; printf(Integ32Format, SumLen); ChkIO(OutName);
+   errno = 0; printf(" %s)\n", getmessage((SumLen == 1) ? Num_Byte : Num_Bytes)); ChkIO(OutName);
 
    if (fclose(SrcFile)==EOF) ChkIO(FileName);
 END
@@ -155,10 +164,10 @@ BEGIN
      exit(1);
     END
 
-   ProcessCMD(BINDParams,BINDParamCnt,ParProcessed,"BINDCMD",ParamError);
+   ProcessCMD(BINDParams,BINDParamCnt,ParUnprocessed,"BINDCMD",ParamError);
 
    z=ParamCount;
-   while ((z>0) AND (NOT ParProcessed[z])) z--;
+   while ((z>0) AND (NOT ParUnprocessed[z])) z--;
    if (z==0)
     BEGIN
      errno=0; printf("%s\n",getmessage(Num_ErrMsgTargetMissing));
@@ -167,14 +176,14 @@ BEGIN
     END
    else
     BEGIN
-     strmaxcpy(TargName,ParamStr[z],255); ParProcessed[z]=False;
+     strmaxcpy(TargName,ParamStr[z],255); ParUnprocessed[z]=False;
      AddSuffix(TargName,getmessage(Num_Suffix));
     END
 
    OpenTarget();
 
    for (z=1; z<=ParamCount; z++)
-    if (ParProcessed[z]) DirScan(ParamStr[z],ProcessFile);
+    if (ParUnprocessed[z]) DirScan(ParamStr[z],ProcessFile);
 
    CloseTarget();
 

@@ -9,6 +9,7 @@
 /*            3. 1.1999 ChkPC-Anpassung                                      */
 /*           23. 1.1999 DecodeCtrlReg jetzt mit unsigned-Ergebnis            */
 /*           30. 1.1999 Formate maschinenunabhaengig gemacht                 */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -112,7 +113,7 @@ PInstTable InstTable;
 
 /*-------------------------------------------------------------------------*/
 
-	static Boolean CheckOpt(char *Asc)
+        static Boolean CheckOpt(char *Asc)
 BEGIN
    Boolean Flag,erg=True;
    int l=strlen(Asc);
@@ -132,8 +133,10 @@ BEGIN
       if ((Asc[1]>='1') AND (Asc[1]<='2')) Condition+=(Asc[1]-'0'+3) << 1;
       else Flag=False;
      else if (toupper(*Asc)=='B')
-      if ((Asc[1]>='0') AND (Asc[1]<='2')) Condition+=(Asc[1]-'0'+1) << 1;
-      else Flag=False;
+      BEGIN
+       if ((Asc[1]>='0') AND (Asc[1]<='2')) Condition+=(Asc[1]-'0'+1) << 1;
+       else Flag=False;
+      END
      if (NOT Flag) WrXError(1445,Asc); erg=Flag;
     END
    else erg=False;
@@ -141,7 +144,7 @@ BEGIN
    return erg;
 END
 
-	static Boolean ReiterateOpPart(void)
+        static Boolean ReiterateOpPart(void)
 BEGIN
    char *p;
    int z;
@@ -177,7 +180,7 @@ END
 
 /*-------------------------------------------------------------------------*/
 
-	static void AddSrc(LongWord Reg)
+        static void AddSrc(LongWord Reg)
 BEGIN
    LongWord Mask=1 << Reg;
 
@@ -185,18 +188,18 @@ BEGIN
    else ThisSrc2|=Mask;
 END
 
-	static void AddLSrc(LongWord Reg)
+        static void AddLSrc(LongWord Reg)
 BEGIN
    AddSrc(Reg); AddSrc(Reg+1);
    ThisLong|=1;
 END
 
-	static void AddDest(LongWord Reg)
+        static void AddDest(LongWord Reg)
 BEGIN
    ThisDest|=(1 << Reg);
 END
 
-	static void AddLDest(LongWord Reg)
+        static void AddLDest(LongWord Reg)
 BEGIN
    ThisDest|=(3 << Reg);
    ThisLong|=2;
@@ -214,7 +217,7 @@ BEGIN
    return z;
 END
 
-	static char *RegName(LongInt Num)
+        static char *RegName(LongInt Num)
 BEGIN
    static char s[5];
 
@@ -223,7 +226,7 @@ BEGIN
    return s;
 END
 
-	static Boolean DecodeSReg(char *Asc, LongWord *Reg, Boolean Quarrel)
+        static Boolean DecodeSReg(char *Asc, LongWord *Reg, Boolean Quarrel)
 BEGIN
    char *end;
    Byte RVal;
@@ -244,7 +247,7 @@ BEGIN
    return TFlag;
 END
 
-	static Boolean DecodeReg(char *Asc, LongWord *Reg, Boolean *PFlag, Boolean Quarrel)
+        static Boolean DecodeReg(char *Asc, LongWord *Reg, Boolean *PFlag, Boolean Quarrel)
 BEGIN
    char *p;
    LongWord NextReg;
@@ -267,7 +270,7 @@ BEGIN
     END
 END
 
-	static Boolean DecodeCtrlReg(char *Asc, LongWord *Erg, Boolean Write)
+        static Boolean DecodeCtrlReg(char *Asc, LongWord *Erg, Boolean Write)
 BEGIN
    int z;
 
@@ -283,7 +286,7 @@ END
 /* Was bedeutet das r-Feld im Adressoperanden mit kurzem Offset ???
    und wie ist das genau mit der Skalierung gemeint ??? */
 
-	static Boolean DecodeMem(char *Asc, LongWord *Erg, LongWord Scale)
+        static Boolean DecodeMem(char *Asc, LongWord *Erg, LongWord Scale)
 BEGIN
    String RegPart,DispPart;
    LongInt DispAcc,Mode;
@@ -416,7 +419,7 @@ BEGIN
    return False;
 END
 
-	static Boolean DecodeAdr(char *Asc, Byte Mask, Boolean Signed, LongWord *AdrVal)
+        static Boolean DecodeAdr(char *Asc, Byte Mask, Boolean Signed, LongWord *AdrVal)
 BEGIN
    Boolean OK;
 
@@ -440,7 +443,7 @@ BEGIN
    else return True;
 END
 
-	static Boolean ChkUnit(LongWord Reg, TUnit U1, TUnit U2)
+        static Boolean ChkUnit(LongWord Reg, TUnit U1, TUnit U2)
 BEGIN
    UnitFlag=Ord(Reg>15);
    if (ThisUnit==NoUnit)
@@ -455,7 +458,7 @@ BEGIN
     END
 END
 
-	static TUnit UnitCode(char c)
+        static TUnit UnitCode(char c)
 BEGIN
    switch (c)
     BEGIN
@@ -467,7 +470,7 @@ BEGIN
    END
 END
 
-	static Boolean UnitUsed(TUnit TestUnit)
+        static Boolean UnitUsed(TUnit TestUnit)
 BEGIN
    Integer z;
 
@@ -477,7 +480,7 @@ BEGIN
    return False;
 END
 
-	static Boolean IsCross(LongWord Reg)
+        static Boolean IsCross(LongWord Reg)
 BEGIN
    return (Reg >> 4)!=UnitFlag;
 END
@@ -487,7 +490,7 @@ BEGIN
    ThisCross=((Reg >> 4)!=UnitFlag);
 END
 
-	static Boolean DecideUnit(LongWord Reg, char *Units)
+        static Boolean DecideUnit(LongWord Reg, char *Units)
 BEGIN
    Integer z;
    TUnit TestUnit;
@@ -516,41 +519,41 @@ BEGIN
    else return True;
 END
 
-	static void SwapReg(LongWord *r1, LongWord *r2)
+        static void SwapReg(LongWord *r1, LongWord *r2)
 BEGIN
    LongWord tmp;
 
    tmp=(*r1); *r1=(*r2); *r2=tmp;
 END
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
    return False;
 END
 
 
-	static Boolean CodeL(LongWord OpCode,LongWord Dest,LongWord Src1,LongWord Src2)
+        static Boolean CodeL(LongWord OpCode,LongWord Dest,LongWord Src1,LongWord Src2)
 BEGIN
    ThisInst=0x18+(OpCode << 5)+(UnitFlag << 1)+(Ord(ThisCross) << 12)
                 +(Dest << 23)+(Src2 << 18)+(Src1 << 13);
    return True;
 END
 
-	static Boolean CodeM(LongWord OpCode, LongWord Dest, LongWord Src1, LongWord Src2)
+        static Boolean CodeM(LongWord OpCode, LongWord Dest, LongWord Src1, LongWord Src2)
 BEGIN
    ThisInst=0x00+(OpCode << 7)+(UnitFlag << 1)+(Ord(ThisCross) << 12)
                 +(Dest << 23)+(Src2 << 18)+(Src1 << 13);
    return True;
 END
 
-	static Boolean CodeS(LongWord OpCode, LongWord Dest, LongWord Src1, LongWord Src2)
+        static Boolean CodeS(LongWord OpCode, LongWord Dest, LongWord Src1, LongWord Src2)
 BEGIN
    ThisInst=0x20+(OpCode << 6)+(UnitFlag << 1)+(Ord(ThisCross) << 12)
                 +(Dest << 23)+(Src2 << 18)+(Src1 << 13);
    return True;
 END
 
-	static Boolean CodeD(LongWord OpCode, LongWord Dest, LongWord Src1, LongWord Src2)
+        static Boolean CodeD(LongWord OpCode, LongWord Dest, LongWord Src1, LongWord Src2)
 BEGIN
    ThisInst=0x40+(OpCode << 7)+(UnitFlag << 1)
                 +(Dest << 23)+(Src2 << 18)+(Src1 << 13);
@@ -561,7 +564,7 @@ END
 
 static Boolean __erg;
 
-	static void DecodeIDLE(Word Index)
+        static void DecodeIDLE(Word Index)
 BEGIN
    if (ArgCnt!=0) WrError(1110);
    else if ((ThisCross) OR (ThisUnit!=NoUnit)) WrError(1107);
@@ -571,7 +574,7 @@ BEGIN
     END
 END
 
-	static void DecodeNOP(Word Index)
+        static void DecodeNOP(Word Index)
 BEGIN
    LongInt Count;
    Boolean OK;
@@ -598,7 +601,7 @@ BEGIN
     END
 END
 
-	static void DecodeMul(Word Index)
+        static void DecodeMul(Word Index)
 BEGIN
    LongWord DReg,S1Reg,S2Reg;
    MulOrder *POrder=MulOrders+Index;
@@ -637,7 +640,7 @@ BEGIN
     END
 END
 
-	static void DecodeMemO(Word Index)
+        static void DecodeMemO(Word Index)
 BEGIN
    LongWord DReg,S1Reg;
    MemOrder *POrder=MemOrders+Index;
@@ -660,8 +663,10 @@ BEGIN
        /* Zielregister 4 Takte verzoegert, nicht als Dest eintragen */
        OK=DecodeMem(ArgStr[1],&S1Reg,POrder->Scale);
        if (OK)
-        if ((S1Reg & 8)==0) OK=ChkUnit((S1Reg >> 18) & 31,D1,D2);
-        else OK=ChkUnit(0x1e,D1,D2);
+        BEGIN
+         if ((S1Reg & 8)==0) OK=ChkUnit((S1Reg >> 18) & 31,D1,D2);
+         else OK=ChkUnit(0x1e,D1,D2);
+        END
        if (OK)
         BEGIN
          ThisInst=S1Reg+(DReg << 23)+(POrder->Code << 4)
@@ -672,7 +677,7 @@ BEGIN
     END
 END
 
-	static void DecodeSTP(Word Index)
+        static void DecodeSTP(Word Index)
 BEGIN
    LongWord S2Reg;
 
@@ -680,16 +685,18 @@ BEGIN
    else if (ChkUnit(0x10,S1,S2))
     BEGIN
      if (DecodeAdr(ArgStr[1],MModReg,False,&S2Reg))
-      if ((ThisCross) OR (S2Reg<16)) WrError(1110);
-      else
-       BEGIN
-        AddSrc(S2Reg);
-        __erg=CodeS(0x0c,0,0,S2Reg);
-       END
+      BEGIN
+       if ((ThisCross) OR (S2Reg<16)) WrError(1110);
+       else
+        BEGIN
+         AddSrc(S2Reg);
+         __erg=CodeS(0x0c,0,0,S2Reg);
+        END
+      END
     END
 END
 
-	static void DecodeABS(Word Index)
+        static void DecodeABS(Word Index)
 BEGIN
    Boolean DPFlag,S1Flag;
    LongWord DReg,S1Reg;
@@ -698,19 +705,21 @@ BEGIN
    else if (DecodeReg(ArgStr[2],&DReg,&DPFlag,True))
     if (ChkUnit(DReg,L1,L2))
      if (DecodeReg(ArgStr[1],&S1Reg,&S1Flag,True))
-      if (DPFlag!=S1Flag) WrError(1350);
-      else if ((ThisCross) AND ((S1Reg >> 4)==UnitFlag)) WrError(1350);
-      else
-       BEGIN
-        SetCross(S1Reg);
-        if (DPFlag) __erg=CodeL(0x38,DReg,0,S1Reg);
-        else __erg=CodeL(0x1a,DReg,0,S1Reg);
-        if (DPFlag) AddLSrc(S1Reg); else AddSrc(S1Reg);
-        if (DPFlag) AddLDest(DReg); else AddDest(DReg);
-       END
+      BEGIN
+       if (DPFlag!=S1Flag) WrError(1350);
+       else if ((ThisCross) AND ((S1Reg >> 4)==UnitFlag)) WrError(1350);
+       else
+        BEGIN
+         SetCross(S1Reg);
+         if (DPFlag) __erg=CodeL(0x38,DReg,0,S1Reg);
+         else __erg=CodeL(0x1a,DReg,0,S1Reg);
+         if (DPFlag) AddLSrc(S1Reg); else AddSrc(S1Reg);
+         if (DPFlag) AddLDest(DReg); else AddDest(DReg);
+        END
+      END
 END
 
-	static void DecodeADD(Word Index)
+        static void DecodeADD(Word Index)
 BEGIN
    LongWord S1Reg,S2Reg,DReg;
    Boolean OK;
@@ -734,26 +743,30 @@ BEGIN
             BEGIN
              case ModReg: /* ADD int,int,long */
               if (ChkUnit(DReg,L1,L2))
-               if ((ThisCross) AND (NOT IsCross(S1Reg)) AND (NOT IsCross(S2Reg))) WrError(1350);
-               else if ((IsCross(S1Reg)) AND (IsCross(S2Reg))) WrError(1350);
-               else
-                BEGIN
-                 AddSrc(S2Reg);
-                 if (IsCross(S1Reg)) SwapReg(&S1Reg,&S2Reg);
-                 SetCross(S2Reg);
-                 __erg=CodeL(0x23,DReg,S1Reg,S2Reg);
-                END
+               BEGIN
+                if ((ThisCross) AND (NOT IsCross(S1Reg)) AND (NOT IsCross(S2Reg))) WrError(1350);
+                else if ((IsCross(S1Reg)) AND (IsCross(S2Reg))) WrError(1350);
+                else
+                 BEGIN
+                  AddSrc(S2Reg);
+                  if (IsCross(S1Reg)) SwapReg(&S1Reg,&S2Reg);
+                  SetCross(S2Reg);
+                  __erg=CodeL(0x23,DReg,S1Reg,S2Reg);
+                 END
+               END
               break;
              case ModLReg:/* ADD int,long,long */
               if (ChkUnit(DReg,L1,L2))
-               if (IsCross(S2Reg)) WrError(1350);
-               else if ((ThisCross) AND (NOT IsCross(S1Reg))) WrError(1350);
-               else
-                BEGIN
-                 AddLSrc(S2Reg);
-                 SetCross(S1Reg);
-                 __erg=CodeL(0x21,DReg,S1Reg,S2Reg);
-                END
+               BEGIN
+                if (IsCross(S2Reg)) WrError(1350);
+                else if ((ThisCross) AND (NOT IsCross(S1Reg))) WrError(1350);
+                else
+                 BEGIN
+                  AddLSrc(S2Reg);
+                  SetCross(S1Reg);
+                  __erg=CodeL(0x21,DReg,S1Reg,S2Reg);
+                 END
+               END
               break;
             END
            break;
@@ -764,20 +777,24 @@ BEGIN
             BEGIN
              case ModReg: /* ADD long,int,long */
               if (ChkUnit(DReg,L1,L2))
-               if (IsCross(S1Reg)) WrError(1350);
-               else if ((ThisCross) AND (NOT IsCross(S2Reg))) WrError(1350);
-               else
-                BEGIN
-                 AddSrc(S2Reg);
-                 SetCross(S2Reg);
-                 __erg=CodeL(0x21,DReg,S2Reg,S1Reg);
-                END
+               BEGIN
+                if (IsCross(S1Reg)) WrError(1350);
+                else if ((ThisCross) AND (NOT IsCross(S2Reg))) WrError(1350);
+                else
+                 BEGIN
+                  AddSrc(S2Reg);
+                  SetCross(S2Reg);
+                  __erg=CodeL(0x21,DReg,S2Reg,S1Reg);
+                 END
+               END
               break;
              case ModImm: /* ADD long,imm,long */
               if (ChkUnit(DReg,L1,L2))
-               if (IsCross(S1Reg)) WrError(1350);
-               else if (ThisCross) WrError(1350);
-               else __erg=CodeL(0x20,DReg,S2Reg,S1Reg);
+               BEGIN
+                if (IsCross(S1Reg)) WrError(1350);
+                else if (ThisCross) WrError(1350);
+                else __erg=CodeL(0x20,DReg,S2Reg,S1Reg);
+               END
               break;
             END
            break;
@@ -785,13 +802,15 @@ BEGIN
            if (DecodeAdr(ArgStr[2],MModLReg,True,&S2Reg))
             BEGIN         /* ADD imm,long,long */
              if (ChkUnit(DReg,L1,L2))
-              if (IsCross(S2Reg)) WrError(1350);
-              else if (ThisCross) WrError(1350);
-              else
-               BEGIN
-                AddLSrc(S2Reg);
-                __erg=CodeL(0x20,DReg,S1Reg,S2Reg);
-               END
+              BEGIN
+               if (IsCross(S2Reg)) WrError(1350);
+               else if (ThisCross) WrError(1350);
+               else
+                BEGIN
+                 AddLSrc(S2Reg);
+                 __erg=CodeL(0x20,DReg,S1Reg,S2Reg);
+                END
+              END
             END
            break;
          END
@@ -866,7 +885,7 @@ BEGIN
     END
 END
 
-	static void DecodeADDU(Word Index)
+        static void DecodeADDU(Word Index)
 BEGIN
    LongWord DReg,S1Reg,S2Reg;
 
@@ -894,12 +913,14 @@ BEGIN
              break;
             case ModImm: /* ADDU imm,?,int */
              if (DecodeAdr(ArgStr[2],MModReg,False,&S2Reg))
-              if (IsCross(S2Reg)) WrError(1350);
-              else
-               BEGIN
-                AddSrc(S2Reg);
-                __erg=CodeD(0x12,DReg,S1Reg,S2Reg);
-               END
+              BEGIN
+               if (IsCross(S2Reg)) WrError(1350);
+               else
+                BEGIN
+                 AddSrc(S2Reg);
+                 __erg=CodeD(0x12,DReg,S1Reg,S2Reg);
+                END
+              END
              break;
            END
          END
@@ -944,12 +965,14 @@ BEGIN
               BEGIN
                AddLSrc(S1Reg);
                if (DecodeAdr(ArgStr[2],MModReg,False,&S2Reg))
-                if ((ThisCross) AND ((S2Reg^DReg)<16)) WrError(1350);
-                else
-                 BEGIN
-                  AddSrc(S2Reg); SetCross(S2Reg);
-                  __erg=CodeL(0x29,DReg,S2Reg,S1Reg);
-                 END
+                BEGIN
+                 if ((ThisCross) AND ((S2Reg^DReg)<16)) WrError(1350);
+                 else
+                  BEGIN
+                   AddSrc(S2Reg); SetCross(S2Reg);
+                   __erg=CodeL(0x29,DReg,S2Reg,S1Reg);
+                  END
+                END
               END
              break;
            END
@@ -959,7 +982,7 @@ BEGIN
     END
 END
 
-	static void DecodeSUB(Word Index)
+        static void DecodeSUB(Word Index)
 BEGIN
    LongWord DReg,S1Reg,S2Reg;
    Boolean OK;
@@ -1010,25 +1033,29 @@ BEGIN
               break;
              case ModImm:
               if (ChkUnit(DReg,D1,D2))
-               if ((ThisCross) OR ((S1Reg^DReg)>15)) WrError(1350);
-               else __erg=CodeD(0x13,DReg,S2Reg,S1Reg);
+               BEGIN
+                if ((ThisCross) OR ((S1Reg^DReg)>15)) WrError(1350);
+                else __erg=CodeD(0x13,DReg,S2Reg,S1Reg);
+               END
               break;
             END
            break;
           case ModImm:
            if (DecodeAdr(ArgStr[2],MModReg,True,&S2Reg))
-            if ((ThisCross) AND ((S2Reg^DReg)<16)) WrError(1350);
-            else
-             BEGIN
-              AddSrc(S2Reg);
-              if (DecideUnit(DReg,"LS"))
-               switch (ThisUnit)
-                BEGIN
-                 case L1: case L2: __erg=CodeL(0x06,DReg,S1Reg,S2Reg); break;
-                 case S1: case S2: __erg=CodeS(0x16,DReg,S1Reg,S2Reg); break;
-                 default: WrError(20000);
-                END
-             END
+            BEGIN
+             if ((ThisCross) AND ((S2Reg^DReg)<16)) WrError(1350);
+             else
+              BEGIN
+               AddSrc(S2Reg);
+               if (DecideUnit(DReg,"LS"))
+                switch (ThisUnit)
+                 BEGIN
+                  case L1: case L2: __erg=CodeL(0x06,DReg,S1Reg,S2Reg); break;
+                  case S1: case S2: __erg=CodeS(0x16,DReg,S1Reg,S2Reg); break;
+                  default: WrError(20000);
+                 END
+              END
+            END
            break;
          END
         break;
@@ -1041,25 +1068,29 @@ BEGIN
            BEGIN
             case ModImm:
              if (DecodeAdr(ArgStr[2],MModLReg,True,&S2Reg))
-              if ((ThisCross) OR (NOT IsCross(S2Reg))) WrError(1350);
-              else
-               BEGIN
-                AddLSrc(S2Reg);
-                __erg=CodeL(0x24,DReg,S1Reg,S2Reg);
-               END
+              BEGIN
+               if ((ThisCross) OR (NOT IsCross(S2Reg))) WrError(1350);
+               else
+                BEGIN
+                 AddLSrc(S2Reg);
+                 __erg=CodeL(0x24,DReg,S1Reg,S2Reg);
+                END
+              END
              break;
             case ModReg:
              AddSrc(S1Reg);
              if (DecodeAdr(ArgStr[2],MModReg,True,&S2Reg))
-              if ((ThisCross) AND (NOT IsCross(S1Reg)) AND (NOT IsCross(S2Reg))) WrError(1350);
-              else if ((IsCross(S1Reg)) AND (IsCross(S2Reg))) WrError(1350);
-              else
-               BEGIN
-                AddSrc(S2Reg);
-                ThisCross=(IsCross(S1Reg)) OR (IsCross(S2Reg));
-                if (IsCross(S1Reg)) __erg=CodeL(0x37,DReg,S1Reg,S2Reg);
-                else __erg=CodeL(0x47,DReg,S1Reg,S2Reg);
-               END
+              BEGIN
+               if ((ThisCross) AND (NOT IsCross(S1Reg)) AND (NOT IsCross(S2Reg))) WrError(1350);
+               else if ((IsCross(S1Reg)) AND (IsCross(S2Reg))) WrError(1350);
+               else
+                BEGIN
+                 AddSrc(S2Reg);
+                 ThisCross=(IsCross(S1Reg)) OR (IsCross(S2Reg));
+                 if (IsCross(S1Reg)) __erg=CodeL(0x37,DReg,S1Reg,S2Reg);
+                 else __erg=CodeL(0x47,DReg,S1Reg,S2Reg);
+                END
+              END
              break;
            END
          END
@@ -1068,7 +1099,7 @@ BEGIN
     END
 END
 
-	static void DecodeSUBU(Word Index)
+        static void DecodeSUBU(Word Index)
 BEGIN
    LongWord S1Reg,S2Reg,DReg;
 
@@ -1082,21 +1113,23 @@ BEGIN
         BEGIN
          AddSrc(S1Reg);
          if (DecodeAdr(ArgStr[2],MModReg,False,&S2Reg))
-          if ((ThisCross) AND (NOT IsCross(S1Reg)) AND (NOT IsCross(S2Reg))) WrError(1350);
-          else if ((IsCross(S1Reg)) AND (IsCross(S2Reg))) WrError(1350);
-          else
-           BEGIN
-            AddSrc(S2Reg);
-            ThisCross=IsCross(S1Reg) OR IsCross(S2Reg);
-            if (IsCross(S1Reg)) __erg=CodeL(0x3f,DReg,S1Reg,S2Reg);
-            else __erg=CodeL(0x2f,DReg,S1Reg,S2Reg);
-           END
+          BEGIN
+           if ((ThisCross) AND (NOT IsCross(S1Reg)) AND (NOT IsCross(S2Reg))) WrError(1350);
+           else if ((IsCross(S1Reg)) AND (IsCross(S2Reg))) WrError(1350);
+           else
+            BEGIN
+             AddSrc(S2Reg);
+             ThisCross=IsCross(S1Reg) OR IsCross(S2Reg);
+             if (IsCross(S1Reg)) __erg=CodeL(0x3f,DReg,S1Reg,S2Reg);
+             else __erg=CodeL(0x2f,DReg,S1Reg,S2Reg);
+            END
+          END
         END
       END
     END
 END
 
-	static void DecodeSUBC(Word Index)
+        static void DecodeSUBC(Word Index)
 BEGIN
    LongWord DReg,S1Reg,S2Reg;
 
@@ -1109,19 +1142,21 @@ BEGIN
        if (DecodeAdr(ArgStr[1],MModReg,False,&S1Reg))
         BEGIN
          if (DecodeAdr(ArgStr[2],MModReg,False,&S2Reg))
-          if ((ThisCross) AND (NOT IsCross(S2Reg))) WrError(1350);
-          else if (IsCross(S1Reg)) WrError(1350);
-          else
-           BEGIN
-            AddSrc(S2Reg); SetCross(S2Reg);
-            __erg=CodeL(0x4b,DReg,S1Reg,S2Reg);
-           END
+          BEGIN
+           if ((ThisCross) AND (NOT IsCross(S2Reg))) WrError(1350);
+           else if (IsCross(S1Reg)) WrError(1350);
+           else
+            BEGIN
+             AddSrc(S2Reg); SetCross(S2Reg);
+             __erg=CodeL(0x4b,DReg,S1Reg,S2Reg);
+            END
+          END
         END
       END
     END
 END
 
-	static void DecodeLinAdd(Word Index)
+        static void DecodeLinAdd(Word Index)
 BEGIN
    LongWord DReg,S1Reg,S2Reg;
    FixedOrder *POrder=LinAddOrders+Index;
@@ -1135,31 +1170,33 @@ BEGIN
        BEGIN
         AddDest(DReg);
         if (DecodeAdr(ArgStr[1],MModReg,True,&S2Reg))
-         if (IsCross(S2Reg)) WrError(1350);
-         else
-          BEGIN
-           AddSrc(S2Reg);
-           DecodeAdr(ArgStr[2],MModReg+MModImm,False,&S1Reg);
-           switch (AdrMode)
-            BEGIN
-             case ModReg:
-              if (IsCross(S1Reg)) WrError(1350);
-              else
-               BEGIN
-                AddSrc(S1Reg);
-                __erg=CodeD(POrder->Code,DReg,S1Reg,S2Reg);
-               END
-              break;
-             case ModImm:
-              __erg=CodeD(POrder->Code+2,DReg,S1Reg,S2Reg);
-              break;
-            END
-          END
+         BEGIN
+          if (IsCross(S2Reg)) WrError(1350);
+          else
+           BEGIN
+            AddSrc(S2Reg);
+            DecodeAdr(ArgStr[2],MModReg+MModImm,False,&S1Reg);
+            switch (AdrMode)
+             BEGIN
+              case ModReg:
+               if (IsCross(S1Reg)) WrError(1350);
+               else
+                BEGIN
+                 AddSrc(S1Reg);
+                 __erg=CodeD(POrder->Code,DReg,S1Reg,S2Reg);
+                END
+               break;
+              case ModImm:
+               __erg=CodeD(POrder->Code+2,DReg,S1Reg,S2Reg);
+               break;
+             END
+           END
+         END
        END
     END
 END
 
-	static void DecodeADDK(Word Index)
+        static void DecodeADDK(Word Index)
 BEGIN
    LongInt Value;
    LongWord DReg;
@@ -1182,7 +1219,7 @@ BEGIN
     END
 END
 
-	static void DecodeADD2_SUB2(Word Index)
+        static void DecodeADD2_SUB2(Word Index)
 BEGIN
    LongWord DReg,S1Reg,S2Reg;
    Boolean OK;
@@ -1199,29 +1236,33 @@ BEGIN
          BEGIN
           AddSrc(S1Reg);
           if (DecodeAdr(ArgStr[2],MModReg,True,&S2Reg))
-           if ((ThisCross) AND (NOT IsCross(S1Reg)) AND (NOT IsCross(S2Reg))) WrError(1350);
-           else if ((IsCross(S1Reg)) AND (IsCross(S2Reg))) WrError(1350);
-           else
-            BEGIN
-             OK=True; AddSrc(S2Reg);
-             if (IsCross(S1Reg))
-              if (Index>1)
+           BEGIN
+            if ((ThisCross) AND (NOT IsCross(S1Reg)) AND (NOT IsCross(S2Reg))) WrError(1350);
+            else if ((IsCross(S1Reg)) AND (IsCross(S2Reg))) WrError(1350);
+            else
+             BEGIN
+              OK=True; AddSrc(S2Reg);
+              if (IsCross(S1Reg))
                BEGIN
-                WrError(1350); OK=False;
+                if (Index>1)
+                 BEGIN
+                  WrError(1350); OK=False;
+                 END
+                else SwapReg(&S1Reg,&S2Reg);
                END
-              else SwapReg(&S1Reg,&S2Reg);
-             if (OK)
-              BEGIN
-               SetCross(S2Reg);
-               __erg=CodeS(Index,DReg,S1Reg,S2Reg);
-              END
-            END
+              if (OK)
+               BEGIN
+                SetCross(S2Reg);
+                __erg=CodeS(Index,DReg,S1Reg,S2Reg);
+               END
+             END
+           END
          END
        END
     END
 END
 
-	static void DecodeLogic(Word Index)
+        static void DecodeLogic(Word Index)
 BEGIN
    LongWord S1Reg,S2Reg,DReg;
    LongWord Code1,Code2;
@@ -1263,27 +1304,29 @@ BEGIN
         END
        if (OK)
         if (DecideUnit(DReg,"LS"))
-         if ((NOT WithImm) AND (IsCross(S1Reg)) AND (IsCross(S2Reg))) WrError(1350);
-         else if ((ThisCross) AND (NOT IsCross(S2Reg)) AND ((WithImm) OR (NOT IsCross(S1Reg)))) WrError(1350);
-         else
-          BEGIN
-           if ((NOT WithImm) AND (IsCross(S1Reg))) SwapReg(&S1Reg,&S2Reg);
-           SetCross(S2Reg);
-           switch (ThisUnit)
-            BEGIN
-             case L1: case L2:
-              __erg=CodeL(Code1-Ord(WithImm),DReg,S1Reg,S2Reg); break;
-             case S1: case S2:
-              __erg=CodeS(Code1-Ord(WithImm),DReg,S1Reg,S2Reg); break;
-             default:
-              WrError(20000);
-            END
-          END
+         BEGIN
+          if ((NOT WithImm) AND (IsCross(S1Reg)) AND (IsCross(S2Reg))) WrError(1350);
+          else if ((ThisCross) AND (NOT IsCross(S2Reg)) AND ((WithImm) OR (NOT IsCross(S1Reg)))) WrError(1350);
+          else
+           BEGIN
+            if ((NOT WithImm) AND (IsCross(S1Reg))) SwapReg(&S1Reg,&S2Reg);
+            SetCross(S2Reg);
+            switch (ThisUnit)
+             BEGIN
+              case L1: case L2:
+               __erg=CodeL(Code1-Ord(WithImm),DReg,S1Reg,S2Reg); break;
+              case S1: case S2:
+               __erg=CodeS(Code1-Ord(WithImm),DReg,S1Reg,S2Reg); break;
+              default:
+               WrError(20000);
+             END
+           END
+         END
       END
     END
 END
 
-	static Boolean DecodeInst(void)
+        static Boolean DecodeInst(void)
 BEGIN
    Boolean OK,erg;
    LongInt Dist;
@@ -1315,16 +1358,18 @@ BEGIN
             if (ArgCnt==3)
              BEGIN
               if (DecodeAdr(ArgStr[2],MModReg,False,&S1Reg))
-               if (IsCross(S1Reg)) WrError(1350);
-               else if ((ThisCross) AND (NOT IsCross(S2Reg))) WrError(1350);
-               else
-                BEGIN
-                 SetCross(S2Reg);
-                 if (Memo("CLR")) erg=CodeS(0x3f,DReg,S1Reg,S2Reg);
-                 else if (Memo("EXTU")) erg=CodeS(0x2b,DReg,S1Reg,S2Reg);
-                 else if (Memo("SET")) erg=CodeS(0x3b,DReg,S1Reg,S2Reg);
-                 else erg=CodeS(0x2f,DReg,S1Reg,S2Reg);
-                END
+               BEGIN
+                if (IsCross(S1Reg)) WrError(1350);
+                else if ((ThisCross) AND (NOT IsCross(S2Reg))) WrError(1350);
+                else
+                 BEGIN
+                  SetCross(S2Reg);
+                  if (Memo("CLR")) erg=CodeS(0x3f,DReg,S1Reg,S2Reg);
+                  else if (Memo("EXTU")) erg=CodeS(0x2b,DReg,S1Reg,S2Reg);
+                  else if (Memo("SET")) erg=CodeS(0x3b,DReg,S1Reg,S2Reg);
+                  else erg=CodeS(0x2f,DReg,S1Reg,S2Reg);
+                 END
+               END
              END
             else if ((ThisCross) OR (IsCross(S2Reg))) WrError(1350);
             else
@@ -1339,7 +1384,7 @@ BEGIN
                            (HReg << 8)+(UnitFlag << 1);
                   if (Memo("CLR")) ThisInst+=0xc8;
                   else if (Memo("SET")) ThisInst+=0x88;
-		  else if (Memo("EXT")) ThisInst+=0x48;
+                  else if (Memo("EXT")) ThisInst+=0x48;
                   else ThisInst+=0x08;
                   erg=True;
                  END
@@ -1430,16 +1475,18 @@ BEGIN
          BEGIN
           AddDest(DReg);
           if (DecodeAdr(ArgStr[2],MModReg,False,&S2Reg))
-           if ((ThisCross) AND (NOT IsCross(S2Reg))) WrError(1350);
-           else
-            BEGIN
-             SetCross(S2Reg);
-             if (DecodeAdr(ArgStr[1],MModImm+MModReg,False,&S1Reg))
-              BEGIN
-               if (AdrMode==ModReg) AddSrc(S1Reg);
-               erg=CodeL(0x6a+Ord(AdrMode==ModImm),DReg,S1Reg,S2Reg);
-              END
-            END
+           BEGIN
+            if ((ThisCross) AND (NOT IsCross(S2Reg))) WrError(1350);
+            else
+             BEGIN
+              SetCross(S2Reg);
+              if (DecodeAdr(ArgStr[1],MModImm+MModReg,False,&S1Reg))
+               BEGIN
+                if (AdrMode==ModReg) AddSrc(S1Reg);
+                erg=CodeL(0x6a+Ord(AdrMode==ModImm),DReg,S1Reg,S2Reg);
+               END
+             END
+           END
          END
       END
      return erg;
@@ -1520,12 +1567,14 @@ BEGIN
               break;
              case ModImm:
               if (DecodeAdr(ArgStr[2],MModReg,True,&S2Reg))
-               if ((ThisCross) AND (NOT IsCross(S2Reg))) WrError(1350);
-               else
-                BEGIN
-                 SetCross(S2Reg);
-                 erg=CodeL(0x12,DReg,S1Reg,S2Reg);
-                END
+               BEGIN
+                if ((ThisCross) AND (NOT IsCross(S2Reg))) WrError(1350);
+                else
+                 BEGIN
+                  SetCross(S2Reg);
+                  erg=CodeL(0x12,DReg,S1Reg,S2Reg);
+                 END
+               END
               break;
             END
            break;
@@ -1537,12 +1586,14 @@ BEGIN
              case ModReg:
               AddSrc(S1Reg);
               if (DecodeAdr(ArgStr[2],MModLReg,True,&S2Reg))
-               if ((ThisCross) AND (NOT IsCross(S1Reg))) WrError(1350);
-               else
-                BEGIN
-                 AddLSrc(S2Reg); SetCross(S1Reg);
-                 erg=CodeL(0x31,DReg,S1Reg,S2Reg);
-                END
+               BEGIN
+                if ((ThisCross) AND (NOT IsCross(S1Reg))) WrError(1350);
+                else
+                 BEGIN
+                  AddLSrc(S2Reg); SetCross(S1Reg);
+                  erg=CodeL(0x31,DReg,S1Reg,S2Reg);
+                 END
+               END
               break;
              case ModLReg:
               if (IsCross(S1Reg)) WrError(1350);
@@ -1568,12 +1619,14 @@ BEGIN
               break;
              case ModImm:
               if (DecodeAdr(ArgStr[2],MModLReg,True,&S2Reg))
-               if (IsCross(S2Reg)) WrError(1350);
-               else
-                BEGIN
-                 AddLSrc(S2Reg);
-                 erg=CodeL(0x30,DReg,S1Reg,S2Reg);
-                END
+               BEGIN
+                if (IsCross(S2Reg)) WrError(1350);
+                else
+                 BEGIN
+                  AddLSrc(S2Reg);
+                  erg=CodeL(0x30,DReg,S1Reg,S2Reg);
+                 END
+               END
               break;
             END
            break;
@@ -1592,11 +1645,13 @@ BEGIN
          BEGIN
           AddDest(DReg);
           if (DecodeAdr(ArgStr[1],MModLReg,True,&S2Reg))
-           if ((ThisCross) OR (IsCross(S2Reg))) WrError(1350);
-           else
-            BEGIN
-             AddLSrc(S2Reg); erg=CodeL(0x40,DReg,0,S2Reg);
-            END
+           BEGIN
+            if ((ThisCross) OR (IsCross(S2Reg))) WrError(1350);
+            else
+             BEGIN
+              AddLSrc(S2Reg); erg=CodeL(0x40,DReg,0,S2Reg);
+             END
+           END
          END
       END
      return erg;
@@ -1615,20 +1670,22 @@ BEGIN
        if (z>0)
         BEGIN
          if (DecodeAdr(ArgStr[z],MModReg,False,&S1Reg))
-          if ((ThisCross) AND ((z==2) OR (IsCross(S1Reg)))) WrError(1350);
-          else
-           BEGIN
-            if (z==1)
-             BEGIN
-              S2Reg=S1Reg;
-	      AddSrc(S2Reg); SetCross(S2Reg);
-             END
-            else
-             BEGIN
-              DReg=S1Reg; AddDest(DReg);
-             END
-            erg=CodeS(0x0d+z,DReg,0,S2Reg);
-           END
+          BEGIN
+           if ((ThisCross) AND ((z==2) OR (IsCross(S1Reg)))) WrError(1350);
+           else
+            BEGIN
+             if (z==1)
+              BEGIN
+               S2Reg=S1Reg;
+               AddSrc(S2Reg); SetCross(S2Reg);
+              END
+             else
+              BEGIN
+               DReg=S1Reg; AddDest(DReg);
+              END
+             erg=CodeS(0x0d+z,DReg,0,S2Reg);
+            END
+          END
         END
       END
      return erg;
@@ -1668,27 +1725,29 @@ BEGIN
           case ModReg:
            AddDest(DReg);
            if (DecodeAdr(ArgStr[1],MModReg,True,&S2Reg))
-            if ((ThisCross) AND (NOT IsCross(S2Reg))) WrError(1350);
-            else
-             BEGIN
-              AddSrc(S2Reg);
-              SetCross(S2Reg);
-              DecodeAdr(ArgStr[2],MModReg+MModImm,False,&S1Reg);
-              switch (AdrMode)
-               BEGIN
-                case ModReg:
-                 if (IsCross(S1Reg)) WrError(1350);
-                 else
-                  BEGIN
-                   AddSrc(S1Reg);
-                   erg=CodeS(0x33,DReg,S1Reg,S2Reg);
-                  END
-                 break;
-                case ModImm:
-                 erg=CodeS(0x32,DReg,S1Reg,S2Reg);
-                 break;
-               END
-             END
+            BEGIN
+             if ((ThisCross) AND (NOT IsCross(S2Reg))) WrError(1350);
+             else
+              BEGIN
+               AddSrc(S2Reg);
+               SetCross(S2Reg);
+               DecodeAdr(ArgStr[2],MModReg+MModImm,False,&S1Reg);
+               switch (AdrMode)
+                BEGIN
+                 case ModReg:
+                  if (IsCross(S1Reg)) WrError(1350);
+                  else
+                   BEGIN
+                    AddSrc(S1Reg);
+                    erg=CodeS(0x33,DReg,S1Reg,S2Reg);
+                   END
+                  break;
+                 case ModImm:
+                  erg=CodeS(0x32,DReg,S1Reg,S2Reg);
+                  break;
+                END
+              END
+            END
            break;
           case ModLReg:
            AddLDest(DReg);
@@ -1759,50 +1818,54 @@ BEGIN
           case ModReg:
            AddDest(DReg);
            if (DecodeAdr(ArgStr[1],MModReg,HasSign,&S2Reg))
-            if ((ThisCross) AND (NOT IsCross(S2Reg))) WrError(1350);
-            else
-             BEGIN
-              AddSrc(S2Reg); SetCross(S2Reg);
-              DecodeAdr(ArgStr[2],MModReg+MModImm,False,&S1Reg);
-              switch (AdrMode)
-               BEGIN
-                case ModReg:
-                 if (IsCross(S1Reg)) WrError(1350);
-                 else
-                  BEGIN
-                   AddSrc(S1Reg);
-                   erg=CodeS(0x27+z,DReg,S1Reg,S2Reg);
-                  END
-                 break;
-                case ModImm:
-                 erg=CodeS(0x26+z,DReg,S1Reg,S2Reg);
-                 break;
-               END
-             END
+            BEGIN
+             if ((ThisCross) AND (NOT IsCross(S2Reg))) WrError(1350);
+             else
+              BEGIN
+               AddSrc(S2Reg); SetCross(S2Reg);
+               DecodeAdr(ArgStr[2],MModReg+MModImm,False,&S1Reg);
+               switch (AdrMode)
+                BEGIN
+                 case ModReg:
+                  if (IsCross(S1Reg)) WrError(1350);
+                  else
+                   BEGIN
+                    AddSrc(S1Reg);
+                    erg=CodeS(0x27+z,DReg,S1Reg,S2Reg);
+                   END
+                  break;
+                 case ModImm:
+                  erg=CodeS(0x26+z,DReg,S1Reg,S2Reg);
+                  break;
+                END
+              END
+            END
            break;
           case ModLReg:
            AddLDest(DReg);
            if (DecodeAdr(ArgStr[1],MModLReg,HasSign,&S2Reg))
-            if ((ThisCross) OR (IsCross(S2Reg))) WrError(1350);
-            else
-             BEGIN
-              AddLSrc(S2Reg);
-              DecodeAdr(ArgStr[2],MModReg+MModImm,False,&S1Reg);
-              switch (AdrMode)
-               BEGIN
-                case ModReg:
-                 if (IsCross(S1Reg)) WrError(1350);
-                 else
-                  BEGIN
-                   AddSrc(S1Reg);
-                   erg=CodeS(0x25+z,DReg,S1Reg,S2Reg);
-                  END
-                 break;
-                case ModImm:
-                 erg=CodeS(0x24+z,DReg,S1Reg,S2Reg);
-                 break;
-               END
-             END
+            BEGIN
+             if ((ThisCross) OR (IsCross(S2Reg))) WrError(1350);
+             else
+              BEGIN
+               AddLSrc(S2Reg);
+               DecodeAdr(ArgStr[2],MModReg+MModImm,False,&S1Reg);
+               switch (AdrMode)
+                BEGIN
+                 case ModReg:
+                  if (IsCross(S1Reg)) WrError(1350);
+                  else
+                   BEGIN
+                    AddSrc(S1Reg);
+                    erg=CodeS(0x25+z,DReg,S1Reg,S2Reg);
+                   END
+                  break;
+                 case ModImm:
+                  erg=CodeS(0x24+z,DReg,S1Reg,S2Reg);
+                  break;
+                END
+              END
+            END
            break;
          END
       END
@@ -1819,26 +1882,28 @@ BEGIN
          BEGIN
           AddDest(DReg);
           if (DecodeAdr(ArgStr[1],MModReg,True,&S2Reg))
-           if ((ThisCross) AND (NOT IsCross(S2Reg))) WrError(1350);
-           else
-            BEGIN
-             AddSrc(S2Reg); SetCross(S2Reg);
-             DecodeAdr(ArgStr[2],MModReg+MModImm,False,&S1Reg);
-             switch (AdrMode)
-              BEGIN
-               case ModReg:
-                if (IsCross(S1Reg)) WrError(1350);
-                else
-                 BEGIN
-                  AddSrc(S1Reg);
-                  erg=CodeS(0x23,DReg,S1Reg,S2Reg);
-                 END
-                break;
-               case ModImm:
-                erg=CodeS(0x22,DReg,S1Reg,S2Reg);
-                break;
-              END
-            END
+           BEGIN
+            if ((ThisCross) AND (NOT IsCross(S2Reg))) WrError(1350);
+            else
+             BEGIN
+              AddSrc(S2Reg); SetCross(S2Reg);
+              DecodeAdr(ArgStr[2],MModReg+MModImm,False,&S1Reg);
+              switch (AdrMode)
+               BEGIN
+                case ModReg:
+                 if (IsCross(S1Reg)) WrError(1350);
+                 else
+                  BEGIN
+                   AddSrc(S1Reg);
+                   erg=CodeS(0x23,DReg,S1Reg,S2Reg);
+                  END
+                 break;
+                case ModImm:
+                 erg=CodeS(0x22,DReg,S1Reg,S2Reg);
+                 break;
+               END
+             END
+           END
          END
       END
      return erg;
@@ -1861,27 +1926,31 @@ BEGIN
              case ModReg:
               AddSrc(S1Reg);
               if (DecodeAdr(ArgStr[2],MModReg,True,&S2Reg))
-              if ((ThisCross) AND (NOT IsCross(S1Reg)) AND (NOT IsCross(S2Reg))) WrError(1350);
-              else if ((IsCross(S1Reg)) AND (IsCross(S2Reg))) WrError(1350);
-              else if (IsCross(S1Reg))
-	       BEGIN
-                ThisCross=True;
-	        erg=CodeL(0x1f,DReg,S1Reg,S2Reg);
-	       END
-              else
                BEGIN
-                SetCross(S2Reg);
-	        erg=CodeL(0x0f,DReg,S1Reg,S2Reg);
+                if ((ThisCross) AND (NOT IsCross(S1Reg)) AND (NOT IsCross(S2Reg))) WrError(1350);
+                else if ((IsCross(S1Reg)) AND (IsCross(S2Reg))) WrError(1350);
+                else if (IsCross(S1Reg))
+                 BEGIN
+                  ThisCross=True;
+                  erg=CodeL(0x1f,DReg,S1Reg,S2Reg);
+                 END
+                else
+                 BEGIN
+                  SetCross(S2Reg);
+                  erg=CodeL(0x0f,DReg,S1Reg,S2Reg);
+                 END
                END
               break;
              case ModImm:
               if (DecodeAdr(ArgStr[2],MModReg,True,&S2Reg))
-               if ((ThisCross) AND (NOT IsCross(S2Reg)<16)) WrError(1350);
-               else
-                BEGIN
-                 AddSrc(S2Reg); SetCross(S2Reg);
-	         erg=CodeL(0x0e,DReg,S1Reg,S2Reg);
-                END
+               BEGIN
+                if ((ThisCross) AND (NOT IsCross(S2Reg)<16)) WrError(1350);
+                else
+                 BEGIN
+                  AddSrc(S2Reg); SetCross(S2Reg);
+                  erg=CodeL(0x0e,DReg,S1Reg,S2Reg);
+                 END
+               END
               break;
             END
            break;
@@ -1890,12 +1959,14 @@ BEGIN
            if (DecodeAdr(ArgStr[1],MModImm,True,&S1Reg))
             BEGIN
              if (DecodeAdr(ArgStr[2],MModLReg,True,&S2Reg))
-              if ((ThisCross) OR (IsCross(S2Reg))) WrError(1350);
-              else
-               BEGIN
-                AddLSrc(S2Reg);
-                erg=CodeL(0x2c,DReg,S1Reg,S2Reg);
-               END
+              BEGIN
+               if ((ThisCross) OR (IsCross(S2Reg))) WrError(1350);
+               else
+                BEGIN
+                 AddLSrc(S2Reg);
+                 erg=CodeL(0x2c,DReg,S1Reg,S2Reg);
+                END
+              END
             END
            break;
          END
@@ -1925,25 +1996,29 @@ BEGIN
         END
        else WithImm=True;
        if (OK)
-        if (WithImm)
-         BEGIN
-          if (ThisUnit==NoUnit)
-           ThisUnit=(UnitUsed(S1)) ? S2 : S1;
-          UnitFlag=Ord(ThisUnit==S2);
-          Dist=EvalIntExpression(ArgStr[1],Int32,&OK)-PacketAddr;
-          if (OK)
-           if ((Dist & 3)!=0) WrError(1325);
-           else if ((NOT SymbolQuestionable) AND ((Dist>0x3fffff) OR (Dist<-0x400000))) WrError(1370);
-           else
+        BEGIN
+         if (WithImm)
+          BEGIN
+           if (ThisUnit==NoUnit)
+            ThisUnit=(UnitUsed(S1)) ? S2 : S1;
+           UnitFlag=Ord(ThisUnit==S2);
+           Dist=EvalIntExpression(ArgStr[1],Int32,&OK)-PacketAddr;
+           if (OK)
             BEGIN
-             ThisInst=0x50+((Dist & 0x007ffffc) << 5)+(UnitFlag << 1);
-             erg=True;
+             if ((Dist & 3)!=0) WrError(1325);
+             else if ((NOT SymbolQuestionable) AND ((Dist>0x3fffff) OR (Dist<-0x400000))) WrError(1370);
+             else
+              BEGIN
+               ThisInst=0x50+((Dist & 0x007ffffc) << 5)+(UnitFlag << 1);
+               erg=True;
+              END
             END
-         END
-        else
-         BEGIN
-          if (ChkUnit(0x10,S1,S2)) erg=CodeS(Code1,0,0,S2Reg);
-         END
+          END
+         else
+          BEGIN
+           if (ChkUnit(0x10,S1,S2)) erg=CodeS(Code1,0,0,S2Reg);
+          END
+        END
       END
      return erg;
     END
@@ -1953,7 +2028,7 @@ BEGIN
    return erg;
 END
 
-	static void ChkPacket(void)
+        static void ChkPacket(void)
 BEGIN
    LongWord EndAddr,Mask;
    LongInt z,z1,z2;
@@ -2034,7 +2109,7 @@ BEGIN
     if (RegReads[z1]>4) WrXError(2005,RegName(z1));
 END
 
-	static void MakeCode_3206X(void)
+        static void MakeCode_3206X(void)
 BEGIN
    CodeLen=0; DontPrint=False;
 
@@ -2144,7 +2219,7 @@ END
 static int InstrZ;
 
 
-   	static void AddLinAdd(char *NName, LongInt NCode)
+        static void AddLinAdd(char *NName, LongInt NCode)
 BEGIN
    if (InstrZ>=LinAddCnt) exit(255);
    LinAddOrders[InstrZ].Name=NName;
@@ -2152,14 +2227,14 @@ BEGIN
    AddInstTable(InstTable,NName,InstrZ++,DecodeLinAdd);
 END
 
-   	static void AddCmp(char *NName, LongInt NCode)
+        static void AddCmp(char *NName, LongInt NCode)
 BEGIN
    if (InstrZ>=CmpCnt) exit(255);
    CmpOrders[InstrZ].Name=NName;
    CmpOrders[InstrZ++].Code=NCode;
 END
 
-   	static void AddMem(char *NName, LongInt NCode, LongInt NScale)
+        static void AddMem(char *NName, LongInt NCode, LongInt NScale)
 BEGIN
    if (InstrZ>=MemCnt) exit(255);
    MemOrders[InstrZ].Name=NName;
@@ -2168,8 +2243,8 @@ BEGIN
    AddInstTable(InstTable,NName,InstrZ++,DecodeMemO);
 END
 
-   	static void AddMul(char *NName, LongInt NCode,
-	                   Boolean NDSign,Boolean NSSign1,Boolean NSSign2, Boolean NMay)
+        static void AddMul(char *NName, LongInt NCode,
+                           Boolean NDSign,Boolean NSSign1,Boolean NSSign2, Boolean NMay)
 BEGIN
    if (InstrZ>=MulCnt) exit(255);
    MulOrders[InstrZ].Name=NName;
@@ -2181,8 +2256,8 @@ BEGIN
    AddInstTable(InstTable,NName,InstrZ++,DecodeMul);
 END
 
-   	static void AddCtrl(char *NName, LongInt NCode,
-	                    Boolean NWr, Boolean NRd)
+        static void AddCtrl(char *NName, LongInt NCode,
+                            Boolean NWr, Boolean NRd)
 BEGIN
    if (InstrZ>=CtrlCnt) exit(255);
    CtrlRegs[InstrZ].Name=NName;
@@ -2191,7 +2266,7 @@ BEGIN
    CtrlRegs[InstrZ++].Rd=NRd;
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    InstTable=CreateInstTable(203);
 
@@ -2262,7 +2337,7 @@ BEGIN
    AddCtrl("PDATA_O",15,True ,True );
 END
 
-	static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    DestroyInstTable(InstTable);
    free(LinAddOrders);
@@ -2274,7 +2349,7 @@ END
 
 /*------------------------------------------------------------------------*/
 
-	static Boolean IsDef_3206X(void)
+        static Boolean IsDef_3206X(void)
 BEGIN
    return (strcmp(LabPart,"||")==0) OR (*LabPart=='[');
 END
@@ -2285,7 +2360,7 @@ BEGIN
    DeinitFields();
 END
 
-	static void SwitchTo_3206X(void)
+        static void SwitchTo_3206X(void)
 BEGIN
    TurnWords=False; ConstMode=ConstModeIntel; SetIsOccupied=False;
 
@@ -2307,7 +2382,7 @@ BEGIN
    ParCnt=0; PacketAddr=0;
 END
 
-	void code3206x_init(void)
+        void code3206x_init(void)
 BEGIN
    CPU32060=AddCPU("32060",SwitchTo_3206X);
 END

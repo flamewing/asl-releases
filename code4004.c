@@ -14,6 +14,7 @@
 /*           23. 1.1999 / / entfernt                                         */
 /*            2. 7.1999 Zus. Befehlsvarianten, andere Registersyntax         */
 /*            8. 9.1999 REG fehlte                                           */
+/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -55,14 +56,14 @@ static PInstTable InstTable;
 /*---------------------------------------------------------------------------*/
 /* Parser */
 
-	static Byte RegVal(char Inp)
+        static Byte RegVal(char Inp)
 BEGIN
    if ((Inp >='0') AND (Inp <= '9')) return Inp - '0';
    else if ((Inp >='A') AND (Inp <= 'F')) return Inp - 'A' + 10;
    else return 0xff;
 END
 
-	static Boolean DecodeReg(char *Asc, Byte *Erg)
+        static Boolean DecodeReg(char *Asc, Byte *Erg)
 BEGIN
    char *s;
 
@@ -76,7 +77,7 @@ BEGIN
     END
 END
 
-	static Boolean DecodeRReg(char *Asc, Byte *Erg)
+        static Boolean DecodeRReg(char *Asc, Byte *Erg)
 BEGIN
    Byte h;
    char *s;
@@ -95,7 +96,7 @@ END
 /*---------------------------------------------------------------------------*/
 /* Hilfsdekoder */
 
-	static void DecodeFixed(Word Index)
+        static void DecodeFixed(Word Index)
 BEGIN
    FixedOrder *Instr=FixedOrders+Index;
 
@@ -106,7 +107,7 @@ BEGIN
     END
 END
 
-	static void DecodeOneReg(Word Index)
+        static void DecodeOneReg(Word Index)
 BEGIN
    FixedOrder *Instr=OneRegOrders+Index;
    Byte Erg;
@@ -119,7 +120,7 @@ BEGIN
     END
 END
 
-	static void DecodeOneRReg(Word Index)
+        static void DecodeOneRReg(Word Index)
 BEGIN
    FixedOrder *Instr=OneRRegOrders+Index;
    Byte Erg;
@@ -162,7 +163,7 @@ BEGIN
     END
 END
 
-	static void DecodeFullJmp(Word Index)
+        static void DecodeFullJmp(Word Index)
 BEGIN
    Word Adr;
    Boolean OK;
@@ -180,7 +181,7 @@ BEGIN
     END
 END
 
-	static void DecodeISZ(Word Index)
+        static void DecodeISZ(Word Index)
 BEGIN
    Word Adr;
    Boolean OK;
@@ -192,15 +193,17 @@ BEGIN
     BEGIN
      Adr=EvalIntExpression(ArgStr[2],UInt12,&OK);
      if (OK)
-      if ((NOT SymbolQuestionable) AND (Hi(EProgCounter()+1)!=Hi(Adr))) WrError(1910);
-      else
-       BEGIN
-        BAsmCode[0]=0x70+Erg; BAsmCode[1]=Lo(Adr); CodeLen=2;
-       END
+      BEGIN
+       if ((NOT SymbolQuestionable) AND (Hi(EProgCounter()+1)!=Hi(Adr))) WrError(1910);
+       else
+        BEGIN
+         BAsmCode[0]=0x70+Erg; BAsmCode[1]=Lo(Adr); CodeLen=2;
+        END
+      END
     END
 END
 
-	static void DecodeJCN(Word Index)
+        static void DecodeJCN(Word Index)
 BEGIN
    Word AdrInt;
    Boolean OK;
@@ -220,17 +223,19 @@ BEGIN
       BEGIN
        AdrInt = EvalIntExpression(ArgStr[2], UInt12, &OK);
        if (OK)
-        if ((NOT SymbolQuestionable) AND (Hi(EProgCounter() + 2) != Hi(AdrInt))) WrError(1370);
-        else
-         BEGIN
-          BAsmCode[1] = Lo(AdrInt);
-          CodeLen = 2;
-         END
+        BEGIN
+         if ((NOT SymbolQuestionable) AND (Hi(EProgCounter() + 2) != Hi(AdrInt))) WrError(1370);
+         else
+          BEGIN
+           BAsmCode[1] = Lo(AdrInt);
+           CodeLen = 2;
+          END
+        END
       END
     END
 END
 
-	static void DecodeFIM(Word Index)
+        static void DecodeFIM(Word Index)
 BEGIN
    Boolean OK;
 
@@ -247,7 +252,7 @@ BEGIN
     END
 END
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
    Boolean ValOK;
    Word Size;
@@ -264,11 +269,11 @@ BEGIN
        Size=EvalIntExpression(ArgStr[1],Int16,&ValOK);
        if (FirstPassUnknown) WrError(1820);
        if ((ValOK) AND (NOT FirstPassUnknown))
-	BEGIN
-	 DontPrint=True;
-	 CodeLen=Size;
+        BEGIN
+         DontPrint=True;
+         CodeLen=Size;
          BookKeeping();
-	END
+        END
       END
      return True;
     END
@@ -280,13 +285,16 @@ BEGIN
       BEGIN
        ValOK=True;
        for (z=1; z<=ArgCnt; z++)
-	if (ValOK)
-	 BEGIN
+        if (ValOK)
+         BEGIN
           FirstPassUnknown=False;
-	  EvalExpression(ArgStr[z],&t);
+          EvalExpression(ArgStr[z],&t);
           if ((t.Typ==TempInt) AND (FirstPassUnknown))
-           if (ActPC==SegData) t.Contents.Int&=7; else t.Contents.Int&=127;
-	  switch (t.Typ)
+           BEGIN
+            if (ActPC==SegData) t.Contents.Int&=7;
+            else t.Contents.Int&=127;
+           END
+          switch (t.Typ)
            BEGIN
             case TempInt:
              if (ActPC==SegCode)
@@ -322,10 +330,10 @@ BEGIN
                 END
               END
              break;
-	    default:
+            default:
              ValOK=False;
-	   END
-	 END
+           END
+         END
        if (NOT ValOK) CodeLen=0;
       END
      return True;
@@ -346,42 +354,42 @@ END
 
 static int InstrZ;
 
-	static void AddFixed(char *NName, Byte NCode)
+        static void AddFixed(char *NName, Byte NCode)
 BEGIN
    if (InstrZ>=FixedOrderCnt) exit(255);
    FixedOrders[InstrZ].Code=NCode;
    AddInstTable(InstTable,NName,InstrZ++,DecodeFixed);
 END
 
-	static void AddOneReg(char *NName, Byte NCode)
+        static void AddOneReg(char *NName, Byte NCode)
 BEGIN
    if (InstrZ>=OneRegOrderCnt) exit(255);
    OneRegOrders[InstrZ].Code=NCode;
    AddInstTable(InstTable,NName,InstrZ++,DecodeOneReg);
 END
 
-	static void AddOneRReg(char *NName, Byte NCode)
+        static void AddOneRReg(char *NName, Byte NCode)
 BEGIN
    if (InstrZ>=OneRRegOrderCnt) exit(255);
    OneRRegOrders[InstrZ].Code=NCode;
    AddInstTable(InstTable,NName,InstrZ++,DecodeOneRReg);
 END
 
-	static void AddAccReg(char *NName, Byte NCode)
+        static void AddAccReg(char *NName, Byte NCode)
 BEGIN
    if (InstrZ>=AccRegOrderCnt) exit(255);
    AccRegOrders[InstrZ].Code=NCode;
    AddInstTable(InstTable,NName,InstrZ++,DecodeAccReg);
 END
 
-	static void AddImm4(char *NName, Byte NCode)
+        static void AddImm4(char *NName, Byte NCode)
 BEGIN
    if (InstrZ>=Imm4OrderCnt) exit(255);
    Imm4Orders[InstrZ].Code=NCode;
    AddInstTable(InstTable,NName,InstrZ++,DecodeImm4);
 END
 
-	static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    InstTable=CreateInstTable(101);
 
@@ -441,7 +449,7 @@ END
 /*---------------------------------------------------------------------------*/
 /* Callbacks */
 
-	static void MakeCode_4004(void)
+        static void MakeCode_4004(void)
 BEGIN
    CodeLen=0; DontPrint=False;
 
@@ -468,7 +476,7 @@ BEGIN
    DeinitFields();
 END
 
-	static void SwitchTo_4004(void)
+        static void SwitchTo_4004(void)
 BEGIN
    PFamilyDescr FoundDescr;
 
@@ -494,7 +502,7 @@ END
 /*---------------------------------------------------------------------------*/
 /* Initialisierung */
 
-	void code4004_init(void)
+        void code4004_init(void)
 BEGIN
    CPU4004=AddCPU("4004",SwitchTo_4004);
 #if 0

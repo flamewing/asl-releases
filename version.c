@@ -19,10 +19,19 @@
 /*            6. 7.1999 Build 14                                             */
 /*           15. 9.1999 Build 15                                             */
 /*            7.11.1999 Final Build                                          */
+/*            9. 1.2000 Version 1.42beta                                     */
+/*           13. 2.2000 Build 2                                              */
+/*           13. 3.2000 Build 3                                              */
+/*            4. 6.2000 Build 5                                              */
+/*           18. 6.2000 Build 6                                              */
+/*            6. 8.2000 Build 7                                              */
+/*           20. 9.2000 Build 8                                              */
 /*                                                                           */
 /*****************************************************************************/
 
 #include "stdinc.h"
 
-char *Version="1.41r8";
-LongInt VerNo=0x1418;
+char *Version="1.42 Beta [Bld 8]";
+LongInt VerNo=0x1428;
+
+char *InfoMessCopyright="(C) 1992,2000 Alfred Arnold";

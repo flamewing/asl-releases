@@ -9,6 +9,7 @@
 /*           16. 8.1998 NoICE-Symbolausgabe                                  */
 /*            6.12.1998 UInt14                                               */
 /*           12. 7.1999 angefangen mit externen Symbolen                     */
+/*           21. 5.2000 added TmpSymCounter                                  */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -48,6 +49,8 @@ extern Boolean FirstPassUnknown;
 extern Boolean SymbolQuestionable;
 extern Boolean UsesForwards;
 extern LongInt MomLocHandle;
+extern LongInt TmpSymCounter;
+extern char TmpSymCounterVal[10];
 extern LongInt LocHandleCnt;
 extern Boolean BalanceTree;
 extern LongInt MomLocHandle;

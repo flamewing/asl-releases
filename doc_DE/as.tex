@@ -72,7 +72,7 @@ Alle anderen Warenzeichen, die nicht ausdr"ucklich in diesem Abschnitt
 genannt wurden und in diesem Handbuch verwendet werden, sind Eigentum
 der entsprechenden Eigent"umer.
 
-\vspace{9cm} 
+\vspace{7cm} 
 
 Dieses Dokument wurde mit dem LaTeX-Satzsystem unter den Betriebssystemen
 Digital Unix, Linux und OS/2 auf AMD K6- und DEC Alpha-Prozessoren
@@ -115,40 +115,23 @@ error''-Verfahren gelernt.
 
 Bevor es in medias res geht, erst einmal der unvermeidliche Prolog:
 \par
-AS in der vorliegenden Version gebe ich als ,,Public Domain'' weiter,
-d.h. die Programm-und Overlaydatei sowie die dazugeh"orenden
-Hilfsprogramme d"urfen frei kopiert und benutzt werden.  Es existieren keine
-Planungen, AS in ein kommerzielles oder Shareware-Programm umzuwandeln. Diese
-Erlaubnis gilt jedoch nur unter der Voraussetzung, da"s die Startmeldung
-der Programme --- insbesondere die Copyrightmeldung --- nicht entfernt oder
-"uberschrieben wird und f"ur das Kopieren/Verschicken nicht mehr als
-eine Aufwandsentsch"adigung (unter DM 20,-) verlangt wird.
+AS in der vorliegenden Version untersteht der Gnu General Public License
+(GPL); die Details dieser Lizenz k"onnen Sie in der beiliegenden Datei
+COPYING nachlesen.  Falls Sie diese nicht mit AS erhalten haben,
+beschweren Sie sich bei demjenigen, von dem Sie AS erhalten haben!
 \par
-Auf Anfrage wird auch der Quellcode dieses Programmes ausgegeben.
-Daraus abgeleitete oder darauf aufbauende Programme m"ussen unter
-den gleichen Bedingungen weitergegeben werden wie dieses Programm.
-\par
-Ich fordere ausdr"ucklich dazu auf, dieses Programm per Diskette oder
-Mailbox/Netzwerk zu verbreiten!
-\par
-Es mag sein, da"s Sie dieses Programm als Beilage zu einem kommerziellen
-Programm erhalten haben.  Die f"ur das kommerzielle Programm geltenden
-Lizenzbedingungen beziehen sich jedoch auf keinen Fall auf AS.
-\par
-Sollte Ihnen der Assembler so gut gefallen, da"s sie mir unbedingt
-Geld daf"ur schicken wollen, so fordere ich Sie dazu auf, den Betrag
-f"ur Greenpeace zu spenden.
-\par
-Ich habe mich bem"uht, das Programm so fehlerfrei wie nur irgendm"oglich
-zu machen.  Da es aber grunds"atzlich keine fehlerfreie Software
-gibt (die einzigen Leute, die keine Fehler machen, liegen auf dem
-Friedhof!), "ubernehme ich keine Garantie f"ur die Funktion von AS
-in einer bestimmten Umgebung (Hard-oder Software) oder Haftung f"ur
-entstehende Sch"aden.  F"ur Hinweise auf Fehler bin ich selbstverst"andlich
-immer dankbar und werde mich bem"uhen, sie zu korrigieren.
+Kurz gesagt, beinhaltet die GPL folgende Punkte:
+\begin{itemize}
+\item{Auf AS aufbauende Programme m"ussen ebenfalls der GPL unterstehen;}
+\item{Weiterverbreitung ausdr"ucklich erlaubt;}
+\item{expliziter Haftungsausschlu"s f"ur durch die Anwendung dieses 
+      Programmes entstehende Sch"aden.}
+\end{itemize}
+...aber f"ur die Details bitte ich wirklich, in den Originaltext der GPL
+zu schauen!
 \par
 Um eine m"oglichst schnelle Fehlerdiagnose und -korrektur zu erm"oglichen,
-bitte ich, dem Fehlerbericht folgende Angaben beizuf"ugen:
+bitte ich, Fehlerberichten folgende Angaben beizuf"ugen:
 \begin{itemize}
 \item{Hardware: \begin{itemize}
                 \item{Prozessortyp (mit/ohne Koprozessor)}
@@ -182,13 +165,13 @@ Von Telefonanrufen bitte ich abzusehen.  Erstens, weil sich die
 komplizierten Zusammenh"ange am Telefon nur "au"serst schwer er"orten
 lassen, und zweitens ist die Telekom schon reich genug...
 \par
-Die neueste Version von AS (DOS,DPMI,OS/2) findet sich auf folgendem
+Die neueste Version von AS (DOS, DPMI, OS/2, C) findet sich auf folgendem
 FTP-Server:
 \begin{verbatim}
- ftp.uni-stuttgart.de
-   Verzeichnis  pub/systems/msdos/programming/as
+ http://john.ccac.rwth-aachen.de:8000/as
 \end{verbatim}
-Die Quellen der C-Version k"onnen von folgendem Server geholt werden:
+Die Quellen der C-Version k"onnen weiterhin von folgendem Server geholt
+werden:
 \begin{verbatim}
  sunsite.unc.edu
    Verzeichnis pub/Linux/devel/lang/assemblers/asl-<version>.tar.gz
@@ -272,11 +255,14 @@ folgende Prozessorfamilien implementiert:
 \item{NEC $\mu$PD7720/7725}
 \item{NEC $\mu$PD77230}
 \item{Fujitsu F$^2$MC8L}
+\item{Fujitsu F$^2$MC16L}
 \item{Symbios Logic SYM53C8xx (ja, die kann man programmieren!)}
 \end{itemize}
 in Arbeit / Planung / "Uberlegung :
 \begin{itemize}
+\item{NEC 78K4}
 \item{Intel 8008}
+\item{Texas Instruments TMS320C54x}
 \item{Analog Devices ADSP21xx}
 \item{SGS-Thomson ST20}
 \item{Texas Instruments TMS320C4x}
@@ -285,7 +271,6 @@ in Arbeit / Planung / "Uberlegung :
 \end{itemize}
 Noch gesucht werden Unterlagen f"ur:
 \begin{itemize}
-\item{NEC 78K4}
 \item{die ganze Palette der OKI-Controller}
 \end{itemize}
 ungeliebt, aber {\it doch} vorhanden :
@@ -849,7 +834,10 @@ Momentan sind folgende Schalter definiert:
       n"achsten Option die Listings aller Durchg"ange auf der Ausgabe!}
 \item{\tty{L}: Assemblerlisting auf Datei schreiben.  Die Listdatei erh"alt
       dabei den gleichen Namen wie die Quelldatei, lediglich die Endung
-      wird durch \tty{LST} ersetzt.}
+      wird durch \tty{LST} ersetzt, es sei denn...}
+\item{\tty{OLIST}: mit einem zus"atzlichen Argument legt einen anderen
+      Pfad bzw. Namen f"ur die Listdatei fest.  Falls mehrere Dateien
+      assembliert werden, kann diese Option auch mehrfach gegeben werden.}
 \item{\tty{o}:Bestimmt einen neuen Namen f"ur die von AS zu erzeugende
       Code-Datei.  Wird diese Option mehrfach verwendet, so werden
       die angegebenen Namen nacheinander den zu assemblierenden
@@ -1463,6 +1451,51 @@ $<$Registersymbol$>$ & 128 \\
 
 %%---------------------------------------------------------------------------
 
+\section{Tempor"are Symbole}
+
+Besonders bei Programmen mit vielen aufeinanderfolgenden Schleifen oder
+IF-artigen Strukturen steht man immer wieder vor dem Problem, sich
+st"andig neue Namen f"ur Labels ausdenken zu m"ussen.  Dabei wei"s man an
+sich genau, da"s man dieses Label nie wieder brauchen wird und am liebsten
+in irgendeiner Weise 'verwerfen' m"ochte.  Eine einfache L"osung, wenn man
+nicht gleich den gro"sen Hammer des Sektionskonzeptes (siehe Kapitel
+\ref{ChapLocSyms}) schwingen m"ochte, sind {\em tempor"are} Symbole, die
+solange ihre G"ultigkeit behalten, bis ein neues, nicht-tempor"ares Symbol
+definiert wird.  Andere Assembler bieten einen "ahnlichen Mechanismus an,
+der dort unter dem Stichwort 'lokale Symbole' l"auft, zur besseren
+Abgrenzung gegen das Sektionskonzept m"ochte ich aber beim Begriff
+'tempor"are Symbole' bleiben.
+
+Ein Symbol, dessen Name mit zwei Dollarzeichen beginnt (dies ist weder f"ur
+normale Symbole noch Konstanten zul"assig), ist ein tempor"ares Symbol. 
+AS f"uhrt intern einen Z"ahler mit, der zu Beginn der Assemblierung auf
+Null gesetzt wird und bei jeder Definition eines nicht-tempor"aren Symbols
+inkrementiert wird.  Wird ein tempor"ares Symbol definiert oder
+referenziert, so werden die beiden f"uhrenden Dollarzeichen gestrichen und
+der momentane Stand des Z"ahlers wird angeh"angt.  Auf diese Weise erh"alt
+man mit jedem nicht-tempor"aren Symbol sozusagen die Symbolnamen zur"uck -
+man kommt an die Symbole vor dieser Definition aber auch nicht mehr heran!  
+Tempor"are Symbole bieten sich daher besonders f"ur den Einsatz in kleinen 
+Anweisungsbl"ocken an, typischerweise etwa ein Dutzend Befehle, auf keinen
+Fall mehr als eine Bildschirmseite, sonst kommt man leicht
+durcheinander...
+
+Hier ein kleines Beispiel: 
+\begin{verbatim}
+$$loop: nop
+        dbra    d0,$$loop
+
+split:
+
+$$loop: nop
+        dbra    d0,$$loop
+\end{verbatim}
+W"are das zwischen den Schleifen liegende nicht-tempor"are Label nicht
+vorhanden, g"abe es nat"urlich eine Fehlermeldung wegen eines doppelt
+definierten Symbols.
+
+%%---------------------------------------------------------------------------
+
 \section{Formelausdr"ucke}
 
 An den meisten Stellen, an denen der Assembler Zahlenangaben erwartet,
@@ -1488,9 +1521,9 @@ Kennzeichnung von verwendeten Zielprozessor abh"angt (Tabelle
             & Intel-Modus      & Motorola-Modus       &   C-Modus  \\
             & (Intel, Zilog,   & (Rockwell, Motorola, &  (PowerPC, \\
             & Thomson, Texas,  &  Microchip, Thomson, &   AMD29K,  \\
-            & Toshiba, NEC,    &  Hitachi, Atmel)     &   National,\\
-            & Siemens, Philips, &                     &   Symbios) \\
-            & Fujitsu, Fairchild) &                   & \\
+            & Toshiba, NEC,    &  Hitachi)            &   National,\\
+            & Siemens, Philips, &                     &   Symbios, \\
+            & Fujitsu, Fairchild) &                   &   Atmel)   \\
 \hline
 \hline
 dezimal     & direkt           & direkt               & direkt \\
@@ -3153,7 +3186,12 @@ Satz interner Register.
 \begin{quote}
 bh) MB89190
 \end{quote}
-Dieser Prozessortyp repr"asentiert die F$^{2}$MC8L-Serie von Fujitsu.
+Dieser Prozessortyp repr"asentiert die F$^{2}$MC8L-Serie von Fujitsu...
+%%-----------
+\begin{quote}
+bi) MB9500
+\end{quote}
+...so wie dieser es momentan f"ur die 16-Bit-Varianten von Fujitsu tut!
 
 Beim CPU-Befehl mu"s der Prozessortyp als einfache Konstante
 angegeben werden, eine Berechnung \`a la
@@ -3289,6 +3327,33 @@ die augenblickliche Einstellung kann aus dem gleichnamigen Symbol
 ausgelesen werden. Defaultm"a"sig ist \tty{PADDING} nur f"ur die
 680x0-Familie eingeschaltet, f"ur alle anderen werden erst nach Umschaltung
 Padding-Bytes eingef"ugt!
+
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\subsection{PACKING}
+\ttindex{PACKING}
+
+{\em G"ultigkeit: AVR}
+
+{\tt PACKING} ist in gewisser Weise "ahnlich zu {\tt PADDING}, es arbeitet
+nur gewisserma"sen anders herum: w"ahrend {\tt PADDING} die
+abgelegten Daten erg"anzt, um komplette Worte und damit ein Alignment zu
+erhalten, quetscht {\tt PACKING} mehrere Werte in ein einzelnes Wort. 
+Dies macht im Code-Segment des AVR Sinn, weil dort mit einem Spezialbefehl
+({\tt LPM}) auf einzelne Bytes in den 16-Bit-Worten zugegriffen werden
+kann.  Ist diese Option eingeschaltet (Argument {\tt ON}), so werden immer
+zwei Byte-Werte bei {\tt DATA} in ein Wort gepackt, analog zu den
+einzelnen Zeichen von String-Argumenten.  Der Wertebereich der
+Integer-Argumente reduziert sich dann nat"urlich auf -128...+255.  Ist
+diese Option dagegen ausgeschaltet, (Argument {\tt OFF}), so bekommt
+jedes Integer-Argument sein eigenes Wort und darf auch Werte von
+-32768...+65535 annehmen.
+
+Diese Unterscheidung betrifft nur Integer-Argumente von {\tt DATA},
+Strings werden immer gepackt.  Zu beachten ist weiterhin, da"s dieses
+Packen nur innerhalb der Argumente eines {\tt DATA}-Befehls funktionieren
+kann, wer also mehrere {\tt DATA}-Befehle hinterienander hat, f"angt sich
+bei ungeraden Argumentzahlen trotzdem halbvolle W"orter ein!
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3838,6 +3903,22 @@ Nibbles des Adre"sraumes ohne Bankumschaltung erreichen.  Da der 75402
 weder \tty{MBE}-Flag noch \tty{MBS}-Register kennt, ist f"ur ihn der
 \tty{ASSUME}-Befehl nicht definiert; Die Initialwerte von \tty{MBE} und
 \tty{MBS} lassen sich daher nicht "andern.
+
+\subsubsection{F$^2$MC16L}
+
+Wie viele andere Mikrokontroller auch, leidet diese Familie etwas unter
+der Knauserei seiner Entwickler: einem 24 Bit breiten Adre"sraum stehen 16
+Bit breite Adre"sregister etwas unterbemittelt gegen"uber.  Also mu"sten
+wieder mal Bank-Register her.  Im einzelnen sind dies PCB f"ur den
+Programmcode, DTB f"ur alle Datenzugriffe, ADB f"ur indirekte Zugriffe
+"uber RW2/RW6 und SSB/USB f"ur die Stacks.  Sie k"onnen alle Werte
+zwischen 0 und 255 annehmen.  Defaultm"a"sig stehen alle Annahmen von AS
+auf 0, mit Ausnahme von 0ffh f"ur PCB.  
+
+Des weiteren existiert das DPR-Register, das angibt, welche Seite
+innerhalb der durch DTB gegebenen 64K-Bank mit 8-Bit-Adressen erreicht
+werden kann.  Der Default f"ur DPR ist 1, zusammen mit dem Default f"ur
+DTB ergibt dies also eine Default-Seite bei 0001xxh.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -4597,28 +4678,56 @@ ergibt also
         CALL    Modul_Funktion
 \end{verbatim}
 \par
+Neben den am Makro selber angegebenen Parametern existieren drei weitere
+'implizite' Parameter, die immer vorhanden sind und daher nicht als eigene
+Makroparameter verwendet werden sollten:
+\begin{itemize}
+\item{{\tt ATTRIBUTE} bezeichnet bei Architekturen, die Attribute f"ur
+      Prozessorbefehle zulassen, das bei einem Makroaufruf angeh"angte
+      Argument.  F"ur ein Beispiel siehe z.B. unten!}
+\item{{\tt ALLARGS} bezeichnet eine kommaseparierte Liste aller
+      Makroargumente, z.B., um sie an eine {\tt IRP}-Anweisung
+      weiterzureichen.}
+\item{{\tt ARGCOUNT} bezeichnet die tat"achlich "ubergebene Anzahl der
+      an das Makro "ubergebenen Argumente.  Zu beachten ist allerdings,
+      da"s diese Zahl niemals geringer als die Zahl der formalen Parameter
+      ist, da AS fehlende Argumente mit Leerstrings auff"ullt!}
+\end{itemize}
+\par
+Rekursion von Makros, also das wiederholte Aufrufen eines Makros innerhalb
+seines Rumpfes oder indirekt "uber andere von ihm aufgerufene Makros ist
+vollkommen legal.  Wie bei jeder Rekusion mu"s man dabei nat"urlich
+sicherstellen, da"s sie irgendwann ein Ende findet.  F"ur den Fall, da"s
+man dies vergessen hat, f"uhrt AS in jedem definierten Makro einen Z"ahler
+mit, der bei Beginn einer Makroexpansion inkrementiert und an deren Ende
+wieder dekrementiert wird.  Bei rekursiven Aufrufen eines Makros erreicht
+dieser Z"ahler also immer h"ohere Werte, und bei einem per {\tt NESTMAX}
+einstellbaren Wert bricht AS ab.  Vorsicht, wenn man diese Bremse
+abschaltet: der Speicherbedarf auf dem Heap kann so beliebig steigen und
+selbst ein Unix-System in die Knie zwingen...
+\par
 Um alle Klarheiten auszur"aumen, ein einfaches Beispiel:
 Ein intelverbl"odeter Programmierer m"ochte die Befehle \tty{PUSH/POP}
 unbedingt auch auf dem 68000 haben.  Er l"ost das ,,Problem''
 folgenderma"sen:
 \begin{verbatim}
 push    MACRO   op
-        MOVE    op,-(sp)
+        MOVE.ATTRIBUTE op,-(sp)
         ENDM
 
 pop     MACRO   op
-        MOVE    (sp)+,op
+        MOVE.ATTRIBUTE (sp)+,op
         ENDM
 \end{verbatim}
 Schreibt man nun im Code
 \begin{verbatim}
         push    d0
-        pop     a2        ,
+        pop.l   a2        ,
 \end{verbatim}
 so wird daraus
 \begin{verbatim}
-        MOVE    d0,-(sp)
-        MOVE    (sp)+,a2
+        MOVE.   d0,-(sp)
+        MOVE.L  (sp)+,a2
 \end{verbatim}
 Eine Makrodefinition darf nicht "uber Includefilegrenzen hinausgehen.
 \par
@@ -4792,6 +4901,53 @@ wichtig, zu beachten, da"s \tty{EXITM} immer nur das momentan innerste
 Konstrukt abbricht!  Wer aus seiner geschachtelten Konstruktion
 vollst"andig ,,ausbrechen'' will, mu"s auf den h"oheren Ebenen ebenfalls 
 \tty{EXITM}'s vorsehen!
+
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\subsection{SHIFT}
+\ttindex{SHIFT}
+
+{\tt SHIFT} ist ein Mittel, um Makros mit variablen Argumentlisten
+abzuarbeiten: Es verwirft den ersten Parameter, so da"s der zweite
+Parameter seinen Platz einnimmt usw.  Auf diese Weise k"onnte man
+sich durch eine variable Argumentliste durcharbeiten...wenn man es richtig
+macht.  Folgendes funktioniert zum Beispiel {\em nicht}...
+\begin{verbatim}
+pushlist  macro reg
+          rept  ARGCOUNT
+          push  reg
+          shift
+          endm
+          endm
+\end{verbatim}
+...weil das Makro {\em einmal} expandiert wird, seine Ausgabe von {\tt
+REPT} aufgenommen und dann n-fach ausgef"uhrt wird.  Das erste Argument
+wird also n-fach gesichert...besser geht es schon so:
+\begin{verbatim}
+pushlist  macro reg
+          if      "ARG"<>""
+           push    arg
+           shift
+           pushlist ALLARGS
+          endif
+          endm
+\end{verbatim}
+Also eine Rekursion, in der pro Schritt die Argumentliste ({\tt ALLARGS})
+um eins verk"uzt wird.  Der wichtige Trick ist, da"s jedes Mal eine neue
+Expansion gestartet wird...
+
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\subsection{MAXNEST}
+\ttindex{MAXNEST}
+
+Mit {\tt MAXNEST} kann man einstellen, wie oft ein Makro maximal rekursiv
+aufgerufen werden kann, bevor AS mit einer Fehlermeldung abbricht.  Dies
+darf ein beliebiger ganzer, positiver Wert sein, wobei der Sonderwert 0
+diese Sicherheitsbremse komplett abschaltet (vorsicht damit...).  Der
+Vorgabewert f"ur die maximale Verschachtelungstiefe ist 256; die
+momentante Einstellung kann aus ener gleichnamigen Variablen gelesen
+werden.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -7918,6 +8074,29 @@ Gemeinsam ist beiden, da"s sie neben Code- und Datensegment auch noch ein
 ROM zur Ablage von Konstanten besitzen.  Dieses ist bei AS auf das
 \tty{ROMDATA}-Segment abgebildet!
 
+%%---------------------------------------------------------------------------
+
+\section{F$^2$MC16L}
+
+Darauf, da"s man bei Anwendungen mit mehr als 64K ROM oder 64K RAM darauf
+achten sollte, AS die korrekte momentane Belegung der Bank-Register
+mitzuteilen, wurde bereits in Zusammenhang mit dem {\tt ASSUME}-Befehl
+erw"ahnt.  AS "uberpr"uft bei jedem absoluten Zugriff anhand dieser
+Annahmen, ob evtl. ein Zugriff auf eine Speicherstelle erfolgt, die
+momentan "uberhaupt nicht greifbar ist.  Standardm"a"sig sind daf"ur
+nat"urlich nur DTB und DPR wichtig, denn ADB bzw. SSB/USB werden nur bei
+indirekten Zugriffen "uber RW2/RW6 bzw. RW3/RW7 benutzt, und bei
+indirekten Zugriffen greift diese Pr"ufmimik ohnehin nicht.  Nun ist es
+aber so, da"s man - "ahnlich wie beim 8086 - einem Befehl eine
+Segmentpr"afix voranstellen kann, mit dem DTB f"ur den folgenden Befehl
+durch ein beliebiges anderes Register ersetzt werden kann.  AS f"uhrt
+deswegen "uber die verwendeten Pr"afixbefehle Buch und schaltet bei der
+Pr"ufung f"ur den n"achsten {\em Prozessorbefehl} um - eine zwischen dem
+Segmentpr"afix und Prozessorbefehl eingestreute Pseudoanweisung l"oscht
+den Merker also {\em nicht}.  Dies gilt auch f"ur Pseudobefehle zur
+Datenablage oder Ver"anderung des Programmz"ahlers - aber wer macht so
+etwas schon ;-)
+
 %%===========================================================================
 
 \cleardoublepage
@@ -9744,6 +9923,9 @@ Name             &  Datentyp   & Definition & Bedeutung \\
 \tty{MOMSEGMENT} &  String     & Spezial    & Name des mit \tty{SEGMENT} ein- \\
                  &             &            & gestellten Adre"sraumes \\
 \hline
+\tty{NESTMAX}    &  Integer    & dynam.(256)& maximale Verschachtelungs- \\
+                 &             &            & tiefe f"ur Makros \\
+\hline
 \tty{PADDING}    &  Boolean    & dynam.(1)  & Auff"ullen von Bytefeldern \\
                  &             &            & auf ganze Anzahl ? \\
 \hline
@@ -10445,6 +10627,21 @@ oder ich werde langsam alt...
             verschieben (r8);}
       \item{Mit dem Schalter \tty{x} kann man jetzt zus"atzlich in einer
             zweiten Stufe bie betroffene Quellzeile ausgeben (r8).}
+      \end{itemize}}
+\item{Version 1.42:
+      \begin{itemize}
+      \item{Die Default-Zahlensyntax f"ur Atmel AVR ist jetzt C-Syntax;}
+      \item{zus"atzliche Kommandozeilenoption {\tt olist}, um die 
+            Listing-Ausgabedatei zu setzen;}
+      \item{unterst"utzt zus"atzlich die F$^{2}$MC16L-Familie von Fujitsu;}
+      \item{zus"atzlicher Befehl {\tt PACKING} f"ur die AVR-Familie;}
+      \item{zus"atzliche implizite Makroparameter {\tt ALLARGS} und
+            {\tt ARGCOUNT};}
+      \item{zus"atzlicher Befehl {\tt SHIFT} zum Abarbeiten variabler
+            Argumentlisten von Makros;}
+      \item{unterst"utzt tempor"are Symbole;}
+      \item{zus"atzlicher Befehl {\tt MAXNEST} zum Einstellen der
+            maximalen Verschachtelungstiefe von Makroexpansionen;}
       \end{itemize}}
 \end{itemize}
 
@@ -11409,6 +11606,11 @@ damit mit der n"achsten Release alle etwas davon haben :-)
 \bibitem{FujitsuCD} Fujitsu Limited: \\
                     {\em June 1998 Semiconductor Data Book.\/} \\
                     CD00-00981-1E
+
+\bibitem{Fujitsu16} Fujitsu Semiconductor: \\
+                    {\em F$^2$MC16LX 16-Bit Microcontroller MB90500 Series
+                         Programming Manual.\/} \\
+                    CM44-00201-1E, 1998
 
 \bibitem{Hit180} Hitachi Ltd. : \\
                  {\em 8-/16-Bit Microprocessor Data Book.\/} \\

@@ -6,6 +6,8 @@
 /*                                                                           */
 /* Historie:  9.10.1996 Grundsteinlegung                                     */
 /*            2. 1.1999 ChkPC-Anpassung                                      */
+/*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
+/*           13. 3.2000 Adressraum fuer HC08 jetzt 64K                       */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -228,7 +230,7 @@ BEGIN
     END
 END
 
-	static void ChkAdr(Word Mask, Word Mask08)
+        static void ChkAdr(Word Mask, Word Mask08)
 BEGIN
    if ((AdrMode!=ModNone) AND ((Mask & (1 << AdrMode))==0))
     BEGIN
@@ -370,12 +372,12 @@ BEGIN
    ChkAdr(Mask,Mask08);
 END
 
-	static Boolean DecodePseudo(void)
+        static Boolean DecodePseudo(void)
 BEGIN
    return False;
 END
 
-	static void MakeCode_6805(void)
+        static void MakeCode_6805(void)
 BEGIN
    int z;
    Integer AdrInt;
@@ -461,11 +463,13 @@ BEGIN
        BEGIN
         AdrInt=EvalIntExpression(ArgStr[1],UInt16,&OK)-(EProgCounter()+2);
         if (OK)
-         if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
-         else
-          BEGIN
-           CodeLen=2; BAsmCode[0]=RelOrders[z].Code; BAsmCode[1]=Lo(AdrInt);
-          END
+         BEGIN
+          if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
+          else
+           BEGIN
+            CodeLen=2; BAsmCode[0]=RelOrders[z].Code; BAsmCode[1]=Lo(AdrInt);
+           END
+         END
        END
       return;
      END
@@ -482,13 +486,15 @@ BEGIN
          BAsmCode[1]=AdrVals[0];
          AdrInt=EvalIntExpression(ArgStr[2],UInt16,&OK)-(EProgCounter()+3);
          if (OK)
-          if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
-          else
-           BEGIN
-            BAsmCode[0]=0x41+(Ord(Memo("CBEQX")) << 4);
-            BAsmCode[2]=AdrInt & 0xff;
-            CodeLen=3;
-           END
+          BEGIN
+           if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
+           else
+            BEGIN
+             BAsmCode[0]=0x41+(Ord(Memo("CBEQX")) << 4);
+             BAsmCode[2]=AdrInt & 0xff;
+             CodeLen=3;
+            END
+          END
         END
       END
      return;
@@ -513,11 +519,13 @@ BEGIN
         BEGIN
          AdrInt=EvalIntExpression(ArgStr[2],UInt16,&OK)-(EProgCounter()+z);
          if (OK)
-          if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
-          else
-           BEGIN
-            BAsmCode[z-1]=AdrInt & 0xff; CodeLen=z;
-           END
+          BEGIN
+           if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
+           else
+            BEGIN
+             BAsmCode[z-1]=AdrInt & 0xff; CodeLen=z;
+            END
+          END
         END
       END
      else if (ArgCnt==3)
@@ -540,11 +548,13 @@ BEGIN
           BEGIN
            AdrInt=EvalIntExpression(ArgStr[3],UInt16,&OK)-(EProgCounter()+z);
            if (OK)
-            if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
-            else
-             BEGIN
-              BAsmCode[z-1]=AdrInt & 0xff; CodeLen=z;
-             END
+            BEGIN
+             if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
+             else
+              BEGIN
+               BAsmCode[z-1]=AdrInt & 0xff; CodeLen=z;
+              END
+            END
           END
         END
       END
@@ -560,13 +570,15 @@ BEGIN
       BEGIN
        AdrInt=EvalIntExpression(ArgStr[1],UInt16,&OK)-(EProgCounter()+2);
        if (OK)
-        if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
-        else
-         BEGIN
-          BAsmCode[0]=0x4b+(Ord(Memo("DBNZX")) << 4);
-          BAsmCode[1]=AdrInt & 0xff;
-          CodeLen=2;
-         END
+        BEGIN
+         if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
+         else
+          BEGIN
+           BAsmCode[0]=0x4b+(Ord(Memo("DBNZX")) << 4);
+           BAsmCode[1]=AdrInt & 0xff;
+           CodeLen=2;
+          END
+        END
       END
      return;
     END
@@ -597,11 +609,13 @@ BEGIN
         BEGIN
          AdrInt=EvalIntExpression(ArgStr[ArgCnt],UInt16,&OK)-(EProgCounter()+z);
          if (OK)
-          if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
-          else
-           BEGIN
-            BAsmCode[z-1]=AdrInt & 0xff; CodeLen=z;
-           END
+          BEGIN
+           if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
+           else
+            BEGIN
+             BAsmCode[z-1]=AdrInt & 0xff; CodeLen=z;
+            END
+          END
         END
       END
      return;
@@ -739,12 +753,14 @@ BEGIN
           BEGIN
            AdrInt=EvalIntExpression(ArgStr[3],UInt16,&OK)-(EProgCounter()+3);
            if (OK)
-            if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
-            else
-             BEGIN
-              CodeLen=3; BAsmCode[0]=(BAsmCode[0] << 1)+Ord(Memo("BRCLR"));
-              BAsmCode[2]=Lo(AdrInt);
-             END
+            BEGIN
+             if ((NOT SymbolQuestionable) AND ((AdrInt<-128) OR (AdrInt>127))) WrError(1370);
+             else
+              BEGIN
+               CodeLen=3; BAsmCode[0]=(BAsmCode[0] << 1)+Ord(Memo("BRCLR"));
+               BAsmCode[2]=Lo(AdrInt);
+              END
+            END
           END
         END
       END
@@ -754,7 +770,7 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
-	static Boolean IsDef_6805(void)
+        static Boolean IsDef_6805(void)
 BEGIN
    return False;
 END
@@ -764,7 +780,7 @@ BEGIN
    DeinitFields();
 END
 
-	static void SwitchTo_6805(void)
+        static void SwitchTo_6805(void)
 BEGIN
    TurnWords=False; ConstMode=ConstModeMoto; SetIsOccupied=False;
 
@@ -773,13 +789,13 @@ BEGIN
 
    ValidSegs=(1<<SegCode);
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
-   SegLimits[SegCode] = 0x1fff;
+   SegLimits[SegCode] = (MomCPU == CPU6808) ? 0xffff : 0x1fff;
 
    MakeCode=MakeCode_6805; IsDef=IsDef_6805;
    SwitchFrom=SwitchFrom_6805; InitFields();
 END
 
-	void code6805_init(void)
+        void code6805_init(void)
 BEGIN
    CPU6805=AddCPU("6805",SwitchTo_6805);
    CPU6808=AddCPU("68HC08",SwitchTo_6805);
