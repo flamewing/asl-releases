@@ -406,20 +406,23 @@ BEGIN
     END
 END	
 
-	static CMDResult CMD_EntryAdr(Boolean Negate, char *Arg)
-BEGIN
+static CMDResult CMD_EntryAdr(Boolean Negate, char *Arg)
+{
    Boolean err;
    
    if (Negate)
-    BEGIN
-     EntryAdrPresent=False; return CMDOK;
-    END
+   {
+     EntryAdrPresent = False;
+     return CMDOK;
+   }
    else
-    BEGIN
-     EntryAdr=ConstLongInt(Arg,&err);
+   {
+     EntryAdr = ConstLongInt(Arg, &err);
+     if (err)
+       EntryAdrPresent = True;
      return (err) ? CMDArg : CMDErr;
-    END
-END	
+   }
+}
 
 	static CMDResult CMD_FillVal(Boolean Negate, char *Arg)
 BEGIN

@@ -52,4 +52,4 @@ Message InfoMessHelp
  "         -m <mode>         :  EPROM-mode (odd,even,byte0..byte3)\n" \
  "         -e <address>      :  set entry address\n" \
  "         -S [L|B]<length>  :  prepend entry address to image\n" \
- "         -k                : automatically erase source files\n"
+ "         -k                :  automatically erase source files\n"

@@ -282,6 +282,7 @@ static Boolean MacroAdder(PTree *PDest, PTree Neu, void *pData)
 void AddMacro(PMacroRec Neu, LongInt DefSect, Boolean Protest)
 {
    PMacroNode NewNode;
+   PTree TreeRoot;
 
    if (NOT CaseSensitive) NLS_UpString(Neu->Name);
    NewNode = (PMacroNode) malloc(sizeof(TMacroNode));
@@ -290,7 +291,9 @@ void AddMacro(PMacroRec Neu, LongInt DefSect, Boolean Protest)
    NewNode->Tree.Attribute = DefSect;
    NewNode->Contents = Neu;
    
-   EnterTree((PTree*)&MacroRoot, &(NewNode->Tree), MacroAdder, &Protest);
+   TreeRoot = &(MacroRoot->Tree);
+   EnterTree(&TreeRoot, &(NewNode->Tree), MacroAdder, &Protest);
+   MacroRoot = (PMacroNode)TreeRoot;
 }
 
 static PMacroRec FoundMacro_FNode(LongInt Handle, char *Part)
@@ -330,7 +333,10 @@ END
 
 void ClearMacroList(void)
 {
-   DestroyTree((PTree*)&MacroRoot, ClearMacroList_ClearNode, NULL);
+   PTree TreeRoot;
+
+   TreeRoot = &(MacroRoot->Tree); MacroRoot = NULL;
+   DestroyTree(&TreeRoot, ClearMacroList_ClearNode, NULL);
 }
 
 static void ResetMacroDefines_ResetNode(PTree Tree, void *pData)

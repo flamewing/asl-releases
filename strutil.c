@@ -11,6 +11,13 @@
 /*           30. 5.1999 ConstLongInt akzeptiert auf 0x fuer Hex-Zahlen       */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: strutil.c,v 1.3 2004/05/30 20:54:26 alfred Exp $                     */
+/*****************************************************************************
+ * $Log: strutil.c,v $
+ * Revision 1.3  2004/05/30 20:54:26  alfred
+ * - added CopyNoBlanks()
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -198,7 +205,7 @@ END
 #endif
 
 #ifdef NEEDS_STRSTR
-	char *strstr(char *haystack, char *needle)
+	char *strstr(const char *haystack, const char *needle)
 BEGIN
    int lh=strlen(haystack), ln=strlen(needle);
    int z;
@@ -455,6 +462,39 @@ BEGIN
     END
    *dest='\0';
 END
+
+int CopyNoBlanks(char *pDest, const char *pSrc, int MaxLen)
+{
+  const char *pSrcRun;
+  char *pDestRun = pDest;
+  int Cnt = 0;
+  Byte Flags = 0;
+  char ch;
+
+  /* leave space for NUL */
+
+  MaxLen--;
+
+  for (pSrcRun = pSrc; (ch = *pSrcRun); pSrcRun++)
+  {
+    switch (ch)
+    {
+      case '\'':
+        if (!(Flags & 2)) Flags ^= 1;
+        break;
+      case '"':
+        if (!(Flags & 1)) Flags ^= 2;
+        break;
+    }
+    if ((!isspace((unsigned char)ch)) || (Flags))
+      *(pDestRun++) = ch;
+    if (++Cnt >= MaxLen)
+      break;
+  }
+  *pDestRun = '\0';
+
+  return Cnt;
+}
 
 /*--------------------------------------------------------------------------*/
 /* fuehrende Leerzeichen loeschen */

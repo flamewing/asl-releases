@@ -10,6 +10,13 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: code166.c,v 1.2 2004/05/29 11:33:00 alfred Exp $                     */
+/*****************************************************************************
+ * $Log: code166.c,v $
+ * Revision 1.2  2004/05/29 11:33:00  alfred
+ * - relocated DecodeIntelPseudo() into own module
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -22,6 +29,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "intpseudo.h" 
 #include "codevars.h"
 
 typedef struct
@@ -57,7 +65,7 @@ typedef struct
 #define DPPCount 4
 static char *RegNames[6]={"DPP0","DPP1","DPP2","DPP3","CP","SP"};
 
-static CPUVar CPU80C166,CPU80C167;
+static CPUVar CPU80C166,CPU80C167,CPU80C167CS;
 
 static BaseOrder *FixedOrders;
 static Condition *Conditions;
@@ -1704,6 +1712,7 @@ END
 BEGIN
    CPU80C166=AddCPU("80C166",SwitchTo_166);
    CPU80C167=AddCPU("80C167",SwitchTo_166);
+   CPU80C167CS=AddCPU("80C167CS",SwitchTo_166);
 
    SaveInitProc=InitPassProc; InitPassProc=InitCode_166;
 END

@@ -12,9 +12,12 @@
 /*             2002-01-27 allow immediate addressing for one-op instrs(doj)  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemsp.c,v 1.5 2003/05/02 21:23:12 alfred Exp $                     */
+/* $Id: codemsp.c,v 1.1 2003/11/06 02:49:23 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: codemsp.c,v $
+ * Revision 1.1  2003/11/06 02:49:23  alfred
+ * - recreated
+ *
  * Revision 1.5  2003/05/02 21:23:12  alfred
  * - strlen() updates
  *

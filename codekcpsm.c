@@ -7,9 +7,15 @@
 /* Historie: 27.02.2003 Grundsteinlegung                                     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codekcpsm.c,v 1.4 2003/03/16 18:53:43 alfred Exp $                   */
+/* $Id: codekcpsm.c,v 1.2 2004/05/29 11:33:03 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codekcpsm.c,v $
+ * Revision 1.2  2004/05/29 11:33:03  alfred
+ * - relocated DecodeIntelPseudo() into own module
+ *
+ * Revision 1.1  2003/11/06 02:49:23  alfred
+ * - recreated
+ *
  * Revision 1.4  2003/03/16 18:53:43  alfred
  * - created 807x
  *
@@ -35,7 +41,7 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
-#include "codepseudo.h"
+#include "intpseudo.h"
 #include "codevars.h"
 #include "headids.h"
 

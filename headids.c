@@ -19,9 +19,18 @@
 /*           2001-07-01 TI 320C54x                                           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: headids.c,v 1.4 2003/03/16 18:53:43 alfred Exp $                          */
+/* $Id: headids.c,v 1.1 2003/11/06 02:49:24 alfred Exp $                          */
 /*****************************************************************************
  * $Log: headids.c,v $
+ * Revision 1.1  2003/11/06 02:49:24  alfred
+ * - recreated
+ *
+ * Revision 1.6  2003/10/12 13:39:13  alfred
+ * - added 78K2
+ *
+ * Revision 1.5  2003/08/16 16:38:39  alfred
+ * - added eZ8
+ *
  * Revision 1.4  2003/03/16 18:53:43  alfred
  * - created 807x
  *
@@ -75,6 +84,7 @@ static TFamilyDescr Descrs[]=
         {"80C166/167", 0x004c, IntHex16},
         {"Zx80"      , 0x0051, IntHex  },
         {"Z8"        , 0x0079, IntHex  },
+        {"eZ8"       , 0x0059, IntHex  },
         {"KCPSM"     , 0x006b, IntHex  },
         {"TLCS-900"  , 0x0052, MotoS   },
         {"TLCS-90"   , 0x0053, IntHex  },
@@ -106,6 +116,7 @@ static TFamilyDescr Descrs[]=
         {"78(C)1x"   , 0x007a, IntHex  },
         {"75K0"      , 0x007b, IntHex  },
         {"78K0"      , 0x007c, IntHex  },
+        {"78K2"      , 0x0060, IntHex16},
         {"7720"      , 0x007d, IntHex  },
         {"7725"      , 0x007e, IntHex  },
         {"77230"     , 0x007f, IntHex  },

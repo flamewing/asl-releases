@@ -17,6 +17,13 @@
 /*       Registersymbole                                                    */
 /*       explizite Displacement-Laengenangaben (Adressen, ADDSP)            */
 /****************************************************************************/
+/* $Id: codefmc16.c,v 1.2 2004/05/29 12:04:47 alfred Exp $                  */
+/*****************************************************************************
+ * $Log: codefmc16.c,v $
+ * Revision 1.2  2004/05/29 12:04:47  alfred
+ * - relocated DecodeMot(16)Pseudo into separate module
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -29,9 +36,12 @@
 #include "asmsub.h"
 #include "asmallg.h"
 #include "codepseudo.h"
+#include "intpseudo.h"
 #include "codevars.h"
 #include "asmitree.h"
 #include "headids.h"
+
+#include "codefmc16.h"
 
 /*--------------------------------------------------------------------------*/
 /* Definitionen */

@@ -5,9 +5,18 @@
 /* structure handling                                                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmstructs.c,v 1.6 2002/11/20 20:25:04 alfred Exp $                 */
+/* $Id: asmstructs.c,v 1.3 2004/01/17 16:18:38 alfred Exp $                 */
 /*****************************************************************************
  * $Log: asmstructs.c,v $
+ * Revision 1.3  2004/01/17 16:18:38  alfred
+ * - fix some more GCC 3.3 quarrel
+ *
+ * Revision 1.2  2004/01/17 16:12:50  alfred
+ * - some quirks for GCC 3.3
+ *
+ * Revision 1.1  2003/11/06 02:49:19  alfred
+ * - recreated
+ *
  * Revision 1.6  2002/11/20 20:25:04  alfred
  * - added unions
  *
@@ -147,6 +156,7 @@ static Boolean StructAdder(PTree *PDest, PTree Neu, void *pData)
 void AddStruct(PStructRec StructRec, char *Name, Boolean Protest)
 {
   PStructNode Node;
+  PTree TreeRoot;
 
   Node = (PStructNode) malloc(sizeof(TStructNode));
   if (Node)
@@ -157,7 +167,9 @@ void AddStruct(PStructRec StructRec, char *Name, Boolean Protest)
     Node->Tree.Attribute = MomSectionHandle;
     Node->Defined = FALSE;
     Node->StructRec = StructRec;
-    EnterTree((PTree*)&StructRoot, &(Node->Tree), StructAdder, &Protest);
+    TreeRoot = &(StructRoot->Tree);
+    EnterTree(&TreeRoot, &(Node->Tree), StructAdder, &Protest);
+    StructRoot = (PStructNode)TreeRoot;
   }
 }
 
@@ -258,7 +270,10 @@ static void ClearNode(PTree Tree, void *pData)
 
 void ClearStructList(void)
 {
-  DestroyTree((PTree*)&StructRoot, ClearNode, NULL);
+  PTree TreeRoot;
+
+  TreeRoot = &(StructRoot->Tree); StructRoot = NULL;
+  DestroyTree(&TreeRoot, ClearNode, NULL);
 }
 
 void ExpandStruct(PStructRec StructRec)

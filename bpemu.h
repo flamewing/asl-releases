@@ -30,9 +30,9 @@ extern Boolean Odd (int inp);
 
 extern Boolean DirScan(char *Mask, charcallback callback);
 
-extern LongInt GetFileTime(char *Name);
+extern LongInt MyGetFileTime(char *Name);
 
-#ifdef _WIN32
+#ifdef __CYGWIN32__
 extern char *DeCygWinDirList(char *pStr);
 
 extern char *DeCygwinPath(char *pStr);

@@ -39,9 +39,36 @@
 /*           2002-01-27 Build 19                                             */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: version.c,v 1.10 2003/05/25 13:01:12 alfred Exp $                     */
+/* $Id: version.c,v 1.7 2004/11/20 17:36:26 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: version.c,v $
+ * Revision 1.7  2004/11/20 17:36:26  alfred
+ * - Bld34
+ *
+ * Revision 1.6  2004/09/26 10:08:35  alfred
+ * - Bld33
+ *
+ * Revision 1.5  2004/05/29 14:39:35  alfred
+ * - Bld32 changelog
+ *
+ * Revision 1.4  2004/03/31 18:25:20  alfred
+ * - Bld31
+ *
+ * Revision 1.3  2003/12/07 13:59:50  alfred
+ * - fixed DebVersion
+ *
+ * Revision 1.2  2003/12/07 13:51:51  alfred
+ * - 1.42 Bld 30
+ *
+ * Revision 1.1  2003/11/06 02:40:28  alfred
+ * - recreated
+ *
+ * Revision 1.12  2003/08/17 14:06:59  alfred
+ * - build 29
+ *
+ * Revision 1.11  2003/06/08 20:17:43  alfred
+ * - stuff for Debian archive
+ *
  * Revision 1.10  2003/05/25 13:01:12  alfred
  * - Build 28
  *
@@ -74,12 +101,13 @@
 #include "stdinc.h"
 #include <string.h>
 
-char *Version="1.42 Beta [Bld 28]";
+char *Version="1.42 Beta [Bld 34]";
+char *DebVersion = "1.42bld34-1";
 LongInt VerNo=0x142f;
 
-char *InfoMessCopyright="(C) 1992,2003 Alfred Arnold";
+char *InfoMessCopyright="(C) 1992,2004 Alfred Arnold";
 
-LongInt Magic=0x12372f44;
+LongInt Magic=0x12372844;
 
 void version_init(void)
 {

@@ -15,6 +15,16 @@
  * 14. 1.2001 silenced warnings about unused parameters
  * 2001-11-11 use DecodeTIPSeudo
  */
+/* $Id: code3205x.c,v 1.3 2004/09/26 14:42:44 alfred Exp $                   */
+/*****************************************************************************
+ * $Log: code3205x.c,v $
+ * Revision 1.3  2004/09/26 14:42:44  alfred
+ * - remove warning
+ *
+ * Revision 1.2  2004/05/29 12:18:05  alfred
+ * - relocated DecodeTIPseudo() to separate module
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -29,9 +39,10 @@
 #include "asmpars.h"
 #include "asmitree.h"
 #include "codepseudo.h"
+#include "tipseudo.h"
 #include "endian.h"
 
-#include "code3202x.h"
+#include "code3205x.h"
 
 /* ---------------------------------------------------------------------- */
 
@@ -1383,6 +1394,7 @@ static void deinitfields(void)
 
 /* ---------------------------------------------------------------------- */
 
+#if 0
 static void define_untyped_label(void)
 {
         if (LabPart[0]) {
@@ -1391,6 +1403,7 @@ static void define_untyped_label(void)
                 PopLocHandle();
         }
 }
+#endif
 
 /* ---------------------------------------------------------------------- */
 

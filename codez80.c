@@ -10,10 +10,15 @@
 /*           2001-12-11 begun with Rabbit2000                                */
 /*                                                                           */
 /*****************************************************************************/
-/*****************************************************************************/
-/* $Id: codez80.c,v 1.3 2003/05/02 21:23:12 alfred Exp $                          */
+/* $Id: codez80.c,v 1.2 2004/05/29 11:33:04 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codez80.c,v $
+ * Revision 1.2  2004/05/29 11:33:04  alfred
+ * - relocated DecodeIntelPseudo() into own module
+ *
+ * Revision 1.1  2003/11/06 02:49:24  alfred
+ * - recreated
+ *
  * Revision 1.3  2003/05/02 21:23:12  alfred
  * - strlen() updates
  *
@@ -36,7 +41,8 @@
 #include "asmcode.h"
 #include "asmallg.h"
 #include "asmitree.h"
-#include "codepseudo.h"
+#include "codepseudo.h" 
+#include "intpseudo.h"
 #include "codevars.h"
 
 /*-------------------------------------------------------------------------*/

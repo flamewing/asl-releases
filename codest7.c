@@ -9,6 +9,13 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: codest7.c,v 1.2 2004/05/29 12:04:48 alfred Exp $                     */
+/*****************************************************************************
+ * $Log: codest7.c,v $
+ * Revision 1.2  2004/05/29 12:04:48  alfred
+ * - relocated DecodeMot(16)Pseudo into separate module
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -22,8 +29,10 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "motpseudo.h"
 #include "codevars.h"
 
+#include "codest7.h"
 
 typedef struct
          {

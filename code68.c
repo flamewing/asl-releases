@@ -13,6 +13,13 @@
 /*                       unsinged limited                                    */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: code68.c,v 1.4 2004/05/29 12:18:05 alfred Exp $                      */
+/*****************************************************************************
+ * $Log: code68.c,v $
+ * Revision 1.4  2004/05/29 12:18:05  alfred
+ * - relocated DecodeTIPseudo() to separate module
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -24,8 +31,11 @@
 #include "asmpars.h"
 #include "asmsub.h"
 #include "codepseudo.h"
+#include "motpseudo.h"
 #include "codevars.h"
 #include "asmitree.h"
+
+#include "code68.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -704,29 +714,29 @@ BEGIN
    AddInstTable(InstTable,"BTGL",0,DecodeBTxx);   
 
    FixedOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*FixedOrderCnt); InstrZ=0;
-   AddFixed("ABA"  ,CPU6800, CPU6811, 0x001b); AddFixed("ABX"  ,CPU6301, CPU6811, 0x003a);
-   AddFixed("ABY"  ,CPU6811, CPU6811, 0x183a); AddFixed("ASLD" ,CPU6301, CPU6811, 0x0005);
-   AddFixed("CBA"  ,CPU6800, CPU6811, 0x0011); AddFixed("CLC"  ,CPU6800, CPU6811, 0x000c);
-   AddFixed("CLI"  ,CPU6800, CPU6811, 0x000e); AddFixed("CLV"  ,CPU6800, CPU6811, 0x000a);
-   AddFixed("DAA"  ,CPU6800, CPU6811, 0x0019); AddFixed("DES"  ,CPU6800, CPU6811, 0x0034);
-   AddFixed("DEX"  ,CPU6800, CPU6811, 0x0009); AddFixed("DEY"  ,CPU6811, CPU6811, 0x1809);
-   AddFixed("FDIV" ,CPU6811, CPU6811, 0x0003); AddFixed("IDIV" ,CPU6811, CPU6811, 0x0002);
-   AddFixed("INS"  ,CPU6800, CPU6811, 0x0031); AddFixed("INX"  ,CPU6800, CPU6811, 0x0008);
-   AddFixed("INY"  ,CPU6811, CPU6811, 0x1808); AddFixed("LSLD" ,CPU6301, CPU6811, 0x0005);
-   AddFixed("LSRD" ,CPU6301, CPU6811, 0x0004); AddFixed("MUL"  ,CPU6301, CPU6811, 0x003d);
-   AddFixed("NOP"  ,CPU6800, CPU6811, 0x0001); AddFixed("PSHX" ,CPU6301, CPU6811, 0x003c);
-   AddFixed("PSHY" ,CPU6811, CPU6811, 0x183c); AddFixed("PULX" ,CPU6301, CPU6811, 0x0038);
-   AddFixed("PULY" ,CPU6811, CPU6811, 0x1838); AddFixed("RTI"  ,CPU6800, CPU6811, 0x003b);
-   AddFixed("RTS"  ,CPU6800, CPU6811, 0x0039); AddFixed("SBA"  ,CPU6800, CPU6811, 0x0010);
-   AddFixed("SEC"  ,CPU6800, CPU6811, 0x000d); AddFixed("SEI"  ,CPU6800, CPU6811, 0x000f);
-   AddFixed("SEV"  ,CPU6800, CPU6811, 0x000b); AddFixed("SLP"  ,CPU6301, CPU6301, 0x001a);
-   AddFixed("STOP" ,CPU6811, CPU6811, 0x00cf); AddFixed("SWI"  ,CPU6800, CPU6811, 0x003f);
-   AddFixed("TAB"  ,CPU6800, CPU6811, 0x0016); AddFixed("TAP"  ,CPU6800, CPU6811, 0x0006);
-   AddFixed("TBA"  ,CPU6800, CPU6811, 0x0017); AddFixed("TPA"  ,CPU6800, CPU6811, 0x0007);
-   AddFixed("TSX"  ,CPU6800, CPU6811, 0x0030); AddFixed("TSY"  ,CPU6811, CPU6811, 0x1830);
-   AddFixed("TXS"  ,CPU6800, CPU6811, 0x0035); AddFixed("TYS"  ,CPU6811, CPU6811, 0x1835);
-   AddFixed("WAI"  ,CPU6800, CPU6811, 0x003e); AddFixed("XGDX" ,CPU6811, CPU6811, 0x008f);
-   AddFixed("XGDY" ,CPU6811, CPU6811, 0x188f);
+   AddFixed("ABA"  ,CPU6800, CPU68HC11K4, 0x001b); AddFixed("ABX"  ,CPU6301, CPU68HC11K4, 0x003a);
+   AddFixed("ABY"  ,CPU6811, CPU68HC11K4, 0x183a); AddFixed("ASLD" ,CPU6301, CPU68HC11K4, 0x0005);
+   AddFixed("CBA"  ,CPU6800, CPU68HC11K4, 0x0011); AddFixed("CLC"  ,CPU6800, CPU68HC11K4, 0x000c);
+   AddFixed("CLI"  ,CPU6800, CPU68HC11K4, 0x000e); AddFixed("CLV"  ,CPU6800, CPU68HC11K4, 0x000a);
+   AddFixed("DAA"  ,CPU6800, CPU68HC11K4, 0x0019); AddFixed("DES"  ,CPU6800, CPU68HC11K4, 0x0034);
+   AddFixed("DEX"  ,CPU6800, CPU68HC11K4, 0x0009); AddFixed("DEY"  ,CPU6811, CPU68HC11K4, 0x1809);
+   AddFixed("FDIV" ,CPU6811, CPU68HC11K4, 0x0003); AddFixed("IDIV" ,CPU6811, CPU68HC11K4, 0x0002);
+   AddFixed("INS"  ,CPU6800, CPU68HC11K4, 0x0031); AddFixed("INX"  ,CPU6800, CPU68HC11K4, 0x0008);
+   AddFixed("INY"  ,CPU6811, CPU68HC11K4, 0x1808); AddFixed("LSLD" ,CPU6301, CPU68HC11K4, 0x0005);
+   AddFixed("LSRD" ,CPU6301, CPU68HC11K4, 0x0004); AddFixed("MUL"  ,CPU6301, CPU68HC11K4, 0x003d);
+   AddFixed("NOP"  ,CPU6800, CPU68HC11K4, 0x0001); AddFixed("PSHX" ,CPU6301, CPU68HC11K4, 0x003c);
+   AddFixed("PSHY" ,CPU6811, CPU68HC11K4, 0x183c); AddFixed("PULX" ,CPU6301, CPU68HC11K4, 0x0038);
+   AddFixed("PULY" ,CPU6811, CPU68HC11K4, 0x1838); AddFixed("RTI"  ,CPU6800, CPU68HC11K4, 0x003b);
+   AddFixed("RTS"  ,CPU6800, CPU68HC11K4, 0x0039); AddFixed("SBA"  ,CPU6800, CPU68HC11K4, 0x0010);
+   AddFixed("SEC"  ,CPU6800, CPU68HC11K4, 0x000d); AddFixed("SEI"  ,CPU6800, CPU68HC11K4, 0x000f);
+   AddFixed("SEV"  ,CPU6800, CPU68HC11K4, 0x000b); AddFixed("SLP"  ,CPU6301, CPU6301    , 0x001a);
+   AddFixed("STOP" ,CPU6811, CPU68HC11K4, 0x00cf); AddFixed("SWI"  ,CPU6800, CPU68HC11K4, 0x003f);
+   AddFixed("TAB"  ,CPU6800, CPU68HC11K4, 0x0016); AddFixed("TAP"  ,CPU6800, CPU68HC11K4, 0x0006);
+   AddFixed("TBA"  ,CPU6800, CPU68HC11K4, 0x0017); AddFixed("TPA"  ,CPU6800, CPU68HC11K4, 0x0007);
+   AddFixed("TSX"  ,CPU6800, CPU68HC11K4, 0x0030); AddFixed("TSY"  ,CPU6811, CPU68HC11K4, 0x1830);
+   AddFixed("TXS"  ,CPU6800, CPU68HC11K4, 0x0035); AddFixed("TYS"  ,CPU6811, CPU68HC11K4, 0x1835);
+   AddFixed("WAI"  ,CPU6800, CPU68HC11K4, 0x003e); AddFixed("XGDX" ,CPU6811, CPU68HC11K4, 0x008f);
+   AddFixed("XGDY" ,CPU6811, CPU68HC11K4, 0x188f);
 
    RelOrders=(BaseOrder *) malloc(sizeof(BaseOrder)*RelOrderCnt); InstrZ=0;
    AddRel("BCC", 0x24); AddRel("BCS", 0x25);
@@ -843,10 +853,10 @@ static ASSUMERec ASSUMEHC11s[ASSUMEHC11Count] =
      else
       BEGIN
        printf("\nMMSIZ %02x MMWBR %02x MM1CR %02x MM2CR %02x",
-              Reg_MMSIZ, Reg_MMWBR, Reg_MM1CR, Reg_MM2CR);
+              (unsigned)Reg_MMSIZ, (unsigned)Reg_MMWBR, (unsigned)Reg_MM1CR, (unsigned)Reg_MM2CR);
        printf("\nWindow 1: %lx...%lx --> %lx...%lx",
               (long)Win1VStart, (long)Win1VEnd, (long)Win1PStart, (long)Win1PEnd);
-       printf("\nWindow 1: %lx...%lx --> %lx...%lx\n",
+       printf("\nWindow 2: %lx...%lx --> %lx...%lx\n",
               (long)Win2VStart, (long)Win2VEnd, (long)Win2PStart, (long)Win2PEnd);
        return True;
       END

@@ -1,5 +1,7 @@
 %%TITLE Bedienungsanleitung Makroassembler AS
-\documentstyle[german,12pt,dina4,twoside,makeidx]{report}
+\documentclass[12pt,a4paper,twoside]{report}
+\usepackage{german}
+\usepackage{makeidx}
 \pagestyle{headings}
 \sloppy
 \textwidth 15cm
@@ -43,7 +45,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand M"arz 2003}
+{\large Stand August 2003}
 \end{raggedright}
 
 \clearpage
@@ -183,9 +185,9 @@ werden:
 ...und damit nat"urlich von jedem Sunsite-Spiegel der Welt!
 \par
 Wer "uber keinen FTP-Zugang verf"ugt, kann den Assembler auch von mir
-anfordern.  Ich werde aber nur Anfragen beantworten, die zwei Disketten (f"ur
-720K/1,2M-Format 4/3 St"uck) und einen passenden, frankierten R"uckumschlag
-enthalten.  \bb{KEIN} Geld schicken!!!
+anfordern.  Ich werde aber nur Anfragen beantworten, die einen CD-Rohling
+und einen passenden, frankierten R"uckumschlag enthalten.  \bb{KEIN} Geld
+schicken!!!
 \par
 So. Nach diesem unvermeidlichen Vorwort k"onnen wir wohl beruhigt
 zur eigentlichen Anleitung schreiten:
@@ -227,7 +229,7 @@ folgende Prozessorfamilien implementiert:
 \item{AMD 29K}
 \item{Siemens 80C166/167}
 \item{Zilog Z80, Z180, Z380}
-\item{Zilog Z8}
+\item{Zilog Z8, eZ8}
 \item{Xilinx KCPSM ('PicoBlaze')}
 \item{Toshiba TLCS-900(L)}
 \item{Toshiba TLCS-90}
@@ -258,7 +260,8 @@ folgende Prozessorfamilien implementiert:
 \item{Fairchild ACE}
 \item{NEC $\mu$PD78(C)1x}
 \item{NEC $\mu$PD75xxx (alias 75K0)}
-\item{NEC $\mu$PD78xxx (alias 78K0)}
+\item{NEC 78K0}
+\item{NEC 78K2}
 \item{NEC $\mu$PD7720/7725}
 \item{NEC $\mu$PD77230}
 \item{Fujitsu F$^2$MC8L}
@@ -270,7 +273,6 @@ in Arbeit / Planung / "Uberlegung :
 \begin{itemize}
 \item{NEC 78K4}
 \item{Intel 8008}
-\item{Texas Instruments TMS320C54x}
 \item{Analog Devices ADSP21xx}
 \item{SGS-Thomson ST20}
 \item{Texas Instruments TMS320C4x}
@@ -502,8 +504,8 @@ Verzeichnisse enthalten im einzelnen:
 \item{{\tt LIB}: vorgesehen f"ur Initialisierungsdateien.}
 \end{itemize}
 Eine Auflistung der Dateien, die in jeder Bin"ardistribution enthalten
-sind, findet sich in den Tabellen \ref{TabCommonPackageList1} und
-\ref{TabCommonPackageList2}.  Falls eine der in diesen (oder den
+sind, findet sich in den Tabellen \ref{TabCommonPackageList1} bis
+\ref{TabCommonPackageList3}.  Falls eine der in diesen (oder den
 folgenden) Tabellen aufgef"uhrten Dateien fehlt, hat jemand (im
 Zweifelsfalle ich) beim Kopieren geschlafen...
 
@@ -562,6 +564,7 @@ REGACE.INC        & Registeradressen ACE \\
 \caption{Standardumfang einer Bin"ardistribution - Teil 1
          \label{TabCommonPackageList1}}
 \end{table*}
+
 \begin{table*}[htp]
 \begin{center}\begin{tabular}{|l|l|}
 \hline
@@ -604,6 +607,16 @@ STDDEFZ8.INC      & Registeradressen Z8-Familie \\
 \hline
 {\bf Verzeichnis LIB} & \\
 \hline
+\end{tabular}\end{center}
+\caption{Standardumfang einer Bin"ardistribution - Teil 2
+         \label{TabCommonPackageList2}}
+\end{table*}
+
+\begin{table*}[htp]
+\begin{center}\begin{tabular}{|l|l|}
+\hline
+Datei             & Funktion \\
+\hline
 \hline
 {\bf Verzeichnis MAN} & \\
 \hline
@@ -614,8 +627,8 @@ P2HEX.1           & Kurzanleitung zu P2HEX \\
 P2BIN.1           & Kurzanleitung zu P2BIN \\
 \hline
 \end{tabular}\end{center}
-\caption{Standardumfang einer Bin"ardistribution - Teil 2
-         \label{TabCommonPackageList2}}
+\caption{Standardumfang einer Bin"ardistribution - Teil 3
+         \label{TabCommonPackageList3}}
 \end{table*}
 
 Je nach Plattform kann eine Bin"ardistribution aber noch weitere Dateien
@@ -1871,9 +1884,6 @@ BITCNT   & bin"are Quersumme    & Integer      & Integer \\
 FIRSTBIT & niedrigstes 1-Bit    & Integer      & Integer \\
 LASTBIT  & h"ochstes 1-Bit      & Integer      & Integer \\
 BITPOS   & einziges 1-Bit       & Integer      & Integer \\
-         &                      & & \\
-SGN      & Vorzeichen (0/1/-1)  & Integer oder & Integer \\
-         &                      & Gleitkomma   & \\
 \hline
 \end{tabular}\end{center}
 \caption{vordefinierte Funktionen in AS - Teil 1 (Integer- und
@@ -1885,6 +1895,8 @@ SGN      & Vorzeichen (0/1/-1)  & Integer oder & Integer \\
 Name     & Funktion             & Argument & Ergebnis \\
 \hline
 \hline
+SGN      & Vorzeichen (0/1/-1)  & Integer oder & Integer \\
+         &                      & Gleitkomma   & \\
 ABS      & Betrag               & Integer oder & Integer oder \\
          &                      & Gleitkomma   & Gleitkomma \\
 TOUPPER  & pass. Gro"sbuchstabe & Integer      & Integer \\
@@ -2682,7 +2694,6 @@ zu geben und damit verschiedene, nicht zusammenh"angende Codest"ucke in
 einer Quelldatei unterzubringen.  Sofern nicht in einem Feld explizit anders
 angegeben, ist die vorgegebene Startadresse in einem Segment (d.h. die ohne
 {\tt ORG} angenommene) immer 0.
-\small
 \begin{table*}[htbp]
 \begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
 \hline
@@ -2736,7 +2747,6 @@ angegeben, ist die vorgegebene Startadresse in einem Segment (d.h. die ohne
 \end{tabular}\end{center}
 \caption{Adre"sbereiche f"ur \tty{ORG} --- Teil 4\label{TabORG4}}
 \end{table*}
-\normalsize
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3021,11 +3031,13 @@ k"onnen.  Eine Liste mit den zus"atzlichen Befehlen findet sich im
 Kapitel mit den prozessorspezifischen Hinweisen.
 %%-----------
 \begin{quote}
-ad) Z8601, Z8604, Z8608, Z8630, Z8631
+ad) Z8601, Z8604, Z8608, Z8630, Z8631 $\rightarrow$ eZ8
 \end{quote}
-Diese Prozessoren unterscheiden sich wieder nur in
+Die Varianten mit Z8-Kern unterscheiden sich nur in
 Speicherausbau und Peripherie, d.h. die Wahl hat auf den
-unterst"utzten Befehlssatz keinen Effekt.
+unterst"utzten Befehlssatz keinen Effekt.  Deutlich anders ist
+jedoch der eZ8, mit einem stark erweiterten Befehlssatz, der auch
+nur auf Quellebene weitestgehens aufw"arts-kompatibel ist.
 %%-----------
 \begin{quote}
 ae) KCPSM
@@ -3237,19 +3249,24 @@ Dies ist das einzige, mir momentan vertraute Mitglied der
 COP8-Familie!
 %%-----------
 \begin{quote}
-bg) 7720 $\rightarrow$ 7725
+bg) 78214
+\end{quote}
+Dies ist momentan der Repr"asentant der 78K2-Familie von NEC.
+%%-----------
+\begin{quote}
+bh) 7720 $\rightarrow$ 7725
 \end{quote}
 Der $\mu$PD7725 bietet im Vergleich zu seinem Vorg"anger gr"o"sere
 Adre"sr"aume und einige zus"atzliche Befehle. {\bf VORSICHT!}  Die
 Prozessoren sind nicht zueinander bin"arkompatibel!
 %%-----------
 \begin{quote}
-bh) 77230
+bi) 77230
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
-bi) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
+bj) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
     \> SYM53C875, SYM53C895
 \end{tabbing}
 \end{quote}
@@ -3258,12 +3275,12 @@ einige Befehlsvarianten nicht, au"serdem unterscheiden sie sich in ihrem
 Satz interner Register.
 %%-----------
 \begin{quote}
-bj) MB89190
+bk) MB89190
 \end{quote}
 Dieser Prozessortyp repr"asentiert die F$^{2}$MC8L-Serie von Fujitsu...
 %%-----------
 \begin{quote}
-bk) MB9500
+bl) MB9500
 \end{quote}
 ...so wie dieser es momentan f"ur die 16-Bit-Varianten von Fujitsu tut!
 
@@ -7365,7 +7382,7 @@ noch "ahnlich wie das ,,Vorbild'' MCCAP einige Pseudoinstruktionen, die
 als eingebaute Makros ausgef"uhrt sind:
 \begin{itemize}
 \item{\tty{NOP} ist eine Kurzschreibweise f"ur \tty{MOVE AUX,AUX}}
-\item{\tty{HALT} ist eine Kurzschreibweise f"ur \tty{JMP \verb!*!}}
+\item{\tty{HALT} ist eine Kurzschreibweise f"ur {\tt JMP \verb!*!}}
 \item{\tty{XML ii} ist eine Kurzschreibweise f"ur \tty{XMIT ii,R12} (nur
       8X305)}
 \item{\tty{XMR ii} ist eine Kurzschreibweise f"ur \tty{XMIT ii,R13} (nur
@@ -8464,6 +8481,23 @@ notwendig sein, einen Pr"afix zu verwenden.
 
 %%---------------------------------------------------------------------------
 
+\section{78K2}
+\label{78K2Spec}
+
+Analog wie beim 78K0 benutzt NEC auch hier wieder Dollar- und
+Ausrufezeichen f"ur verschiedene L"angen von Adre"ssausdr"ucken.
+Zwischen langen und kurzen Adressen (sowohl im RAM- als auch
+SFR-Bereich) wird wieder automatisch entschieden, nur relative
+Adressierung mu"s man manuell anw"ahlen, wenn ein Befehl beides
+unterst"utzt (z.B. {\tt BR}).  
+
+Noch eine Anmerkung (die im "ubrigens auch f"ur den 78K0 gilt): Wer
+mittels {\tt RELAXED} mit Motorola-Syntax arbeitet, mu"s
+Hexadezimalkonstanten klammern, weil das f"uhrende Dollarzeichen u.U. als
+relative Adressierung mi"sverstanden wird...
+
+%%---------------------------------------------------------------------------
+
 \section{$\mu$PD772x}
 
 Sowohl 7720 als auch 7725 werden von dem gleichen Codegenerator behandelt
@@ -9153,7 +9187,7 @@ direkt im Editorfenster anzuzeigen.  Dazu mu"s im Tools-Men"u ein neuer
 Eintrag angelegt werden (\tty{Options/Tools/New}).  Tragen Sie in die
 einzelnen Felder folgende Werte ein :
 \begin{itemize}
-\item{Title: \tty{\verb!~!M\verb!~!akroassembler}}
+\item{Title: {\tt \verb!~!M\verb!~!akroassembler}}
 \item{Program path: \tty{AS}}
 \item{Command line: \tty{-E !1 \$EDNAME \$CAP MSG(AS2MSG) \$NOSWAP \$SAVE
 ALL}}
@@ -10038,12 +10072,28 @@ Angaben:
 	        ist nicht zul"assig oder nicht im
 	        Maschinenkode darstellbar.}
                {keines}
-\errentry{2030}{Konstanten k"onnen nicht ver"andert werden}
+\errentry{2030}{Konstante kann nicht als Variable redefiniert werden}
                {Fehler}
                {Ein einmal mit {\tt EQU} als Konstante\\
                 definiertes Symbol kann nicht nachtr"aglich mit\\
                 {\tt SET} ver"andert werden.}
                {der Name des fraglichen Symbols}
+\errentry{2035}{Variable kann nicht als Konstante redefiniert werden}
+               {Fehler}
+               {Ein einmal mit {\tt SET} als Variable\\
+                definiertes Symbol kann nicht nachtr"aglich als\\
+                Konstante deklariert werden (z.B. mit {\tt EQU}.}
+               {der Name des fraglichen Symbols}
+\errentry{2040}{Strukturname fehlt}
+               {Fehler}
+               {Bei einer Strukturdefinition fehlt der zugeh"orende
+                Name f"ur die Struktur.}
+               {keines}
+\errentry{2050}{leeres Argument}
+               {Fehler}
+               {In der Argumentenliste dieser Anweisung d"urfen keine
+                Leerstrings benutzt werden.}
+               {keines}
 \errentry{10001}{Fehler bein "Offnen der Datei}
                {fatal}
                {Beim Versuch, eine Datei zu "offnen, ist ein
@@ -11187,6 +11237,8 @@ oder ich werde langsam alt...
       \item{unterst"utzt zus"atzlich die 807x-Familie von National
             Semiconductor;}
       \item{unterst"utzt zus"atzlich den 4040 von Intel;}
+      \item{unterst"utzt zus"atzlich den eZ8 von Zilog;}
+      \item{unterst"utzt zus"atzlich die 78K0-Familie von NEC (r5);}
       \end{itemize}}
 \end{itemize}
 
@@ -12399,6 +12451,11 @@ damit mit der n"achsten Release alle etwas davon haben :-)
 \bibitem{NEC7814} NEC Corp.: \\
                 {\em Data Sheet $\mu$PD78014.\/}
 
+\bibitem{NEC78K2} NEC Corp.: \\
+                {\em 78K/II Series 8-Bit Single-Chip Microcontroller
+                 User's Manual - Instructions.\/} \\
+                Document No. U10228EJ6V0UM00 (6th edition), December 1995
+
 \bibitem{PhilXA} Philips Semiconductor: \\
                  {\em 16-bit 80C51XA Microcontrollers (eXtended
                  Architecture).\/} \\
@@ -12566,6 +12623,10 @@ damit mit der n"achsten Release alle etwas davon haben :-)
 \bibitem{ZilZ380} Zilog Inc.: \\
                {\em Z380 CPU Central Processing Unit User's Manual.\/} \\
                (keine Jahresangabe)
+
+\bibitem{ZileZ8} Zilog Inc.: \\
+               {\em eZ8 CPU User Manual.\/} \\
+               UM01285-0503
 
 \end{thebibliography}
 

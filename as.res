@@ -29,9 +29,18 @@
 ;*           2001-10-21 GNU error messages                                   *
 ;*                                                                           *
 ;*****************************************************************************
-;* $Id: as.res,v 1.10 2002/11/20 20:25:05 alfred Exp $                        *
+;* $Id: as.res,v 1.1 2003/11/06 02:53:05 alfred Exp $                        *
 ;*****************************************************************************
 ;* $Log: as.res,v $
+;* Revision 1.1  2003/11/06 02:53:05  alfred
+;* - recreated
+;*
+;* Revision 1.12  2003/10/04 15:38:46  alfred
+;* - differentiate constant/variable messages
+;*
+;* Revision 1.11  2003/10/04 14:00:39  alfred
+;* - complain about empty arguments
+;*
 ;* Revision 1.10  2002/11/20 20:25:05  alfred
 ;* - added unions
 ;*
@@ -676,13 +685,21 @@ Message ErrMsgInvPrefixCombination
  "ung&uuml;ltige Pr&auml;fix-Kombination"
  "invalid combination of prefixes"
 
-Message ErrMsgNoReassignConstants
- "Konstanten k&ouml;nnen nicht ver&auml;ndert werden"
- "constants cannot be modifed"
+Message ErrConstantRedefinedAsVariable
+ "Konstante kann nicht als Variable redefiniert werden"
+ "constants cannot be redefined as variables"
+
+Message ErrVariableRedefinedAsConstant
+ "Variable kann nicht als Konstante redefiniert werden"
+ "variables cannot be redefined as constants"
 
 Message ErrMsgStructNameMissing
  "Strukturname fehlt"
  "structure name missing"
+
+Message ErrMsgEmptyArgument
+ "leeres Argument"
+ "empty argument"
 
 Message ErrMsgOpeningFile
  "Fehler beim &Ouml;ffnen der Datei"

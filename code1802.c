@@ -7,6 +7,13 @@
 /*           3. 2.2001 added 1805 instructions                              */
 /*                                                                          */
 /****************************************************************************/
+/* $Id: code1802.c,v 1.2 2004/05/29 11:33:00 alfred Exp $                   */
+/****************************************************************************
+ * $Log: code1802.c,v $
+ * Revision 1.2  2004/05/29 11:33:00  alfred
+ * - relocated DecodeIntelPseudo() into own module
+ *
+ ****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -17,6 +24,7 @@
 #include "asmpars.h"
 #include "asmitree.h"
 #include "codepseudo.h"
+#include "intpseudo.h"
 #include "headids.h"
 
 /*-------------------------------------------------------------------------*/

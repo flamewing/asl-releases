@@ -10,6 +10,13 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: code7000.c,v 1.2 2004/05/29 12:04:47 alfred Exp $                    */
+/*****************************************************************************
+ * $Log: code7000.c,v $
+ * Revision 1.2  2004/05/29 12:04:47  alfred
+ * - relocated DecodeMot(16)Pseudo into separate module
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -23,8 +30,10 @@
 #include "asmpars.h"
 #include "asmallg.h"
 #include "codepseudo.h"
+#include "motpseudo.h"
 #include "codevars.h"
 
+#include "code7000.h"
 
 #define FixedOrderCount 13
 #define OneRegOrderCount 22
@@ -32,6 +41,7 @@
 #define MulRegOrderCount 3
 #define BWOrderCount 3
 #define LogOrderCount 4
+#define SRegCnt 9
 
 
 #define ModNone (-1)
@@ -85,14 +95,22 @@ typedef struct
           Word Code;
          } FixedMinOrder;
 
-   typedef struct _TLiteral
-            {
-             struct _TLiteral *Next;
-             LongInt Value,FCount;
-             Boolean Is32,IsForward;
-             Integer PassNo;
-             LongInt DefSection;
-            } *PLiteral,TLiteral;
+typedef struct
+        {
+          char *Name;
+          Word Code;
+          CPUVar MinCPU;
+          Boolean NeedsDSP;
+        } TRegDef;
+
+typedef struct _TLiteral
+         {
+          struct _TLiteral *Next;
+          LongInt Value,FCount;
+          Boolean Is32,IsForward;
+          Integer PassNo;
+          LongInt DefSection;
+         } *PLiteral,TLiteral;
 
 static ShortInt OpSize;     /* Groesse=8*(2^OpSize) */
 static ShortInt AdrMode;    /* Ergebnisadressmodus */
@@ -109,6 +127,7 @@ static FixedMinOrder *OneRegOrders;
 static TwoRegOrder *TwoRegOrders;
 static FixedMinOrder *MulRegOrders;
 static FixedOrder *BWOrders;
+static TRegDef *RegDefs;
 static char **LogOrders;
 
 static Boolean CurrDelayed, PrevDelayed, CompLiterals, DSPAvail;
@@ -158,6 +177,15 @@ BEGIN
    BWOrders[InstrZ].Name=NName;
    BWOrders[InstrZ++].Code=NCode;
 END
+
+static void AddSReg(char *NName, Word NCode, CPUVar NMin, Boolean NDSP)
+{
+  if (InstrZ >= SRegCnt) exit(255);
+  RegDefs[InstrZ].Name = NName;
+  RegDefs[InstrZ].Code = NCode;
+  RegDefs[InstrZ].MinCPU = NMin;
+  RegDefs[InstrZ++].NeedsDSP = NDSP;
+}
 
         static void InitFields(void)
 BEGIN
@@ -222,6 +250,17 @@ BEGIN
    LogOrders=(char **) malloc(sizeof(char *)*LogOrderCount); InstrZ=0;
    LogOrders[InstrZ++]="TST"; LogOrders[InstrZ++]="AND";
    LogOrders[InstrZ++]="XOR"; LogOrders[InstrZ++]="OR" ;
+
+   RegDefs = (TRegDef*) malloc(sizeof(TRegDef) * SRegCnt); InstrZ = 0;
+   AddSReg("MACH",  0, CPU7000, FALSE);
+   AddSReg("MACL",  1, CPU7000, FALSE);
+   AddSReg("PR"  ,  2, CPU7000, FALSE);
+   AddSReg("DSR" ,  6, CPU7000, TRUE );
+   AddSReg("A0"  ,  7, CPU7000, TRUE );
+   AddSReg("X0"  ,  8, CPU7000, TRUE );
+   AddSReg("X1"  ,  9, CPU7000, TRUE );
+   AddSReg("Y0"  , 10, CPU7000, TRUE );
+   AddSReg("Y1"  , 11, CPU7000, TRUE );
 END
 
         static void DeinitFields(void)
@@ -232,6 +271,7 @@ BEGIN
    free(MulRegOrders);
    free(BWOrders);
    free(LogOrders);
+   free(RegDefs);
 END
 
 /*-------------------------------------------------------------------------*/
@@ -284,7 +324,7 @@ BEGIN
     END
 END
 
-        static Boolean DecodeReg(char *Asc, Byte *Erg)
+        static Boolean DecodeReg(char *Asc, Word *Erg)
 BEGIN
    Boolean Err;
 
@@ -300,7 +340,7 @@ BEGIN
     END
 END
 
-        static Boolean DecodeCtrlReg(char *Asc, Byte *Erg)
+        static Boolean DecodeCtrlReg(char *Asc, Word *Erg)
 BEGIN
    CPUVar MinCPU=CPU7000;
 
@@ -328,6 +368,27 @@ BEGIN
     END
    else return True;
 END
+
+static Boolean DecodeSReg(char *Asc, Word *Erg)
+{
+  int z;
+  Boolean Result = FALSE;
+
+  for (z = 0; z < SRegCnt; z++)
+    if (!strcasecmp(Asc, RegDefs[z].Name))
+      break;
+  if (z < SRegCnt)
+  {
+    if (MomCPU < RegDefs[z].MinCPU);
+    else if ((!DSPAvail) && RegDefs[z].NeedsDSP);
+    else
+    {
+      Result = TRUE;
+      *Erg = RegDefs[z].Code;
+    }
+  }
+  return Result;
+}
 
         static void ChkAdr(Word Mask)
 BEGIN
@@ -371,7 +432,8 @@ BEGIN
 #define RegPC (-2)
 #define RegGBR (-3)
 
-   Byte p,HReg;
+   Byte p;
+   Word HReg;
    char *pos;
    ShortInt BaseReg,IndReg,DOpSize;
    LongInt DispAcc;
@@ -728,6 +790,43 @@ BEGIN
    return False;
 END
 
+static Boolean DecodeDSP(void)
+{
+  Word Cond = 0;
+
+  /* strip off DSP condition */
+
+  if ((Memo("DCT")) || (Memo("DCF")))
+  {
+    char *pos;
+    int z;
+
+    Cond = Memo("DCT") ? 1 : 2;
+    if (ArgCnt < 1) 
+    {
+      WrError(1110);
+      return True;
+    }
+    
+    pos = FirstBlank(ArgStr[1]);
+    if (!pos)
+    {
+      strcpy(OpPart, ArgStr[1]);
+      for (z = 1; z < ArgCnt; z++)
+        strcpy(ArgStr[z], ArgStr[z + 1]);
+      ArgCnt--;
+    }
+    else
+    {
+      *pos = '\0';
+      strcpy(OpPart, ArgStr[1]);
+      strcpy(ArgStr[1], pos + 1);
+    }
+  }
+
+  return False;
+}
+
         static void SetCode(Word Code)
 BEGIN
    CodeLen=2; WAsmCode[0]=Code;
@@ -738,7 +837,7 @@ BEGIN
    int z;
    LongInt AdrLong;
    Boolean OK;
-   Byte HReg;
+   Word HReg;
 
    CodeLen=0; DontPrint=False; OpSize=(-1);
 
@@ -943,14 +1042,8 @@ BEGIN
          strcpy(ArgStr[1],ArgStr[2]);
          strcpy(ArgStr[2],ArgStr[3]);
         END
-       if (strcasecmp(ArgStr[1],"MACH")==0) HReg=0;
-       else if (strcasecmp(ArgStr[1],"MACL")==0) HReg=1;
-       else if (strcasecmp(ArgStr[1],"PR")==0) HReg=2;
+       if (!DecodeSReg(ArgStr[1], &HReg)) WrError(1440);
        else
-        BEGIN
-         WrError(1440); HReg=0xff;
-        END
-       if (HReg<0xff)
         BEGIN
          DecodeAdr(ArgStr[2],MModReg+((Memo("LDS"))?MModPostInc:MModPreDec),False);
          switch (AdrMode)
@@ -1265,6 +1358,12 @@ BEGIN
       END
      return;
     END
+
+   if (DSPAvail)
+   {
+     if (DecodeDSP())
+       return;
+   }
 
    WrXError(1200,OpPart);
 END

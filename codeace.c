@@ -17,6 +17,13 @@
 /*                      changed segment limits/inits                         */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: codeace.c,v 1.2 2004/05/29 11:33:02 alfred Exp $                     */
+/*****************************************************************************
+ * $Log: codeace.c,v $
+ * Revision 1.2  2004/05/29 11:33:02  alfred
+ * - relocated DecodeIntelPseudo() into own module
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -31,6 +38,7 @@
 #include "asmpars.h"
 #include "asmitree.h"
 #include "codepseudo.h"
+#include "intpseudo.h"
 #include "codevars.h"
 
 #define ModNone (-1)

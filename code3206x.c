@@ -15,9 +15,15 @@
 /*           2001-11-26 scaling fix (input from Johannes)                    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3206x.c,v 1.8 2003/05/02 21:23:10 alfred Exp $                   */
+/* $Id: code3206x.c,v 1.2 2003/12/07 14:01:16 alfred Exp $                   */
 /***************************************************************************** 
  * $Log: code3206x.c,v $
+ * Revision 1.2  2003/12/07 14:01:16  alfred
+ * - added missing static defs
+ *
+ * Revision 1.1  2003/11/06 02:49:19  alfred
+ * - recreated
+ *
  * Revision 1.8  2003/05/02 21:23:10  alfred
  * - strlen() updates
  *
@@ -133,12 +139,12 @@ static LongWord PacketAddr;
 
 static InstrRec ParRecs[MaxParCnt];
 
-FixedOrder *LinAddOrders;
-FixedOrder *CmpOrders;
-MemOrder *MemOrders;
-MulOrder *MulOrders;
-CtrlReg *CtrlRegs;
-PInstTable InstTable;
+static FixedOrder *LinAddOrders;
+static FixedOrder *CmpOrders;
+static MemOrder *MemOrders;
+static MulOrder *MulOrders;
+static CtrlReg *CtrlRegs;
+static PInstTable InstTable;
 
 /*-------------------------------------------------------------------------*/
 

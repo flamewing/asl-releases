@@ -9,9 +9,15 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code90c141.c,v 1.2 2002/10/20 09:22:26 alfred Exp $                          */
+/* $Id: code90c141.c,v 1.2 2004/05/29 11:33:02 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code90c141.c,v $
+ * Revision 1.2  2004/05/29 11:33:02  alfred
+ * - relocated DecodeIntelPseudo() into own module
+ *
+ * Revision 1.1  2003/11/06 02:49:22  alfred
+ * - recreated
+ *
  * Revision 1.2  2002/10/20 09:22:26  alfred
  * - work around the parser problem related to the ' character
  *
@@ -30,6 +36,7 @@
 #include "asmpars.h"
 #include "asmitree.h"
 #include "codepseudo.h"
+#include "intpseudo.h"
 #include "codevars.h"
 
 

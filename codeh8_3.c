@@ -10,6 +10,13 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: codeh8_3.c,v 1.2 2004/05/29 12:04:47 alfred Exp $                    */
+/*****************************************************************************
+ * $Log: codeh8_3.c,v $
+ * Revision 1.2  2004/05/29 12:04:47  alfred
+ * - relocated DecodeMot(16)Pseudo into separate module
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -23,7 +30,10 @@
 #include "asmpars.h"
 #include "asmallg.h"
 #include "codepseudo.h"
+#include "motpseudo.h"
 #include "codevars.h"
+
+#include "codeh8_3.h"
 
 #define FixedOrderCount 4
 #define ConditionCount 20

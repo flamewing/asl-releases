@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3201x.c,v 1.2 2002/08/14 18:43:48 alfred Exp $                          */
+/* $Id: code3201x.c,v 1.1 2003/11/06 02:49:19 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code3201x.c,v $
+ * Revision 1.1  2003/11/06 02:49:19  alfred
+ * - recreated
+ *
  * Revision 1.2  2002/08/14 18:43:48  alfred
  * - warn null allocation, remove some warnings
  *

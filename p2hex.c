@@ -100,9 +100,8 @@ END
 BEGIN
    FILE *SrcFile;
    Word TestID;
-   Byte InpHeader, InpCPU, InpSegment, InpGran, BSwap;
+   Byte InpHeader, InpCPU, InpSegment, InpGran;
    LongWord InpStart,SumLen;
-   int z2;
    Word InpLen,TransLen;
    Boolean doit,FirstBank=0;
    Byte Buffer[MaxLineLen];
@@ -115,7 +114,7 @@ BEGIN
 #endif
             IntOffset=0,MaxAdr;
    LongInt NextPos;
-   Word ErgLen=0,ChkSum=0,RecCnt,Gran,SwapBase,HSeg;
+   Word ErgLen=0,ChkSum=0,RecCnt,Gran,HSeg;
 
    LongInt z;
 
@@ -356,25 +355,19 @@ BEGIN
              case IntHex:
              case IntHex16:
              case IntHex32:
- 	      errno=0; fprintf(TargFile,":"); ChkIO(TargName); ChkSum=0;
- 	      if (MultiMode==0)
- 	       BEGIN
- 	        errno=0; fprintf(TargFile,"%s",HexByte(TransLen)); ChkIO(TargName);
- 	        errno=0; fprintf(TargFile,"%s",HexWord((ErgStart-IntOffset)*Gran)); ChkIO(TargName);
- 	        ChkSum+=TransLen;
- 	        ChkSum+=Lo((ErgStart-IntOffset)*Gran);
- 	        ChkSum+=Hi((ErgStart-IntOffset)*Gran);
- 	       END
- 	      else
- 	       BEGIN
- 	        errno=0; fprintf(TargFile,"%s",HexByte(TransLen/Gran)); ChkIO(TargName);
- 	        errno=0; fprintf(TargFile,"%s",HexWord(ErgStart-IntOffset)); ChkIO(TargName);
- 	        ChkSum+=TransLen/Gran;
- 	        ChkSum+=Lo(ErgStart-IntOffset);
- 	        ChkSum+=Hi(ErgStart-IntOffset);
- 	       END
- 	      errno=0; fprintf(TargFile,"00"); ChkIO(TargName);
- 	      break;
+             {
+               Word WrTransLen;
+               LongWord WrErgStart;
+
+               WrTransLen = (MultiMode < 2) ? TransLen : (TransLen / Gran);
+               WrErgStart = (ErgStart-IntOffset) * ((MultiMode < 2) ? Gran : 1);
+               errno = 0;
+               fprintf(TargFile, ":%s%s00", HexByte(WrTransLen), HexWord(WrErgStart));
+               ChkIO(TargName);
+               ChkSum = Lo(WrTransLen) + Hi(WrErgStart) + Lo(WrErgStart);
+
+               break;
+             }
  	     case TekHex:
  	      errno=0; 
               fprintf(TargFile,"/%s%s%s",HexWord(ErgStart),HexByte(TransLen),
@@ -405,17 +398,18 @@ BEGIN
  	   /* Daten selber */
 
  	   if (fread(Buffer,1,TransLen,SrcFile)!=TransLen) ChkIO(FileName);
- 	   if ((Gran!=1) AND (MultiMode==1))
- 	    for (z=0; z<(TransLen/Gran); z++)
- 	     BEGIN
- 	      SwapBase=z*Gran;
- 	      for (z2=0; z2<(Gran/2); z++)
- 	       BEGIN
- 	        BSwap=Buffer[SwapBase+z2];
- 	        Buffer[SwapBase+z2]=Buffer[SwapBase+Gran-1-z2];
- 	        Buffer[SwapBase+Gran-1-z2]=BSwap;
- 	       END
- 	     END
+           if (MultiMode == 1)
+             switch (Gran)
+             {
+               case 4:
+                 DSwap(Buffer, TransLen);
+                 break;
+               case 2:
+                 WSwap(Buffer, TransLen);
+                 break;
+               case 1:
+                 break;
+             }
  	   if (ActFormat==TiDSK)
             BEGIN
              if (BigEndian) WSwap(WBuffer,TransLen);

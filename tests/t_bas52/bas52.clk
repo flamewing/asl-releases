@@ -1,0 +1,18 @@
+	;**************************************************************
+	;
+	; The statement action routine - CLOCK
+	;
+	;**************************************************************
+	;
+SCLOCK:	ACALL	OTST		;GET CHARACTER AFTER CLOCK TOKEN
+	CLR	ET0
+	CLR	C_BIT
+	JNC	SC_R		;EXIT IF A ZERO
+	ANL	TMOD,#0F0H	;SET UP THE MODE
+	SETB	C_BIT		;USER INTERRUPTS
+	ORL	IE,#82H		;ENABLE ET0 AND EA
+	SETB	TR0		;TURN ON THE TIMER
+	;
+SC_R:	RET
+	;
+

@@ -12,9 +12,18 @@
 /*           2001-09-03 added inx as alias for incx                          */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6805.c,v 1.2 2002/03/31 23:09:32 alfred Exp $                    */
+/* $Id: code6805.c,v 1.3 2004/05/29 12:04:46 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6805.c,v $
+ * Revision 1.3  2004/05/29 12:04:46  alfred
+ * - relocated DecodeMot(16)Pseudo into separate module
+ *
+ * Revision 1.2  2004/05/28 16:13:08  alfred
+ * - added 16-bit Motorola ops
+ *
+ * Revision 1.1  2003/11/06 02:49:21  alfred
+ * - recreated
+ *
  * Revision 1.2  2002/03/31 23:09:32  alfred
  * - added 68HC05 CPU type
  *
@@ -23,6 +32,7 @@
 #include "stdinc.h"
 
 #include <string.h>
+#include <ctype.h>
 
 #include "bpemu.h"
 #include "strutil.h"
@@ -30,9 +40,10 @@
 #include "asmdef.h"
 #include "asmpars.h"
 #include "asmsub.h"
-#include "codepseudo.h"
+#include "motpseudo.h"
 #include "codevars.h"
 
+#include "code6805.h"
 
 typedef struct
          {
@@ -398,6 +409,23 @@ BEGIN
 
    CodeLen=0; DontPrint=False; OpSize=(-1);
 
+   /* Operandengroesse festlegen */
+
+   if (*AttrPart!='\0')
+    switch (toupper(*AttrPart))
+     BEGIN
+      case 'B':OpSize=0; break;
+      case 'W':OpSize=1; break;
+      case 'L':OpSize=2; break;
+      case 'Q':OpSize=3; break;
+      case 'S':OpSize=4; break;
+      case 'D':OpSize=5; break;
+      case 'X':OpSize=6; break;
+      case 'P':OpSize=7; break;
+      default:
+       WrError(1107); return;
+     END
+
    /* zu ignorierendes */
 
    if (Memo("")) return;
@@ -407,6 +435,7 @@ BEGIN
    if (DecodePseudo()) return;
 
    if (DecodeMotoPseudo(True)) return;
+   if (DecodeMoto16Pseudo(OpSize, True)) return;
 
    /* Anweisungen ohne Argument */
 
@@ -797,7 +826,7 @@ BEGIN
    TurnWords=False; ConstMode=ConstModeMoto; SetIsOccupied=False;
 
    PCSymbol="*"; HeaderID=0x62; NOPCode=0x9d;
-   DivideChars=","; HasAttrs=False;
+   DivideChars=","; HasAttrs=True; AttrChars=".";
 
    ValidSegs=(1<<SegCode);
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;

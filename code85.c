@@ -9,9 +9,15 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code85.c,v 1.2 2002/11/09 13:27:12 alfred Exp $                      */
+/* $Id: code85.c,v 1.2 2004/05/29 11:33:01 alfred Exp $                      */
 /***************************************************************************** 
  * $Log: code85.c,v $
+ * Revision 1.2  2004/05/29 11:33:01  alfred
+ * - relocated DecodeIntelPseudo() into own module
+ *
+ * Revision 1.1  2003/11/06 02:49:22  alfred
+ * - recreated
+ *
  * Revision 1.2  2002/11/09 13:27:12  alfred
  * - added hash table search, added undocumented 8085 instructions
  *
@@ -27,7 +33,8 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
-#include "codepseudo.h"
+#include "codepseudo.h" 
+#include "intpseudo.h"
 #include "codevars.h"
 #include "asmitree.h"
 

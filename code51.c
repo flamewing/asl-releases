@@ -17,9 +17,18 @@
 /*           2002-01-23 symbols defined with BIT must not be macro-local     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code51.c,v 1.3 2002/05/31 19:19:17 alfred Exp $                      */
+/* $Id: code51.c,v 1.2 2004/05/29 11:33:00 alfred Exp $                      */
 /***************************************************************************** 
  * $Log: code51.c,v $
+ * Revision 1.2  2004/05/29 11:33:00  alfred
+ * - relocated DecodeIntelPseudo() into own module
+ *
+ * Revision 1.1  2003/11/06 02:49:20  alfred
+ * - recreated
+ *
+ * Revision 1.4  2003/06/22 13:14:43  alfred
+ * - added 80251T
+ *
  * Revision 1.3  2002/05/31 19:19:17  alfred
  * - added DS80C390 instruction variations
  *
@@ -41,6 +50,7 @@
 #include "asmallg.h"
 #include "asmrelocs.h"
 #include "codepseudo.h"
+#include "intpseudo.h"
 #include "codevars.h"
 #include "asmitree.h"
 #include "fileformat.h"
@@ -106,7 +116,7 @@ static SimpProc SaveInitProc;
 static CPUVar CPU87C750, CPU8051, CPU8052, CPU80C320,
        CPU80501, CPU80502, CPU80504, CPU80515, CPU80517,
        CPU80C390,
-       CPU80251;
+       CPU80251, CPU80251T;
 
 static PRelocEntry AdrRelocInfo, BackupAdrRelocInfo;
 static LongWord AdrOffset, AdrRelocType,
@@ -2540,6 +2550,7 @@ BEGIN
    CPU80517  = AddCPU("80517" , SwitchTo_51);
    CPU80C390 = AddCPU("80C390", SwitchTo_51);
    CPU80251  = AddCPU("80C251", SwitchTo_51);
+   CPU80251T = AddCPU("80C251T", SwitchTo_51);
 
    SaveInitProc=InitPassProc;
    InitPassProc=InitPass_51;

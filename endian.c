@@ -64,6 +64,21 @@ BEGIN
     END
 END
 
+	void TSwap(void *Field, int Cnt)
+BEGIN
+   register unsigned char *Run=(unsigned char *) Field,Swap;
+   register int z;
+
+   for (z=0; z<Cnt/10; z++,Run+=10)
+    BEGIN
+     Swap=Run[0]; Run[0]=Run[9]; Run[9]=Swap;
+     Swap=Run[1]; Run[1]=Run[8]; Run[8]=Swap;
+     Swap=Run[2]; Run[2]=Run[7]; Run[7]=Swap;
+     Swap=Run[3]; Run[3]=Run[6]; Run[6]=Swap;
+     Swap=Run[4]; Run[4]=Run[5]; Run[5]=Swap;
+    END
+END
+
 	void DWSwap(void *Field, int Cnt)
 BEGIN
    register unsigned char *Run=(unsigned char *) Field,Swap;
@@ -297,7 +312,8 @@ BEGIN
           (((LargeWord) Buffer[4]) << 32) |
           (((LargeWord) Buffer[3]) << 24) |
           (((LargeWord) Buffer[2]) << 16) |
-          (((LargeWord) Buffer[1]) << 8)  | Buffer[0];
+          (((LargeWord) Buffer[1]) << 8)  |
+                        Buffer[0];
 END
 
 	QuadWord MRead8B(Byte *Buffer)
@@ -307,8 +323,9 @@ BEGIN
           (((LargeWord) Buffer[2]) << 40) |
           (((LargeWord) Buffer[3]) << 32) |
           (((LargeWord) Buffer[4]) << 24) |
-          (((LargeWord) Buffer[6]) << 16) |
-          (((LargeWord) Buffer[6]) << 8) | Buffer[7];
+          (((LargeWord) Buffer[7]) << 16) |
+          (((LargeWord) Buffer[6]) << 8)  | 
+                        Buffer[7];
 END
 
 	void MWrite8L(Byte *Buffer, QuadWord Value)

@@ -10,6 +10,13 @@
 /*           14. 1.2001 silenced warnings about unused parameters           */
 /*                                                                          */
 /****************************************************************************/
+/* $Id: codefmc8.c,v 1.2 2004/05/29 11:33:03 alfred Exp $                   */
+/****************************************************************************
+ * $Log: codefmc8.c,v $
+ * Revision 1.2  2004/05/29 11:33:03  alfred
+ * - relocated DecodeIntelPseudo() into own module
+ *
+ ****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -20,7 +27,7 @@
 #include "asmdef.h"
 #include "asmpars.h"
 #include "asmsub.h"
-#include "codepseudo.h"
+#include "intpseudo.h"
 #include "codevars.h"
 #include "asmitree.h"
 #include "headids.h"

@@ -11,6 +11,13 @@
 /*           25.10.2000 accesses wrong argument for mov nnn,a                */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: code78c10.c,v 1.2 2004/05/29 11:33:01 alfred Exp $                   */
+/*****************************************************************************
+ * $Log: code78c10.c,v $
+ * Revision 1.2  2004/05/29 11:33:01  alfred
+ * - relocated DecodeIntelPseudo() into own module
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -22,6 +29,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "intpseudo.h"
 #include "codevars.h"
 
 /*---------------------------------------------------------------------------*/

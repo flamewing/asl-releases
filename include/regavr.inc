@@ -14,9 +14,15 @@
 ;*                                  Modus                                   *
 ;*                                                                          *
 ;****************************************************************************
-;* $Id: regavr.inc,v 1.3 2002/05/09 12:51:37 alfred Exp $                     *
+;* $Id: regavr.inc,v 1.1 2003/11/06 02:56:33 alfred Exp $                   *
 ;****************************************************************************
 ;* $Log: regavr.inc,v $
+;* Revision 1.1  2003/11/06 02:56:33  alfred
+;* - recreated
+;*
+;* Revision 1.4  2003/07/21 18:05:14  alfred
+;* - fixed ADCH value; removed umlauts
+;*
 ;* Revision 1.3  2002/05/09 12:51:37  alfred
 ;* - added MEGA16 regs
 ;*
@@ -86,7 +92,7 @@ sreg            port    0x3f            ; Statusregister:
 c               equ     0               ;  Carry
 z               equ     1               ;  Ergebnis Null
 n               equ     2               ;  Ergebnis negativ
-v               equ     3               ;  Zweierkomplement-Überlauf
+v               equ     3               ;  Zweierkomplement-Ueberlauf
 s               equ     4               ;  Vorzeichen
 h               equ     5               ;  Halfcarry
 t               equ     6               ;  Bitspeicher
@@ -120,7 +126,7 @@ sm2		  equ	  6		; sleep mode select
 sm1		  equ	  5
 sm0		  equ	  4
 		else ; !ismega
-sm                equ     4             ;  Idle/Powerdown-Modus wählen
+sm                equ     4             ;  Idle/Powerdown-Modus waehlen
 se                equ     5             ;  Sleep-Modus freigeben
                   if      __cpucode>=0x014414
 srw                 equ     6           ;  Wait-State-Wahl externes SRAM
@@ -203,17 +209,17 @@ toie2		  equ	  6
 ocie2		  equ	  7
 ocie1a            equ     4
                  elseif
-toie1             equ     7             ;  Überlauf Timer 1
+toie1             equ     7             ;  Ueberlauf Timer 1
 ticie1            equ     3             ;  Fang Timer 1
 ocie1a            equ     6             ;  Vergleich Timer 1
 		 endif
                 endif
 
 tifr            port    0x38            ; Timer-Interrupt-Flags:
-tov0            equ     toie0		;  Überlauf Timer 0
+tov0            equ     toie0		;  Ueberlauf Timer 0
                 if      __cpucode>=0x012313
 ocf1a            equ     ocie1a         ;  Vergleich A Timer 1
-tov1             equ     toie1          ;  Überlauf Timer 1
+tov1             equ     toie1          ;  Ueberlauf Timer 1
 icf1             equ     ticie1         ;  Fang Timer 1
 		endif
                 if      __cpucode>=0x014414
@@ -302,16 +308,16 @@ tccr1b           port    0x2e           ; Steuerregister B Timer 1:
 cs10             equ     0              ; Vorteilereinstellung
 cs11             equ     1
 cs12             equ     2
-ctc1             equ     3              ; nach Gleichheit zurücksetzen ?
+ctc1             equ     3              ; nach Gleichheit zuruecksetzen ?
 wgm12		 equ	 ctc1
 		 if      ismega(__cpucode)
 wgm13		  equ	  4
 		 endif
 ices1            equ     6              ; Flankenwahl Fang
-icnc1            equ     7              ; Rauschfilter für Fangfunktion
+icnc1            equ     7              ; Rauschfilter fuer Fangfunktion
 
-tcnt1l           port    0x2c           ; Zählregister Timer 1 (LSB)
-tcnt1h           port    0x2d           ;                      (MSB)
+tcnt1l           port    0x2c           ; Zaehlregister Timer 1 (LSB)
+tcnt1h           port    0x2d           ;                       (MSB)
 
                  if      __cpucode>=0x014414
 ocr1al            port    0x2a          ; Vergleichsregister A Timer 1 (LSB)
@@ -380,7 +386,7 @@ mpcm		  equ	  0		; multiprocessor communication mode
 u2x		  equ	  1		; double speed
 pe		  equ	  2		; parity error
 		 endif
-or               equ     3              ;  Empfängerüberlauf
+or               equ     3              ;  Empfaengerueberlauf
 dor		 equ	 or
 fe               equ     4              ;  Framing-Fehler
 udre             equ     5              ;  Datenregister wieder frei
@@ -394,7 +400,7 @@ rxb8             equ     1              ;  Empfangsbit 8
 chr9             equ     2              ;  auf 9-Bit-Datenwerte umschalten
 ucsz2		 equ	 chr9
 txen             equ     3              ;  Sender freigeben
-rxen             equ     4              ;  Empfänger freigeben
+rxen             equ     4              ;  Empfaenger freigeben
 udrie            equ     5              ;  Interrupts bei freiem Datenregister freigeben
 txcie            equ     6              ;  Interrupts nach Versand freigeben
 rxcie            equ     7              ;  Interrupts nach Empfang freigeben
@@ -423,7 +429,7 @@ spcr             port    0x0d           ; SPI Steuerregister:
 spr0             equ     0              ;  Wahl Taktfrequenz
 spr1             equ     1
 cpha             equ     2              ;  Taktphase
-cpol             equ     3              ;  Taktpolarität
+cpol             equ     3              ;  Taktpolaritaet
 mstr             equ     4              ;  Master/Slave-Wahl
 dord             equ     5              ;  Bitreihenfolge
 spe              equ     6              ;  SPI freigeben
@@ -473,7 +479,7 @@ acsr            port    0x08            ; Komparator-Steuer/Statusregister:
 acis0           equ     0               ;  Interrupt-Modus
 acis1           equ     1
 		if	__cpucode>=0x012313
-acic             equ     2              ;  Komparator als Fangsignal für Timer 1 benutzen
+acic             equ     2              ;  Komparator als Fangsignal fuer Timer 1 benutzen
 		endif
 acie            equ     3               ;  Interrupt freigeben
 aci             equ     4               ;  Interrupt aufgetreten ?
@@ -511,7 +517,7 @@ adps2		 equ	 2		; prescaler select
 adps1		 equ	 1
 adps0		 equ	 0
 
-adch		 port	 0x03		; data register
+adch		 port	 0x05		; data register
 adcl		 port	 0x04
 		endif
 
@@ -546,22 +552,22 @@ eerie		 equ	 3		; enable ready interrupt
 
 ;----------------------------------------------------------------------------
 ; Vektoren
-; Leider verschieben sich Vektoren bei den höheren Prozessoren.
+; Leider verschieben sich Vektoren bei den hoeheren Prozessoren.
 ; Warum nur, Atmel, warum ?
 
 vec_reset       label   0               ; Reset-Einsprung
                 switch  __cpucode
                 case    0x011200
 vec_int0         label   1              ; Einsprung ext. Interrupt 0
-vec_tm0ovf       label   2              ; Einsprung Überlauf Timer 0
+vec_tm0ovf       label   2              ; Einsprung Ueberlauf Timer 0
 vec_anacomp      label   3              ; Einsprung Analog-Komparator
                 case    0x012313
 vec_int0         label   1              ; Einsprung ext. Interrupt 0
 vec_int1         label   2              ; Einsprung ext. Interrupt 2
 vec_tm1capt      label   3              ; Einsprung Fang Timer 1
 vec_tm1comp      label   4              ; Einsprung Vergleich Timer 1
-vec_tm1ovf       label   5              ; Einsprung Überlauf Timer 1
-vec_tm0ovf       label   6              ; Einsprung Überlauf Timer 0
+vec_tm1ovf       label   5              ; Einsprung Ueberlauf Timer 1
+vec_tm0ovf       label   6              ; Einsprung Ueberlauf Timer 0
 vec_uartrx       label   7              ; Einsprung UART Empfang komplett
 vec_uartudre     label   8              ; Einsprung UART Datenregister leer
 vec_uarttx       label   9              ; Einsprung UART Sendung komplett
@@ -572,8 +578,8 @@ vec_int1         label   2              ; Einsprung ext. Interrupt 2
 vec_tm1capt      label   3              ; Einsprung Fang Timer 1
 vec_tm1compa     label   4              ; Einsprung Vergleich A Timer 1
 vec_tm1compb     label   5              ; Einsprung Vergleich A Timer 1
-vec_tm1ovf       label   6              ; Einsprung Überlauf Timer 1
-vec_tm0ovf       label   7              ; Einsprung Überlauf Timer 0
+vec_tm1ovf       label   6              ; Einsprung Ueberlauf Timer 1
+vec_tm0ovf       label   7              ; Einsprung Ueberlauf Timer 0
 vec_spi          label   8              ; Einsprung SPI-Interrupt
 vec_uartrx       label   9              ; Einsprung UART Empfang komplett
 vec_uartudre     label   10             ; Einsprung UART Datenregister leer

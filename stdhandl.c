@@ -102,7 +102,7 @@ BEGIN
 #else
    fstat(fileno(stdout),&stdout_stat);
    if (S_ISREG(stdout_stat.st_mode)) Redirected=RedirToFile;
-   else if (S_ISCHR(stdout_stat.st_mode)) Redirected=RedirToDevice;
+   else if (S_ISFIFO(stdout_stat.st_mode)) Redirected=RedirToDevice;
    else Redirected=NoRedir;
 
 #endif

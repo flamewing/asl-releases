@@ -27,19 +27,16 @@
 #include <os2.h>
 #endif
 
+#ifdef __MINGW32__
+#include <direct.h>
+#endif
+
 	char *FExpand(char *Src)
 BEGIN
    static String CurrentDir;
    String Copy;
 #ifdef DRSEP
    String DrvPart;
-#if defined( __EMX__ ) || defined( __IBMC__ )
-   ULONG DrvNum,Dummy;
-#else
-#ifndef _WIN32
-   int DrvNum;
-#endif /* _WIN32 */
-#endif /* EMX... */
 #endif /* DRSEP */
    char *p,*p2;
 
@@ -54,31 +51,55 @@ BEGIN
    else *DrvPart='\0';
 #endif
 
-#ifdef __MSDOS__
-   if (*DrvPart=='\0')
-    BEGIN
-     DrvNum=getdisk(); *DrvPart=DrvNum+'A'; DrvPart[1]='\0'; DrvNum++;
-    END
-   else DrvNum=toupper(*DrvPart)-'@';
-   getcurdir(DrvNum,CurrentDir);
-#else
-#if defined( __EMX__ ) || defined( __IBMC__ )
-   if (*DrvPart=='\0')
-    BEGIN
-     DosQueryCurrentDisk(&DrvNum,&Dummy);
-     *DrvPart=DrvNum+'@'; DrvPart[1]='\0';
-    END
-   else DrvNum=toupper(*DrvPart)-'@';
-   Dummy=255; DosQueryCurrentDir(DrvNum,(PBYTE) CurrentDir,&Dummy);
-#else
-#ifdef _WIN32
+#if (defined __MSDOS__)
+   {
+     int DrvNum;
+
+     if (*DrvPart == '\0')
+     {
+       DrvNum = getdisk();
+       *DrvPart = DrvNum + 'A';
+       DrvPart[1] = '\0'; DrvNum++;
+     }
+     else
+       DrvNum = toupper(*DrvPart) - '@';
+     getcurdir(DrvNum, CurrentDir);
+   }
+#elif (defined __EMX__) || (defined __IBMC__)
+   {
+     ULONG DrvNum, Dummy;
+
+     if (*DrvPart == '\0')
+     {
+       DosQueryCurrentDisk(&DrvNum, &Dummy);
+       *DrvPart = DrvNum + '@'; DrvPart[1] = '\0';
+     }
+     else
+       DrvNum = toupper(*DrvPart) - '@';
+     Dummy = 255;
+     DosQueryCurrentDir(DrvNum, (PBYTE) CurrentDir, &Dummy);
+   }
+#elif (defined __MINGW32__)
+   {
+     int DrvNum;
+ 
+     if (!*DrvPart)
+     {
+       DrvNum = _getdrive();
+       *DrvPart = DrvNum + '@'; DrvPart[1] = '\0';
+     }
+     else
+       DrvNum = toupper(*DrvPart) - '@';
+     _getdcwd(DrvNum, CurrentDir, 255);
+     if (CurrentDir[1] == ':')
+       strcpy(CurrentDir, CurrentDir + 2);
+   }
+#elif (defined _WIN32) /* CygWIN */
    getcwd(CurrentDir,255);
    for (p=CurrentDir; *p!='\0'; p++)
     if (*p=='/') *p='\\';
-#else
+#else /* UNIX */
    getcwd(CurrentDir,255);
-#endif
-#endif   
 #endif
 
    if ((*CurrentDir) && (CurrentDir[strlen(CurrentDir)-1]!=PATHSEP))
@@ -92,7 +113,7 @@ BEGIN
     END
 
 #ifdef DRSEP
-#ifdef _WIN32
+#ifdef __CYGWIN32__
    /* win32 getcwd() does not deliver current drive letter, therefore only prepend a drive letter
       if there was one before. */
    if (*DrvPart)
@@ -148,7 +169,7 @@ BEGIN
        Save=(*p); *p='\0';
       END
      strmaxcpy(Component,start,255);
-#ifdef _WIN32
+#ifdef __CYGWIN32__
      DeCygwinPath(Component);
 #endif
      strmaxcat(Component,SPATHSEP,255);
@@ -241,15 +262,15 @@ BEGIN
 #endif
 END
 
-	LongInt GetFileTime(char *Name)
-BEGIN
+LongInt MyGetFileTime(char *Name)
+{
    struct stat st;
 
    if (stat(Name,&st)==-1) return 0;
    else return st.st_mtime;
-END
+}
 
-#ifdef _WIN32
+#ifdef __CYGWIN32__
 
 /* convert CygWin-style paths back to something usable by other Win32 apps */
 
@@ -292,7 +313,7 @@ char *DeCygwinPath(char *pStr)
 
   return pStr;
 }
-#endif
+#endif /* __CYGWIN32__ */
 
 	void bpemu_init(void)
 BEGIN

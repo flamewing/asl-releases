@@ -9,10 +9,17 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*            3. 1.2001 fixed stack operations pushing/pulling opposite      */
 /*                      stack pointer                                        */
-/*            5. 1.2001 allow pushin/popping D as A/B                        */
+/*            5. 1.2001 allow pushing/popping D as A/B                       */
 /*           13. 1.2001 fix D register access                                */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: code6809.c,v 1.2 2004/05/29 12:04:46 alfred Exp $                    */
+/*****************************************************************************
+ * $Log: code6809.c,v $
+ * Revision 1.2  2004/05/29 12:04:46  alfred
+ * - relocated DecodeMot(16)Pseudo into separate module
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -26,7 +33,10 @@
 #include "asmpars.h"
 #include "asmsub.h"
 #include "codepseudo.h"
+#include "motpseudo.h"
 #include "codevars.h"
+
+#include "code6809.h"
 
 typedef struct
          {

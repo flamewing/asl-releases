@@ -312,7 +312,7 @@ BEGIN
     END
    else HFile=Nil;
 
-   stamp=GetFileTime(argv[1]); Id1=stamp&0x7fffffff;
+   stamp = MyGetFileTime(argv[1]); Id1 = stamp & 0x7fffffff;
    Id2=0;
    for (c=0; c<min((int)strlen(argv[1]),4); c++)
     Id2=(Id2<<8)+((Byte) argv[1][c]);

@@ -10,6 +10,13 @@
 /*            5. 1.2000 fixed accessing P1/P2 with lower case in ANL/ORL     */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: code48.c,v 1.2 2004/05/29 11:33:00 alfred Exp $                      */
+/*****************************************************************************
+ * $Log: code48.c,v $
+ * Revision 1.2  2004/05/29 11:33:00  alfred
+ * - relocated DecodeIntelPseudo() into own module
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -21,7 +28,7 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
-#include "codepseudo.h"
+#include "intpseudo.h"
 #include "codevars.h"
 
 typedef struct

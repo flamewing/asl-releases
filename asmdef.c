@@ -31,9 +31,18 @@
 /*           2001-10-20 added GNU error flag                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmdef.c,v 1.4 2002/11/23 15:53:27 alfred Exp $                     */
+/* $Id: asmdef.c,v 1.2 2004/09/20 18:43:51 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmdef.c,v $
+ * Revision 1.2  2004/09/20 18:43:51  alfred
+ * - correct allocation size
+ *
+ * Revision 1.1  2003/11/06 02:49:18  alfred
+ * - recreated
+ *
+ * Revision 1.5  2003/09/21 21:15:54  alfred
+ * - fix string length
+ *
  * Revision 1.4  2002/11/23 15:53:27  alfred
  * - SegLimits are unsigned now
  *
@@ -281,7 +290,7 @@ END
 
 	static char *GetString(void)
 BEGIN
-   return malloc(256*sizeof(char));
+   return malloc(STRINGSIZE * sizeof(char));
 END
 
 	void asmdef_init(void)
@@ -295,7 +304,7 @@ BEGIN
    SwitchFrom=NullProc;
    InternSymbol=Default_InternSymbol;
 
-   DAsmCode=(LongWord *) malloc(MaxCodeLen/4);
+   DAsmCode=(LongWord *) malloc(MaxCodeLen);
    WAsmCode=(Word *) DAsmCode;
    BAsmCode=(Byte *) DAsmCode;
 

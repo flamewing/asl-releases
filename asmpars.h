@@ -17,9 +17,18 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.h,v 1.5 2003/02/26 19:18:26 alfred Exp $                     */
+/* $Id: asmpars.h,v 1.3 2004/05/30 20:51:43 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.h,v $
+ * Revision 1.3  2004/05/30 20:51:43  alfred
+ * - major cleanups in Const... functions
+ *
+ * Revision 1.2  2004/05/28 16:12:08  alfred
+ * - added some const definitions
+ *
+ * Revision 1.1  2003/11/06 02:49:19  alfred
+ * - recreated
+ *
  * Revision 1.5  2003/02/26 19:18:26  alfred
  * - add/use EvalIntDisplacement()
  *
@@ -88,11 +97,11 @@ extern void InitTmpSymbols(void);
 extern Boolean SingleBit(LargeInt Inp, LargeInt *Erg);
 
 
-extern LargeInt ConstIntVal(char *Asc_O, IntType Typ, Boolean *Ok);
+extern LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult);
 
-extern Double ConstFloatVal(char *Asc_O, FloatType Typ, Boolean *Ok);
+extern Double ConstFloatVal(const char *pExpr, FloatType Typ, Boolean *pResult);
 
-extern void ConstStringVal(char *Asc, char *Erg, Boolean *OK);
+extern void ConstStringVal(const char *pExpr, char *pDest, Boolean *pResult);
 
 
 extern Boolean RangeCheck(LargeInt Wert, IntType Typ);
@@ -152,15 +161,15 @@ extern Boolean IsSymbolChangeable(char *Name);
 
 extern Integer GetSymbolType(char *Name);
 
-extern void EvalExpression(char *Asc_O, TempResult *Erg);
+extern void EvalExpression(const char *pExpr, TempResult *Erg);
 
-extern LargeInt EvalIntExpression(char *Asc, IntType Typ, Boolean *OK);
+extern LargeInt EvalIntExpression(const char *pExpr, IntType Type, Boolean *pResult);
 
-extern LargeInt EvalIntDisplacement(char *Asc, IntType Typ, Boolean *OK);
+extern LargeInt EvalIntDisplacement(char *pExpr, IntType Type, Boolean *pResult);
 
-extern Double EvalFloatExpression(char *Asc, FloatType Typ, Boolean *OK);
+extern Double EvalFloatExpression(const char *pExpr, FloatType Typ, Boolean *pResult);
 
-extern void EvalStringExpression(char *Asc, Boolean *OK, char *Result);
+extern void EvalStringExpression(const char *pExpr, Boolean *pResult, char *pEvalResult);
 
 
 extern Boolean PushSymbol(char *SymName_O, char *StackName_O);

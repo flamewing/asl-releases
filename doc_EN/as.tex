@@ -22,7 +22,8 @@
 %% ------------------------------------------------------------------------------
 
 %%TITLE User's Manual for Macro Assembler AS
-\documentstyle[12pt,twoside,makeidx]{report}
+\documentclass[12pt,twoside]{report}
+\usepackage{makeidx}
 \pagestyle{headings}
 \sloppy
 %%\textwidth 15cm
@@ -63,7 +64,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition March 2003}
+{\large Edition August 2003}
 \end{raggedright}
 
 \clearpage
@@ -191,9 +192,8 @@ The sources of the C version may also be fetched from the following server:
 ..and of course thereby from every Sunsite mirror in the world!
 
 Whoever has no access to an FTP-Server can ask me to send the assembler
-by mail.  Only requests containing floppies (2 pieces 1.44 Mbytes, for
-720Kbytes/1.2Mbytes format 4/3 pieces) and a self-addressed, (correctly)
-stamped envelope will be answered.  Don't send any money!
+by mail.  Only requests containing a blank CD-R and a self-addressed,
+(correctly) stamped envelope will be answered.  Don't send any money!
 
 Now, after this inevitable introduction we can turn to the actual
 documentation:
@@ -236,7 +236,7 @@ following processor families have been implemented:
 \item{AMD 29K}
 \item{Siemens 80C166/167}
 \item{Zilog Z80, Z180, Z380}
-\item{Zilog Z8}
+\item{Zilog Z8, eZ8}
 \item{Xilinx KCPSM ('PicoBlaze')}
 \item{Toshiba TLCS-900(L)}
 \item{Toshiba TLCS-90}
@@ -267,7 +267,8 @@ following processor families have been implemented:
 \item{Fairchild ACE}
 \item{NEC $\mu$PD 78(C)1x}
 \item{NEC $\mu$PD 75xxx (alias 75K0)}
-\item{NEC $\mu$PD 78xxx (alias 78K0)}
+\item{NEC 78K0}
+\item{NEC 78K2}
 \item{NEC $\mu$PD7720/7725}
 \item{NEC $\mu$PD77230}
 \item{Symbios Logic SYM53C8xx (yes, they are programmable!)}
@@ -279,7 +280,6 @@ under work / planned / in consideration :
 \begin{itemize}
 \item{NEC 78K4}
 \item{Intel 8008}
-\item{Texas Instruments TMS320C54x}
 \item{Analog Devices ADSP21xx}
 \item{SGS-Thomson ST20}
 \item{Texas Instruments TMS320C4x}
@@ -2959,11 +2959,13 @@ with the additional instructions can be found in the chapter
 with processor specific hints.
 %%-----------
 \begin{quote}
-ad) Z8601, Z8604, Z8608, Z8630, Z8631
+ad) Z8601, Z8604, Z8608, Z8630, Z8631 $\rightarrow$ eZ8
 \end{quote}
-These processors again only differ in internal memory size and
+The variants with Z8 core only differ in internal memory size and
 on-chip peripherals, i.e. the choice does not have an effect on the
-supported instruction set.
+supported instruction set.  This is substantially different with the eZ8,
+which brings along a strongly extended instruction set that is in wide
+parts only source-level compatible.
 %%-----------
 \begin{quote}
 ae) KCPSM
@@ -3167,19 +3169,24 @@ This is currently the only member of NEC's 78K0 family I am familiar
 with.  Similar remarks like for the COP8 family apply!
 %%-----------
 \begin{quote}
-bg) 7720 $\rightarrow$ 7725
+bg) 78214
+\end{quote}
+This is currently the the representor of NEC's 78K0 family.
+%%-----------
+\begin{quote}
+bh) 7720 $\rightarrow$ 7725
 \end{quote}
 The $\mu$PD7725 offers larger address spaces and som more instructions
 compared to his predecessor. {\bf CAUTION!}  The processors are not binary
 compatible to each other!
 %%-----------
 \begin{quote}
-bh) 77230
+bi) 77230
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
-bi) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
+bj) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
     \> SYM53C875, SYM53C895
 \end{tabbing}
 \end{quote}
@@ -3188,12 +3195,12 @@ instruction variants, furthermore they are different in their set of
 internal registers.
 %%-----------
 \begin{quote}
-bj) MB89190  
+bk) MB89190  
 \end{quote}  
 This processor type represents Fujitsu's F$^{2}$MC8L series...
 %%-----------
 \begin{quote}
-bk) MB9500
+bl) MB9500
 \end{quote}
 ...just like this one does it currently for the 16-bit variants from
 Fujitsu!
@@ -7259,7 +7266,7 @@ Apart from the real machine instructions, AS defines similarly to its
 macros:
 \begin{itemize}
 \item{\tty{NOP} is a shortform for \tty{MOVE AUX,AUX}}
-\item{\tty{HALT} is a shortform for \tty{JMP \verb!*!}}
+\item{\tty{HALT} is a shortform for {\tt JMP \verb!*!}}
 \item{\tty{XML ii} is a shortform for \tty{XMIT ii,R12} (only 8X305)}
 \item{\tty{XMR ii} is a shortform for \tty{XMIT ii,R13} (only 8X305)}
 \item{\tty{SEL $<$busobj$>$} is a shortform for \tty{XMIT $<$adr$>$,IVL/IVR},
@@ -8326,6 +8333,22 @@ certain addressing mode and the instruction allows different
 variants.  Without a prefix, AS will automatically select the shortest
 variant.  It should therefore rarely be necessary to use a prefix in
 practice.
+
+%%---------------------------------------------------------------------------
+
+\section{78K2}
+\label{78K2Spec}
+
+Analogous to the 78K0, NEC here also uses dollar signs and exclamation
+marks to specify different lengths of address expressions.  The selection
+between long and short addresses is done automatically (both in RAM and
+SFR areas), only relative addressing has to be selected explicitly, if an
+instruction supports both variants (like {\tt BR}).
+
+An additional remark (which is also true for the 78K0): Those who want to
+use Motorola syntax via {\tt RELAXED}, might have to put hexadecimal
+constants in parentheses, since the leading dollar sign might be
+misunderstood as relative addressing...
 
 %%---------------------------------------------------------------------------
 
@@ -9850,11 +9873,27 @@ described by:
                {The prefix combination here defined is not allowed, or it
                 cannot be translated into binary code}
                {none}
-\errentry{2030}{constants cannot be modifed}
+\errentry{2030}{constants cannot be redefined as variables}
                {error}
                {A symbol that has once been declared as constant with
                 {\tt EQU} must not be modified afterwards with {\tt SET}.}
                {the name of the symbol in question}
+\errentry{2035}{variables cannot be redefined as constants}
+               {error}
+               {A symbol that has once been declared as variable with
+                {\tt SET} must not be redeclared afterwards as constant
+                (e.g. with {\tt EQU}.}
+               {the name of the symbol in question}
+\errentry{2040}{structure name missing}
+               {error}
+               {A structure's definition lacks the identifier name for the
+                new structure}
+               {none}
+\errentry{2050}{empty argument}
+               {error}
+               {Empty strings must not be used in the argument list for
+                this statement}
+               {none}
 \errentry{10001}{error in opening file}
                {fatal}
                {An error was detected while trying to open a file for input.}
@@ -10941,6 +10980,8 @@ Either that was a long nightshift or I am slowly getting old...
       \item{additionally supports the 807x family from National
             Semiconductor;}
       \item{additionally supports the Intel 4040;}
+      \item{additionally supports the Zilog eZ8;}
+      \item{additionally supports the 78K0 family from NEC;}
       \end{itemize}}
 \end{itemize}
 
@@ -12094,6 +12135,11 @@ from this with the next release :-)
                  Manual.\/} \\
                 Vol. I+II (no year of release given)
 
+\bibitem{NEC78K2} NEC Corp.: \\
+                {\em 78K/II Series 8-Bit Single-Chip Microcontroller
+                 User's Manual - Instructions.\/} \\
+                Document No. U10228EJ6V0UM00 (6th edition), December 1995
+
 \bibitem{NECSig} NEC Corp.: \\
                 {\em Digital Signal Processor Product Description.\/} \\
                 PDDSP.....067V20 (no year of release given)
@@ -12273,6 +12319,10 @@ from this with the next release :-)
                   {\em Z380 CPU Central Processing Unit User's
                   Manual.\/} \\
                   (no year of release given)
+
+\bibitem{ZileZ8} Zilog Inc.: \\
+               {\em eZ8 CPU User Manual.\/} \\
+               UM01285-0503
 
 \end{thebibliography}
 

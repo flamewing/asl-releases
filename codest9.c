@@ -11,6 +11,13 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: codest9.c,v 1.2 2004/05/29 11:33:03 alfred Exp $                     */
+/*****************************************************************************
+ * $Log: codest9.c,v $
+ * Revision 1.2  2004/05/29 11:33:03  alfred
+ * - relocated DecodeIntelPseudo() into own module
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -22,6 +29,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "intpseudo.h"
 #include "codevars.h"
 
 

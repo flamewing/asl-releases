@@ -1,0 +1,25 @@
+	;**************************************************************
+	;
+STONE:	; Toggle the I/O port
+	;
+	;**************************************************************
+	;
+	CALL	THREE		;GET THE NUMBERS
+	ACALL	CBIAS		;BIAS R3:R1 FOR COUNT LOOP
+	;
+STONE1:	CLR	T_BIT		;TOGGLE THE BIT
+	CLR	TR1		;STOP THE TIMER
+	MOV	TH1,R3		;LOAD THE TIMER
+	MOV	TL1,R1
+	CLR	TF1		;CLEAR THE OVERFLOW FLAG
+	SETB	TR1		;TURN IT ON
+	ACALL	DEC76
+	JNB	TF1,$		;WAIT
+	ACALL	ALPAR
+	SETB	T_BIT		;BACK TO A ONE
+	CALL	TIMER_LOAD+2	;LOAD THE HIGH VALUE
+	JNB	TF1,$		;WAIT
+	JNZ	STONE1		;LOOP
+	RET
+	;
+

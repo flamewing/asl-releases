@@ -9,9 +9,12 @@
 /* Historie: 15. 5.1996 Grundsteinlegung                                     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmif.h,v 1.2 2002/05/01 15:56:09 alfred Exp $                       */
+/* $Id: asmif.h,v 1.1 2003/11/06 02:49:18 alfred Exp $                       */
 /***************************************************************************** 
  * $Log: asmif.h,v $
+ * Revision 1.1  2003/11/06 02:49:18  alfred
+ * - recreated
+ *
  * Revision 1.2  2002/05/01 15:56:09  alfred
  * - print start line of IF/SWITCH construct when it ends
  *

@@ -16,9 +16,15 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code77230.c,v 1.2 2002/08/14 18:43:48 alfred Exp $                   */
+/* $Id: code77230.c,v 1.2 2004/09/26 14:40:24 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code77230.c,v $
+ * Revision 1.2  2004/09/26 14:40:24  alfred
+ * - fix error warning
+ *
+ * Revision 1.1  2003/11/06 02:49:21  alfred
+ * - recreated
+ *
  * Revision 1.2  2002/08/14 18:43:48  alfred
  * - warn null allocation, remove some warnings
  *
@@ -572,7 +578,11 @@ BEGIN
               DAsmCode[CodeLen]=(DAsmCode[CodeLen]<<8)+CharTransTable[((usint)*cp)&0xff];
               if ((z&3)==3) CodeLen++;
              END
-            if ((z&3)!=0) DAsmCode[CodeLen++]=(DAsmCode[CodeLen])<<((4-(z&3))<<3);
+            if ((z&3)!=0) 
+            {
+              DAsmCode[CodeLen] = (DAsmCode[CodeLen]) << ((4 - (z & 3)) << 3);
+              CodeLen++;
+            }
             break;
            default:
             OK=False;

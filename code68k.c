@@ -36,6 +36,13 @@
 /*           2001-12-02 fixed problems with forward refs of shift arguments  */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: code68k.c,v 1.2 2004/05/29 12:04:47 alfred Exp $                     */
+/*****************************************************************************
+ * $Log: code68k.c,v $
+ * Revision 1.2  2004/05/29 12:04:47  alfred
+ * - relocated DecodeMot(16)Pseudo into separate module
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -49,7 +56,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmallg.h"
-#include "codepseudo.h"
+#include "motpseudo.h"
 #include "codevars.h"
 #include "asmitree.h"
 
@@ -585,7 +592,7 @@ BEGIN
         DVal=EvalFloatExpression(Asc,Float64,&ValOK);
         if (ValOK) 
          BEGIN
-          ConvertDec(DVal,SwapField);
+          ConvertMotoFloatDec(DVal,SwapField);
           AdrVals[0]=SwapField[5];
           AdrVals[1]=SwapField[4];
           AdrVals[2]=SwapField[3];

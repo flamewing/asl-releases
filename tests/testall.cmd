@@ -80,6 +80,7 @@ call testall t_77230
 call testall t_7725
 call testall t_78c1x
 call testall t_78k0
+call testall t_78k2
 call testall t_807x
 call testall t_85
 call testall t_87c800
@@ -93,6 +94,7 @@ call testall t_avr
 call testall t_bas52
 call testall t_buf32
 call testall t_cop8
+capp testall t_ez8
 call testall t_f2mc8l
 call testall t_fl90
 call testall t_fl900

@@ -12,6 +12,13 @@
 /*           29. 5.1999 SysString                                            */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: strutil.h,v 1.3 2004/05/30 20:54:26 alfred Exp $                     */
+/*****************************************************************************
+ * $Log: strutil.h,v $
+ * Revision 1.3  2004/05/30 20:54:26  alfred
+ * - added CopyNoBlanks()
+ *
+ *****************************************************************************/
 
 extern Boolean HexLowerCase;
 
@@ -39,7 +46,7 @@ extern int strncasecmp(const char *src1, const char *src2, int maxlen);
 #endif
 
 #ifdef NEEDS_STRSTR
-extern char *strstr(char *haystack, char *needle);
+extern char *strstr(const char *haystack, const char *needle);
 #endif
 
 #ifdef BROKEN_SPRINTF
@@ -61,6 +68,8 @@ extern int ReadLnCont(FILE *Datei, char *Zeile, int MaxLen);
 extern LongInt ConstLongInt(const char *inp, Boolean *err);
 
 extern void KillBlanks(char *s);
+
+extern int CopyNoBlanks(char *pDest, const char *pSrc, int MaxLen);
 
 extern void KillPrefBlanks(char *s);
 

@@ -14,9 +14,18 @@
 /*           19. 8.2001 fixed errors for lower halves of XIX...XSP           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code96c141.c,v 1.2 2002/10/20 09:22:25 alfred Exp $                          */
+/* $Id: code96c141.c,v 1.3 2004/11/16 17:43:09 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code96c141.c,v $
+ * Revision 1.3  2004/11/16 17:43:09  alfred
+ * - add missing hex mark on short mask
+ *
+ * Revision 1.2  2004/05/29 11:33:02  alfred
+ * - relocated DecodeIntelPseudo() into own module
+ *
+ * Revision 1.1  2003/11/06 02:49:22  alfred
+ * - recreated
+ *
  * Revision 1.2  2002/10/20 09:22:25  alfred
  * - work around the parser problem related to the ' character
  *
@@ -36,6 +45,7 @@
 #include "asmpars.h"
 #include "asmallg.h"
 #include "codepseudo.h"
+#include "intpseudo.h"
 #include "codevars.h"
 #include "asmitree.h"
 
@@ -708,7 +718,7 @@ END
 
         static Boolean IsShort(Byte Code)
 BEGIN
-   return ((Code & 0x4e)==40);
+   return ((Code & 0x4e)==0x40);
 END
 
         static void CheckSup(void)

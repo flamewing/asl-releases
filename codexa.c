@@ -19,6 +19,16 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: codexa.c,v 1.3 2004/05/29 12:04:48 alfred Exp $                      */
+/*****************************************************************************
+ * $Log: codexa.c,v $
+ * Revision 1.3  2004/05/29 12:04:48  alfred
+ * - relocated DecodeMot(16)Pseudo into separate module
+ *
+ * Revision 1.2  2004/05/29 11:33:04  alfred
+ * - relocated DecodeIntelPseudo() into own module
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -32,8 +42,12 @@
 #include "asmpars.h"
 #include "asmallg.h"
 #include "asmitree.h"
-#include "codepseudo.h"
+#include "codepseudo.h" 
+#include "intpseudo.h"
+#include "motpseudo.h"
 #include "codevars.h"
+
+#include "codexa.h"
 
 /*-------------------------------------------------------------------------*/
 /* Definitionen */

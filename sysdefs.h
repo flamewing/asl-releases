@@ -11,7 +11,17 @@
 /*           2001-10-13 added ARM/Linux                                      */
 /*                                                                           */
 /*****************************************************************************/
-
+/* $Id: sysdefs.h,v 1.3 2004/02/08 20:39:25 alfred Exp $                     */
+/*****************************************************************************
+ * $Log: sysdefs.h,v $
+ * Revision 1.3  2004/02/08 20:39:25  alfred
+ * -
+ *
+ * Revision 1.2  2004/01/17 16:12:35  alfred
+ * - add ePOC
+ *
+ *****************************************************************************/
+  
 /*---------------------------------------------------------------------------*/
 /* unify 68K platforms */
 
@@ -77,6 +87,15 @@
 #endif
 
 /*---------------------------------------------------------------------------*/
+/* ditto for ARM platforms */
+
+#ifdef __arm__
+#ifndef __arm
+#define __arm
+#endif
+#endif
+
+/*---------------------------------------------------------------------------*/
 /* If the compiler claims to be ANSI, we surely can use prototypes */
 
 #ifdef __STDC__
@@ -117,7 +136,9 @@
 #ifdef __m68k
 #ifndef __NetBSD__
 #ifndef __MUNIX__
+#ifndef __amiga
 #define __sunos__
+#endif
 #endif
 #endif
 #endif
@@ -949,7 +970,37 @@ typedef signed long long Integ64;
 typedef unsigned long long Card64;
 #define HAS64
 #define LOCALE_NLS
-#endif
+#endif /* __linux__ */
+
+/*---------------------------------------------------------------------------*/
+/* Psion PDA (ARM cpu) with SymbianOS Epoc32 rel.5 and installed epocemx-GCC:
+
+   well, not really a UNIX... */
+
+#ifdef __EPOC32__
+
+#ifdef __EPOCEMX__
+#define ARCHSYSNAME "psion-epoc32-epocemx"
+#define DEFSMADE
+#define OPENRDMODE "r"
+#define OPENWRMODE "w"
+#define OPENUPMODE "r+"
+#define IEEEFLOAT
+typedef signed char Integ8;
+typedef unsigned char Card8;
+typedef signed short Integ16;
+typedef unsigned short Card16;
+#define HAS16
+typedef signed int Integ32;
+typedef unsigned int Card32;
+typedef signed long long Integ64;
+typedef unsigned long long Card64;
+#define HAS64
+#define NO_NLS 
+#endif /* __EPOCEMX__ */
+
+
+#endif /* __EPOC32__ */
 
 #endif /* __arm */
 

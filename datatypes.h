@@ -48,8 +48,11 @@ typedef float Single;
 
 typedef Byte Boolean; 
 
-typedef char String[256];
-typedef char ShortString[65];
+#define STRINGSIZE 256
+#define SHORTSTRINGSIZE 65
+
+typedef char String[STRINGSIZE];
+typedef char ShortString[SHORTSTRINGSIZE];
 
 #ifndef TRUE
 #define TRUE 1

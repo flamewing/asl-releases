@@ -13,6 +13,13 @@
  * 14. 1.2001 silenced warnings about unused parameters
  * 2001-11-11 moved pseudo ops to codepseudo.c
  */
+/* $Id: code3202x.c,v 1.2 2004/05/29 12:18:05 alfred Exp $                   */
+/*****************************************************************************
+ * $Log: code3202x.c,v $
+ * Revision 1.2  2004/05/29 12:18:05  alfred
+ * - relocated DecodeTIPseudo() to separate module
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -24,6 +31,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "tipseudo.h"
 #include "endian.h"
 
 #include "code3202x.h"

@@ -10,6 +10,22 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: code96.c,v 1.2 2004/05/29 11:33:02 alfred Exp $                      *
+ ***************************************************************************** 
+ * $Log: code96.c,v $
+ * Revision 1.2  2004/05/29 11:33:02  alfred
+ * - relocated DecodeIntelPseudo() into own module
+ *
+ * Revision 1.1  2003/11/06 02:49:22  alfred
+ * - recreated
+ *
+ * Revision 1.3  2003/08/16 17:23:33  alfred
+ * - took back fix
+ *
+ * Revision 1.2  2003/08/16 17:01:55  alfred
+ * - fix condition
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -18,7 +34,8 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
-#include "codepseudo.h"
+#include "codepseudo.h" 
+#include "intpseudo.h"
 #include "codevars.h"
 
 typedef struct 

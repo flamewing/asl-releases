@@ -14,9 +14,12 @@
 /*                      ShortMode wird bei absoluter Adressierung gemerkt    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code56k.c,v 1.3 2003/05/02 21:23:10 alfred Exp $                     */
+/* $Id: code56k.c,v 1.1 2003/11/06 02:49:20 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code56k.c,v $
+ * Revision 1.1  2003/11/06 02:49:20  alfred
+ * - recreated
+ *
  * Revision 1.3  2003/05/02 21:23:10  alfred
  * - strlen() updates
  *

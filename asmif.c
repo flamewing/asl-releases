@@ -7,9 +7,12 @@
 /* Historie: 15. 5.1996 Grundsteinlegung                                     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmif.c,v 1.3 2002/07/14 18:39:57 alfred Exp $                       */
+/* $Id: asmif.c,v 1.1 2003/11/06 02:49:18 alfred Exp $                       */
 /***************************************************************************** 
  * $Log: asmif.c,v $
+ * Revision 1.1  2003/11/06 02:49:18  alfred
+ * - recreated
+ *
  * Revision 1.3  2002/07/14 18:39:57  alfred
  * - fixed TempAll-related warnings
  *

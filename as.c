@@ -58,9 +58,24 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.22 2003/05/02 21:23:08 alfred Exp $                          */
+/* $Id: as.c,v 1.3 2004/10/03 12:52:31 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.3  2004/10/03 12:52:31  alfred
+ * - MinGW adaptions
+ *
+ * Revision 1.2  2004/05/29 12:28:13  alfred
+ * - remove unneccessary dummy fcn
+ *
+ * Revision 1.1  2003/11/06 02:49:18  alfred
+ * - recreated
+ *
+ * Revision 1.24  2003/10/12 19:28:52  alfred
+ * - created 78K/2
+ *
+ * Revision 1.23  2003/10/04 15:38:46  alfred
+ * - differentiate constant/variable messages
+ *
  * Revision 1.22  2003/05/02 21:23:08  alfred
  * - strlen() updates
  *
@@ -220,6 +235,7 @@
 #include "code78c10.h"
 #include "code75k0.h"
 #include "code78k0.h"
+#include "code78k2.h"
 #include "code7720.h"
 #include "code77230.h"
 #include "code53c8xx.h"
@@ -1687,7 +1703,7 @@ BEGIN
 
    /* Datei oeffnen */
 
-#ifdef _WIN32
+#ifdef __CYGWIN32__
    DeCygwinPath(ArgPart);
 #endif
    Tag->Datei=fopen(ArgPart,"r");
@@ -1841,7 +1857,7 @@ BEGIN
      case '=':
       return (NOT Memo("="));
      case ':':
-      return (NOT Memo(":"));
+      return (NOT Memo(":="));
      case 'M':
       return (NOT Memo("MACRO"));
      case 'F':
@@ -3431,7 +3447,7 @@ BEGIN
      asmmac_init(); asmstruct_init(); 
      asmif_init(); asmcode_init(); asmdebug_init(); 
 
-     codeallg_init(); codepseudo_init();
+     codeallg_init();
 
      code68k_init();
      code56k_init(); 
@@ -3452,7 +3468,7 @@ BEGIN
      codest6_init(); codest7_init(); codest9_init(); code6804_init();
      code3201x_init(); code3202x_init(); code3203x_init(); code3205x_init(); code32054x_init(); code3206x_init();
      code9900_init(); codetms7_init(); code370_init(); codemsp_init();
-     code78c10_init(); code75k0_init(); code78k0_init(); code7720_init(); code77230_init();
+     code78c10_init(); code75k0_init(); code78k0_init(); code78k2_init(); code7720_init(); code77230_init();
      codescmp_init(); code807x_init(); codecop8_init(); codesc14xxx_init();
      codeace_init();
      code53c8xx_init();

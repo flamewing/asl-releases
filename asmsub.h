@@ -51,7 +51,9 @@ extern void SplitString(char *Source, char *Left, char *Right, char *Trenner);
 
 extern void TranslateString(char *s);
 
-extern ShortInt StrCmp(char *s1, char *s2, LongInt Hand1, LongInt Hand2);
+extern ShortInt StrCmp(const char *s1, const char *s2, LongInt Hand1, LongInt Hand2);
+
+extern ShortInt StrCaseCmp(const char *s1, const char *s2, LongInt Hand1, LongInt Hand2);
 
 /*#define Memo(s) ((*OpPart==*(s)) AND (strcmp(OpPart,(s))==0))*/
 #define Memo(s) (strcmp(OpPart,(s))==0)
@@ -104,12 +106,17 @@ extern void ExpandLine(char *TokNam, Byte Num, char *Line);
 
 extern void KillCtrl(char *Line);
 
-
+#ifdef __TURBOC__
 extern void ChkStack(void);
 
 extern void ResetStack(void);
 
 extern LongWord StackRes(void);
+#else
+#define ChkStack() {}
+#define ResetStack() {}
+#define StackRes() 0
+#endif
 
 
 extern void AddCopyright(char *NewLine);

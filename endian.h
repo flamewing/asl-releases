@@ -28,10 +28,11 @@ extern void DSwap(void *Field, int Cnt);
 
 extern void QSwap(void *Field, int Cnt);
 
+extern void TSwap(void *Field, int Cnt);
+
 extern void DWSwap(void *Field, int Cnt);
 
 extern void QWSwap(void *Field, int Cnt);
-
 
 extern void Double_2_ieee4(Double inp, Byte *dest, Boolean NeedsBig);
 

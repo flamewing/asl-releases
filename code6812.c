@@ -10,6 +10,13 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: code6812.c,v 1.2 2004/05/29 12:04:46 alfred Exp $                    */
+/*****************************************************************************
+ * $Log: code6812.c,v $
+ * Revision 1.2  2004/05/29 12:04:46  alfred
+ * - relocated DecodeMot(16)Pseudo into separate module
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -21,9 +28,10 @@
 #include "asmdef.h"
 #include "asmpars.h"
 #include "asmsub.h"
-#include "codepseudo.h"
+#include "motpseudo.h"
 #include "codevars.h"
 
+#include "code6812.h"
 
 typedef struct
          {

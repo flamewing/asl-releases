@@ -10,6 +10,13 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: codemcore.c,v 1.2 2004/05/29 12:04:48 alfred Exp $                   */
+/*****************************************************************************
+ * $Log: codemcore.c,v $
+ * Revision 1.2  2004/05/29 12:04:48  alfred
+ * - relocated DecodeMot(16)Pseudo into separate module
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -24,6 +31,7 @@
 #include "asmpars.h"
 #include "asmallg.h"
 #include "codepseudo.h"
+#include "motpseudo.h"
 #include "asmitree.h"
 
 /*--------------------------------------------------------------------------*/

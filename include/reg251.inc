@@ -1,212 +1,243 @@
                 save
-		listing off   ; kein Listing über diesen File
+		listing off   ; no listing over this file
 
 ;****************************************************************************
 ;*                                                                          *
-;*   AS 1.41 - Datei REG251.INC                                             *
+;*   AS 1.42 - File REG251.INC                                              *
 ;*   								            *
-;*   Sinn : enthält SFR- und Bitdefinitionen für MCS-251-Prozessoren        *
+;*   Purpose : contains SFR/bit definions for MCS-251 Processors            *
 ;* 									    *
-;*   letzte Änderungen : 30.12.1995                                         *
+;* $Id: reg251.inc,v 1.1 2003/11/06 02:56:33 alfred Exp $                  *
+;*                                                                          *
+;* $Log: reg251.inc,v $
+;* Revision 1.1  2003/11/06 02:56:33  alfred
+;* - recreated
+;*
+;* Revision 1.2  2003/06/22 13:18:05  alfred
+;* - translated to english, added 251T registers
+;*                                                     *
 ;*                                                                          *
 ;****************************************************************************
 
-                ifndef  reg251inc       ; verhindert Mehrfacheinbindung
+                ifndef  reg251inc       ; avoids multiple inclusion
 
 reg251inc       equ     1
 
-                if      MOMCPUNAME<>"80C251"
-                 fatal  "Falscher Prozessortyp eingestellt: nur 80C251 erlaubt!"
+                if      (MOMCPUNAME<>"80C251")&&(MOMCPUNAME<>"80C251T")
+                 fatal  "Falscher Prozessortyp eingestellt: nur 80C251(T) erlaubt!"
 		endif
 
 
                 if      MOMPASS=1
-                 message "MCS-251-SFR-Definitionen (C) 1995 Alfred Arnold"
-		 message "binde \{MOMCPU}-SFRs ein"
+                 message "MCS-251-SFR-Definitionen (C) 2003 Alfred Arnold"
+		 message "binde \{MOMCPUNAME}-SFRs ein"
 		endif
 
 ;----------------------------------------------------------------------------
-; CPU-Kern:
+; CPU Core:
 ; ACC = A = R11
 ; B = R10
 ; SP/SPH = SPX = DR60
 ; DPL/DPH/DPXL = DPX = DR56
-; CY wird von AS selbst benutzt
+; CY is being used by AS itself
 
-ACC             port    0e0h            ; Akkumulator
+ACC             port    0e0h            ; accumulator
 
-B               port    0f0h            ; B-Register
+B               port    0f0h            ; B register
 
-PSW             port    0d0h            ; 8051-kompatibles PSW
-CARRY           bit     PSW.7           ; Carry
-AC              bit     PSW.6           ; Auxiliary-Carry
-F0              bit     PSW.5           ; Flag 0
-RS1             bit     PSW.4           ; Register-Bank-Auswahl
+PSW             port    0d0h            ; 8051-compatible PSW
+CARRY           bit     PSW.7           ; carry
+AC              bit     PSW.6           ; auxiliary carry
+F0              bit     PSW.5           ; flag 0
+RS1             bit     PSW.4           ; register bank select
 RS0             bit     PSW.3
-OV              bit     PSW.2           ; Overflow-Flag
-UD              bit     PSW.1           ; User-Flag
-P               bit     PSW.0           ; Parity-Flag
+OV              bit     PSW.2           ; overflow flag
+UD              bit     PSW.1           ; user flag
+P               bit     PSW.0           ; parity flag
 
-PSW1            port    0d1h            ; erweitertes PSW (Bits 2-4,6-7 wie in PSW)
-N               bit     PSW1.5          ; Negatives Ergebnis?
-Z               bit     PSW1.1          ; Ergebnis 0 ?
+PSW1            port    0d1h            ; extended PSW (bits 2-4,6-7 as in PSW)
+N               bit     PSW1.5          ; negatives result?
+Z               bit     PSW1.1          ; zero result?
 
-SP              port    81h             ; Stackpointer (Bit 0..7)
-SPH             port    0bdh            ; Stackpointer (Bit 8..15)
-DPL             port    082h            ; Datenzeiger (Bit 0..7)
-DPH             port    083h            ; Datenzeiger (Bit 8..15)
-DPXL            port    084h            ; Datenzeiger (Bit 15..23)
+SP              port    81h             ; stack pointer (bits 0..7)
+SPH             port    0bdh            ; stack pointer (bits 8..15)
+DPL             port    082h            ; data pointer (bits 0..7)
+DPH             port    083h            ; data pointer (bits 8..15)
+DPXL            port    084h            ; data pointer (bits 15..23)
 
-PCON            port    087h            ; Power-Down-Modi u.a.
-SMOD1           bit     PCON.7          ; Verdopplung Baudrate in Modus 1..3
-SMOD0           bit     PCON.6          ; Umschaltung SCON.7 als FE/SM0
-POF             bit     PCON.4          ; war Spannung weg ?
-GF1             bit     PCON.3          ; General Flag 1
-GF0             bit     PCON.2          ; General Flag 0
-PD              bit     PCON.1          ; in Powerdown-Modus schalten
-IDL             bit     PCON.0          ; in Idle-Modus schalten
+PCON            port    087h            ; power down modes etc.
+SMOD1           bit     PCON.7          ; doubles baud rate in modes 1..3
+SMOD0           bit     PCON.6          ; toggles SCON.7 as FE/SM0
+POF             bit     PCON.4          ; power outage ?
+GF1             bit     PCON.3          ; general flag 1
+GF0             bit     PCON.2          ; general flag 0
+PD              bit     PCON.1          ; switch to powerdown mode
+IDL             bit     PCON.0          ; switch to idle mode
 
-IE              port    0a8h            ; Interrupt-Freigaben (eigentlich IE0,
-                                        ; aber das ist schon belegt
-EA              bit     IE.7            ; generelle Interruptsperre
-EC              bit     IE.6            ; PCA-Interrupts freigeben
-ET2             bit     IE.5            ; Interrupts Timer 2 freigeben
-ES              bit     IE.4            ; Interrupts ser. Schnittstelle freigeben
-ET1             bit     IE.3            ; Interrupt Timer 1 freigeben
-EX1             bit     IE.2            ; externen Interrupt 1 freigeben
-ET0             bit     IE.1            ; Interrupt Timer 0 freigeben
-EX0             bit     IE.0            ; externen Interrupt 0 freigeben
+IE              port    0a8h            ; interrupt enables (should be IE0,
+                                        ; but that is already occupied)
+EA              bit     IE.7            ; general interrupt mask
+EC              bit     IE.6            ; enable PCA interrupts
+ET2             bit     IE.5            ; enable timer 2 interrupts
+ES              bit     IE.4            ; enable serial port interrupts
+ET1             bit     IE.3            ; enable timer 1 interrupts
+EX1             bit     IE.2            ; enable external interrupt 1
+ET0             bit     IE.1            ; enable timer 0 interrupts
+EX0             bit     IE.0            ; enable external interrupt 0
 
-IPH0            port    0b7h            ; Interrupt-Prioritäten
+IPH0            port    0b7h            ; interrupt priorities
 IPL0            port    0b8h
 
-;----------------------------------------------------------------------------
-; Ports mit Extrafunktionen:
+                if      MOMCPUNAME="80C251T"
+IPH1             port    0b3h
+IPL1             port    0b2h
+IE01             port    0b1h           ; It's called IE1 in the manual but
+                                        ; that's the name of a bit elsewhere;
+                                        ; Should probably find a better name
+                                        ; for this one, or change IE1
+		endif
 
-P0              port    080h            ; Port 0
-
-P1              port    090h            ; Port 1
-T2              bit     P1.0            ; Ein/Ausgabe Timer 2
-T2EX            bit     P1.1            ; Trigger Timer 2
-ECI             bit     P1.2            ; externer Takt PCA
-CEX0            bit     P1.3            ; Ein/Ausgabe PCA-Modul 0
-CEX1            bit     P1.4            ; Ein/Ausgabe PCA-Modul 1
-CEX2            bit     P1.5            ; Ein/Ausgabe PCA-Modul 2
-CEX3            bit     P1.6            ; Ein/Ausgabe PCA-Modul 3
-CEX4            bit     P1.7            ; Ein/Ausgabe PCA-Modul 4
-
-P2              port    0a0h            ; Port 2
-
-P3              port    0b0h            ; Port 3
-RXD             bit     P3.0            ; serielle Empfangsleitung
-TXD             bit     P3.1            ; serielle Sendeleitung
-INT0            bit     P3.2            ; externer Interrupt 0
-INT1            bit     P3.3            ; externer Interrupt 1
-T0              bit     P3.4            ; Takteingang Timer 0
-T1              bit     P3.5            ; Takteingang Timer 1
-WR              bit     P3.6            ; Leseleitung
-RD              bit     P3.7            ; Schreibleitung
 
 ;----------------------------------------------------------------------------
-; serieller Port:
+; ports with extra functions:
 
-SCON            port    098h            ; Konfiguration
-FE              bit     SCON.7          ; fehlerhaftes Stopbit ?
-SM0             bit     SCON.7          ; Modusauswahl
+P0              port    080h            ; port 0
+
+P1              port    090h            ; port 1
+T2              bit     P1.0            ; in/output timer 2
+T2EX            bit     P1.1            ; trigger timer 2
+ECI             bit     P1.2            ; external PCA clock
+CEX0            bit     P1.3            ; in/output PCA module 0
+CEX1            bit     P1.4            ; in/output PCA module 1
+CEX2            bit     P1.5            ; in/output PCA module 2
+CEX3            bit     P1.6            ; in/output PCA module 3
+CEX4            bit     P1.7            ; in/output PCA module 4
+
+P2              port    0a0h            ; port 2
+
+P3              port    0b0h            ; port 3
+RXD             bit     P3.0            ; serial receive line
+TXD             bit     P3.1            ; serial transmit lie
+INT0            bit     P3.2            ; external interrupt 0
+INT1            bit     P3.3            ; external interrupt 1
+T0              bit     P3.4            ; clock input timer 0
+T1              bit     P3.5            ; clock input timer 1
+WR              bit     P3.6            ; read line
+RD              bit     P3.7            ; write line
+
+;----------------------------------------------------------------------------
+; serial port:
+
+SCON            port    098h            ; configuration
+FE              bit     SCON.7          ; wrong stop bit ?
+SM0             bit     SCON.7          ; mode selection
 SM1             bit     SCON.6
 SM2             bit     SCON.5
-REN             bit     SCON.4          ; Empfänger freigeben
-TB8             bit     SCON.3          ; Sendedatenbit 8
-RB8             bit     SCON.2          ; Empfangsdatenbit 8
-TI              bit     SCON.1          ; Zeichen vollständig versandt ?
-RI              bit     SCON.0          ; Zeichen vollständig empfangen ?
+REN             bit     SCON.4          ; enable receiver
+TB8             bit     SCON.3          ; transmit data bit 8
+RB8             bit     SCON.2          ; receive data bit 8
+TI              bit     SCON.1          ; character sent completely?
+RI              bit     SCON.0          ; character received completely?
 
-SBUF            port    099h            ; Datenregister
-SADEN           port    0b9h            ; Slave-Adreßmaske
-SADDR           port    0a9h            ; Slave-Adresse
+SBUF            port    099h            ; data register
+SADEN           port    0b9h            ; slave address mask
+SADDR           port    0a9h            ; slave address
+
+                if      MOMCPUNAME="80C251T"
+;----------------------------------------------------------------------------
+; second serial port:
+
+SADEN1           port    0bah            ; slave address mask
+SADDR1           port    0aah            ; slave address
+SCON1            port    09ah            ; configuration, similar to SCON
+SBUF1            port    09bh            ; data register
+BGCON            port    08fh
+                endif
 
 ;----------------------------------------------------------------------------
-; Zähler/Watchdog:
+; counters/watchdog:
 
-TL0             port    08ah            ; Zählwert Zähler 0
+TL0             port    08ah            ; counter value counter 0
 TH0             port    08ch
-TL1             port    08bh            ; Zählwert Zähler 1
+TL1             port    08bh            ; counter value counter 1
 TH1             port    08dh
 
-TCON            port    088h            ; Steuerung Zähler 0/1
-TF1             bit     TCON.7          ; Überlauf Timer 1 ?
-TR1             bit     TCON.6          ; Timer 1 starten/stoppen
-TF0             bit     TCON.5          ; Überlauf Timer 0 ?
-TR0             bit     TCON.4          ; Timer 0 starten/stoppen
-IE1             bit     TCON.3          ; externer Interrupt 1 augetreten ?
-IT1             bit     TCON.2          ; Flanken/Pegeltriggerung ext. Interrupt 1
-IE0             bit     TCON.1          ; externer Interrupt 0 augetreten ?
-IT0             bit     TCON.0          ; Flanken/Pegeltriggerung ext. Interrupt 0
+TCON            port    088h            ; counter 0/1 control
+TF1             bit     TCON.7          ; timer 1 overflow?
+TR1             bit     TCON.6          ; start/stop timer 1
+TF0             bit     TCON.5          ; timer 0 overflow?
+TR0             bit     TCON.4          ; start/stop timer 0
+IE1             bit     TCON.3          ; external interrupt 1 occured?
+IT1             bit     TCON.2          ; edge/level trigger ext. interrupt 1
+IE0             bit     TCON.1          ; external interrupt 0 occured?
+IT0             bit     TCON.0          ; edge/level trigger ext. Interrupt 0
 
-TMOD            port    089h            ; Steuerung/Modus Zähler 0/1
-M00             bit     TMOD.0          ; Modus Timer 0
+TMOD            port    089h            ; counter 0/1 control/mode
+M00             bit     TMOD.0          ; timer 0 mode
 M10             bit     TMOD.1
-CT0             bit     TMOD.2          ; Zähler/Timerumschaltung Timer 0
-GATE0           bit     TMOD.3          ; Freigabemodus Timer 0
-M01             bit     TMOD.4          ; Modus Timer 1
+CT0             bit     TMOD.2          ; counter/timer select timer 0
+GATE0           bit     TMOD.3          ; enable mode timer 0
+M01             bit     TMOD.4          ; timer 1 mode
 M11             bit     TMOD.5
-CT1             bit     TMOD.6          ; Zähler/Timerumschaltung Timer 1
-GATE1           bit     TMOD.7          ; Freigabemodus Timer 1
+CT1             bit     TMOD.6          ; counter/timer select timer 1
+GATE1           bit     TMOD.7          ; enable mode timer 1
 
 
-TL2             port    0cch            ; Zählwert Zähler 2
+TL2             port    0cch            ; counter value counter 2
 TH2             port    0cdh
 
-T2CON           port    0c8h            ; Steuerung Zähler 2
-TF2             bit     T2CON.7         ; Überlauf Timer 2 ?
-EXF2            bit     T2CON.6         ; Flanke an T2EX aufgetreten ?
-RCLK            bit     T2CON.5         ; Timer 2 oder 1 für seriellen Empfangstakt nutzen ?
-TCLK            bit     T2CON.4         ; Timer 2 oder 1 für seriellen Sendetakt nutzen ?
-EXEN2           bit     T2CON.3         ; Fang durch T2EX freigeben
-TR2             bit     T2CON.2         ; Timer 2 starten/stoppen
-CT2             bit     T2CON.1         ; Zähler/Timerumschaltung Timer 2
-CPRL2           bit     T2CON.0         ; Fang oder Neuladen durch T2EX
+T2CON           port    0c8h            ; counter 2 control
+TF2             bit     T2CON.7         ; timer 2 overflow?
+EXF2            bit     T2CON.6         ; edge occured on T2EX?
+RCLK            bit     T2CON.5         ; use timer 2 or 1 for serial receive clock?
+TCLK            bit     T2CON.4         ; use timer 2 or 1 for serial transmit clock?
+EXEN2           bit     T2CON.3         ; enable capture via T2EX
+TR2             bit     T2CON.2         ; start/stop timer 2
+CT2             bit     T2CON.1         ; counter/timer select timer 2
+CPRL2           bit     T2CON.0         ; capture or reload via T2EX
 
-T2MOD           port    0c9h            ; Steuerung/Modus Zähler 2
-T2OE            bit     T2MOD.1         ; Ausgabe Timer 2 an T2 freigeben
-DCEN            bit     T2MOD.0         ; Zählrichtung Timer 2
+T2MOD           port    0c9h            ; counter 2 control/mode
+T2OE            bit     T2MOD.1         ; enable timer 2 output on T2
+DCEN            bit     T2MOD.0         ; counting direction timer 2
 
-RCAP2L          port    0cah            ; Reload/Capture-Wert Timer 2
+RCAP2L          port    0cah            ; reload/capture value timer 2
 RCAP2H          port    0cbh
-WDTRST          port    0a6h            ; Watchdog zurücksetzen
+
+WDTRST          port    0a6h            ; reset watchdog
+WCON            port    0a7h            ; watchdog control
 
 ;----------------------------------------------------------------------------
-; Zählerfeld:
+; counter field:
 
-CCON            port    0d8h            ; Steuerregister
-CF              bit     CCON.7          ; Überlauf PCA ?
-CR              bit     CCON.6          ; PCA-Timer starten/stoppen
-CCF4            bit     CCON.4          ; Hat PCA-Modul 4..0 angesprochen ?
+CCON            port    0d8h            ; control register
+CF              bit     CCON.7          ; PCA overflow?
+CR              bit     CCON.6          ; start/stop PCA timer
+CCF4            bit     CCON.4          ; did PCA module 4..0 trigger ?
 CCF3            bit     CCON.3
 CCF2            bit     CCON.2
 CCF1            bit     CCON.1
 CCF0            bit     CCON.0
 
-CMOD            port    0d9h            ; Modusregister
-CIDL            bit     CMOD.7          ; PCA während Idle-Mode abschalten
-WDTE            bit     CMOD.6          ; Watchdog-Ausgabe an PCA-Modul 4 freigeben
-CPS1            bit     CMOD.2          ; PCA-Taktauswahl
+CMOD            port    0d9h            ; mode register
+CIDL            bit     CMOD.7          ; turn off PCA during idle mode
+WDTE            bit     CMOD.6          ; enable watchdog output on PCA module 4
+CPS1            bit     CMOD.2          ; PCA clock select
 CPS0            bit     CMOD.1
-ECF             bit     CMOD.0          ; Interruptfreigabe
+ECF             bit     CMOD.0          ; interrupt enable
 
-CL              port    0e9h            ; Zählwert
+CL              port    0e9h            ; counter value
 CH              port    0f9h
 
 __defpcamodule  macro   Offset,NUM
-CCAPM{NUM}      port    0d0h+Offset     ; Modusregister
-ECOM{NUM}       bit     CCAPM0.6        ; Komparator Modul x einschalten
-CAPP{NUM}       bit     CCAPM0.5        ; Fangfunktion Modul x einschalten (pos. Flanke)
-CAPN{NUM}       bit     CCAPM0.4        ; Fangfunktion Modul x einschalten (neg. Flanke)
-MAT{NUM}        bit     CCAPM0.3        ; Interrupt bei Gleichheit   Modul x einschalten
-TOG{NUM}        bit     CCAPM0.2        ; High-Speed-Output-Modus Modul x einschalten
-PWM{NUM}        bit     CCAPM0.1        ; PWM-Modus Modul x einschalten
-ECCF{NUM}       bit     CCAPM0.0        ; Interrupts durch CCFx einschalten
-CCAP{NUM}L      port    0e0h+Offset     ; Vergleichs/Fangwert Modul x
+CCAPM{NUM}      port    0d0h+Offset     ; mode register
+ECOM{NUM}       bit     CCAPM0.6        ; enable comparator module x
+CAPP{NUM}       bit     CCAPM0.5        ; enable capture function module x (pos. edge)
+CAPN{NUM}       bit     CCAPM0.4        ; enable capture function module x (neg. edge)
+MAT{NUM}        bit     CCAPM0.3        ; enable equality interrupt module x
+TOG{NUM}        bit     CCAPM0.2        ; enable high-speed output mode module x
+PWM{NUM}        bit     CCAPM0.1        ; enable PWM modus module x
+ECCF{NUM}       bit     CCAPM0.0        ; enable interrupts via CCFx
+CCAP{NUM}L      port    0e0h+Offset     ; compare/capture value module x
 CCAP{NUM}H      port    0f0h+Offset
                 endm
 
@@ -220,6 +251,4 @@ CCAP{NUM}H      port    0f0h+Offset
 
                 endif
 
-                restore                 ; wieder erlauben
-
-
+                restore                 ; enable listing again

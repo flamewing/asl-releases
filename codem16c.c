@@ -25,6 +25,13 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: codem16c.c,v 1.2 2004/05/29 11:33:03 alfred Exp $                    */
+/*****************************************************************************
+ * $Log: codem16c.c,v $
+ * Revision 1.2  2004/05/29 11:33:03  alfred
+ * - relocated DecodeIntelPseudo() into own module
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include "string.h"
@@ -36,7 +43,7 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
-#include "codepseudo.h"
+#include "intpseudo.h"
 #include "codevars.h"
 
 #define ModNone (-1)

@@ -90,6 +90,57 @@ bindist:
 	gzip -9 -f asl-$(VERSION)-bin.tar 
 
 #---------------------------------------------------------------------------
+# the Debian package (only works under Debian Linux!!!)
+
+debian: docs debversion
+	echo "asl (`./debversion -v`) stable; urgency=low" >debian/changelog
+	echo "" >>debian/changelog
+	echo "  * no changelog here" >>debian/changelog
+	echo "" >>debian/changelog
+	echo " -- Alfred Arnold <alfred@ccac.rwth-aachen.de> " `822-date` >>debian/changelog
+	echo "" >>debian/changelog
+	echo `./debversion -v`; 
+	dpkg-shlibdeps $(ASLTARGET) $(ALINKTARGET) $(PBINDTARGET) $(PLISTTARGET) $(P2HEXTARGET) $(P2BINTARGET)
+	rm -rf bindebian
+	mkdir -p bindebian/DEBIAN
+	echo "Package: asl" >>bindebian/DEBIAN/control
+	echo "Version:" `./debversion -v` >>bindebian/DEBIAN/control
+	echo "Section: base" >>bindebian/DEBIAN/control
+	echo "Priority: optional" >>bindebian/DEBIAN/control
+	echo "Architecture:" `./debversion -a` >>bindebian/DEBIAN/control
+	cat debian-files/control >>bindebian/DEBIAN/control
+	cp debian-files/postinst debian-files/prerm bindebian/DEBIAN/
+	mkdir -p bindebian/usr/lib/asl/
+	cp *.msg bindebian/usr/lib/asl/
+	mkdir bindebian/usr/lib/asl/include/
+	cp include/*.inc bindebian/usr/lib/asl/include/
+	mkdir -p bindebian/usr/share/doc/asl/
+	cp debian-files/copyright bindebian/usr/share/doc/asl/
+	cp changelog bindebian/usr/share/doc/asl/
+	mkdir bindebian/usr/share/doc/asl/de/ bindebian/usr/share/doc/asl/en/
+	cp doc_DE/as.doc doc_DE/as.html bindebian/usr/share/doc/asl/de/
+	cp doc_EN/as.doc doc_EN/as.html bindebian/usr/share/doc/asl/en/
+	cp debian-files/changelog.Debian bindebian/usr/share/doc/asl/
+	gzip -9 bindebian/usr/share/doc/asl/changelog*
+	mkdir -p bindebian/usr/bin
+	cp $(ASLTARGET) bindebian/usr/bin
+	cp $(ALINKTARGET) bindebian/usr/bin
+	cp $(PBINDTARGET) bindebian/usr/bin
+	cp $(PLISTTARGET) bindebian/usr/bin
+	cp $(P2HEXTARGET) bindebian/usr/bin
+	cp $(P2BINTARGET) bindebian/usr/bin
+	strip bindebian/usr/bin/*
+	strip -R .note -R .comment bindebian/usr/bin/*
+	mkdir -p bindebian/usr/share/man/man1
+	cp man/*.1 bindebian/usr/share/man/man1
+	gzip -9 bindebian/usr/share/man/man1/*.1
+	find bindebian -type f | xargs chmod 644
+	chmod 755 bindebian/usr/bin/* bindebian/DEBIAN/postinst bindebian/DEBIAN/prerm
+	find bindebian -type d | xargs chmod 755
+	fakeroot dpkg-deb --build bindebian
+	mv bindebian.deb asl_`./debversion -v`_`./debversion -a`.deb
+
+#---------------------------------------------------------------------------
 # for my own use only...
 
 tape: unjunk

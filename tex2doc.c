@@ -13,6 +13,16 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: tex2doc.c,v 1.1 2003/11/06 02:49:25 alfred Exp $                    */
+/*****************************************************************************
+ * $Log: tex2doc.c,v $
+ * Revision 1.1  2003/11/06 02:49:25  alfred
+ * - recreated
+ *
+ * Revision 1.3  2003/08/16 17:53:48  alfred
+ * - updated to digest 2e header
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include "asmitree.h"
@@ -2108,6 +2118,17 @@ BEGIN
     END
 END
 
+	static void TeXUsePackage(Word Index)
+BEGIN
+   char Token[TOKLEN];
+   UNUSED(Index);
+
+   assert_token("{");
+   ReadToken(Token);
+   if (strcmp(Token,"german")==0) SetLang(True);
+   assert_token("}");
+END
+
 /*--------------------------------------------------------------------------*/
 
 	int main(int argc, char **argv)
@@ -2157,6 +2178,8 @@ BEGIN
    AddInstTable(TeXTable,"def",0,TeXDef);
    AddInstTable(TeXTable,"font",0,TeXFont);
    AddInstTable(TeXTable,"documentstyle",0,TeXDocumentStyle);
+   AddInstTable(TeXTable,"documentclass",0,TeXDocumentStyle);
+   AddInstTable(TeXTable,"usepackage",0,TeXUsePackage);
    AddInstTable(TeXTable,"appendix",0,TeXAppendix);
    AddInstTable(TeXTable,"makeindex",0,TeXDummy);
    AddInstTable(TeXTable,"begin",0,TeXBeginEnv);

@@ -7,9 +7,12 @@
 /* functions for structure handling                                          */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmstructs.h,v 1.5 2002/11/20 20:25:04 alfred Exp $                          */
+/* $Id: asmstructs.h,v 1.1 2003/11/06 02:49:19 alfred Exp $                          */
 /*****************************************************************************
  * $Log: asmstructs.h,v $
+ * Revision 1.1  2003/11/06 02:49:19  alfred
+ * - recreated
+ *
  * Revision 1.5  2002/11/20 20:25:04  alfred
  * - added unions
  *

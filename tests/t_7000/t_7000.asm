@@ -247,3 +247,14 @@ wdata:	dc.w	$1234
         shad	r3,r7
         shld	r12,sp
 
+	dsp	on
+
+	irp	reg,dsr,a0,x0,x1,y0,y1
+	lds	r7,reg
+	lds	@r9+,reg
+	endm
+
+	irp	reg,dsr,a0,x0,x1,y0,y1
+	sts	reg,r7
+	sts	reg,@-r9
+	endm

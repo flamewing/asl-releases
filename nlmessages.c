@@ -44,7 +44,7 @@ BEGIN
    if ((Num>=0) AND (Num<Catalog->MsgCount)) return Catalog->MsgBlock+Catalog->StrPosis[Num];
    else 
     BEGIN
-     sprintf(umess,"Hey sie Sack, Message-Nummer %d gibbet nich!",Num);
+     sprintf(umess,"catgetmessage: message number %d does not exist", Num);
      return umess;
     END
 END
@@ -110,7 +110,7 @@ BEGIN
     BEGIN
      if (*Path!='\0') 
       BEGIN
-#ifdef _WIN32
+#ifdef __CYGWIN32__
        for (ptr=Path; *ptr!='\0'; ptr++)
         if (*ptr=='/') *ptr='\\';
 #endif    
@@ -134,7 +134,7 @@ BEGIN
          else
           BEGIN
            strmaxcpy(str,ptr,255);
-#ifdef _WIN32
+#ifdef __CYGWIN32__
            DeCygWinDirList(str);
 #endif
            ptr=FSearch(File,str);
@@ -190,7 +190,8 @@ BEGIN
    Catalog->MsgCount=(StrStart-MomPos)>>2;
    Catalog->StrPosis=(LongInt *) malloc(sizeof(LongInt)*Catalog->MsgCount);
    Catalog->StrPosis[0]=0;
-   if (fread(Catalog->StrPosis+1,4,Catalog->MsgCount-1,MsgFile)!=Catalog->MsgCount-1) error(ERdMsg);
+   if (fread(Catalog->StrPosis+1,4,Catalog->MsgCount-1,MsgFile) + 1 != Catalog->MsgCount)
+     error(ERdMsg);
    if (BigEndian) DSwap(Catalog->StrPosis+1,(Catalog->MsgCount-1)<<2);
    for (z=1; z<Catalog->MsgCount; z++)
     BEGIN

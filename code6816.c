@@ -11,6 +11,13 @@
 /*            1. 7.2001 forgot to set AttrChars                              */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: code6816.c,v 1.2 2004/05/29 12:04:46 alfred Exp $                    */
+/*****************************************************************************
+ * $Log: code6816.c,v $
+ * Revision 1.2  2004/05/29 12:04:46  alfred
+ * - relocated DecodeMot(16)Pseudo into separate module
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -24,7 +31,10 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "motpseudo.h"
 #include "codevars.h"
+
+#include "code6816.h"
 
 /*---------------------------------------------------------------------------*/
 

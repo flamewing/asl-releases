@@ -20,9 +20,15 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code960.c,v 1.2 2002/08/14 18:43:49 alfred Exp $                     */
+/* $Id: code960.c,v 1.2 2004/05/29 11:33:02 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code960.c,v $
+ * Revision 1.2  2004/05/29 11:33:02  alfred
+ * - relocated DecodeIntelPseudo() into own module
+ *
+ * Revision 1.1  2003/11/06 02:49:22  alfred
+ * - recreated
+ *
  * Revision 1.2  2002/08/14 18:43:49  alfred
  * - warn null allocation, remove some warnings
  *
@@ -40,7 +46,7 @@
 #include "asmpars.h"
 #include "asmallg.h"
 #include "asmitree.h"
-#include "codepseudo.h"
+#include "intpseudo.h"
 #include "headids.h"
 
 /*--------------------------------------------------------------------------*/

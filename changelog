@@ -1,4 +1,4 @@
-$Id: changelog,v 1.17 2003/05/25 13:01:12 alfred Exp $
+$Id: changelog,v 1.6 2004/09/26 09:40:16 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -931,3 +931,33 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 2003-05-25 [Bld 28] 
 
 - Addition    : added 4040 machine instructions
+
+2003-08-17 [Bld 29]
+
+- Addition    : added 80C251T SFRs
+
+- Addition    : added 80C167CS SFRs
+
+- Addition    : added Zilog eZ8
+
+2003-12-07 [Bld 30]
+
+- Addition    : added NEC 78K2
+
+2004-03-31 [Bld 31]
+
+- Bugfix      : corrected 68HC11K4 instruction set, PRWINS command
+
+2004-05-29 [Bld 32]
+
+- Bugfix      : correct erroneous detection of DUP operator inside
+                string/character constants
+
+2004-09-26 [Bld 33]
+
+- Bugfix      : correct operation of INHX... modes in P2HEX
+
+- Bugfix      : setting of entry address in P2BIN did not work
+
+- Bugfix      : fox crashes when programs defined more than 256
+                bytes of code in one line

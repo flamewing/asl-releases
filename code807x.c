@@ -5,9 +5,15 @@
 /* Codegenerator National INS807X.c                                          */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code807x.c,v 1.6 2003/05/02 21:23:11 alfred Exp $                   *
+/* $Id: code807x.c,v 1.2 2004/05/29 11:33:01 alfred Exp $                   *
  *****************************************************************************
  * $Log: code807x.c,v $
+ * Revision 1.2  2004/05/29 11:33:01  alfred
+ * - relocated DecodeIntelPseudo() into own module
+ *
+ * Revision 1.1  2003/11/06 02:49:22  alfred
+ * - recreated
+ *
  * Revision 1.6  2003/05/02 21:23:11  alfred
  * - strlen() updates
  *
@@ -36,7 +42,7 @@
 #include "asmpars.h"
 #include "asmitree.h"
 #include "headids.h"
-#include "codepseudo.h"
+#include "intpseudo.h"
 #include "codevars.h"
 
 /*---------------------------------------------------------------------------*/

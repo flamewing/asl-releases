@@ -31,6 +31,13 @@
 /*           2002-01-13: fixed undefined value of OK in some cases           */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: code3254x.c,v 1.2 2004/05/29 12:18:05 alfred Exp $                   */
+/*****************************************************************************
+ * $Log: code3254x.c,v $
+ * Revision 1.2  2004/05/29 12:18:05  alfred
+ * - relocated DecodeTIPseudo() to separate module
+ *
+ *****************************************************************************/
 
 /*-------------------------------------------------------------------------*/
 /* Includes */
@@ -49,10 +56,13 @@
 #include "asmrelocs.h"
 #include "asmcode.h"
 #include "codepseudo.h"
+#include "tipseudo.h"
 #include "codevars.h"
 #include "asmitree.h"
 #include "fileformat.h"
 #include "headids.h"
+
+#include "code3254x.h"
 
 /*-------------------------------------------------------------------------*/
 /* Data Structures */
