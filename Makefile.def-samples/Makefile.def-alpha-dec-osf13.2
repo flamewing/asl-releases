@@ -1,19 +1,21 @@
 # -------------------------------------------------------------------------
 # choose your compiler (must be ANSI-compliant!) and linker command, plus
-# any addionally needed flags
+# any additionally needed flags
          
 CC = cc
 LD = cc -non_shared -om
-CFLAGS = -std1 -O4 -Olimit 3000 -tune ev5
+CFLAGS = -std1 -O4 -Olimit 3000 -tune ev5 -fast
 #                               ^^^^^^^^^
 #                               |||||||||
 #         adapt this to your target cpu (ev4 or ev5)
 
 # -------------------------------------------------------------------------
-# directories where binaries and includes should go during installation
+# directories where binaries, includes, and manpages should go during
+# installation
 
 BINDIR = /usr/local/bin
 INCDIR = /usr/local/include/asl
+MANDIR = /usr/local/man
 
 # -------------------------------------------------------------------------
 # language AS will speak to you

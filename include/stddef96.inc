@@ -1,18 +1,18 @@
                 save
-                listing off     ; kein Listing ueber diesen File
+                listing off     ; kein Listing über diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.39 - Datei STDDEF96.INC                                           *
 ;*                                                                          *
-;*   Sinn : enthaelt Register- und Speicheradressen fuer TLCS-900-Prozessoren*
+;*   Sinn : enthält Register- und Speicheradressen für TLCS-900-Prozessoren *
 ;*          Port- bzw. Registernamen nach Toshiba-Konvention                *
 ;*          aus dem Handbuch zur Prozessorfamilie TLCS-900                  *
 ;*                                                                          *
 ;*   Original von Ernst Ahlers, Oktober 1993                                *
-;*   fuer AS angepasst von Alfred Arnold                                    *
+;*   für AS angepaßt von Alfred Arnold                                      *
 ;*                                                                          *
-;*   letzte Aenderungen :  30.10.1993                                       *
+;*   letzte Änderungen :  30.10.1993                                        *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -20,12 +20,12 @@
 
 stddef96inc     equ     1
 
-                if      (MomCPU<>9879873)&&(MomCPU<>9683265)
+                if      (MOMCPU<>9879873)&&(MOMCPU<>9683265)
 		 fatal  "Falscher Prozessortyp eingestellt: nur 96C141 oder 93C141 erlaubt"
                 endif
 
-                if      MomPass=1
-                 message "TLCS-900(L)-Adressdefinitionen"
+                if      MOMPASS=1
+                 message "TLCS-900(L)-Adreßdefinitionen"
                  message "(C) 1993 Ernst Ahlers, Alfred Arnold"
                 endif
 

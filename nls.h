@@ -46,9 +46,15 @@ extern void NLS_TimeString(Word Hour, Word Minute, Word Second, Word Sec100, cha
 
 extern void NLS_CurrTimeString(Boolean Use100, char *Dest);
 
+extern void NLS_CurrencyString(double inp, char *erg);
+
+extern char Upcase(char inp);
+
 extern void NLS_UpString(char *s);
 
 extern void NLS_LowString(char *s);
+
+extern int NLS_StrCmp(const char *s1, const char *s2);
 
 
 extern void nls_init(void);

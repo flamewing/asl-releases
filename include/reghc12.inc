@@ -13,11 +13,11 @@
 
 reghc12inc      equ     1
 
-                if      (MomCPUName<>"68HC12")
+                if      (MOMCPUNAME<>"68HC12")
                  fatal  "Falscher Prozessortyp eingestellt: nur 68HC12 erlaubt!"
 		endif
 
-                if	MomPass=1
+                if      MOMPASS=1
                  message "68HC812A4/68HC912B32-Registerdefinitionen"
                  message "(C) 1996,1997 Oliver Thamm"
 		endif

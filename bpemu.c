@@ -11,37 +11,89 @@
 #include "stdinc.h"
 #include <string.h>
 #include <sys/types.h>
+#include <ctype.h>
 
 #include "stringutil.h"
+
+#ifdef __MSDOS__
+#include <dir.h>
+#endif
+
+#ifdef __EMX__
+#include <os2.h>
+#endif
 
 	char *FExpand(char *Src)
 BEGIN
    static String CurrentDir;
    String Copy;
+#ifdef DRSEP
+   String DrvPart;
+#ifdef __EMX__
+   ULONG DrvNum,Dummy;
+#else      
+   int DrvNum;
+#endif
+#endif
    char *p,*p2;
 
-   getcwd(CurrentDir,255);
-   if (CurrentDir[strlen(CurrentDir)-1]!='/') strmaxcat(CurrentDir,"/",255);
-   if (*CurrentDir!='/') strmaxprep(CurrentDir,"/",255);
    strmaxcpy(Copy,Src,255);
-   
-   if (*Copy=='/') 
+
+#ifdef DRSEP
+   p=strchr(Copy,DRSEP);
+   if (p!=Nil)
     BEGIN
-     strmaxcpy(CurrentDir,"/",255); strcpy(Copy,Copy+1);
+     memcpy(DrvPart,Copy,p-Copy); DrvPart[p-Copy]='\0'; strcpy(Copy,p+1);
+    END
+   else *DrvPart='\0';
+#endif
+
+#ifdef __MSDOS__
+   if (*DrvPart=='\0')
+    BEGIN
+     DrvNum=getdisk(); *DrvPart=DrvNum+'A'; DrvPart[1]='\0'; DrvNum++;
+    END
+   else DrvNum=toupper(*DrvPart)-'@';
+   getcurdir(DrvNum,CurrentDir);
+#else
+#ifdef __EMX__
+   if (*DrvPart=='\0')
+    BEGIN
+     DosQueryCurrentDisk(&DrvNum,&Dummy);
+     *DrvPart=DrvNum+'@'; DrvPart[1]='\0';
+    END
+   else DrvNum=toupper(*DrvPart)-'@';
+   Dummy=255; DosQueryCurrentDir(DrvNum,(PBYTE) CurrentDir,&Dummy);
+#else
+   getcwd(CurrentDir,255);
+#endif   
+#endif
+
+   if (CurrentDir[strlen(CurrentDir)-1]!=PATHSEP) strmaxcat(CurrentDir,SPATHSEP,255);
+   if (*CurrentDir!=PATHSEP) strmaxprep(CurrentDir,SPATHSEP,255);
+
+   if (*Copy==PATHSEP) 
+    BEGIN
+     strmaxcpy(CurrentDir,SPATHSEP,255); strcpy(Copy,Copy+1);
     END
 
-   while((p=strchr(Copy,'/'))!=Nil)
+#ifdef DRSEP
+   strmaxprep(CurrentDir,SDRSEP,255);
+   strmaxprep(CurrentDir,DrvPart,255);
+#endif
+
+   while((p=strchr(Copy,PATHSEP))!=Nil)
     BEGIN
      *p='\0';
      if (strcmp(Copy,".")==0);
      else if ((strcmp(Copy,"..")==0) AND (strlen(CurrentDir)>1))
       BEGIN
        CurrentDir[strlen(CurrentDir)-1]='\0';
-       p2=strrchr(CurrentDir,'/'); p2[1]='\0';
+       p2=strrchr(CurrentDir,PATHSEP); p2[1]='\0';
       END
      else
       BEGIN
-       strmaxcat(CurrentDir,Copy,255); strmaxcat(CurrentDir,"/",255);
+       strmaxcat(CurrentDir,Copy,255); strmaxcat(CurrentDir,SPATHSEP,255);
       END
      strcpy(Copy,p+1);
     END
@@ -72,10 +124,10 @@ BEGIN
      p=strchr(start,':');
      if (p!=Nil) 
       BEGIN
-       Save=*p; *p='\0';
+       Save=(*p); *p='\0';
       END
      strmaxcpy(Component,start,255);
-     strmaxcat(Component,"/",255);
+     strmaxcat(Component,SPATHSEP,255);
      strmaxcat(Component,File,255);
      if (p!=Nil) *p=Save;
      Dummy=fopen(Component,"r"); OK=(Dummy!=Nil); 

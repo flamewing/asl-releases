@@ -1,0 +1,30 @@
+# -------------------------------------------------------------------------
+# choose your compiler (must be ANSI-compliant!) and linker command, plus
+# any additionally needed flags
+         
+CC = cc
+LD = cc -non_shared -om
+CFLAGS = -std1 -O5 -Olimit 3000 -tune ev5 -fast
+#                               ^^^^^^^^^
+#                               |||||||||
+#         adapt this to your target cpu (ev4 or ev5)
+
+# -------------------------------------------------------------------------
+# directories where binaries, includes, and manpages should go during
+# installation
+
+BINDIR = /usr/local/bin
+INCDIR = /usr/local/include/asl
+MANDIR = /usr/local/man
+
+# -------------------------------------------------------------------------
+# language AS will speak to you
+
+LANGRSC = lang_EN
+
+# -------------------------------------------------------------------------
+# character encoding to use (choose one of them)
+
+CHARSET = CHARSET_ISO8859_1
+# CHARSET = CHARSET_ASCII7
+# CHARSET = CHARSET_IBM437

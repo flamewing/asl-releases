@@ -1,14 +1,14 @@
                 save
                 listing off
-; kein Listing Åber diesen File
+; kein Listing ¸ber diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.41 - Datei REG3048.INC                                            *
 ;*   								            *
-;*   Sinn : enthÑlt SFR-, Makro- und Adreadefinitionen fÅr H8/3048          *
+;*   Sinn : enth‰lt SFR-, Makro- und Adreadefinitionen f¸r H8/3048          *
 ;* 									    *
-;*   letzte énderungen :  24.10.1995                                        *
+;*   letzte ƒnderungen :  24.10.1995                                        *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -16,13 +16,13 @@
 
 reg532inc       equ     1
 
-                if      (MomCPU<>104936201)
+                if      (MOMCPUNAME<>"HD6413309")&&(MOMCPUNAME<>"H8/300H")
                  fatal  "Falscher Prozessortyp eingestellt: nur H8/300H erlaubt!"
 		endif
 
 
-		if      MomPass=1
-                 message "H8/3048-SFR-Definitionen "
+                if      MOMPASS=1
+                 message "H8/3048-SFR-Definitionen, (C) 1995 Christian Stelter"
 		endif
 
 
@@ -106,7 +106,7 @@ CS4E            equ     4
 ISCR            equ     $fff4           ; IRQ sense control register
 IER             equ     $fff5           ; IRQ enable register
 ISR             equ     $fff6           ; IRQ status register
-IPRA            equ     $fff8           ; PrioritÑtssteuerung
+IPRA            equ     $fff8           ; Priorit‰tssteuerung
 IPRB            equ     $fff9           ;
 
 
@@ -148,9 +148,9 @@ Name             equ     Num<<2
                 __defvec IMIB4,41
                 __defvec OVI4,42
                 __defvec DEND0A,44
-                __defvec DEND0A,45
+                ;__defvec DEND0A,45
                 __defvec DEND1B,46
-                __defvec DEND1B,47
+                ;__defvec DEND1B,47
                 __defvec ERI0,52
                 __defvec RXI0,53
                 __defvec TXI0,54
@@ -431,8 +431,8 @@ SSR{Name}       equ     Base+4          ; Serial status register
 RDR{Name}       equ     Base+5          ; Receive data register
                 endm
 
-                __defSCI0 $ffb0,"0"
-                __defSCI1 $ffb8,"1"
+                __defSCI $ffb0,"0"
+                __defSCI $ffb8,"1"
 
 ;SMR-Register
 

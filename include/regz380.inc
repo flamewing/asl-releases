@@ -1,15 +1,15 @@
                 save
-                listing off   ; kein Listing Åber diesen File
+                listing off   ; kein Listing ¸ber diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.41 - Datei REGZ380.INC                                            *
 ;*   								            *
-;*   Sinn : enthÑlt Registerdefinitionen fÅr den Z380                       *
+;*   Sinn : enth‰lt Registerdefinitionen f¸r den Z380                       *
 ;*          Diese Register sind nur mit den Befehlen IN0,OUT0 und TSTIO     *
 ;*          erreichbar!!                                                    *
 ;* 									    *
-;*   letzte énderungen : 12.11.1994                                         *
+;*   letzte ƒnderungen : 12.11.1994                                         *
 ;*                        2. 1.1996 Register 0..16h                         *
 ;*                                  (Info von Leonhard Schneider)           *
 ;*                                                                          *
@@ -19,12 +19,12 @@
 
 reg380inc       equ     1
 
-                if      (MomCPU<>896)
+                if      (MOMCPU<>896)
                  fatal  "Falscher Prozessortyp eingestellt: nur Z380 erlaubt!"
 		endif
 
 
-		if      MomPass=1
+                if      MOMPASS=1
                  message "Z380-Register-Definitionen (C) 1994 Alfred Arnold"
 		endif
 
@@ -57,7 +57,7 @@ IER             port    17h             ; Interrupt-Freigaben
 AVBR            port    18h             ; Offset Interruptvektoren ?!
 TRPBK           port    19h             ; zeigt an, ob Trap oder Break ausgetreten
 
-ChipVersion     port    0ffh            ; Chipversion (00=Z380MPU)
+CHIPVERSION     port    0ffh            ; Chipversion (00=Z380MPU)
 
 
 ;----------------------------------------------------------------------------

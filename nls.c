@@ -12,9 +12,15 @@
 #include <string.h>
 #include <time.h>
 #include <ctype.h>
-#ifndef BRAINDEAD_SYSTEM_WITHOUT_NLS
+
+#ifdef LOCALE_NLS
 #include <locale.h>
 #include <langinfo.h>
+#endif
+
+#ifdef OS2_NLS
+#define INCL_DOSNLS
+#include <os2.h>
 #endif
 
 #include "stringutil.h"
@@ -24,102 +30,17 @@
 CharTable UpCaseTable;               /* Umsetzungstabellen */
 CharTable LowCaseTable;
 
-/**
-{ NLS-Datenstrukturen neu initialisieren: }
-
-        ***PROCEDURE NLS_Initialize;
-
-{ kompletten Datensatz abfragen, da diese Unit nicht alles ausnutzt: }
-
-        ***PROCEDURE NLS_GetCountryInfo(VAR Info:NLS_CountryInfo);
-
-{ ein Datum in das korrekte Landesformat umsetzen: }
-
-        ***FUNCTION  NLS_DateString(Year,Month,Day:Word):String;
-
-{ dito fuer aktuelles Datum: }
-
-        ***FUNCTION  NLS_CurrDateString:String;
-
-{ eine Zeitangabe in das korrekte Landesformat umsetzen: }
-
-        ***FUNCTION  NLS_TimeString(Hour,Minute,Second,Sec100:Word):String;
-
-{ dito fuer aktuelle Zeit: }    { mit/ohne Hundertstel }
-                                        { v }
-        ***FUNCTION  NLS_CurrTimeString(Use100:Boolean):String;
-
-{ einen Waehrungsbetrag wandeln: }
-
-        FUNCTION  NLS_CurrencyString(inp:Extended):String;
-
-
-{ ein Zeichen in Grossbuchstaben umsetzen; ersetzt Standard-UpCase }
-
-        FUNCTION  UpCase(inp:Char):Char;
-
-{ einen ganzen String in Grossbuchstaben umsetzen }
-
-        PROCEDURE NLS_UpString(VAR s:String);
-
-{ zwei Strings vergleichen: liefert -1, 0, 1, falls s1 <, =, > s2
-  ACHTUNG! Falls 0 geliefert wird, muss dieses nicht notwendigerweise heissen,
-  dass die Strings identisch sind! }
-
-        FUNCTION NLS_StrCmp(s1,s2:String):ShortInt;
-
-IMPLEMENTATION**/
-
 static NLS_CountryInfo NLSInfo;
-/**static CharTable CollateTable;**/
+static CharTable CollateTable;
 
-/**
-{ Eine Zahl nicht mit Leerzeichen, sondern mit Nullen aufzufuellen, gehoert
-  (neben dem vorzeichenlosen 32-Bit-Integer) zu den Dingen, die ich mir
-  immer schon gewuenscht hatte.  Vielleicht erhoert Borland ja irgendwann
-  einmal mein Flehen, anstelle die Welt mit OOP zu "begluecken" }
+/*-------------------------------------------------------------------------------*/
 
-        FUNCTION StNull(inp:Word; Stellen:Byte):String;
-VAR
-   s:String;
+/* einen String anhand einer Tabelle uebersetzen: */
+
+	static void TranslateString(char *s, CharTable Table)
 BEGIN
-   Str(inp,s); WHILE Length(s)<Stellen DO s:='0'+s;
-   StNull:=s;
-END;
-
-{ einen String anhand einer Tabelle uebersetzen: }
-
-        PROCEDURE TranslateString(VAR s:String; VAR Table:CharTable);
-
-{$IFDEF SPEEDUP}
-
-        Assembler;
-ASM
-        mov     dx,ds           { Datensegment retten }
-        lds     bx,[Table]      { Zeiger auf Uebersetzungstabelle }
-        les     si,[s]          { Zeiger aus String }
-        seges   lodsb           { Laengenbyte holen }
-        sub     cx,cx           { auf 16 Bit aufblasen }
-        mov     cl,al
-        jcxz    @Null           { 64K Durchlaeufe vermeiden }
-        mov     di,si           { Ziel=Quellzeiger }
-        cld
-@schl:  seges   lodsb           { ein Zeichen laden... }
-        xlat                    { ...uebersetzen... }
-        stosb                   { ...ablegen }
-        loop    @schl
-@Null:  mov     ds,dx           { Datensegment wiederherstellen }
-END;
-
-{$ELSE}
-
-VAR
-   z:Integer;
-BEGIN
-   FOR z:=1 TO Length(s) DO s[z]:=Table[s[z]];
-END;
-
-{$ENDIF}*/
+   for (; *s!='\0'; s++) *s=Table[((unsigned int) *s)&0xff];
+END
 
 /*-------------------------------------------------------------------------------*/
 /* Da es moeglich ist, die aktuelle Codeseite im Programmlauf zu wechseln,
@@ -130,31 +51,42 @@ END;
 
         void NLS_Initialize(void)
 BEGIN
-#ifndef BRAINDEAD_SYSTEM_WITHOUT_NLS
-   struct lconv *lc;
-#endif
    char *tmpstr,*run,*cpy;
    Word FmtBuffer;
    Integer z;
+   Boolean DidDate;
 
-   /* Zeit/Datums/Waehrungsformat holen */
+#ifdef LOCALE_NLS
+   struct lconv *lc;
+#endif
 
-#ifdef BRAINDEAD_SYSTEM_WITHOUT_NLS
+#ifdef OS2_NLS
+   COUNTRYCODE ccode;
+   COUNTRYINFO cinfo;
+   ULONG erglen;
+#endif   
+
+   /* get currency format, separators */
+
+#ifdef NO_NLS
    NLSInfo.DecSep=".";
    NLSInfo.ThouSep=",";
    NLSInfo.Currency="$";
    NLSInfo.CurrDecimals=2;
    NLSInfo.CurrFmt=CurrFormatPreNoBlank;
-#else
+#endif
+
+#ifdef LOCALE_NLS
    lc=localeconv();
 
-   NLSInfo.DecSep=(lc->decimal_point!=Nil)?lc->decimal_point:".";
+   NLSInfo.DecSep=(lc->mon_decimal_point!=Nil)?lc->decimal_point:".";
 
-   NLSInfo.ThouSep=(lc->thousands_sep!=Nil)?lc->thousands_sep:",";
+   NLSInfo.ThouSep=(lc->mon_thousands_sep!=Nil)?lc->mon_thousands_sep:",";
 
    NLSInfo.Currency=(lc->currency_symbol!=Nil)?lc->currency_symbol:"$";
 
    NLSInfo.CurrDecimals=lc->int_frac_digits;
+   if (NLSInfo.CurrDecimals>4) NLSInfo.CurrDecimals=2;
 
    if (lc->p_cs_precedes)
     if (lc->p_sep_by_space) NLSInfo.CurrFmt=CurrFormatPreBlank;
@@ -164,70 +96,140 @@ BEGIN
     else NLSInfo.CurrFmt=CurrFormatPostNoBlank;
 #endif
 
-#ifdef BRAINDEAD_SYSTEM_WITHOUT_NLS
-   tmpstr="%m/%d/%y";
-#else
-   tmpstr=nl_langinfo(D_FMT);
+#ifdef OS2_NLS
+   ccode.country=0; ccode.codepage=0;
+   DosQueryCtryInfo(sizeof(cinfo),&ccode,&cinfo,&erglen);
+   
+   NLSInfo.DecSep=strdup(cinfo.szDecimal);
+   
+   NLSInfo.ThouSep=strdup(cinfo.szThousandsSeparator);
+   
+   NLSInfo.Currency=strdup(cinfo.szCurrency);
+   
+   NLSInfo.CurrDecimals=cinfo.cDecimalPlace;
+   
+   NLSInfo.CurrFmt=(CurrFormat) cinfo.fsCurrencyFmt;
 #endif
-   NLSInfo.DateSep=Nil; FmtBuffer=0; run=tmpstr;
-   while (*run!='\0')
-    if (*run=='%')
-     BEGIN
-      FmtBuffer<<=4;
-      switch (toupper(*(++run)))
+
+   /* get date format */
+
+#ifdef NO_NLS
+   tmpstr="%m/%d/%y"; DidDate=False;
+#endif
+
+#ifdef LOCALE_NLS
+   tmpstr=nl_langinfo(D_FMT); DidDate=False;
+#endif
+
+#ifdef OS2_NLS
+   NLSInfo.DateFmt=(DateFormat) cinfo.fsDateFmt;
+   NLSInfo.DateSep=strdup(cinfo.szDateSeparator);
+   DidDate=True;
+#endif
+
+   if (NOT DidDate)
+    BEGIN
+     NLSInfo.DateSep=Nil; FmtBuffer=0; run=tmpstr;
+     while (*run!='\0')
+      if (*run=='%')
        BEGIN
-        case 'D': FmtBuffer+=1; break;
-        case 'M': FmtBuffer+=2; break;
-        case 'Y': FmtBuffer+=3; break;
-       END
-      if (NLSInfo.DateSep==Nil)
-       BEGIN
-        run++; cpy=NLSInfo.DateSep=strdup("                  ");
-        while ((*run!=' ') AND (*run!='%')) *(cpy++)=*(run++);
-        *cpy='\0';
+        FmtBuffer<<=4;
+        switch (toupper(*(++run)))
+         BEGIN
+          case 'D': FmtBuffer+=1; break;
+          case 'M': FmtBuffer+=2; break;
+          case 'Y': FmtBuffer+=3; break;
+         END
+        if (NLSInfo.DateSep==Nil)
+         BEGIN
+          run++; cpy=NLSInfo.DateSep=strdup("                  ");
+          while ((*run!=' ') AND (*run!='%')) *(cpy++)=(*(run++));
+          *cpy='\0';
+         END
+        else run++;
        END
       else run++;
-     END
-    else run++;
-   if (FmtBuffer==0x213) NLSInfo.DateFmt=DateFormatMTY;
-   else if (FmtBuffer==0x123) NLSInfo.DateFmt=DateFormatTMY;
-   else NLSInfo.DateFmt=DateFormatYMT;
+     if (FmtBuffer==0x213) NLSInfo.DateFmt=DateFormatMTY;
+     else if (FmtBuffer==0x123) NLSInfo.DateFmt=DateFormatTMY;
+     else NLSInfo.DateFmt=DateFormatYMT;
+    END
 
-#ifdef BRAINDEAD_SYSTEM_WITHOUT_NLS
-   tmpstr="%H:%M:%S";
-#else
-   tmpstr=nl_langinfo(T_FMT);
+   /* get time format */
+
+#ifdef NO_NLS
+   tmpstr="%H:%M:%S"; DidDate=False;
 #endif
-   NLSInfo.TimeSep=Nil; FmtBuffer=0; run=tmpstr;
-   while (*run!='\0')
-    if (*run=='%')
-     BEGIN
-      FmtBuffer<<=4;
-      switch (toupper(*(++run)))
+
+#ifdef LOCALE_NLS 
+   tmpstr=nl_langinfo(T_FMT); DidDate=False;
+#endif
+
+#ifdef OS2_NLS
+   NLSInfo.TimeFmt=(TimeFormat) cinfo.fsTimeFmt;
+   NLSInfo.TimeSep=strdup(cinfo.szTimeSeparator);
+   DidDate=True;
+#endif
+
+   if (NOT DidDate)
+    BEGIN
+     NLSInfo.TimeSep=Nil; FmtBuffer=0; run=tmpstr;
+     while (*run!='\0')
+      if (*run=='%')
        BEGIN
-        case 'S': FmtBuffer+=1; break;
-        case 'M': FmtBuffer+=2; break;
-        case 'H': FmtBuffer+=3; break;
-       END
-      if (NLSInfo.TimeSep==Nil)
-       BEGIN
-        run++; cpy=NLSInfo.TimeSep=strdup("                  ");
-        while ((*run!=' ') AND (*run!='%')) *(cpy++)=*(run++);
-        *cpy='\0';
+        FmtBuffer<<=4;
+        switch (toupper(*(++run)))
+         BEGIN
+          case 'S': FmtBuffer+=1; break;
+          case 'M': FmtBuffer+=2; break;
+          case 'H': FmtBuffer+=3; break;
+         END
+        if (NLSInfo.TimeSep==Nil)
+         BEGIN
+          run++; cpy=NLSInfo.TimeSep=strdup("                  ");
+          while ((*run!=' ') AND (*run!='%')) *(cpy++)=(*(run++));
+          *cpy='\0';
+         END
+        else run++;
        END
       else run++;
-     END
-    else run++;
-    NLSInfo.TimeFmt=TimeFormatEurope;
+      NLSInfo.TimeFmt=TimeFormatEurope;
+     END 
 
-    /* Tabelle klein-->gross */
+    /* get lower->upper case table */
 
+#if defined(NO_NLS) || defined(LOCALE_NLS) 
     for (z=0; z<256; z++) UpCaseTable[z]=toupper(z);
+#endif
 
-    /* umgekehrte Tabelle */
+#ifdef OS2_NLS
+    for (z=0; z<256; z++) UpCaseTable[z]=(char) z;
+    for (z='a'; z<='z'; z++) UpCaseTable[z]-='a'-'A';
+    DosMapCase(sizeof(UpCaseTable),&ccode,UpCaseTable);
+#endif
 
+    /* get upper->lower case table */
+
+#if defined(NO_NLS) || defined(LOCALE_NLS)
     for (z=0; z<256; z++) LowCaseTable[z]=tolower(z);
+#endif
 
+#ifdef OS2_NLS
+    for (z=0; z<256; z++) LowCaseTable[z]=(char) z;
+    for (z=0; z<256; z++)
+     if (UpCaseTable[z]!=(char) z)
+      LowCaseTable[((unsigned int) UpCaseTable[z])&0xff]=(char) z;
+#endif
+
+    /* get collation table */
+#if defined(NO_NLS) || defined(LOCALE_NLS)
+    for (z=0; z<256; z++) CollateTable[z]=z;
+    for (z='a'; z<='z'; z++) CollateTable[z]=toupper(z);
+#endif
+
+#ifdef OS2_NLS
+    for (z=0; z<256; z++) CollateTable[z]=(char) z;
+    DosQueryCollate(sizeof(CollateTable),&ccode,CollateTable,&erglen);
+#endif
 END
 
         void NLS_GetCountryInfo(NLS_CountryInfo *Info)
@@ -282,99 +284,85 @@ BEGIN
    struct tm *trec;
 
    time(&timep); trec=localtime(&timep);
-   NLS_TimeString(trec->tm_hour,trec->tm_min,trec->tm_sec,100,Dest);
+   NLS_TimeString(trec->tm_hour,trec->tm_min,trec->tm_sec,Use100?0:100,Dest);
 END
-/**
-        FUNCTION NLS_CurrencyString(inp:Extended):String;
-VAR
-   s:String;
-   p:Byte;
-   z:Integer;
+
+        void NLS_CurrencyString(double inp, char *erg)
 BEGIN
-   WITH NLSInfo DO
+   char s[1024],form[1024];
+   char *p,*z;
+
+   /* Schritt 1: mit passender Nachkommastellenzahl wandeln */
+
+   sprintf(form,"%%0.%df",NLSInfo.CurrDecimals);
+   sprintf(s,form,inp);
+
+   /* Schritt 2: vorne den Punkt suchen */
+
+   p=(NLSInfo.CurrDecimals==0) ? s+strlen(s) : strchr(s,'.');
+
+   /* Schritt 3: Tausenderstellen einfuegen */
+
+   z=p;
+   while (z-s>3)
     BEGIN
-     { Schritt 1: mit passender Nachkommastellenzahl wandeln }
-
-     Str(inp:0:CurrDecimals,s);
-
-     { Schritt 2: vorne den Punkt suchen }
-
-     IF CurrDecimals=0 THEN p:=Length(s)+1 ELSE p:=Pos('.',s);
-
-     { Schritt 3: Tausenderstellen einfuegen }
-
-     z:=p;
-     WHILE z>4 DO
-      BEGIN
-       Insert(ThouSep,s,z-3); Dec(z,3); Inc(p,Length(ThouSep));
-      END;
-
-     { Schritt 4: Komma anpassen }
-
-     Delete(s,p,1); Insert(DecSep,s,p);
-
-     { Schritt 5: Einheit anbauen }
-
-     CASE CurrFmt OF
-     CurrFormatPreNoBlank  : NLS_CurrencyString:=Currency+s;
-     CurrFormatPreBlank    : NLS_CurrencyString:=Currency+' '+s;
-     CurrFormatPostNoBlank : NLS_CurrencyString:=s+Currency;
-     CurrFormatPostBlank   : NLS_CurrencyString:=s+' '+Currency;
-     ELSE
-      BEGIN
-       Delete(s,p,Length(DecSep)); Insert(Currency,s,p);
-       NLS_CurrencyString:=s;
-      END;
-     END;
+     strins(s,NLSInfo.ThouSep,z-s-3); z-=3; p+=strlen(NLSInfo.ThouSep);
     END;
-END;
 
-        FUNCTION Upcase(inp:Char):Char;
+   /* Schritt 4: Komma anpassen */
 
-{$IFDEF SPEEDUP}
+   strcpy(p,p+1); strins(s,NLSInfo.DecSep,p-s);
 
-        Assembler;
-ASM
-        lea     bx,[UpCaseTable]{ Adresse Umsetzungstabelle }
-        mov     al,inp          { Zeichen holen... }
-        xlat                    { fertig }
-END;
+   /* Schritt 5: Einheit anbauen */
 
-{$ELSE}
+   switch (NLSInfo.CurrFmt)
+    BEGIN
+     case CurrFormatPreNoBlank:
+      sprintf(erg,"%s%s",NLSInfo.Currency,s); break;
+     case CurrFormatPreBlank:
+      sprintf(erg,"%s %s",NLSInfo.Currency,s); break;
+     case CurrFormatPostNoBlank:
+      sprintf(erg,"%s%s",s,NLSInfo.Currency); break;
+     case CurrFormatPostBlank:
+      sprintf(erg,"%s%s",s,NLSInfo.Currency); break;
+     default:
+      strcpy(p,p+strlen(NLSInfo.DecSep)); strins(NLSInfo.Currency,s,p-s);
+    END
+END
 
+        char Upcase(char inp)
 BEGIN
-   UpCase:=UpCaseTable[inp];
-END;
-
-{$ENDIF}**/
+   return UpCaseTable[((unsigned int) inp)&0xff];
+END
 
         void NLS_UpString(char *s)
 BEGIN
    char *z;
 
-   for (z=s; *z!='\0'; z++) *z=UpCaseTable[(int)*z];
+   for (z=s; *z!='\0'; z++) *z=UpCaseTable[((unsigned int)*z)&0xff];
 END
 
         void NLS_LowString(char *s)
 BEGIN
    char *z;
 
-   for (z=s; *z!='\0'; z++) *z=LowCaseTable[(int)*z];
+   for (z=s; *z!='\0'; z++) *z=LowCaseTable[((unsigned int)*z)&0xff];
 END
-/**
-        FUNCTION NLS_StrCmp(s1,s2:String):ShortInt;
+
+        int NLS_StrCmp(const char *s1, const char *s2)
 BEGIN
-   TranslateString(s1,CollateTable);
-   TranslateString(s2,CollateTable);
-   IF s1>s2 THEN NLS_StrCmp:=1
-   ELSE IF s1=s2 THEN NLS_StrCmp:=0
-   ELSE NLS_StrCmp:=-1;
-END;**/
+   while (CollateTable[((unsigned int)*s1)&0xff]==CollateTable[((unsigned int)*s2)&0xff])
+    BEGIN
+     if ((NOT *s1) AND (NOT *s2)) return 0;
+     s1++; s2++;
+    END
+   return ((int) CollateTable[((unsigned int)*s1)&0xff]-CollateTable[((unsigned int)*s2)&0xff]);
+END
 
 	void nls_init(void)
 BEGIN
-#ifndef BRAINDEAD_SYSTEM_WITHOUT_NLS
+#ifdef LOCALE_NLS
    (void) setlocale(LC_ALL,"");
-/*   printf("%s\n",setlocale(LC_ALL,NULL));*/
+   (void) setlocale(LC_MONETARY,"");
 #endif
 END

@@ -1,13 +1,13 @@
                 save
-                listing off   ; kein Listing Åber diesen File
+;                listing off   ; kein Listing ¸ber diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.41 - Datei REG53x.INC                                             *
 ;*   								            *
-;*   Sinn : enthÑlt Register- und Adre·definitionen fÅr H8/53x              *
+;*   Sinn : enth‰lt Register- und Adreﬂdefinitionen f¸r H8/53x              *
 ;* 									    *
-;*   letzte énderungen : 12.11.1995                                         *
+;*   letzte ƒnderungen : 12.11.1995                                         *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -15,16 +15,16 @@
 
 reg53xinc       equ     1
 
-                if      (MomCPUName<>"HD6475328")&&(MomCPUName<>"HD6475348")&&(MomCPUName<>"HD6475368")&&(MomCPUName<>"HD6475388")
+                if      (MOMCPUNAME<>"HD6475328")&&(MOMCPUNAME<>"HD6475348")&&(MOMCPUNAME<>"HD6475368")&&(MOMCPUNAME<>"HD6475388")
                  fatal  "Falscher Prozessortyp eingestellt: nur HD6475328, HD6475348, HD6475368 oder HD6475388 erlaubt!"
 		endif
 
 
-		if      MomPass=1
+                if      MOMPASS=1
 		 message "H8/53x-Definitionen (C) 1994 Alfred Arnold"
 		endif
 
-__cpunum	equ	MomCPU-$6475000	; ist halt bequemer...
+__cpunum        equ     MOMCPU-$6475000 ; ist halt bequemer...
 
 		if	__cpunum=$328	; Peripherie verschiebt sich beim
 __regbase	 equ	$ff00		; H8/532 um eine Seite nach oben
@@ -81,17 +81,17 @@ SSBY		equ	7		; Sleep/Standby-Moduswahl (rw)
 ; Interruptsteuerung:
 
 		if	__cpunum=$328
-IPRA		 equ	$fff0		; Interrupt-PrioritÑt IRQ1 / IRQ0 (rw)
-IPRB		 equ	$fff1		; Interrupt-PrioritÑt FRT2 / FRT1 (rw)
-IPRC		 equ	$fff2		; Interrupt-PrioritÑt 8-Bit-Timer / FRT3 (rw)
-IPRD		 equ	$fff3		; Interrupt-PrioritÑt AD-Wandler / SCI (rw)
+IPRA		 equ	$fff0		; Interrupt-Priorit‰t IRQ1 / IRQ0 (rw)
+IPRB		 equ	$fff1		; Interrupt-Priorit‰t FRT2 / FRT1 (rw)
+IPRC		 equ	$fff2		; Interrupt-Priorit‰t 8-Bit-Timer / FRT3 (rw)
+IPRD		 equ	$fff3		; Interrupt-Priorit‰t AD-Wandler / SCI (rw)
                 elseif
-IPRA		 equ	$ff00		; Interrupt-PrioritÑt IRQ1 / IRQ0|I.-Timer (rw)
-IPRB		 equ	$ff01		; Interrupt-PrioritÑt IRQ5|IRQ4 / IRQ3|IRQ2 (rw)
-IPRC		 equ	$ff02		; Interrupt-PrioritÑt FRT2 / FRT1 (rw)
-IPRD		 equ	$ff03		; Interrupt-PrioritÑt 8-Bit-Timer / FTR3 (rw)
-IPRE		 equ	$ff04		; Interrupt-PrioritÑt SCI2 / SCI1 (rw)
-IPRF		 equ	$ff05		; Interrupt-PrioritÑt - / AD-Wandler
+IPRA		 equ	$ff00		; Interrupt-Priorit‰t IRQ1 / IRQ0|I.-Timer (rw)
+IPRB		 equ	$ff01		; Interrupt-Priorit‰t IRQ5|IRQ4 / IRQ3|IRQ2 (rw)
+IPRC		 equ	$ff02		; Interrupt-Priorit‰t FRT2 / FRT1 (rw)
+IPRD		 equ	$ff03		; Interrupt-Priorit‰t 8-Bit-Timer / FTR3 (rw)
+IPRE		 equ	$ff04		; Interrupt-Priorit‰t SCI2 / SCI1 (rw)
+IPRF		 equ	$ff05		; Interrupt-Priorit‰t - / AD-Wandler
                 endif
 
 ;----------------------------------------------------------------------------
@@ -144,8 +144,8 @@ P6DR		equ	__portbase+11	; Datenregister Port 6 (rw)
 P6DDR		equ	__portbase+9	; Datenrichtungsregister Port 6 (w)
 		if	__cpunum<>$328
 SYSCR2		 equ	$fefd		; Systemsteuerregister 2 (w)
-P9SCI2E		 equ	0		; P92..P94 fÅr SCI2 nutzen ?
-P9PWME		 equ	1		; P92..P94 fÅr PWM nutzen ?
+P9SCI2E		 equ	0		; P92..P94 f¸r SCI2 nutzen ?
+P9PWME		 equ	1		; P92..P94 f¸r PWM nutzen ?
 P6PWME		 equ	2		; P61..P63 als PWM-Ausgang nutzen ?
 IRQ2E		 equ	3		; Nutzung P60 als IRQ2 ?
 IRQ3E		 equ	4		; Nutzung P61 als IRQ3 ?
@@ -182,10 +182,10 @@ P9DDR            equ    __portbase+$fe  ; Datenrichtungsregister Port 9 (w)
 ;----------------------------------------------------------------------------
 ; Timer:
 
-__deftimer	macro	Base,Name
+__deftimer      macro   Base,NAME
 TCR{NAME}	equ	Base+0		; Steuerregister (rw)
 TCSR{NAME}	equ	Base+1		; Steuer/Statusregister (rw/r)
-FRC{NAME}	equ	Base+2		; ZÑhlerregister (rw, 16 Bit)
+FRC{NAME}	equ	Base+2		; Z‰hlerregister (rw, 16 Bit)
 OCRA{NAME}	equ	Base+4		; Vergleicher A (rw, 16 Bit)
 OCRB{NAME}	equ	Base+6		; Vergleicher B (rw, 16 Bit)
 ICR{NAME}	equ	Base+8		; Eingabe-Fangregister (r, 16 Bit)
@@ -199,16 +199,16 @@ CKS0		equ	0		; TCRx: Taktquellenwahl (rw)
 CKS1		equ	1
 OEA		equ	2		;       Vergleichsergebnis OCRA ausgeben ? (rw)
 OEB		equ	3		;       Vergleichsergebnis OCRB ausgeben ? (rw)
-OVIE		equ	4		;       Interrupt bei FRC-öberlauf auslîsen? (rw)
-OCIEA		equ	5		;       Interrupt bei Gleichheit mit OCRA auslîsen? (rw)
-OCIEB		equ	6		;       Interrupt bei Gleichheit mit OCRB auslîsen? (rw)
-ICIE		equ	7		;       Interrupt bei ICR-Fang auslîsen? (rw)
+OVIE		equ	4		;       Interrupt bei FRC-‹berlauf auslˆsen? (rw)
+OCIEA		equ	5		;       Interrupt bei Gleichheit mit OCRA auslˆsen? (rw)
+OCIEB		equ	6		;       Interrupt bei Gleichheit mit OCRB auslˆsen? (rw)
+ICIE		equ	7		;       Interrupt bei ICR-Fang auslˆsen? (rw)
 
-CCLRA		equ	0		; TCSRx: FRC bei Gleichheit mit OCRA rÅcksetzen ? (rw)
+CCLRA		equ	0		; TCSRx: FRC bei Gleichheit mit OCRA r¸cksetzen ? (rw)
 IEDG		equ	1		;	 Eingabefang bei welcher Flanke ? (rw)
-OLVLA		equ	2		;	 PolaritÑt fÅr OCRA-Ausgangssignal (rw)
-OLVLB		equ	3		;	 PolaritÑt fÅr OCRB-Ausgangssignal (rw)
-OVF		equ	4		;	 FRC-öberlauf aufgetreten ? (r)
+OLVLA		equ	2		;	 Polarit‰t f¸r OCRA-Ausgangssignal (rw)
+OLVLB		equ	3		;	 Polarit‰t f¸r OCRB-Ausgangssignal (rw)
+OVF		equ	4		;	 FRC-‹berlauf aufgetreten ? (r)
 OCFA		equ	5		;        war FRC=OCRA ? (r)
 OCFB		equ	6		;        war FRC=OCRB ? (r)
 ICF		equ	7		;        Eingabe-Fang aufgetreten ? (r)
@@ -219,9 +219,9 @@ __tcntbase	equ	__regbase+$d0
 
 TCR4		equ	__tcntbase+0	; Steuerregister (rw)
 CKS2		equ	2		; Taktauswahl (Rest identisch zu FRCx)
-CCLR0		equ	3		; RÅcksetzmodus
+CCLR0		equ	3		; R¸cksetzmodus
 CCLR1		equ	4
-OVIE_4		equ	5		; Interrupt bei öberlauf auslîsen ?
+OVIE_4		equ	5		; Interrupt bei ‹berlauf auslˆsen ?
 CMIEA		equ	6		; Interrupt bei TCNT=TCORA?
 CMIEB		equ	7		; Interrupt bei TCNT=TCORB?
 
@@ -230,21 +230,21 @@ OS0		equ	0		; Auswirkung von TCORA=TCNT auf TMO
 OS1		equ	1
 OS2		equ	2		; Auswirkung von TCORB=TCNT auf TMO
 OS3		equ	3
-OVF_4		equ	5		; öberlauf aufgetreten
+OVF_4		equ	5		; ‹berlauf aufgetreten
 CMFA		equ	6		; TCNT=TCORA aufgetreten
 CMFB		equ	7		; TCNT=TCORB aufgetreten
 
 TCORA		equ	__tcntbase+2	; Zeitkonstante 1 (rw)
 TCORB		equ	__tcntbase+3	; Zeitkonstante 2 (rw)
-TCNT		equ	__tcntbase+4	; ZÑhlwert (rw)
+TCNT		equ	__tcntbase+4	; Z‰hlwert (rw)
 
 ;----------------------------------------------------------------------------
 ; Pulsweitenmodulatoren:
 
-__defpwm	macro	Base,Name
+__defpwm        macro   Base,NAME
 PW{NAME}_TCR	equ	Base		; Steuerregister (rw)
 PW{NAME}_DTR	equ	Base+1		; Pulsweitenregister (rw)
-PW{NAME}_TCNT	equ	Base+2		; ZÑhlwert (rw)
+PW{NAME}_TCNT	equ	Base+2		; Z‰hlwert (rw)
 		endm
 
 		__defpwm __regbase+$c0,"1"
@@ -263,21 +263,21 @@ WDT_TCSR_R	equ	__wdtbase+0	; Steuer/Statusregister (unterschied-
 WDT_TCSR_W	equ	__wdtbase+1	; liche Schreib/Leseadressen)
 TME		equ	5		; Timer freigeben
 WTIT		equ	6		; Watchdog/Timermodus
-WDT_OVF		equ	7		; Watchdog-öberlauf ?
+WDT_OVF		equ	7		; Watchdog-‹berlauf ?
 
-WDT_TCNT	equ	__wdtbase+1	; ZÑhlregister (rw)
+WDT_TCNT	equ	__wdtbase+1	; Z‰hlregister (rw)
 
 		if	__cpunum<>$328
 RSTCSR_W	 equ	$ff14		; Reset-Register (unterschiedliche
 RSTCSR_R	 equ	$ff15		; Schreib/Leseadressen)
-RSTOE		 equ	6		; Watchdog-Reset nach au·en geben ?
+RSTOE		 equ	6		; Watchdog-Reset nach auﬂen geben ?
 WRST		 equ	7               ; Reset durch Watchdog ?
                 endif
 
 ;----------------------------------------------------------------------------
 ; serielle Schnittstelle:
 
-__defsci	macro   Base,Name
+__defsci        macro   Base,NAME
 SMR{NAME}	equ	Base+0		; Modusregister (rw)
 BRR{NAME}	equ	Base+1		; Bitratenregister (rw)
 SCR{NAME}	equ	Base+2		; Steuerregister (rw)
@@ -295,21 +295,21 @@ RDR{NAME}	equ	Base+5		; Empfangsdaten (r)
 
 STOP		equ	3		; SMRx: #Stopp-Bits
 O_E		equ	4		;       odd/even Parity
-PE		equ	5		;       mit/ohne ParitÑt
+PE		equ	5		;       mit/ohne Parit‰t
 CHR		equ	6		;       7/8 Datenbits
 C_A		equ	7		;       synchron/asynchron
 
 CKE0		equ	0		; SCRx: bei synchroner Kommunikation Takt an SCK ausgeben ?
 CKE1		equ	1		;       Takt intern/extern (-->SCK Ein-oder Ausgang) ?
-RE		equ	4		;       EmpfÑnger freigeben
+RE		equ	4		;       Empf‰nger freigeben
 TE		equ	5		;       Sender freigeben
 RIE		equ	6		;       Empfangs-Interrupt freigeben
 TIE		equ	7		;       Sende-Interrupt freigeben
 
-PER		equ	3		; SSRx: ParitÑts-Fehler
-FER		equ	4		;       ungÅltiger Rahmen
-ORER		equ	5		;       EmpfÑnger-öberlauf
-RDRF		equ     6		;       EmpfÑnger voll ?
+PER		equ	3		; SSRx: Parit‰ts-Fehler
+FER		equ	4		;       ung¸ltiger Rahmen
+ORER		equ	5		;       Empf‰nger-‹berlauf
+RDRF		equ     6		;       Empf‰nger voll ?
 TDRE		equ	7		;       Sender leer ?
 
 ;----------------------------------------------------------------------------
@@ -329,7 +329,7 @@ CH2		equ	2
 CKS		equ	3		; Wandelzeit 274/138 Takte
 SCAN		equ	4		; Single Channel/Scan-Modus
 ADST		equ	5		; Wandler starten/stoppen
-ADIE		equ	6		; Interrupt bei Wandelende auslîsen ?
+ADIE		equ	6		; Interrupt bei Wandelende auslˆsen ?
 ADF		equ	7		; Wandlung abgeschlossen ?
 
 		if	__cpunum<>$328

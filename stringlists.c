@@ -29,7 +29,7 @@ BEGIN
 
    while (*List!=Nil)
     BEGIN
-     Hilf=*List; *List=(*List)->Next;
+     Hilf=(*List); *List=(*List)->Next;
      ClearStringEntry(&Hilf);
     END
 END
@@ -40,7 +40,7 @@ BEGIN
 
    Neu=(StringRecPtr) malloc(sizeof(StringRec));
    Neu->Content=strdup(NewStr); 
-   Neu->Next=*List;
+   Neu->Next=(*List);
    *List=Neu;
 END
 
@@ -53,7 +53,7 @@ BEGIN
    if (*List==Nil) *List=Neu;
    else
     BEGIN
-     Lauf=*List; while (Lauf->Next!=Nil) Lauf=Lauf->Next;
+     Lauf=(*List); while (Lauf->Next!=Nil) Lauf=Lauf->Next;
      Lauf->Next=Neu;
     END
 END
@@ -65,11 +65,11 @@ BEGIN
    if (*List==Nil) return;
    if (strcmp((*List)->Content,OldStr)==0)
     BEGIN
-     Hilf=*List; *List=(*List)->Next; ClearStringEntry(&Hilf);
+     Hilf=(*List); *List=(*List)->Next; ClearStringEntry(&Hilf);
     END
    else
     BEGIN
-     Lauf=*List;
+     Lauf=(*List);
      while ((Lauf->Next!=Nil) AND (strcmp(Lauf->Next->Content,OldStr)!=0)) Lauf=Lauf->Next;
      if (Lauf->Next!=Nil)
       BEGIN
@@ -113,7 +113,7 @@ BEGIN
    if (*List==Nil) Result[0]='\0';
    else
     BEGIN
-     Hilf=*List; *List=(*List)->Next;
+     Hilf=(*List); *List=(*List)->Next;
      strmaxcpy(Result,Hilf->Content,255);
      free(Hilf->Content); free(Hilf);
     END

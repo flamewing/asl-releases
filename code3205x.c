@@ -403,7 +403,13 @@ static void wr_code_byte_lohi(Boolean *ok, Integer *adr, LongInt val)
 
 /* ---------------------------------------------------------------------- */
 
-static void pseudo_store(void (*callback)(Boolean *, Integer *, LongInt))
+typedef void (*tcallback)(
+#ifdef __PROTOS__
+Boolean *, Integer *, LongInt
+#endif
+);
+
+static void pseudo_store(tcallback callback)
 {
 	Boolean ok = True;
 	Integer adr = 0;
@@ -1442,7 +1448,8 @@ static void switch_to_3205x(void)
 
 /* ---------------------------------------------------------------------- */
 
-void code3205x_init(void) {
+void code3205x_init(void)
+{
 	cpu_32050 = AddCPU("320C50", switch_to_3205x);
 	cpu_32051 = AddCPU("320C51", switch_to_3205x);
 	cpu_32053 = AddCPU("320C53", switch_to_3205x);

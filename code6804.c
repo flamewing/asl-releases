@@ -10,11 +10,15 @@
 
 #include "stdinc.h"
 
+#include <string.h>
+
 #include "bpemu.h"
+#include "stringutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 typedef struct
          {
@@ -26,7 +30,7 @@ typedef struct
 #define RelOrderCnt 6
 #define ALUOrderCnt 4
 
-#define ModNone -1
+#define ModNone (-1)
 #define ModInd 0
 #define MModInd (1 << ModInd)
 #define ModDir 1
@@ -44,8 +48,6 @@ static BaseOrder *RelOrders;
 static BaseOrder *ALUOrders;
 
 /*--------------------------------------------------------------------------*/
-
-static int InstrZ;
 
 	static void AddFixed(char *NName, LongInt NCode)
 BEGIN

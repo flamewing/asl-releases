@@ -53,7 +53,9 @@ Op1             equ     Op2+OpSize      ; Adresse Operand 1
 Ld10:           dd      ld(10)
 One:            dd      1.0
 Ten:            dd      10.0
-Tenth:          dd      0.1
+Tenth:          dd      3dcccccdh       ; =0.1, aber die Rundung auf manchen
+					; Systemen variiert (damit Test nicht
+					; scheitert)
 Half:           dd      0.5
 
 cpsh            macro   reg,op,{NoExpand}

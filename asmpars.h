@@ -68,6 +68,8 @@ extern Boolean GetStringSymbol(char *Name, char *Wert);
 
 extern void PrintSymbolList(void);
 
+extern void PrintDebSymbols(FILE *f);
+
 extern void PrintSymbolTree(void);
 
 extern void ClearSymbolList(void);
@@ -133,7 +135,13 @@ extern LongInt GetSectionHandle(char *SName_O, Boolean AddEmpt, LongInt Parent);
 
 extern char *GetSectionName(LongInt Handle);
 
+extern void SetMomSection(LongInt Handle);
+
+extern void AddSectionUsage(LongInt Start, LongInt Length);
+
 extern void PrintSectionList(void);
+
+extern void PrintDebSections(FILE *f);
 
 extern void ClearSectionList(void);
 

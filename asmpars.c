@@ -17,7 +17,7 @@
 #include "bpemu.h"
 #include "nls.h"
 #include "stringutil.h"
-#include "filenums.h"
+#include "asmfnums.h"
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
@@ -53,8 +53,13 @@ LargeInt IntMaxs[IntTypeCnt]=
                       31l,         31l,        31l,         63l,        127l,        127l,        255l,
                      255l,        511l,      1023l,       1023l,       2047l,       4095l,       4095l,
                     8191l,      32767l,     65535l,      65535l,     262143l,     524287l,
+#ifdef __STDC__
                  1048575l,    1048575l,   4194303l,    8388607l,   16777215l,   16777215l, 2147483647l, 4294967295ul,
               4294967295ul
+#else
+                 1048575l,    1048575l,   4194303l,    8388607l,   16777215l,   16777215l, 2147483647l, 4294967295l,
+              4294967295l
+#endif
 #ifdef HAS64
              , 9223372036854775807ll
 #endif
@@ -141,6 +146,7 @@ typedef struct _TCToken
           struct _TCToken *Next;
           char *Name;
           LongInt Parent;
+          ChunkList Usage;
          } TCToken,*PCToken;
 
 typedef struct Operator
@@ -167,11 +173,12 @@ static PCToken FirstSection;
 static Boolean DoRefs;              /* Querverweise protokollieren */
 static PLocHandle FirstLocHandle;
 static PSymbolStack FirstStack;
+static PCToken MomSection;
 
         void AsmParsInit(void)
 BEGIN
    FirstSymbol=Nil;
-   FirstLocSymbol=Nil; MomLocHandle=-1; MomSectionHandle=-1;
+   FirstLocSymbol=Nil; MomLocHandle=(-1); SetMomSection(-1);
    FirstSection=Nil;
    FirstLocHandle=Nil;
    DoRefs=True;
@@ -189,7 +196,7 @@ BEGIN
    else return ((Wert>=IntMins[Typ]) AND (Wert<=IntMaxs[Typ]));
 END
 
-         Boolean FloatRangeCheck(Double Wert, FloatType Typ)
+        Boolean FloatRangeCheck(Double Wert, FloatType Typ)
 BEGIN
    switch (Typ)
     BEGIN
@@ -220,7 +227,7 @@ BEGIN
        case '\'':
        case '\\':
        case '"':
-        ErgChar=*(p+1); cnt=2; break;
+        ErgChar=(*(p+1)); cnt=2; break;
        case 'H':
         ErgChar='\''; cnt=2; break;
        case 'I':
@@ -241,7 +248,7 @@ BEGIN
        case '6': case '7': case '8': case '9':
         cnt=2;
         while ((cnt<4) AND (*(p+cnt)!='\0') AND (*(p+cnt)>='0') AND (*(p+cnt)<='9')) cnt++;
-        Save=*(p+cnt); *(p+cnt)='\0';
+        Save=(*(p+cnt)); *(p+cnt)='\0';
         ErgChar=ConstLongInt(p+1,&OK);
         *(p+cnt)=Save;
         if (!OK) WrError(1320);
@@ -294,7 +301,7 @@ BEGIN
 
    if (*Name=='\0')
     BEGIN
-     *Erg=-1; return True;
+     *Erg=(-1); return True;
     END
    else if (((strlen(Name)==6) OR (strlen(Name)==7))
         AND (strncasecmp(Name,"PARENT",6)==0)
@@ -302,9 +309,9 @@ BEGIN
     BEGIN
      if (strlen(Name)==6) Depth=1; else Depth=Name[6]-AscOfs;
      SLauf=SectionStack; *Erg=MomSectionHandle;
-     while ((Depth>0) AND (*Erg!=-2))
+     while ((Depth>0) AND (*Erg!=(-2)))
       BEGIN
-       if (SLauf==Nil) *Erg=-2;
+       if (SLauf==Nil) *Erg=(-2);
        else
         BEGIN
          *Erg=SLauf->Handle;
@@ -312,7 +319,7 @@ BEGIN
         END
        Depth--;
       END
-     if (*Erg==-2)
+     if (*Erg==(-2))
       BEGIN
        WrError(1484); return False;
       END
@@ -346,7 +353,7 @@ BEGIN
 
    if (Name[l-1]!=']')
     BEGIN
-     *Erg=-2; return True;
+     *Erg=(-2); return True;
     END
 
    Name[l-1]='\0';
@@ -401,7 +408,8 @@ BEGIN
      /* Vorzeichen */
 
      if (*Asc=='+') strcpy(Asc,Asc+1);
-     if ((NegFlag=(*Asc=='-'))) strcpy(Asc,Asc+1);
+     NegFlag=(*Asc=='-');
+     if (NegFlag) strcpy(Asc,Asc+1);
 
      if (RelaxedMode)
       BEGIN
@@ -483,7 +491,7 @@ BEGIN
       END
     END
 
-   if (NegFlag) Wert=-Wert;
+   if (NegFlag) Wert=(-Wert);
 
    *Ok=RangeCheck(Wert,Typ);
    if (Ok) return Wert;
@@ -498,6 +506,8 @@ END
 BEGIN
    Double Erg;
    char *end;
+
+   if (Typ);  /* satisfy some compilers */
 
    if (*Asc_O)
     BEGIN
@@ -529,7 +539,7 @@ BEGIN
    while (*Asc!='\0')
     BEGIN
      z=strchr(Asc,'\\'); if (z==Nil) z=Asc+strlen(Asc);
-     Save=*z; *z='\0'; if (strchr(Asc,'"')!=Nil) return;
+     Save=(*z); *z='\0'; if (strchr(Asc,'"')!=Nil) return;
      strmaxcat(tmp,Asc,255); *z=Save; strcpy(Asc,z);
      if (*Asc=='\\')
       BEGIN
@@ -561,7 +571,7 @@ BEGIN
          case '5': case '6': case '7': case '8': case '9':
           z=Asc+1;
           while ((*z!='\0') AND (z-Asc<4) AND (*z>='0') AND (*z<='9')) z++;
-          Save=*z; *z='\0'; puts(Asc+1); tmp[l++]=ConstLongInt(Asc+1,&OK2)&0xff; *z=Save;
+          Save=(*z); *z='\0'; tmp[l++]=ConstLongInt(Asc+1,&OK2)&0xff; *z=Save;
           if (tmp[l-1]=='\0') WrError(240);
           if (NOT OK2) return; tmp[l++]='\0';
           break;
@@ -593,9 +603,17 @@ BEGIN
 END
 
 
-        static SymbolPtr FindLocNode(char *Name, TempType SearchType);
+        static SymbolPtr FindLocNode(
+#ifdef __PROTOS__
+char *Name, TempType SearchType
+#endif
+);
 
-        static SymbolPtr FindNode(char *Name, TempType SearchType);
+        static SymbolPtr FindNode(
+#ifdef __PROTOS__
+char *Name, TempType SearchType
+#endif
+);
 
 
 	static void EvalExpression_ChgFloat(TempResult *T)
@@ -666,7 +684,7 @@ static Operator Operators[OpCnt+1]=
    Operator *Op;
    char Save='\0';
    Integer LKlamm,RKlamm,WKlamm,zop;
-   Integer OpMax,LocOpMax,OpPos=-1,OpLen;
+   Integer OpMax,LocOpMax,OpPos=(-1),OpLen;
    Boolean OpFnd,InHyp,InQuot;
    LargeInt HVal;
    Double  FVal;
@@ -675,7 +693,10 @@ static Operator Operators[OpCnt+1]=
    String Asc,stemp,ftemp;
    char *KlPos,*zp;
 
-/**   ChkStack;**/
+   memset(&LVal,0,sizeof(LVal));
+   memset(&RVal,0,sizeof(RVal));
+
+   ChkStack();
 
    strmaxcpy(Asc,Asc_O,255);
    strmaxcpy(stemp,Asc,255); KillBlanks(Asc);
@@ -897,12 +918,12 @@ static Operator Operators[OpCnt+1]=
            if (RVal.Contents.Float==0.0) Erg->Contents.Float=1.0;
            else if (LVal.Contents.Float==0.0) Erg->Contents.Float=0.0;
            else if (LVal.Contents.Float>0) Erg->Contents.Float=pow(LVal.Contents.Float,RVal.Contents.Float);
-           else if ((abs(RVal.Contents.Float)<=MaxLongInt) AND (floor(RVal.Contents.Float)==RVal.Contents.Float)) 
+           else if ((abs(RVal.Contents.Float)<=((double)MaxLongInt)) AND (floor(RVal.Contents.Float)==RVal.Contents.Float))
             BEGIN
              HVal=(LongInt) floor(RVal.Contents.Float+0.5);
              if (HVal<0)
               BEGIN
-               LVal.Contents.Float=1/LVal.Contents.Float; HVal=-HVal;
+               LVal.Contents.Float=1/LVal.Contents.Float; HVal=(-HVal);
               END
              Erg->Contents.Float=1.0;
              while (HVal>0)
@@ -985,9 +1006,9 @@ static Operator Operators[OpCnt+1]=
          switch (Erg->Typ=RVal.Typ)
           BEGIN
            case TempInt:
-            Erg->Contents.Int=-RVal.Contents.Int; break;
+            Erg->Contents.Int=(-RVal.Contents.Int); break;
            case TempFloat:
-            Erg->Contents.Float=-RVal.Contents.Float; break;
+            Erg->Contents.Float=(-RVal.Contents.Float); break;
            default: break;
           END
         break;
@@ -1279,10 +1300,10 @@ static Operator Operators[OpCnt+1]=
             END
 #ifdef HAS64
            while ((Erg->Contents.Int<64) AND (NOT Odd(LVal.Contents.Int)));
-           if (Erg->Contents.Int>=64) Erg->Contents.Int=-1;
+           if (Erg->Contents.Int>=64) Erg->Contents.Int=(-1);
 #else
            while ((Erg->Contents.Int<32) AND (NOT Odd(LVal.Contents.Int)));
-           if (Erg->Contents.Int>=32) Erg->Contents.Int=-1;
+           if (Erg->Contents.Int>=32) Erg->Contents.Int=(-1);
 #endif
           END
          FFound=True;
@@ -1294,7 +1315,7 @@ static Operator Operators[OpCnt+1]=
          else
           BEGIN
            Erg->Typ=TempInt;
-           Erg->Contents.Int=-1;
+           Erg->Contents.Int=(-1);
 #ifdef HAS64
            for (z1=0; z1<64; z1++)
 #else
@@ -1318,7 +1339,7 @@ static Operator Operators[OpCnt+1]=
            do
             BEGIN
              if (NOT Odd(LVal.Contents.Int)) Erg->Contents.Int++;
-             LVal.Contents.Int=LVal.Contents.Int >> 1;
+             if (NOT Odd(LVal.Contents.Int)) LVal.Contents.Int=LVal.Contents.Int >> 1;
             END
 #ifdef HAS64
            while ((Erg->Contents.Int<64) AND (NOT Odd(LVal.Contents.Int)));
@@ -1328,7 +1349,7 @@ static Operator Operators[OpCnt+1]=
            if ((Erg->Contents.Int>=32) OR (LVal.Contents.Int!=1))
 #endif
             BEGIN
-             Erg->Contents.Int=-1; WrError(1540);
+             Erg->Contents.Int=(-1); WrError(1540);
             END
           END
          FFound=True;
@@ -1353,12 +1374,12 @@ static Operator Operators[OpCnt+1]=
          switch (LVal.Typ)
           BEGIN
            case TempInt:
-            if (LVal.Contents.Int<0) Erg->Contents.Int=-1;
+            if (LVal.Contents.Int<0) Erg->Contents.Int=(-1);
             else if (LVal.Contents.Int>0) Erg->Contents.Int=1;
             else Erg->Contents.Int=0;
             break;
            case TempFloat:
-            if (LVal.Contents.Float<0) Erg->Contents.Int=-1;
+            if (LVal.Contents.Float<0) Erg->Contents.Int=(-1);
             else if (LVal.Contents.Float>0) Erg->Contents.Int=1;
             else Erg->Contents.Int=0;
             break;
@@ -1617,7 +1638,7 @@ static Operator Operators[OpCnt+1]=
    KlPos=strchr(Asc,'[');
    if (KlPos!=Nil) 
     BEGIN
-     Save=*KlPos; *KlPos='\0';
+     Save=(*KlPos); *KlPos='\0';
     END
    OK=ChkSymbName(Asc);
    if (KlPos!=Nil) *KlPos=Save;
@@ -1632,7 +1653,7 @@ static Operator Operators[OpCnt+1]=
     BEGIN
      Erg->Typ=TempInt; Erg->Contents.Int=Ptr->SymWert.Contents.IWert;
      if (Ptr->SymType!=0) TypeFlag|=(1 << Ptr->SymType);
-     if ((Ptr->SymSize!=-1) AND (SizeFlag==-1)) SizeFlag=Ptr->SymSize;
+     if ((Ptr->SymSize!=(-1)) AND (SizeFlag==(-1))) SizeFlag=Ptr->SymSize;
      if (NOT Ptr->Defined)
       BEGIN
        if (Repass) SymbolQuestionable=True;
@@ -1647,7 +1668,7 @@ static Operator Operators[OpCnt+1]=
     BEGIN
      Erg->Typ=TempFloat; Erg->Contents.Float=Ptr->SymWert.Contents.FWert;
      if (Ptr->SymType!=0) TypeFlag|=(1 << Ptr->SymType);
-     if ((Ptr->SymSize!=-1) AND (SizeFlag==-1)) SizeFlag=Ptr->SymSize;
+     if ((Ptr->SymSize!=(-1)) AND (SizeFlag==(-1))) SizeFlag=Ptr->SymSize;
      if (NOT Ptr->Defined)
       BEGIN
        if (Repass) SymbolQuestionable=True;
@@ -1662,7 +1683,7 @@ static Operator Operators[OpCnt+1]=
     BEGIN
      Erg->Typ=TempString; strmaxcpy(Erg->Contents.Ascii,Ptr->SymWert.Contents.SWert,255);
      if (Ptr->SymType!=0) TypeFlag|=(1 << Ptr->SymType);
-     if ((Ptr->SymSize!=-1) AND (SizeFlag==-1)) SizeFlag=Ptr->SymSize;
+     if ((Ptr->SymSize!=(-1)) AND (SizeFlag==(-1))) SizeFlag=Ptr->SymSize;
      if (NOT Ptr->Defined)
       BEGIN
        if (Repass) SymbolQuestionable=True;
@@ -1693,7 +1714,7 @@ BEGIN
    TempResult t;
 
    *OK=False;
-   TypeFlag=0; SizeFlag=-1;
+   TypeFlag=0; SizeFlag=(-1);
    UsesForwards=False;
    SymbolQuestionable=False;
    FirstPassUnknown=False;
@@ -1720,7 +1741,7 @@ BEGIN
    TempResult t;
 
    *OK=False;
-   TypeFlag=0; SizeFlag=-1;
+   TypeFlag=0; SizeFlag=(-1);
    UsesForwards=False;
    SymbolQuestionable=False;
    FirstPassUnknown=False;
@@ -1752,7 +1773,7 @@ BEGIN
    TempResult t;
 
    *OK=False;
-   TypeFlag=0; SizeFlag=-1;
+   TypeFlag=0; SizeFlag=(-1);
    UsesForwards=False;
    SymbolQuestionable=False;
    FirstPassUnknown=False;
@@ -1799,7 +1820,7 @@ BEGIN
 
    /* Stapelueberlauf pruefen, noch nichts eingefuegt */
 
-   /**ChkStack;**/ Result=False;
+   ChkStack(); Result=False;
 
    /* an einem Blatt angelangt--> einfach anfuegen */
 
@@ -1834,16 +1855,16 @@ BEGIN
           p1=(*Node)->Right;
           if (p1->Balance==1)
            BEGIN
-            (*Node)->Right=p1->Left; p1->Left=*Node;
+            (*Node)->Right=p1->Left; p1->Left=(*Node);
             (*Node)->Balance=0; *Node=p1;
            END
           else
            BEGIN
             p2=p1->Left;
             p1->Left=p2->Right; p2->Right=p1;
-            (*Node)->Right=p2->Left; p2->Left=*Node;
-            if (p2->Balance== 1) (*Node)->Balance=-1; else (*Node)->Balance=0;
-            if (p2->Balance==-1) p1     ->Balance= 1; else p1     ->Balance=0;
+            (*Node)->Right=p2->Left; p2->Left=(*Node);
+            if (p2->Balance== 1) (*Node)->Balance=(-1); else (*Node)->Balance=0;
+            if (p2->Balance==-1) p1     ->Balance=   1; else p1     ->Balance=0;
             *Node=p2;
            END
           (*Node)->Balance=0;
@@ -1858,21 +1879,21 @@ BEGIN
          case 1:
           (*Node)->Balance=0; break;
          case 0:
-          (*Node)->Balance=-1; Result=True; break;
+          (*Node)->Balance=(-1); Result=True; break;
          case -1:
           p1=(*Node)->Left;
-          if (p1->Balance==-1)
+          if (p1->Balance==(-1))
            BEGIN
-            (*Node)->Left=p1->Right; p1->Right=*Node;
+            (*Node)->Left=p1->Right; p1->Right=(*Node);
             (*Node)->Balance=0; (*Node)=p1;
            END
           else
            BEGIN
             p2=p1->Right;
             p1->Right=p2->Left; p2->Left=p1;
-            (*Node)->Left=p2->Right; p2->Right=*Node;
-            if (p2->Balance==-1) (*Node)->Balance= 1; else (*Node)->Balance=0;
-            if (p2->Balance== 1) p1     ->Balance=-1; else p1     ->Balance=0;
+            (*Node)->Left=p2->Right; p2->Right=(*Node);
+            if (p2->Balance==(-1)) (*Node)->Balance=   1; else (*Node)->Balance=0;
+            if (p2->Balance==   1) p1     ->Balance=(-1); else p1     ->Balance=0;
             *Node=p2;
            END
           (*Node)->Balance=0;
@@ -1904,11 +1925,16 @@ BEGIN
            OR ((Neu->SymWert.Typ==TempFloat ) AND (Neu->SymWert.Contents.FWert !=(*Node)->SymWert.Contents.FWert ))
            OR ((Neu->SymWert.Typ==TempInt   ) AND (Neu->SymWert.Contents.IWert !=(*Node)->SymWert.Contents.IWert )))
             BEGIN
+             if ((NOT Repass) AND (JmpErrors>0))
+              BEGIN
+               if (ThrowErrors) ErrorCount-=JmpErrors;
+               JmpErrors=0;
+              END
              Repass=True;
              if ((MsgIfRepass) AND (PassNo>=PassNoForMessage))
               BEGIN
                strmaxcpy(serr,Neu->SymName,255);
-               if (Neu->Attribute!=-1) 
+               if (Neu->Attribute!=(-1)) 
                 BEGIN
                  strmaxcat(serr,"[",255);
                  strmaxcat(serr,GetSectionName(Neu->Attribute),255);
@@ -1926,7 +1952,7 @@ BEGIN
          END
         Neu->RefList=(*Node)->RefList; (*Node)->RefList=Nil;
         Neu->Defined=True; Neu->Used=(*Node)->Used; Neu->Changeable=MayChange;
-        Hilf=*Node; *Node=Neu;
+        Hilf=(*Node); *Node=Neu;
         FreeSymbol(&Hilf);
        END
       break;
@@ -1945,10 +1971,10 @@ END
                                        PForwardSymbol **RRoot, SymbolPtr Neu,
                                        PForwardSymbol *Root, Byte ResCode, Byte *SearchErg)
 BEGIN
-   *Lauf=*Root; *Prev=Nil; *RRoot=Root;
+   *Lauf=(*Root); *Prev=Nil; *RRoot=Root;
    while ((*Lauf!=Nil) AND (strcmp((*Lauf)->Name,Neu->SymName)!=0))
     BEGIN
-     *Prev=*Lauf; *Lauf=(*Lauf)->Next;
+     *Prev=(*Lauf); *Lauf=(*Lauf)->Next;
     END
    if (*Lauf!=Nil) *SearchErg=ResCode;
 END
@@ -1982,7 +2008,7 @@ BEGIN
    if (NOT CaseSensitive) NLS_UpString(Neu->SymName);
 
    SearchErg=0;
-   Neu->Attribute=(ResHandle==-2)?(MomSectionHandle):(ResHandle);
+   Neu->Attribute=(ResHandle==(-2))?(MomSectionHandle):(ResHandle);
    if ((SectionStack!=Nil) AND (Neu->Attribute==MomSectionHandle))
     BEGIN
      EnterSymbol_Search(&Lauf,&Prev,&RRoot,Neu,&(SectionStack->LocSyms),1,&SearchErg);
@@ -1999,7 +2025,7 @@ BEGIN
          strmaxprep(CombName,GetSectionName(MSect),255);
          MSect=RunSect->Handle; RunSect=RunSect->Next;
         END
-       Copy=(SymbolPtr) malloc(sizeof(SymbolEntry)); *Copy=*Neu;
+       Copy=(SymbolPtr) malloc(sizeof(SymbolEntry)); *Copy=(*Neu);
        Copy->SymName=strdup(CombName);
        Copy->Attribute=Lauf->DestSection;
        if (Copy->SymWert.Typ==TempString) 
@@ -2043,9 +2069,9 @@ BEGIN
    Neu->SymWert.Typ=TempInt;
    Neu->SymWert.Contents.IWert=Wert;
    Neu->SymType=Typ;
-   Neu->SymSize=-1;
+   Neu->SymSize=(-1);
 
-   if ((MomLocHandle==-1) OR (DestHandle!=-2))
+   if ((MomLocHandle==(-1)) OR (DestHandle!=(-2)))
     BEGIN
      EnterSymbol(Neu,MayChange,DestHandle);
      if (MakeDebug) PrintSymTree(Name);
@@ -2071,9 +2097,9 @@ BEGIN
    Neu->SymWert.Typ=TempFloat;
    Neu->SymWert.Contents.FWert=Wert;
    Neu->SymType=0;
-   Neu->SymSize=-1;
+   Neu->SymSize=(-1);
 
-   if ((MomLocHandle==-1) OR (DestHandle!=-2))
+   if ((MomLocHandle==(-1)) OR (DestHandle!=(-2)))
     BEGIN
      EnterSymbol(Neu,MayChange,DestHandle);
      if (MakeDebug) PrintSymTree(Name);
@@ -2099,9 +2125,9 @@ BEGIN
    Neu->SymWert.Contents.SWert=strdup(Wert);
    Neu->SymWert.Typ=TempString;
    Neu->SymType=0;
-   Neu->SymSize=-1;
+   Neu->SymSize=(-1);
 
-   if ((MomLocHandle==-1) OR (DestHandle!=-2))
+   if ((MomLocHandle==(-1)) OR (DestHandle!=(-2)))
     BEGIN
      EnterSymbol(Neu,MayChange,DestHandle);
      if (MakeDebug) PrintSymTree(Name);
@@ -2153,13 +2179,13 @@ END
                                       SymbolPtr *FindNode_Result, LongInt Handle)
 BEGIN
    SymbolPtr Lauf=FirstSymbol;
-   ShortInt SErg=-1;
+   ShortInt SErg=(-1);
    Boolean Result=False;
  
    while ((Lauf!=Nil) AND (SErg!=0))
     BEGIN
      SErg=StrCmp(Name,Lauf->SymName,Handle,Lauf->Attribute);
-     if (SErg==-1) Lauf=Lauf->Left;
+     if (SErg==(-1)) Lauf=Lauf->Left;
      else if (SErg==1) Lauf=Lauf->Right;
     END
    if (Lauf!=Nil)
@@ -2193,7 +2219,7 @@ BEGIN
     if (PassNo<=MaxSymPass)
      if (FindNode_FSpec(Name,SectionStack->LocSyms)) DestSection=MomSectionHandle;
 /* if (FSpec(SectionStack->GlobSyms)) return; */
-   if (DestSection==-2)
+   if (DestSection==(-2))
     BEGIN
      if (FindNode_FNode(Name,SearchType,&FindNode_Result,MomSectionHandle)) return FindNode_Result;
      Lauf=SectionStack;
@@ -2212,13 +2238,13 @@ END
                                          SymbolPtr *FindLocNode_Result, LongInt Handle)
 BEGIN
    SymbolPtr Lauf=FirstLocSymbol;
-   ShortInt SErg=-1;
+   ShortInt SErg=(-1);
    Boolean Result=False;
 
    while ((Lauf!=Nil) AND (SErg!=0))
     BEGIN
      SErg=StrCmp(Name,Lauf->SymName,Handle,Lauf->Attribute);
-     if (SErg==-1) Lauf=Lauf->Left;
+     if (SErg==(-1)) Lauf=Lauf->Left;
      else if (SErg==1) Lauf=Lauf->Right;
     END
 
@@ -2241,13 +2267,13 @@ BEGIN
 
    strmaxcpy(Name,Name_O,255); if (NOT CaseSensitive) NLS_UpString(Name);
 
-   if (MomLocHandle==-1) return FindLocNode_Result;
+   if (MomLocHandle==(-1)) return FindLocNode_Result;
 
    if (FindLocNode_FNode(Name,SearchType,&FindLocNode_Result,MomLocHandle))
     return FindLocNode_Result;
 
    RunLocHandle=FirstLocHandle;
-   while ((RunLocHandle!=Nil) AND (RunLocHandle->Cont!=-1))
+   while ((RunLocHandle!=Nil) AND (RunLocHandle->Cont!=(-1)))
     BEGIN
      if (FindLocNode_FNode(Name,SearchType,&FindLocNode_Result,RunLocHandle->Cont)) 
       return FindLocNode_Result;
@@ -2256,19 +2282,20 @@ BEGIN
 
    return FindLocNode_Result;
 END
-
-/**        PROCEDURE SetSymbolType(Name:String; NTyp:Byte);
-VAR
+/**
+        void SetSymbolType(char *Name, Byte NTyp)
+BEGIN
    Lauf:SymbolPtr;
    HRef:Boolean;
-BEGIN
+
    IF NOT ExpandSymbol(Name) THEN Exit;
    HRef:=DoRefs; DoRefs:=False;
    Lauf:=FindLocNode(Name,TempInt);
    IF Lauf=Nil THEN Lauf:=FindNode(Name,TempInt);
    IF Lauf<>Nil THEN Lauf^.SymType:=NTyp;
    DoRefs:=HRef;
-END;**/
+END
+**/
 
         Boolean GetIntSymbol(char *Name, LargeInt *Wert)
 BEGIN
@@ -2283,7 +2310,7 @@ BEGIN
     BEGIN
      *Wert=Lauf->SymWert.Contents.IWert;
      if (Lauf->SymType!=0) TypeFlag|=(1<<Lauf->SymType);
-     if ((Lauf->SymSize!=-1) AND (SizeFlag!=-1)) SizeFlag=Lauf->SymSize;
+     if ((Lauf->SymSize!=(-1)) AND (SizeFlag!=(-1))) SizeFlag=Lauf->SymSize;
      Lauf->Used=True;
     END
    else
@@ -2474,7 +2501,7 @@ BEGIN
    ConvertSymbolVal(&(Node->SymWert),&t); StrSym(&t,False,s1);
 
    strmaxcpy(sh,Node->SymName,255);
-   if (Node->Attribute!=-1) 
+   if (Node->Attribute!=(-1)) 
     BEGIN
      strmaxcat(sh," [",255);
      strmaxcat(sh,GetSectionName(Node->Attribute),255);
@@ -2496,7 +2523,7 @@ END
                                               LongInt *Sum, LongInt *USum,
                                               char *Zeilenrest)
 BEGIN
-   /**ChkStack;**/
+   ChkStack();
 
    if (Node==Nil) return;
 
@@ -2532,6 +2559,85 @@ BEGIN
    strmaxcat(Zeilenrest,(USum==1)?ListUSymSumMsg:ListUSymSumsMsg,255);
    WrLstLine(Zeilenrest);
    WrLstLine("");
+END
+
+static Boolean HWritten;
+static int Space;
+
+	static void PrintDebSymbols_PNode(FILE *f, SymbolPtr Node)
+BEGIN
+   char *p;
+   int l1;
+   TempResult t;
+   String s;
+
+   if (NOT HWritten)
+    BEGIN
+     fprintf(f,"\n"); ChkIO(10004);
+     fprintf(f,"Symbols in Segment %s\n",SegNames[Space]); ChkIO(10004);
+     HWritten=True;
+    END
+
+   fprintf(f,"%s",Node->SymName); ChkIO(10004); l1=strlen(Node->SymName);
+   if (Node->Attribute!=(-1))
+    BEGIN
+     sprintf(s,"[%d]",Node->Attribute);
+     fprintf(f,"%s",s); ChkIO(10004);
+     l1+=strlen(s);
+    END
+   fprintf(f,"%s ",Blanks(37-l1)); ChkIO(10004);
+   switch (Node->SymWert.Typ)
+    BEGIN
+     case TempInt:    fprintf(f,"Int    "); break;
+     case TempFloat:  fprintf(f,"Float  "); break;
+     case TempString: fprintf(f,"String "); break;
+     default: break;
+    END
+   ChkIO(10004);
+   if (Node->SymWert.Typ==TempString)
+    BEGIN
+     l1=0; 
+     for (p=Node->SymWert.Contents.SWert; *p!='\0'; p++)
+      BEGIN
+       if ((*p=='\\') OR (*p<=' '))
+        BEGIN
+         fprintf(f,"\\%03d",*p); l1+=4;
+        END
+       else
+        BEGIN
+         fputc(*p,f); ChkIO(10004); l1++;
+        END
+      END
+    END
+   else
+    BEGIN
+     ConvertSymbolVal(&(Node->SymWert),&t); StrSym(&t,False,s);
+     l1=strlen(s);
+     fprintf(f,"%s",s); ChkIO(10004);
+    END
+   fprintf(f,"%s %-3d %d\n",Blanks(25-l1),Node->SymSize,Node->Used); ChkIO(10004);
+END
+
+	static void PrintDebSymbols_PrintNode(FILE *f, SymbolPtr Node)
+BEGIN
+   ChkStack();
+
+   if (Node==Nil) return;
+
+   PrintDebSymbols_PrintNode(f,Node->Left);
+
+   if (Node->SymType==Space) PrintDebSymbols_PNode(f,Node);
+
+   PrintDebSymbols_PrintNode(f,Node->Right);
+END
+
+	void PrintDebSymbols(FILE *f)
+BEGIN
+   for (Space=0; Space<PCMax; Space++)
+    BEGIN
+     HWritten=False;
+     PrintDebSymbols_PrintNode(f,FirstSymbol);
+    END
 END
 
         static void PrintSymbolTree_PrintNode(SymbolPtr Node, Integer Shift)
@@ -2821,7 +2927,7 @@ BEGIN
    Neu=(PDefSymbol) malloc(sizeof(TDefSymbol));
    Neu->Next=FirstDefSymbol;
    Neu->SymName=strdup(Name);
-   Neu->Wert=*Value;
+   Neu->Wert=(*Value);
    FirstDefSymbol=Neu;
 END
 
@@ -2909,9 +3015,10 @@ BEGIN
       Lauf->Parent=MomSectionHandle;
       Lauf->Name=strdup(SName);
       Lauf->Next=Nil;
+      InitChunk(&(Lauf->Usage));
       if (Prev==Nil) FirstSection=Lauf; else Prev->Next=Lauf;
      END
-    else z=-2;
+    else z=(-2);
    return z;
 END
 
@@ -2920,12 +3027,32 @@ BEGIN
    PCToken Lauf=FirstSection;
    static char *Dummy="";
 
-   if (Handle==-1) return Dummy;
+   if (Handle==(-1)) return Dummy;
    while ((Handle>0) AND (Lauf!=Nil))
     BEGIN
      Lauf=Lauf->Next; Handle--;
     END
    return (Lauf==Nil)?Dummy:Lauf->Name;
+END
+
+        void SetMomSection(LongInt Handle)
+BEGIN
+   LongInt z;
+
+   MomSectionHandle=Handle;
+   if (Handle<0) MomSection=Nil;
+   else
+    BEGIN
+     MomSection=FirstSection;
+     for (z=1; z<=Handle; z++)
+      if (MomSection!=Nil) MomSection=MomSection->Next;
+    END
+END
+
+        void AddSectionUsage(LongInt Start,LongInt Length)
+BEGIN
+   if ((ActPC!=SegCode) OR (MomSection==Nil)) return;
+   AddChunk(&(MomSection->Usage),Start,Length,False);
 END
 
         static void PrintSectionList_PSection(LongInt Handle, Integer Indent)
@@ -2934,8 +3061,8 @@ BEGIN
    LongInt Cnt;
    String h;
 
-   /**ChkStack;**/
-   if (Handle!=-1) 
+   ChkStack();
+   if (Handle!=(-1)) 
     BEGIN
      strmaxcpy(h,Blanks(Indent<<1),255); 
      strmaxcat(h,GetSectionName(Handle),255);
@@ -2960,6 +3087,28 @@ BEGIN
    PrintSectionList_PSection(-1,0);
 END
 
+        void PrintDebSections(FILE *f)
+BEGIN
+   PCToken Lauf;
+   LongInt Cnt,z,l,s;
+
+   Lauf=FirstSection; Cnt=0;
+   while (Lauf!=Nil)
+    BEGIN
+     fprintf(f,"\n"); ChkIO(10004);
+     fprintf(f,"Info for Section %d %s %d\n",Cnt,GetSectionName(Cnt),Lauf->Parent); ChkIO(10004);
+     for (z=0; z<Lauf->Usage.RealLen; z++)
+      BEGIN
+       l=Lauf->Usage.Chunks[z].Length;
+       s=Lauf->Usage.Chunks[z].Start;
+       fprintf(f,"%s",HexString(s,0)); ChkIO(10004);
+       if (l==1) fprintf(f,"\n"); else fprintf(f,"-%s\n",HexString(s+l-1,0)); ChkIO(10004);
+      END
+     Lauf=Lauf->Next;
+     Cnt++;
+    END
+END
+
         void ClearSectionList(void)
 BEGIN
    PCToken Tmp;
@@ -2968,6 +3117,7 @@ BEGIN
     BEGIN
      Tmp=FirstSection;
      free(Tmp->Name);
+     ClearChunk(&(Tmp->Usage));
      FirstSection=Tmp->Next; free(Tmp);
     END
 END
@@ -2992,7 +3142,7 @@ BEGIN
    strmaxcat(h,":",255);
    sprintf(h2,"%d",Node->LineNum); strmaxcat(h,h2,255);
    strmaxcat(h,"):",255);
-   if (Node->Attribute!=-1)
+   if (Node->Attribute!=(-1))
     BEGIN
      strmaxprep(h,"] ",255);
      strmaxprep(h,GetSectionName(Node->Attribute),255);
@@ -3109,7 +3259,7 @@ END
 
         void ClearLocStack()
 BEGIN
-   while (MomLocHandle!=-1) PopLocHandle();
+   while (MomLocHandle!=(-1)) PopLocHandle();
 END
 
 	void asmpars_init(void)

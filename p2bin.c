@@ -19,12 +19,16 @@
 #include "nls.h"
 #include "chunks.h"
 #include "decodecmd.h"
-#include "asmutils.h"
+#include "toolutils.h"
 
 #define BinSuffix ".bin"
 
 
-typedef void (*ProcessProc)(char *FileName, LongWord Offset);
+typedef void (*ProcessProc)(
+#ifdef __PROTOS__
+char *FileName, LongWord Offset
+#endif
+);
 
 
 static CMDProcessed ParProcessed;
@@ -49,7 +53,7 @@ static ChunkList UsedList;
 #include "tools.rsc"
 #include "p2bin.rsc"
 
-#ifndef DEBUG
+#ifdef DEBUG
 #define ChkIO(s) ChkIO_L(s,__LINE__)
 	static void ChkIO_L(char *s, int line)
 BEGIN
@@ -67,13 +71,13 @@ BEGIN
 END
 
 #define BufferSize 4096
+static Byte Buffer[BufferSize];
 
         static void OpenTarget(void)
 BEGIN
    LongWord Rest,Trans;
-   Byte Buffer[BufferSize];
 
-   TargFile=fopen(TargName,"w");
+   TargFile=fopen(TargName,OPENWRMODE);
    if (TargFile==Nil) ChkIO(TargName); 
    RealFileLen=((StopAdr-StartAdr+1)*MaxGran)/SizeDiv;
 
@@ -91,13 +95,12 @@ END
 	static void CloseTarget(void)
 BEGIN
    LongWord Sum,Rest,Trans,Real,z;
-   Byte Buffer[BufferSize];
 
    if (fclose(TargFile)==EOF) ChkIO(TargName);
 
    if (DoCheckSum)
     BEGIN
-     TargFile=fopen(TargName,"r+"); if (TargFile==Nil) ChkIO(TargName);
+     TargFile=fopen(TargName,OPENUPMODE); if (TargFile==Nil) ChkIO(TargName);
      Rest=FileSize(TargFile)-1;
      Sum=0;
      while (Rest!=0)
@@ -125,13 +128,12 @@ BEGIN
    LongWord InpStart,SumLen;
    Word InpLen,TransLen,ResLen;
    Boolean doit;
-   Byte Buffer[BufferSize];
    LongWord ErgStart,ErgStop,NextPos;
    Word ErgLen=0;
    LongInt z;
    Byte Gran;
 
-   SrcFile=fopen(FileName,"r");
+   SrcFile=fopen(FileName,OPENRDMODE);
    if (SrcFile==Nil) ChkIO(FileName);
 
    if (NOT Read2(SrcFile,&TestID)) ChkIO(FileName);
@@ -213,13 +215,13 @@ BEGIN
    if (fclose(SrcFile)==EOF) ChkIO(FileName);
 END
 
-	static void ProcessGroup(char *GroupName, ProcessProc Processor)
+	static void ProcessGroup(char *GroupName_O, ProcessProc Processor)
 BEGIN
 /**   s:SearchRec;**/
-   String /**Path,Name,**/Ext;
+   String /**Path,Name,**/Ext,GroupName;
    LongWord Offset;
 
-   strmaxcpy(Ext,GroupName,255);
+   strmaxcpy(GroupName,GroupName_O,255); strmaxcpy(Ext,GroupName,255);
    if (NOT RemoveOffset(GroupName,&Offset)) ParamError(False,Ext);
    AddSuffix(GroupName,Suffix);
 
@@ -244,7 +246,8 @@ BEGIN
    Word Length,TestID;
    LongWord Adr,EndAdr,NextPos;
 
-   f=fopen(FileName,"r"); if (f==Nil) ChkIO(FileName);
+   f=fopen(FileName,OPENRDMODE);
+   if (f==Nil) ChkIO(FileName);
 
    if (NOT Read2(f,&TestID)) ChkIO(FileName); 
    if (TestID!=FileMagic) FormatError(FileName,FormatInvHeaderMsg);
@@ -287,6 +290,8 @@ BEGIN
    char *p,Save;
    Boolean err;
 
+   if (Arg==Nil); /* satisfy some compilers */
+
    if (Negate)
     BEGIN
      StartAdr=0; StopAdr=0x7fff;
@@ -296,7 +301,7 @@ BEGIN
     BEGIN
      p=strchr(Arg,'-'); if (p==Nil) return CMDErr;
 
-     Save=*p; *p='\0'; 
+     Save=(*p); *p='\0'; 
      if ((StartAuto=(strcmp(Arg,"$")==0))) err=True;
      else StartAdr=ConstLongInt(Arg,&err);
      *p=Save;
@@ -322,6 +327,8 @@ BEGIN
 
    Integer z;
 
+   if (Negate); /* satisfy some compilers */
+
    if (*Arg=='\0')
     BEGIN
      SizeDiv=1; ANDEq=0; ANDMask=0;
@@ -346,12 +353,16 @@ END
 BEGIN
    Boolean err;
 
+   if (Negate); /* satisfy some compilers */
+
    FillVal=ConstLongInt(Arg,&err);
    if (NOT err) return CMDErr; else return CMDArg;
 END
 
 	static CMDResult CMD_CheckSum(Boolean Negate, char *Arg)
 BEGIN
+   if (Arg==Nil); /* satisfy some compilers */
+
    DoCheckSum=NOT Negate;
    return CMDOK;
 END
@@ -374,9 +385,9 @@ BEGIN
    nls_init();
    chunks_init();
    decodecmd_init();
-   asmutils_init();
+   toolutils_init();
 
-   /**NLS_Initialize;**/ WrCopyRight("P2BIN/C V1.41r5");
+   NLS_Initialize(); WrCopyRight("P2BIN/C V1.41r5");
 
    InitChunk(&UsedList);
 
@@ -416,11 +427,15 @@ BEGIN
    MaxGran=1;
    if ((StartAuto) OR (StopAuto))
     BEGIN
+#ifdef __STDC__
      if (StartAuto) StartAdr=0xffffffffu;
+#else
+     if (StartAuto) StartAdr=0xffffffff;
+#endif
      if (StopAuto) StopAdr=0;
      if (ProcessedEmpty(ParProcessed)) ProcessGroup(SrcName,MeasureFile);
      else for (z=1; z<=ParamCount; z++)
-      if (ParProcessed[z]) ProcessGroup(ParamStr[z],MeasureFile);
+       if (ParProcessed[z]) ProcessGroup(ParamStr[z],MeasureFile);
      if (StartAdr>StopAdr)
       BEGIN
        errno=0; printf("%s\n",ErrMsgAutoFailed); ChkIO(OutName); exit(1);

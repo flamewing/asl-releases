@@ -9,7 +9,9 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
+
 #include <ctype.h>
+#include <string.h>
 
 #include "bpemu.h"
 #include "stringutil.h"
@@ -17,6 +19,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 
 typedef struct
@@ -26,27 +29,31 @@ typedef struct
          } FixedOrder;
 
 
-#define ModNone -1
+#define ModNone (-1)
 #define ModAccA 0
-#define MModAccA (1 << ModAccA)     /* A */
+#define MModAccA (1 << ModAccA)            /* A */
 #define ModAccB 1
-#define MModAccB (1 << ModAccB)     /* B */
+#define MModAccB (1 << ModAccB)            /* B */
 #define ModReg 2
-#define MModReg (1 << ModReg)       /* Rn */
+#define MModReg (1 << ModReg)              /* Rn */
 #define ModPort 3
-#define MModPort (1 << ModPort)     /* Pn */
+#define MModPort (1 << ModPort)            /* Pn */
 #define ModAbs 4
-#define MModAbs (1 << ModAbs)       /* nnnn */
+#define MModAbs (1 << ModAbs)              /* nnnn */
 #define ModBRel 5
-#define MModBRel (1 << ModBRel)     /* nnnn(B) */
+#define MModBRel (1 << ModBRel)            /* nnnn(B) */
 #define ModSPRel 6
-#define MModSPRel (1 << ModSPRel)   /* nn(SP) */
+#define MModSPRel (1 << ModSPRel)          /* nn(SP) */
 #define ModIReg 7
-#define MModIReg (1 << ModIReg)     /* @Rn */
+#define MModIReg (1 << ModIReg)            /* @Rn */
 #define ModRegRel 8
-#define MModRegRel (1 << ModRegRel) /* nn(Rn) */
+#define MModRegRel (1 << ModRegRel)        /* nn(Rn) */
 #define ModImm 9
-#define MModImm (1 << ModImm)       /* #nn */
+#define MModImm (1 << ModImm)              /* #nn */
+#define ModImmBRel 10
+#define MModImmBRel (1 << ModImmBRel)      /* #nnnn(B) */
+#define ModImmRegRel 11
+#define MModImmRegRel (1 << ModImmRegRel) /* #nn(Rm) */
 
 #define FixedOrderCount 12
 #define Rel8OrderCount 18
@@ -61,7 +68,6 @@ static CPUVar CPU37010,CPU37020,CPU37030,CPU37040,CPU37050;
 
 static Byte OpSize;
 static ShortInt AdrType;
-static Byte AdrCnt;
 static Byte AdrVals[2];
 static Boolean AddrRel;
 
@@ -74,8 +80,6 @@ static FixedOrder *ABRegOrders;
 static FixedOrder *BitOrders;
 
 /****************************************************************************/
-
-static int InstrZ;
 
 	static void InitFixed(char *NName, Word NCode)
 BEGIN
@@ -188,9 +192,36 @@ BEGIN
     END
 END
 
+	static char *HasDisp(char *Asc)
+BEGIN
+   char *p;
+   Integer Lev;
+
+   if (Asc[strlen(Asc)-1]==')')
+    BEGIN
+     p=Asc+strlen(Asc)-2; Lev=0;
+     while ((p>=Asc) AND (Lev!=-1))
+      BEGIN
+       switch (*p)
+        BEGIN
+         case '(': Lev--; break;
+         case ')': Lev++; break;
+        END
+       if (Lev!=-1) p--;
+      END
+     if (p<Asc) 
+      BEGIN
+       WrXError(1300,Asc); return Nil;
+      END
+    END
+   else p=Nil;
+
+   return p;
+END
+
 	static void DecodeAdr(char *Asc, Word Mask)
 BEGIN
-   Integer HVal,Lev;
+   Integer HVal;
    char *p;
    Boolean OK;
 
@@ -219,26 +250,58 @@ BEGIN
       END
      else
       BEGIN
-       AdrCnt=2; AdrVals[0]=1; AdrVals[1]=0; AdrType=ModAbs;
+       AdrCnt=2; AdrVals[0]=0; AdrVals[1]=1; AdrType=ModAbs;
       END
      ChkAdr(Mask); return;
     END
 
    if (*Asc=='#')
     BEGIN
-     switch (OpSize)
+     strcpy(Asc,Asc+1);
+     p=HasDisp(Asc);
+     if (p==Nil)
       BEGIN
-       case 0:
-        AdrVals[0]=EvalIntExpression(Asc+1,Int8,&OK);
-        break;
-       case 1:
-	HVal=EvalIntExpression(Asc+1,Int16,&OK);
-	AdrVals[0]=Lo(HVal); AdrVals[1]=Hi(HVal);
-        break;
+       switch (OpSize)
+        BEGIN
+         case 0:
+          AdrVals[0]=EvalIntExpression(Asc,Int8,&OK);
+          break;
+         case 1:
+  	  HVal=EvalIntExpression(Asc,Int16,&OK);
+  	  AdrVals[0]=Hi(HVal); AdrVals[1]=Lo(HVal);
+          break;
+        END
+       if (OK)
+        BEGIN
+         AdrCnt=1+OpSize; AdrType=ModImm;
+        END
       END
-     if (OK)
+     else
       BEGIN
-       AdrCnt=1+OpSize; AdrType=ModImm;
+       *p='\0'; FirstPassUnknown=False;
+       HVal=EvalIntExpression(Asc,Int16,&OK);
+       if (OK)
+        BEGIN
+         *p='(';
+         if (strcasecmp(p,"(B)")==0)
+          BEGIN
+           AdrVals[0]=Hi(HVal); AdrVals[1]=Lo(HVal);
+           AdrCnt=2; AdrType=ModImmBRel;
+          END
+         else
+          BEGIN
+           if (FirstPassUnknown) HVal&=127;
+           if (ChkRange(HVal,-128,127))
+            BEGIN
+             AdrVals[0]=HVal & 0xff; AdrCnt=1;
+             AdrVals[1]=EvalIntExpression(Asc,UInt8,&OK);
+             if (OK)
+              BEGIN
+               AdrCnt=2; AdrType=ModImmRegRel;
+              END
+            END  
+          END 
+        END
       END
      ChkAdr(Mask); return;
     END
@@ -253,24 +316,7 @@ BEGIN
      ChkAdr(Mask); return;
     END
 
-   if (Asc[strlen(Asc)-1]==')')
-    BEGIN
-     p=Asc+strlen(Asc)-2; Lev=0;
-     while ((p>=Asc) AND (Lev!=-1))
-      BEGIN
-       switch (*p)
-        BEGIN
-         case '(': Lev--; break;
-         case ')': Lev++; break;
-        END
-       if (Lev!=-1) p--;
-      END
-     if (p<Asc) 
-      BEGIN
-       WrXError(1300,Asc); return;
-      END
-    END
-   else p=Nil;
+   p=HasDisp(Asc);
 
    if (p==Nil)
     BEGIN
@@ -287,7 +333,7 @@ BEGIN
       else
        BEGIN
 	if (AddrRel) HVal-=EProgCounter()+3;
-	AdrVals[0]=Lo(HVal); AdrVals[1]=Hi(HVal); AdrCnt=2;
+	AdrVals[0]=Hi(HVal); AdrVals[1]=Lo(HVal); AdrCnt=2;
 	AdrType=ModAbs;
        END
      ChkAdr(Mask); return;
@@ -304,7 +350,7 @@ BEGIN
        if (strcasecmp(p,"B")==0)
 	BEGIN
 	 if (AddrRel) HVal-=EProgCounter()+3;
-	 AdrVals[0]=Lo(HVal); AdrVals[1]=Hi(HVal); AdrCnt=2;
+	 AdrVals[0]=Hi(HVal); AdrVals[1]=Lo(HVal); AdrCnt=2;
 	 AdrType=ModBRel;
 	END
        else if (strcasecmp(p,"SP")==0)
@@ -351,7 +397,7 @@ BEGIN
 	BEGIN
 	 if ((strcasecmp(ArgStr[2],"A")==0) OR (strcasecmp(ArgStr[2],"B")==0))
 	  BEGIN
-	   Adr=*ArgStr[2]-'A'; OK=True;
+	   Adr=(*ArgStr[2])-'A'; OK=True;
 	  END
 	 else Adr=EvalIntExpression(ArgStr[2],Int16,&OK);
 	 if ((OK) AND (NOT FirstPassUnknown))
@@ -565,7 +611,7 @@ BEGIN
        if (AdrType!=ModNone)
 	BEGIN
 	 z=AdrVals[0];
-	 DecodeAdr(ArgStr[1],MModReg+MModImm+MModBRel+MModRegRel);
+	 DecodeAdr(ArgStr[1],MModReg+MModImm+MModImmBRel+MModImmRegRel);
 	 switch (AdrType)
           BEGIN
 	   case ModReg:
@@ -576,11 +622,11 @@ BEGIN
 	    BAsmCode[0]=0x88; memcpy(BAsmCode+1,AdrVals,2);
 	    BAsmCode[3]=z; CodeLen=4;
 	    break;
-	   case ModBRel:
+	   case ModImmBRel:
 	    BAsmCode[0]=0xa8; memcpy(BAsmCode+1,AdrVals,2);
 	    BAsmCode[3]=z; CodeLen=4;
 	    break;
-	   case ModRegRel:
+	   case ModImmRegRel:
 	    BAsmCode[0]=0xf4; BAsmCode[1]=0xe8;
 	    memcpy(BAsmCode+2,AdrVals,2); BAsmCode[4]=z;
 	    CodeLen=5;

@@ -23,6 +23,44 @@
 #include "codepseudo.h"
 
 
+        int FindInst(void *Field, int Size, int Count)
+BEGIN
+   char *cptr,**ptr;
+
+#ifdef OPT
+   int l=0,r=Count-1,m,res;
+
+   while (TRUE)
+    BEGIN
+     m=(l+r)>>1; cptr=((char *) Field)+(Size*m);
+     ptr=(char**) cptr;
+     res=strcmp(*ptr,OpPart);
+     if (res==0) return m;
+     else if (l==r) return -1;
+     else if (res<0)
+      BEGIN
+       if (r-l==1) return -1; else l=m;
+      END
+     else r=m;
+    END
+
+#else
+   int z,res;
+
+   cptr=Field;
+   for (z=0; z<Count; z++)
+    BEGIN
+     ptr=(char**) cptr;
+     res=strcmp(*ptr,OpPart);
+     if (res==0) return z;
+     if (res>0) return -1;
+     cptr+=Size;
+    END
+   return -1;
+#endif
+END      
+
+
 	Boolean IsIndirect(char *Asc)
 BEGIN
    Integer z,Level,l;
@@ -42,12 +80,18 @@ END
 
 
 static enum{DSNone,DSConstant,DSSpace} DSFlag;
-typedef Boolean (*TLayoutFunc)(char *Asc, Word *Cnt, Boolean Turn);
+typedef Boolean (*TLayoutFunc)(
+#ifdef __PROTOS__
+                               char *Asc, Word *Cnt, Boolean Turn
+#endif
+                                                                 );
 
 	static Boolean LayoutByte(char *Asc, Word *Cnt, Boolean Turn)
 BEGIN
    Boolean Result;
    TempResult t;
+
+   if (Turn);  /* satisfy some compilers */
 
    Result=False;
 
@@ -350,9 +394,9 @@ BEGIN
    Integer z,Depth,Fnd,ALen;
    String Asc,Part;
    Word Rep,SumCnt,ECnt,SInd;
-   Boolean OK,Hyp,Result;
+   Boolean OK,Hyp;
 
-   Result=False; strmaxcpy(Asc,Asc_O,255);
+   strmaxcpy(Asc,Asc_O,255);
 
    /* nach DUP suchen */
 
@@ -698,7 +742,7 @@ BEGIN
 END
 
 
-       static void EnterByte(Byte b)
+        static void EnterByte(Byte b)
 BEGIN
    if (((CodeLen&1)==1) AND (NOT BigEndian) AND (ListGran()!=1))
     BEGIN
@@ -733,6 +777,8 @@ static ONOFFRec ONOFFMoto16s[ONOFFMoto16Count]=
    TempResult t;
    Boolean OK,ValOK;
 
+   if (Turn); /* satisfy some compilers */
+ 
    if (OpSize<0) OpSize=1;
 
    if (CodeONOFF(ONOFFMoto16s,ONOFFMoto16Count)) return True;

@@ -1,7 +1,15 @@
 ;   83C552 processor definition file
 ;   ================================
 
-	if	MomPass=1
+; NOTE: 80c552 is not a predefined processor type in AS.
+; to use this file, add '-alias 80c552=8052' to the command line
+; or key file
+
+        if      MOMCPUNAME<>"80C552"
+         fatal   "80C552.INC: Falscher Prozessortyp, nur 80C552 erlaubt"
+        endif
+
+        if      MOMPASS=1
 	 message "80C552-Registerdefinitionen"
 	 message "(C) 1996 Alfred Arnold"
 	endif

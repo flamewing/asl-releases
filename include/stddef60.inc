@@ -1,13 +1,13 @@
                 save
-                listing off   ; kein Listing Åber diesen File
+                listing off   ; kein Listing ¸ber diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.40 - Datei STDDEF60.INC                                           *
 ;*   								            *
-;*   Sinn : enthÑlt Makrodefinitionen fÅr den PowerPC                       *
+;*   Sinn : enth‰lt Makrodefinitionen f¸r den PowerPC                       *
 ;* 									    *
-;*   letzte énderungen : 29. 5.1994                                         *
+;*   letzte ƒnderungen : 29. 5.1994                                         *
 ;*                       26.12.1994 PPC403-Erweiterungen                    *
 ;*                       28.12.1994 MPC505-Erweiterungen                    *
 ;*                                                                          *
@@ -17,14 +17,14 @@
 
 stddef60inc     equ     1
 
-                if      (MomCPU<>1537)&&(MomCPU<>24576)&&(MomCPU<>1027)&&(MomCPU<>1285)
+                if      (MOMCPU<>1537)&&(MOMCPU<>24576)&&(MOMCPU<>1027)&&(MOMCPU<>1285)
                  fatal  "Falscher Prozessortyp eingestellt: nur MPC601, MPC505, PPC403 oder RS6000 erlaubt!"
 		endif
 
 
-                if      MomPass=1
+                if      MOMPASS=1
                  message "PowerPC-Makro-Definitionen (C) 1994 Alfred Arnold"
-                 switch  MomCPU
+                 switch  MOMCPU
                  case    0x6000
                   message "Zielsystem RS6000"
                  case    0x601
@@ -39,17 +39,17 @@ stddef60inc     equ     1
 ;============================================================================
 ; Device-Control-Register
 
-__defdcr        macro   name,val,{NoExpand}
-name		equ	val
+__defdcr        macro   NAME,val,{NoExpand}
+NAME            equ     val
 mt{"NAME"}      macro      reg
-		mtdcr	name,reg
+                mtdcr   NAME,reg
                 endm
 mf{"NAME"}      macro      reg
-                mfdcr   reg,name
+                mfdcr   reg,NAME
                 endm
 		endm
 
-                if      MomCPU=0x403
+                if      MOMCPU=0x403
                  __defdcr BEAR,0x90     ; Adresse Busfehler
                  __defdcr BESR,0x91     ; Syndrom Busfehler
                  __defdcr BR0,0x80      ; Bank-Register 0..7
@@ -60,12 +60,12 @@ mf{"NAME"}      macro      reg
                  __defdcr BR5,0x85
                  __defdcr BR6,0x86
                  __defdcr BR7,0x87
-                 __defdcr DMACC0,0xc4   ; DMA KettenzÑhler (?)
+                 __defdcr DMACC0,0xc4   ; DMA Kettenz‰hler (?)
                  __defdcr DMACR0,0xc0   ; DMA Steuerregister Kanal 0..3
                  __defdcr DMACR1,0xc8
                  __defdcr DMACR2,0xd0
                  __defdcr DMACR3,0xd8
-                 __defdcr DMACT0,0xc1   ; DMA ZÑhlregister Kanal 0..3
+                 __defdcr DMACT0,0xc1   ; DMA Z‰hlregister Kanal 0..3
                  __defdcr DMACT1,0xc9
                  __defdcr DMACT2,0xd1
                  __defdcr DMACT3,0xd9
@@ -86,26 +86,26 @@ mf{"NAME"}      macro      reg
 ;============================================================================
 ; Special-Purpose-Register
 
-__defspr        macro   name,val,{NoExpand}
-name		equ	val
+__defspr        macro   NAME,val,{NoExpand}
+NAME            equ     val
 mt{"NAME"}      macro      reg
-                mtspr   name,reg
+                mtspr   NAME,reg
                 endm
 mf{"NAME"}      macro      reg
-                mfspr   reg,name
+                mfspr   reg,NAME
                 endm
 		endm
 
                 __defspr XER,0x001      ; Integer Exception Register
-                __defspr LR,0x008       ; RÅcksprungadresse
-                __defspr CTR,0x009      ; ZÑhlregister
+                __defspr LR,0x008       ; R¸cksprungadresse
+                __defspr CTR,0x009      ; Z‰hlregister
                 __defspr SRR0,0x01a     ; Save/Restore-Register
                 __defspr SRR1,0x01b
                 __defspr SPRG0,0x110    ; Special Purpose-Register
                 __defspr SPRG1,0x111
                 __defspr SPRG2,0x112
                 __defspr SPRG3,0x113
-                switch MomCPU
+                switch MOMCPU
                 case 0x403
                  __defspr DAC1,0x3f6    ; Datenadresse Vergleichsregister
                  __defspr DAC2,0x3f7
@@ -114,7 +114,7 @@ mf{"NAME"}      macro      reg
                  __defspr DCCR,0x3fa    ; Steuerung Daten-Cache
                  __defspr DEAR,0x3d5    ; Exception-Adresse Datenzugriff
                  __defspr ESR,0x3d4     ; Exception-Syndrom Datenzugriff
-                 __defspr EVPR,0x3d6    ; Exception-Vektor-PrÑfix
+                 __defspr EVPR,0x3d6    ; Exception-Vektor-Pr‰fix
                  __defspr IAC1,0x3f4    ; Codeadresse Vergleichsregister
                  __defspr IAC2,0x3f5
                  __defspr ICCR,0x3fb    ; Steuerung Code-Cache
@@ -135,7 +135,7 @@ mf{"NAME"}      macro      reg
                  __defspr TBU,269
                  __defspr DSISR,18      ; zeigt Grund von Alignment-Exceptions an
                  __defspr DAR,19        ; Fehlerhafte Datenadresse nach Exception
-                 __defspr DEC,22        ; zÑhlt mit 1 MHz
+                 __defspr DEC,22        ; z‰hlt mit 1 MHz
                  __defspr EIE,80        ; Freigabe externer Interrupts
                  __defspr EID,81        ; Sperre externer Interrupts
                  __defspr NRE,82        ; Non-recoverable Exception
@@ -143,7 +143,7 @@ mf{"NAME"}      macro      reg
                  __defspr TBU_S,285
                  __defspr PVR,287       ; Prozessorversion
                  __defspr ICCST,560     ; Steuerung & Status Instruktionscache
-                 __defspr ICADR,561     ; Instruktionscache Adre·register
+                 __defspr ICADR,561     ; Instruktionscache Adreﬂregister
                  __defspr ICDAT,562     ; Instruktionscache Datenregister
                  __defspr FPECR,1022    ; Gleitkommaexception
                  __defspr CMPA,144      ; Vergleicherwert A..D
@@ -152,7 +152,7 @@ mf{"NAME"}      macro      reg
                  __defspr CMPD,147
                  __defspr ECR,148       ; Grund der Debug-Exception
                  __defspr DER,149       ; Freigabe Debug-Features
-                 __defspr COUNTA,150    ; Breakpoint ZÑhler
+                 __defspr COUNTA,150    ; Breakpoint Z‰hler
                  __defspr COUNTB,151
                  __defspr CMPE,152      ; Vergleicherwert E..G
                  __defspr CMPF,153
@@ -165,7 +165,7 @@ mf{"NAME"}      macro      reg
                  __defspr DPDR,630      ; Development-Port Daten
                  __defspr DPIR,631      ;     "        "   Instruktionen
                 case 0x601
-                 __defspr RTCU,0x004    ; ZÑhler
+                 __defspr RTCU,0x004    ; Z‰hler
                  __defspr RTCL,0x005
                  __defspr DEC,0x006
                  __defspr DSISR,0x012
@@ -187,19 +187,19 @@ mf{"NAME"}      macro      reg
                  __defspr HID5,0x3f5
                  __defspr HID15,0x3ff
                 case 0x6000
-                 __defspr MQ,0x000      ; obere HÑlfte Divident/Produkt
+                 __defspr MQ,0x000      ; obere H‰lfte Divident/Produkt
                 endcase
 
 ;============================================================================
 ; serieller Port PPC403:
 
-                if      MomCPU=0x403
+                if      MOMCPU=0x403
 spls             equ     0x40000000     ; Leitungsstatus
 sphs             equ     0x40000002     ; Status Handshake-Leitungen
 brdh             equ     0x40000004     ; Baudratenteiler
 brdl             equ     0x40000005
 spctl            equ     0x40000006     ; Steuerregister
-sprc             equ     0x40000007     ; Kommandoregister EmpfÑnger
+sprc             equ     0x40000007     ; Kommandoregister Empf‰nger
 sptc             equ     0x40000008     ; Kommandoregister Sender
 sprb             equ     0x40000009     ; Sende/Empfangspuffer
 sptb             equ     sprb
@@ -209,15 +209,15 @@ sptb             equ     sprb
 ; SIU MPC505:
 ; erinnert irgendwie an die vom 6833x...
 
-                if      MomCPU=0x505
+                if      MOMCPU=0x505
 siumcr           equ     0x8007fc00     ; Basissteuerregister
 siutest1         equ     0x8007fc04
 memmap           equ     0x8007fc20     ; Speicherlayout
 specaddr         equ     0x8007fc24     ; erlauben Sperren spekulativer
-specmask         equ     0x8007fc28     ; LadevorgÑnge
+specmask         equ     0x8007fc28     ; Ladevorg‰nge
 termstat         equ     0x8007fc2c
 picsr            equ     0x8007fc40     ; Steuerung periodische Interrupts
-pit              equ     0x8007fc44     ; ZÑhlwert periodischer Interrupt-Timer
+pit              equ     0x8007fc44     ; Z‰hlwert periodischer Interrupt-Timer
 bmcr             equ     0x8007fc48     ; Steuerung Bus-Monitor
 rsr              equ     0x8007fc4c     ; Reset-Status
 sccr             equ     0x8007fc50     ; Steuerung Systemtakt
@@ -269,7 +269,7 @@ csor11           equ     csbase+0x94
 ;----------------------------------------------------------------------------
 ; Peripheral Control Unit MPC505:
 
-                if      MomCPU=0x505
+                if      MOMCPU=0x505
 pcubase          equ     0x8007ef80
 pcumcr           equ     pcubase+0x00   ; Basiskonfiguration
 tstmsra          equ     pcubase+0x10
@@ -279,11 +279,11 @@ tstreps          equ     tstcntrab
 tstcreg1         equ     pcubase+0x18
 tstcreg2         equ     tstcreg1
 tstdreg          equ     pcubase+0x1c
-irqpend          equ     pcubase+0x20   ; auszufÅhrende Interrupts
-irqand           equ     pcubase+0x24   ; freigegebene&auszufÅhrende Interrupts
+irqpend          equ     pcubase+0x20   ; auszuf¸hrende Interrupts
+irqand           equ     pcubase+0x24   ; freigegebene&auszuf¸hrende Interrupts
 irqenable        equ     pcubase+0x28   ; freigegebene Interrupts
 pitqil           equ     pcubase+0x2c   ; Interruptebene PortQ/PIT
-swsr             equ     pcubase+0x40   ; Reload Watchdog auslîsen
+swsr             equ     pcubase+0x40   ; Reload Watchdog auslˆsen
 swcr             equ     pcubase+0x44   ; Steuerung Watchdog
 swtc             equ     swcr
 swr              equ     pcubase+0x48
@@ -294,53 +294,53 @@ pqpar            equ     pcubase+0x54   ; Pinzuordnung PortQ
 ;----------------------------------------------------------------------------
 ; SRAM-Modul MPC505:
 
-                if      MomCPU=0x505
+                if      MOMCPU=0x505
 srammcr          equ     0x8007f00      ; Basiskonfiguration SRAM
                 endif
 
 ;============================================================================
 ; SUBI geht sowohl mit 2 als auch 3 Argumenten
 
-subi            macro   dest,src,val
+subi            macro   dest,src,VAL
                 if      "VAL"=""
                  addi   dest,dest,-src
                 elseif
-                 addi   dest,src,-val
+                 addi   dest,src,-VAL
                 endif
                 endm
 
 ;----------------------------------------------------------------------------
 ; Vergleiche
 
-cmpw            macro   cr,reg1,reg2
+cmpw            macro   cr,REG1,REG2
                 if      "REG2"=""
-                cmp     0,0,cr,reg1
+                cmp     0,0,cr,REG1
                 elseif
-                cmp     cr,0,reg1,reg2
+                cmp     cr,0,REG1,REG2
                 endif
                 endm
 
-cmpwi           macro   cr,reg1,imm
+cmpwi           macro   cr,REG1,IMM
                 if      "IMM"=""
-                cmpi    0,0,cr,imm
+                cmpi    0,0,cr,IMM
                 elseif
-                cmpi    cr,0,reg1,imm
+                cmpi    cr,0,REG1,imm
                 endif
                 endm
 
-cmplw           macro   cr,reg1,reg2
+cmplw           macro   cr,REG1,REG2
                 if      "REG2"=""
-                cmpl    0,0,cr,reg1
+                cmpl    0,0,cr,REG1
                 elseif
-                cmpl    cr,0,reg1,reg2
+                cmpl    cr,0,REG1,REG2
                 endif
                 endm
 
-cmplwi          macro   cr,reg1,imm
+cmplwi          macro   cr,REG1,IMM
                 if      "IMM"=""
-                cmpli   0,0,cr,imm
+                cmpli   0,0,cr,IMM
                 elseif
-                cmpli   cr,0,reg1,imm
+                cmpli   cr,0,REG1,IMM
                 endif
                 endm
 
@@ -362,19 +362,19 @@ crmove          macro   bx,by
 ;----------------------------------------------------------------------------
 ; erweiterte Befehle Logik
 
-not             macro   dest,src
+not             macro   dest,SRC
                 if      "SRC"=""
                  nor    dest,dest
                 elseif
-                 nor    dest,src,src
+                 nor    dest,SRC,SRC
                 endif
                 endm
 
-not.            macro   dest,src
+not.            macro   dest,SRC
                 if      "SRC"=""
                  nor.   dest,dest
                 elseif
-                 nor.   dest,src,src
+                 nor.   dest,SRC,SRC
                 endif
                 endm
 
@@ -407,7 +407,7 @@ insrwi.         macro   ra,rs,n,b
                 rlwimi. ra,rs,32-b-n,b,b+n-1
                 endm
 
-__defins1       macro   name,par1,par2,par3,{NoExpand}
+__defins1       macro   NAME,par1,par2,par3,{NoExpand}
 {"NAME"}        macro   ra,rs,n
                 rlwinm  ra,rs,par1,par2,par3
                 endm
@@ -416,7 +416,7 @@ __defins1       macro   name,par1,par2,par3,{NoExpand}
                 endm
                 endm
 
-__defins2       macro   name,par1,par2,par3,{NoExpand}
+__defins2       macro   NAME,par1,par2,par3,{NoExpand}
 {"NAME"}        macro   ra,rs,b,n
                 rlwinm  ra,rs,par1,par2,par3
                 endm
@@ -443,9 +443,9 @@ rotlw.          macro   ra,rs,rb
                 endm
 
 ;----------------------------------------------------------------------------
-; vereinfachte SprÅnge
+; vereinfachte Spr¸nge
 
-__defjmp1       macro   name,m1,m2,{NoExpand}
+__defjmp1       macro   NAME,m1,m2,{NoExpand}
 {"NAME"}        macro   adr
                 bc      m1,m2,adr
                 endm
@@ -463,7 +463,7 @@ __defjmp1       macro   name,m1,m2,{NoExpand}
                 __defjmp1 bdnz,16,0
                 __defjmp1 bdz,18,0
 
-__defjmp2       macro   name,m1,{NoExpand}
+__defjmp2       macro   NAME,m1,{NoExpand}
 {"NAME"}        macro   cr,adr
                 bc      m1,cr,adr
                 endm
@@ -485,61 +485,61 @@ __defjmp2       macro   name,m1,{NoExpand}
                 __defjmp2 bf,4
                 __defjmp2 bt,12
 
-__defjmp3       macro   name,mask,ofs,{NoExpand}
-{"NAME"}        macro   cr,adr
+__defjmp3       macro   NAME,mask,ofs,{NoExpand}
+{"NAME"}        macro   cr,ADR
                 if      "ADR"=""
                  bc      mask,ofs,cr
                 elseif
                  bc      mask,cr*4+ofs,adr
                 endif
                 endm
-{"NAME"}a       macro   cr,adr
+{"NAME"}a       macro   cr,ADR
                 if      "ADR"=""
                  bca     mask,ofs,cr
                 elseif
                  bca     mask,cr*4+ofs,adr
                 endif
                 endm
-{"NAME"}l       macro   cr,adr
+{"NAME"}l       macro   cr,ADR
                 if      "ADR"=""
                  bcl     mask,ofs,cr
                 elseif
                  bcl     mask,cr*4+ofs,adr
                 endif
                 endm
-{"NAME"}la      macro   cr,adr
+{"NAME"}la      macro   cr,ADR
                 if      "ADR"=""
                  bcla    mask,ofs,cr
                 elseif
                  bcla    mask,cr*4+ofs,adr
                 endif
                 endm
-{"NAME"}ctr     macro   cr
+{"NAME"}ctr     macro   CR
                 if      "CR"=""
                  bcctr   mask,ofs
                 elseif
-                 bc      mask,cr*4+ofs
+                 bc      mask,CR*4+ofs
                 endif
                 endm
-{"NAME"}ctrl    macro   cr
+{"NAME"}ctrl    macro   CR
                 if      "CR"=""
                  bcl     mask,ofs
                 elseif
-                 bcl     mask,cr*4+ofs
+                 bcl     mask,CR*4+ofs
                 endif
                 endm
-{"NAME"}lr      macro   cr
+{"NAME"}lr      macro   CR
                 if      "CR"=""
                 bclr    mask,ofs
                 elseif
-                bclr    mask,4*cr+ofs
+                bclr    mask,4*CR+ofs
                 endif
                 endm
-{"NAME"}lrl     macro   cr
+{"NAME"}lrl     macro   CR
                 if      "CR"=""
                 bclrl   mask,ofs
                 elseif
-                bclrl   mask,4*cr+ofs
+                bclrl   mask,4*CR+ofs
                 endif
                 endm
                 endm
@@ -564,7 +564,7 @@ bctrl           macro
                 bcctrl  20,0
                 endm
 
-__defjmp4       macro   name,mask,{NoExpand}
+__defjmp4       macro   NAME,mask,{NoExpand}
 {"NAME"}        macro   cr
                 bcctr   mask,cr
                 endm
@@ -576,7 +576,7 @@ __defjmp4       macro   name,mask,{NoExpand}
                 __defjmp4 bfctr,4
                 __defjmp4 btctr,12
 
-__defjmp6       macro   name,mask,bit,{NoExpand}
+__defjmp6       macro   NAME,mask,bit,{NoExpand}
 {"NAME"}        macro
                 bclr    mask,bit
                 endm
@@ -589,7 +589,7 @@ __defjmp6       macro   name,mask,bit,{NoExpand}
                 __defjmp6 bdnzlr,16,0
                 __defjmp6 bdzlr,18,0
 
-__defjmp7       macro   name,mask,{NoExpand}
+__defjmp7       macro   NAME,mask,{NoExpand}
 {"NAME"}        macro   cr
                 bclr    mask,cr
                 endm
@@ -612,7 +612,7 @@ trap            macro   ra,rb
                 tw      31,ra,rb
                 endm
 
-__deftrap       macro   name,mask,{NoExpand}
+__deftrap       macro   NAME,mask,{NoExpand}
 {"NAME"}        macro   ra,rb
                 tw      mask,ra,rb
                 endm

@@ -13,11 +13,13 @@
 #include <ctype.h>
 
 #include "bpemu.h"
+#include "stringutil.h"
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -52,8 +54,6 @@ static FixedOrder *FOrders;
 static CPUVar CPU17C42;
 
 /*---------------------------------------------------------------------------*/
-
-static LongInt InstrZ;
 
 	static void AddFixed(char *NName, Word NCode)
 BEGIN
@@ -196,7 +196,7 @@ BEGIN
 
    if (Memo("DATA"))
     BEGIN
-     MaxV=(ActPC==SegCode)?65535:255; MinV=-((MaxV+1) >> 1);
+     MaxV=(ActPC==SegCode)?65535:255; MinV=(-((MaxV+1) >> 1));
      if (ArgCnt==0) WrError(1110);
      else
       BEGIN

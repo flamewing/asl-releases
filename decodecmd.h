@@ -9,8 +9,19 @@
 /*****************************************************************************/
 
 typedef enum {CMDErr,CMDFile,CMDOK,CMDArg} CMDResult;
-typedef CMDResult (*CMDCallback)(Boolean NegFlag, char *Arg);
-typedef void (*CMDErrCallback)(Boolean InEnv, char *Arg);
+
+typedef CMDResult (*CMDCallback)(
+#ifdef __PROTOS__
+Boolean NegFlag, char *Arg
+#endif
+);
+
+typedef void (*CMDErrCallback)
+(
+#ifdef __PROTOS__
+Boolean InEnv, char *Arg
+#endif
+);
 
 typedef struct
          {

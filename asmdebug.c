@@ -17,7 +17,7 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
-#include "filenums.h"
+#include "asmfnums.h"
 
 #include "asmdebug.h"
 
@@ -105,7 +105,7 @@ BEGIN
    strmaxcpy(MAPName,SourceFile,255); KillSuffix(MAPName); AddSuffix(MAPName,MapSuffix);
    MAPFile=fopen(MAPName,"w"); if (MAPFile==Nil) ChkIO(10001);
 
-   Run=LineInfoRoot; ActSeg=-1; ActFile=-1; ModZ=0;
+   Run=LineInfoRoot; ActSeg=(-1); ActFile=(-1); ModZ=0;
    while (Run!=Nil)
     BEGIN
      if (Run->Contents.Space!=ActSeg)
@@ -117,11 +117,11 @@ BEGIN
         END
        ModZ=0;
        errno=0; fprintf(MAPFile,"Segment %s\n",SegNames[ActSeg]); ChkIO(10004);
-       ActFile=-1;
+       ActFile=(-1);
       END
      if (Run->Contents.FileName!=ActFile)
       BEGIN
-       ActFile=Run->Contents.FileName,255;
+       ActFile=Run->Contents.FileName;
        if (ModZ!=0)
         BEGIN
          errno=0; fprintf(MAPFile,"\n"); ChkIO(10004);
@@ -142,6 +142,10 @@ BEGIN
     BEGIN
      errno=0; fprintf(MAPFile,"\n"); ChkIO(10004);
     END
+
+   PrintDebSymbols(MAPFile);
+
+   PrintDebSections(MAPFile);
 
    fclose(MAPFile);
 END

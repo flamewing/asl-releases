@@ -9,6 +9,9 @@
 /*           21. 1.1997 Warnung nicht bitadressierbare Speicherstelle        */
 /*           22. 1.1997 Fehler/Warnungen fuer Stacks                         */
 /*            1. 2.1997 Warnung wegen NUL-Zeichen                            */
+/*           29. 3.1997 Kommandozeilenoption g                               */
+/*           30. 5.1997 Warnung wg. inkorrektem Listing                      */
+/*           12. 7.1997 Kommandozeilenoption Y                               */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -208,6 +211,7 @@
 #define InfoMessAssLines    " Zeilen Quelltext"
 #define InfoMessPassCnt     " Durchlauf"
 #define InfoMessPPassCnt    " Durchl"CH_ae"ufe"
+#define InfoMessNoPass      "        zus"CH_ae"tzliche erforderliche Durchl"CH_ae"ufe wegen Fehlern nicht\n        durchgef"CH_ue"hrt, Listing m"CH_oe"glicherweise inkorrekt"
 #define InfoMessMacAssLine  " Zeile inkl. Makroexpansionen"
 #define InfoMessMacAssLines " Zeilen inkl. Makroexpansionen"
 #define InfoMessWarnCnt     " Warnung"
@@ -225,7 +229,7 @@
 #ifdef MAIN
 #define InfoMessHead1      "Aufruf : "
 #define InfoMessHead2      " [Optionen] [Datei] [Optionen] ..."
-#define InfoMessHelpCnt    30
+#define InfoMessHelpCnt    32
 static char *InfoMessHelp[InfoMessHelpCnt]=
 		  {"--------",
 		   "",
@@ -244,10 +248,12 @@ static char *InfoMessHelp[InfoMessHelpCnt]=
 		   "            !0..!4 f"CH_ue"r Standardhandles",
 		   "            Default <Quelldatei>.LOG",
                    "-r : Meldungen erzeugen, falls zus"CH_ae"tzlicher Pass erforderlich",
+                   "-Y : Sprungfehlerunterdr"CH_ue"ckung (siehe Anleitung)",
                    "-w : Warnungen unterdr"CH_ue"cken           +G : Code-Erzeugung unterdr"CH_ue"cken",
                    "-s : Sektionsliste erzeugen           -t : Listing-Teile ein/ausblenden",
 		   "-u : Belegungsliste erzeugen          -C : Querverweisliste erzeugen",
                    "-I : Include-Verschachtelungsliste ausgeben",
+                   "-g : Debug-Informationen schreiben",
 		   "-A : kompaktere Symbolablage",
 		   "-U : Case-sensitiv arbeiten",
 		   "-x : erweiterte Fehlermeldungen       -n : Fehlermeldungen mit Nummer",

@@ -19,6 +19,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 typedef struct
          {
@@ -66,7 +67,7 @@ static char **DivOrders;
 static char **BJmpOrders;
 static char **MulOrders;
 
-static void (*SaveInitProc)(void);
+static SimpProc SaveInitProc;
 static LongInt DPPAssumes[DPPCount];
 static IntType MemInt,MemInt2;
 static Byte OpSize;
@@ -81,9 +82,6 @@ static Word MemPage;
 static Boolean ExtSFRs;
 
 /*-------------------------------------------------------------------------*/
-
-static int InstrZ;
-
 
 	static void AddFixed(char *NName, CPUVar NMin, Word NCode1, Word NCode2)
 BEGIN
@@ -170,7 +168,7 @@ BEGIN
 
    DivOrders=(char **) malloc(sizeof(char *)*DivOrderCount); InstrZ=0;
    DivOrders[InstrZ++]="DIV";  DivOrders[InstrZ++]="DIVU";
-   DivOrders[InstrZ++]="DIVL"; DivOrders[InstrZ++]="DIVUL";
+   DivOrders[InstrZ++]="DIVL"; DivOrders[InstrZ++]="DIVLU";
 
    BJmpOrders=(char **) malloc(sizeof(char *)*BJmpOrderCount);  InstrZ=0;
    BJmpOrders[InstrZ++]="JB";  BJmpOrders[InstrZ++]="JNB";
@@ -196,7 +194,7 @@ END
 
 /*-------------------------------------------------------------------------*/
 
-#define ModNone -1
+#define ModNone (-1)
 #define ModReg 0
 #define MModReg (1 << ModReg)
 #define ModImm 1
@@ -216,7 +214,7 @@ END
 #define ModLAbs 8
 #define MModLAbs (1 << ModLAbs)
 
-static Byte AdrCnt,AdrMode;
+static Byte AdrMode;
 static Byte AdrVals[2];
 static ShortInt AdrType;
 
@@ -479,7 +477,7 @@ BEGIN
        if (AdrMode==0xff) DecideAbsolute(InCode,DispAcc,Mask,Dest);
        else if (DispAcc==0) AdrType=ModIReg;
        else if (DispAcc>0xffff) WrError(1320);
-       else if (DispAcc<-0x8000) WrError(1315);
+       else if (DispAcc<-0x8000l) WrError(1315);
        else
 	BEGIN
 	 AdrVals[0]=Lo(DispAcc); AdrVals[1]=Hi(DispAcc);
@@ -1626,7 +1624,7 @@ BEGIN
     END
    N_CPChanged=False; N_SPChanged=False;
 
-   MemMode=MemModeStd; ExtSFRs=False; ExtCounter=-1;
+   MemMode=MemModeStd; ExtSFRs=False; ExtCounter=(-1);
 END
 
 	static Boolean ChkPC_166(void)

@@ -10,11 +10,14 @@
 
 #include "stdinc.h"
 
+#include <string.h>
+
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 
 typedef struct
@@ -41,9 +44,6 @@ static FixedOrder *FixedOrders;
 static ConstOrder *ConstOrders;
 
 /*---------------------------------------------------------------------------*/
-
-static int InstrZ;
-
 
 	static void AddFixed(char *NName, Word NCode)
 BEGIN
@@ -375,11 +375,6 @@ BEGIN
    return (Memo("SFR"));
 END
 
-        static void InternSymbol_4500(char *Asc, TempResult *Erg)
-BEGIN
-   Erg->Typ=TempNone;
-END
-
         static void SwitchFrom_4500(void)
 BEGIN
    DeinitFields();
@@ -397,7 +392,7 @@ BEGIN
    Grans[SegData ]=1; ListGrans[SegData ]=1; SegInits[SegCode ]=0;
 
    MakeCode=MakeCode_4500; ChkPC=ChkPC_4500; IsDef=IsDef_4500;
-   SwitchFrom=SwitchFrom_4500; InternSymbol=InternSymbol_4500;
+   SwitchFrom=SwitchFrom_4500;
 
    InitFields();
 END

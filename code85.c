@@ -19,6 +19,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 /*--------------------------------------------------------------------------------------------------*/
 
@@ -49,8 +50,6 @@ static CPUVar CPU8080,CPU8085;
 
 /*--------------------------------------------------------------------------------------------------------*/
 
-static int InstrZ;
-
 	static void AddFixed(char *NName, Boolean NMay, Byte NCode)
 BEGIN
    if (InstrZ>=FixedOrderCnt) exit(255);
@@ -67,14 +66,14 @@ BEGIN
 END
 
         static void AddOp8(char *NName, Byte NCode)
-BEGIN                       
+BEGIN
    if (InstrZ>=Op8OrderCnt) exit(255);
    Op8Orders[InstrZ].Name=NName;
    Op8Orders[InstrZ++].Code=NCode;
 END                         
 
         static void AddALU(char *NName, Byte NCode)
-BEGIN                  
+BEGIN
    if (InstrZ>=ALUOrderCnt) exit(255);
    ALUOrders[InstrZ].Name=NName;
    ALUOrders[InstrZ++].Code=NCode;

@@ -1,6 +1,6 @@
 # -------------------------------------------------------------------------
 # choose your compiler (must be ANSI-compliant!) and linker command, plus
-# any addionally needed flags
+# any additionally needed flags
 
 CC = gcc
 LD = gcc
@@ -10,10 +10,12 @@ LDFLAGS =
 #            |||||
 # adapt this to your target cpu (386/486 or higher)
 # -------------------------------------------------------------------------
-# directories where binaries and includes should go during installation
+# directories where binaries, includes, and manpages should go during
+# installation
 
 BINDIR = /usr/local/bin
 INCDIR = /usr/local/include/asl
+MANDIR = /usr/local/man
 
 # -------------------------------------------------------------------------
 # language AS will speak to you

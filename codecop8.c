@@ -13,13 +13,15 @@
 #include <string.h>
 
 #include "bpemu.h"
+#include "stringutil.h"
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
-#define ModNone -1
+#define ModNone (-1)
 #define ModAcc 0
 #define MModAcc (1 << ModAcc)
 #define ModBInd 1
@@ -66,8 +68,6 @@ static Boolean BigFlag;
 
 /*---------------------------------------------------------------------------*/
 
-static LongInt InstrZ;
-
         static void AddFixed(char *NName, Byte NCode)
 BEGIN
    if (InstrZ>=FixedOrderCnt) exit(255);
@@ -97,7 +97,6 @@ BEGIN
 END
 
         static void InitFields(void)
-
 BEGIN
    FixedOrders=(FixedOrder *) malloc(FixedOrderCnt*sizeof(FixedOrder)); InstrZ=0;
    AddFixed("LAID" ,0xa4);  AddFixed("SC"   ,0xa1);  AddFixed("RC"   ,0xa0);

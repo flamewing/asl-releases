@@ -21,6 +21,16 @@
 #define CH_sz "\341"
 #endif
 
+#ifdef CHARSET_IBM850
+#define CH_ae "\204"
+#define CH_oe "\224"
+#define CH_ue "\201"
+#define CH_Ae "\216"
+#define CH_Oe "\231"
+#define CH_Ue "\232"
+#define CH_sz "\341"
+#endif
+
 #ifdef CHARSET_ASCII7
 #define CH_ae "ae"
 #define CH_oe "oe"

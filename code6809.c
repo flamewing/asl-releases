@@ -20,6 +20,7 @@
 #include "asmpars.h"
 #include "asmsub.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 typedef struct
          {
@@ -53,7 +54,7 @@ typedef struct
           CPUVar MinCPU;
          } ALUOrder;
 
-#define ModNone -1
+#define ModNone (-1)
 #define ModImm 1
 #define ModDir 2
 #define ModInd 3
@@ -79,7 +80,6 @@ static Byte StackRegCodes[StackRegCnt]=
 static char *FlagChars="CVZNIHFE";
 
 static ShortInt AdrMode;
-static Byte AdrCnt;
 static Byte AdrVals[5];
 static Byte OpSize;
 static Boolean ExtFlag;
@@ -96,14 +96,12 @@ static BaseOrder *ImmOrders;
 static BaseOrder *StackOrders;
 static char **BitOrders;
 
-static void (*SaveInitProc)(void);
+static SimpProc SaveInitProc;
 
 static CPUVar CPU6809,CPU6309;
 
 /*-------------------------------------------------------------------------*/
 /* Erzeugung/Aufloesung Codetabellen*/
-
-static int InstrZ;
 
    	static void AddFixed(char *NName, Word NCode, CPUVar NCPU)
 BEGIN
@@ -172,7 +170,7 @@ BEGIN
    StackOrders[InstrZ++].MinCPU=NCPU;
 END
 
-	static void InitFields()
+	static void InitFields(void)
 BEGIN
    FixedOrders=(BaseOrder *) malloc(sizeof(BaseOrder)*FixedOrderCnt); InstrZ=0;
    AddFixed("NOP"  ,0x0012,CPU6809); AddFixed("SYNC" ,0x0013,CPU6809);
@@ -516,7 +514,7 @@ BEGIN
 
    if ((ArgCnt>=1) AND (ArgCnt<=2) AND (strlen(LAsc)==2) AND (LAsc[1]=='+'))
     BEGIN
-     temp[0]=*LAsc; temp[1]='\0';
+     temp[0]=(*LAsc); temp[1]='\0';
      if (CodeReg(temp,&EReg))
       BEGIN
        if ((ArgCnt==2) AND (*Asc!='\0')) WrError(1350);
@@ -531,7 +529,7 @@ BEGIN
 
    if ((ArgCnt>=1) AND (ArgCnt<=2) AND (strlen(LAsc)==3) AND (strncmp(LAsc+1,"++",2)==0))
     BEGIN
-     temp[0]=*LAsc; temp[1]='\0';
+     temp[0]=(*LAsc); temp[1]='\0';
      if (CodeReg(temp,&EReg))
       BEGIN
        if ((ArgCnt==2) AND (*Asc!='\0')) WrError(1350);
@@ -829,7 +827,7 @@ BEGIN
     END
    else if (s[l-1]=='-')
     BEGIN
-     s[l-1]='\0'; *Erg=-1;
+     s[l-1]='\0'; *Erg=(-1);
     END
    else *Erg=0;
 END

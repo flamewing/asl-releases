@@ -9,9 +9,12 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
+
 #include <ctype.h>
+#include <string.h>
 
 #include "nls.h"
+#include "endian.h"
 #include "stringutil.h"
 #include "bpemu.h"
 #include "chunks.h"
@@ -19,6 +22,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 #define TwoOpCount 12
 #define OneOpCount 6
@@ -45,14 +49,12 @@ static OneOpOrder *OneOpOrders;
 static FixedOrder *JmpOrders;
 
 static Word AdrMode,AdrMode2,AdrPart,AdrPart2;
-static Byte AdrCnt,AdrCnt2;
+static Byte AdrCnt2;
 static Word AdrVal,AdrVal2;
 static Byte OpSize;
 static Word PCDist;
 
 /*-------------------------------------------------------------------------*/
-
-static int InstrZ;
 
         static void AddTwoOp(char *NName, Word NCode)
 BEGIN
@@ -274,12 +276,16 @@ END
 
 	static void PutByte(Byte Value)
 BEGIN
-   if (Odd(CodeLen))
+   if (((CodeLen&1)==1) AND (NOT BigEndian))
     BEGIN
-     WAsmCode[(CodeLen >> 1)]=(((Word) Value)<< 8)+BAsmCode[CodeLen-1];
-     CodeLen++;
+     BAsmCode[CodeLen]=BAsmCode[CodeLen-1];
+     BAsmCode[CodeLen-1]=Value;
     END
-   else BAsmCode[CodeLen++]=Value;
+   else
+    BEGIN
+     BAsmCode[CodeLen]=Value;
+    END
+   CodeLen++;
 END
 
 	static Boolean DecodePseudo(void)
@@ -524,7 +530,7 @@ END
 
         static void SwitchTo_MSP(void)
 BEGIN
-   TurnWords=False; ConstMode=ConstModeIntel; SetIsOccupied=False;
+   TurnWords=True; ConstMode=ConstModeIntel; SetIsOccupied=False;
 
    PCSymbol="$"; HeaderID=0x4a; NOPCode=0x4303; /* = MOV #0,#0 */
    DivideChars=","; HasAttrs=True; AttrChars=".";

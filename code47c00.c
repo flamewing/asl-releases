@@ -10,11 +10,15 @@
 
 #include "stdinc.h"
 
+#include <string.h>
+
 #include "bpemu.h"
+#include "stringutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 
 typedef struct
@@ -27,7 +31,7 @@ typedef struct
 #define BitOrderCnt 4
 
 
-#define ModNone -1
+#define ModNone (-1)
 #define ModAcc 0
 #define MModAcc (1 << ModAcc)
 #define ModL 1
@@ -51,14 +55,12 @@ static CPUVar CPU47C00,CPU470C00,CPU470AC00;
 static ShortInt AdrType,OpSize;
 static Byte AdrVal;
 static LongInt DMBAssume;
-static void (*SaveInitProc)(void);
+static SimpProc SaveInitProc;
 
 static FixedOrder *FixedOrders;
 static char **BitOrders;
 
 /*---------------------------------------------------------------------------*/
-
-static int InstrZ;
 
 	static void AddFixed(char *NName, Byte NCode)
 BEGIN
@@ -245,7 +247,7 @@ BEGIN
    Integer z;
    Byte HReg;
 
-   CodeLen=0; DontPrint=False; OpSize=-1;
+   CodeLen=0; DontPrint=False; OpSize=(-1);
 
    /* zu ignorierendes */
 
@@ -1120,6 +1122,7 @@ BEGIN
 
    DMBAssume=0;
 END
+
 	void code47c00_init(void)
 BEGIN
    CPU47C00=AddCPU("47C00",SwitchTo_47C00);

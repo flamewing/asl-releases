@@ -1,13 +1,14 @@
                 save
-                listing off   ; kein Listing Åber diesen File
+                listing off   ; kein Listing ¸ber diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.41 - Datei REGM16C.INC                                            *
 ;*   								            *
-;*   Sinn : enthÑlt Registerdefinitionen fÅr den M16C, Modell M30600M8      *
+;*   Sinn : enth‰lt Registerdefinitionen f¸r den M16C, Modell M30600M8      *
 ;* 									    *
-;*   letzte énderungen : 30. 8.1996                                         *
+;*   letzte ƒnderungen : 30. 8.1996                                         *
+;*                        8. 2.1997 if MomPass...                           *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -15,23 +16,25 @@
 
 regm16cinc      equ     1
 
-                switch  MomCPUName
-                case    "M16C"
-                 fatal   "please be mode specific; do not use the generic processor type for this header!"
-                case    "M30600M8"
-                 message "including M30600M8-registers"
-                elsecase
-                 fatal   "invalid processor type: only M30600M8 allowed!"
-                endcase
+                if      MOMPASS=1
+                 switch  MOMCPUNAME
+                 case    "M16C"
+                  fatal   "please be more specific; do not use the generic processor type for this header file!"
+                 case    "M30600M8"
+                  message "including M30600M8-registers"
+                 elsecase
+                  fatal   "invalid processor type: only M30600M8 allowed!"
+                 endcase
+                endif
 
 ;----------------------------------------------------------------------------
-; benîtigte Makros
+; benˆtigte Makros
 
 __bitreg        macro   Name,Adr,Mask
 Name            equ     Adr
-                irp     Bit,0,1,2,3,4,5,6,7
-                if      Mask&(1<<Bit)
-Name{"BIT"}     equ     Adr<<3+Bit
+                irp     BIT,0,1,2,3,4,5,6,7
+                if      Mask&(1<<BIT)
+Name{"BIT"}     equ     Adr<<3+BIT
                 endif
                 endm
                 endm
@@ -111,11 +114,11 @@ INT0IC          equ     005dh           ; externer Imterrupt 0
 INT1IC          equ     005eh           ; externer Interrupt 1
 INT2IC          equ     005fh           ; externer Interrupt 2
 
-_ILVL0          equ     0               ; PrioritÑtsebene
+_ILVL0          equ     0               ; Priorit‰tsebene
 _ILVL1          equ     1
 _ILVL2          equ     2
 _IR             equ     3               ; Interrupt aufgetreten ?
-_POL            equ     4               ; PolaritÑtswahl (nur INTxIC)
+_POL            equ     4               ; Polarit‰tswahl (nur INTxIC)
 _LVS            equ     5               ; Pegel/Flankentriggerung (nur INTxIC)
 
 ;----------------------------------------------------------------------------
@@ -132,7 +135,7 @@ CS2W            equ     CSR<<3+6
 CS3W            equ     CSR<<3+7
 
 ;----------------------------------------------------------------------------
-; Adre·vergleicher
+; Adreﬂvergleicher
 
 RMAD0           equ     0010h           ; Vergleichsadresse 0
 RMAD1           equ     0014h           ; Vergleichsadresse 1
@@ -160,10 +163,10 @@ _DAD            equ     5               ; feste/wandernde Zieladresse
 
 SAR0            equ     0020h           ; Quelladresse Kanal 0
 DAR0            equ     0024h           ; Zieladresse Kanal 0
-TCR0            equ     0028h           ; ZÑhler Kanal 0
+TCR0            equ     0028h           ; Z‰hler Kanal 0
 SAR1            equ     0030h           ; Quelladresse Kanal 1
 DAR1            equ     0034h           ; Zieladresse Kanal 1
-TCR1            equ     0038h           ; ZÑhler Kanal 1
+TCR1            equ     0038h           ; Z‰hler Kanal 1
 
 ;----------------------------------------------------------------------------
 ; Timer
@@ -182,17 +185,17 @@ _MR0            equ     2               ; Sub-Funktionsauswahl
 _MR1            equ     3
 _MR2            equ     4
 _MR3            equ     5
-_TCK0           equ     6               ; ZÑhlquellenwahl
+_TCK0           equ     6               ; Z‰hlquellenwahl
 _TCK1           equ     7
 
-TA0             equ     0386h           ; ZÑhlregister Timer A0
-TA1             equ     0388h           ; ZÑhlregister Timer A1
-TA2             equ     038ah           ; ZÑhlregister Timer A2
-TA3             equ     038ch           ; ZÑhlregister Timer A3
-TA4             equ     038eh           ; ZÑhlregister Timer A4
-TB0             equ     0390h           ; ZÑhlregister Timer B0
-TB1             equ     0392h           ; ZÑhlregister Timer B1
-TB2             equ     0394h           ; ZÑhlregister Timer B2
+TA0             equ     0386h           ; Z‰hlregister Timer A0
+TA1             equ     0388h           ; Z‰hlregister Timer A1
+TA2             equ     038ah           ; Z‰hlregister Timer A2
+TA3             equ     038ch           ; Z‰hlregister Timer A3
+TA4             equ     038eh           ; Z‰hlregister Timer A4
+TB0             equ     0390h           ; Z‰hlregister Timer B0
+TB1             equ     0392h           ; Z‰hlregister Timer B1
+TB2             equ     0394h           ; Z‰hlregister Timer B2
 
 TABSR           equ     0380h           ; Start/Stop-Register:
 TA0S            equ     TABSR<<3+0      ; Timer A0
@@ -205,7 +208,7 @@ TB1S            equ     TABSR<<3+6      ; Timer B1
 TB2S            equ     TABSR<<3+7      ; Timer B2
 
 CPSRF           equ     0381h           ; Vorteilerregister:
-CPSR            equ     CPSRF<<3+7      ; Vorteiler zurÅcksetzen
+CPSR            equ     CPSRF<<3+7      ; Vorteiler zur¸cksetzen
 
 ONSF            equ     0382h           ; Monoflop-Triggerbits
 TA0OS           equ     ONSF<<3+0       ; Timer A0
@@ -226,7 +229,7 @@ TA3TGH          equ     TRGSR<<3+5
 TA4TGL          equ     TRGSR<<3+6      ; Triggerwahl Timer A4
 TA4TGH          equ     TRGSR<<3+7
 
-UDF             equ     0384h           ; ZÑhlrichtungen(A) / Zweiphasenmodi(A2-4)
+UDF             equ     0384h           ; Z‰hlrichtungen(A) / Zweiphasenmodi(A2-4)
 TA0UD           equ     UDF<<3+0        ; Timer A0
 TA1UD           equ     UDF<<3+1        ; Timer A1
 TA2UD           equ     UDF<<3+2        ; Timer A2
@@ -240,7 +243,7 @@ TA4P            equ     UDF<<3+7        ; Timer A4
 ; Watchdog
 
 WDTS            equ     000eh           ; Startwert
-                __bitreg WDC,000fh,80h  ; Vorteilerwahl / obere ZÑhler-Bits
+                __bitreg WDC,000fh,80h  ; Vorteilerwahl / obere Z‰hler-Bits
 
 ;----------------------------------------------------------------------------
 ; serielle Ports:
@@ -252,7 +255,7 @@ U0RB            equ     03a6h           ; Empfangsregister UART0
 U1RB            equ     03aeh           ; Empfangsregister UART1
 _OER            equ     4               ; Overrun-Fehler ?
 _FER            equ     5               ; Framing-Fehler ?
-_PER            equ     6               ; ParitÑts-Fehler ?
+_PER            equ     6               ; Parit‰ts-Fehler ?
 _SUM            equ     7               ; Summenfehler ?
 
 U0BRG           equ     03a1h           ; Baudratengenerator UART0
@@ -265,8 +268,8 @@ _SMD1           equ     1
 _SMD2           equ     2
 _CKDIR          equ     3               ; interner/externer Takt
 _STPS           equ     4               ; Anzahl Stopbits
-_PRY            equ     5               ; ParitÑtswahl
-_PRYE           equ     6               ; ParitÑtsart
+_PRY            equ     5               ; Parit‰tswahl
+_PRYE           equ     6               ; Parit‰tsart
 _SLEP           equ     7               ; Sleep-Modus
 
 U0C0            equ     03a4h           ; Steuerregister 0 UART0
@@ -277,14 +280,14 @@ _CRS            equ     2               ; RTS/CTS-Auswahl
 _TXEPT          equ     3               ; Senderegister voll ?
 _CRD            equ     4               ; CTS/RTS-Auswahl
 _NCH            equ     5               ; TXD als Open-Collector ?
-_CKPOL          equ     6               ; TaktpolaritÑtswahl
+_CKPOL          equ     6               ; Taktpolarit‰tswahl
 _UFORM          equ     7               ; Bitreihenfolge
 
 U0C1            equ     03a5h           ; Steuerregister 1 UART0
 U1C1            equ     03adh           ; Steuerregister 1 UART1
 _TE             equ     0               ; Senderfreigabe
 _TI             equ     1               ; Sendepuffer leer ?
-_RE             equ     2               ; EmpfÑngerfreigabe
+_RE             equ     2               ; Empf‰ngerfreigabe
 _RI             equ     3               ; Empfangspuffer voll ?
 
 UCON            equ     03b0h           ; Steuerregister 2 UART0+1
@@ -347,9 +350,9 @@ DA1E            equ     DACON<<3+1      ; D/A-Wandler 1 freigeben
 ;----------------------------------------------------------------------------
 ; feste Vektoren
 
-Vec_UndefInstr  equ     0fffdch         ; UND ausgefÅhrt
-Vec_Overflow    equ     0fffe0h         ; INTO+Overflow ausgefÅhrt
-Vec_BRK         equ     0fffe4h         ; BRK ausgefÅhrt
+Vec_UndefInstr  equ     0fffdch         ; UND ausgef¸hrt
+Vec_Overflow    equ     0fffe0h         ; INTO+Overflow ausgef¸hrt
+Vec_BRK         equ     0fffe4h         ; BRK ausgef¸hrt
 Vec_AddrMatch   equ     0fffe8h         ; Adressengleichheit aufgetreten
 Vec_SingleStep  equ     0fffech         ; Einzelschrittverarbeitung
 Vec_WDT         equ     0ffff0h         ; Watchdog hat zugeschlagen
@@ -360,7 +363,7 @@ Vec_Reset       equ     0ffffch
 ;----------------------------------------------------------------------------
 ; Variable Vektoren; hier Offset zu INTB
 
-Vec_BRK2        equ     0               ; BRK ausgefÅhrt (falls fester Vektor abgeschaltet)
+Vec_BRK2        equ     0               ; BRK ausgef¸hrt (falls fester Vektor abgeschaltet)
 Vec_DMA0        equ     44
 Vec_DMA1        equ     48
 Vec_KeyInp      equ     52
@@ -384,7 +387,7 @@ Vec_INT2        equ     124
 ;----------------------------------------------------------------------------
 ; Speicherbereiche
 
-                switch  MomCPUName
+                switch  MOMCPUNAME
                 case    "M30600M8"
 IROM            equ     0f0000h         ; 64K ROM am Ende des Speicherraums
 IROMEND         equ     0fffffh

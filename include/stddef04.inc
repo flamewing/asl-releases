@@ -1,15 +1,15 @@
 		save
-		listing off   ; kein Listing Åber diesen File
+		listing off   ; kein Listing ¸ber diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.39 - Datei STDDEF04.INC                                           *
 ;*   								            *
-;*   Sinn : enthÑlt SFR-Definitionen fÅr den 6804-Prozessor                 *
-;*          Falls Sie noch ein paar schîne Makros suchen, schauen Sie sich  *
+;*   Sinn : enth‰lt SFR-Definitionen f¸r den 6804-Prozessor                 *
+;*          Falls Sie noch ein paar schˆne Makros suchen, schauen Sie sich  *
 ;*          einmal in STDDEF62.INC um !					    *
 ;* 									    *
-;*   letzte énderungen : 28.11.1993                                         *
+;*   letzte ƒnderungen : 28.11.1993                                         *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -17,20 +17,20 @@
 
 stddef04inc     equ     1
 
-		if      (MomCPU<>26628)
+                if      (MOMCPU<>26628)
 		 fatal  "Falscher Prozessortyp eingestellt: nur 6804 erlaubt!"
 		endif
 
-		if      mompass=1
+                if      MOMPASS=1
 		 message "6804-SFR-Definitionen (C) 1993 Alfred Arnold"
 		endif
 
 ;----------------------------------------------------------------------------
-; erstmal die Sachen, die es Åberall gibt :
+; erstmal die Sachen, die es ¸berall gibt :
 
 XP              SFR     $80             ; Registeradressen (die kennt AS aber
 YP              SFR     $81             ; auch schon intern, nur der Voll-
-RegA            SFR     $ff             ; stÑndigkeit halber)
+RegA            SFR     $ff             ; st‰ndigkeit halber)
 
 PA              SFR     $00             ; Port A
 DDRA            SFR     $04

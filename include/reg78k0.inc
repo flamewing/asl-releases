@@ -1,13 +1,13 @@
                 save
-                listing off   ; kein Listing Åber diesen File
+                listing off   ; kein Listing ¸ber diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.41 - Datei REG78K0.INC                                            *
 ;*   								            *
-;*   Sinn : enthÑlt Registerdefinitionen fÅr 78K0 (uPD78070A)               *
+;*   Sinn : enth‰lt Registerdefinitionen f¸r 78K0 (uPD78070A)               *
 ;* 									    *
-;*   letzte énderungen :  1.10.1996                                         *
+;*   letzte ƒnderungen :  1.10.1996                                         *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -15,12 +15,12 @@
 
 reg8k0inc       equ     1
 
-                if      (MomCPUName<>"78070")
+                if      (MOMCPUNAME<>"78070")
                  fatal  "Falscher Prozessortyp eingestellt: nur 78070 erlaubt!"
 		endif
 
 
-		if      MomPass=1
+                if      MOMPASS=1
                  message "78K0-Register-Definitionen (C) 1996 Alfred Arnold"
 		endif
 
@@ -38,14 +38,14 @@ PCC             equ     0fffbh          ; Steuerung Prozessortakt
 
 OSMS            equ     0fff2h          ; Taktteiler ein/ausschalten
 
-OSTS            equ     0fffah          ; Wartezeit, um nach STOP-Auflîsung
+OSTS            equ     0fffah          ; Wartezeit, um nach STOP-Auflˆsung
 
 ;----------------------------------------------------------------------------
 ; Bus-Interface
 
 EBTS            equ     0ff3fh          ; Multiplex an/aus (fest auf aus)
 
-IMS             equ     0fff0h          ; Grî·e internes RAM (fest 1K)
+IMS             equ     0fff0h          ; Grˆﬂe internes RAM (fest 1K)
 
 MM              equ     0fff8h          ; Wait-State-Steuerung
 
@@ -66,7 +66,7 @@ MK0H            equ     0ffe5h
 MK0             equ     IF0L
 MK1L            equ     0ffe6h
 
-PR0L            equ     0ffe8h          ; PrioritÑten
+PR0L            equ     0ffe8h          ; Priorit‰ten
 PR0H            equ     0ffe9h
 PR0             equ     IF0L
 PR1L            equ     0ffeah
@@ -110,7 +110,7 @@ PUOL            equ     0fff7h          ; Pull-Up-Register Port 8..13
 ;----------------------------------------------------------------------------
 ; Timer
 
-TM0             equ     0ff14h          ; ZÑhlwert Timer 0
+TM0             equ     0ff14h          ; Z‰hlwert Timer 0
 CR00            equ     0ff10h          ; Vergleichs/Fangregister 0 Timer 0
 CR01            equ     0ff12h          ; Vergleichs/Fangregister 1 Timer 0
 TCL0            equ     0ff40h          ; Taktauswahl Timer 0
@@ -118,25 +118,25 @@ TMC0            equ     0ff48h          ; Betriebsart Timer 0
 CRC0            equ     0ff4ch          ; Steuerung Fang/Vergleichsregister Timer 0
 TOC0            equ     0ff4eh          ; Ausgabesteuerung Timer 0
 
-TM1             equ     0ff18h          ; ZÑhlwert Timer 1
+TM1             equ     0ff18h          ; Z‰hlwert Timer 1
 CR10            equ     0ff16h          ; Vergleichs/Fangregister Timer 1
 TCL1            equ     0ff41h          ; Taktauswahl Timer 1
 TMC1            equ     0ff49h          ; Betriebsart Timer 1
 
-TM2             equ     0ff19h          ; ZÑhlwert Timer 2
+TM2             equ     0ff19h          ; Z‰hlwert Timer 2
 CR20            equ     0ff17h          ; Vergleichs/Fangregister Timer 2
 TCL2            equ     0ff42h          ; Taktauswahl Timer 2 / Uhren-Timer / Watchdog / Summer
 TMC2            equ     0ff4ah          ; Betriebsart Timer 2 / Uhren-Timer
 
-TMS             equ     TM1             ; ZÑhlwert Timer 1+2 im 16-Bit-Modus
+TMS             equ     TM1             ; Z‰hlwert Timer 1+2 im 16-Bit-Modus
 TOC1            equ     0ff4fh          ; Ausgabesteuerung Timer 1+2
 
-TM5             equ     0ff51h          ; ZÑhlwert Timer 5
+TM5             equ     0ff51h          ; Z‰hlwert Timer 5
 CR50            equ     0ff50h          ; Vergleichsregister Timer 5
 TCL5            equ     0ff52h          ; Taktauswahl Timer 5
 TMC5            equ     0ff53h          ; Betriebsart Timer 5
 
-TM6             equ     0ff55h          ; ZÑhlwert Timer 6
+TM6             equ     0ff55h          ; Z‰hlwert Timer 6
 CR60            equ     0ff54h          ; Vergleichsregister Timer 6
 TCL6            equ     0ff56h          ; Taktauswahl Timer 6
 TMC6            equ     0ff57h          ; Betriebsart Timer 6
@@ -159,7 +159,7 @@ SINT            equ     0ff63h          ; Interrupt-Timing
 
 ; Kanal 1
 SIO1            equ     0ff1bh          ; Datenregister
-ADTP            equ     0ff6ah          ; Adre·zeiger bei Blockempfang/versand
+ADTP            equ     0ff6ah          ; Adreﬂzeiger bei Blockempfang/versand
 CSIM1           equ     0ff68h          ; Betriebsart
 ADTC            equ     0ff69h          ; Steuerung Blockbetrieb
 ADTI            equ     0ff6bh          ; Geschwindigkeit Blockversand
@@ -180,7 +180,7 @@ ADCR            equ     0ff1fh          ; Ergebnisregister Wandlung
 
 ADM             equ     0ff80h          ; Betriebsart
 
-ADIS            equ     0ff84h          ; Umschaltung Ports als AnalogeingÑnge
+ADIS            equ     0ff84h          ; Umschaltung Ports als Analogeing‰nge
 
 ;----------------------------------------------------------------------------
 ; D/A-Wandler

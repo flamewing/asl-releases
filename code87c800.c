@@ -9,7 +9,9 @@
 /*****************************************************************************/
 
 #include "stdinc.h" 
+
 #include <ctype.h>
+#include <string.h>
 
 #include "nls.h"
 #include "bpemu.h"
@@ -18,6 +20,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 
 typedef struct
@@ -38,7 +41,7 @@ typedef struct
 #define ALUOrderCnt 8
 
 
-#define ModNone -1
+#define ModNone (-1)
 #define ModReg8 0
 #define MModReg8 (1 << ModReg8)
 #define ModReg16 1
@@ -58,7 +61,6 @@ static char *Reg8Names="AWCBEDLH";
 
 static CPUVar CPU87C00,CPU87C20,CPU87C40,CPU87C70;
 static ShortInt OpSize;
-static Byte AdrCnt;
 static Byte AdrVals[4];
 static ShortInt AdrType;
 static Byte AdrMode;
@@ -69,8 +71,6 @@ static FixedOrder *RegOrders;
 static char **ALUOrders;
 
 /*--------------------------------------------------------------------------*/
-
-static int InstrZ;
 
 	static void AddFixed(char *NName, Word NCode)
 BEGIN
@@ -301,7 +301,7 @@ BEGIN
    else
     if ((*Part>='0') AND (*Part<='7'))
      BEGIN
-      *Erg=*Part-'0'; return True;
+      *Erg=(*Part)-'0'; return True;
      END
     else
      BEGIN
@@ -333,7 +333,7 @@ BEGIN
    Byte HReg,HCnt,HMode,HVal;
    Boolean OK;
 
-   CodeLen=0; DontPrint=False; OpSize=-1;
+   CodeLen=0; DontPrint=False; OpSize=(-1);
 
    /* zu ignorierendes */
 
@@ -1183,7 +1183,7 @@ BEGIN
      if ((ArgCnt!=2) AND (ArgCnt!=1)) WrError(1110);
      else
       BEGIN
-       if (ArgCnt==1) Condition=-1;
+       if (ArgCnt==1) Condition=(-1);
        else
 	BEGIN
          NLS_UpString(ArgStr[1]);

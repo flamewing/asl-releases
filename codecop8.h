@@ -8,4 +8,4 @@
 /*                                                                           */
 /*****************************************************************************/
 
-	extern void codecop8_init(void);
+extern void codecop8_init(void);

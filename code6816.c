@@ -10,6 +10,8 @@
 
 #include "stdinc.h"
 
+#include <string.h>
+
 #include "nls.h"
 #include "bpemu.h"
 #include "stringutil.h"
@@ -17,6 +19,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -50,7 +53,7 @@ typedef struct
 #define EmuOrderCnt 6
 #define RegCnt 7
 
-#define ModNone -1
+#define ModNone (-1)
 #define ModDisp8 0
 #define MModDisp8 (1 << ModDisp8)
 #define ModDisp16 1
@@ -71,11 +74,10 @@ typedef struct
 static ShortInt OpSize;
 static ShortInt AdrMode;
 static Byte AdrPart;
-static Byte AdrCnt;
 static Byte AdrVals[4];
 
 static LongInt Reg_EK;
-static void (*SaveInitProc)(void);
+static SimpProc SaveInitProc;
 
 static FixedOrder *FixedOrders;
 static FixedOrder *RelOrders;
@@ -90,8 +92,6 @@ static char **Regs;
 static CPUVar CPU6816;
 
 /*-------------------------------------------------------------------------*/
-
-static int InstrZ;
 
         static void AddFixed(char *NName, Word NCode)
 BEGIN
@@ -521,7 +521,7 @@ BEGIN
    Byte Mask;
    LongInt AdrLong;
 
-   CodeLen=0; DontPrint=False; AdrCnt=0; OpSize=-1;
+   CodeLen=0; DontPrint=False; AdrCnt=0; OpSize=(-1);
 
    /* zu ignorierendes */
 
@@ -894,7 +894,7 @@ BEGIN
                 BAsmCode[3]=AdrLong & 0xff;
                 CodeLen=4;
                END
-              else if ((NOT OK) AND ((AdrLong<-0x8000) OR (AdrLong>0x7fff))) WrError(1370);
+              else if ((NOT OK) AND ((AdrLong<-0x8000l) OR (AdrLong>0x7fffl))) WrError(1370);
               else
                BEGIN
                 BAsmCode[0]=0x0a+AdrPart+z;
@@ -906,7 +906,7 @@ BEGIN
                END
               break;
              case ModDisp16:
-              if ((NOT OK) AND ((AdrLong<-0x8000) OR (AdrLong>0x7fff))) WrError(1370);
+              if ((NOT OK) AND ((AdrLong<-0x8000l) OR (AdrLong>0x7fffl))) WrError(1370);
               else
                BEGIN
                 BAsmCode[0]=0x0a+AdrPart+z;
@@ -917,7 +917,7 @@ BEGIN
                END
               break;
              case ModAbs:
-              if ((NOT OK) AND ((AdrLong<-0x8000) OR (AdrLong>0x7fff))) WrError(1370);
+              if ((NOT OK) AND ((AdrLong<-0x8000l) OR (AdrLong>0x7fffl))) WrError(1370);
               else
                BEGIN
                 BAsmCode[0]=0x3a+z;
@@ -970,7 +970,7 @@ BEGIN
         AdrLong=EvalIntExpression(ArgStr[1],UInt24,&OK)-EProgCounter()-6;
         if ((AdrLong&1)==1) WrError(1325);
         else if (*OpPart=='L')
-         if ((NOT SymbolQuestionable) AND ((AdrLong>0x7fff) OR (AdrLong<-0x8000))) WrError(1370);
+         if ((NOT SymbolQuestionable) AND ((AdrLong>0x7fffl) OR (AdrLong<-0x8000l))) WrError(1370);
          else
           BEGIN
            BAsmCode[0]=0x37; BAsmCode[1]=RelOrders[z].Code+0x80;
@@ -979,7 +979,7 @@ BEGIN
            CodeLen=4;
           END
         else
-         if ((NOT SymbolQuestionable) AND ((AdrLong>0x7f) OR (AdrLong<-0x80))) WrError(1370);
+         if ((NOT SymbolQuestionable) AND ((AdrLong>0x7fl) OR (AdrLong<-0x80l))) WrError(1370);
          else
           BEGIN
            BAsmCode[0]=0xb0+RelOrders[z].Code;
@@ -998,7 +998,7 @@ BEGIN
        BEGIN
         AdrLong=EvalIntExpression(ArgStr[1],UInt24,&OK)-EProgCounter()-6;
         if ((AdrLong&1)==1) WrError(1325);
-        else if ((NOT SymbolQuestionable) AND ((AdrLong>0x7fff) OR (AdrLong<-0x8000))) WrError(1370);
+        else if ((NOT SymbolQuestionable) AND ((AdrLong>0x7fffl) OR (AdrLong<-0x8000l))) WrError(1370);
         else
          BEGIN
           BAsmCode[0]=Hi(LRelOrders[z].Code); BAsmCode[1]=Lo(LRelOrders[z].Code);
@@ -1017,7 +1017,7 @@ BEGIN
       BEGIN
        AdrLong=EvalIntExpression(ArgStr[1],UInt24,&OK)-EProgCounter()-6;
        if ((AdrLong&1)==1) WrError(1325);
-       else if ((NOT SymbolQuestionable) AND ((AdrLong>0x7f) OR (AdrLong<-0x80))) WrError(1370);
+       else if ((NOT SymbolQuestionable) AND ((AdrLong>0x7fl) OR (AdrLong<-0x80l))) WrError(1370);
        else
         BEGIN
          BAsmCode[0]=0x36;

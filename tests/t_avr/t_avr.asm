@@ -1,215 +1,229 @@
 
-        cpu     at90s8414
-        page	0
-        include regavr.inc
+	cpu     at90s8515
+	page    0
+	include regavr.inc
 
-        adc	r3,r1
+	adc     r3,r1
 
-        add	r28,r28
+	add     r28,r28
 
-        and	r2,r16
+	and     r2,r16
 
-        andi	r19,$aa
+	andi    r19,$aa
 
-        asr	r17
+	adiw    r26,14
 
-        bclr	7
+	asr     r17
 
-        bld	r0,4
+	bclr    7
 
-	brbc	1,*
+	bld     r0,4
 
-        brbs	6,*
+	brbc    1,*
 
-        brcc	next	; 1   = 01
+	brbs    6,*
 
-        brcs	next	; 0   = 00
+	brcc    next    ; 1   = 01
+
+	brcs    next    ; 0   = 00
 next:
-	breq	next	; -1  = 7F
+	breq    next    ; -1  = 7F
 
-        brge	next	; -2  = 7E
+	brge    next    ; -2  = 7E
 
-        brsh	next	; -3  = 7D
+	brsh    next    ; -3  = 7D
 
-        brid	next	; -4  = 7C
+	brid    next    ; -4  = 7C
 
-        brie	next	; -5  = 7B
+	brie    next    ; -5  = 7B
 
-        brlo	next	; -6  = 7A
+	brlo    next    ; -6  = 7A
 
-        brlt	next	; -7  = 79
+	brlt    next    ; -7  = 79
 
-        brmi	next    ; -8  = 78
+	brmi    next    ; -8  = 78
 
-        brne	next	; -9  = 77
+	brne    next    ; -9  = 77
 
-        brhc	next	; -10 = 76
+	brhc    next    ; -10 = 76
 
-        brhs	next	; -11 = 75
+	brhs    next    ; -11 = 75
 
-        brpl	next	; -12 = 74
+	brpl    next    ; -12 = 74
 
-        brtc	next	; -13 = 73
+	brtc    next    ; -13 = 73
 
-        brts	next	; -14 = 72
+	brts    next    ; -14 = 72
 
-        brvc	next	; -15 = 71
+	brvc    next    ; -15 = 71
 
-        brvs	next	; -16 = 70
+	brvs    next    ; -16 = 70
 
-        bset	6
+	bset    6
 
-        bst	r1,2
+	bst     r1,2
 
-        call	$123456
+	call    $123456
 
-        cbr	r16,$f0
+	cbr     r16,$f0
 
-        clc
+	cbi     $12,7
 
-        cli
+	clc
 
-        cln
+	cli
 
-        clh
+	cln
 
-        clr	r18
+	clh
 
-        cls
+	clr     r18
 
-        clt
+	cls
 
-        clv
+	clt
 
-        clz
+	clv
 
-        com	r4
+	clz
 
-        cp	r4,r19
+	com     r4
 
-        cpc	r3,r1
+	cp      r4,r19
 
-        cpi	r19,3
+	cpc     r3,r1
 
-        cpse	r4,r0
+	cpi     r19,3
 
-        dec	r17
+	cpse    r4,r0
 
-        eor	r0,r22
+	dec     r17
 
-        icall
+	eor     r0,r22
 
-        ijmp
+	icall
 
-        in	r23,$34
+	ijmp
 
-        inc	r22
+	in      r23,$34
 
-        jmp	$123456
+	inc     r22
 
-        ld	r2,x
-        ld	r0,x+
-        ld	r3,-x
+	jmp     $123456
 
-        ld	r1,y
-        ld	r0,y+
-        ld	r3,-y
-        ldd	r4,y+$33
+	ld      r2,x
+	ld      r0,x+
+	ld      r3,-x
 
-        ld	r1,z
-        ld	r0,z+
-        ld	r3,-z
-        ldd	r4,z+$33
+	ld      r1,y
+	ld      r0,y+
+	ld      r3,-y
+	ldd     r4,y+$33
 
-        ldi	r30,$f0
+	ld      r1,z
+	ld      r0,z+
+	ld      r3,-z
+	ldd     r4,z+$33
 
-        lpm
+	ldi     r30,$f0
 
-	lsl	r0
+	lds     r2,$ff00
 
-        lsr	r0
+	lpm
 
-        mov	r16,r0
+	lsl     r0
+
+	lsr     r0
+
+	mov     r16,r0
 
 ;        mul     r6,r5
 
-        neg	r11
+	neg     r11
 
-        nop
+	nop
 
-        or	r15,r16
+	or      r15,r16
 
-        ori	r16,$f0
+	ori     r16,$f0
 
-        out	$18,r16
+	out     $18,r16
 
-        pop	r13
+	pop     r13
 
-        push    r14
+	push    r14
 
-        rcall   *
+	rcall   *
 
-        ret
+	ret
 
-        reti
+	reti
 
-        rjmp    *
+	rjmp    *
 
-        rol     r15
+	rol     r15
 
-        ror     r15
+	ror     r15
 
-        sbc     r3,r1
+	sbc     r3,r1
 
-        sbci    r17,$4f
+	sbci    r17,$4f
 
-        sbr     r16,3
+	sbi     $1c,3
 
-        sbrc    r0,7
+	sbic    $1c,1
 
-        sbrs    r0,7
+	sbis    $10,3
 
-        sec
+	sbr     r16,3
 
-        sei
+	sbrc    r0,7
 
-        sen
+	sbrs    r0,7
 
-        seh
+	sec
 
-        ser     r17
+	sei
 
-        ses
+	sen
 
-        set
+	seh
 
-        sev
+	ser     r17
 
-        sez
+	ses
 
-        sleep
+	set
 
-        st      x,r1
-        st      x+,r0
-        st      -x,r3
+	sev
 
-        st      y,r1
-        st      y+,r0
-        st      -y,r3
-        std     y+2,r4
+	sez
 
-        st      z,r1
-        st      z+,r0
-        st      -z,r3
-        std     z+2,r4
+	sleep
 
-        sub     r13,r12
+	st      x,r1
+	st      x+,r0
+	st      -x,r3
 
-        subi    r22,$11
+	st      y,r1
+	st      y+,r0
+	st      -y,r3
+	std     y+2,r4
 
-        swap    r1
+	st      z,r1
+	st      z+,r0
+	st      -z,r3
+	std     z+2,r4
 
-        tst     r3
+	sts     $ff00,r2
 
-        wdr
+	sub     r13,r12
+
+	subi    r22,$11
+
+	swap    r1
+
+	tst     r3
+
+	wdr
 

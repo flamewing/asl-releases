@@ -13,11 +13,13 @@
 #include <ctype.h>
 
 #include "bpemu.h"
+#include "stringutil.h"
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 
 typedef struct
@@ -68,8 +70,6 @@ static AdrShiftOrder *AdrShiftOrders;
 static ImmOrder *ImmOrders;
 
 /*----------------------------------------------------------------------------*/
-
-static int InstrZ;
 
 	static void AddFixed(char *NName, Word NCode)
 BEGIN

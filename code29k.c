@@ -20,6 +20,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 typedef struct
          {
@@ -63,11 +64,9 @@ static SPReg *SPRegs;
 static CPUVar CPU29000,CPU29240,CPU29243,CPU29245;
 static LongInt Reg_RBP;
 static StringList Emulations;
-static void (*SaveInitProc)(void);
+static SimpProc SaveInitProc;
 
 /*-------------------------------------------------------------------------*/
-
-static int InstrZ;
 
         static void AddStd(char *NName, CPUVar NMin, Boolean NSup, LongWord NCode)
 BEGIN
@@ -181,7 +180,7 @@ BEGIN
    AddVec("ASLEU"  ,CPU29245,False,0x56); AddVec("ASLT"   ,CPU29245,False,0x50);
    AddVec("ASLTU"  ,CPU29245,False,0x52); AddVec("ASNEQ"  ,CPU29245,False,0x72);
 
-   JmpOrders=(JmpOrder *) malloc(sizeof(StdOrder)*JmpOrderCount); InstrZ=0;
+   JmpOrders=(JmpOrder *) malloc(sizeof(JmpOrder)*JmpOrderCount); InstrZ=0;
    AddJmp("CALL"   ,CPU29245,True ,True ,0xa8); AddJmp("JMP"    ,CPU29245,False,True ,0xa0);
    AddJmp("JMPF"   ,CPU29245,True ,True ,0xa4); AddJmp("JMPFDEC",CPU29245,True ,False,0xb4);
    AddJmp("JMPT"   ,CPU29245,True ,True ,0xac);

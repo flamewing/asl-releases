@@ -19,6 +19,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 #define FixedOrderCount 4
 #define ConditionCount 20
@@ -28,7 +29,7 @@
 #define Bit1OrderCount 10
 #define Bit2OrderCount 4
 
-#define ModNone -1
+#define ModNone (-1)
 #define ModReg 0
 #define MModReg (1 << ModReg)
 #define ModImm 1
@@ -70,7 +71,6 @@ typedef struct
 static ShortInt OpSize;     /* Groesse=8*(2^OpSize) */
 static ShortInt AdrMode;    /* Ergebnisadressmodus */
 static Byte AdrPart;        /* Adressierungsmodusbits im Opcode */
-static Byte AdrCnt;         /* Anzahl Bytes Adressargument */
 static Word AdrVals[6];     /* Adressargument */
 
 static CPUVar CPUH8_300L;
@@ -88,8 +88,6 @@ static FixedOrder *Bit2Orders;
 
 /*-------------------------------------------------------------------------*/
 /* dynamische Belegung/Freigabe Codetabellen */
-
-static int InstrZ;
 
 	static void AddFixed(char *NName, Word NCode)
 BEGIN
@@ -587,7 +585,7 @@ BEGIN
    Byte HReg,OpCode;
    Boolean OK;
 
-   CodeLen=0; DontPrint=False; OpSize=-1;
+   CodeLen=0; DontPrint=False; OpSize=(-1);
 
    /* zu ignorierendes */
 

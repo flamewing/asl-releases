@@ -11,12 +11,15 @@
 #include "stdinc.h"
 
 #include <ctype.h>
+#include <string.h>
+
 #include "stringutil.h"
 #include "bpemu.h"
 #include "asmdef.h"
 #include "asmpars.h"
 #include "asmsub.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 
 typedef struct
@@ -41,7 +44,7 @@ typedef struct
          } JmpOrder;
 
 
-#define ModNone -1
+#define ModNone (-1)
 #define ModImm 0
 #define MModImm (1 << ModImm)
 #define ModDir 1
@@ -70,7 +73,6 @@ typedef struct
 
 static ShortInt OpSize;
 static ShortInt AdrMode;
-static Byte AdrCnt;
 static ShortInt ExPos;
 static Byte AdrVals[4];
 static CPUVar CPU6812;
@@ -83,8 +85,6 @@ static FixedOrder *LEAOrders;
 static JmpOrder *JmpOrders;
 
 /*---------------------------------------------------------------------------*/
-
-static int InstrZ;
 
         static void AddFixed(char *NName, Word NCode)
 BEGIN
@@ -465,12 +465,12 @@ BEGIN
      l=strlen(ArgStr[Stop]);
      if ((*ArgStr[Stop]=='-') OR (*ArgStr[Stop]=='+'))
       BEGIN
-       DecFlag=*ArgStr[Stop]=='-';
+       DecFlag=(*ArgStr[Stop]=='-');
        AutoFlag=True; PostFlag=False; strcpy(ArgStr[Stop],ArgStr[Stop]+1);
       END
      else if ((ArgStr[Stop][l-1]=='-') OR (ArgStr[Stop][l-1]=='+'))
       BEGIN
-       DecFlag=ArgStr[Stop][l-1]=='-';
+       DecFlag=(ArgStr[Stop][l-1]=='-');
        AutoFlag=True; PostFlag=True; ArgStr[Stop][l-1]='\0';
       END
      else AutoFlag=DecFlag=PostFlag=False;
@@ -494,7 +494,7 @@ BEGIN
           BEGIN
            if (AdrWord<0)
             BEGIN
-             DecFlag=NOT DecFlag; AdrWord=-AdrWord;
+             DecFlag=NOT DecFlag; AdrWord=(-AdrWord);
             END
            if (DecFlag) AdrWord=8-AdrWord; else AdrWord--;
            AdrVals[0]=(AdrVals[0] << 6)+0x20+(Ord(PostFlag) << 4)+(Ord(DecFlag) << 3)+(AdrWord & 7);
@@ -580,7 +580,7 @@ BEGIN
    Boolean OK;
    Word Mask;
 
-   CodeLen=0; DontPrint=False; OpSize=-1;
+   CodeLen=0; DontPrint=False; OpSize=(-1);
 
    /* Operandengroesse festlegen */
 

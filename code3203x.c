@@ -10,6 +10,7 @@
 
 #include "stdinc.h"
 #include <ctype.h>
+#include <string.h>
 
 #include "nls.h"
 #include "endian.h"
@@ -21,6 +22,8 @@
 #include "asmpars.h"
 #include "asmcode.h"
 #include "codepseudo.h"
+#include "codevars.h"
+
 
 #define ConditionCount 28
 #define FixedOrderCount 3
@@ -64,7 +67,7 @@ typedef struct
 
 
 static CPUVar CPU32030,CPU32031;
-static void (*SaveInitProc)(void);
+static SimpProc SaveInitProc;
 
 static Boolean NextPar,ThisPar;
 static Byte PrevARs,ARs;
@@ -87,9 +90,6 @@ static LongInt DPValue;
 
 /*-------------------------------------------------------------------------*/
 /* Befehlstabellenverwaltung */
-
-static int InstrZ;
-
 
 	static void AddCondition(char *NName, Byte NCode)
 BEGIN
@@ -361,7 +361,7 @@ END
 /*-------------------------------------------------------------------------*/
 /* Adressparser */
 
-#define ModNone -1
+#define ModNone (-1)
 #define ModReg 0
 #define MModReg (1 << ModReg)
 #define ModDir 1
@@ -469,15 +469,15 @@ BEGIN
 	 WrError(1350); return;
 	END
        *p='\0'; strmaxcpy(NDisp,p+1,255); NDisp[strlen(NDisp)-1]='\0';
-       if (strcasecmp(NDisp,"IR0")==0) Disp=-1;
-       else if (strcasecmp(NDisp,"IR1")==0) Disp=-2;
+       if (strcasecmp(NDisp,"IR0")==0) Disp=(-1);
+       else if (strcasecmp(NDisp,"IR1")==0) Disp=(-2);
        else
 	BEGIN
 	 Disp=EvalIntExpression(NDisp,UInt8,&OK);
 	 if (NOT OK) return;
 	END
       END
-     else Disp=-3;
+     else Disp=(-3);
 
      /* II.4. Addieren/Subtrahieren mit/ohne Update? */
 
@@ -535,7 +535,7 @@ BEGIN
        WrError(1350); return;
       END
      HReg-=8;
-     if ((ARs & (1 << HReg))==0) ARs+=1 << HReg;
+     if ((ARs & (1l << HReg))==0) ARs+=1l << HReg;
      else WrXError(210,Asc);
 
      /* II.6. Default-Displacement explizit machen */
@@ -840,12 +840,12 @@ END
 
 	static void SwapMode(ShortInt *M1, ShortInt *M2)
 BEGIN
-   AdrMode=*M1; *M1=*M2; *M2=AdrMode;
+   AdrMode=(*M1); *M1=(*M2); *M2=AdrMode;
 END
 
 	static void SwapPart(Word *P1, Word *P2)
 BEGIN
-   AdrPart=*P1; *P1=*P2; *P2=AdrPart;
+   AdrPart=(*P1); *P1=(*P2); *P2=AdrPart;
 END
 
 	static void MakeCode_3203X(void)
@@ -1021,7 +1021,7 @@ BEGIN
          END
         /* mehrfache Registernutzung ? */
         for (z3=0; z3<8; z3++)
-         if ((ARs & PrevARs & (1 << z3))!=0)
+         if ((ARs & PrevARs & (1l << z3))!=0)
           BEGIN
            sprintf(Form,"AR%d",z3); WrXError(210,Form);
           END
@@ -1308,7 +1308,7 @@ BEGIN
      strcpy(OpPart,OpPart+1);
      if (OpPart[strlen(OpPart)-1]=='D')
       BEGIN
-       OpPart[strlen(OpPart)-1]='\0'; DFlag=1 << 21;
+       OpPart[strlen(OpPart)-1]='\0'; DFlag=1l << 21;
        Disp=3;
       END
      else
@@ -1329,7 +1329,7 @@ BEGIN
 	 BEGIN
           AdrLong=EvalAdrExpression(ArgStr[1],&OK)-(EProgCounter()+Disp);
 	  if (OK)
-	   if ((NOT SymbolQuestionable) AND ((AdrLong>0x7fff) OR (AdrLong<-0x8000))) WrError(1370);
+	   if ((NOT SymbolQuestionable) AND ((AdrLong>0x7fffl) OR (AdrLong<-0x8000l))) WrError(1370);
 	   else
 	    BEGIN
 	     DAsmCode[0]=0x6a000000+(((LongWord)Conditions[z].Code) << 16)+DFlag+(AdrLong & 0xffff);
@@ -1358,7 +1358,7 @@ BEGIN
 	 BEGIN
 	  AdrLong=EvalAdrExpression(ArgStr[1],&OK)-(EProgCounter()+1);
 	  if (OK)
-	   if ((NOT SymbolQuestionable) AND ((AdrLong>0x7fff) OR (AdrLong<-0x8000))) WrError(1370);
+	   if ((NOT SymbolQuestionable) AND ((AdrLong>0x7fffl) OR (AdrLong<-0x8000l))) WrError(1370);
 	   else
 	    BEGIN
 	     DAsmCode[0]=0x72000000+(((LongWord)Conditions[z].Code) << 16)+(AdrLong & 0xffff);
@@ -1376,7 +1376,7 @@ BEGIN
      strcpy(OpPart,OpPart+2);
      if (OpPart[strlen(OpPart)-1]=='D')
       BEGIN
-       OpPart[strlen(OpPart)-1]='\0'; DFlag=1 << 21;
+       OpPart[strlen(OpPart)-1]='\0'; DFlag=1l << 21;
        Disp=3;
       END
      else
@@ -1406,7 +1406,7 @@ BEGIN
 	   BEGIN
             AdrLong=EvalAdrExpression(ArgStr[2],&OK)-(EProgCounter()+Disp);
 	    if (OK)
-	     if ((NOT SymbolQuestionable) AND ((AdrLong>0x7fff) OR (AdrLong<-0x8000))) WrError(1370);
+	     if ((NOT SymbolQuestionable) AND ((AdrLong>0x7fffl) OR (AdrLong<-0x8000l))) WrError(1370);
 	     else
 	      BEGIN
 	       DAsmCode[0]=0x6e000000
@@ -1425,7 +1425,7 @@ BEGIN
 
    if ((strncmp(OpPart,"RETI",4)==0) OR (strncmp(OpPart,"RETS",4)==0))
     BEGIN
-     DFlag=(OpPart[3]=='S')?(1 << 23):(0);
+     DFlag=(OpPart[3]=='S')?(1l << 23):(0);
      strcpy(HOp,OpPart); strcpy(OpPart,OpPart+4);
      for (z=0; z<ConditionCount; z++)
       if (Memo(Conditions[z].Name))

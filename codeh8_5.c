@@ -19,6 +19,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 
 #define FixedOrderCount 6
@@ -31,7 +32,7 @@
 #define BitOrderCount 4
 
 
-#define ModNone -1
+#define ModNone (-1)
 #define ModReg 0
 #define MModReg (1 << ModReg)
 #define ModIReg 1
@@ -71,12 +72,12 @@ typedef struct
 
 
 static CPUVar CPU532,CPU534,CPU536,CPU538;
-static void (*SaveInitProc)(void);
+static SimpProc SaveInitProc;
 
 static ShortInt OpSize;
 static String Format;
 static ShortInt AdrMode;
-static Byte AdrByte,AdrCnt,FormatCode;
+static Byte AdrByte,FormatCode;
 static Byte AdrVals[3];
 static Byte AbsBank;
 
@@ -93,8 +94,6 @@ static FixedOrder *BitOrders;
 
 /*-------------------------------------------------------------------------*/
 /* dynamische Belegung/Freigabe Codetabellen */
-
-static int InstrZ;
 
    	static void AddFixed(char *NName, Word NCode)
 BEGIN
@@ -432,7 +431,7 @@ BEGIN
 
      else
       BEGIN
-       DispAcc=0; DispSize=-1; RegPart=-1; OK=True; Unknown=False;
+       DispAcc=0; DispSize=(-1); RegPart=(-1); OK=True; Unknown=False;
        while ((*Asc!='\0') AND (OK))
         BEGIN
          p=QuotPos(Asc,',');
@@ -493,7 +492,7 @@ BEGIN
                break;
               case 1:
                if (Unknown) DispAcc&=0x7fff;
-               if (ChkRange(DispAcc,-0x8000,0x7fff))
+               if (ChkRange(DispAcc,-0x8000l,0x7fffl))
                 BEGIN
                  AdrMode=ModDisp16; AdrByte=0xf0+RegPart;
                  AdrVals[1]=DispAcc & 0xff;
@@ -510,7 +509,7 @@ BEGIN
 
    /* absolut */
 
-   DispSize=-1; SplitDisp(Asc,&DispSize);
+   DispSize=(-1); SplitDisp(Asc,&DispSize);
    FirstPassUnknown=False;
    DispAcc=EvalIntExpression(Asc,UInt24,&OK);
    DecideAbsolute(DispAcc,DispSize,FirstPassUnknown,Mask);
@@ -600,7 +599,7 @@ BEGIN
    Byte HReg;
    ShortInt HSize;
 
-   CodeLen=0; DontPrint=False; OpSize=-1; AbsBank=Reg_DP;
+   CodeLen=0; DontPrint=False; OpSize=(-1); AbsBank=Reg_DP;
 
    /* zu ignorierendes */
 
@@ -939,7 +938,7 @@ BEGIN
                  if (AdrLong==0) WrError(1315);
                  else
 	          BEGIN
-                   if (Memo("SUB")) AdrLong=-AdrLong;
+                   if (Memo("SUB")) AdrLong=(-AdrLong);
                    BAsmCode[0]=Adr2Byte+(OpSize << 3);
                    memcpy(BAsmCode+1,Adr2Vals,Adr2Cnt);
                    BAsmCode[1+Adr2Cnt]=0x08+abs(AdrLong)-1;
@@ -1198,7 +1197,7 @@ BEGIN
           BEGIN
            AdrLong-=EProgCounter()+2;
            if (AdrLong>0x7fff) AdrLong-=0x10000;
-           else if (AdrLong<-0x8000) AdrLong+=0x10000;
+           else if (AdrLong<-0x8000l) AdrLong+=0x10000;
            if (OpSize==-1)
             if ((AdrLong<=127) AND (AdrLong>=-128)) OpSize=4;
             else OpSize=2;
@@ -1337,7 +1336,7 @@ BEGIN
      else
       BEGIN
        strcpy(ArgStr[1],ArgStr[1]+1);
-       HSize=-1; SplitDisp(ArgStr[1],&HSize);
+       HSize=(-1); SplitDisp(ArgStr[1],&HSize);
        if (HSize!=-1) SetOpSize(HSize);
        FirstPassUnknown=False;
        AdrInt=EvalIntExpression(ArgStr[1],SInt16,&OK);
@@ -1386,7 +1385,7 @@ BEGIN
         else
          BEGIN
           strcpy(ArgStr[2],ArgStr[2]+1);
-          HSize=-1; SplitDisp(ArgStr[2],&HSize);
+          HSize=(-1); SplitDisp(ArgStr[2],&HSize);
           if (HSize!=-1) SetOpSize(HSize);
           FirstPassUnknown=False;
           AdrInt=EvalIntExpression(ArgStr[2],SInt16,&OK);
@@ -1478,10 +1477,10 @@ END
 	static void InitCode_H8_5(void)
 BEGIN
    SaveInitProc();
-   Reg_DP=-1;
-   Reg_EP=-1;
-   Reg_TP=-1;
-   Reg_BR=-1;
+   Reg_DP=(-1);
+   Reg_EP=(-1);
+   Reg_TP=(-1);
+   Reg_BR=(-1);
 END
 
 	static void SwitchTo_H8_5(void)

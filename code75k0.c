@@ -19,9 +19,10 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 
-#define ModNone -1
+#define ModNone (-1)
 #define ModReg4 0
 #define MModReg4 (1 << ModReg4)
 #define ModReg8 1
@@ -44,7 +45,7 @@ typedef struct
          } FixedOrder;
 
 
-static void (*SaveInitProc)(void);
+static SimpProc SaveInitProc;
 
 static FixedOrder *FixedOrders;
 static char **AriOrders;
@@ -67,8 +68,6 @@ static ShortInt AdrMode;
 
 /*-------------------------------------------------------------------------*/
 /* dynamische Codetabellenverwaltung */
-
-static int InstrZ;
 
    	static void AddFixed(char *NewName, Word NewCode)
 BEGIN
@@ -432,7 +431,7 @@ BEGIN
    Word BVal;
    Boolean OK,BrRel,BrLong;
 
-   CodeLen=0; DontPrint=False; OpSize=-1; MinOneIs0=False;
+   CodeLen=0; DontPrint=False; OpSize=(-1); MinOneIs0=False;
 
    /* zu ignorierendes */
 
@@ -1412,6 +1411,7 @@ BEGIN
    MakeCode=MakeCode_75K0; ChkPC=ChkPC_75K0; IsDef=IsDef_75K0;
    SwitchFrom=SwitchFrom_75K0; InitFields();
 END
+
 	void code75k0_init(void) 
 BEGIN
    CPU75402=AddCPU("75402",SwitchTo_75K0);

@@ -1,17 +1,17 @@
                 save
-                listing off     ; kein Listing ueber diesen File
+                listing off     ; kein Listing über diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.39 - Datei STDDEF90.INC                                           *
 ;*                                                                          *
-;*   Sinn : enthaelt Register- und Speicheradressen fuer TLCS-90-Prozessoren*
+;*   Sinn : enthält Register- und Speicheradressen für TLCS-90-Prozessoren  *
 ;*          Port- bzw. Registernamen nach Toshiba-Konvention                *
 ;*          aus dem Handbuch zur Prozessorfamilie TLCS-90                   *
 ;*                                                                          *
 ;*   Author Alfred Arnold                                                   *
 ;*                                                                          *
-;*   letzte Aenderungen :  1.11.1993                                        *
+;*   letzte Änderungen :  1.11.1993                                         *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -19,12 +19,12 @@
 
 stddef90inc     equ     1
 
-                if      (MomCPU<>9486657)
+                if      (MOMCPU<>9486657)
 		 fatal  "Falscher Prozessortyp eingestellt: nur 90C141 erlaubt"
                 endif
 
-                if      MomPass=1
-                 message "TLCS-90-Adressdefinitionen"
+                if      MOMPASS=1
+                 message "TLCS-90-Adreßdefinitionen"
                  message "(C) 1993 Alfred Arnold"
                 endif
 

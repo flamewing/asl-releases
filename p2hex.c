@@ -20,13 +20,17 @@
 #include "chunks.h"
 #include "decodecmd.h"
 
-#include "asmutils.h"
+#include "toolutils.h"
 
 static char *HexSuffix=".hex";
 #define MaxLineLen 254
 
 typedef enum {Default,MotoS,IntHex,IntHex16,IntHex32,MOSHex,TekHex,TiDSK} OutFormat;
-typedef void (*ProcessProc)(char *FileName, LongWord Offset);
+typedef void (*ProcessProc)(
+#ifdef __PROTOS__
+char *FileName, LongWord Offset
+#endif
+);
 
 static CMDProcessed ParProcessed;
 static Integer z,z2;
@@ -82,7 +86,13 @@ BEGIN
    Boolean doit,FirstBank=0;
    Byte Buffer[MaxLineLen];
    Word *WBuffer=(Word *) Buffer;
-   LongWord ErgStart,ErgStop=0xffffffffu,NextPos,IntOffset=0,MaxAdr;
+   LongWord ErgStart,
+#ifdef __STDC__
+            ErgStop=0xffffffffu,
+#else
+            ErgStop=0xffffffff,
+#endif
+            NextPos,IntOffset=0,MaxAdr;
    Word ErgLen=0,ChkSum=0,RecCnt,Gran,SwapBase,HSeg;
 
    LongInt z;
@@ -91,7 +101,7 @@ BEGIN
 
    OutFormat ActFormat;
 
-   SrcFile=fopen(FileName,"r"); 
+   SrcFile=fopen(FileName,OPENRDMODE); 
    if (SrcFile==Nil) ChkIO(FileName);
 
    if (NOT Read2(SrcFile,&TestID)) ChkIO(FileName);
@@ -123,9 +133,9 @@ BEGIN
           case 0x62: case 0x63: case 0x64: case 0x65: case 0x68: case 0x69:
           case 0x6c:
            ActFormat=MotoS; break;
-          case 0x12: case 0x21: case 0x31: case 0x39: case 0x41: case 0x49:
-          case 0x51: case 0x53: case 0x54: case 0x55: case 0x70: case 0x71:
-          case 0x72: case 0x78: case 0x79: case 0x7a: case 0x7b:
+          case 0x12: case 0x21: case 0x31: case 0x32: case 0x33: case 0x39: case 0x3a: case 0x41:
+          case 0x48: case 0x49: case 0x51: case 0x53: case 0x54: case 0x55: case 0x6e: case 0x70:
+          case 0x71: case 0x72: case 0x73: case 0x78: case 0x79: case 0x7a: case 0x7b:
            ActFormat=IntHex; break;
           case 0x42: case 0x4c:
            ActFormat=IntHex16; break;
@@ -143,7 +153,11 @@ BEGIN
         BEGIN
          case MotoS:
          case IntHex32:
+#ifdef __STDC__
           MaxAdr=0xffffffffu; break;
+#else
+          MaxAdr=0xffffffff; break;
+#endif
          case IntHex16:
           MaxAdr=0xffff0+0xffff; break;
          default:
@@ -226,7 +240,11 @@ BEGIN
   	    break;
   	   case IntHex16:
   	    IntelOccured=True;
+#ifdef __STDC__
   	    IntOffset=ErgStart&0xfffffff0u;
+#else
+            IntOffset=ErgStart&0xfffffff0;
+#endif
   	    HSeg=IntOffset>>4; ChkSum=4+Lo(HSeg)+Hi(HSeg);
             errno=0;
   	    fprintf(TargFile,":02000002%s%s\n",HexWord(HSeg),HexByte(0x100-ChkSum));
@@ -235,7 +253,11 @@ BEGIN
   	    break;
            case IntHex32:
   	    IntelOccured=True;
+#ifdef __STDC__
             IntOffset=ErgStart&0xffff0000u;
+#else
+            IntOffset=ErgStart&0xffff0000;
+#endif
             HSeg=IntOffset>>16; ChkSum=6+Lo(HSeg)+Hi(HSeg);
             fprintf(TargFile,":02000004%s%s\n",HexWord(HSeg),HexByte(0x100-ChkSum));
             if (MaxIntel<2) MaxIntel=2;
@@ -465,13 +487,13 @@ BEGIN
    errno=0; fclose(SrcFile); ChkIO(FileName);
 END
 
-	static void ProcessGroup(char *GroupName, ProcessProc Processor)
+	static void ProcessGroup(char *GroupName_O, ProcessProc Processor)
 BEGIN
 /**   s:SearchRec;**/
-   String /**Path,Name,**/Ext;
+   String /**Path,Name,**/Ext,GroupName;
    LongWord Offset;
 
-   strmaxcpy(Ext,GroupName,255);
+   strmaxcpy(GroupName,GroupName_O,255); strmaxcpy(Ext,GroupName,255);
    if (NOT RemoveOffset(GroupName,&Offset)) ParamError(False,Ext);
    AddSuffix(GroupName,Suffix);
 
@@ -496,7 +518,7 @@ BEGIN
    Word Length,TestID;
    LongWord Adr,EndAdr,NextPos;
 
-   f=fopen(FileName,"r"); if (f==Nil) ChkIO(FileName);
+   f=fopen(FileName,OPENRDMODE); if (f==Nil) ChkIO(FileName);
 
    if (NOT Read2(f,&TestID)) ChkIO(FileName); 
    if (TestID!=FileMagic) FormatError(FileName,FormatInvHeaderMsg);
@@ -547,7 +569,7 @@ BEGIN
     BEGIN
      p=strchr(Arg,'-'); if (p==Nil) return CMDErr;
 
-     Save=*p; *p='\0'; 
+     Save=(*p); *p='\0'; 
      if ((StartAuto=(strcmp(Arg,"$")==0))) err=True;
      else StartAdr=ConstLongInt(Arg,&err);
      *p=Save;
@@ -565,18 +587,24 @@ END
 
 	static CMDResult CMD_RelAdr(Boolean Negate, char *Arg)
 BEGIN
+   if (Arg==Nil); /* satisfy some compilers */
+
    RelAdr=(NOT Negate);
    return CMDOK;
 END
 
         static CMDResult CMD_Rec5(Boolean Negate, char *Arg)
 BEGIN
+   if (Arg==Nil); /* satisfy some compilers */
+
    Rec5=(NOT Negate);
    return CMDOK;
 END
 
         static CMDResult CMD_SepMoto(Boolean Negate, char *Arg)
 BEGIN
+   if (Arg==Nil); /* satisfy some compilers */
+
    SepMoto=(NOT Negate);
    return CMDOK;
 END
@@ -653,7 +681,7 @@ BEGIN
     BEGIN
      p=strchr(Arg,'-'); if (p==Nil) return CMDErr;
 
-     Save=*p; *p='\0';
+     Save=(*p); *p='\0';
      StartData=ConstLongInt(Arg,&err);
      *p=Save;
      if (NOT err) return CMDErr;
@@ -732,9 +760,9 @@ BEGIN
    nls_init();
    chunks_init();
    decodecmd_init();
-   asmutils_init();
+   toolutils_init();
 
-   /**NLS_Initialize;**/ WrCopyRight("P2HEX/C V1.41r5");
+   NLS_Initialize(); WrCopyRight("P2HEX/C V1.41r5");
 
    InitChunk(&UsedList);
 
@@ -751,7 +779,7 @@ BEGIN
    StartAdr=0; StopAdr=0x7fff;
    StartAuto=False; StopAuto=False;
    StartData=0; StopData=0x1fff;
-   EntryAdr=-1; EntryAdrPresent=False;
+   EntryAdr=(-1); EntryAdrPresent=False;
    RelAdr=False; Rec5=True; LineLen=16;
    IntelMode=0; MultiMode=0; DestFormat=Default;
    *TargName='\0';
@@ -776,7 +804,11 @@ BEGIN
 
    if ((StartAuto) OR (StopAuto))
     BEGIN
+#ifdef __STDC__
      if (StartAuto) StartAdr=0xffffffffu;
+#else
+     if (StartAuto) StartAdr=0xffffffff;
+#endif
      if (StopAuto) StopAdr=0;
      if (ProcessedEmpty(ParProcessed)) ProcessGroup(SrcName,MeasureFile);
      else for (z=1; z<=ParamCount; z++)

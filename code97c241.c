@@ -9,6 +9,7 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
+
 #include <string.h>
 #include <ctype.h>
 
@@ -19,6 +20,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 
 typedef struct
@@ -67,7 +69,7 @@ static Integer LowLim4,LowLim8;
 
 static Boolean AdrOK;
 static Byte AdrMode,AdrMode2;
-static Byte AdrCnt,AdrCnt2;
+static Byte AdrCnt2;
 static Word AdrVals[2],AdrVals2[2];
 static Integer AdrInc;
 static Word Prefs[2];
@@ -91,8 +93,6 @@ static char **StringOrders;
 static char **Conditions;
 
 /*--------------------------------------------------------------------------*/
-
-static int InstrZ;
 
 	static void AddFixed(char *NName, Word NCode)
 BEGIN
@@ -131,13 +131,13 @@ BEGIN
 END
 
         static void AddGASecond(char *NName, Word NCode)
-BEGIN                             
+BEGIN
    if (InstrZ>=GASecondOrderCount) exit(255);
    GASecondOrders[InstrZ].Name=NName;
    GASecondOrders[InstrZ++].Code=NCode;
 END                               
 
-         static void InitFields(void)
+        static void InitFields(void)
 BEGIN
    FixedOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*FixedOrderCount); InstrZ=0;
    AddFixed("CCF" , 0x7f82);
@@ -849,7 +849,7 @@ BEGIN
    else return False;
 END
 
-	static void ConvertShort()
+	static void ConvertShort(void)
 BEGIN
    if (AdrMode==0x30)
     BEGIN
@@ -857,7 +857,7 @@ BEGIN
     END
 END
 
-	static void Convert2Short()
+	static void Convert2Short(void)
 BEGIN
    if (AdrMode2==0x30)
     BEGIN
@@ -884,114 +884,10 @@ BEGIN
     END
 END
 
-	static void MakeCode_97C241(void)
+	static Boolean CodeAri(void)
 BEGIN
    Integer z,Cnt;
-   Byte Reg,Num1,Num2;
-   char *p;
-   LongInt AdrInt,AdrLong;
-   Boolean OK;
-
-   CodeLen=0; DontPrint=False; PrefUsed[0]=False; PrefUsed[1]=False;
-   AdrInc=0; MinOneIs0=False; LowLim4=-8; LowLim8=-128;
-
-   /* zu ignorierendes */
-
-   if (Memo("")) return;
-
-   /* Formatangabe abspalten */
-
-   switch (AttrSplit)
-    BEGIN
-     case '.':
-      p=strchr(AttrPart,':');
-      if (p!=0)
-       BEGIN
-        if (p<AttrPart+strlen(AttrPart)-1) Format=p[1];
-        else Format=' ';
-        *p='\0';
-       END
-      else Format=' ';
-      break;
-     case ':':
-      p=strchr(AttrPart,'.');
-      if (p==Nil)
-       BEGIN
-        Format=*AttrPart; *AttrPart='\0';
-       END
-      else
-       BEGIN
-        if (p==AttrPart) Format=' '; else Format=*AttrPart;
-        strcpy(AttrPart,p+1);
-       END
-      break;
-     default:
-      Format=' ';
-    END
-   Format=toupper(Format);
-
-   /* Attribut abarbeiten */
-
-   if (*AttrPart=='\0') OpSize=-1;
-   else
-    switch (toupper(*AttrPart))
-     BEGIN
-      case 'B': OpSize=0; break;
-      case 'W': OpSize=1; break;
-      case 'D': OpSize=2; break;
-      default:
-       WrError(1107); return;
-     END
-
-   /* Pseudoanweisungen */
-
-   if (DecodePseudo()) return;
-
-   if (DecodeIntelPseudo(False)) return;
-
-   /* ohne Argument */
-
-   for (z=0; z<FixedOrderCount; z++)
-    if (Memo(FixedOrders[z].Name))
-     BEGIN
-      if (ArgCnt!=0) WrError(1110);
-      else if (*AttrPart!='\0') WrError(1100);
-      else
-       BEGIN
-        WAsmCode[0]=FixedOrders[z].Code;
-        CodeLen=2;
-       END
-      return;
-     END
-
-   /* ein Operand */
-
-   for (z=0; z<RMWOrderCount; z++)
-    if (Memo(RMWOrders[z].Name))
-     BEGIN
-      if ((OpSize==-1) AND ((RMWOrders[z].Mask & 0x20)!=0)) OpSize=2;
-      if (ArgCnt!=1) WrError(1110);
-      else
-       BEGIN
-        if ((NOT IsIndirect(ArgStr[1])) AND ((RMWOrders[z].Mask & 0x20)!=0))
-         BEGIN
-          sprintf(ArgStr[2],"(%s)",ArgStr[1]); strcpy(ArgStr[1],ArgStr[2]);
-         END
-        DecodeAdr(ArgStr[1],0,(RMWOrders[z].Mask & 0x10)==0,(RMWOrders[z].Mask & 0x20)==0);
-        if (AdrOK)
-         if (OpSize==-1) WrError(1132);
-         else if ((RMWOrders[z].Mask & (1 << OpSize))==0) WrError(1130);
-         else
-          BEGIN
-           WAsmCode[0]=(((Word)OpSize+1) << 14)+(((Word)RMWOrders[z].Code) << 8)+AdrMode;
-           memcpy(WAsmCode+1,AdrVals,AdrCnt);
-           CodeLen=2+AdrCnt;
-          END
-       END
-      AddPrefixes(); return;
-     END
-
-   /* Arithmetik */
+   Byte Reg;
 
    for (z=0; z<GASI1OrderCount; z++)
     if (Memo(GASI1Orders[z]))
@@ -1089,7 +985,7 @@ BEGIN
 	    END
 	 END
        END
-      AddPrefixes(); return;
+      AddPrefixes(); return True;
      END
 
    for (z=0; z<GASI2OrderCount; z++)
@@ -1176,7 +1072,7 @@ BEGIN
 	    END
 	 END
        END
-      AddPrefixes(); return;
+      AddPrefixes(); return True;
      END
 
    for (z=0; z<TrinomOrderCount; z++)
@@ -1212,7 +1108,7 @@ BEGIN
 	   END
 	 END
        END
-      AddPrefixes(); return;
+      AddPrefixes(); return True;
      END
 
    if ((Memo("RLM")) OR (Memo("RRM")))
@@ -1247,8 +1143,122 @@ BEGIN
 	   END
 	END
       END
-     AddPrefixes(); return;
+     AddPrefixes(); return True;
     END
+
+   return False;
+END
+
+	static void MakeCode_97C241(void)
+BEGIN
+   Integer z,Cnt;
+   Byte Reg,Num1,Num2;
+   char *p;
+   LongInt AdrInt,AdrLong;
+   Boolean OK;
+
+   CodeLen=0; DontPrint=False; PrefUsed[0]=False; PrefUsed[1]=False;
+   AdrInc=0; MinOneIs0=False; LowLim4=(-8); LowLim8=(-128);
+
+   /* zu ignorierendes */
+
+   if (Memo("")) return;
+
+   /* Formatangabe abspalten */
+
+   switch (AttrSplit)
+    BEGIN
+     case '.':
+      p=strchr(AttrPart,':');
+      if (p!=0)
+       BEGIN
+        if (p<AttrPart+strlen(AttrPart)-1) Format=p[1];
+        else Format=' ';
+        *p='\0';
+       END
+      else Format=' ';
+      break;
+     case ':':
+      p=strchr(AttrPart,'.');
+      if (p==Nil)
+       BEGIN
+        Format=(*AttrPart); *AttrPart='\0';
+       END
+      else
+       BEGIN
+        if (p==AttrPart) Format=' '; else Format=(*AttrPart);
+        strcpy(AttrPart,p+1);
+       END
+      break;
+     default:
+      Format=' ';
+    END
+   Format=toupper(Format);
+
+   /* Attribut abarbeiten */
+
+   if (*AttrPart=='\0') OpSize=(-1);
+   else
+    switch (toupper(*AttrPart))
+     BEGIN
+      case 'B': OpSize=0; break;
+      case 'W': OpSize=1; break;
+      case 'D': OpSize=2; break;
+      default:
+       WrError(1107); return;
+     END
+
+   /* Pseudoanweisungen */
+
+   if (DecodePseudo()) return;
+
+   if (DecodeIntelPseudo(False)) return;
+
+   /* ohne Argument */
+
+   for (z=0; z<FixedOrderCount; z++)
+    if (Memo(FixedOrders[z].Name))
+     BEGIN
+      if (ArgCnt!=0) WrError(1110);
+      else if (*AttrPart!='\0') WrError(1100);
+      else
+       BEGIN
+        WAsmCode[0]=FixedOrders[z].Code;
+        CodeLen=2;
+       END
+      return;
+     END
+
+   /* ein Operand */
+
+   for (z=0; z<RMWOrderCount; z++)
+    if (Memo(RMWOrders[z].Name))
+     BEGIN
+      if ((OpSize==-1) AND ((RMWOrders[z].Mask & 0x20)!=0)) OpSize=2;
+      if (ArgCnt!=1) WrError(1110);
+      else
+       BEGIN
+        if ((NOT IsIndirect(ArgStr[1])) AND ((RMWOrders[z].Mask & 0x20)!=0))
+         BEGIN
+          sprintf(ArgStr[2],"(%s)",ArgStr[1]); strcpy(ArgStr[1],ArgStr[2]);
+         END
+        DecodeAdr(ArgStr[1],0,(RMWOrders[z].Mask & 0x10)==0,(RMWOrders[z].Mask & 0x20)==0);
+        if (AdrOK)
+         if (OpSize==-1) WrError(1132);
+         else if ((RMWOrders[z].Mask & (1 << OpSize))==0) WrError(1130);
+         else
+          BEGIN
+           WAsmCode[0]=(((Word)OpSize+1) << 14)+(((Word)RMWOrders[z].Code) << 8)+AdrMode;
+           memcpy(WAsmCode+1,AdrVals,AdrCnt);
+           CodeLen=2+AdrCnt;
+          END
+       END
+      AddPrefixes(); return;
+     END
+
+   /* Arithmetik */
+
+   if (CodeAri()) return;
 
    for (z=0; z<BitOrderCount; z++)
     if (Memo(BitOrders[z]))
@@ -1261,7 +1271,7 @@ BEGIN
 	 if (OpSize==-1) WrError(1132);
 	 else
 	  BEGIN
-	   CopyAdr(); OpSize=-1; MinOneIs0=True;
+	   CopyAdr(); OpSize=(-1); MinOneIs0=True;
 	   DecodeAdr(ArgStr[2],0,True,True);
 	   if (AdrOK)
 	    BEGIN
@@ -1351,7 +1361,7 @@ BEGIN
 	 if (OpSize==-1) WrError(1132);
 	 else
 	  BEGIN
-	   CopyAdr(); OpSize=-1; MinOneIs0=True;
+	   CopyAdr(); OpSize=(-1); MinOneIs0=True;
 	   DecodeAdr(ArgStr[2],0,True,True);
 	   if (AdrOK)
 	    BEGIN
@@ -1493,7 +1503,7 @@ BEGIN
            if (OpSize==-1) WrError(1132);
            else
             BEGIN
-             if (OpSize==0) LowLim8=-128;
+             if (OpSize==0) LowLim8=(-128);
              if (Format==' ')
               BEGIN
        	       if (((Is2Absolute()) AND (IsShort()))
@@ -1639,7 +1649,7 @@ BEGIN
          if (OpSize==-1) WrError(1132);
          else
           BEGIN
-           CopyAdr(); OpSize=-1; MinOneIs0=True;
+           CopyAdr(); OpSize=(-1); MinOneIs0=True;
            DecodeAdr(ArgStr[2],0,True,True);
            OpSize=OpSize2;
            if (AdrOK)
@@ -1713,7 +1723,7 @@ BEGIN
          if (OpSize==-1) WrError(1132);
          else
           BEGIN
-           CopyAdr(); OpSize=-1;
+           CopyAdr(); OpSize=(-1);
            DecodeAdr(ArgStr[1],1,False,True);
            OpSize=OpSize2;
            if (AdrOK)
@@ -1792,7 +1802,7 @@ BEGIN
 	  DecodeAdr(ArgStr[1],0,False,False);
 	  if (AdrOK)
 	   BEGIN
-	    if (OpSize==0) LowLim8=-128;
+	    if (OpSize==0) LowLim8=(-128);
 	    if (Format==' ')
 	     BEGIN
 	      if (((Is2Absolute()) AND (IsShort()))

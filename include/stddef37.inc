@@ -1,13 +1,13 @@
 		save
-                listing off   ; kein Listing ber diesen File
+                listing off   ; kein Listing über diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.40 - Datei STDDEF37.INC                                           *
 ;*   								            *
-;*   Sinn : enth„lt SFR- und Bitdefinitionen fr die TMS370-Prozessoren     *
+;*   Sinn : enthält SFR- und Bitdefinitionen für die TMS370-Prozessoren     *
 ;* 									    *
-;*   letzte nderungen : 12. 5.1993                                         *
+;*   letzte Änderungen : 12. 5.1993                                         *
 ;*									    *
 ;****************************************************************************
 
@@ -15,12 +15,12 @@
 
 stddef37inc     equ     1
 
-		if      (MomCPU<>57720848)&&(MomCPU<>57720864)&&(MomCPU<>57720880)&&(MomCPU<>57720896)&&(MomCPU<>57720912)
+                if      (MOMCPU<>57720848)&&(MOMCPU<>57720864)&&(MOMCPU<>57720880)&&(MOMCPU<>57720896)&&(MOMCPU<>57720912)
 		 fatal  "Falscher Prozessortyp eingestellt: nur 370C010, 370C020, 370C030, 370C040 oder 370C050 erlaubt!"
 		endif
 
 
-		if      MomPass=1
+                if      MOMPASS=1
 		 message "TMS370-Register-Definitionen (C) 1994 Alfred Arnold"
 		 message "binde \{MOMCPU}-SFRs ein"
 		endif
@@ -33,14 +33,14 @@ stddef37inc     equ     1
 sccr0		equ	p010
 cold_start	dbit	7,sccr0	; Kaltstart ?
 osc_power	dbit	6,sccr0	; Stromaufnahme Oszillator reduzieren
-pf_auto_wait	dbit	5,sccr0 ; Wartezyklen fr externe Peripherie
+pf_auto_wait	dbit	5,sccr0 ; Wartezyklen für externe Peripherie
 osc_flt_flag	dbit	4,sccr0 ; Fehler in Oszillatorschaltung ?
 mc_pin_wpo	dbit	3,sccr0 ; Spannung an MC hoch genug ?
 mc_pin_data	dbit	2,sccr0	; Zustand des MC-Anschlusses
 up_uc_mode	dbit	0,sccr0	; Mikroprozessor/Mikrokontroller-Modus
 
 sccr1		equ	p011
-auto_wait_disable dbit	4,sccr1	; Wartezyklen fr externen Speicher
+auto_wait_disable dbit	4,sccr1	; Wartezyklen für externen Speicher
 memory_disable	dbit	2,sccr1	; int. ROM abschalten
 
 sccr2		equ	p012
@@ -59,14 +59,14 @@ aport2		equ	p021
 adata		equ	p022	; Port A Datenregister
 adir		equ	p023	; Port A Datenrichtungsregister
 
-                if      (MomCPU=370C020h)||(MomCPU>370C030h)
+                if      (MOMCPU=370C020h)||(MOMCPU>370C030h)
 bport1		 equ	p024
 bport2		 equ	p025
 bdata		 equ	p026	; Port B Datenregister
 bdir		 equ	p027	; Port B Datenrichtungsregister
 		endif
 
-                if      (MomCPU=370C020h)||(MomCPU=370C050h)
+                if      (MOMCPU=370C020h)||(MOMCPU=370C050h)
 cport1		 equ	p028
 cport2		 equ	p029
 cdata		 equ	p02a	; Port C Datenregister
@@ -83,15 +83,15 @@ ddir		equ	p02f	; Port D Datenrichtungsregister
 
 int1		equ	p017
 int1_enable	dbit	0,int1	; Freigabe externer Interrupt 1
-int1_priority	dbit	1,int1	; Priorit„t externer Interrupt 1
-int1_polarity	dbit	2,int1	; Polarit„t externer Interrupt 1
+int1_priority	dbit	1,int1	; Priorität externer Interrupt 1
+int1_polarity	dbit	2,int1	; Polarität externer Interrupt 1
 int1_pin_data	dbit	6,int1	; Zustand Interrupt 1-Pin
 int1_flag	dbit	7,int1	; externer Interrupt 1 aufgetreten
 
 int2		equ	p018
 int2_enable	dbit	0,int2	; Freigabe externer Interrupt 2
-int2_priority	dbit	1,int2	; Priorit„t externer Interrupt 2
-int2_polarity	dbit	2,int2	; Polarit„t externer Interrupt 2
+int2_priority	dbit	1,int2	; Priorität externer Interrupt 2
+int2_polarity	dbit	2,int2	; Polarität externer Interrupt 2
 int2_data_out	dbit	3,int2	; Ausgabewert Interrupt 2-Pin
 int2_data_dir	dbit	4,int2	; Datenrichtung Interrupt 2-Pin
 int2_pin_data	dbit	6,int2	; Zustand Interrupt 2-Pin
@@ -99,8 +99,8 @@ int2_flag	dbit	7,int2	; externer Interrupt 2 aufgetreten
 
 int3		equ	p019
 int3_enable	dbit	0,int3	; Freigabe externer Interrupt 3
-int3_priority	dbit	1,int3	; Priorit„t externer Interrupt 3
-int3_polarity	dbit	2,int3	; Polarit„t externer Interrupt 3
+int3_priority	dbit	1,int3	; Priorität externer Interrupt 3
+int3_polarity	dbit	2,int3	; Polarität externer Interrupt 3
 int3_data_out	dbit	3,int3	; Ausgabewert Interrupt 3-Pin
 int3_data_dir	dbit	4,int3	; Datenrichtung Interrupt 3-Pin
 int3_pin_data	dbit	6,int3	; Zustand Interrupt 3-Pin
@@ -113,19 +113,19 @@ deectl		equ	p01a
 ee_busy		dbit	7,deectl ; EEPROM nicht zugreifbar
 ap		dbit	2,deectl ; Blockprogrammierung freigeben
 w1w0		dbit	1,deectl ; Einsen oder Nullen programmieren ?
-ee_exe		dbit	0,deectl ; Vorgang ausfhren
+ee_exe		dbit	0,deectl ; Vorgang ausführen
 
 epctl0		equ	p01c
 ep0_busy	dbit	7,epctl0 ; EPROM Teil 1 nicht zugreifbar
 ep0_vpps	dbit	6,epctl0 ; Brennspannung freigeben
 ep0_w0		dbit	1,epctl0 ; Schreiben von Nullen freigeben
-ep0_exe		dbit	0,epctl0 ; Schreibvorgang ausfhren
+ep0_exe		dbit	0,epctl0 ; Schreibvorgang ausführen
 
 epctl1		equ	p01e
 ep1_busy	dbit	7,epctl1 ; EPROM Teil 2 nicht zugreifbar
 ep1_vpps	dbit	6,epctl1 ; Brennspannung freigeben
 ep1_w0		dbit	1,epctl1 ; Schreiben von Nullen freigeben
-ep1_exe		dbit	0,epctl1 ; Schreibvorgang ausfhren
+ep1_exe		dbit	0,epctl1 ; Schreibvorgang ausführen
 
 ;----------------------------------------------------------------------------
 ; Timer 1
@@ -133,8 +133,8 @@ ep1_exe		dbit	0,epctl1 ; Schreibvorgang ausfhren
 t1ctl1		equ	p049	; steuern auch Watchdog
 t1ctl2		equ	p04a
 
-                if      MomCPU<>370C030h
-t1cntrh		 equ	p040	; Z„hlerregister
+                if      MOMCPU<>370C030h
+t1cntrh		 equ	p040	; Zählerregister
 t1cntrl		 equ	p041
 
 t1ch		 equ	p042	; Vergleichsregister
@@ -147,7 +147,7 @@ t1_input_select0 dbit	0,t1ctl1 ; Taktquelle
 t1_input_select1 dbit	1,t1ctl1
 t1_input_select2 dbit	2,t1ctl1
 
-t1_sw_reset	 dbit	0,t1ctl2 ; Z„hler zurcksetzen
+t1_sw_reset	 dbit	0,t1ctl2 ; Zähler zurücksetzen
 t1_ovrfl_int_flag dbit	3,t1ctl2 ; Overflow aufgetreten ?
 t1_ovrfl_int_ena dbit	4,t1ctl2 ; Overflow-Interrupts freigeben
 
@@ -164,7 +164,7 @@ t1edge_det_ena	 dbit	0,t1ctl4 ; Flankendetektor an T1IC/CR freigeben
 t1cr_rst_ena	 dbit	1,t1ctl4 ; externen Reset freigeben
 t1edge_polarity	 dbit	2,t1ctl4 ; Flankenwahl T1IC/CR
 t1cr_out_ena	 dbit	3,t1ctl4 ; Umschaltung PWM durch T1IC/CR freigeben
-t1c1_rst_ena     dbit   4,t1ctl4 ; Rcksetzen durch Vergleicher freigeben
+t1c1_rst_ena     dbit   4,t1ctl4 ; Rücksetzen durch Vergleicher freigeben
 t1c2_out_ena	 dbit	5,t1ctl4 ; Umschaltung PWM durch Vergleichs(/Fang)register freigeben
 t1c1_out_ena	 dbit	6,t1ctl4 ; Umschaltung PWM durch Vergleichsregister freigeben
 t1_mode		 dbit	7,t1ctl4 ; Modus Timer 1
@@ -186,15 +186,15 @@ t1pwm_data_out	 dbit	2,t1pc2 ; T1PWM-Pin Datenausgang
 t1pwm_data_in	 dbit	7,t1pc2 ; T1PWM-Pin Dateneingang
 
 t1pri		 equ	p04f
-t1_priority	 dbit	6,t1pri ; Priorit„t Interrupts Timer 1
+t1_priority	 dbit	6,t1pri ; Priorität Interrupts Timer 1
 t1_stest	 dbit	7,t1pri ; Selbsttest Timer 1
 		endif
 
 ;----------------------------------------------------------------------------
 ; Timer 2
 
-                if MomCPU>370C030H
-t2cntrh		 equ	p060	; Z„hlerregister
+                if MOMCPU>370C030H
+t2cntrh		 equ	p060	; Zählerregister
 t2cntrl		 equ	p061
 
 t2ch		 equ	p062	; Vergleichsregister
@@ -207,7 +207,7 @@ t2ich		 equ	p066	; Fangregister
 t2icl		 equ	p067
 
 t2ctl1		 equ	p06a
-t2_sw_reset	 dbit	0,t2ctl1 ; Z„hler zurcksetzen
+t2_sw_reset	 dbit	0,t2ctl1 ; Zähler zurücksetzen
 t2_input_select0 dbit	1,t2ctl1 ; Taktquelle
 t2_input_select1 dbit	2,t2ctl1
 t2_ovrfl_int_flag dbit	3,t2ctl1 ; Overflow aufgetreten ?
@@ -228,7 +228,7 @@ t2edge2_det_ena	 dbit	1,t2ctl3 ; Flankendetektor an T2IC2/CR freigeben
 t2edge1_polarity dbit	2,t2ctl3 ; Flankenwahl T2IC1/CR
 t2edge1_out_ena	 dbit	3,t2ctl3 ; Umschaltung PWM durch T2IC1/CR freigeben
 t2edge2_polarity dbit	3,t2ctl3 ; Flankenwahl T2IC2/CR
-t2c1_rst_ena	 dbit	4,t2ctl3 ; Rcksetzen durch Vergleicher freigeben
+t2c1_rst_ena	 dbit	4,t2ctl3 ; Rücksetzen durch Vergleicher freigeben
 t2c2_out_ena	 dbit	5,t2ctl3 ; Umschaltung PWM durch Vergleichs(/Fang)register freigeben
 t2c1_out_ena	 dbit	6,t2ctl3 ; Umschaltung PWM durch Vergleichsregister freigeben
 t2_mode		 dbit	7,t2ctl3 ; Modus Timer 2
@@ -254,23 +254,23 @@ t2pwm_data_out	 dbit	6,t1pc2 ; T2PWM-Pin Datenausgang
 t2pwm_data_in	 dbit	7,t1pc2 ; T2PWM-Pin Dateneingang
 
 t2pri		 equ	p06f
-t2_priority	 dbit	6,t2pri ; Priorit„t Interrupts Timer 2
+t2_priority	 dbit	6,t2pri ; Priorität Interrupts Timer 2
 t2_stest	 dbit	7,t2pri ; Selbsttest Timer 2
 		endif
 
 ;----------------------------------------------------------------------------
 ; Watchdog
 
-                if      MomCPU<>370C030h
-wdcntrh          equ    p046    ; Z„hlregister
+                if      MOMCPU<>370C030h
+wdcntrh          equ    p046    ; Zählregister
 wdcntrl          equ    p047
 
-wdrst            equ    p048    ; Rcksetz-Schlsselregister
+wdrst            equ    p048    ; Rücksetz-Schlüsselregister
 
 wd_input_select0 dbit	4,t1ctl1 ; Taktquelle
 wd_input_select1 dbit	5,t1ctl1
 wd_input_select2 dbit	6,t1ctl1
-wd_ovrfl_tap_sel dbit	7,t1ctl1 ; 15- oder 16-bittig z„hlen
+wd_ovrfl_tap_sel dbit	7,t1ctl1 ; 15- oder 16-bittig zählen
 wd_ovrfl_int_flag dbit	5,t1ctl2 ; Watchdog-Reset aufgetreten ?
 wd_ovrfl_int_ena dbit	6,t1ctl2 ; Watchdog-Interrupts freigeben
 wd_ovrfl_rst_ena dbit   7,t1ctl2 ; Watchdog-Resets freigeben
@@ -279,19 +279,19 @@ wd_ovrfl_rst_ena dbit   7,t1ctl2 ; Watchdog-Resets freigeben
 ;----------------------------------------------------------------------------
 ; SCI
 
-                if (MomCPU=370C020h)||(MomCPU>370C030h)
+                if (MOMCPU=370C020h)||(MOMCPU>370C030h)
 sciccr		 equ	p050
-sci_char0	 dbit	0,sciccr ; Zeichenl„nge
+sci_char0	 dbit	0,sciccr ; Zeichenlänge
 sci_char1	 dbit	1,sciccr
 sci_char2	 dbit	2,sciccr
 address_idle_wup dbit	3,sciccr ; Multiprozessormodus
 async_iosync	 dbit	4,sciccr ; Betriebsart: synchron/asynchron
-parity_enable	 dbit	5,sciccr ; mit/ohne Parit„t
-even_odd_parity	 dbit	6,sciccr ; gerade/ungerade Parit„t
+parity_enable	 dbit	5,sciccr ; mit/ohne Parität
+even_odd_parity	 dbit	6,sciccr ; gerade/ungerade Parität
 stop_bits	 dbit	7,sciccr ; Anzahl Stopbits
 
 scictl		 equ	p051
-rxena		 dbit	0,scictl ; Empf„ngerfreigabe
+rxena		 dbit	0,scictl ; Empfängerfreigabe
 txena		 dbit	1,scictl ; Senderfreigabe
 sleep		 dbit	2,scictl ; Sleep-Modus SCI
 txwake		 dbit	3,scictl ; Sender aufwecken
@@ -307,10 +307,10 @@ tx_empty	 dbit	6,txctl  ; Sender komplett leer ?
 txrdy		 dbit	7,txctl  ; neues Datum kann geschrieben werden
 
 rxctl		 equ	p055
-sci_rx_int_ena	 dbit	0,rxctl	 ; Interrupts durch Empf„nger freigeben
-rxwake		 dbit	1,rxctl	 ; Ist Empf„nger aufgeweckt worden ?
-sci_pe		 dbit	2,rxctl	 ; Parit„tsfehler ?
-sci_oe		 dbit	3,rxctl	 ; šberlauffehler ?
+sci_rx_int_ena	 dbit	0,rxctl	 ; Interrupts durch Empfänger freigeben
+rxwake		 dbit	1,rxctl	 ; Ist Empfänger aufgeweckt worden ?
+sci_pe		 dbit	2,rxctl	 ; Paritätsfehler ?
+sci_oe		 dbit	3,rxctl	 ; Überlauffehler ?
 sci_fe		 dbit	4,rxctl	 ; kein korrektes Stopbit ?
 brkdt		 dbit	5,rxctl	 ; Break aufgetreten ?
 rxrdy		 dbit	6,rxctl	 ; Zeichen empfangen ?
@@ -337,23 +337,23 @@ scitxd_data_in	 dbit	7,scipc2 ; SCITXD-Pin Dateneingang
 
 scipri		 equ	p05f
 sci_espen	 dbit	4,scipri ; SCI emulator suspend ?!
-scirx_priority	 dbit	5,scipri ; SCI Empfangsinterrupt Priorit„t
-scitx_priority	 dbit	6,scipri ; SCI Sendeinterrupt Priorit„t
+scirx_priority	 dbit	5,scipri ; SCI Empfangsinterrupt Priorität
+scitx_priority	 dbit	6,scipri ; SCI Sendeinterrupt Priorität
 sci_test	 dbit	7,scipri ; SCI Selbsttest
 		endif
 
 ;----------------------------------------------------------------------------
 ; SPI
 
-                if (MomCPU<370C030h)||(MomCPU=370C050h)
+                if (MOMCPU<370C030h)||(MOMCPU=370C050h)
 spiccr           equ    p030
-spi_char0        dbit   0,spiccr ; Zeichenl„nge
+spi_char0        dbit   0,spiccr ; Zeichenlänge
 spi_char1        dbit   1,spiccr
 spi_char2        dbit   2,spiccr
 spi_bit_rate0    dbit   3,spiccr ; Bitrate
 spi_bit_rate1    dbit   4,spiccr
 spi_bit_rate2    dbit   5,spiccr
-clock_polarity   dbit   6,spiccr ; Polarit„t Taktsignal
+clock_polarity   dbit   6,spiccr ; Polarität Taktsignal
 spi_sw_reset     dbit   7,spiccr ; Software-Reset
 
 spictl           equ    p031
@@ -361,9 +361,9 @@ spi_int_ena      dbit   0,spictl ; Interrupt-Freigabe
 talk             dbit   1,spictl ; Slave/Master-Senderfreigabe
 master_slave     dbit   2,spictl ; Slave/Master-Umschaltung
 spi_int_flag     dbit   6,spictl ; Interrupt aufgetreten ?
-receiver_overrun dbit   7,spictl ; EMpf„ngerberlauf ?
+receiver_overrun dbit   7,spictl ; EMpfängerüberlauf ?
 
-spibuf           equ    p037     ; Empf„ngerpuffer
+spibuf           equ    p037     ; Empfängerpuffer
 spidat           equ    p039     ; Senderegister
 
 spipc1           equ    p03d
@@ -383,15 +383,15 @@ spimosi_data_out dbit   6,spipc2 ; SPIMOSI-Pin Datenausgang
 spimosi_data_in  dbit   7,spipc2 ; SPIMOSI-Pin Dateneingang
 
 spipri           equ    p03f
-spi_espen        dbit   5,spipri ; Emulator unterdrcken ?!
-spi_priority     dbit   6,spipri ; Interrupt-Priorit„t
+spi_espen        dbit   5,spipri ; Emulator unterdrücken ?!
+spi_priority     dbit   6,spipri ; Interrupt-Priorität
 spi_stest        dbit   7,spipri ; Selbsttest
                 endif
 
 ;----------------------------------------------------------------------------
 ; A/D-Wandler
 
-                if      MomCPU>370C030h
+                if      MOMCPU>370C030h
 adctl            equ    p070
 ad_input_select0 dbit   0,adctl  ; Kanalauswahl
 ad_input_select1 dbit   1,adctl
@@ -399,7 +399,7 @@ ad_input_select2 dbit   2,adctl
 ref_volt_select0 dbit   3,adctl  ; Auswahl Referenzspannung
 ref_volt_select1 dbit   4,adctl
 ref_volt_select2 dbit   5,adctl
-sample_start     dbit   6,adctl  ; Sample-Phase beginnen (wird autom. gel”scht)
+sample_start     dbit   6,adctl  ; Sample-Phase beginnen (wird autom. gelöscht)
 convert_start    dbit   7,adctl  ; Wandlungs-Phase beginnen
 
 adstat           equ    p071
@@ -409,18 +409,18 @@ ad_ready         dbit   2,adstat ; AD-Wandler bereit ?
 
 addata           equ    p072     ; Wandlungsergebnis
 adin             equ    p07d     ; digitale Eingangsdaten, wenn nicht analog genutzt
-adena            equ    p07e     ; Analogeing„nge freischalten
+adena            equ    p07e     ; Analogeingänge freischalten
 
 adpri            equ    p07f
-ad_espen         dbit   5,adpri  ; Emulator unterdrcken ?!
-ad_priority      dbit   6,adpri  ; Interrupt-Priorit„t
+ad_espen         dbit   5,adpri  ; Emulator unterdrücken ?!
+ad_priority      dbit   6,adpri  ; Interrupt-Priorität
 ad_stest         dbit   7,adpri  ; Selbsttest
                 endif
 
 ;----------------------------------------------------------------------------
 ; PACT
 
-                if      MomCPU=370C030h
+                if      MOMCPU=370C030h
 pact_scr         equ    p040
 pact_prescale_select0 dbit 0,pact_scr   ; Vorteilerauswahl
 pact_prescale_select1 dbit 1,pact_scr
@@ -428,8 +428,8 @@ pact_prescale_select2 dbit 2,pact_scr
 pact_prescale_select3 dbit 3,pact_scr
 fast_mode_select dbit   4,pact_scr      ; Vorteiler durch 8 aus
 cmd_def_area_ena dbit   5,pact_scr      ; Zugriff auf Dual-Port-RAM freigeben
-deftim_ovrfl_int_flag dbit 6,pact_scr   ; Timerberlauf aufgetreten ?
-deftim_ovrfl_int_ena  dbit 7,pact_scr   ; Interrupts bei Timerberlauf freigeben
+deftim_ovrfl_int_flag dbit 6,pact_scr   ; Timerüberlauf aufgetreten ?
+deftim_ovrfl_int_ena  dbit 7,pact_scr   ; Interrupts bei Timerüberlauf freigeben
 
 cdstart          equ    p041
 cmd_def_area2    dbit   2,cdstart       ; Startadresse Kommando/Definitionsbereich
@@ -455,9 +455,9 @@ buffer_pointer5  dbit   5,bufptr
 scictlp          equ    p045
 sci_sw_reset      dbit  0,scictlp       ; Software Reset
 sci_tx_int_ena    dbit  2,scictlp       ; Sendeinterrupts freigeben
-sci_rx_int_ena    dbit  3,scictlp       ; Empf„ngerinterrupts freigeben
+sci_rx_int_ena    dbit  3,scictlp       ; Empfängerinterrupts freigeben
 pact_fe           dbit  4,scictlp       ; Rahmenfehler ?
-pact_parity       dbit  5,scictlp       ; Parit„tsfehler ?
+pact_parity       dbit  5,scictlp       ; Paritätsfehler ?
 pact_txrdy        dbit  6,scictlp       ; Sender leer ?
 pact_rxrdy        dbit  7,scictlp       ; Empfangspuffer voll ?
 
@@ -498,13 +498,13 @@ cp6_int_flag     dbit   6,cpctl3        ; Flanke an CP6 aufgetreten ?
 cp6_int_ena      dbit   7,cpctl3        ; Interrupts durch CP6 freigeben
 
 cppre            equ    p04d
-op_set_clr_select dbit  0,cppre         ; Ausgabepins per Sofware l”schen/setzen?
-event_counter_sw_reset dbit 1,cppre     ; Ereignisz„hler zurcksetzen
-cp6_event_only   dbit   2,cppre         ; CP6 nur fr Ereignisz„hler
-input_capt_prescale_select0 dbit 3,cppre; Vorteiler fr CP3..CP6
+op_set_clr_select dbit  0,cppre         ; Ausgabepins per Sofware löschen/setzen?
+event_counter_sw_reset dbit 1,cppre     ; Ereigniszähler zurücksetzen
+cp6_event_only   dbit   2,cppre         ; CP6 nur für Ereigniszähler
+input_capt_prescale_select0 dbit 3,cppre; Vorteiler für CP3..CP6
 input_capt_prescale_select1 dbit 4,cppre
 input_capt_prescale_select2 dbit 5,cppre
-buffer_half_full_int_flag dbit 6,cppre  ; Interrupts, daá Puffer halb/ganz voll ?
+buffer_half_full_int_flag dbit 6,cppre  ; Interrupts, daß Puffer halb/ganz voll ?
 buffer_half_full_int_ena dbit 7,cppre   ; obige Interrupts freischalten
 
 wdrst            equ    p04e
@@ -513,7 +513,7 @@ pactpri          equ    p04f
 wd_prescale_select0 dbit 0,pactpri      ; Vorteiler Watchdog
 wd_prescale_select1 dbit 1,pactpri
 pact_mode_select dbit 2,pactpri         ; PACT in Modus A oder B
-pact_group_3_priority dbit 3,pactpri    ; Priorit„ten der Interruptgruppen
+pact_group_3_priority dbit 3,pactpri    ; Prioritäten der Interruptgruppen
 pact_group_2_priority dbit 4,pactpri
 pact_group_1_priority dbit 5,pactpri
 pact_stest       dbit   7,pactpri       ; Selbsttest

@@ -17,6 +17,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -54,7 +55,7 @@ typedef struct
 static char *SegRegNames[SegRegCnt+1]={"ES","CS","SS","DS"};
 static Byte SegRegPrefixes[SegRegCnt+1]={0x26,0x2e,0x36,0x3e};
 
-#define TypeNone -1
+#define TypeNone (-1)
 #define TypeReg8 0
 #define TypeReg16 1
 #define TypeRegSeg 2
@@ -64,7 +65,6 @@ static Byte SegRegPrefixes[SegRegCnt+1]={0x26,0x2e,0x36,0x3e};
 
 static ShortInt AdrType;
 static Byte AdrMode;
-static Byte AdrCnt;
 static Byte AdrVals[6];
 static ShortInt OpSize;
 static Boolean UnknownFlag;
@@ -76,7 +76,7 @@ static Byte PrefixLen;
 
 static Byte SegAssumes[SegRegCnt+1];
 
-static void (*SaveInitProc)(void);
+static SimpProc SaveInitProc;
 
 static CPUVar CPU8086,CPU80186,CPUV30,CPUV35;
 
@@ -95,8 +95,6 @@ static char **MulOrders;
 static char **Bit1Orders;
 
 /*------------------------------------------------------------------------------------*/
-
-static int InstrZ;
 
 	static void AddFixed(char *NName, CPUVar NMin, Word NCode)
 BEGIN
@@ -430,7 +428,7 @@ BEGIN
    ShortInt FoundSize;
 
    AdrType=TypeNone; AdrCnt=0;
-   SegBuffer=-1; MomSegment=0;
+   SegBuffer=(-1); MomSegment=0;
 
    for (RegZ=0; RegZ<=RegCnt; RegZ++)
     BEGIN
@@ -480,7 +478,7 @@ BEGIN
 
    IsImm=True;
    IndexBuf=0; BaseBuf=0;
-   DispAcc=0; FoundSize=-1;
+   DispAcc=0; FoundSize=(-1);
 
    if (strncasecmp(Asc,"WORD PTR",8)==0)
     BEGIN
@@ -1066,7 +1064,7 @@ BEGIN
      if (ArgCnt!=2) WrError(1110);
      else
       BEGIN
-       DecodeAdr(ArgStr[1]); OpSize=-1;
+       DecodeAdr(ArgStr[1]); OpSize=(-1);
        switch (AdrType)
         BEGIN
          case TypeFReg:
@@ -1132,7 +1130,7 @@ BEGIN
 	  if (AdrMode!=0) WrError(1350);
 	  else
 	   BEGIN
-	    OpSize=-1;
+	    OpSize=(-1);
 	    DecodeAdr(ArgStr[2]);
 	    if ((AdrType!=TypeMem) AND (AdrType!=TypeNone)) WrError(1350);
             else if (AdrType!=TypeNone)
@@ -1205,7 +1203,7 @@ BEGIN
      if (ArgCnt!=2) WrError(1110);
      else
       BEGIN
-       DecodeAdr(ArgStr[1]); OpSize=-1;
+       DecodeAdr(ArgStr[1]); OpSize=(-1);
        switch (AdrType)
         BEGIN
          case TypeFReg:
@@ -1280,7 +1278,7 @@ BEGIN
 	  if (AdrMode!=0) WrError(1350);
 	  else
 	   BEGIN
-	    OpSize=-1;
+	    OpSize=(-1);
 	    DecodeAdr(ArgStr[2]);
 	    switch (AdrType)
              BEGIN
@@ -1408,7 +1406,7 @@ BEGIN
    Integer z,z2;
    char *p;
 
-   CodeLen=0; DontPrint=False; OpSize=-1; PrefixLen=0;
+   CodeLen=0; DontPrint=False; OpSize=(-1); PrefixLen=0;
    NoSegCheck=False; UnknownFlag=False;
 
    /* zu ignorierendes */

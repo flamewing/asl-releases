@@ -10,6 +10,7 @@
 
 #include "stdinc.h"
 #include <string.h>
+#include <ctype.h>
 
 #include "nls.h"
 #include "stringlists.h"
@@ -20,10 +21,6 @@
 #include "asmpars.h"
 
 #include "asmmac.h"
-
-/**	UNIT AsmMac;
-
-INTERFACE**/
 
 
 PInputTag FirstInputTag;
@@ -65,17 +62,21 @@ BEGIN
 
    Neu=(PDefinement) malloc(sizeof(TDefinement));
    Neu->Next=FirstDefine;
-   Neu->TransFrom=strdup(Name);
+   Neu->TransFrom=strdup(Name); if (NOT CaseSensitive) NLS_UpString(Neu->TransFrom);
    Neu->TransTo=strdup(Definition);
    l=strlen(Name);
    for (z=0; z<256; Neu->Compiled[z++]=l);
-   for (z=0; z<l-1; z++) Neu->Compiled[(unsigned int)Name[z]]=strlen(Name)-(z+1);
+   for (z=0; z<l-1; z++) Neu->Compiled[(unsigned int)Neu->TransFrom[z]]=l-(z+1);
    FirstDefine=Neu;
 END
 
-	static void RemoveDefine(char *Name)
+	static void RemoveDefine(char *Name_O)
 BEGIN
    PDefinement Lauf,Del;
+   String Name;
+
+   strmaxcpy(Name,Name_O,255); 
+   if (NOT CaseSensitive) NLS_UpString(Name);
 
    Del=Nil;
 
@@ -144,7 +145,7 @@ BEGIN
    char *p;
 
    strmaxcpy(h,OneLine+1,255);
-   p=FirstBlank(h); UpString(h);
+   p=FirstBlank(h);
    if (p==Nil)
     BEGIN
      strmaxcpy(Cmd,h,255); *h='\0';
@@ -153,7 +154,7 @@ BEGIN
 
    KillPrefBlanks(h); KillPostBlanks(h);
 
-   if (strcmp(Cmd,"DEFINE")==0)
+   if (strcasecmp(Cmd,"DEFINE")==0)
     BEGIN
      p=FirstBlank(h);
      if (p!=Nil)
@@ -162,7 +163,7 @@ BEGIN
        EnterDefine(Arg,h);
       END
     END
-   else if (strcmp(Cmd,"UNDEF")==0) RemoveDefine(h);
+   else if (strcasecmp(Cmd,"UNDEF")==0) RemoveDefine(h);
 
    CodeLen=0;
 END
@@ -171,6 +172,8 @@ END
 BEGIN
    return (((inp>='0') AND (inp<='9')) OR ((inp>='A') AND (inp<='Z')) OR ((inp>='a') AND (inp<='z')));
 END
+
+#define t_toupper(ch) ((CaseSensitive) ? (ch) : (toupper(ch)))
 
 	void ExpandDefines(char *Line)
 BEGIN
@@ -190,18 +193,17 @@ BEGIN
        while ((p<strlen(Line)) AND (Line[p]!='\'') AND (Line[p]!='"')) p++;
        /* nach Quellstring suchen, ersetzen, bis keine Treffer mehr */
        p2=LPos;
-       printf("%d %d\n",p,p2);
        do
         BEGIN
-         z2=1; 
+         z2=0; 
          while ((z2>=0) AND (p2<=p-FromLen))
           BEGIN
            z2=FromLen-1; z=p2+z2; 
-           while ((z2>=0) AND (Line[z]==Lauf->TransFrom[z2]))
+           while ((z2>=0) AND (t_toupper(Line[z])==Lauf->TransFrom[z2]))
             BEGIN
              z2--; z--;
             END
-           if (z2>=0) p2+=Lauf->Compiled[(unsigned int)Line[z]];
+           if (z2>=0) p2+=Lauf->Compiled[(unsigned int)t_toupper(Line[z])];
           END
          if (z2==-1)
           BEGIN
@@ -245,12 +247,11 @@ static PMacroNode MacroRoot;
         static Boolean AddMacro_AddNode(PMacroNode *Node, PMacroRec Neu, 
                                         LongInt DefSect, Boolean Protest)
 BEGIN
-   ShortInt CompErg;
    Boolean Grown;
    PMacroNode p1,p2;
    Boolean Result;
 
-   /**ChkStack;**/
+   ChkStack();
 
 
    if (*Node==Nil)
@@ -263,7 +264,7 @@ BEGIN
     END
    else Result=False;
 
-   switch (CompErg=StrCmp(Neu->Name,(*Node)->Contents->Name,DefSect,(*Node)->DefSection))
+   switch (StrCmp(Neu->Name,(*Node)->Contents->Name,DefSect,(*Node)->DefSection))
     BEGIN
      case 1:
       Grown=AddMacro_AddNode(&((*Node)->Right),Neu,DefSect,Protest);
@@ -280,16 +281,16 @@ BEGIN
           p1=(*Node)->Right;
           if (p1->Balance==1)
            BEGIN
-            (*Node)->Right=p1->Left; p1->Left=*Node;
+            (*Node)->Right=p1->Left; p1->Left=(*Node);
             (*Node)->Balance=0; *Node=p1;
            END
           else
            BEGIN
             p2=p1->Left;
             p1->Left=p2->Right; p2->Right=p1;
-            (*Node)->Right=p2->Left; p2->Left=*Node;
-            if (p2->Balance== 1) (*Node)->Balance=-1; else (*Node)->Balance=0;
-            if (p2->Balance==-1) p1     ->Balance= 1; else p1     ->Balance=0;
+            (*Node)->Right=p2->Left; p2->Left=(*Node);
+            if (p2->Balance== 1) (*Node)->Balance=(-1); else (*Node)->Balance=0;
+            if (p2->Balance==-1) p1     ->Balance=   1; else p1     ->Balance=0;
             *Node=p2;
            END
           (*Node)->Balance=0;
@@ -305,22 +306,22 @@ BEGIN
           (*Node)->Balance=0;
           break;
          case 0:
-          (*Node)->Balance=-1; Result=True; 
+          (*Node)->Balance=(-1); Result=True; 
           break;
          case -1:
           p1=(*Node)->Left;
           if (p1->Balance==-1)
            BEGIN
-            (*Node)->Left=p1->Right; p1->Right=*Node;
+            (*Node)->Left=p1->Right; p1->Right=(*Node);
             (*Node)->Balance=0; *Node=p1;
            END
           else
            BEGIN
             p2=p1->Right;
             p1->Right=p2->Left; p2->Left=p1;
-            (*Node)->Left=p2->Right; p2->Right=*Node;
-            if (p2->Balance==-1) (*Node)->Balance= 1; else (*Node)->Balance=0;
-            if (p2->Balance== 1) p1     ->Balance=-1; else p1     ->Balance=0;
+            (*Node)->Left=p2->Right; p2->Right=(*Node);
+            if (p2->Balance==-1) (*Node)->Balance=   1; else (*Node)->Balance=0;
+            if (p2->Balance== 1) p1     ->Balance=(-1); else p1     ->Balance=0;
             *Node=p2;
            END
           (*Node)->Balance=0;
@@ -388,7 +389,7 @@ END
 
 	static void ClearMacroList_ClearNode(PMacroNode *Node)
 BEGIN
-   /**ChkStack;**/
+   ChkStack();
 
    if (*Node==Nil) return;
 
@@ -405,7 +406,7 @@ END
 
 	static void ResetMacroDefines_ResetNode(PMacroNode Node)
 BEGIN
-   /**ChkStack;**/
+   ChkStack();
 
    if (Node==Nil) return;
 
@@ -450,7 +451,7 @@ END
 	static void PrintMacroList_PrintNode(PMacroNode Node, LongInt *Sum, Boolean *cnt, char *OneS)
 BEGIN
    if (Node==Nil) return;
-   /**ChkStack;**/
+   ChkStack();
 
    PrintMacroList_PrintNode(Node->Left,Sum,cnt,OneS);
 

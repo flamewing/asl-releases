@@ -9,14 +9,18 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
-#include <ctype.h>
 
+#include <ctype.h>
+#include <string.h>
+
+#include "bpemu.h"
 #include "nls.h"
 #include "stringutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 
 typedef struct
@@ -40,9 +44,10 @@ typedef struct
 #define ImmOrderCnt 7
 #define RelOrderCnt 18
 #define BitOrderCnt 4
+#define PBitOrderCnt 4
 
 
-static CPUVar CPU90S1300,CPU90S2312,CPU90S8414;
+static CPUVar CPU90S1200,CPU90S2313,CPU90S4414,CPU90S8515;
 
 static ArchOrder *FixedOrders;
 static ArchOrder *Reg1Orders;
@@ -51,10 +56,9 @@ static FixedOrder *Reg3Orders;
 static FixedOrder *ImmOrders;
 static FixedOrder *RelOrders;
 static FixedOrder *BitOrders;
+static FixedOrder *PBitOrders;
 
 /*---------------------------------------------------------------------------*/
-
-static int InstrZ;
 
         static void AddFixed(char *NName, CPUVar NMin, Word NCode)
 BEGIN
@@ -108,36 +112,43 @@ BEGIN
    BitOrders[InstrZ++].Code=NCode;
 END
 
+        static void AddPBit(char *NName, Word NCode)
+BEGIN
+   if (InstrZ>=PBitOrderCnt) exit(255);
+   PBitOrders[InstrZ].Name=NName;
+   PBitOrders[InstrZ++].Code=NCode;
+END
+
         static void InitFields(void)
 BEGIN
    FixedOrders=(ArchOrder *) malloc(sizeof(ArchOrder)*FixedOrderCnt); InstrZ=0;
-   AddFixed("IJMP" ,CPU90S2312,0x9409); AddFixed("ICALL",CPU90S2312,0x9509);
-   AddFixed("RET"  ,CPU90S1300,0x9508); AddFixed("RETI" ,CPU90S1300,0x9518);
-   AddFixed("LPM"  ,CPU90S2312,0x95c8); AddFixed("SEC"  ,CPU90S1300,0x9408);
-   AddFixed("CLC"  ,CPU90S1300,0x9488); AddFixed("SEN"  ,CPU90S1300,0x9428);
-   AddFixed("CLN"  ,CPU90S1300,0x94a8); AddFixed("SEZ"  ,CPU90S1300,0x9418);
-   AddFixed("CLZ"  ,CPU90S1300,0x9498); AddFixed("SEI"  ,CPU90S1300,0x9478);
-   AddFixed("CLI"  ,CPU90S1300,0x94f8); AddFixed("SES"  ,CPU90S1300,0x9448);
-   AddFixed("CLS"  ,CPU90S1300,0x94c8); AddFixed("SEV"  ,CPU90S1300,0x9438);
-   AddFixed("CLV"  ,CPU90S1300,0x94b8); AddFixed("SET"  ,CPU90S1300,0x9468);
-   AddFixed("CLT"  ,CPU90S1300,0x94e8); AddFixed("SEH"  ,CPU90S1300,0x9458);
-   AddFixed("CLH"  ,CPU90S1300,0x94d8); AddFixed("NOP"  ,CPU90S1300,0x0000);
-   AddFixed("SLEEP",CPU90S1300,0x9588); AddFixed("WDR"  ,CPU90S1300,0x95a8);
+   AddFixed("IJMP" ,CPU90S2313,0x9409); AddFixed("ICALL",CPU90S2313,0x9509);
+   AddFixed("RET"  ,CPU90S1200,0x9508); AddFixed("RETI" ,CPU90S1200,0x9518);
+   AddFixed("LPM"  ,CPU90S2313,0x95c8); AddFixed("SEC"  ,CPU90S1200,0x9408);
+   AddFixed("CLC"  ,CPU90S1200,0x9488); AddFixed("SEN"  ,CPU90S1200,0x9428);
+   AddFixed("CLN"  ,CPU90S1200,0x94a8); AddFixed("SEZ"  ,CPU90S1200,0x9418);
+   AddFixed("CLZ"  ,CPU90S1200,0x9498); AddFixed("SEI"  ,CPU90S1200,0x9478);
+   AddFixed("CLI"  ,CPU90S1200,0x94f8); AddFixed("SES"  ,CPU90S1200,0x9448);
+   AddFixed("CLS"  ,CPU90S1200,0x94c8); AddFixed("SEV"  ,CPU90S1200,0x9438);
+   AddFixed("CLV"  ,CPU90S1200,0x94b8); AddFixed("SET"  ,CPU90S1200,0x9468);
+   AddFixed("CLT"  ,CPU90S1200,0x94e8); AddFixed("SEH"  ,CPU90S1200,0x9458);
+   AddFixed("CLH"  ,CPU90S1200,0x94d8); AddFixed("NOP"  ,CPU90S1200,0x0000);
+   AddFixed("SLEEP",CPU90S1200,0x9588); AddFixed("WDR"  ,CPU90S1200,0x95a8);
 
    Reg1Orders=(ArchOrder *) malloc(sizeof(ArchOrder)*Reg1OrderCnt); InstrZ=0;
-   AddReg1("COM"  ,CPU90S1300,0x9400); AddReg1("NEG"  ,CPU90S1300,0x9401);
-   AddReg1("INC"  ,CPU90S1300,0x9403); AddReg1("DEC"  ,CPU90S1300,0x940a);
-   AddReg1("PUSH" ,CPU90S2312,0x940f); AddReg1("POP"  ,CPU90S2312,0x900f);
-   AddReg1("LSR"  ,CPU90S1300,0x9406); AddReg1("ROR"  ,CPU90S1300,0x9407);
-   AddReg1("ASR"  ,CPU90S1300,0x9405); AddReg1("SWAP" ,CPU90S1300,0x9402);
+   AddReg1("COM"  ,CPU90S1200,0x9400); AddReg1("NEG"  ,CPU90S1200,0x9401);
+   AddReg1("INC"  ,CPU90S1200,0x9403); AddReg1("DEC"  ,CPU90S1200,0x940a);
+   AddReg1("PUSH" ,CPU90S2313,0x920f); AddReg1("POP"  ,CPU90S2313,0x900f);
+   AddReg1("LSR"  ,CPU90S1200,0x9406); AddReg1("ROR"  ,CPU90S1200,0x9407);
+   AddReg1("ASR"  ,CPU90S1200,0x9405); AddReg1("SWAP" ,CPU90S1200,0x9402);
 
    Reg2Orders=(ArchOrder *) malloc(sizeof(ArchOrder)*Reg2OrderCnt); InstrZ=0;
-   AddReg2("ADD"  ,CPU90S1300,0x0c00); AddReg2("ADC"  ,CPU90S1300,0x1c00);
-   AddReg2("SUB"  ,CPU90S1300,0x1800); AddReg2("SBC"  ,CPU90S1300,0x0800);
-   AddReg2("AND"  ,CPU90S1300,0x2000); AddReg2("OR"   ,CPU90S1300,0x2800);
-   AddReg2("EOR"  ,CPU90S1300,0x2400); AddReg2("CPSE" ,CPU90S1300,0x1000);
-   AddReg2("CP"   ,CPU90S1300,0x1400); AddReg2("CPC"  ,CPU90S1300,0x0400);
-   AddReg2("MOV"  ,CPU90S1300,0x2c00); AddReg2("MUL"  ,CPU90S8414+1,0x9c00);
+   AddReg2("ADD"  ,CPU90S1200,0x0c00); AddReg2("ADC"  ,CPU90S1200,0x1c00);
+   AddReg2("SUB"  ,CPU90S1200,0x1800); AddReg2("SBC"  ,CPU90S1200,0x0800);
+   AddReg2("AND"  ,CPU90S1200,0x2000); AddReg2("OR"   ,CPU90S1200,0x2800);
+   AddReg2("EOR"  ,CPU90S1200,0x2400); AddReg2("CPSE" ,CPU90S1200,0x1000);
+   AddReg2("CP"   ,CPU90S1200,0x1400); AddReg2("CPC"  ,CPU90S1200,0x0400);
+   AddReg2("MOV"  ,CPU90S1200,0x2c00); AddReg2("MUL"  ,CPU90S8515+1,0x9c00);
 
    Reg3Orders=(FixedOrder *) malloc(sizeof(FixedOrder)*Reg3OrderCnt); InstrZ=0;
    AddReg3("CLR"  ,0x2400); AddReg3("TST"  ,0x2000); AddReg3("LSL"  ,0x0c00);
@@ -159,6 +170,10 @@ BEGIN
    BitOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*BitOrderCnt); InstrZ=0;
    AddBit("BLD"  ,0xf800); AddBit("BST"  ,0xfa00);
    AddBit("SBRC" ,0xfc00); AddBit("SBRS" ,0xfe00);
+
+   PBitOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*PBitOrderCnt); InstrZ=0;
+   AddPBit("CBI" ,0x9800); AddPBit("SBI" ,0x9a00);
+   AddPBit("SBIC",0x9900); AddPBit("SBIS",0x9b00);
 END
 
         static void DeinitFields(void)
@@ -170,6 +185,7 @@ BEGIN
    free(ImmOrders);
    free(RelOrders);
    free(BitOrders);
+   free(PBitOrders);
 END
 
 /*---------------------------------------------------------------------------*/
@@ -237,7 +253,7 @@ BEGIN
 
    if (Memo("DATA"))
     BEGIN
-     MaxV=(ActPC==SegCode)?65535:255; MinV=-((MaxV+1) >> 1);
+     MaxV=(ActPC==SegCode)?65535:255; MinV=(-((MaxV+1) >> 1));
      if (ArgCnt==0) WrError(1110);
      else
       BEGIN
@@ -375,12 +391,30 @@ BEGIN
       return;
      END
 
+   if ((Memo("ADIW")) OR (Memo("SBIW")))
+    BEGIN
+     if (ArgCnt!=2) WrError(1110);
+     else if (MomCPU<CPU90S2313) WrError(1500);
+     else if (NOT DecodeReg(ArgStr[1],&Reg1)) WrXError(1445,ArgStr[1]);
+     else if ((Reg1<24) OR (Odd(Reg1))) WrXError(1445,ArgStr[1]);
+     else
+      BEGIN
+       Reg2=EvalIntExpression(ArgStr[2],UInt6,&OK);
+       if (OK)
+	BEGIN
+	 WAsmCode[0]=0x9600+(Ord(Memo("SBIW")) << 8)+((Reg1 & 6) << 3)+
+		     (Reg2 & 15)+((Reg2 & 0x30) << 2);
+	 CodeLen=1;
+	END
+      END
+     return;
+    END
+
    /* Transfer */
 
    if ((Memo("LD")) OR (Memo("ST")))
     BEGIN
      if (ArgCnt!=2) WrError(1110);
-     else if (MomCPU<CPU90S2312) WrXError(1500,OpPart);
      else
       BEGIN
        if (Memo("ST"))
@@ -393,6 +427,7 @@ BEGIN
        else z=0;
        if (NOT DecodeReg(ArgStr[1],&Reg1)) WrXError(1445,ArgStr[1]);
        else if (NOT DecodeMem(ArgStr[2],&Reg2)) WrError(1350);
+       else if ((MomCPU<CPU90S2313) AND (Reg2!=0)) WrError(1351);
        else
         BEGIN
          WAsmCode[0]=0x8000+z+(Reg1 << 4)+(Reg2 & 0x0f)+((Reg2 & 0x10) << 8);
@@ -405,7 +440,7 @@ BEGIN
    if ((Memo("LDD")) OR (Memo("STD")))
     BEGIN
      if (ArgCnt!=2) WrError(1110);
-     else if (MomCPU<CPU90S2312) WrXError(1500,OpPart);
+     else if (MomCPU<CPU90S2313) WrXError(1500,OpPart);
      else
       BEGIN
        if (Memo("STD"))
@@ -459,6 +494,35 @@ BEGIN
            CodeLen=1;
           END
         END
+      END
+     return;
+    END
+
+   if ((Memo("LDS")) OR (Memo("STS")))
+    BEGIN
+     if (ArgCnt!=2) WrError(1110);
+     else if (MomCPU<CPU90S2313) WrError(1500);
+     else
+      BEGIN
+       if (Memo("STS"))
+	BEGIN
+	 strcpy(ArgStr[3],ArgStr[1]);
+         strcpy(ArgStr[1],ArgStr[2]);
+         strcpy(ArgStr[2],ArgStr[3]);
+	 z=0x200;
+	END
+       else z=0;
+       if (NOT DecodeReg(ArgStr[1],&Reg1)) WrXError(1445,ArgStr[1]);
+       else
+	BEGIN
+	 WAsmCode[1]=EvalIntExpression(ArgStr[2],UInt16,&OK);
+	 if (OK)
+	  BEGIN
+           ChkSpace(SegData);
+	   WAsmCode[0]=0x9000+z+(Reg1 << 4); 
+	   CodeLen=2;
+	  END
+	END
       END
      return;
     END
@@ -527,6 +591,27 @@ BEGIN
      return;
     END
 
+   for (z=0; z<PBitOrderCnt; z++)
+    if (Memo(PBitOrders[z].Name))
+     BEGIN
+      if (ArgCnt!=2) WrError(1110);
+      else
+       BEGIN
+	Reg1=EvalIntExpression(ArgStr[1],UInt5,&OK);
+	if (OK)
+	 BEGIN
+	  ChkSpace(SegIO);
+	  Reg2=EvalIntExpression(ArgStr[2],UInt3,&OK);
+	  if (OK)
+	   BEGIN
+	    WAsmCode[0]=PBitOrders[z].Code+Reg2+(Reg1 << 3);
+	    CodeLen=1;
+           END
+	 END
+       END
+      return;
+     END
+
    /* Spruenge */
 
    for (z=0; z<RelOrderCnt; z++)
@@ -573,6 +658,7 @@ BEGIN
    if ((Memo("JMP")) OR (Memo("CALL")))
     BEGIN
      if (ArgCnt!=1) WrError(1110);
+     else if (MomCPU<CPU90S2313) WrError(1500);
      else
       BEGIN
        AdrInt=EvalIntExpression(ArgStr[1],UInt22,&OK);
@@ -613,12 +699,13 @@ BEGIN
    switch (ActPC)
     BEGIN
      case SegCode:
-      if (MomCPU==CPU90S1300) return (ProgCounter()<=0x03ff);
-      else if (MomCPU==CPU90S2312) return (ProgCounter()<=0x07ff);
+      if (MomCPU==CPU90S1200) return (ProgCounter()<=0x03ff);
+      else if (MomCPU==CPU90S2313) return (ProgCounter()<=0x07ff);
+      else if (MomCPU==CPU90S4414) return (ProgCounter()<=0x0fff);
       else return (ProgCounter()<=0x1fff);
      case SegData:
-      if (MomCPU==CPU90S1300) return (ProgCounter()<=0x1f);
-      else if (MomCPU==CPU90S2312) return (ProgCounter()<=0x5f);
+      if (MomCPU==CPU90S1200) return (ProgCounter()<=0x5f);
+      else if (MomCPU==CPU90S2313) return (ProgCounter()<=0xdf);
       else return (ProgCounter()<0xffff);
      case SegIO:
       return (ProgCounter()<0x3f);
@@ -655,8 +742,9 @@ END
 
 	void codeavr_init(void)
 BEGIN
-   CPU90S1300=AddCPU("AT90S1300",SwitchTo_AVR);
-   CPU90S2312=AddCPU("AT90S2312",SwitchTo_AVR);
-   CPU90S8414=AddCPU("AT90S8414",SwitchTo_AVR);
+   CPU90S1200=AddCPU("AT90S1200",SwitchTo_AVR);
+   CPU90S2313=AddCPU("AT90S2313",SwitchTo_AVR);
+   CPU90S4414=AddCPU("AT90S4414",SwitchTo_AVR);
+   CPU90S8515=AddCPU("AT90S8515",SwitchTo_AVR);
 END
 

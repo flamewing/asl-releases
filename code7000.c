@@ -9,7 +9,9 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
+
 #include <ctype.h>
+#include <string.h>
 
 #include "bpemu.h"
 #include "stringutil.h"
@@ -17,6 +19,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 
 #define FixedOrderCount 10
@@ -27,7 +30,7 @@
 #define LogOrderCount 4
 
 
-#define ModNone -1
+#define ModNone (-1)
 #define ModReg 0
 #define MModReg (1 << ModReg)
 #define ModIReg 1
@@ -80,7 +83,7 @@ static Word AdrPart;        /* Adressierungsmodusbits im Opcode */
 
 static PLiteral FirstLiteral;
 static LongInt ForwardCount;
-static void (*SaveInitProc)(void);
+static SimpProc SaveInitProc;
 
 static CPUVar CPU7000,CPU7600;
 
@@ -96,8 +99,6 @@ static LongInt DelayedAdr;
 
 /*-------------------------------------------------------------------------*/
 /* dynamische Belegung/Freigabe Codetabellen */
-
-static int InstrZ;
 
 	static void AddFixed(char *NName, Word NCode)
 BEGIN
@@ -296,9 +297,9 @@ END
 
 	static void DecodeAdr(char *Asc, Word Mask, Boolean Signed)
 BEGIN
-#define RegNone -1
-#define RegPC -2
-#define RegGBR -3
+#define RegNone (-1)
+#define RegPC (-2)
+#define RegGBR (-3)
 
    Byte p,HReg;
    char *pos;
@@ -565,7 +566,7 @@ BEGIN
       BEGIN
        WAsmCode[CodeLen >> 1]=Lauf->Value;
        EnterIntSymbol(LiteralName(Lauf),EProgCounter()+CodeLen,SegCode,False);
-       Lauf->PassNo=-1;
+       Lauf->PassNo=(-1);
        CodeLen+=2;
       END
      Lauf=Lauf->Next;
@@ -588,7 +589,7 @@ BEGIN
        WAsmCode[CodeLen >> 1]=(Lauf->Value >> 16);
        WAsmCode[(CodeLen >> 1)+1]=(Lauf->Value & 0xffff);
        EnterIntSymbol(LiteralName(Lauf),EProgCounter()+CodeLen,SegCode,False);
-       Lauf->PassNo=-1;
+       Lauf->PassNo=(-1);
        if (CompLiterals)
         BEGIN
          EqLauf=Lauf->Next;
@@ -599,7 +600,7 @@ BEGIN
                (EqLauf->Value==Lauf->Value))
             BEGIN
              EnterIntSymbol(LiteralName(EqLauf),EProgCounter()+CodeLen,SegCode,False);
-             EqLauf->PassNo=-1;
+             EqLauf->PassNo=(-1);
             END
            EqLauf=EqLauf->Next;
           END
@@ -672,7 +673,7 @@ BEGIN
    Boolean OK;
    Byte HReg;
 
-   CodeLen=0; DontPrint=False; OpSize=-1;
+   CodeLen=0; DontPrint=False; OpSize=(-1);
 
    /* zu ignorierendes */
 

@@ -603,11 +603,14 @@ S_fabs:         bclr    #31,d0                  ; ganz einfach...
 ;-----------------------------------------------------------------------------
 ; Exponentialfunktion: D0.S--> D0.S
 
-S_fexp_Const0:  dc.s            ld(exp(1.0))    ; = ld(e) = 1/ln(2)
-S_fexp_ConstA:  dc.s            0.034657359038  ; Polynomkonstanten
-S_fexp_ConstB:  dc.s            9.9545957821
-S_fexp_ConstC:  dc.s            617.97226953
-S_fexp_ConstD:  dc.s            87.417498202
+; Die "krummen" Konstanten legen wir als hex ab, damit es keine Vergleichs-
+; fehler durch Rundungsvarianzen gibt.
+
+S_fexp_Const0:  dc.l $3FB8AA3B  ; ld(exp(1.0))    = ld(e) = 1/ln(2)
+S_fexp_ConstA:  dc.l $3D0DF4E0  ; 0.034657359038  Polynomkonstanten
+S_fexp_ConstB:  dc.l $411F4606  ; 9.9545957821
+S_fexp_ConstC:  dc.l $441A7E3A  ; 617.97226953
+S_fexp_ConstD:  dc.l $42AED5C2  ; 87.417498202
 
 		ds		0
 S_fexp:         movem.l         d1-d5,-(sp)

@@ -96,7 +96,7 @@ targ:	jmpr	targ
 	div	r3
 	divl	r7
 	divu	r10
-	divul	r0
+	divlu	r0
 
 targ2:  jb      r5.2,targ2
         jbc     0fd30h.12,targ2

@@ -5,6 +5,7 @@
 /* Little/Big-Endian-Routinen                                                */
 /*                                                                           */
 /* Historie: 30. 5.1996 Grundsteinlegung                                     */
+/*            6. 7.1997 Dec32BlankString dazu                                */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -41,6 +42,9 @@ extern Boolean Write2(FILE *file, void *Ptr);
 extern Boolean Write4(FILE *file, void *Ptr);
 
 extern Boolean Write8(FILE *file, void *Ptr);
+
+
+extern char *Dec32BlankString(LongInt number, int Stellen);
 
 
 extern void endian_init(void);

@@ -1,13 +1,13 @@
 		save
-		listing off   ; kein Listing ber diesen File
+		listing off   ; kein Listing über diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.39 - Datei Z8.INC                                                 *
 ;*   								            *
-;*   Sinn : enth„lt Registerkrzel fr den Z8-Prozessor                     *
+;*   Sinn : enthält Registerkürzel für den Z8-Prozessor                     *
 ;* 									    *
-;*   letzte nderungen : 16.12.1993 Rdiger Mersiovsky                      *
+;*   letzte Änderungen : 16.12.1993 Rüdiger Mersiovsky                      *
 ;*                       25.12.1993 Copyrightvermerk                        *
 ;*                                                                          *
 ;****************************************************************************
@@ -16,13 +16,13 @@
 
 stddefz8inc     equ     1
 
-		if      (MomCPU<>34305)
+                if      (MOMCPU<>34305)
                  fatal  "Falscher Prozessortyp eingestellt: nur Z8601 erlaubt!"
 		endif
 
-		if      mompass=1
-                 message "Z8-Krzel-Definitionen"
-                 message "(C) 1993 Rdiger Mersiovsky"
+                if      MOMPASS=1
+                 message "Z8-Kürzel-Definitionen"
+                 message "(C) 1993 Rüdiger Mersiovsky"
 		endif
 
 ;----------------------------------------------------------------------------
@@ -35,16 +35,16 @@ SIO		EQU	0F0H		; serielles Ein-Ausgaberegister
 FLAGS		EQU	0FCH		; Flagregister
 SPH		EQU	0FEH		; Stackpointer, Highteil
 SPL		EQU	0FFH		; Stackpointer, Lowteil
-TMR		EQU	0F1H		; Z„hler/Zeitgeberbetriebsart
-T0		EQU	0F4H		; Z„hler/Zeitgeberregister Kanal 0
-T1		EQU	0F2H		; Z„hler/Zeitgeberregister Kanal 1
+TMR		EQU	0F1H		; Zähler/Zeitgeberbetriebsart
+T0		EQU	0F4H		; Zähler/Zeitgeberregister Kanal 0
+T1		EQU	0F2H		; Zähler/Zeitgeberregister Kanal 1
 PRE0		EQU	0F5H		; T0-Vorteilerregister
 PRE1		EQU	0F3H		; T1-Vorteilerregister
 P01M		EQU	0F8H		; Tor 0, Tor 1 Betriebsart
 P2M		EQU	0F6H		; Tor 2 Betriebsart
 P3M		EQU	0F7H		; Tor 3 Betriebsart
 IMR		EQU	0FBH		; Interrupt-Maskierungsregister
-IPR		EQU	0F9H		; Interrupt-Priorit„tsregister
+IPR		EQU	0F9H		; Interrupt-Prioritätsregister
 IRQ		EQU	0FAH		; Interrupt-Anmelderegister
 RP		EQU	0FDH		; Registerpointer
 

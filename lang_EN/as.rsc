@@ -9,6 +9,9 @@
 /*           21. 1.1997 Warnung nicht bitadressierbare Speicherstelle        */
 /*           22. 1.1997 Fehler/Warnungen fuer Stacks                         */
 /*            1. 2.1997 Warnung wegen NUL-Zeichen                            */
+/*           29. 3.1997 Kommandozeilenoption g                               */
+/*           30. 5.1997 Warnung wg. inkorrektem Listing                      */
+/*           12. 7.1997 Kommandozeilenoption Y                               */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -167,7 +170,7 @@
 /****************************************************************************/
 /* Strings in Listing */
 
-#define ListSymListHead1      "  symbol table (* unused):"
+#define ListSymListHead1      "  symbol table (* = unused):"
 #define ListSymListHead2      "  ------------------------"
 #define ListSymSumMsg         " symbol"
 #define ListSymSumsMsg        " symbols"
@@ -209,14 +212,15 @@
 #define InfoMessAssLines    " lines source file"
 #define InfoMessPassCnt     " pass"
 #define InfoMessPPassCnt    " passes"
+#define InfoMessNoPass      "        additional necessary passes not started due to\n        errors, listing possibly incorrect"
 #define InfoMessMacAssLine  " line incl. macro expansions"
 #define InfoMessMacAssLines " lines incl. macro expansions"
 #define InfoMessWarnCnt     " warning"
 #define InfoMessWarnPCnt    "s"
 #define InfoMessErrCnt      " error"
 #define InfoMessErrPCnt     "s"
-#define InfoMessRemainMem   " KByte available memory"
-#define InfoMessRemainStack " Byte available stack"
+#define InfoMessRemainMem   " bytes available memory"
+#define InfoMessRemainStack " bytes available stack"
 
 #define InfoMessNFilesFound ": no file(s) to assemble!"
 
@@ -226,7 +230,7 @@
 #ifdef MAIN
 #define InfoMessHead1      "calling convention : "
 #define InfoMessHead2      " [options] [file] [options] ..."
-#define InfoMessHelpCnt    30
+#define InfoMessHelpCnt    32
 static char *InfoMessHelp[InfoMessHelpCnt]=
 		  {"--------------------",
 		   "",
@@ -245,10 +249,12 @@ static char *InfoMessHelp[InfoMessHelpCnt]=
 		   "            !0..!4 for standard handles",
 		   "            default is <srcname>.LOG",
 		   "-r : generate messages if repassing necessary",
+                   "-Y : branch error suppression (see manual)",
 		   "-w : suppress warnings                +G : suppress code generation",
 		   "-s : generate section list            -t : enable/disable parts of listing",
 		   "-u : generate usage list              -C : generate cross reference list",
                    "-I : generate include nesting list",
+                   "-g : write debug info",
 		   "-A : compact symbol table",
                    "-U : case-sensitive operation",
 		   "-x : extended error messages          -n : add error #s to error messages",

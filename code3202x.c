@@ -160,8 +160,8 @@ static const struct cmd_adr_shift_order {
 static const struct cmd_imm_order {
 	char *name;
 	Word code;
-	Integer min;
-	Integer max;
+	Integer Min;
+	Integer Max;
 	Word mask;
 } cmd_imm_order[] = {{"ADDK",   0xcc00,     0,    255,   0xff},
 		     {"LACK",   0xca00,     0,    255,   0xff},
@@ -385,7 +385,13 @@ static void wr_code_byte_lohi(Boolean *ok, Integer *adr, LongInt val)
 
 /* ---------------------------------------------------------------------- */
 
-static void pseudo_store(void (*callback)(Boolean *, Integer *, LongInt))
+typedef void (*tcallback)(
+#ifdef __PROTOS__
+Boolean *, Integer *, LongInt
+#endif
+);
+
+static void pseudo_store(tcallback callback)
 {
 	Boolean ok = True;
 	Integer adr = 0;
@@ -898,11 +904,11 @@ static void make_code_3202x(void)
 				WAsmCode[1] = adr_long;
 				return;
 			}
-			if(adr_long < io->min) {
+			if(adr_long < io->Min) {
 				WrError(1315);
 				return;
 			}
-			if(adr_long > io->max) {
+			if(adr_long > io->Max) {
 				WrError(1320);
 				return;
 			}

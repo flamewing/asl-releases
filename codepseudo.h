@@ -23,6 +23,8 @@ typedef struct
           char *FlagName;
          } ONOFFRec;
 
+extern int FindInst(void *Field, int Size, int Count);
+
 extern Boolean IsIndirect(char *Asc);
 
 extern void ConvertDec(Double F, Word *w);

@@ -68,10 +68,17 @@ BEGIN
       case 4:
        for (z=0; z<(l>>2); z++)
         {
+#ifdef __STDC__
 	DAsmCode[z]=((DAsmCode[z]&0xff000000u)>>24)+
 		    ((DAsmCode[z]&0x00ff0000u)>>8)+
 		    ((DAsmCode[z]&0x0000ff00u)<<8)+
 		    ((DAsmCode[z]&0x000000ffu)<<24);
+#else
+	DAsmCode[z]=((DAsmCode[z]&0xff000000)>>24)+
+		    ((DAsmCode[z]&0x00ff0000)>>8)+
+		    ((DAsmCode[z]&0x0000ff00)<<8)+
+		    ((DAsmCode[z]&0x000000ff)<<24);
+#endif
         }
        break;
      END
@@ -129,12 +136,12 @@ END
 
 /*--- Codedatei eroeffnen --------------------------------------------------*/
 
-       void OpenFile(void)
+        void OpenFile(void)
 BEGIN
    Word h;
 
    errno=0;
-   PrgFile=fopen(OutName,"w");
+   PrgFile=fopen(OutName,OPENWRMODE);
    if (PrgFile==Nil) ChkIO(10001);
 
    errno=0; h=FileMagic;
@@ -147,13 +154,15 @@ END
 
 /*---- Codedatei schliessen -------------------------------------------------*/
 
-       void CloseFile(void)
+        void CloseFile(void)
 BEGIN
    Byte Head;
-   char h[20]="AS ";
+   char h[20];
    LongWord Adr;
+   strcpy(h,"AS ");
 
-   NewRecord(); fseek(PrgFile,RecPos,SEEK_SET);
+   NewRecord();
+   fseek(PrgFile,RecPos,SEEK_SET);
 
    if (StartAdrPresent)
     BEGIN
@@ -167,7 +176,7 @@ BEGIN
    Head=FileHeaderEnd;
    if (fwrite(&Head,sizeof(Head),1,PrgFile)!=1) ChkIO(10004);
    if (fwrite(h,1,strlen(h),PrgFile)!=strlen(h)) ChkIO(10004);
-   fclose(PrgFile); /**IF Magic<>0 THEN Erase(PrgFile);**/ 
+   fclose(PrgFile); if (Magic!=0) unlink(OutName); 
 END
 
 /*--- erzeugten Code einer Zeile in Datei ablegen ---------------------------*/

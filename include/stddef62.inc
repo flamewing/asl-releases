@@ -1,13 +1,13 @@
                 save
-                listing off   ; kein Listing Åber diesen File
+                listing off   ; kein Listing ¸ber diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.39 - Datei STDDEF62.INC                                           *
 ;*   								            *
-;*   Sinn : enthÑlt SFR- und Makrodefinitionen fÅr die ST62xx-Prozessoren   *
+;*   Sinn : enth‰lt SFR- und Makrodefinitionen f¸r die ST62xx-Prozessoren   *
 ;* 									    *
-;*   letzte énderungen :  7. 8.1993                                         *
+;*   letzte ƒnderungen :  7. 8.1993                                         *
 ;*                       11. 9.1993 Meldung nur im 1.Pass                   *
 ;*                       21.11.1993 ROMWIN eingebaut                        *
 ;*                                                                          *
@@ -17,21 +17,21 @@
 
 stddef62inc     equ     1
 
-		if      (MomCPU<>25104)&&(MomCPU<>25109)&&(MomCPU<>25120)&&(MomCPU<>25125)
+                if      (MOMCPU<>25104)&&(MOMCPU<>25109)&&(MOMCPU<>25120)&&(MOMCPU<>25125)
 		 fatal  "Falscher Prozessortyp eingestellt: nur ST6210, ST6215, ST6220 oder ST6225 erlaubt!"
 		endif
 
-		if      mompass=1
+                if      MOMPASS=1
 		 message "ST62xx-SFR-Definitionen (C) 1993 Alfred Arnold"
 		 message "Zielprozessor: ST\{MOMCPU}"
 		endif
 
 ;----------------------------------------------------------------------------
-; erstmal die Sachen, die es Åberall gibt :
+; erstmal die Sachen, die es ¸berall gibt :
 
 RegX            SFR     80h             ; Registeradressen (die kennt AS aber
 RegY            SFR     81h             ; auch schon intern, nur der Voll-
-RegV            SFR     82h             ; stÑndigkeit halber)
+RegV            SFR     82h             ; st‰ndigkeit halber)
 RegW            SFR     83h
 RegA            SFR     0ffh
 
@@ -59,7 +59,7 @@ WDOG            SFR     0d8h            ; Watchdog
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Port C nur mit den 28-Pinnern:
 
-                if      (MomCPU=6215H)||(MomCPU=6225H)
+                if      (MOMCPU=6215H)||(MOMCPU=6225H)
 PC               SFR    0c2h            ; Port C
 DDRC             SFR    0c6h
 OPTC             SFR    0ceh
@@ -68,9 +68,9 @@ OPTC             SFR    0ceh
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; hiermit versuche ich, etwas die Leerstellen im Befehlssatz aufzufangen.
 ; das ist nur ein Angebot an Ihre Bequemlichkeit, niemand zwingt Sie, diese
-; Makros zu benutzen, wenn Sie es im Einzelfall kÅrzer kînnen!
+; Makros zu benutzen, wenn Sie es im Einzelfall k¸rzer kˆnnen!
 
-; Addition/Subtraktion mit Carry: erster Operand mu· A (Akku) sein!
+; Addition/Subtraktion mit Carry: erster Operand muﬂ A (Akku) sein!
 
 adc             macro   dst,src
 		jrnc    NoCarry
@@ -84,10 +84,10 @@ sbc             macro   dst,src
 NoCarry:        sub     dst,src
 		endm
 
-; ODER-VerknÅpfung:
+; ODER-Verkn¸pfung:
 ; arbeitet nach der Regel von De Morgan: A OR B = /((/A) AND (/B))
 ; verwendet W-Register
-; dst mu· A (Akku) sein!
+; dst muﬂ A (Akku) sein!
 
 or              macro   dst,src
 		com     dst
@@ -98,11 +98,11 @@ or              macro   dst,src
 		com     dst
 		endm
 
-; EXOR-VerknÅpfung:
-; arbeitet nach dem Prinzip der 4 NAND-Gatter, mu· also selber nicht auf
+; EXOR-Verkn¸pfung:
+; arbeitet nach dem Prinzip der 4 NAND-Gatter, muﬂ also selber nicht auf
 ; das OR-Makro zugreifen
 ; verwendet V- und W-Register
-; dst mu· A (Akku) sein!
+; dst muﬂ A (Akku) sein!
 
 xor             macro   dst,src
 		ld      v,dst           ; Op1 retten
@@ -123,7 +123,7 @@ xor             macro   dst,src
 
 ; rechts mit Carry rotieren
 ; ok, das ist brute force, aber mir ist nix besseres eingefallen...
-; dst mu· Akku (A) sein
+; dst muﬂ Akku (A) sein
 
 rrc             macro   dst
 		rept    7
@@ -132,8 +132,8 @@ rrc             macro   dst
 		endm
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-; FÅr diejenigen, die auf einmal den ROMWIN-Befehl vermissen, hier eine
-; kleine öberbrÅckungshilfe:
+; F¸r diejenigen, die auf einmal den ROMWIN-Befehl vermissen, hier eine
+; kleine ‹berbr¸ckungshilfe:
 
 romwin		macro	adr
 		assume	rombase:adr>>6

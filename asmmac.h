@@ -28,7 +28,11 @@ typedef struct _TInputTag
           String OrigPos;
           Boolean OrigDoLst;
           LongInt StartLine;
-          Boolean (*Processor)(struct _TInputTag *P, char *erg);
+          Boolean (*Processor)(
+#ifdef __PROTOS__
+struct _TInputTag *P, char *erg
+#endif
+);
           LongInt ParCnt,ParZ;
           StringList Params;
           LongInt LineCnt,LineZ;
@@ -37,14 +41,26 @@ typedef struct _TInputTag
           Boolean IsEmpty;
           FILE *Datei;
           void *Buffer;
-          void (*Cleanup)(struct _TInputTag *P);
-          void (*Restorer)(struct _TInputTag *P);
+          void (*Cleanup)(
+#ifdef __PROTOS__
+struct _TInputTag *P
+#endif
+);
+          void (*Restorer)(
+#ifdef __PROTOS__
+struct _TInputTag *P
+#endif
+);
          } TInputTag,*PInputTag;
 
 typedef struct _TOutputTag
          {
           struct _TOutputTag *Next;
-          void (*Processor)(void);
+          void (*Processor)(
+#ifdef __PROTOS__
+void
+#endif
+);
           Integer NestLevel;
           PInputTag Tag;
           PMacroRec Mac;

@@ -10,12 +10,15 @@
 
 #include "stdinc.h"
 
+#include <string.h>
+
 #include "stringutil.h"
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 typedef struct
          {
@@ -50,8 +53,6 @@ static FixedOrder *FOrders;
 static CPUVar CPU16C54,CPU16C55,CPU16C56,CPU16C57;
 
 /*-------------------------------------------------------------------------*/
-
-static LongInt InstrZ;
 
 	static void AddFixed(char *NName, Word NCode)
 BEGIN
@@ -155,7 +156,7 @@ BEGIN
     END
 END
 
-	static Boolean DecodePseudo()
+	static Boolean DecodePseudo(void)
 BEGIN
    Word Size;
    Boolean ValOK;
@@ -191,7 +192,7 @@ BEGIN
 
    if (Memo("DATA"))
     BEGIN
-     MaxV=(ActPC==SegCode)?4095:255; MinV=-((MaxV+1) >> 1);
+     MaxV=(ActPC==SegCode)?4095:255; MinV=(-((MaxV+1) >> 1));
      if (ArgCnt==0) WrError(1110);
      else
       BEGIN

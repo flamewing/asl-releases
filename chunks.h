@@ -29,6 +29,8 @@ extern void DeleteChunk(ChunkList *NChunk, LargeWord DelStart, LargeWord DelLen)
 
 extern void InitChunk(ChunkList *NChunk);
 
+extern void ClearChunk(ChunkList *NChunk);
+
 
 extern void chunks_init(void);
 

@@ -5,10 +5,13 @@
 /* Little/Big-Endian-Routinen                                                */
 /*                                                                           */
 /* Historie: 30. 5.1996 Grundsteinlegung                                     */
+/*            6. 7.1997 Dec32BlankString dazu                                */
 /*                                                                           */
 /*****************************************************************************/
 
 #include "stdinc.h"
+
+#include <string.h>
 
 #include "endian.h"
 
@@ -201,8 +204,8 @@ BEGIN
 #endif
    else
     BEGIN
-     fprintf(stderr,"Configuration error: cannot assign format string for"
-                    "integer of size %d\n",size);
+     fprintf(stderr,
+             "Configuration error: cannot assign format string for integer of size %d\n",size);
      exit(255);
      return "";
     END               
@@ -220,6 +223,17 @@ BEGIN
    LargeIntFormat=AssignSingle(sizeof(LargeInt));
 END
 
+	char *Dec32BlankString(LongInt number, int Stellen)
+BEGIN
+   char Format[10];
+   static char Erg[255];
+
+   sprintf(Format,"%%%d%s",Stellen,LongIntFormat+1);
+   sprintf(Erg,Format,number);
+
+   return Erg;
+END
+
 
 	void endian_init(void)
 BEGIN
@@ -234,11 +248,11 @@ BEGIN
    memset(TwoFace.field,0,sizeof(int)); 
    TwoFace.field[0]=1;
    BigEndian=((TwoFace.test)!=1);
-   if (BigEndian)
+   /*if (BigEndian)
     BEGIN
      fprintf(stderr,"Warning: Big endian machine!\n");
      fprintf(stderr,"AS is so far not adapted for big-endian-machines!\n");
-    END
+    END*/
 END
 
 

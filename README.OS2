@@ -1,0 +1,28 @@
+Additional hints for OS/2 users:
+
+- if you only have FAT file systems, forget compiling AS rightaway - we
+  need the long filenames and therefore a HPFS file system!
+
+- You need the following Unix tools, ported to OS/2 :
+
+  - 'gzip' and 'tar' to unpack the archive, but you obviously already
+    have managed that ;-)
+
+  - Eberhard Matthes' port of the GNU-C compiler for OS/2.  I haven't
+    made attempts with other OS/2 compilers so far, and I doubt that
+    it would be worth it.  emx/gcc makes porting of Unix programs so
+    simple, and it's free...
+
+  - a make utility to process the Makefile.  A port of GNU's make should
+    be perfect.
+
+  
+- If you make a binary distribution, don't forget to include the emx
+  runtime libaries...
+
+- copy the file tests/wd1003at.inc to tests/lowlevel.inc (HPFS does not
+  know symbolic links).
+
+- for testing, cd to the tests/ directory and call the 'testall' script
+  manually.  Generally, most targets in the Makefile won't work under
+  OS/2 at all...

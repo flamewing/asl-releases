@@ -153,7 +153,8 @@ InpBuffer:      db      "-123.456E-7",0 ; Puffer fÅr fatof
 Eins:           dd      1.0             ; benîtigte Konstanten
 MinEins:        dd      -1.0
 Zwei:           dd      2.0
-Pi:             dd      ConstPi
+Pi:             dd      40490fdbh	; um Vergleichsfehler durch Rundung zu
+                                        ; vermeiden
 Zehn:           dd      10.0
 Null:           dd      0.0
 Thou:           dd      100000.0

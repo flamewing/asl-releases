@@ -1,13 +1,13 @@
                 save
-                listing off   ; kein Listing Åber diesen File
+                listing off   ; kein Listing ¸ber diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.39 - Datei BITFUNCS.INC                                           *
 ;*   								            *
-;*   Sinn : enthÑlt Funktionen zur Bitmanipulation                          *
+;*   Sinn : enth‰lt Funktionen zur Bitmanipulation                          *
 ;* 									    *
-;*   letzte énderungen : 30. 5.1993                                         *
+;*   letzte ƒnderungen : 30. 5.1993                                         *
 ;*                       11. 9.1993 Meldung nur im 1.Pass                   *
 ;*									    *
 ;****************************************************************************
@@ -28,7 +28,7 @@ bitfuncsinc     equ      1
 
 mask            function start,bits,((1<<bits)-1)<<start
 
-; das gleiche invers zum Lîschen von Bitgruppen:
+; das gleiche invers zum Lˆschen von Bitgruppen:
 
 invmask         function start,bits,~mask(start,bits)
 
@@ -37,7 +37,7 @@ invmask         function start,bits,~mask(start,bits)
 cutout          function x,start,bits,x&mask(start,bits)
 
 ;----------------------------------------------------------------------------
-; einige hÑufig gebrauchte Sondermasken:
+; einige h‰ufig gebrauchte Sondermasken:
 
 ; oberes Byte eines 16-Bit-Wortes:
 
@@ -47,11 +47,11 @@ hi              function x,(x>>8)&255
 
 lo              function x,x&255
 
-; obere HÑlftes aus einem 32-Bit-Wort:
+; obere H‰lftes aus einem 32-Bit-Wort:
 
 hiword          function x,(x>>16)&65535
 
-; dito untere HÑlfte:
+; dito untere H‰lfte:
 
 loword          function x,x&65535
 
@@ -73,8 +73,8 @@ shln            function x,size,n,(x<<n)&mask(0,size)
 shrn            function x,size,n,(x>>n)&mask(0,size-n)
 
 ; Rotation eines 'size'-Bit-Wortes um 'n' Stellen nach links oder rechts;
-; der erste Term lÑ·t die restlichen Bits unverÑndert und kann bei Bedarf
-; gelîscht werden:
+; der erste Term l‰ﬂt die restlichen Bits unver‰ndert und kann bei Bedarf
+; gelˆscht werden:
 
 rotln           function x,size,n,cutout(x,size,32-size)|shln(x,size,n)|shrn(x,size,size-n)
 rotrn           function x,size,n,cutout(x,size,32-size)|shrn(x,size,n)|shln(x,size,size-n)

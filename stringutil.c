@@ -20,7 +20,7 @@ Boolean HexLowerCase;	    /* Hex-Konstanten mit Kleinbuchstaben */
 /*--------------------------------------------------------------------------*/
 /* eine bestimmte Anzahl Leerzeichen liefern */
 
-       char *Blanks(int cnt)
+        char *Blanks(int cnt)
 BEGIN
    static char *BlkStr="                                                                                                           ";
 
@@ -82,7 +82,7 @@ BEGIN
    
    if (i<0)
     BEGIN
-     i=-i; SignFlag=True;
+     i=(-i); SignFlag=True;
     END
     
    p=tmp;
@@ -94,7 +94,7 @@ BEGIN
    while (i>0);
    
    p2=s; if (SignFlag) *(p2++)='-';
-   while (p>tmp) *(p2++)=*(--p);
+   while (p>tmp) *(p2++)=(*(--p));
    *p2='\0'; return s;
 END
 
@@ -102,12 +102,48 @@ END
 /*---------------------------------------------------------------------------*/
 /* manche haben's nicht... */
 
-#ifdef __ultrix
+#ifdef NEEDS_STRDUP
 	char *strdup(char *s)
 BEGIN
    char *ptr=malloc(strlen(s)+1);
    if (ptr!=0) strcpy(ptr,s);
    return ptr;
+END
+#endif
+
+#ifdef NEEDS_CASECMP
+	int strcasecmp(const char *src1, const char *src2)
+BEGIN
+   while (toupper(*src1)==toupper(*src2))
+    BEGIN
+     if ((NOT *src1) AND (NOT *src2)) return 0;
+     src1++; src2++;
+    END
+   return ((int) toupper(*src1))-((int) toupper(*src2));
+END	
+
+	int strncasecmp(const char *src1, const char *src2, int len)
+BEGIN
+   while (toupper(*src1)==toupper(*src2))
+    BEGIN
+     if (--len==0) return 0;
+     if ((NOT *src1) AND (NOT *src2)) return 0;
+     src1++; src2++;
+    END
+   return ((int) toupper(*src1))-((int) toupper(*src2));
+END	
+#endif
+
+#ifdef NEEDS_STRSTR
+	char *strstr(char *haystack, char *needle)
+BEGIN
+   int lh=strlen(haystack), ln=strlen(needle);
+   int z;
+   char *p;
+
+   for (z=0; z<=lh-ln; z++)
+    if (strncmp(p=haystack+z,needle,ln)==0) return p;
+   return Nil;
 END
 #endif
 
@@ -187,7 +223,7 @@ BEGIN
    while ((Zeichen!='\n') AND (Zeichen!=EOF) AND (!feof(Datei)))
     BEGIN
      Zeichen=fgetc(Datei);
-     *Run++=Zeichen;
+     if (Zeichen!=26) *Run++=Zeichen;
     END
 
    if ((Run>Zeile) AND ((Zeichen==EOF) OR (Zeichen=='\n'))) Run--;
@@ -203,8 +239,8 @@ END
 
         LongInt ConstLongInt(const char *inp, Boolean *err)
 BEGIN
-   char Prefixes[4]="$@%";        /* die moeglichen Zahlensysteme */
-   LongInt Bases[3]={16,8,2};     /* die dazugehoerigen Basen */
+   static char Prefixes[4]={'$','@','%','\0'}; /* die moeglichen Zahlensysteme */
+   static LongInt Bases[3]={16,8,2};           /* die dazugehoerigen Basen */
    LongInt erg;
    LongInt Base=10,z,val,vorz=1;  /* Vermischtes */
 
@@ -212,7 +248,7 @@ BEGIN
 
    if (*inp=='-')
     BEGIN
-     vorz=-1; inp++;
+     vorz=(-1); inp++;
     END
 
 
@@ -234,15 +270,15 @@ BEGIN
     BEGIN
      /* Ziffern 0..9 ergeben selbiges */
 
-     if ((*inp>='0') AND (*inp<='9')) val=*inp-'0';
+     if ((*inp>='0') AND (*inp<='9')) val=(*inp)-'0';
 
      /* Grossbuchstaben fuer Hexziffern */
 
-     else if ((*inp>='A') AND (*inp<='F')) val=*inp-'A'+10;
+     else if ((*inp>='A') AND (*inp<='F')) val=(*inp)-'A'+10;
 
      /* Kleinbuchstaben nicht vergessen...! */
 
-     else if ((*inp>='a') AND (*inp<='f')) val=*inp-'a'+10;
+     else if ((*inp>='a') AND (*inp<='f')) val=(*inp)-'a'+10;
 
      /* alles andere ist Schrott */
 

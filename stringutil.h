@@ -18,8 +18,17 @@ extern char *HexBlankString(LargeWord i, Byte Stellen);
 
 extern char *LargeString(LargeInt i);
 
-#ifdef __ultrix
+#ifdef NEEDS_STRDUP
 extern char *strdup(char *s);
+#endif
+
+#ifdef NEEDS_CASECMP
+extern int strcasecmp(const char *src1, const char *src2);
+extern int strncasecmp(const char *src1, const char *src2, int maxlen);
+#endif
+
+#ifdef NEEDS_STRSTR
+extern char *strstr(char *haystack, char *needle);
 #endif
 
 #undef strlen

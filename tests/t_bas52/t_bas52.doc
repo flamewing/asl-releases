@@ -1,0 +1,11 @@
++----------------------  Test Application BAS52  ----------------------------+
+|                                                                            |
+|  This is the source of the BASIC interpreter for Intel's 8052AH-Basic      |
+|  (version 1.1).  In contrast to other test programs, the reference binary  |
+|  was extracted from a real 8052AH and not generated with the BP version    |
+|  of AS.  Since the source of this interpreter is now freeware, it should   |
+|  be okay to include this program.  Of course, I had to modify the code a   |
+|  bit to adapt it to AS...  The source and ROM dump was provided by         |
+|  squest@cris.com.                                                          |
+|                                                                            |
++----------------------------------------------------------------------------+

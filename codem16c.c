@@ -19,8 +19,9 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
-#define ModNone -1
+#define ModNone (-1)
 #define ModGen 0
 #define MModGen (1 << ModGen)
 #define ModAbs20 1
@@ -76,7 +77,7 @@ static Byte FormatCode;
 static ShortInt OpSize;
 static Byte AdrMode,AdrMode2;
 static ShortInt AdrType,AdrType2;
-static Byte AdrCnt,AdrCnt2;
+static Byte AdrCnt2;
 static Byte AdrVals[3],AdrVals2[3];
 
 static FixedOrder *FixedOrders;
@@ -90,8 +91,6 @@ static char **DirOrders;
 static FixedOrder *BitOrders;
 
 /*------------------------------------------------------------------------*/
-
-static int InstrZ;
 
         static void AddFixed(char *NName, Word NCode)
 BEGIN
@@ -684,7 +683,7 @@ BEGIN
    return False;
 END
 
-        static void CopyAdr()
+        static void CopyAdr(void)
 BEGIN
    AdrType2=AdrType;
    AdrMode2=AdrMode;
@@ -711,114 +710,11 @@ BEGIN
    CodeLen=2+AdrCnt+AdrCnt2;
 END
 
-        static void MakeCode_M16C(void)
+	static Boolean CodeData(void)
 BEGIN
    Integer z,Num1;
-   char *p;
-   LongInt AdrLong,Diff;
-   Boolean OK,MayShort;
+   Boolean OK;
    Byte SMode;
-   ShortInt OpSize2;
-
-   OpSize=-1;
-
-   /* zu ignorierendes */
-
-   if (Memo("")) return;
-
-   /* Formatangabe abspalten */
-
-   switch (AttrSplit)
-    BEGIN
-     case '.':
-      p=strchr(AttrPart,':');
-      if (p!=Nil)
-       BEGIN
-        if (p<AttrPart+strlen(AttrPart)-1) strmaxcpy(Format,p+1,255);
-        *p='\0';
-       END
-      else strcpy(Format," ");
-      break;
-     case ':':
-      p=strchr(AttrPart,'.');
-      if (p==Nil)
-       BEGIN
-        strmaxcpy(Format,AttrPart,255); *AttrPart='\0';
-       END
-      else
-       BEGIN
-        *p='\0';
-        strmaxcpy(Format,(p==AttrPart)?" ":AttrPart,255);
-       END
-      break;
-     default:
-      strcpy(Format," ");
-    END
-
-   /* Attribut abarbeiten */
-
-   switch (toupper(*AttrPart))
-    BEGIN
-     case '\0': OpSize=-1; break;
-     case 'B': OpSize=0; break;
-     case 'W': OpSize=1; break;
-     case 'L': OpSize=2; break;
-     case 'Q': OpSize=3; break;
-     case 'S': OpSize=4; break;
-     case 'D': OpSize=5; break;
-     case 'X': OpSize=6; break;
-     case 'A': OpSize=7; break;
-     default: 
-      WrError(1107); return;
-    END
-   NLS_UpString(Format);
-
-   /* Pseudoanweisungen */
-
-   if (DecodePseudo()) return;
-
-   if (DecodeIntelPseudo(False)) return;
-
-   /* ohne Argument */
-
-   for (z=0; z<FixedOrderCnt; z++)
-    if (Memo(FixedOrders[z].Name))
-     BEGIN
-      if (ArgCnt!=0) WrError(1110);
-      else if (*AttrPart!='\0') WrError(1100);
-      else if (strcmp(Format," ")!=0) WrError(1090);
-      else if (Hi(FixedOrders[z].Code)==0)
-       BEGIN
-        BAsmCode[0]=Lo(FixedOrders[z].Code); CodeLen=1;
-       END
-      else
-       BEGIN
-        BAsmCode[0]=Hi(FixedOrders[z].Code);
-        BAsmCode[1]=Lo(FixedOrders[z].Code); CodeLen=2;
-       END;
-      return;
-     END
-
-   for (z=0; z<StringOrderCnt; z++)
-    if (Memo(StringOrders[z].Name))
-     BEGIN
-      if (OpSize==-1) OpSize=1;
-      if (ArgCnt!=0) WrError(1110);
-      else if ((OpSize!=0) AND (OpSize!=1)) WrError(1130);
-      else if (strcmp(Format," ")!=0) WrError(1090);
-      else if (Hi(StringOrders[z].Code)==0)
-       BEGIN
-        BAsmCode[0]=Lo(StringOrders[z].Code)+OpSize; CodeLen=1;
-       END
-      else
-       BEGIN
-        BAsmCode[0]=Hi(StringOrders[z].Code)+OpSize;
-        BAsmCode[1]=Lo(StringOrders[z].Code); CodeLen=2;
-       END
-      return;
-     END
-
-   /* Datentransfer */
 
    if (Memo("MOV"))
     BEGIN
@@ -950,7 +846,7 @@ BEGIN
            END;
         END;
       END
-     return;
+     return True;
     END
 
    if ((Memo("LDC")) OR (Memo("STC")))
@@ -998,7 +894,7 @@ BEGIN
           END
         END
       END
-     return;
+     return True;
     END
 
    if ((Memo("LDCTX")) OR (Memo("STCTX")))
@@ -1023,7 +919,7 @@ BEGIN
            END
          END
       END
-     return;
+     return True;
     END
 
    if ((Memo("LDE")) OR (Memo("STE")))
@@ -1061,7 +957,7 @@ BEGIN
            END
          END
       END
-     return;
+     return True;
     END
 
    if (Memo("MOVA"))
@@ -1086,7 +982,7 @@ BEGIN
             END
          END
       END
-     return;
+     return True;
     END
 
    for (z=0; z<DirOrderCnt; z++)
@@ -1114,7 +1010,7 @@ BEGIN
             END
          END
        END
-      return;
+      return True;
      END
 
    if ((Memo("PUSH")) OR (Memo("POP")))
@@ -1167,7 +1063,7 @@ BEGIN
            END
          END
       END
-     return;
+     return True;
     END
 
    if ((Memo("PUSHC")) OR (Memo("POPC")))
@@ -1180,7 +1076,7 @@ BEGIN
         BAsmCode[1]=0x02+Ord(Memo("POPC"))+(SMode << 4);
         CodeLen=2;
        END
-     return;
+     return True;
     END
 
    if ((Memo("PUSHM")) OR (Memo("POPM")))
@@ -1205,7 +1101,7 @@ BEGIN
          CodeLen=2;
         END
       END
-     return;
+     return True;
     END
 
    if (Memo("PUSHA"))
@@ -1224,7 +1120,7 @@ BEGIN
           CodeLen=2+AdrCnt;
          END
       END
-     return;
+     return True;
     END
 
    if (Memo("XCHG"))
@@ -1256,7 +1152,7 @@ BEGIN
           else WrError(1350);
         END
       END
-     return;
+     return True;
     END
 
    if ((Memo("STZ")) OR (Memo("STNZ")))
@@ -1280,7 +1176,7 @@ BEGIN
            END
          END
       END
-     return;
+     return True;
     END
 
    if ((Memo("STZX")))
@@ -1309,8 +1205,122 @@ BEGIN
            END
          END
       END
-     return;
+     return True;
     END
+
+   return False;
+END
+
+        static void MakeCode_M16C(void)
+BEGIN
+   Integer z,Num1;
+   char *p;
+   LongInt AdrLong,Diff;
+   Boolean OK,MayShort;
+   Byte SMode;
+   ShortInt OpSize2;
+
+   OpSize=(-1);
+
+   /* zu ignorierendes */
+
+   if (Memo("")) return;
+
+   /* Formatangabe abspalten */
+
+   switch (AttrSplit)
+    BEGIN
+     case '.':
+      p=strchr(AttrPart,':');
+      if (p!=Nil)
+       BEGIN
+        if (p<AttrPart+strlen(AttrPart)-1) strmaxcpy(Format,p+1,255);
+        *p='\0';
+       END
+      else strcpy(Format," ");
+      break;
+     case ':':
+      p=strchr(AttrPart,'.');
+      if (p==Nil)
+       BEGIN
+        strmaxcpy(Format,AttrPart,255); *AttrPart='\0';
+       END
+      else
+       BEGIN
+        *p='\0';
+        strmaxcpy(Format,(p==AttrPart)?" ":AttrPart,255);
+       END
+      break;
+     default:
+      strcpy(Format," ");
+    END
+
+   /* Attribut abarbeiten */
+
+   switch (toupper(*AttrPart))
+    BEGIN
+     case '\0': OpSize=(-1); break;
+     case 'B': OpSize=0; break;
+     case 'W': OpSize=1; break;
+     case 'L': OpSize=2; break;
+     case 'Q': OpSize=3; break;
+     case 'S': OpSize=4; break;
+     case 'D': OpSize=5; break;
+     case 'X': OpSize=6; break;
+     case 'A': OpSize=7; break;
+     default: 
+      WrError(1107); return;
+    END
+   NLS_UpString(Format);
+
+   /* Pseudoanweisungen */
+
+   if (DecodePseudo()) return;
+
+   if (DecodeIntelPseudo(False)) return;
+
+   /* ohne Argument */
+
+   for (z=0; z<FixedOrderCnt; z++)
+    if (Memo(FixedOrders[z].Name))
+     BEGIN
+      if (ArgCnt!=0) WrError(1110);
+      else if (*AttrPart!='\0') WrError(1100);
+      else if (strcmp(Format," ")!=0) WrError(1090);
+      else if (Hi(FixedOrders[z].Code)==0)
+       BEGIN
+        BAsmCode[0]=Lo(FixedOrders[z].Code); CodeLen=1;
+       END
+      else
+       BEGIN
+        BAsmCode[0]=Hi(FixedOrders[z].Code);
+        BAsmCode[1]=Lo(FixedOrders[z].Code); CodeLen=2;
+       END;
+      return;
+     END
+
+   for (z=0; z<StringOrderCnt; z++)
+    if (Memo(StringOrders[z].Name))
+     BEGIN
+      if (OpSize==-1) OpSize=1;
+      if (ArgCnt!=0) WrError(1110);
+      else if ((OpSize!=0) AND (OpSize!=1)) WrError(1130);
+      else if (strcmp(Format," ")!=0) WrError(1090);
+      else if (Hi(StringOrders[z].Code)==0)
+       BEGIN
+        BAsmCode[0]=Lo(StringOrders[z].Code)+OpSize; CodeLen=1;
+       END
+      else
+       BEGIN
+        BAsmCode[0]=Hi(StringOrders[z].Code)+OpSize;
+        BAsmCode[1]=Lo(StringOrders[z].Code); CodeLen=2;
+       END
+      return;
+     END
+
+   /* Datentransfer */
+
+   if (CodeData()) return;
 
    /* Arithmetik */
 
@@ -1832,7 +1842,7 @@ BEGIN
             if (Num1==0) WrError(1315);
             else if (ChkRange(Num1,-8,8))
              BEGIN
-              if (Num1>0) Num1--; else Num1=-9-Num1;
+              if (Num1>0) Num1--; else Num1=(-9)-Num1;
               BAsmCode[0]=0xe0+OpSize2;
               BAsmCode[1]=(Num1 << 4)+AdrMode2;
               memcpy(BAsmCode+2,AdrVals2,AdrCnt);
@@ -1882,7 +1892,7 @@ BEGIN
             if (Num1==0) WrError(1315);
             else if (ChkRange(Num1,-8,8))
              BEGIN
-              if (Num1>0) Num1--; else Num1=-9-Num1;
+              if (Num1>0) Num1--; else Num1=(-9)-Num1;
               if (OpSize2==2)
                BEGIN
                 BAsmCode[0]=0xeb;
@@ -2156,7 +2166,7 @@ BEGIN
           FirstPassUnknown=False;
 	  DecodeAdr(ArgStr[1],MModImm); Num1=ImmVal();
           if (FirstPassUnknown) Num1=0;
-          if (Memo("SBJNZ")) Num1=-Num1;
+          if (Memo("SBJNZ")) Num1=(-Num1);
           if (ChkRange(Num1,-8,7))
            BEGIN
             AdrLong=EvalIntExpression(ArgStr[3],UInt20,&OK)-(EProgCounter()+2);

@@ -19,6 +19,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 typedef struct
          {
@@ -51,7 +52,7 @@ typedef struct
 
 #define CondCnt 20
 
-#define ModNone  -1
+#define ModNone  (-1)
 #define ModWReg   0
 #define MModWReg   (1 << ModWReg)
 #define ModReg    1
@@ -79,11 +80,9 @@ static ALU1Order *ALU1Orders;
 static Condition *Conditions;
 static int TrueCond;
 
-static CPUVar CPUZ8601;
+static CPUVar CPUZ8601,CPUZ8604,CPUZ8608,CPUZ8630,CPUZ8631;
 
 /*--------------------------------------------------------------------------*/
-
-static int InstrZ;
 
 	static void AddFixed(char *NName, Byte NCode)
 BEGIN
@@ -407,7 +406,7 @@ BEGIN
 	     break;
 	    case ModIReg:
 	     BAsmCode[0]=0xe5;
-	     BAsmCode[1]=WorkOfs+Save; BAsmCode[2]=AdrMode;
+	     BAsmCode[1]=AdrMode; BAsmCode[2]=WorkOfs+Save;
 	     CodeLen=3;
 	     break;
 	    case ModImm:
@@ -856,5 +855,9 @@ END
 	void codez8_init(void)
 BEGIN
    CPUZ8601=AddCPU("Z8601",SwitchTo_Z8);
+   CPUZ8604=AddCPU("Z8604",SwitchTo_Z8);
+   CPUZ8608=AddCPU("Z8608",SwitchTo_Z8);
+   CPUZ8630=AddCPU("Z8630",SwitchTo_Z8);
+   CPUZ8631=AddCPU("Z8631",SwitchTo_Z8);
 END
 

@@ -24,6 +24,12 @@ BEGIN
    NChunk->Chunks=Nil;
 END
 
+	void ClearChunk(ChunkList *NChunk)
+BEGIN
+   if (NChunk->AllocLen>0) free(NChunk->Chunks);
+   InitChunk(NChunk);
+END
+
 /*--------------------------------------------------------------------------*/
 /* eine Chunkliste um einen Eintrag erweitern */
 

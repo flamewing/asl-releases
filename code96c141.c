@@ -20,6 +20,8 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
+
 
 typedef struct 
          {
@@ -67,7 +69,7 @@ typedef struct
 #define BitOrderCnt 5
 #define ConditionCnt 24
 
-#define ModNone -1
+#define ModNone (-1)
 #define ModReg 0
 #define MModReg (1  << ModReg)
 #define ModXReg 1
@@ -93,15 +95,12 @@ static LongInt DefaultCondition;
 static ShortInt AdrType;
 static ShortInt OpSize;        /* -1/0/1/2 = nix/Byte/Word/Long */
 static Byte AdrMode;
-static Byte AdrCnt;
 static Byte AdrVals[10];
 static Boolean MinOneIs0;
 
 static CPUVar CPU96C141,CPU93C141;
 
 /*---------------------------------------------------------------------------*/
-
-static Integer InstrZ;
 
         static void AddFixed(char *NName, Word NCode, Byte NFlag, Boolean NSup)
 BEGIN
@@ -172,7 +171,6 @@ BEGIN
 END
 
         static void InitFields(void)
-
 BEGIN
    FixedOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*FixedOrderCnt); InstrZ=0;
    AddFixed("CCF"   , 0x0012, 3, False);
@@ -260,7 +258,7 @@ BEGIN
    AddCondition("UGT" , 11); AddCondition("ULE" ,  3);
 END
 
-       static void DeinitFields(void)
+        static void DeinitFields(void)
 BEGIN
    free(FixedOrders);
    free(RegOrders);
@@ -907,27 +905,10 @@ BEGIN
    return ((Code & 0x4e)==40);
 END
 
-	static void MakeCode_96C141(void)
+	static Boolean CodeMove(void)
 BEGIN
-   Integer z;
-   Word AdrWord;
-   LongInt AdrLong;
-   Boolean OK,ShSrc,ShDest;
+   Boolean ShSrc,ShDest,OK;
    Byte HReg;
-   char *CmpStr;
-   char LChar;
-
-   CodeLen=0; DontPrint=False; OpSize=-1; MinOneIs0=False;
-
-   /* zu ignorierendes */
-
-   if (Memo("")) return;
-
-   /* Pseudoanweisungen */
-
-   if (DecodePseudo()) return;
-
-   if (DecodeIntelPseudo(False)) return;
 
    if (WMemo("LD"))
     BEGIN
@@ -1070,7 +1051,7 @@ BEGIN
 	  break;
         END
       END
-     return;
+     return True;
     END
 
    if ((WMemo("POP")) OR (WMemo("PUSH")))
@@ -1137,8 +1118,36 @@ BEGIN
           break;
         END
       END
-     return;
+     return True;
     END
+
+   return False;
+END
+
+	static void MakeCode_96C141(void)
+BEGIN
+   Integer z;
+   Word AdrWord;
+   LongInt AdrLong;
+   Boolean OK;
+   Byte HReg;
+   char *CmpStr;
+   char LChar;
+
+   CodeLen=0; DontPrint=False; OpSize=(-1); MinOneIs0=False;
+
+   /* zu ignorierendes */
+
+   if (Memo("")) return;
+
+   /* Pseudoanweisungen */
+
+   if (DecodePseudo()) return;
+
+   if (DecodeIntelPseudo(False)) return;
+
+   if (CodeMove()) return;
+
 
    for (z=0; z<FixedOrderCnt; z++)
     if Memo(FixedOrders[z].Name)
@@ -1623,7 +1632,7 @@ BEGIN
 	  if (Memo("JRL")) 
 	   BEGIN
 	    AdrLong-=EProgCounter()+3;
-            if (((AdrLong>32767) OR (AdrLong<-32768)) AND (NOT SymbolQuestionable)) WrError(1330);
+            if (((AdrLong>0x7fffl) OR (AdrLong<-0x8000l)) AND (NOT SymbolQuestionable)) WrError(1330);
 	    else
 	     BEGIN
 	      CodeLen=3; BAsmCode[0]=0x70+Conditions[z].Code;

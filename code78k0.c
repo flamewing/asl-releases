@@ -18,9 +18,10 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 
-#define ModNone -1
+#define ModNone (-1)
 #define ModReg8 0
 #define MModReg8 (1 << ModReg8)
 #define ModReg16 1
@@ -65,7 +66,7 @@ static char **Bit2Orders;
 static char **RelOrders;
 static char **BRelOrders;
 
-static Byte OpSize,AdrCnt,AdrPart;
+static Byte OpSize,AdrPart;
 static Byte AdrVals[2];
 static ShortInt AdrMode;
 
@@ -74,8 +75,6 @@ static CPUVar CPU78070;
 
 /*-------------------------------------------------------------------------*/
 /* dynamische Codetabellenverwaltung */
-
-static int InstrZ;
 
    	static void AddFixed(char *NewName, Word NewCode)
 BEGIN

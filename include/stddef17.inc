@@ -1,15 +1,15 @@
                 save
-                listing off   ; kein Listing Åber diesen File
+                listing off   ; kein Listing ¸ber diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.39 - Datei STDDEF17.INC                                           *
 ;*   								            *
-;*   Sinn : enthÑlt SFR-Definitionen fÅr die PIC 17C4x-Familie              *
+;*   Sinn : enth‰lt SFR-Definitionen f¸r die PIC 17C4x-Familie              *
 ;*          Die Makrodefinitionen kann man bei Bedarf aus STDDEF16.INC      *
 ;*          kopieren							    *
 ;* 									    *
-;*   letzte énderungen : 24. 4.1993                                         *
+;*   letzte ƒnderungen : 24. 4.1993                                         *
 ;*                        5. 6.1993 SAVE & RESTORE                          *
 ;*                                  Prozessorsperre (Idee von Matthias)     *
 ;*                       11. 9.1993 Meldung nur im 1.Pass                   *
@@ -20,11 +20,11 @@
 
 stddef17inc     equ     1
 
-		if      (MomCPU<>97346)
+                if      (MOMCPU<>97346)
 		 fatal  "Falscher Prozessortyp eingestellt: nur 17C42 erlaubt"
 		endif
 
-		if	mompass=1
+                if      MOMPASS=1
 		 message "PIC17C4x-Definitionen (C) 1993 Alfred Arnold"
 		endif
 
@@ -35,7 +35,7 @@ Indirect0       SFR     0               ; indirekte Adressierung 1
 FSR0            SFR     1
 Indirect1       SFR     8               ; indirekte Adressierung 2
 FSR1            SFR     9
-PCL             SFR     2               ; Bit 0..7 ProgrammzÑhler
+PCL             SFR     2               ; Bit 0..7 Programmz‰hler
 PCLATH          SFR     3               ; Hilfsregister PC Bit 8..15
 W               SFR     10              ; Akkumulator
 TBLPTRL         SFR     13              ; Hilfsregister, um Daten
@@ -45,7 +45,7 @@ CPUSTA          SFR     6               ; CPU-Status
 INTSTA          SFR     7               ; Interrupt-Status
 
 ;------------------------------------------------------------------------------
-; ZÑhler
+; Z‰hler
 
 RTCSTA          SFR     5               ; Steuerregister
 RTCCL           SFR     11              ; Daten
@@ -78,11 +78,11 @@ DDRE            SFR     $14
 ;------------------------------------------------------------------------------
 ; serieller Port
 
-RCSTA           SFR     $13             ; EmpfÑngerstatus
-RCREG           SFR     $14             ; EmpfÑngerdaten
+RCSTA           SFR     $13             ; Empf‰ngerstatus
+RCREG           SFR     $14             ; Empf‰ngerdaten
 TXSTA           SFR     $15             ; Senderstatus
 TXREG           SFR     $16             ; Sendedaten
-SPBRG           SFR     $17             ; Teiler fÅr SIO
+SPBRG           SFR     $17             ; Teiler f¸r SIO
 
 ;------------------------------------------------------------------------------
 ; Timer

@@ -19,7 +19,11 @@ typedef struct _TCPUDef
 	  struct _TCPUDef *Next;
 	  char *Name;
 	  CPUVar Number,Orig;
-	  void (*SwitchProc)(void);
+	  void (*SwitchProc)(
+#ifdef __PROTOS__
+                             void
+#endif
+                            );
 	 } TCPUDef,*PCPUDef;
 
 typedef enum {TempInt,TempFloat,TempString,TempNone} TempType;
@@ -96,7 +100,11 @@ extern LongInt Magic;
 
 extern char *InfoMessCopyright;
 
-typedef void (*SimpProc)(void);
+typedef void (*SimpProc)(
+#ifdef __PROTOS__
+void
+#endif
+);
 
 typedef Word WordField[6];          /* fuer Zahlenumwandlung */
 typedef String ArgStrField[ParMax]; /* Feld mit Befehlsparametern */
@@ -168,6 +176,8 @@ extern Word TypeFlag;
 extern ShortInt SizeFlag;
 
 extern Byte PassNo;
+extern Integer JmpErrors;
+extern Boolean ThrowErrors;
 extern Boolean Repass;
 extern Byte MaxSymPass;
 extern Byte ShareMode;
@@ -236,7 +246,7 @@ extern FILE *LstFile;
 extern FILE *ShareFile;
 extern FILE *MacProFile;
 extern FILE *MacroFile;
-extern String LstName;
+extern String LstName,MacroName,MacProName;
 extern Boolean DoLst,NextDoLst;
 extern String ShareName;
 extern CPUVar MomCPU,MomVirtCPU;

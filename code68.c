@@ -18,6 +18,7 @@
 #include "asmpars.h"
 #include "asmsub.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -52,7 +53,7 @@ typedef struct
 			    /* 3 :     Pg 2   Pg 3  */
 
 
-#define ModNone -1
+#define ModNone (-1)
 #define ModAcc  0
 #define MModAcc (1<<ModAcc)
 #define ModDir  1
@@ -68,7 +69,7 @@ typedef struct
 #define Page3Prefix 0x1a
 #define Page4Prefix 0xcd
 
-#define FixedOrderCnt 46
+#define FixedOrderCnt 45
 #define RelOrderCnt 19
 #define ALU8OrderCnt 11
 #define ALU16OrderCnt 13
@@ -80,7 +81,6 @@ static ShortInt OpSize;
 static Byte PrefCnt;	       /* Anzahl Befehlspraefixe */
 static ShortInt AdrMode;       /* Ergebnisadressmodus */
 static Byte AdrPart;           /* Adressierungsmodusbits im Opcode */
-static Byte AdrCnt;	       /* Anzahl Bytes Adressargument */
 static Byte AdrVals[4];        /* Adressargument */
 
 static FixedOrder *FixedOrders;
@@ -93,8 +93,6 @@ static BaseOrder *Sing8Orders;
 static CPUVar CPU6800,CPU6301,CPU6811;
 
 /*---------------------------------------------------------------------------*/
-
-static LongInt InstrZ;
 
 	static void AddFixed(char *NName, CPUVar NMin, CPUVar NMax, Word NCode)
 BEGIN
@@ -155,12 +153,13 @@ BEGIN
    FixedOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*FixedOrderCnt); InstrZ=0;
    AddFixed("ABA"  ,CPU6800, CPU6811, 0x001b); AddFixed("ABX"  ,CPU6301, CPU6811, 0x003a);
    AddFixed("ABY"  ,CPU6811, CPU6811, 0x183a); AddFixed("ASLD" ,CPU6301, CPU6811, 0x0005);
-   AddFixed("LSLD" ,CPU6301, CPU6811, 0x0005); AddFixed("CBA"  ,CPU6800, CPU6811, 0x0011);
-   AddFixed("CLC"  ,CPU6800, CPU6811, 0x000c); AddFixed("CLI"  ,CPU6800, CPU6811, 0x000e);
-   AddFixed("CLV"  ,CPU6800, CPU6811, 0x000a); AddFixed("DAA"  ,CPU6800, CPU6811, 0x0019);
-   AddFixed("DES"  ,CPU6800, CPU6811, 0x0034); AddFixed("DEX"  ,CPU6800, CPU6811, 0x0009);
-   AddFixed("DEY"  ,CPU6811, CPU6811, 0x1809); AddFixed("INS"  ,CPU6800, CPU6811, 0x0031);
-   AddFixed("INX"  ,CPU6800, CPU6811, 0x0008); AddFixed("INY"  ,CPU6811, CPU6811, 0x1808);
+   AddFixed("CBA"  ,CPU6800, CPU6811, 0x0011); AddFixed("CLC"  ,CPU6800, CPU6811, 0x000c);
+   AddFixed("CLI"  ,CPU6800, CPU6811, 0x000e); AddFixed("CLV"  ,CPU6800, CPU6811, 0x000a);
+   AddFixed("DAA"  ,CPU6800, CPU6811, 0x0019); AddFixed("DES"  ,CPU6800, CPU6811, 0x0034);
+   AddFixed("DEX"  ,CPU6800, CPU6811, 0x0009); AddFixed("DEY"  ,CPU6811, CPU6811, 0x1809);
+   AddFixed("FDIV" ,CPU6811, CPU6811, 0x0003); AddFixed("IDIV" ,CPU6811, CPU6811, 0x0002);
+   AddFixed("INS"  ,CPU6800, CPU6811, 0x0031); AddFixed("INX"  ,CPU6800, CPU6811, 0x0008);
+   AddFixed("INY"  ,CPU6811, CPU6811, 0x1808); AddFixed("LSLD" ,CPU6301, CPU6811, 0x0005);
    AddFixed("LSRD" ,CPU6301, CPU6811, 0x0004); AddFixed("MUL"  ,CPU6301, CPU6811, 0x003d);
    AddFixed("NOP"  ,CPU6800, CPU6811, 0x0001); AddFixed("PSHX" ,CPU6301, CPU6811, 0x003c);
    AddFixed("PSHY" ,CPU6811, CPU6811, 0x183c); AddFixed("PULX" ,CPU6301, CPU6811, 0x0038);
@@ -168,26 +167,25 @@ BEGIN
    AddFixed("RTS"  ,CPU6800, CPU6811, 0x0039); AddFixed("SBA"  ,CPU6800, CPU6811, 0x0010);
    AddFixed("SEC"  ,CPU6800, CPU6811, 0x000d); AddFixed("SEI"  ,CPU6800, CPU6811, 0x000f);
    AddFixed("SEV"  ,CPU6800, CPU6811, 0x000b); AddFixed("SLP"  ,CPU6301, CPU6301, 0x001a);
-   AddFixed("SWI"  ,CPU6800, CPU6811, 0x003f); AddFixed("STOP" ,CPU6811, CPU6811, 0x00cf);
+   AddFixed("STOP" ,CPU6811, CPU6811, 0x00cf); AddFixed("SWI"  ,CPU6800, CPU6811, 0x003f);
    AddFixed("TAB"  ,CPU6800, CPU6811, 0x0016); AddFixed("TAP"  ,CPU6800, CPU6811, 0x0006);
    AddFixed("TBA"  ,CPU6800, CPU6811, 0x0017); AddFixed("TPA"  ,CPU6800, CPU6811, 0x0007);
    AddFixed("TSX"  ,CPU6800, CPU6811, 0x0030); AddFixed("TSY"  ,CPU6811, CPU6811, 0x1830);
    AddFixed("TXS"  ,CPU6800, CPU6811, 0x0035); AddFixed("TYS"  ,CPU6811, CPU6811, 0x1835);
    AddFixed("WAI"  ,CPU6800, CPU6811, 0x003e); AddFixed("XGDX" ,CPU6811, CPU6811, 0x008f);
-   AddFixed("SEI"  ,CPU6800, CPU6811, 0x000f); AddFixed("XGDY" ,CPU6811, CPU6811, 0x188f);
-   AddFixed("IDIV" ,CPU6811, CPU6811, 0x0002); AddFixed("FDIV" ,CPU6811, CPU6811, 0x0003);
+   AddFixed("XGDY" ,CPU6811, CPU6811, 0x188f);
 
    RelOrders=(BaseOrder *) malloc(sizeof(BaseOrder)*RelOrderCnt); InstrZ=0;
+   AddRel("BCC", 0x24); AddRel("BCS", 0x25);
+   AddRel("BEQ", 0x27); AddRel("BGE", 0x2c);
+   AddRel("BGT", 0x2e); AddRel("BHI", 0x22);
+   AddRel("BHS", 0x24); AddRel("BLE", 0x2f);
+   AddRel("BLO", 0x25); AddRel("BLS", 0x23);
+   AddRel("BLT", 0x2d); AddRel("BMI", 0x2b);
+   AddRel("BNE", 0x26); AddRel("BPL", 0x2a);
    AddRel("BRA", 0x20); AddRel("BRN", 0x21);
-   AddRel("BHI", 0x22); AddRel("BLS", 0x23);
-   AddRel("BHS", 0x24); AddRel("BCC", 0x24);
-   AddRel("BLO", 0x25); AddRel("BCS", 0x25);
-   AddRel("BNE", 0x26); AddRel("BEQ", 0x27);
-   AddRel("BVC", 0x28); AddRel("BVS", 0x29);
-   AddRel("BPL", 0x2a); AddRel("BMI", 0x2b);
-   AddRel("BGE", 0x2c); AddRel("BLT", 0x2d);
-   AddRel("BGT", 0x2e); AddRel("BLE", 0x2f);
-   AddRel("BSR", 0x8d);
+   AddRel("BSR", 0x8d); AddRel("BVC", 0x28);
+   AddRel("BVS", 0x29);
 
    ALU8Orders=(ALU8Order *) malloc(sizeof(ALU8Order)*ALU8OrderCnt); InstrZ=0;
    AddALU8("SUB",True , 0x80);
@@ -329,29 +327,29 @@ BEGIN
         BEGIN
          Bit8=1; strcpy(Asc,Asc+1);
         END
-       if (Bit8==2)
+       if ((Bit8==2) OR ((MModExt & Erl)==0))
         AdrWord=EvalIntExpression(Asc,Int8,&OK);
        else
         AdrWord=EvalIntExpression(Asc,Int16,&OK);
        if (OK)
         BEGIN
          if (((MModDir & Erl)!=0) AND (Bit8!=1) AND ((Bit8==2) OR ((MModExt & Erl)==0) OR (Hi(AdrWord)==0)))
-  	BEGIN
-  	 if (Hi(AdrWord)!=0)
   	  BEGIN
-  	   WrError(1340); ErrOcc=True;
-  	  END
-  	 else
-  	  BEGIN
-  	   AdrMode=ModDir; AdrPart=1;
-  	   AdrVals[AdrCnt++]=Lo(AdrWord);
-  	  END
-  	END
+  	   if (Hi(AdrWord)!=0)
+  	    BEGIN
+  	     WrError(1340); ErrOcc=True;
+  	    END
+  	   else
+  	    BEGIN
+  	     AdrMode=ModDir; AdrPart=1;
+  	     AdrVals[AdrCnt++]=Lo(AdrWord);
+            END
+          END
          else if ((MModExt & Erl)!=0)
-  	BEGIN
-  	 AdrMode=ModExt; AdrPart=3;
-  	 AdrVals[AdrCnt++]=Hi(AdrWord); AdrVals[AdrCnt++]=Lo(AdrWord);
-  	END
+          BEGIN
+           AdrMode=ModExt; AdrPart=3;
+           AdrVals[AdrCnt++]=Hi(AdrWord); AdrVals[AdrCnt++]=Lo(AdrWord);
+          END
         END
        else ErrOcc=True;
       END
@@ -432,6 +430,9 @@ BEGIN
    Boolean OK;
    Byte AdrByte,Mask;
 
+   int erg;
+   FixedOrder *forder;
+
    CodeLen=0; DontPrint=False; PrefCnt=0; AdrCnt=0; OpSize=0;
 
    /* Operandengroesse festlegen */
@@ -476,29 +477,30 @@ BEGIN
      return;
     END
 
-   for (z=0; z<FixedOrderCnt; z++)
-    if Memo(FixedOrders[z].Name)
+   for (z=0,forder=FixedOrders; z<FixedOrderCnt; z++,forder++)
+    if ((erg=strcmp(OpPart,forder->Name))==0)
      BEGIN
       if (ArgCnt!=0) WrError(1110);
-      else if ((MomCPU<FixedOrders[z].MinCPU) OR (MomCPU>FixedOrders[z].MaxCPU)) WrError(1500);
-      else if (Hi(FixedOrders[z].Code)!=0)
+      else if ((MomCPU<forder->MinCPU) OR (MomCPU>forder->MaxCPU)) WrError(1500);
+      else if (Hi(forder->Code)!=0)
        BEGIN
         CodeLen=2;
-        BAsmCode[0]=Hi(FixedOrders[z].Code);
-        BAsmCode[1]=Lo(FixedOrders[z].Code);
+        BAsmCode[0]=Hi(forder->Code);
+        BAsmCode[1]=Lo(forder->Code);
        END
       else
        BEGIN
         CodeLen=1; 
-        BAsmCode[0]=Lo(FixedOrders[z].Code);
+        BAsmCode[0]=Lo(forder->Code);
        END
       return;
      END
+    else if (erg<0) break;
 
    /* rel. Spruenge */
 
    for (z=0; z<RelOrderCnt; z++)
-    if (Memo(RelOrders[z].Name))
+    if ((erg=strcmp(OpPart,RelOrders[z].Name))==0)
      BEGIN
       if (ArgCnt!=1) WrError(1110);
       else
@@ -516,6 +518,7 @@ BEGIN
        END
       return;
      END
+    else if (erg<0) break;
 
    /* Arithmetik */
 

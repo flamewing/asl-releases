@@ -1,17 +1,17 @@
 		save
-		listing off     ; kein Listing Åber diesen File
+		listing off     ; kein Listing ¸ber diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.40 - Datei STDDEF87.INC                                           *
 ;*                                                                          *
-;*   Sinn : enthÑlt Register- und Speicheradressen fÅr TLCS-870-Prozessoren *
+;*   Sinn : enth‰lt Register- und Speicheradressen f¸r TLCS-870-Prozessoren *
 ;*          Port- bzw. Registernamen nach Toshiba-Konvention                *
 ;*          aus dem Handbuch zur Prozessorfamilie TLCS-870                  *
 ;*                                                                          *
 ;*   Author Alfred Arnold                                                   *
 ;*                                                                          *
-;*   letzte énderungen :  9.1.1994                                          *
+;*   letzte ƒnderungen :  9.1.1994                                          *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -19,14 +19,14 @@
 
 stddef87inc     equ     1
 
-		if      (MomCPU<>556032)&&(MomCPU<>556064)&&(MomCPU<>556096)&&(MomCPU<>556144)
+                if      (MOMCPU<>556032)&&(MOMCPU<>556064)&&(MOMCPU<>556096)&&(MOMCPU<>556144)
 		 fatal  "Falscher Prozessortyp eingestellt: nur 87C00, 87C20, 87C40 oder 87C70 erlaubt"
 		endif
 
-		if      MomPass=1
-		 message "TLCS-870-Adre·definitionen"
+                if      MOMPASS=1
+		 message "TLCS-870-Adreﬂdefinitionen"
 		 message "(C) 1994 Alfred Arnold"
-		 message "Zielprozessor: \{MomCPU}"
+                 message "Zielprozessor: \{MOMCPU}"
 		endif
 
 ;----------------------------------------------------------------------------
@@ -41,43 +41,43 @@ P3		equ	03h
 P4		equ	04h
 P5		equ	05h
 P6		equ	06h
-		if	MomCPU<>87C20h
+                if      MOMCPU<>87C20h
 P7		 equ	07h
 		endif
-		if	MomCPU=87C70h
+                if      MOMCPU=87C70h
 P8		 equ	08h
 P9		 equ	09h
 		endif
 P0CR		equ	0Ah
 P1CR		equ	0BH
-		if	MomCPU=87C70h
+                if      MOMCPU=87C70h
 P4CR		 equ	0Ch
 		endif
-		if	(MomCPU=87C00h)||(MomCPU=87C40h)
+                if      (MOMCPU=87C00h)||(MOMCPU=87C40h)
 P6CR		 equ	0Ch
 P7CR		 equ	0Dh
 		endif
-		if	MomCPU=87C20h
+                if      MOMCPU=87C20h
 P6CR		 equ	29h
 		endif
 
 ; Tastaturinterface
 
-		if	MomCPU=87C70h
+                if      MOMCPU=87C70h
 KEYDR		 equ	P4
 KEYSR		 equ	2Ah
 		endif
 
 ; Vergleicher
 
-		if	MomCPU=87C70h
+                if      MOMCPU=87C70h
 CMPCR		 equ	0Eh
 CMPDR		 equ	0Fh
 		endif
 
 ; Timer: hier geht es ziemlich durcheinander
 
-		if	MomCPU=87C70h
+                if      MOMCPU=87C70h
 TREG1		 equ	10h
 TREG1L		 equ	TREG1
 TREG1H		 equ	TREG1+1
@@ -86,14 +86,14 @@ TREG1A		 equ	10h
 TREG1AL		 equ	TREG1A
 TREG1AH		 equ	TREG1A+1
 TREG1B		 equ	12h
-		 if 	MomCPU<>87C20h
+                 if     MOMCPU<>87C20h
 TREG1BL		  equ	TREG1B
 TREG1BH		  equ	TREG1B+1
 		 elseif
 TC1CR		  equ	13h
 		 endif
 		endif
-		if	MomCPU=87C20h
+                if      MOMCPU=87C20h
 TREG5		 equ	1Dh
 TC5CR		 equ	1Eh
 TREG6		 equ	16h
@@ -101,7 +101,7 @@ TC6CR		 equ	17h
 		elseif
 TC1CR		 equ	14h
 TC2CR		 equ	15h
-		 if 	MomCPU<>87C70h
+                 if     MOMCPU<>87C70h
 TREG2		  equ	16h
 TREG2L		  equ	TREG2
 TREG2H		  equ	TREG2+1
@@ -113,11 +113,11 @@ TC3CR		equ	1Ah
 TREG4		equ	1Bh
 TC4CR		equ	1Ch
 
-; Seriell: auch nicht viel Åbersichtlicher
+; Seriell: auch nicht viel ¸bersichtlicher
 
-		if	(MomCPU=87C00h)||(MomCPU=87C40h)
+                if      (MOMCPU=87C00h)||(MOMCPU=87C40h)
 SIO1SR		 equ	20h
-		 if	MomCPU=87C40h
+                 if     MOMCPU=87C40h
 SIO1CR1		  equ	20h
 SIO1CR2		  equ	21h
 SIO2CR1		  equ	22h
@@ -142,7 +142,7 @@ SIO_BUFFER	 equ	0FF0h
 
 ; High-Speed-seriell
 
-		if	MomCPU=87C70h
+                if      MOMCPU=87C70h
 HSOSR		 equ	24h
 HSOCR		 equ	24h
 HSO_BUFFER	 equ	0FF8H
@@ -150,21 +150,21 @@ HSO_BUFFER	 equ	0FF8H
 
 ; AD-Wandler
 
-		if	MomCPU=87C40h
+                if      MOMCPU=87C40h
 ADCCR		 equ	0Eh
 ADCDR		 equ	0Fh
 		endif
 
 ; LCD
 
-		if	MomCPU=87C20h
+                if      MOMCPU=87C20h
 LCDCR		 equ	28h
 LCD_BUFFER	 equ	0F80h
 		endif
 
 ; Fluoreszenz-Display
 
-		if	MomCPU=87C70h
+                if      MOMCPU=87C70h
 VFTCR1		 equ	28h
 VFTSR		 equ	29h
 VFTCR2		 equ	29h
@@ -196,7 +196,7 @@ ILH		equ	EIR+1
 ; feste Speicherbereiche
 
 IRAM            equ     000C0H    ; Internal RAM 256/512/512/512 Byte...
-		if	MomCPU=87C00h
+                if      MOMCPU=87C00h
 IRAMEND          equ    0013FH
 		elseif
 IRAMEND		 equ	0023FH

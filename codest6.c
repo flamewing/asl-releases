@@ -17,6 +17,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 typedef struct
          {
@@ -40,7 +41,7 @@ typedef struct
 #define AccOrderCnt 3
 
 
-#define ModNone -1
+#define ModNone (-1)
 #define ModAcc 0
 #define MModAcc (1 << ModAcc)
 #define ModDir 1
@@ -51,11 +52,11 @@ typedef struct
 
 static Byte AdrMode;
 static ShortInt AdrType;
-static Byte AdrVal,AdrCnt;
+static Byte AdrVal;
 
 static LongInt WinAssume;
 
-static void (*SaveInitProc)(void);
+static SimpProc SaveInitProc;
 
 static CPUVar CPUST6210,CPUST6215,CPUST6220,CPUST6225;
 
@@ -65,8 +66,6 @@ static FixedOrder *ALUOrders;
 static AccOrder *AccOrders;
 
 /*---------------------------------------------------------------------------------*/
-
-static int InstrZ;
 
 	static void AddFixed(char *NName, Byte NCode)
 BEGIN

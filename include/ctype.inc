@@ -1,18 +1,18 @@
 		save
-		listing off   ; kein Listing ber diesen File
+		listing off   ; kein Listing über diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.40 - Datei CTYPE.INC                                              *
 ;*   								            *
-;*   Sinn : enth„lt Funktionen zur Untersuchung von Zeichen                 *
+;*   Sinn : enthält Funktionen zur Untersuchung von Zeichen                 *
 ;* 									    *
-;*   letzte Žnderungen : 20. 3.1993                                         *
+;*   letzte Änderungen : 20. 3.1993                                         *
 ;*                       11. 9.1993 Meldung nur im 1.Pass                   *
-;*                       19. 2.1994 Funktionen vervollst„ndigt,             *
-;*                                  isascii dem C-Standard angepaát         *
+;*                       19. 2.1994 Funktionen vervollständigt,             *
+;*                                  isascii dem C-Standard angepaßt         *
 ;*									    *
-;* ACHTUNG!  isalpha bercksichtigt keine landesspezifischen Sonderzeichen! *
+;* ACHTUNG!  isalpha berücksichtigt keine landesspezifischen Sonderzeichen! *
 ;*									    *
 ;****************************************************************************
 
@@ -40,7 +40,7 @@ isxdigit	function ch,(isdigit(ch))||((toupper(ch)>='A')&&(toupper(ch)<='F'))
 isascii         function ch,(ch>=0)&&(ch<128)
 
 ;----------------------------------------------------------------------------
-; liefert TRUE, falls das Argument ein Groábuchstabe ist:
+; liefert TRUE, falls das Argument ein Großbuchstabe ist:
 
 isupper		function ch,(ch>='A')&&(ch<='Z')
 
@@ -67,7 +67,7 @@ isspace		function ch,(ch=' ')||(ch=12)||(ch='\n')||(ch='\r')||(ch='\t')||(ch=11)
 
 ;----------------------------------------------------------------------------
 ; liefert TRUE, falls das Argument ein druckbares Zeichen ist:
-; strenggenommen máte man DEL (127) ausnehmen, aber auf dem PC ist das ein
+; strenggenommen müßte man DEL (127) ausnehmen, aber auf dem PC ist das ein
 ; druckbares Zeichen
 
 isprint		function ch,(ch>31)&&(ch<255)

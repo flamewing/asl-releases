@@ -1,15 +1,15 @@
                 save
-                listing off   ; kein Listing Åber diesen File
+                listing off   ; kein Listing ¸ber diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.40 - Datei REG166.INC                                             *
 ;*   								            *
-;*   Sinn : enthÑlt SFR-, Makro- und Adre·definitionen fÅr 80C166/167       *
-;*          OK, der Name fÑllt aus dem Rahmen, aber STDDEF16.INC war schon  *
+;*   Sinn : enth‰lt SFR-, Makro- und Adreﬂdefinitionen f¸r 80C166/167       *
+;*          OK, der Name f‰llt aus dem Rahmen, aber STDDEF16.INC war schon  *
 ;*          belegt...                                                       *
 ;* 									    *
-;*   letzte énderungen : 23. 6.1994                                         *
+;*   letzte ƒnderungen : 23. 6.1994                                         *
 ;*                       27. 6.1994 Makros                                  *
 ;*                       28. 6.1994 Bitadressen                             *
 ;*			  9. 7.1994 Interrupt-Register-Korrektur            *
@@ -23,40 +23,40 @@
 
 reg166inc       equ     1
 
-		if      (MomCPU<>8438118)&&(MomCPU<>8438119)
+                if      (MOMCPU<>8438118)&&(MOMCPU<>8438119)
 		 fatal  "Falscher Prozessortyp eingestellt: nur 80C166 oder 80C167 erlaubt!"
 		endif
 
 
-		if      MomPass=1
+                if      MOMPASS=1
 		 message "80C166/167-SFR-Definitionen (C) 1994 Alfred Arnold"
 		 message "binde \{MOMCPU}-SFRs ein"
 		endif
 
-; damit's etwas kÅrzer wird:
+; damit's etwas k¸rzer wird:
 
-DefIntBits      macro   base,adr,{NoExpand} ; Interruptregister+Bits darin def.
+DefIntBits      macro   BASE,adr,{NoExpand} ; Interruptregister+Bits darin def.
 tmpstr166	set	"BASE"
 {tmpstr166}IC   equ     adr
-{tmpstr166}_GLVL bit    {tmpstr166}IC.0 ; GruppenprioritÑt
-{tmpstr166}_ILVL bit    {tmpstr166}IC.2 ; InterruptprioritÑt
+{tmpstr166}_GLVL bit    {tmpstr166}IC.0 ; Gruppenpriorit‰t
+{tmpstr166}_ILVL bit    {tmpstr166}IC.2 ; Interruptpriorit‰t
 {tmpstr166}IE   bit     {tmpstr166}IC.6 ; Interruptfreigabe
 {tmpstr166}IR   bit     {tmpstr166}IC.7 ; Interruptanzeige
 		endm
 
 ;----------------------------------------------------------------------------
 ; Spezialregister:
-; Bitadressen nur fÅr bitadressierbare Register !
+; Bitadressen nur f¸r bitadressierbare Register !
 ; bei Bitfeldern nur Startbit !
 
-                if      MomCPU=80C167H
+                if      MOMCPU=80C167H
 SYSCON           equ     0ff12h         ; Systemkonfiguration
 WRCFG            bit     SYSCON.7       ; /WRL und /WRH statt /WR und /BHE
 ROMS1            bit     SYSCON.12      ; Lage internes ROM
                 elseif
 SYSCON           equ     0ff0ch
-MCTC             bit     SYSCON.0       ; SpeicherzykluslÑnge
-RWDC             bit     SYSCON.4       ; Schreib/Lese-Verzîgerung
+MCTC             bit     SYSCON.0       ; Speicherzyklusl‰nge
+RWDC             bit     SYSCON.4       ; Schreib/Lese-Verzˆgerung
 MTTC             bit     SYSCON.5       ; Tri-State-Zeit
 BTYP             bit     SYSCON.6       ; Status der EBC-Pins
 RDYEN            bit     SYSCON.12      ; /READY freigeben
@@ -64,13 +64,13 @@ RDYEN            bit     SYSCON.12      ; /READY freigeben
 CLKEN           bit     SYSCON.8        ; CLKOUT freigeben
 BYTDIS          bit     SYSCON.9        ; /BHE freigeben
 ROMEN           bit     SYSCON.10       ; internes ROM freigeben
-SGTDIS          bit     SYSCON.11       ; Adre·raum auf 64K beschrÑnken
-STKSZ           bit     SYSCON.13       ; Maximalgrî·e Stack
+SGTDIS          bit     SYSCON.11       ; Adreﬂraum auf 64K beschr‰nken
+STKSZ           bit     SYSCON.13       ; Maximalgrˆﬂe Stack
 
-                if      MomCPU=80C167H
+                if      MOMCPU=80C167H
 RP0H             equ     0f108h         ; Systemanlaufregister (nur Lesen)
 CSSEL            bit     RP0H.1         ; Anzahl CS-Leitungen
-SALSEL           bit     RP0H.3         ; Anzahl Adre·leitungen ab A16
+SALSEL           bit     RP0H.3         ; Anzahl Adreﬂleitungen ab A16
                 endif
 
 PSW             equ     0ff10h          ; Flagregister
@@ -91,9 +91,9 @@ ILLOPA          bit     TFR.2           ; Wortzugriff auf ungerade Adresse
 PRTFLT          bit     TFR.3           ; Schutzverletzung
 UNDOPC          bit     TFR.7           ; undefinierter Maschinenbefehl
 STKUF           bit     TFR.13          ; Stack-Unterlauf
-STKOF           bit     TFR.14          ; Stack-öberlauf
+STKOF           bit     TFR.14          ; Stack-‹berlauf
 NMI             bit     TFR.15          ; nicht maskierbarer Interrupt
-                if      MomCPU=80C167H
+                if      MOMCPU=80C167H
 EXICON           equ     0f1c0h         ; Steuerung externer Interrupt-Controller
 EXI0ES           bit     EXICON.0       ; Flankensteuerung Interrupt 0
 EXI1ES           bit     EXICON.2       ; Flankensteuerung Interrupt 1
@@ -110,7 +110,7 @@ DPP1            equ     0fe02h
 DPP2            equ     0fe04h
 DPP3            equ     0fe06h
 
-CSP             equ     0fe08h          ; Bits 16.. ProgrammzÑhler
+CSP             equ     0fe08h          ; Bits 16.. Programmz‰hler
 
 MDH             equ     0fe0ch          ; Multiplizier/Dividierregister
 MDL             equ     0fe0eh
@@ -129,26 +129,26 @@ ONES            equ     0ff1eh          ; konstant Einsen
 ;----------------------------------------------------------------------------
 ; Speicher-Interface
 
-                if      MomCPU=80C167H
-ADDRSEL1         equ     0fe18h         ; Adre·dekoder Register 1..4
+                if      MOMCPU=80C167H
+ADDRSEL1         equ     0fe18h         ; Adreﬂdekoder Register 1..4
 ADDRSEL2         equ     0fe1ah
 ADDRSEL3         equ     0fe1ch
 ADDRSEL4         equ     0fe1eh
 
 BUSCON0          equ     0ff0ch         ; Buskonfiguration Register 0..4
-MCTC0            bit     BUSCON0.0      ; SpeicherzykluslÑnge
-RWDC0            bit     BUSCON0.4      ; Schreib/Leseverzîgerung
+MCTC0            bit     BUSCON0.0      ; Speicherzyklusl‰nge
+RWDC0            bit     BUSCON0.4      ; Schreib/Leseverzˆgerung
 MTTC0            bit     BUSCON0.5      ; Tri-State-Zeit
 BTYP0            bit     BUSCON0.6      ; Status EBC-Pins
-ALECTL0          bit     BUSCON0.9      ; ALE VerlÑngerung
+ALECTL0          bit     BUSCON0.9      ; ALE Verl‰ngerung
 BUSACT0          bit     BUSCON0.10     ; Bus aktiv-Steuerbit
 RDYEN0           bit     BUSCON0.12     ; /READY benutzen
 BUSCON1          equ     0ff14h
-MCTC1            bit     BUSCON1.0      ; SpeicherzykluslÑnge
-RWDC1            bit     BUSCON1.4      ; Schreib/Leseverzîgerung
+MCTC1            bit     BUSCON1.0      ; Speicherzyklusl‰nge
+RWDC1            bit     BUSCON1.4      ; Schreib/Leseverzˆgerung
 MTTC1            bit     BUSCON1.5      ; Tri-State-Zeit
 BTYP1            bit     BUSCON1.6      ; Status EBC-Pins
-ALECTL1          bit     BUSCON1.9      ; ALE VerlÑngerung
+ALECTL1          bit     BUSCON1.9      ; ALE Verl‰ngerung
 BUSACT1          bit     BUSCON1.10     ; Bus aktiv-Steuerbit
 RDYEN1           bit     BUSCON1.12     ; /READY benutzen
 CSREN1           bit     BUSCON1.14     ; Arbeitsweise CS-Pins
@@ -184,16 +184,16 @@ RDYEN4           bit     BUSCON4.12
 CSREN4           bit     BUSCON4.14
 CSWEN4           bit     BUSCON4.15
 
-                 DefIntBits XP0,0f186h  ; Interruptsteuerung PeripheriegerÑt 0
-                 DefIntBits XP1,0f18eh  ; Interruptsteuerung PeripheriegerÑt 1
-                 DefIntBits XP2,0f196h  ; Interruptsteuerung PeripheriegerÑt 2
-                 DefIntBits XP3,0f19eh  ; Interruptsteuerung PeripheriegerÑt 3
+                 DefIntBits XP0,0f186h  ; Interruptsteuerung Peripherieger‰t 0
+                 DefIntBits XP1,0f18eh  ; Interruptsteuerung Peripherieger‰t 1
+                 DefIntBits XP2,0f196h  ; Interruptsteuerung Peripherieger‰t 2
+                 DefIntBits XP3,0f19eh  ; Interruptsteuerung Peripherieger‰t 3
                 endif
 
 ;----------------------------------------------------------------------------
 ; Ports:
 
-                if      MomCPU=80C167H
+                if      MOMCPU=80C167H
 P0L              equ     0ff00h         ; Port 0 Datenregister
 P0H              equ     0ff02h
 DP0L             equ     0f100h         ; Port 0 Datenrichtungsregister
@@ -203,7 +203,7 @@ P0               equ     0ff00h
 DP0              equ     0ff02h
                 endif
 
-                if      MomCPU=80C167H
+                if      MOMCPU=80C167H
 P1L              equ     0ff04h         ; Port 1 Datenregister
 P1H              equ     0ff06h
 DP1L             equ     0f104h         ; Port 1 Datenrichtungsregister
@@ -215,17 +215,17 @@ DP1              equ     0ff06h
 
 P2              equ     0ffc0h          ; Port 2 Datenregister
 DP2             equ     0ffc2h          ; Port 2 Datenrichtungsregister
-                if      MomCPU=80C167H
+                if      MOMCPU=80C167H
 ODP2             equ     0f1c2h         ; Port 2 Open-Drain-Einstellung
                 endif
 
 P3              equ     0ffc4h          ; Port 3 Datenregister
 DP3             equ     0ffc6h          ; Port 3 Datenrichtungsregister
-                if      MomCPU=80C167H
+                if      MOMCPU=80C167H
 ODP3             equ     0f1c6h         ; Port 3 Open-Drain-Einstellung
                 endif
 
-                if      MomCPU=80C167H
+                if      MOMCPU=80C167H
 P4               equ     0ffc8h         ; Port 4 Datenregister
 DP4              equ     0ffcah         ; Port 4 Datenrichtungsregister
                 elseif
@@ -235,7 +235,7 @@ DP4              equ     0ff0ah
 
 P5              equ     0ffa2h          ; Port 5 Datenregister (nur Eingang)
 
-                if      MomCPU=80C167H
+                if      MOMCPU=80C167H
 P6               equ     0ffcch         ; Port 6 Datenregister
 DP6              equ     0ffceh         ; Port 6 Datenrichtungsregister
 ODP6             equ     0f1ceh         ; Port 6 Open-Drain-Einstellung
@@ -272,9 +272,9 @@ T2CON           equ     0ff40h          ; Steuerregister Timer 2
 T2I             bit     T2CON.0         ; Eingangssignal Timer 2
 T2M             bit     T2CON.3         ; Modus Timer 2
 T2R             bit     T2CON.6         ; Timer 2 starten/stoppen
-T2UD            bit     T2CON.7         ; Timer 2 ZÑhlrichtung
-                if      MomCPU=80C167H
-T2UDE            bit    T2CON.8         ; Timer 2 externe ZÑhlrichtungswahl
+T2UD            bit     T2CON.7         ; Timer 2 Z‰hlrichtung
+                if      MOMCPU=80C167H
+T2UDE            bit    T2CON.8         ; Timer 2 externe Z‰hlrichtungswahl
                 endif
 		DefIntBits T2,0ff60h    ; Timer 2 Interruptsteuerung
 
@@ -283,10 +283,10 @@ T3CON           equ     0ff42h          ; Steuerregister Timer 3
 T3I             bit     T3CON.0         ; Eingangssignal Timer 3
 T3M             bit     T3CON.3         ; Modus Timer 3
 T3R             bit     T3CON.6         ; Timer 3 starten/stoppen
-T3UD            bit     T3CON.7         ; Timer 3 ZÑhlrichtung
-T3UDE           bit     T3CON.8         ; Timer 3 externe ZÑhlrichtungswahl
+T3UD            bit     T3CON.7         ; Timer 3 Z‰hlrichtung
+T3UDE           bit     T3CON.8         ; Timer 3 externe Z‰hlrichtungswahl
 T3OE            bit     T3CON.9         ; Timer 3 Ausgang freischalten
-T3OTL           bit     T3CON.10        ; Timer 3 Åbergelaufen ?
+T3OTL           bit     T3CON.10        ; Timer 3 ¸bergelaufen ?
 		DefIntBits T3,0ff62h    ; Timer 3 Interruptsteuerung
 
 T4              equ     0fe44h          ; Timer 4
@@ -294,9 +294,9 @@ T4CON           equ     0ff44h          ; Steuerregister Timer 4
 T4I             bit     T4CON.0         ; Eingangssignal Timer 4
 T4M             bit     T4CON.3         ; Modus Timer 4
 T4R             bit     T4CON.6         ; Timer 4 starten/stoppen
-T4UD            bit     T4CON.7         ; Timer 4 ZÑhlrichtung
-                if      MomCPU=80C167H
-T4UDE            bit    T4CON.8         ; Timer 4 externe ZÑhlrichtungswahl
+T4UD            bit     T4CON.7         ; Timer 4 Z‰hlrichtung
+                if      MOMCPU=80C167H
+T4UDE            bit    T4CON.8         ; Timer 4 externe Z‰hlrichtungswahl
                 endif
                 DefIntBits T4,0ff64h    ; Timer 4 Interruptsteuerung
 
@@ -305,32 +305,32 @@ T5CON           equ     0ff46h          ; Steuerregister Timer 5
 T5I             bit     T5CON.0         ; Eingangssignal Timer 5
 T5M             bit     T5CON.3         ; Modus Timer 5
 T5R             bit     T5CON.6         ; Timer 5 starten/stoppen
-T5UD            bit     T5CON.7         ; Timer 5 ZÑhlrichtung
-                if      MomCPU=80C167H
-T5UDE            bit    T5CON.8         ; Timer 5 externe ZÑhlrichtungswahl
+T5UD            bit     T5CON.7         ; Timer 5 Z‰hlrichtung
+                if      MOMCPU=80C167H
+T5UDE            bit    T5CON.8         ; Timer 5 externe Z‰hlrichtungswahl
                 endif
 CI              bit     T5CON.12        ; CAPREL Eingangswahl
-T5CLR           bit     T5CON.14        ; Timer 5 bei Fang lîschen ?
+T5CLR           bit     T5CON.14        ; Timer 5 bei Fang lˆschen ?
 T5SC            bit     T5CON.15        ; Timer 5 Fangen freigeben
 		DefIntBits T5,0ff66h    ; Timer 5 Interruptsteuerung
 
 T6              equ     0fe48h          ; Timer 6
 T6CON           equ     0ff48h          ; Steuerregister Timer 6
 T6I             bit     T6CON.0         ; Eingangssignal Timer 6
-                if      MomCPU=80C167H
+                if      MOMCPU=80C167H
 T6M              bit    T6CON.3         ; Modus Timer 6
                 endif
 T6R             bit     T6CON.6         ; Timer 6 starten/stoppen
-T6UD            bit     T6CON.7         ; Timer 6 ZÑhlrichtung
-                if      MomCPU=80C167H
-T6UDE            bit    T6CON.8         ; Timer 6 externe ZÑhlrichtungswahl
+T6UD            bit     T6CON.7         ; Timer 6 Z‰hlrichtung
+                if      MOMCPU=80C167H
+T6UDE            bit    T6CON.8         ; Timer 6 externe Z‰hlrichtungswahl
                 endif
 T6OE            bit     T6CON.9         ; Timer 6 Ausgang freischalten
-T6OTL           bit     T6CON.10        ; Timer 6 Åbergelaufen ?
+T6OTL           bit     T6CON.10        ; Timer 6 ¸bergelaufen ?
 T6SR            bit     T6CON.15        ; Timer 6 Reload
 		DefIntBits T6,0ff68h    ; Timer 6 Interruptsteuerung
 
-                if      MomCPU=80C167H
+                if      MOMCPU=80C167H
 T7               equ     0f050h         ; Timer 7
 T7REL            equ     0f054h         ; Timer 7 Reload Register
 T78CON           equ     0ff20h         ; Steuerregister Timer 7+8
@@ -344,7 +344,7 @@ T8REL            equ     0f056h         ; Timer 8 Reload Register
 ;-----------------------------------------------------------------------
 ; Capture/Compare-Einheit:
 
-                if      MomCPU=80C167H
+                if      MOMCPU=80C167H
 CAPREL           equ     0fe14h         ; Capture/Reload-Register
                 elseif
 CAPREL           equ     0fe4ah
@@ -365,7 +365,7 @@ CC12            equ     0fe98h
 CC13            equ     0fe9ah
 CC14            equ     0fe9ch
 CC15            equ     0fe9eh
-                if      MomCPU=80C167H
+                if      MOMCPU=80C167H
 CC16             equ     0fe60h         ; zus. CAPCOM Register
 CC17             equ     0fe62h
 CC18             equ     0fe64h
@@ -466,7 +466,7 @@ ACC31           bit     CCM7.15         ; CC31 Timer 0/1 zuordnen
 
 		DefIntBits CR,0ff6ah    ; CAPREL Interruptsteuerregister
 
-		DefIntBits CC0,0ff78h   ; Interruptsteuerung CAPCOM-KanÑle
+		DefIntBits CC0,0ff78h   ; Interruptsteuerung CAPCOM-Kan‰le
 		DefIntBits CC1,0ff7ah
                 DefIntBits CC2,0ff7ch
                 DefIntBits CC3,0ff7eh
@@ -482,8 +482,8 @@ ACC31           bit     CCM7.15         ; CC31 Timer 0/1 zuordnen
 		DefIntBits CC13,0ff92h
 		DefIntBits CC14,0ff94h
 		DefIntBits CC15,0ff96h
-                if      MomCPU=80C167H
-                 DefIntBits CC16,0f160h ; Interruptsteuerung zus. CAPCOM-KanÑle
+                if      MOMCPU=80C167H
+                 DefIntBits CC16,0f160h ; Interruptsteuerung zus. CAPCOM-Kan‰le
                  DefIntBits CC17,0f162h
                  DefIntBits CC18,0f164h
                  DefIntBits CC19,0f166h
@@ -510,8 +510,8 @@ PECC5           equ     0fecah
 PECC6           equ     0fecch
 PECC7           equ     0feceh
 
-SRCP0           equ    0fde0h           ; hoffentlich gilt das auch so fÅr
-SRCP1           equ    0fde4h           ; den 167er, ich habe momentan nÑm-
+SRCP0           equ    0fde0h           ; hoffentlich gilt das auch so f¸r
+SRCP1           equ    0fde4h           ; den 167er, ich habe momentan n‰m-
 SRCP2           equ    0fde8h           ; lich nicht das Datenbuch zur Hand...
 SRCP3           equ    0fdech
 SRCP4           equ    0fdf0h
@@ -530,18 +530,18 @@ DSTP7           equ    0fdfeh
 ;----------------------------------------------------------------------------
 ; Pulsweitenmodulator:
 
-                if      MomCPU=80C167H
+                if      MOMCPU=80C167H
 PP0              equ     0f038h         ; PWM Periode 0
-PT0              equ     0f030h         ; PWM ZÑhler 0
+PT0              equ     0f030h         ; PWM Z‰hler 0
 PW0              equ     0fe30h         ; PWM Pulsweite 0
 PP1              equ     0f03ah         ; PWM Periode 1
-PT1              equ     0f032h         ; PWM ZÑhler 1
+PT1              equ     0f032h         ; PWM Z‰hler 1
 PW1              equ     0fe30h         ; PWM Pulsweite 1
 PP2              equ     0f03ch         ; PWM Periode 2
-PT2              equ     0f034h         ; PWM ZÑhler 2
+PT2              equ     0f034h         ; PWM Z‰hler 2
 PW2              equ     0fe30h         ; PWM Pulsweite 2
 PP3              equ     0f03eh         ; PWM Periode 3
-PT3              equ     0f036h         ; PWM ZÑhler 3
+PT3              equ     0f036h         ; PWM Z‰hler 3
 PW3              equ     0fe30h         ; PWM Pulsweite 3
 PWMCON0          equ     0ff30h         ; PWM Seuerregister 0
 PTR0             bit     PWMCON0.0      ; PT0 laufen lassen
@@ -579,17 +579,17 @@ PS3              bit     PWMCON1.15     ; PT3 Einzelimpulsmodus
 ; A/D-Wandler:
 
 ADDAT           equ     0fea0h          ; A/D-Wandler Ergebnis
-                if      MomCPU=80C167H
+                if      MOMCPU=80C167H
 ADDAT2           equ    0f0a0h          ; A/D-Wandler Ergebnis 2
                 endif
-		DefIntBits ADC,0ff98h   ; A/D-Wandler Interruptsteuerung fÅr Wandlungsende
-		DefIntBits ADE,0ff9ah   ; A/D-Wandler Interruptsteuerung fÅr Fehler
+		DefIntBits ADC,0ff98h   ; A/D-Wandler Interruptsteuerung f¸r Wandlungsende
+		DefIntBits ADE,0ff9ah   ; A/D-Wandler Interruptsteuerung f¸r Fehler
 ADCON           equ     0ffa0h          ; A/D-Wandler Steuerregister
 ADCH            bit     ADCON.0         ; A/D-Wandler Kanalwahl
 ADM             bit     ADCON.4         ; A/D-Wandler Modus
 ADST            bit     ADCON.7         ; A/D-Wandlung starten
-ADBSY           bit     ADCON.8         ; A/D-Wandler beschÑftigt
-                if      MomCPU=80C167H
+ADBSY           bit     ADCON.8         ; A/D-Wandler besch‰ftigt
+                if      MOMCPU=80C167H
 ADWR             bit     ADCON.9        ; A/D-Wandler erst wieder starten, wenn gelesen
 ADCIN            bit     ADCON.10       ; A/D-Wandler Kanalinjektion (??...)
 ADCRQ            bit     ADCON.11       ; A/D-Wandler Kanalinjektion angefordert
@@ -598,7 +598,7 @@ ADCRQ            bit     ADCON.11       ; A/D-Wandler Kanalinjektion angefordert
 ;----------------------------------------------------------------------------
 ; Watchdog:
 
-WDT             equ     0feaeh          ; Watchdog-ZÑhler
+WDT             equ     0feaeh          ; Watchdog-Z‰hler
 WDTCON          equ     0ffaeh          ; Watchdog Steuerregister
 WDTIN           bit     WDTCON.0        ; Watchdog Eingangsfrequenz
 WDTR            bit     WDTCON.1        ; Reset durch Watchdog ?
@@ -616,21 +616,21 @@ S0BG            equ     0feb4h          ; SIO0 Baudrateneinstellung
 S0CON           equ     0ffb0h          ; Steuerregister SIO0
 S0M             bit     S0CON.0         ; SIO0 Modus
 S0STP           bit     S0CON.3         ; SIO0 Anzahl Stopbits
-S0REN           bit     S0CON.4         ; SIO0 EmpfÑnger freigeben
-S0PEN           bit     S0CON.5         ; SIO0 mit ParitÑt
-S0FEN           bit     S0CON.6         ; SIO0 mit RahmenprÅfung
-S0OEN           bit     S0CON.7         ; SIO0 mit öberlaufprÅfung
-S0PE            bit     S0CON.8         ; SIO0 ParitÑtsfehler
+S0REN           bit     S0CON.4         ; SIO0 Empf‰nger freigeben
+S0PEN           bit     S0CON.5         ; SIO0 mit Parit‰t
+S0FEN           bit     S0CON.6         ; SIO0 mit Rahmenpr¸fung
+S0OEN           bit     S0CON.7         ; SIO0 mit ‹berlaufpr¸fung
+S0PE            bit     S0CON.8         ; SIO0 Parit‰tsfehler
 S0FE            bit     S0CON.9         ; SIO0 Rahmenfehler
-S0OE            bit     S0CON.10        ; SIO0 öberlauffehler
-                if      MomCPU=80C167H
+S0OE            bit     S0CON.10        ; SIO0 ‹berlauffehler
+                if      MOMCPU=80C167H
 S0ODD            bit     S0CON.12       ; SIO0 Odd Parity
 S0BRS            bit     S0CON.13       ; SIO0 Baudratenfaktor
                 endif
-S0LB            bit     S0CON.14        ; SIO0 RÅckkopplung
+S0LB            bit     S0CON.14        ; SIO0 R¸ckkopplung
 S0R             bit     S0CON.15        ; SIO0 Baudratengenerator freigeben
 
-                if      MomCPU=80C167H
+                if      MOMCPU=80C167H
 SSCTB            equ     0f0b0h         ; SSC Senderegister
 SSCRB            equ     0f0b2h         ; SSC Empfangsregister
 SSCBR            equ     0f0b4h         ; SSC Baudrateneinstellung
@@ -642,7 +642,7 @@ SSCBM            bit     SSCCON.0       ; Wortbreite
 SSCBC            bit     SSCCON.0       ; Bitzahl
 SSCHB            bit     SSCCON.4       ; Startbitsteuerung
 SSCPH            bit     SSCCON.5       ; Taktphase
-SSCP0            bit     SSCCON.6       ; TaktpolaritÑt
+SSCP0            bit     SSCCON.6       ; Taktpolarit‰t
 SSCTEN           bit     SSCCON.8       ; Sendefehler freigeben
 SSCTE            bit     SSCCON.8       ; Sendefehler aufgetreten ?
 SSCREN           bit     SSCCON.9       ; Empfangsfehler freigeben
@@ -651,7 +651,7 @@ SSCPEN           bit     SSCCON.10      ; Phasenfehler freigeben
 SSCPE            bit     SSCCON.10      ; Phasenfehler aufgetreten ?
 SSCBEN           bit     SSCCON.11      ; Baudratenfehler freigeben
 SSCBE            bit     SSCCON.11      ; Baudratenfehler freigegeben ?
-SSCBSY           bit     SSCCON.12      ; SSC beschÑftigt ?
+SSCBSY           bit     SSCCON.12      ; SSC besch‰ftigt ?
 SSCMS            bit     SSCCON.14      ; SSC als Master betreiben
 SSCEN            bit     SSCCON.15      ; SSC freigeben
                 elseif
@@ -664,14 +664,14 @@ S1BG             equ     0febch         ; SIO1 Baudrateneinstellung
 S1CON            equ     0ffb8h         ; Steuerregister SIO1
 S1M              bit     S1CON.0        ; SIO1 Modus
 S1STP            bit     S1CON.3        ; SIO1 Anzahl Stopbits
-S1REN            bit     S1CON.4        ; SIO1 EmpfÑnger freigeben
-S1PEN            bit     S1CON.5        ; SIO1 mit ParitÑt
-S1FEN            bit     S1CON.6        ; SIO1 mit RahmenprÅfung
-S1OEN            bit     S1CON.7        ; SIO1 mit öberlaufprÅfung
-S1PE             bit     S1CON.8        ; SIO1 ParitÑtsfehler
+S1REN            bit     S1CON.4        ; SIO1 Empf‰nger freigeben
+S1PEN            bit     S1CON.5        ; SIO1 mit Parit‰t
+S1FEN            bit     S1CON.6        ; SIO1 mit Rahmenpr¸fung
+S1OEN            bit     S1CON.7        ; SIO1 mit ‹berlaufpr¸fung
+S1PE             bit     S1CON.8        ; SIO1 Parit‰tsfehler
 S1FE             bit     S1CON.9        ; SIO1 Rahmenfehler
-S1OE             bit     S1CON.10       ; SIO1 öberlauffehler
-S1LB             bit     S1CON.14       ; SIO1 RÅckkopplung
+S1OE             bit     S1CON.10       ; SIO1 ‹berlauffehler
+S1LB             bit     S1CON.14       ; SIO1 R¸ckkopplung
 S1R              bit     S1CON.15       ; SIO1 Baudratengenerator freigeben
                 endif
 
@@ -680,12 +680,12 @@ S1R              bit     S1CON.15       ; SIO1 Baudratengenerator freigeben
 
 RESET           equ     000h            ; Reseteinsprung
 NMITRAP         equ     008h            ; NMI-Einsprung
-STOTRAP         equ     010h            ; Einsprung StackÅberlauf
+STOTRAP         equ     010h            ; Einsprung Stack¸berlauf
 STUTRAP         equ     018h            ; Einsprung Stackunterlauf
 BTRAP           equ     028h            ; undef. Opcode, Protection Fault,
-                                        ; unerlaubter Wortzugriff, ungÅltige Instruktionsadresse,
-                                        ; ungÅltiger Buszugriff
-CC0INT          equ     040h            ; InterrupteinsprÅnge CAPCOM
+                                        ; unerlaubter Wortzugriff, ung¸ltige Instruktionsadresse,
+                                        ; ung¸ltiger Buszugriff
+CC0INT          equ     040h            ; Interrupteinspr¸nge CAPCOM
 CC1INT          equ     044h
 CC2INT          equ     048h
 CC3INT          equ     04ch
@@ -710,7 +710,7 @@ T5INT           equ     094h            ; Interrupteinsprung Timer 5
 T6INT           equ     098h            ; Interrupteinsprung Timer 6
 CRINT           equ     09ch            ; Interrupteinsprung CAPREL
 ADCINT          equ     0a0h            ; Interrupteinsprung A/D-Wandlung fertig
-ADEINT          equ     0a4h            ; Interrupteinsprung A/D-Wandler-öberlauf
+ADEINT          equ     0a4h            ; Interrupteinsprung A/D-Wandler-‹berlauf
 S0TINT          equ     0a8h            ; Interrupteinsprung SIO0 wieder sendebereit
 S0RINT          equ     0ach            ; Interrupteinsprung SIO0 hat Zeichen empfangen
 S0EINT          equ     0b0h            ; Interrupteinsprung SIO0 hat Fehler erkannt
@@ -722,7 +722,7 @@ S1EINT          equ     0bch            ; Interrupteinsprung SIO1 hat Fehler erk
 ;----------------------------------------------------------------------------
 ; Speicherbereiche
 
-                if      MomCPU=80C167H
+                if      MOMCPU=80C167H
 IRAM             equ     0f600h         ; Beginn internes RAM
                 elseif
 IRAM             equ     0fa00h
@@ -732,7 +732,7 @@ IRAMEND         equ     0fdffh          ; Ende      "      "
 BITRAM          equ     0fd00h          ; Beginn bitadressierbarer RAM-Bereich
 BITRAMEND       equ     0fdffh          ; Ende           "          "     "
 
-                if      MomCPU=80C167H
+                if      MOMCPU=80C167H
 PECPTR           equ     0fce0h         ; Begin PEC-Vektoren (optional)
 PECPTREND        equ     0fcffh         ; Ende   "     "
                 elseif
@@ -742,13 +742,13 @@ PECPTREND        equ     0fdffh
 
 SFRSTART        equ     0fe00h          ; Beginn SFR-Bereich
 SFREND          equ     0ffdfh          ; Ende SFR-Bereich
-                if      MomCPU=80C167H
+                if      MOMCPU=80C167H
 ESFRSTART        equ     0f000h         ; Beginn erweiterter SFR-Bereich
 ESFREND          equ     0f1dfh         ; Ende erweiterter SFR-Bereich
                 endif
 
 IROM            equ     0               ; Begin internes ROM
-                if      MomCPU=80C167H
+                if      MOMCPU=80C167H
 IROMEND          equ     07fffh         ; Ende internes ROM (n. voll ausgebaut)
                 elseif
 IROMEND          equ     01fffh

@@ -19,10 +19,11 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 /*-------------------------------------------------------------------------*/
 
-#define ModNone -1
+#define ModNone (-1)
 #define ModReg 0
 #define MModReg (1 << ModReg)
 #define ModMem 1
@@ -66,17 +67,14 @@ static FixedOrder *RotateOrders;
 static FixedOrder *RelOrders;
 
 static LongInt Reg_DS;
-static void (*SaveInitProc)(void);
+static SimpProc SaveInitProc;
 
 static ShortInt AdrMode;
-static Byte AdrCnt,AdrPart,MemPart;
+static Byte AdrPart,MemPart;
 static Byte AdrVals[4];
 static ShortInt OpSize;
 
 /*-------------------------------------------------------------------------*/
-
-static int InstrZ;
-
 
         static void AddFixed(char *NName, Word NCode)
 BEGIN
@@ -383,7 +381,7 @@ BEGIN
          AdrMode=ModMem; MemPart=4;
          AdrVals[0]=DispAcc & 0xff; AdrCnt=1;
         END
-       else if (ChkRange(DispAcc,-0x8000,0x7fff))
+       else if (ChkRange(DispAcc,-0x8000l,0x7fffl))
         BEGIN
          AdrMode=ModMem; MemPart=5;
          AdrVals[0]=(DispAcc >> 8) & 0xff;
@@ -469,7 +467,7 @@ BEGIN
              *Erg=0x200+((AdrLong & 0x3f) << 3)+BPos;
              Res=1;
             END
-           else Res=-1;
+           else Res=(-1);
           END
          else
 	  BEGIN
@@ -480,7 +478,7 @@ BEGIN
              *Erg=0x100+((AdrLong & 0x1f) << 3)+BPos+(AdrLong & 0xff0000);
              Res=1;
             END
-           else Res=-1;
+           else Res=(-1);
           END
         END
       END
@@ -570,7 +568,7 @@ BEGIN
    LongInt AdrLong;
    Boolean OK;
 
-   CodeLen=0; DontPrint=False; OpSize=-1;
+   CodeLen=0; DontPrint=False; OpSize=(-1);
 
    /* Operandengroesse */
 
@@ -1082,7 +1080,7 @@ BEGIN
      if (ArgCnt!=2) WrError(1110);
      else
       BEGIN
-       HMem=OpSize; OpSize=-3;
+       HMem=OpSize; OpSize=(-3);
        DecodeAdr(ArgStr[2],MModImm);
        switch (AdrMode)
         BEGIN
@@ -1356,7 +1354,7 @@ BEGIN
            if (OpSize==2) WrError(1130);
            else
             BEGIN
-             HReg=AdrPart; HMem=OpSize; OpSize=-2;
+             HReg=AdrPart; HMem=OpSize; OpSize=(-2);
              DecodeAdr(ArgStr[2],MModImm);
              switch (AdrMode)
               BEGIN
@@ -1380,7 +1378,7 @@ BEGIN
      else if (*AttrPart!='\0') WrError(1100);
      else
       BEGIN
-       OpSize=-2;
+       OpSize=(-2);
        DecodeAdr(ArgStr[1],MModImm);
        switch (AdrMode)
         BEGIN
@@ -1407,7 +1405,11 @@ BEGIN
         if (OK)
          BEGIN
           ChkSpace(SegCode);
+#ifdef __STDC__
           if (FirstPassUnknown) AdrLong&=0xfffffffeu;
+#else
+          if (FirstPassUnknown) AdrLong&=0xfffffffe;
+#endif
           AdrLong-=(EProgCounter()+CodeLen+2) & 0xfffffe;
           if ((NOT SymbolQuestionable) AND ((AdrLong>254) OR (AdrLong<-256))) WrError(1370);
           else if ((AdrLong&1)==1) WrError(1325);
@@ -1443,7 +1445,11 @@ BEGIN
        if (OK)
         BEGIN
          ChkSpace(SegCode);
+#ifdef __STDC__
          if (FirstPassUnknown) AdrLong&=0xfffffffeu;
+#else
+         if (FirstPassUnknown) AdrLong&=0xfffffffe;
+#endif
          AdrLong-=(EProgCounter()+CodeLen+3) & 0xfffffe;
          if ((NOT SymbolQuestionable) AND ((AdrLong>65534) OR (AdrLong<-65536))) WrError(1370);
          else if ((AdrLong&1)==1) WrError(1325);
@@ -1504,7 +1510,11 @@ BEGIN
        if (OK)
         BEGIN
          ChkSpace(SegCode);
+#ifdef __STDC__
          if (FirstPassUnknown) AdrLong&=0xfffffffeu;
+#else
+         if (FirstPassUnknown) AdrLong&=0xfffffffe;
+#endif
          AdrLong-=(EProgCounter()+CodeLen+3) & 0xfffffe;
          if ((NOT SymbolQuestionable) AND ((AdrLong>65534) OR (AdrLong<-65536))) WrError(1370);
          else if ((AdrLong&1)==1) WrError(1325);

@@ -1,14 +1,14 @@
 		save
-		listing off   ; kein Listing ueber diesen File
+		listing off   ; kein Listing über diesen File
 
 ;****************************************************************************
 ;*                                                                          *
-;*   AS 1.41 - Datei STDDEF2X.INC                                           *
+;*   AS 1.40 - Datei STDDEF2X.INC                                           *
 ;*   								            *
-;*   Sinn : enthaelt die globalen Register-Definitionen fuer die            *
+;*   Sinn : enthält die globalen Register-Definitionen für die              *
 ;*          TMS320C2x Prozessoren                                           *
 ;* 									    *
-;*   letzte Aenderungen : 20.08.1996                                        *
+;*   letzte Änderungen : 27.02.1994                                         *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -16,12 +16,12 @@
 
 stddef2xinc     equ     1
 
-		if      (MomCPU<>320C25H) && (MomCPU<>320C26H) && (MomCPU<>320C28H)
+                if      (MOMCPUNAME<>"320C25") && (MOMCPUNAME<>"320C26") && (MOMCPUNAME<>"320C28")
 		 fatal  "Falscher Prozessortyp eingestellt: nur 320C25, 320C26 und 320C28 erlaubt!"
 		endif
 
-		if      mompass=1
-		 message "TMS320C2x Register-Definitionen (C) 1994,96 Thomas Sailer"
+                if      MOMPASS=1
+		 message "TMS320C2x Register-Definitionen (C) 1994 Thomas Sailer"
 		endif
 
 ;----------------------------------------------------------------------------
@@ -35,7 +35,7 @@ PRD		res	1
 IMR		res	1
 GREG		res	1
 
-		if (MomCPU=320C26H)
+                if (MOMCPUNAME="320C26")
 B2_D		equ	60h
 B0_D		equ	200h
 B1_D		equ	400h

@@ -1,4 +1,4 @@
-/* codeallg.pas */
+/* codeallg.c */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
 /*                                                                           */
@@ -44,7 +44,7 @@ BEGIN
    strmaxcpy(s,MomCPUIdent,11);
    for (z=dest=s; *z!='\0'; z++)
     if (((*z>='0') AND (*z<='9')) OR ((*z>='A') AND (*z<='F')))
-     *(dest++)=*z;
+     *(dest++)=(*z);
    *dest='\0';
    for (z=s; *z!='\0'; z++)
     if ((*z>='0') AND (*z<='9')) break;
@@ -101,7 +101,7 @@ BEGIN
       Neu->Next=SectionStack;
       Neu->Handle=MomSectionHandle;
       Neu->LocSyms=Nil; Neu->GlobSyms=Nil; Neu->ExportSyms=Nil;
-      MomSectionHandle=GetSectionHandle(ArgStr[1],True,MomSectionHandle);
+      SetMomSection(GetSectionHandle(ArgStr[1],True,MomSectionHandle));
       SectionStack=Neu;
      END
 END
@@ -115,7 +115,7 @@ BEGIN
     BEGIN
      WrXError(1488,(*Root)->Name);
      free((*Root)->Name);
-     Tmp=*Root; *Root=Tmp->Next; free(Tmp);
+     Tmp=(*Root); *Root=Tmp->Next; free(Tmp);
     END
 END
 
@@ -135,7 +135,7 @@ BEGIN
       CodeENDSECTION_ChkEmptList(&(Tmp->ExportSyms));
       if (ArgCnt==0)
        sprintf(ListLine,"[%s]",GetSectionName(MomSectionHandle));
-      MomSectionHandle=Tmp->Handle;
+      SetMomSection(Tmp->Handle);
       free(Tmp);
      END
 END
@@ -636,7 +636,7 @@ BEGIN
        if (OK)
 	BEGIN
 	 SetListLineVal(&Erg);
-         SaveLocHandle=MomLocHandle; MomLocHandle=-1;
+         SaveLocHandle=MomLocHandle; MomLocHandle=(-1);
 	 if (FirstPassUnknown) WrError(1820);
 	 else switch (Erg.Typ)
           BEGIN
@@ -765,7 +765,7 @@ END
         static void CodeBINCLUDE(void)
 BEGIN
    FILE *F;
-   LongInt Len=-1;
+   LongInt Len=(-1);
    LongWord Ofs=0,Curr,Rest;
    Word RLen;
    Boolean OK,SaveTurnWords;
@@ -785,7 +785,7 @@ BEGIN
          WrError(1820); OK=False;
         END
        if (OK)
-        if (ArgCnt==2) Len=-1;
+        if (ArgCnt==2) Len=(-1);
         else
          BEGIN
           Len=EvalIntExpression(ArgStr[3],Int32,&OK);
@@ -889,7 +889,7 @@ BEGIN
 	  if (Lauf==Nil)
 	   BEGIN
 	    Lauf=(PForwardSymbol) malloc(sizeof(TForwardSymbol)); 
-            Lauf->Next=*Orig; *Orig=Lauf;
+            Lauf->Next=(*Orig); *Orig=Lauf;
 	    Lauf->Name=strdup(Sym);
 	   END
 	  IdentifySection(Section,&(Lauf->DestSection));
@@ -906,7 +906,11 @@ static ONOFFRec ONOFFAllgs[ONOFFAllgCount]=
 typedef struct
          {
           char *Name;
-          void (*Proc)(void);
+          void (*Proc)(
+#ifdef __PROTOS__
+                       void
+#endif
+                           );
          } PseudoOrder;
 static PseudoOrder Pseudos[]=
                    {{"ALIGN",      CodeALIGN     },

@@ -1,16 +1,16 @@
 		save
-		listing off     ; kein Listing Åber diesen File
+		listing off     ; kein Listing ¸ber diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.40 - Datei STDDEF47.INC                                           *
 ;*                                                                          *
-;*   Sinn : enthÑlt den "erweiterten Befehlssatz fÅr die                    *
+;*   Sinn : enth‰lt den "erweiterten Befehlssatz f¸r die                    *
 ;*          TLCS-47(0(A*))-Reihe                                            *
 ;*                                                                          *
 ;*   Author Alfred Arnold                                                   *
 ;*                                                                          *
-;*   letzte énderungen : 22.1.1994                                          *
+;*   letzte ƒnderungen : 22.1.1994                                          *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -18,20 +18,20 @@
 
 stddef47inc     equ     1
 
-		if      (MomCPU<>293888)&&(MomCPU<>4656128)&&(MomCPU<>74492928)
+                if      (MOMCPU<>293888)&&(MOMCPU<>4656128)&&(MOMCPU<>74492928)
 		 fatal  "Falscher Prozessortyp eingestellt: nur 47C00, 470C00, oder 470AC00 erlaubt"
 		endif
 
-		if      MomPass=1
+                if      MOMPASS=1
 		 message "TLCS-47-Makrodefinitionen"
 		 message "(C) 1994 Alfred Arnold"
-		 message "Zielprozessor: \{MomCPU}"
+                 message "Zielprozessor: \{MOMCPU}"
 		endif
 
 ;----------------------------------------------------------------------------
 ; hier geht's los...
 
-; bedingte SprÅnge
+; bedingte Spr¸nge
 
 
 bz		macro	adr		; Sprung, falls ZF=1
@@ -69,7 +69,7 @@ be		macro	dest,src,adr	; Vergleich & Sprung, falls =
 
 bne		macro	dest,src,adr	; Vergleich & Sprung, falls <>
 		cmpr	dest,src
-		if 	UpString("DEST")<>"A"
+                if      UpString("DEST")<>"A"
 		 testp	zf
 		 b	s1
 		endif
@@ -156,7 +156,7 @@ s1:
 		endm
 
 
-; UnterprogrammrÅcksprÅnge
+; Unterprogrammr¸ckspr¸nge
 
 
 retz		macro			; falls ZF=1
@@ -192,7 +192,7 @@ s1:
 		endm
 
 
-; InterruptrÅcksprÅnge
+; Interruptr¸ckspr¸nge
 
 
 retiz		macro			; falls ZF=1
@@ -232,27 +232,27 @@ s1:
 
 
 shl		macro	op,cnt		; log. Linksshift
-		if	UpString("OP")<>"A"
+                if      UpString("OP")<>"A"
 		 xch	a,op
 		endif
 		rept	cnt
 		 test	cf
 		 rolc	a
 		endm
-		if	UpString("OP")<>"A"
+                if      UpString("OP")<>"A"
 		 xch	a,op
 		endif
 		endm
 
 shr		macro	op,cnt		; log. Rechtsshift
-		if	UpString("OP")<>"A"
+                if      UpString("OP")<>"A"
 		 xch	a,op
 		endif
 		rept	cnt
 		 test	cf
 		 rorc	a
 		endm
-		if	UpString("OP")<>"A"
+                if      UpString("OP")<>"A"
 		 xch	a,op
 		endif
 		endm

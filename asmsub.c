@@ -11,7 +11,6 @@
 #include "stdinc.h"
 #include <string.h>
 #include <ctype.h>
-#include <sys/time.h>
 
 #include "endian.h"
 #include "stdhandl.h"
@@ -24,125 +23,11 @@
 
 #include "asmsub.h"
 
-/**     ***PROCEDURE AsmSubInit;
-
-
-        ***FUNCTION  AddCPU(NewName:String; Switcher:TSwitchProc):CPUVar;
-
-        ***FUNCTION  AddCPUAlias(OrigName,AliasName:String):Boolean;
-
-
-
-        FUNCTION  IsBlank(Zeichen:Char):Boolean;
-
-        ***FUNCTION  QuotPos(VAR s:String; Zeichen:Char):Word;
-
-        ***FUNCTION  RQuotPos(VAR s:String; Zeichen:Char):Word;
-
-        ***FUNCTION  FirstBlank(VAR s:String):Byte;
-
-        ***PROCEDURE SplitString(VAR Source,Left,Right:String; Trenner:Byte);
-
-        ***PROCEDURE KillBlanks(VAR s:String);
-
-        ***PROCEDURE KillPrefBlanks(VAR s:String);
-
-        ***PROCEDURE KillPostBlanks(VAR s:String);
-
-        ***PROCEDURE TranslateString(VAR s:String);
-
-        ***FUNCTION  StrCmp(VAR s1,s2:String; Hand1,Hand2:LongInt):ShortInt;
-
-        ***FUNCTION  Memo(s:String):Boolean;
-
-
-        ***PROCEDURE AddSuffix(VAR s:String; Suff:String);
-
-        ***PROCEDURE KillSuffix(VAR s:String);
-
-        FUNCTION  PathPart(Name:String):String;
-
-        ***FUNCTION  NamePart(Name:String):String;
-
-
-        ***FUNCTION  FloatString(f:Extended):String;
-
-        ***FUNCTION  StrSym(VAR t:TempResult; WithSystem:Boolean):String;
-
-
-        ***PROCEDURE ResetPageCounter;
-
-        ***PROCEDURE NewPage(Level:ShortInt; WithFF:Boolean);
-
-        ***PROCEDURE WrLstLine(Line:String);
-
-        ***PROCEDURE SetListLineVal(VAR t:TempResult);
-
-
-        ***FUNCTION  ChkSymbName(sym:String):Boolean;
-
-        ***FUNCTION  ChkMacSymbName(sym:String):Boolean;
-
-
-        ***PROCEDURE WrErrorString(VAR Message,Add:String; Warning,Fatal:Boolean);
-
-        ***PROCEDURE WrError(Num:Word);
-
-        ***PROCEDURE WrXError(Num:Word; Message:String);
-
-        ***FUNCTION  ChkRange(Value,Min,Max:LongInt):Boolean;
-
-
-        ***FUNCTION  ProgCounter:LongInt;
-
-        ***FUNCTION  EProgCounter:LongInt;
-
-        ***FUNCTION  Granularity:Word;
-
-        ***FUNCTION  ListGran:Word;
-
-        ***PROCEDURE ChkSpace(Space:Byte);
-
-
-        ***PROCEDURE PrintChunk(NChunk:ChunkList);
-
-        ***PROCEDURE PrintUseList;
-
-        ***PROCEDURE ClearUseList;
-
-
-        ***PROCEDURE CompressLine(TokNam:String; Num:Byte; VAR Line:String);
-
-        ***PROCEDURE ExpandLine(TokNam:String; Num:Byte; VAR Line:String);
-
-        ***PROCEDURE KillCtrl(VAR Line:String);
-
-
-        PROCEDURE ChkStack;
-
-        PROCEDURE ResetStack;
-
-        FUNCTION  StackRes:
-{$IFDEF Use32}
-        LongInt;
-{$ELSE}
-        Word;
-{$ENDIF}
-
-
-        ***FUNCTION  DTime(t1,t2:LongInt):LongInt;
-
-
-IMPLEMENTATION **/
 
 Word ErrorCount,WarnCount;
 static StringList CopyrightList,OutList;
 
-/**{$IFDEF USE32}
-   StartStack,MinStack,LowStack:LongInt;
-{$ELSE}
-   StartStack,MinStack,LowStack:Word;
-{$ENDIF}**/
+static LongWord StartStack,MinStack,LowStack;
 
 #define ERRMSG
 #include "as.rsc"
@@ -260,37 +145,6 @@ BEGIN
     END
 END
 
-/**{****************************************************************************}
-{ ist ein Zeichen ein Leerzeichen ? }
-
-        FUNCTION IsBlank(Zeichen:Char):Boolean;
-
-{$IFDEF SPEEDUP}
-
-        Assembler;
-ASM
-        mov     al,Zeichen      { Zeichen holen }
-        mov     ah,1            { Annahme TRUE }
-        cmp     al,' '          { der Reihe nach abfragen }
-        je      @isbl
-        cmp     al,9
-        je      @isbl
-        cmp     al,0
-        je      @isbl
-        cmp     al,255
-        je      @isbl
-        dec     ah              { doch nicht.... }
-@isbl:  mov     al,ah           { Ergebnis in AL }
-END;
-
-{$ELSE}
-
-BEGIN
-   IsBlank:=(Zeichen=' ') OR (Zeichen=#9) OR (Zeichen=#0) OR (Zeichen=#255);
-END;
-
-{$ENDIF}**/
-
 /*--------------------------------------------------------------------------*/
 /* ermittelt das erste/letzte Auftauchen eines Zeichens ausserhalb */
 /* "geschuetzten" Bereichen */
@@ -367,7 +221,7 @@ BEGIN
 
    if ((Trenner==Nil) OR (Trenner>=Source+slen))
     Trenner=Source+slen;
-   Save=*Trenner; *Trenner='\0';
+   Save=(*Trenner); *Trenner='\0';
    strcpy(Left,Source); *Trenner=Save;
    if (Trenner>=Source+slen) *Right='\0';
    else strcpy(Right,Trenner+1);
@@ -395,7 +249,7 @@ END
 /*--------------------------------------------------------------------------*/
 /* alle Leerzeichen aus einem String loeschen */
 
-       void KillBlanks(char *s)
+        void KillBlanks(char *s)
 BEGIN
    char *z;
    Integer dest=0;
@@ -408,7 +262,7 @@ BEGIN
        case '\'': if (NOT InQuot) InHyp=NOT InHyp; break;
        case '"': if (NOT InHyp) InQuot=NOT InQuot; break;
       END
-     if ((NOT isspace(*z)) OR (InHyp) OR (InQuot)) s[dest++]=*z;
+     if ((NOT isspace(*z)) OR (InHyp) OR (InQuot)) s[dest++]=(*z);
     END
    s[dest]='\0';
 END
@@ -459,7 +313,7 @@ END
 /****************************************************************************/
 /* an einen Dateinamen eine Endung anhaengen */
 
-       void AddSuffix(char *s, char *Suff)
+        void AddSuffix(char *s, char *Suff)
 BEGIN
    char *p,*z,*Part;
 
@@ -483,35 +337,36 @@ BEGIN
    if (Part!=Nil) *Part='\0';
 END
 
-/**
-{----------------------------------------------------------------------------}
-{ Pfadanteil (Laufwerk+Verzeichnis) von einem Dateinamen abspalten }
+/*--------------------------------------------------------------------------*/
+/* Pfadanteil (Laufwerk+Verzeichnis) von einem Dateinamen abspalten */
 
-        FUNCTION  PathPart(Name:String):String;
-VAR
-   {$IFDEF WINDOWS}
-   Dummy,Inp,Erg:ARRAY[0..255] OF Char;
-   {$ELSE}
-   Dummy,Erg:String;
-   {$ENDIF}
+        char *PathPart(char *Name)
 BEGIN
-   {$IFDEF WINDOWS}
-   StrPCopy(@Inp,Name);
-   FileSplit(@Inp,@Erg,@Dummy,@Dummy);
-   PathPart:=StrPas(Erg);
-   {$ELSE}
-   FSplit(Name,Erg,Dummy,Dummy);
-   PathPart:=Erg;
-   {$ENDIF}
-END;**/
+   static String s;
+   char *p;
 
+   strmaxcpy(s,Name,255);
+
+   p=strrchr(Name,PATHSEP);
+#ifdef DRSEP
+   if (p==Nil) p=strrchr(Name,DRSEP);
+#endif
+
+   if (p==Nil) *s='\0'; else s[1]='\0';
+
+   return s;
+END
 
 /*--------------------------------------------------------------------------*/
 /* Namensanteil von einem Dateinamen abspalten */
 
         char *NamePart(char *Name)
 BEGIN
-   char *p=strrchr(Name,'/');
+   char *p=strrchr(Name,PATHSEP);
+
+#ifdef DRSEP
+   if (p==Nil) p=strrchr(Name,DRSEP);
+#endif
 
    return (p==Nil)?(Name):(p+1);
 END
@@ -617,7 +472,7 @@ BEGIN
 
    else if (ExpVal<0)
     BEGIN
-     n=-ExpVal-(strlen(p)); /* = Verlaengerung nach Operation */
+     n=(-ExpVal)-(strlen(p)); /* = Verlaengerung nach Operation */
      if (strlen(s)+n<=MaxLen)
       BEGIN
        *p='\0'; d=strchr(s,'.'); strcpy(d,d+1);
@@ -820,7 +675,7 @@ BEGIN
    return True;
 END
 
-        extern Boolean ChkMacSymbName(char *sym)
+        Boolean ChkMacSymbName(char *sym)
 BEGIN
    Integer z;
 
@@ -844,7 +699,30 @@ BEGIN
 END
 
 /*--------------------------------------------------------------------------*/
-/* eine Fehlermeldung mit Klartext ausgeben */
+/* eine Fehlermeldung  mit Klartext ausgeben */
+
+	static void EmergencyStop(void)
+BEGIN
+   if ((IsErrorOpen) AND (ErrorFile!=Nil)) fclose(ErrorFile);
+   fclose(LstFile);
+   if (ShareMode!=0)
+    BEGIN
+     fclose(ShareFile); unlink(ShareName);
+    END
+   if (MacProOutput)
+    BEGIN
+     fclose(MacProFile); unlink(MacProName);
+    END
+   if (MacroOutput)
+    BEGIN
+     fclose(MacroFile); unlink(MacroName);
+    END
+   if (MakeDebug) fclose(Debug);
+   if (CodeOutput)
+    BEGIN
+     fclose(PrgFile); unlink(OutName);
+    END
+END
 
         void WrErrorString(char *Message, char *Add, Boolean Warning, Boolean Fatal)
 BEGIN
@@ -886,6 +764,7 @@ BEGIN
    if (Fatal)
     BEGIN
      fprintf((ErrorFile==Nil)?stdout:ErrorFile,"%s\n",ErrMsgIsFatal);
+     EmergencyStop();
      exit(3);
     END
 END
@@ -1038,6 +917,8 @@ BEGIN
      default  : strmaxcpy(h,ErrMsgIntError,255);
     END
 
+   if (((Num==1910) OR (Num==1370)) AND (NOT Repass)) JmpErrors++;
+
    if (NumericErrors) sprintf(Add,"#%d",Num); 
    else *Add='\0';
    WrErrorString(h,Add,Num<1000,Num>=10000);
@@ -1147,7 +1028,12 @@ BEGIN
    do  
     BEGIN 
      /* niedrigsten Start finden, der ueberhalb des letzten Endes liegt */
-     Found=False; FMin=0xffffffffu;
+     Found=False;
+#ifdef __STDC__
+     FMin=0xffffffffu;
+#else
+     FMin=0xffffffff;
+#endif
      for (z=0; z<NChunk->RealLen; z++)
       if (NChunk->Chunks[z].Start>=NewMin)
        if (FMin>NChunk->Chunks[z].Start)
@@ -1204,10 +1090,7 @@ BEGIN
    Integer z;
 
    for (z=1; z<=PCMax; z++)
-    BEGIN
-     free(SegChunks[z].Chunks);
-     InitChunk(SegChunks+z);
-    END
+    ClearChunk(SegChunks+z);
 END
 
 /****************************************************************************/
@@ -1312,7 +1195,7 @@ BEGIN
     END
 END
 
-       void ExpandLine(char *TokNam, Byte Num, char *Line)
+        void ExpandLine(char *TokNam, Byte Num, char *Line)
 BEGIN
     char *z;
 
@@ -1355,11 +1238,28 @@ BEGIN
    LongInt d;
 
    d=t2-t1; if (d<0) d+=(24*360000);
-   return abs(d);
+   return (d>0) ? d : -d;
 END
 
 /*--------------------------------------------------------------------------*/
 /* Zeit holen */
+
+#ifdef __MSDOS__
+
+#include <dos.h>
+
+        long GTime(void)
+BEGIN
+   struct time ti;
+   struct date da;
+
+   gettime(&ti); getdate (&da);
+   return (dostounix(&da,&ti)*100)+ti.ti_hund;
+END
+
+#else
+
+#include <sys/time.h>
 
         long GTime(void)
 BEGIN
@@ -1368,54 +1268,54 @@ BEGIN
    gettimeofday(&tv,Nil);
    return (tv.tv_sec*100)+(tv.tv_usec/10000);
 END
+
+#endif
 /**
 {****************************************************************************}
 { Heapfehler abfedern }
 
         FUNCTION MyHeapError(Size:Word):Integer;
         Far;
-BEGIN
+ BEGIN
    IF Size<>0 THEN WrError(10006);
    MyHeapError:=1;
 END;
+**/
+/*-------------------------------------------------------------------------*/
+/* Stackfehler abfangen - bis auf DOS nur Dummies */
 
-{----------------------------------------------------------------------------}
-{ Stackfehler abfangen }
+#ifdef __TURBOC__
+unsigned _stklen=65520;
+#include <malloc.h>
+#endif
 
-        PROCEDURE ChkStack;
+        void ChkStack(void)
 BEGIN
-   IF SPtr<MinStack THEN WrError(10007);
-   IF SPtr<LowStack THEN LowStack:=SPtr;
-END;
+#ifdef __TURBOC__
+   LongWord avail=stackavail();
+   if (avail<MinStack) WrError(10007);   
+   if (avail<LowStack) LowStack=avail;
+#endif
+END
 
-        PROCEDURE ResetStack;
+        void ResetStack(void)
 BEGIN
-   LowStack:=SPtr;
-END;
+#ifdef __TURBOC__
+   LowStack=stackavail();
+#endif
+END
 
-        FUNCTION StackRes:
-{$IFDEF USE32}
-        LongInt;
-{$ELSE}
-        Word;
-{$ENDIF}
+        LongWord StackRes(void)
 BEGIN
-   StackRes:=LowStack-MinStack;
-END;
+#ifdef __TURBOC__
+   return LowStack-MinStack;
+#else
+   return 0;
+#endif
+END
 
-{****************************************************************************}
-{ Overlays installieren, PC-Kompatibilitaet }
-{ XMS-Overlays von Wilbert van Leijen }
-
-{$IFDEF MSDOS}
-CONST
-  OvrNoXMSDriver = -7;   { kein XMS Treiber installiert }
-  OvrNoXMSMemory = -8;   { zuwenig XMS Speicher vorhanden }
-
-        PROCEDURE OvrInitXMS; External;
-{$L OVERXMS.OBJ }
-{$ENDIF}
-
+/****************************************************************************/
+/**
 {$IFDEF DPMI}
         FUNCTION MemInitSwapFile(FileName: pChar; FileSize: LongInt): INTEGER;
         EXTERNAL 'RTM' INDEX 35;
@@ -1426,36 +1326,17 @@ CONST
 
 VAR
    Cnt:Char;
-   FileLen,XORVal:LongInt;
-   z:Word;
+   FileLen:LongInt;
    p,err:Integer;
    MemFlag,TempName:String;**/
 
 	void asmsub_init(void)
 BEGIN
-/**   { Fuer DOS-Version Overlays initialisieren }
+   char *CMess=InfoMessCopyright;
+   Word z;
+   LongWord XORVal;
 
-   {$IFDEF MSDOS}
-   OvrInit('AS.OVR');
-   IF OvrResult<>0 THEN OvrInit(ParamStr(0));
-   IF OvrResult<>0 THEN
-    BEGIN
-     WriteLn(StdErr,ErrMsgOvlyError); Halt(4);
-    END;
-   OvrSetBuf(OvrGetBuf+OvrGetBuf SHR 1);
-
-   MemFlag:=GetEnv('USEXMS'); IF MemFlag='' THEN MemFlag:='Y';
-   IF System.Upcase(MemFlag[1])='N'
-    THEN OvrResult:=OvrNoXMSMemory
-    ELSE OvrInitXMS;
-
-   IF OvrResult<>0 THEN
-    BEGIN
-     MemFlag:=GetEnv('USEEMS'); IF MemFlag='' THEN MemFlag:='Y';
-     IF System.Upcase(MemFlag[1])<>'N' THEN OvrInitEMS;
-    END;
-   {$ENDIF}
-
+/**
    { Fuer DPMI evtl. Swapfile anlegen }
 
 {$IFDEF DPMI}
@@ -1484,30 +1365,23 @@ BEGIN
 {$ENDIF}
 
    HeapError:=@MyHeapError;
+**/
 
-   FOR z:=1 TO Length(InfoMessCopyRight) DO
+   for (z=0; z<strlen(CMess); z++)
     BEGIN
-     XORVal:=Ord(InfoMessCopyRight[z]);
-     XORVal:=XORVal SHL ((z MOD 4)*8);
-     Magic:=Magic XOR XORVal;
-    END;**/
+     XORVal=CMess[z];
+     XORVal=XORVal << (((z+1) % 4)*8);
+     Magic=Magic ^ XORVal;
+    END
 
    InitStringList(&CopyrightList);
-/**   InitStringList(OutList);
+   InitStringList(&OutList);
 
-   StartStack:=SPtr; LowStack:=SPtr;
-   {$IFDEF OS2}
-    {$IFDEF VIRTUALPASCAL}
-     MinStack:=StartStack-196608+$800;
-    {$ELSE}
-     MinStack:=StartStack-18432+$800;
-    {$ENDIF}
-   {$ELSE}
-    {$IFDEF WINDOWS}
-     MinStack:=StartStack-16384+$1000;
-    {$ELSE}
-     MinStack:=STartStack-49152+$800;
-    {$ENDIF}
-   {$ENDIF}**/
+#ifdef __TURBOC__
+   StartStack=stackavail(); LowStack=stackavail();
+   MinStack=StartStack-65520+0x800;
+#else
+   StartStack=LowStack=MinStack=0;
+#endif
 END
 

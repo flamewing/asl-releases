@@ -154,8 +154,8 @@ bit3		dbit	5,b
 
 		movw	cat,dog
 		movw	#12345,r010
-		movw	Targ(b),cat
-		movw	(cat),cat
+		movw	#Targ(b),cat
+		movw	#(cat),cat
 
 		trap	7
 

@@ -1,13 +1,13 @@
                 save
-                listing off   ; kein Listing ueber diesen File
+                listing off   ; kein Listing über diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.40 - Datei STDDEF56.INC                                           *
 ;*   								            *
-;*   Sinn : enthaelt SFR-Definitionen fuer den DSP56000-Prozessor           *
+;*   Sinn : enthält SFR-Definitionen für den DSP56000-Prozessor             *
 ;* 									    *
-;*   letzte Aenderungen : 30.12.1993                                        *
+;*   letzte Änderungen : 30.12.1993                                         *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -15,11 +15,11 @@
 
 stddef56inc     equ     1
 
-                if      (MomCPU<>352256)
+                if      (MOMCPU<>352256)
                  fatal  "Falscher Prozessortyp eingestellt: nur 56000 erlaubt!"
 		endif
 
-		if      mompass=1
+                if      MOMPASS=1
                  message "DSP56000-SFR-Definitionen (C) 1993 Alfred Arnold"
 		endif
 
@@ -47,7 +47,7 @@ rx		xsfr	tx		; SCI Empfangsregister
 scr		xsfr	$fff0		; SCI Schnittstellensteuerregister
 ssr		xsfr	$fff1		; SCI Schittstellenstatusregister
 sccr		xsfr	$fff2		; SCI Steuerregister
-stxa		xsfr	$fff3		; SCI Sendedatenadressregister
+stxa		xsfr	$fff3		; SCI Sendedatenadreßregister
 srx		xsfr	$fff4		; SCI Empfangsregister Basisadresse
 stx		xsfr	srx		; SCI Senderegister Basisadresse
 srx_lo		xsfr	srx		; SCI Empfangsregister in Bit 0..7
@@ -58,7 +58,7 @@ srx_hi		xsfr	srx+2		; SCI Empfangsregister in Bit 16..23
 stx_hi		xsfr	stx+2		; SCI Senderegister in Bit 16..23
 
 bcr		xsfr	$fffe		; Bussteuerregister
-ipr		xsfr	$ffff		; Interrupt-Prioritaetenregister
+ipr		xsfr	$ffff		; Interrupt-Prioritätenregister
 
 ;---------------------------------------------------------------------------
 

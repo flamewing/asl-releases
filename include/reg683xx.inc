@@ -1,14 +1,14 @@
                 save
-                listing off             ; kein Listing Åber diesen File
-                macexp  off             ; spart noch ein bi·chen Zeit
+                listing off             ; kein Listing ¸ber diesen File
+                macexp  off             ; spart noch ein biﬂchen Zeit
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.40 - Datei REG96.INC                                              *
 ;*   								            *
-;*   Sinn : enthÑlt Registeradre·definitionen fÅr 68332 und 68340           *
+;*   Sinn : enth‰lt Registeradreﬂdefinitionen f¸r 68332 und 68340           *
 ;* 									    *
-;*   letzte énderungen : 18.11.1994                                         *
+;*   letzte ƒnderungen : 18.11.1994                                         *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -21,23 +21,23 @@ reg6833xinc     equ     1
 		endif
 
 
-		if      MomPass=1
+                if      MOMPASS=1
                  message "CPU32-Register-Definitionen (C) 1994 Alfred Arnold"
                  message "binde \{MOMCPU}-Register ein"
 		endif
 
 ;-----------------------------------------------------------------------------
-; Basis ist entweder $fffa00 oder $7fa000, das mu· man vorher setzen
+; Basis ist entweder $fffa00 oder $7fa000, das muﬂ man vorher setzen
 ; (oder mit dem Default leben :-)
-; beim 68340 kann man ganz frei wÑhlen
-; Da der 68332 A31..A24 nicht herausfÅhrt, kînnte man evtl. auch die Register
-; ab $fffffa00 erreichen und kurze Adressen verwenden.  Das mÅ·te man mal
+; beim 68340 kann man ganz frei w‰hlen
+; Da der 68332 A31..A24 nicht herausf¸hrt, kˆnnte man evtl. auch die Register
+; ab $fffffa00 erreichen und kurze Adressen verwenden.  Das m¸ﬂte man mal
 ; ausprobieren...alternativ kann man man aber auch die Basis auf 0 setzen,
 ; bevor man diese Datei einbindet und dann die Symbole registerrelativ
 ; verwenden.
 
                 ifndef  SIMBase
-                 if      MomCPU=$68332
+                 if      MOMCPU=$68332
 SIMBase           equ     $fffa00
                  elseif
 SIMBase           equ     $000000
@@ -46,7 +46,7 @@ SIMBase           equ     $000000
 
 ;=============================================================================
 ; Da sich 68360, 68340 und 68332 sehr deutlich im Registermodell unterscheiden,
-; habe ich mir keine MÅhe gemacht, Register fÅr Register auseinanderzufieseln,
+; habe ich mir keine M¸he gemacht, Register f¸r Register auseinanderzufieseln,
 ; was gemeinsam ist und was nicht
 
                 switch  MOMCPUNAME
@@ -73,8 +73,8 @@ PEPAR           equ     RegBase+$0016   ; [W] Zuordnung der I/O-Pins Port E
 SYPCR           equ     RegBase+$0022   ; [B] Systemmonitore, Bustimimg
 SWIV            equ     RegBase+$0023   ; [B] Interruptvektor Watchdog
 PICR            equ     RegBase+$0026   ; [W] Interruptebene+ -vektor period. Interrupt
-PITR            equ     RegBase+$002a   ; [W] ZÑhlwert & Vorteiler period. Interrupt
-SWSR            equ     RegBase+$002f   ; [B] Watchdog rÅcksetzen
+PITR            equ     RegBase+$002a   ; [W] Z‰hlwert & Vorteiler period. Interrupt
+SWSR            equ     RegBase+$002f   ; [B] Watchdog r¸cksetzen
 BKAR            equ     RegBase+$0030   ; [L] Breakpoint-Adresse
 BKCR            equ     RegBase+$0034   ; [L] Breakpoint-Steuerung
 
@@ -108,13 +108,13 @@ RAMBase         equ     SIMBase         ; [ ] RAM-Basisadresse
 IDMA1Base       equ     RAMBase+$0e70
 IDMA2Base       equ     RAMBase+$0f70
 
-ICCR            equ     RegBase+$0500   ; [W] Konfiguration IDMA-KanÑle
+ICCR            equ     RegBase+$0500   ; [W] Konfiguration IDMA-Kan‰le
 CMR1            equ     RegBase+$0504   ; [W] Modus IDMA1
 CMR2            equ     RegBase+$0526   ; [W] Modus IDMA2
 __defidma       macro   NAME,Adr,IDMABase
 SAPR{NAME}      equ     Adr             ; [L] Quelladresse bei Speicherkopieraktionen
 DAPR{NAME}      equ     Adr+4           ; [L] Zieladresse   "             "
-BCR{NAME}       equ     Adr+8           ; [L] ZÑhlregister IDMA
+BCR{NAME}       equ     Adr+8           ; [L] Z‰hlregister IDMA
 FCR{NAME}       equ     Adr+12          ; [B] Funktionscodes
 CMAR{NAME}      equ     Adr+14          ; [B] Kanalmaske
 CSR{NAME}       equ     Adr+16          ; [B] Kanalstatus IDMA
@@ -130,8 +130,8 @@ IDMA{NAME}_ITEMP         equ      IDMABase+0     ; [L] temp. Speicher
 ; SDMA:
 
 SDSR            equ     RegBase+$051c   ; [B] Status SDMA
-SDCR            equ     RegBase+$051e   ; [W] Konfiguration SDMA-KanÑle
-SDAR            equ     RegBase+$0520   ; [L] SDMA-Adre·register
+SDCR            equ     RegBase+$051e   ; [W] Konfiguration SDMA-Kan‰le
+SDAR            equ     RegBase+$0520   ; [L] SDMA-Adreﬂregister
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; CPIC:
@@ -164,7 +164,7 @@ TGCR            equ     RegBase+$0560   ; [W] globale Konfiguration Timer
 TMR1            equ     RegBase+$0590   ; [W] Modus Timer 1
 TRR1            equ     RegBase+$0594   ; [W] Referenzwert Timer 1
 TCR1            equ     RegBase+$0598   ; [W] Fangwert Timer 1
-TCN1            equ     RegBase+$059c   ; [W] ZÑhlwert Timer 1
+TCN1            equ     RegBase+$059c   ; [W] Z‰hlwert Timer 1
 TER1            equ     RegBase+$05b0   ; [W] Ereignismeldung Timer 1
 TMR2            equ     RegBase+$0592
 TRR2            equ     RegBase+$0596
@@ -186,7 +186,7 @@ TIMER_TM_ptr    equ     TimerBase+$02   ; [W] Zeiger Tabelle
 TIMER_R_TMR     equ     TimerBase+$04   ; [W] Modus
 TIMER_R_TMV     equ     TimerBase+$06   ; [W] Valid-Register
 TIMER_TM_cmd    equ     TimerBase+$08   ; [L] Kommandoregister
-TIMER_TM_cnt    equ     TimerBase+$0c   ; [L] interner ZÑhler
+TIMER_TM_cnt    equ     TimerBase+$0c   ; [L] interner Z‰hler
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; CP:
@@ -226,23 +226,23 @@ SCCM{NAME}      equ     Adr+20          ; [W] UART Ereignismaske
 SCCS{NAME}      equ     Adr+23          ; [B] UART Status
 SCC{NAME}_RBASE           equ     SCCBase+$00     ; [W] Startadresse Empfangspuffer
 SCC{NAME}_TBASE           equ     SCCBase+$02     ; [W] Startadresse Sendepuffer
-SCC{NAME}_RFCR            equ     SCCBase+$04     ; [B] Adre·raum Empfangen
-SCC{NAME}_TFCR            equ     SCCBase+$05     ; [B] Adre·raum Senden
-SCC{NAME}_MRBLR           equ     SCCBase+$06     ; [W] LÑnge Empfangspuffer
-SCC{NAME}_RSTATE          equ     SCCBase+$08     ; [L] Status EmpfÑnger
-SCC{NAME}_RBPTR           equ     SCCBase+$10     ; [W] Adre·zeiger Empfangen
+SCC{NAME}_RFCR            equ     SCCBase+$04     ; [B] Adreﬂraum Empfangen
+SCC{NAME}_TFCR            equ     SCCBase+$05     ; [B] Adreﬂraum Senden
+SCC{NAME}_MRBLR           equ     SCCBase+$06     ; [W] L‰nge Empfangspuffer
+SCC{NAME}_RSTATE          equ     SCCBase+$08     ; [L] Status Empf‰nger
+SCC{NAME}_RBPTR           equ     SCCBase+$10     ; [W] Adreﬂzeiger Empfangen
 SCC{NAME}_TSTATE          equ     SCCBase+$18     ; [L] Status Sender
-SCC{NAME}_TBPTR           equ     SCCBase+$20     ; [W] Adre·zeiger Senden
+SCC{NAME}_TBPTR           equ     SCCBase+$20     ; [W] Adreﬂzeiger Senden
 SCC{NAME}_RCRC            equ     SCCBase+$28     ; [L] Empfangs-CRC
 SCC{NAME}_TCRC            equ     SCCBase+$2c     ; [L] Sende-CRC
 SCC{NAME}_MAX_IDL         equ     SCCBase+$38     ; [W] --UART-- Maximalzahl Idle-Zeichen
-SCC{NAME}_IDLC            equ     SCCBase+$3a     ; [W] temp. Idle-ZÑhler
+SCC{NAME}_IDLC            equ     SCCBase+$3a     ; [W] temp. Idle-Z‰hler
 SCC{NAME}_BRKCR           equ     SCCBase+$3c     ; [W] Anzahl Sende-Breaks
-SCC{NAME}_PAREC           equ     SCCBase+$3e     ; [W] ParitÑtsfehlerzÑhler
-SCC{NAME}_FRMEC           equ     SCCBase+$40     ; [W] Rahmungs-FehlerzÑhler
-SCC{NAME}_NOSEC           equ     SCCBase+$42     ; [W] RauschzÑhler
+SCC{NAME}_PAREC           equ     SCCBase+$3e     ; [W] Parit‰tsfehlerz‰hler
+SCC{NAME}_FRMEC           equ     SCCBase+$40     ; [W] Rahmungs-Fehlerz‰hler
+SCC{NAME}_NOSEC           equ     SCCBase+$42     ; [W] Rauschz‰hler
 SCC{NAME}_BRKEC           equ     SCCBase+$44     ; [W] Break-Bedingung
-SCC{NAME}_BRKLN           equ     SCCBase+$46     ; [W] LÑnge des letzten Breaks
+SCC{NAME}_BRKLN           equ     SCCBase+$46     ; [W] L‰nge des letzten Breaks
 SCC{NAME}_UADDR1          equ     SCCBase+$48     ; [W] Slave-Adressen
 SCC{NAME}_UADDR2          equ     SCCBase+$4a     ; [W]
 SCC{NAME}_RTEMP           equ     SCCBase+$4c     ; [W] temp. Speicher
@@ -260,26 +260,26 @@ SCC{NAME}_RCCR            equ     SCCBase+$62     ; [W] Empfangszeichen
 SCC{NAME}_RLBC            equ     SCCBase+$64     ; [W] letztes Break-Zeichen
 SCC{NAME}_C_MASK          equ     SCCBase+$34     ; [L] --HDLC-- CRC-Polynom
 SCC{NAME}_C_PRES          equ     SCCBase+$38     ; [L] CRC-Startwert
-SCC{NAME}_DISFC           equ     SCCBase+$3c     ; [W] ZÑhler fÅr verworfene Rahmen
-SCC{NAME}_CRCEC           equ     SCCBase+$3e     ; [W] ZÑhler fÅr CRC-Fehler
-SCC{NAME}_ABTSC           equ     SCCBase+$40     ; [W] ZÑhler fÅr AbbrÅche
-SCC{NAME}_NMARC           equ     SCCBase+$42     ; [W] ZÑhler fÅr unpassende Adressen
-SCC{NAME}_RETRC           equ     SCCBase+$44     ; [W] ZÑhler fÅr Retransmissionen
-SCC{NAME}_MFLR            equ     SCCBase+$46     ; [W] MaximalrahmenlÑnge
-SCC{NAME}_MAX_cnt         equ     SCCBase+$48     ; [W] LÑngenzÑhler
-SCC{NAME}_RFTHR           equ     SCCBase+$4a     ; [W] Schwelle fÅr empfangene Rahmenzahl
+SCC{NAME}_DISFC           equ     SCCBase+$3c     ; [W] Z‰hler f¸r verworfene Rahmen
+SCC{NAME}_CRCEC           equ     SCCBase+$3e     ; [W] Z‰hler f¸r CRC-Fehler
+SCC{NAME}_ABTSC           equ     SCCBase+$40     ; [W] Z‰hler f¸r Abbr¸che
+SCC{NAME}_NMARC           equ     SCCBase+$42     ; [W] Z‰hler f¸r unpassende Adressen
+SCC{NAME}_RETRC           equ     SCCBase+$44     ; [W] Z‰hler f¸r Retransmissionen
+SCC{NAME}_MFLR            equ     SCCBase+$46     ; [W] Maximalrahmenl‰nge
+SCC{NAME}_MAX_cnt         equ     SCCBase+$48     ; [W] L‰ngenz‰hler
+SCC{NAME}_RFTHR           equ     SCCBase+$4a     ; [W] Schwelle f¸r empfangene Rahmenzahl
 SCC{NAME}_RFCNT           equ     SCCBase+$4c     ; [W] empfangene Rahmen
-SCC{NAME}_HMASK           equ     SCCBase+$4e     ; [W] Adre·maske
+SCC{NAME}_HMASK           equ     SCCBase+$4e     ; [W] Adreﬂmaske
 SCC{NAME}_HADDR1          equ     SCCBase+$50     ; [W] Adressen
 SCC{NAME}_HADDR2          equ     SCCBase+$52     ; [W]
 SCC{NAME}_HADRR3          equ     SCCBase+$54     ; [W]
 SCC{NAME}_HADDR4          equ     SCCBase+$56     ; [W]
-SCC{NAME}_TMP             equ     SCCBase+$58     ; [W] TemporÑrspeicher
+SCC{NAME}_TMP             equ     SCCBase+$58     ; [W] Tempor‰rspeicher
 SCC{NAME}_TMP_MB          equ     SCCBase+$5a     ; [W]        "
 SCC{NAME}_CRCC            equ     SCCBase+$34     ; [L] --BISYNC-- temp. Wert CRC
 SCC{NAME}_PRCRC           equ     SCCBase+$38     ; [W] Empfangs-Vorgabe-CRC
 SCC{NAME}_PTCRC           equ     SCCBase+$3a     ; [W] Sende-Vorgabe-CRC
-SCC{NAME}_B_PAREC         equ     SCCBase+$3c     ; [W] ZÑhler Empfangs-ParitÑts-Fehler
+SCC{NAME}_B_PAREC         equ     SCCBase+$3c     ; [W] Z‰hler Empfangs-Parit‰ts-Fehler
 SCC{NAME}_BSYNC           equ     SCCBase+$3e     ; [W] SYNC-Zeichen
 SCC{NAME}_BDLE            equ     SCCBase+$40     ; [W] DLE-Zeichen
 SCC{NAME}_B_CHARACTER1    equ     SCCBase+$42     ; [W] Steuerzeichen
@@ -295,18 +295,18 @@ SCC{NAME}_CRC_P           equ     SCCBase+$30     ; [L] --Transparent-- CRC-Vorg
 SCC{NAME}_CRC_C           equ     SCCBase+$34     ; [L] CRC-Konstante
 SCC{NAME}_E_C_PRES        equ     SCCBase+$30     ; [L] --Ethernet-- CRC-Vorgabe
 SCC{NAME}_E_C_MASK        equ     SCCBase+$34     ; [L] CRC-Maske
-SCC{NAME}_E_CRCEC         equ     SCCBase+$38     ; [L] CRC-FehlerzÑhler
-SCC{NAME}_ALEC            equ     SCCBase+$3c     ; [L] Alignment-FehlerzÑhler
-SCC{NAME}_E_DISFC         equ     SCCBase+$40     ; [L] ZÑhler verworfene Rahmen
+SCC{NAME}_E_CRCEC         equ     SCCBase+$38     ; [L] CRC-Fehlerz‰hler
+SCC{NAME}_ALEC            equ     SCCBase+$3c     ; [L] Alignment-Fehlerz‰hler
+SCC{NAME}_E_DISFC         equ     SCCBase+$40     ; [L] Z‰hler verworfene Rahmen
 SCC{NAME}_PADS            equ     SCCBase+$44     ; [W] Padding-Zeichen kurze Rahmen
 SCC{NAME}_RET_Lim         equ     SCCBase+$46     ; [W] Maximalzahl Retries
 SCC{NAME}_RET_cnt         equ     SCCBase+$48     ; [W] Momentanzahl Retries
-SCC{NAME}_E_MFLR          equ     SCCBase+$4a     ; [W] MaximalrahmenlÑnge
-SCC{NAME}_MINFLR          equ     SCCBase+$4c     ; [W] MinimalrahmenlÑnge
-SCC{NAME}_MAXD1           equ     SCCBase+$4e     ; [W] MaximallÑnge DMA1
-SCC{NAME}_MAXD2           equ     SCCBase+$50     ; [W] MaximallÑnge DMA2
+SCC{NAME}_E_MFLR          equ     SCCBase+$4a     ; [W] Maximalrahmenl‰nge
+SCC{NAME}_MINFLR          equ     SCCBase+$4c     ; [W] Minimalrahmenl‰nge
+SCC{NAME}_MAXD1           equ     SCCBase+$4e     ; [W] Maximall‰nge DMA1
+SCC{NAME}_MAXD2           equ     SCCBase+$50     ; [W] Maximall‰nge DMA2
 SCC{NAME}_MAXD            equ     SCCBase+$52     ; [W] Rx Max DMA
-SCC{NAME}_DMA_cnt         equ     SCCBase+$54     ; [W] DMA-ZÑhler Empfang
+SCC{NAME}_DMA_cnt         equ     SCCBase+$54     ; [W] DMA-Z‰hler Empfang
 SCC{NAME}_MAX_b           equ     SCCBase+$56     ; [W] Max BD Byte Count
 SCC{NAME}_GADDR1          equ     SCCBase+$58     ; [W] Group Address Filter
 SCC{NAME}_GADDR2          equ     SCCBase+$5a     ; [W]
@@ -334,7 +334,7 @@ SCC{NAME}_IADDR1          equ     SCCBase+$94     ; [W] Individual address filte
 SCC{NAME}_IADDR2          equ     SCCBase+$96     ; [W]
 SCC{NAME}_IADDR3          equ     SCCBase+$98     ; [W]
 SCC{NAME}_IADDR4          equ     SCCBase+$9a     ; [W]
-SCC{NAME}_BOFF_CNT        equ     SCCBase+$9c     ; [W] Backoff ZÑhler
+SCC{NAME}_BOFF_CNT        equ     SCCBase+$9c     ; [W] Backoff Z‰hler
 SCC{NAME}_TADDR_H         equ     SCCBase+$9e     ; [W] temp. Adresse
 SCC{NAME}_TADDR_M         equ     SCCBase+$9a     ; [W]
 SCC{NAME}_TADDR_L         equ     SCCBase+$a0     ; [W]
@@ -358,16 +358,16 @@ SMC{NAME}_RBASE           equ     SMCBase+$00     ; [W] Empfangspufferdeskriptor
 SMC{NAME}_TBASE           equ     SMCBase+$02     ; [W] Sendepufferdeskriptoradresse
 SMC{NAME}_RFCR            equ     SMCBase+$04     ; [B] Empfangs-Funktionscode
 SMC{NAME}_TFCR            equ     SMCBase+$05     ; [B] Sende-Funktionscode
-SMC{NAME}_MRBLR           equ     SMCBase+$06     ; [W] MaximallÑnge Empfangspuffer
-SMC{NAME}_RSTATE          equ     SMCBase+$08     ; [L] interner EmpfÑngerstatus
+SMC{NAME}_MRBLR           equ     SMCBase+$06     ; [W] Maximall‰nge Empfangspuffer
+SMC{NAME}_RSTATE          equ     SMCBase+$08     ; [L] interner Empf‰ngerstatus
 SMC{NAME}_RBPTR           equ     SMCBase+$10     ; [W] Rx Buffer descriptor pointer
 SMC{NAME}_TSTATE          equ     SMCBase+$18     ; [L] interner Senderstatus
 SMC{NAME}_TBPTR           equ     SMCBase+$20     ; [W] Tx Buffer Descriptor Pointer
 SMC{NAME}_MAX_IDL         equ     SMCBase+$28     ; [W] --UART-- MAximalzahl Idle-Zeichen
-SMC{NAME}_IDLC            equ     SMCBase+$28     ; [W] Idle-ZÑhler
-SMC{NAME}_BRKLN           equ     SMCBase+$28     ; [W] LÑnge letztes Break-Zeichen
+SMC{NAME}_IDLC            equ     SMCBase+$28     ; [W] Idle-Z‰hler
+SMC{NAME}_BRKLN           equ     SMCBase+$28     ; [W] L‰nge letztes Break-Zeichen
 SMC{NAME}_BRKEC           equ     SMCBase+$28     ; [W] Receive Break Condition Counter
-SMC{NAME}_BRKCR           equ     SMCBase+$28     ; [W] Sende-Break-ZÑhler
+SMC{NAME}_BRKCR           equ     SMCBase+$28     ; [W] Sende-Break-Z‰hler
 SMC{NAME}_R_mask          equ     SMCBase+$28     ; [W] temp. Bitmaske
 SMC{NAME}_M_RxBD          equ     SMCBase+$00     ; [W] --GCI-- Monitor Channel Rx
 SMC{NAME}_M_TxBD          equ     SMCBase+$02     ; [W] Monitor Channel Tx
@@ -394,8 +394,8 @@ SPI_RBASE       equ     SPIBase+$00     ; [W] Empfangsdeskriptoradresse
 SPI_TBASE       equ     SPIBase+$02     ; [W] Sendedeskriptoradresse
 SPI_RFCR        equ     SPIBase+$04     ; [B] Empfangsfunktionscode
 SPI_TFCR        equ     SPIBase+$05     ; [B] Sendefunktionscode
-SPI_MRBLR       equ     SPIBase+$06     ; [W] MaximallÑnge Empfangspuffer
-SPI_RSTATE      equ     SPIBase+$08     ; [L] EmpfÑngerstatus
+SPI_MRBLR       equ     SPIBase+$06     ; [W] Maximall‰nge Empfangspuffer
+SPI_RSTATE      equ     SPIBase+$08     ; [L] Empf‰ngerstatus
 SPI_RBPTR       equ     SPIBase+$10     ; [W] mom. aktiver Empfangsdeskriptor
 SPI_TSTATE      equ     SPIBase+$18     ; [L] Senderstatus
 SPI_TBPTR       equ     SPIBase+$20     ; [W] mom. aktiver Sendedeskriptor
@@ -407,7 +407,7 @@ PIPBase         equ     SMC2Base
 
 PIPC            equ     RegBase+$06b2   ; [W] Konfigurationsregister
 PTPR            equ     RegBase+$06b6   ; [W] Timing-Parameter
-PIPE            equ     SMCE2           ; [B] Ereignisregister, Åberlagert!!
+PIPE            equ     SMCE2           ; [B] Ereignisregister, ¸berlagert!!
 PBDIR           equ     RegBase+$06b8   ; [L] Datenrichtungsregister Port B
 PBPAR           equ     RegBase+$06bc   ; [L] Zuordnung Port B
 PBODR           equ     RegBase+$06c2   ; [W] Steuerbits Port B als open drain
@@ -416,19 +416,19 @@ PIP_RBASE       equ     PIPBase+$00     ; [W] Empfangsdeskriptoradresse
 PIP_TBASE       equ     PIPBase+$02     ; [W] Sendedeskriptoradresse
 PIP_CFCR        equ     PIPBase+$04     ; [B] Funktionscode
 PIP_SMASK       equ     PIPBase+$05     ; [B] Statusmaske
-PIP_MRBLR       equ     PIPBase+$06     ; [W] MaximallÑnge Empfangspuffer
-PIP_RSTATE      equ     PIPBase+$08     ; [L] EmpfÑngerstatus
+PIP_MRBLR       equ     PIPBase+$06     ; [W] Maximall‰nge Empfangspuffer
+PIP_RSTATE      equ     PIPBase+$08     ; [L] Empf‰ngerstatus
 PIP_R_PTR       equ     PIPBase+$0c     ; [L] int. Empfangsdatenzeiger
 PIP_RBPTR       equ     PIPBase+$10     ; [W] mom. Empfangsdeskriptor
-PIP_R_CNT       equ     PIPBase+$12     ; [W] Empfangs-Byte-ZÑhler
+PIP_R_CNT       equ     PIPBase+$12     ; [W] Empfangs-Byte-Z‰hler
 PIP_RTEMP       equ     PIPBase+$14     ; [L] temp. Speicher
 PIP_TSTATE      equ     PIPBase+$18     ; [L] Senderstatus
 PIP_T_PTR       equ     PIPBase+$1c     ; [L] mom. Sendedatenzeiger
 PIP_TBPTR       equ     PIPBase+$20     ; [W] mom. Sendedeskriptor
-PIP_T_CNT       equ     PIPBase+$22     ; [W] Sende-Byte-ZÑhler
+PIP_T_CNT       equ     PIPBase+$22     ; [W] Sende-Byte-Z‰hler
 PIP_TTEMP       equ     PIPBase+$24     ; [L] temp. Speicher
 PIP_MAX_SL      equ     PIPBase+$28     ; [W] max. Ruhezeit
-PIP_SL_CNT      equ     PIPBase+$2a     ; [W] RuhezÑhler
+PIP_SL_CNT      equ     PIPBase+$2a     ; [W] Ruhez‰hler
 PIP_CHARACTER1  equ     PIPBase+$2c     ; [W] Steuerzeichen
 PIP_CHARACTER2  equ     PIPBase+$2e
 PIP_CHARACTER3  equ     PIPBase+$30
@@ -457,7 +457,7 @@ SIRAM           equ     RegBase+$0700   ; [ ] Routing-RAM
 
 ;-----------------------------------------------------------------------------
 ; die Kommentare fallen hier evtl. etwas spartanischer aus, weil der Technical
-; Summary von Motorola fÅr den 68340 noch nicht so ins Detail geht.
+; Summary von Motorola f¸r den 68340 noch nicht so ins Detail geht.
 
 SIMBAR          equ     $0003ff00       ; [L] Einstellung Peripherieadressen
 
@@ -505,7 +505,7 @@ DMACSR1         equ     DMABase+$00a    ; [B] Statusregister DMA-Kanal 1
 DMAFCR1         equ     DMABase+$00b    ; [B] Funktionscoderegister DMA-Kanal 1
 DMASAR1         equ     DMABase+$00c    ; [L] Quelladresse DMA-Kanal 1
 DMADAR1         equ     DMABase+$010    ; [L] Zieladresse DMA-Kanal 1
-DMABTC1         equ     DMABase+$014    ; [L] BytezÑhler DMA-Kanal 1
+DMABTC1         equ     DMABase+$014    ; [L] Bytez‰hler DMA-Kanal 1
 DMAMCR2         equ     DMABase+$020    ; Kanal 2 genauso, nur $20 weiter
 DMAINTR2        equ     DMABase+$024
 DMACCR2         equ     DMABase+$028
@@ -529,7 +529,7 @@ SMIER           equ     SMBase+$015     ; [BW] Interuptfreigaben
 SMOPCR          equ     SMBase+$01d     ; [BW] Steuerung Ausgabeports
 SMIP            equ     SMBase+$01d     ; [BR] Status Eingabeports
 SMOPS           equ     SMBase+$01e     ; [BW] Portbits einzeln setzen
-SMOPR           equ     SMBase+$01f     ; [BW] Portbits einzeln zurÅcksetzen
+SMOPR           equ     SMBase+$01f     ; [BW] Portbits einzeln zur¸cksetzen
 SMMR1A          equ     SMBase+$010     ; [B] Modusregister 1 Kanal A
 SMMR2A          equ     SMBase+$020     ; [B] Modusregister 2 Kanal A
 SMCSRA          equ     SMBase+$011     ; [BR] Taktauswahl Kanal A
@@ -553,7 +553,7 @@ TM1MCR          equ     TMBase+$000     ; [W] Modulkonfiguration Timer 1
 TM1IR           equ     TMBase+$004     ; [W] Interruptkonfiguration Timer 1
 TM1CR           equ     TMBase+$006     ; [W] Steuerung Timer 1
 TM1SR           equ     TMBase+$008     ; [W] Status/Vorteiler Timer 1
-TM1CNTR         equ     TMBase+$00a     ; [W] ZÑhlregister Timer 1
+TM1CNTR         equ     TMBase+$00a     ; [W] Z‰hlregister Timer 1
 TM1PREL1        equ     TMBase+$00c     ; [W] Vorbelegung 1 Timer 1
 TM1PREL2        equ     TMBase+$00e     ; [W] Vorbelegung 2 Timer 1
 TM1COM          equ     TMBase+$010     ; [W] Vergleichsregister Timer 1
@@ -576,20 +576,20 @@ TM2COM          equ     TMBase+$050
 
 SIMCR           equ     SIMBase+$00     ; [W] MCU-Konfiguration
 SIYPCR          equ     SIMBase+$21     ; [W] Watchdog, Bus-Monitorsteuerung
-SWSR            equ     SIMBase+$27     ; [B] Watchdog zurÅcksetzen (mit $55/$aa)
+SWSR            equ     SIMBase+$27     ; [B] Watchdog zur¸cksetzen (mit $55/$aa)
 PICR            equ     SIMBase+$22     ; [W] Interruptsteuerung Timer
-PITR            equ     SIMBase+$24     ; [W] ZÑhlwert Timer
+PITR            equ     SIMBase+$24     ; [W] Z‰hlwert Timer
 
 ;-----------------------------------------------------------------------------
-; der Synthesizer fÅr den Prozessortakt
+; der Synthesizer f¸r den Prozessortakt
 
 SYNCR           equ     SIMBase+$04     ; [W] Taktfrequenz-Synthesizer-Steuerung
 
 ;-----------------------------------------------------------------------------
-; die Chip-Select-AusgÑnge
+; die Chip-Select-Ausg‰nge
 
-CSPAR0          equ     SIMBase+$44     ; [W] Steuerung der AusgÑnge CSBOOT,CS0..CS5
-CSPAR1          equ     SIMBase+$46     ; [W] Steuerung der AusgÑnge CS6..CS10
+CSPAR0          equ     SIMBase+$44     ; [W] Steuerung der Ausg‰nge CSBOOT,CS0..CS5
+CSPAR1          equ     SIMBase+$46     ; [W] Steuerung der Ausg‰nge CS6..CS10
 CSBARBT         equ     SIMBase+$48     ; [W] Startadresse Boot-ROM
 CSORBT          equ     SIMBase+$4a     ; [W] Optionen Boot-ROM
 __cnt           set     0
@@ -616,7 +616,7 @@ DDRF            equ     SIMBase+$1d     ; [B] Datenrichtungsbits Port F
 PFPAR           equ     SIMBase+$1f     ; [B] Steuerung Port F-Pins als Ports oder Bussignale
 
 ;-----------------------------------------------------------------------------
-; Register fÅr den Boundary-Scan-Test des SIM (for Motorola use only...)
+; Register f¸r den Boundary-Scan-Test des SIM (for Motorola use only...)
 
 SIMTR           equ     SIMBase+$02     ; [W] Testregister SIM
 SIMTRE          equ     SIMBase+$08     ; [W] Testregister E-Takt
@@ -643,9 +643,9 @@ HSQR0           equ     TPUBase+$14     ; [W] TPU Sub-Betriebsarten Kanal 8..15
 HSQR1           equ     TPUBase+$16     ; [W] TPU Sub-Betriebsarten Kanal 0.. 7
 HSRR0           equ     TPUBase+$18     ; [W] TPU Service-Anfragebits Kanal 8..15
 HSRR1           equ     TPUBase+$1a     ; [W] TPU Service-Anfragebits Kanal 0.. 7
-CPR0            equ     TPUBase+$1c     ; [W] TPU PrioritÑt Kanal 8..15
-CPR1            equ     TPUBase+$1e     ; [W] TPU PrioritÑt Kanal 0.. 7
-DSCR            equ     TPUBase+$04     ; [W] Register fÅr Entwicklung und Test ?!
+CPR0            equ     TPUBase+$1c     ; [W] TPU Priorit‰t Kanal 8..15
+CPR1            equ     TPUBase+$1e     ; [W] TPU Priorit‰t Kanal 0.. 7
+DSCR            equ     TPUBase+$04     ; [W] Register f¸r Entwicklung und Test ?!
 DSSR            equ     TPUBase+$06     ; eine genauere Beschreibung habe ich
 LR              equ     TPUBase+$22     ; leider nicht...
 SGLR            equ     TPUBase+$24     ;
@@ -653,7 +653,7 @@ DCNR            equ     TPUBase+$26     ;
 TCR             equ     TPUBase+$02     ;
 
 ;-----------------------------------------------------------------------------
-; das Kommando-RAM fÅr die TPU:
+; das Kommando-RAM f¸r die TPU:
 
 TPURAMBase      equ     SIMBase+$100    ; Basisadresse TPURAM-Steuerregister
 TRAMMCR         equ     TPURAMBase+$00  ; [B] Basiskonfiguration TPURAM
@@ -666,7 +666,7 @@ TRAMBAR         equ     TPURAMBase+$04  ; [W] Basisadresse TPURAM
 QSMBase         equ     SIMBase+$200    ; Basisadresse serielle E/A-Einheit
 QSMCR           equ     QSMBase+$00     ; [W] Basiskonfiguration QSM
 QTEST           equ     QSMBase+$02     ; [W] QSM Testregister
-QILR            equ     QSMBase+$04     ; [B] QSM InterruptprioritÑten
+QILR            equ     QSMBase+$04     ; [B] QSM Interruptpriorit‰ten
 QIVR            equ     QSMBase+$05     ; [B] QSM Interruptvektor
 PORTQS          equ     QSMBase+$14     ; [W] Datenbits QSM paralleler Port
 PQSPAR          equ     QSMBase+$16     ; [B] Umschaltung Portbits QSM/paralleler Port

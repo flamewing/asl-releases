@@ -57,7 +57,9 @@ Ld10:           dd      ld(10)          ; Konversionskonstanten
 One:            dd      1.0
 Half:           dd      0.5
 Ten:            dd      10.0
-Tenth:          dd      0.1
+Tenth:          dd      3dcccccdh       ; =0.1, aber die Rundung auf manchen
+					; Systemen variiert (damit Test nicht
+					; scheitert)
 
 Bias            equ     127
 MaxExpo         equ     255

@@ -1,13 +1,14 @@
                 save
-                listing off   ; kein Listing Åber diesen File
+                listing off   ; kein Listing ¸ber diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.41 - Datei REGCOP8.INC                                            *
 ;*   								            *
-;*   Sinn : enthÑlt Registerdefinitionen fÅr die COP8-Familie               *
+;*   Sinn : enth‰lt Registerdefinitionen f¸r die COP8-Familie               *
 ;* 									    *
-;*   letzte énderungen :  2. 9.1996                                         *
+;*   letzte ƒnderungen :  2. 9.1996                                         *
+;*                        8. 2.1997 MOmPass=1...                            *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -15,24 +16,26 @@
 
 regcop8inc      equ     1
 
-                switch  MomCPUName
-                case    "COP87L84"
-                 message "including COP87L84-registers"
-                elsecase
-                 fatal   "invalid processor type: only COP87L84 allowed!"
-                endcase
+                if      MOMPASS=1
+                 switch  MOMCPUNAME
+                 case    "COP87L84"
+                  message "including COP87L84-registers"
+                 elsecase
+                  fatal   "invalid processor type: only COP87L84 allowed!"
+                 endcase
+                endif
 
 ;----------------------------------------------------------------------------
 ; Prozessorkern
 
-__reg           set     0
+__REG           set     0
                 rept    10
-R{"\{__REG}"}   equ __reg+0xf0
-__reg           set     __reg+1,data
+R{"\{__REG}"}   equ __REG+0xf0
+__REG           set     __REG+1,data
                 endm
                 rept    6
-R1{"\{__REG-10}"} equ __reg+0xf0
-__reg           set     __reg+1,data
+R1{"\{__REG-10}"} equ __REG+0xf0
+__REG           set     __REG+1,data
                 endm
 
 psw             sfr     0xef            ; Flags
@@ -55,7 +58,7 @@ cntrl           sfr     0xee            ; globale Steuerung
 sl0             equ      0              ; Taktteiler Microwire
 sl1             equ      1
 iedg            equ      2              ; Flankenwahl externer Interrupt
-msel            equ      3              ; G4/G5 fÅr Microwire benutzen
+msel            equ      3              ; G4/G5 f¸r Microwire benutzen
 t1c0            equ      4              ; Timer 1 Interrupt/Start-Stop
 t1c1            equ      5              ; Moduswahl Timer 1
 t1c2            equ      6
@@ -76,7 +79,7 @@ lpen            equ      6              ; Freigabe Port L-Interrupt
 t1rblo          sfr     0xe6            ; Autoload-Wert B Timer 1
 t1rbhi          sfr     0xe7
 
-tmr1lo          sfr     0xea            ; ZÑhlwert Timer 0
+tmr1lo          sfr     0xea            ; Z‰hlwert Timer 0
 tmr1hi          sfr     0xeb
 
 t1ralo          sfr     0xec            ; Autoload-Wert A Timer 1
@@ -113,8 +116,8 @@ sior            sfr     0xe9            ; Schieberegister
 txd1            sfr     0xb0            ; Sendedaten (Byte 1,3,5,7,...)
 txd2            sfr     0xb1            ; Sendedaten (Byte 2,4,6,8,...)
 
-tdlc            sfr     0xb2            ; SendelÑngen-/Identifier(L)-Register
-tdlc0           equ      0              ; SendelÑnge
+tdlc            sfr     0xb2            ; Sendel‰ngen-/Identifier(L)-Register
+tdlc0           equ      0              ; Sendel‰nge
 tdlc1           equ      1
 tdlc2           equ      2
 tdlc3           equ      3
@@ -136,8 +139,8 @@ trtr            equ      7              ; Senderahmen remote ?
 rxd1            sfr     0xb4            ; Empfangsdaten (Byte 1,3,5,7,...)
 rxd2            sfr     0xb5            ; Empfangsdaten (Byte 2,4,6,8,...)
 
-ridl            sfr     0xb6            ; EmpfangslÑngen/Identifier(L)-Register
-rdlc0           equ      0              ; EmpfangslÑnge
+ridl            sfr     0xb6            ; Empfangsl‰ngen/Identifier(L)-Register
+rdlc0           equ      0              ; Empfangsl‰nge
 rdlc1           equ      1
 rdlc2           equ      2
 rdlc3           equ      3
@@ -183,18 +186,18 @@ terr            equ      5              ; Sendefehler
 ns0             equ      6              ; Knoten-Status
 ns1             equ      7
 
-rtstat          sfr     0xbc            ; CAN-Bus-Sender/EmpfÑngerstatus
+rtstat          sfr     0xbc            ; CAN-Bus-Sender/Empf‰ngerstatus
 rbf             equ      0              ; Empfangspuffer voll ?
-rcv             equ      1              ; Empfang lÑuft ?
-rfv             equ      2              ; empfangener Rahmen gÅltig ?
-rorn            equ      3              ; EmpfÑngerÅberlauf ?
-rold            equ      4              ; EmpfÑngerrahmenÅberlauf ?
+rcv             equ      1              ; Empfang l‰uft ?
+rfv             equ      2              ; empfangener Rahmen g¸ltig ?
+rorn            equ      3              ; Empf‰nger¸berlauf ?
+rold            equ      4              ; Empf‰ngerrahmen¸berlauf ?
 rrtr            equ      5              ; Remote-Bit in empfangenem Rahmen gesetzt ?
-txpnd           equ      6              ; Sendung lÑuft ?
+txpnd           equ      6              ; Sendung l‰uft ?
 tbe             equ      7              ; Sendepuffer leer ?
 
-tec             sfr     0xbd            ; SendefehlerzÑhler
-rec             sfr     0xbe            ; EmpfangsfehlerzÑhler
+tec             sfr     0xbd            ; Sendefehlerz‰hler
+rec             sfr     0xbe            ; Empfangsfehlerz‰hler
 
 ;----------------------------------------------------------------------------
 ; Komparatoren

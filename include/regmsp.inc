@@ -1,25 +1,25 @@
                 save
-                listing off   ; kein Listing Åber diesen File
+                listing off   ; kein Listing ¸ber diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.41 - Datei REGMSP.INC                                             *
 ;*   								            *
-;*   Sinn : enthÑlt Makro- und Registerdefinitionen fÅr den MSP430          *
+;*   Sinn : enth‰lt Makro- und Registerdefinitionen f¸r den MSP430          *
 ;* 									    *
-;*   letzte énderungen : 11. 9.1996                                         *
+;*   letzte ƒnderungen : 11. 9.1996                                         *
 ;*                                                                          *
 ;****************************************************************************
 
-                ifndef  regzMSPinc      ; verhindert Mehrfacheinbindung
+                ifndef  regmspinc      ; verhindert Mehrfacheinbindung
 
 regmspinc       equ     1
 
-                if      (MomCPUName<>"MSP430")
+                if      (MOMCPUNAME<>"MSP430")
                  fatal  "Falscher Prozessortyp eingestellt: nur MSP430 erlaubt!"
 		endif
 
-		if      MomPass=1
+                if      MOMPASS=1
                  message "MSP430-Register+Befehlsdefinitionen (C) 1996 Alfred Arnold"
 		endif
 
@@ -124,7 +124,7 @@ eint            macro
                 endm
 
 nop             macro
-                .word   04303h         ; den symbolischen Befehl wÅrde AS zurÅckweisen
+                .word   04303h         ; den symbolischen Befehl w¸rde AS zur¸ckweisen
                 endm
 
 ret             macro
@@ -155,18 +155,18 @@ ME2             equ     005h
 
 BTCTL           equ     040h            ; Basis-Steuerregister Timer 1
 
-BTCNT1          equ     046h            ; ZÑhlregister
+BTCNT1          equ     046h            ; Z‰hlregister
 BTCNT2          equ     047h
 
 TCCTL           equ     042h
 
 TCPLD           equ     043h            ; Vorladewert
 
-TCDAT           equ     044h            ; ZÑhlwert
+TCDAT           equ     044h            ; Z‰hlwert
 
 TPCTL           equ     04bh            ; Timer/Port Steuerregister
 
-TPCNT1          equ     04ch            ; ZÑhlregister
+TPCNT1          equ     04ch            ; Z‰hlregister
 TPCNT2          equ     04dh
 
 TPD             equ     04eh            ; Datenregister
@@ -181,7 +181,7 @@ WDTCTL          equ     0120h
 ;----------------------------------------------------------------------------
 ; PWM
 
-PWMCTL          equ     058h            ; ZÑhlwert
+PWMCTL          equ     058h            ; Z‰hlwert
 PWMDTB          equ     059h            ; Pulsweite (Puffer)
 PWMDTR          equ     05ah            ; Pulsweite
 PWMCNT          equ     05bh            ; Steuerung
@@ -202,14 +202,14 @@ P0IE            equ     015h            ; Interrupt-Freigaben
 LCDCTL          equ     030h            ; Steuerung
 LCD_Start       equ     031h            ; Startadresse
 LCD_Stop        equ     03fh            ; Endadresse
-__tmp           set     1               ; Einzeldefinitionen
+__TMP           set     1               ; Einzeldefinitionen
                 rept    9
-LCD{"\{__TMP}"} equ     030h+__tmp
-__tmp           set     __tmp+1
+LCD{"\{__TMP}"} equ     030h+__TMP
+__TMP           set     __TMP+1
                 endm
                 rept    6
-LCD1{"\{__TMP-10}"} equ 030h+__tmp
-__tmp           set     __tmp+1
+LCD1{"\{__TMP-10}"} equ 030h+__TMP
+__TMP           set     __TMP+1
                 endm
 
 ;----------------------------------------------------------------------------

@@ -1,13 +1,13 @@
                 save
-                listing off   ; kein Listing Åber diesen File
+                listing off   ; kein Listing ¸ber diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.40 - Datei STDDEF75.INC                                           *
 ;*   								            *
-;*   Sinn : enthÑlt SFR-Definitionen fÅr die ÊPD75K0-Familie                *
+;*   Sinn : enth‰lt SFR-Definitionen f¸r die µPD75K0-Familie                *
 ;* 									    *
-;*   letzte énderungen :  2.12.1994                                         *
+;*   letzte ƒnderungen :  2.12.1994                                         *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -19,57 +19,57 @@ stddef75inc     equ     1
 ; Bequemlichkeit
 
 __message       macro   msg,{NoExpand}
-                if      MomPass=1
+                if      MOMPASS=1
                  message msg
                 endif
                 endm
 
-                __message "ÊPD75K0-Registerdefinitionen, (C) 1994 Alfred Arnold"
+                __message "µPD75K0-Registerdefinitionen, (C) 1994 Alfred Arnold"
 
 ;----------------------------------------------------------------------------
 ; Die Prozessoren zu Gruppen zusammenfassen
 
-                switch  MomCPU
+                switch  MOMCPU
                 case    480258
-                 __message "Binde ÊPD75402-Register ein"
+                 __message "Binde µPD75402-Register ein"
 __family         equ     400
 
                 case    479236,479238,479240
-                 __message "Binde ÊPD750xx-Register ein"
+                 __message "Binde µPD750xx-Register ein"
 __family         equ     000
 
                 case     479848
-                 __message "Binde ÊPD75268-Register ein"
+                 __message "Binde µPD75268-Register ein"
 __family         equ     260
 
                 case     480004,480006,480008,480018,480022
-                 __message "Binde ÊPD753xx-Register ein"
+                 __message "Binde µPD753xx-Register ein"
 __family         equ     300
 
                 case    480040
-                 __message "Binde ÊPD75328-Register ein"
+                 __message "Binde µPD75328-Register ein"
 __family         equ     320
 
                 case    479492,479494,479496,479506,479510
-                 __message "Binde ÊPD751xx-Register ein"
+                 __message "Binde µPD751xx-Register ein"
 __family         equ     100
 
                 case    479750,479752,479762,479766
-                 __message "Binde ÊPD752xx-Register ein"
+                 __message "Binde µPD752xx-Register ein"
 __family         equ     200
 
                 case    480530,480534
-                 __message "Binde ÊPD755xx-Register ein"
+                 __message "Binde µPD755xx-Register ein"
 __family         equ     500
 
                 elsecase
-                 fatal   "Fehler: Keine CPU aus der ÊPD75xxx-Familie definiert"
+                 fatal   "Fehler: Keine CPU aus der µPD75xxx-Familie definiert"
                 endcase
 
 ;----------------------------------------------------------------------------
-; da alle Interrupt-Register gleich sind, dafÅr ein Makro bauen
+; da alle Interrupt-Register gleich sind, daf¸r ein Makro bauen
 
-__defint        macro   name,base,{NoExpand}
+__defint        macro   NAME,base,{NoExpand}
 __tmpnam        set     "NAME"
 I{__tmpnam}     sfr     base
 IE{__tmpnam}    bit     base.1
@@ -81,7 +81,7 @@ IRQ{__tmpnam}   bit     base.0
 
 SP               sfr     0f80h          ; [8W] Stack-Pointer
 BTM              sfr     0f85h          ; [4W] Modus Basis-Timer
-BT               sfr     0f86h          ; [8R] ZÑhlwert Basis-Timer
+BT               sfr     0f86h          ; [8R] Z‰hlwert Basis-Timer
 IM0              sfr     0fb4h          ; [4W] INT0 Modusregister
                  __defint BT,0fb8h      ; [4]  Freigabe/Anzeige Interrupt BT
 PORT0            sfr     0ff0h          ; [4R] Datenregister Port 0
@@ -127,7 +127,7 @@ PMGB             sfr     0fech          ; [8W]      "        "
 
 VICSI            label   0008h          ; Interruptvektoradresse INTCSI
 
-RAMEnd           sfr     64             ; RAM-Grî·e
+RAMEnd           sfr     64             ; RAM-Grˆﬂe
                 endif
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -136,7 +136,7 @@ RAMEnd           sfr     64             ; RAM-Grî·e
 WM               sfr     0f98h          ; [8]  Modus Watchdog
 TM0              sfr     0fa0h          ; [8]  Modus Timer 0
 TOE0             bit     0fa2h.3        ; [1W] Freigabe Ausgabe Timer 0
-T0               sfr     0fa4h          ; [8R] ZÑhlwert Timer 0
+T0               sfr     0fa4h          ; [8R] Z‰hlwert Timer 0
 TMOD0            sfr     0fa6h          ; [8W] Moduloregister Timer 0
 PSW              sfr     0fb0h          ; [4]  Programmstatus
 IST0             bit     PSW.2
@@ -209,7 +209,7 @@ VI1              label   0006h          ; Interruptvektoradresse INT1
 VICSI            label   0008h          ; Interruptvektoradresse INTCSI
 VIT0             label   000ah          ; Interruptvektoradresse INTT0
 
-RAMEnd           sfr     512            ; RAM-Grî·e
+RAMEnd           sfr     512            ; RAM-Grˆﬂe
                 endif
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -221,7 +221,7 @@ DIGS             sfr     0f8ah          ; [4]  Stellenauswahl Display
 KSF              bit     DIGS.3
 WM               sfr     0f98h          ; [8]  Modus Watchdog
 TM0              sfr     0fa0h          ; [8]  Modus Timer 0
-T0               sfr     0fa4h          ; [8R] ZÑhlwert Timer 0
+T0               sfr     0fa4h          ; [8R] Z‰hlwert Timer 0
 TMOD0            sfr     0fa6h          ; [8W] Moduloregister Timer 0
 PSW              sfr     0fb0h          ; [4]  Programmstatus
 IST0             bit     PSW.2
@@ -267,7 +267,7 @@ VISIO            label   0008h          ; Interruptvektoradresse INTSIO
 VIT0             label   000ah          ; Interruptvektoradresse INTT0
 VIKS             label   000eh          ; Interruptvektoradresse INTKS
 
-RAMEnd           sfr     512            ; RAM-Grî·e
+RAMEnd           sfr     512            ; RAM-Grˆﬂe
                 endif
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -278,7 +278,7 @@ LCDC             sfr     0f8eh          ; [4W] Steuerung LC-Display
 WM               sfr     0f98h          ; [8]  Modus Watchdog
 TM0              sfr     0fa0h          ; [8]  Modus Timer 0
 TOE0             bit     0fa2h.3        ; [1W] Freigabe Ausgabe Timer 0
-T0               sfr     0fa4h          ; [8R] ZÑhlwert Timer 0
+T0               sfr     0fa4h          ; [8R] Z‰hlwert Timer 0
 TMOD0            sfr     0fa6h          ; [8W] Moduloregister Timer 0
 PSW              sfr     0fb0h          ; [4]  Programmstatus
 IST0             bit     PSW.2
@@ -347,7 +347,7 @@ VI1              label   0006h          ; Interruptvektoradresse INT1
 VICSI            label   0008h          ; Interruptvektoradresse INTCSI
 VIT0             label   000ah          ; Interruptvektoradresse INTT0
 
-RAMEnd           sfr     512            ; RAM-Grî·e
+RAMEnd           sfr     512            ; RAM-Grˆﬂe
                 endif
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -358,7 +358,7 @@ LCDC             sfr     0f8eh          ; [4W] Steuerung LC-Display
 WM               sfr     0f98h          ; [8]  Modus Watchdog
 TM0              sfr     0fa0h          ; [8]  Modus Timer 0
 TOE0             bit     0fa2h.3        ; [1W] Freigabe Ausgabe Timer 0
-T0               sfr     0fa4h          ; [8R] ZÑhlwert Timer 0
+T0               sfr     0fa4h          ; [8R] Z‰hlwert Timer 0
 TMOD0            sfr     0fa6h          ; [8W] Moduloregister Timer 0
 PSW              sfr     0fb0h          ; [4]  Programmstatus
 IST0             bit     PSW.2
@@ -434,7 +434,7 @@ VI1              label   0006h          ; Interruptvektoradresse INT1
 VICSI            label   0008h          ; Interruptvektoradresse INTCSI
 VIT0             label   000ah          ; Interruptvektoradresse INTT0
 
-RAMEnd           sfr     512            ; RAM-Grî·e
+RAMEnd           sfr     512            ; RAM-Grˆﬂe
                 endif
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -445,21 +445,21 @@ TOE0             bit     0fa2h.3        ; [1W] Freigabe Ausgabe Timer 0
 TO0              bit     0fa2h.2        ; [1W] Ausgabe Timer 0
 TOF0             bit     0fa2h.1        ; [1W] Ausgabeflipflop Timer 0
 TI0              bit     0fa2h.0        ; [1W] Eingabe Timer 0
-T0               sfr     0fa4h          ; [8R] ZÑhlwert Timer 0
+T0               sfr     0fa4h          ; [8R] Z‰hlwert Timer 0
 TMOD0            sfr     0fa6h          ; [8W] Moduloregister Timer 0
 TM1              sfr     0fa8h          ; [8]  Modus Timer 1
 TOE1             bit     0faah.3        ; [1W] Freigabe Ausgabe Timer 1
 TO1              bit     0faah.2        ; [1W] Ausgabe Timer 1
 TOF1             bit     0faah.1        ; [1W] Ausgabeflipflop Timer 1
 TI1              bit     0faah.0        ; [1W] Eingabe Timer 1
-T1               sfr     0fach          ; [8R] ZÑhlwert Timer 1
+T1               sfr     0fach          ; [8R] Z‰hlwert Timer 1
 TMOD1            sfr     0faeh          ; [8W] Moduloregister Timer 1
 PSW              sfr     0fb0h          ; [4]  Programmstatus
 IST1             bit     PSW.3
 IST0             bit     PSW.2
 MBE              bit     PSW.1
 RBE              bit     PSW.0
-IPS              sfr     0fb2h          ; [4W] InterruptprioritÑten
+IPS              sfr     0fb2h          ; [4W] Interruptpriorit‰ten
 PCC              sfr     0fb3h          ; [4W] Steuerung Prozessortakt
 IM1              sfr     0fb5h          ; [4W] INT1 Modusregister
 IE4              bit     IBT.3          ;      Freigabe/Anzeige Interrupt 4
@@ -515,7 +515,7 @@ VISIO            label   0006h          ; Interruptvektoradresse INTSIO
 VIT0             label   0008h          ; Interruptvektoradresse INTT0
 VIT1             label   000ah          ; Interruptvektoradresse INTT1
 
-                 if      MomCPU<75108h   ; RAM-Grî·e
+                 if      MOMCPU<75108h   ; RAM-Grˆﬂe
 RAMEnd            sfr     320
                  elseif
 RAMEnd            sfr     512         
@@ -534,14 +534,14 @@ MODL             sfr     0f94h          ; [8]  Modulo-Wert Pulsgenerator
 MODH             sfr     0f96h          ; [8]
 WM               sfr     0f98h          ; [8]  Modus Watchdog
 TM0              sfr     0fa0h          ; [8]  Modus Timer 0
-T0               sfr     0fa4h          ; [8R] ZÑhlwert Timer 0
+T0               sfr     0fa4h          ; [8R] Z‰hlwert Timer 0
 TMOD0            sfr     0fa6h          ; [8W] Moduloregister Timer 0
 PSW              sfr     0fb0h          ; [4]  Programmstatus
 IST1             bit     PSW.3
 IST0             bit     PSW.2
 MBE              bit     PSW.1
 RBE              bit     PSW.0
-IPS              sfr     0fb2h          ; [4W] InterruptprioritÑten
+IPS              sfr     0fb2h          ; [4W] Interruptpriorit‰ten
 PCC              sfr     0fb3h          ; [4W] Steuerung Prozessortakt
 IM1              sfr     0fb5h          ; [4W] INT1 Modusregister
 SCC              sfr     0fb7h          ; [1W] Steuerung Systemtakt
@@ -585,9 +585,9 @@ VIT0             label   000ah          ; Interruptvektoradresse INTT0
 VITPG            label   000ch          ; Interruptvektoradresse INTTPG
 VIKS             label   000eh          ; Interruptvektoradresse INTKS
 
-                 if      MomCPU<75108h   ; RAM-Grî·e
+                 if      MOMCPU<75108h   ; RAM-Grˆﬂe
 RAMEnd            sfr     396
-                 elseif  MomCPU<75212h
+                 elseif  MOMCPU<75212h
 RAMEnd            sfr     497
                  elseif
 RAMEnd            sfr     512         
@@ -603,14 +603,14 @@ MODH             sfr     0f96h          ; [8]
 WM               sfr     0f98h          ; [8]  Modus Watchdog
 TM0              sfr     0fa0h          ; [8]  Modus Timer 0
 TOE0             bit     0fa2h.3        ; [1W] Freigabe Ausgabe Timer 0
-T0               sfr     0fa4h          ; [8R] ZÑhlwert Timer 0
+T0               sfr     0fa4h          ; [8R] Z‰hlwert Timer 0
 TMOD0            sfr     0fa6h          ; [8W] Moduloregister Timer 0
 PSW              sfr     0fb0h          ; [4]  Programmstatus
 IST1             bit     PSW.3
 IST0             bit     PSW.2
 MBE              bit     PSW.1
 RBE              bit     PSW.0
-IPS              sfr     0fb2h          ; [4W] InterruptprioritÑten
+IPS              sfr     0fb2h          ; [4W] Interruptpriorit‰ten
 PCC              sfr     0fb3h          ; [4W] Steuerung Prozessortakt
 IM1              sfr     0fb5h          ; [4W] INT1 Modusregister
 IM2              sfr     0fb6h          ; [4W] INT2 Modusregister
@@ -690,7 +690,7 @@ VICSIO           label   0008h          ; Interruptvektoradresse INTCSIO
 VIT0             label   000ah          ; Interruptvektoradresse INTT0
 VITPG            label   000ch          ; Interruptvektoradresse INTTPG
 
-RAMEnd           sfr     512            ; RAM-Grî·e
+RAMEnd           sfr     512            ; RAM-Grˆﬂe
                 endif
 
                 endif

@@ -1,13 +1,13 @@
                 save
-                listing off   ; kein Listing Åber diesen File
+                listing off   ; kein Listing ¸ber diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.40 - Datei STDDEF56.INC                                           *
 ;*   								            *
-;*   Sinn : enthÑlt SFR-Definitionen fÅr den DSP56000-Prozessor             *
+;*   Sinn : enth‰lt SFR-Definitionen f¸r den DSP56000-Prozessor             *
 ;* 									    *
-;*   letzte énderungen : 30.12.1993                                         *
+;*   letzte ƒnderungen : 30.12.1993                                         *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -47,7 +47,7 @@ rx		xsfr	tx		; SCI Empfangsregister
 scr		xsfr	$fff0		; SCI Schnittstellensteuerregister
 ssr		xsfr	$fff1		; SCI Schittstellenstatusregister
 sccr		xsfr	$fff2		; SCI Steuerregister
-stxa		xsfr	$fff3		; SCI Sendedatenadre·register
+stxa		xsfr	$fff3		; SCI Sendedatenadreﬂregister
 srx		xsfr	$fff4		; SCI Empfangsregister Basisadresse
 stx		xsfr	srx		; SCI Senderegister Basisadresse
 srx_lo		xsfr	srx		; SCI Empfangsregister in Bit 0..7
@@ -58,7 +58,7 @@ srx_hi		xsfr	srx+2		; SCI Empfangsregister in Bit 16..23
 stx_hi		xsfr	stx+2		; SCI Senderegister in Bit 16..23
 
 bcr		xsfr	$fffe		; Bussteuerregister
-ipr		xsfr	$ffff		; Interrupt-PrioritÑtenregister
+ipr		xsfr	$ffff		; Interrupt-Priorit‰tenregister
 
 ;---------------------------------------------------------------------------
 

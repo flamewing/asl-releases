@@ -19,6 +19,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 typedef struct
          {
@@ -46,7 +47,7 @@ typedef struct
 #define ModReg 1
 #define ModInd 2
 #define ModAcc 3
-#define ModNone -1
+#define ModNone (-1)
 
 #define ClrCplCnt 4
 #define CondOrderCnt 22
@@ -73,8 +74,6 @@ static AccOrder *AccOrders;
 static SelOrder *SelOrders;
 
 /****************************************************************************/
-
-static Integer InstrZ;
 
 	static void AddAcc(char *Name, Byte Code)
 BEGIN
@@ -150,7 +149,7 @@ END
 /****************************************************************************/
 
 	static void DecodeAdr(char *Asc_O)
-BEGIN 
+BEGIN
    Boolean OK;
    String Asc;
 

@@ -1,24 +1,26 @@
-		save
-		listing off   ; kein Listing Åber diesen File
+                save
+		listing off   ; kein Listing ¸ber diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.41 - Datei STDDEF51.INC                                           *
 ;*   								            *
-;*   Sinn : enthÑlt SFR- und Bitdefinitionen fÅr die MCS-51-Prozessoren     *
+;*   Sinn : enth‰lt SFR- und Bitdefinitionen f¸r die MCS-51-Prozessoren     *
 ;* 									    *
-;*   letzte énderungen :  7. 1.1993                                         *
-;*                       14. 1.1993 USING-Makro hinzugefÅgt   		    *
-;*                       26. 1.1993 REGUSAGE-Variable ergÑnzt               *
+;*   letzte ƒnderungen :  7. 1.1993                                         *
+;*                       14. 1.1993 USING-Makro hinzugef¸gt   		    *
+;*                       26. 1.1993 REGUSAGE-Variable erg‰nzt               *
 ;*			 21. 1.1993 Erzeugerhinweis			    *
-;*                        5. 6.1993 IPC & IEC hinzugefÅgt                   *
+;*                        5. 6.1993 IPC & IEC hinzugef¸gt                   *
 ;*                                  SAVE & RESTORE                          *
 ;*                                  Prozessorsperre (Idee von Matthias)     *
 ;*                       11. 9.1993 Meldung nur im 1.Pass                   *
-;*                       12. 5.1994 DS80C320-Register hinzugefÅgt           *
-;*                       25. 6.1995 87C750 hinzugefÅgt                      *
-;*                       22. 3.1996 SFR's fur 80517 eingefÅgt               *
+;*                       12. 5.1994 DS80C320-Register hinzugef¸gt           *
+;*                       25. 6.1995 87C750 hinzugef¸gt                      *
+;*                       22. 3.1996 SFR's fur 80517 eingef¸gt               *
 ;*                                  (von Gabriel Jager)                     *
+;*                       14. 6.1996 80517-Korrekturen wg. Klammerung        *
+;*                       26. 3.1997 Abfrage auf MOMCPU                      *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -26,23 +28,22 @@
 
 stddef51inc     equ     1
 
-                ; hier dezimale Angaben, weil wir nicht genau wissen, ob eine CPU mit Intel-Syntax aktiv ist
-                if      (MomCPU<>8898384)&&(MomCPU<>32849)&&(MomCPU<>32850)&&(MomCPU<>8438560)&&(MomCPU<>525589)&&(MomCPU<>525591)
+                if      (MOMCPUNAME<>"87C750")&&(MOMCPUNAME<>"8051")&&(MOMCPUNAME<>"8052")&&(MOMCPUNAME<>"80C320")&&(MOMCPUNAME<>"80515")&&(MOMCPUNAME<>"80517")
                  fatal  "Falscher Prozessortyp eingestellt: nur 87C750, 8051, 8052, 80C320, 80515 oder 80517 erlaubt!"
 		endif
 
 
-                if      MomPass=1
+                if      MOMPASS=1
                  message "MCS-51-SFR-Definitionen (C) 1993 Alfred Arnold/Gabriel Jager"
 		 message "binde \{MOMCPU}-SFRs ein"
 		endif
 
 ;----------------------------------------------------------------------------
-; erstmal die Sachen, die es (fast) Åberall gibt :
+; erstmal die Sachen, die es (fast) ¸berall gibt :
 
-P0		SFRB	80h		; I/O-Ports
+P0              SFRB    80h             ; I/O-Ports
 P1		SFRB	90h
-P2		SFRB	0a0h
+P2              SFRB    0a0h
 P3		SFRB	0b0h
 RD		BIT	P3.7		; Port 3: Schreibleitung
 WR		BIT	P3.6		;         Leseleitung
@@ -52,7 +53,7 @@ INT1		BIT	P3.3		;         ext. Interrupt 1
 INT0		BIT	P3.2		;	  ext. Interrupt 0
 TXD		BIT	P3.1		;	  ser. Ausgang
 RXD		BIT	P3.0		;	  ser. Eingang
-		if	MomCPU=80C320H
+                if      MOMCPU=80C320H
 TXD1		 BIT	P1.3		; zweiter ser. Ausgang
 RXD1		 BIT	P1.2		; zweiter ser. Eingang
 		endif
@@ -62,7 +63,7 @@ RXD1		 BIT	P1.2		; zweiter ser. Eingang
 SP		SFR	81h		; Stapelzeiger
 DPL		SFR	82h		; Datenzeiger Bit 0..7
 DPH		SFR	83h		;      "      Bit 8..15
-		if	MomCPU=80C320H
+                if      MOMCPU=80C320H
 DPL0		 SFR	DPL
 DPH0		 SFR	DPH
 DPL1		 SFR	84h		; zweiter Datenzeiger 80C320
@@ -78,7 +79,7 @@ RS0		BIT	PSW.3
 OV		BIT	PSW.2
 P		BIT	PSW.0
 ACC		SFRB	0e0h		; Akkumulator
-B		SFRB	0f0h		; Hilfsakku fÅr MUL/DIV
+B		SFRB	0f0h		; Hilfsakku f¸r MUL/DIV
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -90,10 +91,10 @@ REN		BIT	SCON.4		; Empfangssperre
 TB8		BIT	SCON.3		; 9. zu sendendes Bit
 RB8		BIT	SCON.2		; 9. empfangenes Bit
 TI		BIT	SCON.1		; Senderinterruptflag
-RI		BIT	SCON.0		; EmpfÑngerinterruptflag
+RI		BIT	SCON.0		; Empf‰ngerinterruptflag
 SBUF		SFR	99h		;  "         "        Datenregister
 
-		if	MomCPU=80C320H	; Register zweite serielle Schnittstelle
+                if      MOMCPU=80C320H  ; Register zweite serielle Schnittstelle
 SCON0		 SFR	SCON
 SBUF0		 SFR    SBUF
 SCON1		 SFR	0c0h		; Steuerregister
@@ -107,9 +108,9 @@ PCON		SFR	87h		; "Power-Management"
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 TCON		SFRB	88h		; Timer 0/1 Steuerregister
-TF1		BIT	TCON.7		; öberlauf Timer 1
+TF1		BIT	TCON.7		; ‹berlauf Timer 1
 TR1		BIT	TCON.6		; Timer 1 laufenlassen
-TF0		BIT	TCON.5		; öberlauf Timer 0
+TF0		BIT	TCON.5		; ‹berlauf Timer 0
 TR0		BIT	TCON.4		; Timer 0 laufenlassen
 IE1		BIT	TCON.3		; Externer Interrupt 1 aufgetreten
 IT1		BIT	TCON.2		; Einstellung Triggerflanke externer Interrupt 1
@@ -137,7 +138,7 @@ RCLK		  BIT	T2CON.5		; Timer 2 liefert RxD-Takt
 TCLK		  BIT	T2CON.4		; Timer 2 liefert TxD-Takt
 EXEN2		  BIT	T2CON.3		; externer Enable Timer 2
 TR2		  BIT	T2CON.2		; Timer 2 starten
-CT2		  BIT	T2CON.1		; Timer 2 als ZÑhler
+CT2		  BIT	T2CON.1		; Timer 2 als Z‰hler
 CPRL2		  BIT	T2CON.0		; Capture erlauben
 		 elseif
 CRCL		  SFR   0cah		; andere Namen beim 80515 !!
@@ -153,16 +154,16 @@ T2I0		  BIT	T2CON.0
 		 endif
 		endif
 
-		if	MomCPU=80C320H	; Taktauswahl beim 80C320
+                if      MOMCPU=80C320H  ; Taktauswahl beim 80C320
 CKCON		 SFR	8eh		; Bit 3,4,5 <--> Timer 0,1,2
 		endif			; Bit 6,7 <--> Watchdog-Timeout
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; 80C320-Watchdog
 
-		if	MomCPU=80C320h
+                if      MOMCPU=80C320h
 WDCON            SFRB   0d8h
-RWT		 BIT 	WDCON.0		; Watchdog zurÅcksetzen
+RWT		 BIT 	WDCON.0		; Watchdog zur¸cksetzen
 EWT		 BIT	WDCON.1		; Watchdog freigeben
 WTRF		 BIT	WDCON.2		; Watchdog-Reset aufgetreten
 WDIF		 BIT	WDCON.3		; Interrupt 512 Takte bis Reset aufgetreten
@@ -176,17 +177,17 @@ TA		 SFR	0c7h		; nacheinander AA 55 schreiben, um Zugriff auf
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;
                           
-		if	MomCPU=80C320H
-SADDR0           SFR    0a9h            ; Slave-Adresse fÅr seriellen Port 0
-SADDR1           SFR    0aah            ; Slave-Adresse fÅr seriellen Port 1
+                if      MOMCPU=80C320H
+SADDR0           SFR    0a9h            ; Slave-Adresse f¸r seriellen Port 0
+SADDR1           SFR    0aah            ; Slave-Adresse f¸r seriellen Port 1
 SADEN0           SFR    0b9h            ; Bits in SADDR0 freigeben
 SADEN1           SFR    0bah            ; Bits in SADDR1 freigeben
 		endif
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-; zusÑtzliche 80515-Register
+; zus‰tzliche 80515/80517-Register
 
-                if      (MomCPU=80515h)||(MomCPU=80517h)
+                if      (MOMCPU=80515h)||(MOMCPU=80517h)
 P4		 SFRB	0e8h
 P5		 SFRB   0f8h
 
@@ -198,7 +199,7 @@ CCL2		 SFR	0c4h
 CCH1		 SFR	0c3h
 CCL1		 SFR	0c2h
 
-ADCON            SFRB   0d8h            ; andere Namen beim 80517
+ADCON            SFRB   0d8h            ; andere Namen beim 80515/80517
 BD		 BIT	ADCON.7
 CLK		 BIT    ADCON.6
 BSY		 BIT	ADCON.4
@@ -211,13 +212,13 @@ DAPR             SFR    0dah
 		endif
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-; zusÑtzliche 80517-Register
+; zus‰tzliche 80517-Register
 
-               if      MomCPU=80517h
+               if      MOMCPU=80517h
 
 DPSEL            SFR    92h             ;Datenpointer Select
-ADCON1           SFR    0dch            ;Kontrolle 1 Åber A/D-Wandler
-CTCON            SFR    0e1h            ;Kontrolle Åber Compare-Timer
+ADCON1           SFR    0dch            ;Kontrolle 1 ¸ber A/D-Wandler
+CTCON            SFR    0e1h            ;Kontrolle ¸ber Compare-Timer
 IEN2             SFR    9ah
 ARCON            SFR    0efh
 MD0              SFR    0e9h            ;]      Multiplikations-
@@ -252,9 +253,9 @@ CTRELL           SFR    0deh
 P6               SFR    0fah            ; ??? bitadressierbar
 P7               SFR    0dbh            ; ??? bitadressierbar
 P8               SFR    0ddH            ; ??? bitadressierbar
-ADCON0           SFR    0d8h            ;Kontrolle 1 Åber A/D-Wandler
+ADCON0           SFR    0d8h            ;Kontrolle 1 ¸ber A/D-Wandler
 S0BUF            SFR    99h             ;]      Kontrolle
-S0CON            SFR    98h             ;]      fÅr
+S0CON            SFR    98h             ;]      f¸r
 S1BUF            SFR    9ch             ;]      die
 S1CON            SFR    9bh             ;]      serielle
 S1REL            SFR    9dh             ;]      Schnittstelle
@@ -265,7 +266,7 @@ WDTREL           SFR    86h             ;]      0 und 1
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Interruptsteuerregister: nicht kompatibel zwischen 8051/52 und 80515/80517 !!!
 
-                if      (MomCPU=80515h)||(MomCPU=80517h)
+                if      (MOMCPU=80515h)||(MOMCPU=80517h)
 IEN0		 SFRB	0a8h
 EAL              BIT    IEN0.7
 WDT		 BIT	IEN0.6
@@ -304,20 +305,20 @@ ET1		 BIT	IE.3		; Interrupt Timer 1 freigeben
 EX1		 BIT	IE.2		; externen Interrupt 1 freigeben
 ET0		 BIT	IE.1		; Interrupt Timer 0 freigeben
 EX0		 BIT	IE.0		; externen Interrupt 0 freigeben
-IP		 SFRB	0b8h		; InterruptprioritÑten
+IP		 SFRB	0b8h		; Interruptpriorit‰ten
 IPC              SFRB   IP
-PS		 BIT	IP.4		; PrioritÑt serieller Interrupt
-PT1		 BIT	IP.3		; PrioritÑt Interrupt Timer 1
-PX1		 BIT	IP.2		; PrioritÑt externer Interrupt 1
-PT0		 BIT	IP.1		; PrioritÑt Interrupt Timer 0
-PX0		 BIT	IP.0		; PrioritÑt externer Interrupt 0
-		 if 	MomCPU=8052h
+PS		 BIT	IP.4		; Priorit‰t serieller Interrupt
+PT1		 BIT	IP.3		; Priorit‰t Interrupt Timer 1
+PX1		 BIT	IP.2		; Priorit‰t externer Interrupt 1
+PT0		 BIT	IP.1		; Priorit‰t Interrupt Timer 0
+PX0		 BIT	IP.0		; Priorit‰t externer Interrupt 0
+                 if     MOMCPU=8052h
 ET2		  BIT	IE.5		; Interrupt Timer 2 freigeben
-PT2		  BIT	IP.5		; PrioritÑt Interrupt Timer 2
+PT2		  BIT	IP.5		; Priorit‰t Interrupt Timer 2
 		 endif
 		endif
 
-		if	MomCPU=80C320H	; erweiterte Interrupts 80C320
+                if      MOMCPU=80C320H  ; erweiterte Interrupts 80C320
 EIE              SFRB   0e8h
 EWDI		 BIT 	EIE.4		; Watchdog-Interrupt freigeben
 EX5		 BIT	EIE.3		; externe Interrupts 2..5 freigeben
@@ -325,8 +326,8 @@ EX4		 BIT	EIE.2
 EX3		 BIT	EIE.1
 EX2		 BIT	EIE.0
 EIP              SFRB   0f8h
-PWDI		 BIT 	EIP.4		; PrioritÑt Watchdog-Interrupt
-PX5		 BIT	EIP.3		; PrioritÑt externer Interrupts 2..5
+PWDI		 BIT 	EIP.4		; Priorit‰t Watchdog-Interrupt
+PX5		 BIT	EIP.3		; Priorit‰t externer Interrupts 2..5
 PX4		 BIT	EIP.2
 PX3		 BIT	EIP.1
 PX2		 BIT	EIP.0
@@ -335,13 +336,13 @@ EXIF		 SFR	91h		; erweitertes Interrupt-Flag-Register
 
 
 ;---------------------------------------------------------------------------
-; Da man die Register beim 8051 nicht direkt pushen und poppen kann, mu· man
-; dies Åber direkte Adressen tun. Da dazu die Kenntnis der gewÑhlten Regis-
-; terbank erforderlich ist, steht hier das Makro USING zur VerfÅgung, wel-
+; Da man die Register beim 8051 nicht direkt pushen und poppen kann, muﬂ man
+; dies ¸ber direkte Adressen tun. Da dazu die Kenntnis der gew‰hlten Regis-
+; terbank erforderlich ist, steht hier das Makro USING zur Verf¸gung, wel-
 ; ches in den Symbolen AR0..AR7 die momentanen Registeradressen ablegt.
-; USING erwartet als Parameter die gewÑhlte Banknummer.
+; USING erwartet als Parameter die gew‰hlte Banknummer.
 
-Bank0		equ	0		; nur der Schînheit halber...
+Bank0		equ	0		; nur der Schˆnheit halber...
 Bank1		equ	1
 Bank2		equ	2
 Bank3		equ	3
@@ -351,7 +352,7 @@ using		macro	bank
                  error  "Falsche Banknummer: \{BANK}"
                 endif
 
-                ifdef	RegUsage	; BuchfÅhrung Åber benutzte BÑnke
+                ifdef	RegUsage	; Buchf¸hrung ¸ber benutzte B‰nke
 RegUsage	 set	RegUsage|(2^bank)
 		elseif
 RegUsage	 set	2^bank

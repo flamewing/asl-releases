@@ -17,6 +17,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 #include "code7700.h"
 
@@ -60,49 +61,49 @@ typedef struct
           Byte Allowed;
          } MulDivOrder;
 
-#define ModNone    -1
+#define ModNone    (-1)
 #define ModImm      0
-#define MModImm      (1 << ModImm)
+#define MModImm      (1l << ModImm)
 #define ModAbs8     1
-#define MModAbs8     (1 << ModAbs8)
+#define MModAbs8     (1l << ModAbs8)
 #define ModAbs16    2
-#define MModAbs16    (1 << ModAbs16)
+#define MModAbs16    (1l << ModAbs16)
 #define ModAbs24    3
-#define MModAbs24    (1 << ModAbs24)
+#define MModAbs24    (1l << ModAbs24)
 #define ModIdxX8    4
-#define MModIdxX8    (1 << ModIdxX8)
+#define MModIdxX8    (1l << ModIdxX8)
 #define ModIdxX16   5
-#define MModIdxX16   (1 << ModIdxX16)
+#define MModIdxX16   (1l << ModIdxX16)
 #define ModIdxX24   6
-#define MModIdxX24   (1 << ModIdxX24)
+#define MModIdxX24   (1l << ModIdxX24)
 #define ModIdxY8    7
-#define MModIdxY8    (1 << ModIdxY8)
+#define MModIdxY8    (1l << ModIdxY8)
 #define ModIdxY16   8
-#define MModIdxY16   (1 << ModIdxY16)
+#define MModIdxY16   (1l << ModIdxY16)
 #define ModIdxY24   9
-#define MModIdxY24   (1 << ModIdxY24)
+#define MModIdxY24   (1l << ModIdxY24)
 #define ModInd8    10
-#define MModInd8     (1 << ModInd8)
+#define MModInd8     (1l << ModInd8)
 #define ModInd16   11
-#define MModInd16    (1 << ModInd16)
+#define MModInd16    (1l << ModInd16)
 #define ModInd24   12
-#define MModInd24    (1 << ModInd24)
+#define MModInd24    (1l << ModInd24)
 #define ModIndX8   13
-#define MModIndX8    (1 << ModIndX8)
+#define MModIndX8    (1l << ModIndX8)
 #define ModIndX16  14
-#define MModIndX16   (1 << ModIndX16)
+#define MModIndX16   (1l << ModIndX16)
 #define ModIndX24  15
-#define MModIndX24   (1 << ModIndX24)
+#define MModIndX24   (1l << ModIndX24)
 #define ModIndY8   16
-#define MModIndY8    (1 << ModIndY8)
+#define MModIndY8    (1l << ModIndY8)
 #define ModIndY16  17
-#define MModIndY16   (1 << ModIndY16)
+#define MModIndY16   (1l << ModIndY16)
 #define ModIndY24  18
-#define MModIndY24   (1 << ModIndY24)
+#define MModIndY24   (1l << ModIndY24)
 #define ModIdxS8   19
-#define MModIdxS8    (1 << ModIdxS8)
+#define MModIdxS8    (1l << ModIdxS8)
 #define ModIndS8   20
-#define MModIndS8    (1 << ModIndS8)
+#define MModIndS8    (1l << ModIndS8)
 
 #define FixedOrderCnt 64
 
@@ -127,7 +128,6 @@ static LongInt Reg_PG,Reg_DT,Reg_X,Reg_M,Reg_DPR,BankReg;
 
 static Boolean WordSize;
 static Byte AdrVals[3];
-static Byte AdrCnt;
 static ShortInt AdrType;
 static Boolean LFlag;
 
@@ -139,13 +139,11 @@ static FixedOrder *Imm8Orders;
 static XYOrder *XYOrders;
 static MulDivOrder *MulDivOrders;
 
-static void (*SaveInitProc)(void);
+static SimpProc SaveInitProc;
 
 static CPUVar CPU65816,CPUM7700,CPUM7750,CPUM7751;
 
 /*---------------------------------------------------------------------------*/
-
-static int InstrZ;
 
         static void AddFixed(char *NName, Word NCode, Byte NAllowed)
 BEGIN
@@ -317,7 +315,7 @@ END
 	static void ChkAdr(LongWord Mask)
 BEGIN
    if (AdrType!=ModNone)
-    if ((Mask & (1 << ((LongWord)AdrType)))==0)
+    if ((Mask & (1l << ((LongWord)AdrType)))==0)
      BEGIN
       AdrType=ModNone; AdrCnt=0; WrError(1350);
      END
@@ -328,25 +326,58 @@ END
 BEGIN
    Boolean OK;
    LongInt Adr;
+   ShortInt DType;
+   int l=strlen(Asc);
+
+   if ((l>1) AND (*Asc=='<'))
+    BEGIN
+     Asc++; DType=0;
+    END
+   else if ((l>1) AND (*Asc=='>'))
+    if ((l>2) AND (Asc[1]=='>'))
+     BEGIN
+      Asc+=2; DType=2;
+     END
+    else
+     BEGIN
+      Asc++; DType=1;
+     END
+   else DType=(-1);
 
    Adr=EvalIntExpression(Asc,UInt24,&OK);
-   if (OK)
-    if ((((Mask & (1 << Start)))!=0) AND (Adr>=Reg_DPR) AND (Adr<Reg_DPR+0x100))
-     BEGIN
-      AdrCnt=1; AdrType=Start;
-      AdrVals[0]=Lo(Adr-Reg_DPR);
-     END
-    else if ((((Mask & (2 << Start)))!=0) AND (Adr >> 16==BankReg))
-     BEGIN
-      AdrCnt=2; AdrType=Start+1;
-      AdrVals[0]=Lo(Adr); AdrVals[1]=Hi(Adr);
-     END
-    else if (((Mask & (4 << Start)))!=0)
-     BEGIN
+
+   if (NOT OK) return;
+
+   if (DType==-1)
+    BEGIN
+     if ((((Mask & (1l << Start)))!=0) AND (Adr>=Reg_DPR) AND (Adr<Reg_DPR+0x100)) DType=0;
+     else if ((((Mask & (2l << Start)))!=0) AND ((Adr >> 16)==BankReg)) DType=1;
+     else DType=2;
+    END
+
+   if ((Mask & (1l << (Start+DType)))==0) WrError(1350);
+   else switch (DType)
+    BEGIN
+     case 0:
+      if ((FirstPassUnknown) OR (ChkRange(Adr,Reg_DPR,Reg_DPR+0xff)))
+       BEGIN
+        AdrCnt=1; AdrType=Start;
+        AdrVals[0]=Lo(Adr-Reg_DPR);
+       END;
+      break;
+     case 1:
+      if ((NOT FirstPassUnknown) AND ((Adr >> 16)!=BankReg)) WrError(1320);
+      else
+       BEGIN
+        AdrCnt=2; AdrType=Start+1;
+        AdrVals[0]=Lo(Adr); AdrVals[1]=Hi(Adr);
+       END
+      break;
+     case 2:
       AdrCnt=3; AdrType=Start+2;
       AdrVals[0]=Lo(Adr); AdrVals[1]=Hi(Adr); AdrVals[2]=Adr >> 16;
-     END
-    else WrError(1350);
+      break;
+    END
 END
 
 	static void SplitArg(char *Src, String *HStr, Integer *HCnt)
@@ -562,6 +593,7 @@ BEGIN
    if (DecodePseudo()) return;
 
    if (DecodeMotoPseudo(False)) return;
+   if (DecodeIntelPseudo(False)) return;
 
    /* ohne Argument */
 
@@ -1143,7 +1175,7 @@ BEGIN
 	   Start=0;
 	   while ((Start<PushRegCnt) AND (strcasecmp(PushRegs[Start],ArgStr[z])!=0)) Start++;
 	   OK=(Start<PushRegCnt);
-	   if (OK) BAsmCode[1]|=1 << Start;
+	   if (OK) BAsmCode[1]|=1l << Start;
 	   else WrXError(1980,ArgStr[z]);
 	  END
 	 z++;
@@ -1259,7 +1291,7 @@ BEGIN
    PCSymbol="*"; HeaderID=0x19; NOPCode=0xea;
    DivideChars=","; HasAttrs=False;
 
-   ValidSegs=1<<SegCode;
+   ValidSegs=1 << SegCode;
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
 
    MakeCode=MakeCode_7700; ChkPC=ChkPC_7700; IsDef=IsDef_7700;

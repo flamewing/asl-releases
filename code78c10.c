@@ -13,10 +13,12 @@
 #include <string.h>
 
 #include "bpemu.h"
+#include "stringutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -43,7 +45,7 @@ typedef struct
 
 static LongInt WorkArea;
 
-static void (*SaveInitProc)(void);
+static SimpProc SaveInitProc;
 
 static CPUVar CPU7810,CPU78C10;
 
@@ -57,8 +59,6 @@ static FixedOrder *EAOrders;
 static SReg *SRegs;
 
 /*--------------------------------------------------------------------------------*/
-
-static int InstrZ;
 
 	static void AddFixed(char *NName, Word NCode)
 BEGIN
@@ -338,7 +338,7 @@ BEGIN
 
    for (z=0; z<SRegCnt; z++)
     if (strcasecmp(Asc,SRegs[z].Name)==0) break;
-   if ((z==SRegCnt-1) AND (MomCPU=CPU7810))
+   if ((z==SRegCnt-1) AND (MomCPU==CPU7810))
     BEGIN
      WrError(1440); return False;
     END

@@ -27,7 +27,7 @@ Boolean IfAsm;       /* FALSE: in einer neg. IF-Sequenz-->kein Code */
 
 static Boolean ActiveIF;
 
-       static LongInt GetIfVal(char *Cond)
+        static LongInt GetIfVal(char *Cond)
 BEGIN
    Boolean IfOK;
    LongInt Tmp;
@@ -289,7 +289,8 @@ BEGIN
 	 do
           BEGIN
 	   EvalIfExpression(ArgStr[z],&t);
-	   if ((eq=(FirstIfSave->SaveExpr.Typ==t.Typ)))
+           eq=(FirstIfSave->SaveExpr.Typ==t.Typ);
+	   if (eq)
 	    switch (t.Typ)
              BEGIN
 	      case TempInt:    eq=(t.Contents.Int==FirstIfSave->SaveExpr.Contents.Int); break;

@@ -1,0 +1,135 @@
+%%
+%% This is file `a4.sty' generated
+%% on <1991/2/13> with the docstrip utility (v1.1k).
+%%
+%% The original source file was `a4.doc'.
+%%
+%%
+%% Copyright (C) 1990 by Johanes Braams. All rights reserved.
+%%
+%% IMPORTANT NOTICE:
+%%
+%% You are not allowed to change this file. You may however copy this file
+%% to a file with a different name and then change the copy.
+%%
+%% You are NOT ALLOWED to distribute this file alone. You are NOT ALLOWED
+%% to take money for the distribution or use of this file (or a changed
+%% version) except for a nominal charge for copying etc.
+%%
+%% You are allowed to distribute this file under the condition that it is
+%% distributed together with all files mentioned below.
+%%
+%% If you receive only some of these files from someone, complain!
+%%
+%% Error Reports in case of UNCHANGED versions to
+%%
+%% J. Braams
+%% PTT Research, dr Neher Laboratorium
+%% P.O. box 421
+%% 2260 AK Leidschendam
+%% The Netherlands
+%% Internet: <JL_Braams@pttrnl.nl>
+%%
+\def\fileversion{1.2a}
+\def\filedate{30 Nov 90}
+\def\docdate {26 Feb 90}
+%% \CheckSum{134}
+%% \CharacterTable
+%%  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
+%%   Lower-case    \a\b\c\d\e\f\g\h\i\j\k\l\m\n\o\p\q\r\s\t\u\v\w\x\y\z
+%%   Digits        \0\1\2\3\4\5\6\7\8\9
+%%   Exclamation   \!     Double quote  \"     Hash (number) \#
+%%   Dollar        \$     Percent       \%     Ampersand     \&
+%%   Acute accent  \'     Left paren    \(     Right paren   \)
+%%   Asterisk      \*     Plus          \+     Comma         \,
+%%   Minus         \-     Point         \.     Solidus       \/
+%%   Colon         \:     Semicolon     \;     Less than     \<
+%%   Equals        \=     Greater than  \>     Question mark \?
+%%   Commercial at \@     Left bracket  \[     Backslash     \\
+%%   Right bracket \]     Circumflex    \^     Underscore    \_
+%%   Grave accent  \`     Left brace    \{     Vertical bar  \|
+%%   Right brace   \}     Tilde         \~}
+%%
+\wlog{Style option `A4' \fileversion\space<\filedate> (NP and JLB)}
+\wlog{English documentation\space\space\space<\docdate> (JLB)}
+\topmargin 0pt
+\ifcase \@ptsize
+    \textheight 53\baselineskip
+\or
+    \textheight 46\baselineskip
+\or
+    \textheight 42\baselineskip
+\fi
+\advance\textheight by \topskip
+\ifcase \@ptsize
+    \textwidth      5.00in
+    \marginparwidth 1.00in
+  \if@twoside
+    \oddsidemargin  0.55in
+    \evensidemargin 0.75in
+  \else
+    \oddsidemargin  0.55in
+    \evensidemargin 0.55in
+  \fi
+\or
+    \textwidth      5.20in
+    \marginparwidth 1.00in
+  \if@twoside
+    \oddsidemargin  0.45in
+    \evensidemargin 0.65in
+  \else
+    \oddsidemargin  0.45in
+    \evensidemargin 0.45in
+  \fi
+\or
+    \textwidth      5.70in
+    \marginparwidth 0.80in
+  \if@twoside
+    \oddsidemargin  0.20in
+    \evensidemargin 0.40in
+  \else
+    \oddsidemargin  0.20in
+    \evensidemargin 0.20in
+  \fi
+\fi
+\def\WideMargins{%
+  \newdimen\ExtraWidth
+  \ifcase \@ptsize
+    \ExtraWidth = 0.5in
+    \@widemargins
+  \or
+    \ExtraWidth = 0.5in
+    \@widemargins
+  \or
+    \ExtraWidth = 0.7in
+    \@widemargins
+  \fi\let\WideMargins\relax\let\@widemargins\relax}
+{\def\do{\noexpand\do\noexpand}
+ \xdef\@preamblecmds{\@preamblecmds \do\WideMargins}
+}
+\def\@widemargins{%
+    \global\advance\textwidth by -\ExtraWidth
+    \global\advance\marginparwidth by \ExtraWidth
+    \if@twoside
+      \tw@sidedwidemargins
+    \else
+      \@nesidedwidemargins
+    \fi}
+\def\tw@sidedwidemargins{%
+    \if@reversemargin
+      \@tempdima=\evensidemargin
+      \advance\@tempdima by -\oddsidemargin
+      \advance\oddsidemargin by \ExtraWidth
+      \advance\oddsidemargin by \@tempdima
+      \advance\evensidemargin by -\@tempdima
+    \else
+      \advance\evensidemargin by \ExtraWidth
+    \fi}
+\def\@nesidedwidemargins{%
+    \if@reversemargin
+      \advance\oddsidemargin by \ExtraWidth
+      \advance\evensidemargin by \ExtraWidth
+    \fi}
+\endinput
+%%
+%% End of file `a4.sty'.

@@ -18,6 +18,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 #include "code56k.h"
 
@@ -47,7 +48,7 @@ static char *BitJmpOrders[BitOrderCnt]={"JCLR","JSET","JSCLR","JSSET"};
 
 static Byte MacTable[4][4]={{0,2,5,4},{2,0xff,6,7},{5,6,1,3},{4,7,3,0xff}};
 
-#define ModNone -1
+#define ModNone (-1)
 #define ModImm 0
 #define MModImm (1 << ModImm)
 #define ModAbs 1
@@ -82,15 +83,12 @@ static CPUVar CPU56000;
 static ShortInt AdrType;
 static Word AdrMode;
 static LongInt AdrVal;
-static Byte AdrCnt;
 static Byte AdrSeg;
 
 static FixedOrder *FixedOrders;
 static ParOrder *ParOrders;
 
 /*----------------------------------------------------------------------------------------------*/
-
-static Integer InstrZ;
 
 	static void AddFixed(char *Name, LongWord Code) 
 BEGIN
@@ -420,7 +418,7 @@ BEGIN
       END
      else
       BEGIN
-       *Dir=0; *Reg2=-1;
+       *Dir=0; *Reg2=(-1);
        DecodeAdr(Right,MModNoImm,1 << WorkSeg);
        if (AdrType!=ModNone)
 	BEGIN
@@ -431,7 +429,7 @@ BEGIN
     END
    else if (DecodeALUReg(Right,Reg1,WorkSeg==SegXData,WorkSeg==SegYData,True))
     BEGIN
-     *Dir=1; *Reg2=-1;
+     *Dir=1; *Reg2=(-1);
      DecodeAdr(Left,MModAll,1 << WorkSeg);
      if (AdrType!=ModNone)
       BEGIN
@@ -518,7 +516,11 @@ BEGIN
        DecodeAdr(Left,MModAll,MSegXData+MSegYData);
        IsY=Ord(AdrSeg==SegYData);
        MixErg = ((RegErg & 0x18) << 17) + (IsY << 19) + ((RegErg & 7) << 16);
+#ifdef __STDC__
        if ((AdrType==ModImm) AND ((AdrVal & 0xffffff00u)==0))
+#else
+       if ((AdrType==ModImm) AND ((AdrVal & 0xffffff00)==0))
+#endif
 	BEGIN
 	 Result=True;
 	 DAsmCode[0] = 0x200000 + (RegErg << 16) + ((AdrVal & 0xff) << 8);
@@ -708,7 +710,6 @@ BEGIN
 END
 
 	static Boolean DecodeMOVE(Integer Start)
-
 BEGIN
    switch (ArgCnt-Start+1)
     BEGIN
@@ -852,7 +853,7 @@ END
 BEGIN
    Integer z;
    LongInt AddVal,h=0,Reg1,Reg2,Reg3;
-   LongInt HVal,HCnt,HMode,HType,HSeg;
+   LongInt HVal,HCnt,HMode,HSeg;
    Word Condition;
    Boolean OK;
    String Left,Mid,Right;
@@ -1220,7 +1221,7 @@ BEGIN
 	  END
 	 else if (AdrType!=ModNone)
 	  BEGIN
-	   HVal=AdrVal; HCnt=AdrCnt; HMode=AdrMode; HType=AdrType; HSeg=AdrSeg;
+	   HVal=AdrVal; HCnt=AdrCnt; HMode=AdrMode; HSeg=AdrSeg;
 	   DecodeAdr(Right,MModAbs,MSegXData+MSegYData);
 	   if (AdrType!=ModNone)
 	    if ((AdrVal<0xffc0) OR (AdrVal>0xffff)) WrError(1315);

@@ -1,13 +1,13 @@
                 save
-                listing off   ; kein Listing Åber diesen File
+                listing off   ; kein Listing ¸ber diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.39 - Datei STDDEF16.INC                                           *
 ;*   								            *
-;*   Sinn : enthÑlt SFR- und Makrodefinitionen fÅr die PIC 16C5x-Familie    *
+;*   Sinn : enth‰lt SFR- und Makrodefinitionen f¸r die PIC 16C5x-Familie    *
 ;* 									    *
-;*   letzte énderungen : 13. 4.1993                                         *
+;*   letzte ƒnderungen : 13. 4.1993                                         *
 ;*                        5. 6.1993 SAVE & RESTORE                          *
 ;*                                  Prozessorsperre (Idee von Matthias)     *
 ;*                       11. 9.1993 Meldung nur im 1.Pass                   *
@@ -18,11 +18,11 @@
 
 stddef16inc     equ     1
 
-		if      (MomCPU<93268)&&(MomCPU>93271)
+                if      (MOMCPU<93268)&&(MOMCPU>93271)
 		 fatal  "Falscher Prozessortyp eingestellt: nur 16C54..16C57 erlaubt"
 		endif
 
-		if	mompass=1
+                if      MOMPASS=1
 		 message "PIC16C5x-Definitionen (C) 1993 Alfred Arnold"
 		endif
 
@@ -31,7 +31,7 @@ stddef16inc     equ     1
 
 Indirect	SFR	0		; indirekte Adressierung
 PCLo            SFR     2               ; PC Bits 0..7
-RTCC            SFR     1               ; ZÑhler
+RTCC            SFR     1               ; Z‰hler
 Status		SFR	3		; Status-Register
 FSR		SFR	4		; File-Select-Register
 Port_A		SFR	5		; Ports
@@ -50,9 +50,9 @@ PA2		EQU	6		;  "     "     "  10
 
 
 ;----------------------------------------------------------------------------
-; Flags setzen/lîschen:
+; Flags setzen/lˆschen:
 
-clrc		macro			; Carry lîschen
+clrc		macro			; Carry lˆschen
 		bcf	Status,Flag_C
 		endm
 
@@ -60,7 +60,7 @@ setc		macro			; Carry setzen
 		bsf	Status,Flag_C
 		endm
 
-clrdc		macro			; Digit-Carry lîschen
+clrdc		macro			; Digit-Carry lˆschen
 		bcf	Status,Flag_DC
 		endm
 
@@ -68,7 +68,7 @@ setdc		macro			; Digit_Carry setzen
 		bsf	Status,Flag_DC
 		endm
 
-clrz		macro			; Zero-Flag lîschen
+clrz		macro			; Zero-Flag lˆschen
 		bcf	Status,Flag_Z
 		endm
 
@@ -104,7 +104,7 @@ skpnz		macro			; Sprung, falls Z=0
 		endm
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-; bedingte SprÅnge:
+; bedingte Spr¸nge:
 ; VORSICHT: Mehrbyteanweisungen, nicht skip-bar!!!!
 
 b		macro	target		; unbedingter Sprung

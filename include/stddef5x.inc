@@ -1,14 +1,14 @@
 		save
-		listing off   ; kein Listing ueber diesen File
+		listing off   ; kein Listing über diesen File
 
 ;****************************************************************************
 ;*                                                                          *
-;*   AS 1.41 - Datei STDDEF2X.INC                                           *
+;*   AS 1.40 - Datei STDDEF2X.INC                                           *
 ;*   								            *
-;*   Sinn : enthaelt die globalen Register-Definitionen fuer die            *
+;*   Sinn : enthält die globalen Register-Definitionen für die              *
 ;*          TMS320C5x Prozessoren                                           *
 ;* 									    *
-;*   letzte Aenderungen : 20.08.1996                                        *
+;*   letzte Änderungen : 03.11.1995                                         *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -16,12 +16,12 @@
 
 stddef5xinc     equ     1
 
-		if      (MomCPU<>3279952) && (MomCPU<>3279953) && (MomCPU<>3279955)
+                if      (MOMCPU<>3279952) && (MOMCPU<>3279953) && (MOMCPU<>3279955)
 		 fatal  "Falscher Prozessortyp eingestellt: nur 320C50, 320C51 und 320C53 erlaubt!"
 		endif
 
-		if      mompass=1
-		 message "TMS320C5x Register-Definitionen (C) 1995,96 Thomas Sailer"
+                if      MOMPASS=1
+		 message "TMS320C5x Register-Definitionen (C) 1995 Thomas Sailer"
 		endif
 
 ;----------------------------------------------------------------------------

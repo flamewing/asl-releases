@@ -1,13 +1,13 @@
                 save
-                listing off   ; kein Listing Åber diesen File
+                listing off   ; kein Listing ¸ber diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.40 - Datei STDDEF3X.INC                                           *
 ;*   								            *
-;*   Sinn : enthÑlt Register- und Adre·definitionen fÅr die TMS320C3x-CPUs  *
+;*   Sinn : enth‰lt Register- und Adreﬂdefinitionen f¸r die TMS320C3x-CPUs  *
 ;* 									    *
-;*   letzte énderungen : 27. 9.1994                                         *
+;*   letzte ƒnderungen : 27. 9.1994                                         *
 ;*									    *
 ;****************************************************************************
 
@@ -15,12 +15,12 @@
 
 stddef3xinc     equ     1
 
-                if      (MomCPU<>3279920)&&(MomCPU<>3279921)
+                if      (MOMCPU<>3279920)&&(MOMCPU<>3279921)
                  fatal  "Falscher Prozessortyp eingestellt: nur 320C30/320C31 erlaubt!"
 		endif
 
 
-                if      MomPass=1
+                if      MOMPASS=1
                  message "TMS320C3x-Definitionen (C) 1994 Alfred Arnold"
 		endif
 
@@ -47,7 +47,7 @@ S0TIMERPERIOD   equ     808046h
 S0TBUF          equ     808048h
 S0RBUF          equ     80804ch
 
-                if      MomCPU=320C30h
+                if      MOMCPU=320C30h
 S1CTRL           equ     808050h
 S1TXPORTCTRL     equ     808052h
 S1RXPORTCTRL     equ     808053h
@@ -76,17 +76,17 @@ INTVEC_INT2     equ     3
 INTVEC_INT3     equ     4
 INTVEC_XINT0    equ     5
 INTVEC_RINT0    equ     6
-                if      MomCPU=320C30h
+                if      MOMCPU=320C30h
 INTVEC_XINT1     equ     7
 INTVEC_RINT1     equ     8
                 endif
 INTVEC_TINT0    equ     9
 INTVEC_TINT1    equ     0ah
 INTVEC_DINT     equ     0bh
-__tmpintvec     set     0
+__TMPINTVEC     set     0
                 rept    28
-INTVEC_TRAP{"\{__TMPINTVEC}"} equ __tmpintvec+20h
-__tmpintvec     set     __tmpintvec+1
+INTVEC_TRAP{"\{__TMPINTVEC}"} equ __TMPINTVEC+20h
+__TMPINTVEC     set     __TMPINTVEC+1
                 endm
 
                 endif

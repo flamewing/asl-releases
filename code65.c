@@ -18,6 +18,7 @@
 #include "asmpars.h"
 #include "asmsub.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -67,17 +68,14 @@ static FixedOrder *FixedOrders;
 static NormOrder *NormOrders;
 static CondOrder *CondOrders;
 
-static void (*SaveInitProc)(void);
+static SimpProc SaveInitProc;
 static CPUVar CPU6502,CPU65SC02,CPU65C02,CPUM740;
 static LongInt SpecPage;
 
 static ShortInt ErgMode;
 static Byte AdrVals[2];
-static Byte AdrCnt;
 
 /*---------------------------------------------------------------------------*/
-
-static LongInt InstrZ;
 
 	static void AddFixed(char *NName, Byte NFlag, Byte NCode)
 BEGIN
@@ -431,7 +429,7 @@ BEGIN
 
    /* normale Anweisungen: Adressausdruck parsen */
 
-   ErgMode=-1;
+   ErgMode=(-1);
 
    if (ArgCnt==0)
     BEGIN

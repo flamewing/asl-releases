@@ -62,6 +62,8 @@ char *InfoMessCopyright="(C) 1992,1997 Alfred Arnold";
    ShortInt SizeFlag;		    /* Welche Operandengroessen definiert ? */
 
    Byte PassNo;                     /* Durchlaufsnummer */
+   Integer JmpErrors;               /* Anzahl fraglicher Sprungfehler */
+   Boolean ThrowErrors;             /* Fehler verwerfen bei Repass ? */
    Boolean Repass;		    /* noch ein Durchlauf erforderlich */
    Byte MaxSymPass;	            /* Pass, nach dem Symbole definiert sein muessen */
    Byte ShareMode;                  /* 0=kein SHARED,1=Pascal-,2=C-Datei, 3=ASM-Datei */
@@ -105,6 +107,7 @@ char *InfoMessCopyright="(C) 1992,1997 Alfred Arnold";
    char *PCSymbol;		    /* Symbol, womit Programmzaehler erreicht wird. Inhalt Read Only! */
    TConstMode ConstMode;
    Boolean SetIsOccupied;           /* TRUE: SET ist Prozessorbefehl */
+#ifdef __PROTOS__
    void (*MakeCode)(void);          /* Codeerzeugungsprozedur */
    Boolean (*ChkPC)(void);	    /* ueberprueft Codelaengenueberschreitungen */
    Boolean (*IsDef)(void);	    /* ist Label nicht als solches zu werten ? */
@@ -112,6 +115,15 @@ char *InfoMessCopyright="(C) 1992,1997 Alfred Arnold";
    void (*InternSymbol)(char *Asc, TempResult *Erg); /* vordefinierte Symbole ? */
    void (*InitPassProc)(void);	    /* Funktion zur Vorinitialisierung vor einem Pass */
    void (*ClearUpProc)(void);       /* Aufraeumen nach Assemblierung */
+#else
+   void (*MakeCode)();
+   Boolean (*ChkPC)();
+   Boolean (*IsDef)();
+   void (*SwitchFrom)();
+   void (*InternSymbol)();
+   void (*InitPassProc)();
+   void (*ClearUpProc)();
+#endif
 
    String IncludeList;		    /* Suchpfade fuer Includedateien */
    Integer IncDepth,NextIncDepth;   /* Verschachtelungstiefe INCLUDEs */
@@ -121,6 +133,7 @@ char *InfoMessCopyright="(C) 1992,1997 Alfred Arnold";
    FILE *MacProFile;		    /* Makroprozessorausgabe */
    FILE *MacroFile;		    /* Ausgabedatei Makroliste */
    String LstName;		    /* Name der Listdatei */
+   String MacroName,MacProName;   
    Boolean DoLst,NextDoLst;         /* Listing an */
    String ShareName;                /* Name des Sharefiles */
 /**   PrgName:String;                  { Name der Codedatei }**/
@@ -213,8 +226,9 @@ END
 BEGIN
 END
 
-	void Default_InternSymbol(char *Asc, TempResult *Erg)
+        void Default_InternSymbol(char *Asc, TempResult *Erg)
 BEGIN
+   if (Asc); /* satisfy compiler */
    Erg->Typ=TempNone;
 END
 

@@ -18,8 +18,9 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
-#include "insttree.h"
+#include "asmitree.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 
 typedef struct
@@ -51,7 +52,7 @@ typedef struct
 #define ALU2OrderCnt 8
 #define ConditionCnt 24
 
-#define ModNone -1
+#define ModNone (-1)
 #define ModReg8    0
 #define MModReg8   (1 << ModReg8)
 #define ModReg16   1
@@ -73,7 +74,6 @@ static int DefaultCondition;
 
 static ShortInt AdrType;
 static Byte AdrMode;
-static Byte AdrCnt;
 static ShortInt OpSize;
 static Byte AdrVals[10];
 static Boolean MinOneIs0;
@@ -424,7 +424,7 @@ BEGIN
    Boolean OK;
    Byte HReg;
 
-   CodeLen=0; DontPrint=False; OpSize=-1;
+   CodeLen=0; DontPrint=False; OpSize=(-1);
 
    /* zu ignorierendes */
 
@@ -1133,9 +1133,6 @@ BEGIN
 END
 
 /*-------------------------------------------------------------------------*/
-
-static int InstrZ;
-
 
 	static void AddFixed(char *NName, Byte NCode)
 BEGIN

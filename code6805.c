@@ -13,11 +13,14 @@
 #include <string.h>
 
 #include "bpemu.h"
+#include "stringutil.h"
 
 #include "asmdef.h"
 #include "asmpars.h"
 #include "asmsub.h"
 #include "codepseudo.h"
+#include "codevars.h"
+
 
 typedef struct
          {
@@ -48,7 +51,7 @@ typedef struct
 #define ALUOrderCnt 19
 #define RMWOrderCnt 12
 
-#define ModNone -1
+#define ModNone (-1)
 #define ModImm 0
 #define MModImm (1 << ModImm)
 #define ModDir 1
@@ -72,7 +75,6 @@ typedef struct
 
 static ShortInt AdrMode,OpSize;
 static Byte AdrVals[2];
-Byte AdrCnt;
 
 static CPUVar CPU6805,CPU6808;
 
@@ -82,8 +84,6 @@ static RMWOrder *RMWOrders;
 static ALUOrder *ALUOrders;
 
 /*--------------------------------------------------------------------------*/
-
-static int InstrZ;
 
         static void AddFixed(char *NName, CPUVar NMin, Byte NCode)
 BEGIN
@@ -121,7 +121,6 @@ BEGIN
 END
 
         static void InitFields(void)
-
 BEGIN
    FixedOrders=(BaseOrder *) malloc(sizeof(BaseOrder)*FixedOrderCnt); InstrZ=0;
    AddFixed("RTI" ,CPU6805,0x80); AddFixed("RTS" ,CPU6805,0x81);
@@ -381,7 +380,7 @@ BEGIN
    Boolean OK;
    char ch;
 
-   CodeLen=0; DontPrint=False; OpSize=-1;
+   CodeLen=0; DontPrint=False; OpSize=(-1);
 
    /* zu ignorierendes */
 

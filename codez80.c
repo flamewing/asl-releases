@@ -20,6 +20,7 @@
 #include "asmpars.h"
 #include "asmcode.h"
 #include "codepseudo.h"
+#include "codevars.h"
 
 /*-------------------------------------------------------------------------*/
 /* Instruktionsgruppendefinitionen */
@@ -54,7 +55,7 @@ typedef enum {Pref_IN_N,Pref_IN_W ,Pref_IB_W ,Pref_IW_W ,Pref_IB_N ,
 #define ExtFlagName    "INEXTMODE"       /* Flag-Symbolnamen */
 #define LWordFlagName  "INLWORDMODE"
 
-#define ModNone -1
+#define ModNone (-1)
 #define ModReg8 1
 #define ModReg16 2
 #define ModIndReg16 3
@@ -80,7 +81,6 @@ typedef enum {Pref_IN_N,Pref_IN_W ,Pref_IB_W ,Pref_IW_W ,Pref_IB_N ,
 static Byte PrefixCnt;
 static Byte AdrPart,OpSize;
 static Byte AdrVals[4];
-static Byte AdrCnt;
 static ShortInt AdrMode;
 
 static BaseOrder *FixedOrders;
@@ -91,7 +91,7 @@ static char **ShiftOrders;
 static char **BitOrders;
 static Condition *Conditions;
 
-static void (*SaveInitProc)(void);
+static SimpProc SaveInitProc;
 
 static CPUVar CPUZ80,CPUZ80U,CPUZ180,CPUZ380;
 
@@ -104,8 +104,6 @@ static PrefType CurrPrefix,       /* mom. explizit erzeugter Praefix */
 
 /*==========================================================================*/
 /* Codetabellenerzeugung */
-
-static LongInt InstrZ;
 
 	static void AddFixed(char *NewName, CPUVar NewMin, Byte NewLen, Word NewCode)
 BEGIN
@@ -236,14 +234,23 @@ END
 
 	static LongInt CodeEnd(void)
 BEGIN
+#ifdef __STDC__
    if (ExtFlag) return 0xffffffffu;
+#else
+   if (ExtFlag) return 0xffffffff;
+#endif
    else if (MomCPU==CPUZ180) return 0x7ffff;
    else return 0xffff;
 END
 
 	static LongInt PortEnd(void)
 BEGIN
-   if (ExtFlag) return 0xffffffffu; else return 0xff;
+#ifdef __STDC__
+   if (ExtFlag) return 0xffffffffu;
+#else
+   if (ExtFlag) return 0xffffffff;
+#endif
+   else return 0xff;
 END
 
 /*==========================================================================*/
@@ -480,11 +487,11 @@ BEGIN
              BAsmCode[PrefixCnt++]=(z==4)?IXPrefix:IYPrefix;
 	    END
 	   AdrVals[AdrCnt++]=AdrLong & 0xff;
-           if ((AdrLong>=-0x80) AND (AdrLong<=0x7f));
+           if ((AdrLong>=-0x80l) AND (AdrLong<=0x7fl));
 	   else
 	    BEGIN
 	     AdrVals[AdrCnt++]=(AdrLong >> 8) & 0xff;
-             if ((AdrLong>=-0x8000) AND (AdrLong<=0x7fff)) ChangeDDPrefix("IB");
+             if ((AdrLong>=-0x8000l) AND (AdrLong<=0x7fffl)) ChangeDDPrefix("IB");
 	     else
 	      BEGIN
 	       AdrVals[AdrCnt++]=(AdrLong >> 16) & 0xff;
@@ -508,11 +515,19 @@ BEGIN
        AdrVals[0]=AdrLong & 0xff;
        AdrVals[1]=(AdrLong >> 8) & 0xff;
        AdrCnt=2;
+#ifdef __STDC__
        if ((AdrLong & 0xffff0000u)==0);
+#else
+       if ((AdrLong & 0xffff0000)==0);
+#endif
        else
         BEGIN
          AdrVals[AdrCnt++]=((AdrLong >> 16) & 0xff);
+#ifdef __STDC__
          if ((AdrLong & 0xff000000u)==0) ChangeDDPrefix("IB");
+#else
+         if ((AdrLong & 0xff000000)==0) ChangeDDPrefix("IB");
+#endif
          else
           BEGIN
            AdrVals[AdrCnt++]=((AdrLong >> 24) & 0xff);
@@ -545,11 +560,19 @@ BEGIN
          BEGIN
           AdrVals[0]=Lo(AdrLong); AdrVals[1]=Hi(AdrLong);
           AdrMode=ModImm; AdrCnt=2;
+#ifdef __STDC__
           if ((AdrLong & 0xffff0000u)==0);
+#else
+          if ((AdrLong & 0xffff0000)==0);
+#endif
           else
            BEGIN
             AdrVals[AdrCnt++]=(AdrLong >> 16) & 0xff;
+#ifdef __STDC__
             if ((AdrLong & 0xff000000u)==0) ChangeDDPrefix("IB");
+#else
+            if ((AdrLong & 0xff000000)==0) ChangeDDPrefix("IB");
+#endif
             else
              BEGIN
               AdrVals[AdrCnt++]=(AdrLong >> 24) & 0xff;
@@ -1137,6 +1160,631 @@ BEGIN
    return ((tmp<=255) OR (tmp>=0xff80));
 END
 
+	static Boolean CodeAri(void)
+BEGIN
+   Integer z;
+   Byte AdrByte;
+   Boolean OK;
+
+   for (z=0; z<ALUOrderCnt; z++)
+    if (Memo(ALUOrders[z].Name))
+     BEGIN
+      if (ArgCnt==1)
+       BEGIN
+	strcpy(ArgStr[2],ArgStr[1]); strmaxcpy(ArgStr[1],"A",255); ArgCnt=2;
+       END
+      if (ArgCnt!=2) WrError(1110);
+      else if (strcasecmp(ArgStr[1],"HL")==0)
+       BEGIN
+        if (NOT Memo("SUB")) WrError(1350);
+        else
+ 	 BEGIN
+	  OpSize=1; DecodeAdr(ArgStr[2]);
+	  switch (AdrMode)
+           BEGIN
+	    case ModAbs:
+	     BAsmCode[PrefixCnt]=0xed; BAsmCode[PrefixCnt+1]=0xd6;
+	     memcpy(BAsmCode+PrefixCnt+2,AdrVals,AdrCnt);
+	     CodeLen=PrefixCnt+2+AdrCnt;
+	     break;
+	    default: if (AdrMode!=ModNone) WrError(1350);
+	   END
+	 END
+       END
+      else if (strcasecmp(ArgStr[1],"SP")==0)
+       BEGIN
+        if (NOT Memo("SUB")) WrError(1350);
+        else
+         BEGIN
+          OpSize=1; DecodeAdr(ArgStr[2]);
+          switch (AdrMode)
+           BEGIN
+	    case ModImm:
+             BAsmCode[0]=0xed; BAsmCode[1]=0x92;
+	     memcpy(BAsmCode+2,AdrVals,AdrCnt);
+             CodeLen=2+AdrCnt;
+	     break;
+            default: if (AdrMode!=ModNone) WrError(1350);
+           END
+         END
+       END
+      else if (strcasecmp(ArgStr[1],"A")!=0) WrError(1350);
+      else
+       BEGIN
+        OpSize=0; DecodeAdr(ArgStr[2]);
+        switch (AdrMode)
+         BEGIN
+          case ModReg8:
+           CodeLen=PrefixCnt+1+AdrCnt;
+           BAsmCode[PrefixCnt]=0x80+(ALUOrders[z].Code << 3)+AdrPart;
+           memcpy(BAsmCode+PrefixCnt+1,AdrVals,AdrCnt);
+           break;
+          case ModImm:
+           if (NOT ImmIs8()) WrError(1320);
+           else
+            BEGIN
+             CodeLen=2;
+             BAsmCode[0]=0xc6+(ALUOrders[z].Code << 3);
+             BAsmCode[1]=AdrVals[0];
+            END
+           break;
+          default: if (AdrMode!=ModNone) WrError(1350);
+         END
+       END
+      return True;
+     END
+    else if ((strncmp(ALUOrders[z].Name,OpPart,strlen(ALUOrders[z].Name))==0) AND (OpPart[strlen(OpPart)-1]=='W'))
+     BEGIN
+      if ((ArgCnt!=2) AND (ArgCnt!=1)) WrError(1110);
+      else if (MomCPU<CPUZ380) WrError(1500);
+      else if ((ArgCnt==2) AND (strcasecmp(ArgStr[1],"HL")!=0)) WrError(1350);
+      else
+       BEGIN
+        OpSize=1; DecodeAdr(ArgStr[ArgCnt]);
+        switch (AdrMode)
+         BEGIN
+          case ModReg16:
+	   if (PrefixCnt>0)      /* wenn Register, dann nie DDIR! */
+            BEGIN
+             BAsmCode[PrefixCnt]=0x87+(ALUOrders[z].Code << 3);
+	     CodeLen=1+PrefixCnt;
+            END
+           else if (AdrPart==3) WrError(1350);
+           else
+            BEGIN
+             if (AdrPart==2) AdrPart=3;
+             BAsmCode[0]=0xed; BAsmCode[1]=0x84+(ALUOrders[z].Code << 3)+AdrPart;
+	     CodeLen=2;
+            END
+           break;
+          case ModReg8:
+           if ((AdrPart!=6) OR (AdrCnt==0)) WrError(1350);
+           else
+            BEGIN
+             BAsmCode[PrefixCnt]=0xc6+(ALUOrders[z].Code << 3);
+             memcpy(BAsmCode+PrefixCnt+1,AdrVals,AdrCnt);
+             CodeLen=PrefixCnt+1+AdrCnt;
+            END
+           break;
+          case ModImm:
+           BAsmCode[0]=0xed; BAsmCode[1]=0x86+(ALUOrders[z].Code << 3);
+           memcpy(BAsmCode+2,AdrVals,AdrCnt); CodeLen=2+AdrCnt;
+           break;
+	  default: if (AdrMode!=ModNone) WrError(1350);
+         END
+       END
+      return True;
+     END
+
+   if (Memo("ADD"))
+    BEGIN
+     if (ArgCnt!=2) WrError(1110);
+     else
+      BEGIN
+       DecodeAdr(ArgStr[1]);
+       switch (AdrMode)
+        BEGIN
+         case ModReg8:
+          if (AdrPart!=7) WrError(1350);
+          else
+           BEGIN
+            OpSize=0; DecodeAdr(ArgStr[2]);
+            switch (AdrMode)
+             BEGIN
+              case ModReg8:
+               CodeLen=PrefixCnt+1+AdrCnt;
+               BAsmCode[PrefixCnt]=0x80+AdrPart;
+               memcpy(BAsmCode+1+PrefixCnt,AdrVals,AdrCnt);
+               break;
+              case ModImm:
+               CodeLen=PrefixCnt+1+AdrCnt;
+               BAsmCode[PrefixCnt]=0xc6;
+               memcpy(BAsmCode+1+PrefixCnt,AdrVals,AdrCnt);
+               break;
+	      default: if (AdrMode!=ModNone) WrError(1350);
+             END
+           END
+          break;
+         case ModReg16:
+	  if (AdrPart==3) /* SP */
+	   BEGIN
+	    OpSize=1; DecodeAdr(ArgStr[2]);
+	    switch (AdrMode)
+             BEGIN
+	      case ModImm:
+	       if (MomCPU<CPUZ380) WrError(1500);
+	       else
+	        BEGIN
+	         BAsmCode[0]=0xed; BAsmCode[1]=0x82;
+	         memcpy(BAsmCode+2,AdrVals,AdrCnt);
+	         CodeLen=2+AdrCnt;
+	        END
+               break;
+              default: if (AdrMode!=ModNone) WrError(1350);
+	     END
+	   END
+	  else if (AdrPart!=2) WrError(1350);
+	  else
+	   BEGIN
+	    z=PrefixCnt; /* merkt, ob Indexregister */
+	    OpSize=1; DecodeAdr(ArgStr[2]);
+	    switch (AdrMode)
+             BEGIN
+	      case ModReg16:
+	       if ((AdrPart==2) AND (PrefixCnt!=0) AND ((PrefixCnt!=2) OR (BAsmCode[0]!=BAsmCode[1]))) WrError(1350);
+	       else
+	        BEGIN
+	         if (PrefixCnt==2) PrefixCnt--; CodeLen=1+PrefixCnt;
+	         BAsmCode[PrefixCnt]=0x09+(AdrPart << 4);
+	        END
+               break;
+	      case ModAbs:
+	       if (z!=0) WrError(1350);
+	       else if (MomCPU<CPUZ380) WrError(1500);
+	       else
+	        BEGIN
+	         BAsmCode[PrefixCnt]=0xed; BAsmCode[PrefixCnt+1]=0xc2;
+	         memcpy(BAsmCode+PrefixCnt+2,AdrVals,AdrCnt);
+	         CodeLen=PrefixCnt+2+AdrCnt;
+	        END
+               break;
+              default: if (AdrMode!=ModNone) WrError(1350);
+	     END
+	   END
+          break;
+         default: if (AdrMode!=ModNone) WrError(1350);
+        END
+      END
+     return True;
+    END
+
+   if (Memo("ADDW"))
+    BEGIN
+     if ((ArgCnt!=2) AND (ArgCnt!=1)) WrError(1110);
+     else if (MomCPU<CPUZ380) WrError(1500);
+     else if ((ArgCnt==2) AND (strcasecmp(ArgStr[1],"HL")!=0)) WrError(1350);
+     else
+      BEGIN
+       OpSize=1; DecodeAdr(ArgStr[ArgCnt]);
+       switch (AdrMode)
+        BEGIN
+         case ModReg16:
+	  if (PrefixCnt>0)      /* wenn Register, dann nie DDIR! */
+	   BEGIN
+	    BAsmCode[PrefixCnt]=0x87;
+	    CodeLen=1+PrefixCnt;
+	   END
+	  else if (AdrPart==3) WrError(1350);
+	  else
+	   BEGIN
+	    if (AdrPart==2) AdrPart=3;
+	    BAsmCode[0]=0xed; BAsmCode[1]=0x84+AdrPart;
+	    CodeLen=2;
+	   END
+          break;
+         case ModReg8:
+	  if ((AdrPart!=6) OR (AdrCnt==0)) WrError(1350);
+	  else
+	   BEGIN
+	    BAsmCode[PrefixCnt]=0xc6;
+	    memcpy(BAsmCode+PrefixCnt+1,AdrVals,AdrCnt);
+	    CodeLen=PrefixCnt+1+AdrCnt;
+	   END
+          break;
+         case ModImm:
+	  BAsmCode[0]=0xed; BAsmCode[1]=0x86;
+	  memcpy(BAsmCode+2,AdrVals,AdrCnt); CodeLen=2+AdrCnt;
+	  break;
+         default: if (AdrMode!=ModNone) WrError(1350);
+        END
+      END
+     return True;
+    END
+
+   if ((Memo("ADC")) OR (Memo("SBC")))
+    BEGIN
+     if (ArgCnt!=2) WrError(1110);
+     else
+      BEGIN
+       DecodeAdr(ArgStr[1]);
+       switch (AdrMode)
+        BEGIN
+         case ModReg8:
+	  if (AdrPart!=7) WrError(1350);
+	  else
+	   BEGIN
+	    OpSize=0; DecodeAdr(ArgStr[2]);
+	    switch (AdrMode)
+             BEGIN
+              case ModReg8:
+	       CodeLen=PrefixCnt+1+AdrCnt;
+	       BAsmCode[PrefixCnt]=0x88+AdrPart;
+	       memcpy(BAsmCode+1+PrefixCnt,AdrVals,AdrCnt);
+	       break;
+	      case ModImm:
+	       CodeLen=PrefixCnt+1+AdrCnt;
+	       BAsmCode[PrefixCnt]=0xce;
+	       memcpy(BAsmCode+1+PrefixCnt,AdrVals,AdrCnt);
+	       break;
+	      default: if (AdrMode!=ModNone) WrError(1350);
+	     END
+	    if ((Memo("SBC")) AND (CodeLen!=0)) BAsmCode[PrefixCnt]+=0x10;
+	   END
+          break; 
+         case ModReg16:
+	  if ((AdrPart!=2) OR (PrefixCnt!=0)) WrError(1350);
+	  else
+	   BEGIN
+	    OpSize=1; DecodeAdr(ArgStr[2]);
+	    switch (AdrMode)
+             BEGIN
+	      case ModReg16:
+	       if (PrefixCnt!=0) WrError(1350);
+	       else
+	        BEGIN
+	         CodeLen=2; BAsmCode[0]=0xed;
+	         BAsmCode[1]=0x42+(AdrPart << 4);
+	         if (Memo("ADC")) BAsmCode[1]+=8;
+	        END
+               break;
+	      default: if (AdrMode!=ModNone) WrError(1350);
+	     END
+	   END
+          break;
+         default: if (AdrMode!=ModNone) WrError(1350);
+        END
+      END
+     return True;
+    END
+
+   if ((Memo("ADCW")) OR (Memo("SBCW")))
+    BEGIN
+     if ((ArgCnt!=2) AND (ArgCnt!=1)) WrError(1110);
+     else if (MomCPU<CPUZ380) WrError(1500);
+     else if ((ArgCnt==2) AND (strcasecmp(ArgStr[1],"HL")!=0)) WrError(1350);
+     else
+      BEGIN
+       z=Ord(Memo("SBCW")) << 4;
+       OpSize=1; DecodeAdr(ArgStr[ArgCnt]);
+       switch (AdrMode)
+        BEGIN
+         case ModReg16:
+	  if (PrefixCnt>0)      /* wenn Register, dann nie DDIR! */
+	   BEGIN
+	    BAsmCode[PrefixCnt]=0x8f+z;
+	    CodeLen=1+PrefixCnt;
+	   END
+	  else if (AdrPart==3) WrError(1350);
+	  else
+	   BEGIN
+	    if (AdrPart==2) AdrPart=3;
+	    BAsmCode[0]=0xed; BAsmCode[1]=0x8c+z+AdrPart;
+	    CodeLen=2;
+	   END
+          break;
+         case ModReg8:
+	  if ((AdrPart!=6) OR (AdrCnt==0)) WrError(1350);
+	  else
+	   BEGIN
+	    BAsmCode[PrefixCnt]=0xce + z; /* ANSI :-0 */
+	    memcpy(BAsmCode+PrefixCnt+1,AdrVals,AdrCnt);
+	    CodeLen=PrefixCnt+1+AdrCnt;
+	   END
+          break;
+         case ModImm:
+	  BAsmCode[0]=0xed; BAsmCode[1]=0x8e + z;
+	  memcpy(BAsmCode+2,AdrVals,AdrCnt); CodeLen=2+AdrCnt;
+	  break;
+         default: if (AdrMode!=ModNone) WrError(1350);
+        END
+      END
+     return True;
+    END
+
+   if ((Memo("INC")) OR (Memo("DEC")) OR (Memo("INCW")) OR (Memo("DECW")))
+    BEGIN
+     if (ArgCnt!=1) WrError(1110);
+     else
+      BEGIN
+       z=Ord((Memo("DEC")) OR (Memo("DECW")));
+       DecodeAdr(ArgStr[1]);
+       switch (AdrMode)
+        BEGIN
+         case ModReg8:
+	  if (OpPart[strlen(OpPart)-1]=='W') WrError(1350);
+	  else
+	   BEGIN
+	    CodeLen=PrefixCnt+1+AdrCnt;
+	    BAsmCode[PrefixCnt]=0x04+(AdrPart << 3)+z;
+	    memcpy(BAsmCode+PrefixCnt+1,AdrVals,AdrCnt);
+	   END
+          break;
+         case ModReg16:
+	  CodeLen=1+PrefixCnt;
+	  BAsmCode[PrefixCnt]=0x03+(AdrPart << 4)+(z << 3);
+	  break;
+         default: if (AdrMode!=ModNone) WrError(1350);
+        END
+      END
+     return True;
+    END
+
+   for (z=0; z<ShiftOrderCnt; z++)
+    if (Memo(ShiftOrders[z]))
+     BEGIN
+      if ((ArgCnt==0) OR (ArgCnt>2)) WrError(1110);
+      else if ((z==6) AND (MomCPU!=CPUZ80U)) WrError(1500); /* SLIA undok. Z80 */
+      else
+       BEGIN
+        OpSize=0;
+        DecodeAdr(ArgStr[ArgCnt]);
+        switch (AdrMode)
+         BEGIN
+          case ModReg8:
+           if ((PrefixCnt>0) AND (AdrPart!=6)) WrError(1350); /* IXL..IYU verbieten */
+           else
+            BEGIN
+             if (ArgCnt==1) OK=True;
+             else if (MomCPU!=CPUZ80U)
+              BEGIN
+               WrError(1500); OK=False;
+              END
+             else if ((AdrPart!=6) OR (PrefixCnt!=1) OR (NOT DecodeReg8(ArgStr[1],&AdrPart)))
+              BEGIN
+               WrError(1350); OK=False;
+              END
+             else OK=True;
+             if (OK)
+              BEGIN
+               CodeLen=PrefixCnt+1+AdrCnt+1;
+               BAsmCode[PrefixCnt]=0xcb;
+               memcpy(BAsmCode+PrefixCnt+1,AdrVals,AdrCnt);
+               BAsmCode[PrefixCnt+1+AdrCnt]=AdrPart+(z << 3);
+               if ((AdrPart==7) AND (z<4)) WrError(10);
+              END
+            END
+           break;
+          default: if (AdrMode!=ModNone) WrError(1350);
+         END
+       END
+      return True;
+     END
+    else if ((strncmp(OpPart,ShiftOrders[z],strlen(ShiftOrders[z]))==0) AND (OpPart[strlen(OpPart)-1]=='W'))
+     BEGIN
+      if (ArgCnt!=1) WrError(1110);
+      else if ((MomCPU<CPUZ380) OR (z==6)) WrError(1500);
+      else
+       BEGIN
+        OpSize=1; DecodeAdr(ArgStr[1]);
+        switch (AdrMode)
+         BEGIN
+          case ModReg16:
+           if (PrefixCnt>0)
+            BEGIN
+             BAsmCode[2]=0x04+(z << 3)+((BAsmCode[0] >> 5) & 1);
+             BAsmCode[0]=0xed; BAsmCode[1]=0xcb;
+             CodeLen=3;
+            END
+           else if (AdrPart==3) WrError(1350);
+           else
+            BEGIN
+             if (AdrPart==2) AdrPart=3;
+             BAsmCode[0]=0xed; BAsmCode[1]=0xcb;
+             BAsmCode[2]=(z << 3)+AdrPart;
+             CodeLen=3;
+            END
+           break;
+          case ModReg8:
+           if (AdrPart!=6) WrError(1350);
+           else
+            BEGIN
+             if (AdrCnt==0)
+              BEGIN
+               BAsmCode[0]=0xed; PrefixCnt=1;
+              END
+             BAsmCode[PrefixCnt]=0xcb;
+             memcpy(BAsmCode+PrefixCnt+1,AdrVals,AdrCnt);
+             BAsmCode[PrefixCnt+1+AdrCnt]=0x02+(z << 3);
+             CodeLen=PrefixCnt+1+AdrCnt+1;
+            END
+           break;
+          default: if (AdrMode!=ModNone) WrError(1350);
+         END
+       END
+      return True;
+     END
+
+   for (z=0; z<BitOrderCnt; z++)
+    if (Memo(BitOrders[z]))
+     BEGIN
+      if ((ArgCnt!=2) AND (ArgCnt!=3)) WrError(1110);
+      else
+       BEGIN
+        DecodeAdr(ArgStr[ArgCnt]);
+	switch (AdrMode)
+         BEGIN
+	  case ModReg8:
+	   if ((AdrPart!=6) AND (PrefixCnt!=0)) WrError(1350);
+	   else
+	    BEGIN
+             AdrByte=EvalIntExpression(ArgStr[ArgCnt-1],UInt3,&OK);
+	     if (OK)
+	      BEGIN
+               if (ArgCnt==2) OK=True;
+               else if (MomCPU!=CPUZ80U)
+                BEGIN
+                 WrError(1500); OK=False;
+                END
+               else if ((AdrPart!=6) OR (PrefixCnt!=1) OR (z==0) OR (NOT DecodeReg8(ArgStr[1],&AdrPart)))
+                BEGIN
+                 WrError(1350); OK=False;
+                END
+               else OK=True;
+               if (OK)
+                BEGIN
+                 CodeLen=PrefixCnt+2+AdrCnt;
+                 BAsmCode[PrefixCnt]=0xcb;
+                 memcpy(BAsmCode+PrefixCnt+1,AdrVals,AdrCnt);
+                 BAsmCode[PrefixCnt+1+AdrCnt]=AdrPart+(AdrByte << 3)+((z+1) << 6);
+                END
+              END
+	    END
+           break;
+          default: if (AdrMode!=ModNone) WrError(1350); 
+	 END
+       END
+      return True;
+     END
+
+   if (Memo("MLT"))
+    BEGIN
+     if (ArgCnt!=1) WrError(1110);
+     else if (MomCPU<CPUZ180) WrError(1500);
+     else
+      BEGIN
+       DecodeAdr(ArgStr[1]);
+       if ((AdrMode!=ModReg16) OR (PrefixCnt!=0)) WrError(1350);
+       else
+	BEGIN
+	 BAsmCode[CodeLen]=0xed; BAsmCode[CodeLen+1]=0x4c+(AdrPart << 4);
+	 CodeLen=2;
+	END
+      END
+     return True;
+    END
+
+   if ((Memo("DIVUW")) OR (Memo("MULTW")) OR (Memo("MULTUW")))
+    BEGIN
+     if (ArgCnt==1)
+      BEGIN
+       strcpy(ArgStr[2],ArgStr[1]); strmaxcpy(ArgStr[1],"HL",255); ArgCnt=2;
+      END
+     if (MomCPU<CPUZ380) WrError(1500);
+     else if (ArgCnt!=2) WrError(1110);
+     else if (strcasecmp(ArgStr[1],"HL")!=0) WrError(1350);
+     else
+      BEGIN
+       AdrByte=Ord(*OpPart=='D');
+       z=Ord(OpPart[strlen(OpPart)-2]=='U');
+       OpSize=1; DecodeAdr(ArgStr[ArgCnt]);
+       switch (AdrMode)
+        BEGIN
+         case ModReg8:
+	  if ((AdrPart!=6) OR (PrefixCnt==0)) WrError(1350);
+	  else
+	   BEGIN
+	    BAsmCode[PrefixCnt]=0xcb;
+	    memcpy(BAsmCode+PrefixCnt+1,AdrVals,AdrCnt);
+	    BAsmCode[PrefixCnt+1+AdrCnt]=0x92+(z << 3)+(AdrByte << 5);
+	    CodeLen=PrefixCnt+1+AdrCnt+1;
+	   END
+          break;
+         case ModReg16:
+	  if (AdrPart==3) WrError(1350);
+	  else if (PrefixCnt==0)
+	   BEGIN
+	    if (AdrPart==2) AdrPart=3;
+	    BAsmCode[0]=0xed; BAsmCode[1]=0xcb;
+	    BAsmCode[2]=0x90+AdrPart+(z << 3)+(AdrByte << 5);
+	    CodeLen=3;
+	   END
+	  else
+	   BEGIN
+	    BAsmCode[2]=0x94+((BAsmCode[0] >> 5) & 1)+(z << 3)+(AdrByte << 5);
+	    BAsmCode[0]=0xed; BAsmCode[1]=0xcb;
+	    CodeLen=3;
+	   END
+          break;
+         case ModImm:
+	  BAsmCode[0]=0xed; BAsmCode[1]=0xcb;
+	  BAsmCode[2]=0x97+(z << 3)+(AdrByte << 5);
+	  memcpy(BAsmCode+3,AdrVals,AdrCnt);
+	  CodeLen=3+AdrCnt;
+          break;
+         default: if (AdrMode!=ModNone) WrError(1350);
+        END
+      END
+     return True;
+    END
+
+   if (Memo("TST"))
+    BEGIN
+     if (ArgCnt!=1) WrError(1110);
+     else if (MomCPU<CPUZ180) WrError(1500);
+     else
+      BEGIN
+       OpSize=0; DecodeAdr(ArgStr[1]);
+       switch (AdrMode)
+        BEGIN
+         case ModReg8:
+	  if (PrefixCnt!=0) WrError(1350);
+	  else
+	   BEGIN
+	    BAsmCode[0]=0xed; BAsmCode[1]=4+(AdrPart << 3);
+	    CodeLen=2;
+	   END
+          break;
+         case ModImm:
+	  BAsmCode[0]=0xed; BAsmCode[1]=0x64; BAsmCode[2]=AdrVals[0];
+	  CodeLen=3;
+	  break;
+         default: if (AdrMode!=ModNone) WrError(1350);
+        END
+      END
+     return True;
+    END
+
+   if (Memo("SWAP"))
+    BEGIN
+     if (ArgCnt!=1) WrError(1110);
+     else if (MomCPU<CPUZ380) WrError(1500);
+     else
+      BEGIN
+       DecodeAdr(ArgStr[1]);
+       switch (AdrMode)
+        BEGIN
+         case ModReg16:
+          if (AdrPart==3) WrError(1350);
+	  else if (PrefixCnt==0)
+	   BEGIN
+	    if (AdrPart==2) AdrPart=3;
+	    BAsmCode[0]=0xed; BAsmCode[1]=0x0e + (AdrPart << 4); /*?*/
+	    CodeLen=2;
+	   END
+	  else
+	   BEGIN
+	    BAsmCode[PrefixCnt]=0x3e; CodeLen=PrefixCnt+1;
+	   END
+          break;
+         default: if (AdrMode!=ModNone) WrError(1350);
+        END
+      END
+     return True;
+    END
+
+   return False;
+END
+
 	static void MakeCode_Z80(void)
 BEGIN
    Boolean OK;
@@ -1468,621 +2116,7 @@ BEGIN
 /*-------------------------------------------------------------------------*/
 /* Arithmetik */
 
-   for (z=0; z<ALUOrderCnt; z++)
-    if (Memo(ALUOrders[z].Name))
-     BEGIN
-      if (ArgCnt==1)
-       BEGIN
-	strcpy(ArgStr[2],ArgStr[1]); strmaxcpy(ArgStr[1],"A",255); ArgCnt=2;
-       END
-      if (ArgCnt!=2) WrError(1110);
-      else if (strcasecmp(ArgStr[1],"HL")==0)
-       BEGIN
-        if (NOT Memo("SUB")) WrError(1350);
-        else
- 	 BEGIN
-	  OpSize=1; DecodeAdr(ArgStr[2]);
-	  switch (AdrMode)
-           BEGIN
-	    case ModAbs:
-	     BAsmCode[PrefixCnt]=0xed; BAsmCode[PrefixCnt+1]=0xd6;
-	     memcpy(BAsmCode+PrefixCnt+2,AdrVals,AdrCnt);
-	     CodeLen=PrefixCnt+2+AdrCnt;
-	     break;
-	    default: if (AdrMode!=ModNone) WrError(1350);
-	   END
-	 END
-       END
-      else if (strcasecmp(ArgStr[1],"SP")==0)
-       BEGIN
-        if (NOT Memo("SUB")) WrError(1350);
-        else
-         BEGIN
-          OpSize=1; DecodeAdr(ArgStr[2]);
-          switch (AdrMode)
-           BEGIN
-	    case ModImm:
-             BAsmCode[0]=0xed; BAsmCode[1]=0x92;
-	     memcpy(BAsmCode+2,AdrVals,AdrCnt);
-             CodeLen=2+AdrCnt;
-	     break;
-            default: if (AdrMode!=ModNone) WrError(1350);
-           END
-         END
-       END
-      else if (strcasecmp(ArgStr[1],"A")!=0) WrError(1350);
-      else
-       BEGIN
-        OpSize=0; DecodeAdr(ArgStr[2]);
-        switch (AdrMode)
-         BEGIN
-          case ModReg8:
-           CodeLen=PrefixCnt+1+AdrCnt;
-           BAsmCode[PrefixCnt]=0x80+(ALUOrders[z].Code << 3)+AdrPart;
-           memcpy(BAsmCode+PrefixCnt+1,AdrVals,AdrCnt);
-           break;
-          case ModImm:
-           if (NOT ImmIs8()) WrError(1320);
-           else
-            BEGIN
-             CodeLen=2;
-             BAsmCode[0]=0xc6+(ALUOrders[z].Code << 3);
-             BAsmCode[1]=AdrVals[0];
-            END
-           break;
-          default: if (AdrMode!=ModNone) WrError(1350);
-         END
-       END
-      return;
-     END
-    else if ((strncmp(ALUOrders[z].Name,OpPart,strlen(ALUOrders[z].Name))==0) AND (OpPart[strlen(OpPart)-1]=='W'))
-     BEGIN
-      if ((ArgCnt!=2) AND (ArgCnt!=1)) WrError(1110);
-      else if (MomCPU<CPUZ380) WrError(1500);
-      else if ((ArgCnt==2) AND (strcasecmp(ArgStr[1],"HL")!=0)) WrError(1350);
-      else
-       BEGIN
-        OpSize=1; DecodeAdr(ArgStr[ArgCnt]);
-        switch (AdrMode)
-         BEGIN
-          case ModReg16:
-	   if (PrefixCnt>0)      /* wenn Register, dann nie DDIR! */
-            BEGIN
-             BAsmCode[PrefixCnt]=0x87+(ALUOrders[z].Code << 3);
-	     CodeLen=1+PrefixCnt;
-            END
-           else if (AdrPart==3) WrError(1350);
-           else
-            BEGIN
-             if (AdrPart==2) AdrPart=3;
-             BAsmCode[0]=0xed; BAsmCode[1]=0x84+(ALUOrders[z].Code << 3)+AdrPart;
-	     CodeLen=2;
-            END
-           break;
-          case ModReg8:
-           if ((AdrPart!=6) OR (AdrCnt==0)) WrError(1350);
-           else
-            BEGIN
-             BAsmCode[PrefixCnt]=0xc6+(ALUOrders[z].Code << 3);
-             memcpy(BAsmCode+PrefixCnt+1,AdrVals,AdrCnt);
-             CodeLen=PrefixCnt+1+AdrCnt;
-            END
-           break;
-          case ModImm:
-           BAsmCode[0]=0xed; BAsmCode[1]=0x86+(ALUOrders[z].Code << 3);
-           memcpy(BAsmCode+2,AdrVals,AdrCnt); CodeLen=2+AdrCnt;
-           break;
-	  default: if (AdrMode!=ModNone) WrError(1350);
-         END
-       END
-      return;
-     END
-
-   if (Memo("ADD"))
-    BEGIN
-     if (ArgCnt!=2) WrError(1110);
-     else
-      BEGIN
-       DecodeAdr(ArgStr[1]);
-       switch (AdrMode)
-        BEGIN
-         case ModReg8:
-          if (AdrPart!=7) WrError(1350);
-          else
-           BEGIN
-            OpSize=0; DecodeAdr(ArgStr[2]);
-            switch (AdrMode)
-             BEGIN
-              case ModReg8:
-               CodeLen=PrefixCnt+1+AdrCnt;
-               BAsmCode[PrefixCnt]=0x80+AdrPart;
-               memcpy(BAsmCode+1+PrefixCnt,AdrVals,AdrCnt);
-               break;
-              case ModImm:
-               CodeLen=PrefixCnt+1+AdrCnt;
-               BAsmCode[PrefixCnt]=0xc6;
-               memcpy(BAsmCode+1+PrefixCnt,AdrVals,AdrCnt);
-               break;
-	      default: if (AdrMode!=ModNone) WrError(1350);
-             END
-           END
-          break;
-         case ModReg16:
-	  if (AdrPart==3) /* SP */
-	   BEGIN
-	    OpSize=1; DecodeAdr(ArgStr[2]);
-	    switch (AdrMode)
-             BEGIN
-	      case ModImm:
-	       if (MomCPU<CPUZ380) WrError(1500);
-	       else
-	        BEGIN
-	         BAsmCode[0]=0xed; BAsmCode[1]=0x82;
-	         memcpy(BAsmCode+2,AdrVals,AdrCnt);
-	         CodeLen=2+AdrCnt;
-	        END
-               break;
-              default: if (AdrMode!=ModNone) WrError(1350);
-	     END
-	   END
-	  else if (AdrPart!=2) WrError(1350);
-	  else
-	   BEGIN
-	    z=PrefixCnt; /* merkt, ob Indexregister */
-	    OpSize=1; DecodeAdr(ArgStr[2]);
-	    switch (AdrMode)
-             BEGIN
-	      case ModReg16:
-	       if ((AdrPart==2) AND (PrefixCnt!=0) AND ((PrefixCnt!=2) OR (BAsmCode[0]!=BAsmCode[1]))) WrError(1350);
-	       else
-	        BEGIN
-	         if (PrefixCnt==2) PrefixCnt--; CodeLen=1+PrefixCnt;
-	         BAsmCode[PrefixCnt]=0x09+(AdrPart << 4);
-	        END
-               break;
-	      case ModAbs:
-	       if (z!=0) WrError(1350);
-	       else if (MomCPU<CPUZ380) WrError(1500);
-	       else
-	        BEGIN
-	         BAsmCode[PrefixCnt]=0xed; BAsmCode[PrefixCnt+1]=0xc2;
-	         memcpy(BAsmCode+PrefixCnt+2,AdrVals,AdrCnt);
-	         CodeLen=PrefixCnt+2+AdrCnt;
-	        END
-               break;
-              default: if (AdrMode!=ModNone) WrError(1350);
-	     END
-	   END
-          break;
-         default: if (AdrMode!=ModNone) WrError(1350);
-        END
-      END
-     return;
-    END
-
-   if (Memo("ADDW"))
-    BEGIN
-     if ((ArgCnt!=2) AND (ArgCnt!=1)) WrError(1110);
-     else if (MomCPU<CPUZ380) WrError(1500);
-     else if ((ArgCnt==2) AND (strcasecmp(ArgStr[1],"HL")!=0)) WrError(1350);
-     else
-      BEGIN
-       OpSize=1; DecodeAdr(ArgStr[ArgCnt]);
-       switch (AdrMode)
-        BEGIN
-         case ModReg16:
-	  if (PrefixCnt>0)      /* wenn Register, dann nie DDIR! */
-	   BEGIN
-	    BAsmCode[PrefixCnt]=0x87;
-	    CodeLen=1+PrefixCnt;
-	   END
-	  else if (AdrPart==3) WrError(1350);
-	  else
-	   BEGIN
-	    if (AdrPart==2) AdrPart=3;
-	    BAsmCode[0]=0xed; BAsmCode[1]=0x84+AdrPart;
-	    CodeLen=2;
-	   END
-          break;
-         case ModReg8:
-	  if ((AdrPart!=6) OR (AdrCnt==0)) WrError(1350);
-	  else
-	   BEGIN
-	    BAsmCode[PrefixCnt]=0xc6;
-	    memcpy(BAsmCode+PrefixCnt+1,AdrVals,AdrCnt);
-	    CodeLen=PrefixCnt+1+AdrCnt;
-	   END
-          break;
-         case ModImm:
-	  BAsmCode[0]=0xed; BAsmCode[1]=0x86;
-	  memcpy(BAsmCode+2,AdrVals,AdrCnt); CodeLen=2+AdrCnt;
-	  break;
-         default: if (AdrMode!=ModNone) WrError(1350);
-        END
-      END
-     return;
-    END
-
-   if ((Memo("ADC")) OR (Memo("SBC")))
-    BEGIN
-     if (ArgCnt!=2) WrError(1110);
-     else
-      BEGIN
-       DecodeAdr(ArgStr[1]);
-       switch (AdrMode)
-        BEGIN
-         case ModReg8:
-	  if (AdrPart!=7) WrError(1350);
-	  else
-	   BEGIN
-	    OpSize=0; DecodeAdr(ArgStr[2]);
-	    switch (AdrMode)
-             BEGIN
-              case ModReg8:
-	       CodeLen=PrefixCnt+1+AdrCnt;
-	       BAsmCode[PrefixCnt]=0x88+AdrPart;
-	       memcpy(BAsmCode+1+PrefixCnt,AdrVals,AdrCnt);
-	       break;
-	      case ModImm:
-	       CodeLen=PrefixCnt+1+AdrCnt;
-	       BAsmCode[PrefixCnt]=0xce;
-	       memcpy(BAsmCode+1+PrefixCnt,AdrVals,AdrCnt);
-	       break;
-	      default: if (AdrMode!=ModNone) WrError(1350);
-	     END
-	    if ((Memo("SBC")) AND (CodeLen!=0)) BAsmCode[PrefixCnt]+=0x10;
-	   END
-          break; 
-         case ModReg16:
-	  if ((AdrPart!=2) OR (PrefixCnt!=0)) WrError(1350);
-	  else
-	   BEGIN
-	    OpSize=1; DecodeAdr(ArgStr[2]);
-	    switch (AdrMode)
-             BEGIN
-	      case ModReg16:
-	       if (PrefixCnt!=0) WrError(1350);
-	       else
-	        BEGIN
-	         CodeLen=2; BAsmCode[0]=0xed;
-	         BAsmCode[1]=0x42+(AdrPart << 4);
-	         if (Memo("ADC")) BAsmCode[1]+=8;
-	        END
-               break;
-	      default: if (AdrMode!=ModNone) WrError(1350);
-	     END
-	   END
-          break;
-         default: if (AdrMode!=ModNone) WrError(1350);
-        END
-      END
-     return;
-    END
-
-   if ((Memo("ADCW")) OR (Memo("SBCW")))
-    BEGIN
-     if ((ArgCnt!=2) AND (ArgCnt!=1)) WrError(1110);
-     else if (MomCPU<CPUZ380) WrError(1500);
-     else if ((ArgCnt==2) AND (strcasecmp(ArgStr[1],"HL")!=0)) WrError(1350);
-     else
-      BEGIN
-       z=Ord(Memo("SBCW")) << 4;
-       OpSize=1; DecodeAdr(ArgStr[ArgCnt]);
-       switch (AdrMode)
-        BEGIN
-         case ModReg16:
-	  if (PrefixCnt>0)      /* wenn Register, dann nie DDIR! */
-	   BEGIN
-	    BAsmCode[PrefixCnt]=0x8f+z;
-	    CodeLen=1+PrefixCnt;
-	   END
-	  else if (AdrPart==3) WrError(1350);
-	  else
-	   BEGIN
-	    if (AdrPart==2) AdrPart=3;
-	    BAsmCode[0]=0xed; BAsmCode[1]=0x8c+z+AdrPart;
-	    CodeLen=2;
-	   END
-          break;
-         case ModReg8:
-	  if ((AdrPart!=6) OR (AdrCnt==0)) WrError(1350);
-	  else
-	   BEGIN
-	    BAsmCode[PrefixCnt]=0xce + z; /* ANSI :-0 */
-	    memcpy(BAsmCode+PrefixCnt+1,AdrVals,AdrCnt);
-	    CodeLen=PrefixCnt+1+AdrCnt;
-	   END
-          break;
-         case ModImm:
-	  BAsmCode[0]=0xed; BAsmCode[1]=0x8e + z;
-	  memcpy(BAsmCode+2,AdrVals,AdrCnt); CodeLen=2+AdrCnt;
-	  break;
-         default: if (AdrMode!=ModNone) WrError(1350);
-        END
-      END
-     return;
-    END
-
-   if ((Memo("INC")) OR (Memo("DEC")) OR (Memo("INCW")) OR (Memo("DECW")))
-    BEGIN
-     if (ArgCnt!=1) WrError(1110);
-     else
-      BEGIN
-       z=Ord((Memo("DEC")) OR (Memo("DECW")));
-       DecodeAdr(ArgStr[1]);
-       switch (AdrMode)
-        BEGIN
-         case ModReg8:
-	  if (OpPart[strlen(OpPart)-1]=='W') WrError(1350);
-	  else
-	   BEGIN
-	    CodeLen=PrefixCnt+1+AdrCnt;
-	    BAsmCode[PrefixCnt]=0x04+(AdrPart << 3)+z;
-	    memcpy(BAsmCode+PrefixCnt+1,AdrVals,AdrCnt);
-	   END
-          break;
-         case ModReg16:
-	  CodeLen=1+PrefixCnt;
-	  BAsmCode[PrefixCnt]=0x03+(AdrPart << 4)+(z << 3);
-	  break;
-         default: if (AdrMode!=ModNone) WrError(1350);
-        END
-      END
-     return;
-    END
-
-   for (z=0; z<ShiftOrderCnt; z++)
-    if (Memo(ShiftOrders[z]))
-     BEGIN
-      if ((ArgCnt==0) OR (ArgCnt>2)) WrError(1110);
-      else if ((z==6) AND (MomCPU!=CPUZ80U)) WrError(1500); /* SLIA undok. Z80 */
-      else
-       BEGIN
-        OpSize=0;
-        DecodeAdr(ArgStr[ArgCnt]);
-        switch (AdrMode)
-         BEGIN
-          case ModReg8:
-           if ((PrefixCnt>0) AND (AdrPart!=6)) WrError(1350); /* IXL..IYU verbieten */
-           else
-            BEGIN
-             if (ArgCnt==1) OK=True;
-             else if (MomCPU!=CPUZ80U)
-              BEGIN
-               WrError(1500); OK=False;
-              END
-             else if ((AdrPart!=6) OR (PrefixCnt!=1) OR (NOT DecodeReg8(ArgStr[1],&AdrPart)))
-              BEGIN
-               WrError(1350); OK=False;
-              END
-             else OK=True;
-             if (OK)
-              BEGIN
-               CodeLen=PrefixCnt+1+AdrCnt+1;
-               BAsmCode[PrefixCnt]=0xcb;
-               memcpy(BAsmCode+PrefixCnt+1,AdrVals,AdrCnt);
-               BAsmCode[PrefixCnt+1+AdrCnt]=AdrPart+(z << 3);
-               if ((AdrPart==7) AND (z<4)) WrError(10);
-              END
-            END
-           break;
-          default: if (AdrMode!=ModNone) WrError(1350);
-         END
-       END
-      return;
-     END
-    else if ((strncmp(OpPart,ShiftOrders[z],strlen(ShiftOrders[z]))==0) AND (OpPart[strlen(OpPart)-1]=='W'))
-     BEGIN
-      if (ArgCnt!=1) WrError(1110);
-      else if ((MomCPU<CPUZ380) OR (z==6)) WrError(1500);
-      else
-       BEGIN
-        OpSize=1; DecodeAdr(ArgStr[1]);
-        switch (AdrMode)
-         BEGIN
-          case ModReg16:
-           if (PrefixCnt>0)
-            BEGIN
-             BAsmCode[2]=0x04+(z << 3)+((BAsmCode[0] >> 5) & 1);
-             BAsmCode[0]=0xed; BAsmCode[1]=0xcb;
-             CodeLen=3;
-            END
-           else if (AdrPart==3) WrError(1350);
-           else
-            BEGIN
-             if (AdrPart==2) AdrPart=3;
-             BAsmCode[0]=0xed; BAsmCode[1]=0xcb;
-             BAsmCode[2]=(z << 3)+AdrPart;
-             CodeLen=3;
-            END
-           break;
-          case ModReg8:
-           if (AdrPart!=6) WrError(1350);
-           else
-            BEGIN
-             if (AdrCnt==0)
-              BEGIN
-               BAsmCode[0]=0xed; PrefixCnt=1;
-              END
-             BAsmCode[PrefixCnt]=0xcb;
-             memcpy(BAsmCode+PrefixCnt+1,AdrVals,AdrCnt);
-             BAsmCode[PrefixCnt+1+AdrCnt]=0x02+(z << 3);
-             CodeLen=PrefixCnt+1+AdrCnt+1;
-            END
-           break;
-          default: if (AdrMode!=ModNone) WrError(1350);
-         END
-       END
-      return;
-     END
-
-   for (z=0; z<BitOrderCnt; z++)
-    if (Memo(BitOrders[z]))
-     BEGIN
-      if ((ArgCnt!=2) AND (ArgCnt!=3)) WrError(1110);
-      else
-       BEGIN
-        DecodeAdr(ArgStr[ArgCnt]);
-	switch (AdrMode)
-         BEGIN
-	  case ModReg8:
-	   if ((AdrPart!=6) AND (PrefixCnt!=0)) WrError(1350);
-	   else
-	    BEGIN
-             AdrByte=EvalIntExpression(ArgStr[ArgCnt-1],UInt3,&OK);
-	     if (OK)
-	      BEGIN
-               if (ArgCnt==2) OK=True;
-               else if (MomCPU!=CPUZ80U)
-                BEGIN
-                 WrError(1500); OK=False;
-                END
-               else if ((AdrPart!=6) OR (PrefixCnt!=1) OR (z==0) OR (NOT DecodeReg8(ArgStr[1],&AdrPart)))
-                BEGIN
-                 WrError(1350); OK=False;
-                END
-               else OK=True;
-               if (OK)
-                BEGIN
-                 CodeLen=PrefixCnt+2+AdrCnt;
-                 BAsmCode[PrefixCnt]=0xcb;
-                 memcpy(BAsmCode+PrefixCnt+1,AdrVals,AdrCnt);
-                 BAsmCode[PrefixCnt+1+AdrCnt]=AdrPart+(AdrByte << 3)+((z+1) << 6);
-                END
-              END
-	    END
-           break;
-          default: if (AdrMode!=ModNone) WrError(1350); 
-	 END
-       END
-      return;
-     END
-
-   if (Memo("MLT"))
-    BEGIN
-     if (ArgCnt!=1) WrError(1110);
-     else if (MomCPU<CPUZ180) WrError(1500);
-     else
-      BEGIN
-       DecodeAdr(ArgStr[1]);
-       if ((AdrMode!=ModReg16) OR (PrefixCnt!=0)) WrError(1350);
-       else
-	BEGIN
-	 BAsmCode[CodeLen]=0xed; BAsmCode[CodeLen+1]=0x4c+(AdrPart << 4);
-	 CodeLen=2;
-	END
-      END
-     return;
-    END
-
-   if ((Memo("DIVUW")) OR (Memo("MULTW")) OR (Memo("MULTUW")))
-    BEGIN
-     if (ArgCnt==1)
-      BEGIN
-       strcpy(ArgStr[2],ArgStr[1]); strmaxcpy(ArgStr[1],"HL",255); ArgCnt=2;
-      END
-     if (MomCPU<CPUZ380) WrError(1500);
-     else if (ArgCnt!=2) WrError(1110);
-     else if (strcasecmp(ArgStr[1],"HL")!=0) WrError(1350);
-     else
-      BEGIN
-       AdrByte=Ord(*OpPart=='D');
-       z=Ord(OpPart[strlen(OpPart)-2]=='U');
-       OpSize=1; DecodeAdr(ArgStr[ArgCnt]);
-       switch (AdrMode)
-        BEGIN
-         case ModReg8:
-	  if ((AdrPart!=6) OR (PrefixCnt==0)) WrError(1350);
-	  else
-	   BEGIN
-	    BAsmCode[PrefixCnt]=0xcb;
-	    memcpy(BAsmCode+PrefixCnt+1,AdrVals,AdrCnt);
-	    BAsmCode[PrefixCnt+1+AdrCnt]=0x92+(z << 3)+(AdrByte << 5);
-	    CodeLen=PrefixCnt+1+AdrCnt+1;
-	   END
-          break;
-         case ModReg16:
-	  if (AdrPart==3) WrError(1350);
-	  else if (PrefixCnt==0)
-	   BEGIN
-	    if (AdrPart==2) AdrPart=3;
-	    BAsmCode[0]=0xed; BAsmCode[1]=0xcb;
-	    BAsmCode[2]=0x90+AdrPart+(z << 3)+(AdrByte << 5);
-	    CodeLen=3;
-	   END
-	  else
-	   BEGIN
-	    BAsmCode[2]=0x94+((BAsmCode[0] >> 5) & 1)+(z << 3)+(AdrByte << 5);
-	    BAsmCode[0]=0xed; BAsmCode[1]=0xcb;
-	    CodeLen=3;
-	   END
-          break;
-         case ModImm:
-	  BAsmCode[0]=0xed; BAsmCode[1]=0xcb;
-	  BAsmCode[2]=0x97+(z << 3)+(AdrByte << 5);
-	  memcpy(BAsmCode+3,AdrVals,AdrCnt);
-	  CodeLen=3+AdrCnt;
-          break;
-         default: if (AdrMode!=ModNone) WrError(1350);
-        END
-      END
-     return;
-    END
-
-   if (Memo("TST"))
-    BEGIN
-     if (ArgCnt!=1) WrError(1110);
-     else if (MomCPU<CPUZ180) WrError(1500);
-     else
-      BEGIN
-       OpSize=0; DecodeAdr(ArgStr[1]);
-       switch (AdrMode)
-        BEGIN
-         case ModReg8:
-	  if (PrefixCnt!=0) WrError(1350);
-	  else
-	   BEGIN
-	    BAsmCode[0]=0xed; BAsmCode[1]=4+(AdrPart << 3);
-	    CodeLen=2;
-	   END
-          break;
-         case ModImm:
-	  BAsmCode[0]=0xed; BAsmCode[1]=0x64; BAsmCode[2]=AdrVals[0];
-	  CodeLen=3;
-	  break;
-         default: if (AdrMode!=ModNone) WrError(1350);
-        END
-      END
-     return;
-    END
-
-   if (Memo("SWAP"))
-    BEGIN
-     if (ArgCnt!=1) WrError(1110);
-     else if (MomCPU<CPUZ380) WrError(1500);
-     else
-      BEGIN
-       DecodeAdr(ArgStr[1]);
-       switch (AdrMode)
-        BEGIN
-         case ModReg16:
-          if (AdrPart==3) WrError(1350);
-	  else if (PrefixCnt==0)
-	   BEGIN
-	    if (AdrPart==2) AdrPart=3;
-	    BAsmCode[0]=0xed; BAsmCode[1]=0x0e + (AdrPart << 4); /*?*/
-	    CodeLen=2;
-	   END
-	  else
-	   BEGIN
-	    BAsmCode[PrefixCnt]=0x3e; CodeLen=PrefixCnt+1;
-	   END
-          break;
-         default: if (AdrMode!=ModNone) WrError(1350);
-        END
-      END
-     return;
-    END
+   if (CodeAri()) return;
 
 /*-------------------------------------------------------------------------*/
 /* Ein/Ausgabe */
@@ -2350,12 +2384,20 @@ BEGIN
       BEGIN
        AdrLong=EvalAbsAdrExpression(ArgStr[ArgCnt],&OK);
        if (OK)
+#ifdef __STDC__
         if ((AdrLong & 0xffff0000u)==0)
+#else
+        if ((AdrLong & 0xffff0000)==0)
+#endif
          BEGIN
           CodeLen=3; BAsmCode[0]=0xc2+z;
 	  BAsmCode[1]=Lo(AdrLong); BAsmCode[2]=Hi(AdrLong);
          END
+#ifdef __STDC__
         else if ((AdrLong & 0xff000000u)==0)
+#else
+        else if ((AdrLong & 0xff000000)==0)
+#endif
          BEGIN
           ChangeDDPrefix("IB");
           CodeLen=4+PrefixCnt; BAsmCode[PrefixCnt]=0xc2+z;
@@ -2395,12 +2437,20 @@ BEGIN
       BEGIN
        AdrLong=EvalAbsAdrExpression(ArgStr[ArgCnt],&OK);
        if (OK)
+#ifdef __STDC__
         if ((AdrLong & 0xffff0000u)==0)
+#else
+        if ((AdrLong & 0xffff0000)==0)
+#endif
          BEGIN
           CodeLen=3; BAsmCode[0]=0xc4+z;
 	  BAsmCode[1]=Lo(AdrLong); BAsmCode[2]=Hi(AdrLong);
          END
+#ifdef __STDC__
         else if ((AdrLong & 0xff000000u)==0)
+#else
+        else if ((AdrLong & 0xff000000)==0)
+#endif
          BEGIN
           ChangeDDPrefix("IB");
           CodeLen=4+PrefixCnt; BAsmCode[PrefixCnt]=0xc4+z;
@@ -2443,7 +2493,7 @@ BEGIN
        if (OK)
         BEGIN
          AdrLInt-=EProgCounter()+2;
-         if ((AdrLInt<=0x7f) AND (AdrLInt>=-0x80))
+         if ((AdrLInt<=0x7fl) AND (AdrLInt>=-0x80l))
           BEGIN
            CodeLen=2; BAsmCode[0]=z << 3;
            BAsmCode[1]=AdrLInt & 0xff;
@@ -2453,7 +2503,7 @@ BEGIN
           else
            BEGIN
 	    AdrLInt-=2;
-            if ((AdrLInt<=0x7fff) AND (AdrLInt>=-0x8000))
+            if ((AdrLInt<=0x7fffl) AND (AdrLInt>=-0x8000l))
              BEGIN
               CodeLen=4; BAsmCode[0]=0xdd; BAsmCode[1]=z << 3;
               BAsmCode[2]=AdrLInt & 0xff;
@@ -2462,7 +2512,7 @@ BEGIN
             else
              BEGIN
               AdrLInt--;
-              if ((AdrLInt<=0x7fffff) AND (AdrLInt>=-0x800000))
+              if ((AdrLInt<=0x7fffffl) AND (AdrLInt>=-0x800000l))
                BEGIN
                 CodeLen=5; BAsmCode[0]=0xfd; BAsmCode[1]=z << 3;
                 BAsmCode[2]=AdrLInt & 0xff;
@@ -2500,7 +2550,7 @@ BEGIN
         if (OK)
          BEGIN
           AdrLInt-=EProgCounter()+3;
-          if ((AdrLInt<=0x7f) AND (AdrLInt>=-0x80))
+          if ((AdrLInt<=0x7fl) AND (AdrLInt>=-0x80l))
            BEGIN
             CodeLen=3; BAsmCode[0]=0xed; BAsmCode[1]=0xc4+z;
             BAsmCode[2]=AdrLInt & 0xff;
@@ -2508,7 +2558,7 @@ BEGIN
           else
            BEGIN
             AdrLInt--;
-            if ((AdrLInt<=0x7fff) AND (AdrLInt>=-0x8000))
+            if ((AdrLInt<=0x7fffl) AND (AdrLInt>=-0x8000l))
 	     BEGIN
               CodeLen=4; BAsmCode[0]=0xdd; BAsmCode[1]=0xc4+z;
               BAsmCode[2]=AdrLInt & 0xff;
@@ -2517,7 +2567,7 @@ BEGIN
             else
              BEGIN
               AdrLInt--;
-              if ((AdrLInt<=0x7fffff) AND (AdrLInt>=-0x800000))
+              if ((AdrLInt<=0x7fffffl) AND (AdrLInt>=-0x800000l))
                BEGIN
                 CodeLen=5; BAsmCode[0]=0xfd; BAsmCode[1]=0xc4+z;
                 BAsmCode[2]=AdrLInt & 0xff;
@@ -2541,7 +2591,7 @@ BEGIN
        if (OK)
         BEGIN
          AdrLInt-=EProgCounter()+2;
-         if ((AdrLInt<=0x7f) AND (AdrLInt>=-0x80))
+         if ((AdrLInt<=0x7fl) AND (AdrLInt>=-0x80l))
           BEGIN
            CodeLen=2; BAsmCode[0]=0x10; BAsmCode[1]=Lo(AdrLInt);
 	  END
@@ -2549,7 +2599,7 @@ BEGIN
          else
           BEGIN
            AdrLInt-=2;
-           if ((AdrLInt<=0x7fff) AND (AdrLInt>=-0x8000))
+           if ((AdrLInt<=0x7fffl) AND (AdrLInt>=-0x8000l))
             BEGIN
              CodeLen=4; BAsmCode[0]=0xdd; BAsmCode[1]=0x10;
              BAsmCode[2]=AdrLInt & 0xff;
@@ -2558,7 +2608,7 @@ BEGIN
            else
             BEGIN
 	     AdrLInt--;
-             if ((AdrLInt<=0x7fffff) AND (AdrLInt>=-0x800000))
+             if ((AdrLInt<=0x7fffffl) AND (AdrLInt>=-0x800000l))
               BEGIN
                CodeLen=5; BAsmCode[0]=0xfd; BAsmCode[1]=0x10;
                BAsmCode[2]=AdrLInt & 0xff;

@@ -8,7 +8,11 @@
 /*                                                                           */
 /*****************************************************************************/
 
-typedef void (*TSwitchProc)(void);
+typedef void (*TSwitchProc)(
+#ifdef __PROTOS__
+void
+#endif
+);
 
 
 extern Word ErrorCount,WarnCount;
@@ -58,6 +62,8 @@ extern void KillSuffix(char *s);
 
 extern char *NamePart(char *Name);
 
+extern char *PathPart(char *Name);
+
 
 extern char *FloatString(Double f);
 
@@ -96,6 +102,13 @@ extern void CompressLine(char *TokNam, Byte Num, char *Line);
 extern void ExpandLine(char *TokNam, Byte Num, char *Line);
 
 extern void KillCtrl(char *Line);
+
+
+extern void ChkStack(void);
+
+extern void ResetStack(void);
+
+extern LongWord StackRes(void);
 
 
 extern void AddCopyright(char *NewLine);
