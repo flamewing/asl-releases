@@ -5,13 +5,13 @@
 /* Hauptmodul                                                                */
 /*                                                                           */
 /* Historie:  4. 5.1996 Grundsteinlegung                                     */
-/*           24. 6.1998 Zeichenübersetzungstabellen                          */
+/*           24. 6.1998 Zeichen³bersetzungstabellen                          */
 /*           30. 6.1998 Ausgabe in MacPro-File auch wenn Zeile nur aus       */
 /*                      Kommentar oder Label besteht                         */
 /*           18. 7.1998 IRPC-Statement                                       */
 /*           24. 7.1998 Debug-Modus NoICE                                    */
 /*           25. 7.1998 Formate glattgezogen                                 */
-/*           16. 8.1998 Datei-Adressbereiche zurücksetzen                    */
+/*           16. 8.1998 Datei-Adressbereiche zur³cksetzen                    */
 /*           17. 8.1998 InMacroFlag nach asmdef verschoben                   */
 /*           19. 8.1998 BranchExt-Initialisierung                            */
 /*           25. 8.1998 i960-Initialisierung                                 */
@@ -53,6 +53,7 @@
 /*                      initialization, to allow CPU-specific override       */
 /*           2001-07-07 added intiialization of C54x generator               */
 /*           2001-10-20 GNU error style possible                             */
+/*           2001-12-31 added IntLabel directive                             */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -213,6 +214,8 @@ BEGIN
    (*PInp)->Restorer = NULL_Restorer;
    (*PInp)->GetPos = NULL_GetPos;
    (*PInp)->Macro = Nil;
+   (*PInp)->SaveAttr[0] = '\0';
+   (*PInp)->SaveLabel[0] = '\0';
 END
 
 /*=========================================================================*/
@@ -466,9 +469,12 @@ BEGIN
      l = FirstOutputTag->Params;
      for (z = 1; z <= FirstOutputTag->Mac->ParamCount; z++)
       CompressLine(GetStringListNext(&l), z, s);
-     if (HasAttrs) CompressLine(AttrName, ParMax + 1, s);
+     if (HasAttrs)
+       CompressLine(AttrName, ParMax + 1, s);
      CompressLine(ArgCName, ParMax + 2, s);
      CompressLine(AllArgName, ParMax + 3, s);
+     if (FirstOutputTag->Mac->LocIntLabel)
+       CompressLine(LabelName, ParMax + 4, s);
 
      AddStringListLast(&(FirstOutputTag->Mac->FirstLine), s);
     END
@@ -525,9 +531,12 @@ BEGIN
 
    /* process special parameters */
 
-   if (HasAttrs) ExpandLine(PInp->SaveAttr, ParMax + 1, erg);
+   if (HasAttrs)
+     ExpandLine(PInp->SaveAttr, ParMax + 1, erg);
    ExpandLine(PInp->NumArgs, ParMax + 2, erg);
    ExpandLine(PInp->AllArgs, ParMax + 3, erg);
+   if (PInp->Macro->LocIntLabel)
+     ExpandLine(PInp->SaveLabel, ParMax + 4, erg);
 
    CurrLine = PInp->StartLine;
    InMacroFlag = True;
@@ -591,7 +600,7 @@ BEGIN
    int z1,z2;
    POutputTag Neu;
 
-   Boolean DoMacExp,DoPublic;
+   Boolean DoMacExp, DoPublic, DoIntLabel;
    LongInt HSect;
    Boolean ErrFlag;
 
@@ -619,7 +628,7 @@ BEGIN
 
    /* check arguments, sort out control directives */
 
-   DoMacExp = LstMacroEx; DoPublic = False;
+   DoMacExp = LstMacroEx; DoPublic = False; DoIntLabel = False;
    *PList = '\0'; z2 = 0;
    for (z1 = 1; z1 <= ArgCnt; z1++)
     if ((ArgStr[z1][0] == '{') AND (ArgStr[z1][strlen(ArgStr[z1])-1] == '}'))
@@ -627,6 +636,10 @@ BEGIN
       strcpy(ArgStr[z1], ArgStr[z1] + 1); ArgStr[z1][strlen(ArgStr[z1])-1] = '\0';
       if (ReadMacro_SearchArg(ArgStr[z1], "EXPORT", &(Neu->DoExport)));
       else if (ReadMacro_SearchArg(ArgStr[z1], "EXPAND", &DoMacExp)) 
+       BEGIN
+        strmaxcat(PList, ",", 255); strmaxcat(PList, ArgStr[z1], 255);
+       END
+      else if (ReadMacro_SearchArg(ArgStr[z1], "INTLABEL", &DoIntLabel)) 
        BEGIN
         strmaxcat(PList, ",", 255); strmaxcat(PList, ArgStr[z1], 255);
        END
@@ -689,7 +702,9 @@ BEGIN
    OneMacro->UseCounter = 0;
    OneMacro->Name = strdup(LabPart);
    OneMacro->ParamCount = z2;
-   OneMacro->FirstLine = Nil; OneMacro->LocMacExp = DoMacExp;
+   OneMacro->FirstLine = Nil;
+   OneMacro->LocMacExp = DoMacExp;
+   OneMacro->LocIntLabel = DoIntLabel;
 
    FirstOutputTag = Neu;
 END
@@ -753,6 +768,8 @@ BEGIN
      Tag->Macro     = OneMacro;
      strmaxcpy(Tag->SpecName, OneMacro->Name, 255);
      strmaxcpy(Tag->SaveAttr, AttrPart, 255);
+     if (OneMacro->LocIntLabel)
+       strmaxcpy(Tag->SaveLabel, LabPart, 255);
      Tag->IsMacro   = True;
 
      /* 2. inflate parameter count to at least macro's argument count */
@@ -1051,7 +1068,7 @@ BEGIN
    FirstOutputTag = Neu;
 END
 
-/*--- IRPC: dito für Zeichen eines Strings ---------------------------------*/
+/*--- IRPC: dito f³r Zeichen eines Strings ---------------------------------*/
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 /* Diese Routine liefert bei der Expansion eines IRPC-Statements die expan-
@@ -1698,7 +1715,7 @@ END
 BEGIN
    Byte z;
    PMacroRec OneMacro;
-   Boolean SearchMacros,Found;
+   Boolean SearchMacros, Found, IsMacro;
    String tmp,tmp2;
    PStructure ZStruct;
 
@@ -1718,16 +1735,18 @@ BEGIN
 
    /* Prozessor eingehaengt ? */
 
-   if (FirstOutputTag!=Nil)
+   if (FirstOutputTag)
     BEGIN
      FirstOutputTag->Processor(); return;
     END
 
-   /* ansonsten Code erzeugen */
+   /* ansonsten Code erzeugen: check for macro here */
+
+   IsMacro = (SearchMacros) && (FoundMacro(&OneMacro));
 
    /* evtl. voranstehendes Label ablegen */
 
-   if (IfAsm)
+   if ((IfAsm) && ((!IsMacro) || (!OneMacro->LocIntLabel)))
     BEGIN
      if (HasLabel())
       BEGIN 
@@ -1754,15 +1773,23 @@ BEGIN
     BEGIN
      case 'I':
       /* Makroliste ? */
-      if ((Found=Memo("IRP"))) ExpandIRP();
-      else if ((Found=Memo("IRPC"))) ExpandIRPC();
+      Found = True;
+      if (Memo("IRP")) ExpandIRP();
+      else if (Memo("IRPC")) ExpandIRPC();
+      else Found = False;
       break;
      case 'R':
       /* Repetition ? */
-      if ((Found=Memo("REPT"))) ExpandREPT(); break;
+      Found = True;
+      if (Memo("REPT")) ExpandREPT();
+      else Found = False;
+      break;
      case 'W':
       /* bedingte Repetition ? */
-      if ((Found=Memo("WHILE"))) ExpandWHILE(); break;
+      Found = True;
+      if (Memo("WHILE")) ExpandWHILE();
+      else Found = False;
+      break;
     END
 
    /* bedingte Assemblierung ? */
@@ -1774,20 +1801,31 @@ BEGIN
      BEGIN
       case 'M':
        /* Makrodefinition ? */
-       if ((Found=Memo(("MACRO")))) ReadMacro(); break;
+       Found = True;
+       if (Memo("MACRO")) ReadMacro();
+       else Found = False;
+       break;
       case 'E':
        /* Abbruch Makroexpansion ? */
-       if ((Found=Memo(("EXITM")))) ExpandEXITM(); break;
+       Found = True;
+       if (Memo("EXITM")) ExpandEXITM();
+       else Found = False;
+       break;
       case 'S':
        /* shift macro arguments ? */
-       if ((Found=Memo(("SHIFT")))) ExpandSHIFT(); break;
+       Found = True;
+       if (Memo("SHIFT")) ExpandSHIFT();
+       else Found = False;
+       break;
       case 'I':
        /* Includefile? */
-       if ((Found=Memo(("INCLUDE"))))
+       Found = True;
+       if (Memo("INCLUDE"))
         BEGIN
          ExpandINCLUDE(True);
          MasterFile=False;
         END
+       else Found = False;
        break;
      END
 
@@ -1795,7 +1833,7 @@ BEGIN
 
    /* Makroaufruf ? */
 
-   else if ((SearchMacros) AND (FoundMacro(&OneMacro)))
+   else if (IsMacro)
     BEGIN
      if (IfAsm) ExpandMacro(OneMacro);
      if (IfAsm) strmaxcpy(ListLine,"(MACRO)",255);
@@ -3192,7 +3230,6 @@ BEGIN
     BEGIN
      endian_init(); nls_init(); bpemu_init(); stdhandl_init();
      strutil_init(); stringlists_init(); chunks_init();
-
      NLS_Initialize();
 
      nlmessages_init("as.msg",*argv,MsgId1,MsgId2); ioerrs_init(*argv);

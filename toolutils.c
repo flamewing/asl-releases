@@ -35,8 +35,6 @@
 
 #include "version.h"
 
-LongWord Magic=0x12372d44;
-
 /****************************************************************************/
 
 static Boolean DoFilter;
@@ -222,7 +220,8 @@ BEGIN
    PRelocEntry PEntry;
    PExportEntry PExp;
    Boolean OK = FALSE;
-   LongWord StringLen, StringPos, z;
+   LongWord StringLen, StringPos;
+   LongInt z;
    
    /* get memory for structure */
 
@@ -390,18 +389,11 @@ END
 
 	void toolutils_init(char *ProgPath)
 BEGIN
-   Word z;
-   LongWord XORVal;
+   version_init();
 
    opencatalog(&MsgCat,"tools.msg",ProgPath,MsgId1,MsgId2);
 
    FilterCnt=0; DoFilter=False;
-   for (z=0; z<strlen(InfoMessCopyright); z++)
-    BEGIN
-     XORVal=InfoMessCopyright[z];
-     XORVal=XORVal << (((z+1)%4)*8);
-     Magic=Magic^XORVal;
-    END
 END
 
 	Boolean AddressWildcard(char *addr)

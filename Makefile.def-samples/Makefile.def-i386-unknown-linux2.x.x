@@ -6,9 +6,10 @@ CC = gcc
 LD = gcc
 CFLAGS = -g -O3 -mcpu=i486 -fomit-frame-pointer -Wall
 LDFLAGS =
-#            ^^^^^
-#            |||||
+#                    ^^^^^
+#                    |||||
 # adapt this to your target cpu (386/486 or higher)
+# note that older gcc versions require -m[34]86 instead of -mcpu=i[34]86
 # -------------------------------------------------------------------------
 # directories where binaries, includes, and manpages should go during
 # installation

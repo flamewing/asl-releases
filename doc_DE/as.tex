@@ -22,7 +22,6 @@
 
 \font\mengft=cmss9 scaled \magstep1
 \def \rz{\hbox{\mengft{I \hskip -1.7mm R}}}
-
 \makeindex
 
 %%===========================================================================
@@ -37,14 +36,14 @@
 \begin{raggedright}
 {\large Alfred Arnold}\\
 \vspace{1cm}\par
-{\huge Makroassembler AS V1.41r8}\\
+{\huge Makroassembler AS V1.42}\\
 \rule{9.5cm}{0.3mm}\\
 \vspace{2mm}\par
 {\huge Benutzeranleitung}
 
 \vspace{1cm}\par
 
-{\large Stand Mai 2001}
+{\large Stand Januar 2002}
 \end{raggedright}
 
 \clearpage
@@ -244,6 +243,7 @@ folgende Prozessorfamilien implementiert:
 \item{Texas Instruments TMS3202x}
 \item{Texas Instruments TMS320C3x}
 \item{Texas Instruments TMS320C20x/TMS320C5x}
+\item{Texas Instruments TMS320C54x}
 \item{Texas Instruments TMS320C6x}
 \item{Texas Instruments TMS9900}
 \item{Texas Instruments TMS7000}
@@ -2365,11 +2365,11 @@ und \tty{JBIT} genutzt werden.
 \subsection{PORT}
 \ttindex{PORT}
 
-{\em G"ultigkeit: 8080/8085/8086, XA, Z80, 320xx, TLCS-47, AVR}
+{\em G"ultigkeit: 8080/8085/8086, XA, Z80, 320C2x/5x, TLCS-47, AVR}
 
 \tty{PORT} arbeitet analog zu \tty{SFR}, nur wird das Symbol dem I/O-Adre"sbereich
 zugeordnet.  Erlaubte Werte sind 0..7 beim 3201x, 0..15 beim 320C2x,
-0..65535 beim 8086, 0..63 beim AVR und 0..255 beim Rest.
+0..65535 beim 8086 und 320C5x, 0..63 beim AVR und 0..255 beim Rest.
 \par
 Beispiel: eine PIO 8255 liege auf Adresse 20H:
 \begin{verbatim}
@@ -2659,7 +2659,7 @@ angegeben, ist die vorgegebene Startadresse in einem Segment (d.h. die ohne
 \begin{table*}[htbp]
 \begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
 \hline
-\tin{Prozessor} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BITDATA} & \tin{IO} & \tin{REG} & \tin{ROMDATA} \\
+\tin{Ziel} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BITDATA} & \tin{IO} & \tin{REG} & \tin{ROMDATA} \\
 \hline
 \hline
 \input{taborg1.tex}
@@ -2671,15 +2671,15 @@ angegeben, ist die vorgegebene Startadresse in einem Segment (d.h. die ohne
 \begin{table*}[htbp]
 \begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
 \hline
-\tin{Prozessor} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BITDATA} & \tin{IO} & \tin{REG} & \tin{ROMDATA} \\
+\tin{Ziel} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BITDATA} & \tin{IO} & \tin{REG} & \tin{ROMDATA} \\
 \hline
 \hline
 \input{taborg2.tex}
 \hline
-\multicolumn{10}{|l|}{* Da der 8051 kein RAM jenseits 80h hat, mu"s der Initialwert f"ur den 8051} \\
+\multicolumn{10}{|l|}{$^{*}$ Da der 8051 kein RAM jenseits 80h hat, mu"s der Initialwert f"ur den 8051} \\
 \multicolumn{10}{|l|}{  als Zielprozessor auf jeden Fall mit \tty{ORG} angepa"st werden!!} \\
 \hline
-\multicolumn{10}{|l|}{+ Da der Z180 weiterhin logisch nur 64K ansprechen kann, ist der} \\
+\multicolumn{10}{|l|}{$^{+}$ Da der Z180 weiterhin logisch nur 64K ansprechen kann, ist der} \\
 \multicolumn{10}{|l|}{ganze Adre"sraum nur mittels \tty{PHASE}-Anweisungen erreichbar!} \\
 \hline
 \end{tabular}\end{center}
@@ -2689,7 +2689,7 @@ angegeben, ist die vorgegebene Startadresse in einem Segment (d.h. die ohne
 \begin{table*}[htbp]
 \begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
 \hline
-\tin{Prozessor} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BITDATA} & \tin{IO} & \tin{REG} & \tin{ROMDATA} \\
+\tin{Ziel} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BITDATA} & \tin{IO} & \tin{REG} & \tin{ROMDATA} \\
 \hline
 \hline
 \input{taborg3.tex}
@@ -2701,7 +2701,7 @@ angegeben, ist die vorgegebene Startadresse in einem Segment (d.h. die ohne
 \begin{table*}[htbp]
 \begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
 \hline
-\tin{Prozessor} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BITDATA} & \tin{IO} & \tin{REG} & \tin{ROMDATA} \\
+\tin{Ziel} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BITDATA} & \tin{IO} & \tin{REG} & \tin{ROMDATA} \\
 \hline
 \hline
 \input{taborg4.tex}
@@ -3095,13 +3095,18 @@ implementieren.  Die Unterscheidung zwischen den verschiedenen
 C5x-Prozessoren wird von AS momentan nicht ausgenutzt.
 %%-----------
 \begin{quote}
-au) TMS9900
+au) 320C541
+\end{quote}  
+Dies ist momentan der Pepr"asentant f"ur die TMS320C54x-Familie...
+%%-----------
+\begin{quote}
+av) TMS9900
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-av) \> TMS70C00, TMS70C20, TMS70C40, \\
+aw) \> TMS70C00, TMS70C20, TMS70C40, \\
     \> TMS70CT20, TMS70CT40, \\
     \> TMS70C02, TMS70C42, TMS70C82, \\
     \> TMS70C08, TMS70C48 \\
@@ -3116,22 +3121,22 @@ interne RAM-Menge, unterscheiden sich also nur in der Menge
 eingebauten ROMs.
 %%-----------
 \begin{quote}
-aw) 370C010, 370C020, 370C030, 370C040 und 370C050
+ax) 370C010, 370C020, 370C030, 370C040 und 370C050
 \end{quote}
 Analog zur MCS-51-Familie werden die unterschiedlichen Typen nur
 zur Unterscheidung der Peripherie in STDDEF37.INC genutzt, der
 Befehlssatz ist identisch.
 %%-----------
 \begin{quote}
-ax) MSP430
+ay) MSP430
 \end{quote}
 %%-----------
 \begin{quote}
-ay) SC/MP
+az) SC/MP
 \end{quote}
 %%-----------
 \begin{quote}
-az) COP87L84
+ba) COP87L84
 \end{quote}
 Dies ist das momentan einzige unterst"utzte Mitglied der COP8-Familie 
 von National Semiconductor.  Mir ist bekannt, da"s die Familie 
@@ -3142,7 +3147,7 @@ ein Anfang, und die Dokumentation von National ist ziemlich umfangreich...
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-ba) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
+bb) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
     \> SC14420, SC14421, SC14422, SC14424 \\
 \end{tabbing}
 \end{quote}
@@ -3152,7 +3157,7 @@ unterst"utzt werden und deren Architektur im Laufe der Zeit optimiert
 wurde.
 %%-----------
 \begin{quote}
-bb) 7810 $\rightarrow$ 78C10
+bc) 7810 $\rightarrow$ 78C10
 \end{quote}
 Die NMOS-Version besitzt keinen STOP-Modus; der entspechende Befehl sowie
 das ZCM-Register fehlen demzufolge.  \bb{VORSICHT!} NMOS- und CMOS-Version
@@ -3161,7 +3166,7 @@ differieren zum Teil in den Reset-Werten einiger Register!
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bc) \> 75402, \\
+bd) \> 75402, \\
     \> 75004, 75006, 75008, \\
     \> 75268, \\
     \> 75304, 75306, 75308, 75312, 75316, \\
@@ -3177,26 +3182,26 @@ unterscheiden sich einmal durch ihre on-chip-Peripherie und
 zum anderen durch die M"achtigkeit des Befehlssatzes.
 %%-----------
 \begin{quote}
-bd) 78070
+be) 78070
 \end{quote}
 Dies ist das einzige, mir momentan vertraute Mitglied der
 78K0-Familie von NEC.  Es gelten "ahnliche Aussagen wie zur
 COP8-Familie!
 %%-----------
 \begin{quote}
-be) 7720 $\rightarrow$ 7725
+bf) 7720 $\rightarrow$ 7725
 \end{quote}
 Der $\mu$PD7725 bietet im Vergleich zu seinem Vorg"anger gr"o"sere
 Adre"sr"aume und einige zus"atzliche Befehle. {\bf VORSICHT!}  Die
 Prozessoren sind nicht zueinander bin"arkompatibel!
 %%-----------
 \begin{quote}
-bf) 77230
+bg) 77230
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
-bg) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
+bh) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
     \> SYM53C875, SYM53C895
 \end{tabbing}
 \end{quote}
@@ -3205,12 +3210,12 @@ einige Befehlsvarianten nicht, au"serdem unterscheiden sie sich in ihrem
 Satz interner Register.
 %%-----------
 \begin{quote}
-bh) MB89190
+bi) MB89190
 \end{quote}
 Dieser Prozessortyp repr"asentiert die F$^{2}$MC8L-Serie von Fujitsu...
 %%-----------
 \begin{quote}
-bi) MB9500
+bj) MB9500
 \end{quote}
 ...so wie dieser es momentan f"ur die 16-Bit-Varianten von Fujitsu tut!
 
@@ -4655,6 +4660,10 @@ sind.  Es sind folgende Steuerparameter definiert:
       wird nicht in der Datei abgelegt.  Ist zus"atzlich die
       \tty{GLOBAL}-Option gegeben worden, so wird das Makro mit dem
       modifizierten Namen abgelegt.}
+\item{\tty{INTLABEL/NOINTLABEL} : legen fest, ob ein in der Zeile mit
+      dem Makroaufruf definiertes Label innerhalb des Rumpfes als
+      zus"atzlicher Parameter verwendet werden soll, als einfach
+      nur die Adresse dieser Zeile zu 'labeln'.}
 \end{itemize}
 Diese eben beschriebenen Steuerparameter werden von AS aus der
 Parameterliste ausgefiltert, haben also keine weitere Wirkung in
@@ -4711,7 +4720,7 @@ ergibt also
         CALL    Modul_Funktion
 \end{verbatim}
 \par
-Neben den am Makro selber angegebenen Parametern existieren drei weitere
+Neben den am Makro selber angegebenen Parametern existieren vier weitere
 'implizite' Parameter, die immer vorhanden sind und daher nicht als eigene
 Makroparameter verwendet werden sollten:
 \begin{itemize}
@@ -4725,8 +4734,40 @@ Makroparameter verwendet werden sollten:
       an das Makro "ubergebenen Argumente.  Zu beachten ist allerdings,
       da"s diese Zahl niemals geringer als die Zahl der formalen Parameter
       ist, da AS fehlende Argumente mit Leerstrings auff"ullt!}
+\item{{\tt \_\_LABEL\_\_} bezeichnet das Label, das in der das Makro aufrufenden
+      Zeile stand.  Diese Ersetzung findet nur statt, wenn f"ur dieses
+      Makro die {\tt INTLABEL}-Option gesetzt wurde!}
 \end{itemize}
-\par
+
+Der Zweck, ein Label 'intern' im Makro verwenden zu k"onnen, ist sicher
+nicht unmittelbar einleuchtend.  Den einen oder anderen Fall mag es ja
+geben, in dem es sinnvoll ist, den Einsprungpunkt in ein Makro irgendwo
+in seinen Rumpf zu verschieben.  Der wichtigste Anwendungsfall sind aber
+TI-Signalprozessoren, die eine Parallelisierung von Befehlen durch einen
+doppelten senkrechten Strich in der Label-Spalte kennzeichnen, etwa so:
+\begin{verbatim}
+    instr1
+||  instr2
+\end{verbatim}
+(da die beiden Instruktionen im Maschinencode in ein Wort verschmelzen,
+kann man die zweite Instruktion "ubrigens gar nicht separat anspringen - 
+man verliert also durch das Belegen der Label-Position nichts).  Das
+Problem ist aber, da"s einige 'Bequemlichkeits-Befehle' durch Makros
+realisiert werden.  Ein vor das Makro geschriebenes
+Parallelisierungssymbol w"urde normalerweise dem Makro selber zugeordnet,
+{\it nicht dem ersten Befehl im Makro selber}.  Aber mit diesem Trick
+funktioniert's:
+\begin{verbatim}
+myinstr    macro {INTLABEL}
+__LABEL__  instr2
+           endm
+
+           instr1
+||         myinstr
+\end{verbatim}
+Das Ergebnis nach der Expansion von {\tt myinstr} ist identisch zu dem
+vorherigen Beispiel ohne Makro.
+
 Rekursion von Makros, also das wiederholte Aufrufen eines Makros innerhalb
 seines Rumpfes oder indirekt "uber andere von ihm aufgerufene Makros ist
 vollkommen legal.  Wie bei jeder Rekusion mu"s man dabei nat"urlich
@@ -9124,6 +9165,10 @@ Angaben:
                 Attribut mu"s genau ein Zeichen lang sein; weder mehr noch
                 weniger ist erlaubt.}
                {keines}
+\errentry{1107}{undefiniertes Attribut}
+               {Fehler}
+               {Das an einem Befehl angef"ugte Attribut ist ung"ultig.}
+               {keines}
 \errentry{1110}{Unpassende Operandenzahl}
                {Fehler}
                {Die bei einem Befehl (Prozessor oder Pseudo)
@@ -9914,6 +9959,25 @@ den ersten Blick...
           Im Falle der Adre"sangabe bei P2BIN und P2HEX darf aber auch
           \tty{0x} anstelle des Dollarzeichens benutzt werden, was dieses
           Problem von vornherein vermeidet.}
+\vspace{0.3cm}
+\item[F:]{Ich nutze AS auf einem Linux-System, das Ladeprogramm f"ur
+          mein Zielsystem l"auft aber auf einem Windows-Rechner.  Um das
+          zu vereinfachen, greifen beide System auf das gleiche
+          Netzwerklaufwerk zu.  Leider will die Windows-Seite aber die
+          von der Linux-Seite erzeugten Hex-Dateien nicht lesen :-(}
+\item[A:]{Windows- und Linux-Systeme benutzen ein etwas abweichendes
+          Format f"ur Textdateien, unter die auch Hex-Dateien fallen.  
+          W"ahrend Windows jede Zeile mit den Zeichen CR (Carriage Return)
+          und LF (Linefeed) abschlie"st, verwendet Linux nur ein Linefeed.
+          Es h"angt nun von der ''Gutm"utigkeit'' eines Windows-Programmes
+          ab, ob es die Dateien im Linux-Format akzeptiert.  Falls nicht,
+          kann man die Dateien anstelle "uber ein Netzwerklaufwerk "uber
+          FTP im ASCII-Modus "ubertragen, oder man konvertiert die Dateien
+          unter ins Windows-Format.  Das Programm {\em unix2dos} kann dazu
+          z.B. verwendet werden, oder unter Linux ein kleines Script:
+          \begin{verbatim}
+          awk '{print $0"\r"}' test.hex >test_cr.hex
+          \end{verbatim}}
 \end{description}
 
 %%===========================================================================
@@ -9987,6 +10051,10 @@ Name             &  Datentyp   & Definition & Bedeutung \\
 \hline
 \tty{LISTON}     &  Boolean    & dynam.(1)  & Listing freigeschaltet ? \\
 \hline
+\tty{MACEXP}     &  Boolean    & dynam.(1)  & Expansion von Makrokon- \\
+                 &             &            & strukten im Listing \\
+                 &             &            & freigeschaltet ? \\
+\hline
 \end{tabular}\end{center}
 \caption{Vordefinierte Symbole - Teil 1\label{TabInternSyms1}}
 \end{table*}
@@ -9996,10 +10064,6 @@ Name             &  Datentyp   & Definition & Bedeutung \\
 \hline
 Name             &  Datentyp   & Definition & Bedeutung \\
 \hline\hline
-\tty{MACEXP}     &  Boolean    & dynam.(1)  & Expansion von Makrokon- \\
-                 &             &            & strukten im Listing \\
-                 &             &            & freigeschaltet ? \\
-\hline
 \tty{MOMCPU}     &  Integer    & dynam.     & Nummer der momentan \\
                  &             & (68008)    & gesetzten Ziel-CPU \\
 \hline
@@ -10748,6 +10812,12 @@ oder ich werde langsam alt...
       \item{additionally supports the 68HC11K4 address windowing;}
       \item{P2HEX kann jetzt die Adre"sfeldl"ange von AVR-Hex-Dateien
             variieren;}
+      \item{mit der neuen Kommandozeilenoption {\tt -gnuerrors} k"onnen
+            Fehlermeldungen in einem GNU-C-artigen Format ausgegeben
+            werden;}
+      \item{unterst"utzt zus"atzlich die TMS320C54x-Familie von Texas
+            Instruments;}
+      \item{Neue Makro-Option {\tt INTLABEL};}
       \end{itemize}}
 \end{itemize}
 
@@ -11279,7 +11349,7 @@ Sequenz... & ergibt... \\
 \verb!&agrave; &egrave; &igrave; &ograve; &ugrave;! & \'a \'e \'i \'o \'u (Accent \\
 \verb!&Agrave; &Egrave; &Igrave; &Ograve; &Ugrave;! & \'A \'E \'I \'O \'U grave) \\
 \verb!&aacute; &eacute; &iacute; &oacute; &uacute;! & \`a \`e \`i \`o \`u (Accent \\
-\verb!&Aacute; &Eacute; &Iacute; &Oacute; &Uacute;! & \`A \`E \`I \`O \`I agiu) \\
+\verb!&Aacute; &Eacute; &Iacute; &Oacute; &Uacute;! & \`A \`E \`I \`O \`U agiu) \\
 \verb!&acirc; &ecirc; &icirc; &ocirc; &ucirc;! & \^a \^e \^i \^o \^u (Accent \\
 \verb!&Acirc; &Ecirc; &Icirc; &Ocirc; &Ucirc;! & \^A \^E \^I \^O \^U circonflex) \\
 \verb!&ccedil; &Ccedil;! & \c{c} \c{C}(Cedilla) \\
@@ -12056,6 +12126,16 @@ damit mit der n"achsten Release alle etwas davon haben :-)
 \bibitem{TiC20x} Texas Instruments: \\
                  {\em TMS320C20x User's Guide.\/} \\
                  April 1999, SPRU127C
+
+\bibitem{Tispru131g} Texas Instruments: \\
+                     {\em TMS320C54x DSP Reference Set;
+                     Volume 1: CPU and Peripherals.\/} \\
+                     March 2001, SPRU172C
+
+\bibitem{Tispru172c} Texas Instruments: \\
+                     {\em TMS320C54x DSP; Volume 2: Mnemonic Instruction
+                     Set.\/} \\
+                     March 2001, SPRU172C
 
 \bibitem{Tosh90} Toshiba Corp.: \\
                  {\em 8-Bit Microcontroller TLCS-90

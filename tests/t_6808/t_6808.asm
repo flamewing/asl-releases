@@ -205,7 +205,7 @@
         dbnzx   *
 
         dbnz    $20,*
-        dbnz    x,*
+        dbnz    ,x,*
         dbnz    $40,x,*
         dbnz    $40,sp,*
 

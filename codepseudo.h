@@ -7,6 +7,7 @@
 /* Haeufiger benutzte Pseudo-Befehle                                         */
 /*                                                                           */
 /* Historie: 23. 5.1996 Grundsteinlegung                                     */
+/*           2001-11-11 added DecodeTIPseudo                                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -31,6 +32,8 @@ extern Boolean DecodeMotoPseudo(Boolean Turn);
 extern void AddMoto16PseudoONOFF(void);
 
 extern Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn);
+
+extern Boolean DecodeTIPseudo(void);
 
 extern void CodeEquate(ShortInt DestSeg, LargeInt Min, LargeInt Max);
 

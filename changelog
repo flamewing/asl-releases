@@ -850,3 +850,9 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 2001-11-04 [Bld 17]
 
 - Extension   : added -gnuerrors command line option
+
+- Extension   : added support for the TMS320C54x family from Texas Instruments
+
+2002-01-13 [Bld 18]
+
+- Extension   : added INTLABEL option for macros

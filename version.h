@@ -14,4 +14,9 @@ extern char *Version;
 extern LongInt VerNo;
 
 extern char *InfoMessCopyright;
+
+extern LongInt Magic;
+
+extern void version_init(void);
+
 #endif /* _VERSION_H */

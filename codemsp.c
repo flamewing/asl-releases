@@ -8,6 +8,7 @@
 /*             18. 8.1998 BookKeeping-Aufruf bei BSS                         */
 /*              2. 1.1998 ChkPC umgestellt                                   */
 /*              9. 3.2000 'ambiguous else'-Warnungen beseitigt               */
+/*             2001-11-16 Endianness must be LSB first                       */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -282,12 +283,14 @@ END
 
         static void PutByte(Byte Value)
 BEGIN
+#if 0
    if (((CodeLen&1)==1) AND (NOT BigEndian))
     BEGIN
      BAsmCode[CodeLen]=BAsmCode[CodeLen-1];
      BAsmCode[CodeLen-1]=Value;
     END
    else
+#endif
     BEGIN
      BAsmCode[CodeLen]=Value;
     END
@@ -523,7 +526,7 @@ END
 
         static void SwitchTo_MSP(void)
 BEGIN
-   TurnWords=True; ConstMode=ConstModeIntel; SetIsOccupied=False;
+   TurnWords=False; ConstMode=ConstModeIntel; SetIsOccupied=False;
 
    PCSymbol="$"; HeaderID=0x4a; NOPCode=0x4303; /* = MOV #0,#0 */
    DivideChars=","; HasAttrs=True; AttrChars=".";

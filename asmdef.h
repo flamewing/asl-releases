@@ -171,6 +171,7 @@ extern char SrcSuffix[],IncSuffix[],PrgSuffix[],LstSuffix[],
 #define Has64Name        "HAS64"         /* arbeitet Parser mit 64-Bit-Integers ? */
 #define ArchName         "ARCHITECTURE"  /* Zielarchitektur von AS */
 #define AttrName         "ATTRIBUTE"  /* Attributansprache in Makros */
+#define LabelName        "__LABEL__"  /* Labelansprache in Makros */
 #define ArgCName         "ARGCOUNT"   /* Argumentzahlansprache in Makros */
 #define AllArgName       "ALLARGS"    /* Ansprache Argumentliste in Makros */
 #define DefStackName     "DEFSTACK"   /* Default-Stack */
@@ -186,8 +187,6 @@ extern char *EnvName;
 
 extern char *SegNames[PCMax + 2];
 extern char SegShorts[PCMax + 2];
-
-extern LongInt Magic;
 
 #define AscOfs '0'
 

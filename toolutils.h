@@ -38,8 +38,6 @@ typedef struct
           char *Strings;
          } TRelocInfo, *PRelocInfo;
 
-extern LongWord Magic;
-
 extern Word FileID;
 
 extern char *OutName;

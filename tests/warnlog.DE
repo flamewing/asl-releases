@@ -9,6 +9,34 @@ t_16c84.asm(50) : Warnung  : veralteter Befehl
 t_3203x.asm(259) : Warnung  : mehrfache Adressregisterbenutzung in einer Anweisung
 t_3203x.asm(259) : Warnung  : nicht vorhersagbare Ausfuehrung dieser Anweisung
 t_3203x.asm(261) : Warnung  : mehrfache Adressregisterbenutzung in einer Anweisung
+t_6805.asm(59): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(65): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(71): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(77): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(83): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(89): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(95): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(101): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(107): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(113): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(119): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(141): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(148): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(155): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(162): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(169): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(176): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(183): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(189): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(196): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(203): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(210): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(217): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(223): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(230): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(237): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6805.asm(243): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
+t_6808.asm(208): Warnung: einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert
 t_7000.asm(95) : Warnung  : moegliche Pipelining-Effekte
 t_7000.asm(96) : Warnung  : moegliche Pipelining-Effekte
 t_7000.asm(97) : Warnung  : moegliche Pipelining-Effekte

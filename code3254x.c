@@ -26,6 +26,9 @@
 /*           2001-10-26: FRAME                                               */
 /*           2001-10-28: PSHM IDLE RSBX SSBX XC                              */
 /*           2001-11-01: remaining non-parallel ops                          */
+/*           2001-11-09: parallel ops                                        */
+/*           2001-11-11: added pseudo ops                                    */
+/*           2002-01-13: fixed undefined value of OK in some cases           */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -386,7 +389,7 @@ static void DecodeAcc2(Word Index)
   else if ((LastRep) && (!POrder->IsRepeatable)) WrError(1560);
   else
   {
-    if ((OK = DecodeAdr(ArgStr[1], MModAcc)))
+    if (((OK = DecodeAdr(ArgStr[1], MModAcc))))
     {
       WAsmCode[0] = POrder->Code | (AdrVals[0] << 9);
       if (ArgCnt == 2)
@@ -443,7 +446,6 @@ static void DecodeADDSUB(Word Index)
   Word DestAcc;
 
   if ((ArgCnt < 2) || (ArgCnt > 4)) WrError(1110);
-  else if (ThisPar) WrError(1950);
   else
   {
     OpSize = SInt16;
@@ -452,6 +454,7 @@ static void DecodeADDSUB(Word Index)
     {
       case ModAcc:  /* ADD src, SHIFT|ASM [,dst] */
         if (ArgCnt == 4) WrError(1110);
+        else if (ThisPar) WrError(1950);
         else
         {
           Word SrcAcc = *AdrVals;
@@ -558,6 +561,7 @@ static void DecodeADDSUB(Word Index)
         if (Shift == 255) /* TS case */
         {
           if (*AdrVals != DestAcc) WrError(1350);
+          else if (ThisPar) WrError(1950);
           else
           {
             WAsmCode[0] |= 0x0400 | (Index << 11) | (DestAcc << 8);
@@ -568,6 +572,7 @@ static void DecodeADDSUB(Word Index)
         else if (Shift == 254) /* XY case */
         {
           if (*AdrVals != DestAcc) WrError(1350);
+          else if (ThisPar) WrError(1950);
           else
           {   
             WAsmCode[0] |= 0xa000 | (Index << 9) | (DestAcc << 8);
@@ -577,17 +582,40 @@ static void DecodeADDSUB(Word Index)
 
         else if (Shift == 16) /* optimization for 16 shifts */
         {
-          WAsmCode[0] |= (0x3c00 + (Index << 10)) | (*AdrVals << 9) | (DestAcc << 8);
-          CodeLen = 1 + HCnt;
+          if (ThisPar) WrError(1950);
+          else
+          {
+            WAsmCode[0] |= (0x3c00 + (Index << 10)) | (*AdrVals << 9) | (DestAcc << 8);
+            CodeLen = 1 + HCnt;
+          }
         }
 
         else if ((DestAcc == *AdrVals) && (Shift == 0)) /* shortform without shift and with one accu only */
         {
-          WAsmCode[0] |= 0x0000 | (Index << 11) | (DestAcc << 8);
-          CodeLen = 1 + HCnt;
+          if (ThisPar)
+          {
+            AdrMode = ModMem; AdrVals[0] = WAsmCode[0];
+            if (MakeXY(AdrVals, True))
+            {
+              /* prev. operation must be STH src,0,Xmem */
+              if ((LastOpCode & 0xfe0f) != 0x9a00) WrError(1950);
+              else
+              {
+                RetractWords(1);
+                WAsmCode[0] = 0xc000 | (Index << 10) | (DestAcc << 8) | ((LastOpCode & 0x0100) << 1) | ((LastOpCode & 0x00f0) >> 4) | (*AdrVals << 4);
+                CodeLen = 1;
+              }
+            }
+          }
+          else
+          {
+            WAsmCode[0] |= 0x0000 | (Index << 11) | (DestAcc << 8);
+            CodeLen = 1 + HCnt;
+          }
         }
 
-        else 
+        else if (ThisPar) WrError(1950);
+        else
         {
           Word SrcAcc = *AdrVals;
 
@@ -614,59 +642,61 @@ static void DecodeADDSUB(Word Index)
 
       case ModImm:  /* ADD #lk[, SHIFT|16], src[, dst] */
       {
-        /* store away constant */
-
-        WAsmCode[1] = *AdrVals;
-
-        /* no shift? this is the case for two operands or three operands and the second is an accumulator */
-
-        if (ArgCnt == 2)
-          Shift = 0;
-        else if ((ArgCnt == 3) && (IsAcc(ArgStr[2])))
-          Shift = 0;
-
-        /* otherwise shift is second argument */
-
-        else
+        if (ThisPar) WrError(1950);
         {
-          FirstPassUnknown = False;
-          Shift = EvalIntExpression(ArgStr[2], UInt5, &OK);
-          if (!OK)
+          /* store away constant */
+
+          WAsmCode[1] = *AdrVals;
+
+          /* no shift? this is the case for two operands or three operands and the second is an accumulator */
+
+          if (ArgCnt == 2)
+            Shift = 0;
+          else if ((ArgCnt == 3) && (IsAcc(ArgStr[2])))
+            Shift = 0;
+
+          /* otherwise shift is second argument */
+
+          else
+          {
+            FirstPassUnknown = False;
+            Shift = EvalIntExpression(ArgStr[2], UInt5, &OK);
+            if (!OK)
+              break;
+            if ((FirstPassUnknown) && (Shift > 16))
+              Shift &= 15;
+            if (!ChkRange(Shift, 0 ,16))
+              break;
+          }
+
+          /* decode destination accumulator */
+
+          if (!DecodeAdr(ArgStr[ArgCnt], MModAcc))
             break;
-          if ((FirstPassUnknown) && (Shift > 16))
-            Shift &= 15;
-          if (!ChkRange(Shift, 0 ,16))
-            break;
+          DestAcc = *AdrVals;
+
+          /* optionally decode source accumulator.  If no second accumulator, result
+             again remains in AdrVals */
+
+          if ((ArgCnt == 4) || ((ArgCnt == 3) && (IsAcc(ArgStr[2]))))
+          {
+            if (!DecodeAdr(ArgStr[ArgCnt - 1], MModAcc))
+              break;
+          }
+
+          /* distinguish according to shift count */
+
+          if (Shift == 16)
+          {
+            WAsmCode[0] = 0xf060 | Index | (DestAcc << 8) | (*AdrVals << 9);
+            CodeLen = 2;
+          }
+          else
+          {
+            WAsmCode[0] = 0xf000 | (Index << 5) | (DestAcc << 8) | (*AdrVals << 9) | (Shift & 15);
+            CodeLen = 2;
+          }
         }
-
-        /* decode destination accumulator */
-
-        if (!DecodeAdr(ArgStr[ArgCnt], MModAcc))
-          break;
-        DestAcc = *AdrVals;
-
-        /* optionally decode source accumulator.  If no second accumulator, result
-           again remains in AdrVals */
-
-        if ((ArgCnt == 4) || ((ArgCnt == 3) && (IsAcc(ArgStr[2]))))
-        {
-          if (!DecodeAdr(ArgStr[ArgCnt - 1], MModAcc))
-            break;
-        }
-
-        /* distinguish according to shift count */
-
-        if (Shift == 16)
-        {
-          WAsmCode[0] = 0xf060 | Index | (DestAcc << 8) | (*AdrVals << 9);
-          CodeLen = 2;
-        }
-        else
-        {
-          WAsmCode[0] = 0xf000 | (Index << 5) | (DestAcc << 8) | (*AdrVals << 9) | (Shift & 15);
-          CodeLen = 2;
-        }
-
         break;
       }
     }
@@ -704,7 +734,7 @@ static void DecodeMemConst(Word Index)
   else if (DecodeAdr(ArgStr[2 - POrder->Swap], MModMem))
   {
     WAsmCode[0] = POrder->Code | 0[AdrVals];
-    if ((HCnt = AdrCnt))
+    if (((HCnt = AdrCnt)))
       WAsmCode[1] = AdrVals[1];
     OpSize = POrder->ConstType;
     if (DecodeAdr(ArgStr[1 +  POrder->Swap], MModImm))
@@ -722,7 +752,6 @@ static void DecodeMPY(Word Index)
   (void)Index;
 
   if ((ArgCnt != 2) && (ArgCnt != 3)) WrError(1110);
-  else if (ThisPar) WrError(1950);
   else if (DecodeAdr(ArgStr[ArgCnt], MModAcc))
   {
     DestAcc = (*AdrVals) << 8;
@@ -730,7 +759,8 @@ static void DecodeMPY(Word Index)
     {
       Word XMode;
 
-      if (DecodeAdr(ArgStr[1], MModMem))
+      if (ThisPar) WrError(1950);
+      else if (DecodeAdr(ArgStr[1], MModMem))
         if (MakeXY(&XMode, True))
           if (DecodeAdr(ArgStr[2], MModMem))
             if (MakeXY(WAsmCode, True))
@@ -746,15 +776,36 @@ static void DecodeMPY(Word Index)
       switch (AdrMode)
       {
         case ModImm:
-          WAsmCode[0] = 0xf066 | DestAcc;
-          WAsmCode[1] = *AdrVals;
-          CodeLen = 2;
+          if (ThisPar) WrError(1950);
+          else
+          {
+            WAsmCode[0] = 0xf066 | DestAcc;
+            WAsmCode[1] = *AdrVals;
+            CodeLen = 2;
+          }
           break;
         case ModMem:
-          WAsmCode[0] = 0x2000 | DestAcc | 0[AdrVals];
-          if (AdrCnt)
-            WAsmCode[1] = AdrVals[1];
-          CodeLen = 1 + AdrCnt;
+          if (ThisPar)
+          {
+            if (MakeXY(AdrVals, True))
+            {
+              /* previous op ST src, Ym */
+              if ((LastOpCode & 0xfe0f) != 0x9a00) WrError(1950);
+              else
+              {
+                RetractWords(1);
+                *WAsmCode = 0xcc00 | DestAcc | ((LastOpCode & 0x0100) << 1) | ((LastOpCode & 0x00f0) >> 4) | (*AdrVals);
+                CodeLen = 1;
+              }
+            }
+          }
+          else
+          {
+            WAsmCode[0] = 0x2000 | DestAcc | 0[AdrVals];
+            if (AdrCnt)
+              WAsmCode[1] = AdrVals[1];
+            CodeLen = 1 + AdrCnt;
+          }
           break;
       }
     }
@@ -821,7 +872,6 @@ static void DecodeMAC(Word Index)
   (void) Index;
 
   if ((ArgCnt < 2) || (ArgCnt > 4)) WrError(1110);
-  else if (ThisPar) WrError(1950);
   else if (DecodeAdr(ArgStr[ArgCnt], MModAcc))
   {
     *WAsmCode = (*AdrVals) << 8;
@@ -833,6 +883,7 @@ static void DecodeMAC(Word Index)
     if (AdrMode == ModImm)
     {
       if (ArgCnt == 4) WrError(1110);
+      else if (ThisPar) WrError(1950);
       else
       {
         *WAsmCode |= 0xf067; WAsmCode[1] = *AdrVals;
@@ -863,10 +914,37 @@ static void DecodeMAC(Word Index)
 
       if (ArgCnt == 2)
       {
-        *WAsmCode |= 0x2800 | HMode;
-        CodeLen = 1 + AdrCnt;
+        if (ThisPar)
+        {
+          if (MakeXY(AdrVals, True))
+          {
+            if ((LastOpCode & 0xfe0f) == 0x9400) /* previous op LD Xmem, src */
+            {
+              if ((LastOpCode & 0x0100) == (*WAsmCode & 0x0100)) WrError(1950);
+              else
+              {
+                RetractWords(1);
+                *WAsmCode = 0xa800 | (LastOpCode & 0x01f0) | (*AdrVals);
+                CodeLen = 1;
+              }
+            }
+            else if ((LastOpCode & 0xfe0f) == 0x9a00) /* previous op ST src, Ymem */
+            {
+              RetractWords(1);
+              *WAsmCode |= 0xd000 | ((LastOpCode & 0x0100) << 1) | ((LastOpCode & 0x00f0) >> 4) | (*AdrVals << 4);
+              CodeLen = 1;
+            }
+            else WrError(1950);
+          }
+        }
+        else
+        {
+          *WAsmCode |= 0x2800 | HMode;
+          CodeLen = 1 + AdrCnt;
+        }
       }
-      else 
+      else if (ThisPar) WrError(1950);
+      else
       {
         /* both syntax 2+4 have optional second accumulator */
 
@@ -1007,7 +1085,6 @@ static void DecodeMACR(Word Index)
   (void) Index;
 
   if ((ArgCnt < 2) || (ArgCnt > 4)) WrError(1110);
-  else if (ThisPar) WrError(1950);
   else if (DecodeAdr(ArgStr[ArgCnt], MModAcc))
   {
     *WAsmCode = *AdrVals << 8;
@@ -1015,11 +1092,38 @@ static void DecodeMACR(Word Index)
     {
       if (ArgCnt == 2)
       {
-        WAsmCode[0] |= 0x2a00 | *AdrVals;
-        if (AdrCnt)
-          WAsmCode[1] = AdrVals[1];
-        CodeLen = 1 + AdrCnt;
+        if (ThisPar)
+        {
+          if (MakeXY(AdrVals, True))
+          {
+            if ((LastOpCode & 0xfe0f) == 0x9400) /* previous op LD Xmem, src */
+            {
+              if ((LastOpCode & 0x0100) == (*WAsmCode & 0x0100)) WrError(1950);
+              else
+              {
+                RetractWords(1);
+                *WAsmCode = 0xaa00 | (LastOpCode & 0x01f0) | (*AdrVals);
+                CodeLen = 1;
+              }
+            }
+            else if ((LastOpCode & 0xfe0f) == 0x9a00) /* previous op ST src, Ymem */
+            {
+              RetractWords(1);
+              *WAsmCode |= 0xd400 | ((LastOpCode & 0x0100) << 1) | ((LastOpCode & 0x00f0) >> 4) | (*AdrVals << 4);
+              CodeLen = 1;
+            }
+            else WrError(1950);
+          }
+        }
+        else
+        {
+          WAsmCode[0] |= 0x2a00 | *AdrVals;
+          if (AdrCnt)
+            WAsmCode[1] = AdrVals[1];
+          CodeLen = 1 + AdrCnt;
+        }
       }
+      else if (ThisPar) WrError(1950);
       else
       {
         if (MakeXY(AdrVals, True))
@@ -1106,7 +1210,6 @@ static void DecodeMACSU(Word Index)
 static void DecodeMAS(Word Index)
 {
   if ((ArgCnt < 2) || (ArgCnt > 4)) WrError(1110);
-  else if (ThisPar) WrError(1950);
   else if (DecodeAdr(ArgStr[ArgCnt], MModAcc))
   {
     *WAsmCode = ((*AdrVals) << 8);
@@ -1114,11 +1217,38 @@ static void DecodeMAS(Word Index)
     {
       if (ArgCnt == 2)
       {
-        *WAsmCode |= 0x2c00 | Index | *AdrVals;
-        if (AdrCnt)
-          1[WAsmCode] = AdrVals[1];
-        CodeLen = 1 + AdrCnt;
+        if (ThisPar)
+        {
+          if (MakeXY(AdrVals, True))
+          {
+            if ((LastOpCode & 0xfe0f) == 0x9400) /* previous op LD Xmem, src */
+            {
+              if ((LastOpCode & 0x0100) == (*WAsmCode & 0x0100)) WrError(1950);
+              else
+              {
+                RetractWords(1);
+                *WAsmCode = 0xac00 | Index | (LastOpCode & 0x01f0) | (*AdrVals);
+                CodeLen = 1;
+              }
+            }
+            else if ((LastOpCode & 0xfe0f) == 0x9a00) /* previous op ST src, Ymem */
+            {
+              RetractWords(1);
+              *WAsmCode |= 0xd800 | (Index << 1) | ((LastOpCode & 0x0100) << 1) | ((LastOpCode & 0x00f0) >> 4) | (*AdrVals << 4);
+              CodeLen = 1;
+            }
+            else WrError(1950);
+          }
+        }
+        else
+        {
+          *WAsmCode |= 0x2c00 | Index | *AdrVals;
+          if (AdrCnt)
+            1[WAsmCode] = AdrVals[1];
+          CodeLen = 1 + AdrCnt;
+        }
       }
+      else if (ThisPar) WrError(950);
       else if (MakeXY(AdrVals, TRUE))
       {
         *WAsmCode |= 0xb800 | (Index << 1) | ((*AdrVals) << 4);
@@ -1731,7 +1861,10 @@ static void DecodeLD(Word Index)
       }
     }
     else
+    {
       Shift = 0;
+      OK = True;
+    }
     if (OK)
     {
       OpSize = UInt16;
@@ -1758,17 +1891,6 @@ static void DecodeLD(Word Index)
               CodeLen = 1 + AdrCnt;
             }
           }
-          else if (Shift == 16)
-          {
-            if (ThisPar) WrError(1950);
-            else
-            {   
-              WAsmCode[0] |= 0x4400 | AdrVals[0];
-              if (AdrCnt)
-                WAsmCode[1] = AdrVals[1];
-              CodeLen = 1 + AdrCnt;
-            }
-          }
           else if ((Shift >= 0) && (MakeXY(WAsmCode + 1, False)))
           {
             if (ThisPar)
@@ -1788,6 +1910,17 @@ static void DecodeLD(Word Index)
             {
               WAsmCode[0] |= 0x9400 | (WAsmCode[1] << 4) | Shift;
               CodeLen = 1;
+            }
+          }
+          else if (Shift == 16)
+          {
+            if (ThisPar) WrError(1950);
+            else
+            {   
+              WAsmCode[0] |= 0x4400 | AdrVals[0];
+              if (AdrCnt)
+                WAsmCode[1] = AdrVals[1];
+              CodeLen = 1 + AdrCnt;
             }
           }
           else if (!Shift)
@@ -2236,6 +2369,12 @@ static ASSUMERec ASSUME3254xs[ASSUME3254xCount] =
      return True;
     END
 
+  if (Memo("PORT"))
+  {
+    CodeEquate(SegIO,0,65535);
+    return True;
+  }
+
   return False;
 }
 
@@ -2572,6 +2711,8 @@ static void MakeCode_32054x(void)
   if (*OpPart == '\0') return;
 
   if (DecodePseudo()) return;
+
+  if (DecodeTIPseudo()) return;
 
   /* search */
 

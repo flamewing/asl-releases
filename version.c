@@ -35,12 +35,30 @@
 /*           20. 8.2001 Build 15                                             */
 /*            7.10.2001 Build 16                                             */
 /*           2001-11-04 Build 17                                             */
+/*           2002-01-13 Build 18                                             */
 /*                                                                           */
 /*****************************************************************************/
 
 #include "stdinc.h"
+#include <string.h>
 
-char *Version="1.42 Beta [Bld 17]";
+char *Version="1.42 Beta [Bld 18]";
 LongInt VerNo=0x142f;
 
-char *InfoMessCopyright="(C) 1992,2001 Alfred Arnold";
+char *InfoMessCopyright="(C) 1992,2002 Alfred Arnold";
+
+LongInt Magic=0x12372e44;
+
+void version_init(void)
+{
+  unsigned int z;
+  char *CMess = InfoMessCopyright;
+  LongWord XORVal;
+
+  for (z = 0; z < strlen(CMess); z++)
+  {
+    XORVal = CMess[z];
+    XORVal = XORVal << (((z + 1) % 4) * 8);
+    Magic = Magic ^ XORVal;
+  }
+}

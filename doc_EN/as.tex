@@ -56,14 +56,14 @@
 {\large Alfred Arnold, Stefan Hilse, Stephan Kanthak, Oliver
  Sellke, Vittorio De Tomasi}
 \vspace{1cm}\par
-{\huge Macro Assembler AS V1.41r8}\\
+{\huge Macro Assembler AS V1.42}\\
 \rule{9.5cm}{0.3mm}\\
 \vspace{2mm}\par
 {\huge User's Manual}
 
 \vspace{1cm}\par
 
-{\large Edition Mai 2001}
+{\large Edition Januar 2002}
 \end{raggedright}
 
 \clearpage
@@ -252,6 +252,7 @@ following processor families have been implemented:
 \item{Texas Instruments TMS3202x}
 \item{Texas Instruments TMS320C3x}
 \item{Texas Instruments TMS320C20x/TMS320C5x}
+\item{Texas Instruments TMS320C54x}
 \item{Texas Instruments TMS320C6x}
 \item{Texas Instruments TMS9900}
 \item{Texas Instruments TMS7000}
@@ -2310,11 +2311,12 @@ JBIT0}, and \tty{JBIT}.
 \subsection{PORT}
 \ttindex{PORT}
 
-{\em valid for: 8080/8085/8086, XA, Z80, 320xx, TLCS-47, AVR}
+{\em valid for: 8080/8085/8086, XA, Z80, 320C2x/5x, TLCS-47, AVR}
 
 \tty{PORT} works similar to \tty{EQU}, just the symbol becomes assigned to the
-I/O-address range.  Allowed values are 0..7 at the 3201x, 0..15 at the
-320C2x, 0..65535 at the 8086, 0..63 at the AVR, and 0..255 at the rest.
+I/O-address range.  Allowed values are 0..7 for the 3201x, 0..15 for the
+320C2x, 0..65535 for the 8086 and 320C5x, 0..63 for the AVR, and 0..255
+for the rest.
 
 Example : an 8255 PIO is located at address 20H:
 \begin{verbatim}
@@ -2586,7 +2588,7 @@ minus 1:
 \begin{table*}[htbp]
 \begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
 \hline
-\tin{processor} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BITDATA} & \tin{IO} & \tin{REG} & \tin{ROMDATA} \\
+\tin{target} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BITDATA} & \tin{IO} & \tin{REG} & \tin{ROMDATA} \\
 \hline
 \hline
 \input{../doc_DE/taborg1.tex}
@@ -2597,15 +2599,15 @@ minus 1:
 \begin{table*}[htbp]
 \begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
 \hline
-\tin{processor} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BITDATA} & \tin{IO} & \tin{REG} & \tin{ROMDATA} \\
+\tin{target} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BITDATA} & \tin{IO} & \tin{REG} & \tin{ROMDATA} \\
 \hline
 \hline
 \input{../doc_DE/taborg2.tex}
 \hline
-\multicolumn{10}{|l|}{*) As the 8051 does not have any RAM beyond 80h, this value has to be} \\
+\multicolumn{10}{|l|}{$^{*}$ As the 8051 does not have any RAM beyond 80h, this value has to be} \\
 \multicolumn{10}{|l|}{   adapted with ORG for the 8051 as target processor!!}\\
 \hline
-\multicolumn{10}{|l|}{+) As the Z180 still can address only 64K logically, the whole}\\
+\multicolumn{10}{|l|}{$^{+}$ As the Z180 still can address only 64K logically, the whole}\\
 \multicolumn{10}{|l|}{   address space can only be reached via \tty{PHASE} instructions!}\\
 \hline
 \end{tabular}\end{center}
@@ -2614,7 +2616,7 @@ minus 1:
 \begin{table*}[htbp]
 \begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
 \hline
-\tin{processor} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BITDATA} & \tin{IO} & \tin{REG} & \tin{ROMDATA} \\
+\tin{target} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BITDATA} & \tin{IO} & \tin{REG} & \tin{ROMDATA} \\
 \hline
 \hline
 \input{../doc_DE/taborg3.tex}
@@ -2625,7 +2627,7 @@ minus 1:
 \begin{table*}[htbp]
 \begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
 \hline
-\tin{processor} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BITDATA} & \tin{IO} & \tin{REG} & \tin{ROMDATA} \\
+\tin{target} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BITDATA} & \tin{IO} & \tin{REG} & \tin{ROMDATA} \\
 \hline
 \hline
 \input{../doc_DE/taborg4.tex}
@@ -3023,13 +3025,18 @@ implement a subset of the C5x instruction set.  The distinction among the
 C5x processors is currently not used by AS.
 %%-----------
 \begin{quote}
-au) TMS9900
+au) 320C541  
+\end{quote}  
+This one at the moment represents the TMS320C54x family...
+%%-----------
+\begin{quote}
+av) TMS9900
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-av) \> TMS70C00, TMS70C20, TMS70C40,\\
+aw) \> TMS70C00, TMS70C20, TMS70C40,\\
     \> TMS70CT20, TMS70CT40,\\
     \> TMS70C02, TMS70C42, TMS70C82,\\
     \> TMS70C08, TMS70C48\\
@@ -3043,22 +3050,22 @@ RAM and the same on-chip peripherals, they differ only in the amount of
 integrated ROM.
 %%-----------
 \begin{quote}
-aw) 370C010, 370C020, 370C030, 370C040 and 370C050
+ax) 370C010, 370C020, 370C030, 370C040 and 370C050
 \end{quote}
 Similar to the MCS-51 family, the different types are only used to
 differentiate the peripheral equipment in \tty{STDDEF37.INC}; the
 instruction set is always the same.
 %%-----------
 \begin{quote}
-ax) MSP430
+ay) MSP430
 \end{quote}
 %%-----------
 \begin{quote}
-ay) SC/MP
+az) SC/MP
 \end{quote}
 %%-----------
 \begin{quote}
-az) COP87L84
+ba) COP87L84
 \end{quote}
 This is the only member of National Semiconductor's COP8 family that
 is currently supported.  I know that the family is substantially
@@ -3069,7 +3076,7 @@ beginning, and National's documentation is quite extensive...
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-ba) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
+bb) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
     \> SC14420, SC14421, SC14422, SC14424 \\
 \end{tabbing}
 \end{quote}
@@ -3078,7 +3085,7 @@ instructions, since each of them supports different B field formats and
 their architecture has been optimized over time.
 %%-----------
 \begin{quote}
-bb) 7810$\rightarrow$78C10
+bc) 7810$\rightarrow$78C10
 \end{quote}
 The NMOS version has no stop-mode; the respective command and the ZCM
 register are omitted.  \bb{CAUTION!}  NMOS and CMOS version partially
@@ -3087,7 +3094,7 @@ differ in the reset values of some registers!
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bc) \> 75402,\\
+bd) \> 75402,\\
     \> 75004, 75006, 75008,\\
     \> 75268,\\
     \> 75304, 75306, 75308, 75312, 75316,\\
@@ -3103,20 +3110,20 @@ peripherals on the one hand and by their instruction set's power on
 the other hand.
 %%-----------
 \begin{quote}
-bd) 78070
+be) 78070
 \end{quote}
 This is currently the only member of NEC's 78K0 family I am familiar
 with.  Similar remarks like for the COP8 family apply!
 %%-----------
 \begin{quote}
-be) 7720 $\rightarrow$ 7725
+bf) 7720 $\rightarrow$ 7725
 \end{quote}
 The $\mu$PD7725 offers larger address spaces and som more instructions
 compared to his predecessor. {\bf CAUTION!}  The processors are not binary
 compatible to each other!
 %%-----------
 \begin{quote}
-bf) 77230
+bg) 77230
 \end{quote}
 %%-----------
 \begin{quote}
@@ -3130,12 +3137,12 @@ instruction variants, furthermore they are different in their set of
 internal registers.
 %%-----------
 \begin{quote}
-bh) MB89190  
+bi) MB89190  
 \end{quote}  
 This processor type represents Fujitsu's F$^{2}$MC8L series...
 %%-----------
 \begin{quote}
-bi) MB9500
+bj) MB9500
 \end{quote}
 ...just like this one does it currently for the 16-bit variants from
 Fujitsu!
@@ -4535,6 +4542,9 @@ defined:
       definition will not be written to the file.  The macro will be
       written with the concatenated name if the \tty{GLOBAL} option was
       additionally present.}
+\item{\tty{INTLABEL/NOINTLABEL} : rules whether a label defined in a line 
+      that calls this macro may be used as an additional parameter inside
+      the label or not, instead of simply 'labeling' the line.}
 \end{itemize}
 The control parameters described above are removed from the parameter
 list by AS, i.e. they do not have a further influence on processing
@@ -4588,7 +4598,7 @@ will therefore result in
 \begin{verbatim}
         call    module_function
 \end{verbatim}
-Apart from the parameters explicitly declared for a macro, three more
+Apart from the parameters explicitly declared for a macro, four more
 'implicitly' declared parameters exist.   Since they are always present,
 they cannot not be redeclared as explicit parameters:
 \begin{itemize}
@@ -4601,7 +4611,37 @@ they cannot not be redeclared as explicit parameters:
       a macro.  Note however that this number is never lower than the
       formal parameter count of the macro, since AS will fill up missing
       arguments with empty strings!}
+\item{{\tt \_\_LABEL\_\_} refers to a label present in a line that calls the
+      macro. This replacement only takes place if the {\tt INTLABEL}
+      option was set for this macro!}
 \end{itemize}
+
+The purpose of being able to 'internally' use a label in a macro is surely
+not immediately obvious.  There might be cases where moving the macro's
+entry point into its body may be useful.  The most important application
+however are TI signal processors that use a double pipe symbol in the
+label's column to mark parallelism, like this:
+\begin{verbatim}
+    instr1
+||  instr2
+\end{verbatim}
+(since both instructions merge into a single word of machine code, you
+cannot branch to the second instruction - so occupying the label's
+position doesn't hurt).  The problem is however that some 'convenience
+instructions' are realized as macros.  A prallelization symbol written in
+front of a macro call normally would be assigned to the macro itself, {\it
+not to the macro body's first instruction}.  However, things work with
+this trick:
+\begin{verbatim}
+myinstr    macro {INTLABEL}
+__LABEL__  instr2
+           endm  
+
+           instr1
+||         myinstr
+\end{verbatim}
+The result after expanding {\tt myinstr} is identical to the previous
+example without macro.
 
 Recursion of macros, i.e. the repeated call of a macro from within its own
 body is completely legal.  However, like for any other sort of recursion,
@@ -8989,6 +9029,10 @@ described by:
                {The attribute following a point after an instruction must
                 not be longer or shorter than one character.}
                {none}
+\errentry{1107}{undefined attribute}
+               {error}
+               {This instruction uses an invalid attribute.}
+               {none}
 \errentry{1110}{wrong number of operands}
                {error}
                {The number of arguments issued for the instruction (processor or
@@ -9688,6 +9732,25 @@ one maybe does not find them immediately...
    address range specification for P2HEX and P2BIN, you may also use
    \tty{0x} instead of the dollar character, which removes this prblen
    completely.}
+\item[Q:]{I use AS on a Linux system, the loader program for my target 
+          system however runs on a Windows machine. To simplify things,
+          both systems access the same network drive.  Unfortunately, the
+          Windows side refuses to read the hex files created by the Linux
+          side :-(}
+\item[A:]{Windows and Linux systems use slightly different formats for
+          text files (hex files are a sort of text files).  Windows
+          terminates every line with the characters CR (carriage return)
+          and LF (linefeed), however Linux only uses the linefeed.  It
+          depends on the Windows program's 'goodwill' whether it will
+          accept text files in the Linux format or not.  If not, it is
+          possible to transfer the files via FTP in ASCII mode instead
+          of a network drive.  Alternatively, the hex files can be 
+          converted to the Windows format.  For example, the program
+          {\em unix2dos} can be used to do this, or a small script under
+          Linux:
+          \begin{verbatim}
+          awk '{print $0"\r"}' test.hex >test_cr.hex
+          \end{verbatim}}
 \end{description}
 
 %%===========================================================================
@@ -10511,10 +10574,15 @@ Either that was a long nightshift or I am slowly getting old...
             nesting depth of macro expansions;}
       \item{additional command line argument {\tt noicemask} to control
             the amount of segments listed in a NoICE debug info file;}
-      \item{additionally supports the 180x family fro Intersil;}
+      \item{additionally supports the 180x family from Intersil;}
       \item{additionally supports the 68HC11K4 address windowing;}
       \item{P2HEX now allows to vary the address field length of AVR HEX
             files;}
+      \item{the new command line option {\tt -gnuerrors} allows to output 
+            error messages in a GNU C-style format;}
+      \item{additionally supports the TMS320C54x family from Texas
+            Instruments;}
+      \item{new macro option {\tt INTLABEL};}
       \end{itemize}}
 \end{itemize}
 
@@ -10994,33 +11062,39 @@ characters may be placed in message texts (and the compiler will correctly
 pass them to the resulting file), a big disadvantage however is that such
 a file is not fully portable any more: in case it is ported to another
 system using a different coding for national special characters, the user
-will probably be confronted with strange characters at runtime...special
-character should therefore always be written via special sequences
+will probably be confronted with funny characters at runtime...special
+characters should therefore always be written via special sequences
 borrowed from HTML resp. SGML (see table \ref{TabSpecChars}).  Linefeeds
 can be inserted into a line via \verb!\n!, similar to C.
 \begin{table*}[htb]
 \begin{center}\begin{tabular}{|l|l|}
 \hline
-Sequenz... & ergibt... \\
+Sequence... & results in... \\
 \hline
 \hline
-\verb!&auml; &ouml; &uuml;! & "a "o "u (Umlaute)\\
+\verb!&auml; &ouml; &uuml;! & "a "o "u (Umlauts)\\
 \verb!&Auml; &Ouml; &Uuml;! & "A "O "U \\
-\verb!&szlig;!              & "s (scharfes s) \\
-\verb!&agrave; &egrave; &igrave; &ograve; &ugrave;! & \'a \'e \'i \'o \'u (Accent \\
-\verb!&Agrave; &Egrave; &Igrave; &Ograve; &Ugrave;! & \'A \'E \'I \'O \'U grave) \\
-\verb!&aacute; &eacute; &iacute; &oacute; &uacute;! & \`a \`e \`i \`o \`u (Accent \\
-\verb!&Aacute; &Eacute; &Iacute; &Oacute; &Uacute;! & \`A \`E \`I \`O \`I agiu) \\
-\verb!&acirc; &ecirc; &icirc; &ocirc; &ucirc;! & \^a \^e \^i \^o \^u (Accent \\
-\verb!&Acirc; &Ecirc; &Icirc; &Ocirc; &Ucirc;! & \^A \^E \^I \^O \^U circonflex) \\
+\verb!&szlig;!              & "s (sharp s) \\
+\verb!&agrave; &egrave; &igrave; &ograve;! & \'a \'e \'i \'o \\
+\verb!&ugrave;! & \'u \\
+\verb!&Agrave; &Egrave; &Igrave; &Ograve;! & \'A \'E \'I \'O \\
+\verb!&Ugrave;! & \'U (Accent grave) \\
+\verb!&aacute; &eacute; &iacute; &oacute;! & \`a \`e \`i \`o \\
+\verb!&uacute;! & \`u \\
+\verb!&Aacute; &Eacute; &Iacute; &Oacute;! & \`A \`E \`I \`O \\
+\verb!&Uacute;! & \`U (Accent agiu) \\
+\verb!&acirc; &ecirc; &icirc; &ocirc;! & \^a \^e \^i \^o \\
+\verb!&ucirc;! & \^u \\
+\verb!&Acirc; &Ecirc; &Icirc; &Ocirc;! & \^A \^E \^I \^O \\
+\verb!&Ucirc;! & \^U (Accent circonflex) \\
 \verb!&ccedil; &Ccedil;! & \c{c} \c{C}(Cedilla) \\
 \verb!&ntilde; &Ntilde;! & \~n \~N \\
 \verb!&aring; &Aring;! & \aa  \AA \\
 \verb!&aelig; &Aelig;! & \ae  \AE \\
-\verb!&iquest; &iexcl;! & umgedrehtes ! oder ? \\
+\verb!&iquest; &iexcl;! & inverted ! or ? \\
 \hline
 \end{tabular}\end{center}
-\caption{Sonderzeichenschreibweise des {\em rescomp}\label{TabSpecChars}}
+\caption{Syntax for special character in {\em rescomp}\label{TabSpecChars}}
 \end{table*}
 
 %%---------------------------------------------------------------------------
@@ -11767,6 +11841,16 @@ from this with the next release :-)
 \bibitem{TiC20x} Texas Instruments: \\
                  {\em TMS320C20x User's Guide.\/} \\
                  April 1999, SPRU127C
+
+\bibitem{Tispru131g} Texas Instruments: \\
+                     {\em TMS320C54x DSP Reference Set;
+                     Volume 1: CPU and Peripherals.\/} \\
+                     March 2001, SPRU172C
+
+\bibitem{Tispru172c} Texas Instruments: \\
+                     {\em TMS320C54x DSP; Volume 2: Mnemonic Instruction
+                     Set.\/} \\
+                     March 2001, SPRU172C
 
 \bibitem{Tosh90} Toshiba Corp.: \\
                  {\em 8-Bit Microcontroller TLCS-90 Development System

@@ -13,6 +13,8 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "datatypes.h"
+
 extern Boolean BigEndian;
 
 extern char *Integ16Format, *Integ32Format, *Integ64Format;

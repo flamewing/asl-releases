@@ -1499,9 +1499,7 @@ END
 
 	void asmsub_init(void)
 BEGIN
-   char *CMess=InfoMessCopyright;
    Word z;
-   LongWord XORVal;
 
 #ifdef __TURBOC__
 #ifdef __MSDOS__
@@ -1515,13 +1513,6 @@ BEGIN
 #endif
 #endif
 #endif
-
-   for (z=0; z<strlen(CMess); z++)
-    BEGIN
-     XORVal=CMess[z];
-     XORVal=XORVal << (((z+1) % 4)*8);
-     Magic=Magic ^ XORVal;
-    END
 
    InitStringList(&CopyrightList);
    InitStringList(&OutList);
@@ -1600,5 +1591,7 @@ BEGIN
 #else
 #error Oops, unkown charset - you will have to add some work here...
 #endif
+
+   version_init();
 END
 

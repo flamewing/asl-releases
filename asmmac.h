@@ -7,6 +7,7 @@
 /* Unterroutinen des Makroprozessors                                         */
 /*                                                                           */
 /* Historie: 16. 5.1996 Grundsteinlegung                                     */
+/*           2001-12-31 added DoIntLabel flag                                */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -17,6 +18,7 @@ typedef struct _MacroRec
           StringList FirstLine;  /* Zeiger auf erste Zeile */
           LongInt UseCounter;    /* to limit recursive calls */
           Boolean LocMacExp;     /* Makroexpansion wird aufgelistet */
+          Boolean LocIntLabel;   /* Label used internally instead at beginning */
          } MacroRec, *PMacroRec;
 
 #define BufferArraySize 1024
@@ -38,7 +40,7 @@ typedef struct _TInputTag
           StringList Params;
           LongInt LineCnt,LineZ;
           StringRecPtr Lines;
-          String SpecName,SaveAttr,AllArgs,NumArgs;
+          String SpecName,SaveAttr,SaveLabel,AllArgs,NumArgs;
           Boolean IsEmpty;
           FILE *Datei;
           void *Buffer;
@@ -73,7 +75,7 @@ void
           PMacroRec Mac;
           StringList Params;
           LongInt PubSect,GlobSect;
-          Boolean DoExport,DoGlobCopy;
+          Boolean DoExport, DoGlobCopy;
           String GName;
          } TOutputTag, *POutputTag;
 

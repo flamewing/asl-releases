@@ -11,6 +11,8 @@
 /*           30. 1.1999 Formate maschinenunabhaengig gemacht                 */
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*           14. 1.2001 silenced warnings about unused parameters            */
+/*           2001-11-19 B fix (input from Johannes)                          */
+/*           2001-11-26 scaling fix (input from Johannes)                    */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -392,8 +394,16 @@ BEGIN
      FirstPassUnknown=False;
      DispAcc=EvalIntExpression(DispPart,UInt15,&OK);
      if (NOT OK) return False;
-     if (FirstPassUnknown) DispAcc&=7;
-     if (Counter==']') DispAcc*=Scale;
+     if (FirstPassUnknown) DispAcc &= 7;
+     if (Counter == ')')
+      BEGIN
+       if (DispAcc % Scale != 0)
+        BEGIN
+         WrError(1325); return False;
+        END
+       else
+        DispAcc /= Scale;
+      END
     END
 
    /* Benutzung des Adressierers markieren */
@@ -1326,9 +1336,9 @@ BEGIN
             switch (ThisUnit)
              BEGIN
               case L1: case L2:
-               __erg=CodeL(Code1-Ord(WithImm),DReg,S1Reg,S2Reg); break;
+               __erg = CodeL(Code1 - Ord(WithImm), DReg, S1Reg, S2Reg); break;
               case S1: case S2:
-               __erg=CodeS(Code1-Ord(WithImm),DReg,S1Reg,S2Reg); break;
+               __erg = CodeS(Code2 - Ord(WithImm), DReg, S1Reg, S2Reg); break;
               default:
                WrError(20000);
              END
@@ -1988,47 +1998,55 @@ BEGIN
 
    /* Spruenge */
 
-   /* Wie zum Henker unterscheiden sich B IRP und B NRP ???
-      Kann TI keine ordentlichen Handbuecher mehr schreiben ? */
-
    if (Memo("B"))  
     BEGIN
-     if (ArgCnt!=1) WrError(1350);
+     if (ArgCnt != 1) WrError(1350);
      else if (ThisCross) WrError(1350);
-     else if ((ThisUnit!=NoUnit) AND (ThisUnit!=S1) AND (ThisUnit!=S2)) WrError(1350);
+     else if ((ThisUnit != NoUnit) AND (ThisUnit != S1) AND (ThisUnit != S2)) WrError(1350);
      else
       BEGIN
-       OK=True; S2Reg=0; WithImm=False; Code1=0;
-       if (strcasecmp(ArgStr[1],"IRP")==0) Code1=0x03;
-       else if (strcasecmp(ArgStr[1],"NRP")==0) Code1=0x03; /* !!! */
-       else if (DecodeReg(ArgStr[1],&S2Reg,&OK,False))
+       OK = True; S2Reg = 0; WithImm=False; Code1 = 0;
+       if (strcasecmp(ArgStr[1],"IRP") == 0)
         BEGIN
-         if (OK) WrError(1350); OK=NOT OK;
-         Code1=0x0d;
+         Code1 = 0x03; S2Reg = 0x06;
         END
-       else WithImm=True;
+       else if (strcasecmp(ArgStr[1],"NRP")==0)
+        BEGIN
+         Code1 = 0x03; S2Reg = 0x07;
+        END
+       else if (DecodeReg(ArgStr[1], &S2Reg, &OK, False))
+        BEGIN
+         if (OK) WrError(1350); OK = NOT OK;
+         Code1 = 0x0d;
+        END
+       else WithImm = OK = True;
        if (OK)
         BEGIN
          if (WithImm)
           BEGIN
-           if (ThisUnit==NoUnit)
-            ThisUnit=(UnitUsed(S1)) ? S2 : S1;
-           UnitFlag=Ord(ThisUnit==S2);
-           Dist=EvalIntExpression(ArgStr[1],Int32,&OK)-PacketAddr;
+           if (ThisUnit == NoUnit)
+            ThisUnit = (UnitUsed(S1)) ? S2 : S1;
+           UnitFlag = Ord(ThisUnit == S2);
+           /* branches relative to fetch packet */
+           Dist = EvalIntExpression(ArgStr[1] , Int32, &OK) - (PacketAddr & (~31));
            if (OK)
             BEGIN
-             if ((Dist & 3)!=0) WrError(1325);
-             else if ((NOT SymbolQuestionable) AND ((Dist>0x3fffff) OR (Dist<-0x400000))) WrError(1370);
+             if ((Dist & 3) != 0) WrError(1325);
+             else if ((NOT SymbolQuestionable) AND ((Dist > 0x3fffff) OR (Dist < -0x400000))) WrError(1370);
              else
               BEGIN
-               ThisInst=0x50+((Dist & 0x007ffffc) << 5)+(UnitFlag << 1);
-               erg=True;
+               ThisInst = 0x10 + ((Dist & 0x007ffffc) << 5) + (UnitFlag << 1);
+               erg = True;
               END
             END
           END
          else
           BEGIN
-           if (ChkUnit(0x10,S1,S2)) erg=CodeS(Code1,0,0,S2Reg);
+           if (ChkUnit(0x10, S1, S2))
+            BEGIN
+             SetCross(S2Reg);
+             erg = CodeS(Code1, 0, 0, S2Reg);
+            END
           END
         END
       END
@@ -2294,7 +2312,7 @@ BEGIN
    AddInstTable(InstTable,"ADDK",0,DecodeADDK);
    AddInstTable(InstTable,"ADD2",0,DecodeADD2_SUB2);
    AddInstTable(InstTable,"SUB2",1,DecodeADD2_SUB2);
-   AddInstTable(InstTable,"AND",0x1f79,DecodeLogic);
+   AddInstTable(InstTable,"AND",0x1f7b,DecodeLogic);
    AddInstTable(InstTable,"OR",0x1b7f,DecodeLogic);
    AddInstTable(InstTable,"XOR",0x0b6f,DecodeLogic);
 

@@ -55,6 +55,7 @@ call testall t_3201x
 call testall t_3203x
 call testall t_3205x
 call testall t_3206x
+call testall t_3254x
 call testall t_370
 call testall t_4004
 call testall t_403

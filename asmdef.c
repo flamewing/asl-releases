@@ -56,7 +56,6 @@ char *EnvName="ASCMD";                /* Environment-Variable fuer Default-
 char *SegNames[PCMax + 2] = {"NOTHING", "CODE", "DATA", "IDATA", "XDATA", "YDATA",
                              "BITDATA", "IO", "REG", "ROMDATA", "STRUCT"};
 char SegShorts[PCMax + 2] = {'-','C','D','I','X','Y','B','P','R','O','S'};
-LongInt Magic=0x12372d44;
 
 /** ValidSymChars:SET OF Char=['A'..'Z','a'..'z',#128..#165,'0'..'9','_','.']; **/
 

@@ -414,61 +414,104 @@ BEGIN
    ChkMask(Mask,ExtMask);
 END
 
-        static ShortInt DecodeBitAdr(char *Asc, LongInt *Erg, Boolean MayShorten)
-BEGIN
+static ShortInt DecodeBitAdr(char *Asc, LongInt *Erg, Boolean MayShorten)
+{
    Boolean OK;
-   char *PPos,Save;
+   char *PPos, Save;
 
+   PPos = RQuotPos(Asc, '.');
    if (MomCPU<CPU80251)
-    BEGIN
-     *Erg=EvalIntExpression(Asc,UInt8,&OK);
-     if (OK)
-      BEGIN
-       ChkSpace(SegBData);
-       return ModBit51;
-      END
-     else return ModNone;
-    END
-   else
-    BEGIN
-     PPos=RQuotPos(Asc,'.');
-     if (PPos==Nil)
-      BEGIN
-       FirstPassUnknown=False;
-       *Erg=EvalIntExpression(Asc,Int32,&OK);
-       if (FirstPassUnknown) (*Erg)&=0x070000ff;
-#ifdef __STDC__
-       if (((*Erg)&0xf8ffff00u)!=0)
-#else
-       if (((*Erg)&0xf8ffff00)!=0)
-#endif
-        BEGIN
-         WrError(1510); OK=False;
-        END
-      END
-     else
-      BEGIN
-       Save=(*PPos); *PPos='\0'; DecodeAdr(Asc, MModDir8); *PPos = Save;
-       if (AdrMode==ModNone) OK=False;
+   {
+     if (PPos == NULL)
+     {
+       *Erg = EvalIntExpression(Asc, UInt8, &OK);
+       if (OK)
+       {
+         ChkSpace(SegBData);
+         return ModBit51;
+       }
        else
-        BEGIN
-         *Erg=EvalIntExpression(PPos+1,UInt3,&OK)<<24;
-         if (OK) (*Erg)+=AdrVals[0];
-        END
-      END
-     if (NOT OK) return ModNone;
+         return ModNone;
+     }
+     else
+     {
+       Save = *PPos; *PPos = '\0';
+       FirstPassUnknown = False;
+       *Erg = EvalIntExpression(Asc, UInt8, &OK);
+       if (FirstPassUnknown) *Erg = 0x20;
+       *PPos = Save;
+       if (!OK) return ModNone;
+       else
+       {
+         ChkSpace(SegData);
+         Save = EvalIntExpression(PPos + 1, UInt3, &OK);
+         if (!OK) return ModNone;
+         else
+         {
+           if (*Erg > 0x7f)
+           {
+             if ((*Erg) & 7)
+               WrError(220);
+           }
+           else
+           {
+             if (((*Erg) & 0xe0) != 0x20)
+               WrError(220);
+             *Erg = (*Erg - 0x20) << 3;
+           }
+           *Erg += Save;
+           return ModBit51;
+         }
+       }
+     }
+   }
+   else
+   {
+     if (PPos == Nil)
+     {
+       FirstPassUnknown = False;
+       *Erg = EvalIntExpression(Asc, Int32, &OK);
+       if (FirstPassUnknown) (*Erg) &= 0x070000ff;
+#ifdef __STDC__
+       if (((*Erg) & 0xf8ffff00u) != 0)
+#else
+       if (((*Erg) & 0xf8ffff00) != 0)
+#endif
+       {
+         WrError(1510); OK = False;
+       }
+     }
+     else
+     {
+       Save = (*PPos); *PPos = '\0'; DecodeAdr(Asc, MModDir8); *PPos = Save;
+       if (AdrMode == ModNone) OK = False;
+       else
+       {
+         *Erg = EvalIntExpression(PPos+1, UInt3, &OK) << 24;
+         if (OK)
+           (*Erg) += AdrVals[0];
+       }
+     }
+     if (!OK)
+       return ModNone;
      else if (MayShorten)
-      if (((*Erg)&0x87)==0x80)
-       BEGIN
-        *Erg=((*Erg)&0xf8)+((*Erg)>>24); return ModBit51;
-       END
-      else if (((*Erg)&0xf0)==0x20)
-       BEGIN
-        *Erg=(((*Erg)&0x0f)<<3)+((*Erg)>>24); return ModBit51;
-       END
-      else return ModBit251;
-     else return ModBit251;
-    END
+     {
+       if (((*Erg) & 0x87) == 0x80)
+       {
+         *Erg = ((*Erg) & 0xf8) + ((*Erg) >> 24);
+         return ModBit51;
+       }
+       else if (((*Erg) & 0xf0) == 0x20)
+       {
+         *Erg = (((*Erg) & 0x0f) << 3) + ((*Erg) >> 24);
+         return ModBit51;
+       }
+       else
+         return ModBit251;
+     }
+     else
+       return ModBit251;
+   }
 END
 
         static Boolean Chk504(LongInt Adr)
@@ -2116,8 +2159,7 @@ END
 BEGIN
    Word AdrByte;
    Boolean OK;
-   int z,DSeg;
-   String s;
+   int DSeg;
    UNUSED(Index);
 
    FirstPassUnknown=False;
@@ -2143,12 +2185,6 @@ BEGIN
          else
           BEGIN
            if ((AdrByte & 0xe0)!=0x20) WrError(220);
-           AdrByte=(AdrByte-0x20) << 3;
-          END
-         for (z=0; z<8; z++)
-          BEGIN
-           sprintf(s,"%s.%c",LabPart,z+'0');
-           EnterIntSymbol(s,AdrByte+z,SegBData,False);
           END
          if (MakeUseList)
           if (AddChunk(SegChunks+SegBData,AdrByte,8,False)) WrError(90);
@@ -2167,16 +2203,23 @@ BEGIN
    LongInt AdrLong;
    UNUSED(Index);
 
-   if (MomCPU>=CPU80251)
+   if (ArgCnt!=1) WrError(1110);
+   else if (MomCPU >= CPU80251)
     BEGIN
-     if (ArgCnt!=1) WrError(1110);
-     else if (DecodeBitAdr(ArgStr[1],&AdrLong,False)==ModBit251)
+     if (DecodeBitAdr(ArgStr[1], &AdrLong, False) == ModBit251)
       BEGIN
-       EnterIntSymbol(LabPart,AdrLong,SegNone,False);
-       sprintf(ListLine,"=%sH.%s",HexString(AdrLong&0xff,2),HexString(AdrLong>>24,1));
+       EnterIntSymbol(LabPart, AdrLong, SegNone, False);
+       sprintf(ListLine, "=%sH.%s", HexString(AdrLong&0xff, 2), HexString(AdrLong >> 24, 1));
       END
     END
-   else CodeEquate(SegBData,0,0xff);
+   else
+    BEGIN
+     if (DecodeBitAdr(ArgStr[1], &AdrLong, False) == ModBit51)
+      BEGIN
+       EnterIntSymbol(LabPart, AdrLong, SegBData, False);
+       sprintf(ListLine, "=%s", HexString(AdrLong, 2));
+      END
+    END
 END
 
         static void DecodePORT(Word Index)

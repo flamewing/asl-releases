@@ -33,6 +33,7 @@
 /*                      register names must be 2 chars long                  */
 /*           15.10.2000 added handling of outer displacement in ()           */
 /*           12.11.2000 RelPos must be 4 for MOVEM                           */
+/*           2001-12-02 fixed problems with forward refs of shift arguments  */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -592,6 +593,18 @@ BEGIN
           AdrVals[4]=SwapField[1];
           AdrVals[5]=SwapField[0];
          END
+        break;
+       case 8: /* special arg 1..8 */
+        AdrCnt = 2;
+        FirstPassUnknown = False;
+        HVal8 = EvalIntExpression(Asc, UInt4, &ValOK);
+        if (ValOK)
+         BEGIN
+          if (FirstPassUnknown)
+           HVal8 = 1;
+          ValOK = ChkRange(HVal8, 1, 8);
+         END
+        if (ValOK) AdrVals[0]=(Word)((Byte) HVal8);
         break;
       END
      ChkAdr(Erl); return;
@@ -1418,7 +1431,7 @@ BEGIN
        if (CheckColdSize())
         BEGIN
          WAsmCode[0]=0xe000 | AdrMode | (Op << 3) | (OpSize << 6) | (LFlag << 8);
-         OpSize=1;
+         OpSize = 8;
          DecodeAdr(ArgStr[1],Mdata+Mimm);
          if ((AdrNum==1) OR ((AdrNum==11) AND (Lo(AdrVals[0])>=1) AND (Lo(AdrVals[0])<=8)))
           BEGIN

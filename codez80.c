@@ -7,6 +7,7 @@
 /* Historie: 26. 8.1996 Grundsteinlegung                                     */
 /*            1. 2.1998 ChkPC ersetzt                                        */
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
+/*           2001-12-11 begun with Rabbit2000                                */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -22,6 +23,7 @@
 #include "asmpars.h"
 #include "asmcode.h"
 #include "asmallg.h"
+#include "asmitree.h"
 #include "codepseudo.h"
 #include "codevars.h"
 
@@ -30,7 +32,6 @@
 
 typedef struct
          {
-          char *Name;
           CPUVar MinCPU;
           Byte Len;
           Word Code;
@@ -93,10 +94,11 @@ static ALUOrder *ALUOrders;
 static char **ShiftOrders;
 static char **BitOrders;
 static Condition *Conditions;
+static PInstTable InstTable;
 
 static SimpProc SaveInitProc;
 
-static CPUVar CPUZ80,CPUZ80U,CPUZ180,CPUZ380;
+static CPUVar CPUZ80, CPUZ80U, CPUZ180, CPUR2000, CPUZ380;
 
 static Boolean MayLW,             /* Instruktion erlaubt 32 Bit */
                ExtFlag,           /* Prozessor im 4GByte-Modus ? */
@@ -105,158 +107,11 @@ static Boolean MayLW,             /* Instruktion erlaubt 32 Bit */
 static PrefType CurrPrefix,       /* mom. explizit erzeugter Praefix */
                 LastPrefix;       /* von der letzten Anweisung generierter Praefix */
 
-/*==========================================================================*/
-/* Codetabellenerzeugung */
-
-        static void AddFixed(char *NewName, CPUVar NewMin, Byte NewLen, Word NewCode)
-BEGIN
-   if (InstrZ>=FixedOrderCnt) exit(255);
-   FixedOrders[InstrZ].Name=NewName;
-   FixedOrders[InstrZ].MinCPU=NewMin;
-   FixedOrders[InstrZ].Len=NewLen;
-   FixedOrders[InstrZ++].Code=NewCode;
-END
-
-        static void AddAcc(char *NewName, CPUVar NewMin, Byte NewLen, Word NewCode)
-BEGIN
-   if (InstrZ>=AccOrderCnt) exit(255);
-   AccOrders[InstrZ].Name=NewName;
-   AccOrders[InstrZ].MinCPU=NewMin;
-   AccOrders[InstrZ].Len=NewLen;
-   AccOrders[InstrZ++].Code=NewCode;
-END
-
-        static void AddHL(char *NewName, CPUVar NewMin, Byte NewLen, Word NewCode)
-BEGIN
-   if (InstrZ>=HLOrderCnt) exit(255);
-   HLOrders[InstrZ].Name=NewName;
-   HLOrders[InstrZ].MinCPU=NewMin;
-   HLOrders[InstrZ].Len=NewLen;
-   HLOrders[InstrZ++].Code=NewCode;
-END
-
-        static void AddALU(char *NewName, Byte NCode)
-BEGIN
-   if (InstrZ>=ALUOrderCnt) exit(255);
-   ALUOrders[InstrZ].Name=NewName;
-   ALUOrders[InstrZ++].Code=NCode;
-END
-
-        static void AddShift(char *NName)
-BEGIN
-   if (InstrZ>=ShiftOrderCnt) exit(255);
-   ShiftOrders[InstrZ++]=NName;
-END
-
-        static void AddBit(char *NName)
-BEGIN
-   if (InstrZ>=BitOrderCnt) exit(255);
-   BitOrders[InstrZ++]=NName;
-END
-
-        static void AddCondition(char *NewName, Byte NewCode)
-BEGIN
-   if (InstrZ>=ConditionCnt) exit(255);
-   Conditions[InstrZ].Name=NewName;
-   Conditions[InstrZ++].Code=NewCode;
-END
-
-        static void InitFields(void)
-BEGIN
-   InstrZ=0; Conditions=(Condition *) malloc(sizeof(Condition)*ConditionCnt);
-   AddCondition("NZ",0); AddCondition("Z" ,1);
-   AddCondition("NC",2); AddCondition("C" ,3);
-   AddCondition("PO",4); AddCondition("NV",4);
-   AddCondition("PE",5); AddCondition("V" ,5);
-   AddCondition("P" ,6); AddCondition("NS",6);
-   AddCondition("M" ,7); AddCondition("S" ,7);
-
-   InstrZ=0; FixedOrders=(BaseOrder *) malloc(sizeof(BaseOrder)*FixedOrderCnt);
-   AddFixed("EXX"  ,CPUZ80 ,1,0x00d9); AddFixed("LDI"  ,CPUZ80 ,2,0xeda0);
-   AddFixed("LDIR" ,CPUZ80 ,2,0xedb0); AddFixed("LDD"  ,CPUZ80 ,2,0xeda8);
-   AddFixed("LDDR" ,CPUZ80 ,2,0xedb8); AddFixed("CPI"  ,CPUZ80 ,2,0xeda1);
-   AddFixed("CPIR" ,CPUZ80 ,2,0xedb1); AddFixed("CPD"  ,CPUZ80 ,2,0xeda9);
-   AddFixed("CPDR" ,CPUZ80 ,2,0xedb9); AddFixed("RLCA" ,CPUZ80 ,1,0x0007);
-   AddFixed("RRCA" ,CPUZ80 ,1,0x000f); AddFixed("RLA"  ,CPUZ80 ,1,0x0017);
-   AddFixed("RRA"  ,CPUZ80 ,1,0x001f); AddFixed("RLD"  ,CPUZ80 ,2,0xed6f);
-   AddFixed("RRD"  ,CPUZ80 ,2,0xed67); AddFixed("DAA"  ,CPUZ80 ,1,0x0027);
-   AddFixed("CCF"  ,CPUZ80 ,1,0x003f); AddFixed("SCF"  ,CPUZ80 ,1,0x0037);
-   AddFixed("NOP"  ,CPUZ80 ,1,0x0000); AddFixed("HALT" ,CPUZ80 ,1,0x0076);
-   AddFixed("RETI" ,CPUZ80 ,2,0xed4d); AddFixed("RETN" ,CPUZ80 ,2,0xed45);
-   AddFixed("INI"  ,CPUZ80 ,2,0xeda2); AddFixed("INIR" ,CPUZ80 ,2,0xedb2);
-   AddFixed("IND"  ,CPUZ80 ,2,0xedaa); AddFixed("INDR" ,CPUZ80 ,2,0xedba);
-   AddFixed("OUTI" ,CPUZ80 ,2,0xeda3); AddFixed("OTIR" ,CPUZ80 ,2,0xedb3);
-   AddFixed("OUTD" ,CPUZ80 ,2,0xedab); AddFixed("OTDR" ,CPUZ80 ,2,0xedbb);
-   AddFixed("SLP"  ,CPUZ180,2,0xed76); AddFixed("OTIM" ,CPUZ180,2,0xed83);
-   AddFixed("OTIMR",CPUZ180,2,0xed93); AddFixed("OTDM" ,CPUZ180,2,0xed8b);
-   AddFixed("OTDMR",CPUZ180,2,0xed9b); AddFixed("BTEST",CPUZ380,2,0xedcf);
-   AddFixed("EXALL",CPUZ380,2,0xedd9); AddFixed("EXXX" ,CPUZ380,2,0xddd9);
-   AddFixed("EXXY" ,CPUZ380,2,0xfdd9); AddFixed("INDW" ,CPUZ380,2,0xedea);
-   AddFixed("INDRW",CPUZ380,2,0xedfa); AddFixed("INIW" ,CPUZ380,2,0xede2);
-   AddFixed("INIRW",CPUZ380,2,0xedf2); AddFixed("LDDW" ,CPUZ380,2,0xede8);
-   AddFixed("LDDRW",CPUZ380,2,0xedf8); AddFixed("LDIW" ,CPUZ380,2,0xede0);
-   AddFixed("LDIRW",CPUZ380,2,0xedf0); AddFixed("MTEST",CPUZ380,2,0xddcf);
-   AddFixed("OTDRW",CPUZ380,2,0xedfb); AddFixed("OTIRW",CPUZ380,2,0xedf3);
-   AddFixed("OUTDW",CPUZ380,2,0xedeb); AddFixed("OUTIW",CPUZ380,2,0xede3);
-   AddFixed("RETB" ,CPUZ380,2,0xed55);
-
-   InstrZ=0; AccOrders=(BaseOrder *) malloc(sizeof(BaseOrder)*AccOrderCnt);
-   AddAcc("CPL"  ,CPUZ80 ,1,0x002f); AddAcc("NEG"  ,CPUZ80 ,2,0xed44);
-   AddAcc("EXTS" ,CPUZ380,2,0xed65);
-
-   InstrZ=0; HLOrders=(BaseOrder *) malloc(sizeof(BaseOrder)*HLOrderCnt);
-   AddHL("CPLW" ,CPUZ380,2,0xdd2f);  AddHL("NEGW" ,CPUZ380,2,0xed54);
-   AddHL("EXTSW",CPUZ380,2,0xed75);
-
-   InstrZ=0; ALUOrders=(ALUOrder *) malloc(sizeof(ALUOrder)*ALUOrderCnt);
-   AddALU("SUB", 2); AddALU("AND", 4);
-   AddALU("OR" , 6); AddALU("XOR", 5);
-   AddALU("CP" , 7);
-
-   InstrZ=0; ShiftOrders=(char **) malloc(sizeof(char *)*ShiftOrderCnt);
-   AddShift("RLC"); AddShift("RRC"); AddShift("RL"); AddShift("RR"); 
-   AddShift("SLA"); AddShift("SRA"); AddShift("SLIA"); AddShift("SRL");
-
-   InstrZ=0; BitOrders=(char **) malloc(sizeof(char *)*BitOrderCnt);
-   AddBit("BIT"); AddBit("RES"); AddBit("SET");
-END
-
-        static void DeinitFields(void)
-BEGIN
-   free(Conditions);
-   free(FixedOrders);
-   free(AccOrders);
-   free(HLOrders);
-   free(ALUOrders);
-   free(ShiftOrders);
-   free(BitOrders);
-END
 
 /*==========================================================================*/
-/* Adressbereiche */
+/* aux functions */
 
-        static LargeWord CodeEnd(void)
-BEGIN
-#ifdef __STDC__
-   if (ExtFlag) return 0xfffffffflu;
-#else
-   if (ExtFlag) return 0xffffffffl;
-#endif
-   else if (MomCPU==CPUZ180) return 0x7ffffl;
-   else return 0xffff;
-END
-
-        static LargeWord PortEnd(void)
-BEGIN
-#ifdef __STDC__
-   if (ExtFlag) return 0xfffffffflu;
-#else
-   if (ExtFlag) return 0xffffffffl;
-#endif
-   else return 0xff;
-END
-
-/*==========================================================================*/
+/*--------------------------------------------------------------------------*/
 /* Praefix dazuaddieren */
 
         static Boolean ExtendPrefix(PrefType *Dest, char *AddArg)
@@ -314,33 +169,42 @@ END
 /*--------------------------------------------------------------------------*/
 /* Code fuer Praefix bilden */
 
-        static void GetPrefixCode(PrefType inp, Byte *b1 ,Byte *b2)
-BEGIN
-   int z;
+static void GetPrefixCode(PrefType inp, Byte *b1 ,Byte *b2)
+{
+  int z;
 
-   z=((int)inp)-1;
-   *b1=0xdd+((z & 4) << 3);
-   *b2=0xc0+(z & 3);
-END
+  z = ((int)inp) - 1;
+  *b1 = 0xdd + ((z & 4) << 3);
+  *b2 = 0xc0 + (z & 3);
+}
 
 /*--------------------------------------------------------------------------*/
 /* DD-Praefix addieren, nur EINMAL pro Instruktion benutzen! */
 
-        static void ChangeDDPrefix(char *Add)
-BEGIN
-   PrefType ActPrefix;
-   int z;
+static void ChangeDDPrefix(char *Add)
+{
+  PrefType ActPrefix;
+  int z;
 
-   ActPrefix=LastPrefix;
-   if (ExtendPrefix(&ActPrefix,Add))
-    if (LastPrefix!=ActPrefix)
-     BEGIN
-      if (LastPrefix!=Pref_IN_N) RetractWords(2);
-      for (z=PrefixCnt-1; z>=0; z--) BAsmCode[2+z]=BAsmCode[z];
-      PrefixCnt+=2;
-      GetPrefixCode(ActPrefix,BAsmCode+0,BAsmCode+1);
-     END
-END
+  ActPrefix = LastPrefix;
+  if (ExtendPrefix(&ActPrefix, Add))
+    if (LastPrefix != ActPrefix)
+    {
+      if (LastPrefix != Pref_IN_N) RetractWords(2);
+      for (z = PrefixCnt - 1; z >= 0; z--) BAsmCode[2 + z] = BAsmCode[z];
+      PrefixCnt += 2;
+      GetPrefixCode(ActPrefix, BAsmCode + 0, BAsmCode + 1);
+    }
+}
+
+/*--------------------------------------------------------------------------*/
+/* IX/IY used ? */
+
+static Boolean IndexPrefix(void)
+{
+  return (BAsmCode[PrefixCnt - 1] == IXPrefix)
+      || (BAsmCode[PrefixCnt - 1] == IYPrefix);
+}
 
 /*--------------------------------------------------------------------------*/
 /* Wortgroesse ? */
@@ -598,221 +462,243 @@ BEGIN
     END
 END
 
-/*-------------------------------------------------------------------------*/
-/* Bedingung entschluesseln */
+/*==========================================================================*/
+/* instruction decoders */
 
-        static Boolean DecodeCondition(char *Name, int *Erg)
-BEGIN
-   int z;
-   String Name_N;
+static void DecodeFixed(Word Index)
+{
+  BaseOrder *POrder = FixedOrders + Index;
 
-   strmaxcpy(Name_N,Name,255); NLS_UpString(Name_N);
+  if (ArgCnt != 0) WrError(1110);
+  else if (MomCPU < POrder->MinCPU) WrError(1500);
+  else
+  {
+    if (POrder->Len == 2)
+    {
+      BAsmCode[PrefixCnt++] = Hi(POrder->Code);
+      BAsmCode[PrefixCnt++] = Lo(POrder->Code);
+    }
+    else
+      BAsmCode[PrefixCnt++] = Lo(POrder->Code);
+    CodeLen = PrefixCnt;
+  }
+}
 
-   z=0;
-   while ((z<ConditionCnt) AND (strcmp(Conditions[z].Name,Name_N)!=0)) z++;
-   if (z>ConditionCnt) return False;
-   else
-    BEGIN
-     *Erg=Conditions[z].Code; return True;
-    END
-END
+static void DecodeAcc(Word Index)
+{
+  BaseOrder *POrder = AccOrders + Index;
 
-/*-------------------------------------------------------------------------*/
-/* Sonderregister dekodieren */
+  if (ArgCnt > 1) WrError(1110);
+  else if (MomCPU < POrder->MinCPU) WrError(1500);
+  else if ((ArgCnt) && (strcasecmp(ArgStr[1], "A"))) WrError(1350);
+  else
+  {
+    if (POrder->Len == 2)
+    {
+      BAsmCode[PrefixCnt++] = Hi(POrder->Code);
+      BAsmCode[PrefixCnt++] = Lo(POrder->Code);
+    }
+    else
+      BAsmCode[PrefixCnt++] = Lo(POrder->Code);
+    CodeLen = PrefixCnt;
+  }
+}
 
-        static Boolean DecodeSFR(char *Inp, Byte *Erg)
-BEGIN
-   if (strcasecmp(Inp,"SR")==0) *Erg=1;
-   else if (strcasecmp(Inp,"XSR")==0) *Erg=5;
-   else if (strcasecmp(Inp,"DSR")==0) *Erg=6;
-   else if (strcasecmp(Inp,"YSR")==0) *Erg=7;
-   else return False;
-   return True;
-END
+static void DecodeHL(Word Index)
+{
+  BaseOrder *POrder = HLOrders + Index;
 
-/*=========================================================================*/
+  if (ArgCnt > 1) WrError(1110);
+  else if (MomCPU < POrder->MinCPU) WrError(1500);
+  else if ((ArgCnt) && (strcasecmp(ArgStr[1], "HL"))) WrError(1350);
+  else
+  {
+    if (POrder->Len == 2)
+    {
+      BAsmCode[PrefixCnt++] = Hi(POrder->Code);
+      BAsmCode[PrefixCnt++] = Lo(POrder->Code);
+    }
+    else
+      BAsmCode[PrefixCnt++] = Lo(POrder->Code);
+    CodeLen = PrefixCnt;
+  }
+}
 
-        static Boolean DecodePseudo(void)
-BEGIN
-   if (Memo("PORT"))
-    BEGIN
-     CodeEquate(SegIO,0,PortEnd());
-     return True;
-    END
-
-   /* Kompatibilitaet zum M80 */
-
-   if (Memo("DEFB")) strmaxcpy(OpPart,"DB",255);
-   if (Memo("DEFW")) strmaxcpy(OpPart,"DW",255);
-
-   return False;
-END
-
-        static void DecodeLD(void)
+        static void DecodeLD(Word Index)
 BEGIN
    Byte AdrByte,HLen;
    int z;
    Byte HVals[5];
 
-   if (ArgCnt!=2) WrError(1110);
+   UNUSED(Index);
+
+   if (ArgCnt != 2) WrError(1110);
    else
-    BEGIN
+   {
      DecodeAdr(ArgStr[1]);
      switch (AdrMode)
-      BEGIN
+     {
        case ModReg8:
-        if (AdrPart==7) /* LD A,... */
-         BEGIN
-          OpSize=0; DecodeAdr(ArgStr[2]);
-          switch (AdrMode)
-           BEGIN
-            case ModReg8: /* LD A,R8/RX8/(HL)/(XY+D) */
-             BAsmCode[PrefixCnt]=0x78+AdrPart;
-             memcpy(BAsmCode+PrefixCnt+1,AdrVals,AdrCnt);
-             CodeLen=PrefixCnt+1+AdrCnt;
-             break;
-            case ModIndReg16: /* LD A,(BC)/(DE) */
-             BAsmCode[0]=0x0a+(AdrPart << 4); CodeLen=1;
-             break;
-            case ModImm: /* LD A,imm8 */
-             BAsmCode[0]=0x3e; BAsmCode[1]=AdrVals[0]; CodeLen=2;
-             break;
-            case ModAbs: /* LD a,(adr) */
-             BAsmCode[PrefixCnt]=0x3a;
-             memcpy(BAsmCode+PrefixCnt+1,AdrVals,AdrCnt);
-             CodeLen=PrefixCnt+1+AdrCnt;
-             break;
-            case ModRef: /* LD A,R */
-             BAsmCode[0]=0xed; BAsmCode[1]=0x5f;
-             CodeLen=2;
-             break;
-            case ModInt: /* LD A,I */
-             BAsmCode[0]=0xed; BAsmCode[1]=0x57;
-             CodeLen=2;
-             break;
-            default: if (AdrMode!=ModNone) WrError(1350);
-           END
-         END
-        else if ((AdrPart!=6) AND (PrefixCnt==0)) /* LD R8,... */
-         BEGIN
-          AdrByte=AdrPart; OpSize=0; DecodeAdr(ArgStr[2]);
-          switch (AdrMode)
-           BEGIN
-            case ModReg8: /* LD R8,R8/RX8/(HL)/(XY+D) */
-             if (((AdrByte==4) OR (AdrByte==5)) AND (PrefixCnt==1) AND (AdrCnt==0)) WrError(1350);
-             else
-              BEGIN
-               BAsmCode[PrefixCnt]=0x40+(AdrByte << 3)+AdrPart;
-               memcpy(BAsmCode+PrefixCnt+1,AdrVals,AdrCnt);
-               CodeLen=PrefixCnt+1+AdrCnt;
-              END
-             break;
-            case ModImm: /* LD R8,imm8 */
-             BAsmCode[0]=0x06+(AdrByte << 3); BAsmCode[1]=AdrVals[0];
-             CodeLen=2;
-             break;
-            default: if (AdrMode!=ModNone) WrError(1350);
-           END
-         END
-        else if ((AdrPart==4) OR (AdrPart==5)) /* LD RX8,... */
-         BEGIN
-          AdrByte=AdrPart; OpSize=0; DecodeAdr(ArgStr[2]);
-          switch (AdrMode)
-           BEGIN
-            case ModReg8: /* LD RX8,R8/RX8 */
-             if (AdrPart==6) WrError(1350);
-             else if ((AdrPart>=4) AND (AdrPart<=5) AND (PrefixCnt!=2)) WrError(1350);
-             else if ((AdrPart>=4) AND (AdrPart<=5) AND (BAsmCode[0]!=BAsmCode[1])) WrError(1350);
-             else
-              BEGIN
-               if (PrefixCnt==2) PrefixCnt--;
-               BAsmCode[PrefixCnt]=0x40+(AdrByte << 3)+AdrPart;
-               CodeLen=PrefixCnt+1;
-              END
-             break;
-            case ModImm: /* LD RX8,imm8 */
-             BAsmCode[PrefixCnt]=0x06+(AdrByte << 3);
-             BAsmCode[PrefixCnt+1]=AdrVals[0];
-             CodeLen=PrefixCnt+2;
-             break;
-            default: if (AdrMode!=ModNone) WrError(1350);
-           END
-         END
-        else /* LD (HL)/(XY+d),... */
-         BEGIN
-          HLen=AdrCnt; memcpy(HVals,AdrVals,AdrCnt); z=PrefixCnt;
-          if ((z==0) AND (Memo("LDW")))
-           BEGIN
-            OpSize=1; MayLW=True;
-           END
-          else OpSize=0;
-          DecodeAdr(ArgStr[2]);
-          switch (AdrMode)
-           BEGIN
-            case ModReg8: /* LD (HL)/(XY+D),R8 */
-             if ((PrefixCnt!=z) OR (AdrPart==6)) WrError(1350);
-             else
-              BEGIN
-               BAsmCode[PrefixCnt]=0x70+AdrPart;
-               memcpy(BAsmCode+PrefixCnt+1,HVals,HLen);
-               CodeLen=PrefixCnt+1+HLen;
-              END
-             break;
-            case ModImm: /* LD (HL)/(XY+D),imm8:16:32 */
-             if ((z==0) AND (Memo("LDW")))
+         if (AdrPart == 7) /* LD A, ... */
+         {
+           OpSize = 0; DecodeAdr(ArgStr[2]);
+           switch (AdrMode)
+           {
+             case ModReg8: /* LD A, R8/RX8/(HL)/(XY+D) */
+               BAsmCode[PrefixCnt] = 0x78 + AdrPart;
+               memcpy(BAsmCode + PrefixCnt + 1, AdrVals, AdrCnt);
+               CodeLen = PrefixCnt + 1 + AdrCnt;
+               break;
+             case ModIndReg16: /* LD A, (BC)/(DE) */
+               BAsmCode[PrefixCnt++] = 0x0a + (AdrPart << 4);
+               CodeLen = PrefixCnt;
+               break;
+             case ModImm: /* LD A, imm8 */
+               BAsmCode[PrefixCnt++] = 0x3e;
+               BAsmCode[PrefixCnt++] = AdrVals[0];
+               CodeLen = PrefixCnt;
+               break;
+             case ModAbs: /* LD a, (adr) */
+               BAsmCode[PrefixCnt] = 0x3a;
+               memcpy(BAsmCode + PrefixCnt + 1, AdrVals, AdrCnt);
+               CodeLen = PrefixCnt + 1 + AdrCnt;
+               break;
+             case ModRef: /* LD A, R */
+               BAsmCode[PrefixCnt++] = 0xed;
+               BAsmCode[PrefixCnt++] = 0x5f;
+               CodeLen = PrefixCnt;
+               break;
+             case ModInt: /* LD A, I */
+               BAsmCode[PrefixCnt++] = 0xed;
+               BAsmCode[PrefixCnt++] = 0x57;
+               CodeLen = PrefixCnt;
+               break;
+             default:
+               if (AdrMode != ModNone) WrError(1350);
+           }
+         }
+         else if ((AdrPart != 6) && (PrefixCnt == 0)) /* LD R8, ... */
+         {
+           AdrByte = AdrPart; OpSize = 0; DecodeAdr(ArgStr[2]);
+           switch (AdrMode)
+           {
+             case ModReg8: /* LD R8, R8/RX8/(HL)/(XY+D) */
+               /* if (I(XY)+d) as target, cannot use H/L as source ! */
+               if (((AdrByte == 4) || (AdrByte == 5)) && (IndexPrefix()) && (AdrCnt == 0)) WrError(1350);
+               else
+               {
+                 BAsmCode[PrefixCnt] = 0x40 + (AdrByte << 3) + AdrPart;
+                 memcpy(BAsmCode + PrefixCnt + 1, AdrVals, AdrCnt);
+                 CodeLen = PrefixCnt + 1 + AdrCnt;
+               }
+               break;
+             case ModImm: /* LD R8, imm8 */
+               BAsmCode[0] = 0x06 + (AdrByte << 3); BAsmCode[1] = AdrVals[0];
+               CodeLen = 2;
+               break;
+             default:
+               if (AdrMode != ModNone) WrError(1350);
+           }
+         }
+         else if ((AdrPart == 4) || (AdrPart == 5)) /* LD RX8, ... */
+         {
+           AdrByte = AdrPart; OpSize = 0; DecodeAdr(ArgStr[2]);
+           switch (AdrMode)
+            BEGIN
+             case ModReg8: /* LD RX8, R8/RX8 */
+              if (AdrPart == 6) WrError(1350);        /* stopped here */
+              else if ((AdrPart >= 4) && (AdrPart <= 5) && (PrefixCnt != 2)) WrError(1350);
+              else if ((AdrPart >= 4) && (AdrPart <= 5) && (BAsmCode[0] != BAsmCode[1])) WrError(1350);
+              else
+               BEGIN
+                if (PrefixCnt==2) PrefixCnt--;
+                BAsmCode[PrefixCnt]=0x40+(AdrByte << 3)+AdrPart;
+                CodeLen=PrefixCnt+1;
+               END
+              break;
+             case ModImm: /* LD RX8,imm8 */
+              BAsmCode[PrefixCnt]=0x06+(AdrByte << 3);
+              BAsmCode[PrefixCnt+1]=AdrVals[0];
+              CodeLen=PrefixCnt+2;
+              break;
+             default: if (AdrMode!=ModNone) WrError(1350);
+            END
+         }
+         else /* LD (HL)/(XY+d),... */
+         {
+           HLen=AdrCnt; memcpy(HVals,AdrVals,AdrCnt); z=PrefixCnt;
+           if ((z==0) AND (Memo("LDW")))
+            BEGIN
+             OpSize=1; MayLW=True;
+            END
+           else OpSize=0;
+           DecodeAdr(ArgStr[2]);
+           switch (AdrMode)
+            BEGIN
+             case ModReg8: /* LD (HL)/(XY+D),R8 */
+              if ((PrefixCnt!=z) OR (AdrPart==6)) WrError(1350);
+              else
+               BEGIN
+                BAsmCode[PrefixCnt]=0x70+AdrPart;
+                memcpy(BAsmCode+PrefixCnt+1,HVals,HLen);
+                CodeLen=PrefixCnt+1+HLen;
+               END
+              break;
+             case ModImm: /* LD (HL)/(XY+D),imm8:16:32 */
+              if ((z==0) AND (Memo("LDW")))
+               if (MomCPU<CPUZ380) WrError(1500);
+               else
+                BEGIN
+                 BAsmCode[PrefixCnt]=0xed; BAsmCode[PrefixCnt+1]=0x36;
+                 memcpy(BAsmCode+PrefixCnt+2,AdrVals,AdrCnt);
+                 CodeLen=PrefixCnt+2+AdrCnt;
+                END
+              else
+               BEGIN
+                BAsmCode[PrefixCnt]=0x36;
+                memcpy(BAsmCode+1+PrefixCnt,HVals,HLen);
+                BAsmCode[PrefixCnt+1+HLen]=AdrVals[0];
+                CodeLen=PrefixCnt+1+HLen+AdrCnt;
+               END
+              break;
+             case ModReg16: /* LD (HL)/(XY+D),R16/XY */
               if (MomCPU<CPUZ380) WrError(1500);
+              else if (AdrPart==3) WrError(1350);
+              else if (HLen==0)
+               if (PrefixCnt==z) /* LD (HL),R16 */
+                BEGIN
+                 if (AdrPart==2) AdrPart=3;
+                 BAsmCode[0]=0xfd; BAsmCode[1]=0x0f+(AdrPart << 4);
+                 CodeLen=2;
+                END
+               else /* LD (HL),XY */
+                BEGIN
+                 CodeLen=PrefixCnt+1; BAsmCode[PrefixCnt]=0x31;
+                 CodeLen=1+PrefixCnt;
+                END
               else
-               BEGIN
-                BAsmCode[PrefixCnt]=0xed; BAsmCode[PrefixCnt+1]=0x36;
-                memcpy(BAsmCode+PrefixCnt+2,AdrVals,AdrCnt);
-                CodeLen=PrefixCnt+2+AdrCnt;
-               END
-             else
-              BEGIN
-               BAsmCode[PrefixCnt]=0x36;
-               memcpy(BAsmCode+1+PrefixCnt,HVals,HLen);
-               BAsmCode[PrefixCnt+1+HLen]=AdrVals[0];
-               CodeLen=PrefixCnt+1+HLen+AdrCnt;
-              END
-             break;
-            case ModReg16: /* LD (HL)/(XY+D),R16/XY */
-             if (MomCPU<CPUZ380) WrError(1500);
-             else if (AdrPart==3) WrError(1350);
-             else if (HLen==0)
-              if (PrefixCnt==z) /* LD (HL),R16 */
-               BEGIN
-                if (AdrPart==2) AdrPart=3;
-                BAsmCode[0]=0xfd; BAsmCode[1]=0x0f+(AdrPart << 4);
-                CodeLen=2;
-               END
-              else /* LD (HL),XY */
-               BEGIN
-                CodeLen=PrefixCnt+1; BAsmCode[PrefixCnt]=0x31;
-                CodeLen=1+PrefixCnt;
-               END
-             else
-              if (PrefixCnt==z) /* LD (XY+D),R16 */
-               BEGIN
-                if (AdrPart==2) AdrPart=3;
-                BAsmCode[PrefixCnt]=0xcb;
-                memcpy(BAsmCode+PrefixCnt+1,HVals,HLen);
-                BAsmCode[PrefixCnt+1+HLen]=0x0b+(AdrPart << 4);
-                CodeLen=PrefixCnt+1+HLen+1;
-               END
-              else if (BAsmCode[0]==BAsmCode[1]) WrError(1350);
-              else
-               BEGIN
-                PrefixCnt--;
-                BAsmCode[PrefixCnt]=0xcb;
-                memcpy(BAsmCode+PrefixCnt+1,HVals,HLen);
-                BAsmCode[PrefixCnt+1+HLen]=0x2b;
-                CodeLen=PrefixCnt+1+HLen+1;
-               END
-             break;
-            default: if (AdrMode!=ModNone) WrError(1350);
-           END
-         END
-        break;
+               if (PrefixCnt==z) /* LD (XY+D),R16 */
+                BEGIN
+                 if (AdrPart==2) AdrPart=3;
+                 BAsmCode[PrefixCnt]=0xcb;
+                 memcpy(BAsmCode+PrefixCnt+1,HVals,HLen);
+                 BAsmCode[PrefixCnt+1+HLen]=0x0b+(AdrPart << 4);
+                 CodeLen=PrefixCnt+1+HLen+1;
+                END
+               else if (BAsmCode[0]==BAsmCode[1]) WrError(1350);
+               else
+                BEGIN
+                 PrefixCnt--;
+                 BAsmCode[PrefixCnt]=0xcb;
+                 memcpy(BAsmCode+PrefixCnt+1,HVals,HLen);
+                 BAsmCode[PrefixCnt+1+HLen]=0x2b;
+                 CodeLen=PrefixCnt+1+HLen+1;
+                END
+              break;
+             default: if (AdrMode!=ModNone) WrError(1350);
+            END
+         }
+         break;
        case ModReg16:
         if (AdrPart==3) /* LD SP,... */
          BEGIN
@@ -1129,8 +1015,216 @@ BEGIN
          END
         break;
        default: if (AdrMode!=ModNone) WrError(1350);
-      END /* outer switch */
+     }  /* outer switch */
+   }
+}
+
+/*==========================================================================*/
+/* Codetabellenerzeugung */
+
+static void AddFixed(char *NewName, CPUVar NewMin, Byte NewLen, Word NewCode)
+{
+  if (InstrZ >= FixedOrderCnt) exit(255);
+  FixedOrders[InstrZ].MinCPU = NewMin;
+  FixedOrders[InstrZ].Len = NewLen;
+  FixedOrders[InstrZ].Code = NewCode;
+  AddInstTable(InstTable, NewName, InstrZ++, DecodeFixed);
+}
+
+static void AddAcc(char *NewName, CPUVar NewMin, Byte NewLen, Word NewCode)
+{
+  if (InstrZ >= AccOrderCnt) exit(255);
+  AccOrders[InstrZ].MinCPU = NewMin;
+  AccOrders[InstrZ].Len = NewLen;
+  AccOrders[InstrZ].Code = NewCode;
+  AddInstTable(InstTable, NewName, InstrZ++, DecodeAcc);
+}
+
+static void AddHL(char *NewName, CPUVar NewMin, Byte NewLen, Word NewCode)
+{
+  if (InstrZ>=HLOrderCnt) exit(255);
+  HLOrders[InstrZ].MinCPU = NewMin;
+  HLOrders[InstrZ].Len = NewLen;
+  HLOrders[InstrZ].Code = NewCode;
+  AddInstTable(InstTable, NewName, InstrZ++, DecodeHL);
+}
+
+        static void AddALU(char *NewName, Byte NCode)
+BEGIN
+   if (InstrZ>=ALUOrderCnt) exit(255);
+   ALUOrders[InstrZ].Name=NewName;
+   ALUOrders[InstrZ++].Code=NCode;
+END
+
+        static void AddShift(char *NName)
+BEGIN
+   if (InstrZ>=ShiftOrderCnt) exit(255);
+   ShiftOrders[InstrZ++]=NName;
+END
+
+        static void AddBit(char *NName)
+BEGIN
+   if (InstrZ>=BitOrderCnt) exit(255);
+   BitOrders[InstrZ++]=NName;
+END
+
+        static void AddCondition(char *NewName, Byte NewCode)
+BEGIN
+   if (InstrZ>=ConditionCnt) exit(255);
+   Conditions[InstrZ].Name=NewName;
+   Conditions[InstrZ++].Code=NewCode;
+END
+
+        static void InitFields(void)
+BEGIN
+   InstTable = CreateInstTable(203);
+
+   AddInstTable(InstTable, "LD" , 0, DecodeLD);
+   AddInstTable(InstTable, "LDW", 1, DecodeLD);
+
+   InstrZ=0; Conditions=(Condition *) malloc(sizeof(Condition)*ConditionCnt);
+   AddCondition("NZ",0); AddCondition("Z" ,1);
+   AddCondition("NC",2); AddCondition("C" ,3);
+   AddCondition("PO",4); AddCondition("NV",4);
+   AddCondition("PE",5); AddCondition("V" ,5);
+   AddCondition("P" ,6); AddCondition("NS",6);
+   AddCondition("M" ,7); AddCondition("S" ,7);
+
+   InstrZ = 0; FixedOrders = (BaseOrder *) malloc(sizeof(BaseOrder) * FixedOrderCnt);
+   AddFixed("EXX"  ,CPUZ80 , 1, 0x00d9); AddFixed("LDI"  , CPUZ80 , 2, 0xeda0);
+   AddFixed("LDIR" ,CPUZ80 , 2, 0xedb0); AddFixed("LDD"  , CPUZ80 , 2, 0xeda8);
+   AddFixed("LDDR" ,CPUZ80 , 2, 0xedb8); AddFixed("CPI"  , CPUZ80 , 2, 0xeda1);
+   AddFixed("CPIR" ,CPUZ80 , 2, 0xedb1); AddFixed("CPD"  , CPUZ80 , 2, 0xeda9);
+   AddFixed("CPDR" ,CPUZ80 , 2, 0xedb9); AddFixed("RLCA" , CPUZ80 , 1, 0x0007);
+   AddFixed("RRCA" ,CPUZ80 , 1, 0x000f); AddFixed("RLA"  , CPUZ80 , 1, 0x0017);
+   AddFixed("RRA"  ,CPUZ80 , 1, 0x001f); AddFixed("RLD"  , CPUZ80 , 2, 0xed6f);
+   AddFixed("RRD"  ,CPUZ80 , 2, 0xed67); AddFixed("DAA"  , CPUZ80 , 1, 0x0027);
+   AddFixed("CCF"  ,CPUZ80 , 1, 0x003f); AddFixed("SCF"  , CPUZ80 , 1, 0x0037);
+   AddFixed("NOP"  ,CPUZ80 , 1, 0x0000); AddFixed("HALT" , CPUZ80 , 1, 0x0076);
+   AddFixed("RETI" ,CPUZ80 , 2, 0xed4d); AddFixed("RETN" , CPUZ80 , 2, 0xed45);
+   AddFixed("INI"  ,CPUZ80 , 2, 0xeda2); AddFixed("INIR" , CPUZ80 , 2, 0xedb2);
+   AddFixed("IND"  ,CPUZ80 , 2, 0xedaa); AddFixed("INDR" , CPUZ80 , 2, 0xedba);
+   AddFixed("OUTI" ,CPUZ80 , 2, 0xeda3); AddFixed("OTIR" , CPUZ80 , 2, 0xedb3);
+   AddFixed("OUTD" ,CPUZ80 , 2, 0xedab); AddFixed("OTDR" , CPUZ80 , 2, 0xedbb);
+   AddFixed("SLP"  ,CPUZ180, 2, 0xed76); AddFixed("OTIM" , CPUZ180, 2, 0xed83);
+   AddFixed("OTIMR",CPUZ180, 2, 0xed93); AddFixed("OTDM" , CPUZ180, 2, 0xed8b);
+   AddFixed("OTDMR",CPUZ180, 2, 0xed9b); AddFixed("BTEST", CPUZ380, 2, 0xedcf);
+   AddFixed("EXALL",CPUZ380, 2, 0xedd9); AddFixed("EXXX" , CPUZ380, 2, 0xddd9);
+   AddFixed("EXXY" ,CPUZ380, 2, 0xfdd9); AddFixed("INDW" , CPUZ380, 2, 0xedea);
+   AddFixed("INDRW",CPUZ380, 2, 0xedfa); AddFixed("INIW" , CPUZ380, 2, 0xede2);
+   AddFixed("INIRW",CPUZ380, 2, 0xedf2); AddFixed("LDDW" , CPUZ380, 2, 0xede8);
+   AddFixed("LDDRW",CPUZ380, 2, 0xedf8); AddFixed("LDIW" , CPUZ380, 2, 0xede0);
+   AddFixed("LDIRW",CPUZ380, 2, 0xedf0); AddFixed("MTEST", CPUZ380, 2, 0xddcf);
+   AddFixed("OTDRW",CPUZ380, 2, 0xedfb); AddFixed("OTIRW", CPUZ380, 2, 0xedf3);
+   AddFixed("OUTDW",CPUZ380, 2, 0xedeb); AddFixed("OUTIW", CPUZ380, 2, 0xede3);
+   AddFixed("RETB" ,CPUZ380, 2, 0xed55);
+
+   InstrZ=0; AccOrders =(BaseOrder *) malloc(sizeof(BaseOrder) * AccOrderCnt);
+   AddAcc("CPL"  , CPUZ80 , 1, 0x002f); AddAcc("NEG"  ,CPUZ80 ,2, 0xed44);
+   AddAcc("EXTS" , CPUZ380, 2, 0xed65);
+
+   InstrZ=0; HLOrders=(BaseOrder *) malloc(sizeof(BaseOrder)*HLOrderCnt);
+   AddHL("CPLW" ,CPUZ380,2,0xdd2f);  AddHL("NEGW" ,CPUZ380,2,0xed54);
+   AddHL("EXTSW",CPUZ380,2,0xed75);
+
+   InstrZ=0; ALUOrders=(ALUOrder *) malloc(sizeof(ALUOrder)*ALUOrderCnt);
+   AddALU("SUB", 2); AddALU("AND", 4);
+   AddALU("OR" , 6); AddALU("XOR", 5);
+   AddALU("CP" , 7);
+
+   InstrZ=0; ShiftOrders=(char **) malloc(sizeof(char *)*ShiftOrderCnt);
+   AddShift("RLC"); AddShift("RRC"); AddShift("RL"); AddShift("RR"); 
+   AddShift("SLA"); AddShift("SRA"); AddShift("SLIA"); AddShift("SRL");
+
+   InstrZ=0; BitOrders=(char **) malloc(sizeof(char *)*BitOrderCnt);
+   AddBit("BIT"); AddBit("RES"); AddBit("SET");
+END
+
+        static void DeinitFields(void)
+BEGIN
+   free(Conditions);
+   free(FixedOrders);
+   free(AccOrders);
+   free(HLOrders);
+   free(ALUOrders);
+   free(ShiftOrders);
+   free(BitOrders);
+
+   DestroyInstTable(InstTable);
+END
+
+/*==========================================================================*/
+/* Adressbereiche */
+
+        static LargeWord CodeEnd(void)
+BEGIN
+#ifdef __STDC__
+   if (ExtFlag) return 0xfffffffflu;
+#else
+   if (ExtFlag) return 0xffffffffl;
+#endif
+   else if (MomCPU==CPUZ180) return 0x7ffffl;
+   else return 0xffff;
+END
+
+        static LargeWord PortEnd(void)
+BEGIN
+#ifdef __STDC__
+   if (ExtFlag) return 0xfffffffflu;
+#else
+   if (ExtFlag) return 0xffffffffl;
+#endif
+   else return 0xff;
+END
+
+/*-------------------------------------------------------------------------*/
+/* Bedingung entschluesseln */
+
+        static Boolean DecodeCondition(char *Name, int *Erg)
+BEGIN
+   int z;
+   String Name_N;
+
+   strmaxcpy(Name_N,Name,255); NLS_UpString(Name_N);
+
+   z=0;
+   while ((z<ConditionCnt) AND (strcmp(Conditions[z].Name,Name_N)!=0)) z++;
+   if (z>ConditionCnt) return False;
+   else
+    BEGIN
+     *Erg=Conditions[z].Code; return True;
     END
+END
+
+/*-------------------------------------------------------------------------*/
+/* Sonderregister dekodieren */
+
+        static Boolean DecodeSFR(char *Inp, Byte *Erg)
+BEGIN
+   if (strcasecmp(Inp,"SR")==0) *Erg=1;
+   else if (strcasecmp(Inp,"XSR")==0) *Erg=5;
+   else if (strcasecmp(Inp,"DSR")==0) *Erg=6;
+   else if (strcasecmp(Inp,"YSR")==0) *Erg=7;
+   else return False;
+   return True;
+END
+
+/*=========================================================================*/
+
+        static Boolean DecodePseudo(void)
+BEGIN
+   if (Memo("PORT"))
+    BEGIN
+     CodeEquate(SegIO,0,PortEnd());
+     return True;
+    END
+
+   /* Kompatibilitaet zum M80 */
+
+   if (Memo("DEFB")) strmaxcpy(OpPart,"DB",255);
+   if (Memo("DEFW")) strmaxcpy(OpPart,"DW",255);
+
+   return False;
 END
 
         static Boolean ParPair(char *Name1, char *Name2)
@@ -1296,21 +1390,28 @@ BEGIN
            END
           break;
          case ModReg16:
-          if (AdrPart==3) /* SP */
+          if (AdrPart == 3) /* SP */
            BEGIN
-            OpSize=1; DecodeAdr(ArgStr[2]);
+            OpSize = (MomCPU == CPUZ380) ? 1 : 0;
+            DecodeAdr(ArgStr[2]);
             switch (AdrMode)
              BEGIN
               case ModImm:
-               if (MomCPU<CPUZ380) WrError(1500);
-               else
+               if (MomCPU == CPUZ380)
                 BEGIN
-                 BAsmCode[0]=0xed; BAsmCode[1]=0x82;
-                 memcpy(BAsmCode+2,AdrVals,AdrCnt);
-                 CodeLen=2+AdrCnt;
+                 BAsmCode[0] = 0xed; BAsmCode[1] = 0x82;
+                 memcpy(BAsmCode + 2, AdrVals, AdrCnt);
+                 CodeLen = 2 + AdrCnt;
                 END
+               else if (MomCPU == CPUR2000)
+                BEGIN
+                 BAsmCode[0] = 0x27; BAsmCode[1] = 0[AdrVals];
+                 CodeLen = 2;
+                END
+               else WrError(1500);
                break;
-              default: if (AdrMode!=ModNone) WrError(1350);
+              default:
+               if (AdrMode != ModNone) WrError(1350);
              END
            END
           else if (AdrPart!=2) WrError(1350);
@@ -1775,6 +1876,61 @@ BEGIN
    return False;
 END
 
+static void StripPref(const char *Arg, Byte Opcode)
+{
+  char *ptr, *ptr2;
+  int z;
+
+  /* do we have a prefix ? */
+
+  if (!strcmp(OpPart, Arg))
+  {
+    /* add to code */
+
+    BAsmCode[PrefixCnt++] = Opcode;
+    *OpPart = '\0';
+
+    /* cut true opcode out of next argument */
+
+    if (ArgCnt)
+    {
+      /* look for end of string */
+
+      for (ptr = ArgStr[1]; *ptr; ptr++)
+        if (isspace(*ptr))
+          break;
+
+      /* look for beginning of next string */
+
+      for (ptr2 = ptr; *ptr2; ptr2++)
+        if (!isspace(*ptr2))
+          break;
+
+      /* copy out new opcode */
+ 
+      *ptr = '\0';
+      strcpy(OpPart, ArgStr[1]);
+      NLS_UpString(OpPart);
+
+      /* cut down arg or eliminate it completely */
+
+      if (*ptr2)
+        strcpy(ArgStr[1], ptr2);
+      else
+      {
+        for (z = 1; z < ArgCnt; z++)
+          strcpy(ArgStr[z], ArgStr[z + 1]);
+        ArgCnt--;
+      }
+    }
+
+    /* if no further argument, that's all folks */
+
+    else
+      CodeLen = PrefixCnt;
+  }
+}
+
         static void MakeCode_Z80(void)
 BEGIN
    Boolean OK;
@@ -1784,6 +1940,14 @@ BEGIN
    int z;
 
    CodeLen=0; DontPrint=False; PrefixCnt=0; OpSize=0xff; MayLW=False;
+
+/*--------------------------------------------------------------------------*/
+/* Rabbit 2000 prefixes */
+
+   if (MomCPU == CPUR2000)
+   {
+     StripPref("ALTD", 0x76);
+   }    
 
    /* zu ignorierendes */
 
@@ -1828,79 +1992,10 @@ BEGIN
     END
 
 /*--------------------------------------------------------------------------*/
-/* mit Sicherheit am haeufigsten... */
+/* by table */
 
-   if ((Memo("LD")) OR (Memo("LDW")))
-    BEGIN
-     DecodeLD();
+   if (LookupInstTable(InstTable,OpPart))
      return;
-    END
-
-/*--------------------------------------------------------------------------*/
-/* ohne Operanden */
-
-   for (z=0; z<FixedOrderCnt; z++)
-    if (Memo(FixedOrders[z].Name))
-     BEGIN
-      if (ArgCnt!=0) WrError(1110);
-      else if (MomCPU<FixedOrders[z].MinCPU) WrError(1500);
-      else
-       BEGIN
-        if ((CodeLen=FixedOrders[z].Len)==2)
-         BEGIN
-          BAsmCode[0]=Hi(FixedOrders[z].Code);
-          BAsmCode[1]=Lo(FixedOrders[z].Code);
-         END
-        else BAsmCode[0]=Lo(FixedOrders[z].Code);
-       END;
-      return;
-     END
-
-   /* nur Akku zugelassen */
-
-   for (z=0; z<AccOrderCnt; z++)
-    if (Memo(AccOrders[z].Name))
-     BEGIN
-      if (ArgCnt==0)
-       BEGIN
-        ArgCnt=1; strmaxcpy(ArgStr[1],"A",255);
-       END
-      if (ArgCnt!=1) WrError(1110);
-      else if (strcasecmp(ArgStr[1],"A")!=0) WrError(1350);
-      else if (MomCPU<AccOrders[z].MinCPU) WrError(1500);
-      else
-       BEGIN
-        if ((CodeLen=AccOrders[z].Len)==2)
-         BEGIN
-          BAsmCode[0]=Hi(AccOrders[z].Code);
-          BAsmCode[1]=Lo(AccOrders[z].Code);
-         END
-        else BAsmCode[0]=Lo(AccOrders[z].Code);
-       END
-      return;
-     END
-
-   for (z=0; z<HLOrderCnt; z++)
-    if (Memo(HLOrders[z].Name))
-     BEGIN
-      if (ArgCnt==0)
-       BEGIN
-        ArgCnt=1; strmaxcpy(ArgStr[1],"HL",255);
-       END;
-      if (ArgCnt!=1) WrError(1110);
-      else if (strcasecmp(ArgStr[1],"HL")!=0) WrError(1350);
-      else if (MomCPU<HLOrders[z].MinCPU) WrError(1500);
-      else
-       BEGIN
-        if ((CodeLen=HLOrders[z].Len)==2)
-         BEGIN
-          BAsmCode[0]=Hi(HLOrders[z].Code);
-          BAsmCode[1]=Lo(HLOrders[z].Code);
-         END
-        else BAsmCode[0]=Lo(HLOrders[z].Code);
-       END
-      return;
-     END
 
 /*-------------------------------------------------------------------------*/
 /* Datentransfer */
@@ -2816,10 +2911,11 @@ END
 
         void codez80_init(void)
 BEGIN
-   CPUZ80 =AddCPU("Z80" ,SwitchTo_Z80);
-   CPUZ80U=AddCPU("Z80UNDOC",SwitchTo_Z80);
-   CPUZ180=AddCPU("Z180",SwitchTo_Z80);
-   CPUZ380=AddCPU("Z380",SwitchTo_Z80);
+   CPUZ80   = AddCPU("Z80"       , SwitchTo_Z80);
+   CPUZ80U  = AddCPU("Z80UNDOC"  , SwitchTo_Z80);
+   CPUZ180  = AddCPU("Z180"      , SwitchTo_Z80);
+   CPUR2000 = AddCPU("RABBIT2000", SwitchTo_Z80);
+   CPUZ380  = AddCPU("Z380"      , SwitchTo_Z80);
 
    SaveInitProc=InitPassProc; InitPassProc=InitCode_Z80;
 END
