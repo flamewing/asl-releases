@@ -7,6 +7,7 @@
 /* Historie:   4. 7.1999 Grundsteinlegung                                   */
 /*            29. 7.1999 doppelte Variable entfernt                         */
 /*             9. 3.2000 'ambiguous else'-Warnungen beseitigt               */
+/*           14. 1.2001 silenced warnings about unused parameters           */
 /*                                                                          */
 /****************************************************************************/
 
@@ -305,6 +306,7 @@ END
         static void DecodeMOV(Word Index)
 BEGIN
    Byte HReg;
+   UNUSED(Index);
    
    if (ArgCnt != 2) WrError(1110);
    else
@@ -434,6 +436,7 @@ END
         static void DecodeMOVW(Word Index)
 BEGIN
    Byte HReg;
+   UNUSED(Index);
 
    OpSize = 1;
    if (ArgCnt != 2) WrError(1110);
@@ -587,6 +590,8 @@ END
 
         static void DecodeXCH(Word Index)
 BEGIN
+   UNUSED(Index);
+
    if (ArgCnt != 2) WrError(1110);
    else
     BEGIN
@@ -616,6 +621,7 @@ END
         static void DecodeXCHW(Word Index)
 BEGIN
    Byte HReg;
+   UNUSED(Index);
 
    if (ArgCnt != 2) WrError(1110);
    else
@@ -706,6 +712,7 @@ END
         static void DecodeCMP(Word Index)
 BEGIN
    Byte HReg;
+   UNUSED(Index);
 
    if ((ArgCnt != 1) AND (ArgCnt != 2)) WrError(1110);
    else
@@ -838,6 +845,7 @@ END
         static void DecodeCALLV(Word Index)
 BEGIN
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt != 1) WrError(1110);
    else if (*ArgStr[1] != '#') WrError(1120);

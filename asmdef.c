@@ -23,6 +23,11 @@
 /*            7. 5.2000 Packing hinzugefuegt                                 */
 /*            1. 6.2000 added NestMax                                        */
 /*            2. 7.2000 updated year in copyright                            */
+/*            1.11.2000 added RelSegs flag                                   */
+/*           24.12.2000 added NoICEMask                                      */
+/*           14. 1.2001 silenced warnings about unused parameters            */
+/*           27. 3.2001 don't use a number as default PC symbol              */
+/*           2001-09-29 add segment name for STRUCT (just to be sure...)     */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -47,10 +52,10 @@ char OBJSuffix[]=".obj";
 char *EnvName="ASCMD";                /* Environment-Variable fuer Default-
 					Parameter */
 
-char *SegNames[PCMax+1]={"NOTHING","CODE","DATA","IDATA","XDATA","YDATA",
-                         "BITDATA","IO","REG","ROMDATA"};
-char SegShorts[PCMax+1]={'-','C','D','I','X','Y','B','P','R','O'};
-LongInt Magic=0x12372c44;
+char *SegNames[PCMax + 2] = {"NOTHING", "CODE", "DATA", "IDATA", "XDATA", "YDATA",
+                             "BITDATA", "IO", "REG", "ROMDATA", "STRUCT"};
+char SegShorts[PCMax + 2] = {'-','C','D','I','X','Y','B','P','R','O','S'};
+LongInt Magic=0x12372d44;
 
 /** ValidSymChars:SET OF Char=['A'..'Z','a'..'z',#128..#165,'0'..'9','_','.']; **/
 
@@ -60,6 +65,7 @@ LongInt Magic=0x12372c44;
    StringPtr CursUp;		            /*   "     "  Cursor hoch */
 
    LargeWord PCs[StructSeg+1];              /* Programmzaehler */
+   Boolean RelSegs;                         /* relokatibles Segment ? */
    LargeWord StartAdr;                      /* Programmstartadresse */
    Boolean StartAdrPresent;                 /*          "           definiert? */
    LargeWord Phases[StructSeg+1];           /* Verschiebungen */
@@ -85,6 +91,7 @@ LongInt Magic=0x12372c44;
    Byte MaxSymPass;	            /* Pass, nach dem Symbole definiert sein muessen */
    Byte ShareMode;                  /* 0=kein SHARED,1=Pascal-,2=C-Datei, 3=ASM-Datei */
    DebugType DebugMode;             /* Ausgabeformat Debug-Datei */
+   Word NoICEMask;                  /* which symbols to use in NoICE dbg file */
    Byte ListMode;                   /* 0=kein Listing,1=Konsole,2=auf Datei */
    Byte ListOn;		    	    /* Listing erzeugen ? */
    Boolean MakeUseList; 	    /* Belegungsliste ? */
@@ -258,6 +265,8 @@ END
 
         void Default_InternSymbol(char *Asc, TempResult *Erg)
 BEGIN
+   UNUSED(Asc);
+
    Erg->Typ=TempNone;
 END
 
@@ -287,7 +296,7 @@ BEGIN
       da das schon von den Konstantenparsern im Formelparser abgefangen
       wuerde */
 
-   PCSymbol = "1";
+   PCSymbol = "--PC--SYMBOL--";
    *DefCPU = '\0';
 
    for (z=0; z<=ParMax; z++) ArgStr[z]=GetString();

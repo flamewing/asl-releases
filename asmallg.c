@@ -18,11 +18,17 @@
 /*                       added NESTMAX instruction                           */
 /*            26. 6.2000 added EXPORT instruction                            */
 /*             6. 7.2000 unknown symbol in EXPORT triggers repassing         */
+/*            30.10.2000 EXTERN also works for symbols without a segment spec*/
+/*             1.11.2000 added ASEG/RSEG                                     */
+/*            14. 1.2001 silenced warnings about unused parameters           */
+/*                       use SegInits also when segment hasn't been used up  */
+/*                       to now                                              */
 /*                                                                           */
 /*****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
+#include <ctype.h>
 
 #include "nls.h"
 #include "strutil.h"
@@ -104,6 +110,17 @@ BEGIN
    return (Lauf != Nil);
 END
 
+	static void SetNSeg(Byte NSeg)
+BEGIN
+   if ((ActPC != NSeg) OR (NOT PCsUsed[ActPC]))
+    BEGIN
+     ActPC = NSeg;
+     if (NOT PCsUsed[ActPC]) PCs[ActPC] = SegInits[ActPC];
+     PCsUsed[ActPC] = True;
+     DontPrint = True;
+    END
+END 
+
 	char *IntLine(LongInt Inp)
 BEGIN
    static String s;
@@ -129,6 +146,7 @@ END
 	static void CodeSECTION(Word Index)
 BEGIN
    PSaveSection Neu;
+   UNUSED(Index);
 
    if (ArgCnt!=1) WrError(1110);
    else if (ExpandSymbol(ArgStr[1]))
@@ -163,6 +181,7 @@ END
 	static void CodeENDSECTION(Word Index)
 BEGIN
    PSaveSection Tmp;
+   UNUSED(Index);
 
    if (ArgCnt>1) WrError(1110);
    else if (SectionStack==Nil) WrError(1487);
@@ -187,12 +206,15 @@ END
 
 	static void CodeCPU(Word Index)
 BEGIN
+   UNUSED(Index);
+
    if (ArgCnt!=1) WrError(1110);
    else if (*AttrPart!='\0') WrError(1100);
    else
     BEGIN
      NLS_UpString(ArgStr[1]);
-     if (SetNCPU(ArgStr[1], False)) ActPC = SegCode;
+     if (SetNCPU(ArgStr[1], False))
+       SetNSeg(SegCode);
     END
 END
 
@@ -202,6 +224,7 @@ BEGIN
    TempResult t;
    Boolean MayChange;
    Integer DestSeg;
+   UNUSED(Index);
 
    FirstPassUnknown=False;
    MayChange=((NOT Memo("EQU")) AND (NOT Memo("=")));
@@ -249,6 +272,7 @@ END
 BEGIN
    LargeInt HVal;
    Boolean ValOK;
+   UNUSED(Index);
 
    FirstPassUnknown=False;
    if (*AttrPart!='\0') WrError(1100);
@@ -286,6 +310,7 @@ BEGIN
    LargeInt HVal;
    Double FVal;
    String s,c;
+   UNUSED(Index);
 
    if (ShareMode==0) WrError(30);
    else if ((ArgCnt==0) AND (*CommPart!='\0'))
@@ -315,7 +340,7 @@ BEGIN
        END
       else
        BEGIN
-	ValOK=GetIntSymbol(ArgStr[z],&HVal);
+	ValOK=GetIntSymbol(ArgStr[z], &HVal, NULL);
 	switch (ShareMode)
          BEGIN
 	  case 1: sprintf(s,"$%s",HexString(HVal,0)); break;
@@ -355,12 +380,21 @@ END
 BEGIN
    int z;
    LargeInt Value;
+   PRelocEntry Relocs;
+   UNUSED(Index);
 
    for (z = 1; z <= ArgCnt; z++)
     BEGIN
      FirstPassUnknown = True;
-     if (GetIntSymbol(ArgStr[z], &Value))
-      AddExport(ArgStr[z], Value);
+     if (GetIntSymbol(ArgStr[z], &Value, &Relocs))
+      BEGIN
+       if (Relocs == NULL)
+        AddExport(ArgStr[z], Value, 0);
+       else if ((Relocs->Next != NULL) OR (strcmp(Relocs->Ref, RelName_SegStart) != 0))
+        WrXError(1156, ArgStr[z]);
+       else
+        AddExport(ArgStr[z], Value, RelFlag_Relative);
+      END
      else
       BEGIN
        Repass = True;
@@ -374,6 +408,7 @@ END
 BEGIN
    Integer LVal,WVal;
    Boolean ValOK;
+   UNUSED(Index);
 
    if ((ArgCnt!=1) AND (ArgCnt!=2)) WrError(1110);
    else if (*AttrPart!='\0') WrError(1100);
@@ -402,6 +437,7 @@ END
 BEGIN
    ShortInt HVal8;
    Boolean ValOK;
+   UNUSED(Index);
 
    if (ArgCnt>1) WrError(1110);
    else if (*AttrPart!='\0') WrError(1100);
@@ -440,6 +476,7 @@ END
 BEGIN
    Boolean OK;
    LongInt HVal;
+   UNUSED(Index);
 
    if (ArgCnt!=1) WrError(1110);
    else if (ActPC==StructSeg) WrError(1553);
@@ -453,6 +490,8 @@ END
 
 	static void CodeDEPHASE(Word Index)
 BEGIN
+   UNUSED(Index);
+
    if (ArgCnt!=0) WrError(1110);
    else if (ActPC==StructSeg) WrError(1553);
    else Phases[ActPC]=0;
@@ -463,6 +502,7 @@ END
 BEGIN
    String mess;
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt!=1) WrError(1110);
    else
@@ -478,6 +518,7 @@ END
 BEGIN
    String mess;
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt!=1) WrError(1110);
    else
@@ -494,6 +535,7 @@ END
 BEGIN
    String mess;
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt!=1) WrError(1110);
    else
@@ -509,6 +551,7 @@ END
 BEGIN
    String mess;
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt!=1) WrError(1110);
    else
@@ -526,6 +569,7 @@ BEGIN
    unsigned char tfield[256];
    LongWord Start,l,TStart,Stop,z;
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt>3) WrError(1110);
    else if (ArgCnt==0)
@@ -602,6 +646,7 @@ END
 	static void CodePRSET(Word Index)
 BEGIN
    int z,z2;
+   UNUSED(Index);
 
    for (z=0; z<16; z++)
     BEGIN
@@ -616,6 +661,7 @@ END
 BEGIN
    PTransTable Prev,Run,New,Source;
    int erg=0;
+   UNUSED(Index);
 
    if ((ArgCnt!=1) AND (ArgCnt!=2)) WrError(1110);
    else if (NOT ChkSymbName(ArgStr[1])) WrXError(1020,ArgStr[1]);
@@ -659,6 +705,7 @@ BEGIN
    String FName;
    Boolean OK;
    int z;
+   UNUSED(Index);
 
    if (ArgCnt<2) WrError(1110);
    else
@@ -685,6 +732,7 @@ END
 	static void CodeSAVE(Word Index)
 BEGIN
    PSaveState Neu;
+   UNUSED(Index);
 
    if (ArgCnt!=0) WrError(1110);
    else
@@ -704,6 +752,7 @@ END
 	static void CodeRESTORE(Word Index)
 BEGIN
    PSaveState Old;
+   UNUSED(Index);
 
    if (ArgCnt!=0) WrError(1110);
    else if (FirstSaveState==Nil) WrError(1450);
@@ -728,24 +777,19 @@ BEGIN
    Byte SegZ;
    Word Mask;
    Boolean Found;
+   UNUSED(Index);
 
-   if (ArgCnt!=1) WrError(1110);
+   if (ArgCnt != 1) WrError(1110);
    else
     BEGIN
-     Found=False; NLS_UpString(ArgStr[1]);
-     for (SegZ=1,Mask=2; SegZ<=PCMax; SegZ++,Mask<<=1)
-      if (((ValidSegs&Mask)!=0) AND (strcmp(ArgStr[1],SegNames[SegZ])==0))
+     Found = False; NLS_UpString(ArgStr[1]);
+     for (SegZ = 1,Mask = 2; SegZ <= PCMax; SegZ++,Mask <<= 1)
+      if (((ValidSegs&Mask) != 0) AND (strcmp(ArgStr[1], SegNames[SegZ]) == 0))
        BEGIN
-        Found=True;
-        if (ActPC!=SegZ)
- 	 BEGIN
-	  ActPC=SegZ;
-	  if (NOT PCsUsed[ActPC]) PCs[ActPC]=SegInits[ActPC];
-	  PCsUsed[ActPC]=True;
-	  DontPrint=True;
-	 END
+        Found = True;
+        SetNSeg(SegZ);
        END
-     if (NOT Found) WrXError(1961,ArgStr[1]);
+     if (NOT Found) WrXError(1961, ArgStr[1]);
     END
 END
 
@@ -754,6 +798,7 @@ END
 BEGIN
    LongInt Erg;
    Boolean OK;
+   UNUSED(Index);
 
    FirstPassUnknown=False;
    if (ArgCnt!=1) WrError(1110);
@@ -777,6 +822,7 @@ BEGIN
    TempResult Erg;
    Boolean OK;
    LongInt SaveLocHandle;
+   UNUSED(Index);
 
    if ((ArgCnt!=1) AND (ArgCnt!=2)) WrError(1110);
    else
@@ -833,6 +879,7 @@ BEGIN
    Word Dummy;
    Boolean OK;
    LongInt NewPC;
+   UNUSED(Index);
 
    if (ArgCnt!=1) WrError(1110);
    else
@@ -862,6 +909,7 @@ BEGIN
    Boolean OK;
    LongInt Counter,First=0,Last=0;
    String SymPart;
+   UNUSED(Index);
 
    Counter=0;
    if (ArgCnt==0) WrError(1110);
@@ -899,6 +947,7 @@ END
 BEGIN
    LongInt HVal;
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt>1) WrError(1110);
    else
@@ -923,6 +972,7 @@ END
 BEGIN
    Byte Value=0xff;
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt!=1) WrError(1110);
    else if (*AttrPart!='\0') WrError(1100);
@@ -948,6 +998,7 @@ BEGIN
    Boolean OK, SaveTurnWords;
    LargeWord OldPC;
    String Name;
+   UNUSED(Index);
 
    if ((ArgCnt < 1) OR (ArgCnt > 3)) WrError(1110);
    else if (ActPC == StructSeg) WrError(1940);
@@ -1020,6 +1071,7 @@ END
         static void CodePUSHV(Word Index)
 BEGIN
    int z;
+   UNUSED(Index);
 
    if (ArgCnt<2) WrError(1110);
    else
@@ -1033,6 +1085,7 @@ END
         static void CodePOPV(Word Index)
 BEGIN
    int z;
+   UNUSED(Index);
 
    if (ArgCnt<2) WrError(1110);
    else
@@ -1046,6 +1099,7 @@ END
 	static PForwardSymbol CodePPSyms_SearchSym(PForwardSymbol Root, char *Comp)
 BEGIN
    PForwardSymbol Lauf=Root;
+   UNUSED(Comp);
 
    while ((Lauf!=Nil) AND (strcmp(Lauf->Name,Comp)!=0)) Lauf=Lauf->Next;
    return Lauf;
@@ -1057,6 +1111,7 @@ BEGIN
    PStructure NStruct;
    int z;
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt>1) WrError(1110);
    else if (NOT ChkSymbName(LabPart)) WrXError(1020,LabPart);
@@ -1102,6 +1157,7 @@ BEGIN
    PStructure OStruct;
    TempResult t;
    String tmp;
+   UNUSED(Index);
 
    if (ArgCnt>1) WrError(1110);
    else if (StructureStack==Nil) WrError(1550);
@@ -1137,6 +1193,7 @@ BEGIN
    int i;
    Boolean OK;
    Byte Type;
+   UNUSED(Index);
 
    if (ArgCnt < 1) WrError(1110);
    else
@@ -1149,15 +1206,15 @@ BEGIN
         Type = SegNone;
        else
         BEGIN
+         *Split = '\0';
          for (Type = SegNone + 1; Type <= PCMax; Type++)
           if (strcasecmp(Split + 1, SegNames[Type]) == 0)
            break;
-         if (Type > PCMax) WrXError(1961, Split + 1);
-         else
-          BEGIN
-           *Split = '\0';
-           EnterExtSymbol(ArgStr[i], 0, Type, FALSE);
-          END
+        END
+       if (Type > PCMax) WrXError(1961, Split + 1);
+       else
+        BEGIN
+         EnterExtSymbol(ArgStr[i], 0, Type, FALSE);
         END
        i++;
       END
@@ -1168,6 +1225,7 @@ END
 BEGIN
    LongInt Temp;
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt != 1) WrError(1110);
    else
@@ -1180,6 +1238,15 @@ BEGIN
        else NestMax = Temp;
       END
     END
+END
+
+	static void CodeSEGTYPE(Word Index)
+BEGIN
+   UNUSED(Index);
+
+   if (ArgCnt != 0) WrError(1110);
+   else
+    RelSegs = (toupper(*OpPart) == 'R');
 END
 
 	static void CodePPSyms(PForwardSymbol *Orig,
@@ -1285,6 +1352,7 @@ typedef struct
          } PseudoOrder;
 static PseudoOrder Pseudos[]=
                    {{"ALIGN",      CodeALIGN     },
+                    {"ASEG",       CodeSEGTYPE   },
                     {"BINCLUDE",   CodeBINCLUDE  },
                     {"CHARSET",    CodeCHARSET   },
                     {"CODEPAGE",   CodeCODEPAGE  },
@@ -1313,6 +1381,7 @@ static PseudoOrder Pseudos[]=
                     {"RADIX",      CodeRADIX     },
                     {"READ",       CodeREAD      },
                     {"RESTORE",    CodeRESTORE   },
+                    {"RSEG",       CodeSEGTYPE   },
                     {"SAVE",       CodeSAVE      },
                     {"SECTION",    CodeSECTION   },
                     {"SEGMENT",    CodeSEGMENT   },

@@ -23,6 +23,8 @@
 ;*           13. 7.1999 Fehlermeldungen fuer extern-Symbole                  *
 ;*           13. 2.2000 Kommandozeilenoption olist                           *
 ;*            1. 6.2000 changed error message 1850                           *
+;*           21. 7.2001 not repeatable error message                         *
+;*           2001-10-03 warning implicit X-conversion                        *
 ;*                                                                           *
 ;*****************************************************************************
 
@@ -158,6 +160,10 @@ Message ErrMsgWOverRange
 Message ErrMsgNegDUP
  "negatives Argument f&uuml;r DUP"
  "negative argument for DUP"
+
+Message ErrMsgConvIndX
+ "einzelner X-Operand wird als indizierte und nicht als implizite Adressierung interpretiert"
+ "single X operand interpreted as indexed and not implicit addressing"
 
 ;*****
 
@@ -417,6 +423,10 @@ Message ErrMsgInvStructDir
  "Ung&uuml;ltige STRUCT-Direktive"
  "invalid STRUCT directive"
 
+Message ErrMsgNotRepeatable
+ "Anweisung nicht wiederholbar"
+ "Instruction is not repeatable"
+
 Message ErrMsgShortRead
  "vorzeitiges Dateiende"
  "unexpected end of file"
@@ -627,7 +637,11 @@ Message ErrMsgNoRelocs
 
 Message ErrMsgUnresRelocs
  "unverarbeitete externe Referenzen"
- "unresolved external references"
+ "unprocessed external references"
+
+Message ErrMsgUnexportable
+ "Symbol nicht exportierbar"
+ "cannot export this symbol"
 
 ;----------------------------------------------------------------------------
 ; Strings in Listingkopfzeile

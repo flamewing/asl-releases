@@ -25,6 +25,9 @@
 /*           20. 5.2000 added ArgCName, AllArgName                           */
 /*            1. 6.2000 added NestMax                                        */
 /*           26. 6.2000 added exports                                        */
+/*            1.11.2000 added RelSegs flag                                   */
+/*           24.12.2000 added NoICEMask                                      */
+/*           2001-09-29 add segment name for STRUCT (just to be sure...)     */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -117,6 +120,7 @@ typedef struct _TExportEntry
           struct _TExportEntry *Next;
           char *Name;
           int len;
+          LongWord Flags;
           LargeWord Value;
         } TExportEntry, *PExportEntry;
 
@@ -177,8 +181,8 @@ extern char *EnvName;
 
 #define StructSeg (PCMax+1)
 
-extern char *SegNames[PCMax+1];
-extern char SegShorts[PCMax+1];
+extern char *SegNames[PCMax + 2];
+extern char SegShorts[PCMax + 2];
 
 extern LongInt Magic;
 
@@ -262,6 +266,7 @@ extern StringPtr ClrEol;
 extern StringPtr CursUp;
 
 extern LargeWord PCs[StructSeg+1];
+extern Boolean RelSegs;
 extern LargeWord StartAdr;
 extern Boolean StartAdrPresent;
 extern LargeWord Phases[StructSeg+1];
@@ -287,6 +292,7 @@ extern Boolean Repass;
 extern Byte MaxSymPass;
 extern Byte ShareMode;
 extern DebugType DebugMode;
+extern Word NoICEMask;
 extern Byte ListMode;
 extern Byte ListOn;
 extern Boolean MakeUseList;

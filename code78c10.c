@@ -7,6 +7,8 @@
 /* Historie: 29.12.1996 Grundsteinlegung                                     */
 /*            2. 1.1999 ChkPC-Anpassung                                      */
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
+/*           24.10.2000 fixed some errors (MOV A<>mem/DCRW/ETMM/PUSH V/POP V)*/
+/*           25.10.2000 accesses wrong argument for mov nnn,a                */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -135,7 +137,7 @@ BEGIN
    AddSReg("PF"  , 0x05); AddSReg("MKH" , 0x06);
    AddSReg("MKL" , 0x07); AddSReg("ANM" , 0x08);
    AddSReg("SMH" , 0x09); AddSReg("SML" , 0x0a);
-   AddSReg("EOM" , 0x0b); AddSReg("ETNM", 0x0c);
+   AddSReg("EOM" , 0x0b); AddSReg("ETMM", 0x0c);
    AddSReg("TMM" , 0x0d); AddSReg("MM"  , 0x10);
    AddSReg("MCC" , 0x11); AddSReg("MA"  , 0x12);
    AddSReg("MB"  , 0x13); AddSReg("MC"  , 0x14);
@@ -180,7 +182,7 @@ BEGIN
    AddReg2("SLLC", 0x4804); AddReg2("SLRC", 0x4800);
 
    WorkOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*WorkOrderCnt); InstrZ=0;
-   AddWork("DCRW", 0x33); AddWork("INRW", 0x20);
+   AddWork("DCRW", 0x30); AddWork("INRW", 0x20);
    AddWork("LDAW", 0x01); AddWork("STAW", 0x63);
 
    EAOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*EAOrderCnt); InstrZ=0;
@@ -248,7 +250,7 @@ END
 
         static Boolean Decode_rp1(char *Asc, ShortInt *Erg)
 BEGIN
-   if (strcasecmp(Asc,"VA")==0) *Erg=0;
+   if (strcasecmp(Asc,"V")==0) *Erg=0;
    else
     BEGIN
      if (NOT Decode_rp2(Asc,Erg)) return False;
@@ -485,7 +487,15 @@ BEGIN
        BEGIN
         CodeLen=1; BAsmCode[0]=0x08+HReg;
        END
-      else WrError(1350);
+      else 
+       BEGIN
+        AdrInt=EvalIntExpression(ArgStr[2],Int16,&OK);
+        if (OK)
+         BEGIN
+          CodeLen=4; BAsmCode[0]=0x70; BAsmCode[1]=0x69;
+          BAsmCode[2]=Lo(AdrInt); BAsmCode[3]=Hi(AdrInt);
+         END
+       END
      else if (strcasecmp(ArgStr[2],"A")==0)
       if (Decode_sr(ArgStr[1],&HReg))
        BEGIN
@@ -496,7 +506,15 @@ BEGIN
        BEGIN
         CodeLen=1; BAsmCode[0]=0x18+HReg;
        END
-      else WrError(1350);
+      else
+       BEGIN
+        AdrInt=EvalIntExpression(ArgStr[1],Int16,&OK);
+        if (OK)
+         BEGIN
+          CodeLen=4; BAsmCode[0]=0x70; BAsmCode[1]=0x79;
+          BAsmCode[2]=Lo(AdrInt); BAsmCode[3]=Hi(AdrInt);
+         END
+       END
      else if (Decode_r(ArgStr[1],&HReg))
       BEGIN
        AdrInt=EvalIntExpression(ArgStr[2],Int16,&OK);

@@ -15,6 +15,8 @@
 /*            4. 7.1999 Fujitsu F2MC                                         */
 /*           10. 8.1999 Fairchild ACE                                        */
 /*           19.11.1999 Fujitsu F2MC16                                       */
+/*           27. 1.2001 Intersil 1802                                        */
+/*           2001-07-01 TI 320C54x                                           */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -76,6 +78,7 @@ static TFamilyDescr Descrs[]=
         {"TMS3202x"  , 0x0075, TiDSK   },
         {"TMS320C3x" , 0x0076, IntHex32},
         {"TMS320C5x" , 0x0077, TiDSK   },
+        {"TMS320C54x", 0x004b, TiDSK   },
         {"TMS320C6x" , 0x0047, IntHex32},
         {"TMS9900"   , 0x0048, IntHex  },
         {"TMS7000"   , 0x0073, IntHex  },
@@ -94,6 +97,7 @@ static TFamilyDescr Descrs[]=
         {"SYM53C8xx" , 0x0025, IntHex  },
         {"F2MC8"     , 0x0015, IntHex  },
         {"F2MC16"    , 0x0016, IntHex  },
+        {"1802"      , 0x0038, IntHex  },
         {Nil         , 0xffff, Default }
        };
 

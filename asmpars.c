@@ -29,6 +29,10 @@
 /*           21. 5.2000 added TmpSymCounter                                  */
 /*            1. 6.2000 dump symbols explicitly as hex for NoICE             */
 /*           26. 6.2000 GetIntSymbol sets FirstPassUnknown                   */
+/*           14. 1.2001 silenced warnings about unused parameters            */
+/*           25. 5.2001 added UInt21                                         */
+/*            3. 8.2001 added SInt6                                          */
+/*           2001-10-04 better check for ASCII-like integer consts           */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -57,7 +61,7 @@ LargeWord IntMasks[IntTypeCnt]=
              0x00000007l,                         /* UInt3  */
              0x00000007l,0x0000000fl,0x0000000fl, /* SInt4  UInt4  Int4  */
              0x0000000fl,0x0000001fl,0x0000001fl, /* SInt5  UInt5  Int5  */
-             0x0000003fl,                         /* UInt6  */
+             0x0000001fl,0x0000003fl,             /* SInt6  UInt6  */
              0x0000003fl,0x0000007fl,             /* SInt7  UInt7  */
              0x0000007fl,0x000000ffl,0x000000ffl, /* SInt8  UInt8  Int8  */
              0x000001ffl,                         /* UInt9  */
@@ -70,6 +74,7 @@ LargeWord IntMasks[IntTypeCnt]=
              0x00007fffl,0x0000ffffl,0x0000ffffl, /* SInt16 UInt16 Int16 */
              0x0003ffffl,                         /* UInt18 */
              0x0007ffffl,0x000fffffl,0x000fffffl, /* SInt20 UInt20 Int20 */
+             0x001fffffl,                         /* UInt21 */
              0x003fffffl,                         /* UInt22 */
              0x007fffffl,0x00ffffffl,0x00ffffffl, /* SInt24 UInt24 Int24 */
              0xffffffffl,0xffffffffl,0xffffffffl  /* SInt32 UInt32 Int32 */
@@ -84,8 +89,8 @@ LargeInt IntMins[IntTypeCnt]=
                        0l,                            /* UInt3  */
                       -8l,          0l,         -8l,  /* SInt4  UInt4  Int4  */
                      -16l,          0l,        -16l,  /* SInt5  UInt5  Int5  */
-                       0l,                            /* UInt6  */
-                      -64,          0l,               /* SInt7  UInt7  */
+                     -32l,          0l,               /* SInt6  UInt6  */
+                     -64l,          0l,               /* SInt7  UInt7  */
                     -128l,          0l,       -128l,  /* SInt8  UInt8  Int8  */
                        0l,                            /* UInt9  */
                        0l,       -512l,               /* UInt10 Int10 */
@@ -97,6 +102,7 @@ LargeInt IntMins[IntTypeCnt]=
                   -32768l,          0l,     -32768l,  /* SInt16 UInt16 Int16 */
                        0l,                            /* UInt18 */
                  -524288l,          0l,    -524288l,  /* SInt20 UInt20 Int20 */
+                       0l,                            /* UInt21 */
                        0l,                            /* UInt22 */
                 -8388608l,          0l,   -8388608l,  /* SInt24 UInt24 Int24 */
              -2147483647l,          0l,-2147483647l   /* SInt32 UInt32 Int32 */
@@ -111,7 +117,7 @@ LargeInt IntMaxs[IntTypeCnt]=
                        7l,                            /* UInt3  */
                        7l,         15l,         15l,  /* SInt4  UInt4  Int4  */
                       15l,         31l,         31l,  /* SInt5  UInt5  Int5  */
-                      63l,                            /* UInt6  */
+                      31l,         63l,               /* SInt6  UInt6  */
                       63l,        127l,               /* SInt7  UInt7  */
                      127l,        255l,        255l,  /* SInt8  UInt8  Int8  */
                      511l,                            /* UInt9  */
@@ -125,6 +131,7 @@ LargeInt IntMaxs[IntTypeCnt]=
                   262143l,                            /* UInt18 */
                   524287l,                            /* SInt20 */
                  1048575l,    1048575l,               /* UInt20 Int20 */
+                 2097151l,                            /* UInt21 */
                  4194303l,                            /* UInt22 */
 #ifdef __STDC__
                  8388607l,   16777215l,   16777215l,  /* SInt24 UInt24 Int24 */
@@ -519,16 +526,23 @@ BEGIN
 
    /* ASCII herausfiltern */
 
-   else if (*Asc=='\'')
+   else if (*Asc == '\'')
     BEGIN
-     if (Asc[strlen(Asc)-1]!='\'') return -1;
-     strcpy(Asc,Asc+1); Asc[strlen(Asc)-1]='\0'; ReplaceBkSlashes(Asc);
-     for (Search=0; Search<strlen(Asc); Search++)
+     /* consistency check: closing ' must be present precisely at end; skip escaped characters */
+     for (z = Asc + 1; (*z) && (*z != '\''); z++)
+       if (*z == '\\')
+         z++;
+     if ((*z != '\'') || (z[1]))
+       return -1;
+     
+     strcpy(Asc, Asc + 1); Asc[strlen(Asc) - 1] = '\0'; ReplaceBkSlashes(Asc);
+
+     for (Search = 0; Search < strlen(Asc); Search++)
       BEGIN
-       Digit=(usint) Asc[Search];
-       Wert=(Wert<<8)+CharTransTable[Digit&0xff];
+       Digit = (usint) Asc[Search];
+       Wert=(Wert << 8) + CharTransTable[Digit & 0xff];
       END
-     NegFlag=False;
+     NegFlag = False;
     END
 
    /* Zahlenkonstante */
@@ -646,6 +660,7 @@ END
 BEGIN
    Double Erg;
    char *end;
+   UNUSED(Typ);
 
    if (*Asc_O)
     BEGIN
@@ -818,7 +833,7 @@ static Operator Operators[OpCnt+1]=
 
    strmaxcpy(Asc, Asc_O, 255);
    strmaxcpy(stemp, Asc, 255); KillBlanks(Asc);
-   if (MakeDebug) fprintf(Debug, "Parse %s", Asc);
+   if (MakeDebug) fprintf(Debug, "Parse %s\n", Asc);
 
    /* Annahme Fehler */
 
@@ -2343,6 +2358,40 @@ BEGIN
    else EnterLocSymbol(Neu);
 END
 
+        void EnterRelSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange)
+BEGIN
+   SymbolPtr Neu;
+   LongInt DestHandle;
+   String Name;
+
+   strmaxcpy(Name, Name_O, 255);
+   if (NOT ExpandSymbol(Name)) return;
+   if (NOT GetSymSection(Name, &DestHandle)) return;
+   if (NOT ChkSymbName(Name))
+    BEGIN
+     WrXError(1020, Name); return;
+    END
+
+   Neu=(SymbolPtr) malloc(sizeof(SymbolEntry));
+   Neu->SymName = strdup(Name);
+   Neu->SymWert.Typ = TempInt;
+   Neu->SymWert.Contents.IWert = Wert;
+   Neu->SymType = Typ;
+   Neu->SymSize = (-1);
+   Neu->RefList = Nil;
+   Neu->Relocs = (PRelocEntry) malloc(sizeof(TRelocEntry));
+   Neu->Relocs->Next = Nil;
+   Neu->Relocs->Ref = strdup(RelName_SegStart);
+   Neu->Relocs->Add = True;
+
+   if ((MomLocHandle == (-1)) OR (DestHandle != (-2)))
+    BEGIN
+     EnterSymbol(Neu, MayChange, DestHandle);
+     if (MakeDebug) PrintSymTree(Name);
+    END
+   else EnterLocSymbol(Neu);
+END
+
         void EnterFloatSymbol(char *Name_O, Double Wert, Boolean MayChange)
 BEGIN
    SymbolPtr Neu;
@@ -2567,29 +2616,30 @@ BEGIN
 END
 **/
 
-        Boolean GetIntSymbol(char *Name, LargeInt *Wert)
+        Boolean GetIntSymbol(char *Name, LargeInt *Wert, PRelocEntry *Relocs)
 BEGIN
    SymbolPtr Lauf;
    String NName;
 
-   strmaxcpy(NName,Name,255);
+   strmaxcpy(NName, Name, 255);
    if (NOT ExpandSymbol(NName)) return False;
-   Lauf=FindLocNode(NName,TempInt);
-   if (Lauf==Nil) Lauf=FindNode(NName,TempInt);
-   if (Lauf!=Nil)
+   Lauf=FindLocNode(NName, TempInt);
+   if (Lauf == Nil) Lauf = FindNode(NName, TempInt);
+   if (Lauf != Nil)
     BEGIN
-     *Wert=Lauf->SymWert.Contents.IWert;
-     if (Lauf->SymType!=0) TypeFlag|=(1<<Lauf->SymType);
-     if ((Lauf->SymSize!=(-1)) AND (SizeFlag!=(-1))) SizeFlag=Lauf->SymSize;
-     Lauf->Used=True;
+     *Wert = Lauf->SymWert.Contents.IWert;
+     if (Relocs) *Relocs = Lauf->Relocs;
+     if (Lauf->SymType != 0) TypeFlag |= (1 << Lauf->SymType);
+     if ((Lauf->SymSize != (-1)) AND (SizeFlag != (-1))) SizeFlag = Lauf->SymSize;
+     Lauf->Used = True;
     END
    else
     BEGIN
-     if (PassNo>MaxSymPass) WrXError(1010,Name);
+     if (PassNo > MaxSymPass) WrXError(1010, Name);
      else FirstPassUnknown = True;
-     *Wert=EProgCounter();
+     *Wert = EProgCounter();
     END
-   return (Lauf!=Nil);
+   return (Lauf != Nil);
 END
 
         Boolean GetFloatSymbol(char *Name, Double *Wert)
@@ -2935,13 +2985,13 @@ END
 	static void PrNoISection(FILE *f, SymbolPtr Node, LongInt Handle)
 BEGIN
    if (Node->Left!=Nil) PrNoISection(f,Node->Left,Handle);
-   if ((Node->SymType==SegCode) AND (Node->Attribute==Handle) AND (Node->SymWert.Typ==TempInt))
+   if (((1 << Node->SymType) & NoICEMask) AND (Node->Attribute == Handle) AND (Node->SymWert.Typ == TempInt))
     BEGIN
-     errno=0; fprintf(f,"DEFINE %s 0x",Node->SymName); ChkIO(10004);
-     errno=0; fprintf(f,LargeHIntFormat,Node->SymWert.Contents.IWert); ChkIO(10004);
-     errno=0; fprintf(f,"\n"); ChkIO(10004);
+     errno = 0; fprintf(f, "DEFINE %s 0x", Node->SymName); ChkIO(10004);
+     errno = 0; fprintf(f, LargeHIntFormat, Node->SymWert.Contents.IWert); ChkIO(10004);
+     errno = 0; fprintf(f, "\n"); ChkIO(10004);
     END
-   if (Node->Right!=Nil) PrNoISection(f,Node->Right,Handle);
+   if (Node->Right != Nil) PrNoISection(f, Node->Right, Handle);
 END
 
 	void PrintNoISymbols(FILE *f)

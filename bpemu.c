@@ -1,10 +1,11 @@
-
+/* bpemu.c */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Emulation einiger Borland-Pascal-Funktionen                               */
 /*                                                                           */
 /* Historie: 20. 5.1996 Grundsteinlegung                                     */
+/*           2001-04-13 Win32 fixes                                          */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -34,10 +35,12 @@ BEGIN
    String DrvPart;
 #if defined( __EMX__ ) || defined( __IBMC__ )
    ULONG DrvNum,Dummy;
-#else      
+#else
+#ifndef _WIN32
    int DrvNum;
-#endif
-#endif
+#endif /* _WIN32 */
+#endif /* EMX... */
+#endif /* DRSEP */
    char *p,*p2;
 
    strmaxcpy(Copy,Src,255);
@@ -78,8 +81,10 @@ BEGIN
 #endif   
 #endif
 
-   if (CurrentDir[strlen(CurrentDir)-1]!=PATHSEP) strmaxcat(CurrentDir,SPATHSEP,255);
-   if (*CurrentDir!=PATHSEP) strmaxprep(CurrentDir,SPATHSEP,255);
+   if (CurrentDir[strlen(CurrentDir)-1]!=PATHSEP)
+     strmaxcat(CurrentDir,SPATHSEP,255);
+   if (*CurrentDir!=PATHSEP)
+     strmaxprep(CurrentDir,SPATHSEP,255);
 
    if (*Copy==PATHSEP) 
     BEGIN
@@ -87,8 +92,15 @@ BEGIN
     END
 
 #ifdef DRSEP
-   strmaxprep(CurrentDir,SDRSEP,255);
-   strmaxprep(CurrentDir,DrvPart,255);
+#ifdef _WIN32
+   /* win32 getcwd() does not deliver current drive letter, therefore only prepend a drive letter
+      if there was one before. */
+   if (*DrvPart)
+#endif
+    BEGIN
+     strmaxprep(CurrentDir,SDRSEP,255);
+     strmaxprep(CurrentDir,DrvPart,255);
+    END
 #endif
 
    while((p=strchr(Copy,PATHSEP))!=Nil)
@@ -139,7 +151,7 @@ BEGIN
      strmaxcat(Component,SPATHSEP,255);
      strmaxcat(Component,File,255);
      if (p!=Nil) *p=Save;
-     Dummy=fopen(Component,"r"); OK=(Dummy!=Nil); 
+     Dummy=fopen(Component,"r"); OK=(Dummy!=Nil);
      if (OK)
       BEGIN
        fclose(Dummy);

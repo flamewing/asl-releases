@@ -20,17 +20,22 @@
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
+#include "asmpars.h"
+#include "asmrelocs.h"
 
 #define CodeBufferSize 512
 
 static Word LenSoFar;
-static LongInt RecPos,LenPos;
+static LongInt RecPos, LenPos;
+static Boolean ThisRel;
 
 static Word CodeBufferFill;
 static Byte *CodeBuffer;
 
 PPatchEntry PatchList, PatchLast;
 PExportEntry ExportList, ExportLast;
+LongInt SectSymbolCounter;
+String SectSymbolName;
 
         static void FlushBuffer(void)
 BEGIN
@@ -76,7 +81,7 @@ BEGIN
    LongWord Cnt, ExportCnt, StrLen;
    Byte T8;
 
-   if (PatchList != Nil)
+   if ((PatchList != Nil) OR (ExportList != Nil))
     BEGIN
      /* find out length of string field */
 
@@ -116,6 +121,7 @@ BEGIN
      for (ExportLast = ExportList; ExportLast != Nil; ExportLast = ExportLast->Next)
       BEGIN
        if (NOT Write4(PrgFile, &StrLen)) ChkIO(10004);
+       if (NOT Write4(PrgFile, &(ExportLast->Flags))) ChkIO(10004);
        if (NOT Write8(PrgFile, &(ExportLast->Value))) ChkIO(10004);
        StrLen += ExportLast->len;
       END
@@ -153,10 +159,12 @@ BEGIN
 
    /* assume simple record without relocation info */
 
-   b = FileHeaderDataRec; if (fwrite(&b, 1, 1, PrgFile) != 1) ChkIO(10004);
+   b = (ThisRel = RelSegs) ? FileHeaderRelocRec : FileHeaderDataRec;
+   if (fwrite(&b, 1, 1, PrgFile) != 1) ChkIO(10004);
    if (fwrite(&HeaderID, 1, 1, PrgFile) != 1) ChkIO(10004);
    b = ActPC; if (fwrite(&b, 1, 1, PrgFile) != 1) ChkIO(10004);
    b = Grans[ActPC]; if (fwrite(&b, 1, 1, PrgFile) != 1) ChkIO(10004);
+   fflush(PrgFile);
 END
 
        	void NewRecord(LargeWord NStart)
@@ -170,11 +178,12 @@ BEGIN
    FlushBuffer();
 
    /* zero length record which may be deleted ? */
+   /* do not write out patches at this place - they
+      will be merged with the next record. */
 
    if (LenSoFar == 0)
     BEGIN
      if (fseek(PrgFile, RecPos, SEEK_SET) != 0) ChkIO(10003);
-     WrPatches();
      WrRecHeader();
      h = NStart;
      if (NOT Write4(PrgFile, &h)) ChkIO(10004);
@@ -194,13 +203,15 @@ BEGIN
 
      if ((PatchList != Nil) OR (ExportList != Nil))
       BEGIN
+       fflush(PrgFile);
        if (fseek(PrgFile, RecPos, SEEK_SET) != 0) ChkIO(10003);
-       Header = FileHeaderRDataRec;
+       Header = ThisRel ? FileHeaderRRelocRec : FileHeaderRDataRec;
        if (fwrite(&Header, 1, 1, PrgFile) != 1) ChkIO(10004);
       END
 
      /* fill in length of record */
 
+     fflush(PrgFile);
      if (fseek(PrgFile, LenPos, SEEK_SET) != 0) ChkIO(10003);
      if (NOT Write2(PrgFile, &LenSoFar)) ChkIO(10004);
 
@@ -218,11 +229,21 @@ BEGIN
 
      LenSoFar = 0;
      WrRecHeader();
+     ThisRel = RelSegs;
      PC = NStart;
      if (NOT Write4(PrgFile, &PC)) ChkIO(10004);
      LenPos = ftell(PrgFile);
      if (NOT Write2(PrgFile, &LenSoFar)) ChkIO(10004);
     END
+#if 0
+   /* put in the hidden symbol for the relocatable segment ? */
+
+   if ((RelSegs) && (strcmp(CurrFileName, "INTERNAL") != 0))
+    BEGIN
+     sprintf(SectSymbolName, "__%s_%d", NamePart(CurrFileName), (int)(SectSymbolCounter++));
+     AddExport(SectSymbolName, ProgCounter());
+    END
+#endif
 END
 
 /*--- Codedatei eroeffnen --------------------------------------------------*/

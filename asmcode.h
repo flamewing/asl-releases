@@ -13,7 +13,7 @@
 /*****************************************************************************/
 
 extern Word LenSoFar;
-extern LongInt RecPos;
+extern LongInt RecPos, SectSymbolCounter;
 
 extern PPatchEntry PatchList, PatchLast;
 extern PExportEntry ExportList, ExportLast;

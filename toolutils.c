@@ -13,6 +13,8 @@
 /*           26. 6.2000 added reading of export entries                      */
 /*            2. 7.2000 updated copyright year                               */
 /*            4. 7.2000 ReadRecordHeader transports record type              */
+/*           14. 1.2001 silenced warnings about unused parameters            */
+/*           30. 9.2001 added workaround for CygWin file pointer bug         */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -33,7 +35,7 @@
 
 #include "version.h"
 
-LongWord Magic=0x12372c44;
+LongWord Magic=0x12372d44;
 
 /****************************************************************************/
 
@@ -125,10 +127,23 @@ END
 	void ReadRecordHeader(Byte *Header, Byte *CPU, Byte* Segment,
                               Byte *Gran, char *Name, FILE *f)
 BEGIN
+#ifdef _WIN32
+   /* CygWin B20 seems to mix up the file pointer under certain 
+      conditions difficult to reproduce, so we reposition it. */
+
+   long pos;
+
+   pos = ftell(f);
+   fflush(f);
+   rewind(f);
+   fseek(f, pos, SEEK_SET);
+#endif
+
    if (fread(Header, 1, 1, f) != 1) ChkIO(Name);
    if ((*Header != FileHeaderEnd) AND (*Header != FileHeaderStartAdr))
     BEGIN
-     if ((*Header == FileHeaderDataRec) OR (*Header == FileHeaderRDataRec))
+     if ((*Header == FileHeaderDataRec) OR (*Header == FileHeaderRDataRec) OR
+         (*Header == FileHeaderRelocRec) OR (*Header == FileHeaderRRelocRec))
       BEGIN
        if (fread(CPU, 1, 1, f) != 1) ChkIO(Name);
        if (fread(Segment, 1, 1, f) != 1) ChkIO(Name);
@@ -189,7 +204,7 @@ BEGIN
       if (NOT Read4(f, &RelocCount)) ChkIO(Name);
       if (NOT Read4(f, &ExportCount)) ChkIO(Name);
       if (NOT Read4(f, &StringLen)) ChkIO(Name);
-      Length = (16 * RelocCount) + (12 * ExportCount) + StringLen;
+      Length = (16 * RelocCount) + (16 * ExportCount) + StringLen;
       break;
      default:
       if (NOT Read4(f, &Addr)) ChkIO(Name);
@@ -251,6 +266,7 @@ BEGIN
               BEGIN
                if (!Read4(f, &StringPos)) break; 
                PExp->Name = PInfo->Strings + StringPos;
+               if (!Read4(f, &PExp->Flags)) break;
                if (!Read8(f, &PExp->Value)) break;
               END
 
@@ -284,6 +300,7 @@ END
 
 	void DestroyRelocInfo(PRelocInfo PInfo)
 BEGIN
+   UNUSED(PInfo);
 END
 
 	CMDResult CMD_FilterList(Boolean Negate, char *Arg)
@@ -366,7 +383,7 @@ END
 
 	void EraseFile(char *FileName, LongWord Offset)
 BEGIN
-   if (Offset==0); /* satisfy some compilers */
+   UNUSED(Offset);
    
    if (unlink(FileName)==-1) ChkIO(FileName);
 END

@@ -12,6 +12,7 @@
 /*           24. 9.1998 Korrekturen fuer DOS-Compiler                        */
 /*            2. 1.1999 ChkPC-Anpassung                                      */
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
+/*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -121,6 +122,7 @@ BEGIN
    TempResult t;
    int z,z2,Pos,Max;
    Boolean OK;
+   UNUSED(Index);
 
    if (ActPC==SegCode) MaxV=(MomCPU>=CPU7725) ? 16777215 : 8388607;
    else MaxV=65535;
@@ -174,6 +176,7 @@ END
 BEGIN
    Word Size;
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt!=1) WrError(1110);
    else
@@ -235,6 +238,8 @@ END
 
         static void DecodeNOP(Word Index)
 BEGIN
+   UNUSED(Index);
+
    if (NOT ChkOpPresent(ALUField)) return;
 END
 
@@ -264,6 +269,8 @@ END
 
         static void DecodeRET(Word Index)
 BEGIN
+   UNUSED(Index);
+
    if (NOT ChkOpPresent(RetField)) return;
 
    if (ArgCnt!=0) WrError(1110);
@@ -275,6 +282,7 @@ BEGIN
    LongWord Value;
    LongWord Reg;
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt!=2) WrError(1110);
    else if (NOT DecodeReg(ArgStr[1],&Reg,DestRegs,DestRegCnt)) WrXError(1445,ArgStr[1]);
@@ -293,6 +301,7 @@ END
 BEGIN
    char *p;
    int z;
+   UNUSED(Index);
 
    UsedOpFields=0; ActCode=0;
 
@@ -321,6 +330,7 @@ END
         static void DecodeMOV(Word Index)
 BEGIN
    LongWord Dest,Src;
+   UNUSED(Index);
 
    if (NOT ChkOpPresent(MoveField)) return;
 

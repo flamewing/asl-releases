@@ -7,6 +7,7 @@
 /* Historie: 16. 5.1996 Grundsteinlegung                                     */
 /*            2. 1.1999 ChkPC-Anpassung                                      */
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
+/*            5. 1.2000 fixed accessing P1/P2 with lower case in ANL/ORL     */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -309,7 +310,7 @@ BEGIN
          else if (Memo("XRL")) BAsmCode[0]+=0x90;
         END
       END
-     else if ((strcasecmp(ArgStr[1],"BUS")==0) OR (strcmp(ArgStr[1],"P1")==0) OR (strcmp(ArgStr[1],"P2")==0))
+     else if ((strcasecmp(ArgStr[1],"BUS")==0) OR (strcasecmp(ArgStr[1],"P1")==0) OR (strcasecmp(ArgStr[1],"P2")==0))
       BEGIN
        if (Memo("XRL")) WrError(1350);
        else

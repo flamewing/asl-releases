@@ -151,10 +151,19 @@ unjunk:
 	cd doc_EN; $(MAKE) clean RM="rm -f"
 
 depend:
-	$(CC) $(ALLFLAGS) -MM *.c >depfile
+	$(CC) $(ALLFLAGS) -MM *.c >Makefile.dep
+
+Makefile.dep:
+	$(CC) $(ALLFLAGS) -MM *.c >Makefile.dep
+
+tlink: all text1.p text2.p alink
+	./alink -vv text1 text2 text
+	./p2bin -r 0-0xff text
 
 #---------------------------------------------------------------------------
 
-.SUFFIXES: .c
+.SUFFIXES: .c .asm
 .c.$(OBJEXTENSION):
 	$(CC) $(ALLFLAGS) -c $*.c
+.asm.p:
+	./asl -L -q $*.asm

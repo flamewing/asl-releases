@@ -7,6 +7,10 @@
 /* Historie:  13. 8.1996 Grundsteinlegung                                    */
 /*             2. 1.1998 ChkPC ersetzt                                       */
 /*             9. 3.2000 'ambigious else'-Warnungen beseitigt                */
+/*            14. 1.2001 silenced warnings about unused parameters           */
+/*            29. 3.2001 added support for K4 banking scheme                 */
+/*            25. 5.2001 banking support in address parser, indices to only  */
+/*                       unsinged limited                                    */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -93,7 +97,109 @@ static BaseOrder *Bit63Orders;
 static BaseOrder *Sing8Orders;
 static PInstTable InstTable;
 
-static CPUVar CPU6800,CPU6301,CPU6811;
+static LongInt Reg_MMSIZ, Reg_MMWBR, Reg_MM1CR, Reg_MM2CR;
+static LongWord Win1VStart, Win1VEnd, Win1PStart, Win1PEnd,
+                Win2VStart, Win2VEnd, Win2PStart, Win2PEnd;
+static SimpProc SaveInitProc;
+
+static CPUVar CPU6800, CPU6301, CPU6811, CPU68HC11K4;
+
+/*---------------------------------------------------------------------------*/
+
+	static void SetK4Ranges(void)
+{
+  Byte WSize;
+
+  /* window 1 first */
+
+  if ((WSize = Reg_MMSIZ & 0x3))
+  {
+    /* window size */
+
+    Win1VEnd = Win1PEnd = 0x1000 << WSize;
+
+    /* physical start: assume 8K window, systematically clip out bits for
+       larger windows */
+
+    Win1PStart = (Reg_MMWBR & 0x0e) << 12;
+    if (WSize > 1)
+      Win1PStart &= ~0x2000;
+    if (WSize > 2)
+      Win1PStart = (Win1PStart == 0xc000) ? 0x8000 : Win1PStart;
+
+    /* logical start: mask out lower bits according to window size */
+
+    Win1VStart = ((Reg_MM1CR & 0x7f & (~((1 << WSize) - 1))) << 12) + 0x10000;
+
+    /* set end addresses */
+
+    Win1VEnd += Win1VStart;
+    Win1PEnd += Win1PStart;
+  }
+  else
+    Win1VStart = Win1VEnd = Win1PStart = Win1PEnd = 0;
+
+  /* window 2 similarly */
+
+  if ((WSize = Reg_MMSIZ & 0x30))
+  {
+    /* window size */
+
+    WSize = WSize >> 4;
+    Win2VEnd = Win2PEnd = 0x1000 << WSize;
+
+    /* physical start: assume 8K window, systematically clip out bits for
+       larger windows */
+
+    Win2PStart = (Reg_MMWBR & 0x0e0) << 8;
+    if (WSize > 1)
+      Win2PStart &= ~0x2000;
+    if (WSize > 2)
+      Win2PStart = (Win2PStart == 0xc000) ? 0x8000 : Win2PStart;
+
+    /* logical start: mask out lower bits according to window size */
+
+    Win2VStart = ((Reg_MM2CR & 0x7f & (~((1 << WSize) - 1))) << 12) + 0x90000;
+
+    /* set end addresses */
+
+    Win2VEnd += Win2VStart;
+    Win2PEnd += Win2PStart;
+  }
+  else
+    Win2VStart = Win2VEnd = Win2PStart = Win2PEnd = 0;
+}
+
+	static void TranslateAddress(LongWord *Address)
+{
+  /* do not translate the first 64K */
+
+  if (*Address < 0x10000)
+    return;
+
+  /* in first window ? */
+
+  if ((*Address >= Win1VStart) && (*Address < Win1VEnd))
+  {
+    *Address = Win1PStart + (Win1VStart - *Address);
+    return;
+  }
+
+  /* in second window ?  After calculation, check against overlap into first
+     window. */
+
+  if ((*Address >= Win2VStart) && (*Address < Win2VEnd))
+  {
+    *Address = Win2PStart + (Win2VStart - *Address);
+    if ((*Address >= Win1PStart) && (*Address < Win1PEnd))
+      WrError(110);
+    return;
+  }
+
+  /* print out warning if not mapped */
+
+  *Address &= 0xffff; WrError(110);
+}
 
 /*---------------------------------------------------------------------------*/
 
@@ -101,7 +207,7 @@ static CPUVar CPU6800,CPU6301,CPU6811;
 BEGIN
    String Asc;
    Boolean OK,ErrOcc;
-   Word AdrWord;
+   LongWord AdrWord;
    Byte Bit8;
 
    AdrMode=ModNone; AdrPart=0; strmaxcpy(Asc,ArgStr[StartInd],255); ErrOcc=False;
@@ -157,30 +263,35 @@ BEGIN
 
      else
       BEGIN
-       Bit8=0;
-       if (*Asc=='<')
+       Bit8 = 0;
+       if (*Asc == '<')
         BEGIN
-         Bit8=2; strcpy(Asc,Asc+1);
+         Bit8 = 2; strcpy(Asc, Asc + 1);
         END
-       else if (*Asc=='>')
+       else if (*Asc == '>')
         BEGIN
-         Bit8=1; strcpy(Asc,Asc+1);
+         Bit8 = 1; strcpy(Asc, Asc + 1);
         END
-       if ((Bit8==2) OR ((MModExt & Erl)==0))
-        AdrWord=EvalIntExpression(Asc,Int8,&OK);
+       FirstPassUnknown = False;
+       if (MomCPU == CPU68HC11K4)
+        BEGIN
+         AdrWord = EvalIntExpression(Asc, UInt21, &OK);
+         if (OK)
+          TranslateAddress(&AdrWord);
+        END
        else
-        AdrWord=EvalIntExpression(Asc,Int16,&OK);
+        AdrWord = EvalIntExpression(Asc, UInt16, &OK);
        if (OK)
         BEGIN
-         if (((MModDir & Erl)!=0) AND (Bit8!=1) AND ((Bit8==2) OR ((MModExt & Erl)==0) OR (Hi(AdrWord)==0)))
+         if ((MModDir & Erl) AND (Bit8 != 1) AND ((Bit8 == 2) OR ((MModExt & Erl) == 0) OR (Hi(AdrWord) == 0)))
           BEGIN
-           if (Hi(AdrWord)!=0)
+           if ((Hi(AdrWord) != 0) AND (NOT FirstPassUnknown))
             BEGIN
-             WrError(1340); ErrOcc=True;
+             WrError(1340); ErrOcc = True;
             END
            else
             BEGIN
-             AdrMode=ModDir; AdrPart=1;
+             AdrMode = ModDir; AdrPart = 1;
              AdrVals[AdrCnt++]=Lo(AdrWord);
             END
           END
@@ -205,7 +316,7 @@ BEGIN
       BEGIN
        if ((MModInd & Erl)!=0)
         BEGIN
-         AdrWord=EvalIntExpression(Asc,Int8,&OK);
+         AdrWord=EvalIntExpression(Asc,UInt8,&OK);
          if (OK)
           if ((MomCPU<CPU6811) AND (strcasecmp(ArgStr[StartInd+1],"Y")==0))
          BEGIN
@@ -358,6 +469,8 @@ END
 
         static void DecodeJMP(Word Index)
 BEGIN
+   UNUSED(Index);
+
    if ((ArgCnt<1) OR (ArgCnt>2)) WrError(1110);
    else
     BEGIN
@@ -373,6 +486,8 @@ END
 
         static void DecodeJSR(Word Index)
 BEGIN
+   UNUSED(Index);
+
    if ((ArgCnt<1) OR (ArgCnt>2)) WrError(1110);
    else
     BEGIN
@@ -703,6 +818,40 @@ END
 
         static Boolean DecodePseudo(void)
 BEGIN
+#define ASSUMEHC11Count 4
+static ASSUMERec ASSUMEHC11s[ASSUMEHC11Count] = 
+               {{"MMSIZ", &Reg_MMSIZ, 0, 0xff, 0},
+                {"MMWBR", &Reg_MMWBR, 0, 0xff, 0},
+                {"MM1CR", &Reg_MM1CR, 0, 0xff, 0},
+                {"MM2CR", &Reg_MM2CR, 0, 0xff, 0}};
+
+   if (Memo("ASSUME"))
+    BEGIN
+     if (MomCPU == CPU68HC11K4)
+      BEGIN
+       CodeASSUME(ASSUMEHC11s,ASSUMEHC11Count);
+       SetK4Ranges();
+      END
+     else
+       WrError(1500);
+     return True;
+    END
+
+   if (Memo("PRWINS"))
+    BEGIN
+     if (MomCPU != CPU68HC11K4) WrError(1500);
+     else
+      BEGIN
+       printf("\nMMSIZ %02x MMWBR %02x MM1CR %02x MM2CR %02x",
+              Reg_MMSIZ, Reg_MMWBR, Reg_MM1CR, Reg_MM2CR);
+       printf("\nWindow 1: %lx...%lx --> %lx...%lx",
+              (long)Win1VStart, (long)Win1VEnd, (long)Win1PStart, (long)Win1PEnd);
+       printf("\nWindow 1: %lx...%lx --> %lx...%lx\n",
+              (long)Win2VStart, (long)Win2VEnd, (long)Win2PStart, (long)Win2PEnd);
+       return True;
+      END
+    END
+
    return False;
 END
 
@@ -816,6 +965,13 @@ BEGIN
    WrXError(1200,OpPart);
 END
 
+	static void InitCode_68(void)
+BEGIN
+   SaveInitProc();
+   Reg_MMSIZ = Reg_MMWBR = Reg_MM1CR = Reg_MM2CR = 0;
+   SetK4Ranges();
+END
+
         static Boolean IsDef_68(void)
 BEGIN
    return False;
@@ -835,7 +991,7 @@ BEGIN
 
    ValidSegs=1<<SegCode;
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
-   SegLimits[SegCode] = 0xffff;
+   SegLimits[SegCode] = (MomCPU == CPU68HC11K4) ? 0x10ffffl : 0xffff;
 
    MakeCode=MakeCode_68; IsDef=IsDef_68;
    SwitchFrom=SwitchFrom_68; InitFields();
@@ -846,7 +1002,10 @@ END
 
         void code68_init(void)
 BEGIN
-   CPU6800=AddCPU("6800",SwitchTo_68);
-   CPU6301=AddCPU("6301",SwitchTo_68);
-   CPU6811=AddCPU("6811",SwitchTo_68);
+   CPU6800 = AddCPU("6800", SwitchTo_68);
+   CPU6301 = AddCPU("6301", SwitchTo_68);
+   CPU6811 = AddCPU("6811", SwitchTo_68);
+   CPU68HC11K4 = AddCPU("68HC11K4", SwitchTo_68);
+
+   SaveInitProc = InitPassProc; InitPassProc = InitCode_68;
 END

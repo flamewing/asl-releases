@@ -6,6 +6,7 @@
 ;*                                                                           *
 ;* Historie:  2. 7.2000 Grundsteinlegung                                     *
 ;*            4. 7.2000 misc. info messages                                  *
+;*           30.10.2000 added byte messages                                  *
 ;*                                                                           *
 ;*****************************************************************************
 
@@ -16,9 +17,21 @@ Include tools2.res
 ;-----------------------------------------------------------------------------
 ; info messages
 
+Message InfoMsgGetSyms
+ "Symbole lesen aus"
+ "reading symbols from"
+
 Message InfoMsgOpenSrc
  "&Ouml;ffne Quelldatei"
  "opening source file"
+
+Message InfoMsgReading
+ "modifiziere an Adresse"
+ "patching at address"
+
+Message InfoMsgLocating
+ "reloziere an Adresse"
+ "relocating to address"
 
 ;-----------------------------------------------------------------------------
 ; Fehlermeldungen
@@ -49,6 +62,14 @@ Message SumUndefSymbols
 
 ;-----------------------------------------------------------------------------
 ; Ansagen
+
+Message Byte
+ "byte"
+ "Byte"
+
+Message Bytes
+ "bytes"
+ "Bytes"
 
 Message InfoMessHead2
  " <Quelldatei(en)> <Zieldatei> [Optionen]"

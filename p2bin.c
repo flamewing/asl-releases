@@ -9,6 +9,7 @@
 /*            9. 1.2000 plattformabhaengige Formatstrings benutzen           */
 /*           24. 3.2000 added symbolic string for byte message               */
 /*            4. 8.2000 renamed ParProcessed to ParUnprocessed               */
+/*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -354,6 +355,7 @@ BEGIN
    static Byte ByteModeEqs[ByteModeCnt]={0,0,1,0,1,2,3,0,2};
 
    int z;
+   UNUSED(Negate);
 
    if (*Arg=='\0')
     BEGIN
@@ -417,6 +419,7 @@ END
 	static CMDResult CMD_FillVal(Boolean Negate, char *Arg)
 BEGIN
    Boolean err;
+   UNUSED(Negate);
 
    FillVal=ConstLongInt(Arg,&err);
    if (NOT err) return CMDErr; else return CMDArg;
@@ -424,12 +427,16 @@ END
 
 	static CMDResult CMD_CheckSum(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    DoCheckSum=NOT Negate;
    return CMDOK;
 END
 
 	static CMDResult CMD_AutoErase(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    AutoErase=NOT Negate;
    return CMDOK;
 END

@@ -102,15 +102,15 @@ by replacing the source file's extension with '.log'.
 Supress code generation, reducing the functionality of AS to macro
 preprocessing.
 .TP
-.B -g [MAP/Atmel]
+.B -g [MAP/Atmel/NoICE]
 
 Instruct AS to write an additional file containing debug information. This
 information covers the symbol table and the relation between source line
 numbers and machine addresses.  The argument specifies whether debug info
-shall be written in AS's own MAP format or the object format for Atmel's AVR
-tools.  If no argument is given, MAP will be chosen.  The file's name is 
-constructed by replacing the source file's extension with '.map' or '.obj'
-respectively.
+shall be written in AS's own MAP format, the object format for Atmel's AVR
+tools, or a command file suitable for John Hartman's NoICE.  If no argument
+is given, MAP will be chosen.  The file's name is constructed by replacing
+the source file's extension with '.map', '.obj', or '.noi' respectively.
 .TP
 .B -h
 
@@ -156,6 +156,13 @@ extension with '.mac'.
 
 Force AS to extend all error and warning messages with their internal error
 resp. warning number.
+.TP
+.B -noicemask [mask]
+By default, AS will only write symbols to the NoICE debug info that are
+located in the code segment.  By changing this binary mask, more and/or 
+different masks may be chosen.  The assignment is bit 1=code, 2=data, 
+3=idata, 4=xdata, 5=ydata, 6=bitdata, 7=io, 8=reg, 9=romdata .  Negating
+this option reverts the mask to code-only.
 .TP
 .B -o <name>
 Tell AS to write the code output to a file <name>.  By default, the code
@@ -381,4 +388,4 @@ of escape characters).
 
 .SH AUTHOR(S)
 
-Alfred Arnold (a.arnold@kfa-juelich.de), and a few others...
+Alfred Arnold (alfred@ccac.rwth-aachen.de), and a few others...

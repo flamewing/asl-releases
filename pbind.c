@@ -8,6 +8,8 @@
 /*            9. 1.2000 plattformabhaengige Formatstrings benutzen           */
 /*           24. 3.2000 added symbolic string for byte message               */
 /*            4. 7.2000 renamed ParProcessed to ParUnprocessed               */
+/*           30. 5.2001 move copy buffer to heap to avoid stack overflows on */
+/*                      DOS platforms                                        */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -27,13 +29,15 @@
 #include "pbind.rsc"
 #include "ioerrs.h"
 
-static char *Creator="BIND/C 1.41r6";
+#define BufferSize 8192
 
+static char *Creator="BIND/C 1.42";
 
 static CMDProcessed ParUnprocessed;
 
 static FILE *TargFile;
 static String TargName;
+static Byte *Buffer;
 
 	static void OpenTarget(void)
 BEGIN
@@ -54,14 +58,12 @@ END
 
 	static void ProcessFile(char *FileName)
 BEGIN
-#define BufferSize 8192
    FILE *SrcFile;
    Word TestID;
    Byte InpHeader, InpCPU, InpSegment, InpGran;
    LongInt InpStart,SumLen;
    Word InpLen,TransLen;
    Boolean doit;
-   Byte Buffer[BufferSize];
 
    SrcFile=fopen(FileName,OPENRDMODE);
    if (SrcFile==Nil) ChkIO(FileName);  
@@ -145,12 +147,15 @@ BEGIN
    ParamCount=argc-1; ParamStr=argv;
 
    NLS_Initialize();
+   endian_init();
 
    sprintf(Ver,"BIND/C V%s",Version);
    WrCopyRight(Ver);
 
    stdhandl_init(); cmdarg_init(*argv); toolutils_init(*argv); nls_init();
    nlmessages_init("pbind.msg",*argv,MsgId1,MsgId2); ioerrs_init(*argv);
+
+   Buffer = (Byte*) malloc(sizeof(Byte) * BufferSize);
 
    if (ParamCount==0)
     BEGIN

@@ -70,4 +70,11 @@
 #define RelocBitCnt(Type) (Type & 0xff)
 #define RelocFlagPage 0x00400000l
 
+/* this is an internal symbol name used to signify the start address
+   of a segment */
+
+#define RelName_SegStart "$$$"
+
+#define RelFlag_Relative 1
+
 #endif

@@ -11,6 +11,7 @@
 /*           27.11.1999 C... fertig                                         */
 /*            1. 1.2000 Befehle durch                                       */
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                */
+/*           14. 1.2001 silenced warnings about unused parameters           */
 /*                                                                          */
 /* TODO: PC-relativ Displacements berechnen                                 */
 /*       Registersymbole                                                    */
@@ -685,6 +686,7 @@ END
 BEGIN
    Integer Val;
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt != 1) WrError(1110);
    else if (*ArgStr[1] != '#') WrError(1120);
@@ -899,9 +901,10 @@ BEGIN
     END
 END
 
-        static void DecodeCALLV(Word INdex)
+        static void DecodeCALLV(Word Index)
 BEGIN
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt != 1) WrError(1110);
    else if (*ArgStr[1] != '#') WrError(1120);
@@ -998,6 +1001,8 @@ END
 
         static void DecodeCMP(Word Index)
 BEGIN
+   UNUSED(Index);
+
    if ((ArgCnt < 1) OR (ArgCnt > 2)) WrError(1110);
    else if (DecodeAdr(ArgStr[1], MModAcc))
     BEGIN
@@ -1142,6 +1147,7 @@ END
 BEGIN
    Boolean OK;
    LongWord Addr;
+   UNUSED(Index);
 
    if (ArgCnt != 1) WrError(1110);
    else if (*ArgStr[1] == '#')
@@ -1172,6 +1178,7 @@ END
 BEGIN
    Boolean OK;
    LongWord Addr;
+   UNUSED(Index);
 
    if (ArgCnt != 1) WrError(1110);
    else
@@ -1190,6 +1197,8 @@ END
 
         static void DecodeJCTX(Word Index)
 BEGIN
+   UNUSED(Index);
+
    if (ArgCnt != 1) WrError(1110);
    else if (*ArgStr[1] != '@') WrError(1350);
    else if (DecodeAdr(ArgStr[1] + 1, MModAcc))
@@ -1201,6 +1210,8 @@ END
 
         static void DecodeLINK(Word Index)
 BEGIN
+   UNUSED(Index);
+
    if (ArgCnt != 1) WrError(1110);
    else
     BEGIN
@@ -1217,6 +1228,7 @@ END
         static void DecodeMOV(Word Index)
 BEGIN
    Byte HPart, HCnt;
+   UNUSED(Index);
 
    if (ArgCnt != 2) WrError(1110);
    else if (((strcasecmp(ArgStr[1], "@AL") == 0) OR (strcasecmp(ArgStr[1], "@A") == 0))
@@ -1490,6 +1502,8 @@ END
 
         static void DecodeMOVEA(Word Index)
 BEGIN
+   UNUSED(Index);
+
    if (ArgCnt != 2) WrError(1110);
    else
     BEGIN
@@ -1523,6 +1537,7 @@ END
         static void DecodeMOVL(Word Index)
 BEGIN
    Byte HCnt;
+   UNUSED(Index);
 
    if (ArgCnt != 2) WrError(1110);
    else
@@ -1564,6 +1579,7 @@ END
         static void DecodeMOVN(Word Index)
 BEGIN
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt != 2) WrError(1110);
    else if (DecodeAdr(ArgStr[1], MModAcc))
@@ -1581,6 +1597,7 @@ END
         static void DecodeMOVW(Word Index)
 BEGIN
    Byte HPart, HCnt;
+   UNUSED(Index);
 
    if (ArgCnt != 2) WrError(1110);
    else if (((strcasecmp(ArgStr[1], "@AL") == 0) OR (strcasecmp(ArgStr[1], "@A") == 0))
@@ -1777,6 +1794,8 @@ END
 
         static void DecodeMOVX(Word Index)
 BEGIN
+   UNUSED(Index);
+
    if (ArgCnt != 2) WrError(1110);
    else if (DecodeAdr(ArgStr[1], MModAcc))
     BEGIN
@@ -1857,6 +1876,8 @@ END
 
         static void DecodeNRML(Word Index)
 BEGIN
+   UNUSED(Index);
+
    if (ArgCnt != 2) WrError(1110);
    else if (DecodeAdr(ArgStr[1], MModAcc))
     BEGIN
@@ -1959,6 +1980,7 @@ END
 BEGIN
    LongInt Adr;
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt != 2) WrError(1110);
    else if (SplitBit(ArgStr[1], BAsmCode + 1))

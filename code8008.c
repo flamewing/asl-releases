@@ -111,6 +111,7 @@ END
 BEGIN
    Boolean OK;
    Word AdrWord;
+   UNUSED(Index);
 
    if (ArgCnt != 1) WrError(1110);
    else
@@ -137,6 +138,7 @@ END
         static void DecodeINP(Word Index)
 BEGIN
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt != 1) WrError(1110);
    else
@@ -153,6 +155,7 @@ END
         static void DecodeOUT(Word Index)
 BEGIN
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt != 1) WrError(1110);
    else

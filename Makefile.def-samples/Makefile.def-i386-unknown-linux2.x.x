@@ -4,7 +4,7 @@
 
 CC = gcc
 LD = gcc
-CFLAGS = -O3 -m486 -fomit-frame-pointer -Wall
+CFLAGS = -g -O3 -m486 -fomit-frame-pointer -Wall
 LDFLAGS =
 #            ^^^^^
 #            |||||

@@ -16,6 +16,9 @@
 /*            9. 1.2000 plattformabhaengige Formatstrings benutzen           */
 /*           24. 3.2000 added symbolic string for byte message               */
 /*            4. 7.2000 renamed ParProcessed to ParUnprocessed               */
+/*           14. 1.2001 silenced warnings about unused parameters            */
+/*           30. 5.2001 added avrlen parameter                               */
+/*           2001-08-30 set EntryAddrPresent when address given as argument  */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -40,6 +43,7 @@
 
 static char *HexSuffix=".hex";
 #define MaxLineLen 254
+#define AVRLEN_DEFAULT 3
 
 typedef void (*ProcessProc)(
 #ifdef __PROTOS__
@@ -63,6 +67,7 @@ static Byte MultiMode;   /* 0=8M, 1=16, 2=8L, 3=8H */
 static Byte MinMoto;
 static Boolean Rec5;
 static Boolean SepMoto;
+static LongWord AVRLen;
 
 static Boolean RelAdr, MotoOccured, IntelOccured, MOSOccured, DSKOccured;
 static Byte MaxMoto, MaxIntel;
@@ -164,7 +169,7 @@ BEGIN
          case IntHex16:
           MaxAdr=0xffff0+0xffff; break;
          case Atmel:
-          MaxAdr=0xffffff; break;
+          MaxAdr = (1 << (AVRLen << 3)) - 1; break;
          default:
           MaxAdr=0xffff;
         END
@@ -377,8 +382,16 @@ BEGIN
  	      ChkSum=0;
  	      break;
              case Atmel:
-              errno=0; fprintf(TargFile,"%s%s:",HexByte(ErgStart >> 16),HexWord(ErgStart & 0xffff));
+              for (z = (AVRLen - 1) << 3; z >= 0; z -= 8)
+               {
+                errno = 0; 
+                fputs(HexByte((ErgStart >> z) & 0xff), TargFile);
+                ChkIO(TargName);
+               }
+              errno = 0;
+              fputc(':', TargFile);
               ChkIO(TargName);
+              break;
              default:
               break;
  	    END
@@ -588,7 +601,7 @@ END
 	static CMDResult CMD_AdrRange(Boolean Negate, char *Arg)
 BEGIN
    char *p,Save;
-   Boolean err;
+   Boolean ok;
 
    if (Negate)
     BEGIN
@@ -600,14 +613,14 @@ BEGIN
      p=strchr(Arg,'-'); if (p==Nil) return CMDErr;
 
      Save = (*p); *p = '\0'; 
-     if ((StartAuto = AddressWildcard(Arg))) err = True;
-     else StartAdr = ConstLongInt(Arg, &err);
+     if ((StartAuto = AddressWildcard(Arg))) ok = True;
+     else StartAdr = ConstLongInt(Arg, &ok);
      *p = Save;
-     if (NOT err) return CMDErr;
+     if (NOT ok) return CMDErr;
 
-     if ((StopAuto = AddressWildcard(p + 1))) err = True;
-     else StopAdr = ConstLongInt(p + 1, &err);
-     if (NOT err) return CMDErr;
+     if ((StopAuto = AddressWildcard(p + 1))) ok = True;
+     else StopAdr = ConstLongInt(p + 1, &ok);
+     if (NOT ok) return CMDErr;
 
      if ((NOT StartAuto) AND (NOT StopAuto) AND (StartAdr>StopAdr)) return CMDErr;
 
@@ -617,13 +630,16 @@ END
 
 	static CMDResult CMD_RelAdr(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    RelAdr=(NOT Negate);
    return CMDOK;
 END
 
        static CMDResult CMD_AdrRelocate(Boolean Negate, char *Arg)
 BEGIN
-   Boolean err;
+   Boolean ok;
+   UNUSED(Arg);
 
    if (Negate)
     BEGIN
@@ -632,8 +648,8 @@ BEGIN
     END
    else
     BEGIN
-     Relocate = ConstLongInt(Arg,&err);
-     if (NOT err) return CMDErr;
+     Relocate = ConstLongInt(Arg,&ok);
+     if (NOT ok) return CMDErr;
 
      return CMDArg;
     END
@@ -641,12 +657,16 @@ END
    
         static CMDResult CMD_Rec5(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    Rec5=(NOT Negate);
    return CMDOK;
 END
 
         static CMDResult CMD_SepMoto(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    SepMoto=(NOT Negate);
    return CMDOK;
 END
@@ -654,13 +674,13 @@ END
         static CMDResult CMD_IntelMode(Boolean Negate, char *Arg)
 BEGIN
    int Mode;
-   Boolean err;
+   Boolean ok;
 
    if (*Arg=='\0') return CMDErr;
    else
     BEGIN
-     Mode=ConstLongInt(Arg,&err);
-     if ((NOT err) OR (Mode<0) OR (Mode>2)) return CMDErr;
+     Mode=ConstLongInt(Arg,&ok);
+     if ((NOT ok) OR (Mode<0) OR (Mode>2)) return CMDErr;
      else
       BEGIN
        if (NOT Negate) IntelMode=Mode;
@@ -673,13 +693,13 @@ END
 	static CMDResult CMD_MultiMode(Boolean Negate, char *Arg)
 BEGIN
    int Mode;
-   Boolean err;
+   Boolean ok;
 
    if (*Arg=='\0') return CMDErr;
    else
     BEGIN
-     Mode=ConstLongInt(Arg,&err);
-     if ((NOT err) OR (Mode<0) OR (Mode>3)) return CMDErr;
+     Mode=ConstLongInt(Arg,&ok);
+     if ((NOT ok) OR (Mode<0) OR (Mode>3)) return CMDErr;
      else
       BEGIN
        if (NOT Negate) MultiMode=Mode;
@@ -712,7 +732,7 @@ END
 	static CMDResult CMD_DataAdrRange(Boolean Negate, char *Arg)
 BEGIN
    char *p,Save;
-   Boolean err;
+   Boolean ok;
 
    if (Negate)
     BEGIN
@@ -724,12 +744,12 @@ BEGIN
      p=strchr(Arg,'-'); if (p==Nil) return CMDErr;
 
      Save=(*p); *p='\0';
-     StartData=ConstLongInt(Arg,&err);
+     StartData=ConstLongInt(Arg,&ok);
      *p=Save;
-     if (NOT err) return CMDErr;
+     if (NOT ok) return CMDErr;
 
-     StopData=ConstLongInt(p+1,&err);
-     if (NOT err) return CMDErr;
+     StopData=ConstLongInt(p+1,&ok);
+     if (NOT ok) return CMDErr;
 
      if (StartData>StopData) return CMDErr;
 
@@ -739,7 +759,7 @@ END
 
 	static CMDResult CMD_EntryAdr(Boolean Negate, char *Arg)
 BEGIN
-   Boolean err;
+   Boolean ok;
 
    if (Negate)
     BEGIN
@@ -748,15 +768,16 @@ BEGIN
     END
    else
     BEGIN
-     EntryAdr=ConstLongInt(Arg,&err);
-     if ((NOT err) OR (EntryAdr>0xffff)) return CMDErr;
+     EntryAdr=ConstLongInt(Arg,&ok);
+     if ((NOT ok) OR (EntryAdr>0xffff)) return CMDErr;
+     EntryAdrPresent = True;
      return CMDArg;
     END
 END
 
         static CMDResult CMD_LineLen(Boolean Negate, char *Arg)
 BEGIN
-   Boolean err;
+   Boolean ok;
 
    if (Negate)
     if (*Arg!='\0') return CMDErr;
@@ -767,8 +788,8 @@ BEGIN
    else if (*Arg=='\0') return CMDErr;
    else
     BEGIN
-     LineLen=ConstLongInt(Arg,&err);
-     if ((NOT err) OR (LineLen<1) OR (LineLen>MaxLineLen)) return CMDErr;
+     LineLen=ConstLongInt(Arg,&ok);
+     if ((NOT ok) OR (LineLen<1) OR (LineLen>MaxLineLen)) return CMDErr;
      else
       BEGIN
        LineLen+=(LineLen&1); return CMDArg;
@@ -778,7 +799,7 @@ END
 
         static CMDResult CMD_MinMoto(Boolean Negate, char *Arg)
 BEGIN
-   Boolean err;
+   Boolean ok;
 
    if (Negate)
     if (*Arg != '\0') return CMDErr;
@@ -789,19 +810,43 @@ BEGIN
    else if (*Arg == '\0') return CMDErr;
    else
     BEGIN
-     MinMoto = ConstLongInt(Arg,&err);
-     if ((NOT err) OR (MinMoto < 1) OR (MinMoto > 3)) return CMDErr;
+     MinMoto = ConstLongInt(Arg,&ok);
+     if ((NOT ok) OR (MinMoto < 1) OR (MinMoto > 3)) return CMDErr;
      else return CMDArg;
     END
 END
 
 	static CMDResult CMD_AutoErase(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    AutoErase=NOT Negate;
    return CMDOK;
 END
 
-#define P2HEXParamCnt 14
+	static CMDResult CMD_AVRLen(Boolean Negate, char *Arg)
+{
+   Word Temp;
+   Boolean ok;
+
+   if (Negate)  
+    {
+      AVRLen = AVRLEN_DEFAULT;
+      return CMDOK;
+    }
+   else
+    {
+      Temp = ConstLongInt(Arg, &ok);
+      if ((NOT ok) || (Temp < 2) || (Temp > 3)) return CMDErr;
+      else
+       {
+         AVRLen = Temp;
+         return CMDArg;
+       }
+    }
+}
+
+#define P2HEXParamCnt 15
 static CMDRec P2HEXParams[P2HEXParamCnt]=
 	       {{"f", CMD_FilterList},
 		{"r", CMD_AdrRange},
@@ -816,7 +861,8 @@ static CMDRec P2HEXParams[P2HEXParamCnt]=
                 {"e", CMD_EntryAdr},
                 {"l", CMD_LineLen},
                 {"k", CMD_AutoErase},
-                {"M", CMD_MinMoto}};
+                {"M", CMD_MinMoto},
+                {"AVRLEN", CMD_AVRLen}};
 
 static Word ChkSum;
 
@@ -860,6 +906,7 @@ BEGIN
    StartData = 0; StopData = 0x1fff;
    EntryAdr = (-1); EntryAdrPresent = False; AutoErase = False;
    RelAdr = False; Rec5 = True; LineLen = 16;
+   AVRLen = AVRLEN_DEFAULT;
    IntelMode = 0; MultiMode = 0; DestFormat = Default; MinMoto = 1;
    *TargName = '\0';
    Relocate = 0;

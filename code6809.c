@@ -7,6 +7,10 @@
 /* Historie: 10.10.1996 Grundsteinlegung                                     */
 /*            2. 1.1999 ChkPC-Anpassung                                      */
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
+/*            3. 1.2001 fixed stack operations pushing/pulling opposite      */
+/*                      stack pointer                                        */
+/*            5. 1.2001 allow pushin/popping D as A/B                        */
+/*           13. 1.2001 fix D register access                                */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -73,11 +77,11 @@ typedef struct
 #define StackOrderCnt 4
 #define BitOrderCnt 8
 
-#define StackRegCnt 11
+#define StackRegCnt 12
 static char StackRegNames[StackRegCnt][4]=
-                 {"CCR","A","B","DPR","X","Y","S/U","PC","CC","DP","S"};
-static Byte StackRegCodes[StackRegCnt]=
-                 {    0,  1,  2,    3,  4,  5,    6,   7,   0,   3,  6};
+                 {"CCR",  "A",  "B","DPR",  "X",  "Y","S/U", "PC", "CC", "DP",  "S",  "D"};
+static Byte StackRegMasks[StackRegCnt]=
+                 { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x10, 0x08, 0x40, 0x06};
 
 static char *FlagChars="CVZNIHFE";
 
@@ -1216,44 +1220,44 @@ BEGIN
 
    /* Push/Pull */
 
-   for (z=0; z<StackOrderCnt; z++)
+   for (z = 0; z < StackOrderCnt; z++)
     if Memo(StackOrders[z].Name)
      BEGIN
-      BAsmCode[1]=0; OK=True; Extent=False;
+      BAsmCode[1] = 0; OK = True; Extent = False;
       /* S oder U einsetzen, entsprechend Opcode */
-      *StackRegNames[StackRegCnt-1]=
-       OpPart[strlen(OpPart)-1] ^ Ord('S') ^ Ord('U');
-      for (z2=1; z2<=ArgCnt; z2++)
+      *StackRegNames[StackRegCnt - 2] =
+       OpPart[strlen(OpPart) - 1] ^ ('S' ^ 'U');
+      for (z2 = 1; z2 <= ArgCnt; z2++)
        if (OK)
         BEGIN
-         if (strcasecmp(ArgStr[z2],"W")==0)
+         if (strcasecmp(ArgStr[z2], "W") == 0)
           BEGIN
-           if (MomCPU<CPU6309)
+           if (MomCPU < CPU6309)
             BEGIN
-             WrError(1500); OK=False;
+             WrError(1500); OK = False;
             END
-           else if (ArgCnt!=1)
+           else if (ArgCnt != 1)
             BEGIN
-             WrError(1335); OK=False;
+             WrError(1335); OK = False;
             END
-           else Extent=True;
+           else Extent = True;
           END
          else
           BEGIN
-           for (z3=0; z3<StackRegCnt; z3++)
-            if (strcasecmp(ArgStr[z2],StackRegNames[z3])==0)
+           for (z3 = 0; z3 < StackRegCnt; z3++)
+            if (strcasecmp(ArgStr[z2], StackRegNames[z3]) == 0)
              BEGIN
-              BAsmCode[1]|=(1 << StackRegCodes[z3]);
+              BAsmCode[1] |= StackRegMasks[z3];
               break;
              END
-           if (z3>=StackRegCnt)
+           if (z3 >= StackRegCnt)
             BEGIN
-             if (strcasecmp(ArgStr[z2],"ALL")==0) BAsmCode[1]=0xff;
-             else if (*ArgStr[z2]!='#') OK=False;
+             if (strcasecmp(ArgStr[z2], "ALL") == 0) BAsmCode[1] = 0xff;
+             else if (*ArgStr[z2] != '#') OK = False;
              else
               BEGIN
-               BAsmCode[2]=EvalIntExpression(ArgStr[z2]+1,Int8,&OK);
-               if (OK) BAsmCode[1]|=BAsmCode[2];
+               BAsmCode[2] = EvalIntExpression(ArgStr[z2] + 1, Int8, &OK);
+               if (OK) BAsmCode[1] |= BAsmCode[2];
               END
             END
           END
@@ -1261,11 +1265,11 @@ BEGIN
       if (OK)
        if (Extent)
         BEGIN
-         CodeLen=2; BAsmCode[0]=0x10; BAsmCode[1]=StackOrders[z].Code+4;
+         CodeLen = 2; BAsmCode[0] = 0x10; BAsmCode[1] = StackOrders[z].Code + 4;
         END
        else
         BEGIN
-         CodeLen=2; BAsmCode[0]=StackOrders[z].Code;
+         CodeLen = 2; BAsmCode[0] = StackOrders[z].Code;
         END
       else WrError(1980);
       return;

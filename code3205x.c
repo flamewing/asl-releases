@@ -12,6 +12,7 @@
  * 30. 5.1999 Erweiterung auf C203 abgeschlossen, Hashtabelle fuer
  *            Prozessorbefehle erledigt
  *  9. 3.2000 'ambiguous else'-Warnungen beseitigt
+ * 14. 1.2001 silenced warnings about unused parameters
  */
 
 #include "stdinc.h"
@@ -460,6 +461,7 @@ END
 BEGIN
    Word bit;
    Boolean ok;
+   UNUSED(Index);
 
    if ((ArgCnt < 2) || (ArgCnt > 3))
     BEGIN
@@ -481,6 +483,7 @@ END
         static void DecodeBLDD(Word Index)
 BEGIN
    Boolean ok;
+   UNUSED(Index);
 
    if ((ArgCnt < 2) || (ArgCnt > 3))
     BEGIN
@@ -540,6 +543,7 @@ END
         static void DecodeBLPD(Word Index)
 BEGIN
    Boolean ok;
+   UNUSED(Index);
 
    if ((ArgCnt < 2) || (ArgCnt > 3))
     BEGIN
@@ -639,6 +643,7 @@ END
         static void DecodeINTR(Word Index)
 BEGIN
    Boolean ok;
+   UNUSED(Index);
 
    if (ArgCnt != 1)
     BEGIN
@@ -656,6 +661,7 @@ BEGIN
   Boolean ok;
   LongWord adr_long;
   Word Shift;
+  UNUSED(Index);
 
   if ((ArgCnt < 1) || (ArgCnt > 3))
    BEGIN
@@ -707,6 +713,7 @@ END
         static void DecodeLACL(Word Index)
 BEGIN
    Boolean ok;
+   UNUSED(Index);
 
    if (*ArgStr[1] == '#')
     BEGIN
@@ -739,6 +746,7 @@ BEGIN
    Word Reg;
    LongWord adr_long;
    Boolean ok;
+   UNUSED(Index);
 
    if ((ArgCnt < 2) || (ArgCnt > 3))
     BEGIN
@@ -784,6 +792,7 @@ END
 BEGIN
    Word konst;
    Boolean ok;
+   UNUSED(Index);
 
    if (*ArgStr[1] == '#')
     BEGIN
@@ -910,6 +919,8 @@ END
 
         static void DecodeNORM(Word Index)
 BEGIN
+  UNUSED(Index);
+
   if ((ArgCnt < 1) || (ArgCnt > 2))
    BEGIN
     WrError(1110);
@@ -943,6 +954,7 @@ END
 BEGIN
    Word Imm;
    Boolean ok;
+   UNUSED(Index);
 
    if (*ArgStr[1] == '#')
     BEGIN
@@ -1010,6 +1022,7 @@ END
 BEGIN
   Word Reg;
   Boolean ok;
+  UNUSED(Index);
 
   if ((ArgCnt < 2) || (ArgCnt > 3))
    BEGIN
@@ -1031,6 +1044,7 @@ END
 BEGIN
    Word Shift;
    Boolean ok;
+   UNUSED(Index);
 
    if (ArgCnt != 1) WrError(1110);
    else if (MomCPU < cpu_32050) WrError(1500);
@@ -1085,6 +1099,7 @@ END
         static void DecodeRPTB(Word Index)
 BEGIN
    Boolean ok;
+   UNUSED(Index);
 
    if (ArgCnt != 1) WrError(1110);
    else if (MomCPU < cpu_32050) WrError(1500);
@@ -1102,6 +1117,7 @@ END
         static void DecodeRPTZ(Word Index)
 BEGIN
    Boolean ok;
+   UNUSED(Index);
 
    if (ArgCnt != 1) WrError(1110);
    else if (MomCPU < cpu_32050) WrError(1500);
@@ -1121,6 +1137,7 @@ END
 BEGIN
    Word Mode; 
    Boolean ok;
+   UNUSED(Index);
 
    if (ArgCnt < 2) WrError(1110);
    else if (MomCPU < cpu_32050) WrError(1500);
@@ -1459,6 +1476,8 @@ static void wr_code_word(Boolean *ok, int *adr, LongInt val)
 
 static void wr_code_long(Boolean *ok, int *adr, LongInt val)
 {
+	UNUSED(ok);
+
         WAsmCode[(*adr)++] = val & 0xffff;
         WAsmCode[(*adr)++] = val >> 16;
         CodeLen = *adr;

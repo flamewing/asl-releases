@@ -49,10 +49,17 @@ extern Boolean Write4(FILE *file, void *Ptr);
 
 extern Boolean Write8(FILE *file, void *Ptr);
 
+#define MRead1L(Buffer) (*((Byte *)(Buffer)))
+
+#define MRead1B(Buffer) (*((Byte *)(Buffer)))
 
 extern Word MRead2L(Byte *Buffer);
 
 extern Word MRead2B(Byte *Buffer);
+
+#define MWrite1L(Buffer, Value) (*((Byte*) (Buffer))) = Value;
+
+#define MWrite1B(Buffer, Value) (*((Byte*) (Buffer))) = Value;
 
 extern void MWrite2L(Byte *Buffer, Word Value);
 

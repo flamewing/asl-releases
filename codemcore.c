@@ -7,6 +7,7 @@
 /* Historie:  31. 1.1998 Grundsteinlegung                                    */
 /*             3. 1.1999 ChkPC-Anpassung                                     */
 /*             9. 3.2000 'ambigious else'-Warnungen beseitigt                */
+/*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -317,6 +318,7 @@ END
 BEGIN
    Word RegX,ImmV;
    Boolean OK;
+   UNUSED(Index);
 
    if (*AttrPart!='\0') WrError(1100);
    else if (ArgCnt!=2) WrError(1110);
@@ -339,6 +341,7 @@ END
 BEGIN
    Word RegX,ImmV;
    Boolean OK;
+   UNUSED(Index);
 
    if (*AttrPart!='\0') WrError(1100);
    else if (ArgCnt!=2) WrError(1110);
@@ -448,6 +451,7 @@ BEGIN
    Word RegY;
    LongInt Dest;
    Boolean OK;
+   UNUSED(Index);
 
    if (*AttrPart!=0) WrError(1100);
    else if (ArgCnt!=2) WrError(1110);
@@ -474,6 +478,7 @@ BEGIN
    Word RegZ;
    Boolean OK;
    int l=0;
+   UNUSED(Index);
    
    if (*AttrPart!='\0') WrError(1100);
    else if (ArgCnt!=2) WrError(1110);
@@ -522,6 +527,7 @@ END
 BEGIN
    Word RegX,ImmV;
    Boolean OK;
+   UNUSED(Index);
 
    if (*AttrPart!='\0') WrError(1100);
    else if (ArgCnt!=2) WrError(1110);
@@ -541,6 +547,7 @@ END
 BEGIN
    Word ImmV;
    Boolean OK;
+   UNUSED(Index);
 
    if (*AttrPart!='\0') WrError(1100);
    else if (ArgCnt!=1) WrError(1110);

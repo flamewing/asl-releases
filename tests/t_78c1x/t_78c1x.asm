@@ -246,7 +246,7 @@ forw:	nop
 	mviw	20h,01101001b
 	mvix	d,22o
 
-	push	va
+	push	v
 	push	b
 	pop	h
 	pop	ea

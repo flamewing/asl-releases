@@ -10,6 +10,7 @@
 /*           23. 1.1999 DecodeCtrlReg jetzt mit unsigned-Ergebnis            */
 /*           30. 1.1999 Formate maschinenunabhaengig gemacht                 */
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
+/*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -566,6 +567,8 @@ static Boolean __erg;
 
         static void DecodeIDLE(Word Index)
 BEGIN
+   UNUSED(Index);
+
    if (ArgCnt!=0) WrError(1110);
    else if ((ThisCross) OR (ThisUnit!=NoUnit)) WrError(1107);
    else
@@ -578,6 +581,7 @@ END
 BEGIN
    LongInt Count;
    Boolean OK;
+   UNUSED(Index);
 
    if ((ArgCnt!=0) AND (ArgCnt!=1)) WrError(1110);
    else if ((ThisCross) OR (ThisUnit!=NoUnit)) WrError(1107);
@@ -680,6 +684,7 @@ END
         static void DecodeSTP(Word Index)
 BEGIN
    LongWord S2Reg;
+   UNUSED(Index);
 
    if (ArgCnt!=1) WrError(1110);
    else if (ChkUnit(0x10,S1,S2))
@@ -700,6 +705,7 @@ END
 BEGIN
    Boolean DPFlag,S1Flag;
    LongWord DReg,S1Reg;
+   UNUSED(Index);
 
    if (ArgCnt!=2) WrError(1110);
    else if (DecodeReg(ArgStr[2],&DReg,&DPFlag,True))
@@ -723,6 +729,7 @@ END
 BEGIN
    LongWord S1Reg,S2Reg,DReg;
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt!=3) WrError(1110);
    else
@@ -888,6 +895,7 @@ END
         static void DecodeADDU(Word Index)
 BEGIN
    LongWord DReg,S1Reg,S2Reg;
+   UNUSED(Index);
 
    if (ArgCnt!=3) WrError(1110);
    else
@@ -986,6 +994,7 @@ END
 BEGIN
    LongWord DReg,S1Reg,S2Reg;
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt!=3) WrError(1110);
    else
@@ -1102,6 +1111,7 @@ END
         static void DecodeSUBU(Word Index)
 BEGIN
    LongWord S1Reg,S2Reg,DReg;
+   UNUSED(Index);
 
    if (ArgCnt!=3) WrError(1110);
    else
@@ -1132,6 +1142,7 @@ END
         static void DecodeSUBC(Word Index)
 BEGIN
    LongWord DReg,S1Reg,S2Reg;
+   UNUSED(Index);
 
    if (ArgCnt!=3) WrError(1110);
    else
@@ -1201,6 +1212,7 @@ BEGIN
    LongInt Value;
    LongWord DReg;
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt!=2) WrError(1110);
    else

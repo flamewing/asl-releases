@@ -11,6 +11,8 @@
 /*           15. 8.1999 Einrueckung der Endadresse korrigiert                */
 /*           21. 1.2000 Auflisten externe Referenzen                         */
 /*           26. 6.2000 list exports                                         */
+/*           30. 5.2001 move copy buffer to heap to avoid stack overflows on */
+/*                      DOS platforms                                        */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -144,14 +146,17 @@ BEGIN
                 (PEntry->Type & RelocFlagSUB) ? '-' : '+', PEntry->Name);
 
        for (z = 0,  PExp = RelocInfo->ExportEntries; z < RelocInfo->ExportCount; z++, PExp++)
-         printf("%s  %s                     %s\n",
+         printf("%s  %s          %c          %s\n",
                 getmessage(Num_MessExportInfo),
-                HexLong(PExp->Value), PExp->Name);
+                HexLong(PExp->Value), 
+                (PExp->Flags & RelFlag_Relative) ? 'R' : ' ',
+                PExp->Name);
 
        DestroyRelocInfo(RelocInfo);
       END
 
-     else if ((Header == FileHeaderDataRec) || (Header == FileHeaderRDataRec))
+     else if ((Header == FileHeaderDataRec) || (Header == FileHeaderRDataRec) ||
+              (Header == FileHeaderRelocRec) || (Header == FileHeaderRRelocRec))
       BEGIN
        errno = 0;
        if (Magic != 0) FoundId = Nil;

@@ -25,6 +25,7 @@ typedef struct
          {
            char *Name;
            LargeInt Value;
+           LongInt Flags;
          } TExportEntry, *PExportEntry;
 
 typedef struct

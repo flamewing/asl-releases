@@ -13,6 +13,7 @@
 /*                      DS                                                   */
 /*            2. 1.1999 ChkPC-Anpassung                                      */
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
+/*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -216,6 +217,7 @@ END
         static void DecodeMOV(Word Index)
 BEGIN
    LongWord DReg,SReg;
+   UNUSED(Index);
 
    if (NOT SplitArgs(2)) return;
    if (NOT DecodeReg(ArgStr[1],&DReg,DestRegs,DestRegCnt))
@@ -233,6 +235,7 @@ END
         static void DecodeLDI(Word Index)
 BEGIN
    LongWord DReg,Src=0;
+   UNUSED(Index);
 
    if (NOT SplitArgs(2)) return;
    if (NOT DecodeReg(ArgStr[1],&DReg,DestRegs,DestRegCnt))
@@ -247,6 +250,8 @@ END
 
         static void DecodeNOP(Word Index)
 BEGIN
+   UNUSED(Index);
+
    if (NOT SplitArgs(0)) return;
    AddComp(InstrALU,0);
    DiscardArgs();
@@ -355,6 +360,7 @@ END
         static void DecodeRPC(Word Index)
 BEGIN
    LongWord Value;
+   UNUSED(Index);
 
    if (NOT SplitArgs(1)) return;
    FirstPassUnknown=False;
@@ -471,6 +477,7 @@ END
         static void DecodeRPS(Word Index)
 BEGIN
    LongWord Value;
+   UNUSED(Index);
    
    if (NOT SplitArgs(1)) return;
    Value=EvalIntExpression(ArgStr[1],UInt9,&Error);
@@ -482,6 +489,7 @@ END
         static void DecodeNAL(Word Index)
 BEGIN
    LongWord Value;
+   UNUSED(Index);
  
    if (NOT SplitArgs(1)) return;
    FirstPassUnknown=False;

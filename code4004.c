@@ -15,6 +15,7 @@
 /*            2. 7.1999 Zus. Befehlsvarianten, andere Registersyntax         */
 /*            8. 9.1999 REG fehlte                                           */
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
+/*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -186,6 +187,7 @@ BEGIN
    Word Adr;
    Boolean OK;
    Byte Erg;
+   UNUSED(Index);
    
    if (ArgCnt!=2) WrError(1110);
    else if (NOT DecodeReg(ArgStr[1],&Erg)) WrXError(1445,ArgStr[1]);
@@ -207,6 +209,7 @@ END
 BEGIN
    Word AdrInt;
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt != 2) WrError(1110);
    else
@@ -238,6 +241,7 @@ END
         static void DecodeFIM(Word Index)
 BEGIN
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt != 2) WrError(1110);
    else if (NOT DecodeRReg(ArgStr[1], BAsmCode)) WrXError(1445, ArgStr[1]);

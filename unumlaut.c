@@ -46,6 +46,21 @@ static chartrans specchars[]=
      exit(1);
     }
 
+#ifdef _WIN32
+   {
+     char *p;
+     int z;
+
+     for (z = 1; z < argc; z++)
+     {
+       argv[z] = strdup(argv[z]);
+       for (p = argv[z]; *p; p++)
+        if (*p == '\\')
+          *p = '/';      
+     }
+   }
+#endif
+
    src=fopen(argv[1],OPENRDMODE);
    if (src==NULL)
     {

@@ -44,7 +44,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand November 1999}
+{\large Stand Mai 2001}
 \end{raggedright}
 
 \clearpage
@@ -157,7 +157,7 @@ Zu erreichen bin ich folgenderma"sen:
 \item{per E-Mail: \tty{alfred@ccac.rwth-aachen.de}}
 \end{itemize}
 Wer mir pers"onlich Fragen stellen will (und in der N"ahe von Aachen
-wohnt), kann dies mit hoher Wahrscheinlichkeit donnerstags von 19.00
+wohnt), kann dies mit hoher Wahrscheinlichkeit donnerstags von 20.00
 bis 21.00 Uhr im Computerclub an der RWTH Aachen (Eilfschornsteinstra"se 16,
 Keller Philosophengeb"aude R"uckseite).
 \par
@@ -166,9 +166,13 @@ komplizierten Zusammenh"ange am Telefon nur "au"serst schwer er"orten
 lassen, und zweitens ist die Telekom schon reich genug...
 \par
 Die neueste Version von AS (DOS, DPMI, OS/2, C) findet sich auf folgendem
-FTP-Server:
+Server:
 \begin{verbatim}
  http://john.ccac.rwth-aachen.de:8000/as
+\end{verbatim}
+oder auch kurz
+\begin{verbatim}
+ http://www.alfsembler.de
 \end{verbatim}
 Die Quellen der C-Version k"onnen weiterhin von folgendem Server geholt
 werden:
@@ -199,7 +203,7 @@ folgende Prozessorfamilien implementiert:
 \item{Motorola DSP5600x,DSP56300}
 \item{Motorola/IBM MPC601/MPC505/PPC403}
 \item{Motorola M-Core}
-\item{Motorola 6800, 6805, 68HC08, 6809, 68(HC)11, 68HC12, 68HC16 sowie Hitachi 6301}
+\item{Motorola 6800, 6805, 68HC08, 6809, 68(HC)11(K4), 68HC12, 68HC16 sowie Hitachi 6301}
 \item{Hitachi 6309}
 \item{Hitachi H8/300(H)}
 \item{Hitachi H8/500}
@@ -257,6 +261,7 @@ folgende Prozessorfamilien implementiert:
 \item{Fujitsu F$^2$MC8L}
 \item{Fujitsu F$^2$MC16L}
 \item{Symbios Logic SYM53C8xx (ja, die kann man programmieren!)}
+\item{Intersil CDP1802/1805}
 \end{itemize}
 in Arbeit / Planung / "Uberlegung :
 \begin{itemize}
@@ -364,9 +369,9 @@ Die "Ubersetzung wird durch den Extender merklich langsamer, aber immerhin
 l"auft es dann noch...
 
 F"ur Freunde von IBM's Betriebssystem OS/2 \marginpar{{\em OS/2}} gibt es
-eine native OS/2-Version von AS.  Diese ist zwar zur Zeit nur 16-bittig,
-aber man erspart sich immerhin den Umweg "uber DOS-Boxen und hat auch
-keine Probleme mehr mit l"angeren Dateinamen.
+eine native OS/2-Version von AS.  Seit 1.41r8 ist diese nur eine volle
+32-bittige OS/2-Anwendung, was nat"urlich zur Folge hat, da"s OS/2 2.x
+und ein 80386-Prozessor jetzt zwingend erforderlich sind.
 
 Den reinen PC-Bereich verl"a"st man mit der \marginpar{{\em UNIX}}
 C-Version von AS, die so gehalten wurde, da"s sie auf einer m"oglichst
@@ -871,6 +876,11 @@ bzw. \ref{ChapShareOrder}.
       \tty{MAP}, \tty{NOI} bzw. \tty{OBJ}, je nach gew"ahltem Format.
       Wird keine explizite Formatangabe gemacht, wird das MAP-Format
       gew"ahlt.}
+\item{\tty{noicemask [Wert]}: Normalerweise listet AS in NoICE-Debuginfos
+      nur Symbole aus dem CODE-Segment.  Mit dieser Option und einem als
+      Bitmaske zu verstehenden Wert lassen sich andere Symbole aus
+      anderen Segmenten zuschalten.  Die Zuordnung von Bits zu Segmenten
+      kann Tabelle \ref{TabSegmentNums} entnommen werden.} 
 \item{\tty{w}: Ausgabe von Warnungen unterdr"ucken;}
 \item{\tty{E [Datei]}: Die von AS erzeugten Fehlermeldungen und Warnungen
       in eine Datei umleiten.  Anstatt einer Datei k"onnen auch die 5
@@ -925,7 +935,11 @@ bzw. \ref{ChapShareOrder}.
       Symbole, selbst wenn diese schon davor in der Liste definiert
       sein sollten!  Zusammen mit den Befehlen zur bedingten
       Assemblierung (siehe dort) k"onnen so per Kommandozeile aus einer
-      Quelldatei unterschiedliche Programmversionen erzeugt werden.}
+      Quelldatei unterschiedliche Programmversionen erzeugt werden.
+      {\bf ACHTUNG!} Wenn case-sensitiv gearbeitet werden soll, mu"s dies
+      in der Kommandozeile {\em vor} Symboldefinitionen angegeben werden,
+      sonst werden Symbolnamen schon an dieser Stelle in Gro"sbuchstaben
+      umgewandelt!}
 \item{\tty{A}: Die Liste globaler Symbole in einer anderen, kompakteren Form
       ablegen.  Verwenden Sie diese Option, wenn der Assembler bei
       langen Symboltabellen mit einem Stapel"uberlauf abst"urzt.
@@ -1523,7 +1537,8 @@ Kennzeichnung von verwendeten Zielprozessor abh"angt (Tabelle
             & Thomson, Texas,  &  Microchip, Thomson, &   AMD29K,  \\
             & Toshiba, NEC,    &  Hitachi)            &   National,\\
             & Siemens, Philips, &                     &   Symbios, \\
-            & Fujitsu, Fairchild) &                   &   Atmel)   \\
+            & Fujitsu, Fairchild, &                   &   Atmel)   \\
+            & Intersil)        &                      &            \\
 \hline
 \hline
 dezimal     & direkt           & direkt               & direkt \\
@@ -3637,6 +3652,18 @@ zuweisen, wenn man einen anderen Wert als die Vorgabe von 0 in DPR
 schreibt, sonst werden Adressen falscher L"ange erzeugt...
 
 
+\subsubsection{68HC11K4}
+
+Auch beim HC11 konnten die Entwickler letzten Endes nicht dem
+'S"undenfall' widerstehen und haben in den K4 ein Banking-Schema
+eingebaut, um mit 16 Adre"sleitungen mehr als 64 Kbyte anzusprechen.  Die
+Register {\tt MMSIZ}, {\tt MMWBR}, {\tt MM1CR} und {\tt MM2CR} legen fest,
+ob wie die beiden zus"atzlichen 512K-Bereiche in den physikalischen
+Adre"sraum eingeblendet werden sollen.  Initial nimmt AS den Reset-Zustand
+dieser Register an, d.h. alle mit \$00 belegt und das Windowing ist
+abgeschaltet.
+
+
 \subsubsection{68HC16}
 
 Um mit seinen nur 16 Bit breiten Adre"soperanden einen 1 Mbyte gro"sen
@@ -4078,7 +4105,7 @@ Attribute gibt es deswegen wie bei \tty{DC} auch hier nicht.
 {\em\begin{tabbing}
 G"ultigkeit: \= Intel, Zilog, Toshiba, NEC, TMS370, Siemens, AMD, M16(C),\\
              \> MELPS7700/65816, National, ST9, TMS7000, $\mu$PD77230, \\
-             \> Fairchild
+             \> Fairchild, Intersil
 \end{tabbing}}
 
 Diese Befehle stellen sozusagen das Intel-Gegenst"uck zu \tty{DS}
@@ -4149,7 +4176,7 @@ nicht}!
 
 {\em\begin{tabbing} 
 G"ultigkeit: \= Intel, Zilog, Toshiba, NEC, TMS370, Siemens, AMD, M16(C),\\
-             \> National, ST9, TMS7000
+             \> National, ST9, TMS7000, Intersil
 \end{tabbing}}
 
 Dieser Befehl stellt eine Kurzschreibweise dar, um Speicherbereiche
@@ -5998,6 +6025,43 @@ nicht immer so gut wie die zugeh"orige Hardware...):
 Dabei steht \tty{xxx} entweder f"ur \tty{SET} oder \tty{CLR} und \tty{\#mask}
 f"ur die zu verwendende Bitmaske; der Lattenzaun ist dabei optional.
 Anstelle des X-Registers darf nat"urlich auch Y verwendet werden.
+
+Mit der K4-Version des HC11 hat Motorola ein Banking-Schema eingef"uhrt,
+mit dem man zwar einerseits eine zu klein gewordene Architektur noch
+einmal aufbohren kann, den Software- und Tool-Entwicklern aber nicht
+unbedingt das Leben einfacher macht...wie stellt man so etwas vern"unftig
+dar?
+
+Die K4-Architektur {\em erweitert} den Adre"sraum des HC11 um 2x512 Kbyte,
+so da"s jetzt insgesamt 64+1024=1088 Kbyte zur Verf"ugung stehen.  AS tut
+so, als ob es sich dabei um einen Adre"sraum handeln w"urde, der
+folgenderma"sen organisiert ist:
+\begin{itemize}
+\item{\$000000...\$00ffff: der alte HC11-Adre"sraum}
+\item{\$010000...\$08ffff: Fenster 1}
+\item{\$090000...\$10ffff: Fenster 2}
+\end{itemize}
+"Uber den {\tt ASSUME}-Befehl teilt man AS mit, wie die Banking-Register
+eingestellt sind und damit, wie und wo die erweiterten Bereiche
+eingeblendet werden.  Bei absoluten Adressierungen mit Adressen jenseits
+\$10000 berechnet AS dann automatisch, welche Adresse innerhalb der ersten
+64K anzusprechen ist.  Das kann nat"urlich wieder nur f"ur direkte
+Adressierungsarten funktionieren, bei indizierten/indirekten
+Adre"ausdr"ucken ist der Programmierer daf"ur verantwortlich, "uber die
+momentan aktiven Banks den "Uberblick zu behalten!
+
+Wer sich nicht ganz sicher ist, ob die momentane Einstellung korrekt ist,
+kann den Pseudobefehl {\tt PRWINS} benutzen, der dann z.B.
+\begin{verbatim}
+MMSIZ e1 MMWBR 84 MM1CR 00 MM2CR 80
+Window 1: 10000...12000 --> 4000...6000
+Window 1: 90000...94000 --> 8000...c000
+\end{verbatim}
+ausgibt.  Ein z.B. an Stelle \$10000 liegender Befehl
+\begin{verbatim}
+        jmp     *+3
+\end{verbatim}
+w"urde effektiv einen Sprung auf Adresse \$4003 ausl"osen.
 
 %%---------------------------------------------------------------------------
 
@@ -8180,7 +8244,8 @@ Nummer & Segment & Nummer & Segment \\
 \$08 &    REG                  & \$09 &    ROMDATA \\
 \hline
 \end{tabular}\end{center}
-\caption{Kodierungen des {\tt Segment}-Feldes\label{TabSegments}}
+\caption{Kodierungen des {\tt Segment}-Feldes\label{TabSegments}
+         \label{TabSegmentNums}}
 \end{table*}
 Das Gran-Feld gibt die ,,Granularit"at'' des Codes an, d.h. die Gr"o"se 
 der kleinsten, adressierbaren Einheit im folgenden Datensatz.  Dieser
@@ -8519,6 +8584,14 @@ Diese Automatik l"a"st sich mit der Kommandozeilenoption
 teilweise unterdr"ucken: Ein Wert von 2 bzw. 3 sorgt daf"ur, da"s
 S-Records mit einem Mindesttyp von 2 bzw. 3 benutzt werden, w"ahrend ein
 Wert von 0 der vollen Automatik entspricht.
+
+Normalerweise benutzt das AVR-Format immer eine Adre"sl"ange von 3 Bytes. 
+Manche Programme m"ogen das leider nicht...deshalb kann man mit dem
+Schalter
+\begin{verbatim}
+  -avrlen <2|3>
+\end{verbatim}
+die L"ange zur Not auf 2 Bytes reduzieren.
 
 Die Intel-, Tektronix- und MOS-Formate sind auf 16 Bit-Adressen
 beschr"ankt, das 16-Bit Intel-Format reicht 4 Bit weiter.  L"angere
@@ -10642,6 +10715,13 @@ oder ich werde langsam alt...
       \item{unterst"utzt tempor"are Symbole;}
       \item{zus"atzlicher Befehl {\tt MAXNEST} zum Einstellen der
             maximalen Verschachtelungstiefe von Makroexpansionen;}
+      \item{zus"atzliche Kommandozeilenoption {\tt noicemask}, um
+            die Menge der in einem NoICE-Debuginfofile gelisteten Segmente
+            zu steuern;} 
+      \item{unterst"utzt zus"atzlich die 180x-Familie von Intersil;}
+      \item{additionally supports the 68HC11K4 address windowing;}
+      \item{P2HEX kann jetzt die Adre"sfeldl"ange von AVR-Hex-Dateien
+            variieren;}
       \end{itemize}}
 \end{itemize}
 
@@ -11671,6 +11751,16 @@ damit mit der n"achsten Release alle etwas davon haben :-)
                  {\em 80296SA Microcontroller User's Manual.\/} \\
                  Sept. 1996
 
+\bibitem{Inters02} Intersil: \\
+                 {\em CDP1802A, CDP1802AC, CDP1802BC CMOS 8-Bit
+                  Microprocessors.\/} \\
+                 March 1997
+
+\bibitem{Inters05} Intersil: \\
+                 {\em CDP1805AC, CDP1806AC CMOS 8-Bit Microprocessor
+                  with On-Chip RAM and Counter/Timer.\/} \\
+                 March 1997
+
 \bibitem{Kaku} Hirotsugu Kakugawa: \\
                {\em A memo on the secret features of 6309.} \\
                (erh"altlich "uber WWW: \\
@@ -11784,6 +11874,10 @@ damit mit der n"achsten Release alle etwas davon haben :-)
                    {\em DSP56300 24-Bit Digital Signal Processor
                     Family Manual.\/} \\
                    Rev. 0 (keine Jahresangabe im PDF-File)
+
+\bibitem{MotK4} Motorola Inc.: \\
+                {\em MC68HC11K4 Technical Data.\/}
+                1992
 
 \bibitem{SCMP} National Semiconductor: \\
                {\em SC/MP Programmier- und Assembler-Handbuch.\/} \\

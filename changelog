@@ -799,3 +799,50 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 
 - Bugfix      : 680x0-Adressierungen korrigiert
                 äußeres Displacement jetzt auch in Klammer schreibbar
+
+[Bld 10]
+
+- Erweiterung : NoICE-Symboltypenmaske setzbar
+
+- Bugfix      : 6809-Stackoperation mit anderem Stackpointer funktionierten
+                nicht
+
+- Erweiterung : PUSH/PULL 6809 funktionieren auch mit Register D=A+B
+
+- Bugfix      : 8048-ORL/ANL funktionieren wieder mit p1/p2
+
+[Bld 11]
+
+- Bugfix      : 6809-PUSH/PULL mit D-Register klappt jetzt wirklich (sorry!)
+
+- Bugfix      : ACE: Segmente vereint, Bereiche/Startadressen korrigiert
+
+[Bld 13]
+
+- Bugfix      : in der Kommandozeile angegebene Symbole wurden immer in 
+                Großbuchstaben umgewandelt
+
+- Erweiterung : unterstützt 68HC11K4 windowing
+
+- Bugfix      : pbind verfälschte sporadisch Daten beim Umkopieren
+
+- Erweiterung : added avrlen parameter to p2hex
+
+- Bugfix      : on DOS platforms, PLIST did not display 32-bit-addresses
+                incorrectly
+
+[Bld 14]
+
+- Bugfix      : fixed crashes when HC16 cpu type was set from command line
+
+[Bld 15]
+
+- Bugfix      : fixed extended register coding for TLCS-900
+
+- Bugfix      : P2HEX: fix specification of entry address on command line
+
+[Bld 16]
+
+- Bugfix      : do not allow line debug info in pseudo segments
+
+- Bugfix      : more secure detection of ASCII integer constants

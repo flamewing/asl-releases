@@ -10,6 +10,8 @@
 /*           22. 5.2000 fixed decoding xhl0...xhl3                           */
 /*           14. 6.2000 fixed coding of minc/mdec                            */
 /*           18. 6.2000 fixed coding of bs1b                                 */
+/*           14. 1.2001 silenced warnings about unused parameters            */
+/*           19. 8.2001 fixed errors for lower halves of XIX...XSP           */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -257,9 +259,9 @@ BEGIN
    if (((l == 3) OR ((l == 4) AND (*Asc == 'Q')))
    AND ((Asc[l - 1] == 'L') OR (Asc[l - 1] == 'H')))
     BEGIN
-     strcpy(HAsc, Asc + 1); HAsc[l - 2] = '\0';
+     strcpy(HAsc, Asc + (l - 3)); HAsc[2] = '\0';
      for (z = 0; z < RegCnt >> 1; z++)
-      if (strcmp(HAsc,Reg16Names[z + 4]) == 0)
+      if (strcmp(HAsc, Reg16Names[z + 4]) == 0)
        BEGIN
         *ErgNo = 0xf0 + (z << 2) + ((l - 3) << 1)+(Ord(Asc[l - 1] == 'H'));
         *ErgSize = 0; return Result;
@@ -711,6 +713,8 @@ END
 
         static void DecodeMULA(Word Index)
 BEGIN
+   UNUSED(Index);
+
    if (ArgCnt!=1) WrError(1110);
    else
     BEGIN
@@ -842,6 +846,7 @@ END
 BEGIN
    LongInt AdrLong;
    Boolean OK;
+   UNUSED(Index);
    
    if (ArgCnt!=1) WrError(1110);
    else
@@ -862,6 +867,7 @@ END
         static void DecodeRET(Word Index)
 BEGIN
     int z;
+    UNUSED(Index);
 
     if (ArgCnt>1) WrError(1110);
     else
@@ -889,6 +895,7 @@ END
 BEGIN
    Word AdrWord;
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt!=1) WrError(1110);
    else
@@ -906,6 +913,7 @@ END
 BEGIN
    LongInt AdrLong;
    Boolean OK; 
+   UNUSED(Index);
 
    if ((ArgCnt!=2) AND (ArgCnt!=1)) WrError(1110);
    else
@@ -950,6 +958,7 @@ END
         static void DecodeEX(Word Index)
 BEGIN
    Byte HReg;
+   UNUSED(Index);
 
    if (ArgCnt!=2) WrError(1110);
    else if ((ArgPair("F","F\'")) OR (ArgPair("F`","F"))) 
@@ -1043,6 +1052,7 @@ END
         static void DecodeLDA(Word Index)
 BEGIN
    Byte HReg;
+   UNUSED(Index);
 
    if (ArgCnt!=2) WrError(1110);
    else
@@ -1071,6 +1081,7 @@ END
 BEGIN
    LongInt AdrLong;
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt!=2) WrError(1110);
    else
@@ -1101,6 +1112,7 @@ END
         static void DecodeLDC(Word Index)
 BEGIN
    Byte HReg;
+   UNUSED(Index);
 
    if (ArgCnt!=2) WrError(1110);
    else
@@ -1156,6 +1168,7 @@ END
         static void DecodeLDX(Word Index)
 BEGIN
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt!=2) WrError(1110);
    else
@@ -1183,6 +1196,7 @@ END
 BEGIN
    Word AdrWord;
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt!=2) WrError(1110);
    else

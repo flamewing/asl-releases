@@ -8,6 +8,8 @@
 /*            2. 1.1999 ChkPC-Anpassung                                      */
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*           13. 3.2000 Adressraum fuer HC08 jetzt 64K                       */
+/*           2001-09-03 added warning message about X-indexed conversion     */
+/*           2001-09-03 added inx as alias for incx                          */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -49,7 +51,7 @@ typedef struct
           Word Mask;
          } RMWOrder;
 
-#define FixedOrderCnt 52
+#define FixedOrderCnt 53
 #define RelOrderCnt 23
 #define ALUOrderCnt 19
 #define RMWOrderCnt 12
@@ -152,6 +154,7 @@ BEGIN
    AddFixed("STOP",CPU6805,0x8e); AddFixed("TAP" ,CPU6808,0x84);
    AddFixed("TPA" ,CPU6808,0x85); AddFixed("TSX" ,CPU6808,0x95);
    AddFixed("TXS" ,CPU6808,0x94); AddFixed("WAIT",CPU6805,0x8f);
+   AddFixed("INX" ,CPU6805,0x5c); 
 
    RelOrders=(BaseOrder *) malloc(sizeof(BaseOrder)*RelOrderCnt); InstrZ=0;
    AddRel("BRA" ,CPU6805,0x20);   AddRel("BRN" ,CPU6805,0x21);
@@ -234,7 +237,7 @@ END
 BEGIN
    if ((AdrMode!=ModNone) AND ((Mask & (1 << AdrMode))==0))
     BEGIN
-     WrError( (((1 << AdrMode) AND Mask08)==0) ? 1350 : 1505);
+     WrError( (((1 << AdrMode) & Mask08)==0) ? 1350 : 1505);
      AdrMode=ModNone; AdrCnt=0;
     END
 END
@@ -310,7 +313,9 @@ BEGIN
 
      if (strcasecmp(ArgStr[Start],"X")==0)
       BEGIN
-       AdrMode=ModIx; ChkAdr(Mask,Mask08); return;
+       WrError(280);
+       AdrMode=ModIx; ChkAdr(Mask,Mask08);
+       return;
       END
 
      /* immediate */

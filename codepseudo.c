@@ -8,6 +8,7 @@
 /*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
 /*           18. 8.1998 BookKeeping-Aufrufe bei SPeicherreservierungen       */
 /*            8. 3.2000 'ambigious else'-Warnungen beseitigt                 */
+/*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -95,6 +96,7 @@ typedef Boolean (*TLayoutFunc)(
 BEGIN
    Boolean Result;
    TempResult t;
+   UNUSED(Turn);
 
    Result=False;
 
@@ -584,6 +586,7 @@ BEGIN
    Boolean OK;
    TempResult t;
    LongInt Rep,z2;
+   UNUSED(Index);
 
    if (ArgCnt==0) WrError(1110);
    else
@@ -646,6 +649,7 @@ BEGIN
    Word HVal16;
    Boolean OK;
    LongInt Rep,z2;
+   UNUSED(Index);
 
    if (ArgCnt==0) WrError(1110);
    else
@@ -692,6 +696,7 @@ BEGIN
    Boolean OK;
    int z;
    LongInt Rep,z2;
+   UNUSED(Index);
 
    if (ArgCnt==0) WrError(1110);
    else
@@ -731,6 +736,7 @@ END
 BEGIN
    Word HVal16;
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt!=1) WrError(1110);
    else
@@ -848,6 +854,7 @@ BEGIN
    Double DVal;
    TempResult t;
    Boolean OK,ValOK;
+   UNUSED(Turn);
 
    if (OpSize<0) OpSize=1;
 

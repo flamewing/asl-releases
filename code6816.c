@@ -8,6 +8,7 @@
 /*            2. 1.1999 ChkPC-Anpassung                                      */
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*           30. 8.2000 added Moto16 Pseudos                                 */
+/*            1. 7.2001 forgot to set AttrChars                              */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -1081,7 +1082,7 @@ BEGIN
    TurnWords=False; ConstMode=ConstModeMoto; SetIsOccupied=False;
 
    PCSymbol="*"; HeaderID=0x65; NOPCode=0x274c;
-   DivideChars=","; HasAttrs=True;
+   DivideChars=","; HasAttrs=True; AttrChars=".";
 
    ValidSegs=(1<<SegCode);
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;

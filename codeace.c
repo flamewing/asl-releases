@@ -10,6 +10,11 @@
 /*                      nur noch Intel-Pseudos                               */
 /*           16. 8.1999 Fehler beseitigt                                     */
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
+/*           14. 1.2001 silenced warnings about unused parameters            */
+/*                      removed undef'd processors                           */
+/*                      X-displacements are unsigned                         */
+/*                      unified segments                                     */
+/*                      changed segment limits/inits                         */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -67,11 +72,9 @@ typedef struct
          Byte AccCode, XIndCode, DirCode;
         } BitOrder;
 
-enum {D_CPUACE1001, D_CPUACE1101, D_CPUACE2101,
-      D_CPUACE1202, D_CPUACE2202, D_CPUACE2404};
+enum {D_CPUACE1101, D_CPUACE1202};
 
-static CPUVar CPUACE1001, CPUACE1101, CPUACE2101,
-              CPUACE1202, CPUACE2202, CPUACE2404;
+static CPUVar CPUACE1101, CPUACE1202;
 
 static PInstTable InstTable;
 static FixedOrder *FixedOrders;
@@ -83,7 +86,6 @@ static ShortInt AdrMode;
 static Byte AdrVal;
 static Word WAdrVal;
 static Boolean BigFlag, OpSize;
-static IntType XType, CodeType;
 
 /*---------------------------------------------------------------------------*/
 
@@ -121,7 +123,7 @@ BEGIN
    else if (*Asc == '#')
     BEGIN
      if (OpSize)
-      WAdrVal = EvalIntExpression(Asc + 1, XType, &OK);
+      WAdrVal = EvalIntExpression(Asc + 1, Int12, &OK);
      else
       AdrVal = EvalIntExpression(Asc + 1, Int8, &OK);
      if (OK) AdrMode = ModImm;
@@ -156,7 +158,7 @@ BEGIN
          else
           BEGIN
            if (*Part == '#') strcpy(Part, Part +1);
-           AdrVal = EvalIntExpression(Part, SInt8, &OK);
+           AdrVal = EvalIntExpression(Part, UInt8, &OK);
            if (NOT OK) break;
            DispOcc = True;
           END
@@ -173,9 +175,9 @@ BEGIN
    else
     BEGIN
      if (OpSize)
-      WAdrVal = EvalIntExpression(Asc, CodeType, &OK);
+      WAdrVal = EvalIntExpression(Asc, UInt12, &OK);
      else
-      AdrVal = EvalIntExpression(Asc, UInt6, &OK);
+      AdrVal = EvalIntExpression(Asc, UInt8, &OK);
      if (OK) AdrMode = ModDir;
     END
 
@@ -303,6 +305,8 @@ END
 
         static void DecodeIFEQ(Word Index)
 BEGIN
+   UNUSED(Index);
+
    if (ArgCnt != 2) WrError(1110);
    else
     BEGIN
@@ -361,6 +365,8 @@ END
 
         static void DecodeIFGT(Word Index)
 BEGIN
+   UNUSED(Index);
+
    if (ArgCnt != 2) WrError(1110);
    else
     BEGIN
@@ -407,6 +413,8 @@ END
 
         static void DecodeIFLT(Word Index)
 BEGIN
+   UNUSED(Index);
+
    if (ArgCnt != 2) WrError(1110);
    else
     BEGIN
@@ -455,11 +463,12 @@ END
 BEGIN
    LongInt Dist;
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt != 1) WrError(1110);
    else
     BEGIN
-     Dist = EvalIntExpression(ArgStr[1], CodeType, &OK) - (EProgCounter() + 1);
+     Dist = EvalIntExpression(ArgStr[1], UInt12, &OK) - (EProgCounter() + 1);
      if (OK)
       BEGIN
        if ((NOT SymbolQuestionable) AND ((Dist > 31) OR (Dist < -31))) WrError(1370);
@@ -475,6 +484,8 @@ END
 
         static void DecodeLD(Word Index)
 BEGIN
+   UNUSED(Index);
+
    if (ArgCnt != 2) WrError(1110);
    else
     BEGIN
@@ -559,6 +570,8 @@ END
 
         static void DecodeST(Word Index)
 BEGIN
+   UNUSED(Index);
+
    if (ArgCnt != 2) WrError(1110);
    else
     BEGIN
@@ -686,7 +699,7 @@ BEGIN
 
    if (Memo("SFR"))
     BEGIN
-     CodeEquate(SegData,0,0xff);
+     CodeEquate(SegCode,0,0xff);
      return True;
     END;
 
@@ -731,27 +744,16 @@ BEGIN
    PCSymbol = "$"; HeaderID = Descr->Id; NOPCode = 0x1c;
    DivideChars = ","; HasAttrs = False;
 
-   ValidSegs = (1 << SegCode) | (1 << SegData);
-   Grans[SegCode] = 1; ListGrans[SegCode] = 1; SegInits[SegCode] = 0;
-   Grans[SegData] = 1; ListGrans[SegData] = 1; SegInits[SegData] = 0;
-   SegLimits[SegData] = 0xff;
+   ValidSegs = (1 << SegCode);
+   Grans[SegCode] = 1; ListGrans[SegCode] = 1; SegLimits[SegCode] = 0xfff;
 
-   switch (MomCPU - CPUACE1001)
+   switch (MomCPU - CPUACE1101)
     BEGIN
-     case D_CPUACE1001: case D_CPUACE1101: case D_CPUACE2101:
-      SegLimits[SegCode] = 0x3ff;
-      CodeType = UInt10;
-      XType = UInt11;
+     case D_CPUACE1101:
+      SegInits[SegCode] = 0xc00;
       break;
-     case D_CPUACE1202: case D_CPUACE2202:
-      SegLimits[SegCode] = 0x7ff;
-      CodeType = UInt11;
-      XType = UInt12;
-      break;
-     case D_CPUACE2404:
-      SegLimits[SegCode] = 0xfff;
-      CodeType = UInt12;
-      XType = UInt12;
+     case D_CPUACE1202:
+      SegInits[SegCode] = 0x800;
       break;
     END
 
@@ -761,10 +763,6 @@ END
 
         void codeace_init(void)
 BEGIN
-   CPUACE1001 = AddCPU("ACE1001", SwitchTo_ACE);
    CPUACE1101 = AddCPU("ACE1101", SwitchTo_ACE);
-   CPUACE2101 = AddCPU("ACE2101", SwitchTo_ACE);
    CPUACE1202 = AddCPU("ACE1202", SwitchTo_ACE);
-   CPUACE2202 = AddCPU("ACE2202", SwitchTo_ACE);
-   CPUACE2404 = AddCPU("ACE2404", SwitchTo_ACE);
 END

@@ -43,6 +43,15 @@
 /*           21. 5.2000 added TmpSymCounter initialization                   */
 /*            1. 6.2000 REPT/WHILE/IRP(C) not expanded without IfAsm         */
 /*                      added maximum nesting level for macros               */
+/*           24.12.2000 added -noicemask option                              */
+/*           14. 1.2001 silenced warnings about unused parameters            */
+/*                      set 'segment used' flag once code is generated       */
+/*           27. 1.2001 added 1802 initialization                            */
+/*           24. 3.2001 correctly handle predefined symbols when operating   */
+/*                      in case-sensitive mode                               */
+/*            9. 6.2001 moved initialization of DoPadding before CPU-specific*/
+/*                      initialization, to allow CPU-specific override       */
+/*           2001-07-07 added intiialization of C54x generator               */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -127,6 +136,7 @@
 #include "code3202x.h"
 #include "code3203x.h"
 #include "code3205x.h"
+#include "code3254x.h"
 #include "code3206x.h"
 #include "code9900.h"
 #include "codetms7.h"
@@ -144,6 +154,7 @@
 #include "code53c8xx.h"
 #include "codefmc8.h"
 #include "codefmc16.h"
+#include "code1802.h"
 #include "as1750.h"
 /**          Code21xx};**/
 
@@ -169,10 +180,13 @@ static Boolean MasterFile;
 
         static void NULL_Restorer(PInputTag PInp)
 BEGIN
+   UNUSED(PInp);
 END
 
         static Boolean NULL_GetPos(PInputTag PInp, char *dest)
 BEGIN
+   UNUSED(PInp);
+
    *dest='\0'; return False;
 END
 
@@ -1441,6 +1455,7 @@ END
 	static Boolean INCLUDE_GetPos(PInputTag PInp, char *dest)
 BEGIN
    String Tmp;
+   UNUSED(PInp);
 
    sprintf(Tmp,LongIntFormat,CurrLine);
    sprintf(dest,"%s(%s) ",NamePart(CurrFileName),Tmp);
@@ -1666,7 +1681,10 @@ BEGIN
            END
          EnterIntSymbol(tmp,EProgCounter(),SegNone,False);
         END
-       else EnterIntSymbol(LabPart,EProgCounter(),ActPC,False);
+       else if (RelSegs)
+        EnterRelSymbol(LabPart,EProgCounter(),ActPC,False);
+       else
+        EnterIntSymbol(LabPart,EProgCounter(),ActPC,False);
       END
     END
 
@@ -1757,6 +1775,7 @@ BEGIN
         END
        else if (CodeOutput)
         BEGIN
+         PCsUsed[ActPC] = True;
          if (DontPrint) NewRecord(PCs[ActPC]+CodeLen);
          else WriteBytes();
         END
@@ -2069,6 +2088,7 @@ BEGIN
    MomLineCounter = 0;
    MomLocHandle = (-1);
    LocHandleCnt = 0;
+   SectSymbolCounter = 0;
 
    SectionStack = Nil;
    FirstIfSave = Nil;
@@ -2077,11 +2097,11 @@ BEGIN
 
    InitPassProc();
 
-   ActPC = SegCode; PCs[ActPC] = 0; ENDOccured = False;
+   ActPC = SegCode; PCs[ActPC] = 0; RelSegs = False; ENDOccured = False;
    ErrorCount = 0; WarnCount = 0; LineSum = 0; MacLineSum = 0;
    for (z = 1; z <= StructSeg; z++)
     BEGIN
-     PCsUsed[z] = (z == SegCode);
+     PCsUsed[z] = FALSE;
      Phases[z] = 0;
      InitChunk(SegChunks + z);
     END
@@ -2123,6 +2143,8 @@ BEGIN
    EnterStringSymbol(DateName, DateS, True);
    EnterStringSymbol(TimeName, TimeS, True);
 
+   SetFlag(&DoPadding, DoPaddingName, True);
+
    if (*DefCPU == '\0')
     SetCPU(0, True);
    else
@@ -2130,7 +2152,6 @@ BEGIN
 
    SetFlag(&SupAllowed, SupAllowedName, False);
    SetFlag(&FPUAvail, FPUAvailName, False);
-   SetFlag(&DoPadding, DoPaddingName, True);
    SetFlag(&Maximum, MaximumName, False);
    SetFlag(&DoBranchExt, BranchExtName, False);
    EnterIntSymbol(ListOnName, ListOn = 1, SegNone, True);
@@ -2499,6 +2520,8 @@ END
 
         static CMDResult CMD_SharePascal(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    if (NOT Negate) ShareMode=1;
    else if (ShareMode==1) ShareMode=0;
    return CMDOK;
@@ -2506,6 +2529,8 @@ END
 
         static CMDResult CMD_ShareC(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    if (NOT Negate) ShareMode=2;
    else if (ShareMode==2) ShareMode=0;
    return CMDOK;
@@ -2513,6 +2538,8 @@ END
 
         static CMDResult CMD_ShareAssembler(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    if (NOT Negate) ShareMode=3;
    else if (ShareMode==3) ShareMode=0;
    return CMDOK;
@@ -2565,6 +2592,8 @@ END
 
         static CMDResult CMD_ListConsole(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    if (NOT Negate) ListMode=1;
    else if (ListMode==1) ListMode=0;
    return CMDOK;
@@ -2572,6 +2601,8 @@ END
 
         static CMDResult CMD_ListFile(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    if (NOT Negate) ListMode=2;
    else if (ListMode==2) ListMode=0;
    return CMDOK;
@@ -2579,36 +2610,48 @@ END
 
         static CMDResult CMD_SuppWarns(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    SuppWarns=NOT Negate;
    return CMDOK;
 END
 
         static CMDResult CMD_UseList(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    MakeUseList=NOT Negate;
    return CMDOK;
 END
 
         static CMDResult CMD_CrossList(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    MakeCrossList=NOT Negate;
    return CMDOK;
 END
 
         static CMDResult CMD_SectionList(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    MakeSectionList=NOT Negate;
    return CMDOK;
 END
 
         static CMDResult CMD_BalanceTree(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    BalanceTree=NOT Negate;
    return CMDOK;
 END
 
         static CMDResult CMD_MakeDebug(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    if (NOT Negate)
     BEGIN
      MakeDebug=True;
@@ -2625,24 +2668,32 @@ END
 
         static CMDResult CMD_MacProOutput(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    MacProOutput=NOT Negate;
    return CMDOK;
 END
 
         static CMDResult CMD_MacroOutput(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    MacroOutput=NOT Negate;
    return CMDOK;
 END
 
         static CMDResult CMD_MakeIncludeList(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    MakeIncludeList=NOT Negate;
    return CMDOK;
 END
 
         static CMDResult CMD_CodeOutput(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    CodeOutput=NOT Negate;
    return CMDOK;
 END
@@ -2650,6 +2701,7 @@ END
         static CMDResult CMD_MsgIfRepass(Boolean Negate, String Arg)
 BEGIN
    Boolean OK;
+   UNUSED(Arg);
 
    MsgIfRepass=NOT Negate;
    if (MsgIfRepass)
@@ -2672,6 +2724,8 @@ END
 
         static CMDResult CMD_ExtendErrors(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    if ((Negate) AND (ExtendErrors > 0))
      ExtendErrors--;
    else if ((NOT Negate) AND (ExtendErrors < 2))
@@ -2682,30 +2736,40 @@ END
 
         static CMDResult CMD_NumericErrors(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    NumericErrors=NOT Negate;
    return CMDOK;
 END
 
         static CMDResult CMD_HexLowerCase(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    HexLowerCase=NOT Negate;
    return CMDOK;
 END
 
         static CMDResult CMD_QuietMode(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    QuietMode=NOT Negate;
    return CMDOK;
 END
 
         static CMDResult CMD_ThrowErrors(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    ThrowErrors=NOT Negate;
    return CMDOK;
 END
 
         static CMDResult CMD_CaseSensitive(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    CaseSensitive=NOT Negate;
    return CMDOK;
 END
@@ -2777,7 +2841,8 @@ BEGIN
       BEGIN
        *p='\0'; strmaxcpy(Part,Copy,255); strcpy(Copy,p+1);
       END
-    UpString(Part);
+    if (NOT CaseSensitive)
+     UpString(Part);
     p=QuotPos(Part,'=');
     if (p==Nil)
      BEGIN
@@ -2825,6 +2890,8 @@ END
 
         static CMDResult CMD_HardRanges(Boolean Negate, char *Arg)
 BEGIN
+   UNUSED(Arg);
+
    HardRanges=Negate; return CMDOK;
 END
 
@@ -2880,7 +2947,7 @@ END
 BEGIN
    int z;
 
-   for(z=0; z<strlen(s); z++)
+   for(z = 0; z < strlen(s); z++)
     if (NOT isalnum((unsigned int) s[z])) return False;
    return True;
 END
@@ -2926,13 +2993,36 @@ BEGIN
     END
 END
 
+	static CMDResult CMD_NoICEMask(Boolean Negate, char *Arg)
+BEGIN
+   Word erg; 
+   Boolean OK;
+
+   if (Negate)
+    BEGIN
+     NoICEMask = 1 << SegCode; 
+     return CMDOK;
+    END
+   else if (Arg[0] == '\0') return CMDErr;
+   else
+    BEGIN
+     erg = ConstLongInt(Arg, &OK);
+     if ((NOT OK) OR (erg > (1 << PCMax))) return CMDErr;
+     else
+      BEGIN
+       NoICEMask = erg;
+       return CMDArg;
+      END
+    END
+END
+
         static void ParamError(Boolean InEnv, char *Arg)
 BEGIN
    printf("%s%s\n",getmessage((InEnv) ? Num_ErrMsgInvEnvParam : Num_ErrMsgInvParam),Arg);
    exit(4);
 END
 
-#define ASParamCnt 34
+#define ASParamCnt 35
 static CMDRec ASParams[ASParamCnt]=
               {{"A"    , CMD_BalanceTree},
                {"ALIAS", CMD_CPUAlias},
@@ -2951,6 +3041,7 @@ static CMDRec ASParams[ASParamCnt]=
                {"l"    , CMD_ListConsole},
                {"M"    , CMD_MacroOutput},
                {"n"    , CMD_NumericErrors},
+               {"NOICEMASK", CMD_NoICEMask},
                {"o"    , CMD_OutFile},
                {"P"    , CMD_MacProOutput},
                {"p"    , CMD_SharePascal},
@@ -3061,13 +3152,14 @@ BEGIN
      code96c141_init(); code90c141_init(); code87c800_init(); code47c00_init(); code97c241_init();
      code16c5x_init(); code16c8x_init(); code17c4x_init();
      codest6_init(); codest7_init(); codest9_init(); code6804_init();
-     code3201x_init(); code3202x_init(); code3203x_init(); code3205x_init(); code3206x_init();
+     code3201x_init(); code3202x_init(); code3203x_init(); code3205x_init(); code32054x_init(); code3206x_init();
      code9900_init(); codetms7_init(); code370_init(); codemsp_init();
      code78c10_init(); code75k0_init(); code78k0_init(); code7720_init(); code77230_init();
      codescmp_init(); codecop8_init(); codesc14xxx_init();
      codeace_init();
      code53c8xx_init();
      codef2mc8_init(); codef2mc16_init();
+     code1802_init();
      /*as1750_init();*/
      First=FALSE;
     END
@@ -3103,14 +3195,15 @@ BEGIN
       strcpy(ClrEol,"\n");  /* CRLF auf Datei */
     END
 
-   ShareMode=0; ListMode=0; IncludeList[0]='\0'; SuppWarns=False;
-   MakeUseList=False; MakeCrossList=False; MakeSectionList=False;
-   MakeIncludeList=False; ListMask=0xff;
-   MakeDebug=False; ExtendErrors=0;
-   MacroOutput=False; MacProOutput=False; CodeOutput=True;
-   strcpy(ErrorPath,"!2"); MsgIfRepass=False; QuietMode=False;
-   NumericErrors=False; DebugMode=DebugNone; CaseSensitive=False;
-   ThrowErrors=False; HardRanges=True;
+   ShareMode = 0; ListMode = 0; IncludeList[0] = '\0'; SuppWarns = False;
+   MakeUseList = False; MakeCrossList = False; MakeSectionList = False;
+   MakeIncludeList = False; ListMask = 0xff;
+   MakeDebug = False; ExtendErrors = 0;
+   MacroOutput = False; MacProOutput = False; CodeOutput = True;
+   strcpy(ErrorPath, "!2"); MsgIfRepass = False; QuietMode = False;
+   NumericErrors = False; DebugMode = DebugNone; CaseSensitive = False;
+   ThrowErrors = False; HardRanges = True;
+   NoICEMask = 1 << SegCode; 
 
    LineZ=0;
 

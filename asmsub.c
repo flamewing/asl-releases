@@ -19,6 +19,9 @@
 /*            5.11.1999 ExtendErrors ist jetzt ShortInt                      */
 /*           13. 2.2000 Ausgabeliste Listing                                 */
 /*            6. 8.2000 added ValidSymChar array                             */
+/*           21. 7.2001 added not repeatable message                         */
+/*           2001-08-01 QuotPos also works for ) resp. ] characters          */
+/*           2001-09-03 added warning message about X-indexed conversion     */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -231,7 +234,7 @@ BEGIN
         if ((AngBrack|Brack|Flag)==0)
          { Imp[(unsigned char)Zeichen]=Save; return i;}
        END
-      else switch(*i)
+      switch(*i)
        BEGIN
         case '"': if (((Brack|AngBrack)==0) AND ((Flag&2)==0)) Flag^=1; break;
         case '\'':if (((Brack|AngBrack)==0) AND ((Flag&1)==0)) Flag^=2; break;
@@ -862,6 +865,7 @@ BEGIN
      case  250: msgno=Num_ErrMsgPageCrossing; break;
      case  260: msgno=Num_ErrMsgWOverRange; break;
      case  270: msgno=Num_ErrMsgNegDUP; break;
+     case  280: msgno=Num_ErrMsgConvIndX; break;
      case 1000: msgno=Num_ErrMsgDoubleDef; break;
      case 1010: msgno=Num_ErrMsgSymbolUndef; break;
      case 1020: msgno=Num_ErrMsgInvSymName; break;
@@ -879,6 +883,7 @@ BEGIN
      case 1140: msgno=Num_ErrMsgTooMuchArgs; break;
      case 1150: msgno=Num_ErrMsgNoRelocs; break;
      case 1155: msgno=Num_ErrMsgUnresRelocs; break;
+     case 1156: msgno=Num_ErrMsgUnexportable; break;
      case 1200: msgno=Num_ErrMsgUnknownOpcode; break;
      case 1300: msgno=Num_ErrMsgBrackErr; break;
      case 1310: msgno=Num_ErrMsgDivByZero; break;
@@ -933,6 +938,7 @@ BEGIN
      case 1552: msgno=Num_ErrMsgWrongStruct; break;
      case 1553: msgno=Num_ErrMsgPhaseDisallowed; break;
      case 1554: msgno=Num_ErrMsgInvStructDir; break;
+     case 1560: msgno=Num_ErrMsgNotRepeatable; break;
      case 1600: msgno=Num_ErrMsgShortRead; break;
      case 1610: msgno=Num_ErrMsgUnknownCodepage; break;
      case 1700: msgno=Num_ErrMsgRomOffs063; break;

@@ -10,6 +10,7 @@
 /*          13. 7.1998 Cedilla                                               */
 /*          12. 9.1998 input-Statement                                       */
 /*          12. 1.1999 andere Kapitelherarchie fuer article                  */
+/*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -612,11 +613,13 @@ BEGIN
      while (search>=OutLineBuffer)
       BEGIN
        if (*search==' ') break;
-       if (search>OutLineBuffer) 
-        if (*(search-1)=='-') break;
-        else if (*(search-1)=='/') break;
-        else if (*(search-1)==';') break;
-        else if (*(search-1)==';') break;
+       if (search>OutLineBuffer)
+        BEGIN 
+         if (*(search-1)=='-') break;
+         else if (*(search-1)=='/') break;
+         else if (*(search-1)==';') break;
+         else if (*(search-1)==';') break;
+        END
        search--;
       END
      if (search<=OutLineBuffer)
@@ -916,6 +919,8 @@ static char BackSepString[TOKLEN];
 
 	static void TeXFlushLine(Word Index)
 BEGIN
+   UNUSED(Index);
+
    if (CurrEnv==EnvTabular)
     BEGIN
      for (CurrCol++; CurrCol<ThisTable.TColumnCount; ThisTable.Lines[CurrRow][CurrCol++]=strdup(""));
@@ -933,16 +938,20 @@ END
 
 	static void TeXKillLine(Word Index)
 BEGIN
+   UNUSED(Index);
+
    ResetLine();
 END
 
 	static void TeXDummy(Word Index)
 BEGIN
+   UNUSED(Index);
 END
 
 	static void TeXDummyNoBrack(Word Index)
 BEGIN
    char Token[TOKLEN];
+   UNUSED(Index);
 
    ReadToken(Token);
 END
@@ -950,6 +959,7 @@ END
 	static void TeXDummyInCurl(Word Index)
 BEGIN
    char Token[TOKLEN];
+   UNUSED(Index);
 
    assert_token("{");
    ReadToken(Token);
@@ -960,6 +970,7 @@ END
 BEGIN
    char Token[TOKLEN];
    int level;
+   UNUSED(Index);
 
    assert_token("{");
    assert_token("\\");
@@ -985,6 +996,7 @@ END
 BEGIN
    char Token[TOKLEN];
    int level;
+   UNUSED(Index);
 
    assert_token("\\");
    ReadToken(Token);
@@ -1001,6 +1013,7 @@ END
 	static void TeXFont(Word Index)
 BEGIN
    char Token[TOKLEN];
+   UNUSED(Index);
 
    assert_token("\\"); 
    ReadToken(Token); assert_token("="); ReadToken(Token); ReadToken(Token);
@@ -1010,6 +1023,7 @@ END
 	static void TeXAppendix(Word Index)
 BEGIN
    int z;
+   UNUSED(Index);
 
    InAppendix=True;
    *Chapters=(-1);
@@ -1097,6 +1111,7 @@ BEGIN
    Boolean done;
    TColumn NCol;
    int z;
+   UNUSED(Index);
 
    assert_token("{");
    ReadToken(EnvName);
@@ -1207,6 +1222,7 @@ END
 BEGIN
    char EnvName[TOKLEN],Add[TOKLEN];
    EnvType NEnv;
+   UNUSED(Index);
 
    assert_token("{");
    ReadToken(EnvName);
@@ -1253,6 +1269,7 @@ END
 	static void TeXItem(Word Index)
 BEGIN
    char NumString[20],Token[TOKLEN],Acc[TOKLEN];
+   UNUSED(Index);
 
    FlushLine();
    switch(CurrEnv)
@@ -1285,6 +1302,7 @@ END
 	static void TeXBibItem(Word Index)
 BEGIN
    char NumString[20],Token[TOKLEN],Name[TOKLEN],Format[10];
+   UNUSED(Index);
 
    if (CurrEnv!=EnvBiblio) error("\\bibitem not in bibliography environment");
 
@@ -1303,106 +1321,148 @@ END
 
 	static void TeXAddDollar(Word Index)
 BEGIN
+   UNUSED(Index);
+
    DoAddNormal("$",BackSepString);
 END
 
 	static void TeXAddUnderbar(Word Index)
 BEGIN
+   UNUSED(Index);
+
    DoAddNormal("_",BackSepString);
 END
 
         static void TeXAddPot(Word Index)
 BEGIN
+   UNUSED(Index);
+
    DoAddNormal("^",BackSepString);
 END
 
 	static void TeXAddAmpersand(Word Index)
 BEGIN
+   UNUSED(Index);
+
    DoAddNormal("&",BackSepString);
 END
 
         static void TeXAddAt(Word Index)
 BEGIN
+   UNUSED(Index);
+
    DoAddNormal("@",BackSepString);
 END
 
         static void TeXAddImm(Word Index)
 BEGIN
+   UNUSED(Index);
+
    DoAddNormal("#",BackSepString);
 END
 
         static void TeXAddPercent(Word Index)
 BEGIN
+   UNUSED(Index);
+
    DoAddNormal("%",BackSepString);
 END
 
         static void TeXAddSSharp(Word Index)
 BEGIN
+   UNUSED(Index);
+
    DoAddNormal(CH_sz,BackSepString);
 END
 
         static void TeXAddIn(Word Index)  
 BEGIN
+   UNUSED(Index);
+
    DoAddNormal("in",BackSepString);
 END
 
         static void TeXAddReal(Word Index)  
 BEGIN
+   UNUSED(Index);
+
    DoAddNormal("R",BackSepString);
 END
 
 	static void TeXAddGreekMu(Word Index)
 BEGIN
+   UNUSED(Index);
+
    DoAddNormal(CH_mu,BackSepString);
 END
 
 	static void TeXAddGreekPi(Word Index)
 BEGIN
+   UNUSED(Index);
+
    DoAddNormal("Pi",BackSepString);
 END
 
 	static void TeXAddLessEq(Word Index)
 BEGIN
+   UNUSED(Index);
+
    DoAddNormal("<=",BackSepString);
 END
 
         static void TeXAddGreaterEq(Word Index)
 BEGIN
+   UNUSED(Index);
+
    DoAddNormal(">=",BackSepString);
 END
      
         static void TeXAddNotEq(Word Index)
 BEGIN
+   UNUSED(Index);
+
    DoAddNormal("<>",BackSepString);
 END
 
         static void TeXAddMid(Word Index)
 BEGIN
+   UNUSED(Index);
+
    DoAddNormal("|",BackSepString);
 END  
 
 	static void TeXAddRightArrow(Word Index)
 BEGIN
+   UNUSED(Index);
+
    DoAddNormal("->",BackSepString);
 END
 
 	static void TeXAddLongRightArrow(Word Index)
 BEGIN
+   UNUSED(Index);
+
    DoAddNormal("-->",BackSepString);
 END
 
 	static void TeXAddLeftArrow(Word Index)
 BEGIN
+   UNUSED(Index);
+
    DoAddNormal("<-",BackSepString);
 END
 
 	static void TeXAddLeftRightArrow(Word Index)
 BEGIN
+   UNUSED(Index);
+
    DoAddNormal("<->",BackSepString);
 END
 
 	static void TeXDoFrac(Word Index)
 BEGIN
+   UNUSED(Index);
+
    assert_token("{"); *SepString='\0'; BackToken("("); FracState=0;
 END
 
@@ -1457,6 +1517,8 @@ END
 
 	static void TeXAddMarginPar(Word Index)
 BEGIN
+   UNUSED(Index);
+
    assert_token("{");
    SaveEnv(EnvMarginPar);
 END
@@ -1465,6 +1527,7 @@ END
 BEGIN
    char tmp[100];
    int cnt;
+   UNUSED(Index);
 
    assert_token("{");
    if (CurrEnv!=EnvTable) error("caption outside of a table");
@@ -1478,6 +1541,8 @@ END
 
 	static void TeXHorLine(Word Index)
 BEGIN
+   UNUSED(Index);
+
    if (CurrEnv!=EnvTabular) error("\\hline outside of a table");
 
    if (ThisTable.Lines[CurrRow][0]!=Nil) InitTableRow(++CurrRow);
@@ -1489,6 +1554,7 @@ END
 BEGIN
    char Token[TOKLEN],*endptr;
    int cnt;
+   UNUSED(Index);
 
    if (CurrEnv!=EnvTabular) error("\\hline outside of a table");
    if (CurrCol!=0) error("\\multicolumn must be in first column");
@@ -1509,6 +1575,7 @@ END
 	static void TeXIndex(Word Index)
 BEGIN
    char Token[TOKLEN];
+   UNUSED(Index);
    
    assert_token("{"); 
    do
@@ -1539,6 +1606,7 @@ static Double VFactors[]={3.111111,0.3111111,0};
 
 	static void TeXHSpace(Word Index)
 BEGIN
+   UNUSED(Index);
 
    DoAddNormal(Blanks(GetDim(HFactors)),"");
 END
@@ -1546,6 +1614,7 @@ END
 	static void TeXVSpace(Word Index)
 BEGIN
    int z,erg;
+   UNUSED(Index);
 
    erg=GetDim(VFactors);
    FlushLine();
@@ -1556,6 +1625,7 @@ END
 BEGIN
    int h=GetDim(HFactors),v=GetDim(VFactors);
    char Rule[200];
+   UNUSED(Index);
    
    for (v=0; v<h; Rule[v++]='-'); Rule[v]='\0';
    DoAddNormal(Rule,BackSepString);
@@ -1564,6 +1634,7 @@ END
 	static void TeXAddTabStop(Word Index)
 BEGIN
    int z,n,p;
+   UNUSED(Index);
 
    if (CurrEnv!=EnvTabbing) error("tab marker outside of tabbing environment");
    if (TabStopCnt>=TABMAX) error("too many tab stops");
@@ -1578,6 +1649,7 @@ END
 	static void TeXJmpTabStop(Word Index)
 BEGIN
    int diff;
+   UNUSED(Index);
 
    if (CurrEnv!=EnvTabbing) error("tab trigger outside of tabbing environment");
    if (CurrTabStop>=TabStopCnt) error("not enough tab stops");
@@ -1590,6 +1662,7 @@ END
 	static void TeXDoVerb(Word Index)
 BEGIN
    char Token[TOKLEN],*pos,Marker;
+   UNUSED(Index);
 
    ReadToken(Token);
    if (*SepString!='\0') error("invalid control character for \\verb");
@@ -1615,6 +1688,7 @@ END
 	static void TeXErrEntry(Word Index)
 BEGIN
    char Token[TOKLEN];
+   UNUSED(Index);
 
    assert_token("{"); ReadToken(Token); assert_token("}"); assert_token("{");
    *SepString='\0';
@@ -1649,6 +1723,7 @@ END
 	static void TeXWriteLabel(Word Index)
 BEGIN
    char Name[TOKLEN],Value[TOKLEN];
+   UNUSED(Index);
 
    assert_token("{"); collect_token(Name,"}");
 
@@ -1665,6 +1740,7 @@ END
 	static void TeXWriteRef(Word Index)
 BEGIN
    char Name[TOKLEN],Value[TOKLEN];
+   UNUSED(Index);
 
    assert_token("{"); collect_token(Name,"}");
    GetLabel(Name,Value);
@@ -1674,6 +1750,7 @@ END
 	static void TeXWriteCitation(Word Index)
 BEGIN
    char Name[TOKLEN],Value[TOKLEN];
+   UNUSED(Index);
 
    assert_token("{"); collect_token(Name,"}");
    GetCite(Name,Value);
@@ -1683,6 +1760,8 @@ END
 
 	static void TeXNewParagraph(Word Index)
 BEGIN
+   UNUSED(Index);
+
    FlushLine();
    fputc('\n',outfile);
 END
@@ -1691,6 +1770,7 @@ END
 BEGIN
    FILE *file=fopen(TocName,"r");
    char Line[200];
+   UNUSED(Index);
 
    if (file==Nil)
     BEGIN
@@ -1711,6 +1791,7 @@ END
 	static void TeXParSkip(Word Index)
 BEGIN
    char Token[TOKLEN];
+   UNUSED(Index);
 
    ReadToken(Token);
    do
@@ -1731,6 +1812,7 @@ END
 BEGIN
    char Token[TOKLEN],*Repl="";
    Boolean Found=True;
+   UNUSED(Index);
 
    *Token='\0'; 
    ReadToken(Token);
@@ -1766,6 +1848,7 @@ END
 BEGIN
    char Token[TOKLEN],*Repl="";
    Boolean Found=True;
+   UNUSED(Index);
 
    *Token='\0'; 
    ReadToken(Token);
@@ -1800,6 +1883,7 @@ END
 BEGIN
    char Token[TOKLEN],*Repl="";
    Boolean Found=True;
+   UNUSED(Index);
 
    *Token='\0'; 
    ReadToken(Token);
@@ -1834,6 +1918,7 @@ END
 BEGIN
    char Token[TOKLEN],*Repl="";
    Boolean Found=True;
+   UNUSED(Index);
 
    *Token='\0'; 
    ReadToken(Token);
@@ -1868,6 +1953,7 @@ END
 BEGIN
    char Token[TOKLEN],*Repl="";
    Boolean Found=True;
+   UNUSED(Index);
 
    *Token='\0'; 
    ReadToken(Token);
@@ -1893,6 +1979,7 @@ END
 	static void TeXCedilla(Word Index)
 BEGIN
    char Token[TOKLEN];
+   UNUSED(Index);
 
    assert_token("{"); collect_token(Token,"}");
    if (strcmp(Token,"c")==0) strcpy(Token,CH_ccedil);
@@ -1945,6 +2032,7 @@ END
 	static void TeXHyphenation(Word Index)
 BEGIN
    char Token[TOKLEN];
+   UNUSED(Index);
 
    assert_token("{"); collect_token(Token,"}");
    AddException(Token);
@@ -1974,6 +2062,7 @@ END
 	static void TeXInclude(Word Index)
 BEGIN
    char Token[TOKLEN],Msg[TOKLEN];
+   UNUSED(Index);
 
    assert_token("{"); collect_token(Token,"}");
    if ((infiles[IncludeNest]=fopen(Token,"r"))==Nil)
@@ -1987,6 +2076,7 @@ END
 	static void TeXDocumentStyle(Word Index)
 BEGIN
    char Token[TOKLEN];
+   UNUSED(Index);
 
    ReadToken(Token);
    if (strcmp(Token,"[")==0)

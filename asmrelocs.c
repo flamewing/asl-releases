@@ -11,6 +11,7 @@
 /*                      Add in Merge                                        */
 /*           19. 1.2000 TransferRelocs begonnen                             */
 /*            8. 3.2000 'ambigious else'-Warnungen beseitigt                */
+/*           30.10.2000 added transfer of arbitrary lists                   */
 /*                                                                          */
 /****************************************************************************/
 
@@ -139,14 +140,14 @@ BEGIN
    LastRelocs = List;
 END
 
-	void TransferRelocs(LargeWord Addr, LongWord Type)
+	void TransferRelocs2(PRelocEntry RelocList, LargeWord Addr, LongWord Type)
 BEGIN
    PPatchEntry NewPatch;
    PRelocEntry Curr;
 
-   while (LastRelocs != Nil)
+   while (RelocList != Nil)
     BEGIN
-     Curr = LastRelocs;
+     Curr = RelocList;
      NewPatch = (PPatchEntry) malloc(sizeof(TPatchEntry));
      NewPatch->Next = Nil;
      NewPatch->Address = Addr;
@@ -156,12 +157,44 @@ BEGIN
      if (PatchLast == NULL) PatchList = NewPatch;
      else PatchLast->Next = NewPatch;
      PatchLast = NewPatch;
-     LastRelocs = Curr->Next;
+     RelocList = Curr->Next;
      free(Curr);
     END
 END
 
-	void AddExport(char *Name, LargeInt Value)
+	void TransferRelocs(LargeWord Addr, LongWord Type)
+BEGIN
+   TransferRelocs2(LastRelocs, Addr, Type);
+   LastRelocs = NULL;
+END
+
+	void SubPCRefReloc(void)
+BEGIN
+   PRelocEntry Run, Prev, New;
+
+   if (!RelSegs) return;
+  
+   /* search if PC subtraction evens out against an addition */
+
+   for (Prev = Nil, Run = LastRelocs; Run != Nil; Prev = Run, Run = Run->Next)
+    if ((Run->Add) AND (strcmp(Run->Ref, RelName_SegStart) == 0))
+     BEGIN
+      free(Run->Ref);
+      if (Prev) Prev->Next = Run->Next; else LastRelocs = Run->Next;
+      free(Run);
+      return;
+     END
+
+   /* in case we did not find one, add a new one */
+
+   New = (PRelocEntry) malloc(sizeof(TRelocEntry));
+   New->Ref = strdup(RelName_SegStart);
+   New->Add = FALSE;
+   New->Next = Nil;
+   if (Prev) Prev->Next = New; else LastRelocs = New;
+END
+
+	void AddExport(char *Name, LargeInt Value, LongWord Flags)
 BEGIN
    PExportEntry PNew;
 
@@ -169,6 +202,7 @@ BEGIN
    PNew->Next = Nil;
    PNew->Name = strdup(Name);
    PNew->Value = Value;
+   PNew->Flags = Flags;
    if (ExportList == Nil) ExportList = PNew;
    else ExportLast->Next = PNew;
    ExportLast = PNew;

@@ -17,6 +17,7 @@
 /*            3. 1.1999 ChkPC-Anpassung                                      */
 /*           23. 1.1999 Unsauberkeit in Zuweisung (-1 an unsigned) beseitigt */
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
+/*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -102,6 +103,8 @@ static TSwitchProc SaveInitProc;
 
         static Boolean ChkAdr(int AMode, Byte Mask, LongWord *Erg, LongWord *Mode)
 BEGIN
+   UNUSED(Erg);
+
    if ((Mask & (1<<AMode))==0)
     BEGIN
      WrError(1350); return False;

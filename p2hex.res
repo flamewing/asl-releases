@@ -10,6 +10,7 @@
 ;*           24.10.1999 Parameter Relokation                                 *
 ;*           16.11.1999 Atmel-Format                                         *
 ;*           24. 3.2000 added byte messages                                  *
+;*           25. 3.2001 added avrlen parameter                               *
 ;*                                                                           *
 ;*****************************************************************************
 
@@ -65,7 +66,8 @@ Message InfoMessHelp
  "          -M <1|2|3>        : Minimallaenge Adressen S-Records\n" \
  "          -d <Start>-<Stop> : Datenbereich festlegen\n" \
  "          -e <Adresse>      : Startadresse festlegen\n" \
- "          -k                : Quelldateien autom. l&ouml;schen\n"  
+ "          -k                : Quelldateien autom. l&ouml;schen\n" \
+ "          -avrlen <2|3>     : Adre&szlig;feldl&auml;nge Atmel-Format setzen\n"
  "\n" \
  "options: -f <header list>  : records to filter out\n" \
  "         -r <start>-<stop> : address range to filter out\n" \
@@ -84,4 +86,5 @@ Message InfoMessHelp
  "         -M <1|2|3>        : minimum length of S records addresses\n" \
  "         -d <start>-<stop> : set data range\n" \
  "         -e <address>      : set entry address\n" \
- "         -k                : automatically erase source files\n"
+ "         -k                : automatically erase source files\n" \
+ "         -avrlen <2|3>     : set address field length of Atmel format\n"

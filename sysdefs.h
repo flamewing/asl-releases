@@ -1,3 +1,14 @@
+/* sysdefs.h */
+/*****************************************************************************/
+/* AS Port                                                                   */
+/*                                                                           */
+/* system-specific definitions                                               */
+/*                                                                           */
+/* History:  2001-04-13 activated DRSEP for Win32 platform                   */
+/*           2001-09-11 added MacOSX                                         */
+/*                                                                           */
+/*****************************************************************************/
+
 /*---------------------------------------------------------------------------*/
 /* unify 68K platforms */
 
@@ -56,11 +67,20 @@
 #endif
 #endif
 
+#ifdef __ppc__
+#ifndef _POWER
+#define _POWER
+#endif
+#endif
+
 /*---------------------------------------------------------------------------*/
 /* If the compiler claims to be ANSI, we surely can use prototypes */
 
 #ifdef __STDC__
 #define __PROTOS__
+#define UNUSED(x) (void)x
+#else
+#define UNUSED(x) {}
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -523,6 +543,29 @@ typedef unsigned long long Card64;
 #define LOCALE_NLS
 #endif
 
+/*---------------------------------------------------------------------------*/
+/* POWER with OSX (Macintosh) */
+
+#ifdef __APPLE__
+#define ARCHSYSNAME "unknown-macosx"
+#define DEFSMADE
+#define OPENRDMODE "r"
+#define OPENWRMODE "w"
+#define OPENUPMODE "r+"
+#define IEEEFLOAT
+typedef signed char Integ8;
+typedef unsigned char Card8;
+typedef signed short Integ16;
+typedef unsigned short Card16;
+#define HAS16
+typedef signed int Integ32;
+typedef unsigned int Card32;
+typedef signed long long Integ64;
+typedef unsigned long long Card64;
+#define HAS64
+#define NO_NLS
+#endif
+
 #endif /* _POWER */ 
 
 /*===========================================================================*/
@@ -719,8 +762,8 @@ typedef unsigned long long Card64;
 #define SPATHSEP "\\"
 #define DIRSEP ';'
 #define SDIRSEP ";"
-/*#define DRSEP ':'
-#define SDRSEP ":"*/
+#define DRSEP ':'
+#define SDRSEP ":"
 #define NULLDEV "NUL"
 typedef signed char Integ8;
 typedef unsigned char Card8;
@@ -843,6 +886,8 @@ typedef unsigned long Card32;
 #define NOLONGLONG
 #define DOS_NLS
 #define __PROTOS__
+#undef UNUSED
+#define UNUSED(x) (void)x
 #endif
 #endif
 

@@ -11,6 +11,7 @@
 /*           15.11.1998 SELECT/RESELECT, WAIT                                */
 /*            3. 1.1999 ChkPC-Anpassung                                      */
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
+/*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -361,6 +362,7 @@ BEGIN
    char *Adr = Nil;
    LongWord Phase;
    Boolean OK;
+   UNUSED(Index);
 
    if ((MomCPU != CPU53C825) AND (MomCPU != CPU53C875) AND (MomCPU != CPU53C895)) WrError(1500);
    else if ((ArgCnt<2) OR (ArgCnt>3)) WrError(1110);
@@ -484,6 +486,7 @@ BEGIN
    LongWord Tmp, DReg , AriOp = 0xff, ImmVal = 0x100;
    String Parts[8];
    Boolean OK;
+   UNUSED(Index);
 
    BigCPU = (MomCPU == CPU53C825) OR (MomCPU == CPU53C875) OR (MomCPU == CPU53C895);
 
@@ -851,6 +854,7 @@ BEGIN
    int l;
    Boolean OK;
    LongInt Dist;
+   UNUSED(Index);
 
    if (ArgCnt != 1) WrError(1110);
    else

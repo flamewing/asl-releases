@@ -8,6 +8,8 @@
 /*           4. 7.2000 read symbols                                         */
 /*           6. 7.2000 start real relocation                                */
 /*           7. 7.2000 simple relocations                                   */
+/*          30.10.2000 added 1-byte relocations, verbosity levels           */
+/*           14. 1.2001 silenced warnings about unused parameters           */
 /*                                                                          */
 /****************************************************************************/
 
@@ -41,14 +43,16 @@ typedef struct _TPart
           struct _TPart *Next;
           int FileNum, RecNum;
           LargeWord CodeStart, CodeLen;
-          Byte Gran;
+          Byte Gran, Segment;
+          Boolean MustReloc;
           PRelocInfo RelocInfo;
          } TPart, *PPart;
 
 /****************************************************************************/
 /* Variables */
 
-static Boolean Verbose, DoubleErr;
+static Boolean DoubleErr;
+static int Verbose;
 static LongWord UndefErr;
 
 static String TargName;
@@ -61,6 +65,8 @@ static FILE *TargFile;
 
 static Byte *Buffer;
 LongInt BufferSize;
+
+static LargeWord SegStarts[PCMax + 1];
 
 /****************************************************************************/
 /* increase buffer if necessary */
@@ -82,6 +88,8 @@ END
 BEGIN
    switch (Type & ~(RelocFlagSUB | RelocFlagPage))
     BEGIN
+     case RelocTypeL8:
+      return MRead1L(Buffer + Offset);
      case RelocTypeL16:
       return MRead2L(Buffer + Offset);
      case RelocTypeB16:
@@ -108,6 +116,9 @@ END
 BEGIN
    switch (Type & ~(RelocFlagSUB | RelocFlagPage))
     BEGIN
+     case RelocTypeL8:
+      MWrite1L(Buffer + Offset, Value);
+      break;
      case RelocTypeL16:
       MWrite2L(Buffer + Offset, Value);
       break;
@@ -172,8 +183,8 @@ BEGIN
 
    strmaxcpy(SrcName, ParamStr[Index], 255);
    DelSuffix(SrcName); AddSuffix(SrcName, getmessage(Num_Suffix));
-   if (Verbose)
-    printf("%s '%s'...\n", getmessage(Num_InfoMsgOpenSrc), SrcName);
+   if (Verbose >= 2)
+    printf("%s '%s'...\n", getmessage(Num_InfoMsgGetSyms), SrcName);
    if ((f = fopen(SrcName, OPENRDMODE)) == Nil) ChkIO(SrcName);
 
    /* check magic */
@@ -194,7 +205,8 @@ BEGIN
      /* for absolute records, only store address position */
      /* for relocatable records, also read following relocation record */
 
-     if ((Header == FileHeaderDataRec) OR (Header == FileHeaderRDataRec))
+     if ((Header == FileHeaderDataRec) OR (Header == FileHeaderRDataRec) OR
+         (Header == FileHeaderRelocRec) OR (Header == FileHeaderRRelocRec))
       BEGIN
        /* build up record */
 
@@ -203,10 +215,13 @@ BEGIN
        PNew->FileNum = Index;
        PNew->RecNum = cnt++;
        PNew->Gran = Gran;
+       PNew->Segment = Segment;
        if (NOT Read4(f, &Addr)) ChkIO(SrcName);
        PNew->CodeStart = Addr;
        if (NOT Read2(f, &Len)) ChkIO(SrcName);
        PNew->CodeLen = Len;
+       PNew->MustReloc = ((Header == FileHeaderRelocRec) ||
+                          (Header == FileHeaderRRelocRec));
 
        /* skip code */
 
@@ -214,7 +229,7 @@ BEGIN
 
        /* relocatable record must be followed by relocation data */
 
-       if (Header == FileHeaderRDataRec)
+       if ((Header == FileHeaderRDataRec) || (Header == FileHeaderRRelocRec))
         BEGIN
          LongInt z;
          LargeWord Dummy;
@@ -273,27 +288,31 @@ BEGIN
    Byte Header, CPU, Gran, Segment;
    LongInt Addr, z;
    LargeWord Value, RelocVal, NRelocVal;
-   Word Len;
+   Word Len, Magic;
+   LongWord SumLen;
    PRelocEntry PReloc;
-   Boolean UndefFlag;
+   Boolean UndefFlag, Found;
 
    /* open this file - we're only reading */
 
    strmaxcpy(SrcName, ParamStr[Index], 255);
    DelSuffix(SrcName); AddSuffix(SrcName, getmessage(Num_Suffix));
-   if (Verbose)
-    printf("%s '%s'...\n", getmessage(Num_InfoMsgOpenSrc), SrcName);
+   if (Verbose >= 2)
+    printf("%s '%s'...", getmessage(Num_InfoMsgOpenSrc), SrcName);
+   else if (Verbose >= 1)
+    printf("%s", SrcName);
    if ((f = fopen(SrcName, OPENRDMODE)) == Nil) ChkIO(SrcName);
 
    /* check magic */
 
-   if (!Read2(f, &Len)) ChkIO(SrcName);
-   if (Len != FileMagic)
+   if (!Read2(f, &Magic)) ChkIO(SrcName);
+   if (Magic != FileMagic)
     FormatError(SrcName, getmessage(Num_FormatInvHeaderMsg));
 
    /* due to the way we built the part list, all parts of a file are 
       sequentially in the list.  Therefore we only have to look for
-      the first part of this file in the list. */
+      the first part of this file in the list and know the remainders
+      will follow sequentially. */
 
    for (PartRun = PartList; PartRun != Nil; PartRun = PartRun->Next)
     if (PartRun->FileNum >= Index)
@@ -301,6 +320,7 @@ BEGIN
 
    /* now step through the records */
 
+   SumLen = 0;
    while (!feof(f))
     BEGIN
      /* get header */
@@ -310,7 +330,7 @@ BEGIN
      /* records without relocation info do not need any processing - just
         pass them through */
 
-     if (Header == FileHeaderDataRec)
+     if ((Header == FileHeaderDataRec) OR (Header == FileHeaderRelocRec))
       BEGIN
        if (!Read4(f, &Addr)) ChkIO(SrcName);
        if (!Read2(f, &Len)) ChkIO(SrcName);
@@ -321,12 +341,13 @@ BEGIN
        if (!Write2(TargFile, &Len)) ChkIO(TargName);
        if (fwrite(Buffer, 1, Len, f) != Len) ChkIO(TargName);
        if (PartRun != Nil) PartRun = PartRun->Next;
+       SumLen += Len;
       END
 
      /* records with relocation: basically the same, plus the real work...
         the appended relocation info will be skipped in the next loop run. */
 
-     else if (Header == FileHeaderRDataRec)
+     else if ((Header == FileHeaderRDataRec) OR (Header == FileHeaderRRelocRec))
       BEGIN
        if (!Read4(f, &Addr)) ChkIO(SrcName);
        if (!Read2(f, &Len)) ChkIO(SrcName);
@@ -337,8 +358,15 @@ BEGIN
        for (z = 0; z < PartRun->RelocInfo->RelocCount; z++)
         BEGIN
          PReloc = PartRun->RelocInfo->RelocEntries + z;
-         if (GetExport(PReloc->Name, &Value))
+         Found = True;
+         if (strcmp(PReloc->Name, RelName_SegStart) == 0)
+          Value = PartRun->CodeStart;
+         else
+          Found = GetExport(PReloc->Name, &Value);
+         if (Found)
           BEGIN
+           if (Verbose >= 2)
+            printf("%s 0x%x...", getmessage(Num_InfoMsgReading), (int)PReloc->Addr);
            RelocVal = GetValue(PReloc->Type, PReloc->Addr - PartRun->CodeStart);
            NRelocVal = (PReloc->Type & RelocFlagSUB) ? RelocVal - Value : RelocVal + Value;
            PutValue(NRelocVal, PReloc->Type, PReloc->Addr - PartRun->CodeStart);
@@ -356,11 +384,13 @@ BEGIN
         BEGIN
          Header = FileHeaderDataRec;
          WriteRecordHeader(&Header, &CPU, &Segment, &Gran, TargName, TargFile);
+         Addr = PartRun->CodeStart;
          if (!Write4(TargFile, &Addr)) ChkIO(TargName);
          if (!Write2(TargFile, &Len)) ChkIO(TargName);
          if (fwrite(Buffer, 1, Len, TargFile) != Len) ChkIO(TargName);
          if (PartRun != Nil) PartRun = PartRun->Next;
         END
+       SumLen += Len;
       END
 
      /* all done? */
@@ -369,6 +399,13 @@ BEGIN
 
      else SkipRecord(Header, SrcName, f);
     END
+
+   if (Verbose >= 1)
+    BEGIN
+     printf("(");
+     printf(Integ32Format, SumLen);
+     printf(" %s)\n", getmessage((SumLen == 1) ? Num_Byte : Num_Bytes));
+    END
 END
 
 /****************************************************************************/
@@ -376,7 +413,15 @@ END
 
 	static CMDResult CMD_Verbose(Boolean Negate, char *Arg)
 BEGIN
-   Verbose = NOT Negate;
+   UNUSED(Arg);
+
+   if (Negate)
+    BEGIN
+     if (Verbose) Verbose--;
+    END
+   else
+    Verbose++;
+
    return CMDOK;
 END
 
@@ -401,6 +446,8 @@ BEGIN
    int z;
    Word LMagic;
    Byte LHeader;
+   PPart PartRun;
+   LargeInt Diff;
 
    /* save command line arguments for processing */
 
@@ -446,11 +493,14 @@ BEGIN
 
    /* preinit commandline variables */
 
-   Verbose = False;
+   Verbose = 0;
 
    /* process arguments */
 
    ProcessCMD(ALINKParams, ALINKParamCnt, ParUnprocessed, "ALINKCMD", ParamError);
+
+   if ((Verbose >= 1) && (ParamCount != 0))
+    printf("\n");
 
    /* extract target file */
 
@@ -491,6 +541,33 @@ BEGIN
    if (DoubleErr)
     return 1;
 
+   /* arrange relocatable segments in memory, relocate global symbols */
+
+   for (PartRun = PartList; PartRun != Nil; PartRun = PartRun->Next)
+    if (PartRun->MustReloc)
+     BEGIN
+      Diff = SegStarts[PartRun->Segment] - PartRun->CodeStart;
+      PartRun->CodeStart += Diff;
+      if (Verbose >= 2)
+       printf("%s 0x%x\n", getmessage(Num_InfoMsgLocating), (int)PartRun->CodeStart);
+      if (PartRun->RelocInfo)
+       BEGIN
+        PExportEntry ExpRun, ExpEnd;
+        PRelocEntry RelRun, RelEnd;
+
+        ExpRun = PartRun->RelocInfo->ExportEntries;
+        ExpEnd = ExpRun + PartRun->RelocInfo->ExportCount;
+        for (; ExpRun < ExpEnd; ExpRun++)
+         if (ExpRun->Flags & RelFlag_Relative)
+          ExpRun->Value += Diff;
+        RelRun = PartRun->RelocInfo->RelocEntries;
+        RelEnd = RelRun + PartRun->RelocInfo->RelocCount;
+        for (; RelRun < RelEnd; RelRun++)
+         RelRun->Addr += Diff;
+       END
+      SegStarts[PartRun->Segment] += PartRun->CodeLen / PartRun->Gran;
+     END
+
    /* open target file */
 
    if ((TargFile = fopen(TargName, OPENWRMODE)) == Nil) ChkIO(TargName);
@@ -517,6 +594,7 @@ BEGIN
    if ((UndefErr > 0) OR (Magic != 0)) unlink(TargName);
    if (UndefErr > 0)
     BEGIN 
+     fprintf(stderr, "\n");
      fprintf(stderr, LongIntFormat, UndefErr);
      fprintf(stderr, " %s\n", getmessage((UndefErr == 1) ? Num_SumUndefSymbol : Num_SumUndefSymbols));
      return 1;

@@ -10,6 +10,8 @@
 /*            6.12.1998 UInt14                                               */
 /*           12. 7.1999 angefangen mit externen Symbolen                     */
 /*           21. 5.2000 added TmpSymCounter                                  */
+/*           24. 5.2001 added UInt21 type                                    */
+/*            3. 8.2001 added SInt6 type                                     */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -18,7 +20,7 @@ typedef enum {UInt1    ,
               UInt3    ,
               SInt4    ,UInt4    , Int4    ,
               SInt5    ,UInt5    , Int5    ,
-              UInt6    ,
+              SInt6    ,UInt6    ,
               SInt7    ,UInt7    ,
               SInt8    ,UInt8    , Int8    ,
               UInt9    ,
@@ -31,6 +33,7 @@ typedef enum {UInt1    ,
               SInt16   ,UInt16   , Int16   ,
               UInt18   ,
               SInt20   ,UInt20   , Int20   ,
+              UInt21   ,
               UInt22   ,
               SInt24   ,UInt24   , Int24   ,
               SInt32   ,UInt32   , Int32   ,
@@ -83,11 +86,13 @@ extern void EnterIntSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayCha
 
 extern void EnterExtSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange);
 
+extern void EnterRelSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange);
+
 extern void EnterFloatSymbol(char *Name_O, Double Wert, Boolean MayChange);
 
 extern void EnterStringSymbol(char *Name_O, char *Wert, Boolean MayChange);
 
-extern Boolean GetIntSymbol(char *Name, LargeInt *Wert);
+extern Boolean GetIntSymbol(char *Name, LargeInt *Wert, PRelocEntry *Relocs);
 
 extern Boolean GetFloatSymbol(char *Name, Double *Wert);
 

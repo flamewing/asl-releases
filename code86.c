@@ -7,6 +7,7 @@
 /* Historie:                                                                 */
 /*            2. 1.1999 ChkPC-Anpassung                                      */
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
+/*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -470,6 +471,7 @@ END
         static void DecodeMOV(Word Index)
 BEGIN
    Byte AdrByte;
+   UNUSED(Index);
 
    if (ArgCnt!=2) WrError(1110);
    else
@@ -617,6 +619,7 @@ END
         static void DecodeINT(Word Index)
 BEGIN
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt!=1) WrError(1110);
    else
@@ -680,7 +683,7 @@ BEGIN
    if (ArgCnt!=1) WrError(1110);
    else
     BEGIN
-     if (strncmp(ArgStr[1],"SHORT ",6)==0)
+     if (strncmp(ArgStr[1],"SHORT ",6) == 0)
       BEGIN
        AdrByte=2; strcpy(ArgStr[1],ArgStr[1]+6); KillPrefBlanks(ArgStr[1]);
       END
@@ -853,6 +856,7 @@ END
         static void DecodeTEST(Word Index)
 BEGIN
    Byte AdrByte;
+   UNUSED(Index);
 
    if (ArgCnt!=2) WrError(1110);
    else
@@ -928,6 +932,7 @@ END
         static void DecodeXCHG(Word Index)
 BEGIN
    Byte AdrByte;
+   UNUSED(Index);
 
    if (ArgCnt!=2) WrError(1110);
    else
@@ -1039,6 +1044,7 @@ END
 BEGIN
    Word AdrWord;
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt!=2) WrError(1110);
    else if (MomCPU<CPU80186) WrError(1500);

@@ -16,6 +16,7 @@
 /*            9. 1.1999 ChkPC jetzt mit Adresse als Parameter                */
 /*           20. 1.1999 Formate maschinenunabhaengig gemacht                 */
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
+/*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -855,6 +856,7 @@ END
 BEGIN
    LongInt AdrLong;
    Byte HVals[3],HReg,HPart,HCnt;
+   UNUSED(Index);
 
    if (ArgCnt!=2) WrError(1110);
    else if (strcasecmp(ArgStr[1],"C")==0)
@@ -1001,6 +1003,7 @@ END
         static void DecodeMOVC(Word Index)
 BEGIN
    Byte HReg;
+   UNUSED(Index);
 
    if (ArgCnt!=2) WrError(1110);
    else
@@ -1055,6 +1058,7 @@ END
         static void DecodeMOVX(Word Index)
 BEGIN
    Byte HReg;
+   UNUSED(Index);
 
    if (ArgCnt!=2) WrError(1110);
    else
@@ -1097,6 +1101,7 @@ END
         static void DecodeXCH(Word Index)
 BEGIN
    Byte HReg,HPart,HVals[3];
+   UNUSED(Index);
 
    if (ArgCnt!=2) WrError(1110);
    else
@@ -1200,6 +1205,7 @@ END
         static void DecodeDIV(Word Index)
 BEGIN
    Byte HReg;
+   UNUSED(Index);
 
    if (ArgCnt!=2) WrError(1110);
    else
@@ -1233,6 +1239,7 @@ END
 BEGIN
    Byte HReg;
    int z;
+   UNUSED(Index);
 
    if (ArgCnt!=2) WrError(1110);
    else
@@ -1267,6 +1274,7 @@ END
         static void DecodeMUL(Word Index)
 BEGIN
    Byte HReg;
+   UNUSED(Index);
 
    if (ArgCnt!=2) WrError(1110);
    else
@@ -1300,6 +1308,7 @@ END
         static void DecodeMULU(Word Index)
 BEGIN
    Byte HReg;
+   UNUSED(Index);
 
    if (ArgCnt!=2) WrError(1110);
    else
@@ -1333,6 +1342,7 @@ END
         static void DecodeLEA(Word Index)
 BEGIN
    Byte HReg;
+   UNUSED(Index);
 
    if (ArgCnt!=2) WrError(1110);
    else
@@ -1406,6 +1416,8 @@ END
 
         static void DecodeTRAP(Word Index)
 BEGIN
+   UNUSED(Index);
+
    if (ArgCnt!=1) WrError(1110);
    else if (*AttrPart!='\0') WrError(1100);
    else
@@ -1426,6 +1438,7 @@ END
 BEGIN
    LongInt AdrLong;
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt!=1) WrError(1110);
    else if (*AttrPart!='\0') WrError(1100);
@@ -1472,6 +1485,7 @@ END
 BEGIN
    LongInt AdrLong;
    Boolean OK;
+   UNUSED(Index);
 
    if (ArgCnt!=1) WrError(1110);
    else if (*AttrPart!='\0') WrError(1100);
@@ -1540,6 +1554,7 @@ BEGIN
    LongInt AdrLong,SaveLong,odd;
    Boolean OK;
    Byte HReg;
+   UNUSED(Index);
 
    if (ArgCnt!=3) WrError(1110);
    else
@@ -1638,6 +1653,7 @@ BEGIN
    LongInt AdrLong,SaveLong,odd;
    Boolean OK;
    Byte HReg;
+   UNUSED(Index);
 
    if (ArgCnt!=2) WrError(1110);
    else

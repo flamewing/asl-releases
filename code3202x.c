@@ -10,6 +10,7 @@
  *  7.07.1998 Fix Zugriffe auf CharTransTable wg. signed chars
  * 18.08.1998 BookKeeping-Aufruf bei RES
  *  9. 1.1999 ChkPC jetzt ueber SegLimits
+ * 14. 1.2001 silenced warnings about unused parameters
  */
 
 #include "stdinc.h"
@@ -385,6 +386,8 @@ static void wr_code_word(Boolean *ok, int *adr, LongInt val)
 
 static void wr_code_long(Boolean *ok, int *adr, LongInt val)
 {
+	UNUSED(ok);
+
 	WAsmCode[(*adr)++] = val & 0xffff;
 	WAsmCode[(*adr)++] = val >> 16;
 	CodeLen = *adr;

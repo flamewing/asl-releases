@@ -63,7 +63,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition November 1999}
+{\large Edition Mai 2001}
 \end{raggedright}
 
 \clearpage
@@ -165,7 +165,7 @@ You can contact me as follows:
 \end{itemize}
 If someone likes to meet me personally to ask questions and lives
 near Aachen (= Aix-la-Chapelle), you will be able to meet me there. 
-You can do this most probably on thursdays from 7pm to 9pm at the
+You can do this most probably on thursdays from 8pm to 9pm at the
 computerclub inside the RWTH Aachen (Eilfschornsteinstrasse 16,
 cellar of philosophers' building, backdoor entry).
 
@@ -177,6 +177,10 @@ The latest version of AS (DOS, DPMI, OS/2, C) is available from
 the following Server:
 \begin{verbatim}
  http://john.ccac.rwth-aachen.de:8000/as
+\end{verbatim}
+or shortly
+\begin{verbatim}
+ http://www.alfsembler.de
 \end{verbatim}
 The sources of the C version may also be fetched from the following server:
 \begin{verbatim}
@@ -206,7 +210,7 @@ following processor families have been implemented:
 \item{Motorola DSP5600x,DSP56300}
 \item{Motorola M-Core}
 \item{Motorola/IBM MPC601/MPC505/PPC403}
-\item{Motorola 6800, 6805, 68HC08, 6809, 68(HC)11 68HC12, 68HC16, and Hitachi
+\item{Motorola 6800, 6805, 68HC08, 6809, 68(HC)11(K4) 68HC12, 68HC16, and Hitachi
       6301}
 \item{Hitachi 6309}
 \item{Hitachi H8/300(H)}
@@ -265,6 +269,7 @@ following processor families have been implemented:
 \item{Symbios Logic SYM53C8xx (yes, they are programmable!)}
 \item{Fujitsu F$^2$MC8L}
 \item{Fujitsu F$^2$MC16L}
+\item{Intersil CDP1802/1805}
 \end{itemize}
 under work / planned / in consideration :
 \begin{itemize}
@@ -367,9 +372,9 @@ extended memory of an AT.  The assembly becomes significantly slower by
 the extender, but at least it works...
 
 There is a native OS/2 \marginpar{{\em OS/2}} version of AS for friends of
-IBM's OS/2 operating system.  This is currently only a 16-bit version, but
-at least this way saves the roundtrips via DOS boxes and one does not have
-any problems any more with longer file names.
+IBM's OS/2 operating system.  Since version 1.41r8, this is a full 32-bit
+OS/2 application, which of course means that OS/2 2.x and at least an
+80386 CPU are mandatory.  
 
 You can leave \marginpar{{\em UNIX}} the area of PCs-only with the C
 version of AS that was designed to be compilable on a large number of UNIX
@@ -877,6 +882,11 @@ chapters \ref{ChapShareMain} resp. \ref{ChapShareOrder}.
       \ref{SectDebugFormat}  The file's extension is \tty{MAP}, \tty{NOI},
       resp. \tty{OBJ}, depending on the chosen format.  If no explicit
       format specification is done, the MAP format is chosen.}
+\item{\tty{noicemask [value]}: By default, AS lists only symbols from the
+      CODE segment in NoICE debug info files.  With this option and an
+      integer value interpreted as a bit mask, symbols fom other segments
+      may be added.  The assignment of segments to bit positions may
+      be taken from table \ref{TabSegmentNums}.}
 \item{\tty{w}: suppress issue of warnings;}
 \item{\tty{E [file]}: error messages and warnings produced by AS will be 
       redirected to a file. Instead of a file, the 5 standard 
@@ -927,7 +937,10 @@ chapters \ref{ChapShareMain} resp. \ref{ChapShareOrder}.
       before in the list!  Together with the commands for
       conditional assembly (see there) you may produce different
       program versions out of one source file by command line
-      inputs.}
+      inputs. {\bf CAUTION!} If the case-sensitive mode is used, this has
+      to be specified in the command line {\em before} any symbol
+      definitions, otherwise symbol names will be converted to upper
+      case at this place!}
 \item{\tty{A}: stores the list of global symbols in another, more compact 
       form.  Use this option if the assembler crashes with a stack 
       overflow because of too long symbol tables.  Sometimes this
@@ -1491,7 +1504,8 @@ digits, this may be done in different numbering systems (table
                 &  Thomson Texas,   & Microchip, Thomson,  &  AMD 29K,  \\
                 &  Toshiba, NEC,    & Hitachi)             &  National, \\
                 &  Siemens, Philips, &                     &  Symbios,  \\
-                & Fujitsu, Fairchild) &                    &  Atmel)    \\
+                & Fujitsu, Fairchild, &                    &  Atmel)    \\
+                & Intersil)         &                      &            \\
 \hline
 \hline
 decimal         & direct              & direct         &   direct \\
@@ -3551,6 +3565,18 @@ generated!
 
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
+\subsubsection{68HC11K4}
+
+Also for the HC11, the designers finally weren't able to avoid the major
+sin: using a banking scheme to address more than 64 Kbytes with only 16
+address lines.  The registers {\tt MMSIZ}, {\tt MMWBR}, {\tt MM1CR}, and
+{\tt MM2CR} control whether and how the additional 512K address ranges are
+mapped into the physical address space.  AS intially assumes the reset
+state of these registers, i.e. all are set to \$00 and windowing is
+disabled.
+
+%%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
 \subsubsection{68HC16}
 
 The 68HC16 employs a set of bank registers to address a space of 1
@@ -3994,7 +4020,7 @@ attributes therefore do not exist just as in the case of \tty{DC}.
 {\em\begin{tabbing}
 valid for: \= Intel, Zilog, Toshiba, NEC, TMS370, Siemens, AMD, \\
            \> MELPS7700/65816, M16(C), National, ST9, TMS70Cxx, \\
-           \> $\mu$PD77230, Fairchild
+           \> $\mu$PD77230, Fairchild, Intersil
 \end{tabbing}}
 
 These commands are - one could say - the Intel counterpart to \tty{DS} and
@@ -4056,7 +4082,7 @@ them in the processor's proprietary 32-bit format). There is {\em no}
 
 {\em\begin{tabbing}
 valid for: \= Intel, Zilog, Toshiba, NEC, TMS370, Siemens, AMD, \\
-           \> M16(C), National, ST9, TMS7000
+           \> M16(C), National, ST9, TMS7000, Intersil
 \end{tabbing}}
 
 With this instruction, you can reserve a memory area:
@@ -5884,6 +5910,44 @@ In this list, \tty{xxx} is a synonym either for \tty{SET} or \tty{CLR};
 \tty{\#mask} is the bit mask to be applied (the \# sign is optional).  Of
 course, the same statements are also valid for Y-indexed expression (not
 listed here).
+
+With the K4 version  of the HC11, Motorola has introduced a banking
+scheme, which one one hand easily allows to once again extend an
+architecture that has become 'too small', but on the other hand not really
+makes programmers' and tool developers' lifes simpler...how does one
+sensibly map something like this on a model for a programmer?
+
+The K4 architecture {\em extends} the HC11 address space by 2x512 Kbytes,
+which means that we now have a total address space of 64+1024=1088 Kbytes. 
+AS acts like this were one large unified addres space, with the following
+layout:
+\begin{itemize}
+\item{\$000000...\$00ffff: the old HC11 address space}
+\item{\$010000...\$08ffff: Window 1}
+\item{\$090000...\$10ffff: Window 2}
+\end{itemize}
+Via the {\tt ASSUME} statement, one tells AS how the banking registers are
+set up, which in turn describes which extended areas are mapped to which
+physical addresses.  For absolute addresses modes with addresses beyond
+\$10000, AS automatically computes the address within the first 64K that
+is to be used.  Of course this only works for direct addressing modes, it
+is the programmer's responsibility to keep the overview for indirect or
+indexed addressing modes!
+
+In case one is not really sure if the current mapping is really the
+desired one, the pseudo instruction {\tt PRWINS} may be used, which prints
+the assumes MMxxx register contents plus the current mapping(s), like
+this:
+\begin{verbatim}
+MMSIZ $e1 MMWBR $84 MM1CR $00 MM2CR $80
+Window 1: 10000...12000 --> 4000...6000
+Window 1: 90000...94000 --> 8000...c000
+\end{verbatim}
+An instruction
+\begin{verbatim}
+        jmp     *+3
+\end{verbatim}
+located at \$10000 would effectively result in a jump to address \$4003.
 
 %%---------------------------------------------------------------------------
 
@@ -8051,7 +8115,8 @@ number  & segment               & number  & segment \\
 \$08    & \tty{REG}             & \$09    & \tty{ROMDATA} \\
 \hline              
 \end{tabular}\end{center}
-\caption{Codings of the {\tt Segment} Field\label{TabSegments}}
+\caption{Codings of the {\tt Segment} Field\label{TabSegments}
+         \label{TabSegmentNums}}
 \end{table*}
 The \tty{Gran} field describes the code's ''granularity'', i.e. the size of
 the smallest addressable unit in the following set of data.  This
@@ -8389,6 +8454,14 @@ suppressed via the command line option
 A value of 2 resp. 3 assures that that S records with a minimum type of 2
 resp. 3 will be used, while a value of 1 corresponds to the full
 automatism.
+
+Normally, the AVR format always uses an address length of 3 bytes.  Some
+programs however do not like that...which is why there is a switch
+\begin{verbatim}
+  -avrlen <2|3>
+\end{verbatim}
+that allows to reduce the address length to two bytes in case of
+emergency.
 
 The Intel, MOS and Tektronix formats are limited to 16 bit addresses, the
 16-bit Intel format reaches 4 bits further.  Addresses that are to long
@@ -10413,6 +10486,12 @@ Either that was a long nightshift or I am slowly getting old...
       \item{support for temporary symbols;}
       \item{additional instruction {\tt MAXNEST} to set the maximum
             nesting depth of macro expansions;}
+      \item{additional command line argument {\tt noicemask} to control
+            the amount of segments listed in a NoICE debug info file;}
+      \item{additionally supports the 180x family fro Intersil;}
+      \item{additionally supports the 68HC11K4 address windowing;}
+      \item{P2HEX now allows to vary the address field length of AVR HEX
+            files;}
       \end{itemize}}
 \end{itemize}
 
@@ -11387,6 +11466,16 @@ from this with the next release :-)
                  {\em 80296SA Microcontroller User's Manual.\/} \\
                  Sept. 1996
 
+\bibitem{Inters02} Intersil: \\
+                 {\em CDP1802A, CDP1802AC, CDP1802BC CMOS 8-Bit
+                  Microprocessors.\/} \\
+                 March 1997
+
+\bibitem{Inters05} Intersil: \\
+                 {\em CDP1805AC, CDP1806AC CMOS 8-Bit Microprocessor
+                  with On-Chip RAM and Counter/Timer.\/} \\
+                 March 1997
+
 \bibitem{Kaku} Hirotsugu Kakugawa: \\
                {\em A memo on the secret features of 6309.\/} \\
     	       (available via World Wide Web: \\
@@ -11501,6 +11590,10 @@ from this with the next release :-)
                    {\em DSP56300 24-Bit Digital Signal Processor
                     Family Manual.\/} \\
                    Rev. 0 (no year of release given im PDF-File)
+
+\bibitem{MotK4} Motorola Inc.: \\
+                {\em MC68HC11K4 Technical Data.\/}
+                1992
 
 \bibitem{SCMP} National Semiconductor: \\
                {\em SC/MP Program\-mier- und

@@ -178,7 +178,7 @@ confusion in some cases.  As a special option,
 and
 .B <stop>
 may consist of just a single dollar sign (escape this
-in UNIX shells!) to signify the lowest resp. highest address that
+in UNIX shells!) or 0x to signify the lowest resp. highest address that
 occurs in the input file(s).  Using this option will implicitly
 enable a second pass over all input files to find the minimum and
 maximum values before conversion starts, reducing the speed of P2HEX
@@ -204,9 +204,19 @@ S-records.  For example, a value of 2 will effectively disable S1 records,
 and a value of 3 will force usage of S3 records.  The default is 1, which
 enables full automatic setting of the S record length.
 .TP
+.B -avrlen <2|3>
+
+Set the address field length of Atmel AVR Hex files to either two or three
+bytes (the latter is the default).
+.TP
 .B -k
 
 Instruct P2HEX to erase the program source files after conversion.
+.TP
+.B -avrlen <2|3>
+
+Set the width of the address field used for the Atmel hex file format.
+By default, 3-byte addresses will be used.
 
 .SH PRESETTING PARAMETERS
 

@@ -11,6 +11,7 @@
 /*           29. 1.1999 uninitialisierten Speicherzugriff beseitigt          */
 /*            2. 5.1999 optional mehrere Records im Atmel-Format schreiben   */
 /*            1. 6.2000 explicitly write addresses as hex numbers for NoICE  */
+/*           2001-09-29 do not accept line info for pseudo segments          */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -56,6 +57,11 @@ BEGIN
    PLineInfoList PNeu, PFirst, PLast, Run, Link;
    int RecCnt, z;
    Integer FNum;
+
+   /* do not accept line infor for pseudo segments */
+
+   if (Space > PCMax)
+     return;
 
    /* wieviele Records schreiben ? */
 
@@ -154,7 +160,7 @@ BEGIN
         END
        ModZ=0;
        errno=0; fprintf(MAPFile,"Segment %s\n",SegNames[ActSeg]); ChkIO(10004);
-       ActFile=(-1);
+       ActFile = -1;
       END
      if (Run->Contents.FileName!=ActFile)
       BEGIN

@@ -5,6 +5,7 @@
 /* Dezimal-->Hexadezimal-Wandlung, Grossbuchstaben                           */
 /*                                                                           */
 /* Historie: 2. 6.1996                                                       */
+/*          30. 5.2001 fixed 32-bit values on DOS platforms                  */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -57,9 +58,9 @@ BEGIN
    static int z=0;
 
 #ifdef __STDC__
-   sprintf(Buffers[z],"%08x",inp&0xffffffffu);
+   sprintf(Buffers[z],"%08lx", ((long)inp) & 0xfffffffflu);
 #else
-   sprintf(Buffers[z],"%08x",inp&0xffffffff);
+   sprintf(Buffers[z],"%08lx", ((long)inp) & 0xffffffffl);
 #endif
    for (ret=Buffers[z]; *ret!='\0'; ret++) *ret=toupper(*ret);
    ret=Buffers[z]; 
