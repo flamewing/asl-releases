@@ -1,0 +1,34 @@
+#!/bin/sh
+
+echo executing self tests...
+echo "=================================================================" > ../testlog
+echo "Summaric results:" >> ../testlog
+SUMPASS=
+SUMFAIL=
+for t in t_*; do
+ cd $t
+ cat $t.doc
+ ../../asl `cat asflags` -i ../../include $t.asm | tee $t.log
+ ../../p2bin -l 0 -r \$-\$ $t
+ echo +---------------------------------------------------------------+
+ if cmp $t.ori $t.bin; then
+  echo "Test $t succeeded!"
+  SUMPASS="$SUMPASS"+
+  echo "$t : OK" >> ../../testlog
+ else
+  echo "Test $t failed!"
+  SUMFAIL="$SUMFAIL"-
+  echo "$t : failed" >> ../../testlog
+ fi
+ grep assembly $t.log >> ../../testlog
+ grep Assemblierzeit $t.log >> ../../testlog
+ echo +---------------------------------------------------------------+
+ rm -f $t.bin
+ rm -f $t.p
+ rm -f $t.log
+ rm -f $t.h
+ cd ..
+done
+echo "successes: $SUMPASS" >> ../testlog
+echo "failures : $SUMFAIL" >> ../testlog
+cat ../testlog

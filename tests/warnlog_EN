@@ -1,0 +1,35 @@
+t_166.asm(175) : warning  : possible pipelining effects
+t_166.asm(181) : warning  : possible pipelining effects
+t_166.asm(181) : warning  : possible pipelining effects
+t_166.asm(185) : warning  : possible pipelining effects
+t_166.asm(226) : warning  : page might not be addressable
+t_166.asm(231) : warning  : page might not be addressable
+t_16c84.asm(9) : warning  : obsolete instruction, usage discouraged
+t_16c84.asm(50) : warning  : obsolete instruction, usage discouraged
+t_3203x.asm(259) : warning  : multiple use of address register in one instruction
+t_3203x.asm(259) : warning  : unpredictable execution of this instruction
+t_3203x.asm(261) : warning  : multiple use of address register in one instruction
+t_7000.asm(95) : warning  : possible pipelining effects
+t_7000.asm(96) : warning  : possible pipelining effects
+t_7000.asm(97) : warning  : possible pipelining effects
+t_7000.asm(98) : warning  : possible pipelining effects
+t_7000.asm(99) : warning  : possible pipelining effects
+t_75k0.asm(186) : warning  : page might not be addressable
+t_87c800.asm(134) : warning  : unpredictable execution of this instruction
+t_87c800.asm(135) : warning  : unpredictable execution of this instruction
+t_87c800.asm(167) : warning  : unpredictable execution of this instruction
+t_96.asm(155) : warning  : short jump possible
+t_96.asm(159) : warning  : short jump possible
+t_cop8.asm(112) : warning  : distance of 0 not allowed for short jump (NOP created instead)
+t_xa.asm(591) : warning  : unpredictable execution of this instruction
+t_xa.asm(592) : warning  : unpredictable execution of this instruction
+t_xa.asm(593) : warning  : unpredictable execution of this instruction
+t_xa.asm(594) : warning  : unpredictable execution of this instruction
+t_xa.asm(595) : warning  : unpredictable execution of this instruction
+t_xa.asm(596) : warning  : unpredictable execution of this instruction
+t_xa.asm(597) : warning  : unpredictable execution of this instruction
+t_xa.asm(598) : warning  : unpredictable execution of this instruction
+t_xa.asm(599) : warning  : unpredictable execution of this instruction
+t_xa.asm(600) : warning  : unpredictable execution of this instruction
+t_xa.asm(601) : warning  : unpredictable execution of this instruction
+t_xa.asm(602) : warning  : unpredictable execution of this instruction

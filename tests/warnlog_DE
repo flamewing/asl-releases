@@ -1,0 +1,35 @@
+t_166.asm(175) : Warnung  : moegliche Pipelining-Effekte
+t_166.asm(181) : Warnung  : moegliche Pipelining-Effekte
+t_166.asm(181) : Warnung  : moegliche Pipelining-Effekte
+t_166.asm(185) : Warnung  : moegliche Pipelining-Effekte
+t_166.asm(226) : Warnung  : Seite moeglicherweise nicht adressierbar
+t_166.asm(231) : Warnung  : Seite moeglicherweise nicht adressierbar
+t_16c84.asm(9) : Warnung  : veralteter Befehl
+t_16c84.asm(50) : Warnung  : veralteter Befehl
+t_3203x.asm(259) : Warnung  : mehrfache Adressregisterbenutzung in einer Anweisung
+t_3203x.asm(259) : Warnung  : nicht vorhersagbare Ausfuehrung dieser Anweisung
+t_3203x.asm(261) : Warnung  : mehrfache Adressregisterbenutzung in einer Anweisung
+t_7000.asm(95) : Warnung  : moegliche Pipelining-Effekte
+t_7000.asm(96) : Warnung  : moegliche Pipelining-Effekte
+t_7000.asm(97) : Warnung  : moegliche Pipelining-Effekte
+t_7000.asm(98) : Warnung  : moegliche Pipelining-Effekte
+t_7000.asm(99) : Warnung  : moegliche Pipelining-Effekte
+t_75k0.asm(186) : Warnung  : Seite moeglicherweise nicht adressierbar
+t_87c800.asm(134) : Warnung  : nicht vorhersagbare Ausfuehrung dieser Anweisung
+t_87c800.asm(135) : Warnung  : nicht vorhersagbare Ausfuehrung dieser Anweisung
+t_87c800.asm(167) : Warnung  : nicht vorhersagbare Ausfuehrung dieser Anweisung
+t_96.asm(155) : Warnung  : kurzer Sprung moeglich
+t_96.asm(159) : Warnung  : kurzer Sprung moeglich
+t_cop8.asm(112) : Warnung  : Distanz 0 nicht bei Kurzsprung erlaubt (NOP erzeugt)
+t_xa.asm(591) : Warnung  : nicht vorhersagbare Ausfuehrung dieser Anweisung
+t_xa.asm(592) : Warnung  : nicht vorhersagbare Ausfuehrung dieser Anweisung
+t_xa.asm(593) : Warnung  : nicht vorhersagbare Ausfuehrung dieser Anweisung
+t_xa.asm(594) : Warnung  : nicht vorhersagbare Ausfuehrung dieser Anweisung
+t_xa.asm(595) : Warnung  : nicht vorhersagbare Ausfuehrung dieser Anweisung
+t_xa.asm(596) : Warnung  : nicht vorhersagbare Ausfuehrung dieser Anweisung
+t_xa.asm(597) : Warnung  : nicht vorhersagbare Ausfuehrung dieser Anweisung
+t_xa.asm(598) : Warnung  : nicht vorhersagbare Ausfuehrung dieser Anweisung
+t_xa.asm(599) : Warnung  : nicht vorhersagbare Ausfuehrung dieser Anweisung
+t_xa.asm(600) : Warnung  : nicht vorhersagbare Ausfuehrung dieser Anweisung
+t_xa.asm(601) : Warnung  : nicht vorhersagbare Ausfuehrung dieser Anweisung
+t_xa.asm(602) : Warnung  : nicht vorhersagbare Ausfuehrung dieser Anweisung

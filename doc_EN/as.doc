@@ -1,0 +1,3033 @@
+Hello altogether,
+
+this is the first very, very BETA release of the english AS manual.  I haven't
+done the translation myself, it is the work of some other people around the
+net who deserve my deep appreciation for this job.  As you will see, there
+is a big gap somewhere between chapter 3 and the error messages, so there is
+still room for lots of volunteers...
+
+Alfred Arnold
+
+------------------------------------------------------------------------------
+
+
+                   Macro assembler AS  Version 1.41
+
+                          Instruction manual
+
+                        written by Alfred Arnold
+
+        translated so far by Oliver Sellke (OSIP, D-65199 Wiesbaden)
+                   please excuse my terrible english
+            (proof-readed in parts by Stefan Hilse, Wiesbaden)
+
+                         Edition September 1995
+
+
+
+
+                                Contents
+
+
+
+
+     1. Introduction
+
+      1.1. License agreement
+
+      1.2. Delivery
+
+      1.3. General assembler capabilities
+
+     2. Assembler usage 
+
+      2.1. Start-up commands, parameter
+
+       2.2. Format of the input files
+
+       2.3. Format of the listing
+
+       2.4. Symbol conventions
+
+       2.5. Formula expressions
+
+       2.6. Share file
+
+     3. Pseudo commands
+
+      3.1. Definitions
+
+       3.1.1. EQU and SET
+       3.1.2. SFR and SFRB
+       3.1.3. XSFR and YSFR
+       3.1.4. LABEL
+       3.1.5. BIT
+       3.1.6. DBIT
+       3.1.7. PORT
+       3.1.8. CHARSET
+       3.1.9. ENUM
+
+      3.2. Code modification
+
+       3.2.1. ORG
+       3.2.2. CPU
+       3.2.3. SUPMODE, PMMU and FPU
+       3.2.4. PADDING
+       3.2.5. MAXMODE
+       3.2.6. EXTMODE und LWORDMODE
+       3.2.7. SEGMENT
+       3.2.8. PHASE and DEPHASE
+       3.2.9. SAVE and RESTORE
+       3.2.10. ASSUME
+       3.2.11. EMULATED
+
+      3.3. Data definiton
+
+       3.3. 1. DC
+       3.3. 2. DS
+       3.3. 3. DB, DW, DD, DQ and DT
+       3.3. 4. BYT
+       3.3. 5. BYTE
+       3.3. 6. ADR
+       3.3. 7. WORD
+       3.3. 8. LONG
+       3.3. 9. SINGLE und EXTENDED
+       3.3.10. FLOAT und DOUBLE
+       3.3.11. EFLOAT, BFLOAT, TFLOAT
+       3.3.12. Qxx und LQxx
+       3.3.13. DATA
+       3.3.14. ZERO
+       3.3.15. ASCII und ASCIZ
+       3.3.16. STRING und RSTRING
+       3.3.17. DFS
+       3.3.18. BLOCK
+       3.3.19. RES
+       3.3.20. BSS
+       3.3.21. ALIGN
+       3.3.22. LTORG
+
+      3.4. Macro commands
+
+       3.4.1. MACRO
+       3.4.2. IRP
+       3.4.3. REPT
+       3.4.4. FUNCTION
+
+      3.5. Conditional assembly
+
+       3.5.1. IF / ELSEIF / ENDIF
+       3.5.2. SWITCH / CASE / ELSECASE / ENDCASE
+
+      3.6. Listing control
+
+       3.6.1. PAGE
+       3.6.2. NEWPAGE
+       3.6.3. MACEXP
+       3.6.4. LISTING
+       3.6.5. PRTINIT and PRTEXIT
+       3.6.6. TITLE
+
+      3.7. Local symbols
+
+       3.7.1. Basic definition (SECTION/ENDSECTION)
+       3.7.2. Nesting and visibility rules
+       3.7.3. PUBLIC and GLOBAL
+       3.7.4. FORWARD
+       3.7.5. Speed considerations
+
+      3.8. Miscellaneous
+
+       3.8.1. SHARED
+       3.8.2. INCLUDE
+       3.8.3. MESSAGE, WARNING, ERROR and FATAL
+       3.8.4. READ
+       3.8.5. RELAXED
+       3.8.6. END
+
+     4. Processor specified references
+
+      4.1. 6811
+
+      4.2. DSP56000
+
+      4.3. PowerPC
+
+      4.4. H8
+
+      4.5. SH7000/7600
+
+      4.6. MELPS-4500
+
+      4.7. MELPS-740
+
+      4.8. MELPS-7700/65816
+
+      4.9. M16
+
+      4.10. MCS-48
+
+      4.11. MCS-51
+
+      4.12. 8086..V35
+
+      4.13. Z80UNDOC
+
+      4.14. Z380
+
+      4.15. TLCS-900
+
+      4.16. TLCS-90
+
+      4.17. TLCS-870
+
+      4.18. TLCS-47
+
+      4.19. TLCS-9000
+
+      4.20. 29XXX
+
+      4.21. 80C166/167
+
+      4.22. PIC16C5x/16C8x
+
+      4.23. PIC17C4x
+
+      4.24. ST62xx
+
+      4.25. 6804
+
+      4.26. TMS3201x
+
+      4.27. TMS3202x
+
+      4.28. TMS32C03x
+
+      4.29. TMS370xxx
+
+      4.30. 75K0
+
+     5. Generated data format
+
+     6. Utility and tool programs
+
+      6.1. PLIST
+
+      6.2. BIND
+
+      6.3. P2HEX
+
+      6.4. P2BIN
+
+      6.5. AS2MSG
+
+
+     A. AS error messages
+
+     B. I/O error messages
+
+     C. Frequent asked questions
+
+     D. Predefined symbols
+
+     E. Thanks to ...
+
+     F. Changes since version 1.3
+
+     G. Hints to AS source code
+
+      G.1 language assumptions
+
+      G.2 modul apportionment
+
+      G.3 new processor... and now?
+
+      G.4 RSC... What is this?
+
+     H. Bibliography
+
+
+----------------------------------------------------------------------------
+
+       1. Introduction
+       ===============
+
+This instruction is meant for those people who are already very 
+familiar with Assembler and those who like to know how to work 
+with AS.  It is rather a reference than a user's manual and so 
+it does not try to explain neither the "language assembler" nor 
+the processors.  In the bibliography I have listed further literature, 
+which was substantial in the implementation of the different code 
+generators.  There is no book I know where you can learn Assembler 
+from the start, so on the whole I learnt this by "trial and error".
+
+       1.1 License agreement
+       ---------------------
+
+Before we can go "in medias res", first of all the inevitable prologue:
+
+I publish AS, in the present version, as "Public Domain". 
+This means, the program and overlay files and also the 
+utility and tool programs appended may be copied and use for free (of 
+charge).  There exist no plan, to convert AS into a commercial or 
+shareware program. This permission however is valid only under the 
+following premises: 
+1.) The start message of the programs - especially the copyright 
+    message - must not be removed or overwritten 
+2.) For copying and shipping there must be charged an expense 
+    compensation of not more than D(E)M 20,-- (around US$ 14.00).
+
+At request the source code of this program may also be emitted. 
+Programs or derivates structured hereon must be passed-on under the 
+same conditions as this program.
+
+I explicitly encourage you to spread this program by disc or 
+mailbox/bbs/network!
+
+May be, you have got this program as enclosure to a commercial 
+program. The license agreement for the commercial program in no case 
+applies to AS. 
+
+If you took so much pleasure in this assembler, that you like to 
+send me some money I would ask you kindly to give the amount 
+to Greenpeace.
+
+I have been trying to make this program(s) as bug free as possible.  
+But since there is principally no bug free software, I don't assume any 
+warranty for the function of the assembler in a particular environment 
+(hard or software) or liabilty for damages.  Naturally I will always 
+be thankful for bug-reports or improvements and will work on the fixing.
+
+To accelerate the error diagnose and correction, please enclose the 
+following details to the bug report.
+
+ - hardware:  - processor type  ( with/without coprocessor ) 
+              - memory extension
+              - video card
+              - hard-disk type(s) and their interface(s)
+
+ - software:  - operating system ( MS-DOS, Novell-DOS,DR-DOS, OS/2, 
+                Windows ) and version 
+              - resident (TSR) programs installed 
+              - version of AS including the EXE-files date used 
+
+ - if possible, the source file, in which the bug occurs 
+
+You can contact me as follows:
+
+  by mail :  Alfred Arnold
+             Brîltalstr. 5a
+             D-53773 Hennef (Sieg)
+             Germany
+
+  by E-Mail : direct: 
+                      a.arnold@kfa-juelich.de
+              via computerclub: 
+                                ccac@rog.rwth-aachen.de
+
+If you use the second e-mail-address, please enclose a hint that this 
+message is directed to me (Alfred Arnold / Turbo-Pascal-group).  
+Please, don't send any kind of advertisement, only personal letters 
+are welcome by e-mail.  
+
+If someone likes to meet me personally to ask questions and 
+lives near Aachen (= Aix-la-Chapelle) will be able to meet me there.  
+You can do this most probably on thursdays from 19.00 till 21.00 clock 
+at the computerclub inside the RWTH Aachen (Eilfschornsteinstrasse 16, 
+cellar philosophers building back side).  
+
+Please don't call on me.  First, complex relations are extremely 
+hard to discuss at phone.  Secondly, the telephone companies are 
+already rich enough...
+
+The latest german version of AS is resident at the following FTP-Servers:
+
+ ftp.Uni-stuttgart.De
+     directory   pub/systems/pc/lang/as
+
+Whoever has no access to an FTP-Server can ask me for the assembler.  
+Only enquiries containing a disc ( 1 piece 1.44 Mbyte or 1.2 MByte, 
+for 360/720K-format 4/2 piece) and a matching, (correct) stamped 
+cover (envelope) will be answered.  Don't send any money!
+
+Now, after this inevitable introduction we can turn without care 
+to the actual documentation:
+
+
+
+       1.2. Delivery
+       -------------
+
+The package from my side emitted contains by me the following files:
+
+    file                function
+    ----                --------
+
+   AS.EXE               assembler
+   AS.OVR               overlay for assembler
+
+   AS.DOC               this file with the documentation
+
+   PLIST.EXE            lists contents of code files 
+   BIND.EXE             merges code files
+   P2HEX.EXE            converts code files into hex files
+   P2BIN.EXE            converts code files into binary files
+
+   STDDEF51.INC         definiton of SFRs and bits for 8051/8052/ 80515
+   STDDEF16.INC         command macros and register addresses PIC16C5x
+   STDDEF17.INC         register addresses PIC17C4x
+   STDDEF18.INC         register addresses PIC16C8x
+   STDDEF2X.INC         register addresses TMS 3202x
+   STDDEF3X.INC         peripheral addresses TMS 320C3x
+   STDDEF37.INC         register & bit addresses TMS370xxx
+   STDDEF60.INC         command macros & register addresses PowerPC
+   STDDEF62.INC         register addresses & macros ST62xx 
+   STDDEF04.INC         register addresses 6804 
+   STDDEF90.INC         register- & memory addresses TLCS-90 
+   STDDEF96.INC         register- & memory addresses TLCS-900
+   STDDEF87.INC         register- & memory addresses TLCS-870
+   STDDEF47.INC         command macros TLCS-47
+   STDDEFZ8.INC         register addresses Z8-family
+   STDDEF56.INC         register addresses DSP56000
+   REG683XX.INC         register addresses 68332/68340
+   REG96.INC            register addresses 8096
+   REG166.INC           addresses & command macros 80C166/167
+   REGZ380.INC          on-chip register Z380
+   CTYPE.INC            standard functions to analyse characters
+   BITFUNCS.INC         standard functionen for bit manipulation
+
+   DEMOCODE.ASM         sample programs for this assembler 
+   DEMOMAC.ASM
+   DEMOPHAS.ASM
+   DEMOLIST.ASM
+
+In case one of the files is missing, somebody was sleeping while 
+copying (in case of doubt it was me)!
+
+
+       1.3. General assembler capabilities
+       -----------------------------------
+
+In contrast to normal assemblers, AS offers the possibility to 
+generate code for totally different processors. At the moment the 
+following processor families are implemented:
+
+ - Motorola 68000..68030,683xx inkl. Koprozessor und MMU
+ - Motorola DSP56000
+ - Motorola/IBM MPC601/MPC505/PPC403
+ - Motorola 6800, 6805, 6809, 68(HC)11 sowie Hitachi 6301
+ - Hitachi 6309
+ - Hitachi H8
+ - Hitachi SH7000/7600
+ - Rockwell 6502 und 65(S)C02
+ - CMD 65816
+ - Mitsubishi MELPS-740
+ - Mitsubishi MELPS-7700
+ - Mitsubishi MELPS-4500
+ - Mitsubishi M16
+ - Intel MCS-48/41
+ - Intel MCS-51
+ - Intel MCS-96
+ - Intel 8080/8085
+ - AMD 29K
+ - Siemens 80C166/167
+ - Zilog Z80, Z180, Z380
+ - Zilog Z8
+ - Toshiba TLCS-900(L)
+ - Toshiba TLCS-90
+ - Toshiba TLCS-870
+ - Toshiba TLCS-47
+ - Toshiba TLCS-9000
+ - Microchip PIC16C54..16C57
+ - Microchip PIC16C84/PIC16C64
+ - Microchip PIC17C42
+ - SGS-Thomson ST62xx
+ - SGS-Thomson 6804
+ - Texas Instruments TMS32010/32015
+ - Texas Instruments TMS3202x
+ - Texas Instruments TMS320C3x
+ - Texas Instruments TMS370xxx
+ - NEC ÊPD 78(C)1x
+ - NEC ÊPD 75xxx (alias 75K0)
+
+in work / planning / in consideration :
+
+ - NEC 78K0
+ - Toshiba TC9331
+ - Intel MCS-251
+ - Philips XA
+ - Intel i960
+ - Analog Devices ADSP21xx
+
+I'm searching for the following materials at the moment:
+
+ - Texas Instruments TMS320C4x
+ - Texas Instruments TMS320C5x
+ - Texas Instruments TMS320C8x (the CD free of charge is not 
+   available any more and the price for the announced one is 
+   a little bit too high, to implement something "just for fun")
+
+unloved, but now, however, present :
+
+- Intel 80x86, 80186, Nec V30&V35 incl. coprocessor 8087
+
+The switching of the code generator is allowed even within one 
+file, and that in any quantity!
+
+The reason for these flexibility is, that AS has a history, that is to be 
+recognize in the version number as well. AS was created as 
+enlargement of a macro assembler for the 68000-family. On special 
+request, I extended the original assembler so that it was able to 
+translate 8051-mnemonics. On this way (decline ?!) from the 68000 to 
+8051 all the others were created as by-products. So, the 
+version number is not only marketing, but expresses really that this is 
+no 1.0 version with beta-version bugs like MS-DOS 6.0 (which does not 
+reduce the importance what has been said in part 1.1).
+
+This flexibility implies an exotic code format, therefore I 
+added some tools to work on. Their description is to be found in 
+chapter 6.
+
+AS is a macro assembler, which means that the programmer has the 
+possibility, to define new "commands" by means of macros.  Additionally it 
+masters conditional assembling.  Labels inside macros are 
+automatically processed as local.
+
+Symbols, for the assembler, may have either integer-, string- or 
+floating point values. These will be stored - like interim values in 
+formulas - with a width of 32- bit for integer values, 80-bit for 
+floating point values and 255 characters for strings . For Intel micro 
+controller there is the possibility to classify symbols by segmentation. So 
+the assembler has a (small) possibility to recognize wrong access into 
+address spaces.
+
+The assembler does not know explicit limits in the nesting depth of 
+include files or macros; a limit is only given by the program stack 
+restricting the recursion depth.  Nor is there a limit for the 
+symbol length, which is only restricted by the maximal line length. 
+
+From version 1.38 on, AS is a multipass-assembler.  This pompous term 
+means no more, than the fact that the number of passes through the 
+source code must be not more than two. If the source code does not 
+contain any foreward references, AS needs only one pass. In case AS 
+recognizes in the second pass that it must use a command with a shorter 
+or longer code, it needs a third (fourth, fifth...) pass to process all 
+symbol references correct. There is nothing more behind the term 
+"multipass", so it will not be used further more in this documentation.
+
+After so much provise a bitter pill: AS does not generate a linkable code. 
+An extension with a linker needs considerable effort and is not planned 
+at the moment.
+
+As regards "emitation of sources" the sources of AS are not presented in a 
+form, which allowes easy understanding (== zero comments). So I 
+will emit sources only in case somebody really wants to work on it (e.g. 
+implementate AS into another computer system) and the derivate 
+becomes again Public Domain. Particularly I want to prevent, that someone 
+changes 5 lines (most popular the copyright entry) and sales the 
+result commercially as "its own" program.
+
+As regards the obviously inevitable question, if there will be a Windows 
+version sometimes: In my opinion, it makes no sense to support a system 
+additionally by programs, if it is obvious bullshit! For people, who do 
+not like to work under DOS conditions or have urgent memory trouble, 
+there is both, a DOS-DPMI- and a OS/2-version. Since not everybody needs 
+them I publish those versions in separate packages.
+
+
+       2. assembler usage
+       ==================
+
+       2.1. Start-up command, parameters
+       ---------------------------------
+
+AS is a command line driven program, i.e. all parameters and file 
+options are to be given in the command line.  In order to prevent 
+endless increase of memory requirement, the various code generator 
+modules were displaced into an overlay file, whose existence is checked 
+by the assembler immediatelly after program startup.  
+If it does not finds them, the program run will be already stopped 
+at this position...  The file AS.OVR should be always in the same 
+directory as the AS.EXE-file.
+
+Using overlays naturally results in slight overhead. AS tries to 
+reduce this by using possibly existing EMS or XMS memory.  In case 
+this results in trouble, your able to suppress the using of EMS or 
+XMS by setting the enviroment variable USEXMS or USEEMS to n.  
+e.g. it is possible to suppress the using of XMS by the command:
+
+   SET USEXMS=n
+
+Since AS handles all in and outputs via DOS (and therefore it should run 
+also on not so much compatible PC's) and needs only a basic display 
+control which is driven only by ANSI control sequences, during the assembly. 
+In case you should see, in the messages displayed by AS, 
+strange characters, your CONFIG.SYS is obviously lacking a line like this
+
+   device=ansi.sys 
+
+but the further functions of AS will not be infuenced hereby.  
+Alternative you are able to suppres the output of ANSI sequences 
+completely by setting the enviroment variable USEANSI to n.  
+
+The parameters can be divided roughly into two categories: switches 
+and file specifications.  Parameter of these two categories can be 
+performed in any form and mixed-up in the command line.  The assembler 
+evaluates at first all parameters and then assembles the specified 
+files.  From this follow two things:
+
+ - the spezified switches affect all specified source files. If 
+   several source files with different switches shall be assembled, 
+   this has to be done in separated runs.
+
+ - it is possible to assemble more than one file in one shot and to 
+   bring it to the top, it is allowed that the file options contain 
+   wildcards.
+
+Parameter switches are recognized by the assembler by starting on 
+a slash (/) or hyphen (-).  At the moment the following switches 
+are defined:
+
+ -  l : sends assembler listing to console terminal (mostly screen).  
+        In case several passes have to be done, the listing of any 
+        pass is send to the console; in opposite to the next option.
+ -  L : writes assembler listing into a file. The list file gets the 
+        same name as the source file, only the extension is 
+        replaced by LST .
+
+ -  o : Sets the new name of the by AS generated code file.  If this 
+        opton is used multiple, the names will be assigned, one after 
+        the other, to the source files which have to be assembled.  
+        A negation (see below) of this option in connection with a name 
+        erases this name from the list.  A negation without a name 
+        erases the whole list.
+
+ -  c : SHARED-variables will be written in a format, which permits 
+        an easy integration into a C-source file.  The extension of 
+        the file is "H".
+ -  p : SHARED-variables will be written in a format, which permits 
+        easy integration into the CONST-block of a Pascal program. 
+        The extension of the file is "INC". 
+ -  a : SHARED-variables will be written in a format, which permits 
+        easy integration into an assembler source file. The 
+        extension of the file is "INC".
+
+Concerning effect and function of the SHARED-symbols please see 
+           chapters 2.6. or 3.8.1.
+
+ -  w : suppress issue of warnings;
+
+ -  E [file] : error messages and warnings produced by AS will be 
+               diverted in a file. Instead of a file, the 5 standard 
+               handles (STDIN..STDPRN) can also be specified as 
+               !0 to !4 . Default is !2, that means STDERR.  If the 
+               file option is left out, the name of the error file 
+               is the same as of the source file, but with the 
+               extension "LOG".
+
+ -  q : This switch suppresses all messages of AS, the exceptions are 
+        error messages and outputs which are are forced from the 
+        source file.  The time needed for assembly is slighly reduced 
+        hereby and if you call AS from a shell there is no redirection 
+        required.  The disadvantage is that you may "stay in the dark" 
+        for several minutes ... 
+
+ -  h : hexadecimal numbers must be written in small instead of 
+        capital letters. This option is primarily a question of 
+        personal taste.
+
+ -  i <path list> : issues a list of directories, in which the 
+                    assembler automatically shall search for include 
+                    files, in case it didn't find it in the current 
+                    directory.  The different directories has to be 
+                    separated by semicolons.
+
+ -  u : calculate a list of areas which are occupied in the segments. 
+        This option is effective only, in case a listing will be 
+        produced. This option requires considerable additional 
+        memory and computing performance. In normal operation it 
+        should be switched off.
+
+ -  C : generates a list of cross references.  There will be listed 
+        which (global) symbols are used in files and lines.  
+        This list' too, will be generated only, in case a listing is 
+        produced.  This option occupies, too, additional 
+        memory capacity during assembly.
+
+ -  s : issues a list of all sections (see chapter 3.7).  The nesting 
+        is indicated  by indentations (Pascal like).
+
+ -  t : by means of this switch it is possible to separate single 
+        components of the standard issued assembler-listing.  Which 
+        part is assigned to any bit, you will find in the next but 
+        one chapter, where the exact format of the assembler listing 
+        is explained.
+
+ -  D : defines symbols.  The symbols which are specified behind this 
+        option and separated by commas are written in the 
+        global symbol table before starting the assembly.  As default 
+        these symbols are written as integer numbers within the 
+        value TRUE, by means of adjusted equals sign, however, you can 
+        select other values.  The expression following the equals 
+        sign may include operators or internal functions, but NOT 
+        any more symbols, even if these should have been defined before 
+        in the list!  Together with the commands for conditional assembly 
+        (see there) you may produce different program versions out of one 
+        source file by command line inputs.
+
+
+ -  A : writes the list of global symbols in another, more compact 
+        form.  Use this option, if the assembler crashes with a stack 
+        overflow because of long symbol tables.  Sometimes this option 
+        can increase the processing speed of the assembler, but this 
+        depends on the sources.
+
+ -  x : if present, errors get an extended message, so the 
+        identification of the fault should be easily possible.  What 
+        kind of added information the error messages contains, is 
+        given in the appendix inside the list of error messages. 
+ -  n : If this option is set, the error messages will be issued 
+        additionally with their error number (see appendix).  This 
+        may used primary in shells or IDE's to make the identification 
+        of errors easier by those numbers.
+ -  P : instructs AS to write the source text processed by macro 
+        processor and conditional assembly into a file.  Additional 
+        blank- and pure comment lines are missing in this file.  The 
+        extension of this file is "I". 
+ -  M : by means of this switch AS generates a file, where the 
+        definitions of source file macros not using the 
+        NOEXPORT-option, are stored.  This new file has the 
+        same name as the source file, only the extension is 
+        modified into "MAC". 
+ -  G : this switch defines, whether AS code should be produced or not. 
+        If switched off, the processing will be stopped after the macro 
+        processor. This switch is default activated (that logical, 
+        otherwise you won't get a code file). This switch can be used in 
+        connection with the switch P, if only the macro processor of 
+        AS is wished to work.
+ -  r : issues warnings, if situations occur, which need a further 
+        pass. This information can be used to reduce the number of 
+        passes. But be prepared for a big bunch!
+
+If switches require no arguments, it is possible to specify several 
+switches at one time, as in the following example :
+
+ as test*.asm firstprog -cl /i c:\as\8051\include
+
+All files TEST*.ASM as well as the file FIRSTPROG.ASM can be 
+assembled, whereby listings of all files are displayed on the 
+console terminal.  Additional sharefiles will be generated in the C-
+format.  The assembler should search for additional include files 
+in the directory C:\AS\8051\INCLUDE .
+
+This example shows, that the assembler assumes "ASM" as default 
+extension for source files.
+
+Beside this statement in the command line permanent needed options 
+can be written in the environment variable ASCMD . Someone who would 
+like to have list files at any time and possesse a fixed include 
+directory, can save a lot of keyboard work using the command:
+
+ set ascmd=-L -i c:\as\8051\include
+
+The environment options are worked out before the command line 
+will be processed, so options in the command line can overdrive 
+contradicting ones in the environment variable.
+
+At very long path names it can it be very close inside the ASCMD-
+variable.  For such cases a key-file may be the alternative, in which 
+the options can be written in the same way as in the command line or 
+the ASCMD-variable.  But this file may contain several lines with a 
+maximum of 255 characters.  In that case it is important, that in 
+options, which require an argument, both, switches and argument have 
+to be in the SAME line.  AS gets informed of the name of the key-file 
+by an "@" aheaded in the ASCMD-variable, e.g.
+
+set ASCMD=@c:\as\as.key
+
+In order to neutralize options in the ASCMD-variable (or in the 
+key-file), only an aheaded plus sign is to be inserted before the 
+option.  If in an individual case, a listing is not required, it is 
+possible to erase it in this way:
+
+as +L <file>
+
+Naturally it is not consequentlly logical, to deny an option by a 
+plus sign....  UNIX soit qui mal y pense.
+
+In case that you like to start AS from another program or a shell and 
+this shell hands over only lower-case or capital letters in the 
+command line, the following workaround exists: if a tilde "~" is put 
+in front of an option letter, the following letter is always 
+interpreted as a lower-case letter.  Analoguely a "#" demands the 
+interpretation as a capital letter. So examplationly the following 
+transfomations result for:
+
+ /~I ---> /i
+ -#u ---> -U
+
+In dependance of the action, the assembler ends with following 
+return codes:
+
+ 0 : error free run, at the most warnings occurred 
+ 1 : the assembler displayed only start-up parameter and has 
+     terminated immediately. 
+ 2 : errors occurred during assembly, no code file has been produced. 
+ 3 : a fatal error occured what led to immediate termination of the run. 
+ 4 : already while starting the assembler an error occurred. 
+     This may be a parameter error or a faulty overlay-file. 
+
+
+       2.2. Format of the input files
+       ------------------------------
+
+Like most assemblers AS expects exactly one command per line (blank 
+lines naturally are allowed as well).  The lines must not be longer 
+than 255 characters, additional characters are cut.
+
+one single line has following format:
+
+[label[:]] <command>[.attribute] [parameter[,parameter..]] [;comment]
+
+The colon for the label is optional, in case the label starts in 
+the first column ( the consequence is that a command never have to 
+start in column 1).  You are forced to set the colon in case the 
+does not start in the first column so that AS is able to distinguish 
+it from a command. 
+
+At 680x0, SH7000, TLCS-9000, M16 and also H8 an attribute attached 
+to a command along by a dot serves as a description of the 
+operand length. The following attribute letters are defined:
+
+   attribute     arithmetical-logic instruction        jump instruction
+
+       B              byte (8 bit)                         -------
+
+       W/H            word (16 bit)                        -------
+
+       L/D/W        longword (32 bit)                  16-bit-displacement
+
+       Q          quadruple word (64 bit)                  -------
+
+       S          single precision (32 bit)             8-bit-displacement
+
+       D          double precision (64 bit)                -------
+
+       X          extended precision (80/96 bit)       32-bit-displacement
+
+       P          decimal floating point (80/96 bit)       -------
+
+Attention: not all commands allow any operand length, and some 
+commands have no attribute. For more exact studies consult a reasonable 
+programmer's manual, e.g. [1] or equivalent.
+
+###!!!
+
+The number of the command parameters depends on the command and is 
+pricipally located between 0 and 20.  The separation of the parameters 
+from each other is to be performed only by commas (exception: DSP56000, 
+its parallel data transfers are to be separated by blanks).  Commas, that 
+are included in brackets or quotes, of course, are not taken into 
+consideration.  
+
+Instead of a comment at the end, the whole line can consist of 
+comment; if it starts in the first column with a semicolon.
+
+To separate the individual components you may use both, blanks and 
+tabulators.
+
+
+        2.3. Format of the listing
+        --------------------------
+
+The Listing, produced by AS using the command line options i or I, is 
+roughly dividable into the following parts :
+
+1. issue of the source code assembled;
+2. symbol list;
+3. arbitration list;
+4. cross reference list.
+
+The both last ones are only generated, if they have been demanded by 
+additional command line options .
+
+In the first part AS lists the complete contents of all source files 
+inclusive the produced codes. A line of this listing has the following 
+form:
+
+[<n>] <line>/<address> <code> <source>
+
+In the field "n" AS displays the include nesting level. The main file 
+(the file, in that the assembly started), has the depth 0, an included 
+file from there has depth 1 etc..  Depth 0 is not displayed.
+
+In field "line" the line number of the referenced file is 
+issued. The first line of a file has the number 1. The address, at 
+which the generated code of this line is written, follows after the 
+slash in field "address".
+
+The code produced is written behind "address" in field "code", 
+in hexadecimal notation. Depending on the processor type and actual 
+segment the values are formated either as bytes or 16-bit-words. If 
+more code is generated than the field can take, more lines will be 
+generated, in which only this field is occupied.
+
+Finally in the field "source" the line of the source file is issued in 
+their original form.
+
+The symbol table has a layout that regularly allowes to display, if 
+possible, 80 columns. For symbols of "normal length" there is a double 
+column output. If symbols exceed (with their name) the limit of 
+40 columns (characters), they will be issued in a separate line. The 
+output is done in alphabetical order.
+
+The parts mentioned so far as well as the list of all macros/functions 
+defined can be selectively masked in the complete listing. 
+This can be done by the already mentioned command line switch -t. 
+Internally a byte exists inside AS, whose bits represent, which parts 
+are to be written. The bits are assigned to the following parts:
+
+bit   part
+
+ 0    source file(s) + produced code
+ 1    symbol table
+ 2    macro list
+ 3    function list
+ 4    line numbering
+
+All bits are set to 1 for default, when using the switch
+
+-t <mask>
+
+Bits set in <mask> are deleted, so that the respective listing 
+parts are suppressed.  Accordingly it is possible to switch on single 
+parts again with a plus sign, in case you has switched off too much 
+with the ASCMD-variable... If someone wants to have, for example, 
+only the symbol table, it is enough to write:
+
+-t 2  
+
+The arbitration list issues the occupied areas hexadecimally for any 
+single segment.  If the area has only one address, only this is written, 
+otherwise the first and last address.
+
+The cross reference list issues any defined symbol in alphabetical 
+order and has the following form:
+
+ symbol <symol name> (=<value>,<file>/<line>): 
+  file <file 1>:
+  <n1>[(m1)]  ..... <nk>[(mk)]
+  .
+  .
+  file <file l>:
+  <n1>[(m1)]  ..... <nk>[(mk)]
+
+For any symbol it is given, in which files and lines it has been used. 
+If a symbol was used several times in the same line, this would 
+be indicated by a number in brackets behind the line number. 
+If a symbol was never used, it would not appear in the list; The same 
+is true to a file, that would not appear in the list of a symbol, in 
+case it was not referenced in the according file. 
+
+Attention! AS is never interested in the length of the listing lines, 
+i.e. it will not generate any line feeds!
+
+
+        2.4. Symbol conventions
+        -----------------------
+
+Symbols are allowed to be up to 255 characters long (as hinted already 
+in the introduction) and are being distinguished on the whole 
+length, but the symbol names have to meet some conventions: 
+Symbol names are allowed to consist of a random combination of 
+letters, digits, underlines and dots, whereby the first character must 
+not be a digit. The dot is only allowed to meet the MCS-51 notation of 
+register bits and should -as far as possible- not be used in own symbol 
+names.  To separate symbol names in any case the underline "_" and not 
+the dot "." should be used .
+
+The assembler is not case sensitiv, so it makes no difference, whether 
+lower-case or capital letters are used.
+
+The following symbols are predefined by the assembler:
+
+name           type             status    meaning
+
+TRUE           integer          predef.   logical "true"
+FALSE          integer          predef.   logical "false"
+
+CONSTPI        floating-point   predef.   Pi (3.1415.....)
+
+VERSION        integer          predef.   version of AS in BCD-coding, 
+                                          e.g. 1331 hex for version 1.33p1
+
+DATE           String           predef.   date and 
+TIME           String           predef.   moment of the assembly (start)
+
+MOMCPU         integer          predef.   momentary target-CPU 
+                                          (see command CPU)
+
+MOMFILE        String           special   momentary source file
+MOMLINE        integer          special   line number in source file
+MOMPASS        integer          special   number of the running pass
+MOMSECTION     String           special   name of the current section 
+                                          or an empty string
+
+* (Motorola,   integer          special   momentary program counter 
+   Rockwell,
+   Microchip)
+$ (Intel,
+   Zilog,
+   Texas,
+   Toshiba,
+   NEC)
+PC (Thomson)
+
+The status "predef." means that the symbol is stored as a normal 
+symbol in the global symbol table and can also be overwritten by SET 
+(who else this ever needs..).  Special symbols, however, are realized via 
+special conditions within the parser and cannot be overwritten.
+
+Additionally some pseudo commands still define symbols, which allow an 
+inquiry of the momentary value.  The descriptions of these are 
+explained at the commands belonging to it.
+
+
+        2.5. Formula expressions
+        ------------------------
+
+Most places, where the assembler expects number inputs, it is 
+possible to specify not only simple symbols or constants, but also complete 
+formula expressions.  The components of these formula 
+expressions can be both, single symbols and constants.  The 
+notation of integer constants can be done in different numerative 
+systems:
+
+                 Intel-mode           Motorola-mode
+                 (Intel, Zilog,       (Rockwell, Motorola,
+                  Thomson Texas,       Microchip, Thomson)
+                  Toshiba,NEC)            
+
+decimal          direct               direct
+
+hexadecimal      followed by H        aheaded $
+
+binary           followed by B        aheaded %
+
+octal            followed by O        aheaded @
+
+To prevent a misinterpretation of hexadecimal constants (as symbol 
+names) in the Intel-mode, they must be started always by a digit; 
+instead of e.g. F0H there must be written 0F0H.  The Motorola-mode 
+doesn't know such problems (hihihi!). Integer constants can be written 
+as ASCII-values, as well, like the following examples:
+
+'A'    == $41
+'AB'   == $4142
+'ABCD' == $41424344
+
+It is important, to write the characters in quotes, to 
+distinguish them from the following string constant.
+
+Floating point constants are to be written in the usual semilogarithmic 
+notation, which is known in the most general form:
+
+ [-]<integer digits>[.post decimal positions][E[-]exponent]
+
+Attention! The assembler understands a constant at first as a integer 
+constant and makes a floating-point format try only in case the first one 
+failed.  If someone wants to enforce the evaluation as floating point 
+number, so this can be done by dummy post decimal positions, e.g.  2.0 
+instead of 2  .
+
+String constants have to be included in quotation marks. In order to 
+make it possible to write quotation marks and special characters without 
+trouble in string constants, an "escape mechanism" has been worked in, 
+which probably is familiar to C-programmers: 
+
+The assembler understands a backslash (\) with a maximal three digit 
+long number in the string as a character with the according 
+decimal ASCII-value.  So it is possible to define by
+
+\0
+
+a NUL-character.
+
+Some extraordinarily frequently used control characters, you can also 
+achieve by using the following abbreviations:
+
+\b : Backspace           \a : bell         \e : Escape
+\t : tabulator           \n : linefeed     \r : carriage return
+\\ : Backslash           \' or \H : apostrophe 
+                         \" or \I : quotation marks
+
+The identifications may become both, capitals as well as lower-case 
+letters.
+
+By means of this escape character you can also work even formula 
+expressions into a string, if it is enclosed by ticked brackets: 
+e.g. 
+
+     message "root of 81 : \{sqrt(81)}"
+
+results in
+
+              root of 81 : 9
+
+The assembler chooses with the help of the formula result type the 
+correct output format, further string constants, however, are to be 
+avoided in the expression. Otherwise the assembler will get mixed up 
+at the transformation of capitals into lower case letters.
+
+Except for the built-in of formula expressions, you can use this 
+"escape-mechanism" as well in ASCII defined integer constants, 
+like this:
+
+     move.b   #'\n',d0
+
+However, everything has its limits, because the parser with higher 
+priority, which disassembles a line in op-code and parameters, does 
+not know, what it is actually working with; e.g. here:
+
+     move.l   #'\'abc',d0
+
+After the third apostrophe it will not find the comma any more, 
+because it presumes, that it is the start of a further character 
+constant. An error message about a wrong parameter number is the result.  
+An escape would be to write e.g., \i instead of \'.
+
+The calculation provisional results originating within formula expression 
+is to be done always by the highest available resolution, i.e. 
+32 bit for integer numbers, 80 bit for floating point numbers and 255 
+characters for strings. An possible test of value range violation is 
+to be done only in the final result.  
+
+The assembler provides the following operands for combination:
+
+operand function              #operands integer fl.-point string rank
+
+  <>    inequality                2      yes     yes       yes    14
+  >=    greater than or equal     2      yes     yes       yes    14
+  <=    less or equal             2      yes     yes       yes    14
+  <     real smaller              2      yes     yes       yes    14
+  >     real greater              2      yes     yes       yes    14
+  =     equality                  2      yes     yes       yes    14
+
+  !!    log. XOR                  2      yes     no        no     13
+  ||    log. OR                   2      yes     no        no     12
+  &&    log. AND                  2      yes     no        no     11
+  ~~    log. NOT                  1      yes     no        no     10
+
+  -     difference                2      yes     yes       no      9
+  +     sum                       2      yes     yes       yes     9
+  #     modulo division           2      yes     no        no      8
+  /     quotient                  2      yes *)  yes       no      8
+  *     product                   2      yes     yes       no      8
+  ^     power                     2      yes     yes       no      7
+
+  !     binary XOR                2      yes     no        no      6
+  |     binary OR                 2      yes     no        no      5
+  &     binary AND                2      yes     no        no      4
+  ><    mirror of bits            2      yes     no        no      3
+  >>    log. Shift right          2      yes     no        no      2
+  <<    log. Shift left           2      yes     no        no      2
+  ~     binary NOT                2      yes     no        no      1
+
+*) rest will thrown away
+
+
+"Rank" is the priority of an operator at graduations of expressions 
+into subexpressions.  The operator with the highest rank will be 
+evaluated at the very end.  The order of evaluation can be defined by 
+new bracketing.
+
+The compare operators deliver TRUE, in case the condition fits, 
+and FALSE in case it doesn't.  For the logical operators an expression 
+is TRUE, in case it is not 0, otherwise it is FALSE.
+
+The mirror of bits probably needs a little bit of explanation: the 
+operator mirrors the lowest bits in the first operand and leaves the 
+higher priority bits unchanged.  The number of bits which is to be 
+mirrored is given by the right operand and may be between 1 and 32 .
+
+In addition to the operators the assembler defines another line of 
+primarily tracendental functions with floating point arguments:
+
+name      meaning              argument             result
+
+SQRT      square root          arg >= 0             floating point
+
+SIN       sine                 arg real             floating point
+COS       cosine               arg real             floating point
+TAN       tangens              arg <> (2*n+1)*Pi/2  floating point
+COT       cotangent            arg <> n*Pi          floating point
+
+ASIN      inverse sine         |arg| <= 1           floating point
+ACOS      inverse cosine       |arg| <= 1           floating point
+ATAN      inverse tangens      arg real             floating point
+ACOT      inverse cotangent    arg real             floating point
+
+EXP       expotential function arg real             floating point
+ALOG      10 power of argument arg real             floating point
+ALD       2 power of argument  arg real             floating point
+SINH      hyp. sine            arg real             floating point
+COSH      hyp. cosine          arg real             floating point
+TANH      hyp. tangent         arg real             floating point
+COTH      hyp. cotangent       arg <> 0             floating point
+
+LN        nat. logarithm       arg > 0              floating point
+LOG       dec. logarithm       arg > 0              floating point
+LD        2er logarithm        arg > 0              floating point
+ASINH     inv. hyp. Sine       arg real             floating point
+ACOSH     inv. hyp. Cosine     arg >= 1             floating point
+ATANH     inv. hyp. Tangent    arg < 1              floating point
+ACOTH     inv. hyp. Cotangent  arg > 1              floating point
+
+INT       integer part         arg real             floating point
+
+SGN       sign (0/1/-1)        floating point       integer
+                               or integer
+ABS       amount               integer or           integer or
+                               floating point       floating point
+TOUPPER   matching capital     integer              integer
+
+UPSTRING  changes all          String               String  
+          characters
+          into capitals 
+
+
+If a function expects floating point arguments, so this won't mean it is 
+impossible to write e.g.
+
+    wur2 equ sqrt(2)
+
+In such cases an automatical type conversion is produced. In the reverse 
+case the INT-function has to be applied to get a floating point number as 
+integer.  When using this function, you have to pay attention that the 
+result produced always is a signed integer and has so a value range of 
+approximately +/-2.0E9.
+
+For a correct conversion of lower case letter into capital letters a DOS-
+version >= 3.30 is required.
+
+        2.6. Sharefile
+        --------------
+
+This function is a by-product from the old pure 68000 models of AS, 
+I have kept it inside in case someone really(?!) needs it.  
+Basic problem is, to get certain symbols produced when assembling, 
+because possibly someone would like to get access to the memory of 
+the target system by this address information.  The assembler allowes 
+to dispose symbol values externally, by means of SHARED-pseudo commands 
+(see there).  For this purpose the assembler produces a text file with the required symbols and its values in the second pass.  Which may be 
+incorporated by include into a higher-level language or another 
+assembler program.  The format of the text file (C, Pascal or 
+assembler) can be fixed by the command line switch p, c or a .
+
+Attention! If none of the switches is given, no file will be 
+generated and it makes no difference if SHARED-commands are in the 
+source text or not!
+
+When creating a Share-file AS does not check if a file with the 
+same name already exists, such a file  will be simply overwritten.  
+In my opinion a request does not make sense, because AS would 
+ask at each run, if it should overwrite the old version of the 
+Share-file, and that would be really annoying ...
+### proof readed only untill here ###
+### german manual around page 26  ###
+
+
+3. Pseudo commands
+==================
+
+Not for all processors are all pseudo commands defined.  In brackets 
+is noted, for which processor types this command legal is.
+
+3.1. Definitions
+-----------------
+
+3.1.1.  SET and EQU ( all processors )
+- - - - - - - - - -
+
+SET and EQU allows the definition of constants without types, i.e. 
+they will not assigned to a segment and their usage generates in no 
+case a warning because 
+
+of segment mixing. EQU defines constants which can not be modified (by 
+EQU) again, but SET permits the definition of variables, which can be 
+modified during the assembly.  This is useful e.g. at the allokation 
+of resources like interrupt vectors, as shown in the following 
+example:
+
+VecCnt set 0           ; somewhere at the beginning
+
+.
+.
+.
+
+DefVec macro Name      ; a new vector occupy Name  equ VecCnt
+VecCnt set VecCnt+4
+endm
+
+.
+.
+.
+
+
+DefVec Vec1            ; results in Vec1=0
+DefVec Vec2            ; results in Vec2=4
+
+internally constants and variables will be stored identically, the 
+only difference is, that it can be redefined by SET and not by EQU.  
+It is therefore possible to define a symbol with EQU and to change it 
+with SET (even if this is not its real business).
+
+With EQU it is possible to define both, floating-point- as well as 
+integer constants, e.g.
+
+IntTwo     equ   2
+FloatTwo   equ   2.0
+
+Some processors unfortunately have already a SET-command. At these 
+types EVAL must be used instead of SET.
+
+
+3.1.2. SFR and SFRB  ( MCS-51, SFR also PIC, ST62xx, Z8, 6804) 
+- - - - - - - - - -
+
+These commands act like EQU, but the so defined symbols are assigned 
+to the direct addressable data segment, i.e. it serves preferential to 
+the definition of RAM-cells and (such as the name lets guess) hardware 
+registers in the address range of 0..0ffh.  The difference between SFR 
+and SFRB is, that SFRB marks the register as bit addressable, and so 
+the assembler generates in addition 8 symbols, which will be assigned 
+to the bit segment and the names sustain xx.0 to xx.7, e.g.
+PSW    sfr    0d0h      ; results in PSW = D0H (data segment)
+
+PSW    sfrb   0d0h      ; results in extra PSW.0 = D0H (bit)
+                        ;               to PSW.7 = D7H (bit)
+
+Attention! The assembler is not interested at any rate, if a by SFRB 
+defined register is a real bit addressable register, the programmer 
+has to take care for those things!
+
+The address values may have 0 to 255 .
+
+SFR is also allowed with the PICs and the ST62xx-family, but at the 
+16C5x the address range is limited from 0 to 31.
+
+
+3.1.3. XSFR and YSFR  (DSP56000)
+- - - - - - - - - - - 
+
+Even the DSP56000 has a few peripheral register memory-mapped inside 
+the RAM, but the affair becomes complicated, because there are two 
+data areas, the X- and Y-area. This architecture allows on the one 
+hand a higher parallelity, but forces on the other hand to divide the 
+normal SFR-command into the two above mentioned variations.  This 
+works identically to SFR, just that XSFR defines a symbol in the X-
+addressing space and YSFR the corresponding one in the Y-addressing 
+space. The allowed value range is 0..$ffff.
+
+
+3.1.4. LABEL  (all processors)
+- - - - - - - 
+
+The function of the LABEL-command is identically to EQU, but the 
+symbol becomes not typeless, it gets the attribute "code".  LABEL is 
+needed exact for that purpose: Labels are normally local in macros, 
+that means not accessible outside of a macro.  With an EQU-command you 
+can get out of it nicely, but the phrasing
+
+<name> label   $
+
+generates a symbol with correct attributes.
+
+
+3.1.5.  BIT  ( MCS-51 )
+- - - - - -
+
+BIT operates analoge to EQU, just the symbol becomes assigned to the 
+bit addressable segment.  The allowed value range is 0..255.
+
+Example:
+
+my_carry       bit     PSW.7
+
+
+
+3.1.6. PORT  ( 8080/8085/8086, Z80, 3201x, TLCS-47 )
+- - - - - -
+
+PORT works analoge to EQU, just the symbol becomes assigned to the 
+i/o-address range. Allowed values are 0..7 at the 3201x, 0..65535 at 
+the 8086 and 0..255 at the rest.
+
+Example : a PIO 8255 is located at address 20H:
+
+PIO_port_A     port    20h
+PIO_port_B     port    PIO_port_A+1
+PIO_port_C     port    PIO_port_A+2
+PIO_ctrl       port    PIO_port_A+3
+
+
+3.1.7.  CHARSET  ( all processors )
+- - - - - - - -
+
+single board systems, especially when driving LCDs, using frequently 
+another character sets then ASCII. So it is probably pure chance that 
+the umlaut coding correspondes with the one inside the command. To 
+avoid now faulty manual encoding, the assembler contains a cross-
+reference for characters which assignes for each source-code a target 
+character.  To modify this table (which initial translates 1:1) you 
+has to use the command CHARSET. This command expects a range 
+specification as first or first/second parameter for the characters to 
+become translated. The last parameter is the range, into that the 
+characters shall become translated. To the clear up, two examples:
+
+       CHARSET         'Ñ',128
+
+That means the target system codes the 'Ñ' into the number 128 (80H). 
+In case that the target system did not support lower-case letters, by
+
+
+       CHARSET         'a','z','A'
+
+all lower-case letters will be translated automatically into the 
+matching capital letters.
+
+Attention! CHARSET does not affect just only the stored string 
+constants in the memory, but also as "ASCII" formulated integer 
+constants. This means that an already modified cross-reference can 
+lead into other results in the above mentioned examples!
+
+
+3.2. Code modification
+----------------------
+
+
+3.2.1.  ORG  ( all processors )
+- - - - - -
+
+ORG allows the loading of the internal address counter (of the 
+assembler) with a new value. The value range is depending from the 
+momentary selected segment and from the processor type :
+
+               680x0   6502,6800   6805    MCS-48    MCS-51   8080/8085
+                       6301,6811                                 Z80
+                         6809
+
+code segment   0..4G-1   0..64K-1 0..8K-1  0..4K-1   0..64K-1   0..64K-1
+(CODE)         Init 0    Init 0   Init 0   Init 0    Init 0      Init 0
+
+dir. data      -----     -----    -----    -----     0..FFH      -----
+(DATA)                                               Init 30H
+
+indir. data    -----     -----    -----    0..FFH    0..FFH      -----
+(IDATA)                                    Init 20H  Init 80H
+
+external data  -----     -----    -----    0..255    0..64K-1    -----
+(XDATA)                                    Init 0    Init 0
+
+Y-data         -----     -----    -----    -----     ------      -----
+(YDATA)
+
+bit data       -----     -----    -----    -----     0..FFH      -----
+(BITDATA)                                            Init 0
+
+i/o-area       -----     -----    -----    -----     -----       0..FFH
+(IO)                                                             Init 0
+
+
+
+               PIC       PIC      8086,80186 TLCS-900  ST62xx   TMS32010,
+               16C5x     17C4x     V30,V35                       32015
+
+code segment   0..2K-1   0..64K-1  0..64K-1   0..16M-1  0..4K-1  0..4K-1
+(CODE)         Init 0    Init 0    Init 0     Init 0    Init 0   Init 0
+
+dir. data      0..$1F    0..$FF    0..64K-1   -----     0..0FFh  0..8Fh /
+(DATA)         Init 0    Init 0    Init 0               Init 0   0..0FFh
+
+indir. Data    -----     -----     -----      -----     -----    -----
+(IDATA)
+
+external data  -----     -----     -----      -----     -----    -----
+(XDATA)
+
+Y-data         -----     -----     -----      -----     -----    -----
+(YDATA)
+
+bit data       -----     -----     -----      -----     -----    ----- 
+(BITDATA)
+
+i/o-range      -----     -----     0..64K-1   -----     -----    0..7
+(IO)                               Init 0                        Init 0
+
+
+               Z8       MELPS-7700  TLCS-90   uPD72(C)10 PIC16C84 
+                           65816
+code segment   0..64K-1  0..16M-1   0..64K-1  0..64K-1   0..8K-1
+(CODE)         Init 0    Init 0     Init 0    Init 0     Init 0
+
+dir. data      0..0ffh   -----      -----     -----      0..$1ff
+(DATA)         Init 0                                    Init 0
+
+indir. data    -----     -----      -----     -----      -----
+(IDATA)
+
+external data  0..64K-1  -----      -----     -----      -----
+(XDATA)        Init 0
+
+Y-data         -----     -----      -----     -----      -----
+(YDATA)
+
+bit data       -----     -----      -----     -----      -----
+(BITDATA)
+
+i/o-area       -----     -----      -----     -----      -----
+(IO)
+
+                6804    DSP56000  TLCS-870  TLCS-47
+
+code segment   0..4K-1  0..$ffff  0..64K-1  0..16K-1
+(CODE)         Init 0   Init 0    Init 0    Init 0
+
+dir. data      0..$ff   -----     -----     0..3ffh
+(DATA)         Init 0                       Init 0
+
+indir. data    -----    -----     -----     -----
+(IDATA)
+
+external data  -----    0..$ffff  -----     -----
+(XDATA)                 Init 0
+
+Y-data         -----    0..$ffff  -----     -----
+(YDATA)                 Init 0
+
+bit data       -----    -----     -----     -----
+(BITDATA)
+
+i/o-area       -----    -----     -----     0..1fh
+(IO)                                        Init 0
+
+In case that different variations in a processor family have 
+differentially big address ranges, the maximal range is listed for each.
+
+In the most times ORG is needed to give the code a new starting address 
+or a different one, but not to put coherent code parts into one source 
+file.
+
+
+3.2.2.  CPU   ( all processors )
+- - - - - -
+
+This command fixes for which processor the further code shall be 
+generated.  The commands of the other processor families are then not 
+accessable and will produce an error message!
+
+the processors can be distinguished roughly in families, inside the 
+families different types serves additionally to the detailed 
+distinction:
+
+a) 68008 --> 68000 --> 68010 --> 68012 --> 68020 --> 68030
+
+You can found the differences in this family in added commands and 
+addressing modes (from 68020 on).  A small exception is the 68030, where 
+two commands are absent: CALLM and RTM.
+
+b) 6502 --> 65C02 / MELPS740
+
+The CMOS-version defines some additional commands, as well as at a 
+number of some commands addressing modes were added, which are not 
+possible at the 6502.  The Mitsubishi micro controller in opposite 
+expand the 6502 instruction set primarily to bit operations and 
+multiplication / division instructions.  Except for the unconditional 
+jump and commands to the incrementation/decrementation of the 
+accumulator the instruction extensions are different.
+
+c) 8021, 8022, 8039, 80C39, 8048, 80C48, 8041, 8042
+
+At the ROM-less versions 8039 and 80C39, the commands forbidden which 
+are using the BUS (port 0).  The 8021 and 8022 are special versions with 
+strongly emaciated (shrinked) instruction set, for which the 8022 has 
+two A/D- converter and contains the (to it belonging) control-commands.  
+It is possible to transfer the CMOS-versions with the IDL-command into a 
+stop mode with lower current consumption.  The 8041 and 8042 have some 
+additional instructions for controlling the bus interface, but there for 
+a few other commands are omitted.  Moreover is at these processors the 
+code (addressing) area not external extendable, and so AS limits the 
+code segment at these processors up to 1 or 2 kByte.
+
+d) 8051, 8052 and 80515
+
+Over here the assembler makes no distinction, it only manages the 
+differences in the variable MOMCPU (see below), which you can check by 
+the IF-commands.
+
+e) 8080 and 8085
+
+The 8085 knows the additionally commands RIM and SIM for controlling the 
+interrupt enable mask and the two i/o-pins.
+
+f) Z80-->Z180
+
+For the present here are only the additional Z180-commands defined, i.e. 
+the Z180-MMU is still ignored.
+
+g) 6800-->6301-->6811
+
+The 6301 defines only new commands, in opposite the 6811 provides beside 
+additionall commands another index register Y for addressing.
+
+h) 6809 and 6805
+
+These processors are partially source code compatible to the other 
+68xx-, but have got another binary code format and a clearly restricted 
+(6805) or extended (6809) instruction set .
+
+i) 16C54 --> 16C55 --> 16C56 --> 16C57
+
+These processors differ by the available code (addressing) area, i.e. by 
+the address, at which the assembler reports an overrun.
+
+j) 17C42
+
+k) 16C84
+
+l) 8086-->80186-->V30-->V35
+
+Over here just new commands are added again.  The respective 8-bit CPU's 
+are because of of their command compatibility unperformed. So there is 
+to choose for a 8088-system e.g. 8086 .
+
+m) 96C141, 93C141
+
+These two processors represent the two variations of the processor 
+family TLCS-900 and TLCS-900L.  The differences of this two variations 
+will be discussed exactly in section 4.6 .
+
+n) ST6210/ST6215-->ST6220/ST6225
+
+The only distinction AS takes between the two pairs, is the smaller 
+addressing space (2K instead 4K) at the first ones.  The detailed 
+distinction is done to provide an automatic distinction in the source 
+file, which respective hardware is availible (analoge to the 
+8051/52/515).
+
+o) 32010-->32015
+
+The TMS32010 owns just 144 byte internal RAM, and so AS addresses in the 
+data segment just up to this limits.  For the 32015 is this restriction 
+not valid, the full range can be used from 0..255 .
+
+p) Z8601
+
+q) MELPS7700, 65816
+
+Beside a "16-bit-version" of the 6502-instruction set these processors 
+offer several command extensions.  but These are in the most cases 
+different, because each orientates itselve at its respective 8-bit model 
+(65C02 or MELPS-740). Partly other Mnemonics will also used for same 
+commands.
+
+r) 90C141
+
+s) 7810-->78C10
+
+The NMOS-version owns no stop-mode; the respective command and the ZCM-
+register are omitted and also some reset values inside the registers are 
+different.
+
+T) 6804
+
+u) 56000
+
+v) 87C00, 87C20, 87C40, 87C70
+
+The processors of the TLCS-870 have indeed an identical CPU-kernel, but 
+depending on the type different peripherals.  In part registers with the 
+same name were located at different addresses. The file STDDEF87.INC 
+uses, analoge to the MCS-51-family, the here possible distinction, to 
+provide automatically the correct symbol set.
+
+w) 47C00-->470C00-->470AC00
+
+These three variations of the TLCS-47-family have differently big RAM-
+and ROM-address ranges, by which several commands for bank switching 
+will be added or suppressed.
+
+
+At the CPU-command, the processor type must be specified as simple 
+constant , a calculation like:
+
+       CPU     68010+10
+
+is non-permissible.  Valid calls are e.g.
+
+CPU  8051
+
+or
+
+CPU 6800
+
+It makes no difference, which processor type is set, the integer 
+variable MOMCPU contains the actually status as a hexadecimal number.  
+For the 68010 is e.g. MOMCPU=$68010, for the 80C48 MOMCPU=80C48H, 
+because AS can not interpret letters except A..F as hexadecimal number, 
+so these letters must must be omitted at the hex notation; e.g. for the 
+Z80 is MOMCPU=80H.
+
+You can use this advantageous feature, to generate different code 
+depending on processor type.  e.g. the 68000 still didn't know a command 
+for subroutine return with stack correction.  With the variable MOMCPU 
+you can define a macro, that uses or emulate the correct command 
+depending on the processor type:
+
+myrtd  macro   disp
+       if      MOMCPU<$68010   ; emulate for 68008 & 68000 
+        move.l (sp),disp(sp)   
+        lea    disp(sp),sp     
+        rts                    
+       elseif                  
+        rtd    #disp           ; direct use from 68010 on
+       endif
+       endm
+
+
+       cpu     68010
+       myrtd   12              ; results in RTD #12
+
+       cpu     68000
+       myrtd   12              ; results in MOVE.. / LEA.. / RTS
+
+The assembler switches implicit, with the CPU-command, the current 
+segment to code again, because this is the only segment that is defined 
+for all processors.
+
+Default processor type is 68000.
+
+
+
+3.2.3. SUPMODE, FPU, PMMU  ( 680x0, FPU also 8086..V35,
+- - - - - - - - - - - - -    SUPMODE also TLCS-900 )
+
+By the use of these three switches in the 68000-mode it can be defined, 
+what parts of the instruction set may not be used, because the necessary 
+preconditions are not given in the following code part.  As parameter 
+for these commands may either ON or OFF be given, the actual status can 
+be read-out of a variable which is either TRUE or FALSE.
+
+The commands detail mean following:
+
+SUPMODE: allows or prohibites commands, for whose execution the 
+         processor has to be within the supervisor mode.  The status 
+         variable is called INSUPMODE.
+
+FPU    : allows or prohibites the commands of the numerical coprocessor 
+         68881 or 68882.  The status variable is called FPUAVAIL.
+
+PMMU   : allows or prohibites the commands of the memory management unit 
+         68851 or the built-in MMU of the 68030 .  
+         Attention! The 68030-MMU allows just a relative small subset of 
+         the 68851-commands.  The assembler did not test this! The 
+         status variable is called PMMUAVAIL.
+
+The using of in this manner prohibited commands will generate a warning 
+in SUPMODE, at PMMU and FPU a real error message.
+
+FPU is also permitted in the 80x86-family and switch to the 
+corresponding  8087-instruction set.
+
+
+3.2.4. MAXMODE (TLCS-900)
+- - - - - - - - - - - - -
+
+The processors of the TLCS-900-family be able to work in 2 modes, the 
+minimum- and maximum-mode.  Depending on the actual mode, a little bit 
+different benchmark figures are valid to the running mode and the 
+assembler. Along with this command and the parameter ON or OFF, AS is 
+informed that the following code has to run in maximum- or minimum-mode.  
+The actual setting can be read-out from the variable INMAXMODE. 
+Presetting is OFF, i.e. minimum-mode.
+
+
+3.2.5.  SEGMENT ( all processors )
+- - - - - - - -
+
+Certain micro controllers and signal processors know various address 
+ranges, which are not mixable with each other and require for each also 
+different commands for addressing.  To manage also these ones, the 
+assembler provides various program counter, you can switch among them 
+to-and fro by the use of the SEGMENT-command.  This allows both, to 
+define by INCLUDE merged subroutines as well as in the main program 
+needed data at the location, at which it shall be used.  
+In detail the following segments will be managed by the following names:
+
+CODE    : program code;
+DATA    : direct addressable data (and also SFRs); 
+XDATA   : data in external connected RAM or 
+          X-addressing space at the DSP56000;
+YDATA   : Y-addressing space at the DSP56000;
+IDATA   : indirect addressable (internal) data; 
+BITDATA : part of the 8051-internal RAM, which is bitwise addressable;
+IO      : i/o-address range.
+
+See also section 3.2.1. (ORG) for detailed information about address 
+range and initial values of the segments. Depending on the processor 
+family not all segment types will be permitted.
+
+The bit segment is manages in the way, as if it would be a byte segment, 
+i.e. the addresses will be incremented at 1 per bit.
+
+to say it clearly once again: all segments except code serves only the 
+address management, i.e. you can define no code or constants therein.  
+Permissible are only commands, which reserve memory (DS, DB ?...).
+
+Labels get the same type as attribute as the segment have in which it 
+was defined.  So the assembler has a limited possibility to check, if 
+you access by the wrong commands to symbols of a certain segment.  In 
+such cases the assembler issues a warning.
+
+Example:
+
+       CPU     8051            ; MCS-51-code
+
+       segment code            ; test code
+
+       setb flag               ; no warning
+       setb var                ; warning : wrong segment
+
+segment data
+
+var    db ?
+
+       segment bitdata
+
+flag   db ?
+
+
+
+3.2.6.  PHASE and DEPHASE   ( all processors )
+- - - - - - - - - - - - -
+
+In some applications (especially Z80-systems) the code must shifted into 
+another address range, before use.  If the assembler didn't know about 
+this, it would align all Labels to the load adresses (not the start 
+address).  The programmer is then forced to write jumps within this area 
+either independent of location or has to add the offset at each symbol 
+"on foot".  The first one is at some processors not possible, the last 
+one extremly error-prone. 
+With the commands PHASE and DEPHASE it is possible, to inform the 
+assembler at which address the code will be really executed in the 
+target system:
+
+       phase   <address>
+
+Informs the assembler that the following code shall be executed at the 
+specified address.  The assembler calculates thereupon the difference to 
+the real program counter and adds this difference at following 
+operations:
+
+ - address value in the listing
+ - filing of lable values
+ - program counter references in relative jumps and address expressions
+ - request of the program counter with the symbols * or $
+
+this "shifting" becomes switched off by the command
+
+dephase
+
+The assembler manages phase values for all defined segments, although 
+this command pair just makes sense especially in code segments.  
+
+
+
+3.2.7.  SAVE and RESTORE  (all processors)
+- - - - - - - - - - - - -
+
+The command SAVE forces the assembler to puts the content of following 
+variables  to an internal stack:
+
+ - momentary selected processor type (set by CPU); 
+ - momentary active memory area (set by SEGMENT);
+ - Flag, whether Listing is switched on- or off (set by LISTING);
+ - Flag, if expansions of following macros shall be issued in the 
+         Listing (set by MACEXP).
+
+The counterpart RESTORE downloades the at least saved status of this 
+stack again.  These two commands were primarily defined for 
+includefiles, to change the above mentioned variables in any way inside 
+of these files, without loosing their original content.  This may be 
+helpfull e.g. in includefiles with own, fully debugged subroutines, to 
+switch the listing generation off:
+
+       SAVE            ; save old status 
+
+       LISTING  OFF    ; save paper 
+
+       .               ; the actual code
+       .
+
+       RESTORE         ; restore
+
+In opposite to a simple LISTING OFF .. ON-pair, the correct status will 
+be produced again, in case the listing generation was switched off 
+already before.
+
+The assembler checks if the number of SAVE-and RESTORE-commands 
+corresponds and delivers error messages in the following cases:
+
+ - RESTORE, but the internal stack is empty;
+ - the stack not empty at the end of a pass.
+
+
+3.2.8. ASSUME  (various)
+- - - - - - -
+
+
+8086
+....
+
+The 8086 is able to address data in all segments in one command, but 
+needs however so-called "segment-prefixes", if another segment register 
+then DS shall be used.  In addition it is possible, that the DS-register 
+is adjusted to another segment, e.g. to address longer routes of data in 
+the code segment. AS didn't make a  meaning check of the code, so it has 
+to informed via this command to what segments the segment registers 
+point at the moment, e.g.:
+
+       ASSUME  CS:CODE, DS:DATA    .
+
+To all four segments of the 8086 (SS,DS,CS,ES), assumptions can be 
+assigned in this manner.  This command produces NO code, so you has to 
+load values really into the segment registers and this must be done by 
+the program.
+
+The using of this command has the result, that AS is able to put ahead 
+automatically prefixes at sporadic accesses into the code segment, or on 
+the other hand, AS can inform you that the DS-register was shifted and 
+you can save explicit CS:-instructions.
+
+Valid arguments behind the colon are CODE, DATA und NOTHING. The last 
+value informs AS that the segment registers contains no useable value 
+(for AS).  Preinitialized are the following ASSUMEs:
+
+CS:CODE, DS:DATA, ES:NOTHING, SS:NOTHING
+
+
+MELPS7700/65816
+...............
+
+These processors include a lot of registers, whose contents AS must know 
+to generate the correct code.  It is a matter of the following register:
+name   meaning                 value range     default
+
+DT     data bank               0-$ff           0
+PG     code-bank               0-$ff           0
+DPR    direct adr. page        0-$ffff         0
+X      width of indexregister  0 or 1          0
+M      width of accumulator    0 or 1          0
+
+To avoid endless repetitions, please take a look to Chapter 4.11, the 
+useage of this values is decribed there.  The handling is identically to 
+the 8086, i.e. several values can also set at once and no code is 
+generated, which can load the register with values.  This has to be done 
+again and only by the programmer!
+
+
+ÊPD78(C)10
+..........
+
+This processors have a register (V), along with its assistance the 
+"Zeropage", i.e. of the memory cells which are addressable by just one 
+byte, is able to locate free in the memory, within page limits.  
+By reasons of comforts you don't want to work with expressions such as
+
+inrw    Lo(counter)
+
+so AS takes over this job, but only under the premise, that it is informed 
+via the ASSUME-command about the content of the V-register.  If a 
+command with short addressing is used, it will be checked if the upper half 
+of the address expression correspond with the expected content.  A warning will be issued if this is not correct.
+
+
+ST62xx
+......
+
+The micro controller of the ST62-family are able to insert a part 
+(64 byte) of the code area into the data area, e.g. to load constants 
+from the ROM.  This means also, that at one moment only one part of the 
+ROM can be addressed.  Which part it is, is assigned by a certain 
+register.  AS can not check direct the content of this register, but it 
+can be informed by this command that a new value have been assigned to the 
+register.  AS then can test and if necessary warn, in case addresses of 
+the code segment will be accessed, which are not located in the 
+"announced" window.  The variable VARI have e.g. the value 456h, so 
+
+ASSUME ROMBASE:VARI>>6
+
+places the AS-internal variable up to 11h, and an access to VARI generates 
+an access to address 56h in the data segment.
+
+Instead of a symbol it can also be stated a simple NOTHING, e.g. if the bank-
+register is used temporary as memory cell. This value is also the presetting.
+
+
+TLCS-47
+.......
+
+The direct data address area of this processors (it makes no difference 
+whether you address direct or via HL-register) have an amount of only 256 
+Nibbles.  Because the "better" family members have got up to 1024 Nibbles 
+RAM on chip, Toshiba was forced to introduce a banking mechanism via the 
+DMB-register.  AS manages the data segment as a continuous addressing space 
+and checks at any direct addressing, if the address is in the momentary 
+active bank.  The bank AS momentary expected can be fixed by means of
+
+ASSUME  DMB:<0..3>
+
+The default value is 0.
+
+### from here on computer supported raw translation (real bad) ###
+
+3.3. Data definitions
+----------------------
+
+the over here described commands overlap itself partly in their 
+functionality, but defines each processor family other names for the same 
+function.  To with the standard assemblers conformable to remain, was this 
+form of the implementation selected.
+
+
+
+3.3.1.  DC[.Size]       ( 680x0, DSP56000 )
+- - - - - - - - -  
+this command places a or several constants of the with 
+the 68000 by  attribute certain of the type in the memory .  The 
+attributes correspond the in section 2.2 defined, additionally is for byte 
+constants the possibility availible, string expressions in the memory write 
+into, like e.g.
+
+String  dc.B "Hello world!\0"
+
+the parameter number may between 1 and 20 lie.
+
+Should the byte count odd be, so will from the assembler automatically 
+another byte attached, to the word alignment of data obtainable .
+
+With this command stored decimal floating point numbers ( DC.X ...) be able 
+to  the whole area of the extended precision cover, to pay attention to is 
+thereby , that the momentary available coprocessors at the read of such 
+constants the thousand digit of the exponent ignore!
+
+default attribute is W, that means 16-bit-integer numbers.
+
+At the DSP56000 is the data type to integer numbers fixed (a attribute is 
+therefore neither necessary nor allowed), the in the range -8M..16M-1 lie 
+may.   String constants are also allowed, whereby for each three characters 
+in one word packed be.
+
+
+3.3.2.  DS[.Size]       ( 680x0, DSP56000 )
+- - - - - - - - -
+
+with to this command lets once memory capacity for the stated number in the 
+attribute described numbers allocate.  So allocated
+
+DS.B 20
+
+e.g. 20 bytes memory,
+
+DS.X    20
+
+but 240 byte !
+
+the alternate meaning is the alignment of the program counter, being with 
+the value input 0 reached will.  In this way will with
+
+DS.W 0
+
+the program counter to the next even address rounded off, with
+
+DS.D 0
+
+in opposite to the next double word limit.  Possible thereby untouched 
+memory cells haven't  with zeros or NOPs filled, but undefined.
+
+Target for the operand length is - as usual - W, just 16 bit.
+
+At the 56000 is the operand length to words (a 24 bit) fixed, attributes 
+there are therefore such as  DC also here not.
+
+
+3.3.3. DB,DW,DD,DQ and DT ( Intel, Zilog, Toshiba, NEC ) - - - - - - - - - - 
+- - -
+
+this commands are so to speak the Intel-counterpart to DS and DC , and 
+such as not else to expect is the logic a little bit differently: for one 
+will the identification the operand length into the Mnemonic put :
+
+DB: byte or ASCII-String such as at DC.B
+DW: 16-bit-integer
+DD: 32-bit-integer or single precision
+DQ: double precision   ( 64 bit )
+DT: extended precision ( 80 bit )
+
+On the other hand is done by the distinction, if constant definition or 
+reserved memory, within operand.  A reservation of memory will by a ? marked:
+
+db ? ; reserves a byte
+dw ?,? ; reserves memory for 2 words (=4 byte) dd -1 ; puts the constant -1 (
+FFFFFFFFH) in !
+
+reserved memory and constant definition must not in one instructions mixed 
+be:
+
+db "hello",? ; --> error message
+
+additionally is still the DUP-Operator permitted, that the repeated filing 
+of constant sequences or the reservation whole memory blocks permits:
+
+db 3 dup (1,2) ; --> 1 2 1 2 1 2
+dw 20 dup (?) ; reserves 40 byte memory.
+
+As you see can, must the DUP-argument put in brackets be, may for that  
+also again from various parts consist,  itselves also again DUPs can be...
+All operates that means recursive. DUP is the only place, at which you with 
+an other limit of the assembler in touch get in can: maximum be able to 1024 
+byte code or data in one line generated be.  This gets itself not to the 
+reservation of memory, just  the definition of constant arrays !
+In order with the M80 compatible to be, may in the Z80-mode instead of DB / 
+DW as well as DEFB / DEFW are written.
+
+
+3.3.4.  BYT  ( 6502,68xx )
+- - - - - -
+
+along with that command becomes in the 65xx/68xx-mode byte constants or 
+ASCII-Strings writen, it corresponds to also DC.B at the 68000 or DB at 
+Intel.
+
+
+
+
+### german manual around page 44 ###
+--- not complete proof-readed until now, please excuse my    ---
+--- and also the terrible english of the computer            ---
+--- end of translation (13th Sep. 95) of Oliver       EOF    ---
+
+
+----------------------- here is the gap...AA -------------------------------
+
+A. Error messages of AS
+========================
+
+Here the list of the error messages emitted by AS is given. Each error
+message is described by:
+
+- the internal error number (it is displayed only if AS is used with the
+                              -n option)
+
+- the text of the error message
+
+- error type:  Warning   : informs the user that a possible error was
+                           found, or that some inefficient binary code
+                           could be generated. The assembly process is not
+                           stopped.
+
+               Error     : an error was detected. The assembly process
+                           continues, but no binary code is emitted.
+
+
+               Fatal     : unrecoverable error. The assembly process is
+                           terminated.
+
+- reason of the error    : the situation originating the error.
+
+- argument:  a further explanation of the error message.
+
+
+--------------------------------------------------------------------------
+
+0     useless displacement
+
+      Type:     warning
+      Reason:   680x0, 6809 and COP8 CPUs: an address displacement was
+                given a value of 0. An address without displacement is
+                generated, and a convenient number of NOPs are emitted,
+                to avoid phasing errors.
+      Argument: none
+
+
+10    short addressing possible
+
+      Type:     warning
+      Reason:   680x0-, 6502 and 68xx CPUs: a given memory location can be
+                reached using short addressing. A short addressing
+                instruction is emitted, together with the required
+                number of NOPs, to avoid phasing errors.
+      Argument: none
+
+
+20    short jump possible
+
+      Type:     warning
+      Reason:   680x0- and 8086 CPUs can execute jumps using a short or long
+                displacement. If a shorter jump was not required, in the
+                first pass room for the long jump is reserved. Then the code
+                for the shorter jump is emitted, and the remaining space is
+                filled with NOPs, to avoid phasing errors.
+      Argument: none
+
+
+30    no sharefile created, SHARED ignored
+
+      Type:     warning
+      Reason:   A SHARED directive was found, but on the command line no
+                options were specified, to generate a shared file.
+      Argument: none
+
+
+40    FPU possibly cannot read this value (>=1E1000)
+
+      Type:     warning
+      Reason:   The BCD- floating point format used by the 680x0- FPU
+                allows such a large exponent, but according to the last
+                databooks, this is not exactly interpreted. The
+                corresponding word is assembled, but the associated
+                function is not expected to produce the correct result.
+      Argument: none
+
+
+50    privileged instruction
+      Type:     warning
+      Reason:   A Supervisor-mode directive was used, that was not preceded
+                by an explicit SUPMODE ON directive
+      Argument: none
+
+
+60    distance of 0 not allowed for short jump (NOP created instead)
+      Type:     warning
+      Reason:   A short jump with jump distance equal to 0 is not allowed
+                by 680x0 processors, since the associated code word is
+                used to identify long jump instruction. Instead of a
+                jump instruction, AS emits a NOP
+      Argument: none
+
+
+70    symbol out of wrong segment
+      Type:     warning
+      Reason:   The symbol used as an operand comes from an address space
+                that cannot be addressed together with the given instruction
+      Argument: none
+
+
+75    segment not accessible
+      Type:     warning
+      Reason:   The symbol used as an operand belongs to an address space
+                that cannot be accessed with any of the segment registers of
+                the 8086
+      Argument: The name of the unaccessible segment
+
+80    change of symbol values forces additional pass
+      Type:     warning
+      Reason:   A symbol changed value, with respect to previous pass. This
+                warning is emitted only if the -r option is used.
+      Argument: name of the symbol that changed value.
+
+90    overlapping memory usage
+      Type:     warning
+      Reason:   The analysis of the symbol table shows that part of the
+                program memory was used more than once. The reason can be an
+                excessive usage of ORG directives.
+      Argument: none
+
+100   none of the CASE conditions was true
+      Type:     warning
+      Reason:   A SWITCH...CASE directive without ELSECASE clause was
+                executed, and none of the CASE conditions was found true.
+      Argument: none
+
+110   page might not be addressable
+      Type:     warning
+      Reason:   The symbol used as an operand was not found in the memory
+                page defined by an ASSUME directive (ST62xx, 78(C)10).
+      Argument  none
+
+120   register number must be even
+      Type:     warning
+      Reason:   The CPU allows to concatenate only register pairs, whose
+                start address is even (RR0, RR2, ..., only for Z8).
+      Argument: none
+
+130   obsolete instruction, usage discouraged
+      Type:     warning
+      Reason:   The instruction used, althougth supported, was superseded by
+                a new instruction. Future versions of the CPU could no more
+                implement the old instruction.
+      Argument: none
+
+140   unpredictable execution of this instruction
+      Type:     warning
+      Reason:   The addressing mode used for this instruction is allowed,
+                however a register is used in such a way that its content
+                cannot be predicted after the execution of the
+                instruction.
+      Argument:  none
+
+150   localization operator senseless out of a section
+      Type:     warning
+      Reason:   A previously defined parenthesis must be used, so that it is
+                explicitly referred to the local symbols used in the
+                section. When the operator is used out of a section, there
+                are no local symbols, because this operator is useless in
+                this context.
+      Argument: none
+
+160   senseless instruction
+      Type:     warning
+      Reason:   The instruction used has no meaning, or it can be
+                substituted by an other instruction, shorter and more
+                rapidly executed.
+      Argument: none
+
+170   unknown symbol value forces additional pass
+      Type:     warning
+      Reason:   AS expects a forward- definition of a symbol, i.e. a symbol
+                was used before it was defined. A further pass must be
+                executed. This warning is emitted only if the -r option was
+                used.
+      Argument: none
+
+180   address is not properly aligned
+      Type:     warning
+      Reason:   An address was used, that is not an exact multiple of the
+                operand size. Although the CPU databook forbids this, the
+                address could be stored in the instruction word, so AS
+                simply emits a warning.
+      Argument: none.
+
+190   I/O-address must not be used here
+      Type:     warning
+      Reason:   The addressing mode or the address used are correct, but the
+                address referst to the peripheral registers, and it
+                cannot be used in this circumnstance.  Argument: none.
+
+200   possible pipelining effects
+      Type:     warning
+      Reason:   A register is used in a series of instructions, so that a
+                sequence of instructions probably does not generate the
+                desired result. This usually happens when a register is
+                used, before its new content was effectively loaded in it.
+      Argument: the register probably causing the problem.
+
+210   multiple use of address register in one instruction
+      Type:     warning
+      Reason:   An register used for the addressing is used once more in the
+                same instruction, in a way that results in a modification
+                of the register value. The resulting address does not have a
+                well defined value.
+      Argument: the register used more than once.
+
+1000  symbol double defined
+      Type:     error
+      Reason:   A new value is assigned to a symbol, using a label or a
+                EQU, PORT, SFR, LABEL, SFRB or BIT directive: however this
+                can be done only using SET/EVAL.
+      Argument: the name of the offending symbol, and the line number where
+                it was defined for the first time, according to the symbol
+                table.
+
+1010  symbol undefined
+      Type:     error
+      Reason:   A symbol is still not defined in the symbol table, also
+                after a second pass.
+      Argument: the name of the undefined symbol.
+
+1020  invalid symbol name
+      Type:     error
+      Reason:   A symbol does not fulfil the requirements that symbols
+                must have, to be considered valid by AS. Please pay
+                attention that more stringent syntax rules exist for
+                Macros and function parameters.
+      Argument: the wrong symbol
+
+1090  invalid format
+      Type:     error
+      Reason:   The command options used do not exist for this command.
+                (TLCS-9000 only)
+      Argument: the known formats for this command
+
+1100  useless attribute
+      Type:     error
+      Reason:   The command (processor or pseudo) cannot be used with a
+                point-suffixed attribute.
+      Argument: none
+
+1105  attribute may only be one character long
+      Type:     error
+      Reason:   The attribute following a point after a command cannot be
+                neither longer, neither shorter than a character.
+      Argument: none
+
+1110  wrong number of operands
+      Type:     error
+      Reason:   The number of operands issued for the command (processor or
+                pseudo) does not conform with the accepted number of
+                operands.
+      Argument: none
+
+1115  wrong number of operations
+      Type:     error
+      Reason:   The number of options given with this command is not
+                correct.
+      Argument: none
+
+1120  addressing mode must be immediate
+      Type:     error
+      Reason:   The instruction can be used only with immediate operands
+                (preceded by #).
+      Argument: none
+
+1130  invalid operand size
+      Type:     error
+      Reason:   Although the operand is of the right type, it does not have
+                the correct lenght (in bits).
+      Argument: none
+
+1131  conflicting operand sizes
+      Type:     error
+      Reason:   The operands used have different lenght (in bits)
+      Argument: none
+
+1132  undefined operand size
+
+*** ACHTUNG !!! In MSG.ENG gibt es "undefiniert" statt "undefined". Bitte,
+verbessere !!!
+
+      Type:     error
+      Reason:   It is not possible to estimate, from the opcode and from
+                the operands, the size of the operand ( a trouble with
+                8086 assembly). You must define it with a BYTE, WORD, o
+                PTR- prefix.
+      Argument: none
+
+1135  invalid operand type
+      Type:     error
+      Reason:   an expression does not have a correct operand type
+                (integer/decimal/string)
+      Argument: the operand type
+
+1140  too many arguments
+      Type:     error
+      Reason:   No more than 20 arguments can be given to AS
+      Argument: none
+
+1200  unknown opcode
+      Type:     error
+      Reason:   An opcode was used that is neither an AS command, nor a
+                known opcode for the current processor type.
+      Argument: none
+
+1300  number of opening/closing brackets does not match
+      Type:     error
+      Reason:   The expression parser found an expression enclosed by
+                brackets, where the number of left- and right- brackets
+                does not match.
+      Argument: the wrong expression
+
+1310  division by 0
+      Type:     error
+      Reason:   An expression on the right side of a division or modulus
+                operation was found equal to 0.
+      Argument: none
+
+1315  range underflow
+      Type:     error
+      Reason:   An integer word underflowed the allowed range.
+      Argument: the value of the word and the allowed minimum (one day,
+                maybe I will change this...)
+
+1320  range overflow
+      Type:     error
+      Reason:   An integer word overflowed the allowed range.
+      Argument: the value of the world, and the allowed maximum (one day,
+                maybe I will change this...)
+
+1325  address is not properly aligned
+      Type:     error
+      Reason:   The given address does not correspond with the size needed
+                by the data transfer, i.e. it is not an integer multiple of
+                the operand size. Not all processor types can use unaligned
+                data.
+      Argument: none
+
+1330  distance too big
+      Type:     error
+      Reason:   The displacement used for an address is too large.
+      Argument: none
+
+1340  short addressing not allowed
+      Type:     error
+      Reason:   The address of the operand is outside of the address space
+                that can be accessed using short-addressing mode.
+      Argument: none
+
+1350  addressing mode not allowed here
+      Type:     error
+      Reason:   the addressing mode used here, although usually possible,
+                cannot be used here.
+      Argument: none
+
+1351  number must be even
+      Type:     error
+      Reason:   In this point only even addresses are allowed, since the
+                low order bit is used for other purposes or it is reserved.
+      Argument: none
+
+1355  addressing mode not allowed in parallel operation
+      Type:     error
+      Reason:   The addressing mode(s) used are allowed in sequential,
+                but not in parallel instructions
+      Argument: none
+
+1360  undefined condition
+      Type:     error
+      Reason:   The branch condition used for a conditional jump does not
+                exist.
+      Argument: none
+
+1370  jump distance too big
+      Type:     error
+      Reason:   the jumping instruction and destination are too apart, to
+                execute the jump with a single step
+      Argument: none
+
+1375  jump distance is odd
+      Type:     error
+      Reason:   Since instruction must be defined only at even addresses,
+                the jump distance between two instructions must always be
+                even, and the LSB of the jump distance is used otherwise.
+                This issue was not verified here. The reason is usually the
+                presence of an odd number of data in bytes or a wrong ORG.
+      Argument: none
+
+1380  invalid argument for shifting
+      Type:     error
+      Reason:   only a constant or a data register can be used for defining
+                the shift size. (only for 680x0)
+      Argument: none
+
+1390  operand must be in range 1..8
+      Type:     error
+      Reason:   constants for shift size or ADDQ argument can be only
+                within the 1..8 range (only for 680x0)
+      Argument: none
+
+1400  shift amplitude too big
+      Type:     error
+      Reason:   (no more used)
+      Argument: none
+
+1410  invalid register list
+      Type:     error
+      Reason:   The register list argument of MOVEM or FMOVEM has a
+                wrong format (only for 680x0)
+      Argument: none
+
+1420  invalid addressing mode for CMP
+      Type:     error
+      Reason:   The operand combination used with the CMP instruction is
+                not allowed (only for 680x0)
+      Argument: none
+
+1430  invalid CPU type
+      Type:     error
+      Reason:   The processor type defined by the CPU command is unknown
+                to AS.
+      Argument: the unknown processor type
+
+1440  invalid control register
+      Type:     error
+      Reason:   The control register used by a MOVEC is not (yet) available
+                for the processor defined by the CPU command.
+      Argument: none
+
+1445  invalid register
+      Type:     error
+      Reason:   The register used, although valid, cannot be used in this
+                context.
+      Argument: none
+
+1450  RESTORE without SAVE
+      Type:     error
+      Reason:   A RESTORE command was found, that cannot be coupled with a
+                corresponding SAVE.
+      Argument: none
+
+1460  missing RESTORE
+      Type:     error
+      Reason:   After the assembling pass, a SAVE command was missing.
+      Argument: none.
+
+1465  unknown macro control instruction
+      Type:     error
+      Reason:   A MACRO command specification is unknown to AS.
+      Argument: the dubious specification.
+
+1470  missing ENDIF/ENDCASE
+      Type:     error
+      Reason:   after the assembling, some of the IF- or CASE- constructs
+                were found without the closing command
+      Argument: none
+
+1480  invalid IF-structure
+      Type:     error
+      Reason:   The command structure in a IF- or SWITCH- sequence is
+                wrong.
+      Argument: none
+
+1483  section name double defined
+      Type:     error
+      Reason:   In this program module a section with the same name still
+                exists.
+      Argument: the multiple-defined name
+
+1484  unknown section
+      Type:     error
+      Reason:   In the current namespace there are no sections with this
+                name
+      Argument: the unknown name
+
+1485  missing ENDSECTION
+      Type:     error
+      Reason:   Not all the sections were properly closed.
+      Argument: none
+
+1486  wrong ENDSECTION
+      Type:     error
+      Reason:   The given ENDSECTION does not refer to the most
+                deeply nested one.
+      Argument: none
+
+1487  ENDSECTION without SECTION
+      Type:     error
+      Reason:   An ENDSECTION command was found, but the associated section
+                was not defined before.
+      Argument: none
+
+1488  unresolved forward declaration
+      Type:     error
+      Reason:   A symbol declared with a FORWARD or PUBLIC statement could
+                not be resolved.
+      Argument: the name of the unresolved symbol.
+
+1489  conflicting FORWARD <-> PUBLIC-declaration
+      Type:     error
+      Reason:   A symbol was defined both as public and private.
+      Argument: the name of the symbol.
+
+1490  wrong numbers of function arguments
+      Type:     error
+      Reason:   The number of arguments used for referencing a function,
+                does not match the number of arguments defined in the
+                function definition.
+      Argument: none
+
+1495  unresolved literals (missing LTORG)
+      Type:     error
+      Reason:   At the end of the program, or just before switching to
+                another processor type, unresolved literals still remain.
+      Argument: none
+
+1500  order not allowed on
+      Type:     error
+      Reason:   Although the command is correct, it cannot be used with
+                the selected member of the CPU family.
+      Argument: none
+
+1505  addressing mode not allowed on
+      Type:     error
+      Reason:   Although the addressing mode used is correct, it cannot be
+                used with hte selected member of the CPU family.
+      Argument: none
+
+1510  invalid bit position
+      Type:     error
+      Reason:   Either the number of bits specified is not allowed, or
+                the command is not completely specified.
+      Argument: none
+
+1520  only ON/OFF allowed
+      Type:     error
+      Reason:   This pseudocommand accepts as argument either ON or OFF
+      Argument: none
+
+1600  unexpected end of file
+      Type:     error
+      Reason:   It was tried to read past the end of a file with a 
+                BINCLUDE statement.
+      Argument: none
+
+1700  ROM-offset must be in range 0..63
+      Type:     error
+      Reason:   The ROM table of the 680x0 coprocessor has only 64 entries.
+      Argument: none
+
+1710  invalid function code
+      Type:     error
+      Reason:   The only function code arguments allowed are SFC, DFC, a
+                data register, or a constant in the interval of 0..15 (only
+                for 680x0 MMU).
+      Argument: none
+
+1720  invalid function code mask
+      Reason:   Only a number in the interval 0..15 can be used as
+                functioncode mask (only for 680x0 MMU)
+      Type:     error
+      Argument: none
+
+1730  invalid MMU register
+      Type:     error
+      Reason:   The MMU does not have a register with this name (only for
+                680x0 MMU).
+
+      Argument:
+
+1740  level must be in range 0..7
+      Type:     error
+      Reason:   The level for PTESTW and PTESTR must be a constant in the
+                range of 0...7 (only for 680x0 MMU).
+      Argument: none
+
+1750  invalid bit mask
+      Type:     error
+      Reason:   The bit mask used for a Bitfield command has a wrong
+                format (only for 680x0).
+      Argument: none
+
+1760  invalid register pair
+      Type:     error
+      Reason:   The register here defined cannot be used in this context,
+                or there is a syntactic error (only for 680x0).
+      Argument: none
+
+1800  open macro definition
+      Type:     error
+      Reason:   An incomplete macro definition was found. Probably a ENDM
+                was forgotten.
+      Argument: none
+
+1805  EXITM not called from within macro
+      Type:     error
+      Reason:   EXITM is designed to terminate a macro expansion.  This
+                instruction only makes sense within macros and an attempt
+                was made to call it in the absence of macros.
+      Argument: none
+
+1810  more than 10 macro parameters
+      Type:     error
+      Reason:   A macro cannot have more than 10 parameters
+      Argument: none
+
+1815  macro double defined
+      Type:     error
+      Reason:   A macro was defined more than once in a program section.
+      Argument: the multiple defined macro name.
+
+1820  expression must be evaluatable in first pass
+      Type:     error
+      Reason:   The command used has an influence on the lenght of the
+                emitted code, so that forward references cannot be resolved
+                here.
+      Argument: none
+
+1830  too many nested IFs
+      Type:     error
+      Reason:   (no more implemented)
+      Argument: none
+
+1840  ELSEIF/ENDIF without IF
+      Type:     error
+      Reason:   A ELSEIF- or ENDIF- command was found, that is not preceded
+                by an IF- command.
+      Argument: none
+
+1850  nested / recursive makro call
+      Type:     error
+      Reason:   (no more implemented)
+      Argument: none
+
+1860  unknown function
+
+      Type:     error
+      Reason:   The function invoked was not defined before.
+      Argument: The name of the unknown function
+
+1870  function argument out of definition range
+      Type:     error
+      Reason:   The argument does not belong to the allowed argument range
+                associated to the referenced function.
+      Argument: none
+
+1880  floating point overflow
+      Type:     error
+      Reason:   Although the argument is within the range allowed to the
+                function arguments, the result is not valid
+      Argument: none
+
+1890  invalid value pair
+      Type:     error
+      Reason:   The base-exponent pair used in the expression cannot be
+                computed
+      Argument: none
+
+1900  order must not start on this address
+      Type:     error
+      Reason:   No jumps can be performed by the selected CPU from this
+                address.
+      Argument: none
+
+1905  invalid jump target
+      Type:     error
+      Reason:   No jumps can be performed by the selected CPU to this
+                address.
+      Argument: none
+
+1910  jump target not on same page
+      Type:     error
+      Reason:   Jump command and destination must be in the same memory
+                page.
+      Argument: none
+
+1920  code overflow
+      Type:     error
+      Reason:   An attempt was made, to generate more than 1024 code or
+                data bytes in a single memory page.
+      Argument: none
+
+1925  address overflow
+      Type:     error
+      Reason:   The address space for the processor type actually used was
+                filled beyond the maximum allowed limit.
+      Argument: none
+
+1930  constants and placeholders cannot be mixed
+      Type:     error
+      Reason:   Commands that reserve memory, and commands that define
+                constants cannot be mixed into a pseudo-command.
+      Argument: none
+
+1940  code may only be generated in code segment
+      Type:     error
+      Reason:   Segments not used for code can be used only for reserving
+                memory. Inside them neither code nor data can be stored.
+                (not used anymore)
+      Argument: none
+
+1950  parallel construct not possible here
+      Type:     error
+      Reason:   Either these instructions cannot be executed in parallel,
+                or their are not close enough each other, to do parallel
+                execution.
+      Argument: none
+
+1960  invalid segment
+      Type:     error
+      Reason:   The referenced segment cannot be used here.
+      Argument: The name of the segment used.
+
+1961  unknown segment
+      Type:     error
+      Reason:   The segment referenced with a SEGMENT command does not
+                exist in the CPU used.
+      Argument: The name of the segment used
+
+1962  unknown segment register
+      Type:     error
+      Reason:   The segment referenced here does not exist (8086 only)
+      Argument: none
+
+1970  invalid string
+      Type:     error
+      Reason:   The string has an invalid format.
+      Argument: none
+
+1980  invalid register name
+      Type:     error
+      Reason:   The referenced register does not exist, or it cannot
+                be used here.
+      Argument: none
+
+1985  invalid argument
+      Type:     error
+      Reason:   The command used cannot be performed with the REP- prefix.
+      Argument: none
+
+1990  indirect mode not allowed
+      Type:     error
+      Reason:   Indirect addressing cannot be used in this way
+      Argument: none
+
+1995  not allowed in current segment
+      Type:     error
+      Reason:   (no more implemented)
+      Argument: none
+
+1996  not allowed in maximum mode
+      Type:     error
+      Reason:   This register can be defined only in minimum mode
+      Argument: none
+
+1997  not allowed in minimum mode
+      Type:     error
+      Reason:   This register can be defined only in maximum mode
+      Argument: none
+
+2000  invalid combination of prefixes
+      Type:     error
+      Reason:   The prefix combination here defined is not allowed, or it
+                cannot be translated into binary code
+      Argument:
+
+
+2010  invalid escape sequence
+      Type:     error
+      Reason:   The special character defined using a backsslash sequence
+                is not defined
+      Argument: none
+
+10001 error in opening file
+      Type:     fatal
+      Reason:   An error was detected while trying to open a file for input.
+      Argument: description of the I/O error
+
+10002 error in writing listing
+      Type:     fatal
+      Reason:   An error happenend while AS was writing the listing file.
+      Argument: description of the I/O error
+
+10003 file read error
+      Type:     fatal
+      Reason:   An error was detected while reading a source file.
+      Argument: description of the I/O error
+
+10004 file write error
+      Type:     fatal
+      Reason:   While AS was writing a code or share file, an error happened.
+      Argument: description of the I/O error
+
+10006 heap overflow
+      Type:     fatal
+      Reason:   The memory available is not enough to store all the data
+                needed by AS. Try using the DPMI or OS/2 version of AS.
+      Argument: none
+
+10007 stack overflow
+      Type:     fatal
+      Reason:   The program stack crashed, because too complex formulas, or
+                a bad disposition of symols and/or macros were used. Try
+                again, using AS with the option -A.
+      Argument: none
+
+
+B. I/O error messages
+=====================
+
+The following error messages are generated not only by AS, but also from
+the auxiliary programs, like PLIST, BIND, P2HEX, and P2BIN. Only the most
+probable error messages are here explained. Should you meet an undocumented
+error message, then you probably met a program bug ! Please inform us
+immediately about this !!
+
+2     file not found
+      The file requested does not exist, or it is stored in another disk.
+
+3     path not found
+      The path of a file does not exist, or it is in another disk.
+
+4     too much open files
+      There are no more file handles available to DOS. Increase
+      their number changing the value associated to FILES= in the file
+      CONFIG.SYS.
+
+5     file access not allowed
+      Either the network access rights do not allow the file access, or
+      an attempt was done to rewrite or rename a protected file.
+
+6     invalid file handler
+
+12    invalid access mode
+
+15    invalid disk letter
+      The required disk does not exist.
+
+16    The file cannot be deleted
+
+17    RENAME cannot be done on this disk
+
+100   Unexpected end of file
+      A file access tried to go beyond the end of file, although according
+      to its structure this should not happen. The file is probably
+      corrupted.
+
+101   disk full
+      This is self explaining! Please, clean up !
+
+102   ASSIGN failed
+
+103   file not open
+
+104   file not open for reading
+
+105   file not open for writing
+
+106   invalid numerical format
+
+150   the disk is write-protected
+      When you don't use a hard disk as work medium storage, you should
+      sometimes remove the protecting tab from your diskette !
+
+151   unknown device
+      you tried to access a peripherical unit that is unknown to DOS. This
+      should not usually happen, since the name should be automatically
+      interpreted as a filename.
+
+152   disk not ready
+      close the disk drive door.
+
+153   unknown DOS function
+
+154   invalid disk checksum
+      A bad read error on the disk. Try again; if nothing changes,
+      reformat the floppy disk, or begin to take care of your hard disk!
+
+155   invalid FCB
+
+*** (DPB == FCB (file control block) - Bin ich richtig ?!?)
+
+156   position error
+      the diskette/hard disk controller has not found a disk track. See
+      nr. 154 !
+
+157   format unknown
+      DOS cannot read the diskette format
+
+158   sector not found
+      As nr. 156, but the controller this time could not find a disk
+      sector in the track.
+
+159   end of paper
+      You probably redirected the output of AS to a printer. Assembler
+      printout can be veeery long...
+
+160   device read error
+      The operating system detected an unclassificable read error
+
+161   device write error
+      The operating system detected an unclassificable write error
+
+162   general failure error
+      The operating system has absolutly no idea of what happened to the
+      device.
+

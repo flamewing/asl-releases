@@ -1,0 +1,29 @@
+# -------------------------------------------------------------------------
+# choose your compiler (must be ANSI-compliant!) and linker command, plus
+# any additionally needed flags
+
+CC = gcc
+LD = gcc
+CFLAGS = -O3 -fomit-frame-pointer -Wall
+LDFLAGS =
+
+# -------------------------------------------------------------------------
+# directories where binaries and includes should go during installation
+
+BINDIR = /usr/local/bin
+INCDIR = /usr/local/include/asl
+
+# -------------------------------------------------------------------------
+# language AS will speak to you
+# implemented so far:
+# lang_DE = german
+# lang_EN = english
+
+LANGRSC = lang_EN
+
+# -------------------------------------------------------------------------
+# character encoding to use (choose one of them)
+
+# CHARSET = CHARSET_ASCII7
+# CHARSET = CHARSET_IBM437
+CHARSET = CHARSET_ISO8859_1

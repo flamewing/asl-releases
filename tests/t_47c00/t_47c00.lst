@@ -1,0 +1,707 @@
+ AS V1.41r4beta - source file t_47c00.asm - page 1 - 1/15/1997 20:40:36
+
+
+       1/       0 :                     	cpu	470ac00
+       2/       0 :                     	include	"stddef47.inc"
+(1)    1/       0 :                     		save
+(1)  277/       0 :                     		restore
+(1)  278/       0 :                     
+(1)  279/       0 :                     
+(1)  280/       0 :                     
+       3/       0 :                     
+       4/       0 :                     	page 	0
+       5/       0 :                     
+       6/       0 :                     
+       7/       0 :                     	segment	data
+       8/       0 :                     
+       9/       0 :                     nvar1	db	?
+      10/       1 :                     nvar2	db	?
+      11/       2 :                     	align	4
+      12/       4 :                     bvar	db	2 dup (?)
+      13/       6 :                     
+      14/       6 :                     
+      15/       0 :                     	segment	io
+      16/       0 :                     
+      17/       0 :                     port1	db	?
+      18/       1 :                     port2	db	?
+      19/       2 : =7H                 port3	port	7
+      20/       2 :                     
+      21/       0 :                     	segment	code
+      22/       0 :                     
+      23/       0 :                     targ:	db	?
+      24/       1 :                     
+      25/       1 : 2A                  	ret
+      26/       2 : 00                  	nop
+      27/       3 : 2B                  	reti
+      28/       4 :                     
+      29/       4 : 0A                  	inc	@hl
+      30/       5 : 0B                  	dec	@hl
+      31/       6 : 08                  	inc	a
+      32/       7 : 09                  	dec	a
+      33/       8 : 18                  	inc	l
+      34/       9 : 19                  	dec	l
+      35/       A :                     
+      36/       A : 1E                  	and	a,@hl
+      37/       B : 38 73               	and	@hl,#3
+      38/       D : 38 35               	and	a,#5
+      39/       F : 1D                  	or	a,@hl
+      40/      10 : 38 63               	or	@hl,#3
+      41/      12 : 38 25               	or	a,#5
+      42/      14 : 1F                  	xor	a,@hl
+      43/      15 :                     
+      44/      15 : 0C                  	ld	a,@hl
+      45/      16 : 3C 7B               	ld	a,123
+      46/      18 : 28 04               	ld	hl,bvar
+      47/      1A : 44                  	ld	a,#4
+      48/      1B : CD                  	ld	h,#-3
+      49/      1C : E7                  	ld	l,#7
+      50/      1D : CA E5               	ld	hl,#0a5h
+t_47c00.asm(51) : error  : order not allowed on 470AC00
+      51/      1F :                     	ld	dmb,#2
+t_47c00.asm(52) : error  : order not allowed on 470AC00
+      52/      1F :                     	ld	dmb,@hl
+      53/      1F :                     
+      54/      1F : 33                  	ldl	a,@dc
+      55/      20 : 32                  	ldh	a,@dc+
+      56/      21 :                     
+      57/      21 : 0F                  	st	a,@hl
+      58/      22 : 1A                  	st	a,@hl+
+      59/      23 : 1B                  	st	a,@hl-
+      60/      24 : 3F 7B               	st	a,123
+      61/      26 : F3                  	st	#3,@hl+
+      62/      27 : 2D 50               	st	#5,nvar1
+t_47c00.asm(63) : error  : order not allowed on 470AC00
+      63/      29 :                     	st      dmb,@hl
+      64/      29 :                     
+      65/      29 : 10                  	mov	h,a
+      66/      2A : 11                  	mov	l,a
+t_47c00.asm(67) : error  : order not allowed on 470AC00
+      67/      2B :                     	mov	a,dmb
+t_47c00.asm(68) : error  : order not allowed on 470AC00
+      68/      2B :                     	mov	dmb,a
+t_47c00.asm(69) : error  : order not allowed on 470AC00
+      69/      2B :                     	mov	a,spw13
+t_47c00.asm(70) : error  : order not allowed on 470AC00
+      70/      2B :                     	mov	stk13,a
+      71/      2B :                     
+      72/      2B : 0D                  	xch	a,@hl
+      73/      2C : 3D 01               	xch	nvar2,a
+      74/      2E : 29 04               	xch	hl,bvar
+      75/      30 : 31                  	xch	a,l
+      76/      31 : 30                  	xch	h,a
+      77/      32 : 13                  	xch	eir,a
+      78/      33 :                     
+      79/      33 : 3A 20               	in	%port1,a
+      80/      35 : 3A 05               	in	%15h,a
+      81/      37 : 3A 61               	in	%port2,@hl
+      82/      39 : 3A 4A               	in	%1ah,@hl
+      83/      3B :                     
+      84/      3B : 3A 84               	out	a,%port1
+      85/      3D : 3A C5               	out	@hl,%port2
+      86/      3F : 2C D1               	out	#-3,%port2
+      87/      41 :                     
+      88/      41 : 12                  	outb	@hl
+      89/      42 :                     
+      90/      42 : 16                  	cmpr	a,@hl
+      91/      43 : 3E 01               	cmpr	a,nvar2
+      92/      45 : 2E 31               	cmpr	nvar2,#3
+      93/      47 : D4                  	cmpr	a,#4
+      94/      48 : 38 D5               	cmpr	h,#5
+      95/      4A : 38 96               	cmpr	l,#6
+      96/      4C :                     
+      97/      4C : 17                  	add	a,@hl
+      98/      4D : 38 44               	add	@hl,#4
+      99/      4F : 2F 51               	add	nvar2,#5
+     100/      51 : 38 06               	add	a,#6
+     101/      53 : 38 C7               	add	h,#7
+     102/      55 : 38 87               	add	l,#7
+     103/      57 :                     
+     104/      57 : 15                  	addc	a,@hl
+     105/      58 : 14                  	subrc	a,@hl
+     106/      59 :                     
+     107/      59 : 38 17               	subr	a,#7
+     108/      5B : 38 5A               	subr	@hl,#0ah
+     109/      5D :                     
+     110/      5D : 05                  	rolc	a
+     111/      5E : 05 05 05            	rolc	a,3
+     112/      61 : 07                  	rorc	a
+     113/      62 : 07 07               	rorc	a,2
+     114/      64 :                     
+     115/      64 : 35                  	clr	@l
+     116/      65 : 34                  	set	@l
+     117/      66 : 37                  	test	@l
+     118/      67 :                     
+     119/      67 : 06                  	test	cf
+     120/      68 : 04                  	testp	cf
+     121/      69 :                     
+     122/      69 : 0E                  	testp	zf
+     123/      6A :                     
+     124/      6A :                     ;	clr	gf
+     125/      6A :                     ;	set	gf
+     126/      6A :                     ;	testp	gf
+     127/      6A :                     
+     128/      6A :                     ;	clr	dmb
+     129/      6A :                     ;	set	dmb
+     130/      6A :                     ;	test	dmb
+     131/      6A :                     ;	testp	dmb
+     132/      6A :                     
+     133/      6A : 3B 79               	clr	dmb0
+     134/      6C : 3B 39               	set	dmb0
+     135/      6E : 3B B9               	test	dmb0
+     136/      70 : 3B F9               	testp	dmb0
+     137/      72 :                     
+t_47c00.asm(138) : error  : order not allowed on 470AC00
+     138/      72 :                     	clr	dmb1
+t_47c00.asm(139) : error  : order not allowed on 470AC00
+     139/      72 :                     	set	dmb1
+t_47c00.asm(140) : error  : order not allowed on 470AC00
+     140/      72 :                     	test	dmb1
+t_47c00.asm(141) : error  : order not allowed on 470AC00
+     141/      72 :                     	testp	dmb1
+     142/      72 :                     
+t_47c00.asm(143) : error  : order not allowed on 470AC00
+     143/      72 :                     	clr	stk13
+t_47c00.asm(144) : error  : order not allowed on 470AC00
+     144/      72 :                     	set	stk13
+     145/      72 :                     
+     146/      72 : 36 C8               	clr	il,8h
+     147/      74 :                     
+     148/      74 : 5E                  	test	a,2
+     149/      75 :                     
+     150/      75 : 55                  	clr	@hl,1
+     151/      76 : 53                  	set	@hl,3
+     152/      77 : 5A                  	test	@hl,2
+     153/      78 :                     
+     154/      78 : 3B 55               	clr	%5,1
+     155/      7A : 3B 36               	set	%6,3
+     156/      7C : 3B A7               	test	%7,2
+     157/      7E : 3B C8               	testp	%8,0
+     158/      80 :                     
+     159/      80 : 39 51               	clr	nvar2,1
+     160/      82 : 39 31               	set	nvar2,3
+     161/      84 : 39 A1               	test	nvar2,2
+     162/      86 : 39 C1               	testp	nvar2,0
+     163/      88 :                     
+     164/      88 : A0                  	bss	($&3fc0h)+20h
+     165/      89 : 61 23               	bs	123h
+     166/      8B : 02 61 23            	bsl	0123h
+     167/      8E : 03 61 23            	bsl	1123h
+     168/      91 : 1C 61 23            	bsl	2123h
+     169/      94 : 01 61 23            	bsl     3123h
+     170/      97 :                     
+     171/      97 : 75                  	calls	002eh
+     172/      98 :                     
+     173/      98 : 21 23               	call	123h
+     174/      9A :                     
+     175/      9A : 36 43               	eiclr	il,3
+     176/      9C : 36 85               	diclr	il,5
+     177/      9E :                     
+     178/      9E : A0                  	b	($&3fc0h)+20h
+     179/      9F : 61 23               	b	123h
+     180/      A1 : 61 23               	b	0123h
+     181/      A3 : 03 61 23            	b	1123h
+     182/      A6 : 1C 61 23            	b	2123h
+     183/      A9 : 01 61 23            	b	3123h
+     184/      AC :                     
+     185/      AC : (MACRO)             	bz	targ
+     185/      AC : 0E                                  testp   zf
+     185/      AD : 60 00                               b       TARG
+     186/      AF : (MACRO)             	bnz	targ
+     186/      AF : 0E                                  testp   zf
+     186/      B0 : B0                                  b       s1
+     186/      B1 : 60 00                               b       TARG
+     186/      B3 :                     s1:
+     187/      B3 : (MACRO)             	bc	targ
+     187/      B3 : 04                                  testp   cf
+     187/      B4 : 60 00                               b       TARG
+     188/      B6 : (MACRO)             	bnc	targ
+     188/      B6 : 06                                  test    cf
+     188/      B7 : 60 00                               b       TARG
+     189/      B9 : (MACRO)             	be	a,@hl,targ
+     189/      B9 : 16                                  cmpr    A,@HL
+     189/      BA : 0E                                  testp   zf
+     189/      BB : 60 00                               b       TARG
+     190/      BD : (MACRO)             	be	a,nvar2,targ
+     190/      BD : 3E 01                               cmpr    A,NVAR2
+     190/      BF : 0E                                  testp   zf
+     190/      C0 : 60 00                               b       TARG
+     191/      C2 : (MACRO)             	be	a,#3,targ
+     191/      C2 : D3                                  cmpr    A,#3
+     191/      C3 : 0E                                  testp   zf
+     191/      C4 : 60 00                               b       TARG
+     192/      C6 : (MACRO)             	be      h,#4,targ
+     192/      C6 : 38 D4                               cmpr    H,#4
+     192/      C8 : 0E                                  testp   zf
+     192/      C9 : 60 00                               b       TARG
+     193/      CB : (MACRO)             	be	l,#5,targ
+     193/      CB : 38 95                               cmpr    L,#5
+     193/      CD : 0E                                  testp   zf
+     193/      CE : 60 00                               b       TARG
+     194/      D0 : (MACRO)             	be	nvar1,#6,targ
+     194/      D0 : 2E 60                               cmpr    NVAR1,#6
+     194/      D2 : 0E                                  testp   zf
+     194/      D3 : 60 00                               b       TARG
+     195/      D5 : (MACRO)             	bne	a,@hl,targ
+     195/      D5 : 16                                  cmpr    A,@HL
+     195/      D6 : =>FALSE                             if      UpString("A")<>"A"
+     195/      D6 :                                      testp  zf
+     195/      D6 :                                      b      s1
+     195/      D6 :                                     endif
+     195/      D6 : 60 00                               b       TARG
+     195/      D8 :                     s1:
+     196/      D8 : (MACRO)             	bne	a,nvar2,targ
+     196/      D8 : 3E 01                               cmpr    A,NVAR2
+     196/      DA : =>FALSE                             if      UpString("A")<>"A"
+     196/      DA :                                      testp  zf
+     196/      DA :                                      b      s1
+     196/      DA :                                     endif
+     196/      DA : 60 00                               b       TARG
+     196/      DC :                     s1:
+     197/      DC : (MACRO)             	bne	a,#3,targ
+     197/      DC : D3                                  cmpr    A,#3
+     197/      DD : =>FALSE                             if      UpString("A")<>"A"
+     197/      DD :                                      testp  zf
+     197/      DD :                                      b      s1
+     197/      DD :                                     endif
+     197/      DD : 60 00                               b       TARG
+     197/      DF :                     s1:
+     198/      DF : (MACRO)             	bne     h,#4,targ
+     198/      DF : 38 D4                               cmpr    H,#4
+     198/      E1 : =>TRUE                              if      UpString("H")<>"A"
+     198/      E1 : 0E                                   testp  zf
+     198/      E2 : A2                                   b      s1
+     198/      E3 :                                     endif
+     198/      E3 : 60 00                               b       TARG
+     198/      E5 :                     s1:
+     199/      E5 : (MACRO)             	bne	l,#5,targ
+     199/      E5 : 38 95                               cmpr    L,#5
+     199/      E7 : =>TRUE                              if      UpString("L")<>"A"
+     199/      E7 : 0E                                   testp  zf
+     199/      E8 : A8                                   b      s1
+     199/      E9 :                                     endif
+     199/      E9 : 60 00                               b       TARG
+     199/      EB :                     s1:
+     200/      EB : (MACRO)             	bne	nvar1,#6,targ
+     200/      EB : 2E 60                               cmpr    NVAR1,#6
+     200/      ED : =>TRUE                              if      UpString("NVAR1")<>"A"
+     200/      ED : 0E                                   testp  zf
+     200/      EE : AE                                   b      s1
+     200/      EF :                                     endif
+     200/      EF : 60 00                               b       TARG
+     200/      F1 :                     s1:
+     201/      F1 : (MACRO)             	bge	a,@hl,targ
+     201/      F1 : 16                                  cmpr    A,@HL
+     201/      F2 : 0E                                  testp   zf
+     201/      F3 : 60 00                               b       TARG
+     201/      F5 : 06                                  test    cf
+     201/      F6 : 60 00                               b       TARG
+     202/      F8 : (MACRO)             	bge	a,nvar2,targ
+     202/      F8 : 3E 01                               cmpr    A,NVAR2
+     202/      FA : 0E                                  testp   zf
+     202/      FB : 60 00                               b       TARG
+     202/      FD : 06                                  test    cf
+     202/      FE : 60 00                               b       TARG
+     203/     100 : (MACRO)             	bge	a,#3,targ
+     203/     100 : D3                                  cmpr    A,#3
+     203/     101 : 0E                                  testp   zf
+     203/     102 : 60 00                               b       TARG
+     203/     104 : 06                                  test    cf
+     203/     105 : 60 00                               b       TARG
+     204/     107 : (MACRO)             	bge     h,#4,targ
+     204/     107 : 38 D4                               cmpr    H,#4
+     204/     109 : 0E                                  testp   zf
+     204/     10A : 60 00                               b       TARG
+     204/     10C : 06                                  test    cf
+     204/     10D : 60 00                               b       TARG
+     205/     10F : (MACRO)             	bge	l,#5,targ
+     205/     10F : 38 95                               cmpr    L,#5
+     205/     111 : 0E                                  testp   zf
+     205/     112 : 60 00                               b       TARG
+     205/     114 : 06                                  test    cf
+     205/     115 : 60 00                               b       TARG
+     206/     117 : (MACRO)             	bge	nvar1,#6,targ
+     206/     117 : 2E 60                               cmpr    NVAR1,#6
+     206/     119 : 0E                                  testp   zf
+     206/     11A : 60 00                               b       TARG
+     206/     11C : 06                                  test    cf
+     206/     11D : 60 00                               b       TARG
+     207/     11F : (MACRO)             	bgt	a,@hl,targ
+     207/     11F : 16                                  cmpr    A,@HL
+     207/     120 : 06                                  test    cf
+     207/     121 : 60 00                               b       TARG
+     208/     123 : (MACRO)             	bgt	a,nvar2,targ
+     208/     123 : 3E 01                               cmpr    A,NVAR2
+     208/     125 : 06                                  test    cf
+     208/     126 : 60 00                               b       TARG
+     209/     128 : (MACRO)             	bgt	a,#3,targ
+     209/     128 : D3                                  cmpr    A,#3
+     209/     129 : 06                                  test    cf
+     209/     12A : 60 00                               b       TARG
+     210/     12C : (MACRO)             	bgt     h,#4,targ
+     210/     12C : 38 D4                               cmpr    H,#4
+     210/     12E : 06                                  test    cf
+     210/     12F : 60 00                               b       TARG
+     211/     131 : (MACRO)             	bgt	l,#5,targ
+     211/     131 : 38 95                               cmpr    L,#5
+     211/     133 : 06                                  test    cf
+     211/     134 : 60 00                               b       TARG
+     212/     136 : (MACRO)             	bgt	nvar1,#6,targ
+     212/     136 : 2E 60                               cmpr    NVAR1,#6
+     212/     138 : 06                                  test    cf
+     212/     139 : 60 00                               b       TARG
+     213/     13B : (MACRO)             	ble	a,@hl,targ
+     213/     13B : 16                                  cmpr    A,@HL
+     213/     13C : 04                                  testp   cf
+     213/     13D : 60 00                               b       TARG
+     214/     13F : (MACRO)             	ble	a,nvar2,targ
+     214/     13F : 3E 01                               cmpr    A,NVAR2
+     214/     141 : 04                                  testp   cf
+     214/     142 : 60 00                               b       TARG
+     215/     144 : (MACRO)             	ble	a,#3,targ
+     215/     144 : D3                                  cmpr    A,#3
+     215/     145 : 04                                  testp   cf
+     215/     146 : 60 00                               b       TARG
+     216/     148 : (MACRO)             	ble     h,#4,targ
+     216/     148 : 38 D4                               cmpr    H,#4
+     216/     14A : 04                                  testp   cf
+     216/     14B : 60 00                               b       TARG
+     217/     14D : (MACRO)             	ble	l,#5,targ
+     217/     14D : 38 95                               cmpr    L,#5
+     217/     14F : 04                                  testp   cf
+     217/     150 : 60 00                               b       TARG
+     218/     152 : (MACRO)             	ble	nvar1,#6,targ
+     218/     152 : 2E 60                               cmpr    NVAR1,#6
+     218/     154 : 04                                  testp   cf
+     218/     155 : 60 00                               b       TARG
+     219/     157 : (MACRO)             	blt	a,@hl,targ
+     219/     157 : 16                                  cmpr    A,@HL
+     219/     158 : 0E                                  testp   zf
+     219/     159 : 99                                  b       s1
+     219/     15A : 04                                  testp   cf
+     219/     15B : 60 00                               b       TARG
+     219/     15D :                     s1:
+     220/     15D : (MACRO)             	blt	a,nvar2,targ
+     220/     15D : 3E 01                               cmpr    A,NVAR2
+     220/     15F : 0E                                  testp   zf
+     220/     160 : A0                                  b       s1
+     220/     161 : 04                                  testp   cf
+     220/     162 : 60 00                               b       TARG
+     220/     164 :                     s1:
+     221/     164 : (MACRO)             	blt	a,#3,targ
+     221/     164 : D3                                  cmpr    A,#3
+     221/     165 : 0E                                  testp   zf
+     221/     166 : A6                                  b       s1
+     221/     167 : 04                                  testp   cf
+     221/     168 : 60 00                               b       TARG
+     221/     16A :                     s1:
+     222/     16A : (MACRO)             	blt     h,#4,targ
+     222/     16A : 38 D4                               cmpr    H,#4
+     222/     16C : 0E                                  testp   zf
+     222/     16D : AD                                  b       s1
+     222/     16E : 04                                  testp   cf
+     222/     16F : 60 00                               b       TARG
+     222/     171 :                     s1:
+     223/     171 : (MACRO)             	blt	l,#5,targ
+     223/     171 : 38 95                               cmpr    L,#5
+     223/     173 : 0E                                  testp   zf
+     223/     174 : B4                                  b       s1
+     223/     175 : 04                                  testp   cf
+     223/     176 : 60 00                               b       TARG
+     223/     178 :                     s1:
+     224/     178 : (MACRO)             	blt	nvar1,#6,targ
+     224/     178 : 2E 60                               cmpr    NVAR1,#6
+     224/     17A : 0E                                  testp   zf
+     224/     17B : BB                                  b       s1
+     224/     17C : 04                                  testp   cf
+     224/     17D : 60 00                               b       TARG
+     224/     17F :                     s1:
+     225/     17F :                     
+     226/     17F : (MACRO)             	callss	0
+     226/     17F : =>TRUE                              if      0=0
+     226/     17F : 70                                   calls  86h
+     226/     180 : =>FALSE                             elseif
+     226/     180 :                                      calls  (0<<3)+6
+     226/     180 :                                     endif
+     227/     180 : (MACRO)             	callss	5
+     227/     180 : =>FALSE                             if      5=0
+     227/     180 :                                      calls  86h
+     227/     180 : =>TRUE                              elseif
+     227/     180 : 75                                   calls  (5<<3)+6
+     227/     181 :                                     endif
+     228/     181 :                     
+     229/     181 : (MACRO)             	callz	targ
+     229/     181 : 0E                                  testp   zf
+     229/     182 : 82                                  b       s1
+     229/     183 : 83                                  b       s2
+     229/     184 : 20 00               s1:             call    TARG
+     229/     186 :                     s2:
+     230/     186 : (MACRO)             	callnz	targ
+     230/     186 : 0E                                  testp   zf
+     230/     187 : 87                                  b       s1
+     230/     188 : 20 00                               call    TARG
+     230/     18A :                     s1:
+     231/     18A : (MACRO)             	callc	targ
+     231/     18A : 06                                  test    cf
+     231/     18B : 8B                                  b       s1
+     231/     18C : 20 00                               call    TARG
+     231/     18E :                     s1:
+     232/     18E : (MACRO)             	callnc	targ
+     232/     18E : 04                                  testp   cf
+     232/     18F : 8F                                  b       s1
+     232/     190 : 20 00                               call    TARG
+     232/     192 :                     s1:
+     233/     192 :                     
+     234/     192 : (MACRO)             	retz
+     234/     192 : 0E                                  testp   zf
+     234/     193 : 93                                  b       s1
+     234/     194 : 94                                  b       s2
+     234/     195 : 2A                  s1:             ret
+     234/     196 :                     s2:
+     235/     196 : (MACRO)             	retnz
+     235/     196 : 0E                                  testp   zf
+     235/     197 : 97                                  b       s1
+     235/     198 : 2A                                  ret
+     235/     199 :                     s1:
+     236/     199 : (MACRO)             	retc
+     236/     199 : 06                                  test    cf
+     236/     19A : 9A                                  b       s1
+     236/     19B : 2A                                  ret
+     236/     19C :                     s1:
+     237/     19C : (MACRO)             	retnc
+     237/     19C : 04                                  testp   cf
+     237/     19D : 9D                                  b       s1
+     237/     19E : 2A                                  ret
+     237/     19F :                     s1:
+     238/     19F : (MACRO)             	retiz
+     238/     19F : 0E                                  testp   zf
+     238/     1A0 : A0                                  b       s1
+     238/     1A1 : A1                                  b       s2
+     238/     1A2 : 2B                  s1:             reti
+     238/     1A3 :                     s2:
+     239/     1A3 : (MACRO)             	retinz
+     239/     1A3 : 0E                                  testp   zf
+     239/     1A4 : A4                                  b       s1
+     239/     1A5 : 2B                                  reti
+     239/     1A6 :                     s1:
+     240/     1A6 : (MACRO)             	retic
+     240/     1A6 : 06                                  test    cf
+     240/     1A7 : A7                                  b       s1
+     240/     1A8 : 2B                                  reti
+     240/     1A9 :                     s1:
+     241/     1A9 : (MACRO)             	retinc
+     241/     1A9 : 04                                  testp   cf
+     241/     1AA : AA                                  b       s1
+     241/     1AB : 2B                                  reti
+     241/     1AC :                     s1:
+     242/     1AC :                     
+     243/     1AC : (MACRO)             	shl	a,2
+     243/     1AC : =>FALSE                             if      UpString("A")<>"A"
+     243/     1AC :                                      xch    a,A
+     243/     1AC :                                     endif
+     243/     1AC :                                     rept    2
+     243/     1AC :                                      test   cf
+     243/     1AC :                                      rolc   a
+     243/     1AC :                                     endm
+     244/     1AC : 06                                   test   cf
+     245/     1AD : 05                                   rolc   a
+     244/     1AE : 06                                   test   cf
+     245/     1AF : 05                                   rolc   a
+     243/     1B0 : =>FALSE                             if      UpString("A")<>"A"
+     243/     1B0 :                                      xch    a,A
+     243/     1B0 :                                     endif
+     244/     1B0 : (MACRO)             	shl     h,2
+     244/     1B0 : =>TRUE                              if      UpString("H")<>"A"
+     244/     1B0 : 30                                   xch    a,H
+     244/     1B1 :                                     endif
+     244/     1B1 :                                     rept    2
+     244/     1B1 :                                      test   cf
+     244/     1B1 :                                      rolc   a
+     244/     1B1 :                                     endm
+     245/     1B1 : 06                                   test   cf
+     246/     1B2 : 05                                   rolc   a
+     245/     1B3 : 06                                   test   cf
+     246/     1B4 : 05                                   rolc   a
+     244/     1B5 : =>TRUE                              if      UpString("H")<>"A"
+     244/     1B5 : 30                                   xch    a,H
+     244/     1B6 :                                     endif
+     245/     1B6 : (MACRO)             	shl	l,2
+     245/     1B6 : =>TRUE                              if      UpString("L")<>"A"
+     245/     1B6 : 31                                   xch    a,L
+     245/     1B7 :                                     endif
+     245/     1B7 :                                     rept    2
+     245/     1B7 :                                      test   cf
+     245/     1B7 :                                      rolc   a
+     245/     1B7 :                                     endm
+     246/     1B7 : 06                                   test   cf
+     247/     1B8 : 05                                   rolc   a
+     246/     1B9 : 06                                   test   cf
+     247/     1BA : 05                                   rolc   a
+     245/     1BB : =>TRUE                              if      UpString("L")<>"A"
+     245/     1BB : 31                                   xch    a,L
+     245/     1BC :                                     endif
+     246/     1BC : (MACRO)             	shl	@hl,2
+     246/     1BC : =>TRUE                              if      UpString("@HL")<>"A"
+     246/     1BC : 0D                                   xch    a,@HL
+     246/     1BD :                                     endif
+     246/     1BD :                                     rept    2
+     246/     1BD :                                      test   cf
+     246/     1BD :                                      rolc   a
+     246/     1BD :                                     endm
+     247/     1BD : 06                                   test   cf
+     248/     1BE : 05                                   rolc   a
+     247/     1BF : 06                                   test   cf
+     248/     1C0 : 05                                   rolc   a
+     246/     1C1 : =>TRUE                              if      UpString("@HL")<>"A"
+     246/     1C1 : 0D                                   xch    a,@HL
+     246/     1C2 :                                     endif
+     247/     1C2 : (MACRO)             	shl	nvar1,2
+     247/     1C2 : =>TRUE                              if      UpString("NVAR1")<>"A"
+     247/     1C2 : 3D 00                                xch    a,NVAR1
+     247/     1C4 :                                     endif
+     247/     1C4 :                                     rept    2
+     247/     1C4 :                                      test   cf
+     247/     1C4 :                                      rolc   a
+     247/     1C4 :                                     endm
+     248/     1C4 : 06                                   test   cf
+     249/     1C5 : 05                                   rolc   a
+     248/     1C6 : 06                                   test   cf
+     249/     1C7 : 05                                   rolc   a
+     247/     1C8 : =>TRUE                              if      UpString("NVAR1")<>"A"
+     247/     1C8 : 3D 00                                xch    a,NVAR1
+     247/     1CA :                                     endif
+     248/     1CA : (MACRO)             	shr	a,2
+     248/     1CA : =>FALSE                             if      UpString("A")<>"A"
+     248/     1CA :                                      xch    a,A
+     248/     1CA :                                     endif
+     248/     1CA :                                     rept    2
+     248/     1CA :                                      test   cf
+     248/     1CA :                                      rorc   a
+     248/     1CA :                                     endm
+     249/     1CA : 06                                   test   cf
+     250/     1CB : 07                                   rorc   a
+     249/     1CC : 06                                   test   cf
+     250/     1CD : 07                                   rorc   a
+     248/     1CE : =>FALSE                             if      UpString("A")<>"A"
+     248/     1CE :                                      xch    a,A
+     248/     1CE :                                     endif
+     249/     1CE : (MACRO)             	shr     h,2
+     249/     1CE : =>TRUE                              if      UpString("H")<>"A"
+     249/     1CE : 30                                   xch    a,H
+     249/     1CF :                                     endif
+     249/     1CF :                                     rept    2
+     249/     1CF :                                      test   cf
+     249/     1CF :                                      rorc   a
+     249/     1CF :                                     endm
+     250/     1CF : 06                                   test   cf
+     251/     1D0 : 07                                   rorc   a
+     250/     1D1 : 06                                   test   cf
+     251/     1D2 : 07                                   rorc   a
+     249/     1D3 : =>TRUE                              if      UpString("H")<>"A"
+     249/     1D3 : 30                                   xch    a,H
+     249/     1D4 :                                     endif
+     250/     1D4 : (MACRO)             	shr	l,2
+     250/     1D4 : =>TRUE                              if      UpString("L")<>"A"
+     250/     1D4 : 31                                   xch    a,L
+     250/     1D5 :                                     endif
+     250/     1D5 :                                     rept    2
+     250/     1D5 :                                      test   cf
+     250/     1D5 :                                      rorc   a
+     250/     1D5 :                                     endm
+     251/     1D5 : 06                                   test   cf
+     252/     1D6 : 07                                   rorc   a
+     251/     1D7 : 06                                   test   cf
+     252/     1D8 : 07                                   rorc   a
+     250/     1D9 : =>TRUE                              if      UpString("L")<>"A"
+     250/     1D9 : 31                                   xch    a,L
+     250/     1DA :                                     endif
+     251/     1DA : (MACRO)             	shr	@hl,2
+     251/     1DA : =>TRUE                              if      UpString("@HL")<>"A"
+     251/     1DA : 0D                                   xch    a,@HL
+     251/     1DB :                                     endif
+     251/     1DB :                                     rept    2
+     251/     1DB :                                      test   cf
+     251/     1DB :                                      rorc   a
+     251/     1DB :                                     endm
+     252/     1DB : 06                                   test   cf
+     253/     1DC : 07                                   rorc   a
+     252/     1DD : 06                                   test   cf
+     253/     1DE : 07                                   rorc   a
+     251/     1DF : =>TRUE                              if      UpString("@HL")<>"A"
+     251/     1DF : 0D                                   xch    a,@HL
+     251/     1E0 :                                     endif
+     252/     1E0 : (MACRO)             	shr	nvar1,2
+     252/     1E0 : =>TRUE                              if      UpString("NVAR1")<>"A"
+     252/     1E0 : 3D 00                                xch    a,NVAR1
+     252/     1E2 :                                     endif
+     252/     1E2 :                                     rept    2
+     252/     1E2 :                                      test   cf
+     252/     1E2 :                                      rorc   a
+     252/     1E2 :                                     endm
+     253/     1E2 : 06                                   test   cf
+     254/     1E3 : 07                                   rorc   a
+     253/     1E4 : 06                                   test   cf
+     254/     1E5 : 07                                   rorc   a
+     252/     1E6 : =>TRUE                              if      UpString("NVAR1")<>"A"
+     252/     1E6 : 3D 00                                xch    a,NVAR1
+     252/     1E8 :                                     endif
+     253/     1E8 :                     
+     254/     1E8 : (MACRO)             	ei
+     254/     1E8 : 36 7F                               eiclr   il,3fh
+     255/     1EA : (MACRO)             	di
+     255/     1EA : 36 BF                               diclr   il,3fh
+ AS V1.41r4beta - source file t_47c00.asm - page 2 - 1/15/1997 20:40:41
+
+
+  symbol table (* unused):
+  ------------------------
+
+*BIGENDIAN :                      0 - |  BVAR :                           4 D |
+*CONSTPI :        3.141592653589793 - | *DATE :                   1/15/1997 - |
+*FALSE :                          0 - | *FULLPMMU :                       1 - |
+*HAS64 :                          1 - | *HASFPU :                         0 - |
+*HASPMMU :                        0 - | *INEXTMODE :                      0 - |
+*INLWORDMODE :                    0 - | *INMAXMODE :                      0 - |
+*INSRCMODE :                      0 - | *INSUPMODE :                      0 - |
+*LISTON :                         1 - | *MACEXP :                         1 - |
+ MOMCPU :                   470AC00 - | *MOMCPUNAME :               470AC00 - |
+ NVAR1 :                          0 D |  NVAR2 :                          1 D |
+*PADDING :                        1 - |  PORT1 :                          0 P |
+ PORT2 :                          1 P | *PORT3 :                          7 P |
+*RELAXED :                        0 - | *STDDEF47INC :                    1 - |
+ TARG :                           0 C | *TIME :                    20:40:36 - |
+*TRUE :                           1 - | *VERSION :                     1414 - |
+
+     30 symbols
+     23 unused symbols
+
+ AS V1.41r4beta - source file t_47c00.asm - page 3 - 1/15/1997 20:40:41
+
+
+  defined macros:
+  ---------------
+
+BC                                    | BE                                   
+BGE                                   | BGT                                  
+BLE                                   | BLT                                  
+BNC                                   | BNE                                  
+BNZ                                   | BZ                                   
+CALLC                                 | CALLNC                               
+CALLNZ                                | CALLSS                               
+CALLZ                                 | DI                                   
+EI                                    | RETC                                 
+RETIC                                 | RETINC                               
+RETINZ                                | RETIZ                                
+RETNC                                 | RETNZ                                
+RETZ                                  | SHL                                  
+SHR                                   |
+
+     27 macros
+
+
+4.66 seconds assembly time
+
+    535 lines source file
+    910 lines incl. macro expansions
+      1 pass
+     13 errors
+      0 warnings

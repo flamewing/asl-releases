@@ -1,0 +1,8 @@
++----------------------  Test Application PARSYS ----------------------------+
+|                                                                            |
+| Back to the roots!  This is the "operating system" of my 68000-based par-  |
+| allel computer I built several years ago and which was the main reason to  |
+| write my own assembler because the original one from RDK was too buggy to  |
+| work reliably with it.  Contains also a lot of FPU orders.                 |
+|                                                                            |
++----------------------------------------------------------------------------+

@@ -1,0 +1,6 @@
++----------------------  Test Application MIC51  ----------------------------+
+|                                                                            |
+|  This is a student's program from RWTH Aachen's microprocessor course.  It |
+|  tests the MCS51 (not 251!) codegenerator and makes heavy use of macros.   |
+|                                                                            |
++----------------------------------------------------------------------------+

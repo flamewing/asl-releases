@@ -1,0 +1,344 @@
+Hello, AS-Users,
+
+OK, here it is, the C-Version of AS that is theoretically compilable
+on any system that has an ANSI-C-compiler!  Compared to the original
+Pascal version (I will furtherly call it the 'BP version'), speed is
+a bit lower due to the way C handles strings and the presence of a lot
+of 16-bit-integers, but that's so far the price of portability...
+
+This version is still very, very beta!  Use on your own risk!
+
+This file is only for the purpose of getting AS compiled and installed,
+and lists the differences of the C version to the BP version.  It 
+is not meant to be the user's manual for AS.  Unfortunately, this manual
+currently only exists in german language (see the doc_DE directory); first
+attempts of a translation to english are located in the doc_EN dirtectory.
+
+LICENSING
+
+Those who have already used the original DOS/Pascal version of AS
+will know that AS is completely free: you may use and modify AS for
+whatever purpose you like (regardless whether it is commercial or
+not), given that you do not remove my copyright from the sources and
+that programs that build upon the AS sources are given out under the
+same license terms.  Of course, if you add something significant,
+you may also add your own name to the copyright list!
+
+To make things a bit more interesting (for me), I have added a detail
+to the license terms of the C version: it is wineware!  If you want
+and have time, you may send me a bottle of your favourite wine...
+
+
+PLATFORMS
+
+So far, I have tested this version of AS on the following machines:
+
+- Digital Unix 3.2 with DEC-C
+- Ultrix 4.3 with gcc 2.7.2
+- Linux/Alpha with gcc 2.7.0
+- Linux/Intel with gcc 2.7.2
+- NetBSD/Sun3 with gcc 2.7.2
+- SunOS 4.1.3/Sparc with gcc 2.6.3
+- Solaris 2.5/Sparc with Sun-C 3.0.1
+- SGI Irix 5.3/6.2 with SGI-C
+- HP9000/7xx HP-UX 9.0 with HP-C
+- NetBSD/pmax with gcc 2.7.2
+
+However, compilation should work on virtually any UNIX system with an
+ANSI-compliant compiler that can handle signed and unsigned integers
+of 1, 2, 4, and optionally 8 bytes length.  'cc' delivered with
+SunOS or Ultrix do NOT fall into this category!  Use 'gcc' resp.
+'c89' on these systems!
+
+For the future, I am planning to use this version also on non-UNIX
+systems like OS/2 Warp with emx/gcc.
+
+
+DIFFERENCES / THINGS TO DO
+
+The portable C version of AS has the following, known differences to
+the original BP version:
+
+- Floating point values are internally only stored as IEEE double 
+  precision values, not in the 80-bit format Intel NPUs use. 
+  Therefore, floating point ranges and accuracy are not as good as in
+  the BP version.  Currently, there seems to be no portable,
+  standardized 128-bit-format for FP numbers.  Every vendor (IBM,
+  SUN, CRAY, SGI...) uses his own format, so supporting them all
+  looks like a lot of work...
+
+- On most systems, integer arithmetic is done with 64-bit-numbers. 
+  This should hurt only programs that explicitly exploit overflow
+  and sign effects on 32-bit-versions of AS.
+
+- Only a part of the processor families supported by the BP version
+  have so far been ported and tested.  The subset is constantly
+  growing, but it takes quite a long time to port them in a tidy
+  fashion...  I tried to port/test the most popular parts first;
+  the order of porting and addition of new families is driven by
+  request/needs!
+
+  Currently, the following families have been ported and tested:
+
+  - Motorola 680x0
+  - Motorola DSP56K
+  - PowerPC 
+  - Motorola 68xx,6804,6805,68HC08,6809,68HC12,68HC16
+  - Hitachi H8/300(H/L)
+  - Hitachi H8/500
+  - Hitachi SH7x00
+  - 65xx/MELPS-740
+  - 65816/MELPS77xx
+  - Mitsubishi MELPS-4500
+  - Mitsubishi M16C
+  - Intel MCS/48
+  - Intel MCS/(2)51
+  - Intel MCS/(1)96
+  - Intel 8080/8085
+  - Intel 8086/NEC V30/V35
+  - Philips XA
+  - Atmel AVR
+  - AMD 29K
+  - Siemens 80C166/167
+  - Zilog Zx80
+  - Zilog Z8
+  - Toshiba TLCS-900
+  - Toshiba TLCS-90
+  - Toshiba TLCS-870
+  - Toshiba TLCS-47(0(A))
+  - Toshiba TLCS-9000
+  - Microchip PIC 16C5x
+  - Microchip PIC 16C8x
+  - Microchip PIC 17C4x
+  - SGS/Thomson ST6
+  - Texas TMS3201x
+  - Texas TMS320C2x
+  - Texas TMS320C3x
+  - Texas TMS320C5x
+  - Texas TMS370
+  - Texas MSP430
+  - NEC uPD78C1x
+  - NEC 75K0
+  - NEC 78K0
+  - National Semi COP8
+
+  The following families are supported in alpha state, i.e. their code
+  generator went through the compiler, but I haven't assembled anything
+  with them so far.  Using them might erect errors ranging from amusing
+  to fatal...please be patient, I'm trying to dig out the test files
+  again, or make a try on your own...
+
+  - Mitsubishi M16
+
+  The following families still have to be implemented, in their probable
+  order of appearance:
+
+  <currently none, but may change again...>
+
+- NLS is in its infant state.  I included code to use the langinfo
+  functions, but I don't get anything else but the C locale so far
+  :-(
+
+- most UNIX systems name their own assembler already 'as', so I had
+  to modify the name to 'asl'.  The additional letter is to the honor
+  of a person that did quite a lot to spread the UNIX philosophy ;-)
+
+- the C version was designed to have exactly the same command line
+  interface as the original BP version; however, UNIX shells
+  interprete some special characters like the dollar sign for hex
+  values in their own way, so you might have to work with escape (\)
+  and quote characters.
+
+- the USEXMS resp. USEEMS and ASXSWAP environment variables do not
+  exist (thankfully).
+
+- the undocumented C-style preprocessor doesn't work yet.
+
+
+INSTALLATION
+
+First, you need a file 'Makefile.def' that defines some settings for
+your local system.  I deliberatly didn't use GNU autoconfig because I
+want to port this program also to non-UNIX-platforms, maybe even back
+to MS-DOS to replace the original BP version...
+
+'Makefile.def.tmpl' contains sample settings.  Copy this file to
+'Makefile.def' and change what you need to change (e.g. if you want
+to place the binaries and include files in different directories). I
+also included some 'Makefile.def'-files that have been tested in the
+'Makefile.def-samples' directory.  You might still want to look into
+these files, as they contain some optinal settings.
+
+Second, type 'make' and compilation should start.  If you get an
+error in file 'sysdefs.h' saying that your system is unknown, you
+have to extend this file (and send the extension back to me!).  The
+settings made in this file define which integer types have which
+length (AS really needs to know this, as it generates files that
+shall be binary portable!!) and whether the system has NLS.  The
+#ifdef's in this file are structured in the following way:
+
+1. processor type
+  2. system name
+    3. OS name
+
+If you get warnings about ANSI C not supporting 'long long'
+variables, ignore them.  This is the only wanted deviation from ANSI
+C!  If you are on a Solaris machine with Sun's C compiler and get
+tons of 'Semantics of ... change ...' warnings , you may also ignore
+them; they just mean that the old SunOS compiler would have handled
+things differently.  Any other warnings/errors are worth notifying me
+of.
+
+Third, do a 'make test'.  This will assemble some test programs with
+the version of AS you have just compiled and compare the results to
+reference binaries.  It might be a good idea to pipe this command's
+output through a 'tee' since the output is quite lengthy and you
+might overlook some messages otherwise.  Any failed test is worth
+looking into!.
+Some of the test programs will generate warnings from AS.  This is
+normal and not an indication of a wrong configuration!  I included
+a list of warnings that have to occur.  The files are in the tests/
+directory and are named warnlog_xxx, where xxx is the
+abbreviation for the selected language.
+
+Fourth, install everything with 'make install'.  This will place the
+binaries and processor include files in the directores you specified
+in 'Makefile.def' .
+
+
+BENCHMARKS
+
+And now a section for the 'mine is bigger than yours'-guys, a table
+with some benchmark results for the test applications.  The times are
+the wallclock times AS prints itself, measured three times, averaged
+and rounded to 1/100's of seconds.  As system overhead goes into these
+times, memory size and disk speed play a role, so do not quarrel if
+the results you get vary by a few percent...when measuring, assure
+that your machine is otherwise unloaded and all the files are on a
+local filesystem!  Speed of screen output is also an issue, so it may
+not be a bright idea to do the tests on a Sparc console in single user
+mode...
+
+Optimization is the highest available, with some CPU-specific optimi-
+zations (e.g. -m486) ...
+
+Note for the 486's: To avoid confusion, I named the 486 CPU's according
+to the factor they physically use in multiplying the external clock.
+E.g., an AM486DX4/100 which physically triples the clock is named 
+AM486DX3, and an AM5x86 which physically quadruples the clock is named 
+AM486DX4!
+
+Vendor     Machine                 CPU            Clock(MHz)  Cache [on]offchip   Memory(MB)   OS                Compiler     |    BUF32     FL900    MIC51    Index   rel.
+------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------
+Digital    AlphaStation 500/266    21164          267         [8K+8K/96K]/2M      128          Digital Unix 3.2  DEC-C        |     0.72s     0.42s    2.58s  103.20   0.387
+Sun        Ultra 1/140             UltraSparc-1   143         [16K+16K]/512K       64          Solaris 2.5       Sun-C 3.0.1  |     1.13s     0.59s    5.55s   59.74   0.418
+SGI        Indigo 2                R4400          200         [16K+16K]/2M         64          Irix 5.3          SGI-C (2)    |     1.78      0.88s    9.70s   37.25   0.186
+Digital    DECpc AXP/150           21064          150         [8K+8K]/512K         32          Linux 1.99.12     DEC-C        |     2.02s     1.04s   12.09s   31.40   0.209
+SGI        Onyx                    R4400          150         [16K+16K]/4M        256          Irix 5.3          SGI-C (2)    |     2.08s     1.07s   11.80s   31.03   0.207
+IBM        RS/6000 Model 390       POWER 2         66.7       [32K+64K]/1M        128          AIX 4.1.3         IBM XLC      |     2.21s     1.14s   11.52s   30.03   0.450 
+Sun        SPARCstation 20/612     2xSuperSparc-2  60         [20K+16K]/1M         64          Solaris 2.4       Sun-C 3.0.1  |     2.24s     1.12s   11.58s   30.01   0.500
+Digital    DEC 3000 Model 400      21064          133         [8K+8K]/512K         64          Digital Unix 4.0  DEC-C        |     2.18s     1.09s   12.79s   29.58   0.222
+Digital    DEC 3000 Model 300X     21064          175         [8K+8K]/256K         64          Digital Unix 4.0  DEC-C        |     2.44s     1.30s   14.80s   25.59   0.093
+Sun        SPARCstation 20/612     2xSuperSparc-2  50         [20K+16K]/1M         64          Solaris 2.5       Sun-C 3.0.1  |     2.90s     1.41s   14.53s   23.66   0.473
+Digital    DEC 3000 Model 300      21064          150         [8K+8K]/256K         64          Digital Unix 4.0  DEC-C        |     2.84s     1.42s   15.24s   23.38   0.156
+Digital    DECpc AXP/150           21064          150         [8K+8K]/512K         32          Linux 2.0.27 (1)  gcc 2.7.0    |     2.88s     1.36s   16.18s   23.16   0.154
+Sun        SPARCstation 4          MicroSparc-2    85         [16K+8K]            ???          Solaris 2.4       Sun-C 3.0.1  |     3.37s     1.56s   17.23s   20.56   0.242
+Digital    DEC 3000 Model 300LX    21064          125         [8K+8K]/256K         48          Digital Unix 4.0  DEC-C        |     3.34s     1.59s   18.19s   20.11   0.161
+IBM        RS/6000 Model 250       MPC601          66         [32K]               ???          AIX 4.1           IBM XLC      |     4.27s     2.08s   21.60s   16.00   0.242
+Sun        SPARCstation 10/20      SuperSparc-1    33         [20K+16K]            64          Solaris 2.5       Sun-C 3.0.1  |     4.54s     2.23s   22.54s   15.11   0.458
+Digital    DECStation 5000/240     R3000+R3010     40         64K+64K             ???          Ultrix 4.3        gcc 2.7.2    |     3.90s     2.45s   24.45s   15.03   0.376
+<Noname>   Eteq 491/492-Chipset    Am486DX4       133         [16K(WT)]/256K       20          Linux 2.0.27      gcc 2.7.2    |     4.82s     2.57s   26.68s   13.34   0.100
+<Noname>   Asus SP3G               Am486DX3       100         [8K]/256K            32          Linux 2.0.7       gcc 2.7.2    |     5.16s     2.45s   29.16s   12.88   0.129
+HP         HP9000/715              PA7100          50         64K+64K              32          HP-UX 9.0         HP-C         |     5.63s     2.88s   29.97s   11.72   0.234
+<Noname>   SISATQ-Chipset          i486DX2         64         [8K]/256K(no dirty)   4          Linux 2.0.27      gcc 2.7.2    |     6.38s     3.49s   35.91s    9.94   0.155
+Sun        SPARCstation Classic    MicroSparc      50         [4K+2K]              24          Solaris 2.5.1     Sun-C 3.0.1  |     6.92s     3.22s   37.45s    9.81   0.196
+<Noname>   UMC 481A/482A-Chipset   i486DX2         72         [8K]/256K             5          Linux 2.0.27      gcc 2.7.2    |     6.87s     3.35s   39.01s    9.57   0.133
+<Noname>   Eteq 491/492-Chipset    i486DX2         66.7       [8K]/256K             5 (6)      Linux 2.0.27      gcc 2.7.2    |     6.89s     3.75s   35.46s    9.51   0.143
+<Noname>   Eteq 491/492-Chipset    Cx486DX2        66.7       [8K]/256K             5 (6)      Linux 2.0.27      gcc 2.7.2    |     7.30s     3.76s   37.82s    9.11   0.137
+<Noname>   SISATQ-Chipset          Cx486DX2        64         [8K]/256K(no dirty)   4          Linux 2.0.27      gcc 2.7.2    |     7.27s     3.81s   40.83s    8.85   0.138
+<Noname>   UMC 481A/482A-Chipset   Cx486DX2        72         [8K]/128K             5          Linux 2.0.27      gcc 2.7.2    |     7.87s     3.76s   41.69s    8.61   0.120
+Digital    DECStation 5000/200     R3000+R3010     25         64K+64K              32          NetBSD 1.2        gcc 2.7.2 (7)|     8.13s     4.09s   46.93s    7.96   0.318
+<Noname>   Eteq 491/492-Chipset    i486DX2         66.7       [8K]/64K              5 (6)      Linux 2.0.27      gcc 2.7.2    |     8.61s     4.52s   46.33s    7.58   0.114
+<Noname>   Eteq 491/492-Chipset    Cx486DX2        66.7       [8K]/64K              5 (6)      Linux 2.0.27      gcc 2.7.2    |     9.03s     4.46s   46.73s    7.47   0.112
+<Noname>   No Chipset              Am486DX4       100         [16K(WT)]            16          Linux 1.99.12     gcc 2.7.2    |     9.18s     4.36s   48.27s    7.41   0.074
+Sun        SPARCstation 1+         LSI L64801      25         64K                  16          Solaris 2.4       Sun-C 3.0.1  |     9.16s     4.51s   48.96s    7.30   0.292
+Sun        4/670MP                 ???             40(?)      64K(?)              ???          SunOS 4.1.3       gcc 2.6.3    |     8.29s     4.87s   51.48s    7.24   0.181
+<Noname>   SISATQ-Chipset          i486DX2         64         [8K]/64K(no dirty)    4          Linux 2.0.27      gcc 2.7.2    |     9.46s     4.46s   49.44s    7.13   0.111
+<Noname>   SISATQ-Chipset          Cx486DX2        64         [8K]/64K(no dirty)    4          Linux 2.0.27      gcc 2.7.2    |     9.27s     4.64s   51.35s    7.08   0.111
+<Noname>   UMC 481A/482A-Chipset   Cx486DX2        72         [8K]                  5          Linux 2.0.27      gcc 2.7.2    |     9.89s     5.03s   51.55s    6.74   0.094
+IBM        RS/6000 Model 220       RSC3308         33.3       [8K]                 16          AIX 4.1           IBM XLC      |    11.32s     5.60s   66.56s    5.71   0.172
+<Noname>   Eteq 491/492-Chipset    Cx486DX2        66.7       [8K]                  5 (6)      Linux 2.0.27      gcc 2.7.2    |    12.20s     5.80s   66.51s    5.51   0.083
+<Noname>   SISATQ-Chipset          i486DX2         64         [8K]                  4          Linux 2.0.27      gcc 2.7.2    |    12.56s     5.94s   64.41s    5.47   0.085
+<Noname>   Eteq 491/492-Chipset    i486DX2         66.7       [8K]                  5 (6)      Linux 2.0.27      gcc 2.7.2    |    11.84s     6.47s   66.36s    5.37   0.080
+<Noname>   SISATQ-Chipset          Cx486DX2        64         [8K]                  4          Linux 2.0.27      gcc 2.7.2    |    13.73s     6.56s   68.35s    5.04   0.079
+Digital    DECStation 3100         R2000+R2010     16.7       64K+64K              24          NetBSD 1.2        gcc 2.7.2    |    13.14s     6.54s   77.32s    4.91   0.297
+<noname>   UMC 481/482-Chipset     i486DX          33         [8K]+256K            16          Linux 2.0.18      gcc 2.7.2    |    16.19s     7.59s   91.05s    4.13   0.125
+<Noname>   C&T PEAK/DM-Chipset     i386DX+Cx83D87  33.3       64K                   4          Linux 2.0.27      gcc 2.7.2    |    17.35s     9.09s   97.07s    3.71   0.111
+<Noname>   SIS 85C3x0-Chipset      i386DX+Cx83D87  25         64K                   4          Linux 2.0.27      gcc 2.7.2    |    22.62s    11.47s  120.07s    2.93   0.117
+<Noname>   C&T PEAK/DM-Chipset     i386DX+Cx83D87  25         64K                   4          Linux 2.0.27      gcc 2.7.2    |    23.56s    12.47s  131.00s    2.73   0.109
+<Noname>   Opti 495-Chipset        i386DX+Cx83D87  25         128K(no dirty)        4          Linux 2.0.27      gcc 2.7.2    |    26.94s    14.47s  143.42s    2.41   0.097
+Sun        3/260                   MC68020+MC68881 25+20      [0.25K]/64K          16          NetBSD 1.2        gcc 2.7.2    |    28.98s    13.98s  155.79s    2.32   0.093
+<Noname>   C&T PEAK/DM-Chipset     i386DX+Cx83D87  20         64K                   4          Linux 2.0.27      gcc 2.7.2    |    29.10s    15.34s  165.43s    2.19   0.110
+<Noname>   OPTi 381/382-Chipset    i386DX+Cx83D87  25         none                  4          Linux 2.0.27      gcc 2.7.2    |    30.57s    15.83s  168.03s    2.13   0.085
+<Noname>   C&T PEAK/DM-Chipset     i386DX+Cx83D87  33.3       none                  4          Linux 2.0.27      gcc 2.7.2    |    31.15s    16.43s  179.97s    2.04   0.061
+<Noname>   PCChips Chip 2          Am386SX         33.3       none                  4          Linux 2.0.27      gcc 2.7.2    |    33.03s    16.98s  176.92s    1.99   0.060
+<Noname>   SIS 85C3x0-Chipset      i386DX+Cx83D87  25         none                  4          Linux 2.0.27      gcc 2.7.2    |    32.94s    16.95s  180.37s    1.98   0.079
+<Noname>   Cyclone RC2016-Chipset  i386SX          33.3       none                  4          Linux 2.0.27      gcc 2.7.2    |    35.91s    18.34s  194.64s    1.83   0.055
+<Noname>   C&T PEAK/DM-Chipset     i386DX+Cx83D87  16         64K                   4          Linux 2.0.27      gcc 2.7.2    |    37.12s    19.37s  206.50s    1.74   0.109
+Sun        3/60 (tuned)            MC68030+MC68882 24         [0.25K]              16          NetBSD 1.2        gcc 2.7.2    |    38.29s    19.48s  220.14s    1.68   0.070
+<Noname>   C&T 8230-Chipset        i386DX+Cx83D87  20         none                  4          Linux 2.0.27      gcc 2.7.2    |    40.56s    22.26s  220.02s    1.63   0.082
+<Noname>   C&T PEAK/DM-Chipset     i386DX+Cx83D87  25         none                  4          Linux 2.0.27      gcc 2.7.2    |    42.91s    22.23s  244.48s    1.50s  0.060
+Sun        3/160                   MC68020+MC68881 16.67      [0.25K]              16          NetBSD 1.2        gcc 2.7.2    |    49.58s    24.79s  282.11s    1.31   0.079
+<Noname>   C&T PEAK/DM-Chipset     i386DX+Cx83D87  20         none                  4          Linux 2.0.27      gcc 2.7.2    |    53.93s    28.07s  310.04s    1.19   0.059
+<Noname>   Cyclone RC2016-Chipset  Am386SX         20         none                  4          Linux 2.0.27      gcc 2.7.2    |    60.41s    30.34s  330.20s    1.09   0.054
+<Noname>   Intel 82335-Chipset     i386SX          16         none                  4          Linux 2.0.27      gcc 2.7.2    |    63.16s    31.86s  350.67s    1.04   0.065
+<Noname>   Opti 495-Chipset        i386DX+Cx83D87  25         none                  4          Linux 2.0.27      gcc 2.7.2    |    64.71s    33.80s  359.25s    1.00   0.040
+<Noname>   Cyclone RC2016-Chipset  Am386SX         16.7       none                  4          Linux 2.0.27      gcc 2.7.2    |    65.80s    32.91s  359.98s    1.00   0.060
+<Noname>   C&T 8221-Chipset        i386SX          16         none                  4          Linux 2.0.27      gcc 2.7.2    |    65.12s    33.52s  359.52s    1.00   0.063
+<Noname>   C&T PEAK/DM-Chipset     i386DX+Cx83D87  16         none                  4          Linux 2.0.27      gcc 2.7.2    |    69.79s    36.19s  399.86s    0.92   0.057
+Sun        3/50                    MC68020+MC68881 15.8       [0.25K]               4          NetBSD 1.2        gcc 2.7.2    |    71.01s    47.11s  422.60s    0.83   0.052
+<Noname>   PCChips Chip 2          Am386SX         8          none                  4          Linux 2.0.27      gcc 2.7.2    |   140.13s    71.44s  778.46s    0.47   0.058
+
+some numbers from an older version of AS which is slightly faster (thanks Thomson...):
+
+Vendor     Machine                 CPU            Clock(MHz)  Cache [on]offchip   Memory(MB)   OS                Compiler     |    BUF32     FL900    MIC51
+------------------------------------------------------------------------------------------------------------------------------+----------------------------
+<Noname>   Natoma-Chipset          PPro           200         [16K+16K]/256K       32          Linux             pent-gcc     |     0.9s      0.4s     4.7s 
+Sun        Ultra 1/170             UltraSparc-1   167         [16K+16K]/512K       64          Solaris 2.5       Sun-C 3.0.1  |     1.0s      0.5s     5.2s 
+Sun        SPARCstation 20/71      SuperSparc-2    75         [20K+16K]/1M         64          Solaris 2.5       gcc 2.7.2    |     2.3s      1.1s    11.7s
+<Noname>   Neptun-Chipset          Pentium         90         [8K+8K]/256K(async)  48          Linux 2.0.20      gcc 2.7.2.1  |     2.8s      1.4s    16.2s 
+<Noname>   Asus SP3G-PVI           AM486DX3       100         [8K]/256K            16          Linux 1.2.13      gcc 2.7.2    |     4.8s      2.5s    26.9s 
+<Noname>   No Chipset              i486DX2         50         [8K]                 16          Linux 1.99.12     gcc 2.7.2    |    12.9s      6.0s    74.6s 
+Intel      Paragon XPS/10 (4)      2xi860XP        50         [16K+16K]            32          Paragon-OS 1.4    PGC          |    14.6s     12.7s   124.4s 
+CBM        A3000                   MC68030+MC68882 25         [0.25K+0.25K]        14+2        Linux 1.2.13pl9   gcc 2.7.2    |    35.6s     18.8s   184.9s 
+CBM        A2000+68030 Card        MC68030+MC68882 28         [0.25K+0.25K]         8 (5)      Linux 2.0.21      gcc 2.7.2    |    91.37s    39.88s  377.31s
+
+Notes:
+
+(1) ECOFF-based
+(2) Program did not work with -O3, -O2 chosen
+(3) a.out-based
+(4) node program, very slow I/O!
+(5) half of memory is slow 16bit/7.16MHz
+(6) slower  (100ns) memory
+(7) best performance achieved with optimization level 1 ?!
+
+The index numbers at the end of the lines can be calculated with the following
+HP28 program:
+
+<< 359.52 SWAP / ROT 65.12 SWAP / ROT 33.52 SWAP / + + 3 / >>
+
+whereby the last value is the second last divided by the clock frequency.
+
+Non-UPN-wheenies may also compile the 'marks' C program in this distribution.
+
+You have to find out the rest for yourself ;-)
+
+I calculated this weighed ratio to get a uniqe number to sort the list; there
+is so far no special name for this measure.  Call them ASstones, ASmarks, SPECas
+or whatever you like ;-)
+
+
+FEEDBACK
+
+In case of problems or questions, send them to a.arnold@kfa-juelich.de .
