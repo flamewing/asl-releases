@@ -9,6 +9,7 @@
 /*              2. 1.1998 ChkPC umgestellt                                   */
 /*              9. 3.2000 'ambiguous else'-Warnungen beseitigt               */
 /*             2001-11-16 Endianness must be LSB first                       */
+/*             2002-01-27 allow immediate addressing for one-op instrs(doj)  */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -462,7 +463,7 @@ BEGIN
       else if ((OpSize==1) AND (NOT OneOpOrders[z].MayByte)) WrError(1130);
       else
        BEGIN
-        PCDist=2; DecodeAdr(ArgStr[1],15,False);
+        PCDist=2; DecodeAdr(ArgStr[1],15,True);
         if (AdrMode!=0xff)
          BEGIN
           WAsmCode[0]=OneOpOrders[z].Code+(OpSize << 6)+(AdrMode << 4)+AdrPart;

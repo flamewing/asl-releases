@@ -55,8 +55,16 @@
 /*           2001-10-20 GNU error style possible                             */
 /*           2001-12-31 added IntLabel directive                             */
 /*           2002-01-26 changed end behaviour of while statement             */
+/*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: as.c,v 1.3 2002/03/10 10:47:20 alfred Exp $                          */
+/*****************************************************************************
+ * $Log: as.c,v $
+ * Revision 1.3  2002/03/10 10:47:20  alfred
+ * - add CVS log
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -193,6 +201,8 @@ BEGIN
    *dest='\0'; return False;
 END
 
+        Boolean INCLUDE_Processor(PInputTag PInp, char *Erg);
+
         static void GenerateProcessor(PInputTag *PInp)
 BEGIN
    *PInp=(PInputTag) malloc(sizeof(TInputTag));
@@ -204,7 +214,7 @@ BEGIN
    (*PInp)->ParCnt = 0; (*PInp)->ParZ = 0;
    InitStringList(&((*PInp)->Params));
    (*PInp)->LineCnt=0; (*PInp)->LineZ = 1;
-   (*PInp)->Lines = Nil;
+   (*PInp)->Lines = (*PInp)->LineRun = Nil;
    (*PInp)->SpecName[0] = '\0';
    (*PInp)->AllArgs[0] = '\0';
    (*PInp)->NumArgs[0] = '\0';
@@ -217,6 +227,10 @@ BEGIN
    (*PInp)->Macro = Nil;
    (*PInp)->SaveAttr[0] = '\0';
    (*PInp)->SaveLabel[0] = '\0';
+
+   /* in case the input tag chain is empty, this must be the master file */
+
+   (*PInp)->FromFile = (!FirstInputTag) || (FirstInputTag->Processor == INCLUDE_Processor);
 END
 
 /*=========================================================================*/
@@ -875,24 +889,40 @@ BEGIN
    int z;
    Boolean Result;
 
-   Result=True;
+   Result = True;
 
-   Lauf=PInp->Lines; for (z=1; z<=PInp->LineZ-1; z++) Lauf=Lauf->Next;
-   strcpy(erg,Lauf->Content);
-   Lauf=PInp->Params; for (z=1; z<=PInp->ParZ-1; z++) Lauf=Lauf->Next;
-   ExpandLine(Lauf->Content,1,erg); CurrLine=PInp->StartLine+PInp->LineZ;
+   /* increment line counter only if contents came from a true file */
 
-   if (PInp->LineZ==1)
+   CurrLine = PInp->StartLine;
+   if (PInp->FromFile)
+     CurrLine += PInp->LineZ;
+
+   /* first line? Then open new symbol space and reset line pointer */
+
+   if (PInp->LineZ == 1)
     BEGIN
      if (NOT PInp->First) PopLocHandle(); PInp->First=False;
      PushLocHandle(GetLocHandle());
+     PInp->LineRun = PInp->Lines;
     END
 
+   /* extract line */
 
-   if (++(PInp->LineZ)>PInp->LineCnt)
+   strcpy(erg, PInp->LineRun->Content);
+   PInp->LineRun = PInp->LineRun->Next;
+
+   /* expand iteration parameter */
+
+   Lauf = PInp->Params; for (z = 1; z <= PInp->ParZ - 1; z++)
+     Lauf = Lauf->Next;
+   ExpandLine(Lauf->Content, 1, erg);
+
+   /* end of body? then reset to line 1 and exit if this was the last iteration */
+
+   if (++(PInp->LineZ) > PInp->LineCnt)
     BEGIN
-     PInp->LineZ=1; 
-     if (++(PInp->ParZ)>PInp->ParCnt) Result=False;
+     PInp->LineZ = 1; 
+     if (++(PInp->ParZ) > PInp->ParCnt) Result = False;
     END
 
    return Result;
@@ -1077,29 +1107,42 @@ END
 
         Boolean IRPC_Processor(PInputTag PInp, char *erg)
 BEGIN
-   StringRecPtr Lauf;
-   int z;
    Boolean Result;
    char tmp[5];
 
-   Result=True;
+   Result = True;
 
-   Lauf=PInp->Lines; for (z=1; z<=PInp->LineZ-1; z++) Lauf=Lauf->Next;
-   strcpy(erg,Lauf->Content);
-   *tmp=PInp->SpecName[PInp->ParZ-1]; tmp[1]='\0';
-   ExpandLine(tmp,1,erg); CurrLine=PInp->StartLine+PInp->LineZ;
+   /* increment line counter only if contents came from a true file */
 
-   if (PInp->LineZ==1)
+   CurrLine = PInp->StartLine;
+   if (PInp->FromFile)
+     CurrLine += PInp->LineZ;
+ 
+   /* first line? Then open new symbol space and reset line pointer */
+
+   if (PInp->LineZ == 1)
     BEGIN
-     if (NOT PInp->First) PopLocHandle(); PInp->First=False;
+     if (NOT PInp->First) PopLocHandle(); PInp->First = False;
      PushLocHandle(GetLocHandle());
+     PInp->LineRun = PInp->Lines;
     END
 
+   /* extract line */
 
-   if (++(PInp->LineZ)>PInp->LineCnt)
+   strcpy(erg, PInp->LineRun->Content);
+   PInp->LineRun = PInp->LineRun->Next;
+
+   /* extract iteration parameter */
+
+   *tmp = PInp->SpecName[PInp->ParZ - 1]; tmp[1] = '\0';
+   ExpandLine(tmp, 1, erg);
+
+   /* end of body? then reset to line 1 and exit if this was the last iteration */
+
+   if (++(PInp->LineZ) > PInp->LineCnt)
     BEGIN
-     PInp->LineZ=1; 
-     if (++(PInp->ParZ)>PInp->ParCnt) Result=False;
+     PInp->LineZ = 1; 
+     if (++(PInp->ParZ) > PInp->ParCnt) Result = False;
     END
 
    return Result;
@@ -1195,26 +1238,37 @@ END
 
         Boolean REPT_Processor(PInputTag PInp, char *erg)
 BEGIN
-   StringRecPtr Lauf;
-   int z;
    Boolean Result;
 
-   Result=True;
+   Result = True;
 
-   Lauf=PInp->Lines; for(z=1; z<=PInp->LineZ-1; z++) Lauf=Lauf->Next;
-   strcpy(erg,Lauf->Content); CurrLine=PInp->StartLine+PInp->LineZ;
+   /* increment line counter only if contents came from a true file */
 
-   if (PInp->LineZ==1)
+   CurrLine = PInp->StartLine;
+   if (PInp->FromFile)
+     CurrLine += PInp->LineZ;
+
+   /* first line? Then open new symbol space and reset line pointer */
+
+   if (PInp->LineZ == 1)
     BEGIN
      if (NOT PInp->First) PopLocHandle(); PInp->First=False;
      PushLocHandle(GetLocHandle());
+     PInp->LineRun = PInp->Lines;
     END
 
-    if ((++PInp->LineZ)>PInp->LineCnt)
-    BEGIN
-     PInp->LineZ=1;
-     if ((++PInp->ParZ)>PInp->ParCnt) Result=False;
-    END
+    /* extract line */
+
+    strcpy(erg, PInp->LineRun->Content);
+    PInp->LineRun = PInp->LineRun->Next;
+
+    /* last line of body? Then increment count and stop if last iteration */
+
+    if ((++PInp->LineZ) > PInp->LineCnt)
+     BEGIN
+      PInp->LineZ = 1;
+      if ((++PInp->ParZ) > PInp->ParCnt) Result = False;
+     END
 
    return Result;
 END
@@ -1264,7 +1318,7 @@ BEGIN
    POutputTag Neu;
    Boolean ErrFlag;
 
-   /* 0. skip everything when conditinal assembly is off */
+   /* 0. skip everything when conditional assembly is off */
 
    if (NOT IfAsm)
     BEGIN
@@ -1333,11 +1387,14 @@ END
 
         Boolean WHILE_Processor(PInputTag PInp, char *erg)
 BEGIN
-   StringRecPtr Lauf;
    int z;
    Boolean OK,Result;
 
-   CurrLine = PInp->StartLine + PInp->LineZ;
+   /* increment line counter only if this came from a true file */
+
+   CurrLine = PInp->StartLine;
+   if (PInp->FromFile)
+     CurrLine += PInp->LineZ;
 
    /* if this is the first line of the loop body, open a new handle
       for macro-local symbols and drop the old one if this was not the
@@ -1347,12 +1404,14 @@ BEGIN
     BEGIN
      if (NOT PInp->First) PopLocHandle(); PInp->First = False;
      PushLocHandle(GetLocHandle());
+     PInp->LineRun = PInp->Lines;
     END
+
+   /* evaluate condition before first line */
 
    if (PInp->LineZ == 1)
    {
      z = EvalIntExpression(PInp->SpecName, Int32, &OK);
-     { char tmp[30]; sprintf(tmp, "Res %d", z); WrLstLine(tmp); }
      Result = (OK AND (z != 0));
    }
    else Result = True;
@@ -1361,10 +1420,8 @@ BEGIN
    {
      /* get line of body */
 
-     Lauf = PInp->Lines;
-     for (z = 1; z <= PInp->LineZ - 1; z++)
-       Lauf = Lauf->Next;
-     strcpy(erg, Lauf->Content);
+     strcpy(erg, PInp->LineRun->Content);
+     PInp->LineRun = PInp->LineRun->Next;
 
      /* in case this is the last line of the body, reset counters */
 
@@ -1373,6 +1430,9 @@ BEGIN
        PInp->LineZ = 1; PInp->ParZ++;
      }
    }
+
+   /* nasty last line... */
+
    else
      *erg = '\0';
 

@@ -36,6 +36,13 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: asmpars.c,v 1.2 2002/03/10 11:55:42 alfred Exp $                     */
+/***************************************************************************** 
+ * $Log: asmpars.c,v $
+ * Revision 1.2  2002/03/10 11:55:42  alfred
+ * - state which operand type was expected/got
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -1938,6 +1945,7 @@ func_exit:
    if (RVal.Relocs != NULL) FreeRelocs(&RVal.Relocs);
 END
 
+static int TypeNums[TempNone] = {Num_OpTypeInt, Num_OpTypeInt, Num_OpTypeString};
 
         LargeInt EvalIntExpression(char *Asc, IntType Typ, Boolean *OK)
 BEGIN
@@ -1953,7 +1961,15 @@ BEGIN
    SetRelocs(t.Relocs);
    if (t.Typ != TempInt)
     BEGIN
-     if (t.Typ != TempNone) WrError(1135);
+     if (t.Typ != TempNone)
+     {
+       char Msg[50];
+
+       sprintf(Msg, "%s %s %s %s", 
+               getmessage(Num_ErrMsgExpected), getmessage(Num_OpTypeInt),
+               getmessage(Num_ErrMsgButGot), getmessage(TypeNums[t.Typ]));
+       WrXError(1135, Msg);
+     }
      FreeRelocs(&LastRelocs);
      return -1;
     END
@@ -1995,7 +2011,15 @@ BEGIN
       t.Contents.Float=t.Contents.Int;
       break;
      case TempString:
-      WrError(1135); return -1;
+     {
+      char Msg[50];
+
+      sprintf(Msg, "%s %s %s %s",
+               getmessage(Num_ErrMsgExpected), getmessage(Num_OpTypeFloat),
+               getmessage(Num_ErrMsgButGot), getmessage(Num_OpTypeString)); 
+      WrXError(1135, Msg);
+      return -1;
+     }
      default:
       break;
     END
@@ -2022,7 +2046,15 @@ BEGIN
    if (t.Typ!=TempString)
     BEGIN
      *Result='\0';
-     if (t.Typ!=TempNone) WrError(1135);
+     if (t.Typ!=TempNone)
+     {
+       char Msg[50];
+
+       sprintf(Msg, "%s %s %s %s",
+               getmessage(Num_ErrMsgExpected), getmessage(Num_OpTypeString),
+               getmessage(Num_ErrMsgButGot), getmessage(TypeNums[t.Typ]));
+       WrXError(1135, Msg);
+     }
      return;
     END
 

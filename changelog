@@ -1,3 +1,4 @@
+$Id: changelog,v 1.2 2002/03/10 12:42:29 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -862,3 +863,10 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 - Bugfix      : BIT-statements inside macros did not work correctly
 
 - Bugfix      : WHILE-statement evaluates condition after last statement
+
+2002-03-10 [Bld 20]
+
+- Bugfix      : corrected line counting behaviour when REPT/IRP/WHILE draw
+                contents not from file
+
+- Extension   : more precise error messages for type conflicts in some places

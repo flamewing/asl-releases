@@ -12,7 +12,7 @@ for %%i in (include\*.inc) do copy %%i %2
 for %%i in (%2\*.inc) do unumlaut %%i
 
 md %3
-for %%i in (*.1) do copy %%i %3
+for %%i in (man\*.1) do copy %%i %3
 
 md %4
 for %%i in (*.msg) do copy %%i %1

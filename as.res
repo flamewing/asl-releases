@@ -29,6 +29,13 @@
 ;*           2001-10-21 GNU error messages                                   *
 ;*                                                                           *
 ;*****************************************************************************
+;* $Id: as.res,v 1.2 2002/03/10 11:55:42 alfred Exp $                        *
+;*****************************************************************************
+;* $Log: as.res,v $
+;* Revision 1.2  2002/03/10 11:55:42  alfred
+;* - state which operand type was expected/got
+;*
+;*****************************************************************************
 
 Include header.res
 
@@ -656,6 +663,26 @@ Message ErrMsgUnresRelocs
 Message ErrMsgUnexportable
  "Symbol nicht exportierbar"
  "cannot export this symbol"
+
+Message ErrMsgExpected
+ "erwartete"
+ "expected"
+
+Message ErrMsgButGot
+ "aber erhielt"
+ "but got"
+
+Message OpTypeInt
+ "Integer"
+ "integer"
+
+Message OpTypeFloat
+ "Float"
+ "float"
+
+Message OpTypeString
+ "String"
+ "string"
 
 ;----------------------------------------------------------------------------
 ; Strings in Listingkopfzeile

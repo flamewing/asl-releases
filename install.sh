@@ -28,8 +28,8 @@ fi
 if [ "$3" != "" ]; then
  mkdirhier $3/man1
  chmod 755 $3 $3/man1
- for i in *.1; do
-  echo $3/man1/$i
+ for i in man/*.1; do
+  echo $3/man1/`basename $i`
   cp $i $3/man1
   chmod 644 $3/man1/$i
  done

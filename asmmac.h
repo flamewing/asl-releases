@@ -8,6 +8,7 @@
 /*                                                                           */
 /* Historie: 16. 5.1996 Grundsteinlegung                                     */
 /*           2001-12-31 added DoIntLabel flag                                */
+/*           2002-03-03 added FromFile flag, LineRun pointer to input tag    */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -39,9 +40,9 @@ typedef struct _TInputTag
           LongInt ParCnt,ParZ;
           StringList Params;
           LongInt LineCnt,LineZ;
-          StringRecPtr Lines;
+          StringRecPtr Lines, LineRun;
           String SpecName,SaveAttr,SaveLabel,AllArgs,NumArgs;
-          Boolean IsEmpty;
+          Boolean IsEmpty, FromFile;
           FILE *Datei;
           void *Buffer;
           void (*Cleanup)(

@@ -1,11 +1,13 @@
-BASEARCH1FILES = *.c *.h *.1 \
+# $Id: makedefs.files,v 1.3 2002/03/10 12:54:21 alfred Exp $
+
+BASEARCH1FILES = *.c *.h man/*.1 \
             INSTALL README README.OS2 README.DOS README.LANGS README.KR TODO BENCHES Makefile Makefile.dos Makefile.os2 Makefile.w32 Makefile.def.tmpl \
             COPYING install.sh install.bat install.cmd instw32.cmd marks.asm \
             *.res objdefs.* makedefs.* asl.def \
             include/*.inc \
-            Makefile.def-samples
-BASEARCH2FILES = doc_DE doc_EN \
-            tests
+            Makefile.def-samples/M*
+BASEARCH2FILES = doc_DE/Makefile doc_DE/*.tex doc_DE/*.sty doc_EN/Makefile doc_EN/*.tex \
+            tests/testall* tests/warnlog* tests/t_*/asflags tests/t_*/t_*
 
 DISTARCHFILES = $(BASEARCH1FILES) $(BASEARCH2FILES) asl-$(VERSION).lsm changelog
 

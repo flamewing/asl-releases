@@ -17,6 +17,13 @@
 /*           2002-01-23 symbols defined with BIT must not be macro-local     */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: code51.c,v 1.2 2002/03/10 11:55:12 alfred Exp $                      */
+/***************************************************************************** 
+ * $Log: code51.c,v $
+ * Revision 1.2  2002/03/10 11:55:12  alfred
+ * - do not issue futher error messages after failed address evaluation
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -379,6 +386,8 @@ BEGIN
       H32=EvalIntExpression(Asc,UInt16,&OK);
     END
    if (FirstPassUnknown) FirstFlag=True;
+   if (!OK)
+     return;
 
    if ((SegType==-2) OR ((SegType==-1) AND ((TypeFlag & (1 << SegIO))!=0)))
     BEGIN

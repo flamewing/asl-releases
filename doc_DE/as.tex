@@ -989,7 +989,7 @@ bzw. \ref{ChapShareOrder}.
       eines neuen Durchlaufs feststeht.  In welchen (seltenen) Situationen
       dieser Schalter notwendig ist, kann man in Abschnitt \ref{ForwRefs}
       nachlesen.}
-\item{\tty{cpu $<$Name$>$}: Hiermit kann man man den Zielprozessor
+\item{\tty{cpu $<$Name:  $>$}: Hiermit kann man man den Zielprozessor
       vorgeben, f"ur den AS Code erzeugen soll, wenn die Quelldatei keinen
       {\tt CPU}-Befehl enth"alt und es sich nicht um 68008-Code handelt.}
 \item{\tty{alias $<$neu$>$=$<$alt$>$}:\\
@@ -2554,7 +2554,7 @@ Speicherplatzreservierung, also z.B. \tty{DS.x} f"ur die Motorolas oder
 \tty{DB} \& Co. f"ur Intels.  Das dem \tty{STRUCT}-Befehl vorangestellte
 (nicht optionale) Label ist der Name des Records und kann optional beim
 \tty{ENDSTRUCT}-Befehl wiederholt werden.  Weiterhin legt \tty{ENDSTRUCT} in
-\tty{$<$Name$>$\_len} die Gesamtl"ange der Struktur ab (man kann auch die
+\tty{$<$Name:  $>$\_len} die Gesamtl"ange der Struktur ab (man kann auch die
 Verwendung eines anderen Symbolnamens erzwingen, indem man dessen
 Name als Argument von \tty{ENDSTRUCT} angibt).  In der Definition
 \begin{verbatim}
@@ -4603,7 +4603,7 @@ Befehlsfolge
         <Befehle>
         ENDM
 \end{verbatim}
-wird das Makro \tty{$<$Name$>$} als die eingeschlossene Befehlsfolge
+wird das Makro \tty{$<$Name:  $>$} als die eingeschlossene Befehlsfolge
 definiert. Diese Definition alleine erzeugt noch keinen Code!  Daf"ur kann
 fortan die Befehlsfolge einfach durch den Namen abgerufen werden, das Ganze
 stellt also eine Schreiberleichterung dar.  Um die ganze Sache etwas
@@ -5154,10 +5154,10 @@ Neben \tty{IF} sind noch folgende weitere bedingte Befehle definiert:
 \item{\tty{IFUSED} $<$Symbol$>$ : wahr, falls das Symbol bisher mindestens einmal
       benutzt wurde.}
 \item{\tty{IFNUSED} $<$Symbol$>$ : Umkehrung zu \tty{IFUSED}}
-\item{\tty{IFEXIST} $<$Name$>$ : wahr, falls die angegebene Datei existiert.
+\item{\tty{IFEXIST} $<$Name:  $>$ : wahr, falls die angegebene Datei existiert.
       F"ur Schreibweise und Suchpfade gelten gleiche Regeln wie beim
       \tty{INCLUDE}-Befehl (siehe Abschnitt \ref{SectInclude}).}
-\item{\tty{IFNEXIST} $<$Name$>$ : Umkehrung zu \tty{IFEXIST}}
+\item{\tty{IFNEXIST} $<$Name:  $>$ : Umkehrung zu \tty{IFEXIST}}
 \item{\tty{IFB} $<$Arg-Liste$>$ : wahr, falls alle Argumente der Parameterliste leer 
                                   sind.}
 \item{\tty{IFNB} $<$Arg-Liste$>$ : Umkehrung zu IFB.}
@@ -8785,7 +8785,7 @@ Codedatei.  Es ist also ein Minimalaufruf \`a la
 \begin{verbatim}
  P2HEX <Name>
 \end{verbatim}
-m"oglich, um $<$Name$>$.HEX aus $<$Name$>$.P zu erzeugen.
+m"oglich, um $<$Name:  $>$.HEX aus $<$Name:  $>$.P zu erzeugen.
 
 %%---------------------------------------------------------------------------
 
