@@ -15,9 +15,15 @@
 /*            7. 5.2000 Packing hinzugefuegt                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeavr.c,v 1.6 2002/11/04 19:05:01 alfred Exp $                     */
+/* $Id: codeavr.c,v 1.8 2003/02/26 19:18:25 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codeavr.c,v $
+ * Revision 1.8  2003/02/26 19:18:25  alfred
+ * - add/use EvalIntDisplacement()
+ *
+ * Revision 1.7  2003/02/07 22:57:51  alfred
+ * - fix empty left hand in offset
+ *
  * Revision 1.6  2002/11/04 19:05:01  alfred
  * - silenced compiler warning
  *
@@ -408,7 +414,7 @@ static Boolean AccFull;
     else if (NOT DecodeReg(ArgStr[RegI], &Reg)) WrXError(1445, ArgStr[RegI]);
     else
     {
-      Disp = EvalIntExpression(ArgStr[MemI] + 1, UInt6, &OK);
+      Disp = EvalIntDisplacement(ArgStr[MemI] + 1, UInt6, &OK);
       if (OK)
       {
         WAsmCode[0] = 0x8000 | Index | (Reg << 4) | (Disp & 7) | ((Disp & 0x18) << 7) | ((Disp & 0x20) << 8);

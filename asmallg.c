@@ -25,9 +25,12 @@
 /*                       to now                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmallg.c,v 1.10 2003/02/02 12:05:01 alfred Exp $                     */
+/* $Id: asmallg.c,v 1.11 2003/02/06 07:38:09 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmallg.c,v $
+ * Revision 1.11  2003/02/06 07:38:09  alfred
+ * - add missing 'else'
+ *
  * Revision 1.10  2003/02/02 12:05:01  alfred
  * - limit BINCLUDE transfer size to 256 bytes
  *
@@ -1170,7 +1173,7 @@ END
            DoExt = True;
          else if (!strcasecmp(ArgStr[z],"NOEXTNAMES"))
            DoExt = False;
-         if (!strcasecmp(ArgStr[z], "DOTS"))
+         else if (!strcasecmp(ArgStr[z], "DOTS"))
            ExtChar = '.';
          else if (!strcasecmp(ArgStr[z],"NODOTS"))
            ExtChar = '_';

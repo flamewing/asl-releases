@@ -17,9 +17,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.h,v 1.4 2002/10/07 20:25:01 alfred Exp $                     */
+/* $Id: asmpars.h,v 1.5 2003/02/26 19:18:26 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.h,v $
+ * Revision 1.5  2003/02/26 19:18:26  alfred
+ * - add/use EvalIntDisplacement()
+ *
  * Revision 1.4  2002/10/07 20:25:01  alfred
  * - added '/' nameless temporary symbols
  *
@@ -152,6 +155,8 @@ extern Integer GetSymbolType(char *Name);
 extern void EvalExpression(char *Asc_O, TempResult *Erg);
 
 extern LargeInt EvalIntExpression(char *Asc, IntType Typ, Boolean *OK);
+
+extern LargeInt EvalIntDisplacement(char *Asc, IntType Typ, Boolean *OK);
 
 extern Double EvalFloatExpression(char *Asc, FloatType Typ, Boolean *OK);
 

@@ -36,9 +36,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.13 2003/02/02 12:15:21 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.14 2003/02/26 19:18:25 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.c,v $
+ * Revision 1.14  2003/02/26 19:18:25  alfred
+ * - add/use EvalIntDisplacement()
+ *
  * Revision 1.13  2003/02/02 12:15:21  alfred
  * - added exptype() function
  *
@@ -2196,6 +2199,27 @@ BEGIN
      *OK = True; return t.Contents.Int;
     END
 END
+
+LargeInt EvalIntDisplacement(char *Asc, IntType Typ, Boolean *OK)
+{
+  char SaveLeft;
+  LargeInt Result;
+
+  /* save the original character.  We assume there is space to the left! */
+
+  Asc--;
+  SaveLeft = *Asc; *Asc = '0';
+  
+  /* evaluate */
+
+  Result = EvalIntExpression(Asc, Typ, OK);
+
+  /* restore character */
+
+  *Asc = SaveLeft;
+
+  return Result;
+}
 
         Double EvalFloatExpression(char *Asc, FloatType Typ, Boolean *OK)
 BEGIN
