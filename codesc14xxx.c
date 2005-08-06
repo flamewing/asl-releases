@@ -20,6 +20,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "codevars.h"
 #include "headids.h"
 #include "asmitree.h"
 
@@ -193,8 +194,6 @@ BEGIN
 END
 
 /*---------------------------------------------------------------------------*/
-
-static int InstrZ;
 
         static void AddFixed(char *NName, Byte NCode, Word NMask,
                              Byte NMin, Byte NMax)

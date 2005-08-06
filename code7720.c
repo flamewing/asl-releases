@@ -15,9 +15,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code7720.c,v 1.1 2003/11/06 02:49:21 alfred Exp $                    */
+/* $Id: code7720.c,v 1.2 2005/05/21 16:35:05 alfred Exp $                    */
 /***************************************************************************** 
  * $Log: code7720.c,v $
+ * Revision 1.2  2005/05/21 16:35:05  alfred
+ * - removed variables available globally
+ *
  * Revision 1.1  2003/11/06 02:49:21  alfred
  * - recreated
  *
@@ -45,6 +48,7 @@
 #include "asmcode.h"
 #include "asmitree.h"
 #include "headids.h"
+#include "codevars.h"            
 
 /*---------------------------------------------------------------------------*/
 
@@ -359,8 +363,6 @@ END
 
 /*---------------------------------------------------------------------------*/
 /* Tabellenverwaltung */
-
-static int InstrZ;
 
         static void AddJmp(char *NName, LongWord NCode)
 BEGIN

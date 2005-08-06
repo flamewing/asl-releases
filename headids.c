@@ -19,9 +19,12 @@
 /*           2001-07-01 TI 320C54x                                           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: headids.c,v 1.2 2005/02/19 14:10:15 alfred Exp $                          */
+/* $Id: headids.c,v 1.3 2005/07/30 13:57:03 alfred Exp $                          */
 /*****************************************************************************
  * $Log: headids.c,v $
+ * Revision 1.3  2005/07/30 13:57:03  alfred
+ * - add LatticeMico8
+ *
  * Revision 1.2  2005/02/19 14:10:15  alfred
  * - added KCPSM3
  *
@@ -90,6 +93,7 @@ static TFamilyDescr Descrs[]=
         {"eZ8"       , 0x0059, IntHex  },
         {"KCPSM"     , 0x006b, IntHex  },
         {"KCPSM3"    , 0x005b, IntHex  },
+        {"Mico8"     , 0x005c, IntHex  },
         {"TLCS-900"  , 0x0052, MotoS   },
         {"TLCS-90"   , 0x0053, IntHex  },
         {"TLCS-870"  , 0x0054, IntHex  },
@@ -133,28 +137,30 @@ static TFamilyDescr Descrs[]=
 
 /*---------------------------------------------------------------------------*/
 
-	PFamilyDescr FindFamilyByName(char *Name)
-BEGIN
-   PFamilyDescr Run;
+PFamilyDescr FindFamilyByName(char *Name)
+{
+  PFamilyDescr pRun;
 
-   for (Run=Descrs; Run->Name!=Nil; Run++)
-    if (strcmp(Name,Run->Name)==0) return Run;
+  for (pRun = Descrs; pRun->Name != NULL; pRun++)
+    if (!strcmp(Name, pRun->Name))
+      return pRun;
 
-   return Nil;
-END
+  return NULL;
+}
 
-	PFamilyDescr FindFamilyById(Word Id)
-BEGIN
-   PFamilyDescr Run;       
+PFamilyDescr FindFamilyById(Word Id)
+{
+  PFamilyDescr pRun;       
 
-   for (Run=Descrs; Run->Name!=Nil; Run++)
-    if (Id==Run->Id) return Run;
+  for (pRun = Descrs; pRun->Name != NULL; pRun++)
+    if (Id == pRun->Id)
+      return pRun;
 
-   return Nil;
-END
+  return NULL;
+}
 
 /*---------------------------------------------------------------------------*/
 
-	void headids_init(void)
-BEGIN
-END
+void headids_init(void)
+{
+}

@@ -9,6 +9,11 @@ CFLAGS = -std1 -O4 -Olimit 3000 -tune ev5 -fast
 #                               |||||||||
 #         adapt this to your target cpu (ev4 or ev5)
 
+
+TARG_OBJEXTENSION = .o
+
+HOST_OBJEXTENSION = $(TARG_OBJEXTENSION)
+
 # -------------------------------------------------------------------------
 # directories where binaries, includes, and manpages should go during
 # installation

@@ -10,6 +10,11 @@ LDFLAGS =
 #                    |||||
 # adapt this to your target cpu (386/486 or higher)
 # note that older gcc versions require -m[34]86 instead of -mcpu=i[34]86
+
+TARG_OBJEXTENSION = .o
+
+HOST_OBJEXTENSION = $(TARG_OBJEXTENSION)
+
 # -------------------------------------------------------------------------
 # directories where binaries, includes, and manpages should go during
 # installation

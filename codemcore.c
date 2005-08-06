@@ -10,9 +10,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemcore.c,v 1.2 2004/05/29 12:04:48 alfred Exp $                   */
+/* $Id: codemcore.c,v 1.3 2005/05/21 16:35:05 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codemcore.c,v $
+ * Revision 1.3  2005/05/21 16:35:05  alfred
+ * - removed variables available globally
+ *
  * Revision 1.2  2004/05/29 12:04:48  alfred
  * - relocated DecodeMot(16)Pseudo into separate module
  *
@@ -31,6 +34,7 @@
 #include "asmpars.h"
 #include "asmallg.h"
 #include "codepseudo.h"
+#include "codevars.h"
 #include "motpseudo.h"
 #include "asmitree.h"
 
@@ -573,8 +577,6 @@ END
 
 /*--------------------------------------------------------------------------*/
 /* Codetabellenverwaltung */
-
-static int InstrZ;
 
 	static void AddFixed(char *NName, Word NCode, Boolean NPriv)
 BEGIN

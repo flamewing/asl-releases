@@ -10,6 +10,10 @@ LDFLAGS =
 #            |||||||||||||||||||||||
 # adapt to your processor architecture (pwr/pwr2/ppc)
 
+TARG_OBJEXTENSION = .o
+
+HOST_OBJEXTENSION = $(TARG_OBJEXTENSION)
+
 # -------------------------------------------------------------------------
 # directories where binaries, includes, and manpages should go during
 # installation

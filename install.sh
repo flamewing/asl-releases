@@ -61,6 +61,10 @@ if [ "$5" != "" ]; then
    echo $5/as-$i.ps
    cp doc_$i/as.ps $5/as-$i.ps
   fi
+  if [ -f doc_$i/as.pdf ]; then
+   echo $5/as-$i.pdf
+   cp doc_$i/as.pdf $5/as-$i.pdf
+  fi
   chmod 644 $5/as-$i.*
  done
  cp doc_DE/taborg*.tex $5

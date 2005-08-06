@@ -25,6 +25,7 @@
 #include "asmitree.h"
 #include "headids.h"
 #include "strutil.h"
+#include "codevars.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -282,8 +283,6 @@ BEGIN
 END
 
 /*---------------------------------------------------------------------------*/
-
-static int InstrZ;
 
         static void DecodeFixed(Word Index)
 BEGIN
@@ -899,8 +898,6 @@ BEGIN
 END
 
 /*---------------------------------------------------------------------------*/
-
-static int InstrZ;
 
         static void AddReg(char *NName, LargeWord Adr, Word Mask)
 BEGIN

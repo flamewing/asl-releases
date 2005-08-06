@@ -10,6 +10,12 @@ LD = gcc
 CFLAGS = -O2 -mcpu=i486 -Wall -Wno-parentheses -Wno-sign-compare
 LDFLAGS =
 
+TARG_OBJEXTENSION = .o
+TARG_EXEXTENSION = .exe
+
+HOST_OBJEXTENSION = $(TARG_OBJEXTENSION)
+HOST_EXEXTENSION = $(TARG_EXEXTENSION)
+
 # -------------------------------------------------------------------------
 # directories where binaries, includes, and manpages should go during
 # installation

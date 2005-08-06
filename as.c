@@ -58,9 +58,12 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.6 2005/03/21 19:48:16 alfred Exp $                          */
+/* $Id: as.c,v 1.7 2005/07/30 13:57:02 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.7  2005/07/30 13:57:02  alfred
+ * - add LatticeMico8
+ *
  * Revision 1.6  2005/03/21 19:48:16  alfred
  * - shortened name to 8+3 (again...)
  *
@@ -215,6 +218,7 @@
 #include "codez8.h"
 #include "codekcpsm.h"
 #include "codekcp3.h"
+#include "codemic8.h"
 #include "code96c141.h"
 #include "code90c141.h"
 #include "code87c800.h"
@@ -3473,6 +3477,7 @@ BEGIN
      code166_init();
      codez80_init(); codez8_init();
      codekcpsm_init(); codekcpsm3_init();
+     codemico8_init();
      code96c141_init(); code90c141_init(); code87c800_init(); code47c00_init(); code97c241_init();
      code16c5x_init(); code16c8x_init(); code17c4x_init();
      codest6_init(); codest7_init(); codest9_init(); code6804_init();

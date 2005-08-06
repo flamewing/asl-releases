@@ -1,4 +1,4 @@
-$Id: changelog,v 1.8 2005/03/21 19:28:11 alfred Exp $
+$Id: changelog,v 1.9 2005/08/06 13:37:39 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -971,3 +971,7 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 - Addition    : added ATM & LDWX instructions for Zilog eZ8
 
 - Addition    : added KCPSM3 core
+
+2005-08-06 [Bld 36]
+
+- Addition    : added LatticeMico8

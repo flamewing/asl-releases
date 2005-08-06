@@ -7,6 +7,11 @@ LD = cc
 CFLAGS = -O  -D__MUNIX__ -I/usr/include/bsd -Dsigned= -Dvoid=int -Dconst=
 LDFLAGS = -lbsd
 
+
+TARG_OBJEXTENSION = .o  
+
+HOST_OBJEXTENSION = $(TARG_OBJEXTENSION)
+
 # -------------------------------------------------------------------------
 # directories where binaries, includes, and manpages should go during
 # installation

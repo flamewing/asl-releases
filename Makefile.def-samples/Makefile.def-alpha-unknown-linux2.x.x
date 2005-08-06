@@ -7,6 +7,10 @@ LD = gcc
 CFLAGS = -O3 -fomit-frame-pointer -Wall 
 LDFLAGS =
 
+TARG_OBJEXTENSION = .o
+
+HOST_OBJEXTENSION = $(TARG_OBJEXTENSION)
+
 # -------------------------------------------------------------------------
 # directories where binaries, includes, and manpages should go during
 # installation

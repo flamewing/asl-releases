@@ -1,4 +1,4 @@
-# $Id: makedefs.files,v 1.3 2004/10/11 19:06:10 alfred Exp $
+# $Id: makedefs.files,v 1.4 2005/06/25 12:54:44 alfred Exp $
 
 BASEARCH1FILES = *.c *.h man/*.1 \
             INSTALL README README.OS2 README.DOS README.LANGS README.KR TODO BENCHES Makefile Makefile.dos Makefile.os2 Makefile.w32 Makefile.def.tmpl \
@@ -17,19 +17,19 @@ ARCH2FILES = $(BASEARCH2FILES) header.tmpl *.lsm changelog
 
 ARCHFILES = $(ARCH1FILES) $(ARCH2FILES)
 
-# set EXEXTENSION im Makefile.def if you need a specific extension for 
-# the executables (e.g. .exe for OS/2)
+# set *EXEXTENSION im Makefile.def if you need a specific extension for 
+# the executables (e.g. .exe for OS/2 or Windows)
 
-ASLTARGET = asl$(EXEXTENSION)
-PLISTTARGET = plist$(EXEXTENSION)
-ALINKTARGET = alink$(EXEXTENSION)
-PBINDTARGET = pbind$(EXEXTENSION)
-P2HEXTARGET = p2hex$(EXEXTENSION)
-P2BINTARGET = p2bin$(EXEXTENSION)
-RESCOMPTARGET = rescomp$(EXEXTENSION)
-TEX2DOCTARGET = tex2doc$(EXEXTENSION)
-TEX2HTMLTARGET = tex2html$(EXEXTENSION)
-UNUMLAUTTARGET = unumlaut$(EXEXTENSION)
+ASLTARGET = asl$(TARG_EXEXTENSION)
+PLISTTARGET = plist$(TARG_EXEXTENSION)
+ALINKTARGET = alink$(TARG_EXEXTENSION)
+PBINDTARGET = pbind$(TARG_EXEXTENSION)
+P2HEXTARGET = p2hex$(TARG_EXEXTENSION)
+P2BINTARGET = p2bin$(TARG_EXEXTENSION)
+RESCOMPTARGET = rescomp$(HOST_EXEXTENSION)
+TEX2DOCTARGET = tex2doc$(HOST_EXEXTENSION)
+TEX2HTMLTARGET = tex2html$(HOST_EXEXTENSION)
+UNUMLAUTTARGET = unumlaut$(HOST_EXEXTENSION)
 
 ALLTARGETS = ioerrs.msg cmdarg.msg tools.msg \
              as.msg $(ASLTARGET) \

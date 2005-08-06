@@ -66,7 +66,7 @@ install: $(ALLTARGETS)
 	./install.sh $(BINDIR) $(INCDIR) $(MANDIR) $(LIBDIR) $(DOCDIR)
 
 clean:
-	rm -f $(ALLTARGETS) $(RESCOMPTARGET) $(TEX2DOCTARGET) $(TEX2HTMLTARGET) *.$(OBJEXTENSION) *.p *.rsc tests/testlog testlog
+	rm -f $(ALLTARGETS) $(RESCOMPTARGET) $(TEX2DOCTARGET) $(TEX2HTMLTARGET) *$(HOST_OBJEXTENSION) *$(TARG_OBJEXTENSION) *.p *.rsc tests/testlog testlog
 	cd doc_DE; $(MAKE) RM="rm -f" clean
 	cd doc_EN; $(MAKE) RM="rm -f" clean
 
@@ -216,7 +216,7 @@ tlink: all text1.p text2.p alink
 #---------------------------------------------------------------------------
 
 .SUFFIXES: .c .asm
-.c.$(OBJEXTENSION):
+.c$(TARG_OBJEXTENSION):
 	$(CC) $(ALLFLAGS) -c $*.c
 .asm.p:
 	./asl -L -q $*.asm

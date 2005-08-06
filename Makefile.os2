@@ -68,7 +68,8 @@ clean:
 	-del $(TEX2DOCTARGET)
 	-del $(TEX2HTMLTARGET)
 	-del $(RESCOMPTARGET)
-	-del *.$(OBJEXTENSION)
+        -del *$(HOST_OBJEXTENSION) 
+	-del *$(TARG_OBJEXTENSION)
 	-del *.p
 	-del tests/testlog
 	-del testlog
@@ -100,5 +101,5 @@ bindist: $(UNUMLAUTTARGET)
 #---------------------------------------------------------------------------
 
 .SUFFIXES: .c
-.c.$(OBJEXTENSION):
+.c$(TARG_OBJEXTENSION):
 	$(CC) $(ALLFLAGS) -c $*.c

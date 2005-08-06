@@ -22,6 +22,7 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "codevars.h"            
 
 /*****************************************************************************/
 
@@ -37,8 +38,6 @@ static CPUVar CPU8x300,CPU8x305;
 static FixedOrder *AriOrders;
 
 /*-------------------------------------------------------------------------*/
-
-static int InstrZ;
 
         static void AddAri(char *NName, Word NCode)
 BEGIN

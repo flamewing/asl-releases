@@ -9,6 +9,12 @@ CFLAGS =
 OUTOPT = "/O:"
 LDFLAGS = /PM:VIO
 
+TARG_OBJEXTENSION = .obj
+TARG_EXEXTENSION = .exe
+
+HOST_OBJEXTENSION = $(TARG_OBJEXTENSION)
+HOST_EXEXTENSION = $(TARG_EXEXTENSION)
+
 # -------------------------------------------------------------------------
 # directories where binaries, includes, and manpages should go during
 # installation

@@ -9,6 +9,10 @@ CFLAGS = -mv8 -O3 -fomit-frame-pointer -Wall
 #        ++++--- put here -mv7 for older Sparc systems (pre-SS10)
 LDFLAGS =
 
+TARG_OBJEXTENSION = .o
+
+HOST_OBJEXTENSION = $(TARG_OBJEXTENSION)
+
 # -------------------------------------------------------------------------
 # directories where binaries, includes, and manpages should go during
 # installation

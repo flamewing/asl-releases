@@ -6,6 +6,10 @@ CC = cc
 LD = cc 
 CFLAGS = -xO4 -xcg92
 
+TARG_OBJEXTENSION = .o
+
+HOST_OBJEXTENSION = $(TARG_OBJEXTENSION)
+
 # -------------------------------------------------------------------------
 # directories where binaries, includes, and manpages should go during
 # installation

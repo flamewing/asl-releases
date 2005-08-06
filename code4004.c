@@ -18,9 +18,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code4004.c,v 1.1 2003/11/06 02:49:20 alfred Exp $                          */
+/* $Id: code4004.c,v 1.2 2005/05/21 16:35:04 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code4004.c,v $
+ * Revision 1.2  2005/05/21 16:35:04  alfred
+ * - removed variables available globally
+ *
  * Revision 1.1  2003/11/06 02:49:20  alfred
  * - recreated
  *
@@ -48,6 +51,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmitree.h"
+#include "codevars.h"
 #include "headids.h"
 
 /*---------------------------------------------------------------------------*/
@@ -382,8 +386,6 @@ END
 
 /*---------------------------------------------------------------------------*/
 /* Codetabellenverwaltung */
-
-static int InstrZ;
 
 static void AddFixed(char *NName, Byte NCode, CPUVar NMin)
 {

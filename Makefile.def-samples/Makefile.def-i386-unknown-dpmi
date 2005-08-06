@@ -6,6 +6,12 @@ CC = bcc
 LD = bcc -WX
 CFLAGS =-WX -ml -Oe -k- -Z -d -dc
 
+TARG_OBJEXTENSION = .obj
+TARG_EXEXTENSION = .exe 
+
+HOST_OBJEXTENSION = $(TARG_OBJEXTENSION)
+HOST_EXEXTENSION = $(TARG_EXEXTENSION)
+
 # -------------------------------------------------------------------------
 # directories where binaries, includes, and manpages should go during
 # installation

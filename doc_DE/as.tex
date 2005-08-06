@@ -2,6 +2,7 @@
 \documentclass[12pt,a4paper,twoside]{report}
 \usepackage{german}
 \usepackage{makeidx}
+\usepackage{hyperref}
 \pagestyle{headings}
 \sloppy
 \textwidth 15cm
@@ -231,6 +232,7 @@ folgende Prozessorfamilien implementiert:
 \item{Zilog Z80, Z180, Z380}
 \item{Zilog Z8, eZ8}
 \item{Xilinx KCPSM/KCPSM3 ('PicoBlaze')}
+\item{LatticeMico8}
 \item{Toshiba TLCS-900(L)}
 \item{Toshiba TLCS-90}
 \item{Toshiba TLCS-870}
@@ -2466,7 +2468,7 @@ PIO_Ctrl   PORT PIO_Port_A+3
 \ttindex{REG}\ttindex{NAMEREG}
 
 {\em G"ultigkeit: AVR, M*Core, ST9, 80C16x, KCPSM ({\tt NAMEREG} nur
- f"ur KCPSM(3))}
+ f"ur KCPSM(3)), LatticeMico8}
 
 Obwohl immer mit gleicher Syntax, hat diese Anweisung von Prozessor
 zu Prozessor eine leicht abweichende Bedeutung: Falls der Zielprozessor
@@ -3049,18 +3051,22 @@ Instruktionen.  Es ist zu beachten, da"s sie nicht bin"ar
 aufw"artskompatibel ist!
 %%-----------
 \begin{quote}
-af) 96C141, 93C141
+af) MICO8
+\end{quote}
+%%-----------
+\begin{quote}
+ag) 96C141, 93C141
 \end{quote}
 Diese beiden Prozessoren repr"asentieren die beiden Varianten der
 Prozessorfamilie: TLCS-900 und TLCS-900L.  Die Unterschiede dieser beiden
 Varianten werden in Abschnitt \ref{TLCS900Spec} genauer beleuchtet.
 %%-----------
 \begin{quote}
-ag) 90C141
+ah) 90C141
 \end{quote}
 %%-----------
 \begin{quote}
-ah) 87C00, 87C20, 87C40, 87C70
+ai) 87C00, 87C20, 87C40, 87C70
 \end{quote}
 Die Prozessoren der TLCS-870-Reihe haben zwar den identischen CPU-Kern, je
 nach Variante aber eine unterschiedliche Peripherieausstattung.  Zum
@@ -3070,36 +3076,36 @@ m"ogliche Unterscheidung, um automatisch den korrekten Symbolsatz
 bereitzustellen.
 %%-----------
 \begin{quote}
-ai) 47C00 $\rightarrow$ 470C00 $\rightarrow$ 470AC00
+aj) 47C00 $\rightarrow$ 470C00 $\rightarrow$ 470AC00
 \end{quote}
 Diese drei Varianten der TLCS-47-Familie haben unterschiedlich gro"se
 RAM-und ROM-Adre"sbereiche, wodurch jeweils einige Befehle zur
 Bankumschaltung hinzukommen oder wegfallen.
 %%-----------
 \begin{quote}
-aj) 97C241
+ak) 97C241
 \end{quote}
 %%-----------
 \begin{quote}
-ak) 16C54 $\rightarrow$ 16C55 $\rightarrow$ 16C56 $\rightarrow$ 16C57
+al) 16C54 $\rightarrow$ 16C55 $\rightarrow$ 16C56 $\rightarrow$ 16C57
 \end{quote}
 Diese Prozessoren unterscheiden sich durch den verf"ugbaren
 Adre"sraum im Programmspeicher, d.h. durch die Adresse, ab der
 der AS "Uberl"aufe anmeckert.
 %%-----------
 \begin{quote}
-al) 16C64, 16C84
+am) 16C64, 16C84
 \end{quote}
 Analog zur MCS-51-Familie findet hier keine Unterscheidung im
 Codegenerator statt, die unterschiedlichen Nummern dienen lediglich
 der Einblendung der korrekten SFRs in STDDEF18.INC.
 %%-----------
 \begin{quote}
-am) 17C42
+an) 17C42
 \end{quote}
 %%-----------
 \begin{quote}
-an) ST6210/ST6215 $\rightarrow$ ST6220/ST6225
+ao) ST6210/ST6215 $\rightarrow$ ST6220/ST6225
 \end{quote}
 Die einzige Unterscheidung, die AS zwischen den beiden Paaren vornimmt, ist
 der bei den ersten beiden kleinere Adre"sraum (2K anstelle 4K).  Die
@@ -3107,11 +3113,11 @@ Feinunterscheidung dient zur automatischen Unterscheidung in der Quelldatei,
 welche Hardware jeweils vorhanden ist (analog zum 8051/52/515).
 %%-----------
 \begin{quote}
-ao) ST7
+ap) ST7
 \end{quote}
 %%-----------
 \begin{quote}
-ap) ST9020, ST9030, ST9040, ST9050
+aq) ST9020, ST9030, ST9040, ST9050
 \end{quote}
 Diese 4 Namen vetreten die vier ,,Unterfamilien'' der ST9-Familie, die
 sich durch eine unterschiedliche Ausstattung mit On-Chip-Peripherie
@@ -3120,11 +3126,11 @@ Unterscheidung wieder nur im Includefile mit den Peripherieadressen zum
 Zuge kommt.
 %%-----------
 \begin{quote}
-aq) 6804
+ar) 6804
 \end{quote}
 %%-----------
 \begin{quote}
-ar) 32010 $\rightarrow$ 32015
+as) 32010 $\rightarrow$ 32015
 \end{quote}
 Der TMS32010 besitzt nur 144 Byte internes RAM, weshalb AS Adressen im
 Datensegment auf eben diesen Bereich begrenzt.  F"ur den 32015 gilt diese
@@ -3132,20 +3138,20 @@ Beschr"ankung nicht, es kann der volle Bereich von 0--255 angesprochen
 werden.
 %%-----------
 \begin{quote}
-as) 320C25 $\rightarrow$ 320C26 $\rightarrow$ 320C28
+at) 320C25 $\rightarrow$ 320C26 $\rightarrow$ 320C28
 \end{quote}
 Diese Prozessoren unterscheiden sich nur leicht in der
 On-Chip-Peripherie sowie den Konfigurationsbefehlen.
 %%-----------
 \begin{quote}
-at) 320C30, 320C31
+au) 320C30, 320C31
 \end{quote}
 Der 320C31 ist eine etwas ,,abgespeckte'' Version mit dem gleichen
 Befehlssatz, jedoch weniger Peripherie.  In STDDEF3X.INC wird diese
 Unterscheidung ausgenutzt.
 %%-----------
 \begin{quote}
-au) 320C203 $\rightarrow$ 320C50, 320C51, 320C53
+av) 320C203 $\rightarrow$ 320C50, 320C51, 320C53
 \end{quote}
 Ersterer ist der generelle Repr"asentant f"ur die
 C20x-Signalprozessorfamilie, die eine Untermenge des C5x-Befehlssatzes
@@ -3153,18 +3159,18 @@ implementieren.  Die Unterscheidung zwischen den verschiedenen
 C5x-Prozessoren wird von AS momentan nicht ausgenutzt.
 %%-----------
 \begin{quote}
-av) 320C541
+aw) 320C541
 \end{quote}  
 Dies ist momentan der Pepr"asentant f"ur die TMS320C54x-Familie...
 %%-----------
 \begin{quote}
-aw) TMS9900
+ax) TMS9900
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-ax) \> TMS70C00, TMS70C20, TMS70C40, \\
+ay) \> TMS70C00, TMS70C20, TMS70C40, \\
     \> TMS70CT20, TMS70CT40, \\
     \> TMS70C02, TMS70C42, TMS70C82, \\
     \> TMS70C08, TMS70C48 \\
@@ -3179,29 +3185,29 @@ interne RAM-Menge, unterscheiden sich also nur in der Menge
 eingebauten ROMs.
 %%-----------
 \begin{quote}
-ay) 370C010, 370C020, 370C030, 370C040 und 370C050
+az) 370C010, 370C020, 370C030, 370C040 und 370C050
 \end{quote}
 Analog zur MCS-51-Familie werden die unterschiedlichen Typen nur
 zur Unterscheidung der Peripherie in STDDEF37.INC genutzt, der
 Befehlssatz ist identisch.
 %%-----------
 \begin{quote}
-az) MSP430
+ba) MSP430
 \end{quote}
 %%-----------
 \begin{quote}
-ba) SC/MP
+bb) SC/MP
 \end{quote}
 %%-----------
 \begin{quote}
-ba) 8070
+bc) 8070
 \end{quote}
 Dieser PRozessor repr"asentiert die gesamte 807x-Familie (die mindestens
 aus den 8070, 8072 und 8073 besteht), der jedoch ein einheitlicher
 CPU-Kern gemeinsam ist.
 %%-----------
 \begin{quote}
-bb) COP87L84
+bd) COP87L84
 \end{quote}
 Dies ist das momentan einzige unterst"utzte Mitglied der COP8-Familie 
 von National Semiconductor.  Mir ist bekannt, da"s die Familie 
@@ -3212,7 +3218,7 @@ ein Anfang, und die Dokumentation von National ist ziemlich umfangreich...
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bc) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
+be) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
     \> SC14420, SC14421, SC14422, SC14424 \\
 \end{tabbing}
 \end{quote}
@@ -3222,7 +3228,7 @@ unterst"utzt werden und deren Architektur im Laufe der Zeit optimiert
 wurde.
 %%-----------
 \begin{quote}
-bd) 7810 $\rightarrow$ 78C10
+bf) 7810 $\rightarrow$ 78C10
 \end{quote}
 Die NMOS-Version besitzt keinen STOP-Modus; der entspechende Befehl sowie
 das ZCM-Register fehlen demzufolge.  \bb{VORSICHT!} NMOS- und CMOS-Version
@@ -3231,7 +3237,7 @@ differieren zum Teil in den Reset-Werten einiger Register!
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-be) \> 75402, \\
+bg) \> 75402, \\
     \> 75004, 75006, 75008, \\
     \> 75268, \\
     \> 75304, 75306, 75308, 75312, 75316, \\
@@ -3247,31 +3253,31 @@ unterscheiden sich einmal durch ihre on-chip-Peripherie und
 zum anderen durch die M"achtigkeit des Befehlssatzes.
 %%-----------
 \begin{quote}
-bf) 78070
+bh) 78070
 \end{quote}
 Dies ist das einzige, mir momentan vertraute Mitglied der
 78K0-Familie von NEC.  Es gelten "ahnliche Aussagen wie zur
 COP8-Familie!
 %%-----------
 \begin{quote}
-bg) 78214
+bi) 78214
 \end{quote}
 Dies ist momentan der Repr"asentant der 78K2-Familie von NEC.
 %%-----------
 \begin{quote}
-bh) 7720 $\rightarrow$ 7725
+bj) 7720 $\rightarrow$ 7725
 \end{quote}
 Der $\mu$PD7725 bietet im Vergleich zu seinem Vorg"anger gr"o"sere
 Adre"sr"aume und einige zus"atzliche Befehle. {\bf VORSICHT!}  Die
 Prozessoren sind nicht zueinander bin"arkompatibel!
 %%-----------
 \begin{quote}
-bi) 77230
+bk) 77230
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
-bj) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
+bl) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
     \> SYM53C875, SYM53C895
 \end{tabbing}
 \end{quote}
@@ -3280,12 +3286,12 @@ einige Befehlsvarianten nicht, au"serdem unterscheiden sie sich in ihrem
 Satz interner Register.
 %%-----------
 \begin{quote}
-bk) MB89190
+bm) MB89190
 \end{quote}
 Dieser Prozessortyp repr"asentiert die F$^{2}$MC8L-Serie von Fujitsu...
 %%-----------
 \begin{quote}
-bl) MB9500
+bn) MB9500
 \end{quote}
 ...so wie dieser es momentan f"ur die 16-Bit-Varianten von Fujitsu tut!
 
@@ -10691,11 +10697,11 @@ Informationen bekommen, die von einem kleinen Tip bis zu ganzen
 Datenb"uchern reichen.  Hier eine Aufz"ahlung (wie oben gesagt, ohne 
 Garantie auf Vollst"andigkeit!):
 \par 
-Ernst Ahlers, Charles Altmann, Rolf Buchholz, Bernd Casimir,
+Ernst Ahlers, Charles Altmann, Andreas Bolsch, Rolf Buchholz, Bernd Casimir,
 Gunther Ewald, Stephan Hruschka, Peter Kliegelh"ofer, Ulf Meinke,
 Matthias Paul, Norbert Rosch, Steffen Schmid, Leonhard Schneider,
 Ernst Schwab, Michael Schwingen, Oliver Sellke, Christian Stelter,
-Oliver Thamm, Thorsten Thiele, John Weinrich.
+Oliver Thamm, Thorsten Thiele, Andreas Wassatsch, John Weinrich.
 \par
 ...und ein geh"assiger Dank an Rolf-Dieter-Klein und Tobias Thiel, die
 mit ihren ASM68K demonstrierten, wie man es \bb{nicht} machen sollte und
@@ -11254,6 +11260,7 @@ oder ich werde langsam alt...
       \item{unterst"utzt zus"atzlich den eZ8 von Zilog;}
       \item{unterst"utzt zus"atzlich die 78K2-Familie von NEC;}
       \item{unterst"utzt zus"atzlich die KCPSM3-Variante von Xilinx;}
+      \item{unterst"utzt zus"atzlich den LatticeMico8;}
       \end{itemize}}
 \end{itemize}
 
@@ -12302,6 +12309,10 @@ damit mit der n"achsten Release alle etwas davon haben :-)
                {\em A memo on the secret features of 6309.} \\
                (erh"altlich "uber WWW: \\
                 http://www.cs.umd.edu/users/fms/comp/CPUs/6309.txt)
+
+\bibitem{LatMico8} Lattice Semiconductor Corporation: \\
+                   {LatticeMico8 Microcontroller Users Guide.\/} \\
+                   Reference Design RD1026, July 2005 
 
 \bibitem{MicroChip} Microchip Technology Inc.: \\
                     {\em Microchip Data Book.\/} \\

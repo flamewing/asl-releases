@@ -31,9 +31,12 @@
 /*           2002-01-13: fixed undefined value of OK in some cases           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3254x.c,v 1.2 2004/05/29 12:18:05 alfred Exp $                   */
+/* $Id: code3254x.c,v 1.3 2005/05/21 16:22:12 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code3254x.c,v $
+ * Revision 1.3  2005/05/21 16:22:12  alfred
+ * - remove double variables, correct call-by-reference arg
+ *
  * Revision 1.2  2004/05/29 12:18:05  alfred
  * - relocated DecodeTIPseudo() to separate module
  *
@@ -119,7 +122,6 @@ static CPUVar CPU320C541;
 static IntType OpSize;
 static ShortInt AdrMode;
 static Word AdrVals[3];
-static int AdrCnt;
 
 static Boolean ThisPar;
 static Word LastOpCode;
@@ -522,6 +524,8 @@ static void DecodeADDSUB(Word Index)
 
         else if (*ArgStr[2] == '*')
         {
+          Word Tmp;
+
           /* break down source operand to reduced variant */
 
           if (!MakeXY(WAsmCode, True))
@@ -532,9 +536,9 @@ static void DecodeADDSUB(Word Index)
 
           if (!DecodeAdr(ArgStr[2], MModMem))
             break;
-          if (!MakeXY(&Shift, True))
+          if (!MakeXY(&Tmp, True))
             break;
-          WAsmCode[0] |= Shift;
+          WAsmCode[0] |= Tmp;
           Shift = 254;
         }
 
@@ -2392,8 +2396,6 @@ static ASSUMERec ASSUME3254xs[ASSUME3254xCount] =
 
 /*-------------------------------------------------------------------------*/
 /* Code Table Handling */
-
-static int InstrZ;
 
 static void AddFixed(char *Name, Word Code, Boolean IsRepeatable)
 {

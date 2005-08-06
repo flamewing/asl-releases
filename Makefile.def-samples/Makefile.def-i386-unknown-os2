@@ -9,6 +9,13 @@ LDFLAGS =
 #            ^^^^^
 #            |||||
 # adapt this to your target cpu (386/486 or higher)
+
+TARG_OBJEXTENSION = .o
+TARG_EXEXTENSION = .exe 
+
+HOST_OBJEXTENSION = $(TARG_OBJEXTENSION)
+HOST_EXEXTENSION = $(TARG_EXEXTENSION)
+
 # -------------------------------------------------------------------------
 # directories where binaries, includes, and manpages should go during
 # installation

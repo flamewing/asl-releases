@@ -20,9 +20,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code960.c,v 1.2 2004/05/29 11:33:02 alfred Exp $                     */
+/* $Id: code960.c,v 1.3 2005/05/21 16:35:05 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code960.c,v $
+ * Revision 1.3  2005/05/21 16:35:05  alfred
+ * - removed variables available globally
+ *
  * Revision 1.2  2004/05/29 11:33:02  alfred
  * - relocated DecodeIntelPseudo() into own module
  *
@@ -46,6 +49,7 @@
 #include "asmpars.h"
 #include "asmallg.h"
 #include "asmitree.h"
+#include "codevars.h"            
 #include "intpseudo.h"
 #include "headids.h"
 
@@ -482,8 +486,6 @@ BEGIN
 END
 
 /*--------------------------------------------------------------------------*/
-
-static int InstrZ;
 
         static void AddFixed(char *NName, LongWord NCode)
 BEGIN

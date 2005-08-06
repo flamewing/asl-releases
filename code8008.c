@@ -22,6 +22,7 @@
 #include "asmpars.h"
 #include "asmitree.h"
 #include "headids.h"
+#include "codevars.h"            
 
 /*---------------------------------------------------------------------------*/
 /* Variablen */
@@ -177,7 +178,6 @@ END
 /*---------------------------------------------------------------------------*/
 /* Codetabellenverwaltung */
 
-static int InstrZ;
 static char *FlagNames = "CZSP";
 
         static void AddFixed(char *NName, Byte NCode)

@@ -15,9 +15,12 @@
 /*           2001-11-26 scaling fix (input from Johannes)                    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3206x.c,v 1.2 2003/12/07 14:01:16 alfred Exp $                   */
+/* $Id: code3206x.c,v 1.3 2005/05/21 16:35:04 alfred Exp $                   */
 /***************************************************************************** 
  * $Log: code3206x.c,v $
+ * Revision 1.3  2005/05/21 16:35:04  alfred
+ * - removed variables available globally
+ *
  * Revision 1.2  2003/12/07 14:01:16  alfred
  * - added missing static defs
  *
@@ -57,6 +60,7 @@
 #include "asmpars.h"
 #include "asmcode.h"
 #include "codepseudo.h"
+#include "codevars.h"
 #include "asmitree.h"
 #include "nlmessages.h"
 #include "as.rsc"
@@ -2594,9 +2598,6 @@ BEGIN
 END
 
 /*-------------------------------------------------------------------------*/
-
-static int InstrZ;
-
 
         static void AddLinAdd(char *NName, LongInt NCode)
 BEGIN
