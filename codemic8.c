@@ -5,9 +5,12 @@
 /* Codegenerator LatticeMico8                                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemic8.c,v 1.3 2005/08/06 14:19:28 alfred Exp $                   */
+/* $Id: codemic8.c,v 1.4 2005/08/07 10:29:44 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codemic8.c,v $
+ * Revision 1.4  2005/08/07 10:29:44  alfred
+ * - allow instruction aliases for (I) variants
+ *
  * Revision 1.3  2005/08/06 14:19:28  alfred
  * - assure long unsigned constants on 16-bit-platforms
  *
@@ -38,7 +41,7 @@
 #include "codepseudo.h"
 #include "codemic8.h"
 
-#define ALUOrderCnt 18
+#define ALUOrderCnt 14
 #define FixedOrderCnt 9
 #define BranchOrderCnt 10
 #define MemOrderCnt 4
@@ -52,13 +55,20 @@ typedef struct
 typedef struct
         {
           LongWord Code;
+          Boolean MayImm;
+        } ALUOrder;
+
+typedef struct
+        {
+          LongWord Code;
           Byte Space;
         } MemOrder;
 
 static PInstTable InstTable;     
 
-static FixedOrder *FixedOrders, *ALUOrders, *BranchOrders, *RegOrders;
+static FixedOrder *FixedOrders, *BranchOrders, *RegOrders;
 static MemOrder *MemOrders;
+static ALUOrder *ALUOrders;
 
 static CPUVar CPUMico8;
 
@@ -116,22 +126,33 @@ static void DecodeFixed(Word Index)
 
 static void DecodeALU(Word Index)
 {
-  FixedOrder *pOrder = ALUOrders + Index;
-  LongWord SReg, DReg;
+  ALUOrder *pOrder = ALUOrders + Index;
+  LongWord Src, DReg;
 
   if (ArgCnt != 2) WrError(1110);
   else if (!IsWReg(ArgStr[1], &DReg)) WrXError(1445, ArgStr[1]);
-  else if (!IsWReg(ArgStr[2], &SReg)) WrXError(1445, ArgStr[2]);
+  else if (IsWReg(ArgStr[2], &Src))
+  {
+    DAsmCode[0] = pOrder->Code | (DReg << 8) | (Src << 3);
+    CodeLen = 1;
+  }
+  else if (!pOrder->MayImm) WrXError(1445, ArgStr[2]);
   else
   {
-    DAsmCode[0] = pOrder->Code | (DReg << 8) | (SReg << 3);
-    CodeLen = 1;
+    Boolean OK;
+
+    Src = EvalIntExpression(ArgStr[2], Int8, &OK);
+    if (OK)
+    {
+      DAsmCode[0] = pOrder->Code | (1 << 13) | (DReg << 8) | (Src & 0xff);
+      CodeLen = 1;
+    }
   }
 }
 
 static void DecodeALUI(Word Index)
 {
-  FixedOrder *pOrder = ALUOrders + Index;
+  ALUOrder *pOrder = ALUOrders + Index;
   LongWord Src, DReg;
   Boolean OK;
 
@@ -179,6 +200,11 @@ static void DecodeMem(Word Index)
 
   if (ArgCnt != 2) WrError(1110);
   else if (!IsWReg(ArgStr[1], &DReg)) WrXError(1445, ArgStr[1]);
+  else if (IsWReg(ArgStr[2], &Src))
+  {
+    DAsmCode[0] = pOrder->Code | (DReg << 8) | ((Src & 0x1f) << 3) | 2;
+    CodeLen = 1;
+  }
   else
   {
     Src = EvalIntExpression(ArgStr[2], UInt5, &OK);
@@ -189,6 +215,21 @@ static void DecodeMem(Word Index)
       CodeLen = 1;
     }
   }
+}
+
+static void DecodeMemI(Word Index)
+{
+  MemOrder *pOrder = MemOrders + Index;
+  LongWord DReg, SReg;
+
+  if (ArgCnt != 2) WrError(1110);
+  else if (!IsWReg(ArgStr[1], &DReg)) WrXError(1445, ArgStr[1]);
+  else if (!IsWReg(ArgStr[2], &SReg)) WrXError(1445, ArgStr[2]);
+  else
+  {
+    DAsmCode[0] = pOrder->Code | (DReg << 8) | (SReg << 3) | 2;
+    CodeLen = 1;
+  }   
 }
 
 static void DecodeReg(Word Index)
@@ -224,7 +265,7 @@ static void AddALU(char *NName, char *NImmName, LongWord NCode)
 
   ALUOrders[InstrZ].Code = NCode;
   AddInstTable(InstTable, NName, InstrZ, DecodeALU);
-  if (NImmName)
+  if ((ALUOrders[InstrZ].MayImm = (NImmName != NULL)))
     AddInstTable(InstTable, NImmName, InstrZ, DecodeALUI);
   InstrZ++;
 }
@@ -238,14 +279,16 @@ static void AddBranch(char *NName, LongWord NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeBranch);
 }
  
-static void AddMem(char *NName, LongWord NCode, Byte NSpace)
+static void AddMem(char *NName, char *NImmName, LongWord NCode, Byte NSpace)
 {
   if (InstrZ >= MemOrderCnt)
     exit(255);
 
   MemOrders[InstrZ].Code = NCode;
   MemOrders[InstrZ].Space = NSpace;
-  AddInstTable(InstTable, NName, InstrZ++, DecodeMem);
+  AddInstTable(InstTable, NName, InstrZ, DecodeMem);
+  AddInstTable(InstTable, NImmName, InstrZ, DecodeMemI);
+  InstrZ++;
 }      
  
 static void AddReg(char *NName, LongWord NCode)
@@ -274,7 +317,7 @@ static void InitFields(void)
   AddFixed("NOP"   , 0x10000);
 
   InstrZ = 0;
-  ALUOrders = (FixedOrder*) malloc(sizeof(FixedOrder) * ALUOrderCnt);
+  ALUOrders = (ALUOrder*) malloc(sizeof(ALUOrder) * ALUOrderCnt);
   AddALU("ADD"    , "ADDI"  ,   2UL << 14);
   AddALU("ADDC"   , "ADDIC" ,   3UL << 14);
   AddALU("SUB"    , "SUBI"  ,   0UL << 14);
@@ -289,10 +332,6 @@ static void InitFields(void)
   AddALU("RORC"   , NULL    , (10UL << 14) | 1);
   AddALU("ROL"    , NULL    , (10UL << 14) | 2);
   AddALU("ROLC"   , NULL    , (10UL << 14) | 3);
-  AddALU("IMPORTI", NULL    , (15UL << 14) | 3);
-  AddALU("EXPORTI", NULL    , (15UL << 14) | 2);
-  AddALU("LSPI"   , NULL    , (15UL << 14) | 7);
-  AddALU("SSPI"   , NULL    , (15UL << 14) | 6);
 
   InstrZ = 0;
   RegOrders = (FixedOrder*) malloc(sizeof(FixedOrder) * RegOrderCnt); 
@@ -314,10 +353,10 @@ static void InitFields(void)
 
   InstrZ = 0;
   MemOrders = (MemOrder*) malloc(sizeof(MemOrder) * MemOrderCnt);
-  AddMem("IMPORT" , (15UL << 14) | 1, SegIO);
-  AddMem("EXPORT" , (15UL << 14) | 0, SegIO);
-  AddMem("LSP"    , (15UL << 14) | 5, SegData);
-  AddMem("SSP"    , (15UL << 14) | 4, SegData);
+  AddMem("IMPORT" , "IMPORTI", (15UL << 14) | 1, SegIO);
+  AddMem("EXPORT" , "EXPORTI", (15UL << 14) | 0, SegIO);
+  AddMem("LSP"    , "LSPI"   , (15UL << 14) | 5, SegData);
+  AddMem("SSP"    , "SSPI"   , (15UL << 14) | 4, SegData);
 
   AddInstTable(InstTable, "REG", 0, DecodeRegDef);
   AddInstTable(InstTable, "PORT", 0, DecodePort);

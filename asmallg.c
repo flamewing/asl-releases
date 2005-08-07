@@ -25,9 +25,12 @@
 /*                       to now                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmallg.c,v 1.1 2003/11/06 02:49:18 alfred Exp $                     */
+/* $Id: asmallg.c,v 1.2 2005/08/07 10:29:24 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmallg.c,v $
+ * Revision 1.2  2005/08/07 10:29:24  alfred
+ * - remove mnemonic conflict with MICO8
+ *
  * Revision 1.1  2003/11/06 02:49:18  alfred
  * - recreated
  *
@@ -1431,8 +1434,8 @@ static PseudoOrder Pseudos[]=
                     {"ENDSTRUCT",  CodeENDSTRUCT },
                     {"ENUM",       CodeENUM      },
                     {"ERROR",      CodeERROR     },
-                    {"EXPORT",     CodeEXPORT    },
-                    {"EXTERN",     CodeEXTERN    },
+                    {"EXPORT_SYM", CodeEXPORT    },
+                    {"EXTERN_SYM", CodeEXTERN    },
                     {"FATAL",      CodeFATAL     },
                     {"FUNCTION",   CodeFUNCTION  },
                     {"LABEL",      CodeLABEL     },

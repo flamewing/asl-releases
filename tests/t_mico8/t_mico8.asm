@@ -78,4 +78,4 @@ int_handler:
 	b 	$ + 10
 
 	import	r10,21
-
+	export	r10,21

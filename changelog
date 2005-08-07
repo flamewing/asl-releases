@@ -1,4 +1,4 @@
-$Id: changelog,v 1.9 2005/08/06 13:37:39 alfred Exp $
+$Id: changelog,v 1.10 2005/08/07 10:34:08 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -975,3 +975,9 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 2005-08-06 [Bld 36]
 
 - Addition    : added LatticeMico8
+
+2005-08-07 [Bld 37]
+
+- Bugfix      : correct mnemonic conflict for EXPORT on MICO8
+
+- Addition    : allow instruction aliases for ...I variants on MICO8
