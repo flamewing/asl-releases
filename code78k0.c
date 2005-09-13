@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code78k0.c,v 1.2 2004/05/29 11:33:01 alfred Exp $                          *
+/* $Id: code78k0.c,v 1.3 2005/09/08 16:53:42 alfred Exp $                          *
  ***************************************************************************** 
  * $Log: code78k0.c,v $
+ * Revision 1.3  2005/09/08 16:53:42  alfred
+ * - use common PInstTable
+ *
  * Revision 1.2  2004/05/29 11:33:01  alfred
  * - relocated DecodeIntelPseudo() into own module
  *
@@ -74,8 +77,6 @@ typedef struct
          } FixedOrder;
 
 static FixedOrder *FixedOrders;
-
-static PInstTable InstTable;
 
 static Byte OpSize,AdrPart;
 static Byte AdrVals[2];

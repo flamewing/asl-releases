@@ -22,6 +22,7 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "asmitree.h"
 #include "codevars.h"            
 
 /*****************************************************************************/

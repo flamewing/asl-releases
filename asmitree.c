@@ -210,7 +210,11 @@ BEGIN
 
    /* mindestens ein freies Element lassen, damit der Sucher garantiert terminiert */
  
-   if (tab->Size-1<=tab->Fill) exit(255);
+   if (tab->Size-1<=tab->Fill)
+   {
+     fprintf(stderr, "\nhash table overflow\n");
+     exit(255);
+   }
    while (1)
     BEGIN
      if (tab->Entries[h0].Name==Nil)

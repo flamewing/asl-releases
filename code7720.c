@@ -15,9 +15,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code7720.c,v 1.2 2005/05/21 16:35:05 alfred Exp $                    */
+/* $Id: code7720.c,v 1.3 2005/09/08 16:53:42 alfred Exp $                    */
 /***************************************************************************** 
  * $Log: code7720.c,v $
+ * Revision 1.3  2005/09/08 16:53:42  alfred
+ * - use common PInstTable
+ *
  * Revision 1.2  2005/05/21 16:35:05  alfred
  * - removed variables available globally
  *
@@ -87,7 +90,7 @@ static FixedOrder *JmpOrders,*ALU2Orders,*ALU1Orders;
 
 static TReg *DestRegs,*SrcRegs,*ALUSrcRegs;
 
-static PInstTable InstTable, OpTable;
+static PInstTable OpTable;
 
 /*---------------------------------------------------------------------------*/
 /* Hilfsroutinen */

@@ -13,9 +13,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code16c8x.c,v 1.2 2005/05/16 09:38:19 alfred Exp $                   */
+/* $Id: code16c8x.c,v 1.3 2005/09/08 16:53:39 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code16c8x.c,v $
+ * Revision 1.3  2005/09/08 16:53:39  alfred
+ * - use common PInstTable
+ *
  * Revision 1.2  2005/05/16 09:38:19  alfred
  * - major code cleanup, added types with 2K program space
  *
@@ -73,8 +76,6 @@ static FixedOrder *LitOrders;
 static AriOrder *AriOrders;
 static FixedOrder *BitOrders;
 static FixedOrder *FOrders;
-
-static PInstTable InstTable;
 
 static CPUVar CPU16C64, CPU16C84, CPU16C873, CPU16C874, CPU16C876, CPU16C877;
 

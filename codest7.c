@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codest7.c,v 1.2 2004/05/29 12:04:48 alfred Exp $                     */
+/* $Id: codest7.c,v 1.3 2005/09/08 17:31:05 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codest7.c,v $
+ * Revision 1.3  2005/09/08 17:31:05  alfred
+ * - add missing include
+ *
  * Revision 1.2  2004/05/29 12:04:48  alfred
  * - relocated DecodeMot(16)Pseudo into separate module
  *
@@ -28,6 +31,7 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "asmitree.h"
 #include "codepseudo.h"
 #include "motpseudo.h"
 #include "codevars.h"

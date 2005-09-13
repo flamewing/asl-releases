@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code65.c,v 1.2 2004/05/29 12:04:46 alfred Exp $                      */
+/* $Id: code65.c,v 1.3 2005/09/08 17:31:03 alfred Exp $                      */
 /*****************************************************************************
  * $Log: code65.c,v $
+ * Revision 1.3  2005/09/08 17:31:03  alfred
+ * - add missing include
+ *
  * Revision 1.2  2004/05/29 12:04:46  alfred
  * - relocated DecodeMot(16)Pseudo into separate module
  *
@@ -28,6 +31,7 @@
 #include "asmdef.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "asmitree.h"
 #include "codepseudo.h"
 #include "motpseudo.h"
 #include "codevars.h"

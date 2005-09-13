@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code96.c,v 1.2 2004/05/29 11:33:02 alfred Exp $                      *
+/* $Id: code96.c,v 1.3 2005/09/08 17:31:04 alfred Exp $                      *
  ***************************************************************************** 
  * $Log: code96.c,v $
+ * Revision 1.3  2005/09/08 17:31:04  alfred
+ * - add missing include
+ *
  * Revision 1.2  2004/05/29 11:33:02  alfred
  * - relocated DecodeIntelPseudo() into own module
  *
@@ -34,6 +37,7 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "asmitree.h"
 #include "codepseudo.h" 
 #include "intpseudo.h"
 #include "codevars.h"

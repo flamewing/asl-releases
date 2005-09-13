@@ -31,9 +31,12 @@
 /*           2002-01-13: fixed undefined value of OK in some cases           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3254x.c,v 1.3 2005/05/21 16:22:12 alfred Exp $                   */
+/* $Id: code3254x.c,v 1.4 2005/09/08 16:53:41 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code3254x.c,v $
+ * Revision 1.4  2005/09/08 16:53:41  alfred
+ * - use common PInstTable
+ *
  * Revision 1.3  2005/05/21 16:22:12  alfred
  * - remove double variables, correct call-by-reference arg
  *
@@ -60,8 +63,8 @@
 #include "asmcode.h"
 #include "codepseudo.h"
 #include "tipseudo.h"
-#include "codevars.h"
 #include "asmitree.h"
+#include "codevars.h"
 #include "fileformat.h"
 #include "headids.h"
 
@@ -109,7 +112,6 @@ static LongInt Reg_CPL, Reg_DP, Reg_SP;
 
 static Boolean ThisRep, LastRep, ForcePageZero;
 
-static PInstTable InstTable;
 static FixedOrder *FixedOrders, *AccOrders, *Acc2Orders, *MemOrders, *XYOrders,
                   *MemAccOrders, *MacOrders;
 static MemConstOrder *MemConstOrders;

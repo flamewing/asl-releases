@@ -1,4 +1,4 @@
-$Id: changelog,v 1.10 2005/08/07 10:34:08 alfred Exp $
+$Id: changelog,v 1.13 2005/09/12 19:30:26 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -981,3 +981,11 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 - Bugfix      : correct mnemonic conflict for EXPORT on MICO8
 
 - Addition    : allow instruction aliases for ...I variants on MICO8
+
+2005-09-08 [Bld 38]
+
+- Bugfix      : correct Qxxn register decoding on TLCS-900
+
+2005-09-12 [Bld 39]
+
+- Addition    : add HC12X/XGATE instruction extensions

@@ -10,9 +10,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code86.c,v 1.2 2004/05/29 11:33:01 alfred Exp $                      */
+/* $Id: code86.c,v 1.3 2005/09/08 16:53:42 alfred Exp $                      */
 /*****************************************************************************
  * $Log: code86.c,v $
+ * Revision 1.3  2005/09/08 16:53:42  alfred
+ * - use common PInstTable
+ *
  * Revision 1.2  2004/05/29 11:33:01  alfred
  * - relocated DecodeIntelPseudo() into own module
  *
@@ -29,8 +32,8 @@
 #include "asmallg.h"
 #include "codepseudo.h"
 #include "intpseudo.h" 
-#include "codevars.h"
 #include "asmitree.h"
+#include "codevars.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -104,7 +107,6 @@ static FixedOrder *ShiftOrders;
 static AddOrder *Reg16Orders;
 static char **MulOrders;
 static char **Bit1Orders;
-static PInstTable InstTable;
 
 /*------------------------------------------------------------------------------------*/
 

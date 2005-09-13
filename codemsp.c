@@ -12,9 +12,12 @@
 /*             2002-01-27 allow immediate addressing for one-op instrs(doj)  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemsp.c,v 1.1 2003/11/06 02:49:23 alfred Exp $                     */
+/* $Id: codemsp.c,v 1.2 2005/09/08 17:31:05 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: codemsp.c,v $
+ * Revision 1.2  2005/09/08 17:31:05  alfred
+ * - add missing include
+ *
  * Revision 1.1  2003/11/06 02:49:23  alfred
  * - recreated
  *
@@ -46,6 +49,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmallg.h"
+#include "asmitree.h"  
 #include "codepseudo.h"
 #include "codevars.h"
 

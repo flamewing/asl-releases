@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code16c5x.c,v 1.1 2003/11/06 02:49:19 alfred Exp $                          */
+/* $Id: code16c5x.c,v 1.2 2005/09/08 17:31:02 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code16c5x.c,v $
+ * Revision 1.2  2005/09/08 17:31:02  alfred
+ * - add missing include
+ *
  * Revision 1.1  2003/11/06 02:49:19  alfred
  * - recreated
  *
@@ -31,6 +34,7 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "asmitree.h"
 #include "codepseudo.h"
 #include "codevars.h"
 

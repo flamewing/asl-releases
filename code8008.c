@@ -37,7 +37,6 @@ typedef struct
 #define JmpOrderCnt 10
 
 static CPUVar CPU8008;
-static PInstTable InstTable;
 
 static FixedOrder *FixedOrders, *ImmOrders, *JmpOrders;
 

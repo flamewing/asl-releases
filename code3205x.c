@@ -15,9 +15,12 @@
  * 14. 1.2001 silenced warnings about unused parameters
  * 2001-11-11 use DecodeTIPSeudo
  */
-/* $Id: code3205x.c,v 1.3 2004/09/26 14:42:44 alfred Exp $                   */
+/* $Id: code3205x.c,v 1.4 2005/09/08 16:53:39 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code3205x.c,v $
+ * Revision 1.4  2005/09/08 16:53:39  alfred
+ * - use common PInstTable
+ *
  * Revision 1.3  2004/09/26 14:42:44  alfred
  * - remove warning
  *
@@ -39,6 +42,7 @@
 #include "asmpars.h"
 #include "asmitree.h"
 #include "codepseudo.h"
+#include "codevars.h"
 #include "tipseudo.h"
 #include "endian.h"
 
@@ -100,8 +104,6 @@ static CPUVar cpu_320203;
 static CPUVar cpu_32050;
 static CPUVar cpu_32051;
 static CPUVar cpu_32053;
-
-static PInstTable InstTable;
 
 /* ---------------------------------------------------------------------- */
 

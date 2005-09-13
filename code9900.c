@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code9900.c,v 1.1 2003/11/06 02:49:22 alfred Exp $                    */
+/* $Id: code9900.c,v 1.2 2005/09/08 17:31:05 alfred Exp $                    */
 /***************************************************************************** 
  * $Log: code9900.c,v $
+ * Revision 1.2  2005/09/08 17:31:05  alfred
+ * - add missing include
+ *
  * Revision 1.1  2003/11/06 02:49:22  alfred
  * - recreated
  *
@@ -40,6 +43,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmallg.h"
+#include "asmitree.h"
 #include "codepseudo.h"
 #include "codevars.h"
 

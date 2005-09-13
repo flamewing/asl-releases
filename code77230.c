@@ -16,9 +16,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code77230.c,v 1.3 2005/05/21 16:35:05 alfred Exp $                   */
+/* $Id: code77230.c,v 1.4 2005/09/08 16:53:42 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code77230.c,v $
+ * Revision 1.4  2005/09/08 16:53:42  alfred
+ * - use common PInstTable
+ *
  * Revision 1.3  2005/05/21 16:35:05  alfred
  * - removed variables available globally
  *
@@ -109,7 +112,6 @@ static LongWord InstrMask;
 static Boolean Error;
 static LongWord *InstrComps,*InstrDefs;
 
-static PInstTable InstTable;
 static Register *SrcRegs,*ALUSrcRegs,*DestRegs;
 static FixedOrder *JmpOrders,*ALU1Orders,*ALU2Orders;
 

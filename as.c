@@ -58,9 +58,12 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.7 2005/07/30 13:57:02 alfred Exp $                          */
+/* $Id: as.c,v 1.8 2005/09/11 18:10:50 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.8  2005/09/11 18:10:50  alfred
+ * - added XGATE
+ *
  * Revision 1.7  2005/07/30 13:57:02  alfred
  * - add LatticeMico8
  *
@@ -188,6 +191,7 @@
 #include "code56k.h"
 #include "code601.h"
 #include "codemcore.h"
+#include "codexgate.h"
 #include "code68.h"
 #include "code6805.h"
 #include "code6809.h"
@@ -3467,6 +3471,7 @@ BEGIN
      code56k_init(); 
      code601_init();
      codemcore_init();
+     codexgate_init();
      code68_init(); code6805_init(); code6809_init(); code6812_init(); code6816_init();
      codeh8_3_init(); codeh8_5_init(); code7000_init();
      code65_init(); code7700_init(); code4500_init(); codem16_init(); codem16c_init();

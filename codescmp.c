@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codescmp.c,v 1.2 2004/05/29 11:33:03 alfred Exp $                    */
+/* $Id: codescmp.c,v 1.3 2005/09/08 17:31:05 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codescmp.c,v $
+ * Revision 1.3  2005/09/08 17:31:05  alfred
+ * - add missing include
+ *
  * Revision 1.2  2004/05/29 11:33:03  alfred
  * - relocated DecodeIntelPseudo() into own module
  *
@@ -27,6 +30,7 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "asmitree.h"  
 #include "intpseudo.h"
 #include "codevars.h"
 

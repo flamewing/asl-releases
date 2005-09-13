@@ -10,9 +10,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters           */
 /*                                                                          */
 /****************************************************************************/
-/* $Id: codefmc8.c,v 1.2 2004/05/29 11:33:03 alfred Exp $                   */
+/* $Id: codefmc8.c,v 1.3 2005/09/08 16:53:43 alfred Exp $                   */
 /****************************************************************************
  * $Log: codefmc8.c,v $
+ * Revision 1.3  2005/09/08 16:53:43  alfred
+ * - use common PInstTable
+ *
  * Revision 1.2  2004/05/29 11:33:03  alfred
  * - relocated DecodeIntelPseudo() into own module
  *
@@ -28,8 +31,8 @@
 #include "asmpars.h"
 #include "asmsub.h"
 #include "intpseudo.h"
-#include "codevars.h"
 #include "asmitree.h"
+#include "codevars.h"
 #include "headids.h"
 
 /*--------------------------------------------------------------------------*/
@@ -63,7 +66,6 @@ typedef struct
 
 static CPUVar CPU89190;
 
-static PInstTable InstTable;
 static FixedOrder *FixedOrders, *ALUOrders, *AccOrders, *RelOrders;
 
 static int AdrMode;

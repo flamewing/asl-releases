@@ -14,9 +14,15 @@
 /*           19. 8.2001 fixed errors for lower halves of XIX...XSP           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code96c141.c,v 1.3 2004/11/16 17:43:09 alfred Exp $                          */
+/* $Id: code96c141.c,v 1.5 2005/09/08 16:53:42 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code96c141.c,v $
+ * Revision 1.5  2005/09/08 16:53:42  alfred
+ * - use common PInstTable
+ *
+ * Revision 1.4  2005/09/08 16:10:03  alfred
+ * - fix Qxxn register decoding
+ *
  * Revision 1.3  2004/11/16 17:43:09  alfred
  * - add missing hex mark on short mask
  *
@@ -46,8 +52,8 @@
 #include "asmallg.h"
 #include "codepseudo.h"
 #include "intpseudo.h"
-#include "codevars.h"
 #include "asmitree.h"
+#include "codevars.h"
 
 /*-------------------------------------------------------------------------*/
 /* Daten */
@@ -120,7 +126,6 @@ static ALU2Order *BitCFOrders;
 static char **BitOrders;
 static Condition *Conditions;
 static LongInt DefaultCondition;
-static PInstTable InstTable;
 
 static ShortInt AdrType;
 static ShortInt OpSize;        /* -1/0/1/2 = nix/Byte/Word/Long */
@@ -201,7 +206,7 @@ BEGIN
        *ErgNo = ((Asc[2] - '0') << 4)+((z & 6) << 1) + (z & 1);
        if (*Asc == 'Q')
         BEGIN
-         ErgNo += 2; ChkMaximum(True, &Result);
+         *ErgNo |= 2; ChkMaximum(True, &Result);
         END
        if (((*Asc == 'Q') OR (Maximum)) AND (Asc[2] > '3'))
         BEGIN
@@ -221,7 +226,7 @@ BEGIN
         *ErgNo = ((Asc[3] - '0') << 4) + (z << 2);
         if (*Asc == 'Q')
          BEGIN
-          ErgNo += 2; ChkMaximum(True, &Result);
+          *ErgNo |= 2; ChkMaximum(True, &Result);
          END
         if (((*Asc == 'Q') OR (Maximum)) AND (Asc[3] > '3'))
          BEGIN

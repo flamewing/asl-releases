@@ -10,9 +10,12 @@
 /*           2001-12-11 begun with Rabbit2000                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codez80.c,v 1.2 2004/05/29 11:33:04 alfred Exp $                     */
+/* $Id: codez80.c,v 1.3 2005/09/08 16:53:43 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codez80.c,v $
+ * Revision 1.3  2005/09/08 16:53:43  alfred
+ * - use common PInstTable
+ *
  * Revision 1.2  2004/05/29 11:33:04  alfred
  * - relocated DecodeIntelPseudo() into own module
  *
@@ -112,7 +115,6 @@ static ALUOrder *ALUOrders;
 static char **ShiftOrders;
 static char **BitOrders;
 static Condition *Conditions;
-static PInstTable InstTable;
 
 static SimpProc SaveInitProc;
 

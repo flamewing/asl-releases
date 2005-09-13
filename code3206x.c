@@ -15,9 +15,12 @@
 /*           2001-11-26 scaling fix (input from Johannes)                    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3206x.c,v 1.3 2005/05/21 16:35:04 alfred Exp $                   */
+/* $Id: code3206x.c,v 1.4 2005/09/08 16:53:40 alfred Exp $                   */
 /***************************************************************************** 
  * $Log: code3206x.c,v $
+ * Revision 1.4  2005/09/08 16:53:40  alfred
+ * - use common PInstTable
+ *
  * Revision 1.3  2005/05/21 16:35:04  alfred
  * - removed variables available globally
  *
@@ -60,8 +63,8 @@
 #include "asmpars.h"
 #include "asmcode.h"
 #include "codepseudo.h"
-#include "codevars.h"
 #include "asmitree.h"
+#include "codevars.h"
 #include "nlmessages.h"
 #include "as.rsc"
 
@@ -148,7 +151,6 @@ static FixedOrder *CmpOrders;
 static MemOrder *MemOrders;
 static MulOrder *MulOrders;
 static CtrlReg *CtrlRegs;
-static PInstTable InstTable;
 
 /*-------------------------------------------------------------------------*/
 

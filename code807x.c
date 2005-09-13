@@ -5,9 +5,12 @@
 /* Codegenerator National INS807X.c                                          */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code807x.c,v 1.2 2004/05/29 11:33:01 alfred Exp $                   *
+/* $Id: code807x.c,v 1.3 2005/09/08 16:53:42 alfred Exp $                   *
  *****************************************************************************
  * $Log: code807x.c,v $
+ * Revision 1.3  2005/09/08 16:53:42  alfred
+ * - use common PInstTable
+ *
  * Revision 1.2  2004/05/29 11:33:01  alfred
  * - relocated DecodeIntelPseudo() into own module
  *
@@ -77,7 +80,6 @@ typedef struct
           Byte Code, Code16;
         } ShiftOrder;
 
-static PInstTable InstTable;
 static FixedOrder *FixedOrders, *BranchOrders;
 static ShiftOrder *ShiftOrders;
 

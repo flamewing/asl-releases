@@ -12,9 +12,12 @@
 /*           2001-09-03 added inx as alias for incx                          */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6805.c,v 1.3 2004/05/29 12:04:46 alfred Exp $                    */
+/* $Id: code6805.c,v 1.4 2005/09/08 17:31:04 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6805.c,v $
+ * Revision 1.4  2005/09/08 17:31:04  alfred
+ * - add missing include
+ *
  * Revision 1.3  2004/05/29 12:04:46  alfred
  * - relocated DecodeMot(16)Pseudo into separate module
  *
@@ -40,6 +43,7 @@
 #include "asmdef.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "asmitree.h"
 #include "motpseudo.h"
 #include "codevars.h"
 

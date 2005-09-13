@@ -19,9 +19,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codexa.c,v 1.3 2004/05/29 12:04:48 alfred Exp $                      */
+/* $Id: codexa.c,v 1.4 2005/09/08 16:53:43 alfred Exp $                      */
 /*****************************************************************************
  * $Log: codexa.c,v $
+ * Revision 1.4  2005/09/08 16:53:43  alfred
+ * - use common PInstTable
+ *
  * Revision 1.3  2004/05/29 12:04:48  alfred
  * - relocated DecodeMot(16)Pseudo into separate module
  *
@@ -96,8 +99,6 @@ static FixedOrder *StackOrders;
 static RegOrder *RegOrders;
 static FixedOrder *RotateOrders;
 static InvOrder *RelOrders;
-
-static PInstTable InstTable;
 
 static LongInt Reg_DS;
 static SimpProc SaveInitProc;

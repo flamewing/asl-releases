@@ -109,6 +109,7 @@ call testall t_mic51
 call testall t_mico8
 call testall t_msp
 call testall t_parsys
+call testall t_s12x
 call testall t_scmp
 call testall t_secdri
 call testall t_st6
@@ -117,6 +118,7 @@ call testall t_st9
 call testall t_tmpsym
 call testall t_tms7
 call testall t_xa
+call testall t_xgate
 call testall t_z380
 call testall t_z8
 echo successes: %SUMPASS% >> ..\testlog

@@ -10,5 +10,8 @@
 
 #include "stdinc.h"
 
+#include "asmitree.h"
+
 int InstrZ;
 int AdrCnt;
+PInstTable InstTable;

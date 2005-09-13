@@ -13,9 +13,12 @@
 /*                       unsinged limited                                    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68.c,v 1.4 2004/05/29 12:18:05 alfred Exp $                      */
+/* $Id: code68.c,v 1.5 2005/09/08 16:53:41 alfred Exp $                      */
 /*****************************************************************************
  * $Log: code68.c,v $
+ * Revision 1.5  2005/09/08 16:53:41  alfred
+ * - use common PInstTable
+ *
  * Revision 1.4  2004/05/29 12:18:05  alfred
  * - relocated DecodeTIPseudo() to separate module
  *
@@ -32,8 +35,8 @@
 #include "asmsub.h"
 #include "codepseudo.h"
 #include "motpseudo.h"
-#include "codevars.h"
 #include "asmitree.h"
+#include "codevars.h"
 
 #include "code68.h"
 
@@ -105,7 +108,6 @@ static ALU8Order *ALU8Orders;
 static ALU16Order *ALU16Orders;
 static BaseOrder *Bit63Orders;
 static BaseOrder *Sing8Orders;
-static PInstTable InstTable;
 
 static LongInt Reg_MMSIZ, Reg_MMWBR, Reg_MM1CR, Reg_MM2CR;
 static LongWord Win1VStart, Win1VEnd, Win1PStart, Win1PEnd,

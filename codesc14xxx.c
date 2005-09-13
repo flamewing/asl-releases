@@ -20,9 +20,9 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
-#include "codevars.h"
 #include "headids.h"
 #include "asmitree.h"
+#include "codevars.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -46,7 +46,6 @@ typedef struct
 
 static CPUVar CPU14400, CPU14401, CPU14402, CPU14404, CPU14405,
               CPU14420, CPU14421, CPU14422, CPU14424;
-static PInstTable InstTable;
 static FixedOrder *FixedOrders;
 static Word CurrMask;
 

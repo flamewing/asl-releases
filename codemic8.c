@@ -5,9 +5,12 @@
 /* Codegenerator LatticeMico8                                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemic8.c,v 1.4 2005/08/07 10:29:44 alfred Exp $                   */
+/* $Id: codemic8.c,v 1.5 2005/09/08 16:53:43 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codemic8.c,v $
+ * Revision 1.5  2005/09/08 16:53:43  alfred
+ * - use common PInstTable
+ *
  * Revision 1.4  2005/08/07 10:29:44  alfred
  * - allow instruction aliases for (I) variants
  *
@@ -63,8 +66,6 @@ typedef struct
           LongWord Code;
           Byte Space;
         } MemOrder;
-
-static PInstTable InstTable;     
 
 static FixedOrder *FixedOrders, *BranchOrders, *RegOrders;
 static MemOrder *MemOrders;

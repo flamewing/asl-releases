@@ -1,0 +1,8 @@
++------------------------ Test Application S12X -----------------------------+
+|                                                                            |
+|    This is a sample piece of code from Freescale to initialze and start    |
+|    the XGATE coprocessor in the S12X.  Note that for the sake of           |
+|    compactness, the code was moved from 0x3000 to 0xff00, which might      |
+|    not work in reality...                                                  |
+|                                                                            |
++----------------------------------------------------------------------------+

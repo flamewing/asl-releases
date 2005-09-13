@@ -5,9 +5,12 @@
 /* Codegenerator xilinx kcpsm3                                               */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codekcp3.c,v 1.1 2005/03/21 19:48:16 alfred Exp $                   */
+/* $Id: codekcp3.c,v 1.2 2005/09/08 16:53:43 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codekcp3.c,v $
+ * Revision 1.2  2005/09/08 16:53:43  alfred
+ * - use common PInstTable
+ *
  * Revision 1.1  2005/03/21 19:48:16  alfred
  * - shortened name to 8+3 (again...)
  *
@@ -42,8 +45,6 @@ typedef struct
         {
           LongWord Code;
         } FixedOrder;
-
-static PInstTable InstTable;     
 
 static FixedOrder *RegOrders, *ALUOrders;
 

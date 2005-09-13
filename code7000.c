@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code7000.c,v 1.2 2004/05/29 12:04:47 alfred Exp $                    */
+/* $Id: code7000.c,v 1.3 2005/09/08 17:31:04 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code7000.c,v $
+ * Revision 1.3  2005/09/08 17:31:04  alfred
+ * - add missing include
+ *
  * Revision 1.2  2004/05/29 12:04:47  alfred
  * - relocated DecodeMot(16)Pseudo into separate module
  *
@@ -29,6 +32,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmallg.h"
+#include "asmitree.h"
 #include "codepseudo.h"
 #include "motpseudo.h"
 #include "codevars.h"

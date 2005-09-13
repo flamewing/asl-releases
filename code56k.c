@@ -14,9 +14,12 @@
 /*                      ShortMode wird bei absoluter Adressierung gemerkt    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code56k.c,v 1.1 2003/11/06 02:49:20 alfred Exp $                     */
+/* $Id: code56k.c,v 1.2 2005/09/08 17:31:03 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code56k.c,v $
+ * Revision 1.2  2005/09/08 17:31:03  alfred
+ * - add missing include
+ *
  * Revision 1.1  2003/11/06 02:49:20  alfred
  * - recreated
  *
@@ -37,6 +40,7 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "asmitree.h"
 #include "codepseudo.h"
 #include "codevars.h"
 

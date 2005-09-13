@@ -7,9 +7,12 @@
 /*           3. 2.2001 added 1805 instructions                              */
 /*                                                                          */
 /****************************************************************************/
-/* $Id: code1802.c,v 1.2 2004/05/29 11:33:00 alfred Exp $                   */
+/* $Id: code1802.c,v 1.3 2005/09/08 16:53:39 alfred Exp $                   */
 /****************************************************************************
  * $Log: code1802.c,v $
+ * Revision 1.3  2005/09/08 16:53:39  alfred
+ * - use common PInstTable
+ *
  * Revision 1.2  2004/05/29 11:33:00  alfred
  * - relocated DecodeIntelPseudo() into own module
  *
@@ -24,6 +27,7 @@
 #include "asmpars.h"
 #include "asmitree.h"
 #include "codepseudo.h"
+#include "codevars.h"
 #include "intpseudo.h"
 #include "headids.h"
 
@@ -31,8 +35,6 @@
 /* Variables */
 
 static CPUVar CPU1802, CPU1805;
-
-static PInstTable InstTable;
 
 /*-------------------------------------------------------------------------*/
 /* Subroutines */

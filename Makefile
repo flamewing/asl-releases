@@ -1,4 +1,4 @@
-include Makefile.def
+ include Makefile.def
 
 CURRDIR=./
 TAPE=/dev/ntape
@@ -182,7 +182,7 @@ asport2.tar.gz: $(ARCH2FILES)
 snap: unjunk
 	-mount /mo
 	-mkdir -p /mo/public/asport/snap_$(DATE)
-	cp -av $(ARCHFILES) /mo/public/asport/snap_$(DATE)
+	tar cf - $(ARCHFILES) | (cd /mo/public/asport/snap_$(DATE); tar xvf -)
 	umount /mo
 
 unjunk:

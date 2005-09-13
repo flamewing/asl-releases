@@ -19,9 +19,12 @@
 /*           2001-07-01 TI 320C54x                                           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: headids.c,v 1.3 2005/07/30 13:57:03 alfred Exp $                          */
+/* $Id: headids.c,v 1.4 2005/09/11 18:10:51 alfred Exp $                          */
 /*****************************************************************************
  * $Log: headids.c,v $
+ * Revision 1.4  2005/09/11 18:10:51  alfred
+ * - added XGATE
+ *
  * Revision 1.3  2005/07/30 13:57:03  alfred
  * - add LatticeMico8
  *
@@ -62,6 +65,7 @@ static TFamilyDescr Descrs[]=
         {"DSP56000"  , 0x0009, MotoS   },
         {"MPC601"    , 0x0005, MotoS   },
         {"M-CORE"    , 0x0003, MotoS   },
+        {"XGATE"     , 0x0004, MotoS   },
         {"68xx"      , 0x0061, MotoS   },
         {"6805/HC08" , 0x0062, MotoS   },
         {"6809"      , 0x0063, MotoS   },

@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codem16.c,v 1.2 2004/05/29 11:33:03 alfred Exp $                     */
+/* $Id: codem16.c,v 1.3 2005/09/08 17:06:29 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codem16.c,v $
+ * Revision 1.3  2005/09/08 17:06:29  alfred
+ * - dynamically allocate string
+ *
  * Revision 1.2  2004/05/29 11:33:03  alfred
  * - relocated DecodeIntelPseudo() into own module
  *
@@ -28,6 +31,7 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "asmitree.h"
 #include "codepseudo.h"
 #include "intpseudo.h"
 #include "codevars.h"
@@ -126,7 +130,7 @@ typedef struct
 
 static CPUVar CPUM16;
 
-static String Format;
+static char *Format;
 static Byte FormatCode;
 static ShortInt DOpSize,OpSize[5];
 static Word AdrMode[5];
@@ -199,6 +203,8 @@ END
 
         static void InitFields(void)
 BEGIN
+   Format = (char*)malloc(sizeof(char) * STRINGSIZE);
+
    FixedOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*FixedOrderCount); InstrZ=0;
    AddFixed("NOP"  ,0x1bd6); AddFixed("PIB"  ,0x0bd6);
    AddFixed("RIE"  ,0x08f7); AddFixed("RRNG" ,0x3bd6);
@@ -275,6 +281,7 @@ END
 
         static void DeinitFields(void)
 BEGIN
+   free(Format);
    free(FixedOrders);
    free(OneOrders);
    free(GE2Orders);
@@ -1981,7 +1988,7 @@ BEGIN
       p=strchr(AttrPart,':');
       if (p!=Nil)
        BEGIN
-        if (p<AttrPart+strlen(AttrPart)-1) strmaxcpy(Format,p+1,255);
+        if (p<AttrPart+strlen(AttrPart)-1) strmaxcpy(Format,p+1,STRINGSIZE-1);
         else strcpy(Format," ");
         *p='\0';
        END
@@ -1991,12 +1998,12 @@ BEGIN
       p=strchr(AttrPart,'.');
       if (p==Nil)
        BEGIN
-        strmaxcpy(Format,AttrPart,255); *AttrPart='\0';
+        strmaxcpy(Format,AttrPart,STRINGSIZE-1); *AttrPart='\0';
        END
       else
        BEGIN
         *p='\0';
-        if (p==AttrPart) strcpy(Format," "); else strmaxcpy(Format,AttrPart,255);
+        if (p==AttrPart) strcpy(Format," "); else strmaxcpy(Format,AttrPart,STRINGSIZE-1);
        END
       break;
      default:

@@ -10,9 +10,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemcore.c,v 1.3 2005/05/21 16:35:05 alfred Exp $                   */
+/* $Id: codemcore.c,v 1.4 2005/09/08 16:53:43 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codemcore.c,v $
+ * Revision 1.4  2005/09/08 16:53:43  alfred
+ * - use common PInstTable
+ *
  * Revision 1.3  2005/05/21 16:35:05  alfred
  * - removed variables available globally
  *
@@ -34,9 +37,9 @@
 #include "asmpars.h"
 #include "asmallg.h"
 #include "codepseudo.h"
-#include "codevars.h"
 #include "motpseudo.h"
 #include "asmitree.h"
+#include "codevars.h"
 
 /*--------------------------------------------------------------------------*/
 /* Variablen */
@@ -74,7 +77,6 @@ static FixedOrder *OneRegOrders;
 static FixedOrder *TwoRegOrders;
 static ImmOrder *UImm5Orders;
 static FixedOrder *LJmpOrders;
-static PInstTable InstTable;
 static CReg *CRegs;
 
 /*--------------------------------------------------------------------------*/

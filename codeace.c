@@ -17,9 +17,12 @@
 /*                      changed segment limits/inits                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeace.c,v 1.2 2004/05/29 11:33:02 alfred Exp $                     */
+/* $Id: codeace.c,v 1.3 2005/09/08 16:53:42 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codeace.c,v $
+ * Revision 1.3  2005/09/08 16:53:42  alfred
+ * - use common PInstTable
+ *
  * Revision 1.2  2004/05/29 11:33:02  alfred
  * - relocated DecodeIntelPseudo() into own module
  *
@@ -84,7 +87,6 @@ enum {D_CPUACE1101, D_CPUACE1202};
 
 static CPUVar CPUACE1101, CPUACE1202;
 
-static PInstTable InstTable;
 static FixedOrder *FixedOrders;
 static AriOrder *AriOrders;
 static SingOrder *SingOrders;

@@ -48,7 +48,6 @@ static CPUVar CPU53C810, CPU53C860, CPU53C815, CPU53C825, CPU53C875,
 #define M_53C875 0x0010
 #define M_53C895 0x0020
 
-static PInstTable InstTable;
 static PReg Regs;
 
 /*---------------------------------------------------------------------------*/

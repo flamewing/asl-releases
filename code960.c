@@ -20,9 +20,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code960.c,v 1.3 2005/05/21 16:35:05 alfred Exp $                     */
+/* $Id: code960.c,v 1.4 2005/09/08 16:53:42 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code960.c,v $
+ * Revision 1.4  2005/09/08 16:53:42  alfred
+ * - use common PInstTable
+ *
  * Revision 1.3  2005/05/21 16:35:05  alfred
  * - removed variables available globally
  *
@@ -105,7 +108,6 @@ typedef struct
           LongWord Code;
          } SpecReg;
 
-static PInstTable InstTable;
 static FixedOrder *FixedOrders;
 static RegOrder *RegOrders;
 static CobrOrder *CobrOrders;

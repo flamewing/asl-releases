@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code85.c,v 1.2 2004/05/29 11:33:01 alfred Exp $                      */
+/* $Id: code85.c,v 1.3 2005/09/08 16:53:42 alfred Exp $                      */
 /***************************************************************************** 
  * $Log: code85.c,v $
+ * Revision 1.3  2005/09/08 16:53:42  alfred
+ * - use common PInstTable
+ *
  * Revision 1.2  2004/05/29 11:33:01  alfred
  * - relocated DecodeIntelPseudo() into own module
  *
@@ -35,8 +38,8 @@
 #include "asmpars.h"
 #include "codepseudo.h" 
 #include "intpseudo.h"
-#include "codevars.h"
 #include "asmitree.h"
+#include "codevars.h"
 
 /*--------------------------------------------------------------------------------------------------*/
 
@@ -60,8 +63,6 @@ static FixedOrder *FixedOrders;
 static FixedOrder *Op16Orders;
 static FixedOrder *Op8Orders;
 static BaseOrder *ALUOrders;
-
-static PInstTable InstTable;
 
 static CPUVar CPU8080, CPU8085, CPU8085U;
 

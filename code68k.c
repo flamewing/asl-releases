@@ -36,9 +36,12 @@
 /*           2001-12-02 fixed problems with forward refs of shift arguments  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68k.c,v 1.2 2004/05/29 12:04:47 alfred Exp $                     */
+/* $Id: code68k.c,v 1.3 2005/09/08 16:53:41 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code68k.c,v $
+ * Revision 1.3  2005/09/08 16:53:41  alfred
+ * - use common PInstTable
+ *
  * Revision 1.2  2004/05/29 12:04:47  alfred
  * - relocated DecodeMot(16)Pseudo into separate module
  *
@@ -57,8 +60,8 @@
 #include "asmpars.h"
 #include "asmallg.h"
 #include "motpseudo.h"
-#include "codevars.h"
 #include "asmitree.h"
+#include "codevars.h"
 
 
 typedef struct 
@@ -132,7 +135,7 @@ static char **PMMUConds;
 static char **PMMURegNames;
 static Byte *PMMURegSizes;
 static Word *PMMURegCodes;
-static PInstTable InstTable,FInstTable,CInstTable;
+static PInstTable FInstTable,CInstTable;
 
 static SimpProc SaveInitProc;
 

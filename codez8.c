@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codez8.c,v 1.3 2004/11/21 20:35:29 alfred Exp $                          *
+/* $Id: codez8.c,v 1.4 2005/09/08 16:53:43 alfred Exp $                          *
  *****************************************************************************
  * $Log: codez8.c,v $
+ * Revision 1.4  2005/09/08 16:53:43  alfred
+ * - use common PInstTable
+ *
  * Revision 1.3  2004/11/21 20:35:29  alfred
  * - added ATM/LDWX
  *
@@ -142,7 +145,6 @@ static ALU2Order *ALU2Orders;
 static ALU2Order *ALUXOrders;
 static ALU1Order *ALU1Orders;
 static Condition *Conditions;
-static PInstTable InstTable;
 
 static int TrueCond;
 

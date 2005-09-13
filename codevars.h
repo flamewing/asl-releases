@@ -12,4 +12,7 @@
 
 extern int InstrZ;
 extern int AdrCnt;
+
+extern PInstTable InstTable;
+
 #endif /* _CODEVARS_H */

@@ -39,11 +39,13 @@ END
 
 	char *catgetmessage(PMsgCat Catalog, int Num)
 BEGIN
-   static char umess[256];
- 
    if ((Num>=0) AND (Num<Catalog->MsgCount)) return Catalog->MsgBlock+Catalog->StrPosis[Num];
    else 
     BEGIN
+     static char *umess = NULL;
+ 
+     if (!umess)
+       umess = (char*)malloc(sizeof(char) * STRINGSIZE);
      sprintf(umess,"catgetmessage: message number %d does not exist", Num);
      return umess;
     END

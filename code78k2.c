@@ -5,9 +5,12 @@
 /* Codegenerator 78K2-Familie                                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code78k2.c,v 1.11 2004/05/29 12:04:47 alfred Exp $
+/* $Id: code78k2.c,v 1.12 2005/09/08 16:53:42 alfred Exp $
  *****************************************************************************
  * $Log: code78k2.c,v $
+ * Revision 1.12  2005/09/08 16:53:42  alfred
+ * - use common PInstTable
+ *
  * Revision 1.11  2004/05/29 12:04:47  alfred
  * - relocated DecodeMot(16)Pseudo into separate module
  *
@@ -110,8 +113,6 @@ enum {ModNone = -1,
 /*-------------------------------------------------------------------------*/
 
 static CPUVar CPU78214;
-
-static PInstTable InstTable;
 
 static ShortInt AdrMode, AdrVal;
 static Byte AdrVals[3];

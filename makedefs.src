@@ -3,6 +3,7 @@ CODE_SRCS = codepseudo.c intpseudo.c motpseudo.c tipseudo.c codevars.c \
             code56k.c \
   	    code601.c \
 	    codemcore.c \
+            codexgate.c \
   	    code68.c code6805.c code6809.c code6812.c code6816.c \
   	    codeh8_3.c codeh8_5.c code7000.c \
   	    code65.c code7700.c code4500.c codem16.c codem16c.c \

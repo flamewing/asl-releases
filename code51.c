@@ -17,9 +17,12 @@
 /*           2002-01-23 symbols defined with BIT must not be macro-local     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code51.c,v 1.2 2004/05/29 11:33:00 alfred Exp $                      */
+/* $Id: code51.c,v 1.3 2005/09/08 16:53:41 alfred Exp $                      */
 /***************************************************************************** 
  * $Log: code51.c,v $
+ * Revision 1.3  2005/09/08 16:53:41  alfred
+ * - use common PInstTable
+ *
  * Revision 1.2  2004/05/29 11:33:00  alfred
  * - relocated DecodeIntelPseudo() into own module
  *
@@ -51,8 +54,8 @@
 #include "asmrelocs.h"
 #include "codepseudo.h"
 #include "intpseudo.h"
-#include "codevars.h"
 #include "asmitree.h"
+#include "codevars.h"
 #include "fileformat.h"
 
 /*-------------------------------------------------------------------------*/
@@ -103,7 +106,6 @@ static FixedOrder *FixedOrders;
 static FixedOrder *AccOrders;
 static FixedOrder *CondOrders;
 static FixedOrder *BCondOrders;
-static PInstTable InstTable;
 
 static Byte AdrVals[5];
 static Byte AdrPart,AdrSize;

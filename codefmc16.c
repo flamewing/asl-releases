@@ -17,9 +17,12 @@
 /*       Registersymbole                                                    */
 /*       explizite Displacement-Laengenangaben (Adressen, ADDSP)            */
 /****************************************************************************/
-/* $Id: codefmc16.c,v 1.2 2004/05/29 12:04:47 alfred Exp $                  */
+/* $Id: codefmc16.c,v 1.3 2005/09/08 16:53:42 alfred Exp $                  */
 /*****************************************************************************
  * $Log: codefmc16.c,v $
+ * Revision 1.3  2005/09/08 16:53:42  alfred
+ * - use common PInstTable
+ *
  * Revision 1.2  2004/05/29 12:04:47  alfred
  * - relocated DecodeMot(16)Pseudo into separate module
  *
@@ -37,8 +40,8 @@
 #include "asmallg.h"
 #include "codepseudo.h"
 #include "intpseudo.h"
-#include "codevars.h"
 #include "asmitree.h"
+#include "codevars.h"
 #include "headids.h"
 
 #include "codefmc16.h"
@@ -109,7 +112,6 @@ typedef struct
 
 static CPUVar CPU90500;
 
-static PInstTable InstTable;
 static FixedOrder *FixedOrders;
 static FixedOrder *ALU8Orders;
 static FixedOrder *Log8Orders;

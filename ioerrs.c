@@ -172,9 +172,10 @@ static ErrorDef ErrorDefs[]={
 #endif
      {-1,-1}};
        
+char *hs;
+
 	char *GetErrorMsg(int number)
 BEGIN
-   static String hs;
    ErrorDef *z;
 
    for (z=ErrorDefs; z->Msg!=-1; z++)
@@ -189,5 +190,6 @@ END
 
 	void ioerrs_init(char *ProgPath)
 BEGIN
+   hs = (char*)malloc(sizeof(char) * STRINGSIZE);
    opencatalog(&MsgCat,"ioerrs.msg",ProgPath,MsgId1,MsgId2);
 END

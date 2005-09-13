@@ -18,9 +18,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code4004.c,v 1.2 2005/05/21 16:35:04 alfred Exp $                          */
+/* $Id: code4004.c,v 1.3 2005/09/08 16:53:41 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code4004.c,v $
+ * Revision 1.3  2005/09/08 16:53:41  alfred
+ * - use common PInstTable
+ *
  * Revision 1.2  2005/05/21 16:35:04  alfred
  * - removed variables available globally
  *
@@ -76,7 +79,6 @@ static FixedOrder *OneRegOrders;
 static FixedOrder *OneRRegOrders;
 static FixedOrder *AccRegOrders;
 static FixedOrder *Imm4Orders;
-static PInstTable InstTable;
 
 /*---------------------------------------------------------------------------*/
 /* Parser */
