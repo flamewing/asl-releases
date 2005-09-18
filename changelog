@@ -1,4 +1,4 @@
-$Id: changelog,v 1.13 2005/09/12 19:30:26 alfred Exp $
+$Id: changelog,v 1.14 2005/09/17 19:23:16 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -989,3 +989,9 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 2005-09-12 [Bld 39]
 
 - Addition    : add HC12X/XGATE instruction extensions
+
+2005-09-17 [Bld 40]
+
+- Bugfix      : correct 68HC12 behaviour for forward jump/call instructions
+
+- Bugfix      : allow .w and .b as length specifier for 68K branch instructions

@@ -36,9 +36,12 @@
 /*           2001-12-02 fixed problems with forward refs of shift arguments  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68k.c,v 1.3 2005/09/08 16:53:41 alfred Exp $                     */
+/* $Id: code68k.c,v 1.4 2005/09/17 19:11:48 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code68k.c,v $
+ * Revision 1.4  2005/09/17 19:11:48  alfred
+ * - allow .B/.W as branch length specifier
+ *
  * Revision 1.3  2005/09/08 16:53:41  alfred
  * - use common PInstTable
  *
@@ -3534,12 +3537,12 @@ BEGIN
          HVal=EvalIntExpression(ArgStr[1],Int32,&ValOK)-(EProgCounter()+2);
          HVal16=HVal;
 
-         if (OpSize==1)
+         if (*AttrPart == 0)
           BEGIN
            OpSize=(IsDisp16(HVal))?2:6;
           END
 
-         if (OpSize==2)
+         if ((OpSize==2) || (OpSize == 1))
           BEGIN
            if ((NOT IsDisp16(HVal)) AND (NOT SymbolQuestionable)) WrError(1370);
            else
@@ -4125,9 +4128,10 @@ BEGIN
          HVal=EvalIntExpression(ArgStr[1],Int32,&ValOK)-(EProgCounter()+2);
          HVal16=HVal;
 
-         if (OpSize==1) OpSize=(IsDisp16(HVal))?2:6;
+         if (*AttrPart == 0)
+           OpSize=(IsDisp16(HVal))?2:6;
 
-         if (OpSize==2)
+         if ((OpSize==2) || (OpSize == 1))
           BEGIN
            if ((NOT IsDisp16(HVal)) AND (NOT SymbolQuestionable)) WrError(1370);
            else
@@ -4377,7 +4381,7 @@ BEGIN
 
          /* Bei Automatik Groesse festlegen */
 
-         if (OpSize==1) 
+         if (*AttrPart == '\0') 
           BEGIN
            if (IsDisp8(HVal)) OpSize=4;
            else if (IsDisp16(HVal)) OpSize=2;
@@ -4389,7 +4393,7 @@ BEGIN
 
            /* 16 Bit ? */
 
-           if (OpSize==2)
+           if ((OpSize==2) || (OpSize == 1))
             BEGIN
 
              /* zu weit ? */
@@ -4408,7 +4412,7 @@ BEGIN
 
            /* 8 Bit ? */
 
-           else if (OpSize==4)
+           else if ((OpSize==4) || (OpSize == 0))
             BEGIN
 
              /* zu weit ? */

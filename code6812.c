@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6812.c,v 1.8 2005/09/10 16:36:11 alfred Exp $                    */
+/* $Id: code6812.c,v 1.9 2005/09/14 21:40:50 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6812.c,v $
+ * Revision 1.9  2005/09/14 21:40:50  alfred
+ * - optimze use of short/long displacement in forward references
+ *
  * Revision 1.8  2005/09/10 16:36:11  alfred
  * - extended MOV addressing modes on 12X
  *
@@ -80,7 +83,7 @@ typedef struct
            CPUVar MinCPU;  
          } Reg;
 
-enum {eShortModeAuto = 0, eShortModeNo = 1, eShortModeYes = 2};
+enum {eShortModeAuto = 0, eShortModeNo = 1, eShortModeYes = 2, eShortModeExtreme = 3};
 
 #define ModNone (-1)
 #define ModImm 0
@@ -317,21 +320,21 @@ static void CutShort(char *Asc, Integer *ShortMode)
 {
   if (*Asc == '>')
   {
-    *ShortMode = 1;
+    *ShortMode = eShortModeNo;
     strcpy(Asc, Asc + 1);
   }
   else if (*Asc == '<')
   {
-    *ShortMode=2;
-    strcpy(Asc,Asc+1);
+    *ShortMode = eShortModeYes;
+    strcpy(Asc,Asc + 1);
     if (*Asc == '<')
     {
-      *ShortMode = 3;
+      *ShortMode = eShortModeExtreme;
       strcpy(Asc, Asc + 1);
     }
   }
   else
-    *ShortMode = 0;
+    *ShortMode = eShortModeAuto;
 }
 
 static Boolean DistFits(Byte Reg, Integer Dist, Integer Offs, LongInt Min, LongInt Max)
@@ -425,7 +428,10 @@ static void DecodeAdr(int Start, int Stop, Word Mask)
     FirstPassUnknown = False;
     AdrWord = EvalIntExpression(ArgStr[Start], UInt16, &OK);
     if (FirstPassUnknown)
-      AdrWord = (Reg_Direct << 8) | Lo(AdrWord);
+    {
+      if ((!(Mask & MModExt)) || (ShortMode == eShortModeYes))
+        AdrWord = (Reg_Direct << 8) | Lo(AdrWord);
+    }
 
     if (OK)
     {
@@ -514,13 +520,13 @@ static void DecodeAdr(int Start, int Stop, Word Mask)
           AdrWord -= EProgCounter() + ExPos;
         if (OK)
         {
-          if ((ShortMode != 1) && (ShortMode != 2) && ((Mask & MModIdx) != 0) && (DistFits(AdrVals[0], AdrWord, 1, -16, 15)))
+          if ((ShortMode != eShortModeNo) && (ShortMode != eShortModeYes) && ((Mask & MModIdx) != 0) && (DistFits(AdrVals[0], AdrWord, 1, -16, 15)))
           {
             if (AdrVals[0] == eBaseRegPC) AdrWord--;
             AdrVals[0] = (AdrVals[0] << 6) | (AdrWord & 0x1f);
             AdrCnt = 1; AdrMode = ModIdx;
           }
-          else if ((ShortMode != 1) && (ShortMode != 3) && ((Mask & MModIdx1) != 0) && (DistFits(AdrVals[0], AdrWord, 2, -256, 255)))
+          else if ((ShortMode != eShortModeNo) && (ShortMode != eShortModeExtreme) && ((Mask & MModIdx1) != 0) && (DistFits(AdrVals[0], AdrWord, 2, -256, 255)))
           {
             if (AdrVals[0] == eBaseRegPC) AdrWord -= 2;
             AdrVals[0] = 0xe0 | (AdrVals[0] << 3) | (Hi(AdrWord) & 1);
