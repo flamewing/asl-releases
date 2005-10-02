@@ -26,9 +26,12 @@
 /*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.3 2004/10/03 11:44:58 alfred Exp $                      */
+/* $Id: asmsub.c,v 1.4 2005/10/02 10:00:44 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmsub.c,v $
+ * Revision 1.4  2005/10/02 10:00:44  alfred
+ * - ConstLongInt gets default base, correct length check on KCPSM3 registers
+ *
  * Revision 1.3  2004/10/03 11:44:58  alfred
  * - addition for MinGW
  *
@@ -515,7 +518,7 @@ BEGIN
    if (WithE)
     BEGIN
      p=strchr(s,'e');
-     ExpVal=ConstLongInt(p+1,&OK);
+     ExpVal=ConstLongInt(p + 1, &OK, 10);
     END
    else
     BEGIN

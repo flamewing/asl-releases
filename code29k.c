@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code29k.c,v 1.3 2005/09/08 17:31:03 alfred Exp $                     */
+/* $Id: code29k.c,v 1.4 2005/10/02 10:00:44 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code29k.c,v $
+ * Revision 1.4  2005/10/02 10:00:44  alfred
+ * - ConstLongInt gets default base, correct length check on KCPSM3 registers
+ *
  * Revision 1.3  2005/09/08 17:31:03  alfred
  * - add missing include
  *
@@ -277,17 +280,17 @@ BEGIN
 
    if ((strlen(Asc)>=2) AND (toupper(*Asc)=='R'))
     BEGIN
-     *Erg=ConstLongInt(Asc+1,&io);
+     *Erg=ConstLongInt(Asc+1, &io, 10);
      OK=((io) AND (*Erg<=255));
     END
    else if ((strlen(Asc)>=3) AND (toupper(*Asc)=='G') AND (toupper(Asc[1])=='R'))
     BEGIN
-     *Erg=ConstLongInt(Asc+2,&io);
+     *Erg=ConstLongInt(Asc+2, &io, 10);
      OK=((io) AND (*Erg<=127));
     END
    else if ((strlen(Asc)>=3) AND (toupper(*Asc)=='L') AND (toupper(Asc[1])=='R'))
     BEGIN
-     *Erg=ConstLongInt(Asc+2,&io);
+     *Erg=ConstLongInt(Asc+2, &io, 10);
      OK=((io) AND (*Erg<=127));
      *Erg+=128;
     END

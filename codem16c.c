@@ -25,9 +25,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codem16c.c,v 1.3 2005/09/08 17:06:29 alfred Exp $                    */
+/* $Id: codem16c.c,v 1.4 2005/09/30 12:53:49 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codem16c.c,v $
+ * Revision 1.4  2005/09/30 12:53:49  alfred
+ * - correct include statements
+ *
  * Revision 1.3  2005/09/08 17:06:29  alfred
  * - dynamically allocate string
  *
@@ -37,7 +40,7 @@
  *****************************************************************************/
 
 #include "stdinc.h"
-#include "string.h"
+#include <string.h>
 #include <ctype.h>
 
 #include "nls.h"

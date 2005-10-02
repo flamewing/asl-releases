@@ -616,12 +616,12 @@ BEGIN
 
      Save = (*p); *p = '\0'; 
      if ((StartAuto = AddressWildcard(Arg))) ok = True;
-     else StartAdr = ConstLongInt(Arg, &ok);
+     else StartAdr = ConstLongInt(Arg, &ok, 10);
      *p = Save;
      if (NOT ok) return CMDErr;
 
      if ((StopAuto = AddressWildcard(p + 1))) ok = True;
-     else StopAdr = ConstLongInt(p + 1, &ok);
+     else StopAdr = ConstLongInt(p + 1, &ok, 10);
      if (NOT ok) return CMDErr;
 
      if ((NOT StartAuto) AND (NOT StopAuto) AND (StartAdr>StopAdr)) return CMDErr;
@@ -650,7 +650,7 @@ BEGIN
     END
    else
     BEGIN
-     Relocate = ConstLongInt(Arg,&ok);
+     Relocate = ConstLongInt(Arg,&ok,10);
      if (NOT ok) return CMDErr;
 
      return CMDArg;
@@ -681,7 +681,7 @@ BEGIN
    if (*Arg=='\0') return CMDErr;
    else
     BEGIN
-     Mode=ConstLongInt(Arg,&ok);
+     Mode=ConstLongInt(Arg,&ok,10);
      if ((NOT ok) OR (Mode<0) OR (Mode>2)) return CMDErr;
      else
       BEGIN
@@ -700,7 +700,7 @@ BEGIN
    if (*Arg=='\0') return CMDErr;
    else
     BEGIN
-     Mode=ConstLongInt(Arg,&ok);
+     Mode=ConstLongInt(Arg,&ok,10);
      if ((NOT ok) OR (Mode<0) OR (Mode>3)) return CMDErr;
      else
       BEGIN
@@ -749,11 +749,11 @@ BEGIN
      p=strchr(Arg,'-'); if (p==Nil) return CMDErr;
 
      Save=(*p); *p='\0';
-     StartData=ConstLongInt(Arg,&ok);
+     StartData=ConstLongInt(Arg,&ok,10);
      *p=Save;
      if (NOT ok) return CMDErr;
 
-     StopData=ConstLongInt(p+1,&ok);
+     StopData=ConstLongInt(p+1,&ok,10);
      if (NOT ok) return CMDErr;
 
      if (StartData>StopData) return CMDErr;
@@ -773,7 +773,7 @@ BEGIN
     END
    else
     BEGIN
-     EntryAdr=ConstLongInt(Arg,&ok);
+     EntryAdr=ConstLongInt(Arg,&ok,10);
      if ((NOT ok) OR (EntryAdr>0xffff)) return CMDErr;
      EntryAdrPresent = True;
      return CMDArg;
@@ -793,7 +793,7 @@ BEGIN
    else if (*Arg=='\0') return CMDErr;
    else
     BEGIN
-     LineLen=ConstLongInt(Arg,&ok);
+     LineLen=ConstLongInt(Arg,&ok,10);
      if ((NOT ok) OR (LineLen<1) OR (LineLen>MaxLineLen)) return CMDErr;
      else
       BEGIN
@@ -815,7 +815,7 @@ BEGIN
    else if (*Arg == '\0') return CMDErr;
    else
     BEGIN
-     MinMoto = ConstLongInt(Arg,&ok);
+     MinMoto = ConstLongInt(Arg,&ok,10);
      if ((NOT ok) OR (MinMoto < 1) OR (MinMoto > 3)) return CMDErr;
      else return CMDArg;
     END
@@ -841,7 +841,7 @@ END
     }
    else
     {
-      Temp = ConstLongInt(Arg, &ok);
+      Temp = ConstLongInt(Arg, &ok, 10);
       if ((NOT ok) || (Temp < 2) || (Temp > 3)) return CMDErr;
       else
        {

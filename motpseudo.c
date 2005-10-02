@@ -5,9 +5,12 @@
 /* Haeufiger benutzte Motorola-Pseudo-Befehle                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: motpseudo.c,v 1.3 2004/09/20 18:44:37 alfred Exp $                   */
+/* $Id: motpseudo.c,v 1.4 2005/09/30 09:15:58 alfred Exp $                   */
 /***************************************************************************** 
  * $Log: motpseudo.c,v $
+ * Revision 1.4  2005/09/30 09:15:58  alfred
+ * - correct Motorola 8-bit pseudo ops on word-wise CPUs
+ *
  * Revision 1.3  2004/09/20 18:44:37  alfred
  * - formatting cleanups
  *
@@ -49,30 +52,41 @@ static Boolean M16Turn = False;
  * Local Functions
  *****************************************************************************/
 
-        static Boolean CutRep(char *Asc, LongInt *Erg)
-BEGIN
-   char *p;
-   Boolean OK;
+static Boolean CutRep(char *pAsc, LongInt *pErg)
+{
+  if (*pAsc != '[')
+  {
+    *pErg = 1; return True;
+  }
+  else
+  {
+    char *pStart, *pEnd;
+    Boolean OK;
 
-   if (*Asc!='[')
-    BEGIN
-     *Erg=1; return True;
-    END
-   else
-    BEGIN
-     strcpy(Asc,Asc+1); p=QuotPos(Asc,']');
-     if (p==Nil) 
-      BEGIN
-       WrError(1300); return False;
-      END
-     else
-      BEGIN
-       *p='\0';
-       *Erg=EvalIntExpression(Asc,Int32,&OK);
-       strcpy(Asc,p+1); return OK;
-      END
-    END
-END     
+    pStart = pAsc + 1; pEnd = QuotPos(pStart, ']');
+    if (!pEnd) 
+    {
+      WrError(1300); return False;
+    }
+    else
+    {
+      *pStart = '\0';
+      *pErg = EvalIntExpression(pStart, Int32, &OK);
+      strcpy(pAsc, pEnd + 1); return OK;
+    }
+  }
+}    
+
+static void PutByte(Byte Value)
+{
+  if ((ListGran() == 1) || (!(CodeLen & 1)))
+    BAsmCode[CodeLen] = Value;
+  else if (M16Turn)
+    WAsmCode[CodeLen >> 1] = (((Word)BAsmCode[CodeLen -1]) << 8) | Value;
+  else
+    WAsmCode[CodeLen >> 1] = (((Word)Value) << 8) | BAsmCode[CodeLen -1];
+  CodeLen++;
+} 
         
 static void DecodeBYT(Word Index)
 {
@@ -113,27 +127,32 @@ static void DecodeBYT(Word Index)
              WrError(1920); OK = False;
            }
            else
-           {
-             memset(BAsmCode + CodeLen, t.Contents.Int, Rep);
-             CodeLen += Rep;
-           }
+             for (z2 = 0; z2 < Rep; z2++)
+               PutByte(t.Contents.Int);
            break;
+
          case TempFloat:
            WrError(1135); OK = False;
            break;
+
          case TempString:
+         {
+           int l, z3;
+
            TranslateString(t.Contents.Ascii);
-           if (CodeLen + Rep * strlen(t.Contents.Ascii) > MaxCodeLen)
+           l = strlen(t.Contents.Ascii);
+
+           if (CodeLen + (Rep * l) > MaxCodeLen)
            {
              WrError(1920); OK = False;
            }
            else
              for (z2 = 0; z2 < Rep; z2++)
-             {
-               memcpy(BAsmCode + CodeLen, t.Contents.Ascii, strlen(t.Contents.Ascii));
-               CodeLen += strlen(t.Contents.Ascii);
-             }
+               for (z3 = 0; z3 < l; z3++)
+                 PutByte(t.Contents.Ascii[z3]);
            break;
+         }
+
          default:
           OK = False; 
           break;
@@ -184,7 +203,12 @@ static void DecodeADR(Word Index)
        if (OK)
          for (z2 = 0; z2 < Rep; z2++)
          {
-           if (M16Turn)
+           if (ListGran() > 1)
+           {
+             WAsmCode[CodeLen >> 1] = HVal16;
+             CodeLen += 2;
+           }
+           else if (M16Turn)
            {
              BAsmCode[CodeLen++] = Hi(HVal16);
              BAsmCode[CodeLen++] = Lo(HVal16);
@@ -209,7 +233,7 @@ static void DecodeFCC(Word Index)
 {
    String SVal;
    Boolean OK;
-   int z;
+   int z, z3, l;
    LongInt Rep,z2;
    UNUSED(Index);
 
@@ -242,11 +266,10 @@ static void DecodeFCC(Word Index)
          else
          {
            TranslateString(SVal);
+           l = strlen(SVal);
            for (z2 = 0; z2 < Rep; z2++)
-           {
-             memcpy(BAsmCode + CodeLen, SVal, strlen(SVal));
-             CodeLen += strlen(SVal);
-           }
+             for (z3 = 0; z3 < l; z3++)
+               PutByte(SVal[z3]);
          }
        }
 

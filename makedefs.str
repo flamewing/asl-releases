@@ -1,44 +1,26 @@
-ioerrs$(TARG_OBJEXTENSION): ioerrs.rsc
-
 ioerrs.msg ioerrs.rsc: ioerrs.res header.res $(RESCOMPTARGET)
 	$(CURRDIR)$(RESCOMPTARGET) ioerrs.res ioerrs.msg ioerrs.rsc
-
-cmdarg$(TARG_OBJEXTENSION): cmdarg.rsc
 
 cmdarg.msg cmdarg.rsc: cmdarg.res header.res $(RESCOMPTARGET)
 	$(CURRDIR)$(RESCOMPTARGET) cmdarg.res cmdarg.msg cmdarg.rsc
 
-toolutils$(TARG_OBJEXTENSION): tools.rsc
-
 tools.msg tools.rsc: tools.res header.res $(RESCOMPTARGET)
 	$(CURRDIR)$(RESCOMPTARGET) tools.res tools.msg tools.rsc
-
-as$(TARG_OBJEXTENSION) asminclist$(TARG_OBJEXTENSION) asmmac$(TARG_OBJEXTENSION) asmpars$(TARG_OBJEXTENSION) asmsub$(TARG_OBJEXTENSION): as.rsc
 
 as.msg as.rsc: as.res header.res $(RESCOMPTARGET)
 	$(CURRDIR)$(RESCOMPTARGET) as.res as.msg as.rsc
 
-plist$(TARG_OBJEXTENSION): plist.rsc
-
 plist.msg plist.rsc: plist.res tools2.res header.res $(RESCOMPTARGET)
 	$(CURRDIR)$(RESCOMPTARGET) plist.res plist.msg plist.rsc
-
-alink$(TARG_OBJEXTENSION): alink.rsc
 
 alink.msg alink.rsc: alink.res tools2.res header.res $(RESCOMPTARGET)
 	$(CURRDIR)$(RESCOMPTARGET) alink.res alink.msg alink.rsc
 
-pbind$(TARG_OBJEXTENSION): pbind.rsc
-
 pbind.msg pbind.rsc: pbind.res tools2.res header.res $(RESCOMPTARGET)
 	$(CURRDIR)$(RESCOMPTARGET) pbind.res pbind.msg pbind.rsc
 
-p2hex$(TARG_OBJEXTENSION): p2hex.rsc
-
 p2hex.msg p2hex.rsc: p2hex.res tools2.res header.res $(RESCOMPTARGET)
 	$(CURRDIR)$(RESCOMPTARGET) p2hex.res p2hex.msg p2hex.rsc
-
-p2bin$(TARG_OBJEXTENSION): p2bin.rsc
 
 p2bin.msg p2bin.rsc: p2bin.res tools2.res header.res $(RESCOMPTARGET)
 	$(CURRDIR)$(RESCOMPTARGET) p2bin.res p2bin.msg p2bin.rsc

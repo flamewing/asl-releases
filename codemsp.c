@@ -12,9 +12,15 @@
 /*             2002-01-27 allow immediate addressing for one-op instrs(doj)  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemsp.c,v 1.2 2005/09/08 17:31:05 alfred Exp $                     */
+/* $Id: codemsp.c,v 1.4 2005/10/02 10:00:46 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: codemsp.c,v $
+ * Revision 1.4  2005/10/02 10:00:46  alfred
+ * - ConstLongInt gets default base, correct length check on KCPSM3 registers
+ *
+ * Revision 1.3  2005/09/30 08:31:48  alfred
+ * - correct byte disposition for big-endian machines
+ *
  * Revision 1.2  2005/09/08 17:31:05  alfred
  * - add missing include
  *
@@ -170,7 +176,7 @@ BEGIN
     END
    if ((toupper(*Asc)=='R') AND (strlen(Asc)>=2) AND (strlen(Asc)<=3))
     BEGIN
-     *Erg=ConstLongInt(Asc+1,&OK);
+     *Erg=ConstLongInt(Asc+1,&OK,10);
      return ((OK) AND (*Erg<16));
     END
    return False;
@@ -305,21 +311,14 @@ END
 
 /*-------------------------------------------------------------------------*/
 
-        static void PutByte(Byte Value)
-BEGIN
-#if 0
-   if (((CodeLen&1)==1) AND (NOT BigEndian))
-    BEGIN
-     BAsmCode[CodeLen]=BAsmCode[CodeLen-1];
-     BAsmCode[CodeLen-1]=Value;
-    END
-   else
-#endif
-    BEGIN
-     BAsmCode[CodeLen]=Value;
-    END
-   CodeLen++;
-END
+static void PutByte(Word Value)
+{
+  if (CodeLen & 1)
+    WAsmCode[CodeLen >> 1] = (Value << 8) | BAsmCode[CodeLen - 1];
+  else
+    BAsmCode[CodeLen] = Value;
+  CodeLen++;
+}
 
         static Boolean DecodePseudo(void)
 BEGIN

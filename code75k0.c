@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code75k0.c,v 1.3 2005/09/08 17:31:04 alfred Exp $                    */
+/* $Id: code75k0.c,v 1.4 2005/10/02 10:00:45 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code75k0.c,v $
+ * Revision 1.4  2005/10/02 10:00:45  alfred
+ * - ConstLongInt gets default base, correct length check on KCPSM3 registers
+ *
  * Revision 1.3  2005/09/08 17:31:04  alfred
  * - add missing include
  *
@@ -94,7 +97,7 @@ END
 BEGIN
    Boolean Err;
 
-   ROMEnd=ConstLongInt(MomCPUName+3,&Err);
+   ROMEnd=ConstLongInt(MomCPUName+3,&Err,10);
    if (ROMEnd>2) ROMEnd%=10;
    ROMEnd=(ROMEnd << 10)-1;
 

@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code7000.c,v 1.3 2005/09/08 17:31:04 alfred Exp $                    */
+/* $Id: code7000.c,v 1.4 2005/10/02 10:00:45 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code7000.c,v $
+ * Revision 1.4  2005/10/02 10:00:45  alfred
+ * - ConstLongInt gets default base, correct length check on KCPSM3 registers
+ *
  * Revision 1.3  2005/09/08 17:31:04  alfred
  * - add missing include
  *
@@ -339,7 +342,7 @@ BEGIN
    else if ((strlen(Asc)<2) OR (strlen(Asc)>3) OR (toupper(*Asc)!='R')) return False;
    else
     BEGIN
-     *Erg=ConstLongInt(Asc+1,&Err);
+     *Erg=ConstLongInt(Asc + 1, &Err, 10);
      return (Err AND (*Erg<=15));
     END
 END

@@ -15,9 +15,12 @@
 /*            7. 5.2000 Packing hinzugefuegt                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeavr.c,v 1.1 2003/11/06 02:49:22 alfred Exp $                     */
+/* $Id: codeavr.c,v 1.2 2005/10/02 10:00:45 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codeavr.c,v $
+ * Revision 1.2  2005/10/02 10:00:45  alfred
+ * - ConstLongInt gets default base, correct length check on KCPSM3 registers
+ *
  * Revision 1.1  2003/11/06 02:49:22  alfred
  * - recreated
  *
@@ -128,7 +131,7 @@ BEGIN
    if ((l < 2) OR (l > 3) OR (toupper(*Asc) != 'R')) return False;
    else
     BEGIN
-     *Erg = ConstLongInt(Asc + 1, &io);
+     *Erg = ConstLongInt(Asc + 1, &io, 10);
      return ((io) AND (*Erg < 32));
     END
 END

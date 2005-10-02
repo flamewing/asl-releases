@@ -1,7 +1,7 @@
 	cpu	kcpsm3
 
 	CONSTANT const1, 02
-	NAMEREG s08, treg
+	NAMEREG s8, treg
 
 
 	load	treg, const1
@@ -30,7 +30,7 @@ test2:
 	return	NC
 
 	load	s3, 21
-	and	s12, 03
+	and	sC, 03
 	or	s4, 19
 	xor	s7, 71
 
@@ -49,22 +49,22 @@ test2:
 	sub	s1, s4
 	subcy	s1, s4
 
-	sr0	s12
-	sr1	s12
-	srx	s12
-	sra	s12
-	rr	s12
+	sr0	sC
+	sr1	sC
+	srx	sC
+	sra	sC
+	rr	sC
 
-	sl0	s12
-	sl1	s12
-	slx	s12
-	sla	s12
-	rl	s12
+	sl0	sC
+	sl1	sC
+	slx	sC
+	sla	sC
+	rl	sC
 
 	input	s6, 21
-	input	s11, (s1)
-	output	s14, 21
-	output	s15, (s1)
+	input	sB, (s1)
+	output	sE, 21
+	output	sF, (s1)
 
 	returni	enable
 	returni	disable
@@ -81,10 +81,10 @@ test2:
 	fetch	s9,(s4)
 
 	store	s3,vari
-	store	s6,(s14)
+	store	s6,(sE)
 
 	test	s8,0aah
-	test	s12,s3
+	test	sC,s3
 
 	segment	data
 

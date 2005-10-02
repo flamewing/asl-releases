@@ -317,7 +317,7 @@ BEGIN
    do
     BEGIN
      p=strchr(Copy,','); if (p!=Nil) *p='\0';
-     FTemp=ConstLongInt(Copy,&err);
+     FTemp=ConstLongInt(Copy,&err,10);
      if (NOT err) return CMDErr;
 
      for (Search=0; Search<FilterCnt; Search++)
@@ -373,7 +373,7 @@ BEGIN
      else
       BEGIN
        Name[strlen(Name)-1]='\0';
-       *Offset=ConstLongInt(Name+z+1,&err);
+       *Offset=ConstLongInt(Name+z+1,&err,10);
        Name[z]='\0';
        return err;
       END

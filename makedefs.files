@@ -1,4 +1,4 @@
-# $Id: makedefs.files,v 1.4 2005/06/25 12:54:44 alfred Exp $
+# $Id: makedefs.files,v 1.5 2005/09/30 13:40:00 alfred Exp $
 
 BASEARCH1FILES = *.c *.h man/*.1 \
             INSTALL README README.OS2 README.DOS README.LANGS README.KR TODO BENCHES Makefile Makefile.dos Makefile.os2 Makefile.w32 Makefile.def.tmpl \
@@ -30,6 +30,7 @@ RESCOMPTARGET = rescomp$(HOST_EXEXTENSION)
 TEX2DOCTARGET = tex2doc$(HOST_EXEXTENSION)
 TEX2HTMLTARGET = tex2html$(HOST_EXEXTENSION)
 UNUMLAUTTARGET = unumlaut$(HOST_EXEXTENSION)
+MKDEPENDTARGET = mkdepend$(HOST_EXEXTENSION)
 
 ALLTARGETS = ioerrs.msg cmdarg.msg tools.msg \
              as.msg $(ASLTARGET) \

@@ -12,9 +12,12 @@
 /*           29. 5.1999 SysString                                            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: strutil.h,v 1.3 2004/05/30 20:54:26 alfred Exp $                     */
+/* $Id: strutil.h,v 1.4 2005/10/02 10:00:46 alfred Exp $                     */
 /*****************************************************************************
  * $Log: strutil.h,v $
+ * Revision 1.4  2005/10/02 10:00:46  alfred
+ * - ConstLongInt gets default base, correct length check on KCPSM3 registers
+ *
  * Revision 1.3  2004/05/30 20:54:26  alfred
  * - added CopyNoBlanks()
  *
@@ -65,7 +68,7 @@ extern void ReadLn(FILE *Datei, char *Zeile);
 
 extern int ReadLnCont(FILE *Datei, char *Zeile, int MaxLen);
 
-extern LongInt ConstLongInt(const char *inp, Boolean *err);
+extern LongInt ConstLongInt(const char *inp, Boolean *pErr, LongInt Base);
 
 extern void KillBlanks(char *s);
 

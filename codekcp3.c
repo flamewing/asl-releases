@@ -5,9 +5,18 @@
 /* Codegenerator xilinx kcpsm3                                               */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codekcp3.c,v 1.2 2005/09/08 16:53:43 alfred Exp $                   */
+/* $Id: codekcp3.c,v 1.5 2005/10/02 10:22:58 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codekcp3.c,v $
+ * Revision 1.5  2005/10/02 10:22:58  alfred
+ * - KCPSM(3) registers are literals
+ *
+ * Revision 1.4  2005/10/02 10:00:45  alfred
+ * - ConstLongInt gets default base, correct length check on KCPSM3 registers
+ *
+ * Revision 1.3  2005/09/30 12:53:49  alfred
+ * - correct include statements
+ *
  * Revision 1.2  2005/09/08 16:53:43  alfred
  * - use common PInstTable
  *
@@ -20,7 +29,7 @@
  *****************************************************************************/
 
 #include "stdinc.h"
-#include "stdio.h"
+#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -55,7 +64,7 @@ static CPUVar CPUKCPSM3;
  * Address Expression Parsing
  *--------------------------------------------------------------------------*/
 
-static Boolean IsWReg(char *Asc, LongWord *pErg)
+static Boolean IsWReg(const char *Asc, LongWord *pErg)
 {
   Boolean OK;
   char *s;
@@ -65,7 +74,7 @@ static Boolean IsWReg(char *Asc, LongWord *pErg)
   if ((strlen(Asc) < 2) || (toupper(*Asc) != 'S')) 
     return False;
 
-  *pErg = ConstLongInt(Asc + 1, &OK);
+  *pErg = ConstLongInt(Asc + 1, &OK, 16);
   if (!OK)
     return False;
 
@@ -77,7 +86,7 @@ static Boolean IsIWReg(const char *Asc, LongWord *pErg)
   char Tmp[10];
   int l = strlen(Asc);
 
-  if ((l < 4) || (l > 5) || (Asc[0] != '(') || (Asc[l - 1] != ')'))
+  if ((l < 3) || (Asc[0] != '(') || (Asc[l - 1] != ')'))
     return False;
 
   memcpy(Tmp, Asc + 1, l - 2); Tmp[l - 2] = '\0';
@@ -262,7 +271,7 @@ static void DecodeMem(Word Index)
   else if (!IsWReg(ArgStr[1], &Reg)) WrError(1350);
   else 
   {
-    DAsmCode[0] = (((LongWord)Index) << 13) |Reg << 8;
+    DAsmCode[0] = (((LongWord)Index) << 13) | (Reg << 8);
     if (IsIWReg(ArgStr[2], &Addr))
     {
       DAsmCode[0] |= 0x01000 | (Addr << 4);

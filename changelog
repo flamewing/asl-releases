@@ -1,4 +1,4 @@
-$Id: changelog,v 1.14 2005/09/17 19:23:16 alfred Exp $
+$Id: changelog,v 1.16 2005/10/02 12:17:40 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -995,3 +995,14 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 - Bugfix      : correct 68HC12 behaviour for forward jump/call instructions
 
 - Bugfix      : allow .w and .b as length specifier for 68K branch instructions
+
+2005-10-02 [Bld 41]
+
+- Bugfix      : correct endinaness for constant disposition on XGATE
+
+- Bugfix      : correct endinaness for constant disposition of 8-bit Motorola ops
+                on big-endian platforms
+
+- Bugfix      : allow arbitrary register names for KCPSM3
+
+- Bugfix      : correct register naming for KCPSM3

@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code97c241.c,v 1.3 2005/09/08 17:31:04 alfred Exp $                  */
+/* $Id: code97c241.c,v 1.4 2005/10/02 10:00:45 alfred Exp $                  */
 /*****************************************************************************
  * $Log: code97c241.c,v $
+ * Revision 1.4  2005/10/02 10:00:45  alfred
+ * - ConstLongInt gets default base, correct length check on KCPSM3 registers
+ *
  * Revision 1.3  2005/09/08 17:31:04  alfred
  * - add missing include
  *
@@ -366,7 +369,7 @@ BEGIN
      case 'D': *Result=0x80; break;
      default: return False;
     END
-   tmp=ConstLongInt(Asc+2,&Err);
+   tmp=ConstLongInt(Asc+2,&Err,10);
    if ((NOT Err) OR (tmp>15)) return False;
    if ((*Result==0x80) AND (Odd(tmp))) return False;
    *Result+=tmp; return True;

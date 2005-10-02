@@ -17,9 +17,12 @@
 /*           2002-01-23 symbols defined with BIT must not be macro-local     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code51.c,v 1.3 2005/09/08 16:53:41 alfred Exp $                      */
+/* $Id: code51.c,v 1.4 2005/10/02 10:00:44 alfred Exp $                      */
 /***************************************************************************** 
  * $Log: code51.c,v $
+ * Revision 1.4  2005/10/02 10:00:44  alfred
+ * - ConstLongInt gets default base, correct length check on KCPSM3 registers
+ *
  * Revision 1.3  2005/09/08 16:53:41  alfred
  * - use common PInstTable
  *
@@ -168,7 +171,7 @@ BEGIN
     END
    else return False;
 
-   *Erg = ConstLongInt(Start, &IO);
+   *Erg = ConstLongInt(Start, &IO, 10);
    if (NOT IO) return False;
    else if (((*Erg) & Masks[*Size]) != 0) return False;
    else

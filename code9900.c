@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code9900.c,v 1.2 2005/09/08 17:31:05 alfred Exp $                    */
+/* $Id: code9900.c,v 1.3 2005/10/02 10:00:45 alfred Exp $                    */
 /***************************************************************************** 
  * $Log: code9900.c,v $
+ * Revision 1.3  2005/10/02 10:00:45  alfred
+ * - ConstLongInt gets default base, correct length check on KCPSM3 registers
+ *
  * Revision 1.2  2005/09/08 17:31:05  alfred
  * - add missing include
  *
@@ -680,7 +683,7 @@ BEGIN
    if ((strlen(Asc)>=2) AND (toupper(*Asc)=='R')) h=Asc+1;
    else if ((strlen(Asc)>=3) AND (toupper(*Asc)=='W') AND (toupper(Asc[1])=='R')) h=Asc+2;
 
-   Erg->Contents.Int=ConstLongInt(h,&err);
+   Erg->Contents.Int=ConstLongInt(h,&err,10);
    if ((NOT err) OR (Erg->Contents.Int<0) OR (Erg->Contents.Int>15)) return;
 
    Erg->Typ=TempInt;

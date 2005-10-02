@@ -17,9 +17,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.h,v 1.3 2004/05/30 20:51:43 alfred Exp $                     */
+/* $Id: asmpars.h,v 1.4 2005/10/02 10:00:44 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.h,v $
+ * Revision 1.4  2005/10/02 10:00:44  alfred
+ * - ConstLongInt gets default base, correct length check on KCPSM3 registers
+ *
  * Revision 1.3  2004/05/30 20:51:43  alfred
  * - major cleanups in Const... functions
  *
@@ -231,7 +234,7 @@ extern void ClearLocStack(void);
 
 extern void AddRegDef(char *Orig, char *Repl);
 
-extern Boolean FindRegDef(char *Name, char **Erg);
+extern Boolean FindRegDef(const char *Name, char **Erg);
 
 extern void TossRegDefs(LongInt Sect);
 

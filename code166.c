@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code166.c,v 1.3 2005/09/08 17:31:02 alfred Exp $                     */
+/* $Id: code166.c,v 1.4 2005/10/02 10:00:44 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code166.c,v $
+ * Revision 1.4  2005/10/02 10:00:44  alfred
+ * - ConstLongInt gets default base, correct length check on KCPSM3 registers
+ *
  * Revision 1.3  2005/09/08 17:31:02  alfred
  * - add missing include
  *
@@ -233,7 +236,7 @@ static Byte AdrMode;
 static Byte AdrVals[2];
 static ShortInt AdrType;
 
-        static Boolean IsReg(char *Asc, Byte *Erg, Boolean WordWise)
+        static Boolean IsReg(const char *Asc, Byte *Erg, Boolean WordWise)
 BEGIN
    Boolean err;
    char *s;
@@ -243,17 +246,17 @@ BEGIN
    if ((strlen(Asc)<2) OR (toupper(*Asc)!='R')) return False;
    else if ((strlen(Asc)>2) AND (toupper(Asc[1])=='L') AND (NOT WordWise))
     BEGIN
-     *Erg=ConstLongInt(Asc+2,&err); *Erg<<=1;
+     *Erg=ConstLongInt(Asc + 2, &err, 10); *Erg<<=1;
      return ((err) AND (*Erg<=15));
     END
    else if ((strlen(Asc)>2) AND (toupper(Asc[1])=='H') AND (NOT WordWise))
     BEGIN
-     *Erg=ConstLongInt(Asc+2,&err); *Erg<<=1; (*Erg)++;
+     *Erg=ConstLongInt(Asc + 2, &err, 10); *Erg<<=1; (*Erg)++;
      return ((err) AND (*Erg<=15));
     END
    else
     BEGIN
-     *Erg=ConstLongInt(Asc+1,&err);
+     *Erg=ConstLongInt(Asc+1, &err, 10);
      return ((err) AND (*Erg<=15));
     END
 END

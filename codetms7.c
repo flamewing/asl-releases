@@ -8,9 +8,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codetms7.c,v 1.3 2005/09/08 17:31:05 alfred Exp $                    */
+/* $Id: codetms7.c,v 1.4 2005/10/02 10:00:46 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codetms7.c,v $
+ * Revision 1.4  2005/10/02 10:00:46  alfred
+ * - ConstLongInt gets default base, correct length check on KCPSM3 registers
+ *
  * Revision 1.3  2005/09/08 17:31:05  alfred
  * - add missing include
  *
@@ -929,7 +932,7 @@ BEGIN
 
    strmaxcpy(h,Asc+1,255);
    if ((*h=='0') AND (strlen(h)>1)) *h='$';
-   Erg->Contents.Int=ConstLongInt(h,&Err);
+   Erg->Contents.Int=ConstLongInt(h,&Err,10);
    if ((NOT Err) OR (Erg->Contents.Int<0) OR (Erg->Contents.Int>255)) return;
 
    Erg->Typ=TempInt; if (toupper(*Asc)=='P') Erg->Contents.Int+=0x100;

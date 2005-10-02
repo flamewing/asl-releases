@@ -337,12 +337,12 @@ BEGIN
 
      Save=(*p); *p='\0'; 
      if ((StartAuto = AddressWildcard(Arg))) err = True;
-     else StartAdr = ConstLongInt(Arg, &err);
+     else StartAdr = ConstLongInt(Arg, &err, 10);
      *p = Save;
      if (NOT err) return CMDErr;
 
      if ((StopAuto = AddressWildcard(p + 1))) err = True;
-     else StopAdr = ConstLongInt(p+1, &err);
+     else StopAdr = ConstLongInt(p+1, &err, 10);
      if (NOT err) return CMDErr;
 
      if ((NOT StartAuto) AND (NOT StopAuto) AND (StartAdr>StopAdr)) return CMDErr;
@@ -399,7 +399,7 @@ BEGIN
        case 'B': Sgn=(-1);
        case 'L': Arg++;
       END
-     StartHeader=ConstLongInt(Arg,&err);
+     StartHeader=ConstLongInt(Arg,&err, 10);
      if ((NOT err) OR (StartHeader>4)) return CMDErr;
      StartHeader*=Sgn;
      return CMDArg;
@@ -417,7 +417,7 @@ static CMDResult CMD_EntryAdr(Boolean Negate, char *Arg)
    }
    else
    {
-     EntryAdr = ConstLongInt(Arg, &err);
+     EntryAdr = ConstLongInt(Arg, &err, 10);
      if (err)
        EntryAdrPresent = True;
      return (err) ? CMDArg : CMDErr;
@@ -429,7 +429,7 @@ BEGIN
    Boolean err;
    UNUSED(Negate);
 
-   FillVal=ConstLongInt(Arg,&err);
+   FillVal=ConstLongInt(Arg,&err, 10);
    if (NOT err) return CMDErr; else return CMDArg;
 END
 

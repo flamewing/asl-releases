@@ -8,12 +8,15 @@
 /*           13. 8.1997 KillBlanks-Funktionen aus asmsub.c heruebergenommen  */
 /*           29. 8.1998 sprintf-Emulation                                    */
 /*           17. 4.1999 strcasecmp gegen Nullzeiger geschuetzt               */
-/*           30. 5.1999 ConstLongInt akzeptiert auf 0x fuer Hex-Zahlen       */
+/*           30. 5.1999 ConstLongInt akzeptiert auch 0x fuer Hex-Zahlen      */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: strutil.c,v 1.3 2004/05/30 20:54:26 alfred Exp $                     */
+/* $Id: strutil.c,v 1.4 2005/10/02 10:00:46 alfred Exp $                     */
 /*****************************************************************************
  * $Log: strutil.c,v $
+ * Revision 1.4  2005/10/02 10:00:46  alfred
+ * - ConstLongInt gets default base, correct length check on KCPSM3 registers
+ *
  * Revision 1.3  2004/05/30 20:54:26  alfred
  * - added CopyNoBlanks()
  *
@@ -365,12 +368,12 @@ END
 /* erg: Zeiger auf Ergebnis-Longint */
 /* liefert TRUE, falls fehlerfrei, sonst FALSE */
 
-        LongInt ConstLongInt(const char *inp, Boolean *err)
+        LongInt ConstLongInt(const char *inp, Boolean *pErr, LongInt Base)
 BEGIN
    static char Prefixes[4]={'$','@','%','\0'}; /* die moeglichen Zahlensysteme */
    static LongInt Bases[3]={16,8,2};           /* die dazugehoerigen Basen */
    LongInt erg;
-   LongInt Base=10,z,val,vorz=1;  /* Vermischtes */
+   LongInt z,val,vorz = 1;  /* Vermischtes */
 
    /* eventuelles Vorzeichen abspalten */
 
@@ -401,7 +404,7 @@ BEGIN
 
    /* jetzt die Zahlenzeichen der Reihe nach durchverwursten */
 
-   erg=0; *err=False;
+   erg=0; *pErr=False;
    for(; *inp != '\0'; inp++)
     BEGIN
      /* Ziffern 0..9 ergeben selbiges */
@@ -436,7 +439,7 @@ BEGIN
      /* Vorzeichen beruecksichtigen */
 
      erg*=vorz;
-     *err=True;
+     *pErr=True;
     END
 
    return erg;

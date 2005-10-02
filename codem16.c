@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codem16.c,v 1.3 2005/09/08 17:06:29 alfred Exp $                     */
+/* $Id: codem16.c,v 1.4 2005/10/02 10:00:45 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codem16.c,v $
+ * Revision 1.4  2005/10/02 10:00:45  alfred
+ * - ConstLongInt gets default base, correct length check on KCPSM3 registers
+ *
  * Revision 1.3  2005/09/08 17:06:29  alfred
  * - dynamically allocate string
  *
@@ -326,7 +329,7 @@ BEGIN
    else if (strcasecmp(Asc,"FP")==0) *Erg=14;
    else if ((strlen(Asc)>1) AND (toupper(*Asc)=='R'))
     BEGIN
-     *Erg=ConstLongInt(Asc+1,&IO);
+     *Erg = ConstLongInt(Asc + 1, &IO, 10);
      return ((IO) AND (*Erg<=15));
     END
    else return False;

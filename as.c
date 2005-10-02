@@ -58,9 +58,12 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.8 2005/09/11 18:10:50 alfred Exp $                          */
+/* $Id: as.c,v 1.9 2005/10/02 10:00:43 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.9  2005/10/02 10:00:43  alfred
+ * - ConstLongInt gets default base, correct length check on KCPSM3 registers
+ *
  * Revision 1.8  2005/09/11 18:10:50  alfred
  * - added XGATE
  *
@@ -3033,7 +3036,7 @@ BEGIN
      END
     else
      BEGIN
-      PassNoForMessage=ConstLongInt(Arg,&OK);
+      PassNoForMessage=ConstLongInt(Arg, &OK, 10);
       if (NOT OK)
        BEGIN
         PassNoForMessage=1; return CMDOK;
@@ -3140,7 +3143,7 @@ BEGIN
    if (Arg[0]=='\0') return CMDErr;
    else
     BEGIN
-     erg=ConstLongInt(Arg,&OK);
+     erg = ConstLongInt(Arg, &OK, 10);
      if ((NOT OK) OR (erg>31)) return CMDErr;
      else
       BEGIN
@@ -3336,7 +3339,7 @@ BEGIN
    else if (Arg[0] == '\0') return CMDErr;
    else
     BEGIN
-     erg = ConstLongInt(Arg, &OK);
+     erg = ConstLongInt(Arg, &OK, 10);
      if ((NOT OK) OR (erg > (1 << PCMax))) return CMDErr;
      else
       BEGIN

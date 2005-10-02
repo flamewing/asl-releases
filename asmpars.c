@@ -36,9 +36,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.6 2004/05/31 12:47:40 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.7 2005/10/02 10:00:43 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.c,v $
+ * Revision 1.7  2005/10/02 10:00:43  alfred
+ * - ConstLongInt gets default base, correct length check on KCPSM3 registers
+ *
  * Revision 1.6  2004/05/31 12:47:40  alfred
  * - clean up operator handling
  *
@@ -4104,7 +4107,7 @@ BEGIN
     END
 END
 
-        Boolean FindRegDef(char *Name_N, char **Erg)
+        Boolean FindRegDef(const char *Name_N, char **Erg)
 BEGIN
    LongInt Sect;
    PRegDef Node;

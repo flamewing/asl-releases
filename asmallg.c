@@ -25,9 +25,12 @@
 /*                       to now                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmallg.c,v 1.2 2005/08/07 10:29:24 alfred Exp $                     */
+/* $Id: asmallg.c,v 1.3 2005/10/02 10:00:43 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmallg.c,v $
+ * Revision 1.3  2005/10/02 10:00:43  alfred
+ * - ConstLongInt gets default base, correct length check on KCPSM3 registers
+ *
  * Revision 1.2  2005/08/07 10:29:24  alfred
  * - remove mnemonic conflict with MICO8
  *
@@ -127,7 +130,7 @@ BEGIN
     if ((*z>='0') AND (*z<='9')) break;
    if (*z!='\0') strcpy(s,z);
    strprep(s,"$");
-   HCPU=ConstLongInt(s,&ECPU);
+   HCPU=ConstLongInt(s, &ECPU, 10);
    if (ParamCount!=0)
     BEGIN
      EnterIntSymbol(MomCPUName,HCPU,SegNone,True);
@@ -908,7 +911,7 @@ BEGIN
    if (ArgCnt!=1) WrError(1110);
    else
     BEGIN
-     tmp=ConstLongInt(ArgStr[1],&OK);
+     tmp = ConstLongInt(ArgStr[1], &OK, 10);
      if (NOT OK) WrError(1135);
      else if (ChkRange(tmp,2,36))
       BEGIN

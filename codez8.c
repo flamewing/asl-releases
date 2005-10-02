@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codez8.c,v 1.4 2005/09/08 16:53:43 alfred Exp $                          *
+/* $Id: codez8.c,v 1.5 2005/10/02 10:00:46 alfred Exp $                          *
  *****************************************************************************
  * $Log: codez8.c,v $
+ * Revision 1.5  2005/10/02 10:00:46  alfred
+ * - ConstLongInt gets default base, correct length check on KCPSM3 registers
+ *
  * Revision 1.4  2005/09/08 16:53:43  alfred
  * - use common PInstTable
  *
@@ -165,7 +168,7 @@ static Boolean IsWReg(char *Asc, Byte *Erg)
    if ((strlen(Asc) < 2) || (toupper(*Asc) != 'R')) return False;
    else
    {
-     *Erg = ConstLongInt(Asc + 1, &Err);
+     *Erg = ConstLongInt(Asc + 1, &Err, 10);
      if (!Err)
        return False;
      else
@@ -180,7 +183,7 @@ static Boolean IsRReg(char *Asc, Byte *Erg)
    if ((strlen(Asc) < 3) || (strncasecmp(Asc, "RR", 2) != 0)) return False;
    else
    {
-     *Erg = ConstLongInt(Asc + 2, &Err);
+     *Erg = ConstLongInt(Asc + 2, &Err, 10);
      if (NOT Err)
        return False;
      else

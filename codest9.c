@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codest9.c,v 1.3 2005/09/08 17:31:05 alfred Exp $                     */
+/* $Id: codest9.c,v 1.4 2005/10/02 10:00:46 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codest9.c,v $
+ * Revision 1.4  2005/10/02 10:00:46  alfred
+ * - ConstLongInt gets default base, correct length check on KCPSM3 registers
+ *
  * Revision 1.3  2005/09/08 17:31:05  alfred
  * - add missing include
  *
@@ -264,7 +267,7 @@ BEGIN
     END
    else *Size=0;
 
-   *Erg=ConstLongInt(Asc,&Res);
+   *Erg=ConstLongInt(Asc,&Res,10);
    if ((NOT Res) OR (*Erg>15)) return False;
    if ((*Size==1) AND (Odd(*Erg))) return False;
 
@@ -1867,7 +1870,7 @@ BEGIN
      Pair=True; strcpy(h,h+1);
     END
    else Pair=False;
-   Erg->Contents.Int=ConstLongInt(h,&Err);
+   Erg->Contents.Int=ConstLongInt(h,&Err,10);
    if ((NOT Err) OR (Erg->Contents.Int<0) OR (Erg->Contents.Int>255)) return;
    if ((Erg->Contents.Int & 0xf0)==0xd0) return;
    if ((Pair) AND (Odd(Erg->Contents.Int))) return;

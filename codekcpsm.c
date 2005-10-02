@@ -7,9 +7,18 @@
 /* Historie: 27.02.2003 Grundsteinlegung                                     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codekcpsm.c,v 1.3 2005/09/08 17:31:05 alfred Exp $                   */
+/* $Id: codekcpsm.c,v 1.6 2005/10/02 10:22:58 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codekcpsm.c,v $
+ * Revision 1.6  2005/10/02 10:22:58  alfred
+ * - KCPSM(3) registers are literals
+ *
+ * Revision 1.5  2005/10/02 10:00:45  alfred
+ * - ConstLongInt gets default base, correct length check on KCPSM3 registers
+ *
+ * Revision 1.4  2005/09/30 12:53:49  alfred
+ * - correct include statements
+ *
  * Revision 1.3  2005/09/08 17:31:05  alfred
  * - add missing include
  *
@@ -34,7 +43,7 @@
  *****************************************************************************/
 
 #include "stdinc.h"
-#include "stdio.h"
+#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -194,7 +203,7 @@ END
 
 /*--------------------------------------------------------------------------*/ 
 
-	static Boolean IsWReg(char *Asc, Word *Erg)
+	static Boolean IsWReg(const char *Asc, Word *Erg)
 BEGIN
    Boolean Err;
    Boolean retValue;
@@ -205,17 +214,17 @@ BEGIN
    if ((strlen(Asc)<2) OR (toupper(*Asc)!='S')) 
      retValue = False;
    else
-   BEGIN
-     *Erg=ConstLongInt(Asc+1,&Err);
+    BEGIN
+     *Erg=ConstLongInt(Asc+1,&Err, 10);
      if (NOT Err) 
        retValue = False;
      else 
        retValue = (*Erg<=15);
     END
 #ifdef DEBUG_PRINTF
-    fprintf( stderr, "IsWReg: %s %d\n", Asc, retValue );
+   fprintf( stderr, "IsWReg: %s %d\n", Asc, retValue );
 #endif
-    return retValue;
+   return retValue;
 END
 
 	static void ChkAdr(Byte Mask)

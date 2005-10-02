@@ -5,9 +5,15 @@
 /* Codegenerator LatticeMico8                                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemic8.c,v 1.5 2005/09/08 16:53:43 alfred Exp $                   */
+/* $Id: codemic8.c,v 1.7 2005/10/02 10:00:46 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codemic8.c,v $
+ * Revision 1.7  2005/10/02 10:00:46  alfred
+ * - ConstLongInt gets default base, correct length check on KCPSM3 registers
+ *
+ * Revision 1.6  2005/09/30 12:53:49  alfred
+ * - correct include statements
+ *
  * Revision 1.5  2005/09/08 16:53:43  alfred
  * - use common PInstTable
  *
@@ -26,7 +32,7 @@
  *****************************************************************************/
 
 #include "stdinc.h"
-#include "stdio.h"
+#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -87,7 +93,7 @@ static Boolean IsWReg(char *Asc, LongWord *pErg)
   if ((strlen(Asc) < 2) || (toupper(*Asc) != 'R')) 
     return False;
 
-  *pErg = ConstLongInt(Asc + 1, &OK);
+  *pErg = ConstLongInt(Asc + 1, &OK, 10);
   if (!OK)
     return False;
 

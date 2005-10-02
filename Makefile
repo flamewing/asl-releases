@@ -1,4 +1,4 @@
- include Makefile.def
+include Makefile.def
 
 CURRDIR=./
 TAPE=/dev/ntape
@@ -51,10 +51,18 @@ $(TEX2HTMLTARGET): $(TEX2HTML_OBJECTS)
 $(UNUMLAUTTARGET): $(UNUMLAUT_OBJECTS)
 	$(LD) -o $(UNUMLAUTTARGET) $(UNUMLAUT_OBJECTS) $(LDFLAGS)
 
+$(MKDEPENDTARGET): $(MKDEPEND_OBJECTS)
+	$(LD) -o $(MKDEPENDTARGET) $(MKDEPEND_OBJECTS) $(LDFLAGS)
+
 #---------------------------------------------------------------------------
 # special rules for objects dependant on string resource files
 
 include makedefs.str
+
+include Makefile.dep
+
+Makefile.dep depend: $(MKDEPENDTARGET)
+	$(CURRDIR)$(MKDEPENDTARGET) -o Makefile.dep *.c
 
 #---------------------------------------------------------------------------
 # supplementary targets
@@ -200,12 +208,6 @@ unjunk:
            `find . -name "*.noi" -print`
 	cd doc_DE; $(MAKE) clean RM="rm -f"
 	cd doc_EN; $(MAKE) clean RM="rm -f"
-
-depend:
-	$(CC) $(ALLFLAGS) -MM *.c >Makefile.dep
-
-Makefile.dep:
-	$(CC) $(ALLFLAGS) -MM *.c >Makefile.dep
 
 tlink: all text1.p text2.p alink
 	./alink -vv text1 text2 text
