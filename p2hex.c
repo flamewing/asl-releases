@@ -349,7 +349,7 @@ BEGIN
  	      ChkSum+=Hi(ErgStart)+Lo(ErgStart);
  	      break;
  	     case MOSHex:
- 	      errno=0; fprintf(TargFile,";%s%s",HexByte(TransLen),HexWord(ErgStart AND 0xffff)); ChkIO(TargName);
+ 	      errno=0; fprintf(TargFile,";%s%s",HexByte(TransLen),HexWord(ErgStart & 0xffff)); ChkIO(TargName);
  	      ChkSum+=TransLen+Lo(ErgStart)+Hi(ErgStart);
  	      break;
              case IntHex:

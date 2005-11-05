@@ -36,9 +36,12 @@
 /*           2001-12-02 fixed problems with forward refs of shift arguments  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68k.c,v 1.4 2005/09/17 19:11:48 alfred Exp $                     */
+/* $Id: code68k.c,v 1.5 2005/10/30 09:39:05 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code68k.c,v $
+ * Revision 1.5  2005/10/30 09:39:05  alfred
+ * - honour .B as branch size
+ *
  * Revision 1.4  2005/09/17 19:11:48  alfred
  * - allow .B/.W as branch length specifier
  *
@@ -4359,7 +4362,7 @@ BEGIN
     BEGIN
      /* .W, .S, .L, .X erlaubt */
 
-     if ((OpSize!=1) AND (OpSize!=2) AND (OpSize!=4) AND (OpSize!=6)) 
+     if ((OpSize>2) AND (OpSize!=4) AND (OpSize!=6)) 
       WrError(1130);
 
      /* nur ein Operand erlaubt */

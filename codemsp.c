@@ -12,9 +12,12 @@
 /*             2002-01-27 allow immediate addressing for one-op instrs(doj)  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemsp.c,v 1.4 2005/10/02 10:00:46 alfred Exp $                     */
+/* $Id: codemsp.c,v 1.5 2005/10/30 13:23:28 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: codemsp.c,v $
+ * Revision 1.5  2005/10/30 13:23:28  alfred
+ * - warn about odd program counters
+ *
  * Revision 1.4  2005/10/02 10:00:46  alfred
  * - ConstLongInt gets default base, correct length check on KCPSM3 registers
  *
@@ -450,6 +453,10 @@ BEGIN
    /* Pseudoanweisungen */
 
    if (DecodePseudo()) return;
+
+   /* Befehlszaehler ungerade ? */
+
+   if (Odd(EProgCounter())) WrError(180);
 
    /* zwei Operanden */
 

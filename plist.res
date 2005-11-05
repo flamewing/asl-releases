@@ -24,7 +24,7 @@ Message MessFileRequest
 
 Message MessHeaderLine1
  "Codetyp     Segment  Startadresse   L&auml;nge (Byte)  Endadresse"
- "code type   segment   start address length (byte)  end address"
+ "Code-Type   Segment  Start-Address  Length (Bytes) End-Address"
 
 Message MessHeaderLine2
  "------------------------------------------------------------"

@@ -36,9 +36,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.7 2005/10/02 10:00:43 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.8 2005/10/30 13:24:28 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.c,v $
+ * Revision 1.8  2005/10/30 13:24:28  alfred
+ * - allow strings as int constants
+ *
  * Revision 1.7  2005/10/02 10:00:43  alfred
  * - ConstLongInt gets default base, correct length check on KCPSM3 registers
  *
@@ -2391,6 +2394,7 @@ static int TypeNums[] = {0, Num_OpTypeInt, Num_OpTypeFloat, 0, Num_OpTypeString,
 LargeInt EvalIntExpression(const char *pExpr, IntType Type, Boolean *pResult)
 {
   TempResult t;
+  LargeInt Result;
 
   *pResult = False;
   TypeFlag = 0; SizeFlag = (-1);
@@ -2400,25 +2404,47 @@ LargeInt EvalIntExpression(const char *pExpr, IntType Type, Boolean *pResult)
 
   EvalExpression(pExpr, &t);
   SetRelocs(t.Relocs);
-  if (t.Typ != TempInt)
+  switch (t.Typ)
   {
-    if (t.Typ != TempNone)
+    case TempInt:
+      Result = t.Contents.Int;
+      break;
+    case TempString:
     {
-      char Msg[50];
+      int l = strlen(t.Contents.Ascii);
 
-      sprintf(Msg, "%s %s %s %s", 
-              getmessage(Num_ErrMsgExpected), getmessage(Num_OpTypeInt),
-              getmessage(Num_ErrMsgButGot), getmessage(TypeNums[t.Typ]));
-      WrXError(1135, Msg);
+      if ((l > 0) && (l <= 4))
+      {
+        char *pRun;
+        Byte Digit;
+
+        Result = 0;
+        for (pRun = t.Contents.Ascii; *pRun; pRun++)
+        {
+          Digit = (usint) *pRun;
+          Result = (Result << 8) | CharTransTable[Digit & 0xff];
+        }
+        break;
+      }
     }
-    FreeRelocs(&LastRelocs);
-    return -1;
+    default:
+      if (t.Typ != TempNone)
+      {
+        char Msg[50];
+
+        sprintf(Msg, "%s %s %s %s", 
+                getmessage(Num_ErrMsgExpected), getmessage(Num_OpTypeInt),
+                getmessage(Num_ErrMsgButGot), getmessage(TypeNums[t.Typ]));
+        WrXError(1135, Msg);
+      }
+      FreeRelocs(&LastRelocs);
+      return -1;
   }
 
   if (FirstPassUnknown)
-    t.Contents.Int &= IntMasks[(int)Type];
+    Result &= IntMasks[(int)Type];
 
-  if (!RangeCheck(t.Contents.Int, Type))
+  if (!RangeCheck(Result, Type))
   {
     if (HardRanges)
     {
@@ -2429,13 +2455,13 @@ LargeInt EvalIntExpression(const char *pExpr, IntType Type, Boolean *pResult)
     {
       WrError(260);
       *pResult = True;
-      return t.Contents.Int&IntMasks[(int)Type];
+      return Result & IntMasks[(int)Type];
     }
   }
   else
   {
     *pResult = True;
-    return t.Contents.Int;
+    return Result;
   }
 }
 

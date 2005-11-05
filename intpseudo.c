@@ -5,9 +5,12 @@
 /* Haeufiger benutzte Intel-Pseudo-Befehle                                   */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: intpseudo.c,v 1.4 2004/05/31 12:47:28 alfred Exp $                   */
+/* $Id: intpseudo.c,v 1.5 2005/11/04 19:38:00 alfred Exp $                   */
 /***************************************************************************** 
  * $Log: intpseudo.c,v $
+ * Revision 1.5  2005/11/04 19:38:00  alfred
+ * - ignore case on DUP search
+ *
  * Revision 1.4  2004/05/31 12:47:28  alfred
  * - use CopyNoBlanks()
  *
@@ -357,6 +360,8 @@ static Boolean LayoutTenBytes(const char *pExpr, Word *pCnt, Boolean BigEndian)
    
 static Boolean DecodeIntelPseudo_ValidSymChar(char ch)
 {
+  ch = toupper(ch);
+
   return (((ch >= 'A') && (ch <= 'Z'))
        || ((ch >= '0') && (ch <= '9'))
        || (ch == '_')
