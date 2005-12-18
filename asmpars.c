@@ -36,9 +36,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.8 2005/10/30 13:24:28 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.9 2005/12/13 19:28:37 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.c,v $
+ * Revision 1.9  2005/12/13 19:28:37  alfred
+ * - correct format strings for 16-bit platforms
+ *
  * Revision 1.8  2005/10/30 13:24:28  alfred
  * - allow strings as int constants
  *
@@ -1503,7 +1506,7 @@ static Operator Operators[] =
 
    Boolean OK, FFound;
    TempResult LVal, RVal, MVal;
-   int z1, cnt, CopyLen;
+   int z1, cnt;
    char Save='\0';
    sint LKlamm, RKlamm, WKlamm, zop;
    sint OpMax, OpPos = -1;
@@ -1528,7 +1531,7 @@ static Operator Operators[] =
    pErg->Typ = TempNone;
    pErg->Relocs = Nil;
 
-   CopyLen = CopyNoBlanks(Copy, pExpr, STRINGSIZE);
+   (void)CopyNoBlanks(Copy, pExpr, STRINGSIZE);
 
    /* sort out local symbols like - and +++.  Do it now to get them out of the
       formula parser's way. */
@@ -3345,9 +3348,13 @@ void PrintSymbolList(void)
      WrLstLine(Context.Zeilenrest);
    }
    WrLstLine("");
-   sprintf(Context.Zeilenrest, "%7d%s", Context.Sum, getmessage((Context.Sum == 1) ? Num_ListSymSumMsg : Num_ListSymSumsMsg));
+   sprintf(Context.Zeilenrest, "%7lu%s",
+           (unsigned long)Context.Sum,
+           getmessage((Context.Sum == 1) ? Num_ListSymSumMsg : Num_ListSymSumsMsg));
    WrLstLine(Context.Zeilenrest);
-   sprintf(Context.Zeilenrest,"%7d%s", Context.USum, getmessage((Context.USum == 1) ? Num_ListUSymSumMsg : Num_ListUSymSumsMsg));
+   sprintf(Context.Zeilenrest,"%7lu%s",
+           (unsigned long)Context.USum,
+           getmessage((Context.USum == 1) ? Num_ListUSymSumMsg : Num_ListUSymSumsMsg));
    WrLstLine(Context.Zeilenrest);
    WrLstLine("");
 }

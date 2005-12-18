@@ -13,9 +13,12 @@
 /*                       unsinged limited                                    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68.c,v 1.5 2005/09/08 16:53:41 alfred Exp $                      */
+/* $Id: code68.c,v 1.6 2005/11/16 22:03:34 alfred Exp $                      */
 /*****************************************************************************
  * $Log: code68.c,v $
+ * Revision 1.6  2005/11/16 22:03:34  alfred
+ * - correct XGDX for 6301
+ *
  * Revision 1.5  2005/09/08 16:53:41  alfred
  * - use common PInstTable
  *
@@ -737,7 +740,8 @@ BEGIN
    AddFixed("TBA"  ,CPU6800, CPU68HC11K4, 0x0017); AddFixed("TPA"  ,CPU6800, CPU68HC11K4, 0x0007);
    AddFixed("TSX"  ,CPU6800, CPU68HC11K4, 0x0030); AddFixed("TSY"  ,CPU6811, CPU68HC11K4, 0x1830);
    AddFixed("TXS"  ,CPU6800, CPU68HC11K4, 0x0035); AddFixed("TYS"  ,CPU6811, CPU68HC11K4, 0x1835);
-   AddFixed("WAI"  ,CPU6800, CPU68HC11K4, 0x003e); AddFixed("XGDX" ,CPU6811, CPU68HC11K4, 0x008f);
+   AddFixed("WAI"  ,CPU6800, CPU68HC11K4, 0x003e);
+   AddFixed("XGDX" ,CPU6301, CPU68HC11K4, (MomCPU == CPU6301) ? 0x0018 : 0x008f);
    AddFixed("XGDY" ,CPU6811, CPU68HC11K4, 0x188f);
 
    RelOrders=(BaseOrder *) malloc(sizeof(BaseOrder)*RelOrderCnt); InstrZ=0;
@@ -904,20 +908,6 @@ BEGIN
    /* gehashtes */
 
    if (LookupInstTable(InstTable,OpPart)) return;
-
-   /* Anweisungen ohne Argument */
-
-   /* Sonderfall : XGDX hat anderen Code bei 6301 !!!! */
-
-   if ((MomCPU==CPU6301) AND (Memo("XGDX")))
-    BEGIN
-     if (ArgCnt!=0) WrError(1110);
-     else
-      BEGIN
-       CodeLen=1; BAsmCode[0]=0x18;
-      END
-     return;
-    END
 
    for (z=0; z<ALU8OrderCnt; z++)
     if (SplitAcc(ALU8Orders[z].Name))

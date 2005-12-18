@@ -22,12 +22,18 @@ Vendor     Machine                 CPU            Clock(MHz)  Cache [on]offchip 
 -----------------------------------------------------------------------------------------------------------------------------+-------------------------------------------
 Digital    Pers. Workstation 433au 21164a         433         [8K+8K/96K]/???     128         Digital Unix 4.0  DEC-C 3.11   |   0.25s   0.14s    1.52s  245.48   0.567 [ 4. 8.1997]
 Digital    AlphaStation 500/266    21164          267         [8K+8K/96K]/2M      128         Digital Unix 4.0  DEC-C 3.11   |   0.43s   0.25s    2.76s  138.59   0.521 [ 1.11.1997]
-Digital    PC164 board             21164          500         [8K+8K/96K]/1M      128         Linux 2.1.42      gcc 2.7.2    |   0.62s   0.35s    3.51s  101.08   0.202
+Digital    AlphaStation 600 5/266  21164          266         [8K+8K/96K]/2M      448         Linux 2.4.31      gcc 3.3.5    |   0.59s   0.29s    3.34s  110.99   0.417 [16.11.2005 comp 59min]
+Digital    PC164 board             21164a         500         [8K+8K/96K]/1M      128         Linux 2.1.42      gcc 2.7.2    |   0.62s   0.35s    3.51s  101.08   0.202
+Digital    AlphaServer 300 4/266   21064a         266         [16K+16K]/2M        160         Linux 2.4.31      gcc 3.3.5    |   1.30s   0.61s    7.07s   51.93   0.195 [16.11.2005 comp 93min]
+Digital    AlphaServer 400 4/233   21064a         233         [16K+16K]/512K      160         Linux 2.4.31      gcc 3.3.5    |   1.35s   0.64s    7.34s   49.86   0.213 [16.11.2005 comp 128min]
+Digital    AlphaStation 255 4/166  21064          166         [8K+8K]/1M           96         Linux 2.4.31      gcc 3.3.5    |   1.65s   0.72s    9.01s   42.01   0.253 [15.11.2005 comp 163min]
+Digital    AlphaStation 200 4/166  21064          166         [8K+8K]/512K         48         Linux 2.4.31      gcc 3.3.5    |   1.94s   0.85s   10.57s   35.69   0.215 [15.11.2005 comp 188min]
 Digital    DECpc AXP/150           21064          150         [8K+8K]/512K         32         Linux 2.1.125     gcc 2.7.2.3  |   1.98s   1.04s   11.59s   32.05   0.214 [ 7. 2.1999 comp 96min]
 Digital    DECpc AXP/150           21064          150         [8K+8K]/512K         32         Linux 2.1.74      egcs 1.0.1   |   2.05s   0.99s   12.44s   31.51   0.210 [20.06.1998]
 Digital    DECpc AXP/150           21064          150         [8K+8K]/512K         32         Linux 1.99.12     DEC-C 3.11   |   2.02s   1.04s   12.09s   31.40   0.209
 Digital    DEC 3000 Model 400      21064          133         [8K+8K]/512K         64         Digital Unix 4.0  DEC-C 3.11   |   2.18s   1.09s   12.79s   29.58   0.222
 Digital    DEC 3000 Model 300X     21064          175         [8K+8K]/256K         64         Digital Unix 4.0  DEC-C 3.11   |   2.44s   1.30s   14.80s   25.59   0.093
+Digital    AlphaStation 200 4/100  21064          100         [8K+8K]/256K        128         Linux 2.4.31      gcc 3.3.5    |   2.93s   1.28s   15.39s   23.90   0.239 [14.11.2005 comp 270min]
 Digital    DEC 3000 Model 300      21064          150         [8K+8K]/256K         64         Digital Unix 4.0  DEC-C 3.11   |   2.84s   1.42s   15.24s   23.38   0.156
 Digital    DEC 3000 Model 300LX    21064          125         [8K+8K]/256K         48         Digital Unix 4.0  DEC-C 3.11   |   3.34s   1.59s   18.19s   20.11   0.161
 Digital    Noname board            21066          166         [8K+8K]/256K         64         Linux 2.0.34      egcs 1.0.2   |   4.09s   1.87s   21.97s   16.74   0.100 [18. 4.1999 comp 150min]

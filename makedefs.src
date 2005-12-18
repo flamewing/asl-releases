@@ -8,7 +8,7 @@ CODE_SRCS = codepseudo.c intpseudo.c motpseudo.c tipseudo.c codevars.c \
   	    codeh8_3.c codeh8_5.c code7000.c \
   	    code65.c code7700.c code4500.c codem16.c codem16c.c \
             code4004.c code8008.c code48.c code51.c code96.c code85.c code86.c code960.c \
-  	    code8x30x.c codexa.c \
+  	    code8x30x.c code2650.c codexa.c \
   	    codeavr.c \
   	    code29k.c \
   	    code166.c \

@@ -58,9 +58,12 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.9 2005/10/02 10:00:43 alfred Exp $                          */
+/* $Id: as.c,v 1.10 2005/12/09 14:48:06 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.10  2005/12/09 14:48:06  alfred
+ * - added 2650
+ *
  * Revision 1.9  2005/10/02 10:00:43  alfred
  * - ConstLongInt gets default base, correct length check on KCPSM3 registers
  *
@@ -217,6 +220,7 @@
 #include "code86.h"
 #include "code960.h"
 #include "code8x30x.h"
+#include "code2650.h"
 #include "codexa.h"
 #include "codeavr.h"
 #include "code29k.h"
@@ -3479,7 +3483,7 @@ BEGIN
      codeh8_3_init(); codeh8_5_init(); code7000_init();
      code65_init(); code7700_init(); code4500_init(); codem16_init(); codem16c_init();
      code4004_init(); code8008_init(); code48_init(); code51_init(); code96_init(); code85_init(); code86_init(); code960_init();
-     code8x30x_init(); codexa_init();
+     code8x30x_init(); code2650_init(); codexa_init();
      codeavr_init();
      code29k_init();
      code166_init();

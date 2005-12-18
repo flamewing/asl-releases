@@ -1,4 +1,4 @@
-$Id: changelog,v 1.17 2005/11/04 21:09:08 alfred Exp $
+$Id: changelog,v 1.20 2005/12/17 16:36:00 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1007,7 +1007,7 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 
 - Bugfix      : correct register naming for KCPSM3
 
-[Bld 42]
+2005-11-04 [Bld 42]
 
 - Addition    : warn about MSP430 code on odd addresses
 
@@ -1017,3 +1017,11 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 
 - Bugfix      : correct DUP detection in Intel-style data disposition
                 instructions
+
+2005-12-17 [Bld 43]
+
+- Bugfix      : XGDX instruction did not work on 6301
+
+- Addition    : Add 2650 target
+ 
+- Bugfix      : listing on 16-bit hosts lead to crashes
