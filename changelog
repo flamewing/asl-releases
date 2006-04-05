@@ -1,4 +1,4 @@
-$Id: changelog,v 1.21 2006/03/18 11:25:55 alfred Exp $
+$Id: changelog,v 1.22 2006/04/04 16:24:23 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1029,3 +1029,7 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 2006-03-18 [Bld 44]
 
 - Addition    : Add paged address space for 68HC12X
+
+2006-04-04 [Bld 45]
+
+- Bugfix      : some corrections around paged address space of 68HC12X

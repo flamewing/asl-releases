@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6812.c,v 1.11 2006/03/19 09:50:06 alfred Exp $                    */
+/* $Id: code6812.c,v 1.12 2006/04/04 16:22:26 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6812.c,v $
+ * Revision 1.12  2006/04/04 16:22:26  alfred
+ * - missing adaptions to new address space size
+ *
  * Revision 1.11  2006/03/19 09:50:06  alfred
  * - differentiate address type
  *
@@ -108,6 +111,8 @@ enum {eShortModeAuto = 0, eShortModeNo = 1, eShortModeYes = 2, eShortModeExtreme
 #define MModDIdx (1 << ModDIdx)
 #define ModIIdx2 7
 #define MModIIdx2 (1 << ModIIdx2)
+#define ModExtPg 8
+#define MModExtPg (1 << ModExtPg)
 
 #define MModAllIdx (MModIdx | MModIdx1 | MModIdx2 | MModDIdx | MModIIdx2)
 
@@ -360,7 +365,8 @@ static void ChkAdr(Word Mask)
         
 static void DecodeAdr(int Start, int Stop, Word Mask)
 {
-  Integer AdrWord, ShortMode;
+  Integer ShortMode;
+  LongInt AdrWord;
   int l;
   char *p;
   Boolean OK;
@@ -433,7 +439,7 @@ static void DecodeAdr(int Start, int Stop, Word Mask)
 
     CutShort(ArgStr[Start], &ShortMode);
     FirstPassUnknown = False;
-    AdrWord = EvalIntExpression(ArgStr[Start], UInt16, &OK);
+    AdrWord = EvalIntExpression(ArgStr[Start], AddrInt, &OK);
     if (FirstPassUnknown)
     {
       if ((!(Mask & MModExt)) || (ShortMode == eShortModeYes))
@@ -452,6 +458,13 @@ static void DecodeAdr(int Start, int Stop, Word Mask)
       {
         AdrMode = ModExt;
         AdrVals[0] = Hi(AdrWord); AdrVals[1] = Lo(AdrWord);
+        if (Mask & MModExtPg)
+        {
+          Mask |= MModExt;
+          if (((EProgCounter() >> 16) != (AdrWord >> 16))
+           && (!FirstPassUnknown))
+            WrError(250);
+        }
         AdrCnt = 2;
       }
     }
@@ -719,7 +732,7 @@ static void DecodeJmp(Word Index)
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
-    Mask = MModAllIdx | MModExt;
+    Mask = MModAllIdx | MModExtPg;
     if (pOrder->MayDir)
       Mask |= MModDir;
     ExPos = 1; DecodeAdr(1, ArgCnt, Mask);
@@ -757,7 +770,7 @@ static void DecodeLoop(Word Index)
     if (!OK) WrXError(1445, ArgStr[1]);
     else
     {
-      Address = EvalIntExpression(ArgStr[2], UInt16, &OK) - (EProgCounter() + 3);
+      Address = EvalIntExpression(ArgStr[2], AddrInt, &OK) - (EProgCounter() + 3);
       if (OK)
       {
         if (((Address < -256) OR (Address > 255)) && (!SymbolQuestionable)) WrError(1370);
@@ -1098,7 +1111,7 @@ static void DecodeBrBit(Word Index)
     HReg = EvalIntExpression(ArgStr[ArgCnt - 1], UInt8, &OK);
     if (OK)
     {
-      Address = EvalIntExpression(ArgStr[ArgCnt], UInt16, &OK) - EProgCounter();
+      Address = EvalIntExpression(ArgStr[ArgCnt], AddrInt, &OK) - EProgCounter();
       if (OK)
       {
         ExPos = 3; /* Opcode, Maske+Distanz */
