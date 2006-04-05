@@ -17,9 +17,12 @@
 /*           2002-01-23 symbols defined with BIT must not be macro-local     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code51.c,v 1.4 2005/10/02 10:00:44 alfred Exp $                      */
+/* $Id: code51.c,v 1.5 2006/02/27 20:21:17 alfred Exp $                      */
 /***************************************************************************** 
  * $Log: code51.c,v $
+ * Revision 1.5  2006/02/27 20:21:17  alfred
+ * - correct bit range for RAM bit areas
+ *
  * Revision 1.4  2005/10/02 10:00:44  alfred
  * - ConstLongInt gets default base, correct length check on KCPSM3 registers
  *
@@ -2223,48 +2226,50 @@ BEGIN
 END
 
 
-        static void DecodeSFR(Word Index)
-BEGIN
-   Word AdrByte;
-   Boolean OK;
-   int DSeg;
-   UNUSED(Index);
+static void DecodeSFR(Word Index)
+{
+  Word AdrByte;
+  Boolean OK;
+  int DSeg;
+  UNUSED(Index);
 
-   FirstPassUnknown=False;
-   if (ArgCnt!=1) WrError(1110);
-   else if ((Memo("SFRB")) AND (MomCPU>=CPU80251)) WrError(1500);
-   else
-    BEGIN
-     if (MomCPU>=CPU80251) AdrByte=EvalIntExpression(ArgStr[1],UInt9,&OK);
-     else AdrByte=EvalIntExpression(ArgStr[1],UInt8,&OK);
-     if ((OK) AND (NOT FirstPassUnknown))
-      BEGIN
-       PushLocHandle(-1);
-       DSeg=(MomCPU>=CPU80251)?(SegIO):(SegData);
-       EnterIntSymbol(LabPart,AdrByte,DSeg,False);
-       if (MakeUseList)
-        if (AddChunk(SegChunks+DSeg,AdrByte,1,False)) WrError(90);
-       if (Memo("SFRB"))
-        BEGIN
-         if (AdrByte>0x7f)
-          BEGIN
-           if ((AdrByte & 7)!=0) WrError(220);
-          END
-         else
-          BEGIN
-           if ((AdrByte & 0xe0)!=0x20) WrError(220);
-          END
-         if (MakeUseList)
-          if (AddChunk(SegChunks+SegBData,AdrByte,8,False)) WrError(90);
-         sprintf(ListLine,"=%sH-",HexString(AdrByte,2));
-         strmaxcat(ListLine,HexString(AdrByte+7,2),255);
-         strmaxcat(ListLine,"H",255);
-        END
-       else sprintf(ListLine,"=%sH",HexString(AdrByte,2));
-       PopLocHandle();
-      END
-    END
-END
+  FirstPassUnknown = False;
+  if (ArgCnt != 1) WrError(1110);
+  else if ((Memo("SFRB")) && (MomCPU >= CPU80251)) WrError(1500);
+  else
+  {
+    AdrByte = EvalIntExpression(ArgStr[1], (MomCPU >= CPU80251) ? UInt9 : UInt8, & OK);
+    if ((OK) && (!FirstPassUnknown))
+    {
+      PushLocHandle(-1);
+      DSeg = (MomCPU >= CPU80251) ? (SegIO) : (SegData);
+      EnterIntSymbol(LabPart, AdrByte, DSeg, False);
+      if (MakeUseList)
+        if (AddChunk(SegChunks + DSeg, AdrByte, 1, False)) WrError(90);
+      if (Memo("SFRB"))
+      {
+        Byte BitStart;
+
+        if (AdrByte > 0x7f)
+        {
+          if ((AdrByte & 7) != 0) WrError(220);
+          BitStart = AdrByte;
+        }
+        else
+        {
+          if ((AdrByte & 0xe0) != 0x20) WrError(220);
+          BitStart = (AdrByte - 0x20) << 3;
+        }
+        if (MakeUseList)
+          if (AddChunk(SegChunks + SegBData, BitStart, 8, False)) WrError(90);
+        sprintf(ListLine,"=%02XH-%02XH", BitStart, BitStart + 7);
+      }
+      else
+        sprintf(ListLine,"=%02XH", AdrByte);
+      PopLocHandle();
+    }
+  }
+}
 
         static void DecodeBIT(Word Index)
 BEGIN

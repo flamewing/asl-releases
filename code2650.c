@@ -5,9 +5,12 @@
 /* Codegenerator Signetics 2650                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code2650.c,v 1.1 2005/12/09 14:48:06 alfred Exp $
+/* $Id: code2650.c,v 1.2 2006/03/05 18:07:42 alfred Exp $
  *****************************************************************************
  * $Log: code2650.c,v $
+ * Revision 1.2  2006/03/05 18:07:42  alfred
+ * - remove double InstTable variable
+ *
  * Revision 1.1  2005/12/09 14:48:06  alfred
  * - added 2650
  * 
@@ -33,8 +36,6 @@
 /* Local Variables */
 
 static CPUVar CPU2650;
-
-static PInstTable InstTable;
 
 /*--------------------------------------------------------------------------*/
 /* Expression Parsers */

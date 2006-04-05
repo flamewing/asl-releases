@@ -24,7 +24,9 @@ Digital    Pers. Workstation 433au 21164a         433         [8K+8K/96K]/???   
 Digital    AlphaStation 500/266    21164          267         [8K+8K/96K]/2M      128         Digital Unix 4.0  DEC-C 3.11   |   0.43s   0.25s    2.76s  138.59   0.521 [ 1.11.1997]
 Digital    AlphaStation 600 5/266  21164          266         [8K+8K/96K]/2M      448         Linux 2.4.31      gcc 3.3.5    |   0.59s   0.29s    3.34s  110.99   0.417 [16.11.2005 comp 59min]
 Digital    PC164 board             21164a         500         [8K+8K/96K]/1M      128         Linux 2.1.42      gcc 2.7.2    |   0.62s   0.35s    3.51s  101.08   0.202
+Digital    AlphaStation 250 4/266  21064a         266         [16K+16K]/2M        128         Linux 2.4.32      gcc 3.3.5    |   0.97s   0.50s    5.57s   66.00   0.248 [23.12.2005 comp 94min]
 Digital    AlphaServer 300 4/266   21064a         266         [16K+16K]/2M        160         Linux 2.4.31      gcc 3.3.5    |   1.30s   0.61s    7.07s   51.93   0.195 [16.11.2005 comp 93min]
+Digital    AlphaStation 200 4/233  21064a         233         [16K+16K]/512K       96         Linux 2.4.32      gcc 3.3.5    |   1.44s   0.61s    6.97s   50.72   0.218 [25.12.2005 comp 127min]
 Digital    AlphaServer 400 4/233   21064a         233         [16K+16K]/512K      160         Linux 2.4.31      gcc 3.3.5    |   1.35s   0.64s    7.34s   49.86   0.213 [16.11.2005 comp 128min]
 Digital    AlphaStation 255 4/166  21064          166         [8K+8K]/1M           96         Linux 2.4.31      gcc 3.3.5    |   1.65s   0.72s    9.01s   42.01   0.253 [15.11.2005 comp 163min]
 Digital    AlphaStation 200 4/166  21064          166         [8K+8K]/512K         48         Linux 2.4.31      gcc 3.3.5    |   1.94s   0.85s   10.57s   35.69   0.215 [15.11.2005 comp 188min]
@@ -110,6 +112,12 @@ Sun        3/160                   MC68020+MC68881 16.67      [0.25K]           
 PCS        Cadmus 9600/4           MC68020+MC68881 16.67      [0.25K]/16K           8         Munix V.3.3-1     cc           |  53.49s  29.97s  317.50s    1.16   0.069
 Sun        3/50                    MC68020+MC68881 15.8       [0.25K]               4         NetBSD 1.2        gcc 2.7.2    |  71.01s  47.11s  422.60s    0.83   0.052
 
+
+K7-based systems
+
+Vendor     Machine                 CPU            Clock(MHz)  Cache [on]offchip   Memory(MB)  OS                Compiler     |  BUF32   FL900    MIC51    Index   rel.
+-----------------------------------------------------------------------------------------------------------------------------+-------------------------------------------
+<Noname>   Gigabyte K7             AMD Athlon     700         [16K+16K/512K       256         Linux 2.4.31      gcc 3.3.5    |   0.14s   0.08s    1.02s  415.99   0.594 [26.12.2005 comp 8min 1sec]
 
 Pentium-based systems
 

@@ -10,9 +10,15 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6812.c,v 1.9 2005/09/14 21:40:50 alfred Exp $                    */
+/* $Id: code6812.c,v 1.11 2006/03/19 09:50:06 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6812.c,v $
+ * Revision 1.11  2006/03/19 09:50:06  alfred
+ * - differentiate address type
+ *
+ * Revision 1.10  2006/03/18 11:18:13  alfred
+ * - add paged address space
+ *
  * Revision 1.9  2005/09/14 21:40:50  alfred
  * - optimze use of short/long displacement in forward references
  *
@@ -119,6 +125,7 @@ static ShortInt ExPos;
 static Byte AdrVals[4];
 static Byte ActReg, ActRegSize;
 static CPUVar CPU6812, CPU6812X;
+static IntType AddrInt;
 
 static LongInt Reg_Direct, Reg_GPage;
 
@@ -667,10 +674,10 @@ static void DecodeBranch(Word Index)
   else if (*AttrPart!='\0') WrError(1100);
   else
   {
-    Address = EvalIntExpression(ArgStr[1], UInt16, &OK) - EProgCounter() - 2;
+    Address = EvalIntExpression(ArgStr[1], AddrInt, &OK) - EProgCounter() - 2;
     if (OK)
     {
-      if (((Address<-128) || (Address>127)) && (!SymbolQuestionable)) WrError(1370);
+      if (((Address < -128) || (Address > 127)) && (!SymbolQuestionable)) WrError(1370);
       else
       {
         BAsmCode[0] = pOrder->Code;
@@ -691,7 +698,7 @@ static void DecodeLBranch(Word Index)
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
-    Address = EvalIntExpression(ArgStr[1], UInt16, &OK) - EProgCounter() - 4;
+    Address = EvalIntExpression(ArgStr[1], AddrInt, &OK) - EProgCounter() - 4;
     if (OK)
     {
       BAsmCode[0] = 0x18;
@@ -1001,9 +1008,6 @@ static void DecodeBit(Word Index)
 
 static void DecodeCALL(Word Index)
 {
-  Boolean OK;
-  Byte HReg;
-
   UNUSED(Index);
 
   if (ArgCnt < 1) WrError(1110);
@@ -1027,7 +1031,9 @@ static void DecodeCALL(Word Index)
     if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
     else
     {
-      HReg = EvalIntExpression(ArgStr[ArgCnt], UInt8, &OK);
+      Boolean OK;
+      Byte Page = EvalIntExpression(ArgStr[ArgCnt], UInt8, &OK);
+
       if (OK)
       {
         ExPos = 2; /* wg. Seiten-Byte eins mehr */
@@ -1036,13 +1042,37 @@ static void DecodeCALL(Word Index)
         {
           BAsmCode[0] = 0x4a | Ord(AdrMode != ModExt);
           memcpy(BAsmCode + 1, AdrVals, AdrCnt);
-          BAsmCode[1 + AdrCnt] = HReg;
+          BAsmCode[1 + AdrCnt] = Page;
           CodeLen = 2 + AdrCnt;
         }
       }
     }
   }
 }
+
+static void DecodePCALL(Word Index)
+{
+  Boolean OK;
+  LongWord Addr;
+
+  UNUSED(Index);
+
+  if (ArgCnt < 1) WrError(1110);
+  else if (MomCPU != CPU6812X) WrError(1500);
+  else
+  {
+    Addr = EvalIntExpression(ArgStr[1], UInt24, &OK);
+    if (OK)
+    {
+      BAsmCode[0] = 0x4a;
+      BAsmCode[1] = Hi(Addr);
+      BAsmCode[2] = Lo(Addr);
+      BAsmCode[3] = (Addr >> 16) & 0xff;
+      CodeLen = 4;
+    }
+  }
+}
+
 
 static void DecodeBrBit(Word Index)
 {
@@ -1451,6 +1481,7 @@ static void InitFields(void)
   AddInstTable(InstTable, "BSET"  , 0x0c, DecodeBit);
   AddInstTable(InstTable, "BCLR"  , 0x0d, DecodeBit);
   AddInstTable(InstTable, "CALL"  , 0   , DecodeCALL);  
+  AddInstTable(InstTable, "PCALL" , 0   , DecodePCALL);
   AddInstTable(InstTable, "BRSET" , 0x00, DecodeBrBit);
   AddInstTable(InstTable, "BRCLR" , 0x01, DecodeBrBit);
   AddInstTable(InstTable, "TRAP"  , 0   , DecodeTRAP);
@@ -1548,6 +1579,18 @@ static void SwitchFrom_6812(void)
   DeinitFields();
 }
 
+static Boolean ChkPC_6812X(LargeWord Addr)
+{
+  Byte Page = (Addr >> 16) & 0xff;
+
+  if (ActPC != SegCode)
+    return False;
+  else if ((Addr & 0xc000) == 0x8000)
+    return ((Page == 0) || ((Page >= 0x30) && (Page <= 0x3f)));
+  else
+    return (Page == 0);
+}
+
 static void SwitchTo_6812(void)
 {
   TurnWords = False; ConstMode = ConstModeMoto; SetIsOccupied = False;
@@ -1557,7 +1600,17 @@ static void SwitchTo_6812(void)
 
   ValidSegs = (1 << SegCode);
   Grans[SegCode] = 1; ListGrans[SegCode] = 1; SegInits[SegCode] = 0;
-  SegLimits[SegCode] = 0xffff;
+  if (MomCPU == CPU6812X)
+  {
+    SegLimits[SegCode] = 0x3bfff;
+    ChkPC = ChkPC_6812X;
+    AddrInt = UInt22;
+  }
+  else
+  {
+    SegLimits[SegCode] = 0xffff;
+    AddrInt = UInt16;
+  }
 
   MakeCode = MakeCode_6812; IsDef = IsDef_6812;
   SwitchFrom = SwitchFrom_6812; InitFields();

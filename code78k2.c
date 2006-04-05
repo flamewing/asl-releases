@@ -5,9 +5,12 @@
 /* Codegenerator 78K2-Familie                                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code78k2.c,v 1.12 2005/09/08 16:53:42 alfred Exp $
+/* $Id: code78k2.c,v 1.13 2005/12/26 16:15:13 alfred Exp $
  *****************************************************************************
  * $Log: code78k2.c,v $
+ * Revision 1.13  2005/12/26 16:15:13  alfred
+ * - silence warning
+ *
  * Revision 1.12  2005/09/08 16:53:42  alfred
  * - use common PInstTable
  *
@@ -429,7 +432,7 @@ static void DecodeAdr(char *pAsc, Word Mask)
       AdrMode = ModShort; AdrCnt = 1;
       AdrVals[0] = Lo(WordOp);
     }
-    else if ((Mask && MModSFR) && (!ForceLong) && ((WordOp >= 0xff00) && (WordOp <= 0xffff)))
+    else if ((Mask && MModSFR) && (!ForceLong) && (Hi(WordOp) == 0xff))
     {                                                                                    
       AdrMode = ModSFR; AdrCnt = 1;
       AdrVals[0] = Lo(WordOp);                        

@@ -15,9 +15,12 @@
 /*            7. 5.2000 Packing hinzugefuegt                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeavr.c,v 1.2 2005/10/02 10:00:45 alfred Exp $                     */
+/* $Id: codeavr.c,v 1.3 2006/03/05 18:07:42 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codeavr.c,v $
+ * Revision 1.3  2006/03/05 18:07:42  alfred
+ * - remove double InstTable variable
+ *
  * Revision 1.2  2005/10/02 10:00:45  alfred
  * - ConstLongInt gets default base, correct length check on KCPSM3 registers
  *
@@ -86,8 +89,6 @@ typedef struct
 #define RelOrderCnt 18
 #define BitOrderCnt 4
 #define PBitOrderCnt 4
-
-static TInstTable *InstTable;
 
 static SimpProc SaveInitProc;
 

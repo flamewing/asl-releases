@@ -10,7 +10,6 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
-#include <ctype.h>
 
 #include "hex.h"
 
@@ -21,8 +20,7 @@ BEGIN
    static char Buffers[BUFFERCNT][3],*ret;
    static int z=0;
 
-   sprintf(Buffers[z],"%01x",inp&0xf);
-   for (ret=Buffers[z]; *ret!='\0'; ret++) *ret=toupper(*ret);
+   sprintf(Buffers[z],"%01X",inp&0xf);
    ret=Buffers[z]; 
    z=(z+1)%BUFFERCNT;
    return ret;
@@ -33,8 +31,7 @@ BEGIN
    static char Buffers[BUFFERCNT][4],*ret;
    static int z=0;
 
-   sprintf(Buffers[z],"%02x",inp&0xff);
-   for (ret=Buffers[z]; *ret!='\0'; ret++) *ret=toupper(*ret);
+   sprintf(Buffers[z],"%02X",inp&0xff);
    ret=Buffers[z]; 
    z=(z+1)%BUFFERCNT;
    return ret;
@@ -45,8 +42,7 @@ BEGIN
    static char Buffers[BUFFERCNT][6],*ret;
    static int z=0;
 
-   sprintf(Buffers[z],"%04x",inp&0xffff);
-   for (ret=Buffers[z]; *ret!='\0'; ret++) *ret=toupper(*ret);
+   sprintf(Buffers[z],"%04X",inp&0xffff);
    ret=Buffers[z]; 
    z=(z+1)%BUFFERCNT;
    return ret;
@@ -58,11 +54,10 @@ BEGIN
    static int z=0;
 
 #ifdef __STDC__
-   sprintf(Buffers[z],"%08lx", ((long)inp) & 0xfffffffflu);
+   sprintf(Buffers[z],"%08lX", ((long)inp) & 0xfffffffflu);
 #else
-   sprintf(Buffers[z],"%08lx", ((long)inp) & 0xffffffffl);
+   sprintf(Buffers[z],"%08lX", ((long)inp) & 0xffffffffl);
 #endif
-   for (ret=Buffers[z]; *ret!='\0'; ret++) *ret=toupper(*ret);
    ret=Buffers[z]; 
    z=(z+1)%BUFFERCNT;
    return ret;
