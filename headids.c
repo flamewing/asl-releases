@@ -19,9 +19,12 @@
 /*           2001-07-01 TI 320C54x                                           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: headids.c,v 1.5 2005/12/09 14:48:06 alfred Exp $                          */
+/* $Id: headids.c,v 1.6 2006/04/06 20:26:54 alfred Exp $                          */
 /*****************************************************************************
  * $Log: headids.c,v $
+ * Revision 1.6  2006/04/06 20:26:54  alfred
+ * - add COP4
+ *
  * Revision 1.5  2005/12/09 14:48:06  alfred
  * - added 2650
  *
@@ -126,6 +129,7 @@ static TFamilyDescr Descrs[]=
         {"MSP430"    , 0x004a, IntHex  },
         {"SC/MP"     , 0x006e, IntHex  },
         {"807x"      , 0x006a, IntHex  },
+        {"COP4"      , 0x005f, IntHex  },
         {"COP8"      , 0x006f, IntHex  },
         {"SC14XXX"   , 0x006d, IntHex  },
         {"ACE"       , 0x0067, IntHex  },

@@ -65,7 +65,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition September 2005}
+{\large Edition March 2006}
 \end{raggedright}
 
 \clearpage
@@ -265,6 +265,7 @@ following processor families have been implemented:
 \item{Texas Instruments MSP430}
 \item{National Semiconductor SC/MP}
 \item{National Semiconductor INS807x}
+\item{National Semiconductor COP4}
 \item{National Semiconductor COP8}
 \item{National Semiconductor SC144xx}
 \item{Fairchild ACE}
@@ -3144,9 +3145,14 @@ instruction sets which will be added when a need occurs.  It is a
 beginning, and National's documentation is quite extensive... 
 %%-----------
 \begin{quote}
+bf) COP410     
+This represents the COP4 family.
+\end{quote}  
+%%-----------
+\begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bf) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
+bg) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
     \> SC14420, SC14421, SC14422, SC14424 \\
 \end{tabbing}
 \end{quote}
@@ -3155,7 +3161,7 @@ instructions, since each of them supports different B field formats and
 their architecture has been optimized over time.
 %%-----------
 \begin{quote}
-bg) 7810$\rightarrow$78C10
+bh) 7810$\rightarrow$78C10
 \end{quote}
 The NMOS version has no stop-mode; the respective command and the ZCM
 register are omitted.  \bb{CAUTION!}  NMOS and CMOS version partially
@@ -3164,7 +3170,7 @@ differ in the reset values of some registers!
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bh) \> 75402,\\
+bi) \> 75402,\\
     \> 75004, 75006, 75008,\\
     \> 75268,\\
     \> 75304, 75306, 75308, 75312, 75316,\\
@@ -3180,30 +3186,30 @@ peripherals on the one hand and by their instruction set's power on
 the other hand.
 %%-----------
 \begin{quote}
-bi) 78070
+bj) 78070
 \end{quote}
 This is currently the only member of NEC's 78K0 family I am familiar
 with.  Similar remarks like for the COP8 family apply!
 %%-----------
 \begin{quote}
-bj) 78214
+bk) 78214
 \end{quote}
 This is currently the the representor of NEC's 78K2 family.
 %%-----------
 \begin{quote}
-bk) 7720 $\rightarrow$ 7725
+bl) 7720 $\rightarrow$ 7725
 \end{quote}
 The $\mu$PD7725 offers larger address spaces and som more instructions
 compared to his predecessor. {\bf CAUTION!}  The processors are not binary
 compatible to each other!
 %%-----------
 \begin{quote}
-bl) 77230
+bm) 77230
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
-bm) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
+bn) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
     \> SYM53C875, SYM53C895
 \end{tabbing}
 \end{quote}
@@ -3212,12 +3218,12 @@ instruction variants, furthermore they are different in their set of
 internal registers.
 %%-----------
 \begin{quote}
-bn) MB89190  
+bo) MB89190  
 \end{quote}  
 This processor type represents Fujitsu's F$^{2}$MC8L series...
 %%-----------
 \begin{quote}
-bo) MB9500
+bp) MB9500
 \end{quote}
 ...just like this one does it currently for the 16-bit variants from
 Fujitsu!
@@ -4181,7 +4187,7 @@ only for the definition of constant arrays!
 In order to be compatible to the M80, \tty{DEFB/DEFW} may be used instead of
 \tty{DB/DW} in Z80-mode.
 
-Similarly, \tty{BYTE/ADDR} resp. \tty{WORD/ADDRW} in COP8 mode are an
+Similarly, \tty{BYTE/ADDR} resp. \tty{WORD/ADDRW} in COP4/8 mode are an
 alias for \tty{DB} resp. \tty{DW}, with the pairs differing in byte order:
 instructions defined by National for address storage use big endian,
 \tty{BYTE} resp. \tty{WORD} in contrast use little endian.
@@ -4413,7 +4419,7 @@ given by the argument and must not exceed 512.
 \subsection{FB and FW}
 \ttindex{FB}\ttindex{FW}
 
-{\em valid for: COP8}
+{\em valid for: COP4/8}
 
 These instruction allow to fill memory blocks with a byte or word
 constant. The first operand specifies the size of the memory block
@@ -4519,7 +4525,7 @@ processor-specific hints.
 \subsection{DSB and DSW}
 \ttindex{DSB}\ttindex{DSW}
 
-{\em valid for: COP8}
+{\em valid for: COP4/8}
 
 Both instructions allocate memory and ensure compatibility to ASMCOP from
 National.  While \tty{DSB} takes the argument as byte count, \tty{DSW}
@@ -8394,7 +8400,7 @@ misunderstood as relative addressing...
 
 %%---------------------------------------------------------------------------
 
-\section{$\mu$PD772x}
+\section{uPD772x}
 
 Both the 7720 and 7725 are provided by the same code generator and are
 extremely similar in their instruction set.  One should however not
@@ -8410,9 +8416,9 @@ mapped onto the \tty{ROMDATA} segment!
 
 %%---------------------------------------------------------------------------
 
-\section{F$^2$MC16L}
+\section{F2MC16L}
 
-Along with the discussion of the {\tt ASSUME} statement, tt has already
+Along with the discussion of the {\tt ASSUME} statement, it has already
 been mentioned that it is important to inform AS about the correct current
 values of all bank registers - if your program uses more than 64K RAM or
 64K ROM.  With these assumptions in mind, AS checks every direct memory
@@ -8485,12 +8491,12 @@ fields is variable and depends on the value of the \tty{Length} entries.
 A record with a header byte of \$81 is a record that may contain code
 or data from arbitrary segments.  The first byte (\tty{Header}) describes
 the processor family the following code resp. data was generated for (see
-table \ref{TabHeader}).
+tables \ref{TabHeader} and \ref{TabHeader2}).
+
 \begin{table*}[htbp]
 \begin{center}\begin{tabular}{|c|l||c|l|}
 \hline
-header  & family & header  & family \\
-Header & Familie & Header & Familie \\
+Header  & Family & Header  & Family \\
 \hline
 \hline
 \input{../doc_DE/tabids.tex}
@@ -8498,6 +8504,19 @@ Header & Familie & Header & Familie \\
 \caption{Header Bytes for the Different Processor
          Families\label{TabHeader}}
 \end{table*}
+
+\begin{table*}[htbp]
+\begin{center}\begin{tabular}{|c|l||c|l|}
+\hline
+Header  & Family & Header  & Family \\
+\hline
+\hline
+\input{../doc_DE/tabids2.tex}
+\end{tabular}\end{center}
+\caption{Header Bytes for the Different Processor
+         Families\label{TabHeader2}}
+\end{table*}
+
 The \tty{Segment} field signifies the address space the following code
 belongs to.  The assignment defined in table \ref{TabSegments} applies.
 \begin{table*}[htbp] 
@@ -11029,6 +11048,8 @@ Either that was a long nightshift or I am slowly getting old...
       \item{additionally supports the 12X instruction extensions and the
             XGATE core of the 68HC12 family;}
       \item{additionally supports the Signetics 2650;}
+      \item{additionally supports the COP4 family from National
+            Semiconductor;}
       \end{itemize}}
 \end{itemize}
 
@@ -11912,6 +11933,11 @@ from this with the next release :-)
 \bibitem{CMD816} CMD Microcircuits: \\
                 {\em G65SC802/G65SC816 CMOS 8/16-Bit Microprocessor.\/} \\
 		Family Data Sheet.
+
+\bibitem{COP4} National Semiconductor: \\
+               {\em COP410L/COP411L/COP310L/COP311L
+               Single-Chip N-Channel Microcontrollers.\/}
+               RRD-B30M105, March 1992
 
 \bibitem{CPM68K} Digital Research: \\
                  {\em CP/M 68K Operating System User's Guide.\/} \\

@@ -94,6 +94,7 @@ call testall t_ace
 call testall t_avr
 call testall t_bas52
 call testall t_buf32
+call testall t_cop4
 call testall t_cop8
 call testall t_ez8
 call testall t_f2mc8l

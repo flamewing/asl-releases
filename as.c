@@ -58,9 +58,12 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.10 2005/12/09 14:48:06 alfred Exp $                          */
+/* $Id: as.c,v 1.11 2006/04/06 20:26:53 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.11  2006/04/06 20:26:53  alfred
+ * - add COP4
+ *
  * Revision 1.10  2005/12/09 14:48:06  alfred
  * - added 2650
  *
@@ -254,6 +257,7 @@
 #include "codemsp.h"
 #include "codescmp.h"
 #include "code807x.h"
+#include "codecop4.h"
 #include "codecop8.h"
 #include "codesc14xxx.h"
 #include "codeace.h"
@@ -3496,7 +3500,7 @@ BEGIN
      code3201x_init(); code3202x_init(); code3203x_init(); code3205x_init(); code32054x_init(); code3206x_init();
      code9900_init(); codetms7_init(); code370_init(); codemsp_init();
      code78c10_init(); code75k0_init(); code78k0_init(); code78k2_init(); code7720_init(); code77230_init();
-     codescmp_init(); code807x_init(); codecop8_init(); codesc14xxx_init();
+     codescmp_init(); code807x_init(); codecop4_init(); codecop8_init(); codesc14xxx_init();
      codeace_init();
      code53c8xx_init();
      codef2mc8_init(); codef2mc16_init();

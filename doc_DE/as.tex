@@ -46,7 +46,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand September 2005}
+{\large Stand M"arz 2006}
 \end{raggedright}
 
 \clearpage
@@ -260,6 +260,7 @@ folgende Prozessorfamilien implementiert:
 \item{Texas Instruments MSP430}
 \item{National Semiconductor SC/MP}
 \item{National Semiconductor INS807x}
+\item{National Semiconductor COP4}
 \item{National Semiconductor COP8}
 \item{National Semiconductor SC144xx}
 \item{Fairchild ACE}
@@ -3225,9 +3226,14 @@ Befehlssatz existieren, die nach Bedarf hinzukommen werden.  Es ist eben
 ein Anfang, und die Dokumentation von National ist ziemlich umfangreich...
 %%-----------
 \begin{quote}
+bf) COP410
+Dies repr"asentiert die COP4-Familie.
+\end{quote}
+%%-----------
+\begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bf) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
+bg) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
     \> SC14420, SC14421, SC14422, SC14424 \\
 \end{tabbing}
 \end{quote}
@@ -3237,7 +3243,7 @@ unterst"utzt werden und deren Architektur im Laufe der Zeit optimiert
 wurde.
 %%-----------
 \begin{quote}
-bg) 7810 $\rightarrow$ 78C10
+bh) 7810 $\rightarrow$ 78C10
 \end{quote}
 Die NMOS-Version besitzt keinen STOP-Modus; der entspechende Befehl sowie
 das ZCM-Register fehlen demzufolge.  \bb{VORSICHT!} NMOS- und CMOS-Version
@@ -3246,7 +3252,7 @@ differieren zum Teil in den Reset-Werten einiger Register!
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bh) \> 75402, \\
+bi) \> 75402, \\
     \> 75004, 75006, 75008, \\
     \> 75268, \\
     \> 75304, 75306, 75308, 75312, 75316, \\
@@ -3262,31 +3268,31 @@ unterscheiden sich einmal durch ihre on-chip-Peripherie und
 zum anderen durch die M"achtigkeit des Befehlssatzes.
 %%-----------
 \begin{quote}
-bi) 78070
+bj) 78070
 \end{quote}
 Dies ist das einzige, mir momentan vertraute Mitglied der
 78K0-Familie von NEC.  Es gelten "ahnliche Aussagen wie zur
 COP8-Familie!
 %%-----------
 \begin{quote}
-bj) 78214
+bk) 78214
 \end{quote}
 Dies ist momentan der Repr"asentant der 78K2-Familie von NEC.
 %%-----------
 \begin{quote}
-bk) 7720 $\rightarrow$ 7725
+bl) 7720 $\rightarrow$ 7725
 \end{quote}
 Der $\mu$PD7725 bietet im Vergleich zu seinem Vorg"anger gr"o"sere
 Adre"sr"aume und einige zus"atzliche Befehle. {\bf VORSICHT!}  Die
 Prozessoren sind nicht zueinander bin"arkompatibel!
 %%-----------
 \begin{quote}
-bl) 77230
+bm) 77230
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
-bm) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
+bn) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
     \> SYM53C875, SYM53C895
 \end{tabbing}
 \end{quote}
@@ -3295,12 +3301,12 @@ einige Befehlsvarianten nicht, au"serdem unterscheiden sie sich in ihrem
 Satz interner Register.
 %%-----------
 \begin{quote}
-bn) MB89190
+bo) MB89190
 \end{quote}
 Dieser Prozessortyp repr"asentiert die F$^{2}$MC8L-Serie von Fujitsu...
 %%-----------
 \begin{quote}
-bo) MB9500
+bp) MB9500
 \end{quote}
 ...so wie dieser es momentan f"ur die 16-Bit-Varianten von Fujitsu tut!
 
@@ -4307,7 +4313,7 @@ Um mit dem M80 vertr"aglich zu sein, darf im Z80-Modus anstelle von
 \tty{DB}/\tty{DW} auch \tty{DEFB}/\tty{DEFW} geschrieben werden.
 \par
 \ttindex{BYTE}\ttindex{WORD}\ttindex{ADDR}\ttindex{ADDRW}
-Analog stellen \tty{BYTE/ADDR} bzw. \tty{WORD/ADDRW} beim COP8 einen 
+Analog stellen \tty{BYTE/ADDR} bzw. \tty{WORD/ADDRW} beim COP4/8 einen 
 Alias f"ur \tty{DB} bzw. \tty{DW} dar, wobei die beiden Paare sich 
 jedoch in der Byte-Order unterscheiden: Die Befehle, die von National
 zur Adre"sablage vorgesehen waren, benutzen Big-Endian, \tty{BYTE} bzw.
@@ -4548,7 +4554,7 @@ Zahl von Nullworten (=NOPs) im Speicher ab. Es k"onnen maximal
 \subsection{FB und FW}
 \ttindex{FB}\ttindex{FW}
 
-{\em G"ultigkeit: COP8}
+{\em G"ultigkeit: COP4/8}
 
 Mit diesen Befehlen kann ein gr"o"serer Block von Speicher (dessen L"ange
 in Bytes bzw. Worten der erste Parameter angibt) mit einer Byte- bzw.
@@ -4662,9 +4668,9 @@ Hinweisen nachgelesen werden.
 \subsection{DSB und DSW}
 \ttindex{DSB}\ttindex{DSW}
 
-{\em G"ultigkeit: COP8}
+{\em G"ultigkeit: COP4/8}
 
-Diese beiden Befehle stellen im COP8-Modus die zum ASMCOP von National
+Diese beiden Befehle stellen im COP4/8-Modus die zum ASMCOP von National
 kompatible Methode dar, Speicher zu reservieren.  W"ahrend \tty{DSB} nur
 einzelne Bytes freih"alt, reserviert \tty{DSW} W"orter und damit effektiv
 doppelt soviel Bytes wie \tty{DSB}.
@@ -8564,7 +8570,7 @@ relative Adressierung mi"sverstanden wird...
 
 %%---------------------------------------------------------------------------
 
-\section{$\mu$PD772x}
+\section{uPD772x}
 
 Sowohl 7720 als auch 7725 werden von dem gleichen Codegenerator behandelt
 und sind sich in ihren Befehlssatz extrem "ahnlich.  Trotzdem sollte man
@@ -8581,7 +8587,7 @@ ROM zur Ablage von Konstanten besitzen.  Dieses ist bei AS auf das
 
 %%---------------------------------------------------------------------------
 
-\section{F$^2$MC16L}
+\section{F2MC16L}
 
 Darauf, da"s man bei Anwendungen mit mehr als 64K ROM oder 64K RAM darauf
 achten sollte, AS die korrekte momentane Belegung der Bank-Register
@@ -8658,7 +8664,9 @@ die L"ange von Datenfeldern variabel ist und von {\tt Length} abh"angt.
 Ein Record mit einem Header-Byte von \verb!$81! ist ein Record, der Code
 oder Daten aus beliebigen Segmenten beinhalten kann.  Das erste
 Byte (Header) gibt an, f"ur welche Prozessorfamilie die folgenden
-Daten bzw. der folgende  Code bestimmt ist (siehe Tabelle \ref{TabHeader}).  
+Daten bzw. der folgende  Code bestimmt ist (siehe Tabellen \ref{TabHeader}
+und \ref{TabHeader2}).  
+
 \begin{table*}[htbp]
 \begin{center}\begin{tabular}{|c|l||c|l|}
 \hline
@@ -8669,6 +8677,18 @@ Header & Familie & Header & Familie \\
 \end{tabular}\end{center}
 \caption{Headerbytes f"ur die verschiedenen Prozessorfamilien\label{TabHeader}}
 \end{table*}
+
+\begin{table*}[htbp]
+\begin{center}\begin{tabular}{|c|l||c|l|}
+\hline
+Header & Familie & Header & Familie \\
+\hline
+\hline
+\input{tabids2.tex}
+\end{tabular}\end{center}
+\caption{Headerbytes f"ur die verschiedenen Prozessorfamilien\label{TabHeader2}}
+\end{table*}
+
 Das Segment-Feld gibt an, in welchen Adre"sraum des Prozessors der 
 folgende Code geh"ort.  Dabei gilt die in Tabelle \ref{TabSegments}
 angegeben Zuordnung.
@@ -11310,6 +11330,8 @@ oder ich werde langsam alt...
       \item{unterst"utzt zus"atzlich die 12X-Befehlserweiterungen
             und den XGATE-Kern der 68HC12-Familie;}
       \item{unterst"utzt zus"atzlich den Signetics 2650;}
+      \item{unterst"utzt zus"atzlich die COP4-Familie von National
+            Semiconductor;}
       \end{itemize}}
 \end{itemize}
 
@@ -12246,6 +12268,11 @@ damit mit der n"achsten Release alle etwas davon haben :-)
 \bibitem{CMD816} CMD Microcircuits: \\
                  {\em G65SC802 / G65SC816 CMOS 8/16-Bit
                  Microprocessor Family Data Sheet.\/}
+
+\bibitem{COP4} National Semiconductor: \\
+               {\em COP410L/COP411L/COP310L/COP311L
+               Single-Chip N-Channel Microcontrollers.\/}
+               RRD-B30M105, March 1992
 
 \bibitem{CPM68K} Digital Research : \\
                  {\em CP/M 68K Operating System User's Guide.\/} \\

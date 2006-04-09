@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6812.c,v 1.12 2006/04/04 16:22:26 alfred Exp $                    */
+/* $Id: code6812.c,v 1.13 2006/04/09 09:43:03 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6812.c,v $
+ * Revision 1.13  2006/04/09 09:43:03  alfred
+ * - limit check of page crossing
+ *
  * Revision 1.12  2006/04/04 16:22:26  alfred
  * - missing adaptions to new address space size
  *
@@ -462,6 +465,8 @@ static void DecodeAdr(int Start, int Stop, Word Mask)
         {
           Mask |= MModExt;
           if (((EProgCounter() >> 16) != (AdrWord >> 16))
+           && ((AdrWord & 0xc000) == 0x8000)
+           && ((EProgCounter() & 0xc000) == 0x8000)
            && (!FirstPassUnknown))
             WrError(250);
         }

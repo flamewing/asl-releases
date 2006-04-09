@@ -1,4 +1,4 @@
-CODE_SRCS = codepseudo.c intpseudo.c motpseudo.c tipseudo.c codevars.c \
+CODE_SRCS = codepseudo.c intpseudo.c motpseudo.c tipseudo.c natpseudo.c codevars.c \
   	    code68k.c \
             code56k.c \
   	    code601.c \
@@ -21,7 +21,7 @@ CODE_SRCS = codepseudo.c intpseudo.c motpseudo.c tipseudo.c codevars.c \
             code3201x.c code3202x.c code3203x.c code3205x.c code3254x.c code3206x.c \
             code9900.c codetms7.c code370.c codemsp.c \
   	    code78c10.c code75k0.c code78k0.c code78k2.c code7720.c code77230.c \
-            codescmp.c code807x.c codecop8.c codesc14xxx.c \
+            codescmp.c code807x.c codecop4.c codecop8.c codesc14xxx.c \
             codeace.c \
             code53c8xx.c \
             codefmc8.c codefmc16.c \

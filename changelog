@@ -1,4 +1,4 @@
-$Id: changelog,v 1.22 2006/04/04 16:24:23 alfred Exp $
+$Id: changelog,v 1.23 2006/04/09 13:07:51 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1033,3 +1033,9 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 2006-04-04 [Bld 45]
 
 - Bugfix      : some corrections around paged address space of 68HC12X
+
+2006-04-07 [Bld 46]
+
+- Bugfix      : remove some warnings around paged address space of 68HC12X
+
+- Addition    : Add COP4 target

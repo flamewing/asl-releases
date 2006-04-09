@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codecop8.c,v 1.3 2005/09/08 17:31:05 alfred Exp $                    */
+/* $Id: codecop8.c,v 1.4 2006/04/09 12:40:11 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codecop8.c,v $
+ * Revision 1.4  2006/04/09 12:40:11  alfred
+ * - unify COP pseudo instructions
+ *
  * Revision 1.3  2005/09/08 17:31:05  alfred
  * - add missing include
  *
@@ -41,6 +44,7 @@
 #include "asmitree.h"  
 #include "codepseudo.h"
 #include "intpseudo.h"
+#include "natpseudo.h"
 #include "codevars.h"
 
 #define ModNone (-1)
@@ -86,7 +90,6 @@ static FixedOrder *BitOrders;
 
 static ShortInt AdrMode;
 static Byte AdrVal;
-static Boolean BigFlag;
 
 /*---------------------------------------------------------------------------*/
 
@@ -199,116 +202,15 @@ END
 
 /*---------------------------------------------------------------------------*/
 
-        static Boolean DecodePseudo(void)
-BEGIN
-   Boolean ValOK;
-   Word Size,Value,t,z;
-
-   if (Memo("SFR"))
-    BEGIN
-     CodeEquate(SegData,0,0xff);
-     return True;
-    END;
-
-   if (Memo("ADDR"))
-    BEGIN
-     strcpy(OpPart,"DB"); BigFlag=True;
-    END
-
-   if (Memo("ADDRW"))
-    BEGIN
-     strcpy(OpPart,"DW"); BigFlag=True;
-    END
-
-   if (Memo("BYTE")) strcpy(OpPart,"DB");
-
-   if (Memo("WORD")) strcpy(OpPart,"DW");
-
-   if ((Memo("DSB")) OR (Memo("DSW")))
-    BEGIN
-     if (ArgCnt!=1) WrError(1110);
-     else
-      BEGIN
-       FirstPassUnknown=False;
-       Size=EvalIntExpression(ArgStr[1],UInt16,&ValOK);
-       if (FirstPassUnknown) WrError(1820);
-       if ((ValOK) AND (NOT FirstPassUnknown))
-        BEGIN
-         DontPrint=True;
-         if (Memo("DSW")) Size+=Size;
-         if (!Size) WrError(290);
-         CodeLen=Size;
-         BookKeeping();
-        END
-      END
-     return True;
-    END
-
-   if (Memo("FB"))
-    BEGIN
-     if (ArgCnt!=2) WrError(1110);
-     else
-      BEGIN
-       FirstPassUnknown=False;
-       Size=EvalIntExpression(ArgStr[1],UInt16,&ValOK);
-       if (FirstPassUnknown) WrError(1820);
-       if ((ValOK) AND (NOT FirstPassUnknown))
-        BEGIN
-         if (Size>MaxCodeLen) WrError(1920);
-         else
-          BEGIN
-           BAsmCode[0]=EvalIntExpression(ArgStr[2],Int8,&ValOK);
-           if (ValOK)
-            BEGIN
-             CodeLen=Size;
-             memset(BAsmCode+1,BAsmCode[0],Size-1);
-            END
-          END
-        END
-      END
-     return True;
-    END
-
-   if (Memo("FW"))
-    BEGIN
-     if (ArgCnt!=2) WrError(1110);
-     else
-      BEGIN
-       FirstPassUnknown=False;
-       Size=EvalIntExpression(ArgStr[1],UInt16,&ValOK);
-       if (FirstPassUnknown) WrError(1820);
-       if ((ValOK) AND (NOT FirstPassUnknown))
-        BEGIN
-         if ((Size << 1)>MaxCodeLen) WrError(1920);
-         else
-          BEGIN
-           Value=EvalIntExpression(ArgStr[2],Int16,&ValOK);
-           if (ValOK)
-            BEGIN
-             CodeLen=Size << 1; t=0;
-             for (z=0; z<Size; z++)
-              BEGIN
-               BAsmCode[t++]=Lo(Value); BAsmCode[t++]=Hi(Value);
-              END
-            END
-          END
-        END
-      END
-     return True;
-    END
-
-   return False;
-END
-
         static void MakeCode_COP8(void)
 BEGIN
    Integer AdrInt;
    int z;
    Byte HReg;
-   Boolean OK;
+   Boolean OK, BigFlag;
    Word AdrWord;
 
-   CodeLen=0; DontPrint=False; BigFlag=False;
+   CodeLen=0; DontPrint=False;
 
    /* zu ignorierendes */
 
@@ -316,7 +218,7 @@ BEGIN
 
    /* Pseudoanweisungen */
 
-   if (DecodePseudo()) return;
+   if (DecodeNatPseudo(&BigFlag)) return;
 
    if (DecodeIntelPseudo(BigFlag)) return;
 
