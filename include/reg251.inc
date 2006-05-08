@@ -7,9 +7,12 @@
 ;*   								            *
 ;*   Purpose : contains SFR/bit definions for MCS-251 Processors            *
 ;* 									    *
-;* $Id: reg251.inc,v 1.1 2003/11/06 02:56:33 alfred Exp $                  *
+;* $Id: reg251.inc,v 1.2 2006/05/01 09:24:30 alfred Exp $                  *
 ;*                                                                          *
 ;* $Log: reg251.inc,v $
+;* Revision 1.2  2006/05/01 09:24:30  alfred
+;* - correct location of SPH
+;*
 ;* Revision 1.1  2003/11/06 02:56:33  alfred
 ;* - recreated
 ;*
@@ -60,7 +63,7 @@ N               bit     PSW1.5          ; negatives result?
 Z               bit     PSW1.1          ; zero result?
 
 SP              port    81h             ; stack pointer (bits 0..7)
-SPH             port    0bdh            ; stack pointer (bits 8..15)
+SPH             port    0beh            ; stack pointer (bits 8..15)
 DPL             port    082h            ; data pointer (bits 0..7)
 DPH             port    083h            ; data pointer (bits 8..15)
 DPXL            port    084h            ; data pointer (bits 15..23)

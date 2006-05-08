@@ -11,9 +11,12 @@
 /*           2001-10-13 added ARM/Linux                                      */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: sysdefs.h,v 1.3 2004/02/08 20:39:25 alfred Exp $                     */
+/* $Id: sysdefs.h,v 1.4 2006/05/01 09:09:10 alfred Exp $                     */
 /*****************************************************************************
  * $Log: sysdefs.h,v $
+ * Revision 1.4  2006/05/01 09:09:10  alfred
+ * - treat __PPC__ like _POWER
+ *
  * Revision 1.3  2004/02/08 20:39:25  alfred
  * -
  *
@@ -38,9 +41,9 @@
 #endif
 
 #ifdef __mc68000
-#ifndef __m68k
-#define __m68k
-#endif
+# ifndef __m68k
+#  define __m68k
+# endif
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -86,6 +89,12 @@
 #endif
 #endif
 
+#ifdef __PPC__
+# ifndef _POWER
+#  define _POWER
+# endif
+#endif
+
 /*---------------------------------------------------------------------------*/
 /* ditto for ARM platforms */
 
@@ -116,11 +125,15 @@
 
 #ifdef __sparc
 #ifndef __NetBSD__
+#ifndef __FreeBSD__
+#ifndef __linux__
 #ifndef __SVR4
 #define __sunos__
 #else /* __SVR4 */
 #define __solaris__
 #endif /* __SVR4 */
+#endif /* __linux__ */
+#endif /* __FreeBSD__ */
 #endif /* __NetBSD */
 #endif /* __sparc */
 
@@ -235,6 +248,7 @@ extern double strtod();
 extern char *getenv();
 #define NO_NLS
 #endif
+
 /*---------------------------------------------------------------------------*/
 /* Linux/68K: 
 

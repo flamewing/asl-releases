@@ -71,7 +71,7 @@ test: $(ALLTARGETS)
 	cd tests; ./testall $(TESTDIRS)
 
 install: $(ALLTARGETS)
-	./install.sh $(BINDIR) $(INCDIR) $(MANDIR) $(LIBDIR) $(DOCDIR)
+	PREFIX=$(PREFIX) ./install.sh $(BINDIR) $(INCDIR) $(MANDIR) $(LIBDIR) $(DOCDIR)
 
 clean:
 	rm -f $(ALLTARGETS) $(RESCOMPTARGET) $(TEX2DOCTARGET) $(TEX2HTMLTARGET) *$(HOST_OBJEXTENSION) *$(TARG_OBJEXTENSION) *.p *.rsc tests/testlog testlog

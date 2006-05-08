@@ -66,3 +66,22 @@
 	omg
 	xas
 
+; new instructions on COP420
+
+	cpu	cop420
+
+	lbi	1,7          ; extended operand range
+
+	adt
+	casc
+	inin
+	inil
+	cqma
+	xabr
+	skt
+
+	ogi	3
+
+	ldd	1,15
+
+	xad	2,12        ; complete new cos

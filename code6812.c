@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6812.c,v 1.13 2006/04/09 09:43:03 alfred Exp $                    */
+/* $Id: code6812.c,v 1.14 2006/04/10 18:41:55 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6812.c,v $
+ * Revision 1.14  2006/04/10 18:41:55  alfred
+ * *** empty log message ***
+ *
  * Revision 1.13  2006/04/09 09:43:03  alfred
  * - limit check of page crossing
  *
@@ -813,6 +816,8 @@ static void DecodeEMACS(Word Index)
 {
   LongInt Address;
   Boolean OK;
+
+  UNUSED(Index);
 
   if (ArgCnt != 1) WrError(1110);
   else if (*AttrPart != '\0') WrError(1100);

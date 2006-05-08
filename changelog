@@ -1,4 +1,4 @@
-$Id: changelog,v 1.23 2006/04/09 13:07:51 alfred Exp $
+$Id: changelog,v 1.25 2006/05/08 15:39:33 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1039,3 +1039,13 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 - Bugfix      : remove some warnings around paged address space of 68HC12X
 
 - Addition    : Add COP4 target
+
+2006-04-15 [Bld47]
+
+- Addition    : Add ${PREFIX} to installation script
+
+2006-05-08 [Bld48]
+
+- Bugfix      : add range checks to arguments on some COP41x instructions
+
+- Addition    : Add COP42x target
