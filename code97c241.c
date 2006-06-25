@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code97c241.c,v 1.4 2005/10/02 10:00:45 alfred Exp $                  */
+/* $Id: code97c241.c,v 1.5 2006/06/15 20:48:36 alfred Exp $                  */
 /*****************************************************************************
  * $Log: code97c241.c,v $
+ * Revision 1.5  2006/06/15 20:48:36  alfred
+ * - correct function call
+ *
  * Revision 1.4  2005/10/02 10:00:45  alfred
  * - ConstLongInt gets default base, correct length check on KCPSM3 registers
  *
@@ -1617,10 +1620,10 @@ BEGIN
                BEGIN
                 if (Format==' ')
                  BEGIN
-                  if (((Is2Absolute()) AND (IsShort))
+                  if (((Is2Absolute()) AND (IsShort()))
                    OR ((Is2Short()) AND (IsAbsolute()))) Format='A';
                   else Format='G';
-                 END;
+                 END
                 switch (Format)
                  BEGIN
                   case 'G':

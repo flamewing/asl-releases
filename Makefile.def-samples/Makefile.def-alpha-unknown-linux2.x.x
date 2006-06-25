@@ -4,7 +4,7 @@
 
 CC = gcc
 LD = gcc
-CFLAGS = -O3 -fomit-frame-pointer -Wall 
+CFLAGS = -O3 -fomit-frame-pointer -mtune=ev56 -mcpu=ev56 -Wall 
 LDFLAGS =
 
 TARG_OBJEXTENSION = .o

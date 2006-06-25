@@ -58,9 +58,12 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.11 2006/04/06 20:26:53 alfred Exp $                          */
+/* $Id: as.c,v 1.12 2006/06/15 21:15:24 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.12  2006/06/15 21:15:24  alfred
+ * - cleanups in listing output
+ *
  * Revision 1.11  2006/04/06 20:26:53  alfred
  * - add COP4
  *
@@ -382,103 +385,108 @@ BEGIN
    strmaxcat(h,Blanks(20-wr),255);
 END
 
-        static void MakeList(void)
-BEGIN
-   String h, h2, h3, Tmp;
-   Byte i, k;
-   Word n;
-   Word EffLen;
+static void MakeList(void)
+{
+  String h, h2, h3, Tmp;
+  Byte i, k;
+  Word n;
+  Word EffLen;
 
-   EffLen = CodeLen * Granularity();
+  EffLen = CodeLen * Granularity();
 
-   if ((NOT ListToNull) AND (DoLst) AND ((ListMask&1) != 0) AND (NOT IFListMask()))
-    BEGIN
-     /* Zeilennummer / Programmzaehleradresse: */
+  if ((NOT ListToNull) AND (DoLst) AND ((ListMask&1) != 0) AND (NOT IFListMask()))
+  {
+    /* Zeilennummer / Programmzaehleradresse: */
 
-     if (IncDepth == 0) strmaxcpy(h2, "   ", 255);
-     else
-      BEGIN
-       sprintf(Tmp, IntegerFormat, IncDepth);
-       sprintf(h2, "(%s)", Tmp);
-      END
-     if ((ListMask & 0x10) != 0)
-      BEGIN
-       sprintf(h3, Integ32Format, CurrLine);
-       sprintf(h, "%5s/", h3);
-       strmaxcat(h2, h, 255);
-      END
-     strmaxcpy(h, h2, 255); strmaxcat(h, HexBlankString(EProgCounter() - CodeLen, 8), 255);
-     strmaxcat(h, Retracted?" R ":" : ", 255);
+    if (IncDepth == 0)
+      strmaxcpy(h2, "   ", 255);
+    else
+    {
+      sprintf(Tmp, IntegerFormat, IncDepth);
+      sprintf(h2, "(%s)", Tmp);
+    }
+    if (ListMask & ListMask_LineNums)
+    {
+      sprintf(h3, Integ32Format, CurrLine);
+      sprintf(h, "%5s/", h3);
+      strmaxcat(h2, h, 255);
+    }
+    strmaxcpy(h, h2, 255); strmaxcat(h, HexBlankString(EProgCounter() - CodeLen, 8), 255);
+    strmaxcat(h, Retracted?" R ":" : ", 255);
 
-     /* Extrawurst in Listing ? */
-     
-     if (*ListLine != '\0')
-      BEGIN
-       strmaxcat(h, ListLine, 255);
-       strmaxcat(h, Blanks(20 - strlen(ListLine)), 255);
-       strmaxcat(h, OneLine, 255);
-       WrLstLine(h);
-       *ListLine = '\0';
-      END
+    /* Extrawurst in Listing ? */
+    
+    if (*ListLine != '\0')
+    {
+      strmaxcat(h, ListLine, 255);
+      strmaxcat(h, Blanks(20 - strlen(ListLine)), 255);
+      strmaxcat(h, OneLine, 255);
+      WrLstLine(h);
+      *ListLine = '\0';
+    }
 
-     /* Code ausgeben */
+    /* Code ausgeben */
 
-     else
-      switch (ActListGran)
-       BEGIN
-        case 4:
-         n = 0; MakeList_Gen4Line(h, EffLen, &n);
-         strmaxcat(h, OneLine, 255); WrLstLine(h);
-         if (NOT DontPrint)
+    else switch (ActListGran)
+    {
+      case 4:
+        n = 0; MakeList_Gen4Line(h, EffLen, &n);
+        strmaxcat(h, OneLine, 255); WrLstLine(h);
+        if (!DontPrint)
           while (n < EffLen)
-           BEGIN
+          {
             strmaxcpy(h, "                    ", 255);
             MakeList_Gen4Line(h, EffLen, &n);
             WrLstLine(h);
-           END
-         break;
-        case 2:
-         n = 0; MakeList_Gen2Line(h, EffLen, &n);
-         strmaxcat(h, OneLine, 255); WrLstLine(h);
-         if (NOT DontPrint)
+          }
+        break;
+      case 2:
+        n = 0; MakeList_Gen2Line(h, EffLen, &n);
+        strmaxcat(h, OneLine, 255); WrLstLine(h);
+        if (!DontPrint)
           while (n < EffLen)
-           BEGIN
+          {
             strmaxcpy(h, "                    ", 255);
             MakeList_Gen2Line(h, EffLen, &n);
             WrLstLine(h);
-           END
-         break;
-        default:
-         if ((TurnWords) AND (Granularity() != ActListGran)) DreheCodes();
-         for (i = 0; i < 6; i++)
-          if ((NOT DontPrint) AND (EffLen > i))
-           BEGIN
-            strmaxcat(h, HexString(BAsmCode[i], 2), 255); strmaxcat(h, " ", 255);
-           END
-          else strmaxcat(h, "   ", 255);
-         strmaxcat(h, "  ", 255); strmaxcat(h, OneLine, 255);
-         WrLstLine(h);
-         if ((EffLen > 6) AND (NOT DontPrint))
-          BEGIN
-           EffLen -= 6;
-           n = EffLen / 6; if ((EffLen % 6) == 0) n--;
-           for (i = 0; i <= n; i++)
-            BEGIN
-             strmaxcpy(h, "                    ", 255);
-             for (k = 0; k < 6; k++)
+          }
+        break;
+      default:
+        if ((TurnWords) && (Granularity() != ActListGran))
+          DreheCodes();
+        for (i = 0; i < 6; i++)
+          if ((!DontPrint) && (EffLen > i))
+          {
+            strmaxcat(h, HexString(BAsmCode[i], 2), 255);
+            strmaxcat(h, " ", 255);
+          }
+          else
+            strmaxcat(h, "   ", 255);
+        strmaxcat(h, "  ", 255); strmaxcat(h, OneLine, 255);
+        WrLstLine(h);
+        if ((EffLen > 6) && (!DontPrint))
+        {
+          EffLen -= 6;
+          n = EffLen / 6; if ((EffLen % 6) == 0) n--;
+          for (i = 0; i <= n; i++)
+          {
+            strmaxcpy(h, "                    ", 255);
+            if (ListMask & ListMask_LineNums)
+              strmaxcat(h, "      ", 255);
+            for (k = 0; k < 6; k++)
               if (EffLen > i * 6 + k) 
-               BEGIN
+              {
                 strmaxcat(h, HexString(BAsmCode[i * 6 + k + 6], 2), 255);
                 strmaxcat(h, " ", 255);
-               END
+              }
              WrLstLine(h);
-            END
-          END
-         if ((TurnWords) AND (Granularity() != ActListGran)) DreheCodes();
-       END
-
-    END
-END
+          }
+        }
+        if ((TurnWords) && (Granularity() != ActListGran))
+          DreheCodes();
+    }
+  }
+}
 
 /*=========================================================================*/
 /* Makroprozessor */
@@ -1826,7 +1834,7 @@ END
 
      if (*ErgPos)
      {
-       tmppos = (char *) malloc(strlen(ErgPos) + 2);
+       tmppos = (char *) malloc(strlen(ErgPos) + 3);
        sprintf(tmppos, "%s:\n", ErgPos);
        free(ErgPos); ErgPos = tmppos;
      }

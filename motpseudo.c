@@ -5,9 +5,12 @@
 /* Haeufiger benutzte Motorola-Pseudo-Befehle                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: motpseudo.c,v 1.4 2005/09/30 09:15:58 alfred Exp $                   */
+/* $Id: motpseudo.c,v 1.5 2006/06/15 21:17:10 alfred Exp $                   */
 /***************************************************************************** 
  * $Log: motpseudo.c,v $
+ * Revision 1.5  2006/06/15 21:17:10  alfred
+ * - must patch NUL at correct place
+ *
  * Revision 1.4  2005/09/30 09:15:58  alfred
  * - correct Motorola 8-bit pseudo ops on word-wise CPUs
  *
@@ -70,7 +73,7 @@ static Boolean CutRep(char *pAsc, LongInt *pErg)
     }
     else
     {
-      *pStart = '\0';
+      *pEnd = '\0';
       *pErg = EvalIntExpression(pStart, Int32, &OK);
       strcpy(pAsc, pEnd + 1); return OK;
     }

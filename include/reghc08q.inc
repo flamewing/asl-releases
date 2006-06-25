@@ -6,8 +6,8 @@
 ;*                                                                          *
 ;*   REGHC08Q.INC                                                           *
 ;*   REGISTER DEFINITIONS FOR MC68HC908QT/QY                                *
-;*   BY ANDREAS BOLSCH - BOLSCH@MATH.TU-BERLIN.DE                           *
-;*   CHANGED: OCT 26 2004                                                   *
+;*   BY ANDREAS BOLSCH - ANDREAS.BOLSCH@ALUMNI.TU-BERLIN.DE                 *
+;*   CHANGED: DEC 29 2005                                                   *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -92,25 +92,25 @@ DDRB1		EQU	1
 DDRB0		EQU	0
 		endif
 		
-PTAUE		EQU	$000B		;PORT A INPUT PULLUP ENABLE REGISTER
+PTAPUE		EQU	$000B		;PORT A INPUT PULLUP ENABLE REGISTER
 OSC2EN		EQU	7
-PTAUE5		EQU	5
-PTAUE4		EQU	4
-PTAUE3		EQU	3
-PTAUE2		EQU	2
-PTAUE1		EQU	1
-PTAUE0		EQU	0
+PTAPUE5		EQU	5
+PTAPUE4		EQU	4
+PTAPUE3		EQU	3
+PTAPUE2		EQU	2
+PTAPUE1		EQU	1
+PTAPUE0		EQU	0
 
 		ifdef	PTB
-PTBUE		EQU	$000C		;PORT B INPUT PULLUP ENABLE REGISTER
-PTBUE7		EQU	7
-PTBUE6		EQU	6
-PTBUE5		EQU	5
-PTBUE4		EQU	4
-PTBUE3		EQU	3
-PTBUE2		EQU	2
-PTBUE1		EQU	1
-PTBUE0		EQU	0
+PTBPUE		EQU	$000C		;PORT B INPUT PULLUP ENABLE REGISTER
+PTBPUE7		EQU	7
+PTBPUE6		EQU	6
+PTBPUE5		EQU	5
+PTBPUE4		EQU	4
+PTBPUE3		EQU	3
+PTBPUE2		EQU	2
+PTBPUE1		EQU	1
+PTBPUE0		EQU	0
 		endif
 		
 KBSCR		EQU	$001A		;KEYBOARD STATUS AND CONTROL REGISTER
@@ -276,6 +276,8 @@ BPR3		EQU	3
 BPR2		EQU	2
 BPR1		EQU	1
 BPR0		EQU	0
+
+TRIMLOC		EQU     $FFC0           ;NONVOLATILE TRIM VALUE (FLASH)
 
 COPCTL		EQU	$FFFF		;COP CONTROL REGISTER            
 		

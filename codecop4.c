@@ -5,9 +5,12 @@
 /* Codegeneratormodul COP4-Familie                                           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codecop4.c,v 1.5 2006/05/07 13:42:52 alfred Exp $                   *
+/* $Id: codecop4.c,v 1.6 2006/05/22 17:17:11 alfred Exp $                   *
  *****************************************************************************
  * $Log: codecop4.c,v $
+ * Revision 1.6  2006/05/22 17:17:11  alfred
+ * - address space is 1K for COP42x
+ *
  * Revision 1.5  2006/05/07 13:42:52  alfred
  * - regard JP target on next page
  *
@@ -49,6 +52,7 @@ typedef struct
         } FixedOrder;
 
 static CPUVar CPUCOP410, CPUCOP420;
+static IntType AdrInt;
 
 static FixedOrder *FixedOrders, *ImmOrders;
 
@@ -116,7 +120,7 @@ static void DecodeJmp(Word Index)
     Word Addr;
     Boolean OK;
  
-    Addr = EvalIntExpression(ArgStr[1], UInt9, &OK);
+    Addr = EvalIntExpression(ArgStr[1], AdrInt, &OK);
     if (OK)
     {
       BAsmCode[CodeLen++] = Index | Hi(Addr);
@@ -294,7 +298,7 @@ static void DecodeJSRP(Word Index)
     Boolean OK;
  
     FirstPassUnknown = FALSE;
-    Addr = EvalIntExpression(ArgStr[1], UInt9, &OK);
+    Addr = EvalIntExpression(ArgStr[1], AdrInt, &OK);
     if (FirstPassUnknown)
       Addr = 2 << 6;
     if (OK)
@@ -316,7 +320,7 @@ static void DecodeJP(Word Index)
     Boolean OK;
  
     FirstPassUnknown = FALSE;
-    Addr = EvalIntExpression(ArgStr[1], UInt9, &OK);
+    Addr = EvalIntExpression(ArgStr[1], AdrInt, &OK);
     if (FirstPassUnknown)
       Addr = EProgCounter() & (~0x1f);
     if (OK)
@@ -498,7 +502,16 @@ static void SwitchTo_COP4(void)
 
   ValidSegs = (1 << SegCode);
   Grans[SegCode] = 1; ListGrans[SegCode] = 1; SegInits[SegCode] = 0;
-  SegLimits[SegCode] = 0x1ff;
+  if (MomCPU >= CPUCOP420)
+  {
+    SegLimits[SegCode] = 0x3ff;
+    AdrInt = UInt10;
+  }
+  else
+  {
+    SegLimits[SegCode] = 0x1ff;
+    AdrInt = UInt9;
+  }
 
   MakeCode = MakeCode_COP4; IsDef = IsDef_COP4;
   SwitchFrom = SwitchFrom_COP4; InitFields();

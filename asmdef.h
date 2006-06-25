@@ -33,9 +33,12 @@
 /*           2001-10-20 added GNU error flag                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmdef.h,v 1.1 2003/11/06 02:49:18 alfred Exp $                      */
+/* $Id: asmdef.h,v 1.2 2006/06/17 17:03:14 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmdef.h,v $
+ * Revision 1.2  2006/06/17 17:03:14  alfred
+ * - add HCS08 remark
+ *
  * Revision 1.1  2003/11/06 02:49:18  alfred
  * - recreated
  *
@@ -147,6 +150,16 @@ typedef enum {DebugNone,DebugMAP,DebugAOUT,DebugCOFF,DebugELF,DebugAtmel,DebugNo
 #define Char_FF 12
 #define Char_CR 13
 #define Char_ESC 27
+
+#define ListMask_FormFeed         (1 << 0)
+#define ListMask_SymbolList       (1 << 1)
+#define ListMask_MacroList        (1 << 2)
+#define ListMask_FunctionList     (1 << 3)
+#define ListMask_LineNums         (1 << 4)
+#define ListMask_DefineList       (1 << 5)
+#define ListMask_RegDefList       (1 << 6)
+#define ListMask_Codepages        (1 << 7)
+#define ListMask_StructList       (1 << 8)
 
 #ifdef HAS64
 #define MaxLargeInt 0x7fffffffffffffffll

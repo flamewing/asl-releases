@@ -1,4 +1,4 @@
-$Id: changelog,v 1.25 2006/05/08 15:39:33 alfred Exp $
+$Id: changelog,v 1.26 2006/06/24 19:09:06 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1049,3 +1049,7 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 - Bugfix      : add range checks to arguments on some COP41x instructions
 
 - Addition    : Add COP42x target
+
+2006-06-24 [Bld49]
+
+- Addition    : Add (68)HCS12 target
