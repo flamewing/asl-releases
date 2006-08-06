@@ -5,9 +5,12 @@
 /* Codegeneratormodul COP4-Familie                                           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codecop4.c,v 1.6 2006/05/22 17:17:11 alfred Exp $                   *
+/* $Id: codecop4.c,v 1.7 2006/08/05 18:07:31 alfred Exp $                   *
  *****************************************************************************
  * $Log: codecop4.c,v $
+ * Revision 1.7  2006/08/05 18:07:31  alfred
+ * - silence some warnings
+ *
  * Revision 1.6  2006/05/22 17:17:11  alfred
  * - address space is 1K for COP42x
  *
@@ -147,6 +150,8 @@ static void DecodeReg(Word Index)
 
 static void DecodeAISC(Word Index)
 {
+  UNUSED(Index);
+
   if (ArgCnt != 1) WrError(1110);
   else
   {
@@ -168,6 +173,8 @@ static void DecodeAISC(Word Index)
 
 static void DecodeRMB(Word Index)
 {
+  UNUSED(Index);
+
   if (ArgCnt != 1) WrError(1110);  
   else
   {
@@ -185,6 +192,8 @@ static void DecodeRMB(Word Index)
 
 static void DecodeSMB(Word Index)
 {
+  UNUSED(Index);
+
   if (ArgCnt != 1) WrError(1110);
   else
   {   
@@ -202,6 +211,8 @@ static void DecodeSMB(Word Index)
 
 static void DecodeXAD(Word Index)
 {
+  UNUSED(Index);
+
   if (ArgCnt != 2) WrError(1110);
   else
   {   
@@ -233,6 +244,8 @@ static void DecodeXAD(Word Index)
      
 static void DecodeLBI(Word Index)
 {
+  UNUSED(Index);
+
   if (ArgCnt != 2) WrError(1110);
   else
   {   
@@ -269,6 +282,8 @@ static void DecodeLBI(Word Index)
 
 static void DecodeLDD(Word Index)
 {
+  UNUSED(Index);
+
   if (ArgCnt != 2) WrError(1110);
   else if (MomCPU < CPUCOP420) WrError(1500);
   else
@@ -291,6 +306,8 @@ static void DecodeLDD(Word Index)
 
 static void DecodeJSRP(Word Index)
 {
+  UNUSED(Index);
+
   if (ArgCnt != 1) WrError(1110);
   else
   {
@@ -313,6 +330,8 @@ static void DecodeJSRP(Word Index)
 
 static void DecodeJP(Word Index)
 {
+  UNUSED(Index);
+
   if (ArgCnt != 1) WrError(1110);
   else
   {

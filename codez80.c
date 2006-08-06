@@ -10,9 +10,12 @@
 /*           2001-12-11 begun with Rabbit2000                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codez80.c,v 1.3 2005/09/08 16:53:43 alfred Exp $                     */
+/* $Id: codez80.c,v 1.4 2006/08/05 12:01:39 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codez80.c,v $
+ * Revision 1.4  2006/08/05 12:01:39  alfred
+ * - correct parsing of indexed expressions
+ *
  * Revision 1.3  2005/09/08 16:53:43  alfred
  * - use common PInstTable
  *
@@ -282,11 +285,10 @@ BEGIN
 #define Reg16Cnt 6
    static char *Reg16Names[Reg16Cnt]={"BC","DE","HL","SP","IX","IY"};
 
-   int z;
+   int z, l;
    Integer AdrInt;
    LongInt AdrLong;
    Boolean OK;
-   String Asc;
 
    AdrMode=ModNone; AdrCnt=0; AdrPart=0;
 
@@ -339,7 +341,7 @@ BEGIN
 
    /* 3. 16-Bit-Register indirekt ? */
 
-   if ((strlen(Asc_O)>=4) AND (*Asc_O=='(') AND (Asc_O[strlen(Asc_O)-1]==')')) 
+   if ((strlen(Asc_O)>=4) AND (*Asc_O=='(') AND (Asc_O[l = strlen(Asc_O)-1]==')')) 
     for (z=0; z<Reg16Cnt; z++)
      if ((strncasecmp(Asc_O+1,Reg16Names[z],2)==0)
      AND (NOT IsSym(Asc_O[3])))
@@ -363,9 +365,14 @@ BEGIN
         END
        else
         BEGIN        /* SP,IX,IY */
-         strmaxcpy(Asc,Asc_O+3,255); Asc[strlen(Asc)-1]='\0';
-         if (*Asc=='+') strcpy(Asc,Asc+1);
-         AdrLong=EvalIntExpression(Asc,(MomCPU>=CPUZ380)?SInt24:SInt8,&OK);
+         /* we replace the register name with '0 ', making it a valid
+            expression for the parser.  Removing the outer parentheses saves 
+            a level of recursion in the parser: */
+
+         Asc_O[1] = '0';
+         Asc_O[2] = ' ';
+         Asc_O[l] = '\0';
+         AdrLong=EvalIntExpression(Asc_O + 1,(MomCPU>=CPUZ380)?SInt24:SInt8,&OK);
          if (OK)
           BEGIN
            if (z==3) AdrMode=ModSPRel;

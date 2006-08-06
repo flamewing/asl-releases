@@ -31,9 +31,15 @@
 /*           2001-10-20 added GNU error flag                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmdef.c,v 1.2 2004/09/20 18:43:51 alfred Exp $                     */
+/* $Id: asmdef.c,v 1.4 2006/08/05 20:05:27 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmdef.c,v $
+ * Revision 1.4  2006/08/05 20:05:27  alfred
+ * - correct allocation size
+ *
+ * Revision 1.3  2006/08/05 18:25:47  alfred
+ * - make some arrays dynamic to save data segment space
+ *
  * Revision 1.2  2004/09/20 18:43:51  alfred
  * - correct allocation size
  *
@@ -83,18 +89,18 @@ char SegShorts[PCMax + 2] = {'-','C','D','I','X','Y','B','P','R','O','S'};
    StringPtr ClrEol;       	            /* String fuer loeschen bis Zeilenende */
    StringPtr CursUp;		            /*   "     "  Cursor hoch */
 
-   LargeWord PCs[StructSeg+1];              /* Programmzaehler */
+   LargeWord *PCs;                          /* Programmzaehler */
    Boolean RelSegs;                         /* relokatibles Segment ? */
    LargeWord StartAdr;                      /* Programmstartadresse */
    Boolean StartAdrPresent;                 /*          "           definiert? */
-   LargeWord Phases[StructSeg+1];           /* Verschiebungen */
+   LargeWord *Phases;                       /* Verschiebungen */
    Word Grans[StructSeg+1]; 	            /* Groesse der Adressierungselemente */
    Word ListGrans[StructSeg+1];             /* Wortgroesse im Listing */
    ChunkList SegChunks[StructSeg+1];        /* Belegungen */
    Integer ActPC;                           /* gewaehlter Programmzaehler */
    Boolean PCsUsed[StructSeg+1];            /* PCs bereits initialisiert ? */
-   LargeWord SegInits[PCMax+1];             /* Segmentstartwerte */
-   LargeWord SegLimits[PCMax+1];            /* Segmentgrenzwerte */
+   LargeWord *SegInits;                     /* Segmentstartwerte */
+   LargeWord *SegLimits;                    /* Segmentgrenzwerte */
    LongInt ValidSegs;                       /* erlaubte Segmente */
    Boolean ENDOccured;	                    /* END-Statement aufgetreten ? */
    Boolean Retracted;			    /* Codes zurueckgenommen ? */
@@ -342,4 +348,9 @@ BEGIN
    PrtExitString=GetString();
    PrtTitleString=GetString();
    ExtendError=GetString();
+
+   SegInits = (LargeWord*)malloc((PCMax + 1) * sizeof(LargeWord));
+   SegLimits = (LargeWord*)malloc((PCMax + 1) * sizeof(LargeWord));
+   Phases = (LargeWord*)malloc((StructSeg + 1) * sizeof(LargeWord));
+   PCs = (LargeWord*)malloc((StructSeg + 1) * sizeof(LargeWord));
 END

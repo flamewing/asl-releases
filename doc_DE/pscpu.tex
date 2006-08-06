@@ -39,7 +39,7 @@ ADR        \> BYT         \> DC[.$<$size$>$] \> DFS     \> DS[.$<$size$>$] \\
 FCB        \> FCC         \> FDB         \> PADDING     \> RMB \\
 \end{tabbing}}
 
-\subsubsection{Motorola 6805/68HC08}
+\subsubsection{Motorola/Freescale 6805/68HC(S)08}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
 ADR        \> BYT         \> DFS         \> FCB         \> FCC \\
@@ -66,6 +66,13 @@ FCB        \> FCC         \> FDB         \> PADDING     \> RMB \\
 ADR        \> ASSUME      \> BYT         \> DC[.$<$size$>$] \> DFS \\
 DS[.$<$size$>$] FCB       \> FCC         \> FDB         \> PADDING \\
 RMB \\
+\end{tabbing}}
+
+\subsubsection{Freescale 68RS08}
+{\tt\begin{tabbing}
+\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
+ADR        \> BYT         \> DFS         \> FCB         \> FCC \\
+FDB        \> RMB \\
 \end{tabbing}}
 
 \subsubsection{Hitachi H8/300(L/H)}

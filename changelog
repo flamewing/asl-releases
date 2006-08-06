@@ -1,4 +1,4 @@
-$Id: changelog,v 1.26 2006/06/24 19:09:06 alfred Exp $
+$Id: changelog,v 1.29 2006/08/05 18:28:36 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1053,3 +1053,13 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 2006-06-24 [Bld49]
 
 - Addition    : Add (68)HCS12 target
+
+2006-08-05 [Bld50]
+
+- Addition    : Add (68)RS08 (contribution by Andreas Bolsch)
+
+- Bugfix      : For AVR, add the ATmega variant of the LPM instruction
+
+- Addition    : Add AVR targets & address spaces up to ATmega256
+
+- Bugfix      : correct parsing of indexed expressions for Z80 and TLCS-90(0)

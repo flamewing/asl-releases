@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6812.c,v 1.14 2006/04/10 18:41:55 alfred Exp $                    */
+/* $Id: code6812.c,v 1.15 2006/08/05 18:06:43 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6812.c,v $
+ * Revision 1.15  2006/08/05 18:06:43  alfred
+ * - silence some compiler warnings
+ *
  * Revision 1.14  2006/04/10 18:41:55  alfred
  * *** empty log message ***
  *
@@ -1153,6 +1156,8 @@ static void DecodeTRAP(Word Index)
 {
   Boolean OK;
 
+  UNUSED(Index);
+
   if (ArgCnt != 1) WrError(1110);
   else if (*AttrPart != '\0') WrError(1100);
   else
@@ -1174,6 +1179,8 @@ static void DecodeTRAP(Word Index)
 
 static void DecodeBTAS(Word Index)
 {
+  UNUSED(Index);
+
   if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
   else if (MomCPU < CPU6812X) WrError(1500); 
   else if (*AttrPart != '\0') WrError(1100);

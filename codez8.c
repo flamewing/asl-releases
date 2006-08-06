@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codez8.c,v 1.5 2005/10/02 10:00:46 alfred Exp $                          *
+/* $Id: codez8.c,v 1.6 2006/08/05 18:06:43 alfred Exp $                          *
  *****************************************************************************
  * $Log: codez8.c,v $
+ * Revision 1.6  2006/08/05 18:06:43  alfred
+ * - silence some compiler warnings
+ *
  * Revision 1.5  2005/10/02 10:00:46  alfred
  * - ConstLongInt gets default base, correct length check on KCPSM3 registers
  *
@@ -1655,7 +1658,7 @@ static void SwitchTo_Z8(void)
 
    pDescr = FindFamilyByName(IsEncore ? "eZ8" : "Z8");
 
-   PCSymbol = "$"; HeaderID = 0x79;
+   PCSymbol = "$"; HeaderID = pDescr->Id;
    NOPCode = IsEncore ? 0x0f : 0xff;
    DivideChars = ","; HasAttrs = False;
 

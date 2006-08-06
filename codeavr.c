@@ -15,9 +15,12 @@
 /*            7. 5.2000 Packing hinzugefuegt                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeavr.c,v 1.3 2006/03/05 18:07:42 alfred Exp $                     */
+/* $Id: codeavr.c,v 1.4 2006/07/31 18:44:20 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codeavr.c,v $
+ * Revision 1.4  2006/07/31 18:44:20  alfred
+ * - add LPM variation with operands, devices up to ATmega256
+ *
  * Revision 1.3  2006/03/05 18:07:42  alfred
  * - remove double InstTable variable
  *
@@ -81,7 +84,7 @@ typedef struct
          } ArchOrder;
 
 
-#define FixedOrderCnt 28
+#define FixedOrderCnt 27
 #define Reg1OrderCnt 10
 #define Reg2OrderCnt 12
 #define Reg3OrderCnt 4
@@ -93,7 +96,7 @@ typedef struct
 static SimpProc SaveInitProc;
 
 static CPUVar CPU90S1200, CPU90S2313, CPU90S4414, CPU90S8515,
-              CPUATMEGA8, CPUATMEGA16;
+              CPUATMEGA8, CPUATMEGA16, CPUATMEGA32, CPUATMEGA64, CPUATMEGA128, CPUATMEGA256;
 
 static ArchOrder *FixedOrders;
 static ArchOrder *Reg1Orders;
@@ -753,6 +756,37 @@ static Boolean AccFull;
   }
 }
 
+	static void DecodeLPM(Word Index)
+{
+  Word Reg, Adr;
+
+  UNUSED(Index);
+
+  if (!ArgCnt)
+  {
+    if (MomCPU < CPU90S2313) WrError(1500);
+    else
+    {
+      WAsmCode[0] = 0x95c8;
+      CodeLen = 1;
+    }
+  }
+  else if (ArgCnt == 2)
+  {
+    if (MomCPU < CPUATMEGA8) WrError(1500);
+    else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
+    else if (!DecodeMem(ArgStr[2], &Adr)) WrError(1350);
+    else if ((Adr != 0x00) && (Adr != 0x11)) WrError(1350);
+    else
+    {
+      if (((Reg == 30) || (Reg == 31)) && (Adr == 0x11)) WrError(140);
+      WAsmCode[0] = 0x9004 | (Reg << 4) | (Adr & 1);
+      CodeLen = 1;
+    }
+  }
+  else WrError(1110);
+}
+
 	static void DecodeELPM(Word Index)
 {
   Word Reg, Adr;
@@ -846,7 +880,7 @@ BEGIN
    FixedOrders=(ArchOrder *) malloc(sizeof(ArchOrder)*FixedOrderCnt); InstrZ = 0;
    AddFixed("IJMP" ,CPU90S2313,0x9409); AddFixed("ICALL" ,CPU90S2313,0x9509);
    AddFixed("RET"  ,CPU90S1200,0x9508); AddFixed("RETI"  ,CPU90S1200,0x9518);
-   AddFixed("LPM"  ,CPU90S2313,0x95c8); AddFixed("SEC"   ,CPU90S1200,0x9408);
+   AddFixed("SEC"  ,CPU90S1200,0x9408);
    AddFixed("CLC"  ,CPU90S1200,0x9488); AddFixed("SEN"   ,CPU90S1200,0x9428);
    AddFixed("CLN"  ,CPU90S1200,0x94a8); AddFixed("SEZ"   ,CPU90S1200,0x9418);
    AddFixed("CLZ"  ,CPU90S1200,0x9498); AddFixed("SEI"   ,CPU90S1200,0x9478);
@@ -943,6 +977,7 @@ BEGIN
 
    AddInstTable(InstTable, "MOVW", 0, DecodeMOVW);
 
+   AddInstTable(InstTable, "LPM" , 0, DecodeLPM);
    AddInstTable(InstTable, "ELPM", 0, DecodeELPM);
 END
 
@@ -1003,14 +1038,51 @@ BEGIN
    Grans[SegData]=1; ListGrans[SegData]=1; SegInits[SegData]=32;
    Grans[SegIO  ]=1; ListGrans[SegIO  ]=1; SegInits[SegIO  ]=0; SegLimits[SegIO] = 0x3f;
 
-   if (MomCPU == CPU90S1200) SegLimits[SegCode] = 0x01ff;
-   else if (MomCPU == CPU90S2313) SegLimits[SegCode] = 0x03ff;
-   else if (MomCPU == CPU90S4414) SegLimits[SegCode] = 0x07ff;
-   else SegLimits[SegCode] = 0xfff;
-
-   if (MomCPU == CPU90S1200) SegLimits[SegData] = 0x5f;
-   else if (MomCPU == CPU90S2313) SegLimits[SegData] = 0xdf;
-   else SegLimits[SegData] = 0xffff;
+   SegLimits[SegData] = 0xffff;
+   if (MomCPU == CPU90S1200)
+   {
+     SegLimits[SegCode] = 0x01ff;
+     SegLimits[SegData] = 0x5f;
+   }
+   else if (MomCPU == CPU90S2313)
+   {
+     SegLimits[SegCode] = 0x03ff;
+     SegLimits[SegData] = 0xdf;
+   }
+   else if (MomCPU == CPU90S4414)
+   {
+     SegLimits[SegCode] = 0x07ff;
+   }
+   else if ((MomCPU == CPU90S8515) || (MomCPU == CPUATMEGA8))
+   {
+     SegLimits[SegCode] = 0xfff;
+     SegLimits[SegData] = 0x3ff;
+   }
+   else if (MomCPU == CPUATMEGA16)
+   {
+     SegLimits[SegCode] = 0x1fff;
+     SegLimits[SegData] = 0x3ff;
+   }
+   else if (MomCPU == CPUATMEGA32)
+   {
+     SegLimits[SegCode] = 0x3fff;
+     SegLimits[SegData] = 0x7ff; 
+   }
+   else if (MomCPU == CPUATMEGA64)
+   {
+     SegLimits[SegCode] = 0x7fff;
+     SegLimits[SegData] = 0xfff; 
+   }
+   else if (MomCPU == CPUATMEGA128)
+   {
+     SegLimits[SegCode] = 0xffff;
+     SegLimits[SegData] = 0xfff; 
+   }
+   else if (MomCPU == CPUATMEGA256)
+   {
+     SegLimits[SegCode] = 0x1ffff;
+     SegLimits[SegData] = 0x1fff; 
+   }
 
    SignMask = (SegLimits[SegCode] + 1) >> 1;
    ORMask = ((LongInt) - 1) - SegLimits[SegCode];
@@ -1031,6 +1103,10 @@ BEGIN
    CPU90S8515  = AddCPU("AT90S8515" , SwitchTo_AVR);
    CPUATMEGA8  = AddCPU("ATMEGA8"   , SwitchTo_AVR); 
    CPUATMEGA16 = AddCPU("ATMEGA16"  , SwitchTo_AVR); 
+   CPUATMEGA32 = AddCPU("ATMEGA32"  , SwitchTo_AVR); 
+   CPUATMEGA64 = AddCPU("ATMEGA64"  , SwitchTo_AVR);
+   CPUATMEGA128 = AddCPU("ATMEGA128" , SwitchTo_AVR);
+   CPUATMEGA128 = AddCPU("ATMEGA256" , SwitchTo_AVR);
 
    SaveInitProc = InitPassProc; InitPassProc = InitCode_AVR;
 END

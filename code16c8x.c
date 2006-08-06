@@ -13,9 +13,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code16c8x.c,v 1.3 2005/09/08 16:53:39 alfred Exp $                   */
+/* $Id: code16c8x.c,v 1.4 2006/08/05 18:07:55 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code16c8x.c,v $
+ * Revision 1.4  2006/08/05 18:07:55  alfred
+ * - silence some warnings
+ *
  * Revision 1.3  2005/09/08 16:53:39  alfred
  * - use common PInstTable
  *
@@ -311,6 +314,8 @@ static void DecodeDATA(Word Index)
   Boolean ValOK;
   int z;
   TempResult t;
+
+  UNUSED(Index);
 
   if (ArgCnt == 0) WrError(1110);
   else

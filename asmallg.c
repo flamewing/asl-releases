@@ -25,9 +25,12 @@
 /*                       to now                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmallg.c,v 1.3 2005/10/02 10:00:43 alfred Exp $                     */
+/* $Id: asmallg.c,v 1.4 2006/08/05 18:26:32 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmallg.c,v $
+ * Revision 1.4  2006/08/05 18:26:32  alfred
+ * - remove static string
+ *
  * Revision 1.3  2005/10/02 10:00:43  alfred
  * - ConstLongInt gets default base, correct length check on KCPSM3 registers
  *
@@ -168,26 +171,22 @@ BEGIN
     END
 END 
 
-	char *IntLine(LongInt Inp)
-BEGIN
-   static String s;
-
-   switch (ConstMode)
-    BEGIN
-     case ConstModeIntel:
-      sprintf(s,"%sH",HexString(Inp,0));
-      if (*s>'9') strmaxprep(s,"0",255);
+static void IntLine(char *pDest, LongInt Inp)
+{
+  switch (ConstMode)
+  {
+    case ConstModeIntel:
+      sprintf(pDest, "%sH", HexString(Inp, 0));
+      if (*pDest > '9') strmaxprep(pDest, "0", 255);
       break;
-     case ConstModeMoto:
-      sprintf(s,"$%s",HexString(Inp,0));
+    case ConstModeMoto:
+      sprintf(pDest, "$%s", HexString(Inp, 0));
       break;
-     case ConstModeC:
-      sprintf(s,"0x%s",HexString(Inp,0));
+    case ConstModeC:
+      sprintf(pDest, "0x%s", HexString(Inp, 0));
       break;
-    END
-
-   return s;
-END
+  }
+}
 
 
 	static void CodeSECTION(Word Index)
@@ -392,7 +391,7 @@ BEGIN
          BEGIN
 	  case 1: sprintf(s,"$%s",HexString(HVal,0)); break;
           case 2: sprintf(s,"0x%s",HexString(HVal,0)); break;
-	  case 3: strmaxcpy(s,IntLine(HVal),255); break;
+	  case 3: IntLine(s, HVal); break;
 	 END
        END
       if (ValOK)
@@ -854,9 +853,12 @@ BEGIN
      Erg=EvalIntExpression(ArgStr[1],Int32,&OK);
      if ((OK) AND (NOT FirstPassUnknown))
       BEGIN
+       char s[40];
+
        PushLocHandle(-1);
        EnterIntSymbol(LabPart,Erg,SegCode,False);
-       sprintf(ListLine,"=%s",IntLine(Erg));
+       IntLine(s,Erg);
+       sprintf(ListLine,"=%s",s);
        PopLocHandle();
        END
     END
@@ -981,11 +983,13 @@ BEGIN
       else if (z==ArgCnt) Last=Counter;
       Counter++;
      END
-   sprintf(ListLine,"=%s",IntLine(First));
+   IntLine(SymPart, First);
+   sprintf(ListLine, "=%s", SymPart);
    if (ArgCnt!=1)
     BEGIN
      strmaxcat(ListLine,"..",255);
-     strmaxcat(ListLine,IntLine(Last),255);
+     IntLine(SymPart, Last);
+     strmaxcat(ListLine,SymPart,255);
     END
 END
 

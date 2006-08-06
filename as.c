@@ -58,9 +58,12 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.12 2006/06/15 21:15:24 alfred Exp $                          */
+/* $Id: as.c,v 1.13 2006/07/08 10:32:55 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.13  2006/07/08 10:32:55  alfred
+ * - added RS08
+ *
  * Revision 1.12  2006/06/15 21:15:24  alfred
  * - cleanups in listing output
  *
@@ -209,6 +212,7 @@
 #include "code6809.h"
 #include "code6812.h"
 #include "code6816.h"
+#include "code68rs08.h"
 #include "codeh8_3.h"
 #include "codeh8_5.h"
 #include "code7000.h"
@@ -470,7 +474,7 @@ static void MakeList(void)
           n = EffLen / 6; if ((EffLen % 6) == 0) n--;
           for (i = 0; i <= n; i++)
           {
-            strmaxcpy(h, "                    ", 255);
+            strmaxcpy(h, "              ", 255);
             if (ListMask & ListMask_LineNums)
               strmaxcat(h, "      ", 255);
             for (k = 0; k < 6; k++)
@@ -3491,7 +3495,7 @@ BEGIN
      code601_init();
      codemcore_init();
      codexgate_init();
-     code68_init(); code6805_init(); code6809_init(); code6812_init(); code6816_init();
+     code68_init(); code6805_init(); code6809_init(); code6812_init(); code6816_init(); code68rs08_init();
      codeh8_3_init(); codeh8_5_init(); code7000_init();
      code65_init(); code7700_init(); code4500_init(); codem16_init(); codem16c_init();
      code4004_init(); code8008_init(); code48_init(); code51_init(); code96_init(); code85_init(); code86_init(); code960_init();

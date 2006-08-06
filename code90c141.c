@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code90c141.c,v 1.2 2004/05/29 11:33:02 alfred Exp $                          */
+/* $Id: code90c141.c,v 1.3 2006/08/05 12:05:37 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code90c141.c,v $
+ * Revision 1.3  2006/08/05 12:05:37  alfred
+ * - regard spaces in indexed expressions
+ *
  * Revision 1.2  2004/05/29 11:33:02  alfred
  * - relocated DecodeIntelPseudo() into own module
  *
@@ -194,6 +197,7 @@ BEGIN
         BEGIN
          *p='\0'; strmaxcpy(Part,Asc,255); strcpy(Asc,p+1);
         END
+       KillPrefBlanks(Part); KillPostBlanks(Part);
        fnd=False;
        if (strcasecmp(Part,"A")==0)
         BEGIN

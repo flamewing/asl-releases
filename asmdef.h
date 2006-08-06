@@ -33,9 +33,12 @@
 /*           2001-10-20 added GNU error flag                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmdef.h,v 1.2 2006/06/17 17:03:14 alfred Exp $                      */
+/* $Id: asmdef.h,v 1.3 2006/08/05 18:25:48 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmdef.h,v $
+ * Revision 1.3  2006/08/05 18:25:48  alfred
+ * - make some arrays dynamic to save data segment space
+ *
  * Revision 1.2  2006/06/17 17:03:14  alfred
  * - add HCS08 remark
  *
@@ -283,18 +286,18 @@ extern StringPtr SourceFile;
 extern StringPtr ClrEol;
 extern StringPtr CursUp;
 
-extern LargeWord PCs[StructSeg+1];
+extern LargeWord *PCs;
 extern Boolean RelSegs;
 extern LargeWord StartAdr;
 extern Boolean StartAdrPresent;
-extern LargeWord Phases[StructSeg+1];
+extern LargeWord *Phases;
 extern Word Grans[StructSeg+1];
 extern Word ListGrans[StructSeg+1];
 extern ChunkList SegChunks[StructSeg+1];
 extern Integer ActPC;
 extern Boolean PCsUsed[StructSeg+1];
-extern LargeWord SegInits[PCMax+1]; 
-extern LargeWord SegLimits[PCMax+1]; 
+extern LargeWord *SegInits; 
+extern LargeWord *SegLimits;
 extern LongInt ValidSegs;
 extern Boolean ENDOccured;
 extern Boolean Retracted;

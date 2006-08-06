@@ -14,9 +14,15 @@
 /*           19. 8.2001 fixed errors for lower halves of XIX...XSP           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code96c141.c,v 1.5 2005/09/08 16:53:42 alfred Exp $                          */
+/* $Id: code96c141.c,v 1.7 2006/08/05 18:06:05 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code96c141.c,v $
+ * Revision 1.7  2006/08/05 18:06:05  alfred
+ * - remove debug printf
+ *
+ * Revision 1.6  2006/08/05 12:20:03  alfred
+ * - regard spaces in indexed expressions for TLCS-900
+ *
  * Revision 1.5  2005/09/08 16:53:42  alfred
  * - use common PInstTable
  *
@@ -524,6 +530,7 @@ BEGIN
         END
        strncpy(HAsc,Rest,EPos-Rest); HAsc[EPos-Rest]='\0';
        if (EPos<Rest+strlen(Rest)) strcpy(Rest,EPos+1); else *Rest='\0';
+       KillPrefBlanks(HAsc); KillPostBlanks(HAsc);
 
        switch (CodeEReg(HAsc,&HNum,&HSize))
         BEGIN

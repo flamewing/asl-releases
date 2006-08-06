@@ -34,6 +34,7 @@ Digital    AlphaServer 300 4/266   21064a         266         [16K+16K]/2M      
 Digital    AlphaStation 200 4/233  21064a         233         [16K+16K]/512K       96         Linux 2.4.32      gcc 3.3.5    |   1.44s   0.61s    6.97s   50.72   0.218 [25.12.2005 comp 127min]
 Digital    AlphaServer 400 4/233   21064a         233         [16K+16K]/512K      160         Linux 2.4.31      gcc 3.3.5    |   1.35s   0.64s    7.34s   49.86   0.213 [16.11.2005 comp 128min]
 Digital    AlphaStation 255 4/166  21064          166         [8K+8K]/1M           96         Linux 2.4.31      gcc 3.3.5    |   1.65s   0.72s    9.01s   42.01   0.253 [15.11.2005 comp 163min]
+Digital    DEC 3000 Model 400      21064          133         [8K+8K]/512K        288         Tru64 Unix 5.1    ? cc         |   1.90s   0.98s   11.15s   33.57   0.252 [16.07.2006 comp 25min 50sec]
 Digital    AlphaStation 200 4/166  21064          166         [8K+8K]/512K         48         Linux 2.4.31      gcc 3.3.5    |   1.94s   0.85s   10.57s   35.69   0.215 [15.11.2005 comp 188min]
 Digital    DECpc AXP/150           21064          150         [8K+8K]/512K         32         Linux 2.1.125     gcc 2.7.2.3  |   1.98s   1.04s   11.59s   32.05   0.214 [ 7. 2.1999 comp 96min]
 Digital    DECpc AXP/150           21064          150         [8K+8K]/512K         32         Linux 2.1.74      egcs 1.0.1   |   2.05s   0.99s   12.44s   31.51   0.210 [20.06.1998]

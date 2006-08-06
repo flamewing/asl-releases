@@ -4,9 +4,12 @@
 /*                                                                           */
 /* Codegenerator XGATE-Kern                                                  */
 /*****************************************************************************/
-/* $Id: codexgate.c,v 1.2 2005/09/12 18:35:21 alfred Exp $                   */
+/* $Id: codexgate.c,v 1.3 2006/08/05 18:06:43 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codexgate.c,v $
+ * Revision 1.3  2006/08/05 18:06:43  alfred
+ * - silence some compiler warnings
+ *
  * Revision 1.2  2005/09/12 18:35:21  alfred
  * - add load/store
  *
@@ -96,6 +99,8 @@ static void DecodeBRA(Word Index)
 {
   LongInt Dist;
   Boolean OK;  
+
+  UNUSED(Index);
 
   if (ArgCnt != 1) WrError(1110);
   else

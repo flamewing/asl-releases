@@ -9,7 +9,9 @@ LDFLAGS =
 #                    ^^^^^
 #                    |||||
 # adapt this to your target cpu (386/486 or higher)
-# note that older gcc versions require -m[34]86 instead of -mcpu=i[34]86
+# note that older gcc versions require -m[34]86 instead of -mcpu=i[34]86,
+# while older ones might require '-march' instead of '-mcpu'. 
+# @GNU: why does this have to change every two years ?!
 
 TARG_OBJEXTENSION = .o
 

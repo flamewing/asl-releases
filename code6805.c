@@ -12,9 +12,12 @@
 /*           2001-09-03 added inx as alias for incx                          */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6805.c,v 1.5 2006/06/17 14:25:29 alfred Exp $                    */
+/* $Id: code6805.c,v 1.6 2006/07/08 10:16:13 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6805.c,v $
+ * Revision 1.6  2006/07/08 10:16:13  alfred
+ * - remove double variable
+ *
  * Revision 1.5  2006/06/17 14:25:29  alfred
  * - use hash table, add HCS08 target
  *
@@ -114,7 +117,6 @@ static BaseOrder *FixedOrders;
 static BaseOrder *RelOrders;
 static RMWOrder *RMWOrders;
 static ALUOrder *ALUOrders;
-static PInstTable InstTable;
 
 /*--------------------------------------------------------------------------*/
 /* address parser */
