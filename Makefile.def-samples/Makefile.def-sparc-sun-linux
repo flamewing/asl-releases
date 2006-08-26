@@ -6,7 +6,7 @@ CC = gcc
 LD = gcc
 CFLAGS = -mv8 -O3 -fomit-frame-pointer -Wall
 #        ^^^^
-#        ++++--- put here -mv7 for older Sparc systems (pre-SS10)
+#        ++++--- remove for older Sparc systems (pre-SS10)
 LDFLAGS =
 
 TARG_OBJEXTENSION = .o

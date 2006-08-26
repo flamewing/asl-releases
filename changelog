@@ -1,4 +1,4 @@
-$Id: changelog,v 1.29 2006/08/05 18:28:36 alfred Exp $
+$Id: changelog,v 1.30 2006/08/26 11:10:26 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1063,3 +1063,7 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 - Addition    : Add AVR targets & address spaces up to ATmega256
 
 - Bugfix      : correct parsing of indexed expressions for Z80 and TLCS-90(0)
+
+2006-08-26 [Bld51]
+
+- Addition    : finished 8008 target

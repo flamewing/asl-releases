@@ -281,11 +281,7 @@
 #include "as1750.h"
 /**          Code21xx};**/
 
-/**
-VAR
-   ParCnt,k:Integer;
-   CPU:CPUVar;**/
-static String FileMask;
+static char *FileMask;
 static long StartTime,StopTime;
 static Boolean GlobErrFlag;
 static Boolean MasterFile;
@@ -3469,6 +3465,8 @@ BEGIN
    int i;
    static Boolean First=TRUE;
    CMDProcessed ParUnprocessed;     /* bearbeitete Kommandozeilenparameter */
+
+   FileMask = (char*)malloc(sizeof(char) * STRINGSIZE);
 
    ParamCount=argc-1; ParamStr=argv;
 

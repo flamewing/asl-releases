@@ -2588,7 +2588,7 @@ static void FreeSymbolEntry(PSymbolEntry *Node, Boolean Destroy)
    }
 }
 
-static String serr,snum;
+static char *serr, *snum;
 typedef struct
         {
           Boolean MayChange, DoCross;
@@ -4340,6 +4340,8 @@ END
 
 	void asmpars_init(void)
 BEGIN
+   serr = (char*)malloc(sizeof(char) * STRINGSIZE);
+   snum = (char*)malloc(sizeof(char) * STRINGSIZE);
    FirstDefSymbol=Nil;
    FirstFunction=Nil;
    BalanceTree=False;

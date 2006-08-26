@@ -26,10 +26,12 @@ Digital    Pers. Workstation 433au 21164a         433         [8K+8K/96K]/???   
 Digital    Pers. Workstation 433au 21164a         433         [8K+8K/96K]/2M      320         Linux 2.6.16.5    gcc 3.3.5    |   0.33s   0.16s    1.82s  200.82   0.464 [17. 5.2005 comp 25min 54sec]
 Digital    AlphaStation 500/400    21164a         400         [8K+8K/96K]/2M      256         Linux 2.4.32      gcc 3.3.5    |   0.37s   0.22s    2.41s  159.11   0.398 [26.12.2005 comp 28min]
 Digital    AlphaStation 500/266    21164          267         [8K+8K/96K]/2M      128         Digital Unix 4.0  DEC-C 3.11   |   0.43s   0.25s    2.76s  138.59   0.521 [ 1.11.1997]
+Noname     EB164                   21164          300         [8K+8K/96K]/2M       64         Linux 2.4.32      gcc 3.3.5    |   0.49s   0.25s    2.93s  130.45   0.434 [ 5. 8.2006 comp 55min  5sec]
 Digital    AlphaStation 500/266    21164          266         [8K+8K/96K]/2M      256         Linux 2.6.15.3    gcc 3.3.5    |   0.59s   0.27s    3.27s  114.35   0.430 [19. 5.2006 comp 59min 38sec]
 Digital    AlphaStation 600 5/266  21164          266         [8K+8K/96K]/2M      448         Linux 2.4.31      gcc 3.3.5    |   0.59s   0.29s    3.34s  110.99   0.417 [16.11.2005 comp 59min]
 Digital    PC164 board             21164a         500         [8K+8K/96K]/1M      128         Linux 2.1.42      gcc 2.7.2    |   0.62s   0.35s    3.51s  101.08   0.202
 Digital    AlphaStation 250 4/266  21064a         266         [16K+16K]/2M        128         Linux 2.4.32      gcc 3.3.5    |   0.97s   0.50s    5.57s   66.00   0.248 [23.12.2005 comp 94min]
+Aspen      Alpine                  21064a         275         [16K+16K]/2M         48         Linux 2.4.32      gcc 3.3.5    |   1.18s   0.53s    6.28s   58.62   0.213 [20. 7.2006 comp 105min 32sec]
 Digital    AlphaServer 300 4/266   21064a         266         [16K+16K]/2M        160         Linux 2.4.31      gcc 3.3.5    |   1.30s   0.61s    7.07s   51.93   0.195 [16.11.2005 comp 93min]
 Digital    AlphaStation 200 4/233  21064a         233         [16K+16K]/512K       96         Linux 2.4.32      gcc 3.3.5    |   1.44s   0.61s    6.97s   50.72   0.218 [25.12.2005 comp 127min]
 Digital    AlphaServer 400 4/233   21064a         233         [16K+16K]/512K      160         Linux 2.4.31      gcc 3.3.5    |   1.35s   0.64s    7.34s   49.86   0.213 [16.11.2005 comp 128min]
@@ -61,6 +63,7 @@ Sun        SPARCstation 10/20      SuperSparc-1    33         [20K+16K]         
 Sun        SPARCstation IPX        WTL3172         40         64K                  16         NetBSD 1.4.2      egcs 1.1.1   |   5.33s   2.54s   31.25s   12.32   0.350 [ 5. 6.2000 comp 167min]
 Sun        SPARCstation Classic    MicroSparc      50         [4K+2K]              24         Solaris 2.5.1     Sun-C 3.0.1  |   6.92s   3.22s   37.45s    9.81   0.196
 Sun        SPARCstation ELC        MB89603         33         64K                  16         NetBSD 1.3.2      gcc 2.7.2.2  |   7.15s   3.31s   39.19s    9.47   0.286 [19. 1.2000 comp 165min]
+Sun        SPARCstation 2          CY7C601         40         64K                  64         Linux 2.4.32      gcc 2.95     |   6.26s   4.56s   37.88s    9.07   0.227 [12. 8.2006 comp 348min 33sec]
 Sun        SPARCstation IPC        WTL3172         25         64K                  24         NetBSD 1.4.2      egcs 1.1.1   |   7.34s   3.57s   44.86s    8.75   0.350 [ 5. 6.2000 comp 244min]
 Sun        SPARCstation 1+         LSI L64801      25         64K                  16         Solaris 2.4       Sun-C 3.0.1  |   9.16s   4.51s   48.96s    7.30   0.292
 Sun        4/670MP                 ???             40(?)      64K(?)              ???         SunOS 4.1.3       gcc 2.6.3    |   8.29s   4.87s   51.48s    7.24   0.181
