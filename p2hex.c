@@ -21,6 +21,13 @@
 /*           2001-08-30 set EntryAddrPresent when address given as argument  */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: p2hex.c,v 1.5 2006/12/09 18:27:30 alfred Exp $                      */
+/*****************************************************************************
+ * $Log: p2hex.c,v $
+ * Revision 1.5  2006/12/09 18:27:30  alfred
+ * - add warning about empty output
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -129,9 +136,9 @@ BEGIN
    if (NOT Read2(SrcFile,&TestID)) ChkIO(FileName);
    if (TestID!=FileMagic) FormatError(FileName,getmessage(Num_FormatInvHeaderMsg));
 
-   errno=0; printf("%s==>>%s",FileName,TargName); ChkIO(OutName);
+   errno = 0; printf("%s==>>%s", FileName, TargName); ChkIO(OutName);
 
-   SumLen=0;
+   SumLen = 0;
 
    do
     BEGIN
@@ -532,6 +539,10 @@ BEGIN
    errno = 0; printf("  ("); ChkIO(OutName);
    errno = 0; printf(Integ32Format, SumLen); ChkIO(OutName);
    errno = 0; printf(" %s)\n", getmessage((SumLen == 1) ? Num_Byte : Num_Bytes)); ChkIO(OutName);
+   if (!SumLen)
+   {
+     errno = 0; fputs(getmessage(Num_WarnEmptyFile), stdout); ChkIO(OutName);
+   }
 
    errno=0; fclose(SrcFile); ChkIO(FileName);
 END

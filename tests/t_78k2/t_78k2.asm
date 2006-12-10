@@ -436,6 +436,19 @@ __cnt   set     __cnt+1
 	op	cy
 	endm
 
+	irp	op,bt,bf,btclr
+        op	saddr.2,$pc
+        op	b_saddr,$pc
+        op	sfr.3,$pc
+        op	b_sfr,$pc
+        op	a.4,$pc
+        op	b_a,$pc
+        op	x.5,$pc
+        op	b_x,$pc
+        op	psw.6,$pc
+        op	b_psw,$pc
+	endm
+
 	call	1234h
 	call	!1234h
 	irp	reg,ax,bc,de,hl

@@ -12,6 +12,13 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
+/* $Id: p2bin.c,v 1.4 2006/12/09 18:27:30 alfred Exp $                      */
+/***************************************************************************** 
+ * $Log: p2bin.c,v $
+ * Revision 1.4  2006/12/09 18:27:30  alfred
+ * - add warning about empty output
+ *
+ *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -251,6 +258,10 @@ BEGIN
    errno = 0; printf("  ("); ChkIO(OutName);
    errno = 0; printf(Integ32Format, SumLen); ChkIO(OutName);
    errno = 0; printf(" %s)\n", getmessage((SumLen == 1) ? Num_Byte : Num_Bytes)); ChkIO(OutName);
+   if (!SumLen)
+   {
+     errno = 0; fputs(getmessage(Num_WarnEmptyFile), stdout); ChkIO(OutName);
+   }
 
    if (fclose(SrcFile)==EOF) ChkIO(FileName);
 END

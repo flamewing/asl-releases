@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code78k0.c,v 1.3 2005/09/08 16:53:42 alfred Exp $                          *
+/* $Id: code78k0.c,v 1.4 2006/12/09 18:01:34 alfred Exp $                          *
  ***************************************************************************** 
  * $Log: code78k0.c,v $
+ * Revision 1.4  2006/12/09 18:01:34  alfred
+ * - correct some coding errors
+ *
  * Revision 1.3  2005/09/08 16:53:42  alfred
  * - use common PInstTable
  *
@@ -348,7 +351,7 @@ static void DecodeMOV(Word Index)
             CodeLen = 2; BAsmCode[0] = 0xf4; BAsmCode[1] = AdrVals[0];
             break;
           case ModAbs:
-            CodeLen = 3; BAsmCode[0] = 0xfe;
+            CodeLen = 3; BAsmCode[0] = 0x8e;
             memcpy(BAsmCode + 1, AdrVals, AdrCnt);
             break;
           case ModIReg:
@@ -420,7 +423,7 @@ static void DecodeMOV(Word Index)
           if (AdrPart != AccReg) WrError(1350);
           else
           {
-            BAsmCode[0] = 0x95 + (AdrPart << 1); CodeLen = 1;
+            BAsmCode[0] = 0x95 | (HReg << 1); CodeLen = 1;
           }
         }
         break;
@@ -698,7 +701,7 @@ static void DecodeAri(Word Index)
             if (AdrPart == 0) WrError(1350);
             else
             {
-              BAsmCode[0] = (Index << 4) + 0x0f; CodeLen = 2;
+              BAsmCode[0] = (Index << 4) + 0x0f; CodeLen = 1;
             }
             break;
           case ModIndex:
@@ -1074,7 +1077,7 @@ static void DecodeRel(Word Index)
       if (((AdrInt < -128) || (AdrInt > 127)) && (!SymbolQuestionable)) WrError(1370);
       else
       {
-        BAsmCode[0] = 0x8b + (Index << 4); BAsmCode[1] = AdrInt & 0xff;
+        BAsmCode[0] = 0x8d + (Index << 4); BAsmCode[1] = AdrInt & 0xff;
         CodeLen = 2;
       }
     }

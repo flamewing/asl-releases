@@ -5,9 +5,12 @@
 /* Codegenerator 78K2-Familie                                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code78k2.c,v 1.13 2005/12/26 16:15:13 alfred Exp $
+/* $Id: code78k2.c,v 1.14 2006/10/10 10:42:08 alfred Exp $
  *****************************************************************************
  * $Log: code78k2.c,v $
+ * Revision 1.14  2006/10/10 10:42:08  alfred
+ * - add missing 78K2 instructions (fix by Patrik Stroemdahl)
+ *
  * Revision 1.13  2005/12/26 16:15:13  alfred
  * - silence warning
  *
@@ -1531,6 +1534,59 @@ static void DecodeBit1(Word Index)
   }
 }
 
+static void DecodeBrBit(Word Index)
+{
+  LongWord Bit;
+  
+  LongInt Addr;
+  char *pAsc;
+  Boolean OK;
+
+  UNUSED(Index);
+
+  if (ArgCnt != 2) WrError(1110);
+  else if (DecodeBitAdr(ArgStr[1], &Bit))
+  {
+    if ((Bit & 0xfffff800) == 0x01080000)
+    {
+      if (Index == 0x80)
+      {
+        *pCode++ = 0x70 | ((Bit >> 8) & 7);
+	*pCode++ = Bit & 0xff;
+      }
+      else
+      {
+        *pCode++ = 0x00 | ((Bit >> 16) & 0xff);
+	*pCode++ = (0x130 - Index) | ((Bit >> 8) & 0xff);
+	if (Bit & 0x1000000)
+          *pCode++ = Bit & 0xff;
+      }
+    }
+    else
+    {
+      *pCode++ = 0x00 | ((Bit >> 16) & 0xff);
+      *pCode++ = (0x130 - Index) | ((Bit >> 8) & 0xff);
+      if (Bit & 0x1000000)
+        *pCode++ = Bit & 0xff;
+    }
+    if (AdrMode != ModNone)
+    {
+      pAsc = ArgStr[2];
+      if (*pAsc == '$')
+        pAsc++;
+      FirstPassUnknown = FALSE;
+      Addr = EvalIntExpression(pAsc, UInt16, &OK) - (EProgCounter() + (pCode - BAsmCode) + 1);
+      if ((!FirstPassUnknown) && ((Addr < -128) || (Addr > 127)))
+      {
+        WrError(1370);
+        pCode = BAsmCode;
+      }
+      else
+        *pCode++ = Addr & 0xff;
+    }
+  }
+}
+
 static void DecodeASSUME(Word Index)
 {
   static ASSUMERec ASSUME78K2s[] =
@@ -1623,6 +1679,10 @@ static void InitFields(void)
   AddInstTable(InstTable, "SET1", 0x80, DecodeBit1);
   AddInstTable(InstTable, "CLR1", 0x90, DecodeBit1);
   AddInstTable(InstTable, "NOT1", 0x70, DecodeBit1);
+
+  AddInstTable(InstTable, "BT"    , 0x80, DecodeBrBit);
+  AddInstTable(InstTable, "BF"    , 0x90, DecodeBrBit);
+  AddInstTable(InstTable, "BTCLR" , 0x60, DecodeBrBit);
 
   AddFixed("NOP",   0x00);
   AddFixed("DI",    0x4a);

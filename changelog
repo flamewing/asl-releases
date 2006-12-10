@@ -1,4 +1,4 @@
-$Id: changelog,v 1.30 2006/08/26 11:10:26 alfred Exp $
+$Id: changelog,v 1.31 2006/12/09 18:28:17 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1067,3 +1067,9 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 2006-08-26 [Bld51]
 
 - Addition    : finished 8008 target
+
+2006-12-09 [Bld52]
+
+- Bugfix      : added missing instructions for 78K2 target
+
+- Bugfix      : corrected some instruction codings for 78K0

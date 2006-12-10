@@ -36,9 +36,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.9 2005/12/13 19:28:37 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.10 2006/10/10 10:41:41 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.c,v $
+ * Revision 1.10  2006/10/10 10:41:41  alfred
+ * - free up space in data segment
+ *
  * Revision 1.9  2005/12/13 19:28:37  alfred
  * - correct format strings for 16-bit platforms
  *

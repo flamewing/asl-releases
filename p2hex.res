@@ -13,6 +13,13 @@
 ;*           25. 3.2001 added avrlen parameter                               *
 ;*                                                                           *
 ;*****************************************************************************
+;* $Id: p2hex.res,v 1.2 2006/12/09 18:27:30 alfred Exp $                      
+/*****************************************************************************
+;* $Log: p2hex.res,v $
+;* Revision 1.2  2006/12/09 18:27:30  alfred
+;* - add warning about empty output
+;*
+;*****************************************************************************/ 
 
 Include header.res
 
@@ -92,3 +99,7 @@ Message InfoMessHelp
 Message WarnDOption
  "Warnung: -d - Option ist veraltet, siehe Handbuch\n"
  "Warning: -d option is obsolete, see manual\n"
+
+Message WarnEmptyFile
+ "Warnung: keine Daten &uuml;bertragen, falsche/fehlende -r Option?\n"
+ "Warning: no data transferred, wrong/missing -r option?\n"

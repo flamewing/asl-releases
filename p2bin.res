@@ -8,6 +8,13 @@
 ;*           24. 3.2000 added byte messages                                  *
 ;*                                                                           *
 ;*****************************************************************************
+;* $Id: p2bin.res,v 1.3 2006/12/09 18:27:30 alfred Exp $
+/*****************************************************************************
+;* $Log: p2bin.res,v $
+;* Revision 1.3  2006/12/09 18:27:30  alfred
+;* - add warning about empty output
+;*
+;*****************************************************************************
 
 Include header.res
 
@@ -53,3 +60,7 @@ Message InfoMessHelp
  "         -e <address>      :  set entry address\n" \
  "         -S [L|B]<length>  :  prepend entry address to image\n" \
  "         -k                :  automatically erase source files\n"
+
+Message WarnEmptyFile
+ "Warnung: keine Daten &uuml;bertragen, falsche/fehlende -r Option?\n"
+ "Warning: no data transferred, wrong/missing -r option?\n"
