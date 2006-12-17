@@ -15,9 +15,12 @@
 /*            7. 5.2000 Packing hinzugefuegt                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeavr.c,v 1.4 2006/07/31 18:44:20 alfred Exp $                     */
+/* $Id: codeavr.c,v 1.5 2006/12/14 21:03:37 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codeavr.c,v $
+ * Revision 1.5  2006/12/14 21:03:37  alfred
+ * - correct target assignment
+ *
  * Revision 1.4  2006/07/31 18:44:20  alfred
  * - add LPM variation with operands, devices up to ATmega256
  *
@@ -1106,7 +1109,7 @@ BEGIN
    CPUATMEGA32 = AddCPU("ATMEGA32"  , SwitchTo_AVR); 
    CPUATMEGA64 = AddCPU("ATMEGA64"  , SwitchTo_AVR);
    CPUATMEGA128 = AddCPU("ATMEGA128" , SwitchTo_AVR);
-   CPUATMEGA128 = AddCPU("ATMEGA256" , SwitchTo_AVR);
+   CPUATMEGA256 = AddCPU("ATMEGA256" , SwitchTo_AVR);
 
    SaveInitProc = InitPassProc; InitPassProc = InitCode_AVR;
 END

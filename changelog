@@ -1,4 +1,4 @@
-$Id: changelog,v 1.31 2006/12/09 18:28:17 alfred Exp $
+$Id: changelog,v 1.32 2006/12/17 12:07:36 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1073,3 +1073,9 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 - Bugfix      : added missing instructions for 78K2 target
 
 - Bugfix      : corrected some instruction codings for 78K0
+
+2006-12-17 [Bld53]
+
+- Bugfix      : corrected address space assignment of ATmega128
+
+- Bugfix      : fixed negative assembly times on Win32

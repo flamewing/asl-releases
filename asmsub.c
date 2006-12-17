@@ -26,9 +26,12 @@
 /*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.4 2005/10/02 10:00:44 alfred Exp $                      */
+/* $Id: asmsub.c,v 1.5 2006/12/09 19:54:53 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmsub.c,v $
+ * Revision 1.5  2006/12/09 19:54:53  alfred
+ * - remove unplausible part in time computation
+ *
  * Revision 1.4  2005/10/02 10:00:44  alfred
  * - ConstLongInt gets default base, correct length check on KCPSM3 registers
  *
@@ -1525,8 +1528,11 @@ long GTime(void)
 
   GetSystemTimeAsFileTime(&(_now.ft));
   return
-      (_now.ns100 - _W32_FT_OFFSET) / 100000LL +
-      ((_now.ns100 / 10) % 1000000LL) / 10000;
+      (_now.ns100 - _W32_FT_OFFSET) / 100000LL
+#if 0
+      + ((_now.ns100 / 10) % 1000000LL) / 10000
+#endif
+      ;
 }
 
 #else
