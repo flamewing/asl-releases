@@ -36,9 +36,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.10 2006/10/10 10:41:41 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.11 2007/04/30 18:37:51 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.c,v $
+ * Revision 1.11  2007/04/30 18:37:51  alfred
+ * - add weird integer coding
+ *
  * Revision 1.10  2006/10/10 10:41:41  alfred
  * - free up space in data segment
  *
@@ -833,11 +836,13 @@ LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
     if (RelaxedMode)
     {
       Found = False;
+
       if ((l >= 2) && (*pExpr == '0') && (toupper(pExpr[1]) == 'X'))
       {
         ActMode = ConstModeC;
         Found = True;
       }
+
       if ((!Found) && (l >= 2))
       {
         for (Search = 0; Search < 3; Search++)
@@ -848,6 +853,7 @@ LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
             break;
           }
       }
+
       if ((!Found) && (l >= 2) && (*pExpr >= '0') && (*pExpr <= '9'))
       {
         ch = toupper(pExpr[l - 1]);
@@ -862,6 +868,21 @@ LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
             }
         }
       }
+
+      if ((!Found) && (l >= 3) && (pExpr[1] == '\'') && (pExpr[l - 1] == '\''))
+      {
+        switch (toupper(*pExpr))
+        {
+          case 'H':
+          case 'X':
+          case 'B':
+          case 'O':
+            ActMode = ConstModeWeird;
+            Found = True;
+            break;
+        }
+      }
+
       if (!Found)
         ActMode = ConstModeC;
     }
@@ -917,6 +938,23 @@ LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
               default: Base = 8;
             }
         }
+        break;
+      case ConstModeWeird:
+        if ((l < 3) || (pExpr[1] != '\'') || (pExpr[l - 1] != '\''))
+          return -1;
+        switch (toupper(*pExpr))
+        {
+          case 'X':
+          case 'H':
+            Base = 16; break;
+          case 'B':
+            Base = 2; break;
+          case 'O':
+            Base = 8; break;
+          default:
+            return -1;
+        }
+        pExpr += 2; l -= 3;
         break;
     }
 

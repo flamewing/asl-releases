@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code7000.c,v 1.4 2005/10/02 10:00:45 alfred Exp $                    */
+/* $Id: code7000.c,v 1.5 2006/12/19 17:50:18 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code7000.c,v $
+ * Revision 1.5  2006/12/19 17:50:18  alfred
+ * - eliminate static local variable
+ *
  * Revision 1.4  2005/10/02 10:00:45  alfred
  * - ConstLongInt gets default base, correct length check on KCPSM3 registers
  *
@@ -298,10 +301,9 @@ END
 /*-------------------------------------------------------------------------*/
 /* Adressparsing */
 
-        static char *LiteralName(PLiteral Lit)
+        static char *LiteralName(PLiteral Lit, char *Result)
 BEGIN
    String Tmp;
-   static String Result;
 
    if (Lit->IsForward) sprintf(Tmp,"F_%s",HexString(Lit->FCount,8));
    else if (Lit->Is32) sprintf(Tmp,"L_%s",HexString(Lit->Value,8));
@@ -313,12 +315,14 @@ END
         static void PrintLiterals(void)
 BEGIN
    PLiteral Lauf;
+   String Name;
 
    WrLstLine("LiteralList");
    Lauf=FirstLiteral;
    while (Lauf!=Nil)
     BEGIN
-     WrLstLine(LiteralName(Lauf)); Lauf=Lauf->Next;
+     LiteralName(Lauf, Name);
+     WrLstLine(Name); Lauf=Lauf->Next;
     END
 END
 */
@@ -447,6 +451,7 @@ BEGIN
    String AdrStr,LStr;
    Boolean OK,FirstFlag,NIs32,Critical,Found,LDef;
    PLiteral Lauf,Last;
+   String Name;
 
    AdrMode=ModNone;
 
@@ -633,7 +638,8 @@ BEGIN
            Lauf->Next=Nil; Lauf->PassNo=1; Lauf->DefSection=MomSectionHandle;
            do
             BEGIN
-             sprintf(LStr,"%s%s",LiteralName(Lauf),AdrStr);
+             LiteralName(Lauf, Name);
+             sprintf(LStr,"%s%s",Name,AdrStr);
              LDef=IsSymbolDefined(LStr);
              if (LDef) Lauf->PassNo++;
             END
@@ -642,7 +648,8 @@ BEGIN
           END
          /* Distanz abfragen - im naechsten Pass... */
          FirstPassUnknown=False;
-         sprintf(LStr,"%s%s",LiteralName(Lauf),AdrStr);
+         LiteralName(Lauf,Name);
+         sprintf(LStr,"%s%s",Name,AdrStr);
          DispAcc=EvalIntExpression(LStr,Int32,&OK)+p;
          if (OK)
           BEGIN
@@ -699,6 +706,7 @@ END
         static void LTORG_16(void)
 BEGIN
    PLiteral Lauf;
+   String Name;
 
    Lauf=FirstLiteral;
    while (Lauf!=Nil)
@@ -706,7 +714,8 @@ BEGIN
      if ((NOT Lauf->Is32) AND (Lauf->DefSection==MomSectionHandle))
       BEGIN
        WAsmCode[CodeLen >> 1]=Lauf->Value;
-       EnterIntSymbol(LiteralName(Lauf),EProgCounter()+CodeLen,SegCode,False);
+       LiteralName(Lauf,Name);
+       EnterIntSymbol(Name,EProgCounter()+CodeLen,SegCode,False);
        Lauf->PassNo=(-1);
        CodeLen+=2;
       END
@@ -717,6 +726,7 @@ END
         static void LTORG_32(void)
 BEGIN
    PLiteral Lauf,EqLauf;
+   String Name;
 
    Lauf=FirstLiteral;
    while (Lauf!=Nil)
@@ -729,7 +739,8 @@ BEGIN
         END
        WAsmCode[CodeLen >> 1]=(Lauf->Value >> 16);
        WAsmCode[(CodeLen >> 1)+1]=(Lauf->Value & 0xffff);
-       EnterIntSymbol(LiteralName(Lauf),EProgCounter()+CodeLen,SegCode,False);
+       LiteralName(Lauf,Name);
+       EnterIntSymbol(Name,EProgCounter()+CodeLen,SegCode,False);
        Lauf->PassNo=(-1);
        if (CompLiterals)
         BEGIN
@@ -740,7 +751,8 @@ BEGIN
                (EqLauf->DefSection==MomSectionHandle) AND
                (EqLauf->Value==Lauf->Value))
             BEGIN
-             EnterIntSymbol(LiteralName(EqLauf),EProgCounter()+CodeLen,SegCode,False);
+             LiteralName(EqLauf,Name);
+             EnterIntSymbol(Name,EProgCounter()+CodeLen,SegCode,False);
              EqLauf->PassNo=(-1);
             END
            EqLauf=EqLauf->Next;

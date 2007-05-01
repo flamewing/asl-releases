@@ -25,9 +25,12 @@
 /*                       to now                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmallg.c,v 1.4 2006/08/05 18:26:32 alfred Exp $                     */
+/* $Id: asmallg.c,v 1.5 2007/04/30 18:37:51 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmallg.c,v $
+ * Revision 1.5  2007/04/30 18:37:51  alfred
+ * - add weird integer coding
+ *
  * Revision 1.4  2006/08/05 18:26:32  alfred
  * - remove static string
  *
@@ -184,6 +187,9 @@ static void IntLine(char *pDest, LongInt Inp)
       break;
     case ConstModeC:
       sprintf(pDest, "0x%s", HexString(Inp, 0));
+      break;
+    case ConstModeWeird:
+      sprintf(pDest, "x'%s'", HexString(Inp, 0));
       break;
   }
 }

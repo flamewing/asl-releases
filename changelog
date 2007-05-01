@@ -1,4 +1,4 @@
-$Id: changelog,v 1.32 2006/12/17 12:07:36 alfred Exp $
+$Id: changelog,v 1.37 2007/05/01 09:57:30 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1079,3 +1079,18 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 - Bugfix      : corrected address space assignment of ATmega128
 
 - Bugfix      : fixed negative assembly times on Win32
+
+2006-12-19 [Bld54]
+
+- Bugfix      : -t option allows full range of list mask
+
+- Bugfix      : correct output of Intel16/Intel32 hex format for
+                word-addressed targets
+
+2007-05-01 [Bld55]
+
+- Bugfix      : set correct default maximum nesting level
+
+- Addition    : add BANKSEL pseudo instruction for PIC16C8x
+
+- Addition    : add optional new integer syntax

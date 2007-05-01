@@ -26,9 +26,12 @@
 /*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.5 2006/12/09 19:54:53 alfred Exp $                      */
+/* $Id: asmsub.c,v 1.6 2007/04/30 18:37:52 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmsub.c,v $
+ * Revision 1.6  2007/04/30 18:37:52  alfred
+ * - add weird integer coding
+ *
  * Revision 1.5  2006/12/09 19:54:53  alfred
  * - remove unplausible part in time computation
  *
@@ -602,13 +605,14 @@ void StrSym(TempResult *t, Boolean WithSystem, char *Dest, int DestLen)
   switch (t->Typ)
   {
     case TempInt:
-      strmaxcpy(Dest, HexString(t->Contents.Int,1), DestLen - 2);
+      strmaxcpy(Dest, HexString(t->Contents.Int,1), DestLen - 3);
       if (WithSystem)
         switch (ConstMode)
         {
           case ConstModeIntel : strcat(Dest,"H"); break;
           case ConstModeMoto  : strprep(Dest,"$"); break;
           case ConstModeC     : strprep(Dest,"0x"); break;
+          case ConstModeWeird : strprep(Dest,"x'"); strcat(Dest, "'"); break;
         }
       break;
     case TempFloat:

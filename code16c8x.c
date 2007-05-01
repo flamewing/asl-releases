@@ -13,9 +13,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code16c8x.c,v 1.4 2006/08/05 18:07:55 alfred Exp $                   */
+/* $Id: code16c8x.c,v 1.5 2007/04/29 21:34:26 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code16c8x.c,v $
+ * Revision 1.5  2007/04/29 21:34:26  alfred
+ * - add BANKSEL pseudo-instruction
+ *
  * Revision 1.4  2006/08/05 18:07:55  alfred
  * - silence some warnings
  *
@@ -390,6 +393,26 @@ static void DecodeZERO(Word Index)
   }
 }
 
+static void DecodeBANKSEL(Word Index)
+{
+  Word Adr;
+  Boolean ValOK;
+
+  UNUSED(Index);
+
+  if (ArgCnt != 1) WrError(1110);
+  else
+  {
+    Adr = EvalIntExpression(ArgStr[1], UInt9, &ValOK);
+    if (ValOK)
+    {
+      WAsmCode[0] = 0x1283 | ((Adr &  0x80) << 3); /* BxF Status, 5 */
+      WAsmCode[1] = 0x1303 | ((Adr & 0x100) << 2); /* BxF Status, 6 */
+      CodeLen = 2;
+    }
+  }
+}
+
 /*--------------------------------------------------------------------------*/
 /* dynamic code table handling */
 
@@ -494,6 +517,8 @@ static void InitFields(void)
   AddInstTable(InstTable, "RES" , 0, DecodeRES);
   AddInstTable(InstTable, "DATA", 0, DecodeDATA);
   AddInstTable(InstTable, "ZERO", 0, DecodeZERO);
+
+  AddInstTable(InstTable, "BANKSEL", 0, DecodeBANKSEL);
 }
 
 static void DeinitFields(void)

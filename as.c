@@ -58,9 +58,15 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.14 2006/10/10 10:41:12 alfred Exp $                          */
+/* $Id: as.c,v 1.16 2007/04/30 10:19:19 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.16  2007/04/30 10:19:19  alfred
+ * - make default nesting level consistent
+ *
+ * Revision 1.15  2006/12/19 17:26:00  alfred
+ * - allow full list mask range
+ *
  * Revision 1.14  2006/10/10 10:41:12  alfred
  * - allocate FileMask dynamically
  *
@@ -2495,7 +2501,7 @@ BEGIN
    EnterIntSymbol(ListOnName, ListOn = 1, SegNone, True);
    SetFlag(&LstMacroEx, LstMacroExName, True);
    SetFlag(&RelaxedMode, RelaxedName, False);
-   EnterIntSymbol(NestMaxName, DEF_NESTMAX, SegNone, True);
+   EnterIntSymbol(NestMaxName, NestMax = DEF_NESTMAX, SegNone, True);
    CopyDefSymbols();
    
    /* initialize counter for temp symbols here after implicit symbols
@@ -3156,14 +3162,14 @@ END
 
         static CMDResult CMD_ListMask(Boolean Negate, char *Arg)
 BEGIN
-   Byte erg; 
+   Word erg; 
    Boolean OK;
 
    if (Arg[0]=='\0') return CMDErr;
    else
     BEGIN
      erg = ConstLongInt(Arg, &OK, 10);
-     if ((NOT OK) OR (erg>31)) return CMDErr;
+     if ((NOT OK) OR (erg>511)) return CMDErr;
      else
       BEGIN
        if (Negate) ListMask&=(~erg);

@@ -33,9 +33,12 @@
 /*           2001-10-20 added GNU error flag                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmdef.h,v 1.3 2006/08/05 18:25:48 alfred Exp $                      */
+/* $Id: asmdef.h,v 1.4 2007/04/30 18:37:51 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmdef.h,v $
+ * Revision 1.4  2007/04/30 18:37:51  alfred
+ * - add weird integer coding
+ *
  * Revision 1.3  2006/08/05 18:25:48  alfred
  * - make some arrays dynamic to save data segment space
  *
@@ -231,10 +234,13 @@ typedef Word WordField[6];          /* fuer Zahlenumwandlung */
 typedef char *ArgStrField[ParMax+1];/* Feld mit Befehlsparametern */
 typedef char *StringPtr;
 
-typedef enum {ConstModeIntel,	    /* Hex xxxxh, Okt xxxxo, Bin xxxxb */
-	       ConstModeMoto,	    /* Hex $xxxx, Okt @xxxx, Bin %xxxx */
-	       ConstModeC}          /* Hex 0x..., Okt 0...., Bin ----- */
-             TConstMode;
+typedef enum
+{
+  ConstModeIntel,     /* Hex xxxxh, Oct xxxxo, Bin xxxxb */
+  ConstModeMoto,      /* Hex $xxxx, Oct @xxxx, Bin %xxxx */
+  ConstModeC,         /* Hex 0x..., Oct 0...., Bin ----- */
+  ConstModeWeird      /* Hex [xh]'xxxx', Oct o'xxxx', Bin b'xxxx' */
+} TConstMode;
 
 typedef struct _TFunction
          {

@@ -46,7 +46,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand Juli 2006}
+{\large Stand Mai 2007}
 \end{raggedright}
 
 \clearpage
@@ -1659,7 +1659,7 @@ und Buchstaben sind: Ein Symbolname darf nicht mit einem Zeichen von 0 bis
 9 beginnen, was bedeutet, da"s eine Integerkonstante, die nicht durch ein
 anderes Sonderzeichen eindeutig als solche erkennbar ist, niemals mit
 einem Buchstaben beginnen darf; notfalls mu"s man eine eigentlich
-"uberfl"ussige Null voranstellen.  Der bekannteste Fall ist das Scheiben
+"uberfl"ussige Null voranstellen.  Der bekannteste Fall ist das Schreiben
 von Hexadezimalkonstanten im Intel-Modus: Ist die vorderste Stelle
 zwischen A und F, so hilft das hintangestellte H "uberhaupt nichts, es
 mu"s noch eine Null davor (statt F0H also 0F0H).  Die Motorola-oder
@@ -1677,14 +1677,30 @@ Mit Hilfe des \tty{RELAXED}-Befehls (siehe Abschnitt \ref{SectRELAXED})
 kann die starre Zuordnung einer Schreibweise zu einem Zielprozessor
 aufgehoben werden, so da"s man eine beliebige Schreibweise verwenden
 kann (auf Kosten der Kompatibilit"at zu Standard-Assemblern).
-Defaultm"a"sig ist diese Option aber ausgeschaltet.
+Defaultm"a"sig ist diese Option aber ausgeschaltet.  Ebenfalls mit dieser
+Option er"offnet sich eine weitere, vierte Schreibweise f"ur
+Integerkonstanten, wie man sie bei manchen Fremdassemblern antrifft:  Bei
+dieser Schreibweise wird der eigentliche Wert in Hochkommas geschrieben
+und das Zahlensystem ('x' oder 'h' für hexadezimal, 'o' für oktal und 'b'
+f"ur bin"ar) direkt davor.  Die Integer-Konstante 305419896 kann damit
+also folgenderma"sen geschrieben werden:
+\begin{verbatim}
+ x'12345678'
+ h'12345678'
+ o'2215053170'
+ b'00010010001101000101011001111000'
+\end{verbatim}
+Diese Schreibweise ist f"ur keine Prozessorarchitektur der Default und nur
+im \tty{RELAXED}-Modus erreichbar.  Sie dient in erster Linie der
+einfacheren Portierung von Fremdquellen und wird nicht f"ur neu erstellte
+Programme empfohlen.
 
 Wie bereits angesprochen, k"onnen Integer-Konstanten auch als ASCII-Werte
 geschrieben werden, so entsprechen
 \begin{verbatim}
-'A'    ==$41
-'AB'   ==$4142
-'ABCD' ==$41424344
+'A'    == $41
+'AB'   == $4142
+'ABCD' == $41424344
 \end{verbatim}
 Wichtig ist, da"s hier die Zeichen in {\em einfachen Hochkommas}
 geschrieben werden, um sie von den weiter unten beschriebenen
@@ -11346,6 +11362,7 @@ oder ich werde langsam alt...
       \item{unterst"utzt zus"atzlich die HCS08-Erweiterungen von Freescale;}
       \item{unterst"utzt zus"atzlich die RS08-Familie von Freescale;}
       \item{unterst"utzt zus"atzlich den 8008 von Intel;}
+      \item{weitere Syntax f"ur Integer-Konstanten;}
       \end{itemize}}
 \end{itemize}
 

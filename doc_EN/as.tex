@@ -65,7 +65,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition July 2006}
+{\large Edition May 2007}
 \end{raggedright}
 
 \clearpage
@@ -1628,7 +1628,21 @@ With the help of the \tty{RELAXED} instruction (see section \ref{SectRELAXED}),
 the strict assignment of a syntax to a certain target processor can be
 removed.  The result is that an arbitrary syntax may be used (loosing
 compatibility to standard assemblers).  This option is however turned off
-by default.
+by default.  This option also opens the opportunity for a fourth way of
+writing integer constants, a way that is sometimes found on other
+assemblers: This way puts the actual value into apostrophes and prepends
+the numbering system ('x' or 'h' for hexadecimal, 'o' for octal and 'b'
+for binary).  So, the integer constant 305419896 can be written in the
+following ways:
+\begin{verbatim}
+ x'12345678'
+ h'12345678'
+ o'2215053170'
+ b'00010010001101000101011001111000'
+\end{verbatim}
+This syntax is noth the default for any processor architecture and only
+available in \tty{RELAXED} mode.  Its main purpose is the easier porting
+of existing sources and is not recommended for new programs.
 
 Integer constants may also be written as ASCII values, like in
 the following examples:
@@ -11064,6 +11078,7 @@ Either that was a long nightshift or I am slowly getting old...
       \item{additionally supports the HCS08 extensions by Freesacle;}
       \item{additionally supports the RS08 family by Freescale;}
       \item{additionally supports the Intel 8008;}
+      \item{add another optional syntax for integer constants;}
       \end{itemize}}
 \end{itemize}
 

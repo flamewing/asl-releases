@@ -21,9 +21,12 @@
 /*           2001-08-30 set EntryAddrPresent when address given as argument  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: p2hex.c,v 1.5 2006/12/09 18:27:30 alfred Exp $                      */
+/* $Id: p2hex.c,v 1.6 2006/12/19 17:26:42 alfred Exp $                      */
 /*****************************************************************************
  * $Log: p2hex.c,v $
+ * Revision 1.6  2006/12/19 17:26:42  alfred
+ * - correctly regard IntOffset with granularities != 1
+ *
  * Revision 1.5  2006/12/09 18:27:30  alfred
  * - add warning about empty output
  *
@@ -266,30 +269,31 @@ BEGIN
   	    IntOffset=0;
   	    break;
   	   case IntHex16:
-  	    IntelOccured=True;
+  	    IntelOccured = True;
+            IntOffset = (ErgStart * Gran);
 #ifdef __STDC__
-  	    IntOffset=ErgStart&0xfffffff0u;
+  	    IntOffset &= 0xfffffff0u;
 #else
-            IntOffset=ErgStart&0xfffffff0;
+            IntOffset &= 0xfffffff0;
 #endif
-  	    HSeg=IntOffset>>4; ChkSum=4+Lo(HSeg)+Hi(HSeg);
-            errno=0;
-  	    fprintf(TargFile,":02000002%s%s\n",HexWord(HSeg),HexByte(0x100-ChkSum));
-            if (MaxIntel<1) MaxIntel=1;
-  	    ChkIO(TargName);
+  	    HSeg = IntOffset >> 4; ChkSum = 4 + Lo(HSeg) + Hi(HSeg);
+            IntOffset /= Gran;
+            errno = 0; fprintf(TargFile, ":02000002%s%s\n", HexWord(HSeg),HexByte(0x100 - ChkSum)); ChkIO(TargName);
+            if (MaxIntel < 1) MaxIntel = 1;
   	    break;
            case IntHex32:
-  	    IntelOccured=True;
+  	    IntelOccured = True;
+            IntOffset = (ErgStart * Gran);
 #ifdef __STDC__
-            IntOffset=ErgStart&0xffff0000u;
+            IntOffset &= 0xffff0000u;
 #else
-            IntOffset=ErgStart&0xffff0000;
+            IntOffset &= 0xffff0000;
 #endif
-            HSeg=IntOffset>>16; ChkSum=6+Lo(HSeg)+Hi(HSeg);
-            fprintf(TargFile,":02000004%s%s\n",HexWord(HSeg),HexByte(0x100-ChkSum));
-            if (MaxIntel<2) MaxIntel=2;
-  	    ChkIO(TargName);
-            FirstBank=False;
+            HSeg = IntOffset >> 16; ChkSum = 6 + Lo(HSeg) + Hi(HSeg);
+            IntOffset /= Gran;
+            errno = 0; fprintf(TargFile, ":02000004%s%s\n",HexWord(HSeg),HexByte(0x100-ChkSum)); ChkIO(TargName);
+            if (MaxIntel < 2) MaxIntel = 2;
+            FirstBank = False;
             break;
            case TekHex:
             break;
@@ -314,7 +318,7 @@ BEGIN
 
            if ((ActFormat==IntHex32) AND (FirstBank))
             BEGIN
-             IntOffset+=0x10000;
+             IntOffset += (0x10000 / Gran);
              HSeg=IntOffset>>16; ChkSum=6+Lo(HSeg)+Hi(HSeg);
              errno=0;
              fprintf(TargFile,":02000004%s%s\n",HexWord(HSeg),HexByte(0x100-ChkSum));
