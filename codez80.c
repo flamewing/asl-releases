@@ -10,9 +10,12 @@
 /*           2001-12-11 begun with Rabbit2000                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codez80.c,v 1.4 2006/08/05 12:01:39 alfred Exp $                     */
+/* $Id: codez80.c,v 1.5 2007/06/28 20:27:31 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codez80.c,v $
+ * Revision 1.5  2007/06/28 20:27:31  alfred
+ * - silence some warnings on recent GNU C versions
+ *
  * Revision 1.4  2006/08/05 12:01:39  alfred
  * - correct parsing of indexed expressions
  *
@@ -1214,13 +1217,18 @@ BEGIN
 
    strmaxcpy(Name_N,Name,255); NLS_UpString(Name_N);
 
-   z=0;
+   z = 0;
    while ((z<ConditionCnt) AND (strcmp(Conditions[z].Name,Name_N)!=0)) z++;
-   if (z>ConditionCnt) return False;
+   if (z>ConditionCnt)
+   {
+     *Erg = 0;
+     return False;
+   }
    else
-    BEGIN
-     *Erg=Conditions[z].Code; return True;
-    END
+   {
+     *Erg = Conditions[z].Code;
+     return True;
+   }
 END
 
 /*-------------------------------------------------------------------------*/

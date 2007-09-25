@@ -36,9 +36,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.11 2007/04/30 18:37:51 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.12 2007/09/24 17:39:02 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.c,v $
+ * Revision 1.12  2007/09/24 17:39:02  alfred
+ * - correct handling of '-' operator
+ *
  * Revision 1.11  2007/04/30 18:37:51  alfred
  * - add weird integer coding
  *
@@ -1540,7 +1543,10 @@ static Operator Operators[] =
                {">=",2 , True , 23, True , True , True , False, EvalExpression_GeOp},
                {"<>",2 , True , 23, True , True , True , False, EvalExpression_UneqOp},
                /* termination marker */
-               {NULL,0, False ,  0, False, False, False, False, NULL}};
+               {NULL,0, False ,  0, False, False, False, False, NULL}},
+               /* minus may have one or two operands */
+                MinusMonadicOperator = 
+               {"-" ,1 , False, 13, True , True , False, False, EvalExpression_SubOp};
    Operator *pOp;
    Operator *FOps[sizeof(Operators) / sizeof(*Operators)];
    LongInt FOpCnt = 0;
@@ -1695,7 +1701,10 @@ static Operator Operators[] =
      /* Minuszeichen sowohl mit einem als auch 2 Operanden */
 
      if (strcmp(pOp->Id, "-") == 0)
-       pOp->Dyadic = (OpPos>0);
+     {
+       if (!OpPos)
+         pOp = &MinusMonadicOperator;
+     }
 
      /* Operandenzahl pruefen */
 
@@ -2429,6 +2438,7 @@ static Operator Operators[] =
    else WrXError(1010,Copy);
 
 func_exit:
+
    if (LVal.Relocs != NULL) FreeRelocs(&LVal.Relocs);
    if (RVal.Relocs != NULL) FreeRelocs(&RVal.Relocs);
 END

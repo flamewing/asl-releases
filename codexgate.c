@@ -4,9 +4,12 @@
 /*                                                                           */
 /* Codegenerator XGATE-Kern                                                  */
 /*****************************************************************************/
-/* $Id: codexgate.c,v 1.3 2006/08/05 18:06:43 alfred Exp $                   */
+/* $Id: codexgate.c,v 1.4 2007/06/28 20:27:31 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codexgate.c,v $
+ * Revision 1.4  2007/06/28 20:27:31  alfred
+ * - silence some warnings on recent GNU C versions
+ *
  * Revision 1.3  2006/08/05 18:06:43  alfred
  * - silence some compiler warnings
  *
@@ -50,7 +53,11 @@ static Boolean DecodeReg(char *pAsc, Word *pResult)
 {
   Boolean Result;
 
-  if ((strlen(pAsc) != 2) || (toupper(*pAsc) != 'R') || (!isdigit(pAsc[1]))) Result = False;
+  if ((strlen(pAsc) != 2) || (toupper(*pAsc) != 'R') || (!isdigit(pAsc[1])))
+  {
+    *pResult = 0;
+    Result = False;
+  }
   else
   {
     *pResult =  pAsc[1]- '0';

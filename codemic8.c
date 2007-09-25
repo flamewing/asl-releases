@@ -5,9 +5,12 @@
 /* Codegenerator LatticeMico8                                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemic8.c,v 1.7 2005/10/02 10:00:46 alfred Exp $                   */
+/* $Id: codemic8.c,v 1.8 2007/06/28 20:27:31 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codemic8.c,v $
+ * Revision 1.8  2007/06/28 20:27:31  alfred
+ * - silence some warnings on recent GNU C versions
+ *
  * Revision 1.7  2005/10/02 10:00:46  alfred
  * - ConstLongInt gets default base, correct length check on KCPSM3 registers
  *
@@ -91,7 +94,10 @@ static Boolean IsWReg(char *Asc, LongWord *pErg)
   if (FindRegDef(Asc, &s)) Asc = s;
 
   if ((strlen(Asc) < 2) || (toupper(*Asc) != 'R')) 
+  {
+    *pErg = 0;
     return False;
+  }
 
   *pErg = ConstLongInt(Asc + 1, &OK, 10);
   if (!OK)
@@ -242,7 +248,7 @@ static void DecodeMemI(Word Index)
 static void DecodeReg(Word Index)
 {
   FixedOrder *pOrder = RegOrders + Index;
-  LongWord Reg;
+  LongWord Reg = 0;
 
   if (ArgCnt != 1) WrError(1110);
   else if (!IsWReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);

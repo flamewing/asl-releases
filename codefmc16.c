@@ -17,9 +17,12 @@
 /*       Registersymbole                                                    */
 /*       explizite Displacement-Laengenangaben (Adressen, ADDSP)            */
 /****************************************************************************/
-/* $Id: codefmc16.c,v 1.3 2005/09/08 16:53:42 alfred Exp $                  */
+/* $Id: codefmc16.c,v 1.4 2007/06/28 20:27:31 alfred Exp $                  */
 /*****************************************************************************
  * $Log: codefmc16.c,v $
+ * Revision 1.4  2007/06/28 20:27:31  alfred
+ * - silence some warnings on recent GNU C versions
+ *
  * Revision 1.3  2005/09/08 16:53:42  alfred
  * - use common PInstTable
  *
@@ -433,21 +436,25 @@ found:
    return (AdrMode != ModNone);
 END
 
-        static Boolean SplitBit(char *Asc, Byte *Result)
-BEGIN
+static Boolean SplitBit(char *Asc, Byte *Result)
+{
    char *pos;
    Boolean Res = FALSE;
 
    pos = RQuotPos(Asc, ':');
-   if (pos == NULL) WrError(1510);
+   if (pos == NULL)
+   {
+     *Result = 0;
+     WrError(1510);
+   }
    else
-    BEGIN
+   {
      *pos = '\0';
      *Result = EvalIntExpression(pos + 1, UInt3, &Res);
-    END
+   }
 
    return Res;
-END
+}
 
         static void CopyVals(int Offset)
 BEGIN

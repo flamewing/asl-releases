@@ -16,9 +16,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code77230.c,v 1.4 2005/09/08 16:53:42 alfred Exp $                   */
+/* $Id: code77230.c,v 1.5 2007/06/28 20:27:31 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code77230.c,v $
+ * Revision 1.5  2007/06/28 20:27:31  alfred
+ * - silence some warnings on recent GNU C versions
+ *
  * Revision 1.4  2005/09/08 16:53:42  alfred
  * - use common PInstTable
  *
@@ -210,6 +213,7 @@ BEGIN
      BEGIN
       *Erg=Regs[z].Code; return True;
      END
+   *Erg = 0;
    return False;
 END
 

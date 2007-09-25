@@ -11,9 +11,12 @@
 /*           2001-10-13 added ARM/Linux                                      */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: sysdefs.h,v 1.4 2006/05/01 09:09:10 alfred Exp $                     */
+/* $Id: sysdefs.h,v 1.5 2007/09/16 08:56:04 alfred Exp $                     */
 /*****************************************************************************
  * $Log: sysdefs.h,v $
+ * Revision 1.5  2007/09/16 08:56:04  alfred
+ * - add K8 target
+ *
  * Revision 1.4  2006/05/01 09:09:10  alfred
  * - treat __PPC__ like _POWER
  *
@@ -955,6 +958,42 @@ typedef unsigned long Card32;
 #endif
 
 #endif /* __i386 */
+
+
+/*===========================================================================*/
+/* AMD opteron/athlon64/k8 platforms */
+
+#ifdef __k8__
+
+#define ARCHPRNAME "k8"
+
+/*---------------------------------------------------------------------------*/
+/* x86-64 with Linux and GCC:
+   
+   principally, a normal *NIX.  We might use 'long' instead of
+   'long long' for 64-bit integers, but I currently cannot verify this. */
+
+#ifdef __linux__
+#define ARCHSYSNAME "unknown-linux"
+#define DEFSMADE
+#define OPENRDMODE "r"
+#define OPENWRMODE "w"
+#define OPENUPMODE "r+"
+#define IEEEFLOAT
+typedef signed char Integ8;
+typedef unsigned char Card8;
+typedef signed short Integ16;
+typedef unsigned short Card16;
+#define HAS16
+typedef signed int Integ32;
+typedef unsigned int Card32;
+typedef signed long long Integ64;
+typedef unsigned long long Card64;
+#define HAS64
+#define LOCALE_NLS
+#endif
+
+#endif /* __k8__ */
 
 /*===========================================================================*/
 /* ARM platform */

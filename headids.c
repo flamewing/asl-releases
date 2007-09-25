@@ -19,9 +19,12 @@
 /*           2001-07-01 TI 320C54x                                           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: headids.c,v 1.7 2006/07/08 10:32:55 alfred Exp $                          */
+/* $Id: headids.c,v 1.8 2007/09/16 08:55:54 alfred Exp $                          */
 /*****************************************************************************
  * $Log: headids.c,v $
+ * Revision 1.8  2007/09/16 08:55:54  alfred
+ * - preparations for KENBAK
+ *
  * Revision 1.7  2006/07/08 10:32:55  alfred
  * - added RS08
  *
@@ -148,6 +151,7 @@ static TFamilyDescr Descrs[]=
         {"F2MC8"     , 0x0015, IntHex  },
         {"F2MC16"    , 0x0016, IntHex  },
         {"1802"      , 0x0038, IntHex  },
+        {"KENBAK"    , 0x0027, IntHex  },
         {Nil         , 0xffff, Default }
        };
 

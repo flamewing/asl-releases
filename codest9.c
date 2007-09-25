@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codest9.c,v 1.4 2005/10/02 10:00:46 alfred Exp $                     */
+/* $Id: codest9.c,v 1.5 2007/06/28 20:27:31 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codest9.c,v $
+ * Revision 1.5  2007/06/28 20:27:31  alfred
+ * - silence some warnings on recent GNU C versions
+ *
  * Revision 1.4  2005/10/02 10:00:46  alfred
  * - ConstLongInt gets default base, correct length check on KCPSM3 registers
  *
@@ -256,6 +259,7 @@ BEGIN
    Boolean Res;
    char *Asc;
 
+   *Size = 0;
    Asc=Asc_O;
 
    if (strlen(Asc)<2) return False;

@@ -26,9 +26,12 @@
 /*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.6 2007/04/30 18:37:52 alfred Exp $                      */
+/* $Id: asmsub.c,v 1.7 2007/09/24 17:51:48 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmsub.c,v $
+ * Revision 1.7  2007/09/24 17:51:48  alfred
+ * - better handle non-printable characters
+ *
  * Revision 1.6  2007/04/30 18:37:52  alfred
  * - add weird integer coding
  *
@@ -838,6 +841,17 @@ BEGIN
     END
 END
 
+static void PrPrintable(FILE *pFile, const char *pStr)
+{
+  const char *pRun;
+
+  for (pRun = pStr; *pRun; pRun++)
+    if (isprint(*pRun))
+      fputc(*pRun, pFile);
+    else
+      fprintf(pFile, "<0x%02x>", (unsigned char)*pRun);
+}
+
         void WrErrorString(char *Message, char *Add, Boolean Warning, Boolean Fatal)
 BEGIN
    String h,h2;
@@ -891,9 +905,13 @@ BEGIN
      errfile = (ErrorFile == Nil) ? stdout : ErrorFile;
      fprintf(errfile, "%s%s%s\n", h, Message, ClrEol);
      if ((ExtendErrors > 0) AND (*ExtendError != '\0'))
-      fprintf(errfile, "> > > %s%s\n", ExtendError, ClrEol);
+     {
+       fprintf(errfile, "> > > ");
+       PrPrintable(errfile, ExtendError);
+       fprintf(errfile, "%s\n", ClrEol);
+     }
      if (ExtendErrors > 1)
-      fprintf(errfile, "> > > %s%s\n", OneLine, ClrEol);
+       fprintf(errfile, "> > > %s%s\n", OneLine, ClrEol);
     END
    *ExtendError = '\0';
 
