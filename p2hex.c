@@ -21,9 +21,12 @@
 /*           2001-08-30 set EntryAddrPresent when address given as argument  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: p2hex.c,v 1.6 2006/12/19 17:26:42 alfred Exp $                      */
+/* $Id: p2hex.c,v 1.7 2007/11/24 22:48:08 alfred Exp $                      */
 /*****************************************************************************
  * $Log: p2hex.c,v $
+ * Revision 1.7  2007/11/24 22:48:08  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.6  2006/12/19 17:26:42  alfred
  * - correctly regard IntOffset with granularities != 1
  *
@@ -734,7 +737,7 @@ BEGIN
    static THexFormat Format[NameCnt]={Default,MotoS,IntHex,IntHex16,IntHex32,MOSHex,TekHex,TiDSK,Atmel};
    int z;
 
-   for (z=0; z<(int)strlen(Arg); z++) Arg[z]=toupper(Arg[z]);
+   for (z=0; z<(int)strlen(Arg); z++) Arg[z]=mytoupper(Arg[z]);
 
    z=0;
    while ((z<NameCnt) AND (strcmp(Arg,Names[z])!=0)) z++;

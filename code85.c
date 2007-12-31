@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code85.c,v 1.3 2005/09/08 16:53:42 alfred Exp $                      */
+/* $Id: code85.c,v 1.4 2007/11/24 22:48:05 alfred Exp $                      */
 /***************************************************************************** 
  * $Log: code85.c,v $
+ * Revision 1.4  2007/11/24 22:48:05  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.3  2005/09/08 16:53:42  alfred
  * - use common PInstTable
  *
@@ -76,7 +79,7 @@ BEGIN
    if (strlen(Asc)!=1) return False;
    else
     BEGIN
-     p=strchr(RegNames,toupper(*Asc));
+     p=strchr(RegNames,mytoupper(*Asc));
      if (p==0) return False;
      else
       BEGIN

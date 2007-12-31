@@ -50,11 +50,6 @@ static PHyphenException FirstException=Nil;
 
 /*****************************************************************************/
 
-	char mytolower(char ch)
-BEGIN
-   return tolower(((unsigned int) ch)&0xff);
-END
-
 #if 0
 char b[10];
 

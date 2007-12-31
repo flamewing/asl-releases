@@ -7,9 +7,12 @@
 /* Historie: 15. 5.1996 Grundsteinlegung                                     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmif.c,v 1.1 2003/11/06 02:49:18 alfred Exp $                       */
+/* $Id: asmif.c,v 1.2 2007/11/24 22:48:02 alfred Exp $                       */
 /***************************************************************************** 
  * $Log: asmif.c,v $
+ * Revision 1.2  2007/11/24 22:48:02  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.1  2003/11/06 02:49:18  alfred
  * - recreated
  *
@@ -378,7 +381,7 @@ BEGIN
 
    ActiveIF=False;
 
-   switch (toupper(*OpPart))
+   switch (mytoupper(*OpPart))
     BEGIN
      case 'I':
       if (Memo("IF")) CodeIF();

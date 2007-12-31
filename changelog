@@ -1,4 +1,4 @@
-$Id: changelog,v 1.38 2007/09/24 17:53:01 alfred Exp $
+$Id: changelog,v 1.41 2007/12/31 13:39:30 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1098,3 +1098,14 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 2007-09-24 [Bld56]
 
 - Bugfix      : correct handling of minus operator in nested expressions
+
+2007-12-31 [Bld57]
+
+- Bugfix      : correct SKINT -> SKNIT on 78C1x
+
+- Bugfix      : correct LDN and RLDI instructions for 180x
+
+- Change      : MSP decoder now works with hash table
+
+- Addition    : add some MSP430 bit definitions
+

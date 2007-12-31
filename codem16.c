@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codem16.c,v 1.4 2005/10/02 10:00:45 alfred Exp $                     */
+/* $Id: codem16.c,v 1.5 2007/11/24 22:48:07 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codem16.c,v $
+ * Revision 1.5  2007/11/24 22:48:07  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.4  2005/10/02 10:00:45  alfred
  * - ConstLongInt gets default base, correct length check on KCPSM3 registers
  *
@@ -327,7 +330,7 @@ BEGIN
 
    if (strcasecmp(Asc,"SP")==0) *Erg=15;
    else if (strcasecmp(Asc,"FP")==0) *Erg=14;
-   else if ((strlen(Asc)>1) AND (toupper(*Asc)=='R'))
+   else if ((strlen(Asc)>1) AND (mytoupper(*Asc)=='R'))
     BEGIN
      *Erg = ConstLongInt(Asc + 1, &IO, 10);
      return ((IO) AND (*Erg<=15));
@@ -2018,7 +2021,7 @@ BEGIN
 
    if (*AttrPart=='\0') DOpSize=(-1);
    else
-    switch (toupper(*AttrPart))
+    switch (mytoupper(*AttrPart))
      BEGIN
       case 'B': DOpSize=0; break;
       case 'H': DOpSize=1; break;

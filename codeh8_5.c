@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeh8_5.c,v 1.3 2005/09/08 17:06:28 alfred Exp $                    */
+/* $Id: codeh8_5.c,v 1.4 2007/11/24 22:48:06 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codeh8_5.c,v $
+ * Revision 1.4  2007/11/24 22:48:06  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.3  2005/09/08 17:06:28  alfred
  * - dynamically allocate string
  *
@@ -251,7 +254,7 @@ END
 BEGIN
    if (strcasecmp(Asc,"SP")==0) *Erg=7;
    else if (strcasecmp(Asc,"FP")==0) *Erg=6;
-   else if ((strlen(Asc)==2) AND (toupper(*Asc)=='R') AND (Asc[1]>='0') AND (Asc[1]<='7'))
+   else if ((strlen(Asc)==2) AND (mytoupper(*Asc)=='R') AND (Asc[1]>='0') AND (Asc[1]<='7'))
     *Erg=Asc[1]-'0';
    else return False;
    return True;
@@ -664,7 +667,7 @@ BEGIN
 
    if (*AttrPart=='\0') SetOpSize(-1);
    else
-    switch (toupper(*AttrPart))
+    switch (mytoupper(*AttrPart))
      BEGIN
       case 'B':SetOpSize(0); break;
       case 'W':SetOpSize(1); break;

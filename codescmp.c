@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codescmp.c,v 1.3 2005/09/08 17:31:05 alfred Exp $                    */
+/* $Id: codescmp.c,v 1.4 2007/11/24 22:48:07 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codescmp.c,v $
+ * Revision 1.4  2007/11/24 22:48:07  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.3  2005/09/08 17:31:05  alfred
  * - add missing include
  *
@@ -135,9 +138,9 @@ END
 
         static Boolean DecodeReg(char *Asc, Byte *Erg)
 BEGIN
-   if ((strlen(Asc)!=2) OR (toupper(*Asc)!='P')) return False;
+   if ((strlen(Asc)!=2) OR (mytoupper(*Asc)!='P')) return False;
 
-   switch (toupper(Asc[1]))
+   switch (mytoupper(Asc[1]))
     BEGIN
      case 'C': *Erg=0; break;
      case '0': case '1': case '2':

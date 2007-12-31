@@ -15,9 +15,12 @@
 /*            7. 5.2000 Packing hinzugefuegt                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeavr.c,v 1.5 2006/12/14 21:03:37 alfred Exp $                     */
+/* $Id: codeavr.c,v 1.6 2007/11/24 22:48:06 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codeavr.c,v $
+ * Revision 1.6  2007/11/24 22:48:06  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.5  2006/12/14 21:03:37  alfred
  * - correct target assignment
  *
@@ -135,7 +138,7 @@ BEGIN
    if (FindRegDef(Asc, &s)) Asc = s;
    l = strlen(Asc);
 
-   if ((l < 2) OR (l > 3) OR (toupper(*Asc) != 'R')) return False;
+   if ((l < 2) OR (l > 3) OR (mytoupper(*Asc) != 'R')) return False;
    else
     BEGIN
      *Erg = ConstLongInt(Asc + 1, &io, 10);
@@ -429,8 +432,8 @@ static Boolean AccFull;
       MemI = 2; RegI = 1;
     }
     OK = True;
-    if (toupper(*ArgStr[MemI]) == 'Y') Index += 8;
-    else if (toupper(*ArgStr[MemI]) == 'Z');
+    if (mytoupper(*ArgStr[MemI]) == 'Y') Index += 8;
+    else if (mytoupper(*ArgStr[MemI]) == 'Z');
     else OK = False;
     if (NOT OK) WrError(1350);
     else if (NOT DecodeReg(ArgStr[RegI], &Reg)) WrXError(1445, ArgStr[RegI]);

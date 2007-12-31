@@ -47,6 +47,7 @@ call testall t_16c5x
 call testall t_16c84
 call testall t_17c42
 call testall t_1802
+call testall t_1805
 call testall t_251
 call testall t_2650
 call testall t_296

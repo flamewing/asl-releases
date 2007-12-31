@@ -1,6 +1,5 @@
 #ifndef _FINDHYPHEN_H
 #define _FINDHYPHEN_H
-extern char mytolower(char ch);
 
 extern void BuildTree(char **Patterns);
 

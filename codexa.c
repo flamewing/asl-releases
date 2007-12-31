@@ -19,9 +19,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codexa.c,v 1.4 2005/09/08 16:53:43 alfred Exp $                      */
+/* $Id: codexa.c,v 1.5 2007/11/24 22:48:07 alfred Exp $                      */
 /*****************************************************************************
  * $Log: codexa.c,v $
+ * Revision 1.5  2007/11/24 22:48:07  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.4  2005/09/08 16:53:43  alfred
  * - use common PInstTable
  *
@@ -126,7 +129,7 @@ BEGIN
     BEGIN
      *Erg=7; *NSize=1; return True;
     END
-   else if ((strlen(Asc)>=2) AND (toupper(*Asc)=='R') AND (Asc[1]>='0') AND (Asc[1]<='7'))
+   else if ((strlen(Asc)>=2) AND (mytoupper(*Asc)=='R') AND (Asc[1]>='0') AND (Asc[1]<='7'))
     BEGIN
      if (strlen(Asc)==2)
       BEGIN
@@ -146,11 +149,11 @@ BEGIN
          return True;
         END
       END
-     else if ((strlen(Asc)==3) AND (toupper(Asc[2])=='L'))
+     else if ((strlen(Asc)==3) AND (mytoupper(Asc[2])=='L'))
       BEGIN
        *Erg=(Asc[1]-'0') << 1; *NSize=0; return True;
       END
-     else if ((strlen(Asc)==3) AND (toupper(Asc[2])=='H'))
+     else if ((strlen(Asc)==3) AND (mytoupper(Asc[2])=='H'))
       BEGIN
        *Erg=((Asc[1]-'0') << 1)+1; *NSize=0; return True;
       END
@@ -1788,7 +1791,7 @@ BEGIN
    /* Operandengroesse */
 
    if (*AttrPart!='\0')
-    switch (toupper(*AttrPart))
+    switch (mytoupper(*AttrPart))
      BEGIN
       case 'B': SetOpSize(0); break;
       case 'W': SetOpSize(1); break;

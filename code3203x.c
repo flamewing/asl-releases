@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3203x.c,v 1.3 2005/10/02 10:00:44 alfred Exp $                       */
+/* $Id: code3203x.c,v 1.4 2007/11/24 22:48:03 alfred Exp $                       */
 /***************************************************************************** 
  * $Log: code3203x.c,v $
+ * Revision 1.4  2007/11/24 22:48:03  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.3  2005/10/02 10:00:44  alfred
  * - ConstLongInt gets default base, correct length check on KCPSM3 registers
  *
@@ -409,13 +412,13 @@ BEGIN
         {"DP","IR0","IR1","BK","SP","ST","IE","IF","IOF","RS","RE","RC"};
     Boolean Err;
 
-   if ((toupper(*Asc)=='R') AND (strlen(Asc)<=3) AND (strlen(Asc)>=2))
+   if ((mytoupper(*Asc)=='R') AND (strlen(Asc)<=3) AND (strlen(Asc)>=2))
     BEGIN
      *Erg=ConstLongInt(Asc+1,&Err,10);
      if ((Err) AND (*Erg<=0x1b)) return True;
     END
 
-   if ((strlen(Asc)==3) AND (toupper(*Asc)=='A') AND (toupper(Asc[1])=='R') AND (Asc[2]>='0') AND (Asc[2]<='7'))
+   if ((strlen(Asc)==3) AND (mytoupper(*Asc)=='A') AND (mytoupper(Asc[1])=='R') AND (Asc[2]>='0') AND (Asc[2]<='7'))
     BEGIN
      *Erg=Asc[2]-'0'+8; return True;
     END
@@ -474,7 +477,7 @@ BEGIN
      /* II.2. Extrawuerste erledigen */
 
      BitRev=False; Circ=False;
-     if (toupper(Asc[strlen(Asc)-1])=='B')
+     if (mytoupper(Asc[strlen(Asc)-1])=='B')
       BEGIN
        BitRev=True; Asc[strlen(Asc)-1]='\0';
       END

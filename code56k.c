@@ -14,9 +14,12 @@
 /*                      ShortMode wird bei absoluter Adressierung gemerkt    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code56k.c,v 1.2 2005/09/08 17:31:03 alfred Exp $                     */
+/* $Id: code56k.c,v 1.3 2007/11/24 22:48:04 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code56k.c,v $
+ * Revision 1.3  2007/11/24 22:48:04  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.2  2005/09/08 17:31:03  alfred
  * - add missing include
  *
@@ -265,7 +268,7 @@ BEGIN
       *Erg=z+4; return True;
      END
    if ((strlen(Asc)==2) AND (Asc[1]>='0') AND (Asc[1]<='7'))
-    switch (toupper(*Asc))
+    switch (mytoupper(*Asc))
      BEGIN
       case 'R':
        *Erg=16+Asc[1]-'0'; return True;
@@ -396,7 +399,7 @@ END
 
         static Boolean DecodeAddReg(char *Asc, LongInt *Erg)
 BEGIN
-   if ((strlen(Asc)==2) AND (toupper(*Asc)=='M') AND (Asc[1]>='0') AND (Asc[1]<='7'))
+   if ((strlen(Asc)==2) AND (mytoupper(*Asc)=='M') AND (Asc[1]>='0') AND (Asc[1]<='7'))
     BEGIN
      *Erg=Asc[1]-'0'; return True;
     END
@@ -487,7 +490,7 @@ BEGIN
    /* Zielsegment vorgegeben ? */
 
    for (z=0; z<SegCount; z++)
-    if ((toupper(*Asc)==SegNames[z]) AND (Asc[1]==':'))
+    if ((mytoupper(*Asc)==SegNames[z]) AND (Asc[1]==':'))
      BEGIN
       AdrSeg=SegVals[z]; strcpy(Asc,Asc+2);
      END
@@ -509,7 +512,7 @@ BEGIN
            WrError(1760); ChkMask(Erl,ErlSeg); return;
           END
         END
-       else if (ModMasks[z][l]!=toupper(Asc[l])) break;
+       else if (ModMasks[z][l]!=mytoupper(Asc[l])) break;
        if (l>(int)strlen(Asc))
         BEGIN
          AdrType=z; AdrMode+=ModCodes[z] << 3;

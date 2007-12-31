@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code78k0.c,v 1.4 2006/12/09 18:01:34 alfred Exp $                          *
+/* $Id: code78k0.c,v 1.5 2007/11/24 22:48:05 alfred Exp $                          *
  ***************************************************************************** 
  * $Log: code78k0.c,v $
+ * Revision 1.5  2007/11/24 22:48:05  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.4  2006/12/09 18:01:34  alfred
  * - correct some coding errors
  *
@@ -118,13 +121,13 @@ BEGIN
       AdrMode=ModReg8; AdrPart=z; ChkAdr(Mask); return;
      END
 
-   if (toupper(*Asc)=='R')
+   if (mytoupper(*Asc)=='R')
     BEGIN
      if ((strlen(Asc)==2) AND (Asc[1]>='0') AND (Asc[1]<='7'))
       BEGIN
        AdrMode=ModReg8; AdrPart=Asc[1]-'0'; ChkAdr(Mask); return;
       END
-     else if ((strlen(Asc)==3) AND (toupper(Asc[1])=='P') AND (Asc[2]>='0') AND (Asc[2]<='3'))
+     else if ((strlen(Asc)==3) AND (mytoupper(Asc[1])=='P') AND (Asc[2]>='0') AND (Asc[2]<='3'))
       BEGIN
        AdrMode=ModReg16; AdrPart=Asc[2]-'0'; ChkAdr(Mask); return;
       END
@@ -132,7 +135,7 @@ BEGIN
 
    if (strlen(Asc)==2)
     for (z=0; z<4; z++)
-     if ((toupper(*Asc)==*RegNames[(z<<1)+1]) AND (toupper(Asc[1])==*RegNames[z<<1]))
+     if ((mytoupper(*Asc)==*RegNames[(z<<1)+1]) AND (mytoupper(Asc[1])==*RegNames[z<<1]))
       BEGIN
        AdrMode=ModReg16; AdrPart=z; ChkAdr(Mask); return;
       END

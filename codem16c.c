@@ -25,9 +25,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codem16c.c,v 1.4 2005/09/30 12:53:49 alfred Exp $                    */
+/* $Id: codem16c.c,v 1.5 2007/11/24 22:48:07 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codem16c.c,v $
+ * Revision 1.5  2007/11/24 22:48:07  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.4  2005/09/30 12:53:49  alfred
  * - correct include statements
  *
@@ -302,18 +305,18 @@ BEGIN
 
    /* Datenregister 8 Bit */
 
-   if ((strlen(Asc)==3) AND (toupper(*Asc)=='R') AND (Asc[1]>='0') AND (Asc[1]<='1') AND
-      ((toupper(Asc[2])=='L') OR (toupper(Asc[2])=='H')))
+   if ((strlen(Asc)==3) AND (mytoupper(*Asc)=='R') AND (Asc[1]>='0') AND (Asc[1]<='1') AND
+      ((mytoupper(Asc[2])=='L') OR (mytoupper(Asc[2])=='H')))
     BEGIN
      AdrType=ModGen;
-     AdrMode=((Asc[1]-'0') << 1)+Ord(toupper(Asc[2])=='H');
+     AdrMode=((Asc[1]-'0') << 1)+Ord(mytoupper(Asc[2])=='H');
      SetOpSize(0);
      ChkAdr(Mask); return;
     END;
 
    /* Datenregister 16 Bit */
 
-   if ((strlen(Asc)==2) AND (toupper(*Asc)=='R') AND (Asc[1]>='0') AND (Asc[1]<='3'))
+   if ((strlen(Asc)==2) AND (mytoupper(*Asc)=='R') AND (Asc[1]>='0') AND (Asc[1]<='3'))
     BEGIN
      AdrType=ModGen;
      AdrMode=Asc[1]-'0';
@@ -339,7 +342,7 @@ BEGIN
 
    /* Adressregister */
 
-   if ((strlen(Asc)==2) AND (toupper(*Asc)=='A') AND (Asc[1]>='0') AND (Asc[1]<='1'))
+   if ((strlen(Asc)==2) AND (mytoupper(*Asc)=='A') AND (Asc[1]>='0') AND (Asc[1]<='1'))
     BEGIN
      AdrType=ModGen;
      AdrMode=Asc[1]-'0'+4;
@@ -513,9 +516,9 @@ END
 BEGIN
    if (strcasecmp(Asc,"FB")==0) *Erg=7;
    else if (strcasecmp(Asc,"SB")==0) *Erg=6;
-   else if ((strlen(Asc)==2) AND (toupper(*Asc)=='A') AND
+   else if ((strlen(Asc)==2) AND (mytoupper(*Asc)=='A') AND
             (Asc[1]>='0') AND (Asc[1]<='1')) *Erg=Asc[1]-'0'+4;
-   else if ((strlen(Asc)==2) AND (toupper(*Asc)=='R') AND
+   else if ((strlen(Asc)==2) AND (mytoupper(*Asc)=='R') AND
             (Asc[1]>='0') AND (Asc[1]<='3')) *Erg=Asc[1]-'0';
    else return False;
    return True;
@@ -615,7 +618,7 @@ BEGIN
     END
    *Pos1='\0'; strmaxcpy(Reg,Pos1+1,255); Reg[strlen(Reg)-1]='\0';
 
-   if ((strlen(Reg)==2) AND (toupper(*Reg)=='A') AND (Reg[1]>='0') AND (Reg[1]<='1'))
+   if ((strlen(Reg)==2) AND (mytoupper(*Reg)=='A') AND (Reg[1]>='0') AND (Reg[1]<='1'))
     BEGIN
      AdrMode=Reg[1]-'0';
      DecodeDisp(Asc,UInt16,UInt16,&DispAcc,&OK); /* RMS 03: The offset is a full 16 bits */
@@ -1331,7 +1334,7 @@ BEGIN
 
    /* Attribut abarbeiten */
 
-   switch (toupper(*AttrPart))
+   switch (mytoupper(*AttrPart))
     BEGIN
      case '\0': OpSize=(-1); break;
      case 'B': OpSize=0; break;
@@ -2098,7 +2101,7 @@ BEGIN
      else if (strlen(ArgStr[1])!=1) WrError(1350);
      else
       BEGIN
-       p=strchr(Flags,toupper(*ArgStr[1]));
+       p=strchr(Flags,mytoupper(*ArgStr[1]));
        if (p==Nil) WrXError(1440,ArgStr[1]);
        else
         BEGIN

@@ -10,6 +10,9 @@
 /* $Id: code68rs08.c,v                                                       */
 /*****************************************************************************
  * $Log: code68rs08.c,v $
+ * Revision 1.3  2007/11/24 22:48:05  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.2  2006/08/05 18:06:43  alfred
  * - silence some compiler warnings
  *
@@ -788,7 +791,7 @@ static void MakeCode_68rs08(void)
 
   /* deduce operand size No size is zero-length string -> '\0' */
 
-  switch (toupper(*AttrPart))
+  switch (mytoupper(*AttrPart))
   {
     case 'B': OpSize = 0; break;
     case 'W': OpSize = 1; break;

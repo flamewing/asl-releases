@@ -17,9 +17,12 @@
 /*       Registersymbole                                                    */
 /*       explizite Displacement-Laengenangaben (Adressen, ADDSP)            */
 /****************************************************************************/
-/* $Id: codefmc16.c,v 1.4 2007/06/28 20:27:31 alfred Exp $                  */
+/* $Id: codefmc16.c,v 1.5 2007/11/24 22:48:06 alfred Exp $                  */
 /*****************************************************************************
  * $Log: codefmc16.c,v $
+ * Revision 1.5  2007/11/24 22:48:06  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.4  2007/06/28 20:27:31  alfred
  * - silence some warnings on recent GNU C versions
  *
@@ -212,8 +215,8 @@ BEGIN
 
    /* 2. Register: */
 
-   if (toupper(*Asc) == 'R')
-    switch(toupper(Asc[1]))
+   if (mytoupper(*Asc) == 'R')
+    switch(mytoupper(Asc[1]))
      BEGIN
       case 'W':
        if ((Asc[3] == '\0') && (Asc[2] >= '0') && (Asc[2] <= '7'))
@@ -246,7 +249,7 @@ BEGIN
 
    /* 3. 32-Bit-Register indirekt: */
 
-   if ((*Asc == '(') AND (toupper(Asc[1]) == 'R') AND (toupper(Asc[2]) == 'L') AND
+   if ((*Asc == '(') AND (mytoupper(Asc[1]) == 'R') AND (mytoupper(Asc[2]) == 'L') AND
        (Asc[3] >= '0') AND (Asc[3] <= '3') AND (Asc[4] == ')') AND (Asc[5] == '\0'))
     BEGIN
      AdrPart = ((Asc[3] - '0') << 1) + 1;
@@ -297,7 +300,7 @@ BEGIN
      else if (strncasecmp(Asc, "PC", 2) == 0)
       BEGIN
        AdrPart = 0x1e; Asc += 2;
-       if ((*Asc == '+') OR (*Asc == '-') OR (isspace(*Asc)))
+       if ((*Asc == '+') OR (*Asc == '-') OR (myisspace(*Asc)))
         BEGIN
          AdrVal = EvalIntExpression(Asc, SInt16, &OK);
          if (OK)
@@ -320,7 +323,7 @@ BEGIN
 
      /* base register, 32 bit: */
 
-     else if ((toupper(*Asc) == 'R') AND (toupper(Asc[1]) == 'L') AND
+     else if ((mytoupper(*Asc) == 'R') AND (mytoupper(Asc[1]) == 'L') AND
               (Asc[2] >= '0') AND (Asc[2] <= '3'))
       BEGIN
        AdrVal = EvalIntExpression(Asc + 3, SInt8, &OK);
@@ -335,7 +338,7 @@ BEGIN
 
      /* base register, 16 bit: */
 
-     else if ((toupper(*Asc) == 'R') AND (toupper(Asc[1]) == 'W') AND
+     else if ((mytoupper(*Asc) == 'R') AND (mytoupper(Asc[1]) == 'W') AND
               (Asc[2] >= '0') AND (Asc[2] <= '7'))
       BEGIN
        AdrPart = Asc[2] - '0';
@@ -367,7 +370,7 @@ BEGIN
             break;
            END                               /* run into disp part otherwise*/
          case ' ': case '\t': case '-':
-          while (isspace(*Asc))              /* skip leading spaces         */
+          while (myisspace(*Asc))            /* skip leading spaces         */
            Asc++;
           if (strcasecmp(Asc, "+RW7") == 0)  /* base + RW7 as index         */
            BEGIN

@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code166.c,v 1.4 2005/10/02 10:00:44 alfred Exp $                     */
+/* $Id: code166.c,v 1.5 2007/11/24 22:48:03 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code166.c,v $
+ * Revision 1.5  2007/11/24 22:48:03  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.4  2005/10/02 10:00:44  alfred
  * - ConstLongInt gets default base, correct length check on KCPSM3 registers
  *
@@ -243,13 +246,13 @@ BEGIN
 
    if (FindRegDef(Asc,&s)) Asc=s;
 
-   if ((strlen(Asc)<2) OR (toupper(*Asc)!='R')) return False;
-   else if ((strlen(Asc)>2) AND (toupper(Asc[1])=='L') AND (NOT WordWise))
+   if ((strlen(Asc)<2) OR (mytoupper(*Asc)!='R')) return False;
+   else if ((strlen(Asc)>2) AND (mytoupper(Asc[1])=='L') AND (NOT WordWise))
     BEGIN
      *Erg=ConstLongInt(Asc + 2, &err, 10); *Erg<<=1;
      return ((err) AND (*Erg<=15));
     END
-   else if ((strlen(Asc)>2) AND (toupper(Asc[1])=='H') AND (NOT WordWise))
+   else if ((strlen(Asc)>2) AND (mytoupper(Asc[1])=='H') AND (NOT WordWise))
     BEGIN
      *Erg=ConstLongInt(Asc + 2, &err, 10); *Erg<<=1; (*Erg)++;
      return ((err) AND (*Erg<=15));

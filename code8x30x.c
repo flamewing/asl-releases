@@ -89,7 +89,7 @@ BEGIN
      *Erg=15; return True;
     END
 
-   if ((toupper(*Asc)=='R') AND (strlen(Asc)>1) AND (strlen(Asc)<4))
+   if ((mytoupper(*Asc)=='R') AND (strlen(Asc)>1) AND (strlen(Asc)<4))
     BEGIN
      Acc=0; OK=True;
      for (z=Asc+1; *z!='\0'; z++)
@@ -111,11 +111,11 @@ BEGIN
 
    if ((strlen(Asc)==4) AND (strncasecmp(Asc+1,"IV",2)==0) AND (Asc[3]>='0') AND (Asc[3]<='7'))
     BEGIN
-     if (toupper(*Asc)=='L')
+     if (mytoupper(*Asc)=='L')
       BEGIN
        *Erg=Asc[3]-'0'+0x10; return True;
       END
-     else if (toupper(*Asc)=='R')
+     else if (mytoupper(*Asc)=='R')
       BEGIN
        *Erg=Asc[3]-'0'+0x18; return True;
       END

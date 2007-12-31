@@ -36,9 +36,12 @@
 /*           2001-12-02 fixed problems with forward refs of shift arguments  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68k.c,v 1.5 2005/10/30 09:39:05 alfred Exp $                     */
+/* $Id: code68k.c,v 1.6 2007/11/24 22:48:05 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code68k.c,v $
+ * Revision 1.6  2007/11/24 22:48:05  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.5  2005/10/30 09:39:05  alfred
  * - honour .B as branch size
  *
@@ -247,8 +250,8 @@ BEGIN
    if (strlen(s) != 2) Result = False;
    else if (strcasecmp(s,"SP") == 0) *Erg = 15;
    else if (ValReg(s[1]))
-    if (toupper(*s) == 'D') *Erg = s[1] - '0';
-    else if (toupper(*s) == 'A') *Erg = s[1] - '0' + 8;
+    if (mytoupper(*s) == 'D') *Erg = s[1] - '0';
+    else if (mytoupper(*s) == 'A') *Erg = s[1] - '0' + 8;
     else Result = False;
    else Result = False;
 
@@ -258,9 +261,9 @@ END
         static Boolean CodeRegPair(char *Asc, Word *Erg1, Word *Erg2)
 BEGIN
    if (strlen(Asc)!=5) return False;
-   if (toupper(*Asc)!='D') return False;
+   if (mytoupper(*Asc)!='D') return False;
    if (Asc[2]!=':') return False;
-   if (toupper(Asc[3])!='D') return False;
+   if (mytoupper(Asc[3])!='D') return False;
    if (NOT (ValReg(Asc[1]) AND ValReg(Asc[4]))) return False;
 
    *Erg1=Asc[1]-'0'; *Erg2=Asc[4]-'0';
@@ -272,16 +275,16 @@ END
 BEGIN
    if (strlen(Asc)!=9) return False;
    if (*Asc!='(') return False;
-   if ((toupper(Asc[1])!='D') AND (toupper(Asc[1])!='A')) return False;
+   if ((mytoupper(Asc[1])!='D') AND (mytoupper(Asc[1])!='A')) return False;
    if (Asc[3]!=')') return False;
    if (Asc[4]!=':') return False;
    if (Asc[5]!='(') return False;
-   if ((toupper(Asc[6])!='D') AND (toupper(Asc[6])!='A')) return False;
+   if ((mytoupper(Asc[6])!='D') AND (mytoupper(Asc[6])!='A')) return False;
    if (Asc[8]!=')') return False;
    if (NOT (ValReg(Asc[2]) AND ValReg(Asc[7]))) return False;
 
-   *Erg1=Asc[2]-'0'; if (toupper(Asc[1])=='A') *Erg1+=8;
-   *Erg2=Asc[7]-'0'; if (toupper(Asc[6])=='A') *Erg2+=8;
+   *Erg1=Asc[2]-'0'; if (mytoupper(Asc[1])=='A') *Erg1+=8;
+   *Erg2=Asc[7]-'0'; if (mytoupper(Asc[6])=='A') *Erg2+=8;
 
    return True;
 END
@@ -325,7 +328,7 @@ END
 BEGIN
    Boolean ValOK;
 
-   if ((strlen(Asc)==2) AND (toupper(*Asc)=='D') AND (ValReg(Asc[1])))
+   if ((strlen(Asc)==2) AND (mytoupper(*Asc)=='D') AND (ValReg(Asc[1])))
     BEGIN
      *Erg=0x20+(Asc[1]-'0'); return True;
     END
@@ -365,7 +368,7 @@ BEGIN
 
    if ((l > 2) AND (Asc[l - 2] == '.')) 
     BEGIN
-     switch (toupper(Asc[l - 1]))
+     switch (mytoupper(Asc[l - 1]))
       BEGIN
        case 'B': NewLen = 0; break;
        case 'W': NewLen = 1; break;
@@ -409,7 +412,7 @@ BEGIN
       BEGIN
        if ((strlen(C->Name)>3) AND (C->Name[2]=='.')) 
         BEGIN
-         switch (toupper(C->Name[3]))
+         switch (mytoupper(C->Name[3]))
           BEGIN
            case 'L': C->Long=True; break;
            case 'W': C->Long=False; break;
@@ -439,7 +442,7 @@ BEGIN
    C->Art=Disp;
    if (C->Name[strlen(C->Name)-2]=='.') 
     BEGIN
-     switch (toupper(C->Name[strlen(C->Name)-1]))
+     switch (mytoupper(C->Name[strlen(C->Name)-1]))
       BEGIN
        case 'L': C->Size=2; break;
        case 'W': C->Size=1; break;
@@ -1226,9 +1229,9 @@ END
         static Byte OneReg(char *Asc)
 BEGIN
    if (strlen(Asc)!=2) return 16;
-   if ((toupper(*Asc)!='A') AND (toupper(*Asc)!='D')) return 16;
+   if ((mytoupper(*Asc)!='A') AND (mytoupper(*Asc)!='D')) return 16;
    if (NOT ValReg(Asc[1])) return 16;
-   return Asc[1]-'0'+((toupper(*Asc)=='D')?0:8);
+   return Asc[1]-'0'+((mytoupper(*Asc)=='D')?0:8);
 END
 
         static Boolean DecodeRegList(char *Asc_o, Word *Erg)
@@ -1562,13 +1565,13 @@ END
         static void DecodeADDSUBCMP(Word Index)
 BEGIN
    Word Op = Index & 3, Reg;
-   char Variant = toupper(OpPart[strlen(OpPart) - 1]);
+   char Variant = mytoupper(OpPart[strlen(OpPart) - 1]);
    Word PCMask;
    
    /* since CMP only reads operands, PC-relative addressing is also
       allowed for the second operand */
 
-   PCMask = (toupper(*OpPart) == 'C') ? (Mpc+Mpcidx) : 0;
+   PCMask = (mytoupper(*OpPart) == 'C') ? (Mpc+Mpcidx) : 0;
    if (CheckColdSize())
     BEGIN
      if (ArgCnt!=2) WrError(1110);
@@ -1651,7 +1654,7 @@ END
         static void DecodeANDOR(Word Index)
 BEGIN
    Word Op =Index & 3, Reg;
-   char Variant = toupper(OpPart[strlen(OpPart) - 1]);
+   char Variant = mytoupper(OpPart[strlen(OpPart) - 1]);
 
    if (ArgCnt!=2) WrError(1110);
    else if (CheckColdSize())
@@ -4257,7 +4260,7 @@ BEGIN
    DontPrint=False; RelPos=2;
 
    if (*AttrPart!='\0')
-    switch (toupper(*AttrPart))
+    switch (mytoupper(*AttrPart))
      BEGIN
       case 'B': OpSize=0; break;
       case 'W': OpSize=1; break;

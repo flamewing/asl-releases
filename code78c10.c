@@ -11,9 +11,15 @@
 /*           25.10.2000 accesses wrong argument for mov nnn,a                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code78c10.c,v 1.3 2005/09/08 17:31:04 alfred Exp $                   */
+/* $Id: code78c10.c,v 1.5 2007/11/26 19:28:34 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code78c10.c,v $
+ * Revision 1.5  2007/11/26 19:28:34  alfred
+ * - change SKINT -> SKNIT
+ *
+ * Revision 1.4  2007/11/24 22:48:05  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.3  2005/09/08 17:31:04  alfred
  * - add missing include
  *
@@ -221,7 +227,7 @@ BEGIN
    char *p;
 
    if (strlen(Asc)!=1) return False;
-   p=strchr(Names,toupper(*Asc));
+   p=strchr(Names, mytoupper(*Asc));
    if (p==Nil) return False;
    *Erg=p-Names; return True;;
 END
@@ -299,7 +305,7 @@ BEGIN
    if (p==Nil) return False;
 
    if (p==Asc+1)
-    switch (toupper(*Asc))
+    switch (mytoupper(*Asc))
      BEGIN
       case 'H': *Erg=15; break;
       case 'D': *Erg=11; break;
@@ -964,14 +970,14 @@ BEGIN
      return;
     END
 
-   if ((Memo("SKIT")) OR (Memo("SKINT")))
+   if ((Memo("SKIT")) OR (Memo("SKNIT")))
     BEGIN
      if (ArgCnt!=1) WrError(1110);
      else if (NOT Decode_irf(ArgStr[1],&HReg)) WrError(1350);
      else
       BEGIN
        CodeLen=2; BAsmCode[0]=0x48;
-       BAsmCode[1]=0x40+(Ord(Memo("SKINT")) << 5)+HReg;
+       BAsmCode[1]=0x40+(Ord(Memo("SKNIT")) << 5)+HReg;
       END
      return;
     END

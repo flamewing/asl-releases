@@ -45,11 +45,14 @@ Digital    DECpc AXP/150           21064          150         [8K+8K]/512K      
 Digital    DECpc AXP/150           21064          150         [8K+8K]/512K         32         Linux 2.1.74      egcs 1.0.1   |   2.05s   0.99s   12.44s   31.51   0.210 [20.06.1998]
 Digital    DECpc AXP/150           21064          150         [8K+8K]/512K         32         Linux 1.99.12     DEC-C 3.11   |   2.02s   1.04s   12.09s   31.40   0.209
 Digital    DEC 3000 Model 400      21064          133         [8K+8K]/512K         64         Digital Unix 4.0  DEC-C 3.11   |   2.18s   1.09s   12.79s   29.58   0.222
+Digital    DEC 3000 Model 500      21064          150         [8K+8K]/512K        256         NetBSD 3.1.1      gcc 3.3.3    |   2.43s   1.27s   14.82s   25.82   0.172 [26.11.2006 comp 201min 38s]
 Digital    DEC 3000 Model 300X     21064          175         [8K+8K]/256K         64         Digital Unix 4.0  DEC-C 3.11   |   2.44s   1.30s   14.80s   25.59   0.093
 Digital    AlphaStation 200 4/100  21064          100         [8K+8K]/256K        128         Linux 2.4.31      gcc 3.3.5    |   2.93s   1.28s   15.39s   23.90   0.239 [14.11.2005 comp 270min]
 Digital    DEC 3000 Model 300      21064          150         [8K+8K]/256K         64         Digital Unix 4.0  DEC-C 3.11   |   2.84s   1.42s   15.24s   23.38   0.156
 Digital    DEC 3000 Model 300LX    21064          125         [8K+8K]/256K         48         Digital Unix 4.0  DEC-C 3.11   |   3.34s   1.59s   18.19s   20.11   0.161
+Digital    DEC 3000 Model 300      21064          150         [8K+8K]/256K         64         NetBSD 3.1.1      gcc 3.3.3    |   3.62s   1.86s   23.93s   17.23   0.115 [24.11.2007 comp 283min]
 Digital    Noname board            21066          166         [8K+8K]/256K         64         Linux 2.0.34      egcs 1.0.2   |   4.09s   1.87s   21.97s   16.74   0.100 [18. 4.1999 comp 150min]
+Digital    DEC 3000 Model 300LX    21064          125         [8K+8K]/256K        208         NetBSD 3.1.1      gcc 3.3.3    |   3.85s   1.98s   23.06s   16.50   0.132 [25.11.2007 comp 334min]
 
 Sparc-based systems
 
@@ -80,6 +83,7 @@ SGI        Origin 2000             R10000         200         [32K+32K]/4M      
 SGI        Indigo 2                R4400          200         [16K+16K]/2M         64         Irix 5.3          SGI-C (2)    |   1.78s   0.88s    9.70s   37.25   0.186
 SGI        Onyx                    R4400          150         [16K+16K]/4M        256         Irix 5.3          SGI-C (2)    |   2.08s   1.07s   11.80s   31.03   0.207
 Digital    DECStation 5000/240     R3400           40         64K+64K             ???         Ultrix 4.3        gcc 2.7.2    |   3.90s   2.45s   24.45s   15.03   0.376
+Digital    DECStation 5000/133     R3000+R3010     33         64K+128K             64         NetBSD 3.1.1      gcc 3.3.3    |   7.58s   3.70s   46.32s    8.47   0.257 [28.11.2007 comp 449min 51s]
 Digital    DECStation 5000/200     R3000+R3010     25         64K+64K              48         NetBSD 1.3.3      gcc 2.7.2.2  |   8.10s   3.85s   47.64s    8.09   0.324 [17. 1.1999]
 Digital    DECStation 3100         R2000+R2010     16.7       64K+64K              16         NetBSD 1.3.3      gcc 2.7.2.2  |  12.78s   6.09s   74.79s    5.14   0.308 [17. 1.1999]
 

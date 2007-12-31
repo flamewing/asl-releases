@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code7000.c,v 1.5 2006/12/19 17:50:18 alfred Exp $                    */
+/* $Id: code7000.c,v 1.6 2007/11/24 22:48:05 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code7000.c,v $
+ * Revision 1.6  2007/11/24 22:48:05  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.5  2006/12/19 17:50:18  alfred
  * - eliminate static local variable
  *
@@ -343,7 +346,7 @@ BEGIN
     BEGIN
      *Erg=15; return True;
     END
-   else if ((strlen(Asc)<2) OR (strlen(Asc)>3) OR (toupper(*Asc)!='R')) return False;
+   else if ((strlen(Asc)<2) OR (strlen(Asc)>3) OR (mytoupper(*Asc)!='R')) return False;
    else
     BEGIN
      *Erg=ConstLongInt(Asc + 1, &Err, 10);
@@ -367,7 +370,7 @@ BEGIN
     BEGIN
      *Erg=4; MinCPU=CPU7700;
     END
-   else if ((strlen(Asc)==7) AND (toupper(*Asc)=='R')
+   else if ((strlen(Asc)==7) AND (mytoupper(*Asc)=='R')
        AND (strcasecmp(Asc+2,"_BANK")==0)
        AND (Asc[1]>='0') AND (Asc[1]<='7'))
     BEGIN
@@ -876,7 +879,7 @@ BEGIN
       BEGIN
        WrError(1105); return;
       END
-     switch (toupper(*AttrPart))
+     switch (mytoupper(*AttrPart))
       BEGIN
        case 'B': SetOpSize(0); break;
        case 'W': SetOpSize(1); break;

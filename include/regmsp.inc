@@ -10,6 +10,13 @@
 ;*   letzte Änderungen : 2002-01-11                                         *
 ;*                                                                          *
 ;****************************************************************************
+;* $Id: regmsp.inc,v 1.2 2007/12/31 13:23:53 alfred Exp $                    
+;****************************************************************************
+;* $Log: regmsp.inc,v $
+;* Revision 1.2  2007/12/31 13:23:53  alfred
+;* - added some bit definitions
+;*
+;****************************************************************************
 
                 ifndef  regmspinc      ; verhindert Mehrfacheinbindung
 
@@ -20,7 +27,7 @@ regmspinc       equ     1
 		endif
 
                 if      MOMPASS=1
-                 message "MSP430-Register+Befehlsdefinitionen (C) 1996 Alfred Arnold"
+                 message "MSP430-Register+Befehlsdefinitionen (C) 1996/2007 Alfred Arnold, Jose Da Silva"
 		endif
 
 ;----------------------------------------------------------------------------
@@ -160,11 +167,34 @@ jeq		macro	label
 ; Special Function Register of MSP430x1xx Family, Byte Access
 
 IE1             equ     000h            ; Interrupt Enable
-IE2             equ     001h
+ACCVIE          equ     32              ; flash-access interrupt enable  (IE1.5)
+NMIIE           equ     16              ; NMI enable                     (IE1.4)
+OFIE            equ     2               ; Osc-fault-interrupt enable     (IE1.1)
+WDTIE           equ     1               ; Watchdog interrupt enable      (IE1.0)
+
 IFG1            equ     002h            ; Interrupt Flag
-IFG2            equ     003h
+NMIIFG          equ     16              ; set via !RST/NMI pin           (IFG1.4)
+RSTIFG          equ     8               ; External reset interrupt flag  (IFG1.3)
+PORIFG          equ     4               ; Power-on-reset interrupt flag  (IFG1.2)
+OFIFG           equ     2               ; flag on oscillator fault       (IFG1.1)
+WDTIFG          equ     1               ; watchdog or security key violation (IFG1.0)
+
 ME1             equ     004h            ; Modul Enable
+
+;MSP43012xx devices only, only for MSP43012xx devices.
+
+IE2             equ     001h
+UTXIE0          equ     2               ; USART0 transmit int-enable bit (IE2.2)
+URXIE0          equ     1               ; USART0 receive int-enable bit  (IE2.1)
+
+IFG2            equ     003h
+UTXIFG0         equ     2               ; USART0 and SPI transmit flag   (IFG2.1)
+URXIFG0         equ     1               ; USART0 and SPI receive flag    (IFG2.0)
+
 ME2             equ     005h
+UTXE0           equ     2               ; USART0 transmit enable bit     (ME2.1)
+URXE0           equ     1               ; USART0 receive enable bit      (ME2.0)
+USPIE0          equ     1               ; SPI transmit+receive enable    (ME2.0)
 
 ;----------------------------------------------------------------------------
 ; Digital I/O, Byte Access
@@ -262,8 +292,46 @@ EPCTL           equ     054h            ; EPROM-Steuerung
 ; Basic Clock Registers, Byte Access
 
 DCOCTL		equ	056h
+DCO2            equ     128             ;DCO freq select, see RSELx     (DCOCTL.7)
+DCO1            equ     64              ;                               (DCOCTL.6)
+DCO0            equ     32              ;                               (DCOCTL.5)
+MOD4            equ     16              ;Modulator selection            (DCOCTL.4)
+MOD3            equ     8               ;                               (DCOCTL.3)
+MOD2            equ     4               ;                               (DCOCTL.2)
+MOD1            equ     2               ;                               (DCOCTL.1)
+MOD0            equ     1               ;                               (DCOCTL.0)
+
 BCSCTL1		equ	057h
+XT2OFF          equ     128             ; XT2 off. Turn off XT2 oscil    (BCSCTL1.7)
+XTS             equ     64              ; LFXT1 mode. 0=LowFreq,1=HiFreq (BCSCTL1.6)
+DIVA1           equ     32              ; Divider for ACLK.              (BCSCTL1.5)
+DIVA0           equ     16              ; 00=/1, 01=/2, 10=/4, 11=/8     (BCSCTL1.4)
+XT5V            equ     8               ; Unused. Always reset to zero   (BCSCTL1.3)
+RSEL2           equ     4               ; Resistor select. internal R    (BCSCTL1.2)
+RSEL1           equ     2               ; lowest R=0                     (BCSCTL1.1)
+RSEL0           equ     1               ;                                (BCSCTL1.0)
+RSEL_7          equ     7               ;                                (BCSCTL1.0-2)
+RSEL_6          equ     6               ;                                (BCSCTL1.0-2)
+RSEL_5          equ     5               ;                                (BCSCTL1.0-2)
+RSEL_4          equ     4               ;                                (BCSCTL1.0-2)
+RSEL_3          equ     3               ;                                (BCSCTL1.0-2)
+RSEL_2          equ     2               ;                                (BCSCTL1.0-2)
+RSEL_1          equ     1               ;                                (BCSCTL1.0-2)
+RSEL_0          equ     0               ;                                (BCSCTL1.0-2)
+
 BCSCTL2		equ	058h
+SELM_3          equ     128+64          ; Select MCLK. 11=LFXT1CLK       (BCSCTL2.6.7)
+SELM_2          equ     128             ; MCLK 10=XT2CLK or LFXT1CLK     (BCSCTL2.6.7)
+SELM_1          equ     64              ; Select MCLK. 01=DCOCLK         (BCSCTL2.6.7)
+SELM_0          equ     0               ; Select MCLK. 00=DCOCLK         (BCSCTL2.6.7)
+SELM1           equ     128             ; Select MCLK. 00=01=DCOCLK      (BCSCTL2.7)
+SELM0           equ     64              ; 10=XT2CLK or LFXT1CLK=11       (BCSCTL2.6)
+DIVM1           equ     32              ; Divider for MCLK,              (BCSCTL2.5)
+DIVM0           equ     16              ; 00=/1, 01=/2, 10=/4, 11=/8     (BCSCTL2.4)
+SELS            equ     8               ; Select SMCLK 0=DCOCLK,1=XT2CLK (BCSCTL2.3)
+DIVS1           equ     4               ; Divider for SMCLK,             (BCSCTL2.2)
+DIVS0           equ     2               ; 00=/1, 01=/2, 10=/4, 11=/8     (BCSCTL2.1)
+DCOR            equ     1               ; DCO resistor. 0=intern,1=extn  (BCSCTL2.0)
 
 ;----------------------------------------------------------------------------
 ; Comparator_A Registers, Byte Access
@@ -303,6 +371,34 @@ U1BR0		equ	07Ch
 U1BR1		equ	07Dh
 U1RXBUF		equ	07Eh
 U1TXBUF		equ	07Fh
+
+;----------------------------------------------------------------------------
+; USART Register Bits
+
+FE              equ     128             ; Framing error (low stop bit)   (UxRCTL.7)
+PE              equ     64              ; Parity error (PE=0 if PENA=0)  (UxRCTL.6)
+OE              equ     32              ; Overrun error (buffer overrun) (UxRCTL.5)
+BRK             equ     16              ; Break detect flag              (UxRCTL.4)
+URXEIE          equ     8               ; Rec err chars sets URXIFG)     (UxRCTL.3)
+URXWIE          equ     4               ; Rec wakeup int-enable (URXIFG) (UxRCTL.2)
+RXWAKE          equ     2               ; Rec wakeup flag                (UxRCTL.1)
+RXERR           equ     1               ; Rec error flag (FE,PE,OE,BRK)  (UxRCTL.0)
+                                          
+CKPL            equ     64              ; Clock polarity 0=UCLKI=UCLK    (UxTCTL.6)
+SSEL1           equ     32              ; Source 00=UCLKI, 01=ACLK       (UxTCTL.5)
+SSEL0           equ     16              ; Source 10=SMCLKI, 11=SMCLK     (UxTCTL.4)
+URXSE           equ     8               ; Receive start-edge, 1=enabled  (UxTCTL.3)
+TXWAKE          equ     4               ; Transmitter wake, 0=data,1=adr (UxTCTL.2)
+TXEPT           equ     1               ; Transmitter empty flag         (UxTCTL.0)
+                                          
+PENA            equ     128             ; Parity enable, 1=enabled       (UxCTL.7)
+PEV             equ     64              ; Parity select, 1=even,0=odd    (UxCTL.6)
+SPB             equ     32              ; Stop bit, 0=1stop,1=2stop      (UxCTL.5)
+CHAR            equ     16              ; Char length, 0=7bit,1=8bit     (UxCTL.4)
+LISTEN          equ     8               ; Listen enable, 1=loopback->RX  (UxCTL.3)
+SYNC            equ     4               ; synch mode, 0=USART,1=SPI      (UxCTL.2)
+MM              equ     2               ; Multiprocessor, 1=use_protocol (UxCTL.1)
+SWRST           equ     1               ; software reset, 1=held_reset   (UxCTL.0)
 
 ;----------------------------------------------------------------------------
 ; ADC12 low bytes
@@ -351,6 +447,14 @@ TBIV		equ	011Eh
 ; Watchdog/Timer, Word Access
 
 WDTCTL          equ     0120h
+WDTHOLD         equ     128             ; Watchdog timer hold. 1=stopped (WDTCTL.6)
+WDTNMIES        equ     64              ; NMI edge select 0=rise,1=fall  (WDTCTL.6)
+WDTNMI          equ     32              ; NMI pin select, 0=!reset,1=NMI (WDTCTL.5)
+WDTTMSEL        equ     16              ; mode select 0=watchdog,1=timer (WDTCTL.4)
+WDTCNTCL        equ     8               ; Counter clear, 1=clear_counter (WDTCTL.3)
+WDTSSEL         equ     4               ; Source select, 0=SMCLK,1=ACLK  (WDTCTL.2)
+WDTIS1          equ     2               ; Watchdog timer interval select (WDTCTL.1)
+WDTIS0          equ     1               ; 00=32768,01=8192,10=512,11=64  (WDTCTL.0)
 
 ;----------------------------------------------------------------------------
 ; Timer_A Interrupt Vector, Word Access

@@ -10,9 +10,12 @@
 /*            5. 1.2000 fixed accessing P1/P2 with lower case in ANL/ORL     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code48.c,v 1.3 2005/09/08 17:31:03 alfred Exp $                      */
+/* $Id: code48.c,v 1.4 2007/11/24 22:48:04 alfred Exp $                      */
 /*****************************************************************************
  * $Log: code48.c,v $
+ * Revision 1.4  2007/11/24 22:48:04  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.3  2005/09/08 17:31:03  alfred
  * - add missing include
  *
@@ -183,7 +186,7 @@ BEGIN
       END
     END
 
-   else if ((strlen(Asc)==2) AND (toupper(*Asc)=='R'))
+   else if ((strlen(Asc)==2) AND (mytoupper(*Asc)=='R'))
     BEGIN
      if ((Asc[1]>='0') AND (Asc[1]<='7'))
       BEGIN
@@ -191,7 +194,7 @@ BEGIN
       END
     END
 
-   else if ((strlen(Asc)==3) AND (*Asc=='@') AND (toupper(Asc[1])=='R'))
+   else if ((strlen(Asc)==3) AND (*Asc=='@') AND (mytoupper(Asc[1])=='R'))
     BEGIN
      if ((Asc[2]>='0') AND (Asc[2]<='1'))
       BEGIN
@@ -331,7 +334,7 @@ BEGIN
          else
           BEGIN
            CodeLen=2; BAsmCode[0]=0x88;
-           if (toupper(*ArgStr[1])=='P') BAsmCode[0]+=ArgStr[1][1]-'0';
+           if (mytoupper(*ArgStr[1])=='P') BAsmCode[0]+=ArgStr[1][1]-'0';
            if (Memo("ANL")) BAsmCode[0]+=0x10;
            if (strcasecmp(ArgStr[1],"BUS")==0)
             BEGIN
@@ -530,7 +533,7 @@ BEGIN
       BEGIN
        CodeLen=1; BAsmCode[0]=0x22; ChkUPI();
       END
-     else if ((strlen(ArgStr[2])!=2) OR (toupper(*ArgStr[2])!='P')) WrError(1350);
+     else if ((strlen(ArgStr[2])!=2) OR (mytoupper(*ArgStr[2])!='P')) WrError(1350);
      else switch (ArgStr[2][1])
       BEGIN
        case '0':
@@ -711,7 +714,7 @@ BEGIN
          strcpy(ArgStr[1],ArgStr[2]); strmaxcpy(ArgStr[2],"A",255); OK=True;
         END
        if (strcasecmp(ArgStr[2],"A")!=0) WrError(1350);
-       else if ((strlen(ArgStr[1])!=2) OR (toupper(*ArgStr[1])!='P')) WrError(1350);
+       else if ((strlen(ArgStr[1])!=2) OR (mytoupper(*ArgStr[1])!='P')) WrError(1350);
        else if ((ArgStr[1][1]<'4') OR (ArgStr[1][1]>'7')) WrError(1320);
        else
         BEGIN

@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codest7.c,v 1.3 2005/09/08 17:31:05 alfred Exp $                     */
+/* $Id: codest7.c,v 1.4 2007/11/24 22:48:07 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codest7.c,v $
+ * Revision 1.4  2007/11/24 22:48:07  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.3  2005/09/08 17:31:05  alfred
  * - add missing include
  *
@@ -197,11 +200,11 @@ BEGIN
 
    if ((l>=3) AND (Asc[l-2]=='.'))
     BEGIN
-     if (toupper(Asc[l-1])=='B')
+     if (mytoupper(Asc[l-1])=='B')
       BEGIN
        Size=I8; Asc[l-2]='\0'; 
       END
-     else if (toupper(Asc[l-1])=='W')
+     else if (mytoupper(Asc[l-1])=='W')
       BEGIN
        Size=I16; Asc[l-2]='\0';
       END
@@ -233,7 +236,7 @@ BEGIN
    Boolean OK;
    int l=strlen(Asc);
 
-   if ((l>=3) AND (Asc[l-2]=='.') AND (toupper(Asc[l-1])=='W'))
+   if ((l>=3) AND (Asc[l-2]=='.') AND (mytoupper(Asc[l-1])=='W'))
     BEGIN
      I16=True; Asc[l-2]='\0';
     END
@@ -416,7 +419,7 @@ BEGIN
    /* Attribut verarbeiten */
 
    if (*AttrPart!='\0')
-    switch (toupper(*AttrPart))
+    switch (mytoupper(*AttrPart))
      BEGIN
       case 'B': OpSize=0; break;
       case 'W': OpSize=1; break;

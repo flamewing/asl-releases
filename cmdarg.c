@@ -89,12 +89,12 @@ BEGIN
 
      if (Param[Start]=='#')
       BEGIN
-       for (z=Start+1; z<(int)strlen(Param); z++) Param[z]=toupper(Param[z]);
+       for (z=Start+1; z<(int)strlen(Param); z++) Param[z]=mytoupper(Param[z]);
        Start++;
       END
      else if (Param[Start]=='~')
       BEGIN
-       for (z=Start+1; z<(int)strlen(Param); z++) Param[z]=tolower(Param[z]);
+       for (z=Start+1; z<(int)strlen(Param); z++) Param[z]=mytolower(Param[z]);
        Start++;
       END
 
@@ -102,7 +102,7 @@ BEGIN
 
      Search=0;
      strncpy(s,Param+Start,255);
-     for (z=0; z<(int)strlen(s); z++) s[z]=toupper(s[z]);
+     for (z=0; z<(int)strlen(s); z++) s[z]=mytoupper(s[z]);
      for (Search=0; Search<Cnt; Search++)
       if ((strlen(Def[Search].Ident)>1) AND (strcmp(s,Def[Search].Ident)==0)) break;
      if (Search<Cnt) 

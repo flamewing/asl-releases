@@ -5,9 +5,12 @@
 /* Codegenerator 78K2-Familie                                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code78k2.c,v 1.14 2006/10/10 10:42:08 alfred Exp $
+/* $Id: code78k2.c,v 1.15 2007/11/24 22:48:05 alfred Exp $
  *****************************************************************************
  * $Log: code78k2.c,v $
+ * Revision 1.15  2007/11/24 22:48:05  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.14  2006/10/10 10:42:08  alfred
  * - add missing 78K2 instructions (fix by Patrik Stroemdahl)
  *
@@ -156,7 +159,7 @@ static ShortInt DecodeReg8(char *pAsc)
   if (l == 1) 
   {
     static char Reg8Names[9] = "XACBEDLH";
-    char *pPos = strchr(Reg8Names, toupper(*pAsc));
+    char *pPos = strchr(Reg8Names, mytoupper(*pAsc));
 
     if (pPos)
       Result = pPos - Reg8Names;
@@ -329,7 +332,7 @@ static void DecodeAdr(char *pAsc, Word Mask)
          which either means +/- or a blank */
 
       for (pSep = pAsc; *pSep; pSep++)
-        if (!isalpha(*pSep))
+        if (!myisalpha(*pSep))
           break;
       
       /* decode base register.  SP is not otherwise handled. */

@@ -17,9 +17,12 @@
 /*           2002-01-23 symbols defined with BIT must not be macro-local     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code51.c,v 1.5 2006/02/27 20:21:17 alfred Exp $                      */
+/* $Id: code51.c,v 1.6 2007/11/24 22:48:04 alfred Exp $                      */
 /***************************************************************************** 
  * $Log: code51.c,v $
+ * Revision 1.6  2007/11/24 22:48:04  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.5  2006/02/27 20:21:17  alfred
  * - correct bit range for RAM bit areas
  *
@@ -160,15 +163,15 @@ BEGIN
      *Erg = 15; *Size = 2; return True;
     END
 
-   if ((alen >= 2) AND (toupper(*Asc) == 'R'))
+   if ((alen >= 2) AND (mytoupper(*Asc) == 'R'))
     BEGIN
      Start=Asc + 1; *Size = 0;
     END
-   else if ((MomCPU >= CPU80251) AND (alen >= 3) AND (toupper(*Asc) == 'W') AND (toupper(Asc[1]) == 'R'))
+   else if ((MomCPU >= CPU80251) AND (alen >= 3) AND (mytoupper(*Asc) == 'W') AND (mytoupper(Asc[1]) == 'R'))
     BEGIN
      Start = Asc + 2; *Size = 1;
     END
-   else if ((MomCPU >= CPU80251) AND (alen >= 3) AND (toupper(*Asc) == 'D') AND (toupper(Asc[1]) == 'R'))
+   else if ((MomCPU >= CPU80251) AND (alen >= 3) AND (mytoupper(*Asc) == 'D') AND (mytoupper(Asc[1]) == 'R'))
     BEGIN
      Start = Asc + 2; *Size = 2;
     END

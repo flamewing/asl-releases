@@ -15,9 +15,12 @@
  * 14. 1.2001 silenced warnings about unused parameters
  * 2001-11-11 use DecodeTIPSeudo
  */
-/* $Id: code3205x.c,v 1.4 2005/09/08 16:53:39 alfred Exp $                   */
+/* $Id: code3205x.c,v 1.5 2007/11/24 22:48:03 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code3205x.c,v $
+ * Revision 1.5  2007/11/24 22:48:03  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.4  2005/09/08 16:53:39  alfred
  * - use common PInstTable
  *
@@ -109,12 +112,15 @@ static CPUVar cpu_32053;
 
 static Word eval_ar_expression(char *asc, Boolean *ok)
 {
-        *ok = True;
+  *ok = True;
 
-        if ((toupper(asc[0]) == 'A') && (toupper(asc[1]) == 'R') && (asc[2] >= '0') && 
-            (asc[2] <= '7') && (asc[3] <= '\0'))
-                return asc[2] - '0';
-        return EvalIntExpression(asc, UInt3, ok);
+  if ((mytoupper(asc[0]) == 'A')
+   && (mytoupper(asc[1]) == 'R')
+   && (asc[2] >= '0')
+   && (asc[2] <= '7')
+   && (asc[3] <= '\0'))
+     return asc[2] - '0';
+  return EvalIntExpression(asc, UInt3, ok);
 }
 
 /* ---------------------------------------------------------------------- */

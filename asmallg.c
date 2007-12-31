@@ -25,9 +25,12 @@
 /*                       to now                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmallg.c,v 1.5 2007/04/30 18:37:51 alfred Exp $                     */
+/* $Id: asmallg.c,v 1.6 2007/11/24 22:48:02 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmallg.c,v $
+ * Revision 1.6  2007/11/24 22:48:02  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.5  2007/04/30 18:37:51  alfred
  * - add weird integer coding
  *
@@ -1329,7 +1332,7 @@ BEGIN
 
    if (ArgCnt != 0) WrError(1110);
    else
-    RelSegs = (toupper(*OpPart) == 'R');
+    RelSegs = (mytoupper(*OpPart) == 'R');
 END
 
 	static void CodePPSyms(PForwardSymbol *Orig,

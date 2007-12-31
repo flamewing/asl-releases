@@ -31,9 +31,12 @@
 /*           2002-01-13: fixed undefined value of OK in some cases           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3254x.c,v 1.4 2005/09/08 16:53:41 alfred Exp $                   */
+/* $Id: code3254x.c,v 1.5 2007/11/24 22:48:03 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code3254x.c,v $
+ * Revision 1.5  2007/11/24 22:48:03  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.4  2005/09/08 16:53:41  alfred
  * - use common PInstTable
  *
@@ -135,7 +138,7 @@ static char ShortConds[4][4] = {"EQ", "LT", "GT", "NEQ"};
 
 static Boolean IsAcc(char *Asc)
 {
-  return ((Asc[1] == '\0') && (toupper(*Asc) >= 'A') && (toupper(*Asc) <= 'B'));
+  return ((Asc[1] == '\0') && (mytoupper(*Asc) >= 'A') && (mytoupper(*Asc) <= 'B'));
 }
 
 static Boolean DecodeAdr(char *Asc, int Mask)
@@ -154,7 +157,7 @@ static Boolean DecodeAdr(char *Asc, int Mask)
 
   if (IsAcc(Asc))
   {
-    AdrMode = ModAcc; *AdrVals = toupper(*Asc) - 'A';
+    AdrMode = ModAcc; *AdrVals = mytoupper(*Asc) - 'A';
     goto done;
   }
 
@@ -210,7 +213,7 @@ static Boolean DecodeAdr(char *Asc, int Mask)
               OK = False;
             break;
           default:  /* compare verbatim */
-            if (toupper(*pPattern) != toupper(*pComp))
+            if (mytoupper(*pPattern) != mytoupper(*pComp))
               OK = False;
         }
         if (OK)

@@ -20,9 +20,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code960.c,v 1.4 2005/09/08 16:53:42 alfred Exp $                     */
+/* $Id: code960.c,v 1.5 2007/11/24 22:48:06 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code960.c,v $
+ * Revision 1.5  2007/11/24 22:48:06  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.4  2005/09/08 16:53:42  alfred
  * - use common PInstTable
  *
@@ -145,12 +148,12 @@ BEGIN
       *Erg=SpecRegs[z].Code; return True;
      END
 
-   if ((toupper(*Asc)=='G') OR (toupper(*Asc)=='R'))
+   if ((mytoupper(*Asc)=='G') OR (mytoupper(*Asc)=='R'))
     BEGIN
      *Erg=strtol(Asc+1,&end,10);
      if ((*end=='\0') AND (*Erg<=15))
       BEGIN
-       if (toupper(*Asc)=='G') *Erg+=16;
+       if (mytoupper(*Asc)=='G') *Erg+=16;
        return TRUE;
       END
     END

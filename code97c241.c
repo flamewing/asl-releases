@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code97c241.c,v 1.5 2006/06/15 20:48:36 alfred Exp $                  */
+/* $Id: code97c241.c,v 1.6 2007/11/24 22:48:06 alfred Exp $                  */
 /*****************************************************************************
  * $Log: code97c241.c,v $
+ * Revision 1.6  2007/11/24 22:48:06  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.5  2006/06/15 20:48:36  alfred
  * - correct function call
  *
@@ -364,8 +367,8 @@ BEGIN
    Byte tmp;
    Boolean Err;
 
-   if ((strlen(Asc)>4) OR (strlen(Asc)<3) OR (toupper(*Asc)!='R')) return False;
-   switch (toupper(Asc[1]))
+   if ((strlen(Asc)>4) OR (strlen(Asc)<3) OR (mytoupper(*Asc)!='R')) return False;
+   switch (mytoupper(Asc[1]))
     BEGIN
      case 'B': *Result=0x00; break;
      case 'W': *Result=0x40; break;
@@ -1219,13 +1222,13 @@ BEGIN
      default:
       Format=' ';
     END
-   Format=toupper(Format);
+   Format=mytoupper(Format);
 
    /* Attribut abarbeiten */
 
    if (*AttrPart=='\0') OpSize=(-1);
    else
-    switch (toupper(*AttrPart))
+    switch (mytoupper(*AttrPart))
      BEGIN
       case 'B': OpSize=0; break;
       case 'W': OpSize=1; break;

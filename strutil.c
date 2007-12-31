@@ -11,9 +11,12 @@
 /*           30. 5.1999 ConstLongInt akzeptiert auch 0x fuer Hex-Zahlen      */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: strutil.c,v 1.4 2005/10/02 10:00:46 alfred Exp $                     */
+/* $Id: strutil.c,v 1.5 2007/11/24 22:48:08 alfred Exp $                     */
 /*****************************************************************************
  * $Log: strutil.c,v $
+ * Revision 1.5  2007/11/24 22:48:08  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.4  2005/10/02 10:00:46  alfred
  * - ConstLongInt gets default base, correct length check on KCPSM3 registers
  *
@@ -384,7 +387,9 @@ BEGIN
 
    /* Sonderbehandlung 0x --> $ */
 
-   if ((strlen(inp) >= 2) && (*inp == '0') && (toupper(inp[1]) == 'X'))
+   if ((strlen(inp) >= 2) 
+    && (*inp == '0') 
+    && (mytoupper(inp[1]) == 'X'))
     BEGIN
      inp += 2;
      Base = 16;

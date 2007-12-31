@@ -18,9 +18,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code4004.c,v 1.3 2005/09/08 16:53:41 alfred Exp $                          */
+/* $Id: code4004.c,v 1.4 2007/11/24 22:48:04 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code4004.c,v $
+ * Revision 1.4  2007/11/24 22:48:04  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.3  2005/09/08 16:53:41  alfred
  * - use common PInstTable
  *
@@ -96,10 +99,10 @@ BEGIN
 
    if (FindRegDef(Asc,&s)) Asc=s;
 
-   if ((strlen(Asc) != 2) OR (toupper(*Asc)!='R')) return False;
+   if ((strlen(Asc) != 2) OR (mytoupper(*Asc)!='R')) return False;
    else
     BEGIN
-     *Erg = RegVal(toupper(Asc[1]));
+     *Erg = RegVal(mytoupper(Asc[1]));
      return (*Erg != 0xff);
     END
 END
@@ -111,11 +114,11 @@ BEGIN
 
    if (FindRegDef(Asc,&s)) Asc = s;
 
-   if ((strlen(Asc) != 4) OR (toupper(*Asc) != 'R') OR (toupper(Asc[2]) != 'R')) return False;
+   if ((strlen(Asc) != 4) OR (mytoupper(*Asc) != 'R') OR (mytoupper(Asc[2]) != 'R')) return False;
    else
     BEGIN
-     *Erg = RegVal(toupper(Asc[1]));
-     h = RegVal(toupper(Asc[3]));
+     *Erg = RegVal(mytoupper(Asc[1]));
+     h = RegVal(mytoupper(Asc[3]));
      return ((*Erg != 0xff) AND (h != 0xff) AND (h == (*Erg) + 1) AND (Odd(h)));
     END
 END
@@ -245,7 +248,7 @@ END
    {
      BAsmCode[0] = 0x10;
      for (pCond = ArgStr[1]; *pCond; pCond++)
-       switch (toupper(*pCond))
+       switch (mytoupper(*pCond))
        {
          case 'Z': BAsmCode[0] |= 4; break;
          case 'C': BAsmCode[0] |= 2; break;

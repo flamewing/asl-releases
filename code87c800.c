@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code87c800.c,v 1.3 2005/09/08 17:31:04 alfred Exp $                  */
+/* $Id: code87c800.c,v 1.4 2007/11/24 22:48:05 alfred Exp $                  */
 /*****************************************************************************
  * $Log: code87c800.c,v $
+ * Revision 1.4  2007/11/24 22:48:05  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.3  2005/09/08 17:31:04  alfred
  * - add missing include
  *
@@ -179,7 +182,7 @@ BEGIN
 
    if (strlen(Asc)==1)
     for (z=0; z<Reg8Cnt; z++)
-     if (toupper(*Asc)==Reg8Names[z])
+     if (mytoupper(*Asc)==Reg8Names[z])
       BEGIN
        AdrType=ModReg8; OpSize=0; AdrMode=z;
        ChkAdr(Erl); return;
@@ -320,7 +323,7 @@ BEGIN
     else
      BEGIN
       for (*Erg=0; *Erg<Reg8Cnt; (*Erg)++)
-       if (toupper(*Part)==Reg8Names[*Erg]) break;
+       if (mytoupper(*Part)==Reg8Names[*Erg]) break;
       if (*Erg<Reg8Cnt)
        BEGIN
         *Erg+=8; return True;

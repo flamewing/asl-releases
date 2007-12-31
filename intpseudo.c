@@ -5,9 +5,12 @@
 /* Haeufiger benutzte Intel-Pseudo-Befehle                                   */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: intpseudo.c,v 1.5 2005/11/04 19:38:00 alfred Exp $                   */
+/* $Id: intpseudo.c,v 1.6 2007/11/24 22:48:08 alfred Exp $                   */
 /***************************************************************************** 
  * $Log: intpseudo.c,v $
+ * Revision 1.6  2007/11/24 22:48:08  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.5  2005/11/04 19:38:00  alfred
  * - ignore case on DUP search
  *
@@ -360,7 +363,7 @@ static Boolean LayoutTenBytes(const char *pExpr, Word *pCnt, Boolean BigEndian)
    
 static Boolean DecodeIntelPseudo_ValidSymChar(char ch)
 {
-  ch = toupper(ch);
+  ch = mytoupper(ch);
 
   return (((ch >= 'A') && (ch <= 'Z'))
        || ((ch >= '0') && (ch <= '9'))
@@ -460,7 +463,7 @@ static Boolean DecodeIntelPseudo_LayoutMult(const char *pArg, Word *Cnt,
     /* split into parts and evaluate */
 
     pDupPart = pSep + 3;
-    while (isspace(*pDupPart))
+    while (myisspace(*pDupPart))
       pDupPart++;
     SumCnt = 0;
     Len = strlen(pDupPart); 

@@ -12,9 +12,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: p2bin.c,v 1.4 2006/12/09 18:27:30 alfred Exp $                      */
+/* $Id: p2bin.c,v 1.5 2007/11/24 22:48:08 alfred Exp $                      */
 /***************************************************************************** 
  * $Log: p2bin.c,v $
+ * Revision 1.5  2007/11/24 22:48:08  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.4  2006/12/09 18:27:30  alfred
  * - add warning about empty output
  *
@@ -380,7 +383,7 @@ BEGIN
     END
    else
     BEGIN
-     for (z=0; z<(int)strlen(Arg); z++) Arg[z]=toupper(Arg[z]);
+     for (z=0; z<(int)strlen(Arg); z++) Arg[z]=mytoupper(Arg[z]);
      ANDEq=0xff;
      for (z=0; z<ByteModeCnt; z++)
       if (strcmp(Arg,ByteModeStrings[z])==0)
@@ -405,7 +408,7 @@ BEGIN
    else
     BEGIN
      Sgn=1; if (*Arg=='\0') return CMDErr;
-     switch (toupper(*Arg))
+     switch (mytoupper(*Arg))
       BEGIN
        case 'B': Sgn=(-1);
        case 'L': Arg++;

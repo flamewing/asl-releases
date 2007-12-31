@@ -12,9 +12,12 @@
 /*           29. 5.1999 SysString                                            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: strutil.h,v 1.4 2005/10/02 10:00:46 alfred Exp $                     */
+/* $Id: strutil.h,v 1.5 2007/11/24 22:48:08 alfred Exp $                     */
 /*****************************************************************************
  * $Log: strutil.h,v $
+ * Revision 1.5  2007/11/24 22:48:08  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.4  2005/10/02 10:00:46  alfred
  * - ConstLongInt gets default base, correct length check on KCPSM3 registers
  *
@@ -81,4 +84,15 @@ extern void KillPostBlanks(char *s);
 extern int strqcmp(const char *s1, const char *s2);
   
 extern void strutil_init(void);
+
+/* avoid nasty "subscript has type char..." messages on some platforms */
+
+#define __chartouint(c) (((unsigned int)(c)) & 0xff)
+#define mytoupper(c) (toupper(__chartouint(c)))
+#define mytolower(c) (tolower(__chartouint(c)))
+#define myisspace(c) (isspace(__chartouint(c)))
+#define myisdigit(c) (isdigit(__chartouint(c)))
+#define myisprint(c) (isprint(__chartouint(c)))
+#define myisalpha(c) (isalpha(__chartouint(c)))
+
 #endif /* _STRUTIL_H */

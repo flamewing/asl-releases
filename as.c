@@ -58,9 +58,12 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.16 2007/04/30 10:19:19 alfred Exp $                          */
+/* $Id: as.c,v 1.17 2007/11/24 22:48:02 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.17  2007/11/24 22:48:02  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.16  2007/04/30 10:19:19  alfred
  * - make default nesting level consistent
  *
@@ -2662,10 +2665,17 @@ BEGIN
 
      /* Listdatei oeffnen */
 
-     RewriteStandard(&LstFile,LstName);
-     if (LstFile==Nil) ChkIO(10001);
-     errno=0; fprintf(LstFile,"%s",PrtInitString); ChkIO(10002);
-     if ((ListMask&1)!=0) NewPage(0,False);
+     RewriteStandard(&LstFile, LstName);
+     if (LstFile == Nil)
+       ChkIO(10001);
+     if (!ListToNull)
+     {
+       errno=0;
+       fprintf(LstFile, "%s", PrtInitString);
+       ChkIO(10002);
+     }
+     if ((ListMask & 1) != 0)
+       NewPage(0, False);
 
      /* assemblieren */
 
@@ -2768,7 +2778,12 @@ BEGIN
 
      if (MakeIncludeList) PrintIncludeList();
 
-     errno=0; fprintf(LstFile,"%s",PrtExitString); ChkIO(10002);
+     if (!ListToNull)
+     {
+       errno = 0;
+       fprintf(LstFile, "%s", PrtExitString);
+       ChkIO(10002);
+     }
     END
 
    if (MakeUseList) ClearUseList();
@@ -3541,7 +3556,7 @@ BEGIN
     BEGIN
      case NoRedir:
       Env=getenv("USEANSI"); strncpy(Dummy,(Env!=Nil)?Env:"Y",255);
-      if (toupper(Dummy[0])=='N')
+      if (mytoupper(Dummy[0])=='N')
        BEGIN
        END
       else

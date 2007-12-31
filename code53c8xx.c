@@ -63,7 +63,7 @@ BEGIN
 
    /* Anfang suchen */
 
-   for (p = Src; isspace(*p); p++)
+   for (p = Src; myisspace(*p); p++)
     if (*p == '\0') break;
    if (*p == '\0')
     BEGIN
@@ -564,7 +564,7 @@ BEGIN
         END /* ... TO ... */
        else if ((strcasecmp(Parts[1], "SHL") == 0) OR (strcasecmp(Parts[1], "SHR") == 0))
         BEGIN
-         AriOp = 1 + (Ord(toupper(Parts[1][2]) == 'R') << 2);
+         AriOp = 1 + (Ord(mytoupper(Parts[1][2]) == 'R') << 2);
          switch (DecodeComp(Parts[0], &DReg))
           BEGIN
             case SFBR:
@@ -889,7 +889,7 @@ BEGIN
         END
        if (OK)
         BEGIN
-         if (toupper(*Token) == 'S') DAsmCode[0] |= 0x00000200;
+         if (mytoupper(*Token) == 'S') DAsmCode[0] |= 0x00000200;
          CodeLen = 8;
         END
       END

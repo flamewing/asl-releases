@@ -182,7 +182,7 @@ BEGIN
    return (((inp>='0') AND (inp<='9')) OR ((inp>='A') AND (inp<='Z')) OR ((inp>='a') AND (inp<='z')));
 END
 
-#define t_toupper(ch) ((CaseSensitive) ? (ch) : (toupper(ch)))
+#define t_toupper(ch) ((CaseSensitive) ? (ch) : (mytoupper(ch)))
 
 	void ExpandDefines(char *Line)
 BEGIN

@@ -13,9 +13,12 @@
 /*                       unsinged limited                                    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68.c,v 1.6 2005/11/16 22:03:34 alfred Exp $                      */
+/* $Id: code68.c,v 1.7 2007/11/24 22:48:04 alfred Exp $                      */
 /*****************************************************************************
  * $Log: code68.c,v $
+ * Revision 1.7  2007/11/24 22:48:04  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.6  2005/11/16 22:03:34  alfred
  * - correct XGDX for 6301
  *
@@ -880,7 +883,7 @@ BEGIN
    /* Operandengroesse festlegen */
 
    if (*AttrPart!='\0')
-    switch (toupper(*AttrPart))
+    switch (mytoupper(*AttrPart))
      BEGIN
       case 'B':OpSize=0; break;
       case 'W':OpSize=1; break;

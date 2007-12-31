@@ -255,4 +255,4 @@ forw:	nop
 	skn	hc
 
 	skit	fsr
-	skint	an6
+	sknit	an6

@@ -5,9 +5,12 @@
 /* Codegenerator Signetics 2650                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code2650.c,v 1.2 2006/03/05 18:07:42 alfred Exp $
+/* $Id: code2650.c,v 1.3 2007/11/24 22:48:03 alfred Exp $
  *****************************************************************************
  * $Log: code2650.c,v $
+ * Revision 1.3  2007/11/24 22:48:03  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.2  2006/03/05 18:07:42  alfred
  * - remove double InstTable variable
  *
@@ -44,7 +47,7 @@ static Boolean DecodeReg(const char *pAsc, Byte *pRes)
 {
   Boolean Result;
 
-  Result = ((strlen(pAsc) == 2) && (toupper(pAsc[0]) == 'R') && (pAsc[1] >= '0') && (pAsc[1] <= '3'));
+  Result = ((strlen(pAsc) == 2) && (mytoupper(pAsc[0]) == 'R') && (pAsc[1] >= '0') && (pAsc[1] <= '3'));
   if (Result)
     *pRes = pAsc[1] - '0';
   return Result;

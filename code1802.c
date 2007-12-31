@@ -7,9 +7,12 @@
 /*           3. 2.2001 added 1805 instructions                              */
 /*                                                                          */
 /****************************************************************************/
-/* $Id: code1802.c,v 1.3 2005/09/08 16:53:39 alfred Exp $                   */
+/* $Id: code1802.c,v 1.4 2007/11/27 11:24:39 alfred Exp $                   */
 /****************************************************************************
  * $Log: code1802.c,v $
+ * Revision 1.4  2007/11/27 11:24:39  alfred
+ * - some instruction fixes
+ *
  * Revision 1.3  2005/09/08 16:53:39  alfred
  * - use common PInstTable
  *
@@ -90,22 +93,49 @@ BEGIN
     END
 END
 
-	static void DecodeRegImm(Word Opcode)
-BEGIN
-   Boolean OK;
+static void DecodeRegNoZero(Word Opcode)
+{
+  if (ArgCnt != 1) WrError(1110);
+  else if (PutCode(Opcode))
+  {
+    Boolean OK;
+    Byte Reg;
 
-   if (ArgCnt != 2) WrError(1110);
-   else if (PutCode(Opcode))
-    BEGIN
-     BAsmCode[CodeLen - 1] |= EvalIntExpression(ArgStr[1], UInt4, &OK);
-     if (NOT OK) CodeLen = 0;
-     else
-      BEGIN
-       BAsmCode[CodeLen++] = EvalIntExpression(ArgStr[2], Int8, &OK);
-       if (NOT OK) CodeLen = 0;
-      END
-    END
-END
+    FirstPassUnknown = FALSE;
+    Reg = EvalIntExpression(ArgStr[1], UInt4, &OK);
+    if (!OK) CodeLen = 0;
+    else if ((!FirstPassUnknown) && (0 == Reg))
+    {
+      WrXError(1445, ArgStr[1]);
+      CodeLen = 0;
+    }
+    else
+      BAsmCode[CodeLen - 1] |= Reg;
+  }
+}
+
+static void DecodeRegImm16(Word Opcode)
+{
+  Boolean OK;
+
+  if (ArgCnt != 2) WrError(1110);
+  else if (PutCode(Opcode))
+  {
+    BAsmCode[CodeLen - 1] |= EvalIntExpression(ArgStr[1], UInt4, &OK);
+    if (!OK) CodeLen = 0;
+    else
+    {
+      Word Arg = EvalIntExpression(ArgStr[2], Int16, &OK);
+
+      if (!OK) CodeLen = 0;
+      else
+      {
+        BAsmCode[CodeLen++] = Hi(Arg);
+        BAsmCode[CodeLen++] = Lo(Arg);
+      }
+    }
+  }
+}
 
 	static void DecodeRegLBranch(Word Opcode)
 BEGIN
@@ -216,14 +246,14 @@ END
 BEGIN
    InstTable = CreateInstTable(203);
 
-   AddInstTable(InstTable, "LDN"  , 0x0000, DecodeReg);
+   AddInstTable(InstTable, "LDN"  , 0x0000, DecodeRegNoZero);
    AddInstTable(InstTable, "LDA"  , 0x0040, DecodeReg);
    AddInstTable(InstTable, "LDX"  , 0x00f0, DecodeFixed);
    AddInstTable(InstTable, "LDXA" , 0x0072, DecodeFixed);
    AddInstTable(InstTable, "LDI"  , 0x00f8, DecodeImm);
    AddInstTable(InstTable, "STR"  , 0x0050, DecodeReg);
    AddInstTable(InstTable, "STXD" , 0x0073, DecodeFixed);
-   AddInstTable(InstTable, "RLDI" , 0x68c0, DecodeRegImm);
+   AddInstTable(InstTable, "RLDI" , 0x68c0, DecodeRegImm16);
    AddInstTable(InstTable, "RLXA" , 0x6860, DecodeReg);
    AddInstTable(InstTable, "RSXD" , 0x68a0, DecodeReg);
 

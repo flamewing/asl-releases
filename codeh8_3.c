@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeh8_3.c,v 1.3 2005/09/08 17:31:05 alfred Exp $                    */
+/* $Id: codeh8_3.c,v 1.4 2007/11/24 22:48:06 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codeh8_3.c,v $
+ * Revision 1.4  2007/11/24 22:48:06  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.3  2005/09/08 17:31:05  alfred
  * - add missing include
  *
@@ -239,29 +242,29 @@ BEGIN
      *Erg=7; *Size=(Maximum) ? 2 : 1; return True;
     END
 
-   else if ((strlen(Asc)==3) AND (toupper(*Asc)=='R') AND (IsNum(Asc[1],Erg)))
-    if (toupper(Asc[2])=='L')
+   else if ((strlen(Asc)==3) AND (mytoupper(*Asc)=='R') AND (IsNum(Asc[1],Erg)))
+    if (mytoupper(Asc[2])=='L')
      BEGIN
       *Erg+=8; *Size=0; return True;
      END
-    else if (toupper(Asc[2])=='H')
+    else if (mytoupper(Asc[2])=='H')
      BEGIN
       *Size=0; return True;
      END
     else return False;
 
    else if ((strlen(Asc)==2) AND (IsNum(Asc[1],Erg)))
-    if (toupper(*Asc)=='R')
+    if (mytoupper(*Asc)=='R')
      BEGIN
       *Size=1; return True;
      END
-    else if (toupper(*Asc)=='E')
+    else if (mytoupper(*Asc)=='E')
      BEGIN
       *Erg+=8; *Size=1; return True;
      END
     else return False;
 
-   else if ((strlen(Asc)==3) AND (toupper(*Asc)=='E') AND (toupper(Asc[1])=='R') AND (IsNum(Asc[2],Erg)))
+   else if ((strlen(Asc)==3) AND (mytoupper(*Asc)=='E') AND (mytoupper(Asc[1])=='R') AND (IsNum(Asc[2],Erg)))
     BEGIN
      *Size=2; return True;
     END
@@ -614,7 +617,7 @@ BEGIN
       BEGIN
        WrError(1105); return;
       END
-     switch (toupper(*AttrPart))
+     switch (mytoupper(*AttrPart))
       BEGIN
        case 'B': SetOpSize(0); break;
        case 'W': SetOpSize(1); break;

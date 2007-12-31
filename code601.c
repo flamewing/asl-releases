@@ -15,9 +15,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code601.c,v 1.4 2005/10/02 10:00:45 alfred Exp $                     */
+/* $Id: code601.c,v 1.5 2007/11/24 22:48:04 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code601.c,v $
+ * Revision 1.5  2007/11/24 22:48:04  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.4  2005/10/02 10:00:45  alfred
  * - ConstLongInt gets default base, correct length check on KCPSM3 registers
  *
@@ -905,7 +908,7 @@ BEGIN
 
    if (FindRegDef(Asc, &s)) Asc = s;
 
-   if ((strlen(Asc) < 2) OR (toupper(*Asc) != 'R')) return False;
+   if ((strlen(Asc) < 2) OR (mytoupper(*Asc) != 'R')) return False;
    else
     BEGIN
      *Erg = ConstLongInt(Asc+1, &io, 10);
@@ -920,7 +923,7 @@ BEGIN
 
    if (FindRegDef(Asc, &s)) Asc = s;
 
-   if ((strlen(Asc)<3) OR (toupper(*Asc)!='F') OR (toupper(Asc[1])!='R')) return False;
+   if ((strlen(Asc)<3) OR (mytoupper(*Asc)!='F') OR (mytoupper(Asc[1])!='R')) return False;
    else
     BEGIN
      *Erg=ConstLongInt(Asc+2, &io, 10);
@@ -1980,9 +1983,9 @@ BEGIN
 
    Erg->Typ=TempNone;
    if ((l==3) OR (l==4))
-    if ((toupper(*Asc)=='C') AND (toupper(Asc[1])=='R'))
+    if ((mytoupper(*Asc)=='C') AND (mytoupper(Asc[1])=='R'))
      if ((Asc[l-1]>='0') AND (Asc[l-1]<='7'))
-      if ((l==3) != ((toupper(Asc[2])=='F') OR (toupper(Asc[3])=='B')))
+      if ((l==3) != ((mytoupper(Asc[2])=='F') OR (mytoupper(Asc[3])=='B')))
        BEGIN
         Erg->Typ=TempInt; Erg->Contents.Int=Asc[l-1]-'0';
        END

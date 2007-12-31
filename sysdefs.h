@@ -11,9 +11,12 @@
 /*           2001-10-13 added ARM/Linux                                      */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: sysdefs.h,v 1.5 2007/09/16 08:56:04 alfred Exp $                     */
+/* $Id: sysdefs.h,v 1.6 2007/11/24 22:48:08 alfred Exp $                     */
 /*****************************************************************************
  * $Log: sysdefs.h,v $
+ * Revision 1.6  2007/11/24 22:48:08  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.5  2007/09/16 08:56:04  alfred
  * - add K8 target
  *
@@ -703,12 +706,35 @@ typedef unsigned long Card64;
 /*---------------------------------------------------------------------------*/
 /* DEC Alpha with Linux and GCC:
    
-   see OSF... 
-   NLS still missing...well, my Linux/Alpha is stone-age and still
-   ECOFF-based... */
+   see OSF... */
 
 #ifdef __linux__
 #define ARCHSYSNAME "unknown-linux"
+#define DEFSMADE
+#define OPENRDMODE "r"
+#define OPENWRMODE "w"
+#define OPENUPMODE "r+"
+#define IEEEFLOAT
+typedef signed char Integ8;
+typedef unsigned char Card8;
+typedef signed short Integ16;
+typedef unsigned short Card16;
+#define HAS16
+typedef signed int Integ32;
+typedef unsigned int Card32;
+typedef signed long Integ64;
+typedef unsigned long Card64;
+#define HAS64
+#define LOCALE_NLS
+#endif
+
+/*---------------------------------------------------------------------------*/
+/* DEC Alpha with NetBSD and GCC:
+   
+   see OSF... */
+
+#ifdef __NetBSD__
+#define ARCHSYSNAME "unknown-netbsd"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"

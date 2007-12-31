@@ -14,9 +14,12 @@
 /*           19. 8.2001 fixed errors for lower halves of XIX...XSP           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code96c141.c,v 1.7 2006/08/05 18:06:05 alfred Exp $                          */
+/* $Id: code96c141.c,v 1.8 2007/11/24 22:48:06 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code96c141.c,v $
+ * Revision 1.8  2007/11/24 22:48:06  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.7  2006/08/05 18:06:05  alfred
  * - remove debug printf
  *
@@ -370,7 +373,7 @@ BEGIN
      return Result;
     END
    if ((strlen(Asc)==5) AND (strncasecmp(Asc,"DMA",3)==0) AND (Asc[4]>='0') AND (Asc[4]<='3'))
-   switch (toupper(Asc[3]))
+   switch (mytoupper(Asc[3]))
     BEGIN
      case 'S':
       *ErgNo=(Asc[4]-'0')*4; *ErgSize=2; return Result;

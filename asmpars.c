@@ -36,9 +36,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.12 2007/09/24 17:39:02 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.13 2007/11/24 22:48:02 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.c,v $
+ * Revision 1.13  2007/11/24 22:48:02  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.12  2007/09/24 17:39:02  alfred
  * - correct handling of '-' operator
  *
@@ -413,7 +416,7 @@ BEGIN
    int cnt;
    Boolean Finish;
 
-   switch (toupper(**Start))
+   switch (mytoupper(**Start))
     BEGIN
      case '\'': case '\\': case '"':
       *Erg=**Start; (*Start)++; return True;
@@ -441,7 +444,7 @@ BEGIN
       cnt=(System==16) ? 1 : ((System==10) ? 0 : -1);
       do
        BEGIN
-        ch=toupper(**Start); Finish=False;
+        ch=mytoupper(**Start); Finish=False;
         if ((ch>='0') AND (ch<='9')) Digit=ch-'0';
         else if ((System==16) AND (ch>='A') AND (ch<='F')) Digit=(ch-'A')+10;
         else Finish=True;
@@ -840,7 +843,7 @@ LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
     {
       Found = False;
 
-      if ((l >= 2) && (*pExpr == '0') && (toupper(pExpr[1]) == 'X'))
+      if ((l >= 2) && (*pExpr == '0') && (mytoupper(pExpr[1]) == 'X'))
       {
         ActMode = ConstModeC;
         Found = True;
@@ -859,7 +862,7 @@ LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
 
       if ((!Found) && (l >= 2) && (*pExpr >= '0') && (*pExpr <= '9'))
       {
-        ch = toupper(pExpr[l - 1]);
+        ch = mytoupper(pExpr[l - 1]);
         if (DigitVal(ch, RadixBase) == -1)
         {
           for (Search = 0; Search < 3; Search++)
@@ -874,7 +877,7 @@ LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
 
       if ((!Found) && (l >= 3) && (pExpr[1] == '\'') && (pExpr[l - 1] == '\''))
       {
-        switch (toupper(*pExpr))
+        switch (mytoupper(*pExpr))
         {
           case 'H':
           case 'X':
@@ -898,7 +901,7 @@ LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
     switch (ActMode)
     {
       case ConstModeIntel:
-        ch = toupper(pExpr[l - 1]);
+        ch = mytoupper(pExpr[l - 1]);
         if (DigitVal(ch, RadixBase) == -1)
         {
           for (Search = 0; Search < 3; Search++) 
@@ -930,11 +933,11 @@ LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
         else
         {
           pExpr++; l--;
-          ch = toupper(*pExpr);
+          ch = mytoupper(*pExpr);
           if ((RadixBase != 10) && (DigitVal(ch, RadixBase) != -1))
             Base = RadixBase;
           else
-            switch (toupper(*pExpr))
+            switch (mytoupper(*pExpr))
             {
               case 'X': pExpr++;  l--; Base = 16; break;
               case 'B': pExpr++;  l--; Base = 2; break;
@@ -945,7 +948,7 @@ LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
       case ConstModeWeird:
         if ((l < 3) || (pExpr[1] != '\'') || (pExpr[l - 1] != '\''))
           return -1;
-        switch (toupper(*pExpr))
+        switch (mytoupper(*pExpr))
         {
           case 'X':
           case 'H':
@@ -974,7 +977,7 @@ LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
 
     while (l > 0)
     {
-      Search = DigitVal(toupper(*pExpr), Base);
+      Search = DigitVal(mytoupper(*pExpr), Base);
       if (Search == -1)
         return -1;
       Wert = Wert * Base + Search;
@@ -1975,7 +1978,7 @@ static Operator Operators[] =
         BEGIN
          pErg->Typ=TempString; strmaxcpy(pErg->Contents.Ascii,LVal.Contents.Ascii,255);
          for (KlPos=pErg->Contents.Ascii; *KlPos!='\0'; KlPos++)
-          *KlPos=toupper(*KlPos);
+          *KlPos=mytoupper(*KlPos);
         END
 
        /* in Kleinbuchstaben wandeln ? */
@@ -1984,7 +1987,7 @@ static Operator Operators[] =
         BEGIN
          pErg->Typ=TempString; strmaxcpy(pErg->Contents.Ascii,LVal.Contents.Ascii,255);
          for (KlPos=pErg->Contents.Ascii; *KlPos!='\0'; KlPos++)
-          *KlPos=tolower(*KlPos);
+          *KlPos=mytolower(*KlPos);
         END
 
        /* Laenge ermitteln ? */

@@ -11,9 +11,12 @@
 /*            1. 7.2001 forgot to set AttrChars                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6816.c,v 1.5 2006/07/23 12:58:16 alfred Exp $                    */
+/* $Id: code6816.c,v 1.6 2007/11/24 22:48:05 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6816.c,v $
+ * Revision 1.6  2007/11/24 22:48:05  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.5  2006/07/23 12:58:16  alfred
  * - completed rework
  *
@@ -1116,7 +1119,7 @@ static void MakeCode_6816(void)
      Pseudobefehle! Die Maschinenbefehle ueberschreiben diesen Wert! */
 
   if (*AttrPart!='\0')
-    switch (toupper(*AttrPart))
+    switch (mytoupper(*AttrPart))
     {
       case 'B': OpSize = 0; break;
       case 'W': OpSize = 1; break;

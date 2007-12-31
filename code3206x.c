@@ -15,9 +15,12 @@
 /*           2001-11-26 scaling fix (input from Johannes)                    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3206x.c,v 1.4 2005/09/08 16:53:40 alfred Exp $                   */
+/* $Id: code3206x.c,v 1.5 2007/11/24 22:48:03 alfred Exp $                   */
 /***************************************************************************** 
  * $Log: code3206x.c,v $
+ * Revision 1.5  2007/11/24 22:48:03  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.4  2005/09/08 16:53:40  alfred
  * - use common PInstTable
  *
@@ -170,10 +173,10 @@ BEGIN
      else Condition=0;
      Flag=True;
      if (l!=2) Flag=False;
-     else if (toupper(*Asc)=='A')
+     else if (mytoupper(*Asc)=='A')
       if ((Asc[1]>='1') AND (Asc[1]<='2')) Condition+=(Asc[1]-'0'+3) << 1;
       else Flag=False;
-     else if (toupper(*Asc)=='B')
+     else if (mytoupper(*Asc)=='B')
       BEGIN
        if ((Asc[1]>='0') AND (Asc[1]<='2')) Condition+=(Asc[1]-'0'+1) << 1;
        else Flag=False;
@@ -274,8 +277,8 @@ BEGIN
    Boolean TFlag;
 
    TFlag=True;
-   if (toupper(*Asc)=='A') *Reg=0;
-   else if (toupper(*Asc)=='B') *Reg=16;
+   if (mytoupper(*Asc)=='A') *Reg=0;
+   else if (mytoupper(*Asc)=='B') *Reg=16;
    else TFlag=False;
    if (TFlag)
     BEGIN
@@ -2527,7 +2530,7 @@ BEGIN
    ThisUnit=NoUnit; ThisCross=False;
    if (*AttrPart!='\0')
     BEGIN
-     if (toupper(AttrPart[strlen(AttrPart)-1])=='X')
+     if (mytoupper(AttrPart[strlen(AttrPart)-1])=='X')
       BEGIN
        ThisCross=True;
        AttrPart[strlen(AttrPart)-1]='\0';

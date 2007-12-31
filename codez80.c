@@ -10,9 +10,12 @@
 /*           2001-12-11 begun with Rabbit2000                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codez80.c,v 1.5 2007/06/28 20:27:31 alfred Exp $                     */
+/* $Id: codez80.c,v 1.6 2007/11/24 22:48:08 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codez80.c,v $
+ * Revision 1.6  2007/11/24 22:48:08  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.5  2007/06/28 20:27:31  alfred
  * - silence some warnings on recent GNU C versions
  *
@@ -1932,13 +1935,13 @@ static void StripPref(const char *Arg, Byte Opcode)
       /* look for end of string */
 
       for (ptr = ArgStr[1]; *ptr; ptr++)
-        if (isspace(*ptr))
+        if (myisspace(*ptr))
           break;
 
       /* look for beginning of next string */
 
       for (ptr2 = ptr; *ptr2; ptr2++)
-        if (!isspace(*ptr2))
+        if (!myisspace(*ptr2))
           break;
 
       /* copy out new opcode */

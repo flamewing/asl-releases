@@ -10,9 +10,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemcore.c,v 1.4 2005/09/08 16:53:43 alfred Exp $                   */
+/* $Id: codemcore.c,v 1.5 2007/11/24 22:48:07 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codemcore.c,v $
+ * Revision 1.5  2007/11/24 22:48:07  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.4  2005/09/08 16:53:43  alfred
  * - use common PInstTable
  *
@@ -98,7 +101,7 @@ BEGIN
      *Erg=15; return True;
     END
 
-   if (toupper(*Asc)!='R') return False;
+   if (mytoupper(*Asc)!='R') return False;
    else
     BEGIN
      *Erg=strtol(Asc+1,&endptr,10);
@@ -117,7 +120,7 @@ BEGIN
       *Erg=CRegs[z].Code; return True;
      END
 
-   if ((toupper(*Asc)!='C') OR (toupper(Asc[1])!='R')) return False;
+   if ((mytoupper(*Asc)!='C') OR (mytoupper(Asc[1])!='R')) return False;
    else
     BEGIN
      *Erg=strtol(Asc+2,&endptr,10);
@@ -759,7 +762,7 @@ BEGIN
    DontPrint=False;
 
    if (*AttrPart!='\0')
-    switch (toupper(*AttrPart))
+    switch (mytoupper(*AttrPart))
      BEGIN
       case 'B': OpSize=0; break;
       case 'H': OpSize=1; break;

@@ -307,8 +307,10 @@ BEGIN
       END
      IncSym=strdup(argv[3]);
      for (p=IncSym; *p!='\0'; p++)
-      if (isalpha(((unsigned int) *p)&0xff)) *p=toupper(*p);
-      else *p='_';
+      if (isalpha(((unsigned int) *p)&0xff))
+        *p=mytoupper(*p);
+      else
+        *p='_';
     END
    else HFile=Nil;
 

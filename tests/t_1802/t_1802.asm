@@ -2,10 +2,15 @@
 
 	page	0
 
-allregs	macro	instr
-	irp	reg,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
+allregs_nozero	macro	instr
+	irp	reg,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
 	instr	reg
 	endm
+	endm
+
+allregs	macro	instr
+        instr	0
+	allregs_nozero instr
 	endm
 
 allio	macro	instr
@@ -14,7 +19,7 @@ allio	macro	instr
 	endm
 	endm
 
-	allregs	ldn
+	allregs_nozero	ldn
 	allregs	lda
 	ldx
 	ldxa

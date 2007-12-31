@@ -5,9 +5,12 @@
 /* Codegenerator LatticeMico8                                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemic8.c,v 1.8 2007/06/28 20:27:31 alfred Exp $                   */
+/* $Id: codemic8.c,v 1.9 2007/11/24 22:48:07 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codemic8.c,v $
+ * Revision 1.9  2007/11/24 22:48:07  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.8  2007/06/28 20:27:31  alfred
  * - silence some warnings on recent GNU C versions
  *
@@ -93,7 +96,7 @@ static Boolean IsWReg(char *Asc, LongWord *pErg)
 
   if (FindRegDef(Asc, &s)) Asc = s;
 
-  if ((strlen(Asc) < 2) || (toupper(*Asc) != 'R')) 
+  if ((strlen(Asc) < 2) || (mytoupper(*Asc) != 'R')) 
   {
     *pErg = 0;
     return False;

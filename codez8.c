@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codez8.c,v 1.6 2006/08/05 18:06:43 alfred Exp $                          *
+/* $Id: codez8.c,v 1.7 2007/11/24 22:48:08 alfred Exp $                          *
  *****************************************************************************
  * $Log: codez8.c,v $
+ * Revision 1.7  2007/11/24 22:48:08  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.6  2006/08/05 18:06:43  alfred
  * - silence some compiler warnings
  *
@@ -168,7 +171,7 @@ static Boolean IsWReg(char *Asc, Byte *Erg)
 {
    Boolean Err;
 
-   if ((strlen(Asc) < 2) || (toupper(*Asc) != 'R')) return False;
+   if ((strlen(Asc) < 2) || (mytoupper(*Asc) != 'R')) return False;
    else
    {
      *Erg = ConstLongInt(Asc + 1, &Err, 10);

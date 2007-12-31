@@ -26,9 +26,12 @@
 /*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.7 2007/09/24 17:51:48 alfred Exp $                      */
+/* $Id: asmsub.c,v 1.8 2007/11/24 22:48:02 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmsub.c,v $
+ * Revision 1.8  2007/11/24 22:48:02  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.7  2007/09/24 17:51:48  alfred
  * - better handle non-printable characters
  *
@@ -145,7 +148,7 @@ BEGIN
    Neu=(PCPUDef) malloc(sizeof(TCPUDef));
    Neu->Name=strdup(NewName); 
    /* kein UpString, weil noch nicht initialisiert ! */
-   for (p=Neu->Name; *p!='\0'; p++) *p=toupper(*p);
+   for (p=Neu->Name; *p!='\0'; p++) *p=mytoupper(*p);
    Neu->SwitchProc=Switcher;
    Neu->Next=Nil;
    Neu->Number=Neu->Orig=CPUCnt;
@@ -404,7 +407,7 @@ ShortInt StrCaseCmp(const char *s1, const char *s2, LongInt Hand1, LongInt Hand2
 {
   int tmp;
 
-  tmp = toupper(*s1) - toupper(*s2);
+  tmp = mytoupper(*s1) - mytoupper(*s2);
   if (tmp == 0) tmp = strcasecmp(s1,s2);
   if (tmp == 0) tmp = Hand1 - Hand2;
   if (tmp < 0) return -1;
@@ -643,67 +646,89 @@ END
 /*--------------------------------------------------------------------------*/
 /* eine neue Seite im Listing beginnen */
 
-        void NewPage(ShortInt Level, Boolean WithFF)
-BEGIN
-   ShortInt z;
-   String Header,s;
-   char Save;
+void NewPage(ShortInt Level, Boolean WithFF)
+{
+  ShortInt z;
+  String Header,s;
+  char Save;
 
-   if (ListOn==0) return;
+  if (ListOn == 0) return;
 
-   LstCounter=0;
+  LstCounter = 0;
 
-   if (ChapDepth<(Byte) Level)
-    BEGIN
-     memmove(PageCounter+(Level-ChapDepth),PageCounter,(ChapDepth+1)*sizeof(Word));
-     for (z=0; z<=Level-ChapDepth; PageCounter[z++]=1);
-     ChapDepth=Level;
-    END
-   for (z=0; z<=Level-1; PageCounter[z++]=1);
-   PageCounter[Level]++;
+  if (ChapDepth < (Byte) Level)
+  {
+    memmove(PageCounter + (Level - ChapDepth), PageCounter, (ChapDepth + 1) * sizeof(Word));
+    for (z = 0; z <= Level - ChapDepth; PageCounter[z++] = 1);
+    ChapDepth = Level;
+  }
+  for (z = 0; z <= Level - 1; PageCounter[z++] = 1);
+  PageCounter[Level]++;
 
-   if (WithFF)
-    BEGIN
-     errno=0; fprintf(LstFile,"%c",Char_FF); ChkIO(10002);
-    END
+  if ((WithFF) && (!ListToNull))
+  {
+    errno = 0;
+    fprintf(LstFile, "%c", Char_FF);
+    ChkIO(10002);
+  }
 
-   sprintf(Header," AS V%s%s%s",Version,getmessage(Num_HeadingFileNameLab),NamePart(SourceFile));
-   if ((strcmp(CurrFileName,"INTERNAL")!=0) AND (strcmp(NamePart(CurrFileName),NamePart(SourceFile))!=0))
-    BEGIN
-     strmaxcat(Header,"(",255);
-     strmaxcat(Header,NamePart(CurrFileName),255);
-     strmaxcat(Header,")",255);
-    END
-   strmaxcat(Header,getmessage(Num_HeadingPageLab),255);
+  sprintf(Header, " AS V%s%s%s",
+          Version,
+          getmessage(Num_HeadingFileNameLab),
+          NamePart(SourceFile));
+  if ((strcmp(CurrFileName, "INTERNAL") != 0)
+   && (strcmp(NamePart(CurrFileName), NamePart(SourceFile)) != 0))
+  {
+    strmaxcat(Header, "(", 255);
+    strmaxcat(Header, NamePart(CurrFileName), 255);
+    strmaxcat(Header, ")", 255);
+  }
+  strmaxcat(Header, getmessage(Num_HeadingPageLab), 255);
 
-   for (z=ChapDepth; z>=0; z--)
-    BEGIN
-     sprintf(s, IntegerFormat, PageCounter[z]);
-     strmaxcat(Header,s,255);
-     if (z!=0) strmaxcat(Header,".",255);
-    END
+  for (z = ChapDepth; z >= 0; z--)
+  {
+    sprintf(s, IntegerFormat, PageCounter[z]);
+    strmaxcat(Header, s, 255);
+    if (z != 0) strmaxcat(Header, ".", 255);
+  }
 
-   strmaxcat(Header," - ",255);
-   NLS_CurrDateString(s); strmaxcat(Header,s,255);
-   strmaxcat(Header," ",255);
-   NLS_CurrTimeString(False,s); strmaxcat(Header,s,255);
+  strmaxcat(Header, " - ", 255);
+  NLS_CurrDateString(s); strmaxcat(Header, s, 255);
+  strmaxcat(Header, " ", 255);
+  NLS_CurrTimeString(False, s);
+  strmaxcat(Header, s, 255);
 
-   if (PageWidth!=0)
-    while (strlen(Header)>PageWidth)
-     BEGIN
-      Save=Header[PageWidth]; Header[PageWidth]='\0';
-      errno=0; fprintf(LstFile,"%s\n",Header); ChkIO(10002); 
-      Header[PageWidth]=Save; strcpy(Header,Header+PageWidth);
-     END
-   errno=0; fprintf(LstFile,"%s\n",Header); ChkIO(10002);
+  if (PageWidth != 0)
+   while (strlen(Header)>PageWidth)
+   {
+     Save = Header[PageWidth]; Header[PageWidth] = '\0';
+     if (!ListToNull)
+     {
+       errno = 0;
+       fprintf(LstFile, "%s\n", Header);
+       ChkIO(10002);
+     } 
+     Header[PageWidth] = Save; strcpy(Header, Header + PageWidth);
+   }
 
-   if (PrtTitleString[0]!='\0')
-    BEGIN
-     errno=0; fprintf(LstFile,"%s\n",PrtTitleString); ChkIO(10002);
-    END
+  if (!ListToNull)
+  {
+    errno = 0;
+    fprintf(LstFile, "%s\n", Header);
+    ChkIO(10002);
 
-   errno=0; fprintf(LstFile,"\n\n"); ChkIO(10002);
-END
+    if (PrtTitleString[0])
+    {
+      errno = 0;
+      fprintf(LstFile, "%s\n", PrtTitleString);
+      ChkIO(10002);
+    }
+
+    errno = 0;
+    fprintf(LstFile, "\n\n");
+    ChkIO(10002);
+  }
+}
 
 
 /*--------------------------------------------------------------------------*/
@@ -716,7 +741,7 @@ BEGIN
    String LLine;
    int blen=0,hlen,z,Start;
 
-   if (ListOn==0) return;
+   if ((ListOn==0) || (ListToNull)) return;
 
    if (PageLength==0)
     BEGIN
@@ -846,7 +871,7 @@ static void PrPrintable(FILE *pFile, const char *pStr)
   const char *pRun;
 
   for (pRun = pStr; *pRun; pRun++)
-    if (isprint(*pRun))
+    if (myisprint(*pRun))
       fputc(*pRun, pFile);
     else
       fprintf(pFile, "<0x%02x>", (unsigned char)*pRun);
@@ -1132,7 +1157,8 @@ END
 BEGIN
    int io;
 
-   io=errno; if ((io == 0) OR (io == 19) OR (io == 25)) return;
+   io=errno;
+   if ((io == 0) OR (io == 19) OR (io == 25)) return;
 
    WrXError(ErrNo,GetErrorMsg(io));
 END
@@ -1683,12 +1709,12 @@ BEGIN
    /* Bei DOS Auslagerung Overlays in XMS/EMS versuchen */
 
    envval=getenv("USEXMS");
-   if ((envval!=Nil) AND (toupper(*envval)=='N')) ovrerg=-1;
+   if ((envval!=Nil) AND (mytoupper(*envval)=='N')) ovrerg=-1;
    else ovrerg=_OvrInitExt(0,0);
    if (ovrerg!=0)
     BEGIN
      envval=getenv("USEEMS");
-     if ((envval==Nil) OR (toupper(*envval)!='N')) _OvrInitEms(0,0,0);
+     if ((envval==Nil) OR (mytoupper(*envval)!='N')) _OvrInitEms(0,0,0);
     END
 #endif
 #endif

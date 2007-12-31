@@ -13,9 +13,12 @@
  * 14. 1.2001 silenced warnings about unused parameters
  * 2001-11-11 moved pseudo ops to codepseudo.c
  */
-/* $Id: code3202x.c,v 1.2 2004/05/29 12:18:05 alfred Exp $                   */
+/* $Id: code3202x.c,v 1.3 2007/11/24 22:48:03 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code3202x.c,v $
+ * Revision 1.3  2007/11/24 22:48:03  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.2  2004/05/29 12:18:05  alfred
  * - relocated DecodeTIPseudo() to separate module
  *
@@ -255,7 +258,7 @@ static CPUVar cpu_32025, cpu_32026, cpu_32028;
 static Word eval_ar_expression(char *asc, Boolean *ok)
 {
 	*ok = True;
-	if ((toupper(asc[0]) == 'A') && (toupper(asc[1]) == 'R') && (asc[2] >= '0') && 
+	if ((mytoupper(asc[0]) == 'A') && (mytoupper(asc[1]) == 'R') && (asc[2] >= '0') && 
 	    (asc[2] <= '7') && (asc[3] == '\0'))
 		return asc[2] - '0';
 	return EvalIntExpression(asc, UInt3, ok);

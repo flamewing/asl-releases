@@ -15,9 +15,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code7720.c,v 1.3 2005/09/08 16:53:42 alfred Exp $                    */
+/* $Id: code7720.c,v 1.4 2007/11/24 22:48:05 alfred Exp $                    */
 /***************************************************************************** 
  * $Log: code7720.c,v $
+ * Revision 1.4  2007/11/24 22:48:05  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.3  2005/09/08 16:53:42  alfred
  * - use common PInstTable
  *
@@ -231,7 +234,7 @@ BEGIN
     BEGIN
      if ((strlen(ArgStr[1])==4) AND (strncasecmp(ArgStr[1],"ACC",3)==0))
       BEGIN
-       ch=toupper(ArgStr[1][3]);
+       ch=mytoupper(ArgStr[1][3]);
        if ((ch>='A') AND (ch<='B')) Acc=ch-'A';
       END
      if (Acc==0xff) WrXError(1445,ArgStr[1]);
@@ -252,7 +255,7 @@ BEGIN
     BEGIN
      if ((strlen(ArgStr[1])==4) AND (strncasecmp(ArgStr[1],"ACC",3)==0))
       BEGIN
-       ch=toupper(ArgStr[1][3]);
+       ch=mytoupper(ArgStr[1][3]);
        if ((ch>='A') AND (ch<='B')) Acc=ch-'A';
       END
      if (Acc==0xff) WrXError(1445,ArgStr[1]);

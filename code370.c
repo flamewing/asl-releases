@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code370.c,v 1.4 2005/10/02 10:00:44 alfred Exp $                     */
+/* $Id: code370.c,v 1.5 2007/11/24 22:48:03 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code370.c,v $
+ * Revision 1.5  2007/11/24 22:48:03  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.4  2005/10/02 10:00:44  alfred
  * - ConstLongInt gets default base, correct length check on KCPSM3 registers
  *
@@ -1094,14 +1097,14 @@ BEGIN
    String h;
 
    Erg->Typ=TempNone;
-   if ((strlen(Asc)<2) OR ((toupper(*Asc)!='R') AND (toupper(*Asc)!='P'))) return;
+   if ((strlen(Asc)<2) OR ((mytoupper(*Asc)!='R') AND (mytoupper(*Asc)!='P'))) return;
 
    strcpy(h,Asc+1);
    if ((*h=='0') AND (strlen(h)>1)) *h='$';
    Erg->Contents.Int=ConstLongInt(h,&err,10);
    if ((NOT err) OR (Erg->Contents.Int<0) OR (Erg->Contents.Int>255)) return;
 
-   Erg->Typ=TempInt; if (toupper(*Asc)=='P') Erg->Contents.Int+=0x1000;
+   Erg->Typ=TempInt; if (mytoupper(*Asc)=='P') Erg->Contents.Int+=0x1000;
 END
 
         static void SwitchFrom_370(void)

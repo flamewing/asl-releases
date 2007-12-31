@@ -7,9 +7,12 @@
 /* Historie: 27.02.2003 Grundsteinlegung                                     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codekcpsm.c,v 1.6 2005/10/02 10:22:58 alfred Exp $                   */
+/* $Id: codekcpsm.c,v 1.7 2007/11/24 22:48:07 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codekcpsm.c,v $
+ * Revision 1.7  2007/11/24 22:48:07  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.6  2005/10/02 10:22:58  alfred
  * - KCPSM(3) registers are literals
  *
@@ -211,7 +214,7 @@ BEGIN
 
    if (FindRegDef(Asc, &s)) Asc = s;
 
-   if ((strlen(Asc)<2) OR (toupper(*Asc)!='S')) 
+   if ((strlen(Asc)<2) OR (mytoupper(*Asc)!='S')) 
      retValue = False;
    else
     BEGIN

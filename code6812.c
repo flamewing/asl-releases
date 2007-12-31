@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6812.c,v 1.15 2006/08/05 18:06:43 alfred Exp $                    */
+/* $Id: code6812.c,v 1.16 2007/11/24 22:48:04 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6812.c,v $
+ * Revision 1.16  2007/11/24 22:48:04  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.15  2006/08/05 18:06:43  alfred
  * - silence some compiler warnings
  *
@@ -1565,7 +1568,7 @@ static void MakeCode_6812(void)
   /* Operandengroesse festlegen */
 
   if (*AttrPart != '\0')
-    switch (toupper(*AttrPart))
+    switch (mytoupper(*AttrPart))
     {
       case 'B': OpSize = 0; break;
       case 'W': OpSize = 1; break;

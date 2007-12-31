@@ -12,9 +12,12 @@
 /*           2001-09-03 added inx as alias for incx                          */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6805.c,v 1.6 2006/07/08 10:16:13 alfred Exp $                    */
+/* $Id: code6805.c,v 1.7 2007/11/24 22:48:04 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6805.c,v $
+ * Revision 1.7  2007/11/24 22:48:04  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.6  2006/07/08 10:16:13  alfred
  * - remove double variable
  *
@@ -928,7 +931,7 @@ static void MakeCode_6805(void)
 
   /* deduce operand size No size is zero-length string -> '\0' */
 
-  switch (toupper(*AttrPart))
+  switch (mytoupper(*AttrPart))
   {
     case 'B': OpSize = 0; break;
     case 'W': OpSize = 1; break;

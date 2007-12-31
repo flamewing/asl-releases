@@ -5,9 +5,12 @@
 /* Codegenerator xilinx kcpsm3                                               */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codekcp3.c,v 1.5 2005/10/02 10:22:58 alfred Exp $                   */
+/* $Id: codekcp3.c,v 1.6 2007/11/24 22:48:07 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codekcp3.c,v $
+ * Revision 1.6  2007/11/24 22:48:07  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.5  2005/10/02 10:22:58  alfred
  * - KCPSM(3) registers are literals
  *
@@ -71,7 +74,7 @@ static Boolean IsWReg(const char *Asc, LongWord *pErg)
 
   if (FindRegDef(Asc, &s)) Asc = s;
 
-  if ((strlen(Asc) < 2) || (toupper(*Asc) != 'S')) 
+  if ((strlen(Asc) < 2) || (mytoupper(*Asc) != 'S')) 
     return False;
 
   *pErg = ConstLongInt(Asc + 1, &OK, 16);

@@ -8,9 +8,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codetms7.c,v 1.4 2005/10/02 10:00:46 alfred Exp $                    */
+/* $Id: codetms7.c,v 1.5 2007/11/24 22:48:07 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codetms7.c,v $
+ * Revision 1.5  2007/11/24 22:48:07  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.4  2005/10/02 10:00:46  alfred
  * - ConstLongInt gets default base, correct length check on KCPSM3 registers
  *
@@ -928,14 +931,14 @@ BEGIN
    Boolean Err;
 
    Erg->Typ=TempNone;
-   if ((strlen(Asc)<2) OR ((toupper(*Asc)!='R') AND (toupper(*Asc)!='P'))) return;
+   if ((strlen(Asc)<2) OR ((mytoupper(*Asc)!='R') AND (mytoupper(*Asc)!='P'))) return;
 
    strmaxcpy(h,Asc+1,255);
    if ((*h=='0') AND (strlen(h)>1)) *h='$';
    Erg->Contents.Int=ConstLongInt(h,&Err,10);
    if ((NOT Err) OR (Erg->Contents.Int<0) OR (Erg->Contents.Int>255)) return;
 
-   Erg->Typ=TempInt; if (toupper(*Asc)=='P') Erg->Contents.Int+=0x100;
+   Erg->Typ=TempInt; if (mytoupper(*Asc)=='P') Erg->Contents.Int+=0x100;
 END
 
         static void SwitchFrom_TMS7(void)

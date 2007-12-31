@@ -10,9 +10,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters           */
 /*                                                                          */
 /****************************************************************************/
-/* $Id: codefmc8.c,v 1.3 2005/09/08 16:53:43 alfred Exp $                   */
+/* $Id: codefmc8.c,v 1.4 2007/11/24 22:48:06 alfred Exp $                   */
 /****************************************************************************
  * $Log: codefmc8.c,v $
+ * Revision 1.4  2007/11/24 22:48:06  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.3  2005/09/08 16:53:43  alfred
  * - use common PInstTable
  *
@@ -114,7 +117,7 @@ BEGIN
    else if (strcasecmp(Asc, "PS") == 0)
      AdrMode = ModPS;
 
-   else if ((strlen(Asc) == 2) AND (toupper(*Asc) == 'R') AND (Asc[1]>= '0') AND (Asc[1] <= '7'))
+   else if ((strlen(Asc) == 2) AND (mytoupper(*Asc) == 'R') AND (Asc[1]>= '0') AND (Asc[1] <= '7'))
     BEGIN
      AdrMode = ModReg;
      AdrPart = Asc[1] - '0' + 8;

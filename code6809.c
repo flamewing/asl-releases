@@ -13,9 +13,12 @@
 /*           13. 1.2001 fix D register access                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6809.c,v 1.3 2005/09/08 17:31:04 alfred Exp $                    */
+/* $Id: code6809.c,v 1.4 2007/11/24 22:48:04 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6809.c,v $
+ * Revision 1.4  2007/11/24 22:48:04  alfred
+ * - some NetBSD changes
+ *
  * Revision 1.3  2005/09/08 17:31:04  alfred
  * - add missing include
  *
@@ -396,7 +399,7 @@ BEGIN
    if (strlen(ChIn)!=1) return False;
    else
     BEGIN
-     p=strchr(Regs,toupper(*ChIn));
+     p=strchr(Regs,mytoupper(*ChIn));
      if (p==Nil) return False;
      *erg=p-Regs; return True;
     END
@@ -1060,7 +1063,7 @@ BEGIN
         for (z2=1; z2<=ArgCnt; z2++)
          if (OK)
           BEGIN
-           p=(strlen(ArgStr[z2])==1)?strchr(FlagChars,toupper(*ArgStr[z2])):Nil;
+           p=(strlen(ArgStr[z2])==1)?strchr(FlagChars,mytoupper(*ArgStr[z2])):Nil;
            if (p!=Nil)
             BEGIN
              z3=p-FlagChars;
