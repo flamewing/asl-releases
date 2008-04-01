@@ -120,6 +120,11 @@ typedef struct _TIncList
 
 PIncList IncList=Nil;
 
+void WrError(Word Num)
+{
+  (void)Num;
+}
+
 	static void GetLine(char *Dest)
 BEGIN
    PIncList OneFile;

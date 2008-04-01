@@ -11,9 +11,12 @@
 /*           2001-10-13 added ARM/Linux                                      */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: sysdefs.h,v 1.6 2007/11/24 22:48:08 alfred Exp $                     */
+/* $Id: sysdefs.h,v 1.7 2008/01/02 22:32:21 alfred Exp $                     */
 /*****************************************************************************
  * $Log: sysdefs.h,v $
+ * Revision 1.7  2008/01/02 22:32:21  alfred
+ * - better heap checking for DOS target
+ *
  * Revision 1.6  2007/11/24 22:48:08  alfred
  * - some NetBSD changes
  *
@@ -954,6 +957,7 @@ typedef unsigned int Card32;
 #define ARCHSYSNAME "unknown-msdos"
 #endif
 #define CKMALLOC
+#define HEAPRESERVE 4096
 #define DEFSMADE
 #define OPENRDMODE "rb"
 #define OPENWRMODE "wb"

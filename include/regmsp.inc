@@ -10,9 +10,12 @@
 ;*   letzte Änderungen : 2002-01-11                                         *
 ;*                                                                          *
 ;****************************************************************************
-;* $Id: regmsp.inc,v 1.2 2007/12/31 13:23:53 alfred Exp $                    
+;* $Id: regmsp.inc,v 1.3 2008/01/02 22:32:21 alfred Exp $                    
 ;****************************************************************************
 ;* $Log: regmsp.inc,v $
+;* Revision 1.3  2008/01/02 22:32:21  alfred
+;* - better heap checking for DOS target
+;*
 ;* Revision 1.2  2007/12/31 13:23:53  alfred
 ;* - added some bit definitions
 ;*
@@ -162,6 +165,15 @@ jeq		macro	label
 ; ffe0 - ffff : Interrupt Vector Table
 ;
 ;----------------------------------------------------------------------------
+
+;----------------------------------------------------------------------------
+;Status Register
+
+SCG1            equ     128             ; System Clock Generator 1. 1=turn_off_SMCLK
+SCG0            equ     64              ; System Clock Generator 0. 1=turn_off_DCO
+OSCOFF          equ     32              ; Oscillator Off. 1=turn_off_LFXT1CLK
+CPUOFF          equ     16              ; CPU Off. 1=turn_off_CPU        (SR)
+GIE             equ     8               ; General Interrupt Enable       (SR)
 
 ;----------------------------------------------------------------------------
 ; Special Function Register of MSP430x1xx Family, Byte Access

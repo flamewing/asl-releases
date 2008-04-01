@@ -10,9 +10,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code86.c,v 1.3 2005/09/08 16:53:42 alfred Exp $                      */
+/* $Id: code86.c,v 1.4 2008/03/30 21:28:00 alfred Exp $                      */
 /*****************************************************************************
  * $Log: code86.c,v $
+ * Revision 1.4  2008/03/30 21:28:00  alfred
+ * - correct intersegment CALL/JMP
+ *
  * Revision 1.3  2005/09/08 16:53:42  alfred
  * - use common PInstTable
  *
@@ -1003,52 +1006,52 @@ BEGIN
    AddPrefixes();
 END
 
-        static void DecodeCALLJMPF(Word Index)
-BEGIN
-   char *p;
-   Word AdrWord;
-   Boolean OK;
+static void DecodeCALLJMPF(Word Index)
+{
+  char *p;
+  Word AdrWord;
+  Boolean OK;
 
-   if (ArgCnt!=1) WrError(1110);
-   else
-    BEGIN
-     p=QuotPos(ArgStr[1],':');
-     if (p==Nil)
-      BEGIN
-       DecodeAdr(ArgStr[1]);
-       switch (AdrType)
-        BEGIN
-         case TypeMem:
-          BAsmCode[CodeLen]=0xff;
-          BAsmCode[CodeLen+1]=AdrMode+0x18+Index;
+  if (ArgCnt != 1) WrError(1110);
+  else
+  {
+    p = QuotPos(ArgStr[1], ':');
+    if (!p)
+    {
+      DecodeAdr(ArgStr[1]);
+      switch (AdrType)
+      {
+        case TypeMem:
+          BAsmCode[CodeLen] = 0xff;
+          BAsmCode[CodeLen + 1] = AdrMode | Hi(Index);
           MoveAdr(2);
-          CodeLen+=2+AdrCnt;
+          CodeLen += 2 + AdrCnt;
           break;
-         default:
-          if (AdrType!=TypeNone) WrError(1350);
-        END
-      END
-     else
-      BEGIN
-       *p='\0';
-       AdrWord=EvalIntExpression(ArgStr[1],UInt16,&OK);
-       if (OK)
-        BEGIN
-         BAsmCode[CodeLen+3]=Lo(AdrWord);
-         BAsmCode[CodeLen+4]=Hi(AdrWord);
-         AdrWord=EvalIntExpression(p+1,UInt16,&OK);
-         if (OK)
-          BEGIN
-           BAsmCode[CodeLen+1]=Lo(AdrWord);
-           BAsmCode[CodeLen+2]=Hi(AdrWord);
-           BAsmCode[CodeLen]=0x9a+Index;
-           CodeLen+=5;
-          END
-        END
-      END
-    END
-   AddPrefixes();
-END
+        default:
+          if (AdrType != TypeNone) WrError(1350);
+      }
+    }
+    else
+    {
+      *p = '\0';
+      AdrWord = EvalIntExpression(ArgStr[1], UInt16, &OK);
+      if (OK)
+      {
+        BAsmCode[CodeLen + 3] = Lo(AdrWord);
+        BAsmCode[CodeLen + 4] = Hi(AdrWord);
+        AdrWord = EvalIntExpression(p + 1, UInt16, &OK);
+        if (OK)
+        {
+          BAsmCode[CodeLen + 1] = Lo(AdrWord);
+          BAsmCode[CodeLen + 2] = Hi(AdrWord);
+          BAsmCode[CodeLen] = Lo(Index);
+          CodeLen += 5;
+        }
+      }
+    }
+  }
+  AddPrefixes();
+}
 
         static void DecodeENTER(Word Index)
 BEGIN
@@ -1279,162 +1282,163 @@ BEGIN
    Reg16Orders[InstrZ++].Add=NAdd;
 END
 
-        static void InitFields(void)
-BEGIN
-   InstTable=CreateInstTable(201);
-   AddInstTable(InstTable,"MOV"  ,0,DecodeMOV);
-   AddInstTable(InstTable,"INC"  ,0,DecodeINCDEC);
-   AddInstTable(InstTable,"DEC"  ,8,DecodeINCDEC);
-   AddInstTable(InstTable,"INT"  ,0,DecodeINT);
-   AddInstTable(InstTable,"IN"   ,0,DecodeINOUT);
-   AddInstTable(InstTable,"OUT"  ,2,DecodeINOUT);
-   AddInstTable(InstTable,"CALL" ,0,DecodeCALLJMP);
-   AddInstTable(InstTable,"JMP"  ,1,DecodeCALLJMP);
-   AddInstTable(InstTable,"PUSH" ,0,DecodePUSHPOP);
-   AddInstTable(InstTable,"POP"  ,1,DecodePUSHPOP);
-   AddInstTable(InstTable,"NOT"  ,0,DecodeNOTNEG);
-   AddInstTable(InstTable,"NEG"  ,8,DecodeNOTNEG);
-   AddInstTable(InstTable,"RET"  ,0,DecodeRET);
-   AddInstTable(InstTable,"RETF" ,8,DecodeRET);
-   AddInstTable(InstTable,"TEST" ,0,DecodeTEST);
-   AddInstTable(InstTable,"XCHG" ,0,DecodeXCHG);
-   AddInstTable(InstTable,"CALLF",16,DecodeCALLJMPF);
-   AddInstTable(InstTable,"JMPF" ,0,DecodeCALLJMPF);
-   AddInstTable(InstTable,"ENTER",0,DecodeENTER);
+static void InitFields(void)
+{
+  InstTable = CreateInstTable(201);
 
-   FixedOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*FixedOrderCnt); InstrZ=0;
-   AddFixed("AAA",   CPU8086,  0x0037);  AddFixed("AAS",   CPU8086,  0x003f);
-   AddFixed("AAM",   CPU8086,  0xd40a);  AddFixed("AAD",   CPU8086,  0xd50a);
-   AddFixed("CBW",   CPU8086,  0x0098);  AddFixed("CLC",   CPU8086,  0x00f8);
-   AddFixed("CLD",   CPU8086,  0x00fc);  AddFixed("CLI",   CPU8086,  0x00fa);
-   AddFixed("CMC",   CPU8086,  0x00f5);  AddFixed("CWD",   CPU8086,  0x0099);
-   AddFixed("DAA",   CPU8086,  0x0027);  AddFixed("DAS",   CPU8086,  0x002f);
-   AddFixed("HLT",   CPU8086,  0x00f4);  AddFixed("INTO",  CPU8086,  0x00ce);
-   AddFixed("IRET",  CPU8086,  0x00cf);  AddFixed("LAHF",  CPU8086,  0x009f);
-   AddFixed("LOCK",  CPU8086,  0x00f0);  AddFixed("NOP",   CPU8086,  0x0090);
-   AddFixed("POPF",  CPU8086,  0x009d);  AddFixed("PUSHF", CPU8086,  0x009c);
-   AddFixed("SAHF",  CPU8086,  0x009e);  AddFixed("STC",   CPU8086,  0x00f9);
-   AddFixed("STD",   CPU8086,  0x00fd);  AddFixed("STI",   CPU8086,  0x00fb);
-   AddFixed("WAIT",  CPU8086,  0x009b);  AddFixed("XLAT",  CPU8086,  0x00d7);
-   AddFixed("LEAVE", CPU80186, 0x00c9);  AddFixed("PUSHA", CPU80186, 0x0060);
-   AddFixed("POPA",  CPU80186, 0x0061);  AddFixed("ADD4S", CPUV30,   0x0f20);
-   AddFixed("SUB4S", CPUV30,   0x0f22);  AddFixed("CMP4S", CPUV30,   0x0f26);
-   AddFixed("STOP",  CPUV35,   0x0f9e);  AddFixed("RETRBI",CPUV35,   0x0f91);
-   AddFixed("FINT",  CPUV35,   0x0f92);  AddFixed("MOVSPA",CPUV35,   0x0f25);
-   AddFixed("SEGES", CPU8086,  0x0026);  AddFixed("SEGCS", CPU8086,  0x002e);
-   AddFixed("SEGSS", CPU8086,  0x0036);  AddFixed("SEGDS", CPU8086,  0x003e);
-   AddFixed("FWAIT", CPU8086,  0x009b);  
+  AddInstTable(InstTable, "MOV"  , 0, DecodeMOV);
+  AddInstTable(InstTable, "INC"  , 0, DecodeINCDEC);
+  AddInstTable(InstTable, "DEC"  , 8, DecodeINCDEC);
+  AddInstTable(InstTable, "INT"  , 0, DecodeINT);
+  AddInstTable(InstTable, "IN"   , 0, DecodeINOUT);
+  AddInstTable(InstTable, "OUT"  , 2, DecodeINOUT);
+  AddInstTable(InstTable, "CALL" , 0, DecodeCALLJMP);
+  AddInstTable(InstTable, "JMP"  , 1, DecodeCALLJMP);
+  AddInstTable(InstTable, "PUSH" , 0, DecodePUSHPOP);
+  AddInstTable(InstTable, "POP"  , 1, DecodePUSHPOP);
+  AddInstTable(InstTable, "NOT"  , 0, DecodeNOTNEG);
+  AddInstTable(InstTable, "NEG"  , 8, DecodeNOTNEG);
+  AddInstTable(InstTable, "RET"  , 0, DecodeRET);
+  AddInstTable(InstTable, "RETF" , 8, DecodeRET);
+  AddInstTable(InstTable, "TEST" , 0, DecodeTEST);
+  AddInstTable(InstTable, "XCHG" , 0, DecodeXCHG);
+  AddInstTable(InstTable, "CALLF", 0x189a, DecodeCALLJMPF);
+  AddInstTable(InstTable, "JMPF" , 0x28ea, DecodeCALLJMPF);
+  AddInstTable(InstTable, "ENTER", 0, DecodeENTER);
 
-   FPUFixedOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*FPUFixedOrderCnt); InstrZ=0;
-   AddFPUFixed("FCOMPP", CPU8086, 0xded9); AddFPUFixed("FTST",   CPU8086, 0xd9e4);
-   AddFPUFixed("FXAM",   CPU8086, 0xd9e5); AddFPUFixed("FLDZ",   CPU8086, 0xd9ee);
-   AddFPUFixed("FLD1",   CPU8086, 0xd9e8); AddFPUFixed("FLDPI",  CPU8086, 0xd9eb);
-   AddFPUFixed("FLDL2T", CPU8086, 0xd9e9); AddFPUFixed("FLDL2E", CPU8086, 0xd9ea);
-   AddFPUFixed("FLDLG2", CPU8086, 0xd9ec); AddFPUFixed("FLDLN2", CPU8086, 0xd9ed);
-   AddFPUFixed("FSQRT",  CPU8086, 0xd9fa); AddFPUFixed("FSCALE", CPU8086, 0xd9fd);
-   AddFPUFixed("FPREM",  CPU8086, 0xd9f8); AddFPUFixed("FRNDINT",CPU8086, 0xd9fc);
-   AddFPUFixed("FXTRACT",CPU8086, 0xd9f4); AddFPUFixed("FABS",   CPU8086, 0xd9e1);
-   AddFPUFixed("FCHS",   CPU8086, 0xd9e0); AddFPUFixed("FPTAN",  CPU8086, 0xd9f2);
-   AddFPUFixed("FPATAN", CPU8086, 0xd9f3); AddFPUFixed("F2XM1",  CPU8086, 0xd9f0);
-   AddFPUFixed("FYL2X",  CPU8086, 0xd9f1); AddFPUFixed("FYL2XP1",CPU8086, 0xd9f9);
-   AddFPUFixed("FINIT",  CPU8086, 0xdbe3); AddFPUFixed("FENI",   CPU8086, 0xdbe0);
-   AddFPUFixed("FDISI",  CPU8086, 0xdbe1); AddFPUFixed("FCLEX",  CPU8086, 0xdbe2);
-   AddFPUFixed("FINCSTP",CPU8086, 0xd9f7); AddFPUFixed("FDECSTP",CPU8086, 0xd9f6);
-   AddFPUFixed("FNOP",   CPU8086, 0xd9d0);
+  FixedOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*FixedOrderCnt); InstrZ=0;
+  AddFixed("AAA",   CPU8086,  0x0037);  AddFixed("AAS",   CPU8086,  0x003f);
+  AddFixed("AAM",   CPU8086,  0xd40a);  AddFixed("AAD",   CPU8086,  0xd50a);
+  AddFixed("CBW",   CPU8086,  0x0098);  AddFixed("CLC",   CPU8086,  0x00f8);
+  AddFixed("CLD",   CPU8086,  0x00fc);  AddFixed("CLI",   CPU8086,  0x00fa);
+  AddFixed("CMC",   CPU8086,  0x00f5);  AddFixed("CWD",   CPU8086,  0x0099);
+  AddFixed("DAA",   CPU8086,  0x0027);  AddFixed("DAS",   CPU8086,  0x002f);
+  AddFixed("HLT",   CPU8086,  0x00f4);  AddFixed("INTO",  CPU8086,  0x00ce);
+  AddFixed("IRET",  CPU8086,  0x00cf);  AddFixed("LAHF",  CPU8086,  0x009f);
+  AddFixed("LOCK",  CPU8086,  0x00f0);  AddFixed("NOP",   CPU8086,  0x0090);
+  AddFixed("POPF",  CPU8086,  0x009d);  AddFixed("PUSHF", CPU8086,  0x009c);
+  AddFixed("SAHF",  CPU8086,  0x009e);  AddFixed("STC",   CPU8086,  0x00f9);
+  AddFixed("STD",   CPU8086,  0x00fd);  AddFixed("STI",   CPU8086,  0x00fb);
+  AddFixed("WAIT",  CPU8086,  0x009b);  AddFixed("XLAT",  CPU8086,  0x00d7);
+  AddFixed("LEAVE", CPU80186, 0x00c9);  AddFixed("PUSHA", CPU80186, 0x0060);
+  AddFixed("POPA",  CPU80186, 0x0061);  AddFixed("ADD4S", CPUV30,   0x0f20);
+  AddFixed("SUB4S", CPUV30,   0x0f22);  AddFixed("CMP4S", CPUV30,   0x0f26);
+  AddFixed("STOP",  CPUV35,   0x0f9e);  AddFixed("RETRBI",CPUV35,   0x0f91);
+  AddFixed("FINT",  CPUV35,   0x0f92);  AddFixed("MOVSPA",CPUV35,   0x0f25);
+  AddFixed("SEGES", CPU8086,  0x0026);  AddFixed("SEGCS", CPU8086,  0x002e);
+  AddFixed("SEGSS", CPU8086,  0x0036);  AddFixed("SEGDS", CPU8086,  0x003e);
+  AddFixed("FWAIT", CPU8086,  0x009b);  
 
-   FPUStOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*FPUStOrderCnt); InstrZ=0;
-   AddFPUSt("FXCH",  CPU8086, 0xd9c8);
-   AddFPUSt("FFREE", CPU8086, 0xddc0);
+  FPUFixedOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*FPUFixedOrderCnt); InstrZ=0;
+  AddFPUFixed("FCOMPP", CPU8086, 0xded9); AddFPUFixed("FTST",   CPU8086, 0xd9e4);
+  AddFPUFixed("FXAM",   CPU8086, 0xd9e5); AddFPUFixed("FLDZ",   CPU8086, 0xd9ee);
+  AddFPUFixed("FLD1",   CPU8086, 0xd9e8); AddFPUFixed("FLDPI",  CPU8086, 0xd9eb);
+  AddFPUFixed("FLDL2T", CPU8086, 0xd9e9); AddFPUFixed("FLDL2E", CPU8086, 0xd9ea);
+  AddFPUFixed("FLDLG2", CPU8086, 0xd9ec); AddFPUFixed("FLDLN2", CPU8086, 0xd9ed);
+  AddFPUFixed("FSQRT",  CPU8086, 0xd9fa); AddFPUFixed("FSCALE", CPU8086, 0xd9fd);
+  AddFPUFixed("FPREM",  CPU8086, 0xd9f8); AddFPUFixed("FRNDINT",CPU8086, 0xd9fc);
+  AddFPUFixed("FXTRACT",CPU8086, 0xd9f4); AddFPUFixed("FABS",   CPU8086, 0xd9e1);
+  AddFPUFixed("FCHS",   CPU8086, 0xd9e0); AddFPUFixed("FPTAN",  CPU8086, 0xd9f2);
+  AddFPUFixed("FPATAN", CPU8086, 0xd9f3); AddFPUFixed("F2XM1",  CPU8086, 0xd9f0);
+  AddFPUFixed("FYL2X",  CPU8086, 0xd9f1); AddFPUFixed("FYL2XP1",CPU8086, 0xd9f9);
+  AddFPUFixed("FINIT",  CPU8086, 0xdbe3); AddFPUFixed("FENI",   CPU8086, 0xdbe0);
+  AddFPUFixed("FDISI",  CPU8086, 0xdbe1); AddFPUFixed("FCLEX",  CPU8086, 0xdbe2);
+  AddFPUFixed("FINCSTP",CPU8086, 0xd9f7); AddFPUFixed("FDECSTP",CPU8086, 0xd9f6);
+  AddFPUFixed("FNOP",   CPU8086, 0xd9d0);
 
-   FPU16Orders=(FixedOrder *) malloc(sizeof(FixedOrder)*FPU16OrderCnt); InstrZ=0;
-   AddFPU16("FLDCW",  CPU8086, 0xd928);
-   AddFPU16("FSTCW",  CPU8086, 0xd938);
-   AddFPU16("FSTSW",  CPU8086, 0xdd38);
-   AddFPU16("FSTENV", CPU8086, 0xd930);
-   AddFPU16("FLDENV", CPU8086, 0xd920);
+  FPUStOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*FPUStOrderCnt); InstrZ=0;
+  AddFPUSt("FXCH",  CPU8086, 0xd9c8);
+  AddFPUSt("FFREE", CPU8086, 0xddc0);
 
-   StringOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*StringOrderCnt); InstrZ=0;
-   AddString("CMPSB", CPU8086,  0x00a6);
-   AddString("CMPSW", CPU8086,  0x00a7);
-   AddString("LODSB", CPU8086,  0x00ac);
-   AddString("LODSW", CPU8086,  0x00ad);
-   AddString("MOVSB", CPU8086,  0x00a4);
-   AddString("MOVSW", CPU8086,  0x00a5);
-   AddString("SCASB", CPU8086,  0x00ae);
-   AddString("SCASW", CPU8086,  0x00af);
-   AddString("STOSB", CPU8086,  0x00aa);
-   AddString("STOSW", CPU8086,  0x00ab);
-   AddString("INSB",  CPU80186, 0x006c);
-   AddString("INSW",  CPU80186, 0x006d);
-   AddString("OUTSB", CPU80186, 0x006e);
-   AddString("OUTSW", CPU80186, 0x006f);
+  FPU16Orders=(FixedOrder *) malloc(sizeof(FixedOrder)*FPU16OrderCnt); InstrZ=0;
+  AddFPU16("FLDCW",  CPU8086, 0xd928);
+  AddFPU16("FSTCW",  CPU8086, 0xd938);
+  AddFPU16("FSTSW",  CPU8086, 0xdd38);
+  AddFPU16("FSTENV", CPU8086, 0xd930);
+  AddFPU16("FLDENV", CPU8086, 0xd920);
 
-   ReptOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*ReptOrderCnt); InstrZ=0;
-   AddRept("REP",   CPU8086,  0x00f3);
-   AddRept("REPE",  CPU8086,  0x00f3);
-   AddRept("REPZ",  CPU8086,  0x00f3);
-   AddRept("REPNE", CPU8086,  0x00f2);
-   AddRept("REPNZ", CPU8086,  0x00f2);
-   AddRept("REPC",  CPUV30,   0x0065);
-   AddRept("REPNC", CPUV30,   0x0064);
+  StringOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*StringOrderCnt); InstrZ=0;
+  AddString("CMPSB", CPU8086,  0x00a6);
+  AddString("CMPSW", CPU8086,  0x00a7);
+  AddString("LODSB", CPU8086,  0x00ac);
+  AddString("LODSW", CPU8086,  0x00ad);
+  AddString("MOVSB", CPU8086,  0x00a4);
+  AddString("MOVSW", CPU8086,  0x00a5);
+  AddString("SCASB", CPU8086,  0x00ae);
+  AddString("SCASW", CPU8086,  0x00af);
+  AddString("STOSB", CPU8086,  0x00aa);
+  AddString("STOSW", CPU8086,  0x00ab);
+  AddString("INSB",  CPU80186, 0x006c);
+  AddString("INSW",  CPU80186, 0x006d);
+  AddString("OUTSB", CPU80186, 0x006e);
+  AddString("OUTSW", CPU80186, 0x006f);
 
-   RelOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*RelOrderCnt); InstrZ=0;
-   AddRel("JA",    CPU8086, 0x0077); AddRel("JNBE",  CPU8086, 0x0077);
-   AddRel("JAE",   CPU8086, 0x0073); AddRel("JNB",   CPU8086, 0x0073);
-   AddRel("JB",    CPU8086, 0x0072); AddRel("JNAE",  CPU8086, 0x0072);
-   AddRel("JBE",   CPU8086, 0x0076); AddRel("JNA",   CPU8086, 0x0076);
-   AddRel("JC",    CPU8086, 0x0072); AddRel("JCXZ",  CPU8086, 0x00e3);
-   AddRel("JE",    CPU8086, 0x0074); AddRel("JZ",    CPU8086, 0x0074);
-   AddRel("JG",    CPU8086, 0x007f); AddRel("JNLE",  CPU8086, 0x007f);
-   AddRel("JGE",   CPU8086, 0x007d); AddRel("JNL",   CPU8086, 0x007d);
-   AddRel("JL",    CPU8086, 0x007c); AddRel("JNGE",  CPU8086, 0x007c);
-   AddRel("JLE",   CPU8086, 0x007e); AddRel("JNG",   CPU8086, 0x007e);
-   AddRel("JNC",   CPU8086, 0x0073); AddRel("JNE",   CPU8086, 0x0075);
-   AddRel("JNZ",   CPU8086, 0x0075); AddRel("JNO",   CPU8086, 0x0071);
-   AddRel("JNS",   CPU8086, 0x0079); AddRel("JNP",   CPU8086, 0x007b);
-   AddRel("JPO",   CPU8086, 0x007b); AddRel("JO",    CPU8086, 0x0070);
-   AddRel("JP",    CPU8086, 0x007a); AddRel("JPE",   CPU8086, 0x007a);
-   AddRel("JS",    CPU8086, 0x0078); AddRel("LOOP",  CPU8086, 0x00e2);
-   AddRel("LOOPE", CPU8086, 0x00e1); AddRel("LOOPZ", CPU8086, 0x00e1);
-   AddRel("LOOPNE",CPU8086, 0x00e0); AddRel("LOOPNZ",CPU8086, 0x00e0);
+  ReptOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*ReptOrderCnt); InstrZ=0;
+  AddRept("REP",   CPU8086,  0x00f3);
+  AddRept("REPE",  CPU8086,  0x00f3);
+  AddRept("REPZ",  CPU8086,  0x00f3);
+  AddRept("REPNE", CPU8086,  0x00f2);
+  AddRept("REPNZ", CPU8086,  0x00f2);
+  AddRept("REPC",  CPUV30,   0x0065);
+  AddRept("REPNC", CPUV30,   0x0064);
 
-   ModRegOrders=(FixedOrder *) malloc (sizeof(FixedOrder)*ModRegOrderCnt); InstrZ=0;
-   AddModReg("LDS",   CPU8086,  0x00c5);
-   AddModReg("LEA",   CPU8086,  0x008d);
-   AddModReg("LES",   CPU8086,  0x00c4);
-   AddModReg("BOUND", CPU80186, 0x0062);
+  RelOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*RelOrderCnt); InstrZ=0;
+  AddRel("JA",    CPU8086, 0x0077); AddRel("JNBE",  CPU8086, 0x0077);
+  AddRel("JAE",   CPU8086, 0x0073); AddRel("JNB",   CPU8086, 0x0073);
+  AddRel("JB",    CPU8086, 0x0072); AddRel("JNAE",  CPU8086, 0x0072);
+  AddRel("JBE",   CPU8086, 0x0076); AddRel("JNA",   CPU8086, 0x0076);
+  AddRel("JC",    CPU8086, 0x0072); AddRel("JCXZ",  CPU8086, 0x00e3);
+  AddRel("JE",    CPU8086, 0x0074); AddRel("JZ",    CPU8086, 0x0074);
+  AddRel("JG",    CPU8086, 0x007f); AddRel("JNLE",  CPU8086, 0x007f);
+  AddRel("JGE",   CPU8086, 0x007d); AddRel("JNL",   CPU8086, 0x007d);
+  AddRel("JL",    CPU8086, 0x007c); AddRel("JNGE",  CPU8086, 0x007c);
+  AddRel("JLE",   CPU8086, 0x007e); AddRel("JNG",   CPU8086, 0x007e);
+  AddRel("JNC",   CPU8086, 0x0073); AddRel("JNE",   CPU8086, 0x0075);
+  AddRel("JNZ",   CPU8086, 0x0075); AddRel("JNO",   CPU8086, 0x0071);
+  AddRel("JNS",   CPU8086, 0x0079); AddRel("JNP",   CPU8086, 0x007b);
+  AddRel("JPO",   CPU8086, 0x007b); AddRel("JO",    CPU8086, 0x0070);
+  AddRel("JP",    CPU8086, 0x007a); AddRel("JPE",   CPU8086, 0x007a);
+  AddRel("JS",    CPU8086, 0x0078); AddRel("LOOP",  CPU8086, 0x00e2);
+  AddRel("LOOPE", CPU8086, 0x00e1); AddRel("LOOPZ", CPU8086, 0x00e1);
+  AddRel("LOOPNE",CPU8086, 0x00e0); AddRel("LOOPNZ",CPU8086, 0x00e0);
 
-   ShiftOrders=(FixedOrder *) malloc (sizeof(FixedOrder)*ShiftOrderCnt); InstrZ=0;
-   AddShift("SHL",   CPU8086, 4); AddShift("SAL",   CPU8086, 4);
-   AddShift("SHR",   CPU8086, 5); AddShift("SAR",   CPU8086, 7);
-   AddShift("ROL",   CPU8086, 0); AddShift("ROR",   CPU8086, 1);
-   AddShift("RCL",   CPU8086, 2); AddShift("RCR",   CPU8086, 3);
+  ModRegOrders=(FixedOrder *) malloc (sizeof(FixedOrder)*ModRegOrderCnt); InstrZ=0;
+  AddModReg("LDS",   CPU8086,  0x00c5);
+  AddModReg("LEA",   CPU8086,  0x008d);
+  AddModReg("LES",   CPU8086,  0x00c4);
+  AddModReg("BOUND", CPU80186, 0x0062);
 
-   Reg16Orders=(AddOrder *) malloc(sizeof(AddOrder)*Reg16OrderCnt); InstrZ=0;
-   AddReg16("BRKCS", CPUV35, 0x0f2d, 0xc0);
-   AddReg16("TSKSW", CPUV35, 0x0f94, 0xf8);
-   AddReg16("MOVSPB",CPUV35, 0x0f95, 0xf8);
+  ShiftOrders=(FixedOrder *) malloc (sizeof(FixedOrder)*ShiftOrderCnt); InstrZ=0;
+  AddShift("SHL",   CPU8086, 4); AddShift("SAL",   CPU8086, 4);
+  AddShift("SHR",   CPU8086, 5); AddShift("SAR",   CPU8086, 7);
+  AddShift("ROL",   CPU8086, 0); AddShift("ROR",   CPU8086, 1);
+  AddShift("RCL",   CPU8086, 2); AddShift("RCR",   CPU8086, 3);
 
-   InstrZ=0;
-   AddInstTable(InstTable,"ADD",InstrZ++,DecodeALU2);
-   AddInstTable(InstTable,"OR" ,InstrZ++,DecodeALU2);
-   AddInstTable(InstTable,"ADC",InstrZ++,DecodeALU2);
-   AddInstTable(InstTable,"SBB",InstrZ++,DecodeALU2);
-   AddInstTable(InstTable,"AND",InstrZ++,DecodeALU2);
-   AddInstTable(InstTable,"SUB",InstrZ++,DecodeALU2);
-   AddInstTable(InstTable,"XOR",InstrZ++,DecodeALU2);
-   AddInstTable(InstTable,"CMP",InstrZ++,DecodeALU2);
+  Reg16Orders=(AddOrder *) malloc(sizeof(AddOrder)*Reg16OrderCnt); InstrZ=0;
+  AddReg16("BRKCS", CPUV35, 0x0f2d, 0xc0);
+  AddReg16("TSKSW", CPUV35, 0x0f94, 0xf8);
+  AddReg16("MOVSPB",CPUV35, 0x0f95, 0xf8);
 
-   MulOrders=(char **) malloc(sizeof(char *)*MulOrderCnt); InstrZ=0;
-   MulOrders[InstrZ++]="MUL"; MulOrders[InstrZ++]="IMUL";
-   MulOrders[InstrZ++]="DIV"; MulOrders[InstrZ++]="IDIV";
+  InstrZ=0;
+  AddInstTable(InstTable,"ADD",InstrZ++,DecodeALU2);
+  AddInstTable(InstTable,"OR" ,InstrZ++,DecodeALU2);
+  AddInstTable(InstTable,"ADC",InstrZ++,DecodeALU2);
+  AddInstTable(InstTable,"SBB",InstrZ++,DecodeALU2);
+  AddInstTable(InstTable,"AND",InstrZ++,DecodeALU2);
+  AddInstTable(InstTable,"SUB",InstrZ++,DecodeALU2);
+  AddInstTable(InstTable,"XOR",InstrZ++,DecodeALU2);
+  AddInstTable(InstTable,"CMP",InstrZ++,DecodeALU2);
 
-   Bit1Orders=(char **) malloc(sizeof(char *)*Bit1OrderCnt); InstrZ=0;
-   Bit1Orders[InstrZ++]="TEST1";
-   Bit1Orders[InstrZ++]="CLR1";
-   Bit1Orders[InstrZ++]="SET1";
-   Bit1Orders[InstrZ++]="NOT1";
-END
+  MulOrders=(char **) malloc(sizeof(char *)*MulOrderCnt); InstrZ=0;
+  MulOrders[InstrZ++]="MUL"; MulOrders[InstrZ++]="IMUL";
+  MulOrders[InstrZ++]="DIV"; MulOrders[InstrZ++]="IDIV";
+
+  Bit1Orders=(char **) malloc(sizeof(char *)*Bit1OrderCnt); InstrZ=0;
+  Bit1Orders[InstrZ++]="TEST1";
+  Bit1Orders[InstrZ++]="CLR1";
+  Bit1Orders[InstrZ++]="SET1";
+  Bit1Orders[InstrZ++]="NOT1";
+}
 
         static void DeinitFields(void)
 BEGIN

@@ -129,13 +129,6 @@ extern Boolean ChkSymbName(char *sym);
 extern Boolean ChkMacSymbName(char *sym);
 
 
-extern void WrErrorString(char *Message, char *Add, Boolean Warning, Boolean Fatal);
-
-
-extern void WrError(Word Num);
-
-extern void WrXError(Word Num, char *Message);
-
 extern Boolean ChkRange(LargeInt Value, LargeInt Min, LargeInt Max);
 
 
@@ -183,4 +176,7 @@ extern long DTime(long t1, long t2);
 
 
 extern void asmsub_init(void);
+
+#include "asmerr.h"
+
 #endif /* _ASMSUB_H */

@@ -26,9 +26,12 @@
 /*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.8 2007/11/24 22:48:02 alfred Exp $                      */
+/* $Id: asmsub.c,v 1.9 2008/01/02 22:32:21 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmsub.c,v $
+ * Revision 1.9  2008/01/02 22:32:21  alfred
+ * - better heap checking for DOS target
+ *
  * Revision 1.8  2007/11/24 22:48:02  alfred
  * - some NetBSD changes
  *
@@ -1643,15 +1646,29 @@ END
 
         void *ckmalloc(size_t s)
 BEGIN
-   void *tmp=malloc(s);
-   if (tmp==NULL) WrError(10006);
+   void *tmp;
+
+#ifdef __TURBOC__
+   if (coreleft() < HEAPRESERVE + s)
+     WrError(10006);
+#endif
+
+   tmp = malloc(s);
+   if (tmp == NULL) WrError(10006);
    return tmp;
 END
 
         void *ckrealloc(void *p, size_t s)
 BEGIN
-   void *tmp=realloc(p,s);
-   if (tmp==NULL) WrError(10006);
+   void *tmp;
+
+#ifdef __TURBOC__
+   if (coreleft() < HEAPRESERVE + s)
+     WrError(10006);
+#endif
+
+   tmp = realloc(p,s);
+   if (tmp == NULL) WrError(10006);
    return tmp;
 END
 #endif

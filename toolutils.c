@@ -429,4 +429,8 @@ BEGIN
 END
 #endif
 
+void WrError(Word Num)
+{
+  UNUSED(Num);
+}
 
