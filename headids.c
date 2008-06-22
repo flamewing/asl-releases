@@ -19,9 +19,12 @@
 /*           2001-07-01 TI 320C54x                                           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: headids.c,v 1.8 2007/09/16 08:55:54 alfred Exp $                          */
+/* $Id: headids.c,v 1.9 2008/04/13 20:23:46 alfred Exp $                          */
 /*****************************************************************************
  * $Log: headids.c,v $
+ * Revision 1.9  2008/04/13 20:23:46  alfred
+ * - add Atari Vecor Processor target
+ *
  * Revision 1.8  2007/09/16 08:55:54  alfred
  * - preparations for KENBAK
  *
@@ -152,6 +155,7 @@ static TFamilyDescr Descrs[]=
         {"F2MC16"    , 0x0016, IntHex  },
         {"1802"      , 0x0038, IntHex  },
         {"KENBAK"    , 0x0027, IntHex  },
+        {"ATARI_VECTOR", 0x0002,IntHex },
         {Nil         , 0xffff, Default }
        };
 

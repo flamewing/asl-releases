@@ -36,9 +36,12 @@
 /*           2001-12-02 fixed problems with forward refs of shift arguments  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68k.c,v 1.6 2007/11/24 22:48:05 alfred Exp $                     */
+/* $Id: code68k.c,v 1.7 2008/06/01 08:53:07 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code68k.c,v $
+ * Revision 1.7  2008/06/01 08:53:07  alfred
+ * - forbid ADDQ/SUBQ with byte size on address registers
+ *
  * Revision 1.6  2007/11/24 22:48:05  alfred
  * - some NetBSD changes
  *
@@ -228,35 +231,42 @@ END
 
 typedef enum {PC,AReg,Index,indir,Disp,None} CompType;
 typedef struct 
-         {
-          String Name;
-          CompType Art;
-          Word ANummer,INummer;
-          Boolean Long;
-          Word Scale;
-          Word Size;
-          LongInt Wert;
-         } AdrComp;
+{
+  String Name;
+  CompType Art;
+  Word ANummer,INummer;
+  Boolean Long;
+  Word Scale;
+  Word Size;
+  LongInt Wert;
+} AdrComp;
 
-        static Boolean ValReg(char Ch)
-BEGIN
-   return ((Ch>='0') AND (Ch<='7'));
-END
+static Boolean ValReg(char Ch)
+{
+  return ((Ch >= '0') && (Ch <= '7'));
+}
 
-        static Boolean CodeReg(char *s, Word *Erg)
-BEGIN
-   Boolean Result = True;
+static Boolean CodeReg(const char *s, Word *pErg)
+{
+  Boolean Result = True;
 
-   if (strlen(s) != 2) Result = False;
-   else if (strcasecmp(s,"SP") == 0) *Erg = 15;
-   else if (ValReg(s[1]))
-    if (mytoupper(*s) == 'D') *Erg = s[1] - '0';
-    else if (mytoupper(*s) == 'A') *Erg = s[1] - '0' + 8;
+  if (strlen(s) != 2)
+    Result = False;
+  else if (!strcasecmp(s, "SP"))
+    *pErg = 15;
+  else if (ValReg(s[1]))
+  {
+    if (mytoupper(*s) == 'D')
+      *pErg = s[1] - '0';
+    else if (mytoupper(*s) == 'A')
+      *pErg = s[1] - '0' + 8;
     else Result = False;
-   else Result = False;
+  }
+  else
+    Result = False;
 
-   return Result;
-END
+  return Result;
+}
 
         static Boolean CodeRegPair(char *Asc, Word *Erg1, Word *Erg2)
 BEGIN
@@ -631,10 +641,10 @@ BEGIN
 
    /* CPU-Register direkt: */
 
-   if (CodeReg(Asc,&AdrMode)) 
-    BEGIN
-     AdrCnt=0; AdrNum=(AdrMode >> 3)+1; ChkAdr(Erl); return;
-    END
+   if (CodeReg(Asc, &AdrMode)) 
+   {
+     AdrCnt = 0; AdrNum = (AdrMode >> 3) + 1; ChkAdr(Erl); return;
+   }
 
    /* Gleitkommaregister direkt: */
 
@@ -1283,8 +1293,8 @@ END
 
 /* 0=MOVE 1=MOVEA */
 
-        static void DecodeMOVE(Word Index)
-BEGIN
+static void DecodeMOVE(Word Index)
+{
    int z;
    UNUSED(Index);
 
@@ -1402,7 +1412,7 @@ BEGIN
         END
       END
     END
-END
+}
 
         static void DecodeLEA(Word Index)
 BEGIN
@@ -1482,35 +1492,46 @@ END
 
 /* ADDQ=0 SUBQ=1 */
 
-        static void DecodeADDQSUBQ(Word Index)
-BEGIN
-   Byte HVal8;
-   Boolean ValOK;
+static void DecodeADDQSUBQ(Word Index)
+{
+  Byte HVal8;
+  Boolean ValOK;
 
-   if (CheckColdSize())
-    BEGIN
-     if (ArgCnt!=2) WrError(1110);
-     else
-      BEGIN
-       DecodeAdr(ArgStr[2],Mdata+Madr+Madri+Mpost+Mpre+Mdadri+Maix+Mabs);
-       if (AdrNum!=0) 
-        BEGIN
-         WAsmCode[0]=0x5000 | AdrMode | (OpSize << 6) | (Index << 8);
-         CopyAdrVals(WAsmCode+1);
-         if (*ArgStr[1]=='#') strcpy(ArgStr[1],ArgStr[1]+1);
-         FirstPassUnknown=False;
-         HVal8=EvalIntExpression(ArgStr[1],UInt4,&ValOK);
-         if (FirstPassUnknown) HVal8=1;
-         if ((ValOK) AND (HVal8>=1) AND (HVal8<=8)) 
-          BEGIN
-           CodeLen=2+AdrCnt;
-           WAsmCode[0]|=(((Word) HVal8 & 7) << 9);
-          END
-         else WrError(1390);
-        END
-      END
-    END
-END
+  if (!CheckColdSize())
+    return;
+
+  if (ArgCnt != 2)
+  {
+    WrError(1110);
+    return;
+  }
+
+  DecodeAdr(ArgStr[2], Mdata | Madr | Madri | Mpost | Mpre | Mdadri | Maix | Mabs);
+  if (!AdrNum)
+    return;
+
+  if ((2 == AdrNum) && (0 == OpSize))
+  {
+    WrError(1130);
+    return;
+  }
+
+  WAsmCode[0] = 0x5000 | AdrMode | (OpSize << 6) | (Index << 8);
+  CopyAdrVals(WAsmCode + 1);
+  if (*ArgStr[1] == '#')
+    strcpy(ArgStr[1],ArgStr[1]+1);
+  FirstPassUnknown = False;
+  HVal8 = EvalIntExpression(ArgStr[1], UInt4, &ValOK);
+  if (FirstPassUnknown) HVal8 = 1;
+  if ((!ValOK) || (HVal8 < 1) | (HVal8 > 8))
+  {
+    WrError(1390);
+    return;
+  }
+
+  CodeLen = 2 + AdrCnt;
+  WAsmCode[0] |= (((Word) HVal8 & 7) << 9);
+}
 
 /* 0=SUBX 1=ADDX */
 

@@ -10,9 +10,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code86.c,v 1.4 2008/03/30 21:28:00 alfred Exp $                      */
+/* $Id: code86.c,v 1.5 2008/04/06 09:37:52 alfred Exp $                      */
 /*****************************************************************************
  * $Log: code86.c,v $
+ * Revision 1.5  2008/04/06 09:37:52  alfred
+ * - catch immediate addressing on invalid operand size, some reformatting
+ *
  * Revision 1.4  2008/03/30 21:28:00  alfred
  * - correct intersegment CALL/JMP
  *
@@ -113,11 +116,11 @@ static char **Bit1Orders;
 
 /*------------------------------------------------------------------------------------*/
 
-        static void PutCode(Word Code)
-BEGIN
-   if (Hi(Code)!=0) BAsmCode[CodeLen++]=Hi(Code);
-   BAsmCode[CodeLen++]=Lo(Code);
-END
+static void PutCode(Word Code)
+{
+  if (Hi(Code) != 0) BAsmCode[CodeLen++] = Hi(Code);
+  BAsmCode[CodeLen++] = Lo(Code);
+}
 
         static void MoveAdr(int Dest)
 BEGIN
@@ -194,290 +197,297 @@ BEGIN
     END
 END
 
-        static void ChkSpaces(ShortInt SegBuffer, Byte MomSegment)
-BEGIN
-   Byte EffSeg;
+static void ChkSpaces(ShortInt SegBuffer, Byte MomSegment)
+{
+  Byte EffSeg;
 
-   if (NoSegCheck) return;
+  if (NoSegCheck) return;
 
-   /* in welches Segment geht das benutzte Segmentregister ? */
+  /* in welches Segment geht das benutzte Segmentregister ? */
 
-   EffSeg=SegAssumes[SegBuffer];
+  EffSeg=SegAssumes[SegBuffer];
 
-   /* Zieloperand in Code-/Datensegment ? */
+  /* Zieloperand in Code-/Datensegment ? */
 
-   ChkSingleSpace(SegCode,EffSeg,MomSegment);
-   ChkSingleSpace(SegXData,EffSeg,MomSegment);
-   ChkSingleSpace(SegData,EffSeg,MomSegment);
-END
+  ChkSingleSpace(SegCode,EffSeg,MomSegment);
+  ChkSingleSpace(SegXData,EffSeg,MomSegment);
+  ChkSingleSpace(SegData,EffSeg,MomSegment);
+}
 
-        static void DecodeAdr(char *Asc)
-BEGIN
+static void DecodeAdr(char *Asc)
+{
 #define RegCnt 7
-   static char *Reg16Names[RegCnt+1]=
-              {"AX","CX","DX","BX","SP","BP","SI","DI"};
-   static char *Reg8Names[RegCnt+1]=
-              {"AL","CL","DL","BL","AH","CH","DH","BH"};
-   static Byte RMCodes[8]={11,12,21,22,1,2,20,10};
+  static char *Reg16Names[RegCnt+1] =
+             {"AX","CX","DX","BX","SP","BP","SI","DI"};
+  static char *Reg8Names[RegCnt+1] =
+             {"AL","CL","DL","BL","AH","CH","DH","BH"};
+  static Byte RMCodes[8] = {11,12,21,22,1,2,20,10};
 
-   int RegZ,z;
-   Boolean IsImm;
-   ShortInt IndexBuf,BaseBuf;
-   Byte SumBuf;
-   LongInt DispAcc,DispSum;
-   char *p,*p1,*p2;
-   Boolean HasAdr;
-   Boolean OK,OldNegFlag,NegFlag;
-   String AdrPart,AddPart;
-   ShortInt SegBuffer;
-   Byte MomSegment;
-   ShortInt FoundSize;
+  int RegZ, z;
+  Boolean IsImm;
+  ShortInt IndexBuf, BaseBuf;
+  Byte SumBuf;
+  LongInt DispAcc, DispSum;
+  char *p, *p1, *p2;
+  Boolean HasAdr;
+  Boolean OK,OldNegFlag, NegFlag;
+  String AdrPart, AddPart;
+  ShortInt SegBuffer;
+  Byte MomSegment;
+  ShortInt FoundSize;
 
-   AdrType=TypeNone; AdrCnt=0;
-   SegBuffer=(-1); MomSegment=0;
+  AdrType = TypeNone; AdrCnt = 0;
+  SegBuffer = (-1); MomSegment = 0;
 
-   for (RegZ=0; RegZ<=RegCnt; RegZ++)
-    BEGIN
-     if (strcasecmp(Asc,Reg16Names[RegZ])==0)
-      BEGIN
-       AdrType=TypeReg16; AdrMode=RegZ;
-       ChkOpSize(1);
-       return;
-      END
-     if (strcasecmp(Asc,Reg8Names[RegZ])==0)
-      BEGIN
-       AdrType=TypeReg8; AdrMode=RegZ;
-       ChkOpSize(0);
-       return;
-      END
-    END
-
-   for (RegZ=0; RegZ<=SegRegCnt; RegZ++)
-    if (strcasecmp(Asc,SegRegNames[RegZ])==0)
-     BEGIN
-      AdrType=TypeRegSeg; AdrMode=RegZ;
+  for (RegZ = 0; RegZ <= RegCnt; RegZ++)
+  {
+    if (!strcasecmp(Asc, Reg16Names[RegZ]))
+    {
+      AdrType = TypeReg16; AdrMode = RegZ;
       ChkOpSize(1);
       return;
-     END
+    }
+    if (!strcasecmp(Asc, Reg8Names[RegZ]))
+    {
+      AdrType = TypeReg8; AdrMode = RegZ;
+      ChkOpSize(0);
+      return;
+    }
+  }
 
-   if (FPUAvail)
-    BEGIN
-     if (strcasecmp(Asc,"ST")==0)
-      BEGIN
-       AdrType=TypeFReg; AdrMode=0;
-       ChkOpSize(4);
-       return;
-      END
+  for (RegZ = 0; RegZ <= SegRegCnt; RegZ++)
+    if (!strcasecmp(Asc,SegRegNames[RegZ]))
+    {
+      AdrType = TypeRegSeg; AdrMode = RegZ;
+      ChkOpSize(1);
+      return;
+    }
 
-     if ((strlen(Asc)>4) AND (strncasecmp(Asc,"ST(",3)==0) AND (Asc[strlen(Asc)-1]==')'))
-      BEGIN
-       Asc[strlen(Asc)-1]='\0';
-       AdrMode=EvalIntExpression(Asc+3,UInt3,&OK);
-       if (OK)
-        BEGIN
-         AdrType=TypeFReg;
-         ChkOpSize(4);
-        END
-       return;
-      END
-    END
+  if (FPUAvail)
+  {
+    if (!strcasecmp(Asc,"ST"))
+    {
+      AdrType = TypeFReg; AdrMode = 0;
+      ChkOpSize(4);
+      return;
+    }
 
-   IsImm=True;
-   IndexBuf=0; BaseBuf=0;
-   DispAcc=0; FoundSize=(-1);
+    if ((strlen(Asc) > 4) && (!strncasecmp(Asc, "ST(", 3)) && (Asc[strlen(Asc) - 1] == ')'))
+    {
+      Asc[strlen(Asc) - 1] = '\0';
+      AdrMode = EvalIntExpression(Asc + 3, UInt3, &OK);
+      if (OK)
+      {
+        AdrType = TypeFReg;
+        ChkOpSize(4);
+      }
+      return;
+    }
+  }
 
-   if (strncasecmp(Asc,"WORD PTR",8)==0)
-    BEGIN
-     strcpy(Asc,Asc+8); FoundSize=1; IsImm=False;
-     KillBlanks(Asc);
-    END
-   else if (strncasecmp(Asc,"BYTE PTR",8)==0)
-    BEGIN
-     strcpy(Asc,Asc+8); FoundSize=0; IsImm=False;
-     KillBlanks(Asc);
-    END
-   else if (strncasecmp(Asc,"DWORD PTR",9)==0)
-    BEGIN
-     strcpy(Asc,Asc+9); FoundSize=2; IsImm=False;
-     KillBlanks(Asc);
-    END
-   else if (strncasecmp(Asc,"QWORD PTR",9)==0)
-    BEGIN
-     strcpy(Asc,Asc+9); FoundSize=3; IsImm=False;
-     KillBlanks(Asc);
-    END
-   else if (strncasecmp(Asc,"TBYTE PTR",9)==0)
-    BEGIN
-     strcpy(Asc,Asc+9); FoundSize=4; IsImm=False;
-     KillBlanks(Asc);
-    END
+  IsImm = True;
+  IndexBuf = 0; BaseBuf = 0;
+  DispAcc = 0; FoundSize = (-1);
 
-   if ((strlen(Asc)>2) AND (Asc[2]==':'))
-    BEGIN
-     strncpy(AddPart,Asc,2); AddPart[2]='\0';
-     for (z=0; z<=SegRegCnt; z++)
-      if (strcasecmp(AddPart,SegRegNames[z])==0)
-       BEGIN
-        strcpy(Asc,Asc+3); SegBuffer=z;
+  if (!strncasecmp(Asc, "WORD PTR", 8))
+  {
+    strcpy(Asc, Asc + 8); FoundSize = 1; IsImm = False;
+    KillBlanks(Asc);
+  }
+  else if (!strncasecmp(Asc, "BYTE PTR", 8))
+  {
+    strcpy(Asc, Asc + 8); FoundSize = 0; IsImm = False;
+    KillBlanks(Asc);
+  }
+  else if (!strncasecmp(Asc, "DWORD PTR", 9))
+  {
+    strcpy(Asc, Asc + 9); FoundSize = 2; IsImm = False;
+    KillBlanks(Asc);
+  }
+  else if (!strncasecmp(Asc, "QWORD PTR", 9))
+  {
+    strcpy(Asc, Asc + 9); FoundSize = 3; IsImm = False;
+    KillBlanks(Asc);
+  }
+  else if (!strncasecmp(Asc, "TBYTE PTR", 9))
+  {
+    strcpy(Asc, Asc + 9); FoundSize = 4; IsImm = False;
+    KillBlanks(Asc);
+  }
+
+  if ((strlen(Asc) > 2) && (Asc[2] == ':'))
+  {
+    strncpy(AddPart, Asc, 2); AddPart[2] = '\0';
+    for (z = 0; z <= SegRegCnt; z++)
+      if (!strcasecmp(AddPart, SegRegNames[z]))
+      {
+        strcpy(Asc, Asc + 3); SegBuffer = z;
         AddPrefix(SegRegPrefixes[SegBuffer]);
-       END
-    END
+      }
+  }
 
-   do
-    BEGIN
-     p=QuotPos(Asc,'['); HasAdr=(p!=Nil);
+  do
+  {
+    p = QuotPos(Asc, '['); HasAdr = (p != NULL);
 
+    if (p != Asc)
+    {
+      FirstPassUnknown = False; if (p) *p = '\0';
+      DispAcc += EvalIntExpression(Asc, Int16, &OK);
+      if (!OK) return;
+      UnknownFlag = UnknownFlag || FirstPassUnknown;
+      MomSegment |= TypeFlag;
+      if (FoundSize == -1) FoundSize = SizeFlag;
+      if (p == Nil) *Asc = '\0';
+      else
+      {
+        *p = '['; strcpy(Asc, p);
+      }
+    }
 
-     if (p!=Asc)
-      BEGIN
-       FirstPassUnknown=False; if (p!=Nil) *p='\0';
-       DispAcc+=EvalIntExpression(Asc,Int16,&OK);
-       if (NOT OK) return;
-       UnknownFlag=UnknownFlag OR FirstPassUnknown;
-       MomSegment|=TypeFlag;
-       if (FoundSize==-1) FoundSize=SizeFlag;
-       if (p==Nil) *Asc='\0';
-       else
-        BEGIN
-         *p='['; strcpy(Asc,p);
-        END
-      END
+    if (HasAdr)
+    {
+      IsImm = False;
 
-     if (HasAdr)
-      BEGIN
-       IsImm=False;
+      p = RQuotPos(Asc, ']');
+      if (!p)
+      {
+        WrError(1300); return;
+      }
 
-       p=RQuotPos(Asc,']'); if (p==Nil)
-        BEGIN
-         WrError(1300); return;
-        END
+      *p = '\0'; strmaxcpy(AdrPart, Asc + 1, 255); strcpy(Asc, p + 1);
+      OldNegFlag = False;
 
-       *p='\0'; strmaxcpy(AdrPart,Asc+1,255); strcpy(Asc,p+1);
-       OldNegFlag=False;
+      do
+      {
+        NegFlag = False;
+        p1 = QuotPos(AdrPart, '+'); p2 = QuotPos(AdrPart, '-');
+        if (((p1 > p2) || (!p1)) && (p2))
+        {
+          p = p2; NegFlag = True;
+        }
+        else
+          p = p1;
 
-       do
-        BEGIN
-         NegFlag=False;
-         p1=QuotPos(AdrPart,'+'); p2=QuotPos(AdrPart,'-');
-         if (((p1>p2) OR (p1==Nil)) AND (p2!=Nil))
-          BEGIN
-           p=p2; NegFlag=True;
-          END
-         else p=p1;
+        if (p == Nil)
+        {
+          strcpy(AddPart, AdrPart); *AdrPart = '\0';
+        }
+        else
+        {
+          *p = '\0'; strcpy(AddPart, AdrPart); strcpy(AdrPart, p + 1);
+        }
 
-         if (p==Nil)
-          BEGIN
-           strcpy(AddPart,AdrPart); *AdrPart='\0';
-          END
-         else
-          BEGIN
-           *p='\0'; strcpy(AddPart,AdrPart); strcpy(AdrPart,p+1);
-          END
+        if (!strcasecmp(AddPart, "BX"))
+        {
+          if ((OldNegFlag) || (BaseBuf != 0)) return; else BaseBuf = 1;
+        }
+        else if (!strcasecmp(AddPart, "BP"))
+        {
+          if ((OldNegFlag) || (BaseBuf != 0)) return; else BaseBuf = 2;
+        }
+        else if (!strcasecmp(AddPart, "SI"))
+        {
+          if ((OldNegFlag) || (IndexBuf != 0)) return; else IndexBuf = 1;
+        }
+        else if (!strcasecmp(AddPart,"DI"))
+        {
+          if ((OldNegFlag) || (IndexBuf !=0 )) return; else IndexBuf = 2;
+        }
+        else
+        {
+          FirstPassUnknown = False;
+          DispSum = EvalIntExpression(AddPart, Int16, &OK);
+          if (!OK) return;
+          UnknownFlag = UnknownFlag || FirstPassUnknown;
+          if (OldNegFlag) DispAcc -= DispSum; else DispAcc += DispSum;
+          MomSegment |= TypeFlag;
+          if (FoundSize == -1) FoundSize = SizeFlag;
+        }
+        OldNegFlag = NegFlag;
+      }
+      while (*AdrPart!='\0');
+    }
+  }
+  while (*Asc);
 
-         if (strcasecmp(AddPart,"BX")==0)
-          BEGIN
-           if ((OldNegFlag) OR (BaseBuf!=0)) return; else BaseBuf=1;
-          END
-         else if (strcasecmp(AddPart,"BP")==0)
-          BEGIN
-           if ((OldNegFlag) OR (BaseBuf!=0)) return; else BaseBuf=2;
-          END
-         else if (strcasecmp(AddPart,"SI")==0)
-          BEGIN
-           if ((OldNegFlag) OR (IndexBuf!=0)) return; else IndexBuf=1;
-          END
-         else if (strcasecmp(AddPart,"DI")==0)
-          BEGIN
-           if ((OldNegFlag) OR (IndexBuf!=0)) return; else IndexBuf=2;
-          END
-         else
-          BEGIN
-           FirstPassUnknown=False;
-           DispSum=EvalIntExpression(AddPart,Int16,&OK);
-           if (NOT OK) return;
-           UnknownFlag=UnknownFlag OR FirstPassUnknown;
-           if (OldNegFlag) DispAcc-=DispSum; else DispAcc+=DispSum;
-           MomSegment|=TypeFlag;
-           if (FoundSize==-1) FoundSize=SizeFlag;
-          END
-         OldNegFlag=NegFlag;
-        END
-       while (*AdrPart!='\0');
-      END
-    END
-   while (*Asc!='\0');
+  SumBuf = BaseBuf * 10 + IndexBuf;
 
-   SumBuf=BaseBuf*10+IndexBuf;
+  /* welches Segment effektiv benutzt ? */
 
-   /* welches Segment effektiv benutzt ? */
+  if (SegBuffer == -1)
+    SegBuffer = (BaseBuf == 2) ? 2 : 3;
 
-   if (SegBuffer==-1) SegBuffer=(BaseBuf==2) ? 2 : 3;
+  /* nur Displacement */
 
-   /* nur Displacement */
-
-   if (SumBuf==0)
-
+  if (0 == SumBuf)
+  {
     /* immediate */
 
     if (IsImm)
-     BEGIN
-      if (((UnknownFlag) AND (OpSize==0)) OR (MinOneIs0())) DispAcc&=0xff;
+    {
+      if (((UnknownFlag) && (OpSize == 0)) || (MinOneIs0())) DispAcc &= 0xff;
       switch (OpSize)
-       BEGIN
+      {
         case -1:
-         WrError(1132); break;
+          WrError(1132);
+          break;
         case 0:
-         if ((DispAcc<-128) OR (DispAcc>255)) WrError(1320);
-         else
-          BEGIN
-           AdrType=TypeImm; AdrVals[0]=DispAcc & 0xff; AdrCnt=1;
-          END
-         break;
+          if ((DispAcc <- 128) || (DispAcc > 255)) WrError(1320);
+          else
+          {
+            AdrType = TypeImm; AdrVals[0] = DispAcc & 0xff; AdrCnt = 1;
+          }
+          break;
         case 1:
-         AdrType=TypeImm;
-         AdrVals[0]=Lo(DispAcc); AdrVals[1]=Hi(DispAcc); AdrCnt=2;
-         break;
-       END
-     END
+          AdrType = TypeImm;
+          AdrVals[0] = Lo(DispAcc); AdrVals[1] = Hi(DispAcc); AdrCnt = 2;
+          break;
+        default:
+          WrError(1130);
+          break;
+      }
+    }
 
     /* absolut */
 
     else
-     BEGIN
-      AdrType=TypeMem; AdrMode=0x06;
-      AdrVals[0]=Lo(DispAcc); AdrVals[1]=Hi(DispAcc); AdrCnt=2;
-      if (FoundSize!=-1) ChkOpSize(FoundSize);
-      ChkSpaces(SegBuffer,MomSegment);
-     END
+    {
+      AdrType = TypeMem; AdrMode = 0x06;
+      AdrVals[0] = Lo(DispAcc); AdrVals[1] = Hi(DispAcc); AdrCnt = 2;
+      if (FoundSize != -1) ChkOpSize(FoundSize);
+      ChkSpaces(SegBuffer, MomSegment);
+    }
+  }
 
-   /* kombiniert */
+  /* kombiniert */
 
-   else
-    BEGIN
-     AdrType=TypeMem;
-     for (z=0; z<8; z++)
-      if (SumBuf==RMCodes[z]) AdrMode=z;
-     if (DispAcc==0)
-      BEGIN
-       if (SumBuf==20)
-        BEGIN
-         AdrMode+=0x40; AdrVals[0]=0; AdrCnt=1;
-        END
-      END
-     else if (AbleToSign(DispAcc))
-      BEGIN
-       AdrMode+=0x40;
-       AdrVals[0]=DispAcc & 0xff; AdrCnt=1;
-      END
-     else
-      BEGIN
-       AdrMode+=0x80;
-       AdrVals[0]=Lo(DispAcc); AdrVals[1]=Hi(DispAcc); AdrCnt=2;
-      END
-     ChkSpaces(SegBuffer,MomSegment);
-     if (FoundSize!=-1) ChkOpSize(FoundSize);
-    END
-END
+  else
+  {
+    AdrType = TypeMem;
+    for (z = 0; z < 8; z++)
+      if (SumBuf == RMCodes[z]) AdrMode = z;
+    if (DispAcc == 0)
+    {
+      if (SumBuf == 20)
+      {
+        AdrMode += 0x40; AdrVals[0] = 0; AdrCnt = 1;
+      }
+    }
+    else if (AbleToSign(DispAcc))
+    {
+      AdrMode += 0x40;
+      AdrVals[0] = DispAcc & 0xff; AdrCnt = 1;
+    }
+    else
+    {
+      AdrMode += 0x80;
+      AdrVals[0] = Lo(DispAcc); AdrVals[1] = Hi(DispAcc); AdrCnt = 2;
+    }
+    ChkSpaces(SegBuffer, MomSegment);
+    if (FoundSize != -1) ChkOpSize(FoundSize);
+  }
+}
 
 /*---------------------------------------------------------------------------*/
 

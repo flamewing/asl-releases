@@ -58,9 +58,12 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.17 2007/11/24 22:48:02 alfred Exp $                          */
+/* $Id: as.c,v 1.18 2008/04/13 20:23:46 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.18  2008/04/13 20:23:46  alfred
+ * - add Atari Vecor Processor target
+ *
  * Revision 1.17  2007/11/24 22:48:02  alfred
  * - some NetBSD changes
  *
@@ -290,6 +293,7 @@
 #include "codefmc8.h"
 #include "codefmc16.h"
 #include "code1802.h"
+#include "codevector.h"
 #include "as1750.h"
 /**          Code21xx};**/
 
@@ -3539,6 +3543,7 @@ BEGIN
      code53c8xx_init();
      codef2mc8_init(); codef2mc16_init();
      code1802_init();
+     codevector_init();
      /*as1750_init();*/
      First=FALSE;
     END

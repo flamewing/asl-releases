@@ -219,9 +219,9 @@ GoOn:
 DriverHead:     dd      -1              ; Zeiger auf Nachfolger
                 dw      0000100000000010b ; Attribut
 ;                       ^   ^         ^
-;                       ³   ³         ÀÄ kann 32-Bit-Setornummern verarbeiten
-;                       ³   ÀÄÄÄÄÄÄÄÄÄÄÄ kennt Close/Open/Removeable
-;                       ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ Blocktreiber
+;                       |   |         +- kann 32-Bit-Setornummern verarbeiten
+;                       |   +----------- kennt Close/Open/Removeable
+;                       +--------------- Blocktreiber
                 dw      StrategyProc    ; Zeiger auf Strategieroutine
                 dw      InterruptProc   ; Zeiger auf eigentlichen Treibercode
 NrOfVols:       db      0               ; Zahl log. Laufwerke
