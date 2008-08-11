@@ -1,4 +1,4 @@
-$Id: changelog,v 1.43 2008/06/22 11:01:12 alfred Exp $
+$Id: changelog,v 1.44 2008/08/10 12:00:30 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1118,3 +1118,12 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 - Addition    : add Atari Asteroids vector processor as target
 
 - Bugfix      : disallow 68xxx byte-size ADDQ/SUBQ when using an address register
+
+2008-08-10 [Bld60]
+
+- Bugfix      : allow 68xxx dynamic FMOVEM register list with lowercase-written data register
+
+- Bugfix      : correct addressing mode list for FMOVEM register-to-memory
+
+- Change      : allow 68K bit instructions with arguments ranging from 0..255 and issue
+                warning for numbers beyond operand length

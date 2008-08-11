@@ -65,7 +65,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition May 2007}
+{\large Edition August 2008}
 \end{raggedright}
 
 \clearpage
@@ -9392,6 +9392,12 @@ described by:
                 or x-indexed addressing with zero displacement, since 
                 Motorola does not specify this variant.  AS chooses the
                 latter, which may not be the desired one.}
+               {none}
+\errentry{ 300}{bit number will be truncated}
+               {warning}
+               {This instruction only operates on byte resp. longword
+                operands.  bit numbers beyond 7 resp. 31 will be treated
+                modulo-8 resp. modulo-32 by the CPU.}
                {none}
 \errentry{1000}{symbol double defined}
                {error}

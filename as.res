@@ -29,9 +29,12 @@
 ;*           2001-10-21 GNU error messages                                   *
 ;*                                                                           *
 ;*****************************************************************************
-;* $Id: as.res,v 1.1 2003/11/06 02:53:05 alfred Exp $                        *
+;* $Id: as.res,v 1.2 2008/08/10 11:57:47 alfred Exp $                        *
 ;*****************************************************************************
 ;* $Log: as.res,v $
+;* Revision 1.2  2008/08/10 11:57:47  alfred
+;* - handle truncated bit numbers for 68K
+;*
 ;* Revision 1.1  2003/11/06 02:53:05  alfred
 ;* - recreated
 ;*
@@ -218,6 +221,10 @@ Message ErrMsgConvIndX
 Message ErrMsgNullResMem
  "kein Speicher reserviert, sind Sie sicher, da&szlig; Sie das wollten?"
  "no memory reserved, are you sure you wanted that?"
+
+Message ErrMsgBitNumberTruncated
+ "Bit-Nummer wird abgeschnitten werden"
+ "bit number will be truncated"
 
 ;*****
 

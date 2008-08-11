@@ -26,9 +26,12 @@
 /*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.9 2008/01/02 22:32:21 alfred Exp $                      */
+/* $Id: asmsub.c,v 1.10 2008/08/10 11:57:48 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmsub.c,v $
+ * Revision 1.10  2008/08/10 11:57:48  alfred
+ * - handle truncated bit numbers for 68K
+ *
  * Revision 1.9  2008/01/02 22:32:21  alfred
  * - better heap checking for DOS target
  *
@@ -997,6 +1000,7 @@ BEGIN
      case  270: msgno = Num_ErrMsgNegDUP; break;
      case  280: msgno = Num_ErrMsgConvIndX; break;
      case  290: msgno = Num_ErrMsgNullResMem; break;
+     case  300: msgno = Num_ErrMsgBitNumberTruncated; break;
      case 1000: msgno = Num_ErrMsgDoubleDef; break;
      case 1010: msgno = Num_ErrMsgSymbolUndef; break;
      case 1020: msgno = Num_ErrMsgInvSymName; break;

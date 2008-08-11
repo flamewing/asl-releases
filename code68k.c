@@ -36,9 +36,15 @@
 /*           2001-12-02 fixed problems with forward refs of shift arguments  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68k.c,v 1.7 2008/06/01 08:53:07 alfred Exp $                     */
+/* $Id: code68k.c,v 1.9 2008/08/10 11:57:48 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code68k.c,v $
+ * Revision 1.9  2008/08/10 11:57:48  alfred
+ * - handle truncated bit numbers for 68K
+ *
+ * Revision 1.8  2008/08/10 11:29:38  alfred
+ * - fix some FPU coding errors
+ *
  * Revision 1.7  2008/06/01 08:53:07  alfred
  * - forbid ADDQ/SUBQ with byte size on address registers
  *
@@ -2722,44 +2728,50 @@ END
 
 /* 0=BTST 1=BCHG 2=BCLR 3=BSET */
 
-        static void DecodeBits(Word Index)
-BEGIN
-   if (ArgCnt!=2) WrError(1110);
-   else
-    BEGIN
-     if (*AttrPart=='\0') OpSize=0;
-     if (Index!=0) DecodeAdr(ArgStr[2],Mdata+Madri+Mpost+Mpre+Mdadri+Maix+Mabs);
-     else DecodeAdr(ArgStr[2],Mdata+Madri+Mpost+Mpre+Mdadri+Maix+Mpc+Mpcidx+Mabs);
-     if (*AttrPart=='\0') OpSize=(AdrNum==1) ? 2 : 0;
-     if (AdrNum!=0)
-      BEGIN
-       if (((AdrNum==1) AND (OpSize!=2)) OR ((AdrNum!=1) AND (OpSize!=0))) WrError(1130);
-       else
-        BEGIN
-         WAsmCode[0]=AdrMode+(Index << 6);
-         CodeLen=2+AdrCnt; CopyAdrVals(WAsmCode+1);
-         OpSize=0;
-         DecodeAdr(ArgStr[1],Mdata+Mimm);
-         if (AdrNum==1) 
-          BEGIN
-           WAsmCode[0]|=0x100 | (AdrMode << 9);
-          END
-         else if (AdrNum==11) 
-          BEGIN
-           memmove(WAsmCode+2,WAsmCode+1,CodeLen-2); WAsmCode[1]=AdrVals[0];
-           WAsmCode[0]|=0x800;
-           CodeLen+=2;
-           if ((AdrVals[0]>31)
-           OR  (((WAsmCode[0] & 0x38)!=0) AND (AdrVals[0]>7))) 
-            BEGIN
-             CodeLen=0; WrError(1510);
-            END
-          END
-         else CodeLen=0;
-        END
-      END
-    END
-END
+static void DecodeBits(Word Index)
+{
+  if (ArgCnt != 2) WrError(1110);
+  else
+  {
+    Word Mask = Mdata | Madri | Mpost | Mpre | Mdadri | Maix | Mabs;
+
+    if (*AttrPart == '\0')
+      OpSize = 0;
+    if (!Index)
+      Mask |= Mpc | Mpcidx;
+    DecodeAdr(ArgStr[2], Mask);
+    if (*AttrPart == '\0')
+      OpSize=(AdrNum == 1) ? 2 : 0;
+    if (AdrNum)
+    {
+      if (((AdrNum == 1) && (OpSize != 2)) || ((AdrNum != 1) && (OpSize != 0))) WrError(1130);
+      else
+      {
+        Word BitMax = (AdrNum == 1) ? 31 : 7;
+
+        WAsmCode[0] = AdrMode | (Index << 6);
+        CodeLen = 2 + AdrCnt; CopyAdrVals(WAsmCode+1);
+        OpSize = 0;
+        DecodeAdr(ArgStr[1], Mdata | Mimm);
+        switch (AdrNum)
+        {
+          case 1:
+            WAsmCode[0] |= 0x100 | (AdrMode << 9);
+            break;
+          case 11:
+            memmove(WAsmCode + 2, WAsmCode + 1,CodeLen - 2); WAsmCode[1] = AdrVals[0];
+            WAsmCode[0] |= 0x800;
+            CodeLen += 2;
+            if (AdrVals[0] > BitMax)
+              WrError(300);
+            break;
+          default:
+            CodeLen = 0;
+        }
+      }
+    }
+  }
+}
 
 /* 0=BFTST 1=BFCHG 2=BFCLR 3=BFSET */
 
@@ -3232,7 +3244,7 @@ BEGIN
    strmaxcpy(Asc,Asc_o,255);
    *Typ=0; if (*Asc=='\0') return;
 
-   if ((strlen(Asc)==2) AND (*Asc=='D') AND ValReg(Asc[1]))
+   if ((strlen(Asc)==2) AND (mytoupper(*Asc)=='D') AND ValReg(Asc[1]))
     BEGIN
      *Typ = 1; *Erg = (Asc[1]-'0') << 4; return;
     END;
@@ -3744,7 +3756,7 @@ BEGIN
             WrError(1130);
            else
             BEGIN
-             Mask = Madri + Mpost + Mdadri + Maix + Mabs;
+             Mask = Madri + Mpre + Mdadri + Maix + Mabs;
              if (z1 == 3)   /* Steuerregister auch Postinkrement */
               BEGIN
                Mask |= Mpre;
