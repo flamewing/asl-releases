@@ -10,9 +10,15 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code96.c,v 1.3 2005/09/08 17:31:04 alfred Exp $                      *
+/* $Id: code96.c,v 1.5 2008/08/18 21:22:15 alfred Exp $                      *
  ***************************************************************************** 
  * $Log: code96.c,v $
+ * Revision 1.5  2008/08/18 21:22:15  alfred
+ * - fixed EPTS/DPTS coding
+ *
+ * Revision 1.4  2008/08/17 11:01:17  alfred
+ * - correct BMOVI coding
+ *
  * Revision 1.3  2005/09/08 17:31:04  alfred
  * - add missing include
  *
@@ -175,9 +181,9 @@ BEGIN
    AddFixed("CLRC" ,0xf8,CPU8096  ,CPU80296 );
    AddFixed("CLRVT",0xfc,CPU8096  ,CPU80296 );
    AddFixed("DI"   ,0xfa,CPU8096  ,CPU80296 );
-   AddFixed("DPTS" ,0xea,CPU80196 ,CPU80196N);
+   AddFixed("DPTS" ,0xec,CPU80196 ,CPU80196N);
    AddFixed("EI"   ,0xfb,CPU8096  ,CPU80296 );
-   AddFixed("EPTS" ,0xeb,CPU80196 ,CPU80196N);
+   AddFixed("EPTS" ,0xed,CPU80196 ,CPU80196N);
    AddFixed("NOP"  ,0xfd,CPU8096  ,CPU80296 );
    AddFixed("POPA" ,0xf5,CPU80196 ,CPU80296 );
    AddFixed("POPF" ,0xf3,CPU8096  ,CPU80296 );
@@ -747,7 +753,7 @@ BEGIN
          if (AdrType!=ModNone)
           BEGIN
            BAsmCode[1]=AdrVals[0];
-           if (Memo("BMOVI")) BAsmCode[0]=0xad;
+           if (Memo("BMOVI")) BAsmCode[0]=0xcd;
            else if (Memo("BMOV")) BAsmCode[0]=0xc1;
            else BAsmCode[0]=0xe4;          
            CodeLen=3;

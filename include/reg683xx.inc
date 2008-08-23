@@ -668,7 +668,7 @@ QSMCR           equ     QSMBase+$00     ; [W] Basiskonfiguration QSM
 QTEST           equ     QSMBase+$02     ; [W] QSM Testregister
 QILR            equ     QSMBase+$04     ; [B] QSM Interruptprioritäten
 QIVR            equ     QSMBase+$05     ; [B] QSM Interruptvektor
-PORTQS          equ     QSMBase+$14     ; [W] Datenbits QSM paralleler Port
+PORTQS          equ     QSMBase+$15     ; [B] Datenbits QSM paralleler Port
 PQSPAR          equ     QSMBase+$16     ; [B] Umschaltung Portbits QSM/paralleler Port
 DDRQS           equ     QSMBase+$17     ; [B] Datenrichtungsregister Port QSM
 SPCR0           equ     QSMBase+$18     ; [W] Steuerregister 0 QSPI

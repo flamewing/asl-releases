@@ -1,4 +1,4 @@
-$Id: changelog,v 1.44 2008/08/10 12:00:30 alfred Exp $
+$Id: changelog,v 1.46 2008/08/22 19:10:21 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1127,3 +1127,13 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 
 - Change      : allow 68K bit instructions with arguments ranging from 0..255 and issue
                 warning for numbers beyond operand length
+
+2008-08-17 [Bld61]
+
+- Bugfix      : correct MCS-96 BMOVI coding
+
+- Bugfix      : correct definition of PORTQS for MC68332
+
+2008-08-22 [Bld62]
+
+- Bugfix      : correct MCS-96 DPTS/EPTS coding
