@@ -1,4 +1,4 @@
-$Id: changelog,v 1.46 2008/08/22 19:10:21 alfred Exp $
+$Id: changelog,v 1.47 2008/08/29 19:20:10 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1137,3 +1137,7 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 2008-08-22 [Bld62]
 
 - Bugfix      : correct MCS-96 DPTS/EPTS coding
+
+2008-08-29 [Bld63]
+
+- Bugfix      : correct 68K TST addressing modes, PC-relative offsets for a few instructions

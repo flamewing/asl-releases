@@ -36,9 +36,12 @@
 /*           2001-12-02 fixed problems with forward refs of shift arguments  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68k.c,v 1.9 2008/08/10 11:57:48 alfred Exp $                     */
+/* $Id: code68k.c,v 1.10 2008/08/29 19:18:49 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code68k.c,v $
+ * Revision 1.10  2008/08/29 19:18:49  alfred
+ * - corrected a few PC-relative offsets
+ *
  * Revision 1.9  2008/08/10 11:57:48  alfred
  * - handle truncated bit numbers for 68K
  *
@@ -1589,92 +1592,116 @@ END
 
 /* 0=SUB 1=CMP 2=ADD +4=..I +8=..A */
 
-        static void DecodeADDSUBCMP(Word Index)
-BEGIN
-   Word Op = Index & 3, Reg;
-   char Variant = mytoupper(OpPart[strlen(OpPart) - 1]);
-   Word PCMask;
-   
-   /* since CMP only reads operands, PC-relative addressing is also
-      allowed for the second operand */
+static void DecodeADDSUBCMP(Word Index)
+{
+  Word Op = Index & 3, Reg;
+  char Variant = mytoupper(OpPart[strlen(OpPart) - 1]);
+  Word DestMask, SrcMask;
+  
+  if ('I' == Variant)
+    SrcMask = Mimm;
+  else
+    SrcMask = Mdata | Madr | Madri | Mpost | Mpre | Mdadri | Maix | Mpc | Mpcidx | Mabs | Mimm;
 
-   PCMask = (mytoupper(*OpPart) == 'C') ? (Mpc+Mpcidx) : 0;
-   if (CheckColdSize())
-    BEGIN
-     if (ArgCnt!=2) WrError(1110);
-     else
-      BEGIN
-       DecodeAdr(ArgStr[2],Mdata+Madr+Madri+Mpost+Mpre+Mdadri+Maix+Mabs+PCMask);
-       if (AdrNum==2)        /* ADDA ? */
-        if (OpSize==0) WrError(1130);
-       else
-        BEGIN
-         WAsmCode[0]=0x90c0 | ((AdrMode & 7) << 9) | (Op << 13);
-         if (OpSize==2) WAsmCode[0]|=0x100;
-         DecodeAdr(ArgStr[1],Mdata+Madr+Madri+Mpost+Mpre+Mdadri+Maix+Mpc+Mpcidx+Mabs+Mimm);
-         if (AdrNum!=0) 
-          BEGIN
-           WAsmCode[0]|=AdrMode; CodeLen=2+AdrCnt;
-           CopyAdrVals(WAsmCode+1);
-          END
-        END
-       else if (AdrNum==1)      /* ADD <EA>,Dn ? */
-        BEGIN
-         WAsmCode[0]=0x9000 | (OpSize << 6) | ((Reg = AdrMode) << 9) | (Op << 13);
-         if (Variant == 'I')
-          DecodeAdr(ArgStr[1],Mimm);
-         else
-          DecodeAdr(ArgStr[1],Mdata+Madr+Madri+Mpost+Mpre+Mdadri+Maix+Mpc+Mpcidx+Mabs+Mimm);
-         if (AdrNum!=0)
-          BEGIN
-           if ((AdrNum == 11) AND (Variant == 'I'))
-            BEGIN
-             if (Op == 1) Op = 8;
-             WAsmCode[0]=0x400 | (OpSize << 6) | (Op << 8) | Reg;
-            END
-           else
-            WAsmCode[0]|=AdrMode;
-           CopyAdrVals(WAsmCode + 1);
-           CodeLen = 2 + AdrCnt;
-          END
-        END
-       else
-        BEGIN
-         DecodeAdr(ArgStr[1],Mdata+Mimm);
-         if (AdrNum==11)        /* ADDI ? */
-          BEGIN
-           if (Op==1) Op=8;
-           WAsmCode[0]=0x400 | (OpSize << 6) | (Op << 8);
-           CodeLen=2+AdrCnt;
-           CopyAdrVals(WAsmCode+1);
-           if (MomCPU==CPUCOLD) DecodeAdr(ArgStr[2],Mdata);
-           else DecodeAdr(ArgStr[2],Mdata+Madri+Mpost+Mpre+Mdadri+Maix+PCMask+Mabs);
-           if (AdrNum!=0) 
-            BEGIN
-             WAsmCode[0]|=AdrMode;
-             CopyAdrVals(WAsmCode+(CodeLen >> 1));
-             CodeLen+=AdrCnt;
-            END
-           else CodeLen=0;
-          END
-         else if (AdrNum!=0)    /* ADD Dn,<EA> ? */
-          BEGIN
-           if (Op==1) WrError(1420);
-           else
-            BEGIN
-             WAsmCode[0]=0x9100 | (OpSize << 6) | (AdrMode << 9) | (Op << 13);
-             DecodeAdr(ArgStr[2],Madri+Mpost+Mpre+Mdadri+Maix+Mabs+PCMask);
-             if (AdrNum!=0) 
-              BEGIN
-               CodeLen=2+AdrCnt; CopyAdrVals(WAsmCode+1);
-               WAsmCode[0]|=AdrMode;
-              END
-            END
-          END
-        END
-      END
-    END
-END
+  if ('A' == Variant)
+    DestMask = Madr;
+  else
+  {
+    DestMask = Mdata | Madr | Madri | Mpost | Mpre | Mdadri | Maix | Mabs;
+
+    /* since CMP only reads operands, PC-relative addressing is also
+       allowed for the second operand */
+
+    if (mytoupper(*OpPart) == 'C')
+      DestMask |= Mpc | Mpcidx;
+  }
+
+  if (CheckColdSize())
+  {
+    if (ArgCnt != 2) WrError(1110);
+    else
+    {
+      DecodeAdr(ArgStr[2], DestMask);
+      switch (AdrNum)
+      {
+        case 2: /* ADDA/SUBA/CMPA ? */
+          if (OpSize == 0) WrError(1130);
+          else
+          {
+            WAsmCode[0] = 0x90c0 | ((AdrMode & 7) << 9) | (Op << 13);
+            if (OpSize == 2) WAsmCode[0] |= 0x100;
+            DecodeAdr(ArgStr[1], SrcMask);
+            if (AdrNum != 0)
+            {
+              WAsmCode[0] |= AdrMode; CodeLen = 2 + AdrCnt;
+              CopyAdrVals(WAsmCode + 1);
+            }
+          }
+          break;
+
+        case 1: /* ADD/SUB/CMP <ea>,Dn ? */
+          WAsmCode[0] = 0x9000 | (OpSize << 6) | ((Reg = AdrMode) << 9) | (Op << 13);
+          DecodeAdr(ArgStr[1], SrcMask);
+          if (AdrNum != 0)
+          {
+            if ((AdrNum == 11) && (Variant == 'I'))
+            {
+              if (Op == 1) Op = 8;
+              WAsmCode[0] = 0x400 | (OpSize << 6) | (Op << 8) | Reg;
+            }
+            else
+              WAsmCode[0] |= AdrMode;
+            CopyAdrVals(WAsmCode + 1);
+            CodeLen = 2 + AdrCnt;
+          }
+          break;
+
+        case 0:
+          break;
+
+        default: /* CMP/ADD/SUB <ea>, Dn */
+          DecodeAdr(ArgStr[1], Mdata | Mimm);
+          if (AdrNum == 11)        /* ADDI/SUBI/CMPI ? */
+          {
+            /* we have to set the PC offset before we decode the destination operand.  Luckily,
+               this is only needed afterwards for an immediate source operand, so we know the
+               # of words ahead: */
+
+            if (*ArgStr[1] == '#')
+              RelPos += (OpSize == 2) ? 4 : 2;
+
+            if (Op == 1) Op = 8;
+            WAsmCode[0] = 0x400 | (OpSize << 6) | (Op << 8);
+            CodeLen = 2 + AdrCnt;
+            CopyAdrVals(WAsmCode + 1);
+            if (MomCPU == CPUCOLD) DecodeAdr(ArgStr[2], Mdata);
+            else DecodeAdr(ArgStr[2], DestMask);
+            if (AdrNum != 0) 
+            {
+              WAsmCode[0] |= AdrMode;
+              CopyAdrVals(WAsmCode + (CodeLen >> 1));
+              CodeLen += AdrCnt;
+            }
+            else CodeLen = 0;
+          }
+          else if (AdrNum != 0)    /* ADD Dn,<EA> ? */
+          {
+            if (Op == 1) WrError(1420);
+            else
+            {
+              WAsmCode[0] = 0x9100 | (OpSize << 6) | (AdrMode << 9) | (Op << 13);
+              DecodeAdr(ArgStr[2], DestMask);
+              if (AdrNum!=0) 
+              {
+                CodeLen = 2 + AdrCnt; CopyAdrVals(WAsmCode + 1);
+                WAsmCode[0] |= AdrMode;
+              }
+            }
+          }
+      }
+    }
+  }
+}
 
 /* 0=OR 1=AND +4=..I */
 
@@ -1851,26 +1878,30 @@ END
 
 /* 0=CLR 1=TST */
 
-        static void DecodeCLRTST(Word Index)
-BEGIN
-   Word w1;
+static void DecodeCLRTST(Word Index)
+{
+  Word w1;
 
-   if (OpSize>2) WrError(1130);
-   else if (ArgCnt!=1) WrError(1110);
-   else
-    BEGIN
-     w1=Mdata+Madri+Mpost+Mpre+Mdadri+Maix+Mabs;
-     if ((Index==1) AND (OpSize>0) AND (MomCPU>=CPU68332))
-      w1+=Madr+Mpc+Mpcidx+Mimm;
-     DecodeAdr(ArgStr[1],w1);
-     if (AdrNum!=0) 
-      BEGIN
-       CodeLen=2+AdrCnt;
-       WAsmCode[0]=0x4200 | (Index << 11) | (OpSize << 6) | AdrMode;
-       CopyAdrVals(WAsmCode+1);
-      END
-    END
-END
+  if (OpSize > 2) WrError(1130);
+  else if (ArgCnt != 1) WrError(1110);
+  else
+  {
+    w1 = Mdata | Madri | Mpost | Mpre | Mdadri | Maix | Mabs;
+    if ((Index == 1) && (MomCPU >= CPU68332))
+    {
+      w1 |= Mpc | Mpcidx | Mimm;
+      if (OpSize != 0)
+        w1 |= Madr;
+    }
+    DecodeAdr(ArgStr[1], w1);
+    if (AdrNum != 0) 
+    {
+      CodeLen = 2 + AdrCnt;
+      WAsmCode[0] = 0x4200 | (Index << 11) | (OpSize << 6) | AdrMode;
+      CopyAdrVals(WAsmCode + 1);
+    }
+  }
+}
 
 /* 0=JSR 1=JMP */
 
@@ -2678,99 +2709,114 @@ BEGIN
     END
 END
 
-        static void DecodeTBL(Word Index)
-BEGIN
-   char *p;
-   Word w2,Mode;
+static void DecodeTBL(Word Index)
+{
+  char *p;
+  Word w2,Mode;
 
-   if (ArgCnt!=2) WrError(1110);
-   else if (OpSize>2) WrError(1130);
-   else if (MomCPU<CPU68332) WrError(1500);
-   else
-    BEGIN
-     DecodeAdr(ArgStr[2],Mdata);
-     if (AdrNum!=0)
-      BEGIN
-       Mode=AdrMode;
-       p=strchr(ArgStr[1],':');
-       if (p==0)
-        BEGIN
-         DecodeAdr(ArgStr[1],Madri+Mdadri+Maix+Mabs+Mpc+Mpcidx);
-         if (AdrNum!=0) 
-          BEGIN
-           WAsmCode[0]=0xf800+AdrMode;
-           WAsmCode[1]=0x0100+(OpSize << 6)+(Mode << 12)+(Index << 10);
-           memcpy(WAsmCode+2,AdrVals,AdrCnt);
-           CodeLen=4+AdrCnt; Check32();
-          END
-        END
-       else
-        BEGIN
-         strcpy(ArgStr[3],p+1); *p='\0';
-         DecodeAdr(ArgStr[1],Mdata);
-         if (AdrNum!=0)
-          BEGIN
-           w2=AdrMode;
-           DecodeAdr(ArgStr[3],Mdata);
-           if (AdrNum!=0)
-            BEGIN
-             WAsmCode[0]=0xf800+w2;
-             WAsmCode[1]=0x0000+(OpSize << 6)+(Mode << 12)+AdrMode;
-             if (OpPart[3]=='S') WAsmCode[1]+=0x0800;
-             if (OpPart[strlen(OpPart)-1]=='N') WAsmCode[1]+=0x0400;
-             CodeLen=4; Check32();
-            END
-          END
-        END
-      END
-    END
-END
+  if (ArgCnt != 2) WrError(1110);
+  else if (OpSize>2) WrError(1130);
+  else if (MomCPU<CPU68332) WrError(1500);
+  else
+  {
+    DecodeAdr(ArgStr[2],Mdata);
+    if (AdrNum != 0)
+    {
+      Mode = AdrMode;
+      p = strchr(ArgStr[1], ':');
+      if (!p)
+      {
+        RelPos = 4;
+        DecodeAdr(ArgStr[1], Madri | Mdadri | Maix| Mabs | Mpc | Mpcidx);
+        if (AdrNum != 0) 
+        {
+          WAsmCode[0] = 0xf800 | AdrMode;
+          WAsmCode[1] = 0x0100 | (OpSize << 6) | (Mode << 12) | (Index << 10);
+          memcpy(WAsmCode + 2, AdrVals, AdrCnt);
+          CodeLen = 4 + AdrCnt; Check32();
+        }
+      }
+      else
+      {
+        strcpy(ArgStr[3], p + 1); *p = '\0';
+        DecodeAdr(ArgStr[1], Mdata);
+        if (AdrNum != 0)
+        {
+          w2 = AdrMode;
+          DecodeAdr(ArgStr[3], Mdata);
+          if (AdrNum != 0)
+          {
+            WAsmCode[0] = 0xf800 | w2;
+            WAsmCode[1] = 0x0000 | (OpSize << 6) | (Mode << 12) | AdrMode;
+            if (OpPart[3] == 'S') WAsmCode[1] |= 0x0800;
+            if (OpPart[strlen(OpPart) - 1] == 'N') WAsmCode[1] |= 0x0400;
+            CodeLen = 4; Check32();
+          }
+        }
+      }
+    }
+  }
+}
 
 /* 0=BTST 1=BCHG 2=BCLR 3=BSET */
 
 static void DecodeBits(Word Index)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  Word Mask, BitNum, BitMax;
+  Byte SaveOpSize;
+  unsigned ResCodeLen;
+
+  if (ArgCnt != 2)
   {
-    Word Mask = Mdata | Madri | Mpost | Mpre | Mdadri | Maix | Mabs;
-
-    if (*AttrPart == '\0')
-      OpSize = 0;
-    if (!Index)
-      Mask |= Mpc | Mpcidx;
-    DecodeAdr(ArgStr[2], Mask);
-    if (*AttrPart == '\0')
-      OpSize=(AdrNum == 1) ? 2 : 0;
-    if (AdrNum)
-    {
-      if (((AdrNum == 1) && (OpSize != 2)) || ((AdrNum != 1) && (OpSize != 0))) WrError(1130);
-      else
-      {
-        Word BitMax = (AdrNum == 1) ? 31 : 7;
-
-        WAsmCode[0] = AdrMode | (Index << 6);
-        CodeLen = 2 + AdrCnt; CopyAdrVals(WAsmCode+1);
-        OpSize = 0;
-        DecodeAdr(ArgStr[1], Mdata | Mimm);
-        switch (AdrNum)
-        {
-          case 1:
-            WAsmCode[0] |= 0x100 | (AdrMode << 9);
-            break;
-          case 11:
-            memmove(WAsmCode + 2, WAsmCode + 1,CodeLen - 2); WAsmCode[1] = AdrVals[0];
-            WAsmCode[0] |= 0x800;
-            CodeLen += 2;
-            if (AdrVals[0] > BitMax)
-              WrError(300);
-            break;
-          default:
-            CodeLen = 0;
-        }
-      }
-    }
+    WrError(1110);
+    return;
   }
+
+  WAsmCode[0] = (Index << 6);
+  ResCodeLen = 1;
+
+  SaveOpSize = OpSize; OpSize = 0;
+  DecodeAdr(ArgStr[1], Mdata | Mimm);
+  switch (AdrNum)
+  {
+    case 1:
+      WAsmCode[0] |= 0x100 | (AdrMode << 9);
+      BitNum = 0; /* implicitly suppresses bit pos check */
+      break;
+    case 11:
+      WAsmCode[0] |= 0x800;
+      WAsmCode[ResCodeLen++] = BitNum = AdrVals[0];
+      break;
+    default:
+      return;
+  }
+
+  OpSize = SaveOpSize;
+  if (*AttrPart == '\0')
+    OpSize = 0;
+
+  Mask = Mdata | Madri | Mpost | Mpre | Mdadri | Maix | Mabs;
+  if (!Index)
+    Mask |= Mpc | Mpcidx;
+  RelPos = ResCodeLen << 1;
+  DecodeAdr(ArgStr[2], Mask);
+
+  if (*AttrPart == '\0')
+    OpSize = (AdrNum == 1) ? 2 : 0;
+  if (!AdrNum)
+    return;
+  if (((AdrNum == 1) && (OpSize != 2)) || ((AdrNum != 1) && (OpSize != 0)))
+  {
+    WrError(1130);
+    return;
+  }
+
+  BitMax = (AdrNum == 1) ? 31 : 7;
+  WAsmCode[0] |= AdrMode;
+  CopyAdrVals(WAsmCode + ResCodeLen);
+  CodeLen = (ResCodeLen << 1) + AdrCnt;
+  if (BitNum > BitMax)
+    WrError(300);
 }
 
 /* 0=BFTST 1=BFCHG 2=BFCLR 3=BFSET */
