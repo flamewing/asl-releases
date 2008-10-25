@@ -36,9 +36,12 @@
 /*           2001-12-02 fixed problems with forward refs of shift arguments  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68k.c,v 1.10 2008/08/29 19:18:49 alfred Exp $                     */
+/* $Id: code68k.c,v 1.11 2008/09/01 18:19:21 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code68k.c,v $
+ * Revision 1.11  2008/09/01 18:19:21  alfred
+ * - allow immediate operand on BTST
+ *
  * Revision 1.10  2008/08/29 19:18:49  alfred
  * - corrected a few PC-relative offsets
  *
@@ -2797,7 +2800,7 @@ static void DecodeBits(Word Index)
 
   Mask = Mdata | Madri | Mpost | Mpre | Mdadri | Maix | Mabs;
   if (!Index)
-    Mask |= Mpc | Mpcidx;
+    Mask |= Mpc | Mpcidx | Mimm;
   RelPos = ResCodeLen << 1;
   DecodeAdr(ArgStr[2], Mask);
 

@@ -46,7 +46,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand August 2008}
+{\large Stand Oktober 2008}
 \end{raggedright}
 
 \clearpage
@@ -786,7 +786,7 @@ befriedigen zu k"onnen, wurden die verschiedenen Codegeneratormodule in
 der DOS-Version in einen Overlay verlegt, der Teil des EXE-Files ist. 
 Eine getrennte OVR-Datei wie bei fr"uheren Versionen von AS existiert also
 nicht mehr, AS versucht aber wie bisher auch weiterhin, die durch das
-Overlaying entstehenden Verzögerungen durch Nutzung von eventuellem EMS-
+Overlaying entstehenden Verz"ogerungen durch Nutzung von eventuellem EMS-
 oder XMS-Speicher zu reduzieren.  Sollte diese Verwendung zu Problemen
 f"uhren, so k"onnen Sie die Verwendung von EMS bzw. XMS unterbinden, indem
 Sie einer Environment-Variablen \tty{USEXMS} bzw. \tty{USEEMS} den Wert
@@ -1681,7 +1681,7 @@ Defaultm"a"sig ist diese Option aber ausgeschaltet.  Ebenfalls mit dieser
 Option er"offnet sich eine weitere, vierte Schreibweise f"ur
 Integerkonstanten, wie man sie bei manchen Fremdassemblern antrifft:  Bei
 dieser Schreibweise wird der eigentliche Wert in Hochkommas geschrieben
-und das Zahlensystem ('x' oder 'h' für hexadezimal, 'o' für oktal und 'b'
+und das Zahlensystem ('x' oder 'h' f"ur hexadezimal, 'o' f"ur oktal und 'b'
 f"ur bin"ar) direkt davor.  Die Integer-Konstante 305419896 kann damit
 also folgenderma"sen geschrieben werden:
 \begin{verbatim}
@@ -1919,28 +1919,31 @@ BITPOS   & einziges 1-Bit       & Integer      & Integer \\
 Name     & Funktion             & Argument & Ergebnis \\
 \hline
 \hline
-SGN      & Vorzeichen (0/1/-1)  & Integer oder & Integer \\
-         &                      & Gleitkomma   & \\
-ABS      & Betrag               & Integer oder & Integer oder \\
-         &                      & Gleitkomma   & Gleitkomma \\
-TOUPPER  & pass. Gro"sbuchstabe & Integer      & Integer \\
-TOLOWER  & pass. Kleinbuchstabe & Integer      & Integer \\
-UPSTRING  & wandelt alle Zeichen & String & String \\
-          & in Gro"sbuchstaben   &        & \\
-LOWSTRING & wandelt alle Zeichen & String & String \\
-          & in Kleinbuchstaben   &        & \\
-STRLEN    & liefert L"ange eines & String & Integer \\
-          & Strings              &        & \\
-SUBSTR    & extrahiert Teil eines & String, & String \\
-          & Strings              & Integer, & \\
-          &                      & Integer & \\
-STRSTR    & sucht Teilstring in  & String, & Integer \\
-          & einem String         & String & \\
-VAL       & evaluiert Stringin-  & String & abh. von \\
-          & halt als Ausdruck    &        & Argument \\
-EXPRTYPE  & liefert Typ des      & Integer, & 0 \\
-          & Arguments            & Gleitkomma, & 1 \\
-          &                      & String & 2 \\
+SGN         & Vorzeichen (0/1/-1)   & Integer oder & Integer \\
+            &                       & Gleitkomma   & \\
+ABS         & Betrag                & Integer oder & Integer oder \\
+            &                       & Gleitkomma   & Gleitkomma \\
+TOUPPER     & pass. Gro"sbuchstabe  & Integer      & Integer \\
+TOLOWER     & pass. Kleinbuchstabe  & Integer      & Integer \\
+UPSTRING    & wandelt alle Zeichen  & String       & String \\
+            & in Gro"sbuchstaben    &              & \\
+LOWSTRING   & wandelt alle Zeichen  & String       & String \\
+            & in Kleinbuchstaben    &              & \\
+STRLEN      & liefert L"ange eines  & String       & Integer \\
+            & Strings               &              & \\
+SUBSTR      & extrahiert Teil eines & String,      & String \\
+            & Strings               & Integer,     & \\
+            &                       & Integer      & \\
+CHARFROMSTR & extrahiert ein        & String,      & Integer \\
+            & Zeichen aus einem     & Integer      & \\
+            & String                &              & \\
+STRSTR      & sucht Teilstring in   & String,      & Integer \\
+            & einem String          & String       & \\
+VAL         & evaluiert Stringin-   & String       & abh. von \\
+            & halt als Ausdruck     &              & Argument \\
+EXPRTYPE    & liefert Typ des       & Integer,     & 0 \\
+            & Arguments             & Gleitkomma,  & 1 \\
+            &                       & String       & 2 \\
 \hline
 \end{tabular}\end{center}
 \caption{vordefinierte Funktionen in AS - Teil 2
@@ -1954,10 +1957,34 @@ Fehlermeldung aus.
 Die String-Funktion \tty{SUBSTR} erwartet als ersten Parameter den
 Quellstring, als zweiten die Startposition und als dritten die Anzahl zu
 extrahierender Zeichen (eine 0 bedeutet, alle Zeichen bis zum Ende zu
-extrahieren).  \tty{STRSTR} liefert das erste Auftreten des zweiten Strings
-im ersten bzw. -1, falls das Suchmuster nicht gefunden wurde.  Beide
-Funktionen numerieren die Zeichen in einem String ab 0 durch!
-\par
+extrahieren).  Analog erwartet \tty{CHARFROMSTR} den Quellstring als
+erstes Argument und die Zeichenposition als zweites Argument.  Falls die
+angegebene Position gr"o"ser oder gleich der L"ange des Quellstrings ist,
+liefert \tty{SUBSTR} einen Leerstring, w"ahrend \tty{CHARFROMSTR} eine -1
+ergibt.  Eine Position kleiner Null wird von \tty{SUBSTR} als Null
+behandlet, w"ahrend \tty{CHARFROMSTR} in diesem Fall ebenfalls eine -1
+liefert.
+
+Hier ein Beispiel, wie man die beiden Funktionen einsetzt, um einen
+String im Speicher abzulegen, wobei das String-Ende durch ein gesetztes
+MSB gekennzeichnet ist:
+
+\begin{verbatim}
+dbstr   macro   arg
+        if      strlen(arg) > 1
+         db     substr(arg, 0, strlen(arg) - 1)
+        endif
+        if      strlen(arg) > 0
+         db     charfromstr(arg, strlen(arg) - 1) | 80h
+        endif
+        endm
+\end{verbatim}
+
+\tty{STRSTR} liefert das erste Auftreten des zweiten Strings
+im ersten bzw. -1, falls das Suchmuster nicht gefunden wurde. 
+Analog zu \tty{SUBSTR} und \tty{CHARFROMSTR} hat das erste
+Zeichen den Positionswert 0.
+
 Wenn eine Funktion auch Gleitkommaargumente erwartet, so soll
 dies nicht bedeuten, da"s man nicht z.B.
 \begin{verbatim}
@@ -1999,11 +2026,11 @@ Vorw"artsreferenz von einer normalen Referenz?  Dazu sehe man sich folgendes
 Programmbeispiel an (man sehe mir bitte meine -- auch im Rest dieser Anleitung
 anzutreffende -- 68000-Lastigkeit nach):
 \begin{verbatim}
-        move.l  d0,#10
-loop:   move.l  d1,(a1)
+        move.l  #10,d0
+loop:   move.l  (a1),d1
         beq     skip
         neg.l   d1
-skip:   move.l  (a1+),d1
+skip:   move.l  d1,(a1+)
         dbra    d0,loop
 \end{verbatim}
 Denkt man sich den Scheifenrumpf mit dem Sprung weg, so bleibt ein
@@ -2603,7 +2630,7 @@ vorgibt (dieser Parameter hat somit auch nur eine Bedeutung beim ersten
 Umschalten auf eine Tabelle, bei der AS sie automatisch anlegt).  Fehlt
 der zweite Parameter, so ist die initiale Belegung der neuen Tabelle
 gleich der vorher aktiven Tabelle.  Alle folgenden
-\tty{CHARSET}-Anweisungen verändern {\em nur} die momentan aktive Tabelle.
+\tty{CHARSET}-Anweisungen ver"andern {\em nur} die momentan aktive Tabelle.
 
 Zu Beginn eines Durchlaufes wird von AS automatisch eine einzelne
 Zeichentabelle mit dem Namen \tty{STANDARD} erzeugt und 1:1 vorbelegt. 
@@ -3602,7 +3629,7 @@ hier jedoch funktionieren, weil die "Ubertragsbits bei der
 Zieladressenberechnung 'unter den Tisch' fallen.  Vergewissern Sie sich
 genau, ob die von Ihnen eingesetzte Prozessorvariante so arbeitet, bevor
 Sie diese Option einschalten!  Im Falle des oben erw"ahnten AT90S8515 ist
-diese Option sogar zwingend n"otig, um überhaupt quer durch den ganzen
+diese Option sogar zwingend n"otig, um "uberhaupt quer durch den ganzen
 Adre"sraum springen zu k"onnen...
 
 Defaultm"a"sig steht dieser Schalter auf {\tt OFF}, der momentane Stand
@@ -11369,6 +11396,7 @@ oder ich werde langsam alt...
       \item{unterst"utzt zus"atzlich die RS08-Familie von Freescale;}
       \item{unterst"utzt zus"atzlich den 8008 von Intel;}
       \item{weitere Syntax f"ur Integer-Konstanten;}
+      \item{Funktion \tty{CHARFROMSTR} hinzugef"ugt;}
       \end{itemize}}
 \end{itemize}
 

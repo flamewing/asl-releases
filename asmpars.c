@@ -36,9 +36,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.13 2007/11/24 22:48:02 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.14 2008/10/21 16:33:04 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.c,v $
+ * Revision 1.14  2008/10/21 16:33:04  alfred
+ * - added charfromstr() function
+ *
  * Revision 1.13  2007/11/24 22:48:02  alfred
  * - some NetBSD changes
  *
@@ -1919,39 +1922,52 @@ static Operator Operators[] =
 
      /* ein paar Funktionen mit zwei,drei Argumenten */
 
-     if (z1==3)
-      BEGIN
-       if (strcmp(ftemp,"SUBSTR")==0)
-        BEGIN 
-         if ((LVal.Typ!=TempString) OR (MVal.Typ!=TempInt) OR (RVal.Typ!=TempInt)) WrError(1135);
+     if (z1 == 3)
+     {
+       if (!strcmp(ftemp, "SUBSTR"))
+       {
+         if ((LVal.Typ != TempString) || (MVal.Typ != TempInt) || (RVal.Typ != TempInt)) WrError(1135);
          else
-          BEGIN
-           cnt=strlen(LVal.Contents.Ascii)-MVal.Contents.Int;
-           if ((RVal.Contents.Int!=0) AND (RVal.Contents.Int<cnt)) cnt=RVal.Contents.Int;
-           if (cnt<0) cnt=0;
-           memcpy(pErg->Contents.Ascii,LVal.Contents.Ascii+MVal.Contents.Int,cnt);
-           pErg->Contents.Ascii[cnt]='\0';
-           pErg->Typ=TempString;
-          END
-        END
-       else WrXError(1860,ftemp);
+         {
+           cnt = strlen(LVal.Contents.Ascii) - MVal.Contents.Int;
+           if ((RVal.Contents.Int != 0) && (RVal.Contents.Int < cnt))
+             cnt = RVal.Contents.Int;
+           if (cnt < 0)
+             cnt = 0;
+           memcpy(pErg->Contents.Ascii, LVal.Contents.Ascii + MVal.Contents.Int, cnt);
+           pErg->Contents.Ascii[cnt] = '\0';
+           pErg->Typ = TempString;
+         }
+       }
+       else
+         WrXError(1860,ftemp);
        LEAVE;
-      END
-     else if (z1==2)
-      BEGIN 
-       if (strcmp(ftemp,"STRSTR")==0)
-        BEGIN 
-         if ((LVal.Typ!=TempString) OR (MVal.Typ!=TempString)) WrError(1135);
+     }
+     else if (z1 == 2)
+     {
+       if (!strcmp(ftemp, "STRSTR"))
+       { 
+         if ((LVal.Typ != TempString) || (MVal.Typ != TempString)) WrError(1135);
          else
-          BEGIN
-           zp=strstr(LVal.Contents.Ascii,MVal.Contents.Ascii);
-           pErg->Typ=TempInt;
-           pErg->Contents.Int=(zp==Nil) ? -1 : (zp-LVal.Contents.Ascii);
-          END
-        END
-       else WrXError(1860,ftemp);
+         {
+           zp = strstr(LVal.Contents.Ascii, MVal.Contents.Ascii);
+           pErg->Typ = TempInt;
+           pErg->Contents.Int = zp ? zp - LVal.Contents.Ascii : -1;
+         }
+       }
+       else if (!strcmp(ftemp, "CHARFROMSTR"))
+       {
+         if ((LVal.Typ != TempString) || (MVal.Typ != TempInt)) WrError(1135);
+         else  
+         {
+           pErg->Typ = TempInt;
+           pErg->Contents.Int = ((MVal.Contents.Int >= 0) && (MVal.Contents.Int < strlen(LVal.Contents.Ascii))) ? LVal.Contents.Ascii[MVal.Contents.Int] : -1;
+         }
+       }
+       else
+         WrXError(1860,ftemp);
        LEAVE;
-      END
+     }
 
      /* expression type ? */
 

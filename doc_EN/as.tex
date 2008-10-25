@@ -65,7 +65,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition August 2008}
+{\large Edition Oktober 2008}
 \end{raggedright}
 
 \clearpage
@@ -1859,40 +1859,42 @@ FIRSTBIT & lowest 1-bit         & integer              & integer \\
 \begin{table*}[htbp]
 \begin{center}\begin{tabular}{|l|l|l|l|}
 \hline
-name     & meaning              & argument & result \\
-\hline
-\hline
-LASTBIT  & highest 1-bit        & integer              & integer \\
-BITPOS   & unique 1-bit         & integer              & integer \\
-         &                      &                      & \\
-SGN      & sign (0/1/-1)        & floating point       & integer \\
-         &                      & or integer           & \\
-ABS      & absolute value       & integer or           & integer or \\
-         &                      & floating point       & floating point \\
-TOUPPER  & matching capital     & integer              & integer \\
-TOLOWER  & matching lower case  & integer              & integer \\
-         &                      &                      & \\
-UPSTRING & changes all          & string               & string \\
-         & characters           &                      & \\
-         & into capitals        &                      & \\
-         &                      &                      & \\
-LOWSTRING & changes all         & string               & string \\
-         & characters           &                      & \\
-         & into to lower case   &                      & \\
-         &                      &                      & \\
-STRLEN   & returns the length   & string               & integer \\
-         & of a string          &                      & \\
-         &                      &                      & \\
-SUBSTR   & extracts parts of a  & string,              & string \\
-         & string               & integer,             & \\
-         &                      & integer              & \\
-STRSTR   & searches a substring & string,              & integer \\
-         & in a string          & string               & \\
-VAL      & evaluates contents   & string               & depends on \\
-         & as expression        &                      & argument \\
-EXPRTYPE & delivers type of     & integer,             & 0 \\
-         & argument             & float,               & 1 \\
-         &                      & string               & 2 \\
+name        & meaning              & argument & result \\
+\hline      
+\hline      
+LASTBIT     & highest 1-bit        & integer              & integer \\
+BITPOS      & unique 1-bit         & integer              & integer \\
+            &                      &                      & \\
+SGN         & sign (0/1/-1)        & floating point       & integer \\
+            &                      & or integer           & \\
+ABS         & absolute value       & integer or           & integer or \\
+            &                      & floating point       & floating point \\
+TOUPPER     & matching capital     & integer              & integer \\
+TOLOWER     & matching lower case  & integer              & integer \\
+            &                      &                      & \\
+UPSTRING    & changes all          & string               & string \\
+            & characters           &                      & \\
+            & into capitals        &                      & \\
+            &                      &                      & \\
+LOWSTRING   & changes all          & string               & string \\
+            & characters           &                      & \\
+            & into to lower case   &                      & \\
+            &                      &                      & \\
+STRLEN      & returns the length   & string               & integer \\
+            & of a string          &                      & \\
+            &                      &                      & \\
+SUBSTR      & extracts parts of a  & string,              & string \\
+            & string               & integer,             & \\
+            &                      & integer              & \\
+CHARFROMSTR & extracts a character & string,              & integer \\
+            & from a string        & integer              & \\
+STRSTR      & searches a substring & string,              & integer \\
+            & in a string          & string               & \\
+VAL         & evaluates contents   & string               & depends on \\
+            & as expression        &                      & argument \\
+EXPRTYPE    & delivers type of     & integer,             & 0 \\
+            & argument             & float,               & 1 \\
+            &                      & string               & 2 \\
 \hline
 \end{tabular}\end{center}
 \caption{Functions Predefined by AS - Part 2 (Integer and
@@ -1905,9 +1907,32 @@ issues an error message in such a case.
 The string function \tty{SUBSTR} expects the source string as first
 parameter, the start position as second and the number of characters to be
 extracted as third parameter (a 0 means to extract all characters up to
-the end).  \tty{STRSTR} returns the first occurence of the second string
-within the first one resp. -1 if the search pattern was not found.  Both
-functions number characters in a string starting at 0!
+the end).  Similarly, \tty{CHARFROMSTR} expects the source string as
+first argument and the character position as second argument.  In case the
+position argument is larger or equal to the source string's length,
+\tty{SUBSTR} returns an empty string while \tty{CHARFROMSTR} returns -1. 
+A position argument smaller than zero is treated as zero by \tty{SUBSTR},
+while \tty{CHARFROMSTR} will return -1 also in this case.
+
+Here is an example how to use these both functions.  The task is to put a
+string into memory, with the string end being signified by a set MSB in
+the last character:
+
+\begin{verbatim}
+dbstr   macro   arg
+        if      strlen(arg) > 1
+         db     substr(arg, 0, strlen(arg) - 1)
+        endif
+        if      strlen(arg) > 0
+         db     charfromstr(arg, strlen(arg) - 1) | 80h
+        endif
+        endm 
+\end{verbatim}
+
+\tty{STRSTR} returns the first occurence of the second string
+within the first one resp. -1 if the search pattern was not found.
+Similarly to \tty{SUBSTR} and  \tty{CHARFROMSTR}, the first character
+has the position 0.
 
 If a function expects floating point arguments, this does not mean it
 is impossible to write e.g.
@@ -1945,11 +1970,11 @@ a look at the following programming example (please excuse my bias
 for the 68000 family that is also present in the rest of this
 manual):
 \begin{verbatim}
-        move.l  d0,#10
-loop:   move.l  d1,(a1)
+        move.l  #10,d0
+loop:   move.l  (a1),d1
         beq     skip   
         neg.l   d1     
-skip:   move.l  (a1+),d1
+skip:   move.l  d1,(a1+)
         dbra    d0,loop 
 \end{verbatim}
 If one overlooks the loop body with its branch statement, a program
@@ -11085,6 +11110,7 @@ Either that was a long nightshift or I am slowly getting old...
       \item{additionally supports the RS08 family by Freescale;}
       \item{additionally supports the Intel 8008;}
       \item{add another optional syntax for integer constants;}
+      \item{added function \tty{CHARFROMSTR};}
       \end{itemize}}
 \end{itemize}
 
