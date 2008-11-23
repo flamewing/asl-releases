@@ -11,9 +11,12 @@
 /*           30. 5.1999 ConstLongInt akzeptiert auch 0x fuer Hex-Zahlen      */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: strutil.c,v 1.5 2007/11/24 22:48:08 alfred Exp $                     */
+/* $Id: strutil.c,v 1.6 2008/11/23 10:39:17 alfred Exp $                     */
 /*****************************************************************************
  * $Log: strutil.c,v $
+ * Revision 1.6  2008/11/23 10:39:17  alfred
+ * - allow strings with NUL characters
+ *
  * Revision 1.5  2007/11/24 22:48:08  alfred
  * - some NetBSD changes
  *
@@ -299,6 +302,66 @@ BEGIN
    memmove(Dest+Pos+RLen,Dest+Pos,strlen(Dest)+1-Pos);
    memmove(Dest+Pos,Src,RLen);
 END
+
+int strlencmp(const char *pStr1, unsigned Str1Len,
+              const char *pStr2, unsigned Str2Len)
+{
+  const char *p1, *p2, *p1End, *p2End;
+  int Diff;
+ 
+  for (p1 = pStr1, p1End = p1 + Str1Len,
+       p2 = pStr2, p2End = p2 + Str2Len;
+       p1 < p1End && p2 < p2End; p1++, p2++)
+  {
+    Diff = ((int)*p1) - ((int)*p2);
+    if (Diff)
+      return Diff;
+  }
+  return ((int)Str1Len) - ((int)Str2Len);
+}
+
+unsigned fstrlenprint(FILE *pFile, const char *pStr, unsigned StrLen)
+{
+  unsigned Result = 0;
+  const char *pRun, *pEnd;
+
+  for (pRun = pStr, pEnd = pStr + StrLen; pRun < pEnd; pRun++)
+    if ((*pRun == '\\') || (*pRun == '"') || (!isprint(*pRun)))
+    {
+      fprintf(pFile, "\\%03d", *pRun); Result += 4;
+    }
+    else
+    {
+      fputc(*pRun, pFile); Result++;
+    }
+
+  return Result;
+}
+
+unsigned snstrlenprint(char *pDest, unsigned DestLen,
+                       const char *pStr, unsigned StrLen)
+{
+  unsigned Result = 0;
+  const char *pRun, *pEnd;
+
+  for (pRun = pStr, pEnd = pStr + StrLen; pRun < pEnd; pRun++)
+    if ((*pRun == '\\') || (*pRun == '"') || (!isprint(*pRun)))
+    {
+      if (DestLen < 5)
+        break;
+      sprintf(pDest, "\\%03d", *pRun);
+      pDest += 4; DestLen -= 4; Result += 4;
+    }
+    else
+    {
+      if (DestLen < 2)
+        break;
+      *pDest++ = *pRun; DestLen--; Result++;
+    }
+  *pDest = '\0';
+
+  return Result;
+}
 
 /*---------------------------------------------------------------------------*/
 /* Bis Zeilenende lesen */

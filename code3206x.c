@@ -15,9 +15,12 @@
 /*           2001-11-26 scaling fix (input from Johannes)                    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3206x.c,v 1.5 2007/11/24 22:48:03 alfred Exp $                   */
+/* $Id: code3206x.c,v 1.6 2008/11/23 10:39:16 alfred Exp $                   */
 /***************************************************************************** 
  * $Log: code3206x.c,v $
+ * Revision 1.6  2008/11/23 10:39:16  alfred
+ * - allow strings with NUL characters
+ *
  * Revision 1.5  2007/11/24 22:48:03  alfred
  * - some NetBSD changes
  *
@@ -581,7 +584,7 @@ END
         static Boolean DecodePseudo(void)
 BEGIN
    Boolean OK;
-   int z, z2, cnt;
+   int z, cnt;
    TempResult t;
    LongInt Size;
 
@@ -608,6 +611,8 @@ BEGIN
      if (ArgCnt == 0) WrError(1110);
      else
      {
+       int z2;
+
        OK = True;
        for (z = 0; z < ArgCnt; z++)
        {
@@ -662,13 +667,17 @@ BEGIN
               END
              break;
             case TempString:
-             for (z2 = 0; z2 < (int)strlen(t.Contents.Ascii); z2++)
-              BEGIN
-               if ((z2 & 3) == 0) DAsmCode[cnt++] = 0;
-               DAsmCode[cnt - 1] +=
-                  (((LongWord)CharTransTable[((usint)t.Contents.Ascii[z2])&0xff])) << (8*(3-(z2 & 3)));
-              END
-             break;
+            {
+              unsigned z2;
+
+              for (z2 = 0; z2 < t.Contents.Ascii.Length; z2++)
+              {
+                if ((z2 & 3) == 0) DAsmCode[cnt++] = 0;
+                DAsmCode[cnt - 1] +=
+                   (((LongWord)CharTransTable[((usint)t.Contents.Ascii.Contents[z2]) & 0xff])) << (8 * (3 - (z2 & 3)));
+              }
+              break;
+            }
             default:
              OK = False;
            END

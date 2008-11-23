@@ -65,7 +65,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition Oktober 2008}
+{\large Edition December 2008}
 \end{raggedright}
 
 \clearpage
@@ -1590,9 +1590,10 @@ digits, this may be done in different numbering systems (table
 \hline
 \hline
 decimal         & direct              & direct         &   direct \\
-hexadecimal     & followed by H       & aheaded \$     & aheaded 0x \\
-binary          & followed by B       & aheaded \%     & aheaded 0b \\
-octal           & followed by O       & aheaded @      & aheaded 0 \\
+hexadecimal     & followed by H       & prepended \$   & prepended 0x \\
+binary          & followed by B       & prepended \%   & prepended 0b \\
+octal           & followed by O       & prepended @    & prepended 0 \\
+                & followed by Q       &                &         \\
 \hline
 \end{tabular}\end{center}
 \caption{Possible Numbering Systems\label{TabSystems}}
@@ -11111,6 +11112,7 @@ Either that was a long nightshift or I am slowly getting old...
       \item{additionally supports the Intel 8008;}
       \item{add another optional syntax for integer constants;}
       \item{added function \tty{CHARFROMSTR};}
+      \item{additionally allow Q for octal constants in Intel mode;}
       \end{itemize}}
 \end{itemize}
 

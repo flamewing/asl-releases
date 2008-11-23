@@ -18,9 +18,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code4004.c,v 1.4 2007/11/24 22:48:04 alfred Exp $                          */
+/* $Id: code4004.c,v 1.5 2008/11/23 10:39:16 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code4004.c,v $
+ * Revision 1.5  2008/11/23 10:39:16  alfred
+ * - allow strings with NUL characters
+ *
  * Revision 1.4  2007/11/24 22:48:04  alfred
  * - some NetBSD changes
  *
@@ -358,17 +361,17 @@ BEGIN
              WrError(1135); ValOK=False;
              break;
             case TempString:
-             for (z2=0; z2<(int)strlen(t.Contents.Ascii); z2++)
-              BEGIN
-               Ch=CharTransTable[((usint) t.Contents.Ascii[z2])&0xff];
-               if (ActPC==SegCode)
-                BAsmCode[CodeLen++]=Ch;
+             for (z2 = 0; z2 < (int)t.Contents.Ascii.Length; z2++)
+             {
+               Ch = CharTransTable[((usint) t.Contents.Ascii.Contents[z2]) & 0xff];
+               if (ActPC == SegCode)
+                 BAsmCode[CodeLen++] = Ch;
                else
-                BEGIN
-                 BAsmCode[CodeLen++]=Ch >> 4;
-                 BAsmCode[CodeLen++]=Ch & 15;
-                END
-              END
+               {
+                 BAsmCode[CodeLen++] = Ch >> 4;
+                 BAsmCode[CodeLen++] = Ch & 15;
+               }
+             }
              break;
             default:
              ValOK=False;

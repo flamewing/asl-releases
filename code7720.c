@@ -15,9 +15,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code7720.c,v 1.4 2007/11/24 22:48:05 alfred Exp $                    */
+/* $Id: code7720.c,v 1.5 2008/11/23 10:39:17 alfred Exp $                    */
 /***************************************************************************** 
  * $Log: code7720.c,v $
+ * Revision 1.5  2008/11/23 10:39:17  alfred
+ * - allow strings with NUL characters
+ *
  * Revision 1.4  2007/11/24 22:48:05  alfred
  * - some NetBSD changes
  *
@@ -142,61 +145,71 @@ BEGIN
     END
 END
 
-        static void DecodeDATA(Word Index)
-BEGIN
-   LongInt MinV,MaxV,Trans;
-   TempResult t;
-   int z,z2,Pos,Max;
-   Boolean OK;
-   UNUSED(Index);
+static void DecodeDATA(Word Index)
+{
+  LongInt MinV,MaxV;
+  TempResult t;
+  int z,Max;
+  Boolean OK;
+  UNUSED(Index);
 
-   if (ActPC==SegCode) MaxV=(MomCPU>=CPU7725) ? 16777215 : 8388607;
-   else MaxV=65535;
-   MinV=(-((MaxV+1) >> 1));
-   if (ArgCnt==0) WrError(1110);
-   else
-    BEGIN
-     OK=True; z=1;
-     while ((OK) & (z<=ArgCnt))
-      BEGIN
-       FirstPassUnknown=False;
-       EvalExpression(ArgStr[z],&t);
-       if ((FirstPassUnknown) AND (t.Typ==TempInt)) t.Contents.Int&=MaxV;
-       switch (t.Typ)
-        BEGIN
-         case TempInt:
-          if (ChkRange(t.Contents.Int,MinV,MaxV))
-           BEGIN
-            if (ActPC==SegCode) DAsmCode[CodeLen++]=t.Contents.Int;
-            else WAsmCode[CodeLen++]=t.Contents.Int;
-           END
+  if (ActPC == SegCode)
+    MaxV = (MomCPU >= CPU7725) ? 16777215 : 8388607;
+  else
+    MaxV = 65535;
+  MinV = (-((MaxV + 1) >> 1));
+  if (ArgCnt==0) WrError(1110);
+  else
+  {
+    OK = True; z = 1;
+    while ((OK) & (z <= ArgCnt))
+    {
+      FirstPassUnknown = False;
+      EvalExpression(ArgStr[z], &t);
+      if ((FirstPassUnknown) && (t.Typ == TempInt))
+        t.Contents.Int &= MaxV;
+
+      switch (t.Typ)
+      {
+        case TempInt:
+          if ((OK = ChkRange(t.Contents.Int, MinV, MaxV)))
+          {
+            if (ActPC == SegCode) DAsmCode[CodeLen++] = t.Contents.Int;
+            else WAsmCode[CodeLen++] = t.Contents.Int;
+          }
           break;
-         case TempFloat:
-          WrError(1135); OK=False;
+        case TempFloat:
+          WrError(1135); OK = False;
           break;
-         case TempString:
-          Max=((ActPC==SegCode) AND (MomCPU>=CPU7725)) ? 3 : 2; Pos=0;
-          for (z2=0; z2<(int)strlen(t.Contents.Ascii); z2++)
-           BEGIN
-            Trans=CharTransTable[((usint) t.Contents.Ascii[z2])&0xff];
-            if (ActPC==SegCode)
-             DAsmCode[CodeLen]=(Pos==0) ? Trans : (DAsmCode[CodeLen]<<8)|Trans;
+        case TempString:
+        {
+          unsigned z2;
+          LongInt Trans;
+          int Pos;
+
+          Max = ((ActPC == SegCode) && (MomCPU >= CPU7725)) ? 3 : 2; Pos = 0;
+          for (z2 = 0; z2 < t.Contents.Ascii.Length; z2++)
+          {
+            Trans = CharTransTable[((usint) t.Contents.Ascii.Contents[z2]) & 0xff];
+            if (ActPC == SegCode)
+              DAsmCode[CodeLen] = (Pos == 0) ? Trans : (DAsmCode[CodeLen] << 8) | Trans;
             else
-             WAsmCode[CodeLen]=(Pos==0) ? Trans : (WAsmCode[CodeLen]<<8)|Trans;
-            if (++Pos==Max)
-             BEGIN
-              Pos=0; CodeLen++;
-             END
-           END
-          if (Pos!=0) CodeLen++;
+              WAsmCode[CodeLen] = (Pos == 0) ? Trans : (WAsmCode[CodeLen] << 8) | Trans;
+            if (++Pos == Max)
+            {
+              Pos = 0; CodeLen++;
+            }
+          }
+          if (Pos != 0) CodeLen++;
           break;
-         default:
-          OK=False;
-        END
-       z++;
-      END
-    END
-END
+        }
+        default:
+          OK = False;
+      }
+      z++;
+    }
+  }
+}
 
         static void DecodeRES(Word Index)
 BEGIN

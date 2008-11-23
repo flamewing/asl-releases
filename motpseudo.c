@@ -5,9 +5,12 @@
 /* Haeufiger benutzte Motorola-Pseudo-Befehle                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: motpseudo.c,v 1.5 2006/06/15 21:17:10 alfred Exp $                   */
+/* $Id: motpseudo.c,v 1.6 2008/11/23 10:39:17 alfred Exp $                   */
 /***************************************************************************** 
  * $Log: motpseudo.c,v $
+ * Revision 1.6  2008/11/23 10:39:17  alfred
+ * - allow strings with NUL characters
+ *
  * Revision 1.5  2006/06/15 21:17:10  alfred
  * - must patch NUL at correct place
  *
@@ -93,81 +96,81 @@ static void PutByte(Byte Value)
         
 static void DecodeBYT(Word Index)
 {
-   int z;
-   Boolean OK;
-   TempResult t;
-   LongInt Rep,z2;
-   UNUSED(Index);
+  int z;
+  Boolean OK;
+  TempResult t;
+  LongInt Rep,z2;
+  UNUSED(Index);
 
-   if (ArgCnt == 0) WrError(1110);
-   else
-   {
-     z = 1; OK = True;
-     do
-     {
-       if (!*ArgStr[z])
-       {
-         OK = FALSE;
-         WrError(2050);
-         break;
-       }
+  if (ArgCnt == 0) WrError(1110);
+  else
+  {
+    z = 1; OK = True;
+    do
+    {
+      if (!*ArgStr[z])
+      {
+        OK = FALSE;
+        WrError(2050);
+        break;
+      }
 
-       KillBlanks(ArgStr[z]);
-       OK = CutRep(ArgStr[z], &Rep);
-       if (!OK)
-         break;
+      KillBlanks(ArgStr[z]);
+      OK = CutRep(ArgStr[z], &Rep);
+      if (!OK)
+        break;
 
-       EvalExpression(ArgStr[z], &t);
-       switch (t.Typ)
-       {
-         case TempInt:
-           if (NOT RangeCheck(t.Contents.Int, Int8))
-           {
-             WrError(1320); OK = False;
-           }
-           else if (CodeLen + Rep > MaxCodeLen)
-           {
-             WrError(1920); OK = False;
-           }
-           else
-             for (z2 = 0; z2 < Rep; z2++)
-               PutByte(t.Contents.Int);
-           break;
-
-         case TempFloat:
-           WrError(1135); OK = False;
-           break;
-
-         case TempString:
-         {
-           int l, z3;
-
-           TranslateString(t.Contents.Ascii);
-           l = strlen(t.Contents.Ascii);
-
-           if (CodeLen + (Rep * l) > MaxCodeLen)
-           {
-             WrError(1920); OK = False;
-           }
-           else
-             for (z2 = 0; z2 < Rep; z2++)
-               for (z3 = 0; z3 < l; z3++)
-                 PutByte(t.Contents.Ascii[z3]);
-           break;
-         }
-
-         default:
-          OK = False; 
+      EvalExpression(ArgStr[z], &t);
+      switch (t.Typ)
+      {
+        case TempInt:
+          if (NOT RangeCheck(t.Contents.Int, Int8))
+          {
+            WrError(1320); OK = False;
+          }
+          else if (CodeLen + Rep > MaxCodeLen)
+          {
+            WrError(1920); OK = False;
+          }
+          else
+            for (z2 = 0; z2 < Rep; z2++)
+              PutByte(t.Contents.Int);
           break;
-       }
 
-       z++;
-     }
-     while ((z <= ArgCnt) AND (OK));
+        case TempFloat:
+          WrError(1135); OK = False;
+          break;
 
-     if (NOT OK)
-       CodeLen = 0;
-   }
+        case TempString:
+        {
+          int l, z3;
+
+          l = t.Contents.Ascii.Length;
+          TranslateString(t.Contents.Ascii.Contents, l);
+
+          if (CodeLen + (Rep * l) > MaxCodeLen)
+          {
+            WrError(1920); OK = False;
+          }
+          else
+            for (z2 = 0; z2 < Rep; z2++)
+              for (z3 = 0; z3 < l; z3++)
+                PutByte(t.Contents.Ascii.Contents[z3]);
+          break;
+        }
+
+        default:
+         OK = False; 
+         break;
+      }
+
+      z++;
+    }
+    while ((z <= ArgCnt) AND (OK));
+
+    if (!OK)
+      CodeLen = 0;
+  }
 }
 
 static void DecodeADR(Word Index)
@@ -268,8 +271,8 @@ static void DecodeFCC(Word Index)
          }
          else
          {
-           TranslateString(SVal);
            l = strlen(SVal);
+           TranslateString(SVal, l);
            for (z2 = 0; z2 < Rep; z2++)
              for (z3 = 0; z3 < l; z3++)
                PutByte(SVal[z3]);
@@ -508,13 +511,13 @@ BEGIN
                    WrError(1135); OK = False;
                    break;
                  case TempString:
-                   if (CodeLen+Rep*strlen(t.Contents.Ascii)>MaxCodeLen)
+                   if (CodeLen + Rep * t.Contents.Ascii.Length > MaxCodeLen)
                    {
                      WrError(1920); OK=False;
                    }
                    else 
                     for (z2 = 0; z2 < Rep; z2++)
-                      for (zp = t.Contents.Ascii; *zp != '\0'; EnterByte(CharTransTable[((usint) *(zp++)) & 0xff]));
+                      for (zp = t.Contents.Ascii.Contents; zp < t.Contents.Ascii.Contents + t.Contents.Ascii.Length; EnterByte(CharTransTable[((usint) *(zp++)) & 0xff]));
                    break;
                  default:
                    OK = False;

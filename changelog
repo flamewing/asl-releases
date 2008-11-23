@@ -1145,3 +1145,9 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 2008-10-25 [Bld64]
 
 - Addition    : added CHARFROMSTR function
+
+2008-11-23 [Bld65]
+
+- Addition    : allow Q for octal constants in Intel mode
+- Bugfix      : correct coding of OUT instruction for 8008
+- Change      : allow NUL characters in string symbols (again)

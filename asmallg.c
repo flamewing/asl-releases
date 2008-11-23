@@ -25,9 +25,12 @@
 /*                       to now                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmallg.c,v 1.6 2007/11/24 22:48:02 alfred Exp $                     */
+/* $Id: asmallg.c,v 1.7 2008/11/23 10:39:15 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmallg.c,v $
+ * Revision 1.7  2008/11/23 10:39:15  alfred
+ * - allow strings with NUL characters
+ *
  * Revision 1.6  2007/11/24 22:48:02  alfred
  * - some NetBSD changes
  *
@@ -143,7 +146,7 @@ BEGIN
    if (ParamCount!=0)
     BEGIN
      EnterIntSymbol(MomCPUName,HCPU,SegNone,True);
-     EnterStringSymbol(MomCPUIdentName,MomCPUIdent,True);
+     EnterStringSymbol(MomCPUIdentName, MomCPUIdent, True);
     END
 
    InternSymbol=Default_InternSymbol;
@@ -274,53 +277,59 @@ BEGIN
 END
 
 
-	static void CodeSETEQU(Word Index)
-BEGIN
-   TempResult t;
-   Boolean MayChange;
-   Integer DestSeg;
-   UNUSED(Index);
+static void CodeSETEQU(Word Index)
+{
+  TempResult t;
+  Boolean MayChange;
+  Integer DestSeg;
+  UNUSED(Index);
 
-   FirstPassUnknown=False;
-   MayChange=((NOT Memo("EQU")) AND (NOT Memo("=")));
-   if (*AttrPart!='\0') WrError(1100);
-   else if ((ArgCnt<1) OR (ArgCnt>2)) WrError(1110);
-   else
-    BEGIN
-     EvalExpression(ArgStr[1],&t);
-     if (NOT FirstPassUnknown)
-      BEGIN
-       if (ArgCnt==1) DestSeg=SegNone;
-       else
-        BEGIN
-         NLS_UpString(ArgStr[2]);
-         if (strcmp(ArgStr[2],"MOMSEGMENT")==0) DestSeg=ActPC;
-         else if (*ArgStr[2]=='\0') DestSeg=SegNone;
-         else
-          BEGIN
-           DestSeg=0;
-            while ((DestSeg<=PCMax) AND
-                   (strcmp(ArgStr[2],SegNames[DestSeg])!=0))
-             DestSeg++;
-          END
-        END
-       if (DestSeg>PCMax) WrXError(1961,ArgStr[2]);
-       else
-        BEGIN
-         SetListLineVal(&t);
-         PushLocHandle(-1);
-         switch (t.Typ)
-          BEGIN
-           case TempInt   : EnterIntSymbol   (LabPart,t.Contents.Int,DestSeg,MayChange); break;
-           case TempFloat : EnterFloatSymbol (LabPart,t.Contents.Float,MayChange); break;
-           case TempString: EnterStringSymbol(LabPart,t.Contents.Ascii,MayChange); break;
-           default        : break;
-          END
-         PopLocHandle();
-        END
-      END
-    END
-END
+  FirstPassUnknown = False;
+  MayChange = ((!Memo("EQU")) && (!Memo("=")));
+  if (*AttrPart != '\0') WrError(1100);
+  else if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
+  else
+  {
+    EvalExpression(ArgStr[1],&t);
+    if (!FirstPassUnknown)
+    {
+      if (ArgCnt == 1) DestSeg = SegNone;
+      else
+      {
+        NLS_UpString(ArgStr[2]);
+        if (!strcmp(ArgStr[2], "MOMSEGMENT")) DestSeg = ActPC;
+        else if (*ArgStr[2] == '\0') DestSeg = SegNone;
+        else
+        {
+          for (DestSeg = 0; DestSeg <= PCMax; DestSeg++)
+            if (!strcmp(ArgStr[2], SegNames[DestSeg]))
+              break;
+        }
+      }
+      if (DestSeg > PCMax) WrXError(1961,ArgStr[2]);
+      else
+      {
+        SetListLineVal(&t);
+        PushLocHandle(-1);
+        switch (t.Typ)
+        {
+          case TempInt:
+            EnterIntSymbol(LabPart, t.Contents.Int, DestSeg, MayChange);
+            break;
+          case TempFloat:
+            EnterFloatSymbol(LabPart, t.Contents.Float, MayChange);
+            break;
+          case TempString:
+            EnterDynStringSymbol(LabPart, &t.Contents.Ascii, MayChange);
+            break;
+          default:
+            break;
+        }
+        PopLocHandle();
+      }
+    }
+  }
+}
 
 
 	static void CodeORG(Word Index)
@@ -664,11 +673,11 @@ BEGIN
                 for (z=Start; z<=Stop; z++) CharTransTable[z]=TStart+(z-Start);
                break;
               case TempString:
-               l=strlen(t.Contents.Ascii); /* Uebersetzungsstring ab Start */
-               if (Start+l>256) WrError(1320);
+               l = t.Contents.Ascii.Length; /* Uebersetzungsstring ab Start */
+               if (Start +l > 256) WrError(1320);
                else
-                for (z=0; z<l; z++)
-                 CharTransTable[Start+z]=t.Contents.Ascii[z];
+                for (z = 0; z < l; z++)
+                  CharTransTable[Start + z] = t.Contents.Ascii.Contents[z];
                break;
               case TempFloat:
                WrError(1135);
@@ -683,7 +692,10 @@ BEGIN
         if (ArgCnt!=1) WrError(1110); /* Tabelle von Datei lesen */
         else
          BEGIN
-          f=fopen(t.Contents.Ascii,OPENRDMODE);
+          String Tmp;
+
+          DynString2CString(Tmp, &t.Contents.Ascii, sizeof(Tmp));
+          f=fopen(Tmp, OPENRDMODE);
           if (f==Nil) ChkIO(10001);
           if (fread(tfield,sizeof(char),256,f)!=256) ChkIO(10003);
           fclose(f); memcpy(CharTransTable,tfield,sizeof(char)*256);
@@ -874,45 +886,57 @@ BEGIN
 END
 
 
-	static void CodeREAD(Word Index)
-BEGIN
-   String Exp;
-   TempResult Erg;
-   Boolean OK;
-   LongInt SaveLocHandle;
-   UNUSED(Index);
+static void CodeREAD(Word Index)
+{
+  String Exp;
+  TempResult Erg;
+  Boolean OK;
+  LongInt SaveLocHandle;
+  UNUSED(Index);
 
-   if ((ArgCnt!=1) AND (ArgCnt!=2)) WrError(1110);
-   else
-    BEGIN
-     if (ArgCnt==2) EvalStringExpression(ArgStr[1],&OK,Exp);
-     else
-      BEGIN
-       sprintf(Exp,"Read %s ? ",ArgStr[1]); OK=True;
-      END
-     if (OK)
-      BEGIN
-       setbuf(stdout,Nil); printf("%s",Exp); 
-       fgets(Exp,255,stdin); UpString(Exp);
-       FirstPassUnknown=False;
-       EvalExpression(Exp,&Erg);
-       if (OK)
-	BEGIN
-	 SetListLineVal(&Erg);
-         SaveLocHandle=MomLocHandle; MomLocHandle=(-1);
-	 if (FirstPassUnknown) WrError(1820);
-	 else switch (Erg.Typ)
-          BEGIN
-   	   case TempInt   : EnterIntSymbol(ArgStr[ArgCnt],Erg.Contents.Int,SegNone,True); break;
-   	   case TempFloat : EnterFloatSymbol(ArgStr[ArgCnt],Erg.Contents.Float,True); break;
-   	   case TempString: EnterStringSymbol(ArgStr[ArgCnt],Erg.Contents.Ascii,True); break;
-           default        : break;
-	  END
-         MomLocHandle=SaveLocHandle;
-	END
-      END
-    END
-END
+  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
+  else
+  {
+    if (ArgCnt == 2) EvalStringExpression(ArgStr[1], &OK, Exp);
+    else
+    {
+      sprintf(Exp,"Read %s ? ",ArgStr[1]); OK=True;
+    }
+    if (OK)
+    {
+      setbuf(stdout, Nil); printf("%s", Exp); 
+      fgets(Exp, 255, stdin); UpString(Exp);
+      FirstPassUnknown = False;
+      EvalExpression(Exp, &Erg);
+      if (OK)
+      {
+        SetListLineVal(&Erg);
+        SaveLocHandle = MomLocHandle; MomLocHandle = -1;
+        if (FirstPassUnknown) WrError(1820);
+        else switch (Erg.Typ)
+        {
+          case TempInt:
+            EnterIntSymbol(ArgStr[ArgCnt], Erg.Contents.Int, SegNone, True);
+            break;
+          case TempFloat:
+            EnterFloatSymbol(ArgStr[ArgCnt], Erg.Contents.Float, True);
+            break;
+          case TempString:
+          {
+            String Tmp;
+
+            DynString2CString(Tmp, &Erg.Contents.Ascii, sizeof(Tmp));
+            EnterStringSymbol(ArgStr[ArgCnt], Tmp, True);
+            break;
+          }
+          default:
+            break;
+        }
+        MomLocHandle = SaveLocHandle;
+      }
+    }
+  }
+}
 
 	static void CodeRADIX(Word Index)
 BEGIN

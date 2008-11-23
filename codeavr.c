@@ -15,9 +15,12 @@
 /*            7. 5.2000 Packing hinzugefuegt                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeavr.c,v 1.6 2007/11/24 22:48:06 alfred Exp $                     */
+/* $Id: codeavr.c,v 1.7 2008/11/23 10:39:17 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codeavr.c,v $
+ * Revision 1.7  2008/11/23 10:39:17  alfred
+ * - allow strings with NUL characters
+ *
  * Revision 1.6  2007/11/24 22:48:06  alfred
  * - some NetBSD changes
  *
@@ -264,9 +267,9 @@ static Boolean AccFull;
            WrError(1135); OK = False;
            break;
          case TempString:
-           for (z2 = 0; z2 < (int)strlen(t.Contents.Ascii); z2++)
+           for (z2 = 0; z2 < (int)t.Contents.Ascii.Length; z2++)
            {
-             Trans = CharTransTable[((usint) t.Contents.Ascii[z2]) & 0xff];
+             Trans = CharTransTable[((usint) t.Contents.Ascii.Contents[z2]) & 0xff];
              PlaceByte(Trans, TRUE);
            }
            break;

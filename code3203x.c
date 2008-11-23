@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3203x.c,v 1.4 2007/11/24 22:48:03 alfred Exp $                       */
+/* $Id: code3203x.c,v 1.5 2008/11/23 10:39:16 alfred Exp $                       */
 /***************************************************************************** 
  * $Log: code3203x.c,v $
+ * Revision 1.5  2008/11/23 10:39:16  alfred
+ * - allow strings with NUL characters
+ *
  * Revision 1.4  2007/11/24 22:48:03  alfred
  * - some NetBSD changes
  *
@@ -728,7 +731,7 @@ BEGIN
                  {{"DP", &DPValue, -1, 0xff, 0x100}};
 
    Boolean OK;
-   int z,z2;
+   int z;
    LongInt Size;
    Double f;
    TempResult t;
@@ -815,13 +818,18 @@ BEGIN
              if (NOT ExtToSingle(t.Contents.Float,DAsmCode+(CodeLen++))) OK=False;
              break;
             case TempString:
-             for (z2=0; z2<(int)strlen(t.Contents.Ascii); z2++)
-              BEGIN
-               if ((z2 & 3)==0) DAsmCode[CodeLen++]=0;
-               DAsmCode[CodeLen-1]+=
-                  (((LongWord)CharTransTable[((usint)t.Contents.Ascii[z2])&0xff])) << (8*(3-(z2 & 3)));
-              END
-             break;
+            {
+              unsigned z2;
+
+              for (z2 = 0; z2 < t.Contents.Ascii.Length; z2++)
+              {
+               if (!(z2 & 3))
+                 DAsmCode[CodeLen++] = 0;
+               DAsmCode[CodeLen - 1] |=
+                  (((LongWord)CharTransTable[((usint)t.Contents.Ascii.Contents[z2]) & 0xff])) << (8 *(3 - (z2 & 3)));
+              }
+              break;
+            }
             default:
              OK=False;
            END

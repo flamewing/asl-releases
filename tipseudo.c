@@ -5,9 +5,12 @@
 /* Haeufiger benutzte Texas Instruments Pseudo-Befehle                       */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: tipseudo.c,v 1.2 2004/05/29 14:57:56 alfred Exp $                    */
+/* $Id: tipseudo.c,v 1.3 2008/11/23 10:39:17 alfred Exp $                    */
 /***************************************************************************** 
  * $Log: tipseudo.c,v $
+ * Revision 1.3  2008/11/23 10:39:17  alfred
+ * - allow strings with NUL characters
+ *
  * Revision 1.2  2004/05/29 14:57:56  alfred
  * - added missing include statements
  *
@@ -135,7 +138,6 @@ static void pseudo_store(tcallback callback)
   int adr = 0;
   int z;
   TempResult t;
-  unsigned char *cp;
 
   if (!ArgCnt)
   {
@@ -163,10 +165,14 @@ static void pseudo_store(tcallback callback)
         WrError(1135);
         return;
       case TempString:
-        cp = (unsigned char *)t.Contents.Ascii;
-        while (*cp) 
+      {
+        unsigned char *cp = (unsigned char *)t.Contents.Ascii.Contents,
+                    *cend = cp + t.Contents.Ascii.Length;
+
+        while (cp < cend)
           callback(&ok, &adr, CharTransTable[((usint)*cp++)&0xff]);
         break;
+      }
       default:
         WrError(1135);
         ok = False;
@@ -248,13 +254,12 @@ static void wr_code_byte_lohi(Boolean *ok, int *adr, LongInt val)
 Boolean DecodeTIPseudo(void)
 {
   Boolean ok;
-  int z, z2, exp;
+  int z, exp;
   double dbl, mant;
   float flt;
   long lmant;
   Word w, size;
   TempResult t;
-  unsigned char *cp;
 
   if (Memo("RES") || Memo("BSS"))
   {
@@ -311,19 +316,23 @@ Boolean DecodeTIPseudo(void)
           ok = False;
           break;
         case TempString:
-          z2 = 0;
-          cp = (unsigned char *)t.Contents.Ascii;
-          while (*cp)
+        {
+          unsigned char *cp;
+          int z2;
+
+          cp = (unsigned char *)t.Contents.Ascii.Contents;
+          for (z2 = 0; z2 < t.Contents.Ascii.Length; z2++)
           {
             if (z2 & 1)
-              WAsmCode[CodeLen++] |= (CharTransTable[((usint)*cp++)&0xff] << 8);
+              WAsmCode[CodeLen++] |= (CharTransTable[((usint)*cp)&0xff] << 8);
             else
-              WAsmCode[CodeLen] = CharTransTable[((usint)*cp++)&0xff];
-            z2++;
+              WAsmCode[CodeLen] = CharTransTable[((usint)*cp)&0xff];
+            cp++;
           }
           if (z2 & 1)
             CodeLen++;
           break;
+        }
         default:
           break;
       }

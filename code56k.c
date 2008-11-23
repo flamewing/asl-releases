@@ -14,9 +14,12 @@
 /*                      ShortMode wird bei absoluter Adressierung gemerkt    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code56k.c,v 1.3 2007/11/24 22:48:04 alfred Exp $                     */
+/* $Id: code56k.c,v 1.4 2008/11/23 10:39:16 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code56k.c,v $
+ * Revision 1.4  2008/11/23 10:39:16  alfred
+ * - allow strings with NUL characters
+ *
  * Revision 1.3  2007/11/24 22:48:04  alfred
  * - some NetBSD changes
  *
@@ -1034,52 +1037,46 @@ BEGIN
     END
 
    if (Memo("DC"))
-    BEGIN
-     if (ArgCnt<1) WrError(1110);
+   {
+     if (ArgCnt < 1) WrError(1110);
      else
-      BEGIN
-       OK=True;
-       for (z=1 ; z<=ArgCnt; z++)
-        if (OK)
-         BEGIN
-          FirstPassUnknown=False;
-          EvalExpression(ArgStr[z],&t);
-          switch (t.Typ)
-           BEGIN
-            case TempInt:
-             if (FirstPassUnknown) t.Contents.Int&=0xffffff;
-             if (NOT RangeCheck(t.Contents.Int,Int24))
-              BEGIN
-               WrError(1320); OK=False;
-              END
+     {
+       OK = True;
+       for (z = 1; OK && (z <= ArgCnt); z++)
+       {
+         FirstPassUnknown = False;
+         EvalExpression(ArgStr[z], &t);
+         switch (t.Typ)
+         {
+           case TempInt:
+             if (FirstPassUnknown) t.Contents.Int &= 0xffffff;
+             if (!(OK = RangeCheck(t.Contents.Int, Int24))) WrError(1320);
              else
-              BEGIN
-               DAsmCode[CodeLen++]=t.Contents.Int & 0xffffff;
-              END
+               DAsmCode[CodeLen++] = t.Contents.Int & 0xffffff;
              break;
-            case TempString:
-             BCount=2; DAsmCode[CodeLen]=0;
-             for (z2=0; z2<strlen(t.Contents.Ascii); z2++)
-              BEGIN
-               HInt=t.Contents.Ascii[z2];
-               HInt=CharTransTable[((usint) HInt)&0xff];
-               HInt<<=(BCount*8);
-               DAsmCode[CodeLen]|=HInt;
-               if (--BCount<0)
-                BEGIN
-                 BCount=2; DAsmCode[++CodeLen]=0;
-                END
-              END
+           case TempString:
+             BCount = 2; DAsmCode[CodeLen] = 0;
+             for (z2 = 0; z2 < t.Contents.Ascii.Length; z2++)
+             {
+               HInt = t.Contents.Ascii.Contents[z2];
+               HInt = CharTransTable[((usint) HInt) & 0xff];
+               HInt <<= (BCount * 8);
+               DAsmCode[CodeLen] |= HInt;
+               if (--BCount < 0)
+               {
+                 BCount = 2; DAsmCode[++CodeLen] = 0;
+               }
+             }
              if (BCount!=2) CodeLen++;
              break;
-            default:
-             WrError(1135); OK=False;
-           END
-         END
-      END
-     if (NOT OK) CodeLen=0;
+           default:
+             WrError(1135); OK = False;
+         }
+       }
+     }
+     if (!OK) CodeLen = 0;
      return True;
-    END
+   }
 
    return False;
 END

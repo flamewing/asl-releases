@@ -5,9 +5,12 @@
 /* Haeufiger benutzte Intel-Pseudo-Befehle                                   */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: intpseudo.c,v 1.6 2007/11/24 22:48:08 alfred Exp $                   */
+/* $Id: intpseudo.c,v 1.7 2008/11/23 10:39:17 alfred Exp $                   */
 /***************************************************************************** 
  * $Log: intpseudo.c,v $
+ * Revision 1.7  2008/11/23 10:39:17  alfred
+ * - allow strings with NUL characters
+ *
  * Revision 1.6  2007/11/24 22:48:08  alfred
  * - some NetBSD changes
  *
@@ -158,12 +161,12 @@ static Boolean LayoutByte(const char *pExpr, Word *pCnt, Boolean BigEndian)
       WrError(1135);
       break;
     case TempString:
-      TranslateString(t.Contents.Ascii);
-      *pCnt = strlen(t.Contents.Ascii);
+      TranslateString(t.Contents.Ascii.Contents, t.Contents.Ascii.Length);
+      *pCnt = t.Contents.Ascii.Length;
       if (CodeLen + (*pCnt) > MaxCodeLen) WrError(1920);
       else
       {
-        memcpy(BAsmCode + CodeLen, t.Contents.Ascii, *pCnt);
+        memcpy(BAsmCode + CodeLen, t.Contents.Ascii.Contents, *pCnt);
         CodeLen += (*pCnt);
         Result = True;
       }

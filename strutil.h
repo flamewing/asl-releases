@@ -12,9 +12,12 @@
 /*           29. 5.1999 SysString                                            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: strutil.h,v 1.5 2007/11/24 22:48:08 alfred Exp $                     */
+/* $Id: strutil.h,v 1.6 2008/11/23 10:39:17 alfred Exp $                     */
 /*****************************************************************************
  * $Log: strutil.h,v $
+ * Revision 1.6  2008/11/23 10:39:17  alfred
+ * - allow strings with NUL characters
+ *
  * Revision 1.5  2007/11/24 22:48:08  alfred
  * - some NetBSD changes
  *
@@ -66,6 +69,14 @@ extern void strprep(char *Dest, const char *Src);
 extern void strmaxprep(char *Dest, const char *Src, int MaxLen);
 extern void strins(char *Dest, const char *Src, int Pos);
 extern void strmaxins(char *Dest, const char *Src, int Pos, int MaxLen); 
+
+extern int strlencmp(const char *pStr1, unsigned Str1Len,
+                     const char *pStr2, unsigned Str2Len);
+
+extern unsigned fstrlenprint(FILE *pFile, const char *pStr, unsigned StrLen);
+
+extern unsigned snstrlenprint(char *pDest, unsigned DestLen,
+                              const char *pStr, unsigned StrLen);
 
 extern void ReadLn(FILE *Datei, char *Zeile);
 

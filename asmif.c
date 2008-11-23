@@ -7,9 +7,12 @@
 /* Historie: 15. 5.1996 Grundsteinlegung                                     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmif.c,v 1.2 2007/11/24 22:48:02 alfred Exp $                       */
+/* $Id: asmif.c,v 1.3 2008/11/23 10:39:15 alfred Exp $                       */
 /***************************************************************************** 
  * $Log: asmif.c,v $
+ * Revision 1.3  2008/11/23 10:39:15  alfred
+ * - allow strings with NUL characters
+ *
  * Revision 1.2  2007/11/24 22:48:02  alfred
  * - some NetBSD changes
  *
@@ -289,49 +292,59 @@ BEGIN
 END
 
 
-	static void CodeCASE(void)
-BEGIN
-   Boolean eq;
-   int z;
-   TempResult t;
+static void CodeCASE(void)
+{
+  Boolean eq;
+  int z;
+  TempResult t;
 
-   if (FirstIfSave==Nil) WrError(1840);
-   else if (ArgCnt==0) WrError(1110);
-   else 
-    BEGIN
-     if ((FirstIfSave->State!=IfState_CASESWITCH) AND (FirstIfSave->State!=IfState_CASECASE)) WrError(1480);
-     else
-      BEGIN
-       if (NOT FirstIfSave->SaveIfAsm) eq=True;
-       else if (FirstIfSave->CaseFound) eq=False;
-       else
-	BEGIN
-	 eq=False; z=1;
-	 do
-          BEGIN
-	   EvalIfExpression(ArgStr[z],&t);
-           eq=(FirstIfSave->SaveExpr.Typ==t.Typ);
-	   if (eq)
-	    switch (t.Typ)
-             BEGIN
-	      case TempInt:    eq=(t.Contents.Int==FirstIfSave->SaveExpr.Contents.Int); break;
-	      case TempFloat:  eq=(t.Contents.Float==FirstIfSave->SaveExpr.Contents.Float); break;
-	      case TempString: eq=(strcmp(t.Contents.Ascii,FirstIfSave->SaveExpr.Contents.Ascii)==0); break;
-              default:         eq=False; break;
-	     END
-	   z++;
-          END
-	 while ((NOT eq) AND (z<=ArgCnt));
-	END;
-       IfAsm=((FirstIfSave->SaveIfAsm) AND (eq) AND (NOT FirstIfSave->CaseFound));
-       if (FirstIfSave->SaveIfAsm) AddBoolFlag(eq AND (NOT FirstIfSave->CaseFound));
-       if (eq) FirstIfSave->CaseFound=True;
-       FirstIfSave->State=IfState_CASECASE;
-      END
-    END
+  if (!FirstIfSave) WrError(1840);
+  else if (!ArgCnt) WrError(1110);
+  else 
+  {
+    if ((FirstIfSave->State != IfState_CASESWITCH) && (FirstIfSave->State != IfState_CASECASE)) WrError(1480);
+    else
+    {
+      if (!FirstIfSave->SaveIfAsm) eq = True;
+      else if (FirstIfSave->CaseFound) eq = False;
+      else
+      {
+        eq = False; z = 1;
+        do
+        {
+          EvalIfExpression(ArgStr[z], &t);
+          eq = (FirstIfSave->SaveExpr.Typ == t.Typ);
+          if (eq)
+           switch (t.Typ)
+           {
+             case TempInt:
+               eq = (t.Contents.Int == FirstIfSave->SaveExpr.Contents.Int);
+               break;
+             case TempFloat:
+               eq = (t.Contents.Float == FirstIfSave->SaveExpr.Contents.Float);
+               break;
+             case TempString:
+               eq = (DynStringCmp(&t.Contents.Ascii, &FirstIfSave->SaveExpr.Contents.Ascii) == 0);
+               break;
+             default:
+               eq = False;
+               break;
+            END
+          z++;
+        }
+        while ((!eq) && (z <= ArgCnt));
+      }
+      IfAsm = ((FirstIfSave->SaveIfAsm) && (eq) & (!FirstIfSave->CaseFound));
+      if (FirstIfSave->SaveIfAsm)
+        AddBoolFlag(eq && (!FirstIfSave->CaseFound));
+      if (eq)
+        FirstIfSave->CaseFound = True;
+      FirstIfSave->State=IfState_CASECASE;
+    }
+  }
 
-   ActiveIF=(FirstIfSave==Nil) OR (FirstIfSave->SaveIfAsm);
-END
+  ActiveIF = (FirstIfSave == Nil) || (FirstIfSave->SaveIfAsm);
+}
 
 
 	static void CodeELSECASE(void)

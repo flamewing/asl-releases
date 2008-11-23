@@ -33,9 +33,12 @@
 /*           2001-10-20 added GNU error flag                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmdef.h,v 1.4 2007/04/30 18:37:51 alfred Exp $                      */
+/* $Id: asmdef.h,v 1.5 2008/11/23 10:39:15 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmdef.h,v $
+ * Revision 1.5  2008/11/23 10:39:15  alfred
+ * - allow strings with NUL characters
+ *
  * Revision 1.4  2007/04/30 18:37:51  alfred
  * - add weird integer coding
  *
@@ -72,6 +75,8 @@
 
 #include "fileformat.h"
 
+#include "dynstring.h"
+
 typedef Byte CPUVar;
 
 typedef struct _TCPUDef
@@ -89,35 +94,39 @@ typedef struct _TCPUDef
 typedef enum {TempNone = 0, TempInt = 1, TempFloat = 2, TempString = 4, TempAll = 7} TempType;
 
 typedef struct _RelocEntry
-         {
-          struct _RelocEntry *Next;
-          char *Ref;
-          Byte Add;
-         } TRelocEntry, *PRelocEntry;
+{
+ struct _RelocEntry *Next;
+ char *Ref;
+ Byte Add;
+} TRelocEntry, *PRelocEntry;
 
 typedef struct
-         {
-          TempType Typ;
-          PRelocEntry Relocs;
-          union
-           {
-            LargeInt Int;
-            Double Float;
-            String Ascii;
-           } Contents;
-         } TempResult;
+{
+ TempType Typ;
+ PRelocEntry Relocs;
+ union
+  {
+   LargeInt Int;
+   Double Float;
+   tDynString Ascii;
+  } Contents;
+} TempResult;
 
 typedef struct
-         {
-          TempType Typ;
-          TRelocEntry *Relocs;
-          union
-           {
-            LargeInt IWert;
-            Double FWert;
-            char *SWert;
-           } Contents;
-         } SymbolVal;
+{
+  TempType Typ;
+  TRelocEntry *Relocs;
+  union
+  {
+    LargeInt IWert;
+    Double FWert;
+    struct
+    {
+      char *Contents;
+      unsigned Length;
+    } String;
+  } Contents;
+} SymbolVal;
 
 typedef struct _TCrossRef
          {

@@ -13,9 +13,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code16c8x.c,v 1.5 2007/04/29 21:34:26 alfred Exp $                   */
+/* $Id: code16c8x.c,v 1.6 2008/11/23 10:39:16 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code16c8x.c,v $
+ * Revision 1.6  2008/11/23 10:39:16  alfred
+ * - allow strings with NUL characters
+ *
  * Revision 1.5  2007/04/29 21:34:26  alfred
  * - add BANKSEL pseudo-instruction
  *
@@ -347,13 +350,13 @@ static void DecodeDATA(Word Index)
           break;
         case TempString:
         {
-          char *p;
+          unsigned z;
 
-          for (p = t.Contents.Ascii; *p != '\0'; p++)
-          if (ActPC == SegCode)
-            WAsmCode[CodeLen++] = CharTransTable[((usint) *p)&0xff];
-          else
-            BAsmCode[CodeLen++] = CharTransTable[((usint) *p)&0xff];
+          for (z = 0; z < t.Contents.Ascii.Length; z++)
+            if (ActPC == SegCode)
+              WAsmCode[CodeLen++] = CharTransTable[((usint) t.Contents.Ascii.Contents[z]) & 0xff];
+            else
+              BAsmCode[CodeLen++] = CharTransTable[((usint) t.Contents.Ascii.Contents[z]) & 0xff];
           break;
         }
         default:

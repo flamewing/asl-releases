@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3201x.c,v 1.2 2005/09/08 17:31:03 alfred Exp $                          */
+/* $Id: code3201x.c,v 1.3 2008/11/23 10:39:16 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code3201x.c,v $
+ * Revision 1.3  2008/11/23 10:39:16  alfred
+ * - allow strings with NUL characters
+ *
  * Revision 1.2  2005/09/08 17:31:03  alfred
  * - add missing include
  *
@@ -244,8 +247,7 @@ END
         static Boolean DecodePseudo(void)
 BEGIN
    Word Size;
-   int z,z2;
-   char *p;
+   int z;
    TempResult t;
    Boolean OK;
 
@@ -297,15 +299,22 @@ BEGIN
              WrError(1135); OK=False;
              break;
             case TempString:
-             for (p=t.Contents.Ascii,z2=0; *p!='\0'; p++,z2++)
-              BEGIN
-               if ((z2&1)==0)
-                WAsmCode[CodeLen]=CharTransTable[((usint)*p)&0xff];
-               else
-                WAsmCode[CodeLen++]+=((Word) CharTransTable[((usint)*p)&0xff]) << 8;
-              END
-             if ((z2&1)==0) CodeLen++;
-             break;
+            {
+              Word Trans;
+              unsigned z2;
+
+              for (z2 = 0; z2 < t.Contents.Ascii.Length; z2++)
+              {
+                Trans = CharTransTable[((usint)t.Contents.Ascii.Contents[z2]) & 0xff];
+                if (z2 & 1)
+                  WAsmCode[CodeLen++] |= Trans << 8;
+                else
+                  WAsmCode[CodeLen] = Trans;
+              }
+              if (z2 & 1)
+                CodeLen++;
+              break;
+            }
             default:
              OK=False;
            END

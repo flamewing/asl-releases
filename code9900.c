@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code9900.c,v 1.4 2007/11/24 22:48:06 alfred Exp $                    */
+/* $Id: code9900.c,v 1.5 2008/11/23 10:39:17 alfred Exp $                    */
 /***************************************************************************** 
  * $Log: code9900.c,v $
+ * Revision 1.5  2008/11/23 10:39:17  alfred
+ * - allow strings with NUL characters
+ *
  * Revision 1.4  2007/11/24 22:48:06  alfred
  * - some NetBSD changes
  *
@@ -345,7 +348,6 @@ END
         static Boolean DecodePseudo(void)
 BEGIN
    int z;
-   char *p;
    Boolean OK;
    TempResult t;
    Word HVal16;
@@ -376,15 +378,17 @@ BEGIN
             WrError(1135); OK=False;
             break;
            case TempString:
-            if (strlen(t.Contents.Ascii)+CodeLen>=MaxCodeLen)
-             BEGIN
-              WrError(1920); OK=False;
-             END
+            if (t.Contents.Ascii.Length + CodeLen >= MaxCodeLen)
+            {
+              WrError(1920); OK = False;
+            }
             else
-             BEGIN
-              TranslateString(t.Contents.Ascii);
-              for (p=t.Contents.Ascii; *p!='\0'; PutByte(*(p++)));
-             END
+            {
+              char *p, *pEnd = t.Contents.Ascii.Contents + t.Contents.Ascii.Length;
+
+              TranslateString(t.Contents.Ascii.Contents, t.Contents.Ascii.Length);
+              for (p=t.Contents.Ascii.Contents; p < pEnd; PutByte(*(p++)));
+            }
             break;
            default:
             OK=False;

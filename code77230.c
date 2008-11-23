@@ -16,9 +16,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code77230.c,v 1.5 2007/06/28 20:27:31 alfred Exp $                   */
+/* $Id: code77230.c,v 1.6 2008/11/23 10:39:17 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code77230.c,v $
+ * Revision 1.6  2008/11/23 10:39:17  alfred
+ * - allow strings with NUL characters
+ *
  * Revision 1.5  2007/06/28 20:27:31  alfred
  * - silence some warnings on recent GNU C versions
  *
@@ -534,7 +537,7 @@ BEGIN
    TempResult t;
    LongWord temp;
    LongInt sign,mant,expo,Size;
-   char *cp;
+   char *cp, *cend;
 
    if (Memo("DW"))
     BEGIN
@@ -583,11 +586,11 @@ BEGIN
              END
             break;
            case TempString:
-            for (z=0,cp=t.Contents.Ascii; *cp!='\0'; cp++,z++)
-             BEGIN
+            for (z = 0, cp = t.Contents.Ascii.Contents, cend = cp + t.Contents.Ascii.Length; cp < cend; cp++,z++)
+            {
               DAsmCode[CodeLen]=(DAsmCode[CodeLen]<<8)+CharTransTable[((usint)*cp)&0xff];
               if ((z&3)==3) CodeLen++;
-             END
+            }
             if ((z&3)!=0) 
             {
               DAsmCode[CodeLen] = (DAsmCode[CodeLen]) << ((4 - (z & 3)) << 3);

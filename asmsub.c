@@ -26,9 +26,12 @@
 /*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.10 2008/08/10 11:57:48 alfred Exp $                      */
+/* $Id: asmsub.c,v 1.11 2008/11/23 10:39:16 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmsub.c,v $
+ * Revision 1.11  2008/11/23 10:39:16  alfred
+ * - allow strings with NUL characters
+ *
  * Revision 1.10  2008/08/10 11:57:48  alfred
  * - handle truncated bit numbers for 68K
  *
@@ -390,12 +393,15 @@ END
 
 /****************************************************************************/
 
-        void TranslateString(char *s)
-BEGIN
-   char *z;
+void TranslateString(char *s, int Length)
+{
+  char *pRun, *pEnd;
 
-   for (z=s; *z!='\0'; z++) *z=CharTransTable[((usint)(*z))&0xff];
-END
+  if (Length < 0)
+    Length = strlen(s);
+  for (pRun = s, pEnd = pRun + Length; pRun < pEnd; pRun++)
+    *pRun = CharTransTable[((usint)(*pRun)) & 0xff];
+}
 
 ShortInt StrCmp(const char *s1, const char *s2, LongInt Hand1, LongInt Hand2)
 {
@@ -631,7 +637,7 @@ void StrSym(TempResult *t, Boolean WithSystem, char *Dest, int DestLen)
       strmaxcpy(Dest, FloatString(t->Contents.Float), DestLen);
       break;
     case TempString:
-      strmaxcpy(Dest, t->Contents.Ascii, DestLen);
+      snstrlenprint(Dest, DestLen, t->Contents.Ascii.Contents, t->Contents.Ascii.Length);
       break;
     default:
       strmaxcpy(Dest, "???", DestLen);
@@ -641,13 +647,14 @@ void StrSym(TempResult *t, Boolean WithSystem, char *Dest, int DestLen)
 /****************************************************************************/
 /* Listingzaehler zuruecksetzen */
 
-        void ResetPageCounter(void)
-BEGIN
-   int z;
+void ResetPageCounter(void)
+{
+  int z;
 
-   for (z=0; z<=ChapMax; z++) PageCounter[z]=0;
-   LstCounter=0; ChapDepth=0;
-END
+  for (z = 0; z <= ChapMax; z++)
+    PageCounter[z] = 0;
+  LstCounter = 0; ChapDepth = 0;
+}
 
 /*--------------------------------------------------------------------------*/
 /* eine neue Seite im Listing beginnen */

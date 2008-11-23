@@ -17,9 +17,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.h,v 1.4 2005/10/02 10:00:44 alfred Exp $                     */
+/* $Id: asmpars.h,v 1.5 2008/11/23 10:39:16 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.h,v $
+ * Revision 1.5  2008/11/23 10:39:16  alfred
+ * - allow strings with NUL characters
+ *
  * Revision 1.4  2005/10/02 10:00:44  alfred
  * - ConstLongInt gets default base, correct length check on KCPSM3 registers
  *
@@ -46,33 +49,36 @@
  *
  *****************************************************************************/
            
-typedef enum {UInt1    ,
-              UInt2    ,
-              UInt3    ,
-              SInt4    ,UInt4    , Int4    ,
-              SInt5    ,UInt5    , Int5    ,
-              SInt6    ,UInt6    ,
-              SInt7    ,UInt7    ,
-              SInt8    ,UInt8    , Int8    ,
-              UInt9    ,
-              UInt10   , Int10   ,
-              UInt11   ,
-              UInt12   , Int12   ,
-              UInt13   ,
-              UInt14   ,
-              UInt15   ,
-              SInt16   ,UInt16   , Int16   ,
-              UInt18   ,
-              SInt20   ,UInt20   , Int20   ,
-              UInt21   ,
-              UInt22   ,
-              UInt23   ,
-              SInt24   ,UInt24   , Int24   ,
-              SInt32   ,UInt32   , Int32   ,
+typedef enum
+{
+  UInt1    ,
+  UInt2    ,
+  UInt3    ,
+  SInt4    ,UInt4    , Int4    ,
+  SInt5    ,UInt5    , Int5    ,
+  SInt6    ,UInt6    ,
+  SInt7    ,UInt7    ,
+  SInt8    ,UInt8    , Int8    ,
+  UInt9    ,
+  UInt10   , Int10   ,
+  UInt11   ,
+  UInt12   , Int12   ,
+  UInt13   ,
+  UInt14   ,
+  UInt15   ,
+  SInt16   ,UInt16   , Int16   ,
+  UInt18   ,
+  SInt20   ,UInt20   , Int20   ,
+  UInt21   ,
+  UInt22   ,
+  UInt23   ,
+  SInt24   ,UInt24   , Int24   ,
+  SInt32   ,UInt32   , Int32   ,
 #ifdef HAS64
-               Int64   ,
+  Int64   ,
 #endif
-               IntTypeCnt} IntType;
+  IntTypeCnt
+} IntType;
 
 typedef enum {Float32,Float64,Float80,FloatDec,FloatCo,FloatTypeCnt} FloatType;
 
@@ -104,7 +110,7 @@ extern LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult);
 
 extern Double ConstFloatVal(const char *pExpr, FloatType Typ, Boolean *pResult);
 
-extern void ConstStringVal(const char *pExpr, char *pDest, Boolean *pResult);
+extern void ConstStringVal(const char *pExpr, tDynString *pDest, Boolean *pResult);
 
 
 extern Boolean RangeCheck(LargeInt Wert, IntType Typ);
@@ -125,7 +131,9 @@ extern void EnterRelSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayCha
 
 extern void EnterFloatSymbol(char *Name_O, Double Wert, Boolean MayChange);
 
-extern void EnterStringSymbol(char *Name_O, char *Wert, Boolean MayChange);
+extern void EnterStringSymbol(char *Name_O, const char *pValue, Boolean MayChange);
+
+extern void EnterDynStringSymbol(char *Name_O, const tDynString *pValue, Boolean MayChange);
 
 extern Boolean GetIntSymbol(char *Name, LargeInt *Wert, PRelocEntry *Relocs);
 

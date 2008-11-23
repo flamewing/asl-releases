@@ -12,9 +12,12 @@
 /*             2002-01-27 allow immediate addressing for one-op instrs(doj)  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemsp.c,v 1.7 2007/12/31 12:56:27 alfred Exp $                     */
+/* $Id: codemsp.c,v 1.8 2008/11/23 10:39:17 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: codemsp.c,v $
+ * Revision 1.8  2008/11/23 10:39:17  alfred
+ * - allow strings with NUL characters
+ *
  * Revision 1.7  2007/12/31 12:56:27  alfred
  * - rework to hash table
  *
@@ -352,7 +355,6 @@ static void DecodeBYTE(Word Index)
   Boolean OK;
   int z;
   TempResult t;
-  char *p;
 
   UNUSED(Index);
 
@@ -380,16 +382,22 @@ static void DecodeBYTE(Word Index)
           WrError(1135); OK = False;
           break;
         case TempString:
-          if (strlen(t.Contents.Ascii) + CodeLen >= MaxCodeLen)
+        {
+          unsigned l = t.Contents.Ascii.Length;
+
+          if (l + CodeLen >= MaxCodeLen)
           {
             WrError(1920); OK = False;
           }
           else
           {
-            TranslateString(t.Contents.Ascii);
-            for (p = t.Contents.Ascii; *p; PutByte(*(p++)));
+            char *pEnd = t.Contents.Ascii.Contents + l, *p;
+
+            TranslateString(t.Contents.Ascii.Contents, l);
+            for (p = t.Contents.Ascii.Contents; p < pEnd; PutByte(*(p++)));
           }
           break;
+        }
         default: 
           OK = False; break;
       }

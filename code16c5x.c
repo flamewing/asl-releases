@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code16c5x.c,v 1.2 2005/09/08 17:31:02 alfred Exp $                          */
+/* $Id: code16c5x.c,v 1.3 2008/11/23 10:39:16 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code16c5x.c,v $
+ * Revision 1.3  2008/11/23 10:39:16  alfred
+ * - allow strings with NUL characters
+ *
  * Revision 1.2  2005/09/08 17:31:02  alfred
  * - add missing include
  *
@@ -180,7 +183,6 @@ BEGIN
    Boolean ValOK;
    int z;
    TempResult t;
-   char *p;
    LongInt MinV,MaxV;
 
    if (Memo("SFR"))
@@ -234,12 +236,16 @@ BEGIN
 	     WrError(1135); ValOK=False; 
              break;
 	    case TempString:
-	     for (p=t.Contents.Ascii; *p!='\0'; p++)
-              if (ActPC==SegCode)
- 	       WAsmCode[CodeLen++]=CharTransTable[((usint) *p)&0xff];
-              else
- 	       BAsmCode[CodeLen++]=CharTransTable[((usint) *p)&0xff];
-	     break;
+            {
+              unsigned z;
+
+              for (z = 0; z < t.Contents.Ascii.Length; z++)
+                if (ActPC == SegCode)
+                  WAsmCode[CodeLen++] = CharTransTable[((usint) t.Contents.Ascii.Contents[z]) & 0xff];
+                else
+                  BAsmCode[CodeLen++] = CharTransTable[((usint) t.Contents.Ascii.Contents[z]) & 0xff];
+	      break;
+            }
 	    default:
              ValOK=False;
 	   END

@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codest6.c,v 1.3 2005/09/08 17:31:05 alfred Exp $                     */
+/* $Id: codest6.c,v 1.4 2008/11/23 10:39:17 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codest6.c,v $
+ * Revision 1.4  2008/11/23 10:39:17  alfred
+ * - allow strings with NUL characters
+ *
  * Revision 1.3  2005/09/08 17:31:05  alfred
  * - add missing include
  *
@@ -245,7 +248,7 @@ BEGIN
          EvalStringExpression(ArgStr[z],&OK,s);
          if (OK)
           BEGIN
-           TranslateString(s);
+           TranslateString(s, -1);
            if (CodeLen+strlen(s)+Ord(Flag)>MaxCodeLen)
             BEGIN
              WrError(1920); OK=False;

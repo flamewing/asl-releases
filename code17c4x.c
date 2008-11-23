@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code17c4x.c,v 1.2 2005/09/08 17:31:03 alfred Exp $                          */
+/* $Id: code17c4x.c,v 1.3 2008/11/23 10:39:16 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code17c4x.c,v $
+ * Revision 1.3  2008/11/23 10:39:16  alfred
+ * - allow strings with NUL characters
+ *
  * Revision 1.2  2005/09/08 17:31:03  alfred
  * - add missing include
  *
@@ -241,13 +244,13 @@ BEGIN
              WrError(1135); ValOK=False;
              break;
             case TempString:
-             for (z2=0; z2<(int)strlen(t.Contents.Ascii); z2++)
-              BEGIN
-               Size=CharTransTable[((usint) t.Contents.Ascii[z2])&0xff];
-               if (ActPC==SegData) BAsmCode[CodeLen++]=Size;
-               else if ((z2&1)==0) WAsmCode[CodeLen++]=Size;
-               else WAsmCode[CodeLen-1]+=Size<<8;
-              END
+             for (z2 = 0; z2 < (int)t.Contents.Ascii.Length; z2++)
+             {
+               Size = CharTransTable[((usint) t.Contents.Ascii.Contents[z2]) & 0xff];
+               if (ActPC == SegData) BAsmCode[CodeLen++] = Size;
+               else if ((z2 & 1)==0) WAsmCode[CodeLen++] = Size;
+               else WAsmCode[CodeLen - 1] |= Size << 8;
+             }
              break;
             default: ValOK=False;
            END

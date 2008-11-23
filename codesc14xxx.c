@@ -94,7 +94,7 @@ BEGIN
    int z;
    Boolean OK;
    TempResult t;
-   char *p;
+   char *p, *pEnd;
 
    if ((Memo("DC")) OR (Memo("DC8")))
     BEGIN
@@ -113,7 +113,7 @@ BEGIN
             if (ChkRange(t.Contents.Int, -128, 255)) PutByte(t.Contents.Int);
             break;
            case TempString:
-            for (p = t.Contents.Ascii; *p != '\0'; p++)
+            for (p = t.Contents.Ascii.Contents, pEnd = p + t.Contents.Ascii.Length; p < pEnd; p++)
              PutByte(CharTransTable[((usint) *p) & 0xff]);
             break;
            case TempFloat:

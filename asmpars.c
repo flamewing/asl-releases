@@ -36,9 +36,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.14 2008/10/21 16:33:04 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.15 2008/11/23 10:39:15 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.c,v $
+ * Revision 1.15  2008/11/23 10:39:15  alfred
+ * - allow strings with NUL characters
+ *
  * Revision 1.14  2008/10/21 16:33:04  alfred
  * - added charfromstr() function
  *
@@ -272,8 +275,8 @@ Boolean BalanceTree;           /* Symbolbaum ausbalancieren                  */
 
 
 static char BaseIds[3]={'%','@','$'};
-static char BaseLetters[3]={'B','O','H'};
-static Byte BaseVals[3]={2,8,16};
+static char BaseLetters[4]={'B','O','H','Q'};
+static Byte BaseVals[4]={2,8,16,8};
 
 typedef struct _TSymbolEntry
          {
@@ -868,7 +871,7 @@ LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
         ch = mytoupper(pExpr[l - 1]);
         if (DigitVal(ch, RadixBase) == -1)
         {
-          for (Search = 0; Search < 3; Search++)
+          for (Search = 0; Search < sizeof(BaseLetters) / sizeof(*BaseLetters); Search++)
             if (ch==BaseLetters[Search])
             {
               ActMode = ConstModeIntel;
@@ -907,7 +910,7 @@ LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
         ch = mytoupper(pExpr[l - 1]);
         if (DigitVal(ch, RadixBase) == -1)
         {
-          for (Search = 0; Search < 3; Search++) 
+          for (Search = 0; Search < sizeof(BaseLetters) / sizeof(*BaseLetters); Search++) 
             if (ch == BaseLetters[Search])
             {
               Base = BaseVals[Search];
@@ -1041,11 +1044,11 @@ Double ConstFloatVal(const char *pExpr, FloatType Typ, Boolean *pResult)
  * Result:      value
  *****************************************************************************/
 
-void ConstStringVal(const char *pExpr, char *pDest, Boolean *pResult)
+void ConstStringVal(const char *pExpr, tDynString *pDest, Boolean *pResult)
 {
   String Copy;
-  char *pPos, *pCurr, *pDestRun;
-  int l, RLen, TLen;
+  char *pPos, *pCurr;
+  int l, TLen;
 
   *pResult = False;
 
@@ -1059,7 +1062,7 @@ void ConstStringVal(const char *pExpr, char *pDest, Boolean *pResult)
   /* go through source */
 
   pCurr = Copy;
-  pDestRun = pDest; RLen = STRINGSIZE - 1;
+  pDest->Length = 0;
   while (*pCurr)
   {
     /* copy part up to next '\' verbatim: */
@@ -1070,10 +1073,7 @@ void ConstStringVal(const char *pExpr, char *pDest, Boolean *pResult)
     if (strchr(pCurr, '"'))
       return;
     TLen = strlen(pCurr);
-    if (TLen > RLen)
-      TLen = RLen;
-    memcpy(pDestRun, pCurr, TLen);
-    pDestRun += TLen; RLen-= TLen;
+    DynStringAppend(pDest, pCurr, TLen);
 
     /* are we done? If not, advance pointer to behind '\' */
 
@@ -1120,21 +1120,20 @@ void ConstStringVal(const char *pExpr, char *pDest, Boolean *pResult)
         {
           case TempInt:
             pStr = SysString(t.Contents.Int, OutRadixBase, 0);
+            TLen = strlen(pStr);
             break;
           case TempFloat:
             pStr = FloatString(t.Contents.Float);
+            TLen = strlen(pStr);
             break;
           case TempString: 
-            pStr = t.Contents.Ascii;
+            pStr = t.Contents.Ascii.Contents;
+            TLen = t.Contents.Ascii.Length;
             break;
           default:
             return;
         }
-        TLen = strlen(pStr);
-        if (TLen > RLen)
-          TLen = RLen;  
-        memcpy(pDestRun, pStr, TLen);
-        pDestRun += TLen; RLen-= TLen;
+        DynStringAppend(pDest, pStr, TLen);
 
         /* advance source pointer to behind '}' */
 
@@ -1145,19 +1144,17 @@ void ConstStringVal(const char *pExpr, char *pDest, Boolean *pResult)
 
       else
       {
-        if (!ProcessBk(&pCurr, pDestRun))
+        char Res;
+
+        if (!ProcessBk(&pCurr, &Res))
           return;
-        if (RLen > 0)
-        {
-          pDestRun++; RLen--;
-        }
+        DynStringAppend(pDest, &Res, 1);
       }
     }
   }
 
-  *pDestRun = '\0';
   *pResult = True;
-END
+}
 
 
         static PSymbolEntry FindLocNode(
@@ -1355,8 +1352,8 @@ static void EvalExpression_AddOp(TempResult *pErg, TempResult *pLVal, TempResult
       pErg->Contents.Float = pLVal->Contents.Float + pRVal->Contents.Float;
       break;
     case TempString: 
-      strmaxcpy(pErg->Contents.Ascii, pLVal->Contents.Ascii, STRINGSIZE);
-      strmaxcat(pErg->Contents.Ascii, pRVal->Contents.Ascii, STRINGSIZE);
+      DynString2DynString(&pErg->Contents.Ascii, &pLVal->Contents.Ascii);
+      DynStringAppendDynString(&pErg->Contents.Ascii, &pRVal->Contents.Ascii);
       break;
     default:
       break;
@@ -1416,7 +1413,7 @@ static void EvalExpression_EqOp(TempResult *pErg, TempResult *pLVal, TempResult 
       pErg->Contents.Int = (pLVal->Contents.Float == pRVal->Contents.Float) ? 1 : 0;
       break;
     case TempString:
-      pErg->Contents.Int = (strcmp(pLVal->Contents.Ascii, pRVal->Contents.Ascii) == 0) ? 1 : 0;
+      pErg->Contents.Int = (DynStringCmp(&pLVal->Contents.Ascii, &pRVal->Contents.Ascii) == 0) ? 1 : 0;
       break;
     default:
       break;
@@ -1435,7 +1432,7 @@ static void EvalExpression_GtOp(TempResult *pErg, TempResult *pLVal, TempResult 
       pErg->Contents.Int = (pLVal->Contents.Float > pRVal->Contents.Float) ? 1 : 0;
       break;
     case TempString:
-      pErg->Contents.Int = (strcmp(pLVal->Contents.Ascii, pRVal->Contents.Ascii) > 0) ? 1 : 0;
+      pErg->Contents.Int = (DynStringCmp(&pLVal->Contents.Ascii, &pRVal->Contents.Ascii) > 0) ? 1 : 0;
       break;
     default:
       break;
@@ -1454,7 +1451,7 @@ static void EvalExpression_LtOp(TempResult *pErg, TempResult *pLVal, TempResult 
       pErg->Contents.Int = (pLVal->Contents.Float < pRVal->Contents.Float) ? 1 : 0;
       break;                                                                     
     case TempString:                                                             
-      pErg->Contents.Int = (strcmp(pLVal->Contents.Ascii, pRVal->Contents.Ascii) < 0) ? 1 : 0;
+      pErg->Contents.Int = (DynStringCmp(&pLVal->Contents.Ascii, &pRVal->Contents.Ascii) < 0) ? 1 : 0;
       break;                                                                     
     default:                                                                     
       break;                                                                     
@@ -1473,7 +1470,7 @@ static void EvalExpression_LeOp(TempResult *pErg, TempResult *pLVal, TempResult 
       pErg->Contents.Int = (pLVal->Contents.Float <= pRVal->Contents.Float) ? 1 : 0;
       break;
     case TempString:
-      pErg->Contents.Int = (strcmp(pLVal->Contents.Ascii, pRVal->Contents.Ascii) <= 0) ? 1 : 0;
+      pErg->Contents.Int = (DynStringCmp(&pLVal->Contents.Ascii, &pRVal->Contents.Ascii) <= 0) ? 1 : 0;
       break;
     default:
       break;
@@ -1492,7 +1489,7 @@ static void EvalExpression_GeOp(TempResult *pErg, TempResult *pLVal, TempResult 
       pErg->Contents.Int = (pLVal->Contents.Float >= pRVal->Contents.Float) ? 1 : 0;
       break;
     case TempString:
-      pErg->Contents.Int = (strcmp(pLVal->Contents.Ascii, pRVal->Contents.Ascii) >= 0) ? 1 : 0;
+      pErg->Contents.Int = (DynStringCmp(&pLVal->Contents.Ascii, &pRVal->Contents.Ascii) >= 0) ? 1 : 0;
       break;
     default:
       break;
@@ -1511,7 +1508,7 @@ static void EvalExpression_UneqOp(TempResult *pErg, TempResult *pLVal, TempResul
       pErg->Contents.Int = (pLVal->Contents.Float != pRVal->Contents.Float) ? 1 : 0;
       break;
     case TempString:
-      pErg->Contents.Int = (strcmp(pLVal->Contents.Ascii, pRVal->Contents.Ascii) != 0) ? 1 : 0;
+      pErg->Contents.Int = (DynStringCmp(&pLVal->Contents.Ascii, &pRVal->Contents.Ascii) != 0) ? 1 : 0;
       break;
     default:
       break;
@@ -1523,33 +1520,33 @@ static void EvalExpression_UneqOp(TempResult *pErg, TempResult *pLVal, TempResul
 void EvalExpression(const char *pExpr, TempResult *pErg)
 {
 static Operator Operators[] =
-              {{" " ,1 , False,  0, False, False, False, False, EvalExpression_DummyOp},
-               {"~" ,1 , False,  1, True , False, False, False, EvalExpression_OneComplOp},
-               {"<<",2 , True ,  3, True , False, False, False, EvalExpression_ShLeftOp},
-               {">>",2 , True ,  3, True , False, False, False, EvalExpression_ShRightOp},
-               {"><",2 , True ,  4, True , False, False, False, EvalExpression_BitMirrorOp},
-               {"&" ,1 , True ,  5, True , False, False, False, EvalExpression_BinAndOp},
-               {"|" ,1 , True ,  6, True , False, False, False, EvalExpression_BinOrOp},
-               {"!" ,1 , True ,  7, True , False, False, False, EvalExpression_BinXorOp},
-               {"^" ,1 , True ,  8, True , True , False, False, EvalExpression_PotOp},
-               {"*" ,1 , True , 11, True , True , False, False, EvalExpression_MultOp},
-               {"/" ,1 , True , 11, True , True , False, False, EvalExpression_DivOp},
-               {"#" ,1 , True , 11, True , False, False, False, EvalExpression_ModOp},
-               {"+" ,1 , True , 13, True , True , True , False, EvalExpression_AddOp},
-               {"-" ,1 , True , 13, True , True , False, False, EvalExpression_SubOp},
-               {"~~",2 , False,  2, True , False, False, False, EvalExpression_LogNotOp},
-               {"&&",2 , True , 15, True , False, False, False, EvalExpression_LogAndOp},
-               {"||",2 , True , 16, True , False, False, False, EvalExpression_LogOrOp},
-               {"!!",2 , True , 17, True , False, False, False, EvalExpression_LogXorOp},
-               {"=" ,1 , True , 23, True , True , True , False, EvalExpression_EqOp},
-               {"==",2 , True , 23, True , True , True , False, EvalExpression_EqOp},
-               {">" ,1 , True , 23, True , True , True , False, EvalExpression_GtOp},
-               {"<" ,1 , True , 23, True , True , True , False, EvalExpression_LtOp},
-               {"<=",2 , True , 23, True , True , True , False, EvalExpression_LeOp},
-               {">=",2 , True , 23, True , True , True , False, EvalExpression_GeOp},
-               {"<>",2 , True , 23, True , True , True , False, EvalExpression_UneqOp},
+              {{" " , 1 , False,  0, False, False, False, False, EvalExpression_DummyOp},
+               {"~" , 1 , False,  1, True , False, False, False, EvalExpression_OneComplOp},
+               {"<<", 2 , True ,  3, True , False, False, False, EvalExpression_ShLeftOp},
+               {">>", 2 , True ,  3, True , False, False, False, EvalExpression_ShRightOp},
+               {"><", 2 , True ,  4, True , False, False, False, EvalExpression_BitMirrorOp},
+               {"&" , 1 , True ,  5, True , False, False, False, EvalExpression_BinAndOp},
+               {"|" , 1 , True ,  6, True , False, False, False, EvalExpression_BinOrOp},
+               {"!" , 1 , True ,  7, True , False, False, False, EvalExpression_BinXorOp},
+               {"^" , 1 , True ,  8, True , True , False, False, EvalExpression_PotOp},
+               {"*" , 1 , True , 11, True , True , False, False, EvalExpression_MultOp},
+               {"/" , 1 , True , 11, True , True , False, False, EvalExpression_DivOp},
+               {"#" , 1 , True , 11, True , False, False, False, EvalExpression_ModOp},
+               {"+" , 1 , True , 13, True , True , True , False, EvalExpression_AddOp},
+               {"-" , 1 , True , 13, True , True , False, False, EvalExpression_SubOp},
+               {"~~", 2 , False,  2, True , False, False, False, EvalExpression_LogNotOp},
+               {"&&", 2 , True , 15, True , False, False, False, EvalExpression_LogAndOp},
+               {"||", 2 , True , 16, True , False, False, False, EvalExpression_LogOrOp},
+               {"!!", 2 , True , 17, True , False, False, False, EvalExpression_LogXorOp},
+               {"=" , 1 , True , 23, True , True , True , False, EvalExpression_EqOp},
+               {"==", 2 , True , 23, True , True , True , False, EvalExpression_EqOp},
+               {">" , 1 , True , 23, True , True , True , False, EvalExpression_GtOp},
+               {"<" , 1 , True , 23, True , True , True , False, EvalExpression_LtOp},
+               {"<=", 2 , True , 23, True , True , True , False, EvalExpression_LeOp},
+               {">=", 2 , True , 23, True , True , True , False, EvalExpression_GeOp},
+               {"<>", 2 , True , 23, True , True , True , False, EvalExpression_UneqOp},
                /* termination marker */
-               {NULL,0, False ,  0, False, False, False, False, NULL}},
+               {NULL, 0 , False,  0, False, False, False, False, NULL}},
                /* minus may have one or two operands */
                 MinusMonadicOperator = 
                {"-" ,1 , False, 13, True , True , False, False, EvalExpression_SubOp};
@@ -1622,7 +1619,7 @@ static Operator Operators[] =
      LEAVE;
    }
 
-   ConstStringVal(Copy, pErg->Contents.Ascii, &OK);
+   ConstStringVal(Copy, &pErg->Contents.Ascii, &OK);
    if (OK)
    {
      pErg->Typ = TempString;
@@ -1825,50 +1822,59 @@ static Operator Operators[] =
 
      /* selbstdefinierte Funktion ? */
 
-     if ((ValFunc=FindFunction(ftemp))!=Nil)
-      BEGIN
-       strmaxcpy(ftemp,ValFunc->Definition,255);
-       for (z1=1; z1<=ValFunc->ArguCnt; z1++)
-        BEGIN
-         if (Copy[0]=='\0')
-          BEGIN
+     if ((ValFunc = FindFunction(ftemp)))
+     {
+       strmaxcpy(ftemp, ValFunc->Definition, 255);
+       for (z1 = 1; z1 <= ValFunc->ArguCnt; z1++)
+       {
+         if (!Copy[0])
+         {
            WrError(1490); LEAVE;
-          END;
-         KlPos=QuotPos(Copy,','); if (KlPos!=Nil) *KlPos='\0';
-         EvalExpression(Copy,&LVal);
+         }
+
+         KlPos = QuotPos(Copy,',');
+         if (KlPos)
+           *KlPos = '\0';
+
+         EvalExpression(Copy, &LVal);
          if (LVal.Relocs != Nil)
-          BEGIN
+         {
            WrError(1150); FreeRelocs(&LVal.Relocs); return;
-          END
-         if (KlPos==Nil) Copy[0]='\0'; else strcpy(Copy,KlPos+1);
+         }
+
+         if (!KlPos)
+           Copy[0] = '\0';
+         else
+           strcpy(Copy, KlPos + 1);
+
+         strmaxcpy(stemp, "(", 255);
          switch (LVal.Typ)
-          BEGIN
+         {
            case TempInt:
-            sprintf(stemp,"%s",LargeString(LVal.Contents.Int));
-            break;
+             sprintf(stemp + 1, "%s", LargeString(LVal.Contents.Int));
+             break;
            case TempFloat:
-            sprintf(stemp,"%0.16e",LVal.Contents.Float); 
-            KillBlanks(stemp);
-            break;
+             sprintf(stemp + 1, "%0.16e", LVal.Contents.Float); 
+             KillBlanks(stemp);
+             break;
            case TempString:
-            strcpy(stemp,"\""); 
-            strmaxcat(stemp,LVal.Contents.Ascii,255);
-            strmaxcat(stemp,"\"",255);
-            break;
+             stemp[1] = '"';
+             snstrlenprint(stemp + 2, 252, LVal.Contents.Ascii.Contents, LVal.Contents.Ascii.Length);
+             strmaxcat(stemp,"\"",255);
+             break;
            default:
-            LEAVE;
-          END
-         memmove(stemp+1,stemp,strlen(stemp)+1);
-         stemp[0]='('; strmaxcat(stemp,")",255);
-         ExpandLine(stemp,z1,ftemp);
-        END
+             LEAVE;
+         }
+         strmaxcat(stemp,")", 255);
+         ExpandLine(stemp, z1, ftemp);
+       }
        if (Copy[0]!='\0')
         BEGIN
          WrError(1490); LEAVE;
         END
        EvalExpression(ftemp,pErg);
        LEAVE;
-      END
+     }
 
      /* hier einmal umwandeln ist effizienter */
 
@@ -1929,13 +1935,13 @@ static Operator Operators[] =
          if ((LVal.Typ != TempString) || (MVal.Typ != TempInt) || (RVal.Typ != TempInt)) WrError(1135);
          else
          {
-           cnt = strlen(LVal.Contents.Ascii) - MVal.Contents.Int;
+           cnt = LVal.Contents.Ascii.Length - MVal.Contents.Int;
            if ((RVal.Contents.Int != 0) && (RVal.Contents.Int < cnt))
              cnt = RVal.Contents.Int;
            if (cnt < 0)
              cnt = 0;
-           memcpy(pErg->Contents.Ascii, LVal.Contents.Ascii + MVal.Contents.Int, cnt);
-           pErg->Contents.Ascii[cnt] = '\0';
+           pErg->Contents.Ascii.Length = 0;
+           DynStringAppend(&pErg->Contents.Ascii, LVal.Contents.Ascii.Contents + MVal.Contents.Int, cnt);
            pErg->Typ = TempString;
          }
        }
@@ -1950,9 +1956,8 @@ static Operator Operators[] =
          if ((LVal.Typ != TempString) || (MVal.Typ != TempString)) WrError(1135);
          else
          {
-           zp = strstr(LVal.Contents.Ascii, MVal.Contents.Ascii);
+           pErg->Contents.Int = DynStringFind(&LVal.Contents.Ascii, &MVal.Contents.Ascii);
            pErg->Typ = TempInt;
-           pErg->Contents.Int = zp ? zp - LVal.Contents.Ascii : -1;
          }
        }
        else if (!strcmp(ftemp, "CHARFROMSTR"))
@@ -1961,7 +1966,7 @@ static Operator Operators[] =
          else  
          {
            pErg->Typ = TempInt;
-           pErg->Contents.Int = ((MVal.Contents.Int >= 0) && (MVal.Contents.Int < strlen(LVal.Contents.Ascii))) ? LVal.Contents.Ascii[MVal.Contents.Int] : -1;
+           pErg->Contents.Int = ((MVal.Contents.Int >= 0) && (MVal.Contents.Int < LVal.Contents.Ascii.Length)) ? LVal.Contents.Ascii.Contents[MVal.Contents.Int] : -1;
          }
        }
        else
@@ -1986,47 +1991,56 @@ static Operator Operators[] =
 
      /* Funktionen fuer Stringargumente */
 
-     if (LVal.Typ==TempString)
-      BEGIN
+     if (LVal.Typ == TempString)
+     {
        /* in Grossbuchstaben wandeln ? */
 
-       if (strcmp(ftemp,"UPSTRING")==0)
-        BEGIN
-         pErg->Typ=TempString; strmaxcpy(pErg->Contents.Ascii,LVal.Contents.Ascii,255);
-         for (KlPos=pErg->Contents.Ascii; *KlPos!='\0'; KlPos++)
-          *KlPos=mytoupper(*KlPos);
-        END
+       if (!strcmp(ftemp, "UPSTRING"))
+       {
+         pErg->Typ = TempString;
+         DynString2DynString(&pErg->Contents.Ascii, &LVal.Contents.Ascii);
+         for (KlPos = pErg->Contents.Ascii.Contents;
+              KlPos < pErg->Contents.Ascii.Contents + pErg->Contents.Ascii.Length;
+              KlPos++)
+           *KlPos = mytoupper(*KlPos);
+       }
 
        /* in Kleinbuchstaben wandeln ? */
 
-       else if (strcmp(ftemp,"LOWSTRING")==0)
-        BEGIN
-         pErg->Typ=TempString; strmaxcpy(pErg->Contents.Ascii,LVal.Contents.Ascii,255);
-         for (KlPos=pErg->Contents.Ascii; *KlPos!='\0'; KlPos++)
-          *KlPos=mytolower(*KlPos);
-        END
+       else if (!strcmp(ftemp, "LOWSTRING"))
+       {
+         pErg->Typ = TempString;
+         DynString2DynString(&pErg->Contents.Ascii, &LVal.Contents.Ascii);
+         for (KlPos = pErg->Contents.Ascii.Contents;
+              KlPos < pErg->Contents.Ascii.Contents + pErg->Contents.Ascii.Length;
+              KlPos++)
+           *KlPos = mytolower(*KlPos);
+       }
 
        /* Laenge ermitteln ? */
 
-       else if (strcmp(ftemp,"STRLEN")==0)
-        BEGIN
-         pErg->Typ=TempInt; pErg->Contents.Int=strlen(LVal.Contents.Ascii);
-        END
+       else if (!strcmp(ftemp, "STRLEN"))
+       {
+         pErg->Typ = TempInt; pErg->Contents.Int = LVal.Contents.Ascii.Length;
+       }
 
        /* Parser aufrufen ? */
 
-       else if (strcmp(ftemp,"VAL")==0)
-        BEGIN
-         EvalExpression(LVal.Contents.Ascii,pErg);
-        END
+       else if (!strcmp(ftemp, "VAL"))
+       {
+         String Tmp;
+
+         DynString2CString(Tmp, &LVal.Contents.Ascii, sizeof(Tmp));
+         EvalExpression(Tmp, pErg);
+       }
 
        /* nix gefunden ? */
 
        else
-        BEGIN
-         WrXError(1860,ftemp); pErg->Typ=TempNone;
-        END
-      END
+       {
+         WrXError(1860, ftemp); pErg->Typ = TempNone;
+       }
+     }
 
      /* Funktionen fuer Zahlenargumente */
 
@@ -2371,9 +2385,9 @@ static Operator Operators[] =
    /* interne Symbole ? */
 
    if (strcasecmp(Copy,"MOMFILE")==0)
-    BEGIN
-     pErg->Typ=TempString;
-     strmaxcpy(pErg->Contents.Ascii,CurrFileName,255);
+   {
+     pErg->Typ = TempString;
+     CString2DynString(&pErg->Contents.Ascii, CurrFileName);
      LEAVE;
     END;
 
@@ -2391,19 +2405,19 @@ static Operator Operators[] =
      LEAVE;
     END
 
-   if (strcasecmp(Copy,"MOMSECTION")==0)
-    BEGIN
-     pErg->Typ=TempString;
-     strmaxcpy(pErg->Contents.Ascii,GetSectionName(MomSectionHandle),255);
+   if (!strcasecmp(Copy, "MOMSECTION"))
+   {
+     pErg->Typ = TempString;
+     CString2DynString(&pErg->Contents.Ascii, GetSectionName(MomSectionHandle));
      LEAVE;
-    END
+   }
 
-   if (strcasecmp(Copy,"MOMSEGMENT")==0)
-    BEGIN
-     pErg->Typ=TempString;
-     strmaxcpy(pErg->Contents.Ascii,SegNames[ActPC],255);
+   if (!strcasecmp(Copy, "MOMSEGMENT"))
+   {
+     pErg->Typ = TempString;
+     CString2DynString(&pErg->Contents.Ascii, SegNames[ActPC]);
      LEAVE;
-    END
+   }
 
    if (NOT ExpandSymbol(Copy)) LEAVE;
 
@@ -2422,25 +2436,33 @@ static Operator Operators[] =
    Ptr = FindLocNode(Copy, TempAll);
    if (Ptr == Nil) Ptr=FindNode(Copy, TempAll);
    if (Ptr != Nil)
-    BEGIN
+   {
      switch (pErg->Typ = Ptr->SymWert.Typ)
-      BEGIN
-       case TempInt: pErg->Contents.Int=Ptr->SymWert.Contents.IWert; break;
-       case TempFloat: pErg->Contents.Float=Ptr->SymWert.Contents.FWert; break;
-       case TempString: strmaxcpy(pErg->Contents.Ascii,Ptr->SymWert.Contents.SWert,255);
-       default: break;
-      END
+     {
+       case TempInt:
+         pErg->Contents.Int = Ptr->SymWert.Contents.IWert;
+         break;
+       case TempFloat:
+         pErg->Contents.Float = Ptr->SymWert.Contents.FWert;
+         break;
+       case TempString:
+         pErg->Contents.Ascii.Length = 0;
+         DynStringAppend(&pErg->Contents.Ascii, Ptr->SymWert.Contents.String.Contents, Ptr->SymWert.Contents.String.Length);
+         break;
+       default:
+         break;
+     }
      if (pErg->Typ != TempNone) pErg->Relocs = DupRelocs(Ptr->Relocs);
      if (Ptr->SymType != 0) TypeFlag |= (1 << Ptr->SymType);
      if ((Ptr->SymSize != (-1)) AND (SizeFlag == (-1))) SizeFlag = Ptr->SymSize;
-     if (NOT Ptr->Defined)
-      BEGIN
+     if (!Ptr->Defined)
+     {
        if (Repass) SymbolQuestionable = True;
        UsesForwards = True;
-      END
+     }
      Ptr->Used = True;
      LEAVE;
-    END
+   }
 
    /* Symbol evtl. im ersten Pass unbekannt */
 
@@ -2484,7 +2506,7 @@ LargeInt EvalIntExpression(const char *pExpr, IntType Type, Boolean *pResult)
       break;
     case TempString:
     {
-      int l = strlen(t.Contents.Ascii);
+      int l = t.Contents.Ascii.Length;
 
       if ((l > 0) && (l <= 4))
       {
@@ -2492,7 +2514,9 @@ LargeInt EvalIntExpression(const char *pExpr, IntType Type, Boolean *pResult)
         Byte Digit;
 
         Result = 0;
-        for (pRun = t.Contents.Ascii; *pRun; pRun++)
+        for (pRun = t.Contents.Ascii.Contents;
+             pRun < t.Contents.Ascii.Contents + l;
+             pRun++)
         {
           Digit = (usint) *pRun;
           Result = (Result << 8) | CharTransTable[Digit & 0xff];
@@ -2625,7 +2649,7 @@ void EvalStringExpression(const char *pExpr, Boolean *pResult, char *pEvalResult
   }
   else
   {
-    strmaxcpy(pEvalResult, t.Contents.Ascii, 255);
+    DynString2CString(pEvalResult, &t.Contents.Ascii, 255);
     *pResult = True;
   }
 }
@@ -2641,7 +2665,7 @@ static void FreeSymbolEntry(PSymbolEntry *Node, Boolean Destroy)
    }
 
    if ((*Node)->SymWert.Typ == TempString)
-    free((*Node)->SymWert.Contents.SWert);
+     free((*Node)->SymWert.Contents.String.Contents);
 
    while ((*Node)->RefList != Nil)
    {
@@ -2725,7 +2749,7 @@ static Boolean SymbolAdder(PTree *PDest, PTree Neu, void *pData)
     if (NOT EnterStruct->MayChange)
     {
       if ((NewEntry->SymWert.Typ != (*Node)->SymWert.Typ)
-       OR ((NewEntry->SymWert.Typ == TempString) AND (strcmp(NewEntry->SymWert.Contents.SWert, (*Node)->SymWert.Contents.SWert) != 0))
+       OR ((NewEntry->SymWert.Typ == TempString) AND (strlencmp(NewEntry->SymWert.Contents.String.Contents, NewEntry->SymWert.Contents.String.Length, (*Node)->SymWert.Contents.String.Contents, (*Node)->SymWert.Contents.String.Length) != 0))
        OR ((NewEntry->SymWert.Typ == TempFloat ) AND (NewEntry->SymWert.Contents.FWert != (*Node)->SymWert.Contents.FWert))
        OR ((NewEntry->SymWert.Typ == TempInt   ) AND (NewEntry->SymWert.Contents.IWert != (*Node)->SymWert.Contents.IWert)))
        {
@@ -2801,17 +2825,18 @@ static void EnterSymbol(PSymbolEntry Neu, Boolean MayChange, LongInt ResHandle)
    SearchErg = 0;
    EnterStruct.MayChange = MayChange; EnterStruct.DoCross = MakeCrossList;
    Neu->Tree.Attribute = (ResHandle == (-2)) ? (MomSectionHandle) : (ResHandle);
-   if ((SectionStack != Nil) AND (Neu->Tree.Attribute == MomSectionHandle))
+   if ((SectionStack != Nil) && (Neu->Tree.Attribute == MomSectionHandle))
    {
      EnterSymbol_Search(&Lauf, &Prev, &RRoot, Neu, &(SectionStack->LocSyms),
                         1, &SearchErg);
      if (Lauf == Nil)
        EnterSymbol_Search(&Lauf, &Prev, &RRoot, Neu,
-                         &(SectionStack->GlobSyms), 2, &SearchErg);
+                          &(SectionStack->GlobSyms), 2, &SearchErg);
      if (Lauf == Nil)
        EnterSymbol_Search(&Lauf, &Prev, &RRoot, Neu,
                           &(SectionStack->ExportSyms), 3, &SearchErg);
-     if (SearchErg == 2) Neu->Tree.Attribute = Lauf->DestSection;
+     if (SearchErg == 2)
+       Neu->Tree.Attribute = Lauf->DestSection;
      if (SearchErg == 3)
      {
        strmaxcpy(CombName, Neu->Tree.Name, 255);
@@ -2826,8 +2851,12 @@ static void EnterSymbol(PSymbolEntry Neu, Boolean MayChange, LongInt ResHandle)
        Copy->Tree.Name = strdup(CombName);
        Copy->Tree.Attribute = Lauf->DestSection;
        Copy->Relocs = DupRelocs(Neu->Relocs);
-       if (Copy->SymWert.Typ == TempString) 
-         Copy->SymWert.Contents.SWert = strdup(Neu->SymWert.Contents.SWert);
+       if (Copy->SymWert.Typ == TempString)
+       {
+         Copy->SymWert.Contents.String.Contents = (char*)malloc(Neu->SymWert.Contents.String.Length);
+         memcpy(Copy->SymWert.Contents.String.Contents, Neu->SymWert.Contents.String.Contents,
+                Copy->SymWert.Contents.String.Length = Neu->SymWert.Contents.String.Length);
+       }
        EnterTree(&TreeRoot, &(Copy->Tree), SymbolAdder, &EnterStruct);
      }
      if (Lauf != Nil)
@@ -2980,36 +3009,47 @@ BEGIN
    else EnterLocSymbol(Neu);
 END
 
-        void EnterStringSymbol(char *Name_O, char *Wert, Boolean MayChange)
-BEGIN
-   PSymbolEntry Neu;
-   LongInt DestHandle;
-   String Name;
+void EnterDynStringSymbol(char *Name_O, const tDynString *pValue, Boolean MayChange)
+{
+  PSymbolEntry Neu;
+  LongInt DestHandle;
+  String Name;
 
-   strmaxcpy(Name, Name_O, 255);
-   if (NOT ExpandSymbol(Name)) return;
-   if (NOT GetSymSection(Name,&DestHandle)) return;
-   if (!ChkTmp(Name, TRUE)) ChkTmp2(Name, TRUE);
-   if (NOT ChkSymbName(Name))
-    BEGIN
-     WrXError(1020, Name); return;
-    END
-   Neu=(PSymbolEntry) malloc(sizeof(TSymbolEntry));
-   Neu->Tree.Name = strdup(Name);
-   Neu->SymWert.Contents.SWert = strdup(Wert);
-   Neu->SymWert.Typ = TempString;
-   Neu->SymType = 0;
-   Neu->SymSize = (-1);
-   Neu->RefList = Nil;
-   Neu->Relocs = Nil;
+  strmaxcpy(Name, Name_O, 255);
+  if (!ExpandSymbol(Name)) return;
+  if (!GetSymSection(Name,&DestHandle)) return;
+  if (!ChkTmp(Name, TRUE)) ChkTmp2(Name, TRUE);
+  if (!ChkSymbName(Name))
+  {
+    WrXError(1020, Name); return;
+  }
+  Neu = (PSymbolEntry) malloc(sizeof(TSymbolEntry));
+  Neu->Tree.Name = strdup(Name);
+  Neu->SymWert.Contents.String.Contents = (char*)malloc(pValue->Length);
+  memcpy(Neu->SymWert.Contents.String.Contents, pValue->Contents, pValue->Length);
+  Neu->SymWert.Contents.String.Length = pValue->Length;
+  Neu->SymWert.Typ = TempString;
+  Neu->SymType = 0;
+  Neu->SymSize = -1;
+  Neu->RefList = Nil;
+  Neu->Relocs = Nil;
 
-   if ((MomLocHandle == (-1)) OR (DestHandle != (-2)))
-    BEGIN
-     EnterSymbol(Neu, MayChange, DestHandle);
-     if (MakeDebug) PrintSymTree(Name);
-    END
-   else EnterLocSymbol(Neu);
-END
+  if ((MomLocHandle == (-1)) OR (DestHandle != (-2)))
+  {
+    EnterSymbol(Neu, MayChange, DestHandle);
+    if (MakeDebug) PrintSymTree(Name);
+  }
+  else EnterLocSymbol(Neu);
+}
+
+void EnterStringSymbol(char *Name_O, const char *pValue, Boolean MayChange)
+{
+  tDynString DynString;
+
+  DynString.Length = 0;
+  DynStringAppend(&DynString, pValue, -1);
+  EnterDynStringSymbol(Name_O, &DynString, MayChange);
+}
 
         static void AddReference(PSymbolEntry Node)
 BEGIN
@@ -3210,27 +3250,29 @@ BEGIN
    return (Lauf!=Nil);
 END
 
-        Boolean GetStringSymbol(char *Name, char *Wert)
-BEGIN
-   PSymbolEntry Lauf;
-   String NName;
+Boolean GetStringSymbol(char *Name, char *Wert)
+{
+  PSymbolEntry Lauf;
+  String NName;
 
-   strmaxcpy(NName,Name,255);
-   if (NOT ExpandSymbol(NName)) return False;
-   Lauf=FindLocNode(NName,TempString);
-   if (Lauf==Nil) Lauf=FindNode(NName,TempString);
-   if (Lauf!=Nil)
-    BEGIN
-     strcpy(Wert,Lauf->SymWert.Contents.SWert);
-     Lauf->Used=True;
-    END
-   else
-    BEGIN
-     if (PassNo>MaxSymPass) WrXError(1010,Name);
-     *Wert='\0';
-    END
-   return (Lauf!=Nil);
-END
+  strmaxcpy(NName, Name, 255);
+  if (!ExpandSymbol(NName)) return False;
+  Lauf = FindLocNode(NName,TempString);
+  if (!Lauf)
+    Lauf = FindNode(NName, TempString);
+  if (Lauf != Nil)
+  {
+    memcpy(Wert, Lauf->SymWert.Contents.String.Contents, Lauf->SymWert.Contents.String.Length);
+    Wert[Lauf->SymWert.Contents.String.Length] = '\0';
+    Lauf->Used = True;
+  }
+  else
+  {
+    if (PassNo > MaxSymPass) WrXError(1010, Name);
+    *Wert = '\0';
+  }
+  return (Lauf != Nil);
+}
 
         void SetSymbolSize(char *Name, ShortInt Size)
 BEGIN
@@ -3337,16 +3379,24 @@ BEGIN
    return (Lauf == Nil) ? -1 : Lauf->SymType;
 END
 
-        static void ConvertSymbolVal(SymbolVal *Inp, TempResult *Outp)
-BEGIN
-   switch (Outp->Typ=Inp->Typ)
-    BEGIN
-     case TempInt   :Outp->Contents.Int  =Inp->Contents.IWert; break;
-     case TempFloat :Outp->Contents.Float=Inp->Contents.FWert; break;
-     case TempString:strmaxcpy(Outp->Contents.Ascii,Inp->Contents.SWert,255); break;
-     default: break;
-    END
-END
+static void ConvertSymbolVal(SymbolVal *Inp, TempResult *Outp)
+{
+  switch (Outp->Typ = Inp->Typ)
+  {
+    case TempInt:
+      Outp->Contents.Int = Inp->Contents.IWert;
+      break;
+    case TempFloat:
+      Outp->Contents.Float = Inp->Contents.FWert;
+      break;
+    case TempString:
+      Outp->Contents.Ascii.Length = 0;
+      DynStringAppend(&Outp->Contents.Ascii, Inp->Contents.String.Contents, Inp->Contents.String.Length);
+      break;
+    default:
+      break;
+  }
+}
 
 typedef struct
         {
@@ -3436,66 +3486,56 @@ typedef struct
           int Space;
         } TDebContext;
 
-	static void PrintDebSymbols_PNode(PTree Tree, void *pData)
-BEGIN
-   PSymbolEntry Node = (PSymbolEntry) Tree;
-   TDebContext *DebContext = (TDebContext*) pData;
-   char *p;
-   int l1;
-   TempResult t;
-   String s;
- 
-   if (Node->SymType != DebContext->Space) 
-     return;
+static void PrintDebSymbols_PNode(PTree Tree, void *pData)
+{
+  PSymbolEntry Node = (PSymbolEntry) Tree;
+  TDebContext *DebContext = (TDebContext*) pData;
+  int l1;
+  TempResult t;
+  String s;
 
-   if (NOT DebContext->HWritten)
-    BEGIN
-     fprintf(DebContext->f, "\n"); ChkIO(10004);
-     fprintf(DebContext->f, "Symbols in Segment %s\n",SegNames[DebContext->Space]); ChkIO(10004);
-     DebContext->HWritten=True;
-    END
+  if (Node->SymType != DebContext->Space) 
+    return;
 
-   fprintf(DebContext->f,"%s",Node->Tree.Name); ChkIO(10004); l1=strlen(Node->Tree.Name);
-   if (Node->Tree.Attribute!=(-1))
-    BEGIN
-     sprintf(s,"[%d]", (int)Node->Tree.Attribute);
-     fprintf(DebContext->f,"%s",s); ChkIO(10004);
-     l1+=strlen(s);
-    END
-   fprintf(DebContext->f,"%s ",Blanks(37-l1)); ChkIO(10004);
-   switch (Node->SymWert.Typ)
-    BEGIN
-     case TempInt:    fprintf(DebContext->f,"Int    "); break;
-     case TempFloat:  fprintf(DebContext->f,"Float  "); break;
-     case TempString: fprintf(DebContext->f,"String "); break;
-     default: break;
-    END
-   ChkIO(10004);
-   if (Node->SymWert.Typ==TempString)
-    BEGIN
-     l1=0; 
-     for (p=Node->SymWert.Contents.SWert; *p!='\0'; p++)
-      BEGIN
-       if ((*p=='\\') OR (*p<=' '))
-        BEGIN
-         fprintf(DebContext->f,"\\%03d",*p); l1+=4;
-        END
-       else
-        BEGIN
-         fputc(*p,DebContext->f); ChkIO(10004); l1++;
-        END
-      END
-    END
-   else
-    BEGIN
-     ConvertSymbolVal(&(Node->SymWert),&t);
-     StrSym(&t, False, s, sizeof(s));
-     l1=strlen(s);
-     fprintf(DebContext->f,"%s",s); ChkIO(10004);
-    END
-   fprintf(DebContext->f,"%s %-3d %d\n",Blanks(25-l1),Node->SymSize,(int)Node->Used);
-   ChkIO(10004);
-END
+  if (!DebContext->HWritten)
+  {
+    fprintf(DebContext->f, "\n"); ChkIO(10004);
+    fprintf(DebContext->f, "Symbols in Segment %s\n", SegNames[DebContext->Space]); ChkIO(10004);
+    DebContext->HWritten = True;
+  }
+
+  fprintf(DebContext->f, "%s", Node->Tree.Name); ChkIO(10004); l1 = strlen(Node->Tree.Name);
+  if (Node->Tree.Attribute != (-1))
+  {
+    sprintf(s, "[%d]", (int)Node->Tree.Attribute);
+    fprintf(DebContext->f, "%s", s); ChkIO(10004);
+    l1 += strlen(s);
+  }
+  fprintf(DebContext->f, "%s ", Blanks(37 - l1)); ChkIO(10004);
+  switch (Node->SymWert.Typ)
+  {
+    case TempInt:    fprintf(DebContext->f,"Int    "); break;
+    case TempFloat:  fprintf(DebContext->f,"Float  "); break;
+    case TempString: fprintf(DebContext->f,"String "); break;
+    default: break;
+  }
+  ChkIO(10004);
+  if (Node->SymWert.Typ == TempString)
+  {
+    errno = 0;
+    l1 = fstrlenprint(DebContext->f, Node->SymWert.Contents.String.Contents, Node->SymWert.Contents.String.Length);
+    ChkIO(10004);
+  }
+  else
+  {
+    ConvertSymbolVal(&(Node->SymWert),&t);
+    StrSym(&t, False, s, sizeof(s));
+    l1=strlen(s);
+    fprintf(DebContext->f,"%s",s); ChkIO(10004);
+  }
+  fprintf(DebContext->f,"%s %-3d %d\n",Blanks(25-l1),Node->SymSize,(int)Node->Used);
+  ChkIO(10004);
+}
 
 void PrintDebSymbols(FILE *f)
 {
@@ -3847,23 +3887,30 @@ BEGIN
   free(Save->SymName); free(Save);
 END
 
-        void CopyDefSymbols(void)
-BEGIN
-   PDefSymbol Lauf;
+void CopyDefSymbols(void)
+{
+  PDefSymbol Lauf;
 
-   Lauf=FirstDefSymbol;
-   while (Lauf!=Nil)
-    BEGIN
-     switch (Lauf->Wert.Typ)
-      BEGIN
-       case TempInt:    EnterIntSymbol(Lauf->SymName,Lauf->Wert.Contents.Int,0,True); break;
-       case TempFloat:  EnterFloatSymbol(Lauf->SymName,Lauf->Wert.Contents.Float,True); break;
-       case TempString: EnterStringSymbol(Lauf->SymName,Lauf->Wert.Contents.Ascii,True); break;
-       default: break;
-      END
-     Lauf=Lauf->Next;
-    END
-END
+  Lauf = FirstDefSymbol;
+  while (Lauf != Nil)
+  {
+    switch (Lauf->Wert.Typ)
+    {
+      case TempInt:
+        EnterIntSymbol(Lauf->SymName, Lauf->Wert.Contents.Int, 0, True);
+        break;
+      case TempFloat:
+        EnterFloatSymbol(Lauf->SymName, Lauf->Wert.Contents.Float, True);
+        break;
+      case TempString:
+        EnterDynStringSymbol(Lauf->SymName, &Lauf->Wert.Contents.Ascii, True);
+        break;
+      default:
+        break;
+    }
+    Lauf = Lauf->Next;
+  }
+}
 
 void PrintSymbolDepth(void)
 {

@@ -162,7 +162,7 @@ static void DecodeOUT(Word Index)
       if (Addr < 8) WrError(1315);
       else
       {
-        BAsmCode[0] = 0x41 | Addr;
+        BAsmCode[0] = 0x41 | (Addr << 1);
         CodeLen = 1;
         ChkSpace(SegIO);
       }
@@ -224,10 +224,10 @@ static void DecodeLXI(Word Index)
     Val = EvalIntExpression(ArgStr[2], Int16, &OK);
     if (OK)
     {
-      BAsmCode[0] = 0x06 | (DReg << 3);
-      BAsmCode[1] = Hi(Val);
       BAsmCode[2] = 0x06 | ((DReg + 1) << 3);
       BAsmCode[3] = Lo(Val);
+      BAsmCode[0] = 0x06 | (DReg << 3);
+      BAsmCode[1] = Hi(Val);
       CodeLen = 4;
     }
   }
