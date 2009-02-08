@@ -14,9 +14,12 @@
 /*                      ShortMode wird bei absoluter Adressierung gemerkt    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code56k.c,v 1.4 2008/11/23 10:39:16 alfred Exp $                     */
+/* $Id: code56k.c,v 1.5 2008/12/14 20:22:03 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code56k.c,v $
+ * Revision 1.5  2008/12/14 20:22:03  alfred
+ * - allow forcing of long addresses
+ *
  * Revision 1.4  2008/11/23 10:39:16  alfred
  * - allow strings with NUL characters
  *
@@ -128,6 +131,7 @@ static LargeInt MemLimit;
 static ShortInt AdrType;
 static LongInt AdrMode;
 static LongInt AdrVal;
+static Boolean ForceImmLong;
 static Byte AdrSeg, ShortMode;
 
 static FixedOrder *FixedOrders;
@@ -526,14 +530,23 @@ BEGIN
    /* immediate ? */
 
    if (*Asc=='#')
-    BEGIN
-     AdrVal=EvalIntExpression(Asc+1,Int24,&OK);
+   {
+     if (Asc[1] == '>')
+     {
+       ForceImmLong = TRUE;
+       AdrVal = EvalIntExpression(Asc + 2, Int24, &OK);
+     }
+     else
+     {
+       ForceImmLong = FALSE;
+       AdrVal = EvalIntExpression(Asc + 1, Int24, &OK);
+     }
      if (OK)
-      BEGIN
-       AdrType=ModImm; AdrCnt=1; AdrMode=0x34; 
-       ChkMask(Erl,ErlSeg); return;
-      END
-    END
+     {
+       AdrType = ModImm; AdrCnt = 1; AdrMode = 0x34; 
+       ChkMask(Erl, ErlSeg); return;
+     }
+   }
 
    /* Register mit Displacement bei 56300 */
 
@@ -761,9 +774,9 @@ BEGIN
             CodeLen=2;
            END
 #ifdef __STDC__
-         else if ((AdrType==ModImm) AND ((AdrVal & 0xffffff00u)==0))
+         else if ((!ForceImmLong) && (AdrType == ModImm) && ((AdrVal & 0xffffff00u) == 0))
 #else
-         else if ((AdrType==ModImm) AND ((AdrVal & 0xffffff00)==0))
+         else if ((!ForceImmLong) && (AdrType == ModImm) && ((AdrVal & 0xffffff00) == 0))
 #endif
           BEGIN
            Result=True;
@@ -1464,27 +1477,27 @@ BEGIN
      return;
     END
 
-   if ((Memo("ANDI")) OR (Memo("ORI")))
-    BEGIN
-     if (ArgCnt!=1) WrError(1110);
+   if ((Memo("ANDI")) || (Memo("ORI")))
+   {
+     if (ArgCnt != 1) WrError(1110);
      else
-      BEGIN
-       SplitArg(ArgStr[1],Left,Right);
-       if ((*Left=='\0') OR (*Right=='\0')) WrError(1110);
-       else if (NOT DecodeControlReg(Right,&Reg1)) WrError(1350);
-       else if (*Left!='#') WrError(1120);
+     {
+       SplitArg(ArgStr[1], Left, Right);
+       if ((*Left == '\0') || (*Right == '\0')) WrError(1110);
+       else if (!DecodeControlReg(Right, &Reg1)) WrXError(1350, Right);
+       else if (*Left != '#') WrError(1120);
        else
-        BEGIN
-         h=EvalIntExpression(Left+1,Int8,&OK);
+       {
+         h = EvalIntExpression(Left+1,Int8,&OK);
          if (OK)
-          BEGIN
-           CodeLen=1;
+         {
+           CodeLen = 1;
            DAsmCode[0] = 0x0000b8 + ((h & 0xff) << 8) + (Ord(Memo("ORI")) << 6) + Reg1;
-          END
-        END
-      END
+         }
+       }
+     }
      return;
-    END
+   }
 
    if (Memo("NORM"))
     BEGIN
@@ -1742,10 +1755,10 @@ BEGIN
            BEGIN
             DAsmCode[0]=0x058020+(AdrVal << 8)+Reg3+Reg1; CodeLen=1;
            END
-          else if ((AdrType==ModImm) AND (AdrVal<=255))
-           BEGIN
-            DAsmCode[0]=0x0500a0+(AdrVal << 8)+Reg1; CodeLen=1;
-           END
+          else if ((!ForceImmLong) && (AdrType == ModImm) && (AdrVal <= 255))
+          {
+            DAsmCode[0] = 0x0500a0 + (AdrVal << 8) + Reg1; CodeLen = 1;
+          }
           else
            BEGIN
             DAsmCode[0]=0x05c020+(AdrMode << 8)+Reg3+Reg1;
