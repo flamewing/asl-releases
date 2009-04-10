@@ -1,4 +1,4 @@
-$Id: changelog,v 1.49 2009/02/08 12:53:43 alfred Exp $
+$Id: changelog,v 1.50 2009/04/10 09:41:41 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1155,3 +1155,7 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 2009-02-08 [Bld66]
 
 - Bugfix      : correct DINT coding for TMS7xxx
+
+2009-04-10 [Bld67]
+
+- Bugfix      : correct AVR branch instructions when target is beyond 64K

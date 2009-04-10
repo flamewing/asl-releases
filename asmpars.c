@@ -36,9 +36,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.15 2008/11/23 10:39:15 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.16 2009/04/10 08:58:30 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.c,v $
+ * Revision 1.16  2009/04/10 08:58:30  alfred
+ * - correct address ranges for AVRs
+ *
  * Revision 1.15  2008/11/23 10:39:15  alfred
  * - allow strings with NUL characters
  *
@@ -173,6 +176,7 @@ LargeWord IntMasks[IntTypeCnt]=
              0x00003fffl,                         /* UInt14 */
              0x00007fffl,                         /* UInt15 */
              0x00007fffl,0x0000ffffl,0x0000ffffl, /* SInt16 UInt16 Int16 */
+             0x0001ffffl,                         /* UInt17 */
              0x0003ffffl,                         /* UInt18 */
              0x0007ffffl,0x000fffffl,0x000fffffl, /* SInt20 UInt20 Int20 */
              0x001fffffl,                         /* UInt21 */
@@ -202,6 +206,7 @@ LargeInt IntMins[IntTypeCnt]=
                        0l,                            /* UInt14 */
                        0l,                            /* UInt15 */
                   -32768l,          0l,     -32768l,  /* SInt16 UInt16 Int16 */
+                       0,                             /* UInt17 */
                        0l,                            /* UInt18 */
                  -524288l,          0l,    -524288l,  /* SInt20 UInt20 Int20 */
                        0l,                            /* UInt21 */
@@ -231,6 +236,7 @@ LargeInt IntMaxs[IntTypeCnt]=
                    16383l,                            /* UInt14 */
                    32767l,                            /* UInt15 */
                    32767l,      65535l,      65535l,  /* SInt16 UInt16 Int16 */
+                  131071l,                            /* UInt17 */
                   262143l,                            /* UInt18 */
                   524287l,                            /* SInt20 */
                  1048575l,    1048575l,               /* UInt20 Int20 */

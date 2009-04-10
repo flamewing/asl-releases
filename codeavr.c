@@ -15,9 +15,12 @@
 /*            7. 5.2000 Packing hinzugefuegt                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeavr.c,v 1.7 2008/11/23 10:39:17 alfred Exp $                     */
+/* $Id: codeavr.c,v 1.8 2009/04/10 08:58:31 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codeavr.c,v $
+ * Revision 1.8  2009/04/10 08:58:31  alfred
+ * - correct address ranges for AVRs
+ *
  * Revision 1.7  2008/11/23 10:39:17  alfred
  * - allow strings with NUL characters
  *
@@ -118,6 +121,8 @@ static FixedOrder *PBitOrders;
 
 static Boolean WrapFlag;
 static LongInt ORMask, SignMask;
+
+static IntType AdrIntType;
 
 static char *WrapFlagName = "WRAPMODE";
 
@@ -483,7 +488,7 @@ static Boolean AccFull;
   }
 }
 
-	static void DecodeLDSSTS(Word Index)
+static void DecodeLDSSTS(Word Index)
 {
   int RegI, MemI;
   Word Reg;
@@ -590,7 +595,7 @@ static Boolean AccFull;
   }
 }
 
-	static void DecodePBit(Word Index)
+static void DecodePBit(Word Index)
 {
   FixedOrder *POrder = PBitOrders + Index;
   Word Adr, Bit;
@@ -615,7 +620,7 @@ static Boolean AccFull;
 
 /* branches */
 
-	static void DecodeRel(Word Index)
+static void DecodeRel(Word Index)
 {
   FixedOrder *POrder = RelOrders + Index;
   LongInt AdrInt;
@@ -624,11 +629,11 @@ static Boolean AccFull;
   if (ArgCnt != 1) WrError(1110);
   else
   {
-    AdrInt = EvalIntExpression(ArgStr[1], UInt16, &OK) - (EProgCounter() + 1);
+    AdrInt = EvalIntExpression(ArgStr[1], AdrIntType, &OK) - (EProgCounter() + 1);
     if (OK)
     {
       if (WrapFlag) AdrInt = CutAdr(AdrInt);
-      if ((NOT SymbolQuestionable) AND ((AdrInt < -64) OR (AdrInt > 63))) WrError(1370);
+      if ((!SymbolQuestionable) && ((AdrInt < -64) || (AdrInt > 63))) WrError(1370);
       else
       {
         ChkSpace(SegCode);
@@ -639,7 +644,7 @@ static Boolean AccFull;
   }
 }
 
-	static void DecodeBRBSBC(Word Index)
+static void DecodeBRBSBC(Word Index)
 {
   Word Bit;
   LongInt AdrInt;
@@ -651,7 +656,7 @@ static Boolean AccFull;
     Bit = EvalIntExpression(ArgStr[1], UInt3, &OK);
     if (OK)
     {
-      AdrInt = EvalIntExpression(ArgStr[2], UInt16, &OK) - (EProgCounter() + 1);
+      AdrInt = EvalIntExpression(ArgStr[2], AdrIntType, &OK) - (EProgCounter() + 1);
       if (OK)
       {
         if (WrapFlag) AdrInt = CutAdr(AdrInt);
@@ -687,7 +692,7 @@ static Boolean AccFull;
    END
 }
 
-	static void DecodeRJMPCALL(Word Index)
+static void DecodeRJMPCALL(Word Index)
 {
   LongInt AdrInt;
   Boolean OK;
@@ -699,7 +704,7 @@ static Boolean AccFull;
     if (OK)
     {
       if (WrapFlag) AdrInt = CutAdr(AdrInt);
-      if ((NOT SymbolQuestionable) AND ((AdrInt < -2048) OR (AdrInt > 2047))) WrError(1370);
+      if ((NOT SymbolQuestionable) && ((AdrInt < -2048) || (AdrInt > 2047))) WrError(1370);
       else
       {
         ChkSpace(SegCode);
@@ -1052,45 +1057,54 @@ BEGIN
    {
      SegLimits[SegCode] = 0x01ff;
      SegLimits[SegData] = 0x5f;
+     AdrIntType = UInt9;
    }
    else if (MomCPU == CPU90S2313)
    {
      SegLimits[SegCode] = 0x03ff;
      SegLimits[SegData] = 0xdf;
+     AdrIntType = UInt10;
    }
    else if (MomCPU == CPU90S4414)
    {
      SegLimits[SegCode] = 0x07ff;
+     AdrIntType = UInt11;
    }
    else if ((MomCPU == CPU90S8515) || (MomCPU == CPUATMEGA8))
    {
      SegLimits[SegCode] = 0xfff;
      SegLimits[SegData] = 0x3ff;
+     AdrIntType = UInt12;
    }
    else if (MomCPU == CPUATMEGA16)
    {
      SegLimits[SegCode] = 0x1fff;
      SegLimits[SegData] = 0x3ff;
+     AdrIntType = UInt13;
    }
    else if (MomCPU == CPUATMEGA32)
    {
      SegLimits[SegCode] = 0x3fff;
      SegLimits[SegData] = 0x7ff; 
+     AdrIntType = UInt14;
    }
    else if (MomCPU == CPUATMEGA64)
    {
      SegLimits[SegCode] = 0x7fff;
      SegLimits[SegData] = 0xfff; 
+     AdrIntType = UInt15;
    }
    else if (MomCPU == CPUATMEGA128)
    {
      SegLimits[SegCode] = 0xffff;
      SegLimits[SegData] = 0xfff; 
+     AdrIntType = UInt16;
    }
    else if (MomCPU == CPUATMEGA256)
    {
      SegLimits[SegCode] = 0x1ffff;
      SegLimits[SegData] = 0x1fff; 
+     AdrIntType = UInt17;
    }
 
    SignMask = (SegLimits[SegCode] + 1) >> 1;

@@ -17,9 +17,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.h,v 1.5 2008/11/23 10:39:16 alfred Exp $                     */
+/* $Id: asmpars.h,v 1.6 2009/04/10 08:58:31 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.h,v $
+ * Revision 1.6  2009/04/10 08:58:31  alfred
+ * - correct address ranges for AVRs
+ *
  * Revision 1.5  2008/11/23 10:39:16  alfred
  * - allow strings with NUL characters
  *
@@ -67,6 +70,7 @@ typedef enum
   UInt14   ,
   UInt15   ,
   SInt16   ,UInt16   , Int16   ,
+  UInt17   ,
   UInt18   ,
   SInt20   ,UInt20   , Int20   ,
   UInt21   ,
