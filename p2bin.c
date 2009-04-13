@@ -12,9 +12,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: p2bin.c,v 1.5 2007/11/24 22:48:08 alfred Exp $                      */
+/* $Id: p2bin.c,v 1.6 2009/04/13 07:55:57 alfred Exp $                      */
 /***************************************************************************** 
  * $Log: p2bin.c,v $
+ * Revision 1.6  2009/04/13 07:55:57  alfred
+ * - silence Borland C++ warnings
+ *
  * Revision 1.5  2007/11/24 22:48:08  alfred
  * - some NetBSD changes
  *
@@ -350,12 +353,14 @@ BEGIN
      p=strchr(Arg,'-'); if (p==Nil) return CMDErr;
 
      Save=(*p); *p='\0'; 
-     if ((StartAuto = AddressWildcard(Arg))) err = True;
+     StartAuto = AddressWildcard(Arg);
+     if (StartAuto) err = True;
      else StartAdr = ConstLongInt(Arg, &err, 10);
      *p = Save;
      if (NOT err) return CMDErr;
 
-     if ((StopAuto = AddressWildcard(p + 1))) err = True;
+     StopAuto = AddressWildcard(p + 1);
+     if (StopAuto) err = True;
      else StopAdr = ConstLongInt(p+1, &err, 10);
      if (NOT err) return CMDErr;
 

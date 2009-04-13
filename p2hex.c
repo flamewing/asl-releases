@@ -21,9 +21,12 @@
 /*           2001-08-30 set EntryAddrPresent when address given as argument  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: p2hex.c,v 1.7 2007/11/24 22:48:08 alfred Exp $                      */
+/* $Id: p2hex.c,v 1.8 2009/04/13 07:55:57 alfred Exp $                      */
 /*****************************************************************************
  * $Log: p2hex.c,v $
+ * Revision 1.8  2009/04/13 07:55:57  alfred
+ * - silence Borland C++ warnings
+ *
  * Revision 1.7  2007/11/24 22:48:08  alfred
  * - some NetBSD changes
  *
@@ -633,12 +636,14 @@ BEGIN
      p=strchr(Arg,'-'); if (p==Nil) return CMDErr;
 
      Save = (*p); *p = '\0'; 
-     if ((StartAuto = AddressWildcard(Arg))) ok = True;
+     StartAuto = AddressWildcard(Arg);
+     if (StartAuto) ok = True;
      else StartAdr = ConstLongInt(Arg, &ok, 10);
      *p = Save;
      if (NOT ok) return CMDErr;
 
-     if ((StopAuto = AddressWildcard(p + 1))) ok = True;
+     StopAuto = AddressWildcard(p + 1);
+     if (StopAuto) ok = True;
      else StopAdr = ConstLongInt(p + 1, &ok, 10);
      if (NOT ok) return CMDErr;
 

@@ -13,9 +13,12 @@
 /*                       unsinged limited                                    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68.c,v 1.7 2007/11/24 22:48:04 alfred Exp $                      */
+/* $Id: code68.c,v 1.8 2009/04/13 07:53:46 alfred Exp $                      */
 /*****************************************************************************
  * $Log: code68.c,v $
+ * Revision 1.8  2009/04/13 07:53:46  alfred
+ * - silence Borlanc C++ warning
+ *
  * Revision 1.7  2007/11/24 22:48:04  alfred
  * - some NetBSD changes
  *
@@ -130,7 +133,8 @@ static CPUVar CPU6800, CPU6301, CPU6811, CPU68HC11K4;
 
   /* window 1 first */
 
-  if ((WSize = Reg_MMSIZ & 0x3))
+  WSize = Reg_MMSIZ & 0x3;
+  if (WSize)
   {
     /* window size */
 
@@ -159,7 +163,8 @@ static CPUVar CPU6800, CPU6301, CPU6811, CPU68HC11K4;
 
   /* window 2 similarly */
 
-  if ((WSize = Reg_MMSIZ & 0x30))
+  WSize = Reg_MMSIZ & 0x30;
+  if (WSize)
   {
     /* window size */
 

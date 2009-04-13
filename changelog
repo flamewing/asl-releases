@@ -1,4 +1,4 @@
-$Id: changelog,v 1.50 2009/04/10 09:41:41 alfred Exp $
+$Id: changelog,v 1.52 2009/04/13 07:52:25 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1159,3 +1159,7 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 2009-04-10 [Bld67]
 
 - Bugfix      : correct AVR branch instructions when target is beyond 64K
+
+2009-04-13 [Bld68]
+
+- Bugfix      : correct SC/MP relative addressing regarding page wrap
