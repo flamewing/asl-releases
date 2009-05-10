@@ -90,6 +90,7 @@ distrib: unjunk
 	gzip -9 -f asl-$(VERSION).tar
 
 bindist: $(UNUMLAUTTARGET)
+	rm -rf as
 	mkdir as
 	cmd /cinstw32.cmd as\\bin as\\include as\\man as\\lib as\\doc
 	cd as; zip -9 -r ../as$(VERSION).zip *.*

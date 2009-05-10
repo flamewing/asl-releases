@@ -33,9 +33,12 @@
 /*           2001-10-20 added GNU error flag                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmdef.h,v 1.5 2008/11/23 10:39:15 alfred Exp $                      */
+/* $Id: asmdef.h,v 1.6 2009/05/10 10:48:09 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmdef.h,v $
+ * Revision 1.6  2009/05/10 10:48:09  alfred
+ * - increase CPUVar space
+ *
  * Revision 1.5  2008/11/23 10:39:15  alfred
  * - allow strings with NUL characters
  *
@@ -77,7 +80,7 @@
 
 #include "dynstring.h"
 
-typedef Byte CPUVar;
+typedef unsigned CPUVar;
 
 typedef struct _TCPUDef
          {

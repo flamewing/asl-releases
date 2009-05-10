@@ -58,9 +58,12 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.18 2008/04/13 20:23:46 alfred Exp $                          */
+/* $Id: as.c,v 1.19 2009/05/10 10:48:45 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.19  2009/05/10 10:48:45  alfred
+ * - display macro nesting in listing
+ *
  * Revision 1.18  2008/04/13 20:23:46  alfred
  * - add Atari Vecor Processor target
  *
@@ -301,6 +304,7 @@ static char *FileMask;
 static long StartTime,StopTime;
 static Boolean GlobErrFlag;
 static Boolean MasterFile;
+static unsigned MacroNestLevel = 0;
 
 /*=== Zeilen einlesen ======================================================*/
 
@@ -856,127 +860,130 @@ END
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 /* Beendigung der Expansion eines Makros */
 
-	static void MACRO_Cleanup(PInputTag PInp)
-BEGIN
-   ClearStringList(&(PInp->Params));
-END
+static void MACRO_Cleanup(PInputTag PInp)
+{
+  ClearStringList(&(PInp->Params));
+}
 
-	static Boolean MACRO_GetPos(PInputTag PInp, char *dest)
-BEGIN
-   String Tmp;
+static Boolean MACRO_GetPos(PInputTag PInp, char *dest)
+{
+  String Tmp;
 
-   sprintf(Tmp,LongIntFormat,PInp->LineZ-1);
-   sprintf(dest,"%s(%s) ",PInp->SpecName,Tmp);
-   return False;
-END
+  sprintf(Tmp,LongIntFormat, PInp->LineZ - 1);
+  sprintf(dest, "%s(%s) ", PInp->SpecName, Tmp);
+  return False;
+}
 
-        static void MACRO_Restorer(PInputTag PInp)
-BEGIN
-   /* discard the local symbol space */
+static void MACRO_Restorer(PInputTag PInp)
+{
+  /* discard the local symbol space */
 
-   PopLocHandle();
+  PopLocHandle();
 
-   /* undo the recursion counter by one */
+  /* undo the recursion counter by one */
 
-   if ((PInp->Macro != Nil) AND (PInp->Macro->UseCounter > 0))
-     PInp->Macro->UseCounter--;
+  if ((PInp->Macro != Nil) AND (PInp->Macro->UseCounter > 0))
+    PInp->Macro->UseCounter--;
 
-   /* restore list flag */
+  /* restore list flag */
 
-   DoLst = PInp->OrigDoLst;
-END
+  DoLst = PInp->OrigDoLst;
+  MacroNestLevel--;
+}
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 /* Dies initialisiert eine Makroexpansion */
 
-        static void ExpandMacro(PMacroRec OneMacro)
-BEGIN
-   int z1;
-   StringRecPtr Lauf;
-   PInputTag Tag = Nil;
+static void ExpandMacro(PMacroRec OneMacro)
+{
+  int z1;
+  StringRecPtr Lauf;
+  PInputTag Tag = NULL;
 
-   CodeLen = 0;
+  CodeLen = 0;
 
-   if ((NestMax > 0) AND (OneMacro->UseCounter > NestMax)) WrError(1850);
-   else
-    BEGIN
-     OneMacro->UseCounter++;
+  if ((NestMax > 0) && (OneMacro->UseCounter > NestMax)) WrError(1850);
+  else
+  {
+    OneMacro->UseCounter++;
 
-     /* 1. Tag erzeugen */
+    /* 1. Tag erzeugen */
 
-     GenerateProcessor(&Tag);
-     Tag->Processor = MACRO_Processor;
-     Tag->Restorer  = MACRO_Restorer;
-     Tag->Cleanup   = MACRO_Cleanup;
-     Tag->GetPos    = MACRO_GetPos;
-     Tag->Macro     = OneMacro;
-     strmaxcpy(Tag->SpecName, OneMacro->Name, 255);
-     strmaxcpy(Tag->SaveAttr, AttrPart, 255);
-     if (OneMacro->LocIntLabel)
-       strmaxcpy(Tag->SaveLabel, LabPart, 255);
-     Tag->IsMacro   = True;
+    GenerateProcessor(&Tag);
+    Tag->Processor = MACRO_Processor;
+    Tag->Restorer  = MACRO_Restorer;
+    Tag->Cleanup   = MACRO_Cleanup;
+    Tag->GetPos    = MACRO_GetPos;
+    Tag->Macro     = OneMacro;
+    strmaxcpy(Tag->SpecName, OneMacro->Name, 255);
+    strmaxcpy(Tag->SaveAttr, AttrPart, 255);
+    if (OneMacro->LocIntLabel)
+      strmaxcpy(Tag->SaveLabel, LabPart, 255);
+    Tag->IsMacro   = True;
 
-     /* 2. inflate parameter count to at least macro's argument count */
+    /* 2. inflate parameter count to at least macro's argument count */
 
-     if (ArgCnt < OneMacro->ParamCount)
-      BEGIN
-       for (z1 = ArgCnt + 1; z1 <= OneMacro->ParamCount; z1++)
-        *(ArgStr[z1]) = '\0';
-       ArgCnt = OneMacro->ParamCount;
-      END
+    if (ArgCnt < OneMacro->ParamCount)
+    {
+      for (z1 = ArgCnt + 1; z1 <= OneMacro->ParamCount; z1++)
+       *(ArgStr[z1]) = '\0';
+      ArgCnt = OneMacro->ParamCount;
+    }
 
-     /* 3. Parameterliste aufbauen - umgekehrt einfacher */
+    /* 3. Parameterliste aufbauen - umgekehrt einfacher */
 
-     for (z1 = ArgCnt; z1 >= 1; z1--)
-      BEGIN
-       if (NOT CaseSensitive) UpString(ArgStr[z1]);
-       AddStringListFirst(&(Tag->Params), ArgStr[z1]);
-      END
-     Tag->ParCnt = ArgCnt;
-     ComputeMacroStrings(Tag);
+    for (z1 = ArgCnt; z1 >= 1; z1--)
+    {
+      if (!CaseSensitive) UpString(ArgStr[z1]);
+      AddStringListFirst(&(Tag->Params), ArgStr[z1]);
+    }
+    Tag->ParCnt = ArgCnt;
+    ComputeMacroStrings(Tag);
 
-     /* 4. Zeilenliste anhaengen */
+    /* 4. Zeilenliste anhaengen */
 
-     Tag->Lines = OneMacro->FirstLine;
-     Tag->IsEmpty = (OneMacro->FirstLine == Nil);
-     Lauf = OneMacro->FirstLine;
-     while (Lauf != Nil)
-      BEGIN
-       Tag->LineCnt++; Lauf = Lauf->Next;
-      END
-    END
+    Tag->Lines = OneMacro->FirstLine;
+    Tag->IsEmpty = (OneMacro->FirstLine == Nil);
+    Lauf = OneMacro->FirstLine;
+    while (Lauf)
+    {
+      Tag->LineCnt++; Lauf = Lauf->Next;
+    }
+  }
 
-   /* 5. anhaengen */
+  /* 5. anhaengen */
 
-   if (Tag != NULL)
-    BEGIN
-     if (IfAsm)
-      BEGIN
-       NextDoLst = (DoLst AND OneMacro->LocMacExp);
-       Tag->Next = FirstInputTag; FirstInputTag = Tag;
-      END
-     else
-      BEGIN
-       ClearStringList(&(Tag->Params)); free(Tag);
-      END
-    END
-END
+  if (Tag)
+  {
+    if (IfAsm)
+    {
+      NextDoLst = (DoLst && OneMacro->LocMacExp);
+      Tag->Next = FirstInputTag; FirstInputTag = Tag;
+      MacroNestLevel++;
+    }
+    else
+    {
+      ClearStringList(&(Tag->Params)); free(Tag);
+    }
+  }
+}
 
 /*-------------------------------------------------------------------------*/
 /* vorzeitiger Abbruch eines Makros */
 
-        static void ExpandEXITM(void)
-BEGIN
-   if (ArgCnt != 0) WrError(1110);
-   else if (FirstInputTag == Nil) WrError(1805);
-   else if (NOT FirstInputTag->IsMacro) WrError(1805);
-   else if (IfAsm)
-    BEGIN
-     FirstInputTag->Cleanup(FirstInputTag);
-     RestoreIFs(FirstInputTag->IfLevel);
-     FirstInputTag->IsEmpty = True;
-    END
-END
+static void ExpandEXITM(void)
+{
+  if (ArgCnt != 0) WrError(1110);
+  else if (!FirstInputTag) WrError(1805);
+  else if (!FirstInputTag->IsMacro) WrError(1805);
+  else if (IfAsm)
+  {
+    MacroNestLevel--;
+    FirstInputTag->Cleanup(FirstInputTag);
+    RestoreIFs(FirstInputTag->IfLevel);
+    FirstInputTag->IsEmpty = True;
+  }
+}
 
 /*-------------------------------------------------------------------------*/
 /* discard first argument */
@@ -2070,7 +2077,10 @@ BEGIN
      if (IfAsm)
      {
        ExpandMacro(OneMacro);
-       strmaxcpy(ListLine,"(MACRO)",255);
+       if (MacroNestLevel > 1)
+         sprintf(ListLine,  "%*s(MACRO-%u)", MacroNestLevel - 1, "", MacroNestLevel);
+       else
+         strmaxcpy(ListLine, "(MACRO)", 255);
      }
    }
 
