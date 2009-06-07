@@ -46,7 +46,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand December 2008}
+{\large Stand Juni 2009}
 \end{raggedright}
 
 \clearpage
@@ -1514,8 +1514,11 @@ solange ihre G"ultigkeit behalten, bis ein neues, nicht-tempor"ares Symbol
 definiert wird.  Andere Assembler bieten einen "ahnlichen Mechanismus an,
 der dort unter dem Stichwort 'lokale Symbole' l"auft, zur besseren
 Abgrenzung gegen das Sektionskonzept m"ochte ich aber beim Begriff
-'tempor"are Symbole' bleiben.  AS kennt zwei unterschiedliche Typen von
-tempor"aren Symbolen, solche {\em mit Namen} und {\em namenlose}:
+'tempor"are Symbole' bleiben.  AS kennt drei unterschiedliche Typen von
+tempor"aren Symbolen, um jedem 'Umsteiger' ein Konzept anzubieten, das den
+Umstieg so einfach wie m"oglich macht.  Leider kocht quasi jeder Assembler
+bei diesem Thema sein eigenes S"uppchen, so daﬂ es nur in Ausnahmef"allen
+eine 1:1-L"osung f"ur existierenden Code geben wird:
 
 \subsection{Tempor"are Symbole mit Namen}
 
@@ -1603,6 +1606,43 @@ RealSymbol:
 
 ptr:	dfs	2
 \end{verbatim}
+
+\subsection{Zusammengesetzte tempor"are Symbole}
+
+Dies ist vielleicht der Typ von tempor"aren Symbolen, der dem Konzept von
+lokalen Symbolen und Sektionen am n"achsten kommt.  Wann immer der Name
+eines Symboles mit einem Punkt (.) anf‰ngt, wird das Symbol nicht mit
+diesem Namen in der Symboltabelle abgelegt.  Stattdessen wird der Name des
+zuletzt definierten Symbols ohne vorangestellten Punkt davorgeh"angt.  Auf
+diese Weise nehmen Sybole, deren Name nicht mit einem Punkt anf"angt, quasi
+die Rolle von 'Bereichsgrenzen' ein und Symbole, deren Name mit einem
+Punkt anf"angt, k"onnen in jedem Bereich neu verwendet werden.  Sehen wir
+uns das folgende kurze Beispiel an:
+\begin{verbatim}
+proc1:                    ; nicht-tempor"ares Symbol 'proc1'
+
+.loop   moveq   #20,d0    ; definiert in Wirklichkeit 'proc1.loop'
+        dbra    d0,.loop
+        rts
+
+proc2:                    ; nicht-tempor"ares Symbol 'proc2'
+
+.loop   moveq   #10,d1    ; definiert in Wirklichkeit 'proc2.loop'
+        jsr     proc1
+        dbra    d1,.loop
+        rts
+\end{verbatim}
+Man beachte, da"s es weiterhin m"oglich ist, auf alle tempor"aren Symbole
+zuzugreifen, auch wenn man sich nicht im gleichen 'Bereich' befindet,
+indem man einfach den zusammengesetzten Namen benutzt (wie z.B.
+'proc2.loop' im voranstehenden Beispiel).
+
+Zusammengesetzte Symbole lassen sich prinzipiell mit Sektionen kombinieren
+und k"onnen so auch zu lokalen Symbolen werden.  Man beachte allerdings,
+da"s das zuletzt definierte, nicht tempor"are Symbol nicht pro Sektion
+gespeichert wird, sondern lediglich global.  Das kann sich
+aber auch irgendwann einmal "andern, man sollte sich also nicht auf das
+augenblickliche Verhalten verlassen.
 
 %%---------------------------------------------------------------------------
 
@@ -11399,6 +11439,7 @@ oder ich werde langsam alt...
       \item{weitere Syntax f"ur Integer-Konstanten;}
       \item{Funktion \tty{CHARFROMSTR} hinzugef"ugt;}
       \item{Q f"ur Oktalkonstanten im Intel-Modus hinzugef"ugt;}
+      \item{weitere Variante f"ur tempor"are Symbole hinzugef"ugt;}
       \end{itemize}}
 \end{itemize}
 

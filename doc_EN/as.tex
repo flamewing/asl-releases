@@ -65,7 +65,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition December 2008}
+{\large Edition June 2009}
 \end{raggedright}
 
 \clearpage
@@ -1467,11 +1467,14 @@ will never need to reference them again afterwards and you really would
 like to get 'rid' of them somehow.  A simple solution if you don't want to
 swing the large hammer of sections (see chapter \ref{ChapLocSyms}) are
 {\em temporary} symbols which remain valid as long as a new,
-non-temporary symbol gets defined.  Othe assemblers offer a similar
-mechanism which is commnoly referred as 'local symbols'; however, for the
+non-temporary symbol gets defined.  Other assemblers offer a similar
+mechanism which is commonly referred as 'local symbols'; however, for the
 sake of a better distinction, I want to stay with the term 'temporary
-symbols'.  AS distinguishes between two types of temporary symbols, {\em
-named} and {\em nameless} symbols:
+symbols'.  AS knows three different types of temporary symbols, in the
+hope to offer everyone 'switching' to AS a solution that makes conversion
+as easy as possible.  However, practically every assembler has its own
+interpretation of this feature, so there will be only few cases where a
+1:1 solution for existing code:
 
 \section{Named Temporary Symbols}
 
@@ -1557,6 +1560,39 @@ RealSymbol:
 ptr:	dfs	2
 \end{verbatim}
 
+\subsection{Composed Temporary Symbols}
+
+This is maybe the type of temporary symbols that is nearest to the concept
+of local symbols and sections.  Whenever a symbol's name begins with a dot
+(.), the symbol is not directly stored with this name in the symbol table. 
+Instead, the name of the most recently-defined symbol not beginning with a
+dot is prepended to the symbols name.  This way, 'non-dotted' symbols take
+the role of section separators and 'dotted' symbol names may be reused
+after a 'non-dotted' symbol has been defined.  Take a look at the
+following little example:
+\begin{verbatim}
+proc1:				; non-temporary symbol 'proc1'
+
+.loop	moveq	#20,d0		; actually defines 'proc1.loop'
+	dbra	d0,.loop
+	rts
+
+proc2:				; non-temporary symbol 'proc2'
+
+.loop	moveq	#10,d1		; actually defines 'proc2.loop'
+	jsr	proc1
+	dbra	d1,.loop
+	rts
+\end{verbatim}
+Note that it is still possible to access all temporary symbols, even
+without being in the same 'area', by simply using the composed name (like
+'proc2.loop' in the previous example).
+
+It is principally possible to combine composed temporary symbols with
+sections, which makes them also to local symbols.  Take however into
+account that the most recent non-temporary symbol is not stored
+per-section, but simply globally.  This may change however in a future
+version, so one shouldn't rely on the current behaviour.
 
 %%---------------------------------------------------------------------------
 
@@ -11113,6 +11149,7 @@ Either that was a long nightshift or I am slowly getting old...
       \item{add another optional syntax for integer constants;}
       \item{added function \tty{CHARFROMSTR};}
       \item{additionally allow Q for octal constants in Intel mode;}
+      \item{add another variant for temporary symbols;}
       \end{itemize}}
 \end{itemize}
 

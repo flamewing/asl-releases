@@ -58,9 +58,12 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.19 2009/05/10 10:48:45 alfred Exp $                          */
+/* $Id: as.c,v 1.20 2009/06/07 09:32:25 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.20  2009/06/07 09:32:25  alfred
+ * - add named temporary symbols
+ *
  * Revision 1.19  2009/05/10 10:48:45  alfred
  * - display macro nesting in listing
  *
@@ -1907,61 +1910,63 @@ END
 
 /*--- aus der zerlegten Zeile Code erzeugen --------------------------------*/
 
-        Boolean HasLabel(void)
-BEGIN
-   if (*LabPart=='\0') return False;
-   if (IsDef()) return False;
+Boolean HasLabel(void)
+{
+  if (!*LabPart)
+    return False;
+  if (IsDef())
+  return False;
 
-   switch (*OpPart)
-    BEGIN
-     case '=':
-      return (NOT Memo("="));
-     case ':':
-      return (NOT Memo(":="));
-     case 'M':
-      return (NOT Memo("MACRO"));
-     case 'F':
-      return (NOT Memo("FUNCTION"));
-     case 'L':
-      return (NOT Memo("LABEL"));
-     case 'S':
-      return ((NOT Memo("SET")) OR (SetIsOccupied)) AND (NOT (Memo("STRUCT") OR Memo("STRUC")));
-     case 'E':
-      return ((NOT Memo("EVAL")) OR (NOT SetIsOccupied))
-          AND (NOT Memo("EQU")) AND (NOT (Memo("ENDSTRUCT") OR Memo("ENDS")));
-     case 'U':
-      return (NOT Memo("UNION"));
-     default: 
+  switch (*OpPart)
+  {
+    case '=':
+      return (!Memo("="));
+    case ':':
+      return (!Memo(":="));
+    case 'M':
+      return (!Memo("MACRO"));
+    case 'F':
+      return (!Memo("FUNCTION"));
+    case 'L':
+      return (!Memo("LABEL"));
+    case 'S':
+      return ((!Memo("SET")) || (SetIsOccupied)) && (!(Memo("STRUCT") || Memo("STRUC")));
+    case 'E':
+      return ((!Memo("EVAL")) || (!SetIsOccupied))
+           && (!Memo("EQU")) && (!(Memo("ENDSTRUCT") || Memo("ENDS")));
+    case 'U':
+      return (!Memo("UNION"));
+    default: 
       return True;
-    END   
-END
+  }   
+}
 
-	void HandleLabel(char *Name, LargeWord Value)
+void HandleLabel(char *Name, LargeWord Value)
 {
   PStructStack ZStruct;
-   String tmp,tmp2;
+  String tmp, tmp2;
 
   /* structure element ? */
 
-  if (StructStack != Nil)
+  if (StructStack)
   {
     AddStructElem(StructStack->StructRec, Name, Value);
     strmaxcpy(tmp, Name, 255);
-    for (ZStruct = StructStack; ZStruct != Nil; ZStruct = ZStruct->Next)
-     if (ZStruct->StructRec->DoExt)
-      BEGIN
-       sprintf(tmp2,"%s%c",ZStruct->Name, ZStruct->StructRec->ExtChar);
-       strmaxprep(tmp, tmp2, 255);
-      END
+    for (ZStruct = StructStack; ZStruct; ZStruct = ZStruct->Next)
+      if (ZStruct->StructRec->DoExt)
+      {
+        sprintf(tmp2, "%s%c", ZStruct->Name, ZStruct->StructRec->ExtChar);
+        strmaxprep(tmp, tmp2, 255);
+      }
     EnterIntSymbol(tmp, Value, SegNone, False);
   }
 
   /* normal label */
 
   else if (RelSegs)
-   EnterRelSymbol(Name, Value, ActPC, False);
+    EnterRelSymbol(Name, Value, ActPC, False);
   else
-   EnterIntSymbol(Name, Value, ActPC, False);
+    EnterIntSymbol(Name, Value, ActPC, False);
 }
 
         static void Produce_Code(void)

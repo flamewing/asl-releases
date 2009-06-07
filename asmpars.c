@@ -36,9 +36,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.16 2009/04/10 08:58:30 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.17 2009/06/07 09:32:25 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.c,v $
+ * Revision 1.17  2009/06/07 09:32:25  alfred
+ * - add named temporary symbols
+ *
  * Revision 1.16  2009/04/10 08:58:30  alfred
  * - correct address ranges for AVRs
  *
@@ -279,7 +282,6 @@ LongInt LocHandleCnt;          /* mom. verwendeter lokaler Handle            */
 
 Boolean BalanceTree;           /* Symbolbaum ausbalancieren                  */
 
-
 static char BaseIds[3]={'%','@','$'};
 static char BaseLetters[4]={'B','O','H','Q'};
 static Byte BaseVals[4]={2,8,16,8};
@@ -367,6 +369,7 @@ static Boolean DoRefs;              /* Querverweise protokollieren */
 static PLocHandle FirstLocHandle;
 static PSymbolStack FirstStack;
 static PCToken MomSection;
+static char *LastGlobSymbol;
 
         void AsmParsInit(void)
 BEGIN
@@ -529,9 +532,10 @@ END
 
 	void InitTmpSymbols(void)
 {
-   TmpSymCounter = FwdSymCounter = BackSymCounter = 0;
-   *TmpSymCounterVal = '\0';
-   TmpSymLogDepth = 0;
+  TmpSymCounter = FwdSymCounter = BackSymCounter = 0;
+  *TmpSymCounterVal = '\0';
+  TmpSymLogDepth = 0;
+  *LastGlobSymbol = '\0';
 }
 
 	static void AddTmpSymLog(Boolean Back, LongInt Counter)
@@ -553,123 +557,158 @@ END
     TmpSymLogDepth++;
 }
 
-	static Boolean ChkTmp(char *Name, Boolean Define)
+static Boolean ChkTmp1(char *Name, Boolean Define)
 {
-   char *Src, *Dest;
-   Boolean Result = FALSE;
+  char *Src, *Dest;
+  Boolean Result = FALSE;
 
-   /* $$-Symbols: append current $$-counter */
+  /* $$-Symbols: append current $$-counter */
 
-   if (strncmp(Name, "$$", 2) == 0)
-   {
-     /* manually copy since this will implicitly give us the point to append
-        the number */
+  if (!strncmp(Name, "$$", 2))
+  {
+    /* manually copy since this will implicitly give us the point to append
+       the number */
 
-     for (Src = Name + 2, Dest = Name; *Src; *(Dest++) = *(Src++));
+    for (Src = Name + 2, Dest = Name; *Src; *(Dest++) = *(Src++));
 
-     /* append number. only generate the number once */
+    /* append number. only generate the number once */
 
-     if (*TmpSymCounterVal == '\0')
-      sprintf(TmpSymCounterVal, "%d", TmpSymCounter);
-     strcpy(Dest, TmpSymCounterVal);
-     Result = TRUE;
-   }
+    if (*TmpSymCounterVal == '\0')
+     sprintf(TmpSymCounterVal, "%d", TmpSymCounter);
+    strcpy(Dest, TmpSymCounterVal);
+    Result = TRUE;
+  }
 
-   /* no special local symbol: increment $$-counter */
+  /* no special local symbol: increment $$-counter */
 
-   else if (Define)
-   {
-     TmpSymCounter++;
-     *TmpSymCounterVal = '\0';
-   }
+  else if (Define)
+  {
+    TmpSymCounter++;
+    *TmpSymCounterVal = '\0';
+  }
 
-   return Result;
+  return Result;
 }
 
-	static Boolean ChkTmp2(char *Name, Boolean Define)
+static Boolean ChkTmp2(char *Name, Boolean Define)
 {
-   char *Src;
-   int Cnt;
-   Boolean Result = FALSE;
+  char *Src;
+  int Cnt;
+  Boolean Result = FALSE;
 
-   /* Note: We have to deal with three symbol definitions:
-    
-       "-" for backward-only referencing
-       "+" for forward-only referencing
-       "/" for either way of referencing
+  /* Note: We have to deal with three symbol definitions:
+   
+      "-" for backward-only referencing
+      "+" for forward-only referencing
+      "/" for either way of referencing
 
-       "/" and "+" are both expanded to forward symbol names, so the
-       forward refencing to both types is unproblematic, however
-       only "/" and "-" are stored in the backlog of the three 
-       most-recent symbols for backward referencing.  
-   */
+      "/" and "+" are both expanded to forward symbol names, so the
+      forward refencing to both types is unproblematic, however
+      only "/" and "-" are stored in the backlog of the three 
+      most-recent symbols for backward referencing.  
+  */
 
-   /* backward references ? */
+  /* backward references ? */
 
-   if (*Name == '-')
-   {
-     for (Src = Name; *Src; Src++)
-       if (*Src != '-')
-         break;
-     Cnt = Src - Name;
-     if (!*Src)
-     {
-       if ((Define) && (Cnt == 1))
-       {
-         sprintf(Name, "__back%d", BackSymCounter);
-         AddTmpSymLog(TRUE, BackSymCounter);
-         BackSymCounter++;
-         Result = TRUE;
-       }
+  if (*Name == '-')
+  {
+    for (Src = Name; *Src; Src++)
+      if (*Src != '-')
+        break;
+    Cnt = Src - Name;
+    if (!*Src)
+    {
+      if ((Define) && (Cnt == 1))
+      {
+        sprintf(Name, "__back%d", BackSymCounter);
+        AddTmpSymLog(TRUE, BackSymCounter);
+        BackSymCounter++;
+        Result = TRUE;
+      }
 
-       /* TmpSymLogDepth cannot become larger than LOCSYMSIGHT, so we only
-          have to check against the log's actual depth. */
+      /* TmpSymLogDepth cannot become larger than LOCSYMSIGHT, so we only
+         have to check against the log's actual depth. */
 
-       else if (Cnt <= TmpSymLogDepth)
-       {
-         Cnt--;
-         sprintf(Name, "__%s%d", 
-                 TmpSymLog[Cnt].Back ? "back" : "forw",
-                 TmpSymLog[Cnt].Counter);
-         Result = TRUE;
-       }
-     }
-   }
+      else if (Cnt <= TmpSymLogDepth)
+      {
+        Cnt--;
+        sprintf(Name, "__%s%d", 
+                TmpSymLog[Cnt].Back ? "back" : "forw",
+                TmpSymLog[Cnt].Counter);
+        Result = TRUE;
+      }
+    }
+  }
 
-   /* forward references ? */
+  /* forward references ? */
 
-   else if (*Name == '+')
-   {
-     for (Src = Name; *Src; Src++)
-       if (*Src != '+')
-         break;
-     Cnt = Src - Name;
-     if (!*Src)
-     {
-       if ((Define) && (Cnt == 1))
-       {
-         sprintf(Name, "__forw%d", FwdSymCounter++);
-         Result = TRUE;
-       }
-       else if (Cnt <= LOCSYMSIGHT)
-       {
-         sprintf(Name, "__forw%d", FwdSymCounter + (Cnt - 1));
-         Result = TRUE;
-       }
-     }
-   }
+  else if (*Name == '+')
+  {
+    for (Src = Name; *Src; Src++)
+      if (*Src != '+')
+        break;
+    Cnt = Src - Name;
+    if (!*Src)
+    {
+      if ((Define) && (Cnt == 1))
+      {
+        sprintf(Name, "__forw%d", FwdSymCounter++);
+        Result = TRUE;
+      }
+      else if (Cnt <= LOCSYMSIGHT)
+      {
+        sprintf(Name, "__forw%d", FwdSymCounter + (Cnt - 1));
+        Result = TRUE;
+      }
+    }
+  }
 
-   /* slash: only allowed for definition, but add to log for backward ref. */
+  /* slash: only allowed for definition, but add to log for backward ref. */
 
-   else if ((!strcmp(Name, "/")) && (Define))
-   {
-     AddTmpSymLog(FALSE, FwdSymCounter);
-     sprintf(Name, "__forw%d", FwdSymCounter);
-     FwdSymCounter++;
-     Result = TRUE;
-   }
+  else if ((!strcmp(Name, "/")) && (Define))
+  {
+    AddTmpSymLog(FALSE, FwdSymCounter);
+    sprintf(Name, "__forw%d", FwdSymCounter);
+    FwdSymCounter++;
+    Result = TRUE;
+  }
 
-   return Result;
+  return Result;
+}
+
+static Boolean ChkTmp3(char *Name, Boolean Define)
+{
+  Boolean Result = FALSE;
+
+  if ('.' == *Name)
+  {
+    String Tmp;
+
+    strmaxcpy(Tmp, LastGlobSymbol, 255);
+    strmaxcat(Tmp, Name, 255);
+    strmaxcpy(Name, Tmp, 255);
+
+    Result = TRUE;
+  }
+  else if (Define)
+  {
+    strmaxcpy(LastGlobSymbol, Name, 255);
+  }
+
+  return Result;
+}
+
+static Boolean ChkTmp(char *Name, Boolean Define)
+{
+  Boolean Result = FALSE;
+
+  if (ChkTmp1(Name, Define))
+    Result = TRUE;
+  if (ChkTmp2(Name, Define))
+    Result = TRUE;
+  if (ChkTmp3(Name, Define))
+    Result = TRUE;
+  return Result;
 }
 
         Boolean IdentifySection(char *Name, LongInt *Erg)
@@ -2386,7 +2425,7 @@ static Operator Operators[] =
 
    strmaxcpy(Copy,stemp,255); KillPrefBlanks(Copy); KillPostBlanks(Copy);
 
-   ChkTmp(Copy, FALSE);
+   ChkTmp1(Copy, FALSE);
 
    /* interne Symbole ? */
 
@@ -2884,37 +2923,42 @@ BEGIN
    PrintSymbolTree(); PrintSymbolDepth();
 END
 
-        void EnterIntSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange)
-BEGIN
-   PSymbolEntry Neu;
-   LongInt DestHandle;   
-   String Name;
+void EnterIntSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange)
+{
+  PSymbolEntry Neu;
+  LongInt DestHandle;   
+  String Name;
 
-   strmaxcpy(Name, Name_O, 255);
-   if (NOT ExpandSymbol(Name)) return;
-   if (NOT GetSymSection(Name, &DestHandle)) return;
-   if (!ChkTmp(Name, TRUE)) ChkTmp2(Name, TRUE);
-   if (NOT ChkSymbName(Name))
-    BEGIN
-     WrXError(1020, Name); return;
-    END
+  strmaxcpy(Name, Name_O, 255);
+  if (!ExpandSymbol(Name))
+    return;
+  if (!GetSymSection(Name, &DestHandle))
+    return;
+  (void)ChkTmp(Name, TRUE);
+  if (!ChkSymbName(Name))
+  {
+    WrXError(1020, Name);
+    return;
+  }
 
-   Neu=(PSymbolEntry) malloc(sizeof(TSymbolEntry));
-   Neu->Tree.Name = strdup(Name);
-   Neu->SymWert.Typ = TempInt;
-   Neu->SymWert.Contents.IWert = Wert;
-   Neu->SymType = Typ;
-   Neu->SymSize = (-1);
-   Neu->RefList = Nil;
-   Neu->Relocs = Nil;
+  Neu = (PSymbolEntry) malloc(sizeof(TSymbolEntry));
+  Neu->Tree.Name = strdup(Name);
+  Neu->SymWert.Typ = TempInt;
+  Neu->SymWert.Contents.IWert = Wert;
+  Neu->SymType = Typ;
+  Neu->SymSize = (-1);
+  Neu->RefList = Nil;
+  Neu->Relocs = Nil;
 
-   if ((MomLocHandle == (-1)) OR (DestHandle != (-2)))
-    BEGIN
-     EnterSymbol(Neu, MayChange, DestHandle);
-     if (MakeDebug) PrintSymTree(Name);
-    END
-   else EnterLocSymbol(Neu);
-END
+  if ((MomLocHandle == (-1)) || (DestHandle != (-2)))
+  {
+    EnterSymbol(Neu, MayChange, DestHandle);
+    if (MakeDebug)
+      PrintSymTree(Name);
+  }
+  else
+    EnterLocSymbol(Neu);
+}
 
         void EnterExtSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange)
 BEGIN
@@ -2943,10 +2987,11 @@ BEGIN
    Neu->Relocs->Add = True;
 
    if ((MomLocHandle == (-1)) OR (DestHandle != (-2)))
-    BEGIN
+   {
      EnterSymbol(Neu, MayChange, DestHandle);
-     if (MakeDebug) PrintSymTree(Name);
-    END
+     if (MakeDebug)
+       PrintSymTree(Name);
+   }
    else EnterLocSymbol(Neu);
 END
 
@@ -2984,36 +3029,41 @@ BEGIN
    else EnterLocSymbol(Neu);
 END
 
-        void EnterFloatSymbol(char *Name_O, Double Wert, Boolean MayChange)
-BEGIN
-   PSymbolEntry Neu;
-   LongInt DestHandle;
-   String Name;
+void EnterFloatSymbol(char *Name_O, Double Wert, Boolean MayChange)
+{
+  PSymbolEntry Neu;
+  LongInt DestHandle;
+  String Name;
 
-   strmaxcpy(Name, Name_O,255);
-   if (NOT ExpandSymbol(Name)) return;
-   if (NOT GetSymSection(Name,&DestHandle)) return;
-   if (!ChkTmp(Name, TRUE)) ChkTmp2(Name, TRUE);
-   if (NOT ChkSymbName(Name))
-    BEGIN
-     WrXError(1020, Name); return;
-    END
-   Neu=(PSymbolEntry) malloc(sizeof(TSymbolEntry));
-   Neu->Tree.Name=strdup(Name);
-   Neu->SymWert.Typ = TempFloat;
-   Neu->SymWert.Contents.FWert = Wert;
-   Neu->SymType = 0;
-   Neu->SymSize = (-1);
-   Neu->RefList = Nil;
-   Neu->Relocs = Nil;
+  strmaxcpy(Name, Name_O, 255);
+  if (!ExpandSymbol(Name))
+    return;
+  if (!GetSymSection(Name, &DestHandle))
+    return;
+  (void)ChkTmp(Name, TRUE);
+  if (!ChkSymbName(Name))
+  {
+    WrXError(1020, Name);
+    return;
+  }
+  Neu = (PSymbolEntry) malloc(sizeof(TSymbolEntry));
+  Neu->Tree.Name = strdup(Name);
+  Neu->SymWert.Typ = TempFloat;
+  Neu->SymWert.Contents.FWert = Wert;
+  Neu->SymType = 0;
+  Neu->SymSize = (-1);
+  Neu->RefList = Nil;
+  Neu->Relocs = Nil;
 
-   if ((MomLocHandle == (-1)) OR (DestHandle != (-2)))
-    BEGIN
-     EnterSymbol(Neu, MayChange, DestHandle);
-     if (MakeDebug) PrintSymTree(Name);
-    END
-   else EnterLocSymbol(Neu);
-END
+  if ((MomLocHandle == (-1)) || (DestHandle != (-2)))
+  {
+    EnterSymbol(Neu, MayChange, DestHandle);
+    if (MakeDebug)
+      PrintSymTree(Name);
+  }
+  else
+    EnterLocSymbol(Neu);
+}
 
 void EnterDynStringSymbol(char *Name_O, const tDynString *pValue, Boolean MayChange)
 {
@@ -3023,8 +3073,8 @@ void EnterDynStringSymbol(char *Name_O, const tDynString *pValue, Boolean MayCha
 
   strmaxcpy(Name, Name_O, 255);
   if (!ExpandSymbol(Name)) return;
-  if (!GetSymSection(Name,&DestHandle)) return;
-  if (!ChkTmp(Name, TRUE)) ChkTmp2(Name, TRUE);
+  if (!GetSymSection(Name, &DestHandle)) return;
+  (void)ChkTmp(Name, TRUE);
   if (!ChkSymbName(Name))
   {
     WrXError(1020, Name); return;
@@ -3040,10 +3090,11 @@ void EnterDynStringSymbol(char *Name_O, const tDynString *pValue, Boolean MayCha
   Neu->RefList = Nil;
   Neu->Relocs = Nil;
 
-  if ((MomLocHandle == (-1)) OR (DestHandle != (-2)))
+  if ((MomLocHandle == (-1)) || (DestHandle != (-2)))
   {
     EnterSymbol(Neu, MayChange, DestHandle);
-    if (MakeDebug) PrintSymTree(Name);
+    if (MakeDebug)
+      PrintSymTree(Name);
   }
   else EnterLocSymbol(Neu);
 }
@@ -3124,74 +3175,82 @@ END
 
 static PSymbolEntry FindNode(char *Name_O, TempType SearchType)
 {
-   PSaveSection Lauf;
-   LongInt DestSection;
-   PSymbolEntry Result = NULL;
-   String Name;
+  PSaveSection Lauf;
+  LongInt DestSection;
+  PSymbolEntry Result = NULL;
+  String Name;
 
-   strmaxcpy(Name,Name_O,255);
+  strmaxcpy(Name, Name_O, 255);
+  ChkTmp3(Name, FALSE);
 
-   if (NOT GetSymSection(Name,&DestSection)) return NULL;
+  if (!GetSymSection(Name, &DestSection))
+    return NULL;
 
-   if (NOT CaseSensitive) NLS_UpString(Name);
+  if (!CaseSensitive)
+    NLS_UpString(Name);
 
-   if (SectionStack != Nil)
-     if (PassNo <= MaxSymPass)
-       if (FindNode_FSpec(Name, SectionStack->LocSyms)) DestSection = MomSectionHandle;
+  if (SectionStack != Nil)
+    if (PassNo <= MaxSymPass)
+      if (FindNode_FSpec(Name, SectionStack->LocSyms)) DestSection = MomSectionHandle;
 
-   if (DestSection == (-2))
-   {
-     if ((Result = FindNode_FNode(Name, SearchType, MomSectionHandle))) return Result;
-     Lauf = SectionStack;
-     while (Lauf != Nil)
-     {
-       if ((Result = FindNode_FNode(Name, SearchType, Lauf->Handle))) break;;
-       Lauf = Lauf->Next;
-     }
-   }
-   else
-     Result = FindNode_FNode(Name, SearchType, DestSection);
+  if (DestSection == (-2))
+  {
+    if ((Result = FindNode_FNode(Name, SearchType, MomSectionHandle)))
+      return Result;
+    Lauf = SectionStack;
+    while (Lauf)
+    {
+      if ((Result = FindNode_FNode(Name, SearchType, Lauf->Handle))) break;
+      Lauf = Lauf->Next;
+    }
+  }
+  else
+    Result = FindNode_FNode(Name, SearchType, DestSection);
 
-   return Result;
+  return Result;
 }
 
 static PSymbolEntry FindLocNode_FNode(char *Name, TempType SearchType, LongInt Handle)
 {
-   PSymbolEntry Lauf;
+  PSymbolEntry Lauf;
 
-   Lauf = (PSymbolEntry) SearchTree((PTree)FirstLocSymbol, Name, Handle);
+  Lauf = (PSymbolEntry) SearchTree((PTree)FirstLocSymbol, Name, Handle);
 
-   if (Lauf)
-   {
-     if (!(Lauf->SymWert.Typ & SearchType))
-       Lauf = NULL;
-   }
+  if (Lauf)
+  {
+    if (!(Lauf->SymWert.Typ & SearchType))
+      Lauf = NULL;
+  }
 
-   return Lauf;
+  return Lauf;
 }
 
 static PSymbolEntry FindLocNode(char *Name_O, TempType SearchType)
 {
-   PLocHandle RunLocHandle;
-   PSymbolEntry Result = NULL;
-   String Name;
+  PLocHandle RunLocHandle;
+  PSymbolEntry Result = NULL;
+  String Name;
 
-   strmaxcpy(Name,Name_O,255); if (NOT CaseSensitive) NLS_UpString(Name);
+  strmaxcpy(Name,Name_O, 255);
+  ChkTmp3(Name, FALSE);
+  if (!CaseSensitive)
+    NLS_UpString(Name);
 
-   if (MomLocHandle == (-1)) return NULL;
+  if (MomLocHandle == (-1))
+    return NULL;
 
-   if ((Result = FindLocNode_FNode(Name, SearchType, MomLocHandle)))
+  if ((Result = FindLocNode_FNode(Name, SearchType, MomLocHandle)))
     return Result;
 
-   RunLocHandle = FirstLocHandle;
-   while ((RunLocHandle != Nil) AND (RunLocHandle->Cont != -1))
-   {
-     if ((Result = FindLocNode_FNode(Name, SearchType, RunLocHandle->Cont)) )
-       break;
-     RunLocHandle = RunLocHandle->Next;
-   }
+  RunLocHandle = FirstLocHandle;
+  while ((RunLocHandle) && (RunLocHandle->Cont != -1))
+  {
+    if ((Result = FindLocNode_FNode(Name, SearchType, RunLocHandle->Cont)) )
+      break;
+    RunLocHandle = RunLocHandle->Next;
+  }
 
-   return Result;
+  return Result;
 }
 /**
         void SetSymbolType(char *Name, Byte NTyp)
@@ -4473,5 +4532,6 @@ BEGIN
 #ifdef HAS64
    IntMins[(int)Int64]--;
 #endif
+   LastGlobSymbol = (char*)malloc(sizeof(char) * 256);
 END
 
