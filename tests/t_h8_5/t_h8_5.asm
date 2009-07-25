@@ -115,6 +115,10 @@
 
                 link    fp,#-4
 
+		mov:g.b r2,r5
+		mov.b   r2,r5
+		mov:g.w r2,r5
+		mov.w	r2,r5
                 mov:g.w r0,@r1
                 mov.w   r0,@r1
                 mov:e.b #$55,r0

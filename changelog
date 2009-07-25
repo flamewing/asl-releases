@@ -1173,3 +1173,7 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 2009-06-07 [Bld70]
 
 - Addition    : added named temporary symbols
+
+2009-07-25 [Bld71]
+
+- Bugfix      : corrected H8/500 register-to-register MOV coding
