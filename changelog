@@ -1,4 +1,4 @@
-$Id: changelog,v 1.54 2009/06/07 09:32:25 alfred Exp $
+$Id: changelog,v 1.56 2010/01/01 14:58:02 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1177,3 +1177,8 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 2009-07-25 [Bld71]
 
 - Bugfix      : corrected H8/500 register-to-register MOV coding
+
+2010-01-01 [Bld72]
+
+- Bugfix      : corrected address offset handling for H8/500
+- Bugfix      : some coding corrections for Lattice Mico8

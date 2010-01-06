@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeh8_5.c,v 1.6 2009/07/25 12:58:10 alfred Exp $                    */
+/* $Id: codeh8_5.c,v 1.7 2009/12/21 21:07:15 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codeh8_5.c,v $
+ * Revision 1.7  2009/12/21 21:07:15  alfred
+ * - allow unsigned 16 bit displacements
+ *
  * Revision 1.6  2009/07/25 12:58:10  alfred
  * - update formatting style of remaining parts
  *
@@ -394,7 +397,7 @@ static void DecodeAdr(char *Asc, Word Mask)
               break;
             case 1:
               if (Unknown) DispAcc &= 0x7fff;
-              if (ChkRange(DispAcc, -0x8000l, 0x7fffl))
+              if (ChkRange(DispAcc, -0x8000l, 0xffffl))
               {
                 AdrMode = ModDisp16; AdrByte = 0xf0 | RegPart;
                 AdrVals[1] = DispAcc & 0xff;

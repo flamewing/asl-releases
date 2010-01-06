@@ -5,9 +5,12 @@
 /* Codegenerator LatticeMico8                                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemic8.c,v 1.9 2007/11/24 22:48:07 alfred Exp $                   */
+/* $Id: codemic8.c,v 1.10 2010/01/01 14:31:49 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codemic8.c,v $
+ * Revision 1.10  2010/01/01 14:31:49  alfred
+ * - added some coding bugfixes
+ *
  * Revision 1.9  2007/11/24 22:48:07  alfred
  * - some NetBSD changes
  *
@@ -58,28 +61,34 @@
 
 #define ALUOrderCnt 14
 #define FixedOrderCnt 9
-#define BranchOrderCnt 10
-#define MemOrderCnt 4
+#define BranchOrderCnt 8
+#define UnconBranchOrderCnt 2
+#define MemOrderCnt 6
 #define RegOrderCnt 2
 
-typedef struct
-        {
-          LongWord Code;
-        } FixedOrder;
+/* define as needed by address space */
+
+#define CodeAddrInt UInt12
+#define DataAddrInt UInt5
 
 typedef struct
-        {
-          LongWord Code;
-          Boolean MayImm;
-        } ALUOrder;
+{
+  LongWord Code;
+} FixedOrder;
 
 typedef struct
-        {
-          LongWord Code;
-          Byte Space;
-        } MemOrder;
+{
+  LongWord Code;
+  Boolean MayImm;
+} ALUOrder;
 
-static FixedOrder *FixedOrders, *BranchOrders, *RegOrders;
+typedef struct
+{
+  LongWord Code;
+  Byte Space;
+} MemOrder;
+
+static FixedOrder *FixedOrders, *BranchOrders, *RegOrders, *UnconBranchOrders;
 static MemOrder *MemOrders;
 static ALUOrder *ALUOrders;
 
@@ -96,7 +105,7 @@ static Boolean IsWReg(char *Asc, LongWord *pErg)
 
   if (FindRegDef(Asc, &s)) Asc = s;
 
-  if ((strlen(Asc) < 2) || (mytoupper(*Asc) != 'R')) 
+  if ((strlen(Asc) < 2) || (mytoupper(*Asc) != 'R'))
   {
     *pErg = 0;
     return False;
@@ -194,7 +203,7 @@ static void DecodeBranch(Word Index)
   if (ArgCnt != 1) WrError(1110);
   else
   {   
-    Dest = EvalIntExpression(ArgStr[1], UInt10, &OK);
+    Dest = EvalIntExpression(ArgStr[1], CodeAddrInt, &OK);
     if (OK)
     {
       Dest -= EProgCounter();
@@ -205,9 +214,32 @@ static void DecodeBranch(Word Index)
         CodeLen = 1;
       }
     }
-  }  
-}    
-     
+  }
+}
+
+static void DecodeUnconBranch(Word Index)
+{
+  FixedOrder *pOrder = UnconBranchOrders + Index;
+  LongInt Dest;
+  Boolean OK;
+
+  if (ArgCnt != 1) WrError(1110);
+  else
+  {
+    Dest = EvalIntExpression(ArgStr[1], CodeAddrInt, &OK);
+    if (OK)
+    {
+      Dest -= EProgCounter();
+      if (((Dest < -2048) || (Dest > 2047)) && (!SymbolQuestionable)) WrError(1370);
+      else
+      {
+        DAsmCode[0] = pOrder->Code | (Dest & 0xfff);
+        CodeLen = 1;
+      }
+    }
+  }
+}
+
 static void DecodeMem(Word Index)
 {
   MemOrder *pOrder = MemOrders + Index;
@@ -223,7 +255,7 @@ static void DecodeMem(Word Index)
   }
   else
   {
-    Src = EvalIntExpression(ArgStr[2], UInt5, &OK);
+    Src = EvalIntExpression(ArgStr[2], DataAddrInt, &OK);
     if (OK)
     {
       ChkSpace(pOrder->Space);
@@ -245,7 +277,7 @@ static void DecodeMemI(Word Index)
   {
     DAsmCode[0] = pOrder->Code | (DReg << 8) | (SReg << 3) | 2;
     CodeLen = 1;
-  }   
+  }
 }
 
 static void DecodeReg(Word Index)
@@ -273,7 +305,7 @@ static void AddFixed(char *NName, LongWord NCode)
   FixedOrders[InstrZ].Code = NCode;
   AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
- 
+
 static void AddALU(char *NName, char *NImmName, LongWord NCode)
 {
   if (InstrZ >= ALUOrderCnt)
@@ -294,7 +326,16 @@ static void AddBranch(char *NName, LongWord NCode)
   BranchOrders[InstrZ].Code = NCode;
   AddInstTable(InstTable, NName, InstrZ++, DecodeBranch);
 }
- 
+
+static void AddUnconBranch(char *NName, LongWord NCode)
+{
+  if (InstrZ >= UnconBranchOrderCnt)
+    exit(255);
+
+  UnconBranchOrders[InstrZ].Code = NCode;
+  AddInstTable(InstTable, NName, InstrZ++, DecodeUnconBranch);
+}
+
 static void AddMem(char *NName, char *NImmName, LongWord NCode, Byte NSpace)
 {
   if (InstrZ >= MemOrderCnt)
@@ -305,8 +346,8 @@ static void AddMem(char *NName, char *NImmName, LongWord NCode, Byte NSpace)
   AddInstTable(InstTable, NName, InstrZ, DecodeMem);
   AddInstTable(InstTable, NImmName, InstrZ, DecodeMemI);
   InstrZ++;
-}      
- 
+}
+
 static void AddReg(char *NName, LongWord NCode)
 {
   if (InstrZ >= RegOrderCnt)
@@ -314,8 +355,8 @@ static void AddReg(char *NName, LongWord NCode)
 
   RegOrders[InstrZ].Code = NCode;
   AddInstTable(InstTable, NName, InstrZ++, DecodeReg);
-}      
-       
+}
+
 static void InitFields(void)
 {
   InstTable = CreateInstTable(97);
@@ -328,8 +369,8 @@ static void InitFields(void)
   AddFixed("SETZ"  , 0x2c003);
   AddFixed("CLRI"  , 0x2c004);
   AddFixed("SETI"  , 0x2c005);
-  AddFixed("RET"   , 0x3a000);
-  AddFixed("IRET"  , 0x3a001);
+  AddFixed("RET"   , 0x38000); /* was 0x3a000 in '05 edition of user's manual */
+  AddFixed("IRET"  , 0x39000); /* was 0x3a001 in '05 edition of user's manual */
   AddFixed("NOP"   , 0x10000);
 
   InstrZ = 0;
@@ -344,13 +385,13 @@ static void InitFields(void)
   AddALU("XOR"    , "XORI"  ,   7UL << 14);
   AddALU("CMP"    , "CMPI"  ,   8UL << 14);
   AddALU("TEST"   , "TESTI" ,   9UL << 14);
-  AddALU("ROR"    , NULL    , (10UL << 14) | 0);
-  AddALU("RORC"   , NULL    , (10UL << 14) | 1);
-  AddALU("ROL"    , NULL    , (10UL << 14) | 2);
-  AddALU("ROLC"   , NULL    , (10UL << 14) | 3);
+  AddALU("ROR"    , NULL    , (10UL << 14) | 0); /* Note: The User guide (Feb '08) differs  */
+  AddALU("ROL"    , NULL    , (10UL << 14) | 1); /* from the actual implementation in */
+  AddALU("RORC"   , NULL    , (10UL << 14) | 2); /* decoding the last 3 bits of the Rotate */
+  AddALU("ROLC"   , NULL    , (10UL << 14) | 3); /* instructions. These values are correct. */
 
   InstrZ = 0;
-  RegOrders = (FixedOrder*) malloc(sizeof(FixedOrder) * RegOrderCnt); 
+  RegOrders = (FixedOrder*) malloc(sizeof(FixedOrder) * RegOrderCnt);
   AddReg("INC"    , (2UL << 14)  | (1UL << 13) | 1);
   AddReg("DEC"    , (0UL << 14)  | (1UL << 13) | 1);
 
@@ -360,16 +401,25 @@ static void InitFields(void)
   AddBranch("BNZ"   , 0x32400);
   AddBranch("BC"    , 0x32800);
   AddBranch("BNC"   , 0x32c00);
-  AddBranch("B"     , 0x33000);
   AddBranch("CALLZ" , 0x36000);
   AddBranch("CALLNZ", 0x36400);
-  AddBranch("CALLC" , 0x36800);  
+  AddBranch("CALLC" , 0x36800);
   AddBranch("CALLNC", 0x36c00);
-  AddBranch("CALL"  , 0x37000);
+
+  /* AcQ/MA: a group for unconditional branches, which can support
+   *         larger branches then the conditional branches (not supported
+   *         in the earliest versions of the Mico8 processor). The branch
+   *         range is +2047 to -2048 instead of +511 to -512. */
+  InstrZ = 0;
+  UnconBranchOrders = (FixedOrder*) malloc(sizeof(FixedOrder) * UnconBranchOrderCnt);
+  AddUnconBranch("B"     , 0x33000);
+  AddUnconBranch("CALL"  , 0x37000);
 
   InstrZ = 0;
   MemOrders = (MemOrder*) malloc(sizeof(MemOrder) * MemOrderCnt);
+  AddMem("INP"    , "INPI"   , (15UL << 14) | 1, SegIO);   /* new in V3 Lattice assembler */
   AddMem("IMPORT" , "IMPORTI", (15UL << 14) | 1, SegIO);
+  AddMem("OUTP"   , "OUTPI"  , (15UL << 14) | 0, SegIO);   /* new in V3 Lattice assembler */
   AddMem("EXPORT" , "EXPORTI", (15UL << 14) | 0, SegIO);
   AddMem("LSP"    , "LSPI"   , (15UL << 14) | 5, SegData);
   AddMem("SSP"    , "SSPI"   , (15UL << 14) | 4, SegData);
@@ -384,6 +434,7 @@ static void DeinitFields(void)
   free(FixedOrders);
   free(ALUOrders);
   free(BranchOrders);
+  free(UnconBranchOrders);
   free(MemOrders);
   free(RegOrders);
 }
@@ -394,7 +445,7 @@ static void DeinitFields(void)
 
 static Boolean IsDef_Mico8(void)
 {
-   return (Memo("REG")) || (Memo("PORT")); 
+   return (Memo("REG")) || (Memo("PORT"));
 }
 
 static void SwitchFrom_Mico8(void)
@@ -435,9 +486,9 @@ static void SwitchTo_Mico8(void)
 
    ValidSegs = (1 << SegCode) | (1 << SegData) | (1 << SegXData) | (1 << SegIO);
    Grans[SegCode] = 4; ListGrans[SegCode] = 4; SegInits[SegCode] = 0;
-   SegLimits[SegCode] = 0x3ff;
+   SegLimits[SegCode] = IntMaxs[CodeAddrInt];
    Grans[SegData] = 1; ListGrans[SegData] = 1; SegInits[SegData] = 0;
-   SegLimits[SegData] = 0x1f;
+   SegLimits[SegData] = IntMaxs[DataAddrInt];
    Grans[SegXData] = 1; ListGrans[SegXData] = 1; SegInits[SegXData] = 0;
    SegLimits[SegXData] = 0xff;
    Grans[SegIO] = 1; ListGrans[SegIO] = 1; SegInits[SegIO] = 0;
