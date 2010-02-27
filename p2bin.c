@@ -12,9 +12,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: p2bin.c,v 1.6 2009/04/13 07:55:57 alfred Exp $                      */
+/* $Id: p2bin.c,v 1.7 2010/02/27 13:09:07 alfred Exp $                      */
 /***************************************************************************** 
  * $Log: p2bin.c,v $
+ * Revision 1.7  2010/02/27 13:09:07  alfred
+ * - assure file pointer is set correctly after fflush()
+ *
  * Revision 1.6  2009/04/13 07:55:57  alfred
  * - silence Borland C++ warnings
  *
@@ -120,47 +123,65 @@ BEGIN
     END
 END
 
-	static void CloseTarget(void)
-BEGIN
-   LongWord Sum,Rest,Trans,Real,z,bpos, AHeader;
+static void CloseTarget(void)
+{
+  LongWord z, AHeader;
 
-   AHeader = abs(StartHeader);
-   if ((EntryAdrPresent) AND (StartHeader!=0))
-    BEGIN
-     rewind(TargFile); 
-     bpos=((StartHeader>0) ? 0 : -1-StartHeader)<<3;
-     for (z=0; z<AHeader; z++)
-      BEGIN
-       Buffer[z]=(EntryAdr >> bpos) & 0xff;
-       bpos += (StartHeader>0) ? 8 : -8;
-      END
-     if (fwrite(Buffer,1,AHeader,TargFile)!=AHeader) ChkIO(TargName);
-    END
+  AHeader = abs(StartHeader);
 
-   if (fclose(TargFile)==EOF) ChkIO(TargName);
+  /* write entry address to file? */
 
-   if (DoCheckSum)
-    BEGIN
-     TargFile=fopen(TargName,OPENUPMODE); if (TargFile==Nil) ChkIO(TargName);
-     if (fseek(TargFile,AHeader,SEEK_SET)==-1) ChkIO(TargName);
-     Rest=FileSize(TargFile)-1;
-     Sum=0;
-     while (Rest!=0)
-      BEGIN
-       Trans=min(Rest,BufferSize);
-       Rest-=Trans;
-       Real=fread(Buffer,1,Trans,TargFile);
-       if (Real!=Trans) ChkIO(TargName);
-       for (z=0; z<Trans; Sum+=Buffer[z++]);
-      END
-     errno=0; printf("%s%s\n",getmessage(Num_InfoMessChecksum),HexLong(Sum));
-     Buffer[0]=0x100-(Sum&0xff); fflush(TargFile);
-     if (fwrite(Buffer,1,1,TargFile)!=1) ChkIO(TargName); fflush(TargFile);
-     if (fclose(TargFile)==EOF) ChkIO(TargName);
-    END
+  if ((EntryAdrPresent) && (StartHeader != 0))
+  {
+    LongWord bpos;
 
-   if (Magic!=0) unlink(TargName);
-END
+    rewind(TargFile); 
+    bpos = ((StartHeader > 0) ? 0 : -1 - StartHeader) << 3;
+    for (z = 0; z < AHeader; z++)
+    {
+      Buffer[z] = (EntryAdr >> bpos) & 0xff;
+      bpos += (StartHeader>0) ? 8 : -8;
+    }
+    if (fwrite(Buffer, 1, AHeader, TargFile) != AHeader) ChkIO(TargName);
+  }
+
+  if (EOF == fclose(TargFile)) ChkIO(TargName);
+
+  /* compute checksum over file? */
+
+  if (DoCheckSum)
+  {
+    LongWord Sum, Size, Rest, Trans, Read;
+
+    TargFile = fopen(TargName,OPENUPMODE); if (!TargFile) ChkIO(TargName);
+    if (fseek(TargFile, AHeader, SEEK_SET) == -1) ChkIO(TargName);
+    Size = Rest = FileSize(TargFile) - AHeader - 1;
+
+    Sum = 0;
+    while (Rest > 0)
+    {
+      Trans = min(Rest, BufferSize);
+      Rest -= Trans;
+      Read = fread(Buffer, 1, Trans, TargFile);
+      if (Read != Trans) ChkIO(TargName);
+      for (z = 0; z < Trans; Sum += Buffer[z++]);
+    }
+    errno = 0; printf("%s%s\n", getmessage(Num_InfoMessChecksum), HexLong(Sum));
+    Buffer[0] = 0x100 - (Sum & 0xff);
+
+    /* Some systems require fflush() between read & write operations.  And
+       some other systems again garble the file pointer upon an fflush(): */
+
+    fflush(TargFile);
+    if (fseek(TargFile, AHeader + Size, SEEK_SET) == -1) ChkIO(TargName);
+    if (fwrite(Buffer, 1, 1, TargFile) != 1) ChkIO(TargName);
+    fflush(TargFile);
+
+    if (fclose(TargFile) == EOF) ChkIO(TargName);
+  }
+
+  if (Magic != 0) unlink(TargName);
+}
 
         static void ProcessFile(char *FileName, LongWord Offset)
 BEGIN

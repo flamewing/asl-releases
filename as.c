@@ -58,9 +58,12 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.20 2009/06/07 09:32:25 alfred Exp $                          */
+/* $Id: as.c,v 1.21 2010/02/27 14:17:26 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.21  2010/02/27 14:17:26  alfred
+ * - correct increment/decrement of macro nesting level
+ *
  * Revision 1.20  2009/06/07 09:32:25  alfred
  * - add named temporary symbols
  *
@@ -885,13 +888,17 @@ static void MACRO_Restorer(PInputTag PInp)
 
   /* undo the recursion counter by one */
 
-  if ((PInp->Macro != Nil) AND (PInp->Macro->UseCounter > 0))
+  if ((PInp->Macro) && (PInp->Macro->UseCounter > 0))
     PInp->Macro->UseCounter--;
 
   /* restore list flag */
 
   DoLst = PInp->OrigDoLst;
-  MacroNestLevel--;
+
+  /* decrement macro nesting counter only if this actually was a macro */
+
+  if (PInp->Processor == MACRO_Processor)
+    MacroNestLevel--;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -981,7 +988,6 @@ static void ExpandEXITM(void)
   else if (!FirstInputTag->IsMacro) WrError(1805);
   else if (IfAsm)
   {
-    MacroNestLevel--;
     FirstInputTag->Cleanup(FirstInputTag);
     RestoreIFs(FirstInputTag->IfLevel);
     FirstInputTag->IsEmpty = True;
@@ -2082,7 +2088,7 @@ BEGIN
      if (IfAsm)
      {
        ExpandMacro(OneMacro);
-       if (MacroNestLevel > 1)
+       if ((MacroNestLevel > 1) && (MacroNestLevel < 100))
          sprintf(ListLine,  "%*s(MACRO-%u)", MacroNestLevel - 1, "", MacroNestLevel);
        else
          strmaxcpy(ListLine, "(MACRO)", 255);

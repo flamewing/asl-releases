@@ -1,4 +1,4 @@
-$Id: changelog,v 1.56 2010/01/01 14:58:02 alfred Exp $
+$Id: changelog,v 1.57 2010/02/27 14:25:19 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1167,7 +1167,6 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 2009-05-10 [Bld69]
 
 - Bugfix      : allow more CPU aliases
-
 - Addition    : dispay macro nesting in listing
 
 2009-06-07 [Bld70]
@@ -1182,3 +1181,8 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 
 - Bugfix      : corrected address offset handling for H8/500
 - Bugfix      : some coding corrections for Lattice Mico8
+
+2010-02-27 [Bld73]
+
+- Bugfix      : corrected P2BIN checksum generation on Win32 systems
+- Bugfix      : corrected macro nesting dispay in listing
