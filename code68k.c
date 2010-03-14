@@ -36,9 +36,12 @@
 /*           2001-12-02 fixed problems with forward refs of shift arguments  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68k.c,v 1.11 2008/09/01 18:19:21 alfred Exp $                     */
+/* $Id: code68k.c,v 1.12 2010/03/07 10:45:22 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code68k.c,v $
+ * Revision 1.12  2010/03/07 10:45:22  alfred
+ * - generalization of Motorola disposal instructions
+ *
  * Revision 1.11  2008/09/01 18:19:21  alfred
  * - allow immediate operand on BTST
  *
@@ -626,7 +629,7 @@ BEGIN
         DVal=EvalFloatExpression(Asc,Float64,&ValOK);
         if (ValOK) 
          BEGIN
-          ConvertMotoFloatDec(DVal,SwapField);
+          ConvertMotoFloatDec(DVal,(Byte *) SwapField,False);
           AdrVals[0]=SwapField[5];
           AdrVals[1]=SwapField[4];
           AdrVals[2]=SwapField[3];

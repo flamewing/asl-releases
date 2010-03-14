@@ -1,0 +1,7 @@
++------------------------- Test Application DX ------------------------------+
+|                                                                            |
+|      This test plays a bit with the DB/DW/DD/DQ/DT pseudo instruction e.g. |
+|      on 80x86.  Note that the floating point stuff may fail if your        |
+|      machine is not fully IEEE 754/854 compliant.                          |
+|                                                                            |
++----------------------------------------------------------------------------+

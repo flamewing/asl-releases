@@ -1,0 +1,6 @@
++----------------------- Test Application ADRSTR ----------------------------+
+|                                                                            |
+|      This test demonstrates the use of the ADR/FDB instruction with        |
+|      both integer and string arguments.                                    |
+|                                                                            |
++----------------------------------------------------------------------------+

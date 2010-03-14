@@ -1,0 +1,7 @@
++------------------------- Test Application DC ------------------------------+
+|                                                                            |
+|      This test plays a bit with the DC.x pseudo instruction e.g. on        |
+|      680x0.  Note that the floating point stuff may fail if your machine   |
+|      is not fully IEEE 754/854 compliant.                                  |
+|                                                                            |
++----------------------------------------------------------------------------+

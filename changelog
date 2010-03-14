@@ -1,4 +1,4 @@
-$Id: changelog,v 1.57 2010/02/27 14:25:19 alfred Exp $
+$Id: changelog,v 1.58 2010/03/14 11:04:57 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1186,3 +1186,7 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 
 - Bugfix      : corrected P2BIN checksum generation on Win32 systems
 - Bugfix      : corrected macro nesting dispay in listing
+
+2010-03-14 [Bld74]
+
+- Addition    : DW/DD/DQ/DD, DC.[wlxsdp], ADR also accept string arguments

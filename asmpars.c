@@ -36,9 +36,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.17 2009/06/07 09:32:25 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.18 2010/03/07 11:16:53 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.c,v $
+ * Revision 1.18  2010/03/07 11:16:53  alfred
+ * - allow DC.(float) on string operands
+ *
  * Revision 1.17  2009/06/07 09:32:25  alfred
  * - add named temporary symbols
  *
@@ -402,9 +405,9 @@ BEGIN
     BEGIN
      case Float32  : return (fabs(Wert)<=3.4e38);
      case Float64  : return (fabs(Wert)<=1.7e308);
-/**     case FloatCo  : FloatRangeCheck:=Abs(Wert)<=9.22e18;
-     case Float80  : FloatRangeCheck:=True;
-     case FloatDec : FloatRangeCheck:=True;**/
+/**     case FloatCo  : FloatRangeCheck:=Abs(Wert)<=9.22e18; */
+     case Float80  : return True;
+     case FloatDec : return True;
      default: return False;
     END
 /**   IF (Typ=FloatDec) AND (Abs(Wert)>1e1000) THEN WrError(40);**/

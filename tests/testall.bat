@@ -94,11 +94,14 @@ call testall t_960
 call testall t_97c241
 call testall t_9900
 call testall t_ace
+call testall t_adrstr
 call testall t_avr
 call testall t_bas52
 call testall t_buf32
 call testall t_cop4
 call testall t_cop8
+call testall t_dc
+call testall t_dx
 call testall t_ez8
 call testall t_f2mc8l
 call testall t_fl90
