@@ -25,9 +25,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codem16c.c,v 1.5 2007/11/24 22:48:07 alfred Exp $                    */
+/* $Id: codem16c.c,v 1.6 2010/03/27 14:21:04 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codem16c.c,v $
+ * Revision 1.6  2010/03/27 14:21:04  alfred
+ * - correct address range check
+ *
  * Revision 1.5  2007/11/24 22:48:07  alfred
  * - some NetBSD changes
  *
@@ -646,7 +649,7 @@ BEGIN
      DecodeDisp(Asc,UInt13,UInt16,&DispAcc,&OK);
      if (OK)
       BEGIN
-       if ((MayShort) AND (DispAcc<0x7ff))
+       if ((MayShort) AND (DispAcc<=0x7ff))
         BEGIN
          AdrMode=16+(DispAcc & 7);
          AdrVals[0]=DispAcc >> 3; AdrCnt=1;
