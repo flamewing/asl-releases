@@ -25,9 +25,15 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codem16c.c,v 1.6 2010/03/27 14:21:04 alfred Exp $                    */
+/* $Id: codem16c.c,v 1.8 2010/04/11 11:38:43 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codem16c.c,v $
+ * Revision 1.8  2010/04/11 11:38:43  alfred
+ * - correct SHA coding
+ *
+ * Revision 1.7  2010/04/04 08:31:16  alfred
+ * - correct some coding details
+ *
  * Revision 1.6  2010/03/27 14:21:04  alfred
  * - correct address range check
  *
@@ -1209,19 +1215,19 @@ BEGIN
           BEGIN
            if (OpSize==-1) WrError(1132);
            else if (OpSize>1) WrError(1130);
-           else if (AdrMode<4)
-            BEGIN
-             BAsmCode[0]=0x7a+OpSize;
-             BAsmCode[1]=(AdrMode << 4)+AdrMode2;
-             memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
-             CodeLen=2+AdrCnt2;
-            END
            else if (AdrMode2<4)
             BEGIN
              BAsmCode[0]=0x7a+OpSize;
              BAsmCode[1]=(AdrMode2 << 4)+AdrMode;
              memcpy(BAsmCode+2,AdrVals,AdrCnt);
              CodeLen=2+AdrCnt;
+            END
+           else if (AdrMode<4)
+            BEGIN
+             BAsmCode[0]=0x7a+OpSize;
+             BAsmCode[1]=(AdrMode << 4)+AdrMode2;
+             memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
+             CodeLen=2+AdrCnt2;
             END
            else WrError(1350);
           END
@@ -1990,65 +1996,67 @@ BEGIN
      return;
     END
 
-   if ((Memo("SHA")) OR (Memo("SHL")))
-    BEGIN
-     if (ArgCnt!=2) WrError(1110);
+   if ((Memo("SHA")) || (Memo("SHL")))
+   {
+     if (ArgCnt != 2) WrError(1110);
      else if (CheckFormat("G"))
-      BEGIN
-       z=Ord(Memo("SHA"));
-       DecodeAdr(ArgStr[2],MModGen+MModReg32);
-       if (AdrType!=ModNone)
-        BEGIN
-         if (OpSize==-1) WrError(1132);
-         else if ((OpSize>2) OR ((OpSize==2) AND (AdrType==ModGen))) WrError(1130);
+     {
+       z = Ord(Memo("SHA"));
+       DecodeAdr(ArgStr[2], MModGen | MModReg32);
+       if (AdrType != ModNone)
+       {
+         if (OpSize == -1) WrError(1132);
+         else if ((OpSize > 2) || ((OpSize == 2) && (AdrType == ModGen))) WrError(1130);
          else
-          BEGIN
-           CopyAdr(); OpSize2=OpSize; OpSize=0;
-           DecodeAdr(ArgStr[1],MModImm+MModGen);
-           if (AdrType==ModGen)
-            if (AdrMode!=3) WrError(1350);
-            else if (AdrMode2*2+OpSize2==3) WrError(1350);
-            else
-             BEGIN
-              if (OpSize2==2)
-               BEGIN
-                BAsmCode[0]=0xeb;
-                BAsmCode[1]=0x01+(AdrMode2 << 4)+(z << 5);
-               END
-              else
-               BEGIN
-                BAsmCode[0]=0x74+OpSize2;
-                BAsmCode[1]=0xe0+(z << 4)+AdrMode2;
-               END
-              memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
-              CodeLen=2+AdrCnt2;
-             END
-           else if (AdrType==ModImm)
-            BEGIN
-             Num1=ImmVal();
-             if (Num1==0) WrError(1315);
-             else if (ChkRange(Num1,-8,8))
-              BEGIN
-               if (Num1>0) Num1--; else Num1=(-9)-Num1;
-               if (OpSize2==2)
-                BEGIN
-                 BAsmCode[0]=0xeb;
-                 BAsmCode[1]=0x80+(AdrMode2 << 4)+(z << 5)+(Num1 & 15);
-                END
+         {
+           CopyAdr(); OpSize2 = OpSize; OpSize = 0;
+           DecodeAdr(ArgStr[1], MModImm | MModGen);
+           if (AdrType == ModGen)
+           {
+             if (AdrMode != 3) WrError(1350);
+             else if (AdrMode2 + 2 * OpSize2 == 3) WrError(1350);
+             else
+             {
+               if (OpSize2 == 2)
+               {
+                 BAsmCode[0] = 0xeb;
+                 BAsmCode[1] = 0x01 | (AdrMode2 << 4) | (z << 5);
+               }
                else
-                BEGIN
-                 BAsmCode[0]=0xe8+(z << 3)+OpSize2;
-                 BAsmCode[1]=(Num1 << 4)+AdrMode2;
-                END
-               memcpy(BAsmCode+2,AdrVals2,AdrCnt2);
-               CodeLen=2+AdrCnt2;
-              END
-            END
-          END
-        END
-      END
+               {
+                 BAsmCode[0] = 0x74 | OpSize2;
+                 BAsmCode[1] = 0xe0 | (z << 4) | AdrMode2;
+               }
+               memcpy(BAsmCode + 2, AdrVals2, AdrCnt2);
+               CodeLen = 2 + AdrCnt2;
+             }
+           }
+           else if (AdrType==ModImm)
+           {
+             Num1=ImmVal();
+             if (Num1 == 0) WrError(1315);
+             else if (ChkRange(Num1, -8, 8))
+             {
+               if (Num1 > 0) Num1--; else Num1 = (-9) - Num1;
+               if (OpSize2 == 2)
+               {
+                 BAsmCode[0] = 0xeb;
+                 BAsmCode[1] = 0x80 | (AdrMode2 << 4) | (z << 5) | (Num1 & 15);
+               }
+               else
+               {
+                 BAsmCode[0] = (0xe8 + (z << 3)) | OpSize2;
+                 BAsmCode[1] = (Num1 << 4) | AdrMode2;
+               }
+               memcpy(BAsmCode + 2, AdrVals2, AdrCnt2);
+               CodeLen = 2 + AdrCnt2;
+             }
+           }
+         }
+       }
+     }
      return;
-    END
+   }
 
    /* Bitoperationen */
 

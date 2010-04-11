@@ -20,32 +20,32 @@
 /*****************************************************************************/
 
 typedef struct _TMsgList
-         {
-          struct _TMsgList *Next;
-          LongInt Position;
-          char *Contents;
-         } TMsgList,*PMsgList;
+{
+  struct _TMsgList *Next;
+  LongInt Position;
+  char *Contents;
+} TMsgList,*PMsgList;
 
 typedef struct
-         {
-          PMsgList Messages,LastMessage;
-          char *CtryName;
-          LongInt *CtryCodes,CtryCodeCnt;
-          LongInt FilePos,HeadLength,TotLength;
-         } TMsgCat,*PMsgCat;
+{
+  PMsgList Messages,LastMessage;
+  char *CtryName;
+  LongInt *CtryCodes,CtryCodeCnt;
+  LongInt FilePos,HeadLength,TotLength;
+} TMsgCat,*PMsgCat;
 
 typedef struct
-         {
-          char *AbbString,*Character;
-         } TransRec;
+{
+  char *AbbString,*Character;
+} TransRec;
 
 /*****************************************************************************/
 
 #ifdef __TURBOC__ 
-unsigned _stklen=16384;
+unsigned _stklen = 16384;
 #endif
 
-static char *IdentString="AS Message Catalog - not readable\n\032\004";
+static char *IdentString = "AS Message Catalog - not readable\n\032\004";
 
 static LongInt MsgCounter;
 static PMsgCat MsgCats;
@@ -53,389 +53,408 @@ static LongInt CatCount,DefCat;
 static FILE *SrcFile,*MsgFile,*HFile;
 static char *IncSym;
 
-static TransRec TransRecs[]={
-                 {"&auml;",CH_ae},
-                 {"&euml;",CH_ee},
-                 {"&iuml;",CH_ie},
-                 {"&ouml;",CH_oe},
-                 {"&uuml;",CH_ue},
-                 {"&Auml;",CH_Ae},
-                 {"&Euml;",CH_Ee},
-                 {"&Iuml;",CH_Ie},
-                 {"&Ouml;",CH_Oe},
-                 {"&Uuml;",CH_Ue},
-                 {"&szlig;",CH_sz},
-                 {"&sup2;",CH_e2},
-                 {"&micro;",CH_mu},
-                 {"&agrave;",CH_agrave},
-                 {"&Agrave;",CH_Agrave},
-                 {"&egrave;",CH_egrave},
-                 {"&Egrave;",CH_Egrave},
-                 {"&igrave;",CH_igrave},
-                 {"&Igrave;",CH_Igrave},
-                 {"&ograve;",CH_ograve},
-                 {"&Ograve;",CH_Ograve},
-                 {"&ugrave;",CH_ugrave},
-                 {"&Ugrave;",CH_Ugrave},
-                 {"&aacute;",CH_aacute},
-                 {"&Aacute;",CH_Aacute},
-                 {"&eacute;",CH_eacute},
-                 {"&Eacute;",CH_Eacute},
-                 {"&iacute;",CH_iacute},
-                 {"&Iacute;",CH_Iacute},
-                 {"&oacute;",CH_oacute},
-                 {"&Oacute;",CH_Oacute},
-                 {"&uacute;",CH_uacute},
-                 {"&Uacute;",CH_Uacute},
-                 {"&acirc;",CH_acirc},
-                 {"&Acirc;",CH_Acirc},
-                 {"&ecirc;",CH_ecirc},
-                 {"&Ecirc;",CH_Ecirc},
-                 {"&icirc;",CH_icirc},
-                 {"&Icirc;",CH_Icirc},
-                 {"&ocirc;",CH_ocirc},
-                 {"&Ocirc;",CH_Ocirc},
-                 {"&ucirc;",CH_ucirc},
-                 {"&Ucirc;",CH_Ucirc},
-                 {"&ccedil;",CH_ccedil},
-                 {"&Ccedil;",CH_Ccedil},
-                 {"&ntilde;",CH_ntilde},
-                 {"&Ntilde;",CH_Ntilde},
-                 {"&aring;",CH_aring},
-                 {"&Aring;",CH_Aring},
-                 {"&aelig;",CH_aelig},
-                 {"&Aelig;",CH_Aelig},
-                 {"&iquest;",CH_iquest},
-                 {"&iexcl;",CH_iexcl},
-                 {"\\n","\n"},
-                 {Nil,Nil}};
+static TransRec TransRecs[] =
+{
+  { "&auml;"  , CH_ae     },
+  { "&euml;"  , CH_ee     },
+  { "&iuml;"  , CH_ie     },
+  { "&ouml;"  , CH_oe     },
+  { "&uuml;"  , CH_ue     },
+  { "&Auml;"  , CH_Ae     },
+  { "&Euml;"  , CH_Ee     },
+  { "&Iuml;"  , CH_Ie     },
+  { "&Ouml;"  , CH_Oe     },
+  { "&Uuml;"  , CH_Ue     },
+  { "&szlig;" , CH_sz     },
+  { "&sup2;"  , CH_e2     },
+  { "&micro;" , CH_mu     },
+  { "&agrave;", CH_agrave },
+  { "&Agrave;", CH_Agrave },
+  { "&egrave;", CH_egrave },
+  { "&Egrave;", CH_Egrave },
+  { "&igrave;", CH_igrave },
+  { "&Igrave;", CH_Igrave },
+  { "&ograve;", CH_ograve },
+  { "&Ograve;", CH_Ograve },
+  { "&ugrave;", CH_ugrave },
+  { "&Ugrave;", CH_Ugrave },
+  { "&aacute;", CH_aacute },
+  { "&Aacute;", CH_Aacute },
+  { "&eacute;", CH_eacute },
+  { "&Eacute;", CH_Eacute },
+  { "&iacute;", CH_iacute },
+  { "&Iacute;", CH_Iacute },
+  { "&oacute;", CH_oacute },
+  { "&Oacute;", CH_Oacute },
+  { "&uacute;", CH_uacute },
+  { "&Uacute;", CH_Uacute },
+  { "&acirc;" , CH_acirc  },
+  { "&Acirc;" , CH_Acirc  },
+  { "&ecirc;" , CH_ecirc  },
+  { "&Ecirc;" , CH_Ecirc  },
+  { "&icirc;" , CH_icirc  },
+  { "&Icirc;" , CH_Icirc  },
+  { "&ocirc;" , CH_ocirc  },
+  { "&Ocirc;" , CH_Ocirc  },
+  { "&ucirc;" , CH_ucirc  },
+  { "&Ucirc;" , CH_Ucirc  },
+  { "&ccedil;", CH_ccedil },
+  { "&Ccedil;", CH_Ccedil },
+  { "&ntilde;", CH_ntilde },
+  { "&Ntilde;", CH_Ntilde },
+  { "&aring;" , CH_aring  },
+  { "&Aring;" , CH_Aring  },
+  { "&aelig;" , CH_aelig  },
+  { "&Aelig;" , CH_Aelig  },
+  { "&iquest;", CH_iquest },
+  { "&iexcl;" , CH_iexcl  },
+  { "\\n"     , "\n"      },
+  { Nil       , Nil       }
+};
 
 /*****************************************************************************/
 
 typedef struct _TIncList
-         {
-          struct _TIncList *Next;
-          FILE *Contents;
-         } TIncList,*PIncList;
+{
+  struct _TIncList *Next;
+  FILE *Contents;
+} TIncList,*PIncList;
 
-PIncList IncList=Nil;
+PIncList IncList = NULL;
 
 void WrError(Word Num)
 {
   (void)Num;
 }
 
-	static void GetLine(char *Dest)
-BEGIN
-   PIncList OneFile;
+static void fwritechk(const char *pArg, int retcode,
+                      void *pBuffer, size_t size, size_t nmemb, FILE *pFile)
+{
+  size_t res;
 
-   ReadLn(SrcFile,Dest);
-   if (strncasecmp(Dest,"INCLUDE",7)==0)
-    BEGIN
-     OneFile=(PIncList) malloc(sizeof(TIncList));
-     OneFile->Next=IncList; OneFile->Contents=SrcFile;
-     IncList=OneFile;
-     strcpy(Dest,Dest+7); KillPrefBlanks(Dest); KillPrefBlanks(Dest);
-     SrcFile=fopen(Dest,"r");
-     if (SrcFile==Nil)
-      BEGIN
-       perror(Dest); exit(2);
-      END
-     GetLine(Dest);
-    END
-   if ((feof(SrcFile)) AND (IncList!=Nil))
-    BEGIN
-     fclose(SrcFile);
-     OneFile=IncList; IncList=OneFile->Next;
-     SrcFile=OneFile->Contents; free(OneFile);
-    END
-END
+  res = fwrite(pBuffer, size, nmemb, pFile);
+  if (res != nmemb)
+  {
+    perror(pArg);
+    exit(retcode);
+  }
+}
+
+static FILE *fopenchk(const char *pName, int retcode, const char *pOpenMode)
+{
+  FILE *pRes;
+
+  pRes = fopen(pName, pOpenMode);
+  if (!pRes)
+  {
+    perror(pName);
+    exit(retcode);
+  }
+  return pRes;
+}
+
+static void GetLine(char *Dest)
+{
+  PIncList OneFile;
+
+  ReadLn(SrcFile, Dest);
+  if (!strncasecmp(Dest, "INCLUDE", 7))
+  {
+    OneFile = (PIncList) malloc(sizeof(TIncList));
+    OneFile->Next = IncList; OneFile->Contents = SrcFile;
+    IncList = OneFile;
+    strcpy(Dest,Dest + 7); KillPrefBlanks(Dest); KillPrefBlanks(Dest);
+    SrcFile = fopenchk(Dest, 2, "r");
+    GetLine(Dest);
+  }
+  if ((feof(SrcFile)) && (IncList))
+  {
+    fclose(SrcFile);
+    OneFile = IncList; IncList = OneFile->Next;
+    SrcFile = OneFile->Contents; free(OneFile);
+  }
+}
 
 /*****************************************************************************/
 
-	static void SynError(char *LinePart)
-BEGIN
-   fprintf(stderr,"syntax error : %s\n",LinePart); exit(10);
-END
+static void SynError(char *LinePart)
+{
+  fprintf(stderr, "syntax error : %s\n", LinePart); exit(10);
+}
 
 /*---------------------------------------------------------------------------*/
 
-	static void Process_LANGS(char *Line)
-BEGIN
-   char NLine[1024],*p,*p2,*p3,*end,z,Part[1024];
-   PMsgCat PCat;
-   int num;
+static void Process_LANGS(char *Line)
+{
+  char NLine[1024], *p, *p2, *p3, *end, z, Part[1024];
+  PMsgCat PCat;
+  int num;
+
+  strmaxcpy(NLine, Line, 1024);
+  KillPrefBlanks(NLine); KillPostBlanks(NLine);
+
+  p = NLine; z = 0;
+  while (*p)
+  {
+    for (; ((*p) && (!isspace((unsigned int) *p))); p++);
+    for (; ((*p) && (isspace((unsigned int) *p))); p++);
+    z++;
+  }
+
+  MsgCats = (PMsgCat) malloc(sizeof(TMsgCat) * (CatCount = z)); p = NLine;
+  for (z = 0, PCat = MsgCats; z < CatCount; z++, PCat++)
+  {
+    PCat->Messages = Nil;
+    PCat->TotLength = 0;
+    PCat->CtryCodeCnt = 0;
+    for (p2 = p; ((*p2) && (!isspace((unsigned int) *p2))); p2++);
+    if (*p2 == '\0') strcpy(Part, p);
+    else
+    {
+      *p2 = '\0'; strcpy(Part, p);
+      for (p = p2 + 1; ((*p) && (isspace((unsigned int) *p2))); p++);
+    }
+    if ((!*Part) || (Part[strlen(Part)-1] != ')')) SynError(Part);
+    Part[strlen(Part) - 1] = '\0';
+    p2 = strchr(Part, '(');
+    if (!p2) SynError(Part); *p2 = '\0';
+    PCat->CtryName = strdup(Part); p2++;
+    do
+    {
+      for (p3 = p2; ((*p3) && (*p3 != ',')); p3++);
+      switch (*p3)
+      {
+        case '\0':
+          num = strtol(p2, &end, 10); p2 = p3;
+          break;
+        case ',':
+          *p3 = '\0'; num = strtol(p2, &end, 10); p2 = p3 + 1;
+          break;
+        default:
+          num = 0; 
+          break;
+      }
+      if (*end) SynError("numeric format");
+      PCat->CtryCodes=(PCat->CtryCodeCnt == 0) ?
+                      (LongInt *) malloc(sizeof(LongInt)) :
+                      (LongInt *) realloc(PCat->CtryCodes, sizeof(LongInt) * (PCat->CtryCodeCnt + 1));
+      PCat->CtryCodes[PCat->CtryCodeCnt++] = num;
+    }
+    while (*p2!='\0');
+  }
+}
+
+static void Process_DEFAULT(char *Line)
+{
+  PMsgCat z;
+
+  if (!CatCount) SynError("DEFAULT before LANGS");
+  KillPrefBlanks(Line); KillPostBlanks(Line);
+  for (z = MsgCats; z < MsgCats + CatCount; z++)
+    if (!strcasecmp(z->CtryName,Line))
+      break;
+  if (z >= MsgCats + CatCount)
+    SynError("unknown country name in DEFAULT");
+  DefCat = z - MsgCats;
+}
+
+static void Process_MESSAGE(char *Line)
+{
+  char Msg[4096];
+  String OneLine;
+  int l;
+  PMsgCat z;
+  TransRec *PRec;
+  char *pos;
+  PMsgList List;
+  Boolean Cont;
+
+  KillPrefBlanks(Line); KillPostBlanks(Line);
+  if (HFile) fprintf(HFile, "#define Num_%s %d\n", Line, MsgCounter);
+  MsgCounter++;
   
-   strmaxcpy(NLine,Line,1024);
-   KillPrefBlanks(NLine); KillPostBlanks(NLine);
-
-   p=NLine; z=0;
-   while (*p!='\0')
-    BEGIN
-     for (; ((*p!='\0') AND (NOT isspace((unsigned int) *p))); p++);
-     for (; ((*p!='\0') AND (isspace((unsigned int) *p))); p++);
-     z++;
-    END
-
-   MsgCats=(PMsgCat) malloc(sizeof(TMsgCat)*(CatCount=z)); p=NLine;
-   for (z=0,PCat=MsgCats; z<CatCount; z++,PCat++)
-    BEGIN
-     PCat->Messages=Nil;
-     PCat->TotLength=0;
-     PCat->CtryCodeCnt=0;
-     for (p2=p; ((*p2!='\0') AND (NOT isspace((unsigned int) *p2))); p2++);
-     if (*p2=='\0') strcpy(Part,p);
-     else
-      BEGIN
-       *p2='\0'; strcpy(Part,p);
-       for (p=p2+1; ((*p!='\0') AND (isspace((unsigned int) *p2))); p++);
-      END
-     if ((!*Part) || (Part[strlen(Part)-1] != ')')) SynError(Part);
-     Part[strlen(Part)-1]='\0';
-     p2=strchr(Part,'(');
-     if (p2==Nil) SynError(Part); *p2='\0';
-     PCat->CtryName=strdup(Part); p2++;
-     do
-      BEGIN
-       for (p3=p2; ((*p3!='\0') AND (*p3!=',')); p3++);
-       switch (*p3)
-        BEGIN
-         case '\0':
-          num=strtol(p2,&end,10); p2=p3; break;
-         case ',':
-          *p3='\0'; num=strtol(p2,&end,10); p2=p3+1; break;
-         default:
-          num=0; 
-        END
-       if (*end!='\0') SynError("numeric format");
-       PCat->CtryCodes=(PCat->CtryCodeCnt==0) ?
-                       (LongInt *) malloc(sizeof(LongInt)) :
-                       (LongInt *) realloc(PCat->CtryCodes,sizeof(LongInt)*(PCat->CtryCodeCnt+1));
-       PCat->CtryCodes[PCat->CtryCodeCnt++]=num;
-      END
-     while (*p2!='\0');
-    END
-END
-
-	static void Process_DEFAULT(char *Line)
-BEGIN
-   PMsgCat z;
-
-   if (CatCount==0) SynError("DEFAULT before LANGS");
-   KillPrefBlanks(Line); KillPostBlanks(Line);
-   for (z=MsgCats; z<MsgCats+CatCount; z++) if (strcasecmp(z->CtryName,Line)==0) break;
-   if (z>=MsgCats+CatCount) SynError("unknown country name in DEFAULT");
-   DefCat=z-MsgCats;
-END
-
-	static void Process_MESSAGE(char *Line)
-BEGIN
-   char Msg[4096];
-   String OneLine;
-   int l;
-   PMsgCat z;
-   TransRec *PRec;
-   char *pos;
-   PMsgList List;
-   Boolean Cont;
-
-   KillPrefBlanks(Line); KillPostBlanks(Line);
-   if (HFile!=Nil) fprintf(HFile,"#define Num_%s %d\n",Line,MsgCounter);
-   MsgCounter++;
-   
-   for (z=MsgCats; z<MsgCats+CatCount; z++)
-    BEGIN
-     *Msg='\0';
-     do
-      BEGIN
-       GetLine(OneLine); KillPrefBlanks(OneLine); KillPostBlanks(OneLine);
-       l=strlen(OneLine);
-       if ((Cont=(OneLine[l-1]=='\\')))
-        BEGIN
-         OneLine[l-1]='\0'; KillPostBlanks(OneLine); l=strlen(OneLine);
-        END
-       if (*OneLine!='"') SynError(OneLine);
-       if (OneLine[l-1]!='"') SynError(OneLine); OneLine[l-1]='\0';
-       strmaxcat(Msg,OneLine+1,4095);
-      END
-     while (Cont);
-     for (PRec=TransRecs; PRec->AbbString!=Nil; PRec++)
-      while ((pos=strstr(Msg,PRec->AbbString))!=Nil)
-       BEGIN
-        strcpy(pos,pos+strlen(PRec->AbbString)-1);
-        *pos= *PRec->Character;
-       END
-     List=(PMsgList) malloc(sizeof(TMsgList));
-     List->Next=Nil;
-     List->Position=z->TotLength;
-     List->Contents=strdup(Msg);
-     if (z->Messages==Nil) z->Messages=List;
-     else z->LastMessage->Next=List;
-     z->LastMessage=List;
-     z->TotLength+=strlen(Msg)+1;
-    END
-END
+  for (z = MsgCats; z < MsgCats + CatCount; z++)
+  {
+    *Msg = '\0';
+    do
+    {
+      GetLine(OneLine); KillPrefBlanks(OneLine); KillPostBlanks(OneLine);
+      l = strlen(OneLine);
+      if ((Cont = (OneLine[l - 1] == '\\')))
+      {
+        OneLine[l - 1] = '\0'; KillPostBlanks(OneLine); l = strlen(OneLine);
+      }
+      if (*OneLine != '"') SynError(OneLine);
+      if (OneLine[l - 1] != '"') SynError(OneLine); OneLine[l - 1] = '\0';
+      strmaxcat(Msg, OneLine + 1, 4095);
+    }
+    while (Cont);
+    for (PRec = TransRecs; PRec->AbbString; PRec++)
+      while ((pos = strstr(Msg, PRec->AbbString)))
+      {
+        strcpy(pos, pos + strlen(PRec->AbbString) - 1);
+        *pos = *PRec->Character;
+      }
+    List = (PMsgList) malloc(sizeof(TMsgList));
+    List->Next = Nil;
+    List->Position = z->TotLength;
+    List->Contents = strdup(Msg);
+    if (!z->Messages) z->Messages = List;
+    else z->LastMessage->Next = List;
+    z->LastMessage = List;
+    z->TotLength += strlen(Msg) + 1;
+  }
+}
 
 /*---------------------------------------------------------------------------*/
 
-	int main(int argc, char **argv)
-BEGIN
-   char Line[1024],Cmd[1024],*p,Save;
-   PMsgCat z;
-   TMsgCat TmpCat;
-   PMsgList List;
-   int c;
-   time_t stamp;
-   LongInt Id1,Id2;
-   LongInt RunPos,StrPos;
+int main(int argc, char **argv)
+{
+  char Line[1024], Cmd[1024], *p, Save;
+  PMsgCat z;
+  TMsgCat TmpCat;
+  PMsgList List;
+  int c;
+  time_t stamp;
+  LongInt Id1, Id2;
+  LongInt RunPos, StrPos;
 
-   endian_init(); strutil_init();
+  endian_init(); strutil_init();
 
-   if ((argc<3) OR (argc>4))
-    BEGIN
-     fprintf(stderr,"usage: %s <input resource file> <output msg file> [header file]\n",*argv);
-     exit(1);
-    END
+  if ((argc<3) || (argc>4))
+  {
+    fprintf(stderr, "usage: %s <input resource file> <output msg file> [header file]\n", *argv);
+    exit(1);
+  }
 
-   SrcFile=fopen(argv[1],"r");
-   if (SrcFile==Nil)
-    BEGIN
-     perror(argv[1]); exit(2);
-    END
+  SrcFile = fopenchk(argv[1], 2, "r");
 
-   if (argc==4)
-    BEGIN
-     HFile=fopen(argv[3],"w");
-     if (HFile==Nil)
-      BEGIN
-       perror(argv[3]); exit(3);
-      END
-     IncSym=strdup(argv[3]);
-     for (p=IncSym; *p!='\0'; p++)
-      if (isalpha(((unsigned int) *p)&0xff))
-        *p=mytoupper(*p);
-      else
-        *p='_';
-    END
-   else HFile=Nil;
+  if (argc == 4)
+  {
+    HFile = fopenchk(argv[3], 3, "w");
+    IncSym = strdup(argv[3]);
+    for (p = IncSym; *p; p++)
+     if (isalpha(((unsigned int) *p) & 0xff))
+       *p = mytoupper(*p);
+     else
+       *p = '_';
+  }
+  else
+    HFile = NULL;
 
-   stamp = MyGetFileTime(argv[1]); Id1 = stamp & 0x7fffffff;
-   Id2=0;
-   for (c=0; c<min((int)strlen(argv[1]),4); c++)
-    Id2=(Id2<<8)+((Byte) argv[1][c]);
-   if (HFile!=Nil)
-    BEGIN
-     fprintf(HFile,"#ifndef %s\n",IncSym);
-     fprintf(HFile,"#define %s\n",IncSym);
-     fprintf(HFile,"#define MsgId1 %ld\n",(long) Id1);
-     fprintf(HFile,"#define MsgId2 %ld\n",(long) Id2);
-    END
+  stamp = MyGetFileTime(argv[1]); Id1 = stamp & 0x7fffffff;
+  Id2 = 0;
+  for (c = 0; c < min((int)strlen(argv[1]), 4); c++)
+   Id2 = (Id2 << 8) + ((Byte) argv[1][c]);
+  if (HFile)
+  {
+    fprintf(HFile, "#ifndef %s\n", IncSym);
+    fprintf(HFile, "#define %s\n", IncSym);
+    fprintf(HFile, "#define MsgId1 %ld\n", (long) Id1);
+    fprintf(HFile, "#define MsgId2 %ld\n", (long) Id2);
+  }
 
-   MsgCounter=CatCount=0; MsgCats=Nil; DefCat= -1;
-   while (NOT feof(SrcFile))
-    BEGIN
-     GetLine(Line); KillPrefBlanks(Line); KillPostBlanks(Line);
-     if ((*Line!=';') AND (*Line!='#') AND (*Line!='\0'))
-      BEGIN
-       for (p=Line; ((NOT isspace((unsigned int) *p)) AND (*p!='\0')); p++);
-       Save= *p; *p='\0'; strmaxcpy(Cmd,Line,1024); *p=Save; strcpy(Line,p);
-       if (strcasecmp(Cmd,"LANGS")==0) Process_LANGS(Line);
-       else if (strcasecmp(Cmd,"DEFAULT")==0) Process_DEFAULT(Line);
-       else if (strcasecmp(Cmd,"MESSAGE")==0) Process_MESSAGE(Line);
-      END
-    END
+  MsgCounter = CatCount = 0; MsgCats = NULL; DefCat = -1;
+  while (!feof(SrcFile))
+  {
+    GetLine(Line); KillPrefBlanks(Line); KillPostBlanks(Line);
+    if ((*Line != ';') && (*Line != '#') && (*Line != '\0'))
+    {
+      for (p = Line; ((!isspace((unsigned int) *p)) && (*p)); p++);
+      Save = *p; *p = '\0'; strmaxcpy(Cmd, Line, 1024); *p = Save; strcpy(Line, p);
+      if (!strcasecmp(Cmd, "LANGS")) Process_LANGS(Line);
+      else if (!strcasecmp(Cmd, "DEFAULT")) Process_DEFAULT(Line);
+      else if (!strcasecmp(Cmd, "MESSAGE")) Process_MESSAGE(Line);
+    }
+  }
 
-   fclose(SrcFile);
-   if (HFile!=Nil)
-    BEGIN
-     fprintf(HFile,"#endif /* #ifndef %s */\n",IncSym);
-     fclose(HFile);
-    END
+  fclose(SrcFile);
+  if (HFile)
+  {
+    fprintf(HFile, "#endif /* #ifndef %s */\n", IncSym);
+    fclose(HFile);
+  }
 
-   MsgFile=fopen(argv[2],OPENWRMODE);
-   if (MsgFile==Nil)
-    BEGIN
-     perror(argv[2]); exit(4);
-    END
+  MsgFile = fopenchk(argv[2], 4, OPENWRMODE);
 
-   /* Magic-String */
+  /* Magic-String */
 
-   fwrite(IdentString,1,strlen(IdentString),MsgFile);
-   Write4(MsgFile,&Id1); Write4(MsgFile,&Id2);
+  fwritechk(argv[2], 5, IdentString, 1, strlen(IdentString), MsgFile);
+  Write4(MsgFile, &Id1); Write4(MsgFile, &Id2);
 
-   /* Default nach vorne */
+  /* Default nach vorne */
 
-   if (DefCat>0)
-    BEGIN
-     TmpCat=MsgCats[0]; MsgCats[0]=MsgCats[DefCat]; MsgCats[DefCat]=TmpCat;
-    END
+  if (DefCat > 0)
+  {
+    TmpCat = MsgCats[0]; MsgCats[0] = MsgCats[DefCat]; MsgCats[DefCat] = TmpCat;
+  }
 
-   /* Startadressen String-Kataloge berechnen */
+  /* Startadressen String-Kataloge berechnen */
 
-   RunPos=ftell(MsgFile)+1;
-   for (z=MsgCats; z<MsgCats+CatCount; z++)
-    RunPos+=(z->HeadLength=strlen(z->CtryName)+1+4+4+(4*z->CtryCodeCnt)+4);
-   for (z=MsgCats; z<MsgCats+CatCount; z++)
-    BEGIN
-     z->FilePos=RunPos; RunPos+=z->TotLength+(4*MsgCounter);
-    END
+  RunPos = ftell(MsgFile) + 1;
+  for (z = MsgCats; z < MsgCats + CatCount; z++)
+    RunPos += (z->HeadLength = strlen(z->CtryName) + 1 + 4 + 4 + (4 * z->CtryCodeCnt) + 4);
+  for (z = MsgCats; z < MsgCats + CatCount; z++)
+  {
+    z->FilePos = RunPos; RunPos += z->TotLength + (4 * MsgCounter);
+  }
 
-   /* Country-Records schreiben */
+  /* Country-Records schreiben */
 
-   for (z=MsgCats; z<MsgCats+CatCount; z++)
-    BEGIN
-     fwrite(z->CtryName,1,strlen(z->CtryName)+1,MsgFile);
-     Write4(MsgFile,&(z->TotLength));
-     Write4(MsgFile,&(z->CtryCodeCnt));
-     for (c=0; c<z->CtryCodeCnt; c++) Write4(MsgFile,z->CtryCodes+c);
-     Write4(MsgFile,&(z->FilePos));
-    END
-   Save='\0'; fwrite(&Save,1,1,MsgFile);
+  for (z = MsgCats; z < MsgCats + CatCount; z++)
+  {
+    fwritechk(argv[2], 5, z->CtryName, 1, strlen(z->CtryName) + 1, MsgFile);
+    Write4(MsgFile, &(z->TotLength));
+    Write4(MsgFile, &(z->CtryCodeCnt));
+    for (c = 0; c < z->CtryCodeCnt; c++) Write4(MsgFile, z->CtryCodes + c);
+    Write4(MsgFile, &(z->FilePos));
+  }
+  Save = '\0'; fwritechk(argv[2], 5, &Save, 1, 1, MsgFile);
 
-   /* Stringtabellen schreiben */
+  /* Stringtabellen schreiben */
 
-   for (z=MsgCats; z<MsgCats+CatCount; z++)
-    BEGIN
-     for (List=z->Messages; List!=Nil; List=List->Next)
-      BEGIN
-       StrPos=z->FilePos+(4*MsgCounter)+List->Position;
-       Write4(MsgFile,&StrPos);
-      END
-     for (List=z->Messages; List!=Nil; List=List->Next)
-      fwrite(List->Contents,1,strlen(List->Contents)+1,MsgFile);
-    END
+  for (z = MsgCats; z < MsgCats + CatCount; z++)
+  {
+    for (List = z->Messages; List; List = List->Next)
+    {
+      StrPos = z->FilePos + (4 * MsgCounter) + List->Position;
+      Write4(MsgFile, &StrPos);
+    }
+    for (List = z->Messages; List; List = List->Next)
+      fwritechk(argv[2], 5, List->Contents, 1, strlen(List->Contents) + 1, MsgFile);
+  }
 
-   /* faeaedisch... */
+  /* faeaedisch... */
 
-   fclose(MsgFile);
+  fclose(MsgFile);
 
-   return 0;
-END
+  return 0;
+}
 
 #ifdef CKMALLOC
 #undef malloc
 #undef realloc
 
-        void *ckmalloc(size_t s)
-BEGIN
-   void *tmp=malloc(s);
-   if (tmp==NULL) 
-    BEGIN
-     fprintf(stderr,"allocation error(malloc): out of memory");
-     exit(255);
-    END
-   return tmp;
-END
+void *ckmalloc(size_t s)
+{
+  void *tmp = malloc(s);
 
-        void *ckrealloc(void *p, size_t s)
-BEGIN
-   void *tmp=realloc(p,s);
-   if (tmp==NULL)
-    BEGIN
-     fprintf(stderr,"allocation error(realloc): out of memory");
-     exit(255);
-    END
-   return tmp;
-END
+  if (!tmp) 
+  {
+    fprintf(stderr, "allocation error(malloc): out of memory");
+    exit(255);
+  }
+  return tmp;
+}
+
+void *ckrealloc(void *p, size_t s)
+{
+  void *tmp = realloc(p, s);
+  if (!tmp)
+  {
+    fprintf(stderr, "allocation error(realloc): out of memory");
+    exit(255);
+  }
+  return tmp;
+}
 #endif
-

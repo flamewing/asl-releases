@@ -1,4 +1,4 @@
-$Id: changelog,v 1.59 2010/03/27 15:03:36 alfred Exp $
+$Id: changelog,v 1.60 2010/04/11 11:40:42 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1194,3 +1194,7 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 2010-03-26 [Bld75]
 
 - Bugfix      : correct address range for M16C bit short addressing
+
+2010-04-11 [Bld76]
+
+- Bugfix      : correct operand checking for SHA/SHL on M16C
