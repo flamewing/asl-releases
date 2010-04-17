@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codez8.c,v 1.7 2007/11/24 22:48:08 alfred Exp $                          *
+/* $Id: codez8.c,v 1.8 2010/04/17 13:14:24 alfred Exp $                          *
  *****************************************************************************
  * $Log: codez8.c,v $
+ * Revision 1.8  2010/04/17 13:14:24  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.7  2007/11/24 22:48:08  alfred
  * - some NetBSD changes
  *
@@ -273,11 +276,10 @@ static void DecodeAdr(char *Asc, Word Mask, Boolean Is16)
 
    if (*Asc == '@')
    {
-     strcpy(Asc, Asc + 1);
+     Asc++;
      if ((strlen(Asc) >= 6) && (!strncasecmp(Asc, ".RR", 3)) && (IsIndirect(Asc + 3)))
      {
-       strcpy(Asc, Asc + 3);
-       AdrVal = EvalIntExpression(Asc, Int8, &OK);
+       AdrVal = EvalIntExpression(Asc + 3, Int8, &OK);
        if (OK)
        {
          AdrType = ModWeird; ChkSpace(SegData);

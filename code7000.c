@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code7000.c,v 1.6 2007/11/24 22:48:05 alfred Exp $                    */
+/* $Id: code7000.c,v 1.7 2010/04/17 13:14:22 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code7000.c,v $
+ * Revision 1.7  2010/04/17 13:14:22  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.6  2007/11/24 22:48:05  alfred
  * - some NetBSD changes
  *
@@ -465,10 +468,10 @@ BEGIN
 
    if (*Asc=='@')
     BEGIN
-     strcpy(Asc,Asc+1);
+     Asc++;
      if (IsIndirect(Asc))
       BEGIN
-       strcpy(Asc,Asc+1); Asc[strlen(Asc)-1]='\0';
+       Asc++; Asc[strlen(Asc)-1]='\0';
        BaseReg=RegNone; IndReg=RegNone;
        DispAcc=0; FirstFlag=False; OK=True;
        while ((*Asc!='\0') AND (OK))
@@ -480,7 +483,7 @@ BEGIN
           END
          else
           BEGIN
-           *pos='\0'; strmaxcpy(AdrStr,Asc,255); strcpy(Asc,pos+1);
+           *pos='\0'; strmaxcpy(AdrStr,Asc,255); strmov(Asc,pos+1);
           END
          if (strcasecmp(AdrStr,"PC")==0)
           if (BaseReg==RegNone) BaseReg=RegPC;

@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code97c241.c,v 1.6 2007/11/24 22:48:06 alfred Exp $                  */
+/* $Id: code97c241.c,v 1.7 2010/04/17 13:14:23 alfred Exp $                  */
 /*****************************************************************************
  * $Log: code97c241.c,v $
+ * Revision 1.7  2010/04/17 13:14:23  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.6  2007/11/24 22:48:06  alfred
  * - some NetBSD changes
  *
@@ -429,7 +432,7 @@ BEGIN
     BEGIN
      /* I.1. vorkonditionieren */
 
-     strcpy(Asc,Asc+1); Asc[strlen(Asc)-1]='\0'; KillBlanks(Asc);
+     strmov(Asc,Asc+1); Asc[strlen(Asc)-1]='\0'; KillBlanks(Asc);
 
      /* I.2. Predekrement */
 
@@ -493,7 +496,7 @@ BEGIN
         END
        else
         BEGIN
-         *EPos='\0'; strmaxcpy(AdrPart,Asc,255); strcpy(Asc,EPos+1);
+         *EPos='\0'; strmaxcpy(AdrPart,Asc,255); strmov(Asc,EPos+1);
         END
 
        /* I.4.b. Indexregister mit Skalierung */

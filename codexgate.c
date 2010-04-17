@@ -4,9 +4,12 @@
 /*                                                                           */
 /* Codegenerator XGATE-Kern                                                  */
 /*****************************************************************************/
-/* $Id: codexgate.c,v 1.5 2007/11/24 22:48:08 alfred Exp $                   */
+/* $Id: codexgate.c,v 1.6 2010/04/17 13:14:24 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codexgate.c,v $
+ * Revision 1.6  2010/04/17 13:14:24  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.5  2007/11/24 22:48:08  alfred
  * - some NetBSD changes
  *
@@ -488,7 +491,7 @@ static void DecodeMem(Word Code)
       OK = DecodeReg(ArgStr[2], &Base);
       if (!OK)
         WrXError(1445, ArgStr[2]);
-      strcpy(ArgStr[2], pPos + 1);
+      strmov(ArgStr[2], pPos + 1);
     }
     else
     {

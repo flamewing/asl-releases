@@ -163,7 +163,7 @@ static void GetLine(char *Dest)
     OneFile = (PIncList) malloc(sizeof(TIncList));
     OneFile->Next = IncList; OneFile->Contents = SrcFile;
     IncList = OneFile;
-    strcpy(Dest,Dest + 7); KillPrefBlanks(Dest); KillPrefBlanks(Dest);
+    strmov(Dest, Dest + 7); KillPrefBlanks(Dest); KillPrefBlanks(Dest);
     SrcFile = fopenchk(Dest, 2, "r");
     GetLine(Dest);
   }
@@ -207,8 +207,9 @@ static void Process_LANGS(char *Line)
     PCat->Messages = Nil;
     PCat->TotLength = 0;
     PCat->CtryCodeCnt = 0;
-    for (p2 = p; ((*p2) && (!isspace((unsigned int) *p2))); p2++);
-    if (*p2 == '\0') strcpy(Part, p);
+    for (p2 = p; ((*p2) && (!myisspace(*p2))); p2++);
+    if (*p2 == '\0')
+      strcpy(Part, p);
     else
     {
       *p2 = '\0'; strcpy(Part, p);
@@ -292,7 +293,7 @@ static void Process_MESSAGE(char *Line)
     for (PRec = TransRecs; PRec->AbbString; PRec++)
       while ((pos = strstr(Msg, PRec->AbbString)))
       {
-        strcpy(pos, pos + strlen(PRec->AbbString) - 1);
+        strmov(pos, pos + strlen(PRec->AbbString) - 1);
         *pos = *PRec->Character;
       }
     List = (PMsgList) malloc(sizeof(TMsgList));
@@ -361,7 +362,7 @@ int main(int argc, char **argv)
     if ((*Line != ';') && (*Line != '#') && (*Line != '\0'))
     {
       for (p = Line; ((!isspace((unsigned int) *p)) && (*p)); p++);
-      Save = *p; *p = '\0'; strmaxcpy(Cmd, Line, 1024); *p = Save; strcpy(Line, p);
+      Save = *p; *p = '\0'; strmaxcpy(Cmd, Line, 1024); *p = Save; strmov(Line, p);
       if (!strcasecmp(Cmd, "LANGS")) Process_LANGS(Line);
       else if (!strcasecmp(Cmd, "DEFAULT")) Process_DEFAULT(Line);
       else if (!strcasecmp(Cmd, "MESSAGE")) Process_MESSAGE(Line);

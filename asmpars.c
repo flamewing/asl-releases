@@ -36,9 +36,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.18 2010/03/07 11:16:53 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.19 2010/04/17 13:14:19 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.c,v $
+ * Revision 1.19  2010/04/17 13:14:19  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.18  2010/03/07 11:16:53  alfred
  * - allow DC.(float) on string operands
  *
@@ -1858,7 +1861,7 @@ static Operator Operators[] =
      /* Funktionsnamen abschneiden */
 
      *KlPos='\0'; strmaxcpy(ftemp,Copy,255);
-     strcpy(Copy,KlPos+1); Copy[strlen(Copy)-1]='\0'; 
+     strmov(Copy,KlPos+1); Copy[strlen(Copy)-1]='\0'; 
 
      /* Nullfunktion: nur Argument */
 

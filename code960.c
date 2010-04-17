@@ -20,9 +20,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code960.c,v 1.5 2007/11/24 22:48:06 alfred Exp $                     */
+/* $Id: code960.c,v 1.6 2010/04/17 13:14:23 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code960.c,v $
+ * Revision 1.6  2010/04/17 13:14:23  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.5  2007/11/24 22:48:06  alfred
  * - some NetBSD changes
  *
@@ -403,7 +406,7 @@ END
         static void DecodeMemO(Word Index)
 BEGIN
    MemOrder *Op=MemOrders+Index;
-   LongWord Reg=0,Mem;
+   LongWord Reg=0,Mem=0;
    int MemType;
    ShortInt MemPos=(Op->RegPos>0) ? 3-Op->RegPos : 1;
 

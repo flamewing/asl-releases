@@ -17,9 +17,12 @@
 /*           2002-01-23 symbols defined with BIT must not be macro-local     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code51.c,v 1.6 2007/11/24 22:48:04 alfred Exp $                      */
+/* $Id: code51.c,v 1.7 2010/04/17 13:14:20 alfred Exp $                      */
 /***************************************************************************** 
  * $Log: code51.c,v $
+ * Revision 1.7  2010/04/17 13:14:20  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.6  2007/11/24 22:48:04  alfred
  * - some NetBSD changes
  *
@@ -923,7 +926,6 @@ END
 
         static void DecodeLogic(Word Index)
 BEGIN
-   Boolean InvFlag;
    Byte HReg;
    LongInt AdrLong;
    int z;
@@ -935,23 +937,26 @@ BEGIN
     BEGIN
      if (Index==2) WrError(1350);
      else
-      BEGIN
-       HReg=Index << 4;
-       InvFlag=(*ArgStr[2]=='/');
-       if (InvFlag) strcpy(ArgStr[2],ArgStr[2]+1);
-       switch (DecodeBitAdr(ArgStr[2],&AdrLong,True))
-        BEGIN
+     {
+       Boolean InvFlag;
+       char *pArg2 = ArgStr[2];
+
+       HReg = Index << 4;
+       InvFlag = (*pArg2 == '/');
+       if (InvFlag) pArg2++;
+       switch (DecodeBitAdr(pArg2, &AdrLong, True))
+       {
          case ModBit51:
-          PutCode((InvFlag) ? 0xa0+HReg : 0x72+HReg);
-          BAsmCode[CodeLen++] = AdrLong & 0xff;
-          break;
+           PutCode((InvFlag) ? 0xa0 + HReg : 0x72 + HReg);
+           BAsmCode[CodeLen++] = AdrLong & 0xff;
+           break;
          case ModBit251:
-          PutCode(0x1a9);
-          BAsmCode[CodeLen++] = ((InvFlag) ? 0xe0 : 0x70) + HReg + (AdrLong >>24);
-          BAsmCode[CodeLen++] = AdrLong & 0xff;
-          break;
-        END
-      END
+           PutCode(0x1a9);
+           BAsmCode[CodeLen++] = ((InvFlag) ? 0xe0 : 0x70) + HReg + (AdrLong >> 24);
+           BAsmCode[CodeLen++] = AdrLong & 0xff;
+           break;
+       }
+     }
     END
    else
     BEGIN

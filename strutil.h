@@ -12,9 +12,12 @@
 /*           29. 5.1999 SysString                                            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: strutil.h,v 1.6 2008/11/23 10:39:17 alfred Exp $                     */
+/* $Id: strutil.h,v 1.7 2010/04/17 13:14:24 alfred Exp $                     */
 /*****************************************************************************
  * $Log: strutil.h,v $
+ * Revision 1.7  2010/04/17 13:14:24  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.6  2008/11/23 10:39:17  alfred
  * - allow strings with NUL characters
  *
@@ -93,6 +96,8 @@ extern void KillPrefBlanks(char *s);
 extern void KillPostBlanks(char *s);
 
 extern int strqcmp(const char *s1, const char *s2);
+  
+extern char *strmov(char *pDest, const char *pSrc);
   
 extern void strutil_init(void);
 

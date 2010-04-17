@@ -26,9 +26,12 @@
 /*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.11 2008/11/23 10:39:16 alfred Exp $                      */
+/* $Id: asmsub.c,v 1.12 2010/04/17 13:14:19 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmsub.c,v $
+ * Revision 1.12  2010/04/17 13:14:19  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.11  2008/11/23 10:39:16  alfred
  * - allow strings with NUL characters
  *
@@ -359,18 +362,18 @@ END
 /*--------------------------------------------------------------------------*/
 /* einen String in zwei Teile zerlegen */
 
-	void SplitString(char *Source, char *Left, char *Right, char *Trenner)
-BEGIN
-   char Save;
-   LongInt slen=strlen(Source);
+void SplitString(char *Source, char *Left, char *Right, char *Trenner)
+{
+  char Save;
+  LongInt slen = strlen(Source);
 
-   if ((Trenner==Nil) OR (Trenner>=Source+slen))
-    Trenner=Source+slen;
-   Save=(*Trenner); *Trenner='\0';
-   strcpy(Left,Source); *Trenner=Save;
-   if (Trenner>=Source+slen) *Right='\0';
-   else strcpy(Right,Trenner+1);
-END
+  if ((!Trenner) || (Trenner >= Source + slen))
+    Trenner = Source + slen;
+  Save = (*Trenner); *Trenner = '\0';
+  strmov(Left, Source); *Trenner = Save;
+  if (Trenner >= Source + slen) *Right = '\0';
+  else strmov(Right, Trenner + 1);
+}
 
 /*--------------------------------------------------------------------------*/
 /* verbesserte Grossbuchstabenfunktion */
@@ -511,11 +514,11 @@ BEGIN
    if (p==Nil) return s;
    switch (*(++p))
     BEGIN
-     case '+': strcpy(p,p+1); break;
+     case '+': strmov(p,p+1); break;
      case '-': p++; break;
     END
 
-   while (*p=='0') strcpy(p,p+1);
+   while (*p=='0') strmov(p,p+1);
    WithE=(*p!='\0');
    if (NOT WithE) s[strlen(s)-1]='\0';
 
@@ -524,7 +527,7 @@ BEGIN
    if (WithE) p=strchr(s,'e'); else p=s+strlen(s); p--;
    while (*p=='0') 
     BEGIN
-     strcpy(p,p+1); p--;
+     strmov(p,p+1); p--;
     END
 
    /* 4. auf die gewuenschte Maximalstellenzahl begrenzen */
@@ -563,7 +566,7 @@ BEGIN
      if (nzeroes<=0)
       BEGIN
        *p='\0';
-       d=strchr(s,'.'); strcpy(d,d+1);
+       d=strchr(s,'.'); strmov(d,d+1);
        if (nzeroes!=0) 
         BEGIN
          memmove(s+strlen(s)+nzeroes+1,s+strlen(s)+nzeroes,-nzeroes);
@@ -579,7 +582,7 @@ BEGIN
        n=strlen(p)+1+(MaxLen-strlen(s)); /* = Anzahl freizubekommender Zeichen+Gutschrift */ 
        if (n>=nzeroes)
         BEGIN
-         *p='\0'; d=strchr(s,'.'); strcpy(d,d+1);
+         *p='\0'; d=strchr(s,'.'); strmov(d,d+1);
          d=s+strlen(s); 
          for (n=0; n<nzeroes; n++) *(d++)='0'; *d='\0';
         END
@@ -594,7 +597,7 @@ BEGIN
      n=(-ExpVal)-(strlen(p)); /* = Verlaengerung nach Operation */
      if (strlen(s)+n<=MaxLen)
       BEGIN
-       *p='\0'; d=strchr(s,'.'); strcpy(d,d+1);
+       *p='\0'; d=strchr(s,'.'); strmov(d,d+1);
        if (s[0]=='-') d=s+1; else d=s;
        memmove(d-ExpVal+1,d,strlen(s)+1);
        *(d++)='0'; *(d++)='.';
@@ -610,7 +613,7 @@ BEGIN
      p=strchr(s,'e'); if (p!=Nil) *p='E';
     END
    else p=s+strlen(s);
-   if ((p!=Nil) AND (*(p-1)=='.')) strcpy(p-1,p);
+   if ((p!=Nil) AND (*(p-1)=='.')) strmov(p-1,p);
 
    return s;
 END
@@ -1460,7 +1463,7 @@ BEGIN
      AND   ((z==0) OR (NOT CompressLine_NErl(Line[z-1])))
      AND   ((e>=(int)strlen(Line)) OR (NOT CompressLine_NErl(Line[e]))) )
       BEGIN
-       strcpy(Line+z+1,Line+e); Line[z]=Num;
+       strmov(Line+z+1,Line+e); Line[z]=Num;
        llen=strlen(Line);
       END;
      z++; 
@@ -1476,7 +1479,7 @@ BEGIN
       z=strchr(Line,Num);
       if (z!=Nil)
        BEGIN
-        strcpy(z,z+1); 
+        strmov(z,z+1); 
         strmaxins(Line,TokNam,z-Line,255);
        END
      END
@@ -1493,7 +1496,7 @@ BEGIN
      if (*z=='\0');
      else if (*z==Char_HT)
       BEGIN
-       strcpy(z,z+1);
+       strmov(z,z+1);
        strprep(z,Blanks(8-((z-Line)%8)));
       END
      else if ((*z&0xe0)==0) *z=' ';

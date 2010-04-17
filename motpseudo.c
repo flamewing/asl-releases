@@ -5,9 +5,12 @@
 /* Haeufiger benutzte Motorola-Pseudo-Befehle                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: motpseudo.c,v 1.11 2010/03/14 11:40:19 alfred Exp $                   */
+/* $Id: motpseudo.c,v 1.12 2010/04/17 13:14:24 alfred Exp $                   */
 /***************************************************************************** 
  * $Log: motpseudo.c,v $
+ * Revision 1.12  2010/04/17 13:14:24  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.11  2010/03/14 11:40:19  alfred
  * silence compiler warning
  *
@@ -93,7 +96,7 @@ static Boolean CutRep(char *pAsc, LongInt *pErg)
     {
       *pEnd = '\0';
       *pErg = EvalIntExpression(pStart, Int32, &OK);
-      strcpy(pAsc, pEnd + 1); return OK;
+      strmov(pAsc, pEnd + 1); return OK;
     }
   }
 }    
@@ -429,7 +432,7 @@ void ConvertMotoFloatDec(Double F, Byte *pDest, Boolean NeedsBig)
 
   if (*Man=='-')
   {
-    pDest[11] |= 0x80; strcpy(Man, Man + 1);
+    pDest[11] |= 0x80; strmov(Man, Man + 1);
   }
   else if (*Man == '+')
     strcpy(Man, Man + 1);
@@ -438,14 +441,14 @@ void ConvertMotoFloatDec(Double F, Byte *pDest, Boolean NeedsBig)
 
   if (*Exp == '-')
   {
-    pDest[11]|=0x40; strcpy(Exp, Exp + 1);
+    pDest[11]|=0x40; strmov(Exp, Exp + 1);
   }
   else if (*Exp == '+')
-    strcpy(Exp, Exp + 1);
+    strmov(Exp, Exp + 1);
 
   /* integral part of mantissa (one digit) */
 
-  DigIns(*Man, 16, pDest); strcpy(Man, Man + 2);
+  DigIns(*Man, 16, pDest); strmov(Man, Man + 2);
 
   /* truncate mantissa if we have more digits than we can represent */
 

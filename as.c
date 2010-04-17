@@ -58,9 +58,12 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.21 2010/02/27 14:17:26 alfred Exp $                          */
+/* $Id: as.c,v 1.22 2010/04/17 13:14:18 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.22  2010/04/17 13:14:18  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.21  2010/02/27 14:17:26  alfred
  * - correct increment/decrement of macro nesting level
  *
@@ -787,7 +790,7 @@ BEGIN
    for (z1 = 1; z1 <= ArgCnt; z1++)
     if ((ArgStr[z1][0] == '{') AND (ArgStr[z1][strlen(ArgStr[z1])-1] == '}'))
      BEGIN
-      strcpy(ArgStr[z1], ArgStr[z1] + 1); ArgStr[z1][strlen(ArgStr[z1])-1] = '\0';
+      strmov(ArgStr[z1], ArgStr[z1] + 1); ArgStr[z1][strlen(ArgStr[z1])-1] = '\0';
       if (ReadMacro_SearchArg(ArgStr[z1], "EXPORT", &(Neu->DoExport)));
       else if (ReadMacro_SearchArg(ArgStr[z1], "EXPAND", &DoMacExp)) 
        BEGIN
@@ -846,7 +849,7 @@ BEGIN
 
    if ((MacroOutput) AND (Neu->DoExport))
     BEGIN 
-     if (strlen(PList) != 0) strcpy(PList, PList+1);
+     if (strlen(PList) != 0) strmov(PList, PList+1);
      errno = 0;
      if (Neu->DoGlobCopy) fprintf(MacroFile, "%s MACRO %s\n", Neu->GName, PList);
      else fprintf(MacroFile, "%s MACRO %s\n", LabPart, PList);
@@ -1743,8 +1746,7 @@ BEGIN
      WrError(1110); return;
     END
 
-   strmaxcpy(ArgPart,ArgStr[1],255);
-   if (*ArgPart=='"') strcpy(ArgPart,ArgPart+1);
+   strmaxcpy(ArgPart, (*ArgStr[1] == '"') ? (ArgStr[1] + 1) : ArgStr[1], 255);
    if ((*ArgPart) && (ArgPart[strlen(ArgPart)-1]=='"'))
      ArgPart[strlen(ArgPart)-1]='\0';
    AddSuffix(ArgPart,IncSuffix); strmaxcpy(ArgStr[1],ArgPart,255);
@@ -1988,7 +1990,7 @@ BEGIN
 
    if (*OpPart=='!')
     BEGIN
-     SearchMacros=False; strcpy(OpPart,OpPart+1);
+     SearchMacros=False; strmov(OpPart,OpPart+1);
     END
    else
     BEGIN
@@ -2189,23 +2191,27 @@ BEGIN
 
    /* Label abspalten */
 
-   if ((*h!='\0') AND (NOT isspace((unsigned char)*h)))
-    BEGIN
-     for (i=h; *i!='\0'; i++)
-      if ((isspace(((unsigned char)*i)&0xff)) OR (*i==':')) break;
-     if (*i=='\0')
-      BEGIN
-       strcpy(LabPart,h); *h='\0';
-      END
+   if ((*h) && (!myisspace(*h)))
+   {
+     for (i = h; *i; i++)
+       if ((myisspace(*i)) || (*i == ':'))
+         break;
+     if (!*i)
+     {
+       strcpy(LabPart, h); *h = '\0';
+     }
      else
-      BEGIN
-       *i='\0'; strcpy(LabPart,h); strcpy(h,i+1);
-      END
-     if (LabPart[l=(strlen(LabPart)-1)]==':') LabPart[l]='\0';
-    END
-   else *LabPart='\0';
+     {
+       *i = '\0'; strcpy(LabPart, h); strmov(h, i + 1);
+     }
+     if (LabPart[l = (strlen(LabPart) - 1)] == ':')
+       LabPart[l] = '\0';
+   }
+   else
+     *LabPart = '\0';
 
    /* Opcode & Argument trennen */
+
    setjmp(Retry);
    KillPrefBlanks(h);
    i=FirstBlank(h);
@@ -2406,13 +2412,19 @@ BEGIN
    return (n!=1) ? getmessage(Num_ListPlurName) : "";
 END
 
-        static void TWrite_RWrite(char *dest, Double r, Byte Stellen)
-BEGIN
-   String s;
+static void TWrite_RWrite(char *dest, Double r, Byte Stellen)
+{
+  String s;
+  char *pFirst;
 
-   sprintf(s,"%20.*f",Stellen,r);
-   while (*s==' ') strcpy(s,s+1); strcat(dest,s);
-END
+  sprintf(s, "%20.*f", Stellen, r);
+
+  for (pFirst = s; *pFirst; pFirst++)
+    if (!isspace(*pFirst))
+      break;
+
+  strcat(dest, pFirst);
+}
 
         static void TWrite(Double DTime, char *dest)
 BEGIN

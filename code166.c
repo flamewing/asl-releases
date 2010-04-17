@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code166.c,v 1.5 2007/11/24 22:48:03 alfred Exp $                     */
+/* $Id: code166.c,v 1.6 2010/04/17 13:14:19 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code166.c,v $
+ * Revision 1.6  2010/04/17 13:14:19  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.5  2007/11/24 22:48:03  alfred
  * - some NetBSD changes
  *
@@ -454,7 +457,7 @@ BEGIN
 
    else if ((*Asc=='[') AND (Asc[strlen(Asc)-1]==']'))
     BEGIN
-     strcpy(Asc,Asc+1); Asc[strlen(Asc)-1]='\0';
+     Asc++; Asc[strlen(Asc)-1]='\0';
 
      /* Predekrement ? */
 
@@ -485,7 +488,7 @@ BEGIN
           END
          else
           BEGIN
-           *PPos='\0'; strmaxcpy(Part,Asc,255); strcpy(Asc,PPos+1);
+           *PPos='\0'; strmaxcpy(Part,Asc,255); strmov(Asc,PPos+1);
           END
          if (IsReg(Part,&HReg,True))
           if ((NegFlag) OR (AdrMode!=0xff)) WrError(1350); else AdrMode=HReg;
@@ -616,7 +619,7 @@ BEGIN
     BEGIN
      WrError(1350); return False;
     END
-   strcpy(Asc,Asc+1);
+   strmov(Asc,Asc+1);
    FirstPassUnknown=False;
    *Erg=EvalIntExpression(Asc,UInt3,&OK);
    if (FirstPassUnknown) *Erg=1;

@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codest7.c,v 1.4 2007/11/24 22:48:07 alfred Exp $                     */
+/* $Id: codest7.c,v 1.5 2010/04/17 13:14:23 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codest7.c,v $
+ * Revision 1.5  2010/04/17 13:14:23  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.4  2007/11/24 22:48:07  alfred
  * - some NetBSD changes
  *
@@ -270,7 +273,7 @@ END
 BEGIN
    Boolean OK,YReg;
    String Asc,Asc2;
-   char *p;
+   char *p, *pAsc;
 
    strmaxcpy(Asc,Asc_O,255);
 
@@ -317,19 +320,19 @@ BEGIN
 
    /* speicherindirekt ? */
 
-   if ((*Asc=='[') AND (Asc[strlen(Asc)-1]==']'))
-    BEGIN
-     strcpy(Asc,Asc+1); Asc[strlen(Asc)-1]='\0';
-     DecideASize(Mask,Asc,ModIAbs8,ModIAbs16,0xb,0xc);
-     if (AdrType!=ModNone) AddPrefix(0x92);
+   if ((*Asc == '[') && (Asc[strlen(Asc) - 1] == ']'))
+   {
+     pAsc = Asc + 1; pAsc[strlen(pAsc) - 1] = '\0';
+     DecideASize(Mask, pAsc, ModIAbs8, ModIAbs16, 0xb, 0xc);
+     if (AdrType != ModNone) AddPrefix(0x92);
      ChkAdr(Mask); return;
-    END
+   }
 
    /* sonstwie indirekt ? */
 
    if (IsIndirect(Asc))
     BEGIN
-     strcpy(Asc,Asc+1); Asc[strlen(Asc)-1]='\0';
+     strmov(Asc,Asc+1); Asc[strlen(Asc)-1]='\0';
 
      /* ein oder zwei Argumente ? */
 
@@ -367,7 +370,7 @@ BEGIN
 
      if ((*Asc=='[') AND (Asc[strlen(Asc)-1]==']'))
       BEGIN
-       strcpy(Asc,Asc+1); Asc[strlen(Asc)-1]='\0';
+       strmov(Asc,Asc+1); Asc[strlen(Asc)-1]='\0';
        if (YReg)
         BEGIN
          DecideASize(Mask,Asc,ModIYAbs8,ModIYAbs16,0xe,0xd);

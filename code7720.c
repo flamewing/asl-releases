@@ -15,9 +15,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code7720.c,v 1.5 2008/11/23 10:39:17 alfred Exp $                    */
+/* $Id: code7720.c,v 1.6 2010/04/17 13:14:22 alfred Exp $                    */
 /***************************************************************************** 
  * $Log: code7720.c,v $
+ * Revision 1.6  2010/04/17 13:14:22  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.5  2008/11/23 10:39:17  alfred
  * - allow strings with NUL characters
  *
@@ -337,35 +340,35 @@ BEGIN
     END
 END
 
-        static void DecodeOP(Word Index)
-BEGIN
-   char *p;
-   int z;
-   UNUSED(Index);
+static void DecodeOP(Word Index)
+{
+  char *p;
+  int z;
+  UNUSED(Index);
 
-   UsedOpFields=0; ActCode=0;
+  UsedOpFields = 0; ActCode = 0;
 
-   if (ArgCnt>1)
-    BEGIN
-     p=FirstBlank(ArgStr[1]);
-     if (p!=NULL)
-      BEGIN
-       *p='\0'; strmaxcpy(OpPart,ArgStr[1],255);
-       NLS_UpString(OpPart);
-       strcpy(ArgStr[1],p+1); KillPrefBlanks(ArgStr[1]);
-      END
-     else
-      BEGIN
-       strmaxcpy(OpPart,ArgStr[1],255);
-       for (z=1; z<ArgCnt; z++)
-        strcpy(ArgStr[z],ArgStr[z+1]);
-       ArgCnt--;
-      END
-     if (NOT LookupInstTable(OpTable,OpPart)) WrXError(1200,OpPart);
-    END
+  if (ArgCnt>1)
+  {
+    p = FirstBlank(ArgStr[1]);
+    if (p)
+    {
+      *p = '\0'; strmaxcpy(OpPart, ArgStr[1], 255);
+      NLS_UpString(OpPart);
+      strmov(ArgStr[1], p + 1); KillPrefBlanks(ArgStr[1]);
+    }
+    else
+    {
+      strmaxcpy(OpPart, ArgStr[1], 255);
+      for (z = 1; z < ArgCnt; z++)
+       strcpy(ArgStr[z], ArgStr[z + 1]);
+      ArgCnt--;
+    }
+    if (!LookupInstTable(OpTable,OpPart)) WrXError(1200,OpPart);
+  }
 
-    DAsmCode[0]=ActCode; CodeLen=1;
-END
+  DAsmCode[0] = ActCode; CodeLen = 1;
+}
 
         static void DecodeMOV(Word Index)
 BEGIN

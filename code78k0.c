@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code78k0.c,v 1.5 2007/11/24 22:48:05 alfred Exp $                          *
+/* $Id: code78k0.c,v 1.6 2010/04/17 13:14:22 alfred Exp $                          *
  ***************************************************************************** 
  * $Log: code78k0.c,v $
+ * Revision 1.6  2010/04/17 13:14:22  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.5  2007/11/24 22:48:05  alfred
  * - some NetBSD changes
  *
@@ -168,7 +171,7 @@ BEGIN
 
    if ((*Asc=='[') AND (Asc[strlen(Asc)-1]==']'))
     BEGIN
-     strcpy(Asc,Asc+1); Asc[strlen(Asc)-1]='\0';
+     Asc++; Asc[strlen(Asc)-1]='\0';
 
      if ((strcasecmp(Asc,"DE")==0) OR (strcasecmp(Asc,"RP2")==0))
       BEGIN
@@ -177,7 +180,7 @@ BEGIN
      else if ((strncasecmp(Asc,"HL",2)!=0) AND (strncasecmp(Asc,"RP3",3)!=0)) WrXError(1445,Asc);
      else
       BEGIN
-       strcpy(Asc,Asc+2); if (*Asc=='3') strcpy(Asc,Asc+1);
+       Asc += 2; if (*Asc == '3') Asc++;
        if ((strcasecmp(Asc,"+B")==0) OR (strcasecmp(Asc,"+R3")==0))
         BEGIN
          AdrMode=ModIndex; AdrPart=1;
@@ -210,7 +213,7 @@ BEGIN
 
    if (*Asc=='!')
     BEGIN
-     LongFlag=True; strcpy(Asc,Asc+1);
+     LongFlag=True; Asc++;
     END
    else LongFlag=False;
 
@@ -1029,16 +1032,18 @@ static void DecodeBR(Word Index)
   }
   else
   {
-    if (*ArgStr[1] == '!') 
+    char *pArg1 = ArgStr[1];
+
+    if (*pArg1 == '!') 
     {
-      strcpy(ArgStr[1], ArgStr[1] + 1); HReg = 1;
+      pArg1++; HReg = 1;
     }
-    else if (*ArgStr[1] == '$')
+    else if (*pArg1 == '$')
     {
-      strcpy(ArgStr[1], ArgStr[1] + 1); HReg = 2;
+      pArg1++; HReg = 2;
     }
     else HReg = 0;
-    AdrWord = EvalIntExpression(ArgStr[1], UInt16, &OK);
+    AdrWord = EvalIntExpression(pArg1, UInt16, &OK);
     if (OK)
     {
       if (HReg == 0)

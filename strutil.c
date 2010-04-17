@@ -11,9 +11,12 @@
 /*           30. 5.1999 ConstLongInt akzeptiert auch 0x fuer Hex-Zahlen      */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: strutil.c,v 1.6 2008/11/23 10:39:17 alfred Exp $                     */
+/* $Id: strutil.c,v 1.7 2010/04/17 13:14:24 alfred Exp $                     */
 /*****************************************************************************
  * $Log: strutil.c,v $
+ * Revision 1.7  2010/04/17 13:14:24  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.6  2008/11/23 10:39:17  alfred
  * - allow strings with NUL characters
  *
@@ -575,7 +578,7 @@ BEGIN
    char *z=s;
 
    while ((*z!='\0') AND (isspace((unsigned char)*z))) z++;
-   if (z!=s) strcpy(s,z);
+   if (z!=s) strmov(s,z);
 END
 
 /*--------------------------------------------------------------------------*/
@@ -595,6 +598,50 @@ BEGIN
    int erg=(*s1)-(*s2);
    return (erg!=0) ? erg : strcmp(s1,s2);
 END
+
+/*--------------------------------------------------------------------------*/
+
+/* we need a strcpy() with a defined behaviour in case of overlapping source
+   and destination: */
+
+char *strmov(char *pDest, const char *pSrc)
+{
+  memmove(pDest, pSrc, strlen(pSrc) + 1);
+  return pDest;
+}
+
+#ifdef __GNUC__
+
+char *strcpy(char *pDest, const char *pSrc)
+{
+  int l = strlen(pSrc) + 1;
+  int Overlap = 0;
+
+  if (pSrc < pDest)
+  {
+    if (pSrc + l > pDest)
+      Overlap = 1;
+  }
+  else if (pSrc > pDest)
+  {
+    if (pDest + l > pSrc)
+      Overlap = 1;
+  }
+  else if (l > 0)
+  {
+    Overlap = 1;
+  }
+
+  if (Overlap)
+    fprintf(stderr, "overlapping strcpy() called from address 0x%p, resolve this address with addr2line and report to author\n",
+            __builtin_return_address(0));
+
+  return strmov(pDest, pSrc);
+}
+
+#endif
+
+/*--------------------------------------------------------------------------*/
 
 	void strutil_init(void)
 BEGIN

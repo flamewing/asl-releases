@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code370.c,v 1.5 2007/11/24 22:48:03 alfred Exp $                     */
+/* $Id: code370.c,v 1.6 2010/04/17 13:14:20 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code370.c,v $
+ * Revision 1.6  2010/04/17 13:14:20  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.5  2007/11/24 22:48:03  alfred
  * - some NetBSD changes
  *
@@ -276,7 +279,7 @@ BEGIN
 
    if (*Asc=='#')
     BEGIN
-     strcpy(Asc,Asc+1);
+     Asc++;
      p=HasDisp(Asc);
      if (p==Nil)
       BEGIN

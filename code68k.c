@@ -36,9 +36,12 @@
 /*           2001-12-02 fixed problems with forward refs of shift arguments  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68k.c,v 1.12 2010/03/07 10:45:22 alfred Exp $                     */
+/* $Id: code68k.c,v 1.13 2010/04/17 13:14:21 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code68k.c,v $
+ * Revision 1.13  2010/04/17 13:14:21  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.12  2010/03/07 10:45:22  alfred
  * - generalization of Motorola disposal instructions
  *
@@ -547,112 +550,113 @@ BEGIN
    /* immediate : */
 
    if (*Asc=='#') 
-    BEGIN
-     strcpy(Asc,Asc+1);
-     AdrNum=11;
-     AdrMode=0x3c;
+   {
+     char *pAsc = Asc + 1;
+
+     AdrNum = 11;
+     AdrMode = 0x3c;
      switch (OpSize)
-      BEGIN
+     {
        case 0:
-        AdrCnt=2;
-        HVal8=EvalIntExpression(Asc,Int8,&ValOK);
-        if (ValOK) AdrVals[0]=(Word)((Byte) HVal8);
-        break;
+         AdrCnt = 2;
+         HVal8 = EvalIntExpression(pAsc, Int8, &ValOK);
+         if (ValOK) AdrVals[0] = (Word)((Byte) HVal8);
+         break;
        case 1:
-        AdrCnt=2;
-        HVal16=EvalIntExpression(Asc,Int16,&ValOK);
-        if (ValOK) AdrVals[0]=(Word) HVal16;
-        break;
+         AdrCnt = 2;
+         HVal16 = EvalIntExpression(pAsc, Int16, &ValOK);
+         if (ValOK) AdrVals[0] = (Word) HVal16;
+         break;
        case 2:
-        AdrCnt=4;
-        HVal=EvalIntExpression(Asc,Int32,&ValOK);
-        if (ValOK) 
-         BEGIN
-          AdrVals[0]=HVal >> 16;
-          AdrVals[1]=HVal & 0xffff;
-         END
-        break;
+         AdrCnt = 4;
+         HVal = EvalIntExpression(pAsc,Int32,&ValOK);
+         if (ValOK) 
+         {
+           AdrVals[0] = HVal >> 16;
+           AdrVals[1] = HVal & 0xffff;
+         }
+         break;
 #ifdef HAS64
        case 3:
-        AdrCnt=8;
-        QVal=EvalIntExpression(Asc,Int64,&ValOK);
-        if (ValOK) 
-         BEGIN
-          AdrVals[0]=(QVal >> 48) & 0xffff;
-          AdrVals[1]=(QVal >> 32) & 0xffff;
-          AdrVals[2]=(QVal >> 16) & 0xffff;
-          AdrVals[3]=(QVal      ) & 0xffff;
-         END
-        break;
+         AdrCnt = 8;
+         QVal = EvalIntExpression(pAsc, Int64, &ValOK);
+         if (ValOK) 
+         {
+           AdrVals[0] = (QVal >> 48) & 0xffff;
+           AdrVals[1] = (QVal >> 32) & 0xffff;
+           AdrVals[2] = (QVal >> 16) & 0xffff;
+           AdrVals[3] = (QVal      ) & 0xffff;
+         }
+         break;
 #endif
        case 4:
-        AdrCnt=4;
-        DVal=EvalFloatExpression(Asc,Float32,&ValOK);
-        if (ValOK) 
-         BEGIN
-          Double_2_ieee4(DVal,(Byte *) SwapField,BigEndian);
-          if (BigEndian) DWSwap((Byte *) SwapField,4);
-          AdrVals[0]=SwapField[1];
-          AdrVals[1]=SwapField[0];
-         END
-        break;
+         AdrCnt = 4;
+         DVal = EvalFloatExpression(pAsc, Float32, &ValOK);
+         if (ValOK) 
+         {
+           Double_2_ieee4(DVal, (Byte *) SwapField, BigEndian);
+           if (BigEndian) DWSwap((Byte *) SwapField, 4);
+           AdrVals[0] = SwapField[1];
+           AdrVals[1] = SwapField[0];
+         }
+         break;
        case 5:
-        AdrCnt=8;
-        DVal=EvalFloatExpression(Asc,Float64,&ValOK);
-        if (ValOK) 
-         BEGIN
-          Double_2_ieee8(DVal,(Byte *) SwapField,BigEndian);
-          if (BigEndian) QWSwap((Byte *) SwapField,8);
-          AdrVals[0]=SwapField[3];
-          AdrVals[1]=SwapField[2];
-          AdrVals[2]=SwapField[1];
-          AdrVals[3]=SwapField[0];
-         END
-        break;
+         AdrCnt = 8;
+         DVal = EvalFloatExpression(pAsc, Float64, &ValOK);
+         if (ValOK) 
+         {
+           Double_2_ieee8(DVal, (Byte *) SwapField, BigEndian);
+           if (BigEndian) QWSwap((Byte *) SwapField, 8);
+           AdrVals[0] = SwapField[3];
+           AdrVals[1] = SwapField[2];
+           AdrVals[2] = SwapField[1];
+           AdrVals[3] = SwapField[0];
+         }
+         break;
        case 6:
-        AdrCnt=12;
-        DVal=EvalFloatExpression(Asc,Float64,&ValOK);
-        if (ValOK) 
-         BEGIN
-          Double_2_ieee10(DVal,(Byte *) SwapField,False);
-          if (BigEndian) WSwap((Byte *) SwapField,10);
-          AdrVals[0]=SwapField[4];
-          AdrVals[1]=0;
-          AdrVals[2]=SwapField[3];
-          AdrVals[3]=SwapField[2];
-          AdrVals[4]=SwapField[1];
-          AdrVals[5]=SwapField[0];
-         END
-        break;
+         AdrCnt = 12;
+         DVal = EvalFloatExpression(pAsc, Float64, &ValOK);
+         if (ValOK) 
+         {
+           Double_2_ieee10(DVal, (Byte *) SwapField, False);
+           if (BigEndian) WSwap((Byte *) SwapField, 10);
+           AdrVals[0] = SwapField[4];
+           AdrVals[1] = 0;
+           AdrVals[2] = SwapField[3];
+           AdrVals[3] = SwapField[2];
+           AdrVals[4] = SwapField[1];
+           AdrVals[5] = SwapField[0];
+         }
+         break;
        case 7:
-        AdrCnt=12;
-        DVal=EvalFloatExpression(Asc,Float64,&ValOK);
-        if (ValOK) 
-         BEGIN
-          ConvertMotoFloatDec(DVal,(Byte *) SwapField,False);
-          AdrVals[0]=SwapField[5];
-          AdrVals[1]=SwapField[4];
-          AdrVals[2]=SwapField[3];
-          AdrVals[3]=SwapField[2];
-          AdrVals[4]=SwapField[1];
-          AdrVals[5]=SwapField[0];
-         END
-        break;
+         AdrCnt = 12;
+         DVal = EvalFloatExpression(pAsc, Float64, &ValOK);
+         if (ValOK) 
+         {
+           ConvertMotoFloatDec(DVal, (Byte *) SwapField, False);
+           AdrVals[0] = SwapField[5];
+           AdrVals[1] = SwapField[4];
+           AdrVals[2] = SwapField[3];
+           AdrVals[3] = SwapField[2];
+           AdrVals[4] = SwapField[1];
+           AdrVals[5] = SwapField[0];
+         }
+         break;
        case 8: /* special arg 1..8 */
-        AdrCnt = 2;
-        FirstPassUnknown = False;
-        HVal8 = EvalIntExpression(Asc, UInt4, &ValOK);
-        if (ValOK)
-         BEGIN
-          if (FirstPassUnknown)
-           HVal8 = 1;
-          ValOK = ChkRange(HVal8, 1, 8);
-         END
-        if (ValOK) AdrVals[0]=(Word)((Byte) HVal8);
-        break;
-      END
+         AdrCnt = 2;
+         FirstPassUnknown = False;
+         HVal8 = EvalIntExpression(pAsc, UInt4, &ValOK);
+         if (ValOK)
+         {
+           if (FirstPassUnknown)
+            HVal8 = 1;
+           ValOK = ChkRange(HVal8, 1, 8);
+         }
+         if (ValOK) AdrVals[0] = (Word)((Byte) HVal8);
+         break;
+     }
      ChkAdr(Erl); return;
-    END
+   }
 
    /* CPU-Register direkt: */
 
@@ -730,7 +734,7 @@ BEGIN
      /* aeusseres Displacement abspalten, Klammern loeschen: */
 
      p = strchr(Asc,'('); *p = '\0';
-     strmaxcpy(OutDisp, Asc, 255); strcpy(Asc, p + 1);
+     strmaxcpy(OutDisp, Asc, 255); strmov(Asc, p + 1);
      OutDispLen = (-1);
      if (NOT SplitSize(OutDisp, &OutDispLen))
       return;
@@ -756,7 +760,7 @@ BEGIN
         END
        else
         BEGIN
-         *p = '\0'; strcpy(AdrComps[CompCnt].Name, Asc); strcpy(Asc, p + 1);
+         *p = '\0'; strcpy(AdrComps[CompCnt].Name, Asc); strmov(Asc, p + 1);
         END
        if (NOT ClassComp(AdrComps + CompCnt)) 
         BEGIN
@@ -1511,6 +1515,7 @@ static void DecodeADDQSUBQ(Word Index)
 {
   Byte HVal8;
   Boolean ValOK;
+  char *pArg1;
 
   if (!CheckColdSize())
     return;
@@ -1533,10 +1538,11 @@ static void DecodeADDQSUBQ(Word Index)
 
   WAsmCode[0] = 0x5000 | AdrMode | (OpSize << 6) | (Index << 8);
   CopyAdrVals(WAsmCode + 1);
-  if (*ArgStr[1] == '#')
-    strcpy(ArgStr[1],ArgStr[1]+1);
+  pArg1 = ArgStr[1];
+  if ('#' == *pArg1)
+    pArg1++;
   FirstPassUnknown = False;
-  HVal8 = EvalIntExpression(ArgStr[1], UInt4, &ValOK);
+  HVal8 = EvalIntExpression(pArg1, UInt4, &ValOK);
   if (FirstPassUnknown) HVal8 = 1;
   if ((!ValOK) || (HVal8 < 1) | (HVal8 > 8))
   {
@@ -4374,19 +4380,19 @@ BEGIN
 
    /* Befehlserweiterungen */
 
-   if ((*OpPart=='F') AND (FPUAvail))
-    BEGIN
-     strcpy(OpPart,OpPart+1);
+   if ((*OpPart == 'F') && (FPUAvail))
+   {
+     strmov(OpPart, OpPart + 1);
      DecodeFPUOrders();
      return;
-    END
+   }
 
-   if ((*OpPart=='P') AND (NOT Memo("PEA")) AND (PMMUAvail))
-    BEGIN
-     strcpy(OpPart,OpPart+1);
+   if ((*OpPart == 'P') && (!Memo("PEA")) && (PMMUAvail))
+   {
+     strmov(OpPart, OpPart + 1);
      DecodePMMUOrders();
      return;
-    END
+   }
 
    /* vermischtes */
 

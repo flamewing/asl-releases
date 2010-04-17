@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code7700.c,v 1.4 2005/09/08 17:31:04 alfred Exp $                    */
+/* $Id: code7700.c,v 1.5 2010/04/17 13:14:22 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code7700.c,v $
+ * Revision 1.5  2010/04/17 13:14:22  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.4  2005/09/08 17:31:04  alfred
  * - add missing include
  *
@@ -398,25 +401,25 @@ BEGIN
     END
 END
 
-        static void SplitArg(char *Src, String *HStr, Integer *HCnt)
-BEGIN
-   char *p;
+static void SplitArg(char *Src, String *HStr, Integer *HCnt)
+{
+  char *p;
 
-   strcpy(Src,Src+1); Src[strlen(Src)-1]='\0';
-   p=QuotPos(Src,',');
-   if (p==Nil)
-    BEGIN
-     strmaxcpy(HStr[0],Src,255); *HCnt=1;
-    END
-   else
-    BEGIN
-     *p='\0';
-     strmaxcpy(HStr[0],Src,255);
-     strmaxcpy(HStr[1],p+1,255);
-     *p=',';
-     *HCnt=2;
-    END
-END
+  Src++; Src[strlen(Src) - 1] = '\0';
+  p = QuotPos(Src, ',');
+  if (!p)
+  {
+    strmaxcpy(HStr[0], Src, 255); *HCnt = 1;
+  }
+  else
+  {
+    *p = '\0';
+    strmaxcpy(HStr[0], Src, 255);
+    strmaxcpy(HStr[1], p + 1, 255);
+    *p = ',';
+    *HCnt = 2;
+  }
+}
 
         static void DecodeAdr(Integer Start, LongWord Mask)
 BEGIN

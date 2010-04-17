@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6812.c,v 1.16 2007/11/24 22:48:04 alfred Exp $                    */
+/* $Id: code6812.c,v 1.17 2010/04/17 13:14:20 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6812.c,v $
+ * Revision 1.17  2010/04/17 13:14:20  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.16  2007/11/24 22:48:04  alfred
  * - some NetBSD changes
  *
@@ -345,16 +348,19 @@ static void CutShort(char *Asc, Integer *ShortMode)
   if (*Asc == '>')
   {
     *ShortMode = eShortModeNo;
-    strcpy(Asc, Asc + 1);
+    strmov(Asc, Asc + 1);
   }
   else if (*Asc == '<')
   {
-    *ShortMode = eShortModeYes;
-    strcpy(Asc,Asc + 1);
-    if (*Asc == '<')
+    if (Asc[1] == '<')
     {
       *ShortMode = eShortModeExtreme;
-      strcpy(Asc, Asc + 1);
+      strmov(Asc, Asc + 2);
+    }
+    else
+    {
+      *ShortMode = eShortModeYes;
+      strmov(Asc,Asc + 1);
     }
   }
   else
@@ -421,7 +427,7 @@ static void DecodeAdr(int Start, int Stop, Word Mask)
 
     if ((*ArgStr[Start] == '[') && (ArgStr[Start][strlen(ArgStr[Start]) - 1] == ']'))
     {
-      strcpy(ArgStr[Start], ArgStr[Start] + 1);
+      strmov(ArgStr[Start], ArgStr[Start] + 1);
       ArgStr[Start][strlen(ArgStr[Start]) - 1] = '\0';
       p = QuotPos(ArgStr[Start], ','); if (p != Nil) *p = '\0';
       if (p == Nil) WrError(1350);
@@ -495,7 +501,7 @@ static void DecodeAdr(int Start, int Stop, Word Mask)
     if ((*ArgStr[Stop] == '-') || (*ArgStr[Stop] == '+'))
     {
       DecFlag = (*ArgStr[Stop] == '-');
-      AutoFlag = True; PostFlag = False; strcpy(ArgStr[Stop], ArgStr[Stop] + 1);
+      AutoFlag = True; PostFlag = False; strmov(ArgStr[Stop], ArgStr[Stop] + 1);
     }
     else if ((ArgStr[Stop][l - 1] == '-') || (ArgStr[Stop][l - 1] == '+'))
     {
@@ -1012,9 +1018,11 @@ static void DecodeBit(Word Index)
   else if (*AttrPart!='\0') WrError(1100);
   else
   {
-    if (*ArgStr[ArgCnt] == '#')
-      strcpy(ArgStr[ArgCnt], ArgStr[ArgCnt] + 1);
-    HReg = EvalIntExpression(ArgStr[ArgCnt], UInt8, &OK);
+    char *pArgN = ArgStr[ArgCnt];
+
+    if (*pArgN == '#')
+      pArgN++;
+    HReg = EvalIntExpression(pArgN, UInt8, &OK);
     if (OK)
     {
       ExPos = 2; /* wg. Masken-Postbyte */
@@ -1122,9 +1130,11 @@ static void DecodeBrBit(Word Index)
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
-    if (*ArgStr[ArgCnt - 1] == '#')
-      strcpy(ArgStr[ArgCnt - 1], ArgStr[ArgCnt - 1] + 1);
-    HReg = EvalIntExpression(ArgStr[ArgCnt - 1], UInt8, &OK);
+    char *pArgN1 = ArgStr[ArgCnt - 1];
+
+    if (*pArgN1 == '#')
+      pArgN1++;
+    HReg = EvalIntExpression(pArgN1, UInt8, &OK);
     if (OK)
     {
       Address = EvalIntExpression(ArgStr[ArgCnt], AddrInt, &OK) - EProgCounter();
@@ -1165,9 +1175,11 @@ static void DecodeTRAP(Word Index)
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
+    char *pArg1 = ArgStr[1];
+
     FirstPassUnknown = False;
-    if (*ArgStr[1] == '#') strcpy(ArgStr[1], ArgStr[1] + 1);
-    BAsmCode[1] = EvalIntExpression(ArgStr[1], UInt8, &OK);
+    if (*pArg1 == '#') pArg1++;
+    BAsmCode[1] = EvalIntExpression(pArg1, UInt8, &OK);
     if (FirstPassUnknown) BAsmCode[1] = 0x30;
     if (OK)
     {

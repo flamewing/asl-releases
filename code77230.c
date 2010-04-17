@@ -16,9 +16,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code77230.c,v 1.6 2008/11/23 10:39:17 alfred Exp $                   */
+/* $Id: code77230.c,v 1.7 2010/04/17 13:14:22 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code77230.c,v $
+ * Revision 1.7  2010/04/17 13:14:22  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.6  2008/11/23 10:39:17  alfred
  * - allow strings with NUL characters
  *
@@ -167,30 +170,30 @@ BEGIN
 
    if (DiscPtr!=Nil)
     BEGIN
-     for (p=DiscPtr+1; isspace(((usint)*p)&0xff); p++)
+     for (p=DiscPtr+1; myisspace(*p); p++)
       if (*p=='\0') break;
-     for (p2=p; NOT isspace(((usint)*p2)&0xff); p2++)
+     for (p2=p; NOT myisspace(*p2); p2++)
       if (*p2=='\0') break;
      Eaten=(*p2=='\0'); *p2='\0';
-     strcpy(OpPart,p); NLS_UpString(OpPart);
+     strmov(OpPart,p); NLS_UpString(OpPart);
      if (Eaten)
       BEGIN
        for (z=1; z<ArgCnt; z++)
-        strcpy(ArgStr[z],ArgStr[z+1]);
+        strmov(ArgStr[z],ArgStr[z+1]);
        ArgCnt--;
       END
      else
       BEGIN
        if (p2!=Nil)
-        for (p2++; isspace(((usint)*p2)&0xff); p2++);
-       strcpy(ArgStr[SplittedArg],p2);
+        for (p2++; myisspace(*p2); p2++);
+       strmov(ArgStr[SplittedArg],p2);
       END
     END
    else *OpPart='\0';
    if (DiscCnt>0)
     BEGIN
      for (z=0; z<=ArgCnt-DiscCnt; z++)
-      strcpy(ArgStr[z+1],ArgStr[z+DiscCnt]);
+      strmov(ArgStr[z+1],ArgStr[z+DiscCnt]);
      ArgCnt-=DiscCnt-1;
     END
 END

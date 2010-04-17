@@ -17,9 +17,12 @@
 /*                      changed segment limits/inits                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeace.c,v 1.3 2005/09/08 16:53:42 alfred Exp $                     */
+/* $Id: codeace.c,v 1.4 2010/04/17 13:14:23 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codeace.c,v $
+ * Revision 1.4  2010/04/17 13:14:23  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.3  2005/09/08 16:53:42  alfred
  * - use common PInstTable
  *
@@ -166,12 +169,14 @@ BEGIN
            WrError(1350); break;
           END
          else
-          BEGIN
-           if (*Part == '#') strcpy(Part, Part +1);
-           AdrVal = EvalIntExpression(Part, UInt8, &OK);
-           if (NOT OK) break;
+         {
+           char *pPart = Part;
+
+           if (*pPart == '#') pPart++;
+           AdrVal = EvalIntExpression(pPart, UInt8, &OK);
+           if (!OK) break;
            DispOcc = True;
-          END
+         }
          if (p == Nil) Asc = "";
          else Asc = p + 1;
         END

@@ -31,119 +31,123 @@
 #include <direct.h>
 #endif
 
-	char *FExpand(char *Src)
-BEGIN
-   static String CurrentDir;
-   String Copy;
+char *FExpand(char *Src)
+{
+  static String CurrentDir;
+  String Copy;
 #ifdef DRSEP
-   String DrvPart;
+  String DrvPart;
 #endif /* DRSEP */
-   char *p,*p2;
+  char *p,*p2;
 
-   strmaxcpy(Copy,Src,255);
+  strmaxcpy(Copy, Src, 255);
 
 #ifdef DRSEP
-   p=strchr(Copy,DRSEP);
-   if (p!=Nil)
-    BEGIN
-     memcpy(DrvPart,Copy,p-Copy); DrvPart[p-Copy]='\0'; strcpy(Copy,p+1);
-    END
-   else *DrvPart='\0';
+  p = strchr(Copy,DRSEP);
+  if (p)
+  {
+    memcpy(DrvPart, Copy, p - Copy);
+    DrvPart[p - Copy] = '\0';
+    strmov(Copy, p + 1);
+  }
+  else
+    *DrvPart = '\0';
 #endif
 
 #if (defined __MSDOS__)
-   {
-     int DrvNum;
+  {
+    int DrvNum;
 
-     if (*DrvPart == '\0')
-     {
-       DrvNum = getdisk();
-       *DrvPart = DrvNum + 'A';
-       DrvPart[1] = '\0'; DrvNum++;
-     }
-     else
-       DrvNum = toupper(*DrvPart) - '@';
-     getcurdir(DrvNum, CurrentDir);
-   }
+    if (*DrvPart == '\0')
+    {
+      DrvNum = getdisk();
+      *DrvPart = DrvNum + 'A';
+      DrvPart[1] = '\0'; DrvNum++;
+    }
+    else
+      DrvNum = toupper(*DrvPart) - '@';
+    getcurdir(DrvNum, CurrentDir);
+  }
 #elif (defined __EMX__) || (defined __IBMC__)
-   {
-     ULONG DrvNum, Dummy;
+  {
+    ULONG DrvNum, Dummy;
 
-     if (*DrvPart == '\0')
-     {
-       DosQueryCurrentDisk(&DrvNum, &Dummy);
-       *DrvPart = DrvNum + '@'; DrvPart[1] = '\0';
-     }
-     else
-       DrvNum = toupper(*DrvPart) - '@';
-     Dummy = 255;
-     DosQueryCurrentDir(DrvNum, (PBYTE) CurrentDir, &Dummy);
-   }
+    if (*DrvPart == '\0')
+    {
+      DosQueryCurrentDisk(&DrvNum, &Dummy);
+      *DrvPart = DrvNum + '@'; DrvPart[1] = '\0';
+    }
+    else
+      DrvNum = toupper(*DrvPart) - '@';
+    Dummy = 255;
+    DosQueryCurrentDir(DrvNum, (PBYTE) CurrentDir, &Dummy);
+  }
 #elif (defined __MINGW32__)
-   {
-     int DrvNum;
+  {
+    int DrvNum;
  
-     if (!*DrvPart)
-     {
-       DrvNum = _getdrive();
-       *DrvPart = DrvNum + '@'; DrvPart[1] = '\0';
-     }
-     else
-       DrvNum = toupper(*DrvPart) - '@';
-     _getdcwd(DrvNum, CurrentDir, 255);
-     if (CurrentDir[1] == ':')
-       strcpy(CurrentDir, CurrentDir + 2);
-   }
+    if (!*DrvPart)
+    {
+      DrvNum = _getdrive();
+      *DrvPart = DrvNum + '@'; DrvPart[1] = '\0';
+    }
+    else
+      DrvNum = toupper(*DrvPart) - '@';
+    _getdcwd(DrvNum, CurrentDir, 255);
+    if (CurrentDir[1] == ':')
+      strcpy(CurrentDir, CurrentDir + 2);
+  }
 #elif (defined _WIN32) /* CygWIN */
-   getcwd(CurrentDir,255);
-   for (p=CurrentDir; *p!='\0'; p++)
-    if (*p=='/') *p='\\';
+  getcwd(CurrentDir, 255);
+  for (p = CurrentDir; *p; p++)
+    if (*p == '/') *p = '\\';
 #else /* UNIX */
-   getcwd(CurrentDir,255);
+  getcwd(CurrentDir,255);
 #endif
 
-   if ((*CurrentDir) && (CurrentDir[strlen(CurrentDir)-1]!=PATHSEP))
-     strmaxcat(CurrentDir,SPATHSEP,255);
-   if (*CurrentDir!=PATHSEP)
-     strmaxprep(CurrentDir,SPATHSEP,255);
+  if ((*CurrentDir) && (CurrentDir[strlen(CurrentDir)-1]!=PATHSEP))
+    strmaxcat(CurrentDir,SPATHSEP,255);
+  if (*CurrentDir!=PATHSEP)
+    strmaxprep(CurrentDir,SPATHSEP,255);
 
-   if (*Copy==PATHSEP) 
-    BEGIN
-     strmaxcpy(CurrentDir,SPATHSEP,255); strcpy(Copy,Copy+1);
-    END
+  if (*Copy == PATHSEP) 
+  {
+    strmaxcpy(CurrentDir, SPATHSEP, 255); strmov(Copy, Copy + 1);
+  }
 
 #ifdef DRSEP
 #ifdef __CYGWIN32__
-   /* win32 getcwd() does not deliver current drive letter, therefore only prepend a drive letter
-      if there was one before. */
-   if (*DrvPart)
+  /* win32 getcwd() does not deliver current drive letter, therefore only prepend a drive letter
+     if there was one before. */
+  if (*DrvPart)
 #endif
-    BEGIN
-     strmaxprep(CurrentDir,SDRSEP,255);
-     strmaxprep(CurrentDir,DrvPart,255);
-    END
+  {
+    strmaxprep(CurrentDir, SDRSEP, 255);
+    strmaxprep(CurrentDir, DrvPart, 255);
+  }
 #endif
 
-   while((p=strchr(Copy,PATHSEP))!=Nil)
-    BEGIN
-     *p='\0';
-     if (strcmp(Copy,".")==0);
-     else if ((strcmp(Copy,"..")==0) AND (strlen(CurrentDir)>1))
-      BEGIN
-       CurrentDir[strlen(CurrentDir)-1]='\0';
-       p2=strrchr(CurrentDir,PATHSEP); p2[1]='\0';
-      END
-     else
-      BEGIN
-       strmaxcat(CurrentDir,Copy,255); strmaxcat(CurrentDir,SPATHSEP,255);
-      END
-     strcpy(Copy,p+1);
-    END
+  while ((p = strchr(Copy, PATHSEP)))
+  {
+    *p = '\0';
+    if (!strcmp(Copy, "."));
+    else if ((!strcmp(Copy, "..")) && (strlen(CurrentDir) > 1))
+    {
+      CurrentDir[strlen(CurrentDir) - 1] = '\0';
+      p2 = strrchr(CurrentDir, PATHSEP); p2[1] = '\0';
+    }
+    else
+    {
+      strmaxcat(CurrentDir, Copy, 255);
+      strmaxcat(CurrentDir, SPATHSEP, 255);
+    }
+    strmov(Copy, p + 1);
+  }
 
-   strmaxcat(CurrentDir,Copy,255);
+  strmaxcat(CurrentDir, Copy, 255);
 
-   return CurrentDir; 
-END
+  return CurrentDir; 
+}
 
 	char *FSearch(char *File, char *Path)
 BEGIN
@@ -293,7 +297,7 @@ char *DeCygwinPath(char *pStr)
    && (pStr[0] =='/') && (pStr[1] == '/') && (pStr[3] == '/')
    && (isalpha(pStr[2])))
   {
-    strcpy(pStr, pStr + 1);
+    strmov(pStr, pStr + 1);
     pStr[0] = pStr[1];
     pStr[1] = ':';
   }
@@ -302,7 +306,7 @@ char *DeCygwinPath(char *pStr)
    && (pStr[0] =='\\') && (pStr[1] == '\\') && (pStr[3] == '\\')
    && (isalpha(pStr[2])))
   {
-    strcpy(pStr, pStr + 1);
+    strmov(pStr, pStr + 1);
     pStr[0] = pStr[1];
     pStr[1] = ':';
   }

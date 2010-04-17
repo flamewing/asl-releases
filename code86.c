@@ -10,9 +10,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code86.c,v 1.5 2008/04/06 09:37:52 alfred Exp $                      */
+/* $Id: code86.c,v 1.6 2010/04/17 13:14:22 alfred Exp $                      */
 /*****************************************************************************
  * $Log: code86.c,v $
+ * Revision 1.6  2010/04/17 13:14:22  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.5  2008/04/06 09:37:52  alfred
  * - catch immediate addressing on invalid operand size, some reformatting
  *
@@ -291,27 +294,27 @@ static void DecodeAdr(char *Asc)
 
   if (!strncasecmp(Asc, "WORD PTR", 8))
   {
-    strcpy(Asc, Asc + 8); FoundSize = 1; IsImm = False;
+    Asc += 8; FoundSize = 1; IsImm = False;
     KillBlanks(Asc);
   }
   else if (!strncasecmp(Asc, "BYTE PTR", 8))
   {
-    strcpy(Asc, Asc + 8); FoundSize = 0; IsImm = False;
+    Asc += 8; FoundSize = 0; IsImm = False;
     KillBlanks(Asc);
   }
   else if (!strncasecmp(Asc, "DWORD PTR", 9))
   {
-    strcpy(Asc, Asc + 9); FoundSize = 2; IsImm = False;
+    Asc += 9; FoundSize = 2; IsImm = False;
     KillBlanks(Asc);
   }
   else if (!strncasecmp(Asc, "QWORD PTR", 9))
   {
-    strcpy(Asc, Asc + 9); FoundSize = 3; IsImm = False;
+    Asc += 9; FoundSize = 3; IsImm = False;
     KillBlanks(Asc);
   }
   else if (!strncasecmp(Asc, "TBYTE PTR", 9))
   {
-    strcpy(Asc, Asc + 9); FoundSize = 4; IsImm = False;
+    Asc += 9; FoundSize = 4; IsImm = False;
     KillBlanks(Asc);
   }
 
@@ -321,7 +324,7 @@ static void DecodeAdr(char *Asc)
     for (z = 0; z <= SegRegCnt; z++)
       if (!strcasecmp(AddPart, SegRegNames[z]))
       {
-        strcpy(Asc, Asc + 3); SegBuffer = z;
+        Asc += 3; SegBuffer = z;
         AddPrefix(SegRegPrefixes[SegBuffer]);
       }
   }
@@ -341,7 +344,7 @@ static void DecodeAdr(char *Asc)
       if (p == Nil) *Asc = '\0';
       else
       {
-        *p = '['; strcpy(Asc, p);
+        *p = '['; strmov(Asc, p);
       }
     }
 
@@ -371,11 +374,11 @@ static void DecodeAdr(char *Asc)
 
         if (p == Nil)
         {
-          strcpy(AddPart, AdrPart); *AdrPart = '\0';
+          strmov(AddPart, AdrPart); *AdrPart = '\0';
         }
         else
         {
-          *p = '\0'; strcpy(AddPart, AdrPart); strcpy(AdrPart, p + 1);
+          *p = '\0'; strcpy(AddPart, AdrPart); strmov(AdrPart, p + 1);
         }
 
         if (!strcasecmp(AddPart, "BX"))

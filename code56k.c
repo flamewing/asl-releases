@@ -14,9 +14,12 @@
 /*                      ShortMode wird bei absoluter Adressierung gemerkt    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code56k.c,v 1.5 2008/12/14 20:22:03 alfred Exp $                     */
+/* $Id: code56k.c,v 1.6 2010/04/17 13:14:20 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code56k.c,v $
+ * Revision 1.6  2010/04/17 13:14:20  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.5  2008/12/14 20:22:03  alfred
  * - allow forcing of long addresses
  *
@@ -247,20 +250,20 @@ BEGIN
     END
 END
 
-        static void CutSize(char *Asc, Byte *ShortMode)
-BEGIN
-   switch (*Asc)
-    BEGIN
-     case '>':
-      strcpy(Asc,Asc+1); *ShortMode=2;
+static void CutSize(char *Asc, Byte *ShortMode)
+{
+  switch (*Asc)
+  {
+    case '>':
+      strmov(Asc, Asc + 1); *ShortMode = 2;
       break;
-     case '<':
-      strcpy(Asc,Asc+1); *ShortMode=1;
+    case '<':
+      strmov(Asc, Asc + 1); *ShortMode = 1;
       break;
-     default:
-      *ShortMode=0;
-    END  
-END
+    default:
+      *ShortMode = 0;
+  }
+}
 
         static Boolean DecodeReg(char *Asc, LongInt *Erg)
 BEGIN
@@ -479,7 +482,7 @@ BEGIN
    String Asc;
    char *pp,*np,save;
 
-   AdrType=ModNone; AdrCnt=0; strmaxcpy(Asc,Asc_O,255);
+   AdrType=ModNone; AdrCnt=0;
    ShortMode = 0;
 
    /* Adressierungsmodi vom 56300 abschneiden */
@@ -497,10 +500,11 @@ BEGIN
    /* Zielsegment vorgegeben ? */
 
    for (z=0; z<SegCount; z++)
-    if ((mytoupper(*Asc)==SegNames[z]) AND (Asc[1]==':'))
+    if ((mytoupper(*Asc_O)==SegNames[z]) AND (Asc_O[1]==':'))
      BEGIN
-      AdrSeg=SegVals[z]; strcpy(Asc,Asc+2);
+      AdrSeg=SegVals[z]; Asc_O += 2;
      END
+   strmaxcpy(Asc,Asc_O,255);
 
    /* Adressausdruecke abklopfen: dazu mit Referenzstring vergleichen */
 
@@ -552,7 +556,7 @@ BEGIN
 
    if (IsIndirect(Asc))
     BEGIN
-     strcpy(Asc,Asc+1); Asc[strlen(Asc)-1]='\0';
+     strmov(Asc,Asc+1); Asc[strlen(Asc)-1]='\0';
      pp=strchr(Asc,'+'); np=strchr(Asc,'-');
      if ((pp==Nil) OR ((np!=Nil) AND (np<pp))) pp=np;
      if (pp!=0)
@@ -1122,6 +1126,7 @@ BEGIN
    Word Condition;
    Boolean OK,DontAdd;
    String Left,Mid,Right;
+   char *pLeft;
    Byte Size;
 
    CodeLen=0; DontPrint=False;
@@ -1308,13 +1313,14 @@ BEGIN
            break;
           case ParMul:
            SplitArg(ArgStr[1],Left,Mid); SplitArg(Mid,Mid,Right); h=0;
-           if (*Left=='-')
-            BEGIN
-             strcpy(Left,Left+1); h+=4;
-            END
-           else if (*Left=='+') strcpy(Left,Left+1);
+           pLeft= Left;
+           if (*pLeft == '-')
+           {
+             pLeft++; h += 4;
+           }
+           else if (*pLeft == '+') pLeft++;
            if (NOT DecodeALUReg(Right,&Reg3,False,False,True)) SetXError(1445,Right);
-           else if (NOT DecodeReg(Left,&Reg1)) SetXError(1445,Left);
+           else if (NOT DecodeReg(pLeft,&Reg1)) SetXError(1445,Left);
            else if ((Reg1<4) OR (Reg1>7)) SetXError(1445,Left);
            else if (*Mid=='#')
             BEGIN
@@ -1382,21 +1388,22 @@ BEGIN
        BEGIN
         SplitArg(ArgStr[1],Left,Mid); SplitArg(Mid,Mid,Right);
         h=0;
-        switch (*Left)
-         BEGIN
+        pLeft = Left;
+        switch (*pLeft)
+        {
           case '-':
-           h=4;
+            h = 4;
           case '+':
-           strcpy(Left,Left+1);
-         END
+            pLeft++;
+        }
         if ((*Mid=='\0') OR (*Right=='\0')) WrError(1110);
         else if (NOT DecodeALUReg(Right,&Reg1,False,False,True)) WrXError(1445,Right);
         else if (NOT DecodeXYABReg(Mid,&Reg2)) WrXError(1445,Mid);
         else if ((Reg2<4) OR (Reg2>7)) WrXError(1445,Mid);
-        else if (*Left!='#') WrError(1120);
+        else if (*pLeft!='#') WrError(1120);
         else
          BEGIN
-          DAsmCode[1]=EvalIntExpression(Left+1,Int24,&OK);
+          DAsmCode[1]=EvalIntExpression(pLeft+1,Int24,&OK);
           if (OK)
            BEGIN
             DAsmCode[0]=0x0141c0+z+h+(Reg1 << 3)+((Reg2 & 3) << 4);
@@ -1414,16 +1421,17 @@ BEGIN
      else
       BEGIN
        SplitArg(ArgStr[1],Left,Mid); SplitArg(Mid,Mid,Right);
-       if (*Left=='-')
-        BEGIN
-         strcpy(Left,Left+1); Condition+=16;
-        END
-       else if (*Left=='+') strcpy(Left,Left+1);
+       pLeft = Left;
+       if (*pLeft == '-')
+       {
+         pLeft++; Condition+=16;
+       }
+       else if (*pLeft == '+') pLeft++;
        if ((*Mid=='\0') OR (*Right=='\0')) WrError(1110);
        else if (NOT DecodeALUReg(Right,&Reg1,False,False,True)) WrXError(1445,Right);
        else if (NOT DecodeXYAB1Reg(Mid,&Reg2)) WrXError(1445,Mid);
        else if (Reg2<4) WrXError(1445,Mid);
-       else if (NOT DecodeXYAB1Reg(Left,&Reg3)) WrXError(1445,Left);
+       else if (NOT DecodeXYAB1Reg(pLeft,&Reg3)) WrXError(1445,Left);
        else if (Reg3<4) WrXError(1445,Left);
        else
         BEGIN
@@ -1444,16 +1452,17 @@ BEGIN
       BEGIN
        if (OpPart[1]=='A') Condition-=0x100;
        SplitArg(ArgStr[1],Left,Mid); SplitArg(Mid,Mid,Right);
-       if (*Left=='-')
-        BEGIN
-         strcpy(Left,Left+1); Condition+=16;
-        END
-       else if (*Left=='+') strcpy(Left,Left+1);
+       pLeft = Left;
+       if (*pLeft == '-')
+       {
+         pLeft++; Condition += 16;
+       }
+       else if (*pLeft == '+') pLeft++;
        if ((*Mid=='\0') OR (*Right=='\0')) WrError(1110);
        else if (NOT DecodeALUReg(Right,&Reg1,False,False,True)) WrXError(1445,Right);
        else if (NOT DecodeXYAB1Reg(Mid,&Reg2)) WrXError(1445,Mid);
        else if (Reg2<4) WrXError(1445,Mid);
-       else if (NOT DecodeXYAB1Reg(Left,&Reg3)) WrXError(1445,Left);
+       else if (NOT DecodeXYAB1Reg(pLeft,&Reg3)) WrXError(1445,Left);
        else if (Reg3<4) WrXError(1445,Left);
        else
         BEGIN

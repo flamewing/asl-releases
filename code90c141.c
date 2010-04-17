@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code90c141.c,v 1.3 2006/08/05 12:05:37 alfred Exp $                          */
+/* $Id: code90c141.c,v 1.4 2010/04/17 13:14:23 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code90c141.c,v $
+ * Revision 1.4  2010/04/17 13:14:23  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.3  2006/08/05 12:05:37  alfred
  * - regard spaces in indexed expressions
  *
@@ -180,7 +183,7 @@ BEGIN
    if (IsIndirect(Asc))
     BEGIN
      OccFlag=0; BaseReg=0; DispAcc=0; ok=True; NegFlag=False; Unknown=False;
-     strcpy(Asc,Asc+1); Asc[strlen(Asc)-1]='\0';
+     Asc++; Asc[strlen(Asc)-1]='\0';
      do
       BEGIN
        ppos=QuotPos(Asc,'+');
@@ -195,7 +198,7 @@ BEGIN
         END
        else
         BEGIN
-         *p='\0'; strmaxcpy(Part,Asc,255); strcpy(Asc,p+1);
+         *p='\0'; strmaxcpy(Part,Asc,255); strmov(Asc,p+1);
         END
        KillPrefBlanks(Part); KillPostBlanks(Part);
        fnd=False;

@@ -19,9 +19,12 @@
 /*          14. 6.1999 mit optionaler Aufspaltung in Subdateien begonnen     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: tex2html.c,v 1.2 2004/11/20 21:32:27 alfred Exp $                   */
+/* $Id: tex2html.c,v 1.3 2010/04/17 13:14:24 alfred Exp $                   */
 /*****************************************************************************
  * $Log: tex2html.c,v $
+ * Revision 1.3  2010/04/17 13:14:24  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.2  2004/11/20 21:32:27  alfred
  * - adaptions for MinGW
  *
@@ -339,7 +342,7 @@ BEGIN
     BEGIN
      *c='\0'; strcpy(Dest,Src);
      for (c++; *c==' '; c++); 
-     strcpy(Src,c); 
+     strmov(Src,c); 
     END
 END
 
@@ -645,7 +648,7 @@ BEGIN
        save=(*search); *search='\0';
        PutLine(False); *search=save;
        for (; *search==' '; search++);
-       strcpy(OutLineBuffer,search);
+       strmov(OutLineBuffer,search);
       END
     END
 END

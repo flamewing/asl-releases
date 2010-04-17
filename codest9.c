@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codest9.c,v 1.5 2007/06/28 20:27:31 alfred Exp $                     */
+/* $Id: codest9.c,v 1.6 2010/04/17 13:14:23 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codest9.c,v $
+ * Revision 1.6  2010/04/17 13:14:23  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.5  2007/06/28 20:27:31  alfred
  * - silence some warnings on recent GNU C versions
  *
@@ -294,6 +297,7 @@ BEGIN
    Boolean OK;
    String Reg,Asc;
    char *p;
+   int l;
 
    AdrMode=ModNone; AdrCnt=0;
    strmaxcpy(Asc,Asc_O,255); 
@@ -338,35 +342,41 @@ BEGIN
      ChkAdr(Mask); return;
     END
 
+   l = strlen(Asc);
+
    /* Postinkrement */
 
-   if ((*Asc) && (Asc[strlen(Asc)-1]=='+'))
-    BEGIN
-     if ((*Asc!='(') OR (Asc[strlen(Asc)-2]!=')')) WrError(1350);
+   if ((l > 0) && (Asc[l - 1] == '+'))
+   {
+     char *pAsc = Asc;
+
+     if ((l < 3) || (*pAsc != '(') || (pAsc[l - 2] != ')')) WrError(1350);
      else
-      BEGIN
-       strcpy(Asc,Asc+1); Asc[strlen(Asc)-2]='\0';
-       if (NOT DecodeReg(Asc,&AdrPart,&Size)) WrXError(1445,Asc);
-       AdrMode=(Size==0) ? ModIncWReg : ModIncWRReg;
-      END
+     {
+       pAsc++; pAsc[l - 3] = '\0';
+       if (!DecodeReg(pAsc, &AdrPart, &Size)) WrXError(1445, pAsc);
+       AdrMode = (Size == 0) ? ModIncWReg : ModIncWRReg;
+     }
      ChkAdr(Mask); return;
-    END
+   }
 
    /* Predekrement */
 
-   if ((*Asc=='-') AND (Asc[1]=='(') AND (Asc[strlen(Asc)-1]==')')) 
-    BEGIN
-     strcpy(Reg,Asc+2); Reg[strlen(Reg)-1]='\0';
-     if (DecodeReg(Reg,&AdrPart,&Size)) 
-      BEGIN
-       if (Size==0) WrError(1350); else AdrMode=ModDecWRReg;
+   if ((*Asc == '-') && (Asc[1] == '(') && (Asc[l - 1] == ')')) 
+   {
+     char *pReg = Asc + 2;
+
+     pReg[l - 3] = '\0';
+     if (DecodeReg(pReg, &AdrPart, &Size)) 
+     {
+       if (Size == 0) WrError(1350); else AdrMode = ModDecWRReg;
        ChkAdr(Mask); return;
-      END
-    END
+     }
+   }
 
    /* indirekt<->direkt */
 
-   if ((strlen(Asc)<3) || (Asc[strlen(Asc)-1]!=')'))
+   if ((strlen(Asc)<3) || (Asc[l - 1]!=')'))
     BEGIN
      OK=False; p=Asc;
     END
@@ -518,37 +528,40 @@ BEGIN
    ChkAdr(Mask);
 END
 
-        static Boolean SplitBit(char *Asc, Byte *Erg)
-BEGIN
-   char *p;
-   Integer val;
-   Boolean OK,Inv;
+static Boolean SplitBit(char *Asc, Byte *Erg)
+{
+  char *p;
+  Boolean OK;
 
-   p=RQuotPos(Asc,'.');
-   if ((p==Nil) OR (p==Asc+strlen(Asc)+1)) 
-    BEGIN
-     if (*Asc=='!') 
-      BEGIN
-       Inv=True; strcpy(Asc,Asc+1);
-      END
-     else Inv=False;
-     val=EvalIntExpression(Asc,UInt8,&OK);
-     if (OK) 
-      BEGIN
-       *Erg=val & 15; if (Inv) *Erg^=1;
-       sprintf(Asc, "r%d", (int)(val >> 4));
-       return True;
-      END
-     return False;
-    END
+  p = RQuotPos(Asc, '.');
+  if ((!p) || (p == Asc + strlen(Asc) + 1)) 
+  {
+    Boolean Inv = False;
+    Integer val;
 
-   if (p[1]=='!') 
-    *Erg=1+(EvalIntExpression(p+2,UInt3,&OK) << 1);
-   else
-    *Erg=EvalIntExpression(p+1,UInt3,&OK) << 1;
-   *p='\0';
-   return OK;
-END
+    if (*Asc == '!') 
+    {
+      Inv = True; strmov(Asc, Asc + 1);
+    }
+    val = EvalIntExpression(Asc, UInt8, &OK);
+    if (OK)
+    {
+      *Erg = val & 15;
+      if (Inv)
+        *Erg ^= 1;
+      sprintf(Asc, "r%d", (int)(val >> 4));
+      return True;
+    }
+    return False;
+  }
+
+  if (p[1] == '!') 
+   *Erg = 1 + (EvalIntExpression(p + 2, UInt3, &OK) << 1);
+  else
+   *Erg = EvalIntExpression(p + 1, UInt3, &OK) << 1;
+  *p = '\0';
+  return OK;
+}
 
 /*--------------------------------------------------------------------------*/
 
@@ -1858,30 +1871,31 @@ BEGIN
    DeinitFields();
 END
 
-        static void InternSymbol_ST9(char *Asc, TempResult *Erg)
-BEGIN
-   String h;
-   Boolean Err;
-   Boolean Pair;
+static void InternSymbol_ST9(char *Asc, TempResult *Erg)
+{
+  Boolean Err;
+  Boolean Pair;
 
-   Erg->Typ=TempNone;
-   if ((strlen(Asc)<2) OR (*Asc!='R')) return;
+  Erg->Typ = TempNone;
+  if ((strlen(Asc) < 2) || (*Asc != 'R')) return;
+  Asc++;
 
-   strmaxcpy(h,Asc+1,255);
-   if (*h=='R')
-    BEGIN
-     if (strlen(h)<2) return;
-     Pair=True; strcpy(h,h+1);
-    END
-   else Pair=False;
-   Erg->Contents.Int=ConstLongInt(h,&Err,10);
-   if ((NOT Err) OR (Erg->Contents.Int<0) OR (Erg->Contents.Int>255)) return;
-   if ((Erg->Contents.Int & 0xf0)==0xd0) return;
-   if ((Pair) AND (Odd(Erg->Contents.Int))) return;
+  if (*Asc == 'R')
+  {
+    if (strlen(Asc) < 2) return;
+    Pair = True; Asc++;
+  }
+  else
+    Pair = False;
 
-   if (Pair) Erg->Contents.Int+=0x100;
-   Erg->Typ=TempInt; TypeFlag|=(1 << SegReg);
-END
+  Erg->Contents.Int = ConstLongInt(Asc, &Err, 10);
+  if ((!Err) || (Erg->Contents.Int < 0) || (Erg->Contents.Int > 255)) return;
+  if ((Erg->Contents.Int & 0xf0) == 0xd0) return;
+  if ((Pair) && (Odd(Erg->Contents.Int))) return;
+
+  if (Pair) Erg->Contents.Int += 0x100;
+  Erg->Typ = TempInt; TypeFlag |= (1 << SegReg);
+}
 
         static void SwitchTo_ST9(void)
 BEGIN

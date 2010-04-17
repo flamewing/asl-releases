@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code87c800.c,v 1.4 2007/11/24 22:48:05 alfred Exp $                  */
+/* $Id: code87c800.c,v 1.5 2010/04/17 13:14:22 alfred Exp $                  */
 /*****************************************************************************
  * $Log: code87c800.c,v $
+ * Revision 1.5  2010/04/17 13:14:22  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.4  2007/11/24 22:48:05  alfred
  * - some NetBSD changes
  *
@@ -197,7 +200,7 @@ BEGIN
 
    if (IsIndirect(Asc))
     BEGIN
-     strcpy(Asc,Asc+1); Asc[strlen(Asc)-1]='\0';
+     Asc++; Asc[strlen(Asc)-1]='\0';
      if (strcasecmp(Asc,"-HL")==0)
       BEGIN
        AdrType=ModMem; AdrMode=7; ChkAdr(Erl); return;
@@ -220,7 +223,7 @@ BEGIN
         END
        else
         BEGIN
-         *EPos='\0'; strmaxcpy(AdrPart,Asc,255); strcpy(Asc,EPos+1);
+         *EPos='\0'; strmaxcpy(AdrPart,Asc,255); strmov(Asc,EPos+1);
         END
        for (z=0; z<AdrRegCnt; z++)
         if (strcasecmp(AdrPart,AdrRegs[z])==0) break;

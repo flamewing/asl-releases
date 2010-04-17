@@ -31,9 +31,12 @@
 /*           2002-01-13: fixed undefined value of OK in some cases           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3254x.c,v 1.5 2007/11/24 22:48:03 alfred Exp $                   */
+/* $Id: code3254x.c,v 1.6 2010/04/17 13:14:20 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code3254x.c,v $
+ * Revision 1.6  2010/04/17 13:14:20  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.5  2007/11/24 22:48:03  alfred
  * - some NetBSD changes
  *
@@ -2722,7 +2725,7 @@ static void MakeCode_32054x(void)
    ThisPar = !strcmp(LabPart, "||");
    if ((strlen(OpPart) > 2) && (!strncmp(OpPart, "||", 2)))
    {
-     ThisPar = True; strcpy(OpPart, OpPart + 2);
+     ThisPar = True; strmov(OpPart, OpPart + 2);
    }
 
   /* zu ignorierendes */

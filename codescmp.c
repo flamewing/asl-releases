@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codescmp.c,v 1.5 2009/04/13 07:36:50 alfred Exp $                    */
+/* $Id: codescmp.c,v 1.6 2010/04/17 13:14:23 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codescmp.c,v $
+ * Revision 1.6  2010/04/17 13:14:23  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.5  2009/04/13 07:36:50  alfred
  * - clean up SC/MP target, correct PC-relative addressing
  *
@@ -86,7 +89,7 @@ static Boolean DecodeAdr(char *Asc, Boolean MayInc, Byte PCDisp, Byte *Arg)
           WrError(1350);
           return False;
         }
-        strcpy(Asc, Asc + 1); *Arg += 4;
+        strmov(Asc, Asc + 1); *Arg += 4;
       }
       if (!strcasecmp(Asc, "E"))
         BAsmCode[1] = 0x80;

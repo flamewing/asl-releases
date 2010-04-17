@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeh8_3.c,v 1.4 2007/11/24 22:48:06 alfred Exp $                    */
+/* $Id: codeh8_3.c,v 1.5 2010/04/17 13:14:23 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codeh8_3.c,v $
+ * Revision 1.5  2010/04/17 13:14:23  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.4  2007/11/24 22:48:06  alfred
  * - some NetBSD changes
  *
@@ -453,7 +456,7 @@ BEGIN
 
    if (*Asc=='@')
     BEGIN
-     strcpy(Asc,Asc+1);
+     Asc++;
 
      if (*Asc=='@')
       BEGIN
@@ -497,7 +500,7 @@ BEGIN
 
      if (IsIndirect(Asc))
       BEGIN
-       strcpy(Asc,Asc+1); Asc[strlen(Asc)-1]='\0';
+       Asc++; Asc[strlen(Asc)-1]='\0';
        AdrPart=0xff; DispAcc=0;
        do
         BEGIN

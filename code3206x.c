@@ -15,9 +15,12 @@
 /*           2001-11-26 scaling fix (input from Johannes)                    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3206x.c,v 1.6 2008/11/23 10:39:16 alfred Exp $                   */
+/* $Id: code3206x.c,v 1.7 2010/04/17 13:14:19 alfred Exp $                   */
 /***************************************************************************** 
  * $Log: code3206x.c,v $
+ * Revision 1.7  2010/04/17 13:14:19  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.6  2008/11/23 10:39:16  alfred
  * - allow strings with NUL characters
  *
@@ -378,18 +381,18 @@ BEGIN
    Mode=1; /* Default ist *+R */
    if (*RegPart=='+')
     BEGIN
-     strcpy(RegPart,RegPart+1); Mode=1;
+     strmov(RegPart,RegPart+1); Mode=1;
      if (*RegPart=='+')
       BEGIN
-       strcpy(RegPart,RegPart+1); Mode=9;
+       strmov(RegPart,RegPart+1); Mode=9;
       END
     END
    else if (*RegPart=='-')
     BEGIN
-     strcpy(RegPart,RegPart+1); Mode=0;
+     strmov(RegPart,RegPart+1); Mode=0;
      if (*RegPart=='-')
       BEGIN
-       strcpy(RegPart,RegPart+1); Mode=8;
+       strmov(RegPart,RegPart+1); Mode=8;
       END
     END
    else if (RegPart[l-1]=='+')

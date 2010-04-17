@@ -227,8 +227,8 @@
 #include "stdinc.h"
 #include <string.h>
 
-char *Version="1.42 Beta [Bld 76]";
-char *DebVersion = "1.42bld76-1";
+char *Version="1.42 Beta [Bld 77]";
+char *DebVersion = "1.42bld77-1";
 LongInt VerNo=0x142f;
 
 char *InfoMessCopyright="(C) 1992,2010 Alfred Arnold";

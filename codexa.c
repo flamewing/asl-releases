@@ -19,9 +19,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codexa.c,v 1.5 2007/11/24 22:48:07 alfred Exp $                      */
+/* $Id: codexa.c,v 1.6 2010/04/17 13:14:24 alfred Exp $                      */
 /*****************************************************************************
  * $Log: codexa.c,v $
+ * Revision 1.6  2010/04/17 13:14:24  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.5  2007/11/24 22:48:07  alfred
  * - some NetBSD changes
  *
@@ -255,7 +258,7 @@ BEGIN
 
    if ((*Asc=='[') AND (Asc[strlen(Asc)-1]==']'))
     BEGIN
-     strcpy(Asc,Asc+1); Asc[strlen(Asc)-1]='\0';
+     Asc++; Asc[strlen(Asc)-1]='\0';
      if (Asc[strlen(Asc)-1]=='+')
       BEGIN
        Asc[strlen(Asc)-1]='\0';
@@ -282,7 +285,7 @@ BEGIN
           END
          else
           BEGIN
-           *PPos='\0'; strmaxcpy(Part,Asc,255); strcpy(Asc,PPos+1);
+           *PPos='\0'; strmaxcpy(Part,Asc,255); strmov(Asc,PPos+1);
           END
          if (DecodeReg(Part,&NSize,&Reg))
           if ((NSize!=1) OR (AdrPart!=0xff) OR (NegFlag))
@@ -1392,30 +1395,30 @@ BEGIN
     END
 END
 
-        static void DecodeANLORL(Word Index)
-BEGIN
-   LongInt AdrLong;
-   Boolean OK;
+static void DecodeANLORL(Word Index)
+{
+  if (ArgCnt != 2) WrError(1110);
+  else if (*AttrPart) WrError(1100);
+  else if (strcasecmp(ArgStr[1], "C")) WrError(1350);
+  else
+  {
+    char *pArg2 = ArgStr[2];
+    Boolean Invert = False;
+    LongInt AdrLong;
 
-   if (ArgCnt!=2) WrError(1110);
-   else if (*AttrPart!='\0') WrError(1100);
-   else if (strcasecmp(ArgStr[1],"C")!=0) WrError(1350);
-   else
-    BEGIN
-     if (*ArgStr[2]=='/')
-      BEGIN
-       OK=True; strcpy(ArgStr[2],ArgStr[2]+1);
-      END
-     else OK=False;
-     if (DecodeBitAddr(ArgStr[2],&AdrLong))
-      BEGIN
-       ChkBitPage(AdrLong);
-       BAsmCode[CodeLen++]=0x08;
-       BAsmCode[CodeLen++]=0x40+(Index << 5)+(Ord(OK) << 4)+(Hi(AdrLong) & 3);
-       BAsmCode[CodeLen++]=Lo(AdrLong);
-      END
-    END
-END
+    if (*pArg2 == '/')
+    {
+      Invert = True; pArg2++;
+    }
+    if (DecodeBitAddr(pArg2, &AdrLong))
+    {
+      ChkBitPage(AdrLong);
+      BAsmCode[CodeLen++] = 0x08;
+      BAsmCode[CodeLen++] = 0x40 | (Index << 5) | (Ord(Invert) << 4) | (Hi(AdrLong) & 3);
+      BAsmCode[CodeLen++] = Lo(AdrLong);
+    }
+  }
+}
 
         static void DecodeCLRSETB(Word Index)
 BEGIN

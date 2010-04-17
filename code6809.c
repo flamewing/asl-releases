@@ -13,9 +13,12 @@
 /*           13. 1.2001 fix D register access                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6809.c,v 1.4 2007/11/24 22:48:04 alfred Exp $                    */
+/* $Id: code6809.c,v 1.5 2010/04/17 13:14:20 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6809.c,v $
+ * Revision 1.5  2010/04/17 13:14:20  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.4  2007/11/24 22:48:04  alfred
  * - some NetBSD changes
  *
@@ -405,22 +408,26 @@ BEGIN
     END
 END
 
-        static void ChkZero(char *s, Byte *Erg)
-BEGIN
-   if (*s=='>')
-    BEGIN
-     strcpy(s,s+1); *Erg=1;
-    END
-   else if (*s=='<')
-    BEGIN
-     strcpy(s,s+1); *Erg=2;
-     if (*s=='<')
-      BEGIN
-       strcpy(s,s+1); *Erg=3;
-      END
-    END
-   else *Erg=0;
-END
+static void ChkZero(char *s, Byte *Erg)
+{
+  if (*s == '>')
+  {
+    strmov(s, s + 1); *Erg = 1;
+  }
+  else if (*s == '<')
+  {
+    if (1[s] == '<')
+    {
+      strmov(s, s + 2); *Erg = 3;
+    }
+    else
+    {
+      strmov(s, s + 1); *Erg = 2;
+    }
+  }
+  else
+    *Erg = 0;
+}
 
         static Boolean MayShort(Integer Arg)
 BEGIN
@@ -478,7 +485,7 @@ BEGIN
 
    if ((*Asc=='[') AND (Asc[strlen(Asc)-1]==']'))
     BEGIN
-     IndFlag=True; strcpy(Asc,Asc+1); Asc[strlen(Asc)-1]='\0';
+     IndFlag=True; strmov(Asc,Asc+1); Asc[strlen(Asc)-1]='\0';
      ArgCnt=0;
      while (*Asc!='\0')
       BEGIN
@@ -486,7 +493,7 @@ BEGIN
        p=QuotPos(Asc,',');
        if (p!=Nil)
         BEGIN
-         *p='\0'; strmaxcpy(ArgStr[ArgCnt],Asc,255); strcpy(Asc,p+1);
+         *p='\0'; strmaxcpy(ArgStr[ArgCnt],Asc,255); strmov(Asc,p+1);
         END
        else
         BEGIN

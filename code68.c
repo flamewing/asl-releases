@@ -13,9 +13,12 @@
 /*                       unsinged limited                                    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68.c,v 1.8 2009/04/13 07:53:46 alfred Exp $                      */
+/* $Id: code68.c,v 1.9 2010/04/17 13:14:20 alfred Exp $                      */
 /*****************************************************************************
  * $Log: code68.c,v $
+ * Revision 1.9  2010/04/17 13:14:20  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.8  2009/04/13 07:53:46  alfred
  * - silence Borlanc C++ warning
  *
@@ -289,11 +292,11 @@ BEGIN
        Bit8 = 0;
        if (*Asc == '<')
         BEGIN
-         Bit8 = 2; strcpy(Asc, Asc + 1);
+         Bit8 = 2; strmov(Asc, Asc + 1);
         END
        else if (*Asc == '>')
         BEGIN
-         Bit8 = 1; strcpy(Asc, Asc + 1);
+         Bit8 = 1; strmov(Asc, Asc + 1);
         END
        FirstPassUnknown = False;
        if (MomCPU == CPU68HC11K4)
@@ -524,106 +527,110 @@ BEGIN
     END
 END
 
-        static void DecodeBRxx(Word Index)
-BEGIN
-   Boolean OK;
-   Byte Mask;
-   Integer AdrInt;
+static void DecodeBRxx(Word Index)
+{
+  Boolean OK;
+  Byte Mask;
+  Integer AdrInt;
 
-   if (ArgCnt==1)
-    BEGIN
-     Try2Split(1); Try2Split(1);
-    END
-   else if (ArgCnt==2)
-    BEGIN
-     Try2Split(ArgCnt); Try2Split(2);
-    END
-   if ((ArgCnt<3) OR (ArgCnt>4)) WrError(1110);
-   else if (MomCPU<CPU6811) WrError(1500);
-   else
-    BEGIN
-     if (*ArgStr[ArgCnt-1]=='#') strcpy(ArgStr[ArgCnt-1],ArgStr[ArgCnt-1]+1);
-     Mask=EvalIntExpression(ArgStr[ArgCnt-1],Int8,&OK);
-     if (OK)
-      BEGIN
-       DecodeAdr(1,ArgCnt-2,MModDir+MModInd);
-       if (AdrMode!=ModNone)
-        BEGIN
-         AdrInt=EvalIntExpression(ArgStr[ArgCnt],Int16,&OK);
-         if (OK)
-          BEGIN
-           AdrInt-=EProgCounter()+3+PrefCnt+AdrCnt;
-           if ((AdrInt<-128) OR (AdrInt>127)) WrError(1370);
-           else
-            BEGIN
-             CodeLen=PrefCnt+3+AdrCnt;
-             BAsmCode[PrefCnt]=0x12+Index;
-             if (AdrMode==ModInd) BAsmCode[PrefCnt]+=12;
-             memcpy(BAsmCode+PrefCnt+1,AdrVals,AdrCnt);
-             BAsmCode[PrefCnt+1+AdrCnt]=Mask;
-             BAsmCode[PrefCnt+2+AdrCnt]=Lo(AdrInt);
-            END
-          END
-        END
-      END
-    END
-END
+  if (ArgCnt == 1)
+  {
+    Try2Split(1); Try2Split(1);
+  }
+  else if (ArgCnt == 2)
+  {
+    Try2Split(ArgCnt); Try2Split(2);
+  }
+  if ((ArgCnt < 3) || (ArgCnt > 4)) WrError(1110);
+  else if (MomCPU < CPU6811) WrError(1500);
+  else
+  {
+    char *pArg1 = ArgStr[ArgCnt - 1];
 
-        static void DecodeBxx(Word Index)
-BEGIN
-    Byte Mask;
-    Boolean OK;
-    int z;
-
-    if (MomCPU==CPU6301)
-     BEGIN
-      strcpy(ArgStr[ArgCnt+1],ArgStr[1]);
-      for (z=1; z<=ArgCnt-1; z++) strcpy(ArgStr[z],ArgStr[z+1]);
-      strcpy(ArgStr[ArgCnt],ArgStr[ArgCnt+1]);
-     END
-    if ((ArgCnt>=1) AND (ArgCnt<=2)) Try2Split(ArgCnt);
-    if ((ArgCnt<2) OR (ArgCnt>3)) WrError(1110);
-    else if (MomCPU<CPU6301) WrError(1500);
-    else
-     BEGIN
-      if (*ArgStr[ArgCnt]=='#') strcpy(ArgStr[ArgCnt],ArgStr[ArgCnt]+1);
-      Mask=EvalIntExpression(ArgStr[ArgCnt],Int8,&OK);
-      if ((OK) AND (MomCPU==CPU6301))
-       BEGIN
-        if (Mask>7)
-         BEGIN
-          WrError(1320); OK=False;
-         END
-        else
-         BEGIN
-          Mask=1 << Mask;
-          if (Index==1) Mask=0xff-Mask;
-         END
-       END
-      if (OK)
-       BEGIN
-        DecodeAdr(1,ArgCnt-1,MModDir+MModInd);
-        if (AdrMode!=ModNone)
-         BEGIN
-          CodeLen=PrefCnt+2+AdrCnt;
-          if (MomCPU==CPU6301)
-           BEGIN
-            BAsmCode[PrefCnt]=0x62-Index;
-            if (AdrMode==ModDir) BAsmCode[PrefCnt]+=0x10;
-            BAsmCode[1+PrefCnt]=Mask;
-            memcpy(BAsmCode+2+PrefCnt,AdrVals,AdrCnt);
-           END
+    if (*pArg1 == '#') pArg1++;
+    Mask = EvalIntExpression(pArg1, Int8,& OK);
+    if (OK)
+    {
+      DecodeAdr(1, ArgCnt-2, MModDir | MModInd);
+      if (AdrMode != ModNone)
+      {
+        AdrInt = EvalIntExpression(ArgStr[ArgCnt], Int16, &OK);
+        if (OK)
+        {
+          AdrInt -= EProgCounter() + 3 + PrefCnt + AdrCnt;
+          if ((AdrInt < -128) || (AdrInt > 127)) WrError(1370);
           else
-           BEGIN
-            BAsmCode[PrefCnt]=0x14+Index;
-            if (AdrMode==ModInd) BAsmCode[PrefCnt]+=8;
-            memcpy(BAsmCode+1+PrefCnt,AdrVals,AdrCnt);
-            BAsmCode[1+PrefCnt+AdrCnt]=Mask;
-           END
-         END
-       END
-     END
-END
+          {
+            CodeLen = PrefCnt + 3 + AdrCnt;
+            BAsmCode[PrefCnt] = 0x12 + Index;
+            if (AdrMode == ModInd) BAsmCode[PrefCnt] += 12;
+            memcpy(BAsmCode + PrefCnt + 1, AdrVals, AdrCnt);
+            BAsmCode[PrefCnt + 1 + AdrCnt] = Mask;
+            BAsmCode[PrefCnt + 2 + AdrCnt] = Lo(AdrInt);
+          }
+        }
+      }
+    }
+  }
+}
+
+static void DecodeBxx(Word Index)
+{
+   Byte Mask;
+   Boolean OK;
+   int z;
+
+   if (MomCPU==CPU6301)
+   {
+     strcpy(ArgStr[ArgCnt + 1], ArgStr[1]);
+     for (z = 1; z <= ArgCnt - 1; z++) strcpy(ArgStr[z], ArgStr[z + 1]);
+     strcpy(ArgStr[ArgCnt], ArgStr[ArgCnt + 1]);
+   }
+   if ((ArgCnt >= 1) && (ArgCnt <= 2)) Try2Split(ArgCnt);
+   if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
+   else if (MomCPU < CPU6301) WrError(1500);
+   else
+   {
+     char *pArgN = ArgStr[ArgCnt];
+
+     if (*pArgN == '#') pArgN++;
+     Mask = EvalIntExpression(pArgN, Int8, &OK);
+     if ((OK) && (MomCPU == CPU6301))
+     {
+       if (Mask > 7)
+       {
+         WrError(1320); OK=False;
+       }
+       else
+       {
+         Mask = 1 << Mask;
+         if (Index == 1) Mask = 0xff - Mask;
+       }
+     }
+     if (OK)
+     {
+       DecodeAdr(1, ArgCnt - 1, MModDir | MModInd);
+       if (AdrMode != ModNone)
+       {
+         CodeLen = PrefCnt + 2 + AdrCnt;
+         if (MomCPU == CPU6301)
+         {
+           BAsmCode[PrefCnt] = 0x62 - Index;
+           if (AdrMode == ModDir) BAsmCode[PrefCnt] += 0x10;
+           BAsmCode[1 + PrefCnt] = Mask;
+           memcpy(BAsmCode + 2 + PrefCnt, AdrVals, AdrCnt);
+         }
+         else
+         {
+           BAsmCode[PrefCnt] = 0x14 + Index;
+           if (AdrMode == ModInd) BAsmCode[PrefCnt] += 8;
+           memcpy(BAsmCode + 1 + PrefCnt, AdrVals, AdrCnt);
+           BAsmCode[1 + PrefCnt + AdrCnt] = Mask;
+         }
+       }
+     }
+   }
+}
 
         static void DecodeBTxx(Word Index)
 BEGIN

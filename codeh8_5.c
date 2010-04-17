@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeh8_5.c,v 1.7 2009/12/21 21:07:15 alfred Exp $                    */
+/* $Id: codeh8_5.c,v 1.8 2010/04/17 13:14:23 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codeh8_5.c,v $
+ * Revision 1.8  2010/04/17 13:14:23  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.7  2009/12/21 21:07:15  alfred
  * - allow unsigned 16 bit displacements
  *
@@ -152,7 +155,7 @@ static Boolean DecodeRegList(char *Asc, Byte *pErg)
     }
     else
     {
-      *p = '\0'; strmaxcpy(Part, Asc, 255); strcpy(Asc, p + 1);
+      *p = '\0'; strmaxcpy(Part, Asc, 255); strmov(Asc, p + 1);
     }
     if (DecodeReg(Part,&Reg1)) *pErg |= (1 << Reg1);
     else
@@ -337,7 +340,7 @@ static void DecodeAdr(char *Asc, Word Mask)
         }
         else
         {
-          *p = '\0'; strmaxcpy(Part, Asc, 255); strcpy(Asc, p + 1);
+          *p = '\0'; strmaxcpy(Part, Asc, 255); strmov(Asc, p + 1);
         }
         if (DecodeReg(Part, &HReg))
         {

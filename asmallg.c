@@ -25,9 +25,12 @@
 /*                       to now                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmallg.c,v 1.7 2008/11/23 10:39:15 alfred Exp $                     */
+/* $Id: asmallg.c,v 1.8 2010/04/17 13:14:19 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmallg.c,v $
+ * Revision 1.8  2010/04/17 13:14:19  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.7  2008/11/23 10:39:15  alfred
  * - allow strings with NUL characters
  *
@@ -118,44 +121,47 @@ BEGIN
    else return (Addr <= SegLimits[ActPC]);
 END
 
-	void SetCPU(CPUVar NewCPU, Boolean NotPrev)
-BEGIN
-   LongInt HCPU;
-   char *z,*dest;
-   Boolean ECPU;
-   char s[11];
-   PCPUDef Lauf;
+void SetCPU(CPUVar NewCPU, Boolean NotPrev)
+{
+  LongInt HCPU;
+  char *z, *dest;
+  Boolean ECPU;
+  char s[11];
+  PCPUDef Lauf;
 
-   Lauf=FirstCPUDef;
-   while ((Lauf!=Nil) AND (Lauf->Number!=NewCPU)) Lauf=Lauf->Next;
-   if (Lauf==Nil) return;
+  Lauf = FirstCPUDef;
+  while ((Lauf) && (Lauf->Number != NewCPU))
+    Lauf = Lauf->Next;
+  if (!Lauf)
+    return;
 
-   strmaxcpy(MomCPUIdent,Lauf->Name,11);
-   MomCPU=Lauf->Orig;
-   MomVirtCPU=Lauf->Number;
-   strmaxcpy(s,MomCPUIdent,11);
-   for (z=dest=s; *z!='\0'; z++)
-    if (((*z>='0') AND (*z<='9')) OR ((*z>='A') AND (*z<='F')))
-     *(dest++)=(*z);
-   *dest='\0';
-   for (z=s; *z!='\0'; z++)
-    if ((*z>='0') AND (*z<='9')) break;
-   if (*z!='\0') strcpy(s,z);
-   strprep(s,"$");
-   HCPU=ConstLongInt(s, &ECPU, 10);
-   if (ParamCount!=0)
-    BEGIN
-     EnterIntSymbol(MomCPUName,HCPU,SegNone,True);
-     EnterStringSymbol(MomCPUIdentName, MomCPUIdent, True);
-    END
+  strmaxcpy(MomCPUIdent, Lauf->Name, 11);
+  MomCPU = Lauf->Orig;
+  MomVirtCPU = Lauf->Number;
+  strmaxcpy(s, MomCPUIdent, 11);
+  for (z = dest = s; *z; z++)
+    if (isxdigit(*z))
+      *(dest++) = (*z);
+  *dest = '\0';
+  for (z = s; *z != '\0'; z++)
+    if (isdigit(*z))
+      break;
+  if (*z) strmov(s, z);
+  strprep(s, "$");
+  HCPU = ConstLongInt(s, &ECPU, 10);
+  if (ParamCount != 0)
+  {
+    EnterIntSymbol(MomCPUName, HCPU, SegNone, True);
+    EnterStringSymbol(MomCPUIdentName, MomCPUIdent, True);
+  }
 
-   InternSymbol=Default_InternSymbol;
-   ChkPC = DefChkPC;
-   if (NOT NotPrev) SwitchFrom();
-   Lauf->SwitchProc();
+  InternSymbol = Default_InternSymbol;
+  ChkPC = DefChkPC;
+  if (!NotPrev) SwitchFrom();
+  Lauf->SwitchProc();
 
-   DontPrint=True;
-END
+  DontPrint = True;
+}
 
 	Boolean SetNCPU(char *Name, Boolean NoPrev)
 BEGIN

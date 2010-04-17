@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code75k0.c,v 1.4 2005/10/02 10:00:45 alfred Exp $                    */
+/* $Id: code75k0.c,v 1.5 2010/04/17 13:14:22 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code75k0.c,v $
+ * Revision 1.5  2010/04/17 13:14:22  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.4  2005/10/02 10:00:45  alfred
  * - ConstLongInt gets default base, correct length check on KCPSM3 registers
  *
@@ -1241,16 +1244,18 @@ BEGIN
       END
      else
       BEGIN
-       BrRel=False; BrLong=False;
-       if (*ArgStr[1]=='$')
-        BEGIN
-         BrRel=True; strcpy(ArgStr[1],ArgStr[1]+1);
-        END
-       else if (*ArgStr[1]=='!')
-        BEGIN
-         BrLong=True; strcpy(ArgStr[1],ArgStr[1]+1);
-        END
-       AdrInt=EvalIntExpression(ArgStr[1],UInt16,&OK);
+       char *pArg1 = ArgStr[1];
+
+       BrRel = False; BrLong = False;
+       if (*pArg1 == '$')
+       {
+         BrRel = True; pArg1++;
+       }
+       else if (*pArg1 == '!')
+       {
+         BrLong = True; pArg1++;
+       }
+       AdrInt = EvalIntExpression(pArg1, UInt16, &OK);
        if (OK)
         BEGIN
          Dist=AdrInt-EProgCounter();
@@ -1311,55 +1316,59 @@ BEGIN
     END
 
    if (Memo("CALL"))
-    BEGIN
-     if (ArgCnt!=1) WrError(1110);
+   {
+     if (ArgCnt != 1) WrError(1110);
      else
-      BEGIN
-       if (*ArgStr[1]=='!')
-        BEGIN
-         strcpy(ArgStr[1],ArgStr[1]+1); BrLong=True;
-        END
-       else BrLong=False;
-       FirstPassUnknown=False;
-       AdrInt=EvalIntExpression(ArgStr[1],UInt16,&OK);
-       if (FirstPassUnknown) AdrInt&=0x7ff;
+     {
+       char *pArg1 = ArgStr[1];
+
+       if (*pArg1 == '!')
+       {
+         pArg1++; BrLong = True;
+       }
+       else BrLong = False;
+       FirstPassUnknown = False;
+       AdrInt = EvalIntExpression(pArg1, UInt16, &OK);
+       if (FirstPassUnknown) AdrInt &= 0x7ff;
        if (OK)
-        BEGIN
-         if ((BrLong) OR (AdrInt>0x7ff))
-          BEGIN
-           BAsmCode[0]=0xab;
-           BAsmCode[1]=0x40+Hi(AdrInt & 0x3fff);
-           BAsmCode[2]=Lo(AdrInt);
-           CodeLen=3;
+       {
+         if ((BrLong) || (AdrInt > 0x7ff))
+         {
+           BAsmCode[0] = 0xab;
+           BAsmCode[1] = 0x40 + Hi(AdrInt & 0x3fff);
+           BAsmCode[2] = Lo(AdrInt);
+           CodeLen = 3;
            CheckCPU(CPU75004);
-          END
+         }
          else
-          BEGIN
-           BAsmCode[0]=0x40+Hi(AdrInt & 0x7ff);
-           BAsmCode[1]=Lo(AdrInt);
-           CodeLen=2;
-          END
+         {
+           BAsmCode[0] = 0x40 + Hi(AdrInt & 0x7ff);
+           BAsmCode[1] = Lo(AdrInt);
+           CodeLen = 2;
+         }
          ChkSpace(SegCode);
-        END
-      END
+       }
+     }
      return;
-    END
+   }
 
    if (Memo("CALLF"))
     BEGIN
      if (ArgCnt!=1) WrError(1110);
      else
-      BEGIN
-       if (*ArgStr[1]=='!') strcpy(ArgStr[1],ArgStr[1]+1);
-       AdrInt=EvalIntExpression(ArgStr[1],UInt11,&OK);
+     {
+       char *pArg1 = ArgStr[1];
+
+       if (*pArg1 == '!') pArg1++;
+       AdrInt = EvalIntExpression(pArg1, UInt11, &OK);
        if (OK)
-        BEGIN
-         BAsmCode[0]=0x40+Hi(AdrInt);
-         BAsmCode[1]=Lo(AdrInt);
-         CodeLen=2;
+       {
+         BAsmCode[0] = 0x40 + Hi(AdrInt);
+         BAsmCode[1] = Lo(AdrInt);
+         CodeLen = 2;
          ChkSpace(SegCode);
-        END
-      END
+       }
+     }
      return;
     END
 

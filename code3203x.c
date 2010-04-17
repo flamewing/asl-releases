@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3203x.c,v 1.5 2008/11/23 10:39:16 alfred Exp $                       */
+/* $Id: code3203x.c,v 1.6 2010/04/17 13:14:19 alfred Exp $                       */
 /***************************************************************************** 
  * $Log: code3203x.c,v $
+ * Revision 1.6  2010/04/17 13:14:19  alfred
+ * - address overlapping strcpy()
+ *
  * Revision 1.5  2008/11/23 10:39:16  alfred
  * - allow strings with NUL characters
  *
@@ -475,7 +478,7 @@ BEGIN
     BEGIN
      /* II.1. Erkennungszeichen entfernen */
 
-     strcpy(Asc,Asc+1);
+     Asc++;
 
      /* II.2. Extrawuerste erledigen */
 
@@ -519,22 +522,22 @@ BEGIN
       BEGIN
        if (Asc[1]=='-')
         BEGIN
-         Mode=ModPreDec; strcpy(Asc,Asc+2);
+         Mode=ModPreDec; Asc += 2;
         END
        else
         BEGIN
-         Mode=ModSub; strcpy(Asc,Asc+1);
+         Mode=ModSub; Asc++;
         END
       END
      else if (*Asc=='+')
       BEGIN
        if (Asc[1]=='+')
         BEGIN
-         Mode=ModPreInc; strcpy(Asc,Asc+2);
+         Mode=ModPreInc; Asc += 2;
         END
        else
         BEGIN
-         Mode=ModAdd; strcpy(Asc,Asc+1);
+         Mode=ModAdd; Asc++;
         END
       END
      else if (Asc[l-1]=='-')
@@ -872,7 +875,7 @@ END
 
         static LongWord EvalAdrExpression(char *Asc, Boolean *OK)
 BEGIN
-   if (*Asc=='@') strcpy(Asc,Asc+1);
+   if (*Asc=='@') Asc++;
    return EvalIntExpression(Asc,UInt24,OK);
 END
 
@@ -899,7 +902,7 @@ BEGIN
    ThisPar=(strcmp(LabPart,"||")==0);
    if ((strlen(OpPart)>2) AND (strncmp(OpPart,"||",2)==0))
     BEGIN
-     ThisPar=True; strcpy(OpPart,OpPart+2);
+     ThisPar=True; strmov(OpPart,OpPart+2);
     END
    if ((NOT NextPar) AND (ThisPar))
     BEGIN
@@ -1233,7 +1236,7 @@ BEGIN
 
    if ((strncmp(OpPart,"LDI",3)==0) OR (strncmp(OpPart,"LDF",3)==0))
     BEGIN
-     strcpy(HOp,OpPart); strcpy(OpPart,OpPart+3);
+     strcpy(HOp,OpPart); strmov(OpPart,OpPart+3);
      for (z=0; z<ConditionCount; z++)
       if (Memo(Conditions[z].Name))
        BEGIN
@@ -1345,7 +1348,7 @@ BEGIN
    if (*OpPart=='B')
     BEGIN
      strcpy(HOp,OpPart);
-     strcpy(OpPart,OpPart+1);
+     strmov(OpPart,OpPart+1);
      l=strlen(OpPart);
      if ((l>=1) AND (OpPart[l-1]=='D'))
       BEGIN
@@ -1386,7 +1389,7 @@ BEGIN
 
    if (strncmp(OpPart,"CALL",4)==0)
     BEGIN
-     strcpy(HOp,OpPart); strcpy(OpPart,OpPart+4);
+     strcpy(HOp,OpPart); strmov(OpPart,OpPart+4);
      for (z=0; z<ConditionCount; z++)
       if (Memo(Conditions[z].Name))
        BEGIN
@@ -1418,7 +1421,7 @@ BEGIN
    if (strncmp(OpPart,"DB",2)==0)
     BEGIN
      strcpy(HOp,OpPart);
-     strcpy(OpPart,OpPart+2);
+     strmov(OpPart,OpPart+2);
      l=strlen(OpPart);
      if ((l>=1) AND (OpPart[l-1]=='D'))
       BEGIN
@@ -1474,7 +1477,7 @@ BEGIN
    if ((strncmp(OpPart,"RETI",4)==0) OR (strncmp(OpPart,"RETS",4)==0))
     BEGIN
      DFlag=(OpPart[3]=='S')?(1l << 23):(0);
-     strcpy(HOp,OpPart); strcpy(OpPart,OpPart+4);
+     strcpy(HOp,OpPart); strmov(OpPart,OpPart+4);
      for (z=0; z<ConditionCount; z++)
       if (Memo(Conditions[z].Name))
        BEGIN
@@ -1492,7 +1495,7 @@ BEGIN
 
    if (strncmp(OpPart,"TRAP",4)==0)
     BEGIN
-     strcpy(HOp,OpPart); strcpy(OpPart,OpPart+4);
+     strcpy(HOp,OpPart); strmov(OpPart,OpPart+4);
      for (z=0; z<ConditionCount; z++)
       if (Memo(Conditions[z].Name))
        BEGIN
