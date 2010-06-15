@@ -95,7 +95,7 @@ char *FExpand(char *Src)
       DrvNum = toupper(*DrvPart) - '@';
     _getdcwd(DrvNum, CurrentDir, 255);
     if (CurrentDir[1] == ':')
-      strcpy(CurrentDir, CurrentDir + 2);
+      strmov(CurrentDir, CurrentDir + 2);
   }
 #elif (defined _WIN32) /* CygWIN */
   getcwd(CurrentDir, 255);

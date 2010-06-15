@@ -6,7 +6,7 @@ BASEARCH1FILES = *.c *.h man/*.1 \
             *.res objdefs.* makedefs.* asl.def \
             include/*.inc \
             Makefile.def-samples/M*
-BASEARCH2FILES = doc_DE/Makefile doc_DE/*.tex doc_DE/*.sty doc_EN/Makefile doc_EN/*.tex \
+BASEARCH2FILES = doc_DE/Makefile doc_DE/*.tex doc_EN/Makefile doc_EN/*.tex \
             tests/testall* tests/warnlog* \
             tests/t_*/t_* tests/t_*/asflags tests/t_*/*.i* tests/t_*/*.ASM tests/t_bas52/bas52.*
 

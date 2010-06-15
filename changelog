@@ -1,4 +1,4 @@
-$Id: changelog,v 1.60 2010/04/11 11:40:42 alfred Exp $
+$Id: changelog,v 1.62 2010/06/14 17:20:45 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1202,3 +1202,7 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 2010-04-17 [Bld77]
 
 - Bugfix      : address problem of overlapping strcpy()
+
+2010-06-14 [Bld78] 
+
+- Bugfix      : do not optimize out 68K BSR if it has zero distance

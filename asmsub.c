@@ -26,9 +26,12 @@
 /*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.12 2010/04/17 13:14:19 alfred Exp $                      */
+/* $Id: asmsub.c,v 1.13 2010/05/01 17:22:02 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmsub.c,v $
+ * Revision 1.13  2010/05/01 17:22:02  alfred
+ * - use strmov()
+ *
  * Revision 1.12  2010/04/17 13:14:19  alfred
  * - address overlapping strcpy()
  *
@@ -506,7 +509,7 @@ BEGIN
 
    sprintf(s,"%27.15e",f); 
    for (p=s; (*p==' ') OR (*p=='+'); p++);
-   if (p!=s) strcpy(s,p);
+   if (p!=s) strmov(s,p);
 
    /* 2. Exponenten soweit als moeglich kuerzen, evtl. ganz streichen */
 
@@ -538,7 +541,7 @@ BEGIN
 
    /* 5. Maximallaenge ueberschritten ? */
 
-   if (strlen(s)>MaxLen) strcpy(d+(n-(strlen(s)-MaxLen)),d+n);
+   if (strlen(s)>MaxLen) strmov(d+(n-(strlen(s)-MaxLen)),d+n);
 
    /* 6. Exponentenwert berechnen */
 
@@ -724,7 +727,7 @@ void NewPage(ShortInt Level, Boolean WithFF)
        fprintf(LstFile, "%s\n", Header);
        ChkIO(10002);
      } 
-     Header[PageWidth] = Save; strcpy(Header, Header + PageWidth);
+     Header[PageWidth] = Save; strmov(Header, Header + PageWidth);
    }
 
   if (!ListToNull)
@@ -1343,7 +1346,7 @@ BEGIN
     END
    else
     BEGIN
-     *p='\0'; strmaxcpy(tmp,Acc,255); strcpy(Acc,p+1);
+     *p='\0'; strmaxcpy(tmp,Acc,255); strmov(Acc,p+1);
     END
    return tmp;
 END
@@ -1723,7 +1726,7 @@ BEGIN
      else
       BEGIN
        *p=Nil; strcpy(TempName,MemVal);
-       strcpy(MemVal,p+1);
+       strmov(MemVal,p+1);
       END;
      KillBlanks(TempName); KillBlanks(MemVal);
      FileLen=strtol(MemFlag,&p,0);

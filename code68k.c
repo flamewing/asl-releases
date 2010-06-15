@@ -36,9 +36,12 @@
 /*           2001-12-02 fixed problems with forward refs of shift arguments  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68k.c,v 1.13 2010/04/17 13:14:21 alfred Exp $                     */
+/* $Id: code68k.c,v 1.14 2010/06/13 17:48:57 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code68k.c,v $
+ * Revision 1.14  2010/06/13 17:48:57  alfred
+ * - do not optimize BSR with zero displacement
+ *
  * Revision 1.13  2010/04/17 13:14:21  alfred
  * - address overlapping strcpy()
  *
@@ -4521,7 +4524,7 @@ BEGIN
              else
               BEGIN
                CodeLen=2;
-               if (HVal8!=0)
+               if ((HVal8!=0) || (1 == CondIndex))
                 BEGIN
                  WAsmCode[0]=0x6000 | (CondIndex << 8) | ((Byte)HVal8);
                 END
