@@ -1,4 +1,4 @@
-	cpu	mico8
+	cpu	mico8_v3
 
 ; from user's manual
 

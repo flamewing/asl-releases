@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codez8.c,v 1.8 2010/04/17 13:14:24 alfred Exp $                          *
+/* $Id: codez8.c,v 1.9 2010/12/05 22:58:58 alfred Exp $                          *
  *****************************************************************************
  * $Log: codez8.c,v $
+ * Revision 1.9  2010/12/05 22:58:58  alfred
+ * - allow arbitrary RP values on eZ8
+ *
  * Revision 1.8  2010/04/17 13:14:24  alfred
  * - address overlapping strcpy()
  *
@@ -957,6 +960,8 @@ static void DecodeJP(Word Index)
 
 static void DecodeSRP(Word Index)
 {
+  Boolean Valid;
+
   UNUSED(Index);
 
   if (ArgCnt!=1) WrError(1110);
@@ -965,7 +970,11 @@ static void DecodeSRP(Word Index)
     DecodeAdr(ArgStr[1], MModImm, False);
     if (AdrType == ModImm)
     {
-      if (((AdrVal & 15)!=0) || ((AdrVal > 0x70) && (AdrVal < 0xf0))) WrError(120);
+      if (IsEncore)
+        Valid = True;
+      else
+        Valid = (((AdrVal & 15) == 0) && (AdrVal <= 0x70));
+      if (!Valid) WrError(120);
       else
       {
         BAsmCode[0] = IsEncore ? 0x01 : 0x31;

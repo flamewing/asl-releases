@@ -13,9 +13,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: tex2doc.c,v 1.1 2003/11/06 02:49:25 alfred Exp $                    */
+/* $Id: tex2doc.c,v 1.2 2010/08/27 14:52:43 alfred Exp $                    */
 /*****************************************************************************
  * $Log: tex2doc.c,v $
+ * Revision 1.2  2010/08/27 14:52:43  alfred
+ * - some more overlapping strcpy() cleanups
+ *
  * Revision 1.1  2003/11/06 02:49:25  alfred
  * - recreated
  *
@@ -1677,7 +1680,7 @@ BEGIN
 
    ReadToken(Token);
    if (*SepString!='\0') error("invalid control character for \\verb");
-   Marker=(*Token); strcpy(Token,Token+1); strcpy(SepString,BackSepString);
+   Marker=(*Token); strmov(Token,Token+1); strcpy(SepString,BackSepString);
    do
     BEGIN
      DoAddNormal(SepString,"");

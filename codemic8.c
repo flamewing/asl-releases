@@ -5,9 +5,12 @@
 /* Codegenerator LatticeMico8                                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemic8.c,v 1.10 2010/01/01 14:31:49 alfred Exp $                   */
+/* $Id: codemic8.c,v 1.11 2010/12/11 22:52:39 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codemic8.c,v $
+ * Revision 1.11  2010/12/11 22:52:39  alfred
+ * - split up Mico 8 versions
+ *
  * Revision 1.10  2010/01/01 14:31:49  alfred
  * - added some coding bugfixes
  *
@@ -61,8 +64,8 @@
 
 #define ALUOrderCnt 14
 #define FixedOrderCnt 9
-#define BranchOrderCnt 8
-#define UnconBranchOrderCnt 2
+#define ShortBranchOrderCnt 8
+#define LongBranchOrderCnt 10
 #define MemOrderCnt 6
 #define RegOrderCnt 2
 
@@ -88,11 +91,11 @@ typedef struct
   Byte Space;
 } MemOrder;
 
-static FixedOrder *FixedOrders, *BranchOrders, *RegOrders, *UnconBranchOrders;
+static FixedOrder *FixedOrders, *ShortBranchOrders, *RegOrders, *LongBranchOrders;
 static MemOrder *MemOrders;
 static ALUOrder *ALUOrders;
 
-static CPUVar CPUMico8;
+static CPUVar CPUMico8_05, CPUMico8_V3, CPUMico8_V31;
 
 /*--------------------------------------------------------------------------
  * Address Expression Parsing
@@ -194,9 +197,9 @@ static void DecodeALUI(Word Index)
   }
 }
 
-static void DecodeBranch(Word Index)
+static void DecodeShortBranch(Word Index)
 {
-  FixedOrder *pOrder = BranchOrders + Index;
+  FixedOrder *pOrder = ShortBranchOrders + Index;
   LongInt Dest;
   Boolean OK;
 
@@ -217,9 +220,9 @@ static void DecodeBranch(Word Index)
   }
 }
 
-static void DecodeUnconBranch(Word Index)
+static void DecodeLongBranch(Word Index)
 {
-  FixedOrder *pOrder = UnconBranchOrders + Index;
+  FixedOrder *pOrder = LongBranchOrders + Index;
   LongInt Dest;
   Boolean OK;
 
@@ -318,22 +321,22 @@ static void AddALU(char *NName, char *NImmName, LongWord NCode)
   InstrZ++;
 }
 
-static void AddBranch(char *NName, LongWord NCode)
+static void AddShortBranch(char *NName, LongWord NCode)
 {
-  if (InstrZ >= BranchOrderCnt)
+  if (InstrZ >= ShortBranchOrderCnt)
     exit(255);
 
-  BranchOrders[InstrZ].Code = NCode;
-  AddInstTable(InstTable, NName, InstrZ++, DecodeBranch);
+  ShortBranchOrders[InstrZ].Code = NCode;
+  AddInstTable(InstTable, NName, InstrZ++, DecodeShortBranch);
 }
 
-static void AddUnconBranch(char *NName, LongWord NCode)
+static void AddLongBranch(char *NName, LongWord NCode)
 {
-  if (InstrZ >= UnconBranchOrderCnt)
+  if (InstrZ >= LongBranchOrderCnt)
     exit(255);
 
-  UnconBranchOrders[InstrZ].Code = NCode;
-  AddInstTable(InstTable, NName, InstrZ++, DecodeUnconBranch);
+  LongBranchOrders[InstrZ].Code = NCode;
+  AddInstTable(InstTable, NName, InstrZ++, DecodeLongBranch);
 }
 
 static void AddMem(char *NName, char *NImmName, LongWord NCode, Byte NSpace)
@@ -369,8 +372,21 @@ static void InitFields(void)
   AddFixed("SETZ"  , 0x2c003);
   AddFixed("CLRI"  , 0x2c004);
   AddFixed("SETI"  , 0x2c005);
-  AddFixed("RET"   , 0x38000); /* was 0x3a000 in '05 edition of user's manual */
-  AddFixed("IRET"  , 0x39000); /* was 0x3a001 in '05 edition of user's manual */
+  if (MomCPU == CPUMico8_05)
+  {
+    AddFixed("RET"   , 0x3a000);
+    AddFixed("IRET"  , 0x3a001);
+  }
+  else if (MomCPU == CPUMico8_V3)
+  {
+    AddFixed("RET"   , 0x38000);
+    AddFixed("IRET"  , 0x39000);
+  }
+  else if (MomCPU == CPUMico8_V31)
+  {
+    AddFixed("RET"   , 0x39000);
+    AddFixed("IRET"  , 0x3a000);
+  }
   AddFixed("NOP"   , 0x10000);
 
   InstrZ = 0;
@@ -396,33 +412,70 @@ static void InitFields(void)
   AddReg("DEC"    , (0UL << 14)  | (1UL << 13) | 1);
 
   InstrZ = 0;
-  BranchOrders = (FixedOrder*) malloc(sizeof(FixedOrder) * BranchOrderCnt);
-  AddBranch("BZ"    , 0x32000);
-  AddBranch("BNZ"   , 0x32400);
-  AddBranch("BC"    , 0x32800);
-  AddBranch("BNC"   , 0x32c00);
-  AddBranch("CALLZ" , 0x36000);
-  AddBranch("CALLNZ", 0x36400);
-  AddBranch("CALLC" , 0x36800);
-  AddBranch("CALLNC", 0x36c00);
+  ShortBranchOrders = (FixedOrder*) malloc(sizeof(FixedOrder) * ShortBranchOrderCnt);
+  if (MomCPU != CPUMico8_V31)
+  {
+    AddShortBranch("BZ"    , 0x32000);
+    AddShortBranch("BNZ"   , 0x32400);
+    AddShortBranch("BC"    , 0x32800);
+    AddShortBranch("BNC"   , 0x32c00);
+    AddShortBranch("CALLZ" , 0x36000);
+    AddShortBranch("CALLNZ", 0x36400);
+    AddShortBranch("CALLC" , 0x36800);
+    AddShortBranch("CALLNC", 0x36c00);
+  }
 
   /* AcQ/MA: a group for unconditional branches, which can support
    *         larger branches then the conditional branches (not supported
    *         in the earliest versions of the Mico8 processor). The branch
    *         range is +2047 to -2048 instead of +511 to -512. */
   InstrZ = 0;
-  UnconBranchOrders = (FixedOrder*) malloc(sizeof(FixedOrder) * UnconBranchOrderCnt);
-  AddUnconBranch("B"     , 0x33000);
-  AddUnconBranch("CALL"  , 0x37000);
+  LongBranchOrders = (FixedOrder*) malloc(sizeof(FixedOrder) * LongBranchOrderCnt);
+  if (MomCPU != CPUMico8_05)
+  {
+    if (MomCPU == CPUMico8_V31)
+    {
+      AddLongBranch("BZ"    , 0x30000);
+      AddLongBranch("BNZ"   , 0x31000);
+      AddLongBranch("BC"    , 0x32000);
+      AddLongBranch("BNC"   , 0x33000);
+      AddLongBranch("CALLZ" , 0x34000);
+      AddLongBranch("CALLNZ", 0x35000);
+      AddLongBranch("CALLC" , 0x36000);
+      AddLongBranch("CALLNC", 0x37000);
+      AddLongBranch("CALL"  , 0x38000);
+      AddLongBranch("B"     , 0x3b000);
+    }
+    else
+    {
+      AddLongBranch("B"     , 0x33000);
+      AddLongBranch("CALL"  , 0x37000);
+    }
+  }
 
   InstrZ = 0;
   MemOrders = (MemOrder*) malloc(sizeof(MemOrder) * MemOrderCnt);
-  AddMem("INP"    , "INPI"   , (15UL << 14) | 1, SegIO);   /* new in V3 Lattice assembler */
-  AddMem("IMPORT" , "IMPORTI", (15UL << 14) | 1, SegIO);
-  AddMem("OUTP"   , "OUTPI"  , (15UL << 14) | 0, SegIO);   /* new in V3 Lattice assembler */
-  AddMem("EXPORT" , "EXPORTI", (15UL << 14) | 0, SegIO);
-  AddMem("LSP"    , "LSPI"   , (15UL << 14) | 5, SegData);
-  AddMem("SSP"    , "SSPI"   , (15UL << 14) | 4, SegData);
+  if (MomCPU == CPUMico8_V31)
+  {
+    AddMem("INP"    , "INPI"   , (23UL << 13) | 1, SegIO);
+    AddMem("IMPORT" , "IMPORTI", (23UL << 13) | 1, SegIO);
+    AddMem("OUTP"   , "OUTPI"  , (23UL << 13) | 0, SegIO);
+    AddMem("EXPORT" , "EXPORTI", (23UL << 13) | 0, SegIO);
+    AddMem("LSP"    , "LSPI"   , (23UL << 13) | 5, SegData);
+    AddMem("SSP"    , "SSPI"   , (23UL << 13) | 4, SegData);
+  }
+  else
+  {
+    if (MomCPU == CPUMico8_V3)
+    {
+      AddMem("INP"    , "INPI"   , (15UL << 14) | 1, SegIO);
+      AddMem("OUTP"   , "OUTPI"  , (15UL << 14) | 0, SegIO);
+    }
+    AddMem("IMPORT" , "IMPORTI", (15UL << 14) | 1, SegIO);
+    AddMem("EXPORT" , "EXPORTI", (15UL << 14) | 0, SegIO);
+    AddMem("LSP"    , "LSPI"   , (15UL << 14) | 5, SegData);
+    AddMem("SSP"    , "SSPI"   , (15UL << 14) | 4, SegData);
+  }
 
   AddInstTable(InstTable, "REG", 0, DecodeRegDef);
   AddInstTable(InstTable, "PORT", 0, DecodePort);
@@ -433,8 +486,8 @@ static void DeinitFields(void)
   DestroyInstTable(InstTable);
   free(FixedOrders);
   free(ALUOrders);
-  free(BranchOrders);
-  free(UnconBranchOrders);
+  free(LongBranchOrders);
+  free(ShortBranchOrders);
   free(MemOrders);
   free(RegOrders);
 }
@@ -504,5 +557,7 @@ static void SwitchTo_Mico8(void)
 
 void codemico8_init(void)
 {
-   CPUMico8 = AddCPU("Mico8", SwitchTo_Mico8);
+   CPUMico8_05  = AddCPU("Mico8_05" , SwitchTo_Mico8);
+   CPUMico8_V3  = AddCPU("Mico8_V3" , SwitchTo_Mico8);
+   CPUMico8_V31 = AddCPU("Mico8_V31", SwitchTo_Mico8);
 }

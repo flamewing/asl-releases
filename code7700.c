@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code7700.c,v 1.5 2010/04/17 13:14:22 alfred Exp $                    */
+/* $Id: code7700.c,v 1.6 2010/08/27 14:52:42 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code7700.c,v $
+ * Revision 1.6  2010/08/27 14:52:42  alfred
+ * - some more overlapping strcpy() cleanups
+ *
  * Revision 1.5  2010/04/17 13:14:22  alfred
  * - address overlapping strcpy()
  *
@@ -669,8 +672,10 @@ BEGIN
       if (ArgCnt!=1) WrError(1110);
       else
        BEGIN
-        if (*ArgStr[1]=='#') strcpy(ArgStr[1],ArgStr[1]+1);
-        AdrLong=EvalIntExpression(ArgStr[1],Int32,&OK);
+        char *pVal = ArgStr[1];
+
+        if (*pVal == '#') pVal++;
+        AdrLong=EvalIntExpression(pVal, Int32,&OK);
         if (OK)
          BEGIN
           OK=RelOrders[z].Disp8==-1;
@@ -1234,7 +1239,7 @@ BEGIN
      if (ArgCnt!=1) WrError(1110);
      else
       BEGIN
-       if (*ArgStr[1]=='#') strcpy(ArgStr[1],ArgStr[1]+1);
+       if (*ArgStr[1]=='#') strmov(ArgStr[1],ArgStr[1]+1);
        DecodeAdr(1,MModAbs8);
        if (AdrType!=ModNone)
         BEGIN
@@ -1253,7 +1258,7 @@ BEGIN
        Rel=True;
        if (*ArgStr[1]=='#')
         BEGIN
-         strcpy(ArgStr[1],ArgStr[1]+1); Rel=False;
+         strmov(ArgStr[1],ArgStr[1]+1); Rel=False;
         END
        BAsmCode[0]=0x62;
        if (Rel)

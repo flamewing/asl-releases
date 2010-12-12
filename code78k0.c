@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code78k0.c,v 1.6 2010/04/17 13:14:22 alfred Exp $                          *
+/* $Id: code78k0.c,v 1.7 2010/08/27 14:52:42 alfred Exp $                          *
  ***************************************************************************** 
  * $Log: code78k0.c,v $
+ * Revision 1.7  2010/08/27 14:52:42  alfred
+ * - some more overlapping strcpy() cleanups
+ *
  * Revision 1.6  2010/04/17 13:14:22  alfred
  * - address overlapping strcpy()
  *
@@ -978,11 +981,13 @@ static void DecodeCALLF(Word Index)
   if (ArgCnt != 1) WrError(1110);
   else
   {
-    if (*ArgStr[1] == '!') strcpy(ArgStr[1], ArgStr[1] + 1);
-    AdrWord = EvalIntExpression(ArgStr[1], UInt11, &OK);
+    char *pVal = ArgStr[1];
+
+    if ('!' == *pVal) pVal++;
+    AdrWord = EvalIntExpression(pVal, UInt11, &OK);
     if (OK)
     {
-      BAsmCode[0] = 0x0c +(Hi(AdrWord) << 4);
+      BAsmCode[0] = 0x0c | (Hi(AdrWord) << 4);
       BAsmCode[1] = Lo(AdrWord);
       CodeLen = 2;
     }
@@ -1078,8 +1083,11 @@ static void DecodeRel(Word Index)
   if (ArgCnt != 1) WrError(1110);
   else
   {
-    if (*ArgStr[1] == '$') strcpy(ArgStr[1], ArgStr[1] + 1);
-    AdrInt = EvalIntExpression(ArgStr[1], UInt16, &OK) - (EProgCounter() + 2);
+    char *pAdr = ArgStr[1];
+
+    if ('$' == *pAdr)
+      pAdr++;
+    AdrInt = EvalIntExpression(pAdr, UInt16, &OK) - (EProgCounter() + 2);
     if (OK)
     {
       if (((AdrInt < -128) || (AdrInt > 127)) && (!SymbolQuestionable)) WrError(1370);
@@ -1101,6 +1109,8 @@ static void DecodeBRel(Word Index)
   if (ArgCnt != 2) WrError(1110);
   else if (DecodeBitAdr(ArgStr[1], &HReg))
   {
+    char *pAdr;
+
     if ((Index == 1) && ((HReg & 0x88) == 0))
     {
       BAsmCode[0] = 0x8c + HReg; BAsmCode[1] = AdrVals[0]; HReg = 2;
@@ -1123,8 +1133,8 @@ static void DecodeBRel(Word Index)
       BAsmCode[2] = AdrVals[0];
       HReg = 2 + AdrCnt;
     }
-    if (*ArgStr[2] == '$') strcpy(ArgStr[2], ArgStr[2] + 1);
-    AdrInt = EvalIntExpression(ArgStr[2], UInt16, &OK) - (EProgCounter() + HReg + 1);
+    pAdr = (*ArgStr[2] == '$') ? ArgStr[2] + 1 : ArgStr[2];
+    AdrInt = EvalIntExpression(pAdr, UInt16, &OK) - (EProgCounter() + HReg + 1);
     if (OK)
     {
       if (((AdrInt < -128) || (AdrInt > 127)) & (!SymbolQuestionable)) WrError(1370);
@@ -1151,9 +1161,10 @@ static void DecodeDBNZ(Word Index)
     if ((AdrMode == ModReg8) && ((AdrPart & 6) != 2)) WrError(1350);
     else if (AdrMode != ModNone)
     {
+      char *pAdr;
       BAsmCode[0] = (AdrMode == ModReg8) ? 0x88 + AdrPart : 0x04;
       BAsmCode[1] = AdrVals[0];
-      if (*ArgStr[2] == '$') strcpy(ArgStr[2], ArgStr[2] + 1);
+      pAdr = (*ArgStr[2] == '$') ? ArgStr[2] + 1 : ArgStr[2];
       AdrInt = EvalIntExpression(ArgStr[2], UInt16, &OK) - (EProgCounter() + AdrCnt + 2);
       if (OK)
       {

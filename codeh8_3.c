@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeh8_3.c,v 1.5 2010/04/17 13:14:23 alfred Exp $                    */
+/* $Id: codeh8_3.c,v 1.6 2010/08/27 14:52:42 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codeh8_3.c,v $
+ * Revision 1.6  2010/08/27 14:52:42  alfred
+ * - some more overlapping strcpy() cleanups
+ *
  * Revision 1.5  2010/04/17 13:14:23  alfred
  * - address overlapping strcpy()
  *
@@ -1703,8 +1706,9 @@ BEGIN
      else if (MomCPU<CPU6413309) WrError(1500);
      else
       BEGIN
-       if (*ArgStr[1]=='#') strcpy(ArgStr[1],ArgStr[1]+1);
-       WAsmCode[0]=EvalIntExpression(ArgStr[1],UInt2,&OK)<<4;
+       char *pVal = (*ArgStr[1]=='#') ? ArgStr[1] + 1 : ArgStr[1];
+
+       WAsmCode[0]=EvalIntExpression(pVal,UInt2,&OK)<<4;
        if (OK)
         BEGIN
          WAsmCode[0]+=0x5700; CodeLen=2;

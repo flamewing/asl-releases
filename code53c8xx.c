@@ -332,7 +332,7 @@ BEGIN
            WrError(1350); OK = False;
           END
          Buf |= 0x00800000;
-         strcpy(ArgStr[1], ArgStr[1] + 4); ArgStr[1][l - 5] = '\0';
+         strmov(ArgStr[1], ArgStr[1] + 4); ArgStr[1][l - 5] = '\0';
         END
        Adr = EvalIntExpression(ArgStr[1], UInt32, &OK);
        if ((OK) AND (Buf != 0))
@@ -398,7 +398,7 @@ BEGIN
            DAsmCode[0] |= Phase;
            if (strncasecmp(ArgStr[2],"PTR", 3) == 0)
             BEGIN
-             strcpy(ArgStr[2], ArgStr[2] + 4);
+             strmov(ArgStr[2], ArgStr[2] + 4);
              DAsmCode[0] |= 0x20000000;
             END
            Adr = ArgStr[2];
@@ -751,11 +751,11 @@ BEGIN
     BEGIN
      if (strncasecmp(ArgStr[1], "MEMORY", 6) == 0)
       BEGIN
-       strcpy(ArgStr[1], ArgStr[1] + 7);
+       strmov(ArgStr[1], ArgStr[1] + 7);
        if (strncasecmp(ArgStr[1], "NO FLUSH", 8) == 0)
         BEGIN
          DAsmCode[0] = 0xc1000000;
-         strcpy(ArgStr[1], ArgStr[1] + 9);
+         strmov(ArgStr[1], ArgStr[1] + 9);
         END
        else DAsmCode[0] = 0xc0000000;
        DAsmCode[0] |= EvalIntExpression(ArgStr[1], UInt24, &OK);
@@ -788,7 +788,7 @@ BEGIN
              DAsmCode[0] |= ImmVal << 24;
              if (strncasecmp(ArgStr[2], "PTR", 3) == 0)
               BEGIN
-               strcpy(ArgStr[2], ArgStr[2] + 4);
+               strmov(ArgStr[2], ArgStr[2] + 4);
                DAsmCode[0] |= 0x20000000;
               END
              DAsmCode[1] = EvalIntExpression(ArgStr[2], UInt32, &OK);
@@ -813,7 +813,7 @@ BEGIN
      DAsmCode[0] = 0x40000000; OK = True;
      if (strncasecmp(ArgStr[1], "ATN ", 4) == 0)
       BEGIN
-       strcpy(ArgStr[1], ArgStr[1] + 4); KillPrefBlanks(ArgStr[1]);
+       strmov(ArgStr[1], ArgStr[1] + 4); KillPrefBlanks(ArgStr[1]);
        if (NOT MayATN) OK = False;
        else DAsmCode[0] |= 0x01000000;
       END
@@ -822,7 +822,7 @@ BEGIN
       BEGIN
        if (strncasecmp(ArgStr[1], "FROM ", 5) == 0)
         BEGIN
-         strcpy(ArgStr[1], ArgStr[1] + 5); KillPrefBlanks(ArgStr[1]);
+         strmov(ArgStr[1], ArgStr[1] + 5); KillPrefBlanks(ArgStr[1]);
          DAsmCode[0] |= 0x02000000 + EvalIntExpression(ArgStr[1], UInt24, &OK);
         END
        else DAsmCode[0] |= EvalIntExpression(ArgStr[1], UInt4, &OK) << 16;

@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6812.c,v 1.17 2010/04/17 13:14:20 alfred Exp $                    */
+/* $Id: code6812.c,v 1.18 2010/08/27 14:52:41 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6812.c,v $
+ * Revision 1.18  2010/08/27 14:52:41  alfred
+ * - some more overlapping strcpy() cleanups
+ *
  * Revision 1.17  2010/04/17 13:14:20  alfred
  * - address overlapping strcpy()
  *
@@ -227,16 +230,20 @@ static Boolean DecodeBaseReg(const char *pAsc, Byte *pErg)
   return Result;
 }
 
-static Boolean ValidReg(char *Asc_o)
+static Boolean ValidReg(const char *Asc_o)
 {
   Byte Dummy;
   String Asc;
   int l = strlen(Asc_o);
 
-  strmaxcpy(Asc, Asc_o,255);
-
-  if ((*Asc == '-') || (*Asc == '+')) strcpy(Asc, Asc + 1);
-  else if ((Asc[l - 1] == '-') || (Asc[l - 1] == '+')) Asc[l - 1] = '\0';
+  if ((*Asc_o == '-') || (*Asc_o == '+'))
+    strcpy(Asc, Asc_o + 1);
+  else 
+  {
+    strcpy(Asc, Asc_o);
+    if ((Asc_o[l - 1] == '-') || (Asc_o[l - 1] == '+'))
+      Asc[l - 1] = '\0';
+  }
   return DecodeBaseReg(Asc, &Dummy);
 }
 

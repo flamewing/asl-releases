@@ -36,9 +36,12 @@
 /*           2001-12-02 fixed problems with forward refs of shift arguments  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68k.c,v 1.14 2010/06/13 17:48:57 alfred Exp $                     */
+/* $Id: code68k.c,v 1.15 2010/08/27 14:52:41 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code68k.c,v $
+ * Revision 1.15  2010/08/27 14:52:41  alfred
+ * - some more overlapping strcpy() cleanups
+ *
  * Revision 1.14  2010/06/13 17:48:57  alfred
  * - do not optimize BSR with zero displacement
  *
@@ -449,7 +452,7 @@ BEGIN
            case 'W': C->Long=False; break;
            default: return False;
           END
-         strcpy(C->Name+2,C->Name+4);
+         strmov(C->Name+2,C->Name+4);
         END
        else C->Long=(MomCPU==CPUCOLD);
        if ((strlen(C->Name)>3) AND (C->Name[2]=='*')) 
@@ -463,7 +466,7 @@ BEGIN
                      C->Scale=3; break;
            default: return False;
           END
-         strcpy(C->Name+2,C->Name+4);
+         strmov(C->Name+2,C->Name+4);
         END
        else C->Scale=0;
        C->INummer=C->ANummer; C->Art=Index; return True;
@@ -1081,7 +1084,7 @@ BEGIN
           END
          else
           BEGIN
-           *p='\0'; strcpy(OneComp.Name,Asc); strcpy(Asc,p+1);
+           *p='\0'; strcpy(OneComp.Name,Asc); strmov(Asc,p+1);
           END
          if (NOT ClassComp(&OneComp)) 
           BEGIN
@@ -1266,49 +1269,50 @@ BEGIN
    return Asc[1]-'0'+((mytoupper(*Asc)=='D')?0:8);
 END
 
-        static Boolean DecodeRegList(char *Asc_o, Word *Erg)
-BEGIN
-   static Word Masks[16]={1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384,32768};
-   Byte h,h2,z;
-   char *p;
-   String Asc,s;
+static Boolean DecodeRegList(char *Asc_o, Word *Erg)
+{
+  static Word Masks[16]={1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384,32768};
+  Byte h, h2, z;
+  char *p;
+  String Asc, s;
 
-   *Erg=0; strmaxcpy(Asc,Asc_o,255);
-   do
-    BEGIN
-     p=strchr(Asc,'/');
-     if (p==Nil)
-      BEGIN
-       strcpy(s,Asc); *Asc='\0';
-      END
-     else
-      BEGIN
-       *p='\0'; strcpy(s,Asc); strcpy(Asc,p+1);
-      END
-     if (*Asc=='/') strcpy(Asc,Asc+1);
-     p=strchr(s,'-');
-     if (p==Nil) 
-      BEGIN
-       if ((h=OneReg(s))==16) return False;
-       *Erg|=Masks[h];
-      END
-     else
-      BEGIN
-       *p='\0';
-       if ((h = OneReg(s)) == 16) return False;
-       if ((h2 = OneReg(p + 1)) == 16) return False;
-       if (h <= h2)
+  *Erg = 0; strmaxcpy(Asc, Asc_o, 255);
+  do
+  {
+    p = strchr(Asc, '/');
+    if (!p)
+    {
+      strcpy(s, Asc); *Asc = '\0';
+    }
+    else
+    {
+      *p='\0'; strcpy(s, Asc); strmov(Asc, p+1);
+    }
+    if (*Asc == '/')
+      strmov(Asc, Asc + 1);
+    p = strchr(s, '-');
+    if (!p) 
+    {
+      if ((h = OneReg(s)) == 16) return False;
+      *Erg |= Masks[h];
+    }
+    else
+    {
+      *p = '\0';
+      if ((h = OneReg(s)) == 16) return False;
+      if ((h2 = OneReg(p + 1)) == 16) return False;
+      if (h <= h2)
         for (z = h; z <= h2; *Erg |= Masks[z++]);
-       else
-        BEGIN
-         for (z = h; z <= 15; *Erg |= Masks[z++]);
-         for (z = 0; z <= h2; *Erg |= Masks[z++]);
-        END
-      END
-    END    
-   while (*Asc!='\0');
-   return True;
-END
+      else
+      {
+        for (z = h; z <= 15; *Erg |= Masks[z++]);
+        for (z = 0; z <= h2; *Erg |= Masks[z++]);
+      }
+    }
+  }
+  while (*Asc);
+  return True;
+}
 
 /*-------------------------------------------------------------------------*/
 /* Dekodierroutinen: Integer-Einheit */
@@ -1461,56 +1465,61 @@ END
 
 /* 0=ASR 1=ASL 2=LSR 3=LSL 4=ROXR 5=ROXL 6=ROR 7=ROL */
 
-        static void DecodeShift(Word Index)
-BEGIN
-   Boolean ValOK;
-   Byte HVal8;
-   Word LFlag=(Index>>2), Op=Index&3;
+static void DecodeShift(Word Index)
+{
+  Boolean ValOK;
+  Byte HVal8;
+  Word LFlag = (Index >> 2), Op = Index & 3;
 
-   if (ArgCnt==1) 
-    BEGIN
-     strcpy(ArgStr[2],ArgStr[1]); strcpy(ArgStr[1],"#1");
-     ArgCnt=2;
-    END
-   if (ArgCnt!=2) WrError(1110);
-   else if ((*OpPart=='R') AND (MomCPU==CPUCOLD)) WrError(1500);
-   else
-    BEGIN
-     DecodeAdr(ArgStr[2],Mdata+Madri+Mpost+Mpre+Mdadri+Maix+Mabs);
-     if (AdrNum==1) 
-      BEGIN
-       if (CheckColdSize())
-        BEGIN
-         WAsmCode[0]=0xe000 | AdrMode | (Op << 3) | (OpSize << 6) | (LFlag << 8);
-         OpSize = 8;
-         DecodeAdr(ArgStr[1],Mdata+Mimm);
-         if ((AdrNum==1) OR ((AdrNum==11) AND (Lo(AdrVals[0])>=1) AND (Lo(AdrVals[0])<=8)))
-          BEGIN
-           CodeLen=2;
-           WAsmCode[0] |= (AdrNum==1) ? 0x20|(AdrMode<<9) : ((AdrVals[0] & 7) << 9);
-          END
-         else WrError(1380);
-        END
-      END
-     else if (AdrNum!=0) 
-      BEGIN
-       if (MomCPU==CPUCOLD) WrError(1350);
-       else
-        BEGIN
-         if (OpSize!=1) WrError(1130);
-         else
-          BEGIN
-           WAsmCode[0]=0xe0c0 | AdrMode | (Op << 9) | (LFlag << 8);
-           CopyAdrVals(WAsmCode+1);
-           if (*ArgStr[1]=='#') strcpy(ArgStr[1],ArgStr[1]+1);
-           HVal8=EvalIntExpression(ArgStr[1],Int8,&ValOK);
-           if ((ValOK) AND (HVal8==1)) CodeLen=2+AdrCnt;
-           else WrError(1390);
-          END
-        END
-      END
-    END
-END
+  if (ArgCnt == 1) 
+  {
+    strcpy(ArgStr[2],ArgStr[1]); strcpy(ArgStr[1], "#1");
+    ArgCnt = 2;
+  }
+  if (ArgCnt != 2) WrError(1110);
+  else if ((*OpPart == 'R') && (MomCPU == CPUCOLD)) WrError(1500);
+  else
+  {
+    DecodeAdr(ArgStr[2], Mdata | Madri | Mpost | Mpre | Mdadri | Maix | Mabs);
+    if (AdrNum == 1) 
+    {
+      if (CheckColdSize())
+      {
+        WAsmCode[0] = 0xe000 | AdrMode | (Op << 3) | (OpSize << 6) | (LFlag << 8);
+        OpSize = 8;
+        DecodeAdr(ArgStr[1], Mdata | Mimm);
+        if ((AdrNum == 1) || ((AdrNum == 11) && (Lo(AdrVals[0]) >= 1) && (Lo(AdrVals[0]) <= 8)))
+        {
+          CodeLen = 2;
+          WAsmCode[0] |= (AdrNum == 1) ? 0x20 | (AdrMode<<9) : ((AdrVals[0] & 7) << 9);
+        }
+        else WrXError(1380, ArgStr[1]);
+      }
+    }
+    else if (AdrNum!=0) 
+    {
+      if (MomCPU == CPUCOLD) WrError(1350);
+      else
+      {
+        if (OpSize != 1) WrError(1130);
+        else
+        {
+          char *pVal = ArgStr[1];
+
+          WAsmCode[0] = 0xe0c0 | AdrMode | (Op << 9) | (LFlag << 8);
+          CopyAdrVals(WAsmCode + 1);
+          if (*pVal == '#')
+            pVal++;
+          HVal8 = EvalIntExpression(pVal, Int8, &ValOK);
+          if ((ValOK) && (HVal8 == 1))
+            CodeLen = 2 + AdrCnt;
+          else
+            WrXError(1390, ArgStr[1]);
+        }
+      }
+    }
+  }
+}
 
 /* ADDQ=0 SUBQ=1 */
 
@@ -3320,7 +3329,7 @@ BEGIN
       END
      else
       BEGIN
-       *h1='\0'; strcpy(s,Asc); strcpy(Asc,h1+1);
+       *h1='\0'; strcpy(s,Asc); strmov(Asc, h1 + 1);
       END
      if (strcasecmp(s,"FPCR")==0) hw|=0x400;
      else if (strcasecmp(s,"FPSR")==0) hw|=0x200;
@@ -3501,7 +3510,7 @@ BEGIN
             BEGIN
              if (strlen(sk)>2)
               BEGIN
-               OpSize=0; strcpy(sk,sk+1); sk[strlen(sk)-1]='\0';
+               OpSize=0; strmov(sk,sk+1); sk[strlen(sk)-1]='\0';
                DecodeAdr(sk,Mdata+Mimm);
                if (AdrNum==1) WAsmCode[1]|=(AdrMode << 4) | 0x1000;
                else if (AdrNum==11) WAsmCode[1]|=(AdrVals[0] & 127);
@@ -3591,7 +3600,7 @@ BEGIN
        p=strrchr(ArgStr[2],':');
        if (p!=Nil)
         BEGIN
-         *p='\0'; strcpy(sk,ArgStr[2]); strcpy(ArgStr[2],p+1);
+         *p='\0'; strcpy(sk,ArgStr[2]); strmov(ArgStr[2],p+1);
         END
        else *sk='\0';
        DecodeAdr(sk,Mfpn);

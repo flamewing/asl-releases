@@ -19,9 +19,12 @@
 /*          14. 6.1999 mit optionaler Aufspaltung in Subdateien begonnen     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: tex2html.c,v 1.3 2010/04/17 13:14:24 alfred Exp $                   */
+/* $Id: tex2html.c,v 1.4 2010/08/27 14:52:43 alfred Exp $                   */
 /*****************************************************************************
  * $Log: tex2html.c,v $
+ * Revision 1.4  2010/08/27 14:52:43  alfred
+ * - some more overlapping strcpy() cleanups
+ *
  * Revision 1.3  2010/04/17 13:14:24  alfred
  * - address overlapping strcpy()
  *
@@ -1836,7 +1839,7 @@ BEGIN
 
    ReadToken(Token);
    if (*SepString!='\0') error("invalid control character for \\verb");
-   Marker=(*Token); strcpy(Token,Token+1); strcpy(SepString,BackSepString);
+   Marker=(*Token); strmov(Token,Token+1); strcpy(SepString,BackSepString);
    do
     BEGIN
      DoAddNormal(SepString,"");

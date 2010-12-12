@@ -10,9 +10,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code86.c,v 1.6 2010/04/17 13:14:22 alfred Exp $                      */
+/* $Id: code86.c,v 1.7 2010/08/27 14:52:42 alfred Exp $                      */
 /*****************************************************************************
  * $Log: code86.c,v $
+ * Revision 1.7  2010/08/27 14:52:42  alfred
+ * - some more overlapping strcpy() cleanups
+ *
  * Revision 1.6  2010/04/17 13:14:22  alfred
  * - address overlapping strcpy()
  *
@@ -358,7 +361,7 @@ static void DecodeAdr(char *Asc)
         WrError(1300); return;
       }
 
-      *p = '\0'; strmaxcpy(AdrPart, Asc + 1, 255); strcpy(Asc, p + 1);
+      *p = '\0'; strmaxcpy(AdrPart, Asc + 1, 255); strmov(Asc, p + 1);
       OldNegFlag = False;
 
       do
@@ -709,15 +712,18 @@ BEGIN
    if (ArgCnt!=1) WrError(1110);
    else
     BEGIN
-     if (strncmp(ArgStr[1],"SHORT ",6) == 0)
+     char *pAdr = ArgStr[1];
+
+     if (!strncmp(pAdr, "SHORT ", 6))
       BEGIN
-       AdrByte=2; strcpy(ArgStr[1],ArgStr[1]+6); KillPrefBlanks(ArgStr[1]);
+       AdrByte=2; pAdr += 6; KillPrefBlanks(pAdr);
       END
-     else if ((strncmp(ArgStr[1],"LONG ",5)==0) OR (strncmp(ArgStr[1],"NEAR ",5)==0))
+     else if ((!strncmp(pAdr, "LONG ", 5)) OR (!strncmp(pAdr, "NEAR ", 5)))
       BEGIN
-       AdrByte=1; strcpy(ArgStr[1],ArgStr[1]+5); KillPrefBlanks(ArgStr[1]);
+       AdrByte=1; pAdr += 5; KillPrefBlanks(pAdr);
       END
-     else AdrByte=0;
+     else
+       AdrByte=0;
      OK=True;
      if (Index==0)
       BEGIN

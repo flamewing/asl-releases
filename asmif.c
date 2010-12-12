@@ -7,9 +7,12 @@
 /* Historie: 15. 5.1996 Grundsteinlegung                                     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmif.c,v 1.3 2008/11/23 10:39:15 alfred Exp $                       */
+/* $Id: asmif.c,v 1.4 2010/08/27 14:52:41 alfred Exp $                       */
 /***************************************************************************** 
  * $Log: asmif.c,v $
+ * Revision 1.4  2010/08/27 14:52:41  alfred
+ * - some more overlapping strcpy() cleanups
+ *
  * Revision 1.3  2008/11/23 10:39:15  alfred
  * - allow strings with NUL characters
  *
@@ -151,34 +154,34 @@ BEGIN
 END
 
 
-	void CodeIFEXIST(void)
-BEGIN
-   LongInt IfExpr;
-   Boolean Found;
-   String NPath;
+void CodeIFEXIST(void)
+{
+  LongInt IfExpr;
+  Boolean Found;
+  String NPath;
 
-   ActiveIF=IfAsm;
+  ActiveIF = IfAsm;
 
-   if (NOT IfAsm) IfExpr=1;
-   else if (ArgCnt!=1)
-    BEGIN
-     WrError(1110); IfExpr=1;
-    END
-   else
-    BEGIN
-     strmaxcpy(ArgPart,ArgStr[1],255);
-     if (*ArgPart=='"') strcpy(ArgPart,ArgPart+1);
-     if (ArgPart[strlen(ArgPart)-1]=='"') ArgPart[strlen(ArgPart)-1]='\0';
-     AddSuffix(ArgPart,IncSuffix);
-     strmaxcpy(NPath,IncludeList,255); strmaxprep(NPath,".:",255);
-     Found=(*(FSearch(ArgPart,NPath))!='\0');
-     if (IfAsm)
-      strmaxcpy(ListLine,(Found)?"=>FOUND":"=>NOT FOUND",255);
-     if (Memo("IFEXIST")) IfExpr=(Found)?1:0;
-     else IfExpr=(Found)?0:1;
-    END
-   PushIF(IfExpr);
-END
+  if (!IfAsm) IfExpr = 1;
+  else if (ArgCnt != 1)
+  {
+    WrError(1110); IfExpr = 1;
+  }
+  else
+  {
+    strmaxcpy(ArgPart, (ArgStr[1][0] == '"') ? ArgStr[1] + 1 : ArgStr[1], 255);
+    if (ArgPart[strlen(ArgPart)-1] == '"')
+      ArgPart[strlen(ArgPart)-1] = '\0';
+    AddSuffix(ArgPart, IncSuffix);
+    strmaxcpy(NPath, IncludeList, 255);
+    strmaxprep(NPath, ".:", 255);
+    Found = (*(FSearch(ArgPart, NPath)) != '\0');
+    if (IfAsm)
+      strmaxcpy(ListLine, Found ? "=>FOUND" : "=>NOT FOUND", 255);
+    IfExpr = Memo("IFEXIST") ? Found : !Found;
+  }
+  PushIF(IfExpr);
+}
 
 
 	static void CodeIFB(void)	

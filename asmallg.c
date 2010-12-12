@@ -25,9 +25,12 @@
 /*                       to now                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmallg.c,v 1.8 2010/04/17 13:14:19 alfred Exp $                     */
+/* $Id: asmallg.c,v 1.9 2010/08/27 14:52:41 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmallg.c,v $
+ * Revision 1.9  2010/08/27 14:52:41  alfred
+ * - some more overlapping strcpy() cleanups
+ *
  * Revision 1.8  2010/04/17 13:14:19  alfred
  * - address overlapping strcpy()
  *
@@ -1119,7 +1122,7 @@ BEGIN
      if (OK)
       BEGIN
        strmaxcpy(Name, ArgStr[1], 255);
-       if (*Name == '"') strcpy(Name, Name + 1);
+       if (*Name == '"') strmov(Name, Name + 1);
        if ((*Name) && (Name[strlen(Name) - 1] == '"')) Name[strlen(Name) - 1] = '\0';
        strmaxcpy(ArgStr[1], Name, 255);
        strmaxcpy(Name, FExpand(FSearch(Name, IncludeList)), 255);

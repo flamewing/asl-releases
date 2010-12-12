@@ -8,9 +8,12 @@
 /*           28. 7.1999 %T ist Abkuerzung fuer %H:%M:%S                      */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: nls.c,v 1.1 2003/11/06 02:49:24 alfred Exp $                         */
+/* $Id: nls.c,v 1.2 2010/08/27 14:52:43 alfred Exp $                         */
 /*****************************************************************************
  * $Log: nls.c,v $
+ * Revision 1.2  2010/08/27 14:52:43  alfred
+ * - some more overlapping strcpy() cleanups
+ *
  * Revision 1.1  2003/11/06 02:49:24  alfred
  * - recreated
  *
@@ -601,7 +604,7 @@ BEGIN
 
    /* Schritt 4: Komma anpassen */
 
-   strcpy(p,p+1); strins(s,NLSInfo.DecSep,p-s);
+   strmov(p,p+1); strins(s,NLSInfo.DecSep,p-s);
 
    /* Schritt 5: Einheit anbauen */
 
@@ -616,7 +619,7 @@ BEGIN
      case CurrFormatPostBlank:
       sprintf(erg,"%s%s",s,NLSInfo.Currency); break;
      default:
-      strcpy(p,p+strlen(NLSInfo.DecSep)); strins(NLSInfo.Currency,s,p-s);
+      strmov(p,p+strlen(NLSInfo.DecSep)); strins(NLSInfo.Currency,s,p-s);
     END
 END
 

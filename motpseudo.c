@@ -5,9 +5,12 @@
 /* Haeufiger benutzte Motorola-Pseudo-Befehle                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: motpseudo.c,v 1.12 2010/04/17 13:14:24 alfred Exp $                   */
+/* $Id: motpseudo.c,v 1.13 2010/08/27 14:52:42 alfred Exp $                   */
 /***************************************************************************** 
  * $Log: motpseudo.c,v $
+ * Revision 1.13  2010/08/27 14:52:42  alfred
+ * - some more overlapping strcpy() cleanups
+ *
  * Revision 1.12  2010/04/17 13:14:24  alfred
  * - address overlapping strcpy()
  *
@@ -435,7 +438,7 @@ void ConvertMotoFloatDec(Double F, Byte *pDest, Boolean NeedsBig)
     pDest[11] |= 0x80; strmov(Man, Man + 1);
   }
   else if (*Man == '+')
-    strcpy(Man, Man + 1);
+    strmov(Man, Man + 1);
 
   /* handle exponent sign */
 
@@ -465,7 +468,7 @@ void ConvertMotoFloatDec(Double F, Byte *pDest, Boolean NeedsBig)
      never occur since an IEEE double is limited to ~1E308 and we have for digits */
 
   if (strlen(Exp) > 4)
-    strcpy(Exp, Exp + strlen(Exp) - 4);
+    strmov(Exp, Exp + strlen(Exp) - 4);
 
   /* insert exponent bits */
 

@@ -14,9 +14,12 @@
 /*           19. 8.2001 fixed errors for lower halves of XIX...XSP           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code96c141.c,v 1.8 2007/11/24 22:48:06 alfred Exp $                          */
+/* $Id: code96c141.c,v 1.9 2010/08/27 14:52:42 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code96c141.c,v $
+ * Revision 1.9  2010/08/27 14:52:42  alfred
+ * - some more overlapping strcpy() cleanups
+ *
  * Revision 1.8  2007/11/24 22:48:06  alfred
  * - some NetBSD changes
  *
@@ -2256,8 +2259,8 @@ BEGIN
              (strcasecmp(ArgStr[2]+strlen(ArgStr[2])-2,CmpStr)!=0))  OK=False;
          else
           BEGIN
-           strcpy(ArgStr[1],ArgStr[1]+1); ArgStr[1][strlen(ArgStr[1])-2]='\0';
-           strcpy(ArgStr[2],ArgStr[2]+1); ArgStr[2][strlen(ArgStr[2])-2]='\0';
+           strmov(ArgStr[1],ArgStr[1]+1); ArgStr[1][strlen(ArgStr[1])-2]='\0';
+           strmov(ArgStr[2],ArgStr[2]+1); ArgStr[2][strlen(ArgStr[2])-2]='\0';
            if ((strcasecmp(ArgStr[1],"XIX")==0) AND (strcasecmp(ArgStr[2],"XIY")==0)) HReg=2;
            else if ((Maximum) AND (strcasecmp(ArgStr[1],"XDE")==0) AND (strcasecmp(ArgStr[2],"XHL")==0)) HReg=0;
            else if ((NOT Maximum) AND (strcasecmp(ArgStr[1],"DE")==0) AND (strcasecmp(ArgStr[2],"HL")==0)) HReg=0;

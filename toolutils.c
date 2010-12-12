@@ -329,7 +329,7 @@ BEGIN
      else if ((NOT Negate) AND (Search>=FilterCnt))
       FilterBytes[FilterCnt++]=FTemp;
 
-     if (p!=Nil) strcpy(Copy,p+1);
+     if (p!=Nil) strmov(Copy,p+1);
     END
    while (p!=Nil);
 

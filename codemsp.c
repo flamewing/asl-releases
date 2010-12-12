@@ -12,9 +12,12 @@
 /*             2002-01-27 allow immediate addressing for one-op instrs(doj)  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemsp.c,v 1.8 2008/11/23 10:39:17 alfred Exp $                     */
+/* $Id: codemsp.c,v 1.9 2010/12/05 23:18:57 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: codemsp.c,v $
+ * Revision 1.9  2010/12/05 23:18:57  alfred
+ * - improve erro arguments
+ *
  * Revision 1.8  2008/11/23 10:39:17  alfred
  * - allow strings with NUL characters
  *
@@ -214,7 +217,7 @@ static void DecodeAdr(char *Asc, Byte Mask, Boolean MayImm)
         AdrVal = EvalIntExpression(Asc, Int16, &OK);
         if (OK)
         {
-          if ((AdrPart == 2) || (AdrPart == 3)) WrXError(1445,Asc);
+          if ((AdrPart == 2) || (AdrPart == 3)) WrXError(1445, p + 1);
           else if ((AdrVal == 0) && ((Mask & 4) != 0)) AdrMode = 2;
           else
           {

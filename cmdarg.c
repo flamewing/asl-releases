@@ -28,13 +28,14 @@ char **ParamStr;
 TMsgCat MsgCat;
 StringList FileArgList;
 
-        static void ClrBlanks(char *tmp)
-BEGIN
-   int cnt;
+static void ClrBlanks(char *tmp)
+{
+  int cnt;
 
-   for (cnt=0; isspace((unsigned int) tmp[cnt]); cnt++);
-   if (cnt>0) strcpy(tmp,tmp+cnt);
-END
+  for (cnt = 0; isspace((unsigned int) tmp[cnt]); cnt++);
+  if (cnt > 0)
+    strmov(tmp, tmp + cnt);
+}
 
 	Boolean ProcessedEmpty(CMDProcessed Processed)
 BEGIN
@@ -221,21 +222,13 @@ BEGIN
       END
 END
 
-        char *GetEXEName(void)
-BEGIN
-   static String s;
-   char *pos;
+const char *GetEXEName(void)
+{
+  char *pos;
 
-   strcpy(s,ParamStr[0]);
-   do
-    BEGIN
-     pos=strchr(s,'/');
-     if (pos!=Nil) strcpy(s,pos+1);
-    END
-   while (pos!=Nil);
-   pos=strchr(s,'.'); if (pos!=Nil) *pos='\0';
-   return s;
-END
+  pos = strrchr(ParamStr[0], '/');
+  return (pos) ? pos + 1 : ParamStr[0];
+}
 
 	void cmdarg_init(char *ProgPath)
 BEGIN

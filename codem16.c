@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codem16.c,v 1.5 2007/11/24 22:48:07 alfred Exp $                     */
+/* $Id: codem16.c,v 1.6 2010/08/27 14:52:42 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codem16.c,v $
+ * Revision 1.6  2010/08/27 14:52:42  alfred
+ * - some more overlapping strcpy() cleanups
+ *
  * Revision 1.5  2007/11/24 22:48:07  alfred
  * - some NetBSD changes
  *
@@ -424,7 +427,7 @@ BEGIN
       END
      else
       BEGIN
-       *p='\0'; strmaxcpy(Part,Asc,255); strcpy(Asc,p+1);
+       *p='\0'; strmaxcpy(Part,Asc,255); strmov(Asc,p+1);
       END
 
      strcpy(SReg,Part); p=QuotPos(SReg,'*'); if (p!=Nil) *p='\0';
@@ -435,10 +438,10 @@ BEGIN
       if (Rec->Next!=Nil) SetError(1350);
       else
        BEGIN
-        strcpy(Part,Part+1);
+        strmov(Part,Part+1);
         if (IsIndirect(Part))
          BEGIN
-          strcpy(Part,Part+1); Part[strlen(Part)-1]='\0';
+          strmov(Part,Part+1); Part[strlen(Part)-1]='\0';
          END
         Rec->Next=DecodeChain(Part);
        END
@@ -591,10 +594,10 @@ BEGIN
 
    if (*Asc=='@')
     BEGIN
-     strcpy(Asc,Asc+1);
+     strmov(Asc,Asc+1);
      if (IsIndirect(Asc))
       BEGIN
-       strcpy(Asc,Asc+1); Asc[strlen(Asc)-1]='\0';
+       strmov(Asc,Asc+1); Asc[strlen(Asc)-1]='\0';
       END
 
      /* Stack Push ? */
@@ -986,7 +989,7 @@ BEGIN
 
    if (IsIndirect(Asc))
     BEGIN
-     strcpy(Asc,Asc+1); Asc[strlen(Asc)-1]='\0';
+     strmov(Asc,Asc+1); Asc[strlen(Asc)-1]='\0';
     END
    *Erg=0;
    while (*Asc!='\0')
@@ -999,7 +1002,7 @@ BEGIN
       END
      else
       BEGIN
-       *p='\0'; strmaxcpy(Part,Asc,11); strcpy(Asc,p+1);
+       *p='\0'; strmaxcpy(Part,Asc,11); strmov(Asc,p+1);
       END
      p=strchr(Part,'-');
      if (p==Nil)
@@ -2570,8 +2573,10 @@ BEGIN
     BEGIN
      if (Memo("EXITD"))
       BEGIN
-       z=1; strcpy(ArgStr[3],ArgStr[1]);
-       strcpy(ArgStr[1],ArgStr[2]); strcpy(ArgStr[2],ArgStr[3]);
+       z=1;
+       strcpy(ArgStr[3],ArgStr[1]);
+       strcpy(ArgStr[1],ArgStr[2]);
+       strcpy(ArgStr[2],ArgStr[3]);
       END
      else z=0;
      if (ArgCnt!=2) WrError(1110);

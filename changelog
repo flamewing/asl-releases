@@ -1,4 +1,4 @@
-$Id: changelog,v 1.62 2010/06/14 17:20:45 alfred Exp $
+$Id: changelog,v 1.63 2010/12/12 13:18:50 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1206,3 +1206,11 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 2010-06-14 [Bld78] 
 
 - Bugfix      : do not optimize out 68K BSR if it has zero distance
+
+2010-12-12 [Bld79]
+
+- Bugfix      : correct back-transformation of SFR addresses to absolute for 80C167
+
+- Bugfix      : allow arbitrary values for register pointer on eZ8
+
+- Change      : split up Mico8 variants

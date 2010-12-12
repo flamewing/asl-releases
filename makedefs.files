@@ -1,4 +1,4 @@
-# $Id: makedefs.files,v 1.5 2005/09/30 13:40:00 alfred Exp $
+# $Id: makedefs.files,v 1.6 2010/06/14 18:36:01 alfred Exp $
 
 BASEARCH1FILES = *.c *.h man/*.1 \
             INSTALL README README.OS2 README.DOS README.LANGS README.KR TODO BENCHES Makefile Makefile.dos Makefile.os2 Makefile.w32 Makefile.def.tmpl \

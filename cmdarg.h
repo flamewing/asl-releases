@@ -44,7 +44,8 @@ extern Boolean ProcessedEmpty(CMDProcessed Processed);
 extern void ProcessCMD(CMDRec *Def, Integer Cnt, CMDProcessed Unprocessed,
                        char *EnvName, CMDErrCallback ErrProc);
 
-extern char *GetEXEName(void);
+extern const char *GetEXEName(void);
 
 extern void cmdarg_init(char *ProgPath);
+
 #endif /* _CMDARG_H */

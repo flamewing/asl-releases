@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code65.c,v 1.3 2005/09/08 17:31:03 alfred Exp $                      */
+/* $Id: code65.c,v 1.4 2010/08/27 14:52:41 alfred Exp $                      */
 /*****************************************************************************
  * $Log: code65.c,v $
+ * Revision 1.4  2010/08/27 14:52:41  alfred
+ * - some more overlapping strcpy() cleanups
+ *
  * Revision 1.3  2005/09/08 17:31:03  alfred
  * - add missing include
  *
@@ -239,14 +242,16 @@ END
 
 /*---------------------------------------------------------------------------*/
 
-        static void ChkZero(char *Asc, Byte *erg)
-BEGIN
-   if ((strlen(Asc)>1) AND ((*Asc=='<') OR (*Asc=='>')))
-    BEGIN
-     *erg=Ord(*Asc=='<')+1; strcpy(Asc,Asc+1);
-    END
-   else *erg=0;
-END
+static void ChkZero(char *Asc, Byte *erg)
+{
+  if ((strlen(Asc) > 1) && ((*Asc == '<') || (*Asc == '>')))
+  {
+    *erg = Ord(*Asc == '<') + 1;
+    strmov(Asc, Asc + 1);
+  }
+  else
+    *erg = 0;
+}
 
         static Boolean DecodePseudo(void)
 BEGIN

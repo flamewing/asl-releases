@@ -10,9 +10,15 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code166.c,v 1.6 2010/04/17 13:14:19 alfred Exp $                     */
+/* $Id: code166.c,v 1.8 2010/12/05 23:17:59 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code166.c,v $
+ * Revision 1.8  2010/12/05 23:17:59  alfred
+ * - use machine-dependent SFR start when transforming SFR addresses back to absolute
+ *
+ * Revision 1.7  2010/08/27 14:52:41  alfred
+ * - some more overlapping strcpy() cleanups
+ *
  * Revision 1.6  2010/04/17 13:14:19  alfred
  * - address overlapping strcpy()
  *
@@ -493,15 +499,17 @@ BEGIN
          if (IsReg(Part,&HReg,True))
           if ((NegFlag) OR (AdrMode!=0xff)) WrError(1350); else AdrMode=HReg;
          else
-          BEGIN
-           if (*Part=='#') strcpy(Part,Part+1);
-           HDisp=EvalIntExpression(Part,Int32,&OK);
+         {
+           char *pPart = Part;
+
+           if (*pPart == '#') pPart++;
+           HDisp = EvalIntExpression(pPart, Int32, &OK);
            if (OK)
-            BEGIN
-             if (NegFlag) DispAcc-=HDisp;
-             else DispAcc+=HDisp;
-            END
-          END
+           {
+             if (NegFlag) DispAcc -= HDisp;
+             else DispAcc += HDisp;
+           }
+         }
          NegFlag=NNegFlag;
         END
        if (AdrMode==0xff) DecideAbsolute(InCode,DispAcc,Mask,Dest);
@@ -821,7 +829,7 @@ BEGIN
             case ModMReg: /* BAsmCode[1] sicher absolut darstellbar, da Rn vorher */
                           /* abgefangen wird! */
              BAsmCode[0]=0xf6+Cond;
-             AdrLong=0xfe00+(((Word)BAsmCode[1]) << 1);
+             AdrLong=SFRStart()+(((Word)BAsmCode[1]) << 1);
              CalcPage(&AdrLong,True);
              BAsmCode[2]=Lo(AdrLong);
              BAsmCode[3]=Hi(AdrLong);
@@ -950,7 +958,7 @@ BEGIN
             case ModMReg: /* BAsmCode[1] sicher absolut darstellbar, da Rn vorher */
                           /* abgefangen wird! */
              BAsmCode[0]=0xc5+Cond;
-             AdrLong=0xfe00+(((Word)BAsmCode[1]) << 1);
+             AdrLong=SFRStart()+(((Word)BAsmCode[1]) << 1);
              CalcPage(&AdrLong,True);
              BAsmCode[2]=Lo(AdrLong);
              BAsmCode[3]=Hi(AdrLong);
@@ -1086,7 +1094,7 @@ BEGIN
              case ModMReg: /* BAsmCode[1] sicher absolut darstellbar, da Rn vorher */
                            /* abgefangen wird! */
               BAsmCode[0]=0x04+Cond;
-              AdrLong=0xfe00+(((Word)BAsmCode[1]) << 1);
+              AdrLong=SFRStart()+(((Word)BAsmCode[1]) << 1);
               CalcPage(&AdrLong,True);
               BAsmCode[2]=Lo(AdrLong);
               BAsmCode[3]=Hi(AdrLong);
