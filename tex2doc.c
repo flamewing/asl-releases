@@ -13,9 +13,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: tex2doc.c,v 1.2 2010/08/27 14:52:43 alfred Exp $                    */
+/* $Id: tex2doc.c,v 1.3 2010/12/12 14:31:41 alfred Exp $                    */
 /*****************************************************************************
  * $Log: tex2doc.c,v $
+ * Revision 1.3  2010/12/12 14:31:41  alfred
+ * - use strmov()
+ *
  * Revision 1.2  2010/08/27 14:52:43  alfred
  * - some more overlapping strcpy() cleanups
  *
@@ -320,22 +323,21 @@ END
 
 /*------------------------------------------------------------------------------*/
 
+static void GetNext(char *Src, char *Dest)
+{
+  char *c = strchr(Src, ' ');
 
-	static void GetNext(char *Src, char *Dest)
-BEGIN
-   char *c=strchr(Src,' ');
-
-   if (c==Nil)
-    BEGIN
-     strcpy(Dest,Src); *Src='\0';
-    END
-   else
-    BEGIN
-     *c='\0'; strcpy(Dest,Src);
-     for (c++; *c==' '; c++); 
-     strcpy(Src,c); 
-    END
-END
+  if (!c)
+  {
+    strcpy(Dest, Src); *Src = '\0';
+  }
+  else
+  {
+    *c = '\0'; strcpy(Dest , Src);
+    for (c++; *c == ' '; c++); 
+    strmov(Src, c); 
+  }
+}
 
 	static void ReadAuxFile(char *Name)
 BEGIN

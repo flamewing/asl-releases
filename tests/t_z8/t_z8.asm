@@ -31,7 +31,7 @@
 	and	@r9,#35h
 	and	@vari,#10011b
 
-	add	2,5
+	add	>2,>5		; disallow register addressing
 	adc	r5,#4
 	sub	@r0,#20
 	sbc	r7,vari

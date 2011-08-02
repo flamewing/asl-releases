@@ -1,4 +1,4 @@
-$Id: changelog,v 1.63 2010/12/12 13:18:50 alfred Exp $
+$Id: changelog,v 1.64 2011-08-01 20:01:10 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1214,3 +1214,7 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 - Bugfix      : allow arbitrary values for register pointer on eZ8
 
 - Change      : split up Mico8 variants
+
+2011-08-01 [Bld80]
+
+- Change      : rework (e)Z8 working register addressing

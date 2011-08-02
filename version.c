@@ -39,9 +39,12 @@
 /*           2002-01-27 Build 19                                             */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: version.c,v 1.52 2010/12/12 13:18:50 alfred Exp $                     */
+/* $Id: version.c,v 1.53 2011-08-01 20:01:10 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: version.c,v $
+ * Revision 1.53  2011-08-01 20:01:10  alfred
+ * - rework Z8 work register addressing
+ *
  * Revision 1.52  2010/12/12 13:18:50  alfred
  * - 1.42 Bld 79
  *
@@ -236,13 +239,13 @@
 #include "stdinc.h"
 #include <string.h>
 
-char *Version="1.42 Beta [Bld 79]";
-char *DebVersion = "1.42bld79-1";
+char *Version="1.42 Beta [Bld 80]";
+char *DebVersion = "1.42bld80-1";
 LongInt VerNo=0x142f;
 
-char *InfoMessCopyright="(C) 1992,2010 Alfred Arnold";
+char *InfoMessCopyright="(C) 1992,2011 Alfred Arnold";
 
-LongInt Magic=0x12372c45;
+LongInt Magic=0x12372d45;
 
 void version_init(void)
 {

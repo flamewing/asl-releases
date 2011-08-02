@@ -46,7 +46,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand Dezember 2010}
+{\large Stand August 2011}
 \end{raggedright}
 
 \clearpage
@@ -3154,11 +3154,11 @@ Instruktionen.  Es ist zu beachten, da"s sie nicht bin"ar
 aufw"artskompatibel ist!
 %%-----------
 \begin{quote}
-ah) MICO8_05, MICO8_V3, MICO8_V31
+ah) MICO8\_05, MICO8\_V3, MICO8\_V31
 \end{quote}
 Leider hat Lattice die Maschinencodes des Mico8 mehrfach ge"andert, so
 da"s verschiedene Targets notwendig wurden, um auch alte Designs weiter
-zu unterstützen.  Die erste Variante entspricht der Variante, wie sie
+zu unterst"utzen.  Die erste Variante entspricht der Variante, wie sie
 im 2005er-Manual beschrieben wurde, die beiden anderen die Versionen 3.0
 bzw. 3.1.
 %%-----------
@@ -7720,6 +7720,63 @@ der Code
 erzeugt.  Der im ersten Schritt erzeugte Code f"ur \tty{DDIR LW}
 wird verworfen, was an einem \tty{R} im Listing zu erkennen
 ist.
+
+%%---------------------------------------------------------------------------
+
+\section{Z8 und eZ8}
+\label{Z8Spec}
+
+Der Prozessorkern der Z8-Mikrokontroller beinhaltet keine eigenen
+Register.  Stattdessen kann ein 16er-Block des internen Adre"raums
+aus RAM und I/O-Registern als 'Arbeitsregister' benutzt werden, die
+mit 4-Bit-Adressen angesprochen werden können.  Welcher 16er-Block
+als Arbeitsregister benutzt werden soll, wird mit dem RP-Register
+festgelegt: Bits 4 bis 7 von RP definieren den 'Offset', der auf die
+4-Bit-Arbeitsregisteradresse addiert wird, um eine 8-Bit-Adresse zu
+erhalten.
+
+"Ublicherweise werden die Arbeitsregister in der Assemblersyntax als
+Register R0...R15 angesprochen, man kann diese Arbeitsregister aber
+auch als eine Methode zur effizienteren (k"urzeren) Adressierung eines
+16er-Bocks im internen RAM betrachten.
+
+Mit dem \tty{ASSUME}-Befehl teilt man AS den aktuellen Wert von RP mit.  AS
+ist dann in der Lage, bei einer Adresse aus dem internen RAM
+automatisch zu entscheiden, ob dieser Operand mit einer 4-Bit Adresse
+angesprochen werden kann oder eine 8-Bit-Adresse verwendet werden
+muß.  Man kann diese Funktion auch dazu benutzen, Arbeitsregistern
+symbolische Namen zu verpassen:
+\begin{verbatim}
+op1     equ     040h
+op2     equ     041h
+
+        srp     #040h
+        assume  rp:040h
+
+        ld      op1,op2		; entspricht ld r0,r1
+\end{verbatim}
+Im Gegensatz zum Original Zilog-Assembler ist es nicht erforderlich,
+eine 'Arbeitsregisteradressierung' explizit durch ein vorangestelltes
+Ausrufezeichen anzufordern, wobei AS diese Syntax nichtsdestotrotz
+versteht - ein vorangestelltes Ausrufezeichen erzwingt quasi
+4-Bit-Adressierung, auch wenn die Adresse eigentlich nicht im durch
+RP festgelegten 16-Bit-Fenster liegt (dann wird eine Warnung
+ausgegeben).  Umgekehrt ist es durch ein vorangestelltes $>$-Zeichen
+möglich, eine Adressierung mit 8 Bit zu erzwingen, auch wenn die
+Adresse eigentlich im aktuellen 16er-Fenster liegt.
+
+Beim eZ8 wird das Spielchen quasi eine Stufe weiter getrieben: der
+interne Daten-Adre"sbereich ist jetzt 12 statt 8 Bit gro"s.  Um
+kompatibel zum alten Z8-Kern zu sein, hat Zilog die zusätzlichen
+Banking-Bits in den {\em unteren} vier Bits von RP untergebracht -
+ein RP-Wert von 12h definiert also das 16er-Adre"sfenster von 210h
+bis 21fh.
+
+Die unteren vier Bits von RP definieren beim eZ8 gleichzeitig das
+256er-Fenster, das man mit 8-Bit-Adressen erreichen kann - hier gilt
+ein analoger Mechanismus, der daf"ur sorgt, da"s AS automatisch 12-
+oder 8-Bit-Adressen verwendet.  'Lange' 12-Bit-Adressen kann man mit
+zwei vorangestellten $>$-Zeichen erzwingen.
 
 %%---------------------------------------------------------------------------
 

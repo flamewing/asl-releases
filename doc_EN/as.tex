@@ -65,7 +65,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition December 2010}
+{\large Edition August 2011}
 \end{raggedright}
 
 \clearpage
@@ -3071,7 +3071,7 @@ offers a larger address space and some additional instructions.  Note that
 it is not binary upward-compatible!
 %%-----------
 \begin{quote}
-ah) MICO8_05, MICO8_V3, MICO8_V31    
+ah) MICO8\_05, MICO8\_V3, MICO8\_V31
 \end{quote}
 Lattice unfortunately changed the machine instructions more than once, so
 different targets became necessary to provide continued support for older
@@ -7563,6 +7563,58 @@ instruction, resulting in
 \end{verbatim}
 The machine code that was first created for \tty{DDIR LW} is retracted and
 replaced, which is signified with an \tty{R} in the listing.
+
+%%---------------------------------------------------------------------------
+
+\section{Z8 and eZ8}
+\label{Z8Spec}
+
+The CPU core contained in the Z8 microcontrollers does not contain
+any specific registers.  Instead, a block of 16 consecutive cells of
+the internal address space (contains RAM and I/O registers) may be
+used as 'work registers' and be addressed with 4-bit addresses. The
+RP register defines which memory block is used as work registers:
+bits 4 to 7 of RP define the 'offset' that is added to every 4-bit
+work register address to get a complete 8-bit address.
+
+Usually, one refers to work registers as R0..R15 in assembly
+statements.  It is however also posssible to regard work registers as
+an efficient way to address a block of memory addresses in internal
+RAM.
+
+The \tty{ASSUME} statement is used to inform AS about the current
+value of RP. AS is then capable to automatically decide whether an
+address in internal RAM may be reached with a 4-bit or 8-bit address.
+This may be used to assign symbolic names to work registers:
+\begin{verbatim}
+op1     equ     040h
+op2     equ     041h
+
+        srp     #040h
+        assume  rp:040h
+
+        ld      op1,op2         ; equal to ld r0,r1
+\end{verbatim}
+Opposed to the original Zilog assembler, it is not necessary to
+explicitly specify 'work register addressing' with a prefixed
+exclamation mark.  AS however also understands this syntax - a
+prefixed exclamation mark enforces 4-bit addressing, even when the
+address does not lie within the 16-address block defined by RP (AS will
+issue a warning in that case).  Vice versa, a prefixed $>$
+character enforces 8-bit addressing even when the address is within
+the current 16-address block.
+
+The eZ8 takes this 'game' to the next level: the internal address
+space now has 12 instead of 8 bits.  To assure compatibility with the
+old Z8 core, Zilog placed the additional 4 bits in the {\em lower}
+four bits of RP.  For instance, an RP value of 12h defines an address
+window from 210h to 21fh.
+
+At the same time, the lower four bits of RP define a window of 256
+addresses that can be addressed with 8-bit addresses.  The mechanism
+to automatically select between 8- and 12-bit addresses is analogous.
+'Long' 12-bit addresses may be enforced by prefixing two $>$
+characters.
 
 %%---------------------------------------------------------------------------
 

@@ -9,10 +9,13 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codez8.c,v 1.9 2010/12/05 22:58:58 alfred Exp $                          *
+/* $Id: codez8.c,v 1.10 2011-08-01 20:01:10 alfred Exp $                          *
  *****************************************************************************
  * $Log: codez8.c,v $
- * Revision 1.9  2010/12/05 22:58:58  alfred
+ * Revision 1.10  2011-08-01 20:01:10  alfred
+ * - rework Z8 work register addressing
+ *
+ * Revision 1.9  2010-12-05 22:58:58  alfred
  * - allow arbitrary RP values on eZ8
  *
  * Revision 1.8  2010/04/17 13:14:24  alfred
@@ -88,22 +91,22 @@
 #include "headids.h"
 
 typedef struct
-         {
-          Byte Code;
-         } FixedOrder;
+{
+  Byte Code;
+} FixedOrder;
 
 typedef struct
-         {
-          Byte Code;
-          Boolean Is16;
-          Byte Ext;
-         } ALU1Order;
+{
+  Byte Code;
+  Boolean Is16;
+  Byte Ext;
+} ALU1Order;
 
 typedef struct
-         {
-          Byte Code;
-          Byte Ext;
-         } ALU2Order;
+{
+  Byte Code;
+  Byte Ext;
+} ALU2Order;
 
 typedef struct
          {
@@ -242,10 +245,30 @@ static void ChkAdr(Word Mask, Boolean Is16)
    }
 }     
 
+static Boolean IsWRegAddress(Word Address)
+{
+  return ((RPVal <= 0xff)
+       && (((Address >> 4) & 15) == ((RPVal >> 4) & 15))
+       && (((Address >> 8) & 15) == ((RPVal >> 0) & 15)));
+}
+
+static Boolean IsRegAddress(Word Address)
+{
+  /* simple Z8 does not support 12 bit register addresses, so
+     always force this to TRUE for it */
+
+  if (!IsEncore)
+    return TRUE;
+  return ((RPVal <= 0xff)
+       && (Hi(Address) == (RPVal & 15)));
+}
+
 static void DecodeAdr(char *Asc, Word Mask, Boolean Is16)
 {
    Boolean OK;
    char  *p;
+   int z, ForceLen;
+   char *pAsc;
 
    if (!IsEncore)
      Mask &= ~(MModXReg | MModIndRR | MModWeird);
@@ -273,6 +296,23 @@ static void DecodeAdr(char *Asc, Word Mask, Boolean Is16)
      if ((AdrVal & 1) == 1) WrError(1351);
      else AdrType = ModRReg;
      ChkAdr(Mask, Is16); return;
+   }
+
+   /* treat absolute address as register? */
+
+   if (*Asc == '!')
+   {
+     FirstPassUnknown = FALSE;
+     AdrWVal = EvalIntExpression(Asc + 1, UInt16, &OK);
+     if (OK)
+     {
+       if ((!FirstPassUnknown) && (!IsWRegAddress(AdrWVal)))
+         WrError(110);
+       AdrType = ModWReg;
+       AdrVal = AdrWVal & 15;
+       ChkAdr(Mask, Is16);
+     }
+     return;
    }
 
    /* indirekte Konstrukte ? */
@@ -338,7 +378,16 @@ static void DecodeAdr(char *Asc, Word Mask, Boolean Is16)
 
    /* einfache direkte Adresse ? */
 
-   AdrWVal = EvalIntExpression(Asc, (Is16) ? UInt16 : RegSpaceType, &OK);
+   pAsc = Asc; ForceLen = 0;
+   for (z = 0; z < 2; z++)
+     if (*pAsc == '>')
+     {
+       pAsc++; ForceLen++;
+     }
+     else
+       break;
+   FirstPassUnknown = FALSE;
+   AdrWVal = EvalIntExpression(pAsc, (Is16) ? UInt16 : RegSpaceType, &OK);
    if (OK)
    {
      if (Is16)
@@ -348,7 +397,14 @@ static void DecodeAdr(char *Asc, Word Mask, Boolean Is16)
      }
      else
      {
-       if (((RPVal & 15) == (Hi(AdrWVal))) && (Mask & MModReg))
+       if (FirstPassUnknown && (!(Mask & ModXReg)))
+         AdrWVal = Lo(AdrWVal) | ((RPVal & 15) << 8);
+       if ((IsWRegAddress(AdrWVal)) && (Mask & MModWReg) && (ForceLen <= 0))
+       {
+         AdrType = ModWReg;
+         AdrVal = AdrWVal & 15;
+       }
+       else if ((IsRegAddress(AdrWVal)) && (Mask & MModReg) && (ForceLen <= 1))
        {
          AdrType = ModReg;
          AdrVal = Lo(AdrWVal);

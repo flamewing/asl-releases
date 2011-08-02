@@ -13,9 +13,12 @@
 /*           2002-01-13 Borland Pascal 3.1 doesn't like empty default clause */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codepseudo.c,v 1.8 2004/05/29 12:28:13 alfred Exp $                  */
+/* $Id: codepseudo.c,v 1.9 2011-08-01 19:58:03 alfred Exp $                  */
 /***************************************************************************** 
  * $Log: codepseudo.c,v $
+ * Revision 1.9  2011-08-01 19:58:03  alfred
+ * - parse noting value case-insensitive
+ *
  * Revision 1.8  2004/05/29 12:28:13  alfred
  * - remove unneccessary dummy fcn
  *
@@ -172,7 +175,7 @@ void CodeASSUME(ASSUMERec *Def, Integer Cnt)
       if (!OK) WrXError(1980, RegPart);
       else
       {
-        if (strcmp(ValPart, "NOTHING") == 0)
+        if (strcasecmp(ValPart, "NOTHING") == 0)
         {
           if (Def[z2].NothingVal == -1) WrError(1350);
           else

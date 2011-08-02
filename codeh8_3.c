@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeh8_3.c,v 1.6 2010/08/27 14:52:42 alfred Exp $                    */
+/* $Id: codeh8_3.c,v 1.7 2011-08-01 19:56:08 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codeh8_3.c,v $
+ * Revision 1.7  2011-08-01 19:56:08  alfred
+ * - add attribute type to error message
+ *
  * Revision 1.6  2010/08/27 14:52:42  alfred
  * - some more overlapping strcpy() cleanups
  *
@@ -621,7 +624,7 @@ BEGIN
     BEGIN
      if (strlen(AttrPart)!=1)
       BEGIN
-       WrError(1105); return;
+       WrXError(1105, AttrPart); return;
       END
      switch (mytoupper(*AttrPart))
       BEGIN
