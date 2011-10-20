@@ -1,4 +1,4 @@
-$Id: changelog,v 1.64 2011-08-01 20:01:10 alfred Exp $
+$Id: changelog,v 1.65 2011-10-20 14:00:40 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1218,3 +1218,7 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 2011-08-01 [Bld80]
 
 - Change      : rework (e)Z8 working register addressing
+
+2011-10-20 [Bld81]
+
+- Change      : range checking of RP value for Z8 more graceful

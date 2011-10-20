@@ -29,9 +29,12 @@
 ;*           2001-10-21 GNU error messages                                   *
 ;*                                                                           *
 ;*****************************************************************************
-;* $Id: as.res,v 1.2 2008/08/10 11:57:47 alfred Exp $                        *
+;* $Id: as.res,v 1.3 2011-10-20 14:00:40 alfred Exp $                        *
 ;*****************************************************************************
 ;* $Log: as.res,v $
+;* Revision 1.3  2011-10-20 14:00:40  alfred
+;* - SRP handling more graceful on Z8
+;*
 ;* Revision 1.2  2008/08/10 11:57:47  alfred
 ;* - handle truncated bit numbers for 68K
 ;*
@@ -225,6 +228,10 @@ Message ErrMsgNullResMem
 Message ErrMsgBitNumberTruncated
  "Bit-Nummer wird abgeschnitten werden"
  "bit number will be truncated"
+
+Message ErrMsgInvRegisterPointer
+ "Ung&uuml;ltiger Wert f&uuml;r Registerzeiger"
+ "invalid register pointer value"
 
 ;*****
 

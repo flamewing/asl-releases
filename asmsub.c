@@ -26,9 +26,12 @@
 /*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.13 2010/05/01 17:22:02 alfred Exp $                      */
+/* $Id: asmsub.c,v 1.14 2011-10-20 14:00:40 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmsub.c,v $
+ * Revision 1.14  2011-10-20 14:00:40  alfred
+ * - SRP handling more graceful on Z8
+ *
  * Revision 1.13  2010/05/01 17:22:02  alfred
  * - use strmov()
  *
@@ -1014,6 +1017,7 @@ BEGIN
      case  280: msgno = Num_ErrMsgConvIndX; break;
      case  290: msgno = Num_ErrMsgNullResMem; break;
      case  300: msgno = Num_ErrMsgBitNumberTruncated; break;
+     case  310: msgno = Num_ErrMsgInvRegisterPointer; break;
      case 1000: msgno = Num_ErrMsgDoubleDef; break;
      case 1010: msgno = Num_ErrMsgSymbolUndef; break;
      case 1020: msgno = Num_ErrMsgInvSymName; break;

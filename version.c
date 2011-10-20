@@ -39,9 +39,12 @@
 /*           2002-01-27 Build 19                                             */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: version.c,v 1.53 2011-08-01 20:01:10 alfred Exp $                     */
+/* $Id: version.c,v 1.54 2011-10-20 14:00:40 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: version.c,v $
+ * Revision 1.54  2011-10-20 14:00:40  alfred
+ * - SRP handling more graceful on Z8
+ *
  * Revision 1.53  2011-08-01 20:01:10  alfred
  * - rework Z8 work register addressing
  *
@@ -239,8 +242,8 @@
 #include "stdinc.h"
 #include <string.h>
 
-char *Version="1.42 Beta [Bld 80]";
-char *DebVersion = "1.42bld80-1";
+char *Version="1.42 Beta [Bld 81]";
+char *DebVersion = "1.42bld81-1";
 LongInt VerNo=0x142f;
 
 char *InfoMessCopyright="(C) 1992,2011 Alfred Arnold";

@@ -65,7 +65,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition August 2011}
+{\large Edition Oktober 2011}
 \end{raggedright}
 
 \clearpage
@@ -9516,6 +9516,11 @@ described by:
                {This instruction only operates on byte resp. longword
                 operands.  bit numbers beyond 7 resp. 31 will be treated
                 modulo-8 resp. modulo-32 by the CPU.}
+               {none}
+\errentry{ 310}{invalid register pointer value}
+               {warning}
+               {Valid values for the RP register range from 0x00 to 0x70 resp.
+                0xf0, because all other areas are unused on the Z8.}
                {none}
 \errentry{1000}{symbol double defined}
                {error}

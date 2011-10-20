@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codez8.c,v 1.10 2011-08-01 20:01:10 alfred Exp $                          *
+/* $Id: codez8.c,v 1.11 2011-10-20 14:00:40 alfred Exp $                          *
  *****************************************************************************
  * $Log: codez8.c,v $
+ * Revision 1.11  2011-10-20 14:00:40  alfred
+ * - SRP handling more graceful on Z8
+ *
  * Revision 1.10  2011-08-01 20:01:10  alfred
  * - rework Z8 work register addressing
  *
@@ -1029,14 +1032,11 @@ static void DecodeSRP(Word Index)
       if (IsEncore)
         Valid = True;
       else
-        Valid = (((AdrVal & 15) == 0) && (AdrVal <= 0x70));
-      if (!Valid) WrError(120);
-      else
-      {
-        BAsmCode[0] = IsEncore ? 0x01 : 0x31;
-        BAsmCode[1] = AdrVal;
-        CodeLen = 2;
-      }
+        Valid = (((AdrVal & 15) == 0) && ((AdrVal <= 0x70) || (AdrVal >= 0xf0)));
+      if (!Valid) WrError(310);
+      BAsmCode[0] = IsEncore ? 0x01 : 0x31;
+      BAsmCode[1] = AdrVal;
+      CodeLen = 2;
     }
   }
 }
