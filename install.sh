@@ -54,7 +54,7 @@ if [ "${MANPATH}" != "" ]; then
  for i in man/*.1; do
   echo ${MANPATH}/man1/`basename $i`
   cp $i ${MANPATH}/man1
-  chmod 644 ${MANPATH}/man1/$i
+  chmod 644 ${MANPATH}/man1/`basename $i`
  done
 fi
 
@@ -72,8 +72,10 @@ if [ "${DOCPATH}" != "" ]; then
  ${MKDIRHIER} ${DOCPATH}
  chmod 755 ${DOCPATH}
  for i in DE EN; do
-  echo ${DOCPATH}/as-$i.doc
-  cp doc_$i/as.doc ${DOCPATH}/as-$i.doc
+  if [ -f doc_$i/as.html ]; then
+    echo ${DOCPATH}/as-$i.doc
+    cp doc_$i/as.doc ${DOCPATH}/as-$i.doc
+  fi
   echo ${DOCPATH}/as-$i.tex
   cp doc_$i/as.tex ${DOCPATH}/as-$i.tex
   if [ -f doc_$i/as.html ]; then

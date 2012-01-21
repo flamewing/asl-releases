@@ -46,7 +46,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand Oktober 2011}
+{\large Stand Januar 2012}
 \end{raggedright}
 
 \clearpage
@@ -204,7 +204,7 @@ folgende Prozessorfamilien implementiert:
 \item{Motorola 68000..68040,683xx inkl. Koprozessor und MMU}
 \item{Motorola ColdFire}
 \item{Motorola DSP5600x,DSP56300}
-\item{Motorola/IBM MPC601/MPC505/PPC403}
+\item{Motorola/IBM MPC601/MPC505/PPC403/MPC821}
 \item{Motorola M-Core}
 \item{Motorola 6800, 68(HC)11(K4) sowie Hitachi 6301}
 \item{Motorola/Freescale 6805, 68HC(S)08}
@@ -2881,7 +2881,7 @@ vergr"o"sert alle Adre"sr"aume von 64K-W"ortern auf 16M und verdoppelt fast
 die Anzahl der Befehle.
 %%-----------
 \begin{quote}
-c) PPC403 $\rightarrow$ PPC403GC $\rightarrow$ MPC505 $\rightarrow$ MPC601 $\rightarrow$ RS6000
+c) PPC403 $\rightarrow$ PPC403GC $\rightarrow$ MPC505 $\rightarrow$ MPC601 $\rightarrow$ MPC821 $\rightarrow$ RS6000
 \end{quote}
 Der PCC403 ist eine abgespeckte Version der PowerPC-Linie ohne
 Gleitkommaeinheit, demzufolge sind s"amtliche Gleitkommabefehle
@@ -11508,6 +11508,8 @@ oder ich werde langsam alt...
       \item{Funktion \tty{CHARFROMSTR} hinzugef"ugt;}
       \item{Q f"ur Oktalkonstanten im Intel-Modus hinzugef"ugt;}
       \item{weitere Variante f"ur tempor"are Symbole hinzugef"ugt;}
+      \item{der PowerPC-Teil wurde um Unterst"utzung f"ur den MPC821 erweitert
+            (Beitrag von Marcin Cieslak);}
       \end{itemize}}
 \end{itemize}
 
@@ -12664,6 +12666,10 @@ damit mit der n"achsten Release alle etwas davon haben :-)
                  {\em PowerPC(tm) MPC505 RISC Microcontroller Technical
                  Summary.\/} \\
                  1994
+
+\bibitem{Mot821} Motorola Inc.: \\
+                 {\em PowerPC(tm) MPC821 Portable Microprocessor User's Manual.\/} \\
+                 1996
 
 \bibitem{Mot12} Motorola Inc.: \\
                 {\em CPU12 Reference Manual.\/} \\

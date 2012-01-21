@@ -58,9 +58,12 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.22 2010/04/17 13:14:18 alfred Exp $                          */
+/* $Id: as.c,v 1.23 2012-01-14 14:34:58 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.23  2012-01-14 14:34:58  alfred
+ * - add some platforms
+ *
  * Revision 1.22  2010/04/17 13:14:18  alfred
  * - address overlapping strcpy()
  *

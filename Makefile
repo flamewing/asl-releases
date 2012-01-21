@@ -15,7 +15,9 @@ ALLFLAGS = $(CFLAGS) -D$(CHARSET) -DSTDINCLUDES=\"$(INCDIR)\" -DLIBDIR=\"$(LIBDI
 #---------------------------------------------------------------------------
 # primary targets
 
-all: $(ALLTARGETS)
+binaries: $(ALLTARGETS)
+
+all: binaries docs
 
 docs: $(TEX2DOCTARGET) $(TEX2HTMLTARGET)
 	cd doc_DE; $(MAKE) TEX2DOC=../$(TEX2DOCTARGET) TEX2HTML=../$(TEX2HTMLTARGET) RM="rm -f"
@@ -81,9 +83,9 @@ clean:
 #---------------------------------------------------------------------------
 # create distributions
 
-distrib: unjunk
+distrib: unjunk Makefile.dep
 	mkdir ../asl-$(VERSION)
-	tar cf - $(DISTARCHFILES) | (cd ../asl-$(VERSION); tar xvf -)
+	tar cf - $(DISTARCHFILES) Makefile.dep | (cd ../asl-$(VERSION); tar xvf -)
 	cd ..; tar cvf asl-$(VERSION).tar asl-$(VERSION)
 	mv ../asl-$(VERSION).tar ./
 	rm -rf ../asl-$(VERSION)

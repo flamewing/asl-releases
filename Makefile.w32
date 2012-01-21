@@ -15,7 +15,9 @@ ALLFLAGS = $(CFLAGS) -D$(CHARSET) -DSTDINCLUDES=\"$(INCDIR)\" -DLIBDIR=\"$(LIBDI
 #---------------------------------------------------------------------------
 # primary targets
 
-all: $(ALLTARGETS)
+binaries: $(ALLTARGETS)
+
+all: binaries docs
 
 docs: $(TEX2DOCTARGET) $(TEX2HTMLTARGET)
 	cd doc_DE; $(MAKE) TEX2DOC=../$(TEX2DOCTARGET) TEX2HTML=../$(TEX2HTMLTARGET) RM="rm -f"

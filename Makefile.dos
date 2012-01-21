@@ -13,7 +13,9 @@ ALLFLAGS = $(CFLAGS) -D$(CHARSET) -DSTDINCLUDES="$(INCDIR)" -DLIBDIR="$(LIBDIR)"
 #---------------------------------------------------------------------------
 # primary targets
 
-all: $(ALLTARGETS)
+binaries: $(ALLTARGETS)
+
+all: binaries docs
 
 docs: $(TEX2DOCTARGET) $(TEX2HTMLTARGET)
 	cd doc_DE

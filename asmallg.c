@@ -25,9 +25,12 @@
 /*                       to now                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmallg.c,v 1.9 2010/08/27 14:52:41 alfred Exp $                     */
+/* $Id: asmallg.c,v 1.10 2012-01-16 19:31:18 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmallg.c,v $
+ * Revision 1.10  2012-01-16 19:31:18  alfred
+ * - regard symbol name expansion in arguments for SHARED
+ *
  * Revision 1.9  2010/08/27 14:52:41  alfred
  * - some more overlapping strcpy() cleanups
  *
@@ -376,78 +379,86 @@ BEGIN
    END
 END
 
-	static void CodeSHARED(Word Index)
-BEGIN
-   int z;
-   Boolean ValOK;
-   LargeInt HVal;
-   Double FVal;
-   String s,c;
-   UNUSED(Index);
+static void CodeSHARED(Word Index)
+{
+  int z;
+  Boolean ValOK;
+  LargeInt HVal;
+  Double FVal;
+  String s,c;
+  UNUSED(Index);
 
-   if (ShareMode==0) WrError(30);
-   else if ((ArgCnt==0) AND (*CommPart!='\0'))
-    BEGIN
-     CodeSHARED_BuildComment(c); 
-     errno=0; fprintf(ShareFile,"%s\n",c); ChkIO(10004);
-    END
-   else
-    for (z=1; z<=ArgCnt; z++)
-     BEGIN
-      if (IsSymbolString(ArgStr[z]))
-       BEGIN
-	ValOK=GetStringSymbol(ArgStr[z],s);
-	if (ShareMode==1) 
-         BEGIN
-          strmaxprep(s,"\'",255); strmaxcat(s,"\'",255);
-         END
-	else
-         BEGIN
-          strmaxprep(s,"\"",255); strmaxcat(s,"\"",255);
-         END
-       END
-      else if (IsSymbolFloat(ArgStr[z]))
-       BEGIN
-	ValOK=GetFloatSymbol(ArgStr[z],&FVal);
-	sprintf(s,"%0.17g",FVal);
-       END
-      else
-       BEGIN
-	ValOK=GetIntSymbol(ArgStr[z], &HVal, NULL);
-	switch (ShareMode)
-         BEGIN
-	  case 1: sprintf(s,"$%s",HexString(HVal,0)); break;
-          case 2: sprintf(s,"0x%s",HexString(HVal,0)); break;
-	  case 3: IntLine(s, HVal); break;
-	 END
-       END
-      if (ValOK)
-       BEGIN
-        if ((z==1) AND (*CommPart!='\0'))
-         BEGIN
-          CodeSHARED_BuildComment(c); strmaxprep(c," ",255);
-         END
-        else *c='\0';
-	errno=0;
-	switch (ShareMode)
-         BEGIN
-          case 1: 
-           fprintf(ShareFile,"%s = %s;%s\n",ArgStr[z],s,c); break;
-          case 2: 
-           fprintf(ShareFile,"#define %s %s%s\n",ArgStr[z],s,c); break;
-          case 3:
-           strmaxprep(s,IsSymbolChangeable(ArgStr[z])?"set ":"equ ",255);
-           fprintf(ShareFile,"%s %s%s\n",ArgStr[z],s,c); break;
-	 END
-	ChkIO(10004);
-       END
-      else if (PassNo==1)
-       BEGIN
-        Repass=True;
-	if ((MsgIfRepass) AND (PassNo>=PassNoForMessage)) WrXError(170,ArgStr[z]);
-       END
-     END
-END
+  if (ShareMode == 0) WrError(30);
+  else if ((ArgCnt == 0) && (*CommPart!='\0'))
+  {
+    CodeSHARED_BuildComment(c); 
+    errno = 0; fprintf(ShareFile, "%s\n", c); ChkIO(10004);
+  }
+  else
+   for (z = 1; z <= ArgCnt; z++)
+   {
+     if (!ExpandSymbol(ArgStr[z]))
+       continue;
+     if (!ChkSymbName(ArgStr[z]))
+     {
+       WrXError(1020, ArgStr[z]);
+       continue;
+     }
+     if (IsSymbolString(ArgStr[z]))
+     {
+       ValOK = GetStringSymbol(ArgStr[z], s);
+       if (ShareMode == 1) 
+       {
+         strmaxprep(s, "\'", 255); strmaxcat(s, "\'", 255);
+       }
+       else
+       {
+         strmaxprep(s, "\"", 255); strmaxcat(s, "\"", 255);
+       }
+     }
+     else if (IsSymbolFloat(ArgStr[z]))
+     {
+       ValOK = GetFloatSymbol(ArgStr[z], &FVal);
+       sprintf(s, "%0.17g", FVal);
+     }
+     else
+     {
+       ValOK = GetIntSymbol(ArgStr[z], &HVal, NULL);
+       switch (ShareMode)
+       {
+         case 1: sprintf(s, "$%s", HexString(HVal, 0)); break;
+         case 2: sprintf(s, "0x%s", HexString(HVal, 0)); break;
+         case 3: IntLine(s, HVal); break;
+       }
+     }
+     if (ValOK)
+     {
+       if ((z == 1) && (*CommPart != '\0'))
+       {
+         CodeSHARED_BuildComment(c); strmaxprep(c, " ", 255);
+       }
+       else
+         *c = '\0';
+       errno = 0;
+       switch (ShareMode)
+       {
+         case 1: 
+          fprintf(ShareFile, "%s = %s;%s\n", ArgStr[z], s, c); break;
+         case 2: 
+          fprintf(ShareFile, "#define %s %s%s\n", ArgStr[z], s, c); break;
+         case 3:
+          strmaxprep(s, IsSymbolChangeable(ArgStr[z]) ? "set " : "equ ", 255);
+          fprintf(ShareFile, "%s %s%s\n", ArgStr[z], s, c); break;
+       }
+       ChkIO(10004);
+     }
+     else if (PassNo == 1)
+     {
+       Repass = True;
+       if ((MsgIfRepass) && (PassNo >= PassNoForMessage)) WrXError(170, ArgStr[z]);
+     }
+   }
+}
 
 	static void CodeEXPORT(Word Index)
 BEGIN

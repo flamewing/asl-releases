@@ -19,22 +19,23 @@
 
 stddef60inc     equ     1
 
-                if      (MOMCPU<>1537)&&(MOMCPU<>24576)&&(MOMCPU<>1027)&&(MOMCPU<>1285)&&(MOMCPU<>16443)&&(MOMCPU<>16444)
-                 fatal  "Falscher Prozessortyp eingestellt: nur MPC601, MPC505, PPC403 oder RS6000 erlaubt!"
-		endif
-
-
                 if      MOMPASS=1
-                 message "PowerPC-Makro-Definitionen (C) 1994 Alfred Arnold"
-                 switch  MOMCPU
-                 case    0x6000
+                 message "PowerPC-Makro-Definitionen (C) 1994,2012 Alfred Arnold"
+                 switch  MOMCPUNAME
+                 case    "RS6000"
                   message "Zielsystem RS6000"
-                 case    0x601
+                 case    "MPC601"
                   message "Zielsystem MPC601"
-                 case    0x505
+                 case    "MPC505"
                   message "Zielsystem MPC505"
-                 case    0x403,0x403c
-                  message "Zielsystem PPC403Gx"
+                 case    "PPC403"
+                  message "Zielsystem PPC403"
+                 case    "PPC403GC"
+                  message "Zielsystem PPC403GC"
+                 case    "MPC821"
+                  message "Zielsystem MPC821"
+                 elsecase
+                  fatal  "Falscher Prozessortyp eingestellt: nur MPC601, MPC505, PPC403[GC], MPC821 oder RS6000 erlaubt!"
                  endcase
 		endif
 
@@ -158,7 +159,7 @@ mf{"NAME"}      macro      reg
                  __defspr DER,149       ; Freigabe Debug-Features
                  __defspr COUNTA,150    ; Breakpoint Zähler
                  __defspr COUNTB,151
-                 __defspr CMPE,152      ; Vergleicherwert E..G
+                 __defspr CMPE,152      ; Vergleicherwert E..H
                  __defspr CMPF,153
                  __defspr CMPG,154
                  __defspr CMPH,155
@@ -192,6 +193,87 @@ mf{"NAME"}      macro      reg
                  __defspr HID15,0x3ff
                 case 0x6000
                  __defspr MQ,0x000      ; obere Hälfte Divident/Produkt
+                case 0x821
+                 __defspr EIE,80        ; Freigabe externer Interrupts
+                 __defspr EID,81        ; Sperre externer Interrupts
+                 __defspr NRI,82        ; Non-recoverable Exception
+                 __defspr NRE,82        ; (alias)
+                 __defspr CMPA,144      ; Vergleicherwert A..D
+                 __defspr CMPB,145
+                 __defspr CMPC,146
+                 __defspr CMPD,147
+                 __defspr ICR,148       ; Grund der Debug-Exception
+                 __defspr ECR,148       ; (alias)
+                 __defspr DER,149       ; Freigabe Debug-Features
+                 __defspr COUNTA,150    ; Breakpoint Zaehler
+                 __defspr COUNTB,151
+                 __defspr CMPE,152      ; Vergleicherwert E..H
+                 __defspr CMPF,153
+                 __defspr CMPG,154
+                 __defspr CMPH,155
+                 __defspr LCTRL1,156    ; Debug-Steuerung Vergleicher L-Bus
+                 __defspr LCTRL2,157
+                 __defspr ICTRL,158     ; Debug-Steuerung I-Bus
+                 __defspr BAR,159       ; Breakpoint-Adresse
+                 __defspr DPDR,630      ; Development-Port Daten
+                 __defspr DPIR,631      ;     "        "   Instruktionen
+                 __defspr IMMR,638
+                 __defspr IC_CST,560    ; Steuerung & Status Instruktionscache
+                 __defspr ICCST,560     ; (alias)
+                 __defspr ICCSR,560     ; (alias)
+                 __defspr IC_ADR,561    ; Instruktionscache Adressregister
+                 __defspr ICADR,561     ; (alias)
+                 __defspr IC_DAT,562    ; Instruktionscache Datenregister
+                 __defspr ICDAT,562     ; (alias)
+                 __defspr DC_CST,568    ; Steuerung & Status Datencache
+                 __defspr DCCST,568     ; (alias)
+                 __defspr DCCSR,568     ; (alias)
+                 __defspr DC_ADR,569    ; Datencache Adressregister
+                 __defspr DCADR,569     ; (alias)
+                 __defspr DC_DAT,570    ; Datencache Datenregister
+                 __defspr DCDAT,570     ; (alias)
+                 __defspr MI_CTR,784
+                 __defspr MICTR,784
+                 __defspr MI_AP,786
+                 __defspr MIAP,786
+                 __defspr MI_EPN,787
+                 __defspr MIEPN,787
+                 __defspr MI_TWC,789
+                 __defspr MITWC,789
+                 __defspr MIL1DL2P,789  ; (alias)
+                 __defspr MI_RPN,790
+                 __defspr MIRPN,790
+                 __defspr MI_DBCAM,816
+                 __defspr MICAM,816
+                 __defspr MI_DBRAM0,817
+                 __defspr MIRAM0,817
+                 __defspr MI_DBRAM1,818
+                 __defspr MIRAM1,818
+                 __defspr MD_CTR,792
+                 __defspr MDCTR1,792
+                 __defspr M_CASID,793
+                 __defspr MCASID,793
+                 __defspr MD_AP,794
+                 __defspr MDAP,794
+                 __defspr MD_EPN,795
+                 __defspr MDEPN,795
+                 __defspr M_TWP,796
+                 __defspr MDTWB,796
+                 __defspr MDL1P,796     ; (alias)
+                 __defspr MD_TWC,797
+                 __defspr MDTWC,797
+                 __defspr MDL1DL2P,797  ; (alias)
+                 __defspr MD_RPN,798
+                 __defspr MDRPN,798
+                 __defspr M_TW,799
+                 __defspr MDTW,799
+                 __defspr MDSAVE,799   ; (alias)
+                 __defspr MD_DBCAM,824
+                 __defspr MDCAM,824
+                 __defspr MD_DBRAM0,825
+                 __defspr MDRAM0,825
+                 __defspr MD_DBRAM1,826
+                 __defspr MDRAM1,826
                 endcase
                 if MOMCPU=0x403c
                  __defspr pid, 0x3b1

@@ -65,7 +65,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition Oktober 2011}
+{\large Edition January 2012}
 \end{raggedright}
 
 \clearpage
@@ -210,7 +210,7 @@ following processor families have been implemented:
 \item{Motorola 68000..68040,683xx incl. coprocessor and MMU}
 \item{Motorola ColdFire}
 \item{Motorola DSP5600x,DSP56300}\item{Motorola M-Core}
-\item{Motorola/IBM MPC601/MPC505/PPC403}
+\item{Motorola/IBM MPC601/MPC505/PPC403/MPC821}
 \item{Motorola 6800, 68(HC)11(K4) and Hitachi 6301}
 \item{Motorola/Freescale 6805, 68HC(S)08}
 \item{Motorola 6809 / Hitachi 6309}
@@ -2800,7 +2800,7 @@ spaces are enlarged from 64K words to 16M and the number of instructions
 almost has been doubled.
 %%-----------
 \begin{quote}
-c) PPC403 $\rightarrow$ MPPC403 $\rightarrow$ MPC505 $\rightarrow$ MPC601 $\rightarrow$ RS6000
+c) PPC403 $\rightarrow$ MPPC403 $\rightarrow$ MPC505 $\rightarrow$ MPC601 $\rightarrow$ MPC821 $\rightarrow$ RS6000
 \end{quote}
 The PPC403 is a reduced version of the PowerPC line without a floating
 point unit, which is why all floating point instructions are disabled for
@@ -11211,6 +11211,8 @@ Either that was a long nightshift or I am slowly getting old...
       \item{added function \tty{CHARFROMSTR};}
       \item{additionally allow Q for octal constants in Intel mode;}
       \item{add another variant for temporary symbols;}
+      \item{the PowerPC part has been extended by the MPC821 
+            (contribution by Marcin Cieslak);}
       \end{itemize}}
 \end{itemize}
 
@@ -12319,6 +12321,10 @@ from this with the next release :-)
                  {\em PowerPC(tm) MPC505 RISC Microcontroller Technical
                  Summary.\/} \\
         	 1994
+
+\bibitem{Mot821} Motorola Inc.: \\
+                 {\em PowerPC(tm) MPC821 Portable Microprocessor User's Manual.\/} \\
+                 1996
 
 \bibitem{Mot12} Motorola Inc.: \\
                 {\em CPU12 Reference Manual.\/} \\

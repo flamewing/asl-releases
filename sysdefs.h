@@ -11,9 +11,12 @@
 /*           2001-10-13 added ARM/Linux                                      */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: sysdefs.h,v 1.7 2008/01/02 22:32:21 alfred Exp $                     */
+/* $Id: sysdefs.h,v 1.8 2012-01-14 14:34:58 alfred Exp $                     */
 /*****************************************************************************
  * $Log: sysdefs.h,v $
+ * Revision 1.8  2012-01-14 14:34:58  alfred
+ * - add some platforms
+ *
  * Revision 1.7  2008/01/02 22:32:21  alfred
  * - better heap checking for DOS target
  *
@@ -756,6 +759,26 @@ typedef unsigned long Card64;
 #define LOCALE_NLS
 #endif
 
+#ifdef __FreeBSD__
+#define ARCHSYSNAME "unknown-freebsd"
+#define DEFSMADE
+#define OPENRDMODE "r"
+#define OPENWRMODE "w"
+#define OPENUPMODE "r+"
+#define IEEEFLOAT
+typedef signed char Integ8;
+typedef unsigned char Card8;
+typedef signed short Integ16;
+typedef unsigned short Card16;
+#define HAS16
+typedef signed int Integ32;
+typedef unsigned int Card32;
+typedef signed long Integ64;
+typedef unsigned long Card64;
+#define HAS64
+#define NO_NLS
+#endif
+
 #endif /* __alpha */
 
 /*===========================================================================*/
@@ -999,12 +1022,17 @@ typedef unsigned long Card32;
 
 /*---------------------------------------------------------------------------*/
 /* x86-64 with Linux and GCC:
+   amd64 with FreeBSD and GCC:
    
    principally, a normal *NIX.  We might use 'long' instead of
    'long long' for 64-bit integers, but I currently cannot verify this. */
 
+#if defined(__linux__) || defined(__FreeBSD__)
 #ifdef __linux__
 #define ARCHSYSNAME "unknown-linux"
+#else
+#define ARCHSYSNAME "unknown-freebsd"
+#endif
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
