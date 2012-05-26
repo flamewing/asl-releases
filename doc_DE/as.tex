@@ -46,7 +46,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand Januar 2012}
+{\large Stand Mai 2012}
 \end{raggedright}
 
 \clearpage
@@ -2558,7 +2558,7 @@ PIO_Ctrl   PORT PIO_Port_A+3
 \ttindex{REG}\ttindex{NAMEREG}
 
 {\em G"ultigkeit: AVR, M*Core, ST9, 80C16x, KCPSM ({\tt NAMEREG} nur
- f"ur KCPSM(3)), LatticeMico8}
+ f"ur KCPSM(3)), LatticeMico8, MSP430}
 
 Obwohl immer mit gleicher Syntax, hat diese Anweisung von Prozessor
 zu Prozessor eine leicht abweichende Bedeutung: Falls der Zielprozessor
@@ -4984,6 +4984,9 @@ Makroparameter verwendet werden sollten:
       Zeile stand.  Diese Ersetzung findet nur statt, wenn f"ur dieses
       Makro die {\tt INTLABEL}-Option gesetzt wurde!}
 \end{itemize}
+{\bf WICHTIG:} Die Namen dieser impliziten Parameter sind auch
+case-insensitiv, wenn AS insgesamt angewiesen wurde, case-sensitiv
+zu arbeiten!
 
 Der Zweck, ein Label 'intern' im Makro verwenden zu k"onnen, ist sicher
 nicht unmittelbar einleuchtend.  Den einen oder anderen Fall mag es ja
@@ -11510,6 +11513,9 @@ oder ich werde langsam alt...
       \item{weitere Variante f"ur tempor"are Symbole hinzugef"ugt;}
       \item{der PowerPC-Teil wurde um Unterst"utzung f"ur den MPC821 erweitert
             (Beitrag von Marcin Cieslak);}
+      \item{implizite Makro-Parameter sind immer case-insensitiv;}
+      \item{das \tty{REG}-Statement ist jetzt auch f"ur den MSP430
+            erlaubt;}
       \end{itemize}}
 \end{itemize}
 

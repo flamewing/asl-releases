@@ -26,9 +26,12 @@
 /*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.14 2011-10-20 14:00:40 alfred Exp $                      */
+/* $Id: asmsub.c,v 1.15 2012-05-26 13:49:19 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmsub.c,v $
+ * Revision 1.15  2012-05-26 13:49:19  alfred
+ * - MSP additions, make implicit macro parameters always case-insensitive
+ *
  * Revision 1.14  2011-10-20 14:00:40  alfred
  * - SRP handling more graceful on Z8
  *
@@ -1450,32 +1453,33 @@ END
 /****************************************************************************/
 /* Tokenverarbeitung */
 
-	static Boolean CompressLine_NErl(char ch)
-BEGIN
-   return (((ch>='A') AND (ch<='Z')) OR ((ch>='a') AND (ch<='z')) OR ((ch>='0') AND (ch<='9')));
-END
+static Boolean CompressLine_NErl(char ch)
+{
+  return (((ch >= 'A') && (ch <= 'Z'))
+       || ((ch >= 'a') && (ch <= 'z'))
+       || ((ch >= '0') && (ch <= '9')));
+}
 
-        void CompressLine(char *TokNam, Byte Num, char *Line)
-BEGIN
-   int z,e,tlen,llen;
-   Boolean SFound;
+void CompressLine(char *TokNam, Byte Num, char *Line, Boolean ThisCaseSensitive)
+{
+  int z, e, tlen, llen;
+  Boolean cmpres;
 
-   z=0; tlen=strlen(TokNam); llen=strlen(Line);
-   while (z<=llen-tlen)
-    BEGIN
-     e=z+strlen(TokNam); 
-     SFound=(CaseSensitive) ? (strncmp(Line+z,TokNam,tlen)==0)
-                            : (strncasecmp(Line+z,TokNam,tlen)==0);
-     if  ( (SFound) 
-     AND   ((z==0) OR (NOT CompressLine_NErl(Line[z-1])))
-     AND   ((e>=(int)strlen(Line)) OR (NOT CompressLine_NErl(Line[e]))) )
-      BEGIN
-       strmov(Line+z+1,Line+e); Line[z]=Num;
-       llen=strlen(Line);
-      END;
-     z++; 
-    END
-END
+  z = 0; tlen = strlen(TokNam); llen = strlen(Line);
+  while (z <= llen - tlen)
+  {
+    e = z + tlen;
+    cmpres = ThisCaseSensitive ? strncmp(Line + z, TokNam, tlen) : strncasecmp(Line + z, TokNam, tlen);
+    if ((!cmpres)
+     && ((z == 0) || (!CompressLine_NErl(Line[z - 1])))
+     && ((e >= (int)strlen(Line)) || (!CompressLine_NErl(Line[e]))))
+    {
+      strmov(Line + z + 1, Line + e); Line[z] = Num;
+      llen = strlen(Line);
+    }
+    z++; 
+  }
+}
 
         void ExpandLine(char *TokNam, Byte Num, char *Line)
 BEGIN

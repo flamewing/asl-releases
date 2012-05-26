@@ -11,9 +11,12 @@
 /*           2001-10-13 added ARM/Linux                                      */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: sysdefs.h,v 1.8 2012-01-14 14:34:58 alfred Exp $                     */
+/* $Id: sysdefs.h,v 1.9 2012-05-16 21:04:23 alfred Exp $                     */
 /*****************************************************************************
  * $Log: sysdefs.h,v $
+ * Revision 1.9  2012-05-16 21:04:23  alfred
+ * - add Linux/MIPS
+ *
  * Revision 1.8  2012-01-14 14:34:58  alfred
  * - add some platforms
  *
@@ -488,6 +491,26 @@ typedef unsigned long long Card64;
 
 #ifdef __sgi
 #define ARCHSYSNAME "sgi-irix"
+#define DEFSMADE
+#define OPENRDMODE "r"
+#define OPENWRMODE "w"
+#define OPENUPMODE "r+"
+#define IEEEFLOAT
+typedef signed char Integ8;
+typedef unsigned char Card8;
+typedef signed short Integ16;
+typedef unsigned short Card16;
+#define HAS16
+typedef signed int Integ32;
+typedef unsigned int Card32;
+typedef signed long long Integ64;
+typedef unsigned long long Card64;
+#define HAS64
+#define LOCALE_NLS
+#endif
+
+#ifdef __linux__
+#define ARCHSYSNAME "unknown-linux"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"

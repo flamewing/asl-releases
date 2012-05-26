@@ -1,4 +1,4 @@
-$Id: changelog,v 1.67 2012-01-21 12:30:45 alfred Exp $
+$Id: changelog,v 1.68 2012-05-26 13:49:19 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1228,3 +1228,9 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 - Addition    : added support for MPC 821 from Marcin Cieslak
 
 - Bugfix      : regard symbol name expansion in arguments for SHARED
+
+2012-05-26 [Bld83]
+
+- Change      : implicit macro parameters are always case-insensitive
+
+- Addition    : add REG instruction to MSP430

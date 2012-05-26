@@ -25,9 +25,12 @@
 /*                       to now                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmallg.c,v 1.10 2012-01-16 19:31:18 alfred Exp $                     */
+/* $Id: asmallg.c,v 1.11 2012-05-26 13:49:19 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmallg.c,v $
+ * Revision 1.11  2012-05-26 13:49:19  alfred
+ * - MSP additions, make implicit macro parameters always case-insensitive
+ *
  * Revision 1.10  2012-01-16 19:31:18  alfred
  * - regard symbol name expansion in arguments for SHARED
  *
@@ -809,7 +812,7 @@ BEGIN
       BEGIN
        strmaxcpy(FName,ArgStr[ArgCnt],255);
        for (z=1; z<ArgCnt; z++)
-	CompressLine(ArgStr[z],z,FName);
+	CompressLine(ArgStr[z],z,FName,CaseSensitive);
        EnterFunction(LabPart,FName,ArgCnt-1);
       END
     END

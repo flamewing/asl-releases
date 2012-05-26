@@ -12,9 +12,12 @@
 /*             2002-01-27 allow immediate addressing for one-op instrs(doj)  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemsp.c,v 1.9 2010/12/05 23:18:57 alfred Exp $                     */
+/* $Id: codemsp.c,v 1.10 2012-05-26 13:49:19 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: codemsp.c,v $
+ * Revision 1.10  2012-05-26 13:49:19  alfred
+ * - MSP additions, make implicit macro parameters always case-insensitive
+ *
  * Revision 1.9  2010/12/05 23:18:57  alfred
  * - improve erro arguments
  *
@@ -111,6 +114,10 @@ static void ChkAdr(Byte Mask)
 
 static Boolean DecodeReg(const char *Asc, Word *pErg)
 {
+  char *s;
+
+  if (FindRegDef(Asc, &s)) Asc = s;
+
   if (!strcasecmp(Asc, "PC"))
   {
     *pErg = 0; return True;
@@ -458,6 +465,14 @@ static void DecodeBSS(Word Index)
   }
 }
 
+static void DecodeRegDef(Word Index)
+{
+  UNUSED(Index);
+
+  if (ArgCnt != 1) WrError(1110);
+  else AddRegDef(LabPart, ArgStr[1]);
+}
+
 /*-------------------------------------------------------------------------*/
 
 #define AddFixed(NName, NCode) \
@@ -504,6 +519,8 @@ static void InitFields(void)
   AddInstTable(InstTable, "BYTE", 0, DecodeBYTE);
   AddInstTable(InstTable, "WORD", 0, DecodeWORD);
   AddInstTable(InstTable, "BSS" , 0, DecodeBSS);
+
+  AddInstTable(InstTable, "REG", 0, DecodeRegDef);
 }
 
 static void DeinitFields(void)
@@ -526,12 +543,12 @@ static void MakeCode_MSP(void)
   /* Attribut bearbeiten */
 
   if (*AttrPart == '\0') OpSize = 0;
-  else if (strlen(AttrPart) > 1) WrError(1107);
+  else if (strlen(AttrPart) > 1) WrXError(1107, AttrPart);
   else switch (mytoupper(*AttrPart))
   {
     case 'B': OpSize = 1; break;
     case 'W': OpSize = 0; break;
-    default:  WrError(1107); return;
+    default:  WrXError(1107, AttrPart); return;
   }
 
   /* alles aus der Tabelle */
@@ -542,7 +559,7 @@ static void MakeCode_MSP(void)
 
 static Boolean IsDef_MSP(void)
 {
-  return False;
+  return Memo("REG");
 }
 
 static void SwitchFrom_MSP(void)

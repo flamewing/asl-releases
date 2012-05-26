@@ -58,9 +58,12 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.23 2012-01-14 14:34:58 alfred Exp $                          */
+/* $Id: as.c,v 1.24 2012-05-26 13:49:19 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.24  2012-05-26 13:49:19  alfred
+ * - MSP additions, make implicit macro parameters always case-insensitive
+ *
  * Revision 1.23  2012-01-14 14:34:58  alfred
  * - add some platforms
  *
@@ -628,13 +631,16 @@ BEGIN
 
      l = FirstOutputTag->Params;
      for (z = 1; z <= FirstOutputTag->Mac->ParamCount; z++)
-      CompressLine(GetStringListNext(&l), z, s);
+      CompressLine(GetStringListNext(&l), z, s, CaseSensitive);
+
+     /* reserved argument names are never case-sensitive */
+
      if (HasAttrs)
-       CompressLine(AttrName, ParMax + 1, s);
-     CompressLine(ArgCName, ParMax + 2, s);
-     CompressLine(AllArgName, ParMax + 3, s);
+       CompressLine(AttrName, ParMax + 1, s, FALSE);
+     CompressLine(ArgCName, ParMax + 2, s, FALSE);
+     CompressLine(AllArgName, ParMax + 3, s, FALSE);
      if (FirstOutputTag->Mac->LocIntLabel)
-       CompressLine(LabelName, ParMax + 4, s);
+       CompressLine(LabelName, ParMax + 4, s, FALSE);
 
      AddStringListLast(&(FirstOutputTag->Mac->FirstLine), s);
     END
@@ -1152,7 +1158,7 @@ BEGIN
    if (FirstOutputTag->NestLevel>-1)
     BEGIN
      strmaxcpy(s,OneLine,255); KillCtrl(s);
-     CompressLine(GetStringListFirst(FirstOutputTag->Params,&Dummy),1,s);
+     CompressLine(GetStringListFirst(FirstOutputTag->Params,&Dummy),1,s, CaseSensitive);
      AddStringListLast(&(FirstOutputTag->Tag->Lines),s);
      FirstOutputTag->Tag->LineCnt++;
     END

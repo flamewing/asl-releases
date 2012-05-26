@@ -65,7 +65,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition January 2012}
+{\large Edition Mai 2012}
 \end{raggedright}
 
 \clearpage
@@ -2484,7 +2484,7 @@ PIO_ctrl   port PIO_port_A+3
 \ttindex{REG}\ttindex{NAMEREG}
 
 {\em valid for: AVR, M*Core, ST9, 80C16x, KCPSM ({\tt NAMEREG} valid only
- for KCPSM(3)), LatticeMico8}
+ for KCPSM(3)), LatticeMico8, MSP430}
 
 Though it always has the same syntax, this instruction has a slightly
 different meaning from processor to processor:  If the processor uses a
@@ -4817,6 +4817,8 @@ they cannot not be redeclared as explicit parameters:
       macro. This replacement only takes place if the {\tt INTLABEL}
       option was set for this macro!}
 \end{itemize}
+{\bf IMPORTANT:} the names of these implicit parameters are also
+case-insensitive if AS was told to operate case-sensitive!
 
 The purpose of being able to 'internally' use a label in a macro is surely
 not immediately obvious.  There might be cases where moving the macro's
@@ -11213,6 +11215,8 @@ Either that was a long nightshift or I am slowly getting old...
       \item{add another variant for temporary symbols;}
       \item{the PowerPC part has been extended by the MPC821 
             (contribution by Marcin Cieslak);}
+      \item{implicit macro parameters are always case-insensitive;}
+      \item{add \tty{REG} statement to MSP430;}
       \end{itemize}}
 \end{itemize}
 
