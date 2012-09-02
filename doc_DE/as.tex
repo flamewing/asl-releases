@@ -276,6 +276,7 @@ folgende Prozessorfamilien implementiert:
 \item{Fujitsu F$^2$MC16L}
 \item{Symbios Logic SYM53C8xx (ja, die kann man programmieren!)}
 \item{Intersil CDP1802/1805}
+\item{XMOS XS1}
 \end{itemize}
 in Arbeit / Planung / "Uberlegung :
 \begin{itemize}
@@ -2209,7 +2210,7 @@ einmal sein.  Was sollte man als Erkenntnis aus diesem Abschnitt mitnehmen?
 \section{Registersymbole}
 \label{SectRegSyms} \ttindex{Registersymbole}
 
-{\em G"ultigkeit: PowerPC, M-Core, 4004/4040, 80C16x, AVR}
+{\em G"ultigkeit: PowerPC, M-Core, 4004/4040, 80C16x, AVR, XS1}
 
 Manchmal ist es erw"unscht, nicht nur einer Speicheradresse oder einer
 Konstanten, sondern auch einem Register einen symbolischen Namen zuzuweisen,
@@ -3408,6 +3409,11 @@ Dieser Prozessortyp repr"asentiert die F$^{2}$MC8L-Serie von Fujitsu...
 bq) MB9500
 \end{quote}
 ...so wie dieser es momentan f"ur die 16-Bit-Varianten von Fujitsu tut!
+%%-----------
+\begin{quote}
+br) XS1
+\end{quote}
+Dieser Typ repr"asentiert die XCore-''Familie''.
 
 Beim CPU-Befehl mu"s der Prozessortyp als einfache Konstante
 angegeben werden, eine Berechnung \`a la
@@ -4361,7 +4367,7 @@ Attribute gibt es deswegen wie bei \tty{DC} auch hier nicht.
 {\em\begin{tabbing}
 G"ultigkeit: \= Intel, Zilog, Toshiba, NEC, TMS370, Siemens, AMD, M16(C),\\
              \> MELPS7700/65816, National, ST9, TMS7000, $\mu$PD77230, \\
-             \> Fairchild, Intersil
+             \> Fairchild, Intersil, XS1
 \end{tabbing}}
 
 Diese Befehle stellen sozusagen das Intel-Gegenst"uck zu \tty{DS}
@@ -10935,7 +10941,7 @@ Datenb"uchern reichen.  Hier eine Aufz"ahlung (wie oben gesagt, ohne
 Garantie auf Vollst"andigkeit!):
 \par 
 Ernst Ahlers, Charles Altmann, Marco Awater, Len Bayles, Andreas Bolsch,
-Rolf Buchholz, Bernd Casimir, Gunther Ewald, Stephan Hruschka, Peter
+Rolf Buchholz, Bernd Casimir, Nils Eilers, Gunther Ewald, Stephan Hruschka, Peter
 Kliegelh"ofer, Ulf Meinke, Matthias Paul, Norbert Rosch, Steffen Schmid,
 Leonhard Schneider, Ernst Schwab, Michael Schwingen, Oliver Sellke,
 Christian Stelter, Patrik Str"omdahl, Oliver Thamm, Thorsten Thiele,
@@ -11516,6 +11522,7 @@ oder ich werde langsam alt...
       \item{implizite Makro-Parameter sind immer case-insensitiv;}
       \item{das \tty{REG}-Statement ist jetzt auch f"ur den MSP430
             erlaubt;}
+      \item{unterst"utzt zus"atzlich den XS1 von XMOS;}
       \end{itemize}}
 \end{itemize}
 
@@ -12919,7 +12926,11 @@ damit mit der n"achsten Release alle etwas davon haben :-)
                  {\em PicoBlaze 8-bit Embedded Microcontroller User Guide
                  for Spartan-3, Virtex-II, and Virtex-II Pro FPGAs.\/} \\
                  UG129 (v1.1) June 10, 2004
-                                                      
+
+\bibitem{XMOS} David May:: \\
+               {\em The XMOS XS1 Architecture.\/} \\
+               Publication Date: 2009/10/19, Copyright 2009 XMOS Ltd.
+
 \bibitem{Zilog} Datenbl"atter der Firma Zilog zur Z80-Familie
 
 \bibitem{ZilZ8} Zilog Inc.: \\

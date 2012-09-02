@@ -26,9 +26,12 @@
 /*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.15 2012-05-26 13:49:19 alfred Exp $                      */
+/* $Id: asmsub.c,v 1.16 2012-08-22 20:01:45 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmsub.c,v $
+ * Revision 1.16  2012-08-22 20:01:45  alfred
+ * - regard UTF-8
+ *
  * Revision 1.15  2012-05-26 13:49:19  alfred
  * - MSP additions, make implicit macro parameters always case-insensitive
  *
@@ -1788,7 +1791,7 @@ BEGIN
 #elif defined CHARSET_ISO8859_1
    for (z = 192; z <= 255; z++)
      ValidSymChar[z] = VALID_S1 | VALID_SN;
-#elif defined CHARSET_ASCII7
+#elif (defined CHARSET_ASCII7) || (defined CHARSET_UTF8)
 #else
 #error Oops, unkown charset - you will have to add some work here...
 #endif

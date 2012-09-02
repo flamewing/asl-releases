@@ -1,11 +1,11 @@
-# -------------------------------------------------------------------------
-# choose your compiler (must be ANSI-compliant!) and linker command, plus
-# any additionally needed flags
-
+# -------------------------------------------------------------------------M
+# choose your compiler (must be ANSI-compliant!) and linker command, plusM
+# any additionally needed flagsM
+M
 CC = gcc
 LD = gcc
-CFLAGS = -O3 -fomit-frame-pointer -Wall
-LDFLAGS =
+CFLAGS = -O3 -fomit-frame-pointer -Wall -arch i386
+LDFLAGS = -arch i386
 
 TARG_OBJEXTENSION = .o
 TARG_EXEXTENSION =
@@ -19,14 +19,16 @@ HOST_EXEXTENSION = $(TARG_EXEXTENSION)
 
 BINDIR = /usr/local/bin
 INCDIR = /usr/local/include/asl
-MANDIR = /usr/local/man
+MANDIR = /usr/local/share/man
 LIBDIR = /usr/local/lib/asl
-DOCDIR = /usr/local/doc/asl
+DOCDIR = /usr/local/share/doc/asl
 
 # -------------------------------------------------------------------------
 # character encoding to use (choose one of them)
 
 # CHARSET = CHARSET_ASCII7
 # CHARSET = CHARSET_IBM437
-# CHARSET = CHARSET_UTF8
-CHARSET = CHARSET_ISO8859_1
+# CHARSET = CHARSET_ISO8859_1
+CHARSET = CHARSET_UTF8
+
+

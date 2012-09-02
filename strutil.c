@@ -11,9 +11,12 @@
 /*           30. 5.1999 ConstLongInt akzeptiert auch 0x fuer Hex-Zahlen      */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: strutil.c,v 1.7 2010/04/17 13:14:24 alfred Exp $                     */
+/* $Id: strutil.c,v 1.8 2012-08-19 09:39:02 alfred Exp $                     */
 /*****************************************************************************
  * $Log: strutil.c,v $
+ * Revision 1.8  2012-08-19 09:39:02  alfred
+ * - handle cases where strcpy is a macro
+ *
  * Revision 1.7  2010/04/17 13:14:24  alfred
  * - address overlapping strcpy()
  *
@@ -612,6 +615,9 @@ char *strmov(char *pDest, const char *pSrc)
 
 #ifdef __GNUC__
 
+#ifdef strcpy
+# undef strcpy
+#endif
 char *strcpy(char *pDest, const char *pSrc)
 {
   int l = strlen(pSrc) + 1;

@@ -58,9 +58,12 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.24 2012-05-26 13:49:19 alfred Exp $                          */
+/* $Id: as.c,v 1.25 2012-07-22 11:51:45 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.25  2012-07-22 11:51:45  alfred
+ * - begun with XCore target
+ *
  * Revision 1.24  2012-05-26 13:49:19  alfred
  * - MSP additions, make implicit macro parameters always case-insensitive
  *
@@ -312,6 +315,7 @@
 #include "codefmc16.h"
 #include "code1802.h"
 #include "codevector.h"
+#include "codexcore.h"
 #include "as1750.h"
 /**          Code21xx};**/
 
@@ -3586,6 +3590,7 @@ BEGIN
      codef2mc8_init(); codef2mc16_init();
      code1802_init();
      codevector_init();
+     codexcore_init();
      /*as1750_init();*/
      First=FALSE;
     END

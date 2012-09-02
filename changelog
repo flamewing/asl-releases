@@ -1,4 +1,4 @@
-$Id: changelog,v 1.68 2012-05-26 13:49:19 alfred Exp $
+$Id: changelog,v 1.71 2012-09-02 08:46:51 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1234,3 +1234,11 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 - Change      : implicit macro parameters are always case-insensitive
 
 - Addition    : add REG instruction to MSP430
+
+2012-09-02 [Bld84]
+
+- Addition    : add support for XMOS XS1
+
+- Addition    : optionally support UTF8 encoding
+
+- Addition    : add Makefile definitions for OSX

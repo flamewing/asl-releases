@@ -129,6 +129,7 @@ call testall t_tmpsym
 call testall t_tms7
 call testall t_vector
 call testall t_xa
+call testall t_xcore
 call testall t_xgate
 call testall t_z380
 call testall t_z8

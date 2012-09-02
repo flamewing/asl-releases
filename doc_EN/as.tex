@@ -281,6 +281,7 @@ following processor families have been implemented:
 \item{Fujitsu F$^2$MC8L}
 \item{Fujitsu F$^2$MC16L}
 \item{Intersil CDP1802/1805}
+\item{XMOS XS1}
 \end{itemize}
 under work / planned / in consideration :
 \begin{itemize}
@@ -2144,7 +2145,7 @@ necessary.  Which is the essence you should learn from this section?
 \section{Register Symbols}
 \label{SectRegSyms} \ttindex{register symbols}
 
-{\em valid for: PowerPC, M-Core, 4004/4040, 80C16x, AVR}
+{\em valid for: PowerPC, M-Core, 4004/4040, 80C16x, AVR, XS1}
 
 Sometimes it is desirable not only to assign symbolic names to memory
 addresses or constants, but also to a register, to emphasize its function
@@ -3317,6 +3318,11 @@ bq) MB9500
 \end{quote}
 ...just like this one does it currently for the 16-bit variants from
 Fujitsu!
+%%-----------
+\begin{quote}
+br) XS1
+\end{quote}
+This type represents the XCore-"family".
 
 The \tty{CPU} instruction needs the processor type as a simple constant, a
 calculation like:
@@ -4234,7 +4240,7 @@ attributes therefore do not exist just as in the case of \tty{DC}.
 {\em\begin{tabbing}
 valid for: \= Intel, Zilog, Toshiba, NEC, TMS370, Siemens, AMD, \\
            \> MELPS7700/65816, M16(C), National, ST9, TMS70Cxx, \\
-           \> $\mu$PD77230, Fairchild, Intersil
+           \> $\mu$PD77230, Fairchild, Intersil, XS1
 \end{tabbing}}
 
 These commands are - one could say - the Intel counterpart to \tty{DS} and
@@ -10615,7 +10621,7 @@ people, ranging from tips up to complete data books.  An enumeration
 follows (as stated before, without guarantee for completelessness!):
 
 Ernst Ahlers, Charles Altmann, Marco Awater, Len Bayles, Andreas Bolsch, Rolf Buchholz,
-Bernd Casimir, Gunther Ewald, Stephan Hruschka, Peter Kliegelh\"ofer, Ulf
+Bernd Casimir, Nils Eilers, Gunther Ewald, Stephan Hruschka, Peter Kliegelh\"ofer, Ulf
 Meinke, Matthias Paul, Norbert Rosch, Steffen Schmid, Leonhard Schneider,
 Ernst Schwab, Michael Schwingen, Oliver Sellke, Christian Stelter,
 Patrik Str\"omdahl, Oliver Thamm, Thorsten Thiele, Andreas Wassatsch,
@@ -11217,6 +11223,7 @@ Either that was a long nightshift or I am slowly getting old...
             (contribution by Marcin Cieslak);}
       \item{implicit macro parameters are always case-insensitive;}
       \item{add \tty{REG} statement to MSP430;}
+      \item{additionally supports the XMOS XS1;}
       \end{itemize}}
 \end{itemize}
 
@@ -12573,6 +12580,10 @@ from this with the next release :-)
                  for Spartan-3, Virtex-II, and Virtex-II Pro FPGAs.\/} \\
                  UG129 (v1.1) June 10, 2004
                           
+\bibitem{XMOS} David May:: \\
+               {\em The XMOS XS1 Architecture.\/} \\
+               Publication Date: 2009/10/19, Copyright 2009 XMOS Ltd.
+
 \bibitem{Zilog} data sheets from Zilog about the Z80 family
 
 \bibitem{ZilZ8} Zilog Inc.: \\

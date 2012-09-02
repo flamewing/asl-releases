@@ -26,7 +26,8 @@ CODE_SRCS = codepseudo.c intpseudo.c motpseudo.c tipseudo.c natpseudo.c codevars
             code53c8xx.c \
             codefmc8.c codefmc16.c \
             code1802.c \
-            codevector.c
+            codevector.c \
+	    codexcore.c
 
 ST_SRCS = strutil.c stdhandl.c stringlists.c
 

@@ -21,9 +21,12 @@
 /*           2001-08-30 set EntryAddrPresent when address given as argument  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: p2hex.c,v 1.8 2009/04/13 07:55:57 alfred Exp $                      */
+/* $Id: p2hex.c,v 1.9 2012-08-19 09:37:51 alfred Exp $                       */
 /*****************************************************************************
  * $Log: p2hex.c,v $
+ * Revision 1.9  2012-08-19 09:37:51  alfred
+ * - silence compiler warnings about printf without arguments
+ *
  * Revision 1.8  2009/04/13 07:55:57  alfred
  * - silence Borland C++ warnings
  *
@@ -759,7 +762,7 @@ BEGIN
    char *p,Save;
    Boolean ok;
 
-   fprintf(stderr, getmessage(Num_WarnDOption));
+   fputs(getmessage(Num_WarnDOption), stderr);
    fflush(stdout);
 
    if (Negate)
@@ -990,12 +993,12 @@ BEGIN
      if (NOT EntryAdrPresent) EntryAdr=0;
      if (MaxMoto>=2)
       BEGIN
-       errno=0; fprintf(TargFile,HexByte((EntryAdr>>24)&0xff)); ChkIO(TargName);
+       errno=0; fputs(HexByte((EntryAdr>>24)&0xff), TargFile); ChkIO(TargName);
        ChkSum+=(EntryAdr>>24)&0xff;
       END
      if (MaxMoto>=1)
       BEGIN
-       errno=0; fprintf(TargFile,HexByte((EntryAdr>>16)&0xff)); ChkIO(TargName);
+       errno=0; fputs(HexByte((EntryAdr>>16)&0xff), TargFile); ChkIO(TargName);
        ChkSum+=(EntryAdr>>16)&0xff;
       END
      errno=0; fprintf(TargFile,"%s",HexWord(EntryAdr&0xffff)); ChkIO(TargName);

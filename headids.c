@@ -19,9 +19,12 @@
 /*           2001-07-01 TI 320C54x                                           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: headids.c,v 1.9 2008/04/13 20:23:46 alfred Exp $                          */
+/* $Id: headids.c,v 1.10 2012-07-22 11:51:45 alfred Exp $                          */
 /*****************************************************************************
  * $Log: headids.c,v $
+ * Revision 1.10  2012-07-22 11:51:45  alfred
+ * - begun with XCore target
+ *
  * Revision 1.9  2008/04/13 20:23:46  alfred
  * - add Atari Vecor Processor target
  *
@@ -156,6 +159,7 @@ static TFamilyDescr Descrs[]=
         {"1802"      , 0x0038, IntHex  },
         {"KENBAK"    , 0x0027, IntHex  },
         {"ATARI_VECTOR", 0x0002,IntHex },
+        {"XCore"     , 0x0006, MotoS   },
         {Nil         , 0xffff, Default }
        };
 

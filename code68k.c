@@ -36,9 +36,12 @@
 /*           2001-12-02 fixed problems with forward refs of shift arguments  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68k.c,v 1.15 2010/08/27 14:52:41 alfred Exp $                     */
+/* $Id: code68k.c,v 1.16 2012-07-19 20:30:19 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code68k.c,v $
+ * Revision 1.16  2012-07-19 20:30:19  alfred
+ * - -
+ *
  * Revision 1.15  2010/08/27 14:52:41  alfred
  * - some more overlapping strcpy() cleanups
  *
@@ -1756,7 +1759,7 @@ BEGIN
      else if (strcasecmp(ArgStr[2],"SR")==0) /* AND #...,SR */
       BEGIN
        if ((*AttrPart!='\0') AND (OpSize!=1)) WrError(1130);
-       else if ((MomCPU==CPU68008) OR (MomCPU==CPUCOLD)) WrError(1500);
+       else if (MomCPU==CPUCOLD) WrError(1500);
        else
         BEGIN
          WAsmCode[0] = 0x007c | (Op << 9);
@@ -1847,7 +1850,6 @@ BEGIN
        if (AdrNum!=0) 
         BEGIN
          CodeLen=4; WAsmCode[1]=AdrVals[0]; CheckSup();
-         CheckCPU(CPU68000);
         END
       END
     END

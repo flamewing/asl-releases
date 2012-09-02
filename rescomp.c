@@ -293,8 +293,8 @@ static void Process_MESSAGE(char *Line)
     for (PRec = TransRecs; PRec->AbbString; PRec++)
       while ((pos = strstr(Msg, PRec->AbbString)))
       {
-        strmov(pos, pos + strlen(PRec->AbbString) - 1);
-        *pos = *PRec->Character;
+        strmov(pos, pos + strlen(PRec->AbbString) - strlen(PRec->Character));
+        memcpy(pos, PRec->Character, strlen(PRec->Character));
       }
     List = (PMsgList) malloc(sizeof(TMsgList));
     List->Next = Nil;
