@@ -15,9 +15,12 @@
 /*                      DOS platforms                                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: plist.c,v 1.1 2003/11/06 02:49:24 alfred Exp $                       */
+/* $Id: plist.c,v 1.2 2012-09-02 16:55:23 alfred Exp $                       */
 /*****************************************************************************
  * $Log: plist.c,v $
+ * Revision 1.2  2012-09-02 16:55:23  alfred
+ * - silence compiler warning about non-literal printf() format strinf
+ *
  * Revision 1.1  2003/11/06 02:49:24  alfred
  * - recreated
  *
@@ -122,7 +125,7 @@ BEGIN
 
      if (Header == FileHeaderEnd)
       BEGIN
-       errno = 0; printf(getmessage(Num_MessGenerator)); ChkIO(OutName);
+       errno = 0; fputs(getmessage(Num_MessGenerator), stdout); ChkIO(OutName);
        do 
         BEGIN
   	 errno = 0; Ch = fgetc(ProgFile); ChkIO(ProgName);

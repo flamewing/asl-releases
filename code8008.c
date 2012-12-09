@@ -113,7 +113,13 @@ static void DecodeRST(Word Index)
     {
       if (ChkRange(AdrWord, 0, 0x38))
       {
-        if ((AdrWord & 7) != 0) WrError(1325);
+        if (AdrWord < 8)
+        {
+          BAsmCode[0] = 0x05 | (AdrWord << 3);
+          CodeLen = 1;
+          ChkSpace(SegCode);
+        }
+        else if ((AdrWord & 7) != 0) WrError(1325);
         else
         {
           BAsmCode[0] = AdrWord + 0x05;

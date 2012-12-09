@@ -11,9 +11,12 @@
 /*           2001-10-13 added ARM/Linux                                      */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: sysdefs.h,v 1.11 2012-08-22 20:01:22 alfred Exp $                     */
+/* $Id: sysdefs.h,v 1.12 2012-11-28 20:47:29 alfred Exp $                     */
 /*****************************************************************************
  * $Log: sysdefs.h,v $
+ * Revision 1.12  2012-11-28 20:47:29  alfred
+ * - correct typo
+ *
  * Revision 1.11  2012-08-22 20:01:22  alfred
  * - add OSX 32 bit
  *
@@ -46,6 +49,13 @@
  *
  *****************************************************************************/
   
+/* NOTE:
+ *
+ * when adding new platforms, " gcc -dM -E - <<<'' " might be helpful to
+ * find out about predefined symbols
+ *
+ */
+
 /*---------------------------------------------------------------------------*/
 /* unify 68K platforms */
 
@@ -145,17 +155,17 @@
 #endif
 
 #ifdef __sparc
-#ifndef __NetBSD__
-#ifndef __FreeBSD__
-#ifndef __linux__
-#ifndef __SVR4
-#define __sunos__
-#else /* __SVR4 */
-#define __solaris__
-#endif /* __SVR4 */
-#endif /* __linux__ */
-#endif /* __FreeBSD__ */
-#endif /* __NetBSD */
+# ifndef __NetBSD__
+#  ifndef __FreeBSD__
+#   ifndef __linux__
+#    ifndef __SVR4
+#     define __sunos__
+#    else /* __SVR4 */
+#     define __solaris__
+#    endif /* __SVR4 */
+#   endif /* __linux__ */
+#  endif /* __FreeBSD__ */
+# endif /* __NetBSD */
 #endif /* __sparc */
 
 #ifdef __sparc__

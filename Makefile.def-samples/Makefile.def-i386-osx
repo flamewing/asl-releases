@@ -1,7 +1,7 @@
-# -------------------------------------------------------------------------M
-# choose your compiler (must be ANSI-compliant!) and linker command, plusM
-# any additionally needed flagsM
-M
+# -------------------------------------------------------------------------
+# choose your compiler (must be ANSI-compliant!) and linker command, plus
+# any additionally needed flags
+
 CC = gcc
 LD = gcc
 CFLAGS = -O3 -fomit-frame-pointer -Wall -arch i386

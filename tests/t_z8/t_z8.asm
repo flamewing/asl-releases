@@ -1,5 +1,7 @@
 	cpu	z8601
 
+myreg5	reg	r5
+
 	ccf
 	rcf
 	scf
@@ -19,7 +21,7 @@
 	nop
 
 	and	r7,r13
-	and	r5,vari
+	and	myreg5,vari
 	and	vari,r4
 
 	and	r3,@r14
@@ -32,34 +34,34 @@
 	and	@vari,#10011b
 
 	add	>2,>5		; disallow register addressing
-	adc	r5,#4
+	adc	myreg5,#4
 	sub	@r0,#20
 	sbc	r7,vari
-	or	vari,@r5
+	or	vari,@myreg5
 	tcm	r0,@r8
 	tm	@vari,#00001000b
 	cp	vari,#20
-	xor	r5,#255
+	xor	myreg5,#255
 
-	inc	r5
+	inc	myreg5
 	inc	@r12
 	inc	vari
 
 	dec	r6
 	dec	vari
-	dec	@r5
+	dec	@myreg5
 	dec	@vari
 	decw	rr6
 	decw	vari
-	decw	@r5
+	decw	@myreg5
 	decw	@vari
-	decw	@r5
+	decw	@myreg5
 
 test1:	jr	test1
 	jr	f,test1
 	jr	uge,test1
 
-	djnz	r5,test1
+	djnz	myreg5,test1
 
 	call	test1
 	call	@vari
@@ -72,7 +74,7 @@ test1:	jr	test1
 
 
 	ld	r3,r4
-	ld	r5,vari
+	ld	myreg5,vari
 	ld	r6,@r7
 	ld	r8,@vari
 	ld	r9,vari(r10)
@@ -95,7 +97,7 @@ test1:	jr	test1
 	ld	vari(r3),r4
 
 
-	ldc	r5,@rr6
+	ldc	myreg5,@rr6
 	ldc	@rr8,r7
 	lde	r9,@rr10
 	lde	@rr12,r11

@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codez8.c,v 1.11 2011-10-20 14:00:40 alfred Exp $                          *
+/* $Id: codez8.c,v 1.12 2012-12-09 12:32:06 alfred Exp $                          *
  *****************************************************************************
  * $Log: codez8.c,v $
+ * Revision 1.12  2012-12-09 12:32:06  alfred
+ * - Bld85
+ *
  * Revision 1.11  2011-10-20 14:00:40  alfred
  * - SRP handling more graceful on Z8
  *
@@ -179,9 +182,13 @@ static IntType RegSpaceType;
 /*--------------------------------------------------------------------------*/ 
 /* address expression decoding routines */
 
-static Boolean IsWReg(char *Asc, Byte *Erg)
+static Boolean IsWReg(const char *Asc, Byte *Erg)
 {
    Boolean Err;
+   char *pAlias;
+
+   if (FindRegDef(Asc, &pAlias))
+     Asc = pAlias;
 
    if ((strlen(Asc) < 2) || (mytoupper(*Asc) != 'R')) return False;
    else
@@ -194,9 +201,13 @@ static Boolean IsWReg(char *Asc, Byte *Erg)
    }
 }
 
-static Boolean IsRReg(char *Asc, Byte *Erg)
+static Boolean IsRReg(const char *Asc, Byte *Erg)
 {
    Boolean Err;
+   char *pAlias;
+
+   if (FindRegDef(Asc, &pAlias))
+     Asc = pAlias;
 
    if ((strlen(Asc) < 3) || (strncasecmp(Asc, "RR", 2) != 0)) return False;
    else
@@ -1675,6 +1686,13 @@ static ASSUMERec ASSUMEeZ8s[ASSUMEeZ8Count] =
      return True;
    }
 
+   if (Memo("REG"))
+   {
+     if (ArgCnt != 1) WrError(1110);
+     else AddRegDef(LabPart, ArgStr[1]);
+     return True;
+   }
+
    if (Memo("ASSUME"))
    {
      CodeASSUME(ASSUMEeZ8s, ASSUMEeZ8Count);
@@ -1710,7 +1728,7 @@ static void InitCode_Z8(void)
 
 static Boolean IsDef_Z8(void)
 {
-   return (Memo("SFR"));
+   return ((Memo("SFR")) || (Memo("REG")));
 }
 
 static void SwitchFrom_Z8(void)

@@ -1,4 +1,4 @@
-$Id: changelog,v 1.71 2012-09-02 08:46:51 alfred Exp $
+$Id: changelog,v 1.72 2012-12-09 12:32:06 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1242,3 +1242,7 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 - Addition    : optionally support UTF8 encoding
 
 - Addition    : add Makefile definitions for OSX
+
+2012-12-09 [Bld85]
+
+- Change      : allow register symbols for Zilog Z8
