@@ -54,7 +54,7 @@ code17c4x.o: stdinc.h bpemu.h strutil.h chunks.h asmdef.h asmsub.h asmitree.h as
 
 code1802.o: stdinc.h bpemu.h asmdef.h asmsub.h asmpars.h asmitree.h codepseudo.h codevars.h intpseudo.h headids.h
 
-code2650.o: stdinc.h nls.h chunks.h bpemu.h strutil.h asmdef.h asmsub.h asmpars.h asmitree.h codevars.h headids.h
+code2650.o: stdinc.h nls.h chunks.h bpemu.h strutil.h asmdef.h asmsub.h asmpars.h asmitree.h codevars.h headids.h intpseudo.h code2650.h
 
 code29k.o: stdinc.h nls.h strutil.h bpemu.h stringlists.h asmdef.h asmsub.h asmpars.h asmallg.h asmitree.h codepseudo.h intpseudo.h codevars.h
 

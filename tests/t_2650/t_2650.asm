@@ -570,3 +570,6 @@ immed		equ	$a5
 	zbrr  23h
 	zbsr  *23h
 	zbsr  23h
+
+	db	01h
+	db	20 dup (10, "Hello World")

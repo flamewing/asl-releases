@@ -5,9 +5,12 @@
 /* Codegenerator Signetics 2650                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code2650.c,v 1.3 2007/11/24 22:48:03 alfred Exp $
+/* $Id: code2650.c,v 1.4 2012-12-31 11:21:29 alfred Exp $
  *****************************************************************************
  * $Log: code2650.c,v $
+ * Revision 1.4  2012-12-31 11:21:29  alfred
+ * - add Dx pseudo instructions to 2650 target
+ *
  * Revision 1.3  2007/11/24 22:48:03  alfred
  * - some NetBSD changes
  *
@@ -33,7 +36,9 @@
 #include "asmpars.h"
 #include "asmitree.h"
 #include "codevars.h" 
-#include "headids.h"           
+#include "headids.h"
+#include "intpseudo.h"
+#include "code2650.h"
 
 /*--------------------------------------------------------------------------*/
 /* Local Variables */
@@ -517,6 +522,8 @@ static void MakeCode_2650(void)
     return;
 
   /* Pseudoanweisungen */
+
+  if (DecodeIntelPseudo(False)) return;
 
   /* try to split off first (register) operand from instruction */
 
