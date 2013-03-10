@@ -1,4 +1,4 @@
-$Id: changelog,v 1.73 2012-12-31 11:21:29 alfred Exp $
+$Id: changelog,v 1.74 2013-03-09 16:15:08 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1250,3 +1250,11 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 2012-12-31 [Bld86]
 
 - Change      : add Dx pseudo instructions to Signetics 2650
+
+2013-03-09 [Bld87]
+
+- Bugfix      : correct PC-relative addressing on SC/MP
+
+- Addition    : (NO)GLOBALSYMBOLS parameter for macros
+
+- Addition    : add support for NEC uPD75xx

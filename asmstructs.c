@@ -5,9 +5,12 @@
 /* structure handling                                                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmstructs.c,v 1.3 2004/01/17 16:18:38 alfred Exp $                 */
+/* $Id: asmstructs.c,v 1.4 2013-02-14 21:05:31 alfred Exp $                 */
 /*****************************************************************************
  * $Log: asmstructs.c,v $
+ * Revision 1.4  2013-02-14 21:05:31  alfred
+ * - add missing bookkeeping for expanded structs
+ *
  * Revision 1.3  2004/01/17 16:18:38  alfred
  * - fix some more GCC 3.3 quarrel
  *
@@ -297,6 +300,7 @@ void ExpandStruct(PStructRec StructRec)
       HandleLabel(CompName, EProgCounter() + StructElem->Offset);
     }
     CodeLen = StructRec->TotLen;
+    BookKeeping();
     DontPrint = True;
   }
 }

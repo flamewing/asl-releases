@@ -19,9 +19,12 @@
 /*           2001-07-01 TI 320C54x                                           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: headids.c,v 1.10 2012-07-22 11:51:45 alfred Exp $                          */
+/* $Id: headids.c,v 1.11 2013-03-09 16:15:08 alfred Exp $                          */
 /*****************************************************************************
  * $Log: headids.c,v $
+ * Revision 1.11  2013-03-09 16:15:08  alfred
+ * - add NEC 75xx
+ *
  * Revision 1.10  2012-07-22 11:51:45  alfred
  * - begun with XCore target
  *
@@ -146,6 +149,7 @@ static TFamilyDescr Descrs[]=
         {"COP8"      , 0x006f, IntHex  },
         {"SC14XXX"   , 0x006d, IntHex  },
         {"ACE"       , 0x0067, IntHex  },
+        {"75xx"      , 0x005d, IntHex  },
         {"78(C)1x"   , 0x007a, IntHex  },
         {"75K0"      , 0x007b, IntHex  },
         {"78K0"      , 0x007c, IntHex  },

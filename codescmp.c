@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codescmp.c,v 1.6 2010/04/17 13:14:23 alfred Exp $                    */
+/* $Id: codescmp.c,v 1.7 2013-03-07 20:10:11 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codescmp.c,v $
+ * Revision 1.7  2013-03-07 20:10:11  alfred
+ * - correct PC-relative addressing for SC/MP
+ *
  * Revision 1.6  2010/04/17 13:14:23  alfred
  * - address overlapping strcpy()
  *
@@ -177,7 +180,7 @@ static void DecodeRegOrder(Word Index)
 static void DecodeMem(Word Index)
 {
   if (ArgCnt != 1) WrError(1110);
-  else if (DecodeAdr(ArgStr[1], True, 1, BAsmCode + 0))
+  else if (DecodeAdr(ArgStr[1], True, 0, BAsmCode + 0))
   {
     BAsmCode[0] |= Index; CodeLen = 2; ChkPage();
   }

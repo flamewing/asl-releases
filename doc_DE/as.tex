@@ -46,7 +46,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand Dezember 2012}
+{\large Stand M"arz 2013}
 \end{raggedright}
 
 \clearpage
@@ -267,6 +267,7 @@ folgende Prozessorfamilien implementiert:
 \item{National Semiconductor SC144xx}
 \item{Fairchild ACE}
 \item{NEC $\mu$PD78(C)1x}
+\item{NEC $\mu$PD75xx}
 \item{NEC $\mu$PD75xxx (alias 75K0)}
 \item{NEC 78K0}
 \item{NEC 78K2}
@@ -3350,9 +3351,15 @@ das ZCM-Register fehlen demzufolge.  \bb{VORSICHT!} NMOS- und CMOS-Version
 differieren zum Teil in den Reset-Werten einiger Register!
 %%-----------
 \begin{quote}
+bj) 7500
+\end{quote}
+Diese Type repr"asentiert aktuell alle Varianten der
+$\mu$PD75xx-Familie (gleicher CPU-Kern).
+%%-----------
+\begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bj) \> 75402, \\
+bk) \> 75402, \\
     \> 75004, 75006, 75008, \\
     \> 75268, \\
     \> 75304, 75306, 75308, 75312, 75316, \\
@@ -3368,31 +3375,31 @@ unterscheiden sich einmal durch ihre on-chip-Peripherie und
 zum anderen durch die M"achtigkeit des Befehlssatzes.
 %%-----------
 \begin{quote}
-bk) 78070
+bl) 78070
 \end{quote}
 Dies ist das einzige, mir momentan vertraute Mitglied der
 78K0-Familie von NEC.  Es gelten "ahnliche Aussagen wie zur
 COP8-Familie!
 %%-----------
 \begin{quote}
-bl) 78214
+bm) 78214
 \end{quote}
 Dies ist momentan der Repr"asentant der 78K2-Familie von NEC.
 %%-----------
 \begin{quote}
-bm) 7720 $\rightarrow$ 7725
+bn) 7720 $\rightarrow$ 7725
 \end{quote}
 Der $\mu$PD7725 bietet im Vergleich zu seinem Vorg"anger gr"o"sere
 Adre"sr"aume und einige zus"atzliche Befehle. {\bf VORSICHT!}  Die
 Prozessoren sind nicht zueinander bin"arkompatibel!
 %%-----------
 \begin{quote}
-bn) 77230
+bo) 77230
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
-bo) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
+bp) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
     \> SYM53C875, SYM53C895
 \end{tabbing}
 \end{quote}
@@ -3401,17 +3408,17 @@ einige Befehlsvarianten nicht, au"serdem unterscheiden sie sich in ihrem
 Satz interner Register.
 %%-----------
 \begin{quote}
-bp) MB89190
+bq) MB89190
 \end{quote}
 Dieser Prozessortyp repr"asentiert die F$^{2}$MC8L-Serie von Fujitsu...
 %%-----------
 \begin{quote}
-bq) MB9500
+br) MB9500
 \end{quote}
 ...so wie dieser es momentan f"ur die 16-Bit-Varianten von Fujitsu tut!
 %%-----------
 \begin{quote}
-br) XS1
+bs) XS1
 \end{quote}
 Dieser Typ repr"asentiert die XCore-''Familie''.
 
@@ -4916,6 +4923,11 @@ sind.  Es sind folgende Steuerparameter definiert:
       dem Makroaufruf definiertes Label innerhalb des Rumpfes als
       zus"atzlicher Parameter verwendet werden soll, als einfach
       nur die Adresse dieser Zeile zu 'labeln'.}
+\item{\tty{GLOBALSYMBOLS/NOGLOBALSYMBOLS} : legt fest, ob im
+      Makro definierte Labels lokal zu diesem Makro sein sollen
+      oder auch au"serhalb des Makros verf"ugbar sein sollen. 
+      Der Default ist, da"s Labels lokal sind, weil mehrfache
+      Benutzung eines Makros ansonsten schwierig w"are.}
 \end{itemize}
 Diese eben beschriebenen Steuerparameter werden von AS aus der
 Parameterliste ausgefiltert, haben also keine weitere Wirkung in
@@ -5061,10 +5073,12 @@ so wird daraus
 Eine Makrodefinition darf nicht "uber Includefilegrenzen hinausgehen.
 \par
 In Makror"umpfen definierte Labels werden immer als lokal betrachtet,
-ein expliziter \tty{LOCAL}-Befehl ist also nicht erforderlich (und ist
-auch nicht definiert).  Ist es aus irgendwelchen Gr"unden erforderlich,
-so kann man es mit \tty{LABEL} definieren, dessen Anwendung (wie bei
-\tty{BIT,SFR}...) immer globale Symbole ergibt :
+auﬂer bei der Definition des Makros wurde die
+\tty{GLOBALSYMBOLS}-Option verwendet.  Ist es aus irgendwelchen Gr"unden
+erforderlich, ein einzelnes Label in einem Makro global zu
+machen, das ansonsten lokale Labels benutzt, so kann man es mit
+\tty{LABEL} definieren, dessen Anwendung (wie bei \tty{BIT,SFR}...)
+immer globale Symbole ergibt :
 \begin{verbatim}
 <Name>  LABEL   *
 \end{verbatim}
@@ -5129,7 +5143,11 @@ was in folgendem resultiert:
         PUSH    dpl
         PUSH    dph
 \end{verbatim}
-Benutzte Labels sind wieder f"ur jeden Durchgang automatisch lokal.
+Die Argumentliste darf analog zu einer Makro-Definition die
+Steueranweisungen \tty{GLOBALSYMBOLS} bzw. \tty{NOGLOBALSYMBOLS} (durch
+geschweifte Klammern als solche gekennzeichnet) enthalten, um zu
+steuern, ob benutzte Labels f"ur jeden Durchgang automatisch lokal
+sind oder nicht.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -5170,7 +5188,10 @@ Der Vollst"andigkeit halber ein Beispiel:
 \end{verbatim}
 rotiert den Akku um 3 Stellen nach rechts.
 \par
-Symbole sind wiederum f"ur jede einzelne Repetition lokal.
+Ob Symbole f"ur jede einzelne Repetition lokal sind oder nicht,
+kann wiederum durch die Steuerparameter \tty{GLOBALSYMBOLS} bzw.
+\tty{NOGLOBALSYMBOLS} (durch geschweifte Klammern als solche
+gekennzeichnet) bestimmt werden.
 
 Ist das Argument von \tty{REPT} kleiner oder gleich Null, so wird
 "uberhaupt keine Expansion durchgef"uhrt.  Dies ist ein Unterschied
@@ -5475,6 +5496,20 @@ innerhalb einer Sektion werden diese Symbole als lokal zu dieser Sektion
 definiert.  Analoges gilt aber auch f"ur die Strukturen selber, d.h. eine
 innerhalb einer Sektion definierte Struktur kann nicht au"erhalb der
 Sektion benutzt werden.
+
+\subsection{Strukturen und Makros}
+
+Will man Strukturen "uber Makros instantiieren, so mu"s man die
+\tty{GLOBALSYMBOLS}-Option bei der Definition des Makros
+benutzen, damit die dar"uber erzeugten Symbole auch au"serhalb
+des Makros verwendbar sind.  Eine Reihe von Strukturen kann man
+z.B. so anlegen:
+
+\begin{verbatim}
+        irp     name,{GLOBALSYMBOLS},rec1,rec2,rec3
+name    Rec
+        endm
+\end{verbatim}
 
 %%---------------------------------------------------------------------------
 
@@ -11523,6 +11558,10 @@ oder ich werde langsam alt...
       \item{das \tty{REG}-Statement ist jetzt auch f"ur den MSP430
             erlaubt;}
       \item{unterst"utzt zus"atzlich den XS1 von XMOS;}
+      \item{zus"atzliche Parameter \tty{GLOBALSYMBOLS} und
+            \tty{NOGLOBALSYMBOLS} um zu steuern, ob Labels
+            in Makros lokal sind oder nicht;}
+      \item{kennt zus"atzlich die 75xx-Reihe von NEC;}
       \end{itemize}}
 \end{itemize}
 

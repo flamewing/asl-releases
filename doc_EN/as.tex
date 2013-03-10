@@ -65,7 +65,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition December 2012}
+{\large Edition March 2013}
 \end{raggedright}
 
 \clearpage
@@ -272,6 +272,7 @@ following processor families have been implemented:
 \item{National Semiconductor SC144xx}
 \item{Fairchild ACE}
 \item{NEC $\mu$PD 78(C)1x}
+\item{NEC $\mu$PD75xx}
 \item{NEC $\mu$PD 75xxx (alias 75K0)}
 \item{NEC 78K0}
 \item{NEC 78K2}
@@ -3259,9 +3260,15 @@ register are omitted.  \bb{CAUTION!}  NMOS and CMOS version partially
 differ in the reset values of some registers!
 %%-----------
 \begin{quote}
+bj) 7500
+\end{quote}
+This Type currently represents all variants of the
+$\mu$PD75xx family (same CPU core).
+%%-----------
+\begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bj) \> 75402,\\
+bk) \> 75402,\\
     \> 75004, 75006, 75008,\\
     \> 75268,\\
     \> 75304, 75306, 75308, 75312, 75316,\\
@@ -3277,30 +3284,30 @@ peripherals on the one hand and by their instruction set's power on
 the other hand.
 %%-----------
 \begin{quote}
-bk) 78070
+bl) 78070
 \end{quote}
 This is currently the only member of NEC's 78K0 family I am familiar
 with.  Similar remarks like for the COP8 family apply!
 %%-----------
 \begin{quote}
-bl) 78214
+bm) 78214
 \end{quote}
 This is currently the the representor of NEC's 78K2 family.
 %%-----------
 \begin{quote}
-bm) 7720 $\rightarrow$ 7725
+bn) 7720 $\rightarrow$ 7725
 \end{quote}
 The $\mu$PD7725 offers larger address spaces and som more instructions
 compared to his predecessor. {\bf CAUTION!}  The processors are not binary
 compatible to each other!
 %%-----------
 \begin{quote}
-bn) 77230
+bo) 77230
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
-bo) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
+bp) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
     \> SYM53C875, SYM53C895
 \end{tabbing}
 \end{quote}
@@ -3309,18 +3316,18 @@ instruction variants, furthermore they are different in their set of
 internal registers.
 %%-----------
 \begin{quote}
-bp) MB89190  
+bq) MB89190  
 \end{quote}  
 This processor type represents Fujitsu's F$^{2}$MC8L series...
 %%-----------
 \begin{quote}
-bq) MB9500
+br) MB9500
 \end{quote}
 ...just like this one does it currently for the 16-bit variants from
 Fujitsu!
 %%-----------
 \begin{quote}
-br) XS1
+bs) XS1
 \end{quote}
 This type represents the XCore-"family".
 
@@ -4753,6 +4760,11 @@ defined:
 \item{\tty{INTLABEL/NOINTLABEL} : rules whether a label defined in a line 
       that calls this macro may be used as an additional parameter inside
       the label or not, instead of simply 'labeling' the line.}
+\item{\tty{GLOBALSYMBOLS/NOGLOBALSYMBOLS} : rules whether labels
+      defined in the macro's body shall be local to this macro or
+      also be available outside the macro.  The default is to
+      keep them local, since using a macro multiple time would be
+      difficult otherwise.}
 \end{itemize}
 The control parameters described above are removed from the parameter
 list by AS, i.e. they do not have a further influence on processing
@@ -4890,11 +4902,12 @@ this results in
 \end{verbatim}
 A macro definition must not cross include file boundaries.
 
-Labels defined in macros always are regarded as being local, an explicit
-\tty{LOCAL} instruction is therefore not necessary (it even does not
-exist).  In case there is a reason to make a label global, one may define
-it with \tty{LABEL} which always creates global symbols (similar to \tty{BIT,
-SFR...}):
+Labels defined in macros always are regarded as being local,
+unless the \tty{GLOBALSYMBOLS} was used in the macro's
+definition.  If a single label shall be made public in a macro
+that uses local labels otherwise, it may be defined with a
+\tty{LABEL} statement which always creates global symbols
+(similar to \tty{BIT, SFR...}):
 \begin{verbatim}
 <Name>  label   $
 \end{verbatim}
@@ -4957,7 +4970,11 @@ to push a couple of registers to the stack, what results in
         push    dpl
         push    dph
 \end{verbatim}
-Again, labels used are automatically local for every pass.
+Analog to a macro definition, the argument list may contain the
+control parameters \tty{GLOBALSYMBOLS} resp.
+\tty{NOGLOBALSYMBOLS} (marked as such by being enclosed in curly
+braces).  This allows to control whether used labels are local for
+every pass or not.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -4995,6 +5012,11 @@ An example for the sake of completeness:
         endm
 \end{verbatim}
 rotates the accumulator to the right by three digits.
+
+Once again, the optional control parameters \tty{GLOBALSYMBOLS}
+resp. \tty{NOGLOBALSYMBOLS} (marked as such by being enclosed in
+curly braces) decide wheter labels are local to the individual
+repetitions.
 
 In case \tty{REPT}'s argument is equal to or smaller than 0, no expansion
 at all is done.  This is different to older versions of AS which used to
@@ -5288,6 +5310,19 @@ are treated just like normal symbols, i.e. when used within a section,
 these symbols are local to the section.  The same is however also true for
 the structures themselves, i.e. a structure defined within a section
 cannot be used outside of the section.
+
+\subsection{Structures and Macros}
+
+If one wants to instantiate structures via macros, one has to use
+the \tty{GLOBALSYMBOLS} options when defining the macro to make
+the defined symbols visible outside the macro.  For instance, a
+list of structures can be defined in the following way:
+
+\begin{verbatim}
+        irp     name,{GLOBALSYMBOLS},rec1,rec2,rec3
+name    Rec
+        endm
+\end{verbatim}
 
 %%---------------------------------------------------------------------------
 
@@ -11224,6 +11259,10 @@ Either that was a long nightshift or I am slowly getting old...
       \item{implicit macro parameters are always case-insensitive;}
       \item{add \tty{REG} statement to MSP430;}
       \item{additionally supports the XMOS XS1;}
+      \item{additional parameters \tty{GLOBALSYMBOLS} and
+            \tty{NOGLOBALSYMBOLS} to control whether labels in   
+            macros are local or not;}
+      \item{additionally supports the NEC 75xx series;}
       \end{itemize}}
 \end{itemize}
 

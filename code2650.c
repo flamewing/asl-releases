@@ -5,9 +5,12 @@
 /* Codegenerator Signetics 2650                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code2650.c,v 1.4 2012-12-31 11:21:29 alfred Exp $
+/* $Id: code2650.c,v 1.5 2013-02-14 20:48:57 alfred Exp $
  *****************************************************************************
  * $Log: code2650.c,v $
+ * Revision 1.5  2013-02-14 20:48:57  alfred
+ * - allow UN as condition
+ *
  * Revision 1.4  2012-12-31 11:21:29  alfred
  * - add Dx pseudo instructions to 2650 target
  *
@@ -68,7 +71,7 @@ static Boolean DecodeCondition(const char *pAsc, Byte *pRes)
     *pRes = 1;
   else if (!strcasecmp(pAsc, "LT"))
     *pRes = 2;
-  else if (!strcasecmp(pAsc, "ALWAYS"))
+  else if ((!strcasecmp(pAsc, "ALWAYS")) || (!strcasecmp(pAsc, "UN")))
     *pRes = 3;
   else
     Result = FALSE;

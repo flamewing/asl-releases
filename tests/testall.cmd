@@ -77,6 +77,7 @@ call testall t_6816
 call testall t_68rs08
 call testall t_7000
 call testall t_75k0
+call testall t_75xx
 call testall t_7700
 call testall t_7720
 call testall t_77230
@@ -125,6 +126,7 @@ call testall t_secdrive
 call testall t_st6
 call testall t_st7
 call testall t_st9
+call testall t_structs
 call testall t_tmpsym
 call testall t_tms7
 call testall t_vector

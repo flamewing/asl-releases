@@ -58,9 +58,15 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.25 2012-07-22 11:51:45 alfred Exp $                          */
+/* $Id: as.c,v 1.27 2013-03-09 16:15:07 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.27  2013-03-09 16:15:07  alfred
+ * - add NEC 75xx
+ *
+ * Revision 1.26  2013-03-09 07:54:38  alfred
+ * - add GLOBALSYMBOLS option
+ *
  * Revision 1.25  2012-07-22 11:51:45  alfred
  * - begun with XCore target
  *
@@ -305,6 +311,7 @@
 #include "codesc14xxx.h"
 #include "codeace.h"
 #include "code78c10.h"
+#include "code75xx.h"
 #include "code75k0.h"
 #include "code78k0.h"
 #include "code78k2.h"
@@ -374,6 +381,7 @@ BEGIN
    (*PInp)->Macro = Nil;
    (*PInp)->SaveAttr[0] = '\0';
    (*PInp)->SaveLabel[0] = '\0';
+   (*PInp)->GlobalSymbols = False;
 
    /* in case the input tag chain is empty, this must be the master file */
 
@@ -547,6 +555,27 @@ BEGIN
    return (Memo("ENDM"));
 END
 
+typedef void (*tMacroArgCallback)(Boolean CtrlArg, char *pArg, void *pUser);
+
+static void ProcessMacroArgs(tMacroArgCallback Callback, void *pUser)
+{
+  int z1, l;
+
+  for (z1 = 1; z1 <= ArgCnt; z1++)
+  {
+    l = strlen(ArgStr[z1]);
+    if ((l >= 2) && (ArgStr[z1][0] == '{') && (ArgStr[z1][l - 1] == '}'))
+    {
+      ArgStr[z1][l - 1] = '\0';
+      Callback(TRUE, ArgStr[z1] + 1, pUser);
+    }
+    else
+    {
+      Callback(FALSE, ArgStr[z1], pUser);
+    }
+  }
+}
+
 /*-------------------------------------------------------------------------*/
 /* Dieser Einleseprozessor dient nur dazu, eine fehlerhafte Makrodefinition
   bis zum Ende zu ueberlesen */
@@ -713,7 +742,8 @@ BEGIN
 
    /* before the first line, start a new local symbol space */
 
-   if (PInp->LineZ == 1) PushLocHandle(GetLocHandle());
+   if ((PInp->LineZ == 1) && (!PInp->GlobalSymbols))
+     PushLocHandle(GetLocHandle());
 
    /* signal the end of the macro */
 
@@ -725,18 +755,21 @@ END
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 /* Initialisierung des Makro-Einleseprozesses */
 
-        static Boolean ReadMacro_SearchArg(char *Test, char *Comp, Boolean *Erg)
-BEGIN
-   if (strcasecmp(Test,Comp)==0)
-    BEGIN
-     *Erg=True; return True;
-    END
-   else if ((strlen(Test)>2) AND (strncasecmp(Test,"NO",2)==0) AND (strcasecmp(Test+2,Comp)==0))
-    BEGIN
-     *Erg=False; return True;
-    END
-   else return False;
-END
+static Boolean ReadMacro_SearchArg(const char *pTest, const char *pComp, Boolean *pErg)
+{
+  if (!strcasecmp(pTest, pComp))
+  {
+    *pErg = True;
+    return True;
+  }
+  else if ((strlen(pTest) > 2) && (!strncasecmp(pTest, "NO", 2)) && (!strcasecmp(pTest + 2, pComp)))
+  {
+    *pErg = False;
+    return True;
+  }
+  else
+    return False;
+}
 
         static Boolean ReadMacro_SearchSect(char *Test_O, char *Comp, Boolean *Erg, LongInt *Section)
 BEGIN
@@ -762,122 +795,154 @@ BEGIN
    else return False;
 END
 
-        static void ReadMacro(void)
-BEGIN
-   String PList;
-   PSaveSection RunSection;
-   PMacroRec OneMacro;
-   int z1,z2;
-   POutputTag Neu;
+typedef struct
+{
+  String PList;
+  POutputTag pOutputTag;
+  Boolean DoMacExp, DoPublic, DoIntLabel, GlobalSymbols;
+  Boolean ErrFlag;
+  int ParamCount;
+} tReadMacroContext;
 
-   Boolean DoMacExp, DoPublic, DoIntLabel;
-   LongInt HSect;
-   Boolean ErrFlag;
+static void ExpandPList(String PList, const char *pArg, Boolean CtrlArg)
+{
+  if (!*PList)
+    strmaxcat(PList, ",", 255);
+  if (CtrlArg)
+    strmaxcat(PList, "{", 255);
+  strmaxcat(PList, pArg, 255);
+  if (CtrlArg)
+    strmaxcat(PList, "}", 255);
+}
 
-   CodeLen=0; ErrFlag=False;
+static void ProcessMACROArgs(Boolean CtrlArg, char *pArg, void *pUser)
+{
+  tReadMacroContext *pContext = (tReadMacroContext*)pUser;
 
-   /* Makronamen pruefen */
-   /* Definition nur im ersten Pass */
-
-   if (PassNo != 1) ErrFlag = True;
-   else if (NOT ExpandSymbol(LabPart)) ErrFlag = True;
-   else if (NOT ChkSymbName(LabPart))
-    BEGIN
-     WrXError(1020,LabPart); ErrFlag = True;
-    END
-
-   /* create tag */
-
-   Neu = (POutputTag) malloc(sizeof(TOutputTag));
-   Neu->Processor = MACRO_OutProcessor;
-   Neu->NestLevel = 0;
-   Neu->Params = Nil;
-   Neu->DoExport = False;
-   Neu->DoGlobCopy = False;
-   Neu->Next = FirstOutputTag;
-
-   /* check arguments, sort out control directives */
-
-   DoMacExp = LstMacroEx; DoPublic = False; DoIntLabel = False;
-   *PList = '\0'; z2 = 0;
-   for (z1 = 1; z1 <= ArgCnt; z1++)
-    if ((ArgStr[z1][0] == '{') AND (ArgStr[z1][strlen(ArgStr[z1])-1] == '}'))
-     BEGIN
-      strmov(ArgStr[z1], ArgStr[z1] + 1); ArgStr[z1][strlen(ArgStr[z1])-1] = '\0';
-      if (ReadMacro_SearchArg(ArgStr[z1], "EXPORT", &(Neu->DoExport)));
-      else if (ReadMacro_SearchArg(ArgStr[z1], "EXPAND", &DoMacExp)) 
-       BEGIN
-        strmaxcat(PList, ",", 255); strmaxcat(PList, ArgStr[z1], 255);
-       END
-      else if (ReadMacro_SearchArg(ArgStr[z1], "INTLABEL", &DoIntLabel)) 
-       BEGIN
-        strmaxcat(PList, ",", 255); strmaxcat(PList, ArgStr[z1], 255);
-       END
-      else if (ReadMacro_SearchSect(ArgStr[z1], "GLOBAL", &(Neu->DoGlobCopy), &(Neu->GlobSect)));
-      else if (ReadMacro_SearchSect(ArgStr[z1], "PUBLIC", &DoPublic,&(Neu->PubSect)));
-      else
-       BEGIN
-        WrXError(1465,ArgStr[z1]); ErrFlag = True;
-       END
-     END
+  if (CtrlArg)
+  {
+    if (ReadMacro_SearchArg(pArg, "EXPORT", &(pContext->pOutputTag->DoExport)));
+    else if (ReadMacro_SearchArg(pArg, "GLOBALSYMBOLS", &pContext->GlobalSymbols));
+    else if (ReadMacro_SearchArg(pArg, "EXPAND", &pContext->DoMacExp))
+    {
+      ExpandPList(pContext->PList, pArg, CtrlArg);
+    }
+    else if (ReadMacro_SearchArg(pArg, "INTLABEL", &pContext->DoIntLabel)) 
+    {
+      ExpandPList(pContext->PList, pArg, CtrlArg);
+    }
+    else if (ReadMacro_SearchSect(pArg, "GLOBAL", &(pContext->pOutputTag->DoGlobCopy), &(pContext->pOutputTag->GlobSect)));
+    else if (ReadMacro_SearchSect(pArg, "PUBLIC", &pContext->DoPublic, &(pContext->pOutputTag->PubSect)));
     else
-     BEGIN
-      strmaxcat(PList, ",", 255); strmaxcat(PList, ArgStr[z1], 255); z2++;
-      if (NOT ChkMacSymbName(ArgStr[z1]))
-       BEGIN
-        WrXError(1020, ArgStr[z1]); ErrFlag = True;
-       END
-      AddStringListLast(&(Neu->Params), ArgStr[z1]);
-     END
+    {
+      WrXError(1465, pArg); pContext->ErrFlag = True;
+    }
+  }
+  else
+  {
+    ExpandPList(pContext->PList, pArg, CtrlArg);
+    if (!ChkMacSymbName(pArg))
+    {
+      WrXError(1020, pArg);
+      pContext->ErrFlag = True;
+    }
+    AddStringListLast(&(pContext->pOutputTag->Params), pArg);
+    pContext->ParamCount++;
+  }
+}
 
-   /* Abbruch bei Fehler */
+static void ReadMacro(void)
+{
+  PSaveSection RunSection;
+  PMacroRec OneMacro;
+  tReadMacroContext Context;
+  LongInt HSect;
 
-   if (ErrFlag)
-    BEGIN
-     ClearStringList(&(Neu->Params));
-     free(Neu);
-     AddWaitENDM_Processor();
-     return;
-    END
+  CodeLen = 0; Context.ErrFlag = False;
 
-   /* Bei Globalisierung Namen des Extramakros ermitteln */
+  /* Makronamen pruefen */
+  /* Definition nur im ersten Pass */
 
-   if (Neu->DoGlobCopy)
-    BEGIN
-     strmaxcpy(Neu->GName, LabPart, 255);
-     RunSection = SectionStack; HSect = MomSectionHandle;
-     while ((HSect != Neu->GlobSect) AND (RunSection != Nil))
-      BEGIN
-       strmaxprep(Neu->GName, "_", 255);
-       strmaxprep(Neu->GName, GetSectionName(HSect), 255);
-       HSect = RunSection->Handle; RunSection = RunSection->Next;
-      END
-    END
-   if (NOT DoPublic) Neu->PubSect = MomSectionHandle;
+  if (PassNo != 1)
+    Context.ErrFlag = True;
+  else if (!ExpandSymbol(LabPart))
+    Context.ErrFlag = True;
+  else if (!ChkSymbName(LabPart))
+  {
+    WrXError(1020, LabPart);
+    Context.ErrFlag = True;
+  }
 
-   /* chain in */
+  /* create tag */
 
-   OneMacro = (PMacroRec) malloc(sizeof(MacroRec));
-   Neu->Mac = OneMacro;
+  Context.pOutputTag = (POutputTag) malloc(sizeof(TOutputTag));
+  Context.pOutputTag->Processor = MACRO_OutProcessor;
+  Context.pOutputTag->NestLevel = 0;
+  Context.pOutputTag->Params = NULL;
+  Context.pOutputTag->DoExport = False;
+  Context.pOutputTag->DoGlobCopy = False;
+  Context.pOutputTag->Next = FirstOutputTag;
 
-   if ((MacroOutput) AND (Neu->DoExport))
-    BEGIN 
-     if (strlen(PList) != 0) strmov(PList, PList+1);
-     errno = 0;
-     if (Neu->DoGlobCopy) fprintf(MacroFile, "%s MACRO %s\n", Neu->GName, PList);
-     else fprintf(MacroFile, "%s MACRO %s\n", LabPart, PList);
-     ChkIO(10004); 
-    END
+  /* check arguments, sort out control directives */
 
-   OneMacro->UseCounter = 0;
-   OneMacro->Name = strdup(LabPart);
-   OneMacro->ParamCount = z2;
-   OneMacro->FirstLine = Nil;
-   OneMacro->LocMacExp = DoMacExp;
-   OneMacro->LocIntLabel = DoIntLabel;
+  Context.DoMacExp = LstMacroEx;
+  Context.DoPublic = False;
+  Context.DoIntLabel = False;
+  Context.GlobalSymbols = False;
+  *Context.PList = '\0';
+  Context.ParamCount = 0;
+  ProcessMacroArgs(ProcessMACROArgs, &Context);
 
-   FirstOutputTag = Neu;
-END
+  /* Abbruch bei Fehler */
+
+  if (Context.ErrFlag)
+  {
+    ClearStringList(&(Context.pOutputTag->Params));
+    free(Context.pOutputTag);
+    AddWaitENDM_Processor();
+    return;
+  }
+
+  /* Bei Globalisierung Namen des Extramakros ermitteln */
+
+  if (Context.pOutputTag->DoGlobCopy)
+  {
+    strmaxcpy(Context.pOutputTag->GName, LabPart, 255);
+    RunSection = SectionStack; HSect = MomSectionHandle;
+    while ((HSect != Context.pOutputTag->GlobSect) && (RunSection != NULL))
+    {
+      strmaxprep(Context.pOutputTag->GName, "_", 255);
+      strmaxprep(Context.pOutputTag->GName, GetSectionName(HSect), 255);
+      HSect = RunSection->Handle; RunSection = RunSection->Next;
+    }
+  }
+  if (!Context.DoPublic)
+    Context.pOutputTag->PubSect = MomSectionHandle;
+
+  /* chain in */
+
+  OneMacro = (PMacroRec) malloc(sizeof(MacroRec));
+  Context.pOutputTag->Mac = OneMacro;
+
+  if ((MacroOutput) && (Context.pOutputTag->DoExport))
+  {
+    errno = 0;
+    fprintf(MacroFile, "%s MACRO %s\n",
+            Context.pOutputTag->DoGlobCopy ? Context.pOutputTag->GName : LabPart,
+            Context.PList);
+    ChkIO(10004); 
+  }
+
+  OneMacro->UseCounter = 0;
+  OneMacro->Name = strdup(LabPart);
+  OneMacro->ParamCount = Context.ParamCount;
+  OneMacro->FirstLine = NULL;
+  OneMacro->LocMacExp = Context.DoMacExp;
+  OneMacro->LocIntLabel = Context.DoIntLabel;
+  OneMacro->GlobalSymbols = Context.GlobalSymbols;
+
+  FirstOutputTag = Context.pOutputTag;
+}
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 /* Beendigung der Expansion eines Makros */
@@ -900,7 +965,8 @@ static void MACRO_Restorer(PInputTag PInp)
 {
   /* discard the local symbol space */
 
-  PopLocHandle();
+  if (!PInp->GlobalSymbols)
+    PopLocHandle();
 
   /* undo the recursion counter by one */
 
@@ -941,6 +1007,7 @@ static void ExpandMacro(PMacroRec OneMacro)
     Tag->Cleanup   = MACRO_Cleanup;
     Tag->GetPos    = MACRO_GetPos;
     Tag->Macro     = OneMacro;
+    Tag->GlobalSymbols = OneMacro->GlobalSymbols;
     strmaxcpy(Tag->SpecName, OneMacro->Name, 255);
     strmaxcpy(Tag->SaveAttr, AttrPart, 255);
     if (OneMacro->LocIntLabel)
@@ -1044,50 +1111,54 @@ END
 /* Diese Routine liefert bei der Expansion eines IRP-Statements die expan-
   dierten Zeilen */
 
-        Boolean IRP_Processor(PInputTag PInp, char *erg)
-BEGIN
-   StringRecPtr Lauf;
-   int z;
-   Boolean Result;
+Boolean IRP_Processor(PInputTag PInp, char *erg)
+{
+  StringRecPtr Lauf;
+  int z;
+  Boolean Result;
 
-   Result = True;
+  Result = True;
 
-   /* increment line counter only if contents came from a true file */
+  /* increment line counter only if contents came from a true file */
 
-   CurrLine = PInp->StartLine;
-   if (PInp->FromFile)
-     CurrLine += PInp->LineZ;
+  CurrLine = PInp->StartLine;
+  if (PInp->FromFile)
+    CurrLine += PInp->LineZ;
 
-   /* first line? Then open new symbol space and reset line pointer */
+  /* first line? Then open new symbol space and reset line pointer */
 
-   if (PInp->LineZ == 1)
-    BEGIN
-     if (NOT PInp->First) PopLocHandle(); PInp->First=False;
-     PushLocHandle(GetLocHandle());
-     PInp->LineRun = PInp->Lines;
-    END
+  if (PInp->LineZ == 1)
+  {
+    if (!PInp->GlobalSymbols)
+    {
+      if (!PInp->First) PopLocHandle();
+      PushLocHandle(GetLocHandle());
+    }
+    PInp->First = False;
+    PInp->LineRun = PInp->Lines;
+  }
 
-   /* extract line */
+  /* extract line */
 
-   strcpy(erg, PInp->LineRun->Content);
-   PInp->LineRun = PInp->LineRun->Next;
+  strcpy(erg, PInp->LineRun->Content);
+  PInp->LineRun = PInp->LineRun->Next;
 
-   /* expand iteration parameter */
+  /* expand iteration parameter */
 
-   Lauf = PInp->Params; for (z = 1; z <= PInp->ParZ - 1; z++)
-     Lauf = Lauf->Next;
-   ExpandLine(Lauf->Content, 1, erg);
+  Lauf = PInp->Params; for (z = 1; z <= PInp->ParZ - 1; z++)
+    Lauf = Lauf->Next;
+  ExpandLine(Lauf->Content, 1, erg);
 
-   /* end of body? then reset to line 1 and exit if this was the last iteration */
+  /* end of body? then reset to line 1 and exit if this was the last iteration */
 
-   if (++(PInp->LineZ) > PInp->LineCnt)
-    BEGIN
-     PInp->LineZ = 1; 
-     if (++(PInp->ParZ) > PInp->ParCnt) Result = False;
-    END
+  if (++(PInp->LineZ) > PInp->LineCnt)
+   BEGIN
+    PInp->LineZ = 1; 
+    if (++(PInp->ParZ) > PInp->ParCnt) Result = False;
+   END
 
-   return Result;
-END
+  return Result;
+}
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 /* Aufraeumroutine IRP/IRPC */
@@ -1191,249 +1262,335 @@ END
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 /* Initialisierung der IRP-Bearbeitung */
 
-        static void ExpandIRP(void)
-BEGIN
-   String Parameter;
-   int z1;
-   PInputTag Tag;
-   POutputTag Neu;
-   Boolean ErrFlag;
+typedef struct
+{
+  Boolean ErrFlag;
+  Boolean GlobalSymbols;
+  int ArgCnt;
+  POutputTag pOutputTag;
+  StringList Params;
+} tExpandIRPContext;
 
-   /* 0. terminate if conditinal assembly bites */
+static void ProcessIRPArgs(Boolean CtrlArg, char *pArg, void *pUser)
+{
+  tExpandIRPContext *pContext = (tExpandIRPContext*)pUser;
 
-   if (NOT IfAsm)
-    BEGIN
-     AddWaitENDM_Processor();
-     return;
-    END
+  if (CtrlArg)
+  {
+    if (ReadMacro_SearchArg(pArg, "GLOBALSYMBOLS", &pContext->GlobalSymbols));
+    else
+    {
+      WrXError(1465, pArg); pContext->ErrFlag = True;
+    }
+  }
+  else
+  {
+    /* differentiate placeholder & arguments */
 
-   /* 1. Parameter pruefen */
+    if (0 == pContext->ArgCnt)
+    {
+      if (!ChkMacSymbName(pArg))
+      {
+        WrXError(1020, pArg);
+        pContext->ErrFlag = True;
+      }
+      else
+        AddStringListFirst(&(pContext->pOutputTag->Params), pArg);
+    }
+    else
+    {
+      if (!CaseSensitive)
+        UpString(pArg);
+      AddStringListLast(&(pContext->Params), pArg);
+    }
+    pContext->ArgCnt++;
+  }
+}
 
-   if (ArgCnt < 2)
-    BEGIN
-     WrError(1110); ErrFlag = True;
-    END
-   else
-    BEGIN
-     strmaxcpy(Parameter, ArgStr[1], 255);
-     if (NOT ChkMacSymbName(ArgStr[1]))
-      BEGIN
-       WrXError(1020, Parameter); ErrFlag = True;
-      END
-     else ErrFlag = False;
-    END
-   if (ErrFlag)
-    BEGIN
-     AddWaitENDM_Processor();
-     return;
-    END
+static void ExpandIRP(void)
+{
+  PInputTag Tag;
+  tExpandIRPContext Context;
 
-   /* 2. Tag erzeugen */
+  /* 0. terminate if conditional assembly bites */
 
-   GenerateProcessor(&Tag);
-   Tag->ParCnt    = ArgCnt - 1;
-   Tag->Processor = IRP_Processor;
-   Tag->Restorer  = MACRO_Restorer;
-   Tag->Cleanup   = IRP_Cleanup;
-   Tag->GetPos    = IRP_GetPos;
+  if (!IfAsm)
+  {
+    AddWaitENDM_Processor();
+    return;
+  }
+
+  /* 1. Parameter pruefen */
+
+  Context.ErrFlag = False;
+  Context.GlobalSymbols = False;
+  Context.ArgCnt = 0;
+  Context.Params = NULL;
+
+  Context.pOutputTag = (POutputTag) malloc(sizeof(TOutputTag));
+  Context.pOutputTag->Next      = FirstOutputTag;
+  Context.pOutputTag->Processor = IRP_OutProcessor;
+  Context.pOutputTag->NestLevel = 0;
+  Context.pOutputTag->Params    = NULL;
+  ProcessMacroArgs(ProcessIRPArgs, &Context);
+
+  /* at least parameter & one arg */
+
+  if (Context.ArgCnt < 2)
+  {
+    WrError(1110);
+    Context.ErrFlag = True;
+  }
+  if (Context.ErrFlag)
+  {
+    ClearStringList(&(Context.pOutputTag->Params));
+    ClearStringList(&(Context.Params));
+    free(Context.pOutputTag);
+    AddWaitENDM_Processor();
+    return;
+  }
+
+  /* 2. Tag erzeugen */
+
+  GenerateProcessor(&Tag);
+  Tag->ParCnt    = Context.ArgCnt - 1;
+  Tag->Params    = Context.Params;
+  Tag->Processor = IRP_Processor;
+  Tag->Restorer  = MACRO_Restorer;
+  Tag->Cleanup   = IRP_Cleanup;
+  Tag->GetPos    = IRP_GetPos;
+  Tag->GlobalSymbols = Context.GlobalSymbols;
    Tag->ParZ      = 1;
-   Tag->IsMacro   = True;
-   *Tag->SaveAttr = '\0';
+  Tag->IsMacro   = True;
+  *Tag->SaveAttr = '\0';
+  Context.pOutputTag->Tag = Tag;
 
-   /* 3. Parameterliste aufbauen; rueckwaerts einen Tucken schneller */
+  /* 4. einbetten */
 
-   for (z1 = ArgCnt; z1 >= 2; z1--)
-    BEGIN
-     if (!CaseSensitive)
-       UpString(ArgStr[z1]);
-     AddStringListFirst(&(Tag->Params), ArgStr[z1]);
-    END
+  FirstOutputTag = Context.pOutputTag;
+}
 
-   /* 4. einbetten */
-
-   Neu = (POutputTag) malloc(sizeof(TOutputTag));
-   Neu->Next      = FirstOutputTag;
-   Neu->Processor = IRP_OutProcessor;
-   Neu->NestLevel = 0;
-   Neu->Tag       = Tag;
-   Neu->Params    = Nil;
-   AddStringListFirst(&(Neu->Params), ArgStr[1]);
-   FirstOutputTag = Neu;
-END
-
-/*--- IRPC: dito f³r Zeichen eines Strings ---------------------------------*/
+/*--- IRPC: dito fuer Zeichen eines Strings ---------------------------------*/
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 /* Diese Routine liefert bei der Expansion eines IRPC-Statements die expan-
   dierten Zeilen */
 
-        Boolean IRPC_Processor(PInputTag PInp, char *erg)
-BEGIN
-   Boolean Result;
-   char tmp[5];
+Boolean IRPC_Processor(PInputTag PInp, char *erg)
+{
+  Boolean Result;
+  char tmp[5];
 
-   Result = True;
+  Result = True;
 
-   /* increment line counter only if contents came from a true file */
+  /* increment line counter only if contents came from a true file */
 
-   CurrLine = PInp->StartLine;
-   if (PInp->FromFile)
-     CurrLine += PInp->LineZ;
- 
-   /* first line? Then open new symbol space and reset line pointer */
+  CurrLine = PInp->StartLine;
+  if (PInp->FromFile)
+    CurrLine += PInp->LineZ;
 
-   if (PInp->LineZ == 1)
-    BEGIN
-     if (NOT PInp->First) PopLocHandle(); PInp->First = False;
-     PushLocHandle(GetLocHandle());
-     PInp->LineRun = PInp->Lines;
-    END
+  /* first line? Then open new symbol space and reset line pointer */
 
-   /* extract line */
+  if (PInp->LineZ == 1)
+  {
+    if (!PInp->GlobalSymbols)
+    {
+      if (PInp->First) PopLocHandle();
+      PushLocHandle(GetLocHandle());
+    }
+    PInp->First = False;
+    PInp->LineRun = PInp->Lines;
+  }
 
-   strcpy(erg, PInp->LineRun->Content);
-   PInp->LineRun = PInp->LineRun->Next;
+  /* extract line */
 
-   /* extract iteration parameter */
+  strcpy(erg, PInp->LineRun->Content);
+  PInp->LineRun = PInp->LineRun->Next;
 
-   *tmp = PInp->SpecName[PInp->ParZ - 1]; tmp[1] = '\0';
-   ExpandLine(tmp, 1, erg);
+  /* extract iteration parameter */
 
-   /* end of body? then reset to line 1 and exit if this was the last iteration */
+  *tmp = PInp->SpecName[PInp->ParZ - 1]; tmp[1] = '\0';
+  ExpandLine(tmp, 1, erg);
 
-   if (++(PInp->LineZ) > PInp->LineCnt)
-    BEGIN
-     PInp->LineZ = 1; 
-     if (++(PInp->ParZ) > PInp->ParCnt) Result = False;
-    END
+  /* end of body? then reset to line 1 and exit if this was the last iteration */
 
-   return Result;
-END
+  if (++(PInp->LineZ) > PInp->LineCnt)
+  {
+    PInp->LineZ = 1; 
+    if (++(PInp->ParZ) > PInp->ParCnt) Result = False;
+  }
+
+  return Result;
+}
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 /* Initialisierung der IRPC-Bearbeitung */
 
-        static void ExpandIRPC(void)
-BEGIN
-   String Parameter;
-   PInputTag Tag;
-   POutputTag Neu;
-   Boolean ErrFlag;
+typedef struct
+{
+  Boolean ErrFlag;
+  Boolean GlobalSymbols;
+  int ArgCnt;
+  POutputTag pOutputTag;
+  String Parameter;
+} tExpandIRPCContext;
 
-   /* 0. terminate if conditinal assembly bites */
+static void ProcessIRPCArgs(Boolean CtrlArg, char *pArg, void *pUser)
+{
+  tExpandIRPCContext *pContext = (tExpandIRPCContext*)pUser;
 
-   if (NOT IfAsm)
-    BEGIN
-     AddWaitENDM_Processor();
-     return;
-    END
+  if (CtrlArg)
+  {
+    if (ReadMacro_SearchArg(pArg, "GLOBALSYMBOLS", &pContext->GlobalSymbols));
+    else
+    {
+      WrXError(1465, pArg); pContext->ErrFlag = True;
+    }
+  }
+  else
+  {
+    if (0 == pContext->ArgCnt)
+    {
+      if (!ChkMacSymbName(pArg))
+      {
+        WrXError(1020, pArg);
+        pContext->ErrFlag = True;
+      }
+      else
+        AddStringListFirst(&(pContext->pOutputTag->Params), pArg);
+    }
+    else
+    {
+      Boolean OK;
 
-   /* 1.Parameter pruefen */
+      EvalStringExpression(pArg, &OK, pContext->Parameter);
+      if (!OK)
+        pContext->ErrFlag = True;
+    }
+    pContext->ArgCnt++;
+  }
+}
 
-   if (ArgCnt < 2)
-    BEGIN
-     WrError(1110); ErrFlag = True;
-    END
-   else
-    BEGIN
-     strmaxcpy(Parameter, ArgStr[1], 255);
-     if (NOT ChkMacSymbName(ArgStr[1]))
-      BEGIN
-       WrXError(1020, Parameter); ErrFlag = True;
-      END
-     else ErrFlag = False;
-    END
-   if (NOT ErrFlag)
-    BEGIN
-     EvalStringExpression(ArgStr[2], &ErrFlag, Parameter);
-     ErrFlag = NOT ErrFlag;
-    END
-   if (ErrFlag)
-    BEGIN
-     AddWaitENDM_Processor();
-     return;
-    END
+static void ExpandIRPC(void)
+{
+  PInputTag Tag;
+  tExpandIRPCContext Context;
 
-   /* 2. Tag erzeugen */
+  /* 0. terminate if conditinal assembly bites */
 
-   GenerateProcessor(&Tag);
-   Tag->ParCnt    = strlen(Parameter);
-   Tag->Processor = IRPC_Processor;
-   Tag->Restorer  = MACRO_Restorer;
-   Tag->Cleanup   = IRP_Cleanup;
-   Tag->GetPos    = IRP_GetPos;
-   Tag->ParZ      = 1;
-   Tag->IsMacro   = True;
-   *Tag->SaveAttr = '\0';
-   strmaxcpy(Tag->SpecName, Parameter, 255);
+  if (!IfAsm)
+  {
+    AddWaitENDM_Processor();
+    return;
+  }
 
-   /* 4. einbetten */
+  /* 1.Parameter pruefen */
 
-   Neu = (POutputTag) malloc(sizeof(TOutputTag));
-   Neu->Next = FirstOutputTag;
-   Neu->Processor = IRP_OutProcessor;
-   Neu->NestLevel = 0;
-   Neu->Tag = Tag;
-   Neu->Params = Nil;
-   AddStringListFirst(&(Neu->Params), ArgStr[1]);
-   FirstOutputTag = Neu;
-END
+  Context.ErrFlag = False;
+  Context.GlobalSymbols = False;
+  Context.ArgCnt = 0;
+
+  Context.pOutputTag = (POutputTag) malloc(sizeof(TOutputTag));
+  Context.pOutputTag->Next = FirstOutputTag;
+  Context.pOutputTag->Processor = IRP_OutProcessor;
+  Context.pOutputTag->NestLevel = 0;
+  Context.pOutputTag->Params = Nil;
+  ProcessMacroArgs(ProcessIRPCArgs, &Context);
+
+  /* parameter & string */
+
+  if (Context.ArgCnt != 2)
+  {
+    WrError(1110);
+    Context.ErrFlag = True;
+  }
+  if (Context.ErrFlag)
+  {
+    ClearStringList(&(Context.pOutputTag->Params));
+    AddWaitENDM_Processor();
+    return;
+  }
+
+  /* 2. Tag erzeugen */
+
+  GenerateProcessor(&Tag);
+  Tag->ParCnt    = strlen(Context.Parameter);
+  Tag->Processor = IRPC_Processor;
+  Tag->Restorer  = MACRO_Restorer;
+  Tag->Cleanup   = IRP_Cleanup;
+  Tag->GetPos    = IRP_GetPos;
+  Tag->GlobalSymbols = Context.GlobalSymbols;
+  Tag->ParZ      = 1;
+  Tag->IsMacro   = True;
+  *Tag->SaveAttr = '\0';
+  strmaxcpy(Tag->SpecName, Context.Parameter, 255);
+
+  /* 4. einbetten */
+
+  Context.pOutputTag->Tag = Tag;
+  FirstOutputTag = Context.pOutputTag;
+}
 
 /*--- Repetition -----------------------------------------------------------*/
 
-        static void REPT_Cleanup(PInputTag PInp)
-BEGIN
-   ClearStringList(&(PInp->Lines));
-END
+static void REPT_Cleanup(PInputTag PInp)
+{
+  ClearStringList(&(PInp->Lines));
+}
 
-	static Boolean REPT_GetPos(PInputTag PInp, char *dest)
-BEGIN
-   int z1=PInp->ParZ,z2=PInp->LineZ;
+static Boolean REPT_GetPos(PInputTag PInp, char *dest)
+{
+  int z1 = PInp->ParZ, z2 = PInp->LineZ;
 
-   if (--z2<=0)
-    BEGIN
-     z2=PInp->LineCnt; z1--;
-    END
-   sprintf(dest,"REPT %ld(%ld)",(long)z1,(long)z2);
-   return False;
-END
+  if (--z2 <= 0)
+  {
+    z2 = PInp->LineCnt; z1--;
+  }
+  sprintf(dest, "REPT %ld(%ld)", (long)z1, (long)z2);
+  return False;
+}
 
-        Boolean REPT_Processor(PInputTag PInp, char *erg)
-BEGIN
-   Boolean Result;
+Boolean REPT_Processor(PInputTag PInp, char *erg)
+{
+  Boolean Result;
 
-   Result = True;
+  Result = True;
 
-   /* increment line counter only if contents came from a true file */
+  /* increment line counter only if contents came from a true file */
 
-   CurrLine = PInp->StartLine;
-   if (PInp->FromFile)
-     CurrLine += PInp->LineZ;
+  CurrLine = PInp->StartLine;
+  if (PInp->FromFile)
+    CurrLine += PInp->LineZ;
 
-   /* first line? Then open new symbol space and reset line pointer */
+  /* first line? Then open new symbol space and reset line pointer */
 
-   if (PInp->LineZ == 1)
-    BEGIN
-     if (NOT PInp->First) PopLocHandle(); PInp->First=False;
-     PushLocHandle(GetLocHandle());
-     PInp->LineRun = PInp->Lines;
-    END
+  if (PInp->LineZ == 1)
+  {
+    if (!PInp->GlobalSymbols)
+    {
+      if (!PInp->First) PopLocHandle();
+      PushLocHandle(GetLocHandle());
+    }
+    PInp->First = False;
+    PInp->LineRun = PInp->Lines;
+  }
 
-    /* extract line */
+  /* extract line */
 
-    strcpy(erg, PInp->LineRun->Content);
-    PInp->LineRun = PInp->LineRun->Next;
+  strcpy(erg, PInp->LineRun->Content);
+  PInp->LineRun = PInp->LineRun->Next;
 
-    /* last line of body? Then increment count and stop if last iteration */
+  /* last line of body? Then increment count and stop if last iteration */
 
-    if ((++PInp->LineZ) > PInp->LineCnt)
-     BEGIN
-      PInp->LineZ = 1;
-      if ((++PInp->ParZ) > PInp->ParCnt) Result = False;
-     END
+  if ((++PInp->LineZ) > PInp->LineCnt)
+  {
+    PInp->LineZ = 1;
+    if ((++PInp->ParZ) > PInp->ParCnt)
+      Result = False;
+  }
 
-   return Result;
-END
+  return Result;
+}
 
 	static void REPT_OutProcessor(void)
 BEGIN
@@ -1472,68 +1629,102 @@ BEGIN
     END
 END
 
-        static void ExpandREPT(void)
-BEGIN
-   Boolean ValOK;
-   LongInt ReptCount=0;
-   PInputTag Tag;
-   POutputTag Neu;
-   Boolean ErrFlag;
+typedef struct
+{
+  Boolean ErrFlag;
+  Boolean GlobalSymbols;
+  int ArgCnt;
+  LongInt ReptCount;
+} tExpandREPTContext;
 
-   /* 0. skip everything when conditional assembly is off */
+static void ProcessREPTArgs(Boolean CtrlArg, char *pArg, void *pUser)
+{
+  tExpandREPTContext *pContext = (tExpandREPTContext*)pUser;
 
-   if (NOT IfAsm)
-    BEGIN
-     AddWaitENDM_Processor();
-     return;
-    END
+  if (CtrlArg)
+  {
+    if (ReadMacro_SearchArg(pArg, "GLOBALSYMBOLS", &pContext->GlobalSymbols));
+    else
+    {
+      WrXError(1465, pArg); pContext->ErrFlag = True;
+    }
+  }
+  else
+  {
+    Boolean ValOK;
 
-   /* 1. Repetitionszahl ermitteln */
+    FirstPassUnknown = False;
+    pContext->ReptCount = EvalIntExpression(pArg, Int32, &ValOK);
+    if (FirstPassUnknown)
+      WrError(1820);
+    if ((!ValOK) || (FirstPassUnknown))
+      pContext->ErrFlag = True;
+    pContext->ArgCnt++;
+  }
+}
 
-   if (ArgCnt != 1)
-    BEGIN
-     WrError(1110); ErrFlag = True;
-    END
-   else
-    BEGIN
-     FirstPassUnknown = False;
-     ReptCount=EvalIntExpression(ArgStr[1], Int32, &ValOK);
-     if (FirstPassUnknown) WrError(1820);
-     ErrFlag=((NOT ValOK) OR (FirstPassUnknown));
-    END
-   if (ErrFlag)
-    BEGIN
-     AddWaitENDM_Processor();
-     return;
-    END
+static void ExpandREPT(void)
+{
+  PInputTag Tag;
+  POutputTag Neu;
+  tExpandREPTContext Context;
 
-   /* 2. Tag erzeugen */
+  /* 0. skip everything when conditional assembly is off */
 
-   GenerateProcessor(&Tag);
-   Tag->ParCnt    = ReptCount;
-   Tag->Processor = REPT_Processor;
-   Tag->Restorer  = MACRO_Restorer;
-   Tag->Cleanup   = REPT_Cleanup;
-   Tag->GetPos    = REPT_GetPos;
-   Tag->IsMacro   = True;
-   Tag->ParZ      = 1;
+  if (!IfAsm)
+  {
+    AddWaitENDM_Processor();
+    return;
+  }
 
-   /* 3. einbetten */
+  /* 1. Repetitionszahl ermitteln */
 
-   Neu=(POutputTag) malloc(sizeof(TOutputTag));
-   Neu->Processor = REPT_OutProcessor;
-   Neu->NestLevel = 0;
-   Neu->Next      = FirstOutputTag;
-   Neu->Tag       = Tag;
-   FirstOutputTag = Neu;
-END
+  Context.GlobalSymbols = False;
+  Context.ReptCount = 0;
+  Context.ErrFlag = False;
+  Context.ArgCnt = 0;
+  ProcessMacroArgs(ProcessREPTArgs, &Context);
+
+  /* rept count must be present only once */
+
+  if (Context.ArgCnt != 1)
+  {
+    WrError(1110); Context.ErrFlag = True;
+  }
+  if (Context.ErrFlag)
+  {
+    AddWaitENDM_Processor();
+    return;
+  }
+
+  /* 2. Tag erzeugen */
+
+  GenerateProcessor(&Tag);
+  Tag->ParCnt    = Context.ReptCount;
+  Tag->Processor = REPT_Processor;
+  Tag->Restorer  = MACRO_Restorer;
+  Tag->Cleanup   = REPT_Cleanup;
+  Tag->GetPos    = REPT_GetPos;
+  Tag->GlobalSymbols = Context.GlobalSymbols;
+  Tag->IsMacro   = True;
+  Tag->ParZ      = 1;
+
+  /* 3. einbetten */
+
+  Neu=(POutputTag) malloc(sizeof(TOutputTag));
+  Neu->Processor = REPT_OutProcessor;
+  Neu->NestLevel = 0;
+  Neu->Next      = FirstOutputTag;
+  Neu->Tag       = Tag;
+  FirstOutputTag = Neu;
+}
 
 /*- bedingte Wiederholung -------------------------------------------------------*/
 
-        static void WHILE_Cleanup(PInputTag PInp)
-BEGIN
-   ClearStringList(&(PInp->Lines));
-END
+static void WHILE_Cleanup(PInputTag PInp)
+{
+  ClearStringList(&(PInp->Lines));
+}
 
 	static Boolean WHILE_GetPos(PInputTag PInp, char *dest)
 BEGIN
@@ -1547,59 +1738,63 @@ BEGIN
    return False;
 END
 
-        Boolean WHILE_Processor(PInputTag PInp, char *erg)
-BEGIN
-   int z;
-   Boolean OK,Result;
+Boolean WHILE_Processor(PInputTag PInp, char *erg)
+{
+  int z;
+  Boolean OK,Result;
 
-   /* increment line counter only if this came from a true file */
+  /* increment line counter only if this came from a true file */
 
-   CurrLine = PInp->StartLine;
-   if (PInp->FromFile)
-     CurrLine += PInp->LineZ;
+  CurrLine = PInp->StartLine;
+  if (PInp->FromFile)
+    CurrLine += PInp->LineZ;
 
-   /* if this is the first line of the loop body, open a new handle
-      for macro-local symbols and drop the old one if this was not the
-      first pass through the body. */
+  /* if this is the first line of the loop body, open a new handle
+     for macro-local symbols and drop the old one if this was not the
+     first pass through the body. */
 
-   if (PInp->LineZ == 1)
-    BEGIN
-     if (NOT PInp->First) PopLocHandle(); PInp->First = False;
-     PushLocHandle(GetLocHandle());
-     PInp->LineRun = PInp->Lines;
-    END
+  if (PInp->LineZ == 1)
+  {
+    if (!PInp->GlobalSymbols)
+    {
+      if (!PInp->First) PopLocHandle();
+      PushLocHandle(GetLocHandle());
+    }
+    PInp->First = False;
+    PInp->LineRun = PInp->Lines;
+  }
 
-   /* evaluate condition before first line */
+  /* evaluate condition before first line */
 
-   if (PInp->LineZ == 1)
-   {
-     z = EvalIntExpression(PInp->SpecName, Int32, &OK);
-     Result = (OK AND (z != 0));
-   }
-   else Result = True;
+  if (PInp->LineZ == 1)
+  {
+    z = EvalIntExpression(PInp->SpecName, Int32, &OK);
+    Result = (OK AND (z != 0));
+  }
+  else Result = True;
 
-   if (Result)
-   {
-     /* get line of body */
+  if (Result)
+  {
+    /* get line of body */
 
-     strcpy(erg, PInp->LineRun->Content);
-     PInp->LineRun = PInp->LineRun->Next;
+    strcpy(erg, PInp->LineRun->Content);
+    PInp->LineRun = PInp->LineRun->Next;
 
-     /* in case this is the last line of the body, reset counters */
+    /* in case this is the last line of the body, reset counters */
 
-     if ((++PInp->LineZ) > PInp->LineCnt)
-     {
-       PInp->LineZ = 1; PInp->ParZ++;
-     }
-   }
+    if ((++PInp->LineZ) > PInp->LineCnt)
+    {
+      PInp->LineZ = 1; PInp->ParZ++;
+    }
+  }
 
-   /* nasty last line... */
+  /* nasty last line... */
 
-   else
-     *erg = '\0';
+  else
+    *erg = '\0';
 
-   return Result;
-END
+  return Result;
+}
 
 	static void WHILE_OutProcessor(void)
 BEGIN
@@ -1644,53 +1839,88 @@ BEGIN
     END
 END
 
-        static void ExpandWHILE(void)
-BEGIN
-   PInputTag Tag;
-   POutputTag Neu;
-   Boolean ErrFlag;
+typedef struct
+{
+  Boolean ErrFlag;
+  Boolean GlobalSymbols; 
+  int ArgCnt;
+  String SpecName;
+} tExpandWHILEContext;
 
-   /* 0. turned off ? */
+static void ProcessWHILEArgs(Boolean CtrlArg, char *pArg, void *pUser)
+{
+  tExpandWHILEContext *pContext = (tExpandWHILEContext*)pUser;
 
-   if (NOT IfAsm)
-    BEGIN
-     AddWaitENDM_Processor();
-     return;
-    END
+  if (CtrlArg)
+  {
+    if (ReadMacro_SearchArg(pArg, "GLOBALSYMBOLS", &pContext->GlobalSymbols));
+    else
+    {   
+      WrXError(1465, pArg); pContext->ErrFlag = True;
+    }
+  }  
+  else
+  {
+    strmaxcpy(pContext->SpecName, pArg, 255);
+    pContext->ArgCnt++;
+  }
+}
 
-   /* 1. Bedingung ermitteln */
+static void ExpandWHILE(void)
+{
+  PInputTag Tag;
+  POutputTag Neu;
+  tExpandWHILEContext Context;
 
-   if (ArgCnt != 1)
-    BEGIN
-     WrError(1110); ErrFlag = True;
-    END
-   else ErrFlag = False;
-   if (ErrFlag)
-    BEGIN
-     AddWaitENDM_Processor();
-     return;
-    END
+  /* 0. turned off ? */
 
-   /* 2. Tag erzeugen */
+  if (!IfAsm)
+  {
+    AddWaitENDM_Processor();
+    return;
+  }
 
-   GenerateProcessor(&Tag);
-   Tag->Processor = WHILE_Processor;
-   Tag->Restorer  = MACRO_Restorer;
-   Tag->Cleanup   = WHILE_Cleanup;
-   Tag->GetPos    = WHILE_GetPos;
-   Tag->IsMacro   = True;
-   Tag->ParZ      = 1;
-   strmaxcpy(Tag->SpecName, ArgStr[1], 255);
+  /* 1. Bedingung ermitteln */
 
-   /* 3. einbetten */
+  Context.GlobalSymbols = False;
+  Context.ErrFlag = False;
+  Context.ArgCnt = 0;
+  ProcessMacroArgs(ProcessWHILEArgs, &Context);
 
-   Neu=(POutputTag) malloc(sizeof(TOutputTag));
-   Neu->Processor = WHILE_OutProcessor;
-   Neu->NestLevel = 0;
-   Neu->Next      = FirstOutputTag;
-   Neu->Tag       = Tag;
-   FirstOutputTag = Neu;
-END
+  /* condition must be present only once */
+
+  if (Context.ArgCnt != 1)
+  {
+    WrError(1110);
+    Context.ErrFlag = True;
+  }
+  if (Context.ErrFlag)
+  {
+    AddWaitENDM_Processor();
+    return;
+  }
+
+  /* 2. Tag erzeugen */
+
+  GenerateProcessor(&Tag);
+  Tag->Processor = WHILE_Processor;
+  Tag->Restorer  = MACRO_Restorer;
+  Tag->Cleanup   = WHILE_Cleanup;
+  Tag->GetPos    = WHILE_GetPos;
+  Tag->GlobalSymbols = Context.GlobalSymbols;
+  Tag->IsMacro   = True;
+  Tag->ParZ      = 1;
+  strmaxcpy(Tag->SpecName, Context.SpecName, 255);
+
+  /* 3. einbetten */
+
+  Neu=(POutputTag) malloc(sizeof(TOutputTag));
+  Neu->Processor = WHILE_OutProcessor;
+  Neu->NestLevel = 0;
+  Neu->Next      = FirstOutputTag;
+  Neu->Tag       = Tag;
+  FirstOutputTag = Neu;
+}
 
 /*--------------------------------------------------------------------------*/
 /* Einziehen von Include-Files */
@@ -3583,7 +3813,7 @@ BEGIN
      codest6_init(); codest7_init(); codest9_init(); code6804_init();
      code3201x_init(); code3202x_init(); code3203x_init(); code3205x_init(); code32054x_init(); code3206x_init();
      code9900_init(); codetms7_init(); code370_init(); codemsp_init();
-     code78c10_init(); code75k0_init(); code78k0_init(); code78k2_init(); code7720_init(); code77230_init();
+     code78c10_init(); code75xx_init(); code75k0_init(); code78k0_init(); code78k2_init(); code7720_init(); code77230_init();
      codescmp_init(); code807x_init(); codecop4_init(); codecop8_init(); codesc14xxx_init();
      codeace_init();
      code53c8xx_init();

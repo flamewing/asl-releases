@@ -39,9 +39,12 @@
 /*           2002-01-27 Build 19                                             */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: version.c,v 1.60 2012-12-31 11:21:29 alfred Exp $                     */
+/* $Id: version.c,v 1.61 2013-03-09 16:20:03 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: version.c,v $
+ * Revision 1.61  2013-03-09 16:20:03  alfred
+ * - 1.42 Bld 87
+ *
  * Revision 1.60  2012-12-31 11:21:29  alfred
  * - add Dx pseudo instructions to 2650 target
  *
@@ -260,13 +263,13 @@
 #include "stdinc.h"
 #include <string.h>
 
-char *Version="1.42 Beta [Bld 86]";
-char *DebVersion = "1.42bld86-1";
+char *Version="1.42 Beta [Bld 87]";
+char *DebVersion = "1.42bld87-1";
 LongInt VerNo=0x142f;
 
-char *InfoMessCopyright="(C) 1992,2012 Alfred Arnold";
+char *InfoMessCopyright="(C) 1992,2013 Alfred Arnold";
 
-LongInt Magic=0x12372e45;
+LongInt Magic=0x12372f45;
 
 void version_init(void)
 {
