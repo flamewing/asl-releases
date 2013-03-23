@@ -7,9 +7,12 @@
 /* Historie: 2013-03-09 Grundsteinlegung                                     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code75xx.c,v 1.1 2013-03-09 16:15:08 alfred Exp $                    */
+/* $Id: code75xx.c,v 1.2 2013-03-15 21:22:05 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code75xx.c,v $
+ * Revision 1.2  2013-03-15 21:22:05  alfred
+ * - add 7508 instructions
+ *
  * Revision 1.1  2013-03-09 16:15:08  alfred
  * - add NEC 75xx
  *
@@ -31,7 +34,8 @@
 #include "intpseudo.h"
 #include "codevars.h"
 
-static CPUVar CPU7500;
+static CPUVar CPU7566, CPU7508;
+static IntType CodeIntType, DataIntType;
 
 /*-------------------------------------------------------------------------*/
 /* code generation */
@@ -61,7 +65,11 @@ static void DecodeImm4(Word Index)
 
     Value = EvalIntExpression(ArgStr[1], Int4, &OK);
     if (OK)
+    {
       PutCode(Index | (Value & 15));
+      if (Memo("OP"))
+        ChkSpace(SegIO);
+    }
   }
 }
 
@@ -79,6 +87,23 @@ static void DecodeImm5(Word Index)
   }
 }
 
+static void DecodeImm8(Word Index)
+{
+  if (ArgCnt != 1) WrError(1110);
+  else
+  {
+    Boolean OK;
+    Word Value;
+
+    Value = EvalIntExpression(ArgStr[1], Int8, &OK);
+    if (OK)
+    {
+      PutCode(Index);
+      BAsmCode[CodeLen++] = Value;
+    }
+  }
+}
+
 static void DecodeImm2(Word Index)
 {
   if (ArgCnt != 1) WrError(1110);
@@ -93,15 +118,37 @@ static void DecodeImm2(Word Index)
   }
 }
 
+static void DecodeImm3(Word Index)
+{
+  if (ArgCnt != 1) WrError(1110);
+  else
+  {
+    Boolean OK;
+    Word Value;
+
+    Value = EvalIntExpression(ArgStr[1], UInt3, &OK);
+    if (OK)
+    {
+      PutCode(Index | (Value & 7));
+      if (Memo("OP"))
+        ChkSpace(SegIO);
+    }
+  }
+}
+
 static void DecodePR(Word Index)
 {
   if (ArgCnt != 1) WrError(1110);
   else if (!strcasecmp(ArgStr[1], "HL-"))
-    PutCode(Index | 0);
+    PutCode(Index | 0x10);
   else if (!strcasecmp(ArgStr[1], "HL+"))
-    PutCode(Index | 1);
+    PutCode(Index | 0x11);
   else if (!strcasecmp(ArgStr[1], "HL"))
-    PutCode(Index | 2);
+    PutCode(Index | 0x12);
+  else if ((MomCPU == CPU7508) && (!strcasecmp(ArgStr[1], "DL")))
+    PutCode(Index | 0x00);
+  else if ((MomCPU == CPU7508) && (!strcasecmp(ArgStr[1], "DE")))
+    PutCode(Index | 0x01);
   else
     WrXError(1135, ArgStr[1]);
 }
@@ -114,10 +161,11 @@ static void DecodeDataMem(Word Index)
     Boolean OK;
     Word Value;
  
-    Value = EvalIntExpression(ArgStr[1], UInt6, &OK);
+    Value = EvalIntExpression(ArgStr[1], DataIntType, &OK);
     if (OK)
     {
-      PutCode(Index | (Value & 0x3f));
+      PutCode(Index);
+      BAsmCode[CodeLen++] = Value & SegLimits[SegData];
       ChkSpace(SegData);
     }
   }
@@ -130,11 +178,21 @@ static void DecodeAbs(Word Index)
   {
     Boolean OK;
     Word Address;
+    IntType Type = CodeIntType;
+    Word SegLimit = SegLimits[SegCode];
 
-    Address = EvalIntExpression(ArgStr[1], UInt10, &OK);
+    /* CALL can only address first 2K on 7508! */
+
+    if ((Memo("CALL")) && (MomCPU == CPU7508))
+    {
+      Type = UInt11;
+      SegLimit = 0x1fff;
+    }
+
+    Address = EvalIntExpression(ArgStr[1], Type, &OK);
     if (OK)
     {
-      PutCode(Index | (Address & 0x3ff));
+      PutCode(Index | (Address & SegLimit));
       ChkSpace(SegCode);
     }
   }
@@ -149,12 +207,13 @@ static void DecodeJCP(Word Index)
     Word Address;
 
     FirstPassUnknown = FALSE;
-    Address = EvalIntExpression(ArgStr[1], UInt10, &OK);
+    Address = EvalIntExpression(ArgStr[1], CodeIntType, &OK);
     if (OK)
     {
-      Word NextAddr = (EProgCounter() + 1) & 0x3ff;
+      Word NextAddr = (EProgCounter() + 1) & SegLimits[SegCode];
+      Word PageMask = SegLimits[SegCode] & (~0x3f);
 
-      if ((!FirstPassUnknown) && ((NextAddr & 0x3c0) != (Address & 0x3c0))) WrError(1910);
+      if ((!FirstPassUnknown) && ((NextAddr & PageMask) != (Address & PageMask))) WrError(1910);
       else
         PutCode(Index | (Address & 0x3f));
       ChkSpace(SegCode);
@@ -171,7 +230,7 @@ static void DecodeCAL(Word Index)
     Word Address;
  
     FirstPassUnknown = FALSE;
-    Address = EvalIntExpression(ArgStr[1], UInt10, &OK);
+    Address = EvalIntExpression(ArgStr[1], CodeIntType, &OK);
     if (FirstPassUnknown)
       Address = (Address & 0x1c7) | 0x100;
     if (OK)
@@ -180,6 +239,69 @@ static void DecodeCAL(Word Index)
       else
         PutCode(Index | ((Address & 0x0c0) >> 3) | (Address & 7));
       ChkSpace(SegCode);
+    }
+  }
+}
+
+static void DecodeLHLT(Word Index)
+{
+  if (ArgCnt != 1) WrError(1110);
+  else
+  {
+    Boolean OK;
+    Word Address;
+ 
+    FirstPassUnknown = FALSE;
+    Address = EvalIntExpression(ArgStr[1], CodeIntType, &OK);
+    if (FirstPassUnknown)
+      Address = (Address & 0x00cf) | 0x00c0;
+    if (OK)
+    {
+      if ((Address < 0xc0) || (Address > 0xcf)) WrError(1320);
+      else
+        PutCode(Index | (Address & 0xf));
+      ChkSpace(SegCode);
+    }
+  }
+}
+
+static void DecodeCALT(Word Index)
+{
+  if (ArgCnt != 1) WrError(1110);
+  else
+  {
+    Boolean OK;
+    Word Address;
+ 
+    FirstPassUnknown = FALSE;
+    Address = EvalIntExpression(ArgStr[1], CodeIntType, &OK);
+    if (FirstPassUnknown)
+      Address = (Address & 0x00ff) | 0x00c0;
+    if (OK)
+    {
+      if ((Address < 0xd0) || (Address > 0xff)) WrError(1320);
+      else
+        PutCode(Index | (Address & 0x3f));
+      ChkSpace(SegCode);
+    }
+  }
+}
+
+static void DecodeLogPort(Word Index)
+{
+  if (ArgCnt != 2) WrError(1110);
+  else
+  {
+    Boolean OK;
+    Word Port, Mask;
+
+    Port = EvalIntExpression(ArgStr[1], UInt4, &OK);
+    if (OK)
+    {
+      ChkSpace(SegIO);
+      Mask = EvalIntExpression(ArgStr[2], UInt4, &OK);
+      if (OK)
+        PutCode(Index | ((Mask & 15) << 4) | (Port & 15));
     }
   }
 }
@@ -205,6 +327,16 @@ static void AddImm2(char *NewName, Word NewCode)
 static void AddImm5(char *NewName, Word NewCode)
 {
   AddInstTable(InstTable, NewName, NewCode, DecodeImm5);
+}
+
+static void AddImm8(char *NewName, Word NewCode)
+{
+  AddInstTable(InstTable, NewName, NewCode, DecodeImm8);
+}
+
+static void AddImm3(char *NewName, Word NewCode)
+{
+  AddInstTable(InstTable, NewName, NewCode, DecodeImm3);
 }
 
 static void AddPR(char *NewName, Word NewCode)
@@ -247,37 +379,124 @@ static void InitFields(void)
   AddFixed("TCNTAM", 0x3f3b);
   AddFixed("IPL"   , 0x70);
   AddFixed("OPL"   , 0x72);
-  AddFixed("RPBL"  , 0x5c);
-  AddFixed("SPBL"  , 0x5d);
   AddFixed("HALT"  , 0x3f36);
   AddFixed("STOP"  , 0x3f37);
   AddFixed("NOP"  , 0x00);
+  if (MomCPU == CPU7566)
+  {
+    AddFixed("RPBL"  , 0x5c);
+    AddFixed("SPBL"  , 0x5d);
+  }
+  if (MomCPU == CPU7508)
+  {
+    AddFixed("LAMTL", 0x3f34);
+    AddFixed("TAD", 0x3eaa);
+    AddFixed("TAE", 0x3e8a);
+    AddFixed("TAH", 0x3eba);
+    AddFixed("TAL", 0x3e9a);
+    AddFixed("TDA", 0x3eab);
+    AddFixed("TEA", 0x3e8b);
+    AddFixed("THA", 0x3ebb);
+    AddFixed("TLA", 0x3e9b);
+    AddFixed("XAD", 0x4a);
+    AddFixed("XAE", 0x4b);
+    AddFixed("XAH", 0x7a);
+    AddFixed("ANL", 0x3fb2);
+    AddFixed("ORL", 0x3fb6);
+    AddFixed("RAR", 0x3fb3);
+    AddFixed("IES", 0x49);
+    AddFixed("DES", 0x48);
+    AddFixed("RTPSW", 0x43);
+    AddFixed("PSHDE", 0x3e8e);
+    AddFixed("PSHHL", 0x3e9e);
+    AddFixed("POPDE", 0x3e8f);
+    AddFixed("POPHL", 0x3e9f);
+    AddFixed("TSPAM", 0x3f35);
+    AddFixed("TAMMOD", 0x3f3f);
+    AddFixed("IP1", 0x71);
+    AddFixed("IP54", 0x3f38);
+    AddFixed("OP3", 0x73);
+    AddFixed("OP54", 0x3f3c);
+  }
 
   AddImm4("LAI", 0x10);
-  AddImm4("STII", 0x40);
   AddImm4("AISC", 0x00);
   AddImm4("SKAEI", 0x3f60);
+  if (MomCPU == CPU7566)
+  {
+    AddImm4("STII", 0x40);
+  }
+  if (MomCPU == CPU7508)
+  {
+    AddImm4("LDI", 0x3e20);
+    AddImm4("LEI", 0x3e00);
+    AddImm4("LHI", 0x3e30);
+    AddImm4("LLI", 0x3e10);
+    AddImm4("JAM", 0x3f10);
+    AddImm4("SKDEI", 0x3e60);
+    AddImm4("SKEEI", 0x3e40);
+    AddImm4("SKHEI", 0x3e70);
+    AddImm4("SKLEI", 0x3e50);
+    AddImm4("OP", 0x3fe0);
+  }
 
-  AddImm2("LHI", 0x28);
   AddImm2("RMB", 0x68);
   AddImm2("SMB", 0x6c);
   AddImm2("SKABT", 0x74);
   AddImm2("SKMBT", 0x64);
   AddImm2("SKMBF", 0x60);
-  AddImm2("SKI", 0x3d40);
+  if (MomCPU == CPU7566)
+  {
+    AddImm2("SKI", 0x3d40);
+    AddImm2("LHI", 0x28);
+  }
 
-  AddImm5("LHLI", 0xc0);
+  if (MomCPU == CPU7508)
+  {
+    AddImm3("EI", 0x3f90);
+    AddImm3("DI", 0x3f80);
+    AddImm3("SKI", 0x3f40);
+    AddImm3("IP", 0x3fc0);
+  }
 
-  AddPR("LAM", 0x50);
-  AddPR("XAM", 0x54);
+  if (MomCPU == CPU7566)
+  {
+    AddImm5("LHLI", 0xc0);
+  }
 
-  AddDataMem("IDRS", 0x3d00);
-  AddDataMem("DDRS", 0x3c00);
+  if (MomCPU == CPU7508)
+  {
+    AddImm8("LDEI", 0x4f);
+    AddImm8("LHLI", 0x4e);
+  }
+
+  AddPR("LAM", 0x40);
+  AddPR("XAM", 0x44);
+
+  AddDataMem("IDRS", 0x3d);
+  AddDataMem("DDRS", 0x3c);
+  if (MomCPU == CPU7508)
+  {
+    AddDataMem("LADR", 0x38);
+    AddDataMem("XADR", 0x39);
+    AddDataMem("XHDR", 0x3a);
+    AddDataMem("XLDR", 0x3b);
+  }
 
   AddAbs("JMP" , 0x2000);
   AddAbs("CALL", 0x3000);
   AddInstTable(InstTable, "JCP", 0x80, DecodeJCP);
-  AddInstTable(InstTable, "CAL", 0xe0, DecodeCAL);
+  if (MomCPU == CPU7566)
+  {
+    AddInstTable(InstTable, "CAL", 0xe0, DecodeCAL);
+  }
+  if (MomCPU == CPU7508)
+  {
+    AddInstTable(InstTable, "LHLT", 0xc0, DecodeLHLT);
+    AddInstTable(InstTable, "CALT", 0xc0, DecodeCALT);
+    AddInstTable(InstTable, "ANP", 0x4c00, DecodeLogPort);
+    AddInstTable(InstTable, "ORP", 0x4d00, DecodeLogPort);
+  }
 }
 
 static void DeinitFields(void)
@@ -323,8 +542,23 @@ static void SwitchTo_75xx(void)
   ValidSegs = (1 << SegCode) | (1 << SegData);
   Grans[SegCode] = 1; ListGrans[SegCode] = 1; SegInits[SegCode] = 0;
   Grans[SegData] = 1; ListGrans[SegData] = 1; SegInits[SegData] = 0;
-  SegLimits[SegData] = 0x3f;
-  SegLimits[SegCode] = 0x3ff;
+  if (MomCPU == CPU7508)
+  {
+    ValidSegs |= (1 << SegIO);
+    Grans[SegIO] = 1; ListGrans[SegIO] = 1; SegInits[SegIO] = 0; SegLimits[SegIO] = 15;
+
+    SegLimits[SegData] = 0xff;
+    DataIntType = UInt8;
+    SegLimits[SegCode] = 0xfff;
+    CodeIntType = UInt12;
+  }
+  else
+  {
+    SegLimits[SegData] = 0x3f;
+    DataIntType = UInt6;
+    SegLimits[SegCode] = 0x3ff;
+    CodeIntType = UInt10;
+  }
 
   MakeCode = MakeCode_75xx; IsDef = IsDef_75xx;
   SwitchFrom = SwitchFrom_75xx; InitFields();
@@ -332,5 +566,6 @@ static void SwitchTo_75xx(void)
 
 void code75xx_init(void) 
 {
-  CPU7500 = AddCPU("7500",SwitchTo_75xx);
+  CPU7566 = AddCPU("7566", SwitchTo_75xx);
+  CPU7508 = AddCPU("7508", SwitchTo_75xx);
 }

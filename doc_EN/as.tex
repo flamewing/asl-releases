@@ -3260,10 +3260,13 @@ register are omitted.  \bb{CAUTION!}  NMOS and CMOS version partially
 differ in the reset values of some registers!
 %%-----------
 \begin{quote}
-bj) 7500
+bj) 7500 $\leftrightarrow$ 7508
 \end{quote}
-This Type currently represents all variants of the
-$\mu$PD75xx family (same CPU core).
+There are two different types of CPU cores in the $\mu$PD75xx
+family: the 7566 represents the the 'instruction set B', which
+provides less instructions, less registers and smaller address
+spaces.  The 7508 represents the 'full' instruction set A.  {\bf
+CAUTION!} These instruction sets are not 100\% binary compatible!
 %%-----------
 \begin{quote}
 \begin{tabbing}

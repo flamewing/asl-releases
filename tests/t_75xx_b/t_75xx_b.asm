@@ -1,4 +1,4 @@
-	cpu	7500
+	cpu	7566
 
 	lai	4
 	lhi	3

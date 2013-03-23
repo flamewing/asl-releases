@@ -77,7 +77,8 @@ call testall t_6816
 call testall t_68rs08
 call testall t_7000
 call testall t_75k0
-call testall t_75xx
+call testall t_75xx_a
+call testall t_75xx_b
 call testall t_7700
 call testall t_7720
 call testall t_77230

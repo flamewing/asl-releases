@@ -1258,3 +1258,7 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 - Addition    : (NO)GLOBALSYMBOLS parameter for macros
 
 - Addition    : add support for NEC uPD75xx
+
+2013-03-22 [Bld88]
+
+- Addition    : support 75xx instruction set A & B

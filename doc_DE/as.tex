@@ -3351,10 +3351,14 @@ das ZCM-Register fehlen demzufolge.  \bb{VORSICHT!} NMOS- und CMOS-Version
 differieren zum Teil in den Reset-Werten einiger Register!
 %%-----------
 \begin{quote}
-bj) 7500
+bj) 7566 $\leftrightarrow$ 7508
 \end{quote}
-Diese Type repr"asentiert aktuell alle Varianten der
-$\mu$PD75xx-Familie (gleicher CPU-Kern).
+Es existieren in der $\mu$PD75xx-Familie zwei verschiedene
+CPU-Kerne: Der 7566 repr"asentiert den 'instruction set B', der
+deutlich weniger Befehle, einige Register weniger und kleinere
+Adre"sr"aume erlaubt.  Der 7508 repr"asentiert den 'vollen'
+Befehlssatz A.  {\bf VORSICHT!} Beide Maschinen-Befehlss"atze
+sind nicht 100\%-ig bin"arkompatibel!
 %%-----------
 \begin{quote}
 \begin{tabbing}
