@@ -12,9 +12,12 @@
 /*           2001-09-03 added inx as alias for incx                          */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6805.c,v 1.7 2007/11/24 22:48:04 alfred Exp $                    */
+/* $Id: code6805.c,v 1.8 2013-03-31 18:06:47 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6805.c,v $
+ * Revision 1.8  2013-03-31 18:06:47  alfred
+ * - add missing PADDING instruction
+ *
  * Revision 1.7  2007/11/24 22:48:04  alfred
  * - some NetBSD changes
  *
@@ -994,6 +997,7 @@ static void SwitchTo_6805(void)
 
   MakeCode = MakeCode_6805; IsDef = IsDef_6805;
   SwitchFrom = SwitchFrom_6805; InitFields();
+  AddMoto16PseudoONOFF();
 }
 
 void code6805_init(void)

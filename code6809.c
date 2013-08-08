@@ -13,9 +13,12 @@
 /*           13. 1.2001 fix D register access                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6809.c,v 1.5 2010/04/17 13:14:20 alfred Exp $                    */
+/* $Id: code6809.c,v 1.6 2013-03-31 20:06:19 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6809.c,v $
+ * Revision 1.6  2013-03-31 20:06:19  alfred
+ * - allows Moto16 pseudo-ops for 6809
+ *
  * Revision 1.5  2010/04/17 13:14:20  alfred
  * - address overlapping strcpy()
  *
@@ -889,6 +892,23 @@ BEGIN
 
    CodeLen=0; DontPrint=False; OpSize=0; ExtFlag=False;
 
+   /* deduce operand size No size is zero-length string -> '\0' */
+
+   switch (mytoupper(*AttrPart))
+   {
+     case 'B': OpSize = 0; break;
+     case 'W': OpSize = 1; break;
+     case 'L': OpSize = 2; break;
+     case 'Q': OpSize = 3; break;
+     case 'S': OpSize = 4; break;
+     case 'D': OpSize = 5; break;
+     case 'X': OpSize = 6; break;
+     case 'P': OpSize = 7; break;
+     case '\0': break;
+     default:
+       WrError(1107); return;
+   }
+
    /* zu ignorierendes */
 
    if (Memo("")) return;
@@ -898,6 +918,7 @@ BEGIN
    if (DecodePseudo()) return;
 
    if (DecodeMotoPseudo(True)) return;
+   if (DecodeMoto16Pseudo(OpSize, True)) return;
 
    /* Anweisungen ohne Argument */
 
@@ -1341,7 +1362,7 @@ BEGIN
    TurnWords=False; ConstMode=ConstModeMoto; SetIsOccupied=False;
 
    PCSymbol="*"; HeaderID=0x63; NOPCode=0x9d;
-   DivideChars=","; HasAttrs=False;
+   DivideChars=","; HasAttrs=True; AttrChars = ".";
 
    ValidSegs=(1<<SegCode);
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
@@ -1350,6 +1371,7 @@ BEGIN
    MakeCode=MakeCode_6809; IsDef=IsDef_6809;
 
    SwitchFrom=SwitchFrom_6809; InitFields();
+   AddMoto16PseudoONOFF();
 END
 
         void code6809_init(void)

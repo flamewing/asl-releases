@@ -10,6 +10,9 @@
 /* $Id: code68rs08.c,v                                                       */
 /*****************************************************************************
  * $Log: code68rs08.c,v $
+ * Revision 1.4  2013-03-31 18:06:47  alfred
+ * - add missing PADDING instruction
+ *
  * Revision 1.3  2007/11/24 22:48:05  alfred
  * - some NetBSD changes
  *
@@ -854,6 +857,7 @@ static void SwitchTo_68rs08(void)
 
   MakeCode = MakeCode_68rs08; IsDef = IsDef_68rs08;
   SwitchFrom = SwitchFrom_68rs08; InitFields();
+  AddMoto16PseudoONOFF();
 }
 
 void code68rs08_init(void)

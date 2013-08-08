@@ -5,9 +5,12 @@
 /* Codegeneratormodul COP4-Familie                                           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codecop4.c,v 1.7 2006/08/05 18:07:31 alfred Exp $                   *
+/* $Id: codecop4.c,v 1.8 2013-06-16 17:18:20 alfred Exp $                   *
  *****************************************************************************
  * $Log: codecop4.c,v $
+ * Revision 1.8  2013-06-16 17:18:20  alfred
+ * - add COP440 target
+ *
  * Revision 1.7  2006/08/05 18:07:31  alfred
  * - silence some warnings
  *
@@ -45,7 +48,7 @@
 
 #include "codecop4.h"
 
-#define FixedOrderCnt 30
+#define FixedOrderCnt 42
 #define ImmOrderCnt 3
 
 typedef struct
@@ -54,7 +57,7 @@ typedef struct
           Word Code;
         } FixedOrder;
 
-static CPUVar CPUCOP410, CPUCOP420;
+static CPUVar CPUCOP410, CPUCOP420, CPUCOP440;
 static IntType AdrInt;
 
 static FixedOrder *FixedOrders, *ImmOrders;
@@ -399,7 +402,7 @@ static void AddImm(char *NName, Word NCode, CPUVar NMin)
 
 static void InitFields(void)
 {
-  InstTable = CreateInstTable(103);
+  InstTable = CreateInstTable(173);
 
   FixedOrders = (FixedOrder*)malloc(sizeof(FixedOrder) * FixedOrderCnt);
   InstrZ = 0;
@@ -415,16 +418,25 @@ static void InitFields(void)
   AddFixed("RET"  , 0x48,   CPUCOP410);
   AddFixed("RETSK", 0x49,   CPUCOP410);
   AddFixed("CAMQ" , 0x333c, CPUCOP410);
+  AddFixed("CAME" , 0x331f, CPUCOP440);
+  AddFixed("CAMT" , 0x333f, CPUCOP440);
+  AddFixed("CAMR" , 0x333d, CPUCOP440);
+  AddFixed("CEMA" , 0x330f, CPUCOP440);
+  AddFixed("CTMA" , 0x332f, CPUCOP440);
   AddFixed("LQID" , 0xbf,   CPUCOP410);
   AddFixed("CAB"  , 0x50,   CPUCOP410);
   AddFixed("CBA"  , 0x4e,   CPUCOP410);
   AddFixed("SKC"  , 0x20,   CPUCOP410);
   AddFixed("SKE"  , 0x21,   CPUCOP410);
   AddFixed("SKGZ" , 0x3321, CPUCOP410);
+  AddFixed("SKSZ" , 0x331c, CPUCOP440);
   AddFixed("ING"  , 0x332a, CPUCOP410);
+  AddFixed("INH"  , 0x332b, CPUCOP440);
   AddFixed("INL"  , 0x332e, CPUCOP410);
+  AddFixed("INR"  , 0x332d, CPUCOP440);
   AddFixed("OBD"  , 0x333e, CPUCOP410);
   AddFixed("OMG"  , 0x333a, CPUCOP410);
+  AddFixed("OMH"  , 0x333b, CPUCOP440);
   AddFixed("XAS"  , 0x4f,   CPUCOP410);
   AddFixed("ADT"  , 0x4a,   CPUCOP420);
   AddFixed("CASC" , 0x10,   CPUCOP420);
@@ -433,6 +445,9 @@ static void InitFields(void)
   AddFixed("XABR" , 0x12,   CPUCOP420);  
   AddFixed("ININ" , 0x3328, CPUCOP420);
   AddFixed("INIL" , 0x3329, CPUCOP420);
+  AddFixed("OR"   , 0x331a, CPUCOP440);
+  AddFixed("LID"  , 0x3319, CPUCOP440);
+  AddFixed("XAN"  , 0x330b, CPUCOP440);
 
   AddInstTable(InstTable, "SKGBZ", 0x33, DecodeSK);
   AddInstTable(InstTable, "SKMBZ", 0x00, DecodeSK);
@@ -521,7 +536,12 @@ static void SwitchTo_COP4(void)
 
   ValidSegs = (1 << SegCode);
   Grans[SegCode] = 1; ListGrans[SegCode] = 1; SegInits[SegCode] = 0;
-  if (MomCPU >= CPUCOP420)
+  if (MomCPU >= CPUCOP440)
+  {
+    SegLimits[SegCode] = 0x7ff;
+    AdrInt = UInt11;
+  }
+  else if (MomCPU >= CPUCOP420)
   {
     SegLimits[SegCode] = 0x3ff;
     AdrInt = UInt10;
@@ -540,4 +560,5 @@ void codecop4_init(void)
 {
   CPUCOP410 = AddCPU("COP410", SwitchTo_COP4);
   CPUCOP420 = AddCPU("COP420", SwitchTo_COP4);
+  CPUCOP440 = AddCPU("COP440", SwitchTo_COP4);
 }

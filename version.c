@@ -39,9 +39,15 @@
 /*           2002-01-27 Build 19                                             */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: version.c,v 1.61 2013-03-09 16:20:03 alfred Exp $                     */
+/* $Id: version.c,v 1.63 2013/08/07 19:44:38 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: version.c,v $
+ * Revision 1.63  2013/08/07 19:44:38  alfred
+ * - add test for overlong lines
+ *
+ * Revision 1.62  2013-03-31 07:28:43  alfred
+ * - Build 88
+ *
  * Revision 1.61  2013-03-09 16:20:03  alfred
  * - 1.42 Bld 87
  *
@@ -263,8 +269,8 @@
 #include "stdinc.h"
 #include <string.h>
 
-char *Version="1.42 Beta [Bld 88]";
-char *DebVersion = "1.42bld88-1";
+char *Version="1.42 Beta [Bld 89]";
+char *DebVersion = "1.42bld89-1";
 LongInt VerNo=0x142f;
 
 char *InfoMessCopyright="(C) 1992,2013 Alfred Arnold";

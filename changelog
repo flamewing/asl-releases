@@ -1,4 +1,4 @@
-$Id: changelog,v 1.74 2013-03-09 16:15:08 alfred Exp $
+$Id: changelog,v 1.76 2013/08/07 19:44:37 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1262,3 +1262,11 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 2013-03-22 [Bld88]
 
 - Addition    : support 75xx instruction set A & B
+
+2013-08-07 [Bld89]
+
+- Bugfix      : PADDING instruction available for 6805/6808
+
+- Addition    : add COP440 target
+
+- Bugfix      : better handling of overlong souce code lines

@@ -115,6 +115,7 @@ call testall t_kcpsm3
 call testall t_h8_3
 call testall t_h8_5
 call testall t_hcs08
+call testall t_longline
 call testall t_m16c
 call testall t_mcore
 call testall t_mic51

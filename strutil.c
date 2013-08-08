@@ -11,9 +11,15 @@
 /*           30. 5.1999 ConstLongInt akzeptiert auch 0x fuer Hex-Zahlen      */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: strutil.c,v 1.8 2012-08-19 09:39:02 alfred Exp $                     */
+/* $Id: strutil.c,v 1.10 2013/08/07 19:44:38 alfred Exp $                     */
 /*****************************************************************************
  * $Log: strutil.c,v $
+ * Revision 1.10  2013/08/07 19:44:38  alfred
+ * - add test for overlong lines
+ *
+ * Revision 1.9  2013/08/05 20:10:10  alfred
+ * - handle overlong lines
+ *
  * Revision 1.8  2012-08-19 09:39:02  alfred
  * - handle cases where strcpy is a macro
  *
@@ -385,11 +391,29 @@ unsigned snstrlenprint(char *pDest, unsigned DestLen,
    if ((l>0) AND (Zeile[l-1]==26)) Zeile[--l]='\0';
 }
 
+#if 0
+
+static void dump(const char *pLine, unsigned Cnt)
+{
+  unsigned z;
+
+  fputc('\n', stderr);
+  for (z = 0; z < Cnt; z++)
+  {
+    fprintf(stderr, " %02x", pLine[z]);
+    if ((z & 15) == 15)
+      fputc('\n', stderr);
+  }
+  fputc('\n', stderr);
+}
+
+#endif
+
         int ReadLnCont(FILE *Datei, char *Zeile, int MaxLen)
 {
    char *ptr, *pDest;
    int l, RemLen, Count;
-   Boolean cont;
+   Boolean cont, Terminated;
 
    /* read from input until either string has reached maximum length,
       or no continuation is present */
@@ -399,6 +423,7 @@ unsigned snstrlenprint(char *pDest, unsigned DestLen,
    {
      /* get a line from file */
 
+     Terminated = False;
      *pDest = '\0'; ptr = fgets(pDest, RemLen, Datei);
      if ((ptr==Nil) AND (ferror(Datei) != 0))
        *pDest = '\0';
@@ -407,7 +432,10 @@ unsigned snstrlenprint(char *pDest, unsigned DestLen,
 
      l = strlen(pDest); cont = False;
      if ((l > 0) && (pDest[l - 1] == '\n'))
+     {
        pDest[--l] = '\0';
+       Terminated = True;
+     }
      if ((l > 0) && (pDest[l - 1] == '\r'))
        pDest[--l] = '\0';
 
@@ -430,6 +458,24 @@ unsigned snstrlenprint(char *pDest, unsigned DestLen,
      RemLen -= l; pDest += l; Count++;
    }
    while ((RemLen > 2) && (cont));
+
+   if (!Terminated)
+   {
+     char Tmp[100];
+
+     while (TRUE)
+     {
+       Terminated = False;
+       ptr = fgets(Tmp, sizeof(Tmp), Datei);
+       if (!ptr)
+         break;
+       l = strlen(Tmp);
+       if (!l)
+         break;
+       if ((l > 0) && (Tmp[l - 1] == '\n'))
+         break;
+     }
+   }
 
    return Count;
 }
