@@ -5,9 +5,12 @@
 /* Haeufiger benutzte Intel-Pseudo-Befehle                                   */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: intpseudo.c,v 1.8 2010/03/14 10:45:15 alfred Exp $                   */
+/* $Id: intpseudo.c,v 1.9 2013/12/21 19:46:51 alfred Exp $                   */
 /***************************************************************************** 
  * $Log: intpseudo.c,v $
+ * Revision 1.9  2013/12/21 19:46:51  alfred
+ * - dynamically resize code buffer
+ *
  * Revision 1.8  2010/03/14 10:45:15  alfred
  * - allow string arguments for DW/DD/DQ/DT
  *
@@ -115,7 +118,7 @@ static Boolean PreLayoutChk(const char *pExpr, Boolean *pResult, Word *pCnt, int
   else
   {
     DSFlag = DSConstant;
-    if (CodeLen + 2 > MaxCodeLen)
+    if (SetMaxCodeLen(CodeLen + 2))
     {
       WrError(1920);
       *pResult = False;
@@ -166,7 +169,7 @@ static Boolean LayoutByte(const char *pExpr, Word *pCnt, Boolean BigEndian)
     case TempString:
       TranslateString(t.Contents.Ascii.Contents, t.Contents.Ascii.Length);
       *pCnt = t.Contents.Ascii.Length;
-      if (CodeLen + (*pCnt) > MaxCodeLen) WrError(1920);
+      if (SetMaxCodeLen(CodeLen + (*pCnt))) WrError(1920);
       else
       {
         memcpy(BAsmCode + CodeLen, t.Contents.Ascii.Contents, *pCnt);
@@ -235,7 +238,7 @@ static Boolean LayoutWord(const char *pExpr, Word *pCnt, Boolean BigEndian)
     case TempString:
       TranslateString(t.Contents.Ascii.Contents, t.Contents.Ascii.Length);
       *pCnt = t.Contents.Ascii.Length * 2;
-      if (CodeLen + (*pCnt) > MaxCodeLen) WrError(1920);
+      if (SetMaxCodeLen(CodeLen + (*pCnt))) WrError(1920);
       else
       {
         unsigned z;
@@ -309,7 +312,7 @@ static Boolean LayoutDoubleWord(const char *pExpr, Word *pCnt, Boolean BigEndian
     case TempString:
       TranslateString(erg.Contents.Ascii.Contents, erg.Contents.Ascii.Length);
       *pCnt = erg.Contents.Ascii.Length * 4;
-      if (CodeLen + (*pCnt) > MaxCodeLen) WrError(1920);
+      if (SetMaxCodeLen(CodeLen + (*pCnt))) WrError(1920);
       else
       {   
         unsigned z;
@@ -393,7 +396,7 @@ static Boolean LayoutQuadWord(const char *pExpr, Word *pCnt, Boolean BigEndian)
     case TempString:
       TranslateString(erg.Contents.Ascii.Contents, erg.Contents.Ascii.Length);
       *pCnt = erg.Contents.Ascii.Length * 8; 
-      if (CodeLen + (*pCnt) > MaxCodeLen) WrError(1920);
+      if (SetMaxCodeLen(CodeLen + (*pCnt))) WrError(1920);
       else  
       {   
         unsigned z;
@@ -455,7 +458,7 @@ static Boolean LayoutTenBytes(const char *pExpr, Word *pCnt, Boolean BigEndian)
     case TempString:
       TranslateString(erg.Contents.Ascii.Contents, erg.Contents.Ascii.Length);
       *pCnt = erg.Contents.Ascii.Length * 10;
-      if (CodeLen + (*pCnt) > MaxCodeLen) WrError(1920);
+      if (SetMaxCodeLen(CodeLen + (*pCnt))) WrError(1920);
       else
       {
         unsigned z;
@@ -632,13 +635,13 @@ static Boolean DecodeIntelPseudo_LayoutMult(const char *pArg, Word *Cnt,
     if (DSFlag == DSConstant)
     {
       SInd = CodeLen - SumCnt;
-      if (CodeLen + SumCnt * (DupCnt - 1) > MaxCodeLen)
+      if (SetMaxCodeLen(CodeLen + SumCnt * (DupCnt - 1)))
       {
         WrError(1920); return False;
       }
       for (z = 1; z <= DupCnt - 1; z++)
       {
-        if (CodeLen + SumCnt > MaxCodeLen)
+        if (SetMaxCodeLen(CodeLen + SumCnt))
           return False;
         memcpy(BAsmCode + CodeLen, BAsmCode + SInd, SumCnt);
         CodeLen += SumCnt;

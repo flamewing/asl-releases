@@ -31,9 +31,12 @@
 /*           2001-10-20 added GNU error flag                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmdef.c,v 1.4 2006/08/05 20:05:27 alfred Exp $                     */
+/* $Id: asmdef.c,v 1.5 2013/12/21 19:46:50 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmdef.c,v $
+ * Revision 1.5  2013/12/21 19:46:50  alfred
+ * - dynamically resize code buffer
+ *
  * Revision 1.4  2006/08/05 20:05:27  alfred
  * - correct allocation size
  *
@@ -58,6 +61,8 @@
  *****************************************************************************/
 
 #include "stdinc.h"
+
+#include <errno.h>
 
 #include "stringlists.h"
 #include "chunks.h"
@@ -229,6 +234,7 @@ char SegShorts[PCMax + 2] = {'-','C','D','I','X','Y','B','P','R','O','S'};
    LongInt MomSectionHandle;        /* mom. Namensraum */
    PSaveSection SectionStack;	    /* gespeicherte Sektionshandles */
 
+   LongWord MaxCodeLen = 0;         /* max. length of generated code */
    LongInt CodeLen;                 /* Laenge des erzeugten Befehls */
    LongWord *DAsmCode;              /* Zwischenspeicher erzeugter Code */
    Word *WAsmCode;
@@ -299,6 +305,29 @@ BEGIN
    return malloc(STRINGSIZE * sizeof(char));
 END
 
+int SetMaxCodeLen(LongWord NewMaxCodeLen)
+{
+  if (NewMaxCodeLen > MaxCodeLen_Max)
+    return ENOMEM;
+  if (NewMaxCodeLen > MaxCodeLen)
+  {
+    void *pNewMem;
+
+    if (!MaxCodeLen)
+      pNewMem = (LongWord *) malloc(NewMaxCodeLen);
+    else
+      pNewMem = (LongWord *) realloc(DAsmCode, NewMaxCodeLen);
+    if (!pNewMem)
+      return ENOMEM;
+
+    DAsmCode = (LongWord *)pNewMem;
+    WAsmCode = (Word *) DAsmCode;
+    BAsmCode = (Byte *) DAsmCode;
+    MaxCodeLen = NewMaxCodeLen;
+  }
+  return 0;
+}
+
 	void asmdef_init(void)
 BEGIN
    int z;
@@ -310,9 +339,7 @@ BEGIN
    SwitchFrom=NullProc;
    InternSymbol=Default_InternSymbol;
 
-   DAsmCode=(LongWord *) malloc(MaxCodeLen);
-   WAsmCode=(Word *) DAsmCode;
-   BAsmCode=(Byte *) DAsmCode;
+   SetMaxCodeLen(MaxCodeLen_Ini);
 
    RelaxedMode=True; ConstMode=ConstModeC;
 

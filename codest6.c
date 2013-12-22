@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codest6.c,v 1.4 2008/11/23 10:39:17 alfred Exp $                     */
+/* $Id: codest6.c,v 1.5 2013/12/21 19:46:51 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codest6.c,v $
+ * Revision 1.5  2013/12/21 19:46:51  alfred
+ * - dynamically resize code buffer
+ *
  * Revision 1.4  2008/11/23 10:39:17  alfred
  * - allow strings with NUL characters
  *
@@ -249,7 +252,7 @@ BEGIN
          if (OK)
           BEGIN
            TranslateString(s, -1);
-           if (CodeLen+strlen(s)+Ord(Flag)>MaxCodeLen)
+           if (SetMaxCodeLen(CodeLen+strlen(s)+Ord(Flag)))
             BEGIN
              WrError(1920); OK=False;
             END

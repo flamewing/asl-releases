@@ -8,9 +8,12 @@
 /*           28. 7.1999 %T ist Abkuerzung fuer %H:%M:%S                      */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: nls.c,v 1.2 2010/08/27 14:52:43 alfred Exp $                         */
+/* $Id: nls.c,v 1.3 2013/12/17 18:17:19 alfred Exp $                         */
 /*****************************************************************************
  * $Log: nls.c,v $
+ * Revision 1.3  2013/12/17 18:17:19  alfred
+ * - add missing break statement
+ *
  * Revision 1.2  2010/08/27 14:52:43  alfred
  * - some more overlapping strcpy() cleanups
  *
@@ -338,7 +341,7 @@ BEGIN
      switch (NLSInfo.Country)
       BEGIN
        case 41: case 46: case 47: case 358:
-        NLSInfo.TimeSep=".";
+        NLSInfo.TimeSep="."; break;
        default:
         NLSInfo.TimeSep=":";
       END

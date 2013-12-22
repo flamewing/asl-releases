@@ -12,9 +12,12 @@
 /*             2002-01-27 allow immediate addressing for one-op instrs(doj)  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemsp.c,v 1.10 2012-05-26 13:49:19 alfred Exp $                     */
+/* $Id: codemsp.c,v 1.11 2013/12/21 19:46:51 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: codemsp.c,v $
+ * Revision 1.11  2013/12/21 19:46:51  alfred
+ * - dynamically resize code buffer
+ *
  * Revision 1.10  2012-05-26 13:49:19  alfred
  * - MSP additions, make implicit macro parameters always case-insensitive
  *
@@ -382,7 +385,7 @@ static void DecodeBYTE(Word Index)
         case TempInt:
           if (FirstPassUnknown) t.Contents.Int &= 0xff;
           if (!RangeCheck(t.Contents.Int, Int8)) WrError(1320);
-          else if (CodeLen == MaxCodeLen)
+          else if (SetMaxCodeLen(CodeLen + 1))
           {
             WrError(1920); OK = False;
           }
@@ -395,7 +398,7 @@ static void DecodeBYTE(Word Index)
         {
           unsigned l = t.Contents.Ascii.Length;
 
-          if (l + CodeLen >= MaxCodeLen)
+          if (SetMaxCodeLen(l + CodeLen))
           {
             WrError(1920); OK = False;
           }

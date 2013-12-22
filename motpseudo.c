@@ -5,9 +5,12 @@
 /* Haeufiger benutzte Motorola-Pseudo-Befehle                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: motpseudo.c,v 1.13 2010/08/27 14:52:42 alfred Exp $                   */
+/* $Id: motpseudo.c,v 1.14 2013/12/21 19:46:51 alfred Exp $                   */
 /***************************************************************************** 
  * $Log: motpseudo.c,v $
+ * Revision 1.14  2013/12/21 19:46:51  alfred
+ * - dynamically resize code buffer
+ *
  * Revision 1.13  2010/08/27 14:52:42  alfred
  * - some more overlapping strcpy() cleanups
  *
@@ -149,7 +152,7 @@ static void DecodeBYT(Word Index)
           {
             WrError(1320); OK = False;
           }
-          else if (CodeLen + Rep > MaxCodeLen)
+          else if (SetMaxCodeLen(CodeLen + Rep))
           {
             WrError(1920); OK = False;
           }
@@ -169,7 +172,7 @@ static void DecodeBYT(Word Index)
           l = t.Contents.Ascii.Length;
           TranslateString(t.Contents.Ascii.Contents, l);
 
-          if (CodeLen + (Rep * l) > MaxCodeLen)
+          if (SetMaxCodeLen(CodeLen + (Rep * l)))
           {
             WrError(1920); OK = False;
           }
@@ -271,7 +274,7 @@ static void DecodeADR(Word Index)
          break;
        }
 
-       if (CodeLen + ((Cnt * Rep) << 1) > MaxCodeLen)
+       if (SetMaxCodeLen(CodeLen + ((Cnt * Rep) << 1)))
        {
          WrError(1920);
          OK = False;
@@ -330,7 +333,7 @@ static void DecodeFCC(Word Index)
        EvalStringExpression(ArgStr[z], &OK, SVal);
        if (OK)
        {
-         if (CodeLen + Rep * strlen(SVal) >= MaxCodeLen)
+         if (SetMaxCodeLen(CodeLen + Rep * strlen(SVal)))
          {
            WrError(1920);
            OK = False;
@@ -680,7 +683,7 @@ BEGIN
    LongInt z2;
    char *zp;
    LongInt WSize,Rep = 0;
-   LongInt NewPC,HVal,WLen;
+   LongInt NewPC,HVal;
    TempResult t;
    Boolean OK, ValOK;
    ShortInt SpaceFlag;
@@ -761,7 +764,7 @@ BEGIN
      if (ArgCnt == 0) WrError(1110);
      else
      {
-       OK = True; z = 1; WLen = 0; SpaceFlag = -1;
+       OK = True; z = 1; SpaceFlag = -1;
 
        while ((z <= ArgCnt) && (OK))
        {
@@ -828,7 +831,7 @@ BEGIN
                {
                  WrError(1320); OK = False;
                }
-               else if (CodeLen + (Rep * WSize) > MaxCodeLen)
+               else if (SetMaxCodeLen(CodeLen + (Rep * WSize)))
                {
                  WrError(1920); OK = False;
                }
@@ -846,7 +849,7 @@ BEGIN
                {
                  WrError(1320); OK = False;
                }
-               else if (CodeLen + (Rep * WSize) > MaxCodeLen)
+               else if (SetMaxCodeLen(CodeLen + (Rep * WSize)))
                {
                  WrError(1920); OK = False;
                }   
@@ -863,7 +866,7 @@ BEGIN
                {
                  if (ConvertFloat && EnterFloat)
                  {
-                   if (CodeLen + (Rep * WSize * t.Contents.Ascii.Length) > MaxCodeLen)
+                   if (SetMaxCodeLen(CodeLen + (Rep * WSize * t.Contents.Ascii.Length)))
                    {
                      WrError(1920); OK = False;
                    }
@@ -883,7 +886,7 @@ BEGIN
                    WrError(1135); OK = False;
                  }
                }
-               else if (CodeLen + Rep * t.Contents.Ascii.Length > MaxCodeLen)
+               else if (SetMaxCodeLen(CodeLen + Rep * t.Contents.Ascii.Length))
                {
                  WrError(1920); OK = False;
                }

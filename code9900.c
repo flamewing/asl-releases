@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code9900.c,v 1.5 2008/11/23 10:39:17 alfred Exp $                    */
+/* $Id: code9900.c,v 1.6 2013/12/21 19:46:51 alfred Exp $                    */
 /***************************************************************************** 
  * $Log: code9900.c,v $
+ * Revision 1.6  2013/12/21 19:46:51  alfred
+ * - dynamically resize code buffer
+ *
  * Revision 1.5  2008/11/23 10:39:17  alfred
  * - allow strings with NUL characters
  *
@@ -368,7 +371,7 @@ BEGIN
            case TempInt:
             if (FirstPassUnknown) t.Contents.Int&=0xff;
             if (NOT RangeCheck(t.Contents.Int,Int8)) WrError(1320);
-            else if (CodeLen==MaxCodeLen)
+            else if (SetMaxCodeLen(CodeLen + 1))
              BEGIN
               WrError(1920); OK=False;
              END
@@ -378,7 +381,7 @@ BEGIN
             WrError(1135); OK=False;
             break;
            case TempString:
-            if (t.Contents.Ascii.Length + CodeLen >= MaxCodeLen)
+            if (SetMaxCodeLen(t.Contents.Ascii.Length + CodeLen))
             {
               WrError(1920); OK = False;
             }

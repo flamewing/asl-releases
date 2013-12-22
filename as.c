@@ -58,9 +58,15 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.27 2013-03-09 16:15:07 alfred Exp $                          */
+/* $Id: as.c,v 1.29 2013/12/21 19:46:50 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.29  2013/12/21 19:46:50  alfred
+ * - dynamically resize code buffer
+ *
+ * Revision 1.28  2013/12/17 18:54:17  alfred
+ * - correct local symbol handle processing in IRPC
+ *
  * Revision 1.27  2013-03-09 16:15:07  alfred
  * - add NEC 75xx
  *
@@ -435,9 +441,8 @@ END
 static void MakeList(void)
 {
   String h, h2, h3, Tmp;
-  Byte i, k;
-  Word n;
-  Word EffLen;
+  Word i, k;
+  Word n, EffLen;
 
   EffLen = CodeLen * Granularity();
 
@@ -1395,7 +1400,7 @@ Boolean IRPC_Processor(PInputTag PInp, char *erg)
   {
     if (!PInp->GlobalSymbols)
     {
-      if (PInp->First) PopLocHandle();
+      if (!PInp->First) PopLocHandle();
       PushLocHandle(GetLocHandle());
     }
     PInp->First = False;

@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code17c4x.c,v 1.3 2008/11/23 10:39:16 alfred Exp $                          */
+/* $Id: code17c4x.c,v 1.4 2013/12/21 19:46:51 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code17c4x.c,v $
+ * Revision 1.4  2013/12/21 19:46:51  alfred
+ * - dynamically resize code buffer
+ *
  * Revision 1.3  2008/11/23 10:39:16  alfred
  * - allow strings with NUL characters
  *
@@ -270,7 +273,7 @@ BEGIN
        if (FirstPassUnknown) WrError(1820);
        if ((ValOK) AND (NOT FirstPassUnknown))
         BEGIN
-         if ((Size << 1)>MaxCodeLen) WrError(1920);
+         if (SetMaxCodeLen(Size << 1)) WrError(1920);
          else
           BEGIN
            CodeLen=Size;

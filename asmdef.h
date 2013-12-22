@@ -33,9 +33,12 @@
 /*           2001-10-20 added GNU error flag                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmdef.h,v 1.6 2009/05/10 10:48:09 alfred Exp $                      */
+/* $Id: asmdef.h,v 1.7 2013/12/21 19:46:50 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmdef.h,v $
+ * Revision 1.7  2013/12/21 19:46:50  alfred
+ * - dynamically resize code buffer
+ *
  * Revision 1.6  2009/05/10 10:48:09  alfred
  * - increase CPUVar space
  *
@@ -232,7 +235,9 @@ extern char SegShorts[PCMax + 2];
 
 #define AscOfs '0'
 
-#define MaxCodeLen 1024
+#define MaxCodeLen_Ini 256
+#define MaxCodeLen_Max 65535
+extern LongWord MaxCodeLen;
 
 #define DEF_NESTMAX 256
 
@@ -456,6 +461,8 @@ extern FILE *Debug;
 extern void AsmDefInit(void);
 
 extern void NullProc(void);
+
+extern int SetMaxCodeLen(LongWord NewMaxCodeLen);
 
 extern void Default_InternSymbol(char *Asc, TempResult *Erg);
 

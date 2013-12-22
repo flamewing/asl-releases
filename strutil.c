@@ -11,9 +11,12 @@
 /*           30. 5.1999 ConstLongInt akzeptiert auch 0x fuer Hex-Zahlen      */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: strutil.c,v 1.10 2013/08/07 19:44:38 alfred Exp $                     */
+/* $Id: strutil.c,v 1.11 2013/12/18 22:21:54 alfred Exp $                     */
 /*****************************************************************************
  * $Log: strutil.c,v $
+ * Revision 1.11  2013/12/18 22:21:54  alfred
+ * - regard \ escaping for quotes
+ *
  * Revision 1.10  2013/08/07 19:44:38  alfred
  * - add test for overlong lines
  *
@@ -593,26 +596,33 @@ int CopyNoBlanks(char *pDest, const char *pSrc, int MaxLen)
   int Cnt = 0;
   Byte Flags = 0;
   char ch;
+  Boolean ThisEscaped, PrevEscaped;
 
   /* leave space for NUL */
 
   MaxLen--;
 
+  PrevEscaped = False;
   for (pSrcRun = pSrc; (ch = *pSrcRun); pSrcRun++)
   {
+    ThisEscaped = False;
     switch (ch)
     {
       case '\'':
-        if (!(Flags & 2)) Flags ^= 1;
+        if (!(Flags & 2) && !PrevEscaped) Flags ^= 1;
         break;
       case '"':
-        if (!(Flags & 1)) Flags ^= 2;
+        if (!(Flags & 1) && !PrevEscaped) Flags ^= 2;
+        break;
+      case '\\':
+        if (!PrevEscaped) ThisEscaped = True;
         break;
     }
     if ((!isspace((unsigned char)ch)) || (Flags))
       *(pDestRun++) = ch;
     if (++Cnt >= MaxLen)
       break;
+    PrevEscaped = ThisEscaped;
   }
   *pDestRun = '\0';
 

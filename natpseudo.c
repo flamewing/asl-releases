@@ -5,9 +5,12 @@
 /* Pseudo Instructions used for National Semiconductor CPUs                  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: natpseudo.c,v 1.1 2006/04/09 12:40:11 alfred Exp $                    */
+/* $Id: natpseudo.c,v 1.2 2013/12/21 19:46:51 alfred Exp $                    */
 /***************************************************************************** 
  * $Log: natpseudo.c,v $
+ * Revision 1.2  2013/12/21 19:46:51  alfred
+ * - dynamically resize code buffer
+ *
  * Revision 1.1  2006/04/09 12:40:11  alfred
  * - unify COP pseudo instructions
  *
@@ -94,7 +97,7 @@ Boolean DecodeNatPseudo(Boolean *pBigFlag)
       if (FirstPassUnknown) WrError(1820);
       else if (ValOK)
       {
-        if (Size > MaxCodeLen) WrError(1920);
+        if (SetMaxCodeLen(Size)) WrError(1920);
         else
         {
           BAsmCode[0] = EvalIntExpression(ArgStr[2], Int8, &ValOK);
@@ -119,7 +122,7 @@ Boolean DecodeNatPseudo(Boolean *pBigFlag)
       if (FirstPassUnknown) WrError(1820);
       else if (ValOK)
       {
-        if ((Size << 1) > MaxCodeLen) WrError(1920);
+        if (SetMaxCodeLen(Size << 1)) WrError(1920);
         else
         {
           Value = EvalIntExpression(ArgStr[2], Int16, &ValOK);

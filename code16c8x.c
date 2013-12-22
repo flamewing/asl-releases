@@ -13,9 +13,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code16c8x.c,v 1.6 2008/11/23 10:39:16 alfred Exp $                   */
+/* $Id: code16c8x.c,v 1.7 2013/12/21 19:46:51 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code16c8x.c,v $
+ * Revision 1.7  2013/12/21 19:46:51  alfred
+ * - dynamically resize code buffer
+ *
  * Revision 1.6  2008/11/23 10:39:16  alfred
  * - allow strings with NUL characters
  *
@@ -386,7 +389,7 @@ static void DecodeZERO(Word Index)
     if (FirstPassUnknown) WrError(1820);
     if ((ValOK) && (!FirstPassUnknown))
     {
-      if ((Size << Shift) > MaxCodeLen) WrError(1920);
+      if (SetMaxCodeLen(Size << Shift)) WrError(1920);
       else
       {
         CodeLen = Size;

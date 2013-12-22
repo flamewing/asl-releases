@@ -36,9 +36,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.20 2013-03-09 16:15:08 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.21 2013/12/21 19:46:51 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.c,v $
+ * Revision 1.21  2013/12/21 19:46:51  alfred
+ * - dynamically resize code buffer
+ *
  * Revision 1.20  2013-03-09 16:15:08  alfred
  * - add NEC 75xx
  *
@@ -490,20 +493,24 @@ BEGIN
     END
 END
 
-        static void ReplaceBkSlashes(char *s)
-BEGIN
-   char *p,*n;
-   char ErgChar;
+static void ReplaceBkSlashes(char *s)
+{
+  char *pSrc, *pDest;
 
-   p=strchr(s,'\\');
-   while (p!=Nil)
-    BEGIN
-     n=p+1; if (ProcessBk(&n,&ErgChar)) *p=ErgChar;
-     strcpy(p+1,n);
-     p=strchr(p+1,'\\');
-    END
-END
-
+  pSrc = pDest = s;
+  while (*pSrc)
+  {
+    if (*pSrc == '\\')
+    {
+      pSrc++;
+      if (ProcessBk(&pSrc, pDest))
+        pDest++;
+    }
+    else
+      *pDest++ = *pSrc++;
+  }
+  *pDest = '\0';
+}
 
         Boolean ExpandSymbol(char *Name)
 BEGIN
