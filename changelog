@@ -1278,3 +1278,9 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 - Bugfix      : correct handling of escaped quotes in string constants
 
 - Change      : allow up to 64K code per line
+
+2014-03-03 [Bld91]
+
+- Change      : allow register names R10...R15 for 4004/4040
+
+- Adddtion    : add COP444 target

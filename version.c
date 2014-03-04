@@ -39,9 +39,12 @@
 /*           2002-01-27 Build 19                                             */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: version.c,v 1.64 2013/12/21 19:46:51 alfred Exp $                     */
+/* $Id: version.c,v 1.65 2013/12/21 20:25:15 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: version.c,v $
+ * Revision 1.65  2013/12/21 20:25:15  alfred
+ * - 1.42 Bld 90
+ *
  * Revision 1.64  2013/12/21 19:46:51  alfred
  * - dynamically resize code buffer
  *
@@ -272,13 +275,13 @@
 #include "stdinc.h"
 #include <string.h>
 
-char *Version="1.42 Beta [Bld 90]";
-char *DebVersion = "1.42bld90-1";
+char *Version="1.42 Beta [Bld 91]";
+char *DebVersion = "1.42bld91-1";
 LongInt VerNo=0x142f;
 
-char *InfoMessCopyright="(C) 1992,2013 Alfred Arnold";
+char *InfoMessCopyright="(C) 1992,2014 Alfred Arnold";
 
-LongInt Magic=0x12372f45;
+LongInt Magic=0x12372845;
 
 void version_init(void)
 {

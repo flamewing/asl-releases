@@ -18,9 +18,15 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code4004.c,v 1.5 2008/11/23 10:39:16 alfred Exp $                          */
+/* $Id: code4004.c,v 1.7 2014/03/03 20:19:12 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code4004.c,v $
+ * Revision 1.7  2014/03/03 20:19:12  alfred
+ * - correct data types
+ *
+ * Revision 1.6  2014/03/03 19:50:51  alfred
+ * - allow register names R10...R15
+ *
  * Revision 1.5  2008/11/23 10:39:16  alfred
  * - allow strings with NUL characters
  *
@@ -89,42 +95,78 @@ static FixedOrder *Imm4Orders;
 /*---------------------------------------------------------------------------*/
 /* Parser */
 
-        static Byte RegVal(char Inp)
-BEGIN
-   if ((Inp >='0') AND (Inp <= '9')) return Inp - '0';
-   else if ((Inp >='A') AND (Inp <= 'F')) return Inp - 'A' + 10;
-   else return 0xff;
-END
+static Byte RegVal(const char *pInp, int l)
+{
+  switch (l)
+  {
+    case 1:
+    {
+      char ch = mytoupper(*pInp);
+      if ((ch >='0') && (ch <= '9'))
+        return ch - '0';
+      else if ((ch >='A') && (ch <= 'F'))
+        return ch - 'A' + 10;
+      else
+        return 0xff;
+    }
+    case 2:
+    {
+      unsigned Acc = 0, z;
 
-        static Boolean DecodeReg(char *Asc, Byte *Erg)
-BEGIN
-   char *s;
+      for (z = 0; z < 2; z++)
+      {
+        if (!isdigit(pInp[z]))
+          return 0xff;
+        Acc = (Acc * 10) + (pInp[z] - '0');
+      }
+      return (Acc <= 15) ? Acc : 0xff;
+    }
+    default:
+      return 0xff;
+  }
+}
 
-   if (FindRegDef(Asc,&s)) Asc=s;
+static Boolean DecodeReg(char *pAsc, Byte *pErg)
+{
+  char *s;
+  int l;
 
-   if ((strlen(Asc) != 2) OR (mytoupper(*Asc)!='R')) return False;
-   else
-    BEGIN
-     *Erg = RegVal(mytoupper(Asc[1]));
-     return (*Erg != 0xff);
-    END
-END
+  if (FindRegDef(pAsc, &s))
+    pAsc = s;
 
-        static Boolean DecodeRReg(char *Asc, Byte *Erg)
-BEGIN
-   Byte h;
-   char *s;
+  l = strlen(pAsc);
+  if ((l < 2) || (l > 3) || (mytoupper(*pAsc) != 'R'))
+    return False;
 
-   if (FindRegDef(Asc,&s)) Asc = s;
+  *pErg = RegVal(pAsc + 1, l - 1);
+  return (*pErg != 0xff);
+}
 
-   if ((strlen(Asc) != 4) OR (mytoupper(*Asc) != 'R') OR (mytoupper(Asc[2]) != 'R')) return False;
-   else
-    BEGIN
-     *Erg = RegVal(mytoupper(Asc[1]));
-     h = RegVal(mytoupper(Asc[3]));
-     return ((*Erg != 0xff) AND (h != 0xff) AND (h == (*Erg) + 1) AND (Odd(h)));
-    END
-END
+static Boolean DecodeRReg(char *pAsc, Byte *pErg)
+{
+  Byte h;
+  char *s, *pPair, Save;
+  int l;
+
+  if (FindRegDef(pAsc, &s))
+    pAsc = s;
+
+  l = strlen(pAsc);
+  if ((l < 4) || (l > 6) || (mytoupper(*pAsc) != 'R'))
+    return False;
+
+  for (pPair = pAsc + 1; *pPair; pPair++)
+    if (mytoupper(*pPair) == 'R')
+      break;
+  if ((!*pPair) || (pPair - pAsc < 2) || (pPair - pAsc >= l - 1))
+    return False;
+
+  Save = *pPair; *pPair = '\0';
+  *pErg = RegVal(pAsc + 1, pPair - pAsc - 1);
+  h = RegVal(pPair + 1, l - (pPair - pAsc + 1));
+  *pPair= Save;
+  return (*pErg != 0xff) && (h != 0xff) && (Odd(h)) && (*pErg + 1 == h);
+}
 
 /*---------------------------------------------------------------------------*/
 /* Hilfsdekoder */

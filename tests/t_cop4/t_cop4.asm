@@ -85,3 +85,10 @@
 	ldd	1,15
 
 	xad	2,12        ; complete new cos
+
+; instructions on COP444
+
+	cpu	cop444
+
+	halt
+	it

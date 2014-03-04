@@ -5,9 +5,12 @@
 /* Codegeneratormodul COP4-Familie                                           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codecop4.c,v 1.8 2013-06-16 17:18:20 alfred Exp $                   *
+/* $Id: codecop4.c,v 1.9 2014/03/03 19:54:17 alfred Exp $                   *
  *****************************************************************************
  * $Log: codecop4.c,v $
+ * Revision 1.9  2014/03/03 19:54:17  alfred
+ * - add COP444 target
+ *
  * Revision 1.8  2013-06-16 17:18:20  alfred
  * - add COP440 target
  *
@@ -48,16 +51,22 @@
 
 #include "codecop4.h"
 
-#define FixedOrderCnt 42
+#define FixedOrderCnt 44
 #define ImmOrderCnt 3
 
-typedef struct
-        {
-          CPUVar MinCPU;
-          Word Code;
-        } FixedOrder;
+#define M_CPUCOP410 (1 << 0)
+#define M_CPUCOP420 (1 << 1)
+#define M_CPUCOP440 (1 << 2)
+#define M_CPUCOP444 (1 << 3)
 
-static CPUVar CPUCOP410, CPUCOP420, CPUCOP440;
+typedef struct
+{
+  Word CPUMask;
+  Word Code;
+} FixedOrder;
+
+static CPUVar CPUCOP410, CPUCOP420, CPUCOP440, CPUCOP444;
+static Word CurrCPUMask;
 static IntType AdrInt;
 
 static FixedOrder *FixedOrders, *ImmOrders;
@@ -70,7 +79,7 @@ static void DecodeFixed(Word Index)
   FixedOrder *pOrder = FixedOrders + Index;
 
   if (ArgCnt != 0) WrError(1110);
-  else if (MomCPU < pOrder->MinCPU) WrError(1500);
+  else if (!(CurrCPUMask & pOrder->CPUMask)) WrError(1500);
   else
   {
     if (Hi(pOrder->Code))
@@ -102,7 +111,7 @@ static void DecodeImm(Word Index)
   FixedOrder *pOrder = ImmOrders + Index;
 
   if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < pOrder->MinCPU) WrError(1500);
+  else if (!(CurrCPUMask & pOrder->CPUMask)) WrError(1500);
   else
   {
     Byte Val;
@@ -266,7 +275,7 @@ static void DecodeLBI(Word Index)
       {
         if ((Val > 0) && (Val < 9))
         {
-          if (MomCPU < CPUCOP420) WrError(1500);
+          if (!(CurrCPUMask & (M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP440))) WrError(1500);
           else
           {
             BAsmCode[CodeLen++] = 0x33;
@@ -288,7 +297,7 @@ static void DecodeLDD(Word Index)
   UNUSED(Index);
 
   if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPUCOP420) WrError(1500);
+  else if (!(CurrCPUMask & (M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP440))) WrError(1500);
   else
   {   
     Byte Reg, Val;
@@ -376,26 +385,26 @@ static void DecodeJP(Word Index)
 /*---------------------------------------------------------------------------*/
 /* Code Table Handling */
 
-static void AddFixed(char *NName, Word NCode, CPUVar NMin)
+static void AddFixed(char *NName, Word NCode, Word NMask)
 {
   if (InstrZ >= FixedOrderCnt)
     exit(0);
   else
   {
     FixedOrders[InstrZ].Code = NCode;
-    FixedOrders[InstrZ].MinCPU = NMin;
+    FixedOrders[InstrZ].CPUMask = NMask;
     AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
   }
 }
 
-static void AddImm(char *NName, Word NCode, CPUVar NMin)
+static void AddImm(char *NName, Word NCode, Word NMask)
 {
   if (InstrZ >= ImmOrderCnt)
     exit(0);
   else
   {
     ImmOrders[InstrZ].Code = NCode;
-    ImmOrders[InstrZ].MinCPU = NMin;
+    ImmOrders[InstrZ].CPUMask = NMask;
     AddInstTable(InstTable, NName, InstrZ++, DecodeImm);
   }
 }
@@ -406,57 +415,59 @@ static void InitFields(void)
 
   FixedOrders = (FixedOrder*)malloc(sizeof(FixedOrder) * FixedOrderCnt);
   InstrZ = 0;
-  AddFixed("ASC"  , 0x30,   CPUCOP410);
-  AddFixed("ADD"  , 0x31,   CPUCOP410);
-  AddFixed("CLRA" , 0x00,   CPUCOP410);
-  AddFixed("COMP" , 0x40,   CPUCOP410);
-  AddFixed("NOP"  , 0x44,   CPUCOP410);
-  AddFixed("RC"   , 0x32,   CPUCOP410);
-  AddFixed("SC"   , 0x22,   CPUCOP410);
-  AddFixed("XOR"  , 0x02,   CPUCOP410);
-  AddFixed("JID"  , 0xff,   CPUCOP410);
-  AddFixed("RET"  , 0x48,   CPUCOP410);
-  AddFixed("RETSK", 0x49,   CPUCOP410);
-  AddFixed("CAMQ" , 0x333c, CPUCOP410);
-  AddFixed("CAME" , 0x331f, CPUCOP440);
-  AddFixed("CAMT" , 0x333f, CPUCOP440);
-  AddFixed("CAMR" , 0x333d, CPUCOP440);
-  AddFixed("CEMA" , 0x330f, CPUCOP440);
-  AddFixed("CTMA" , 0x332f, CPUCOP440);
-  AddFixed("LQID" , 0xbf,   CPUCOP410);
-  AddFixed("CAB"  , 0x50,   CPUCOP410);
-  AddFixed("CBA"  , 0x4e,   CPUCOP410);
-  AddFixed("SKC"  , 0x20,   CPUCOP410);
-  AddFixed("SKE"  , 0x21,   CPUCOP410);
-  AddFixed("SKGZ" , 0x3321, CPUCOP410);
-  AddFixed("SKSZ" , 0x331c, CPUCOP440);
-  AddFixed("ING"  , 0x332a, CPUCOP410);
-  AddFixed("INH"  , 0x332b, CPUCOP440);
-  AddFixed("INL"  , 0x332e, CPUCOP410);
-  AddFixed("INR"  , 0x332d, CPUCOP440);
-  AddFixed("OBD"  , 0x333e, CPUCOP410);
-  AddFixed("OMG"  , 0x333a, CPUCOP410);
-  AddFixed("OMH"  , 0x333b, CPUCOP440);
-  AddFixed("XAS"  , 0x4f,   CPUCOP410);
-  AddFixed("ADT"  , 0x4a,   CPUCOP420);
-  AddFixed("CASC" , 0x10,   CPUCOP420);
-  AddFixed("CQMA" , 0x332c, CPUCOP420);
-  AddFixed("SKT"  , 0x41,   CPUCOP420);  
-  AddFixed("XABR" , 0x12,   CPUCOP420);  
-  AddFixed("ININ" , 0x3328, CPUCOP420);
-  AddFixed("INIL" , 0x3329, CPUCOP420);
-  AddFixed("OR"   , 0x331a, CPUCOP440);
-  AddFixed("LID"  , 0x3319, CPUCOP440);
-  AddFixed("XAN"  , 0x330b, CPUCOP440);
+  AddFixed("ASC"  , 0x30,   M_CPUCOP410 | M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("ADD"  , 0x31,   M_CPUCOP410 | M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("CLRA" , 0x00,   M_CPUCOP410 | M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("COMP" , 0x40,   M_CPUCOP410 | M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("NOP"  , 0x44,   M_CPUCOP410 | M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("RC"   , 0x32,   M_CPUCOP410 | M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("SC"   , 0x22,   M_CPUCOP410 | M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("XOR"  , 0x02,   M_CPUCOP410 | M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("JID"  , 0xff,   M_CPUCOP410 | M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("RET"  , 0x48,   M_CPUCOP410 | M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("RETSK", 0x49,   M_CPUCOP410 | M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("CAMQ" , 0x333c, M_CPUCOP410 | M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("CAME" , 0x331f,                             M_CPUCOP440              );
+  AddFixed("CAMT" , 0x333f,                             M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("CAMR" , 0x333d,                             M_CPUCOP440              );
+  AddFixed("CEMA" , 0x330f,                             M_CPUCOP440              );
+  AddFixed("CTMA" , 0x332f,                             M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("LQID" , 0xbf,   M_CPUCOP410 | M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("CAB"  , 0x50,   M_CPUCOP410 | M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("CBA"  , 0x4e,   M_CPUCOP410 | M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("SKC"  , 0x20,   M_CPUCOP410 | M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("SKE"  , 0x21,   M_CPUCOP410 | M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("SKGZ" , 0x3321, M_CPUCOP410 | M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("SKSZ" , 0x331c,                             M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("ING"  , 0x332a, M_CPUCOP410 | M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("INH"  , 0x332b,                             M_CPUCOP440              );
+  AddFixed("INL"  , 0x332e, M_CPUCOP410 | M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("INR"  , 0x332d,                             M_CPUCOP440              );
+  AddFixed("OBD"  , 0x333e, M_CPUCOP410 | M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("OMG"  , 0x333a, M_CPUCOP410 | M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("OMH"  , 0x333b,                             M_CPUCOP440              );
+  AddFixed("XAS"  , 0x4f,   M_CPUCOP410 | M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("ADT"  , 0x4a,                 M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("CASC" , 0x10,                 M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("CQMA" , 0x332c,               M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("SKT"  , 0x41,                 M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);  
+  AddFixed("XABR" , 0x12,                 M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);  
+  AddFixed("ININ" , 0x3328,               M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("INIL" , 0x3329,               M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddFixed("OR"   , 0x331a,                             M_CPUCOP440              );
+  AddFixed("LID"  , 0x3319,                             M_CPUCOP440              );
+  AddFixed("XAN"  , 0x330b,                             M_CPUCOP440              );
+  AddFixed("HALT" , 0x3338,                                           M_CPUCOP444);
+  AddFixed("IT"   , 0x3339,                                           M_CPUCOP444);
 
   AddInstTable(InstTable, "SKGBZ", 0x33, DecodeSK);
   AddInstTable(InstTable, "SKMBZ", 0x00, DecodeSK);
 
   ImmOrders = (FixedOrder*)malloc(sizeof(FixedOrder) * ImmOrderCnt);
   InstrZ = 0;
-  AddImm("STII" , 0x70,   CPUCOP410);
-  AddImm("LEI"  , 0x3360, CPUCOP410);
-  AddImm("OGI"  , 0x3350, CPUCOP420);                 
+  AddImm("STII" , 0x70,   M_CPUCOP410 | M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddImm("LEI"  , 0x3360, M_CPUCOP410 | M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);
+  AddImm("OGI"  , 0x3350,               M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP444);                 
 
   AddInstTable(InstTable, "JMP"  , 0x60, DecodeJmp);
   AddInstTable(InstTable, "JSR"  , 0x68, DecodeJmp);
@@ -528,6 +539,15 @@ static void SwitchTo_COP4(void)
 
   pDescr = FindFamilyByName("COP4");
 
+  if (MomCPU == CPUCOP410)
+    CurrCPUMask = M_CPUCOP410;
+  else if (MomCPU == CPUCOP420)
+    CurrCPUMask = M_CPUCOP420;
+  else if (MomCPU == CPUCOP440)
+    CurrCPUMask = M_CPUCOP440;
+  else if (MomCPU == CPUCOP444)
+    CurrCPUMask = M_CPUCOP444;
+
   TurnWords = False; ConstMode = ConstModeC; SetIsOccupied = False;
 
   PCSymbol = "."; HeaderID = pDescr->Id;
@@ -561,4 +581,5 @@ void codecop4_init(void)
   CPUCOP410 = AddCPU("COP410", SwitchTo_COP4);
   CPUCOP420 = AddCPU("COP420", SwitchTo_COP4);
   CPUCOP440 = AddCPU("COP440", SwitchTo_COP4);
+  CPUCOP444 = AddCPU("COP444", SwitchTo_COP4);
 }

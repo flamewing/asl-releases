@@ -21,8 +21,20 @@ Next:
 	fim	r6r7, 45h
 	fim	r8r9, 56h
 	fim	rarb, 67h
+        fim	r10r11, 67h
 	fim	rcrd, 78h
+        fim     r12r13, 78h
 	fim	rerf, 89h
+        fim     r14r15, 89h
+
+	; some broken register names
+
+        ;fim	rr,12h		; both numbers missing
+	;fim	r1r3,12h	; numbers not consecutive
+	;fim	r3r4,12h	; invalid even/odd pairing
+	;fim	rr3,12h		; first number missing
+	;fim	r2r,12h		; second number missing
+	;fim	r16r17,12h	; number out of range
 
 	src	r0r1
 	src	r2r3
