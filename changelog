@@ -1,4 +1,4 @@
-$Id: changelog,v 1.77 2013/12/21 19:46:51 alfred Exp $
+$Id: changelog,v 1.82 2014/03/08 21:16:30 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1283,4 +1283,15 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 
 - Change      : allow register names R10...R15 for 4004/4040
 
-- Adddtion    : add COP444 target
+- Addition    : add COP444 target
+
+2014-03-08 [Bld92]
+
+- Bugfix      : correct handling of escaped quotation marks when converting string
+                to uppercase
+
+- Addition    : add RORG statement
+
+- Change      : for unresolved forwards, put forward statement position into extended error
+
+- Addition    : added new function ASSUMEDVAL to query values set via ASSUME

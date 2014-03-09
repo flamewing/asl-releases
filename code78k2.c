@@ -5,9 +5,12 @@
 /* Codegenerator 78K2-Familie                                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code78k2.c,v 1.15 2007/11/24 22:48:05 alfred Exp $
+/* $Id: code78k2.c,v 1.16 2014/03/08 21:06:36 alfred Exp $
  *****************************************************************************
  * $Log: code78k2.c,v $
+ * Revision 1.16  2014/03/08 21:06:36  alfred
+ * - rework ASSUME framework
+ *
  * Revision 1.15  2007/11/24 22:48:05  alfred
  * - some NetBSD changes
  *
@@ -131,6 +134,10 @@ static Byte *pCode;
 static LongInt Reg_P6, Reg_PM6;
 
 static SimpProc SaveInitProc;
+
+static ASSUMERec ASSUME78K2s[] =
+             {{"P6"  , &Reg_P6  , 0,  0xf,  0x10},
+              {"PM6" , &Reg_PM6 , 0,  0xf,  0x10}};
 
 /*-------------------------------------------------------------------------*/
 /* address decoders */
@@ -1590,17 +1597,6 @@ static void DecodeBrBit(Word Index)
   }
 }
 
-static void DecodeASSUME(Word Index)
-{
-  static ASSUMERec ASSUME78K2s[] =
-               {{"P6"  , &Reg_P6  , 0,  0xf,  0x10},
-                {"PM6" , &Reg_PM6 , 0,  0xf,  0x10}};
-
-  UNUSED(Index);
-
-  CodeASSUME(ASSUME78K2s, sizeof(ASSUME78K2s) / sizeof(ASSUME78K2s[0]));
-}
-
 /*-------------------------------------------------------------------------*/
 /* dynamic code table handling */
 
@@ -1698,7 +1694,6 @@ static void InitFields(void)
   AddFixed("ADJBS", 0x0f);
 
   AddInstTable(InstTable, "BIT", 0, DecodeBIT);
-  AddInstTable(InstTable, "ASSUME", 0, DecodeASSUME);
 }
 
 static void DeinitFields(void)
@@ -1759,6 +1754,9 @@ static void SwitchTo_78K2(void)
   ValidSegs = 1 << SegCode;
   Grans[SegCode] = 1; ListGrans[SegCode] = 1; SegInits[SegCode] = 0;
   SegLimits[SegCode] = 0xfffff;
+
+  pASSUMERecs = ASSUME78K2s;
+  ASSUMERecCnt = sizeof(ASSUME78K2s) / sizeof(ASSUME78K2s[0]);
 
   MakeCode = MakeCode_78K2; IsDef = IsDef_78K2;
   SwitchFrom = SwitchFrom_78K2; InitFields();

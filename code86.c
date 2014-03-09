@@ -10,9 +10,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code86.c,v 1.7 2010/08/27 14:52:42 alfred Exp $                      */
+/* $Id: code86.c,v 1.8 2014/03/08 21:06:36 alfred Exp $                      */
 /*****************************************************************************
  * $Log: code86.c,v $
+ * Revision 1.8  2014/03/08 21:06:36  alfred
+ * - rework ASSUME framework
+ *
  * Revision 1.7  2010/08/27 14:52:42  alfred
  * - some more overlapping strcpy() cleanups
  *
@@ -1216,6 +1219,47 @@ BEGIN
     END
 END
 
+static void DecodeASSUME(void)
+{
+  Boolean OK;
+  int z,z2,z3;
+  char *p;
+  String SegPart,ValPart;
+
+  if (ArgCnt == 0) WrError(1110);
+  else
+  {
+    z =1 ; OK = True;
+    while ((z <= ArgCnt) && (OK))
+    {
+      OK = False; p = QuotPos(ArgStr[z], ':');
+      if (p != Nil)
+      {
+        *p ='\0'; strmaxcpy(SegPart, ArgStr[z], 255); strmaxcpy(ValPart, p + 1, 255);
+      }
+      else
+      {
+        strmaxcpy(SegPart, ArgStr[z], 255); *ValPart = '\0';
+      }
+      z2 = 0;
+      while ((z2 <= SegRegCnt) && (strcasecmp(SegPart, SegRegNames[z2]) != 0)) z2++;
+      if (z2 > SegRegCnt) WrXError(1962, SegPart);
+      else
+      {
+        z3 = 0;
+        while ((z3 <= PCMax) && (strcasecmp(ValPart, SegNames[z3]) != 0)) z3++;
+        if (z3 > PCMax) WrXError(1961, ValPart);
+        else if ((z3 != SegCode) && (z3 != SegData) && (z3 != SegXData) && (z3 != SegNone)) WrError(1960);
+        else
+        {
+          SegAssumes[z2] = z3; OK = True;
+        }
+      }
+      z++;
+    }
+  }
+}
+
 /*---------------------------------------------------------------------------*/
 
         static void AddFixed(char *NName, CPUVar NMin, Word NCode)
@@ -1495,51 +1539,9 @@ END
 
         static Boolean DecodePseudo(void)
 BEGIN
-   Boolean OK;
-   int z,z2,z3;
-   char *p;
-   String SegPart,ValPart;
-
    if (Memo("PORT"))
     BEGIN
      CodeEquate(SegIO,0,0xffff);
-     return True;
-    END
-
-   if (Memo("ASSUME"))
-    BEGIN
-     if (ArgCnt==0) WrError(1110);
-     else
-      BEGIN
-       z=1; OK=True;
-       while ((z<=ArgCnt) AND (OK))
-        BEGIN
-         OK=False; p=QuotPos(ArgStr[z],':');
-         if (p!=Nil)
-          BEGIN
-           *p='\0'; strmaxcpy(SegPart,ArgStr[z],255); strmaxcpy(ValPart,p+1,255);
-          END
-         else
-          BEGIN
-           strmaxcpy(SegPart,ArgStr[z],255); *ValPart='\0';
-          END
-         z2=0;
-         while ((z2<=SegRegCnt) AND (strcasecmp(SegPart,SegRegNames[z2])!=0)) z2++;
-         if (z2>SegRegCnt) WrXError(1962,SegPart);
-         else
-          BEGIN
-           z3=0;
-           while ((z3<=PCMax) AND (strcasecmp(ValPart,SegNames[z3])!=0)) z3++;
-           if (z3>PCMax) WrXError(1961,ValPart);
-           else if ((z3!=SegCode) AND (z3!=SegData) AND (z3!=SegXData) AND (z3!=SegNone)) WrError(1960);
-           else
-            BEGIN
-             SegAssumes[z2]=z3; OK=True;
-            END
-          END
-         z++;
-        END
-      END
      return True;
     END
 
@@ -2633,6 +2635,8 @@ BEGIN
    SegLimits[SegXData] = 0xffff;
    Grans[SegIO   ]=1; ListGrans[SegIO   ]=1; SegInits[SegIO   ]=0;
    SegLimits[SegIO   ] = 0xffff;
+
+   pASSUMEOverride = DecodeASSUME;
 
    MakeCode=MakeCode_86; IsDef=IsDef_86;
    SwitchFrom=SwitchFrom_86; InitFields();

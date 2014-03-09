@@ -26,9 +26,12 @@
 /*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.16 2012-08-22 20:01:45 alfred Exp $                      */
+/* $Id: asmsub.c,v 1.17 2014/03/08 10:52:07 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmsub.c,v $
+ * Revision 1.17  2014/03/08 10:52:07  alfred
+ * - correctly handle escaped quotation marks
+ *
  * Revision 1.16  2012-08-22 20:01:45  alfred
  * - regard UTF-8
  *
@@ -393,18 +396,35 @@ void SplitString(char *Source, char *Left, char *Right, char *Trenner)
 /* einen String in Grossbuchstaben umwandeln.  Dabei Stringkonstanten in Ruhe */
 /* lassen */
 
-	void UpString(char *s)
-BEGIN
-   char *z;
-   int hypquot=0;
+void UpString(char *s)
+{
+  char *z;
+  int hypquot = 0;
+  Boolean LastBk = FALSE, ThisBk;
 
-   for (z=s; *z!='\0'; z++)
-    BEGIN
-     if ((*z=='\'') AND ((hypquot&2)==0)) hypquot^=1;
-     else if ((*z=='"') AND ((hypquot&1)==0)) hypquot^=2;
-     else if (hypquot==0) *z=UpCaseTable[(int)*z];
-    END
-END
+  for (z = s; *z != '\0'; z++)
+  {
+    ThisBk = FALSE;
+    switch (*z)
+    {
+      case '\\':
+        ThisBk = TRUE;
+        break;
+      case '\'':
+        if ((!(hypquot & 2)) && (!LastBk))
+          hypquot ^= 1;
+        break;
+      case '"':
+        if ((!(hypquot & 1)) && (!LastBk))
+          hypquot ^= 2;
+        break;
+      default:
+        if (!hypquot)
+          *z = UpCaseTable[(int)*z];
+    }
+    LastBk = ThisBk;
+  }
+}
 
 /****************************************************************************/
 

@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codest6.c,v 1.5 2013/12/21 19:46:51 alfred Exp $                     */
+/* $Id: codest6.c,v 1.6 2014/03/08 21:06:37 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codest6.c,v $
+ * Revision 1.6  2014/03/08 21:06:37  alfred
+ * - rework ASSUME framework
+ *
  * Revision 1.5  2013/12/21 19:46:51  alfred
  * - dynamically resize code buffer
  *
@@ -86,6 +89,10 @@ static FixedOrder *FixedOrders;
 static FixedOrder *RelOrders;
 static FixedOrder *ALUOrders;
 static AccOrder *AccOrders;
+
+#define ASSUME62Count 1
+   static ASSUMERec ASSUME62s[ASSUME62Count]=
+                    {{"ROMBASE", &WinAssume, 0, 0x3f, 0x40}};
 
 /*---------------------------------------------------------------------------------*/
 
@@ -226,10 +233,6 @@ END
 
         static Boolean DecodePseudo(void)
 BEGIN
-#define ASSUME62Count 1
-   static ASSUMERec ASSUME62s[ASSUME62Count]=
-                    {{"ROMBASE", &WinAssume, 0, 0x3f, 0x40}};
-
    Boolean OK,Flag;
    int z;
    String s;
@@ -285,12 +288,6 @@ BEGIN
    if (Memo("BLOCK"))
     BEGIN
      strmaxcpy(OpPart,"DFS",255); DecodeMotoPseudo(False);
-     return True;
-    END
-
-   if (Memo("ASSUME"))
-    BEGIN
-     CodeASSUME(ASSUME62s,ASSUME62Count);
      return True;
     END
 
@@ -648,6 +645,9 @@ BEGIN
    SegLimits[SegCode] = (MomCPU < CPUST6220) ? 0xfff : 0x7ff;
    Grans[SegData]=1; ListGrans[SegData]=1; SegInits[SegData]=0;
    SegLimits[SegData] = 0xff;
+
+   pASSUMERecs = ASSUME62s;
+   ASSUMERecCnt = ASSUME62Count;
 
    MakeCode=MakeCode_ST62; IsDef=IsDef_ST62;
    SwitchFrom=SwitchFrom_ST62; InitFields();

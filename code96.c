@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code96.c,v 1.5 2008/08/18 21:22:15 alfred Exp $                      *
+/* $Id: code96.c,v 1.6 2014/03/08 21:06:36 alfred Exp $                      *
  ***************************************************************************** 
  * $Log: code96.c,v $
+ * Revision 1.6  2014/03/08 21:06:36  alfred
+ * - rework ASSUME framework
+ *
  * Revision 1.5  2008/08/18 21:22:15  alfred
  * - fixed EPTS/DPTS coding
  *
@@ -118,7 +121,7 @@ static LongInt WSRVal,WSR1Val;
 static Word WinStart,WinStop,WinEnd,WinBegin;
 static Word Win1Start,Win1Stop,Win1Begin,Win1End;
 
-IntType MemInt;
+static IntType MemInt;
 
 /*---------------------------------------------------------------------------*/
 
@@ -467,6 +470,7 @@ END
 
         static void CalcWSRWindow(void)
 BEGIN
+   WSRVal &= 0x7f;
    if (WSRVal<=0x0f)
     BEGIN
      WinStart=0xffff; WinStop=0; WinBegin=0xff; WinEnd=0;
@@ -521,25 +525,6 @@ BEGIN
      Win1Start=(WSR1Val+0x340) << 6;
      Win1Stop=Win1Start+0x3f;
     END
-END
-
-        static Boolean DecodePseudo(void)
-BEGIN
-#define ASSUME96Count 2
-   static ASSUMERec ASSUME96s[ASSUME96Count]=
-             {{"WSR", &WSRVal, 0, 0xff, 0x00},
-              {"WSR1", &WSR1Val, 0, 0xbf, 0x00}};
-
-   if (Memo("ASSUME"))
-    BEGIN
-     if (MomCPU<CPU80196) WrError(1500);
-     else CodeASSUME(ASSUME96s,(MomCPU>=CPU80296)?ASSUME96Count:1);
-     WSRVal&=0x7f;
-     CalcWSRWindow(); CalcWSR1Window();
-     return True;
-    END
-
-   return False;
 END
 
         static Boolean BMemo(char *Name)
@@ -603,8 +588,6 @@ BEGIN
    if (Memo("")) return;
 
    /* Pseudoanweisungen */
-
-   if (DecodePseudo()) return;
 
    if (DecodeIntelPseudo(False)) return;
 
@@ -1274,6 +1257,11 @@ BEGIN
    DeinitFields();
 END
 
+#define ASSUME96Count 2
+   static ASSUMERec ASSUME96s[ASSUME96Count]=
+             {{"WSR", &WSRVal, 0, 0xff, 0x00, CalcWSRWindow},
+              {"WSR1", &WSR1Val, 0, 0xbf, 0x00, CalcWSR1Window}};
+
         static void SwitchTo_96(void)
 BEGIN
    TurnWords=False; ConstMode=ConstModeIntel; SetIsOccupied=False;
@@ -1290,6 +1278,12 @@ BEGIN
 
    if (MomCPU>=CPU80196N) MemInt=UInt24;
    else MemInt=UInt16;
+
+   if (MomCPU >= CPU80196)
+   {
+     pASSUMERecs = ASSUME96s;
+     ASSUMERecCnt = (MomCPU >= CPU80296) ? ASSUME96Count : 1;
+   }
 
    InitFields();
 END

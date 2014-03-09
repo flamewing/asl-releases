@@ -1,4 +1,4 @@
-/* codeallg.c */
+
 /*****************************************************************************/
 /* AS-Portierung                                                             */
 /*                                                                           */
@@ -25,9 +25,18 @@
 /*                       to now                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmallg.c,v 1.11 2012-05-26 13:49:19 alfred Exp $                     */
+/* $Id: asmallg.c,v 1.14 2014/03/08 21:06:34 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmallg.c,v $
+ * Revision 1.14  2014/03/08 21:06:34  alfred
+ * - rework ASSUME framework
+ *
+ * Revision 1.13  2014/03/08 17:26:14  alfred
+ * - print out declaration position for unresolved forwards
+ *
+ * Revision 1.12  2014/03/08 16:18:46  alfred
+ * - add RORG statement
+ *
  * Revision 1.11  2012-05-26 13:49:19  alfred
  * - MSP additions, make implicit macro parameters always case-insensitive
  *
@@ -108,6 +117,7 @@
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
+#include "as.h"
 #include "asmpars.h"
 #include "asmmac.h"
 #include "asmstructs.h"
@@ -166,6 +176,9 @@ void SetCPU(CPUVar NewCPU, Boolean NotPrev)
 
   InternSymbol = Default_InternSymbol;
   ChkPC = DefChkPC;
+  ASSUMERecCnt = 0;
+  pASSUMERecs = NULL;
+  pASSUMEOverride = NULL;
   if (!NotPrev) SwitchFrom();
   Lauf->SwitchProc();
 
@@ -239,17 +252,21 @@ BEGIN
 END
 
 
-	static void CodeENDSECTION_ChkEmptList(PForwardSymbol *Root)
-BEGIN
-   PForwardSymbol Tmp;
+static void CodeENDSECTION_ChkEmptList(PForwardSymbol *Root)
+{
+  PForwardSymbol Tmp;
+  String XError;
 
-   while (*Root!=Nil)
-    BEGIN
-     WrXError(1488,(*Root)->Name);
-     free((*Root)->Name);
-     Tmp=(*Root); *Root=Tmp->Next; free(Tmp);
-    END
-END
+  while (*Root)
+  {
+    strmaxcpy(XError, (*Root)->Name, 255);
+    strmaxcat(XError, ", ", 255);
+    strmaxcat(XError, (*Root)->pErrorPos, 255);
+    WrXError(1488, XError);
+    free((*Root)->Name); free((*Root)->pErrorPos);
+    Tmp = (*Root); *Root = Tmp->Next; free(Tmp);
+  }
+}
 
 	static void CodeENDSECTION(Word Index)
 BEGIN
@@ -371,6 +388,30 @@ BEGIN
     END
 END
 
+static void CodeRORG(Word Index)
+{
+  LargeInt HVal;
+  Boolean ValOK;
+  UNUSED(Index);
+
+  FirstPassUnknown = False;
+
+  if (*AttrPart != '\0') WrError(1100);
+  else if (ArgCnt != 1) WrError(1110); 
+  else
+  {
+#ifndef HAS64
+    HVal = EvalIntExpression(ArgStr[1], SInt32, &ValOK);
+#else
+    HVal = EvalIntExpression(ArgStr[1], Int64,&ValOK);
+#endif
+    if (FirstPassUnknown) WrError(1820);
+    else if (ValOK)
+    {
+      PCs[ActPC] += HVal; DontPrint=True;
+    }
+  }
+}
 
    	static void CodeSHARED_BuildComment(char *c)
 BEGIN
@@ -571,6 +612,7 @@ BEGIN
     BEGIN
      HVal=EvalIntExpression(ArgStr[1],Int32,&OK);
      if (OK) Phases[ActPC]=HVal-ProgCounter();
+     printf("PHASE 0x%llx\n", Phases[ActPC]);
     END
 END
 
@@ -1006,6 +1048,68 @@ BEGIN
     END
 END
 
+/*****************************************************************************
+ * Function:    CodeASSUME
+ * Purpose:     handle ASSUME statement
+ * Result:      -
+ *****************************************************************************/
+
+static void CodeASSUME(Word Index)
+{
+  int z1, z2;
+  Boolean OK;
+  LongInt HVal;
+  String RegPart, ValPart;
+
+  /* CPU-specific override? */
+
+  if (pASSUMEOverride)
+  {
+    pASSUMEOverride();
+    return;
+  }
+
+  if (ArgCnt == 0) WrError(1110);
+  else
+  {
+    z1 = 1; OK = True;
+    while ((z1 <= ArgCnt) && (OK))
+    {
+      SplitString(ArgStr[z1], RegPart, ValPart, QuotPos(ArgStr[z1], ':'));
+      z2 = 0; NLS_UpString(RegPart);
+      while ((z2 < ASSUMERecCnt) && (strcmp(pASSUMERecs[z2].Name,RegPart)))
+        z2++;
+      OK = (z2 < ASSUMERecCnt);
+      if (!OK) WrXError(1980, RegPart);
+      else
+      {
+        if (strcasecmp(ValPart, "NOTHING") == 0)
+        {
+          if (pASSUMERecs[z2].NothingVal == -1) WrError(1350);
+          else
+            *(pASSUMERecs[z2].Dest) = pASSUMERecs[z2].NothingVal;
+        }
+        else
+        {
+          FirstPassUnknown = False;
+          HVal = EvalIntExpression(ValPart, Int32, &OK);
+          if (OK)
+          {
+            if (FirstPassUnknown)
+            {
+              WrError(1820); OK = False;
+            }
+            else if (ChkRange(HVal, pASSUMERecs[z2].Min, pASSUMERecs[z2].Max))
+              *(pASSUMERecs[z2].Dest) = HVal;
+          }
+        }
+        if (pASSUMERecs[z2].pPostProc)
+          pASSUMERecs[z2].pPostProc();
+      }
+      z1++;
+    }
+  }
+}
 
 	static void CodeENUM(Word Index)
 BEGIN
@@ -1412,6 +1516,7 @@ BEGIN
 	    Lauf=(PForwardSymbol) malloc(sizeof(TForwardSymbol)); 
             Lauf->Next=(*Orig); *Orig=Lauf;
 	    Lauf->Name=strdup(Sym);
+            Lauf->pErrorPos = GetErrorPos();
 	   END
 	  IdentifySection(Section,&(Lauf->DestSection));
 	 END
@@ -1486,6 +1591,7 @@ typedef struct
 static PseudoOrder Pseudos[]=
                    {{"ALIGN",      CodeALIGN     },
                     {"ASEG",       CodeSEGTYPE   },
+                    {"ASSUME",     CodeASSUME    },
                     {"BINCLUDE",   CodeBINCLUDE  },
                     {"CHARSET",    CodeCHARSET   },
                     {"CODEPAGE",   CodeCODEPAGE  },
@@ -1515,6 +1621,7 @@ static PseudoOrder Pseudos[]=
                     {"RADIX",      CodeRADIX     },
                     {"READ",       CodeREAD      },
                     {"RESTORE",    CodeRESTORE   },
+                    {"RORG",       CodeRORG      },
                     {"RSEG",       CodeSEGTYPE   },
                     {"SAVE",       CodeSAVE      },
                     {"SECTION",    CodeSECTION   },

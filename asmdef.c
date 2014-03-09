@@ -31,9 +31,12 @@
 /*           2001-10-20 added GNU error flag                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmdef.c,v 1.5 2013/12/21 19:46:50 alfred Exp $                     */
+/* $Id: asmdef.c,v 1.6 2014/03/08 21:06:35 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmdef.c,v $
+ * Revision 1.6  2014/03/08 21:06:35  alfred
+ * - rework ASSUME framework
+ *
  * Revision 1.5  2013/12/21 19:46:50  alfred
  * - dynamically resize code buffer
  *
@@ -110,6 +113,10 @@ char SegShorts[PCMax + 2] = {'-','C','D','I','X','Y','B','P','R','O','S'};
    Boolean ENDOccured;	                    /* END-Statement aufgetreten ? */
    Boolean Retracted;			    /* Codes zurueckgenommen ? */
    Boolean ListToStdout,ListToNull;         /* Listing auf Konsole/Nulldevice ? */
+
+   unsigned ASSUMERecCnt;
+   const ASSUMERec *pASSUMERecs;
+   void (*pASSUMEOverride)(void);
 
    Word TypeFlag;		    /* Welche Adressraeume genutzt ? */
    ShortInt SizeFlag;		    /* Welche Operandengroessen definiert ? */

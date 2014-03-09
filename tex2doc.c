@@ -13,9 +13,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: tex2doc.c,v 1.3 2010/12/12 14:31:41 alfred Exp $                    */
+/* $Id: tex2doc.c,v 1.4 2014/03/08 21:06:00 alfred Exp $                    */
 /*****************************************************************************
  * $Log: tex2doc.c,v $
+ * Revision 1.4  2014/03/08 21:06:00  alfred
+ * - regard \*
+ *
  * Revision 1.3  2010/12/12 14:31:41  alfred
  * - use strmov()
  *
@@ -2005,6 +2008,11 @@ BEGIN
    DoAddNormal(Token,BackSepString);
 END
 
+	static void TeXAsterisk(Word Index)
+BEGIN
+   DoAddNormal("*",BackSepString);
+END
+
 	static Boolean TeXNLSSpec(char *Line)
 BEGIN
    Boolean Found=True;
@@ -2248,6 +2256,7 @@ BEGIN
    AddInstTable(TeXTable,"^",0,TeXNLSCirc);
    AddInstTable(TeXTable,"~",0,TeXNLSTilde);
    AddInstTable(TeXTable,"c",0,TeXCedilla);
+   AddInstTable(TeXTable,"*",0,TeXAsterisk);
    AddInstTable(TeXTable,"newif",0,TeXDummy);
    AddInstTable(TeXTable,"fi",0,TeXDummy);
    AddInstTable(TeXTable,"ifelektor",0,TeXDummy);

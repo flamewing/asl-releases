@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codez8.c,v 1.12 2012-12-09 12:32:06 alfred Exp $                          *
+/* $Id: codez8.c,v 1.13 2014/03/08 21:06:37 alfred Exp $                          *
  *****************************************************************************
  * $Log: codez8.c,v $
+ * Revision 1.13  2014/03/08 21:06:37  alfred
+ * - rework ASSUME framework
+ *
  * Revision 1.12  2012-12-09 12:32:06  alfred
  * - Bld85
  *
@@ -178,6 +181,10 @@ static Boolean IsEncore;
 static SimpProc SaveInitProc;
 static LongInt RPVal;
 static IntType RegSpaceType;
+
+#define ASSUMEeZ8Count 1
+static ASSUMERec ASSUMEeZ8s[ASSUMEeZ8Count] =
+               {{"RP" , &RPVal , 0, 0xff, 0x100}};
 
 /*--------------------------------------------------------------------------*/ 
 /* address expression decoding routines */
@@ -1676,10 +1683,6 @@ static void DeinitFields(void)
 
 static Boolean DecodePseudo(void)
 {
-#define ASSUMEeZ8Count 1
-static ASSUMERec ASSUMEeZ8s[ASSUMEeZ8Count] =
-               {{"RP" , &RPVal , 0, 0xff, 0x100}};
-
    if (Memo("SFR"))
    {
      CodeEquate(SegData, 0, 0xff);
@@ -1690,12 +1693,6 @@ static ASSUMERec ASSUMEeZ8s[ASSUMEeZ8Count] =
    {
      if (ArgCnt != 1) WrError(1110);
      else AddRegDef(LabPart, ArgStr[1]);
-     return True;
-   }
-
-   if (Memo("ASSUME"))
-   {
-     CodeASSUME(ASSUMEeZ8s, ASSUMEeZ8Count);
      return True;
    }
 
@@ -1767,6 +1764,9 @@ static void SwitchTo_Z8(void)
      RegSpaceType = UInt8;
      SegLimits[SegData] = 0xff; 
    }
+
+   pASSUMERecs = ASSUMEeZ8s;
+   ASSUMERecCnt = ASSUMEeZ8Count;
 
    MakeCode=MakeCode_Z8; IsDef=IsDef_Z8;
    SwitchFrom=SwitchFrom_Z8; InitFields();

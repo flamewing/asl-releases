@@ -10,7 +10,7 @@ as.o: stdinc.h version.h endian.h bpemu.h stdhandl.h nls.h nlmessages.h as.rsc i
 
 as1750.o: common.h utils.h datatypes.h strutil.h asmdef.h asmsub.h asmpars.h as1750.h
 
-asmallg.o: stdinc.h nls.h strutil.h stringlists.h bpemu.h cmdarg.h chunks.h asmdef.h asmsub.h asmpars.h asmmac.h asmstructs.h asmcode.h asmrelocs.h asmitree.h codepseudo.h
+asmallg.o: stdinc.h nls.h strutil.h stringlists.h bpemu.h cmdarg.h chunks.h asmdef.h asmsub.h as.h asmpars.h asmmac.h asmstructs.h asmcode.h asmrelocs.h asmitree.h codepseudo.h
 
 asmcode.o: stdinc.h version.h endian.h chunks.h asmdef.h asmsub.h asmpars.h asmrelocs.h
 

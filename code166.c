@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code166.c,v 1.8 2010/12/05 23:17:59 alfred Exp $                     */
+/* $Id: code166.c,v 1.9 2014/03/08 21:06:35 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code166.c,v $
+ * Revision 1.9  2014/03/08 21:06:35  alfred
+ * - rework ASSUME framework
+ *
  * Revision 1.8  2010/12/05 23:17:59  alfred
  * - use machine-dependent SFR start when transforming SFR addresses back to absolute
  *
@@ -110,6 +113,13 @@ static enum {MemModeStd,MemModeNoCheck,MemModeZeroPage,MemModeFixedBank,MemModeF
              /* normal    EXTS Rn        EXTP Rn         EXTS nn          EXTP nn        */
 static Word MemPage;
 static Boolean ExtSFRs;
+
+#define ASSUME166Count 4
+static ASSUMERec ASSUME166s[ASSUME166Count]=
+             {{"DPP0", DPPAssumes+0, 0, 15, -1},
+              {"DPP1", DPPAssumes+1, 0, 15, -1},
+              {"DPP2", DPPAssumes+2, 0, 15, -1},
+              {"DPP3", DPPAssumes+3, 0, 15, -1}};
 
 /*-------------------------------------------------------------------------*/
 
@@ -643,23 +653,10 @@ END
 
 /*-------------------------------------------------------------------------*/
 
-#define ASSUME166Count 4
-static ASSUMERec ASSUME166s[ASSUME166Count]=
-             {{"DPP0", DPPAssumes+0, 0, 15, -1},
-              {"DPP1", DPPAssumes+1, 0, 15, -1},
-              {"DPP2", DPPAssumes+2, 0, 15, -1},
-              {"DPP3", DPPAssumes+3, 0, 15, -1}};
-
         static Boolean DecodePseudo(void)
 BEGIN
    Word Adr;
    Byte Bit;
-
-   if (Memo("ASSUME"))
-    BEGIN
-     CodeASSUME(ASSUME166s,ASSUME166Count);
-     return True;
-    END
 
    if (Memo("BIT"))
     BEGIN
@@ -1725,6 +1722,9 @@ BEGIN
      SegLimits[SegCode] = 0xffffffl;
     END
    for (z=1; z<4; z++) ASSUME166s[z].Max=ASSUME166s[0].Max;
+
+   pASSUMERecs = ASSUME166s;
+   ASSUMERecCnt = ASSUME166Count;
 
    InitFields();
 END

@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code7700.c,v 1.6 2010/08/27 14:52:42 alfred Exp $                    */
+/* $Id: code7700.c,v 1.7 2014/03/08 21:06:36 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code7700.c,v $
+ * Revision 1.7  2014/03/08 21:06:36  alfred
+ * - rework ASSUME framework
+ *
  * Revision 1.6  2010/08/27 14:52:42  alfred
  * - some more overlapping strcpy() cleanups
  *
@@ -166,6 +169,14 @@ static MulDivOrder *MulDivOrders;
 static SimpProc SaveInitProc;
 
 static CPUVar CPU65816,CPUM7700,CPUM7750,CPUM7751;
+
+#define ASSUME7700Count 5
+static ASSUMERec ASSUME7700s[ASSUME7700Count]=
+               {{"PG" , &Reg_PG , 0,  0xff,  0x100},
+                {"DT" , &Reg_DT , 0,  0xff,  0x100},
+                {"X"  , &Reg_X  , 0,     1,     -1},
+                {"M"  , &Reg_M  , 0,     1,     -1},
+                {"DPR", &Reg_DPR, 0,0xffff,0x10000}};
 
 /*---------------------------------------------------------------------------*/
 
@@ -562,25 +573,6 @@ BEGIN
    else WrError(1110);
 END
 
-        static Boolean DecodePseudo(void)
-BEGIN
-#define ASSUME7700Count 5
-static ASSUMERec ASSUME7700s[ASSUME7700Count]=
-               {{"PG" , &Reg_PG , 0,  0xff,  0x100},
-                {"DT" , &Reg_DT , 0,  0xff,  0x100},
-                {"X"  , &Reg_X  , 0,     1,     -1},
-                {"M"  , &Reg_M  , 0,     1,     -1},
-                {"DPR", &Reg_DPR, 0,0xffff,0x10000}};
-
-   if (Memo("ASSUME"))
-    BEGIN
-     CodeASSUME(ASSUME7700s,ASSUME7700Count);
-     return True;
-    END
-
-   return False;
-END
-
         static Boolean LMemo(char *s)
 BEGIN
    String tmp;
@@ -614,8 +606,6 @@ BEGIN
    if (Memo("")) return;
 
    /* Pseudoanweisungen */
-
-   if (DecodePseudo()) return;
 
    if (DecodeMotoPseudo(False)) return;
    if (DecodeIntelPseudo(False)) return;
@@ -1319,6 +1309,9 @@ BEGIN
    ValidSegs=1 << SegCode;
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
    SegLimits[SegCode] = 0xffffffl;
+
+   pASSUMERecs = ASSUME7700s;
+   ASSUMERecCnt = ASSUME7700Count;
 
    MakeCode=MakeCode_7700; IsDef=IsDef_7700;
    SwitchFrom=SwitchFrom_7700; InitFields();

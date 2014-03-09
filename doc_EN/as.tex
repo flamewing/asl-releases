@@ -2697,7 +2697,15 @@ pass: all stacks are cleared at the beginning of a pass!
 with a new value. The value range depends on the currently selected
 segment and on the processor type (tables \ref{TabORG1} to \ref{TabORG4}).
 The lower bound is always zero, and the upper bound is the given value
-minus 1:
+minus 1.
+\par
+{\bf CAUTION}: If the \tty{PHASE} instruction is also used, one
+has to keep in mind that the argument of \tty{ORG} always is the
+{\em load address} of the code.  Expressions using the \$ or \*
+symbol to refer to the current program counter however deliver
+the {\em execution address} of the code and do not yeld the
+desired result when used as argument for \tty{ORG}.  The
+\tty{RORG} statement (\ref{SectRORG}) should be used in such cases.
 \small
 \begin{table*}[htbp]
 \begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
@@ -2759,6 +2767,27 @@ put different, non-continuous code parts into one source file.  In case
 there is no explicit other value listet in a table entry, the initial
 address for this segment (i.e. the start address used without {\tt ORG})
 is 0.
+
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\subsection{RORG}
+\label{SectRORG} 
+\ttindex{RORG}   
+
+{\em valid for: all processors}
+
+\tty{RORG} modifies the program counter just like \tty{ORG},
+however it does not expect an absolute address as argument. 
+Instead, it expects a relative value (positive or negative) that
+is added to the current program counter.  A possible application
+of this statement is the reservation of a certain amount of
+address space, or the use in code parts that are included
+multiple times (e.g. via macros or includes) and that shall be
+position-independent.  Another application is the use in code
+that has an execution address different from the load address
+(i.e. the \tty{PHASE} statement is used).  There is no symbol to
+refer to the current {\em load address}, but it can be referred
+to indirectly via the \tty{RORG} statement.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3749,6 +3778,11 @@ and whose contents are important to know for AS in order to generate
 correct addressing.  It is important to note that \tty{ASSUME} only
 informs AS about these, \bb{no} machine code is generated that actually
 loads these values into the appropriate registers!
+
+A value defined with \tty{ASSUME} can be queried or integrated
+into expressions via the built-in function \tty{ASSUMEDVAL}. 
+This is the case for all architectures listed in the following
+sub-sections except for the 8086.
 
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
@@ -9140,10 +9174,10 @@ The value given is an {\em offset}, i.e. it is added to the addresses
 given in the code file.
 \par
 A special value for start and stop address arguments is a single
-dollar sign (\tty{\$}).  This stands for the very first resp. last address
-that has been used in the code file.  So, if you want to be sure
-that always the whole program is stored in the hex file, set the
-address filter
+dollar sign (\tty{\$}) or '0x'.  This stands for the very first resp.
+last address that has been used in the code file.  So, if you want to
+be sure that always the whole program is stored in the hex file, set
+the address filter
 \begin{verbatim}
  -r $-$
 \end{verbatim}
@@ -9819,7 +9853,9 @@ described by:
                {error}
                {A symbol declared with a \tty{FORWARD} or \tty{PUBLIC} statement could
                 not be resolved.}
-               {the name of the unresolved symbol.}
+               {the name of the unresolved symbol, plus the
+                position of the forward declaration in the
+                source.}
 \errentry{1489}{conflicting FORWARD $<->$ PUBLIC-declaration}
                {error}
                {A symbol was defined both as public and private.}

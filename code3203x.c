@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3203x.c,v 1.6 2010/04/17 13:14:19 alfred Exp $                       */
+/* $Id: code3203x.c,v 1.7 2014/03/08 21:06:35 alfred Exp $                       */
 /***************************************************************************** 
  * $Log: code3203x.c,v $
+ * Revision 1.7  2014/03/08 21:06:35  alfred
+ * - rework ASSUME framework
+ *
  * Revision 1.6  2010/04/17 13:14:19  alfred
  * - address overlapping strcpy()
  *
@@ -123,6 +126,10 @@ static char **ParOrders;
 static SingOrder *SingOrders;
 
 static LongInt DPValue;
+
+#define ASSUME3203Count 1
+   static ASSUMERec ASSUME3203s[ASSUME3203Count]=
+                 {{"DP", &DPValue, -1, 0xff, 0x100}};
 
 /*-------------------------------------------------------------------------*/
 /* Befehlstabellenverwaltung */
@@ -729,21 +736,11 @@ END
 
         static Boolean DecodePseudo(void)
 BEGIN
-#define ASSUME3203Count 1
-   static ASSUMERec ASSUME3203s[ASSUME3203Count]=
-                 {{"DP", &DPValue, -1, 0xff, 0x100}};
-
    Boolean OK;
    int z;
    LongInt Size;
    Double f;
    TempResult t;
-
-   if (Memo("ASSUME"))
-    BEGIN
-     CodeASSUME(ASSUME3203s,ASSUME3203Count);
-     return True;
-    END
 
    if (Memo("SINGLE"))
     BEGIN
@@ -1544,6 +1541,9 @@ BEGIN
    ValidSegs=1<<SegCode;
    Grans[SegCode]=4; ListGrans[SegCode]=4; SegInits[SegCode]=0;
    SegLimits[SegCode] = 0xffffffl;
+
+   pASSUMERecs = ASSUME3203s;
+   ASSUMERecCnt = ASSUME3203Count;
 
    MakeCode=MakeCode_3203X; IsDef=IsDef_3203X;
    SwitchFrom=SwitchFrom_3203X; InitFields(); NextPar=False;

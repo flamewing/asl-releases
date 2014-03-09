@@ -13,9 +13,12 @@
 /*                       unsinged limited                                    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68.c,v 1.9 2010/04/17 13:14:20 alfred Exp $                      */
+/* $Id: code68.c,v 1.10 2014/03/08 21:06:35 alfred Exp $                      */
 /*****************************************************************************
  * $Log: code68.c,v $
+ * Revision 1.10  2014/03/08 21:06:35  alfred
+ * - rework ASSUME framework
+ *
  * Revision 1.9  2010/04/17 13:14:20  alfred
  * - address overlapping strcpy()
  *
@@ -849,25 +852,6 @@ END
 
         static Boolean DecodePseudo(void)
 BEGIN
-#define ASSUMEHC11Count 4
-static ASSUMERec ASSUMEHC11s[ASSUMEHC11Count] = 
-               {{"MMSIZ", &Reg_MMSIZ, 0, 0xff, 0},
-                {"MMWBR", &Reg_MMWBR, 0, 0xff, 0},
-                {"MM1CR", &Reg_MM1CR, 0, 0xff, 0},
-                {"MM2CR", &Reg_MM2CR, 0, 0xff, 0}};
-
-   if (Memo("ASSUME"))
-    BEGIN
-     if (MomCPU == CPU68HC11K4)
-      BEGIN
-       CodeASSUME(ASSUMEHC11s,ASSUMEHC11Count);
-       SetK4Ranges();
-      END
-     else
-       WrError(1500);
-     return True;
-    END
-
    if (Memo("PRWINS"))
     BEGIN
      if (MomCPU != CPU68HC11K4) WrError(1500);
@@ -999,6 +983,13 @@ BEGIN
    DeinitFields();
 END
 
+#define ASSUMEHC11Count 4
+static ASSUMERec ASSUMEHC11s[ASSUMEHC11Count] = 
+               {{"MMSIZ", &Reg_MMSIZ, 0, 0xff, 0, SetK4Ranges},
+                {"MMWBR", &Reg_MMWBR, 0, 0xff, 0, SetK4Ranges},
+                {"MM1CR", &Reg_MM1CR, 0, 0xff, 0, SetK4Ranges},
+                {"MM2CR", &Reg_MM2CR, 0, 0xff, 0, SetK4Ranges}};
+
         static void SwitchTo_68(void)
 BEGIN
    TurnWords=False; ConstMode=ConstModeMoto; SetIsOccupied=False;
@@ -1013,6 +1004,12 @@ BEGIN
    MakeCode=MakeCode_68; IsDef=IsDef_68;
    SwitchFrom=SwitchFrom_68; InitFields();
    AddMoto16PseudoONOFF();
+
+   if (MomCPU == CPU68HC11K4)
+   {
+     pASSUMERecs = ASSUMEHC11s;
+     ASSUMERecCnt = ASSUMEHC11Count;
+   }
 
    SetFlag(&DoPadding,DoPaddingName,False);
 END

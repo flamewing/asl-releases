@@ -17,9 +17,12 @@
 /*       Registersymbole                                                    */
 /*       explizite Displacement-Laengenangaben (Adressen, ADDSP)            */
 /****************************************************************************/
-/* $Id: codefmc16.c,v 1.5 2007/11/24 22:48:06 alfred Exp $                  */
+/* $Id: codefmc16.c,v 1.6 2014/03/08 21:06:36 alfred Exp $                  */
 /*****************************************************************************
  * $Log: codefmc16.c,v $
+ * Revision 1.6  2014/03/08 21:06:36  alfred
+ * - rework ASSUME framework
+ *
  * Revision 1.5  2007/11/24 22:48:06  alfred
  * - some NetBSD changes
  *
@@ -138,6 +141,15 @@ static ShortInt AdrMode, OpSize;
 static LongInt Reg_PCB, Reg_DTB, Reg_ADB, Reg_USB, Reg_SSB, Reg_DPR;
 
 static SimpProc SaveInitProc;
+
+#define ASSUMEF2MC16Count 6
+   static ASSUMERec ASSUMEF2MC16s[ASSUMEF2MC16Count] = 
+                  {{"PCB"    , &Reg_PCB,     0x00, 0xff, 0x100},
+                   {"DTB"    , &Reg_DTB,     0x00, 0xff, 0x100},
+                   {"ADB"    , &Reg_ADB,     0x00, 0xff, 0x100},
+                   {"USB"    , &Reg_USB,     0x00, 0xff, 0x100},
+                   {"SSB"    , &Reg_SSB,     0x00, 0xff, 0x100},
+                   {"DPR"    , &Reg_DPR,     0x00, 0xff, 0x100}};
 
 /*--------------------------------------------------------------------------*/
 /* Adressdekoder */
@@ -2109,26 +2121,6 @@ BEGIN
     END
 END
 
-        static Boolean DecodePseudo(void)
-BEGIN
-#define ASSUMEF2MC16Count 6
-   static ASSUMERec ASSUMEF2MC16s[ASSUMEF2MC16Count] = 
-                  {{"PCB"    , &Reg_PCB,     0x00, 0xff, 0x100},
-                   {"DTB"    , &Reg_DTB,     0x00, 0xff, 0x100},
-                   {"ADB"    , &Reg_ADB,     0x00, 0xff, 0x100},
-                   {"USB"    , &Reg_USB,     0x00, 0xff, 0x100},
-                   {"SSB"    , &Reg_SSB,     0x00, 0xff, 0x100},
-                   {"DPR"    , &Reg_DPR,     0x00, 0xff, 0x100}};
-
-   if (Memo("ASSUME"))
-    BEGIN
-     CodeASSUME(ASSUMEF2MC16s,ASSUMEF2MC16Count);
-     return True;
-    END
-
-   return False;
-END
-
 /*--------------------------------------------------------------------------*/
 /* Codetabellen */
 
@@ -2385,7 +2377,6 @@ BEGIN
 
    /* Pseudoanweisungen */
 
-   if (DecodePseudo()) return;
    if (DecodeIntelPseudo(False)) return;
 
    /* akt. Datensegment */
@@ -2450,6 +2441,9 @@ BEGIN
    SwitchFrom = SwitchFrom_F2MC16; InitFields();
 
    AddONOFF("SUPMODE" , &SupAllowed, SupAllowedName,False);
+
+   pASSUMERecs = ASSUMEF2MC16s;
+   ASSUMERecCnt = ASSUMEF2MC16Count;
 
    NextDataSeg = 1; /* DTB */
 END

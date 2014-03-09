@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code29k.c,v 1.5 2007/11/24 22:48:03 alfred Exp $                     */
+/* $Id: code29k.c,v 1.6 2014/03/08 21:06:35 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code29k.c,v $
+ * Revision 1.6  2014/03/08 21:06:35  alfred
+ * - rework ASSUME framework
+ *
  * Revision 1.5  2007/11/24 22:48:03  alfred
  * - some NetBSD changes
  *
@@ -86,6 +89,10 @@ static CPUVar CPU29000,CPU29240,CPU29243,CPU29245;
 static LongInt Reg_RBP;
 static StringList Emulations;
 static SimpProc SaveInitProc;
+
+#define ASSUME29KCount 1
+   static ASSUMERec ASSUME29Ks[ASSUME29KCount]=
+             {{"RBP", &Reg_RBP, 0, 0xff, 0x00000000}};
 
 /*-------------------------------------------------------------------------*/
 
@@ -322,17 +329,7 @@ END
 
         static Boolean DecodePseudo(void)
 BEGIN
-#define ASSUME29KCount 1
-   static ASSUMERec ASSUME29Ks[ASSUME29KCount]=
-             {{"RBP", &Reg_RBP, 0, 0xff, 0x00000000}};
-
    int z;
-
-   if (Memo("ASSUME"))
-    BEGIN
-     CodeASSUME(ASSUME29Ks,ASSUME29KCount);
-     return True;
-    END
 
    if (Memo("EMULATED"))
     BEGIN
@@ -894,6 +891,9 @@ BEGIN
 
    MakeCode=MakeCode_29K; IsDef=IsDef_29K;
    AddONOFF("SUPMODE", &SupAllowed, SupAllowedName,False);
+
+   pASSUMERecs = ASSUME29Ks;
+   ASSUMERecCnt = ASSUME29KCount;
 
    SwitchFrom=SwitchFrom_29K; InitFields();
 END

@@ -31,9 +31,12 @@
 /*           2002-01-13: fixed undefined value of OK in some cases           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3254x.c,v 1.6 2010/04/17 13:14:20 alfred Exp $                   */
+/* $Id: code3254x.c,v 1.7 2014/03/08 21:06:35 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code3254x.c,v $
+ * Revision 1.7  2014/03/08 21:06:35  alfred
+ * - rework ASSUME framework
+ *
  * Revision 1.6  2010/04/17 13:14:20  alfred
  * - address overlapping strcpy()
  *
@@ -133,6 +136,12 @@ static Word AdrVals[3];
 
 static Boolean ThisPar;
 static Word LastOpCode;
+
+#define ASSUME3254xCount 3
+static ASSUMERec ASSUME3254xs[ASSUME3254xCount] = 
+               {{"CPL", &Reg_CPL, 0,      1,       0},
+                {"DP" , &Reg_DP , 0,  0x1ff,   0x200},
+                {"SP" , &Reg_SP , 0, 0xffff, 0x10000}};
 
 /*-------------------------------------------------------------------------*/
 /* Address Decoder */
@@ -2381,18 +2390,6 @@ static void DecodePort(Word Index)
 
 static Boolean DecodePseudo(void)
 {
-#define ASSUME3254xCount 3
-static ASSUMERec ASSUME3254xs[ASSUME3254xCount] = 
-               {{"CPL", &Reg_CPL, 0,      1,       0},
-                {"DP" , &Reg_DP , 0,  0x1ff,   0x200},
-                {"SP" , &Reg_SP , 0, 0xffff, 0x10000}};
-
-  if (Memo("ASSUME"))
-    BEGIN
-     CodeASSUME(ASSUME3254xs,ASSUME3254xCount);
-     return True;
-    END
-
   if (Memo("PORT"))
   {
     CodeEquate(SegIO,0,65535);
@@ -2782,6 +2779,9 @@ static void SwitchTo_32054x(void)
 
   MakeCode = MakeCode_32054x; IsDef = IsDef_32054x;
   
+  pASSUMERecs = ASSUME3254xs;
+  ASSUMERecCnt = ASSUME3254xCount;
+
   InitFields(); SwitchFrom = SwitchFrom_32054x;
   ThisRep = LastRep = False;
   LastOpCode = 0;

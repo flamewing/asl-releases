@@ -36,9 +36,15 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.21 2013/12/21 19:46:51 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.23 2014/03/08 21:06:35 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.c,v $
+ * Revision 1.23  2014/03/08 21:06:35  alfred
+ * - rework ASSUME framework
+ *
+ * Revision 1.22  2014/03/08 17:26:14  alfred
+ * - print out declaration position for unresolved forwards
+ *
  * Revision 1.21  2013/12/21 19:46:51  alfred
  * - dynamically resize code buffer
  *
@@ -1951,6 +1957,18 @@ static Operator Operators[] =
        LEAVE;
       END
 
+     else if (!strcmp(ftemp, "ASSUMEDVAL"))
+     {
+       for (z1 = 0; z1 < ASSUMERecCnt; z1++)
+         if (!strcasecmp(Copy, pASSUMERecs[z1].Name))
+         {
+           pErg->Typ = TempInt;
+           pErg->Contents.Int = *(pASSUMERecs[z1].Dest);
+           LEAVE;
+         }
+       WrXError(1010, Copy); LEAVE;
+     }
+
      /* Unterausdruck auswerten (interne Funktionen maxmimal mit drei Argumenten) */
 
      z1 = 0; KlPos = Copy;
@@ -2923,6 +2941,7 @@ static void EnterSymbol(PSymbolEntry Neu, Boolean MayChange, LongInt ResHandle)
      if (Lauf != Nil)
      {
        free(Lauf->Name);
+       free(Lauf->pErrorPos);
        if (Prev == Nil) *RRoot = Lauf->Next;
        else Prev->Next = Lauf->Next;
        free(Lauf);

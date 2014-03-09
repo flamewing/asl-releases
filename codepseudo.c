@@ -13,9 +13,12 @@
 /*           2002-01-13 Borland Pascal 3.1 doesn't like empty default clause */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codepseudo.c,v 1.9 2011-08-01 19:58:03 alfred Exp $                  */
+/* $Id: codepseudo.c,v 1.10 2014/03/08 21:06:36 alfred Exp $                  */
 /***************************************************************************** 
  * $Log: codepseudo.c,v $
+ * Revision 1.10  2014/03/08 21:06:36  alfred
+ * - rework ASSUME framework
+ *
  * Revision 1.9  2011-08-01 19:58:03  alfred
  * - parse noting value case-insensitive
  *
@@ -148,55 +151,3 @@ void CodeEquate(ShortInt DestSeg, LargeInt Min, LargeInt Max)
   }
 }
 
-/*****************************************************************************
- * Function:    CodeASSUME
- * Purpose:     handle ASSUME statement
- * Result:      -
- *****************************************************************************/
-   
-void CodeASSUME(ASSUMERec *Def, Integer Cnt)
-{
-  int z1, z2;
-  Boolean OK;
-  LongInt HVal;
-  String RegPart, ValPart;
-
-  if (ArgCnt == 0) WrError(1110);
-  else
-  {
-    z1 = 1; OK = True;
-    while ((z1 <= ArgCnt) && (OK))
-    {
-      SplitString(ArgStr[z1], RegPart, ValPart, QuotPos(ArgStr[z1], ':'));
-      z2 = 0; NLS_UpString(RegPart);
-      while ((z2 < Cnt) && (strcmp(Def[z2].Name,RegPart)))
-        z2++;
-      OK = (z2 < Cnt);
-      if (!OK) WrXError(1980, RegPart);
-      else
-      {
-        if (strcasecmp(ValPart, "NOTHING") == 0)
-        {
-          if (Def[z2].NothingVal == -1) WrError(1350);
-          else
-            *(Def[z2].Dest) = Def[z2].NothingVal;
-        }
-        else
-        {
-          FirstPassUnknown = False;
-          HVal = EvalIntExpression(ValPart, Int32, &OK);
-          if (OK)
-          {
-            if (FirstPassUnknown)
-            {
-              WrError(1820); OK = False;
-            }
-            else if (ChkRange(HVal,Def[z2].Min,Def[z2].Max))
-              *(Def[z2].Dest) = HVal;
-          }
-        }
-      }
-      z1++;
-    }
-  }
-}

@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6812.c,v 1.18 2010/08/27 14:52:41 alfred Exp $                    */
+/* $Id: code6812.c,v 1.19 2014/03/08 21:06:36 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6812.c,v $
+ * Revision 1.19  2014/03/08 21:06:36  alfred
+ * - rework ASSUME framework
+ *
  * Revision 1.18  2010/08/27 14:52:41  alfred
  * - some more overlapping strcpy() cleanups
  *
@@ -163,6 +166,11 @@ static Reg *Regs;
 static PInstTable RegTable;
 
 static SimpProc SaveInitProc;
+
+#define ASSUME6812Count 5
+static ASSUMERec ASSUME6812s[ASSUME6812Count] =
+               { {"DIRECT" , &Reg_Direct , 0,  0xff,  0x100},
+                 {"GPAGE"  , &Reg_GPage  , 0,  0x7f,   0x80} };
 
 /*---------------------------------------------------------------------------*/
 /* Address Expression Decoder */
@@ -1235,20 +1243,6 @@ static void DecodeBTAS(Word Index)
   }
 }
 
-static void LCodeASSUME(Word Index)
-{
-#define ASSUME6812Count 5
-static ASSUMERec ASSUME6812s[ASSUME6812Count] =
-               { {"DIRECT" , &Reg_Direct , 0,  0xff,  0x100},
-                 {"GPAGE"  , &Reg_GPage  , 0,  0x7f,   0x80} };
-
-  UNUSED(Index);
-
-  if (MomCPU < CPU6812X) WrError(1500);
-  else
-    CodeASSUME(ASSUME6812s,ASSUME6812Count);
-}
-
 static void LookupReg(Word Index)
 {
   Reg *pReg = Regs + Index;
@@ -1539,8 +1533,6 @@ static void InitFields(void)
   AddInstTable(InstTable, "TRAP"  , 0   , DecodeTRAP);
   AddInstTable(InstTable, "BTAS"  , 0   , DecodeBTAS);
 
-  AddInstTable(InstTable, "ASSUME", 0, LCodeASSUME);
-
   RegTable = CreateInstTable(31);
   Regs = (Reg*) malloc(sizeof(Reg) * RegCount);
   InstrZ = 0;
@@ -1667,6 +1659,12 @@ static void SwitchTo_6812(void)
   MakeCode = MakeCode_6812; IsDef = IsDef_6812;
   SwitchFrom = SwitchFrom_6812; InitFields();
   AddMoto16PseudoONOFF();
+
+  if (MomCPU >= CPU6812X)
+  {
+    pASSUMERecs = ASSUME6812s;
+   ASSUMERecCnt = ASSUME6812Count;
+  }
 
   SetFlag(&DoPadding, DoPaddingName, False);
 }

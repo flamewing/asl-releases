@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code65.c,v 1.4 2010/08/27 14:52:41 alfred Exp $                      */
+/* $Id: code65.c,v 1.5 2014/03/08 21:06:35 alfred Exp $                      */
 /*****************************************************************************
  * $Log: code65.c,v $
+ * Revision 1.5  2014/03/08 21:06:35  alfred
+ * - rework ASSUME framework
+ *
  * Revision 1.4  2010/08/27 14:52:41  alfred
  * - some more overlapping strcpy() cleanups
  *
@@ -95,6 +98,10 @@ static LongInt SpecPage;
 
 static ShortInt ErgMode;
 static Byte AdrVals[2];
+
+#define ASSUME740Count 1
+   static ASSUMERec ASSUME740s[ASSUME740Count]=
+                    {{"SP", &SpecPage, 0, 0xff, -1}};
 
 /*---------------------------------------------------------------------------*/
 
@@ -253,22 +260,6 @@ static void ChkZero(char *Asc, Byte *erg)
     *erg = 0;
 }
 
-        static Boolean DecodePseudo(void)
-BEGIN
-#define ASSUME740Count 1
-   static ASSUMERec ASSUME740s[ASSUME740Count]=
-                    {{"SP", &SpecPage, 0, 0xff, -1}};
-
-   if (Memo("ASSUME"))
-    BEGIN
-     if (MomCPU!=CPUM740) WrError(1500);
-     else CodeASSUME(ASSUME740s,ASSUME740Count);
-     return True;
-    END
-
-   return False;
-END
-
         static void ChkFlags(void)
 BEGIN
    /* Spezialflags ? */
@@ -325,8 +316,6 @@ BEGIN
    if (Memo("")) { ChkFlags(); return; }
 
    /* Pseudoanweisungen */
-
-   if (DecodePseudo()) { ChkFlags(); return; }
 
    if (DecodeMotoPseudo(False)) { ChkFlags(); return; }
 
@@ -747,6 +736,12 @@ BEGIN
    ValidSegs=1<<SegCode;
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
    SegLimits[SegCode] = 0xffff;
+
+   if (MomCPU == CPUM740)
+   {
+     pASSUMERecs = ASSUME740s;
+     ASSUMERecCnt = ASSUME740Count;
+   }
 
    MakeCode=MakeCode_65; IsDef=IsDef_65;
    SwitchFrom=SwitchFrom_65; InitFields();

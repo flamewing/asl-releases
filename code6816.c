@@ -11,9 +11,12 @@
 /*            1. 7.2001 forgot to set AttrChars                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6816.c,v 1.6 2007/11/24 22:48:05 alfred Exp $                    */
+/* $Id: code6816.c,v 1.7 2014/03/08 21:06:36 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6816.c,v $
+ * Revision 1.7  2014/03/08 21:06:36  alfred
+ * - rework ASSUME framework
+ *
  * Revision 1.6  2007/11/24 22:48:05  alfred
  * - some NetBSD changes
  *
@@ -115,6 +118,10 @@ static EmuOrder *EmuOrders;
 static char **Regs;
 
 static CPUVar CPU6816;
+
+#define ASSUME6816Count 1
+  static ASSUMERec ASSUME6816s[ASSUME6816Count] =
+                   {{"EK" , &Reg_EK , 0 , 0xff , 0x100}};
 
 /*-------------------------------------------------------------------------*/
 
@@ -1096,21 +1103,6 @@ static void DeinitFields(void)
 
 /*-------------------------------------------------------------------------*/
 
-static Boolean DecodePseudo(void)
-{
-#define ASSUME6816Count 1
-  static ASSUMERec ASSUME6816s[ASSUME6816Count] =
-                   {{"EK" , &Reg_EK , 0 , 0xff , 0x100}};
-
-  if (Memo("ASSUME"))
-  {
-    CodeASSUME(ASSUME6816s, ASSUME6816Count);
-    return True;
-  }
-
-  return False;
-}
-
 static void MakeCode_6816(void)
 {
   CodeLen = 0; DontPrint = False; AdrCnt = 0; OpSize = (-1);
@@ -1137,8 +1129,6 @@ static void MakeCode_6816(void)
   if (Memo("")) return;
 
   /* Pseudoanweisungen */
-
-  if (DecodePseudo()) return;
 
   if (DecodeMotoPseudo(True)) return;
   if (DecodeMoto16Pseudo(OpSize, True)) return;
@@ -1177,6 +1167,9 @@ static void SwitchTo_6816(void)
   MakeCode = MakeCode_6816; IsDef = IsDef_6816;
   SwitchFrom = SwitchFrom_6816;
   AddMoto16PseudoONOFF();
+
+  pASSUMERecs = ASSUME6816s;
+  ASSUMERecCnt = ASSUME6816Count;
 
   InitFields();
 }

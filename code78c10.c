@@ -11,9 +11,12 @@
 /*           25.10.2000 accesses wrong argument for mov nnn,a                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code78c10.c,v 1.5 2007/11/26 19:28:34 alfred Exp $                   */
+/* $Id: code78c10.c,v 1.6 2014/03/08 21:06:36 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code78c10.c,v $
+ * Revision 1.6  2014/03/08 21:06:36  alfred
+ * - rework ASSUME framework
+ *
  * Revision 1.5  2007/11/26 19:28:34  alfred
  * - change SKINT -> SKNIT
  *
@@ -79,6 +82,10 @@ static FixedOrder *Reg2Orders;
 static FixedOrder *WorkOrders;
 static FixedOrder *EAOrders;
 static SReg *SRegs;
+
+#define ASSUME78C10Count 1
+static ASSUMERec ASSUME78C10s[ASSUME78C10Count]=
+                 {{"V" , &WorkArea, 0, 0xff, 0x100}};
 
 /*--------------------------------------------------------------------------------*/
 
@@ -442,21 +449,6 @@ END
 
 /*--------------------------------------------------------------------------*/
 
-        static Boolean DecodePseudo(void)
-BEGIN
-#define ASSUME78C10Count 1
-static ASSUMERec ASSUME78C10s[ASSUME78C10Count]=
-                 {{"V" , &WorkArea, 0, 0xff, 0x100}};
-
-   if (Memo("ASSUME"))
-    BEGIN
-     CodeASSUME(ASSUME78C10s,ASSUME78C10Count);
-     return True;
-    END
-
-   return False;
-END
-
         static void MakeCode_78C10(void)
 BEGIN
    int z;
@@ -471,8 +463,6 @@ BEGIN
    if (Memo("")) return;
 
    /* Pseudoanweisungen */
-
-   if (DecodePseudo()) return;
 
    if (DecodeIntelPseudo(False)) return;
 
@@ -1011,6 +1001,9 @@ BEGIN
    ValidSegs=1<<SegCode;
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
    SegLimits[SegCode] = 0xffff;
+
+   pASSUMERecs = ASSUME78C10s;
+   ASSUMERecCnt = ASSUME78C10Count;
 
    MakeCode=MakeCode_78C10; IsDef=IsDef_78C10;
    SwitchFrom=SwitchFrom_78C10; InitFields();

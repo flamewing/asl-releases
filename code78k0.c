@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code78k0.c,v 1.7 2010/08/27 14:52:42 alfred Exp $                          *
+/* $Id: code78k0.c,v 1.8 2014/03/08 09:47:43 alfred Exp $                          *
  ***************************************************************************** 
  * $Log: code78k0.c,v $
+ * Revision 1.8  2014/03/08 09:47:43  alfred
+ * - fix DBNZ
+ *
  * Revision 1.7  2010/08/27 14:52:42  alfred
  * - some more overlapping strcpy() cleanups
  *
@@ -1165,7 +1168,7 @@ static void DecodeDBNZ(Word Index)
       BAsmCode[0] = (AdrMode == ModReg8) ? 0x88 + AdrPart : 0x04;
       BAsmCode[1] = AdrVals[0];
       pAdr = (*ArgStr[2] == '$') ? ArgStr[2] + 1 : ArgStr[2];
-      AdrInt = EvalIntExpression(ArgStr[2], UInt16, &OK) - (EProgCounter() + AdrCnt + 2);
+      AdrInt = EvalIntExpression(pAdr, UInt16, &OK) - (EProgCounter() + AdrCnt + 2);
       if (OK)
       {
         if (((AdrInt < -128) || (AdrInt > 127)) && (!SymbolQuestionable)) WrError(1370);

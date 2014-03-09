@@ -2788,6 +2788,16 @@ zu geben und damit verschiedene, nicht zusammenh"angende Codest"ucke in
 einer Quelldatei unterzubringen.  Sofern nicht in einem Feld explizit anders
 angegeben, ist die vorgegebene Startadresse in einem Segment (d.h. die ohne
 {\tt ORG} angenommene) immer 0.
+\par
+{\bf WICHTIG:} Falls auch mit dem \tty{PHASE}-Befehl gearbeitet
+wird, mu"s ber"ucksichtigt werden, da"s das Argument von \tty{ORG}
+immer die {\em Ladeadresse} des Codes ist, nicht die {\em
+Ausf"uhrungsadresse}.  Ausdr"ucke, die sich mit dem \$- oder
+\*-Symbol auf den aktuellen Programmz"ahler beziehen, liefern
+aber die {\em Ausf"uhrungsadresse} des Codes und f"uhren als
+Argument von \tty{ORG} nicht zum gew"unschten Ergebnis.  In
+solchen F"allen ist die \tty{RORG}-Anweisung (\ref{SectRORG}) das
+Mittel der Wahl.
 \begin{table*}[htbp]
 \begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
 \hline
@@ -2841,6 +2851,28 @@ angegeben, ist die vorgegebene Startadresse in einem Segment (d.h. die ohne
 \end{tabular}\end{center}
 \caption{Adre"sbereiche f"ur \tty{ORG} --- Teil 4\label{TabORG4}}
 \end{table*}
+
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\subsection{RORG}
+\label{SectRORG}
+\ttindex{RORG}
+
+{\em G"ultigkeit: alle Prozessoren}
+
+\tty{RORG} setzt wie \tty{ORG} den Programmz"ahler neu, erwartet
+als Argument allerdings keine absolute Adresse, sondern einen
+relativen Wert (positiv oder negativ), der zum Programmz"ahler
+addiert wird.  Eine Anwendungsm"oglichkeit ist das Freilassen
+einer bestimmten Menge von Adre"sraum, oder die Anwendung in
+Code-Teilen, die an mehreren Stellen (z.B. via Makros oder
+Includes) eingebunden werden und lageunabh"angig arbeiten sollen. 
+Eine weitere Anwendungsm"oglichkeit ergibt sich in Code, der eine
+Ausf"uhrungsadresse unterschiedlich zur Ladeadresse hat (d.h. es
+wird mit der \tty{PHASE}-Anweisung gearbeitet).  Es gibt kein
+Symbol, "uber das man in so einer Situation auf die aktuelle
+{\em Ladeadresse} zugreifen kann, aber mittels \tty{RORG} kann man
+sich indirekt darauf beziehen.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3860,6 +3892,11 @@ Adressierungseinheiten beeinflussen und deren Werte AS wissen mu"s, um
 korrekte Adressierungen zu erzeugen.  Wichtig ist, da"s man AS mit ASSUME
 diese Werte nur mitteilt, es wird {\em kein} Maschinencode erzeugt, der
 diese Werte in die entsprechenden Register l"adt!
+
+Ein mit \tty{ASSUME} definierter Wert l"a"st sich mit der
+eingebauten Funktion \tty{ASSUMEDVAL} wieder abfragen oder in
+Ausdr"ucke einbauen.  Dies gilt f"ur alle im folgenden gelisteten
+Architekturen mit Ausnahme des 8086.
 
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
@@ -9326,10 +9363,10 @@ verschieben, kann man den Schalter
 verwenden.  Der dabei angegebene Wert ist ein {\em Offset}, d.h. er wird
 auf die in der Code-Datei angegebenen Adressen aufaddiert.
 \par
-Als Sonderwerte f"ur Start-und Endadresse beim r-Parameter ist ein
-schlichtes Dollar-Zeichen (\$) erlaubt.  Diese kennzeichnet die erste
-bzw. letzte in der Programmdatei belegte Adresse.  Wer also sicher
-sein will, da"s immer das ganze Programm in der Hex-Datei abgelegt
+Als Sonderwert f"ur Start-und Endadresse beim r-Parameter ist ein
+schlichtes Dollar-Zeichen (\$) bzw. ein '0x' erlaubt.  Dies kennzeichnet
+die erste bzw. letzte in der Programmdatei belegte Adresse.  Wer also
+sicher sein will, da"s immer das ganze Programm in der Hex-Datei abgelegt
 wird, braucht sich mit dem Schalter
 \begin{verbatim}
  -r $-$
@@ -10037,7 +10074,8 @@ Angaben:
                {Fehler}
                {ein mit \tty{FORWARD} oder \tty{PUBLIC}
 	        angek"undigtes Symbol wurde nicht in der Sektion definiert.}
-               {der Name des fraglichen Symbols}
+               {der Name des fraglichen Symbols, plus die
+                Position der Vorw"arts-Deklaration im Quelltext}
 \errentry{1489}{widersprechende FORWARD $\leftrightarrow$PUBLIC-Deklaration}
                {Fehler}
                {Ein Symbol wurde sowohl als privat als auch

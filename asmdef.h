@@ -33,9 +33,15 @@
 /*           2001-10-20 added GNU error flag                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmdef.h,v 1.7 2013/12/21 19:46:50 alfred Exp $                      */
+/* $Id: asmdef.h,v 1.9 2014/03/08 21:06:35 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmdef.h,v $
+ * Revision 1.9  2014/03/08 21:06:35  alfred
+ * - rework ASSUME framework
+ *
+ * Revision 1.8  2014/03/08 17:26:14  alfred
+ * - print out declaration position for unresolved forwards
+ *
  * Revision 1.7  2013/12/21 19:46:50  alfred
  * - dynamically resize code buffer
  *
@@ -288,6 +294,7 @@ typedef struct _TForwardSymbol
 	  struct _TForwardSymbol *Next;
           StringPtr Name;
 	  LongInt DestSection;
+          StringPtr pErrorPos;
 	 } TForwardSymbol,*PForwardSymbol;
 
 typedef struct _TSaveSection
@@ -303,6 +310,15 @@ typedef struct _TDefinement
           StringPtr TransFrom,TransTo;
           Byte Compiled[256];
 	 } TDefinement,*PDefinement;
+
+typedef struct _ASSUMERec
+         {
+          char *Name;
+          LongInt *Dest;
+          LongInt Min,Max;
+          LongInt NothingVal;
+          void (*pPostProc)(void);
+         } ASSUMERec;
 
 extern StringPtr SourceFile;
 
@@ -325,6 +341,10 @@ extern LongInt ValidSegs;
 extern Boolean ENDOccured;
 extern Boolean Retracted;
 extern Boolean ListToStdout,ListToNull;
+
+extern unsigned ASSUMERecCnt;
+extern const ASSUMERec *pASSUMERecs;
+extern void (*pASSUMEOverride)(void);
 
 extern Word TypeFlag;
 extern ShortInt SizeFlag;

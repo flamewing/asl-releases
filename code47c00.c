@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code47c00.c,v 1.3 2005/09/08 17:31:03 alfred Exp $                   */
+/* $Id: code47c00.c,v 1.4 2014/03/08 21:06:35 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code47c00.c,v $
+ * Revision 1.4  2014/03/08 21:06:35  alfred
+ * - rework ASSUME framework
+ *
  * Revision 1.3  2005/09/08 17:31:03  alfred
  * - add missing include
  *
@@ -73,6 +76,10 @@ static SimpProc SaveInitProc;
 
 static FixedOrder *FixedOrders;
 static char **BitOrders;
+
+#define ASSUME47Count 1
+static ASSUMERec ASSUME47s[ASSUME47Count]=
+             {{"DMB", &DMBAssume, 0, 3, 4}};
 
 /*---------------------------------------------------------------------------*/
 
@@ -216,19 +223,9 @@ END
 
         static Boolean DecodePseudo(void)
 BEGIN
-#define ASSUME47Count 1
-static ASSUMERec ASSUME47s[ASSUME47Count]=
-             {{"DMB", &DMBAssume, 0, 3, 4}};
-
    if (Memo("PORT"))
     BEGIN
      CodeEquate(SegIO,0,0x1f);
-     return True;
-    END
-
-   if (Memo("ASSUME"))
-    BEGIN
-     CodeASSUME(ASSUME47s,ASSUME47Count);
      return True;
     END
 
@@ -1131,6 +1128,9 @@ BEGIN
    SegLimits[SegData] = RAMEnd();
    Grans[SegIO  ]=1; ListGrans[SegIO  ]=1; SegInits[SegIO  ]=0;
    SegLimits[SegIO  ] = PortEnd();
+
+   pASSUMERecs = ASSUME47s;
+   ASSUMERecCnt = ASSUME47Count;
 
    MakeCode=MakeCode_47C00; IsDef=IsDef_47C00;
    SwitchFrom=SwitchFrom_47C00; InitFields();

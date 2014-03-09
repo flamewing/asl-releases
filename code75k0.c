@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code75k0.c,v 1.5 2010/04/17 13:14:22 alfred Exp $                    */
+/* $Id: code75k0.c,v 1.6 2014/03/08 21:06:36 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code75k0.c,v $
+ * Revision 1.6  2014/03/08 21:06:36  alfred
+ * - rework ASSUME framework
+ *
  * Revision 1.5  2010/04/17 13:14:22  alfred
  * - address overlapping strcpy()
  *
@@ -162,6 +165,14 @@ BEGIN
      case 1: if (Hi(Adr)!=MBSValue) WrError(110); break;
     END
 END
+
+static void CheckMBE(void)
+{
+  if ((MomCPU == CPU75402) && (MBEValue != 0))
+  {
+    MBEValue = 0; WrError(1440);
+  }
+}
 
         static void ChkAdr(Byte Mask)
 BEGIN
@@ -401,22 +412,7 @@ END
 
         static Boolean DecodePseudo(void)
 BEGIN
-#define ASSUME75Count 2
-   static ASSUMERec ASSUME75s[ASSUME75Count]=
-             {{"MBS", &MBSValue, 0, 0x0f, 0x10},
-              {"MBE", &MBEValue, 0, 0x01, 0x01}};
-
    Word BErg;
-
-   if (Memo("ASSUME"))
-    BEGIN
-     CodeASSUME(ASSUME75s,ASSUME75Count);
-     if ((MomCPU==CPU75402) AND (MBEValue!=0))
-      BEGIN
-       MBEValue=0; WrError(1440);
-      END
-     return True;
-    END
 
    if (Memo("SFR"))
     BEGIN
@@ -1439,6 +1435,11 @@ BEGIN
    DeinitFields();
 END
 
+#define ASSUME75Count 2
+   static ASSUMERec ASSUME75s[ASSUME75Count]=
+             {{"MBS", &MBSValue, 0, 0x0f, 0x10},
+              {"MBE", &MBEValue, 0, 0x01, 0x01, CheckMBE}};
+
         static void SwitchTo_75K0(void)
 BEGIN
    TurnWords=False; ConstMode=ConstModeIntel; SetIsOccupied=False;
@@ -1450,6 +1451,9 @@ BEGIN
    Grans[SegCode]=1; ListGrans[SegCode]=1; SegInits[SegCode]=0;
    Grans[SegData]=1; ListGrans[SegData]=1; SegInits[SegData]=0;
    SegLimits[SegData] = 0xfff;
+
+   pASSUMERecs = ASSUME75s;
+   ASSUMERecCnt = ASSUME75Count;
 
    MakeCode=MakeCode_75K0; IsDef=IsDef_75K0;
    SwitchFrom=SwitchFrom_75K0; InitFields();

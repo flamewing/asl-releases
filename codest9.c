@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codest9.c,v 1.6 2010/04/17 13:14:23 alfred Exp $                     */
+/* $Id: codest9.c,v 1.7 2014/03/08 21:06:37 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codest9.c,v $
+ * Revision 1.7  2014/03/08 21:06:37  alfred
+ * - rework ASSUME framework
+ *
  * Revision 1.6  2010/04/17 13:14:23  alfred
  * - address overlapping strcpy()
  *
@@ -129,6 +132,10 @@ static Byte AdrVals[3];
 
 static SimpProc SaveInitProc;
 static LongInt DPAssume;
+
+#define ASSUMEST9Count 1
+static ASSUMERec ASSUMEST9s[ASSUMEST9Count]=
+               {{"DP", &DPAssume, 0,  1, 0x0}};
 
 /*--------------------------------------------------------------------------*/
 
@@ -567,9 +574,6 @@ static Boolean SplitBit(char *Asc, Byte *Erg)
 
         static Boolean DecodePseudo(void)
 BEGIN
-#define ASSUMEST9Count 1
-static ASSUMERec ASSUMEST9s[ASSUMEST9Count]=
-               {{"DP", &DPAssume, 0,  1, 0x0}};
    Byte Bit;
 
    if (Memo("REG")) 
@@ -593,12 +597,6 @@ static ASSUMERec ASSUMEST9s[ASSUMEST9Count]=
                  (Odd(Bit))?"!":"", (Bit >> 1)+AscOfs);
         END
       END
-     return True;
-    END
-
-   if (Memo("ASSUME")) 
-    BEGIN
-     CodeASSUME(ASSUMEST9s,ASSUMEST9Count);
      return True;
     END
 
@@ -1914,6 +1912,9 @@ BEGIN
 
    MakeCode=MakeCode_ST9; IsDef=IsDef_ST9;
    SwitchFrom=SwitchFrom_ST9; InternSymbol=InternSymbol_ST9;
+
+   pASSUMERecs = ASSUMEST9s;
+   ASSUMERecCnt = ASSUMEST9Count;
 
    InitFields();
 END

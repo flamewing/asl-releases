@@ -13,9 +13,15 @@
 /*           13. 1.2001 fix D register access                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6809.c,v 1.6 2013-03-31 20:06:19 alfred Exp $                    */
+/* $Id: code6809.c,v 1.8 2014/03/08 21:06:36 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6809.c,v $
+ * Revision 1.8  2014/03/08 21:06:36  alfred
+ * - rework ASSUME framework
+ *
+ * Revision 1.7  2014/03/08 17:48:07  alfred
+ * - make more tolerant regarding spaces
+ *
  * Revision 1.6  2013-03-31 20:06:19  alfred
  * - allows Moto16 pseudo-ops for 6809
  *
@@ -128,6 +134,10 @@ static char **BitOrders;
 static SimpProc SaveInitProc;
 
 static CPUVar CPU6809,CPU6309;
+
+#define ASSUME09Count 1
+static ASSUMERec ASSUME09s[ASSUME09Count]=
+             {{"DPR", &DPRValue, 0, 0xff, 0x100}};
 
 /*-------------------------------------------------------------------------*/
 /* Erzeugung/Aufloesung Codetabellen*/
@@ -502,6 +512,8 @@ BEGIN
         BEGIN
          strmaxcpy(ArgStr[ArgCnt],Asc,255); *Asc='\0';
         END
+       KillPrefBlanks(ArgStr[ArgCnt]);
+       KillPostBlanks(ArgStr[ArgCnt]);
       END
      strmaxcpy(Asc,ArgStr[1],255); strmaxcpy(LAsc,ArgStr[ArgCnt],255);
     END
@@ -836,21 +848,6 @@ BEGIN
    return False;
 END
 
-        static Boolean DecodePseudo(void)
-BEGIN
-#define ASSUME09Count 1
-static ASSUMERec ASSUME09s[ASSUME09Count]=
-             {{"DPR", &DPRValue, 0, 0xff, 0x100}};
-
-   if (Memo("ASSUME"))
-    BEGIN
-     CodeASSUME(ASSUME09s,ASSUME09Count);
-     return True;
-    END
-
-   return False;
-END
-
         static void SplitPM(char *s, int *Erg)
 BEGIN
    int l=strlen(s);
@@ -914,8 +911,6 @@ BEGIN
    if (Memo("")) return;
 
    /* Pseudoanweisungen */
-
-   if (DecodePseudo()) return;
 
    if (DecodeMotoPseudo(True)) return;
    if (DecodeMoto16Pseudo(OpSize, True)) return;
@@ -1372,6 +1367,9 @@ BEGIN
 
    SwitchFrom=SwitchFrom_6809; InitFields();
    AddMoto16PseudoONOFF();
+
+   pASSUMERecs = ASSUME09s;
+   ASSUMERecCnt = ASSUME09Count;
 END
 
         void code6809_init(void)

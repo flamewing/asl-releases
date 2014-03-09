@@ -19,9 +19,12 @@
 /*          14. 6.1999 mit optionaler Aufspaltung in Subdateien begonnen     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: tex2html.c,v 1.4 2010/08/27 14:52:43 alfred Exp $                   */
+/* $Id: tex2html.c,v 1.5 2014/03/08 21:06:00 alfred Exp $                   */
 /*****************************************************************************
  * $Log: tex2html.c,v $
+ * Revision 1.5  2014/03/08 21:06:00  alfred
+ * - regard \*
+ *
  * Revision 1.4  2010/08/27 14:52:43  alfred
  * - some more overlapping strcpy() cleanups
  *
@@ -1518,6 +1521,13 @@ BEGIN
    DoAddNormal("%",BackSepString);
 END
 
+        static void TeXAddAsterisk(Word Index)
+BEGIN
+   UNUSED(Index);
+
+   DoAddNormal("*",BackSepString);
+END
+
         static void TeXAddSSharp(Word Index)
 BEGIN
    UNUSED(Index);
@@ -2482,6 +2492,7 @@ BEGIN
    AddInstTable(TeXTable,"@",0,TeXAddAt);
    AddInstTable(TeXTable,"#",0,TeXAddImm);
    AddInstTable(TeXTable,"%",0,TeXAddPercent);
+   AddInstTable(TeXTable,"*",0,TeXAddAsterisk);
    AddInstTable(TeXTable,"ss",0,TeXAddSSharp);
    AddInstTable(TeXTable,"in",0,TeXAddIn);
    AddInstTable(TeXTable,"rz",0,TeXAddReal);

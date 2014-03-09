@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeh8_5.c,v 1.8 2010/04/17 13:14:23 alfred Exp $                    */
+/* $Id: codeh8_5.c,v 1.9 2014/03/08 21:06:36 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codeh8_5.c,v $
+ * Revision 1.9  2014/03/08 21:06:36  alfred
+ * - rework ASSUME framework
+ *
  * Revision 1.8  2010/04/17 13:14:23  alfred
  * - address overlapping strcpy()
  *
@@ -112,6 +115,13 @@ static OneOrder *OneOrders;
 static OneOrder *OneRegOrders;
 static OneOrder *RegEAOrders;
 static OneOrder *TwoRegOrders;
+
+#define ASSUMEH8_5Count 4
+static ASSUMERec ASSUMEH8_5s[ASSUMEH8_5Count]=
+               {{"DP", &Reg_DP, 0, 0xff, -1},
+                {"EP", &Reg_EP, 0, 0xff, -1},
+                {"TP", &Reg_TP, 0, 0xff, -1},
+                {"BR", &Reg_BR, 0, 0xff, -1}};
 
 /*-------------------------------------------------------------------------*/
 /* Adressparsing */
@@ -1445,24 +1455,6 @@ static void DeinitFields(void)
   DestroyInstTable(InstTable);
 }
 
-        static Boolean DecodePseudo(void)
-BEGIN
-#define ASSUMEH8_5Count 4
-static ASSUMERec ASSUMEH8_5s[ASSUMEH8_5Count]=
-               {{"DP", &Reg_DP, 0, 0xff, -1},
-                {"EP", &Reg_EP, 0, 0xff, -1},
-                {"TP", &Reg_TP, 0, 0xff, -1},
-                {"BR", &Reg_BR, 0, 0xff, -1}};
-
-   if (Memo("ASSUME"))
-    BEGIN
-     CodeASSUME(ASSUMEH8_5s,ASSUMEH8_5Count);
-     return True;
-    END
-
-   return False;
-END
-
 static void MakeCode_H8_5(void)
 {
   char *p;
@@ -1472,10 +1464,6 @@ static void MakeCode_H8_5(void)
   /* zu ignorierendes */
 
   if (Memo("")) return;
-
-  /* Pseudoanweisungen */
-
-  if (DecodePseudo()) return;
 
   /* Formatangabe abspalten */
 
@@ -1587,6 +1575,9 @@ static void SwitchTo_H8_5(void)
   InitFields();
   AddONOFF("MAXMODE", &Maximum, MaximumName, False);
   AddMoto16PseudoONOFF();
+
+  pASSUMERecs = ASSUMEH8_5s;
+  ASSUMERecCnt = ASSUMEH8_5Count;
 
   SetFlag(&DoPadding, DoPaddingName, False);
 }

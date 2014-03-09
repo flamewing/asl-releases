@@ -19,9 +19,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codexa.c,v 1.6 2010/04/17 13:14:24 alfred Exp $                      */
+/* $Id: codexa.c,v 1.7 2014/03/08 21:06:37 alfred Exp $                      */
 /*****************************************************************************
  * $Log: codexa.c,v $
+ * Revision 1.7  2014/03/08 21:06:37  alfred
+ * - rework ASSUME framework
+ *
  * Revision 1.6  2010/04/17 13:14:24  alfred
  * - address overlapping strcpy()
  *
@@ -113,6 +116,10 @@ static ShortInt AdrMode;
 static Byte AdrPart,MemPart;
 static Byte AdrVals[4];
 static ShortInt OpSize;
+
+#define ASSUMEXACount 1
+static ASSUMERec ASSUMEXAs[ASSUMEXACount]=
+             {{"DS", &Reg_DS, 0, 0xff, 0x100}};
 
 /*-------------------------------------------------------------------------*/
 /* Hilfsroutinen */
@@ -435,9 +442,6 @@ END
 
         static Boolean DecodePseudo(void)
 BEGIN
-#define ASSUMEXACount 1
-static ASSUMERec ASSUMEXAs[ASSUMEXACount]=
-             {{"DS", &Reg_DS, 0, 0xff, 0x100}};
    LongInt BAdr;
 
    if (Memo("PORT"))
@@ -469,12 +473,6 @@ static ASSUMERec ASSUMEXAs[ASSUMEXACount]=
           break;
         END
       END
-     return True;
-    END
-
-   if (Memo("ASSUME"))
-    BEGIN
-     CodeASSUME(ASSUMEXAs,ASSUMEXACount);
      return True;
     END
 
@@ -2039,6 +2037,9 @@ BEGIN
    AddONOFF("SUPMODE",  &SupAllowed, SupAllowedName,False);
    AddONOFF("BRANCHEXT",&DoBranchExt,BranchExtName ,False);
    AddMoto16PseudoONOFF();
+
+   pASSUMERecs = ASSUMEXAs;
+   ASSUMERecCnt = ASSUMEXACount;
 
    SetFlag(&DoPadding,DoPaddingName,False);
 END
