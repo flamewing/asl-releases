@@ -56,7 +56,7 @@ BEGIN
    return catgetmessage(&DefaultCatalog,Num);
 END
 
-	FILE *myopen(char *name, LongInt MsgId1, LongInt MsgId2)
+	FILE *myopen(const char *name, LongInt MsgId1, LongInt MsgId2)
 BEGIN
    FILE *tmpfile;
    String line;
@@ -82,7 +82,7 @@ END
 
 #define MSGPATHNAME "AS_MSGPATH"
 
-	void opencatalog(PMsgCat Catalog, char *File, char *Path, LongInt MsgId1, LongInt MsgId2)
+	void opencatalog(PMsgCat Catalog, const char *File, const char *Path, LongInt MsgId1, LongInt MsgId2)
 BEGIN
    FILE *MsgFile;
    char str[2048],*ptr;

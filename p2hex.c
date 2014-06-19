@@ -21,9 +21,15 @@
 /*           2001-08-30 set EntryAddrPresent when address given as argument  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: p2hex.c,v 1.9 2012-08-19 09:37:51 alfred Exp $                       */
+/* $Id: p2hex.c,v 1.11 2014/06/14 08:51:19 alfred Exp $                       */
 /*****************************************************************************
  * $Log: p2hex.c,v $
+ * Revision 1.11  2014/06/14 08:51:19  alfred
+ * - put entry address for Intel8 into end record
+ *
+ * Revision 1.10  2014/05/29 10:59:05  alfred
+ * - some const cleanups
+ *
  * Revision 1.9  2012-08-19 09:37:51  alfred
  * - silence compiler warnings about printf without arguments
  *
@@ -67,7 +73,7 @@ static char *HexSuffix=".hex";
 
 typedef void (*ProcessProc)(
 #ifdef __PROTOS__
-char *FileName, LongWord Offset
+const char *FileName, LongWord Offset
 #endif
 );
 
@@ -115,7 +121,7 @@ BEGIN
    if (Magic!=0) unlink(TargName);
 END
 
-        static void ProcessFile(char *FileName, LongWord Offset)
+        static void ProcessFile(const char *FileName, LongWord Offset)
 BEGIN
    FILE *SrcFile;
    Word TestID;
@@ -581,7 +587,7 @@ BEGIN
     fprintf(stderr,"%s%s%s\n",getmessage(Num_ErrMsgNullMaskA),GroupName,getmessage(Num_ErrMsgNullMaskB));
 END
 
-        static void MeasureFile(char *FileName, LongWord Offset)
+        static void MeasureFile(const char *FileName, LongWord Offset)
 BEGIN
    FILE *f;
    Byte Header, CPU, Segment, Gran;
@@ -624,7 +630,7 @@ BEGIN
    fclose(f);
 END
 
-	static CMDResult CMD_AdrRange(Boolean Negate, char *Arg)
+	static CMDResult CMD_AdrRange(Boolean Negate, const char *Arg)
 BEGIN
    char *p,Save;
    Boolean ok;
@@ -656,7 +662,7 @@ BEGIN
     END
 END
 
-	static CMDResult CMD_RelAdr(Boolean Negate, char *Arg)
+	static CMDResult CMD_RelAdr(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -664,7 +670,7 @@ BEGIN
    return CMDOK;
 END
 
-       static CMDResult CMD_AdrRelocate(Boolean Negate, char *Arg)
+       static CMDResult CMD_AdrRelocate(Boolean Negate, const char *Arg)
 BEGIN
    Boolean ok;
    UNUSED(Arg);
@@ -683,7 +689,7 @@ BEGIN
     END
 END
    
-        static CMDResult CMD_Rec5(Boolean Negate, char *Arg)
+        static CMDResult CMD_Rec5(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -691,7 +697,7 @@ BEGIN
    return CMDOK;
 END
 
-        static CMDResult CMD_SepMoto(Boolean Negate, char *Arg)
+        static CMDResult CMD_SepMoto(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -699,7 +705,7 @@ BEGIN
    return CMDOK;
 END
 
-        static CMDResult CMD_IntelMode(Boolean Negate, char *Arg)
+        static CMDResult CMD_IntelMode(Boolean Negate, const char *Arg)
 BEGIN
    int Mode;
    Boolean ok;
@@ -718,7 +724,7 @@ BEGIN
     END
 END
 
-	static CMDResult CMD_MultiMode(Boolean Negate, char *Arg)
+	static CMDResult CMD_MultiMode(Boolean Negate, const char *Arg)
 BEGIN
    int Mode;
    Boolean ok;
@@ -737,27 +743,39 @@ BEGIN
     END
 END
 
-        static CMDResult CMD_DestFormat(Boolean Negate, char *Arg)
-BEGIN
+static CMDResult CMD_DestFormat(Boolean Negate, const char *pArg)
+{
 #define NameCnt 9
 
-   static char *Names[NameCnt]={"DEFAULT","MOTO","INTEL","INTEL16","INTEL32","MOS","TEK","DSK","ATMEL"};
-   static THexFormat Format[NameCnt]={Default,MotoS,IntHex,IntHex16,IntHex32,MOSHex,TekHex,TiDSK,Atmel};
-   int z;
+  static char *Names[NameCnt] =
+  {
+    "DEFAULT", "MOTO", "INTEL", "INTEL16", "INTEL32", "MOS", "TEK", "DSK", "ATMEL"
+  };
+  static THexFormat Format[NameCnt] =
+  {
+    Default, MotoS, IntHex, IntHex16, IntHex32, MOSHex, TekHex, TiDSK, Atmel
+  };
+  int z;
+  String Arg;
 
-   for (z=0; z<(int)strlen(Arg); z++) Arg[z]=mytoupper(Arg[z]);
+  strmaxcpy(Arg, pArg, 255);
+  NLS_UpString(Arg);
 
-   z=0;
-   while ((z<NameCnt) AND (strcmp(Arg,Names[z])!=0)) z++;
-   if (z>=NameCnt) return CMDErr;
+  z = 0;
+  while ((z < NameCnt) && (strcmp(Arg,Names[z]) != 0))
+    z++;
+  if (z >= NameCnt)
+    return CMDErr;
 
-   if (NOT Negate) DestFormat=Format[z];
-   else if (DestFormat==Format[z]) DestFormat=Default;
+  if (!Negate)
+    DestFormat = Format[z];
+  else if (DestFormat == Format[z])
+    DestFormat = Default;
 
-   return CMDArg;
-END
+  return CMDArg;
+}
 
-	static CMDResult CMD_DataAdrRange(Boolean Negate, char *Arg)
+	static CMDResult CMD_DataAdrRange(Boolean Negate, const char *Arg)
 BEGIN
    char *p,Save;
    Boolean ok;
@@ -788,93 +806,109 @@ BEGIN
     END
 END
 
-	static CMDResult CMD_EntryAdr(Boolean Negate, char *Arg)
-BEGIN
-   Boolean ok;
-
-   if (Negate)
-    BEGIN
-     EntryAdrPresent=False;
-     return CMDOK;
-    END
-   else
-    BEGIN
-     EntryAdr=ConstLongInt(Arg,&ok,10);
-     if ((NOT ok) OR (EntryAdr>0xffff)) return CMDErr;
-     EntryAdrPresent = True;
-     return CMDArg;
-    END
-END
-
-        static CMDResult CMD_LineLen(Boolean Negate, char *Arg)
-BEGIN
-   Boolean ok;
-
-   if (Negate)
-    if (*Arg!='\0') return CMDErr;
-    else
-     BEGIN
-      LineLen=16; return CMDOK;
-     END
-   else if (*Arg=='\0') return CMDErr;
-   else
-    BEGIN
-     LineLen=ConstLongInt(Arg,&ok,10);
-     if ((NOT ok) OR (LineLen<1) OR (LineLen>MaxLineLen)) return CMDErr;
-     else
-      BEGIN
-       LineLen+=(LineLen&1); return CMDArg;
-      END
-    END
-END
-
-        static CMDResult CMD_MinMoto(Boolean Negate, char *Arg)
-BEGIN
-   Boolean ok;
-
-   if (Negate)
-    if (*Arg != '\0') return CMDErr;
-    else
-     BEGIN
-      MinMoto = 0; return CMDOK;
-     END
-   else if (*Arg == '\0') return CMDErr;
-   else
-    BEGIN
-     MinMoto = ConstLongInt(Arg,&ok,10);
-     if ((NOT ok) OR (MinMoto < 1) OR (MinMoto > 3)) return CMDErr;
-     else return CMDArg;
-    END
-END
-
-	static CMDResult CMD_AutoErase(Boolean Negate, char *Arg)
-BEGIN
-   UNUSED(Arg);
-
-   AutoErase=NOT Negate;
-   return CMDOK;
-END
-
-	static CMDResult CMD_AVRLen(Boolean Negate, char *Arg)
+static CMDResult CMD_EntryAdr(Boolean Negate, const char *Arg)
 {
-   Word Temp;
-   Boolean ok;
+  Boolean ok;
 
-   if (Negate)  
+  if (Negate)
+  {
+    EntryAdrPresent = False;
+    return CMDOK;
+  }
+  else
+  {
+    EntryAdr = ConstLongInt(Arg, &ok, 10);
+    if ((!ok) || (EntryAdr>0xffff))
+      return CMDErr;
+    EntryAdrPresent = True;
+    return CMDArg;
+  }
+}
+
+static CMDResult CMD_LineLen(Boolean Negate, const char *Arg)
+{
+  Boolean ok;
+
+  if (Negate)
+  {
+    if (*Arg!='\0')
+      return CMDErr;
+    else
     {
-      AVRLen = AVRLEN_DEFAULT;
+      LineLen = 16;
       return CMDOK;
     }
-   else
+  }
+  else if (*Arg == '\0')
+    return CMDErr;
+  else
+  {
+    LineLen = ConstLongInt(Arg, &ok, 10);
+    if ((!ok) || (LineLen < 1) || (LineLen > MaxLineLen))
+      return CMDErr;
+    else
     {
-      Temp = ConstLongInt(Arg, &ok, 10);
-      if ((NOT ok) || (Temp < 2) || (Temp > 3)) return CMDErr;
-      else
-       {
-         AVRLen = Temp;
-         return CMDArg;
-       }
+      LineLen += LineLen & 1;
+      return CMDArg;
     }
+  }
+}
+
+static CMDResult CMD_MinMoto(Boolean Negate, const char *Arg)
+{
+  Boolean ok;
+
+  if (Negate)
+  {
+    if (*Arg != '\0')
+      return CMDErr;
+    else
+    {
+      MinMoto = 0;
+      return CMDOK;
+    }
+  }
+  else if (*Arg == '\0')
+    return CMDErr;
+  else
+  {
+    MinMoto = ConstLongInt(Arg, &ok, 10);
+    if ((!ok) || (MinMoto < 1) || (MinMoto > 3))
+      return CMDErr;
+    else
+      return CMDArg;
+  }
+}
+
+static CMDResult CMD_AutoErase(Boolean Negate, const char *Arg)
+{
+  UNUSED(Arg);
+
+  AutoErase = !Negate;
+  return CMDOK;
+}
+
+static CMDResult CMD_AVRLen(Boolean Negate, const char *Arg)
+{
+  Word Temp;
+  Boolean ok;
+
+  if (Negate)  
+  {
+    AVRLen = AVRLEN_DEFAULT;
+    return CMDOK;
+  }
+  else
+  {
+    Temp = ConstLongInt(Arg, &ok, 10);
+    if ((!ok) || (Temp < 2) || (Temp > 3))
+      return CMDErr;
+    else
+    {
+      AVRLen = Temp;
+      return CMDArg;
+    }
+  }
 }
 
 #define P2HEXParamCnt 15
@@ -1008,41 +1042,56 @@ BEGIN
     END
 
    if (IntelOccured)
-    BEGIN
+   {
+     Word EndRecAddr = 0;
+
      if (EntryAdrPresent)
-      BEGIN
-       if (MaxIntel == 2)
-        BEGIN
-         errno = 0; fprintf(TargFile, ":04000005"); ChkIO(TargName); ChkSum = 4 + 5;
-         errno = 0; fprintf(TargFile, "%s", HexLong(EntryAdr)); ChkIO(TargName);
-         ChkSum+=((EntryAdr >> 24)& 0xff) +
-                 ((EntryAdr >> 16)& 0xff) +
-                 ((EntryAdr >> 8) & 0xff) +
-                 ( EntryAdr       & 0xff);
-        END
-       else if (MaxIntel == 1)
-        BEGIN
-         Seg = (EntryAdr >> 4) & 0xffff;
-         Ofs = EntryAdr & 0x000f;
-         errno = 0; fprintf(TargFile, ":04000003%s%s", HexWord(Seg), HexWord(Ofs));
-         ChkIO(TargName); ChkSum = 4 + 3 + Lo(Seg) + Hi(Seg) + Ofs;
-        END
-       else
-        BEGIN
-         errno = 0; fprintf(TargFile, ":00%s03", HexWord(EntryAdr & 0xffff));
-         ChkIO(TargName); ChkSum = 3 + Lo(EntryAdr) + Hi(EntryAdr);
-        END
-       errno = 0; fprintf(TargFile, "%s\n", HexByte(0x100 - ChkSum)); ChkIO(TargName);
-      END
-     errno=0;
+     {
+       switch (MaxIntel)
+       {
+         case 2:
+           errno = 0; fprintf(TargFile, ":04000005"); ChkIO(TargName);
+           ChkSum = 4 + 5;
+           errno = 0; fprintf(TargFile, "%s", HexLong(EntryAdr)); ChkIO(TargName);
+           ChkSum += ((EntryAdr >> 24)& 0xff) +
+                   ((EntryAdr >> 16)& 0xff) +
+                   ((EntryAdr >> 8) & 0xff) +
+                   ( EntryAdr       & 0xff);
+           goto WrChkSum;
+
+         case 1:
+           Seg = (EntryAdr >> 4) & 0xffff;
+           Ofs = EntryAdr & 0x000f;
+           errno = 0; fprintf(TargFile, ":04000003%s%s", HexWord(Seg), HexWord(Ofs)); ChkIO(TargName);
+           ChkSum = 4 + 3 + Lo(Seg) + Hi(Seg) + Ofs;
+           goto WrChkSum;
+
+         default: /* == 0 */
+           EndRecAddr = EntryAdr & 0xffff;
+           break;
+
+         WrChkSum:
+           errno = 0; fprintf(TargFile, "%s\n", HexByte(0x100 - ChkSum)); ChkIO(TargName);
+       }
+     }
+     errno = 0;
      switch (IntelMode)
-      BEGIN
-       case 0: fprintf(TargFile,":00000001FF\n"); break;
-       case 1: fprintf(TargFile,":00000001\n"); break;
-       case 2: fprintf(TargFile,":0000000000\n"); break;
-      END
+     {
+       case 0:
+       {
+         ChkSum = 1 + Hi(EndRecAddr) + Lo(EndRecAddr);
+         fprintf(TargFile,":00%s01%s\n", HexWord(EndRecAddr), HexByte(0x100 - ChkSum));
+         break;
+       }
+       case 1:
+         fprintf(TargFile,":00000001\n");
+         break;
+       case 2:
+         fprintf(TargFile,":0000000000\n");
+         break;
+     }
      ChkIO(TargName);
-    END
+   }
 
    if (MOSOccured)
     BEGIN

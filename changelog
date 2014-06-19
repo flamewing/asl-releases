@@ -1,4 +1,4 @@
-$Id: changelog,v 1.82 2014/03/08 21:16:30 alfred Exp $
+$Id: changelog,v 1.84 2014/06/19 11:37:03 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1295,3 +1295,16 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 - Change      : for unresolved forwards, put forward statement position into extended error
 
 - Addition    : added new function ASSUMEDVAL to query values set via ASSUME
+
+[Bld93]
+
+- Change      : put entry address into 01 record for Intel8 hex format
+
+- Bugfix      : correct uninitialized array in M16 decoder
+
+- Change      : for Z80, do not warn about possible short addressing for
+                RL/RLC/RR/RRC A
+
+- Change      - rework/cleanup Z80, F2MC8L, Picoblaze, H8/300, XA, M16C, STx
+                targets, partially rework and provide initial test case for
+                M16 target

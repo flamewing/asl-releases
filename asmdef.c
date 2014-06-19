@@ -31,9 +31,12 @@
 /*           2001-10-20 added GNU error flag                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmdef.c,v 1.6 2014/03/08 21:06:35 alfred Exp $                     */
+/* $Id: asmdef.c,v 1.7 2014/06/15 09:17:08 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmdef.c,v $
+ * Revision 1.7  2014/06/15 09:17:08  alfred
+ * - optional Memo profiling
+ *
  * Revision 1.6  2014/03/08 21:06:35  alfred
  * - rework ASSUME framework
  *
@@ -225,6 +228,10 @@ char SegShorts[PCMax + 2] = {'-','C','D','I','X','Y','B','P','R','O','S'};
    ArgStrField ArgStr;              /* Komponenten des Arguments */
    Byte ArgCnt;                     /* Argumentzahl */
    StringPtr OneLine;               /* eingelesene Zeile */
+#ifdef PROFILE_MEMO
+   unsigned NumMemo;
+   unsigned long NumMemoCnt, NumMemoSum;
+#endif
 
    Byte LstCounter;                 /* Zeilenzaehler fuer automatischen Umbruch */
    Word PageCounter[ChapMax+1];     /* hierarchische Seitenzaehler */

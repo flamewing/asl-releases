@@ -11,11 +11,11 @@
 /*                                                                           */
 /*****************************************************************************/
 
-typedef enum {CMDErr,CMDFile,CMDOK,CMDArg} CMDResult;
+typedef enum {CMDErr, CMDFile, CMDOK, CMDArg} CMDResult;
 
 typedef CMDResult (*CMDCallback)(
 #ifdef __PROTOS__
-Boolean NegFlag, char *Arg
+Boolean NegFlag, const char *Arg
 #endif
 );
 
@@ -27,13 +27,13 @@ Boolean InEnv, char *Arg
 );
 
 typedef struct
-         {
-          char *Ident; 
-          CMDCallback Callback;
-         } CMDRec;
+{
+  char *Ident; 
+  CMDCallback Callback;
+} CMDRec;
          
 #define MAXPARAM 256
-typedef Boolean CMDProcessed[MAXPARAM+1];         
+typedef Boolean CMDProcessed[MAXPARAM + 1];
 
 extern LongInt ParamCount;
 extern char **ParamStr;

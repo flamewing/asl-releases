@@ -55,8 +55,15 @@ extern ShortInt StrCmp(const char *s1, const char *s2, LongInt Hand1, LongInt Ha
 
 extern ShortInt StrCaseCmp(const char *s1, const char *s2, LongInt Hand1, LongInt Hand2);
 
-/*#define Memo(s) ((*OpPart==*(s)) AND (strcmp(OpPart,(s))==0))*/
-#define Memo(s) (strcmp(OpPart,(s))==0)
+#ifdef PROFILE_MEMO
+static inline Boolean Memo(const char *s)
+{
+  NumMemo++;
+  return !strcmp(OpPart, s);
+}
+#else
+# define Memo(s) (!strcmp(OpPart,(s)))
+#endif
 
 
 extern void AddSuffix(char *s, char *Suff);
@@ -142,27 +149,27 @@ extern void RemoveIncludeList(char *RemPath);
 
 extern void ClearOutList(void);
 
-extern void AddToOutList(char *NewName);
+extern void AddToOutList(const char *NewName);
 
-extern void RemoveFromOutList(char *OldName);
+extern void RemoveFromOutList(const char *OldName);
 
 extern char *GetFromOutList(void);
 
 
 extern void ClearShareOutList(void);
 
-extern void AddToShareOutList(char *NewName);
+extern void AddToShareOutList(const char *NewName);
 
-extern void RemoveFromShareOutList(char *OldName);
+extern void RemoveFromShareOutList(const char *OldName);
 
 extern char *GetFromShareOutList(void);
 
 
 extern void ClearListOutList(void);
 
-extern void AddToListOutList(char *NewName);
+extern void AddToListOutList(const char *NewName);
 
-extern void RemoveFromListOutList(char *OldName);
+extern void RemoveFromListOutList(const char *OldName);
 
 extern char *GetFromListOutList(void);
 

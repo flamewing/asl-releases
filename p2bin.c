@@ -12,9 +12,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: p2bin.c,v 1.7 2010/02/27 13:09:07 alfred Exp $                      */
+/* $Id: p2bin.c,v 1.8 2014/05/29 10:59:05 alfred Exp $                      */
 /***************************************************************************** 
  * $Log: p2bin.c,v $
+ * Revision 1.8  2014/05/29 10:59:05  alfred
+ * - some const cleanups
+ *
  * Revision 1.7  2010/02/27 13:09:07  alfred
  * - assure file pointer is set correctly after fflush()
  *
@@ -52,7 +55,7 @@
 
 typedef void (*ProcessProc)(
 #ifdef __PROTOS__
-char *FileName, LongWord Offset
+const char *FileName, LongWord Offset
 #endif
 );
 
@@ -183,7 +186,7 @@ static void CloseTarget(void)
   if (Magic != 0) unlink(TargName);
 }
 
-        static void ProcessFile(char *FileName, LongWord Offset)
+        static void ProcessFile(const char *FileName, LongWord Offset)
 BEGIN
    FILE *SrcFile;
    Word TestID;
@@ -314,7 +317,7 @@ BEGIN
     fprintf(stderr,"%s%s%s\n",getmessage(Num_ErrMsgNullMaskA),GroupName,getmessage(Num_ErrMsgNullMaskB));
 END
 
-        static void MeasureFile(char *FileName, LongWord Offset)
+        static void MeasureFile(const char *FileName, LongWord Offset)
 BEGIN
    FILE *f;
    Byte Header, CPU, Gran, Segment;
@@ -359,7 +362,7 @@ BEGIN
    if (fclose(f)==EOF) ChkIO(FileName);
 END
 
-	static CMDResult CMD_AdrRange(Boolean Negate, char *Arg)
+	static CMDResult CMD_AdrRange(Boolean Negate, const char *Arg)
 BEGIN
    char *p,Save;
    Boolean err;
@@ -391,38 +394,56 @@ BEGIN
     END
 END
 
-	static CMDResult CMD_ByteMode(Boolean Negate, char *Arg)
-BEGIN
+static CMDResult CMD_ByteMode(Boolean Negate, const char *pArg)
+{
 #define ByteModeCnt 9
-   static char *ByteModeStrings[ByteModeCnt]={"ALL","EVEN","ODD","BYTE0","BYTE1","BYTE2","BYTE3","WORD0","WORD1"};
-   static Byte ByteModeDivs[ByteModeCnt]={1,2,2,4,4,4,4,2,2};
-   static Byte ByteModeMasks[ByteModeCnt]={0,1,1,3,3,3,3,2,2};
-   static Byte ByteModeEqs[ByteModeCnt]={0,0,1,0,1,2,3,0,2};
+  static char *ByteModeStrings[ByteModeCnt] =
+  {
+    "ALL", "EVEN", "ODD", "BYTE0", "BYTE1", "BYTE2", "BYTE3", "WORD0", "WORD1"
+  };
+  static Byte ByteModeDivs[ByteModeCnt] =
+  {
+    1, 2, 2, 4, 4, 4, 4, 2, 2
+  };
+  static Byte ByteModeMasks[ByteModeCnt] = 
+  {
+    0, 1, 1, 3, 3, 3, 3, 2, 2
+  };
+  static Byte ByteModeEqs[ByteModeCnt] =
+  {
+    0, 0, 1, 0, 1, 2, 3, 0, 2
+  };
 
-   int z;
-   UNUSED(Negate);
+  int z;
+  UNUSED(Negate);
 
-   if (*Arg=='\0')
-    BEGIN
-     SizeDiv=1; ANDEq=0; ANDMask=0;
-     return CMDOK;
-    END
-   else
-    BEGIN
-     for (z=0; z<(int)strlen(Arg); z++) Arg[z]=mytoupper(Arg[z]);
-     ANDEq=0xff;
-     for (z=0; z<ByteModeCnt; z++)
-      if (strcmp(Arg,ByteModeStrings[z])==0)
-       BEGIN
-        SizeDiv=ByteModeDivs[z];
-        ANDMask=ByteModeMasks[z];
-        ANDEq  =ByteModeEqs[z];
-       END
-      if (ANDEq==0xff) return CMDErr; else return CMDArg;
-    END
-END
+  if (*pArg == '\0')
+  {
+    SizeDiv = 1; ANDEq = 0; ANDMask = 0;
+    return CMDOK;
+  }
+  else
+  {
+    String Arg;
 
-	static CMDResult CMD_StartHeader(Boolean Negate, char *Arg)
+    strmaxcpy(Arg, pArg, 255);
+    NLS_UpString(Arg);
+    ANDEq = 0xff;
+    for (z = 0; z < ByteModeCnt; z++)
+      if (strcmp(Arg, ByteModeStrings[z]) == 0)
+      {
+        SizeDiv = ByteModeDivs[z];
+        ANDMask = ByteModeMasks[z];
+        ANDEq   = ByteModeEqs[z];
+      }
+    if (ANDEq == 0xff)
+      return CMDErr;
+    else
+      return CMDArg;
+  }
+}
+
+	static CMDResult CMD_StartHeader(Boolean Negate, const char *Arg)
 BEGIN
    Boolean err;
    ShortInt Sgn;
@@ -446,7 +467,7 @@ BEGIN
     END
 END	
 
-static CMDResult CMD_EntryAdr(Boolean Negate, char *Arg)
+static CMDResult CMD_EntryAdr(Boolean Negate, const char *Arg)
 {
    Boolean err;
    
@@ -464,7 +485,7 @@ static CMDResult CMD_EntryAdr(Boolean Negate, char *Arg)
    }
 }
 
-	static CMDResult CMD_FillVal(Boolean Negate, char *Arg)
+	static CMDResult CMD_FillVal(Boolean Negate, const char *Arg)
 BEGIN
    Boolean err;
    UNUSED(Negate);
@@ -473,7 +494,7 @@ BEGIN
    if (NOT err) return CMDErr; else return CMDArg;
 END
 
-	static CMDResult CMD_CheckSum(Boolean Negate, char *Arg)
+	static CMDResult CMD_CheckSum(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -481,7 +502,7 @@ BEGIN
    return CMDOK;
 END
 
-	static CMDResult CMD_AutoErase(Boolean Negate, char *Arg)
+	static CMDResult CMD_AutoErase(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 

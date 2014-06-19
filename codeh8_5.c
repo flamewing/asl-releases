@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeh8_5.c,v 1.9 2014/03/08 21:06:36 alfred Exp $                    */
+/* $Id: codeh8_5.c,v 1.10 2014/06/15 15:22:01 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codeh8_5.c,v $
+ * Revision 1.10  2014/06/15 15:22:01  alfred
+ * - some cleanups
+ *
  * Revision 1.9  2014/03/08 21:06:36  alfred
  * - rework ASSUME framework
  *
@@ -427,10 +430,10 @@ static void DecodeAdr(char *Asc, Word Mask)
 
   /* absolut */
 
-  DispSize=(-1); SplitDisp(Asc,&DispSize);
-  FirstPassUnknown=False;
-  DispAcc=EvalIntExpression(Asc,UInt24,&OK);
-  DecideAbsolute(DispAcc,DispSize,FirstPassUnknown,Mask);
+  DispSize = -1; SplitDisp(Asc, &DispSize);
+  FirstPassUnknown = False;
+  DispAcc = EvalIntExpression(Asc, UInt24, &OK);
+  DecideAbsolute(DispAcc, DispSize, FirstPassUnknown, Mask);
 
   ChkAdr(Mask);
 }
@@ -445,7 +448,7 @@ static LongInt ImmVal(void)
       t = AdrVals[0]; if (t > 127) t -= 256;
       break;
     case 1:
-      t=(((Word)AdrVals[0]) << 8) + AdrVals[1];
+      t = (((Word)AdrVals[0]) << 8) + AdrVals[1];
       if (t > 0x7fff) t -= 0x10000;
       break;
     default:
@@ -456,22 +459,25 @@ static LongInt ImmVal(void)
 
 /*-------------------------------------------------------------------------*/
 
-        static Boolean CheckFormat(char *FSet)
-BEGIN
-   char *p;
+static Boolean CheckFormat(char *FSet)
+{
+  char *p;
 
-   if (strcmp(Format," ")==0) FormatCode=0;
-   else
-    BEGIN
-     p=strchr(FSet,*Format);
-     if (p==Nil)
-      BEGIN
-       WrError(1090); return False;
-      END
-     else FormatCode=p-FSet+1;
-    END
-   return True;
-END
+  if (!strcmp(Format," "))
+    FormatCode = 0;
+  else
+  {
+    p = strchr(FSet, *Format);
+    if (!p)
+    {
+      WrError(1090);
+      return False;
+    }
+    else
+      FormatCode = p - FSet + 1;
+  }
+  return True;
+}
 
 static void CopyAdr(void)
 {

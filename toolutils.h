@@ -17,70 +17,70 @@
 #include "fileformat.h"
 
 typedef struct
-         {
-           LargeInt Addr;
-           LongInt Type;
-           char *Name;
-         } TRelocEntry, *PRelocEntry;
+{
+  LargeInt Addr;
+  LongInt Type;
+  char *Name;
+} TRelocEntry, *PRelocEntry;
 
 typedef struct
-         {
-           char *Name;
-           LargeInt Value;
-           LongInt Flags;
-         } TExportEntry, *PExportEntry;
+{
+  char *Name;
+  LargeInt Value;
+  LongInt Flags;
+} TExportEntry, *PExportEntry;
 
 typedef struct
-         {
-          LongInt RelocCount, ExportCount;
-          PRelocEntry RelocEntries;
-          PExportEntry ExportEntries;
-          char *Strings;
-         } TRelocInfo, *PRelocInfo;
+{
+  LongInt RelocCount, ExportCount;
+  PRelocEntry RelocEntries;
+  PExportEntry ExportEntries;
+  char *Strings;
+} TRelocInfo, *PRelocInfo;
 
 extern Word FileID;
 
 extern char *OutName;
 
 
-extern void WrCopyRight(char *Msg);
+extern void WrCopyRight(const char *Msg);
 
 extern void DelSuffix(char *Name);
 
 extern void AddSuffix(char *Name, char *Suff);
 
-extern void FormatError(char *Name, char *Detail);
+extern void FormatError(const char *Name, const char *Detail);
 
-extern void ChkIO(char *Name);
+extern void ChkIO(const char *Name);
 
 extern Word Granularity(Byte Header);
 
 extern void ReadRecordHeader(Byte *Header, Byte *Target, Byte* Segment,
-                             Byte *Gran, char *Name, FILE *f);
+                             Byte *Gran, const char *Name, FILE *f);
 
 extern void WriteRecordHeader(Byte *Header, Byte *Target, Byte* Segment,
-                              Byte *Gran, char *Name, FILE *f);
+                              Byte *Gran, const char *Name, FILE *f);
 
-extern void SkipRecord(Byte Header, char *Name, FILE *f);
+extern void SkipRecord(Byte Header, const char *Name, FILE *f);
 
 extern PRelocInfo ReadRelocInfo(FILE *f);
 
 extern void DestroyRelocInfo(PRelocInfo PInfo);
 
-extern CMDResult CMD_FilterList(Boolean Negate, char *Arg);
+extern CMDResult CMD_FilterList(Boolean Negate, const char *Arg);
 
 extern Boolean FilterOK(Byte Header);
 
 extern Boolean RemoveOffset(char *Name, LongWord *Offset);
 
 
-extern void EraseFile(char *FileName, LongWord Offset);
+extern void EraseFile(const char *FileName, LongWord Offset);
 
 
-extern Boolean AddressWildcard(char *addr);
+extern Boolean AddressWildcard(const char *addr);
 
 
-extern void toolutils_init(char *ProgPath);
+extern void toolutils_init(const char *ProgPath);
 
 #include "asmerr.h"
 

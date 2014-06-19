@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code7000.c,v 1.7 2010/04/17 13:14:22 alfred Exp $                    */
+/* $Id: code7000.c,v 1.8 2014/05/29 10:59:05 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code7000.c,v $
+ * Revision 1.8  2014/05/29 10:59:05  alfred
+ * - some const cleanups
+ *
  * Revision 1.7  2010/04/17 13:14:22  alfred
  * - address overlapping strcpy()
  *
@@ -848,6 +851,7 @@ static Boolean DecodeDSP(void)
       strcpy(ArgStr[1], pos + 1);
     }
   }
+  UNUSED(Cond);
 
   return False;
 }

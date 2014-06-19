@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6804.c,v 1.3 2005/09/08 17:31:03 alfred Exp $                    */
+/* $Id: code6804.c,v 1.4 2014/06/09 12:46:51 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6804.c,v $
+ * Revision 1.4  2014/06/09 12:46:51  alfred
+ * - add missing parentheses
+ *
  * Revision 1.3  2005/09/08 17:31:03  alfred
  * - add missing include
  *
@@ -210,7 +213,7 @@ BEGIN
    /* Anweisungen ohne Argument */
 
    for (z=0; z<FixedOrderCnt; z++)
-    if Memo(FixedOrders[z].Name)
+    if (Memo(FixedOrders[z].Name))
      BEGIN
       if (ArgCnt!=0) WrError(1110);
       else
@@ -227,7 +230,7 @@ BEGIN
    /* relative/absolute Spruenge */
 
    for (z=0; z<RelOrderCnt; z++)
-    if Memo(RelOrders[z].Name)
+    if (Memo(RelOrders[z].Name))
      BEGIN
       if (ArgCnt!=1) WrError(1110);
       else

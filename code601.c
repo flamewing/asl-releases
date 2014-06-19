@@ -15,9 +15,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code601.c,v 1.6 2012-01-14 13:04:13 alfred Exp $                     */
+/* $Id: code601.c,v 1.7 2014/06/09 12:48:07 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code601.c,v $
+ * Revision 1.7  2014/06/09 12:48:07  alfred
+ * - add missing parentheses
+ *
  * Revision 1.6  2012-01-14 13:04:13  alfred
  * - merged in MPC821 support
  *
@@ -1065,7 +1068,7 @@ BEGIN
    /* ein Register */
 
    for (z=0; z<Reg1OrderCount; z++)
-    if Memo(Reg1Orders[z].Name)
+    if (Memo(Reg1Orders[z].Name))
      BEGIN
       if (ArgCnt!=1) WrError(1110);
       else if (NOT ChkCPU(Reg1Orders[z].CPUMask)) WrXError(1500,OpPart);
@@ -1147,7 +1150,7 @@ BEGIN
    /* 2 Bedingungs-Bits */
 
    for (z=0; z<CReg2OrderCount; z++)
-    if Memo(CReg2Orders[z].Name)
+    if (Memo(CReg2Orders[z].Name))
      BEGIN
       if (ArgCnt!=2) WrError(1110);
       else if (NOT ChkCPU(CReg2Orders[z].CPUMask)) WrXError(1500,OpPart);
@@ -1165,7 +1168,7 @@ BEGIN
    /* 1/2 Float-Register */
 
    for (z=0; z<FReg2OrderCount; z++)
-    if Memo(FReg2Orders[z].Name)
+    if (Memo(FReg2Orders[z].Name))
      BEGIN
       if (ArgCnt==1)
        BEGIN
@@ -1185,7 +1188,7 @@ BEGIN
    /* 1/2 Integer-Register, Quelle in B */
 
    for (z=0; z<Reg2BOrderCount; z++)
-    if Memo(Reg2BOrders[z].Name)
+    if (Memo(Reg2BOrders[z].Name))
      BEGIN
       if (ArgCnt==1)
        BEGIN

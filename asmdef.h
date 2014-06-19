@@ -33,9 +33,12 @@
 /*           2001-10-20 added GNU error flag                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmdef.h,v 1.9 2014/03/08 21:06:35 alfred Exp $                      */
+/* $Id: asmdef.h,v 1.10 2014/06/15 09:17:08 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmdef.h,v $
+ * Revision 1.10  2014/06/15 09:17:08  alfred
+ * - optional Memo profiling
+ *
  * Revision 1.9  2014/03/08 21:06:35  alfred
  * - rework ASSUME framework
  *
@@ -449,6 +452,10 @@ extern char AttrSplit;
 extern ArgStrField ArgStr;
 extern Byte ArgCnt;
 extern StringPtr OneLine;
+#ifdef PROFILE_MEMO
+extern unsigned NumMemo;
+extern unsigned long NumMemoSum, NumMemoCnt;
+#endif
 
 extern Byte LstCounter;
 extern Word PageCounter[ChapMax+1];

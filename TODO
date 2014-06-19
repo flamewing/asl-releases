@@ -4,3 +4,6 @@
   bisheriger Unix-Teil
 - Anleitung: Quellenkapitel neuschreiben
 - Anleitung: FAQ wenn viele Passes
+
+- IsDef liefert Dekoder
+- Entschüsselung AttrPart über strchr()

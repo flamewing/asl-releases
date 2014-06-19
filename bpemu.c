@@ -149,7 +149,7 @@ char *FExpand(char *Src)
   return CurrentDir; 
 }
 
-	char *FSearch(char *File, char *Path)
+	char *FSearch(const char *File, char *Path)
 BEGIN
    static String Component;
    char *p,*start,Save='\0';

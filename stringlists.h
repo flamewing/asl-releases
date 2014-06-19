@@ -23,11 +23,11 @@ extern void ClearStringEntry(StringRecPtr *Elem);
 
 extern void ClearStringList(StringList *List);
 
-extern void AddStringListFirst(StringList *List, char *NewStr);
+extern void AddStringListFirst(StringList *List, const char *NewStr);
 
-extern void AddStringListLast(StringList *List, char *NewStr);
+extern void AddStringListLast(StringList *List, const char *NewStr);
 
-extern void RemoveStringList(StringList *List, char *OldStr);
+extern void RemoveStringList(StringList *List, const char *OldStr);
 
 extern char *GetStringListFirst(StringList List, StringRecPtr *Lauf);
 

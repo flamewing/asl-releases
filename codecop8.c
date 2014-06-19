@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codecop8.c,v 1.4 2006/04/09 12:40:11 alfred Exp $                    */
+/* $Id: codecop8.c,v 1.5 2014/06/09 12:47:47 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codecop8.c,v $
+ * Revision 1.5  2014/06/09 12:47:47  alfred
+ * - add missing parentheses
+ *
  * Revision 1.4  2006/04/09 12:40:11  alfred
  * - unify COP pseudo instructions
  *
@@ -225,7 +228,7 @@ BEGIN
    /* ohne Argument */
 
    for (z=0; z<FixedOrderCnt; z++)
-    if Memo(FixedOrders[z].Name)
+    if (Memo(FixedOrders[z].Name))
      BEGIN
       if (ArgCnt!=0) WrError(1110);
       else
@@ -371,7 +374,7 @@ BEGIN
    /* Arithmetik */
 
    for (z=0; z<AccOrderCnt; z++)
-    if Memo(AccOrders[z].Name)
+    if (Memo(AccOrders[z].Name))
      BEGIN
       if (ArgCnt!=1) WrError(1110);
       else
@@ -386,7 +389,7 @@ BEGIN
      END
 
    for (z=0; z<AccMemOrderCnt; z++)
-    if Memo(AccMemOrders[z].Name)
+    if (Memo(AccMemOrders[z].Name))
      BEGIN
       if (ArgCnt!=2) WrError(1110);
       else
@@ -519,7 +522,7 @@ BEGIN
    /* Bitbefehle */
 
    for (z=0; z<BitOrderCnt; z++)
-    if Memo(BitOrders[z].Name)
+    if (Memo(BitOrders[z].Name))
      BEGIN
       if (ArgCnt!=2) WrError(1110);
       else

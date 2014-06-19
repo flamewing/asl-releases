@@ -10,9 +10,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code86.c,v 1.8 2014/03/08 21:06:36 alfred Exp $                      */
+/* $Id: code86.c,v 1.9 2014/06/09 12:46:02 alfred Exp $                      */
 /*****************************************************************************
  * $Log: code86.c,v $
+ * Revision 1.9  2014/06/09 12:46:02  alfred
+ * - add missing parentheses
+ *
  * Revision 1.8  2014/03/08 21:06:36  alfred
  * - rework ASSUME framework
  *
@@ -2238,7 +2241,7 @@ BEGIN
      END
 
    for (z=0; z<MulOrderCnt; z++)
-    if Memo(MulOrders[z])
+    if (Memo(MulOrders[z]))
      BEGIN
       switch (ArgCnt)
        BEGIN

@@ -5,9 +5,12 @@
 /* Codegenerator xilinx kcpsm3                                               */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codekcp3.c,v 1.6 2007/11/24 22:48:07 alfred Exp $                   */
+/* $Id: codekcp3.c,v 1.7 2014/06/16 20:05:10 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codekcp3.c,v $
+ * Revision 1.7  2014/06/16 20:05:10  alfred
+ * - minor cleanups
+ *
  * Revision 1.6  2007/11/24 22:48:07  alfred
  * - some NetBSD changes
  *
@@ -437,7 +440,7 @@ static void MakeCode_KCPSM3(void)
 
    if (DecodeIntelPseudo(True)) return;
 
-   if (NOT LookupInstTable(InstTable, OpPart))
+   if (!LookupInstTable(InstTable, OpPart))
      WrXError(1200, OpPart);
 }
 

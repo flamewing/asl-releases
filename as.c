@@ -58,9 +58,15 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.29 2013/12/21 19:46:50 alfred Exp $                          */
+/* $Id: as.c,v 1.31 2014/06/15 09:17:08 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.31  2014/06/15 09:17:08  alfred
+ * - optional Memo profiling
+ *
+ * Revision 1.30  2014/05/29 10:59:05  alfred
+ * - some const cleanups
+ *
  * Revision 1.29  2013/12/21 19:46:50  alfred
  * - dynamically resize code buffer
  *
@@ -2361,6 +2367,10 @@ BEGIN
     BEGIN
      StopfZahl=0; CodeLen=0; DontPrint=False;
 
+#ifdef PROFILE_MEMO
+     NumMemo = 0;
+#endif
+
      if (IfAsm)
       BEGIN
        if (NOT CodeGlobalPseudo()) MakeCode(); 
@@ -2380,6 +2390,10 @@ BEGIN
         END
        CodeLen+=ActListGran/Granularity();
       END
+
+#ifdef PROFILE_MEMO
+     NumMemoSum += NumMemo; NumMemoCnt++;
+#endif
 
      if ((ActPC!=StructSeg) AND (NOT ChkPC(PCs[ActPC]+CodeLen-1)) AND (CodeLen!=0))
       WrError(1925);
@@ -2803,6 +2817,10 @@ BEGIN
    
    Repass=False; PassNo++;
 
+#ifdef PROFILE_MEMO
+   NumMemoSum = 0; NumMemoCnt = 0;
+#endif
+
    dbgexit("AssembleFile_InitPass");
 END
 
@@ -3139,6 +3157,12 @@ BEGIN
    if (NOT QuietMode) printf("%s%s\n",s,ClrEol);
    if (ListMode==2) WrLstLine(s);
 
+#ifdef PROFILE_MEMO
+   sprintf(s,"%7.2f%s", ((double)NumMemoSum) / NumMemoCnt, " oppart compares");
+   if (NOT QuietMode) printf("%s%s\n",s,ClrEol);
+   if (ListMode==2) WrLstLine(s);
+#endif
+
    fclose(LstFile);
 
    /* verstecktes */
@@ -3168,7 +3192,7 @@ END
 
 /*-------------------------------------------------------------------------*/
 
-        static CMDResult CMD_SharePascal(Boolean Negate, char *Arg)
+        static CMDResult CMD_SharePascal(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -3177,7 +3201,7 @@ BEGIN
    return CMDOK;
 END
 
-        static CMDResult CMD_ShareC(Boolean Negate, char *Arg)
+        static CMDResult CMD_ShareC(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -3186,7 +3210,7 @@ BEGIN
    return CMDOK;
 END
 
-        static CMDResult CMD_ShareAssembler(Boolean Negate, char *Arg)
+        static CMDResult CMD_ShareAssembler(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -3195,52 +3219,73 @@ BEGIN
    return CMDOK;
 END
 
-        static CMDResult CMD_DebugMode(Boolean Negate, char *Arg)
-BEGIN
-   UpString(Arg);
+static CMDResult CMD_DebugMode(Boolean Negate, const char *pArg)
+{
+  String Arg;
 
-   if (Negate)
-    if (Arg[0]!='\0') return CMDErr;
+  strmaxcpy(Arg, pArg, 255);
+  UpString(Arg);
+
+  if (Negate)
+  {
+    if (Arg[0] != '\0')
+      return CMDErr;
     else
-     BEGIN
-      DebugMode=DebugNone; return CMDOK;
-     END
-   else if (strcmp(Arg,"")==0)
-    BEGIN
-     DebugMode=DebugMAP; return CMDOK;
-    END
-   else if (strcmp(Arg,"ATMEL")==0)
-    BEGIN
-     DebugMode=DebugAtmel; return CMDArg;
-    END
-   else if (strcmp(Arg,"MAP")==0)
-    BEGIN
-     DebugMode=DebugMAP; return CMDArg;
-    END
-   else if (strcmp(Arg,"NOICE")==0)
-    BEGIN
-     DebugMode=DebugNoICE; return CMDArg;
-    END
-   /*else if (strcmp(Arg,"A.OUT")==0)
-    BEGIN
-     DebugMode=DebugAOUT; return CMDArg;
-    END
-   else if (strcmp(Arg,"COFF")==0)
-    BEGIN
-     DebugMode=DebugCOFF; return CMDArg;
-    END
-   else if (strcmp(Arg,"ELF")==0)
-    BEGIN
-     DebugMode=DebugELF; return CMDArg;
-    END*/
-   else return CMDErr;
+    {
+      DebugMode = DebugNone;
+      return CMDOK;
+    }
+   }
+   else if (strcmp(Arg, "") == 0)
+   {
+     DebugMode = DebugMAP;
+     return CMDOK;
+   }
+   else if (strcmp(Arg, "ATMEL") == 0)
+   {
+     DebugMode = DebugAtmel;
+     return CMDArg;
+   }
+   else if (strcmp(Arg, "MAP") == 0)
+   {
+     DebugMode = DebugMAP;
+     return CMDArg;
+   }
+   else if (strcmp(Arg, "NOICE") == 0)
+   {
+     DebugMode = DebugNoICE;
+     return CMDArg;
+   }
+#if 0
+   else if (strcmp(Arg, "A.OUT") == 0)
+   {
+     DebugMode = DebugAOUT;
+     return CMDArg;
+   }
+   else if (strcmp(Arg, "COFF") == 0)
+   {
+     DebugMode = DebugCOFF;
+     return CMDArg;
+   }
+   else if (strcmp(Arg, "ELF") == 0)
+   {
+     DebugMode = DebugELF;
+     return CMDArg;
+   }
+#endif
+   else
+    return CMDErr;
 
-/*   if (Negate) DebugMode=DebugNone;
-   else DebugMode=DebugMAP;
-   return CMDOK;*/
-END
+#if 0
+   if (Negate)
+     DebugMode = DebugNone;
+   else
+     DebugMode = DebugMAP;
+   return CMDOK;
+#endif
+}
 
-        static CMDResult CMD_ListConsole(Boolean Negate, char *Arg)
+        static CMDResult CMD_ListConsole(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -3249,7 +3294,7 @@ BEGIN
    return CMDOK;
 END
 
-        static CMDResult CMD_ListFile(Boolean Negate, char *Arg)
+        static CMDResult CMD_ListFile(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -3258,7 +3303,7 @@ BEGIN
    return CMDOK;
 END
 
-        static CMDResult CMD_SuppWarns(Boolean Negate, char *Arg)
+        static CMDResult CMD_SuppWarns(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -3266,7 +3311,7 @@ BEGIN
    return CMDOK;
 END
 
-        static CMDResult CMD_UseList(Boolean Negate, char *Arg)
+        static CMDResult CMD_UseList(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -3274,7 +3319,7 @@ BEGIN
    return CMDOK;
 END
 
-        static CMDResult CMD_CrossList(Boolean Negate, char *Arg)
+        static CMDResult CMD_CrossList(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -3282,7 +3327,7 @@ BEGIN
    return CMDOK;
 END
 
-        static CMDResult CMD_SectionList(Boolean Negate, char *Arg)
+        static CMDResult CMD_SectionList(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -3290,7 +3335,7 @@ BEGIN
    return CMDOK;
 END
 
-        static CMDResult CMD_BalanceTree(Boolean Negate, char *Arg)
+        static CMDResult CMD_BalanceTree(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -3298,7 +3343,7 @@ BEGIN
    return CMDOK;
 END
 
-        static CMDResult CMD_MakeDebug(Boolean Negate, char *Arg)
+        static CMDResult CMD_MakeDebug(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -3316,7 +3361,7 @@ BEGIN
    return CMDOK;
 END
 
-        static CMDResult CMD_MacProOutput(Boolean Negate, char *Arg)
+        static CMDResult CMD_MacProOutput(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -3324,7 +3369,7 @@ BEGIN
    return CMDOK;
 END
 
-        static CMDResult CMD_MacroOutput(Boolean Negate, char *Arg)
+        static CMDResult CMD_MacroOutput(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -3332,7 +3377,7 @@ BEGIN
    return CMDOK;
 END
 
-        static CMDResult CMD_MakeIncludeList(Boolean Negate, char *Arg)
+        static CMDResult CMD_MakeIncludeList(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -3340,7 +3385,7 @@ BEGIN
    return CMDOK;
 END
 
-        static CMDResult CMD_CodeOutput(Boolean Negate, char *Arg)
+        static CMDResult CMD_CodeOutput(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -3348,7 +3393,7 @@ BEGIN
    return CMDOK;
 END
 
-        static CMDResult CMD_MsgIfRepass(Boolean Negate, String Arg)
+        static CMDResult CMD_MsgIfRepass(Boolean Negate, const char *Arg)
 BEGIN
    Boolean OK;
    UNUSED(Arg);
@@ -3372,7 +3417,7 @@ BEGIN
    else return CMDOK;
 END
 
-        static CMDResult CMD_ExtendErrors(Boolean Negate, char *Arg)
+        static CMDResult CMD_ExtendErrors(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -3384,7 +3429,7 @@ BEGIN
    return CMDOK;
 END
 
-        static CMDResult CMD_NumericErrors(Boolean Negate, char *Arg)
+        static CMDResult CMD_NumericErrors(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -3392,7 +3437,7 @@ BEGIN
    return CMDOK;
 END
 
-        static CMDResult CMD_HexLowerCase(Boolean Negate, char *Arg)
+        static CMDResult CMD_HexLowerCase(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -3400,7 +3445,7 @@ BEGIN
    return CMDOK;
 END
 
-        static CMDResult CMD_QuietMode(Boolean Negate, char *Arg)
+        static CMDResult CMD_QuietMode(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -3408,7 +3453,7 @@ BEGIN
    return CMDOK;
 END
 
-        static CMDResult CMD_ThrowErrors(Boolean Negate, char *Arg)
+        static CMDResult CMD_ThrowErrors(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -3416,7 +3461,7 @@ BEGIN
    return CMDOK;
 END
 
-        static CMDResult CMD_CaseSensitive(Boolean Negate, char *Arg)
+        static CMDResult CMD_CaseSensitive(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -3424,7 +3469,7 @@ BEGIN
    return CMDOK;
 END
 
-        static CMDResult CMD_GNUErrors(Boolean Negate, char *Arg)
+        static CMDResult CMD_GNUErrors(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
@@ -3432,7 +3477,7 @@ BEGIN
    return CMDOK;
 END
 
-        static CMDResult CMD_IncludeList(Boolean Negate, char *Arg)
+        static CMDResult CMD_IncludeList(Boolean Negate, const char *Arg)
 BEGIN
    char *p;
    String Copy,part;
@@ -3460,7 +3505,7 @@ BEGIN
     END
 END
 
-        static CMDResult CMD_ListMask(Boolean Negate, char *Arg)
+        static CMDResult CMD_ListMask(Boolean Negate, const char *Arg)
 BEGIN
    Word erg; 
    Boolean OK;
@@ -3479,7 +3524,7 @@ BEGIN
     END
 END
 
-        static CMDResult CMD_DefSymbol(Boolean Negate, char *Arg)
+        static CMDResult CMD_DefSymbol(Boolean Negate, const char *Arg)
 BEGIN
    String Copy,Part,Name;
    char *p;
@@ -3533,7 +3578,7 @@ BEGIN
    return CMDArg;
 END
 
-        static CMDResult CMD_ErrorPath(Boolean Negate, String Arg)
+        static CMDResult CMD_ErrorPath(Boolean Negate, const char *Arg)
 BEGIN
    if (Negate) return CMDErr;
    else if (Arg[0]=='\0')
@@ -3546,14 +3591,14 @@ BEGIN
     END
 END
 
-        static CMDResult CMD_HardRanges(Boolean Negate, char *Arg)
+        static CMDResult CMD_HardRanges(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 
    HardRanges=Negate; return CMDOK;
 END
 
-        static CMDResult CMD_OutFile(Boolean Negate, char *Arg)
+        static CMDResult CMD_OutFile(Boolean Negate, const char *Arg)
 BEGIN
    if (Arg[0]=='\0')
     if (Negate)
@@ -3569,7 +3614,7 @@ BEGIN
     END
 END
 
-        static CMDResult CMD_ShareOutFile(Boolean Negate, char *Arg)
+        static CMDResult CMD_ShareOutFile(Boolean Negate, const char *Arg)
 BEGIN
    if (Arg[0]=='\0')
     if (Negate)
@@ -3585,7 +3630,7 @@ BEGIN
     END
 END
 
-        static CMDResult CMD_ListOutFile(Boolean Negate, char *Arg)
+        static CMDResult CMD_ListOutFile(Boolean Negate, const char *Arg)
 BEGIN
    if (Arg[0]=='\0')
     if (Negate)
@@ -3610,7 +3655,7 @@ BEGIN
    return True;
 END
 
-	static CMDResult CMD_CPUAlias(Boolean Negate, char *Arg)
+	static CMDResult CMD_CPUAlias(Boolean Negate, const char *Arg)
 BEGIN
    char *p;
    String s1,s2;
@@ -3635,7 +3680,7 @@ BEGIN
     END
 END
 
-	static CMDResult CMD_SetCPU(Boolean Negate, char *Arg)
+	static CMDResult CMD_SetCPU(Boolean Negate, const char *Arg)
 BEGIN
    if (Negate)
     BEGIN
@@ -3651,7 +3696,7 @@ BEGIN
     END
 END
 
-	static CMDResult CMD_NoICEMask(Boolean Negate, char *Arg)
+	static CMDResult CMD_NoICEMask(Boolean Negate, const char *Arg)
 BEGIN
    Word erg; 
    Boolean OK;

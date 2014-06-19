@@ -412,7 +412,7 @@ END
 /****************************************************************************/
 /* command line processing */
 
-	static CMDResult CMD_Verbose(Boolean Negate, char *Arg)
+	static CMDResult CMD_Verbose(Boolean Negate, const char *Arg)
 BEGIN
    UNUSED(Arg);
 

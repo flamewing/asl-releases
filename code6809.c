@@ -13,9 +13,12 @@
 /*           13. 1.2001 fix D register access                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6809.c,v 1.8 2014/03/08 21:06:36 alfred Exp $                    */
+/* $Id: code6809.c,v 1.9 2014/06/09 12:45:15 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6809.c,v $
+ * Revision 1.9  2014/06/09 12:45:15  alfred
+ * - add missing parentheses
+ *
  * Revision 1.8  2014/03/08 21:06:36  alfred
  * - rework ASSUME framework
  *
@@ -918,7 +921,7 @@ BEGIN
    /* Anweisungen ohne Argument */
 
    for (z=0; z<FixedOrderCnt; z++)
-    if Memo(FixedOrders[z].Name)
+    if (Memo(FixedOrders[z].Name))
      BEGIN
       if (ArgCnt!=0) WrError(1110);
       else if (MomCPU<FixedOrders[z].MinCPU) WrError(1500);
@@ -998,7 +1001,7 @@ BEGIN
    /* ALU-Operationen */
 
    for (z=0; z<ALUOrderCnt; z++)
-    if Memo(ALUOrders[z].Name)
+    if (Memo(ALUOrders[z].Name))
      BEGIN
       if ((ArgCnt<1) OR (ArgCnt>2)) WrError(1110);
       else if (MomCPU<ALUOrders[z].MinCPU) WrError(1500);
@@ -1047,7 +1050,7 @@ BEGIN
    /* Read-Modify-Write-Operationen */
 
    for (z=0; z<RMWOrderCnt; z++)
-    if Memo(RMWOrders[z].Name)
+    if (Memo(RMWOrders[z].Name))
      BEGIN
       if ((ArgCnt<1) OR (ArgCnt>2)) WrError(1110);
       else if (MomCPU<RMWOrders[z].MinCPU) WrError(1500);
@@ -1238,7 +1241,7 @@ BEGIN
    /* Berechnung effektiver Adressen */
 
    for (z=0; z<LEAOrderCnt; z++)
-    if Memo(LEAOrders[z].Name)
+    if (Memo(LEAOrders[z].Name))
      BEGIN
       if ((ArgCnt<1) OR (ArgCnt>2)) WrError(1110);
       else
@@ -1261,7 +1264,7 @@ BEGIN
    /* Push/Pull */
 
    for (z = 0; z < StackOrderCnt; z++)
-    if Memo(StackOrders[z].Name)
+    if (Memo(StackOrders[z].Name))
      BEGIN
       BAsmCode[1] = 0; OK = True; Extent = False;
       /* S oder U einsetzen, entsprechend Opcode */

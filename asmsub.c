@@ -26,9 +26,12 @@
 /*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.17 2014/03/08 10:52:07 alfred Exp $                      */
+/* $Id: asmsub.c,v 1.18 2014/05/29 10:59:05 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmsub.c,v $
+ * Revision 1.18  2014/05/29 10:59:05  alfred
+ * - some const cleanups
+ *
  * Revision 1.17  2014/03/08 10:52:07  alfred
  * - correctly handle escaped quotation marks
  *
@@ -1413,65 +1416,65 @@ END
 /****************************************************************************/
 /* Listen mit Ausgabedateien */
 
-        void ClearOutList(void)
-BEGIN
-   ClearStringList(&OutList);
-END
+void ClearOutList(void)
+{
+  ClearStringList(&OutList);
+}
 
-        void AddToOutList(char *NewName)
-BEGIN
-   AddStringListLast(&OutList,NewName);
-END
+void AddToOutList(const char *NewName)
+{
+  AddStringListLast(&OutList, NewName);
+}
 
-        void RemoveFromOutList(char *OldName)
-BEGIN
-   RemoveStringList(&OutList,OldName);
-END
+void RemoveFromOutList(const char *OldName)
+{
+  RemoveStringList(&OutList,OldName);
+}
 
-        char *GetFromOutList(void)
-BEGIN
-   return GetAndCutStringList(&OutList);
-END
+char *GetFromOutList(void)
+{
+  return GetAndCutStringList(&OutList);
+}
 
-        void ClearShareOutList(void)
-BEGIN
-   ClearStringList(&ShareOutList);
-END
+void ClearShareOutList(void)
+{
+  ClearStringList(&ShareOutList);
+}
 
-        void AddToShareOutList(char *NewName)
-BEGIN
-   AddStringListLast(&ShareOutList,NewName);
-END
+void AddToShareOutList(const char *NewName)
+{
+  AddStringListLast(&ShareOutList, NewName);
+}
 
-        void RemoveFromShareOutList(char *OldName)
-BEGIN
-   RemoveStringList(&ShareOutList,OldName);
-END
+void RemoveFromShareOutList(const char *OldName)
+{
+  RemoveStringList(&ShareOutList, OldName);
+}
 
-        char *GetFromShareOutList(void)
-BEGIN
-   return GetAndCutStringList(&ShareOutList);
-END
+char *GetFromShareOutList(void)
+{
+  return GetAndCutStringList(&ShareOutList);
+}
 
-        void ClearListOutList(void)
-BEGIN
-   ClearStringList(&ListOutList);
-END
+void ClearListOutList(void)
+{
+  ClearStringList(&ListOutList);
+}
 
-        void AddToListOutList(char *NewName)
-BEGIN
-   AddStringListLast(&ListOutList,NewName);
-END
+void AddToListOutList(const char *NewName)
+{
+  AddStringListLast(&ListOutList, NewName);
+}
 
-        void RemoveFromListOutList(char *OldName)
-BEGIN
-   RemoveStringList(&ListOutList,OldName);
-END
+void RemoveFromListOutList(const char *OldName)
+{
+  RemoveStringList(&ListOutList, OldName);
+}
 
-        char *GetFromListOutList(void)
-BEGIN
-   return GetAndCutStringList(&ListOutList);
-END
+char *GetFromListOutList(void)
+{
+  return GetAndCutStringList(&ListOutList);
+}
 
 /****************************************************************************/
 /* Tokenverarbeitung */

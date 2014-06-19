@@ -34,7 +34,7 @@ BEGIN
     END
 END
 
-        void AddStringListFirst(StringList *List, char *NewStr)
+        void AddStringListFirst(StringList *List, const char *NewStr)
 BEGIN
    StringRecPtr Neu;
 
@@ -44,7 +44,7 @@ BEGIN
    *List=Neu;
 END
 
-        void AddStringListLast(StringList *List, char *NewStr)
+        void AddStringListLast(StringList *List, const char *NewStr)
 BEGIN
    StringRecPtr Neu,Lauf;
 
@@ -58,7 +58,7 @@ BEGIN
     END
 END
 
-        void RemoveStringList(StringList *List, char *OldStr)
+        void RemoveStringList(StringList *List, const char *OldStr)
 BEGIN
    StringRecPtr Lauf,Hilf;
 

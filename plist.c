@@ -15,9 +15,12 @@
 /*                      DOS platforms                                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: plist.c,v 1.2 2012-09-02 16:55:23 alfred Exp $                       */
+/* $Id: plist.c,v 1.3 2014/05/29 10:59:06 alfred Exp $                       */
 /*****************************************************************************
  * $Log: plist.c,v $
+ * Revision 1.3  2014/05/29 10:59:06  alfred
+ * - some const cleanups
+ *
  * Revision 1.2  2012-09-02 16:55:23  alfred
  * - silence compiler warning about non-literal printf() format strinf
  *
@@ -219,5 +222,6 @@ BEGIN
    errno = 0; printf("\n"); ChkIO(OutName);
 
    errno = 0; fclose(ProgFile); ChkIO(ProgName);
+   (void)HeadFnd;
    return 0;
 END

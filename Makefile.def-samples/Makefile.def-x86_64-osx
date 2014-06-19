@@ -4,8 +4,8 @@
 
 CC = gcc
 LD = gcc
-CFLAGS = -O3 -fomit-frame-pointer -Wall
-LDFLAGS =
+CFLAGS = -O3 -fomit-frame-pointer -Wall -arch x86_64
+LDFLAGS = -arch x86_64
 
 TARG_OBJEXTENSION = .o
 TARG_EXEXTENSION =
@@ -19,9 +19,9 @@ HOST_EXEXTENSION = $(TARG_EXEXTENSION)
 
 BINDIR = /usr/local/bin
 INCDIR = /usr/local/include/asl
-MANDIR = /usr/local/man
+MANDIR = /usr/local/share/man
 LIBDIR = /usr/local/lib/asl
-DOCDIR = /usr/local/doc/asl
+DOCDIR = /usr/local/share/doc/asl
 
 # -------------------------------------------------------------------------
 # character encoding to use (choose one of them)
