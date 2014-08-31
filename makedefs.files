@@ -1,4 +1,4 @@
-# $Id: makedefs.files,v 1.6 2010/06/14 18:36:01 alfred Exp $
+# $Id: makedefs.files,v 1.7 2014/08/11 21:10:01 alfred Exp $
 
 BASEARCH1FILES = *.c *.h man/*.1 \
             INSTALL README README.OS2 README.DOS README.LANGS README.KR TODO BENCHES Makefile Makefile.dos Makefile.os2 Makefile.w32 Makefile.def.tmpl \
@@ -8,7 +8,7 @@ BASEARCH1FILES = *.c *.h man/*.1 \
             Makefile.def-samples/M*
 BASEARCH2FILES = doc_DE/Makefile doc_DE/*.tex doc_EN/Makefile doc_EN/*.tex \
             tests/testall* tests/warnlog* \
-            tests/t_*/t_* tests/t_*/asflags tests/t_*/*.i* tests/t_*/*.ASM tests/t_bas52/bas52.*
+            tests/t_*/t_* tests/t_*/asflags tests/t_*/*.i* tests/t_*/*.ASM tests/t_bas52/bas52.* tests/t_m16/mkm16.cpp
 
 DISTARCHFILES = $(BASEARCH1FILES) $(BASEARCH2FILES) asl-$(VERSION).lsm changelog
 

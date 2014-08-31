@@ -4,13 +4,12 @@
 
 CC = gcc
 LD = gcc
-CFLAGS = -g -O3 -mcpu=i586 -fomit-frame-pointer -Wall
+CFLAGS = -g -O3 -march=i586 -fomit-frame-pointer -Wall
 LDFLAGS =
 #                    ^^^^^
 #                    |||||
 # adapt this to your target cpu (386/486 or higher)
-# note that older gcc versions require -m[34]86 instead of -mcpu=i[34]86,
-# while older ones might require '-march' instead of '-mcpu'. 
+# note that older gcc versions require -m[34]86 or -mcpu=i[34]86 instead of -march=i[34]86.
 # @GNU: why does this have to change every two years ?!
 
 TARG_OBJEXTENSION = .o

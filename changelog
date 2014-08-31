@@ -1,4 +1,4 @@
-$Id: changelog,v 1.84 2014/06/19 11:37:03 alfred Exp $
+$Id: changelog,v 1.86 2014/08/31 13:05:10 alfred Exp $
 ------------------------------------------------------------------------------
 v1.41r3 Aenderungen: (-->v1.41r4beta)
 
@@ -1308,3 +1308,27 @@ v1.41r8 Aenderungen: (-->v1.42beta)
 - Change      - rework/cleanup Z80, F2MC8L, Picoblaze, H8/300, XA, M16C, STx
                 targets, partially rework and provide initial test case for
                 M16 target
+
+[Bld94]
+
+- Bugfix      : for Z80 target, detect invalid condition identifiers
+
+- Bugfix      : avoid infinite loop on M16 when chained addressing is used incorrectly
+
+- Change      : rework/cleanup COP8, AVR, ACE, TMS9900, TLCS/9000, TLCS/900, i960,
+                MCS-96, TLCS/90, 8X30x, TLCS/870, 8086, 8085, 78Kx, 78c10, uPD77230, uPD772x,
+                65816/7700 targets, complete reworks and testcase on M16
+
+- Bugfix      : BCLR/BSET/BSETI/BTST on M16 use format G/E/Q instead of G/E/R
+
+- Bugfix      : do not allow JSR with direct mode on 6800
+
+- Bugfix      : correct 8087 FIMUL coding
+
+- Bugfix      : correct JSL/JML byte order for 65816
+
+- Bugfix      : correct COP, PEI, PEA, BIT instructions for 65816
+
+- Bugfix      : use correct bank register for 65816 JMP/JSR instruction
+
+- Addition    : on 65816, allow DBR as alias for DT and PBR as alias for PG

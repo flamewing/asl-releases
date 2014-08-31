@@ -10,9 +10,12 @@
 /*           2001-12-11 begun with Rabbit2000                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codez80.c,v 1.9 2014/06/19 10:12:17 alfred Exp $                     */
+/* $Id: codez80.c,v 1.10 2014/06/20 17:39:22 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codez80.c,v $
+ * Revision 1.10  2014/06/20 17:39:22  alfred
+ * - correctly report invalid conditions
+ *
  * Revision 1.9  2014/06/19 10:12:17  alfred
  * - RRA is not equal to RR A regarding flags, so not warn about short addressing
  *
@@ -580,16 +583,13 @@ static Boolean ParPair(char *Name1, char *Name2)
 /*-------------------------------------------------------------------------*/
 /* Bedingung entschluesseln */
 
-static Boolean DecodeCondition(char *Name, int *Erg)
+static Boolean DecodeCondition(const char *Name, int *Erg)
 {
   int z;
-  String Name_N;
-
-  strmaxcpy(Name_N,Name,255); NLS_UpString(Name_N);
 
   z = 0;
-  while ((z<ConditionCnt) AND (strcmp(Conditions[z].Name,Name_N)!=0)) z++;
-  if (z>ConditionCnt)
+  while ((z < ConditionCnt) && (strcasecmp(Conditions[z].Name, Name))) z++;
+  if (z >= ConditionCnt)
   {
     *Erg = 0;
     return False;
@@ -2460,7 +2460,7 @@ static void DecodeRET(Word Code)
     BAsmCode[0] = 0xc9;
   }
   else if (ArgCnt != 1) WrError(1110);
-  else if (!DecodeCondition(ArgStr[1], &Cond)) WrError(1360);
+  else if (!DecodeCondition(ArgStr[1], &Cond)) WrXError(1360, ArgStr[1]);
   else
   {
     CodeLen = 1;
@@ -2509,7 +2509,7 @@ static void DecodeJP(Word Code)
     if (OK)
       Cond <<= 3;
     else
-      WrError(1360);
+      WrXError(1360, ArgStr[1]);
   }
   else
   {
@@ -2570,7 +2570,7 @@ static void DecodeCALL(Word Code)
       if (OK)
         Condition <<= 3;
       else
-        WrError(1360);
+        WrXError(1360, ArgStr[1]);
       break;
     default:
       WrError(1110);
@@ -2634,7 +2634,7 @@ static void DecodeJR(Word Code)
       if (OK)
         Condition += 4;
       else
-        WrError(1360);
+        WrXError(1360, ArgStr[1]);
       break;
     default:
       WrError(1110);
@@ -2705,7 +2705,7 @@ static void DecodeCALR(Word Code)
       if (OK)
         Condition <<= 3;
       else
-        WrError(1360);
+        WrXError(1360, ArgStr[1]);
       break;
     default:
       WrError(1110);

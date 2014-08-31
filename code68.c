@@ -13,9 +13,12 @@
 /*                       unsinged limited                                    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68.c,v 1.11 2014/06/07 17:18:01 alfred Exp $                      */
+/* $Id: code68.c,v 1.12 2014/07/07 19:27:35 alfred Exp $                      */
 /*****************************************************************************
  * $Log: code68.c,v $
+ * Revision 1.12  2014/07/07 19:27:35  alfred
+ * - do not allow JSR with direct mode on 6800
+ *
  * Revision 1.11  2014/06/07 17:18:01  alfred
  * - rework to current style
  *
@@ -518,7 +521,7 @@ static void DecodeJSR(Word Index)
   if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
   else
   {
-    DecodeAdr(1, ArgCnt, MModDir | MModExt | MModInd);
+    DecodeAdr(1, ArgCnt, MModExt | MModInd | ((MomCPU >= CPU6301) ? MModDir : 0));
     if (AdrMode != ModImm)
     {
       CodeLen=PrefCnt + 1 + AdrCnt;

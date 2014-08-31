@@ -116,7 +116,7 @@ code7700.o: stdinc.h bpemu.h strutil.h asmdef.h asmsub.h asmpars.h asmitree.h co
 
 code7720.o: stdinc.h strutil.h nls.h bpemu.h asmdef.h asmsub.h asmpars.h asmcode.h asmitree.h headids.h codevars.h
 
-code77230.o: stdinc.h strutil.h nls.h endian.h asmdef.h asmsub.h asmpars.h asmitree.h headids.h codevars.h
+code77230.o: stdinc.h strutil.h nls.h endian.h bpemu.h asmdef.h asmsub.h asmpars.h asmitree.h headids.h codevars.h
 
 code78c10.o: stdinc.h bpemu.h strutil.h asmdef.h asmsub.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h
 

@@ -70,7 +70,7 @@ Makefile.dep depend: $(MKDEPENDTARGET)
 # supplementary targets
 
 test: $(ALLTARGETS)
-	cd tests; ./testall $(TESTDIRS)
+	cd tests; ./testall "$(TESTDIRS)"
 
 install: $(ALLTARGETS)
 	PREFIX=$(PREFIX) ./install.sh $(BINDIR) $(INCDIR) $(MANDIR) $(LIBDIR) $(DOCDIR)

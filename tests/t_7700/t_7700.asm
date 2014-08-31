@@ -14,7 +14,7 @@ accmode macro   size
 	   clp    #$20
 	   assume m:0
 	  elsecase
-	   fatal  "accmode: ungÅltige Operandengrî·e: $\{SIZE}"
+	   fatal  "accmode: invalid operand size: $\{SIZE}"
 	 endcase
 	endm
 
@@ -27,7 +27,7 @@ idxmode macro	size
 	   clp    #$10
 	   assume x:0
 	  elsecase
-	   fatal  "idxmode: ungÅltige Operandengrî·e: $\{SIZE}"
+	   fatal  "idxmode: invalid operand size: $\{SIZE}"
 	 endcase
 	endm
 
@@ -265,7 +265,7 @@ targ3:
 
 	cpu     65816
 
-	cop
+	cop	#0
 	jml     $2000
 	jsl     $4000
 	brl     *

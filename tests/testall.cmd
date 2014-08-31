@@ -107,6 +107,7 @@ call testall t_dc
 call testall t_dx
 call testall t_ez8
 call testall t_f2mc8l
+call testall t_f2mc16
 call testall t_fl90
 call testall t_fl900
 call testall t_full09

@@ -5,9 +5,12 @@
 /* Codegenerator 78K2-Familie                                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code78k2.c,v 1.16 2014/03/08 21:06:36 alfred Exp $
+/* $Id: code78k2.c,v 1.17 2014/08/17 10:37:39 alfred Exp $
  *****************************************************************************
  * $Log: code78k2.c,v $
+ * Revision 1.17  2014/08/17 10:37:39  alfred
+ * - some minor cleanups
+ *
  * Revision 1.16  2014/03/08 21:06:36  alfred
  * - rework ASSUME framework
  *
@@ -92,18 +95,20 @@
 
 /*-------------------------------------------------------------------------*/
 
-enum {ModNone = -1,
-      ModImm = 0,
-      ModReg8 = 1,
-      ModReg16 = 2,
-      ModMem = 3,
-      ModAbs = 4,
-      ModShort = 5,
-      ModSFR = 6,
-      ModPSW = 7,
-      ModSP = 8,
-      ModSTBC = 9
-     };
+enum
+{
+  ModNone = -1,
+  ModImm = 0,
+  ModReg8 = 1,
+  ModReg16 = 2,
+  ModMem = 3,
+  ModAbs = 4,
+  ModShort = 5,
+  ModSFR = 6,
+  ModPSW = 7,
+  ModSP = 8,
+  ModSTBC = 9
+};
 
 #define MModImm (1 << ModImm)
 #define MModReg8 (1 << ModReg8)
@@ -136,8 +141,10 @@ static LongInt Reg_P6, Reg_PM6;
 static SimpProc SaveInitProc;
 
 static ASSUMERec ASSUME78K2s[] =
-             {{"P6"  , &Reg_P6  , 0,  0xf,  0x10},
-              {"PM6" , &Reg_PM6 , 0,  0xf,  0x10}};
+{
+  {"P6"  , &Reg_P6  , 0,  0xf,  0x10},
+  {"PM6" , &Reg_PM6 , 0,  0xf,  0x10}
+};
 
 /*-------------------------------------------------------------------------*/
 /* address decoders */
@@ -1706,21 +1713,21 @@ static void DeinitFields(void)
 
 static void MakeCode_78K2(void)
 {
-   CodeLen = 0; DontPrint = False; OpSize = -1;
+  CodeLen = 0; DontPrint = False; OpSize = -1;
 
-   /* zu ignorierendes */
+  /* zu ignorierendes */
 
-   if (Memo("")) return;
+  if (Memo("")) return;
 
-   /* Pseudoanweisungen */
+  /* Pseudoanweisungen */
 
-   if (DecodeIntelPseudo(False)) return;
+  if (DecodeIntelPseudo(False)) return;
 
-   pCode = BAsmCode;
-   if (!LookupInstTable(InstTable, OpPart))
-     WrXError(1200,OpPart);
-   else
-     CodeLen = pCode - BAsmCode;
+  pCode = BAsmCode;
+  if (!LookupInstTable(InstTable, OpPart))
+    WrXError(1200,OpPart);
+  else
+    CodeLen = pCode - BAsmCode;
 }
 
 static void InitCode_78K2(void)
@@ -1746,10 +1753,15 @@ static void SwitchTo_78K2(void)
 
   pDescr = FindFamilyByName("78K2");
 
-  TurnWords = False; ConstMode = ConstModeIntel; SetIsOccupied = False;
+  TurnWords = False;
+  ConstMode = ConstModeIntel;
+  SetIsOccupied = False;
 
-  PCSymbol = "PC"; HeaderID = pDescr->Id; NOPCode = 0x00;
-  DivideChars = ","; HasAttrs = False;
+  PCSymbol = "PC";
+  HeaderID = pDescr->Id;
+  NOPCode = 0x00;
+  DivideChars = ",";
+  HasAttrs = False;
 
   ValidSegs = 1 << SegCode;
   Grans[SegCode] = 1; ListGrans[SegCode] = 1; SegInits[SegCode] = 0;
@@ -1764,7 +1776,8 @@ static void SwitchTo_78K2(void)
 
 void code78k2_init(void)
 {
-   CPU78214 = AddCPU("78214", SwitchTo_78K2);
+  CPU78214 = AddCPU("78214", SwitchTo_78K2);
 
-   SaveInitProc = InitPassProc; InitPassProc = InitCode_78K2;
+  SaveInitProc = InitPassProc;
+  InitPassProc = InitCode_78K2;
 }

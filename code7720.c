@@ -15,9 +15,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code7720.c,v 1.6 2010/04/17 13:14:22 alfred Exp $                    */
+/* $Id: code7720.c,v 1.7 2014/08/25 20:20:15 alfred Exp $                    */
 /***************************************************************************** 
  * $Log: code7720.c,v $
+ * Revision 1.7  2014/08/25 20:20:15  alfred
+ * - rework to current style
+ *
  * Revision 1.6  2010/04/17 13:14:22  alfred
  * - address overlapping strcpy()
  *
@@ -64,95 +67,92 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define JmpOrderCnt 36
-#define ALU2OrderCnt 8
-#define ALU1OrderCnt 7
-
 #define DestRegCnt 16
 #define SrcRegCnt 16
 #define ALUSrcRegCnt 4
 
 typedef struct
-         {
-          LongWord Code;
-         } FixedOrder;
+{
+  char *Name;
+  LongWord Code;
+} TReg;
 
-typedef struct
-         {
-          char *Name;
-          LongWord Code;
-         } TReg;
+typedef enum
+{
+  MoveField,
+  ALUField,
+  DPLField,
+  DPHField,
+  RPField,
+  RetField
+} OpComps;
 
-typedef enum {MoveField,ALUField,DPLField,DPHField,RPField,RetField} OpComps;
-
-static CPUVar CPU7720,CPU7725;
+static CPUVar CPU7720, CPU7725;
 
 static LongWord ActCode;
 static Boolean InOp;
 static Byte UsedOpFields;
 
-static Byte TypePos,ImmValPos,AddrPos,ALUPos,DPLPos,AccPos,ALUSrcPos;
+static Byte TypePos, ImmValPos, AddrPos, ALUPos, DPLPos, AccPos, ALUSrcPos;
 static IntType MemInt;
-static Word ROMEnd,DROMEnd,RAMEnd;
+static Word ROMEnd, DROMEnd, RAMEnd;
 
-static FixedOrder *JmpOrders,*ALU2Orders,*ALU1Orders;
-
-static TReg *DestRegs,*SrcRegs,*ALUSrcRegs;
+static TReg *DestRegs, *SrcRegs, *ALUSrcRegs;
 
 static PInstTable OpTable;
 
 /*---------------------------------------------------------------------------*/
 /* Hilfsroutinen */
 
-        static Boolean DecodeReg(char *Asc, LongWord *Code, TReg *Regs, int Cnt)
-BEGIN
-   int z;
+static Boolean DecodeReg(char *Asc, LongWord *Code, TReg *Regs, int Cnt)
+{
+  int z;
 
-   for (z=0; z<Cnt; z++)
-    if (strcasecmp(Asc,Regs[z].Name)==0) break;
+  for (z = 0; z < Cnt; z++)
+    if (!strcasecmp(Asc, Regs[z].Name))
+      break;
 
-   if (z<Cnt) *Code=Regs[z].Code;
-   return z<Cnt;
-END
+  if (z < Cnt) *Code = Regs[z].Code;
+  return z < Cnt;
+}
 
-        static Boolean ChkOpPresent(OpComps Comp)
-BEGIN
-   if ((UsedOpFields&(1l<<Comp))!=0)
-    BEGIN
-     WrError(1355); return False;
-    END
-   else
-    BEGIN
-     UsedOpFields|=1l<<Comp; return True;
-    END
-END
+static Boolean ChkOpPresent(OpComps Comp)
+{
+  if ((UsedOpFields&(1l << Comp)) != 0)
+  {
+    WrError(1355); return False;
+  }
+  else
+  {
+    UsedOpFields |= 1l << Comp; return True;
+  }
+}
 
 /*---------------------------------------------------------------------------*/
 /* Dekoder */                               
 
-        static void DecodeJmp(Word Index)
-BEGIN
-   Word Dest;
-   Boolean OK;
-   FixedOrder *Op=JmpOrders+Index;
+static void DecodeJmp(Word Code)
+{
+  Word Dest;
+  Boolean OK;
 
-   if (ArgCnt!=1) WrError(1110);
-   else
-    BEGIN
-     Dest=EvalIntExpression(ArgStr[1],MemInt,&OK);
-     if (OK)
-      BEGIN
-       DAsmCode[0]=(2l<<TypePos)+(Op->Code<<13)+(Dest<<AddrPos);
-       CodeLen=1;
-      END
-    END
-END
+  if (ArgCnt != 1) WrError(1110);
+  else
+  {
+    Dest = EvalIntExpression(ArgStr[1], MemInt, &OK);
+    if (OK)
+    {
+      DAsmCode[0] = (2l << TypePos) + (((LongWord)Code) << 13) + (Dest << AddrPos);
+      CodeLen = 1;
+    }
+  }
+}
 
 static void DecodeDATA(Word Index)
 {
-  LongInt MinV,MaxV;
+  LongInt MinV, MaxV;
   TempResult t;
-  int z,Max;
+  int z, Max;
   Boolean OK;
   UNUSED(Index);
 
@@ -161,10 +161,11 @@ static void DecodeDATA(Word Index)
   else
     MaxV = 65535;
   MinV = (-((MaxV + 1) >> 1));
-  if (ArgCnt==0) WrError(1110);
+  if (ArgCnt == 0) WrError(1110);
   else
   {
-    OK = True; z = 1;
+    OK = True;
+    z = 1;
     while ((OK) & (z <= ArgCnt))
     {
       FirstPassUnknown = False;
@@ -177,12 +178,15 @@ static void DecodeDATA(Word Index)
         case TempInt:
           if ((OK = ChkRange(t.Contents.Int, MinV, MaxV)))
           {
-            if (ActPC == SegCode) DAsmCode[CodeLen++] = t.Contents.Int;
-            else WAsmCode[CodeLen++] = t.Contents.Int;
+            if (ActPC == SegCode)
+              DAsmCode[CodeLen++] = t.Contents.Int;
+            else
+              WAsmCode[CodeLen++] = t.Contents.Int;
           }
           break;
         case TempFloat:
-          WrError(1135); OK = False;
+          WrError(1135);
+          OK = False;
           break;
         case TempString:
         {
@@ -190,7 +194,8 @@ static void DecodeDATA(Word Index)
           LongInt Trans;
           int Pos;
 
-          Max = ((ActPC == SegCode) && (MomCPU >= CPU7725)) ? 3 : 2; Pos = 0;
+          Max = ((ActPC == SegCode) && (MomCPU >= CPU7725)) ? 3 : 2;
+          Pos = 0;
           for (z2 = 0; z2 < t.Contents.Ascii.Length; z2++)
           {
             Trans = CharTransTable[((usint) t.Contents.Ascii.Contents[z2]) & 0xff];
@@ -200,10 +205,12 @@ static void DecodeDATA(Word Index)
               WAsmCode[CodeLen] = (Pos == 0) ? Trans : (WAsmCode[CodeLen] << 8) | Trans;
             if (++Pos == Max)
             {
-              Pos = 0; CodeLen++;
+              Pos = 0;
+              CodeLen++;
             }
           }
-          if (Pos != 0) CodeLen++;
+          if (Pos != 0)
+            CodeLen++;
           break;
         }
         default:
@@ -214,131 +221,146 @@ static void DecodeDATA(Word Index)
   }
 }
 
-        static void DecodeRES(Word Index)
-BEGIN
-   Word Size;
-   Boolean OK;
-   UNUSED(Index);
+static void DecodeRES(Word Index)
+{
+  Word Size;
+  Boolean OK;
+  UNUSED(Index);
 
-   if (ArgCnt!=1) WrError(1110);
-   else
-    BEGIN
-     FirstPassUnknown=False;
-     Size=EvalIntExpression(ArgStr[1],Int16,&OK);
-     if (FirstPassUnknown) WrError(1820);
-     if ((OK) AND (NOT FirstPassUnknown))
-      BEGIN
-       DontPrint=True;
-       if (!Size) WrError(290);
-       CodeLen=Size;
-       BookKeeping();
-      END
-    END
-END
+  if (ArgCnt != 1) WrError(1110);
+  else
+  {
+    FirstPassUnknown = False;
+    Size = EvalIntExpression(ArgStr[1], Int16, &OK);
+    if (FirstPassUnknown) WrError(1820);
+    if ((OK) && (!FirstPassUnknown))
+    {
+      DontPrint = True;
+      if (!Size)
+        WrError(290);
+      CodeLen = Size;
+      BookKeeping();
+    }
+  }
+}
 
-        static void DecodeALU2(Word Index)
-BEGIN
-   LongWord Acc=0xff,Src;
-   FixedOrder *Op=ALU2Orders+Index;
-   char ch;
-   
-   if (NOT ChkOpPresent(ALUField)) return;
+static void DecodeALU2(Word Code)
+{
+  LongWord Acc = 0xff, Src;
+  char ch;
+  
+  if (!ChkOpPresent(ALUField))
+    return;
 
-   if (ArgCnt!=2) WrError(1110);
-   else if (NOT DecodeReg(ArgStr[2],&Src,ALUSrcRegs,ALUSrcRegCnt)) WrXError(1445,ArgStr[2]);
-   else
-    BEGIN
-     if ((strlen(ArgStr[1])==4) AND (strncasecmp(ArgStr[1],"ACC",3)==0))
-      BEGIN
-       ch=mytoupper(ArgStr[1][3]);
-       if ((ch>='A') AND (ch<='B')) Acc=ch-'A';
-      END
-     if (Acc==0xff) WrXError(1445,ArgStr[1]);
-     else ActCode|=(Op->Code<<ALUPos)+(Acc<<AccPos)+(Src<<ALUSrcPos);
-    END
-END
+  if (ArgCnt != 2) WrError(1110);
+  else if (!DecodeReg(ArgStr[2], &Src, ALUSrcRegs, ALUSrcRegCnt)) WrXError(1445, ArgStr[2]);
+  else
+  {
+    if ((strlen(ArgStr[1]) == 4) && (!strncasecmp(ArgStr[1], "ACC", 3)))
+    {
+      ch = mytoupper(ArgStr[1][3]);
+      if ((ch>='A') && (ch<='B'))
+        Acc = ch - 'A';
+    }
+    if (Acc == 0xff)
+      WrXError(1445, ArgStr[1]);
+    else
+      ActCode |= (((LongWord)Code) << ALUPos) + (Acc << AccPos) + (Src << ALUSrcPos);
+  }
+}
 
-        static void DecodeALU1(Word Index)
-BEGIN
-   LongWord Acc=0xff;
-   FixedOrder *Op=ALU1Orders+Index;
-   char ch;
-   
-   if (NOT ChkOpPresent(ALUField)) return;
+static void DecodeALU1(Word Code)
+{
+  LongWord Acc = 0xff;
+  char ch;
+  
+  if (!ChkOpPresent(ALUField))
+    return;
 
-   if (ArgCnt!=1) WrError(1110);
-   else
-    BEGIN
-     if ((strlen(ArgStr[1])==4) AND (strncasecmp(ArgStr[1],"ACC",3)==0))
-      BEGIN
-       ch=mytoupper(ArgStr[1][3]);
-       if ((ch>='A') AND (ch<='B')) Acc=ch-'A';
-      END
-     if (Acc==0xff) WrXError(1445,ArgStr[1]);
-     else ActCode|=(Op->Code<<ALUPos)+(Acc<<AccPos);
-    END
-END
+  if (ArgCnt != 1) WrError(1110);
+  else
+  {
+    if ((strlen(ArgStr[1]) == 4) && (!strncasecmp(ArgStr[1], "ACC", 3)))
+    {
+      ch = mytoupper(ArgStr[1][3]);
+      if ((ch >= 'A') && (ch <= 'B'))
+        Acc = ch - 'A';
+    }
+    if (Acc == 0xff)
+      WrXError(1445, ArgStr[1]);
+    else
+      ActCode |= (((LongWord)Code) << ALUPos) + (Acc << AccPos);
+  }
+}
 
-        static void DecodeNOP(Word Index)
-BEGIN
-   UNUSED(Index);
+static void DecodeNOP(Word Index)
+{
+  UNUSED(Index);
 
-   if (NOT ChkOpPresent(ALUField)) return;
-END
+  if (!ChkOpPresent(ALUField))
+    return;
+}
 
-        static void DecodeDPL(Word Index)
-BEGIN
-   if (NOT ChkOpPresent(DPLField)) return;
+static void DecodeDPL(Word Index)
+{
+  if (!ChkOpPresent(DPLField))
+    return;
 
-   if (ArgCnt!=0) WrError(1110);
-   else ActCode|=(((LongWord)Index)<<DPLPos);
-END
+  if (ArgCnt != 0) WrError(1110);
+  else
+    ActCode |= (((LongWord)Index) << DPLPos);
+}
 
-        static void DecodeDPH(Word Index)
-BEGIN
-   if (NOT ChkOpPresent(DPHField)) return;
+static void DecodeDPH(Word Index)
+{
+  if (!ChkOpPresent(DPHField))
+    return;
 
-   if (ArgCnt!=0) WrError(1110);
-   else ActCode|=(((LongWord)Index)<<9);
-END
+  if (ArgCnt != 0) WrError(1110);
+  else
+    ActCode |= (((LongWord)Index) << 9);
+}
 
-        static void DecodeRP(Word Index)
-BEGIN
-   if (NOT ChkOpPresent(RPField)) return;
+static void DecodeRP(Word Index)
+{
+  if (!ChkOpPresent(RPField))
+    return;
 
-   if (ArgCnt!=0) WrError(1110);
-   else ActCode|=(((LongWord)Index)<<8);
-END
+  if (ArgCnt != 0) WrError(1110);
+  else ActCode |= (((LongWord)Index) << 8);
+}
 
-        static void DecodeRET(Word Index)
-BEGIN
-   UNUSED(Index);
+static void DecodeRET(Word Index)
+{
+  UNUSED(Index);
 
-   if (NOT ChkOpPresent(RetField)) return;
+  if (!ChkOpPresent(RetField))
+    return;
 
-   if (ArgCnt!=0) WrError(1110);
-   else ActCode|=(1l<<TypePos);
-END
+  if (ArgCnt != 0) WrError(1110);
+  else
+    ActCode |= (1l << TypePos);
+}
 
-        static void DecodeLDI(Word Index)
-BEGIN
-   LongWord Value;
-   LongWord Reg;
-   Boolean OK;
-   UNUSED(Index);
+static void DecodeLDI(Word Index)
+{
+  LongWord Value;
+  LongWord Reg;
+  Boolean OK;
+  UNUSED(Index);
 
-   if (ArgCnt!=2) WrError(1110);
-   else if (NOT DecodeReg(ArgStr[1],&Reg,DestRegs,DestRegCnt)) WrXError(1445,ArgStr[1]);
-   else
-    BEGIN
-     Value=EvalIntExpression(ArgStr[2],Int16,&OK);
-     if (OK)
-      BEGIN
-       DAsmCode[0]=(3l<<TypePos)+Reg+(Value<<ImmValPos);
-       CodeLen=1;
-      END
-    END
-END
+  if (ArgCnt != 2) WrError(1110);
+  else if (!DecodeReg(ArgStr[1], &Reg, DestRegs, DestRegCnt)) WrXError(1445, ArgStr[1]);
+  else
+  {
+    Value = EvalIntExpression(ArgStr[2], Int16, &OK);
+    if (OK)
+    {
+      DAsmCode[0] = (3l << TypePos) + Reg + (Value << ImmValPos);
+      CodeLen = 1;
+    }
+  }
+}
 
 static void DecodeOP(Word Index)
 {
@@ -346,296 +368,304 @@ static void DecodeOP(Word Index)
   int z;
   UNUSED(Index);
 
-  UsedOpFields = 0; ActCode = 0;
+  UsedOpFields = 0;
+  ActCode = 0;
 
   if (ArgCnt>1)
   {
     p = FirstBlank(ArgStr[1]);
     if (p)
     {
-      *p = '\0'; strmaxcpy(OpPart, ArgStr[1], 255);
+      *p = '\0';
+      strmaxcpy(OpPart, ArgStr[1], 255);
       NLS_UpString(OpPart);
-      strmov(ArgStr[1], p + 1); KillPrefBlanks(ArgStr[1]);
+      strmov(ArgStr[1], p + 1);
+      KillPrefBlanks(ArgStr[1]);
     }
     else
     {
       strmaxcpy(OpPart, ArgStr[1], 255);
       for (z = 1; z < ArgCnt; z++)
-       strcpy(ArgStr[z], ArgStr[z + 1]);
+        strcpy(ArgStr[z], ArgStr[z + 1]);
       ArgCnt--;
     }
-    if (!LookupInstTable(OpTable,OpPart)) WrXError(1200,OpPart);
+    if (!LookupInstTable(OpTable, OpPart))
+      WrXError(1200, OpPart);
   }
 
-  DAsmCode[0] = ActCode; CodeLen = 1;
+  DAsmCode[0] = ActCode;
+  CodeLen = 1;
 }
 
-        static void DecodeMOV(Word Index)
-BEGIN
-   LongWord Dest,Src;
-   UNUSED(Index);
+static void DecodeMOV(Word Index)
+{
+  LongWord Dest, Src;
+  UNUSED(Index);
 
-   if (NOT ChkOpPresent(MoveField)) return;
+  if (!ChkOpPresent(MoveField))
+    return;
 
-   if (ArgCnt!=2) WrError(1110);
-   else if (NOT DecodeReg(ArgStr[1],&Dest,DestRegs,DestRegCnt)) WrXError(1445,ArgStr[1]);
-   else if (NOT DecodeReg(ArgStr[2],&Src,SrcRegs,SrcRegCnt)) WrXError(1445,ArgStr[2]);
-   else ActCode|=Dest+(Src<<4);
-END
+  if (ArgCnt != 2) WrError(1110);
+  else if (!DecodeReg(ArgStr[1], &Dest, DestRegs, DestRegCnt)) WrXError(1445, ArgStr[1]);
+  else if (!DecodeReg(ArgStr[2], &Src, SrcRegs, SrcRegCnt)) WrXError(1445, ArgStr[2]);
+  else
+    ActCode |= Dest + (Src << 4);
+}
 
 /*---------------------------------------------------------------------------*/
 /* Tabellenverwaltung */
 
-        static void AddJmp(char *NName, LongWord NCode)
-BEGIN
-   if (InstrZ>=JmpOrderCnt) exit(255);
-   if ((MomCPU<CPU7725) AND (Odd(NCode))) return;
-   JmpOrders[InstrZ].Code=(MomCPU==CPU7725) ? NCode : NCode>>1;
-   AddInstTable(InstTable, NName, InstrZ++, DecodeJmp);
-END
+static void AddJmp(char *NName, Word NCode)
+{
+  if ((MomCPU < CPU7725) && (Odd(NCode)))
+    return;
+  AddInstTable(InstTable, NName, (MomCPU == CPU7725) ? NCode : NCode >> 1, DecodeJmp);
+}
 
-        static void AddALU2(char *NName, LongWord NCode)
-BEGIN
-   if (InstrZ>=ALU2OrderCnt) exit(255);
-   ALU2Orders[InstrZ].Code=NCode;
-   AddInstTable(OpTable, NName, InstrZ++, DecodeALU2);
-END
+static void AddALU2(char *NName, Word NCode)
+{
+  AddInstTable(OpTable, NName, NCode, DecodeALU2);
+}
 
-        static void AddALU1(char *NName, LongWord NCode)
-BEGIN
-   if (InstrZ>=ALU1OrderCnt) exit(255);
-   ALU1Orders[InstrZ].Code=NCode;
-   AddInstTable(OpTable, NName, InstrZ++, DecodeALU1);
-END
+static void AddALU1(char *NName, Word NCode)
+{
+  AddInstTable(OpTable, NName, NCode, DecodeALU1);
+}
 
-        static void AddDestReg(char *NName, LongWord NCode)
-BEGIN
-   if (InstrZ>=DestRegCnt) exit(255);
-   DestRegs[InstrZ].Name=NName;
-   DestRegs[InstrZ++].Code=NCode;
-END
+static void AddDestReg(char *NName, LongWord NCode)
+{
+  if (InstrZ >= DestRegCnt)
+    exit(255);
+  DestRegs[InstrZ].Name = NName;
+  DestRegs[InstrZ++].Code = NCode;
+}
 
-        static void AddSrcReg(char *NName, LongWord NCode)
-BEGIN
-   if (InstrZ>=SrcRegCnt) exit(255);
-   SrcRegs[InstrZ].Name=NName;
-   SrcRegs[InstrZ++].Code=NCode;
-END
+static void AddSrcReg(char *NName, LongWord NCode)
+{
+  if (InstrZ >= SrcRegCnt)
+    exit(255);
+  SrcRegs[InstrZ].Name = NName;
+  SrcRegs[InstrZ++].Code = NCode;
+}
 
-        static void AddALUSrcReg(char *NName, LongWord NCode)
-BEGIN
-   if (InstrZ>=ALUSrcRegCnt) exit(255);
-   ALUSrcRegs[InstrZ].Name=NName;
-   ALUSrcRegs[InstrZ++].Code=NCode;
-END
+static void AddALUSrcReg(char *NName, LongWord NCode)
+{
+  if (InstrZ >= ALUSrcRegCnt)
+    exit(255);
+  ALUSrcRegs[InstrZ].Name = NName;
+  ALUSrcRegs[InstrZ++].Code = NCode;
+}
 
-        static void InitFields(void)
-BEGIN
-   InstTable=CreateInstTable(101);
-   OpTable=CreateInstTable(79);
+static void InitFields(void)
+{
+  InstTable = CreateInstTable(101);
+  OpTable = CreateInstTable(79);
 
-   AddInstTable(InstTable,"LDI",0,DecodeLDI);
-   AddInstTable(InstTable,"LD",0,DecodeLDI);
-   AddInstTable(InstTable,"OP",0,DecodeOP);
-   AddInstTable(InstTable,"DATA",0,DecodeDATA);
-   AddInstTable(InstTable,"RES",0,DecodeRES);
-   AddInstTable(OpTable,"MOV",0,DecodeMOV);
-   AddInstTable(OpTable,"NOP",0,DecodeNOP);
-   AddInstTable(OpTable,"DPNOP",0,DecodeDPL);
-   AddInstTable(OpTable,"DPINC",1,DecodeDPL);
-   AddInstTable(OpTable,"DPDEC",2,DecodeDPL);
-   AddInstTable(OpTable,"DPCLR",3,DecodeDPL);
-   AddInstTable(OpTable,"M0",0,DecodeDPH);   
-   AddInstTable(OpTable,"M1",1,DecodeDPH);   
-   AddInstTable(OpTable,"M2",2,DecodeDPH);   
-   AddInstTable(OpTable,"M3",3,DecodeDPH);   
-   AddInstTable(OpTable,"M4",4,DecodeDPH);   
-   AddInstTable(OpTable,"M5",5,DecodeDPH);   
-   AddInstTable(OpTable,"M6",6,DecodeDPH);   
-   AddInstTable(OpTable,"M7",7,DecodeDPH);   
-   if (MomCPU>=CPU7725)
-    BEGIN
-     AddInstTable(OpTable,"M8",8,DecodeDPH);   
-     AddInstTable(OpTable,"M9",9,DecodeDPH);   
-     AddInstTable(OpTable,"MA",10,DecodeDPH);   
-     AddInstTable(OpTable,"MB",11,DecodeDPH);   
-     AddInstTable(OpTable,"MC",12,DecodeDPH);   
-     AddInstTable(OpTable,"MD",13,DecodeDPH);   
-     AddInstTable(OpTable,"ME",14,DecodeDPH);   
-     AddInstTable(OpTable,"MF",15,DecodeDPH);   
-    END
-   AddInstTable(OpTable,"RPNOP",0,DecodeRP);   
-   AddInstTable(OpTable,"RPDEC",1,DecodeRP);
-   AddInstTable(OpTable,"RET",1,DecodeRET);
+  AddInstTable(InstTable, "LDI", 0, DecodeLDI);
+  AddInstTable(InstTable, "LD", 0, DecodeLDI);
+  AddInstTable(InstTable, "OP", 0, DecodeOP);
+  AddInstTable(InstTable, "DATA", 0, DecodeDATA);
+  AddInstTable(InstTable, "RES", 0, DecodeRES);
+  AddInstTable(OpTable, "MOV", 0, DecodeMOV);
+  AddInstTable(OpTable, "NOP", 0, DecodeNOP);
+  AddInstTable(OpTable, "DPNOP", 0, DecodeDPL);
+  AddInstTable(OpTable, "DPINC", 1, DecodeDPL);
+  AddInstTable(OpTable, "DPDEC", 2, DecodeDPL);
+  AddInstTable(OpTable, "DPCLR", 3, DecodeDPL);
+  AddInstTable(OpTable, "M0", 0, DecodeDPH);   
+  AddInstTable(OpTable, "M1", 1, DecodeDPH);   
+  AddInstTable(OpTable, "M2", 2, DecodeDPH);   
+  AddInstTable(OpTable, "M3", 3, DecodeDPH);   
+  AddInstTable(OpTable, "M4", 4, DecodeDPH);   
+  AddInstTable(OpTable, "M5", 5, DecodeDPH);   
+  AddInstTable(OpTable, "M6", 6, DecodeDPH);   
+  AddInstTable(OpTable, "M7", 7, DecodeDPH);   
+  if (MomCPU >= CPU7725)
+  {
+    AddInstTable(OpTable, "M8", 8, DecodeDPH);   
+    AddInstTable(OpTable, "M9", 9, DecodeDPH);   
+    AddInstTable(OpTable, "MA", 10, DecodeDPH);   
+    AddInstTable(OpTable, "MB", 11, DecodeDPH);   
+    AddInstTable(OpTable, "MC", 12, DecodeDPH);   
+    AddInstTable(OpTable, "MD", 13, DecodeDPH);   
+    AddInstTable(OpTable, "ME", 14, DecodeDPH);   
+    AddInstTable(OpTable, "MF", 15, DecodeDPH);   
+  }
+  AddInstTable(OpTable, "RPNOP", 0, DecodeRP);   
+  AddInstTable(OpTable, "RPDEC", 1, DecodeRP);
+  AddInstTable(OpTable, "RET", 1, DecodeRET);
 
-   JmpOrders=(FixedOrder *) malloc(sizeof(FixedOrder)*JmpOrderCnt); InstrZ=0;
-   AddJmp("JMP"   , 0x100); AddJmp("CALL"  , 0x140);
-   AddJmp("JNCA"  , 0x080); AddJmp("JCA"   , 0x082);
-   AddJmp("JNCB"  , 0x084); AddJmp("JCB"   , 0x086);
-   AddJmp("JNZA"  , 0x088); AddJmp("JZA"   , 0x08a);
-   AddJmp("JNZB"  , 0x08c); AddJmp("JZB"   , 0x08e);
-   AddJmp("JNOVA0", 0x090); AddJmp("JOVA0" , 0x092);
-   AddJmp("JNOVB0", 0x094); AddJmp("JOVB0" , 0x096);
-   AddJmp("JNOVA1", 0x098); AddJmp("JOVA1" , 0x09a);
-   AddJmp("JNOVB1", 0x09c); AddJmp("JOVB1" , 0x09e);
-   AddJmp("JNSA0" , 0x0a0); AddJmp("JSA0"  , 0x0a2);
-   AddJmp("JNSB0" , 0x0a4); AddJmp("JSB0"  , 0x0a6);
-   AddJmp("JNSA1" , 0x0a8); AddJmp("JSA1"  , 0x0aa);
-   AddJmp("JNSB1" , 0x0ac); AddJmp("JSB1"  , 0x0ae);
-   AddJmp("JDPL0" , 0x0b0); AddJmp("JDPLF" , 0x0b2);
-   AddJmp("JNSIAK", 0x0b4); AddJmp("JSIAK" , 0x0b6);
-   AddJmp("JNSOAK", 0x0b8); AddJmp("JSOAK" , 0x0ba);
-   AddJmp("JNRQM" , 0x0bc); AddJmp("JRQM"  , 0x0be);
-   AddJmp("JDPLN0", 0x0b1); AddJmp("JDPLNF" , 0x0b3);
+  AddJmp("JMP"   , 0x100); AddJmp("CALL"  , 0x140);
+  AddJmp("JNCA"  , 0x080); AddJmp("JCA"   , 0x082);
+  AddJmp("JNCB"  , 0x084); AddJmp("JCB"   , 0x086);
+  AddJmp("JNZA"  , 0x088); AddJmp("JZA"   , 0x08a);
+  AddJmp("JNZB"  , 0x08c); AddJmp("JZB"   , 0x08e);
+  AddJmp("JNOVA0", 0x090); AddJmp("JOVA0" , 0x092);
+  AddJmp("JNOVB0", 0x094); AddJmp("JOVB0" , 0x096);
+  AddJmp("JNOVA1", 0x098); AddJmp("JOVA1" , 0x09a);
+  AddJmp("JNOVB1", 0x09c); AddJmp("JOVB1" , 0x09e);
+  AddJmp("JNSA0" , 0x0a0); AddJmp("JSA0"  , 0x0a2);
+  AddJmp("JNSB0" , 0x0a4); AddJmp("JSB0"  , 0x0a6);
+  AddJmp("JNSA1" , 0x0a8); AddJmp("JSA1"  , 0x0aa);
+  AddJmp("JNSB1" , 0x0ac); AddJmp("JSB1"  , 0x0ae);
+  AddJmp("JDPL0" , 0x0b0); AddJmp("JDPLF" , 0x0b2);
+  AddJmp("JNSIAK", 0x0b4); AddJmp("JSIAK" , 0x0b6);
+  AddJmp("JNSOAK", 0x0b8); AddJmp("JSOAK" , 0x0ba);
+  AddJmp("JNRQM" , 0x0bc); AddJmp("JRQM"  , 0x0be);
+  AddJmp("JDPLN0", 0x0b1); AddJmp("JDPLNF" , 0x0b3);
 
-   ALU2Orders=(FixedOrder *) malloc(sizeof(FixedOrder)*ALU2OrderCnt); InstrZ=0;
-   AddALU2("OR"  , 1); AddALU2("AND" , 2); AddALU2("XOR" , 3);
-   AddALU2("SUB" , 4); AddALU2("ADD" , 5); AddALU2("SBB" , 6);
-   AddALU2("ADC" , 7); AddALU2("CMP" ,10);
+  AddALU2("OR"  , 1); AddALU2("AND" , 2); AddALU2("XOR" , 3);
+  AddALU2("SUB" , 4); AddALU2("ADD" , 5); AddALU2("SBB" , 6);
+  AddALU2("ADC" , 7); AddALU2("CMP" ,10);
 
-   ALU1Orders=(FixedOrder *) malloc(sizeof(FixedOrder)*ALU1OrderCnt); InstrZ=0;
-   AddALU1("DEC" , 8); AddALU1("INC" , 9); AddALU1("SHR1",11);
-   AddALU1("SHL1",12); AddALU1("SHL2",13); AddALU1("SHL4",14);
-   AddALU1("XCHG",15);
+  AddALU1("DEC" ,  8); AddALU1("INC" ,  9); AddALU1("SHR1", 11);
+  AddALU1("SHL1", 12); AddALU1("SHL2", 13); AddALU1("SHL4", 14);
+  AddALU1("XCHG", 15);
 
-   DestRegs=(TReg *) malloc(sizeof(TReg)*DestRegCnt); InstrZ=0;
-   AddDestReg("@NON",  0); AddDestReg("@A"  ,  1);
-   AddDestReg("@B"  ,  2); AddDestReg("@TR" ,  3);
-   AddDestReg("@DP" ,  4); AddDestReg("@RP" ,  5);
-   AddDestReg("@DR" ,  6); AddDestReg("@SR" ,  7);
-   AddDestReg("@SOL",  8); AddDestReg("@SOM",  9);
-   AddDestReg("@K"  , 10); AddDestReg("@KLR", 11);
-   AddDestReg("@KLM", 12); AddDestReg("@L"  , 13);
-   AddDestReg((MomCPU==CPU7725)?"@TRB":"",14);
-   AddDestReg("@MEM", 15);
-   
+  DestRegs = (TReg *) malloc(sizeof(TReg) * DestRegCnt); InstrZ = 0;
+  AddDestReg("@NON",  0); AddDestReg("@A"  ,  1);
+  AddDestReg("@B"  ,  2); AddDestReg("@TR" ,  3);
+  AddDestReg("@DP" ,  4); AddDestReg("@RP" ,  5);
+  AddDestReg("@DR" ,  6); AddDestReg("@SR" ,  7);
+  AddDestReg("@SOL",  8); AddDestReg("@SOM",  9);
+  AddDestReg("@K"  , 10); AddDestReg("@KLR", 11);
+  AddDestReg("@KLM", 12); AddDestReg("@L"  , 13);
+  AddDestReg((MomCPU == CPU7725)?"@TRB":"", 14);
+  AddDestReg("@MEM", 15);
 
-   SrcRegs=(TReg *) malloc(sizeof(TReg)*SrcRegCnt); InstrZ=0;
-   AddSrcReg("NON" ,  0); AddSrcReg("A"   ,  1);
-   AddSrcReg("B"   ,  2); AddSrcReg("TR"  ,  3);
-   AddSrcReg("DP"  ,  4); AddSrcReg("RP"  ,  5);
-   AddSrcReg("RO"  ,  6); AddSrcReg("SGN" ,  7);
-   AddSrcReg("DR"  ,  8); AddSrcReg("DRNF",  9);
-   AddSrcReg("SR"  , 10); AddSrcReg("SIM" , 11);
-   AddSrcReg("SIL" , 12); AddSrcReg("K"   , 13);
-   AddSrcReg("L"   , 14); AddSrcReg("MEM" , 15);
+  SrcRegs = (TReg *) malloc(sizeof(TReg) * SrcRegCnt); InstrZ = 0;
+  AddSrcReg("NON" ,  0); AddSrcReg("A"   ,  1);
+  AddSrcReg("B"   ,  2); AddSrcReg("TR"  ,  3);
+  AddSrcReg("DP"  ,  4); AddSrcReg("RP"  ,  5);
+  AddSrcReg("RO"  ,  6); AddSrcReg("SGN" ,  7);
+  AddSrcReg("DR"  ,  8); AddSrcReg("DRNF",  9);
+  AddSrcReg("SR"  , 10); AddSrcReg("SIM" , 11);
+  AddSrcReg("SIL" , 12); AddSrcReg("K"   , 13);
+  AddSrcReg("L"   , 14); AddSrcReg("MEM" , 15);
 
-   ALUSrcRegs=(TReg *) malloc(sizeof(TReg)*ALUSrcRegCnt); InstrZ=0;
-   AddALUSrcReg("RAM", 0); AddALUSrcReg("IDB", 1);
-   AddALUSrcReg("M"  , 2); AddALUSrcReg("N"  , 3);
-END
+  ALUSrcRegs = (TReg *) malloc(sizeof(TReg) * ALUSrcRegCnt); InstrZ = 0;
+  AddALUSrcReg("RAM", 0); AddALUSrcReg("IDB", 1);
+  AddALUSrcReg("M"  , 2); AddALUSrcReg("N"  , 3);
+}
 
-        static void DeinitFields(void)
-BEGIN
-   DestroyInstTable(InstTable);
-   DestroyInstTable(OpTable);
-   free(JmpOrders);
-   free(ALU2Orders);
-   free(ALU1Orders);
-   free(DestRegs);
-   free(SrcRegs);
-   free(ALUSrcRegs);
-END
+static void DeinitFields(void)
+{
+  DestroyInstTable(InstTable);
+  DestroyInstTable(OpTable);
+  free(DestRegs);
+  free(SrcRegs);
+  free(ALUSrcRegs);
+}
 
 /*---------------------------------------------------------------------------*/
 /* Callbacks */
 
-        static void MakeCode_7720(void)
-BEGIN
-   Boolean NextOp;
+static void MakeCode_7720(void)
+{
+  Boolean NextOp;
 
-   /* Nullanweisung */
+  /* Nullanweisung */
 
-   if ((Memo("")) AND (*AttrPart=='\0') AND (ArgCnt==0)) return;
+  if ((Memo("")) && (*AttrPart == '\0') && (ArgCnt == 0))
+    return;
 
-   /* direkte Anweisungen */
+  /* direkte Anweisungen */
 
-   NextOp=Memo("OP");
-   if (LookupInstTable(InstTable,OpPart))
-    BEGIN
-     InOp=NextOp; return;
-    END
+  NextOp = Memo("OP");
+  if (LookupInstTable(InstTable, OpPart))
+  {
+    InOp = NextOp; return;
+  }
 
-   /* wenn eine parallele Op-Anweisung offen ist, noch deren Komponenten testen */
+  /* wenn eine parallele Op-Anweisung offen ist, noch deren Komponenten testen */
 
-   if ((InOp) AND (LookupInstTable(OpTable,OpPart)))
-    BEGIN
-     RetractWords(1);
-     DAsmCode[0]=ActCode; CodeLen=1;
-     return;
-    END
+  if ((InOp) && (LookupInstTable(OpTable, OpPart)))
+  {
+    RetractWords(1);
+    DAsmCode[0] = ActCode;
+    CodeLen = 1;
+    return;
+  }
 
-   /* Hae??? */
+  /* Hae??? */
 
-   WrXError(1200,OpPart);
-END
+  WrXError(1200, OpPart);
+}
 
-        static Boolean IsDef_7720(void)
-BEGIN
-   return False;
-END
+static Boolean IsDef_7720(void)
+{
+  return False;
+}
 
-        static void SwitchFrom_7720(void)
-BEGIN
-   DeinitFields();
-END
+static void SwitchFrom_7720(void)
+{
+  DeinitFields();
+}
 
-        static void SwitchTo_7720(void)
-BEGIN
-   PFamilyDescr FoundDescr;
+static void SwitchTo_7720(void)
+{
+  PFamilyDescr FoundDescr;
 
-   TurnWords=False; ConstMode=ConstModeIntel; SetIsOccupied=False;
+  TurnWords = False;
+  ConstMode = ConstModeIntel;
+  SetIsOccupied = False;
 
-   if (MomCPU==CPU7725)
-    BEGIN
-     FoundDescr=FindFamilyByName("7725");
-     MemInt=UInt11;
-     ROMEnd=0x7ff; DROMEnd=0x3ff; RAMEnd=0xff;
-     TypePos=22;
-     ImmValPos=6;
-     AddrPos=2;
-     ALUPos=16;
-     DPLPos=13;
-     AccPos=15;
-     ALUSrcPos=20;
-    END
-   else
-    BEGIN
-     FoundDescr=FindFamilyByName("7720");
-     MemInt=UInt9;
-     ROMEnd=0x1ff; DROMEnd=0x1ff; RAMEnd=0x7f;
-     TypePos=21;
-     ImmValPos=5;
-     AddrPos=4;
-     ALUPos=15;
-     DPLPos=12;
-     AccPos=14;
-     ALUSrcPos=19;
-    END
- 
-   PCSymbol="$"; HeaderID=FoundDescr->Id; NOPCode=0x000000;
-   DivideChars=","; HasAttrs=False;
+  if (MomCPU == CPU7725)
+  {
+    FoundDescr = FindFamilyByName("7725");
+    MemInt = UInt11;
+    ROMEnd = 0x7ff; DROMEnd = 0x3ff; RAMEnd = 0xff;
+    TypePos = 22;
+    ImmValPos = 6;
+    AddrPos = 2;
+    ALUPos = 16;
+    DPLPos = 13;
+    AccPos = 15;
+    ALUSrcPos = 20;
+  }
+  else
+  {
+    FoundDescr = FindFamilyByName("7720");
+    MemInt = UInt9;
+    ROMEnd = 0x1ff; DROMEnd = 0x1ff; RAMEnd = 0x7f;
+    TypePos = 21;
+    ImmValPos = 5;
+    AddrPos = 4;
+    ALUPos = 15;
+    DPLPos = 12;
+    AccPos = 14;
+    ALUSrcPos = 19;
+  }
 
-   ValidSegs=(1l<<SegCode)|(1l<<SegData)|(1l<<SegRData);
-   Grans[SegCode ]=4; ListGrans[SegCode ]=4; SegInits[SegCode ]=0;
-   SegLimits[SegCode ] = ROMEnd;
-   Grans[SegData ]=2; ListGrans[SegData ]=2; SegInits[SegData ]=0;
-   SegLimits[SegData ] = RAMEnd;
-   Grans[SegRData]=2; ListGrans[SegRData]=2; SegInits[SegRData]=0;
-   SegLimits[SegRData] = DROMEnd;
+  PCSymbol = "$";
+  HeaderID = FoundDescr->Id;
+  NOPCode = 0x000000;
+  DivideChars = ",";
+  HasAttrs = False;
 
-   MakeCode=MakeCode_7720; IsDef=IsDef_7720;
-   SwitchFrom=SwitchFrom_7720;
+  ValidSegs = (1l << SegCode) | (1l << SegData) | (1l << SegRData);
+  Grans[SegCode ] = 4; ListGrans[SegCode ] = 4; SegInits[SegCode ] = 0;
+  SegLimits[SegCode ] = ROMEnd;
+  Grans[SegData ] = 2; ListGrans[SegData ] = 2; SegInits[SegData ] = 0;
+  SegLimits[SegData ] = RAMEnd;
+  Grans[SegRData] = 2; ListGrans[SegRData] = 2; SegInits[SegRData] = 0;
+  SegLimits[SegRData] = DROMEnd;
 
-   InOp=False; UsedOpFields=0; ActCode=0;
-   InitFields();
-END
+  MakeCode = MakeCode_7720;
+  IsDef = IsDef_7720;
+  SwitchFrom = SwitchFrom_7720;
+
+  InOp = False;
+  UsedOpFields = 0;
+  ActCode = 0;
+  InitFields();
+}
 
 /*---------------------------------------------------------------------------*/
 /* Initialisierung */
 
-        void code7720_init(void)
-BEGIN
-   CPU7720=AddCPU("7720",SwitchTo_7720);
-   CPU7725=AddCPU("7725",SwitchTo_7720);
-END
+void code7720_init(void)
+{
+  CPU7720 = AddCPU("7720", SwitchTo_7720);
+  CPU7725 = AddCPU("7725", SwitchTo_7720);
+}
