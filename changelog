@@ -1,78 +1,1220 @@
-$Id: changelog,v 1.86 2014/08/31 13:05:10 alfred Exp $
+$Id: changelog,v 1.89 2014/09/21 12:11:51 alfred Exp $
 ------------------------------------------------------------------------------
-v1.41r3 Aenderungen: (-->v1.41r4beta)
 
-11.3.1996
+2014-09-21 [1.42 Bld 95]
 
-- Bugfix      : -l - Option funktionierte bei P2HEX nicht.
-- Erweiterung : P2HEX/P2BIN koennen Dateiinhalte auf andere Adressen
-                verschieben.
-- Erweiterung : P2HEX kann den Einsprungpunkt auch in Intel-Hex-Files
-                weitergeben.
-- Erweiterung : Kommentare in SHARED-Anweisungen werden in die Share-Datei
-                weitergegeben.
-- Aenderung   : Als Kommentarzeichen wird fuer Share-Dateien im Pascal-Modus
-                (* ... *) anstelle { ... } verwendet.  Dies erlaubt es, 
-                die Dateien auch fuer Modula zu verwenden und sollte fuer
-                Pascal keine Nachteile mit sich bringen.  
+- Change      : flip order of changelog
 
-18.3.1996
+- Change      : rework/cleanup 75K0, SH, 80C16x targets
 
-- Bugfix      : Kodierungsfehler im Z(3)80-Teil behoben:
-                - MTEST
-                - LD (IX/IY+n),r16
-                - MULTW/MULTUW/DIVUW [HL,]IX/IY/imm16
-                - LD r16,BC
-- Bugfix      : Fehlermeldungen ueber fehlende/fehlerhafte Key-Datei kamen
-                in der englischen Version noch auf Deutsch.
+- Addition    : allow keyword arguments and parameter defaults for macros
 
-25.3.1996
+2014-08-31 [1.42 Bld 94]
 
-- Bugfix      : Erwaehnung der -quiet sowie -alias -Optionen fehlte in der
-                Online-Hilfe
-- Erweiterung : 80C517 als Prozessortyp aufgenommen (+Register in STDDEF51.INC)
+- Bugfix      : for Z80 target, detect invalid condition identifiers
 
- 9.4.1996
+- Bugfix      : avoid infinite loop on M16 when chained addressing is used incorrectly
 
-- Erweiterung : MELPS-7700-Teil kennt jetzt auch die 7750er-Befehlssatzer-
-                weiterungen
+- Change      : rework/cleanup COP8, AVR, ACE, TMS9900, TLCS/9000, TLCS/900, i960,
+                MCS-96, TLCS/90, 8X30x, TLCS/870, 8086, 8085, 78Kx, 78c10, uPD77230, uPD772x,
+                65816/7700 targets, complete reworks and testcase on M16
 
- 6.5.1996
+- Bugfix      : BCLR/BSET/BSETI/BTST on M16 use format G/E/Q instead of G/E/R
 
-- Bugfix      : VERSION-Variable stand noch auf 1.41r2
+- Bugfix      : do not allow JSR with direct mode on 6800
 
-13.5.1996
+- Bugfix      : correct 8087 FIMUL coding
 
-- Erweiterung : MELPS-7700-Teil kennt jetzt auch die 7751er-Befehlssatzer-
-                weiterungen.
+- Bugfix      : correct JSL/JML byte order for 65816
 
-- Bugfix      : einige haarstraeubende Nichtinitialisierungen von Variablen 
-                beseitigt, die in Zusammenhang mit der Definition von Symbolen 
-                in der Kommandozeile auftreten koennen.
+- Bugfix      : correct COP, PEI, PEA, BIT instructions for 65816
 
-28.5.1996
+- Bugfix      : use correct bank register for 65816 JMP/JSR instruction
 
-- Bugfix      : Der Z80-Teil hatte bei IX/IY-Displacements ein Byte zu frueh 
-                auf laengere Offsets umgeschaltet.
+- Addition    : on 65816, allow DBR as alias for DT and PBR as alias for PG
 
-- Bugfix      : Die \i und \h - Escapes funktionierten in Strings nicht.
+2014-06-19 [1.42 Bld 93]
 
-- Bugfix      : Die Bereichseingrenzung fuer 24-Bit-Zahlen war nicht korrekt.
+- Change      : put entry address into 01 record for Intel8 hex format
 
-29.5.1996
+- Bugfix      : correct uninitialized array in M16 decoder
 
-- Bugfix      : Der 68000-Teil schrieb Bloedsinn in die Code-Datei, wenn in 
-                einer Zeile genau ein Byte Code erzeugt wurde.
+- Change      : for Z80, do not warn about possible short addressing for
+                RL/RLC/RR/RRC A
 
-31.5.1996
+- Change      - rework/cleanup Z80, F2MC8L, Picoblaze, H8/300, XA, M16C, STx
+                targets, partially rework and provide initial test case for
+                M16 target
 
-- Bugfix      : Im MELPS-7700-Teil funktionierten eine Reihe von Befehlen nicht mehr,
-                wenn man den 7751er als Ziel-CPU einstellte.
+2014-03-08 [1.42 Bld 92]
 
-- Bugfix      : Der SEL-Befehl des MCS-48-Teils gab bei einer falschen 
-                Parameterzahl eine falsche Fehlermeldung aus.
+- Bugfix      : correct handling of escaped quotation marks when converting string
+                to uppercase
 
-10.6.1996
+- Addition    : add RORG statement
+
+- Change      : for unresolved forwards, put forward statement position into extended error
+
+- Addition    : added new function ASSUMEDVAL to query values set via ASSUME
+
+2014-03-03 [1.42 Bld 91]
+
+- Change      : allow register names R10...R15 for 4004/4040
+
+- Addition    : add COP444 target
+
+2013-12-21 [1.42 Bld 90]
+
+- Bugfix      : IRPC messed up local symbol handling
+
+- Bugfix      : correct handling of escaped quotes in string constants
+
+- Change      : allow up to 64K code per line
+
+2013-08-07 [1.42 Bld 89]
+
+- Bugfix      : PADDING instruction available for 6805/6808
+
+- Addition    : add COP440 target
+
+- Bugfix      : better handling of overlong souce code lines
+
+2013-03-22 [1.42 Bld 88]
+
+- Addition    : support 75xx instruction set A & B
+
+2013-03-09 [1.42 Bld 87]
+
+- Bugfix      : correct PC-relative addressing on SC/MP
+
+- Addition    : (NO)GLOBALSYMBOLS parameter for macros
+
+- Addition    : add support for NEC uPD75xx
+
+2012-12-31 [1.42 Bld 86]
+
+- Change      : add Dx pseudo instructions to Signetics 2650
+
+2012-12-09 [1.42 Bld 85]
+
+- Change      : allow register symbols for Zilog Z8
+
+2012-09-02 [1.42 Bld 84]
+
+- Addition    : add support for XMOS XS1
+
+- Addition    : optionally support UTF8 encoding
+
+- Addition    : add Makefile definitions for OSX
+
+2012-05-26 [1.42 Bld 83]
+
+- Change      : implicit macro parameters are always case-insensitive
+
+- Addition    : add REG instruction to MSP430
+
+2012-01-21 [1.42 Bld 82]
+
+- Addition    : added support for MPC 821 from Marcin Cieslak
+
+- Bugfix      : regard symbol name expansion in arguments for SHARED
+
+2011-10-20 [1.42 Bld 81]
+
+- Change      : range checking of RP value for Z8 more graceful
+
+2011-08-01 [1.42 Bld 80]
+
+- Change      : rework (e)Z8 working register addressing
+
+2010-12-12 [1.42 Bld 79]
+
+- Bugfix      : correct back-transformation of SFR addresses to absolute for 80C167
+
+- Bugfix      : allow arbitrary values for register pointer on eZ8
+
+- Change      : split up Mico8 variants
+
+2010-06-14 [1.42 Bld 78] 
+
+- Bugfix      : do not optimize out 68K BSR if it has zero distance
+
+2010-04-17 [1.42 Bld 77]
+
+- Bugfix      : address problem of overlapping strcpy()
+
+2010-04-11 [1.42 Bld 76]
+
+- Bugfix      : correct operand checking for SHA/SHL on M16C
+
+2010-03-26 [1.42 Bld 75]
+
+- Bugfix      : correct address range for M16C bit short addressing
+
+2010-03-14 [1.42 Bld 74]
+
+- Addition    : DW/DD/DQ/DD, DC.[wlxsdp], ADR also accept string arguments
+
+2010-02-27 [1.42 Bld 73]
+
+- Bugfix      : corrected P2BIN checksum generation on Win32 systems
+- Bugfix      : corrected macro nesting dispay in listing
+
+2010-01-01 [1.42 Bld 72]
+
+- Bugfix      : corrected address offset handling for H8/500
+- Bugfix      : some coding corrections for Lattice Mico8
+
+2009-07-25 [1.42 Bld 71]
+
+- Bugfix      : corrected H8/500 register-to-register MOV coding
+
+2009-06-07 [1.42 Bld 70]
+
+- Addition    : added named temporary symbols
+
+2009-05-10 [1.42 Bld 69]
+
+- Bugfix      : allow more CPU aliases
+- Addition    : dispay macro nesting in listing
+
+2009-04-13 [1.42 Bld 68]
+
+- Bugfix      : correct SC/MP relative addressing regarding page wrap
+
+2009-04-10 [1.42 Bld 67]
+
+- Bugfix      : correct AVR branch instructions when target is beyond 64K
+
+2009-02-08 [1.42 Bld 66]
+
+- Bugfix      : correct DINT coding for TMS7xxx
+
+2008-11-23 [1.42 Bld 65]
+
+- Addition    : allow Q for octal constants in Intel mode
+- Bugfix      : correct coding of OUT instruction for 8008
+- Change      : allow NUL characters in string symbols (again)
+
+2008-10-25 [1.42 Bld 64]
+
+- Addition    : added CHARFROMSTR function
+
+2008-08-29 [1.42 Bld 63]
+
+- Bugfix      : correct 68K TST addressing modes, PC-relative offsets for a few instructions
+
+2008-08-22 [1.42 Bld 62]
+
+- Bugfix      : correct MCS-96 DPTS/EPTS coding
+
+2008-08-17 [1.42 Bld 61]
+
+- Bugfix      : correct MCS-96 BMOVI coding
+
+- Bugfix      : correct definition of PORTQS for MC68332
+
+2008-08-10 [1.42 Bld 60]
+
+- Bugfix      : allow 68xxx dynamic FMOVEM register list with lowercase-written data register
+
+- Bugfix      : correct addressing mode list for FMOVEM register-to-memory
+
+- Change      : allow 68K bit instructions with arguments ranging from 0..255 and issue
+                warning for numbers beyond operand length
+
+2008-06-22 [1.42 Bld 59]
+
+- Addition    : add Atari Asteroids vector processor as target
+
+- Bugfix      : disallow 68xxx byte-size ADDQ/SUBQ when using an address register
+
+2008-03-31 [1.42 Bld 58]
+
+- Bugfix      : correct 8086 CALLF/JMPF instructions
+
+2007-12-31 [1.42 Bld 57]
+
+- Bugfix      : correct SKINT -> SKNIT on 78C1x
+
+- Bugfix      : correct LDN and RLDI instructions for 180x
+
+- Change      : MSP decoder now works with hash table
+
+- Addition    : add some MSP430 bit definitions
+
+2007-09-24 [1.42 Bld 56]
+
+- Bugfix      : correct handling of minus operator in nested expressions
+
+2007-05-01 [1.42 Bld 55]
+
+- Bugfix      : set correct default maximum nesting level
+
+- Addition    : add BANKSEL pseudo instruction for PIC16C8x
+
+- Addition    : add optional new integer syntax
+
+2006-12-19 [1.42 Bld 54]
+
+- Bugfix      : -t option allows full range of list mask
+
+- Bugfix      : correct output of Intel16/Intel32 hex format for
+                word-addressed targets
+
+2006-12-17 [1.42 Bld 53]
+
+- Bugfix      : corrected address space assignment of ATmega128
+
+- Bugfix      : fixed negative assembly times on Win32
+
+2006-12-09 [1.42 Bld 52]
+
+- Bugfix      : added missing instructions for 78K2 target
+
+- Bugfix      : corrected some instruction codings for 78K0
+
+2006-08-26 [1.42 Bld 51]
+
+- Addition    : finished 8008 target
+
+2006-08-05 [1.42 Bld 50]
+
+- Addition    : Add (68)RS08 (contribution by Andreas Bolsch)
+
+- Bugfix      : For AVR, add the ATmega variant of the LPM instruction
+
+- Addition    : Add AVR targets & address spaces up to ATmega256
+
+- Bugfix      : correct parsing of indexed expressions for Z80 and TLCS-90(0)
+
+2006-06-24 [1.42 Bld 49]
+
+- Addition    : Add (68)HCS12 target
+
+2006-05-08 [1.42 Bld 48]
+
+- Bugfix      : add range checks to arguments on some COP41x instructions
+
+- Addition    : Add COP42x target
+
+2006-04-15 [1.42 Bld 47]
+
+- Addition    : Add ${PREFIX} to installation script
+
+2006-04-07 [1.42 Bld 46]
+
+- Bugfix      : remove some warnings around paged address space of 68HC12X
+
+- Addition    : Add COP4 target
+
+2006-04-04 [1.42 Bld 45]
+
+- Bugfix      : some corrections around paged address space of 68HC12X
+
+2006-03-18 [1.42 Bld 44]
+
+- Addition    : Add paged address space for 68HC12X
+
+2005-12-17 [1.42 Bld 43]
+
+- Bugfix      : XGDX instruction did not work on 6301
+
+- Addition    : Add 2650 target
+
+- Bugfix      : listing on 16-bit hosts lead to crashes
+
+2005-11-04 [1.42 Bld 42]
+
+- Addition    : warn about MSP430 code on odd addresses
+
+- Bugfix      : .b as length specifier for 68K branch instructions would not work
+
+- Bugfix      : correct address field of MOS hex format
+
+- Bugfix      : correct DUP detection in Intel-style data disposition
+                instructions
+
+2005-10-02 [1.42 Bld 41]
+
+- Bugfix      : correct endinaness for constant disposition on XGATE
+
+- Bugfix      : correct endinaness for constant disposition of 8-bit Motorola ops
+                on big-endian platforms
+
+- Bugfix      : allow arbitrary register names for KCPSM3
+
+- Bugfix      : correct register naming for KCPSM3
+
+2005-09-17 [1.42 Bld 40]
+
+- Bugfix      : correct 68HC12 behaviour for forward jump/call instructions
+
+- Addition    : allow .w and .b as length specifier for 68K branch instructions
+
+2005-09-12 [1.42 Bld 39]
+
+- Addition    : add HC12X/XGATE instruction extensions
+
+2005-09-08 [1.42 Bld 38]
+
+- Bugfix      : correct Qxxn register decoding on TLCS-900
+
+2005-08-07 [1.42 Bld 37]
+
+- Bugfix      : correct mnemonic conflict for EXPORT on MICO8
+
+- Addition    : allow instruction aliases for ...I variants on MICO8
+
+2005-08-06 [1.42 Bld 36]
+
+- Addition    : added LatticeMico8
+
+2005-03-21 [1.42 Bld 35]
+
+- Addition    : added ATM & LDWX instructions for Zilog eZ8
+
+- Addition    : added KCPSM3 core
+
+2004-11-20 [1.42 Bld 34]
+
+- Bugfix      : allow double-memory addressing variants on TLCS/900 again
+
+2004-09-26 [1.42 Bld 33]
+
+- Bugfix      : correct operation of INHX... modes in P2HEX
+
+- Bugfix      : setting of entry address in P2BIN did not work
+
+- Bugfix      : fix crashes when programs defined more than 256
+                bytes of code in one line
+
+2004-05-29 [1.42 Bld 32]
+
+- Bugfix      : correct erroneous detection of DUP operator inside
+                string/character constants
+
+2004-03-31 [1.42 Bld 31]
+
+- Bugfix      : corrected 68HC11K4 instruction set, PRWINS command
+
+2003-12-07 [1.42 Bld 30]
+
+- Addition    : added NEC 78K2
+
+2003-08-17 [1.42 Bld 29]
+
+- Addition    : added 80C251T SFRs
+
+- Addition    : added 80C167CS SFRs
+
+- Addition    : added Zilog eZ8
+
+2003-05-25 [1.42 Bld 28] 
+
+- Addition    : added 4040 machine instructions
+
+2003-03-30 [1.42 Bld 27]
+
+- Addition    : integrated support for KCPSM/PicoBlaze provided by Andreas
+                Wassatsch
+
+- Addition    : added support for the INS807x processor family
+
+- Bugfix      : allow source file specification in key file
+
+2003-02-26 [1.42 Bld 26]
+
+- Bugfix      : symbolic displacement with Atmel AVR did not work any more
+
+2003-02-02 [1.42 Bld 25]
+
+- Extension   : added EXPRTYPE function
+
+- Bugfix      : in case-sensitive mode, IRP arguments were converted
+                to uppercase
+
+- Bugfix      : 4004 JCN instruction did not allow multiple conditions
+
+- Extension   : allow line continuation
+
+2002-11-23 [1.42 Bld 24]
+
+- Extension   : added undocumented 8085 instructions
+
+- Extension   : improved structure handling, added unions
+
+- Extension   : DC allows ? as operand
+
+2002-10-11 [1.42 Bld 23]
+
+- Bugfix      : repaired named temporary symbols
+
+2002-10-09 [1.42 Bld 22]
+
+- Extension   : added nameless temporary symbols 
+
+2002-05-25 [1.42 Bld 21]
+
+- Extension   : added Atmel MEGA8/MEGA16 CPU types & registers
+
+- Bugfix      : data disposal for Atmel did not work correctly
+
+- Extension   : extended the 320C6x target with pseudo instructions and 
+                machine instructions that previously had to be emulated
+                with macros
+
+- Extension   : ENDIF/ENDCASE show the line number of the IF/CASE statement
+                they were matched to in the listing
+
+- Bugfix      : [] as specifier for the root section was not accepted
+
+- Bugfix      : avoid incorrect debug output when addresses of sections vary
+
+2002-03-10 [1.42 Bld 20]
+
+- Bugfix      : corrected line counting behaviour when REPT/IRP/WHILE draw
+                contents not from file
+
+- Extension   : more precise error messages for type conflicts in some places
+
+2002-01-27 [1.42 Bld 19]
+
+- Bugfix      : BIT-statements inside macros did not work correctly
+
+- Bugfix      : WHILE-statement evaluates condition after last statement
+
+2002-01-13 [1.42 Bld 18]
+
+- Extension   : added INTLABEL option for macros
+
+2001-11-04 [1.42 Bld 17]
+
+- Extension   : added -gnuerrors command line option
+
+- Extension   : added support for the TMS320C54x family from Texas Instruments
+
+2001-08-11 [1.42 Bld 16]
+
+- Bugfix      : do not allow line debug info in pseudo segments
+
+- Bugfix      : more secure detection of ASCII integer constants
+
+[1.42 Bld 15]
+
+- Bugfix      : fixed extended register coding for TLCS-900
+
+- Bugfix      : P2HEX: fix specification of entry address on command line
+
+[1.42 Bld 14]
+
+- Bugfix      : fixed crashes when HC16 cpu type was set from command line
+
+[1.42 Bld 13]
+
+- Bugfix      : in der Kommandozeile angegebene Symbole wurden immer in 
+                Großbuchstaben umgewandelt
+
+- Erweiterung : unterstützt 68HC11K4 windowing
+
+- Bugfix      : pbind verfälschte sporadisch Daten beim Umkopieren
+
+- Erweiterung : added avrlen parameter to p2hex
+
+- Bugfix      : on DOS platforms, PLIST did not display 32-bit-addresses
+                incorrectly
+
+[1.42 Bld 11]
+
+- Bugfix      : 6809-PUSH/PULL mit D-Register klappt jetzt wirklich (sorry!)
+
+- Bugfix      : ACE: Segmente vereint, Bereiche/Startadressen korrigiert
+
+[1.42 Bld 10]
+
+- Erweiterung : NoICE-Symboltypenmaske setzbar
+
+- Bugfix      : 6809-Stackoperation mit anderem Stackpointer funktionierten
+                nicht
+
+- Erweiterung : PUSH/PULL 6809 funktionieren auch mit Register D=A+B
+
+- Bugfix      : 8048-ORL/ANL funktionieren wieder mit p1/p2
+
+[1.42 Bld 9]
+
+- Bugfix      : 680x0-Adressierungen korrigiert
+                äußeres Displacement jetzt auch in Klammer schreibbar
+
+[1.42 Bld 8]
+
+- Erweiterung : DC.x / DS.x funktionieren auch für 68HC16
+
+- Änderung    : Lizenz jetzt GPL
+
+[1.42 Bld 7]
+
+- Bugfix      : / als Parameterzeichen funktioniert wieder
+
+[1.42 Bld 6]
+
+- Bugfix      : Kodierungsfehler TLCS-900(MINC/MDEC, BS1B/BS1F) behoben
+
+- Bugfix      : Abstürze bei BINCLUDE größerer Dateien unter DPMI behoben
+
+[1.42 Bld 5]
+
+- Bugfix      : REPT/IRP(C)/WHILE-Statement in IF-geklammerten Zweigen werden komplett
+                übersprungen
+
+- Bugfix      : Adressen NoICE-Debugfiles werden jetzt als Hex ausgegeben und auch so
+                gekennzeichnet
+
+- Erweiterung : die maximale Verschachtelungstiefe für Aufrufe eines Makros ist jetzt auf
+                einen per NESTMAX einstellbaren Wert begrenzt
+
+- Bugfix      : weitere Fixes in Bankregister-Parser TLCS-900
+
+2000-05-29 [1.42 Bld 4]
+
+- Erweiterung : Packing-Befehl für AVR eingeführt
+
+- Erweiterung : ALLARGS/ARGCOUNT für Makros
+
+- Bugfix      : Bankregister-Parser TLCS-900 repariert
+
+- Erweiterung : temporäre Symbole
+
+2000-03-13 [1.42 Bld 3]
+
+- Bugfix      : 'ambiguous' Warnungen bei egcs beseitigt
+
+- Bugfix      : EXG beim 680x0 korrigiert
+
+- Aenderung   : Adressraum des 68HC08 ist jetzt 64K
+
+2000-02-13 [1-42 Bld 2]
+
+- Bugfix      : ADDX/SUBX beim 68000 waren vertauscht
+
+2000-01-09 [1.42 Bld 1]
+
+- Bugfix      : ADDX/SUBX beim 68000 funktionierten nicht
+
+- Bugfix      : Im Listing und bei P2BIN/P2HEX/PBIND waren noch einige
+                Formatstrings nicht plattformabhängig, was bei Werten über 
+                32K merkwürdige Effekte ergab...
+
+- Bugfix      : PC-relative Adressierung für 56300 benutzte falschen Offset
+
+- Erweiterung : Längenoptionierung bei absoluter Adressierung im 56xxx
+                läßt sich per '>' ausschalten
+
+1999-09-15 [1.41r8 Bld 15]
+
+- Erweiterung : Fairchild ACE als Prozessorziel
+
+- Bugfix      : Probleme mit dem NULL-Device und dem NLS-Support einiger Linux-
+                Distributionen behoben
+
+- Erweiterung : REG-Statement fuer PowerPCs
+
+- Bugfix      : Registerpaarsyntax fuer 4004 korrigiert
+
+- Erweiterung : Minimalrecordlaenge fuer P2HEX
+
+1999-07-06 [1.41r8 Bld 14]
+
+- Erweiterung : Unterstützung der TMS320C20x-Befehlsuntermenge
+
+- Erweiterung : hexadezimale Adressangaben für die Hilfsprogramm können jetzt
+                auch in C-Notation gemacht werden
+
+- Erweiterung : OUTRADIX-Befehl
+
+- Änderung    : Syntax für 4004-Registerpaare ist jetzt R[02468ABCE]R[13579BDF]
+
+- Erweiterung : Unterstützung Fujitsu F²MC8L
+
+- Bugfix      : FMOVE <ea>,FPm funktionierte mit <ea> = D1 nicht (680x0)
+
+- Bugfix      : FSMOVE und FDMOVE fuer 68040 fehlten noch
+
+- Erweiterung : Kommandozeilenoption für P2HEX, um Minimalgröße S-Records zu
+                setzen
+
+- Bugfix      : -l - Option in P2HEX funktionierte nicht
+
+1999-05-02 [1.41r8 Bld 13]
+
+- Erweiterung : WRAPMODE-Befehl fuer Atmel AVR
+
+- Änderung    : In Atmel-Debugfiles wird für jedes Wort eines Maschinenbefehls ein
+                Record geschrieben, nicht mehr nur für das erste
+
+1999-04-20 [1.41r8 Bld 12]
+
+- Bugfix      : Parameterbereich B_RST für Ziel SC14xxx falsch
+
+1999-04-09 [1.41r8 Bld 11]
+
+- Erweiterung : Befehle / Register PPC403-MMU
+
+- Erweiterung : National SC144xx-Support
+
+- Bugfix      : Angabe von Symbol-Defines in der Kommandozeile, die nicht
+                einfache Konstanten sind, konnten zu Abstürzen führen
+
+- Erweiterung : Kommandozeilenoption, um CPU-Typ zu setzen
+
+- Erweiterung : In der Kommandozeile kann ein Key-File referenziert werden
+
+- Erweiterung : In der Kommandozeile kann die Zieldatei für Shared-Definitionen
+                gesetzt werden
+
+1999-02-08 [1.41r8 Bld 10]
+
+- Bugfix      : Eine Reihe von Kodierungsfehlern im M16C-Teil beseitigt
+
+1999-02-01 [1.41r8 Bld 9]
+
+- Bugfix      : Weil einige Formatstrings nicht portabel waren, knallte
+                es bisweilen unter DOS/DPMI
+
+1999-01-27 [1.41r8 Bld 8]
+
+- Bugfix      : Die implizite Erweiterung von Registern auf -paare klappte
+                nicht auf allen Zielplattformen (680x0)
+
+- Bugfix      : SBCD wurde falsch kodiert (680x0)
+
+1999-01-17 [1.41r8 Bld 7]
+
+- Erweiterung : Der 680x0-Teil legt die Länge äußerer Displacements jetzt
+                selber fest.
+
+1999-01-10 [1.41r8 Bld 6]
+
+- Bugfix      : bei X/Y-Indizierung wurde im 65xx-Teil das Indexregister
+                nicht sauber abgeprueft
+
+- Erweiterung : SYM53C8xx-Unterstützung
+
+- Erweiterung : i4004-Unterstützung
+
+- Bugfix      : Der Adressbereich fuer die neueren 80C166-Derivate stand
+                noch auf 0-3ffffh statt 0-ffffffh
+
+- Bugfix      : Für PIC16C64/84 ist zusätzlich der Adreßbereich von $2000
+                bis $2007 eingeschaltet. (oder ist das eine Erweiterung? 
+                Ick wees nich...)
+
+- Bugfix      : Wenn der vom einem Befehl erzeugte Code über eine Record-
+                Grenze im P-File hinausging, gab es eine fehlerhafte Folge-
+                adresse im neuen Record.
+
+- Bugfix      : Wenn mit BINCLUDE Daten von mehr als 64K eingezogen wurden
+                (strenggenommen, wenn BINCLUDE zur Anlage eines neuen
+                Records in der P-Datei führte), gab es fehlerhafte Adressen
+                im Record, außerdem fehlte die Prüfung auf Segmentgrenzen-
+                überschreitung
+
+1998-10-25 [1.41r8 Bld 5]
+
+- Bugfix      : direkt indizierte Adressierung mit 16-Bit-Displacement
+                ergab ein falsches Postbyte beim 68HC12
+
+1998-10-18 [1.41r8 Bld 4]
+
+
+- Erweiterung : NEC uPD77230-Unterstützung
+
+- Erweiterung : BRANCHEXT fuer XA funktioniert jetzt auch für BR
+
+- Erweiterung : Fehlermeldungen mit > > > am Anfang
+
+- Bugfix      : TRAPA für H8/300H nachgetragen
+
+- Bugfix      : LDD/STD mit <Reg>+<Symbol> klappte nicht
+
+1998-09-24 [1.41r8 Bld 3]
+
+- Bugfix      : Fuer MOV dir8,Rm im 80251-Teil wurde ein falscher Code erzeugt
+                (Fehler im Manual!)
+
+- Erweiterung : i960-Unterstuetzung
+
+- Erweiterung : NEC uPD7720/25-Unterstützung
+
+- Bugfix      : einige Kodierungsfehler im M16C-Teil behoben
+
+1998-08-21 [1.41r8 Bld 2]
+
+- Bugfix      : einige Bereichsmasken im Parser waren falsch gesetzt
+
+- Erweiterung : Backslash-Ausdrücke in Character/String-Konstanten jetzt
+                auch in hex oder oktal möglich
+
+- Bugfix      : kurze 8051-Bitadressen wurden im 80251-Sourcemodus unnötig
+                in lange Adressen umgewandelt.
+
+- Aenderung   : nicht mit XA-PSW-Bits kollidierende 51er-Flags haben jetzt
+                wieder die Originalnamen
+
+- Bugfix      : Befehle mit genau 20 Argumenten gaben einen Crash
+
+- Erweiterung : RADIX-Befehl zur Festlegung des Default-Zahlensystems
+
+- Erweiterung : statt ELSEIF darf auch ELSE geschrieben werden
+
+- Bugfix      : im Testprogramm T_FULL09 wurde an einigen Stellen ELSE statt
+                ELSEIF benutzt
+
+- Erweiterung : statt = darf auch == geschrieben werden
+
+1998-07-02 [1.41r8 Bld 1]
+
+- Erweiterung : String-Funktionen STRSUB und STRSTR
+
+- Erweiterung : CODEPAGE-Anweisung
+
+- Bugfix      : Manual-Pages machten Probleme mit catman unter Solaris
+
+- Bugfix      : Zeilen, die nur aus Label bzw. Kommentar bestanden, wurden
+                nicht in den Makroprozessoroutput übernommen
+
+- Bugfix      : DEFINEs arbeiteten nicht korrekt
+
+- Erweiterung : neue Argumentvarianten für CHARSET
+
+[1.41r7 Bld 20]
+
+- Bugfix      : DD und DQ legten Daten immer in Little-Endian ab, egal
+                von der Einstellung mit BIGENDIAN
+
+1998-06-02 [1.41r7 Bld 19]
+
+- Bugfix      : TST ab 68020 funktionierte nicht mit immediate/PC-relativ
+
+- Bugfix      : Adressierungsart ([pc]) funktionierte im 68K-Teil nicht
+
+- Bugfix      : MTCRF im PowerPC-Teil war nicht korrekt implementiert
+
+- Bugfix      : DATA im AVR-Teil verschlampte letztes Argument (nur C-Version)
+
+- Bugfix      : In STDDEF60.INC waren einige PPC403-Register falsch definiert
+
+- Bugfix      : MOVE vom/zum CCR war als Byte-Operation kodiert
+
+1998-05-25 [1.41r7 Bld 18]
+
+- Bugfix      : TST ab 68020 funktionierte nicht mit Adreßregister
+
+[1.41r7 Bld 17]
+
+- Bugfix      : Ungültige Bitadressen erzeugten z.T. beim 80C16x keine
+                Fehlermeldungen
+
+- Erweiterung : Registersymbole auch für 80C16x
+
+1998-04-13 [1.41r7 Bld 16]
+
+- Bugfix      : EQU/SET akzeptierten kein leeres Argument, um typenlose Symbole
+                zu definieren
+
+- Bugfix      : LDD/STD beim AVR kamen nicht mit symbolischen Offsets zurecht
+
+- Erweiterung : 320C6x-Support
+
+1998-02-16 [1.41r7 Bld 15]
+
+- Bugfix      : BINCLUDE, die zweite...
+
+1998-01-26 [1.41r7 Bld 14]
+
+- Erweiterung : Die Pseudo-Befehle BYT/FCB,ADR/FDB und FCC erlauben jetzt auch
+                den von DC.x her bekannten Wiederholungsfaktor.
+
+- Bugfix      : MOVC beim 8051 gab keine Fehlermeldung bei einem ungueltigen
+                zweiten Parameter aus.
+
+1998-01-12 [1.41r7 Bld 13]
+
+- Bugfix      : in REG166.INC war das CAPREL-Register fuer einige 80C16x-
+                Varianten falsch beschrieben
+
+- Bugfix      : EXTP legte fuer 80C16x die Bits in einer falschen Reihenfolge
+                ab.
+
+1997-12-03 [1.41r7 Bld 12]
+
+- Bugfix      : BINCLUDE arbeitete nicht korrekt, wenn nur der Offset 
+                angegeben war
+
+1997-11-20 [1.41r7 Bld 11]
+
+- Bugfix      : MOVBZ/MOVBS funktionierten in der Kombination 'rn,abs'
+                nicht
+
+1997-11-17 [1.41r7 Bld 10]
+
+- Erweiterung : 68K-Teil kennt Motorola ColdFire
+
+1997-10-27 [1.41r7 Bld 9]
+
+- Erweiterung : P2BIN und P2HEX koennen jetzt optional die Quelldateien nach
+                Umwandlung loeschen
+
+- Erweiterung : P2BIN kann jetzt dem Image die Startadresse voranstellen
+
+- Erweiterung : Unterstuetzung der undokumentierten 6502-Befehle
+
+1997-10-22 [1.41r7 Bld 8]
+
+- Bugfix      : Eine Reihe von Kodierungen im 80C251-Teil waren noch verkehrt
+
+1997-10-20 [1.41r7 Bld 7]
+
+- Bugfix      : DUP spielte bei Argumenten <=0 verrueckt
+
+- Erweiterung : STRLEN()-Funktion
+
+- Erweiterung : Registersymbole fuer Atmel AVR
+
+1997-10-09 [1.41r7 Bld 6]
+
+- Bugfix      : CALL beim 80C166 ergab nicht immer korrekte Bedingungs-Codes
+
+1997-09-29 [1.41r7 Bld 5]
+
+- Bugfix      : Die Operandenreihenfolgen fuer Schiebe- und Immediate-Befehle
+                beim TMS9900 waren nicht korrekt, und einfache Integerzahlen
+                als Registerangaben waren nicht erlaubt.
+
+- Erweiterung : Unterstuetzung der 68040-Steuerregister fuer MOVEC
+
+1997-09-01 [1.41r7 Bld 4]
+
+- Erweiterung : Unterstuetzung des Atmel HEX- und OBJ-Formates
+
+1997-08-21 [1.41r7 Bld 3]
+
+- Bugfix      : beim MELPS7700 wurden fuer DEC abs8 und ICN abs8 gleiche
+                Opcodes erzeugt
+
+1997-07-28 [1.41r7 Bld 2]
+
+- Bugfix      : traten keine Fehler auf, so wurde eine alte Error-Log-Datei
+                nicht beseitigt
+
+- Erweiterung : Ueber die ARCHITECTURE-Variable kann jetzt die Zielplattform
+                von AS abgefragt werden
+
+- Aenderung   : PADDING ist nur noch fuer die 680x0-Familie defaultmaessig 
+                eingeschaltet
+
+1997-08-11 [1.41r7 Bld 1]
+
+- Erweiterung : Definition von Strukturen ueber STRUCT/ENDSTRUCT
+
+12.6.1997 [1.41r6 Bld 9]
+
+- Bugfix      : Vorwaertsdeklarationen beim 68xx gaben noch Probleme bei
+                Befehlen, die nur kurze absolute Adressen kennen
+
+26.5.1997 [1.41r6 Bld 8]
+
+- Erweiterung : Stack-Verbrauch im Parser reduziert (zu Gunsten der OS/2-
+                Version)
+
+- Erweiterung : < > >> als Praefixe fuer MELPS-7700 zugelassen
+
+- Erweiterung : DB, DW... auch fuer MELPS-7700 zugelassen
+
+9.6.1997 [1.41r6 Bld 7]
+
+- Bugfix      : BTST akzeptierte kein ueberfluessiges .B Attribut
+
+- Bugfix      : der AVR-Teil ist jetzt den offiziellen Typen angepasst
+
+5.5.1997 [1.41r6 Bld 6]
+
+- Erweiterung : Sektionsinfo in Debug-Meldungen
+
+1.4.1997 [1.41r6 Bld 5]
+
+- Erweiterung : Schreiben von Debug-Informationen moeglich
+
+- Erweiterung : Includefiles fuer Siemens SAB C501/2/4
+
+- Erweiterung : Includefile fuer 80C163/165 erweitert
+
+24.3.1997 [1.41r6 Bld 4]
+
+- Bugfix      : Die t-Option funktionierte verkehrtherum
+
+- Bugfix      : bei grossen 8051-Programmen konnte es bei Vorwaersspruengen
+                Fehler ueber zu lange Sprungdistanzen geben
+
+- Bugfix      : Wenn beim 680x0 die Adressierungsart d16(An) eine Vor-
+                waertsreferenz enthielt, gab es Fehler.
+
+17.3.1997 [1.41r6 Bld 3]
+
+- Erweiterung : neue Z8-Derivate
+
+- Erweiterung : Beruecksichtigung der Maskenfehler des 80C504
+
+13.3.1997 [1.41r6 Bld 2]
+
+- Bugfix      : Bei grossen 8051-Programmen konnte es bei den Befehlen
+                CJNE, DJNZ, JNB, JB und JBC zu out-of-branch-Fehlern
+                kommen, obwohl das Ziel eigentlich innerhalb der Sprung-
+                weite lag.
+
+- Erweiterung : Zusaetzliche Prozessorfamilien: MCS-296, TMS9900
+
+7.2.1997 [1.41r6 Bld 1]
+
+- Bugfix      : Die BITPOS-Funktion arbeitete nicht korrekt.
+
+- Aenderung   : Wird ein Makro in einem mit IF... ausgeschlossenen Teil
+                referiert, so erfolgt die (MACRO)-Anzeige im Listing
+                nicht mehr, als Zeichen, dass nicht expandiert wird.
+
+- Bugfix      : Die meisten Include-Files arbeiteten im case-sensitiven
+                Modus nicht korrekt.
+
+- Bugfix      : Im TMS-370-Teil waren alle 16-Bit-Teile von Instruktionen
+                verdreht (little statt big endian) abgelegt.
+
+- Bugfix      : Im TMS-370-Teil wurde das #-Zeichen nicht immer akzeptiert.
+
+- Bugfix      : Die DIVLU-Instruktion beim 166er war versehentlich als
+                DIVUL abgelegt.
+
+- Erweiterung : Zusaetzliche Prozessorfamilien: ST9, SC/MP und TMS7000
+
+1997-01-21 [1.41r5 Bld 16]
+
+- Bugfix      : wurde ein NEWPAGE-Befehl ohne Argument benutzt, kam
+                bisweilen keine Reaktion
+
+- Bugfix      : bei bitbedingten Sprungbefehlen des XA, die auf einer
+                ungeraden Adresse mit vorangestelltem Label lagen, gab
+                es Kodierungsfehler
+
+- Bugfix      : wurden mit dem POPU-Befehl des XA gleichzeitig Register 
+                aus der unteren und oberen Haelfte geholt, war die Reihen-
+                folge der Einzelbefehle nicht spiegelbildlich zu PUSH/PUSHU
+
+- Bugfix      : Der MUL-Befehl des 6805 wurde erst fuer den 68HC08 erlaubt
+
+- Bugfix      : indizierte Adressierungsarten mit automatischem Inkrement/
+                Dekrement erzeugten ein falsches Postbyte
+
+1997-01-02 [1.41r5 Bld 15]
+
+- Bugfix      : beim M16C war die Abfrage auf ungueltige Adressierungsmodi
+                bei LDE/STE/INC/DEC/NOT/ROT/JMPS/ADJNZ nicht korrekt
+
+- Bugfix      : beim MSP gab es keinen Abbruch bei ungueltiger Operandengroesse
+
+- Bugfix      : beim MSP gab es keine Fehlermeldung wenn fuer BYTE ein
+                Float-Argument verwendet wurde
+
+- Bugfix      : beim MSP wurde das nicht erlaubte Attribut bei RETI nicht
+                abgeprueft
+
+- Erweiterung : PADDING geht jetzt auch beim MSP
+
+- Bugfix      : die automatische Laengenumschaltung fuer relative Spruenge
+                arbeitete beim H8/500 fehlerhaft
+
+- Bugfix      : beim H8/500 gab es eine falsche Meldung bei absoluten
+                Adressen ausserhalb der aktuellen Seite
+
+- Bugfix      : beim 78C1x war der erlaube Displacement-Bereich in Adressen
+                zu gross
+
+- Bugfix      : Der SER-Befehl beim AVR erzeugte bisweilen keinen Code
+
+- Bugfix      : Im 75K0-Teil wurden fuer Prozessoren >=75104 bisweilen
+                keine Steuerregister akzeptiert
+
+1996-12-19 [1.41r5 Bld 14]
+
+- Bugfix      : beim H8/300(H): wurde bei Logikanweisungen mit einem C am Ende
+                die Argumentzahl nicht kontrolliert
+
+- Bugfix      : bei 32-bittiger Anzeige im Listing wurden keine Vornullen
+                ausgegeben
+
+- Bugfix      : die relativen Sprungbefehle beim TMS370 erlaubten nur Adressen von
+                0..255 als Argument
+
+- Bugfix      : beim MELPS4500 war versehentlich das DATA-Segment gesperrt
+
+- Bugfix      : beim 16C8x war Konstantenablage im Codesegment nur 12-bittig
+                zugelassen
+
+- Bugfix      : bei einem REPT-Argument <1 erfolgte trotzdem ein Durchlauf
+
+- Aenderung   : Fehlernummern fuer fatale Fehler wurden von Basis 2000 auf
+                Basis 10000 geschoben
+
+- Erweiterung : Konstantenablage ist jetzt auch im Codesegment zugelassen
+
+1996-11-11 (alaaf...) [1.41r5 Bld 13]
+
+- Bugfix      : bei MELPS7751 als Ziel funktionierten einige Befehle nicht
+
+- Bugfix      : wurde beim Z8 ein ungueltiges Register fuer indizierte Adressierung angegeben,
+                so gab es eine bloede Fehlermeldung
+
+1996-11-05 [1.41r5 Bld 12]
+
+- Erweiterung : DC.X funktioniert jetzt auch bei 68xx
+
+- Bugfix      : wurde beim TLCS90 bei CALL, JMP oder RET eine ungueltige
+                Bedingung benutzt, gab es keine Fehlermeldung
+
+- Erweiterung : Funktionen TOLOWER, LOWSTRING
+
+1996-10-28 [1.41r5 Bld 11]
+
+- Bugfix      : Beim 6804 war die Bereichsabfrage nicht korrekt (16 statt 12 Bit)
+
+- Bugfix      : Bei DC.x fuer den 68HC12 waren die Bytes paarweise verdreht
+
+- Bugfix      : Mit READ in Makros eingelesene Symbole wurden als lokal zum Makro definiert
+
+- Bugfix      : Beim 8086 gab es keine Fehlermeldung, wenn die schliessende Klammer (])
+                eines Adressausdruckes fehlte
+
+- Bugfix      : Beim 8086 wurde fuer Displacements von -128 versehentlich lange Adressierung
+                benutzt
+
+- Bugfix      : INS/EXT beim V30/35 erzeugten auch Code , wenn der Adressierungsmodus ungueltig
+                war
+
+- Bugfix      : wurde beim 8085  bei LDAX/STAX ein falsches Register benutzt, gab es eine unsinnige
+                Fehlermeldung
+
+- Bugfix      : Beim 8086 gab es bei falschem Adressierungsmodus in einigen Faellen doppelte 
+                Fehlermeldungen
+
+- Bugfix      : Beim PowerPC waren bei MTSPR/MFSPR/MTDCR/MFDCR die 5-Bit-Komponenten der Register-
+                nummer verdreht
+
+- Bugfix      : wurden beim 8086 8-Bit-immediate-Werte mit Vorwaertsreferenzen benutzt, so gab es
+                in einigen Faellen Fehler wegen Bereichsueberschreitungen 
+
+1996-10-14 [1.41r5 Bld 10]
+
+- Bugfix      : wurde beim Wiederholungsfaktor von DC.x die schliessende 
+                Klammer vergessen, so gab es unvorhersagbare Reaktionen 
+                anstatt einer Fehlermeldung
+
+- Bugfix      : die Attributabfrage bei PEA in 680x0-Teil war nicht korrekt
+
+- Bugfix      : wurde beim 68xx ein inkorrektes Indexregister verwendet, so
+                wurde kein Fehler gemeldet, sondern absolute Adressierung
+                erzeugt
+
+- Bugfix      : auf b endende Hex-Zahlen mit C-Syntax funktionierten im 
+                RELAXED-Modus nicht
+
+- Bugfix      : Prozessornamen COP87L48-->COP87L84 korrigiert
+
+- Bugfix      : CBEQ beim 68HC08 erzeugte z.T. auch Code bei falschem 
+                Adressierungsmodus
+
+- Bugfix      : P2HEX/P2BIN arbeiteten nicht korrekt bei Adressen > 2GByte
+
+- Erweiterung : zusaetzlicher BINCLUDE-Befehl
+
+- Bugfix      : explizit kurze Adressen beim 6809 funktionierten nicht,
+                wenn DPR<>0 war
+
+- Erweiterung : BIGENDIAN nun auch beim PowerPC
+
+1996-10-04 [1.41r5 Bld 9]
+
+- Erweiterung : zusaetzlich 78K0 unterstuetzt
+
+1996-09-23 [1.41r5 Bld 8]
+
+- Bugfix      : im PowerPC-Teil gab es noch einige Big<->Little-Endian-
+                Verdrehungen
+
+1996-09-16 [1.41r5 Bld 7]
+
+- Erweiterung : zusaetzlich MSP430 unterstuetzt
+
+- Erweiterung : mit LISTING NOSKIPPED bzw. LISTING PURECODE kann man jetzt
+                nicht assemblierte Teile aus dem Listing ausschliessen
+
+1996-09-09 [1.41r5 Bld 6]
+
+- Erweiterung : zum M16C gibt es jetzt auch ein Includefile
+
+- Erweiterung : zusaetzlich COP8-Familie unterstuetzt
+
+- Bugfix      : wurden im Zx80-Teil ADC oder SBC mit einer falschen 
+                Operandenzahl benutzt, gab es eine falsche Fehlermeldung
+
+- Bugfix      : wurden im Z380-Teil INA, INAW, OUTA, OUTAW mit einer Adresse 
+                >2GByte benutzt, konnte es Kodierungsfehler geben
+
+- Erweiterung : zusaetzliche Befehle zur bedingten Assemblierung: IFB und IFNB
+
+- Erweiterung : neuer EXITM-Befehl, um eine Makroexpansion vorzeitig
+                abzubrechen
+
+- Bugfix      : in den englische Fehlermeldungen geisterten noch einige
+                deutsche Woerter herum
+
+1996-08-26 [1.41r5 Bld 5]
+
+- Bugfix      : in PIC16C8x-Teil war die Adressbereichsbegrenzung nicht korrekt
+
+- Erweiterung : zusaetzlich M16C-Familie unterstuetzt 
+
+1996-08-19 [1.41r5 Bld 4]
+
+- Bugfix      : Im 65xx-Teil funktionierten die Angaben < bzw. > zur Er-
+                zwingung kurzer bzw. langer Adressen nicht korrekt
+
+- Bugfix      : INC/INC A bzw. DEC/DEC A funktionierten beim MELPS/740 nicht
+
+1996-08-12 [1.41r5 Bld 3]
+
+- Bugfix      : Der TLCS-900-Teil machte bei der Bearbeitung von 2-Operanden-
+                ALU-Befehlen (ADD,SUB,CMP...) auch weiter, wenn eine falschen
+                Anzahl von Parametern angegeben war.
+
+- Bugfix      : Im TLCS-900-Teil konnten bei der Benutzung vorwaertsreferen-
+                zierter Symbole fuer Schiebeamplituden Fehler auftreten
+
+- Erweiterung : Um etwas kompatibler zum AS11 von Motorola zu werden, gibt es
+                jetzt im 68xx-Modus auch die Befehle FCC, FDB, FCB und RMB.
+
+1996-08-05 [1.41r5 Bld 2]
+
+- Bugfix      : noch 1,2 Kleinigkeiten im XA-Teil beseitigt...
+
+1996-07-15 [1.41r5 Bld 1]
+
+- Bugfix      : lag beim XA ein Normier-/Schiebebefehl mit 32-Bit-Operanden-
+                laenge auf einer ungeraden Adresse, so dass bei vorangestelltem 
+                Label ein NOP eingeflickt werden musste, so wurde ein falscher 
+                Code erzeugt.
+
+- Bugfix      : Im TLCS-900-Teil wurde ein Byte zu frueh auf laengere 
+                Displacements beim Adressierungsmodus (reg+disp) umgeschaltet.
+
+1996-06-10 [1.41r4 Bld 10]
 
 - Bugfix      : bei P2HEX war die Bereichsueberpruefung fuer den 
                 Datenadressbereich des DSK-Formats fehlerhaft
@@ -110,1225 +1252,72 @@ v1.41r3 Aenderungen: (-->v1.41r4beta)
 
 - Erweiterung : DQ kann jetzt auch 64-Bit-Integers ablegen
 
-------------------------------------------------------------------------------
-v1.41r4 Aenderungen: (-->v1.41r5beta)
+1996-05-31 [1.41r4 Bld 9]
 
-15.7.1996
+- Bugfix      : Im MELPS-7700-Teil funktionierten eine Reihe von Befehlen nicht mehr,
+                wenn man den 7751er als Ziel-CPU einstellte.
 
-- Bugfix      : lag beim XA ein Normier-/Schiebebefehl mit 32-Bit-Operanden-
-                laenge auf einer ungeraden Adresse, so dass bei vorangestelltem 
-                Label ein NOP eingeflickt werden musste, so wurde ein falscher 
-                Code erzeugt.
+- Bugfix      : Der SEL-Befehl des MCS-48-Teils gab bei einer falschen 
+                Parameterzahl eine falsche Fehlermeldung aus.
 
-- Bugfix      : Im TLCS-900-Teil wurde ein Byte zu frueh auf laengere 
-                Displacements beim Adressierungsmodus (reg+disp) umgeschaltet.
+1996-05-29 [1.41r4 Bld 8]
 
- 5.8.1996
+- Bugfix      : Der 68000-Teil schrieb Bloedsinn in die Code-Datei, wenn in 
+                einer Zeile genau ein Byte Code erzeugt wurde.
 
-- Bugfix      : noch 1,2 Kleinigkeiten im XA-Teil beseitigt...
+1996-05-28 [1.41r4 Bld 7]
 
-12.8.1996
+- Bugfix      : Der Z80-Teil hatte bei IX/IY-Displacements ein Byte zu frueh 
+                auf laengere Offsets umgeschaltet.
 
-- Bugfix      : Der TLCS-900-Teil machte bei der Bearbeitung von 2-Operanden-
-                ALU-Befehlen (ADD,SUB,CMP...) auch weiter, wenn eine falschen
-                Anzahl von Parametern angegeben war.
+- Bugfix      : Die \i und \h - Escapes funktionierten in Strings nicht.
 
-- Bugfix      : Im TLCS-900-Teil konnten bei der Benutzung vorwaertsreferen-
-                zierter Symbole fuer Schiebeamplituden Fehler auftreten
+- Bugfix      : Die Bereichseingrenzung fuer 24-Bit-Zahlen war nicht korrekt.
 
-- Erweiterung : Um etwas kompatibler zum AS11 von Motorola zu werden, gibt es
-                jetzt im 68xx-Modus auch die Befehle FCC, FDB, FCB und RMB.
- 
-19.8.1996
+1996-05-13 [1.41r4 Bld 6]
 
-- Bugfix      : Im 65xx-Teil funktionierten die Angaben < bzw. > zur Er-
-                zwingung kurzer bzw. langer Adressen nicht korrekt
+- Erweiterung : MELPS-7700-Teil kennt jetzt auch die 7751er-Befehlssatzer-
+                weiterungen.
 
-- Bugfix      : INC/INC A bzw. DEC/DEC A funktionierten beim MELPS/740 nicht
+- Bugfix      : einige haarstraeubende Nichtinitialisierungen von Variablen 
+                beseitigt, die in Zusammenhang mit der Definition von Symbolen 
+                in der Kommandozeile auftreten koennen.
 
-26.8.1996 
+1996-05-06 [1.41r4 Bld 5]
 
-- Bugfix      : in PIC16C8x-Teil war die Adressbereichsbegrenzung nicht korrekt
+- Bugfix      : VERSION-Variable stand noch auf 1.41r2
 
-- Erweiterung : zusaetzlich M16C-Familie unterstuetzt 
+1996-04-09 [1.41r4 Bld 4]
 
- 9.9.1996
+- Erweiterung : MELPS-7700-Teil kennt jetzt auch die 7750er-Befehlssatzer-
+                weiterungen
 
-- Erweiterung : zum M16C gibt es jetzt auch ein Includefile
+1996-03-25 [1.41r4 Bld 3]
 
-- Erweiterung : zusaetzlich COP8-Familie unterstuetzt
+- Bugfix      : Erwaehnung der -quiet sowie -alias -Optionen fehlte in der
+                Online-Hilfe
+- Erweiterung : 80C517 als Prozessortyp aufgenommen (+Register in STDDEF51.INC)
 
-- Bugfix      : wurden im Zx80-Teil ADC oder SBC mit einer falschen 
-                Operandenzahl benutzt, gab es eine falsche Fehlermeldung
+1996-03-18 [1.41r4 Bld 2]
 
-- Bugfix      : wurden im Z380-Teil INA, INAW, OUTA, OUTAW mit einer Adresse 
-                >2GByte benutzt, konnte es Kodierungsfehler geben
+- Bugfix      : Kodierungsfehler im Z(3)80-Teil behoben:
+                - MTEST
+                - LD (IX/IY+n),r16
+                - MULTW/MULTUW/DIVUW [HL,]IX/IY/imm16
+                - LD r16,BC
+- Bugfix      : Fehlermeldungen ueber fehlende/fehlerhafte Key-Datei kamen
+                in der englischen Version noch auf Deutsch.
 
-- Erweiterung : zusaetzliche Befehle zur bedingten Assemblierung: IFB und IFNB
+1996-03-11 [1.41r4 Bld 1]
 
-- Erweiterung : neuer EXITM-Befehl, um eine Makroexpansion vorzeitig
-                abzubrechen
-
-- Bugfix      : in den englische Fehlermeldungen geisterten noch einige
-                deutsche Woerter herum
-
-16.9.1996
-
-- Erweiterung : zusaetzlich MSP430 unterstuetzt
-
-- Erweiterung : mit LISTING NOSKIPPED bzw. LISTING PURECODE kann man jetzt
-                nicht assemblierte Teile aus dem Listing ausschliessen
-
-23.9.1996
-
-- Bugfix      : im PowerPC-Teil gab es noch einige Big<->Little-Endian-
-                Verdrehungen
-
-4.10.1996
-
-- Erweiterung : zusaetzlich 78K0 unterstuetzt
-
-14.10.1996
-
-- Bugfix      : wurde beim Wiederholungsfaktor von DC.x die schliessende 
-                Klammer vergessen, so gab es unvorhersagbare Reaktionen 
-                anstatt einer Fehlermeldung
-
-- Bugfix      : die Attributabfrage bei PEA in 680x0-Teil war nicht korrekt
-
-- Bugfix      : wurde beim 68xx ein inkorrektes Indexregister verwendet, so
-                wurde kein Fehler gemeldet, sondern absolute Adressierung
-                erzeugt
-
-- Bugfix      : auf b endende Hex-Zahlen mit C-Syntax funktionierten im 
-                RELAXED-Modus nicht
-
-- Bugfix      : Prozessornamen COP87L48-->COP87L84 korrigiert
-
-- Bugfix      : CBEQ beim 68HC08 erzeugte z.T. auch Code bei falschem 
-                Adressierungsmodus
-
-- Bugfix      : P2HEX/P2BIN arbeiteten nicht korrekt bei Adressen > 2GByte
-
-- Erweiterung : zusaetzlicher BINCLUDE-Befehl
-
-- Bugfix      : explizit kurze Adressen beim 6809 funktionierten nicht,
-                wenn DPR<>0 war
-
-- Erweiterung : BIGENDIAN nun auch beim PowerPC
-
-28.10.1996
-
-- Bugfix      : Beim 6804 war die Bereichsabfrage nicht korrekt (16 statt 12 Bit)
-
-- Bugfix      : Bei DC.x fuer den 68HC12 waren die Bytes paarweise verdreht
-
-- Bugfix      : Mit READ in Makros eingelesene Symbole wurden als lokal zum Makro definiert
-
-- Bugfix      : Beim 8086 gab es keine Fehlermeldung, wenn die schliessende Klammer (])
-                eines Adressausdruckes fehlte
-
-- Bugfix      : Beim 8086 wurde fuer Displacements von -128 versehentlich lange Adressierung
-                benutzt
-
-- Bugfix      : INS/EXT beim V30/35 erzeugten auch Code , wenn der Adressierungsmodus ungueltig
-                war
-
-- Bugfix      : wurde beim 8085  bei LDAX/STAX ein falsches Register benutzt, gab es eine unsinnige
-                Fehlermeldung
-
-- Bugfix      : Beim 8086 gab es bei falschem Adressierungsmodus in einigen Faellen doppelte 
-                Fehlermeldungen
-
-- Bugfix      : Beim PowerPC waren bei MTSPR/MFSPR/MTDCR/MFDCR die 5-Bit-Komponenten der Register-
-                nummer verdreht
-
-- Bugfix      : wurden beim 8086 8-Bit-immediate-Werte mit Vorwaertsreferenzen benutzt, so gab es
-                in einigen Faellen Fehler wegen Bereichsueberschreitungen 
-
-5.11.1996
-
-- Erweiterung : DC.X funktioniert jetzt auch bei 68xx
-
-- Bugfix      : wurde beim TLCS90 bei CALL, JMP oder RET eine ungueltige
-                Bedingung benutzt, gab es keine Fehlermeldung
-
-- Erweiterung : Funktionen TOLOWER, LOWSTRING
-
-
-11.11.1996 (alaaf...)
-
-- Bugfix      : bei MELPS7751 als Ziel funktionierten einige Befehle nicht
-
-- Bugfix      : wurde beim Z8 ein ungueltiges Register fuer indizierte Adressierung angegeben,
-                so gab es eine bloede Fehlermeldung
-
-19.12.1996
-
-- Bugfix      : beim H8/300(H): wurde bei Logikanweisungen mit einem C am Ende
-                die Argumentzahl nicht kontrolliert
-
-- Bugfix      : bei 32-bittiger Anzeige im Listing wurden keine Vornullen
-                ausgegeben
-
-- Bugfix      : die relativen Sprungbefehle beim TMS370 erlaubten nur Adressen von
-                0..255 als Argument
-
-- Bugfix      : beim MELPS4500 war versehentlich das DATA-Segment gesperrt
-
-- Bugfix      : beim 16C8x war Konstantenablage im Codesegment nur 12-bittig
-                zugelassen
-
-- Bugfix      : bei einem REPT-Argument <1 erfolgte trotzdem ein Durchlauf
-
-- Aenderung   : Fehlernummern fuer fatale Fehler wurden von Basis 2000 auf
-                Basis 10000 geschoben
-
-- Erweiterung : Konstantenablage ist jetzt auch im Codesegment zugelassen
-
-2.1.1997
-
-- Bugfix      : beim M16C war die Abfrage auf ungueltige Adressierungsmodi
-                bei LDE/STE/INC/DEC/NOT/ROT/JMPS/ADJNZ nicht korrekt
-
-- Bugfix      : beim MSP gab es keinen Abbruch bei ungueltiger Operandengroesse
-
-- Bugfix      : beim MSP gab es keine Fehlermeldung wenn fuer BYTE ein
-                Float-Argument verwendet wurde
-
-- Bugfix      : beim MSP wurde das nicht erlaubte Attribut bei RETI nicht
-                abgeprueft
-
-- Erweiterung : PADDING geht jetzt auch beim MSP
-
-- Bugfix      : die automatische Laengenumschaltung fuer relative Spruenge
-                arbeitete beim H8/500 fehlerhaft
-
-- Bugfix      : beim H8/500 gab es eine falsche Meldung bei absoluten
-                Adressen ausserhalb der aktuellen Seite
-
-- Bugfix      : beim 78C1x war der erlaube Displacement-Bereich in Adressen
-                zu gross
-
-- Bugfix      : Der SER-Befehl beim AVR erzeugte bisweilen keinen Code
-
-- Bugfix      : Im 75K0-Teil wurden fuer Prozessoren >=75104 bisweilen
-                keine Steuerregister akzeptiert
-
-21.1.1997
-
-- Bugfix      : wurde ein NEWPAGE-Befehl ohne Argument benutzt, kam
-                bisweilen keine Reaktion
-
-- Bugfix      : bei bitbedingten Sprungbefehlen des XA, die auf einer
-                ungeraden Adresse mit vorangestelltem Label lagen, gab
-                es Kodierungsfehler
-
-- Bugfix      : wurden mit dem POPU-Befehl des XA gleichzeitig Register 
-                aus der unteren und oberen Haelfte geholt, war die Reihen-
-                folge der Einzelbefehle nicht spiegelbildlich zu PUSH/PUSHU
-
-- Bugfix      : Der MUL-Befehl des 6805 wurde erst fuer den 68HC08 erlaubt
-
-- Bugfix      : indizierte Adressierungsarten mit automatischem Inkrement/
-                Dekrement erzeugten ein falsches Postbyte
-
-------------------------------------------------------------------------------
-v1.41r5 Aenderungen: (-->v1.41r6beta)
-
-7.2.1997
-
-- Bugfix      : Die BITPOS-Funktion arbeitete nicht korrekt.
-
-- Aenderung   : Wird ein Makro in einem mit IF... ausgeschlossenen Teil
-                referiert, so erfolgt die (MACRO)-Anzeige im Listing
-                nicht mehr, als Zeichen, dass nicht expandiert wird.
-
-- Bugfix      : Die meisten Include-Files arbeiteten im case-sensitiven
-                Modus nicht korrekt.
-
-- Bugfix      : Im TMS-370-Teil waren alle 16-Bit-Teile von Instruktionen
-                verdreht (little statt big endian) abgelegt.
-
-- Bugfix      : Im TMS-370-Teil wurde das #-Zeichen nicht immer akzeptiert.
-
-- Bugfix      : Die DIVLU-Instruktion beim 166er war versehentlich als
-                DIVUL abgelegt.
-
-- Erweiterung : Zusaetzliche Prozessorfamilien: ST9, SC/MP und TMS7000
-
-13.3.1997
-
-- Bugfix      : Bei grossen 8051-Programmen konnte es bei den Befehlen
-                CJNE, DJNZ, JNB, JB und JBC zu out-of-branch-Fehlern
-                kommen, obwohl das Ziel eigentlich innerhalb der Sprung-
-                weite lag.
-
-- Erweiterung : Zusaetzliche Prozessorfamilien: MCS-296, TMS9900
-
-17.3.1997
-
-- Erweiterung : neue Z8-Derivate
-
-- Erweiterung : Beruecksichtigung der Maskenfehler des 80C504
-
-24.3.1997
-
-- Bugfix      : Die t-Option funktionierte verkehrtherum
-
-- Bugfix      : bei grossen 8051-Programmen konnte es bei Vorwaersspruengen
-                Fehler ueber zu lange Sprungdistanzen geben
-
-- Bugfix      : Wenn beim 680x0 die Adressierungsart d16(An) eine Vor-
-                waertsreferenz enthielt, gab es Fehler.
-
-1.4.1997
-
-- Erweiterung : Schreiben von Debug-Informationen moeglich
-
-- Erweiterung : Includefiles fuer Siemens SAB C501/2/4
-
-- Erweiterung : Includefile fuer 80C163/165 erweitert
-
-5.5.1997
-
-- Erweiterung : Sektionsinfo in Debug-Meldungen
-
-26.5.1997
-
-- Erweiterung : Stack-Verbrauch im Parser reduziert (zu Gunsten der OS/2-
-                Version)
-
-- Erweiterung : < > >> als Praefixe fuer MELPS-7700 zugelassen
-
-- Erweiterung : DB, DW... auch fuer MELPS-7700 zugelassen
-
-9.6.1997 
-
-- Bugfix      : BTST akzeptierte kein ueberfluessiges .B Attribut
-
-- Bugfix      : der AVR-Teil ist jetzt den offiziellen Typen angepasst
-
-12.6.1997
-
-- Bugfix      : Vorwaertsdeklarationen beim 68xx gaben noch Probleme bei
-                Befehlen, die nur kurze absolute Adressen kennen
-
-------------------------------------------------------------------------------
-v1.41r6 Aenderungen: (-->v1.41r7beta)
-
-28.7.1997
-
-- Bugfix      : traten keine Fehler auf, so wurde eine alte Error-Log-Datei
-                nicht beseitigt
-
-- Erweiterung : Ueber die ARCHITECTURE-Variable kann jetzt die Zielplattform
-                von AS abgefragt werden
-
-- Aenderung   : PADDING ist nur noch fuer die 680x0-Familie defaultmaessig 
-                eingeschaltet
-
-11.8.1997
-
-- Erweiterung : Definition von Strukturen ueber STRUCT/ENDSTRUCT
-
-21.8.1997
-
-- Bugfix      : beim MELPS7700 wurden fuer DEC abs8 und ICN abs8 gleiche
-                Opcodes erzeugt
-
-1.9.1997
-
-- Erweiterung : Unterstuetzung des Atmel HEX- und OBJ-Formates
-
-29.9.1997
-
-- Bugfix      : Die Operandenreihenfolgen fuer Schiebe- und Immediate-Befehle
-                beim TMS9900 waren nicht korrekt, und einfache Integerzahlen
-                als Registerangaben waren nicht erlaubt.
-
-- Erweiterung : Unterstuetzung der 68040-Steuerregister fuer MOVEC
-
-9.10.1997
-
-- Bugfix      : CALL beim 80C166 ergab nicht immer korrekte Bedingungs-Codes
-
-20.10.1997
-
-- Bugfix      : DUP spielte bei Argumenten <=0 verrueckt
-
-- Erweiterung : STRLEN()-Funktion
-
-- Erweiterung : Registersymbole fuer Atmel AVR
-
-22.10.1997
-
-- Bugfix      : Eine Reihe von Kodierungen im 80C251-Teil waren noch verkehrt
-
-27.10.1997
-
-- Erweiterung : P2BIN und P2HEX koennen jetzt optional die Quelldateien nach
-                Umwandlung loeschen
-
-- Erweiterung : P2BIN kann jetzt dem Image die Startadresse voranstellen
-
-- Erweiterung : Unterstuetzung der undokumentierten 6502-Befehle
-
-17.11.1997
-
-- Erweiterung : 68K-Teil kennt Motorola ColdFire
-
-20.11.1997
-
-- Bugfix      : MOVBZ/MOVBS funktionierten in der Kombination 'rn,abs'
-                nicht
-
-3.12.1997
-
-- Bugfix      : BINCLUDE arbeitete nicht korrekt, wenn nur der Offset 
-                angegeben war
-
-12.1.1998 
-
-- Bugfix      : in REG166.INC war das CAPREL-Register fuer einige 80C16x-
-                Varianten falsch beschrieben
-
-- Bugfix      : EXTP legte fuer 80C16x die Bits in einer falschen Reihenfolge
-                ab.
-
-26.1.1998
-
-- Erweiterung : Die Pseudo-Befehle BYT/FCB,ADR/FDB und FCC erlauben jetzt auch
-                den von DC.x her bekannten Wiederholungsfaktor.
-
-- Bugfix      : MOVC beim 8051 gab keine Fehlermeldung bei einem ungueltigen
-                zweiten Parameter aus.
-
-16.1.1998
-
-- Bugfix      : BINCLUDE, die zweite...
-
-13.4.1998
-
-- Bugfix      : EQU/SET akzeptierten kein leeres Argument, um typenlose Symbole
-                zu definieren
-
-- Bugfix      : LDD/STD beim AVR kamen nicht mit symbolischen Offsets zurecht
-
-- Erweiterung : 320C6x-Support
-
-
-....
-
-- Bugfix      : Ungültige Bitadressen erzeugten z.T. beim 80C16x keine
-                Fehlermeldungen
-
-- Erweiterung : Registersymbole auch für 80C16x
-
-25.5.1998
-
-- Bugfix      : TST ab 68020 funktionierte nicht mit Adreßregister
-
-2.6.1998
-
-- Bugfix      : TST ab 68020 funktionierte nicht mit immediate/PC-relativ
-
-- Bugfix      : Adressierungsart ([pc]) funktionierte im 68K-Teil nicht
-
-- Bugfix      : MTCRF im PowerPC-Teil war nicht korrekt implementiert
-
-- Bugfix      : DATA im AVR-Teil verschlampte letztes Argument (nur C-Version)
-
-- Bugfix      : In STDDEF60.INC waren einige PPC403-Register falsch definiert
-
-- Bugfix      : MOVE vom/zum CCR war als Byte-Operation kodiert
-
-............
-
-- Bugfix      : DD und DQ legten Daten immer in Little-Endian ab, egal
-                von der Einstellung mit BIGENDIAN
-
-------------------------------------------------------------------------------
-v1.41r7 Aenderungen: (-->v1.41r8beta)
-
-2.7.1998
-
-- Erweiterung : String-Funktionen STRSUB und STRSTR
-
-- Erweiterung : CODEPAGE-Anweisung
-
-- Bugfix      : Manual-Pages machten Probleme mit catman unter Solaris
-
-- Bugfix      : Zeilen, die nur aus Label bzw. Kommentar bestanden, wurden
-                nicht in den Makroprozessoroutput übernommen
-
-- Bugfix      : DEFINEs arbeiteten nicht korrekt
-
-- Erweiterung : neue Argumentvarianten für CHARSET
-
-21.8.1998
-
-- Bugfix      : einige Bereichsmasken im Parser waren falsch gesetzt
-
-- Erweiterung : Backslash-Ausdrücke in Character/String-Konstanten jetzt
-                auch in hex oder oktal möglich
-
-- Bugfix      : kurze 8051-Bitadressen wurden im 80251-Sourcemodus unnötig
-                in lange Adressen umgewandelt.
-
-- Aenderung   : nicht mit XA-PSW-Bits kollidierende 51er-Flags haben jetzt
-                wieder die Originalnamen
-
-- Bugfix      : Befehle mit genau 20 Argumenten gaben einen Crash
-
-- Erweiterung : RADIX-Befehl zur Festlegung des Default-Zahlensystems
-
-- Erweiterung : statt ELSEIF darf auch ELSE geschrieben werden
-
-- Bugfix      : im Testprogramm T_FULL09 wurde an einigen Stellen ELSE statt
-                ELSEIF benutzt
-
-- Erweiterung : statt = darf auch == geschrieben werden
-
-24.9.1998 [Bld 3]
-
-- Bugfix      : Fuer MOV dir8,Rm im 80251-Teil wurde ein falscher Code erzeugt
-                (Fehler im Manual!)
-
-- Erweiterung : i960-Unterstuetzung
-
-- Erweiterung : NEC uPD7720/25-Unterstützung
-
-- Bugfix      : einige Kodierungsfehler im M16C-Teil behoben
-
-18.10.1998 [Bld 4]
-
-
-- Erweiterung : NEC uPD77230-Unterstützung
-
-- Erweiterung : BRANCHEXT fuer XA funktioniert jetzt auch für BR
-
-- Erweiterung : Fehlermeldungen mit > > > am Anfang
-
-- Bugfix      : TRAPA für H8/300H nachgetragen
-
-- Bugfix      : LDD/STD mit <Reg>+<Symbol> klappte nicht
-
-25.10.1998 [Bld 5]
-
-- Bugfix      : direkt indizierte Adressierung mit 16-Bit-Displacement
-                ergab ein falsches Postbyte beim 68HC12
-
-10. 1.1999 [Bld 6]
-
-- Bugfix      : bei X/Y-Indizierung wurde im 65xx-Teil das Indexregister
-                nicht sauber abgeprueft
-
-- Erweiterung : SYM53C8xx-Unterstützung
-
-- Erweiterung : i4004-Unterstützung
-
-- Bugfix      : Der Adressbereich fuer die neueren 80C166-Derivate stand
-                noch auf 0-3ffffh statt 0-ffffffh
-
-- Bugfix      : Für PIC16C64/84 ist zusätzlich der Adreßbereich von $2000
-                bis $2007 eingeschaltet. (oder ist das eine Erweiterung? 
-                Ick wees nich...)
-
-- Bugfix      : Wenn der vom einem Befehl erzeugte Code über eine Record-
-                Grenze im P-File hinausging, gab es eine fehlerhafte Folge-
-                adresse im neuen Record.
-
-- Bugfix      : Wenn mit BINCLUDE Daten von mehr als 64K eingezogen wurden
-                (strenggenommen, wenn BINCLUDE zur Anlage eines neuen
-                Records in der P-Datei führte), gab es fehlerhafte Adressen
-                im Record, außerdem fehlte die Prüfung auf Segmentgrenzen-
-                überschreitung
-
-17. 1.1999 [Bld 7]
-
-- Erweiterung : Der 680x0-Teil legt die Länge äußerer Displacements jetzt
-                selber fest.
-
-27. 1.1999 [Bld 8]
-
-- Bugfix      : Die implizite Erweiterung von Registern auf -paare klappte
-                nicht auf allen Zielplattformen (680x0)
-
-- Bugfix      : SBCD wurde falsch kodiert (680x0)
-
- 1. 2.1999 [Bld 9]
-
-- Bugfix      : Weil einige Formatstrings nicht portabel waren, knallte
-                es bisweilen unter DOS/DPMI
-
- 8. 2.1999 [Bld 10]
-
-- Bugfix      : Eine Reihe von Kodierungsfehlern im M16C-Teil beseitigt
-
-19. 4.1999 [Bld 11]
-
-- Erweiterung : Befehle / Register PPC403-MMU
-
-- Erweiterung : National SC144xx-Support
-
-- Bugfix      : Angabe von Symbol-Defines in der Kommandozeile, die nicht
-                einfache Konstanten sind, konnten zu Abstürzen führen
-
-- Erweiterung : Kommandozeilenoption, um CPU-Typ zu setzen
-
-- Erweiterung : In der Kommandozeile kann ein Key-File referenziert werden
-
-- Erweiterung : In der Kommandozeile kann die Zieldatei für Shared-Definitionen
-                gesetzt werden
-
-20. 4.1999 [Bld 11]
-
-- Bugfix      : Parameterbereich B_RST für Ziel SC14xxx falsch
-
- 2. 5.1999 [Bld 12]
-
-- Erweiterung : WRAPMODE-Befehl fuer Atmel AVR
-
-- Änderung    : In Atmel-Debugfiles wird für jedes Wort eines Maschinenbefehls ein
-                Record geschrieben, nicht mehr nur für das erste
-
- 6. 7.1999 [Bld 14]
-
-- Erweiterung : Unterstützung der TMS320C20x-Befehlsuntermenge
-
-- Erweiterung : hexadezimale Adressangaben für die Hilfsprogramm können jetzt
-                auch in C-Notation gemacht werden
-
-- Erweiterung : OUTRADIX-Befehl
-
-- Änderung    : Syntax für 4004-Registerpaare ist jetzt R[02468ABCE]R[13579BDF]
-
-- Erweiterung : Unterstützung Fujitsu F²MC8L
-
-- Bugfix      : FMOVE <ea>,FPm funktionierte mit <ea> = D1 nicht (680x0)
-
-- Bugfix      : FSMOVE und FDMOVE fuer 68040 fehlten noch
-
-- Erweiterung : Kommandozeilenoption für P2HEX, um Minimalgröße S-Records zu
-                setzen
-
-- Bugfix      : -l - Option in P2HEX funktionierte nicht
-
-15. 9.1999 [Bld 15]
-
-- Erweiterung : Fairchild ACE als Prozessorziel
-
-- Bugfix      : Probleme mit dem NULL-Device und dem NLS-Support einiger Linux-
-                Distributionen behoben
-
-- Erweiterung : REG-Statement fuer PowerPCs
-
-- Bugfix      : Registerpaarsyntax fuer 4004 korrigiert
-
-- Erweiterung : Minimalrecordlaenge fuer P2HEX
-
-------------------------------------------------------------------------------
-v1.41r8 Aenderungen: (-->v1.42beta)
-
-9.1.2000 [Bld 1]
-
-- Bugfix      : ADDX/SUBX beim 68000 funktionierten nicht
-
-- Bugfix      : Im Listing und bei P2BIN/P2HEX/PBIND waren noch einige
-                Formatstrings nicht plattformabhängig, was bei Werten über 
-                32K merkwürdige Effekte ergab...
-
-- Bugfix      : PC-relative Adressierung für 56300 benutzte falschen Offset
-
-- Erweiterung : Längenoptionierung bei absoluter Adressierung im 56xxx
-                läßt sich per '>' ausschalten
-
-13.2.2000 [Bld 2]
-
-- Bugfix      : ADDX/SUBX beim 68000 waren vertauscht
-
-
-13.3.2000 [Bld 3]
-
-- Bugfix      : 'ambiguous' Warnungen bei egcs beseitigt
-
-- Bugfix      : EXG beim 680x0 korrigiert
-
-- Aenderung   : Adressraum des 68HC08 ist jetzt 64K
-
-29.5.2000 [Bld 4]
-
-- Erweiterung : Packing-Befehl für AVR eingeführt
-
-- Erweiterung : ALLARGS/ARGCOUNT für Makros
-
-- Bugfix      : Bankregister-Parser TLCS-900 repariert
-
-- Erweiterung : temporäre Symbole
-
-[Bld 5]
-
-- Bugfix      : REPT/IRP(C)/WHILE-Statement in IF-geklammerten Zweigen werden komplett
-                übersprungen
-
-- Bugfix      : Adressen NoICE-Debugfiles werden jetzt als Hex ausgegeben und auch so
-                gekennzeichnet
-
-- Erweiterung : die maximale Verschachtelungstiefe für Aufrufe eines Makros ist jetzt auf
-                einen per NESTMAX einstellbaren Wert begrenzt
-
-- Bugfix      : weitere Fixes in Bankregister-Parser TLCS-900
-
-[Bld 6]
-
-- Bugfix      : Kodierungsfehler TLCS-900(MINC/MDEC, BS1B/BS1F) behoben
-
-- Bugfix      : Abstürze bei BINCLUDE größerer Dateien unter DPMI behoben
-
-[Bld 7]
-
-- Bugfix      : / als Parameterzeichen funktioniert wieder
-
-[Bld 8]
-
-- Erweiterung : DC.x / DS.x funktionieren auch für 68HC16
-
-- Änderung    : Lizenz jetzt GPL
-
-[Bld 9]
-
-- Bugfix      : 680x0-Adressierungen korrigiert
-                äußeres Displacement jetzt auch in Klammer schreibbar
-
-[Bld 10]
-
-- Erweiterung : NoICE-Symboltypenmaske setzbar
-
-- Bugfix      : 6809-Stackoperation mit anderem Stackpointer funktionierten
-                nicht
-
-- Erweiterung : PUSH/PULL 6809 funktionieren auch mit Register D=A+B
-
-- Bugfix      : 8048-ORL/ANL funktionieren wieder mit p1/p2
-
-[Bld 11]
-
-- Bugfix      : 6809-PUSH/PULL mit D-Register klappt jetzt wirklich (sorry!)
-
-- Bugfix      : ACE: Segmente vereint, Bereiche/Startadressen korrigiert
-
-[Bld 13]
-
-- Bugfix      : in der Kommandozeile angegebene Symbole wurden immer in 
-                Großbuchstaben umgewandelt
-
-- Erweiterung : unterstützt 68HC11K4 windowing
-
-- Bugfix      : pbind verfälschte sporadisch Daten beim Umkopieren
-
-- Erweiterung : added avrlen parameter to p2hex
-
-- Bugfix      : on DOS platforms, PLIST did not display 32-bit-addresses
-                incorrectly
-
-[Bld 14]
-
-- Bugfix      : fixed crashes when HC16 cpu type was set from command line
-
-[Bld 15]
-
-- Bugfix      : fixed extended register coding for TLCS-900
-
-- Bugfix      : P2HEX: fix specification of entry address on command line
-
-[Bld 16]
-
-- Bugfix      : do not allow line debug info in pseudo segments
-
-- Bugfix      : more secure detection of ASCII integer constants
-
-2001-11-04 [Bld 17]
-
-- Extension   : added -gnuerrors command line option
-
-- Extension   : added support for the TMS320C54x family from Texas Instruments
-
-2002-01-13 [Bld 18]
-
-- Extension   : added INTLABEL option for macros
-
-2002-01-27 [Bld 19]
-
-- Bugfix      : BIT-statements inside macros did not work correctly
-
-- Bugfix      : WHILE-statement evaluates condition after last statement
-
-2002-03-10 [Bld 20]
-
-- Bugfix      : corrected line counting behaviour when REPT/IRP/WHILE draw
-                contents not from file
-
-- Extension   : more precise error messages for type conflicts in some places
-
-2002-05-25 [Bld 21]
-
-- Extension   : added Atmel MEGA8/MEGA16 CPU types & registers
-
-- Bugfix      : data disposal for Atmel did not work correctly
-
-- Extension   : extended the 320C6x target with pseudo instructions and 
-                machine instructions that previously had to be emulated
-                with macros
-
-- Extension   : ENDIF/ENDCASE show the line number of the IF/CASE statement
-                they were matched to in the listing
-
-- Bugfix      : [] as specifier for the root section was not accepted
-
-- Bugfix      : avoid incorrect debug output when addresses of sections vary
-
-2002-10-09 [Bld 22]
-
-- Extension   : added nameless temporary symbols 
-
-2002-10-11 [Bld 23]
-
-- Bugfix      : repaired named temporary symbols
-
-2002-11-23 [Bld 24]
-
-- Extension   : added undocumented 8085 instructions
-
-- Extension   : improved structure handling, added unions
-
-- Extension   : DC allows ? as operand
-
-2003-02-02 [Bld 25]
-
-- Extension   : added EXPRTYPE function
-
-- Bugfix      : in case-sensitive mode, IRP arguments were converted
-                to uppercase
-
-- Bugfix      : 4004 JCN instruction did not allow multiple conditions
-
-- Extension   : allow line continuation
-
-2003-02-26 [Bld 26]
-
-- Bugfix      : symbolic displacement with Atmel AVR did not work any more
-
---- [Bld 27]
-
-- Addition    : integrated support for KCPSM/PicoBlaze provided by Andreas
-                Wassatsch
-
-- Addition    : added support for the INS807x processor family
-
-- Bugfix      : allow source file specification in key file
-
-2003-05-25 [Bld 28] 
-
-- Addition    : added 4040 machine instructions
-
-2003-08-17 [Bld 29]
-
-- Addition    : added 80C251T SFRs
-
-- Addition    : added 80C167CS SFRs
-
-- Addition    : added Zilog eZ8
-
-2003-12-07 [Bld 30]
-
-- Addition    : added NEC 78K2
-
-2004-03-31 [Bld 31]
-
-- Bugfix      : corrected 68HC11K4 instruction set, PRWINS command
-
-2004-05-29 [Bld 32]
-
-- Bugfix      : correct erroneous detection of DUP operator inside
-                string/character constants
-
-2004-09-26 [Bld 33]
-
-- Bugfix      : correct operation of INHX... modes in P2HEX
-
-- Bugfix      : setting of entry address in P2BIN did not work
-
-- Bugfix      : fix crashes when programs defined more than 256
-                bytes of code in one line
-
-2004-11-20 [Bld 34]
-
-- Bugfix      : allow double-memory addressing variants on TLCS/900 again
-
-[Bld35]
-
-- Addition    : added ATM & LDWX instructions for Zilog eZ8
-
-- Addition    : added KCPSM3 core
-
-2005-08-06 [Bld 36]
-
-- Addition    : added LatticeMico8
-
-2005-08-07 [Bld 37]
-
-- Bugfix      : correct mnemonic conflict for EXPORT on MICO8
-
-- Addition    : allow instruction aliases for ...I variants on MICO8
-
-2005-09-08 [Bld 38]
-
-- Bugfix      : correct Qxxn register decoding on TLCS-900
-
-2005-09-12 [Bld 39]
-
-- Addition    : add HC12X/XGATE instruction extensions
-
-2005-09-17 [Bld 40]
-
-- Bugfix      : correct 68HC12 behaviour for forward jump/call instructions
-
-- Addition    : allow .w and .b as length specifier for 68K branch instructions
-
-2005-10-02 [Bld 41]
-
-- Bugfix      : correct endinaness for constant disposition on XGATE
-
-- Bugfix      : correct endinaness for constant disposition of 8-bit Motorola ops
-                on big-endian platforms
-
-- Bugfix      : allow arbitrary register names for KCPSM3
-
-- Bugfix      : correct register naming for KCPSM3
-
-2005-11-04 [Bld 42]
-
-- Addition    : warn about MSP430 code on odd addresses
-
-- Bugfix      : .b as length specifier for 68K branch instructions would not work
-
-- Bugfix      : correct address field of MOS hex format
-
-- Bugfix      : correct DUP detection in Intel-style data disposition
-                instructions
-
-2005-12-17 [Bld 43]
-
-- Bugfix      : XGDX instruction did not work on 6301
-
-- Addition    : Add 2650 target
- 
-- Bugfix      : listing on 16-bit hosts lead to crashes
-
-2006-03-18 [Bld 44]
-
-- Addition    : Add paged address space for 68HC12X
-
-2006-04-04 [Bld 45]
-
-- Bugfix      : some corrections around paged address space of 68HC12X
-
-2006-04-07 [Bld 46]
-
-- Bugfix      : remove some warnings around paged address space of 68HC12X
-
-- Addition    : Add COP4 target
-
-2006-04-15 [Bld47]
-
-- Addition    : Add ${PREFIX} to installation script
-
-2006-05-08 [Bld48]
-
-- Bugfix      : add range checks to arguments on some COP41x instructions
-
-- Addition    : Add COP42x target
-
-2006-06-24 [Bld49]
-
-- Addition    : Add (68)HCS12 target
-
-2006-08-05 [Bld50]
-
-- Addition    : Add (68)RS08 (contribution by Andreas Bolsch)
-
-- Bugfix      : For AVR, add the ATmega variant of the LPM instruction
-
-- Addition    : Add AVR targets & address spaces up to ATmega256
-
-- Bugfix      : correct parsing of indexed expressions for Z80 and TLCS-90(0)
-
-2006-08-26 [Bld51]
-
-- Addition    : finished 8008 target
-
-2006-12-09 [Bld52]
-
-- Bugfix      : added missing instructions for 78K2 target
-
-- Bugfix      : corrected some instruction codings for 78K0
-
-2006-12-17 [Bld53]
-
-- Bugfix      : corrected address space assignment of ATmega128
-
-- Bugfix      : fixed negative assembly times on Win32
-
-2006-12-19 [Bld54]
-
-- Bugfix      : -t option allows full range of list mask
-
-- Bugfix      : correct output of Intel16/Intel32 hex format for
-                word-addressed targets
-
-2007-05-01 [Bld55]
-
-- Bugfix      : set correct default maximum nesting level
-
-- Addition    : add BANKSEL pseudo instruction for PIC16C8x
-
-- Addition    : add optional new integer syntax
-
-2007-09-24 [Bld56]
-
-- Bugfix      : correct handling of minus operator in nested expressions
-
-2007-12-31 [Bld57]
-
-- Bugfix      : correct SKINT -> SKNIT on 78C1x
-
-- Bugfix      : correct LDN and RLDI instructions for 180x
-
-- Change      : MSP decoder now works with hash table
-
-- Addition    : add some MSP430 bit definitions
-
-[Bld58]
-
-- Bugfix      : correct 8086 CALLF/JMPF instructions
-
-2008-06-22 [Bld59]
-
-- Addition    : add Atari Asteroids vector processor as target
-
-- Bugfix      : disallow 68xxx byte-size ADDQ/SUBQ when using an address register
-
-2008-08-10 [Bld60]
-
-- Bugfix      : allow 68xxx dynamic FMOVEM register list with lowercase-written data register
-
-- Bugfix      : correct addressing mode list for FMOVEM register-to-memory
-
-- Change      : allow 68K bit instructions with arguments ranging from 0..255 and issue
-                warning for numbers beyond operand length
-
-2008-08-17 [Bld61]
-
-- Bugfix      : correct MCS-96 BMOVI coding
-
-- Bugfix      : correct definition of PORTQS for MC68332
-
-2008-08-22 [Bld62]
-
-- Bugfix      : correct MCS-96 DPTS/EPTS coding
-
-2008-08-29 [Bld63]
-
-- Bugfix      : correct 68K TST addressing modes, PC-relative offsets for a few instructions
-
-2008-10-25 [Bld64]
-
-- Addition    : added CHARFROMSTR function
-
-2008-11-23 [Bld65]
-
-- Addition    : allow Q for octal constants in Intel mode
-- Bugfix      : correct coding of OUT instruction for 8008
-- Change      : allow NUL characters in string symbols (again)
-
-2009-02-08 [Bld66]
-
-- Bugfix      : correct DINT coding for TMS7xxx
-
-2009-04-10 [Bld67]
-
-- Bugfix      : correct AVR branch instructions when target is beyond 64K
-
-2009-04-13 [Bld68]
-
-- Bugfix      : correct SC/MP relative addressing regarding page wrap
-
-2009-05-10 [Bld69]
-
-- Bugfix      : allow more CPU aliases
-- Addition    : dispay macro nesting in listing
-
-2009-06-07 [Bld70]
-
-- Addition    : added named temporary symbols
-
-2009-07-25 [Bld71]
-
-- Bugfix      : corrected H8/500 register-to-register MOV coding
-
-2010-01-01 [Bld72]
-
-- Bugfix      : corrected address offset handling for H8/500
-- Bugfix      : some coding corrections for Lattice Mico8
-
-2010-02-27 [Bld73]
-
-- Bugfix      : corrected P2BIN checksum generation on Win32 systems
-- Bugfix      : corrected macro nesting dispay in listing
-
-2010-03-14 [Bld74]
-
-- Addition    : DW/DD/DQ/DD, DC.[wlxsdp], ADR also accept string arguments
-
-2010-03-26 [Bld75]
-
-- Bugfix      : correct address range for M16C bit short addressing
-
-2010-04-11 [Bld76]
-
-- Bugfix      : correct operand checking for SHA/SHL on M16C
-
-2010-04-17 [Bld77]
-
-- Bugfix      : address problem of overlapping strcpy()
-
-2010-06-14 [Bld78] 
-
-- Bugfix      : do not optimize out 68K BSR if it has zero distance
-
-2010-12-12 [Bld79]
-
-- Bugfix      : correct back-transformation of SFR addresses to absolute for 80C167
-
-- Bugfix      : allow arbitrary values for register pointer on eZ8
-
-- Change      : split up Mico8 variants
-
-2011-08-01 [Bld80]
-
-- Change      : rework (e)Z8 working register addressing
-
-2011-10-20 [Bld81]
-
-- Change      : range checking of RP value for Z8 more graceful
-
-2012-01-21 [Bld82]
-
-- Addition    : added support for MPC 821 from Marcin Cieslak
-
-- Bugfix      : regard symbol name expansion in arguments for SHARED
-
-2012-05-26 [Bld83]
-
-- Change      : implicit macro parameters are always case-insensitive
-
-- Addition    : add REG instruction to MSP430
-
-2012-09-02 [Bld84]
-
-- Addition    : add support for XMOS XS1
-
-- Addition    : optionally support UTF8 encoding
-
-- Addition    : add Makefile definitions for OSX
-
-2012-12-09 [Bld85]
-
-- Change      : allow register symbols for Zilog Z8
-
-2012-12-31 [Bld86]
-
-- Change      : add Dx pseudo instructions to Signetics 2650
-
-2013-03-09 [Bld87]
-
-- Bugfix      : correct PC-relative addressing on SC/MP
-
-- Addition    : (NO)GLOBALSYMBOLS parameter for macros
-
-- Addition    : add support for NEC uPD75xx
-
-2013-03-22 [Bld88]
-
-- Addition    : support 75xx instruction set A & B
-
-2013-08-07 [Bld89]
-
-- Bugfix      : PADDING instruction available for 6805/6808
-
-- Addition    : add COP440 target
-
-- Bugfix      : better handling of overlong souce code lines
-
-2013-12-21 [Bld90]
-
-- Bugfix      : IRPC messed up local symbol handling
-
-- Bugfix      : correct handling of escaped quotes in string constants
-
-- Change      : allow up to 64K code per line
-
-2014-03-03 [Bld91]
-
-- Change      : allow register names R10...R15 for 4004/4040
-
-- Addition    : add COP444 target
-
-2014-03-08 [Bld92]
-
-- Bugfix      : correct handling of escaped quotation marks when converting string
-                to uppercase
-
-- Addition    : add RORG statement
-
-- Change      : for unresolved forwards, put forward statement position into extended error
-
-- Addition    : added new function ASSUMEDVAL to query values set via ASSUME
-
-[Bld93]
-
-- Change      : put entry address into 01 record for Intel8 hex format
-
-- Bugfix      : correct uninitialized array in M16 decoder
-
-- Change      : for Z80, do not warn about possible short addressing for
-                RL/RLC/RR/RRC A
-
-- Change      - rework/cleanup Z80, F2MC8L, Picoblaze, H8/300, XA, M16C, STx
-                targets, partially rework and provide initial test case for
-                M16 target
-
-[Bld94]
-
-- Bugfix      : for Z80 target, detect invalid condition identifiers
-
-- Bugfix      : avoid infinite loop on M16 when chained addressing is used incorrectly
-
-- Change      : rework/cleanup COP8, AVR, ACE, TMS9900, TLCS/9000, TLCS/900, i960,
-                MCS-96, TLCS/90, 8X30x, TLCS/870, 8086, 8085, 78Kx, 78c10, uPD77230, uPD772x,
-                65816/7700 targets, complete reworks and testcase on M16
-
-- Bugfix      : BCLR/BSET/BSETI/BTST on M16 use format G/E/Q instead of G/E/R
-
-- Bugfix      : do not allow JSR with direct mode on 6800
-
-- Bugfix      : correct 8087 FIMUL coding
-
-- Bugfix      : correct JSL/JML byte order for 65816
-
-- Bugfix      : correct COP, PEI, PEA, BIT instructions for 65816
-
-- Bugfix      : use correct bank register for 65816 JMP/JSR instruction
-
-- Addition    : on 65816, allow DBR as alias for DT and PBR as alias for PG
+- Bugfix      : -l - Option funktionierte bei P2HEX nicht.
+- Erweiterung : P2HEX/P2BIN koennen Dateiinhalte auf andere Adressen
+                verschieben.
+- Erweiterung : P2HEX kann den Einsprungpunkt auch in Intel-Hex-Files
+                weitergeben.
+- Erweiterung : Kommentare in SHARED-Anweisungen werden in die Share-Datei
+                weitergegeben.
+- Aenderung   : Als Kommentarzeichen wird fuer Share-Dateien im Pascal-Modus
+                (* ... *) anstelle { ... } verwendet.  Dies erlaubt es, 
+                die Dateien auch fuer Modula zu verwenden und sollte fuer
+                Pascal keine Nachteile mit sich bringen.  

@@ -359,6 +359,8 @@ void ClearMacroRec(PMacroRec *Alt, Boolean Complete)
      free((*Alt)->Name); (*Alt)->Name = NULL;
    }
    ClearStringList(&((*Alt)->FirstLine));
+   ClearStringList(&((*Alt)->ParamNames));
+   ClearStringList(&((*Alt)->ParamDefVals));
 
    if (Complete)
    {

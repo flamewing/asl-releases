@@ -58,9 +58,15 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.31 2014/06/15 09:17:08 alfred Exp $                          */
+/* $Id: as.c,v 1.33 2014/09/21 13:15:16 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.33  2014/09/21 13:15:16  alfred
+ * - assure structure is initialized
+ *
+ * Revision 1.32  2014/09/14 13:22:32  alfred
+ * - ass keyword arguments
+ *
  * Revision 1.31  2014/06/15 09:17:08  alfred
  * - optional Memo profiling
  *
@@ -673,7 +679,7 @@ BEGIN
 
      /* compress into tokens */
 
-     l = FirstOutputTag->Params;
+     l = FirstOutputTag->ParamNames;
      for (z = 1; z <= FirstOutputTag->Mac->ParamCount; z++)
       CompressLine(GetStringListNext(&l), z, s, CaseSensitive);
 
@@ -695,6 +701,8 @@ BEGIN
     BEGIN
      if (IfAsm)
       BEGIN
+       FirstOutputTag->Mac->ParamNames = FirstOutputTag->ParamNames; FirstOutputTag->ParamNames = NULL;
+       FirstOutputTag->Mac->ParamDefVals = FirstOutputTag->ParamDefVals; FirstOutputTag->ParamDefVals = NULL;
        AddMacro(FirstOutputTag->Mac,FirstOutputTag->PubSect,True);
        if ((FirstOutputTag->DoGlobCopy) AND (SectionStack!=Nil))
         BEGIN
@@ -702,13 +710,20 @@ BEGIN
          GMacro->Name=strdup(FirstOutputTag->GName);
          GMacro->ParamCount=FirstOutputTag->Mac->ParamCount;
          GMacro->FirstLine=DuplicateStringList(FirstOutputTag->Mac->FirstLine);
+         GMacro->ParamNames=DuplicateStringList(FirstOutputTag->Mac->ParamNames);
+         GMacro->ParamDefVals=DuplicateStringList(FirstOutputTag->Mac->ParamDefVals);
          AddMacro(GMacro,FirstOutputTag->GlobSect,False);
         END
       END
-     else ClearMacroRec(&(FirstOutputTag->Mac), TRUE);
+     else
+     {
+       ClearMacroRec(&(FirstOutputTag->Mac), TRUE);
+     }
 
      Tmp=FirstOutputTag; FirstOutputTag=Tmp->Next;
-     ClearStringList(&(Tmp->Params)); free(Tmp);
+     ClearStringList(&(Tmp->ParamNames));
+     ClearStringList(&(Tmp->ParamDefVals));
+     free(Tmp);
     END
 END
 
@@ -851,13 +866,25 @@ static void ProcessMACROArgs(Boolean CtrlArg, char *pArg, void *pUser)
   }
   else
   {
+    char *pDefault;
+
     ExpandPList(pContext->PList, pArg, CtrlArg);
+    pDefault = QuotPos(pArg, '=');
+    if (pDefault)
+    {
+      *pDefault++ = '\0';
+      KillPostBlanks(pArg);
+      KillPrefBlanks(pArg);
+    }
     if (!ChkMacSymbName(pArg))
     {
       WrXError(1020, pArg);
       pContext->ErrFlag = True;
     }
-    AddStringListLast(&(pContext->pOutputTag->Params), pArg);
+    if (!CaseSensitive)
+      UpString(pArg);
+    AddStringListLast(&(pContext->pOutputTag->ParamNames), pArg);
+    AddStringListLast(&(pContext->pOutputTag->ParamDefVals), pDefault ? pDefault : "");
     pContext->ParamCount++;
   }
 }
@@ -889,7 +916,8 @@ static void ReadMacro(void)
   Context.pOutputTag = (POutputTag) malloc(sizeof(TOutputTag));
   Context.pOutputTag->Processor = MACRO_OutProcessor;
   Context.pOutputTag->NestLevel = 0;
-  Context.pOutputTag->Params = NULL;
+  Context.pOutputTag->ParamNames = NULL;
+  Context.pOutputTag->ParamDefVals = NULL;
   Context.pOutputTag->DoExport = False;
   Context.pOutputTag->DoGlobCopy = False;
   Context.pOutputTag->Next = FirstOutputTag;
@@ -908,7 +936,8 @@ static void ReadMacro(void)
 
   if (Context.ErrFlag)
   {
-    ClearStringList(&(Context.pOutputTag->Params));
+    ClearStringList(&(Context.pOutputTag->ParamNames));
+    ClearStringList(&(Context.pOutputTag->ParamDefVals));
     free(Context.pOutputTag);
     AddWaitENDM_Processor();
     return;
@@ -932,7 +961,7 @@ static void ReadMacro(void)
 
   /* chain in */
 
-  OneMacro = (PMacroRec) malloc(sizeof(MacroRec));
+  OneMacro = (PMacroRec) calloc(1, sizeof(MacroRec));
   Context.pOutputTag->Mac = OneMacro;
 
   if ((MacroOutput) && (Context.pOutputTag->DoExport))
@@ -999,9 +1028,11 @@ static void MACRO_Restorer(PInputTag PInp)
 
 static void ExpandMacro(PMacroRec OneMacro)
 {
-  int z1;
-  StringRecPtr Lauf;
+  int z1, z2;
+  StringRecPtr Lauf, pDefault, pParamName, pArg;
   PInputTag Tag = NULL;
+  Boolean NamedArgs;
+  char *p;
 
   CodeLen = 0;
 
@@ -1025,24 +1056,98 @@ static void ExpandMacro(PMacroRec OneMacro)
       strmaxcpy(Tag->SaveLabel, LabPart, 255);
     Tag->IsMacro   = True;
 
-    /* 2. inflate parameter count to at least macro's argument count */
+    /* 2. store special parameters - in the original form */
 
-    if (ArgCnt < OneMacro->ParamCount)
-    {
-      for (z1 = ArgCnt + 1; z1 <= OneMacro->ParamCount; z1++)
-       *(ArgStr[z1]) = '\0';
-      ArgCnt = OneMacro->ParamCount;
-    }
+    sprintf(Tag->NumArgs, "%d", ArgCnt);
+    Tag->AllArgs[0] = '\0';
+    for (z1 = 1; z1 <= ArgCnt; z1++)
+     BEGIN
+      if (z1 == 1) strmaxcat(Tag->AllArgs, ",", 255);
+      strmaxcat(Tag->AllArgs, ArgStr[z1], 255);
+     END
+    Tag->ParCnt = OneMacro->ParamCount;
 
-    /* 3. Parameterliste aufbauen - umgekehrt einfacher */
+    /* 3. generate argument list */
 
-    for (z1 = ArgCnt; z1 >= 1; z1--)
+    /* 3a. initialize with empty defaults - order is irrelevant at this point: */
+
+    for (z1 = OneMacro->ParamCount; z1 >= 1; z1--)
+      AddStringListFirst(&(Tag->Params), NULL);
+
+    /* 3b. walk over given arguments */
+
+    NamedArgs = False;
+    for (z1 = 1; z1 <= ArgCnt; z1++)
     {
       if (!CaseSensitive) UpString(ArgStr[z1]);
-      AddStringListFirst(&(Tag->Params), ArgStr[z1]);
+
+      /* explicit name given? */
+
+      p = QuotPos(ArgStr[z1], '=');
+
+      /* if parameter name given... */
+
+      if (p)
+      {
+        /* split it off */
+
+        *p++ = '\0';
+        KillPostBlanks(ArgStr[z1]);
+        KillPrefBlanks(p);
+
+        /* search parameter by name */
+
+        for (pParamName = OneMacro->ParamNames, pArg = Tag->Params;
+             pParamName; pParamName = pParamName->Next, pArg = pArg->Next)
+          if (!strcmp(ArgStr[z1], pParamName->Content))
+          {
+            if (pArg->Content)
+            {
+              WrXError(320, pParamName->Content);
+              free(pArg->Content);
+            }
+            pArg->Content = strdup(p);
+            break;
+          }
+        if (!pParamName)
+          WrXError(1811, ArgStr[z1]);
+
+        /* set flag that no unnamed args are any longer allowed */
+
+        NamedArgs = True;
+      }
+
+      /* unnamed argument: */
+
+      else if (NamedArgs)
+        WrError(1812);
+
+      /* empty positional parameters mean using defaults: */
+
+      else if ((z1 <= OneMacro->ParamCount) && (strlen(ArgStr[z1]) > 0))
+      {
+        pArg = Tag->Params;
+        pParamName = OneMacro->ParamNames;
+        for (z2 = 0; z2 < z1 - 1; z2++)
+        {
+          pParamName = pParamName->Next;
+          pArg = pArg->Next;
+        }
+        if (pArg->Content)
+        {
+          WrXError(320, pParamName->Content);
+          free(pArg->Content);
+        }
+        pArg->Content = strdup(ArgStr[z1]);
+      }
     }
-    Tag->ParCnt = ArgCnt;
-    ComputeMacroStrings(Tag);
+
+    /* 3c. fill in defaults */
+
+    for (pParamName = OneMacro->ParamNames, pArg = Tag->Params, pDefault = OneMacro->ParamDefVals;
+             pParamName; pParamName = pParamName->Next, pArg = pArg->Next, pDefault = pDefault->Next)
+      if (!pArg->Content)
+        pArg->Content = strdup(pDefault->Content);
 
     /* 4. Zeilenliste anhaengen */
 
@@ -1244,7 +1349,7 @@ BEGIN
    if (FirstOutputTag->NestLevel>-1)
     BEGIN
      strmaxcpy(s,OneLine,255); KillCtrl(s);
-     CompressLine(GetStringListFirst(FirstOutputTag->Params,&Dummy),1,s, CaseSensitive);
+     CompressLine(GetStringListFirst(FirstOutputTag->ParamNames,&Dummy),1,s, CaseSensitive);
      AddStringListLast(&(FirstOutputTag->Tag->Lines),s);
      FirstOutputTag->Tag->LineCnt++;
     END
@@ -1262,10 +1367,11 @@ BEGIN
       END
      else
       BEGIN
-       ClearStringList(&(Tmp->Tag->Lines)); ClearStringList(&(Tmp->Tag->Params));
+       ClearStringList(&(Tmp->Tag->Lines));
+       ClearStringList(&(Tmp->Tag->Params));
        free(Tmp->Tag);
       END
-     ClearStringList(&(Tmp->Params));
+     ClearStringList(&(Tmp->ParamNames));
      free(Tmp);
     END
 END
@@ -1306,7 +1412,7 @@ static void ProcessIRPArgs(Boolean CtrlArg, char *pArg, void *pUser)
         pContext->ErrFlag = True;
       }
       else
-        AddStringListFirst(&(pContext->pOutputTag->Params), pArg);
+        AddStringListFirst(&(pContext->pOutputTag->ParamNames), pArg);
     }
     else
     {
@@ -1342,7 +1448,8 @@ static void ExpandIRP(void)
   Context.pOutputTag->Next      = FirstOutputTag;
   Context.pOutputTag->Processor = IRP_OutProcessor;
   Context.pOutputTag->NestLevel = 0;
-  Context.pOutputTag->Params    = NULL;
+  Context.pOutputTag->ParamNames = NULL;
+  Context.pOutputTag->ParamDefVals = NULL;
   ProcessMacroArgs(ProcessIRPArgs, &Context);
 
   /* at least parameter & one arg */
@@ -1354,7 +1461,8 @@ static void ExpandIRP(void)
   }
   if (Context.ErrFlag)
   {
-    ClearStringList(&(Context.pOutputTag->Params));
+    ClearStringList(&(Context.pOutputTag->ParamNames));
+    ClearStringList(&(Context.pOutputTag->ParamDefVals));
     ClearStringList(&(Context.Params));
     free(Context.pOutputTag);
     AddWaitENDM_Processor();
@@ -1468,7 +1576,7 @@ static void ProcessIRPCArgs(Boolean CtrlArg, char *pArg, void *pUser)
         pContext->ErrFlag = True;
       }
       else
-        AddStringListFirst(&(pContext->pOutputTag->Params), pArg);
+        AddStringListFirst(&(pContext->pOutputTag->ParamNames), pArg);
     }
     else
     {
@@ -1505,7 +1613,7 @@ static void ExpandIRPC(void)
   Context.pOutputTag->Next = FirstOutputTag;
   Context.pOutputTag->Processor = IRP_OutProcessor;
   Context.pOutputTag->NestLevel = 0;
-  Context.pOutputTag->Params = Nil;
+  Context.pOutputTag->ParamNames = Nil;
   ProcessMacroArgs(ProcessIRPCArgs, &Context);
 
   /* parameter & string */
@@ -1517,7 +1625,7 @@ static void ExpandIRPC(void)
   }
   if (Context.ErrFlag)
   {
-    ClearStringList(&(Context.pOutputTag->Params));
+    ClearStringList(&(Context.pOutputTag->ParamNames));
     AddWaitENDM_Processor();
     return;
   }

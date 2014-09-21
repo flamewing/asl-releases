@@ -65,7 +65,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition March 2014}
+{\large Edition September 2014}
 \end{raggedright}
 
 \clearpage
@@ -4761,6 +4761,11 @@ section and its subsections when the definition is done from within
 a section.  This behaviour however can be controlled in wide limits
 via the options \tty{PUBLIC} and \tty{GLOBAL} described below.
 
+A default value may be provided for each macro parameter
+(appended via an equal sign).  This value is used if there is no
+argument for this parameter at macro call or if the positional
+argument (see below) for this parameter is empty.
+
 Apart from the macro parameters themselves, the parameter list may
 contain control parameters which influence the processing of the
 macro.  These parameters are distinguished from normal parameters by
@@ -4828,7 +4833,7 @@ mul     MACRO   para,parb
         IF      UpString("PARB")<>"B"
          MOV    b,parb
         ENDIF
-        mul     ab
+        !mul     ab
         ENDM
 \end{verbatim}
 It is important for the example above that the assembler converts all
@@ -4836,6 +4841,34 @@ parameter names to upper case when operating in case-insensitive
 mode, but this conversion never takes place inside of string constants. 
 Macro parameter names therefore have to be written in upper case when
 they appear in string constants.
+
+Macro arguments may be given in either of two forms: {\em
+positional} or {\em keyword} arguments.
+
+For positional arguments, the assignment of arguments to macro
+parameters simply results from the position of arguments, i.e.
+the first argument is assigned to the first parameter, the second
+argument to the second parameter and so on.  If the number of
+arguments is smaller than the number of parameters, eventually
+defined default values or simply an empty string are inserted. 
+The same is valid for empty arguments in the argument list.
+
+Keyword arguments on the other hand explicitly define which
+parameter they relate to, by being prefixed with the parameter's
+name:
+\begin{verbatim}
+       mul  para=r0,parb=r1
+\end{verbatim}
+Again, non-assigned parameters will use an eventually defined
+default or an empty string.
+
+As a difference to positional arguments, keyword arguments allow
+to assign an empty string to a parameter with a non-empty
+default.
+
+Mixing of positional and keyword arguments in one macro call is
+possible, however it is not allowed to use positional arguments
+after the first keyword argument.
 
 The same naming rules as for usual symbols also apply for macro
 parameters, with the exception that only letters and numbers are
@@ -9603,6 +9636,13 @@ described by:
                {Valid values for the RP register range from 0x00 to 0x70 resp.
                 0xf0, because all other areas are unused on the Z8.}
                {none}
+\errentry{ 320}{macro argument redefined}
+               {warning}
+               {A macro parameter was assigned two or more
+                different values.  This may happen by usage of
+                keyword arguments.  The last argument is actually
+                used.}
+               {name of the macro parameter}
 \errentry{1000}{symbol double defined}
                {error}
                {A new value is assigned to a symbol, using a label or a
@@ -9987,6 +10027,17 @@ described by:
 \errentry{1810}{more than 10 macro parameters}
                {error}
                {A macro cannot have more than 10 parameters}
+               {none}
+\errentry{1811}{keyword argument not defined in macro}
+               {error}
+               {a keyword argument referred to a parameter the
+                called macro does not provide.}
+               {used keyword resp. macro parameter}
+\errentry{1812}{positional argument no longer allowed after keyword argument}
+               {Fehler}
+               {position and keyword arguments  may be mixed in
+                one macro call, however only keyword arguments
+                are allowed after the first keyword argument.}
                {none}
 \errentry{1815}{macro double defined}
                {error}

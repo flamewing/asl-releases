@@ -26,9 +26,12 @@
 /*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.18 2014/05/29 10:59:05 alfred Exp $                      */
+/* $Id: asmsub.c,v 1.19 2014/09/14 13:22:33 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmsub.c,v $
+ * Revision 1.19  2014/09/14 13:22:33  alfred
+ * - ass keyword arguments
+ *
  * Revision 1.18  2014/05/29 10:59:05  alfred
  * - some const cleanups
  *
@@ -246,7 +249,7 @@ BEGIN
      Save=FirstCPUDef; FirstCPUDef=Save->Next;
      free(Save->Name); free(Save);
     END
-END	
+END
 
 /****************************************************************************/
 /* Copyrightlistenverwaltung */
@@ -1047,6 +1050,7 @@ BEGIN
      case  290: msgno = Num_ErrMsgNullResMem; break;
      case  300: msgno = Num_ErrMsgBitNumberTruncated; break;
      case  310: msgno = Num_ErrMsgInvRegisterPointer; break;
+     case  320: msgno = Num_ErrMsgMacArgRedef; break;
      case 1000: msgno = Num_ErrMsgDoubleDef; break;
      case 1010: msgno = Num_ErrMsgSymbolUndef; break;
      case 1020: msgno = Num_ErrMsgInvSymName; break;
@@ -1133,6 +1137,8 @@ BEGIN
      case 1800: msgno = Num_ErrMsgOpenMacro; break;
      case 1805: msgno = Num_ErrMsgEXITMOutsideMacro; break;
      case 1810: msgno = Num_ErrMsgTooManyMacParams; break;
+     case 1811: msgno = Num_ErrMsgUndefKeyArg; break;
+     case 1812: msgno = Num_ErrMsgNoPosArg; break;
      case 1815: msgno = Num_ErrMsgDoubleMacro; break;
      case 1820: msgno = Num_ErrMsgFirstPassCalc; break;
      case 1830: msgno = Num_ErrMsgTooManyNestedIfs; break;

@@ -17,6 +17,8 @@ typedef struct _MacroRec
   char *Name;            /* Name des Makros */
   Byte ParamCount;       /* Anzahl Parameter */
   StringList FirstLine;  /* Zeiger auf erste Zeile */
+  StringList ParamNames; /* parameter names, needed for named parameters */
+  StringList ParamDefVals; /* default values */
   LongInt UseCounter;    /* to limit recursive calls */
   Boolean LocMacExp;     /* Makroexpansion wird aufgelistet */
   Boolean LocIntLabel;   /* Label used internally instead at beginning */
@@ -41,7 +43,7 @@ typedef struct _TInputTag
                                                       );
   LongInt ParCnt,ParZ;
   StringList Params;
-  LongInt LineCnt,LineZ;
+  LongInt LineCnt, LineZ;
   StringRecPtr Lines, LineRun;
   String SpecName,SaveAttr,SaveLabel,AllArgs,NumArgs;
   Boolean IsEmpty, FromFile;
@@ -76,7 +78,7 @@ typedef struct _TOutputTag
   Integer NestLevel;
   PInputTag Tag;
   PMacroRec Mac;
-  StringList Params;
+  StringList ParamNames, ParamDefVals;
   LongInt PubSect,GlobSect;
   Boolean DoExport, DoGlobCopy;
   String GName;

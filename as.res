@@ -29,9 +29,12 @@
 ;*           2001-10-21 GNU error messages                                   *
 ;*                                                                           *
 ;*****************************************************************************
-;* $Id: as.res,v 1.3 2011-10-20 14:00:40 alfred Exp $                        *
+;* $Id: as.res,v 1.4 2014/09/14 13:22:33 alfred Exp $                        *
 ;*****************************************************************************
 ;* $Log: as.res,v $
+;* Revision 1.4  2014/09/14 13:22:33  alfred
+;* - ass keyword arguments
+;*
 ;* Revision 1.3  2011-10-20 14:00:40  alfred
 ;* - SRP handling more graceful on Z8
 ;*
@@ -232,6 +235,10 @@ Message ErrMsgBitNumberTruncated
 Message ErrMsgInvRegisterPointer
  "Ung&uuml;ltiger Wert f&uuml;r Registerzeiger"
  "invalid register pointer value"
+
+Message ErrMsgMacArgRedef
+ "Makro-Argument umdefiniert"
+ "macro argument redefined"
 
 ;*****
 
@@ -546,6 +553,14 @@ Message ErrMsgDoubleMacro
 Message ErrMsgTooManyMacParams
  "mehr als 10 Makroparameter"
  "more than 10 macro parameters"
+
+Message ErrMsgUndefKeyArg
+ "Schl&uuml;sselwortargument nicht in Makro definiert"
+ "keyword argument not defined in macro"
+
+Message ErrMsgNoPosArg
+ "Positionsargument nach Schl&uuml;sselwortargumenten nicht mehr erlaubt"
+ "positional argument no longer allowed after keyword argument"
 
 Message ErrMsgEXITMOutsideMacro
  "EXITM au&szlig;erhalb eines Makrorumpfes"

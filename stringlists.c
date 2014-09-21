@@ -20,7 +20,10 @@ END
 
         void ClearStringEntry(StringRecPtr *Elem)
 BEGIN
-   free((*Elem)->Content); free(*Elem); *Elem=Nil;
+   if ((*Elem)->Content)
+     free((*Elem)->Content);
+   free(*Elem);
+   *Elem=Nil;
 END
 
         void ClearStringList(StringList *List)
@@ -39,7 +42,7 @@ BEGIN
    StringRecPtr Neu;
 
    Neu=(StringRecPtr) malloc(sizeof(StringRec));
-   Neu->Content=strdup(NewStr); 
+   Neu->Content= NewStr ? strdup(NewStr) : NULL;
    Neu->Next=(*List);
    *List=Neu;
 END
@@ -49,7 +52,8 @@ BEGIN
    StringRecPtr Neu,Lauf;
 
    Neu=(StringRecPtr) malloc(sizeof(StringRec)); 
-   Neu->Content=strdup(NewStr); Neu->Next=Nil;
+   Neu->Content = NewStr ? strdup(NewStr) : NULL;
+   Neu->Next=Nil;
    if (*List==Nil) *List=Neu;
    else
     BEGIN

@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code7700.c,v 1.10 2014/08/31 13:14:12 alfred Exp $                    */
+/* $Id: code7700.c,v 1.11 2014/09/14 09:36:59 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code7700.c,v $
+ * Revision 1.11  2014/09/14 09:36:59  alfred
+ * - add missing compiler warning silencing
+ *
  * Revision 1.10  2014/08/31 13:14:12  alfred
  * - do not use snprintf
  *

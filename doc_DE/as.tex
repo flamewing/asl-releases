@@ -46,7 +46,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand M"arz 2014}
+{\large Stand September 2014}
 \end{raggedright}
 
 \clearpage
@@ -4922,6 +4922,12 @@ bekannt.  Dieses Verhalten l"a"st sich aber durch die weiter unten
 beschriebenen Optionen \tty{PUBLIC} und \tty{GLOBAL} in weiten Grenzen
 steuern.
 \par
+F"ur jeden Makroparameter kann ein Defaultwert mit angeh"angtem
+Gleichheitszeichen angegeben werden.  Dieser Wert wird f"ur den
+Parameter eingesetzt, wenn beim Makroaufruf kein Argument f"ur
+diesen Parameter angegeben wird, bzw. wenn ein Positionsargument
+(s.u.) f"ur diesen Parameter leer ist.
+\par
 Neben den eigentlichen Makroparametern k"onnen in der Parameterliste
 auch Steuerparameter enthalten sein, die die Abarbeitung des betroffenen
 Makros beeinflussen; diese Parameter werden von normalen Parametern
@@ -4996,7 +5002,7 @@ mul     MACRO   para,parb
         IF      UpString("PARB")<>"B"
          MOV    b,parb
         ENDIF
-        mul     ab
+        !mul     ab
         ENDM
 \end{verbatim} 
 Wichtig ist bei obigem Beispiel, da"s der Assembler alle
@@ -5004,6 +5010,36 @@ Parameternamen im case-sensitiven Modus in Gro"sbuchstaben
 umsetzt, in Strings aber nie eine Umwandlung in Gro"sbuchstaben
 erfolgt. Die Makroparameternamen m"ussen in den Stringkonstanten
 daher gro"s geschrieben werden.
+\par
+Argumente an ein Makro k"onnen in zwei Formen angegeben werden:
+als {\em Positionsargumente} oder als {\em
+Schl"usselwortargumente}.
+\par
+Bei Positionsargumenten ergibt sich
+die Zuordnung von Argumenten zu Makro-Parametern einfach durch
+ihre Position in der Aufrufliste, d.h. das erste Argument wird dem
+ersten Parameter zugeordnet, das zweite Argument dem zweiten
+Parameter usw..  Werden weniger Argumente angegeben als das Makro
+Parameter hat, werden eventuell definierte Defaultwerte oder ein
+Leerstring eingesetzt.  Gleiches gilt auch f"ur leere Argumente.
+\par
+Schl"usselwortargumente geben jedoch explizit an, f"ur welchen
+Makro-Parameter sie gelten, indem der Parametername dem Wert
+vorangestellt wird, z.B. so:
+\begin{verbatim}
+       mul  para=r0,parb=r1
+\end{verbatim}
+Wiederum wird f"ur nicht definierte Parameter ein eventuell
+vorhandener Default oder ein Leerstring eingesetzt.
+\par
+Im Unterschied zu Positionsargumenten ist es mit
+Schl"usselwortargumenten auch m"oglich, einem Parameter einen
+Leerstring zuzuweisen, der einen nicht-leeren Default-Wert hat.
+\par
+Positions- und Schl"usselwortargumente d"urfen auch in einem
+Aufruf gemischt werden, jedoch d"urfen ab dem ersten
+Schl"usselwortargument keine Positionsargumente mehr verwendet
+werden.
 \par
 F"ur die Makroparameter gelten die gleichen Konventionen wie bei
 normalen Symbolen, mit der Ausnahme, da"s hier nur Buchstaben
@@ -9802,6 +9838,13 @@ Angaben:
                 nur Werte von 0x00...0x70 bzw. 0xf0, weil die anderen
                 Registerbereiche unbelegt sind.}
                {keines}
+\errentry{ 320}{Makro-Argument umdefiniert}
+               {Warnung}
+               {Einem Makroparameter wurden zwei oder mehr
+                verschiedene Werte zugewiesen.  Dies kann bei der
+                Verwendung von Schlüsselwortparametern auftreten.
+                Das zuletzt angegebene Argument wird benutzt.}
+               {Name des Makroparameters}
 \errentry{1000}{Symbol doppelt definiert}
                {Fehler}
                {Einem Symbol wurde durch ein Label oder
@@ -10216,6 +10259,19 @@ Angaben:
 \errentry{1810}{mehr als 10 Makroparameter}
                {Fehler}
                {Ein Makro darf h"ochstens 10 Parameter haben.}
+               {keines}
+\errentry{1811}{Schl"usselwortargument nicht in Makro definiert}
+               {Fehler}
+               {Ein Schl"usselwortargument bezog sich auf einen
+                Parameter, den das aufgerufene Makro gar nicht
+                besitzt.}
+               {verwendetes Schl"usselwort bzw. Makroparameter}
+\errentry{1812}{Positionsargument nach Schl"usselwortargumenten nicht mehr erlaubt}
+               {Fehler}
+               {Positions- und Schl"usselwortargumente d"urfen in
+                einem Makroaufruf gemischt werden, aber nach dem
+                ersten Schl"usselwortargument sind nur noch
+                solche zugelassen.}
                {keines}
 \errentry{1815}{doppelte Makrodefinition}
                {Fehler}
