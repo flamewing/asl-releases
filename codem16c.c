@@ -25,9 +25,18 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codem16c.c,v 1.9 2014/06/13 20:58:48 alfred Exp $                    */
+/* $Id: codem16c.c,v 1.12 2014/12/07 19:14:01 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codem16c.c,v $
+ * Revision 1.12  2014/12/07 19:14:01  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
+ * Revision 1.11  2014/12/05 11:15:28  alfred
+ * - eliminate AND/OR/NOT
+ *
+ * Revision 1.10  2014/12/05 08:53:45  alfred
+ * - eliminate remaining BEGIN/END
+ *
  * Revision 1.9  2014/06/13 20:58:48  alfred
  * - adapt to current style
  *
@@ -524,7 +533,7 @@ static Boolean DecodeBitAdr(Boolean MayShort)
         AdrVals[0] = DispAcc >> 3;
         AdrCnt = 1;
       }
-      else if ((DispAcc > 0) AND (DispAcc < 256))
+      else if ((DispAcc > 0) && (DispAcc < 256))
       {
         AdrMode = 10;
         AdrVals[0] = DispAcc & 0xff;
@@ -551,7 +560,7 @@ static Boolean DecodeBitAdr(Boolean MayShort)
       AdrVals[0] = DispAcc & 0xff;
       AdrCnt = 1;
       return True;
-     END
+    }
     WrError(1510);             /* RMS 08: Notify user there's a problem with the offset */
     return False;
   }
@@ -641,7 +650,7 @@ static void DecodeFixed(Word Code)
   {
     BAsmCode[0] = Lo(Code);
     CodeLen = 1;
-   END
+  }
   else
   {
     BAsmCode[0] = Hi(Code);
@@ -822,7 +831,7 @@ static void DecodeMOV(Word Code)
                   BAsmCode[0] = 0xb0 + SMode;
                   memcpy(BAsmCode + 1, AdrVals2, AdrCnt2);
                   CodeLen = 1 + AdrCnt2;
-                 END
+                }
               }
               break;
           }
@@ -1132,6 +1141,8 @@ static void DecodePUSHA(Word Code)
 
 static void DecodeXCHG(Word Code)
 {
+  UNUSED(Code);
+
   if (ArgCnt != 2) WrError(1110);
   else if (CheckFormat("G"))
   {
@@ -1671,6 +1682,8 @@ static void DecodeBCD(Word Code)
 
 static void DecodeEXTS(Word Code)
 {
+  UNUSED(Code);
+
   if (ArgCnt != 1) WrError(1110);
   else if (CheckFormat("G"))
   {

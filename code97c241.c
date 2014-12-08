@@ -9,9 +9,15 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code97c241.c,v 1.8 2014/06/28 20:35:30 alfred Exp $                  */
+/* $Id: code97c241.c,v 1.10 2014/12/07 19:14:00 alfred Exp $                  */
 /*****************************************************************************
  * $Log: code97c241.c,v $
+ * Revision 1.10  2014/12/07 19:14:00  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
+ * Revision 1.9  2014/12/01 18:29:39  alfred
+ * - replace Nil -> NULL
+ *
  * Revision 1.8  2014/06/28 20:35:30  alfred
  * - rework to current style
  *
@@ -300,7 +306,7 @@ static void DecodeAdr(char *Asc, Byte PrefInd, Boolean MayImm, Boolean MayReg)
       else
         EPos = min(MPos, PPos);
       NMinFlag = ((EPos) && (*EPos == '-'));
-      if (EPos==Nil)
+      if (!EPos)
       {
         strmaxcpy(AdrPart, Asc, 255);
         *Asc = '\0';
@@ -1877,6 +1883,8 @@ static void DecodeString(Word Code)
 
 static void DecodeEX(Word Code)
 {
+  UNUSED(Code);
+
   if (ArgCnt != 2) WrError(1110);
   else
   {

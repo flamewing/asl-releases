@@ -4,9 +4,12 @@
 /*                                                                           */
 /* Codegenerator XCore                                                       */
 /*****************************************************************************/
-/* $Id: codexcore.c,v 1.5 2012-08-03 17:30:03 alfred Exp $                   */
+/* $Id: codexcore.c,v 1.6 2014/12/07 19:14:02 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codexcore.c,v $
+ * Revision 1.6  2014/12/07 19:14:02  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
  * Revision 1.5  2012-08-03 17:30:03  alfred
  * - completed machine instructions
  *
@@ -485,6 +488,8 @@ static void Code_branch_core(Word Code, int DistArgIndex)
 static void Code_BRU(Word Index)
 {
   unsigned Op1;
+
+  UNUSED(Index);
 
   if (ArgCnt != 1) WrError(1110);
   else if (ParseReg(ArgStr[1], &Op1))

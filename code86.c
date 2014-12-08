@@ -10,9 +10,21 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code86.c,v 1.10 2014/08/10 13:12:33 alfred Exp $                      */
+/* $Id: code86.c,v 1.14 2014/12/07 19:14:00 alfred Exp $                      */
 /*****************************************************************************
  * $Log: code86.c,v $
+ * Revision 1.14  2014/12/07 19:14:00  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
+ * Revision 1.13  2014/12/02 13:33:19  alfred
+ * - do not use strncpy()
+ *
+ * Revision 1.12  2014/11/16 13:15:07  alfred
+ * - remove some superfluous semicolons
+ *
+ * Revision 1.11  2014/11/05 15:47:15  alfred
+ * - replace InitPass callchain with registry
+ *
  * Revision 1.10  2014/08/10 13:12:33  alfred
  * - rework to current style
  *
@@ -107,8 +119,6 @@ static Byte Prefixes[6];
 static Byte PrefixLen;
 
 static Byte SegAssumes[SegRegCnt + 1];
-
-static SimpProc SaveInitProc;
 
 static CPUVar CPU8086, CPU80186, CPUV30, CPUV35;
 
@@ -347,7 +357,7 @@ static void DecodeAdr(char *Asc)
 
   if ((strlen(Asc) > 2) && (Asc[2] == ':'))
   {
-    strncpy(AddPart, Asc, 2);
+    memcpy(AddPart, Asc, 2);
     AddPart[2] = '\0';
     for (z = 0; z <= SegRegCnt; z++)
       if (!strcasecmp(AddPart, SegRegNames[z]))
@@ -1569,7 +1579,7 @@ static void DecodeFST_FSTP(Word Code)
         if ((OpSize == -1) && (UnknownFlag))
           OpSize = 2;
         if (OpSize == -1) WrError(1132);
-        else if ((OpSize < 2) || ((OpSize == 4) && (Code = 0xd0))) WrError(1130);
+        else if ((OpSize < 2) || ((OpSize == 4) && (Code == 0xd0))) WrError(1130);
         else
         {
           MoveAdr(2);
@@ -2239,7 +2249,7 @@ static void DecodeMul(Word Index)
       WrError(1110);
   }
   AddPrefixes();
-};
+}
 
 static void DecodeModReg(Word Code)
 {
@@ -2856,7 +2866,6 @@ static void MakeCode_86(void)
 
 static void InitCode_86(void)
 {
-  SaveInitProc();
   SegAssumes[0] = SegNone; /* ASSUME ES:NOTHING */
   SegAssumes[1] = SegCode; /* ASSUME CS:CODE */
   SegAssumes[2] = SegNone; /* ASSUME SS:NOTHING */
@@ -2905,5 +2914,5 @@ void code86_init(void)
   CPUV30   = AddCPU("V30"  ,SwitchTo_86);
   CPUV35   = AddCPU("V35"  ,SwitchTo_86);
 
-  SaveInitProc = InitPassProc; InitPassProc = InitCode_86;
+  AddInitPassProc(InitCode_86);
 }

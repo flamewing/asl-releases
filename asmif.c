@@ -7,9 +7,12 @@
 /* Historie: 15. 5.1996 Grundsteinlegung                                     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmif.c,v 1.4 2010/08/27 14:52:41 alfred Exp $                       */
+/* $Id: asmif.c,v 1.5 2014/12/01 15:43:55 alfred Exp $                       */
 /***************************************************************************** 
  * $Log: asmif.c,v $
+ * Revision 1.5  2014/12/01 15:43:55  alfred
+ * - rework to current style
+ *
  * Revision 1.4  2010/08/27 14:52:41  alfred
  * - some more overlapping strcpy() cleanups
  *
@@ -49,112 +52,123 @@ Boolean IfAsm;       /* FALSE: in einer neg. IF-Sequenz-->kein Code */
 
 static Boolean ActiveIF;
 
-        static LongInt GetIfVal(char *Cond)
-BEGIN
-   Boolean IfOK;
-   LongInt Tmp;
+static LongInt GetIfVal(char *Cond)
+{
+  Boolean IfOK;
+  LongInt Tmp;
 
-   FirstPassUnknown=False;
-   Tmp=EvalIntExpression(Cond,Int32,&IfOK);
-   if ((FirstPassUnknown) OR (NOT IfOK))
-    BEGIN
-     Tmp=1;
-     if (FirstPassUnknown) WrError(1820);
-     else if (NOT IfOK) WrError(1135);
-    END
+  FirstPassUnknown = False;
+  Tmp = EvalIntExpression(Cond, Int32, &IfOK);
+  if ((FirstPassUnknown) || (!IfOK))
+  {
+    Tmp = 1;
+    if (FirstPassUnknown) WrError(1820);
+    else if (!IfOK) WrError(1135);
+  }
 
-   return Tmp;
-END
-
-
-	static void AddBoolFlag(Boolean Flag)
-BEGIN
-   strmaxcpy(ListLine,Flag?"=>TRUE":"=>FALSE",255);
-END
+  return Tmp;
+}
 
 
-	static void PushIF(LongInt IfExpr)
-BEGIN
-   PIfSave NewSave;
-   
-   NewSave=(PIfSave) malloc(sizeof(TIfSave));
-   NewSave->NestLevel = SaveIFs() + 1;
-   NewSave->Next = FirstIfSave;
-   NewSave->SaveIfAsm = IfAsm;
-   NewSave->State = IfState_IFIF;
-   NewSave->CaseFound = (IfExpr != 0);
-   NewSave->StartLine = CurrLine;
-   FirstIfSave = NewSave;
-   IfAsm=(IfAsm AND (IfExpr != 0));
-END
+static void AddBoolFlag(Boolean Flag)
+{
+  strmaxcpy(ListLine, Flag ? "=>TRUE" : "=>FALSE", 255);
+}
 
 
-	static void CodeIF(void)
-BEGIN
-   LongInt IfExpr;
+static void PushIF(LongInt IfExpr)
+{
+  PIfSave NewSave;
 
-   ActiveIF=IfAsm;
-
-   if (NOT IfAsm) IfExpr=1;
-   else if (ArgCnt!=1)
-    BEGIN
-     WrError(1110); IfExpr=1;
-    END
-   else IfExpr=GetIfVal(ArgStr[1]);
-   if (IfAsm) AddBoolFlag(IfExpr!=0);
-   PushIF(IfExpr);
-END
-
-
-	static void CodeIFDEF(void)
-BEGIN
-   LongInt IfExpr;
-   Boolean Defined;
-
-   ActiveIF=IfAsm;
-
-   if (NOT IfAsm) IfExpr=1;
-   else if (ArgCnt!=1)
-    BEGIN
-     WrError(1110); IfExpr=1;
-    END
-   else
-    BEGIN
-     Defined=IsSymbolDefined(ArgStr[1]);
-     if (IfAsm)
-      strmaxcpy(ListLine,(Defined)?"=>DEFINED":"=>UNDEFINED",255);
-     if (Memo("IFDEF")) IfExpr=(Defined)?1:0;
-     else IfExpr=(Defined)?0:1;
-    END
-   PushIF(IfExpr);
-END
+  NewSave = (PIfSave) malloc(sizeof(TIfSave));
+  NewSave->NestLevel = SaveIFs() + 1;
+  NewSave->Next = FirstIfSave;
+  NewSave->SaveIfAsm = IfAsm;
+  NewSave->State = IfState_IFIF;
+  NewSave->CaseFound = (IfExpr != 0);
+  NewSave->StartLine = CurrLine;
+  FirstIfSave = NewSave;
+  IfAsm = IfAsm && (IfExpr != 0);
+}
 
 
-	static void CodeIFUSED(void)
-BEGIN
-   LongInt IfExpr;
-   Boolean Used;
+static void CodeIF(void)
+{
+  LongInt IfExpr;
 
-   ActiveIF=IfAsm;
+  ActiveIF = IfAsm;
 
-   if (NOT IfAsm) IfExpr=1;
-   else if (ArgCnt!=1)
-    BEGIN
-     WrError(1110); IfExpr=1;
-    END
-   else
-    BEGIN
-     Used=IsSymbolUsed(ArgStr[1]);
-     if (IfAsm)
-      strmaxcpy(ListLine,(Used)?"=>USED":"=>UNUSED",255);
-     if (Memo("IFUSED")) IfExpr=(Used)?1:0;
-     else IfExpr=(Used)?0:1;
-    END
-   PushIF(IfExpr);
-END
+  if (!IfAsm)
+    IfExpr = 1;
+  else if (ArgCnt != 1)
+  {
+    WrError(1110);
+    IfExpr = 1;
+  }
+  else
+    IfExpr = GetIfVal(ArgStr[1]);
+  if (IfAsm)
+    AddBoolFlag(IfExpr != 0);
+  PushIF(IfExpr);
+}
 
 
-void CodeIFEXIST(void)
+static void CodeIFDEF(Word Negate)
+{
+  LongInt IfExpr;
+  Boolean Defined;
+
+  ActiveIF = IfAsm;
+
+  if (!IfAsm) IfExpr = 1;
+  else if (ArgCnt != 1)
+  {
+    WrError(1110);
+    IfExpr = 1;
+  }
+  else
+  {
+    Defined = IsSymbolDefined(ArgStr[1]);
+    if (IfAsm)
+      strmaxcpy(ListLine, (Defined) ? "=>DEFINED" : "=>UNDEFINED", 255);
+    if (!Negate)
+      IfExpr = (Defined) ? 1 : 0;
+    else
+      IfExpr = (Defined) ? 0 : 1;
+  }
+  PushIF(IfExpr);
+}
+
+
+static void CodeIFUSED(Word Negate)
+{
+  LongInt IfExpr;
+  Boolean Used;
+
+  ActiveIF = IfAsm;
+
+  if (!IfAsm)
+    IfExpr = 1;
+  else if (ArgCnt != 1)
+  {
+    WrError(1110);
+    IfExpr = 1;
+  }
+  else
+  {
+    Used = IsSymbolUsed(ArgStr[1]);
+    if (IfAsm)
+      strmaxcpy(ListLine, (Used) ? "=>USED" : "=>UNUSED", 255);
+    if (!Negate)
+      IfExpr = (Used) ? 1 : 0;
+    else
+      IfExpr = (Used) ? 0 : 1;
+  }
+  PushIF(IfExpr);
+}
+
+
+void CodeIFEXIST(Word Negate)
 {
   LongInt IfExpr;
   Boolean Found;
@@ -162,137 +176,153 @@ void CodeIFEXIST(void)
 
   ActiveIF = IfAsm;
 
-  if (!IfAsm) IfExpr = 1;
+  if (!IfAsm)
+    IfExpr = 1;
   else if (ArgCnt != 1)
   {
-    WrError(1110); IfExpr = 1;
+    WrError(1110);
+    IfExpr = 1;
   }
   else
   {
     strmaxcpy(ArgPart, (ArgStr[1][0] == '"') ? ArgStr[1] + 1 : ArgStr[1], 255);
-    if (ArgPart[strlen(ArgPart)-1] == '"')
-      ArgPart[strlen(ArgPart)-1] = '\0';
+    if (ArgPart[strlen(ArgPart) - 1] == '"')
+      ArgPart[strlen(ArgPart) - 1] = '\0';
     AddSuffix(ArgPart, IncSuffix);
     strmaxcpy(NPath, IncludeList, 255);
     strmaxprep(NPath, ".:", 255);
     Found = (*(FSearch(ArgPart, NPath)) != '\0');
     if (IfAsm)
       strmaxcpy(ListLine, Found ? "=>FOUND" : "=>NOT FOUND", 255);
-    IfExpr = Memo("IFEXIST") ? Found : !Found;
+    IfExpr = Negate ? !Found : Found;
   }
   PushIF(IfExpr);
 }
 
 
-	static void CodeIFB(void)	
-BEGIN
-   Boolean Blank=True;
-   LongInt IfExpr;
-   int z;
-   
-   ActiveIF=IfAsm;
+static void CodeIFB(Word Negate)
+{
+  Boolean Blank = True;
+  LongInt IfExpr;
+  int z;
 
-   if (NOT IfAsm) IfExpr=1;
-   else
-    BEGIN
-     for (z=1; z<=ArgCnt; z++) if (strlen(ArgStr[z++])>0) Blank=False;
-     if (IfAsm)
-      strmaxcpy(ListLine,(Blank)?"=>BLANK":"=>NOT BLANK",255);
-     if (Memo("IFB")) IfExpr=(Blank)?1:0;
-     else IfExpr=(Blank)?0:1;
-    END
-   PushIF(IfExpr); 
-END
+  ActiveIF = IfAsm;
 
-
-	static void CodeELSEIF(void)
-BEGIN
-   LongInt IfExpr;
-
-   if (FirstIfSave==Nil) WrError(1840);
-   else if (ArgCnt==0)
-    BEGIN
-     if (FirstIfSave->State!=IfState_IFIF) WrError(1480);
-     else if (FirstIfSave->SaveIfAsm) AddBoolFlag(IfAsm=(NOT FirstIfSave->CaseFound));
-     FirstIfSave->State=IfState_IFELSE;
-    END
-   else if (ArgCnt==1)
-    BEGIN
-     if (FirstIfSave->State!=IfState_IFIF) WrError(1480);
-     else
-      BEGIN
-       if (NOT FirstIfSave->SaveIfAsm) IfExpr=1;
-       else if (FirstIfSave->CaseFound) IfExpr=0;
-       else IfExpr=GetIfVal(ArgStr[1]);
-       IfAsm=((FirstIfSave->SaveIfAsm) AND (IfExpr!=0) AND (NOT FirstIfSave->CaseFound));
-       if (FirstIfSave->SaveIfAsm) AddBoolFlag(IfExpr!=0);
-       if (IfExpr!=0) FirstIfSave->CaseFound=True;
-      END
-    END
-   else WrError(1110);
-
-   ActiveIF=(FirstIfSave==Nil) OR (FirstIfSave->SaveIfAsm);
-END
+  if (!IfAsm)
+    IfExpr = 1;
+  else
+  {
+    for (z = 1; z <= ArgCnt; z++)
+      if (strlen(ArgStr[z++]) > 0)
+        Blank = False;
+    if (IfAsm)
+      strmaxcpy(ListLine, (Blank) ? "=>BLANK" : "=>NOT BLANK", 255);
+    IfExpr = Negate ? !Blank : Blank;
+  }
+  PushIF(IfExpr);
+}
 
 
-	static void CodeENDIF(void)
-BEGIN
-   PIfSave NewSave;
+static void CodeELSEIF(void)
+{
+  LongInt IfExpr;
 
-   if (ArgCnt!=0) WrError(1110);
-   if (FirstIfSave==Nil) WrError(1840);
-   else
-    BEGIN
-     if ((FirstIfSave->State!=IfState_IFIF) AND (FirstIfSave->State!=IfState_IFELSE)) WrError(1480);
-     else
-      BEGIN
-       IfAsm=FirstIfSave->SaveIfAsm;
-       NewSave=FirstIfSave; FirstIfSave=NewSave->Next;
-       sprintf(ListLine, "[%u]", (unsigned)NewSave->StartLine);
-       free(NewSave);
-      END
-    END
+  if (!FirstIfSave) WrError(1840);
+  else if (ArgCnt == 0)
+  {
+    if (FirstIfSave->State != IfState_IFIF) WrError(1480);
+    else if (FirstIfSave->SaveIfAsm)
+      AddBoolFlag(IfAsm = (!FirstIfSave->CaseFound));
+    FirstIfSave->State = IfState_IFELSE;
+  }
+  else if (ArgCnt == 1)
+  {
+    if (FirstIfSave->State != IfState_IFIF) WrError(1480);
+    else
+    {
+      if (!FirstIfSave->SaveIfAsm)
+        IfExpr = 1;
+      else if (FirstIfSave->CaseFound)
+        IfExpr = 0;
+      else
+        IfExpr = GetIfVal(ArgStr[1]);
+      IfAsm = ((FirstIfSave->SaveIfAsm) && (IfExpr != 0) && (!FirstIfSave->CaseFound));
+      if (FirstIfSave->SaveIfAsm)
+        AddBoolFlag(IfExpr != 0);
+      if (IfExpr != 0)
+        FirstIfSave->CaseFound = True;
+    }
+  }
+  else WrError(1110);
 
-   ActiveIF=IfAsm;
-END
+  ActiveIF = (!FirstIfSave) || (FirstIfSave->SaveIfAsm);
+}
 
 
-	static void EvalIfExpression(char *Cond, TempResult *erg)
-BEGIN
-   FirstPassUnknown=False;
-   EvalExpression(Cond,erg);
-   if ((erg->Typ==TempNone) OR (FirstPassUnknown))
-    BEGIN
-     erg->Typ=TempInt; erg->Contents.Int=1;
-     if (FirstPassUnknown) WrError(1820);
-    END
-END
+static void CodeENDIF(void)
+{
+  PIfSave NewSave;
+
+  if (ArgCnt != 0) WrError(1110);
+  if (!FirstIfSave) WrError(1840);
+  else
+  {
+    if ((FirstIfSave->State != IfState_IFIF) && (FirstIfSave->State != IfState_IFELSE)) WrError(1480);
+    else
+    {
+      IfAsm = FirstIfSave->SaveIfAsm;
+      NewSave = FirstIfSave;
+      FirstIfSave = NewSave->Next;
+      sprintf(ListLine, "[%u]", (unsigned)NewSave->StartLine);
+      free(NewSave);
+    }
+  }
+
+  ActiveIF = IfAsm;
+}
 
 
-	static void CodeSWITCH(void)
-BEGIN
-   PIfSave NewSave;
+static void EvalIfExpression(char *Cond, TempResult *erg)
+{
+  FirstPassUnknown = False;
+  EvalExpression(Cond, erg);
+  if ((erg->Typ == TempNone) || (FirstPassUnknown))
+  {
+    erg->Typ = TempInt;
+    erg->Contents.Int = 1;
+    if (FirstPassUnknown)
+      WrError(1820);
+  }
+}
 
-   ActiveIF=IfAsm;
 
-   NewSave=(PIfSave) malloc(sizeof(TIfSave));
-   NewSave->NestLevel=SaveIFs()+1;
-   NewSave->Next=FirstIfSave; NewSave->SaveIfAsm=IfAsm;
-   NewSave->CaseFound=False; NewSave->State=IfState_CASESWITCH;
-   NewSave->StartLine = CurrLine;
-   if (ArgCnt!=1)
-    BEGIN
-     NewSave->SaveExpr.Typ=TempInt; 
-     NewSave->SaveExpr.Contents.Int=1; 
-     if (IfAsm) WrError(1110);
-    END
-   else
-    BEGIN
-     EvalIfExpression(ArgStr[1],&(NewSave->SaveExpr));
-     SetListLineVal(&(NewSave->SaveExpr));
-    END
-   FirstIfSave=NewSave;
-END
+static void CodeSWITCH(void)
+{
+  PIfSave NewSave;
+
+  ActiveIF = IfAsm;
+
+  NewSave = (PIfSave) malloc(sizeof(TIfSave));
+  NewSave->NestLevel = SaveIFs() + 1;
+  NewSave->Next = FirstIfSave;
+  NewSave->SaveIfAsm = IfAsm;
+  NewSave->CaseFound = False;
+  NewSave->State = IfState_CASESWITCH;
+  NewSave->StartLine = CurrLine;
+  if (ArgCnt != 1)
+  {
+    NewSave->SaveExpr.Typ = TempInt;
+    NewSave->SaveExpr.Contents.Int = 1;
+    if (IfAsm)
+      WrError(1110);
+  }
+  else
+  {
+    EvalIfExpression(ArgStr[1], &(NewSave->SaveExpr));
+    SetListLineVal(&(NewSave->SaveExpr));
+  }
+  FirstIfSave = NewSave;
+}
 
 
 static void CodeCASE(void)
@@ -303,16 +333,19 @@ static void CodeCASE(void)
 
   if (!FirstIfSave) WrError(1840);
   else if (!ArgCnt) WrError(1110);
-  else 
+  else
   {
     if ((FirstIfSave->State != IfState_CASESWITCH) && (FirstIfSave->State != IfState_CASECASE)) WrError(1480);
     else
     {
-      if (!FirstIfSave->SaveIfAsm) eq = True;
-      else if (FirstIfSave->CaseFound) eq = False;
+      if (!FirstIfSave->SaveIfAsm)
+        eq = True;
+      else if (FirstIfSave->CaseFound)
+        eq = False;
       else
       {
-        eq = False; z = 1;
+        eq = False;
+        z = 1;
         do
         {
           EvalIfExpression(ArgStr[z], &t);
@@ -332,7 +365,7 @@ static void CodeCASE(void)
              default:
                eq = False;
                break;
-            END
+           }
           z++;
         }
         while ((!eq) && (z <= ArgCnt));
@@ -342,130 +375,142 @@ static void CodeCASE(void)
         AddBoolFlag(eq && (!FirstIfSave->CaseFound));
       if (eq)
         FirstIfSave->CaseFound = True;
-      FirstIfSave->State=IfState_CASECASE;
+      FirstIfSave->State = IfState_CASECASE;
     }
   }
 
-  ActiveIF = (FirstIfSave == Nil) || (FirstIfSave->SaveIfAsm);
+  ActiveIF = (!FirstIfSave) || (FirstIfSave->SaveIfAsm);
 }
 
 
-	static void CodeELSECASE(void)
-BEGIN
-   if (ArgCnt!=0) WrError(1110);
-   else
-    BEGIN
-     if ((FirstIfSave->State!=IfState_CASESWITCH) AND (FirstIfSave->State!=IfState_CASECASE)) WrError(1480);
-     else IfAsm=(FirstIfSave->SaveIfAsm AND (NOT FirstIfSave->CaseFound));
-     if (FirstIfSave->SaveIfAsm) AddBoolFlag(NOT FirstIfSave->CaseFound);
-     FirstIfSave->CaseFound=True;
-     FirstIfSave->State=IfState_CASEELSE;
-    END
+static void CodeELSECASE(void)
+{
+  if (ArgCnt != 0) WrError(1110);
+  else
+  {
+    if ((FirstIfSave->State != IfState_CASESWITCH) && (FirstIfSave->State != IfState_CASECASE)) WrError(1480);
+    else
+      IfAsm = (FirstIfSave->SaveIfAsm && (!FirstIfSave->CaseFound));
+    if (FirstIfSave->SaveIfAsm)
+      AddBoolFlag(!FirstIfSave->CaseFound);
+    FirstIfSave->CaseFound = True;
+    FirstIfSave->State = IfState_CASEELSE;
+  }
 
-   ActiveIF=(FirstIfSave==Nil) OR (FirstIfSave->SaveIfAsm);
-END
-
-
-	static void CodeENDCASE(void)
-BEGIN
-   PIfSave NewSave;
-
-   if (ArgCnt!=0) WrError(1110);
-   if (FirstIfSave==Nil) WrError(1840);
-   else 
-    BEGIN
-     if ((FirstIfSave->State!=IfState_CASESWITCH) 
-     AND (FirstIfSave->State!=IfState_CASECASE) 
-     AND (FirstIfSave->State!=IfState_CASEELSE)) WrError(1480);
-     else
-      BEGIN
-       IfAsm=FirstIfSave->SaveIfAsm;
-       if (NOT FirstIfSave->CaseFound) WrError(100);
-       NewSave=FirstIfSave; FirstIfSave=NewSave->Next;
-       sprintf(ListLine, "[%u]", (unsigned)NewSave->StartLine);
-       free(NewSave);
-      END
-    END
-
-   ActiveIF=IfAsm;
-END
+  ActiveIF = (!FirstIfSave) || (FirstIfSave->SaveIfAsm);
+}
 
 
-	Boolean CodeIFs(void)
-BEGIN
-   Boolean Result=True;
+static void CodeENDCASE(void)
+{
+  PIfSave NewSave;
 
-   ActiveIF=False;
+  if (ArgCnt != 0) WrError(1110);
+  if (!FirstIfSave) WrError(1840);
+  else
+  {
+    if ((FirstIfSave->State != IfState_CASESWITCH)
+    && (FirstIfSave->State != IfState_CASECASE)
+    && (FirstIfSave->State != IfState_CASEELSE)) WrError(1480);
+    else
+    {
+      IfAsm = FirstIfSave->SaveIfAsm;
+      if (!FirstIfSave->CaseFound) WrError(100);
+      NewSave = FirstIfSave;
+      FirstIfSave = NewSave->Next;
+      sprintf(ListLine, "[%u]", (unsigned)NewSave->StartLine);
+      free(NewSave);
+    }
+  }
 
-   switch (mytoupper(*OpPart))
-    BEGIN
-     case 'I':
+  ActiveIF = IfAsm;
+}
+
+
+Boolean CodeIFs(void)
+{
+  Boolean Result = True;
+
+  ActiveIF = False;
+
+  switch (mytoupper(*OpPart))
+  {
+    case 'I':
       if (Memo("IF")) CodeIF();
-      else if ((Memo("IFDEF")) OR (Memo("IFNDEF"))) CodeIFDEF();
-      else if ((Memo("IFUSED")) OR (Memo("IFNUSED"))) CodeIFUSED();
-      else if ((Memo("IFEXIST")) OR (Memo("IFNEXIST"))) CodeIFEXIST();
-      else if ((Memo("IFB")) OR (Memo("IFNB"))) CodeIFB();
-      else Result=False;
+      else if (Memo("IFDEF")) CodeIFDEF(False);
+      else if (Memo("IFNDEF")) CodeIFDEF(True);
+      else if (Memo("IFUSED")) CodeIFUSED(False);
+      else if (Memo("IFNUSED")) CodeIFUSED(True);
+      else if (Memo("IFEXIST")) CodeIFEXIST(False);
+      else if (Memo("IFNEXIST")) CodeIFEXIST(True);
+      else if (Memo("IFB")) CodeIFB(False);
+      else if (Memo("IFNB")) CodeIFB(True);
+      else Result = False;
       break;
-     case 'E':
-      if ((Memo("ELSE")) OR (Memo("ELSEIF"))) CodeELSEIF();
+    case 'E':
+      if ((Memo("ELSE")) || (Memo("ELSEIF"))) CodeELSEIF();
       else if (Memo("ENDIF")) CodeENDIF();
       else if (Memo("ELSECASE")) CodeELSECASE();
       else if (Memo("ENDCASE")) CodeENDCASE();
-      else Result=False;
+      else Result = False;
       break;
-     case 'S':
+    case 'S':
       if (Memo("SWITCH")) CodeSWITCH();
-      else Result=False;
+      else Result = False;
       break;
-     case 'C':
+    case 'C':
       if (Memo("CASE")) CodeCASE();
-      else Result=False;
+      else Result = False;
       break;
-     default:
-      Result=False;
-    END
+    default:
+      Result = False;
+  }
 
-   return Result;
-END
+  return Result;
+}
 
-	Integer SaveIFs(void)
-BEGIN
-   return (FirstIfSave==Nil) ? 0 : FirstIfSave->NestLevel;
-END
+Integer SaveIFs(void)
+{
+  return (!FirstIfSave) ? 0 : FirstIfSave->NestLevel;
+}
 
-	void RestoreIFs(Integer Level)
-BEGIN
-   PIfSave OldSave;
+void RestoreIFs(Integer Level)
+{
+  PIfSave OldSave;
 
-   while ((FirstIfSave!=Nil) AND (FirstIfSave->NestLevel!=Level))
-    BEGIN
-     OldSave=FirstIfSave; FirstIfSave=OldSave->Next;
-     IfAsm=OldSave->SaveIfAsm;
-     free(OldSave);
-    END
-END
-
-
-	Boolean IFListMask(void)
-BEGIN
-   switch (ListOn)
-    BEGIN
-     case 0: return True;
-     case 1: return False;
-     case 2: return ((NOT ActiveIF) AND (NOT IfAsm));
-     case 3: return (ActiveIF OR (NOT IfAsm));
-    END
-   return True;
-END
+  while ((FirstIfSave) && (FirstIfSave->NestLevel != Level))
+  {
+    OldSave = FirstIfSave;
+    FirstIfSave = OldSave->Next;
+    IfAsm = OldSave->SaveIfAsm;
+    free(OldSave);
+  }
+}
 
 
-	void AsmIFInit(void)
-BEGIN
-   IfAsm=True;
-END
+Boolean IFListMask(void)
+{
+  switch (ListOn)
+  {
+    case 0:
+      return True;
+    case 1:
+      return False;
+    case 2:
+      return ((!ActiveIF) && (!IfAsm));
+    case 3:
+      return (ActiveIF || (!IfAsm));
+  }
+  return True;
+}
 
 
-	void asmif_init(void)
-BEGIN
-END
+void AsmIFInit(void)
+{
+  IfAsm = True;
+}
+
+
+void asmif_init(void)
+{
+}

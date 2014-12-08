@@ -17,9 +17,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.h,v 1.6 2009/04/10 08:58:31 alfred Exp $                     */
+/* $Id: asmpars.h,v 1.7 2014/11/30 10:09:54 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.h,v $
+ * Revision 1.7  2014/11/30 10:09:54  alfred
+ * - rework to current style
+ *
  * Revision 1.6  2009/04/10 08:58:31  alfred
  * - correct address ranges for AVRs
  *
@@ -84,12 +87,23 @@ typedef enum
   IntTypeCnt
 } IntType;
 
-typedef enum {Float32,Float64,Float80,FloatDec,FloatCo,FloatTypeCnt} FloatType;
+typedef struct
+{
+  LargeWord Mask;
+  LargeInt Min, Max;
+} tIntTypeDef;
 
-extern LargeWord IntMasks[IntTypeCnt];
-extern LargeInt IntMins[IntTypeCnt];
-extern LargeInt IntMaxs[IntTypeCnt];
+typedef enum
+{
+  Float32,
+  Float64,
+  Float80,
+  FloatDec,
+  FloatCo,
+  FloatTypeCnt
+} FloatType;
 
+extern tIntTypeDef IntTypeDefs[IntTypeCnt];
 extern Boolean FirstPassUnknown;
 extern Boolean SymbolQuestionable;
 extern Boolean UsesForwards;

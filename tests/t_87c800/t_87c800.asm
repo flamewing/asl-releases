@@ -25,7 +25,6 @@ targ:	jrs	t,targ
 	jr	ge,targ
 	jr	le,targ
 	jr	gt,targ
-	jr	targ
 
 	daa	a
 	daa	b
@@ -80,6 +79,7 @@ targ:	jrs	t,targ
 	mcmp	(c+hl),55h
 	mcmp	(pc+a),55h
 
+
 	inc	c
 	inc	bc
 	inc	(12h)
@@ -105,6 +105,9 @@ targ:	jrs	t,targ
 	mul	c,b
 	mul	d,e
 	mul	l,h
+
+targ2:
+	jr	targ2
 
 	div	wa,c
 	div	de,c

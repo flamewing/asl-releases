@@ -17,9 +17,12 @@
 /*       Registersymbole                                                    */
 /*       explizite Displacement-Laengenangaben (Adressen, ADDSP)            */
 /****************************************************************************/
-/* $Id: codefmc16.c,v 1.7 2014/06/20 19:24:42 alfred Exp $                  */
+/* $Id: codefmc16.c,v 1.8 2014/11/05 15:47:15 alfred Exp $                  */
 /*****************************************************************************
  * $Log: codefmc16.c,v $
+ * Revision 1.8  2014/11/05 15:47:15  alfred
+ * - replace InitPass callchain with registry
+ *
  * Revision 1.7  2014/06/20 19:24:42  alfred
  * - reworked to current style
  *
@@ -116,8 +119,6 @@ static LongWord CurrBank;
 static ShortInt AdrMode, OpSize;
 
 static LongInt Reg_PCB, Reg_DTB, Reg_ADB, Reg_USB, Reg_SSB, Reg_DPR;
-
-static SimpProc SaveInitProc;
 
 #define ASSUMEF2MC16Count 6
 static ASSUMERec ASSUMEF2MC16s[ASSUMEF2MC16Count] =
@@ -2326,7 +2327,6 @@ static Boolean IsDef_F2MC16(void)
 
 static void InitCode_F2MC16(void)
 {
-  SaveInitProc();
   Reg_PCB = 0xff;
   Reg_DTB = 0x00;
   Reg_USB = 0x00;
@@ -2383,6 +2383,5 @@ void codef2mc16_init(void)
 {
   CPU90500 = AddCPU("MB90500", SwitchTo_F2MC16);
 
-  SaveInitProc = InitPassProc;
-  InitPassProc = InitCode_F2MC16;
+  AddInitPassProc(InitCode_F2MC16);
 }

@@ -9,9 +9,15 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codez8.c,v 1.13 2014/03/08 21:06:37 alfred Exp $                          *
+/* $Id: codez8.c,v 1.15 2014/12/05 11:15:29 alfred Exp $                          *
  *****************************************************************************
  * $Log: codez8.c,v $
+ * Revision 1.15  2014/12/05 11:15:29  alfred
+ * - eliminate AND/OR/NOT
+ *
+ * Revision 1.14  2014/11/05 15:47:16  alfred
+ * - replace InitPass callchain with registry
+ *
  * Revision 1.13  2014/03/08 21:06:37  alfred
  * - rework ASSUME framework
  *
@@ -178,7 +184,6 @@ static int TrueCond;
 static CPUVar CPUZ8601, CPUZ8604, CPUZ8608, CPUZ8630, CPUZ8631, CPUeZ8;
 static Boolean IsEncore;
 
-static SimpProc SaveInitProc;
 static LongInt RPVal;
 static IntType RegSpaceType;
 
@@ -220,7 +225,7 @@ static Boolean IsRReg(const char *Asc, Byte *Erg)
    else
    {
      *Erg = ConstLongInt(Asc + 2, &Err, 10);
-     if (NOT Err)
+     if (!Err)
        return False;
      else
        return (*Erg <= 15);
@@ -253,7 +258,7 @@ static Boolean CorrMode12(Word Mask, ShortInt Old, ShortInt New)
 
 static void ChkAdr(Word Mask, Boolean Is16)
 {
-   if (NOT Is16)
+   if (!Is16)
    {
      CorrMode8(Mask, ModWReg, ModReg);
      CorrMode12(Mask, ModWReg, ModXReg);
@@ -1522,204 +1527,204 @@ static void DecodeBtj(Word Index)
 
 static void AddFixed(char *NName, Byte NCode)
 {
-   if (InstrZ >= FixedOrderCnt)
-     exit(255);
-   FixedOrders[InstrZ].Code = NCode;
-   AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
+  if (InstrZ >= FixedOrderCnt)
+    exit(255);
+  FixedOrders[InstrZ].Code = NCode;
+  AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
 static void AddALU2(char *NName, Byte NCode, Byte NExt)
 {
-   if (InstrZ >= ALU2OrderCnt) 
-     exit(255);
-   ALU2Orders[InstrZ].Code = NCode;
-   ALU2Orders[InstrZ].Ext = NExt;
-   AddInstTable(InstTable, NName, InstrZ++, DecodeALU2);
+  if (InstrZ >= ALU2OrderCnt) 
+    exit(255);
+  ALU2Orders[InstrZ].Code = NCode;
+  ALU2Orders[InstrZ].Ext = NExt;
+  AddInstTable(InstTable, NName, InstrZ++, DecodeALU2);
 }
 
 static void AddALUX(char *NName, Byte NCode, Byte NExt)
 {
-   if (InstrZ >= ALUXOrderCnt) 
-     exit(255);
-   ALUXOrders[InstrZ].Code = NCode;
-   ALUXOrders[InstrZ].Ext = NExt;
-   AddInstTable(InstTable, NName, InstrZ++, DecodeALUX);
+  if (InstrZ >= ALUXOrderCnt) 
+    exit(255);
+  ALUXOrders[InstrZ].Code = NCode;
+  ALUXOrders[InstrZ].Ext = NExt;
+  AddInstTable(InstTable, NName, InstrZ++, DecodeALUX);
 }
 
 static void AddALU1(char *NName, Byte NCode, Boolean NIs, Byte NExt)
 {
-   if (InstrZ >= ALU1OrderCnt)
-     exit(255);
-   ALU1Orders[InstrZ].Is16 = NIs;
-   ALU1Orders[InstrZ].Code = NCode;
-   ALU1Orders[InstrZ].Ext = NExt;
-   AddInstTable(InstTable, NName, InstrZ++, DecodeALU1);
+  if (InstrZ >= ALU1OrderCnt)
+    exit(255);
+  ALU1Orders[InstrZ].Is16 = NIs;
+  ALU1Orders[InstrZ].Code = NCode;
+  ALU1Orders[InstrZ].Ext = NExt;
+  AddInstTable(InstTable, NName, InstrZ++, DecodeALU1);
 }
 
 static void AddCondition(char *NName, Byte NCode)
 {
-   if (InstrZ >= CondCnt)
-     exit(255);
-   Conditions[InstrZ].Name = NName;
-   Conditions[InstrZ++].Code = NCode;
+  if (InstrZ >= CondCnt)
+    exit(255);
+  Conditions[InstrZ].Name = NName;
+  Conditions[InstrZ++].Code = NCode;
 }
    
 static void InitFields(void)
 {
-   InstTable = CreateInstTable(201);
+  InstTable = CreateInstTable(201);
 
-   FixedOrders=(FixedOrder *) malloc(sizeof(FixedOrder) * FixedOrderCnt);
-   InstrZ = 0;
-   AddFixed("CCF" , 0xef);  AddFixed("DI"  , 0x8f);
-   AddFixed("EI"  , 0x9f);  AddFixed("HALT", 0x7f);
-   AddFixed("IRET", 0xbf);  AddFixed("NOP" , IsEncore ? 0x0f : 0xff);
-   AddFixed("RCF" , 0xcf);  AddFixed("RET" , 0xaf);
-   AddFixed("SCF" , 0xdf);  AddFixed("STOP", 0x6f);
-   AddFixed("ATM" , 0x2f);  
-   if (IsEncore)
-     AddFixed("BRK" , 0x00);
-   else
-     AddFixed("WDH" , 0x4f);
-   AddFixed("WDT" , 0x5f);
+  FixedOrders=(FixedOrder *) malloc(sizeof(FixedOrder) * FixedOrderCnt);
+  InstrZ = 0;
+  AddFixed("CCF" , 0xef);  AddFixed("DI"  , 0x8f);
+  AddFixed("EI"  , 0x9f);  AddFixed("HALT", 0x7f);
+  AddFixed("IRET", 0xbf);  AddFixed("NOP" , IsEncore ? 0x0f : 0xff);
+  AddFixed("RCF" , 0xcf);  AddFixed("RET" , 0xaf);
+  AddFixed("SCF" , 0xdf);  AddFixed("STOP", 0x6f);
+  AddFixed("ATM" , 0x2f);  
+  if (IsEncore)
+    AddFixed("BRK" , 0x00);
+  else
+    AddFixed("WDH" , 0x4f);
+  AddFixed("WDT" , 0x5f);
 
-   ALU2Orders = (ALU2Order *) malloc(sizeof(ALU2Order) * ALU2OrderCnt);
-   InstrZ = 0;
-   AddALU2("ADD" , 0x00, 0x00);
-   AddALU2("ADC" , 0x10, 0x00);
-   AddALU2("SUB" , 0x20, 0x00);
-   AddALU2("SBC" , 0x30, 0x00);
-   AddALU2("OR"  , 0x40, 0x00);
-   AddALU2("AND" , 0x50, 0x00);
-   AddALU2("TCM" , 0x60, 0x00);
-   AddALU2("TM"  , 0x70, 0x00);
-   AddALU2("CP"  , 0xa0, 0x00);
-   AddALU2("XOR" , 0xb0, 0x00);
-   AddALU2("CPC" , 0xa0, EXTPREFIX);
+  ALU2Orders = (ALU2Order *) malloc(sizeof(ALU2Order) * ALU2OrderCnt);
+  InstrZ = 0;
+  AddALU2("ADD" , 0x00, 0x00);
+  AddALU2("ADC" , 0x10, 0x00);
+  AddALU2("SUB" , 0x20, 0x00);
+  AddALU2("SBC" , 0x30, 0x00);
+  AddALU2("OR"  , 0x40, 0x00);
+  AddALU2("AND" , 0x50, 0x00);
+  AddALU2("TCM" , 0x60, 0x00);
+  AddALU2("TM"  , 0x70, 0x00);
+  AddALU2("CP"  , 0xa0, 0x00);
+  AddALU2("XOR" , 0xb0, 0x00);
+  AddALU2("CPC" , 0xa0, EXTPREFIX);
 
-   ALUXOrders = (ALU2Order *) malloc(sizeof(ALU2Order) * ALUXOrderCnt);
-   InstrZ = 0;
-   AddALUX("ADDX", 0x08, 0x00);
-   AddALUX("ADCX", 0x18, 0x00);
-   AddALUX("SUBX", 0x28, 0x00);
-   AddALUX("SBCX", 0x38, 0x00);
-   AddALUX("ORX" , 0x48, 0x00);
-   AddALUX("ANDX", 0x58, 0x00);
-   AddALUX("TCMX", 0x68, 0x00);
-   AddALUX("TMX" , 0x78, 0x00);
-   AddALUX("CPX" , 0xa8, 0x00);
-   AddALUX("XORX", 0xb8, 0x00);
-   AddALUX("CPCX", 0xa8, EXTPREFIX);
+  ALUXOrders = (ALU2Order *) malloc(sizeof(ALU2Order) * ALUXOrderCnt);
+  InstrZ = 0;
+  AddALUX("ADDX", 0x08, 0x00);
+  AddALUX("ADCX", 0x18, 0x00);
+  AddALUX("SUBX", 0x28, 0x00);
+  AddALUX("SBCX", 0x38, 0x00);
+  AddALUX("ORX" , 0x48, 0x00);
+  AddALUX("ANDX", 0x58, 0x00);
+  AddALUX("TCMX", 0x68, 0x00);
+  AddALUX("TMX" , 0x78, 0x00);
+  AddALUX("CPX" , 0xa8, 0x00);
+  AddALUX("XORX", 0xb8, 0x00);
+  AddALUX("CPCX", 0xa8, EXTPREFIX);
 
-   ALU1Orders = (ALU1Order *) malloc(sizeof(ALU1Order) * ALU1OrderCnt);
-   InstrZ = 0;
-   AddALU1("DEC" , IsEncore ? 0x30 : 0x00, False, 0x00);
-   AddALU1("RLC" , 0x10, False, 0x00);
-   AddALU1("DA"  , 0x40, False, 0x00);
-   AddALU1("POP" , 0x50, False, 0x00);
-   AddALU1("COM" , 0x60, False, 0x00);
-   AddALU1("PUSH", 0x70, False, 0x00);
-   AddALU1("DECW", 0x80, True , 0x00);
-   AddALU1("RL"  , 0x90, False, 0x00);
-   AddALU1("INCW", 0xa0, True , 0x00);
-   AddALU1("CLR" , 0xb0, False, 0x00);
-   AddALU1("RRC" , 0xc0, False, 0x00);
-   AddALU1("SRA" , 0xd0, False, 0x00);
-   AddALU1("RR"  , 0xe0, False, 0x00);
-   AddALU1("SWAP", 0xf0, False, 0x00);
-   AddALU1("SRL" , 0xc0, False, EXTPREFIX);
+  ALU1Orders = (ALU1Order *) malloc(sizeof(ALU1Order) * ALU1OrderCnt);
+  InstrZ = 0;
+  AddALU1("DEC" , IsEncore ? 0x30 : 0x00, False, 0x00);
+  AddALU1("RLC" , 0x10, False, 0x00);
+  AddALU1("DA"  , 0x40, False, 0x00);
+  AddALU1("POP" , 0x50, False, 0x00);
+  AddALU1("COM" , 0x60, False, 0x00);
+  AddALU1("PUSH", 0x70, False, 0x00);
+  AddALU1("DECW", 0x80, True , 0x00);
+  AddALU1("RL"  , 0x90, False, 0x00);
+  AddALU1("INCW", 0xa0, True , 0x00);
+  AddALU1("CLR" , 0xb0, False, 0x00);
+  AddALU1("RRC" , 0xc0, False, 0x00);
+  AddALU1("SRA" , 0xd0, False, 0x00);
+  AddALU1("RR"  , 0xe0, False, 0x00);
+  AddALU1("SWAP", 0xf0, False, 0x00);
+  AddALU1("SRL" , 0xc0, False, EXTPREFIX);
 
-   Conditions=(Condition *) malloc(sizeof(Condition)*CondCnt); InstrZ=0;
-   AddCondition("F"  , 0); TrueCond=InstrZ; AddCondition("T"  , 8);
-   AddCondition("C"  , 7); AddCondition("NC" ,15);
-   AddCondition("Z"  , 6); AddCondition("NZ" ,14);
-   AddCondition("MI" , 5); AddCondition("PL" ,13);
-   AddCondition("OV" , 4); AddCondition("NOV",12);
-   AddCondition("EQ" , 6); AddCondition("NE" ,14);
-   AddCondition("LT" , 1); AddCondition("GE" , 9);
-   AddCondition("LE" , 2); AddCondition("GT" ,10);
-   AddCondition("ULT", 7); AddCondition("UGE",15);
-   AddCondition("ULE", 3); AddCondition("UGT",11);
+  Conditions=(Condition *) malloc(sizeof(Condition)*CondCnt); InstrZ=0;
+  AddCondition("F"  , 0); TrueCond=InstrZ; AddCondition("T"  , 8);
+  AddCondition("C"  , 7); AddCondition("NC" ,15);
+  AddCondition("Z"  , 6); AddCondition("NZ" ,14);
+  AddCondition("MI" , 5); AddCondition("PL" ,13);
+  AddCondition("OV" , 4); AddCondition("NOV",12);
+  AddCondition("EQ" , 6); AddCondition("NE" ,14);
+  AddCondition("LT" , 1); AddCondition("GE" , 9);
+  AddCondition("LE" , 2); AddCondition("GT" ,10);
+  AddCondition("ULT", 7); AddCondition("UGE",15);
+  AddCondition("ULE", 3); AddCondition("UGT",11);
 
-   AddInstTable(InstTable, "LD", 0, DecodeLD);
-   AddInstTable(InstTable, "LDX", 0, DecodeLDX);
-   AddInstTable(InstTable, "LDWX", 0, DecodeLDWX);
-   AddInstTable(InstTable, "LDC", 0xc2, DecodeLDCE);
-   AddInstTable(InstTable, "LDE", 0x82, DecodeLDCE);
-   AddInstTable(InstTable, "LDCI", 0xc3, DecodeLDCEI);
-   AddInstTable(InstTable, "LDEI", 0x83, DecodeLDCEI);
-   AddInstTable(InstTable, "INC", 0, DecodeINC);
-   AddInstTable(InstTable, "JR", 0, DecodeJR);
-   AddInstTable(InstTable, "JP", 0, DecodeJP);
-   AddInstTable(InstTable, "CALL", 0, DecodeCALL);
-   AddInstTable(InstTable, "SRP", 0, DecodeSRP);
-   AddInstTable(InstTable, "DJNZ", 0, DecodeDJNZ);
-   AddInstTable(InstTable, "LEA", 0, DecodeLEA);
-   
-   AddInstTable(InstTable, "POPX" , 0xd8, DecodeStackExt);
-   AddInstTable(InstTable, "PUSHX", 0xc8, DecodeStackExt);
-   AddInstTable(InstTable, "TRAP" , 0, DecodeTRAP);
-   AddInstTable(InstTable, "BSWAP", 0, DecodeBSWAP);
-   AddInstTable(InstTable, "MULT" , 0, DecodeMULT);
-   AddInstTable(InstTable, "BIT", 0, DecodeBIT);
-   AddInstTable(InstTable, "BCLR", 0x00, DecodeBit);
-   AddInstTable(InstTable, "BSET", 0x80, DecodeBit);
-   AddInstTable(InstTable, "BTJ", 0, DecodeBTJ);
-   AddInstTable(InstTable, "BTJZ", 0x00, DecodeBtj);
-   AddInstTable(InstTable, "BTJNZ", 0x80, DecodeBtj);
+  AddInstTable(InstTable, "LD", 0, DecodeLD);
+  AddInstTable(InstTable, "LDX", 0, DecodeLDX);
+  AddInstTable(InstTable, "LDWX", 0, DecodeLDWX);
+  AddInstTable(InstTable, "LDC", 0xc2, DecodeLDCE);
+  AddInstTable(InstTable, "LDE", 0x82, DecodeLDCE);
+  AddInstTable(InstTable, "LDCI", 0xc3, DecodeLDCEI);
+  AddInstTable(InstTable, "LDEI", 0x83, DecodeLDCEI);
+  AddInstTable(InstTable, "INC", 0, DecodeINC);
+  AddInstTable(InstTable, "JR", 0, DecodeJR);
+  AddInstTable(InstTable, "JP", 0, DecodeJP);
+  AddInstTable(InstTable, "CALL", 0, DecodeCALL);
+  AddInstTable(InstTable, "SRP", 0, DecodeSRP);
+  AddInstTable(InstTable, "DJNZ", 0, DecodeDJNZ);
+  AddInstTable(InstTable, "LEA", 0, DecodeLEA);
+  
+  AddInstTable(InstTable, "POPX" , 0xd8, DecodeStackExt);
+  AddInstTable(InstTable, "PUSHX", 0xc8, DecodeStackExt);
+  AddInstTable(InstTable, "TRAP" , 0, DecodeTRAP);
+  AddInstTable(InstTable, "BSWAP", 0, DecodeBSWAP);
+  AddInstTable(InstTable, "MULT" , 0, DecodeMULT);
+  AddInstTable(InstTable, "BIT", 0, DecodeBIT);
+  AddInstTable(InstTable, "BCLR", 0x00, DecodeBit);
+  AddInstTable(InstTable, "BSET", 0x80, DecodeBit);
+  AddInstTable(InstTable, "BTJ", 0, DecodeBTJ);
+  AddInstTable(InstTable, "BTJZ", 0x00, DecodeBtj);
+  AddInstTable(InstTable, "BTJNZ", 0x80, DecodeBtj);
 }
 
 static void DeinitFields(void)
 {
-   free(FixedOrders);
-   free(ALU2Orders);
-   free(ALU1Orders);
-   free(ALUXOrders);
-   free(Conditions);
+  free(FixedOrders);
+  free(ALU2Orders);
+  free(ALU1Orders);
+  free(ALUXOrders);
+  free(Conditions);
 
-   DestroyInstTable(InstTable);
+  DestroyInstTable(InstTable);
 }
 
 /*---------------------------------------------------------------------*/
 
 static Boolean DecodePseudo(void)
 {
-   if (Memo("SFR"))
-   {
-     CodeEquate(SegData, 0, 0xff);
-     return True;
-   }
+  if (Memo("SFR"))
+  {
+    CodeEquate(SegData, 0, 0xff);
+    return True;
+  }
 
-   if (Memo("REG"))
-   {
-     if (ArgCnt != 1) WrError(1110);
-     else AddRegDef(LabPart, ArgStr[1]);
-     return True;
-   }
+  if (Memo("REG"))
+  {
+    if (ArgCnt != 1) WrError(1110);
+    else AddRegDef(LabPart, ArgStr[1]);
+    return True;
+  }
 
-   return False;
+  return False;
 }
 
 static void MakeCode_Z8(void)
 {
-   CodeLen = 0; DontPrint = False;
+  CodeLen = 0; DontPrint = False;
 
-   /* zu ignorierendes */
+  /* zu ignorierendes */
 
-   if (Memo("")) return;
+  if (Memo("")) return;
 
-   /* Pseudoanweisungen */
+  /* Pseudoanweisungen */
 
-   if (DecodePseudo()) return;
+  if (DecodePseudo()) return;
 
-   if (DecodeIntelPseudo(True)) return;
+  if (DecodeIntelPseudo(True))
+    return;
 
-   if (!LookupInstTable(InstTable, OpPart))
-     WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart))
+    WrXError(1200, OpPart);
 }
 
 static void InitCode_Z8(void)
 {
-  SaveInitProc();
   RPVal = 0;
 }
 
@@ -1735,51 +1740,51 @@ static void SwitchFrom_Z8(void)
 
 static void SwitchTo_Z8(void)
 {
-   PFamilyDescr pDescr;
+  PFamilyDescr pDescr;
 
-   TurnWords = False; ConstMode = ConstModeIntel; SetIsOccupied = False;
+  TurnWords = False; ConstMode = ConstModeIntel; SetIsOccupied = False;
 
-   IsEncore = (MomCPU == CPUeZ8);
+  IsEncore = (MomCPU == CPUeZ8);
 
-   pDescr = FindFamilyByName(IsEncore ? "eZ8" : "Z8");
+  pDescr = FindFamilyByName(IsEncore ? "eZ8" : "Z8");
 
-   PCSymbol = "$"; HeaderID = pDescr->Id;
-   NOPCode = IsEncore ? 0x0f : 0xff;
-   DivideChars = ","; HasAttrs = False;
+  PCSymbol = "$"; HeaderID = pDescr->Id;
+  NOPCode = IsEncore ? 0x0f : 0xff;
+  DivideChars = ","; HasAttrs = False;
 
-   ValidSegs = (1 << SegCode) | (1 << SegData);
-   Grans[SegCode] = 1; ListGrans[SegCode] = 1; SegInits[SegCode] = 0;
-   SegLimits[SegCode] = 0xffff;
-   Grans[SegData] = 1; ListGrans[SegData] = 1; SegInits[SegData] = 0;
-   if (IsEncore)
-   {
-     RegSpaceType = UInt12;
-     SegLimits[SegData] = 0xfff;
-     ValidSegs |= 1 << SegXData;
-     Grans[SegXData] = 1; ListGrans[SegXData] = 1; SegInits[SegXData] = 0;
-     SegLimits[SegXData] = 0xffff;
-   }
-   else
-   {
-     RegSpaceType = UInt8;
-     SegLimits[SegData] = 0xff; 
-   }
+  ValidSegs = (1 << SegCode) | (1 << SegData);
+  Grans[SegCode] = 1; ListGrans[SegCode] = 1; SegInits[SegCode] = 0;
+  SegLimits[SegCode] = 0xffff;
+  Grans[SegData] = 1; ListGrans[SegData] = 1; SegInits[SegData] = 0;
+  if (IsEncore)
+  {
+    RegSpaceType = UInt12;
+    SegLimits[SegData] = 0xfff;
+    ValidSegs |= 1 << SegXData;
+    Grans[SegXData] = 1; ListGrans[SegXData] = 1; SegInits[SegXData] = 0;
+    SegLimits[SegXData] = 0xffff;
+  }
+  else
+  {
+    RegSpaceType = UInt8;
+    SegLimits[SegData] = 0xff; 
+  }
 
-   pASSUMERecs = ASSUMEeZ8s;
-   ASSUMERecCnt = ASSUMEeZ8Count;
+  pASSUMERecs = ASSUMEeZ8s;
+  ASSUMERecCnt = ASSUMEeZ8Count;
 
-   MakeCode=MakeCode_Z8; IsDef=IsDef_Z8;
-   SwitchFrom=SwitchFrom_Z8; InitFields();
+  MakeCode=MakeCode_Z8; IsDef=IsDef_Z8;
+  SwitchFrom=SwitchFrom_Z8; InitFields();
 }
 
 void codez8_init(void)
 {
-   CPUZ8601 = AddCPU("Z8601", SwitchTo_Z8);
-   CPUZ8604 = AddCPU("Z8604", SwitchTo_Z8);
-   CPUZ8608 = AddCPU("Z8608", SwitchTo_Z8);
-   CPUZ8630 = AddCPU("Z8630", SwitchTo_Z8);
-   CPUZ8631 = AddCPU("Z8631", SwitchTo_Z8);
-   CPUeZ8 = AddCPU("eZ8", SwitchTo_Z8);
+  CPUZ8601 = AddCPU("Z8601", SwitchTo_Z8);
+  CPUZ8604 = AddCPU("Z8604", SwitchTo_Z8);
+  CPUZ8608 = AddCPU("Z8608", SwitchTo_Z8);
+  CPUZ8630 = AddCPU("Z8630", SwitchTo_Z8);
+  CPUZ8631 = AddCPU("Z8631", SwitchTo_Z8);
+  CPUeZ8 = AddCPU("eZ8", SwitchTo_Z8);
 
-   SaveInitProc = InitPassProc; InitPassProc = InitCode_Z8;
+  AddInitPassProc(InitCode_Z8);
 }

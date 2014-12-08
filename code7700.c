@@ -9,9 +9,15 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code7700.c,v 1.11 2014/09/14 09:36:59 alfred Exp $                    */
+/* $Id: code7700.c,v 1.13 2014/11/16 13:15:07 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code7700.c,v $
+ * Revision 1.13  2014/11/16 13:15:07  alfred
+ * - remove some superfluous semicolons
+ *
+ * Revision 1.12  2014/11/05 15:47:15  alfred
+ * - replace InitPass callchain with registry
+ *
  * Revision 1.11  2014/09/14 09:36:59  alfred
  * - add missing compiler warning silencing
  *
@@ -142,8 +148,6 @@ static ShortInt AdrType;
 static RelOrder *RelOrders;
 static XYOrder *XYOrders;
 
-static SimpProc SaveInitProc;
-
 static CPUVar CPU65816, CPUM7700, CPUM7750, CPUM7751;
 
 static ASSUMERec ASSUME7700s[] =
@@ -217,7 +221,7 @@ static void CodeDisp(char *Asc, LongInt Start, LongWord Mask)
           AdrCnt = 1;
           AdrType = Start;
           AdrVals[0] = Lo(Adr - Reg_DPR);
-        };
+        }
         break;
       case 1:
         if ((!FirstPassUnknown) && ((Adr >> 16) != BankReg)) WrError(1320);
@@ -468,7 +472,7 @@ static void DecodePHB_PLB(Word Code)
     {
       CodeLen = 1;
       BAsmCode[0] = 0x8b;
-    };
+    }
     BAsmCode[CodeLen - 1] += Code;
   }
 }
@@ -1494,7 +1498,6 @@ static void MakeCode_7700(void)
 
 static void InitCode_7700(void)
 {
-  SaveInitProc();
   Reg_PG = 0;
   Reg_DT = 0;
   Reg_X = 0;
@@ -1537,5 +1540,5 @@ void code7700_init(void)
   CPUM7750 = AddCPU("MELPS7750", SwitchTo_7700);
   CPUM7751 = AddCPU("MELPS7751", SwitchTo_7700);
 
-  SaveInitProc = InitPassProc; InitPassProc = InitCode_7700;
+  AddInitPassProc(InitCode_7700);
 }

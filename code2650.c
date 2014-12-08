@@ -5,9 +5,12 @@
 /* Codegenerator Signetics 2650                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code2650.c,v 1.5 2013-02-14 20:48:57 alfred Exp $
+/* $Id: code2650.c,v 1.6 2014/12/07 19:13:59 alfred Exp $
  *****************************************************************************
  * $Log: code2650.c,v $
+ * Revision 1.6  2014/12/07 19:13:59  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
  * Revision 1.5  2013-02-14 20:48:57  alfred
  * - allow UN as condition
  *
@@ -530,7 +533,8 @@ static void MakeCode_2650(void)
 
   /* try to split off first (register) operand from instruction */
 
-  if ((pPos = strchr(OpPart, ','))) 
+  pPos = strchr(OpPart, ',');
+  if (pPos)
   {
     int ArgC;
 

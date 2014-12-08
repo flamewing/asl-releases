@@ -12141,19 +12141,16 @@ disabled.  The flag that tells AS whether the following code executes
 in user or supervisor mode might be set via a special pseudo
 instruction.  But there must also be an initialization that assures
 that all passes start with the same state.  The hook offered via
-\tty{InitPassProc} offers a chance to do such initializations.  The
-principle is similar to the redirection of an interrupt vector: the
-unit saves the old value prior to pointing the procedure variable to
-its own routine (the routine must be parameter-less and \tty{FAR} coded).
-The new routine first calls the old chain of procedures and
-afterwards does its own operations.
+\tty{AddInitPassProc} offers a chance to do such initializations.  The
+callback function passed to it is called before a new pass is
+started.
 
-The function chain built up via \tty{CleanUpProc} works similar to
-\tty{InitPassProc}: It enables code generators to do clean-ups after
+The function chain built up via \tty{AddCleanUpProc} works similar to
+\tty{AddInitPassProc}: It enables code generators to do clean-ups after
 assembly (e.g. freeing of literal tables).  This makes sense when
-multiple files are assembled with a single call of AS.  Otherwise,  one
+multiple files are assembled with a single call of AS.  Otherwise, one
 would risk to have 'junk' in tables from the previous run.  No module
-currently exploits this feature.
+currently uses this feature.
 
 \subsubsection{Writing the Code Generator itself}
 

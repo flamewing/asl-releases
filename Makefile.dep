@@ -6,19 +6,19 @@ addcr.o:
 
 alink.o: stdinc.h version.h endian.h bpemu.h strutil.h nls.h nlmessages.h stringlists.h cmdarg.h toolutils.h ioerrs.h version.h alink.rsc
 
-as.o: stdinc.h version.h endian.h bpemu.h stdhandl.h nls.h nlmessages.h as.rsc ioerrs.h strutil.h stringlists.h cmdarg.h asmitree.h chunks.h asminclist.h asmfnums.h asmdef.h asmsub.h asmpars.h asmmac.h asmstructs.h asmif.h asmcode.h asmdebug.h asmrelocs.h asmallg.h codepseudo.h as.h code68k.h code56k.h code601.h codemcore.h codexgate.h code68.h code6805.h code6809.h code6812.h code6816.h code68rs08.h codeh8_3.h codeh8_5.h code7000.h code65.h code7700.h code4500.h codem16.h codem16c.h code4004.h code8008.h code48.h code51.h code96.h code85.h code86.h code960.h code8x30x.h code2650.h codexa.h codeavr.h code29k.h code166.h codez80.h codez8.h codekcpsm.h codekcp3.h codemic8.h code96c141.h code90c141.h code87c800.h code47c00.h code97c241.h code16c5x.h code16c8x.h code17c4x.h codest6.h codest7.h codest9.h code6804.h code3201x.h code3202x.h code3203x.h code3205x.h code3254x.h code3206x.h code9900.h codetms7.h code370.h codemsp.h codescmp.h code807x.h codecop4.h codecop8.h codesc14xxx.h codeace.h code78c10.h code75xx.h code75k0.h code78k0.h code78k2.h code7720.h code77230.h code53c8xx.h codefmc8.h codefmc16.h code1802.h codevector.h codexcore.h as1750.h
+as.o: stdinc.h version.h endian.h bpemu.h stdhandl.h nls.h nlmessages.h as.rsc ioerrs.h strutil.h stringlists.h cmdarg.h asmitree.h chunks.h asminclist.h asmfnums.h asmdef.h asmsub.h asmpars.h asmmac.h asmstructs.h asmif.h asmcode.h asmdebug.h asmrelocs.h asmallg.h codepseudo.h as.h code68k.h code56k.h code601.h codemcore.h codexgate.h code68.h code6805.h code6809.h code6812.h code6816.h code68rs08.h codeh8_3.h codeh8_5.h code7000.h code65.h code7700.h code4500.h codem16.h codem16c.h code4004.h code8008.h code48.h code51.h code96.h code85.h code86.h code960.h code8x30x.h code2650.h codexa.h codeavr.h code29k.h code166.h codez80.h codez8.h codekcpsm.h codekcp3.h codemic8.h code96c141.h code90c141.h code87c800.h code870c.h code47c00.h code97c241.h code16c5x.h code16c8x.h code17c4x.h codest6.h codest7.h codest9.h code6804.h code3201x.h code3202x.h code3203x.h code3205x.h code3254x.h code3206x.h code9900.h codetms7.h code370.h codemsp.h codescmp.h code807x.h codecop4.h codecop8.h codesc14xxx.h codeace.h code78c10.h code75xx.h code75k0.h code78k0.h code78k2.h code7720.h code77230.h code53c8xx.h codefmc8.h codefmc16.h code1802.h codevector.h codexcore.h as1750.h
 
 as1750.o: common.h utils.h datatypes.h strutil.h asmdef.h asmsub.h asmpars.h as1750.h
 
 asmallg.o: stdinc.h nls.h strutil.h stringlists.h bpemu.h cmdarg.h chunks.h asmdef.h asmsub.h as.h asmpars.h asmmac.h asmstructs.h asmcode.h asmrelocs.h asmitree.h codepseudo.h
 
-asmcode.o: stdinc.h version.h endian.h chunks.h asmdef.h asmsub.h asmpars.h asmrelocs.h
+asmcode.o: stdinc.h version.h endian.h chunks.h asmdef.h asmsub.h asmpars.h intconsts.h asmrelocs.h
 
 asmdebug.o: stdinc.h strutil.h endian.h strutil.h chunks.h asmdef.h asmsub.h asmpars.h asmfnums.h asmdebug.h
 
 asmdef.o: stdinc.h stringlists.h chunks.h asmdef.h asmsub.h
 
-asmfnums.o: stdinc.h strutil.h chunks.h asmdef.h asmsub.h asmfnums.h
+asmfnums.o: stdinc.h strutil.h chunks.h asmdef.h asmsub.h intconsts.h asmfnums.h
 
 asmif.o: stdinc.h bpemu.h chunks.h strutil.h asmdef.h asmsub.h asmpars.h asmif.h
 
@@ -34,7 +34,7 @@ asmrelocs.o: stdinc.h strutil.h asmdef.h asmsub.h asmcode.h asmrelocs.h fileform
 
 asmstructs.o: stdinc.h nls.h nlmessages.h strutil.h trees.h as.h asmdef.h asmsub.h asmpars.h asmstructs.h as.rsc
 
-asmsub.o: stdinc.h version.h endian.h stdhandl.h nls.h nlmessages.h as.rsc strutil.h stringlists.h chunks.h ioerrs.h asmdef.h asmpars.h asmdebug.h as.h asmsub.h
+asmsub.o: stdinc.h version.h endian.h stdhandl.h nls.h nlmessages.h as.rsc strutil.h stringlists.h chunks.h ioerrs.h asmdef.h asmpars.h asmdebug.h intconsts.h as.h asmsub.h
 
 bincmp.o:
 
@@ -56,17 +56,17 @@ code1802.o: stdinc.h bpemu.h asmdef.h asmsub.h asmpars.h asmitree.h codepseudo.h
 
 code2650.o: stdinc.h nls.h chunks.h bpemu.h strutil.h asmdef.h asmsub.h asmpars.h asmitree.h codevars.h headids.h intpseudo.h code2650.h
 
-code29k.o: stdinc.h nls.h strutil.h bpemu.h stringlists.h asmdef.h asmsub.h asmpars.h asmallg.h asmitree.h codepseudo.h intpseudo.h codevars.h
+code29k.o: stdinc.h nls.h strutil.h bpemu.h stringlists.h asmdef.h asmsub.h asmpars.h asmallg.h asmitree.h codepseudo.h intpseudo.h codevars.h intconsts.h
 
 code3201x.o: stdinc.h bpemu.h strutil.h chunks.h asmdef.h asmsub.h asmpars.h asmitree.h codepseudo.h codevars.h
 
-code3202x.o: stdinc.h strutil.h chunks.h asmdef.h asmsub.h asmpars.h codepseudo.h tipseudo.h endian.h code3202x.h
+code3202x.o: stdinc.h strutil.h chunks.h asmdef.h asmsub.h asmpars.h asmitree.h codevars.h codepseudo.h tipseudo.h endian.h code3202x.h
 
 code3203x.o: stdinc.h nls.h endian.h bpemu.h strutil.h chunks.h asmdef.h asmsub.h asmpars.h asmcode.h asmitree.h codepseudo.h codevars.h
 
 code3205x.o: stdinc.h nls.h bpemu.h strutil.h chunks.h asmdef.h asmsub.h asmpars.h asmitree.h codepseudo.h codevars.h tipseudo.h endian.h code3205x.h
 
-code3206x.o: stdinc.h endian.h strutil.h bpemu.h nls.h asmdef.h asmsub.h asmpars.h asmcode.h codepseudo.h asmitree.h codevars.h nlmessages.h as.rsc
+code3206x.o: stdinc.h endian.h strutil.h bpemu.h nls.h asmdef.h asmsub.h asmpars.h asmcode.h codepseudo.h asmitree.h codevars.h nlmessages.h intconsts.h as.rsc
 
 code3254x.o: stdinc.h bpemu.h strutil.h chunks.h asmdef.h asmsub.h asmpars.h asmallg.h asmrelocs.h asmcode.h codepseudo.h tipseudo.h asmitree.h codevars.h fileformat.h headids.h code3254x.h
 
@@ -80,13 +80,13 @@ code47c00.o: stdinc.h bpemu.h strutil.h asmdef.h asmsub.h asmpars.h asmitree.h c
 
 code48.o: stdinc.h nls.h strutil.h stringlists.h asmdef.h asmsub.h asmpars.h asmitree.h intpseudo.h codevars.h
 
-code51.o: stdinc.h bpemu.h strutil.h chunks.h asmdef.h asmsub.h asmpars.h asmallg.h asmrelocs.h codepseudo.h intpseudo.h asmitree.h codevars.h fileformat.h
+code51.o: stdinc.h bpemu.h strutil.h chunks.h asmdef.h asmsub.h asmpars.h asmallg.h asmrelocs.h codepseudo.h intpseudo.h asmitree.h codevars.h fileformat.h intconsts.h
 
-code53c8xx.o: stdinc.h asmdef.h asmsub.h asmpars.h asmitree.h headids.h strutil.h codevars.h
+code53c8xx.o: stdinc.h asmdef.h asmsub.h asmpars.h asmitree.h headids.h strutil.h codevars.h intconsts.h
 
-code56k.o: stdinc.h strutil.h chunks.h asmdef.h asmsub.h asmpars.h asmitree.h codepseudo.h codevars.h code56k.h
+code56k.o: stdinc.h strutil.h chunks.h asmdef.h asmsub.h asmpars.h asmitree.h codepseudo.h codevars.h intconsts.h code56k.h
 
-code601.o: stdinc.h endian.h strutil.h asmdef.h asmsub.h asmpars.h asmallg.h asmitree.h intpseudo.h codevars.h headids.h
+code601.o: stdinc.h endian.h strutil.h asmdef.h asmsub.h asmpars.h asmallg.h asmitree.h intpseudo.h codevars.h headids.h intconsts.h
 
 code65.o: stdinc.h bpemu.h strutil.h asmdef.h asmpars.h asmsub.h asmitree.h codepseudo.h motpseudo.h codevars.h code65.h
 
@@ -102,11 +102,11 @@ code6812.o: stdinc.h strutil.h bpemu.h asmdef.h asmpars.h asmsub.h asmitree.h co
 
 code6816.o: stdinc.h nls.h bpemu.h strutil.h asmdef.h asmsub.h asmpars.h asmitree.h codepseudo.h motpseudo.h codevars.h code6816.h
 
-code68k.o: stdinc.h nls.h bpemu.h endian.h strutil.h asmdef.h asmsub.h asmpars.h asmallg.h motpseudo.h asmitree.h codevars.h
+code68k.o: stdinc.h nls.h bpemu.h endian.h strutil.h asmdef.h asmsub.h asmpars.h asmallg.h motpseudo.h asmitree.h codevars.h intconsts.h
 
 code68rs08.o: stdinc.h bpemu.h strutil.h asmdef.h asmpars.h asmsub.h asmitree.h motpseudo.h codevars.h code68rs08.h
 
-code7000.o: stdinc.h bpemu.h strutil.h asmdef.h asmsub.h asmpars.h asmallg.h asmitree.h codepseudo.h motpseudo.h codevars.h code7000.h
+code7000.o: stdinc.h bpemu.h strutil.h asmdef.h asmsub.h asmpars.h asmallg.h asmitree.h codepseudo.h motpseudo.h codevars.h intconsts.h code7000.h
 
 code75k0.o: stdinc.h nls.h strutil.h bpemu.h asmdef.h asmsub.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h
 
@@ -132,6 +132,8 @@ code85.o: stdinc.h nls.h bpemu.h strutil.h asmdef.h asmsub.h asmpars.h codepseud
 
 code86.o: stdinc.h bpemu.h strutil.h asmdef.h asmsub.h asmpars.h asmallg.h codepseudo.h intpseudo.h asmitree.h codevars.h
 
+code870c.o: stdinc.h nls.h bpemu.h strutil.h asmdef.h asmsub.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h headids.h
+
 code87c800.o: stdinc.h nls.h bpemu.h strutil.h asmdef.h asmsub.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h
 
 code8x30x.o: stdinc.h nls.h chunks.h bpemu.h strutil.h asmdef.h asmsub.h asmpars.h asmitree.h codevars.h
@@ -140,7 +142,7 @@ code90c141.o: stdinc.h nls.h bpemu.h strutil.h asmdef.h asmsub.h asmpars.h asmit
 
 code96.o: stdinc.h bpemu.h asmdef.h asmsub.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h
 
-code960.o: stdinc.h endian.h strutil.h bpemu.h asmdef.h asmsub.h asmpars.h asmallg.h asmitree.h codevars.h intpseudo.h headids.h
+code960.o: stdinc.h endian.h strutil.h bpemu.h asmdef.h asmsub.h asmpars.h asmallg.h asmitree.h codevars.h intpseudo.h headids.h intconsts.h
 
 code96c141.o: stdinc.h nls.h bpemu.h strutil.h asmdef.h asmsub.h asmpars.h asmallg.h codepseudo.h intpseudo.h asmitree.h codevars.h
 
@@ -170,11 +172,11 @@ codekcp3.o: stdinc.h nls.h strutil.h bpemu.h asmdef.h asmsub.h asmpars.h asmitre
 
 codekcpsm.o: stdinc.h nls.h strutil.h bpemu.h asmdef.h asmsub.h asmpars.h asmitree.h intpseudo.h codevars.h headids.h
 
-codem16.o: stdinc.h bpemu.h nls.h strutil.h asmdef.h asmsub.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h
+codem16.o: stdinc.h bpemu.h nls.h strutil.h asmdef.h asmsub.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h intconsts.h
 
 codem16c.o: stdinc.h nls.h bpemu.h strutil.h asmdef.h asmsub.h asmpars.h asmitree.h intpseudo.h codevars.h
 
-codemcore.o: stdinc.h nls.h endian.h strutil.h bpemu.h asmdef.h asmsub.h asmpars.h asmallg.h codepseudo.h motpseudo.h asmitree.h codevars.h
+codemcore.o: stdinc.h nls.h endian.h strutil.h bpemu.h asmdef.h asmsub.h asmpars.h asmallg.h codepseudo.h motpseudo.h asmitree.h codevars.h intconsts.h
 
 codemic8.o: stdinc.h nls.h strutil.h bpemu.h asmdef.h asmsub.h asmpars.h asmitree.h intpseudo.h codevars.h headids.h codepseudo.h codemic8.h
 
@@ -198,7 +200,7 @@ codevars.o: stdinc.h asmitree.h
 
 codevector.o: stdinc.h nls.h strutil.h bpemu.h asmdef.h asmsub.h asmpars.h asmitree.h intpseudo.h codevars.h headids.h codepseudo.h codevector.h
 
-codexa.o: stdinc.h nls.h strutil.h bpemu.h asmdef.h asmsub.h asmpars.h asmallg.h asmitree.h codepseudo.h intpseudo.h motpseudo.h codevars.h codexa.h
+codexa.o: stdinc.h nls.h strutil.h bpemu.h asmdef.h asmsub.h asmpars.h asmallg.h asmitree.h codepseudo.h intpseudo.h motpseudo.h codevars.h intconsts.h codexa.h
 
 codexcore.o: stdinc.h nls.h endian.h strutil.h bpemu.h asmdef.h asmsub.h asmpars.h asmallg.h headids.h codepseudo.h intpseudo.h asmitree.h codevars.h codexcore.h
 
@@ -206,7 +208,7 @@ codexgate.o: stdinc.h nls.h endian.h strutil.h bpemu.h asmdef.h asmsub.h asmpars
 
 codez8.o: stdinc.h nls.h strutil.h bpemu.h asmdef.h asmsub.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h headids.h
 
-codez80.o: stdinc.h nls.h strutil.h bpemu.h asmdef.h asmsub.h asmpars.h asmcode.h asmallg.h asmitree.h codepseudo.h intpseudo.h codevars.h
+codez80.o: stdinc.h nls.h strutil.h bpemu.h asmdef.h asmsub.h asmpars.h asmcode.h asmallg.h asmitree.h codepseudo.h intpseudo.h codevars.h intconsts.h
 
 debversion.o: version.c
 
@@ -220,7 +222,7 @@ grhyph.o:
 
 headids.o: stdinc.h headids.h
 
-hex.o: stdinc.h hex.h
+hex.o: stdinc.h intconsts.h hex.h
 
 intpseudo.o: stdinc.h bpemu.h endian.h strutil.h asmdef.h asmsub.h asmpars.h intpseudo.h
 
@@ -236,9 +238,9 @@ nlmessages.o: stdinc.h strutil.h endian.h bpemu.h nls.h nlmessages.h
 
 nls.o: stdinc.h strutil.h nls.h
 
-p2bin.o: stdinc.h version.h endian.h bpemu.h strutil.h hex.h nls.h nlmessages.h p2bin.rsc ioerrs.h chunks.h stringlists.h cmdarg.h toolutils.h
+p2bin.o: stdinc.h version.h endian.h bpemu.h strutil.h hex.h nls.h nlmessages.h p2bin.rsc ioerrs.h chunks.h stringlists.h cmdarg.h toolutils.h intconsts.h
 
-p2hex.o: stdinc.h version.h endian.h bpemu.h hex.h nls.h nlmessages.h p2hex.rsc ioerrs.h strutil.h chunks.h stringlists.h cmdarg.h toolutils.h headids.h
+p2hex.o: stdinc.h version.h endian.h bpemu.h hex.h nls.h nlmessages.h p2hex.rsc ioerrs.h strutil.h chunks.h stringlists.h cmdarg.h intconsts.h toolutils.h headids.h
 
 pbind.o: stdinc.h version.h endian.h stdhandl.h bpemu.h strutil.h stringlists.h cmdarg.h toolutils.h nls.h nlmessages.h pbind.rsc ioerrs.h
 
@@ -270,4 +272,4 @@ ushyph.o:
 
 version.o: stdinc.h
 
-Makefile.dep: a2k.c addcr.c alink.c as.c as1750.c asmallg.c asmcode.c asmdebug.c asmdef.c asmfnums.c asmif.c asminclist.c asmitree.c asmmac.c asmpars.c asmrelocs.c asmstructs.c asmsub.c bincmp.c bpemu.c chunks.c cmdarg.c code166.c code16c5x.c code16c8x.c code17c4x.c code1802.c code2650.c code29k.c code3201x.c code3202x.c code3203x.c code3205x.c code3206x.c code3254x.c code370.c code4004.c code4500.c code47c00.c code48.c code51.c code53c8xx.c code56k.c code601.c code65.c code68.c code6804.c code6805.c code6809.c code6812.c code6816.c code68k.c code68rs08.c code7000.c code75k0.c code75xx.c code7700.c code7720.c code77230.c code78c10.c code78k0.c code78k2.c code8008.c code807x.c code85.c code86.c code87c800.c code8x30x.c code90c141.c code96.c code960.c code96c141.c code97c241.c code9900.c codeace.c codeavr.c codecop4.c codecop8.c codeflt1750.c codefmc16.c codefmc8.c codeh8_3.c codeh8_5.c codekcp3.c codekcpsm.c codem16.c codem16c.c codemcore.c codemic8.c codemsp.c codepseudo.c codesc14xxx.c codescmp.c codest6.c codest7.c codest9.c codetms7.c codevars.c codevector.c codexa.c codexcore.c codexgate.c codez8.c codez80.c debversion.c dynstring.c endian.c findhyphen.c grhyph.c headids.c hex.c intpseudo.c ioerrs.c mkdepend.c motpseudo.c natpseudo.c nlmessages.c nls.c p2bin.c p2hex.c pbind.c plist.c rescomp.c stdhandl.c stringlists.c strutil.c tex2doc.c tex2html.c tipseudo.c toolutils.c trees.c umlaut.c unumlaut.c ushyph.c version.c
+Makefile.dep: a2k.c addcr.c alink.c as.c as1750.c asmallg.c asmcode.c asmdebug.c asmdef.c asmfnums.c asmif.c asminclist.c asmitree.c asmmac.c asmpars.c asmrelocs.c asmstructs.c asmsub.c bincmp.c bpemu.c chunks.c cmdarg.c code166.c code16c5x.c code16c8x.c code17c4x.c code1802.c code2650.c code29k.c code3201x.c code3202x.c code3203x.c code3205x.c code3206x.c code3254x.c code370.c code4004.c code4500.c code47c00.c code48.c code51.c code53c8xx.c code56k.c code601.c code65.c code68.c code6804.c code6805.c code6809.c code6812.c code6816.c code68k.c code68rs08.c code7000.c code75k0.c code75xx.c code7700.c code7720.c code77230.c code78c10.c code78k0.c code78k2.c code8008.c code807x.c code85.c code86.c code870c.c code87c800.c code8x30x.c code90c141.c code96.c code960.c code96c141.c code97c241.c code9900.c codeace.c codeavr.c codecop4.c codecop8.c codeflt1750.c codefmc16.c codefmc8.c codeh8_3.c codeh8_5.c codekcp3.c codekcpsm.c codem16.c codem16c.c codemcore.c codemic8.c codemsp.c codepseudo.c codesc14xxx.c codescmp.c codest6.c codest7.c codest9.c codetms7.c codevars.c codevector.c codexa.c codexcore.c codexgate.c codez8.c codez80.c debversion.c dynstring.c endian.c findhyphen.c grhyph.c headids.c hex.c intpseudo.c ioerrs.c mkdepend.c motpseudo.c natpseudo.c nlmessages.c nls.c p2bin.c p2hex.c pbind.c plist.c rescomp.c stdhandl.c stringlists.c strutil.c tex2doc.c tex2html.c tipseudo.c toolutils.c trees.c umlaut.c unumlaut.c ushyph.c version.c

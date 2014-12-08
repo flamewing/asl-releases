@@ -5,9 +5,12 @@
 /* Tree management                                                           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: trees.c,v 1.1 2003/11/06 02:49:25 alfred Exp $                       */
+/* $Id: trees.c,v 1.2 2014/12/05 08:53:45 alfred Exp $                       */
 /***************************************************************************** 
  * $Log: trees.c,v $
+ * Revision 1.2  2014/12/05 08:53:45  alfred
+ * - eliminate remaining BEGIN/END
+ *
  * Revision 1.1  2003/11/06 02:49:25  alfred
  * - recreated
  *
@@ -168,31 +171,38 @@ Boolean EnterTree(PTree *PDest, PTree Neu, TTreeAdder Adder, void *pData)
    {
      Grown = EnterTree(&((*PDest)->Left), Neu, Adder, pData);
      if ((BalanceTree) && (Grown))
-      switch ((*PDest)->Balance)
-      {
-        case 1:
-         (*PDest)->Balance = 0; break;
-        case 0:
-         (*PDest)->Balance = (-1); Result = True; break;
-        case -1:
-         p1 = (*PDest)->Left;
-         if (p1->Balance == (-1))
-         {
-           (*PDest)->Left = p1->Right; p1->Right = *PDest;
-           (*PDest)->Balance = 0; *PDest = p1;
-         }
-         else
-         {
-           p2 = p1->Right;
-           p1->Right = p2->Left; p2->Left = p1;
-           (*PDest)->Left = p2->Right; p2->Right = *PDest;
-           if (p2->Balance == (-1)) (*PDest)->Balance =    1; else (*PDest)->Balance = 0;
-           if (p2->Balance ==    1) p1      ->Balance = (-1); else p1      ->Balance = 0;
-           *PDest = p2;
-         }
-         (*PDest)->Balance = 0;
-         break;
-       END
+       switch ((*PDest)->Balance)
+       {
+         case 1:
+           (*PDest)->Balance = 0;
+           break;
+         case 0:
+           (*PDest)->Balance = -1;
+           Result = True;
+           break;
+         case -1:
+           p1 = (*PDest)->Left;
+           if (p1->Balance == (-1))
+           {
+             (*PDest)->Left = p1->Right;
+             p1->Right = *PDest;
+             (*PDest)->Balance = 0;
+             *PDest = p1;
+           }
+           else
+           {
+             p2 = p1->Right;
+             p1->Right = p2->Left;
+             p2->Left = p1;
+             (*PDest)->Left = p2->Right;
+             p2->Right = *PDest;
+             if (p2->Balance == (-1)) (*PDest)->Balance =    1; else (*PDest)->Balance = 0;
+             if (p2->Balance ==    1) p1      ->Balance = (-1); else p1      ->Balance = 0;
+             *PDest = p2;
+           }
+           (*PDest)->Balance = 0;
+           break;
+       }
    }  
 
   /* otherwise we might replace the node */

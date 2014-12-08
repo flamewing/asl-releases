@@ -5,9 +5,18 @@
 /* Codegenerator LatticeMico8                                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemic8.c,v 1.11 2010/12/11 22:52:39 alfred Exp $                   */
+/* $Id: codemic8.c,v 1.14 2014/12/07 19:14:01 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codemic8.c,v $
+ * Revision 1.14  2014/12/07 19:14:01  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
+ * Revision 1.13  2014/12/05 11:15:28  alfred
+ * - eliminate AND/OR/NOT
+ *
+ * Revision 1.12  2014/11/30 10:09:54  alfred
+ * - rework to current style
+ *
  * Revision 1.11  2010/12/11 22:52:39  alfred
  * - split up Mico 8 versions
  *
@@ -316,7 +325,8 @@ static void AddALU(char *NName, char *NImmName, LongWord NCode)
 
   ALUOrders[InstrZ].Code = NCode;
   AddInstTable(InstTable, NName, InstrZ, DecodeALU);
-  if ((ALUOrders[InstrZ].MayImm = (NImmName != NULL)))
+  ALUOrders[InstrZ].MayImm = NImmName != NULL;
+  if (ALUOrders[InstrZ].MayImm)
     AddInstTable(InstTable, NImmName, InstrZ, DecodeALUI);
   InstrZ++;
 }
@@ -518,7 +528,7 @@ static void MakeCode_Mico8(void)
 
    if (DecodeIntelPseudo(True)) return;
 
-   if (NOT LookupInstTable(InstTable, OpPart))
+   if (!LookupInstTable(InstTable, OpPart))
      WrXError(1200, OpPart);
 }
 
@@ -539,9 +549,9 @@ static void SwitchTo_Mico8(void)
 
    ValidSegs = (1 << SegCode) | (1 << SegData) | (1 << SegXData) | (1 << SegIO);
    Grans[SegCode] = 4; ListGrans[SegCode] = 4; SegInits[SegCode] = 0;
-   SegLimits[SegCode] = IntMaxs[CodeAddrInt];
+   SegLimits[SegCode] = IntTypeDefs[CodeAddrInt].Max;
    Grans[SegData] = 1; ListGrans[SegData] = 1; SegInits[SegData] = 0;
-   SegLimits[SegData] = IntMaxs[DataAddrInt];
+   SegLimits[SegData] = IntTypeDefs[DataAddrInt].Max;
    Grans[SegXData] = 1; ListGrans[SegXData] = 1; SegInits[SegXData] = 0;
    SegLimits[SegXData] = 0xff;
    Grans[SegIO] = 1; ListGrans[SegIO] = 1; SegInits[SegIO] = 0;

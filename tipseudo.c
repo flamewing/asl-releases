@@ -5,9 +5,12 @@
 /* Haeufiger benutzte Texas Instruments Pseudo-Befehle                       */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: tipseudo.c,v 1.3 2008/11/23 10:39:17 alfred Exp $                    */
+/* $Id: tipseudo.c,v 1.4 2014/11/03 17:36:12 alfred Exp $                    */
 /***************************************************************************** 
  * $Log: tipseudo.c,v $
+ * Revision 1.4  2014/11/03 17:36:12  alfred
+ * - relocate IsDef() for common TI pseudo instructions
+ *
  * Revision 1.3  2008/11/23 10:39:17  alfred
  * - allow strings with NUL characters
  *
@@ -545,3 +548,22 @@ Boolean DecodeTIPseudo(void)
   return False;
 }
 
+Boolean IsTIDef(void)
+{
+  static const char *defs[] =
+  {
+    "BSS", "STRING", "RSTRING", 
+    "BYTE", "WORD", "LONG", "FLOAT",
+    "DOUBLE", "EFLOAT", "BFLOAT", 
+    "TFLOAT", NULL
+  }; 
+  const char **cp = defs;
+
+  while (*cp)
+  {
+    if (Memo(*cp))
+      return True;
+    cp++;
+  }
+  return False;
+}

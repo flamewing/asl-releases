@@ -29,9 +29,12 @@
 ;*           2001-10-21 GNU error messages                                   *
 ;*                                                                           *
 ;*****************************************************************************
-;* $Id: as.res,v 1.4 2014/09/14 13:22:33 alfred Exp $                        *
+;* $Id: as.res,v 1.5 2014/11/23 17:06:32 alfred Exp $                        *
 ;*****************************************************************************
 ;* $Log: as.res,v $
+;* Revision 1.5  2014/11/23 17:06:32  alfred
+;* - add error #2060 (unimplemented)
+;*
 ;* Revision 1.4  2014/09/14 13:22:33  alfred
 ;* - ass keyword arguments
 ;*
@@ -729,6 +732,10 @@ Message ErrMsgStructNameMissing
 Message ErrMsgEmptyArgument
  "leeres Argument"
  "empty argument"
+
+Message ErrMsgUnimplemented
+ "nicht implementierte Anweisung"
+ "unimplemented instruction"
 
 Message ErrMsgOpeningFile
  "Fehler beim &Ouml;ffnen der Datei"

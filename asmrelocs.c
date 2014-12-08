@@ -26,184 +26,209 @@
 
 /*---------------------------------------------------------------------------*/
 
-PRelocEntry LastRelocs = Nil;
+PRelocEntry LastRelocs = NULL;
 
 /*---------------------------------------------------------------------------*/
 
-	PRelocEntry MergeRelocs(PRelocEntry *list1, PRelocEntry *list2,
-                                Boolean Add)
-BEGIN
-   PRelocEntry PRun1, PRun2, PPrev, PNext, PLast, PRes;
+PRelocEntry MergeRelocs(PRelocEntry *list1, PRelocEntry *list2, Boolean Add)
+{
+  PRelocEntry PRun1, PRun2, PPrev, PNext, PLast, PRes;
 
-   PRun1 = *list1; PLast = PRes = Nil;
+  PRun1 = *list1;
+  PLast = PRes = NULL;
 
-   /* ueber alle in Liste 1 */
+  /* ueber alle in Liste 1 */
 
-   while (PRun1 != Nil)
-    BEGIN
-     /* Uebereinstimmung suchen, die sich aufhebt */
+  while (PRun1)
+  {
+    /* Uebereinstimmung suchen, die sich aufhebt */
 
-     PNext = PRun1->Next;
-     PRun2 = *list2; PPrev = Nil;
-     while (PRun2 != Nil)
-      if ((strcasecmp(PRun1->Ref, PRun2->Ref) == 0) AND ((PRun1->Add != PRun2->Add) != Add))
-       BEGIN
+    PNext = PRun1->Next;
+    PRun2 = *list2;
+    PPrev = NULL;
+    while (PRun2)
+      if ((!strcasecmp(PRun1->Ref, PRun2->Ref)) && ((PRun1->Add != PRun2->Add) != Add))
+      {
         /* gefunden -> beide weg */
 
-        free(PRun1->Ref); free(PRun2->Ref);
-        if (PPrev == Nil) *list2 = PRun2->Next;
-        else PPrev->Next = PRun2->Next;
-        free(PRun2); free(PRun1); PRun1 = Nil;
+        free(PRun1->Ref);
+        free(PRun2->Ref);
+        if (!PPrev)
+          *list2 = PRun2->Next;
+        else
+          PPrev->Next = PRun2->Next;
+        free(PRun2);
+        free(PRun1);
+        PRun1 = NULL;
         break;
-       END
+      }
       else
-       BEGIN
-        PPrev = PRun2; PRun2 = PRun2->Next;
-       END
+      {
+        PPrev = PRun2;
+        PRun2 = PRun2->Next;
+      }
 
-     /* ansonsten an Ergebnisliste anhaengen */
+    /* ansonsten an Ergebnisliste anhaengen */
 
-     if (PRun1 != Nil)
-      BEGIN
-       if (PLast == Nil) PRes = PLast = PRun1;
-       else 
-        BEGIN
-         PLast->Next = PRun1; PLast = PRun1;
-        END
-      END
-     PRun1 = PNext;
-    END
+    if (PRun1)
+    {
+      if (!PLast)
+        PRes = PLast = PRun1;
+      else 
+      {
+        PLast->Next = PRun1;
+        PLast = PRun1;
+      }
+    }
+    PRun1 = PNext;
+  }
 
-   /* Reste aus Liste 2 nicht vergessen */
+  /* Reste aus Liste 2 nicht vergessen */
 
-   if (PLast == Nil) PRes = *list2;
-   else PLast->Next = *list2;
+  if (!PLast)
+    PRes = *list2;
+  else
+    PLast->Next = *list2;
 
-   /* Quellisten jetzt leer */
+  /* Quellisten jetzt leer */
 
-   *list1 = *list2 = Nil;
+  *list1 = *list2 = NULL;
 
-   /* fertich */
+  /* fertich */
 
-   return PRes;
-END
+  return PRes;
+}
 
-	void InvertRelocs(PRelocEntry *erg, PRelocEntry *src)
-BEGIN
-   PRelocEntry SRun;
+void InvertRelocs(PRelocEntry *erg, PRelocEntry *src)
+{
+  PRelocEntry SRun;
 
-   for (SRun = *src; SRun != Nil; SRun = SRun->Next)
-    SRun->Add = NOT (SRun->Add);
+  for (SRun = *src; SRun; SRun = SRun->Next)
+    SRun->Add = !(SRun->Add);
 
-   *erg = *src;
-END
+  *erg = *src;
+}
 
-	void FreeRelocs(PRelocEntry *list)
-BEGIN
-   PRelocEntry Run;
+void FreeRelocs(PRelocEntry *list)
+{
+  PRelocEntry Run;
 
-   while (*list != Nil)
-    BEGIN
-     Run = *list;
-     *list = (*list)->Next;
-     free(Run->Ref);
-     free(Run);
-    END
-END
+  while (*list)
+  {
+    Run = *list;
+    *list = (*list)->Next;
+    free(Run->Ref);
+    free(Run);
+  }
+}
 
-	 PRelocEntry DupRelocs(PRelocEntry src)
-BEGIN
-   PRelocEntry First, Run, SRun, Neu;
+PRelocEntry DupRelocs(PRelocEntry src)
+{
+  PRelocEntry First, Run, SRun, Neu;
 
-   First = Run = Nil;
-   for (SRun = src; SRun != Nil; SRun = SRun->Next)
-    BEGIN
-     Neu = (PRelocEntry) malloc(sizeof(TRelocEntry));
-     Neu->Next = Nil;
-     Neu->Ref = strdup(SRun->Ref);
-     Neu->Add = SRun->Add;
-     if (First == Nil) First = Neu;
-     else Run->Next = Neu;
-     Run = Neu;
-    END
+  First = Run = NULL;
+  for (SRun = src; SRun; SRun = SRun->Next)
+  {
+    Neu = (PRelocEntry) malloc(sizeof(TRelocEntry));
+    Neu->Next = NULL;
+    Neu->Ref = strdup(SRun->Ref);
+    Neu->Add = SRun->Add;
+    if (!First)
+      First = Neu;
+    else
+      Run->Next = Neu;
+    Run = Neu;
+  }
 
-   return First;
-END
+  return First;
+}
 
-	void SetRelocs(PRelocEntry List)
-BEGIN
-   if (LastRelocs != Nil)
-    BEGIN
-     WrError(1155);
-     FreeRelocs(&LastRelocs);
-    END
-   LastRelocs = List;
-END
+void SetRelocs(PRelocEntry List)
+{
+  if (LastRelocs)
+  {
+    WrError(1155);
+    FreeRelocs(&LastRelocs);
+  }
+  LastRelocs = List;
+}
 
-	void TransferRelocs2(PRelocEntry RelocList, LargeWord Addr, LongWord Type)
-BEGIN
-   PPatchEntry NewPatch;
-   PRelocEntry Curr;
+void TransferRelocs2(PRelocEntry RelocList, LargeWord Addr, LongWord Type)
+{
+  PPatchEntry NewPatch;
+  PRelocEntry Curr;
 
-   while (RelocList != Nil)
-    BEGIN
-     Curr = RelocList;
-     NewPatch = (PPatchEntry) malloc(sizeof(TPatchEntry));
-     NewPatch->Next = Nil;
-     NewPatch->Address = Addr;
-     NewPatch->Ref = Curr->Ref;
-     NewPatch->RelocType = Type;
-     if (NOT Curr->Add) NewPatch->RelocType |= RelocFlagSUB;
-     if (PatchLast == NULL) PatchList = NewPatch;
-     else PatchLast->Next = NewPatch;
-     PatchLast = NewPatch;
-     RelocList = Curr->Next;
-     free(Curr);
-    END
-END
+  while (RelocList)
+  {
+    Curr = RelocList;
+    NewPatch = (PPatchEntry) malloc(sizeof(TPatchEntry));
+    NewPatch->Next = NULL;
+    NewPatch->Address = Addr;
+    NewPatch->Ref = Curr->Ref;
+    NewPatch->RelocType = Type;
+    if (!Curr->Add)
+      NewPatch->RelocType |= RelocFlagSUB;
+    if (PatchLast == NULL)
+      PatchList = NewPatch;
+    else
+      PatchLast->Next = NewPatch;
+    PatchLast = NewPatch;
+    RelocList = Curr->Next;
+    free(Curr);
+  }
+}
 
-	void TransferRelocs(LargeWord Addr, LongWord Type)
-BEGIN
-   TransferRelocs2(LastRelocs, Addr, Type);
-   LastRelocs = NULL;
-END
+void TransferRelocs(LargeWord Addr, LongWord Type)
+{
+  TransferRelocs2(LastRelocs, Addr, Type);
+  LastRelocs = NULL;
+}
 
-	void SubPCRefReloc(void)
-BEGIN
-   PRelocEntry Run, Prev, New;
+void SubPCRefReloc(void)
+{
+  PRelocEntry Run, Prev, New;
 
-   if (!RelSegs) return;
-  
-   /* search if PC subtraction evens out against an addition */
+  if (!RelSegs)
+    return;
+ 
+  /* search if PC subtraction evens out against an addition */
 
-   for (Prev = Nil, Run = LastRelocs; Run != Nil; Prev = Run, Run = Run->Next)
-    if ((Run->Add) AND (strcmp(Run->Ref, RelName_SegStart) == 0))
-     BEGIN
+  for (Prev = NULL, Run = LastRelocs; Run; Prev = Run, Run = Run->Next)
+    if ((Run->Add) && (!strcmp(Run->Ref, RelName_SegStart)))
+    {
       free(Run->Ref);
-      if (Prev) Prev->Next = Run->Next; else LastRelocs = Run->Next;
+      if (Prev)
+        Prev->Next = Run->Next;
+      else
+        LastRelocs = Run->Next;
       free(Run);
       return;
-     END
+    }
 
-   /* in case we did not find one, add a new one */
+  /* in case we did not find one, add a new one */
 
-   New = (PRelocEntry) malloc(sizeof(TRelocEntry));
-   New->Ref = strdup(RelName_SegStart);
-   New->Add = FALSE;
-   New->Next = Nil;
-   if (Prev) Prev->Next = New; else LastRelocs = New;
-END
+  New = (PRelocEntry) malloc(sizeof(TRelocEntry));
+  New->Ref = strdup(RelName_SegStart);
+  New->Add = FALSE;
+  New->Next = NULL;
+  if (Prev)
+    Prev->Next = New;
+  else
+    LastRelocs = New;
+}
 
-	void AddExport(char *Name, LargeInt Value, LongWord Flags)
-BEGIN
-   PExportEntry PNew;
+void AddExport(char *Name, LargeInt Value, LongWord Flags)
+{
+  PExportEntry PNew;
 
-   PNew = (PExportEntry) malloc(sizeof(TExportEntry));
-   PNew->Next = Nil;
-   PNew->Name = strdup(Name);
-   PNew->Value = Value;
-   PNew->Flags = Flags;
-   if (ExportList == Nil) ExportList = PNew;
-   else ExportLast->Next = PNew;
-   ExportLast = PNew;
-END
+  PNew = (PExportEntry) malloc(sizeof(TExportEntry));
+  PNew->Next = NULL;
+  PNew->Name = strdup(Name);
+  PNew->Value = Value;
+  PNew->Flags = Flags;
+  if (!ExportList)
+    ExportList = PNew;
+  else
+    ExportLast->Next = PNew;
+  ExportLast = PNew;
+}

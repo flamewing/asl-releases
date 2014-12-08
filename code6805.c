@@ -12,9 +12,12 @@
 /*           2001-09-03 added inx as alias for incx                          */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6805.c,v 1.8 2013-03-31 18:06:47 alfred Exp $                    */
+/* $Id: code6805.c,v 1.9 2014/11/13 14:29:48 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6805.c,v $
+ * Revision 1.9  2014/11/13 14:29:48  alfred
+ * - rework to current style
+ *
  * Revision 1.8  2013-03-31 18:06:47  alfred
  * - add missing PADDING instruction
  *
@@ -62,52 +65,53 @@
 #include "code6805.h"
 
 typedef struct
-         {
-           char *Name;
-           CPUVar MinCPU;
-           Byte Code;
-         } BaseOrder;
+{
+  CPUVar MinCPU;
+  Byte Code;
+} BaseOrder;
 
 typedef struct 
-         {
-           char *Name;
-           CPUVar MinCPU;
-           Byte Code;
-           Word Mask;
-           ShortInt Size;
-         } ALUOrder;
+{
+  CPUVar MinCPU;
+  Byte Code;
+  Word Mask;
+  ShortInt Size;
+} ALUOrder;
 
 typedef struct 
-         {
-           char *Name;
-           CPUVar MinCPU;
-           Byte Code;
-           Word Mask;
-         } RMWOrder;
+{
+  CPUVar MinCPU;
+  Byte Code;
+  Word Mask;
+} RMWOrder;
 
 #define FixedOrderCnt 54
 #define RelOrderCnt 23
 #define ALUOrderCnt 16
 #define RMWOrderCnt 12
 
-#define ModNone (-1)
-#define ModImm 0
+enum
+{
+  ModNone = -1,
+  ModImm = 0,
+  ModDir = 1,
+  ModExt = 2,
+  ModIx2 = 3,
+  ModIx1 = 4,
+  ModIx = 5,
+  ModSP2 = 6,
+  ModSP1 = 7,
+  ModIxP = 8,
+};
+
 #define MModImm (1 << ModImm)
-#define ModDir 1
 #define MModDir (1 << ModDir)
-#define ModExt 2
 #define MModExt (1 << ModExt)
-#define ModIx2 3
 #define MModIx2 (1 << ModIx2)
-#define ModIx1 4
 #define MModIx1 (1 << ModIx1)
-#define ModIx 5
 #define MModIx  (1 << ModIx)
-#define ModSP2 6
 #define MModSP2 (1 << ModSP2)
-#define ModSP1 7
 #define MModSP1 (1 << ModSP1)
-#define ModIxP 8
 #define MModIxP (1 << ModIxP)
 #define MMod05 (MModImm | MModDir | MModExt | MModIx2 | MModIx1 | MModIx)
 #define MMod08 (MModSP2 | MModSP1 | MModIxP)
@@ -128,28 +132,22 @@ static ALUOrder *ALUOrders;
 /* address parser */
 
 
-static void ChkZero(char *s, char *serg, Byte *pErg)
+static char *ChkZero(char *s, Byte *pErg)
 {
-  if (*s=='<')
+  if (*s == '<')
   {
-    strcpy(serg, s + 1); *pErg = 2;
+    *pErg = 2;
+    return s + 1;
   }
   else if (*s == '>')
   {
-    strcpy(serg, s + 1); *pErg = 1;
+    *pErg = 1;
+    return s + 1;
   }
   else
   {
-    strcpy(serg, s); *pErg = 0;
-  }
-}
-
-static void ChkAdr(Word Mask, Word Mask08)
-{
-  if ((AdrMode != ModNone) && ((Mask & (1 << AdrMode)) == 0))
-  {
-    WrError((((1 << AdrMode) & Mask08) == 0) ? 1350 : 1505);
-    AdrMode = ModNone; AdrCnt = 0;
+    *pErg = 0;
+    return s;
   }
 }
 
@@ -158,55 +156,67 @@ static void DecodeAdr(Byte Start, Byte Stop, Word Mask)
   Boolean OK;
   Word AdrWord, Mask08;
   Byte ZeroMode;
-  String s;
+  char *s;
   ShortInt tmode1, tmode2;
 
-  AdrMode = ModNone; AdrCnt = 0;
+  AdrMode = ModNone;
+  AdrCnt = 0;
 
   Mask08 = Mask & MMod08;
-  if (MomCPU == CPU6805) Mask &= MMod05;
+  if (MomCPU == CPU6805)
+    Mask &= MMod05;
 
   if (Stop - Start == 1)
   {
     if (!strcasecmp(ArgStr[Stop], "X"))
     {
-      tmode1 = ModIx1; tmode2 = ModIx2;
+      tmode1 = ModIx1;
+      tmode2 = ModIx2;
     }
     else if (!strcasecmp(ArgStr[Stop],"SP"))
     {
-      tmode1 = ModSP1; tmode2 = ModSP2;
+      tmode1 = ModSP1;
+      tmode2 = ModSP2;
       if (MomCPU < CPU68HC08)
       {
-        WrXError(1445, ArgStr[Stop]); ChkAdr(Mask, Mask08); return;
+        WrXError(1445, ArgStr[Stop]);
+        goto chk;
       }
     }
     else
     {
-      WrXError(1445, ArgStr[Stop]); ChkAdr(Mask, Mask08); return;
+      WrXError(1445, ArgStr[Stop]);
+      goto chk;
     }
 
-    ChkZero(ArgStr[Start], s, &ZeroMode);
+    s = ChkZero(ArgStr[Start], &ZeroMode);
     FirstPassUnknown = False;
     AdrWord = EvalIntExpression(s, (ZeroMode == 2) ? Int8 : Int16, &OK);
 
     if (OK)
     {
-      if ((ZeroMode == 0) && (AdrWord == 0) && (Mask & MModIx) && (tmode1 == ModIx1)) AdrMode = ModIx;
+      if ((ZeroMode == 0) && (AdrWord == 0) && (Mask & MModIx) && (tmode1 == ModIx1))
+        AdrMode = ModIx;
 
       else if (((Mask && (1 << tmode2)) == 0) || (ZeroMode == 2) || ((ZeroMode == 0) && (Hi(AdrWord) == 0)))
       {
-        if (FirstPassUnknown) AdrWord &= 0xff;
+        if (FirstPassUnknown)
+          AdrWord &= 0xff;
         if (Hi(AdrWord) != 0) WrError(1340);
         else
         {
-          AdrCnt = 1; AdrVals[0] = Lo(AdrWord); AdrMode = tmode1;
+          AdrCnt = 1;
+          AdrVals[0] = Lo(AdrWord);
+          AdrMode = tmode1;
         }
       }
 
       else
       {
-        AdrVals[0] = Hi(AdrWord); AdrVals[1] = Lo(AdrWord);
-        AdrCnt = 2; AdrMode = tmode2;
+        AdrVals[0] = Hi(AdrWord);
+        AdrVals[1] = Lo(AdrWord);
+        AdrCnt = 2;
+        AdrMode = tmode2;
       }
     }
   }
@@ -217,7 +227,8 @@ static void DecodeAdr(Byte Start, Byte Stop, Word Mask)
 
     if (!strcasecmp(ArgStr[Start], "X+"))
     {
-      AdrMode = ModIxP; ChkAdr(Mask, Mask08); return;
+      AdrMode = ModIxP;
+      goto chk;
     }
 
     /* X-indirekt */
@@ -225,8 +236,8 @@ static void DecodeAdr(Byte Start, Byte Stop, Word Mask)
     if (!strcasecmp(ArgStr[Start], "X"))
     {
       WrError(280);
-      AdrMode = ModIx; ChkAdr(Mask, Mask08);
-      return;
+      AdrMode = ModIx;
+      goto chk;
     }
 
     /* immediate */
@@ -236,29 +247,33 @@ static void DecodeAdr(Byte Start, Byte Stop, Word Mask)
       switch (OpSize)
       {
         case -1:
-          WrError(1132); break;
+          WrError(1132);
+          break;
         case 0:
           AdrVals[0] = EvalIntExpression(ArgStr[Start] + 1, Int8, &OK);
           if (OK)
           {
-            AdrCnt = 1; AdrMode = ModImm;
+            AdrCnt = 1;
+            AdrMode = ModImm;
           }
           break;
         case 1:
           AdrWord = EvalIntExpression(ArgStr[Start] + 1, Int16, &OK);
           if (OK)
           {
-            AdrVals[0] = Hi(AdrWord); AdrVals[1] = Lo(AdrWord);
-            AdrCnt = 2; AdrMode = ModImm;
+            AdrVals[0] = Hi(AdrWord);
+            AdrVals[1] = Lo(AdrWord);
+            AdrCnt = 2;
+            AdrMode = ModImm;
           }
           break;
       }
-      ChkAdr(Mask, Mask08); return;
+      goto chk;
     }
 
     /* absolut */
 
-    ChkZero(ArgStr[Start], s, &ZeroMode);
+    s = ChkZero(ArgStr[Start], &ZeroMode);
     FirstPassUnknown = False;
     AdrWord = EvalIntExpression(s, (ZeroMode == 2) ? UInt8 : AdrIntType, &OK);
 
@@ -266,25 +281,36 @@ static void DecodeAdr(Byte Start, Byte Stop, Word Mask)
     {
       if (((Mask & MModExt) == 0) || (ZeroMode == 2) || ((ZeroMode == 0) && (Hi(AdrWord) == 0)))
       {
-        if (FirstPassUnknown) AdrWord &= 0xff;
+        if (FirstPassUnknown)
+          AdrWord &= 0xff;
         if (Hi(AdrWord) != 0) WrError(1340);
         else
         {
-          AdrCnt = 1; AdrVals[0] = Lo(AdrWord); AdrMode = ModDir;
+          AdrCnt = 1;
+          AdrVals[0] = Lo(AdrWord);
+          AdrMode = ModDir;
         }
       }
       else
       {
-        AdrVals[0] = Hi(AdrWord); AdrVals[1] = Lo(AdrWord);
-        AdrCnt = 2; AdrMode = ModExt;
+        AdrVals[0] = Hi(AdrWord);
+        AdrVals[1] = Lo(AdrWord);
+        AdrCnt = 2;
+        AdrMode = ModExt;
       }
-      ChkAdr(Mask, Mask08); return;
+      goto chk;
     }
   }
 
   else WrError(1110);
 
-  ChkAdr(Mask, Mask08);
+chk:
+  if ((AdrMode != ModNone) && (!(Mask & (1 << AdrMode))))
+  {
+    WrError(((1 << AdrMode) & Mask08) ? 1505 : 1350);
+    AdrMode = ModNone;
+    AdrCnt = 0;
+  }
 }
 
 /*--------------------------------------------------------------------------*/
@@ -292,13 +318,14 @@ static void DecodeAdr(Byte Start, Byte Stop, Word Mask)
 
 static void DecodeFixed(Word Index)
 {
-  BaseOrder *pOrder = FixedOrders + Index;
+  const BaseOrder *pOrder = FixedOrders + Index;
 
-  if (ArgCnt!=0) WrError(1110);
-  else if (MomCPU < pOrder->MinCPU) WrXError(1500,OpPart);
+  if (ArgCnt != 0) WrError(1110);
+  else if (MomCPU < pOrder->MinCPU) WrXError(1500, OpPart);
   else
   {
-    CodeLen = 1; BAsmCode[0] = pOrder->Code;
+    CodeLen = 1;
+    BAsmCode[0] = pOrder->Code;
   }
 }
 
@@ -306,29 +333,37 @@ static void DecodeMOV(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt!=2) WrError(1110);
+  if (ArgCnt != 2) WrError(1110);
   else if (MomCPU < CPU68HC08) WrXError(1500, OpPart);
   else
   {
-    OpSize = 0; DecodeAdr(1, 1, MModImm | MModDir | MModIxP);
+    OpSize = 0;
+    DecodeAdr(1, 1, MModImm | MModDir | MModIxP);
     switch (AdrMode)
     {
       case ModImm:
-        BAsmCode[1] = AdrVals[0]; DecodeAdr(2, 2, MModDir);
+        BAsmCode[1] = AdrVals[0];
+        DecodeAdr(2, 2, MModDir);
         if (AdrMode == ModDir)
         {
-          BAsmCode[0] = 0x6e; BAsmCode[2] = AdrVals[0]; CodeLen = 3;
+          BAsmCode[0] = 0x6e;
+          BAsmCode[2] = AdrVals[0];
+          CodeLen = 3;
         }
         break;
       case ModDir:
-        BAsmCode[1] = AdrVals[0]; DecodeAdr(2, 2, MModDir | MModIxP);
+        BAsmCode[1] = AdrVals[0];
+        DecodeAdr(2, 2, MModDir | MModIxP);
         switch (AdrMode)
         {
           case ModDir:
-            BAsmCode[0] = 0x4e; BAsmCode[2] = AdrVals[0]; CodeLen = 3;
+            BAsmCode[0] = 0x4e;
+            BAsmCode[2] = AdrVals[0];
+            CodeLen = 3;
             break;
           case ModIxP:
-            BAsmCode[0] = 0x5e; CodeLen = 2;
+            BAsmCode[0] = 0x5e;
+            CodeLen = 2;
             break;
         }
         break;
@@ -336,7 +371,9 @@ static void DecodeMOV(Word Index)
         DecodeAdr(2, 2, MModDir);
         if (AdrMode == ModDir)
         {
-          BAsmCode[0] = 0x7e; BAsmCode[1] = AdrVals[0]; CodeLen = 2;
+          BAsmCode[0] = 0x7e;
+          BAsmCode[1] = AdrVals[0];
+          CodeLen = 2;
         }
         break;
     }
@@ -359,7 +396,9 @@ static void DecodeRel(Word Index)
       if ((!SymbolQuestionable) && ((AdrInt < -128) || (AdrInt>127))) WrError(1370);
       else
       {
-        CodeLen = 2; BAsmCode[0] = pOrder->Code; BAsmCode[1] = Lo(AdrInt);
+        CodeLen = 2;
+        BAsmCode[0] = pOrder->Code;
+        BAsmCode[1] = Lo(AdrInt);
       }
     }
   }
@@ -401,17 +440,20 @@ static void DecodeCBEQ(Word Index)
 
   UNUSED(Index);
 
-  if (MomCPU < CPU68HC08) WrXError(1500,OpPart);
+  if (MomCPU < CPU68HC08) WrXError(1500, OpPart);
   else if (ArgCnt == 2)
   {
     DecodeAdr(1, 1, MModDir | MModIxP);
     switch (AdrMode)
     {
       case ModDir:
-        BAsmCode[0] = 0x31; BAsmCode[1] = AdrVals[0]; Disp = 3;
+        BAsmCode[0] = 0x31;
+        BAsmCode[1] = AdrVals[0];
+        Disp = 3;
         break;
       case ModIxP:
-        BAsmCode[0]=0x71; Disp = 2;
+        BAsmCode[0]=0x71;
+        Disp = 2;
         break;
     }
     if (AdrMode != ModNone)
@@ -422,7 +464,8 @@ static void DecodeCBEQ(Word Index)
         if ((!SymbolQuestionable) && ((AdrInt < -128) || (AdrInt > 127))) WrError(1370);
         else
         {
-          BAsmCode[Disp - 1] = AdrInt & 0xff; CodeLen = Disp;
+          BAsmCode[Disp - 1] = AdrInt & 0xff;
+          CodeLen = Disp;
         }
       }
     }
@@ -433,11 +476,13 @@ static void DecodeCBEQ(Word Index)
     if (!strcasecmp(ArgStr[2], "X+")) Disp = 3;
     else if (!strcasecmp(ArgStr[2],"SP"))
     {
-      BAsmCode[0] = 0x9e; Disp = 4;
+      BAsmCode[0] = 0x9e;
+      Disp = 4;
     }
     else
     {
-      WrXError(1445, ArgStr[2]); OK = False;
+      WrXError(1445, ArgStr[2]);
+      OK = False;
     }
     if (OK)
     {
@@ -451,13 +496,15 @@ static void DecodeCBEQ(Word Index)
           if ((!SymbolQuestionable) && ((AdrInt < -128) || (AdrInt > 127))) WrError(1370);
           else
           {
-            BAsmCode[Disp - 1] = AdrInt & 0xff; CodeLen = Disp;
+            BAsmCode[Disp - 1] = AdrInt & 0xff;
+            CodeLen = Disp;
           }
         }
       }
     }
   }
-  else WrError(1110);
+  else
+    WrError(1110);
 }
 
 static void DecodeDBNZx(Word Index)
@@ -499,16 +546,24 @@ static void DecodeDBNZ(Word Index)
     switch (AdrMode)
     {
       case ModDir:
-        BAsmCode[0] = 0x3b; BAsmCode[1] = AdrVals[0]; Disp = 3;
+        BAsmCode[0] = 0x3b;
+        BAsmCode[1] = AdrVals[0];
+        Disp = 3;
         break;
       case ModIx:
-        BAsmCode[0] = 0x7b; Disp = 2;
+        BAsmCode[0] = 0x7b;
+        Disp = 2;
         break;
       case ModIx1:
-        BAsmCode[0] = 0x6b; BAsmCode[1] = AdrVals[0]; Disp = 3;
+        BAsmCode[0] = 0x6b;
+        BAsmCode[1] = AdrVals[0];
+        Disp = 3;
         break;
       case ModSP1:
-        BAsmCode[0] = 0x9e; BAsmCode[1] = 0x6b; BAsmCode[2] = AdrVals[0]; Disp = 4;
+        BAsmCode[0] = 0x9e;
+        BAsmCode[1] = 0x6b;
+        BAsmCode[2] = AdrVals[0];
+        Disp = 4;
         break;
     }
     if (AdrMode != ModNone)
@@ -519,7 +574,8 @@ static void DecodeDBNZ(Word Index)
         if ((!SymbolQuestionable) && ((AdrInt < -128) || (AdrInt > 127))) WrError(1370);
         else
         {
-          BAsmCode[Disp - 1] = AdrInt & 0xff; CodeLen = Disp;
+          BAsmCode[Disp - 1] = AdrInt & 0xff;
+          CodeLen = Disp;
         }
       }
     }
@@ -528,7 +584,7 @@ static void DecodeDBNZ(Word Index)
 
 static void DecodeALU(Word Index)
 {
-  ALUOrder *pOrder = ALUOrders + Index;
+  const ALUOrder *pOrder = ALUOrders + Index;
 
   if (MomCPU < pOrder->MinCPU) WrXError(1500, OpPart);
   else
@@ -540,31 +596,42 @@ static void DecodeALU(Word Index)
       switch (AdrMode)
       {
         case ModImm:
-          BAsmCode[0] = 0xa0 + pOrder->Code; CodeLen = 1; /* leave for CPHX */
+          BAsmCode[0] = 0xa0 + pOrder->Code;
+          CodeLen = 1; /* leave for CPHX */
           break;
         case ModDir:
-          BAsmCode[0] = 0xb0 + pOrder->Code; CodeLen = 1;
+          BAsmCode[0] = 0xb0 + pOrder->Code;
+          CodeLen = 1;
           break;
         case ModExt:
-          BAsmCode[0] = 0xc0 | pOrder->Code; CodeLen = 1;
+          BAsmCode[0] = 0xc0 | pOrder->Code;
+          CodeLen = 1;
           break;
         case ModIx:
-          BAsmCode[0] = 0xf0 | pOrder->Code; CodeLen = 1;
+          BAsmCode[0] = 0xf0 | pOrder->Code;
+          CodeLen = 1;
           break;
         case ModIx1:
-          BAsmCode[0] = 0xe0 | pOrder->Code; CodeLen = 1;
+          BAsmCode[0] = 0xe0 | pOrder->Code;
+          CodeLen = 1;
           break;
         case ModIx2:
-          BAsmCode[0] = 0xd0 | pOrder->Code; CodeLen = 1;
+          BAsmCode[0] = 0xd0 | pOrder->Code;
+          CodeLen = 1;
           break;
         case ModSP1:
-          BAsmCode[0] = 0x9e; BAsmCode[1] = 0xe0| pOrder->Code; CodeLen = 2;
+          BAsmCode[0] = 0x9e;
+          BAsmCode[1] = 0xe0| pOrder->Code;
+          CodeLen = 2;
           break;
         case ModSP2:
-          BAsmCode[0] = 0x9e; BAsmCode[1] = 0xd0 | pOrder->Code; CodeLen = 2;
+          BAsmCode[0] = 0x9e;
+          BAsmCode[1] = 0xd0 | pOrder->Code;
+          CodeLen = 2;
           break;
       }
-      memcpy(BAsmCode + CodeLen, AdrVals, AdrCnt); CodeLen += AdrCnt;
+      memcpy(BAsmCode + CodeLen, AdrVals, AdrCnt);
+      CodeLen += AdrCnt;
     }
   }
 }
@@ -587,19 +654,25 @@ static void DecodeCPHX(Word Index)
       switch (AdrMode)
       {
         case ModImm:
-          BAsmCode[0] = 0x65; CodeLen = 1;
+          BAsmCode[0] = 0x65;
+          CodeLen = 1;
           break;
         case ModDir:
-          BAsmCode[0] = 0x75; CodeLen = 1;
+          BAsmCode[0] = 0x75;
+          CodeLen = 1;
           break;
         case ModExt:
-          BAsmCode[0] = 0x3e; CodeLen = 1;
+          BAsmCode[0] = 0x3e;
+          CodeLen = 1;
           break;
         case ModSP1:
-          BAsmCode[0] = 0x9e; BAsmCode[1]=0xf3; CodeLen = 2;
+          BAsmCode[0] = 0x9e;
+          BAsmCode[1] = 0xf3;
+          CodeLen = 2;
           break;
       }
-      memcpy(BAsmCode + CodeLen, AdrVals, AdrCnt); CodeLen += AdrCnt;
+      memcpy(BAsmCode + CodeLen, AdrVals, AdrCnt);
+      CodeLen += AdrCnt;
     }
   }
 }
@@ -621,16 +694,21 @@ static void DecodeSTHX(Word Index)
       switch (AdrMode)
       {
         case ModDir:
-          BAsmCode[0] = 0x35; CodeLen = 1;
+          BAsmCode[0] = 0x35;
+          CodeLen = 1;
           break;
         case ModExt:
-          BAsmCode[0] = 0x96; CodeLen = 1;
+          BAsmCode[0] = 0x96;
+          CodeLen = 1;
           break;
         case ModSP1:
-          BAsmCode[0] = 0x9e; BAsmCode[1]=0xff; CodeLen = 2;
+          BAsmCode[0] = 0x9e;
+          BAsmCode[1] = 0xff;
+          CodeLen = 2;
           break;
       }
-      memcpy(BAsmCode + CodeLen, AdrVals, AdrCnt); CodeLen += AdrCnt;
+      memcpy(BAsmCode + CodeLen, AdrVals, AdrCnt);
+      CodeLen += AdrCnt;
     }
   }
 }
@@ -653,28 +731,40 @@ static void DecodeLDHX(Word Index)
       switch (AdrMode)
       {
         case ModImm:
-          BAsmCode[0] = 0x45; CodeLen = 1;
+          BAsmCode[0] = 0x45;
+          CodeLen = 1;
           break;
         case ModDir:
-          BAsmCode[0] = 0x55; CodeLen = 1;
+          BAsmCode[0] = 0x55;
+          CodeLen = 1;
           break;
         case ModExt:
-          BAsmCode[0] = 0x32; CodeLen = 1;
+          BAsmCode[0] = 0x32;
+          CodeLen = 1;
           break;
         case ModIx  :
-          BAsmCode[0] = 0x9e; BAsmCode[1] = 0xae; CodeLen = 2;
+          BAsmCode[0] = 0x9e;
+          BAsmCode[1] = 0xae;
+          CodeLen = 2;
           break;
         case ModIx1 :
-          BAsmCode[0] = 0x9e; BAsmCode[1] = 0xce; CodeLen = 2;
+          BAsmCode[0] = 0x9e;
+          BAsmCode[1] = 0xce;
+          CodeLen = 2;
           break;
         case ModIx2 :
-          BAsmCode[0] = 0x9e; BAsmCode[1] = 0xbe; CodeLen = 2;
+          BAsmCode[0] = 0x9e;
+          BAsmCode[1] = 0xbe;
+          CodeLen = 2;
           break;
         case ModSP1:
-          BAsmCode[0] = 0x9e; BAsmCode[1] = 0xfe; CodeLen = 2;
+          BAsmCode[0] = 0x9e;
+          BAsmCode[1] = 0xfe;
+          CodeLen = 2;
           break;
       }
-      memcpy(BAsmCode + CodeLen, AdrVals, AdrCnt); CodeLen += AdrCnt;
+      memcpy(BAsmCode + CodeLen, AdrVals, AdrCnt);
+      CodeLen += AdrCnt;
     }
   }
 }
@@ -691,14 +781,15 @@ static void DecodeAIx(Word Index)
     BAsmCode[1] = EvalIntExpression(ArgStr[1] + 1, SInt8, &OK);
     if (OK)
     {
-      BAsmCode[0] = 0xa7 | Index; CodeLen = 2;
+      BAsmCode[0] = 0xa7 | Index;
+      CodeLen = 2;
     }
   }
 }
 
 static void DecodeRMW(Word Index)
 {
-  RMWOrder *pOrder = RMWOrders + Index;
+  const RMWOrder *pOrder = RMWOrders + Index;
 
   if (MomCPU < pOrder->MinCPU) WrXError(1500, OpPart);
   else
@@ -709,19 +800,24 @@ static void DecodeRMW(Word Index)
       switch (AdrMode)
       {
         case ModDir :
-          BAsmCode[0] = 0x30 | pOrder->Code; CodeLen = 1;
+          BAsmCode[0] = 0x30 | pOrder->Code;
+          CodeLen = 1;
           break;
         case ModIx  :
-          BAsmCode[0] = 0x70 | pOrder->Code; CodeLen = 1;
+          BAsmCode[0] = 0x70 | pOrder->Code;
+          CodeLen = 1;
           break;
         case ModIx1 :
-          BAsmCode[0] = 0x60 | pOrder->Code; CodeLen = 1;
+          BAsmCode[0] = 0x60 | pOrder->Code;
+          CodeLen = 1;
           break;
         case ModSP1 :
-          BAsmCode[0] = 0x9e; BAsmCode[1] = 0x60 | pOrder->Code; CodeLen = 2;
+          BAsmCode[0] = 0x9e; BAsmCode[1] = 0x60 | pOrder->Code;
+          CodeLen = 2;
           break;
       }
-      memcpy(BAsmCode + CodeLen, AdrVals, AdrCnt); CodeLen += AdrCnt;
+      memcpy(BAsmCode + CodeLen, AdrVals, AdrCnt);
+      CodeLen += AdrCnt;
     }
   }
 }
@@ -739,7 +835,8 @@ static void DecodeBx(Word Index)
       BAsmCode[0] = EvalIntExpression(ArgStr[1], UInt3, &OK);
       if (OK)
       {
-        CodeLen = 2; BAsmCode[0] = 0x10 |  (BAsmCode[0] << 1) | Index;
+        CodeLen = 2;
+        BAsmCode[0] = 0x10 | (BAsmCode[0] << 1) | Index;
       }
     }
   }
@@ -765,7 +862,8 @@ static void DecodeBRx(Word Index)
           if ((!SymbolQuestionable) && ((AdrInt < -128) || (AdrInt > 127))) WrError(1370);
           else
           {
-            CodeLen = 3; BAsmCode[0] = (BAsmCode[0] << 1) | Index;
+            CodeLen = 3;
+            BAsmCode[0] = (BAsmCode[0] << 1) | Index;
             BAsmCode[2] = Lo(AdrInt);
           }
         }
@@ -930,9 +1028,11 @@ static void MakeCode_6805(void)
   int l;
   char ch;
 
-  CodeLen = 0; DontPrint = False; OpSize = (-1);
+  CodeLen = 0;
+  DontPrint = False;
+  OpSize = (-1);
 
-  /* deduce operand size No size is zero-length string -> '\0' */
+  /* deduce operand size - no size is zero-length string -> '\0' */
 
   switch (mytoupper(*AttrPart))
   {
@@ -951,12 +1051,15 @@ static void MakeCode_6805(void)
 
   /* zu ignorierendes */
 
-  if (Memo("")) return;
+  if (Memo(""))
+    return;
 
   /* Pseudoanweisungen */
 
-  if (DecodeMotoPseudo(True)) return;
-  if (DecodeMoto16Pseudo(OpSize, True)) return;
+  if (DecodeMotoPseudo(True))
+    return;
+  if (DecodeMoto16Pseudo(OpSize, True))
+    return;
 
   l = strlen(OpPart);
   ch = OpPart[l - 1];
@@ -964,8 +1067,11 @@ static void MakeCode_6805(void)
   {
     int z;
 
-    for (z = ArgCnt; z >= 1; z--) strcpy(ArgStr[z + 1], ArgStr[z]);
-    *ArgStr[1] = ch; ArgStr[1][1] = '\0'; ArgCnt++;
+    for (z = ArgCnt; z >= 1; z--)
+      strcpy(ArgStr[z + 1], ArgStr[z]);
+    *ArgStr[1] = ch;
+    ArgStr[1][1] = '\0';
+    ArgCnt++;
     OpPart[l - 1] = '\0';
   }
 
@@ -975,28 +1081,38 @@ static void MakeCode_6805(void)
 
 static Boolean IsDef_6805(void)
 {
-   return False;
+  return False;
 }
 
 static void SwitchFrom_6805(void)
 {
-   DeinitFields();
+  DeinitFields();
 }
 
 static void SwitchTo_6805(void)
 {
-  TurnWords = False; ConstMode = ConstModeMoto; SetIsOccupied = False;
+  TurnWords = False;
+  ConstMode = ConstModeMoto;
+  SetIsOccupied = False;
 
-  PCSymbol = "*"; HeaderID = 0x62; NOPCode = 0x9d;
-  DivideChars = ","; HasAttrs = True; AttrChars = ".";
+  PCSymbol = "*";
+  HeaderID = 0x62;
+  NOPCode = 0x9d;
+  DivideChars = ",";
+  HasAttrs = True;
+  AttrChars = ".";
 
   ValidSegs = (1 << SegCode);
-  Grans[SegCode] = 1; ListGrans[SegCode] = 1; SegInits[SegCode] = 0;
+  Grans[SegCode] = 1;
+  ListGrans[SegCode] = 1;
+  SegInits[SegCode] = 0;
   SegLimits[SegCode] = (MomCPU >= CPU68HC08) ? 0xffff : 0x1fff;
   AdrIntType = (MomCPU >= CPU68HC08) ? UInt16 : UInt13;
 
-  MakeCode = MakeCode_6805; IsDef = IsDef_6805;
-  SwitchFrom = SwitchFrom_6805; InitFields();
+  MakeCode = MakeCode_6805;
+  IsDef = IsDef_6805;
+  SwitchFrom = SwitchFrom_6805;
+  InitFields();
   AddMoto16PseudoONOFF();
 }
 

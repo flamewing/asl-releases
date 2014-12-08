@@ -413,7 +413,7 @@ static void MakeCode_sc14xxx(void)
 
   if (Memo("")) return;
 
-  if (NOT LookupInstTable(InstTable,OpPart))
+  if (!LookupInstTable(InstTable,OpPart))
     WrXError(1200, OpPart);
 }
 

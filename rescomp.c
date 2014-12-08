@@ -109,7 +109,7 @@ static TransRec TransRecs[] =
   { "&iquest;", CH_iquest },
   { "&iexcl;" , CH_iexcl  },
   { "\\n"     , "\n"      },
-  { Nil       , Nil       }
+  { NULL      , NULL      }
 };
 
 /*****************************************************************************/
@@ -204,7 +204,7 @@ static void Process_LANGS(char *Line)
   MsgCats = (PMsgCat) malloc(sizeof(TMsgCat) * (CatCount = z)); p = NLine;
   for (z = 0, PCat = MsgCats; z < CatCount; z++, PCat++)
   {
-    PCat->Messages = Nil;
+    PCat->Messages = NULL;
     PCat->TotLength = 0;
     PCat->CtryCodeCnt = 0;
     for (p2 = p; ((*p2) && (!myisspace(*p2))); p2++);
@@ -281,7 +281,8 @@ static void Process_MESSAGE(char *Line)
     {
       GetLine(OneLine); KillPrefBlanks(OneLine); KillPostBlanks(OneLine);
       l = strlen(OneLine);
-      if ((Cont = (OneLine[l - 1] == '\\')))
+      Cont = OneLine[l - 1] == '\\';
+      if (Cont)
       {
         OneLine[l - 1] = '\0'; KillPostBlanks(OneLine); l = strlen(OneLine);
       }
@@ -291,13 +292,16 @@ static void Process_MESSAGE(char *Line)
     }
     while (Cont);
     for (PRec = TransRecs; PRec->AbbString; PRec++)
-      while ((pos = strstr(Msg, PRec->AbbString)))
+      while (True)
       {
+        pos = strstr(Msg, PRec->AbbString);
+        if (!pos)
+          break;
         strmov(pos, pos + strlen(PRec->AbbString) - strlen(PRec->Character));
         memcpy(pos, PRec->Character, strlen(PRec->Character));
       }
     List = (PMsgList) malloc(sizeof(TMsgList));
-    List->Next = Nil;
+    List->Next = NULL;
     List->Position = z->TotLength;
     List->Contents = strdup(Msg);
     if (!z->Messages) z->Messages = List;

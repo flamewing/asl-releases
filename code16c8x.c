@@ -13,9 +13,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code16c8x.c,v 1.7 2013/12/21 19:46:51 alfred Exp $                   */
+/* $Id: code16c8x.c,v 1.8 2014/10/03 12:03:45 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code16c8x.c,v $
+ * Revision 1.8  2014/10/03 12:03:45  alfred
+ * - rework to current style
+ *
  * Revision 1.7  2013/12/21 19:46:51  alfred
  * - dynamically resize code buffer
  *
@@ -59,35 +62,7 @@
 
 /*---------------------------------------------------------------------------*/
 
-typedef struct
-        {
-          Word Code;
-        } FixedOrder;
-
-typedef struct
-        {
-          Word Code;
-          Byte DefaultDir;
-        } AriOrder;
-
-#define D_CPU16C64  0
-#define D_CPU16C84  1
-#define D_CPU16C873 2
-#define D_CPU16C874 3
-#define D_CPU16C876 4
-#define D_CPU16C877 5
-
-#define FixedOrderCnt 7
-#define LitOrderCnt 7
-#define AriOrderCnt 14
-#define BitOrderCnt 4
-#define FOrderCnt 2
-
-static FixedOrder *FixedOrders;
-static FixedOrder *LitOrders;
-static AriOrder *AriOrders;
-static FixedOrder *BitOrders;
-static FixedOrder *FOrders;
+#define AddCodeSpace 0x300
 
 static CPUVar CPU16C64, CPU16C84, CPU16C873, CPU16C874, CPU16C876, CPU16C877;
 
@@ -108,56 +83,41 @@ static Word EvalFExpression(char *pAsc, Boolean *pOK)
     return 0;
 }
 
-static Word ROMEnd(void)
-{
-  switch (MomCPU - CPU16C64)
-  {
-    case D_CPU16C64 : return 0x7ff;
-    case D_CPU16C84 : return 0x3ff;
-    case D_CPU16C873: return 0x0fff;
-    case D_CPU16C874: return 0x0fff;
-    case D_CPU16C876: return 0x1fff;
-    case D_CPU16C877: return 0x1fff;
-    default: return 0;
-  }
-}
-
 /*--------------------------------------------------------------------------*/
 /* instruction decoders */
 
-static void DecodeFixed(Word Index)
+static void DecodeFixed(Word Code)
 {
-  const FixedOrder *pOrder = FixedOrders + Index;
-
   if (ArgCnt != 0) WrError(1110);
   else
   {
-    WAsmCode[CodeLen++] = pOrder->Code;
+    WAsmCode[CodeLen++] = Code;
     if (Memo("OPTION"))
       WrError(130);
   }
 }
 
-static void DecodeLit(Word Index)
+static void DecodeLit(Word Code)
 {
   Word AdrWord;
   Boolean OK;
-  const FixedOrder *pOrder = LitOrders + Index;
 
   if (ArgCnt != 1) WrError(1110);
   else
   {
     AdrWord = EvalIntExpression(ArgStr[1], Int8, &OK);
     if (OK)
-      WAsmCode[CodeLen++] = pOrder->Code | Lo(AdrWord);
+      WAsmCode[CodeLen++] = Code | Lo(AdrWord);
   }
 }
 
-static void DecodeAri(Word Index)
+static void DecodeAri(Word Code)
 {
+  Word DefaultDir = (Code >> 8) & 0x80;
   Boolean OK;
   Word AdrWord;
-  const AriOrder *pOrder = AriOrders + Index;
+
+  Code &= 0x7fff;
 
   if ((ArgCnt == 0) || (ArgCnt > 2)) WrError(1110);
   else
@@ -165,10 +125,10 @@ static void DecodeAri(Word Index)
     AdrWord = EvalFExpression(ArgStr[1], &OK);
     if (OK)
     {
-      WAsmCode[0] = pOrder->Code | AdrWord;
+      WAsmCode[0] = Code | AdrWord;
       if (1 == ArgCnt)
       {
-        WAsmCode[0] |= pOrder->DefaultDir << 7;
+        WAsmCode[0] |= DefaultDir;
         CodeLen = 1;
       }
       else if (!strcasecmp(ArgStr[2], "W"))
@@ -191,11 +151,10 @@ static void DecodeAri(Word Index)
   }
 }
 
-static void DecodeBit(Word Index)
+static void DecodeBit(Word Code)
 {
   Word AdrWord;
   Boolean OK;
-  const FixedOrder *pOrder = BitOrders + Index;
 
   if (ArgCnt != 2) WrError(1110);
   else
@@ -206,25 +165,24 @@ static void DecodeBit(Word Index)
       WAsmCode[0] = EvalFExpression(ArgStr[1], &OK);
       if (OK)
       {
-        WAsmCode[0] |= pOrder->Code | (AdrWord << 7);
+        WAsmCode[0] |= Code | (AdrWord << 7);
         CodeLen = 1;
       }
     }
   }
 }
 
-static void DecodeF(Word Index)
+static void DecodeF(Word Code)
 {
   Word AdrWord;
   Boolean OK;
-  const FixedOrder *pOrder = FOrders + Index;
 
   if (ArgCnt != 1) WrError(1110);
   else
   {
     AdrWord = EvalFExpression(ArgStr[1], &OK);
     if (OK)
-      WAsmCode[CodeLen++] = pOrder->Code | AdrWord;
+      WAsmCode[CodeLen++] = Code | AdrWord;
   }
 }
 
@@ -261,7 +219,7 @@ static void DecodeJump(Word Index)
     AdrWord = EvalIntExpression(ArgStr[1], Int16, &OK);
     if (OK)
     {
-      if (AdrWord > ROMEnd()) WrError(1320);
+      if (AdrWord > (SegLimits[SegCode] - AddCodeSpace)) WrError(1320);
       else
       {
         Word XORVal, Mask, RegBit;
@@ -424,51 +382,33 @@ static void DecodeBANKSEL(Word Index)
 
 static void AddFixed(char *NName, Word NCode)
 {
-  if (InstrZ >= FixedOrderCnt)
-    exit(255);
-  FixedOrders[InstrZ].Code = NCode;
-  AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
+  AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
 static void AddLit(char *NName, Word NCode)
 {
-  if (InstrZ >= LitOrderCnt)
-    exit(255);
-  LitOrders[InstrZ].Code = NCode;
-  AddInstTable(InstTable, NName, InstrZ++, DecodeLit);
+  AddInstTable(InstTable, NName, NCode, DecodeLit);
 }
 
-static void AddAri(char *NName, Word NCode, Byte NDir)
+static void AddAri(char *NName, Word NCode, Word NDir)
 {
-  if (InstrZ >= AriOrderCnt)
-    exit(255);
-  AriOrders[InstrZ].Code = NCode;
-  AriOrders[InstrZ].DefaultDir = NDir;
-  AddInstTable(InstTable, NName, InstrZ++, DecodeAri);
+  AddInstTable(InstTable, NName, NCode | (NDir << 15), DecodeAri);
 }
 
 static void AddBit(char *NName, Word NCode)
 {
-  if (InstrZ >= BitOrderCnt)
-    exit(255);
-  BitOrders[InstrZ].Code = NCode;
-  AddInstTable(InstTable, NName, InstrZ++, DecodeBit);
+  AddInstTable(InstTable, NName, NCode, DecodeBit);
 }
 
 static void AddF(char *NName, Word NCode)
 {
-  if (InstrZ >= FOrderCnt)
-    exit(255);
-  FOrders[InstrZ].Code = NCode;
-  AddInstTable(InstTable, NName, InstrZ++, DecodeF);
+  AddInstTable(InstTable, NName, NCode, DecodeF);
 }
 
 static void InitFields(void)
 {
   InstTable = CreateInstTable(201);
 
-  FixedOrders = (FixedOrder *) malloc(sizeof(FixedOrder) * FixedOrderCnt);
-  InstrZ = 0;
   AddFixed("CLRW"  , 0x0100);
   AddFixed("NOP"   , 0x0000);
   AddFixed("CLRWDT", 0x0064);
@@ -477,8 +417,6 @@ static void InitFields(void)
   AddFixed("RETFIE", 0x0009);
   AddFixed("RETURN", 0x0008);
  
-  LitOrders = (FixedOrder *) malloc(sizeof(FixedOrder) * LitOrderCnt);
-  InstrZ = 0;
   AddLit("ADDLW", 0x3e00);
   AddLit("ANDLW", 0x3900);
   AddLit("IORLW", 0x3800);
@@ -487,8 +425,6 @@ static void InitFields(void)
   AddLit("SUBLW", 0x3c00);
   AddLit("XORLW", 0x3a00);
 
-  AriOrders = (AriOrder *) malloc(sizeof(AriOrder) * AriOrderCnt);
-  InstrZ = 0;
   AddAri("ADDWF" , 0x0700, 0);
   AddAri("ANDWF" , 0x0500, 0);
   AddAri("COMF"  , 0x0900, 1);
@@ -504,15 +440,11 @@ static void InitFields(void)
   AddAri("SWAPF" , 0x0e00, 1);
   AddAri("XORWF" , 0x0600, 0);
 
-  BitOrders = (FixedOrder *) malloc(sizeof(FixedOrder) * BitOrderCnt);
-  InstrZ = 0;
   AddBit("BCF"  , 0x1000);
   AddBit("BSF"  , 0x1400);
   AddBit("BTFSC", 0x1800);
   AddBit("BTFSS", 0x1c00);
 
-  FOrders = (FixedOrder *) malloc(sizeof(FixedOrder) * FOrderCnt);
-  InstrZ = 0;
   AddF("CLRF" , 0x0180);
   AddF("MOVWF", 0x0080);
 
@@ -529,12 +461,6 @@ static void InitFields(void)
 
 static void DeinitFields(void)
 {
-  free(FixedOrders);
-  free(LitOrders);
-  free(AriOrders);
-  free(BitOrders);
-  free(FOrders);
-
   DestroyInstTable(InstTable);
 }
 
@@ -576,7 +502,9 @@ static void SwitchTo_16c8x(void)
 {
   PFamilyDescr pDescr;
 
-  TurnWords = False; ConstMode = ConstModeMoto; SetIsOccupied = False;
+  TurnWords = False;
+  ConstMode = ConstModeMoto;
+  SetIsOccupied = False;
 
   pDescr = FindFamilyByName("16C8x");
   PCSymbol = "*";
@@ -587,7 +515,20 @@ static void SwitchTo_16c8x(void)
 
   ValidSegs = (1 << SegCode) | (1 << SegData);
   Grans[SegCode] = 2; ListGrans[SegCode] = 2; SegInits[SegCode] = 0;
-  SegLimits[SegCode] = ROMEnd() + 0x300;
+  if (MomCPU == CPU16C64)
+    SegLimits[SegCode] = 0x7ff;
+  else if (MomCPU == CPU16C873)
+    SegLimits[SegCode] = 0x0fff;
+  else if (MomCPU == CPU16C874)
+    SegLimits[SegCode] = 0x0fff;
+  else if (MomCPU == CPU16C876)
+    SegLimits[SegCode] = 0x1fff;
+  else if (MomCPU == CPU16C877)
+    SegLimits[SegCode] = 0x1fff;
+  else
+    SegLimits[SegCode] = 0x3ff;
+
+  SegLimits[SegCode] += AddCodeSpace;
   Grans[SegData] = 1; ListGrans[SegData] = 1; SegInits[SegData] = 0;
   SegLimits[SegData] = 0x1ff;
   ChkPC = ChkPC_16c8x;

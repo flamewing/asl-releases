@@ -12,9 +12,15 @@
 /*             2002-01-27 allow immediate addressing for one-op instrs(doj)  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemsp.c,v 1.11 2013/12/21 19:46:51 alfred Exp $                     */
+/* $Id: codemsp.c,v 1.13 2014/12/07 19:14:01 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: codemsp.c,v $
+ * Revision 1.13  2014/12/07 19:14:01  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
+ * Revision 1.12  2014/12/05 11:15:28  alfred
+ * - eliminate AND/OR/NOT
+ *
  * Revision 1.11  2013/12/21 19:46:51  alfred
  * - dynamically resize code buffer
  *
@@ -416,7 +422,7 @@ static void DecodeBYTE(Word Index)
       }
       z++;
     }
-    while ((z<=ArgCnt) AND (OK));
+    while ((z <= ArgCnt) && (OK));
     if (!OK) CodeLen = 0;
     else if ((Odd(CodeLen)) && (DoPadding)) PutByte(0);
   }
@@ -427,6 +433,8 @@ static void DecodeWORD(Word Index)
   int z;
   Word HVal16;
   Boolean OK;
+
+  UNUSED(Index);
 
   if (ArgCnt == 0) WrError(1110);
   else
@@ -451,6 +459,8 @@ static void DecodeBSS(Word Index)
 {
   Word HVal16;
   Boolean OK;
+
+  UNUSED(Index);
 
   if (ArgCnt!=1) WrError(1110);
   else

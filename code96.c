@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code96.c,v 1.7 2014/07/12 20:27:42 alfred Exp $                      *
+/* $Id: code96.c,v 1.8 2014/11/05 15:47:15 alfred Exp $                      *
  ***************************************************************************** 
  * $Log: code96.c,v $
+ * Revision 1.8  2014/11/05 15:47:15  alfred
+ * - replace InitPass callchain with registry
+ *
  * Revision 1.7  2014/07/12 20:27:42  alfred
  * - rework to current style
  *
@@ -65,7 +68,6 @@ enum { ModNone = -1, ModDir = 0, ModMem = 1, ModImm = 2 };
 #define SFRStop 0x17
 
 static CPUVar CPU8096, CPU80196, CPU80196N, CPU80296;
-static SimpProc SaveInitProc;
 
 static Byte AdrMode;
 static ShortInt AdrType;
@@ -1338,7 +1340,6 @@ static void MakeCode_96(void)
 
 static void InitCode_96(void)
 {
-  SaveInitProc();
   WSRVal  = 0; CalcWSRWindow();
   WSR1Val = 0; CalcWSR1Window();
 }
@@ -1399,6 +1400,5 @@ void code96_init(void)
   CPU80196N = AddCPU("80196N", SwitchTo_96);
   CPU80296  = AddCPU("80296" , SwitchTo_96);
 
-  SaveInitProc = InitPassProc;
-  InitPassProc = InitCode_96;
+  AddInitPassProc(InitCode_96);
 }

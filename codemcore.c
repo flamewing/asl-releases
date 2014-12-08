@@ -10,9 +10,18 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemcore.c,v 1.6 2014/06/10 10:27:15 alfred Exp $                   */
+/* $Id: codemcore.c,v 1.9 2014/12/07 19:14:01 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codemcore.c,v $
+ * Revision 1.9  2014/12/07 19:14:01  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
+ * Revision 1.8  2014/12/05 11:58:16  alfred
+ * - collapse STDC queries into one file
+ *
+ * Revision 1.7  2014/12/05 08:53:45  alfred
+ * - eliminate remaining BEGIN/END
+ *
  * Revision 1.6  2014/06/10 10:27:15  alfred
  * - adapt to current style
  *
@@ -46,6 +55,7 @@
 #include "motpseudo.h"
 #include "asmitree.h"
 #include "codevars.h"
+#include "intconsts.h"
 
 /*--------------------------------------------------------------------------*/
 /* Variablen */
@@ -432,10 +442,11 @@ static void DecodeLdStm(Word Index)
   else if ((*ArgStr[2] != '(') || (ArgStr[2][l = strlen(ArgStr[2]) - 1] != ')')) WrError(1350);
   else
   {
+    p = strchr(ArgStr[1], '-');
     ArgStr[2][l] = '\0';
     if (!DecodeReg(ArgStr[2] + 1, &RegI)) WrXError(1445, ArgStr[2] + 1);
     else if (RegI != 0) WrXError(1445, ArgStr[2] + 1);
-    else if (!(p = strchr(ArgStr[1], '-'))) WrError(1350);
+    else if (!p) WrError(1350);
     else if (!DecodeReg(p + 1, &RegL)) WrXError(1445, p + 1);
     else if (RegL != 15) WrXError(1445, p + 1);
     else
@@ -464,9 +475,10 @@ static void DecodeLdStq(Word Index)
   else
   {
     ArgStr[2][l] = '\0';
+    p = strchr(ArgStr[1], '-');
     if (!DecodeReg(ArgStr[2] + 1, &RegX)) WrXError(1445, ArgStr[2] + 1);
     else if ((RegX >= 4) && (RegX <= 7)) WrXError(1445, ArgStr[2]+1);
-    else if (!(p = strchr(ArgStr[1], '-'))) WrError(1350);
+    else if (!p) WrError(1350);
     else if (!DecodeReg(p + 1, &RegL)) WrXError(1445, p + 1);
     else if (RegL != 7) WrXError(1445, p + 1);
     else
@@ -818,11 +830,7 @@ static void SwitchTo_MCORE(void)
 
    ValidSegs = (1 << SegCode);
    Grans[SegCode] = 1; ListGrans[SegCode] = 2; SegInits[SegCode] = 0;
-#ifdef __STDC__
-   SegLimits[SegCode] = 0xfffffffful;
-#else
-   SegLimits[SegCode] = 0xffffffffl;
-#endif
+   SegLimits[SegCode] = INTCONST_ffffffff;
 
    MakeCode = MakeCode_MCORE; IsDef = IsDef_MCORE;
 
@@ -831,7 +839,7 @@ static void SwitchTo_MCORE(void)
    AddMoto16PseudoONOFF();
 
    SetFlag(&DoPadding, DoPaddingName, True);
-END
+}
 
 /*--------------------------------------------------------------------------*/
 /* Initialisierung */

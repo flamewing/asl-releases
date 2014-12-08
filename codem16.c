@@ -9,9 +9,21 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codem16.c,v 1.29 2014/07/02 20:55:42 alfred Exp $                     */
+/* $Id: codem16.c,v 1.33 2014/12/07 19:14:01 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codem16.c,v $
+ * Revision 1.33  2014/12/07 19:14:01  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
+ * Revision 1.32  2014/12/05 11:58:16  alfred
+ * - collapse STDC queries into one file
+ *
+ * Revision 1.31  2014/11/23 18:38:23  alfred
+ * - use sizeof()
+ *
+ * Revision 1.30  2014/11/16 13:15:08  alfred
+ * - remove some superfluous semicolons
+ *
  * Revision 1.29  2014/07/02 20:55:42  alfred
  * - complete rework of M16
  *
@@ -115,6 +127,7 @@
 #include "codepseudo.h"
 #include "intpseudo.h"
 #include "codevars.h"
+#include "intconsts.h"
 
 #define ModNone      (-1)
 #define ModReg       0
@@ -347,7 +360,7 @@ static PChainRec DecodeChain(char *Asc)
     if (!p)
     {
       strmaxcpy(Part, Asc, 255);
-      *Asc = '\0'; 
+      *Asc = '\0';
     }
     else
     {
@@ -714,7 +727,7 @@ static Boolean DecodeAdr(char *Asc, int Index, Word Mask)
           RunChain->Scales[z2] = RunChain->Scales[z2 + 1];
         }
         RunChain->RegCnt--;
-      };
+      }
 
       /* Jetzt ueber die einzelnen Komponenten iterieren */
 
@@ -728,7 +741,7 @@ static Boolean DecodeAdr(char *Asc, int Index, Word Mask)
         {
           PrevChain = RunChain;
           RunChain = RunChain->Next;
-        };
+        }
 
         /* noch etwas abzulegen ? */
 
@@ -1000,13 +1013,13 @@ static Boolean DecodeRegList(char *Asc, Word *Erg, Boolean Turn)
     p = ((p1) && (p1<p2)) ? p1 : p2;
     if (!p)
     {
-      strmaxcpy(Part, Asc, 11);
+      strmaxcpy(Part, Asc, sizeof(Part));
       *Asc = '\0';
     }
     else
     {
       *p = '\0';
-      strmaxcpy(Part, Asc, 11);
+      strmaxcpy(Part, Asc, sizeof(Part));
       strmov(Asc, p + 1);
     }
     p = strchr(Part, '-');
@@ -1026,7 +1039,7 @@ static Boolean DecodeRegList(char *Asc, Word *Erg, Boolean Turn)
       {
         WrXError(1410, Part);
         return False;
-      };
+      }
       if (!DecodeReg(p + 1, &r2))
       {
         WrXError(1410, p + 1);
@@ -1092,7 +1105,7 @@ static Boolean CheckFormat(char *FSet)
     else
       WrError(1090);
     return (p != NULL);
-  };
+  }
   return True;
 }
 
@@ -2001,6 +2014,8 @@ static void DecodeQINS_QDEL(Word IsQINS)
 
 static void DecodeRVBY(Word Code)
 {
+  UNUSED(Code);
+
   if (ArgCnt != 2) WrError(1110);
   else if ((CheckFormat("G"))
         && (GetOpSize(ArgStr[1], 1))
@@ -2272,7 +2287,7 @@ static void DecodeBit(Word Index)
                 CodeLen = 2 + AdrCnt1[2];
               }
             }
-            break; 
+            break;
         }
       }
     }
@@ -2704,6 +2719,8 @@ static void DecodeENTER_EXITD(Word IsEXITD)
 
 static void DecodeSCMP(Word Code)
 {
+  UNUSED(Code);
+
   if (DOpSize == -1) DOpSize = 2;
   if (ArgCnt != 0) WrError(1110);
   else if (OptionCnt > 1) WrError(1115);
@@ -3190,11 +3207,7 @@ static void SwitchTo_M16(void)
   Grans[SegCode] = 1;
   ListGrans[SegCode] = 2;
   SegInits[SegCode] = 0;
-#ifdef __STDC__
-  SegLimits[SegCode] = 0xfffffffful;
-#else
-  SegLimits[SegCode] = 0xffffffffl;
-#endif
+  SegLimits[SegCode] = INTCONST_ffffffff;
 
   MakeCode = MakeCode_M16;
   IsDef = IsDef_M16;

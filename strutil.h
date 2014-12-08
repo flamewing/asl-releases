@@ -12,9 +12,15 @@
 /*           29. 5.1999 SysString                                            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: strutil.h,v 1.7 2010/04/17 13:14:24 alfred Exp $                     */
+/* $Id: strutil.h,v 1.9 2014/12/07 19:14:02 alfred Exp $                     */
 /*****************************************************************************
  * $Log: strutil.h,v $
+ * Revision 1.9  2014/12/07 19:14:02  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
+ * Revision 1.8  2014/12/03 19:01:01  alfred
+ * - remove static return value
+ *
  * Revision 1.7  2010/04/17 13:14:24  alfred
  * - address overlapping strcpy()
  *
@@ -34,7 +40,7 @@
 
 extern Boolean HexLowerCase;
 
-extern char *Blanks(int cnt);
+extern const char *Blanks(int cnt);
 
 extern char *HexString(LargeWord i, Byte Stellen);
 
@@ -42,14 +48,14 @@ extern char *SysString(LargeWord i, LargeWord System, Byte Stellen);
 
 extern char *HexBlankString(LargeWord i, Byte Stellen);
 
-extern char *LargeString(LargeInt i);
+extern char *LargeString(char *pDest, LargeInt i);
 
 #ifdef NEEDS_STRDUP
-extern char *strdup(char *s);
+extern char *strdup(const char *s);
 #endif
 #ifdef CKMALLOC
 #define strdup(s) mystrdup(s)
-extern char *mystrdup(char *s);
+extern char *mystrdup(const char *s);
 #endif
 
 #ifdef NEEDS_CASECMP

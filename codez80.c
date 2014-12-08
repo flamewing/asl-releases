@@ -10,9 +10,21 @@
 /*           2001-12-11 begun with Rabbit2000                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codez80.c,v 1.10 2014/06/20 17:39:22 alfred Exp $                     */
+/* $Id: codez80.c,v 1.14 2014/12/07 19:14:02 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codez80.c,v $
+ * Revision 1.14  2014/12/07 19:14:02  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
+ * Revision 1.13  2014/12/05 11:58:16  alfred
+ * - collapse STDC queries into one file
+ *
+ * Revision 1.12  2014/12/05 08:53:45  alfred
+ * - eliminate remaining BEGIN/END
+ *
+ * Revision 1.11  2014/11/05 15:47:16  alfred
+ * - replace InitPass callchain with registry
+ *
  * Revision 1.10  2014/06/20 17:39:22  alfred
  * - correctly report invalid conditions
  *
@@ -68,6 +80,7 @@
 #include "codepseudo.h" 
 #include "intpseudo.h"
 #include "codevars.h"
+#include "intconsts.h"
 
 /*-------------------------------------------------------------------------*/
 /* Instruktionsgruppendefinitionen */
@@ -117,15 +130,9 @@ typedef enum
 #define IXPrefix 0xdd
 #define IYPrefix 0xfd
 
-#ifdef __STDC__
-# define U32Mask 0xfffffffflu
-# define U16Mask 0xffff0000lu
-# define U8Mask 0xff000000lu
-#else
-# define U32Mask 0xffffffffl
-# define U16Mask 0xffff0000l
-# define U8Mask 0xff000000l
-#endif
+#define U32Mask INTCONST_ffffffff
+#define U16Mask INTCONST_ffff0000
+#define U8Mask  INTCONST_ff000000
 
 /*-------------------------------------------------------------------------*/
 
@@ -138,8 +145,6 @@ static BaseOrder *FixedOrders;
 static BaseOrder *AccOrders;
 static BaseOrder *HLOrders;
 static Condition *Conditions;
-
-static SimpProc SaveInitProc;
 
 static CPUVar CPUZ80, CPUZ80U, CPUZ180, CPUR2000, CPUZ380;
 
@@ -1927,6 +1932,8 @@ static void DecodeTST(Word Index)
 
 static void DecodeSWAP(Word Index)
 {
+  UNUSED(Index);
+
   if (ArgCnt != 1) WrError(1110);
   else if (MomCPU < CPUZ380) WrError(1500);
   else
@@ -2284,7 +2291,7 @@ static void DecodeIN_OUT(Word IsOUT)
         ChkSpace(SegIO);
         CodeLen = 2;
         BAsmCode[0] = IsOUT ? 0xd3 : 0xdb;
-       END
+      }
     }
   }
 }
@@ -2694,6 +2701,8 @@ static void DecodeCALR(Word Code)
   Boolean OK;
   int Condition;
 
+  UNUSED(Code);
+
   switch (ArgCnt)
   {
     case 1:
@@ -2814,6 +2823,8 @@ static void DecodeDJNZ(Word Code)
 
 static void DecodeRST(Word Code)
 {
+  UNUSED(Code);
+
   if (ArgCnt != 1) WrError(1110);
   else
   {
@@ -2842,7 +2853,7 @@ static void DecodeEI_DI(Word Code)
   {
     BAsmCode[0] = 0xf3 + Code;
     CodeLen = 1;
-   END
+  }
   else if (ArgCnt != 1) WrError(1110);
   else if (MomCPU < CPUZ380) WrError(1500);
   else
@@ -3298,7 +3309,6 @@ static void MakeCode_Z80(void)
 
 static void InitCode_Z80(void)
 {
-  SaveInitProc();
   SetFlag(&ExtFlag, ExtFlagName, False);
   SetFlag(&LWordFlag, LWordFlagName, False);
 }
@@ -3351,6 +3361,5 @@ void codez80_init(void)
   CPUR2000 = AddCPU("RABBIT2000", SwitchTo_Z80);
   CPUZ380  = AddCPU("Z380"      , SwitchTo_Z80);
 
-  SaveInitProc = InitPassProc;
-  InitPassProc = InitCode_Z80;
+  AddInitPassProc(InitCode_Z80);
 }

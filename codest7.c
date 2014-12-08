@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codest7.c,v 1.6 2014/06/09 10:35:13 alfred Exp $                     */
+/* $Id: codest7.c,v 1.7 2014/12/07 19:14:01 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codest7.c,v $
+ * Revision 1.7  2014/12/07 19:14:01  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
  * Revision 1.6  2014/06/09 10:35:13  alfred
  * - rework to current style
  *
@@ -537,6 +540,8 @@ static void DecodePUSH_POP(Word Code)
 static void DecodeCP(Word Code)
 {
   LongInt Mask;
+
+  UNUSED(Code);
 
   if (ArgCnt != 2) WrError(1110);
   else if (*AttrPart != '\0') WrError(1100);

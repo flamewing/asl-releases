@@ -12488,17 +12488,13 @@ sind.  Im Assembler-Quelltext k"onnte dieses Flag, das angibt, in welchem
 Modus der folgende Code ausgef"uhrt wird, durch einen Pseudobefehl
 umgeschaltet werden.  Es ist aber dann immer noch eine Initialisierung
 erforderlich, die sicherstellt, da"s in allen Durchl"aufen ein identischer
-Ausgangszustand vorliegt.  Der "uber den Funktionszeiger \tty{InitPassProc}
+Ausgangszustand vorliegt.  Der "uber die Funktion \tty{AddInitPassProc}
 angebotene Haken bietet die M"oglichkeit, derartige Initialisierungen
-vorzunehmen.  Das verwendete Prinzip "ahnelt dabei dem Einh"angen in
-einen Interruptvektor: In der Initialisierung der Unit wird der alte Wert
-von \tty{InitPassProc} gesichert.  Danach kann \tty{InitPassProc} auf
-die hinzuzuf"ugende Funktion (parameterlos, kein R"uckgabewert) umgebogen
-werden.  Die neue Routine ruft dann zuerst die alte Initialisierungsroutine
-auf und f"uhrt danach ihre eigenen Operationen durch.
+vorzunehmen.  Die "ubergebene Callback-Funktion wird vor Beginn
+eines Durchgangs aufgerufen.
 
-Analog zu \tty{InitPassProc} funktioniert die "uber \tty{CleanUpProc}
-aufgebaute Funktionskette, die es den Codegeneratoren erlaubt, nach dem
+Analog zu \tty{AddInitPassProc} funktioniert die "uber \tty{AddCleanUpProc}
+aufgebaute Funktionsliste, die es den Codegeneratoren erlaubt, nach dem
 Abschlu"s der Assemblierung noch Aufr"aumarbeiten (z.B. das Freigeben von
 Literaltabellen o."a.) durchzuf"uhren.  Dies ist sinnvoll, wenn mehrere
 Dateien mit einem Aufruf assembliert werden, sonst h"atte man noch

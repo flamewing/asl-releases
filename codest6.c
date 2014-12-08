@@ -9,9 +9,15 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codest6.c,v 1.7 2014/06/09 14:12:42 alfred Exp $                     */
+/* $Id: codest6.c,v 1.9 2014/12/07 19:14:01 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codest6.c,v $
+ * Revision 1.9  2014/12/07 19:14:01  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
+ * Revision 1.8  2014/11/05 15:47:16  alfred
+ * - replace InitPass callchain with registry
+ *
  * Revision 1.7  2014/06/09 14:12:42  alfred
  * - convert to current style
  *
@@ -61,8 +67,6 @@ static ShortInt AdrType;
 static Byte AdrVal;
 
 static LongInt WinAssume;
-
-static SimpProc SaveInitProc;
 
 static CPUVar CPUST6210, CPUST6215, CPUST6220, CPUST6225;
 
@@ -239,6 +243,8 @@ static void DecodeLD(Word Code)
 
 static void DecodeLDI(Word Code)
 {
+  UNUSED(Code);
+
   if (ArgCnt != 2) WrError(1110);
   else
   {
@@ -622,7 +628,6 @@ static void MakeCode_ST62(void)
 
 static void InitCode_ST62(void)
 {
-  SaveInitProc();
   WinAssume = 0x40;
 }
 
@@ -663,5 +668,5 @@ void codest6_init(void)
   CPUST6220 = AddCPU("ST6220", SwitchTo_ST62);
   CPUST6225 = AddCPU("ST6225", SwitchTo_ST62);
 
-  SaveInitProc = InitPassProc; InitPassProc = InitCode_ST62;
+  AddInitPassProc(InitCode_ST62);
 }

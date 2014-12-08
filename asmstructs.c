@@ -5,9 +5,15 @@
 /* structure handling                                                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmstructs.c,v 1.4 2013-02-14 21:05:31 alfred Exp $                 */
+/* $Id: asmstructs.c,v 1.6 2014/12/07 19:13:59 alfred Exp $                 */
 /*****************************************************************************
  * $Log: asmstructs.c,v $
+ * Revision 1.6  2014/12/07 19:13:59  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
+ * Revision 1.5  2014/12/05 11:09:10  alfred
+ * - eliminate Nil
+ *
  * Revision 1.4  2013-02-14 21:05:31  alfred
  * - add missing bookkeeping for expanded structs
  *
@@ -38,6 +44,7 @@
  *****************************************************************************/
 
 #include "stdinc.h"
+#include <string.h>
 
 #include "nls.h"
 #include "nlmessages.h"
@@ -55,12 +62,12 @@
 
 /*****************************************************************************/
 
-typedef struct _TStructNode
-        {
-          TTree Tree;
-          Boolean Defined;
-          PStructRec StructRec;
-        } TStructNode, *PStructNode;
+typedef struct sStructNode
+{
+  TTree Tree;
+  Boolean Defined;
+  PStructRec StructRec;
+} TStructNode, *PStructNode;
 
 /*****************************************************************************/
 
@@ -105,7 +112,8 @@ void AddStructElem(PStructRec StructRec, char *Name, LongInt Offset)
   if (Neu)
   {
     Neu->Name = strdup(Name);
-    if (NOT CaseSensitive) NLS_UpString(Neu->Name);
+    if (!CaseSensitive)
+      NLS_UpString(Neu->Name);
     Neu->Offset = Offset;
     Neu->Next = NULL;
     if (!StructRec->Elems)
@@ -132,14 +140,15 @@ static Boolean StructAdder(PTree *PDest, PTree Neu, void *pData)
 
   if (!PDest)
   {
-    NewNode->Defined = TRUE; 
+    NewNode->Defined = TRUE;
     return True;
   }
 
   Node = (PStructNode*) PDest;
   if ((*Node)->Defined)
   {
-    if (Protest) WrXError(1815,Neu->Name);
+    if (Protest)
+      WrXError(1815, Neu->Name);
     else
     {
       DestroyStructRec((*Node)->StructRec);
@@ -166,7 +175,8 @@ void AddStruct(PStructRec StructRec, char *Name, Boolean Protest)
   {
     Node->Tree.Left = Node->Tree.Right = NULL;
     Node->Tree.Name = strdup(Name);
-    if (NOT CaseSensitive) NLS_UpString(Node->Tree.Name);
+    if (!CaseSensitive)
+      NLS_UpString(Node->Tree.Name);
     Node->Tree.Attribute = MomSectionHandle;
     Node->Defined = FALSE;
     Node->StructRec = StructRec;
@@ -178,28 +188,33 @@ void AddStruct(PStructRec StructRec, char *Name, Boolean Protest)
 
 static PStructRec FoundStruct_FNode(LongInt Handle, char *Name)
 {
-   PStructNode Lauf;
+  PStructNode Lauf;
 
-   Lauf = (PStructNode) SearchTree((PTree)StructRoot, Name, Handle);
-   return Lauf ? Lauf->StructRec : NULL;
+  Lauf = (PStructNode) SearchTree((PTree)StructRoot, Name, Handle);
+  return Lauf ? Lauf->StructRec : NULL;
 }
 
 Boolean FoundStruct(PStructRec *Erg)
 {
-   PSaveSection Lauf;
-   String Part;
+  PSaveSection Lauf;
+  String Part;
 
-   strmaxcpy(Part, LOpPart, 255);
-   if (!CaseSensitive) NLS_UpString(Part);
+  strmaxcpy(Part, LOpPart, 255);
+  if (!CaseSensitive)
+    NLS_UpString(Part);
 
-   if ((*Erg = FoundStruct_FNode(MomSectionHandle, Part))) return True;
-   Lauf = SectionStack;
-   while (Lauf != Nil)
-   {
-     if ((*Erg = FoundStruct_FNode(Lauf->Handle, Part))) return True;
-     Lauf = Lauf->Next;
-   }
-   return False;
+  *Erg = FoundStruct_FNode(MomSectionHandle, Part);
+  if (*Erg)
+    return True;
+  Lauf = SectionStack;
+  while (Lauf)
+  {
+    *Erg = FoundStruct_FNode(Lauf->Handle, Part);
+    if (*Erg)
+      return True;
+    Lauf = Lauf->Next;
+  }
+  return False;
 }
 
 static void ResDef(PTree Tree, void *pData)
@@ -214,10 +229,10 @@ void ResetStructDefines(void)
   IterTree((PTree)StructRoot, ResDef, NULL);
 }
 
-typedef struct 
-        {
-          LongInt Sum;
-        } TPrintContext;
+typedef struct
+{
+  LongInt Sum;
+} TPrintContext;
 
 static void PrintDef(PTree Tree, void *pData)
 {
@@ -259,7 +274,7 @@ void PrintStructList(void)
 
   Context.Sum = 0;
   IterTree((PTree)StructRoot, PrintDef, &Context);
-  sprintf(s, "%d%s", Context.Sum, 
+  sprintf(s, "%d%s", Context.Sum,
           getmessage((Context.Sum == 1) ? Num_ListStructSumMsg : Num_ListStructSumsMsg));
 }
 
@@ -275,7 +290,8 @@ void ClearStructList(void)
 {
   PTree TreeRoot;
 
-  TreeRoot = &(StructRoot->Tree); StructRoot = NULL;
+  TreeRoot = &(StructRoot->Tree);
+  StructRoot = NULL;
   DestroyTree(&TreeRoot, ClearNode, NULL);
 }
 

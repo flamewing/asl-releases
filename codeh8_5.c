@@ -9,9 +9,18 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeh8_5.c,v 1.10 2014/06/15 15:22:01 alfred Exp $                    */
+/* $Id: codeh8_5.c,v 1.13 2014/12/07 19:14:01 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codeh8_5.c,v $
+ * Revision 1.13  2014/12/07 19:14:01  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
+ * Revision 1.12  2014/12/05 08:53:45  alfred
+ * - eliminate remaining BEGIN/END
+ *
+ * Revision 1.11  2014/11/05 15:47:16  alfred
+ * - replace InitPass callchain with registry
+ *
  * Revision 1.10  2014/06/15 15:22:01  alfred
  * - some cleanups
  *
@@ -99,7 +108,6 @@ typedef struct
 
 
 static CPUVar CPU532,CPU534,CPU536,CPU538;
-static SimpProc SaveInitProc;
 
 static ShortInt OpSize;
 static char *Format;
@@ -1275,7 +1283,7 @@ static void DecodeLINK(Word Dummy)
               break;
             default:
               WrError(1130);
-           END
+          }
         }
       }
     }
@@ -1305,6 +1313,8 @@ static void DecodeUNLK(Word Dummy)
 
 static void DecodeTRAPA(Word Dummy)
 {
+  UNUSED(Dummy);
+
   if (ArgCnt != 1) WrError(1110);
   else if (*AttrPart != '\0') WrError(1100);
   else if (strcmp(Format," ")) WrError(1090);
@@ -1557,7 +1567,6 @@ static void SwitchFrom_H8_5(void)
 
 static void InitCode_H8_5(void)
 {
-  SaveInitProc();
   Reg_DP = -1;
   Reg_EP = -1;
   Reg_TP = -1;
@@ -1595,5 +1604,5 @@ void codeh8_5_init(void)
   CPU536 = AddCPU("HD6475368", SwitchTo_H8_5);
   CPU538 = AddCPU("HD6475388", SwitchTo_H8_5);
 
-  SaveInitProc = InitPassProc; InitPassProc = InitCode_H8_5;
+  AddInitPassProc(InitCode_H8_5);
 }

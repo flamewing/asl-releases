@@ -54,6 +54,7 @@ call testall t_296
 call testall t_29k
 call testall t_32
 call testall t_3201x
+call testall t_3202x
 call testall t_3203x
 call testall t_3205x
 call testall t_3206x
@@ -90,6 +91,7 @@ call testall t_8008
 call testall t_807x
 call testall t_821
 call testall t_85
+call testall t_870c
 call testall t_87c800
 call testall t_8X30x
 call testall t_96

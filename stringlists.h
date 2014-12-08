@@ -10,11 +10,11 @@
 /*                                                                           */
 /*****************************************************************************/
 
-typedef struct _StringRec
-         {
-          struct _StringRec *Next;
-          char *Content;
-         } StringRec,*StringRecPtr;
+typedef struct sStringRec
+{
+  struct sStringRec *Next;
+  char *Content;
+} StringRec, *StringRecPtr;
 typedef StringRecPtr StringList;
 
 extern void InitStringList(StringList *List);

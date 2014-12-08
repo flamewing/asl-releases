@@ -8,9 +8,15 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codetms7.c,v 1.6 2009/02/08 12:49:20 alfred Exp $                    */
+/* $Id: codetms7.c,v 1.8 2014/12/05 11:15:29 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codetms7.c,v $
+ * Revision 1.8  2014/12/05 11:15:29  alfred
+ * - eliminate AND/OR/NOT
+ *
+ * Revision 1.7  2014/12/01 18:29:40  alfred
+ * - replace Nil -> NULL
+ *
  * Revision 1.6  2009/02/08 12:49:20  alfred
  * - correct DINT coding, rework to new style & instruction hash table
  *
@@ -184,13 +190,14 @@ static void DecodeAdr(char *Asc, Word Mask)
     }
     if (p < Asc)
     {
-      WrError(1300); p=Nil;
+      WrError(1300);
+      p = NULL;
     }
   }
   else
     p = NULL;
 
-  if (p == Nil)
+  if (!p)
   {
     HVal = EvalIntExpression(Asc, Int16, &OK);
     if (OK)
@@ -339,7 +346,7 @@ static void DecodeALU2(Word Index)
 
   Index &= ~0xc000;
 
-  if (((IsRela) && (ArgCnt != 3)) OR ((!IsRela) && (ArgCnt != 2))) WrError(1110);
+  if (((IsRela) && (ArgCnt != 3)) || ((!IsRela) && (ArgCnt != 2))) WrError(1110);
   else
   {
     DecodeAdr(ArgStr[2], MModPort | (IsP ? 0 : MModAccA | MModAccB | MModReg));
@@ -424,7 +431,7 @@ static void DecodeALU2(Word Index)
       Integer AdrInt = EvalIntExpression(ArgStr[3], Int16, &OK) - (EProgCounter() + CodeLen + 1);
 
       if (!OK) CodeLen = 0;
-      else if ((!SymbolQuestionable) && ((AdrInt > 127) OR (AdrInt < -128)))
+      else if ((!SymbolQuestionable) && ((AdrInt > 127) || (AdrInt < -128)))
       {
         WrError(1370); CodeLen = 0;
       }

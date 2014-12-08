@@ -20,9 +20,18 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code960.c,v 1.7 2014/07/12 14:45:17 alfred Exp $                     */
+/* $Id: code960.c,v 1.10 2014/12/07 19:14:00 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code960.c,v $
+ * Revision 1.10  2014/12/07 19:14:00  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
+ * Revision 1.9  2014/12/05 11:58:16  alfred
+ * - collapse STDC queries into one file
+ *
+ * Revision 1.8  2014/11/05 15:47:15  alfred
+ * - replace InitPass callchain with registry
+ *
  * Revision 1.7  2014/07/12 14:45:17  alfred
  * - reworked to current style
  *
@@ -64,6 +73,7 @@
 #include "codevars.h"            
 #include "intpseudo.h"
 #include "headids.h"
+#include "intconsts.h"
 
 /*--------------------------------------------------------------------------*/
 
@@ -135,7 +145,6 @@ static MemOrder *MemOrders;
 static SpecReg *SpecRegs;
 
 static CPUVar CPU80960;
-static TSwitchProc SaveInitProc;
 
 /*--------------------------------------------------------------------------*/
 
@@ -818,7 +827,6 @@ static Boolean IsDef_960(void)
 
 static void InitPass_960(void)
 {
-  SaveInitProc();
   SetFlag(&FPUAvail, FPUAvailName, False);
 }
 
@@ -836,7 +844,8 @@ static void SwitchTo_960(void)
   ConstMode = ConstModeIntel;
   SetIsOccupied = False;
 
-  if (!(FoundId = FindFamilyByName("i960")))
+  FoundId = FindFamilyByName("i960");
+  if (!FoundId)
     exit(255);
   PCSymbol = "$";
   HeaderID = FoundId->Id;
@@ -848,11 +857,7 @@ static void SwitchTo_960(void)
   Grans[SegCode] = 1;
   ListGrans[SegCode] = 4;
   SegInits[SegCode] = 0;
-#ifdef __STDC__
-  SegLimits[SegCode] = 0xfffffffful;
-#else
-  SegLimits[SegCode] = 0xffffffffl;
-#endif
+  SegLimits[SegCode] = INTCONST_ffffffff;
 
   MakeCode = MakeCode_960;
   IsDef = IsDef_960;
@@ -867,6 +872,5 @@ void code960_init(void)
 {
   CPU80960 = AddCPU("80960", SwitchTo_960);
   
-  SaveInitProc = InitPassProc;
-  InitPassProc = InitPass_960; 
+  AddInitPassProc(InitPass_960);
 }

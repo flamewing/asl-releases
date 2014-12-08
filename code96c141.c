@@ -14,9 +14,12 @@
 /*           19. 8.2001 fixed errors for lower halves of XIX...XSP           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code96c141.c,v 1.10 2014/08/11 21:10:27 alfred Exp $                          */
+/* $Id: code96c141.c,v 1.11 2014/12/07 19:14:00 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code96c141.c,v $
+ * Revision 1.11  2014/12/07 19:14:00  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
  * Revision 1.10  2014/08/11 21:10:27  alfred
  * - adapt to current style
  *
@@ -183,12 +186,16 @@ static Byte CodeEReg(char *Asc, Byte *ErgNo, Byte *ErgSize)
 
   /* mom. Bank ? */
 
-  if ((l == 1) && ((pos = strchr(Reg8Names, *Asc))))
+  if (l == 1)
   {
-    z = pos - Reg8Names;
-    *ErgNo = 0xe0 + ((z & 6) << 1) + (z & 1);
-    *ErgSize = 0;
-    return Result;
+    pos = strchr(Reg8Names, *Asc);
+    if (pos)
+    {
+     z = pos - Reg8Names;
+     *ErgNo = 0xe0 + ((z & 6) << 1) + (z & 1);
+     *ErgSize = 0;
+     return Result;
+    }
   }
   for (z = 0; z < RegCnt; z++)
   {

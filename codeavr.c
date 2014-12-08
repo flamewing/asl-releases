@@ -15,9 +15,12 @@
 /*            7. 5.2000 Packing hinzugefuegt                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeavr.c,v 1.9 2014/06/22 08:13:30 alfred Exp $                     */
+/* $Id: codeavr.c,v 1.10 2014/11/05 15:47:15 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codeavr.c,v $
+ * Revision 1.10  2014/11/05 15:47:15  alfred
+ * - replace InitPass callchain with registry
+ *
  * Revision 1.9  2014/06/22 08:13:30  alfred
  * - rework to current style
  *
@@ -86,8 +89,6 @@
 #include "asmitree.h"
 #include "codepseudo.h"
 #include "codevars.h"
-
-static SimpProc SaveInitProc;
 
 static CPUVar CPU90S1200, CPU90S2313, CPU90S4414, CPU90S8515,
               CPUATMEGA8, CPUATMEGA16, CPUATMEGA32, CPUATMEGA64, CPUATMEGA128, CPUATMEGA256;
@@ -958,7 +959,6 @@ static void MakeCode_AVR(void)
 
 static void InitCode_AVR(void)
 {
-  SaveInitProc();
   SetFlag(&Packing, PackingName, False);
 }
 
@@ -1057,7 +1057,7 @@ static void SwitchTo_AVR(void)
   InitFields();
 }
 
-        void codeavr_init(void)
+void codeavr_init(void)
 {
    CPU90S1200  = AddCPU("AT90S1200" , SwitchTo_AVR);
    CPU90S2313  = AddCPU("AT90S2313" , SwitchTo_AVR);
@@ -1070,6 +1070,6 @@ static void SwitchTo_AVR(void)
    CPUATMEGA128 = AddCPU("ATMEGA128" , SwitchTo_AVR);
    CPUATMEGA256 = AddCPU("ATMEGA256" , SwitchTo_AVR);
 
-   SaveInitProc = InitPassProc; InitPassProc = InitCode_AVR;
+   AddInitPassProc(InitCode_AVR);
 }
 

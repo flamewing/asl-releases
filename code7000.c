@@ -10,9 +10,18 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code7000.c,v 1.9 2014/09/09 17:00:33 alfred Exp $                    */
+/* $Id: code7000.c,v 1.12 2014/12/07 19:14:00 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code7000.c,v $
+ * Revision 1.12  2014/12/07 19:14:00  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
+ * Revision 1.11  2014/12/05 11:58:16  alfred
+ * - collapse STDC queries into one file
+ *
+ * Revision 1.10  2014/11/05 15:47:15  alfred
+ * - replace InitPass callchain with registry
+ *
  * Revision 1.9  2014/09/09 17:00:33  alfred
  * - rework to current style
  *
@@ -54,6 +63,7 @@
 #include "codepseudo.h"
 #include "motpseudo.h"
 #include "codevars.h"
+#include "intconsts.h"
 
 #include "code7000.h"
 
@@ -147,7 +157,6 @@ static Word AdrPart;        /* Adressierungsmodusbits im Opcode */
 
 static PLiteral FirstLiteral;
 static LongInt ForwardCount;
-static SimpProc SaveInitProc;
 
 static CPUVar CPU7000, CPU7600, CPU7700;
 
@@ -979,6 +988,8 @@ static void DecodeBW(Word Index)
 
 static void DecodeMAC(Word Code)
 {
+  UNUSED(Code);
+
   if (OpSize == -1)
     SetOpSize(1);
   if (ArgCnt != 2) WrError(1110);
@@ -1561,7 +1572,6 @@ static void MakeCode_7000(void)
 
 static void InitCode_7000(void)
 {
-  SaveInitProc();
   FirstLiteral = NULL;
   ForwardCount = 0;
   SetFlag(&DSPAvail, DSPAvailName, False);
@@ -1595,11 +1605,7 @@ static void SwitchTo_7000(void)
 
   ValidSegs = 1 << SegCode;
   Grans[SegCode] = 1; ListGrans[SegCode] = 2; SegInits[SegCode] = 0;
-#ifdef __STDC__
-  SegLimits[SegCode] = 0xfffffffful;
-#else
-  SegLimits[SegCode] = 0xffffffffl;
-#endif
+  SegLimits[SegCode] = INTCONST_ffffffff;
 
   MakeCode = MakeCode_7000;
   IsDef = IsDef_7000;
@@ -1622,7 +1628,6 @@ void code7000_init(void)
   CPU7600 = AddCPU("SH7600", SwitchTo_7000);
   CPU7700 = AddCPU("SH7700", SwitchTo_7000);
 
-  SaveInitProc = InitPassProc;
-  InitPassProc = InitCode_7000;
+  AddInitPassProc(InitCode_7000);
   FirstLiteral = NULL;
 }

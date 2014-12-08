@@ -15,9 +15,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code7720.c,v 1.7 2014/08/25 20:20:15 alfred Exp $                    */
+/* $Id: code7720.c,v 1.8 2014/12/07 19:14:00 alfred Exp $                    */
 /***************************************************************************** 
  * $Log: code7720.c,v $
+ * Revision 1.8  2014/12/07 19:14:00  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
  * Revision 1.7  2014/08/25 20:20:15  alfred
  * - rework to current style
  *
@@ -176,7 +179,8 @@ static void DecodeDATA(Word Index)
       switch (t.Typ)
       {
         case TempInt:
-          if ((OK = ChkRange(t.Contents.Int, MinV, MaxV)))
+          OK = ChkRange(t.Contents.Int, MinV, MaxV);
+          if (OK)
           {
             if (ActPC == SegCode)
               DAsmCode[CodeLen++] = t.Contents.Int;

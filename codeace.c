@@ -17,9 +17,12 @@
 /*                      changed segment limits/inits                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeace.c,v 1.5 2014/06/23 17:27:49 alfred Exp $                     */
+/* $Id: codeace.c,v 1.6 2014/12/01 18:29:40 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codeace.c,v $
+ * Revision 1.6  2014/12/01 18:29:40  alfred
+ * - replace Nil -> NULL
+ *
  * Revision 1.5  2014/06/23 17:27:49  alfred
  * - reworked to current style
  *
@@ -156,7 +159,8 @@ static void DecodeAdr(char *Asc, Word Mask)
       while (*Asc != '\0')
       {
         p = QuotPos(Asc, ',');
-        if (p != Nil) *p = '\0';
+        if (p)
+          *p = '\0';
         strmaxcpy(Part, Asc, 255);
         KillPrefBlanks(Part); KillPostBlanks(Part);
         if (!strcasecmp(Part, "X"))
@@ -178,7 +182,8 @@ static void DecodeAdr(char *Asc, Word Mask)
           if (!OK) break;
           DispOcc = True;
         }
-        if (p == Nil) Asc = "";
+        if (!p)
+          Asc = "";
         else Asc = p + 1;
       }
       if (*Asc == '\0')

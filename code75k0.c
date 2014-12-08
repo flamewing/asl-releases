@@ -9,9 +9,15 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code75k0.c,v 1.9 2014/09/21 12:21:45 alfred Exp $                    */
+/* $Id: code75k0.c,v 1.11 2014/11/16 13:15:07 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code75k0.c,v $
+ * Revision 1.11  2014/11/16 13:15:07  alfred
+ * - remove some superfluous semicolons
+ *
+ * Revision 1.10  2014/11/05 15:47:15  alfred
+ * - replace InitPass callchain with registry
+ *
  * Revision 1.9  2014/09/21 12:21:45  alfred
  * - compilable with Borland C again
  *
@@ -68,8 +74,6 @@ enum
 #define MModImm (1 << ModImm)
 #define MModInd (1 << ModInd)
 #define MModAbs (1 << ModAbs)
-
-static SimpProc SaveInitProc;
 
 static LongInt MBSValue, MBEValue;
 static Boolean MinOneIs0;
@@ -223,7 +227,7 @@ static void DecodeAdr(char *Asc, Byte Mask)
       case 1:
         AdrPart = EvalIntExpression(Asc + 1, Int8, &OK);
         break;
-    };
+    }
     if (OK)
       AdrMode = ModImm;
     goto chk;
@@ -666,8 +670,9 @@ static void DecodeXCH(Word Code)
             if ((AdrPart != 0) || (HReg != 1)) WrError(1350);
             else
             {
-              PutCode(0x11aa); CheckCPU(CPU75004);
-            };
+              PutCode(0x11aa);
+              CheckCPU(CPU75004);
+            }
             break;
         }
         break;
@@ -1566,7 +1571,6 @@ static void MakeCode_75K0(void)
 
 static void InitCode_75K0(void)
 {
-  SaveInitProc();
   MBSValue = 0; MBEValue = 0;
 }
 
@@ -1632,5 +1636,5 @@ void code75k0_init(void)
   CPU75512 = AddCPU("75512", SwitchTo_75K0);
   CPU75516 = AddCPU("75516", SwitchTo_75K0);
 
-  SaveInitProc = InitPassProc; InitPassProc = InitCode_75K0;
+  AddInitPassProc(InitCode_75K0);
 }

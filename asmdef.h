@@ -33,9 +33,18 @@
 /*           2001-10-20 added GNU error flag                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmdef.h,v 1.10 2014/06/15 09:17:08 alfred Exp $                      */
+/* $Id: asmdef.h,v 1.13 2014/11/23 18:29:29 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmdef.h,v $
+ * Revision 1.13  2014/11/23 18:29:29  alfred
+ * - correct buffer overflow in MomCPUName
+ *
+ * Revision 1.12  2014/11/06 11:22:01  alfred
+ * - replace hook chain for ClearUp, document new mechanism
+ *
+ * Revision 1.11  2014/11/05 15:47:13  alfred
+ * - replace InitPass callchain with registry
+ *
  * Revision 1.10  2014/06/15 09:17:08  alfred
  * - optional Memo profiling
  *
@@ -200,7 +209,7 @@ typedef enum {DebugNone,DebugMAP,DebugAOUT,DebugCOFF,DebugELF,DebugAtmel,DebugNo
 extern char SrcSuffix[],IncSuffix[],PrgSuffix[],LstSuffix[],
             MacSuffix[],PreSuffix[],LogSuffix[],MapSuffix[],
             OBJSuffix[];
-            
+
 #define MomCPUName       "MOMCPU"     /* mom. Prozessortyp */
 #define MomCPUIdentName  "MOMCPUNAME" /* mom. Prozessortyp */
 #define SupAllowedName   "INSUPMODE"  /* privilegierte Befehle erlaubt */
@@ -338,7 +347,7 @@ extern Word ListGrans[StructSeg+1];
 extern ChunkList SegChunks[StructSeg+1];
 extern Integer ActPC;
 extern Boolean PCsUsed[StructSeg+1];
-extern LargeWord *SegInits; 
+extern LargeWord *SegInits;
 extern LargeWord *SegLimits;
 extern LongInt ValidSegs;
 extern Boolean ENDOccured;
@@ -418,8 +427,6 @@ extern Boolean (*ChkPC)(LargeWord Addr);
 extern Boolean (*IsDef)(void);
 extern void (*SwitchFrom)(void);
 extern void (*InternSymbol)(char *Asc, TempResult *Erg);
-extern void (*InitPassProc)(void);
-extern void (*ClearUpProc)(void);
 
 extern StringPtr IncludeList;
 extern Integer IncDepth,NextIncDepth;
@@ -434,7 +441,7 @@ extern Boolean DoLst,NextDoLst;
 extern StringPtr ShareName;
 extern CPUVar MomCPU,MomVirtCPU;
 extern char DefCPU[20];
-extern char MomCPUIdent[10];
+extern char MomCPUIdent[20];
 extern PCPUDef FirstCPUDef;
 extern CPUVar CPUCnt;
 

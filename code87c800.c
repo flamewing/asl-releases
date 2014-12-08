@@ -9,9 +9,22 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code87c800.c,v 1.6 2014/07/13 22:10:58 alfred Exp $                  */
+/* $Id: code87c800.c,v 1.10 2014/12/07 19:14:00 alfred Exp $                  */
 /*****************************************************************************
  * $Log: code87c800.c,v $
+ * Revision 1.10  2014/12/07 19:14:00  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
+ * Revision 1.9  2014/11/22 11:45:58  alfred
+ * - correct some formatting errors
+ * - correct handling of JR
+ *
+ * Revision 1.8  2014/11/17 23:51:32  alfred
+ * - begun with TLCS-870/C
+ *
+ * Revision 1.7  2014/11/17 21:25:22  alfred
+ * - some remaining cleanups
+ *
  * Revision 1.6  2014/07/13 22:10:58  alfred
  * - reworked to current style
  *
@@ -47,16 +60,10 @@
 
 
 typedef struct
-         {
-          char *Name;
-          Word Code;
-         } FixedOrder;
-
-typedef struct
-         {
-          char *Name;
-          Byte Code;
-         } CondRec;
+{
+  char *Name;
+  Byte Code;
+} CondRec;
 
 #define ConditionCnt 12
 
@@ -94,9 +101,15 @@ static CondRec *Conditions;
 
 static void DecodeAdr(char *Asc, Byte Erl)
 {
-  static char *Reg16Names[]={"WA", "BC", "DE", "HL"};
+  static char *Reg16Names[] = 
+  {
+    "WA", "BC", "DE", "HL"
+  };
   static const int Reg16Cnt = sizeof(Reg16Names) / sizeof(*Reg16Names);
-  static char *AdrRegs[]={"HL", "DE", "C", "PC", "A"};
+  static char *AdrRegs[] = 
+  {
+    "HL", "DE", "C", "PC", "A"
+  };
   static const int AdrRegCnt = sizeof(AdrRegs) / sizeof(*AdrRegs);
 
   int z;
@@ -306,7 +319,7 @@ static Boolean SplitBit(char *Asc, Byte *Erg)
 
 static void CodeMem(Byte Entry, Byte Opcode)
 {
-  BAsmCode[0] = Entry+AdrMode;
+  BAsmCode[0] = Entry + AdrMode;
   memcpy(BAsmCode + 1, AdrVals, AdrCnt);
   BAsmCode[1 + AdrCnt] = Opcode;
 }
@@ -1008,7 +1021,7 @@ static void DecodeALU(Word Code)
       switch (AdrType)
       {
         case ModReg8:
-          CodeLen=2;
+          CodeLen = 2;
           BAsmCode[0] = 0xe8 | AdrMode;
           BAsmCode[1] = 0xd0 | HReg;
           break;
@@ -1247,6 +1260,8 @@ static void DecodeMUL(Word Code)
 
 static void DecodeDIV(Word Code)
 {
+  UNUSED(Code);
+
   if (ArgCnt != 2) WrError(1110);
   else
   {
@@ -1335,14 +1350,14 @@ static void DecodeJR(Word Code)
     if (Condition >= ConditionCnt) WrXError(1360, ArgStr[1]);
     else
     {
-      AdrInt = EvalIntExpression(ArgStr[2], Int16, &OK) - (EProgCounter() + 2);
+      AdrInt = EvalIntExpression(ArgStr[ArgCnt], Int16, &OK) - (EProgCounter() + 2);
       if (OK)
       {
         if (((AdrInt < -128) || (AdrInt > 127)) && (!SymbolQuestionable)) WrError(1370);
         else
         {
           CodeLen = 2;
-          BAsmCode[0] = (Condition == -1) ?  0xfb: 0xd0 | Conditions[Condition].Code;
+          BAsmCode[0] = (Condition == -1) ?  0xfb : 0xd0 | Conditions[Condition].Code;
           BAsmCode[1] = AdrInt & 0xff;
         }
       }
@@ -1417,6 +1432,8 @@ static void DecodeCALLV(Word Code)
 
 static void DecodeCALLP(Word Code)
 {
+  UNUSED(Code);
+
   if (ArgCnt != 1) WrError(1110);
   else
   {
@@ -1445,8 +1462,8 @@ static void AddFixed(char *NName, Word NCode)
 static void AddCond(char *NName, Byte NCode)
 {
   if (InstrZ >= ConditionCnt) exit(255);
-  Conditions[InstrZ].Name=NName;
-  Conditions[InstrZ++].Code=NCode;
+  Conditions[InstrZ].Name = NName;
+  Conditions[InstrZ++].Code = NCode;
 }
 
 static void AddReg(char *NName, Word NCode)
@@ -1488,7 +1505,7 @@ static void InitFields(void)
   AddFixed("SWI" , 0x00ff);
   AddFixed("NOP" , 0x0000);
 
-  Conditions=(CondRec *) malloc(sizeof(CondRec)*ConditionCnt); InstrZ=0;
+  Conditions = (CondRec *) malloc(sizeof(CondRec)*ConditionCnt); InstrZ = 0;
   AddCond("EQ", 0); AddCond("Z" , 0);
   AddCond("NE", 1); AddCond("NZ", 1);
   AddCond("CS", 2); AddCond("LT", 2);
@@ -1529,11 +1546,13 @@ static void MakeCode_87C800(void)
 
   /* zu ignorierendes */
 
-  if (Memo("")) return;
+  if (Memo(""))
+    return;
 
   /* Pseudoanweisungen */
 
-  if (DecodeIntelPseudo(False)) return;
+  if (DecodeIntelPseudo(False))
+    return;
 
   if (!LookupInstTable(InstTable, OpPart))
     WrXError(1200, OpPart);
@@ -1559,9 +1578,9 @@ static void SwitchTo_87C800(void)
   HeaderID = 0x54;
   NOPCode = 0x00;
   DivideChars = ",";
-  HasAttrs =False;
+  HasAttrs = False;
 
-  ValidSegs =1 << SegCode;
+  ValidSegs = 1 << SegCode;
   Grans[SegCode] = 1;
   ListGrans[SegCode] = 1;
   SegInits[SegCode] = 0;

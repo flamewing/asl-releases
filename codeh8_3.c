@@ -10,9 +10,18 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeh8_3.c,v 1.8 2014/06/16 19:23:18 alfred Exp $                    */
+/* $Id: codeh8_3.c,v 1.11 2014/12/07 19:14:01 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codeh8_3.c,v $
+ * Revision 1.11  2014/12/07 19:14:01  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
+ * Revision 1.10  2014/12/05 11:15:28  alfred
+ * - eliminate AND/OR/NOT
+ *
+ * Revision 1.9  2014/12/05 08:53:45  alfred
+ * - eliminate remaining BEGIN/END
+ *
  * Revision 1.8  2014/06/16 19:23:18  alfred
  * - adapt to current style
  *
@@ -1492,7 +1501,7 @@ static void DecodeINC_DEC(Word Code)
               WAsmCode[0] = Code + 0x0b70 + HReg + (z << 7);
               break;
           }
-         END
+        }
       }
     }
   }
@@ -1572,10 +1581,10 @@ static void DecodeEXTS_EXTU(Word IsEXTS)
         switch (OpSize)
         {
           case 1:
-            WAsmCode[0] = (Memo("EXTS")) ? 0x17d0 : 0x1750;
+            WAsmCode[0] = IsEXTS ? 0x17d0 : 0x1750;
             break;
           case 2:
-            WAsmCode[0] = (Memo("EXTS")) ? 0x17f0 : 0x1770;
+            WAsmCode[0] = IsEXTS ? 0x17f0 : 0x1770;
             break;
         }
         WAsmCode[0] += AdrPart;
@@ -1637,7 +1646,7 @@ static void DecodeCond(Word Code)
       }
       else
       {
-        if ((!SymbolQuestionable) && ((AdrLong < -128) OR (AdrLong > 127))) WrError(1370);
+        if ((!SymbolQuestionable) && ((AdrLong < -128) || (AdrLong > 127))) WrError(1370);
         else
         {
           CodeLen = 2;

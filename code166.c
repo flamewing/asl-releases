@@ -10,9 +10,15 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code166.c,v 1.10 2014/09/19 21:20:26 alfred Exp $                     */
+/* $Id: code166.c,v 1.12 2014/12/07 19:13:59 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code166.c,v $
+ * Revision 1.12  2014/12/07 19:13:59  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
+ * Revision 1.11  2014/11/05 15:47:13  alfred
+ * - replace InitPass callchain with registry
+ *
  * Revision 1.10  2014/09/19 21:20:26  alfred
  * - rework to current style
  *
@@ -82,7 +88,6 @@ static BaseOrder *FixedOrders;
 static Condition *Conditions;
 static int TrueCond;
 
-static SimpProc SaveInitProc;
 static LongInt DPPAssumes[DPPCount];
 static IntType MemInt, MemInt2;
 static Byte OpSize;
@@ -1584,6 +1589,8 @@ static void DecodeRETP(Word Code)
 
 static void DecodeTRAP(Word Code)
 {
+  UNUSED(Code);
+
   if (ArgCnt != 1) WrError(1110);
   else if (*ArgStr[1] != '#') WrError(1350);
   else
@@ -1894,7 +1901,6 @@ static void InitCode_166(void)
 {
   int z;
 
-  SaveInitProc();
   for (z = 0; z < DPPCount; z++)
   {
     DPPAssumes[z] = z;
@@ -1969,6 +1975,5 @@ void code166_init(void)
   CPU80C167 = AddCPU("80C167", SwitchTo_166);
   CPU80C167CS = AddCPU("80C167CS", SwitchTo_166);
 
-  SaveInitProc = InitPassProc;
-  InitPassProc = InitCode_166;
+  AddInitPassProc(InitCode_166);
 }

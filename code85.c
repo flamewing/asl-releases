@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code85.c,v 1.5 2014/08/10 13:27:53 alfred Exp $                      */
+/* $Id: code85.c,v 1.6 2014/12/07 19:14:00 alfred Exp $                      */
 /***************************************************************************** 
  * $Log: code85.c,v $
+ * Revision 1.6  2014/12/07 19:14:00  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
  * Revision 1.5  2014/08/10 13:27:53  alfred
  * - rework to current style
  *
@@ -53,10 +56,10 @@ static CPUVar CPU8080, CPU8085, CPU8085U;
 
 /*---------------------------------------------------------------------------*/
 
-static Boolean DecodeReg8(char *Asc, Byte *Erg)
+static Boolean DecodeReg8(const char *Asc, Byte *Erg)
 {
   static const char *RegNames = "BCDEHLMA";
-  char *p;
+  const char *p;
 
   if (strlen(Asc) != 1) return False;
   else

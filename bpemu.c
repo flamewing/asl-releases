@@ -38,7 +38,7 @@ char *FExpand(char *Src)
 #ifdef DRSEP
   String DrvPart;
 #endif /* DRSEP */
-  char *p,*p2;
+  char *p, *p2;
 
   strmaxcpy(Copy, Src, 255);
 
@@ -62,7 +62,8 @@ char *FExpand(char *Src)
     {
       DrvNum = getdisk();
       *DrvPart = DrvNum + 'A';
-      DrvPart[1] = '\0'; DrvNum++;
+      DrvPart[1] = '\0';
+      DrvNum++;
     }
     else
       DrvNum = toupper(*DrvPart) - '@';
@@ -75,7 +76,8 @@ char *FExpand(char *Src)
     if (*DrvPart == '\0')
     {
       DosQueryCurrentDisk(&DrvNum, &Dummy);
-      *DrvPart = DrvNum + '@'; DrvPart[1] = '\0';
+      *DrvPart = DrvNum + '@';
+      DrvPart[1] = '\0';
     }
     else
       DrvNum = toupper(*DrvPart) - '@';
@@ -89,7 +91,8 @@ char *FExpand(char *Src)
     if (!*DrvPart)
     {
       DrvNum = _getdrive();
-      *DrvPart = DrvNum + '@'; DrvPart[1] = '\0';
+      *DrvPart = DrvNum + '@';
+      DrvPart[1] = '\0';
     }
     else
       DrvNum = toupper(*DrvPart) - '@';
@@ -105,14 +108,15 @@ char *FExpand(char *Src)
   getcwd(CurrentDir,255);
 #endif
 
-  if ((*CurrentDir) && (CurrentDir[strlen(CurrentDir)-1]!=PATHSEP))
-    strmaxcat(CurrentDir,SPATHSEP,255);
+  if ((*CurrentDir) && (CurrentDir[strlen(CurrentDir) - 1] != PATHSEP))
+    strmaxcat(CurrentDir, SPATHSEP, 255);
   if (*CurrentDir!=PATHSEP)
-    strmaxprep(CurrentDir,SPATHSEP,255);
+    strmaxprep(CurrentDir, SPATHSEP, 255);
 
   if (*Copy == PATHSEP) 
   {
-    strmaxcpy(CurrentDir, SPATHSEP, 255); strmov(Copy, Copy + 1);
+    strmaxcpy(CurrentDir, SPATHSEP, 255);
+    strmov(Copy, Copy + 1);
   }
 
 #ifdef DRSEP
@@ -127,8 +131,11 @@ char *FExpand(char *Src)
   }
 #endif
 
-  while ((p = strchr(Copy, PATHSEP)))
+  while (True)
   {
+    p = strchr(Copy, PATHSEP);
+    if (!p)
+      break;
     *p = '\0';
     if (!strcmp(Copy, "."));
     else if ((!strcmp(Copy, "..")) && (strlen(CurrentDir) > 1))
@@ -149,129 +156,148 @@ char *FExpand(char *Src)
   return CurrentDir; 
 }
 
-	char *FSearch(const char *File, char *Path)
-BEGIN
-   static String Component;
-   char *p,*start,Save='\0';
-   FILE *Dummy;
-   Boolean OK;  
+char *FSearch(const char *File, char *Path)
+{
+  static String Component;
+  char *p, *start, Save = '\0';
+  FILE *Dummy;
+  Boolean OK;  
 
-   Dummy=fopen(File,"r"); OK=(Dummy!=Nil);
-   if (OK)
-    BEGIN
-     fclose(Dummy);
-     strmaxcpy(Component,File,255); return Component;
-    END
+  Dummy = fopen(File,"r");
+  OK = (Dummy != NULL);
+  if (OK)
+  {
+    fclose(Dummy);
+    strmaxcpy(Component, File, 255);
+    return Component;
+  }
 
-   start=Path;
-   do
-    BEGIN
-     if (*start=='\0') break;
-     p=strchr(start,DIRSEP);
-     if (p!=Nil) 
-      BEGIN
-       Save=(*p); *p='\0';
-      END
-     strmaxcpy(Component,start,255);
+  start = Path;
+  do
+  {
+    if (*start == '\0')
+      break;
+    p = strchr(start,DIRSEP);
+    if (p) 
+    {
+      Save = *p;
+      *p = '\0';
+    }
+    strmaxcpy(Component, start, 255);
 #ifdef __CYGWIN32__
-     DeCygwinPath(Component);
+    DeCygwinPath(Component);
 #endif
-     strmaxcat(Component,SPATHSEP,255);
-     strmaxcat(Component,File,255);
-     if (p!=Nil) *p=Save;
-     Dummy=fopen(Component,"r"); OK=(Dummy!=Nil);
-     if (OK)
-      BEGIN
-       fclose(Dummy);
-       return Component;
-      END
-     start=p+1;
-    END
-   while (p!=Nil);
+    strmaxcat(Component, SPATHSEP, 255);
+    strmaxcat(Component, File, 255);
+    if (p)
+      *p = Save;
+    Dummy = fopen(Component, "r");
+    OK = Dummy != NULL;
+    if (OK)
+    {
+      fclose(Dummy);
+      return Component;
+    }
+    start = p + 1;
+  }
+  while (p);
 
-   *Component='\0'; return Component;
-END
+  *Component='\0';
+  return Component;
+}
 
-	long FileSize(FILE *file)
-BEGIN
-   long Save=ftell(file),Size;
+long FileSize(FILE *file)
+{
+  long Save = ftell(file), Size;
 
-   fseek(file,0,SEEK_END); 
-   Size=ftell(file);
-   fseek(file,Save,SEEK_SET);
-   return Size;
-END
+  fseek(file, 0, SEEK_END); 
+  Size=ftell(file);
+  fseek(file, Save, SEEK_SET);
+  return Size;
+}
 
-	Byte Lo(Word inp)
-BEGIN
-   return (inp&0xff);
-END
+Byte Lo(Word inp)
+{
+  return (inp & 0xff);
+}
 
-	Byte Hi(Word inp)
-BEGIN
-   return ((inp>>8)&0xff);
-END
+Byte Hi(Word inp)
+{
+  return ((inp >> 8) & 0xff);
+}
 
-	Boolean Odd(int inp)
-BEGIN
-   return ((inp&1)==1);
-END
+Boolean Odd(int inp)
+{
+  return ((inp & 1) == 1);
+}
 
-	Boolean DirScan(char *Mask, charcallback callback)
-BEGIN
-   char Name[1024];
+Boolean DirScan(char *Mask, charcallback callback)
+{
+  char Name[1024];
 
 #ifdef __MSDOS__
-   struct ffblk blk;
-   int res;
-   char *pos;
+  struct ffblk blk;
+  int res;
+  char *pos;
 
-   res=findfirst(Mask,&blk,FA_RDONLY|FA_HIDDEN|FA_SYSTEM|FA_LABEL|FA_DIREC|FA_ARCH);
-   if (res<0) return False;
-   pos=strrchr(Mask,PATHSEP); if (pos==Nil) pos=strrchr(Mask,DRSEP);
-   if (pos==Nil) pos=Mask; else pos++;
-   memcpy(Name,Mask,pos-Mask);
-   while (res==0)
-    BEGIN
-     if ((blk.ff_attrib&(FA_LABEL|FA_DIREC))==0)
-      BEGIN
-       strcpy(Name+(pos-Mask),blk.ff_name);
-       callback(Name);
-      END
-     res=findnext(&blk);
-    END
-   return True;
+  res = findfirst(Mask, &blk, FA_RDONLY | FA_HIDDEN | FA_SYSTEM | FA_LABEL | FA_DIREC | FA_ARCH);
+  if (res < 0)
+    return False;
+  pos = strrchr(Mask, PATHSEP);
+  if (!pos)
+    pos = strrchr(Mask, DRSEP);
+  pos = pos ? pos + 1 : Mask;
+  memcpy(Name, Mask, pos - Mask);
+  while (res==0)
+  {
+    if ((blk.ff_attrib & (FA_LABEL|FA_DIREC)) == 0)
+    {
+      strcpy(Name + (pos - Mask), blk.ff_name);
+      callback(Name);
+    }
+    res = findnext(&blk);
+  }
+  return True;
 #else
 #if defined ( __EMX__ ) || defined ( __IBMC__ )
-   HDIR hdir=1;
-   FILEFINDBUF3 buf;
-   ULONG rescnt;
-   USHORT res;
-   char *pos;
+  HDIR hdir = 1;
+  FILEFINDBUF3 buf;
+  ULONG rescnt;
+  USHORT res;
+  char *pos;
 
-   rescnt=1; res=DosFindFirst(Mask,&hdir,0x16,&buf,sizeof(buf),&rescnt,1);
-   if (res!=0) return False;
-   pos=strrchr(Mask,PATHSEP); if (pos==Nil) pos=strrchr(Mask,DRSEP);
-   if (pos==Nil) pos=Mask; else pos++;
-   memcpy(Name,Mask,pos-Mask);
-   while (res==0)
-    BEGIN
-     strcpy(Name+(pos-Mask),buf.achName); callback(Name);
-     res=DosFindNext(hdir,&buf,sizeof(buf),&rescnt);
-    END
-   return True;
+  rescnt = 1;
+  res = DosFindFirst(Mask, &hdir, 0x16, &buf, sizeof(buf), &rescnt, 1);
+  if (res)
+    return False;
+  pos = strrchr(Mask, PATHSEP);
+  if (!pos)
+    pos = strrchr(Mask, DRSEP);
+  pos = pos ? pos + 1 : Mask;
+  memcpy(Name, Mask, pos - Mask);
+  while (res == 0)
+  {
+    strcpy(Name + (pos - Mask), buf.achName);
+    callback(Name);
+    res = DosFindNext(hdir, &buf, sizeof(buf), &rescnt);
+  }
+  return True;
 #else
-   strmaxcpy(Name,Mask,255); callback(Name); return True;
+  strmaxcpy(Name, Mask, 255);
+  callback(Name);
+  return True;
 #endif
 #endif
-END
+}
 
 LongInt MyGetFileTime(char *Name)
 {
-   struct stat st;
+  struct stat st;
 
-   if (stat(Name,&st)==-1) return 0;
-   else return st.st_mtime;
+  if (stat(Name, &st) == -1)
+    return 0;
+  else
+    return st.st_mtime;
 }
 
 #ifdef __CYGWIN32__
@@ -319,6 +345,6 @@ char *DeCygwinPath(char *pStr)
 }
 #endif /* __CYGWIN32__ */
 
-	void bpemu_init(void)
-BEGIN
-END
+void bpemu_init(void)
+{
+}

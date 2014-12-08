@@ -24,93 +24,97 @@
 
 
 typedef void **PFileArray;
-typedef struct _TFileNode
-         {
-          Integer Name;
-          Integer Len;
-          struct _TFileNode *Parent;
-          PFileArray Subs;
-         } TFileNode,*PFileNode;
+typedef struct sFileNode
+{
+  Integer Name;
+  Integer Len;
+  struct sFileNode *Parent;
+  PFileArray Subs;
+} TFileNode, *PFileNode;
 
 static PFileNode Root,Curr;
 
 
-  	void PushInclude(char *S)
-BEGIN
-   PFileNode Neu;
+void PushInclude(char *S)
+{
+  PFileNode Neu;
 
-   Neu=(PFileNode) malloc(sizeof(TFileNode));
-   Neu->Name=GetFileNum(S);
-   Neu->Len=0; Neu->Subs=Nil;
-   Neu->Parent=Curr;
-   if (Root==Nil) Root=Neu;
-   if (Curr==Nil) Curr=Neu;
-   else
-    BEGIN
-     if (Curr->Len==0)
-      Curr->Subs=(PFileArray) malloc(sizeof(void *));
-     else
-      Curr->Subs=(PFileArray) realloc(Curr->Subs,sizeof(void *)*(Curr->Len+1));
-     Curr->Subs[Curr->Len++]=(void *)Neu;
-     Curr=Neu;
-    END
-END
+  Neu = (PFileNode) malloc(sizeof(TFileNode));
+  Neu->Name = GetFileNum(S);
+  Neu->Len = 0;
+  Neu->Subs = NULL;
+  Neu->Parent = Curr;
+  if (!Root)
+    Root = Neu;
+  if (!Curr)
+    Curr = Neu;
+  else
+  {
+    if (Curr->Len == 0)
+      Curr->Subs = (PFileArray) malloc(sizeof(void *));
+    else
+      Curr->Subs = (PFileArray) realloc(Curr->Subs, sizeof(void *) * (Curr->Len + 1));
+    Curr->Subs[Curr->Len++] = (void *)Neu;
+    Curr = Neu;
+  }
+}
 
+void PopInclude(void)
+{
+  if (Curr)
+    Curr = Curr->Parent;
+}
 
-	void PopInclude(void)
-BEGIN
-   if (Curr!=Nil) Curr=Curr->Parent;
-END
+static void PrintIncludeList_PrintNode(PFileNode Node, int Indent)
+{
+  int z;
+  String h;
 
+  ChkStack();
 
-        static void PrintIncludeList_PrintNode(PFileNode Node, int Indent)
-BEGIN
-   int z;
-   String h;
+  if (Node)
+  {
+    strmaxcpy(h,Blanks(Indent), 255);
+    strmaxcat(h,GetFileName(Node->Name), 255);
+    WrLstLine(h);
+    for (z = 0; z < Node->Len; z++)
+      PrintIncludeList_PrintNode(Node->Subs[z], Indent + 5);
+  }
+}
 
-   ChkStack();
+void PrintIncludeList(void)
+{
+  NewPage(ChapDepth, True);
+  WrLstLine(getmessage(Num_ListIncludeListHead1));
+  WrLstLine(getmessage(Num_ListIncludeListHead2));
+  WrLstLine("");
+  PrintIncludeList_PrintNode(Root, 0);
+}
 
-   if (Node!=Nil)
-    BEGIN
-     strmaxcpy(h,Blanks(Indent),255);
-     strmaxcat(h,GetFileName(Node->Name),255);
-     WrLstLine(h);
-     for (z=0; z<Node->Len; z++) PrintIncludeList_PrintNode(Node->Subs[z],Indent+5);
-    END
-END
+static void ClearIncludeList_ClearNode(PFileNode Node)
+{
+  int z; 
 
-	void PrintIncludeList(void)
-BEGIN
-   NewPage(ChapDepth,True);
-   WrLstLine(getmessage(Num_ListIncludeListHead1));
-   WrLstLine(getmessage(Num_ListIncludeListHead2));
-   WrLstLine("");
-   PrintIncludeList_PrintNode(Root,0);
-END
+  ChkStack();
 
+  if (Node)
+  {
+    for (z = 0; z < Node->Len; ClearIncludeList_ClearNode(Node->Subs[z++]));
+    if (Node->Len > 0)
+      free(Node->Subs);
+    free(Node);
+  }
+}
 
-        static void ClearIncludeList_ClearNode(PFileNode Node)
-BEGIN
-   int z; 
+void ClearIncludeList(void)
+{
+  ClearIncludeList_ClearNode(Root);
+  Curr = NULL;
+  Root = NULL;
+}
 
-   ChkStack();
-
-   if (Node!=Nil)
-    BEGIN
-     for (z=0; z<Node->Len; ClearIncludeList_ClearNode(Node->Subs[z++]));
-     if (Node->Len>0) free(Node->Subs);
-     free(Node);
-    END
-END
-
-	void ClearIncludeList(void)
-BEGIN
-   ClearIncludeList_ClearNode(Root);
-   Curr=Nil; Root=Nil;
-END
-
-
-	void asminclist_init(void)
-BEGIN
-  Root=Nil; Curr=Nil;
-END
+void asminclist_init(void)
+{
+  Root = NULL;
+  Curr = NULL;
+}

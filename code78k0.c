@@ -9,9 +9,15 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code78k0.c,v 1.10 2014/08/17 11:42:35 alfred Exp $                          *
+/* $Id: code78k0.c,v 1.12 2014/12/07 19:14:00 alfred Exp $                          *
  ***************************************************************************** 
  * $Log: code78k0.c,v $
+ * Revision 1.12  2014/12/07 19:14:00  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
+ * Revision 1.11  2014/12/01 18:29:39  alfred
+ * - replace Nil -> NULL
+ *
  * Revision 1.10  2014/08/17 11:42:35  alfred
  * - reformat to current style
  *
@@ -226,7 +232,8 @@ static void DecodeAdr(char *Asc, Word Mask)
 
   /* erzwungen lang ? */
 
-  if ((LongFlag = (*Asc == '!')))
+  LongFlag = *Asc == '!';
+  if (LongFlag)
     Asc++;
 
   /* -->absolut */
@@ -283,7 +290,7 @@ static Boolean DecodeBitAdr(char *Asc, Byte *Erg)
   Boolean OK;
 
   p=RQuotPos(Asc,'.');
-  if (p==Nil)
+  if (!p)
   {
     WrError(1510);
     return False;

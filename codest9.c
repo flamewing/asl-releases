@@ -11,9 +11,15 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codest9.c,v 1.8 2014/06/08 21:17:57 alfred Exp $                     */
+/* $Id: codest9.c,v 1.10 2014/12/07 19:14:01 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codest9.c,v $
+ * Revision 1.10  2014/12/07 19:14:01  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
+ * Revision 1.9  2014/11/05 15:47:16  alfred
+ * - replace InitPass callchain with registry
+ *
  * Revision 1.8  2014/06/08 21:17:57  alfred
  * - adapt to current style
  *
@@ -108,7 +114,6 @@ static ShortInt AdrMode,AbsSeg;
 static Byte AdrPart,OpSize;
 static Byte AdrVals[3];
 
-static SimpProc SaveInitProc;
 static LongInt DPAssume;
 
 #define ASSUMEST9Count 1
@@ -1817,6 +1822,8 @@ static void DecodeBIT(Word Code)
 {
   Byte Bit;
 
+  UNUSED(Code);
+
   if (ArgCnt != 1) WrError(1110);
   else if (SplitBit(ArgStr[1], &Bit)) 
   {
@@ -1981,8 +1988,6 @@ static void MakeCode_ST9(void)
 
 static void InitCode_ST9(void)
 {
-  SaveInitProc();
-
   DPAssume = 0;
 }
 
@@ -2052,5 +2057,5 @@ void codest9_init(void)
   CPUST9030 = AddCPU("ST9030", SwitchTo_ST9);
   CPUST9040 = AddCPU("ST9040", SwitchTo_ST9);
   CPUST9050 = AddCPU("ST9050", SwitchTo_ST9);
-  SaveInitProc = InitPassProc; InitPassProc = InitCode_ST9;
+  AddInitPassProc(InitCode_ST9);
 }

@@ -41,7 +41,7 @@ extern void ClearCPUList(void);
 
 extern void UpString(char *s);
 
-extern char *QuotPos(char *s, char Zeichen);
+extern char *QuotPos(const char *s, char Zeichen);
 
 extern char *RQuotPos(char *s, char Zeichen);
 
@@ -140,6 +140,7 @@ extern Boolean ChkRange(LargeInt Value, LargeInt Min, LargeInt Max);
 
 
 extern void ChkIO(Word ErrNo);
+extern void ChkXIO(Word ErrNo, const char *pPath);
 
 
 extern void AddIncludeList(char *NewPath);
@@ -180,7 +181,11 @@ extern void BookKeeping(void);
 extern long DTime(long t1, long t2);
 
 
+extern void InitPass(void);
+extern void AddInitPassProc(SimpProc NewProc);
 
+extern void ClearUp(void);
+extern void AddClearUpProc(SimpProc NewProc);
 
 extern void asmsub_init(void);
 

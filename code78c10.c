@@ -11,9 +11,12 @@
 /*           25.10.2000 accesses wrong argument for mov nnn,a                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code78c10.c,v 1.7 2014/08/17 20:02:44 alfred Exp $                   */
+/* $Id: code78c10.c,v 1.8 2014/11/05 15:47:15 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code78c10.c,v $
+ * Revision 1.8  2014/11/05 15:47:15  alfred
+ * - replace InitPass callchain with registry
+ *
  * Revision 1.7  2014/08/17 20:02:44  alfred
  * - rework to current style
  *
@@ -60,8 +63,6 @@ typedef struct
 
 
 static LongInt WorkArea;
-
-static SimpProc SaveInitProc;
 
 static CPUVar CPU7810, CPU78C10;
 
@@ -1078,7 +1079,6 @@ static void MakeCode_78C10(void)
 
 static void InitCode_78C10(void)
 {
-  SaveInitProc();
   WorkArea = 0x100;
 }
 
@@ -1116,6 +1116,5 @@ void code78c10_init(void)
   CPU7810 = AddCPU("7810" , SwitchTo_78C10);
   CPU78C10 = AddCPU("78C10", SwitchTo_78C10);
 
-  SaveInitProc = InitPassProc;
-  InitPassProc = InitCode_78C10;
+  AddInitPassProc(InitCode_78C10);
 }

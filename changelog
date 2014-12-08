@@ -1,5 +1,14 @@
-$Id: changelog,v 1.89 2014/09/21 12:11:51 alfred Exp $
+$Id: changelog,v 1.100 2014/12/07 19:17:44 alfred Exp $
 ------------------------------------------------------------------------------
+
+2014-12-07 [1.42 Bld 96]
+
+- Change      : rework/cleanup PIC, 1802, 3201x, 3202x, 3203x, 3206x, 3254x,
+                4004, MELPS4500, 47Cxx, MCS-48/51, 56K, PowerPC, 65xx, 68xx, 68K targets
+
+- Addition    : Add TLCS-870/C target
+
+- Bugfix      : correct handling of TLCS-870 JR instructon without condition
 
 2014-09-21 [1.42 Bld 95]
 

@@ -5,9 +5,15 @@
 /* Codegenerator 78K2-Familie                                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code78k2.c,v 1.17 2014/08/17 10:37:39 alfred Exp $
+/* $Id: code78k2.c,v 1.19 2014/12/07 19:14:00 alfred Exp $
  *****************************************************************************
  * $Log: code78k2.c,v $
+ * Revision 1.19  2014/12/07 19:14:00  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
+ * Revision 1.18  2014/11/05 15:47:15  alfred
+ * - replace InitPass callchain with registry
+ *
  * Revision 1.17  2014/08/17 10:37:39  alfred
  * - some minor cleanups
  *
@@ -137,8 +143,6 @@ static ShortInt OpSize;
 static Boolean AltBank;
 static Byte *pCode;
 static LongInt Reg_P6, Reg_PM6;
-
-static SimpProc SaveInitProc;
 
 static ASSUMERec ASSUME78K2s[] =
 {
@@ -432,7 +436,8 @@ static void DecodeAdr(char *pAsc, Word Mask)
 
   /* OK, nothing but absolute left...exclamation mark enforces 16-bit addressing */
 
-  if ((ForceLong = (*pAsc == '!')))
+  ForceLong = (*pAsc == '!');
+  if (ForceLong)
     pAsc++;
 
   FirstPassUnknown = False;
@@ -1312,7 +1317,8 @@ static void DecodeBR(Word Index)
   else
   {
     pAsc = ArgStr[1];
-    if ((Rel = (*pAsc == '$')))
+    Rel = (*pAsc == '$');
+    if (Rel)
       pAsc++;
     FirstPassUnknown = FALSE;
     DecodeAdr(pAsc, MModAbs | MModReg16);
@@ -1732,7 +1738,6 @@ static void MakeCode_78K2(void)
 
 static void InitCode_78K2(void)
 {
-  SaveInitProc();
   Reg_PM6 = 0;
   Reg_P6  = 0;
 }
@@ -1778,6 +1783,5 @@ void code78k2_init(void)
 {
   CPU78214 = AddCPU("78214", SwitchTo_78K2);
 
-  SaveInitProc = InitPassProc;
-  InitPassProc = InitCode_78K2;
+  AddInitPassProc(InitCode_78K2);
 }

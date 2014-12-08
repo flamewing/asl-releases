@@ -16,9 +16,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code77230.c,v 1.8 2014/08/24 10:16:29 alfred Exp $                   */
+/* $Id: code77230.c,v 1.9 2014/11/16 13:15:07 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code77230.c,v $
+ * Revision 1.9  2014/11/16 13:15:07  alfred
+ * - remove some superfluous semicolons
+ *
  * Revision 1.8  2014/08/24 10:16:29  alfred
  * - rework to current style
  *
@@ -223,7 +226,7 @@ static void AddComp(int Index, LongWord Value)
   {
     InstrMask |= (1l << Index);
     InstrComps[Index] = Value;
-  };
+  }
 }
 
 static Boolean DecodeReg(char *Asc, LongWord *Erg, Register *Regs, int Cnt)

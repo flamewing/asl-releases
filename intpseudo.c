@@ -5,9 +5,15 @@
 /* Haeufiger benutzte Intel-Pseudo-Befehle                                   */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: intpseudo.c,v 1.9 2013/12/21 19:46:51 alfred Exp $                   */
+/* $Id: intpseudo.c,v 1.11 2014/12/07 19:14:02 alfred Exp $                   */
 /***************************************************************************** 
  * $Log: intpseudo.c,v $
+ * Revision 1.11  2014/12/07 19:14:02  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
+ * Revision 1.10  2014/12/05 11:09:11  alfred
+ * - eliminate Nil
+ *
  * Revision 1.9  2013/12/21 19:46:51  alfred
  * - dynamically resize code buffer
  *
@@ -69,7 +75,10 @@ typedef Boolean (*TLayoutFunc)(
  * Local Variables
  *****************************************************************************/
 
-static enum{ DSNone, DSConstant, DSSpace} DSFlag;
+static enum
+{
+  DSNone, DSConstant, DSSpace
+} DSFlag;
 
 /*****************************************************************************
  * Local Functions
@@ -150,7 +159,8 @@ static Boolean LayoutByte(const char *pExpr, Word *pCnt, Boolean BigEndian)
      in output buffer, so we only need to check again in case of
      a string argument: */
 
-  FirstPassUnknown = False; EvalExpression(pExpr, &t);
+  FirstPassUnknown = False;
+  EvalExpression(pExpr, &t);
   Result = False;
   switch (t.Typ)
   {
@@ -159,7 +169,8 @@ static Boolean LayoutByte(const char *pExpr, Word *pCnt, Boolean BigEndian)
       if (!RangeCheck(t.Contents.Int, Int8)) WrError(1320);
       else
       {
-        BAsmCode[CodeLen++] = t.Contents.Int; *pCnt = 1;
+        BAsmCode[CodeLen++] = t.Contents.Int;
+        *pCnt = 1;
         Result = True;
       }
       break;
@@ -218,12 +229,14 @@ static Boolean LayoutWord(const char *pExpr, Word *pCnt, Boolean BigEndian)
      in output buffer, so we only need to check again in case of
      a string argument: */
 
-  FirstPassUnknown = False; EvalExpression(pExpr, &t);
+  FirstPassUnknown = False;
+  EvalExpression(pExpr, &t);
   Result = True; *pCnt = 0;
   switch (t.Typ)
   {
     case TempInt:
-      if (FirstPassUnknown) t.Contents.Int &= 0xffff;
+      if (FirstPassUnknown)
+        t.Contents.Int &= 0xffff;
       if (!RangeCheck(t.Contents.Int, Int16)) WrError(1320);
       else
       {
@@ -264,10 +277,20 @@ static Boolean LayoutWord(const char *pExpr, Word *pCnt, Boolean BigEndian)
 
 static void PutDWord(LongWord l, Boolean BigEndian)
 {
-  BAsmCode[CodeLen    ] = (l      ) & 0xff;
-  BAsmCode[CodeLen + 1] = (l >>  8) & 0xff;
-  BAsmCode[CodeLen + 2] = (l >> 16) & 0xff;
-  BAsmCode[CodeLen + 3] = (l >> 24) & 0xff;
+  if (BigEndian)   
+  {
+    BAsmCode[CodeLen    ] = (l >> 24) & 0xff;
+    BAsmCode[CodeLen + 1] = (l >> 16) & 0xff;
+    BAsmCode[CodeLen + 2] = (l >>  8) & 0xff;
+    BAsmCode[CodeLen + 3] = (l      ) & 0xff;
+  }
+  else
+  {
+    BAsmCode[CodeLen    ] = (l      ) & 0xff;
+    BAsmCode[CodeLen + 1] = (l >>  8) & 0xff;
+    BAsmCode[CodeLen + 2] = (l >> 16) & 0xff;
+    BAsmCode[CodeLen + 3] = (l >> 24) & 0xff;
+  }
   CodeLen += 4;
 }
 
@@ -305,7 +328,8 @@ static Boolean LayoutDoubleWord(const char *pExpr, Word *pCnt, Boolean BigEndian
       else
       {
         Double_2_ieee4(erg.Contents.Float, BAsmCode + CodeLen, False);
-        *pCnt = 4; CodeLen += 4;
+        *pCnt = 4;
+        CodeLen += 4;
         Result = True;
       }
       break;
@@ -345,21 +369,42 @@ static Boolean LayoutDoubleWord(const char *pExpr, Word *pCnt, Boolean BigEndian
 
 static void PutQWord(LargeWord l, Boolean BigEndian)
 {
-  BAsmCode[CodeLen    ] = (l      ) & 0xff;
-  BAsmCode[CodeLen + 1] = (l >>  8) & 0xff;
-  BAsmCode[CodeLen + 2] = (l >> 16) & 0xff;
-  BAsmCode[CodeLen + 3] = (l >> 24) & 0xff;
+  if (BigEndian)
+  {
+    BAsmCode[CodeLen + 7] = (l      ) & 0xff;
+    BAsmCode[CodeLen + 6] = (l >>  8) & 0xff;
+    BAsmCode[CodeLen + 5] = (l >> 16) & 0xff;
+    BAsmCode[CodeLen + 4] = (l >> 24) & 0xff;
 #ifdef HAS64
-  BAsmCode[CodeLen + 4] = (l >> 32) & 0xff;
-  BAsmCode[CodeLen + 5] = (l >> 40) & 0xff;
-  BAsmCode[CodeLen + 6] = (l >> 48) & 0xff;
-  BAsmCode[CodeLen + 7] = (l >> 56) & 0xff;
+    BAsmCode[CodeLen + 3] = (l >> 32) & 0xff;
+    BAsmCode[CodeLen + 2] = (l >> 40) & 0xff;
+    BAsmCode[CodeLen + 1] = (l >> 48) & 0xff;
+    BAsmCode[CodeLen + 0] = (l >> 56) & 0xff;
 #else
-  BAsmCode[CodeLen + 4] =
-  BAsmCode[CodeLen + 5] =
-  BAsmCode[CodeLen + 6] =
-  BAsmCode[CodeLen + 7] = 0;
+    BAsmCode[CodeLen + 3] =
+    BAsmCode[CodeLen + 2] =
+    BAsmCode[CodeLen + 1] =
+    BAsmCode[CodeLen    ] = 0;
 #endif
+  }
+  else
+  {
+    BAsmCode[CodeLen    ] = (l      ) & 0xff;
+    BAsmCode[CodeLen + 1] = (l >>  8) & 0xff;
+    BAsmCode[CodeLen + 2] = (l >> 16) & 0xff;
+    BAsmCode[CodeLen + 3] = (l >> 24) & 0xff;
+#ifdef HAS64
+    BAsmCode[CodeLen + 4] = (l >> 32) & 0xff;
+    BAsmCode[CodeLen + 5] = (l >> 40) & 0xff;
+    BAsmCode[CodeLen + 6] = (l >> 48) & 0xff;
+    BAsmCode[CodeLen + 7] = (l >> 56) & 0xff;
+#else
+    BAsmCode[CodeLen + 4] =
+    BAsmCode[CodeLen + 5] =
+    BAsmCode[CodeLen + 6] =
+    BAsmCode[CodeLen + 7] = 0;
+#endif
+  }
   CodeLen += 8;
 }
 
@@ -390,7 +435,8 @@ static Boolean LayoutQuadWord(const char *pExpr, Word *pCnt, Boolean BigEndian)
       break;
     case TempFloat:
       Double_2_ieee8(erg.Contents.Float, BAsmCode + CodeLen, False);
-      *pCnt = 8; CodeLen += 8;
+      *pCnt = 8;
+      CodeLen += 8;
       Result = True;
       break;
     case TempString:
@@ -452,7 +498,8 @@ static Boolean LayoutTenBytes(const char *pExpr, Word *pCnt, Boolean BigEndian)
       /* no break! */
     case TempFloat:
       Double_2_ieee10(erg.Contents.Float, BAsmCode + CodeLen, False);
-      *pCnt = 10; CodeLen += 10;
+      *pCnt = 10;
+      CodeLen += 10;
       Result = True;
       break;
     case TempString:
@@ -663,16 +710,16 @@ Boolean DecodeIntelPseudo(Boolean Turn)
 {
   Word Dummy;
   int z;
-  TLayoutFunc LayoutFunc=Nil;
+  TLayoutFunc LayoutFunc = NULL;
   Boolean OK;
   LongInt HVal;
   char Ident;
 
-  if ((strlen(OpPart )!= 2) OR (*OpPart != 'D'))
+  if ((strlen(OpPart )!= 2) || (*OpPart != 'D'))
     return False;
   Ident = OpPart[1];
 
-  if ((Ident == 'B') OR (Ident == 'W') OR (Ident == 'D') OR (Ident == 'Q') OR (Ident == 'T'))
+  if ((Ident == 'B') || (Ident == 'W') || (Ident == 'D') || (Ident == 'Q') || (Ident == 'T'))
   {
     DSFlag = DSNone;
     switch (Ident)
@@ -714,11 +761,11 @@ Boolean DecodeIntelPseudo(Boolean Turn)
       }
       else
         OK = DecodeIntelPseudo_LayoutMult(ArgStr[z], &Dummy, LayoutFunc, Turn);
-      if (NOT OK)
+      if (!OK)
         CodeLen = 0;
       z++;
     }
-    while ((OK) AND (z <= ArgCnt));
+    while ((OK) && (z <= ArgCnt));
 
     DontPrint = (DSFlag == DSSpace);
     if (DontPrint)
@@ -741,8 +788,10 @@ Boolean DecodeIntelPseudo(Boolean Turn)
       if (FirstPassUnknown) WrError(1820);
       else if (OK)
       {
-        DontPrint = True; CodeLen = HVal;
-        if (!HVal) WrError(290);
+        DontPrint = True;
+        CodeLen = HVal;
+        if (!HVal)
+          WrError(290);
         BookKeeping();
       }
     }

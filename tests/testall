@@ -11,27 +11,35 @@ else
  SUBDIRS="$1"
 fi
 for t in $SUBDIRS; do
- cd $t
- cat $t.doc
- ../../asl `cat asflags` -i ../../include $t.asm | tee $t.log
- ../../p2bin -k -l 0 -r 0x-0x $t
- echo +---------------------------------------------------------------+
- if cmp $t.ori $t.bin; then
-  echo "Test $t succeeded!"
-  SUMPASS=`expr $SUMPASS + 1`
-  echo "$t : OK" >> ../../testlog
+ if cd $t ; then
+ {
+  cat $t.doc
+  ../../asl `cat asflags` -i ../../include $t.asm | tee $t.log
+  ../../p2bin -k -l 0 -r 0x-0x $t
+  echo +---------------------------------------------------------------+
+  if cmp $t.ori $t.bin; then
+   echo "Test $t succeeded!"
+   SUMPASS=`expr $SUMPASS + 1`
+   echo "$t : OK" >> ../../testlog
+  else
+   echo "Test $t failed!"
+   SUMFAIL=`expr $SUMFAIL + 1`
+   echo "$t : failed" >> ../../testlog
+  fi
+  grep assembly $t.log >> ../../testlog
+  grep Assemblierzeit $t.log >> ../../testlog
+  echo +---------------------------------------------------------------+
+  rm -f $t.bin
+  rm -f $t.log
+  rm -f $t.h
+  cd ..
+ }
  else
-  echo "Test $t failed!"
+ {
+  echo "$t : no such test" >> ../testlog
   SUMFAIL=`expr $SUMFAIL + 1`
-  echo "$t : failed" >> ../../testlog
+ }
  fi
- grep assembly $t.log >> ../../testlog
- grep Assemblierzeit $t.log >> ../../testlog
- echo +---------------------------------------------------------------+
- rm -f $t.bin
- rm -f $t.log
- rm -f $t.h
- cd ..
 done
 echo "successes: $SUMPASS" >> ../testlog
 echo "failures : $SUMFAIL" >> ../testlog

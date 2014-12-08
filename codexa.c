@@ -19,9 +19,21 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codexa.c,v 1.9 2014/06/15 09:18:09 alfred Exp $                      */
+/* $Id: codexa.c,v 1.13 2014/12/07 19:14:02 alfred Exp $                      */
 /*****************************************************************************
  * $Log: codexa.c,v $
+ * Revision 1.13  2014/12/07 19:14:02  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
+ * Revision 1.12  2014/12/05 11:58:16  alfred
+ * - collapse STDC queries into one file
+ *
+ * Revision 1.11  2014/12/05 08:53:45  alfred
+ * - eliminate remaining BEGIN/END
+ *
+ * Revision 1.10  2014/11/05 15:47:16  alfred
+ * - replace InitPass callchain with registry
+ *
  * Revision 1.9  2014/06/15 09:18:09  alfred
  * - optimize IsDef a bit
  *
@@ -64,17 +76,14 @@
 #include "intpseudo.h"
 #include "motpseudo.h"
 #include "codevars.h"
+#include "intconsts.h"
 
 #include "codexa.h"
 
 /*-------------------------------------------------------------------------*/
 /* Definitionen */
 
-#ifdef __STDC__
-# define Even32Mask 0xfffffffeu
-#else
-# define Even32Mask 0xfffffffe
-#endif
+#define Even32Mask INTCONST_fffffffe
 
 #define ModNone (-1)
 #define ModReg 0
@@ -113,7 +122,6 @@ static RegOrder *RegOrders;
 static InvOrder *RelOrders;
 
 static LongInt Reg_DS;
-static SimpProc SaveInitProc;
 
 static ShortInt AdrMode;
 static Byte AdrPart,MemPart;
@@ -473,6 +481,8 @@ static void DecodeBIT(Word Index)
 {
   LongInt BAdr;
 
+  UNUSED(Index);
+
   if (ArgCnt != 1) WrError(1110);
   else if (*AttrPart != '\0') WrError(1100);
   else if (DecodeBitAddr(ArgStr[1], &BAdr))
@@ -651,7 +661,7 @@ static void DecodeALU(Word Index)
               memcpy(BAsmCode + CodeLen, HVals, HCnt);
               memcpy(BAsmCode + CodeLen + HCnt, AdrVals, AdrCnt);
               CodeLen += AdrCnt + HCnt;
-             END
+            }
             break;
         }
         break;
@@ -1999,7 +2009,6 @@ static void DeinitFields(void)
 
 static void InitCode_XA(void)
 {
-  SaveInitProc();
   Reg_DS = 0;
 }
 
@@ -2057,5 +2066,5 @@ void codexa_init(void)
   CPUXAG2 = AddCPU("XAG2", SwitchTo_XA);
   CPUXAG3 = AddCPU("XAG3", SwitchTo_XA);
 
-  SaveInitProc = InitPassProc; InitPassProc = InitCode_XA;
+  AddInitPassProc(InitCode_XA);
 }

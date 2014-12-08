@@ -11,9 +11,18 @@
 /*           30. 5.1999 ConstLongInt akzeptiert auch 0x fuer Hex-Zahlen      */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: strutil.c,v 1.11 2013/12/18 22:21:54 alfred Exp $                     */
+/* $Id: strutil.c,v 1.14 2014/12/07 19:14:02 alfred Exp $                     */
 /*****************************************************************************
  * $Log: strutil.c,v $
+ * Revision 1.14  2014/12/07 19:14:02  alfred
+ * - silence a couple of Borland C related warnings and errors
+ *
+ * Revision 1.13  2014/12/03 19:01:00  alfred
+ * - remove static return value
+ *
+ * Revision 1.12  2014/12/03 18:54:53  alfred
+ * - rework to current style
+ *
  * Revision 1.11  2013/12/18 22:21:54  alfred
  * - regard \ escaping for quotes
  *
@@ -58,15 +67,21 @@ Boolean HexLowerCase;	    /* Hex-Konstanten mit Kleinbuchstaben */
 /*--------------------------------------------------------------------------*/
 /* eine bestimmte Anzahl Leerzeichen liefern */
 
-        char *Blanks(int cnt)
-BEGIN
-   static char *BlkStr="                                                                                                           ";
+const char *Blanks(int cnt)
+{
+  static const char *BlkStr = "                                                                                                           ";
+  static int BlkStrLen = 0;
 
-   if (cnt<0) cnt=0;
+  if (!BlkStrLen)
+    BlkStrLen = strlen(BlkStr);
 
-   return BlkStr+(strlen(BlkStr)-cnt);
-END
+  if (cnt < 0)
+    cnt = 0;
+  if (cnt > BlkStrLen)
+    cnt = BlkStrLen;
 
+  return BlkStr + (BlkStrLen - cnt);
+}
 
 /****************************************************************************/
 /* eine Integerzahl in eine Hexstring umsetzen. Weitere vordere Stellen als */
@@ -74,108 +89,115 @@ END
 
 #define BufferCnt 8
 
-	char *HexString(LargeWord i, Byte Stellen)
-BEGIN
-   static ShortString h[BufferCnt];
-   static int z = 0, Cnt;
-   LargeWord digit;
-   char *ptr;
+char *HexString(LargeWord i, Byte Stellen)
+{
+  static ShortString h[BufferCnt];
+  static int z = 0, Cnt;
+  LargeWord digit;
+  char *ptr;
 
-   if (Stellen > sizeof(ShortString) - 1)
+  if (Stellen > sizeof(ShortString) - 1)
     Stellen = sizeof(ShortString) - 1;
 
-   ptr = h[z] + sizeof(ShortString) - 1;
-   *ptr = '\0'; Cnt = Stellen;
-   do
-    BEGIN
-     digit = i & 15;
-     if (digit < 10)
+  ptr = h[z] + sizeof(ShortString) - 1;
+  *ptr = '\0';
+  Cnt = Stellen;
+  do
+  {
+    digit = i & 15;
+    if (digit < 10)
       *(--ptr) = digit + '0';
-     else if (HexLowerCase)
+    else if (HexLowerCase)
       *(--ptr) = digit - 10 + 'a';
-     else
+    else
       *(--ptr) = digit - 10 + 'A';
-     i = i >> 4;
-     Cnt--;
-    END
-   while ((Cnt > 0) OR (i != 0));
+    i = i >> 4;
+    Cnt--;
+  }
+  while ((Cnt > 0) || (i != 0));
 
-   z = (z + 1) % BufferCnt;
+  z = (z + 1) % BufferCnt;
 
-   return ptr;
-END
+  return ptr;
+}
 
-	char *SysString(LargeWord i, LargeWord System, Byte Stellen)
-BEGIN
-   static ShortString h[BufferCnt];
-   static int z = 0, Cnt;
-   LargeWord digit;
-   char *ptr;
+char *SysString(LargeWord i, LargeWord System, Byte Stellen)
+{
+  static ShortString h[BufferCnt];
+  static int z = 0, Cnt;
+  LargeWord digit;
+  char *ptr;
 
-   if (Stellen > sizeof(ShortString) - 1)
+  if (Stellen > sizeof(ShortString) - 1)
     Stellen = sizeof(ShortString) - 1;
 
-   ptr = h[z] + sizeof(ShortString) - 1;
-   *ptr = '\0'; Cnt = Stellen;
-   do
-    BEGIN
-     digit = i % System;
-     if (digit < 10)
+  ptr = h[z] + sizeof(ShortString) - 1;
+  *ptr = '\0';
+  Cnt = Stellen;
+  do
+  {
+    digit = i % System;
+    if (digit < 10)
       *(--ptr) = digit + '0';
-     else if (HexLowerCase)
+    else if (HexLowerCase)
       *(--ptr) = digit - 10 + 'a';
-     else
+    else
       *(--ptr) = digit - 10 + 'A';
-     i /= System;
-     Cnt--;
-    END
-   while ((Cnt > 0) OR (i != 0));
+    i /= System;
+    Cnt--;
+  }
+  while ((Cnt > 0) || (i != 0));
 
-   z = (z + 1) % BufferCnt;
+  z = (z + 1) % BufferCnt;
 
-   return ptr;
-END
+  return ptr;
+}
 
 /*--------------------------------------------------------------------------*/
 /* dito, nur vorne Leerzeichen */
 
-        char *HexBlankString(LargeWord i, Byte Stellen)
-BEGIN
-   static String temp;
-   
-   strmaxcpy(temp,HexString(i,0),255);
-   if (strlen(temp)<Stellen) strmaxprep(temp,Blanks(Stellen-strlen(temp)),255);
-   return temp;
-END
+char *HexBlankString(LargeWord i, Byte Stellen)
+{
+  static String temp;
+
+  strmaxcpy(temp, HexString(i, 0), 255);
+  if (strlen(temp) < Stellen)
+    strmaxprep(temp, Blanks(Stellen - strlen(temp)), 255);
+  return temp;
+}
 
 /*---------------------------------------------------------------------------*/
-/* Da manche Systeme (SunOS) Probleme mit der Ausgabe extra langer Ints 
+/* Da manche Systeme (SunOS) Probleme mit der Ausgabe extra langer Ints
    haben, machen wir das jetzt zu Fuss :-( */
 
-	char *LargeString(LargeInt i)
-BEGIN
-   Boolean SignFlag=False;
-   static String s;
-   String tmp;
-   char *p,*p2;
-   
-   if (i<0)
-    BEGIN
-     i=(-i); SignFlag=True;
-    END
-    
-   p=tmp;
-   do
-    BEGIN
-     *(p++)='0'+(i%10);
-     i/=10;
-    END
-   while (i>0);
-   
-   p2=s; if (SignFlag) *(p2++)='-';
-   while (p>tmp) *(p2++)=(*(--p));
-   *p2='\0'; return s;
-END
+char *LargeString(char *pDest, LargeInt i)
+{
+  Boolean SignFlag = False;
+  String tmp;
+  char *p, *p2;
+
+  if (i < 0)
+  {
+    i = -i;
+    SignFlag = True;
+  }
+
+  p = tmp;
+  do
+  {
+    *(p++) = '0' + (i % 10);
+    i /= 10;
+  }
+  while (i > 0);
+
+  p2 = pDest;
+  if (SignFlag)
+    *(p2++) = '-';
+  while (p > tmp)
+    *(p2++) = (*(--p));
+  *p2 = '\0';
+  return pDest;
+}
 
 
 /*---------------------------------------------------------------------------*/
@@ -183,80 +205,92 @@ END
 
 #if defined(NEEDS_STRDUP) || defined(CKMALLOC)
 #ifdef CKMALLOC
-	char *mystrdup(char *s)
-BEGIN
+char *mystrdup(const char *s)
+{
 #else
-	char *strdup(char *s)
-BEGIN
+char *strdup(const char *s)
+{
 #endif
-   char *ptr=(char *) malloc(strlen(s)+1);
+  char *ptr = (char *) malloc(strlen(s) + 1);
 #ifdef CKMALLOC
-   if (ptr==Nil) 
-    BEGIN
-     fprintf(stderr,"strdup: out of memory?\n"); exit(255);
-    END
+  if (!ptr)
+  {
+    fprintf(stderr, "strdup: out of memory?\n");
+    exit(255);
+  }
 #endif
-   if (ptr!=0) strcpy(ptr,s);
-   return ptr;
-END
+  if (ptr != 0)
+    strcpy(ptr, s);
+  return ptr;
+}
 #endif
 
 #ifdef NEEDS_CASECMP
-	int strcasecmp(const char *src1, const char *src2)
-BEGIN
-   if (src1 == NULL) src1 = "";
-   if (src2 == NULL) src2 = "";
-   while (toupper(*src1)==toupper(*src2))
-    BEGIN
-     if ((NOT *src1) AND (NOT *src2)) return 0;
-     src1++; src2++;
-    END
-   return ((int) toupper(*src1))-((int) toupper(*src2));
-END	
+int strcasecmp(const char *src1, const char *src2)
+{
+  if (!src1)
+    src1 = "";
+  if (!src2)
+    src2 = "";
+  while (toupper(*src1) == toupper(*src2))
+  {
+    if ((!*src1) && (!*src2))
+      return 0;
+    src1++;
+    src2++;
+  }
+  return ((int) toupper(*src1)) - ((int) toupper(*src2));
+}	
 
-	int strncasecmp(const char *src1, const char *src2, int len)
-BEGIN
-   if (src1 == NULL) src1 = "";
-   if (src2 == NULL) src2 = "";
-   while (toupper(*src1)==toupper(*src2))
-    BEGIN
-     if (--len==0) return 0;
-     if ((NOT *src1) AND (NOT *src2)) return 0;
-     src1++; src2++;
-    END
-   return ((int) toupper(*src1))-((int) toupper(*src2));
-END	
+int strncasecmp(const char *src1, const char *src2, int len)
+{
+  if (!src1)
+    src1 = "";
+  if (!src2)
+    src2 = "";
+  while (toupper(*src1) == toupper(*src2))
+  {
+    if (--len == 0)
+      return 0;
+    if ((!*src1) && (!*src2))
+      return 0;
+    src1++;
+    src2++;
+  }
+  return ((int) toupper(*src1)) - ((int) toupper(*src2));
+}	
 #endif
 
 #ifdef NEEDS_STRSTR
-	char *strstr(const char *haystack, const char *needle)
-BEGIN
-   int lh=strlen(haystack), ln=strlen(needle);
-   int z;
-   char *p;
+char *strstr(const char *haystack, const char *needle)
+{
+  int lh = strlen(haystack), ln = strlen(needle);
+  int z;
+  char *p;
 
-   for (z=0; z<=lh-ln; z++)
-    if (strncmp(p=haystack+z,needle,ln)==0) return p;
-   return Nil;
-END
+  for (z = 0; z <= lh - ln; z++)
+    if (strncmp(p = haystack + z, needle, ln) == 0)
+      return p;
+  return NULL;
+}
 #endif
 
 #ifdef BROKEN_SPRINTF
 #include <varargs.h>
 
-	int mysprintf(va_alist) va_dcl
-BEGIN
-   va_list pvar;
-   char *form,*dest,*run;
+int mysprintf(va_alist) va_dcl
+{
+  va_list pvar;
+  char *form, *dest, *run;
 
-   va_start(pvar);
-   dest=va_arg(pvar,char*);
-   form=va_arg(pvar,char*);
-   vsprintf(dest,form,pvar);
+  va_start(pvar);
+  dest = va_arg(pvar, char*);
+  form = va_arg(pvar, char*);
+  vsprintf(dest, form, pvar);
 
-   for (run=dest; *run!='\0'; run++);
-   return run-dest;
-END
+  for (run = dest; *run != '\0'; run++);
+  return run - dest;
+}
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -270,60 +304,66 @@ void strmaxcpy(char *dest, const char *src, int Max)
 
   if (cnt > (Max - 1))
     cnt = Max - 1;
-  memcpy(dest, src, cnt); dest[cnt]='\0';
+  memcpy(dest, src, cnt);
+  dest[cnt] = '\0';
 }
 
 /*---------------------------------------------------------------------------*/
 /* einfuegen, mit Begrenzung */
 
-	void strmaxcat(char *Dest, const char *Src, int MaxLen)
-BEGIN
-   int TLen=strlen(Src),DLen=strlen(Dest);
+void strmaxcat(char *Dest, const char *Src, int MaxLen)
+{
+  int TLen = strlen(Src), DLen = strlen(Dest);
 
-   if (TLen>MaxLen-DLen) TLen=MaxLen-DLen;
-   if (TLen>0)
-    BEGIN
-     memcpy(Dest+DLen,Src,TLen);
-     Dest[DLen+TLen]='\0';
-    END
-END
+  if (TLen > MaxLen - DLen)
+    TLen = MaxLen - DLen;
+  if (TLen > 0)
+  {
+    memcpy(Dest + DLen, Src, TLen);
+    Dest[DLen + TLen] = '\0';
+  }
+}
 
-	void strprep(char *Dest, const char *Src)
-BEGIN
-   memmove(Dest+strlen(Src),Dest,strlen(Dest)+1);
-   memmove(Dest,Src,strlen(Src));
-END
+void strprep(char *Dest, const char *Src)
+{
+  memmove(Dest + strlen(Src), Dest, strlen(Dest) + 1);
+  memmove(Dest, Src, strlen(Src));
+}
 
-	void strmaxprep(char *Dest, const char *Src, int MaxLen)
-BEGIN
-   int RLen;
-   
-   RLen = strlen(Src); if ( RLen > MaxLen - ((int)strlen(Dest))) RLen = MaxLen - strlen(Dest);
-   memmove(Dest+RLen,Dest,strlen(Dest)+1);
-   memmove(Dest,Src,RLen);
-END
+void strmaxprep(char *Dest, const char *Src, int MaxLen)
+{
+  int RLen;
 
-	void strins(char *Dest, const char *Src, int Pos)
-BEGIN
-   memmove(Dest+Pos+strlen(Src),Dest+Pos,strlen(Dest)+1-Pos);
-   memmove(Dest+Pos,Src,strlen(Src));
-END
+  RLen = strlen(Src);
+  if (RLen > MaxLen - ((int)strlen(Dest)))
+    RLen = MaxLen - strlen(Dest);
+  memmove(Dest + RLen, Dest, strlen(Dest) + 1);
+  memmove(Dest, Src, RLen);
+}
 
-	void strmaxins(char *Dest, const char *Src, int Pos, int MaxLen)
-BEGIN
-   int RLen;
+void strins(char *Dest, const char *Src, int Pos)
+{
+  memmove(Dest + Pos + strlen(Src), Dest + Pos, strlen(Dest) + 1 - Pos);
+  memmove(Dest + Pos, Src, strlen(Src));
+}
 
-   RLen = strlen(Src); if (RLen > MaxLen - ((int)strlen(Dest))) RLen = MaxLen - strlen(Dest);
-   memmove(Dest+Pos+RLen,Dest+Pos,strlen(Dest)+1-Pos);
-   memmove(Dest+Pos,Src,RLen);
-END
+void strmaxins(char *Dest, const char *Src, int Pos, int MaxLen)
+{
+  int RLen;
+
+  RLen = strlen(Src);
+  if (RLen > MaxLen - ((int)strlen(Dest)))
+    RLen = MaxLen - strlen(Dest);
+  memmove(Dest + Pos + RLen, Dest + Pos, strlen(Dest) + 1 - Pos);
+  memmove(Dest + Pos, Src, RLen);
+}
 
 int strlencmp(const char *pStr1, unsigned Str1Len,
               const char *pStr2, unsigned Str2Len)
 {
   const char *p1, *p2, *p1End, *p2End;
   int Diff;
- 
+
   for (p1 = pStr1, p1End = p1 + Str1Len,
        p2 = pStr2, p2End = p2 + Str2Len;
        p1 < p1End && p2 < p2End; p1++, p2++)
@@ -343,11 +383,13 @@ unsigned fstrlenprint(FILE *pFile, const char *pStr, unsigned StrLen)
   for (pRun = pStr, pEnd = pStr + StrLen; pRun < pEnd; pRun++)
     if ((*pRun == '\\') || (*pRun == '"') || (!isprint(*pRun)))
     {
-      fprintf(pFile, "\\%03d", *pRun); Result += 4;
+      fprintf(pFile, "\\%03d", *pRun);
+      Result += 4;
     }
     else
     {
-      fputc(*pRun, pFile); Result++;
+      fputc(*pRun, pFile);
+      Result++;
     }
 
   return Result;
@@ -365,13 +407,17 @@ unsigned snstrlenprint(char *pDest, unsigned DestLen,
       if (DestLen < 5)
         break;
       sprintf(pDest, "\\%03d", *pRun);
-      pDest += 4; DestLen -= 4; Result += 4;
+      pDest += 4;
+      DestLen -= 4;
+      Result += 4;
     }
     else
     {
       if (DestLen < 2)
         break;
-      *pDest++ = *pRun; DestLen--; Result++;
+      *pDest++ = *pRun;
+      DestLen--;
+      Result++;
     }
   *pDest = '\0';
 
@@ -381,17 +427,22 @@ unsigned snstrlenprint(char *pDest, unsigned DestLen,
 /*---------------------------------------------------------------------------*/
 /* Bis Zeilenende lesen */
 
-         void ReadLn(FILE *Datei, char *Zeile)
+void ReadLn(FILE *Datei, char *Zeile)
 {
-   char *ptr;
-   int l;
- 
-   *Zeile='\0'; ptr=fgets(Zeile,256,Datei);
-   if ((ptr==Nil) AND (ferror(Datei)!=0)) *Zeile='\0';
-   l=strlen(Zeile);
-   if ((l>0) AND (Zeile[l-1]=='\n')) Zeile[--l]='\0';
-   if ((l>0) AND (Zeile[l-1]=='\r')) Zeile[--l]='\0';
-   if ((l>0) AND (Zeile[l-1]==26)) Zeile[--l]='\0';
+  char *ptr;
+  int l;
+
+  *Zeile = '\0';
+  ptr = fgets(Zeile, 256, Datei);
+  if ((!ptr) && (ferror(Datei) != 0))
+    *Zeile = '\0';
+  l = strlen(Zeile);
+  if ((l > 0) && (Zeile[l - 1] == '\n'))
+    Zeile[--l] = '\0';
+  if ((l > 0) && (Zeile[l - 1] == '\r'))
+    Zeile[--l] = '\0';
+  if ((l > 0) && (Zeile[l - 1] == 26))
+    Zeile[--l] = '\0';
 }
 
 #if 0
@@ -412,75 +463,81 @@ static void dump(const char *pLine, unsigned Cnt)
 
 #endif
 
-        int ReadLnCont(FILE *Datei, char *Zeile, int MaxLen)
+int ReadLnCont(FILE *Datei, char *Zeile, int MaxLen)
 {
-   char *ptr, *pDest;
-   int l, RemLen, Count;
-   Boolean cont, Terminated;
+  char *ptr, *pDest;
+  int l, RemLen, Count;
+  Boolean cont, Terminated;
 
-   /* read from input until either string has reached maximum length,
-      or no continuation is present */
+  /* read from input until either string has reached maximum length,
+     or no continuation is present */
 
-   RemLen = MaxLen; pDest = Zeile; Count = 0;
-   do
-   {
-     /* get a line from file */
+  RemLen = MaxLen;
+  pDest = Zeile;
+  Count = 0;
+  do
+  {
+    /* get a line from file */
 
-     Terminated = False;
-     *pDest = '\0'; ptr = fgets(pDest, RemLen, Datei);
-     if ((ptr==Nil) AND (ferror(Datei) != 0))
-       *pDest = '\0';
+    Terminated = False;
+    *pDest = '\0';
+    ptr = fgets(pDest, RemLen, Datei);
+    if ((!ptr) && (ferror(Datei) != 0))
+      *pDest = '\0';
 
-     /* strip off trailing CR/LF */
+    /* strip off trailing CR/LF */
 
-     l = strlen(pDest); cont = False;
-     if ((l > 0) && (pDest[l - 1] == '\n'))
-     {
-       pDest[--l] = '\0';
-       Terminated = True;
-     }
-     if ((l > 0) && (pDest[l - 1] == '\r'))
-       pDest[--l] = '\0';
+    l = strlen(pDest);
+    cont = False;
+    if ((l > 0) && (pDest[l - 1] == '\n'))
+    {
+      pDest[--l] = '\0';
+      Terminated = True;
+    }
+    if ((l > 0) && (pDest[l - 1] == '\r'))
+      pDest[--l] = '\0';
 
-     /* yes - this is necessary, when we get an old DOS textfile with
-        Ctrl-Z as EOF */
+    /* yes - this is necessary, when we get an old DOS textfile with
+       Ctrl-Z as EOF */
 
-     if ((l > 0) && (pDest[l - 1] == 26))
-       pDest[--l] = '\0';
+    if ((l > 0) && (pDest[l - 1] == 26))
+      pDest[--l] = '\0';
 
-     /* optional line continuation */
+    /* optional line continuation */
 
-     if ((l > 0) && (pDest[l - 1] == '\\'))
-     {
-       pDest[--l] = '\0';
-       cont = True;
-     }
+    if ((l > 0) && (pDest[l - 1] == '\\'))
+    {
+      pDest[--l] = '\0';
+      cont = True;
+    }
 
-     /* prepare for next chunk */
+    /* prepare for next chunk */
 
-     RemLen -= l; pDest += l; Count++;
-   }
-   while ((RemLen > 2) && (cont));
+    RemLen -= l;
+    pDest += l;
+    Count++;
+  }
+  while ((RemLen > 2) && (cont));
 
-   if (!Terminated)
-   {
-     char Tmp[100];
+  if (!Terminated)
+  {
+    char Tmp[100];
 
-     while (TRUE)
-     {
-       Terminated = False;
-       ptr = fgets(Tmp, sizeof(Tmp), Datei);
-       if (!ptr)
-         break;
-       l = strlen(Tmp);
-       if (!l)
-         break;
-       if ((l > 0) && (Tmp[l - 1] == '\n'))
-         break;
-     }
-   }
+    while (TRUE)
+    {
+      Terminated = False;
+      ptr = fgets(Tmp, sizeof(Tmp), Datei);
+      if (!ptr)
+        break;
+      l = strlen(Tmp);
+      if (!l)
+        break;
+      if ((l > 0) && (Tmp[l - 1] == '\n'))
+        break;
+    }
+  }
 
-   return Count;
+  return Count;
 }
 
 /*--------------------------------------------------------------------*/
@@ -489,105 +546,121 @@ static void dump(const char *pLine, unsigned Cnt)
 /* erg: Zeiger auf Ergebnis-Longint */
 /* liefert TRUE, falls fehlerfrei, sonst FALSE */
 
-        LongInt ConstLongInt(const char *inp, Boolean *pErr, LongInt Base)
-BEGIN
-   static char Prefixes[4]={'$','@','%','\0'}; /* die moeglichen Zahlensysteme */
-   static LongInt Bases[3]={16,8,2};           /* die dazugehoerigen Basen */
-   LongInt erg;
-   LongInt z,val,vorz = 1;  /* Vermischtes */
+LongInt ConstLongInt(const char *inp, Boolean *pErr, LongInt Base)
+{
+  static const char Prefixes[4] = { '$', '@', '%', '\0' }; /* die moeglichen Zahlensysteme */
+  static const LongInt Bases[3] = { 16, 8, 2 };            /* die dazugehoerigen Basen */
+  LongInt erg;
+  LongInt z, val, vorz = 1;  /* Vermischtes */
 
-   /* eventuelles Vorzeichen abspalten */
+  /* eventuelles Vorzeichen abspalten */
 
-   if (*inp == '-')
-    BEGIN
-     vorz = (-1); inp++;
-    END
+  if (*inp == '-')
+  {
+    vorz = -1;
+    inp++;
+  }
 
-   /* Sonderbehandlung 0x --> $ */
+  /* Sonderbehandlung 0x --> $ */
 
-   if ((strlen(inp) >= 2) 
-    && (*inp == '0') 
-    && (mytoupper(inp[1]) == 'X'))
-    BEGIN
-     inp += 2;
-     Base = 16;
-    END
+  if ((strlen(inp) >= 2)
+   && (*inp == '0')
+   && (mytoupper(inp[1]) == 'X'))
+  {
+    inp += 2;
+    Base = 16;
+  }
 
-   /* Jetzt das Zahlensystem feststellen.  Vorgabe ist dezimal, was
-      sich aber durch den Initialwert von Base jederzeit aendern
-      laesst.  Der break-Befehl verhindert, dass mehrere Basenzeichen
-      hintereinander eingegeben werden koennen */
+  /* Jetzt das Zahlensystem feststellen.  Vorgabe ist dezimal, was
+     sich aber durch den Initialwert von Base jederzeit aendern
+     laesst.  Der break-Befehl verhindert, dass mehrere Basenzeichen
+     hintereinander eingegeben werden koennen */
 
-   else
+  else
     for (z = 0; z < 3; z++)
-     if (*inp == Prefixes[z])
-      BEGIN
-       Base = Bases[z]; inp++; break;
-      END
+      if (*inp == Prefixes[z])
+      {
+        Base = Bases[z];
+        inp++;
+        break;
+      }
 
-   /* jetzt die Zahlenzeichen der Reihe nach durchverwursten */
+  /* jetzt die Zahlenzeichen der Reihe nach durchverwursten */
 
-   erg=0; *pErr=False;
-   for(; *inp != '\0'; inp++)
-    BEGIN
-     /* Ziffern 0..9 ergeben selbiges */
+  erg = 0;
+  *pErr = False;
+  for(; *inp != '\0'; inp++)
+  {
+    /* Ziffern 0..9 ergeben selbiges */
 
-     if ((*inp>='0') AND (*inp<='9')) val=(*inp)-'0';
+    if ((*inp >= '0') && (*inp <= '9'))
+      val = (*inp) - '0';
 
-     /* Grossbuchstaben fuer Hexziffern */
+    /* Grossbuchstaben fuer Hexziffern */
 
-     else if ((*inp>='A') AND (*inp<='F')) val=(*inp)-'A'+10;
+    else if ((*inp >= 'A') && (*inp <= 'F'))
+      val = (*inp) - 'A' + 10;
 
-     /* Kleinbuchstaben nicht vergessen...! */
+    /* Kleinbuchstaben nicht vergessen...! */
 
-     else if ((*inp>='a') AND (*inp<='f')) val=(*inp)-'a'+10;
+    else if ((*inp >= 'a') && (*inp <= 'f'))
+      val = (*inp) - 'a' + 10;
 
-     /* alles andere ist Schrott */
+    /* alles andere ist Schrott */
 
-     else break;
+    else
+      break;
 
-     /* entsprechend der Basis zulaessige Ziffer ? */
+    /* entsprechend der Basis zulaessige Ziffer ? */
 
-     if (val>=Base) break;
+    if (val >= Base)
+      break;
 
-     /* Zahl linksschieben, zusammenfassen, naechster bitte */
+    /* Zahl linksschieben, zusammenfassen, naechster bitte */
 
-     erg=erg*Base+val;
-    END
+    erg = erg*Base + val;
+  }
 
-   /* bis zum Ende durchgelaufen ? */
-   
-   if (*inp == '\0')
-    BEGIN
-     /* Vorzeichen beruecksichtigen */
+  /* bis zum Ende durchgelaufen ? */
 
-     erg*=vorz;
-     *pErr=True;
-    END
+  if (*inp == '\0')
+  {
+    /* Vorzeichen beruecksichtigen */
 
-   return erg;
-END
+    erg*=vorz;
+    *pErr = True;
+  }
+
+  return erg;
+}
 
 /*--------------------------------------------------------------------------*/
 /* alle Leerzeichen aus einem String loeschen */
 
-        void KillBlanks(char *s)
-BEGIN
-   char *z,*dest;
-   Boolean InHyp=False,InQuot=False;
+void KillBlanks(char *s)
+{
+  char *z, *dest;
+  Boolean InHyp = False, InQuot = False;
 
-   dest=s;
-   for (z=s; *z!='\0'; z++)
-    BEGIN
-     switch (*z)
-      BEGIN
-       case '\'': if (NOT InQuot) InHyp=NOT InHyp; break;
-       case '"': if (NOT InHyp) InQuot=NOT InQuot; break;
-      END
-     if ((NOT isspace((unsigned char)*z)) OR (InHyp) OR (InQuot)) *(dest++)=(*z);
-    END
-   *dest='\0';
-END
+  dest = s;
+  for (z = s; *z != '\0'; z++)
+  {
+    switch (*z)
+    {
+      case '\'':
+        if (!InQuot)
+          InHyp = !InHyp;
+        break;
+      case '"':
+        if (!InHyp)
+          InQuot = !InQuot;
+        break;
+    }
+    if ((!isspace((unsigned char)*z)) || (InHyp) || (InQuot))
+      *(dest++) = (*z);
+  }
+  *dest = '\0';
+}
 
 int CopyNoBlanks(char *pDest, const char *pSrc, int MaxLen)
 {
@@ -603,19 +676,23 @@ int CopyNoBlanks(char *pDest, const char *pSrc, int MaxLen)
   MaxLen--;
 
   PrevEscaped = False;
-  for (pSrcRun = pSrc; (ch = *pSrcRun); pSrcRun++)
+  for (pSrcRun = pSrc; *pSrcRun; pSrcRun++)
   {
+    ch = *pSrcRun;
     ThisEscaped = False;
     switch (ch)
     {
       case '\'':
-        if (!(Flags & 2) && !PrevEscaped) Flags ^= 1;
+        if (!(Flags & 2) && !PrevEscaped)
+          Flags ^= 1;
         break;
       case '"':
-        if (!(Flags & 1) && !PrevEscaped) Flags ^= 2;
+        if (!(Flags & 1) && !PrevEscaped)
+          Flags ^= 2;
         break;
       case '\\':
-        if (!PrevEscaped) ThisEscaped = True;
+        if (!PrevEscaped)
+          ThisEscaped = True;
         break;
     }
     if ((!isspace((unsigned char)ch)) || (Flags))
@@ -632,31 +709,35 @@ int CopyNoBlanks(char *pDest, const char *pSrc, int MaxLen)
 /*--------------------------------------------------------------------------*/
 /* fuehrende Leerzeichen loeschen */
 
-        void KillPrefBlanks(char *s)
-BEGIN
-   char *z=s;
+void KillPrefBlanks(char *s)
+{
+  char *z = s;
 
-   while ((*z!='\0') AND (isspace((unsigned char)*z))) z++;
-   if (z!=s) strmov(s,z);
-END
+  while ((*z != '\0') && (isspace((unsigned char)*z)))
+    z++;
+  if (z != s)
+    strmov(s, z);
+}
 
 /*--------------------------------------------------------------------------*/
 /* anhaengende Leerzeichen loeschen */
 
-        void KillPostBlanks(char *s)
-BEGIN
-   char *z=s+strlen(s)-1;
+void KillPostBlanks(char *s)
+{
+  char *z = s + strlen(s) - 1;
 
-   while ((z>=s) AND (isspace((unsigned char)*z))) *(z--)='\0';
-END
+  while ((z >= s) && (isspace((unsigned char)*z)))
+    *(z--) = '\0';
+}
 
-/*--------------------------------------------------------------------------*/ 
+/*--------------------------------------------------------------------------*/
 
-	int strqcmp(const char *s1, const char *s2)
-BEGIN
-   int erg=(*s1)-(*s2);
-   return (erg!=0) ? erg : strcmp(s1,s2);
-END
+int strqcmp(const char *s1, const char *s2)
+{
+  int erg = (*s1) - (*s2);
+
+  return (erg != 0) ? erg : strcmp(s1, s2);
+}
 
 /*--------------------------------------------------------------------------*/
 
@@ -705,7 +786,7 @@ char *strcpy(char *pDest, const char *pSrc)
 
 /*--------------------------------------------------------------------------*/
 
-	void strutil_init(void)
-BEGIN
-   HexLowerCase=False;
-END
+void strutil_init(void)
+{
+  HexLowerCase = False;
+}
