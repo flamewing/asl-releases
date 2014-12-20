@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code370.c,v 1.8 2014/12/07 19:13:59 alfred Exp $                     */
+/* $Id: code370.c,v 1.9 2014/12/14 17:58:46 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code370.c,v $
+ * Revision 1.9  2014/12/14 17:58:46  alfred
+ * - remove static variables in strutil.c
+ *
  * Revision 1.8  2014/12/07 19:13:59  alfred
  * - silence a couple of Borland C related warnings and errors
  *
@@ -387,9 +390,12 @@ static void DecodeDBIT(Word Code)
         Adr = EvalIntExpression(ArgStr[2], Int16, &OK);
       if ((OK) && (!FirstPassUnknown))
       {
+        char Str[30];
+
         PushLocHandle(-1);
         EnterIntSymbol(LabPart, (((LongInt)Bit) << 16) + Adr, SegNone, False);
-        sprintf(ListLine, "=%s:%c", HexString(Adr, 0), Bit + '0');
+        HexString(Str, sizeof(Str), Adr, 0);
+        sprintf(ListLine, "=%s:%c", Str, Bit + '0');
         PopLocHandle();
       }
     }

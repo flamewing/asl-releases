@@ -1,0 +1,6 @@
++----------------------- Test Application CMDCPU ----------------------------+
+|                                                                            |
+|      This tests setting the target CPU via the -cpu command line switch,   |
+|      rather than the CPU pseudo instruction.                               |
+|                                                                            |
++----------------------------------------------------------------------------+

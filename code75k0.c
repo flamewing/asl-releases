@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code75k0.c,v 1.11 2014/11/16 13:15:07 alfred Exp $                    */
+/* $Id: code75k0.c,v 1.12 2014/12/14 17:58:47 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code75k0.c,v $
+ * Revision 1.12  2014/12/14 17:58:47  alfred
+ * - remove static variables in strutil.c
+ *
  * Revision 1.11  2014/11/16 13:15:07  alfred
  * - remove some superfluous semicolons
  *
@@ -314,7 +317,10 @@ static Boolean DecodeBitAddr(char *Asc, Word *Erg, char *pBName)
       {
         *Erg = 0x40 + ((Adr & 0x3c) >> 2);
         if (pBName)
-          sprintf(pBName, "%sH.@L", HexString(Adr, 3));
+        {
+          HexString(pBName, STRINGSIZE, Adr, 3);
+          strmaxcat(pBName, "H.@L", STRINGSIZE);
+        }
         return True;
       }
     }
@@ -334,7 +340,12 @@ static Boolean DecodeBitAddr(char *Asc, Word *Erg, char *pBName)
           {
             *Erg = (Num << 4) + Adr;
             if (pBName)
-              sprintf(pBName, "@H%s.%c", HexString(Adr, 1), Num + '0');
+            {
+              char Str[30];
+
+              HexString(Str, sizeof(Str), Adr,  1);
+              sprintf(pBName, "@H%s.%c", Str, Num + '0');
+            }
             return True;
           }
         }
@@ -355,7 +366,12 @@ static Boolean DecodeBitAddr(char *Asc, Word *Erg, char *pBName)
           else
             *Erg = 0x400 + (((Word)Num) << 8) + Lo(Adr) + (Hi(Adr) << 12);
           if (pBName)
-            sprintf(pBName, "%sH.%c", HexString(Adr, 3), '0' + Num);
+          {
+            char Str[30];
+
+            HexString(Str, sizeof(Str), Adr, 3);
+            sprintf(pBName, "%sH.%c", Str, '0' + Num);
+          }
           return True;
         }
       }

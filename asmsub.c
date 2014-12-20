@@ -26,9 +26,12 @@
 /*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.27 2014/12/05 11:58:15 alfred Exp $                      */
+/* $Id: asmsub.c,v 1.28 2014/12/14 17:58:46 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmsub.c,v $
+ * Revision 1.28  2014/12/14 17:58:46  alfred
+ * - remove static variables in strutil.c
+ *
  * Revision 1.27  2014/12/05 11:58:15  alfred
  * - collapse STDC queries into one file
  *
@@ -822,7 +825,7 @@ void StrSym(TempResult *t, Boolean WithSystem, char *Dest, int DestLen)
   switch (t->Typ)
   {
     case TempInt:
-      strmaxcpy(Dest, HexString(t->Contents.Int, 1), DestLen - 3);
+      HexString(Dest, DestLen - 3, t->Contents.Int, 1);
       if (WithSystem)
         switch (ConstMode)
         {
@@ -1535,6 +1538,7 @@ void PrintChunk(ChunkList *NChunk)
   do
   {
     /* niedrigsten Start finden, der ueberhalb des letzten Endes liegt */
+
     Found = False;
     FMin = INTCONST_ffffffff;
     for (z = 0; z < NChunk->RealLen; z++)
@@ -1548,13 +1552,17 @@ void PrintChunk(ChunkList *NChunk)
 
     if (Found)
     {
-      strmaxcat(BufferS, HexString(NChunk->Chunks[p].Start, 0), 255);
+      char Num[30];
+
+      HexString(Num, sizeof(Num), NChunk->Chunks[p].Start, 0);
+      strmaxcat(BufferS, Num, 255);
       if (NChunk->Chunks[p].Length != 1)
       {
         strmaxcat(BufferS, "-", 255);
-        strmaxcat(BufferS, HexString(NChunk->Chunks[p].Start + NChunk->Chunks[p].Length - 1, 0), 255);
+        HexString(Num, sizeof(Num), NChunk->Chunks[p].Start + NChunk->Chunks[p].Length - 1, 0);
+        strmaxcat(BufferS, Num, 255);
       }
-      strmaxcat(BufferS, Blanks(19 - strlen(BufferS)%19), 255);
+      strmaxcat(BufferS, Blanks(19 - strlen(BufferS) % 19), 255);
       if (++BufferZ == 4)
       {
         WrLstLine(BufferS);

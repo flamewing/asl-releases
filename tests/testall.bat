@@ -103,6 +103,7 @@ call testall t_adrstr
 call testall t_avr
 call testall t_bas52
 call testall t_buf32
+call testall t_cmdcpu
 call testall t_cop4
 call testall t_cop8
 call testall t_dc
@@ -132,6 +133,7 @@ call testall t_secdri
 call testall t_st6
 call testall t_st7
 call testall t_st9
+call testall t_stringify
 call testall t_structs
 call testall t_tmpsym
 call testall t_tms7

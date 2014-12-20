@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code7000.c,v 1.12 2014/12/07 19:14:00 alfred Exp $                    */
+/* $Id: code7000.c,v 1.13 2014/12/14 17:58:47 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code7000.c,v $
+ * Revision 1.13  2014/12/14 17:58:47  alfred
+ * - remove static variables in strutil.c
+ *
  * Revision 1.12  2014/12/07 19:14:00  alfred
  * - silence a couple of Borland C related warnings and errors
  *
@@ -190,11 +193,25 @@ static void ChkDelayed(void)
 static char *LiteralName(PLiteral Lit, char *Result)
 {
   String Tmp;
+  char PassStr[10];
 
-  if (Lit->IsForward) sprintf(Tmp, "F_%s", HexString(Lit->FCount, 8));
-  else if (Lit->Is32) sprintf(Tmp, "L_%s", HexString(Lit->Value, 8));
-  else sprintf(Tmp, "W_%s", HexString(Lit->Value, 4));
-  sprintf(Result, "LITERAL_%s_%s", Tmp, HexString(Lit->PassNo, 0));
+  if (Lit->IsForward)
+  {
+    strcpy(Tmp, "F_");
+    HexString(Tmp + 2, sizeof(Tmp) - 2, Lit->FCount, 8);
+  }
+  else if (Lit->Is32)
+  {
+    strcpy(Tmp, "L_");
+    HexString(Tmp + 2, sizeof(Tmp) - 2, Lit->Value, 8);
+  }
+  else
+  {
+    strcpy(Tmp, "W_");
+    HexString(Tmp + 2, sizeof(Tmp) - 2, Lit->Value, 4);
+  }
+  HexString(PassStr, sizeof(PassStr), Lit->PassNo, 0);
+  sprintf(Result, "LITERAL_%s_%s", Tmp, PassStr);
   return Result;
 }
 /*

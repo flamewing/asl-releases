@@ -11,9 +11,12 @@
 /*           30. 5.1999 ConstLongInt akzeptiert auch 0x fuer Hex-Zahlen      */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: strutil.c,v 1.14 2014/12/07 19:14:02 alfred Exp $                     */
+/* $Id: strutil.c,v 1.15 2014/12/14 17:58:47 alfred Exp $                     */
 /*****************************************************************************
  * $Log: strutil.c,v $
+ * Revision 1.15  2014/12/14 17:58:47  alfred
+ * - remove static variables in strutil.c
+ *
  * Revision 1.14  2014/12/07 19:14:02  alfred
  * - silence a couple of Borland C related warnings and errors
  *
@@ -87,19 +90,19 @@ const char *Blanks(int cnt)
 /* eine Integerzahl in eine Hexstring umsetzen. Weitere vordere Stellen als */
 /* Nullen */
 
-#define BufferCnt 8
-
-char *HexString(LargeWord i, Byte Stellen)
+int HexString(char *pDest, int DestSize, LargeWord i, Byte Stellen)
 {
-  static ShortString h[BufferCnt];
-  static int z = 0, Cnt;
+  int Cnt, Len = 0;
   LargeWord digit;
   char *ptr;
 
-  if (Stellen > sizeof(ShortString) - 1)
-    Stellen = sizeof(ShortString) - 1;
+  if (DestSize < 1)
+    return 0;
 
-  ptr = h[z] + sizeof(ShortString) - 1;
+  if (Stellen > DestSize - 1)
+    Stellen = DestSize - 1;
+
+  ptr = pDest + DestSize - 1;
   *ptr = '\0';
   Cnt = Stellen;
   do
@@ -113,25 +116,28 @@ char *HexString(LargeWord i, Byte Stellen)
       *(--ptr) = digit - 10 + 'A';
     i = i >> 4;
     Cnt--;
+    Len++;
   }
   while ((Cnt > 0) || (i != 0));
+  if (ptr != pDest)
+    strmov(pDest, ptr);
 
-  z = (z + 1) % BufferCnt;
-
-  return ptr;
+  return Len;
 }
 
-char *SysString(LargeWord i, LargeWord System, Byte Stellen)
+int SysString(char *pDest, int DestSize, LargeWord i, LargeWord System, int Stellen)
 {
-  static ShortString h[BufferCnt];
-  static int z = 0, Cnt;
+  int Len = 0, Cnt;
   LargeWord digit;
   char *ptr;
 
-  if (Stellen > sizeof(ShortString) - 1)
-    Stellen = sizeof(ShortString) - 1;
+  if (DestSize < 1)
+    return 0;
 
-  ptr = h[z] + sizeof(ShortString) - 1;
+  if (Stellen > DestSize - 1)
+    Stellen = DestSize - 1;
+
+  ptr = pDest + DestSize - 1;
   *ptr = '\0';
   Cnt = Stellen;
   do
@@ -145,25 +151,25 @@ char *SysString(LargeWord i, LargeWord System, Byte Stellen)
       *(--ptr) = digit - 10 + 'A';
     i /= System;
     Cnt--;
+    Len++;
   }
   while ((Cnt > 0) || (i != 0));
 
-  z = (z + 1) % BufferCnt;
-
-  return ptr;
+  if (ptr != pDest)
+    strmov(pDest, ptr);
+  return Len;
 }
 
 /*--------------------------------------------------------------------------*/
 /* dito, nur vorne Leerzeichen */
 
-char *HexBlankString(LargeWord i, Byte Stellen)
+void HexBlankString(char *pDest, unsigned DestSize, LargeWord i, Byte Stellen)
 {
-  static String temp;
+  unsigned DestLen;
 
-  strmaxcpy(temp, HexString(i, 0), 255);
-  if (strlen(temp) < Stellen)
-    strmaxprep(temp, Blanks(Stellen - strlen(temp)), 255);
-  return temp;
+  DestLen = HexString(pDest, DestSize, i, 0);
+  if (DestLen < Stellen)
+    strmaxprep(pDest, Blanks(Stellen - DestLen), DestSize);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -296,7 +302,7 @@ int mysprintf(va_alist) va_dcl
 /*---------------------------------------------------------------------------*/
 /* das originale strncpy plaettet alle ueberstehenden Zeichen mit Nullen */
 
-void strmaxcpy(char *dest, const char *src, int Max)
+int strmaxcpy(char *dest, const char *src, int Max)
 {
   int cnt = strlen(src);
 
@@ -306,22 +312,26 @@ void strmaxcpy(char *dest, const char *src, int Max)
     cnt = Max - 1;
   memcpy(dest, src, cnt);
   dest[cnt] = '\0';
+  return cnt;
 }
 
 /*---------------------------------------------------------------------------*/
 /* einfuegen, mit Begrenzung */
 
-void strmaxcat(char *Dest, const char *Src, int MaxLen)
+int strmaxcat(char *Dest, const char *Src, int MaxLen)
 {
   int TLen = strlen(Src), DLen = strlen(Dest);
 
-  if (TLen > MaxLen - DLen)
-    TLen = MaxLen - DLen;
+  if (TLen > MaxLen - 1 - DLen)
+    TLen = MaxLen - DLen - 1;
   if (TLen > 0)
   {
     memcpy(Dest + DLen, Src, TLen);
     Dest[DLen + TLen] = '\0';
+    return DLen + TLen;
   }
+  else
+    return DLen;
 }
 
 void strprep(char *Dest, const char *Src)
@@ -332,12 +342,13 @@ void strprep(char *Dest, const char *Src)
 
 void strmaxprep(char *Dest, const char *Src, int MaxLen)
 {
-  int RLen;
+  int RLen, DestLen;
 
   RLen = strlen(Src);
-  if (RLen > MaxLen - ((int)strlen(Dest)))
-    RLen = MaxLen - strlen(Dest);
-  memmove(Dest + RLen, Dest, strlen(Dest) + 1);
+  DestLen = strlen(Dest);
+  if (RLen > MaxLen - DestLen - 1)
+    RLen = MaxLen - DestLen - 1;
+  memmove(Dest + RLen, Dest, DestLen + 1);
   memmove(Dest, Src, RLen);
 }
 

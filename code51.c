@@ -17,9 +17,12 @@
 /*           2002-01-23 symbols defined with BIT must not be macro-local     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code51.c,v 1.13 2014/12/07 19:13:59 alfred Exp $                      */
+/* $Id: code51.c,v 1.14 2014/12/14 17:58:47 alfred Exp $                      */
 /***************************************************************************** 
  * $Log: code51.c,v $
+ * Revision 1.14  2014/12/14 17:58:47  alfred
+ * - remove static variables in strutil.c
+ *
  * Revision 1.13  2014/12/07 19:13:59  alfred
  * - silence a couple of Borland C related warnings and errors
  *
@@ -2414,20 +2417,27 @@ static void DecodeBIT(Word Index)
   {
     if (DecodeBitAdr(ArgStr[1], &AdrLong, False) == ModBit251)
     {
+      char ByteStr[20], BitStr[10];
+
       PushLocHandle(-1);
       EnterIntSymbol(LabPart, AdrLong, SegNone, False);
       PopLocHandle();
-      sprintf(ListLine, "=%sH.%s", HexString(AdrLong&0xff, 2), HexString(AdrLong >> 24, 1));
+      HexString(ByteStr, sizeof(ByteStr), AdrLong & 0xff, 2);
+      HexString(BitStr, sizeof(BitStr), AdrLong >> 24, 1);
+      sprintf(ListLine, "=%sH.%s", ByteStr, BitStr);
     }
   }
   else
   {
     if (DecodeBitAdr(ArgStr[1], &AdrLong, False) == ModBit51)
     {
+      char ByteStr[20];
+
       PushLocHandle(-1);
       EnterIntSymbol(LabPart, AdrLong, SegBData, False);
       PopLocHandle();
-      sprintf(ListLine, "=%s", HexString(AdrLong, 2));
+      HexString(ByteStr, sizeof(ByteStr), AdrLong, 2);
+      sprintf(ListLine, "=%s", ByteStr);
     }
   }
 }

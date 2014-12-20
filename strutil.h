@@ -12,9 +12,12 @@
 /*           29. 5.1999 SysString                                            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: strutil.h,v 1.9 2014/12/07 19:14:02 alfred Exp $                     */
+/* $Id: strutil.h,v 1.10 2014/12/14 17:58:47 alfred Exp $                     */
 /*****************************************************************************
  * $Log: strutil.h,v $
+ * Revision 1.10  2014/12/14 17:58:47  alfred
+ * - remove static variables in strutil.c
+ *
  * Revision 1.9  2014/12/07 19:14:02  alfred
  * - silence a couple of Borland C related warnings and errors
  *
@@ -42,11 +45,11 @@ extern Boolean HexLowerCase;
 
 extern const char *Blanks(int cnt);
 
-extern char *HexString(LargeWord i, Byte Stellen);
+extern int HexString(char *pDest, int DestSize, LargeWord i, Byte Stellen);
 
-extern char *SysString(LargeWord i, LargeWord System, Byte Stellen);
+extern int SysString(char *pDest, int DestSize, LargeWord i, LargeWord System, int Stellen);
 
-extern char *HexBlankString(LargeWord i, Byte Stellen);
+extern void HexBlankString(char *pDest, unsigned DestSize, LargeWord i, Byte Stellen);
 
 extern char *LargeString(char *pDest, LargeInt i);
 
@@ -72,8 +75,8 @@ extern char *strstr(const char *haystack, const char *needle);
 extern int mysprintf();
 #endif
 
-extern void strmaxcpy(char *dest, const char *src, int Max);
-extern void strmaxcat(char *Dest, const char *Src, int MaxLen);
+extern int strmaxcpy(char *dest, const char *src, int Max);
+extern int strmaxcat(char *Dest, const char *Src, int MaxLen);
 extern void strprep(char *Dest, const char *Src);
 extern void strmaxprep(char *Dest, const char *Src, int MaxLen);
 extern void strins(char *Dest, const char *Src, int Pos);

@@ -24,9 +24,15 @@
 /*                       to now                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmallg.c,v 1.20 2014/12/07 19:13:58 alfred Exp $                     */
+/* $Id: asmallg.c,v 1.22 2014/12/14 17:58:46 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmallg.c,v $
+ * Revision 1.22  2014/12/14 17:58:46  alfred
+ * - remove static variables in strutil.c
+ *
+ * Revision 1.21  2014/12/12 17:16:08  alfred
+ * - repainr -cpu comman dline switch and provide test for it
+ *
  * Revision 1.20  2014/12/07 19:13:58  alfred
  * - silence a couple of Borland C related warnings and errors
  *
@@ -211,10 +217,16 @@ Boolean SetNCPU(char *Name, Boolean NoPrev)
   Lauf = FirstCPUDef;
   while ((Lauf) && (strcmp(Name, Lauf->Name)))
     Lauf = Lauf->Next;
-  if (!Lauf) WrXError(1430, Name);
+  if (!Lauf)
+  {
+    WrXError(1430, Name);
+    return False;
+  }
   else
+  {
     SetCPU(Lauf->Number, NoPrev);
-  return (!Lauf);
+    return True;
+  }
 }
 
 static void SetNSeg(Byte NSeg)
@@ -229,22 +241,25 @@ static void SetNSeg(Byte NSeg)
   }
 }
 
-static void IntLine(char *pDest, LongInt Inp)
+static void IntLine(char *pDest, int DestSize, LongInt Inp)
 {
+  HexString(pDest, DestSize, Inp, 0);
   switch (ConstMode)
   {
     case ConstModeIntel:
-      sprintf(pDest, "%sH", HexString(Inp, 0));
-      if (*pDest > '9') strmaxprep(pDest, "0", 255);
+      strmaxcat(pDest, "H", DestSize);
+      if (*pDest > '9')
+        strmaxprep(pDest, "0", DestSize);
       break;
     case ConstModeMoto:
-      sprintf(pDest, "$%s", HexString(Inp, 0));
+      strmaxprep(pDest, "$", DestSize);
       break;
     case ConstModeC:
-      sprintf(pDest, "0x%s", HexString(Inp, 0));
+      strmaxprep(pDest, "0x", DestSize);
       break;
     case ConstModeWeird:
-      sprintf(pDest, "x'%s'", HexString(Inp, 0));
+      strmaxprep(pDest, "x'", DestSize);
+      strmaxcat(pDest, "'", DestSize);
       break;
   }
 }
@@ -508,13 +523,15 @@ static void CodeSHARED(Word Index)
        switch (ShareMode)
        {
          case 1:
-           sprintf(s, "$%s", HexString(HVal, 0));
+           HexString(s, sizeof(s), HVal, 0);
+           strmaxprep(s, "$", sizeof(s));
            break;
          case 2:
-           sprintf(s, "0x%s", HexString(HVal, 0));
+           HexString(s, sizeof(s), HVal, 0);
+           strmaxprep(s, "", sizeof(s));
            break;
          case 3:
-           IntLine(s, HVal);
+           IntLine(s, sizeof(s), HVal);
            break;
        }
      }
@@ -1052,7 +1069,7 @@ static void CodeLABEL(Word Index)
 
       PushLocHandle(-1);
       EnterIntSymbol(LabPart, Erg, SegCode, False);
-      IntLine(s, Erg);
+      IntLine(s, sizeof(s), Erg);
       sprintf(ListLine, "=%s", s);
       PopLocHandle();
     }
@@ -1264,12 +1281,12 @@ static void CodeENUM(Word Index)
       Counter++;
     }
   }
-  IntLine(SymPart, First);
+  IntLine(SymPart, sizeof(SymPart), First);
   sprintf(ListLine, "=%s", SymPart);
   if (ArgCnt != 1)
   {
     strmaxcat(ListLine, "..", 255);
-    IntLine(SymPart, Last);
+    IntLine(SymPart, sizeof(SymPart), Last);
     strmaxcat(ListLine, SymPart, 255);
   }
 }

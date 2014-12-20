@@ -153,7 +153,8 @@ static void DumpDebugInfo_MAP(void)
   int ModZ;
   ShortInt ActSeg;
   FILE *MAPFile;
-  String MAPName, Tmp;
+  String MAPName;
+  char Tmp[30], Tmp2[30];
 
   strmaxcpy(MAPName, SourceFile, 255);
   KillSuffix(MAPName);
@@ -191,7 +192,8 @@ static void DumpDebugInfo_MAP(void)
     };
     errno = 0;
     sprintf(Tmp, LongIntFormat, Run->Contents.LineNum);
-    fprintf(MAPFile, "%5s:%s ", Tmp, HexString(Run->Contents.Address, 8));
+    HexString(Tmp2, sizeof(Tmp2), Run->Contents.Address, 8);
+    fprintf(MAPFile, "%5s:%s ", Tmp, Tmp2);
     ChkIO(10004);
     if (++ModZ == 5)
     {

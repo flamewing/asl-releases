@@ -36,9 +36,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.28 2014/12/07 19:13:58 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.29 2014/12/14 17:58:46 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmpars.c,v $
+ * Revision 1.29  2014/12/14 17:58:46  alfred
+ * - remove static variables in strutil.c
+ *
  * Revision 1.28  2014/12/07 19:13:58  alfred
  * - silence a couple of Borland C related warnings and errors
  *
@@ -1203,6 +1206,7 @@ void ConstStringVal(const char *pExpr, tDynString *pDest, Boolean *pResult)
       {
         TempResult t;
         char *pStr;
+        String Str;
 
         /* cut out part in {...} */
 
@@ -1230,11 +1234,11 @@ void ConstStringVal(const char *pExpr, tDynString *pDest, Boolean *pResult)
 
         /* append result */
 
-        switch(t.Typ)
+        switch (t.Typ)
         {
           case TempInt:
-            pStr = SysString(t.Contents.Int, OutRadixBase, 0);
-            TLen = strlen(pStr);
+            TLen = SysString(Str, sizeof(Str), t.Contents.Int, OutRadixBase, 0);
+            pStr = Str;
             break;
           case TempFloat:
             pStr = FloatString(t.Contents.Float);
@@ -4489,6 +4493,7 @@ void PrintDebSections(FILE *f)
 {
   PCToken Lauf;
   LongInt Cnt, z, l, s;
+  char Str[30];
 
   Lauf = FirstSection; Cnt = 0;
   while (Lauf)
@@ -4504,8 +4509,17 @@ void PrintDebSections(FILE *f)
     {
       l = Lauf->Usage.Chunks[z].Length;
       s = Lauf->Usage.Chunks[z].Start;
-      fprintf(f, "%s", HexString(s, 0)); ChkIO(10004);
-      if (l == 1) fprintf(f, "\n"); else fprintf(f, "-%s\n", HexString(s+l-1, 0)); ChkIO(10004);
+      HexString(Str, sizeof(Str), s, 0);
+      fputs(Str, f);
+      ChkIO(10004);
+      if (l == 1)
+        fprintf(f, "\n");
+      else
+      {
+        HexString(Str, sizeof(Str), s + l - 1, 0);
+        fprintf(f, "-%s\n", Str);
+      }
+      ChkIO(10004);
     }
     Lauf = Lauf->Next;
     Cnt++;

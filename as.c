@@ -58,9 +58,12 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.45 2014/12/02 13:33:19 alfred Exp $                          */
+/* $Id: as.c,v 1.46 2014/12/14 17:58:46 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.46  2014/12/14 17:58:46  alfred
+ * - remove static variables in strutil.c
+ *
  * Revision 1.45  2014/12/02 13:33:19  alfred
  * - do not use strncpy()
  *
@@ -474,6 +477,7 @@ static POutputTag GenerateOUTProcessor(SimpProc Processor)
 static void MakeList_Gen2Line(char *h, Word EffLen, Word *n)
 {
   int z, Rest;
+  char Str[20];
 
   Rest = EffLen - (*n);
   if (Rest > 8)
@@ -482,13 +486,15 @@ static void MakeList_Gen2Line(char *h, Word EffLen, Word *n)
     Rest = 0;
   for (z = 0; z < (Rest >> 1); z++)
   {
-    strmaxcat(h, HexString(WAsmCode[(*n) >> 1], 4), 255);
+    HexString(Str, sizeof(Str), WAsmCode[(*n) >> 1], 4);
+    strmaxcat(h, Str, 255);
     strmaxcat(h, " ", 255);
     (*n) += 2;
   }
   if (Rest & 1)
   {
-    strmaxcat(h, HexString(BAsmCode[*n], 2), 255);
+    HexString(Str, sizeof(Str), BAsmCode[*n], 2);
+    strmaxcat(h, Str, 255);
     strmaxcat(h, "   ", 255);
     (*n)++;
   }
@@ -499,6 +505,7 @@ static void MakeList_Gen2Line(char *h, Word EffLen, Word *n)
 static void MakeList_Gen4Line(char *h, Word EffLen, Word *n)
 {
   int z, Rest, wr = 0;
+  char Str[20];
 
   Rest = EffLen - (*n);
   if (Rest > 8)
@@ -507,14 +514,16 @@ static void MakeList_Gen4Line(char *h, Word EffLen, Word *n)
     Rest = 0;
   for (z = 0; z < (Rest >> 2); z++)
   {
-    strmaxcat(h, HexString(DAsmCode[(*n) >> 2], 8), 255);
+    HexString(Str, sizeof(Str), DAsmCode[(*n) >> 2], 8);
+    strmaxcat(h, Str, 255);
     strmaxcat(h, " ", 255);
     *n += 4;
     wr += 9;
   }
   for (z = 0; z < (Rest&3); z++)
   {
-    strmaxcat(h, HexString(BAsmCode[(*n)++], 2), 255);
+    HexString(Str, sizeof(Str), BAsmCode[(*n)++], 2);
+    strmaxcat(h, Str, 255);
     strmaxcat(h, " ", 255);
     wr += 3;
   }
@@ -547,7 +556,8 @@ static void MakeList(void)
       strmaxcat(h2, h, 255);
     }
     strmaxcpy(h, h2, 255);
-    strmaxcat(h, HexBlankString(EProgCounter() - CodeLen, 8), 255);
+    HexBlankString(h2, sizeof(h2), EProgCounter() - CodeLen, 8);
+    strmaxcat(h, h2, 255);
     strmaxcat(h, Retracted?" R ":" : ", 255);
 
     /* Extrawurst in Listing ? */
@@ -596,17 +606,22 @@ static void MakeList(void)
           }
           break;
         default:
+        {
+          char Str[20];
+
           if ((TurnWords) && (Granularity() != ActListGran))
             DreheCodes();
           for (i = 0; i < 6; i++)
             if ((!DontPrint) && (EffLen > i))
             {
-              strmaxcat(h, HexString(BAsmCode[i], 2), 255);
+              HexString(Str, sizeof(Str), BAsmCode[i], 2);
+              strmaxcat(h, Str, 255);
               strmaxcat(h, " ", 255);
             }
             else
               strmaxcat(h, "   ", 255);
-          strmaxcat(h, "  ", 255); strmaxcat(h, OneLine, 255);
+          strmaxcat(h, "  ", 255);
+          strmaxcat(h, OneLine, 255);
           WrLstLine(h);
           if ((EffLen > 6) && (!DontPrint))
           {
@@ -622,7 +637,8 @@ static void MakeList(void)
               for (k = 0; k < 6; k++)
                 if (EffLen > i * 6 + k)
                 {
-                  strmaxcat(h, HexString(BAsmCode[i * 6 + k + 6], 2), 255);
+                  HexString(Str, sizeof(Str), BAsmCode[i * 6 + k + 6], 2);
+                  strmaxcat(h, Str, 255);
                   strmaxcat(h, " ", 255);
                 }
                WrLstLine(h);
@@ -630,6 +646,7 @@ static void MakeList(void)
           }
           if ((TurnWords) && (Granularity() != ActListGran))
             DreheCodes();
+        }
       }
     }
   }

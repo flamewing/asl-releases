@@ -1,5 +1,9 @@
-$Id: changelog,v 1.100 2014/12/07 19:17:44 alfred Exp $
+$Id: changelog,v 1.101 2014/12/20 16:04:46 alfred Exp $
 ------------------------------------------------------------------------------
+
+3012-12-20 [1.42 Bld 97]
+
+- Bugfix      : repair -cpu command line option that was broken in previous build
 
 2014-12-07 [1.42 Bld 96]
 
