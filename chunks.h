@@ -13,20 +13,22 @@
 /*****************************************************************************/
 
 typedef struct
-         {
-	  LargeWord Start,Length;
-	 } OneChunk;
+{
+  LargeWord Start,Length;
+} OneChunk;
 
 typedef struct 
-         {
-	  Word RealLen,AllocLen;
-	  OneChunk *Chunks;
-	 } ChunkList;
+{
+  Word RealLen,AllocLen;
+  OneChunk *Chunks;
+} ChunkList;
 
 
 extern Boolean AddChunk(ChunkList *NChunk, LargeWord NewStart, LargeWord NewLen, Boolean Warn);
 
 extern void DeleteChunk(ChunkList *NChunk, LargeWord DelStart, LargeWord DelLen);
+
+extern Boolean AddressInChunk(ChunkList *NChunk, LargeWord Address);
 
 extern void InitChunk(ChunkList *NChunk);
 

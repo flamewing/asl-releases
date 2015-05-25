@@ -19,9 +19,12 @@
 /*           2001-07-01 TI 320C54x                                           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: headids.c,v 1.13 2014/12/05 11:09:10 alfred Exp $                          */
+/* $Id: headids.c,v 1.14 2015/04/20 18:40:30 alfred Exp $                          */
 /*****************************************************************************
  * $Log: headids.c,v $
+ * Revision 1.14  2015/04/20 18:40:30  alfred
+ * - add TMS1000 support (no docs yet)
+ *
  * Revision 1.13  2014/12/05 11:09:10  alfred
  * - eliminate Nil
  *
@@ -150,6 +153,7 @@ static TFamilyDescr Descrs[] =
   { "TMS7000"   , 0x0073, IntHex   },
   { "TMS370xx"  , 0x0049, IntHex   },
   { "MSP430"    , 0x004a, IntHex   },
+  { "TMS1000"   , 0x0007, IntHex   },
   { "SC/MP"     , 0x006e, IntHex   },
   { "807x"      , 0x006a, IntHex   },
   { "COP4"      , 0x005f, IntHex   },

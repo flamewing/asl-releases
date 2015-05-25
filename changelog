@@ -1,7 +1,11 @@
-$Id: changelog,v 1.101 2014/12/20 16:04:46 alfred Exp $
+$Id: changelog,v 1.102 2015/05/25 08:09:02 alfred Exp $
 ------------------------------------------------------------------------------
 
-3012-12-20 [1.42 Bld 97]
+2015-05-25 [1.42 Bld 98]
+
+- Addition    : Add TMS1000 target
+
+2014-12-20 [1.42 Bld 97]
 
 - Bugfix      : repair -cpu command line option that was broken in previous build
 
@@ -12,7 +16,7 @@ $Id: changelog,v 1.101 2014/12/20 16:04:46 alfred Exp $
 
 - Addition    : Add TLCS-870/C target
 
-- Bugfix      : correct handling of TLCS-870 JR instructon without condition
+- Bugfix      : correct handling of TLCS-870 JR instruction without condition
 
 2014-09-21 [1.42 Bld 95]
 

@@ -46,7 +46,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand September 2014}
+{\large Stand Mai 2015}
 \end{raggedright}
 
 \clearpage
@@ -177,13 +177,6 @@ oder auch kurz
 \begin{verbatim}
  http://www.alfsembler.de
 \end{verbatim}
-Die Quellen der C-Version k"onnen weiterhin von folgendem Server geholt
-werden:
-\begin{verbatim}
- sunsite.unc.edu
-   Verzeichnis pub/Linux/devel/lang/assemblers/asl-<version>.tar.gz
-\end{verbatim}
-...und damit nat"urlich von jedem Sunsite-Spiegel der Welt!
 \par
 Wer "uber keinen FTP-Zugang verf"ugt, kann den Assembler auch von mir
 anfordern.  Ich werde aber nur Anfragen beantworten, die einen CD-Rohling
@@ -258,6 +251,7 @@ folgende Prozessorfamilien implementiert:
 \item{Texas Instruments TMS320C6x}
 \item{Texas Instruments TMS9900}
 \item{Texas Instruments TMS7000}
+\item{Texas Instruments TMS1000}
 \item{Texas Instruments TMS370xxx}
 \item{Texas Instruments MSP430}
 \item{National Semiconductor SC/MP}
@@ -282,7 +276,6 @@ folgende Prozessorfamilien implementiert:
 in Arbeit / Planung / "Uberlegung :
 \begin{itemize}
 \item{NEC 78K4}
-\item{Intel 8008}
 \item{Analog Devices ADSP21xx}
 \item{SGS-Thomson ST20}
 \item{Texas Instruments TMS320C4x}
@@ -3338,18 +3331,27 @@ bc) MSP430
 \end{quote}
 %%-----------
 \begin{quote}
-bd) SC/MP
+bd) TMS1000, TMS1100, TMS1200, TMS1300
+\end{quote}
+F"ur TMS1000 und TMS1200 sind jeweils 1 KByte ROM und 64 Nibbles
+RAM vorgesehen, f"ur TMS1100 und TMS1300 jeweils das doppelte.  Des
+weiteren hat TI f"ur TMS1100 und TMS1300 einen deutlich anderen 
+Dewfault-Befehlssatz vorgesehen (AS kennt nur die Default-
+Befehlss"atze!).
+%%-----------
+\begin{quote}
+be) SC/MP
 \end{quote}
 %%-----------
 \begin{quote}
-be) 8070
+bf) 8070
 \end{quote}
-Dieser PRozessor repr"asentiert die gesamte 807x-Familie (die mindestens
+Dieser Prozessor repr"asentiert die gesamte 807x-Familie (die mindestens
 aus den 8070, 8072 und 8073 besteht), der jedoch ein einheitlicher
 CPU-Kern gemeinsam ist.
 %%-----------
 \begin{quote}
-bf) COP87L84
+bg) COP87L84
 \end{quote}
 Dies ist das momentan einzige unterst"utzte Mitglied der COP8-Familie 
 von National Semiconductor.  Mir ist bekannt, da"s die Familie 
@@ -3358,7 +3360,7 @@ Befehlssatz existieren, die nach Bedarf hinzukommen werden.  Es ist eben
 ein Anfang, und die Dokumentation von National ist ziemlich umfangreich...
 %%-----------
 \begin{quote}
-bg) COP410 $\rightarrow$ COP420 $\rightarrow$ COP440 $\rightarrow$ COP444
+bh) COP410 $\rightarrow$ COP420 $\rightarrow$ COP440 $\rightarrow$ COP444
 Die COP42x-Derivate bieten einige weitere Befehle, des weiteren wurden
 Befehlen in ihrem Wertebereich erweitert.
 \end{quote}
@@ -3366,7 +3368,7 @@ Befehlen in ihrem Wertebereich erweitert.
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bh) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
+bi) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
     \> SC14420, SC14421, SC14422, SC14424 \\
 \end{tabbing}
 \end{quote}
@@ -3376,14 +3378,14 @@ unterst"utzt werden und deren Architektur im Laufe der Zeit optimiert
 wurde.
 %%-----------
 \begin{quote}
-bi) 7810 $\rightarrow$ 78C10
+bj) 7810 $\rightarrow$ 78C10
 \end{quote}
 Die NMOS-Version besitzt keinen STOP-Modus; der entspechende Befehl sowie
 das ZCM-Register fehlen demzufolge.  \bb{VORSICHT!} NMOS- und CMOS-Version
 differieren zum Teil in den Reset-Werten einiger Register!
 %%-----------
 \begin{quote}
-bj) 7566 $\leftrightarrow$ 7508
+bk) 7566 $\leftrightarrow$ 7508
 \end{quote}
 Es existieren in der $\mu$PD75xx-Familie zwei verschiedene
 CPU-Kerne: Der 7566 repr"asentiert den 'instruction set B', der
@@ -3395,7 +3397,7 @@ sind nicht 100\%-ig bin"arkompatibel!
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bk) \> 75402, \\
+bl) \> 75402, \\
     \> 75004, 75006, 75008, \\
     \> 75268, \\
     \> 75304, 75306, 75308, 75312, 75316, \\
@@ -3411,31 +3413,31 @@ unterscheiden sich einmal durch ihre on-chip-Peripherie und
 zum anderen durch die M"achtigkeit des Befehlssatzes.
 %%-----------
 \begin{quote}
-bl) 78070
+bm) 78070
 \end{quote}
 Dies ist das einzige, mir momentan vertraute Mitglied der
 78K0-Familie von NEC.  Es gelten "ahnliche Aussagen wie zur
 COP8-Familie!
 %%-----------
 \begin{quote}
-bm) 78214
+bn) 78214
 \end{quote}
 Dies ist momentan der Repr"asentant der 78K2-Familie von NEC.
 %%-----------
 \begin{quote}
-bn) 7720 $\rightarrow$ 7725
+bo) 7720 $\rightarrow$ 7725
 \end{quote}
 Der $\mu$PD7725 bietet im Vergleich zu seinem Vorg"anger gr"o"sere
 Adre"sr"aume und einige zus"atzliche Befehle. {\bf VORSICHT!}  Die
 Prozessoren sind nicht zueinander bin"arkompatibel!
 %%-----------
 \begin{quote}
-bo) 77230
+bp) 77230
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
-bp) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
+bq) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
     \> SYM53C875, SYM53C895
 \end{tabbing}
 \end{quote}
@@ -3444,17 +3446,17 @@ einige Befehlsvarianten nicht, au"serdem unterscheiden sie sich in ihrem
 Satz interner Register.
 %%-----------
 \begin{quote}
-bq) MB89190
+br) MB89190
 \end{quote}
 Dieser Prozessortyp repr"asentiert die F$^{2}$MC8L-Serie von Fujitsu...
 %%-----------
 \begin{quote}
-br) MB9500
+bs) MB9500
 \end{quote}
 ...so wie dieser es momentan f"ur die 16-Bit-Varianten von Fujitsu tut!
 %%-----------
 \begin{quote}
-bs) XS1
+bt) XS1
 \end{quote}
 Dieser Typ repr"asentiert die XCore-''Familie''.
 
@@ -4415,7 +4417,8 @@ Attribute gibt es deswegen wie bei \tty{DC} auch hier nicht.
 {\em\begin{tabbing}
 G"ultigkeit: \= Intel (au"ser 4004/4040), Zilog, Toshiba, NEC, TMS370,\\
              \> Siemens, AMD, M16(C), MELPS7700/65816, National, ST9,\\
-             \> TMS7000, $\mu$PD77230, Signetics, Fairchild, Intersil,\\
+             \> TMS7000, TMS1000, $\mu$PD77230, Signetics,\\
+             \> Fairchild, Intersil,\\
              \> XS1
 \end{tabbing}}
 
@@ -4487,7 +4490,7 @@ nicht}!
 
 {\em\begin{tabbing} 
 G"ultigkeit: \= Intel, Zilog, Toshiba, NEC, TMS370, Siemens, AMD, M16(C),\\
-             \> National, ST9, TMS7000, Intersil
+             \> National, ST9, TMS7000, TMS1000, Intersil
 \end{tabbing}}
 
 Dieser Befehl stellt eine Kurzschreibweise dar, um Speicherbereiche
@@ -8697,6 +8700,31 @@ Befehle Fehlermeldungen bekommen!!
 
 %%---------------------------------------------------------------------------
 
+\section{TMS1000}
+
+Der erste Mikrocontroller der Welt nun endlich auch in AS - lange hat es
+gedauert, nun ist die L"ucke geschlossen.  Dieses Target hat aber einige
+T"ucken, die in diesem Abschnitt kurz angesprochen werden sollen.
+
+Zum einen ist der Befehlssatz dieser Controller teilweise über die ROM-Maske
+ver"anderbar, d.h. man kann die Funktion einiger Opcodes in Grenzen frei
+definieren.  AS kennt nur die Befehle und deren Kodierungen, die in
+\cite{TMS1000PGMRef} als Default-Kodierungen beschrieben sind.  Wer f"ur eine
+spezielle Anwendung andere Befehle bzw. gleiche Befehle mit anderem Opcode
+hat, kann diese "uber Makros mit passende \tty{DB}-Befehlen "andern.
+
+Des weiteren ist zu beachten, daß Spr"unge und Unterprogrammaufrufe nur die
+unteren 6 Bit der Zieladresse im Befehl selber beinhalten.  Die oberen 4 bzw.
+5 Bits kommen aus Page- bzw. Chapter-Registern, die vorher passend zu setzen
+sind.  AS selber kann hier nicht "uberpr"ufen, ob die Register vom Programmierer
+korrekt gesetzt werden!.  Zumindest f"ur den Fall, da"s man im gleichen Chapter
+bleibt, gibt es die Assembler-Pseudobefehle \tty{CALLL} bzw.
+\tty{BL}, die einen \tty{LDP}- und einen \tty{CALL/BR}-Befehl zusammenfassen
+(was angesichts des kanppen Programmspeichers eine bequeme, aber nicht immer
+effiziente Variante ist).
+
+%%---------------------------------------------------------------------------
+
 \section{COP8 \& SC/MP}
 \label{COP8Spec}
 
@@ -11661,6 +11689,7 @@ oder ich werde langsam alt...
             \tty{NOGLOBALSYMBOLS} um zu steuern, ob Labels
             in Makros lokal sind oder nicht;}
       \item{kennt zus"atzlich die 75xx-Reihe von NEC;}
+      \item{kennt zus"atzlich die TMS1000-Controller von TI;}
       \end{itemize}}
 \end{itemize}
 
@@ -13017,6 +13046,12 @@ damit mit der n"achsten Release alle etwas davon haben :-)
                      {\em TMS320C54x DSP; Volume 2: Mnemonic Instruction
                      Set.\/} \\
                      March 2001, SPRU172C
+
+\bibitem{TMS1000PGMRef} Texas Instruments: \\
+                     {\em TMS 1000 Series MOS/LSI One-Chip
+                     Microcomputers Programmer's Reference
+                     Manual.\/} \\
+                     CM122-1 1275, 1975
 
 \bibitem{Tosh90} Toshiba Corp.: \\
                  {\em 8-Bit Microcontroller TLCS-90

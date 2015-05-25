@@ -11,9 +11,12 @@
 /*           2001-10-13 added ARM/Linux                                      */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: sysdefs.h,v 1.13 2014/05/29 10:59:06 alfred Exp $                     */
+/* $Id: sysdefs.h,v 1.14 2015/03/04 18:37:24 alfred Exp $                     */
 /*****************************************************************************
  * $Log: sysdefs.h,v $
+ * Revision 1.14  2015/03/04 18:37:24  alfred
+ * - add AArch64
+ *
  * Revision 1.13  2014/05/29 10:59:06  alfred
  * - some const cleanups
  *
@@ -717,6 +720,35 @@ typedef unsigned long long Card64;
 #endif
 
 #endif /* vax */
+
+#ifdef __aarch64__ 
+
+#define ARCHPRNAME "aarch64"
+
+/*---------------------------------------------------------------------------*/
+/* AArch64 with Linux and GCC: */
+
+#ifdef __linux__
+#define ARCHSYSNAME "unknown-linux"
+#define DEFSMADE
+#define OPENRDMODE "r"
+#define OPENWRMODE "w"
+#define OPENUPMODE "r+"
+#define IEEEFLOAT
+typedef signed char Integ8;
+typedef unsigned char Card8;
+typedef signed short Integ16;
+typedef unsigned short Card16;
+#define HAS16
+typedef signed int Integ32;
+typedef unsigned int Card32;
+typedef signed long Integ64;
+typedef unsigned long Card64;
+#define HAS64
+#define LOCALE_NLS
+#endif
+
+#endif /* __aarch64__ */
 
 /*===========================================================================*/
 /* DEC Alpha platforms */

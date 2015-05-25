@@ -136,6 +136,8 @@ call testall t_st9
 call testall t_stringify
 call testall t_structs
 call testall t_tmpsym
+call testall t_tms1000
+call testall t_tms1100
 call testall t_tms7
 call testall t_vector
 call testall t_xa

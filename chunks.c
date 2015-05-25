@@ -187,6 +187,22 @@ void DeleteChunk(ChunkList *NChunk, LargeWord DelStart, LargeWord DelLen)
 }
 
 /*--------------------------------------------------------------------------*/
+/* check whether address is in chunk */
+
+Boolean AddressInChunk(ChunkList *NChunk, LargeWord Address)
+{
+  Word z;
+
+  for (z = 0; z < NChunk->RealLen; z++)
+  {
+    if ((NChunk->Chunks[z].Start <= Address)
+     && (NChunk->Chunks[z].Start + NChunk->Chunks[z].Length - 1 >= Address))
+      return True;
+  }
+  return False;
+}
+
+/*--------------------------------------------------------------------------*/
 /* Minimaladresse holen */
 
 LargeWord ChunkMin(ChunkList *NChunk)

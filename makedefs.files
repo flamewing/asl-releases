@@ -1,4 +1,4 @@
-# $Id: makedefs.files,v 1.7 2014/08/11 21:10:01 alfred Exp $
+# $Id: makedefs.files,v 1.9 2015/05/25 08:19:35 alfred Exp $
 
 BASEARCH1FILES = *.c *.h man/*.1 \
             INSTALL README README.OS2 README.DOS README.LANGS README.KR TODO BENCHES Makefile Makefile.dos Makefile.os2 Makefile.w32 Makefile.def.tmpl \
@@ -21,6 +21,7 @@ ARCHFILES = $(ARCH1FILES) $(ARCH2FILES)
 # the executables (e.g. .exe for OS/2 or Windows)
 
 ASLTARGET = asl$(TARG_EXEXTENSION)
+DASLTARGET = dasl$(TARG_EXEXTENSION)
 PLISTTARGET = plist$(TARG_EXEXTENSION)
 ALINKTARGET = alink$(TARG_EXEXTENSION)
 PBINDTARGET = pbind$(TARG_EXEXTENSION)
@@ -32,10 +33,9 @@ TEX2HTMLTARGET = tex2html$(HOST_EXEXTENSION)
 UNUMLAUTTARGET = unumlaut$(HOST_EXEXTENSION)
 MKDEPENDTARGET = mkdepend$(HOST_EXEXTENSION)
 
-ALLTARGETS = ioerrs.msg cmdarg.msg tools.msg \
-             as.msg $(ASLTARGET) \
-             plist.msg $(PLISTTARGET) \
-             alink.msg $(ALINKTARGET) \
-             pbind.msg $(PBINDTARGET) \
-             p2hex.msg $(P2HEXTARGET) \
-             p2bin.msg $(P2BINTARGET)
+ALLTARGETS = $(ASLTARGET) \
+             $(PLISTTARGET) \
+             $(ALINKTARGET) \
+             $(PBINDTARGET) \
+             $(P2HEXTARGET) \
+             $(P2BINTARGET)

@@ -58,9 +58,16 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.46 2014/12/14 17:58:46 alfred Exp $                          */
+/* $Id: as.c,v 1.48 2015/04/20 18:40:29 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.48  2015/04/20 18:40:29  alfred
+ * - add TMS1000 support (no docs yet)
+ *
+ * Revision 1.47  2015/01/04 20:33:42  alfred
+ * - avoid double build in parallel make
+ * - begun with disassembler
+ *
  * Revision 1.46  2014/12/14 17:58:46  alfred
  * - remove static variables in strutil.c
  *
@@ -363,6 +370,7 @@
 #include "codetms7.h"
 #include "code370.h"
 #include "codemsp.h"
+#include "codetms1.h"
 #include "codescmp.h"
 #include "code807x.h"
 #include "codecop4.h"
@@ -4273,7 +4281,8 @@ int main(int argc, char **argv)
     chunks_init();
     NLS_Initialize();
 
-    nlmessages_init("as.msg", *argv, MsgId1, MsgId2); ioerrs_init(*argv);
+    nlmessages_init("as.msg", *argv, MsgId1, MsgId2);
+    ioerrs_init(*argv);
     cmdarg_init(*argv);
 
     asmfnums_init();
@@ -4353,6 +4362,7 @@ int main(int argc, char **argv)
     codetms7_init();
     code370_init();
     codemsp_init();
+    codetms1_init();
     code78c10_init();
     code75xx_init();
     code75k0_init();

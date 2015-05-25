@@ -10,6 +10,9 @@ tools.msg tools.rsc: tools.res header.res $(RESCOMPTARGET)
 as.msg as.rsc: as.res header.res $(RESCOMPTARGET)
 	$(CURRDIR)$(RESCOMPTARGET) as.res as.msg as.rsc
 
+das.msg das.rsc: das.res header.res $(RESCOMPTARGET)
+	$(CURRDIR)$(RESCOMPTARGET) das.res das.msg das.rsc
+
 plist.msg plist.rsc: plist.res tools2.res header.res $(RESCOMPTARGET)
 	$(CURRDIR)$(RESCOMPTARGET) plist.res plist.msg plist.rsc
 
