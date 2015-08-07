@@ -14,9 +14,12 @@
 /*           19. 8.2001 fixed errors for lower halves of XIX...XSP           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code96c141.c,v 1.11 2014/12/07 19:14:00 alfred Exp $                          */
+/* $Id: code96c141.c,v 1.12 2015/05/25 08:38:35 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code96c141.c,v $
+ * Revision 1.12  2015/05/25 08:38:35  alfred
+ * - silence come warnings on old GCC versions
+ *
  * Revision 1.11  2014/12/07 19:14:00  alfred
  * - silence a couple of Borland C related warnings and errors
  *
@@ -2212,12 +2215,11 @@ static void DecodeLDxx(Word Code)
   else
   {
     Boolean OK;
-    Byte HReg;
+    Byte HReg = 0;
 
     if (ArgCnt == 0) 
     {
       OK = True;
-      HReg = 0;
     }
     else
     {
@@ -2236,12 +2238,10 @@ static void DecodeLDxx(Word Code)
       {
         ArgStr[1][l1 - 2] = '\0';
         ArgStr[2][l2 - 2] = '\0';
-        if ((!strcasecmp(ArgStr[1] + 1,"XIX")) && (!strcasecmp(ArgStr[2] + 1,"XIY")))
+        if ((!strcasecmp(ArgStr[1] + 1,"XIX")) && (!strcasecmp(ArgStr[2] + 1, "XIY")))
           HReg = 2;
-        else if ((Maximum) && (!strcasecmp(ArgStr[1] + 1, "XDE")) && (!strcasecmp(ArgStr[2] + 1 ,"XHL")))
-          HReg = 0;
-        else if ((!Maximum) && (!strcasecmp(ArgStr[1] + 1 ,"DE")) && (!strcasecmp(ArgStr[2] + 1 ,"HL")))
-          HReg = 0;
+        else if ((Maximum) && (!strcasecmp(ArgStr[1] + 1, "XDE")) && (!strcasecmp(ArgStr[2] + 1 , "XHL")));
+        else if ((!Maximum) && (!strcasecmp(ArgStr[1] + 1, "DE")) && (!strcasecmp(ArgStr[2] + 1 , "HL")));
         else
           OK = False;
       }

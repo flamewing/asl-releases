@@ -5356,8 +5356,8 @@ REPT} aufgenommen und dann n-fach ausgef"uhrt wird.  Das erste Argument
 wird also n-fach gesichert...besser geht es schon so:
 \begin{verbatim}
 pushlist  macro reg
-          if      "ARG"<>""
-           push    arg
+          if      "REG"<>""
+           push    reg
            shift
            pushlist ALLARGS
           endif

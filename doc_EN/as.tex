@@ -5172,8 +5172,8 @@ pushlist  macro reg
 saved n times...the following approach works better:
 \begin{verbatim}
 pushlist  macro reg
-          if      "ARG"<>""
-           push    arg
+          if      "REG"<>""
+           push    reg
            shift
            pushlist ALLARGS
           endif

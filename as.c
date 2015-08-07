@@ -58,9 +58,15 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.48 2015/04/20 18:40:29 alfred Exp $                          */
+/* $Id: as.c,v 1.50 2015/08/05 18:28:05 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.50  2015/08/05 18:28:05  alfred
+ * - correct initial construction of ALLARGS, compute ALLARGS/NUMARGS only if needed
+ *
+ * Revision 1.49  2015/08/03 18:25:37  alfred
+ * - add excess macro arguments to argument list for usage with SHIFT
+ *
  * Revision 1.48  2015/04/20 18:40:29  alfred
  * - add TMS1000 support (no docs yet)
  *
@@ -451,6 +457,8 @@ static PInputTag GenerateProcessor(void)
   PInp->SaveAttr[0] = '\0';
   PInp->SaveLabel[0] = '\0';
   PInp->GlobalSymbols = False;
+  PInp->UsesNumArgs =
+  PInp->UsesAllArgs = False;
 
   /* in case the input tag chain is empty, this must be the master file */
 
@@ -474,6 +482,8 @@ static POutputTag GenerateOUTProcessor(SimpProc Processor)
   POut->GlobSect = 0;
   POut->DoExport = False;
   POut->DoGlobCopy= False;
+  POut->UsesNumArgs =
+  POut->UsesAllArgs = False;
   *POut->GName = '\0';
 
   return POut;
@@ -739,18 +749,22 @@ static void ComputeMacroStrings(PInputTag Tag)
 
   /* recompute # of params */
 
-  sprintf(Tag->NumArgs, "%d", Tag->ParCnt);
+  if (Tag->UsesNumArgs)
+    sprintf(Tag->NumArgs, "%d", Tag->ParCnt);
 
   /* recompute 'all string' parameter */
 
-  Tag->AllArgs[0] = '\0';
-  Lauf = Tag->Params;
-  while (Lauf)
+  if (Tag->UsesAllArgs)
   {
-    if (Tag->AllArgs[0] != '\0')
-      strmaxcat(Tag->AllArgs, ",", 255);
-    strmaxcat(Tag->AllArgs, Lauf->Content, 255);
-    Lauf = Lauf->Next;
+    Tag->AllArgs[0] = '\0';
+    Lauf = Tag->Params;
+    while (Lauf)
+    {
+      if (Tag->AllArgs[0] != '\0')
+        strmaxcat(Tag->AllArgs, ",", 255);
+      strmaxcat(Tag->AllArgs, Lauf->Content, 255);
+      Lauf = Lauf->Next;
+    }
   }
 }
 
@@ -799,8 +813,10 @@ static void MACRO_OutProcessor(void)
 
     if (HasAttrs)
       CompressLine(AttrName, ParMax + 1, s, FALSE);
-    CompressLine(ArgCName, ParMax + 2, s, FALSE);
-    CompressLine(AllArgName, ParMax + 3, s, FALSE);
+    if (CompressLine(ArgCName, ParMax + 2, s, FALSE) > 0)
+      FirstOutputTag->UsesNumArgs = TRUE;
+    if (CompressLine(AllArgName, ParMax + 3, s, FALSE) > 0)
+      FirstOutputTag->UsesAllArgs = TRUE;
     if (FirstOutputTag->Mac->LocIntLabel)
       CompressLine(LabelName, ParMax + 4, s, FALSE);
 
@@ -813,6 +829,8 @@ static void MACRO_OutProcessor(void)
   {
     if (IfAsm)
     {
+      FirstOutputTag->Mac->UsesNumArgs = FirstOutputTag->UsesNumArgs;
+      FirstOutputTag->Mac->UsesAllArgs = FirstOutputTag->UsesAllArgs;
       FirstOutputTag->Mac->ParamNames = FirstOutputTag->ParamNames;
       FirstOutputTag->ParamNames = NULL;
       FirstOutputTag->Mac->ParamDefVals = FirstOutputTag->ParamDefVals;
@@ -826,6 +844,8 @@ static void MACRO_OutProcessor(void)
         GMacro->FirstLine = DuplicateStringList(FirstOutputTag->Mac->FirstLine);
         GMacro->ParamNames = DuplicateStringList(FirstOutputTag->Mac->ParamNames);
         GMacro->ParamDefVals = DuplicateStringList(FirstOutputTag->Mac->ParamDefVals);
+        GMacro->UsesNumArgs = FirstOutputTag->Mac->UsesNumArgs;
+        GMacro->UsesAllArgs = FirstOutputTag->Mac->UsesAllArgs;
         AddMacro(GMacro, FirstOutputTag->GlobSect, False);
       }
     }
@@ -873,8 +893,10 @@ Boolean MACRO_Processor(PInputTag PInp, char *erg)
 
   if (HasAttrs)
     ExpandLine(PInp->SaveAttr, ParMax + 1, erg);
-  ExpandLine(PInp->NumArgs, ParMax + 2, erg);
-  ExpandLine(PInp->AllArgs, ParMax + 3, erg);
+  if (PInp->UsesNumArgs)
+    ExpandLine(PInp->NumArgs, ParMax + 2, erg);
+  if (PInp->UsesAllArgs)
+    ExpandLine(PInp->AllArgs, ParMax + 3, erg);
   if (PInp->Macro->LocIntLabel)
     ExpandLine(PInp->SaveLabel, ParMax + 4, erg);
 
@@ -1171,20 +1193,28 @@ static void ExpandMacro(PMacroRec OneMacro)
     Tag->GetPos    = MACRO_GetPos;
     Tag->Macro     = OneMacro;
     Tag->GlobalSymbols = OneMacro->GlobalSymbols;
+    Tag->UsesNumArgs = OneMacro->UsesNumArgs;
+    Tag->UsesAllArgs = OneMacro->UsesAllArgs;
     strmaxcpy(Tag->SpecName, OneMacro->Name, 255);
     strmaxcpy(Tag->SaveAttr, AttrPart, 255);
     if (OneMacro->LocIntLabel)
       strmaxcpy(Tag->SaveLabel, LabPart, 255);
     Tag->IsMacro   = True;
 
-    /* 2. store special parameters - in the original form */
+    /* 2. Store special parameters - in the original form.
+          Omit this if they aren't used at all in the macro's body. */
 
-    sprintf(Tag->NumArgs, "%d", ArgCnt);
+    Tag->NumArgs[0] = '\0';
+    if (Tag->UsesNumArgs)
+      sprintf(Tag->NumArgs, "%d", ArgCnt);
     Tag->AllArgs[0] = '\0';
-    for (z1 = 1; z1 <= ArgCnt; z1++)
+    if (Tag->UsesAllArgs)
     {
-      if (z1 == 1) strmaxcat(Tag->AllArgs, ",", 255);
-      strmaxcat(Tag->AllArgs, ArgStr[z1], 255);
+      for (z1 = 1; z1 <= ArgCnt; z1++)
+      {
+        if (z1 != 1) strmaxcat(Tag->AllArgs, ",", 255);
+        strmaxcat(Tag->AllArgs, ArgStr[z1], 255);
+      }
     }
     Tag->ParCnt = OneMacro->ParamCount;
 
@@ -1238,12 +1268,12 @@ static void ExpandMacro(PMacroRec OneMacro)
         NamedArgs = True;
       }
 
-      /* unnamed argument: */
+      /* do not mix unnamed with named arguments: */
 
       else if (NamedArgs)
         WrError(1812);
 
-      /* empty positional parameters mean using defaults: */
+      /* empty positional parameters mean using defaults - insert non-empty args here: */
 
       else if ((z1 <= OneMacro->ParamCount) && (strlen(ArgStr[z1]) > 0))
       {
@@ -1261,6 +1291,11 @@ static void ExpandMacro(PMacroRec OneMacro)
         }
         pArg->Content = strdup(ArgStr[z1]);
       }
+
+      /* excess unnamed arguments: append at end of list */
+
+      else if (z1 > OneMacro->ParamCount)
+        AddStringListLast(&(Tag->Params), ArgStr[z1]);
     }
 
     /* 3c. fill in defaults */

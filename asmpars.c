@@ -36,9 +36,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.29 2014/12/14 17:58:46 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.30 2015/07/05 17:23:39 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmpars.c,v $
+ * Revision 1.30  2015/07/05 17:23:39  alfred
+ * - disallow float constants starting with 0x
+ *
  * Revision 1.29  2014/12/14 17:58:46  alfred
  * - remove static variables in strutil.c
  *
@@ -1144,8 +1147,24 @@ Double ConstFloatVal(const char *pExpr, FloatType Typ, Boolean *pResult)
 
   if (*pExpr)
   {
-    Erg = strtod(pExpr, &pEnd);
-    *pResult = (*pEnd == '\0');
+    /* Some strtod() implementations interpret hex constants starting with '0x'.  We
+       don't want this here.  Either 0x for hex constants is allowed, then it should
+       have been parsed before by ConstIntVal(), or not, then we don't want the constant
+       be stored as float. */
+
+    if ((strlen(pExpr) >= 2)
+     && (pExpr[0] == '0')
+     && (toupper(pExpr[1]) == 'X'))
+    {
+      Erg = 0;
+      *pResult = False;
+    }
+
+    else
+    {
+      Erg = strtod(pExpr, &pEnd);
+      *pResult = (*pEnd == '\0');
+    }
   }
   else
   {

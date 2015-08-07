@@ -26,9 +26,12 @@
 /*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.28 2014/12/14 17:58:46 alfred Exp $                      */
+/* $Id: asmsub.c,v 1.29 2015/08/05 18:28:06 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmsub.c,v $
+ * Revision 1.29  2015/08/05 18:28:06  alfred
+ * - correct initial construction of ALLARGS, compute ALLARGS/NUMARGS only if needed
+ *
  * Revision 1.28  2014/12/14 17:58:46  alfred
  * - remove static variables in strutil.c
  *
@@ -1740,10 +1743,11 @@ static Boolean CompressLine_NErl(char ch)
        || ((ch >= '0') && (ch <= '9')));
 }
 
-void CompressLine(char *TokNam, Byte Num, char *Line, Boolean ThisCaseSensitive)
+int CompressLine(char *TokNam, Byte Num, char *Line, Boolean ThisCaseSensitive)
 {
   int z, e, tlen, llen;
   Boolean cmpres;
+  int NumCompress = 0;
 
   z = 0;
   tlen = strlen(TokNam);
@@ -1759,9 +1763,11 @@ void CompressLine(char *TokNam, Byte Num, char *Line, Boolean ThisCaseSensitive)
       strmov(Line + z + 1, Line + e);
       Line[z] = Num;
       llen = strlen(Line);
+      NumCompress++;
     }
     z++;
   }
+  return NumCompress;
 }
 
 void ExpandLine(char *TokNam, Byte Num, char *Line)

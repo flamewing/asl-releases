@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codem16.c,v 1.33 2014/12/07 19:14:01 alfred Exp $                     */
+/* $Id: codem16.c,v 1.34 2015/05/25 08:38:36 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codem16.c,v $
+ * Revision 1.34  2015/05/25 08:38:36  alfred
+ * - silence come warnings on old GCC versions
+ *
  * Revision 1.33  2014/12/07 19:14:01  alfred
  * - silence a couple of Borland C related warnings and errors
  *
@@ -2143,7 +2146,10 @@ static void DecodeCHK(Word Code)
       IsSigned = 1;
     }
     else
+    {
       OptOK = False;
+      IsSigned = 0;
+    }
 
     if (OpSize[3] == -1) OpSize[3] = 2;
     if (OpSize[2] == -1) OpSize[2] = OpSize[3];

@@ -1,0 +1,6 @@
++----------------------- Test Application MACARGS ---------------------------+
+|                                                                            |
+|     This test plays a bit with special macro parameters: ALLARGS,          |
+|     ARGCOUNT, ATTRIBUTE and __LABEL__.                                     |
+|                                                                            |
++----------------------------------------------------------------------------+

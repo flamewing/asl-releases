@@ -107,7 +107,7 @@ extern void PrintUseList(void);
 extern void ClearUseList(void);
 
 
-extern void CompressLine(char *TokNam, Byte Num, char *Line, Boolean CompressLine);
+extern int CompressLine(char *TokNam, Byte Num, char *Line, Boolean CompressLine);
 
 extern void ExpandLine(char *TokNam, Byte Num, char *Line);
 

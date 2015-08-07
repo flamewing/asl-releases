@@ -161,9 +161,19 @@ StringList DuplicateStringList(StringList Src)
 
 Boolean StringListPresent(StringList List, char *Search)
 {
-  while ((List) && (strcmp(List->Content,Search)))
+  while ((List) && (strcmp(List->Content, Search)))
     List = List->Next;
   return (List != NULL);
+}
+
+void DumpStringList(StringList List)
+{
+  while (List)
+  {
+    printf("'%s' -> ", List->Content ? List->Content : "<NULL>");
+    List = List->Next;
+  }
+  printf("\n");
 }
 
 void stringlists_init(void)

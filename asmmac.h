@@ -23,6 +23,8 @@ typedef struct _MacroRec
   Boolean LocMacExp;     /* Makroexpansion wird aufgelistet */
   Boolean LocIntLabel;   /* Label used internally instead at beginning */
   Boolean GlobalSymbols; /* labels not local to macro */
+  Boolean UsesNumArgs,   /* NUMARGS referenced in macro body */
+          UsesAllArgs;   /* ALLARGS referenced in macro body */
 } MacroRec, *PMacroRec;
 
 #define BufferArraySize 1024
@@ -45,8 +47,9 @@ typedef struct _TInputTag
   StringList Params;
   LongInt LineCnt, LineZ;
   StringRecPtr Lines, LineRun;
-  String SpecName,SaveAttr,SaveLabel,AllArgs,NumArgs;
-  Boolean IsEmpty, FromFile;
+  String SpecName, SaveAttr, SaveLabel, AllArgs;
+  ShortString NumArgs;
+  Boolean IsEmpty, FromFile, UsesAllArgs, UsesNumArgs;
   FILE *Datei;
   void *Buffer;
   void (*Cleanup)(
@@ -80,7 +83,7 @@ typedef struct _TOutputTag
   PMacroRec Mac;
   StringList ParamNames, ParamDefVals;
   LongInt PubSect,GlobSect;
-  Boolean DoExport, DoGlobCopy;
+  Boolean DoExport, DoGlobCopy, UsesNumArgs, UsesAllArgs;
   String GName;
 } TOutputTag, *POutputTag;
 

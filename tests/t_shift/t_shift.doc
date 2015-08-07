@@ -1,0 +1,7 @@
++------------------------- Test Application SHIFT ---------------------------+
+|                                                                            |
+|     This test plays a bit with the recursive macros definition and         |
+|     recursive processing of macro parameters. Test use SHIFT and ALLARGS   |
+|     as is described in the AS manual.                                      |
+|                                                                            |
++----------------------------------------------------------------------------+

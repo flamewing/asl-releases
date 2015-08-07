@@ -122,6 +122,7 @@ call testall t_hcs08
 call testall t_longline
 call testall t_m16
 call testall t_m16c
+call testall t_macargs
 call testall t_mcore
 call testall t_mic51
 call testall t_mico8
@@ -130,6 +131,7 @@ call testall t_parsys
 call testall t_s12x
 call testall t_scmp
 call testall t_secdrive
+call testall t_shift
 call testall t_st6
 call testall t_st7
 call testall t_st9
