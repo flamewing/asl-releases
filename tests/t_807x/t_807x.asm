@@ -2,25 +2,30 @@
 
 	nop
 	ret
-	ssm
 
-	ld	a,10h,pc
-	ld	a,10h,sp
+	ssm
+	ssm	p2
+	ssm	p3
+
+	ld	a,0x10,pc
+	ld	a,0x10,sp
 	ld	a,-3,p2
 	ld	a,-10,p3
 	ld	a,#20
-	ld	a,12h
+	ld	a,0x12
+	ld	a,0xffc0
 	ld	a,@+1,p2
 	ld	a,@-1,p3
 	ld	a,e
 	ld	a,s
 
-	ld	ea,10h,pc
-        ld      ea,10h,sp
-        ld      ea,-3,p2 
+	ld	ea,0x10,pc
+        ld      ea,0x10,sp
+        ld      ea,-3,p2
         ld      ea,-10,p3
-        ld      ea,#2030h
-        ld      ea,12h   
+        ld      ea,#0x2030
+        ld      ea,0x12
+	ld	ea,0xffc0
         ld      ea,@+1,p2
         ld      ea,@-1,p3
 	ld	ea,pc
@@ -32,71 +37,79 @@
 	ld	sp,ea
 	ld	p2,ea
 	ld	p3,ea
-	ld	sp,#1234h
-	ld	p2,#1234h
-	ld	p3,#1234h
-	ld	t,10h,pc
-        ld      t,10h,sp
-        ld      t,-3,p2 
+	ld	sp,#0x1234
+	ld	p2,#0x1234
+	ld	p3,#0x1234
+	ld	t,0x10,pc
+        ld      t,0x10,sp
+        ld      t,-3,p2
         ld      t,-10,p3
-        ld      t,#2030h
-        ld      t,12h   
+        ld      t,#0x2030
+        ld      t,0x12
+	ld	t,0xffc0
         ld      t,@+1,p2
         ld      t,@-1,p3
 	ld	t,ea
 	ld	e,a
+	ld	s,a
 
-	st	a,10h,pc
-	st	a,10h,sp
+	st	a,0x10,pc
+	st	a,0x10,sp
 	st	a,-3,p2
 	st	a,-10,p3
-	st	a,12h
+	st	a,0x12
+	st	a,0xffc0
 	st	a,@+1,p2
 	st	a,@-1,p3
 
-        st      ea,10h,pc
-        st      ea,10h,sp
-        st      ea,-3,p2 
+        st      ea,0x10,pc
+        st      ea,0x10,sp
+        st      ea,-3,p2
         st      ea,-10,p3
-        st      ea,12h   
+        st      ea,0x12
+	st	ea,0xffc0
         st      ea,@+1,p2
         st      ea,@-1,p3
 
-	add	a,10h,pc
-	add	a,10h,sp
+	add	a,0x10,pc
+	add	a,0x10,sp
 	add	a,-3,p2
 	add	a,-10,p3
 	add	a,#20
-	add	a,12h
+	add	a,0x12
+	add	a,0xffc0
 	add	a,@+1,p2
 	add	a,@-1,p3
 	add	a,e
 
-        add     ea,10h,pc
-        add     ea,10h,sp
-        add     ea,-3,p2 
+        add     ea,0x10,pc
+        add     ea,0x10,sp
+        add     ea,-3,p2
         add     ea,-10,p3
-	add	ea,#2030h
-        add     ea,12h   
+	add	ea,#0x2030
+        add     ea,0x12
+	add	ea,0xffc0
         add     ea,@+1,p2
         add     ea,@-1,p3
 
-	sub	a,10h,pc
-	sub	a,10h,sp
+	sub	a,$,pc
+	sub	a,0x10,sp
 	sub	a,-3,p2
 	sub	a,-10,p3
 	sub	a,#20
-	sub	a,12h
+	sub	a,0x12
+	sub	a,0xffc0
 	sub	a,@+1,p2
 	sub	a,@-1,p3
 	sub	a,e
 
         sub     ea,$,pc
-        sub     ea,10h,sp
-        sub     ea,-3,p2 
+        sub     ea,0x10,sp
+        sub     ea,-3,p2
         sub     ea,-10,p3
-	sub	ea,#2030h
-        sub     ea,12h   
+	sub	ea,#0x2030
+        sub     ea,0x12
+	sub	ea,0xffc0
         sub     ea,@+1,p2
         sub     ea,@-1,p3
 
@@ -104,33 +117,36 @@
 	div	ea,t
 
         and     a,$,pc
-        and     a,10h,sp
+        and     a,0x10,sp
         and     a,-3,p2
         and     a,-10,p3
-        and     a,#20
-        and     a,12h
+        and     a,=20
+        and     a,0x12
+	and	a,0xffc0
         and     a,@+1,p2
         and     a,@-1,p3
         and     a,e
-	and	s, #10h
+	and	s, #0x10
 
         or	a,$,pc
-        or	a,10h,sp
+        or	a,0x10,sp
         or	a,-3,p2
         or	a,-10,p3
         or	a,#20
-        or	a,12h
+        or	a,0x12
+	or	a,0xffc0
         or	a,@+1,p2
         or	a,@-1,p3
         or	a,e
-	or	s, #10h
+	or	s, #0x10
 
         xor     a,$,pc
-        xor     a,10h,sp
+        xor     a,0x10,sp
         xor     a,-3,p2
         xor     a,-10,p3
         xor     a,#20
-        xor     a,12h
+        xor     a,0x12
+	xor	a,0xffc0
         xor     a,@+1,p2
         xor     a,@-1,p3
         xor     a,e
@@ -161,27 +177,29 @@
 	pop	p2
 	pop	p3
 
-	pli	p2,#1234h
-	pli	p3,#1234h
+	pli	p2,=0x1234
+	pli	p3,=0x1234
 
 	ild	a,$,pc
-	ild	a,10h,sp
+	ild	a,0x10,sp
 	ild	a,-3,p2
 	ild	a,-10,p3
-	ild	a,12h
+	ild	a,0x12
+	ild	a,0xffc0
 	ild	a,@+1,p2
 	ild	a,@-1,p3
 
 	dld	a,$,pc
-	dld	a,10h,sp
+	dld	a,0x10,sp
 	dld	a,-3,p2
 	dld	a,-10,p3
-	dld	a,12h
+	dld	a,0x12
+	dld	a,0xffc0
 	dld	a,@+1,p2
 	dld	a,@-1,p3
 
-	jmp	1234h
-	jsr	1234h
+	jmp	0x1234
+	jsr	0x1234
 
 	call	7
 

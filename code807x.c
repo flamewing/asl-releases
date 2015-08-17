@@ -5,9 +5,18 @@
 /* Codegenerator National INS807X.c                                          */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code807x.c,v 1.3 2005/09/08 16:53:42 alfred Exp $                   *
+/* $Id: code807x.c,v 1.6 2015/08/17 16:26:02 alfred Exp $                   *
  *****************************************************************************
  * $Log: code807x.c,v $
+ * Revision 1.6  2015/08/17 16:26:02  alfred
+ * - allow address range 0xffxx for direct addressing on INS807x
+ *
+ * Revision 1.5  2015/08/14 21:03:29  alfred
+ * - some additions/corrections to 807x target
+ *
+ * Revision 1.4  2015/08/14 19:50:18  alfred
+ * - correct integer constant mode for INS807x (C instead of Intel)
+ *
  * Revision 1.3  2005/09/08 16:53:42  alfred
  * - use common PInstTable
  *
@@ -50,7 +59,6 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define FixedOrderCnt 10
 #define ShiftOrderCnt 5
 #define BranchOrderCnt 5
 
@@ -71,16 +79,10 @@
 #define MModT (1 << ModT)
 
 typedef struct
-        {
-          Byte Code;
-        } FixedOrder;
+{
+  Byte Code, Code16;
+} ShiftOrder;
 
-typedef struct
-        {
-          Byte Code, Code16;
-        } ShiftOrder;
-
-static FixedOrder *FixedOrders, *BranchOrders;
 static ShiftOrder *ShiftOrders;
 
 static int OpSize, AdrMode;
@@ -183,7 +185,7 @@ static void DecodeAdr(int Index, Byte Mask)
 
   /* immediate? */
 
-  if (*ArgStr[Index] == '#')
+  if ((*ArgStr[Index] == '#') || (*ArgStr[Index] == '='))
   {
     switch (OpSize)
     {
@@ -210,10 +212,18 @@ static void DecodeAdr(int Index, Byte Mask)
 
   if (Cnt == 1)
   {
-    AdrVals[0] = EvalIntExpression(ArgStr[Index], UInt8, &OK);
+    FirstPassUnknown = False;
+    Addr = EvalIntExpression(ArgStr[Index], UInt16, &OK);
+    if (FirstPassUnknown)
+      Addr &= 0xff;
     if (OK)
     {
-      AdrMode = ModMem; AdrPart = 5; AdrCnt = 1;
+      if ((Hi(Addr) != 0x00) && (Hi(Addr) != 0xff)) WrError(1320);
+      else
+      {
+        AdrVals[0] = Lo(Addr);
+        AdrMode = ModMem; AdrPart = 5; AdrCnt = 1;
+      }
     }
     goto AdrFound;
   }
@@ -263,14 +273,12 @@ AdrFound:
 
 /*---------------------------------------------------------------------------*/
 
-static void DecodeFixed(Word Index)
+static void DecodeFixed(Word Code)
 {
-  FixedOrder *POrder = FixedOrders + Index;
-
   if (ArgCnt != 0) WrError(1110);
   else
   {
-    BAsmCode[0] = POrder->Code;
+    BAsmCode[0] = Code;
     CodeLen = 1;
   }
 }
@@ -282,7 +290,7 @@ static void DecodeLD(Word Index)
   if ((ArgCnt < 1) || (ArgCnt > 3)) WrError(1110);
   else
   {
-    DecodeAdr(1, MModAcc | MModReg | MModT | MModE);
+    DecodeAdr(1, MModAcc | MModReg | MModT | MModE | MModS);
     switch (AdrMode)
     {
       case ModAcc:
@@ -339,13 +347,9 @@ static void DecodeLD(Word Index)
             CodeLen = 1;
             break;
           case ModImm:
-            if (!BAsmCode[0]) WrError(1350);
-            else
-            {
-              BAsmCode[0] |= 0x24;
-              memcpy(BAsmCode + 1, AdrVals, AdrCnt);
-              CodeLen = 1 + AdrCnt;
-            }
+            BAsmCode[0] |= 0x24;
+            memcpy(BAsmCode + 1, AdrVals, AdrCnt);
+            CodeLen = 1 + AdrCnt;
             break;
         }
         break;
@@ -374,6 +378,17 @@ static void DecodeLD(Word Index)
             CodeLen = 1;
             break;
         }
+        break;
+      case ModS:
+        DecodeAdr(2, MModAcc);
+        switch (AdrMode)
+        {
+          case ModAcc:
+            BAsmCode[0] = 0x07;
+            CodeLen = 1;
+            break;
+        }
+        break;
     }
   }
 }
@@ -450,7 +465,7 @@ static void DecodePLI(Word Index)
     DecodeAdr(1, MModReg);
     if (AdrMode == ModReg)
     {
-      if (AdrPart < 2) WrError(1350);
+      if (AdrPart == 1) WrError(1350);
       else
       {
         BAsmCode[0] = 0x20 | AdrPart;
@@ -462,6 +477,29 @@ static void DecodePLI(Word Index)
         }
       }
     }
+  }
+}
+
+static void DecodeSSM(Word Code)
+{
+  UNUSED(Code);
+
+  switch (ArgCnt)
+  {
+    case 0:
+      BAsmCode[0] = 0x2e;
+      CodeLen = 1;
+      break;
+    case 1:
+      if ((!GetReg16(ArgStr[1], BAsmCode + 0)) || (BAsmCode[0] < 2)) WrXError(1445, ArgStr[1]);
+      else
+      {
+        BAsmCode[0] |= 0x2c;
+        CodeLen = 1;
+      }
+      break;
+    default:
+      WrError(1110);
   }
 }
 
@@ -587,7 +625,7 @@ static void DecodeStack(Word Index)
         CodeLen++;
         break;
       case ModReg:
-        if ((AdrPart == 1) || ((Index) && (AdrPart == 0))) WrError(1350);
+        if (AdrPart == 1) WrError(1350);
         else
           BAsmCode[CodeLen++] = 0x54 | Index | AdrPart;
         break;
@@ -626,7 +664,7 @@ static void DecodeJMPJSR(Word Index)
   if (ArgCnt != 1) WrError(1110);
   else
   {
-    Address = EvalIntExpression(ArgStr[1], UInt16, &OK);
+    Address = (EvalIntExpression(ArgStr[1], UInt16, &OK) - 1) & 0xffff;
     if (OK)
     {
       BAsmCode[CodeLen++] = Index;
@@ -651,10 +689,8 @@ static void DecodeCALL(Word Index)
   }
 }
 
-static void DecodeBranch(Word Index)
+static void DecodeBranch(Word Code)
 {
-  FixedOrder *POrder = BranchOrders + Index;
-
   /* allow both syntaxes for PC-relative addressing */
 
   if (ArgCnt == 1)
@@ -667,10 +703,10 @@ static void DecodeBranch(Word Index)
     if (AdrMode == ModMem)
     {
       if ((AdrPart == 1) || (AdrPart > 3)) WrError(1350);
-      else if ((POrder->Code < 0x60) && (AdrPart != 0))  WrError(1350);
+      else if ((Code < 0x60) && (AdrPart != 0))  WrError(1350);
       else
       {
-        BAsmCode[0] = POrder->Code | AdrPart;
+        BAsmCode[0] = Code | AdrPart;
         memcpy(BAsmCode + 1, AdrVals, AdrCnt);
         CodeLen = 1 + AdrCnt;
       }
@@ -682,18 +718,12 @@ static void DecodeBranch(Word Index)
 
 static void AddFixed(char *NName, Byte NCode)
 {
-  if (InstrZ >= FixedOrderCnt)
-    exit(0);
-  FixedOrders[InstrZ].Code = NCode;
-  AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
+  AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
 static void AddBranch(char *NName, Byte NCode)
 {
-  if (InstrZ >= BranchOrderCnt)
-    exit(0);
-  BranchOrders[InstrZ].Code = NCode;
-  AddInstTable(InstTable, NName, InstrZ++, DecodeBranch);
+  AddInstTable(InstTable, NName, NCode, DecodeBranch);
 }
 
 static void AddShift(char *NName, Byte NCode, Byte NCode16)
@@ -709,9 +739,7 @@ static void InitFields(void)
 {
   InstTable = CreateInstTable(53);
 
-  FixedOrders = (FixedOrder*) malloc(sizeof(FixedOrder) * FixedOrderCnt); InstrZ = 0;
   AddFixed("RET", 0x5c);
-  AddFixed("SSM", 0x2e);
   AddFixed("NOP", 0x00);
 
   ShiftOrders = (ShiftOrder*) malloc(sizeof(ShiftOrder) * ShiftOrderCnt); InstrZ = 0;
@@ -725,6 +753,7 @@ static void InitFields(void)
   AddInstTable(InstTable, "ST",     0, DecodeST);
   AddInstTable(InstTable, "XCH",    0, DecodeXCH);
   AddInstTable(InstTable, "PLI",    0, DecodePLI);
+  AddInstTable(InstTable, "SSM",    0, DecodeSSM);
 
   AddInstTable(InstTable, "ADD", 0xb0, DecodeADDSUB);
   AddInstTable(InstTable, "SUB", 0xb8, DecodeADDSUB);
@@ -746,7 +775,6 @@ static void InitFields(void)
   AddInstTable(InstTable, "JSR", 0x20, DecodeJMPJSR);
   AddInstTable(InstTable, "CALL",   0, DecodeCALL);
 
-  BranchOrders = (FixedOrder*) malloc(sizeof(FixedOrder) * BranchOrderCnt); InstrZ = 0;
   AddBranch("BND", 0x2d);
   AddBranch("BRA", 0x74);
   AddBranch("BP" , 0x64);
@@ -757,7 +785,6 @@ static void InitFields(void)
 static void DeinitFields(void)
 {
   DestroyInstTable(InstTable);
-  free(FixedOrders);
   free(ShiftOrders);
 }
 
@@ -793,7 +820,7 @@ static void SwitchTo_807x(void)
 
    FoundDescr = FindFamilyByName("807x");
 
-   TurnWords = False; ConstMode = ConstModeIntel; SetIsOccupied = False;
+   TurnWords = False; ConstMode = ConstModeC; SetIsOccupied = False;
 
    PCSymbol="$"; HeaderID = FoundDescr->Id; NOPCode = 0x00;
    DivideChars = ","; HasAttrs = False;

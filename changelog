@@ -1,5 +1,11 @@
-$Id: changelog,v 1.103 2015/08/07 16:39:42 alfred Exp $
+$Id: changelog,v 1.105 2015/08/17 16:28:43 alfred Exp $
 ------------------------------------------------------------------------------
+
+2015-08-17 [1.42 Bld 100]
+
+- Bugfix      : default integer constant mode for INS807x was
+                Intel and not C as documented
+- Bugfix      : various fixes & extensions for 807x target
 
 2015-08-07 [1.42 Bld 99]
 
