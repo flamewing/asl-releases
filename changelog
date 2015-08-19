@@ -1,5 +1,14 @@
-$Id: changelog,v 1.105 2015/08/17 16:28:43 alfred Exp $
+$Id: changelog,v 1.106 2015/08/19 17:05:52 alfred Exp $
 ------------------------------------------------------------------------------
+
+[1.42 Bld 101]
+
+- Bugfix      : correct PC-relative addressing on 807x target
+
+- Bugfix      : add missing condition codes of 68K FPU
+
+- Bugfix      : correct handling of 68K BSR instruction with
+                8 bit displacement
 
 2015-08-17 [1.42 Bld 100]
 

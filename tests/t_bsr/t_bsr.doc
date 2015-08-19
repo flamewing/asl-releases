@@ -1,0 +1,9 @@
++-----------------------  Test Application BSR  -----------------------------+
+|                                                                            |
+|  This is a small test case to test a nasty detail od the 68K instruction   |
+|  set: a distance of 0 is not allowed for the short (8 bit) version of Bcc  |
+|  instructions.  If instructed to deduce the displacement size itself, the  |
+|  assembler will either replace the instruction with a NOP, or use the 16   |
+|  bit variant of BSR.                                                       |
+|                                                                            |
++----------------------------------------------------------------------------+

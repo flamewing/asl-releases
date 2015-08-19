@@ -102,6 +102,7 @@ call testall t_ace
 call testall t_adrstr
 call testall t_avr
 call testall t_bas52
+call testall t_bsr
 call testall t_buf32
 call testall t_cmdcpu
 call testall t_cop4

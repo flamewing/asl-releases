@@ -36,9 +36,15 @@
 /*           2001-12-02 fixed problems with forward refs of shift arguments  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68k.c,v 1.21 2014/12/07 19:13:59 alfred Exp $                     */
+/* $Id: code68k.c,v 1.23 2015/08/19 17:04:47 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code68k.c,v $
+ * Revision 1.23  2015/08/19 17:04:47  alfred
+ * - correct handling of short BSR for 68K
+ *
+ * Revision 1.22  2015/08/19 16:32:32  alfred
+ * - add missing FPU conditions
+ *
  * Revision 1.21  2014/12/07 19:13:59  alfred
  * - silence a couple of Borland C related warnings and errors
  *
@@ -3262,7 +3268,7 @@ static void DecodeBcc(Word CondCode)
     LongInt HVal;
     Integer HVal16;
     ShortInt HVal8;
-    Boolean ValOK;
+    Boolean ValOK, IsBSR = (1 == CondCode);
 
     /* Zieladresse ermitteln, zum Programmzaehler relativieren */
 
@@ -3274,7 +3280,17 @@ static void DecodeBcc(Word CondCode)
     if (*AttrPart == '\0') 
     {
       if (IsDisp8(HVal))
-        OpSize = 4;
+      {
+        /* BSR with zero displacement cannot be converted to NOP.  Generate a
+           16 bit displacement instead.  Also, to avoid that code length
+           oscillated back and forth over passes, also use a 16 bit displacement
+           for a distance up to 2: */
+
+        if ((HVal >= 0) && (HVal <= 2) && IsBSR)
+          OpSize = 2;
+        else
+          OpSize = 4;
+      }
       else if (IsDisp16(HVal))
         OpSize = 2;
       else
@@ -3310,11 +3326,17 @@ static void DecodeBcc(Word CondCode)
         HVal8 = HVal;
         if ((!IsDisp8(HVal)) && (!SymbolQuestionable)) WrError(1370);
 
+        /* cannot generate short BSR with zero displacement, and BSR cannot
+           be replaced with NOP -> error */
+
+        else if ((HVal == 0) && IsBSR) WrError(1370);
+
         /* Code erzeugen */
+
         else
         {
           CodeLen = 2;
-          if ((HVal8 != 0) || (1 == CondCode))
+          if ((HVal8 != 0) || IsBSR)
           {
             WAsmCode[0] = 0x6000 | (CondCode << 8) | ((Byte)HVal8);
           }
@@ -4997,6 +5019,9 @@ static void InitFields(void)
   AddFPUCond("OLE" , 0x05); AddFPUCond("UGT" , 0x0a);
   AddFPUCond("OGL" , 0x06); AddFPUCond("UEQ" , 0x09);
   AddFPUCond("OR"  , 0x07); AddFPUCond("UN"  , 0x08);
+  AddFPUCond("F"   , 0x00); AddFPUCond("T"   , 0x0f);
+  AddFPUCond("SF"  , 0x10); AddFPUCond("ST"  , 0x1f);
+  AddFPUCond("SEQ" , 0x11); AddFPUCond("SNE" , 0x1e);
 
   AddPMMUCond("BS"); AddPMMUCond("BC"); AddPMMUCond("LS"); AddPMMUCond("LC"); 
   AddPMMUCond("SS"); AddPMMUCond("SC"); AddPMMUCond("AS"); AddPMMUCond("AC"); 
