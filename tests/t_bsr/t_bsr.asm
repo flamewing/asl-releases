@@ -2,7 +2,7 @@
 
 	org	$1000
 
-	; automatic length deduction must use 16 bit displacement
+	; automatic length deduction must use 16 bit displacement for
 	; BSR instruction, since a displacement of 0 is not allowed
 	; for a 8-bit displacement:
 

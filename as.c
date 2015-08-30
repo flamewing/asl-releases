@@ -58,9 +58,12 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.50 2015/08/05 18:28:05 alfred Exp $                          */
+/* $Id: as.c,v 1.51 2015/08/28 17:22:26 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.51  2015/08/28 17:22:26  alfred
+ * - add special handling for labels following BSR
+ *
  * Revision 1.50  2015/08/05 18:28:05  alfred
  * - correct initial construction of ALLARGS, compute ALLARGS/NUMARGS only if needed
  *
@@ -2535,7 +2538,8 @@ void HandleLabel(char *Name, LargeWord Value)
   else if (RelSegs)
     EnterRelSymbol(Name, Value, ActPC, False);
   else
-    EnterIntSymbol(Name, Value, ActPC, False);
+    EnterIntSymbolWithFlags(Name, Value, ActPC, False,
+                            Value == AfterBSRAddr ? NextLabelFlag_AfterBSR : 0);
 }
 
 static void Produce_Code(void)
@@ -2576,6 +2580,11 @@ static void Produce_Code(void)
     IsStruct = FoundStruct(&OneStruct);
   else
     IsStruct = FALSE;
+
+  /* no longer at an address right after a BSR? */
+
+  if (EProgCounter() != AfterBSRAddr)
+    AfterBSRAddr = 0;
 
   /* evtl. voranstehendes Label ablegen */
 
@@ -3129,6 +3138,8 @@ static void AssembleFile_InitPass(void)
   ResetPageCounter();
 
   StartAdrPresent = False;
+
+  AfterBSRAddr = 0;
 
   Repass = False;
   PassNo++;

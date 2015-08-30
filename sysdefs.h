@@ -11,9 +11,12 @@
 /*           2001-10-13 added ARM/Linux                                      */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: sysdefs.h,v 1.14 2015/03/04 18:37:24 alfred Exp $                     */
+/* $Id: sysdefs.h,v 1.15 2015/08/21 19:12:19 alfred Exp $                     */
 /*****************************************************************************
  * $Log: sysdefs.h,v $
+ * Revision 1.15  2015/08/21 19:12:19  alfred
+ * - avoid double definition if both K8 and x86_64 set
+ *
  * Revision 1.14  2015/03/04 18:37:24  alfred
  * - add AArch64
  *
@@ -1114,7 +1117,7 @@ typedef unsigned long Card32;
 /*===========================================================================*/
 /* AMD opteron/athlon64/k8 platforms */
 
-#ifdef __k8__
+#if (defined __k8__) && (!defined __x86_64)
 
 #define ARCHPRNAME "k8"
 

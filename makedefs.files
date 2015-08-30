@@ -1,9 +1,9 @@
-# $Id: makedefs.files,v 1.9 2015/05/25 08:19:35 alfred Exp $
+# $Id: makedefs.files,v 1.10 2015/08/30 11:36:05 alfred Exp $
 
 BASEARCH1FILES = *.c *.h man/*.1 \
             INSTALL README README.OS2 README.DOS README.LANGS README.KR TODO BENCHES Makefile Makefile.dos Makefile.os2 Makefile.w32 Makefile.def.tmpl \
             COPYING install.sh install.bat install.cmd instw32.cmd marks.asm \
-            *.res objdefs.* makedefs.* asl.def \
+            *.res objdefs.* makedefs.* rscdeps asl.def \
             include/*.inc \
             Makefile.def-samples/M*
 BASEARCH2FILES = doc_DE/Makefile doc_DE/*.tex doc_EN/Makefile doc_EN/*.tex \

@@ -31,9 +31,12 @@
 /*           2001-10-20 added GNU error flag                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmdef.c,v 1.11 2014/12/01 15:14:43 alfred Exp $                     */
+/* $Id: asmdef.c,v 1.12 2015/08/28 17:22:26 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmdef.c,v $
+ * Revision 1.12  2015/08/28 17:22:26  alfred
+ * - add special handling for labels following BSR
+ *
  * Revision 1.11  2014/12/01 15:14:43  alfred
  * - rework to current style
  *
@@ -122,6 +125,7 @@ LargeWord *PCs;                          /* Programmzaehler */
 Boolean RelSegs;                         /* relokatibles Segment ? */
 LargeWord StartAdr;                      /* Programmstartadresse */
 Boolean StartAdrPresent;                 /*          "           definiert? */
+LargeWord AfterBSRAddr;                  /* address right behind last BSR */
 LargeWord *Phases;                       /* Verschiebungen */
 Word Grans[StructSeg + 1];               /* Groesse der Adressierungselemente */
 Word ListGrans[StructSeg + 1];           /* Wortgroesse im Listing */

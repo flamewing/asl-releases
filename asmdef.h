@@ -33,9 +33,12 @@
 /*           2001-10-20 added GNU error flag                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmdef.h,v 1.13 2014/11/23 18:29:29 alfred Exp $                      */
+/* $Id: asmdef.h,v 1.14 2015/08/28 17:22:26 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmdef.h,v $
+ * Revision 1.14  2015/08/28 17:22:26  alfred
+ * - add special handling for labels following BSR
+ *
  * Revision 1.13  2014/11/23 18:29:29  alfred
  * - correct buffer overflow in MomCPUName
  *
@@ -124,9 +127,17 @@ typedef struct _RelocEntry
  Byte Add;
 } TRelocEntry, *PRelocEntry;
 
+typedef Word tSymbolFlags;
+enum
+{
+  NextLabelFlag_AfterBSR = 1 << 0
+};
+
+
 typedef struct
 {
  TempType Typ;
+ LongWord Flags;
  PRelocEntry Relocs;
  union
   {
@@ -340,6 +351,7 @@ extern StringPtr CursUp;
 extern LargeWord *PCs;
 extern Boolean RelSegs;
 extern LargeWord StartAdr;
+extern LargeWord AfterBSRAddr;
 extern Boolean StartAdrPresent;
 extern LargeWord *Phases;
 extern Word Grans[StructSeg+1];

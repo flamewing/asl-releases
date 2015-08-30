@@ -1,7 +1,12 @@
-$Id: changelog,v 1.106 2015/08/19 17:05:52 alfred Exp $
+$Id: changelog,v 1.108 2015/08/30 10:44:06 alfred Exp $
 ------------------------------------------------------------------------------
 
-[1.42 Bld 101]
+2015-08-30 [1.42 Bld 102]
+
+- Bugfix      : yet another fix to correct handling of BSR
+                on 68K
+
+2015-08-19 [1.42 Bld 101]
 
 - Bugfix      : correct PC-relative addressing on 807x target
 

@@ -39,9 +39,12 @@
 /*           2002-01-27 Build 19                                             */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: version.c,v 1.76 2015/08/19 17:05:52 alfred Exp $                     */
+/* $Id: version.c,v 1.77 2015/08/28 17:22:27 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: version.c,v $
+ * Revision 1.77  2015/08/28 17:22:27  alfred
+ * - add special handling for labels following BSR
+ *
  * Revision 1.76  2015/08/19 17:05:52  alfred
  * - 1.42 Build 101
  *
@@ -308,8 +311,8 @@
 #include "stdinc.h"
 #include <string.h>
 
-char *Version="1.42 Beta [Bld 101]";
-char *DebVersion = "1.42bld101-1";
+char *Version="1.42 Beta [Bld 102]";
+char *DebVersion = "1.42bld102-1";
 LongInt VerNo=0x142f;
 
 char *InfoMessCopyright="(C) 1992,2015 Alfred Arnold";

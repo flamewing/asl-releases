@@ -36,9 +36,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.30 2015/07/05 17:23:39 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.31 2015/08/28 17:22:26 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmpars.c,v $
+ * Revision 1.31  2015/08/28 17:22:26  alfred
+ * - add special handling for labels following BSR
+ *
  * Revision 1.30  2015/07/05 17:23:39  alfred
  * - disallow float constants starting with 0x
  *
@@ -297,6 +300,7 @@ typedef struct sSymbolEntry
   PCrossRef RefList;
   Byte FileNum;
   LongInt LineNum;
+  tSymbolFlags Flags;
   TRelocEntry *Relocs;
 } TSymbolEntry, *PSymbolEntry;
 
@@ -1732,6 +1736,7 @@ void EvalExpression(const char *pExpr, TempResult *pErg)
 
   pErg->Typ = TempNone;
   pErg->Relocs = NULL;
+  pErg->Flags = 0;
 
   (void)CopyNoBlanks(Copy, pExpr, STRINGSIZE);
 
@@ -2742,7 +2747,10 @@ void EvalExpression(const char *pExpr, TempResult *pErg)
         break;
     }
     if (pErg->Typ != TempNone)
+    {
       pErg->Relocs = DupRelocs(Ptr->Relocs);
+      pErg->Flags = Ptr->Flags;
+    }
     if (Ptr->SymType != 0)
       TypeFlag |= (1 << Ptr->SymType);
     if ((Ptr->SymSize != -1) && (SizeFlag == -1))
@@ -2787,7 +2795,7 @@ static const int TypeNums[] =
   0, Num_OpTypeInt, Num_OpTypeFloat, 0, Num_OpTypeString, 0, 0, 0
 };
 
-LargeInt EvalIntExpression(const char *pExpr, IntType Type, Boolean *pResult)
+LargeInt EvalIntExpressionWithFlags(const char *pExpr, IntType Type, Boolean *pResult, tSymbolFlags *pFlags)
 {
   TempResult t;
   LargeInt Result;
@@ -2798,6 +2806,8 @@ LargeInt EvalIntExpression(const char *pExpr, IntType Type, Boolean *pResult)
   UsesForwards = False;
   SymbolQuestionable = False;
   FirstPassUnknown = False;
+  if (pFlags)
+    *pFlags = 0;
 
   EvalExpression(pExpr, &t);
   SetRelocs(t.Relocs);
@@ -2805,6 +2815,8 @@ LargeInt EvalIntExpression(const char *pExpr, IntType Type, Boolean *pResult)
   {
     case TempInt:
       Result = t.Contents.Int;
+      if (pFlags)
+        *pFlags = t.Flags;
       break;
     case TempString:
     {
@@ -3171,7 +3183,7 @@ static void EnterSymbol(PSymbolEntry Neu, Boolean MayChange, LongInt ResHandle)
         MSect = RunSect->Handle;
         RunSect = RunSect->Next;
       }
-      Copy = (PSymbolEntry) malloc(sizeof(TSymbolEntry));
+      Copy = (PSymbolEntry) calloc(1, sizeof(TSymbolEntry));
       *Copy = (*Neu);
       Copy->Tree.Name = strdup(CombName);
       Copy->Tree.Attribute = Lauf->DestSection;
@@ -3207,7 +3219,7 @@ void PrintSymTree(char *Name)
   PrintSymbolDepth();
 }
 
-void EnterIntSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange)
+void EnterIntSymbolWithFlags(const char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange, tSymbolFlags Flags)
 {
   PSymbolEntry Neu;
   LongInt DestHandle;
@@ -3225,11 +3237,12 @@ void EnterIntSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange)
     return;
   }
 
-  Neu = (PSymbolEntry) malloc(sizeof(TSymbolEntry));
+  Neu = (PSymbolEntry) calloc(1, sizeof(TSymbolEntry));
   Neu->Tree.Name = strdup(Name);
   Neu->SymWert.Typ = TempInt;
   Neu->SymWert.Contents.IWert = Wert;
   Neu->SymType = Typ;
+  Neu->Flags = Flags;
   Neu->SymSize = -1;
   Neu->RefList = NULL;
   Neu->Relocs = NULL;
@@ -3261,7 +3274,7 @@ void EnterExtSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange)
     return;
   }
 
-  Neu = (PSymbolEntry) malloc(sizeof(TSymbolEntry));
+  Neu = (PSymbolEntry) calloc(1, sizeof(TSymbolEntry));
   Neu->Tree.Name = strdup(Name);
   Neu->SymWert.Typ = TempInt;
   Neu->SymWert.Contents.IWert = Wert;
@@ -3300,7 +3313,7 @@ void EnterRelSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange)
     return;
   }
 
-  Neu = (PSymbolEntry) malloc(sizeof(TSymbolEntry));
+  Neu = (PSymbolEntry) calloc(1, sizeof(TSymbolEntry));
   Neu->Tree.Name = strdup(Name);
   Neu->SymWert.Typ = TempInt;
   Neu->SymWert.Contents.IWert = Wert;
@@ -3339,7 +3352,7 @@ void EnterFloatSymbol(char *Name_O, Double Wert, Boolean MayChange)
     WrXError(1020, Name);
     return;
   }
-  Neu = (PSymbolEntry) malloc(sizeof(TSymbolEntry));
+  Neu = (PSymbolEntry) calloc(1, sizeof(TSymbolEntry));
   Neu->Tree.Name = strdup(Name);
   Neu->SymWert.Typ = TempFloat;
   Neu->SymWert.Contents.FWert = Wert;
@@ -3375,7 +3388,7 @@ void EnterDynStringSymbol(char *Name_O, const tDynString *pValue, Boolean MayCha
     WrXError(1020, Name);
     return;
   }
-  Neu = (PSymbolEntry) malloc(sizeof(TSymbolEntry));
+  Neu = (PSymbolEntry) calloc(1, sizeof(TSymbolEntry));
   Neu->Tree.Name = strdup(Name);
   Neu->SymWert.Contents.String.Contents = (char*)malloc(pValue->Length);
   memcpy(Neu->SymWert.Contents.String.Contents, pValue->Contents, pValue->Length);

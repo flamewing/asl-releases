@@ -1,0 +1,16 @@
+alink.$(TARG_OBJEXTENSION): alink.rsc
+as.$(TARG_OBJEXTENSION): as.rsc
+asminclist.$(TARG_OBJEXTENSION): as.rsc
+asmmac.$(TARG_OBJEXTENSION): as.rsc
+asmpars.$(TARG_OBJEXTENSION): as.rsc
+asmstructs.$(TARG_OBJEXTENSION): as.rsc
+asmsub.$(TARG_OBJEXTENSION): as.rsc
+cmdarg.$(TARG_OBJEXTENSION): cmdarg.rsc
+code3206x.$(TARG_OBJEXTENSION): as.rsc
+das.$(TARG_OBJEXTENSION): das.rsc
+ioerrs.$(TARG_OBJEXTENSION): oerrs.rsc
+p2bin.$(TARG_OBJEXTENSION): p2bin.rsc
+p2hex.$(TARG_OBJEXTENSION): p2hex.rsc
+pbind.$(TARG_OBJEXTENSION): pbind.rsc
+plist.$(TARG_OBJEXTENSION): plist.rsc
+toolutils.$(TARG_OBJEXTENSION): tools.rsc

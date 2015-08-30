@@ -17,9 +17,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.h,v 1.7 2014/11/30 10:09:54 alfred Exp $                     */
+/* $Id: asmpars.h,v 1.8 2015/08/28 17:22:27 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.h,v $
+ * Revision 1.8  2015/08/28 17:22:27  alfred
+ * - add special handling for labels following BSR
+ *
  * Revision 1.7  2014/11/30 10:09:54  alfred
  * - rework to current style
  *
@@ -141,7 +144,9 @@ extern Boolean IdentifySection(char *Name, LongInt *Erg);
 
 extern Boolean ExpandSymbol(char *Name);
 
-extern void EnterIntSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange);
+extern void EnterIntSymbolWithFlags(const char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange, tSymbolFlags Flags);
+
+#define EnterIntSymbol(Name_O, Wert, Typ, MayChange) EnterIntSymbolWithFlags(Name_O, Wert, Typ, MayChange, 0)
 
 extern void EnterExtSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange);
 
@@ -192,7 +197,9 @@ extern Integer GetSymbolType(char *Name);
 
 extern void EvalExpression(const char *pExpr, TempResult *Erg);
 
-extern LargeInt EvalIntExpression(const char *pExpr, IntType Type, Boolean *pResult);
+extern LargeInt EvalIntExpressionWithFlags(const char *pExpr, IntType Type, Boolean *pResult, tSymbolFlags *pFlags);
+
+#define EvalIntExpression(pExpr, Type, pResult) EvalIntExpressionWithFlags(pExpr, Type, pResult, NULL)
 
 extern LargeInt EvalIntDisplacement(char *pExpr, IntType Type, Boolean *pResult);
 

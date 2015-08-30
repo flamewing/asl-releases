@@ -81,6 +81,11 @@ $(UNUMLAUTTARGET): $(UNUMLAUT_OBJECTS)
 !include makedefs.str
 
 #---------------------------------------------------------------------------
+# no make depend, some minimal dependencies to get all built
+
+!include rscdeps
+
+#---------------------------------------------------------------------------
 # supplementary targets
 
 test: $(ALLTARGETS)

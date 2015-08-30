@@ -36,9 +36,12 @@
 /*           2001-12-02 fixed problems with forward refs of shift arguments  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68k.c,v 1.23 2015/08/19 17:04:47 alfred Exp $                     */
+/* $Id: code68k.c,v 1.24 2015/08/28 17:22:27 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code68k.c,v $
+ * Revision 1.24  2015/08/28 17:22:27  alfred
+ * - add special handling for labels following BSR
+ *
  * Revision 1.23  2015/08/19 17:04:47  alfred
  * - correct handling of short BSR for 68K
  *
@@ -3269,10 +3272,11 @@ static void DecodeBcc(Word CondCode)
     Integer HVal16;
     ShortInt HVal8;
     Boolean ValOK, IsBSR = (1 == CondCode);
+    tSymbolFlags Flags;
 
     /* Zieladresse ermitteln, zum Programmzaehler relativieren */
 
-    HVal = EvalIntExpression(ArgStr[1], Int32, &ValOK);
+    HVal = EvalIntExpressionWithFlags(ArgStr[1], Int32, &ValOK, &Flags);
     HVal = HVal - (EProgCounter() + 2);
 
     /* Bei Automatik Groesse festlegen */
@@ -3282,11 +3286,16 @@ static void DecodeBcc(Word CondCode)
       if (IsDisp8(HVal))
       {
         /* BSR with zero displacement cannot be converted to NOP.  Generate a
-           16 bit displacement instead.  Also, to avoid that code length
-           oscillated back and forth over passes, also use a 16 bit displacement
-           for a distance up to 2: */
+           16 bit displacement instead. */
 
-        if ((HVal >= 0) && (HVal <= 2) && IsBSR)
+        if (!HVal && IsBSR)
+          OpSize = 2;
+
+        /* if the jump target is the address right behind the BSR, keep
+           16 bit displacement to avoid oscillating back and forth between
+           8 and 16 bits: */
+
+        else if ((Flags & NextLabelFlag_AfterBSR) && (HVal == 2) && IsBSR)
           OpSize = 2;
         else
           OpSize = 4;
@@ -3360,6 +3369,9 @@ static void DecodeBcc(Word CondCode)
         CheckCPU(CPU68332);
       }
     }
+
+    if ((CodeLen > 0) && IsBSR)
+      AfterBSRAddr = EProgCounter() + CodeLen;
   }
 }
 
