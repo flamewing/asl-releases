@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code97c241.c,v 1.10 2014/12/07 19:14:00 alfred Exp $                  */
+/* $Id: code97c241.c,v 1.11 2015/09/20 10:37:36 alfred Exp $                  */
 /*****************************************************************************
  * $Log: code97c241.c,v $
+ * Revision 1.11  2015/09/20 10:37:36  alfred
+ * - silence some GCC warnings
+ *
  * Revision 1.10  2014/12/07 19:14:00  alfred
  * - silence a couple of Borland C related warnings and errors
  *
@@ -45,6 +48,7 @@
 
 #include <string.h>
 #include <ctype.h>
+#include <assert.h>
 
 #include "nls.h"
 #include "strutil.h"
@@ -1406,6 +1410,7 @@ static void DecodeBField(Word Code)
             case 0: Num1 = EvalIntExpression(ArgStr[3], UInt3, &OK) & 7; break;
             case 1: Num1 = EvalIntExpression(ArgStr[3], Int4, &OK) & 15; break;
             case 2: Num1 = EvalIntExpression(ArgStr[3], Int5, &OK) & 31; break;
+            default: assert(0);
           }
           if (OK)
           {

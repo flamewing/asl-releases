@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeh8_3.c,v 1.11 2014/12/07 19:14:01 alfred Exp $                    */
+/* $Id: codeh8_3.c,v 1.12 2015/09/20 10:37:35 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codeh8_3.c,v $
+ * Revision 1.12  2015/09/20 10:37:35  alfred
+ * - silence some GCC warnings
+ *
  * Revision 1.11  2014/12/07 19:14:01  alfred
  * - silence a couple of Borland C related warnings and errors
  *
@@ -156,7 +159,10 @@ static Boolean DecodeReg(char *Asc, Byte *Erg, ShortInt *Size)
       return True;
     }
     else
+    {
+      *Size = -1;
       return False;
+    }
   }
 
   else if ((l == 2) && (IsNum(Asc[1], Erg)))
@@ -173,7 +179,10 @@ static Boolean DecodeReg(char *Asc, Byte *Erg, ShortInt *Size)
       return True;
     }
     else
+    {
+      *Size = -1;
       return False;
+    }
   }
 
   else if ((l == 3) && (mytoupper(*Asc) == 'E') && (mytoupper(Asc[1]) == 'R') & (IsNum(Asc[2], Erg)))
@@ -182,7 +191,10 @@ static Boolean DecodeReg(char *Asc, Byte *Erg, ShortInt *Size)
     return True;
   }
   else
+  {
+    *Size = -1;
     return False;
+  }
 }
 
 static void CutSize(char *Asc)

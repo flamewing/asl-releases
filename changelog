@@ -1,5 +1,10 @@
-$Id: changelog,v 1.108 2015/08/30 10:44:06 alfred Exp $
+$Id: changelog,v 1.109 2015/09/26 13:30:28 alfred Exp $
 ------------------------------------------------------------------------------
+
+[1.42 Bld 103]
+
+- Bugfix      : On 8008, the assembler accidentally allowed
+                INR, DCR and MOV with invalid register operands.
 
 2015-08-30 [1.42 Bld 102]
 

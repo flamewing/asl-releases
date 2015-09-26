@@ -185,6 +185,7 @@ static void DecodeMOV(Word Index)
   if (ArgCnt != 2) WrError(1110);
   else if (!DecodeReg(ArgStr[1], &DReg)) WrXError(1445, ArgStr[1]);
   else if (!DecodeReg(ArgStr[2], &SReg)) WrXError(1445, ArgStr[2]);
+  else if ((DReg == 7) && (SReg == 7)) WrError(1760); /* MOV M,M not allowed - asame opcode as HLT */
   else
   {
     BAsmCode[0] = 0xc0 | (DReg << 3) | SReg;
@@ -241,13 +242,15 @@ static void DecodeLXI(Word Index)
 
 static void DecodeSingleReg(Word Index)
 {
-  Byte Reg;
+  Byte Reg, Opcode = Lo(Index), Shift = Hi(Index) & 7;
+  Boolean NoAM = (Index & 0x8000) || False;
 
   if (ArgCnt != 1) WrError(1110);
   else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
+  else if (NoAM && ((Reg == 0) || (Reg == 7))) WrXError(1445, ArgStr[1]);
   else
   {
-    BAsmCode[0] = Lo(Index) | (Reg << Hi(Index));
+    BAsmCode[0] = Opcode | (Reg << Shift);
     CodeLen = 1;
   }
 }
@@ -262,17 +265,18 @@ static void AddFixed(char *NName, Byte NCode)
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddFixeds(char *NName, Byte NCode, int Pos)
+static void AddFixeds(char *NName, Byte NCode, int Shift, Byte RegMask)
 {
   char Memo[10], *p;
-  int z;
+  int Reg;
 
   strcpy(Memo, NName); p = strchr(Memo, '*');
-  for (z = 0; z < 8; z++)
-  {
-    *p = RegNames[z];
-    AddFixed(Memo, NCode + (z << Pos));
-  }
+  for (Reg = 0; Reg < 8; Reg++)
+    if ((1 << Reg) & RegMask)
+    {
+      *p = RegNames[Reg];
+      AddFixed(Memo, NCode + (Reg << Shift));
+    }
 }
 
 static void AddImm(char *NName, Byte NCode)
@@ -394,10 +398,14 @@ static void InitFields(void)
     AddInstTable(InstTable, "MOV", 0, DecodeMOV);
   else
   {
-    AddFixeds("L*A", 0xc0, 3); AddFixeds("L*B", 0xc1, 3);
-    AddFixeds("L*C", 0xc2, 3); AddFixeds("L*D", 0xc3, 3);
-    AddFixeds("L*E", 0xc4, 3); AddFixeds("L*H", 0xc5, 3);
-    AddFixeds("L*L", 0xc6, 3); AddFixeds("L*M", 0xc7, 3);
+    AddFixeds("L*A", 0xc0, 3, 0xff);
+    AddFixeds("L*B", 0xc1, 3, 0xff);
+    AddFixeds("L*C", 0xc2, 3, 0xff);
+    AddFixeds("L*D", 0xc3, 3, 0xff);
+    AddFixeds("L*E", 0xc4, 3, 0xff);
+    AddFixeds("L*H", 0xc5, 3, 0xff);
+    AddFixeds("L*L", 0xc6, 3, 0xff);
+    AddFixeds("L*M", 0xc7, 3, 0x7f); /* forbid LMM - would be opcode for HLT */
   }
 
   if (New)
@@ -410,30 +418,30 @@ static void InitFields(void)
 
   if (New)
   {
-    AddInstTable(InstTable, "ADD", 0x80, DecodeSingleReg);
-    AddInstTable(InstTable, "ADC", 0x88, DecodeSingleReg);
-    AddInstTable(InstTable, "SUB", 0x90, DecodeSingleReg);
-    AddInstTable(InstTable, "SBB", 0x98, DecodeSingleReg);
-    AddInstTable(InstTable, "ANA", 0xa0, DecodeSingleReg);
-    AddInstTable(InstTable, "XRA", 0xa8, DecodeSingleReg);
-    AddInstTable(InstTable, "ORA", 0xb0, DecodeSingleReg);
-    AddInstTable(InstTable, "CMP", 0xb8, DecodeSingleReg);
-    AddInstTable(InstTable, "INR", 0x0300, DecodeSingleReg);
-    AddInstTable(InstTable, "DCR", 0x0301, DecodeSingleReg);
+    AddInstTable(InstTable, "ADD", 0x0080, DecodeSingleReg);
+    AddInstTable(InstTable, "ADC", 0x0088, DecodeSingleReg);
+    AddInstTable(InstTable, "SUB", 0x0090, DecodeSingleReg);
+    AddInstTable(InstTable, "SBB", 0x0098, DecodeSingleReg);
+    AddInstTable(InstTable, "ANA", 0x00a0, DecodeSingleReg);
+    AddInstTable(InstTable, "XRA", 0x00a8, DecodeSingleReg);
+    AddInstTable(InstTable, "ORA", 0x00b0, DecodeSingleReg);
+    AddInstTable(InstTable, "CMP", 0x00b8, DecodeSingleReg);
+    AddInstTable(InstTable, "INR", 0x8300, DecodeSingleReg);
+    AddInstTable(InstTable, "DCR", 0x8301, DecodeSingleReg);
   }
   else
   {
-    AddFixeds("AD*", 0x80, 0);
-    AddFixeds("AC*", 0x88, 0);
-    AddFixeds("SU*", 0x90, 0);
-    AddFixeds("SB*", 0x98, 0);
-    AddFixeds("NR*", 0xa0, 0);
-    AddFixeds("ND*", 0xa0, 0);
-    AddFixeds("XR*", 0xa8, 0);
-    AddFixeds("OR*", 0xb0, 0);
-    AddFixeds("CP*", 0xb8, 0);
-    AddFixeds("IN*", 0x00, 3);
-    AddFixeds("DC*", 0x01, 3);
+    AddFixeds("AD*", 0x80, 0, 0xff);
+    AddFixeds("AC*", 0x88, 0, 0xff);
+    AddFixeds("SU*", 0x90, 0, 0xff);
+    AddFixeds("SB*", 0x98, 0, 0xff);
+    AddFixeds("NR*", 0xa0, 0, 0xff);
+    AddFixeds("ND*", 0xa0, 0, 0xff);
+    AddFixeds("XR*", 0xa8, 0, 0xff);
+    AddFixeds("OR*", 0xb0, 0, 0xff);
+    AddFixeds("CP*", 0xb8, 0, 0xff);
+    AddFixeds("IN*", 0x00, 3, 0x7e); /* no INA/INM */
+    AddFixeds("DC*", 0x01, 3, 0x7e); /* no DCA/DCM */
   }
 
   AddImm ("ADI", 0x04);

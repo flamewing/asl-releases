@@ -216,23 +216,19 @@
 	cpm
 	cpi	55h
 
-	ina
 	inb
 	inc
 	ind
 	ine
 	inh
 	inl
-	inm
 
-	dca
 	dcb
 	dcc
 	dcd
 	dce
 	dch
 	dcl
-	dcm
 
 ;-----------------------------------
 ; Rotate Group
@@ -465,23 +461,19 @@
 	cmp	m
 	cpi	55h
 
-	inr	a
 	inr	b
 	inr	c
 	inr	d
 	inr	e
 	inr	h
 	inr	l
-	inr	m
 
-	dcr	a
 	dcr	b
 	dcr	c
 	dcr	d
 	dcr	e
 	dcr	h
 	dcr	l
-	dcr	m
 
 ;-----------------------------------
 ; Rotate Group
