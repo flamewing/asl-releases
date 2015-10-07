@@ -1007,13 +1007,20 @@ BranchTarget    bra     BranchTarget                ; $20,2
                 leas    d,s                         ; 32,2+
                 leau    1,u                         ; 33,2+
                 pshs    a,b                         ; $34,2
+		pshs	d                           ; alternate
                 pshs    all                         ; alternate
                 pshs    #123                        ; alternate
                 puls    x                           ; $35,2
                 puls    all                         ; alternate
                 puls    #$ff                        ; alternate
                 pshu    ccr                         ; $36,2
+		pulu	cc                          ; alternate
                 pulu    dpr                         ; $37,2
+		pulu	dp                          ; alternate
+		pulu	y                           ; $37,2
+		puls	s/u                         ; $35,2
+		puls	u                           ; alternate
+		pshs	pc                          ; $34,2
                 rts                                 ; $39,1
                 abx                                 ; $3A,1
                 rti                                 ; $3B,1

@@ -1,5 +1,11 @@
-$Id: changelog,v 1.109 2015/09/26 13:30:28 alfred Exp $
+$Id: changelog,v 1.111 2015/10/06 16:42:23 alfred Exp $
 ------------------------------------------------------------------------------
+
+[1.42 Bld 104]
+
+- Bugfix      : Correct SHARED symbol output in C mode
+
+- Bugfix      : Correct coding of CC on 6809 for push/pull
 
 [1.42 Bld 103]
 

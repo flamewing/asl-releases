@@ -13,9 +13,12 @@
 /*           13. 1.2001 fix D register access                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6809.c,v 1.14 2014/11/16 13:15:07 alfred Exp $                    */
+/* $Id: code6809.c,v 1.15 2015/10/05 16:20:07 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6809.c,v $
+ * Revision 1.15  2015/10/05 16:20:07  alfred
+ * - correct CC coding for 6809
+ *
  * Revision 1.14  2014/11/16 13:15:07  alfred
  * - remove some superfluous semicolons
  *
@@ -133,7 +136,7 @@ static char StackRegNames[StackRegCnt][4] =
 };
 static Byte StackRegMasks[StackRegCnt] =
 {
-  0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x10, 0x08, 0x40, 0x06
+  0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x01, 0x08, 0x40, 0x06
 };
 
 static char *FlagChars = "CVZNIHFE";
@@ -1175,7 +1178,7 @@ static void DecodeStack(Word Index)
     } 
   }
   else
-    WrError(1980);
+    WrXError(1980, ArgStr[z2 - 1]);
 }
 
 static void DecodeBITMD_LDMD(Word Code)

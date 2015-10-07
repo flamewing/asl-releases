@@ -24,9 +24,15 @@
 /*                       to now                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmallg.c,v 1.22 2014/12/14 17:58:46 alfred Exp $                     */
+/* $Id: asmallg.c,v 1.24 2015/10/06 16:42:23 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmallg.c,v $
+ * Revision 1.24  2015/10/06 16:42:23  alfred
+ * - repair SHARED output in C mode
+ *
+ * Revision 1.23  2015/10/05 21:41:27  alfred
+ * - correct C shared symbol output
+ *
  * Revision 1.22  2014/12/14 17:58:46  alfred
  * - remove static variables in strutil.c
  *
@@ -523,12 +529,13 @@ static void CodeSHARED(Word Index)
        switch (ShareMode)
        {
          case 1:
-           HexString(s, sizeof(s), HVal, 0);
-           strmaxprep(s, "$", sizeof(s));
+           s[0] = '$';
+           HexString(s + 1, sizeof(s) - 1, HVal, 0);
            break;
          case 2:
-           HexString(s, sizeof(s), HVal, 0);
-           strmaxprep(s, "", sizeof(s));
+           s[0] = '0';
+           s[1] = 'x';
+           HexString(s + 2, sizeof(s) - 2, HVal, 0);
            break;
          case 3:
            IntLine(s, sizeof(s), HVal);
