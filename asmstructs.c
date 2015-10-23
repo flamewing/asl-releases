@@ -5,9 +5,18 @@
 /* structure handling                                                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmstructs.c,v 1.6 2014/12/07 19:13:59 alfred Exp $                 */
+/* $Id: asmstructs.c,v 1.9 2015/10/23 08:43:33 alfred Exp $                 */
 /*****************************************************************************
  * $Log: asmstructs.c,v $
+ * Revision 1.9  2015/10/23 08:43:33  alfred
+ * - beef up & fix structure handling
+ *
+ * Revision 1.8  2015/10/18 20:08:52  alfred
+ * - when expanding structure, also regard sub-structures
+ *
+ * Revision 1.7  2015/10/18 19:02:16  alfred
+ * - first reork/fix of nested structure handling
+ *
  * Revision 1.6  2014/12/07 19:13:59  alfred
  * - silence a couple of Borland C related warnings and errors
  *
@@ -71,7 +80,8 @@ typedef struct sStructNode
 
 /*****************************************************************************/
 
-PStructStack StructStack;        /* momentan offene Strukturen */
+PStructStack StructStack,        /* momentan offene Strukturen */
+             pInnermostNamedStruct;
 int StructSaveSeg;               /* gesichertes Segment waehrend Strukturdef.*/
 PStructNode StructRoot = NULL;
 
@@ -104,7 +114,7 @@ void DestroyStructRec(PStructRec StructRec)
   free(StructRec);
 }
 
-void AddStructElem(PStructRec StructRec, char *Name, LongInt Offset)
+void AddStructElem(PStructRec StructRec, char *Name, Boolean IsStruct, LongInt Offset)
 {
   PStructElem Neu, Run;
 
@@ -114,6 +124,7 @@ void AddStructElem(PStructRec StructRec, char *Name, LongInt Offset)
     Neu->Name = strdup(Name);
     if (!CaseSensitive)
       NLS_UpString(Neu->Name);
+    Neu->IsStruct = IsStruct;
     Neu->Offset = Offset;
     Neu->Next = NULL;
     if (!StructRec->Elems)
@@ -125,6 +136,36 @@ void AddStructElem(PStructRec StructRec, char *Name, LongInt Offset)
     }
   }
   BumpStructLength(StructRec, Offset);
+}
+
+void BuildStructName(char *pResult, unsigned ResultLen, const char *pName)
+{
+  PStructStack ZStruct;
+  String tmp2;
+
+  strmaxcpy(pResult, pName, ResultLen);
+  for (ZStruct = StructStack; ZStruct; ZStruct = ZStruct->Next)
+    if (ZStruct->StructRec->DoExt && ZStruct->Name[0])
+    {
+      sprintf(tmp2, "%s%c", ZStruct->Name, ZStruct->StructRec->ExtChar);
+      strmaxprep(pResult, tmp2, ResultLen);
+    }
+}
+
+void AddStructSymbol(const char *pName, LargeWord Value)
+{
+  PStructStack ZStruct;
+  String tmp;
+
+  /* what we get is offset/length in current structure.  Add to
+     it all offsets in parent structures, i.e. leave out SaveCurrPC
+     of bottom of stack which contains saved PC of non-struct segment: */
+
+  BuildStructName(tmp, 255, pName);
+  for (ZStruct = StructStack; ZStruct->Next; ZStruct = ZStruct->Next)
+    Value += ZStruct->SaveCurrPC;
+
+  EnterIntSymbol(tmp, Value, SegNone, False);
 }
 
 void BumpStructLength(PStructRec StructRec, LongInt Length)
@@ -194,12 +235,12 @@ static PStructRec FoundStruct_FNode(LongInt Handle, char *Name)
   return Lauf ? Lauf->StructRec : NULL;
 }
 
-Boolean FoundStruct(PStructRec *Erg)
+Boolean FoundStruct(PStructRec *Erg, const char *pName)
 {
   PSaveSection Lauf;
   String Part;
 
-  strmaxcpy(Part, LOpPart, 255);
+  strmaxcpy(Part, pName, 255);
   if (!CaseSensitive)
     NLS_UpString(Part);
 
@@ -295,26 +336,39 @@ void ClearStructList(void)
   DestroyTree(&TreeRoot, ClearNode, NULL);
 }
 
-void ExpandStruct(PStructRec StructRec)
+static void ExpandStruct_One(PStructRec StructRec, const char *pPrefix, LargeWord Base)
 {
   PStructElem StructElem;
   String CompName;
   int llen;
   char *dptr;
 
+  strmaxcpy(CompName, pPrefix, 254);
+  llen = strlen(CompName);
+  dptr = CompName + llen;
+  *dptr++ = StructRec->ExtChar; llen++;
+  llen = 254 - llen;
+  for (StructElem = StructRec->Elems; StructElem; StructElem = StructElem->Next)
+  {
+    strmaxcpy(dptr, StructElem->Name, llen);
+    HandleLabel(CompName, Base + StructElem->Offset);
+    if (StructElem->IsStruct)
+    {
+      TStructRec *pSubStruct;
+      Boolean Found = FoundStruct(&pSubStruct, StructElem->Name);
+
+      if (Found)
+        ExpandStruct_One(pSubStruct, CompName, Base + StructElem->Offset);
+    }
+  }
+}
+
+void ExpandStruct(PStructRec StructRec)
+{
   if (!LabPart[0]) WrError(2040);
   else
   {
-    strmaxcpy(CompName, LabPart, 254);
-    llen = strlen(CompName);
-    dptr = CompName + llen;
-    *dptr++ = StructRec->ExtChar; llen++;
-    llen = 254 - llen;
-    for (StructElem = StructRec->Elems; StructElem;  StructElem = StructElem->Next)
-    {
-      strmaxcpy(dptr, StructElem->Name, llen);
-      HandleLabel(CompName, EProgCounter() + StructElem->Offset);
-    }
+    ExpandStruct_One(StructRec, LabPart, EProgCounter());
     CodeLen = StructRec->TotLen;
     BookKeeping();
     DontPrint = True;

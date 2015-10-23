@@ -7,9 +7,18 @@
 /* functions for structure handling                                          */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmstructs.h,v 1.1 2003/11/06 02:49:19 alfred Exp $                          */
+/* $Id: asmstructs.h,v 1.4 2015/10/23 08:43:33 alfred Exp $                          */
 /*****************************************************************************
  * $Log: asmstructs.h,v $
+ * Revision 1.4  2015/10/23 08:43:33  alfred
+ * - beef up & fix structure handling
+ *
+ * Revision 1.3  2015/10/18 20:08:52  alfred
+ * - when expanding structure, also regard sub-structures
+ *
+ * Revision 1.2  2015/10/18 19:02:16  alfred
+ * - first reork/fix of nested structure handling
+ *
  * Revision 1.1  2003/11/06 02:49:19  alfred
  * - recreated
  *
@@ -31,44 +40,49 @@
  * Revision 1.9  2002/11/10 16:27:32  alfred
  *****************************************************************************/
    
-typedef struct _TStructElem
-        {
-          struct _TStructElem *Next;
-          char *Name;
-          LongInt Offset;
-        } TStructElem, *PStructElem;
+typedef struct sStructElem
+{
+  struct sStructElem *Next;
+  char *Name;
+  Boolean IsStruct;
+  LongInt Offset;
+} TStructElem, *PStructElem;
 
-typedef struct _TStructRec
-        {
-          LongInt TotLen;
-          PStructElem Elems;
-          char ExtChar;
-          Boolean DoExt;
-          Boolean IsUnion;
-        } TStructRec, *PStructRec;
+typedef struct sStructRec
+{
+  LongInt TotLen;
+  PStructElem Elems;
+  char ExtChar;
+  Boolean DoExt;
+  Boolean IsUnion;
+} TStructRec, *PStructRec;
 
-typedef struct _TStructStack
-         {
-          struct _TStructStack *Next;
-          char *Name;
-          LargeWord CurrPC;
-          PStructRec StructRec;
-         } TStructStack, *PStructStack;
+typedef struct sStructStack
+{
+  struct sStructStack *Next;
+  char *Name;
+  LargeWord SaveCurrPC, SaveOffsetToInnermost;
+  PStructRec StructRec;
+} TStructStack, *PStructStack;
 
-extern PStructStack StructStack;
+extern PStructStack StructStack, pInnermostNamedStruct;
 extern int StructSaveSeg;
 
 extern PStructRec CreateStructRec(void);
 
 extern void DestroyStructRec(PStructRec StructRec);
 
-extern void AddStructElem(PStructRec StructRec, char *Name, LongInt Offset);
+extern void BuildStructName(char *pResult, unsigned ResultLen, const char *pName);
+
+extern void AddStructElem(PStructRec StructRec, char *Name, Boolean IsStruct, LongInt Offset);
+
+extern void AddStructSymbol(const char *pName, LargeWord Value);
 
 extern void BumpStructLength(PStructRec StructRec, LongInt Length);
 
 extern void AddStruct(PStructRec StructRec, char *Name, Boolean Protest);
 
-extern Boolean FoundStruct(PStructRec *Erg);
+extern Boolean FoundStruct(PStructRec *Erg, const char *pName);
 
 extern void ResetStructDefines(void);
 

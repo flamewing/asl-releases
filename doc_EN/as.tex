@@ -65,7 +65,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition May 2015}
+{\large Edition October 2015}
 \end{raggedright}
 
 \clearpage
@@ -5263,8 +5263,8 @@ builtin functions!
 %%---------------------------------------------------------------------------
 
 \section{Structures}
-\ttindex{STRUCT}\ttindex{ENDSTRUCT}\ttindex{UNION}
-\ttindex{STRUC}\ttindex{ENDS}
+\ttindex{STRUCT}\ttindex{ENDSTRUCT}\ttindex{UNION}\ttindex{ENDUNION}
+\ttindex{STRUC}\ttindex{ENDSTRUC}\ttindex{ENDS}
 \ttindex{DOTTEDSTRUCTS}
 
 {\em valid for: all processors}
@@ -5276,21 +5276,24 @@ statements.  These statements shall be explained in the following section.
 
 \subsection{Definition}
 
-The definiton of a structure is begun with the statement \tty{STRUCT} and
-ends with \tty{ENDSTRUCT} (lazy people may also write {\tt STRUC} resp.
-{\tt ENDS} instead).  A label preceding these instructions is taken as
-the name of the structure to be defined; it is optional at the end of the
-definition and may be used to redefine the length symbol's name (see
-below).  The remaining procedure is simple: Together with \tty{STRUCT},
-the cuurent program counter is saved and reset to zero.  All labels
-defined between \tty{STRUCT} and \tty{ENDSTRUCT} therefore are the offsets
-of the structure's data fields.  Reserving space is done via the same
-instructions that are also otherwise used for reserving space, like e.g.
-\tty{DS.x} for Motorola CPUs or \tty{DB} \& co. for Intel-style
+The definiton of a structure is begun with the statement
+\tty{STRUCT} and ends with \tty{ENDSTRUCT} (lazy people may also
+write {\tt STRUC} resp.  {\tt ENDSTRUC} or {\tt ENDS} instead). 
+A optional label preceding these instructions is taken as the
+name of the structure to be defined; it is optional at the end of
+the definition and may be used to redefine the length symbol's
+name (see below).  The remaining procedure is simple: Together
+with \tty{STRUCT}, the cuurent program counter is saved and reset
+to zero.  All labels defined between \tty{STRUCT} and
+\tty{ENDSTRUCT} therefore are the offsets of the structure's data
+fields.  Reserving space is done via the same instructions that
+are also otherwise used for reserving space, like e.g. 
+\tty{DS.x} for Motorola CPUs or \tty{DB} \& co.  for Intel-style
 processors.  The rules for rounding up lengths to assure certain
-alignments also apply here - if one wants to define 'packed' structures, a
-preceding {\tt PADDING OFF} may be necessary.  Vice versa, alignments may
-be forced with {\tt ALIGN} or similar instructions.
+alignments also apply here - if one wants to define 'packed'
+structures, a preceding {\tt PADDING OFF} may be necessary.  Vice
+versa, alignments may be forced with {\tt ALIGN} or similar
+instructions.
 
 Since such a definition only represents a sort of 'prototype', only
 instructions that reserve memory may be used, no instructions that dispose
@@ -5368,6 +5371,19 @@ data    Rec
 TreeRec endstruct
 \end{verbatim}
 
+It is also allowed to define one structure inside of another
+structure:
+\begin{verbatim}
+TreeRec struct  
+left    dd         ?
+right   dd         ?
+TreeData struct
+name      db         32 dup(?)
+id        dw         ?
+TreeData endstruct
+TreeRec endstruct
+\end{verbatim}
+
 \subsection{Unions}
 
 A union is a special form of a structure whose elements are not laid out
@@ -5377,6 +5393,27 @@ defnition basically does nothing more than to assign the value of zero to
 a couple of symbols.  It may however be useful to clarify the overlap in a
 program and therefore to make it more 'readable'.  The size of a union is
 the maximum of all elements' lengths.
+
+\subsection{Nameless Structures}
+
+The name of a structure or union is optional if it is part of
+another (named) structure or union.  Elements of this structure
+will then become part of of the 'next higher' named structure.
+For example, 
+\begin{verbatim}
+TreeRec struct  
+left    dd         ?
+right   dd         ?
+        struct
+name      db         32 dup(?)
+id        dw         ?
+        endstruct
+TreeRec endstruct
+\end{verbatim}   
+generates the symbols {\tt TREEREC\_NAME} and {\em TREEREC\_ID}.
+
+Futhermore, no symbol holding its length is generated for an
+unnamed structure or union.
 
 \subsection{Structures and Sections}
 
@@ -10274,6 +10311,23 @@ described by:
                {Empty strings must not be used in the argument list for
                 this statement}
                {none}
+\errentry{2060}{unimplemented instruction}
+               {error}
+               {The used machinen instruction is principally known
+                to the assembler, however, it is currently not
+                implemented, du to lack of documentation from the
+                processor manufacturer.}
+               {the instruction that was used}
+\errentry{2070}{unnamed structure is not part of another structure}
+               {error}
+               {An unnamed structure or union always must be part
+                of another structure or union.}
+               {none}
+\errentry{2080}{STRUCT ended by ENDUNION}
+               {error}
+               {ENDUNION may only be used to finalize the definition
+                of a union and not of a structure.}
+               {name of the structure (if available)}
 \errentry{10001}{error in opening file}
                {fatal}
                {An error was detected while trying to open a file for input.}

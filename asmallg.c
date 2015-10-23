@@ -24,9 +24,18 @@
 /*                       to now                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmallg.c,v 1.24 2015/10/06 16:42:23 alfred Exp $                     */
+/* $Id: asmallg.c,v 1.27 2015/10/23 08:43:33 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmallg.c,v $
+ * Revision 1.27  2015/10/23 08:43:33  alfred
+ * - beef up & fix structure handling
+ *
+ * Revision 1.26  2015/10/20 17:31:25  alfred
+ * - put all pseudo instructions into table for init
+ *
+ * Revision 1.25  2015/10/18 19:02:16  alfred
+ * - first reork/fix of nested structure handling
+ *
  * Revision 1.24  2015/10/06 16:42:23  alfred
  * - repair SHARED output in C mode
  *
@@ -1484,87 +1493,119 @@ static PForwardSymbol CodePPSyms_SearchSym(PForwardSymbol Root, char *Comp)
 }
 
 
-static void CodeSTRUCT(Word Index)
+static void CodeSTRUCT(Word IsUnion)
 {
   PStructStack NStruct;
   int z;
   Boolean OK, DoExt;
   char ExtChar;
-  UNUSED(Index);
 
   if (ArgCnt > 1)
+  {
     WrError(1110);
-  else if (!ChkSymbName(LabPart))
-    WrXError(1020, LabPart);
+    return;
+  }
+
+  /* unnamed struct/union only allowed if embedded into at least one named struct/union */
+
+  if (!*LabPart)
+  {
+    if (!pInnermostNamedStruct)
+    {
+      WrError(2070);
+      return;
+    }
+  }
   else
   {
+    if (!ChkSymbName(LabPart))
+    {
+      WrXError(1020, LabPart);
+      return;
+    }
     if (!CaseSensitive)
       NLS_UpString(LabPart);
+  }
 
-    if (StructStack)
-      StructStack->CurrPC = ProgCounter();
-    NStruct = (PStructStack) malloc(sizeof(TStructStack));
-    NStruct->Name = strdup(LabPart);
-    NStruct->CurrPC = 0;
-    DoExt = True;
-    ExtChar = DottedStructs ? '.' : '_';
-    NStruct->Next = StructStack;
-    OK = True;
-    for (z = 1; z <= ArgCnt; z++)
-      if (OK)
-      {
-        if (!strcasecmp(ArgStr[z], "EXTNAMES"))
-          DoExt = True;
-        else if (!strcasecmp(ArgStr[z], "NOEXTNAMES"))
-          DoExt = False;
-        else if (!strcasecmp(ArgStr[z], "DOTS"))
-          ExtChar = '.';
-        else if (!strcasecmp(ArgStr[z], "NODOTS"))
-          ExtChar = '_';
-        else
-        {
-          WrXError(1554, ArgStr[z]);
-          OK = False;
-        }
-      }
+  /* If named and embedded into another struct, add as element to innermost named parent struct.
+    Add up all offsets of unnamed structs in between. */
+
+  if (StructStack && (*LabPart))
+  {
+    PStructStack pRun;
+    LargeWord Offset = ProgCounter();
+
+    for (pRun = StructStack; pRun && pRun != pInnermostNamedStruct; pRun = pRun->Next)
+      Offset += pRun->SaveCurrPC;
+    AddStructElem(pInnermostNamedStruct->StructRec, LabPart, True, Offset);
+    AddStructSymbol(LabPart, ProgCounter());
+  }
+
+  NStruct = (PStructStack) malloc(sizeof(TStructStack));
+  NStruct->Name = strdup(LabPart);
+  NStruct->SaveCurrPC = ProgCounter();
+  DoExt = True;
+  ExtChar = DottedStructs ? '.' : '_';
+  NStruct->Next = StructStack;
+  OK = True;
+  for (z = 1; z <= ArgCnt; z++)
     if (OK)
     {
-      NStruct->StructRec = CreateStructRec();
-      NStruct->StructRec->ExtChar = ExtChar;
-      NStruct->StructRec->DoExt = DoExt;
-      NStruct->StructRec->IsUnion = Memo("UNION");
-      StructStack = NStruct;
-      if (ActPC != StructSeg)
-        StructSaveSeg = ActPC;
-      ActPC = StructSeg;
-      PCs[ActPC] = 0;
-      Phases[ActPC] = 0;
-      Grans[ActPC] = Grans[SegCode];
-      ListGrans[ActPC] = ListGrans[SegCode];
-      ClearChunk(SegChunks + StructSeg);
-      CodeLen = 0;
-      DontPrint = True;
+      if (!strcasecmp(ArgStr[z], "EXTNAMES"))
+        DoExt = True;
+      else if (!strcasecmp(ArgStr[z], "NOEXTNAMES"))
+        DoExt = False;
+      else if (!strcasecmp(ArgStr[z], "DOTS"))
+        ExtChar = '.';
+      else if (!strcasecmp(ArgStr[z], "NODOTS"))
+        ExtChar = '_';
+      else
+      {
+        WrXError(1554, ArgStr[z]);
+        OK = False;
+      }
     }
-    else
-    {
-      free(NStruct->Name);
-      free(NStruct);
-    }
+  if (OK)
+  {
+    NStruct->StructRec = CreateStructRec();
+    NStruct->StructRec->ExtChar = ExtChar;
+    NStruct->StructRec->DoExt = DoExt;
+    NStruct->StructRec->IsUnion = IsUnion;
+    StructStack = NStruct;
+    if (ActPC != StructSeg)
+      StructSaveSeg = ActPC;
+    if (NStruct->Name[0])
+      pInnermostNamedStruct = NStruct;
+    ActPC = StructSeg;
+    PCs[ActPC] = 0;
+    Phases[ActPC] = 0;
+    Grans[ActPC] = Grans[SegCode];
+    ListGrans[ActPC] = ListGrans[SegCode];
+    ClearChunk(SegChunks + StructSeg);
+    CodeLen = 0;
+    DontPrint = True;
+  }
+  else
+  {
+    free(NStruct->Name);
+    free(NStruct);
   }
 }
 
-static void CodeENDSTRUCT(Word Index)
+static void CodeENDSTRUCT(Word IsUnion)
 {
   Boolean OK;
   PStructStack OStruct;
   TempResult t;
   String tmp;
-  UNUSED(Index);
 
   if (ArgCnt > 1) WrError(1110);
   else if (!StructStack) WrError(1550);
   else
   {
+    if (IsUnion && !StructStack->StructRec->IsUnion)
+      WrXError(2080, StructStack->Name);
+
     if (*LabPart == '\0') OK = True;
     else
     {
@@ -1575,27 +1616,70 @@ static void CodeENDSTRUCT(Word Index)
     }
     if (OK)
     {
+      LargeWord TotLen;
+
+      /* unchain current struct from stack */
+
       OStruct = StructStack;
       StructStack = OStruct->Next;
-      if (ArgCnt == 0)
-        sprintf(tmp, "%s%clen", OStruct->Name, OStruct->StructRec->ExtChar);
-      else
-        strmaxcpy(tmp, ArgStr[1], 255);
+
+      /* find new innermost named struct */
+
+      for (pInnermostNamedStruct = StructStack;
+           pInnermostNamedStruct;
+           pInnermostNamedStruct = pInnermostNamedStruct->Next)
+      {
+        if (pInnermostNamedStruct->Name[0])
+          break;
+      }
+
       BumpStructLength(OStruct->StructRec, ProgCounter());
-      EnterIntSymbol(tmp, OStruct->StructRec->TotLen, SegNone, False);
+      TotLen = OStruct->StructRec->TotLen;
+
+      /* add symbol for struct length if not nameless */
+
+      if (ArgCnt == 0)
+      {
+        if (OStruct->Name[0])
+        {
+          String tmp2;
+          sprintf(tmp2, "%s%clen", OStruct->Name, OStruct->StructRec->ExtChar);
+          BuildStructName(tmp, 255, tmp2);
+          EnterIntSymbol(tmp, TotLen, SegNone, False);
+        }
+      }
+      else
+        EnterIntSymbol(ArgStr[1], TotLen, SegNone, False);
+
       t.Typ = TempInt;
-      t.Contents.Int = OStruct->StructRec->TotLen;
+      t.Contents.Int = TotLen;
       SetListLineVal(&t);
 
-      AddStruct(OStruct->StructRec, OStruct->Name, True);
+      /* If named, store completed structure.
+         Otherwise, discard temporary struct. */
+
+      if (OStruct->Name[0])
+        AddStruct(OStruct->StructRec, OStruct->Name, True);
+
+      /* set PC back to outer's struct value, plus size of
+         just completed struct, or non-struct value: */
+
+      PCs[ActPC] = OStruct->SaveCurrPC;
+      if (!StructStack)
+      {
+        ActPC = StructSaveSeg;
+        CodeLen = 0;
+      }
+      else
+      {
+        CodeLen = TotLen;
+      }
+
+      /* free struct stack elements no longer needed */
 
       free(OStruct->Name);
       free(OStruct);
-      if (!StructStack)
-        ActPC = StructSaveSeg;
-      else PCs[ActPC] += StructStack->CurrPC;
       ClearChunk(SegChunks + StructSeg);
-      CodeLen = 0;
       DontPrint = True;
     }
   }
@@ -1766,52 +1850,62 @@ typedef struct
 {
   char *Name;
   InstProc Proc;
+  Word Index;
 } PseudoOrder;
 static const PseudoOrder Pseudos[] =
 {
-  {"ALIGN",      CodeALIGN     },
-  {"ASEG",       CodeSEGTYPE   },
-  {"ASSUME",     CodeASSUME    },
-  {"BINCLUDE",   CodeBINCLUDE  },
-  {"CHARSET",    CodeCHARSET   },
-  {"CODEPAGE",   CodeCODEPAGE  },
-  {"CPU",        CodeCPU       },
-  {"DEPHASE",    CodeDEPHASE   },
-  {"END",        CodeEND       },
-  {"ENDS",       CodeENDSTRUCT },
-  {"ENDSECTION", CodeENDSECTION},
-  {"ENDSTRUCT",  CodeENDSTRUCT },
-  {"ENUM",       CodeENUM      },
-  {"ERROR",      CodeERROR     },
-  {"EXPORT_SYM", CodeEXPORT    },
-  {"EXTERN_SYM", CodeEXTERN    },
-  {"FATAL",      CodeFATAL     },
-  {"FUNCTION",   CodeFUNCTION  },
-  {"LABEL",      CodeLABEL     },
-  {"LISTING",    CodeLISTING   },
-  {"MESSAGE",    CodeMESSAGE   },
-  {"NEWPAGE",    CodeNEWPAGE   },
-  {"NESTMAX",    CodeNESTMAX   },
-  {"ORG",        CodeORG       },
-  {"PAGE",       CodePAGE      },
-  {"PHASE",      CodePHASE     },
-  {"POPV",       CodePOPV      },
-  {"PRSET",      CodePRSET     },
-  {"PUSHV",      CodePUSHV     },
-  {"RADIX",      CodeRADIX     },
-  {"READ",       CodeREAD      },
-  {"RESTORE",    CodeRESTORE   },
-  {"RORG",       CodeRORG      },
-  {"RSEG",       CodeSEGTYPE   },
-  {"SAVE",       CodeSAVE      },
-  {"SECTION",    CodeSECTION   },
-  {"SEGMENT",    CodeSEGMENT   },
-  {"SHARED",     CodeSHARED    },
-  {"STRUC",      CodeSTRUCT    },
-  {"STRUCT",     CodeSTRUCT    },
-  {"UNION",      CodeSTRUCT    },
-  {"WARNING",    CodeWARNING   },
-  {""       ,    NULL          }
+  {"ALIGN",      CodeALIGN      , 0 },
+  {"ASEG",       CodeSEGTYPE    , 0 },
+  {"ASSUME",     CodeASSUME     , 0 },
+  {"BINCLUDE",   CodeBINCLUDE   , 0 },
+  {"CHARSET",    CodeCHARSET    , 0 },
+  {"CODEPAGE",   CodeCODEPAGE   , 0 },
+  {"CPU",        CodeCPU        , 0 },
+  {"DEPHASE",    CodeDEPHASE    , 0 },
+  {"END",        CodeEND        , 0 },
+  {"ENDS",       CodeENDSTRUCT  , 0 },
+  {"ENDSECTION", CodeENDSECTION , 0 },
+  {"ENDSTRUC",   CodeENDSTRUCT  , 0 },
+  {"ENDSTRUCT",  CodeENDSTRUCT  , 0 },
+  {"ENDUNION",   CodeENDSTRUCT  , 1 },
+  {"ENUM",       CodeENUM       , 0 },
+  {"EQU",        CodeSETEQU     , 0 },
+  {"ERROR",      CodeERROR      , 0 },
+  {"EXPORT_SYM", CodeEXPORT     , 0 },
+  {"EXTERN_SYM", CodeEXTERN     , 0 },
+  {"FATAL",      CodeFATAL      , 0 },
+  {"FUNCTION",   CodeFUNCTION   , 0 },
+  {"LABEL",      CodeLABEL      , 0 },
+  {"LISTING",    CodeLISTING    , 0 },
+  {"MESSAGE",    CodeMESSAGE    , 0 },
+  {"NEWPAGE",    CodeNEWPAGE    , 0 },
+  {"NESTMAX",    CodeNESTMAX    , 0 },
+  {"ORG",        CodeORG        , 0 },
+  {"OUTRADIX",   CodeRADIX      , 1 },
+  {"PAGE",       CodePAGE       , 0 },
+  {"PHASE",      CodePHASE      , 0 },
+  {"POPV",       CodePOPV       , 0 },
+  {"PRSET",      CodePRSET      , 0 },
+  {"PRTINIT",    CodeString     , 0 },
+  {"PRTEXIT",    CodeString     , 1 },
+  {"TITLE",      CodeString     , 2 },
+  {"PUSHV",      CodePUSHV      , 0 },
+  {"RADIX",      CodeRADIX      , 0 },
+  {"READ",       CodeREAD       , 0 },
+  {"RESTORE",    CodeRESTORE    , 0 },
+  {"RORG",       CodeRORG       , 0 },
+  {"RSEG",       CodeSEGTYPE    , 0 },
+  {"SAVE",       CodeSAVE       , 0 },
+  {"SECTION",    CodeSECTION    , 0 },
+  {"SEGMENT",    CodeSEGMENT    , 0 },
+  {"SHARED",     CodeSHARED     , 0 },
+  {"STRUC",      CodeSTRUCT     , 0 },
+  {"STRUCT",     CodeSTRUCT     , 0 },
+  {"UNION",      CodeSTRUCT     , 1 },
+  {"WARNING",    CodeWARNING    , 0 },
+  {"=",          CodeSETEQU     , 0 },
+  {":=",         CodeSETEQU     , 1 },
+  {""       ,    NULL           , 0 }
 };
 
 Boolean CodeGlobalPseudo(void)
@@ -1878,14 +1972,7 @@ void codeallg_init(void)
 
   PseudoTable = CreateInstTable(201);
   for (POrder = Pseudos; POrder->Proc; POrder++)
-    AddInstTable(PseudoTable, POrder->Name, 0, POrder->Proc);
-  AddInstTable(PseudoTable, "OUTRADIX", 1, CodeRADIX);
-  AddInstTable(PseudoTable, "EQU", False, CodeSETEQU);
-  AddInstTable(PseudoTable, "=", False, CodeSETEQU);
-  AddInstTable(PseudoTable, ":=", True, CodeSETEQU);
-  AddInstTable(PseudoTable, "PRTINIT", 0, CodeString);
-  AddInstTable(PseudoTable, "PRTEXIT", 1, CodeString);
-  AddInstTable(PseudoTable, "TITLE", 2, CodeString);
+    AddInstTable(PseudoTable, POrder->Name, POrder->Index, POrder->Proc);
   ONOFFTable = CreateInstTable(47);
   AddONOFF("MACEXP", &LstMacroEx, LstMacroExName, True);
   AddONOFF("RELAXED", &RelaxedMode, RelaxedName, True);

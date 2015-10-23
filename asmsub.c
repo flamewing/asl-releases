@@ -26,9 +26,12 @@
 /*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.29 2015/08/05 18:28:06 alfred Exp $                      */
+/* $Id: asmsub.c,v 1.30 2015/10/23 08:43:33 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmsub.c,v $
+ * Revision 1.30  2015/10/23 08:43:33  alfred
+ * - beef up & fix structure handling
+ *
  * Revision 1.29  2015/08/05 18:28:06  alfred
  * - correct initial construction of ALLARGS, compute ALLARGS/NUMARGS only if needed
  *
@@ -1390,6 +1393,8 @@ static void WrErrorNum(Word Num)
     case 2040: msgno = Num_ErrMsgStructNameMissing; break;
     case 2050: msgno = Num_ErrMsgEmptyArgument; break;
     case 2060: msgno = Num_ErrMsgUnimplemented; break;
+    case 2070: msgno = Num_ErrMsgFreestandingUnnamedStruct; break;
+    case 2080: msgno = Num_ErrMsgSTRUCTEndedByENDUNION; break;
     case 10001: msgno = Num_ErrMsgOpeningFile; break;
     case 10002: msgno = Num_ErrMsgListWrError; break;
     case 10003: msgno = Num_ErrMsgFileReadError; break;

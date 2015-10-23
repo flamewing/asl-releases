@@ -58,9 +58,18 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.51 2015/08/28 17:22:26 alfred Exp $                          */
+/* $Id: as.c,v 1.54 2015/10/23 08:43:33 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.54  2015/10/23 08:43:33  alfred
+ * - beef up & fix structure handling
+ *
+ * Revision 1.53  2015/10/18 20:08:52  alfred
+ * - when expanding structure, also regard sub-structures
+ *
+ * Revision 1.52  2015/10/18 19:02:15  alfred
+ * - first reork/fix of nested structure handling
+ *
  * Revision 1.51  2015/08/28 17:22:26  alfred
  * - add special handling for labels following BSR
  *
@@ -2515,22 +2524,12 @@ Boolean HasLabel(void)
 
 void HandleLabel(char *Name, LargeWord Value)
 {
-  PStructStack ZStruct;
-  String tmp, tmp2;
-
   /* structure element ? */
 
-  if (StructStack)
+  if (pInnermostNamedStruct)
   {
-    AddStructElem(StructStack->StructRec, Name, Value);
-    strmaxcpy(tmp, Name, 255);
-    for (ZStruct = StructStack; ZStruct; ZStruct = ZStruct->Next)
-      if (ZStruct->StructRec->DoExt)
-      {
-        sprintf(tmp2, "%s%c", ZStruct->Name, ZStruct->StructRec->ExtChar);
-        strmaxprep(tmp, tmp2, 255);
-      }
-    EnterIntSymbol(tmp, Value, SegNone, False);
+    AddStructElem(pInnermostNamedStruct->StructRec, Name, False, Value);
+    AddStructSymbol(Name, Value);
   }
 
   /* normal label */
@@ -2577,7 +2576,7 @@ static void Produce_Code(void)
   /* otherwise generate code: check for macro/structs here */
 
   if (!(IsMacro = (SearchMacros) && (FoundMacro(&OneMacro))))
-    IsStruct = FoundStruct(&OneStruct);
+    IsStruct = FoundStruct(&OneStruct, LOpPart);
   else
     IsStruct = FALSE;
 
@@ -2731,6 +2730,8 @@ static void Produce_Code(void)
       WrError(1925);
     else
     {
+      LargeWord NewPC = PCs[ActPC] + CodeLen;
+
       if ((!DontPrint) && (ActPC != StructSeg) && (CodeLen > 0))
         BookKeeping();
       if (ActPC == StructSeg)
@@ -2740,6 +2741,7 @@ static void Produce_Code(void)
         {
           BumpStructLength(StructStack->StructRec, CodeLen);
           CodeLen = 0;
+          NewPC = 0;
         }
       }
       else if (CodeOutput)
@@ -2750,7 +2752,7 @@ static void Produce_Code(void)
         else
           WriteBytes();
       }
-      PCs[ActPC] += CodeLen;
+      PCs[ActPC] = NewPC;
     }
   }
 
@@ -3054,7 +3056,8 @@ static void AssembleFile_InitPass(void)
   SectionStack = NULL;
   FirstIfSave = NULL;
   FirstSaveState = NULL;
-  StructStack = NULL;
+  StructStack =
+  pInnermostNamedStruct = NULL;
 
   InitPass();
 

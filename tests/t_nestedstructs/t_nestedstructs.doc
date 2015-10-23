@@ -1,0 +1,8 @@
++------------------ Test Application NESTEDSTRUCTS --------------------------+
+|                                                                            |
+|          This is a slightly more complex demo about how to define & use    |
+|          structures, derived from a code snippet provided by Alex Kazik.   |
+|          It uses nested structures, a nameless union and tests for correct |
+|          element offsets.                                                  |
+|                                                                            |
++----------------------------------------------------------------------------+

@@ -5,9 +5,12 @@
 /* Haeufiger benutzte Motorola-Pseudo-Befehle                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: motpseudo.c,v 1.17 2014/12/04 13:33:57 alfred Exp $                   */
+/* $Id: motpseudo.c,v 1.18 2015/10/18 17:26:25 alfred Exp $                   */
 /*****************************************************************************
  * $Log: motpseudo.c,v $
+ * Revision 1.18  2015/10/18 17:26:25  alfred
+ * - allow ? as argument to some BYT/FCB/ADR/FDB
+ *
  * Revision 1.17  2014/12/04 13:33:57  alfred
  * - compilable again
  *
@@ -133,17 +136,16 @@ static void PutByte(Byte Value)
 
 static void DecodeBYT(Word Index)
 {
-  int z;
-  Boolean OK;
-  TempResult t;
-  LongInt Rep,z2;
   UNUSED(Index);
 
   if (ArgCnt == 0) WrError(1110);
   else
   {
-    z = 1;
-    OK = True;
+    ShortInt SpaceFlag = -1;
+    int z = 1;
+    Boolean OK = True;
+    LongInt Rep;
+
     do
     {
       if (!*ArgStr[z])
@@ -158,52 +160,86 @@ static void DecodeBYT(Word Index)
       if (!OK)
         break;
 
-      EvalExpression(ArgStr[z], &t);
-      switch (t.Typ)
+      if (!strcmp(ArgStr[z], "?"))
       {
-        case TempInt:
-          if (!RangeCheck(t.Contents.Int, Int8))
-          {
-            WrError(1320);
-            OK = False;
-          }
-          else if (SetMaxCodeLen(CodeLen + Rep))
-          {
-            WrError(1920);
-            OK = False;
-          }
-          else
-            for (z2 = 0; z2 < Rep; z2++)
-              PutByte(t.Contents.Int);
-          break;
-
-        case TempFloat:
-          WrError(1135);
-          OK = False;
-          break;
-
-        case TempString:
+        if (SpaceFlag == 0)
         {
-          int l, z3;
-
-          l = t.Contents.Ascii.Length;
-          TranslateString(t.Contents.Ascii.Contents, l);
-
-          if (SetMaxCodeLen(CodeLen + (Rep * l)))
-          {
-            WrError(1920);
-            OK = False;
-          }
-          else
-            for (z2 = 0; z2 < Rep; z2++)
-              for (z3 = 0; z3 < l; z3++)
-                PutByte(t.Contents.Ascii.Contents[z3]);
-          break;
+          WrError(1930);
+          OK = FALSE;
         }
+        else
+        {
+          SpaceFlag = 1;
+          CodeLen += Rep;
+        }
+      }
+      else if (SpaceFlag == 1)
+      {
+        WrError(1930);
+        OK = FALSE;
+      }
+      else
+      {
+        TempResult t;
 
-        default:
-          OK = False;
-          break;
+        SpaceFlag = 0;
+
+        EvalExpression(ArgStr[z], &t);
+        switch (t.Typ)
+        {
+          case TempInt:
+            if (!RangeCheck(t.Contents.Int, Int8))
+            {
+              WrError(1320);
+              OK = False;
+            }
+            else if (SetMaxCodeLen(CodeLen + Rep))
+            {
+              WrError(1920);
+              OK = False;
+            }
+            else
+            {
+              LongInt z2;
+
+              for (z2 = 0; z2 < Rep; z2++)
+                PutByte(t.Contents.Int);
+            }
+            break;
+
+          case TempFloat:
+            WrError(1135);
+            OK = False;
+            break;
+
+          case TempString:
+          {
+            int l;
+
+            l = t.Contents.Ascii.Length;
+            TranslateString(t.Contents.Ascii.Contents, l);
+
+            if (SetMaxCodeLen(CodeLen + (Rep * l)))
+            {
+              WrError(1920);
+              OK = False;
+            }
+            else
+            {
+              LongInt z2;
+              int z3;
+
+              for (z2 = 0; z2 < Rep; z2++)
+                for (z3 = 0; z3 < l; z3++)
+                  PutByte(t.Contents.Ascii.Contents[z3]);
+            }
+            break;
+          }
+
+          default:
+            OK = False;
+            break;
+        }
       }
 
       z++;
@@ -212,6 +248,8 @@ static void DecodeBYT(Word Index)
 
     if (!OK)
       CodeLen = 0;
+    else if (SpaceFlag == 1)
+      DontPrint = True;
   }
 }
 
@@ -236,16 +274,16 @@ static void PutADR(Word Value)
 
 static void DecodeADR(Word Index)
 {
-  int z;
-  TempResult Res;
-  Boolean OK;
-  LongInt Rep, z2, z3, Cnt;
   UNUSED(Index);
 
   if (ArgCnt == 0) WrError(1110);
   else
   {
-    z = 1; OK = True;
+    int z = 1;
+    Boolean OK = True;
+    LongInt Rep;
+    ShortInt SpaceFlag = -1;
+
     do
     {
       if (!*ArgStr[z])
@@ -259,66 +297,96 @@ static void DecodeADR(Word Index)
       if (!OK)
         break;
 
-      FirstPassUnknown = False;
-      EvalExpression(ArgStr[z], &Res);
-
-      switch (Res.Typ)
+      if (!strcmp(ArgStr[z], "?"))
       {
-        case TempInt:
-          if (FirstPassUnknown)
-            Res.Contents.Int &= 0xffff;
-          if (!RangeCheck(Res.Contents.Int, Int16))
-          {
-            WrError(1320);
-            Res.Typ = TempNone;
-          }
-          Cnt = 1;
-          break;
-        case TempString:
-          Cnt = Res.Contents.Ascii.Length;
-          TranslateString(Res.Contents.Ascii.Contents, Res.Contents.Ascii.Length);
-          break;
-        case TempFloat:
-          WrError(1135);
-          /* no break */
-        default:
-          Res.Typ = TempNone;
-          Cnt = 0;
-          break;
+        if (SpaceFlag == 0)
+        {
+          WrError(1930);
+          OK = False;
+        }
+        else
+        {
+          SpaceFlag = 1;
+          CodeLen += 2 * Rep;
+        }
       }
-      if (TempNone == Res.Typ)
+      else if (SpaceFlag == 1)
       {
+        WrError(1930);
         OK = False;
-        break;
       }
-
-      if (SetMaxCodeLen(CodeLen + ((Cnt * Rep) << 1)))
+      else
       {
-        WrError(1920);
-        OK = False;
-        break;
-      }
+        TempResult Res;
+        LongInt z2, Cnt;
 
-      for (z2 = 0; z2 < Rep; z2++)
+        SpaceFlag = 0;
+        FirstPassUnknown = False;
+        EvalExpression(ArgStr[z], &Res);
+
         switch (Res.Typ)
         {
           case TempInt:
-            PutADR(Res.Contents.Int);
+            if (FirstPassUnknown)
+              Res.Contents.Int &= 0xffff;
+            if (!RangeCheck(Res.Contents.Int, Int16))
+            {
+              WrError(1320);
+              Res.Typ = TempNone;
+            }
+            Cnt = 1;
             break;
           case TempString:
-            for (z3 = 0; z3 < Res.Contents.Ascii.Length; z3++)
-              PutADR(Res.Contents.Ascii.Contents[z3]);
+            Cnt = Res.Contents.Ascii.Length;
+            TranslateString(Res.Contents.Ascii.Contents, Res.Contents.Ascii.Length);
             break;
+          case TempFloat:
+            WrError(1135);
+            /* no break */
           default:
+            Res.Typ = TempNone;
+            Cnt = 0;
             break;
         }
+        if (TempNone == Res.Typ)
+        {
+          OK = False;
+          break;
+        }
 
+        if (SetMaxCodeLen(CodeLen + ((Cnt * Rep) << 1)))
+        {
+          WrError(1920);
+          OK = False;
+          break;
+        }
+
+        for (z2 = 0; z2 < Rep; z2++)
+          switch (Res.Typ)
+          {
+            case TempInt:
+              PutADR(Res.Contents.Int);
+              break;
+            case TempString:
+            {
+              LongInt z3;
+
+              for (z3 = 0; z3 < Res.Contents.Ascii.Length; z3++)
+                PutADR(Res.Contents.Ascii.Contents[z3]);
+              break;
+            }
+            default:
+              break;
+          }
+      }
       z++;
     }
     while ((z <= ArgCnt) && (OK));
 
     if (!OK)
       CodeLen = 0;
+    else if (SpaceFlag)
+      DontPrint = True;
   }
 }
 
@@ -965,7 +1033,7 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
 
       else
       {
-        if ((DoPadding) && ((CodeLen&1)==1))
+        if (DoPadding && (CodeLen & 1))
           EnterByte(0);
       }
     }

@@ -130,7 +130,7 @@ TH1		SFR	8dh
 T2CON	 	 SFRB	0c8h		; Steuerregister Timer 2
 TL2	 	 SFR	0cch		; Daten Timer 2
 TH2	 	 SFR	0cdh
-		 if	MOMCPU=8052h
+		 if	(MOMCPU=8052h)||(MOMCPU=80C320h)
 RCAP2L	 	  SFR	0cah		; Capture-Register
 RCAP2H	 	  SFR	0cbh
 TF2		  BIT	T2CON.7		; Overflow Timer 2

@@ -29,9 +29,12 @@
 ;*           2001-10-21 GNU error messages                                   *
 ;*                                                                           *
 ;*****************************************************************************
-;* $Id: as.res,v 1.5 2014/11/23 17:06:32 alfred Exp $                        *
+;* $Id: as.res,v 1.6 2015/10/23 08:43:33 alfred Exp $                        *
 ;*****************************************************************************
 ;* $Log: as.res,v $
+;* Revision 1.6  2015/10/23 08:43:33  alfred
+;* - beef up & fix structure handling
+;*
 ;* Revision 1.5  2014/11/23 17:06:32  alfred
 ;* - add error #2060 (unimplemented)
 ;*
@@ -736,6 +739,14 @@ Message ErrMsgEmptyArgument
 Message ErrMsgUnimplemented
  "nicht implementierte Anweisung"
  "unimplemented instruction"
+
+Message ErrMsgFreestandingUnnamedStruct
+ "namenlose Struktur nicht Teil einer anderen Struktur"
+ "unnamed structure is not part of another structure"
+
+Message ErrMsgSTRUCTEndedByENDUNION
+ "STRUCT durch ENDUNION beendet"
+ "STRUCT ended by ENDUNION"
 
 Message ErrMsgOpeningFile
  "Fehler beim &Ouml;ffnen der Datei"

@@ -46,7 +46,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand Mai 2015}
+{\large Stand Oktober 2015}
 \end{raggedright}
 
 \clearpage
@@ -1512,7 +1512,7 @@ Abgrenzung gegen das Sektionskonzept m"ochte ich aber beim Begriff
 'tempor"are Symbole' bleiben.  AS kennt drei unterschiedliche Typen von
 tempor"aren Symbolen, um jedem 'Umsteiger' ein Konzept anzubieten, das den
 Umstieg so einfach wie m"oglich macht.  Leider kocht quasi jeder Assembler
-bei diesem Thema sein eigenes S"uppchen, so daß es nur in Ausnahmef"allen
+bei diesem Thema sein eigenes S"uppchen, so da"s es nur in Ausnahmef"allen
 eine 1:1-L"osung f"ur existierenden Code geben wird:
 
 \subsection{Tempor"are Symbole mit Namen}
@@ -1606,7 +1606,7 @@ ptr:	dfs	2
 
 Dies ist vielleicht der Typ von tempor"aren Symbolen, der dem Konzept von
 lokalen Symbolen und Sektionen am n"achsten kommt.  Wann immer der Name
-eines Symboles mit einem Punkt (.) anfängt, wird das Symbol nicht mit
+eines Symboles mit einem Punkt (.) anf"angt, wird das Symbol nicht mit
 diesem Namen in der Symboltabelle abgelegt.  Stattdessen wird der Name des
 zuletzt definierten Symbols ohne vorangestellten Punkt davorgeh"angt.  Auf
 diese Weise nehmen Sybole, deren Name nicht mit einem Punkt anf"angt, quasi
@@ -5154,7 +5154,7 @@ so wird daraus
 Eine Makrodefinition darf nicht "uber Includefilegrenzen hinausgehen.
 \par
 In Makror"umpfen definierte Labels werden immer als lokal betrachtet,
-außer bei der Definition des Makros wurde die
+au"ser bei der Definition des Makros wurde die
 \tty{GLOBALSYMBOLS}-Option verwendet.  Ist es aus irgendwelchen Gr"unden
 erforderlich, ein einzelnes Label in einem Makro global zu
 machen, das ansonsten lokale Labels benutzt, so kann man es mit
@@ -5450,8 +5450,8 @@ zu eingebauten Funktionen!
 %%---------------------------------------------------------------------------
 
 \section{Strukturen}
-\ttindex{STRUCT}\ttindex{ENDSTRUCT}\ttindex{UNION}
-\ttindex{STRUC}\ttindex{ENDS}
+\ttindex{STRUCT}\ttindex{ENDSTRUCT}\ttindex{UNION}\ttindex{ENDUNION}
+\ttindex{STRUC}\ttindex{ENDSTRUC}\ttindex{ENDS}
 \ttindex{DOTTEDSTRUCTS}
 
 {\em G"ultigkeit: alle Prozessoren}
@@ -5466,22 +5466,23 @@ erl"autert werden sollen:
 
 Die Definition einer Struktur wird duch den Befehl \tty{STRUCT}
 eingeleitet und durch \tty{ENDSTRUCT} abgeschlossen (schreibfaule
-Zeitgenossen d"urfen aber auch stattdessen {\tt STRUC} bzw. {\tt ENDS}
-schreiben).  Ein diesen Befehlen voranstehendes Label wird als Name der zu
-definierenden Struktur genommen; am Ende der Definition ist der Name
-optional und kann von zur Festlegung des L"angennamens (s.u.) genutzt werden.
-Das restliche Verfahren ist simpel: Mit einem \tty{STRUCT} wird der
-momentane Programmz"ahler gesichert und auf Null zur"uckgesetzt.  Alle
-zwischen \tty{STRUCT} und \tty{ENDSTRUCT} definierten Labels ergeben
-mithin die Offsets der einzelnen Datenfelder in der Struktur. 
-Die Reservierung des Platzes f"ur die einzelnen Felder erfolgt mit den
-f"ur den jeweils aktiven Zielprozessor zul"assigen Befehlen zur
-Speicherplatzreservierung, also z.B. \tty{DS.x} f"ur die Motorolas oder
-\tty{DB} \& Co. f"ur Intels.  Es gelten hier auch gleichfalls die Regeln
-f"ur das Aufrunden von L"angen, um Alignments zu erhalten - wer also
-'gepackte' Strukturen definieren will, mu"s eventuell ein {\tt PADDING
-OFF} voranstellen.  Umgekehrt lassen sich Ausrichtungen nat"urlich mit
-Befehlen wie {\tt ALIGN} erzwingen.  
+Zeitgenossen d"urfen aber auch stattdessen {\tt STRUC} bzw.  {\tt
+ENDSTRUC} oder {\tt ENDS} schreiben).  Ein eventuell diesen Befehlen
+voranstehendes Label wird als Name der zu definierenden Struktur
+genommen; am Ende der Definition ist der Name optional und kann von
+zur Festlegung des L"angennamens (s.u.) genutzt werden.  Das
+restliche Verfahren ist simpel: Mit einem \tty{STRUCT} wird der
+momentane Programmz"ahler gesichert und auf Null zur"uckgesetzt. 
+Alle zwischen \tty{STRUCT} und \tty{ENDSTRUCT} definierten Labels
+ergeben mithin die Offsets der einzelnen Datenfelder in der Struktur. 
+Die Reservierung des Platzes f"ur die einzelnen Felder erfolgt mit
+den f"ur den jeweils aktiven Zielprozessor zul"assigen Befehlen zur
+Speicherplatzreservierung, also z.B.  \tty{DS.x} f"ur die Motorolas
+oder \tty{DB} \& Co.  f"ur Intels.  Es gelten hier auch gleichfalls
+die Regeln f"ur das Aufrunden von L"angen, um Alignments zu erhalten
+- wer also 'gepackte' Strukturen definieren will, mu"s eventuell ein
+{\tt PADDING OFF} voranstellen.  Umgekehrt lassen sich Ausrichtungen
+nat"urlich mit Befehlen wie {\tt ALIGN} erzwingen.
 
 Da eine solche Definition nur eine Art 'Prototypen' darstellt, k"onnen nur
 Befehle benutzt werden, die Speicherplatz reservieren, aber keine solchen,
@@ -5556,7 +5557,21 @@ left    dd         ?
 right   dd         ?
 data    Rec
 TreeRec endstruct
+\end{verbatim} 
+
+Ebenso ist es erlaubt, eine Struktur direkt in einer anderen
+Struktur zu definieren:
+\begin{verbatim}
+TreeRec struct  
+left    dd         ?
+right   dd         ?
+TreeData struct
+name      db         32 dup(?)
+id        dw         ?
+TreeData endstruct
+TreeRec endstruct
 \end{verbatim}   
+  
 
 \subsection{Unions}
 
@@ -5568,6 +5583,27 @@ mehr, als einer Reihe von Symbolen den Wert Null zuzuweisen, sie kann aber
 sinnvoll sein, um programmtechnisch die "Uberlappung der Elemente zu
 verdeutlichen und den Code so etwas 'lesbarer' zu gestalten.  Die Gr"o"se
 einer Struktur ist das Maximum der Gr"o"sen aller Elemente.
+
+\subsection{Namenlose Strukturen}
+
+Der Name einer Struktur oder Union ist optional, allerdings nur, wenn
+diese Teil einer anderen, nicht namenlosen Struktur ist.  Elemente
+dieser Struktur werden dann Teil der 'n"achsth"oheren' benamten
+Struktur:
+\begin{verbatim}
+TreeRec struct  
+left    dd         ?
+right   dd         ?
+        struct
+name      db         32 dup(?)
+id        dw         ?
+        endstruct
+TreeRec endstruct
+\end{verbatim}
+erzeugt also die Symbole {\tt TREEREC\_NAME} und {\tt TREEREC\_ID}. 
+
+Des weiteren wird f"ur namenlose Strukturen oder Unions kein Symbol
+mit deren L"ange angelegt.
 
 \subsection{Strukturen und Sektionen}
 
@@ -7854,7 +7890,7 @@ ist.
 Der Prozessorkern der Z8-Mikrokontroller beinhaltet keine eigenen
 Register.  Stattdessen kann ein 16er-Block des internen Adre"raums
 aus RAM und I/O-Registern als 'Arbeitsregister' benutzt werden, die
-mit 4-Bit-Adressen angesprochen werden können.  Welcher 16er-Block
+mit 4-Bit-Adressen angesprochen werden k"onnen.  Welcher 16er-Block
 als Arbeitsregister benutzt werden soll, wird mit dem RP-Register
 festgelegt: Bits 4 bis 7 von RP definieren den 'Offset', der auf die
 4-Bit-Arbeitsregisteradresse addiert wird, um eine 8-Bit-Adresse zu
@@ -7869,7 +7905,7 @@ Mit dem \tty{ASSUME}-Befehl teilt man AS den aktuellen Wert von RP mit.  AS
 ist dann in der Lage, bei einer Adresse aus dem internen RAM
 automatisch zu entscheiden, ob dieser Operand mit einer 4-Bit Adresse
 angesprochen werden kann oder eine 8-Bit-Adresse verwendet werden
-muß.  Man kann diese Funktion auch dazu benutzen, Arbeitsregistern
+mu"s.  Man kann diese Funktion auch dazu benutzen, Arbeitsregistern
 symbolische Namen zu verpassen:
 \begin{verbatim}
 op1     equ     040h
@@ -7887,12 +7923,12 @@ versteht - ein vorangestelltes Ausrufezeichen erzwingt quasi
 4-Bit-Adressierung, auch wenn die Adresse eigentlich nicht im durch
 RP festgelegten 16-Bit-Fenster liegt (dann wird eine Warnung
 ausgegeben).  Umgekehrt ist es durch ein vorangestelltes $>$-Zeichen
-möglich, eine Adressierung mit 8 Bit zu erzwingen, auch wenn die
+m"oglich, eine Adressierung mit 8 Bit zu erzwingen, auch wenn die
 Adresse eigentlich im aktuellen 16er-Fenster liegt.
 
 Beim eZ8 wird das Spielchen quasi eine Stufe weiter getrieben: der
 interne Daten-Adre"sbereich ist jetzt 12 statt 8 Bit gro"s.  Um
-kompatibel zum alten Z8-Kern zu sein, hat Zilog die zusätzlichen
+kompatibel zum alten Z8-Kern zu sein, hat Zilog die zus"atzlichen
 Banking-Bits in den {\em unteren} vier Bits von RP untergebracht -
 ein RP-Wert von 12h definiert also das 16er-Adre"sfenster von 210h
 bis 21fh.
@@ -8706,14 +8742,14 @@ Der erste Mikrocontroller der Welt nun endlich auch in AS - lange hat es
 gedauert, nun ist die L"ucke geschlossen.  Dieses Target hat aber einige
 T"ucken, die in diesem Abschnitt kurz angesprochen werden sollen.
 
-Zum einen ist der Befehlssatz dieser Controller teilweise über die ROM-Maske
+Zum einen ist der Befehlssatz dieser Controller teilweise "uber die ROM-Maske
 ver"anderbar, d.h. man kann die Funktion einiger Opcodes in Grenzen frei
 definieren.  AS kennt nur die Befehle und deren Kodierungen, die in
 \cite{TMS1000PGMRef} als Default-Kodierungen beschrieben sind.  Wer f"ur eine
 spezielle Anwendung andere Befehle bzw. gleiche Befehle mit anderem Opcode
 hat, kann diese "uber Makros mit passende \tty{DB}-Befehlen "andern.
 
-Des weiteren ist zu beachten, daß Spr"unge und Unterprogrammaufrufe nur die
+Des weiteren ist zu beachten, da"s Spr"unge und Unterprogrammaufrufe nur die
 unteren 6 Bit der Zieladresse im Befehl selber beinhalten.  Die oberen 4 bzw.
 5 Bits kommen aus Page- bzw. Chapter-Registern, die vorher passend zu setzen
 sind.  AS selber kann hier nicht "uberpr"ufen, ob die Register vom Programmierer
@@ -9862,7 +9898,7 @@ Angaben:
                {keines}
 \errentry{ 310}{Ung"ultiger Wert f"ur Registerzeiger}
                {Warnung}
-               {G"ultige bzw. sinnvolle Werte für den Registerzeiger sind
+               {G"ultige bzw. sinnvolle Werte f"ur den Registerzeiger sind
                 nur Werte von 0x00...0x70 bzw. 0xf0, weil die anderen
                 Registerbereiche unbelegt sind.}
                {keines}
@@ -9870,7 +9906,7 @@ Angaben:
                {Warnung}
                {Einem Makroparameter wurden zwei oder mehr
                 verschiedene Werte zugewiesen.  Dies kann bei der
-                Verwendung von Schlüsselwortparametern auftreten.
+                Verwendung von Schl"usselwortparametern auftreten.
                 Das zuletzt angegebene Argument wird benutzt.}
                {Name des Makroparameters}
 \errentry{1000}{Symbol doppelt definiert}
@@ -10519,6 +10555,24 @@ Angaben:
                {In der Argumentenliste dieser Anweisung d"urfen keine
                 Leerstrings benutzt werden.}
                {keines}
+\errentry{2060}{nicht implementierte Anweisung}
+               {Fehler}
+               {Der benutzte Maschinenbefehl ist dem Assembler
+                zwar bekannt, ist aber aufgrund fehlender
+                Dokumentation seitens des Prozessorherstellers
+                momentan nicht implementiert.}
+               {Der benutzte Befehl}
+\errentry{2070}{namenlose Struktur nicht Teil einer anderen Struktur}
+               {Fehler}
+               {Eine Struktur oder Union, die keinen Namen hat, mu"s
+                immer Teil einer anderen, benamten Struktur oder Union
+                sein.}
+               {keines}
+\errentry{2080}{STRUCT durch ENDUNION beendet}
+               {Fehler}
+               {ENDUNION darf nur zum Beenden der Definition einer
+                Union benutzt werden, nicht einer Struktur.}
+               {Name der Struktur (falls vorhanden)}
 \errentry{10001}{Fehler bein "Offnen der Datei}
                {fatal}
                {Beim Versuch, eine Datei zu "offnen, ist ein

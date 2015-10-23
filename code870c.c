@@ -5,9 +5,12 @@
 /* Codegenerator TLCS-870                                                    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code870c.c,v 1.7 2014/11/23 17:53:46 alfred Exp $                  */
+/* $Id: code870c.c,v 1.8 2015/10/23 08:43:12 alfred Exp $                  */
 /*****************************************************************************
  * $Log: code870c.c,v $
+ * Revision 1.8  2015/10/23 08:43:12  alfred
+ * - display name of unimplemented instruction
+ *
  * Revision 1.7  2014/11/23 17:53:46  alfred
  * - add J pseudo instruction
  * - correct P and M conditions
@@ -1309,7 +1312,7 @@ static void DecodeUnimplemented(Word Code)
 {
   UNUSED(Code);
 
-  WrError(2060);
+  WrXError(2060, OpPart);
 }
 
 /*--------------------------------------------------------------------------*/
