@@ -36,9 +36,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.31 2015/08/28 17:22:26 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.32 2015/10/25 20:47:18 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmpars.c,v $
+ * Revision 1.32  2015/10/25 20:47:18  alfred
+ * - correct two-column printout indentation of symbol list
+ *
  * Revision 1.31  2015/08/28 17:22:26  alfred
  * - add special handling for labels following BSR
  *
@@ -3842,7 +3845,7 @@ static void PrintSymbolList_PNode(PTree Tree, void *pData)
   PSymbolEntry Node = (PSymbolEntry) Tree;
   TListContext *pContext = (TListContext*) pData;
   String s1, sh;
-  int l1;
+  int l1, nBlanks;
   TempResult t;
 
   ConvertSymbolVal(&(Node->SymWert), &t);
@@ -3856,9 +3859,9 @@ static void PrintSymbolList_PNode(PTree Tree, void *pData)
     strmaxcat(sh, "]", 255);
   }
   strmaxprep(sh, (Node->Used) ? " " : "*", 255);
-  l1 = (strlen(s1) + strlen(sh) + 6) % (pContext->cwidth);
-  if (l1 < pContext->cwidth - 2)
-    strmaxprep(s1, Blanks(pContext->cwidth - 2 - l1), 255);
+  l1 = (strlen(s1) + strlen(sh) + 7);
+  for (nBlanks = pContext->cwidth - 1 - l1; nBlanks < 0; nBlanks += pContext->cwidth);
+  strmaxprep(s1, Blanks(nBlanks), 255);
   strmaxprep(s1, " : ", 255);
   strmaxprep(s1, sh, 255);
   strmaxcat(s1, " ", 255);

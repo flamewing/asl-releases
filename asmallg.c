@@ -24,9 +24,12 @@
 /*                       to now                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmallg.c,v 1.27 2015/10/23 08:43:33 alfred Exp $                     */
+/* $Id: asmallg.c,v 1.28 2015/10/28 17:54:33 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmallg.c,v $
+ * Revision 1.28  2015/10/28 17:54:33  alfred
+ * - allow substructures of same name in different structures
+ *
  * Revision 1.27  2015/10/23 08:43:33  alfred
  * - beef up & fix structure handling
  *
@@ -1499,6 +1502,7 @@ static void CodeSTRUCT(Word IsUnion)
   int z;
   Boolean OK, DoExt;
   char ExtChar;
+  String StructName;
 
   if (ArgCnt > 1)
   {
@@ -1527,8 +1531,15 @@ static void CodeSTRUCT(Word IsUnion)
       NLS_UpString(LabPart);
   }
 
+  /* compose name of nested structures */
+
+  if (*LabPart)
+    BuildStructName(StructName, sizeof(StructName), LabPart);
+  else
+    *StructName = '\0';
+
   /* If named and embedded into another struct, add as element to innermost named parent struct.
-    Add up all offsets of unnamed structs in between. */
+     Add up all offsets of unnamed structs in between. */
 
   if (StructStack && (*LabPart))
   {
@@ -1542,7 +1553,8 @@ static void CodeSTRUCT(Word IsUnion)
   }
 
   NStruct = (PStructStack) malloc(sizeof(TStructStack));
-  NStruct->Name = strdup(LabPart);
+  NStruct->Name = strdup(StructName);
+  NStruct->pBaseName = NStruct->Name + strlen(NStruct->Name) - strlen(LabPart); /* NULL -> complain too long */
   NStruct->SaveCurrPC = ProgCounter();
   DoExt = True;
   ExtChar = DottedStructs ? '.' : '_';
@@ -1597,7 +1609,6 @@ static void CodeENDSTRUCT(Word IsUnion)
   Boolean OK;
   PStructStack OStruct;
   TempResult t;
-  String tmp;
 
   if (ArgCnt > 1) WrError(1110);
   else if (!StructStack) WrError(1550);
@@ -1611,7 +1622,7 @@ static void CodeENDSTRUCT(Word IsUnion)
     {
       if (!CaseSensitive)
         NLS_UpString(LabPart);
-      OK = !strcmp(LabPart, StructStack->Name);
+      OK = !strcmp(LabPart, StructStack->pBaseName);
       if (!OK) WrError(1552);
     }
     if (OK)
@@ -1643,9 +1654,9 @@ static void CodeENDSTRUCT(Word IsUnion)
         if (OStruct->Name[0])
         {
           String tmp2;
+
           sprintf(tmp2, "%s%clen", OStruct->Name, OStruct->StructRec->ExtChar);
-          BuildStructName(tmp, 255, tmp2);
-          EnterIntSymbol(tmp, TotLen, SegNone, False);
+          EnterIntSymbol(tmp2, TotLen, SegNone, False);
         }
       }
       else

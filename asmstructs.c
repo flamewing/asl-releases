@@ -5,9 +5,12 @@
 /* structure handling                                                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmstructs.c,v 1.9 2015/10/23 08:43:33 alfred Exp $                 */
+/* $Id: asmstructs.c,v 1.10 2015/10/28 17:54:33 alfred Exp $                 */
 /*****************************************************************************
  * $Log: asmstructs.c,v $
+ * Revision 1.10  2015/10/28 17:54:33  alfred
+ * - allow substructures of same name in different structures
+ *
  * Revision 1.9  2015/10/23 08:43:33  alfred
  * - beef up & fix structure handling
  *
@@ -147,7 +150,7 @@ void BuildStructName(char *pResult, unsigned ResultLen, const char *pName)
   for (ZStruct = StructStack; ZStruct; ZStruct = ZStruct->Next)
     if (ZStruct->StructRec->DoExt && ZStruct->Name[0])
     {
-      sprintf(tmp2, "%s%c", ZStruct->Name, ZStruct->StructRec->ExtChar);
+      sprintf(tmp2, "%s%c", ZStruct->pBaseName, ZStruct->StructRec->ExtChar);
       strmaxprep(pResult, tmp2, ResultLen);
     }
 }
@@ -155,17 +158,22 @@ void BuildStructName(char *pResult, unsigned ResultLen, const char *pName)
 void AddStructSymbol(const char *pName, LargeWord Value)
 {
   PStructStack ZStruct;
-  String tmp;
 
   /* what we get is offset/length in current structure.  Add to
      it all offsets in parent structures, i.e. leave out SaveCurrPC
      of bottom of stack which contains saved PC of non-struct segment: */
 
-  BuildStructName(tmp, 255, pName);
   for (ZStruct = StructStack; ZStruct->Next; ZStruct = ZStruct->Next)
     Value += ZStruct->SaveCurrPC;
 
-  EnterIntSymbol(tmp, Value, SegNone, False);
+  {
+    String tmp, tmp2;
+
+    sprintf(tmp2, "%s%c", pInnermostNamedStruct->Name, pInnermostNamedStruct->StructRec->ExtChar);
+    strmaxcpy(tmp, pName, sizeof(tmp));
+    strmaxprep(tmp, tmp2, sizeof(tmp));
+    EnterIntSymbol(tmp, Value, SegNone, False);
+  }
 }
 
 void BumpStructLength(PStructRec StructRec, LongInt Length)
@@ -336,31 +344,39 @@ void ClearStructList(void)
   DestroyTree(&TreeRoot, ClearNode, NULL);
 }
 
-static void ExpandStruct_One(PStructRec StructRec, const char *pPrefix, LargeWord Base)
+static void ExpandStruct_One(PStructRec StructRec, char *pVarPrefix, char *pStructPrefix, LargeWord Base)
 {
   PStructElem StructElem;
-  String CompName;
-  int llen;
-  char *dptr;
+  int VarLen, RemVarLen, StructLen, RemStructLen;
 
-  strmaxcpy(CompName, pPrefix, 254);
-  llen = strlen(CompName);
-  dptr = CompName + llen;
-  *dptr++ = StructRec->ExtChar; llen++;
-  llen = 254 - llen;
-  for (StructElem = StructRec->Elems; StructElem; StructElem = StructElem->Next)
+  VarLen = strlen(pVarPrefix);
+  pVarPrefix[VarLen] = StructRec->ExtChar;
+  RemVarLen = STRINGSIZE - 3 - VarLen;
+
+  StructLen = strlen(pStructPrefix);
+  pStructPrefix[StructLen] = StructRec->ExtChar;
+  RemStructLen = STRINGSIZE - 3 - StructLen;
+
+  if ((RemVarLen > 1) && (RemStructLen > 1))
   {
-    strmaxcpy(dptr, StructElem->Name, llen);
-    HandleLabel(CompName, Base + StructElem->Offset);
-    if (StructElem->IsStruct)
+    for (StructElem = StructRec->Elems; StructElem; StructElem = StructElem->Next)
     {
-      TStructRec *pSubStruct;
-      Boolean Found = FoundStruct(&pSubStruct, StructElem->Name);
+      strmaxcpy(pVarPrefix + VarLen + 1, StructElem->Name, RemVarLen);
+      HandleLabel(pVarPrefix, Base + StructElem->Offset);
+      if (StructElem->IsStruct)
+      {
+        TStructRec *pSubStruct;
+        Boolean Found;
 
-      if (Found)
-        ExpandStruct_One(pSubStruct, CompName, Base + StructElem->Offset);
+        strmaxcpy(pStructPrefix + StructLen + 1, StructElem->Name, RemStructLen);
+        Found = FoundStruct(&pSubStruct, pStructPrefix);
+        if (Found)
+          ExpandStruct_One(pSubStruct, pVarPrefix, pStructPrefix, Base + StructElem->Offset);
+      }
     }
   }
+  pVarPrefix[VarLen] = '\0';
+  pStructPrefix[StructLen] = '\0';
 }
 
 void ExpandStruct(PStructRec StructRec)
@@ -368,7 +384,11 @@ void ExpandStruct(PStructRec StructRec)
   if (!LabPart[0]) WrError(2040);
   else
   {
-    ExpandStruct_One(StructRec, LabPart, EProgCounter());
+    String CompVarName, CompStructName;
+
+    strmaxcpy(CompVarName, LabPart, sizeof(CompVarName));
+    strmaxcpy(CompStructName, LOpPart, sizeof(CompStructName));
+    ExpandStruct_One(StructRec, LabPart, LOpPart, EProgCounter());
     CodeLen = StructRec->TotLen;
     BookKeeping();
     DontPrint = True;

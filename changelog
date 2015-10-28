@@ -1,5 +1,9 @@
-$Id: changelog,v 1.113 2015/10/23 08:43:33 alfred Exp $
+$Id: changelog,v 1.114 2015/10/28 17:55:33 alfred Exp $
 ------------------------------------------------------------------------------
+
+2015-10-28 [1.42 Bld 106]
+
+- Addition    : Allow sub-structures of same name in different structures
 
 2015-10-23 [1.42 Bld 105]
 

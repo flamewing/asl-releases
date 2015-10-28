@@ -7,9 +7,12 @@
 /* functions for structure handling                                          */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmstructs.h,v 1.4 2015/10/23 08:43:33 alfred Exp $                          */
+/* $Id: asmstructs.h,v 1.5 2015/10/28 17:54:33 alfred Exp $                          */
 /*****************************************************************************
  * $Log: asmstructs.h,v $
+ * Revision 1.5  2015/10/28 17:54:33  alfred
+ * - allow substructures of same name in different structures
+ *
  * Revision 1.4  2015/10/23 08:43:33  alfred
  * - beef up & fix structure handling
  *
@@ -60,7 +63,7 @@ typedef struct sStructRec
 typedef struct sStructStack
 {
   struct sStructStack *Next;
-  char *Name;
+  char *Name, *pBaseName;
   LargeWord SaveCurrPC, SaveOffsetToInnermost;
   PStructRec StructRec;
 } TStructStack, *PStructStack;
