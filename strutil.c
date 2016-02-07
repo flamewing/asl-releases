@@ -299,6 +299,28 @@ int mysprintf(va_alist) va_dcl
 }
 #endif
 
+#include <stdarg.h>
+
+/* Some s(n)printf implementations do not NUL-terminate the string.
+   Furthermore, snprintf() returns the number of characters it
+   *would* have written if it had had enough space... */
+
+int my_snprintf(char *pDest, size_t DestSize, const char *pFmt, ...)
+{
+  va_list ap;
+
+  va_start(ap, pFmt);
+  vsnprintf(pDest, DestSize, pFmt, ap);
+  va_end(ap);
+  if (DestSize > 0)
+  {
+    pDest[DestSize - 1] = '\0';
+    return strlen(pDest);
+  }
+  else
+    return 0;
+}
+
 /*---------------------------------------------------------------------------*/
 /* das originale strncpy plaettet alle ueberstehenden Zeichen mit Nullen */
 

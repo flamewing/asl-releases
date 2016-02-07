@@ -39,9 +39,12 @@
 /*           2002-01-27 Build 19                                             */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: version.c,v 1.81 2015/10/28 17:55:33 alfred Exp $                     */
+/* $Id: version.c,v 1.82 2016/02/07 16:02:37 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: version.c,v $
+ * Revision 1.82  2016/02/07 16:02:37  alfred
+ * - 1.42 Bld 107
+ *
  * Revision 1.81  2015/10/28 17:55:33  alfred
  * - 1.42 Bld 106
  *
@@ -323,13 +326,13 @@
 #include "stdinc.h"
 #include <string.h>
 
-char *Version = "1.42 Beta [Bld 106]";
-char *DebVersion = "1.42bld106-1";
+char *Version = "1.42 Beta [Bld 107]";
+char *DebVersion = "1.42bld107-1";
 LongInt VerNo = 0x142f;
 
-char *InfoMessCopyright = "(C) 1992,2015 Alfred Arnold";
+char *InfoMessCopyright = "(C) 1992,2016 Alfred Arnold";
 
-LongInt Magic = 0x12372945;
+LongInt Magic = 0x12372a45;
 
 void version_init(void)
 {

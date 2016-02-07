@@ -17,9 +17,12 @@
 /*           2002-01-23 symbols defined with BIT must not be macro-local     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code51.c,v 1.14 2014/12/14 17:58:47 alfred Exp $                      */
+/* $Id: code51.c,v 1.15 2016/01/30 17:15:01 alfred Exp $                      */
 /***************************************************************************** 
  * $Log: code51.c,v $
+ * Revision 1.15  2016/01/30 17:15:01  alfred
+ * - allow register symbols on MCS-(2)51
+ *
  * Revision 1.14  2014/12/14 17:58:47  alfred
  * - remove static variables in strutil.c
  *
@@ -176,41 +179,46 @@ static void SetOpSize(ShortInt NewSize)
   }
 }
 
-static Boolean DecodeReg(char *Asc, Byte *Erg,Byte *Size)
+static Boolean DecodeReg(const char *pAsc, Byte *Erg, Byte *Size)
 {
   static Byte Masks[3] = { 0, 1, 3 };
 
-  char *Start;
-  int alen = strlen(Asc);
+  const char *Start;
+  char *pRepl;
+  int alen;
   Boolean IO;
 
-  if (!strcasecmp(Asc,"DPX"))
+  if (FindRegDef(pAsc, &pRepl))
+    pAsc = pRepl;
+  alen = strlen(pAsc);
+
+  if (!strcasecmp(pAsc, "DPX"))
   {
     *Erg = 14;
     *Size = 2;
     return True;
   }
 
-  if (!strcasecmp(Asc, "SPX"))
+  if (!strcasecmp(pAsc, "SPX"))
   {
     *Erg = 15;
     *Size = 2;
     return True;
   }
 
-  if ((alen >= 2) && (mytoupper(*Asc) == 'R'))
+  if ((alen >= 2) && (mytoupper(*pAsc) == 'R'))
   {
-    Start=Asc + 1;
+    Start = pAsc + 1;
     *Size = 0;
   }
-  else if ((MomCPU >= CPU80251) && (alen >= 3) && (mytoupper(*Asc) == 'W') && (mytoupper(Asc[1]) == 'R'))
+  else if ((MomCPU >= CPU80251) && (alen >= 3) && (mytoupper(*pAsc) == 'W') && (mytoupper(pAsc[1]) == 'R'))
   {
-    Start = Asc + 2;
+    Start = pAsc + 2;
     *Size = 1;
   }
-  else if ((MomCPU >= CPU80251) && (alen >= 3) && (mytoupper(*Asc) == 'D') && (mytoupper(Asc[1]) == 'R'))
+  else if ((MomCPU >= CPU80251) && (alen >= 3) && (mytoupper(*pAsc) == 'D') && (mytoupper(pAsc[1]) == 'R'))
   {
-    Start = Asc + 2;
+    Start = pAsc + 2;
     *Size = 2;
   }
   else
@@ -2451,6 +2459,15 @@ static void DecodePORT(Word Index)
     CodeEquate(SegIO, 0, 0x1ff);
 }
 
+static void DecodeREG(Word Code)
+{
+  UNUSED(Code);
+
+  if (ArgCnt != 1) WrError(1110);
+  else
+    AddRegDef(LabPart, ArgStr[1]);
+}
+
 /*-------------------------------------------------------------------------*/
 /* dynamische Codetabellenverwaltung */
 
@@ -2571,6 +2588,8 @@ static void InitFields(void)
   AddBCond("JB" , 0x0020, CPU87C750);
   AddBCond("JBC", 0x0010, CPU87C750);
   AddBCond("JNB", 0x0030, CPU87C750);
+
+  AddInstTable(InstTable, "REG"  , 0, DecodeREG);
 }
 
 static void DeinitFields(void)
@@ -2618,8 +2637,9 @@ static Boolean IsDef_51(void)
       if (MomCPU >= CPU80251) return False;
       return Memo("SFRB");
     case 'P':
-      if (MomCPU >= CPU80251) return Memo("PORT");
-      else return False;
+      return (MomCPU >= CPU80251) ? Memo("PORT") : False;
+    case 'R':
+      return Memo("REG");
     default:
       return False;
   }

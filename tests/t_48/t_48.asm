@@ -1,6 +1,8 @@
         cpu     8048
 
-        add     a,r2
+Myreg	reg	r2
+
+        add     a,Myreg
         add     a,@r1
         add     a,#21h
 
@@ -35,7 +37,7 @@
         dis     i
         dis     tcnti
 
-        djnz    r2,$
+        djnz    Myreg,$
 
         en      i
         en      tcnti
@@ -78,7 +80,7 @@
 
         jmpp    @a
 
-        mov     a,r2
+        mov     a,Myreg
         mov     a,@r1
         mov     a,#21h
         mov     r3,a

@@ -10,9 +10,12 @@
 /*            5. 1.2000 fixed accessing P1/P2 with lower case in ANL/ORL     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code48.c,v 1.5 2014/11/06 18:19:35 alfred Exp $                      */
+/* $Id: code48.c,v 1.6 2016/01/30 16:46:37 alfred Exp $                      */
 /*****************************************************************************
  * $Log: code48.c,v $
+ * Revision 1.6  2016/01/30 16:46:37  alfred
+ * - add register symbols for MCS-48
+ *
  * Revision 1.5  2014/11/06 18:19:35  alfred
  * - rework to current style
  *
@@ -89,6 +92,22 @@ static SelOrder *SelOrders;
 
 /****************************************************************************/
 
+static Boolean DecodeReg(const char *pAsc, Byte *pErg)
+{
+  char *s;
+
+  if (FindRegDef(pAsc, &s))
+    pAsc = s;
+
+  if ((strlen(pAsc) != 2)
+   || (mytoupper(pAsc[0]) != 'R')
+   || (!isdigit(pAsc[1])))
+    return False;
+
+  *pErg = pAsc[1] - '0';
+  return (*pErg <= 7);
+}
+
 static void DecodeAdr(const char *Asc_O)
 {
   Boolean OK;
@@ -112,23 +131,13 @@ static void DecodeAdr(const char *Asc_O)
     }
   }
 
-  else if ((strlen(Asc) == 2) && (mytoupper(*Asc) == 'R'))
-  {
-    if ((Asc[1] >= '0') && (Asc[1] <= '7'))
-    {
-      AdrMode = ModReg;
-      AdrVal = Asc[1] - '0';
-    }
-  }
+  else if (DecodeReg(Asc, &AdrVal))
+    AdrMode = ModReg;
 
-  else if ((strlen(Asc) == 3) && (*Asc == '@') && (mytoupper(Asc[1]) == 'R'))
-  {
-    if ((Asc[2] >= '0') && (Asc[2] <= '1'))
-    {
-      AdrMode = ModInd;
-      AdrVal = Asc[2] - '0';
-    }
-  }
+  else if ((*Asc == '@')
+        && (DecodeReg(Asc + 1, &AdrVal))
+        && (AdrVal <= 1))
+    AdrMode = ModInd;
 }
 
 static void ChkN802X(void)
@@ -1007,6 +1016,15 @@ static void DecodeIDL(Word Code)
   }
 }
 
+static void DecodeREG(Word Code)
+{
+  UNUSED(Code);
+
+  if (ArgCnt != 1) WrError(1110);
+  else
+    AddRegDef(LabPart, ArgStr[1]);
+}
+
 /****************************************************************************/
 
 static void AddAcc(char *Name, Byte Code)
@@ -1107,6 +1125,8 @@ static void InitFields(void)
   AddSel("RB1" , 0xd5, False, False);
   AddSel("AN0" , 0x95, True , False);
   AddSel("AN1" , 0x85, True , False);
+
+  AddInstTable(InstTable, "REG", 0, DecodeREG);
 }
 
 static void DeinitFields(void)
@@ -1139,7 +1159,7 @@ static void MakeCode_48(void)
 
 static Boolean IsDef_48(void)
 {
-  return False;
+  return Memo("REG");
 }
 
 static void SwitchFrom_48(void)
