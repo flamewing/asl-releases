@@ -1135,15 +1135,16 @@ error messages always relate to the last line of such a composed source
 line.
 \par
 The colon for the label is optional, in case the label starts in the
-first column (the consequence is that a mnemonic must not start in
-column 1).  It is necessary to set the colon in case the label does
-not start in the first column so that AS is able to distinguish it
-from a mnemonic.  In the latter case, there must be at least one space
-between colon and mnemonic if the processor belongs to a family that
-supports an attribute that denotes an instruction format and is
-separated from the mnemonic by a colon.  This restriction is
-necessary to avoid ambiguities: a distinction between a mnemonic with
-format and a label with mnemonic would otherwise be impossible.
+first column (the consequence is that a machine or pseudo
+instruction must not start in column 1).  It is necessary to set the
+colon in case the label does not start in the first column so that AS
+is able to distinguish it from a mnemonic.  In the latter case, there
+must be at least one space between colon and mnemonic if the processor
+belongs to a family that supports an attribute that denotes an
+instruction format and is separated from the mnemonic by a colon.  This
+restriction is necessary to avoid ambiguities: a distinction between a
+mnemonic with format and a label with mnemonic would otherwise be
+impossible.
 
 Some signal processor families from Texas Instruments optionally use a
 double line (\verb!||!) in place of the label to signify the prallel
@@ -9067,9 +9068,10 @@ messages to STDOUT (resp. error messages to STDERR).  Therefore,
 input and output redirections should not be a problem.
 
 In case that numeric or address specifications have to be given in
-the command line, they may also be written in hexadecimal notation
-when they are prefixed with a dollar character or a \tty{0x} like in C.
-(e.g. \verb!$10! or \verb!0x10! instead of 16).
+the command line, they may also be written in hexadecimal
+notation,  either ba allending a \verb!h! or prepending a dollar
+character or a \tty{0x} like in C.
+(e.g. \verb!10h!, \verb!$10!, or \verb!0x10! instead of 16).
 
 Unix shells however \marginpar{{\em UNIX}} assign a special meaning to the
 dollar sign, which makes it necessary to escape a dollar sign with a

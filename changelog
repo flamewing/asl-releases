@@ -1,5 +1,16 @@
-$Id: changelog,v 1.117 2016/02/07 16:02:37 alfred Exp $
+$Id: changelog,v 1.121 2016/04/26 14:17:45 alfred Exp $
 ------------------------------------------------------------------------------
+
+2016-04-26 [1.42 Bld 108]
+
+- Bugfix      : For 8080/8085, complain about wrong register names
+                for PUSH/POP
+
+- Addition    : Allow automatic 16/32-bit deduction for inner
+                displacement on 68K
+
+- Addition    : Allow Intel-style hex syntax for addresses passed
+                to P2BIN and P2HEX
 
 2016-02-07 [1.42 Bld 107]
 

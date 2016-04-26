@@ -11,9 +11,12 @@
 /*           30. 5.1999 ConstLongInt akzeptiert auch 0x fuer Hex-Zahlen      */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: strutil.c,v 1.15 2014/12/14 17:58:47 alfred Exp $                     */
+/* $Id: strutil.c,v 1.16 2016/03/25 19:05:57 alfred Exp $                     */
 /*****************************************************************************
  * $Log: strutil.c,v $
+ * Revision 1.16  2016/03/25 19:05:57  alfred
+ * - allow Intel hex notation for addresses passed to tools
+ *
  * Revision 1.15  2014/12/14 17:58:47  alfred
  * - remove static variables in strutil.c
  *
@@ -299,6 +302,7 @@ int mysprintf(va_alist) va_dcl
 }
 #endif
 
+#if 0
 #include <stdarg.h>
 
 /* Some s(n)printf implementations do not NUL-terminate the string.
@@ -320,6 +324,7 @@ int my_snprintf(char *pDest, size_t DestSize, const char *pFmt, ...)
   else
     return 0;
 }
+#endif
 
 /*---------------------------------------------------------------------------*/
 /* das originale strncpy plaettet alle ueberstehenden Zeichen mit Nullen */
@@ -582,9 +587,11 @@ int ReadLnCont(FILE *Datei, char *Zeile, int MaxLen)
 LongInt ConstLongInt(const char *inp, Boolean *pErr, LongInt Base)
 {
   static const char Prefixes[4] = { '$', '@', '%', '\0' }; /* die moeglichen Zahlensysteme */
+  static const char Postfixes[4] = { 'H', 'O', '\0', '\0' };
   static const LongInt Bases[3] = { 16, 8, 2 };            /* die dazugehoerigen Basen */
   LongInt erg;
   LongInt z, val, vorz = 1;  /* Vermischtes */
+  int InpLen = strlen(inp);
 
   /* eventuelles Vorzeichen abspalten */
 
@@ -592,15 +599,17 @@ LongInt ConstLongInt(const char *inp, Boolean *pErr, LongInt Base)
   {
     vorz = -1;
     inp++;
+    InpLen--;
   }
 
   /* Sonderbehandlung 0x --> $ */
 
-  if ((strlen(inp) >= 2)
+  if ((InpLen >= 2)
    && (*inp == '0')
    && (mytoupper(inp[1]) == 'X'))
   {
     inp += 2;
+    InpLen -= 2;
     Base = 16;
   }
 
@@ -609,20 +618,29 @@ LongInt ConstLongInt(const char *inp, Boolean *pErr, LongInt Base)
      laesst.  Der break-Befehl verhindert, dass mehrere Basenzeichen
      hintereinander eingegeben werden koennen */
 
-  else
+  else if (InpLen > 0)
+  {
     for (z = 0; z < 3; z++)
       if (*inp == Prefixes[z])
       {
         Base = Bases[z];
         inp++;
+        InpLen--;
         break;
       }
+      else if (mytoupper(inp[InpLen - 1]) == Postfixes[z])
+      {
+        Base = Bases[z];
+        InpLen--;
+        break;
+      }
+  }
 
   /* jetzt die Zahlenzeichen der Reihe nach durchverwursten */
 
   erg = 0;
   *pErr = False;
-  for(; *inp != '\0'; inp++)
+  for(; InpLen > 0; inp++, InpLen--)
   {
     /* Ziffern 0..9 ergeben selbiges */
 
@@ -651,12 +669,12 @@ LongInt ConstLongInt(const char *inp, Boolean *pErr, LongInt Base)
 
     /* Zahl linksschieben, zusammenfassen, naechster bitte */
 
-    erg = erg*Base + val;
+    erg = erg * Base + val;
   }
 
   /* bis zum Ende durchgelaufen ? */
 
-  if (*inp == '\0')
+  if (!InpLen)
   {
     /* Vorzeichen beruecksichtigen */
 

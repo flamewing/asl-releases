@@ -1168,16 +1168,16 @@ darf.  Zeilenangaben in Fehlermeldungen beziehen sich immer auf die
 letzte Zeile einer solchen zusammengesetzten Zeile.
 \par
 Der Doppelpunkt nach dem Label ist optional, falls das Label in der
-ersten Spalte beginnt (woraus folgt, da"s der Befehl niemals in Spalte
-1 beginnen darf).  Man mu"s ihn aber setzen, falls das Label nicht
-in der ersten Spalte beginnt, damit AS es von einem Befehl unterscheiden
-kann.  In letzterem Fall mu"s "ubrigens zwischen Doppelpunkt und dem
-Befehl mindestens ein Leerzeichen stehen, falls der eingestellte
-Zielprozessor zu denjenigen geh"ort, bei denen das Attribut auch
-eine mit einem Doppelpunkt abgetrennte Formatangabe sein darf.  Dieser
-Knopf ist aus Eindeutigkeitsgr"unden n"otig, da sonst keine
-Unterscheidung zwischen Befehl mit Format und Label mit Befehl m"oglich
-w"are.
+ersten Spalte beginnt (woraus folgt, da"s ein Befehl, sei es ein
+Maschinen- oder Pseudobefehl niemals in Spalte 1 beginnen darf).
+Man mu"s ihn aber setzen, falls das Label nicht in der ersten Spalte
+beginnt, damit AS es von einem Befehl unterscheiden kann.  In letzterem
+Fall mu"s "ubrigens zwischen Doppelpunkt und dem Befehl mindestens ein
+Leerzeichen stehen, falls der eingestellte Zielprozessor zu denjenigen
+geh"ort, bei denen das Attribut auch eine mit einem Doppelpunkt
+abgetrennte Formatangabe sein darf.  Diese Einschr"ankung ist aus
+Eindeutigkeitsgr"unden n"otig, da sonst keine Unterscheidung zwischen
+Befehl mit Format und Label mit Befehl m"oglich w"are.
 \par
 Einige Signalprozessorreihen von Texas Instruments verwenden den f"ur das
 Label vorgesehenen Platz wahlweise auch f"ur einen Doppelstrich
@@ -9259,8 +9259,9 @@ Ausgaben sollten sich daher problemlos umleiten lassen.
 \par
 Sofern Programme im folgenden Zahlen-oder Adre"sangaben von der
 Kommandozeile lesen, d"urfen diese auch hexadezimal geschrieben werden,
-indem man sie mit einem voranstehenden Dollarzeichen oder \tty{0x} wie 
-in C versieht (z.B. \verb!$10! oder \verb!0x10! anstelle von 16).
+indem man sie mit einem hintangestellten \tty{h}, einem voranstehenden
+Dollarzeichen oder \tty{0x} wie in C versieht (z.B. \verb!$10!,
+\verb!10h! oder \verb!0x10! anstelle von 16).
 \par
 Unix-Shells \marginpar{{\em UNIX}} ordnen dem Dollarzeichen allerdings
 eine spezielle Bedeutung zu (Parameterexpansion), weshalb es n"otig ist,

@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code85.c,v 1.6 2014/12/07 19:14:00 alfred Exp $                      */
+/* $Id: code85.c,v 1.7 2016/04/26 14:13:50 alfred Exp $                      */
 /***************************************************************************** 
  * $Log: code85.c,v $
+ * Revision 1.7  2016/04/26 14:13:50  alfred
+ * - complain about wrong register names for PUSH/POP
+ *
  * Revision 1.6  2014/12/07 19:14:00  alfred
  * - silence a couple of Borland C related warnings and errors
  *
@@ -74,15 +77,18 @@ static Boolean DecodeReg8(const char *Asc, Byte *Erg)
   }
 }
 
-static Boolean DecodeReg16(char *Asc, Byte *Erg)
+static Boolean DecodeReg16(char *pAsc, Byte *pResult)
 {
-  static const char *RegNames[4] = {"B", "D", "H", "SP"};
+  static const char *RegNames[8] = {"B", "D", "H", "SP", "BC", "DE", "HL", "SP"};
 
-  for (*Erg = 0; (*Erg) < 4; (*Erg)++)
-    if (strcasecmp(Asc, RegNames[*Erg]) == 0)
+  for (*pResult = 0; (*pResult) < 8; (*pResult)++)
+    if (!strcasecmp(pAsc, RegNames[*pResult]))
+    {
+      *pResult &= 3;
       break;
+    }
 
-  return ((*Erg) < 4);
+  return ((*pResult) < 4);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -255,14 +261,15 @@ static void DecodePUSH_POP(Word Index)
   if (ArgCnt != 1) WrError(1110);
   else
   {
-    OK = TRUE;
     if (!strcasecmp(ArgStr[1], "PSW"))
-      Reg = 3;
-    else if (DecodeReg16(ArgStr[1], &Reg))
     {
-      if (Reg == 3)
-        OK = FALSE;
-    } 
+      Reg = 3;
+      OK = TRUE;
+    }
+    else if (DecodeReg16(ArgStr[1], &Reg))
+      OK = (Reg != 3);
+    else
+      OK = FALSE;
     if (!OK) WrXError(1980, ArgStr[1]);
     else
     {

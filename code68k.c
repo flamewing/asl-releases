@@ -36,9 +36,12 @@
 /*           2001-12-02 fixed problems with forward refs of shift arguments  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68k.c,v 1.24 2015/08/28 17:22:27 alfred Exp $                     */
+/* $Id: code68k.c,v 1.25 2016/04/09 12:33:11 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code68k.c,v $
+ * Revision 1.25  2016/04/09 12:33:11  alfred
+ * - allow automatic 16/32 bis deduction of inner displacement on 68K
+ *
  * Revision 1.24  2015/08/28 17:22:27  alfred
  * - add special handling for labels following BSR
  *
@@ -277,7 +280,7 @@ typedef struct
   Word ANummer, INummer;
   Boolean Long;
   Word Scale;
-  Word Size;
+  ShortInt Size;
   LongInt Wert;
 } AdrComp;
 
@@ -555,7 +558,7 @@ static Boolean ClassComp(AdrComp *C)
     C->Name[strlen(C->Name) - 2] = '\0';
   }
   else
-    C->Size = 1;
+    C->Size = -1;
   C->Art = Disp;
   return True;
 }
@@ -1293,18 +1296,25 @@ static void DecodeAdr(const char *Asc_O, Word Erl)
         AdrMode = 0x3b;
         switch (AdrComps[0].Size)
         {
+          case -1:
+           if (IsDisp16(HVal))
+             goto PCIs16;
+           else
+             goto PCIs32;
           case 1:
             if (!IsDisp16(HVal)) 
             {
               WrError(1330);
               return;
             }
+          PCIs16:
             AdrVals[1] = HVal & 0xffff;
             AdrVals[0] += 0x20;
             AdrNum = 7;
             AdrCnt = 4;
             break;
           case 2:
+          PCIs32:
             AdrVals[1] = HVal >> 16;
             AdrVals[2] = HVal & 0xffff;
             AdrVals[0] += 0x30;
@@ -1333,28 +1343,39 @@ static void DecodeAdr(const char *Asc_O, Word Erl)
           AdrVals[0] += 0x10;
         }
         else
+        {
+          HVal = EvalIntExpression(AdrComps[0].Name, Int32, &ValOK);
+          if (!ValOK)
+            return;
           switch (AdrComps[0].Size)
           {
+            case -1:
+              if (IsDisp16(HVal))
+                goto AnIs16;
+              else
+                goto AnIs32;
             case 1:
-              HVal16 = EvalIntExpression(AdrComps[0].Name, Int16, &ValOK);
-              if (!ValOK)
+              if (!IsDisp16(HVal))
+              {
+                WrError(1330);
                 return;
-              AdrNum = 7;
-              AdrVals[1] = HVal16;
-              AdrCnt = 4;
+              }
+            AnIs16:
               AdrVals[0] += 0x20;
+              AdrVals[1] = HVal & 0xffff;
+              AdrNum = 7;
+              AdrCnt = 4;
               break;
             case 2:
-              HVal = EvalIntExpression(AdrComps[0].Name, Int32, &ValOK);
-              if (!ValOK)
-                return;
-              AdrNum = 7;
-              AdrCnt = 6;
+            AnIs32:
               AdrVals[0] += 0x30;
               AdrVals[1] = HVal >> 16;
               AdrVals[2] = HVal & 0xffff;
+              AdrNum = 7;
+              AdrCnt = 6;
               break;
           }
+        }
       }
 
       /* aeusseres Displacement: */
