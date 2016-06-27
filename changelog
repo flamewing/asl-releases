@@ -1,5 +1,9 @@
-$Id: changelog,v 1.121 2016/04/26 14:17:45 alfred Exp $
+$Id: changelog,v 1.123 2016/06/26 15:59:28 alfred Exp $
 ------------------------------------------------------------------------------
+
+2016-06-26 [1.42 Bld 109]
+
+- Bugfix      : Correct output file in respect to expanded structures
 
 2016-04-26 [1.42 Bld 108]
 

@@ -58,9 +58,12 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.55 2015/10/25 20:06:11 alfred Exp $                          */
+/* $Id: as.c,v 1.56 2016/06/23 15:57:21 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.56  2016/06/23 15:57:21  alfred
+ * - correct code output in respect to structure expansion
+ *
  * Revision 1.55  2015/10/25 20:06:11  alfred
  * - regard new END... struction/union instructions
  *
@@ -2674,18 +2677,6 @@ static void Produce_Code(void)
     }
   }
 
-  /* structure declaration ? */
-
-  else if (IsStruct)
-  {
-    if (IfAsm)
-    {
-      ExpandStruct(OneStruct);
-      strmaxcpy(ListLine, OneStruct->IsUnion ? "(UNION)" : "(STRUCT)", 255);
-      PCs[ActPC] += CodeLen;
-    }
-  }
-
   else
   {
     StopfZahl = 0;
@@ -2698,7 +2689,14 @@ static void Produce_Code(void)
 
     if (IfAsm)
     {
-      if (!CodeGlobalPseudo())
+      /* structure declaration ? */
+
+      if (IsStruct)
+      {
+        ExpandStruct(OneStruct);
+        strmaxcpy(ListLine, OneStruct->IsUnion ? "(UNION)" : "(STRUCT)", 255);
+      }
+      else if (!CodeGlobalPseudo())
         MakeCode();
       if ((MacProOutput) && ((*OpPart != '\0') || (*LabPart != '\0') || (*CommPart != '\0')))
       {
