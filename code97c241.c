@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code97c241.c,v 1.11 2015/09/20 10:37:36 alfred Exp $                  */
+/* $Id: code97c241.c,v 1.12 2016/07/01 17:43:50 alfred Exp $                  */
 /*****************************************************************************
  * $Log: code97c241.c,v $
+ * Revision 1.12  2016/07/01 17:43:50  alfred
+ * - allow enforcement of prefix for TLCS-9000
+ *
  * Revision 1.11  2015/09/20 10:37:36  alfred
  * - silence some GCC warnings
  *
@@ -102,19 +105,29 @@ static char **Conditions;
 
 /*--------------------------------------------------------------------------*/
 
-static void AddSignedPrefix(Byte Index, Byte MaxBits, LongInt Value)
+static const char *CheckForcePrefix(const char *pArg, Boolean *pForce)
+{
+  if (*pArg == '>')
+  {
+    *pForce = True;
+    pArg++;
+  }
+  return pArg;
+}
+
+static void AddSignedPrefix(Byte Index, Byte MaxBits, LongInt Value, Boolean Force)
 {
   LongInt Max;
 
   Max = 1l << (MaxBits -1);
-  if ((Value < -Max) || (Value >= Max))
+  if (Force || ((Value < -Max) || (Value >= Max)))
   {
     PrefUsed[Index] = True;
     Prefs[Index] = (Value >> MaxBits) & 0x7ff;
   }
 }
 
-static Boolean AddRelPrefix(Byte Index, Byte MaxBits, LongInt *Value)
+static Boolean AddRelPrefix(Byte Index, Byte MaxBits, LongInt *Value, Boolean Force)
 {
   LongInt Max1,Max2;
 
@@ -123,7 +136,7 @@ static Boolean AddRelPrefix(Byte Index, Byte MaxBits, LongInt *Value)
   if ((*Value < -Max2) || (*Value >= Max2)) WrError(1370);
   else
   {
-    if ((*Value < -Max1) || (*Value >= Max1))
+    if (Force || ((*Value < -Max1) || (*Value >= Max1)))
     {
       PrefUsed[Index] = True;
       Prefs[Index] = ((*Value) >> MaxBits) & 0x7ff;
@@ -133,12 +146,12 @@ static Boolean AddRelPrefix(Byte Index, Byte MaxBits, LongInt *Value)
   return False;
 }
 
-static void AddAbsPrefix(Byte Index, Byte MaxBits, LongInt Value)
+static void AddAbsPrefix(Byte Index, Byte MaxBits, LongInt Value, Boolean Force)
 {
   LongInt Dist;
 
   Dist = 1l << (MaxBits - 1);
-  if ((Value >= Dist) && (Value < 0x1000000 - Dist))
+  if (Force || ((Value >= Dist) && (Value < 0x1000000 - Dist)))
   {
     PrefUsed[Index] = True;
     Prefs[Index] = (Value >> MaxBits) & 0x7ff;
@@ -234,6 +247,8 @@ static void DecodeAdr(char *Asc, Byte PrefInd, Boolean MayImm, Boolean MayReg)
 
   if (IsIndirect(Asc))
   {
+    Boolean ForcePrefix = False;
+
     /* I.1. vorkonditionieren */
 
     strmov(Asc, Asc + 1);
@@ -403,8 +418,10 @@ static void DecodeAdr(char *Asc, Byte PrefInd, Boolean MayImm, Boolean MayReg)
 
       else
       {
+        const char *pPart = CheckForcePrefix(AdrPart, &ForcePrefix);
+
         FirstPassUnknown = False;
-        DispPart = EvalIntExpression(AdrPart, Int32, &OK);
+        DispPart = EvalIntExpression(pPart, Int32, &OK);
         if (!OK)
           return;
         if (FirstPassUnknown)
@@ -426,9 +443,9 @@ static void DecodeAdr(char *Asc, Byte PrefInd, Boolean MayImm, Boolean MayReg)
 
     if ((BaseReg == FreeReg) && (IndReg == FreeReg))
     {
-      AdrMode = 0x20;
+      AdrMode = 0x20; /* 0x60 should be equivalent: adding 0 as RW0 or RD0 is irrelvant */
       AdrVals[0] = 0xe000 + (DispAcc & 0x1fff); AdrCnt = 2;
-      AddAbsPrefix(PrefInd, 13, DispAcc);
+      AddAbsPrefix(PrefInd, 13, DispAcc, ForcePrefix);
       AdrOK = True;
       return;
     }
@@ -464,7 +481,7 @@ static void DecodeAdr(char *Asc, Byte PrefInd, Boolean MayImm, Boolean MayReg)
             AdrVals[0] = (((Word)BaseReg & 14) << 11) + 0x8000;
           AdrVals[0] += DispAcc & 0x1ff;
           AdrCnt = 2;
-          AddSignedPrefix(PrefInd, 9, DispAcc);
+          AddSignedPrefix(PrefInd, 9, DispAcc, ForcePrefix);
           AdrOK = True;
         }
         return;
@@ -485,7 +502,7 @@ static void DecodeAdr(char *Asc, Byte PrefInd, Boolean MayImm, Boolean MayReg)
         {
           AdrMode = 0x20;
           AdrVals[0] = 0xd000 + (DispAcc & 0x1ff); AdrCnt = 2;
-          AddSignedPrefix(PrefInd, 9, DispAcc);
+          AddSignedPrefix(PrefInd, 9, DispAcc, ForcePrefix);
           AdrOK = True;
         }
         return;
@@ -502,7 +519,7 @@ static void DecodeAdr(char *Asc, Byte PrefInd, Boolean MayImm, Boolean MayReg)
           AdrMode = 0x20;
           AdrVals[0] = 0xd800 + (DispAcc & 0x1ff);
           AdrCnt = 2;
-          AddSignedPrefix(PrefInd, 9, DispAcc);
+          AddSignedPrefix(PrefInd, 9, DispAcc, ForcePrefix);
           AdrOK = True;
         }
         return;
@@ -522,7 +539,7 @@ static void DecodeAdr(char *Asc, Byte PrefInd, Boolean MayImm, Boolean MayReg)
             AdrMode = 0x60 + (BaseReg & 14);
           AdrVals[0] = 0xe000 + (DispAcc & 0x1fff);
           AdrCnt = 2;
-          AddSignedPrefix(PrefInd, 13, DispAcc);
+          AddSignedPrefix(PrefInd, 13, DispAcc, ForcePrefix);
           AdrOK = True;
         }
         return;
@@ -563,7 +580,7 @@ static void DecodeAdr(char *Asc, Byte PrefInd, Boolean MayImm, Boolean MayReg)
         }
         AdrVals[0] += (((Word)ScaleFact) << 9) + (DispAcc & 0x1ff);
         AdrCnt = 2;
-        AddSignedPrefix(PrefInd, 9, DispAcc);
+        AddSignedPrefix(PrefInd, 9, DispAcc, ForcePrefix);
         AdrOK = True;
       }
       return;
@@ -1971,10 +1988,10 @@ static void DecodeCALR_JR(Word Code)
   else
   {
     LongInt AdrInt;
-    Boolean OK;
+    Boolean OK, ForcePrefix = False;
 
-    AdrInt = EvalIntExpression(ArgStr[1], Int32, &OK) - EProgCounter();
-    if ((OK) && (AddRelPrefix(0, 13, &AdrInt)))
+    AdrInt = EvalIntExpression(CheckForcePrefix(ArgStr[1], &ForcePrefix), Int32, &OK) - EProgCounter();
+    if ((OK) && (AddRelPrefix(0, 13, &AdrInt, ForcePrefix)))
     {
       if (Odd(AdrInt)) WrError(1375);
       else
@@ -2000,11 +2017,11 @@ static void DecodeJRC(Word Code)
     else
     {
       LongInt AdrInt;
-      Boolean OK;
+      Boolean OK, ForcePrefix = False;
 
       Condition %= 16;
-      AdrInt = EvalIntExpression(ArgStr[2], Int32, &OK) - EProgCounter();
-      if ((OK) && (AddRelPrefix(0, 9, &AdrInt)))
+      AdrInt = EvalIntExpression(CheckForcePrefix(ArgStr[2], &ForcePrefix), Int32, &OK) - EProgCounter();
+      if ((OK) && (AddRelPrefix(0, 9, &AdrInt, ForcePrefix)))
       {
         if (Odd(AdrInt)) WrError(1375);
         else
@@ -2029,15 +2046,19 @@ static void DecodeJRBC_JRBS(Word Code)
     z = EvalIntExpression(ArgStr[1], UInt3, &OK);
     if (OK)
     {
-      LongInt AdrLong, AdrInt;
+      Boolean AdrLongPrefix = False;
+      LongInt AdrLong;
 
       FirstPassUnknown = False;
-      AdrLong = EvalIntExpression(ArgStr[2], Int24, &OK);
+      AdrLong = EvalIntExpression(CheckForcePrefix(ArgStr[2], &AdrLongPrefix), Int24, &OK);
       if (OK)
       {
-        AddAbsPrefix(1, 13, AdrLong);
-        AdrInt = EvalIntExpression(ArgStr[3], Int32, &OK) - EProgCounter();
-        if ((OK) && (AddRelPrefix(0, 9, &AdrInt)))
+        LongInt AdrInt;
+        Boolean AdrIntPrefix = False;
+
+        AddAbsPrefix(1, 13, AdrLong, AdrLongPrefix);
+        AdrInt = EvalIntExpression(CheckForcePrefix(ArgStr[3], &AdrIntPrefix), Int32, &OK) - EProgCounter();
+        if ((OK) && (AddRelPrefix(0, 9, &AdrInt, AdrIntPrefix)))
         {
           if (Odd(AdrInt)) WrError(1375);
           else
@@ -2066,10 +2087,10 @@ static void DecodeDJNZ(Word Code)
       else
       {
         LongInt AdrInt;
-        Boolean OK;
+        Boolean OK, ForcePrefix = False;
 
-        AdrInt = EvalIntExpression(ArgStr[2], Int32, &OK) - (EProgCounter() + 4 + AdrCnt +2 * Ord(PrefUsed[0]));
-        if ((OK) && (AddRelPrefix(1, 13, &AdrInt)))
+        AdrInt = EvalIntExpression(CheckForcePrefix(ArgStr[2], &ForcePrefix), Int32, &OK) - (EProgCounter() + 4 + AdrCnt +2 * Ord(PrefUsed[0]));
+        if ((OK) && (AddRelPrefix(1, 13, &AdrInt, ForcePrefix)))
         {
           if (Odd(AdrInt)) WrError(1375);
           else
@@ -2104,11 +2125,11 @@ static void DecodeDJNZC(Word Code)
         if ((OpSize != 1) && (OpSize != 2)) WrError(1130);
         else
         {
-          Boolean OK;
+          Boolean OK, ForcePrefix = False;
           LongInt AdrInt;
 
-          AdrInt = EvalIntExpression(ArgStr[3], Int32, &OK) - EProgCounter();
-          if ((OK) && (AddRelPrefix(1, 13, &AdrInt)))
+          AdrInt = EvalIntExpression(CheckForcePrefix(ArgStr[3], &ForcePrefix), Int32, &OK) - EProgCounter();
+          if ((OK) && (AddRelPrefix(1, 13, &AdrInt, ForcePrefix)))
           {
             if (Odd(AdrInt)) WrError(1375);
             else
@@ -2132,10 +2153,10 @@ static void DecodeLINK_RETD(Word Code)
   else
   {
     LongInt AdrInt;
-    Boolean OK;
+    Boolean OK, ForcePrefix = False;
 
     FirstPassUnknown = False;
-    AdrInt = EvalIntExpression(ArgStr[1], Int32, &OK);
+    AdrInt = EvalIntExpression(CheckForcePrefix(ArgStr[1], &ForcePrefix), Int32, &OK);
     if (FirstPassUnknown)
       AdrInt &= 0x1fe;
     if (ChkRange(AdrInt, -0x80000, 0x7ffff))
@@ -2144,7 +2165,7 @@ static void DecodeLINK_RETD(Word Code)
       else
       {
         WAsmCode[0] = Code + (AdrInt & 0x1fe);
-        AddSignedPrefix(0, 9, AdrInt);
+        AddSignedPrefix(0, 9, AdrInt, ForcePrefix);
         CodeLen = 2;
       }
     }

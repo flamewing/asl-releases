@@ -65,7 +65,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition October 2015}
+{\large Edition July 2016}
 \end{raggedright}
 
 \clearpage
@@ -8025,20 +8025,41 @@ However, some instructions that could not be realized as macros are
 
 \section{TLCS-9000}
 
-This is the first time that I implemented a processor for AS which
-was not available at that point of time.  Unfortunately, Toshiba
-decided to put this processor ''on ice'', so we won't see any silicon
-in the near future.  This has of course the result that this part
+This was the first time that I implemented a processor for AS which
+was not yet available at that point of time.  And unfortunately,
+I received back then information that Toshiba had decided no to
+maket this processor at all.  This of course had the result that
+the TLCS-9000 part of the assembler
 \begin{enumerate}
-\item{is a ''paper design'', i.e. there was so far no chance to test
-     it in the reality and}
+\item{was a ''paper design'', i.e. there was so far no chance to test
+      it on real hardware and}
 \item{the documentation for the '9000 I could get hold of \cite{Tosh9000}
-      were preliminary, so they could not deliver clarity on every
-      detail.}
+      was preliminary and was unclear in a couple of detail
+      issues.}
 \end{enumerate}
-Therefore, errors in this code generator are quite possible (and will
-of course be fixed if it should ever become possible!).  At least the
+So i effect, this target went into 'dormant mode'...
+
+...cut, 20 years have passed: all of a sudden, people are
+contacting me and tell me that Toshiba actually did sell
+TLCS-9000 chips to customers, and they ask for documentation to
+do reverse engineering.  Maybe this will shed some light on the
+remaining unclarities.  Nevertheless, errors in this code generator
+are quite possible (and will of course be fixed!).  At least the
 few examples listed in \cite{Tosh9000} are assembled correctly.
+
+Displacements included in machine instructions may only have a
+certain maximum length (e.g. 9 or 13 bits).  In case the
+displacement is longer, a prefix containing the 'upper bits' must
+be prepended to the instruction.  AS will automatically insert
+such prefixes when necessary, however it is also possible to
+force usage of a prefix by adding a leading \verb!'>'!.  An
+example for this:
+
+\begin{verbatim}
+  ld:g.b  (0h),0       ; no prefix
+  ld:g.b  (400000h),0  ; prefix added automatically
+  ld:g.b  (>0h),0      ; forced prefix
+\end{verbatim}
 
 %%---------------------------------------------------------------------------
 

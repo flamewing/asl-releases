@@ -1,5 +1,9 @@
-$Id: changelog,v 1.123 2016/06/26 15:59:28 alfred Exp $
+$Id: changelog,v 1.124 2016/07/01 17:43:50 alfred Exp $
 ------------------------------------------------------------------------------
+
+2016-07-01 [1.42 Bld 110]
+
+- Addition    : allow enforcement of prefixes for TLCS-9000
 
 2016-06-26 [1.42 Bld 109]
 

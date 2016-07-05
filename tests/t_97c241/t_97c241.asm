@@ -334,3 +334,5 @@ Targ:		jr	Targ
 		add.w	(rw4+56h),3579h
 		jrc	nz,$-1234h
 
+		add.w	(rw4+>0eah),rw7
+		add.w	(rw4->0eah),rw7

@@ -46,7 +46,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand Oktober 2015}
+{\large Stand Juli 2016}
 \end{raggedright}
 
 \clearpage
@@ -8193,9 +8193,10 @@ daher auch ohne die Include-Datei zur Verf"ugung:
 
 Hier ist es zum ersten Mal passiert, da"s ich einen Prozessor in AS
 implementiert habe, der zu diesem Zeitpunkt noch gar nicht auf dem
-Markt war.  Toshiba hat sich leider auch vorl"aufig dazu entschieden,
-diesen Prozessor ,,auf Eis'' zu legen, bis auf weiteres wird es also
-auch kein Silizium geben.  Das hat nat"urlich zur Folge, da"s dieser Teil
+Markt war.  Toshiba hatte sich nach meinen Informationen leider
+zwischenzeitlich auch dazu entschieden, diesen Prozessor ,,auf Eis''
+zu legen, also auch kein Silizium geben.  Das hatte nat"urlich zur Folge,
+da"s dieser Teil
 \begin{description}
 \item[1.]{ein ,,Paper-Design'' ist, d.h. noch nicht praktisch getestet
           wurde und}
@@ -8203,9 +8204,30 @@ auch kein Silizium geben.  Das hat nat"urlich zur Folge, da"s dieser Teil
           noch vorl"aufig waren, also noch nicht bis ins letzte Klarheit
           lieferten.}
 \end{description}
-Fehler in diesem Teil sind also durchaus noch m"oglich (und werden
-nat"urlich bereinigt, wenn es denn einmal gehen sollte!).  Zumindest
-die Handvoll Beispiele in \cite{Tosh9000} werden aber richtig "ubersetzt.
+und dieses Target foratn in einen Dornr"oschenschlaf fiel...
+
+...Schnitt, 20 Jahre sp"ater: auf einmal melden sich Leute bei
+mir, da"s Toshiba wohl doch TLCS-9000-Chips an Kunden verkauft
+hat, und fragen nach den Unterlagen, weil sie Reverse-Engineering
+betreiben.  Vielleicht bekommen wir ja auf diesem Wege noch das
+eine oder andere unklare Detail best"atigt oder gekl"art.  Fehler in
+diesem Teil sind also weiterhin noch m"oglich und werden nat"urlich
+bereinigt.  Zumindest die Handvoll Beispiele in \cite{Tosh9000} werden
+aber richtig "ubersetzt.
+
+Displacements im Maschinenbefehl selber k"onnen nur eine bestimmte
+maximale L"ange (z.B. 13 oder 9 Bit) haben.  Ist das Displacement
+l"anger, mu"s dem Befehl ein Pr"afix mit den ''oberen Bits''
+vorangestellt werden.  AS wird solche Pr"afixe automatisch nach
+Bedarf einsetzen, man kann jedoch auch mit einem dem Displacement
+vorangestellten \verb!'>'! das Setzen eines Pr"afix erzwingen,
+z.B. so:
+
+\begin{verbatim}
+  ld:g.b  (0h),0       ; kein Pr"afix
+  ld:g.b  (400000h),0  ; Pr"afix automatisch erzeugt
+  ld:g.b  (>0h),0      ; Pr"afix erzwungen
+\end{verbatim}
 
 %%---------------------------------------------------------------------------
 
