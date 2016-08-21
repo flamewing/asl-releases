@@ -10,9 +10,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemcore.c,v 1.9 2014/12/07 19:14:01 alfred Exp $                   */
+/* $Id: codemcore.c,v 1.10 2016/08/17 21:26:46 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codemcore.c,v $
+ * Revision 1.10  2016/08/17 21:26:46  alfred
+ * - fix some errors and warnings detected by clang
+ *
  * Revision 1.9  2014/12/07 19:14:01  alfred
  * - silence a couple of Borland C related warnings and errors
  *
@@ -242,6 +245,7 @@ static void DecodeOneReg(Word Index)
   if (*AttrPart != '\0') WrError(1100);
   else if (ArgCnt != 1) WrError(1110);
   else if (!DecodeReg(ArgStr[1], &RegX)) WrXError(1445, ArgStr[1]);
+  else
   {
     if ((Instr->Priv) && (!SupAllowed)) WrError(50);
     WAsmCode[0] = Instr->Code + RegX;
@@ -258,6 +262,7 @@ static void DecodeTwoReg(Word Index)
   else if (ArgCnt != 2) WrError(1110);
   else if (!DecodeReg(ArgStr[1], &RegX)) WrXError(1445, ArgStr[1]);
   else if (!DecodeReg(ArgStr[2], &RegY)) WrXError(1445, ArgStr[2]);
+  else
   {
     if ((Instr->Priv) && (!SupAllowed)) WrError(50);
     WAsmCode[0] = Instr->Code + (RegY << 4) + RegX;

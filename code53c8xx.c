@@ -368,7 +368,10 @@ static void DecodeJmps(Word Index)
     }
     Buf = 0;
     if (Memo("RETURN"))
+    {
       Adr = 0;
+      OK = True;
+    }
     else
     {
       l = strlen(ArgStr[1]);

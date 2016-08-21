@@ -15,9 +15,12 @@
 /*           2001-11-26 scaling fix (input from Johannes)                    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3206x.c,v 1.10 2014/12/05 11:58:15 alfred Exp $                   */
+/* $Id: code3206x.c,v 1.11 2016/08/17 21:26:46 alfred Exp $                   */
 /***************************************************************************** 
  * $Log: code3206x.c,v $
+ * Revision 1.11  2016/08/17 21:26:46  alfred
+ * - fix some errors and warnings detected by clang
+ *
  * Revision 1.10  2014/12/05 11:58:15  alfred
  * - collapse STDC queries into one file
  *
@@ -2515,7 +2518,7 @@ static void DecodeSSUB(Word Code)
           case ModImm:
             if (DecodeAdr(ArgStr[2], MModReg, True, &S2Reg))
             {
-              if ((ThisCross) && (!IsCross(S2Reg) < 16)) WrError(1350);
+              if ((ThisCross) && (!IsCross(S2Reg))) WrError(1350);
               else
               {
                 AddSrc(S2Reg); SetCross(S2Reg);
@@ -2707,19 +2710,20 @@ static void ChkPacket(void)
         }
       }
 
-  for (z2 = 0; z2 < 32; RegReads[z2++] = 0);
-    for (z1 = 0; z1 < ParCnt; z1++)
+  for (z2 = 0; z2 < 32; z2++)
+    RegReads[z2] = 0;
+  for (z1 = 0; z1 < ParCnt; z1++)
+  {
+    Mask = 1;
+    for (z2 = 0; z2 < 32; z2++)
     {
-      Mask = 1;
-      for (z2 = 0; z2 < 32; z2++)
-      {
-        if ((ParRecs[z1].SrcMask & Mask) != 0)
-          RegReads[z2]++;
-        if ((ParRecs[z1].SrcMask2 & Mask) != 0)
-          RegReads[z2]++;
-        Mask = Mask << 1;
-      }
+      if ((ParRecs[z1].SrcMask & Mask) != 0)
+        RegReads[z2]++;
+      if ((ParRecs[z1].SrcMask2 & Mask) != 0)
+        RegReads[z2]++;
+      Mask = Mask << 1;
     }
+  }
 
   /* Register mehr als 4mal gelesen */
 

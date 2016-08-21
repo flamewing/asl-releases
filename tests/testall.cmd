@@ -88,6 +88,7 @@ call testall t_7725
 call testall t_78c1x
 call testall t_78k0
 call testall t_78k2
+call testall t_78k3
 call testall t_8008
 call testall t_807x
 call testall t_821

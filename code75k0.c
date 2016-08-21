@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code75k0.c,v 1.12 2014/12/14 17:58:47 alfred Exp $                    */
+/* $Id: code75k0.c,v 1.13 2016/08/17 21:26:46 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code75k0.c,v $
+ * Revision 1.13  2016/08/17 21:26:46  alfred
+ * - fix some errors and warnings detected by clang
+ *
  * Revision 1.12  2014/12/14 17:58:47  alfred
  * - remove static variables in strutil.c
  *
@@ -223,6 +226,7 @@ static void DecodeAdr(char *Asc, Byte Mask)
     {
       case -1:
         WrError(1132);
+        OK = False;
         break;
       case 0:
         AdrPart = EvalIntExpression(Asc + 1, Int4, &OK) & 15;

@@ -5,9 +5,19 @@
 /* Codegenerator 78K2-Familie                                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code78k2.c,v 1.19 2014/12/07 19:14:00 alfred Exp $
+/* $Id: code78k2.c,v 1.22 2016/08/14 20:00:23 alfred Exp $
  *****************************************************************************
  * $Log: code78k2.c,v $
+ * Revision 1.22  2016/08/14 20:00:23  alfred
+ * - correct formatting
+ *
+ * Revision 1.21  2016/08/12 18:20:40  alfred
+ * - correct usage of & operator
+ * - rename PRn -> RPn
+ *
+ * Revision 1.20  2016/08/10 19:22:33  alfred
+ * - correct usage of toupper()
+ *
  * Revision 1.19  2014/12/07 19:14:00  alfred
  * - silence a couple of Borland C related warnings and errors
  *
@@ -183,7 +193,7 @@ static ShortInt DecodeReg8(char *pAsc)
       Result = pPos - Reg8Names;
   }
 
-  else if ((l == 2) && (toupper(pAsc[0] == 'R')))
+  else if ((l == 2) && (toupper(pAsc[0]) == 'R'))
   {
     if ((pAsc[1] >= '0') && (pAsc[1] <= '7'))
       Result = pAsc[1] - '0';
@@ -199,7 +209,7 @@ static ShortInt DecodeReg16(char *pAsc)
 
   if (l == 2)
   {
-    static char *Reg16Names[4] = {"AX","BC","DE","HL"};
+    static char *Reg16Names[4] = {"AX", "BC", "DE", "HL"};
     int z;
 
     for (z = 0; z < 4; z++)
@@ -210,7 +220,7 @@ static ShortInt DecodeReg16(char *pAsc)
       }
   }
    
-  else if ((l == 3) && (toupper(pAsc[0] == 'P')) && (toupper(pAsc[1] == 'R')))
+  else if ((l == 3) && (toupper(pAsc[0]) == 'R') && (toupper(pAsc[1]) == 'P'))
   {
     if ((pAsc[2] >= '0') && (pAsc[2] <= '3'))
       Result = pAsc[2] - '0';
@@ -327,7 +337,7 @@ static void DecodeAdr(char *pAsc, Word Mask)
     if (pStart == pAsc)
     {
       static char *Modes[] = { "DE+",  "HL+",  "DE-",  "HL-",  "DE",  "HL",
-                               "PR2+", "PR3+", "PR2-", "PR3-", "PR2", "PR3" };
+                               "RP2+", "RP3+", "RP2-", "RP3-", "RP2", "RP3" };
       unsigned z;
       char *pSep, Save;
 
@@ -452,12 +462,12 @@ static void DecodeAdr(char *pAsc, Word Mask)
 
     WordOp = LongOp & 0xffff;
 
-    if ((Mask && MModShort) && (!ForceLong) && ((WordOp >= 0xfe20) && (WordOp <= 0xff1f)))
+    if ((Mask & MModShort) && (!ForceLong) && ((WordOp >= 0xfe20) && (WordOp <= 0xff1f)))
     {
       AdrMode = ModShort; AdrCnt = 1;
       AdrVals[0] = Lo(WordOp);
     }
-    else if ((Mask && MModSFR) && (!ForceLong) && (Hi(WordOp) == 0xff))
+    else if ((Mask & MModSFR) && (!ForceLong) && (Hi(WordOp) == 0xff))
     {                                                                                    
       AdrMode = ModSFR; AdrCnt = 1;
       AdrVals[0] = Lo(WordOp);                        
@@ -1286,7 +1296,7 @@ static void DecodeCALLT(Word Index)
     if ((*pAsc != '[') || (pAsc[l - 1] != ']')) WrError(1350);
     else
     {
-      pAsc++; pAsc[l -2] = '\0';
+      pAsc++; pAsc[l - 2] = '\0';
       FirstPassUnknown = FALSE;
       AdrWord = EvalIntExpression(pAsc, UInt7, &OK);
       if (OK)

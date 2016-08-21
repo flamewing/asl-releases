@@ -357,8 +357,8 @@ static void DecodeAri(Word Code)
       if (OK)
        if (DecodeReg(ArgStr[1], &SrcReg, &SrcLen))
        {
-         if ((Rot == 0xffff))
-          Rot = ((SrcLen == -1)) ? 0 : SrcLen;
+         if (Rot == 0xffff)
+           Rot = ((SrcLen == -1)) ? 0 : SrcLen;
          if ((DestReg >= 16) && (SrcLen != -1) && (SrcLen != Rot)) WrError(1131);
          else
          {
@@ -506,7 +506,7 @@ static void DecodeNZT(Word Code)
       }
     }
   }
-};
+}
 
 /* Symbol: 00AA0ORL */
 

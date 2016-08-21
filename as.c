@@ -58,9 +58,12 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.56 2016/06/23 15:57:21 alfred Exp $                          */
+/* $Id: as.c,v 1.57 2016/08/10 21:06:22 alfred Exp $                          */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.57  2016/08/10 21:06:22  alfred
+ * - begun with 78K3 support
+ *
  * Revision 1.56  2016/06/23 15:57:21  alfred
  * - correct code output in respect to structure expansion
  *
@@ -406,6 +409,7 @@
 #include "code75k0.h"
 #include "code78k0.h"
 #include "code78k2.h"
+#include "code78k3.h"
 #include "code7720.h"
 #include "code77230.h"
 #include "code53c8xx.h"
@@ -4419,6 +4423,7 @@ int main(int argc, char **argv)
     code75k0_init();
     code78k0_init();
     code78k2_init();
+    code78k3_init();
     code7720_init();
     code77230_init();
     codescmp_init();

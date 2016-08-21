@@ -36,9 +36,12 @@
 /*           2001-12-02 fixed problems with forward refs of shift arguments  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68k.c,v 1.25 2016/04/09 12:33:11 alfred Exp $                     */
+/* $Id: code68k.c,v 1.26 2016/08/17 21:26:46 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code68k.c,v $
+ * Revision 1.26  2016/08/17 21:26:46  alfred
+ * - fix some errors and warnings detected by clang
+ *
  * Revision 1.25  2016/04/09 12:33:11  alfred
  * - allow automatic 16/32 bis deduction of inner displacement on 68K
  *
@@ -1289,7 +1292,13 @@ static void DecodeAdr(const char *Asc_O, Word Erl)
 
       if (AdrComps[1].Art == PC) 
       {
-        HVal = (AdrComps[0].Art == None) ? 0 : EvalIntExpression(AdrComps[0].Name, Int32, &ValOK);
+        if (AdrComps[0].Art == None)
+        {
+          HVal = 0;
+          ValOK = True;
+        }
+        else
+          HVal = EvalIntExpression(AdrComps[0].Name, Int32, &ValOK);
         HVal -= EProgCounter() + RelPos;
         if (!ValOK)
           return;

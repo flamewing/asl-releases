@@ -14,9 +14,12 @@
 /*                      ShortMode wird bei absoluter Adressierung gemerkt    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code56k.c,v 1.9 2014/12/07 19:13:59 alfred Exp $                     */
+/* $Id: code56k.c,v 1.10 2016/08/17 21:26:46 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code56k.c,v $
+ * Revision 1.10  2016/08/17 21:26:46  alfred
+ * - fix some errors and warnings detected by clang
+ *
  * Revision 1.9  2014/12/07 19:13:59  alfred
  * - silence a couple of Borland C related warnings and errors
  *
@@ -1126,8 +1129,8 @@ static Boolean DecodePseudo(void)
             WrError(1135); OK = False;
         }
       }
+      if (!OK) CodeLen = 0;
     }
-    if (!OK) CodeLen = 0;
     return True;
   }
 

@@ -4,9 +4,12 @@
 /*                                                                           */
 /* Codegenerator XCore                                                       */
 /*****************************************************************************/
-/* $Id: codexcore.c,v 1.6 2014/12/07 19:14:02 alfred Exp $                   */
+/* $Id: codexcore.c,v 1.7 2016/08/17 21:26:47 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codexcore.c,v $
+ * Revision 1.7  2016/08/17 21:26:47  alfred
+ * - fix some errors and warnings detected by clang
+ *
  * Revision 1.6  2014/12/07 19:14:02  alfred
  * - silence a couple of Borland C related warnings and errors
  *
@@ -106,6 +109,7 @@ static void Code_3r(Word Index)
   else if (!ParseReg(ArgStr[1], &Op1)) WrXError(1445, ArgStr[1]);
   else if (!ParseReg(ArgStr[2], &Op2)) WrXError(1445, ArgStr[2]);
   else if (!ParseReg(ArgStr[3], &Op3)) WrXError(1445, ArgStr[3]);
+  else
   {
     WAsmCode[0] = Index
                 | ((Op3 & 3) << 0)
@@ -124,6 +128,7 @@ static void Code_2rus(Word Index)
   if (ArgCnt != 3) WrError(1110);
   else if (!ParseReg(ArgStr[1], &Op1)) WrXError(1445, ArgStr[1]);
   else if (!ParseReg(ArgStr[2], &Op2)) WrXError(1445, ArgStr[2]);
+  else
   {
     FirstPassUnknown = FALSE;
     Op3 = EvalIntExpression(ArgStr[3], UInt4, &OK);
@@ -152,6 +157,7 @@ static void Code_2r(Word Index)
   if (ArgCnt != 2) WrError(1110);
   else if (!ParseReg(ArgStr[1], &Op1)) WrXError(1445, ArgStr[1]);
   else if (!ParseReg(ArgStr[2], &Op2)) WrXError(1445, ArgStr[2]);
+  else
   {
     unsigned Up = UpVal(Op2, Op1, 0, 0) + 27;
 
@@ -172,6 +178,7 @@ static void Code_l3r(Word Index)
   else if (!ParseReg(ArgStr[1], &Op1)) WrXError(1445, ArgStr[1]);
   else if (!ParseReg(ArgStr[2], &Op2)) WrXError(1445, ArgStr[2]);
   else if (!ParseReg(ArgStr[3], &Op3)) WrXError(1445, ArgStr[3]);
+  else
   {
     WAsmCode[0] = 0xf800
                 | ((Op3 & 3) << 0)
@@ -191,6 +198,7 @@ static void Code_l2rus(Word Index)
   if (ArgCnt != 3) WrError(1110);
   else if (!ParseReg(ArgStr[1], &Op1)) WrXError(1445, ArgStr[1]);
   else if (!ParseReg(ArgStr[2], &Op2)) WrXError(1445, ArgStr[2]);
+  else
   {
     FirstPassUnknown = FALSE;
     Op3 = EvalIntExpression(ArgStr[3], UInt4, &OK);
@@ -233,6 +241,7 @@ static void Code_l2r(Word Index)
   if (ArgCnt != 2) WrError(1110);
   else if (!ParseReg(ArgStr[1], &Op1)) WrXError(1445, ArgStr[1]);
   else if (!ParseReg(ArgStr[2], &Op2)) WrXError(1445, ArgStr[2]);
+  else
   {
     unsigned Up = UpVal(Op2, Op1, 0, 0) + 27;
 
@@ -367,6 +376,7 @@ static void Code_l4r(Word Index)
   else if (!ParseReg(ArgStr[2], &Op2)) WrXError(1445, ArgStr[2]);
   else if (!ParseReg(ArgStr[3], &Op3)) WrXError(1445, ArgStr[3]);
   else if (!ParseReg(ArgStr[4], &Op4)) WrXError(1445, ArgStr[4]);
+  else
   {
     WAsmCode[0] = 0xf800
                 | ((Op3 & 3) << 0)
@@ -388,6 +398,7 @@ static void Code_l5r(Word Index)
   else if (!ParseReg(ArgStr[3], &Op2)) WrXError(1445, ArgStr[3]);
   else if (!ParseReg(ArgStr[4], &Op3)) WrXError(1445, ArgStr[4]);
   else if (!ParseReg(ArgStr[5], &Op5)) WrXError(1445, ArgStr[5]);
+  else
   {
     unsigned Up = UpVal(Op5, Op4, 0, 0) + 27;
     WAsmCode[0] = 0xf800
@@ -415,6 +426,7 @@ static void Code_l6r(Word Index)
   else if (!ParseReg(ArgStr[4], &Op3)) WrXError(1445, ArgStr[4]);
   else if (!ParseReg(ArgStr[5], &Op5)) WrXError(1445, ArgStr[5]);
   else if (!ParseReg(ArgStr[6], &Op6)) WrXError(1445, ArgStr[6]);
+  else
   {
     WAsmCode[0] = 0xf800
                 | ((Op3 & 3) << 0)
@@ -507,6 +519,7 @@ static void Code_cbranch(Word Index)
 
   if (ArgCnt != 2) WrError(1110);
   else if (!ParseReg(ArgStr[1], &Op1)) WrXError(1445, ArgStr[1]);
+  else
     Code_branch_core(Index | (Op1 << 6), 2);
 }
 
@@ -517,6 +530,7 @@ static void Code_r2r(Word Index)
   if (ArgCnt != 2) WrError(1110);
   else if (!ParseReg(ArgStr[1], &Op1)) WrXError(1445, ArgStr[1]);
   else if (!ParseReg(ArgStr[2], &Op2)) WrXError(1445, ArgStr[2]);
+  else
   {
     unsigned Up = UpVal(Op1, Op2, 0, 0) + 27;
 

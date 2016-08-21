@@ -19,9 +19,12 @@
 /*           2001-07-01 TI 320C54x                                           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: headids.c,v 1.14 2015/04/20 18:40:30 alfred Exp $                          */
+/* $Id: headids.c,v 1.15 2016/08/10 21:06:23 alfred Exp $                          */
 /*****************************************************************************
  * $Log: headids.c,v $
+ * Revision 1.15  2016/08/10 21:06:23  alfred
+ * - begun with 78K3 support
+ *
  * Revision 1.14  2015/04/20 18:40:30  alfred
  * - add TMS1000 support (no docs yet)
  *
@@ -165,6 +168,7 @@ static TFamilyDescr Descrs[] =
   { "75K0"      , 0x007b, IntHex   },
   { "78K0"      , 0x007c, IntHex   },
   { "78K2"      , 0x0060, IntHex16 },
+  { "78K3"      , 0x0058, IntHex   },
   { "7720"      , 0x007d, IntHex   },
   { "7725"      , 0x007e, IntHex   },
   { "77230"     , 0x007f, IntHex   },

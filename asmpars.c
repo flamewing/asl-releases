@@ -36,9 +36,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.32 2015/10/25 20:47:18 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.33 2016/08/17 21:26:45 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmpars.c,v $
+ * Revision 1.33  2016/08/17 21:26:45  alfred
+ * - fix some errors and warnings detected by clang
+ *
  * Revision 1.32  2015/10/25 20:47:18  alfred
  * - correct two-column printout indentation of symbol list
  *
@@ -1418,7 +1421,7 @@ static void EvalExpression_PotOp(TempResult *pErg, TempResult *pLVal, TempResult
         pErg->Contents.Float = 0.0;
       else if (pLVal->Contents.Float > 0)
         pErg->Contents.Float = pow(pLVal->Contents.Float, pRVal->Contents.Float);
-      else if ((abs(pRVal->Contents.Float) <= ((double)MaxLongInt)) && (floor(pRVal->Contents.Float) == pRVal->Contents.Float))
+      else if ((fabs(pRVal->Contents.Float) <= ((double)MaxLongInt)) && (floor(pRVal->Contents.Float) == pRVal->Contents.Float))
       {
         HVal = (LongInt) floor(pRVal->Contents.Float + 0.5);
         if (HVal < 0)
@@ -2382,7 +2385,7 @@ void EvalExpression(const char *pExpr, TempResult *pErg)
         switch (pErg->Typ = LVal.Typ)
         {
           case TempInt:
-            pErg->Contents.Int = abs(LVal.Contents.Int);
+            pErg->Contents.Int = (LVal.Contents.Int < 0) ? -LVal.Contents.Int : LVal.Contents.Int;
             break;
           case TempFloat:
             pErg->Contents.Float = fabs(LVal.Contents.Float);

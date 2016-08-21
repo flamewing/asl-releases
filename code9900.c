@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code9900.c,v 1.7 2014/06/25 21:34:02 alfred Exp $                    */
+/* $Id: code9900.c,v 1.8 2016/08/20 21:13:45 alfred Exp $                    */
 /***************************************************************************** 
  * $Log: code9900.c,v $
+ * Revision 1.8  2016/08/20 21:13:45  alfred
+ * - fix some pedantic CLANG errors
+ *
  * Revision 1.7  2014/06/25 21:34:02  alfred
  * - rework to current style
  *
@@ -301,7 +304,7 @@ static void DecodeRegOrder(Word Code)
     WAsmCode[0] += Code << 4;
     CodeLen = 2;
   }
-};
+}
 
 static void DecodeLMF(Word Code)
 {

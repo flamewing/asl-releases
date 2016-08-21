@@ -1,5 +1,11 @@
-$Id: changelog,v 1.124 2016/07/01 17:43:50 alfred Exp $
+$Id: changelog,v 1.126 2016/08/21 10:30:26 alfred Exp $
 ------------------------------------------------------------------------------
+
+2016-08-21 [1.42 Bld 111]
+
+- Bugfix      : correct a couple of bugs detected by CLang
+
+- Addition    : add support for NEC 78K3
 
 2016-07-01 [1.42 Bld 110]
 

@@ -502,3 +502,14 @@ __cnt   set     __cnt+1
 
 	sel	rb2
 	sel	rb1
+
+;-----
+
+r8      equ     0fe30h
+rp4	equ	0fe32h
+
+	mov	a,r0
+	mov	a,r8
+	movw	ax,rp2
+	movw	ax,rp4
+

@@ -265,6 +265,7 @@ folgende Prozessorfamilien implementiert:
 \item{NEC $\mu$PD75xxx (alias 75K0)}
 \item{NEC 78K0}
 \item{NEC 78K2}
+\item{NEC 78K3}
 \item{NEC $\mu$PD7720/7725}
 \item{NEC $\mu$PD77230}
 \item{Fujitsu F$^2$MC8L}
@@ -559,6 +560,7 @@ REG29K.INC        & Peripherieadressen AMD 2924x \\
 REG53X.INC        & Registeradressen H8/53x \\
 REG683XX.INC      & Registeradressen 68332/68340/68360 \\
 REG7000.INC       & Registeradressen TMS70Cxx \\
+REG78310.INC      & Registeradressen \& Vektoren 78K3 \\
 REG78K0.INC       & Registeradressen 78K0 \\
 REG96.INC         & Registeradressen MCS-96 \\
 REGACE.INC        & Registeradressen ACE \\
@@ -3425,19 +3427,24 @@ bn) 78214
 Dies ist momentan der Repr"asentant der 78K2-Familie von NEC.
 %%-----------
 \begin{quote}
-bo) 7720 $\rightarrow$ 7725
+bo) 78310
+\end{quote}
+Dies ist momentan der Repr"asentant der 78K3-Familie von NEC.
+%%-----------
+\begin{quote}
+bp) 7720 $\rightarrow$ 7725
 \end{quote}
 Der $\mu$PD7725 bietet im Vergleich zu seinem Vorg"anger gr"o"sere
 Adre"sr"aume und einige zus"atzliche Befehle. {\bf VORSICHT!}  Die
 Prozessoren sind nicht zueinander bin"arkompatibel!
 %%-----------
 \begin{quote}
-bp) 77230
+bq) 77230
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
-bq) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
+br) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
     \> SYM53C875, SYM53C895
 \end{tabbing}
 \end{quote}
@@ -3446,17 +3453,17 @@ einige Befehlsvarianten nicht, au"serdem unterscheiden sie sich in ihrem
 Satz interner Register.
 %%-----------
 \begin{quote}
-br) MB89190
+bs) MB89190
 \end{quote}
 Dieser Prozessortyp repr"asentiert die F$^{2}$MC8L-Serie von Fujitsu...
 %%-----------
 \begin{quote}
-bs) MB9500
+bt) MB9500
 \end{quote}
 ...so wie dieser es momentan f"ur die 16-Bit-Varianten von Fujitsu tut!
 %%-----------
 \begin{quote}
-bt) XS1
+bu) XS1
 \end{quote}
 Dieser Typ repr"asentiert die XCore-''Familie''.
 
@@ -4193,6 +4200,28 @@ vorangestelltem \verb!&!) realisiert, die die fehlenden oberen vier Bits
 nachliefern.  Zumindest bei absoluten Adressen kann AS "uberpr"ufen, ob
 die gerade angesprochene, lineare 20-bittige Adresse innerhalb des
 gegebenen 64K-Fensters liegt.   
+
+%%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+\subsubsection{78K3}
+
+Prozessoren mit 78K3-Kern besitzen Registerb"anke mit insgesamt 16 Registern,
+die man "uber ihre Nummern ansprechen kann (\tty{R0} bis \tty{R15}) oder ihre symbolischen
+Namen (\tty{X=R0, A=R1, C=R2, B=R3, VPL=R8, VPH=R9, UPL=R10, UPH=R11, E=R12,
+D=R13, L=R14, H=R15}).  Der Prozessorkern besitzt ein Register-Auswahlbit
+(\tty{RSS}), mit dem man das Mapping von A/X und B/C von R0..R3 auf R4..R7
+umschaltet.  Dies ist in erste Linie für Befehle wichtig, die implizit eines
+dieser Register benutzen (d.h. bei denen die Registernummer nicht im Maschinenbefehl
+kodiert ist).  Man kann dem Assembler aber auch "uber ein
+
+\begin{verbatim}
+  assume rss:1
+\end{verbatim}
+
+mitteilen, daß die folgenden Befehle mit diesem ge"anderten Mapping arbeiten.  Der
+Assembler wird für Befehle, in denen die Registernummer explizit kodiert ist, dann
+auch die alternativen Registernummern einsetzen.  Umgekehrt wird dann z.B. auch
+\tty{R5} statt \tty{R1} im Quellcode wie \tty{A} behandelt.
 
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
@@ -8917,8 +8946,8 @@ notwendig sein, einen Pr"afix zu verwenden.
 
 %%---------------------------------------------------------------------------
 
-\section{78K2}
-\label{78K2Spec}
+\section{78K2/78K3}
+\label{78K23Spec}
 
 Analog wie beim 78K0 benutzt NEC auch hier wieder Dollar- und
 Ausrufezeichen f"ur verschiedene L"angen von Adre"ssausdr"ucken.
@@ -11767,6 +11796,7 @@ oder ich werde langsam alt...
             in Makros lokal sind oder nicht;}
       \item{kennt zus"atzlich die 75xx-Reihe von NEC;}
       \item{kennt zus"atzlich die TMS1000-Controller von TI;}
+      \item{unterst"utzt zus"atzlich die 78K2-Familie von NEC;}
       \end{itemize}}
 \end{itemize}
 
@@ -13007,6 +13037,10 @@ damit mit der n"achsten Release alle etwas davon haben :-)
                 {\em 78K/II Series 8-Bit Single-Chip Microcontroller
                  User's Manual - Instructions.\/} \\
                 Document No. U10228EJ6V0UM00 (6th edition), December 1995
+
+\bibitem{NEC78K3} NEC Corp.: \\
+		{\em uPD78310/312CW/G 8 Bit CMOS Microcomputer Product
+                 Description.\/}
 
 \bibitem{PhilXA} Philips Semiconductor: \\
                  {\em 16-bit 80C51XA Microcontrollers (eXtended
