@@ -338,8 +338,8 @@
 #include "stdinc.h"
 #include <string.h>
 
-char *Version = "1.42 Beta [Bld 111]";
-char *DebVersion = "1.42bld111-1";
+char *Version = "1.42 Beta [Bld 112]";
+char *DebVersion = "1.42bld112-1";
 LongInt VerNo = 0x142f;
 
 char *InfoMessCopyright = "(C) 1992,2016 Alfred Arnold";

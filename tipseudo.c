@@ -5,9 +5,12 @@
 /* Haeufiger benutzte Texas Instruments Pseudo-Befehle                       */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: tipseudo.c,v 1.4 2014/11/03 17:36:12 alfred Exp $                    */
+/* $Id: tipseudo.c,v 1.5 2016/08/24 12:13:19 alfred Exp $                    */
 /***************************************************************************** 
  * $Log: tipseudo.c,v $
+ * Revision 1.5  2016/08/24 12:13:19  alfred
+ * - begun with 320C4x support
+ *
  * Revision 1.4  2014/11/03 17:36:12  alfred
  * - relocate IsDef() for common TI pseudo instructions
  *
@@ -35,6 +38,7 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "asmitree.h"
 
 #include "tipseudo.h"
 
@@ -566,4 +570,239 @@ Boolean IsTIDef(void)
     cp++;
   }
   return False;
+}
+
+/*-------------------------------------------------------------------------*/
+/* Convert IEEE to C3x/C4x floating point format */
+
+static void SplitExt(Double Inp, LongInt *Expo, LongWord *Mant)
+{
+  Byte Field[8];
+  Boolean Sign;
+  int z;
+
+  Double_2_ieee8(Inp, Field, False);
+  Sign = (Field[7] > 0x7f);
+  *Expo = (((LongWord) Field[7] & 0x7f) << 4) + (Field[6] >> 4);
+  *Mant = Field[6] & 0x0f;
+  if (*Expo != 0)
+    *Mant |= 0x10;
+  for (z = 5; z > 2; z--)
+    *Mant = ((*Mant) << 8) | Field[z];
+  *Mant = ((*Mant) << 3) + (Field[2] >> 5);
+  *Expo -= 0x3ff;
+  if (Sign)
+    *Mant = (0xffffffff - *Mant) + 1;
+  *Mant = (*Mant) ^ 0x80000000;
+}
+
+Boolean ExtToTIC34xShort(Double Inp, Word *Erg)
+{
+  LongInt Expo;
+  LongWord Mant;
+
+  if (Inp == 0)
+    *Erg = 0x8000;
+  else
+  {
+    SplitExt(Inp, &Expo, &Mant);
+    if (!ChkRange(Expo, -7, 7))
+      return False;
+    *Erg = ((Expo << 12) & 0xf000) | ((Mant >> 20) & 0xfff);
+  }
+  return True;
+}
+
+Boolean ExtToTIC34xSingle(Double Inp, LongWord *Erg)
+{
+  LongInt Expo;
+  LongWord Mant;
+
+  if (Inp == 0)
+    *Erg = 0x80000000;
+  else
+  {
+    SplitExt(Inp, &Expo, &Mant);
+    if (!ChkRange(Expo, -127, 127))
+      return False;
+    *Erg = ((Expo << 24) & 0xff000000) + (Mant >> 8);
+  }
+  return True;
+}
+
+Boolean ExtToTIC34xExt(Double Inp, LongWord *ErgL, LongWord *ErgH)
+{
+  LongInt Exp;
+
+  if (Inp == 0)
+  {
+    *ErgH = 0x80;
+    *ErgL = 0x00000000;
+  }
+  else
+  {
+    SplitExt(Inp, &Exp, ErgL);
+    if (!ChkRange(Exp, -127, 127))
+      return False;
+    *ErgH = Exp & 0xff;
+  }
+  return True;
+}
+
+/*-------------------------------------------------------------------------*/
+/* Pseudo Instructions common to C3x/C4x */
+
+static void DecodeSINGLE(Word Code)
+{
+  Double f;
+  int z;
+  Boolean OK;
+
+  UNUSED(Code);
+
+  if (ArgCnt == 0) WrError(1110);
+  else
+  {
+    OK = True;
+    for (z = 1; z <= ArgCnt; z++)
+      if (OK)
+      {
+        f = EvalFloatExpression(ArgStr[z], Float64, &OK);
+        if (OK)
+          OK = OK && ExtToTIC34xSingle(f, DAsmCode + (CodeLen++));
+      }
+    if (!OK)
+      CodeLen = 0;
+  }
+}
+
+static void DecodeEXTENDED(Word Code)
+{
+  Double f;
+  int z;
+  Boolean OK;
+
+  UNUSED(Code);
+
+  if (ArgCnt == 0) WrError(1110);
+  else
+  {
+    OK = True;
+    for (z = 1; z <= ArgCnt; z++)
+      if (OK)
+      {
+        f = EvalFloatExpression(ArgStr[z], Float64, &OK);
+        if (OK)
+          OK = OK && ExtToTIC34xExt(f, DAsmCode + CodeLen + 1, DAsmCode + CodeLen);
+        CodeLen += 2;
+      }
+    if (!OK)
+      CodeLen = 0;
+  }
+}
+
+static void DecodeWORD(Word Code)
+{
+  Boolean OK;
+  int z;
+
+  UNUSED(Code);
+
+  if (ArgCnt == 0) WrError(1110);
+  else
+  {
+    OK = True;
+    for (z = 1; z <= ArgCnt; z++)
+      if (OK) DAsmCode[CodeLen++] = EvalIntExpression(ArgStr[z], Int32, &OK);
+    if (!OK)
+      CodeLen = 0;
+  }
+}
+
+static void DecodeDATA(Word Code)
+{
+  Boolean OK;
+  TempResult t;
+  int z;
+
+  UNUSED(Code);
+
+  if (ArgCnt == 0) WrError(1110);
+  else
+  {
+    OK = True;
+    for (z = 1; z <= ArgCnt; z++)
+      if (OK)
+      {
+        EvalExpression(ArgStr[z], &t);
+        switch (t.Typ)
+        {
+          case TempInt:
+#ifdef HAS64
+            if (!RangeCheck(t.Contents.Int, Int32))
+            {
+              OK = False;
+              WrError(1320);
+            }
+            else
+#endif
+              DAsmCode[CodeLen++] = t.Contents.Int;
+            break;
+          case TempFloat:
+            if (!ExtToTIC34xSingle(t.Contents.Float, DAsmCode + (CodeLen++)))
+              OK = False;
+            break;
+          case TempString:
+          {
+            unsigned z2;
+
+            for (z2 = 0; z2 < t.Contents.Ascii.Length; z2++)
+            {
+             if (!(z2 & 3))
+               DAsmCode[CodeLen++] = 0;
+             DAsmCode[CodeLen - 1] |=
+                (((LongWord)CharTransTable[((usint)t.Contents.Ascii.Contents[z2]) & 0xff])) << (8 * (3 - (z2 & 3)));
+            }
+            break;
+          }
+          default:
+            OK = False;
+        }
+      }
+    if (!OK)
+      CodeLen = 0;
+  }
+}
+
+static void DecodeBSS(Word Code)
+{
+  Boolean OK;
+  LongInt Size;
+
+  UNUSED(Code);
+
+  if (ArgCnt != 1) WrError(1110);
+  else
+  {
+    FirstPassUnknown = False;
+    Size = EvalIntExpression(ArgStr[1], UInt24, &OK);
+    if (FirstPassUnknown) WrError(1820);
+    if ((OK) && (!FirstPassUnknown))
+    {
+      DontPrint = True;
+      if (!Size)
+        WrError(290);
+      CodeLen = Size;
+      BookKeeping();
+    }
+  }
+}
+
+void AddTI34xPseudo(TInstTable *pInstTable)
+{
+  AddInstTable(pInstTable, "SINGLE", 0, DecodeSINGLE);
+  AddInstTable(pInstTable, "EXTENDED", 0, DecodeEXTENDED);
+  AddInstTable(pInstTable, "WORD", 0, DecodeWORD);
+  AddInstTable(pInstTable, "DATA", 0, DecodeDATA);
+  AddInstTable(pInstTable, "BSS", 0, DecodeBSS);
 }

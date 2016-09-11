@@ -1,4 +1,4 @@
-INCFILES = taborg*.tex pscpu.tex pscomm.tex
+INCFILES = taborg*.tex tabids*.tex pscpu.tex pscomm.tex
 
 all: as.doc as.html as.ps as.pdf
 

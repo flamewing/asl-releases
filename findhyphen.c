@@ -170,8 +170,13 @@ void AddException(char *Name)
     *(dest++) = *src;
   *dest = '\0';
   New->word = strdup(tmp);
-  New->posis = (int *) malloc(sizeof(int)*New->poscnt);
-  memcpy(New->posis, pos, sizeof(int)*New->poscnt);
+  if (New->poscnt)
+  {
+    New->posis = (int *) malloc(sizeof(int) * New->poscnt);
+    memcpy(New->posis, pos, sizeof(int) * New->poscnt);
+  }
+  else
+    New->posis = NULL;
   FirstException = New;
 }
 
@@ -213,8 +218,13 @@ void DoHyphens(char *word, int **posis, int *posicnt)
   for (Ex = FirstException; Ex; Ex = Ex->next)
     if (!strcasecmp(Ex->word, word))
     {
-      *posis = (int *) malloc(sizeof(int)*Ex->poscnt);
-      memcpy(*posis, Ex->posis, sizeof(int)*Ex->poscnt);
+      if (Ex->poscnt)
+      {
+        *posis = (int *) malloc(sizeof(int) * Ex->poscnt);
+        memcpy(*posis, Ex->posis, sizeof(int) * Ex->poscnt);
+      }
+      else
+        *posis = NULL;
       *posicnt = Ex->poscnt;
       return;
     }

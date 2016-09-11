@@ -46,7 +46,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand Juli 2016}
+{\large Stand August 2016}
 \end{raggedright}
 
 \clearpage
@@ -236,6 +236,7 @@ folgende Prozessorfamilien implementiert:
 \item{Toshiba TLCS-870}
 \item{Toshiba TLCS-47}
 \item{Toshiba TLCS-9000}
+\item{Toshiba TC9331}
 \item{Microchip PIC16C54..16C57}
 \item{Microchip PIC16C84/PIC16C64}
 \item{Microchip PIC17C42}
@@ -245,7 +246,7 @@ folgende Prozessorfamilien implementiert:
 \item{SGS-Thomson 6804}
 \item{Texas Instruments TMS32010/32015}
 \item{Texas Instruments TMS3202x}
-\item{Texas Instruments TMS320C3x}
+\item{Texas Instruments TMS320C3x/TMS320C4x}
 \item{Texas Instruments TMS320C20x/TMS320C5x}
 \item{Texas Instruments TMS320C54x}
 \item{Texas Instruments TMS320C6x}
@@ -279,9 +280,7 @@ in Arbeit / Planung / "Uberlegung :
 \item{NEC 78K4}
 \item{Analog Devices ADSP21xx}
 \item{SGS-Thomson ST20}
-\item{Texas Instruments TMS320C4x}
 \item{Texas Instruments TMS320C8x}
-\item{Toshiba TC9331}
 \end{itemize}
 Noch gesucht werden Unterlagen f"ur:
 \begin{itemize}
@@ -558,12 +557,11 @@ REG166.INC        & Adressen \& Befehlsmakros 80C166/167 \\
 REG251.INC        & Adressen \& Bits 80C251 \\
 REG29K.INC        & Peripherieadressen AMD 2924x \\
 REG53X.INC        & Registeradressen H8/53x \\
+REG6303.INC       & Registeradressen 6303 \\
 REG683XX.INC      & Registeradressen 68332/68340/68360 \\
 REG7000.INC       & Registeradressen TMS70Cxx \\
 REG78310.INC      & Registeradressen \& Vektoren 78K3 \\
 REG78K0.INC       & Registeradressen 78K0 \\
-REG96.INC         & Registeradressen MCS-96 \\
-REGACE.INC        & Registeradressen ACE \\
 \hline
 \end{tabular}\end{center}
 \caption{Standardumfang einer Bin"ardistribution - Teil 1
@@ -578,6 +576,8 @@ Datei             & Funktion \\
 \hline
 {\bf Verzeichnis INCLUDE} & \\
 \hline
+REG96.INC         & Registeradressen MCS-96 \\
+REGACE.INC        & Registeradressen ACE \\
 REGAVR.INC        & Register- \& Bitadressen AVR-Familie \\
 REGCOP8.INC       & Registeradressen COP8 \\
 REGGP32.INC       & Registeradressen 68HC908GP32 \\
@@ -594,6 +594,7 @@ STDDEF18.INC      & Registeradressen PIC16C8x \\
 STDDEF2X.INC      & Registeradressen TMS3202x \\
 STDDEF37.INC      & Register- \& Bitadressen TMS370xxx \\
 STDDEF3X.INC      & Peripherieadressen TMS320C3x \\
+STDDEF4X.INC      & Peripherieadressen TMS320C4x \\
 STDDEF47.INC      & Befehlsmakros TLCS-47 \\
 STDDEF51.INC      & Definition von SFRs und Bits f"ur \\
                   & 8051/8052/80515 \\
@@ -1185,7 +1186,7 @@ Einige Signalprozessorreihen von Texas Instruments verwenden den f"ur das
 Label vorgesehenen Platz wahlweise auch f"ur einen Doppelstrich
 (\verb!||!), der die parallele Ausf"uhrung mit der vorangehenden
 Instruktion anzeigt.  Wenn diese beiden Instruktionen auf Maschinenebene
-in einem einzigen Wort vereinigt werden (C3x), macht ein zus"atzliches
+in einem einzigen Wort vereinigt werden (C3x/C4x), macht ein zus"atzliches
 Label vor der zweiten Anweisung nat"urlich keinen Sinn und ist auch nicht
 vorgesehen.  Anders sieht es beim C6x mit seinen Instruktionspaketen
 variabler L"ange aus: Wer dort (unsch"onerweise...) mitten in ein Paket
@@ -2771,7 +2772,7 @@ hinwegzuretten: Zu Beginn eines Durchlaufes werden alle Stacks geleert!
 
 \tty{ORG} erlaubt es, den assemblerinternen Adre"sz"ahler mit einem neuen
 Wert zu besetzen.  Der Wertebereich ist vom momentan gew"ahlten Segment
-und vom Prozessortyp abh"angig (Tabellen \ref{TabORG1} bis \ref{TabORG4}).
+und vom Prozessortyp abh"angig (Tabellen \ref{TabORG1} bis \ref{TabORG5}).
 Die untere Grenze ist dabei immer 0; die obere Grenze der angegebene Wert
 minus eins.
 \par
@@ -2796,7 +2797,8 @@ Mittel der Wahl.
 \begin{table*}[htbp]
 \begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
 \hline
-\tin{Ziel} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BITDATA} & \tin{IO} & \tin{REG} & \tin{ROMDATA} \\
+\tin{Ziel} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BIT-} & \tin{IO} & \tin{REG} & \tin{ROM-} \\
+\tin{Ziel} &            &            &             &             &             & \tin{DATA} & \tin{IO} & \tin{REG} & \tin{DATA} \\
 \hline
 \hline
 \input{taborg1.tex}
@@ -2808,16 +2810,20 @@ Mittel der Wahl.
 \begin{table*}[htbp]
 \begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
 \hline
-\tin{Ziel} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BITDATA} & \tin{IO} & \tin{REG} & \tin{ROMDATA} \\
+\tin{Ziel} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BIT-} & \tin{IO} & \tin{REG} & \tin{ROM-} \\
+\tin{Ziel} &            &            &             &             &             & \tin{DATA} & \tin{IO} & \tin{REG} & \tin{DATA} \\
 \hline
 \hline
 \input{taborg2.tex}
 \hline
-\multicolumn{10}{|l|}{$^{*}$ Da der 8051 kein RAM jenseits 80h hat, mu"s der Initialwert f"ur den 8051} \\
-\multicolumn{10}{|l|}{  als Zielprozessor auf jeden Fall mit \tty{ORG} angepa"st werden!!} \\
+\multicolumn{10}{|l|}{$^{*}$ Initialwert 80h. } \\
+\multicolumn{10}{|l|}{  Da der 8051 kein RAM jenseits 80h hat, mu"s der Initialwert f"ur den 8051} \\
+\multicolumn{10}{|l|}{  als Zielprozessor auf jeden Fall mit \tty{ORG} angepa"st werden!} \\
 \hline
 \multicolumn{10}{|l|}{$^{+}$ Da der Z180 weiterhin logisch nur 64K ansprechen kann, ist der} \\
 \multicolumn{10}{|l|}{ganze Adre"sraum nur mittels \tty{PHASE}-Anweisungen erreichbar!} \\
+\hline
+\multicolumn{10}{|l|}{$^{-}$ Initialwert 400h. } \\
 \hline
 \end{tabular}\end{center}
 \caption{Adre"sbereiche f"ur \tty{ORG} --- Teil 2\label{TabORG2}}
@@ -2826,7 +2832,8 @@ Mittel der Wahl.
 \begin{table*}[htbp]
 \begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
 \hline
-\tin{Ziel} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BITDATA} & \tin{IO} & \tin{REG} & \tin{ROMDATA} \\
+\tin{Ziel} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BIT-} & \tin{IO} & \tin{REG} & \tin{ROM-} \\
+\tin{Ziel} &            &            &             &             &             & \tin{DATA} & \tin{IO} & \tin{REG} & \tin{DATA} \\
 \hline
 \hline
 \input{taborg3.tex}
@@ -2838,13 +2845,29 @@ Mittel der Wahl.
 \begin{table*}[htbp]
 \begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
 \hline
-\tin{Ziel} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BITDATA} & \tin{IO} & \tin{REG} & \tin{ROMDATA} \\
+\tin{Ziel} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BIT-} & \tin{IO} & \tin{REG} & \tin{ROM-} \\
+\tin{Ziel} &            &            &             &             &             & \tin{DATA} & \tin{IO} & \tin{REG} & \tin{DATA} \\
 \hline
 \hline
 \input{taborg4.tex}
 \hline
+\multicolumn{10}{|l|}{$^{*}$ Initialwert 800h bzw. 0C00h} \\
+\hline
 \end{tabular}\end{center}
 \caption{Adre"sbereiche f"ur \tty{ORG} --- Teil 4\label{TabORG4}}
+\end{table*}
+\clearpage
+\begin{table*}[htbp]
+\begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
+\hline
+\tin{Ziel} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BIT-} & \tin{IO} & \tin{REG} & \tin{ROM-} \\
+\tin{Ziel} &            &            &             &             &             & \tin{DATA} & \tin{IO} & \tin{REG} & \tin{DATA} \\
+\hline
+\hline
+\input{taborg5.tex}
+\hline
+\end{tabular}\end{center}
+\caption{Adre"sbereiche f"ur \tty{ORG} --- Teil 5\label{TabORG5}}
 \end{table*}
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3224,25 +3247,29 @@ am) 97C241
 \end{quote}
 %%-----------
 \begin{quote}
-an) 16C54 $\rightarrow$ 16C55 $\rightarrow$ 16C56 $\rightarrow$ 16C57
+an) TC9331
+\end{quote}
+%%-----------
+\begin{quote}
+ao) 16C54 $\rightarrow$ 16C55 $\rightarrow$ 16C56 $\rightarrow$ 16C57
 \end{quote}
 Diese Prozessoren unterscheiden sich durch den verf"ugbaren
 Adre"sraum im Programmspeicher, d.h. durch die Adresse, ab der
 der AS "Uberl"aufe anmeckert.
 %%-----------
 \begin{quote}
-ao) 16C64, 16C84
+ap) 16C64, 16C84
 \end{quote}
 Analog zur MCS-51-Familie findet hier keine Unterscheidung im
 Codegenerator statt, die unterschiedlichen Nummern dienen lediglich
 der Einblendung der korrekten SFRs in STDDEF18.INC.
 %%-----------
 \begin{quote}
-ap) 17C42
+aq) 17C42
 \end{quote}
 %%-----------
 \begin{quote}
-aq) ST6210/ST6215 $\rightarrow$ ST6220/ST6225
+ar) ST6210/ST6215 $\rightarrow$ ST6220/ST6225
 \end{quote}
 Die einzige Unterscheidung, die AS zwischen den beiden Paaren vornimmt, ist
 der bei den ersten beiden kleinere Adre"sraum (2K anstelle 4K).  Die
@@ -3250,11 +3277,11 @@ Feinunterscheidung dient zur automatischen Unterscheidung in der Quelldatei,
 welche Hardware jeweils vorhanden ist (analog zum 8051/52/515).
 %%-----------
 \begin{quote}
-ar) ST7
+as) ST7
 \end{quote}
 %%-----------
 \begin{quote}
-as) ST9020, ST9030, ST9040, ST9050
+at) ST9020, ST9030, ST9040, ST9050
 \end{quote}
 Diese 4 Namen vetreten die vier ,,Unterfamilien'' der ST9-Familie, die
 sich durch eine unterschiedliche Ausstattung mit On-Chip-Peripherie
@@ -3263,11 +3290,11 @@ Unterscheidung wieder nur im Includefile mit den Peripherieadressen zum
 Zuge kommt.
 %%-----------
 \begin{quote}
-at) 6804
+au) 6804
 \end{quote}
 %%-----------
 \begin{quote}
-au) 32010 $\rightarrow$ 32015
+av) 32010 $\rightarrow$ 32015
 \end{quote}
 Der TMS32010 besitzt nur 144 Byte internes RAM, weshalb AS Adressen im
 Datensegment auf eben diesen Bereich begrenzt.  F"ur den 32015 gilt diese
@@ -3275,20 +3302,24 @@ Beschr"ankung nicht, es kann der volle Bereich von 0--255 angesprochen
 werden.
 %%-----------
 \begin{quote}
-av) 320C25 $\rightarrow$ 320C26 $\rightarrow$ 320C28
+aw) 320C25 $\rightarrow$ 320C26 $\rightarrow$ 320C28
 \end{quote}
 Diese Prozessoren unterscheiden sich nur leicht in der
 On-Chip-Peripherie sowie den Konfigurationsbefehlen.
 %%-----------
 \begin{quote}
-aw) 320C30, 320C31
+ax) 320C30, 320C31 $\rightarrow$ 320C40, 320C44
 \end{quote}
-Der 320C31 ist eine etwas ,,abgespeckte'' Version mit dem gleichen
-Befehlssatz, jedoch weniger Peripherie.  In STDDEF3X.INC wird diese
-Unterscheidung ausgenutzt.
+Der 320C31 ist eine etwas ,,abgespeckte'' Version des 320C30 mit dem
+gleichen Befehlssatz, jedoch weniger Peripherie.  In STDDEF3X.INC
+wird diese Unterscheidung ausgenutzt.  Die C4x-Varianten sind
+Quellcode-aufw"artskompatibel, unterscheiden sich im
+Maschinencode einiger Befehle jedoch subtil.  Auch hier ist ist
+der C44 eine abgespeckte Version des C40, mit weniger Peripherie
+und kleinerem Adre"raum.
 %%-----------
 \begin{quote}
-ax) 320C203 $\rightarrow$ 320C50, 320C51, 320C53
+ay) 320C203 $\rightarrow$ 320C50, 320C51, 320C53
 \end{quote}
 Ersterer ist der generelle Repr"asentant f"ur die
 C20x-Signalprozessorfamilie, die eine Untermenge des C5x-Befehlssatzes
@@ -3296,18 +3327,18 @@ implementieren.  Die Unterscheidung zwischen den verschiedenen
 C5x-Prozessoren wird von AS momentan nicht ausgenutzt.
 %%-----------
 \begin{quote}
-ay) 320C541
+az) 320C541
 \end{quote}  
 Dies ist momentan der Pepr"asentant f"ur die TMS320C54x-Familie...
 %%-----------
 \begin{quote}
-az) TMS9900
+ba) TMS9900
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-ba) \> TMS70C00, TMS70C20, TMS70C40, \\
+bb) \> TMS70C00, TMS70C20, TMS70C40, \\
     \> TMS70CT20, TMS70CT40, \\
     \> TMS70C02, TMS70C42, TMS70C82, \\
     \> TMS70C08, TMS70C48 \\
@@ -3322,18 +3353,18 @@ interne RAM-Menge, unterscheiden sich also nur in der Menge
 eingebauten ROMs.
 %%-----------
 \begin{quote}
-bb) 370C010, 370C020, 370C030, 370C040 und 370C050
+bc) 370C010, 370C020, 370C030, 370C040 und 370C050
 \end{quote}
 Analog zur MCS-51-Familie werden die unterschiedlichen Typen nur
 zur Unterscheidung der Peripherie in STDDEF37.INC genutzt, der
 Befehlssatz ist identisch.
 %%-----------
 \begin{quote}
-bc) MSP430
+bd) MSP430
 \end{quote}
 %%-----------
 \begin{quote}
-bd) TMS1000, TMS1100, TMS1200, TMS1300
+be) TMS1000, TMS1100, TMS1200, TMS1300
 \end{quote}
 F"ur TMS1000 und TMS1200 sind jeweils 1 KByte ROM und 64 Nibbles
 RAM vorgesehen, f"ur TMS1100 und TMS1300 jeweils das doppelte.  Des
@@ -3342,18 +3373,18 @@ Dewfault-Befehlssatz vorgesehen (AS kennt nur die Default-
 Befehlss"atze!).
 %%-----------
 \begin{quote}
-be) SC/MP
+bf) SC/MP
 \end{quote}
 %%-----------
 \begin{quote}
-bf) 8070
+bg) 8070
 \end{quote}
 Dieser Prozessor repr"asentiert die gesamte 807x-Familie (die mindestens
 aus den 8070, 8072 und 8073 besteht), der jedoch ein einheitlicher
 CPU-Kern gemeinsam ist.
 %%-----------
 \begin{quote}
-bg) COP87L84
+bh) COP87L84
 \end{quote}
 Dies ist das momentan einzige unterst"utzte Mitglied der COP8-Familie 
 von National Semiconductor.  Mir ist bekannt, da"s die Familie 
@@ -3362,7 +3393,7 @@ Befehlssatz existieren, die nach Bedarf hinzukommen werden.  Es ist eben
 ein Anfang, und die Dokumentation von National ist ziemlich umfangreich...
 %%-----------
 \begin{quote}
-bh) COP410 $\rightarrow$ COP420 $\rightarrow$ COP440 $\rightarrow$ COP444
+bi) COP410 $\rightarrow$ COP420 $\rightarrow$ COP440 $\rightarrow$ COP444
 Die COP42x-Derivate bieten einige weitere Befehle, des weiteren wurden
 Befehlen in ihrem Wertebereich erweitert.
 \end{quote}
@@ -3370,7 +3401,7 @@ Befehlen in ihrem Wertebereich erweitert.
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bi) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
+bj) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
     \> SC14420, SC14421, SC14422, SC14424 \\
 \end{tabbing}
 \end{quote}
@@ -3380,14 +3411,14 @@ unterst"utzt werden und deren Architektur im Laufe der Zeit optimiert
 wurde.
 %%-----------
 \begin{quote}
-bj) 7810 $\rightarrow$ 78C10
+bk) 7810 $\rightarrow$ 78C10
 \end{quote}
 Die NMOS-Version besitzt keinen STOP-Modus; der entspechende Befehl sowie
 das ZCM-Register fehlen demzufolge.  \bb{VORSICHT!} NMOS- und CMOS-Version
 differieren zum Teil in den Reset-Werten einiger Register!
 %%-----------
 \begin{quote}
-bk) 7566 $\leftrightarrow$ 7508
+bl) 7566 $\leftrightarrow$ 7508
 \end{quote}
 Es existieren in der $\mu$PD75xx-Familie zwei verschiedene
 CPU-Kerne: Der 7566 repr"asentiert den 'instruction set B', der
@@ -3399,7 +3430,7 @@ sind nicht 100\%-ig bin"arkompatibel!
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bl) \> 75402, \\
+bm) \> 75402, \\
     \> 75004, 75006, 75008, \\
     \> 75268, \\
     \> 75304, 75306, 75308, 75312, 75316, \\
@@ -3415,36 +3446,36 @@ unterscheiden sich einmal durch ihre on-chip-Peripherie und
 zum anderen durch die M"achtigkeit des Befehlssatzes.
 %%-----------
 \begin{quote}
-bm) 78070
+bn) 78070
 \end{quote}
 Dies ist das einzige, mir momentan vertraute Mitglied der
 78K0-Familie von NEC.  Es gelten "ahnliche Aussagen wie zur
 COP8-Familie!
 %%-----------
 \begin{quote}
-bn) 78214
+bo) 78214
 \end{quote}
 Dies ist momentan der Repr"asentant der 78K2-Familie von NEC.
 %%-----------
 \begin{quote}
-bo) 78310
+bp) 78310
 \end{quote}
 Dies ist momentan der Repr"asentant der 78K3-Familie von NEC.
 %%-----------
 \begin{quote}
-bp) 7720 $\rightarrow$ 7725
+bq) 7720 $\rightarrow$ 7725
 \end{quote}
 Der $\mu$PD7725 bietet im Vergleich zu seinem Vorg"anger gr"o"sere
 Adre"sr"aume und einige zus"atzliche Befehle. {\bf VORSICHT!}  Die
 Prozessoren sind nicht zueinander bin"arkompatibel!
 %%-----------
 \begin{quote}
-bq) 77230
+br) 77230
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
-br) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
+bs) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
     \> SYM53C875, SYM53C895
 \end{tabbing}
 \end{quote}
@@ -3453,17 +3484,17 @@ einige Befehlsvarianten nicht, au"serdem unterscheiden sie sich in ihrem
 Satz interner Register.
 %%-----------
 \begin{quote}
-bs) MB89190
+bt) MB89190
 \end{quote}
 Dieser Prozessortyp repr"asentiert die F$^{2}$MC8L-Serie von Fujitsu...
 %%-----------
 \begin{quote}
-bt) MB9500
+bu) MB9500
 \end{quote}
 ...so wie dieser es momentan f"ur die 16-Bit-Varianten von Fujitsu tut!
 %%-----------
 \begin{quote}
-bu) XS1
+bv) XS1
 \end{quote}
 Dieser Typ repr"asentiert die XCore-''Familie''.
 
@@ -4225,13 +4256,13 @@ auch die alternativen Registernummern einsetzen.  Umgekehrt wird dann z.B. auch
 
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-\subsubsection{320C3x}
+\subsubsection{320C3x/C4x}
 
 Da alle Instruktionsworte dieser Prozessorfamilie nur 32 Bit lang
 sind, und von diesen 32 Bit nur 16 Bit f"ur absolute Adressen vorgesehen
-wurden, m"ussen die fehlenden oberen 8 Bit aus dem DP-Register
+wurden, m"ussen die fehlenden oberen 8/16 Bit aus dem DP-Register
 erg"anzt werden.  Bei Adressierungen kann man aber trotzdem die volle
-24-Bit-Adresse angeben, AS pr"uft dann, ob die oberen 8 Bit mit dem
+24/32-Bit-Adresse angeben, AS pr"uft dann, ob die oberen 8/16 Bit mit dem
 angenommenen Inhalt von DP "ubereinstimmen.  Gegen"uber dem \tty{LDP}-Befehl
 weicht \tty{ASSUME} darin ab, da"s man hier nicht eine beliebige Adresse
 aus der Speicherbank angeben kann, das Herausziehen der oberen Bits
@@ -4598,9 +4629,9 @@ einzelnen Parameter in eckigen Klammern vorangestellt werden.
 \subsection{WORD}
 \ttindex{WORD}
 
-{\em G"ultigkeit: ST6, i960, 320C2(0)x, 320C3x, 320C5x, MSP}
+{\em G"ultigkeit: ST6, i960, 320C2(0)x, 320C3x/C4x/C5x, MSP}
 
-F"ur den 320C3x und i960 werden hiermit 32-Bit-Worte abgelegt, f"ur die
+F"ur den 320C3x/C4x und i960 werden hiermit 32-Bit-Worte abgelegt, f"ur die
 alle anderen Familien 16-Bit-Worte.  Ein im 320C2(0)x/5x-Modus vor dem Befehl
 stehendes Label wird als untypisiert gespeichert, d.h. keinem Adre"sraum
 zugeordnet.  Der Sinn dieses Verhaltens wird bei den prozessorspezifischen
@@ -4634,11 +4665,11 @@ Hinweisen erl"autert).
 \subsection{SINGLE, DOUBLE und EXTENDED}
 \ttindex{SINGLE}\ttindex{DOUBLE}\ttindex{EXTENDED}
 
-{\em G"ultigkeit: 320C3x (nicht {\tt DOUBLE}), 320C6x (nicht {\tt
+{\em G"ultigkeit: 320C3x/C4x (nicht {\tt DOUBLE}), 320C6x (nicht {\tt
    EXTENDED})}
 
 Mit diesen Befehlen werden Gleitkomma-Konstanten im Speicher abgelegt,
-jedoch beim 320C3x nicht im IEEE-Format, sondern in den vom Prozessor
+jedoch beim 320C3x/C4x nicht im IEEE-Format, sondern in den vom Prozessor
 verwendeten 32- und 40-Bit-Formaten.  Da 40 Bit nicht mehr in eine
 Speicherzelle hineinpassen, werden im Falle von \tty{EXTENDED} immer derer
 2 pro Wert belegt.  Im ersten Wort finden sich die oberen 8 Bit (der
@@ -4716,11 +4747,11 @@ Integer- als auch Stringwerte zul"assig sind.  Bei Strings belegt beim
 16C5x/16C8x, 17C4x im Datensegment und 4500er ein Zeichen ein Wort, bei
 AVR, 17C4x im Codesegment, $\mu$PD772x in den Datensegmenten und
 3201x/3202x passen zwei Zeichen in ein Wort (LSB zuerst), beim $\mu$PD7725
-drei und beim 320C3x sogar derer 4 (MSB zuerst).  Im Gegensatz dazu mu"s
+drei und beim 320C3x/C4x sogar derer 4 (MSB zuerst).  Im Gegensatz dazu mu"s
 im Datensegment des 4500ers ein Zeichen auf zwei Speicherstellen verteilt
 werden, ebenso wie beim 4004.  Der Wertebereich f"ur Integers entspricht
 der Wortbreite des jeweiligen Prozessors im jeweiligen Segment. Das
-bedeutet, da"s \tty{DATA} beim 320C3x die Funktion von \tty{WORD} mit
+bedeutet, da"s \tty{DATA} beim 320C3x/C4x die Funktion von \tty{WORD} mit
 einschlie"st (die von \tty{SINGLE} "ubrigens auch, wenn AS das Argument
 als Gleitkommazahl erkennt).
 
@@ -4842,7 +4873,7 @@ den PICs Bytes, beim 4500er Nibbles sowie bei Texas ebenfalls W"orter.
 \subsection{BSS}
 \ttindex{BSS}
 
-{\em G"ultigkeit: 320C2(0)x, 320C3x, 320C5x, 320C6x, MSP}
+{\em G"ultigkeit: 320C2(0)x, 320C3x/C4x/C5x/C6x, MSP}
 
 \tty{BSS} arbeitet analog zu \tty{RES}, lediglich ein eventuell vor dem
 Befehl stehendes Symbol wird beim 320C2(0)x/5x als untypisiert gespeichert.
@@ -8260,6 +8291,45 @@ z.B. so:
 
 %%---------------------------------------------------------------------------
 
+\section{TC9331}
+
+Toshiba hat seinerzeit für diesen Prozessor einen (DOS-basierten)
+Assembler namens ASM31T geliefert.  Dieser Assembler unterstützt
+eine Reihe von Syntax-Elementen, die sich auf AS nicht ohne
+"Anderungen abbilden lie"sen, die die Kompatibilit"at
+zu existierenden Quelldateien f"ur andere Targets gef"ahrdert
+h"atten.  An folgenden Stellen werden m"oglicherweise "Anderungen
+erforderlich sein, um f"ur den ASM31T geschriebene Programme mit
+AS "ubersetzen zu k"onnen:
+
+\begin{itemize}
+\item{ASM31T unterst"utzt C-artige Kommentare (\verb!/* ... */!),
+      die auch "uber mehrere Zeilen gehen d"urfen.  Diese werden
+      von AS nicht unterst"utzt und m"ussen in mit einem
+      Semikolon eingeleitete Kommentare umgesetzt werden.}
+\item{Wie ASM31T unterst"utzt AS für den TC9331 Kommentare in
+      runden Klammern (\verb!( ... )!), aber nur innerhalb
+      eines Befehlsarguments.  Enth"alt ein solcher Kommentar ein
+      Komma, wird dieses Komma als Argument-Trenner behandelt und
+      der Kommentar nicht beim Parsing der Arguente
+      "ubersprungen.}
+\item{ASM31T erlaubt Symbol- und Label-Namen, die einen
+      Bindestrich enthalten.  Das ist bei AS nicht zugelassen,
+      der Bindestrich ist hier der Subtraktionsoperator und in
+      einem Ausdruck wie \verb!end-start! w"are sonst nicht klar,
+      ob ein einzelnes Symbol oder die Differenz von zwei
+      Symbolen gemeint ist.}
+\item{ASM31T verlangt zwingend ein \tty{END}-Statement am Ende
+      des Programmes; bei AS ist dies optional.}
+\end{itemize}
+
+Des weiteren fehlen AS im Moment die F"ahigkeiten, auf
+miteinander kollidierende Nutzungen von Funktionseinheiten in
+einem Befehl hinzuweisen.  Die Dokumentation von Toshiba ist an
+diesem Punkt leider etwas schwer verst"andlich.
+
+%%---------------------------------------------------------------------------
+
 \section{29xxx}
 
 Wie schon beim \tty{ASSUME}-Befehl beschrieben, kann AS mit der Kenntnis
@@ -8650,7 +8720,7 @@ definiert.
 
 %%---------------------------------------------------------------------------
 
-\section{TMS320C3x}
+\section{TMS320C3x/C4x}
 
 Die gr"o"sten Magenschmerzen bei diesem Prozessor hat mir die Syntax
 paralleler Befehle bereitet, die auf zwei Zeilen verteilt werden,
@@ -11797,6 +11867,8 @@ oder ich werde langsam alt...
       \item{kennt zus"atzlich die 75xx-Reihe von NEC;}
       \item{kennt zus"atzlich die TMS1000-Controller von TI;}
       \item{unterst"utzt zus"atzlich die 78K2-Familie von NEC;}
+      \item{alle neueren Anderungen werden nur noch in der
+            separaten changelog-Datei dokumentiert.}
       \end{itemize}}
 \end{itemize}
 
@@ -13121,6 +13193,10 @@ damit mit der n"achsten Release alle etwas davon haben :-)
                    {\em TMS320C2x User's Guide.\/} \\
                    Revision C, Jan. 1993
 
+\bibitem{TiC40} Texas Instruments: \\
+                   {\em TMS320C4x User's Guide.\/} \\
+                   SPRU063C, May 1999
+
 \bibitem{Ti370} Texas Instruments: \\
                    {\em TMS370 Family Data Manual.\/} \\
                    1994, SPNS014B
@@ -13191,6 +13267,10 @@ damit mit der n"achsten Release alle etwas davon haben :-)
 \bibitem{Tosh9000} Toshiba Corp.: \\
                     {\em TLCS-9000/16 Instruction Set Manual Version 2.2.\/} \\
                     10. Feb 1994
+
+\bibitem{Tosh9331} Toshiba Corp.: \\
+                   {\em TC9331 Digital Audio Signal Processor
+                   Application Information.} \\
 
 \bibitem{Val8X} Valvo GmbH: \\
                 {\em Bipolare Mikroprozessoren und bipolare

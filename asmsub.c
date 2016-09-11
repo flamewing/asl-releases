@@ -26,9 +26,15 @@
 /*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.30 2015/10/23 08:43:33 alfred Exp $                      */
+/* $Id: asmsub.c,v 1.32 2016/09/11 15:39:49 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmsub.c,v $
+ * Revision 1.32  2016/09/11 15:39:49  alfred
+ * - determine DOS time without floatig point
+ *
+ * Revision 1.31  2016/08/30 09:53:46  alfred
+ * - make string argument const
+ *
  * Revision 1.30  2015/10/23 08:43:33  alfred
  * - beef up & fix structure handling
  *
@@ -1423,7 +1429,7 @@ void WrError(Word Num)
   WrErrorNum(Num);
 }
 
-void WrXError(Word Num, char *Message)
+void WrXError(Word Num, const char *Message)
 {
   strmaxcpy(ExtendError, Message, 255);
   WrErrorNum(Num);
@@ -1894,10 +1900,16 @@ void AddClearUpProc(SimpProc NewProc)
 
 long GTime(void)
 {
-  static unsigned long *tick = MK_FP(0x40, 0x6c);
-  double tmp = *tick;
+  union REGS inregs, outregs;
+  long result;
 
-  return ((long) (tmp*5.4931641));
+  inregs.h.ah = 0x2c;
+  int86(0x21, &inregs, &outregs);
+  result = outregs.h.ch;
+  result = (result * 60) + outregs.h.cl;
+  result = (result * 60) + outregs.h.dh;
+  result = (result * 100) + outregs.h.dl;
+  return result;
 }
 
 #elif __IBMC__

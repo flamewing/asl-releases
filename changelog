@@ -1,5 +1,13 @@
-$Id: changelog,v 1.126 2016/08/21 10:30:26 alfred Exp $
+$Id: changelog,v 1.128 2016/08/31 08:43:23 alfred Exp $
 ------------------------------------------------------------------------------
+
+2016-09-11 [1.42 Bld 112]
+
+- Addition    : add support for Toshiba TC9331
+
+- Addition    : add support for TI TMS 320C4x
+
+- Addition    : add include file with Hitachi/Renesas 6303 registers
 
 2016-08-21 [1.42 Bld 111]
 

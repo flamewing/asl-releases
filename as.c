@@ -58,9 +58,30 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.57 2016/08/10 21:06:22 alfred Exp $                          */
+/* $Id: as.c,v 1.64 2016/08/30 13:48:22 alfred Exp $                         */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.64  2016/08/30 13:48:22  alfred
+ * - yet another TC9331 speciality in the parser...
+ *
+ * Revision 1.63  2016/08/30 10:08:17  alfred
+ * - regard empty OpPart with arguments
+ *
+ * Revision 1.62  2016/08/29 21:10:43  alfred
+ * - begun with TC9331
+ *
+ * Revision 1.61  2016/08/29 17:07:04  alfred
+ * - if last argument was empty, trailing blanks on second-last argument were not removed
+ *
+ * Revision 1.60  2016/08/26 19:03:56  alfred
+ * - remove separate C4x decoder (was folded into C3x)
+ *
+ * Revision 1.59  2016/08/25 20:43:02  alfred
+ * - C4x will be realized as extension of C3x target
+ *
+ * Revision 1.58  2016/08/24 12:13:18  alfred
+ * - begun with 320C4x support
+ *
  * Revision 1.57  2016/08/10 21:06:22  alfred
  * - begun with 78K3 support
  *
@@ -380,6 +401,7 @@
 #include "code870c.h"
 #include "code47c00.h"
 #include "code97c241.h"
+#include "code9331.h"
 #include "code16c5x.h"
 #include "code16c8x.h"
 #include "code17c4x.h"
@@ -2825,21 +2847,44 @@ static void SplitLine(void)
   setjmp(Retry);
   KillPrefBlanks(h);
   i = FirstBlank(h);
-  SplitString(h, OpPart, ArgPart, i);
 
-  /* Falls noch kein Label da war, kann es auch ein Label sein */
+  /* If potential OpPart starts with argument divider,
+     OpPart is empty and rest of line is all-arguments: */
 
-  i = strchr(OpPart, ':');
-  if ((*LabPart == '\0') && (i) && (i[1] == '\0'))
+  if (strchr(DivideChars, *h))
   {
-    *i = '\0';
-    strcpy(LabPart, OpPart);
-    strcpy(OpPart, i + 1);
-    if (*OpPart == '\0')
+    *OpPart = '\0';
+    strmaxcpy(ArgPart, h, 255);
+  }
+  else
+  {
+    SplitString(h, OpPart, ArgPart, i);
+
+    /* Falls noch kein Label da war, kann es auch ein Label sein */
+
+    i = strchr(OpPart, ':');
+    if ((*LabPart == '\0') && (i) && (i[1] == '\0'))
     {
-      strcpy(h, ArgPart);
-      longjmp(Retry, 1);
+      *i = '\0';
+      strcpy(LabPart, OpPart);
+      strcpy(OpPart, i + 1);
+      if (*OpPart == '\0')
+      {
+        strcpy(h, ArgPart);
+        longjmp(Retry, 1);
+      }
     }
+  }
+
+  ArgCnt = 0;
+
+  /* trailing separator on OpPart means we have to push in another empty argument */
+
+  l = strlen(OpPart);
+  if (l && strchr(DivideChars, OpPart[l - 1]))
+  {
+    OpPart[l - 1] = '\0';
+    strcpy(ArgStr[++ArgCnt], "");
   }
 
   /* Attribut abspalten */
@@ -2875,7 +2920,6 @@ static void SplitLine(void)
   /* Argumente zerteilen: Da alles aus einem String kommt und die Teile alle auch
      so lang sind, koennen wir uns Laengenabfragen sparen */
 
-  ArgCnt = 0;
   strcpy(h, ArgPart);
   run = h;
   if (*run != '\0')
@@ -2895,9 +2939,9 @@ static void SplitLine(void)
       if (i)
         *i = '\0';
       strcpy(ArgStr[++ArgCnt], run);
+      KillPostBlanks(ArgStr[ArgCnt]);
       if ((lpos) && (ArgCnt != ParMax))
         *ArgStr[++ArgCnt] = '\0';
-      KillPostBlanks(ArgStr[ArgCnt]);
       run = !i ? i : i + 1;
     }
     while ((run) && (ArgCnt != ParMax) && (!lpos));
@@ -4400,6 +4444,7 @@ int main(int argc, char **argv)
     code870c_init();
     code47c00_init();
     code97c241_init();
+    code9331_init();
     code16c5x_init();
     code16c8x_init();
     code17c4x_init();
