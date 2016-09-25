@@ -1,5 +1,13 @@
-$Id: changelog,v 1.128 2016/08/31 08:43:23 alfred Exp $
+$Id: changelog,v 1.130 2016/09/25 15:13:36 alfred Exp $
 ------------------------------------------------------------------------------
+
+2016-09-25 [1.42 Bld 113]
+
+- Addition    : added bit definitions for 80C320 second UART
+
+- Bugfix      : fix memory leak and incorrect format string on DPMI version
+
+- Bugfix      : fix a couple of memory handling errors detected by valgrind
 
 2016-09-11 [1.42 Bld 112]
 

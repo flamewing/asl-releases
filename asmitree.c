@@ -177,7 +177,7 @@ void PrintInstTree(PInstTreeNode Root)
 
 /*----------------------------------------------------------------------------*/
 
-static int GetKey(char *Name, LongWord TableSize)
+static int GetKey(const char *Name, LongWord TableSize)
 {
   register unsigned char *p;
   LongWord tmp = 0;
@@ -221,7 +221,7 @@ void DestroyInstTable(PInstTable tab)
   free(tab);
 }
 
-void AddInstTable(PInstTable tab, char *Name, Word Index, InstProc Proc)
+void AddInstTable(PInstTable tab, const char *Name, Word Index, InstProc Proc)
 {
   LongWord h0 = GetKey(Name, tab->Size), z = 0;
 
@@ -236,7 +236,7 @@ void AddInstTable(PInstTable tab, char *Name, Word Index, InstProc Proc)
   {
     if (!tab->Entries[h0].Name)
     {
-      tab->Entries[h0].Name = (tab->Dynamic) ? strdup(Name) : Name;
+      tab->Entries[h0].Name = (tab->Dynamic) ? strdup(Name) : (char*)Name;
       tab->Entries[h0].Proc = Proc;
       tab->Entries[h0].Index = Index;
       tab->Entries[h0].Coll = z;

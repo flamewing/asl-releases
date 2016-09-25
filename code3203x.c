@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3203x.c,v 1.20 2016/08/27 07:31:51 alfred Exp $                       */
+/* $Id: code3203x.c,v 1.21 2016/09/12 17:31:41 alfred Exp $                       */
 /***************************************************************************** 
  * $Log: code3203x.c,v $
+ * Revision 1.21  2016/09/12 17:31:41  alfred
+ * - corrections for 16-bit compiler
+ *
  * Revision 1.20  2016/08/27 07:31:51  alfred
  * - remove debug printf
  *
@@ -728,7 +731,7 @@ static void DecodeGen(Word Index)
 
     if (AdrMode == ModImm)
     {
-      T28 = 1 << 28;
+      T28 = 1ul << 28;
     }
     else if (Is4x && Is4xArDisp(AdrMode, AdrPart))
     {
@@ -736,7 +739,7 @@ static void DecodeGen(Word Index)
          defines addressing mode of src1, which is the opposite of the type 1 format! */
 
       T21_22 |= 1ul << 21;
-      T28 = 1 << 28;
+      T28 = 1ul << 28;
       AdrPart = ((Word)(Hi(AdrPart) & 7) | (Lo(AdrPart) << 3)) << 8;
     }
 

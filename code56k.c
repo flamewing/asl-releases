@@ -14,9 +14,12 @@
 /*                      ShortMode wird bei absoluter Adressierung gemerkt    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code56k.c,v 1.10 2016/08/17 21:26:46 alfred Exp $                     */
+/* $Id: code56k.c,v 1.11 2016/09/12 18:20:21 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code56k.c,v $
+ * Revision 1.11  2016/09/12 18:20:21  alfred
+ * - use memmove() for overlapping copy
+ *
  * Revision 1.10  2016/08/17 21:26:46  alfred
  * - fix some errors and warnings detected by clang
  *
@@ -181,7 +184,7 @@ static void SplitArg(const char *Orig, char *LDest, char *RDest)
   }
   else
   {
-    memcpy(LDest, Orig, p - Orig);
+    memmove(LDest, Orig, p - Orig);
     LDest[p - Orig] = '\0';
     strcpy(RDest, p + 1);
   }

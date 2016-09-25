@@ -26,9 +26,12 @@
 /*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.32 2016/09/11 15:39:49 alfred Exp $                      */
+/* $Id: asmsub.c,v 1.33 2016/09/12 19:49:16 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmsub.c,v $
+ * Revision 1.33  2016/09/12 19:49:16  alfred
+ * - use gettime() to get DOS time (int86 leaks memory per call)
+ *
  * Revision 1.32  2016/09/11 15:39:49  alfred
  * - determine DOS time without floatig point
  *
@@ -1900,15 +1903,14 @@ void AddClearUpProc(SimpProc NewProc)
 
 long GTime(void)
 {
-  union REGS inregs, outregs;
+  struct time tbuf;
   long result;
 
-  inregs.h.ah = 0x2c;
-  int86(0x21, &inregs, &outregs);
-  result = outregs.h.ch;
-  result = (result * 60) + outregs.h.cl;
-  result = (result * 60) + outregs.h.dh;
-  result = (result * 100) + outregs.h.dl;
+  gettime(&tbuf);
+  result = tbuf.ti_hour;
+  result = (result * 60) + tbuf.ti_min;
+  result = (result * 60) + tbuf.ti_sec;
+  result = (result * 100) + tbuf.ti_hund;
   return result;
 }
 

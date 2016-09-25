@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6812.c,v 1.22 2014/12/05 11:15:28 alfred Exp $                    */
+/* $Id: code6812.c,v 1.23 2016/09/12 18:31:48 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6812.c,v $
+ * Revision 1.23  2016/09/12 18:31:48  alfred
+ * - regard zero-length string
+ *
  * Revision 1.22  2014/12/05 11:15:28  alfred
  * - eliminate AND/OR/NOT
  *
@@ -273,7 +276,7 @@ static Boolean ValidReg(const char *Asc_o)
   else 
   {
     strcpy(Asc, Asc_o);
-    if ((Asc_o[l - 1] == '-') || (Asc_o[l - 1] == '+'))
+    if ((l > 0) && ((Asc_o[l - 1] == '-') || (Asc_o[l - 1] == '+')))
       Asc[l - 1] = '\0';
   }
   return DecodeBaseReg(Asc, &Dummy);
@@ -674,7 +677,7 @@ static void Try2Split(int Src)
   KillPrefBlanks(ArgStr[Src]);
   KillPostBlanks(ArgStr[Src]);
   p = ArgStr[Src] + strlen(ArgStr[Src]) - 1;
-  while ((p >= ArgStr[Src]) & (!isspace(((unsigned int) *p) & 0xff)))
+  while ((p >= ArgStr[Src]) && (!isspace(((unsigned int) *p) & 0xff)))
     p--;
   if (p >= ArgStr[Src])
   {

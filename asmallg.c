@@ -24,9 +24,12 @@
 /*                       to now                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmallg.c,v 1.28 2015/10/28 17:54:33 alfred Exp $                     */
+/* $Id: asmallg.c,v 1.29 2016/09/12 18:44:53 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmallg.c,v $
+ * Revision 1.29  2016/09/12 18:44:53  alfred
+ * - fix memory leak
+ *
  * Revision 1.28  2015/10/28 17:54:33  alfred
  * - allow substructures of same name in different structures
  *
@@ -1671,6 +1674,9 @@ static void CodeENDSTRUCT(Word IsUnion)
 
       if (OStruct->Name[0])
         AddStruct(OStruct->StructRec, OStruct->Name, True);
+      else
+        DestroyStructRec(OStruct->StructRec);
+      OStruct->StructRec = NULL;
 
       /* set PC back to outer's struct value, plus size of
          just completed struct, or non-struct value: */

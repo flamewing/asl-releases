@@ -15,9 +15,15 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code601.c,v 1.10 2014/12/05 11:58:15 alfred Exp $                     */
+/* $Id: code601.c,v 1.12 2016/09/12 18:13:00 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code601.c,v $
+ * Revision 1.12  2016/09/12 18:13:00  alfred
+ * - correct some errors found by valgrind
+ *
+ * Revision 1.11  2016/09/12 18:05:30  alfred
+ * - correct some memory leaks
+ *
  * Revision 1.10  2014/12/05 11:58:15  alfred
  * - collapse STDC queries into one file
  *
@@ -1425,7 +1431,7 @@ static void AddCReg2(char *NName1, char *NName2, LongWord NCode, Byte NMask)
   AddInstTable(InstTable, (MomCPU == CPU6000) ? NName2 : NName1, InstrZ++, DecodeCReg2);
 }
 
-static void AddSFReg2(char *NName, LongInt NCode, Byte NMask)
+static void AddSFReg2(const char *NName, LongInt NCode, Byte NMask)
 {
   if (InstrZ >= FReg2OrderCount) exit(255);
   if (!NName) exit(255);
@@ -1434,14 +1440,15 @@ static void AddSFReg2(char *NName, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, NName, InstrZ++, DecodeFReg2);
 }
 
-static void AddFReg2(char *NName1, char *NName2, LongInt NCode, Byte NMask, Boolean WithFL)
+static void AddFReg2(const char *NName1, const char *NName2, LongInt NCode, Byte NMask, Boolean WithFL)
 {
-  String NName;
-  char *pSrcName = (MomCPU == CPU6000) ? NName2 : NName1;
+  const char *pSrcName = (MomCPU == CPU6000) ? NName2 : NName1;
 
-  AddSFReg2(NName, NCode, NMask);
+  AddSFReg2(pSrcName, NCode, NMask);
   if (WithFL)
   {
+    String NName;
+
     sprintf(NName, "%s.", pSrcName);
     AddSFReg2(NName, NCode | 0x001, NMask);
   }
@@ -1473,16 +1480,16 @@ static void AddReg2Swap(char *NName1, char *NName2, LongInt NCode, Byte NMask, B
   if (WithOE)
   {
     sprintf(NName, "%sO", pSrcName);
-    AddSReg2Swap(strdup(NName), NCode | 0x400, NMask);
+    AddSReg2Swap(NName, NCode | 0x400, NMask);
   }
   if (WithFL)
   {
     sprintf(NName, "%s.", pSrcName);
-    AddSReg2Swap(strdup(NName), NCode | 0x001, NMask);
+    AddSReg2Swap(NName, NCode | 0x001, NMask);
     if (WithOE)
     {
       sprintf(NName, "%sO.", pSrcName);
-      AddSReg2Swap(strdup(NName), NCode | 0x401, NMask);
+      AddSReg2Swap(NName, NCode | 0x401, NMask);
     }
   }
 }

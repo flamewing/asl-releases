@@ -5,9 +5,15 @@
 /* structure handling                                                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmstructs.c,v 1.10 2015/10/28 17:54:33 alfred Exp $                 */
+/* $Id: asmstructs.c,v 1.12 2016/09/22 15:36:15 alfred Exp $                 */
 /*****************************************************************************
  * $Log: asmstructs.c,v $
+ * Revision 1.12  2016/09/22 15:36:15  alfred
+ * - use platform-dependent format string for LongInt
+ *
+ * Revision 1.11  2016/09/12 19:46:56  alfred
+ * - initialize some elements in constructor
+ *
  * Revision 1.10  2015/10/28 17:54:33  alfred
  * - allow substructures of same name in different structures
  *
@@ -99,6 +105,8 @@ PStructRec CreateStructRec(void)
   {
     Neu->TotLen = 0;
     Neu->Elems = NULL;
+    Neu->ExtChar = '\0';
+    Neu->DoExt = Neu->IsUnion = False;
   }
   return Neu;
 }
@@ -303,7 +311,7 @@ static void PrintDef(PTree Tree, void *pData)
   WrLstLine(s);
   for (Elem = Node->StructRec->Elems; Elem; Elem = Elem->Next)
   {
-    sprintf(s, "%3d ", Elem->Offset);
+    sprintf(s, "%3" PRILongInt " ", Elem->Offset);
     strmaxcat(s, Elem->Name, 255);
     WrLstLine(s);
   }
@@ -323,7 +331,7 @@ void PrintStructList(void)
 
   Context.Sum = 0;
   IterTree((PTree)StructRoot, PrintDef, &Context);
-  sprintf(s, "%d%s", Context.Sum,
+  sprintf(s, "%" PRILongInt "%s", Context.Sum,
           getmessage((Context.Sum == 1) ? Num_ListStructSumMsg : Num_ListStructSumsMsg));
 }
 

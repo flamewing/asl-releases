@@ -11,9 +11,12 @@
 /*           2001-10-13 added ARM/Linux                                      */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: sysdefs.h,v 1.15 2015/08/21 19:12:19 alfred Exp $                     */
+/* $Id: sysdefs.h,v 1.16 2016/09/22 15:36:15 alfred Exp $                     */
 /*****************************************************************************
  * $Log: sysdefs.h,v $
+ * Revision 1.16  2016/09/22 15:36:15  alfred
+ * - use platform-dependent format string for LongInt
+ *
  * Revision 1.15  2015/08/21 19:12:19  alfred
  * - avoid double definition if both K8 and x86_64 set
  *
@@ -223,6 +226,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 #ifdef __GNUC__
 typedef signed long long Integ64;
@@ -254,6 +258,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
@@ -281,6 +286,7 @@ typedef short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 #define NOLONGLONG
 #define memmove(s1,s2,len) bcopy(s2,s1,len)
@@ -307,6 +313,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
@@ -352,6 +359,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 #ifdef __GNUC__
 typedef signed long long Integ64;
@@ -386,6 +394,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
@@ -411,6 +420,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
@@ -434,6 +444,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
@@ -472,6 +483,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 #ifdef __GNUC__
 typedef signed long long Integ64;
@@ -501,6 +513,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
@@ -527,6 +540,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
@@ -547,6 +561,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
@@ -579,6 +594,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
@@ -611,6 +627,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
@@ -634,6 +651,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
@@ -657,6 +675,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
@@ -692,6 +711,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 #define NOLONGLONG
 #define NO_NLS
@@ -715,6 +735,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
@@ -744,6 +765,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long Integ64;
 typedef unsigned long Card64;
@@ -779,6 +801,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long Integ64;
 typedef unsigned long Card64;
@@ -804,6 +827,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long Integ64;
 typedef unsigned long Card64;
@@ -829,6 +853,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long Integ64;
 typedef unsigned long Card64;
@@ -849,6 +874,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long Integ64;
 typedef unsigned long Card64;
@@ -883,6 +909,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
@@ -908,6 +935,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
@@ -933,6 +961,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
@@ -957,6 +986,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
@@ -990,6 +1020,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
@@ -1024,6 +1055,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
@@ -1056,6 +1088,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 #define NOLONGLONG
 #define OS2_NLS   
@@ -1102,6 +1135,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed long Integ32;
+#define PRIInteg32 "ld"
 typedef unsigned long Card32;
 #define NOLONGLONG
 #define DOS_NLS
@@ -1148,6 +1182,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
@@ -1191,6 +1226,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
@@ -1223,6 +1259,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
@@ -1250,6 +1287,7 @@ typedef signed short Integ16;
 typedef unsigned short Card16;
 #define HAS16
 typedef signed int Integ32;
+#define PRIInteg32 "d"
 typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
@@ -1276,6 +1314,7 @@ typedef unsigned long long Card64;
 typedef signed char Integ8;
 typedef unsigned char Card8;
 typedef signed short Integ32;
+#define PRIInteg32 "d"
 typedef unsigned short Card32;
 typedef signed int Integ64;
 typedef unsigned int Card64;

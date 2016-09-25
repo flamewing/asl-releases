@@ -59,7 +59,7 @@ extern void SetDynamicInstTable(PInstTable Table);
 
 extern void DestroyInstTable(PInstTable tab);
 
-extern void AddInstTable(PInstTable tab, char *Name, Word Index, InstProc Proc);
+extern void AddInstTable(PInstTable tab, const char *Name, Word Index, InstProc Proc);
 
 extern void RemoveInstTable(PInstTable tab, char *Name);
 

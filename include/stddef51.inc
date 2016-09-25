@@ -97,8 +97,24 @@ SBUF		SFR	99h		;  "         "        Datenregister
 
                 if      MOMCPU=80C320H  ; Register zweite serielle Schnittstelle
 SCON0		 SFR	SCON
+SM0_0		 BIT	SCON0.7
+SM1_0		 BIT    SCON0.6
+SM2_0 		 BIT    SCON0.5
+REN_0		 BIT	SCON0.4
+TB8_0		 BIT	SCON0.3
+RB8_0		 BIT	SCON0.2
+TI_0		 BIT	SCON0.1
+RI_0		 BIT	SCON0.0
 SBUF0		 SFR    SBUF
 SCON1		 SFR	0c0h		; Steuerregister
+SM0_1		 BIT	SCON1.7
+SM1_1		 BIT    SCON1.6
+SM2_1 		 BIT    SCON1.5
+REN_1		 BIT	SCON1.4
+TB8_1		 BIT	SCON1.3
+RB8_1		 BIT	SCON1.2
+TI_1		 BIT	SCON1.1
+RI_1		 BIT	SCON1.0
 SBUF1            SFR    0c1h            ; Datenregister
 		endif
 
