@@ -1,0 +1,7 @@
++----------------------- Test Application Z80SYNTAX -------------------------+
+|                                                                            |
+|    This (synthetic) test enumerates all 8080/8085 instructions that have a |
+|    (different) equivalent in Z80 syntax.  Optionally, the 8080/8085 part   |
+|    allows to write them in the (better readable) Z80 syntax.               |
+|                                                                            |
++----------------------------------------------------------------------------+

@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code4500.c,v 1.4 2014/11/06 11:58:16 alfred Exp $                    */
+/* $Id: code4500.c,v 1.5 2016/09/29 16:43:36 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code4500.c,v $
+ * Revision 1.5  2016/09/29 16:43:36  alfred
+ * - introduce common DecodeDATA/DecodeRES functions
+ *
  * Revision 1.4  2014/11/06 11:58:16  alfred
  * - rework to current style
  *
@@ -41,6 +44,7 @@
 #include "asmpars.h"
 #include "asmitree.h"
 #include "codepseudo.h"
+#include "fourpseudo.h"
 #include "codevars.h"
 
 
@@ -66,97 +70,9 @@ static void DecodeSFR(Word Code)
   CodeEquate(SegData, 0, 415);
 }
 
-static void DecodeRES(Word Code)
+static void DecodeDATA_4500(Word Code)
 {
-  UNUSED(Code);
-
-  if (ArgCnt != 1) WrError(1110);
-  else
-  {
-    Boolean ValOK;
-    Word Size;
-
-    FirstPassUnknown = False;
-    Size = EvalIntExpression(ArgStr[1], Int16, &ValOK);
-    if (FirstPassUnknown) WrError(1820);
-    if ((ValOK) && (!FirstPassUnknown))
-    {
-      DontPrint = True;
-      if (!Size) WrError(290);
-      CodeLen = Size;
-      BookKeeping();
-    }
-  }
-}
-
-static void DecodeDATA(Word Code)
-{
-  Boolean ValOK;
-  TempResult t;
-  char Ch;
-  int z, z2;
-
-  UNUSED(Code);
-
-  if (ArgCnt == 0) WrError(1110);
-  else
-  {
-    ValOK = True;
-    for (z = 1; ValOK && (z <= ArgCnt); z++)
-    {
-      FirstPassUnknown = False;
-      EvalExpression(ArgStr[z], &t);
-      if ((t.Typ == TempInt) && (FirstPassUnknown))
-        t.Contents.Int &= (ActPC == SegData) ? 7 : 511;
-
-      switch (t.Typ)
-      {
-        case TempInt:
-          if (ActPC == SegCode)
-          {
-            if (!RangeCheck(t.Contents.Int, Int10))
-            {
-              WrError(1320);
-              ValOK = False;
-            }
-            else
-              WAsmCode[CodeLen++] = t.Contents.Int & 0x3ff;
-          }
-          else
-          {
-            if (!RangeCheck(t.Contents.Int, Int4))
-            {
-              WrError(1320);
-              ValOK = False;
-            }
-            else
-              BAsmCode[CodeLen++] = t.Contents.Int & 0x0f;
-          }
-          break;
-        case TempFloat:
-          WrError(1135);
-          ValOK = False;
-          break;
-        case TempString:
-          for (z2 = 0; z2 < t.Contents.Ascii.Length; z2++)
-          {
-            Ch = CharTransTable[((usint) t.Contents.Ascii.Contents[z2]) & 0xff];
-            if (ActPC == SegCode)
-              WAsmCode[CodeLen++] = Ch;
-            else
-            {
-              BAsmCode[CodeLen++] = Ch >> 4;
-              BAsmCode[CodeLen++] = Ch & 15;
-            }
-          }
-          break;
-        default:
-          ValOK = False;
-      }
-    }
-    if (!ValOK)
-      CodeLen = 0;
-  }
+  DecodeDATA(Int10, Int4);
 }
 
 static void DecodeFixed(Word Code)
@@ -364,7 +280,7 @@ static void InitFields(void)
 
   AddInstTable(InstTable, "SFR", 0, DecodeSFR);
   AddInstTable(InstTable, "RES", 0, DecodeRES);
-  AddInstTable(InstTable, "DATA", 0, DecodeDATA);
+  AddInstTable(InstTable, "DATA", 0, DecodeDATA_4500);
 
   AddFixed("AM"   , 0x00a);  AddFixed("AMC"  , 0x00b);  AddFixed("AND"  , 0x018);
   AddFixed("CLD"  , 0x011);  AddFixed("CMA"  , 0x01c);  AddFixed("DEY"  , 0x017);

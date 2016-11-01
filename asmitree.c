@@ -249,7 +249,7 @@ void AddInstTable(PInstTable tab, const char *Name, Word Index, InstProc Proc)
   }
 }
 
-void RemoveInstTable(PInstTable tab, char *Name)
+void RemoveInstTable(PInstTable tab, const char *Name)
 {
   LongWord h0 = GetKey(Name, tab->Size);
 
@@ -269,7 +269,7 @@ void RemoveInstTable(PInstTable tab, char *Name)
   }
 }
 
-Boolean LookupInstTable(PInstTable tab, char *Name)
+Boolean LookupInstTable(PInstTable tab, const char *Name)
 {
   LongWord h0 = GetKey(Name, tab->Size);
 

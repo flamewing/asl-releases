@@ -61,9 +61,9 @@ extern void DestroyInstTable(PInstTable tab);
 
 extern void AddInstTable(PInstTable tab, const char *Name, Word Index, InstProc Proc);
 
-extern void RemoveInstTable(PInstTable tab, char *Name);
+extern void RemoveInstTable(PInstTable tab, const char *Name);
 
-extern Boolean LookupInstTable(PInstTable tab, char *Name);
+extern Boolean LookupInstTable(PInstTable tab, const char *Name);
 
 extern void PrintInstTable(FILE *stream, PInstTable tab);
 

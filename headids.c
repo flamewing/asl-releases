@@ -19,9 +19,21 @@
 /*           2001-07-01 TI 320C54x                                           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: headids.c,v 1.18 2016/08/29 21:10:43 alfred Exp $                          */
+/* $Id: headids.c,v 1.22 2016/11/01 11:48:05 alfred Exp $                          */
 /*****************************************************************************
  * $Log: headids.c,v $
+ * Revision 1.22  2016/11/01 11:48:05  alfred
+ * - add support for OKI OLMS-40
+ *
+ * Revision 1.21  2016/10/09 19:55:53  alfred
+ * - first version of MIL STD 1750 support
+ *
+ * Revision 1.20  2016/09/30 19:37:18  alfred
+ * - renamed HMCS40x to HMCS400
+ *
+ * Revision 1.19  2016/09/25 20:31:21  alfred
+ * - add HMCS4x target
+ *
  * Revision 1.18  2016/08/29 21:10:43  alfred
  * - begun with TC9331
  *
@@ -117,6 +129,7 @@ static TFamilyDescr Descrs[] =
   { "H8/300(H}"    , 0x0068, MotoS    },
   { "H8/500"       , 0x0069, MotoS    },
   { "SH7x00"       , 0x006c, MotoS    },
+  { "HMCS400"      , 0x0050, MotoS    },
   { "65xx"         , 0x0011, MOSHex   },
   { "MELPS-7700"   , 0x0019, MOSHex   },
   { "MELPS-4500"   , 0x0012, IntHex   },
@@ -185,10 +198,12 @@ static TFamilyDescr Descrs[] =
   { "SYM53C8xx"    , 0x0025, IntHex   },
   { "F2MC8"        , 0x0015, IntHex   },
   { "F2MC16"       , 0x0016, IntHex   },
+  { "OLMS-40"      , 0x004e, IntHex   },
   { "1802"         , 0x0038, IntHex   },
   { "KENBAK"       , 0x0027, IntHex   },
   { "ATARI_VECTOR" , 0x0002, IntHex   },
   { "XCore"        , 0x0006, MotoS    },
+  { "1750"         , 0x004f, IntHex   },
   { NULL           , 0xffff, Default  }
 };
 

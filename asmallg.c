@@ -24,9 +24,12 @@
 /*                       to now                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmallg.c,v 1.29 2016/09/12 18:44:53 alfred Exp $                     */
+/* $Id: asmallg.c,v 1.30 2016/10/07 20:03:03 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmallg.c,v $
+ * Revision 1.30  2016/10/07 20:03:03  alfred
+ * - make some arguments const
+ *
  * Revision 1.29  2016/09/12 18:44:53  alfred
  * - fix memory leak
  *
@@ -1811,7 +1814,7 @@ static int ONOFFCnt = 0;
 typedef struct
 {
   Boolean Persist, *FlagAddr;
-  char *FlagName, *InstName;
+  const char *FlagName, *InstName;
 } ONOFFTab;
 static ONOFFTab *ONOFFList;
 
@@ -1837,7 +1840,7 @@ static void DecodeONOFF(Word Index)
   }
 }
 
-void AddONOFF(char *InstName, Boolean *Flag, char *FlagName, Boolean Persist)
+void AddONOFF(const char *InstName, Boolean *Flag, const char *FlagName, Boolean Persist)
 {
   if (ONOFFCnt == ONOFFMax) exit(255);
   ONOFFList[ONOFFCnt].Persist = Persist;

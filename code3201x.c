@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3201x.c,v 1.5 2014/12/07 19:13:59 alfred Exp $                          */
+/* $Id: code3201x.c,v 1.6 2016/09/29 16:43:36 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code3201x.c,v $
+ * Revision 1.6  2016/09/29 16:43:36  alfred
+ * - introduce common DecodeDATA/DecodeRES functions
+ *
  * Revision 1.5  2014/12/07 19:13:59  alfred
  * - silence a couple of Borland C related warnings and errors
  *
@@ -46,6 +49,7 @@
 #include "asmpars.h"
 #include "asmitree.h"
 #include "codepseudo.h"
+#include "fourpseudo.h"
 #include "codevars.h"
 
 
@@ -371,86 +375,11 @@ static void DecodePORT(Word Code)
   CodeEquate(SegIO, 0, 7);
 }
 
-static void DecodeRES(Word Code)
+static void DecodeDATA_3201x(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
-  {
-    Boolean OK;
-    Word Size;
-
-    FirstPassUnknown = False;
-    Size = EvalIntExpression(ArgStr[1], Int16, &OK);
-    if (FirstPassUnknown)
-      WrError(1820);
-    if ((OK) && (!FirstPassUnknown))
-    {
-      DontPrint = True;
-      if (!Size)
-        WrError(290);
-      CodeLen = Size;
-      BookKeeping();
-    }
-  }
-}
-
-static void DecodeDATA(Word Code)
-{
-  int z;
-  TempResult t;
-  Boolean OK;
-
-  UNUSED(Code);
-
-  if (ArgCnt == 0) WrError(1110);
-  else
-  {
-    OK = True;
-    for (z = 1; z <= ArgCnt; z++)
-     if (OK)
-     {
-       EvalExpression(ArgStr[z], &t);
-       switch (t.Typ)
-       {
-         case TempInt:
-           if ((t.Contents.Int < -32768) || (t.Contents.Int > 0xffff))
-           {
-             WrError(1320);
-             OK = False;
-           }
-           else
-             WAsmCode[CodeLen++] = t.Contents.Int;
-           break;
-         case TempFloat:
-           WrError(1135);
-           OK = False;
-           break;
-         case TempString:
-         {
-           Word Trans;
-           unsigned z2;
-
-           for (z2 = 0; z2 < t.Contents.Ascii.Length; z2++)
-           {
-             Trans = CharTransTable[((usint)t.Contents.Ascii.Contents[z2]) & 0xff];
-             if (z2 & 1)
-               WAsmCode[CodeLen++] |= Trans << 8;
-             else
-               WAsmCode[CodeLen] = Trans;
-           }
-           if (z2 & 1)
-             CodeLen++;
-           break;
-         }
-         default:
-           OK = False;
-       }
-     }
-    if (!OK)
-      CodeLen = 0;
-  }
+  DecodeDATA(Int16, Int16);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -499,7 +428,7 @@ static void InitFields(void)
   AddInstTable(InstTable, "LARK", 0, DecodeLARK);
   AddInstTable(InstTable, "PORT", 0, DecodePORT);
   AddInstTable(InstTable, "RES", 0, DecodeRES);
-  AddInstTable(InstTable, "DATA", 0, DecodeDATA);
+  AddInstTable(InstTable, "DATA", 0, DecodeDATA_3201x);
 
   AddFixed("ABS"   , 0x7f88);  AddFixed("APAC"  , 0x7f8f);
   AddFixed("CALA"  , 0x7f8c);  AddFixed("DINT"  , 0x7f81);

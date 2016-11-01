@@ -36,9 +36,15 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.33 2016/08/17 21:26:45 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.35 2016/10/07 20:03:03 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmpars.c,v $
+ * Revision 1.35  2016/10/07 20:03:03  alfred
+ * - make some arguments const
+ *
+ * Revision 1.34  2016/09/29 16:43:36  alfred
+ * - introduce common DecodeDATA/DecodeRES functions
+ *
  * Revision 1.33  2016/08/17 21:26:45  alfred
  * - fix some errors and warnings detected by clang
  *
@@ -236,6 +242,7 @@ tIntTypeDef IntTypeDefs[IntTypeCnt] =
   { 0x00000fffl,      -2047l,       4095l }, /* Int12 */
   { 0x00001fffl,          0l,       8191l }, /* UInt13 */
   { 0x00003fffl,          0l,      16383l }, /* UInt14 */
+  { 0x00003fffl,      -8192l,      16383l }, /* Int14 */
   { 0x00007fffl,          0l,      32767l }, /* UInt15 */
   { 0x00007fffl,     -32768l,      32767l }, /* SInt16 */
   { 0x0000ffffl,          0l,      65535l }, /* UInt16 */
@@ -4320,7 +4327,7 @@ void ResetSymbolDefines(void)
   IterTree(&(FirstLocSymbol->Tree), ResetSymbolDefines_ResetNode, NULL);
 }
 
-void SetFlag(Boolean *Flag, char *Name, Boolean Wert)
+void SetFlag(Boolean *Flag, const char *Name, Boolean Wert)
 {
   *Flag = Wert;
   EnterIntSymbol(Name, *Flag ? 1 : 0, 0, True);

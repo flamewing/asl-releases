@@ -46,6 +46,7 @@ call testall t_166
 call testall t_16c5x
 call testall t_16c84
 call testall t_17c42
+call testall t_1750
 call testall t_1802
 call testall t_1805
 call testall t_251
@@ -126,6 +127,7 @@ call testall t_kcpsm3
 call testall t_h8_3
 call testall t_h8_5
 call testall t_hcs08
+call testall t_hmcs4x
 call testall t_longline
 call testall t_m16
 call testall t_m16c
@@ -135,6 +137,7 @@ call testall t_mic51
 call testall t_mico8
 call testall t_msp
 call testall t_nestedstructs
+call testall t_olms40
 call testall t_parsys
 call testall t_s12x
 call testall t_scmp
@@ -155,6 +158,7 @@ call testall t_xcore
 call testall t_xgate
 call testall t_z380
 call testall t_z8
+call testall t_z80syntax
 echo successes: %SUMPASS% >> ..\testlog
 echo failures: %SUMFAIL% >> ..\testlog
 type ..\testlog

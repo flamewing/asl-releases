@@ -15,9 +15,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code7720.c,v 1.8 2014/12/07 19:14:00 alfred Exp $                    */
+/* $Id: code7720.c,v 1.9 2016/09/29 16:43:37 alfred Exp $                    */
 /***************************************************************************** 
  * $Log: code7720.c,v $
+ * Revision 1.9  2016/09/29 16:43:37  alfred
+ * - introduce common DecodeDATA/DecodeRES functions
+ *
  * Revision 1.8  2014/12/07 19:14:00  alfred
  * - silence a couple of Borland C related warnings and errors
  *
@@ -151,7 +154,7 @@ static void DecodeJmp(Word Code)
   }
 }
 
-static void DecodeDATA(Word Index)
+static void DecodeDATA_7720(Word Index)
 {
   LongInt MinV, MaxV;
   TempResult t;
@@ -468,7 +471,7 @@ static void InitFields(void)
   AddInstTable(InstTable, "LDI", 0, DecodeLDI);
   AddInstTable(InstTable, "LD", 0, DecodeLDI);
   AddInstTable(InstTable, "OP", 0, DecodeOP);
-  AddInstTable(InstTable, "DATA", 0, DecodeDATA);
+  AddInstTable(InstTable, "DATA", 0, DecodeDATA_7720);
   AddInstTable(InstTable, "RES", 0, DecodeRES);
   AddInstTable(OpTable, "MOV", 0, DecodeMOV);
   AddInstTable(OpTable, "NOP", 0, DecodeNOP);

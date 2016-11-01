@@ -5,9 +5,12 @@
 /* Haeufiger benutzte Texas Instruments Pseudo-Befehle                       */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: tipseudo.c,v 1.5 2016/08/24 12:13:19 alfred Exp $                    */
+/* $Id: tipseudo.c,v 1.6 2016/09/29 16:43:37 alfred Exp $                    */
 /***************************************************************************** 
  * $Log: tipseudo.c,v $
+ * Revision 1.6  2016/09/29 16:43:37  alfred
+ * - introduce common DecodeDATA/DecodeRES functions
+ *
  * Revision 1.5  2016/08/24 12:13:19  alfred
  * - begun with 320C4x support
  *
@@ -40,6 +43,7 @@
 #include "asmpars.h"
 #include "asmitree.h"
 
+#include "fourpseudo.h"
 #include "tipseudo.h"
 
 /*****************************************************************************
@@ -265,87 +269,19 @@ Boolean DecodeTIPseudo(void)
   double dbl, mant;
   float flt;
   long lmant;
-  Word w, size;
-  TempResult t;
+  Word w;
 
   if (Memo("RES") || Memo("BSS"))
   {
-    if (ArgCnt != 1)
-    {
-      WrError(1110);
-      return True;
-    }
     if (Memo("BSS"))
       define_untyped_label();
-    FirstPassUnknown = False;
-    size = EvalIntExpression(ArgStr[1], Int16, &ok);
-    if (FirstPassUnknown)
-    {
-      WrError(1820);
-      return True;
-    }
-    if (!ok) 
-      return True;
-    DontPrint = True;
-    if (!size) WrError(290);
-    CodeLen = size;
-    BookKeeping();
+    DecodeRES(0);
     return True;
   }
 
   if (Memo("DATA"))
   {
-    if (!ArgCnt)
-    {
-      WrError(1110);
-      return True;
-    }
-
-    ok = True;
-    for (z = 1; (z <= ArgCnt) && ok; z++)
-    {
-      if (!*ArgStr[z])
-      {
-        ok = False;
-        break;
-      }
-      EvalExpression(ArgStr[z], &t);
-      switch(t.Typ)
-      {
-        case TempInt:  
-          if (!ChkRange(t.Contents.Int, -32768, 0xffff))
-            ok = False;
-          else
-            WAsmCode[CodeLen++] = t.Contents.Int;
-          break;
-        case TempFloat:
-          WrError(1135); 
-          ok = False;
-          break;
-        case TempString:
-        {
-          unsigned char *cp;
-          int z2;
-
-          cp = (unsigned char *)t.Contents.Ascii.Contents;
-          for (z2 = 0; z2 < t.Contents.Ascii.Length; z2++)
-          {
-            if (z2 & 1)
-              WAsmCode[CodeLen++] |= (CharTransTable[((usint)*cp)&0xff] << 8);
-            else
-              WAsmCode[CodeLen] = CharTransTable[((usint)*cp)&0xff];
-            cp++;
-          }
-          if (z2 & 1)
-            CodeLen++;
-          break;
-        }
-        default:
-          break;
-      }
-    }
-    if (!ok)
-      CodeLen = 0;
+    DecodeDATA(Int16, Int16);
     return True;
   }
 
@@ -719,7 +655,7 @@ static void DecodeWORD(Word Code)
   }
 }
 
-static void DecodeDATA(Word Code)
+static void DecodeDATA34x(Word Code)
 {
   Boolean OK;
   TempResult t;
@@ -803,6 +739,6 @@ void AddTI34xPseudo(TInstTable *pInstTable)
   AddInstTable(pInstTable, "SINGLE", 0, DecodeSINGLE);
   AddInstTable(pInstTable, "EXTENDED", 0, DecodeEXTENDED);
   AddInstTable(pInstTable, "WORD", 0, DecodeWORD);
-  AddInstTable(pInstTable, "DATA", 0, DecodeDATA);
+  AddInstTable(pInstTable, "DATA", 0, DecodeDATA34x);
   AddInstTable(pInstTable, "BSS", 0, DecodeBSS);
 }

@@ -58,9 +58,21 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.64 2016/08/30 13:48:22 alfred Exp $                         */
+/* $Id: as.c,v 1.68 2016/11/01 11:48:04 alfred Exp $                         */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.68  2016/11/01 11:48:04  alfred
+ * - add support for OKI OLMS-40
+ *
+ * Revision 1.67  2016/10/09 19:55:52  alfred
+ * - first version of MIL STD 1750 support
+ *
+ * Revision 1.66  2016/09/30 19:37:17  alfred
+ * - renamed HMCS40x to HMCS400
+ *
+ * Revision 1.65  2016/09/25 20:31:20  alfred
+ * - add HMCS4x target
+ *
  * Revision 1.64  2016/08/30 13:48:22  alfred
  * - yet another TC9331 speciality in the parser...
  *
@@ -373,6 +385,7 @@
 #include "code7000.h"
 #include "code65.h"
 #include "code7700.h"
+#include "codehmcs400.h"
 #include "code4500.h"
 #include "codem16.h"
 #include "codem16c.h"
@@ -437,10 +450,11 @@
 #include "code53c8xx.h"
 #include "codefmc8.h"
 #include "codefmc16.h"
+#include "codeol40.h"
 #include "code1802.h"
 #include "codevector.h"
 #include "codexcore.h"
-#include "as1750.h"
+#include "code1750.h"
 /**          Code21xx};**/
 
 static char *FileMask;
@@ -4416,6 +4430,7 @@ int main(int argc, char **argv)
     code7000_init();
     code65_init();
     code7700_init();
+    codehmcs400_init();
     code4500_init();
     codem16_init();
     codem16c_init();
@@ -4480,10 +4495,11 @@ int main(int argc, char **argv)
     code53c8xx_init();
     codef2mc8_init();
     codef2mc16_init();
+    codeolms40_init();
     code1802_init();
     codevector_init();
     codexcore_init();
-    /*as1750_init();*/
+    code1750_init();
     First = FALSE;
   }
 

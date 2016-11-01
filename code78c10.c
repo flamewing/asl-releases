@@ -11,9 +11,12 @@
 /*           25.10.2000 accesses wrong argument for mov nnn,a                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code78c10.c,v 1.8 2014/11/05 15:47:15 alfred Exp $                   */
+/* $Id: code78c10.c,v 1.9 2016/10/22 17:54:20 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code78c10.c,v $
+ * Revision 1.9  2016/10/22 17:54:20  alfred
+ * - add some alternate notations for 78C1x indirect addressing
+ *
  * Revision 1.8  2014/11/05 15:47:15  alfred
  * - replace InitPass callchain with registry
  *
@@ -59,6 +62,13 @@ typedef struct
   Byte Code;
 } SReg;
 
+typedef struct
+{
+  const char *pName;
+  Byte Code;
+  Byte MayIndirect;
+} tAdrMode;
+
 #define SRegCnt 28
 
 
@@ -83,7 +93,8 @@ static Boolean Decode_r(char *Asc, ShortInt *Erg)
   if (strlen(Asc) != 1) return False;
   p = strchr(Names, mytoupper(*Asc));
   if (!p) return False;
-  *Erg = p-Names; return True;
+  *Erg = p - Names;
+  return True;
 }
 
 static Boolean Decode_r1(char *Asc, ShortInt *Erg)
@@ -106,12 +117,26 @@ static Boolean Decode_r2(char *Asc, ShortInt *Erg)
 
 static Boolean Decode_rp2(char *Asc, ShortInt *Erg)
 {
-#define RegCnt 5
-  static char *Regs[RegCnt] = {"SP", "B", "D", "H", "EA"};
+  static const SReg Regs[] =
+  {
+    { "SP" , 0 },
+    { "B"  , 1 },
+    { "BC" , 1 },
+    { "D"  , 2 },
+    { "DE" , 2 },
+    { "H"  , 3 },
+    { "HL" , 3 },
+    { "EA" , 4 },
+    { NULL , 0 },
+  };
 
-  for (*Erg = 0; *Erg < RegCnt; (*Erg)++)
-   if (!strcasecmp(Asc, Regs[*Erg])) break;
-  return (*Erg < RegCnt);
+  for (*Erg = 0; Regs[*Erg].Name; (*Erg)++)
+    if (!strcasecmp(Asc, Regs[*Erg].Name))
+    {
+      *Erg = Regs[*Erg].Code;
+      return True;
+    }
+  return False;
 }
 
 static Boolean Decode_rp(char *Asc, ShortInt *Erg)
@@ -137,38 +162,88 @@ static Boolean Decode_rp3(char *Asc, ShortInt *Erg)
   return ((*Erg < 4) && (*Erg > 0));
 }
 
-static Boolean Decode_rpa2(char *Asc, ShortInt *Erg, ShortInt *Disp)
+static Boolean DecodeAdrMode(char *pAsc, const tAdrMode pModes[],
+                             ShortInt *pErg, Boolean *pWasIndirect)
 {
-#define OpCnt 13
-  static char *OpNames[OpCnt] = {"B", "D", "H", "D+", "H+", "D-", "H-", 
-                                  "H+A", "A+H", "H+B", "B+H", "H+EA", "EA+H"};
-  static Byte OpCodes[OpCnt] = {1, 2, 3, 4, 5, 6, 7, 12, 12, 13, 13, 14, 14};
-
   int z;
-  char *p, *pm;
-  Boolean OK;
 
-  for (z = 0; z < OpCnt; z++)
-   if (!strcasecmp(Asc, OpNames[z]))
-   {
-     *Erg = OpCodes[z]; return True;
-   }
+  if (!*pWasIndirect && (IsIndirect(pAsc)))
+  {
+    strmov(pAsc, pAsc + 1);
+    pAsc[strlen(pAsc) - 1] = '\0';
+    *pWasIndirect = True;
+  }
+
+  for (z = 0; pModes[z].pName; z++)
+  {
+    if (*pWasIndirect && !pModes[z].MayIndirect)
+      continue;
+    if (!strcasecmp(pAsc, pModes[z].pName))
+    {
+      *pErg = pModes[z].Code;
+      return True;
+    }
+  }
+  return False;
+}
+
+static Boolean Decode_rpa2(char *Asc, Boolean *pWasIndirect, ShortInt *Erg, ShortInt *Disp)
+{
+  static const tAdrMode AdrModes[] =
+  {
+    { "B"   ,  1  , True  },
+    { "BC"  ,  1  , True  },
+    { "D"   ,  2  , True  },
+    { "DE"  ,  2  , True  },
+    { "H"   ,  3  , True  },
+    { "HL"  ,  3  , True  },
+    { "D+"  ,  4  , True  },
+    { "DE+" ,  4  , True  },
+    { "(DE)+", 4  , False },
+    { "H+"   , 5  , True  },
+    { "HL+"  , 5  , True  },
+    { "(HL)+", 5  , False },
+    { "D-"   , 6  , True  },
+    { "DE-"  , 6  , True  },
+    { "(DE)-", 6  , False },
+    { "H-"   , 7  , True  },
+    { "HL-"  , 7  , True  },
+    { "(HL)-", 7  , False },
+    { "H+A"  , 12 , True  },
+    { "HL+A" , 12 , True  },
+    { "A+H"  , 12 , True  },
+    { "A+HL" , 12 , True  },
+    { "H+B"  , 13 , True  },
+    { "HL+B" , 13 , True  },
+    { "B+H"  , 13 , True  },
+    { "B+HL" , 13 , True  },
+    { "H+EA" , 14 , True  },
+    { "HL+EA", 14 , True  },
+    { "EA+H" , 14 , True  },
+    { "EA+HL", 14 , True  },
+    { NULL  , 0   , False },
+  };
+
+  char *p, *pm, Save;
+  Boolean OK;
+  ShortInt BaseReg;
+
+  if (DecodeAdrMode(Asc, AdrModes, Erg, pWasIndirect))
+  {
+    *Disp = 0;
+    return True;
+  }
 
   p = QuotPos(Asc, '+'); pm = QuotPos(Asc, '-');
   if ((!p) || ((pm) && (pm < p))) p = pm;
   if (!p) return False;
 
-  if (p == Asc + 1)
-  {
-    switch (mytoupper(*Asc))
-    {
-      case 'H': *Erg = 15; break;
-      case 'D': *Erg = 11; break;
-      default: return False;
-    }
-  }
-  else
+  Save = *p; *p = '\0';
+  OK = (Decode_rp2(Asc, &BaseReg));
+  *p = Save;
+  if (!OK || ((BaseReg != 2) && (BaseReg != 3)))
     return False;
+  *Erg = (BaseReg == 3) ? 15 : 11;
   *Disp = EvalIntExpression(p, SInt8, &OK);
   return OK;
 }
@@ -176,29 +251,44 @@ static Boolean Decode_rpa2(char *Asc, ShortInt *Erg, ShortInt *Disp)
 static Boolean Decode_rpa(char *Asc, ShortInt *Erg)
 {
   ShortInt Dummy;
+  Boolean WasIndirect = False;
 
-  if (!Decode_rpa2(Asc, Erg, &Dummy)) return False;
+  if (!Decode_rpa2(Asc, &WasIndirect, Erg, &Dummy)) return False;
   return (*Erg <= 7);
 }
 
 static Boolean Decode_rpa1(char *Asc, ShortInt *Erg)
 {
   ShortInt Dummy;
+  Boolean WasIndirect = False;
 
-  if (!Decode_rpa2(Asc, Erg, &Dummy)) return False;
+  if (!Decode_rpa2(Asc, &WasIndirect, Erg, &Dummy)) return False;
   return (*Erg <= 3);
 }
 
 static Boolean Decode_rpa3(char *Asc, ShortInt *Erg, ShortInt *Disp)
 {
-   if (!strcasecmp(Asc, "D++")) *Erg = 4;
-   else if (!strcasecmp(Asc, "H++")) *Erg = 5;
-   else
-   {
-     if (!Decode_rpa2(Asc, Erg, Disp)) return False;
-     return ((*Erg == 2) || (*Erg == 3) || (*Erg >= 8));
-   }
-   return True;
+  static const tAdrMode AdrModes[] =
+  {
+    { "D++"   , 4 , True  },
+    { "DE++"  , 4 , True  },
+    { "(DE)++", 4 , False },
+    { "H++"   , 5 , True  },
+    { "HL++"  , 5 , True  },
+    { "(HL)++", 5 , False },
+    { NULL    , 0 , False },
+  };
+  Boolean WasIndirect = False;
+
+  if (DecodeAdrMode(Asc, AdrModes, Erg, &WasIndirect))
+  {
+    *Disp = 0;
+    return True;
+  }
+
+  if (!Decode_rpa2(Asc, &WasIndirect, Erg, Disp))
+    return False;
+  return ((*Erg == 2) || (*Erg == 3) || (*Erg >= 8));
 }
 
 static Boolean Decode_f(char *Asc, ShortInt *Erg)
@@ -471,9 +561,10 @@ static void DecodeMVIX(Word Code)
 static void DecodeLDAX_STAX(Word Code)
 {
   ShortInt HReg;
+  Boolean WasIndirect = False;
 
   if (ArgCnt != 1) WrError(1110);
-  else if (!Decode_rpa2(ArgStr[1], &HReg, (ShortInt *) BAsmCode + 1)) WrError(1350);
+  else if (!Decode_rpa2(ArgStr[1], &WasIndirect, &HReg, (ShortInt *) BAsmCode + 1)) WrError(1350);
   else
   {
     CodeLen = 1 + Ord(HasDisp(HReg));

@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3203x.c,v 1.21 2016/09/12 17:31:41 alfred Exp $                       */
+/* $Id: code3203x.c,v 1.22 2016/10/21 20:05:56 alfred Exp $                       */
 /***************************************************************************** 
  * $Log: code3203x.c,v $
+ * Revision 1.22  2016/10/21 20:05:56  alfred
+ * - fix some bugs detected by pedantic GCC
+ *
  * Revision 1.21  2016/09/12 17:31:41  alfred
  * - corrections for 16-bit compiler
  *
@@ -733,7 +736,7 @@ static void DecodeGen(Word Index)
     {
       T28 = 1ul << 28;
     }
-    else if (Is4x && Is4xArDisp(AdrMode, AdrPart))
+    else if (Is4x() && Is4xArDisp(AdrMode, AdrPart))
     {
       /* note that for type 2, bit 21 defines addressing mode of src2 and bit 22
          defines addressing mode of src1, which is the opposite of the type 1 format! */
@@ -1022,7 +1025,8 @@ static void DecodeGen(Word Index)
                   | EffPart(CurrGenInfo.Src2Mode, CurrGenInfo.Src2Part);
     else
       DAsmCode[0] = 0x00000000 | (((LongWord)CurrGenInfo.pOrder->Code) << 23)
-                  | (((LongWord)CurrGenInfo.Src2Mode) << 21) + CurrGenInfo.Src2Part
+                  | (((LongWord)CurrGenInfo.Src2Mode) << 21)
+                  | CurrGenInfo.Src2Part
                   | (((LongWord)CurrGenInfo.DestPart) << 16);
     CodeLen = 1;
     NextPar = True;

@@ -1,5 +1,17 @@
-$Id: changelog,v 1.130 2016/09/25 15:13:36 alfred Exp $
+$Id: changelog,v 1.135 2016/11/01 13:49:18 alfred Exp $
 ------------------------------------------------------------------------------
+
+2016-11-01 [1.42 Bld 114]
+
+- Addition    : add support for OKI OLMS-40
+
+- Addition    : allow some alternate notations for 78C1x indirect addressing
+
+- Addition    : add support for MIL STD 1750
+
+- Addition    : allow Z80-style syntax for 8080/8085
+
+- Addition    : add support for Hitachi HMCS400
 
 2016-09-25 [1.42 Bld 113]
 

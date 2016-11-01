@@ -15,9 +15,12 @@
 /*            7. 5.2000 Packing hinzugefuegt                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeavr.c,v 1.10 2014/11/05 15:47:15 alfred Exp $                     */
+/* $Id: codeavr.c,v 1.11 2016/09/29 16:43:37 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codeavr.c,v $
+ * Revision 1.11  2016/09/29 16:43:37  alfred
+ * - introduce common DecodeDATA/DecodeRES functions
+ *
  * Revision 1.10  2014/11/05 15:47:15  alfred
  * - replace InitPass callchain with registry
  *
@@ -214,7 +217,7 @@ static void PlaceByte(Word Value, Boolean Pack)
     BAsmCode[CodeLen++] = Value;
 }
 
-static void DecodeDATA(Word Index)
+static void DecodeDATA_AVR(Word Index)
 {
   Integer Trans;
   int z, z2;
@@ -920,7 +923,7 @@ static void InitFields(void)
 
   AddInstTable(InstTable, "PORT", 0, DecodePORT);
   AddInstTable(InstTable, "RES" , 0, DecodeRES);
-  AddInstTable(InstTable, "DATA", 0, DecodeDATA);
+  AddInstTable(InstTable, "DATA", 0, DecodeDATA_AVR);
   AddInstTable(InstTable, "REG" , 0, DecodeREG);
 
   AddInstTable(InstTable, "MULS", 0, DecodeMULS);

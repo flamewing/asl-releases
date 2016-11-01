@@ -17,9 +17,15 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.h,v 1.8 2015/08/28 17:22:27 alfred Exp $                     */
+/* $Id: asmpars.h,v 1.10 2016/10/07 20:03:04 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.h,v $
+ * Revision 1.10  2016/10/07 20:03:04  alfred
+ * - make some arguments const
+ *
+ * Revision 1.9  2016/09/29 16:43:36  alfred
+ * - introduce common DecodeDATA/DecodeRES functions
+ *
  * Revision 1.8  2015/08/28 17:22:27  alfred
  * - add special handling for labels following BSR
  *
@@ -73,7 +79,7 @@ typedef enum
   UInt11   ,
   UInt12   , Int12   ,
   UInt13   ,
-  UInt14   ,
+  UInt14   , Int14   ,
   UInt15   ,
   SInt16   ,UInt16   , Int16   ,
   UInt17   ,
@@ -253,7 +259,7 @@ extern void PrintDebSections(FILE *f);
 extern void ClearSectionList(void);
 
 
-extern void SetFlag(Boolean *Flag, char *Name, Boolean Wert);
+extern void SetFlag(Boolean *Flag, const char *Name, Boolean Wert);
 
 
 extern LongInt GetLocHandle(void);

@@ -13,9 +13,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code16c8x.c,v 1.8 2014/10/03 12:03:45 alfred Exp $                   */
+/* $Id: code16c8x.c,v 1.9 2016/09/29 16:43:36 alfred Exp $                   */
 /*****************************************************************************
  * $Log: code16c8x.c,v $
+ * Revision 1.9  2016/09/29 16:43:36  alfred
+ * - introduce common DecodeDATA/DecodeRES functions
+ *
  * Revision 1.8  2014/10/03 12:03:45  alfred
  * - rework to current style
  *
@@ -58,6 +61,7 @@
 #include "asmitree.h"
 #include "headids.h"
 #include "codepseudo.h"
+#include "fourpseudo.h"
 #include "codevars.h"
 
 /*---------------------------------------------------------------------------*/
@@ -251,85 +255,11 @@ static void DecodeSFR(Word Index)
   CodeEquate(SegData, 0, 511);
 }
 
-static void DecodeRES(Word Index)
+static void DecodeDATA_16C8x(Word Index)
 {
-  Word Size;
-  Boolean ValOK;
-
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
-  {
-    FirstPassUnknown = False;
-    Size = EvalIntExpression(ArgStr[1], Int16, &ValOK);
-    if (FirstPassUnknown) WrError(1820);
-    if ((ValOK) && (!FirstPassUnknown))
-    {
-      DontPrint = True;
-      if (!Size) WrError(290);
-      CodeLen = Size;
-      BookKeeping();
-    }
-  }
-}
-
-static void DecodeDATA(Word Index)
-{
-  const LongInt MaxV = (ActPC == SegCode) ? 16383 : 255,
-                MinV = (-((MaxV + 1) >> 1));
-  Boolean ValOK;
-  int z;
-  TempResult t;
-
-  UNUSED(Index);
-
-  if (ArgCnt == 0) WrError(1110);
-  else
-  {
-    ValOK = True;
-    for (z = 1; z <= ArgCnt; z++)
-    {
-      FirstPassUnknown = False;
-      EvalExpression(ArgStr[z], &t);
-      if ((FirstPassUnknown) && (t.Typ==TempInt))
-        t.Contents.Int &= MaxV;
-      switch (t.Typ)
-      {
-        case TempInt:
-          if (ChkRange(t.Contents.Int, MinV, MaxV))
-          {
-            if (ActPC == SegCode)
-              WAsmCode[CodeLen++] = t.Contents.Int & MaxV;
-            else
-              BAsmCode[CodeLen++] = t.Contents.Int & MaxV;
-          }
-          break;
-        case TempFloat:
-          WrError(1135);
-          ValOK = False; 
-          break;
-        case TempString:
-        {
-          unsigned z;
-
-          for (z = 0; z < t.Contents.Ascii.Length; z++)
-            if (ActPC == SegCode)
-              WAsmCode[CodeLen++] = CharTransTable[((usint) t.Contents.Ascii.Contents[z]) & 0xff];
-            else
-              BAsmCode[CodeLen++] = CharTransTable[((usint) t.Contents.Ascii.Contents[z]) & 0xff];
-          break;
-        }
-        default:
-          ValOK = False;
-      }
-
-      if (!ValOK)
-        break;
-    }
-    if (!ValOK)
-      CodeLen = 0;
-  }
+  DecodeDATA(Int14, Int8);
 }
 
 static void DecodeZERO(Word Index)
@@ -453,7 +383,7 @@ static void InitFields(void)
   AddInstTable(InstTable, "CALL", 0x2000, DecodeJump);
   AddInstTable(InstTable, "SFR" , 0, DecodeSFR);
   AddInstTable(InstTable, "RES" , 0, DecodeRES);
-  AddInstTable(InstTable, "DATA", 0, DecodeDATA);
+  AddInstTable(InstTable, "DATA", 0, DecodeDATA_16C8x);
   AddInstTable(InstTable, "ZERO", 0, DecodeZERO);
 
   AddInstTable(InstTable, "BANKSEL", 0, DecodeBANKSEL);

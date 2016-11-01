@@ -14,7 +14,7 @@ extern void SetCPU(CPUVar NewCPU, Boolean NotPrev);
 
 extern Boolean SetNCPU(char *Name, Boolean NotPrev);
 
-extern void AddONOFF(char *InstName, Boolean *Flag, char *FlagName, Boolean Persist);
+extern void AddONOFF(const char *InstName, Boolean *Flag, const char *FlagName, Boolean Persist);
 
 extern void ClearONOFF(void);
 

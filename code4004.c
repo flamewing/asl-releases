@@ -18,9 +18,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code4004.c,v 1.8 2014/11/06 11:10:13 alfred Exp $                          */
+/* $Id: code4004.c,v 1.9 2016/09/29 16:43:36 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code4004.c,v $
+ * Revision 1.9  2016/09/29 16:43:36  alfred
+ * - introduce common DecodeDATA/DecodeRES functions
+ *
  * Revision 1.8  2014/11/06 11:10:13  alfred
  * - rework to current style
  *
@@ -71,6 +74,9 @@
 #include "asmitree.h"
 #include "codevars.h"
 #include "headids.h"
+#include "fourpseudo.h"
+
+#include "code4004.h"
 
 /*---------------------------------------------------------------------------*/
 /* Variablen */
@@ -322,90 +328,11 @@ static void DecodeFIM(Word Index)
   }
 }
 
-static void DecodeDS(Word Code)
-{
-  UNUSED(Code);
-
-  if (ArgCnt != 1) WrError(1110);
-  else
-  {
-    Boolean ValOK;
-    Word Size;
-
-    FirstPassUnknown = False;
-    Size = EvalIntExpression(ArgStr[1], Int16, &ValOK);
-    if (FirstPassUnknown)
-      WrError(1820);
-    if ((ValOK) && (!FirstPassUnknown))
-    {
-      DontPrint = True;
-      if (!Size) WrError(290);
-      CodeLen = Size;
-      BookKeeping();
-    }
-  }
-}
-
-static void DecodeDATA(Word Code)
+static void DecodeDATA_4004(Word Code)
 {
   UNUSED(Code); 
 
-  if (ArgCnt == 0) WrError(1110);
-  else
-  {
-    Boolean ValOK = True;
-    TempResult t;
-    int z, z2;
-    char Ch;
-
-    for (z = 1; z <= ArgCnt; z++)
-      if (ValOK)
-      {
-        FirstPassUnknown = False;
-        EvalExpression(ArgStr[z], &t);
-        if ((t.Typ == TempInt) && (FirstPassUnknown))
-          t.Contents.Int &= (ActPC == SegData) ? 7 : 127;
-
-        switch (t.Typ)
-        {
-          case TempInt:
-            if (ActPC == SegCode)
-            {
-              if (!(ValOK = RangeCheck(t.Contents.Int,Int8))) WrError(1320);
-              else
-                BAsmCode[CodeLen++] = t.Contents.Int & 0xff;
-            }
-            else
-            {
-              if (!(ValOK = RangeCheck(t.Contents.Int,Int4))) WrError(1320);
-              else
-                BAsmCode[CodeLen++] = t.Contents.Int & 0x0f;
-            }
-            break;
-          case TempFloat:
-            WrError(1135);
-            ValOK = False;
-            break;
-          case TempString:
-            for (z2 = 0; z2 < (int)t.Contents.Ascii.Length; z2++)
-            {
-              Ch = CharTransTable[((usint) t.Contents.Ascii.Contents[z2]) & 0xff];
-              if (ActPC == SegCode)
-                BAsmCode[CodeLen++] = Ch;
-              else
-              {
-                BAsmCode[CodeLen++] = Ch >> 4;
-                BAsmCode[CodeLen++] = Ch & 15;
-              }
-            }
-            break;
-          default:
-            ValOK = False;
-        }
-      }
-    if (!ValOK)
-      CodeLen = 0;
-  }
+  DecodeDATA(Int8, Int4);
 }
 
 static void DecodeREG(Word Code)
@@ -495,8 +422,8 @@ static void InitFields(void)
   AddInstTable(InstTable,"ISZ", 0, DecodeISZ);
   AddInstTable(InstTable,"FIM", 0, DecodeFIM);
 
-  AddInstTable(InstTable, "DS", 0, DecodeDS);
-  AddInstTable(InstTable, "DATA", 0, DecodeDATA);
+  AddInstTable(InstTable, "DS", 0, DecodeRES);
+  AddInstTable(InstTable, "DATA", 0, DecodeDATA_4004);
   AddInstTable(InstTable, "REG", 0, DecodeREG);
 }
 
