@@ -83,7 +83,8 @@ int main(int argc, char **argv)
 
     while (!feof(pFile))
     {
-      fgets(line, sizeof(line), pFile);
+      if (!fgets(line, sizeof(line), pFile))
+        break;
       l = strlen(line);
       if ((l > 0) && (line[l - 1] == '\n'))
         line[l - 1] = '\0';

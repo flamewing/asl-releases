@@ -12,16 +12,20 @@
 
 /* Hex-Formate */
 
-typedef enum {Default,MotoS,
-              IntHex,IntHex16,IntHex32,
-              MOSHex,TekHex,TiDSK,Atmel} THexFormat;
+typedef enum
+{
+  Default, MotoS,
+  IntHex, IntHex16, IntHex32,
+  MOSHex, TekHex, TiDSK, Atmel,
+  Mico8
+} THexFormat;
 
 typedef struct
-         {
-          char *Name;
-          Word Id;
-          THexFormat HexFormat;
-         } TFamilyDescr,*PFamilyDescr;
+{
+  char *Name;
+  Word Id;
+  THexFormat HexFormat;
+} TFamilyDescr, *PFamilyDescr;
 
 extern PFamilyDescr FindFamilyByName(char *Name);
 

@@ -138,6 +138,7 @@ call testall t_mico8
 call testall t_msp
 call testall t_nestedstructs
 call testall t_olms40
+call testall t_olms50
 call testall t_parsys
 call testall t_s12x
 call testall t_scmp

@@ -33,9 +33,15 @@
 /*           2001-10-20 added GNU error flag                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmdef.h,v 1.14 2015/08/28 17:22:26 alfred Exp $                      */
+/* $Id: asmdef.h,v 1.16 2016/11/25 16:29:36 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmdef.h,v $
+ * Revision 1.16  2016/11/25 16:29:36  alfred
+ * - allow SELECT as alternative to SWITCH
+ *
+ * Revision 1.15  2016/11/24 22:41:46  alfred
+ * - add SELECT as alternative to SWITCH
+ *
  * Revision 1.14  2015/08/28 17:22:26  alfred
  * - add special handling for labels following BSR
  *
@@ -433,7 +439,7 @@ extern Boolean TurnWords;
 extern Byte HeaderID;
 extern char *PCSymbol;
 extern TConstMode ConstMode;
-extern Boolean SetIsOccupied;
+extern Boolean SetIsOccupied, SwitchIsOccupied, PageIsOccupied;
 extern void (*MakeCode)(void);
 extern Boolean (*ChkPC)(LargeWord Addr);
 extern Boolean (*IsDef)(void);

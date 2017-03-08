@@ -1,13 +1,16 @@
-/* codeolms40.c */
+/* codeol40.c */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator OKI OLMS-40-Familie                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeol40.c,v 1.2 2016/11/01 13:43:31 alfred Exp $
+/* $Id: codeol40.c,v 1.3 2016/11/24 22:43:12 alfred Exp $
  *****************************************************************************
  * $Log: codeol40.c,v $
+ * Revision 1.3  2016/11/24 22:43:12  alfred
+ * - correct comments about file name
+ *
  * Revision 1.2  2016/11/01 13:43:31  alfred
  * - add OLMS-40 meta instructions
  *

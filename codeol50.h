@@ -1,22 +1,20 @@
-#ifndef _CODEOLMS40_H
-#define _CODEOLMS40_H
+#ifndef _CODEOLMS50_H
+#define _CODEOLMS50_H
 /* codeol40.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
 /*                                                                           */
-/* Codegenerator OKI OLMS-40                                                 */
+/* Codegenerator OKI OLMS-50/60                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeol40.h,v 1.2 2016/11/24 22:43:13 alfred Exp $                    */
+/* $Id: codeol50.h,v 1.1 2016/11/25 18:12:13 alfred Exp $                    */
 /***************************************************************************** 
- * $Log: codeol40.h,v $
- * Revision 1.2  2016/11/24 22:43:13  alfred
- * - correct comments about file name
+ * $Log: codeol50.h,v $
+ * Revision 1.1  2016/11/25 18:12:13  alfred
+ * - first version to support OLMS-50
  *
- * Revision 1.1  2016/11/01 11:48:05  alfred
- * - add support for OKI OLMS-40
  *
  *****************************************************************************/
 
-extern void codeolms40_init(void);
-#endif /* _CODEOLMS40_H */
+extern void codeolms50_init(void);
+#endif /* _CODEOLMS50_H */

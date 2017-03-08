@@ -19,9 +19,12 @@
 /*           2001-07-01 TI 320C54x                                           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: headids.c,v 1.22 2016/11/01 11:48:05 alfred Exp $                          */
+/* $Id: headids.c,v 1.23 2016/11/25 18:12:13 alfred Exp $                          */
 /*****************************************************************************
  * $Log: headids.c,v $
+ * Revision 1.23  2016/11/25 18:12:13  alfred
+ * - first version to support OLMS-50
+ *
  * Revision 1.22  2016/11/01 11:48:05  alfred
  * - add support for OKI OLMS-40
  *
@@ -199,6 +202,7 @@ static TFamilyDescr Descrs[] =
   { "F2MC8"        , 0x0015, IntHex   },
   { "F2MC16"       , 0x0016, IntHex   },
   { "OLMS-40"      , 0x004e, IntHex   },
+  { "OLMS-50"      , 0x004d, IntHex   },
   { "1802"         , 0x0038, IntHex   },
   { "KENBAK"       , 0x0027, IntHex   },
   { "ATARI_VECTOR" , 0x0002, IntHex   },

@@ -25,7 +25,7 @@ CODE_SRCS = codepseudo.c intpseudo.c motpseudo.c tipseudo.c natpseudo.c fourpseu
             codeace.c \
             code53c8xx.c \
             codefmc8.c codefmc16.c \
-            codeol40.c \
+            codeol40.c codeol50.c \
             code1802.c \
             codevector.c \
 	    codexcore.c \

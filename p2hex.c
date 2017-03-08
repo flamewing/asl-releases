@@ -21,9 +21,12 @@
 /*           2001-08-30 set EntryAddrPresent when address given as argument  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: p2hex.c,v 1.13 2014/12/05 11:58:16 alfred Exp $                       */
+/* $Id: p2hex.c,v 1.14 2017/02/26 16:35:16 alfred Exp $                       */
 /*****************************************************************************
  * $Log: p2hex.c,v $
+ * Revision 1.14  2017/02/26 16:35:16  alfred
+ * - support Mico8 hex format
+ *
  * Revision 1.13  2014/12/05 11:58:16  alfred
  * - collapse STDC queries into one file
  *
@@ -102,7 +105,7 @@ static Boolean Rec5;
 static Boolean SepMoto;
 static LongWord AVRLen, ValidSegs;
 
-static Boolean RelAdr, MotoOccured, IntelOccured, MOSOccured, DSKOccured;
+static Boolean RelAdr, MotoOccured, IntelOccured, MOSOccured, DSKOccured, Mico8Occured;
 static Byte MaxMoto, MaxIntel;
 
 static THexFormat DestFormat;
@@ -207,6 +210,9 @@ static void ProcessFile(const char *FileName, LongWord Offset)
           break;
         case Atmel:
           MaxAdr = (1 << (AVRLen << 3)) - 1;
+          break;
+        case Mico8:
+          MaxAdr = INTCONST_ffffffff;
           break;
         case TiDSK:
           ValidSegs = (1 << SegCode) | (1 << SegData);
@@ -331,6 +337,8 @@ static void ProcessFile(const char *FileName, LongWord Offset)
             break;
           case Atmel:
             break;
+          case Mico8:
+            break;
           case TiDSK:
             if (!DSKOccured)
             {
@@ -360,7 +368,8 @@ static void ProcessFile(const char *FileName, LongWord Offset)
           }
 
           /* Recordlaenge ausrechnen, fuer Intel32 auf 64K-Grenze begrenzen
-             bei Atmel nur 2 Byte pro Zeile! */
+             Bei Atmel nur 2 Byte pro Zeile!
+             Bei Mivo8 nur 4 B<te (davon ei Wort=18 Bit) pro Zeile! */
 
           TransLen = min(LineLen, ErgLen);
           if ((ActFormat == IntHex32) && ((ErgStart & 0xffff) + (TransLen/Gran) >= 0x10000))
@@ -370,6 +379,8 @@ static void ProcessFile(const char *FileName, LongWord Offset)
           }
           else if (ActFormat == Atmel)
             TransLen = min(2, TransLen);
+          else if (ActFormat == Mico8)
+            TransLen = min(4, TransLen);
 
           /* Start der Datenzeile */
 
@@ -436,6 +447,8 @@ static void ProcessFile(const char *FileName, LongWord Offset)
               fputc(':', TargFile);
               ChkIO(TargName);
               break;
+            case Mico8:
+              break;
             default:
               break;
           }
@@ -481,6 +494,16 @@ static void ProcessFile(const char *FileName, LongWord Offset)
               SumLen += 2;
             }
           }
+          else if (ActFormat == Mico8)
+          {
+            if (TransLen >= 4)
+            {
+              fprintf(TargFile, "%s", HexNibble(Buffer[1] & 0x0f));
+              fprintf(TargFile, "%s", HexByte(Buffer[2]));
+              fprintf(TargFile, "%s", HexByte(Buffer[3]));
+              SumLen += 4;
+            }
+          }
           else
             for (z = 0; z < (LongInt)TransLen; z++)
               if ((MultiMode < 2) || (z % Gran == MultiMode - 2))
@@ -521,6 +544,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
               ChkIO(TargName);
               break;
             case Atmel:
+            case Mico8:
               errno = 0;
               fprintf(TargFile, "\n");
               ChkIO(TargName);
@@ -565,6 +589,8 @@ static void ProcessFile(const char *FileName, LongWord Offset)
           case TiDSK:
             break;
           case Atmel:
+            break;
+          case Mico8:
             break;
           default:
             break;
@@ -803,11 +829,11 @@ static CMDResult CMD_DestFormat(Boolean Negate, const char *pArg)
 
   static char *Names[] =
   {
-    "DEFAULT", "MOTO", "INTEL", "INTEL16", "INTEL32", "MOS", "TEK", "DSK", "ATMEL"
+    "DEFAULT", "MOTO", "INTEL", "INTEL16", "INTEL32", "MOS", "TEK", "DSK", "ATMEL", "MICO8"
   };
   static THexFormat Format[] =
   {
-    Default, MotoS, IntHex, IntHex16, IntHex32, MOSHex, TekHex, TiDSK, Atmel
+    Default, MotoS, IntHex, IntHex16, IntHex32, MOSHex, TekHex, TiDSK, Atmel, Mico8
   };
   int z;
   String Arg;

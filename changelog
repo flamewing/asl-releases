@@ -1,5 +1,19 @@
-$Id: changelog,v 1.135 2016/11/01 13:49:18 alfred Exp $
+$Id: changelog,v 1.142 2017/02/26 17:18:18 alfred Exp $
 ------------------------------------------------------------------------------
+
+2017-02-26 [1.42 Bld 115]
+
+- Addition    : allow alternate syntax for SET and EQU
+
+- Addition    : support the MICO8 prom_init hex format in P2HEX
+
+- Bugfix      : handle the return value of fgets() and getcwd() at some places
+                to silence compiler warnings
+
+- Bugfix      : correct handling of SCAL instruction for 1805(A)
+
+- Addition    : differentiate 1804/1805/1806 and 1804A/1805A/1806A instruction
+                set
 
 2016-11-01 [1.42 Bld 114]
 

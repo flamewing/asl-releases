@@ -13,9 +13,15 @@
 ;*           25. 3.2001 added avrlen parameter                               *
 ;*                                                                           *
 ;*****************************************************************************
-;* $Id: p2hex.res,v 1.2 2006/12/09 18:27:30 alfred Exp $                      
+;* $Id: p2hex.res,v 1.4 2017/02/26 16:35:16 alfred Exp $                      
 /*****************************************************************************
 ;* $Log: p2hex.res,v $
+;* Revision 1.4  2017/02/26 16:35:16  alfred
+;* - support Mico8 hex format
+;*
+;* Revision 1.3  2017/02/20 21:14:08  alfred
+;* - correct typo
+;*
 ;* Revision 1.2  2006/12/09 18:27:30  alfred
 ;* - add warning about empty output
 ;*
@@ -67,7 +73,7 @@ Message InfoMessHelp
  "          -F <Default|Moto|\n" \
  "              Intel|MOS|Tek|\n" \
  "              Intel16|DSK|\n" \
- "              Intel32|Atmel>: Zielformat\n" \
+ "              Intel32|Atmel|Mico8>: Zielformat\n" \
  "          +5                : S5-Records unterdr&uuml;cken\n" \
  "          -s                : S-Record-Gruppen einzeln terminieren\n" \
  "          -M <1|2|3>        : Minimallaenge Adressen S-Records\n" \
@@ -87,8 +93,8 @@ Message InfoMessHelp
  "         -F <Default|Moto|\n" \
  "             Intel|MOS|Tek|\n" \
  "             Intel16|DSK|\n" \
- "             Intel32|Atmel>: target format\n" \
- "         +5                : supress S5-records\n" \
+ "             Intel32|Atmel|Mico8>: target format\n" \
+ "         +5                : suppress S5-records\n" \
  "         -s                : separate terminators for S-record groups\n" \
  "         -M <1|2|3>        : minimum length of S records addresses\n" \
  "         -d <start>-<stop> : set data range (obsolete, see manual)\n" \

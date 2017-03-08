@@ -101,7 +101,8 @@ char *FExpand(char *Src)
       strmov(CurrentDir, CurrentDir + 2);
   }
 #elif (defined _WIN32) /* CygWIN */
-  getcwd(CurrentDir, 255);
+  if (!getcwd(CurrentDir, 255))
+    0[CurrentDir] = '\0';
   for (p = CurrentDir; *p; p++)
     if (*p == '/') *p = '\\';
 #else /* UNIX */

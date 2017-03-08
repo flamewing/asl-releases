@@ -58,9 +58,15 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.68 2016/11/01 11:48:04 alfred Exp $                         */
+/* $Id: as.c,v 1.70 2017/02/26 16:20:46 alfred Exp $                         */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.70  2017/02/26 16:20:46  alfred
+ * - silence compiler warnings about unused function results
+ *
+ * Revision 1.69  2016/11/25 18:12:12  alfred
+ * - first version to support OLMS-50
+ *
  * Revision 1.68  2016/11/01 11:48:04  alfred
  * - add support for OKI OLMS-40
  *
@@ -451,6 +457,7 @@
 #include "codefmc8.h"
 #include "codefmc16.h"
 #include "codeol40.h"
+#include "codeol50.h"
 #include "code1802.h"
 #include "codevector.h"
 #include "codexcore.h"
@@ -4496,6 +4503,7 @@ int main(int argc, char **argv)
     codef2mc8_init();
     codef2mc16_init();
     codeolms40_init();
+    codeolms50_init();
     code1802_init();
     codevector_init();
     codexcore_init();
@@ -4602,7 +4610,8 @@ int main(int argc, char **argv)
   {
     printf("%s [%s] ", getmessage(Num_InvMsgSource), SrcSuffix);
     fflush(stdout);
-    fgets(FileMask, 255, stdin);
+    if (!fgets(FileMask, 255, stdin))
+      return 0;
     if ((*FileMask) && (FileMask[strlen(FileMask) - 1] == '\n'))
       FileMask[strlen(FileMask) - 1] = '\0';
     AssembleGroup();

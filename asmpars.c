@@ -36,9 +36,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.35 2016/10/07 20:03:03 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.36 2017/02/26 16:57:48 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmpars.c,v $
+ * Revision 1.36  2017/02/26 16:57:48  alfred
+ * - make some arguments const
+ *
  * Revision 1.35  2016/10/07 20:03:03  alfred
  * - make some arguments const
  *
@@ -1313,13 +1316,13 @@ void ConstStringVal(const char *pExpr, tDynString *pDest, Boolean *pResult)
 
 static PSymbolEntry FindLocNode(
 #ifdef __PROTOS__
-char *Name, TempType SearchType
+const char *Name, TempType SearchType
 #endif
 );
 
 static PSymbolEntry FindNode(
 #ifdef __PROTOS__
-char *Name, TempType SearchType
+const char *Name, TempType SearchType
 #endif
 );
 
@@ -3270,7 +3273,7 @@ void EnterIntSymbolWithFlags(const char *Name_O, LargeInt Wert, Byte Typ, Boolea
     EnterLocSymbol(Neu);
 }
 
-void EnterExtSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange)
+void EnterExtSymbol(const char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange)
 {
   PSymbolEntry Neu;
   LongInt DestHandle;
@@ -3309,7 +3312,7 @@ void EnterExtSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange)
     EnterLocSymbol(Neu);
 }
 
-void EnterRelSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange)
+void EnterRelSymbol(const char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange)
 {
   PSymbolEntry Neu;
   LongInt DestHandle;
@@ -3348,7 +3351,7 @@ void EnterRelSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange)
     EnterLocSymbol(Neu);
 }
 
-void EnterFloatSymbol(char *Name_O, Double Wert, Boolean MayChange)
+void EnterFloatSymbol(const char *Name_O, Double Wert, Boolean MayChange)
 {
   PSymbolEntry Neu;
   LongInt DestHandle;
@@ -3384,7 +3387,7 @@ void EnterFloatSymbol(char *Name_O, Double Wert, Boolean MayChange)
     EnterLocSymbol(Neu);
 }
 
-void EnterDynStringSymbol(char *Name_O, const tDynString *pValue, Boolean MayChange)
+void EnterDynStringSymbol(const char *Name_O, const tDynString *pValue, Boolean MayChange)
 {
   PSymbolEntry Neu;
   LongInt DestHandle;
@@ -3422,7 +3425,7 @@ void EnterDynStringSymbol(char *Name_O, const tDynString *pValue, Boolean MayCha
     EnterLocSymbol(Neu);
 }
 
-void EnterStringSymbol(char *Name_O, const char *pValue, Boolean MayChange)
+void EnterStringSymbol(const char *Name_O, const char *pValue, Boolean MayChange)
 {
   tDynString DynString;
 
@@ -3502,7 +3505,7 @@ static Boolean FindNode_FSpec(char *Name, PForwardSymbol Root)
   return (Root != NULL);
 }
 
-static PSymbolEntry FindNode(char *Name_O, TempType SearchType)
+static PSymbolEntry FindNode(const char *Name_O, TempType SearchType)
 {
   PSaveSection Lauf;
   LongInt DestSection;
@@ -3557,7 +3560,7 @@ static PSymbolEntry FindLocNode_FNode(char *Name, TempType SearchType, LongInt H
   return Lauf;
 }
 
-static PSymbolEntry FindLocNode(char *Name_O, TempType SearchType)
+static PSymbolEntry FindLocNode(const char *Name_O, TempType SearchType)
 {
   PLocHandle RunLocHandle;
   PSymbolEntry Result = NULL;
@@ -3605,7 +3608,7 @@ void SetSymbolType(char *Name, Byte NTyp)
 }
 **/
 
-Boolean GetIntSymbol(char *Name, LargeInt *Wert, PRelocEntry *Relocs)
+Boolean GetIntSymbol(const char *Name, LargeInt *Wert, PRelocEntry *Relocs)
 {
   PSymbolEntry Lauf;
   String NName;
@@ -3638,7 +3641,7 @@ Boolean GetIntSymbol(char *Name, LargeInt *Wert, PRelocEntry *Relocs)
   return (Lauf != NULL);
 }
 
-Boolean GetFloatSymbol(char *Name, Double *Wert)
+Boolean GetFloatSymbol(const char *Name, Double *Wert)
 {
   PSymbolEntry Lauf;
   String NName;
@@ -3663,7 +3666,7 @@ Boolean GetFloatSymbol(char *Name, Double *Wert)
   return (Lauf != NULL);
 }
 
-Boolean GetStringSymbol(char *Name, char *Wert)
+Boolean GetStringSymbol(const char *Name, char *Wert)
 {
   PSymbolEntry Lauf;
   String NName;
@@ -3689,7 +3692,7 @@ Boolean GetStringSymbol(char *Name, char *Wert)
   return (Lauf != NULL);
 }
 
-void SetSymbolSize(char *Name, ShortInt Size)
+void SetSymbolSize(const char *Name, ShortInt Size)
 {
   PSymbolEntry Lauf;
   Boolean HRef;
@@ -3708,7 +3711,7 @@ void SetSymbolSize(char *Name, ShortInt Size)
   DoRefs = HRef;
 }
 
-ShortInt GetSymbolSize(char *Name)
+ShortInt GetSymbolSize(const char *Name)
 {
   PSymbolEntry Lauf;
   String NName;
@@ -3722,7 +3725,7 @@ ShortInt GetSymbolSize(char *Name)
   return ((Lauf) ? Lauf->SymSize : -1);
 }
 
-Boolean IsSymbolFloat(char *Name)
+Boolean IsSymbolFloat(const char *Name)
 {
   PSymbolEntry Lauf;
   String NName;
@@ -3737,7 +3740,7 @@ Boolean IsSymbolFloat(char *Name)
   return ((Lauf) && (Lauf->SymWert.Typ == TempFloat));
 }
 
-Boolean IsSymbolString(char *Name)
+Boolean IsSymbolString(const char *Name)
 {
   PSymbolEntry Lauf;
   String NName;
@@ -3752,7 +3755,7 @@ Boolean IsSymbolString(char *Name)
   return ((Lauf) && (Lauf->SymWert.Typ == TempString));
 }
 
-Boolean IsSymbolDefined(char *Name)
+Boolean IsSymbolDefined(const char *Name)
 {
   PSymbolEntry Lauf;
   String NName;
@@ -3767,7 +3770,7 @@ Boolean IsSymbolDefined(char *Name)
   return ((Lauf) && (Lauf->Defined));
 }
 
-Boolean IsSymbolUsed(char *Name)
+Boolean IsSymbolUsed(const char *Name)
 {
   PSymbolEntry Lauf;
   String NName;
@@ -3782,7 +3785,7 @@ Boolean IsSymbolUsed(char *Name)
   return ((Lauf) && (Lauf->Used));
 }
 
-Boolean IsSymbolChangeable(char *Name)
+Boolean IsSymbolChangeable(const char *Name)
 {
   PSymbolEntry Lauf;
   String NName;
@@ -3797,7 +3800,7 @@ Boolean IsSymbolChangeable(char *Name)
   return ((Lauf) && (Lauf->Changeable));
 }
 
-Integer GetSymbolType(char *Name)
+Integer GetSymbolType(const char *Name)
 {
   PSymbolEntry Lauf;
   String NName;

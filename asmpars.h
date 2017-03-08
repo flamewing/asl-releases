@@ -17,9 +17,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.h,v 1.10 2016/10/07 20:03:04 alfred Exp $                     */
+/* $Id: asmpars.h,v 1.11 2017/02/26 16:57:48 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.h,v $
+ * Revision 1.11  2017/02/26 16:57:48  alfred
+ * - make some arguments const
+ *
  * Revision 1.10  2016/10/07 20:03:04  alfred
  * - make some arguments const
  *
@@ -154,21 +157,21 @@ extern void EnterIntSymbolWithFlags(const char *Name_O, LargeInt Wert, Byte Typ,
 
 #define EnterIntSymbol(Name_O, Wert, Typ, MayChange) EnterIntSymbolWithFlags(Name_O, Wert, Typ, MayChange, 0)
 
-extern void EnterExtSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange);
+extern void EnterExtSymbol(const char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange);
 
-extern void EnterRelSymbol(char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange);
+extern void EnterRelSymbol(const char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange);
 
-extern void EnterFloatSymbol(char *Name_O, Double Wert, Boolean MayChange);
+extern void EnterFloatSymbol(const char *Name_O, Double Wert, Boolean MayChange);
 
-extern void EnterStringSymbol(char *Name_O, const char *pValue, Boolean MayChange);
+extern void EnterStringSymbol(const char *Name_O, const char *pValue, Boolean MayChange);
 
-extern void EnterDynStringSymbol(char *Name_O, const tDynString *pValue, Boolean MayChange);
+extern void EnterDynStringSymbol(const char *Name_O, const tDynString *pValue, Boolean MayChange);
 
-extern Boolean GetIntSymbol(char *Name, LargeInt *Wert, PRelocEntry *Relocs);
+extern Boolean GetIntSymbol(const char *Name, LargeInt *Wert, PRelocEntry *Relocs);
 
-extern Boolean GetFloatSymbol(char *Name, Double *Wert);
+extern Boolean GetFloatSymbol(const char *Name, Double *Wert);
 
-extern Boolean GetStringSymbol(char *Name, char *Wert);
+extern Boolean GetStringSymbol(const char *Name, char *Wert);
 
 extern void PrintSymbolList(void);
 
@@ -185,21 +188,21 @@ extern void ResetSymbolDefines(void);
 extern void PrintSymbolDepth(void);
 
 
-extern void SetSymbolSize(char *Name, ShortInt Size);
+extern void SetSymbolSize(const char *Name, ShortInt Size);
 
-extern ShortInt GetSymbolSize(char *Name);
+extern ShortInt GetSymbolSize(const char *Name);
 
-extern Boolean IsSymbolFloat(char *Name);
+extern Boolean IsSymbolFloat(const char *Name);
 
-extern Boolean IsSymbolString(char *Name);
+extern Boolean IsSymbolString(const char *Name);
 
-extern Boolean IsSymbolDefined(char *Name);
+extern Boolean IsSymbolDefined(const char *Name);
 
-extern Boolean IsSymbolUsed(char *Name);
+extern Boolean IsSymbolUsed(const char *Name);
 
-extern Boolean IsSymbolChangeable(char *Name);
+extern Boolean IsSymbolChangeable(const char *Name);
 
-extern Integer GetSymbolType(char *Name);
+extern Integer GetSymbolType(const char *Name);
 
 extern void EvalExpression(const char *pExpr, TempResult *Erg);
 

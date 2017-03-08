@@ -13,9 +13,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: tex2doc.c,v 1.7 2014/12/05 08:06:29 alfred Exp $                    */
+/* $Id: tex2doc.c,v 1.8 2017/02/26 16:20:47 alfred Exp $                    */
 /*****************************************************************************
  * $Log: tex2doc.c,v $
+ * Revision 1.8  2017/02/26 16:20:47  alfred
+ * - silence compiler warnings about unused function results
+ *
  * Revision 1.7  2014/12/05 08:06:29  alfred
  * - silence const warnings
  *
@@ -1368,7 +1371,8 @@ static void TeXBeginEnv(Word Index)
       }
       do
       {
-        fgets(Add, TOKLEN-1, infiles[IncludeNest - 1]);
+        if (!fgets(Add, TOKLEN-1, infiles[IncludeNest - 1]))
+          break;
         CurrLine++;
         done = strstr(Add, "\\end{verbatim}") != NULL;
         if (!done)
@@ -2106,7 +2110,8 @@ static void TeXContents(Word Index)
   fprintf(outfile, "        %s\n\n", ContentsName);
   while (!feof(file))
   {
-    fgets(Line, 199, file);
+    if (!fgets(Line, 199, file))
+      break;
     fputs(Line, outfile);
   }
 

@@ -31,9 +31,15 @@
 /*           2001-10-20 added GNU error flag                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmdef.c,v 1.12 2015/08/28 17:22:26 alfred Exp $                     */
+/* $Id: asmdef.c,v 1.14 2016/11/25 16:29:36 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmdef.c,v $
+ * Revision 1.14  2016/11/25 16:29:36  alfred
+ * - allow SELECT as alternative to SWITCH
+ *
+ * Revision 1.13  2016/11/24 22:41:46  alfred
+ * - add SELECT as alternative to SWITCH
+ *
  * Revision 1.12  2015/08/28 17:22:26  alfred
  * - add special handling for labels following BSR
  *
@@ -195,7 +201,9 @@ Boolean TurnWords;                       /* TRUE  = Motorola-Wortformat */
 Byte HeaderID;	                         /* Kennbyte des Codeheaders */
 char *PCSymbol;	                         /* Symbol, womit Programmzaehler erreicht wird. Inhalt Read Only! */
 TConstMode ConstMode;
-Boolean SetIsOccupied;                   /* TRUE: SET ist Prozessorbefehl */
+Boolean SetIsOccupied,			 /* TRUE: SET/SWITCH/PAGE ist Prozessorbefehl */
+        SwitchIsOccupied,
+        PageIsOccupied;
 #ifdef __PROTOS__
 void (*MakeCode)(void);                  /* Codeerzeugungsprozedur */
 Boolean (*ChkPC)(LargeWord Addr);        /* ueberprueft Codelaengenueberschreitungen */

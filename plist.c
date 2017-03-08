@@ -15,9 +15,12 @@
 /*                      DOS platforms                                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: plist.c,v 1.7 2014/12/07 19:14:02 alfred Exp $                       */
+/* $Id: plist.c,v 1.8 2017/02/26 16:20:46 alfred Exp $                       */
 /*****************************************************************************
  * $Log: plist.c,v $
+ * Revision 1.8  2017/02/26 16:20:46  alfred
+ * - silence compiler warnings about unused function results
+ *
  * Revision 1.7  2014/12/07 19:14:02  alfred
  * - silence a couple of Borland C related warnings and errors
  *
@@ -104,7 +107,8 @@ int main(int argc, char **argv)
   {
     errno = 0;
     printf("%s", getmessage(Num_MessFileRequest));
-    fgets(ProgName, 255, stdin);
+    if (!fgets(ProgName, 255, stdin))
+      return 0;
     ChkIO(OutName);
   }
   else if (ParamCount == 1)

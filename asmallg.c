@@ -24,9 +24,24 @@
 /*                       to now                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmallg.c,v 1.30 2016/10/07 20:03:03 alfred Exp $                     */
+/* $Id: asmallg.c,v 1.35 2017/02/26 17:11:20 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmallg.c,v $
+ * Revision 1.35  2017/02/26 17:11:20  alfred
+ * - allow alternate syntax for SET and EQU
+ *
+ * Revision 1.34  2017/02/26 16:20:46  alfred
+ * - silence compiler warnings about unused function results
+ *
+ * Revision 1.33  2016/11/25 18:12:12  alfred
+ * - first version to support OLMS-50
+ *
+ * Revision 1.32  2016/11/25 16:29:36  alfred
+ * - allow SELECT as alternative to SWITCH
+ *
+ * Revision 1.31  2016/11/24 22:41:45  alfred
+ * - add SELECT as alternative to SWITCH
+ *
  * Revision 1.30  2016/10/07 20:03:03  alfred
  * - make some arguments const
  *
@@ -224,6 +239,7 @@ void SetCPU(CPUVar NewCPU, Boolean NotPrev)
   }
 
   InternSymbol = Default_InternSymbol;
+  SetIsOccupied = SwitchIsOccupied = PageIsOccupied = False;
   ChkPC = DefChkPC;
   ASSUMERecCnt = 0;
   pASSUMERecs = NULL;
@@ -378,46 +394,49 @@ static void CodeSETEQU(Word MayChange)
 {
   TempResult t;
   Integer DestSeg;
+  int ValIndex = *LabPart ? 1 : 2;
 
   FirstPassUnknown = False;
   if (*AttrPart != '\0') WrError(1100);
-  else if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
+  else if ((ArgCnt < ValIndex) || (ArgCnt > ValIndex + 1)) WrError(1110);
   else
   {
-    EvalExpression(ArgStr[1], &t);
+    EvalExpression(ArgStr[ValIndex], &t);
     if (!FirstPassUnknown)
     {
-      if (ArgCnt == 1)
+      if (ArgCnt == ValIndex)
         DestSeg = SegNone;
       else
       {
-        NLS_UpString(ArgStr[2]);
-        if (!strcmp(ArgStr[2], "MOMSEGMENT"))
+        NLS_UpString(ArgStr[ValIndex + 1]);
+        if (!strcmp(ArgStr[ValIndex + 1], "MOMSEGMENT"))
           DestSeg = ActPC;
-        else if (*ArgStr[2] == '\0')
+        else if (*ArgStr[ValIndex + 1] == '\0')
           DestSeg = SegNone;
         else
         {
           for (DestSeg = 0; DestSeg <= PCMax; DestSeg++)
-            if (!strcmp(ArgStr[2], SegNames[DestSeg]))
+            if (!strcmp(ArgStr[ValIndex + 1], SegNames[DestSeg]))
               break;
         }
       }
-      if (DestSeg > PCMax) WrXError(1961, ArgStr[2]);
+      if (DestSeg > PCMax) WrXError(1961, ArgStr[ValIndex + 1]);
       else
       {
+        const char *pName = *LabPart ? LabPart : ArgStr[1];
+
         SetListLineVal(&t);
         PushLocHandle(-1);
         switch (t.Typ)
         {
           case TempInt:
-            EnterIntSymbol(LabPart, t.Contents.Int, DestSeg, MayChange);
+            EnterIntSymbol(pName, t.Contents.Int, DestSeg, MayChange);
             break;
           case TempFloat:
-            EnterFloatSymbol(LabPart, t.Contents.Float, MayChange);
+            EnterFloatSymbol(pName, t.Contents.Float, MayChange);
             break;
           case TempString:
-            EnterDynStringSymbol(LabPart, &t.Contents.Ascii, MayChange);
+            EnterDynStringSymbol(pName, &t.Contents.Ascii, MayChange);
             break;
           default:
             break;
@@ -1121,12 +1140,16 @@ static void CodeREAD(Word Index)
     }
     if (OK)
     {
-      setbuf(stdout, NULL);
       printf("%s", Exp);
-      fgets(Exp, 255, stdin);
-      UpString(Exp);
-      FirstPassUnknown = False;
-      EvalExpression(Exp, &Erg);
+      fflush(stdout);
+      if (!fgets(Exp, 255, stdin))
+        OK = False;
+      else
+      {
+        UpString(Exp);
+        FirstPassUnknown = False;
+        EvalExpression(Exp, &Erg);
+      }
       if (OK)
       {
         SetListLineVal(&Erg);
@@ -1902,7 +1925,6 @@ static const PseudoOrder Pseudos[] =
   {"NESTMAX",    CodeNESTMAX    , 0 },
   {"ORG",        CodeORG        , 0 },
   {"OUTRADIX",   CodeRADIX      , 1 },
-  {"PAGE",       CodePAGE       , 0 },
   {"PHASE",      CodePHASE      , 0 },
   {"POPV",       CodePOPV       , 0 },
   {"PRSET",      CodePRSET      , 0 },
@@ -1943,6 +1965,14 @@ Boolean CodeGlobalPseudo(void)
       if ((SetIsOccupied) && (Memo("EVAL")))
       {
         CodeSETEQU(True);
+        return True;
+      }
+      break;
+    case 'P':
+      if ((!PageIsOccupied && Memo("PAGE"))
+       || (PageIsOccupied && Memo("PAGESIZE")))
+      {
+        CodePAGE(0);
         return True;
       }
       break;

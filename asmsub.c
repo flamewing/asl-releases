@@ -26,9 +26,12 @@
 /*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.33 2016/09/12 19:49:16 alfred Exp $                      */
+/* $Id: asmsub.c,v 1.34 2016/11/25 18:12:13 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmsub.c,v $
+ * Revision 1.34  2016/11/25 18:12:13  alfred
+ * - first version to support OLMS-50
+ *
  * Revision 1.33  2016/09/12 19:49:16  alfred
  * - use gettime() to get DOS time (int86 leaks memory per call)
  *
@@ -1404,6 +1407,7 @@ static void WrErrorNum(Word Num)
     case 2060: msgno = Num_ErrMsgUnimplemented; break;
     case 2070: msgno = Num_ErrMsgFreestandingUnnamedStruct; break;
     case 2080: msgno = Num_ErrMsgSTRUCTEndedByENDUNION; break;
+    case 2090: msgno = Num_ErrMsgAddrOnDifferentPage; break;
     case 10001: msgno = Num_ErrMsgOpeningFile; break;
     case 10002: msgno = Num_ErrMsgListWrError; break;
     case 10003: msgno = Num_ErrMsgFileReadError; break;

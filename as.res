@@ -29,9 +29,12 @@
 ;*           2001-10-21 GNU error messages                                   *
 ;*                                                                           *
 ;*****************************************************************************
-;* $Id: as.res,v 1.6 2015/10/23 08:43:33 alfred Exp $                        *
+;* $Id: as.res,v 1.7 2016/11/25 18:12:12 alfred Exp $                        *
 ;*****************************************************************************
 ;* $Log: as.res,v $
+;* Revision 1.7  2016/11/25 18:12:12  alfred
+;* - first version to support OLMS-50
+;*
 ;* Revision 1.6  2015/10/23 08:43:33  alfred
 ;* - beef up & fix structure handling
 ;*
@@ -747,6 +750,10 @@ Message ErrMsgFreestandingUnnamedStruct
 Message ErrMsgSTRUCTEndedByENDUNION
  "STRUCT durch ENDUNION beendet"
  "STRUCT ended by ENDUNION"
+
+Message ErrMsgAddrOnDifferentPage
+ "Speicheradresse nicht auf aktiver Seite"
+ "Memory address mot on active memory page"
 
 Message ErrMsgOpeningFile
  "Fehler beim &Ouml;ffnen der Datei"

@@ -7,9 +7,12 @@
 /* Historie: 15. 5.1996 Grundsteinlegung                                     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmif.c,v 1.5 2014/12/01 15:43:55 alfred Exp $                       */
+/* $Id: asmif.c,v 1.6 2016/11/24 22:41:46 alfred Exp $                       */
 /***************************************************************************** 
  * $Log: asmif.c,v $
+ * Revision 1.6  2016/11/24 22:41:46  alfred
+ * - add SELECT as alternative to SWITCH
+ *
  * Revision 1.5  2014/12/01 15:43:55  alfred
  * - rework to current style
  *
@@ -455,7 +458,8 @@ Boolean CodeIFs(void)
       else Result = False;
       break;
     case 'S':
-      if (Memo("SWITCH")) CodeSWITCH();
+      if (Memo("SWITCH") && !SwitchIsOccupied) CodeSWITCH();
+      else if (Memo("SELECT") && SwitchIsOccupied) CodeSWITCH();
       else Result = False;
       break;
     case 'C':

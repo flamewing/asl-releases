@@ -1,4 +1,4 @@
-	cpu	1805
+	cpu	1805a
 
 	rldi	4,1234h
 	rlxa	5
@@ -6,15 +6,6 @@
 
 	dbnz	5,$
 	rnx	4
-
-	dadd
-	dadi	12h
-	dadc
-	daci	12h
-	dsm
-	dsmi	12h
-	dsmb
-	dsbi	12h
 
 	bci	$
 	bxi	$	
@@ -34,3 +25,17 @@
 	cie
 	cid
 	dsav
+
+	scal	4,8765h
+	sret	5
+
+	cpu	1805a
+
+	dadd
+	dadi	12h
+	dadc
+	daci	12h
+	dsm
+	dsmi	12h
+	dsmb
+	dsbi	12h
