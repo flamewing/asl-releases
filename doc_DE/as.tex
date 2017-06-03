@@ -46,7 +46,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand Frebruar 2017}
+{\large Stand Juni 2017}
 \end{raggedright}
 
 \clearpage
@@ -209,7 +209,7 @@ folgende Prozessorfamilien implementiert:
 \item{Hitachi H8/500}
 \item{Hitachi SH7000/7600/7700}
 \item{Hitachi HMCS400}
-\item{Rockwell 6502 und 65(S)C02}
+\item{Rockwell 6502, 65(S)C02 und WDC W65C02S}
 \item{CMD 65816}
 \item{Mitsubishi MELPS-740}
 \item{Mitsubishi MELPS-7700}
@@ -255,7 +255,7 @@ folgende Prozessorfamilien implementiert:
 \item{Texas Instruments TMS7000}
 \item{Texas Instruments TMS1000}
 \item{Texas Instruments TMS370xxx}
-\item{Texas Instruments MSP430}
+\item{Texas Instruments MSP430(X)}
 \item{National Semiconductor SC/MP}
 \item{National Semiconductor INS807x}
 \item{National Semiconductor COP4}
@@ -2568,7 +2568,7 @@ PIO_Ctrl   PORT PIO_Port_A+3
 \ttindex{REG}\ttindex{NAMEREG}
 
 {\em G"ultigkeit: AVR, M*Core, ST9, 80C16x, KCPSM ({\tt NAMEREG} nur
- f"ur KCPSM(3)), LatticeMico8, MSP430}
+ f"ur KCPSM(3)), LatticeMico8, MSP430(X)}
 
 Obwohl immer mit gleicher Syntax, hat diese Anweisung von Prozessor
 zu Prozessor eine leicht abweichende Bedeutung: Falls der Zielprozessor
@@ -3029,16 +3029,22 @@ Diese drei Varianten der HMCS400-Serie unterscheiden sich in der
 Gr"o"se des internen ROM- und RAM-Speichers.
 %%-----------
 \begin{quote}
-n) 6502 $\rightarrow$ 65(S)C02 / MELPS740
+n) 6502 $\rightarrow$ 65(S)C02 $\rightarrow$ W65C02S / MELPS740
 \end{quote}
 Die CMOS-Version definiert einige zus"atzliche Befehle, au"serdem sind
 bei einigen Befehlen Adressierungsarten hinzugekommen, die beim 6502
-nicht m"oglich waren.  Die Mitsubishi-Mikrokontroller dagegen erweitern den
+nicht m"oglich waren.  Der W65SC02 erg"anzt den
+65C02-Befehlssatz um zwei Befehle, mit denen die Low-Power-Modi
+der CPU feiner eingestellt werden k"onnen.  Dem 65SC02 fehlen die
+Bitmanipulationsbefehle des 65C02.
+
+Die Mitsubishi-Mikrokontroller dagegen erweitern den
 6502-Befehlssatz in erster Linie um Bitoperationen und
 Multiplikations-/Divisionsbefehle.  Bis auf den unbedingten Sprung und
 Befehle zur Inkrementierung/Dekremetierung des Akkumulatos sind die
-Erweiterungen disjunkt. Dem 65SC02 fehlen die Bitmanipulationsbefehle
-des 65C02.  Mit dem Prozessortyp 6502UNDOC sind die ,,undokumentierten''
+Erweiterungen disjunkt.
+
+Mit dem Prozessortyp 6502UNDOC sind die ,,undokumentierten''
 6502-Befehle erreichbar, d.h. die Operationen, die sich bei der Verwendung
 nicht als Befehle definierter Bitkombinationen im Opcode ergeben.  Die von
 AS unterst"utzten Varianten sind im Kapitel mit den prozessorspezifischen
@@ -3378,7 +3384,10 @@ zur Unterscheidung der Peripherie in STDDEF37.INC genutzt, der
 Befehlssatz ist identisch.
 %%-----------
 \begin{quote}
-be) MSP430
+be) MSP430 $\rightarrow$ MSP430X
+Die X-Variante des CPU-Kerns erweitert den Adre"sraum von 64
+KiByte auf 1 MiByte und erweitert den Befehlssatz, um
+Instrutionen mehrfach ausf"uhren zu k"onnen.
 \end{quote}
 %%-----------
 \begin{quote}
@@ -3660,7 +3669,7 @@ diese Einstellung vor!  \tty{FULLPMMU} mu"s also auf jeden Fall nach dem
 \subsection{PADDING}
 \ttindex{PADDING}
 
-{\em G"ultigkeit: 680x0, 68xx, M*Core, XA, H8, SH7000, TMS9900, MSP430, ST7}
+{\em G"ultigkeit: 680x0, 68xx, M*Core, XA, H8, SH7000, TMS9900, MSP430(X), ST7}
 
 Prozessoren der 680x0-Familie stehen ungeraden Adressen ziemlich
 kritisch gegen"uber: Befehle d"urfen nicht auf einer ungeraden Adresse
@@ -3933,8 +3942,8 @@ Variablen auf einen internen Stapel:
 \item{momentan aktiver Speicherbereich (mit \tty{SEGMENT} gesetzt);}
 \item{Flag, ob Listing ein- oder ausgeschaltet ist (mit \tty{LISTING}
       gesetzt);}
-\item{Flag, ob Expansionen folgender Makos im Listing ausgegeben
-      werden sollen (mit \tty{MACEXP} gesetzt).}
+\item{Flags, zu welchem Teil Expansionen folgender Makos im Listing
+      ausgegeben werden sollen (mit \tty{MACEXP} gesetzt).}
 \item{momentan aktive Zeichen"ubersetzungstabelle (mit \tty{CODEPAGE}
       gesetzt).}
 \end{itemize}
@@ -4267,10 +4276,10 @@ mit dem angenommenen Inhalt "ubereinstimmt.  Stimmt sie nicht, so erfolgt
 eine Warnung.
 
 Architektur und Befehlssatz dieser Prozessoren sind grob an den
-Intel 8080/8085 angelehnt - das gilt auch für die Mnemonics.  Die
+Intel 8080/8085 angelehnt - das gilt auch f"ur die Mnemonics.  Die
 Adressierungsart (direkt, indirekt, immediate) ist mit in das
 Mnemonic verpackt, und 16-Bit-Register (BC, DE, HL) werden wie
-beim 8080 mit einem Buchstaben abgekürzt.  Da NEC in der
+beim 8080 mit einem Buchstaben abgek"urzt.  Da NEC in der
 Erkl"arung der einzelnen Adressierungsarten aber auch immer
 wieder die ausgeschriebenen Registernamen benutzt und auch mal
 Klammern benutzt, um indirekte Adressierung anzudeuten und mal
@@ -4334,7 +4343,7 @@ die man "uber ihre Nummern ansprechen kann (\tty{R0} bis \tty{R15}) oder ihre sy
 Namen (\tty{X=R0, A=R1, C=R2, B=R3, VPL=R8, VPH=R9, UPL=R10, UPH=R11, E=R12,
 D=R13, L=R14, H=R15}).  Der Prozessorkern besitzt ein Register-Auswahlbit
 (\tty{RSS}), mit dem man das Mapping von A/X und B/C von R0..R3 auf R4..R7
-umschaltet.  Dies ist in erste Linie für Befehle wichtig, die implizit eines
+umschaltet.  Dies ist in erste Linie f"ur Befehle wichtig, die implizit eines
 dieser Register benutzen (d.h. bei denen die Registernummer nicht im Maschinenbefehl
 kodiert ist).  Man kann dem Assembler aber auch "uber ein
 
@@ -4342,8 +4351,8 @@ kodiert ist).  Man kann dem Assembler aber auch "uber ein
   assume rss:1
 \end{verbatim}
 
-mitteilen, daß die folgenden Befehle mit diesem ge"anderten Mapping arbeiten.  Der
-Assembler wird für Befehle, in denen die Registernummer explizit kodiert ist, dann
+mitteilen, da"s die folgenden Befehle mit diesem ge"anderten Mapping arbeiten.  Der
+Assembler wird f"ur Befehle, in denen die Registernummer explizit kodiert ist, dann
 auch die alternativen Registernummern einsetzen.  Umgekehrt wird dann z.B. auch
 \tty{R5} statt \tty{R1} im Quellcode wie \tty{A} behandelt.
 
@@ -4461,7 +4470,7 @@ Feature daher mit Vorsicht einsetzen!
 {\em G"ultigkeit: 8080/8085}
 
 Mit \tty{ON} als Argument kann man (fast) alle 8080-Befehle wahlweise
-auch in der Form schreiben, wie sie Zilog für den Z80 definiert hat. 
+auch in der Form schreiben, wie sie Zilog f"ur den Z80 definiert hat. 
 Zum Beispiel benutzt man einfach nur noch \tty{LD} mit sich selbst
 erkl"arenden Operanden, wo man in der originalen 8080-Syntax je nach
 Operanden \tty{MVI, LXI, MOV, STA, LDA, SHLD, LHLD, LDAX, STAX} oder
@@ -5110,6 +5119,14 @@ sind.  Es sind folgende Steuerparameter definiert:
 \item{\tty{EXPAND/NOEXPAND} : legen fest, ob bei der sp"ateren
       Verwendung diese Makros der expandierte Code mit angezeigt
       werden soll.  Default ist der durch den Pseudobefehl \tty{MACEXP}
+      festgelegte Wert.}
+\item{\tty{EXPIF/NOEXPIF} : legen fest, ob bei der sp"ateren
+      Verwendung diese Makros Befehle zur bedingten Assemblierung
+      und dadurch ausgeschlossener Code angezeit werden soll.  Default
+      ist der durch den Pseudobefehl \tty{MACEXP} festgelegte Wert.}
+\item{\tty{EXPMACRO/NOEXPMACRO} : legen fest, ob bei der sp"ateren
+      Verwendung diese Makros darin definierte Makros angezeigt werden
+      sollen.  Default ist der durch den Pseudobefehl \tty{MACEXP}
       festgelegte Wert.}
 \item{\tty{PUBLIC[:Sektionsname]} : ordnet das Makro nicht der
       aktuellen, sondern einer ihr "ubergeordneten Sektion zu.
@@ -5982,7 +5999,7 @@ Die Defaulteinstellung f"ur die Seitenl"ange ist 60 Zeilen, f"ur die
 Zeilenbreite 0; letztere Wert wird auch angenommen, wenn \tty{PAGE} nur mit
 einem Argument aufgerufen wird.
 \par
-Falls \tty{PAGE} auf dem gewählten Target bereits ein
+Falls \tty{PAGE} auf dem gew"ahlten Target bereits ein
 Maschinenbefehl ist, benutzt man stattdessen \tty{PAGESIZE}.
 \par
 \bb{ACHTUNG!} AS hat keine M"oglichkeit, zu "uberpr"ufen, ob die
@@ -6023,30 +6040,55 @@ um sozusagen ein neues Hauptkapitel zu beginnen.
 \subsection{MACEXP}
 \ttindex{MACEXP}
 
-Mit dem Befehl
+Ist ein Makro einmal ausgestestet und 'fertig', m"ochte man es bei
+Benutzung vielleicht gar nicht mehr im Listing sehen.  Mit diesem
+Pseudobefehl kann man steuern, ob der aus einem Makro expandierte
+Code ausgegeben wird, und wenn ja, zu welchen Teilen.  Im
+einfachsten Fall schaltet ein
 \begin{verbatim}
         MACEXP  off
 \end{verbatim}
-kann man erreichen, da"s bei Makroexpansionen nur noch der Makroaufruf
-und nicht der expandierte Text ausgegeben wird.  Die ist bei
-makrointensivem Code sinnvoll, um das Listing nicht ins Uferlose
-wachsen zu lassen.  Mit
+die Ausgabe des expandierten Codes komplett aus.  Sinngem"a"s schaltet
+ein 
 \begin{verbatim}
         MACEXP  on
 \end{verbatim}
-wird die vollst"andige Listingform wieder eingeschaltet, dies ist auch
-die Default-Vorgabe.
+die vollst"andige Listingform wieder an, dies ist auch die Default-Vorgabe.
+\par
+\tty{MACEXP} kennt neben diesem globalen Ein- und Ausschalter
+noch Wege, nur Teile des expandierten Makros zu listen.  Dazu
+werden die Zeilen in einem Makrorumpf in drei Klassen eingeteilt:
+\begin{enumerate}
+\item{Befehle zur bedingte Assemblierung, sowie Code-Zeilen, die
+      wegen bedingter Assemblierung nicht ausgef"uhrt werden,
+      k"onnen "uber die Argumente \tty{IF} bzw. \tty{NOIF} ein- und
+      ausgeblendet werden.}
+\item{Makro-Definitionen (dazu z"ahlen auch \tty{REPT},
+      \tty{WHILE} und \tty{IRP(C)}) k"onnen "uber die Argumente
+      \tty{MACRO} bzw. \tty{NOMACRO} ein- und
+      ausgeblendet werden.}
+\item{Alle andere ist der 'Rest'.}
+\end{enumerate}
+Die einzelnen Schalter wirken relativ zur aktuellen Einstellung:
+ist z.B. initial alles eingeschaltet, sorgt ein
+\begin{verbatim}
+        MACEXP  noif,nomacro
+\end{verbatim}
+daf"ur, da"s nur noch das gelistet wird, was weder eine
+Makrodefinition ist noch per bedingter Assemblierung
+ausgeschlossen wurde.
 \par
 Zwischen der Bedeutung von \tty{MACEXP} f"ur Makros und der f"ur alle
 anderen makroartigen Konstrukte (z.B. \tty{REPT}) besteht ein subtiler
-Unterschied: W"ahrend Makros intern ein Flag besitzen, das anzeigt, ob
-Expansionen dieses Makros ausgegeben werden sollen oder nicht, wirkt
-\tty{MACEXP} direkt auf alle anderen Konstrukte, die ,,vor Ort''
-aufgel"ost werden.  Der Sinn dieser Differenzierung besteht darin, da"s
-es Makros geben kann, die ausgetestet sind und die man nicht mehr sehen
-will, andere aber sehr wohl noch.  \tty{MACEXP} dient hier als
+Unterschied: W"ahrend Makros intern eigene Flags besitzen, die anzeigt,
+welche Teile bei einer Expansionen dieses Makros ausgegeben werden sollen
+oder nicht, wirkt \tty{MACEXP} direkt auf alle anderen Konstrukte, die
+,,vor Ort'' aufgel"ost werden.  Der Sinn dieser Differenzierung besteht
+darin, da"s es Makros geben kann, die ausgetestet sind und die man nicht
+mehr sehen will, andere aber sehr wohl noch.  \tty{MACEXP} dient hier als
 Default f"ur das bei der Definition des Makros zu setzende Flag, der mit
-den Steuerparametern \tty{NOEXPAND/EXPAND} "ubersteuert werden kann.
+den Steuerparametern \tty{(NO)EXPAND/(NO)EXPMACRO/(NO)EXPIF} "ubersteuert
+werden kann.
 
 Die momentane Einstellung l"a"st sich aus dem Symbol \tty{MACEXP} auslesen.
 
@@ -7049,7 +7091,7 @@ Nat"urlich unterst"utzt AS diese Syntax, wie Hitachi sie
 seinerzeit definiert hat, ich habe aber zus"atzlich f"ur die
 meisten Befehle eine - finde ich - sch"onere und besser lesbare
 Variante implementiert, so wie Zilog es seinerzeit mit den Z80
-gemacht hat.  Zum Beispiel können alle Maschineninstruktionen,
+gemacht hat.  Zum Beispiel k"onnen alle Maschineninstruktionen,
 die in irgendeiner Form Daten transferieren, egal ob die
 Operanden Register, Konstanten oder Speicherstellen sind, "uber den
 AS-spezifischen \tty{LD}-Befehl angesprochen werden.  "Ahnliche
@@ -8599,8 +8641,8 @@ z.B. so:
 
 \section{TC9331}
 
-Toshiba hat seinerzeit für diesen Prozessor einen (DOS-basierten)
-Assembler namens ASM31T geliefert.  Dieser Assembler unterstützt
+Toshiba hat seinerzeit f"ur diesen Prozessor einen (DOS-basierten)
+Assembler namens ASM31T geliefert.  Dieser Assembler unterst"utzt
 eine Reihe von Syntax-Elementen, die sich auf AS nicht ohne
 "Anderungen abbilden lie"sen, die die Kompatibilit"at
 zu existierenden Quelldateien f"ur andere Targets gef"ahrdert
@@ -8613,7 +8655,7 @@ AS "ubersetzen zu k"onnen:
       die auch "uber mehrere Zeilen gehen d"urfen.  Diese werden
       von AS nicht unterst"utzt und m"ussen in mit einem
       Semikolon eingeleitete Kommentare umgesetzt werden.}
-\item{Wie ASM31T unterst"utzt AS für den TC9331 Kommentare in
+\item{Wie ASM31T unterst"utzt AS f"ur den TC9331 Kommentare in
       runden Klammern (\verb!( ... )!), aber nur innerhalb
       eines Befehlsarguments.  Enth"alt ein solcher Kommentar ein
       Komma, wird dieses Komma als Argument-Trenner behandelt und
@@ -9146,7 +9188,7 @@ der Prozessor an dieser Stelle nicht...
 
 %%---------------------------------------------------------------------------
 
-\section{MSP430}
+\section{MSP430(X)}
 \label{MSPSpec}
 
 Der MSP430 wurde als RISC-Prozessor mit minimalem Stromverbrauch 
@@ -9156,10 +9198,27 @@ worden (da RISC-Prozessoren keinen Mikrocode besitzen, mu"s jeder
 Befehl mit zus"atzlichem Silizium implementiert werden und erh"oht so
 den Stromverbrauch).  Eine Reihe von Befehlen, die bei anderen 
 Prozessoren in Hardware gegossen wurden, werden beim MSP durch eine 
-Emulation mit anderen Befehlen realisiert.  Bei AS finden sich diese 
-Befehle mit in der Datei \tty{REGMSP.INC}.  Wer diese Datei nicht 
-einbindet, wird bei "uber der H"alfte der insgesamt von TI definierten 
-Befehle Fehlermeldungen bekommen!!
+Emulation mit anderen Befehlen realisiert.  Fr"uhere Versionen
+von AS implementierten diese Befehle "uber Makros in der Datei
+\tty{REGMSP.INC}.  Wer diese Datei nicht einband, erhielt bei "uber
+der H"alfte der insgesamt von TI definierten Befehle
+Fehlermeldungen.  Dies ist aktuell nicht mehr so, zusammen mit
+der Erweiterung auf den CPU430X-Befehlssatz werden die
+Instruktionen vom Assembler direkt implementiert. 
+\tty{REGMSP.INC} enth"alt nur noch die Adressen von I/O-Registern. 
+Wer aus irgendwelchen Gr"unden die alten Makros braucht, findet
+sie jetzt in der Datei \tty{EMULMSP.INC}.
+
+Die emulierten Instruktionen decken auch einige Sonderf"alle ab,
+die der TI-Assembler nicht beherrscht.  So wird zum Beispiel
+\begin{verbatim}
+    rlc  @r6+
+\end{verbatim}
+automatisch in
+\begin{verbatim}
+    addc @r6+,-2(r6)
+\end{verbatim}
+umgesetzt.
 
 %%---------------------------------------------------------------------------
 
@@ -11010,6 +11069,23 @@ Angaben:
                {ENDUNION darf nur zum Beenden der Definition einer
                 Union benutzt werden, nicht einer Struktur.}
                {Name der Struktur (falls vorhanden)}
+\errentry{2090}{Speicheradresse nicht auf aktiver Seite}
+               {Fehler}
+               {Die Zieladresse befindet sich nicht in der durch 
+                das Seitenregister aktuell adressierbaren
+                Speicherseite.}
+               {keines}
+\errentry{2100}{unbekanntes Makro-Expansions-Argument}
+               {Fehler}
+               {Ein \tty{MACEXP} gegebenes Argument konnte nicht
+                interpretiert werden.}
+               {das unbekannte Argument}
+\errentry{2110}{widerspr"uchliche Angaben zur Makro-Expansion}
+               {Fehler}
+               {Eine Angabe zur Makroexpansion und ihr genaues
+                Gegenteil d"urfen nicht gleichzeitig al Argument
+                von \tty{MACEXP} verwendet werden.}
+               {keines}
 \errentry{10001}{Fehler bein "Offnen der Datei}
                {fatal}
                {Beim Versuch, eine Datei zu "offnen, ist ein
@@ -13545,6 +13621,11 @@ damit mit der n"achsten Release alle etwas davon haben :-)
                        {\em MSP430 Family Architecture User's
                        Guide.\/} \\
                        1995, SLAUE10A
+
+\bibitem{Ti430X} Texas Instruments: \\
+                 {\em MSP430 MSP430x5xx and MSP430x6xx Family
+                  User's Guide.\/} \\
+                 October 2016, SLAU208
 
 \bibitem{TiC60} Texas Instruments: \\
                 {\em TMS320C62xx CPU and Instruction Set Reference

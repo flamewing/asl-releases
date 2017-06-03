@@ -20,7 +20,7 @@ typedef struct _MacroRec
   StringList ParamNames; /* parameter names, needed for named parameters */
   StringList ParamDefVals; /* default values */
   LongInt UseCounter;    /* to limit recursive calls */
-  Boolean LocMacExp;     /* Makroexpansion wird aufgelistet */
+  tLstMacroExpMod LstMacroExpMod; /* modify macro expansion list subset */
   Boolean LocIntLabel;   /* Label used internally instead at beginning */
   Boolean GlobalSymbols; /* labels not local to macro */
   Boolean UsesNumArgs,   /* NUMARGS referenced in macro body */
@@ -36,7 +36,7 @@ typedef struct _TInputTag
   Integer IfLevel;
   Boolean First;
   Boolean GlobalSymbols;
-  Boolean OrigDoLst;
+  tLstMacroExp OrigDoLst;
   LongInt StartLine;
   Boolean (*Processor)(
 #ifdef __PROTOS__

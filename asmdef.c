@@ -31,9 +31,12 @@
 /*           2001-10-20 added GNU error flag                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmdef.c,v 1.14 2016/11/25 16:29:36 alfred Exp $                     */
+/* $Id: asmdef.c,v 1.15 2017/04/02 11:10:36 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmdef.c,v $
+ * Revision 1.15  2017/04/02 11:10:36  alfred
+ * - allow more fine-grained macro expansion in listing
+ *
  * Revision 1.14  2016/11/25 16:29:36  alfred
  * - allow SELECT as alternative to SWITCH
  *
@@ -228,7 +231,7 @@ FILE *MacroFile;                        /* Ausgabedatei Makroliste */
 Boolean InMacroFlag;                    /* momentan wird Makro expandiert */
 StringPtr LstName;                      /* Name der Listdatei */
 StringPtr MacroName, MacProName;
-Boolean DoLst, NextDoLst;               /* Listing an */
+tLstMacroExp DoLst, NextDoLst;          /* Listing an */
 StringPtr ShareName;                    /* Name des Sharefiles */
 
 CPUVar MomCPU,MomVirtCPU;               /* definierter/vorgegaukelter Prozessortyp */
@@ -263,8 +266,8 @@ Word PageCounter[ChapMax + 1];          /* hierarchische Seitenzaehler */
 Byte ChapDepth;                         /* momentane Kapitelverschachtelung */
 StringPtr ListLine;                     /* alternative Ausgabe vor Listing fuer EQU */
 Byte PageLength, PageWidth;             /* Seitenlaenge/breite in Zeilen/Spalten */
-Boolean LstMacroEx,                     /* Makroexpansionen auflisten */
-        DottedStructs;                  /* structure elements with dots */
+tLstMacroExp LstMacroExp;               /* Makroexpansionen auflisten */
+Boolean DottedStructs;                  /* structure elements with dots */
 StringPtr PrtInitString;                /* Druckerinitialisierungsstring */
 StringPtr PrtExitString;                /* Druckerdeinitialisierungsstring */
 StringPtr PrtTitleString;               /* Titelzeile */

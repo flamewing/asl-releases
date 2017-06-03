@@ -121,11 +121,14 @@ void opencatalog(PMsgCat Catalog, const char *File, const char *Path, LongInt Ms
     lcstring = "";
 #endif
 
-  /* find first valid message file */
+  /* find first valid message file: current directory has prio 1: */
 
   MsgFile = myopen(File, MsgId1, MsgId2);
   if (!MsgFile)
   {
+    /* if executable path (argv[0]) is given and contains more than just the
+       plain name, try its path with next-highest prio: */
+
     if (*Path != '\0')
     {
 #ifdef __CYGWIN32__
@@ -134,33 +137,41 @@ void opencatalog(PMsgCat Catalog, const char *File, const char *Path, LongInt Ms
 #endif
       pSep = strrchr(Path, PATHSEP);
       if (!pSep)
-        pSep = Path + strlen(Path);
-      memcpy(str, Path, pSep - Path); str[pSep - Path] = '\0';
-      strcat(str, SPATHSEP);
-      strcat(str, File);
-      MsgFile = myopen(str, MsgId1, MsgId2);
+        MsgFile = NULL;
+      else
+      {
+        memcpy(str, Path, pSep - Path); str[pSep - Path] = '\0';
+        strcat(str, SPATHSEP);
+        strcat(str, File);
+        MsgFile = myopen(str, MsgId1, MsgId2);
+      }
     }
     if (!MsgFile)
     {
+      /* search in AS_MSGPATH next */
+
       ptr = getenv(MSGPATHNAME);
       if (ptr)
       {
-        sprintf(str, "%s/%s", ptr, File);
+        sprintf(str, "%s%c%s", ptr, PATHSEP, File);
         MsgFile = myopen(str, MsgId1, MsgId2);
       }
       else
       {
+        /* if everything fails, search via PATH */
+
         ptr = getenv("PATH");
         if (!ptr)
           MsgFile = NULL;
         else
         {
-          strmaxcpy(str, ptr, 255);
+          char *pCopy = strdup(ptr);
 #ifdef __CYGWIN32__
-          DeCygWinDirList(str);
+          DeCygWinDirList(pCopy);
 #endif
-          ptr = FSearch(File, str);
+          ptr = FSearch(File, pCopy);
           MsgFile = (*ptr != '\0') ? myopen(ptr, MsgId1, MsgId2) : NULL;
+          free(pCopy);
         }
       }
       if (!MsgFile)

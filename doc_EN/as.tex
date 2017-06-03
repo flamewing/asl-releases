@@ -65,7 +65,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition February 2017}
+{\large Edition June 2017}
 \end{raggedright}
 
 \clearpage
@@ -215,7 +215,7 @@ following processor families have been implemented:
 \item{Hitachi H8/500}
 \item{Hitachi SH7000/7600/7700}
 \item{Hitachi HMCS400}
-\item{Rockwell 6502 and 65(S)C02}
+\item{Rockwell 6502, 65(S)C02, and WDC W65C02S}
 \item{CMD 65816}
 \item{Mitsubishi MELPS-740}
 \item{Mitsubishi MELPS-7700}
@@ -261,7 +261,7 @@ following processor families have been implemented:
 \item{Texas Instruments TMS7000}
 \item{Texas Instruments TMS1000}
 \item{Texas Instruments TMS370xxx}
-\item{Texas Instruments MSP430}
+\item{Texas Instruments MSP430(X)}
 \item{National Semiconductor SC/MP}
 \item{National Semiconductor INS807x}
 \item{National Semiconductor COP4}
@@ -2496,7 +2496,7 @@ PIO_ctrl   port PIO_port_A+3
 \ttindex{REG}\ttindex{NAMEREG}
 
 {\em valid for: AVR, M*Core, ST9, 80C16x, KCPSM ({\tt NAMEREG} valid only
- for KCPSM(3)), LatticeMico8, MSP430}
+ for KCPSM(3)), LatticeMico8, MSP430(X)}
 
 Though it always has the same syntax, this instruction has a slightly
 different meaning from processor to processor:  If the processor uses a
@@ -2944,16 +2944,22 @@ These three variants of the HMCS400 series differ by the size of
 the internal ROM and RAM.
 %%-----------
 \begin{quote}
-n) 6502 $\rightarrow$ 65(S)C02 / MELPS740 / 6502UNDOC
+n) 6502 $\rightarrow$ 65(S)C02 $\rightarrow$ W65C02S / MELPS740 / 6502UNDOC
 \end{quote}
 The CMOS version defines some additional instructions, as well as a number of
 some instruction/addressing mode combinations were added which were not
-possible on the 6502.  The Mitsubishi micro controllers in opposite expand
+possible on the 6502.  The W65C02S adds two opcodes to the 65C02 instruction
+set to give more fine-grained control over how to stop the CPU for low power
+modes.  The 65SC02 lacks the bit manipulation instructions of the          
+65C02.
+
+The Mitsubishi micro controllers in opposite expand
 the 6502 instruction set primarily to bit operations and multiplication /
 division instructions.  Except for the unconditional jump and instructions
-to increment/decrement the accumulator, the instruction extensions are
-orthogonal.  The 65SC02 lacks the bit manipulation instructions of the
-65C02.  The 6502UNDOC processor type enables access to the "undocumented"
+to increment/decrement the accumulator, the instruction extensions
+have nothing in common.
+
+The 6502UNDOC processor type enables access to the "undocumented"
 6502 instructions, i.e. the operations that result from the usage of bit
 combinations in the opcode that are not defined as instructions.  The 
 variants supported by AS are listed in the appendix containing processor-specific
@@ -3287,7 +3293,10 @@ differentiate the peripheral equipment in \tty{STDDEF37.INC}; the
 instruction set is always the same.
 %%-----------
 \begin{quote}
-be) MSP430
+be) MSP430 $\rightarrow$ MSP430X
+The X variant of the CPU core extends the address space from 64
+KiBytes to 1 MiByte and augments the instruction set, e.g. by
+prefixed to repeat instructions.
 \end{quote}
 %%-----------
 \begin{quote}
@@ -3567,7 +3576,7 @@ instruction!
 \subsection{PADDING}
 \ttindex{PADDING}
 
-{\em valid for: 680x0, 68xx, M*Core, XA, H8, SH7000, MSP430, TMS9900, ST7}
+{\em valid for: 680x0, 68xx, M*Core, XA, H8, SH7000, MSP430(X), TMS9900, ST7}
 
 Processors of the 680x0 family are quite critical regarding odd addresses:
 instructions must not start on an odd address, and data accesses to odd
@@ -3818,8 +3827,8 @@ following variables onto an internal stack:
 \item{currently selected processor type (set by \tty{CPU});}
 \item{currently active memory area (set by \tty{SEGMENT});}
 \item{the flag whether listing is switched on or off (set by \tty{LISTING});}
-\item{the flag whether expansions of following macros shall be issued in
-      the assembly listing (set by \tty{MACEXP}).}
+\item{the flags that define which part of expanded macros shall be
+      printed in the assembly listing (set by \tty{MACEXP}).}
 \item{currently active character translation table (set by
       \tty{CODEPAGE}).}
 \end{itemize}
@@ -4957,6 +4966,14 @@ defined:
 \item{\tty{EXPAND/NOEXPAND}: rule whether the enclosed code shall
       be written to the listing when the macro is expanded.  The
       default is the value set by the pseudo instruction \tty{MACEXP}.}
+\item{\tty{EXPIF/NOEXPIF}: rule whether instructions for
+      conditional assembly and code excluded by it shall
+      be written to the listing when the macro is expanded.  The
+      default is the value set by the pseudo instruction \tty{MACEXP}.}
+\item{\tty{EXPMACRO/NOEXPMACRO}: rule whether macros defined in
+      the macro's body shall be written to the listing when the macro
+      is expanded.  The default is the value set by the pseudo instruction
+      \tty{MACEXP}.}
 \item{\tty{PUBLIC[:section name]}: assigns the macro to a parent section
       instead of the current section.  A section can make macros
       accessible for the outer code this way.  If the section
@@ -5854,29 +5871,52 @@ done to start a new 'main chapter'.
 \subsection{MACEXP}
 \ttindex{MACEXP}
 
-One can achieve by the statement
+Once a macro is tested and 'done', one might not want to see it
+in the listing when it is used.  This pseudo instruction controls
+whether the code expanded form a macro is printed in the listing,
+and if yes, which parts of it.  The simples usage is
 \begin{verbatim}
         macexp  off
 \end{verbatim}
-that only the macro call and not the expanded text is listed for
-macro expansions.  This is sensible for macro intensive codes to
-avoid that the listing grows beyond all bounds.  The full listing can
-be turned on again with a
+which completely turns off printing of the expanded code. 
+Consequently, by issuing a
 \begin{verbatim}
-        macexp  on  .
+        macexp  on
 \end{verbatim}
-This is also the default.
+the complete listing is turned on again.  This is also the default.
+
+Aside from this global switch, \tty{MACEXP} has means to disable
+listing of parts of the macro's contents.  The code contained in
+a macro gets divided into three classes:
+\begin{enumerate}
+\item{Instructions for conditional assembly and instructions that
+      are not executed because of conditional assembly can be
+      removed from or added to the listing via the arguments
+      \tty{IF} resp. \tty{NOIF}.}
+\item{Macro definitions (including \tty{REPT}, \tty{WHILE} and
+      \tty{IRP(C)}) can be removed from or added to the listing
+      via the arguments \tty{MACRO} resp. \tty{NOMACRO}.}
+\item{Anything else is the 'rest'...}
+\end{enumerate}
+The individual switcheswork on the current setting.  For
+instance, if printing of everything is initially enabled, a
+\begin{verbatim}
+        MACEXP  noif,nomacro
+\end{verbatim}
+has the effect that only the contents of a macro are listed that
+are neither part of a macro defintion nor were excluded via
+conditional assembly.
 
 There is a subtle difference between the meaning of \tty{MACEXP} for
 macros and for all other macro-like constructs (e.g. \tty{REPT}): while a
-macro contain an internal flag that rules whether expansions of this macro
+macro contains internal flags that rules which parts of its body
 shall be listed or not, \tty{MACEXP} directly influences all other
 constructs that are resolved 'in place'.  The reason for this
 differentiation is that there may be macros that are tested and their
 expansion is therefore unnecessary, but all other macros still shall be
-expanded.  \tty{MACEXP} serves as a default for the macro's internal flag
-when it is defined, and it may be overridden by the \tty{NOEXPAND} resp.
-\tty{EXPAND} directives.
+expanded.  \tty{MACEXP} serves as a default for the macro's internal
+flags when it is defined, and it may be overridden by the
+\tty{(NO)EXPAND}, \tty{(NO)EXPIF}, and \tty{(NO)EXPMAC} directives.
 
 The current setting may be read from the symbol \tty{MACEXP}.
 
@@ -8957,7 +8997,7 @@ addressing mode for other memory ranges...
 
 %%---------------------------------------------------------------------------
 
-\section{MSP430}
+\section{MSP430(X)}
 \label{MSPSpec}
 
 The MSP was designed to be a RISC processor with a minimal power
@@ -8966,10 +9006,25 @@ to the absolute minimum (RISC processors do not have a microcode ROM
 so every additional instruction has to be implemented with additional
 silicon that increases power consumption).  A number of instructions
 that are hardwired for other processors are therefore emulated with
-other instructions.  For AS, these instructions are defined in the
-include file \tty{REGMSP.INC}.  You will get error messages for more than
-half of the instructions defined by TI if you forget to include this
-file!
+other instructions.  Older versions of AS implemented these
+instructions via macros in the file \tty{REGMSP.INC}.  If one did
+not include this file, you got error messages for more than
+half of the instructions defined by TI.  This has been changed in
+recent versions: as part of adding the 430X instruction set,
+implementation of these instructions was moved into the assmebler's
+core.  \tty{REGMSP.INC} now only contains addresses of I/O
+registers.  If you need the old macros for some reason, they have
+been moved to the file \tty{EMULMSP.INC}.
+
+Instruction emulation also covers some special cases not handled
+by the original TI assembler.  For instance,
+\begin{verbatim}
+    rlc  @r6+   
+\end{verbatim}
+is automatically assembled as
+\begin{verbatim}
+    addc @r6+,-2(r6) 
+\end{verbatim}
 
 %%---------------------------------------------------------------------------
 
@@ -10762,6 +10817,23 @@ described by:
                {ENDUNION may only be used to finalize the definition
                 of a union and not of a structure.}
                {name of the structure (if available)}
+\errentry{2090}{Memory address mot on active memory page}
+               {error}
+               {The target address is not within the page
+                that is currently addressable via the page
+                register.}
+               {none}
+\errentry{2100}{unknown macro expansion argument}
+               {error}
+               {An argument to \tty{MACEXP} could not be
+                interpreted.}
+               {the unknown argument}
+\errentry{2110}{contradicting macro expansion specifications}
+               {error}
+               {A specification about macro expansion and its
+                precise opposite may not be used in the same
+                \tty{MACEXP} instruction.}
+               {none}
 \errentry{10001}{error in opening file}
                {fatal}
                {An error was detected while trying to open a file for input.}
@@ -13192,6 +13264,11 @@ from this with the next release :-)
 \bibitem{Ti430FamArch} Texas Instruments: \\
                        {\em MSP430 Family Architecture User's Guide.\/} \\
                        1995, SLAUE10A
+
+\bibitem{Ti430X} Texas Instruments: \\
+                 {\em MSP430 MSP430x5xx and MSP430x6xx Family
+                  User's Guide.\/} \\
+                 October 2016, SLAU208
 
 \bibitem{TiC60} Texas Instruments: \\
                 {\em TMS320C62xx CPU and Instruction Set Reference

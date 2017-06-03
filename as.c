@@ -58,9 +58,12 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.70 2017/02/26 16:20:46 alfred Exp $                         */
+/* $Id: as.c,v 1.71 2017/04/02 11:10:36 alfred Exp $                         */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.71  2017/04/02 11:10:36  alfred
+ * - allow more fine-grained macro expansion in listing
+ *
  * Revision 1.70  2017/02/26 16:20:46  alfred
  * - silence compiler warnings about unused function results
  *
@@ -345,6 +348,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <setjmp.h>
+#include <assert.h>
 
 #include "version.h"
 #include "endian.h"
@@ -468,6 +472,7 @@ static char *FileMask;
 static long StartTime, StopTime;
 static Boolean GlobErrFlag;
 static Boolean MasterFile;
+static Boolean WasIF, WasMACRO;
 static unsigned MacroNestLevel = 0;
 
 /*=== Zeilen einlesen ======================================================*/
@@ -618,10 +623,26 @@ static void MakeList(void)
   String h, h2, h3, Tmp;
   Word i, k;
   Word n, EffLen;
+  Boolean ThisDoLst;
 
   EffLen = CodeLen * Granularity();
 
-  if ((!ListToNull) && (DoLst) && ((ListMask&1) != 0) && (!IFListMask()))
+#if 0
+  fprintf(stderr, "[%s] WasIF %u WasMACRO %u DoLst %u\n", OpPart, WasIF, WasMACRO, DoLst);
+#endif
+  if (WasIF)
+    ThisDoLst = !!(DoLst & eLstMacroExpIf);
+  else if (WasMACRO)
+    ThisDoLst = !!(DoLst & eLstMacroExpMacro);
+  else
+  {
+    if (!IfAsm && (!(DoLst & eLstMacroExpIf)))
+      ThisDoLst = False;
+    else
+      ThisDoLst = !!(DoLst & eLstMacroExpRest);
+  }
+
+  if ((!ListToNull) && (ThisDoLst) && ((ListMask & 1) != 0) && (!IFListMask()))
   {
     /* Zeilennummer / Programmzaehleradresse: */
 
@@ -752,7 +773,13 @@ static Boolean MacroStart(void)
 
 static Boolean MacroEnd(void)
 {
-  return (Memo("ENDM"));
+  if (Memo("ENDM"))
+  {
+    WasMACRO = True;
+    return True;
+  }
+  else
+    return False;
 }
 
 typedef void (*tMacroArgCallback)(Boolean CtrlArg, char *pArg, void *pUser);
@@ -844,6 +871,8 @@ static void MACRO_OutProcessor(void)
   StringRecPtr l;
   PMacroRec GMacro;
   String s;
+
+  WasMACRO = True;
 
   /* write preprocessed output to file ? */
 
@@ -1032,7 +1061,8 @@ typedef struct
 {
   String PList;
   POutputTag pOutputTag;
-  Boolean DoMacExp, DoPublic, DoIntLabel, GlobalSymbols;
+  tLstMacroExpMod LstMacroExpMod;
+  Boolean DoPublic, DoIntLabel, GlobalSymbols;
   Boolean ErrFlag;
   int ParamCount;
 } tReadMacroContext;
@@ -1054,10 +1084,32 @@ static void ProcessMACROArgs(Boolean CtrlArg, char *pArg, void *pUser)
 
   if (CtrlArg)
   {
+    Boolean DoMacExp;
+
     if (ReadMacro_SearchArg(pArg, "EXPORT", &(pContext->pOutputTag->DoExport)));
     else if (ReadMacro_SearchArg(pArg, "GLOBALSYMBOLS", &pContext->GlobalSymbols));
-    else if (ReadMacro_SearchArg(pArg, "EXPAND", &pContext->DoMacExp))
+    else if (ReadMacro_SearchArg(pArg, "EXPAND", &DoMacExp))
     {
+      if (DoMacExp)
+        pContext->LstMacroExpMod.SetAll = True;
+      else
+        pContext->LstMacroExpMod.ClrAll = True;
+      ExpandPList(pContext->PList, pArg, CtrlArg);
+    }
+    else if (ReadMacro_SearchArg(pArg, "EXPIF", &DoMacExp))
+    {
+      if (DoMacExp)
+        pContext->LstMacroExpMod.ORMask |= eLstMacroExpIf;
+      else
+        pContext->LstMacroExpMod.ANDMask |= eLstMacroExpIf;
+      ExpandPList(pContext->PList, pArg, CtrlArg);
+    }
+    else if (ReadMacro_SearchArg(pArg, "EXPMACRO", &DoMacExp))
+    {
+      if (DoMacExp)
+        pContext->LstMacroExpMod.ORMask |= eLstMacroExpMacro;
+      else
+        pContext->LstMacroExpMod.ANDMask |= eLstMacroExpMacro;
       ExpandPList(pContext->PList, pArg, CtrlArg);
     }
     else if (ReadMacro_SearchArg(pArg, "INTLABEL", &pContext->DoIntLabel))
@@ -1104,6 +1156,8 @@ static void ReadMacro(void)
   tReadMacroContext Context;
   LongInt HSect;
 
+  WasMACRO = True;
+
   CodeLen = 0;
   Context.ErrFlag = False;
 
@@ -1127,7 +1181,9 @@ static void ReadMacro(void)
 
   /* check arguments, sort out control directives */
 
-  Context.DoMacExp = LstMacroEx;
+  InitLstMacroExpMod(&Context.LstMacroExpMod);
+  Context.LstMacroExpMod.ORMask = LstMacroExp;
+  Context.LstMacroExpMod.ANDMask = eLstMacroExpAll & ~LstMacroExp;
   Context.DoPublic = False;
   Context.DoIntLabel = False;
   Context.GlobalSymbols = False;
@@ -1185,7 +1241,7 @@ static void ReadMacro(void)
   OneMacro->Name = strdup(LabPart);
   OneMacro->ParamCount = Context.ParamCount;
   OneMacro->FirstLine = NULL;
-  OneMacro->LocMacExp = Context.DoMacExp;
+  OneMacro->LstMacroExpMod = Context.LstMacroExpMod;
   OneMacro->LocIntLabel = Context.DoIntLabel;
   OneMacro->GlobalSymbols = Context.GlobalSymbols;
 
@@ -1388,7 +1444,7 @@ static void ExpandMacro(PMacroRec OneMacro)
   {
     if (IfAsm)
     {
-      NextDoLst = (DoLst && OneMacro->LocMacExp);
+      NextDoLst = ApplyLstMacroExpMod(DoLst, &OneMacro->LstMacroExpMod);
       Tag->Next = FirstInputTag;
       FirstInputTag = Tag;
       MacroNestLevel++;
@@ -1405,6 +1461,8 @@ static void ExpandMacro(PMacroRec OneMacro)
 
 static void ExpandEXITM(void)
 {
+  WasMACRO = True;
+
   if (ArgCnt != 0) WrError(1110);
   else if (!FirstInputTag) WrError(1805);
   else if (!FirstInputTag->IsMacro) WrError(1805);
@@ -1422,6 +1480,8 @@ static void ExpandEXITM(void)
 static void ExpandSHIFT(void)
 {
   PInputTag RunTag;
+
+  WasMACRO = True;
 
   if (ArgCnt != 0) WrError(1110);
   else if (!FirstInputTag) WrError(1805);
@@ -1571,6 +1631,8 @@ static void IRP_OutProcessor(void)
   StringRecPtr Dummy;
   String s;
 
+  WasMACRO = True;
+
   /* Schachtelungen mitzaehlen */
 
   if (MacroStart())
@@ -1597,7 +1659,7 @@ static void IRP_OutProcessor(void)
     Tmp->Tag->IsEmpty = !Tmp->Tag->Lines;
     if (IfAsm)
     {
-      NextDoLst = DoLst && LstMacroEx;
+      NextDoLst = DoLst & LstMacroExp;
       Tmp->Tag->Next = FirstInputTag;
       FirstInputTag = Tmp->Tag;
     }
@@ -1665,6 +1727,8 @@ static void ExpandIRP(void)
 {
   PInputTag Tag;
   tExpandIRPContext Context;
+
+  WasMACRO = True;
 
   /* 0. terminate if conditional assembly bites */
 
@@ -1831,6 +1895,8 @@ static void ExpandIRPC(void)
   PInputTag Tag;
   tExpandIRPCContext Context;
 
+  WasMACRO = True;
+
   /* 0. terminate if conditinal assembly bites */
 
   if (!IfAsm)
@@ -1949,6 +2015,8 @@ static void REPT_OutProcessor(void)
 {
   POutputTag Tmp;
 
+  WasMACRO = True;
+
   /* Schachtelungen mitzaehlen */
 
   if (MacroStart())
@@ -1973,7 +2041,7 @@ static void REPT_OutProcessor(void)
     Tmp->Tag->IsEmpty = !Tmp->Tag->Lines;
     if ((IfAsm) && (Tmp->Tag->ParCnt > 0))
     {
-      NextDoLst = (DoLst && LstMacroEx);
+      NextDoLst = DoLst & LstMacroExp;
       Tmp->Tag->Next = FirstInputTag;
       FirstInputTag = Tmp->Tag;
     }
@@ -2026,6 +2094,8 @@ static void ExpandREPT(void)
   PInputTag Tag;
   POutputTag Neu;
   tExpandREPTContext Context;
+
+  WasMACRO = True;
 
   /* 0. skip everything when conditional assembly is off */
 
@@ -2163,6 +2233,8 @@ static void WHILE_OutProcessor(void)
   Boolean OK;
   LongInt Erg;
 
+  WasMACRO = True;
+
   /* Schachtelungen mitzaehlen */
 
   if (MacroStart())
@@ -2192,7 +2264,7 @@ static void WHILE_OutProcessor(void)
     OK = (OK && (!FirstPassUnknown) && (Erg != 0));
     if ((IfAsm) && (OK))
     {
-      NextDoLst = (DoLst && LstMacroEx);
+      NextDoLst = DoLst & LstMacroExp;
       Tmp->Tag->Next = FirstInputTag;
       FirstInputTag = Tmp->Tag;
     }
@@ -2238,6 +2310,8 @@ static void ExpandWHILE(void)
   PInputTag Tag;
   POutputTag Neu;
   tExpandWHILEContext Context;
+
+  WasMACRO = True;
 
   /* 0. turned off ? */
 
@@ -2600,9 +2674,10 @@ static void Produce_Code(void)
   Byte z;
   PMacroRec OneMacro;
   PStructRec OneStruct;
-  Boolean SearchMacros, Found, IsMacro, IsStruct;
+  Boolean SearchMacros, Found, IsMacro = False, IsStruct = False;
 
   ActListGran = ListGran();
+  WasIF = WasMACRO = False;
 
   /* Makrosuche unterdruecken ? */
 
@@ -2629,10 +2704,11 @@ static void Produce_Code(void)
 
   /* otherwise generate code: check for macro/structs here */
 
-  if (!(IsMacro = (SearchMacros) && (FoundMacro(&OneMacro))))
+  IsMacro = (SearchMacros) && (FoundMacro(&OneMacro));
+  if (IsMacro)
+    WasMACRO = True;
+  if (!IsMacro)
     IsStruct = FoundStruct(&OneStruct, LOpPart);
-  else
-    IsStruct = FALSE;
 
   /* no longer at an address right after a BSR? */
 
@@ -2673,7 +2749,8 @@ static void Produce_Code(void)
 
   /* bedingte Assemblierung ? */
 
-  if (!Found) Found = CodeIFs();
+  if (!Found)
+    WasIF = Found = CodeIFs();
 
   if (!Found)
     switch (*OpPart)
@@ -3160,7 +3237,7 @@ static void AssembleFile_InitPass(void)
   CurrLine = 0;
 
   IncDepth = -1;
-  DoLst = True;
+  DoLst = eLstMacroExpAll;
 
   /* Pseudovariablen initialisieren */
 
@@ -3199,7 +3276,7 @@ static void AssembleFile_InitPass(void)
   SetFlag(&Maximum, MaximumName, False);
   SetFlag(&DoBranchExt, BranchExtName, False);
   EnterIntSymbol(ListOnName, ListOn = 1, SegNone, True);
-  SetFlag(&LstMacroEx, LstMacroExName, True);
+  SetLstMacroExp(eLstMacroExpAll);
   SetFlag(&RelaxedMode, RelaxedName, False);
   EnterIntSymbol(NestMaxName, NestMax = DEF_NESTMAX, SegNone, True);
   CopyDefSymbols();

@@ -1,5 +1,16 @@
-$Id: changelog,v 1.142 2017/02/26 17:18:18 alfred Exp $
+$Id: changelog,v 1.147 2017/06/03 08:03:39 alfred Exp $
 ------------------------------------------------------------------------------
+
+2017-06-03 [1.42 Bld 116]
+
+- Addition    : add W65C02S target (proposed by Alessandro Gatti)
+
+- Change      : implement MSP430 emulated instructions within assembler instead
+                of with macros
+
+- Addition    : add MSP430X instruction set
+
+- Addition    : allow more fine-grained control of macro expansion in listing
 
 2017-02-26 [1.42 Bld 115]
 

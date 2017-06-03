@@ -36,9 +36,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.36 2017/02/26 16:57:48 alfred Exp $                     */
+/* $Id: asmpars.c,v 1.37 2017/04/02 11:10:36 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmpars.c,v $
+ * Revision 1.37  2017/04/02 11:10:36  alfred
+ * - allow more fine-grained macro expansion in listing
+ *
  * Revision 1.36  2017/02/26 16:57:48  alfred
  * - make some arguments const
  *
@@ -4334,6 +4337,38 @@ void SetFlag(Boolean *Flag, const char *Name, Boolean Wert)
 {
   *Flag = Wert;
   EnterIntSymbol(Name, *Flag ? 1 : 0, 0, True);
+}
+
+void SetLstMacroExp(tLstMacroExp NewLstMacroExp)
+{
+  LstMacroExp = NewLstMacroExp;
+  EnterIntSymbol(LstMacroExpName, NewLstMacroExp, 0, True);
+  if (LstMacroExp == eLstMacroExpAll)
+    strcpy(ListLine, "ALL");
+  else if (LstMacroExp == eLstMacroExpNone)
+    strcpy(ListLine, "NONE");
+  else
+  {
+    strcpy(ListLine, "=");;
+    if (LstMacroExp & eLstMacroExpMacro)
+    {
+      if (*ListLine != '=')
+        strmaxcat(ListLine, "+", STRINGSIZE - 1);
+      strmaxcat(ListLine, "MACRO", STRINGSIZE - 1);
+    }
+    if (LstMacroExp & eLstMacroExpIf)
+    {
+      if (*ListLine != '=')
+        strmaxcat(ListLine, "+", STRINGSIZE - 1);
+      strmaxcat(ListLine, "IF", STRINGSIZE - 1);
+    }
+    if (LstMacroExp & eLstMacroExpRest)
+    {
+      if (*ListLine != '=')
+        strmaxcat(ListLine, "+", STRINGSIZE - 1);
+      strmaxcat(ListLine, "REST", STRINGSIZE - 1);
+    }
+  }
 }
 
 void AddDefSymbol(char *Name, TempResult *Value)

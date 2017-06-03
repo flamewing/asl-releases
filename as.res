@@ -29,9 +29,12 @@
 ;*           2001-10-21 GNU error messages                                   *
 ;*                                                                           *
 ;*****************************************************************************
-;* $Id: as.res,v 1.7 2016/11/25 18:12:12 alfred Exp $                        *
+;* $Id: as.res,v 1.8 2017/04/02 11:10:36 alfred Exp $                        *
 ;*****************************************************************************
 ;* $Log: as.res,v $
+;* Revision 1.8  2017/04/02 11:10:36  alfred
+;* - allow more fine-grained macro expansion in listing
+;*
 ;* Revision 1.7  2016/11/25 18:12:12  alfred
 ;* - first version to support OLMS-50
 ;*
@@ -754,6 +757,14 @@ Message ErrMsgSTRUCTEndedByENDUNION
 Message ErrMsgAddrOnDifferentPage
  "Speicheradresse nicht auf aktiver Seite"
  "Memory address mot on active memory page"
+
+Message ErrMsgUnknownMacExpMod
+ "unbekanntes Makro-Expansions-Argument"
+ "unknown macro expansion argument"
+
+Message ErrMsgConflictingMacExpMod
+ "widerspr&uuml;chliche Angaben zur Makro-Expansion"
+ "contradicting macro expansion specifications"
 
 Message ErrMsgOpeningFile
  "Fehler beim &Ouml;ffnen der Datei"

@@ -17,9 +17,12 @@
 /*           2001-10-20 added UInt23                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.h,v 1.11 2017/02/26 16:57:48 alfred Exp $                     */
+/* $Id: asmpars.h,v 1.12 2017/04/02 11:10:36 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: asmpars.h,v $
+ * Revision 1.12  2017/04/02 11:10:36  alfred
+ * - allow more fine-grained macro expansion in listing
+ *
  * Revision 1.11  2017/02/26 16:57:48  alfred
  * - make some arguments const
  *
@@ -263,6 +266,8 @@ extern void ClearSectionList(void);
 
 
 extern void SetFlag(Boolean *Flag, const char *Name, Boolean Wert);
+
+extern void SetLstMacroExp(tLstMacroExp NewMacroExp);
 
 
 extern LongInt GetLocHandle(void);

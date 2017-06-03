@@ -24,9 +24,15 @@
 /*                       to now                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmallg.c,v 1.35 2017/02/26 17:11:20 alfred Exp $                     */
+/* $Id: asmallg.c,v 1.37 2017/06/03 08:25:00 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmallg.c,v $
+ * Revision 1.37  2017/06/03 08:25:00  alfred
+ * - silence warning about unused argument
+ *
+ * Revision 1.36  2017/04/02 11:10:36  alfred
+ * - allow more fine-grained macro expansion in listing
+ *
  * Revision 1.35  2017/02/26 17:11:20  alfred
  * - allow alternate syntax for SET and EQU
  *
@@ -1040,7 +1046,7 @@ static void CodeSAVE(Word Index)
     Neu->SaveCPU = MomCPU;
     Neu->SavePC = ActPC;
     Neu->SaveListOn = ListOn;
-    Neu->SaveLstMacroEx = LstMacroEx;
+    Neu->SaveLstMacroExp = LstMacroExp;
     Neu->SaveTransTable = CurrTransTable;
     FirstSaveState = Neu;
   }
@@ -1065,9 +1071,48 @@ static void CodeRESTORE(Word Index)
     if (Old->SaveCPU != MomCPU)
       SetCPU(Old->SaveCPU, False);
     EnterIntSymbol(ListOnName, ListOn = Old->SaveListOn, 0, True);
-    SetFlag(&LstMacroEx, LstMacroExName, Old->SaveLstMacroEx);
+    SetLstMacroExp(Old->SaveLstMacroExp);
     CurrTransTable = Old->SaveTransTable;
     free(Old);
+  }
+}
+
+
+static void CodeMACEXP(Word Index)
+{
+  UNUSED(Index);
+
+  if (ArgCnt < 1) WrError(1110);
+  else if (*AttrPart != '\0') WrError(1100);
+  else
+  {
+    int z;
+    tLstMacroExpMod LstMacroExpMod;
+    Boolean OK = True;
+
+    InitLstMacroExpMod(&LstMacroExpMod);
+    for (z = 1; z <= ArgCnt; z++)
+    {
+      if (!strcasecmp(ArgStr[z], "ON")) LstMacroExpMod.SetAll = True;
+      else if (!strcasecmp(ArgStr[z], "OFF")) LstMacroExpMod.ClrAll = True;
+      else if (!strcasecmp(ArgStr[z], "NOIF")) LstMacroExpMod.ANDMask |= eLstMacroExpIf;
+      else if (!strcasecmp(ArgStr[z], "NOMACRO")) LstMacroExpMod.ANDMask |= eLstMacroExpMacro;
+      else if (!strcasecmp(ArgStr[z], "IF")) LstMacroExpMod.ORMask |= eLstMacroExpIf;
+      else if (!strcasecmp(ArgStr[z], "MACRO")) LstMacroExpMod.ORMask |= eLstMacroExpMacro;
+      else
+        OK = False;
+      if (!OK)
+      {
+        WrXError(2100, ArgStr[z]);
+        break;
+      }
+    }
+    if (OK)
+    {
+      if (!ChkLstMacroExpMod) WrError(2110);
+      else
+        SetLstMacroExp(ApplyLstMacroExpMod(LstMacroExp, &LstMacroExpMod));
+    }
   }
 }
 
@@ -1935,6 +1980,7 @@ static const PseudoOrder Pseudos[] =
   {"RADIX",      CodeRADIX      , 0 },
   {"READ",       CodeREAD       , 0 },
   {"RESTORE",    CodeRESTORE    , 0 },
+  {"MACEXP",     CodeMACEXP     , 0 },
   {"RORG",       CodeRORG       , 0 },
   {"RSEG",       CodeSEGTYPE    , 0 },
   {"SAVE",       CodeSAVE       , 0 },
@@ -2024,7 +2070,6 @@ void codeallg_init(void)
   for (POrder = Pseudos; POrder->Proc; POrder++)
     AddInstTable(PseudoTable, POrder->Name, POrder->Index, POrder->Proc);
   ONOFFTable = CreateInstTable(47);
-  AddONOFF("MACEXP", &LstMacroEx, LstMacroExName, True);
   AddONOFF("RELAXED", &RelaxedMode, RelaxedName, True);
   AddONOFF("DOTTEDSTRUCTS", &DottedStructs, DottedStructsName, True);
 }

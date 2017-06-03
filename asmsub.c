@@ -26,9 +26,12 @@
 /*           2002-03-31 fixed operand order of memset                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.34 2016/11/25 18:12:13 alfred Exp $                      */
+/* $Id: asmsub.c,v 1.35 2017/04/02 11:10:37 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmsub.c,v $
+ * Revision 1.35  2017/04/02 11:10:37  alfred
+ * - allow more fine-grained macro expansion in listing
+ *
  * Revision 1.34  2016/11/25 18:12:13  alfred
  * - first version to support OLMS-50
  *
@@ -1408,6 +1411,8 @@ static void WrErrorNum(Word Num)
     case 2070: msgno = Num_ErrMsgFreestandingUnnamedStruct; break;
     case 2080: msgno = Num_ErrMsgSTRUCTEndedByENDUNION; break;
     case 2090: msgno = Num_ErrMsgAddrOnDifferentPage; break;
+    case 2100: msgno = Num_ErrMsgUnknownMacExpMod; break;
+    case 2110: msgno = Num_ErrMsgConflictingMacExpMod; break;
     case 10001: msgno = Num_ErrMsgOpeningFile; break;
     case 10002: msgno = Num_ErrMsgListWrError; break;
     case 10003: msgno = Num_ErrMsgFileReadError; break;

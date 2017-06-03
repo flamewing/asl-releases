@@ -136,6 +136,7 @@ call testall t_mcore
 call testall t_mic51
 call testall t_mico8
 call testall t_msp
+call testall t_msp430x
 call testall t_nestedstructs
 call testall t_olms40
 call testall t_olms50
@@ -154,6 +155,7 @@ call testall t_tms1000
 call testall t_tms1100
 call testall t_tms7
 call testall t_vector
+call testall t_w65c02s
 call testall t_xa
 call testall t_xcore
 call testall t_xgate

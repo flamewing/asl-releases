@@ -33,9 +33,12 @@
 /*           2001-10-20 added GNU error flag                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmdef.h,v 1.16 2016/11/25 16:29:36 alfred Exp $                      */
+/* $Id: asmdef.h,v 1.17 2017/04/02 11:10:36 alfred Exp $                      */
 /*****************************************************************************
  * $Log: asmdef.h,v $
+ * Revision 1.17  2017/04/02 11:10:36  alfred
+ * - allow more fine-grained macro expansion in listing
+ *
  * Revision 1.16  2016/11/25 16:29:36  alfred
  * - allow SELECT as alternative to SWITCH
  *
@@ -105,10 +108,9 @@
  *****************************************************************************/
 
 #include "chunks.h"
-
 #include "fileformat.h"
-
 #include "dynstring.h"
+#include "lstmacroexp.h"
 
 typedef unsigned CPUVar;
 
@@ -234,7 +236,7 @@ extern char SrcSuffix[],IncSuffix[],PrgSuffix[],LstSuffix[],
 #define PackingName      "PACKING"    /* gepackte Ablage an */
 #define MaximumName      "INMAXMODE"  /* CPU im Maximum-Modus */
 #define FPUAvailName     "HASFPU"     /* FPU-Befehle erlaubt */
-#define LstMacroExName   "MACEXP"     /* expandierte Makros anzeigen */
+#define LstMacroExpName  "MACEXP"     /* expandierte Makros anzeigen */
 #define ListOnName       "LISTON"     /* Listing an/aus */
 #define RelaxedName      "RELAXED"    /* alle Zahlenschreibweisen zugelassen */
 #define SrcModeName      "INSRCMODE"  /* CPU im Quellcode-kompatiblen Modus */
@@ -295,59 +297,59 @@ typedef enum
 } TConstMode;
 
 typedef struct _TFunction
-         {
-	  struct _TFunction *Next;
-	  Byte ArguCnt;
-          StringPtr Name,Definition;
-	 } TFunction,*PFunction;
+{
+  struct _TFunction *Next;
+  Byte ArguCnt;
+  StringPtr Name,Definition;
+} TFunction, *PFunction;
 
 typedef struct _TTransTable
-         {
-          struct _TTransTable *Next;
-          char *Name;
-          unsigned char *Table;
-         } TTransTable,*PTransTable;
+{
+  struct _TTransTable *Next;
+  char *Name;
+  unsigned char *Table;
+} TTransTable, *PTransTable;
 
 typedef struct _TSaveState
-	 {
-	  struct _TSaveState *Next;
-	  CPUVar SaveCPU;
-	  Integer SavePC;
-	  Byte SaveListOn;
-	  Boolean SaveLstMacroEx;
-	  PTransTable SaveTransTable;
-	 } TSaveState,*PSaveState;
+{
+  struct _TSaveState *Next;
+  CPUVar SaveCPU;
+  Integer SavePC;
+  Byte SaveListOn;
+  tLstMacroExp SaveLstMacroExp;
+  PTransTable SaveTransTable;
+} TSaveState,*PSaveState;
 
 typedef struct _TForwardSymbol
-         {
-	  struct _TForwardSymbol *Next;
-          StringPtr Name;
-	  LongInt DestSection;
-          StringPtr pErrorPos;
-	 } TForwardSymbol,*PForwardSymbol;
+{
+  struct _TForwardSymbol *Next;
+  StringPtr Name;
+  LongInt DestSection;
+  StringPtr pErrorPos;
+} TForwardSymbol,*PForwardSymbol;
 
 typedef struct _TSaveSection
-         {
-	  struct _TSaveSection *Next;
-          PForwardSymbol LocSyms,GlobSyms,ExportSyms;
-	  LongInt Handle;
-	 } TSaveSection,*PSaveSection;
+{
+  struct _TSaveSection *Next;
+  PForwardSymbol LocSyms,GlobSyms,ExportSyms;
+  LongInt Handle;
+} TSaveSection,*PSaveSection;
 
 typedef struct _TDefinement
-         {
- 	  struct _TDefinement *Next;
-          StringPtr TransFrom,TransTo;
-          Byte Compiled[256];
-	 } TDefinement,*PDefinement;
+{
+  struct _TDefinement *Next;
+  StringPtr TransFrom,TransTo;
+  Byte Compiled[256];
+} TDefinement,*PDefinement;
 
 typedef struct _ASSUMERec
-         {
-          char *Name;
-          LongInt *Dest;
-          LongInt Min,Max;
-          LongInt NothingVal;
-          void (*pPostProc)(void);
-         } ASSUMERec;
+{
+  char *Name;
+  LongInt *Dest;
+  LongInt Min,Max;
+  LongInt NothingVal;
+  void (*pPostProc)(void);
+} ASSUMERec;
 
 extern StringPtr SourceFile;
 
@@ -454,8 +456,8 @@ extern FILE *ShareFile;
 extern FILE *MacProFile;
 extern FILE *MacroFile;
 extern Boolean InMacroFlag;
-extern StringPtr LstName,MacroName,MacProName;
-extern Boolean DoLst,NextDoLst;
+extern StringPtr LstName, MacroName, MacProName;
+extern tLstMacroExp DoLst, NextDoLst;
 extern StringPtr ShareName;
 extern CPUVar MomCPU,MomVirtCPU;
 extern char DefCPU[20];
@@ -486,8 +488,9 @@ extern Byte LstCounter;
 extern Word PageCounter[ChapMax+1];
 extern Byte ChapDepth;
 extern StringPtr ListLine;
-extern Byte PageLength,PageWidth;
-extern Boolean LstMacroEx, DottedStructs;
+extern Byte PageLength, PageWidth;
+extern tLstMacroExp LstMacroExp;
+extern Boolean DottedStructs;
 extern StringPtr PrtInitString;
 extern StringPtr PrtExitString;
 extern StringPtr PrtTitleString;
