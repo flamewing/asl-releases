@@ -19,9 +19,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codexa.c,v 1.13 2014/12/07 19:14:02 alfred Exp $                      */
+/* $Id: codexa.c,v 1.14 2017/06/07 19:10:35 alfred Exp $                      */
 /*****************************************************************************
  * $Log: codexa.c,v $
+ * Revision 1.14  2017/06/07 19:10:35  alfred
+ * - remove double DIVU instruction
+ *
  * Revision 1.13  2014/12/07 19:14:02  alfred
  * - silence a couple of Borland C related warnings and errors
  *
@@ -1920,7 +1923,6 @@ static void InitFields(void)
   AddInstTable(InstTable, "DIV"  , 0, DecodeDIV);
   AddInstTable(InstTable, "DIVU" , 0, DecodeDIVU);
   AddInstTable(InstTable, "MUL"  , 0, DecodeMUL);
-  AddInstTable(InstTable, "DIVU" , 0, DecodeDIVU);
   AddInstTable(InstTable, "MULU" , 0, DecodeMULU);
   AddInstTable(InstTable, "LEA"  , 0, DecodeLEA);
   AddInstTable(InstTable, "ANL"  , 0, DecodeANLORL);

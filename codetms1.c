@@ -5,9 +5,12 @@
 /* Codegenerator TMS1000-Familie                                             */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codetms1.c,v 1.1 2015/04/20 18:40:29 alfred Exp $                    */
+/* $Id: codetms1.c,v 1.2 2017/06/07 19:07:20 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codetms1.c,v $
+ * Revision 1.2  2017/06/07 19:07:20  alfred
+ * - remove double instruction DMAN
+ *
  * Revision 1.1  2015/04/20 18:40:29  alfred
  * - add TMS1000 support (no docs yet)
  *
@@ -178,7 +181,6 @@ static void InitFields(void)
   AddInstTable(InstTable, "IYC", Is1100 ? 0x05 : 0x2b, DecodeFixed);
   AddInstTable(InstTable, "DAN", Is1100 ? 0x77 : 0x07, DecodeFixed);
   AddInstTable(InstTable, "DYN", Is1100 ? 0x04 : 0x2c, DecodeFixed);
-  AddInstTable(InstTable, "DMAN", Is1100 ? 0x07 : 0x2a, DecodeFixed);
   AddInstTable(InstTable, "CPAIZ", Is1100 ? 0x3d : 0x2d, DecodeFixed);
   AddInstTable(InstTable, "A6AAC", Is1100 ? 0x7a : 0x06, DecodeFixed);
   AddInstTable(InstTable, "A8AAC", Is1100 ? 0x7e : 0x01, DecodeFixed);

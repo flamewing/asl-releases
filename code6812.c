@@ -10,9 +10,15 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6812.c,v 1.23 2016/09/12 18:31:48 alfred Exp $                    */
+/* $Id: code6812.c,v 1.25 2017/06/07 19:34:54 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6812.c,v $
+ * Revision 1.25  2017/06/07 19:34:54  alfred
+ * - add missing ClearONOFF()
+ *
+ * Revision 1.24  2017/06/07 19:08:10  alfred
+ * - remove double LBGT instruction
+ *
  * Revision 1.23  2016/09/12 18:31:48  alfred
  * - regard zero-length string
  *
@@ -91,6 +97,7 @@
 #include "asmdef.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "asmallg.h"
 #include "asmitree.h"
 #include "codepseudo.h"
 #include "motpseudo.h"
@@ -1500,8 +1507,8 @@ static void InitFields(void)
   AddBranch("LBLO", 0x25);    AddBranch("LBCS", 0x25);
   AddBranch("LBMI", 0x2b);    AddBranch("LBVS", 0x29);
   AddBranch("LBRA", 0x20);    AddBranch("LBPL", 0x2a);
-  AddBranch("LBGT", 0x2e);    AddBranch("LBRN", 0x21);
-  AddBranch("LBVC", 0x28);    AddBranch("LBSR", 0x07);
+  AddBranch("LBRN", 0x21);    AddBranch("LBVC", 0x28);
+  AddBranch("LBSR", 0x07);
 
   GenOrders = (GenOrder *) malloc(sizeof(GenOrder) * GenOrderCount);
   InstrZ = 0;
@@ -1734,6 +1741,7 @@ static Boolean IsDef_6812(void)
 static void SwitchFrom_6812(void)
 {
   DeinitFields();
+  ClearONOFF();
 }
 
 static Boolean ChkPC_6812X(LargeWord Addr)

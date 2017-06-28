@@ -9,9 +9,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code85.c,v 1.10 2016/11/24 22:42:26 alfred Exp $                      */
+/* $Id: code85.c,v 1.11 2017/06/07 19:41:00 alfred Exp $                      */
 /***************************************************************************** 
  * $Log: code85.c,v $
+ * Revision 1.11  2017/06/07 19:41:00  alfred
+ * - add missing ClearONOFF()
+ *
  * Revision 1.10  2016/11/24 22:42:26  alfred
  * - silence warning
  *
@@ -1315,6 +1318,7 @@ static Boolean IsDef_85(void)
 static void SwitchFrom_85(void)
 {
   DeinitFields();
+  ClearONOFF();
 }
 
 static void SwitchTo_85(void)

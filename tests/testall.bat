@@ -71,6 +71,7 @@ call testall t_56000
 call testall t_56300
 call testall t_65
 call testall t_6502u
+call testall t_65c19
 call testall t_6804
 call testall t_68040
 call testall t_6805
@@ -128,6 +129,7 @@ call testall t_h8_3
 call testall t_h8_5
 call testall t_hcs08
 call testall t_hmcs4x
+call testall t_huc6280
 call testall t_longline
 call testall t_m16
 call testall t_m16c

@@ -243,6 +243,11 @@ void AddInstTable(PInstTable tab, const char *Name, Word Index, InstProc Proc)
       tab->Fill++;
       return;
     }
+    if (!strcmp(tab->Entries[h0].Name, Name))
+    {
+      printf("%s double in table\n", Name);
+      exit(255);
+    }
     z++;
     if ((LongInt)(++h0) == tab->Size)
       h0 = 0;

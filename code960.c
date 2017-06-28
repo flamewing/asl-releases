@@ -20,9 +20,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code960.c,v 1.10 2014/12/07 19:14:00 alfred Exp $                     */
+/* $Id: code960.c,v 1.11 2017/06/07 19:33:12 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code960.c,v $
+ * Revision 1.11  2017/06/07 19:33:12  alfred
+ * - correct SCANBIT -> SPANBIT instruction
+ *
  * Revision 1.10  2014/12/07 19:14:00  alfred
  * - silence a couple of Borland C related warnings and errors
  *
@@ -742,7 +745,7 @@ static void InitFields(void)
   AddReg("SHRDI"   , 0x59a, IntOp   , IntOp   , IntOp   , True , True , False);
   AddReg("SINR"    , 0x68c, SingleOp, NoneOp  , SingleOp, True , False, False);
   AddReg("SINRL"   , 0x69c, DoubleOp, NoneOp  , DoubleOp, True , False, False);
-  AddReg("SCANBIT" , 0x640, IntOp   , NoneOp  , IntOp   , True , False, False);
+  AddReg("SPANBIT" , 0x640, IntOp   , NoneOp  , IntOp   , True , False, False);
   AddReg("SQRTR"   , 0x688, SingleOp, NoneOp  , SingleOp, True , False, False);
   AddReg("SQRTRL"  , 0x698, DoubleOp, NoneOp  , DoubleOp, True , False, False);
   AddReg("SUBC"    , 0x5b2, IntOp   , IntOp   , IntOp   , True , True , False);

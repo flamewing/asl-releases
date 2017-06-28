@@ -1,5 +1,17 @@
-$Id: changelog,v 1.147 2017/06/03 08:03:39 alfred Exp $
+$Id: changelog,v 1.152 2017/06/28 17:05:00 alfred Exp $
 ------------------------------------------------------------------------------
+
+2017-06-28 [1.42 Bld 117]
+
+- Bugfix      : correct MSP430 source operand conversion 0(Rn) -> @Rn
+
+- Addition    : add HuC6280 target
+
+- Addition    : add 65C19 target
+
+- Addition    : allow IXH/IYH as alias for IXU/IYU on Z80UNDOC
+
+- Addition    : allow SLS as alias for SLIA on Z80UNDOC
 
 2017-06-03 [1.42 Bld 116]
 
@@ -11,6 +23,11 @@ $Id: changelog,v 1.147 2017/06/03 08:03:39 alfred Exp $
 - Addition    : add MSP430X instruction set
 
 - Addition    : allow more fine-grained control of macro expansion in listing
+
+- Bugfix      : allow searching PATH variables longer than 255 characters
+
+- Bugfix      : use correct character on Windows platforms to concatenate
+                AS_MSGPATH and message file name
 
 2017-02-26 [1.42 Bld 115]
 

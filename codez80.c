@@ -10,9 +10,12 @@
 /*           2001-12-11 begun with Rabbit2000                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codez80.c,v 1.14 2014/12/07 19:14:02 alfred Exp $                     */
+/* $Id: codez80.c,v 1.15 2017/06/04 19:00:44 alfred Exp $                     */
 /*****************************************************************************
  * $Log: codez80.c,v $
+ * Revision 1.15  2017/06/04 19:00:44  alfred
+ * - add some aliases for Z80UNDOC
+ *
  * Revision 1.14  2014/12/07 19:14:02  alfred
  * - silence a couple of Borland C related warnings and errors
  *
@@ -342,8 +345,6 @@ static Boolean IsSym(char ch)
 
 static void DecodeAdr(char *Asc_O)
 {
-#define Reg8XCnt 4
-  static char *Reg8XNames[Reg8XCnt]={"IXU","IXL","IYU","IYL"};
 #define Reg16Cnt 6
   static char *Reg16Names[Reg16Cnt]={"BC","DE","HL","SP","IX","IY"};
 
@@ -378,17 +379,29 @@ static void DecodeAdr(char *Asc_O)
     return;
   }
 
-  /* 1a. 8-Bit-Haelften von IX/IY ? (nur Z380, sonst als Symbole zulassen) */
+  /* 1a. 8-Bit-Haelften von IX/IY ? (nur Z380/Z80UNDOC, sonst als Symbole zulassen) */
 
-  if ((MomCPU >= CPUZ380) || (MomCPU == CPUZ80U))
+  if (((MomCPU >= CPUZ380) || (MomCPU == CPUZ80U))
+   && ((strlen(Asc_O) == 3) && (toupper(Asc_O[0]) == 'I')))
   {
-    for (z = 0; z < Reg8XCnt; z++)
-      if (!strcasecmp(Asc_O, Reg8XNames[z]))
+    char ix = toupper(Asc_O[1]);
+
+    if ((ix == 'X') || (ix == 'Y'))
+      switch (toupper(Asc_O[2]))
       {
-        AdrMode = ModReg8;
-        BAsmCode[PrefixCnt++] = (z <= 1) ? IXPrefix : IYPrefix;
-        AdrPart = 4 + (z & 1); /* = H/L */
-        return;
+        case 'L':
+          AdrMode = ModReg8;
+          BAsmCode[PrefixCnt++] = (ix == 'X') ? IXPrefix : IYPrefix;
+          AdrPart = 5;
+          return;
+        case 'H':
+          if (MomCPU != CPUZ80U)
+            break; /* conditional break, do not allow IXH/IYH on Z380 */
+        case 'U':
+          AdrMode = ModReg8;
+          BAsmCode[PrefixCnt++] = (ix == 'X') ? IXPrefix : IYPrefix;
+          AdrPart = 4;
+          return;
       }
   }
 
@@ -1673,7 +1686,7 @@ static void DecodeShift8(Word Code)
   Boolean OK;
 
   if ((ArgCnt == 0) || (ArgCnt > 2)) WrError(1110);
-  else if ((Code == 6) && (MomCPU != CPUZ80U)) WrError(1500); /* SLIA undok. Z80 */
+  else if ((Code == 6) && (MomCPU != CPUZ80U)) WrError(1500); /* SLIA/SLS undok. Z80 */
   else
   {
     OpSize = 0;
@@ -2830,14 +2843,23 @@ static void DecodeRST(Word Code)
   {
     Boolean OK;
     Byte AdrByte;
+    LargeWord SaveRadixBase = RadixBase;
+
+#if 0
+    /* some people like to regard the RST argument as a literal
+       and leave away the 'h' to mark 38 as a hex number... */
+    RadixBase = 16;
+#endif
 
     FirstPassUnknown = False;
     AdrByte = EvalIntExpression(ArgStr[1], Int8, &OK);
+    RadixBase = SaveRadixBase;
+
     if (FirstPassUnknown)
       AdrByte = AdrByte & 0x38;  
     if (OK)
     {
-      if ((AdrByte > 0x38) || (AdrByte & 7)) WrError(1320);
+      if ((AdrByte > 0x38) || (AdrByte & 7)) WrError(1905);
       else
       {
         CodeLen = 1;
@@ -3203,6 +3225,7 @@ static void InitFields(void)
   AddShift("RL"  , "RLW"  , 2); AddShift("RR" , "RRW" , 3); 
   AddShift("SLA" , "SLAW" , 4); AddShift("SRA", "SRAW", 5);
   AddShift("SLIA", NULL   , 6); AddShift("SRL", "SRLW", 7);
+  AddShift("SLS" , NULL   , 6);
 
   AddBit("BIT", 0); AddBit("RES", 1); AddBit("SET", 2);
 }

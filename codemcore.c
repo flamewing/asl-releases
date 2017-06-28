@@ -10,9 +10,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemcore.c,v 1.10 2016/08/17 21:26:46 alfred Exp $                   */
+/* $Id: codemcore.c,v 1.11 2017/06/07 19:16:48 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codemcore.c,v $
+ * Revision 1.11  2017/06/07 19:16:48  alfred
+ * - add missing ClearONOFF() call
+ *
  * Revision 1.10  2016/08/17 21:26:46  alfred
  * - fix some errors and warnings detected by clang
  *
@@ -824,6 +827,7 @@ static Boolean IsDef_MCORE(void)
 static void SwitchFrom_MCORE(void)
 {
   DeinitFields();
+  ClearONOFF();
 }
 
 static void SwitchTo_MCORE(void)

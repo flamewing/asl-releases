@@ -43,6 +43,9 @@ toni    equ     01114h
         jne     $
         jn      $+2
 
+	mov	0(r5),4(r5)	; result in same machine code
+	mov	@r5,4(r5)
+
 ;----------------------------------
 ; emulierte Befehle
 

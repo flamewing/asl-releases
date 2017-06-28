@@ -4,9 +4,12 @@
 /*                                                                           */
 /* Codegenerator XCore                                                       */
 /*****************************************************************************/
-/* $Id: codexcore.c,v 1.7 2016/08/17 21:26:47 alfred Exp $                   */
+/* $Id: codexcore.c,v 1.8 2017/06/07 19:01:09 alfred Exp $                   */
 /*****************************************************************************
  * $Log: codexcore.c,v $
+ * Revision 1.8  2017/06/07 19:01:09  alfred
+ * - remove double instruction
+ *
  * Revision 1.7  2016/08/17 21:26:47  alfred
  * - fix some errors and warnings detected by clang
  *
@@ -590,7 +593,6 @@ static void InitFields(void)
   AddInstTable(InstTable, "LD8U"   , 0x8800, Code_3r);
   AddInstTable(InstTable, "LDW"    , 0x4800, Code_3r);
   AddInstTable(InstTable, "LSS"    , 0xc000, Code_3r);
-  AddInstTable(InstTable, "LSU"    , 0xc800, Code_3r);
   AddInstTable(InstTable, "LSU"    , 0xc800, Code_3r);
   AddInstTable(InstTable, "OR"     , 0x4000, Code_3r);
   AddInstTable(InstTable, "SHL"    , 0x2000, Code_3r);

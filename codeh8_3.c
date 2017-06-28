@@ -10,9 +10,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeh8_3.c,v 1.12 2015/09/20 10:37:35 alfred Exp $                    */
+/* $Id: codeh8_3.c,v 1.13 2017/06/07 19:42:56 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codeh8_3.c,v $
+ * Revision 1.13  2017/06/07 19:42:56  alfred
+ * - remove superfluous double PADDING registration
+ *
  * Revision 1.12  2015/09/20 10:37:35  alfred
  * - silence some GCC warnings
  *
@@ -1960,7 +1963,6 @@ static void SwitchTo_H8_3(void)
   SwitchFrom = SwitchFrom_H8_3;
   InitFields();
   AddONOFF("MAXMODE", &Maximum   , MaximumName   , False);
-  AddONOFF("PADDING", &DoPadding , DoPaddingName , False);
   AddMoto16PseudoONOFF();
 
   CPU16 = (MomCPU <= CPUH8_300);

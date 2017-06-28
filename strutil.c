@@ -11,9 +11,12 @@
 /*           30. 5.1999 ConstLongInt akzeptiert auch 0x fuer Hex-Zahlen      */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: strutil.c,v 1.16 2016/03/25 19:05:57 alfred Exp $                     */
+/* $Id: strutil.c,v 1.17 2017/06/16 19:03:19 alfred Exp $                     */
 /*****************************************************************************
  * $Log: strutil.c,v $
+ * Revision 1.17  2017/06/16 19:03:19  alfred
+ * - remove superfluous 0x from output
+ *
  * Revision 1.16  2016/03/25 19:05:57  alfred
  * - allow Intel hex notation for addresses passed to tools
  *
@@ -827,7 +830,7 @@ char *strcpy(char *pDest, const char *pSrc)
   }
 
   if (Overlap)
-    fprintf(stderr, "overlapping strcpy() called from address 0x%p, resolve this address with addr2line and report to author\n",
+    fprintf(stderr, "overlapping strcpy() called from address %p, resolve this address with addr2line and report to author\n",
             __builtin_return_address(0));
 
   return strmov(pDest, pSrc);

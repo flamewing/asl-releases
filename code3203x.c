@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3203x.c,v 1.22 2016/10/21 20:05:56 alfred Exp $                       */
+/* $Id: code3203x.c,v 1.23 2017/06/07 19:38:43 alfred Exp $                       */
 /***************************************************************************** 
  * $Log: code3203x.c,v $
+ * Revision 1.23  2017/06/07 19:38:43  alfred
+ * - do not double-generate CALL and LAJ
+ *
  * Revision 1.22  2016/10/21 20:05:56  alfred
  * - fix some bugs detected by pedantic GCC
  *
@@ -1573,10 +1576,13 @@ static void AddCondition(char *NName, Byte NCode)
   AddInstTable(InstTable, InstName, 0x0580 | NCode, DecodeBcc);
   sprintf(InstName, "B%sAT", NName);
   AddInstTable(InstTable, InstName, 0x0380 | NCode, DecodeBcc);
-  sprintf(InstName, "LAJ%s", NName);
-  AddInstTable(InstTable, InstName, 0x4180 | NCode, DecodeBcc);
-  sprintf(InstName, "CALL%s", NName);
-  AddInstTable(InstTable, InstName, NCode, DecodeCALLcc);
+  if (*NName)
+  {
+    sprintf(InstName, "LAJ%s", NName);
+    AddInstTable(InstTable, InstName, 0x4180 | NCode, DecodeBcc);
+    sprintf(InstName, "CALL%s", NName);
+    AddInstTable(InstTable, InstName, NCode, DecodeCALLcc);
+  }
   sprintf(InstName, "DB%s", NName);
   AddInstTable(InstTable, InstName, NCode, DecodeDBcc);
   sprintf(InstName, "DB%sD", NName);

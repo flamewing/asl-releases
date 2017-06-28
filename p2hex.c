@@ -21,9 +21,12 @@
 /*           2001-08-30 set EntryAddrPresent when address given as argument  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: p2hex.c,v 1.14 2017/02/26 16:35:16 alfred Exp $                       */
+/* $Id: p2hex.c,v 1.15 2017/06/28 16:41:46 alfred Exp $                       */
 /*****************************************************************************
  * $Log: p2hex.c,v $
+ * Revision 1.15  2017/06/28 16:41:46  alfred
+ * - rework Occured flags
+ *
  * Revision 1.14  2017/02/26 16:35:16  alfred
  * - support Mico8 hex format
  *
@@ -105,7 +108,17 @@ static Boolean Rec5;
 static Boolean SepMoto;
 static LongWord AVRLen, ValidSegs;
 
-static Boolean RelAdr, MotoOccured, IntelOccured, MOSOccured, DSKOccured, Mico8Occured;
+static Boolean RelAdr;
+
+static unsigned FormatOccured;
+enum
+{
+  eMotoOccured = (1 << 0),
+  eIntelOccured = (1 << 1),
+  eMOSOccured = (1 << 2),
+  eDSKOccured = (1 << 3),
+  eMico8Occured = (1 << 4),
+};
 static Byte MaxMoto, MaxIntel;
 
 static THexFormat DestFormat;
@@ -280,7 +293,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
         switch (ActFormat)
         {
           case MotoS:
-            if ((!MotoOccured) || (SepMoto))
+            if ((!(FormatOccured & eMotoOccured)) || (SepMoto))
             {
               errno = 0; fprintf(TargFile, "S0030000FC\n"); ChkIO(TargName);
             }
@@ -301,17 +314,17 @@ static void ProcessFile(const char *FileName, LongWord Offset)
               fprintf(TargFile, "S503%s%s\n", HexWord(RecCnt), HexByte(Lo(ChkSum ^ 0xff)));
               ChkIO(TargName);
             }
-            MotoOccured = True;
+            FormatOccured |= eMotoOccured;
             break;
           case MOSHex:
-            MOSOccured = True;
+            FormatOccured |= eMOSOccured;
             break;
           case IntHex:
-            IntelOccured = True;
+            FormatOccured |= eIntelOccured;
             IntOffset = 0;
             break;
           case IntHex16:
-            IntelOccured = True;
+            FormatOccured |= eIntelOccured;
             IntOffset = (ErgStart * Gran);
             IntOffset &= INTCONST_fffffff0;
             HSeg = IntOffset >> 4;
@@ -322,7 +335,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
               MaxIntel = 1;
             break;
           case IntHex32:
-            IntelOccured = True;
+            FormatOccured |= eIntelOccured;
             IntOffset = (ErgStart * Gran);
             IntOffset &= INTCONST_ffffff00;
             HSeg = IntOffset >> 16;
@@ -340,9 +353,9 @@ static void ProcessFile(const char *FileName, LongWord Offset)
           case Mico8:
             break;
           case TiDSK:
-            if (!DSKOccured)
+            if (!(FormatOccured & eDSKOccured))
             {
-              DSKOccured = True;
+              FormatOccured |= eDSKOccured;
               errno = 0; fprintf(TargFile, "%s%s\n", getmessage(Num_DSKHeaderLine), TargName); ChkIO(TargName);
             }
             break;
@@ -1118,10 +1131,7 @@ int main(int argc, char **argv)
   }
 
   OpenTarget();
-  MotoOccured = False;
-  IntelOccured = False;
-  MOSOccured = False;
-  DSKOccured = False;
+  FormatOccured = 0;
   MaxMoto = 0;
   MaxIntel = 0;
 
@@ -1132,7 +1142,7 @@ int main(int argc, char **argv)
       if (ParUnprocessed[z])
         ProcessGroup(ParamStr[z], ProcessFile);
 
-  if ((MotoOccured) && (!SepMoto))
+  if ((FormatOccured & eMotoOccured) && (!SepMoto))
   {
     errno = 0; fprintf(TargFile, "S%c%s", '9' - MaxMoto, HexByte(3 + MaxMoto)); ChkIO(TargName);
     ChkSum = 3 + MaxMoto;
@@ -1154,7 +1164,7 @@ int main(int argc, char **argv)
     errno = 0; fprintf(TargFile, "%s\n", HexByte(0xff - (ChkSum & 0xff))); ChkIO(TargName);
   }
 
-  if (IntelOccured)
+  if (FormatOccured & eIntelOccured)
   {
     Word EndRecAddr = 0;
 
@@ -1206,12 +1216,12 @@ int main(int argc, char **argv)
     ChkIO(TargName);
   }
 
-  if (MOSOccured)
+  if (FormatOccured & eMOSOccured)
   {
     errno = 0; fprintf(TargFile, ";0000040004\n"); ChkIO(TargName);
   }
 
-  if (DSKOccured)
+  if (FormatOccured & eDSKOccured)
   {
     if (EntryAdrPresent)
     {

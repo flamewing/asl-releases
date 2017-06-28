@@ -14,9 +14,12 @@
 /*           19. 8.2001 fixed errors for lower halves of XIX...XSP           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code96c141.c,v 1.12 2015/05/25 08:38:35 alfred Exp $                          */
+/* $Id: code96c141.c,v 1.13 2017/06/07 19:49:28 alfred Exp $                          */
 /*****************************************************************************
  * $Log: code96c141.c,v $
+ * Revision 1.13  2017/06/07 19:49:28  alfred
+ * - resolve CPL conflict
+ *
  * Revision 1.12  2015/05/25 08:38:35  alfred
  * - silence come warnings on old GCC versions
  *
@@ -1645,9 +1648,19 @@ static void DecodeImm(Word Index)
   }
 }
 
+static void DecodeALU2(Word Code);
+
 static void DecodeReg(Word Index)
 {
   RegOrder *RegZ = RegOrders + Index;
+
+  /* dispatch to CPL as compare-long with two args: */
+ 
+  if ((Memo("CPL")) && (ArgCnt >= 2))
+  {
+    DecodeALU2(0x0207);
+    return;
+  }
 
   if (ArgCnt != 1) WrError(1110);
   else
@@ -2369,7 +2382,11 @@ static void AddSize(char *NName, Byte NCode, InstProc Proc, Word SizeMask)
     SizeName[l - 1] = 'W';
     AddInstTable(InstTable, SizeName, 0x0100 | NCode, Proc);
   }
-  if (SizeMask & 4)
+
+  /* CP(L) would generate conflict with CPL instruction - dispatch
+     it from CPL single-op instruction if ArgCnt >= 2! */
+
+  if ((SizeMask & 4) && (strcmp(NName, "CP")))
   {
     SizeName[l - 1] = 'L';
     AddInstTable(InstTable, SizeName, 0x0200 | NCode, Proc);

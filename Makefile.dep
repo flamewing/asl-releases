@@ -92,15 +92,15 @@ code601.o: stdinc.h endian.h strutil.h asmdef.h asmsub.h asmpars.h asmallg.h asm
 
 code65.o: stdinc.h bpemu.h strutil.h asmdef.h asmpars.h asmsub.h asmitree.h codepseudo.h motpseudo.h codevars.h code65.h
 
-code68.o: stdinc.h bpemu.h strutil.h asmdef.h asmpars.h asmsub.h codepseudo.h motpseudo.h asmitree.h codevars.h code68.h
+code68.o: stdinc.h bpemu.h strutil.h asmdef.h asmpars.h asmallg.h asmsub.h codepseudo.h motpseudo.h asmitree.h codevars.h code68.h
 
 code6804.o: stdinc.h bpemu.h strutil.h asmdef.h asmsub.h asmpars.h asmitree.h codepseudo.h motpseudo.h codevars.h code6804.h
 
 code6805.o: stdinc.h bpemu.h strutil.h asmdef.h asmpars.h asmsub.h asmitree.h motpseudo.h codevars.h code6805.h
 
-code6809.o: stdinc.h nls.h strutil.h bpemu.h asmdef.h asmpars.h asmsub.h asmitree.h codepseudo.h motpseudo.h codevars.h code6809.h
+code6809.o: stdinc.h nls.h strutil.h bpemu.h asmdef.h asmpars.h asmsub.h asmallg.h asmitree.h codepseudo.h motpseudo.h codevars.h code6809.h
 
-code6812.o: stdinc.h strutil.h bpemu.h asmdef.h asmpars.h asmsub.h asmitree.h codepseudo.h motpseudo.h codevars.h code6812.h
+code6812.o: stdinc.h strutil.h bpemu.h asmdef.h asmpars.h asmsub.h asmallg.h asmitree.h codepseudo.h motpseudo.h codevars.h code6812.h
 
 code6816.o: stdinc.h nls.h bpemu.h strutil.h asmdef.h asmsub.h asmpars.h asmitree.h codepseudo.h motpseudo.h codevars.h code6816.h
 

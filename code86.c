@@ -10,9 +10,12 @@
 /*           14. 1.2001 silenced warnings about unused parameters            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code86.c,v 1.14 2014/12/07 19:14:00 alfred Exp $                      */
+/* $Id: code86.c,v 1.15 2017/06/07 19:29:05 alfred Exp $                      */
 /*****************************************************************************
  * $Log: code86.c,v $
+ * Revision 1.15  2017/06/07 19:29:05  alfred
+ * - correct registration of ROR4
+ *
  * Revision 1.14  2014/12/07 19:14:00  alfred
  * - silence a couple of Borland C related warnings and errors
  *
@@ -2666,7 +2669,7 @@ static void InitFields(void)
   AddInstTable(InstTable, "ENTER", 0, DecodeENTER);
   AddInstTable(InstTable, "PORT", 0, DecodePORT);
   AddInstTable(InstTable, "ROL4", 0x28, DecodeROL4_ROR4);
-  AddInstTable(InstTable, "ROL4", 0x2a, DecodeROL4_ROR4);
+  AddInstTable(InstTable, "ROR4", 0x2a, DecodeROL4_ROR4);
   AddInstTable(InstTable, "INS", 0x31, DecodeINS_EXT);
   AddInstTable(InstTable, "EXT", 0x33, DecodeINS_EXT);
   AddInstTable(InstTable, "FPO2", 0, DecodeFPO2);

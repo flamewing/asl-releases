@@ -24,9 +24,12 @@
 /*                       to now                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmallg.c,v 1.37 2017/06/03 08:25:00 alfred Exp $                     */
+/* $Id: asmallg.c,v 1.38 2017/06/28 16:35:15 alfred Exp $                     */
 /*****************************************************************************
  * $Log: asmallg.c,v $
+ * Revision 1.38  2017/06/28 16:35:15  alfred
+ * - correct function call
+ *
  * Revision 1.37  2017/06/03 08:25:00  alfred
  * - silence warning about unused argument
  *
@@ -1109,7 +1112,7 @@ static void CodeMACEXP(Word Index)
     }
     if (OK)
     {
-      if (!ChkLstMacroExpMod) WrError(2110);
+      if (!ChkLstMacroExpMod(&LstMacroExpMod)) WrError(2110);
       else
         SetLstMacroExp(ApplyLstMacroExpMod(LstMacroExp, &LstMacroExpMod));
     }

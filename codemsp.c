@@ -12,9 +12,15 @@
 /*             2002-01-27 allow immediate addressing for one-op instrs(doj)  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemsp.c,v 1.24 2017/05/31 19:13:14 alfred Exp $                     */
+/* $Id: codemsp.c,v 1.26 2017/06/28 17:02:40 alfred Exp $                     */
 /***************************************************************************** 
  * $Log: codemsp.c,v $
+ * Revision 1.26  2017/06/28 17:02:40  alfred
+ * - correct MSP430 source operand conversion 0(Rn) -> @Rn
+ *
+ * Revision 1.25  2017/06/07 19:12:43  alfred
+ * - remove double JNZ instruction
+ *
  * Revision 1.24  2017/05/31 19:13:14  alfred
  * - MSP430(X): forgot to set PCDist for some instructions
  * - MSP430(X): also set upper 4 bits of displacement for emulated instruction
@@ -191,6 +197,7 @@ static const IntType OpSizeIntTypes[eOpSizeCnt] = { Int8, Int16, Int20 };
 static void ResetAdr(tAdrParts *pAdrParts)
 {
   pAdrParts->Mode = eModeNone;
+  pAdrParts->Part = 0;
   pAdrParts->Cnt = 0;
   pAdrParts->WasImm =
   pAdrParts->WasAbs = False;
@@ -371,7 +378,10 @@ static Boolean DecodeAdr(char *Asc, tExtMode ExtMode, Byte Mask, Boolean MayImm,
         {
           if ((Reg == 2) || (Reg == 3)) WrXError(1445, p + 1);
           else if ((pAdrParts->Val == 0) && ((Mask & 4) != 0))
+          {
+            pAdrParts->Part = Reg;
             pAdrParts->Mode = eModeIReg;
+          }
           else
           {
             pAdrParts->Part = Reg;
@@ -1487,8 +1497,8 @@ static void InitFields(void)
   AddJmp("JNC" , 0x2800); AddJmp("JC"  , 0x2c00);
   AddJmp("JN"  , 0x3000); AddJmp("JGE" , 0x3400);
   AddJmp("JL"  , 0x3800); AddJmp("JMP" , 0x3C00);
-  AddJmp("JEQ" , 0x2400); AddJmp("JNZ" , 0x2000);
-  AddJmp("JLO" , 0x2800); AddJmp("JHS" , 0x2c00);
+  AddJmp("JEQ" , 0x2400); AddJmp("JLO" , 0x2800);
+  AddJmp("JHS" , 0x2c00);
 
   AddInstTable(InstTable, "BYTE", 0, DecodeBYTE);
   AddInstTable(InstTable, "WORD", 0, DecodeWORD);

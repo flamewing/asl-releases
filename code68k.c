@@ -36,9 +36,12 @@
 /*           2001-12-02 fixed problems with forward refs of shift arguments  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68k.c,v 1.26 2016/08/17 21:26:46 alfred Exp $                     */
+/* $Id: code68k.c,v 1.27 2017/06/07 18:58:34 alfred Exp $                     */
 /*****************************************************************************
  * $Log: code68k.c,v $
+ * Revision 1.27  2017/06/07 18:58:34  alfred
+ * - correct DBxx -> PDBxx (68K PMMU)
+ *
  * Revision 1.26  2016/08/17 21:26:46  alfred
  * - fix some errors and warnings detected by clang
  *
@@ -4838,7 +4841,7 @@ static void AddPMMUCond(char *NName)
 
   sprintf(TmpName, "PB%s", NName);
   AddInstTable(InstTable, TmpName, InstrZ, DecodePBcc);
-  sprintf(TmpName, "DB%s", NName);
+  sprintf(TmpName, "PDB%s", NName);
   AddInstTable(InstTable, TmpName, InstrZ, DecodePDBcc);
   sprintf(TmpName, "PS%s", NName);
   AddInstTable(InstTable, TmpName, InstrZ, DecodePScc);

@@ -58,9 +58,12 @@
 /*           2002-03-03 use FromFile, LineRun fields in input tag            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.71 2017/04/02 11:10:36 alfred Exp $                         */
+/* $Id: as.c,v 1.72 2017/06/16 19:06:08 alfred Exp $                         */
 /*****************************************************************************
  * $Log: as.c,v $
+ * Revision 1.72  2017/06/16 19:06:08  alfred
+ * - correct some overlapping strcpy() uses
+ *
  * Revision 1.71  2017/04/02 11:10:36  alfred
  * - allow more fine-grained macro expansion in listing
  *
@@ -4136,7 +4139,7 @@ static CMDResult CMD_DefSymbol(Boolean Negate, const char *Arg)
     {
       *p = '\0';
       strmaxcpy(Part, Copy, 255);
-      strcpy(Copy, p + 1);
+      strmov(Copy, p + 1);
     }
    if (!CaseSensitive)
      UpString(Part);
@@ -4150,7 +4153,7 @@ static CMDResult CMD_DefSymbol(Boolean Negate, const char *Arg)
    {
      *p = '\0';
      strmaxcpy(Name, Part, 255);
-     strcpy(Part, p + 1);
+     strmov(Part, p + 1);
    }
    if (!ChkSymbName(Name))
      return CMDErr;

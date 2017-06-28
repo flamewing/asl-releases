@@ -13,9 +13,12 @@
 /*                       unsinged limited                                    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code68.c,v 1.14 2014/11/13 09:06:49 alfred Exp $                      */
+/* $Id: code68.c,v 1.15 2017/06/07 20:41:31 alfred Exp $                      */
 /*****************************************************************************
  * $Log: code68.c,v $
+ * Revision 1.15  2017/06/07 20:41:31  alfred
+ * - add missing ClearONOFF()
+ *
  * Revision 1.14  2014/11/13 09:06:49  alfred
  * - adapt to current style
  *
@@ -59,6 +62,7 @@
 #include "strutil.h"
 #include "asmdef.h"
 #include "asmpars.h"
+#include "asmallg.h"
 #include "asmsub.h"
 #include "codepseudo.h"
 #include "motpseudo.h"
@@ -1011,6 +1015,7 @@ static Boolean IsDef_68(void)
 static void SwitchFrom_68()
 {
   DeinitFields();
+  ClearONOFF();
 }
 
 

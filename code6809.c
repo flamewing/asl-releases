@@ -13,9 +13,12 @@
 /*           13. 1.2001 fix D register access                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6809.c,v 1.15 2015/10/05 16:20:07 alfred Exp $                    */
+/* $Id: code6809.c,v 1.16 2017/06/07 19:21:45 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code6809.c,v $
+ * Revision 1.16  2017/06/07 19:21:45  alfred
+ * - ad dmissing ClearONOFF() call
+ *
  * Revision 1.15  2015/10/05 16:20:07  alfred
  * - correct CC coding for 6809
  *
@@ -71,6 +74,7 @@
 #include "asmdef.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "asmallg.h"
 #include "asmitree.h"
 #include "codepseudo.h"
 #include "motpseudo.h"
@@ -1550,6 +1554,7 @@ static Boolean IsDef_6809(void)
 static void SwitchFrom_6809(void)
 {
   DeinitFields();
+  ClearONOFF();
 }
 
 static void SwitchTo_6809(void)
