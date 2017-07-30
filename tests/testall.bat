@@ -78,6 +78,7 @@ call testall t_6805
 call testall t_6808
 call testall t_6812
 call testall t_6816
+call testall t_68kaddr
 call testall t_68kdis
 call testall t_68rs08
 call testall t_7000

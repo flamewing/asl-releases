@@ -1,6 +1,10 @@
 $Id: changelog,v 1.152 2017/06/28 17:05:00 alfred Exp $
 ------------------------------------------------------------------------------
 
+2017-07-30 [1.42 Bld 118]
+
+- Bugfix      : correct several flaws in 68K address mode decoder
+
 2017-06-28 [1.42 Bld 117]
 
 - Bugfix      : correct MSP430 source operand conversion 0(Rn) -> @Rn

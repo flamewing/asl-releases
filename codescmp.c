@@ -9,10 +9,10 @@
 /*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codescmp.c,v 1.7 2013-03-07 20:10:11 alfred Exp $                    */
+/* $Id: codescmp.c,v 1.7 2013/03/07 20:10:11 alfred Exp $                    */
 /*****************************************************************************
  * $Log: codescmp.c,v $
- * Revision 1.7  2013-03-07 20:10:11  alfred
+ * Revision 1.7  2013/03/07 20:10:11  alfred
  * - correct PC-relative addressing for SC/MP
  *
  * Revision 1.6  2010/04/17 13:14:23  alfred

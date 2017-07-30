@@ -21,8 +21,13 @@ Boolean ChkLstMacroExpMod(const tLstMacroExpMod *pLstMacroExpMod)
 
 tLstMacroExp ApplyLstMacroExpMod(tLstMacroExp Src, const tLstMacroExpMod *pLstMacroExpMod)
 {
+#if 0
+  fprintf(stderr, "ClrAll %u ANDMask %u SetAll %u ORMask %u\n",
+          pLstMacroExpMod->ClrAll, pLstMacroExpMod->ANDMask,
+          pLstMacroExpMod->SetAll, pLstMacroExpMod->ORMask);
+#endif
   if (pLstMacroExpMod->ClrAll)
-    Src &= ~eLstMacroExpNone;
+    Src &= ~eLstMacroExpAll;
   Src &= ~pLstMacroExpMod->ANDMask;
   if (pLstMacroExpMod->SetAll)
     Src |= eLstMacroExpAll;

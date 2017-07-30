@@ -11,9 +11,12 @@
 /*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code4500.c,v 1.5 2016/09/29 16:43:36 alfred Exp $                    */
+/* $Id: code4500.c,v 1.6 2017/07/05 12:26:46 alfred Exp $                    */
 /*****************************************************************************
  * $Log: code4500.c,v $
+ * Revision 1.6  2017/07/05 12:26:46  alfred
+ * - silence warning
+ *
  * Revision 1.5  2016/09/29 16:43:36  alfred
  * - introduce common DecodeDATA/DecodeRES functions
  *
@@ -72,6 +75,8 @@ static void DecodeSFR(Word Code)
 
 static void DecodeDATA_4500(Word Code)
 {
+  UNUSED(Code);
+
   DecodeDATA(Int10, Int4);
 }
 

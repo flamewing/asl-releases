@@ -1,4 +1,4 @@
-INCFILES = ../doc_DE/taborg*.tex ../doc_DE/tabids*.tex ../doc_DE/pscpu.tex ../doc_DE/pscomm.tex
+INCFILES = ../doc_DE/taborg*.tex ../doc_DE/tabids*.tex ../doc_DE/pscpu.tex ../doc_DE/pscomm.tex biblio.tex
 
 all: as.doc as.html as.ps as.pdf
 
