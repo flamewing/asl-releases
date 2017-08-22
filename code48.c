@@ -47,7 +47,7 @@
 typedef struct
 {
   Byte Code;
-  Byte May2X;
+  Byte May2X, MaySiemens;
   Byte UPIFlag;
 } CondOrder;
 
@@ -72,18 +72,10 @@ enum
 #define CondOrderCnt 22
 #define SelOrderCnt 6
 
-#define D_CPU8021  0
-#define D_CPU8022  1
-#define D_CPU8039  2
-#define D_CPU8048  3
-#define D_CPU80C39 4
-#define D_CPU80C48 5
-#define D_CPU8041  6
-#define D_CPU8042  7
-
 static ShortInt AdrMode;
 static Byte AdrVal;
-static CPUVar CPU8021, CPU8022, CPU8039, CPU8048, CPU80C39, CPU80C48, CPU8041, CPU8042;
+static CPUVar CPU8021, CPU8022, CPU8039, CPU8048, CPU80C39, CPU80C48, CPU8041, CPU8042,
+              CPU80C382, CPUMSM80C39, CPUMSM80C48;
 
 static char **ClrCplVals;
 static Byte *ClrCplCodes;
@@ -153,7 +145,18 @@ static void ChkN802X(void)
 static void Chk802X(void)
 {
   if (CodeLen == 0) return;
-  if ((MomCPU!=CPU8021) && (MomCPU!=CPU8022))
+  if ((MomCPU != CPU8021) && (MomCPU != CPU8022))
+  {
+    WrError(1500);
+    CodeLen = 0;
+  }
+}
+
+static void ChkCMOS(void)
+{
+  if (CodeLen == 0) return;
+  if ((MomCPU != CPU80C39) && (MomCPU != CPU80C48) && (MomCPU != CPU80C382)
+   && (MomCPU != CPUMSM80C39) && (MomCPU != CPUMSM80C48))
   {
     WrError(1500);
     CodeLen = 0;
@@ -173,7 +176,37 @@ static void ChkNUPI(void)
 static void ChkUPI(void)
 {
   if (CodeLen == 0) return;
-  if ((MomCPU!=CPU8041) && (MomCPU!=CPU8042))
+  if ((MomCPU != CPU8041) && (MomCPU != CPU8042))
+  {
+    WrError(1500);
+    CodeLen = 0;
+  }
+}
+
+static void ChkNSiemens(void)
+{
+  if (CodeLen == 0) return;
+  if (MomCPU == CPU80C382)
+  {
+    WrError(1500);
+    CodeLen = 0;
+  }
+}
+
+static void ChkOKI(void)
+{
+  if (CodeLen == 0) return;
+  if ((MomCPU != CPUMSM80C39) && (MomCPU != CPUMSM80C48))
+  {
+    WrError(1500);
+    CodeLen = 0;
+  }
+}
+
+static void ChkSiemensOrOKI(void)
+{
+  if (CodeLen == 0) return;
+  if ((MomCPU != CPU80C382) && (MomCPU != CPUMSM80C39) && (MomCPU != CPUMSM80C48))
   {
     WrError(1500);
     CodeLen = 0;
@@ -188,6 +221,30 @@ static void ChkExt(void)
     WrError(1500);
     CodeLen = 0;
   }
+}
+
+static void ChkPx(Byte PortNum)
+{
+  switch (PortNum)
+  {
+    case 0:
+      Chk802X();
+      break;
+    case 2:
+      ChkNSiemens();
+      break;
+    default:
+      break;
+  }
+}
+
+static Boolean IsIReg3(const char *pAsc)
+{
+  Byte RegNum;
+
+  if (*pAsc != '@')
+    return False;
+  return DecodeReg(pAsc + 1, &RegNum) && (RegNum == 3);
 }
 
 /****************************************************************************/
@@ -253,13 +310,18 @@ static void DecodeANL_ORL_XRL(Word Code)
     else
     {
       DecodeAdr(ArgStr[2]);
-      if (AdrMode!=ModImm) WrError(1350);
+      if (AdrMode != ModImm) WrError(1350);
       else
       {
         CodeLen = 2;
         BAsmCode[0] = Code + 0x88;
         if (mytoupper(*ArgStr[1]) == 'P')
-          BAsmCode[0] += ArgStr[1][1] - '0';
+        {
+          Byte PortNum = ArgStr[1][1] - '0';
+
+          BAsmCode[0] += PortNum;
+          ChkPx(PortNum);
+        }
         if (!strcasecmp(ArgStr[1], "BUS"))
         {
           ChkExt();
@@ -318,7 +380,10 @@ static void DecodeCLR_CPL(Word Code)
         BAsmCode[0] = ClrCplCodes[z];
         OK = True;
         if (*ArgStr[1] == 'F')
+        {
           ChkN802X();
+          ChkNSiemens();
+        }
       }
       z++;
     }
@@ -359,6 +424,11 @@ static void DecodeDEC(Word Code)
         CodeLen = 1;
         BAsmCode[0] = 0xc8 + AdrVal;
         ChkN802X();
+        break;
+      case ModInd:
+        CodeLen = 1;
+        BAsmCode[0] = 0xc0 | AdrVal;
+        ChkSiemensOrOKI();
         break;
       default:
         WrError(1350);
@@ -408,21 +478,30 @@ static void DecodeDJNZ(Word Code)
   else
   {
     DecodeAdr(ArgStr[1]);
-    if (AdrMode != ModReg) WrError(1350);
-    else
+    switch (AdrMode)
+    {
+      case ModReg:
+        CodeLen = 1;
+        BAsmCode[0] = 0xe8 + AdrVal;
+        break;
+      case ModInd:
+        CodeLen = 1;
+        BAsmCode[0] = 0xe0 + AdrVal;
+        ChkSiemensOrOKI();
+        break;
+      default:
+        WrError(1350);
+    }
+    if (CodeLen > 0)
     {
       Boolean OK;
       Word AdrWord = EvalIntExpression(ArgStr[2], Int16, &OK);
 
       if (OK)
       {
-        if (((((int)EProgCounter()) + 1) & 0xff00) != (AdrWord & 0xff00)) WrError(1910);
+        if (((((int)EProgCounter()) + CodeLen) & 0xff00) != (AdrWord & 0xff00)) WrError(1910);
         else
-        {
-          CodeLen = 2;
-          BAsmCode[0] = 0xe8 + AdrVal;
-          BAsmCode[1] = AdrWord & 0xff;
-        }
+          BAsmCode[CodeLen++] = AdrWord & 0xff;
       }
     }
   }
@@ -440,6 +519,7 @@ static void DecodeENT0(Word Code)
     BAsmCode[0] = 0x75;
     ChkN802X();
     ChkNUPI();
+    ChkNSiemens();
   }
 }
 
@@ -489,11 +569,14 @@ static void DecodeIN(Word Code)
     case '0':
     case '1':
     case '2':
+    {
+      Byte PortNum = ArgStr[2][1] - '0';
+
       CodeLen = 1;
-      BAsmCode[0] = 0x08 + ArgStr[2][1] - '0';
-      if (ArgStr[2][1] == '0')
-        Chk802X();
+      BAsmCode[0] = 0x08 + PortNum;
+      ChkPx(PortNum);
       break;
+    }
     default:
       WrError(1350);
   }
@@ -572,6 +655,8 @@ static void DecodeCond(Word Index)
         default:
           break;
       }
+      if (!pOrder->MaySiemens)
+        ChkNSiemens();
     }
   }
 }
@@ -613,11 +698,24 @@ static void DecodeMOV(Word Code)
       CodeLen = 1;
       BAsmCode[0] = 0x42;
     }
+    else if (!strcasecmp(ArgStr[2], "P1"))
+    {
+      CodeLen = 1;
+      BAsmCode[0] = 0x63;
+      ChkOKI();
+    }
+    else if (!strcasecmp(ArgStr[2], "P2"))
+    {
+      CodeLen = 1;
+      BAsmCode[0] = 0x73;
+      ChkOKI();
+    }
     else if (!strcasecmp(ArgStr[2], "PSW"))
     {
       CodeLen = 1;
       BAsmCode[0] = 0xc7;
       ChkN802X();
+      ChkNSiemens();
     }
     else
     {
@@ -641,6 +739,17 @@ static void DecodeMOV(Word Code)
        }
     }
   }
+  else if (!strcasecmp(ArgStr[1], "P1"))
+  {
+    if (IsIReg3(ArgStr[2]))
+    {
+      CodeLen = 1;
+      BAsmCode[0] = 0xf3;
+      ChkOKI();
+    }
+    else
+      WrError(1350);
+  }
   else if (!strcasecmp(ArgStr[2], "A"))
   {
     if (!strcasecmp(ArgStr[1], "STS"))
@@ -659,6 +768,7 @@ static void DecodeMOV(Word Code)
       CodeLen = 1;
       BAsmCode[0] = 0xd7;
       ChkN802X();
+      ChkNSiemens();
     }
     else
     {
@@ -724,9 +834,13 @@ static void DecodeANLD_ORLD_MOVD(Word Code)
     else if ((pArg1[1] < '4') || (pArg1[1] > '7')) WrError(1320);
     else
     {
+      Byte PortNum = pArg1[1] - '4';
+
       CodeLen = 1;
-      BAsmCode[0] = Code + pArg1[1] - '4';
+      BAsmCode[0] = Code + PortNum;
       ChkN802X();
+      if (PortNum == 3)
+        ChkNSiemens();
     }
   }
 }
@@ -740,6 +854,21 @@ static void DecodeMOVP_MOVP3(Word Code)
     CodeLen = 1;
     BAsmCode[0] = Code;
     ChkN802X();
+  }
+}
+
+static void DecodeMOVP1(Word Code)
+{
+  UNUSED(Code);
+
+  if (ArgCnt != 2) WrError(1110);
+  else if (strcasecmp(ArgStr[1], "P")) WrError(1350);
+  else if (!IsIReg3(ArgStr[2])) WrError(1350);
+  else
+  {
+    CodeLen = 1;
+    BAsmCode[0] = 0xc3;
+    ChkOKI();
   }
 }
 
@@ -824,11 +953,14 @@ static void DecodeOUTL(Word Code)
     {
       CodeLen = 1;
       BAsmCode[0] = 0x90;
+      /* Chk802X? */
     }
     else if ((!strcmp(ArgStr[1], "P1")) || (!strcmp(ArgStr[1], "P2")))
     {
+      Byte PortNum = ArgStr[1][1] - '0';
       CodeLen = 1;
-      BAsmCode[0] = 0x38 + ArgStr[1][1] - '0';
+      BAsmCode[0] = 0x38 + PortNum;
+      ChkPx(PortNum);
     }
     else
       WrError(1350);
@@ -985,7 +1117,7 @@ static void DecodeRAD(Word Code)
   else if (MomCPU != CPU8022) WrError(1500);
   else
   {
-    CodeLen = 1; 
+    CodeLen = 1;
     BAsmCode[0] = 0x80;
   }
 }
@@ -1003,16 +1135,27 @@ static void DecodeRETI(Word Code)
   }
 }
 
-static void DecodeIDL(Word Code)
+static void DecodeIDL_HALT(Word Code)
 {
   UNUSED(Code);
 
   if (ArgCnt != 0) WrError(1110);
-  else if ((MomCPU != CPU80C39) && (MomCPU != CPU80C48)) WrError(1500);
   else
   {
     CodeLen = 1;
-    BAsmCode[0] = 0x01;
+    BAsmCode[0] = (MomCPU == CPU80C382) ? 0xf3 : 0x01;
+    ChkCMOS();
+  }
+}
+
+static void DecodeOKIFixed(Word Code)
+{
+  if (ArgCnt != 0) WrError(1110);
+  else
+  {
+    CodeLen = 1;
+    BAsmCode[0] = Code;
+    ChkOKI();
   }
 }
 
@@ -1032,11 +1175,12 @@ static void AddAcc(char *Name, Byte Code)
   AddInstTable(InstTable, Name, Code, DecodeAcc);
 }
 
-static void AddCond(char *Name, Byte Code, Byte May2X, Byte UPIFlag)
+static void AddCond(char *Name, Byte Code, Byte May2X, Byte MaySiemens, Byte UPIFlag)
 {
   if (InstrZ == CondOrderCnt) exit(255);
   CondOrders[InstrZ].Code = Code;
   CondOrders[InstrZ].May2X = May2X;
+  CondOrders[InstrZ].MaySiemens = MaySiemens;
   CondOrders[InstrZ].UPIFlag = UPIFlag;
   AddInstTable(InstTable, Name, InstrZ++, DecodeCond);
 }
@@ -1078,6 +1222,7 @@ static void InitFields(void)
   AddInstTable(InstTable, "MOVD", 0x3c, DecodeANLD_ORLD_MOVD);
   AddInstTable(InstTable, "MOVP", 0xa3, DecodeMOVP_MOVP3);
   AddInstTable(InstTable, "MOVP3", 0xe3, DecodeMOVP_MOVP3);
+  AddInstTable(InstTable, "MOVP1", 0x00, DecodeMOVP1);
   AddInstTable(InstTable, "MOVX", 0x00, DecodeMOVX);
   AddInstTable(InstTable, "NOP", 0x00, DecodeNOP);
   AddInstTable(InstTable, "OUT", 0x00, DecodeOUT);
@@ -1091,25 +1236,30 @@ static void InitFields(void)
   AddInstTable(InstTable, "XCHD", 0x00, DecodeXCHD);
   AddInstTable(InstTable, "RAD", 0x00, DecodeRAD);
   AddInstTable(InstTable, "RETI", 0x00, DecodeRETI);
-  AddInstTable(InstTable, "IDL", 0x00, DecodeIDL);
+  AddInstTable(InstTable, "IDL", 0x00, DecodeIDL_HALT);
+  AddInstTable(InstTable, "HALT", 0x00, DecodeIDL_HALT);
+  AddInstTable(InstTable, "HLTS", 0x82, DecodeOKIFixed);
+  AddInstTable(InstTable, "FLT", 0xa2, DecodeOKIFixed);
+  AddInstTable(InstTable, "FLTT", 0xc2, DecodeOKIFixed);
+  AddInstTable(InstTable, "FRES", 0xe2, DecodeOKIFixed);
 
   ClrCplVals = (char **) malloc(sizeof(char *)*ClrCplCnt);
   ClrCplCodes = (Byte *) malloc(sizeof(Byte)*ClrCplCnt);
   ClrCplVals[0] = "A"; ClrCplVals[1] = "C"; ClrCplVals[2] = "F0"; ClrCplVals[3] = "F1";
   ClrCplCodes[0] = 0x27; ClrCplCodes[1] = 0x97; ClrCplCodes[2] = 0x85; ClrCplCodes[3] = 0xa5;
-  
+
   CondOrders = (CondOrder *) malloc(sizeof(CondOrder) * CondOrderCnt); InstrZ = 0;
-  AddCond("JTF"  , 0x16, 2, 3); AddCond("JNI"  , 0x86, 0, 2);
-  AddCond("JC"   , 0xf6, 2, 3); AddCond("JNC"  , 0xe6, 2, 3);
-  AddCond("JZ"   , 0xc6, 2, 3); AddCond("JNZ"  , 0x96, 2, 3);
-  AddCond("JT0"  , 0x36, 1, 3); AddCond("JNT0" , 0x26, 1, 3);
-  AddCond("JT1"  , 0x56, 2, 3); AddCond("JNT1" , 0x46, 2, 3);
-  AddCond("JF0"  , 0xb6, 0, 3); AddCond("JF1"  , 0x76, 0, 3);
-  AddCond("JNIBF", 0xd6, 2, 1); AddCond("JOBF" , 0x86, 2, 1);
-  AddCond("JB0"  , 0x12, 0, 3); AddCond("JB1"  , 0x32, 0, 3);
-  AddCond("JB2"  , 0x52, 0, 3); AddCond("JB3"  , 0x72, 0, 3);
-  AddCond("JB4"  , 0x92, 0, 3); AddCond("JB5"  , 0xb2, 0, 3);
-  AddCond("JB6"  , 0xd2, 0, 3); AddCond("JB7"  , 0xf2, 0, 3);
+  AddCond("JTF"  , 0x16, 2, 1, 3); AddCond("JNI"  , (MomCPU == CPU80C382) ? 0x66 : 0x86, 0, 1, 2);
+  AddCond("JC"   , 0xf6, 2, 1, 3); AddCond("JNC"  , 0xe6, 2, 1, 3);
+  AddCond("JZ"   , 0xc6, 2, 1, 3); AddCond("JNZ"  , 0x96, 2, 1, 3);
+  AddCond("JT0"  , 0x36, 1, 1, 3); AddCond("JNT0" , 0x26, 1, 1, 3);
+  AddCond("JT1"  , 0x56, 2, 1, 3); AddCond("JNT1" , 0x46, 2, 1, 3);
+  AddCond("JF0"  , 0xb6, 0, 0, 3); AddCond("JF1"  , 0x76, 0, 0, 3);
+  AddCond("JNIBF", 0xd6, 2, 1, 1); AddCond("JOBF" , 0x86, 2, 1, 1);
+  AddCond("JB0"  , 0x12, 0, 1, 3); AddCond("JB1"  , 0x32, 0, 1, 3);
+  AddCond("JB2"  , 0x52, 0, 1, 3); AddCond("JB3"  , 0x72, 0, 1, 3);
+  AddCond("JB4"  , 0x92, 0, 1, 3); AddCond("JB5"  , 0xb2, 0, 1, 3);
+  AddCond("JB6"  , 0xd2, 0, 1, 3); AddCond("JB7"  , 0xf2, 0, 1, 3);
 
   AddAcc("DA"  , 0x57);
   AddAcc("RL"  , 0xe7);
@@ -1179,20 +1329,17 @@ static void SwitchTo_48(void)
   DivideChars = ",";
   HasAttrs = False;
 
+  /* limit code segement size only vor variants known to have no
+     external program memory */
+
   ValidSegs = (1 << SegCode) | (1 << SegIData) | (1 << SegXData);
   Grans[SegCode ] = 1; ListGrans[SegCode ] = 1; SegInits[SegCode ] = 0;
-  switch (MomCPU - CPU8021)
-  {
-    case D_CPU8041:
-      SegLimits[SegCode] = 0x3ff;
-      break;
-    case D_CPU8042:
-      SegLimits[SegCode] = 0x7ff;
-      break;
-    default:
-      SegLimits[SegCode] = 0xfff;
-      break;
-  }
+  if ((MomCPU == CPU8041) || (MomCPU == CPU8021))
+    SegLimits[SegCode] = 0x3ff;
+  else if ((MomCPU == CPU8042) || (MomCPU == CPU8022))
+    SegLimits[SegCode] = 0x7ff;
+  else
+    SegLimits[SegCode] = 0xfff;
   Grans[SegIData] = 1; ListGrans[SegIData] = 1; SegInits[SegIData] = 0x20;
   SegLimits[SegIData] = 0xff;
   Grans[SegXData] = 1; ListGrans[SegXData] = 1; SegInits[SegXData] = 0;
@@ -1214,4 +1361,7 @@ void code48_init(void)
   CPU80C48 = AddCPU("80C48", SwitchTo_48);
   CPU8041  = AddCPU("8041" , SwitchTo_48);
   CPU8042  = AddCPU("8042" , SwitchTo_48);
+  CPU80C382 = AddCPU("80C382" , SwitchTo_48);
+  CPUMSM80C39 = AddCPU("MSM80C39" , SwitchTo_48);
+  CPUMSM80C48 = AddCPU("MSM80C48" , SwitchTo_48);
 }

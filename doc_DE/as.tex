@@ -46,7 +46,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand Juni 2017}
+{\large Stand August 2017}
 \end{raggedright}
 
 \clearpage
@@ -76,7 +76,7 @@ Alle anderen Warenzeichen, die nicht ausdr"ucklich in diesem Abschnitt
 genannt wurden und in diesem Handbuch verwendet werden, sind Eigentum
 der entsprechenden Eigent"umer.
 
-\vspace{6cm} 
+\vspace{6cm}
 
 Dieses Dokument wurde mit dem LaTeX-Satzsystem unter dem Betriebssystem
 Linux angefertigt und formatiert.
@@ -127,7 +127,7 @@ Kurz gesagt, beinhaltet die GPL folgende Punkte:
 \begin{itemize}
 \item{Auf AS aufbauende Programme m"ussen ebenfalls der GPL unterstehen;}
 \item{Weiterverbreitung ausdr"ucklich erlaubt;}
-\item{expliziter Haftungsausschlu"s f"ur durch die Anwendung dieses 
+\item{expliziter Haftungsausschlu"s f"ur durch die Anwendung dieses
       Programmes entstehende Sch"aden.}
 \end{itemize}
 ...aber f"ur die Details bitte ich wirklich, in den Originaltext der GPL
@@ -218,7 +218,8 @@ folgende Prozessorfamilien implementiert:
 \item{Mitsubishi M16}
 \item{Mitsubishi M16C}
 \item{Intel 4004/4040}
-\item{Intel MCS-48/41}
+\item{Intel MCS-48/41, einschlie"slich Siemens SAB80C382 und der
+      OKI-Varianten}
 \item{Intel MCS-51/251, Dallas DS80C390}
 \item{Intel MCS-96/196(Nx)/296}
 \item{Intel 8080/8085}
@@ -269,6 +270,7 @@ folgende Prozessorfamilien implementiert:
 \item{NEC 78K0}
 \item{NEC 78K2}
 \item{NEC 78K3}
+\item{NEC 78K4}
 \item{NEC $\mu$PD7720/7725}
 \item{NEC $\mu$PD77230}
 \item{Fujitsu F$^2$MC8L}
@@ -282,7 +284,6 @@ folgende Prozessorfamilien implementiert:
 \end{itemize}
 in Arbeit / Planung / "Uberlegung :
 \begin{itemize}
-\item{NEC 78K4}
 \item{Analog Devices ADSP21xx}
 \item{SGS-Thomson ST20}
 \item{Texas Instruments TMS320C8x}
@@ -304,10 +305,10 @@ Makroassemblers f"ur die 68000er-Familie entstanden.  Auf besonderen
 Wunsch habe ich den urspr"unglichen Assembler um die F"ahigkeit zur
 "Ubersetzung von 8051-Mnemonics erweitert, und auf dem Weg (Abstieg?!) vom
 68000 zum 8051 sind eine Reihe anderer fast nebenbei abgefallen...die
-restlichen Prozessoren wurden allesamt auf Benutzeranfrage hin integriert. 
+restlichen Prozessoren wurden allesamt auf Benutzeranfrage hin integriert.
 Zumindest beim prozessorunabh"angigen Kern kann man also getrost davon
 ausgehen, da"s er gut ausgetestet und von offensichtlichen Bugs frei ist.
-Leider habe ich aber h"aufig mangels passender Hardware nicht die 
+Leider habe ich aber h"aufig mangels passender Hardware nicht die
 M"oglichkeit, einen neuen Codegenerator praktisch zu testen, so da"s bei
 Neuerungen "Uberraschungen nie ganz auszuschlie"sen sind.  Das in
 Abschnitt \ref{SectLicense} gesagte hat also schon seinen Grund...
@@ -375,7 +376,7 @@ weiteren Versionen (die als getrennte Pakete distributiert werden):
 F"ur den Fall, da"s \marginpar{{\em DPMI}} man bei der "Ubersetzung
 gro"ser, komplexer Programme unter DOS Speicherplatzprobleme bekommt,
 existiert eine DOS-Version, die mittels eines DOS-Extenders im Protected
-Mode abl"auft und so das komplette Extended Memory eines ATs nutzen kann. 
+Mode abl"auft und so das komplette Extended Memory eines ATs nutzen kann.
 Die "Ubersetzung wird durch den Extender merklich langsamer, aber immerhin
 l"auft es dann noch...
 
@@ -407,7 +408,7 @@ Ich treibe die Entwicklung an AS prim"ar weiter, weil sie mir {\em Spa"s}
 macht; AS ist ein nicht-kommerzielles Projekt und ich nehme mir deswegen
 die Freiheit, nicht auf potentielle Marktanteile zu schielen.  Ich suche
 mir die Plattformen aus, auf denen das Programmieren {\em mir} Spa"s
-macht, und Programmieren unter Windows macht mir definitiv keinen Spa"s! 
+macht, und Programmieren unter Windows macht mir definitiv keinen Spa"s!
 Ich habe "ubrigens durchaus schon einmal Windows-Programme schreiben
 m"ussen, es ist also nicht so, da"s ich hier ohne Erfahrung etwas
 daherreden w"urde.  Sofern irgendjemand AS in diese Richtung portieren
@@ -489,7 +490,7 @@ Prinzipiell erh"alt man AS in einer von zwei Formen: Als {\em
 Bin"ardistribution} oder {\em Quellcodedistribution}.  Im Falle einer
 Bin"ardistribution bekommt man AS mit den zugeh"origen Dienstprogrammen
 und Hilfsdateien fertig "ubersetzt, so da"s man nach dem Auspacken des
-Archivs an die gew"unschte Stelle direkt loslegen kann. 
+Archivs an die gew"unschte Stelle direkt loslegen kann.
 Bin"ardistributionen werden f"ur verbreitete Plattformen gemacht, bei
 denen die Mehrzahl der Benutzer keinen Compiler hat oder die "Ubersetzung
 trickreich ist (im Moment sind dies DOS und OS/2).  Eine
@@ -695,7 +696,7 @@ EMXWRAP.DLL       & \\
 
 \section{Installation}
 
-Eine besondere \marginpar{{\em DOS}} Installation ist f"ur die Nutzung 
+Eine besondere \marginpar{{\em DOS}} Installation ist f"ur die Nutzung
 einer Bin"ardistribution nicht notwendig, es gen"ugt, das Archiv an
 passender Stelle auszupacken und dann noch einige Kleinigkeiten zu
 erg"anzen.  Als Beispiel hier eine Installation, wie sie vielleicht
@@ -717,19 +718,19 @@ c:\as\doc
 Erg"anzen Sie jetzt die \tty{PATH}-Anweisung in Ihrer \tty{AUTOEXEC.BAT}
 um das Verzeichnis \verb!c:\as\bin!, so da"s AS und seine Hilfsprogramme
 vom System gefunden werden.  In dem \tty{lib}-Verzeichnis erzeugen Sie
-mit einem beliebigen Texteditor eine Datei \tty{AS.RC} mit folgendem 
+mit einem beliebigen Texteditor eine Datei \tty{AS.RC} mit folgendem
 Inhalt:
 \begin{verbatim}
 -i c:\as\include
 \end{verbatim}
-Diese sogenannte {\em Key-Datei} zeigt AS, in welchem Verzeichnis er seine 
-Include-Dateien suchen soll.  Damit AS diese Key-Datei bei Start 
+Diese sogenannte {\em Key-Datei} zeigt AS, in welchem Verzeichnis er seine
+Include-Dateien suchen soll.  Damit AS diese Key-Datei bei Start
 auch beachtet, mu"s noch folgende Anweisung in die \tty{AUTOEXEC.BAT}:
 \begin{verbatim}
 set ASCMD=@c:\as\lib\as.rc
 \end{verbatim}
 Was Sie alles noch in der Key-Datei voreinstellen k"onnen, steht im
-folgenden Abschnitt.  
+folgenden Abschnitt.
 
 Die Installation der DPMI-Version \marginpar{{\em DPMI}} sollte im Prinzip
 genauso verlaufen wie der reinen DOS-Version; wenn der Pfad das {\tt
@@ -754,7 +755,7 @@ bereits dort aufgef"uhrt ist.
 
 Wie bereits erw"ahnt, beschr"ankt sich die Installationsbeschreibung hier
 nur auf Bin"ardistributionen.  Da eine Installation unter Unix
-\marginpar{{\em UNIX}} im Augenblick immer eine Quellcodedistribution ist, 
+\marginpar{{\em UNIX}} im Augenblick immer eine Quellcodedistribution ist,
 geht der Verweis hier unisono in Anhang \ref{ChapSource}.
 
 %%---------------------------------------------------------------------------
@@ -762,7 +763,7 @@ geht der Verweis hier unisono in Anhang \ref{ChapSource}.
 \section{Aufruf, Parameter}\label{SectCallConvention}
 
 AS ist ein kommandozeilengesteuertes Programm, d.h. alle Parameter
-und Dateiangaben sind in der Kommandozeile anzugeben.  
+und Dateiangaben sind in der Kommandozeile anzugeben.
 
 Zu AS geh"ort eine Reihe Reihe von Nachrichtendateien (erkennbar an der
 Endung {\tt MSG}, aus denen AS zur Laufzeit die f"ur die jeweilige
@@ -774,7 +775,7 @@ folgenden Verzeichnissen:
 \item{in dem in der Environment-Variablen {\tt AS\_MSGPATH} angegebenen
       Verzeichnis, oder alternativ in den in der {\tt PATH}-Variablen
       gelisteten Verzeichnissen;}
-\item{In dem Verzeichnis, das AS zur Kompilationszeit durch das 
+\item{In dem Verzeichnis, das AS zur Kompilationszeit durch das
       Makro {\tt LIBDIR} mitgegeben wurde.}
 \end{itemize}
 Diese Dateien werden von AS {\em zwingend} zum Betrieb ben"otigt, d.h.
@@ -786,7 +787,7 @@ CONFIG.SYS}, unter Unix an der {\tt LANG}-Environment-Variablen.
 
 Um den \marginpar{{\em DOS}} Speicherbedarf von AS unter DOS "uberhaupt
 befriedigen zu k"onnen, wurden die verschiedenen Codegeneratormodule in
-der DOS-Version in einen Overlay verlegt, der Teil des EXE-Files ist. 
+der DOS-Version in einen Overlay verlegt, der Teil des EXE-Files ist.
 Eine getrennte OVR-Datei wie bei fr"uheren Versionen von AS existiert also
 nicht mehr, AS versucht aber wie bisher auch weiterhin, die durch das
 Overlaying entstehenden Verz"ogerungen durch Nutzung von eventuellem EMS-
@@ -802,7 +803,7 @@ die Verwendung von extended memory verhindern.
 Da AS alle Ein-und Ausgaben "uber das Betriebssystem abwickelt (und daher
 unter DOS auch auf nicht ganz so kompatiblen PC's laufen sollte) und eine
 rudiment"are Bildschirmsteuerung ben"otigt, gibt er w"ahrend der
-Assemblierung ANSI-Steuersequenzen aus.  
+Assemblierung ANSI-Steuersequenzen aus.
 Falls Sie in den Ausgaben von AS \marginpar{{\em DOS/}} also seltsame
 Zeichen sehen sollten, fehlt offensichtlich in Ihrer CONFIG.SYS die
 Einbindung des ANSI-Trei\-bers (\tty{device=\-ansi.sys}), die weitere Funktion
@@ -811,8 +812,8 @@ k"onnen Sie aber auch die Ausgabe von ANSI-Sequenzen durch das Setzen der
 Environment-Variablen \tty{USEANSI} auf \tty{n} ganz unterdr"ucken.
 
 Der DOS-Extender der DPMI-Version \marginpar{{\em DPMI}} l"a"st sich in
-seiner Speicherbelegung durch diverse Kommandozeilenoptionen beeinflussen. 
-Diese k"onnen Sie bei Bedarf der Datei DPMIUSER.DOC entnehmen. 
+seiner Speicherbelegung durch diverse Kommandozeilenoptionen beeinflussen.
+Diese k"onnen Sie bei Bedarf der Datei DPMIUSER.DOC entnehmen.
 Zus"atzlich ist ASX in der Lage, bei Bedarf den vorhandenen Speicher
 durch eine Swap-Datei zu ,,erweitern''.  Dazu belegt man eine
 Environment-Variable \tty{ASXSWAP} folgenderma"sen:
@@ -825,7 +826,7 @@ aktuellen Verzeichnis unter dem Namen \tty{ASX.TMP} angelegt.  In jedem
 Falle wird die Swap-Datei nach Programmende wieder gel"oscht.
 
 Die Kommandozeilenparameter k"onnen grob in drei Klassen eingeteilt
-werden: Schalter, Key-File-Referenzen (s.u.) und Dateispezifikationen. 
+werden: Schalter, Key-File-Referenzen (s.u.) und Dateispezifikationen.
 Parameter dieser beiden Klassen k"onnen beliebig gemischt in der
 Kommandozeile auftreten, AS wertet zuerst alle Parameter aus und
 assembliert dann die angegebenen Dateien. Daraus folgen zwei Dinge:
@@ -874,7 +875,7 @@ Momentan sind folgende Schalter definiert:
       Quelldateien zugeordnet; Negation (s.u.) dieser Option in
       Verbindung mit einem Namen l"oscht den Namen aus der Liste;
       Negation ohne Namensangabe l"oscht die komplette Liste.}
-\item{\tty{SHAREOUT}:dito, nur f"ur eine eventuell zu erzeugende 
+\item{\tty{SHAREOUT}:dito, nur f"ur eine eventuell zu erzeugende
       SHARE-Datei}
 \item{\tty{c}: SHARED-Variablen werden in einem Format abgelegt, das die
       Einbindung in eine C-Quelldatei erlaubt.  Die Endung der Datei
@@ -906,7 +907,7 @@ bzw. \ref{ChapShareOrder}.
       nur Symbole aus dem CODE-Segment.  Mit dieser Option und einem als
       Bitmaske zu verstehenden Wert lassen sich andere Symbole aus
       anderen Segmenten zuschalten.  Die Zuordnung von Bits zu Segmenten
-      kann Tabelle \ref{TabSegmentNums} entnommen werden.} 
+      kann Tabelle \ref{TabSegmentNums} entnommen werden.}
 \item{\tty{w}: Ausgabe von Warnungen unterdr"ucken;}
 \item{\tty{E [Datei]}: Die von AS erzeugten Fehlermeldungen und Warnungen
       in eine Datei umleiten.  Anstatt einer Datei k"onnen auch die 5
@@ -1047,7 +1048,7 @@ Dieses Beispiel zeigt nebenbei, da"s AS als Defaultendung f"ur Quelldateien
 Etwas Vorsicht ist bei Schaltern angebracht, die ein optionales Argument
 haben: Folgt auf einen solchen Schalter ohne Argument ein Dateiname, so
 versucht AS, diesen als Argument zu verwerten, was naturgem"a"s schief
-geht: 
+geht:
 \begin{verbatim}
  as -g test.asm
 \end{verbatim}
@@ -1129,9 +1130,9 @@ folgenden Returncodes:
 \item[4]{Bereits w"ahrend des Starts des Assemblers ist ein Fehler
          aufgetreten.  Dies kann ein Parameterfehler oder eine fehlerhafte
          Overlay-Datei sein.}
-\item[255]{Bei der Initialisierung ist irgendein interner Fehler 
-         aufgetreten, der auf keinen Fall auftreten sollte...neu booten, 
-         noch einmal probieren, und bei Reproduzierbarkeit mit mir 
+\item[255]{Bei der Initialisierung ist irgendein interner Fehler
+         aufgetreten, der auf keinen Fall auftreten sollte...neu booten,
+         noch einmal probieren, und bei Reproduzierbarkeit mit mir
          Verbindung aufnehmen!}
 \end{description}
 
@@ -1170,7 +1171,7 @@ Eine einzelne Zeile hat folgendes Format:
 \end{verbatim}
 Eine Zeile darf dabei auch "uber mehrere Zeilen in der Quelldatei
 verteilt sein, Folgezeichen (\verb!\!) verketten diese Teile dann zu
-einer einzigen Zeile.  Zu beachten ist allerdings, da"s aufgrund der 
+einer einzigen Zeile.  Zu beachten ist allerdings, da"s aufgrund der
 internen Pufferstruktur die Gesamtzeile nicht 256 Zeichen "uberschreiten
 darf.  Zeilenangaben in Fehlermeldungen beziehen sich immer auf die
 letzte Zeile einer solchen zusammengesetzten Zeile.
@@ -1429,7 +1430,7 @@ Name             & Bedeutung \\
 \caption{Vordefinierte Symbole\label{TabPredefined}}
 \end{table*}
 \bb{VORSICHT!}  W"ahrend es im case-insensitiven Modus egal ist,
-mit welcher Kombination von Gro"s- und Kleinbuchstaben man 
+mit welcher Kombination von Gro"s- und Kleinbuchstaben man
 vordefinierte Symbole anspricht, mu"s man sich im case-sensitiven
 Modus exakt an die oben angegebene Schreibweise (nur Gro"sbuchstaben)
 halten!
@@ -1539,7 +1540,7 @@ f"ur den Einsatz in kleinen Anweisungsbl"ocken an, typischerweise etwa ein
 Dutzend Befehle, auf keinen Fall mehr als eine Bildschirmseite, sonst
 kommt man leicht durcheinander...
 
-Hier ein kleines Beispiel: 
+Hier ein kleines Beispiel:
 \begin{verbatim}
 $$loop: nop
         dbra    d0,$$loop
@@ -1563,7 +1564,7 @@ von Null an laufende Z"ahler sind.  Referenziert werden diese Symbole
 "uber die Sonderwerte {\tt - -- ---} bzw. {\tt + ++ +++}, womit sich die
 drei letzten 'Minussymbole' bzw die drei n"achsten 'Plussymbole'
 referenzieren lassen.  Welche Variante man benutzt, h"angt also davon ab,
-ob man ein Symbol vorw"arts oder r"uckw"arts referenzieren will.  
+ob man ein Symbol vorw"arts oder r"uckw"arts referenzieren will.
 
 Bei der {\em Definition} namenloser tempor"arer Symbole gibt es neben dem
 Plus- und Minuszeichen noch eine dritte Variante, n"amlich einen
@@ -2025,7 +2026,7 @@ dbstr   macro   arg
 \end{verbatim}
 
 \tty{STRSTR} liefert das erste Auftreten des zweiten Strings
-im ersten bzw. -1, falls das Suchmuster nicht gefunden wurde. 
+im ersten bzw. -1, falls das Suchmuster nicht gefunden wurde.
 Analog zu \tty{SUBSTR} und \tty{CHARFROMSTR} hat das erste
 Zeichen den Positionswert 0.
 
@@ -2110,8 +2111,8 @@ L"ange eine Adresse anzubieten, die nicht zu Fehlern f"uhrt.  Dies beantwortet
 auch die bisweilen gestellte Frage, warum in einem Listing des ersten
 Passes (dies bleibt z.B. stehen, wenn AS aufgrund anderer Fehler den
 zweiten Pass erst gar nicht beginnt), z.T. falsche Adressen im erzeugten
-Bin"arcode gezeigt werden - dies sind noch nicht aufgel"oste 
-Vorw"artsreferenzen.  
+Bin"arcode gezeigt werden - dies sind noch nicht aufgel"oste
+Vorw"artsreferenzen.
 
 Das obige Beispiel offenbart allerdings noch eine weitere Schwierigkeit
 von Vorw"artsreferenzen: Je nach Abstand von Quelle und Ziel im Code kann
@@ -2198,7 +2199,7 @@ Zugegeben, das war ein ziemlich l"anglicher Ausflug, aber es mu"ste einfach
 einmal sein.  Was sollte man als Erkenntnis aus diesem Abschnitt mitnehmen?
 \begin{enumerate}
 \item{AS versucht immer, den k"urzestm"oglichen Code zu erzeugen.  Dazu
-      ben"otigt er eine endliche Zahl von Durchl"aufen.  Wenn man ihn 
+      ben"otigt er eine endliche Zahl von Durchl"aufen.  Wenn man ihn
       nicht gerade knebelt, kennt AS keine R"ucksichten...}
 \item{Wenn sinnvoll und m"oglich, Sprung- und Adre"sl"angen explizit
       vorgeben.  Man kann damit u.U. die Anzahl der Durchl"aufe deutlich
@@ -2377,7 +2378,7 @@ Anstelle von \tty{EQU} darf auch einfach ein Gleichheitszeichen geschrieben
 werden, analog kann man anstelle von \tty{SET} bzw. \tty{EVAL}
 einfach \tty{:=} schreiben.  Des weiteren existiert eine
 'alternative' Syntax, bei der der Synbolname nicht aus dem Feld
-f"ur das Label genommen wird, sondern das erste Argument ist. 
+f"ur das Label genommen wird, sondern das erste Argument ist.
 Alternativ darf man also auch schreiben:
 \begin{verbatim}
           EQU   IntZwei,2
@@ -2516,7 +2517,7 @@ bit1    BIT     @h+5.2
 \end{verbatim}
 erlaubt.
 \par
-Beim ST9 ist es hingegen m"oglich, Bits auch invertiert anzusprechen, 
+Beim ST9 ist es hingegen m"oglich, Bits auch invertiert anzusprechen,
 was beim \tty{BIT}-Befehl auch ber"ucksichtigt wird:
 \begin{verbatim}
 invbit  BIT     r6.!3
@@ -2573,9 +2574,9 @@ PIO_Ctrl   PORT PIO_Port_A+3
 
 Obwohl immer mit gleicher Syntax, hat diese Anweisung von Prozessor
 zu Prozessor eine leicht abweichende Bedeutung: Falls der Zielprozessor
-f"ur Register einen eigenen Adre"sraum verwendet, so hat \tty{REG}  
+f"ur Register einen eigenen Adre"sraum verwendet, so hat \tty{REG}
 die Wirkung eines simplen \tty{EQU}s f"ur eben diesen Adre"sraum (z.B. beim
-ST9).  F"ur alle anderen Prozessoren definiert \tty{REG} Registersymbole, 
+ST9).  F"ur alle anderen Prozessoren definiert \tty{REG} Registersymbole,
 deren Funktion in Abschnitt \ref{SectRegSyms} beschrieben sind.
 
 {\tt NAMEREG} existiert aus Kompatibilit"atsgr"unden zum Originalassembler
@@ -2592,7 +2593,7 @@ Register- als auch symbolischer Name als Argumente angegeben, z.B. so:
 
 {\em G"ultigkeit: 8X30x}
 
-\tty{LIV} und \tty{RIV} dienen dazu, sogenannte IV-Bus-Objekte zu definieren. 
+\tty{LIV} und \tty{RIV} dienen dazu, sogenannte IV-Bus-Objekte zu definieren.
 Bei diesen handelt es sich um Bitgruppen in peripheren Speicherzellen
 mit einer L"ange von 1..8 Bit, die fortan symbolisch angesprochen
 werden k"onnen, so da"s man bei den entsprechenden Befehlen nicht mehr
@@ -2600,7 +2601,7 @@ Adresse, L"ange und Position separat angeben mu"s.  Da die
 8X30x-Prozessoren zwei periphere Adre"sr"aume besitzen (einen ,,linken''
 und einen ,,rechten'', sind auch zwei separate Befehle definiert.  Die
 Parameter dieser Befehle sind allerdings identisch: es m"ussen drei
-Parameter sein, die Adresse, Startposition und L"ange angeben. 
+Parameter sein, die Adresse, Startposition und L"ange angeben.
 Weitere Hinweise zur Benutzung von Busobjekten finden sich in
 Abschnitt \ref{8X30xSpec}.
 
@@ -2617,7 +2618,7 @@ der im PC "ubereinstimmt, d"urfte wohl reiner Zufall sein.  Um nun
 aber keine fehlertr"achtigen Handumkodierungen vornehmen zu m"ussen,
 enth"alt der Assembler eine Umsetzungstabelle f"ur Zeichen, die jedem
 Quellcode ein Zielzeichen zuordnet.  Zur Modifikation dieser Tabelle
-(die initial 1:1 "ubersetzt), dient der Befehl \tty{CHARSET}. 
+(die initial 1:1 "ubersetzt), dient der Befehl \tty{CHARSET}.
 \tty{CHARSET} kann mit verschiedenen Parameterzahlen und -typen angewendet
 werden.  Ist die Parameterzahl eins, so mu"s es sich um einen
 String-Ausdruck handeln, der von AS als Dateiname interpretiert wird.  Aus
@@ -2630,7 +2631,7 @@ Eintr"age angibt.  Es folgen dann ein oder zwei weitere Parameter, die die
 Art der "Ubersetzung angeben:
 
 Ein einzelner, weiterer Integer ver"andert genau einen Eintrag.  So
-bedeutet z.B. 
+bedeutet z.B.
 \begin{quote}{\tt
         CHARSET '"a',128}
 \end{quote}
@@ -2671,7 +2672,7 @@ in den obigen Beispielen zu anderen Ergebnissen f"uhren kann!
 
 Mit der \tty{CHARSET}-Anweisung hat man zwar beliebige Freiheiten in der
 Zeichenzuordnung zwischen Entwicklungs- und Zielplattform, wenn auf der
-Zielplattform jedoch verschiedene Zeichens"atze existieren, kann das 
+Zielplattform jedoch verschiedene Zeichens"atze existieren, kann das
 Umschalten zwischen diesen jedoch zu einer umst"andlichen Orgie von
 \tty{CHARSET}-Kommandos werden.  Mit der \tty{CODEPAGE}-Anweisung kann
 man jedoch mehrere Zeichentabellen vorhalten und zwischen diesen mit einem
@@ -2685,7 +2686,7 @@ gleich der vorher aktiven Tabelle.  Alle folgenden
 \tty{CHARSET}-Anweisungen ver"andern {\em nur} die momentan aktive Tabelle.
 
 Zu Beginn eines Durchlaufes wird von AS automatisch eine einzelne
-Zeichentabelle mit dem Namen \tty{STANDARD} erzeugt und 1:1 vorbelegt. 
+Zeichentabelle mit dem Namen \tty{STANDARD} erzeugt und 1:1 vorbelegt.
 Verwendet man keine \tty{CODEPAGE}-Anweisungen, so beziehen sich alle mit
 \tty{CHARSET} gemachten Einstellungen auf diese Tabelle.
 
@@ -2734,7 +2735,7 @@ Wert zuzuweisen.
 {\em G"ultigkeit: alle Prozessoren}
 
 Mit \tty{PUSHV} und \tty{POPV} ist es m"oglich, den Wert von (nicht
-makrolokalen) Symbolen tempor"ar zu speichern und zu einem sp"ateren 
+makrolokalen) Symbolen tempor"ar zu speichern und zu einem sp"ateren
 Zeitpunkt wiederherzustellen.  Die Speicherung erfolgt auf {\em Stacks},
 d.h. Last-In-First-Out-Speichern.  Ein Stack hat einen Namen, der den
 allgemeinen Symbolkonventionen gen"ugen mu"s, und existiert so lange,
@@ -2744,9 +2745,9 @@ werdender Stack wird automatisch wieder aufgel"ost.  Der Name des Stacks,
 auf den Symbole abgelegt und von dem sie wieder abgeholt werden sollen,
 ist der erste Parameter von \tty{PUSHV} bzw. \tty{POPV}, danach folgt
 eine beliebige Menge von Symbolen als weitere Parameter.  Alle in der
-Liste aufgef"uhrten Symbole m"ussen bereits existieren, es ist also 
+Liste aufgef"uhrten Symbole m"ussen bereits existieren, es ist also
 {\em nicht} m"oglich, mit einem \tty{POPV}-Befehl implizit neue Symbole
-zu definieren.  
+zu definieren.
 \par
 Stacks stellen eine globale Ressource dar, d.h. ihre Namen sind
 nicht lokal zu Sektionen.
@@ -2879,6 +2880,9 @@ Mittel der Wahl.
 \hline
 \input{taborg5.tex}
 \hline
+\multicolumn{10}{|l|}{$^{*}$ Bereich für Programmcode auf 1 MByte
+begrenzt} \\
+\hline
 \end{tabular}\end{center}
 \caption{Adre"sbereiche f"ur \tty{ORG} --- Teil 5\label{TabORG5}}
 \end{table*}
@@ -2897,7 +2901,7 @@ relativen Wert (positiv oder negativ), der zum Programmz"ahler
 addiert wird.  Eine Anwendungsm"oglichkeit ist das Freilassen
 einer bestimmten Menge von Adre"sraum, oder die Anwendung in
 Code-Teilen, die an mehreren Stellen (z.B. via Makros oder
-Includes) eingebunden werden und lageunabh"angig arbeiten sollen. 
+Includes) eingebunden werden und lageunabh"angig arbeiten sollen.
 Eine weitere Anwendungsm"oglichkeit ergibt sich in Code, der eine
 Ausf"uhrungsadresse unterschiedlich zur Ladeadresse hat (d.h. es
 wird mit der \tty{PHASE}-Anweisung gearbeitet).  Es gibt kein
@@ -2985,13 +2989,13 @@ deutlich eingeschr"ankteren (6805) bzw. erweiterten (6809) Befehlssatz.
 Der 6309 ist eine CMOS-Version des 6809, die zwar offiziell
 nur kompatibel zum 6809 ist, inoffiziell aber mehr Register und
 deutlich mehr Befehle besitzt (siehe \cite{Kaku}).
-%%----------- 
+%%-----------
 \begin{quote}
 h) 68HC12 $\longrightarrow$ 68HC12X
 \end{quote}
 Der 12X-Kern bietet eine Reihe neuer Befehle, bzw. bestehende Befehle
 wurden um neue Adressierungsarten erg"anzt.
-%%----------- 
+%%-----------
 \begin{quote}
 i) 68HC16
 \end{quote}
@@ -3095,23 +3099,31 @@ zus"atzlicher Maschineninstruktionen.
 \begin{quote}
 t) 4008 $\rightarrow$ 8008NEW
 \end{quote}
-Intel hat 1975 die Mnemonics des umdefiniert, die zweite Variante spiegelt 
-diesen neuen Befehlssatz wieder.  Eine gleichzeitige Unterst"utzung beider 
+Intel hat 1975 die Mnemonics des umdefiniert, die zweite Variante spiegelt
+diesen neuen Befehlssatz wieder.  Eine gleichzeitige Unterst"utzung beider
 Varianten war nicht m"oglich, da teilweise "Uberschneidungen vorliegen.
 %%-----------
 \begin{quote}
-u) 8021, 8022, 8039, 80C39, 8048, 80C48, 8041, 8042
+u) 8021, 8022, 8039, (MSM)80C39, 8048, (MSM)80C48, 8041, 8042, 80C382
 \end{quote}
 Bei den ROM-losen Versionen 8039 und 80C39 sind die Befehle verboten,
 die den BUS (Port 0) ansprechen.  Der 8021 und 8022 sind Sonderversionen
 mit stark abgemagertem Befehlssatz, wof"ur der 8022 zwei A/D-Wandler
 und die dazugeh"origen Steuerbefehle enth"alt.  Die CMOS-Versionen lassen
-sich mit dem \tty{IDL}-Befehl in einen Ruhezustand niedriger Stromaufnahme
-"uberf"uhren.  Der 8041 und 8042 haben einige Zusatzbefehle zur
+sich mit dem \tty{IDL}- bzw. \tty{HALT}-Befehl in einen Ruhezustand niedriger
+Stromaufnahme "uberf"uhren.  Der 8041 und 8042 haben einige Zusatzbefehle zur
 Steuerung der Busschnittstelle, daf"ur fehlen aber einige andere Befehle.
-Dar"uber hinaus ist bei diesen Prozessoren der Programmadre"sraum nicht
+Beim 8041, 8042, 8021 und 8022 ist der Programmadre"sraum nicht
 extern erweiterbar, weshalb AS das Codesegment bei diesen Prozessoren
-auf 1 bzw. 2 Kbyte begrenzt.
+auf 1 bzw. 2 Kbyte begrenzt.  Der (SAB)80C382 ist eine von
+Siemens speziell für Telefone entwickelte Variante, die ebenfalls
+einen \tty{HALT}-Befehl kennt sowie \tty{DJNZ} und \tty{DEC} auch
+mit indirekter Adressierung erlaubt.  Im Gegenzug wurden einige
+Befehle des 'normalen' 8048 entfernt. Die OKI-Varienaten (MSM...)
+unterst"utzen ebenfalls \tty{DJNZ} und \tty{DEC} mit indirekter
+Adressierung, sowie eine erweiterte Steuerung der
+Power-Down-Modi, ohne den Basis-MCS-48-Befehlssatz zu
+beschneiden.
 %%-----------
 \begin{quote}
 \begin{tabbing}
@@ -3147,8 +3159,8 @@ das gr"o"sere interne RAM anzusprechen.  Die 80196N-Familie wiederum
 erweitert den Adre"sraum auf 16 Mbyte und f"uhrt eine Reihe von
 Befehlen ein, mit denen man auf Adressen jenseits 64 Kbyte zugreifen
 kann.  Der 80296 erweitert den CPU-Kern um Befehle zur Signalverarbeitung
-und ein zweites Windowing-Register, verzichtet jedoch auf den {\em 
-Peripheral Transaction Server} (PTS) und verliert damit wieder zwei 
+und ein zweites Windowing-Register, verzichtet jedoch auf den {\em
+Peripheral Transaction Server} (PTS) und verliert damit wieder zwei
 Maschinenbefehle.
 %%-----------
 \begin{quote}
@@ -3367,7 +3379,7 @@ C5x-Prozessoren wird von AS momentan nicht ausgenutzt.
 %%-----------
 \begin{quote}
 ba) 320C541
-\end{quote}  
+\end{quote}
 Dies ist momentan der Pepr"asentant f"ur die TMS320C54x-Familie...
 %%-----------
 \begin{quote}
@@ -3383,7 +3395,7 @@ bc) \> TMS70C00, TMS70C20, TMS70C40, \\
     \> TMS70C08, TMS70C48 \\
 \end{tabbing}
 \end{quote}
-Alle Mitglieder dieser Familie haben den gleichen CPU-Kern, 
+Alle Mitglieder dieser Familie haben den gleichen CPU-Kern,
 unterscheiden sich im Befehlssatz also nicht.  Die Unterschiede
 finden sich nur in der Datei REG7000.INC, in der Speicherbereiche
 und Peripherieadressen definiert werden.  Die in einer Zeile
@@ -3410,7 +3422,7 @@ bf) TMS1000, TMS1100, TMS1200, TMS1300
 \end{quote}
 F"ur TMS1000 und TMS1200 sind jeweils 1 KByte ROM und 64 Nibbles
 RAM vorgesehen, f"ur TMS1100 und TMS1300 jeweils das doppelte.  Des
-weiteren hat TI f"ur TMS1100 und TMS1300 einen deutlich anderen 
+weiteren hat TI f"ur TMS1100 und TMS1300 einen deutlich anderen
 Dewfault-Befehlssatz vorgesehen (AS kennt nur die Default-
 Befehlss"atze!).
 %%-----------
@@ -3428,10 +3440,10 @@ CPU-Kern gemeinsam ist.
 \begin{quote}
 bi) COP87L84
 \end{quote}
-Dies ist das momentan einzige unterst"utzte Mitglied der COP8-Familie 
-von National Semiconductor.  Mir ist bekannt, da"s die Familie 
-wesentlich gr"o"ser ist und auch Vertreter mit unterschiedlich gro"sem 
-Befehlssatz existieren, die nach Bedarf hinzukommen werden.  Es ist eben 
+Dies ist das momentan einzige unterst"utzte Mitglied der COP8-Familie
+von National Semiconductor.  Mir ist bekannt, da"s die Familie
+wesentlich gr"o"ser ist und auch Vertreter mit unterschiedlich gro"sem
+Befehlssatz existieren, die nach Bedarf hinzukommen werden.  Es ist eben
 ein Anfang, und die Dokumentation von National ist ziemlich umfangreich...
 %%-----------
 \begin{quote}
@@ -3505,19 +3517,24 @@ bq) 78310
 Dies ist momentan der Repr"asentant der 78K3-Familie von NEC.
 %%-----------
 \begin{quote}
-br) 7720 $\rightarrow$ 7725
+br) 784026
+\end{quote}
+Dies ist momentan der Repr"asentant der 78K4-Familie von NEC.
+%%-----------
+\begin{quote}
+bs) 7720 $\rightarrow$ 7725
 \end{quote}
 Der $\mu$PD7725 bietet im Vergleich zu seinem Vorg"anger gr"o"sere
 Adre"sr"aume und einige zus"atzliche Befehle. {\bf VORSICHT!}  Die
 Prozessoren sind nicht zueinander bin"arkompatibel!
 %%-----------
 \begin{quote}
-bs) 77230
+bt) 77230
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
-bt) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
+bu) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
     \> SYM53C875, SYM53C895
 \end{tabbing}
 \end{quote}
@@ -3526,44 +3543,44 @@ einige Befehlsvarianten nicht, au"serdem unterscheiden sie sich in ihrem
 Satz interner Register.
 %%-----------
 \begin{quote}
-bu) MB89190
+bv) MB89190
 \end{quote}
 Dieser Prozessortyp repr"asentiert die F$^{2}$MC8L-Serie von Fujitsu...
 %%-----------
 \begin{quote}
-bv) MB9500
+bw) MB9500
 \end{quote}
 ...so wie dieser es momentan f"ur die 16-Bit-Varianten von Fujitsu tut!
 %%-----------
 \begin{quote}
-bw) MSM5840, MSM5842, MSM58421, MSM58422, MSM5847
+bx) MSM5840, MSM5842, MSM58421, MSM58422, MSM5847
 \end{quote}
 Diese Varianten der OLMS-40-Familie unterscheiden sich im
 Befehlssatz sowie im internen Programm- und Datenspeicher.
 %%-----------
 \begin{quote}
-bx) MSM5054, MSM5055, MSM5056, MSM6051, MSM6052
+by) MSM5054, MSM5055, MSM5056, MSM6051, MSM6052
 \end{quote}
 Gleiches wie bei der OLMS-40-Familie: Unterschiede im
 Befehlssatz sowie im internen Programm- und Datenspeicher.
 %%-----------
 \begin{quote}
-by) 1802 $\rightarrow$ 1804, 1805, 1806 $\rightarrow$ 1804A, 1805A
+bz) 1802 $\rightarrow$ 1804, 1805, 1806 $\rightarrow$ 1804A, 1805A
 1806A
 \end{quote}
 1804, 1805 und 1806 haben gegen"uber dem 'Original' 1802 einen leicht
 erweiterten Befehlssatz sowie on-chip-RAM und einen integrierten
-Timer.  Die A-Versionen erweitern den Befehlssatz um \tty{DSAV}, 
+Timer.  Die A-Versionen erweitern den Befehlssatz um \tty{DSAV},
 \tty{DBNZ}, sowie um Befehle f"ur Addition und Subtraktion im
 BCD-Format.
 %%-----------
 \begin{quote}
-bz) XS1
+ca) XS1
 \end{quote}
 Dieser Typ repr"asentiert die XCore-''Familie''.
 %%-----------
 \begin{quote}
-ca) 1750
+cb) 1750
 \end{quote}
 MIL STD 1750 ist ein Standard, also gibt es auch nur eine
 (Standard-)Variante...
@@ -3628,7 +3645,7 @@ gleichnamige Kommandozeilenoption nicht ver"andert wurde.
 \subsection{SUPMODE, FPU, PMMU}
 \ttindex{SUPMODE}\ttindex{FPU}\ttindex{PMMU}
 
-{\em\begin{tabbing} 
+{\em\begin{tabbing}
 G"ultigkeit: \= 680x0, FPU auch 80x86, i960, SUPMODE auch TLCS-900, \\
              \> SH7000, i960, 29K, XA, PowerPC, M*CORE und TMS9900
 \end{tabbing}}
@@ -3656,7 +3673,7 @@ Die Befehle bedeuten im einzelnen folgendes:
 Benutzung von auf diese Weise gesperrten Befehlen erzeugt bei \tty{SUPMODE}
 eine Warnung, bei \tty{PMMU} und \tty{FPU} eine echte Fehlermeldung.
 
-%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{FULLPMMU}
 \ttindex{FULLPMMU}
@@ -3665,18 +3682,18 @@ eine Warnung, bei \tty{PMMU} und \tty{FPU} eine echte Fehlermeldung.
 
 Motorola hat zwar ab dem 68030 die PMMU in den Prozessor integriert,
 diese aber nur mit einer Funktionsuntermenge der externen PMMU 68851
-ausgestattet.  AS sperrt bei aktiviertem PMMU-Befehlssatz (s.o.) deshalb 
+ausgestattet.  AS sperrt bei aktiviertem PMMU-Befehlssatz (s.o.) deshalb
 alle fehlenden Befehle, wenn als Zielprozessor 68030 oder h"oher
 eingestellt wurde.  Nun kann es aber sein, da"s in einem System mit
 68030-Prozessor die interne MMU abgeschaltet wurde und der Prozessor
-mit einer externen 68851 betrieben wird.  Mit \tty{FULLPMMU ON} kann man 
-AS dann mitteilen, da"s der vollst"andige MMU-Befehlssatz zugelassen 
+mit einer externen 68851 betrieben wird.  Mit \tty{FULLPMMU ON} kann man
+AS dann mitteilen, da"s der vollst"andige MMU-Befehlssatz zugelassen
 ist.  Umgekehrt kann man, wenn man portablen Code erzeugen will, alle
-zus"atzlichen Befehle trotz 68020-Zielplattform mit \tty{FULLPMMU OFF} 
+zus"atzlichen Befehle trotz 68020-Zielplattform mit \tty{FULLPMMU OFF}
 abschalten.  Die Umschaltung darf beliebig oft erfolgen, die momentane
 Einstellung kann aus einem gleichnamigen Symbol ausgelesen werden.
-\bb{ACHTUNG!}  Der \tty{CPU}-Befehl besetzt f"ur 680x0-Argumente implizit 
-diese Einstellung vor!  \tty{FULLPMMU} mu"s also auf jeden Fall nach dem 
+\bb{ACHTUNG!}  Der \tty{CPU}-Befehl besetzt f"ur 680x0-Argumente implizit
+diese Einstellung vor!  \tty{FULLPMMU} mu"s also auf jeden Fall nach dem
 \tty{CPU}-Befehl kommen!
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3713,7 +3730,7 @@ Padding-Bytes eingef"ugt!
 {\tt PACKING} ist in gewisser Weise "ahnlich zu {\tt PADDING}, es arbeitet
 nur gewisserma"sen anders herum: w"ahrend {\tt PADDING} die
 abgelegten Daten erg"anzt, um komplette Worte und damit ein Alignment zu
-erhalten, quetscht {\tt PACKING} mehrere Werte in ein einzelnes Wort. 
+erhalten, quetscht {\tt PACKING} mehrere Werte in ein einzelnes Wort.
 Dies macht im Code-Segment des AVR Sinn, weil dort mit einem Spezialbefehl
 ({\tt LPM}) auf einzelne Bytes in den 16-Bit-Worten zugegriffen werden
 kann.  Ist diese Option eingeschaltet (Argument {\tt ON}), so werden immer
@@ -3799,21 +3816,21 @@ kann man aus der Variablen \tty{INSRCMODE} auslesen.  Der Default ist
 
 {\em G"ultigkeit: MCS-51/251, PowerPC}
 
-Bei den Prozessoren der 8051-Serie ist Intel seinen eigenen Prinzipien 
+Bei den Prozessoren der 8051-Serie ist Intel seinen eigenen Prinzipien
 untreu geworden: Der Prozessor verwendet entgegen jeglicher Tradition
-eine Big-Endian-Orientierung von Mehrbytewerten!  W"ahrend dies bei 
-den MCS-51-Prozessoren noch nicht gro"sartig auffiel, da der Prozessor 
+eine Big-Endian-Orientierung von Mehrbytewerten!  W"ahrend dies bei
+den MCS-51-Prozessoren noch nicht gro"sartig auffiel, da der Prozessor
 ohnehin nur 8-bittig auf Speicherzellen zugreifen konnte, man sich die
-Byte-Anordnung bei eigenen Datenstrukturen also aussuchen konnte, ist 
-dies beim MCS-251 nicht mehr so, er kann auch ganze (Lang-)Worte aus 
+Byte-Anordnung bei eigenen Datenstrukturen also aussuchen konnte, ist
+dies beim MCS-251 nicht mehr so, er kann auch ganze (Lang-)Worte aus
 dem Speicher lesen und erwartet dabei das MSB zuerst.  Da dies nicht der
-bisherigen Arbeitsweise von AS bei der Konstantenablage entspricht, 
+bisherigen Arbeitsweise von AS bei der Konstantenablage entspricht,
 kann man nun mit diesem Befehl umschalten, ob die Befehle \tty{DB, DW, DD,
 DQ} und \tty{DT} mit Big- oder Little-Endian-Orientierung arbeiten sollen.
 Mit \tty{BIGENDIAN OFF} (Voreinstellung) wird wie bei "alteren AS-Versionen
 zuerst das niederwertigste Byte abgelegt, mit \tty{BIGENDIAN ON} wird die
-MCS-251-kompatible Variante benutzt.  Nat"urlich kann man diese Einstellung 
-beliebig oft im Code "andern; die momentane Einstellung kann aus dem 
+MCS-251-kompatible Variante benutzt.  Nat"urlich kann man diese Einstellung
+beliebig oft im Code "andern; die momentane Einstellung kann aus dem
 gleichnamigen Symbol ausgelesen werden.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3827,7 +3844,7 @@ Ist dieser Schalter auf {\tt ON} gesetzt, so veranla"st man AS dazu,
 anzunehmen, der Programmz"ahler des Prozessors habe nicht die volle, durch
 die Architektur gegebene L"ange von 16 Bits, sondern nur eine L"ange, die
 es gerade eben erlaubt, das interne ROM zu adressieren.  Im Falle des
-AT90S8515 sind dies z.B. 12 Bit, entsprechend 4 KWorten oder 8 KBytes. 
+AT90S8515 sind dies z.B. 12 Bit, entsprechend 4 KWorten oder 8 KBytes.
 Damit werden relative Spr"unge vom Anfang des ROMs zum Ende und umgekehrt
 m"oglich, die bei strenger Arithmetik einen out-of-branch ergeben w"urden,
 hier jedoch funktionieren, weil die "Ubertragsbits bei der
@@ -4051,11 +4068,11 @@ kann.  Default ist 0, was auch dem Reset-Zustand entspricht.
 
 Um mit seinen nur 16 Bit breiten Adre"soperanden einen 1 Mbyte gro"sen
 Adre"sraum ansprechen zu k"onnen, bedient sich der 68HC16 einer Reihe
-von Bank-Registern, die die fehlenden oberen vier Adre"sbits nachliefern.  
+von Bank-Registern, die die fehlenden oberen vier Adre"sbits nachliefern.
 Davon ist das \tty{EK}-Register f"ur absolute Datenzugriffe (nicht
 Spr"unge!) zust"andig.  AS "uberpr"uft bei jeder absoluten Adressierung,
-ob die oberen vier Bits der Adresse mit dem "uber \tty{ASSUME} 
-spezifizierten Wert "ubereinstimmen.  Differieren die Werte, gibt AS eine 
+ob die oberen vier Bits der Adresse mit dem "uber \tty{ASSUME}
+spezifizierten Wert "ubereinstimmen.  Differieren die Werte, gibt AS eine
 Warnung aus.  Der Vorgabewert f"ur \tty{EK} ist 0.
 
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -4174,9 +4191,9 @@ Vorinitialisiert sind folgende \tty{ASSUME}s :
 \subsubsection{XA}
 
 Die XA-Familie besitzt einen Datenadre"sraum von 16 Mbyte, ein Proze"s
-kann jedoch nur immer innerhalb einer 64K-Seite adressieren, die 
+kann jedoch nur immer innerhalb einer 64K-Seite adressieren, die
 durch das DS-Register vorgegeben wird.  AS mu"s man den momentanen
-Wert dieses Registers vorgeben, damit er Zugriffe auf absolute 
+Wert dieses Registers vorgeben, damit er Zugriffe auf absolute
 Adressen "uberpr"ufen kann.
 
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -4266,7 +4283,7 @@ wird.  Dieser Wert ist auch die Voreinstellung.
 Die ST9-Familie verwendet zur Adressierung von Code- und Datenbereich
 exakt die gleichen Befehle.  Welcher Adre"sraum dabei jeweils
 angesprochen wird, h"angt vom Stand des DP-Flags im Flag-Register ab.
-Damit AS bei absoluten Zugriffen "uberpr"ufen kann, ob man mit Symbolen 
+Damit AS bei absoluten Zugriffen "uberpr"ufen kann, ob man mit Symbolen
 aus dem korrekten Adre"sraum arbeitet (das funktioniert nat"urlich {\em nur}
 bei absoluten Zugriffen!), mu"s man ihm per \tty{ASSUME} mitteilen, ob das
 DP-Flag momentan auf 0 (Code) oder 1 (Daten) steht.  Der Initialwert
@@ -4344,10 +4361,10 @@ scheinen auch solche Notationen zu benutzen:
 78K2 ist eine 8/16-Bit-Architektur, die nachtr"aglich durch Banking auf
 einen (Daten-)Adre"sraum von einem MByte erweitert wurde.  Das Banking
 wird mit den Registern PM6 (Normalfall) bzw. P6 (alternativer Fall mit
-vorangestelltem \verb!&!) realisiert, die die fehlenden oberen vier Bits 
+vorangestelltem \verb!&!) realisiert, die die fehlenden oberen vier Bits
 nachliefern.  Zumindest bei absoluten Adressen kann AS "uberpr"ufen, ob
 die gerade angesprochene, lineare 20-bittige Adresse innerhalb des
-gegebenen 64K-Fensters liegt.   
+gegebenen 64K-Fensters liegt.
 
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
@@ -4370,6 +4387,30 @@ mitteilen, da"s die folgenden Befehle mit diesem ge"anderten Mapping arbeiten.  
 Assembler wird f"ur Befehle, in denen die Registernummer explizit kodiert ist, dann
 auch die alternativen Registernummern einsetzen.  Umgekehrt wird dann z.B. auch
 \tty{R5} statt \tty{R1} im Quellcode wie \tty{A} behandelt.
+
+%%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+\subsubsection{78K4}
+
+78K4 war als 'Upgrade-Pfad' vom 78K3 konzipiert, deshalb besitzt
+dessen Prozessorkern auch ein RSS-Bit, mit dem man das Mapping
+der Register AX und BC umschalten kann (auch wenn NEC von dessen
+Verwendung in neuem Code abr"at).
+
+Neben vielen neuen Befehlen und Adressierungsarten ist die
+wesentliche Erweiterung der gr"o"sere Adre"raum von 16 MByte, von
+dem allerdings nur das erste MByte für Programmcode genutzt
+werden kann.  Das CPU-interne RAM sowie die Special Function
+Register k"onnen wahlweise am oberen Ende des ersten MByte oder
+der ersten 64 KByte Seite liegen.  Dies teilt man dem Prozessor
+durch den \tty{LOCATION}-Befehl mit, der als Argument wahlweise
+eine 0 oder 15 akzeptiert.  Parallel damit schaltet der Prozessor
+auch die Adre"sbereiche um, die mit kurzen (8-Bit) Adressen
+erreicht werden k"onnen.  Parallel dazu mu"s man dem Assembler
+mittels \tty{ASSUME LOCATION:..} ebenfalls dieser Wert mitgeteilt
+werden, damit er kurze Adressen in den dazu passenden Bereichen
+erzeugt.  Der Assembler nimmt f"ur LOCATION einen Default von Null
+an.
 
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
@@ -4420,7 +4461,7 @@ wieder mal Bank-Register her.  Im einzelnen sind dies PCB f"ur den
 Programmcode, DTB f"ur alle Datenzugriffe, ADB f"ur indirekte Zugriffe
 "uber RW2/RW6 und SSB/USB f"ur die Stacks.  Sie k"onnen alle Werte
 zwischen 0 und 255 annehmen.  Defaultm"a"sig stehen alle Annahmen von AS
-auf 0, mit Ausnahme von 0ffh f"ur PCB.  
+auf 0, mit Ausnahme von 0ffh f"ur PCB.
 
 Des weiteren existiert das DPR-Register, das angibt, welche Seite
 innerhalb der durch DTB gegebenen 64K-Bank mit 8-Bit-Adressen erreicht
@@ -4485,14 +4526,14 @@ Feature daher mit Vorsicht einsetzen!
 {\em G"ultigkeit: 8080/8085}
 
 Mit \tty{ON} als Argument kann man (fast) alle 8080-Befehle wahlweise
-auch in der Form schreiben, wie sie Zilog f"ur den Z80 definiert hat. 
+auch in der Form schreiben, wie sie Zilog f"ur den Z80 definiert hat.
 Zum Beispiel benutzt man einfach nur noch \tty{LD} mit sich selbst
 erkl"arenden Operanden, wo man in der originalen 8080-Syntax je nach
 Operanden \tty{MVI, LXI, MOV, STA, LDA, SHLD, LHLD, LDAX, STAX} oder
 \tty{SPHL} schreiben mu"s.
 
 Weil einige Mnemonics in der 8080- und Z80-Syntax unterschiedliche
-Bedeutung haben, kann man nicht zu 100\% im 'Z80-Stil' programmieren. 
+Bedeutung haben, kann man nicht zu 100\% im 'Z80-Stil' programmieren.
 Wo die Grenzen dieser Betriebsart liegen, kann man im Detail im
 Abschnitt \ref{8080Spec} nachlesen.
 
@@ -4558,7 +4599,7 @@ diesem Kommando Speicher zu reservieren, indem man als Argument ein
 Fragezeichen angibt.  Diese Erweiterung haben wohl einige Drittanbieter
 von 68K-Assemblern eingebaut, in Anlehnung an das, was Intel-Assembler
 machen.  Wer dies benutzt, sollte sich aber im klaren sein, da"s dies
-zu Problemen beim Portieren von Code auf andere Assembler f"uhren kann. 
+zu Problemen beim Portieren von Code auf andere Assembler f"uhren kann.
 Des weiteren d"urfen Fragenzeichen als Operanden nicht mit 'normalen'
 Konstanten in einer Anweisung gemischt werden.
 
@@ -4628,21 +4669,21 @@ Zum anderen erfolgt die Unterscheidung, ob Konstantendefinition oder
 Speicherreservierung, im Operanden.  Eine Reservierung von Speicher
 wird durch ein \tty{?} gekennzeichnet:
 \begin{verbatim}
-        db  ?   ; reserviert ein Byte 
-        dw  ?,? ; reserviert Speicher fuer 2 Worte (=4 Byte) 
-        dd  -1  ; legt die Konstante -1 (FFFFFFFFH) ab ! 
+        db  ?   ; reserviert ein Byte
+        dw  ?,? ; reserviert Speicher fuer 2 Worte (=4 Byte)
+        dd  -1  ; legt die Konstante -1 (FFFFFFFFH) ab !
 \end{verbatim}
 Speicherreservierung und Konstantendefinition d"urfen \bb{nicht in einer
 Anweisung} gemischt werden:
 \begin{verbatim}
-        db  "Hallo",?  ; -->Fehlermeldung 
+        db  "Hallo",?  ; -->Fehlermeldung
 \end{verbatim}
 \ttindex{DUP}
 Zus"atzlich ist noch der \tty{DUP}-Operator erlaubt, der die mehrfache Ablage
 von Konstantenfolgen oder die Reservierung ganzer Speicherbl"ocke erlaubt:
 \begin{verbatim}
-        db  3 dup (1,2) ; --> 1 2 1 2 1 2 
-        dw  20 dup (?)  ; reserviert 40 Byte Speicher. 
+        db  3 dup (1,2) ; --> 1 2 1 2 1 2
+        dw  20 dup (?)  ; reserviert 40 Byte Speicher.
 \end{verbatim}
 Wie man sehen kann, mu"s das \tty{DUP}-Argument geklammert werden, darf daf"ur
 aber auch wieder aus mehreren Teilen bestehen, die selber auch wieder
@@ -4659,8 +4700,8 @@ Um mit dem M80 vertr"aglich zu sein, darf im Z80-Modus anstelle von
 \tty{DB}/\tty{DW} auch \tty{DEFB}/\tty{DEFW} geschrieben werden.
 \par
 \ttindex{BYTE}\ttindex{WORD}\ttindex{ADDR}\ttindex{ADDRW}
-Analog stellen \tty{BYTE/ADDR} bzw. \tty{WORD/ADDRW} beim COP4/8 einen 
-Alias f"ur \tty{DB} bzw. \tty{DW} dar, wobei die beiden Paare sich 
+Analog stellen \tty{BYTE/ADDR} bzw. \tty{WORD/ADDRW} beim COP4/8 einen
+Alias f"ur \tty{DB} bzw. \tty{DW} dar, wobei die beiden Paare sich
 jedoch in der Byte-Order unterscheiden: Die Befehle, die von National
 zur Adre"sablage vorgesehen waren, benutzen Big-Endian, \tty{BYTE} bzw.
 \tty{WORD} jedoch Little-Endian.
@@ -4677,7 +4718,7 @@ nicht}!
 \ttindex{DS}
 \ttindex{DS8}
 
-{\em\begin{tabbing} 
+{\em\begin{tabbing}
 G"ultigkeit: \= Intel, Zilog, Toshiba, NEC, TMS370, Siemens, AMD, M16(C),\\
              \> National, ST9, TMS7000, TMS1000, Intersil
 \end{tabbing}}
@@ -4727,7 +4768,7 @@ als untypisiert gespeichert, d.h. keinem Adre"sraum zugeordnet.
 Der Sinn dieses Verhaltens wird bei den prozessorspezifischen
 Hinweisen erl"autert.
 
-Ob beim MSP bzw. TMS9900 ungerade Mengen von Bytes automatisch um 
+Ob beim MSP bzw. TMS9900 ungerade Mengen von Bytes automatisch um
 ein Null-Byte erg"anzt werden sollen, kann mit dem PADDING-Befehl
 eingestellt werden.
 
@@ -4879,10 +4920,10 @@ Strings belegt beim 16C5x/16C8x, 17C4x im Datensegment, beim
 bei AVR, 17C4x im Codesegment, $\mu$PD772x in den Datensegmenten
 und 3201x/3202x passen zwei Zeichen in ein Wort (LSB zuerst),
 beim $\mu$PD7725 drei und beim 320C3x/C4x sogar derer 4 (MSB
-zuerst).  Im Gegensatz dazu mu"s im Datensegment des 4500 bzw. 
+zuerst).  Im Gegensatz dazu mu"s im Datensegment des 4500 bzw.
 ein Zeichen auf zwei Speicherstellen verteilt werden, ebenso wie
 beim 4004 und HMCS400.  Der Wertebereich f"ur Integers entspricht
-der Wortbreite des jeweiligen Prozessors im jeweiligen Segment. 
+der Wortbreite des jeweiligen Prozessors im jeweiligen Segment.
 Das bedeutet, da"s \tty{DATA} beim 320C3x/C4x die Funktion von
 \tty{WORD} mit einschlie"st (die von \tty{SINGLE} "ubrigens auch,
 wenn AS das Argument als Gleitkommazahl erkennt).
@@ -4898,7 +4939,7 @@ Dieser Befehl legt einen durch den Parameter spezifizierte
 Zahl von Nullworten (=NOPs) im Speicher ab. Es k"onnen maximal
 512 Nullen mit einem Befehl abgelegt werden.
 
-%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{FB und FW}
 \ttindex{FB}\ttindex{FW}
@@ -4945,7 +4986,7 @@ untypisiert gespeichert.  Der Sinn dieser Ma"snahme ist im
 entsprechenden Kapitel mit den prozessorspezifischen Befehlen
 erl"autert.
 
-%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{FCC}
 \ttindex{FCC}
@@ -4982,12 +5023,12 @@ Dito.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-\subsection{SPACE}       
-\ttindex{SPACE}          
-                         
+\subsection{SPACE}
+\ttindex{SPACE}
+
 {\em G"ultigkeit: i960}
-                         
-Dito.                
+
+Dito.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -5036,7 +5077,7 @@ doppelt soviel Bytes wie \tty{DSB}.
 Dieser Befehl reserviert Speicher in Schritten von vollst"andigen Worten,
 d.h. 16 Bit.  Er stellt einen Alias zu {\tt DW} dar.
 
-%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{ALIGN}
 \ttindex{ALIGN}
@@ -5178,7 +5219,7 @@ sind.  Es sind folgende Steuerparameter definiert:
       nur die Adresse dieser Zeile zu 'labeln'.}
 \item{\tty{GLOBALSYMBOLS/NOGLOBALSYMBOLS} : legt fest, ob im
       Makro definierte Labels lokal zu diesem Makro sein sollen
-      oder auch au"serhalb des Makros verf"ugbar sein sollen. 
+      oder auch au"serhalb des Makros verf"ugbar sein sollen.
       Der Default ist, da"s Labels lokal sind, weil mehrfache
       Benutzung eines Makros ansonsten schwierig w"are.}
 \end{itemize}
@@ -5209,7 +5250,7 @@ mul     MACRO   para,parb
         ENDIF
         !mul     ab
         ENDM
-\end{verbatim} 
+\end{verbatim}
 Wichtig ist bei obigem Beispiel, da"s der Assembler alle
 Parameternamen im case-sensitiven Modus in Gro"sbuchstaben
 umsetzt, in Strings aber nie eine Umwandlung in Gro"sbuchstaben
@@ -5300,7 +5341,7 @@ doppelten senkrechten Strich in der Label-Spalte kennzeichnen, etwa so:
 ||  instr2
 \end{verbatim}
 (da die beiden Instruktionen im Maschinencode in ein Wort verschmelzen,
-kann man die zweite Instruktion "ubrigens gar nicht separat anspringen - 
+kann man die zweite Instruktion "ubrigens gar nicht separat anspringen -
 man verliert also durch das Belegen der Label-Position nichts).  Das
 Problem ist aber, da"s einige 'Bequemlichkeits-Befehle' durch Makros
 realisiert werden.  Ein vor das Makro geschriebenes
@@ -5519,20 +5560,20 @@ einfach zu beheben ist.  Hoffentlich st"ort es nicht allzusehr....
 \ttindex{EXITM}
 
 \tty{EXITM} stellt einen Weg dar, um eine Makroexpansion oder einen der
-Befehle \tty{REPT}, \tty{IRP} oder \tty{WHILE} vorzeitig abzubrechen.  
-Eine solche M"oglichkeit hilft zum Beispiel, umfangreichere Klammerungen 
-mit \tty{IF-ENDIF}-Sequenzen in Makros "ubersichtlicher zu gestalten.  
+Befehle \tty{REPT}, \tty{IRP} oder \tty{WHILE} vorzeitig abzubrechen.
+Eine solche M"oglichkeit hilft zum Beispiel, umfangreichere Klammerungen
+mit \tty{IF-ENDIF}-Sequenzen in Makros "ubersichtlicher zu gestalten.
 Sinnvollerweise ist ein \tty{EXITM} aber selber auch immer bedingt, was zu
 einem wichtigen Detail f"uhrt: Der Stack, der "uber momentan offene
 \tty{IF}- oder \tty{SWITCH}-Konstrukte Buch f"uhrt, wird auf den Stand vor
 Beginn der Makroexpansion zur"uckgesetzt.  Dies ist f"ur bedingte
-\tty{EXITM}'s zwingend notwendig, da das den \tty{EXITM}-Befehl in 
-irgendeiner Form einschlie"sende \tty{ENDIF} oder \tty{ENDCASE} nicht mehr 
-erreicht wird und AS ohne einen solchen Trick eine Fehlermeldung erzeugen 
-w"urde.  Weiterhin ist es f"ur verschachtelte Makrokonstruktionen 
+\tty{EXITM}'s zwingend notwendig, da das den \tty{EXITM}-Befehl in
+irgendeiner Form einschlie"sende \tty{ENDIF} oder \tty{ENDCASE} nicht mehr
+erreicht wird und AS ohne einen solchen Trick eine Fehlermeldung erzeugen
+w"urde.  Weiterhin ist es f"ur verschachtelte Makrokonstruktionen
 wichtig, zu beachten, da"s \tty{EXITM} immer nur das momentan innerste
 Konstrukt abbricht!  Wer aus seiner geschachtelten Konstruktion
-vollst"andig ,,ausbrechen'' will, mu"s auf den h"oheren Ebenen ebenfalls 
+vollst"andig ,,ausbrechen'' will, mu"s auf den h"oheren Ebenen ebenfalls
 \tty{EXITM}'s vorsehen!
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -5588,8 +5629,8 @@ werden.
 \ttindex{FUNCTION}
 \label{SectFUNCTION}
 
-\tty{FUNCTION} ist zwar kein Makrobefehl im engeren Sinne, da 
-hierbei aber "ahnliche Mechanismen wie bei Makroersetzungen 
+\tty{FUNCTION} ist zwar kein Makrobefehl im engeren Sinne, da
+hierbei aber "ahnliche Mechanismen wie bei Makroersetzungen
 angewendet werden, soll er hier beschrieben werden.
 \par
 Dieser Befehl dient dazu, neue Funktionen zu definieren, die in
@@ -5631,8 +5672,8 @@ Rechenaufwand zu reduzieren und Seiteneffekte zu vermeiden.
 Bei Funktionen mit mehreren Argumenten m"ussen die einzelnen Argumente
 bei der Benutzung durch Kommata getrennt werden.
 \par
-\bb{ACHTUNG!} Analog wie bei Makros kann man mit der Definition von 
-Funktionen bestehende Funktionen umdefinieren.  Damit lassen sich auch 
+\bb{ACHTUNG!} Analog wie bei Makros kann man mit der Definition von
+Funktionen bestehende Funktionen umdefinieren.  Damit lassen sich auch
 wieder Phasenfehler provozieren.  Solche Definitionen sollten daher auf
 jeden Fall vor der ersten Benutzung erfolgen!
 \par
@@ -5674,9 +5715,9 @@ voranstehendes Label wird als Name der zu definierenden Struktur
 genommen; am Ende der Definition ist der Name optional und kann von
 zur Festlegung des L"angennamens (s.u.) genutzt werden.  Das
 restliche Verfahren ist simpel: Mit einem \tty{STRUCT} wird der
-momentane Programmz"ahler gesichert und auf Null zur"uckgesetzt. 
+momentane Programmz"ahler gesichert und auf Null zur"uckgesetzt.
 Alle zwischen \tty{STRUCT} und \tty{ENDSTRUCT} definierten Labels
-ergeben mithin die Offsets der einzelnen Datenfelder in der Struktur. 
+ergeben mithin die Offsets der einzelnen Datenfelder in der Struktur.
 Die Reservierung des Platzes f"ur die einzelnen Felder erfolgt mit
 den f"ur den jeweils aktiven Zielprozessor zul"assigen Befehlen zur
 Speicherplatzreservierung, also z.B.  \tty{DS.x} f"ur die Motorolas
@@ -5759,12 +5800,12 @@ left    dd         ?
 right   dd         ?
 data    Rec
 TreeRec endstruct
-\end{verbatim} 
+\end{verbatim}
 
 Ebenso ist es erlaubt, eine Struktur direkt in einer anderen
 Struktur zu definieren:
 \begin{verbatim}
-TreeRec struct  
+TreeRec struct
 left    dd         ?
 right   dd         ?
 TreeData struct
@@ -5772,13 +5813,13 @@ name      db         32 dup(?)
 id        dw         ?
 TreeData endstruct
 TreeRec endstruct
-\end{verbatim}   
-  
+\end{verbatim}
+
 
 \subsection{Unions}
 
 Eine Union ist eine Sonderform einer Struktur, bei der die einzelnen
-Elemente nicht hintereinander, sondern {\em "ubereinander} liegen, d.h. 
+Elemente nicht hintereinander, sondern {\em "ubereinander} liegen, d.h.
 alle Elemente liegen an Startadresse 0 innerhalb der Struktur und belegen
 den gleichen Speicherplatz.  Naturgem"a"s tut so eine Definition nicht
 mehr, als einer Reihe von Symbolen den Wert Null zuzuweisen, sie kann aber
@@ -5793,7 +5834,7 @@ diese Teil einer anderen, nicht namenlosen Struktur ist.  Elemente
 dieser Struktur werden dann Teil der 'n"achsth"oheren' benamten
 Struktur:
 \begin{verbatim}
-TreeRec struct  
+TreeRec struct
 left    dd         ?
 right   dd         ?
         struct
@@ -5802,7 +5843,7 @@ id        dw         ?
         endstruct
 TreeRec endstruct
 \end{verbatim}
-erzeugt also die Symbole {\tt TREEREC\_NAME} und {\tt TREEREC\_ID}. 
+erzeugt also die Symbole {\tt TREEREC\_NAME} und {\tt TREEREC\_ID}.
 
 Des weiteren wird f"ur namenlose Strukturen oder Unions kein Symbol
 mit deren L"ange angelegt.
@@ -5837,11 +5878,11 @@ name    Rec
 {\em G"ultigkeit: alle Prozessoren}
 
 Der Assembler unterst"utzt die bedingte Assemblierung mit Hilfe der
-Konstrukte \tty{IF}... sowie \tty{SWITCH}... .  Diese Befehle wirken zur 
-Assemblierzeit, indem entsprechend der Bedingung Teile "ubersetzt oder 
-"ubersprungen werden.  Diese Befehle sind also \ii{nicht} mit den 
-IF-Statements h"oherer Programmiersprachen zu vergleichen (obwohl es 
-sehr verlockend w"are, den Assembler um die Strukturierungsbefehle 
+Konstrukte \tty{IF}... sowie \tty{SWITCH}... .  Diese Befehle wirken zur
+Assemblierzeit, indem entsprechend der Bedingung Teile "ubersetzt oder
+"ubersprungen werden.  Diese Befehle sind also \ii{nicht} mit den
+IF-Statements h"oherer Programmiersprachen zu vergleichen (obwohl es
+sehr verlockend w"are, den Assembler um die Strukturierungsbefehle
 h"oherer Sprachen zu erweitern...).
 \par
 Die folgenden Konstrukte d"urfen beliebig (bis zum Speicher"uberlauf)
@@ -5898,7 +5939,7 @@ Neben \tty{IF} sind noch folgende weitere bedingte Befehle definiert:
       F"ur Schreibweise und Suchpfade gelten gleiche Regeln wie beim
       \tty{INCLUDE}-Befehl (siehe Abschnitt \ref{SectInclude}).}
 \item{\tty{IFNEXIST} $<$Name:  $>$ : Umkehrung zu \tty{IFEXIST}}
-\item{\tty{IFB} $<$Arg-Liste$>$ : wahr, falls alle Argumente der Parameterliste leer 
+\item{\tty{IFB} $<$Arg-Liste$>$ : wahr, falls alle Argumente der Parameterliste leer
                                   sind.}
 \item{\tty{IFNB} $<$Arg-Liste$>$ : Umkehrung zu IFB.}
 \end{itemize}
@@ -6064,7 +6105,7 @@ einfachsten Fall schaltet ein
         MACEXP  off
 \end{verbatim}
 die Ausgabe des expandierten Codes komplett aus.  Sinngem"a"s schaltet
-ein 
+ein
 \begin{verbatim}
         MACEXP  on
 \end{verbatim}
@@ -6112,7 +6153,7 @@ Die momentane Einstellung l"a"st sich aus dem Symbol \tty{MACEXP} auslesen.
 \subsection{LISTING}
 \ttindex{LISTING}
 
-funktioniert wie \tty{MACEXP} und akzeptiert die gleichen Parameter, 
+funktioniert wie \tty{MACEXP} und akzeptiert die gleichen Parameter,
 arbeitet aber wesentlich radikaler: Mit
 \begin{verbatim}
         LISTING off
@@ -6121,17 +6162,17 @@ wird \ii{"uberhaupt} nichts mehr im Listing ausgegeben.  Diese Anweisung
 macht Sinn f"ur erprobte Codeteile oder Includefiles, um den
 Papierverbrauch nicht ins Unerme"sliche zu steigern.  \bb{ACHTUNG!}
 Wer sp"ater das Gegenst"uck vergi"st, bekommt auch keine Symboltabelle
-mehr zu sehen!  Zus"atzlich zu \tty{ON} und \tty{OFF} akzeptiert 
-\tty{LISTING} auch \tty{NOSKIPPED} und \tty{PURECODE} als Argument.  Mit 
+mehr zu sehen!  Zus"atzlich zu \tty{ON} und \tty{OFF} akzeptiert
+\tty{LISTING} auch \tty{NOSKIPPED} und \tty{PURECODE} als Argument.  Mit
 der \tty{NOSKIPPED}-Einstellung werden aufgrund bedingter Assemblierung
 nicht assemblierte Teile nicht im Listing aufgef"uhrt, w"ahrend
 \tty{PURECODE} - wie der Name schon erahnen l"a"st - auch die
-\tty{IF}-Konstrukte selber nicht mehr im Listing auff"uhrt.  Diese 
+\tty{IF}-Konstrukte selber nicht mehr im Listing auff"uhrt.  Diese
 Einstellungen sind n"utzlich, wenn man Makros, die anhand von
 Parametern verschiedene Aktionen ausf"uhren, benutzt, und im Listing
 nur noch die jeweils benutzten Teile sehen m"ochte.
 \par
-Die momentane Einstellung l"a"st sich aus dem Symbol \tty{LISTING} 
+Die momentane Einstellung l"a"st sich aus dem Symbol \tty{LISTING}
 (0=\tty{OFF}, 1=\tty{ON}, 2=\tty{NOSKIPPED}, 3=\tty{PURECODE}) auslesen.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -6200,14 +6241,14 @@ abgeschaltet werden mu"s:
 
 \tty{RADIX} mit einem numerischen Argument zwischen 2 und 36 legt das
 Default-Zahlensystem f"ur Integer-Konstanten fest, d.h. das Zahlensystem,
-das angenommen wird, wenn man nichts ausdr"ucklich anderes angegeben hat. 
+das angenommen wird, wenn man nichts ausdr"ucklich anderes angegeben hat.
 Defaultm"a"sig ist dies 10, und bei der Ver"anderung dieses Wertes sind
 einige Fallstricke zu beachten, die in Abschnitt \ref{SectIntConsts}
-beschrieben sind.  
+beschrieben sind.
 
 Unabh"angig von der momentanen Einstellung ist das Argument von {\tt
 RADIX} {\em immer dezimal}; weiterhin d"urfen keine symbolischen oder
-Formelausdr"ucke verwendet werden, sondern nur einfache Zahlenkonstanten! 
+Formelausdr"ucke verwendet werden, sondern nur einfache Zahlenkonstanten!
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -6428,7 +6469,7 @@ Makros nicht von den Sektionen beeinflu"st wird, deshalb der Trick mit dem
 \par
 Nat"urlich ist mit dieser Definition das Problen noch nicht ganz gel"ost,
 bisher ist das Einsprung-Label ja noch lokal und von au"sen nicht zu
-erreichen.  Wer nun meint, man h"atte das Label einfach nur vor der 
+erreichen.  Wer nun meint, man h"atte das Label einfach nur vor der
 SECTION-Anweisung plazieren m"ussen, sei jetzt bitte ruhig, denn er
 verdirbt mir den "Ubergang auf das n"achste Thema:
 
@@ -6571,18 +6612,18 @@ Geschmacks;  man kann AS genauso gut ohne Sektionen verwenden.
 
 {\em G"ultigkeit: alle Prozessoren}
 
-Mit diesem Befehl weist man den AS an, die in der Parameterliste 
+Mit diesem Befehl weist man den AS an, die in der Parameterliste
 angegebenen Symbole (egal ob Integer, Gleitkomma oder String) im
-Sharefile mit ihren Werten abzulegen.  Ob eine solche Datei "uberhaupt 
+Sharefile mit ihren Werten abzulegen.  Ob eine solche Datei "uberhaupt
 und in welchem Format erzeugt wird, h"angt von den in
 \ref{SectCallConvention} beschriebenen Kommandozeilenschaltern ab.
 Findet AS diesen Befehl und es wird keine Datei erzeugt, f"uhrt das zu
 einer Warnung.
 \par
-\bb{VORSICHT!} Ein eventuell der Befehlszeile anh"angender Kommentar 
-wird  in die erste, ausgegebene Zeile mit "ubertragen (sofern die 
-Argumentliste von \tty{SHARED} leer ist, wird nur der Kommentar ausgegeben).  
-Falls die Share-Datei f"ur C oder Pascal erzeugt wird, sind einen 
+\bb{VORSICHT!} Ein eventuell der Befehlszeile anh"angender Kommentar
+wird  in die erste, ausgegebene Zeile mit "ubertragen (sofern die
+Argumentliste von \tty{SHARED} leer ist, wird nur der Kommentar ausgegeben).
+Falls die Share-Datei f"ur C oder Pascal erzeugt wird, sind einen
 C/Pascal-Kommentar schlie"sende Zeichenfolgen (\verb!*/! bzw.
 \verb!*)!) im Kommentar zu vermeiden.  AS pr"uft dies \ii{nicht}!
 
@@ -6633,15 +6674,15 @@ ignoriert.
 
 {\em G"ultigkeit: alle Prozessoren}
 
-\tty{BINCLUDE} dient dazu, in den von AS erzeugten Code Bin"ardaten 
-einzubetten, die von einem anderen Programm erzeugt wurden (das kann 
+\tty{BINCLUDE} dient dazu, in den von AS erzeugten Code Bin"ardaten
+einzubetten, die von einem anderen Programm erzeugt wurden (das kann
 nat"urlich theoretisch auch von AS selber erzeugter Code sein...).
 \tty{BINCLUDE} hat drei Formen:
 \begin{verbatim}
    BINCLUDE <Datei>
 \end{verbatim}
 In dieser Form wird die Datei komplett eingebunden.
-\begin{verbatim} 
+\begin{verbatim}
    BINCLUDE <Datei>,<Offset>
 \end{verbatim}
 In dieser Form wird der Inhalt der Datei ab \verb!<Offset>! bis zum Ende
@@ -7101,7 +7142,7 @@ gleichen Einschr"ankungen f"ur das Displacement wie bei Literalen).
 Beim Befehlssatz dieser 4-Bit-Prozessoren f"uhlte ich mich
 spontan an den 8080/8085 erinnert - sehr viele Menemonics, die
 Adressierungsart (z.B.  indirekt oder direkt) ist in den Befehl
-einkodiert, die Befehle sind zum Teil nur schwer zu merken. 
+einkodiert, die Befehle sind zum Teil nur schwer zu merken.
 Nat"urlich unterst"utzt AS diese Syntax, wie Hitachi sie
 seinerzeit definiert hat, ich habe aber zus"atzlich f"ur die
 meisten Befehle eine - finde ich - sch"onere und besser lesbare
@@ -7112,7 +7153,7 @@ Operanden Register, Konstanten oder Speicherstellen sind, "uber den
 AS-spezifischen \tty{LD}-Befehl angesprochen werden.  "Ahnliche
 'Meta-Befehle' gibt es f"ur arithmetische und logische Befehle.
 Eine vollst"andige Liste aller Meta-Befehle und ihrer Operanden
-findet sich in den Tabellen \ref{TabHMCS400Meta} und 
+findet sich in den Tabellen \ref{TabHMCS400Meta} und
 \ref{TabHMCS400MetaOps}, ihre praktische Verwendung kann man sich
 in der Datei \tty{t\_hmcs4x.asm} ansehen.
 
@@ -7177,9 +7218,9 @@ Operand                 & Typen \\
 gro"sen Teil in die Mnemonics hineinkodiert, und ich habe mich
 auch hier daf"ur entschieden, f"ur h"aufig genutzte Befehle eine
 alternative, modernere und besser lesbare Notation
-bereitzustellen. 
+bereitzustellen.
 Eine vollst"andige Liste aller Meta-Befehle und ihrer Operanden
-findet sich in den Tabellen \ref{TabOLMS40Meta} und 
+findet sich in den Tabellen \ref{TabOLMS40Meta} und
 \ref{TabOLMS40MetaOps}, ihre praktische Verwendung kann man sich
 in der Datei \tty{t\_olms4.asm} ansehen.
 
@@ -7905,9 +7946,9 @@ Befehle ist die Z80-Syntax nicht m"oglich, da sie mit existierenden
 \section{8085UNDOC}
 \label{8085Spec}
 
-"Ahnlich wie beim Z80 oder 6502, sind auch beim 8085 die undokumentierten 
+"Ahnlich wie beim Z80 oder 6502, sind auch beim 8085 die undokumentierten
 Befehle nicht n"aher von Intel spezifiziert worden, weshalb es nicht
-undenkbar ist, da"s andere Assembler andere Mnemonics daf"ur verwenden. 
+undenkbar ist, da"s andere Assembler andere Mnemonics daf"ur verwenden.
 Deshalb sollen auch diese Befehle und ihre Funktion hier kurz aufgelistet
 werden.  Und auch hier wieder ist die Verwendung dieser Befehle auf
 eigenes Risiko - schon der an sich zum 8085 aufw"artskompatible Z80
@@ -8028,11 +8069,11 @@ Liste dessen, was zu beachten ist:
 Allgemein unterst"utzt AS f"ur diese Prozessoren nur ein Small-Programmiermodell, d.h.
 \ii{ein} Codesegment mit maximal 64 KByte und ein ebenfalls h"ochstens 64
 KByte gro"ses Datensegment mit (f"ur COM-Dateien uninitialisierten) Daten.
-Zwischen diesen beiden Segmenten kann mit dem \tty{SEGMENT}-Befehl hin-und hergeschaltet werden. 
+Zwischen diesen beiden Segmenten kann mit dem \tty{SEGMENT}-Befehl hin-und hergeschaltet werden.
 Aus dieser Tatsache folgert, da"s Spr"unge immer intrasegment"ar sind,
 sofern sie sich auf Adressen im Codesegment beziehen.  Falls weite Spr"unge
 doch einmal erforderlich sein sollten, k"onnen sie mit \tty{CALLF} und
-\tty{JMPF} und einer Speicheradresse oder einen Segment:Offset-Wert als 
+\tty{JMPF} und einer Speicheradresse oder einen Segment:Offset-Wert als
 Argument erreicht werden.
 \par
 Ein weiteres gro"ses Problem dieser Prozessoren ist deren Assemblersyntax,
@@ -8068,13 +8109,13 @@ AS         & \tty{mov ax,vari}        & \tty{mov ax,[vari]}    \\
 Der Assembler pr"uft bei Symbolen, ob sie im Datensegment liegen und
 versucht, automatisch einen passenden Segmentpr"afix einzuf"ugen, z.B.
 falls ohne CS-Pr"afix auf Symbole im Code zugegriffen wird.  Dieser
-Mechanismus kann jedoch nur funktionieren, falls der \tty{ASSUME}-Befehl 
+Mechanismus kann jedoch nur funktionieren, falls der \tty{ASSUME}-Befehl
 (siehe dort) korrekt angewendet wurde.
 \par
 Die Intel-Syntax verlangt eine Abspeicherung, ob an einem Symbol Bytes oder
 W"orter abgelegt wurden.  AS nimmt diese Typisierung nur vor, falls in der
 gleichen Zeile wie das Label ein \tty{DB} oder \tty{DW} steht.  F"ur alle anderen F"alle
-mu"s mit den Operatoren \tty{WORD PTR, BYTE PTR} usw. explizit angegeben werden, 
+mu"s mit den Operatoren \tty{WORD PTR, BYTE PTR} usw. explizit angegeben werden,
 um was f"ur eine Operandengr"o"se es sich handelt.  Solange ein Register an der
 Operation beteiligt ist, kann auf diese Kennzeichnung verzichtet werden, da
 durch den Registernamen die Operandengr"o"se eindeutig bestimmt ist.
@@ -8084,7 +8125,7 @@ des Prozessors synchronisiert, indem selbiger mit dem BUSY-Ausgang des
 Koprozessors verbunden wird.  AS unterst"utzt dieses Handshaking, indem
 vor jedem 8087-Befehl automatisch ein \tty{WAIT}-Befehl eingef"ugt wird.  Ist
 dies aus irgendwelchen Gr"unden unerw"unscht (z.B. w"ahrend der
-Initialisierung), so mu"s im Opcode hinter dem \tty{F} ein \tty{N} eingef"ugt 
+Initialisierung), so mu"s im Opcode hinter dem \tty{F} ein \tty{N} eingef"ugt
 werden; aus
 \begin{verbatim}
         FINIT
@@ -8168,7 +8209,7 @@ aus dem aktuellen Datensegment.  Dies bedeutet aber, da"s diese Adressen
 je nach Situation unterschiedliche Bits ansprechen k"onnen - ein definieren
 von Bits mit Hilfe von \tty{DC}-Befehlen, was durch ein extra Segment
 m"oglich geworden w"are, w"urde also nicht "uberm"a"sig viel Sinn ergeben.
-Zur Definition einzelner, symbolisch ansprechbarer Bits steht aber 
+Zur Definition einzelner, symbolisch ansprechbarer Bits steht aber
 nach wie vor der \tty{BIT}-Befehl zur Verf"ugung, mit dem beliebige Bitadressen
 (Register, RAM, SFR) definiert werden k"onnen.  F"ur Bitadressen im
 internen RAM wird auch die 64K-Bank-Adresse gespeichert, so da"s AS
@@ -8178,7 +8219,7 @@ vorbesetzt wurde.
 Nichts drehen kann man dagegen an den Bem"uhungen von AS, potentielle
 Sprungziele (also Zeilen im Code mit Label) auf gerade Adressen
 auszurichten.  Dies macht AS genauso wie andere XA-Assembler auch durch
-Einf"ugen von \tty{NOP}s vor dem fraglichen Befehl.  
+Einf"ugen von \tty{NOP}s vor dem fraglichen Befehl.
 
 %%---------------------------------------------------------------------------
 
@@ -8963,16 +9004,16 @@ Adressierung, um trotz eines nur 8 Bit langen Wertes (0..255) ein
 
 \section{ST9}
 
-Die Bitadressierungsm"oglichkeiten des ST9 sind relativ eingeschr"ankt: 
+Die Bitadressierungsm"oglichkeiten des ST9 sind relativ eingeschr"ankt:
 Mit Ausnahme des \tty{BTSET}-Befehls ist es nur m"oglich, auf Bits innerhalb
 des aktuellen Arbeitsregistersatzes zuzugreifen.  Eine Bit-Adresse
 sieht also folgenderma"sen aus:
 \begin{verbatim}
   rn.[!]b
 \end{verbatim}
-wobei \verb?!? eine optionale Invertierung eines Quelloperanden bedeutet.  
-Wird ein Bit symbolisch mittels des \tty{BIT}-Befehles definiert, so wird 
-die Registernummer im Symbolwert in Bit 7..4, die Bitnummer in Bit 
+wobei \verb?!? eine optionale Invertierung eines Quelloperanden bedeutet.
+Wird ein Bit symbolisch mittels des \tty{BIT}-Befehles definiert, so wird
+die Registernummer im Symbolwert in Bit 7..4, die Bitnummer in Bit
 3..1 und eine optionale Invertierung in Bit 0 vermerkt.  AS unterscheidet
 direkte und symbolische Bitangaben am Fehlen eines Punktes,
 der Name eines Bitsymboles darf also keinen Punkt enthalten, obwohl
@@ -8984,7 +9025,7 @@ bit2    bit     r5.3
         .
         bld	r0.0,!bit2
 \end{verbatim}
-Auf diese Weise ist es auch m"oglich, eine inverse Definition nachtr"aglich 
+Auf diese Weise ist es auch m"oglich, eine inverse Definition nachtr"aglich
 wieder aufzuheben.
 \par
 Bitdefinitionen finden sich in gro"ser Zahl in der Include-Datei
@@ -8996,7 +9037,7 @@ Register ausgerichtet wurde!
 Im Gegensatz zu der zum AST9 von SGS-Thomson geh"orenden Definitionsdatei
 sind f"ur AS die Namen der Peripherieregister nur als allgemeine
 Registernamen definiert (\tty{R...}), nicht auch noch als Arbeitsregister
-(\tty{r...}).  Dies ist so, weil AS Geschwindigkeitsgr"unden keine 
+(\tty{r...}).  Dies ist so, weil AS Geschwindigkeitsgr"unden keine
 Aliasnamen f"ur Register definieren kann.
 
 %%---------------------------------------------------------------------------
@@ -9098,8 +9139,8 @@ ein \tty{R} vor dem erzeugten Code steht.
 Bez"uglich der doppelten senkrechten Striche und ihrer Position in der
 Zeile ist man nicht ganz so flexibel wie beim TI-Assembler: Entweder
 man schreibt sie anstelle eines Labels (d.h. in der ersten Spalte oder
-mit einem angeh"angten Doppelpunkt, das ist aber nicht mehr 
-TI-kompatibel...) oder direkt vor den zweiten Befehl ohne Leerzeichen, 
+mit einem angeh"angten Doppelpunkt, das ist aber nicht mehr
+TI-kompatibel...) oder direkt vor den zweiten Befehl ohne Leerzeichen,
 sonst bekommt der Zeilenparser von AS Probleme und h"alt die Striche
 f"ur das Mnemonic.
 
@@ -9110,7 +9151,7 @@ f"ur das Mnemonic.
 Wie bei den meisten "alteren Prozessorfamilien auch, hatte TI seinerzeit
 ein eigenes Format zur Schreibweise von Hexadezimal- und Bin"arkonstanten
 verwendet, anstelle deren AS die normale, heute auch bei TI
-gebr"auchliche Intel-Notation verwendet.  
+gebr"auchliche Intel-Notation verwendet.
 
 Die TI-Syntax f"ur Register erlaubt es, da"s anstelle eines echten Namens
 (entweder \tty{Rx} oder \tty{WRx}) auch eine einfache Integer-Zahl
@@ -9139,7 +9180,7 @@ herstellereigene Syntax f"ur hexadezimale und bin"are Konstanten
 defaultm"a"sig die Intel-Syntax verwendet.  Auf diese ist Texas bei den
 Nachfolgern dieser Familie, n"amlich den 370ern auch umgestiegen.  Beim
 genaueren Betrachten des Maschinenbefehlssatzes stellt man fest, da"s
-ca. 80\% der 7000er-Befehle bin"ar aufw"artskompatibel sind, und auch die 
+ca. 80\% der 7000er-Befehle bin"ar aufw"artskompatibel sind, und auch die
 Assemblersyntax ist fast gleich - aber eben nur fast.  Bei der Erweiterung
 des 7000er-Befehlssatzes hat TI n"amlich auch gleich die Chance genutzt,
 die Syntax etwas zu vereinheitlichen und zu vereinfachen.  Ich habe mich
@@ -9154,7 +9195,7 @@ einflie"sen zu lassen:
       benutzt wird, ist es nicht notwendig, die Mnemonic-Form mit explizit
       angeh"angtem \tty{P} zu benutzen - die allgemeine Form reicht genauso
       aus.}
-\item{Der vorangestelle Klammeraffe f"ur absolute oder B-indizierte 
+\item{Der vorangestelle Klammeraffe f"ur absolute oder B-indizierte
       Adressierung darf weggelassen werden.}
 \item{Anstelle des \tty{CMPA}-Befehls darf auch einfach
       \tty{CMP} mit \tty{A} als Ziel benutzt werden.}
@@ -9206,21 +9247,21 @@ der Prozessor an dieser Stelle nicht...
 \section{MSP430(X)}
 \label{MSPSpec}
 
-Der MSP430 wurde als RISC-Prozessor mit minimalem Stromverbrauch 
+Der MSP430 wurde als RISC-Prozessor mit minimalem Stromverbrauch
 konzipiert.  Aus diesem Grund ist der Satz von Befehlen, die der
-Prozessor in Hardware versteht, auf das absolut notwendige reduziert 
-worden (da RISC-Prozessoren keinen Mikrocode besitzen, mu"s jeder 
+Prozessor in Hardware versteht, auf das absolut notwendige reduziert
+worden (da RISC-Prozessoren keinen Mikrocode besitzen, mu"s jeder
 Befehl mit zus"atzlichem Silizium implementiert werden und erh"oht so
-den Stromverbrauch).  Eine Reihe von Befehlen, die bei anderen 
-Prozessoren in Hardware gegossen wurden, werden beim MSP durch eine 
+den Stromverbrauch).  Eine Reihe von Befehlen, die bei anderen
+Prozessoren in Hardware gegossen wurden, werden beim MSP durch eine
 Emulation mit anderen Befehlen realisiert.  Fr"uhere Versionen
 von AS implementierten diese Befehle "uber Makros in der Datei
 \tty{REGMSP.INC}.  Wer diese Datei nicht einband, erhielt bei "uber
 der H"alfte der insgesamt von TI definierten Befehle
 Fehlermeldungen.  Dies ist aktuell nicht mehr so, zusammen mit
 der Erweiterung auf den CPU430X-Befehlssatz werden die
-Instruktionen vom Assembler direkt implementiert. 
-\tty{REGMSP.INC} enth"alt nur noch die Adressen von I/O-Registern. 
+Instruktionen vom Assembler direkt implementiert.
+\tty{REGMSP.INC} enth"alt nur noch die Adressen von I/O-Registern.
 Wer aus irgendwelchen Gr"unden die alten Makros braucht, findet
 sie jetzt in der Datei \tty{EMULMSP.INC}.
 
@@ -9265,11 +9306,11 @@ effiziente Variante ist).
 \section{COP8 \& SC/MP}
 \label{COP8Spec}
 
-Leider Gottes hat sich auch National dazu entschieden, als 
-Schreibweise f"ur nichtdezimale Integer-Konstanten die von 
-IBM-Gro"srechnern bekannte (und von mir vielgeha"ste) Variante 
-\verb!X'...! zu benutzen.  Das geht nat"urlich (wie immer) nicht.  
-Zum Gl"uck scheint der ASMCOP aber auch die C-Variante zuzulassen, 
+Leider Gottes hat sich auch National dazu entschieden, als
+Schreibweise f"ur nichtdezimale Integer-Konstanten die von
+IBM-Gro"srechnern bekannte (und von mir vielgeha"ste) Variante
+\verb!X'...! zu benutzen.  Das geht nat"urlich (wie immer) nicht.
+Zum Gl"uck scheint der ASMCOP aber auch die C-Variante zuzulassen,
 und diese wurde deshalb der Default f"ur die COPs...
 
 %%---------------------------------------------------------------------------
@@ -9301,7 +9342,7 @@ IAR & AS & Funktion\\
 \tty{\#include} & \tty{include} & Include-Datei einbinden \\
 \tty{\#define} & \tty{SET, EQU} & Symbole definieren \\
 \tty{\#elif, ELIF, ELSEIF} & \tty{ELSEIF} & Weiterer Zweig einer IF-Kette \\
-\tty{\#else, ELSE} & \tty{ELSE} & Letzter Zweig einer IF-Kette \\ 
+\tty{\#else, ELSE} & \tty{ELSE} & Letzter Zweig einer IF-Kette \\
 \tty{\#endif, ENDIF} & \tty{ENDIF} & Beendet eine IF-Kette \\
 \tty{\#error} & \tty{ERROR, FATAL} & Fehlermeldung erzeugen \\
 \tty{\#if, IF} & \tty{IF} & Beginn einer IF-Kette\\
@@ -9389,23 +9430,23 @@ auf absolute Adressen verschiedene Schreibweisen:
 \item{absolut lang: vorangestelltes \verb"!"}
 \item{PC-relativ: vorangestelltes \verb"$"}
 \end{itemize}
-Bei AS sind diese Pr"afixe nur notwendig, falls man eine bestimmte 
+Bei AS sind diese Pr"afixe nur notwendig, falls man eine bestimmte
 Adressierung erzwingen will und der Befehl verschiedene Varianten
 zul"a"st.  Setzt man keinen Pr"afix, so w"ahlt AS automatisch die
-k"urzeste Variante.  Es d"urfte daher in der Praxis sehr selten 
+k"urzeste Variante.  Es d"urfte daher in der Praxis sehr selten
 notwendig sein, einen Pr"afix zu verwenden.
 
 %%---------------------------------------------------------------------------
 
-\section{78K2/78K3}
-\label{78K23Spec}
+\section{78K2/78K3/78K4}
+\label{78K234Spec}
 
 Analog wie beim 78K0 benutzt NEC auch hier wieder Dollar- und
 Ausrufezeichen f"ur verschiedene L"angen von Adre"ssausdr"ucken.
 Zwischen langen und kurzen Adressen (sowohl im RAM- als auch
 SFR-Bereich) wird wieder automatisch entschieden, nur relative
 Adressierung mu"s man manuell anw"ahlen, wenn ein Befehl beides
-unterst"utzt (z.B. {\tt BR}).  
+unterst"utzt (z.B. {\tt BR}).
 
 Noch eine Anmerkung (die im "ubrigens auch f"ur den 78K0 gilt): Wer
 mittels {\tt RELAXED} mit Motorola-Syntax arbeitet, mu"s
@@ -9475,7 +9516,7 @@ bereits f"ur das 16-Bit-Kennungswort mit dem Wert \$1489, d.h. jede
 Codedatei beginnt mit den Bytes \$89/\$14.
 \par
 Danach folgt eine Reihe beliebig vieler ,,Records'', wobei ein Record
-entweder ein zusammenh"angendes Teilfeld des Codes darstellt oder bestimmte 
+entweder ein zusammenh"angendes Teilfeld des Codes darstellt oder bestimmte
 Zusatzinformationen enth"alt.  Eine Datei
 kann auch ohne Umschaltung des Prozessortyps mehrere Records enthalten,
 wenn Code- oder Konstantenbereiche durch reservierte (und nicht zu
@@ -9509,7 +9550,7 @@ Ein Record mit einem Header-Byte von \verb!$81! ist ein Record, der Code
 oder Daten aus beliebigen Segmenten beinhalten kann.  Das erste
 Byte (Header) gibt an, f"ur welche Prozessorfamilie die folgenden
 Daten bzw. der folgende  Code bestimmt ist (siehe Tabellen \ref{TabHeader}
-und \ref{TabHeader2}).  
+und \ref{TabHeader2}).
 
 \begin{table*}[htbp]
 \begin{center}\begin{tabular}{|c|l||c|l|}
@@ -9533,7 +9574,7 @@ Header & Familie & Header & Familie \\
 \caption{Headerbytes f"ur die verschiedenen Prozessorfamilien\label{TabHeader2}}
 \end{table*}
 
-Das Segment-Feld gibt an, in welchen Adre"sraum des Prozessors der 
+Das Segment-Feld gibt an, in welchen Adre"sraum des Prozessors der
 folgende Code geh"ort.  Dabei gilt die in Tabelle \ref{TabSegments}
 angegeben Zuordnung.
 \begin{table*}[htbp]
@@ -9552,11 +9593,11 @@ Nummer & Segment & Nummer & Segment \\
 \caption{Kodierungen des {\tt Segment}-Feldes\label{TabSegments}
          \label{TabSegmentNums}}
 \end{table*}
-Das Gran-Feld gibt die ,,Granularit"at'' des Codes an, d.h. die Gr"o"se 
+Das Gran-Feld gibt die ,,Granularit"at'' des Codes an, d.h. die Gr"o"se
 der kleinsten, adressierbaren Einheit im folgenden Datensatz.  Dieser
 Wert ist eine Funktion von Prozessortyp und Segment und ein wichtiges
-Detail f"ur die Interpretation der beiden folgenden Felder, die 
-Startadresse und L"ange angeben: W"ahrend die Startadresse sich auf die 
+Detail f"ur die Interpretation der beiden folgenden Felder, die
+Startadresse und L"ange angeben: W"ahrend die Startadresse sich auf die
 Granularit"at bezieht, erfolgt die L"angenangabe immer in Bytes!  W"are
 die Startadresse z.B. \$300 und die L"ange 12, so w"are die sich
 ergebende Endadresse bei einer Granularit"at von 1 \$30b, bei einer
@@ -9577,7 +9618,7 @@ Kurzschreibweise dar und stellen die Abw"artskompatibilit"at mit fr"uheren
 Definitionen des Dateiformats her: Das Header-Byte gibt direkt den
 Prozessortyp gem"a"s der ersten Tabelle an, das Zielsegment ist auf \tty{CODE}
 festgelegt und die Granularit"at ergibt sich aus dem Prozessortyp,
-aufgerundet auf eine Zweierpotenz von Bytes.  AS bevorzugt diese Records, 
+aufgerundet auf eine Zweierpotenz von Bytes.  AS bevorzugt diese Records,
 wenn Daten bzw. Code f"ur das \tty{CODE}-Segment anstehen.
 \par
 Der Record mit dem Typ-Byte \verb!$80! legt den Einsprungpunkt fest, d.h.
@@ -9597,7 +9638,7 @@ Debug-Dateien k"onnen optional von AS erzeugt werden und liefern
 nachgeschalteten Werkzeugen wie Disassemblern oder Debuggern f"ur diese
 wichtige Informationen.  AS kann Debug-Informationen in drei Formaten
 ausgeben: Zum einen im Objekt-Format der AVR-Tools von Atmel sowie eine zu
-NoICE kompatible Kommandodatei und zum anderen in einem eigenen Format. 
+NoICE kompatible Kommandodatei und zum anderen in einem eigenen Format.
 Die ersten beiden werden in \cite{AVRObj} bzw. der Dokumentation zu
 NoICE ausf"uhrlich beschrieben, deshalb beschr"ankt sich die folgende
 Beschreibung auf das AS-eigene MAP-Format:
@@ -9629,14 +9670,14 @@ Zeilen der Form
 \begin{verbatim}
 Segment <Segmentname>
 \end{verbatim}
-bzw. 
+bzw.
 \begin{verbatim}
 File <Dateiname>
 \end{verbatim}
 getrennt.
 
 Die Symboltabelle folgt der Quellzeileninformation und ist wieder
-prim"ar nach den Segmenten geordnet, aus denen die Symbole stammen. 
+prim"ar nach den Segmenten geordnet, aus denen die Symbole stammen.
 Im Gegensatz zur Zeileninformation kommt hier allerdings auch der
 Abschnitt \tty{NOTHING} hinzu, der die Symbole beinhaltet, die keinem
 speziellen Adre"sraum zugeordnet sind (z.B. Symbole, die einfach mit
@@ -9681,7 +9722,7 @@ aufzulisten.  Hat AS keine Informationen "uber die Symbolgr"o"se, so
 steht in diesem Feld eine schlichte -1.
 
 Das f"unfte und letzte Feld gibt schlu"sendlich durch eine 0 oder 1 an,
-ob das Symbol w"ahrend der Assemblierung jemals referenziert wurde. 
+ob das Symbol w"ahrend der Assemblierung jemals referenziert wurde.
 Ein Programm, da"s die Symboltabelle liest, kann auf diese Weise z.B.
 nicht benutzte Symbole automatisch verwerfen, da sie beim folgenden
 Debugging oder der Disassemblierung mit hoher Wahrscheinlichkeit auch
@@ -9704,10 +9745,10 @@ Information ben"otigt ein R"uck"ubersetzer, um sich bei der Auffindung
 eines Symbols f"ur einen Zahlenwert ausgehend von der aktuellen Sektion
 im Baum bis zur Wurzel ,,durchhangeln'' kann, bis ein passendes
 Symbol gefunden wird.  Auf diese Zeile folgt eine Reihe weiterer
-Zeilen, die den von dieser Sektion belegten Code-Bereich beschreiben. 
+Zeilen, die den von dieser Sektion belegten Code-Bereich beschreiben.
 Jeder einzelne Eintrag (genau einer pro Zeile) beschreibt entweder
 eine einzelne Adresse oder einen durch zwei Grenzwerte beschriebenen
-Bereich (Trennung von Anfangs-und Endwert durch ein Minuszeichen). 
+Bereich (Trennung von Anfangs-und Endwert durch ein Minuszeichen).
 Die Grenzen sind dabei ,,inklusive'', d.h. die Grenzen geh"oren auch zu
 dem Bereich.  Wichtig ist, da"s ein einer Sektion zugeh"origer Bereich
 nicht nochmals f"ur ihre Vatersektionen aufgef"uhrt wird (eine Ausnahme
@@ -9737,7 +9778,7 @@ Leseprogramm zu ignorieren.
 Um die Arbeit mit dem Codeformat des Assemblers etwas zu erleichtern,
 lege ich einige Progamme zu deren Bearbeitung bei.  F"ur diese Programme
 gilt sinngem"a"s das gleiche wie in \ref{SectLicense}!
- 
+
 Allen Programmen gemeinsam sind die Returncodes, die sie liefern (Tabelle
 \ref{TabToolReturns}).
 \par
@@ -9883,8 +9924,8 @@ Prozessortyps automatisch eines aus, und zwar S-Records f"ur Motorola-
 Prozessoren, Hitachi und TLCS-900(0), MOS f"ur 65xx/MELPS, DSK f"ur die
 16-Bit-Texas-Signalprozessoren, Atmel Generic f"ur die AVRs und Intel-Hex
 f"ur den Rest. Je nach Breite der Startadresse kommen bei S-Record Records
-der Typen 1,2 oder 3 zum Einsatz, jedoch nie in einer Gruppe gemischt. 
-Diese Automatik l"a"st sich mit der Kommandozeilenoption 
+der Typen 1,2 oder 3 zum Einsatz, jedoch nie in einer Gruppe gemischt.
+Diese Automatik l"a"st sich mit der Kommandozeilenoption
 \begin{verbatim}
   -M <1|2|3>
 \end{verbatim}
@@ -9892,7 +9933,7 @@ teilweise unterdr"ucken: Ein Wert von 2 bzw. 3 sorgt daf"ur, da"s
 S-Records mit einem Mindesttyp von 2 bzw. 3 benutzt werden, w"ahrend ein
 Wert von 0 der vollen Automatik entspricht.
 
-Normalerweise benutzt das AVR-Format immer eine Adre"sl"ange von 3 Bytes. 
+Normalerweise benutzt das AVR-Format immer eine Adre"sl"ange von 3 Bytes.
 Manche Programme m"ogen das leider nicht...deshalb kann man mit dem
 Schalter
 \begin{verbatim}
@@ -9902,7 +9943,7 @@ die L"ange zur Not auf 2 Bytes reduzieren.
 
 Das Mico8-Format unterscheidet sich insofern aus den anderen
 Formaten, als da"s es keine Adre"sfelder besitzt - es ist eine
-schlichte Auflistung der Instruktionsw"orter im Programmspeicher. 
+schlichte Auflistung der Instruktionsw"orter im Programmspeicher.
 Bei der Benutzung mu"s darauf geachtet werden, da"s der
 belegte Adre"sbereich (der sich z.B. mit PLIST anzeigen l"a"st)
 bei Null beginnt und fortlaufend ist.
@@ -10015,8 +10056,8 @@ die Option
 mit der man die in die Hex-Datei einzutragende Startadresse festlegen
 kann.  Fehlt diese Angabe, so wird nach einen entsprechenden Eintrag
 in der Code-Datei gesucht.  Ist auch dort kein Hinweis auf einen
-Einsprungpunkt zu finden, so wird kein Eintrag in die HEX-Datei 
-geschrieben (DSK/Intel) bzw. das entsprechende Feld wird auf 0 gesetzt 
+Einsprungpunkt zu finden, so wird kein Eintrag in die HEX-Datei
+geschrieben (DSK/Intel) bzw. das entsprechende Feld wird auf 0 gesetzt
 (Motorola).
 \par
 Leider ist sich die Literatur nicht ganz "uber die Endezeile f"ur
@@ -10043,8 +10084,8 @@ tun.  Der erlaubte Wertebereich liegt dabei zwischen 2 und 254 Datenbytes;
 ungerade Werte werden implizit auf gerade Anzahlen aufgerundet.
 \par
 Meist werden die tempor"aren, von AS erzeugten Code-Dateien nach einer
-Umwandlung nicht mehr unbedingt gebraucht.  Mit der Kommandozeilen-  
-option 
+Umwandlung nicht mehr unbedingt gebraucht.  Mit der Kommandozeilen-
+option
 \begin{verbatim}
 -k
 \end{verbatim}
@@ -10151,7 +10192,7 @@ Aufruf nicht erst der halbe DOS-Speicher ,,freigeswappt'' werden mu"s.
 \cleardoublepage
 
 \appendix
- 
+
 %%===========================================================================
 
 \cleardoublepage
@@ -10181,9 +10222,9 @@ Angaben:
 \par
 
 \newcommand{\errentry}[5]
-           {\item[#1]{#2 
+           {\item[#1]{#2
                       \begin{description}
-                      \item[Type:]{\ \\#3} 
+                      \item[Type:]{\ \\#3}
                       \item[Reason:]{\ \\#4}
                       \item[Argument:]{\ \\#5}
                       \end{description}}
@@ -10363,7 +10404,7 @@ Angaben:
                {der Name des Stacks sowie seine Resttiefe}
 \errentry{ 240}{NUL-Zeichen in Strings, Ergebnis undefiniert}
 	       {Warnung}
-	       {Eine String-Konstante enth"alt ein 
+	       {Eine String-Konstante enth"alt ein
                 NUL-Zeichen. Dies funktioniert zwar mit der Pascal-Version,
                 in Hinblick auf die C-Version von AS ist dies aber ein Problem,
                 da C Strings mit einem NUL-Zeichen terminiert, d.h. der String
@@ -10774,7 +10815,7 @@ Angaben:
                 \tty{EXTNAMES} oder \tty{NOEXTNAMES} zugelassen.}
                {die unbekannte Direktive}
 \errentry{1560}{Anweisung nicht wiederholbar}
-               {Fehler} 
+               {Fehler}
                {Diese Maschinenanweisung kann nicht mit Hilfe eines
                 {\tt RPT}-Konstruktes wiederholt werden.}
                {keines}
@@ -10826,9 +10867,9 @@ Angaben:
                {keines}
 \errentry{1805}{EXITM au"serhalb eines Makrorumpfes}
                {Fehler}
-               {\tty{EXITM} bricht die Expansion von 
-                Makro-Konstrukten ab.  Dieser Befehl macht nur innerhalb 
-                von Makros Sinn und es wurde versucht, ihn au"serhalb 
+               {\tty{EXITM} bricht die Expansion von
+                Makro-Konstrukten ab.  Dieser Befehl macht nur innerhalb
+                von Makros Sinn und es wurde versucht, ihn au"serhalb
                 aufzurufen.}
                {keines}
 \errentry{1810}{mehr als 10 Makroparameter}
@@ -11004,7 +11045,7 @@ Angaben:
                {Fehler}
                {Ein Ausf"uhrungspaket enth"alt mehr als eine
                 Lang-Schreiboperation, was nicht erlaubt ist.}
-               {eine der Funktionseinheiten, auf denen eine 
+               {eine der Funktionseinheiten, auf denen eine
                 Lang-Schreiboperation ausgef"uhrt wird}
 \errentry{2004}{Lang-Lese- mit Schreiboperation}
                {Fehler}
@@ -11030,7 +11071,7 @@ Angaben:
                {keines}
 \errentry{2009}{Anweisung nicht auf diese Funktionseinheit ausf"uhrbar}
                {Fehler}
-               {Diese Anweisung kann nicht auf dieser Funktionseinheit 
+               {Diese Anweisung kann nicht auf dieser Funktionseinheit
                 ausgef"uhrt werden.}
                {none}
 \errentry{2010}{Ung"ultige Escape-Sequenz}
@@ -11086,7 +11127,7 @@ Angaben:
                {Name der Struktur (falls vorhanden)}
 \errentry{2090}{Speicheradresse nicht auf aktiver Seite}
                {Fehler}
-               {Die Zieladresse befindet sich nicht in der durch 
+               {Die Zieladresse befindet sich nicht in der durch
                 das Seitenregister aktuell adressierbaren
                 Speicherseite.}
                {keines}
@@ -11291,7 +11332,7 @@ den ersten Blick...
          Zeit tue, wenn ich mich nicht gerade um den Broterwerb k"ummere.
          Von dieser Zeit nimmt AS schon einen ganz erheblichen Teil ein,
          und ab und zu genehmige ich mir auch mal eine Auszeit, um den
-         L"otkolben zu schwingen, mal wieder eine Tangerine Dream-Platte 
+         L"otkolben zu schwingen, mal wieder eine Tangerine Dream-Platte
          bewu"st zu h"oren, mich vor den Fernseher zu hocken oder einfach
          nur dringenden menschlichen Bed"urfnissen nachzugehen.  Ich habe
          einmal angefangen, einen Disassembler zu konzipieren, der wieder
@@ -11376,7 +11417,7 @@ den ersten Blick...
           Netzwerklaufwerk zu.  Leider will die Windows-Seite aber die
           von der Linux-Seite erzeugten Hex-Dateien nicht lesen :-(}
 \item[A:]{Windows- und Linux-Systeme benutzen ein etwas abweichendes
-          Format f"ur Textdateien, unter die auch Hex-Dateien fallen.  
+          Format f"ur Textdateien, unter die auch Hex-Dateien fallen.
           W"ahrend Windows jede Zeile mit den Zeichen CR (Carriage Return)
           und LF (Linefeed) abschlie"st, verwendet Linux nur ein Linefeed.
           Es h"angt nun von der ''Gutm"utigkeit'' eines Windows-Programmes
@@ -11398,7 +11439,7 @@ den ersten Blick...
 In diesem Anhang finden sich noch einmal als schnelle Referenz alle
 von AS zur Verf"ugung gestellten Pseudobefehle.  Die Liste ist in zwei
 Teile gegliedert: Im ersten Teil finden sich Befehle, die unabh"angig
-vom eingestellten Zielprozessor vorhanden sind, danach folgen f"ur 
+vom eingestellten Zielprozessor vorhanden sind, danach folgen f"ur
 jede Prozessorfamilie die zus"atzlich vorhandenen Befehle:
 
 \subsubsection{Immer vorhandene Befehle}
@@ -11542,7 +11583,7 @@ Symbole nur einmal am Anfang eines Passes besetzt werden, k"onnen sich
 die Werte dynamischer Symbole w"ahrend der Assemblierung mehrfach "andern,
 da sie mit anderen Befehlen vorgenommene Einstellungen widerspiegeln.
 \par
-Die hier aufgelistete Schreibweise ist diejenige, mit der man die 
+Die hier aufgelistete Schreibweise ist diejenige, mit der man die
 Symbole auch im case-sensitiven Modus erreicht.
 \par
 Die hier aufgef"uhrten Namen sollte man f"ur eigene Symbole meiden;
@@ -11611,7 +11652,7 @@ Funktionen liefern entweder TRUE oder FALSE:
       ist;}
 \item{{\em isxdigit(ch)} ist TRUE, falls {\em ch} eine g"ultige
       Hexadezimal-Ziffer (0..9, A..F, a..f) ist;}
-\item{{\em isascii(ch)} ist TRUE, falls {\em ch} sich im Bereich 
+\item{{\em isascii(ch)} ist TRUE, falls {\em ch} sich im Bereich
       normaler ASCII-Zeichen ohne gesetztes Bit 7 bewegt;}
 \item{{\em isupper(ch)} ist TRUE, falls {\em ch} ein Gro"sbuchstabe
       ist (Sonderzeichen ausgenommen);}
@@ -11649,41 +11690,41 @@ it is because I stood in the footsteps of giants.'' \\
 \hspace{2cm} --unknown}
 \end{quote}
 \par
-Wenn man sich entschlie"st, ein solches Kapitel neu zu schreiben, 
-nachdem es eigentlich schon zwei Jahre veraltet ist, l"auft man 
-automatisch Gefahr, da"s dabei der eine oder andere gute Geist, der 
+Wenn man sich entschlie"st, ein solches Kapitel neu zu schreiben,
+nachdem es eigentlich schon zwei Jahre veraltet ist, l"auft man
+automatisch Gefahr, da"s dabei der eine oder andere gute Geist, der
 etwas zum bisherigen Gelingen dieses Projektes beigetragen hat,
-vergessen wird.  Der 
-allererste  Dank geb"uhrt daher allen Personen, die ich in der 
-folgenden Aufz"ahlung unfreiwillig unterschlagen habe!  
+vergessen wird.  Der
+allererste  Dank geb"uhrt daher allen Personen, die ich in der
+folgenden Aufz"ahlung unfreiwillig unterschlagen habe!
 \par
 AS als Universalassembler, wie er jetzt besteht, ist auf Anregung von
-Bernhard (C.) Zschocke entstanden, der einen ,,studentenfreundlichen'', 
-d.h. kostenlosen 8051-Assembler f"ur sein Mikroprozessorpraktikum 
-brauchte und mich dazu bewegt hat, einen bereits bestehenden 
+Bernhard (C.) Zschocke entstanden, der einen ,,studentenfreundlichen'',
+d.h. kostenlosen 8051-Assembler f"ur sein Mikroprozessorpraktikum
+brauchte und mich dazu bewegt hat, einen bereits bestehenden
 68000-Assembler zu erweitern.  Von dortan nahm die Sache ihren Lauf...
 Das Mikroprozessorpraktikum an der RWTH Aachen hat auch immer die
-eifrigsten Nutzer der neuesten AS-Features (und damit Bug-Sucher) 
+eifrigsten Nutzer der neuesten AS-Features (und damit Bug-Sucher)
 gestellt und damit einiges zur jetzigen Qualit"at von AS beigetragen.
 \par
 Das Internet und FTP haben sich als gro"se Hilfe bei der Meldung von
 Bugs und der Verbreitung von AS erwiesen.  Ein Dank geht daher an
 die FTP-Administratoren (Bernd Casimir in Stuttgart, Norbert Breidohr
-in Aachen und J"urgen Mei"sburger in J"ulich).  Insbesondere letzterer 
-hat sich sehr engagiert, um eine praxisnahe L"osung im ZAM zu 
+in Aachen und J"urgen Mei"sburger in J"ulich).  Insbesondere letzterer
+hat sich sehr engagiert, um eine praxisnahe L"osung im ZAM zu
 finden.
 \par
 Ach ja, wo wir schon im ZAM sind: Wolfgang E. Nagel hat zwar nichts
-direkt mit AS zu tun, immerhin ist er aber mein Chef und wirft 
+direkt mit AS zu tun, immerhin ist er aber mein Chef und wirft
 st"andig vier Augen auf das, was ich tue.  Bei AS scheint zumindest
 ein lachendes dabei zu sein...
 \par
 Ohne Datenb"ucher und Unterlagen zu Prozessoren ist ein Programm wie
 AS nicht zu machen.  Ich habe von einer enormen Anzahl von Leuten
 Informationen bekommen, die von einem kleinen Tip bis zu ganzen
-Datenb"uchern reichen.  Hier eine Aufz"ahlung (wie oben gesagt, ohne 
+Datenb"uchern reichen.  Hier eine Aufz"ahlung (wie oben gesagt, ohne
 Garantie auf Vollst"andigkeit!):
-\par 
+\par
 Ernst Ahlers, Charles Altmann, Marco Awater, Len Bayles, Andreas Bolsch,
 Rolf Buchholz, Bernd Casimir, Nils Eilers, Gunther Ewald, Stephan Hruschka, Peter
 Kliegelh"ofer, Ulf Meinke, Matthias Paul, Norbert Rosch, Steffen Schmid,
@@ -11804,9 +11845,9 @@ oder ich werde langsam alt...
       \item{Kommandozeilenoptionen k"onnen mit einem Pluszeichen negiert
             werden;}
       \item{Filter \tty{AS2MSG} zur bequemen Arbeit mit AS unter Turbo-Pascal 7.0;}
-      \item{\tty{ELSEIF} darf ein Argument zur Bildung von 
+      \item{\tty{ELSEIF} darf ein Argument zur Bildung von
             \tty{IF-THEN-ELSE}-Leitern haben;}
-      \item{Zur bequemeren bedingten Assemblierung zus"atzlich ein 
+      \item{Zur bequemeren bedingten Assemblierung zus"atzlich ein
             \tty{CASE}-Konstrukt;}
       \item{Selbstdefinierte Funktionen d"urfen mehr als ein Argument haben;}
       \item{P2HEX kann nun auch Hexfiles f"ur 65er-Prozessoren erzeugen;}
@@ -12038,10 +12079,10 @@ oder ich werde langsam alt...
             klarkommen.  Wenn man nicht jeden Mist selber kontrolliert...
 	    (r3)}
       \item{"uber den Befehl \tty{BIGENDIAN} kann im MCS-51/251-Modus
-            jetzt gew"ahlt werden, ob die Ablage von Konstanten im Big- 
+            jetzt gew"ahlt werden, ob die Ablage von Konstanten im Big-
             oder Little-Endian-Format erfolgen soll (r3);}
-      \item{es wird beim 680x0 jetzt zwischen dem vollen und eingeschr"ankten 
-            MMU-Befehlssatz unterschieden; eine manuelle Umschaltung ist mit dem 
+      \item{es wird beim 680x0 jetzt zwischen dem vollen und eingeschr"ankten
+            MMU-Befehlssatz unterschieden; eine manuelle Umschaltung ist mit dem
             \tty{FULLPMMU}-Befehl m"oglich (r3);}
       \item{"uber die neue Kommandozeilenoption \tty{I} kann eine Liste
             aller eingezogenen Include-Files mit ihrer Verschachtelung
@@ -12049,7 +12090,7 @@ oder ich werde langsam alt...
       \item{Beim \tty{END}-Statement kann jetzt zus"atzlich ein
             Einsprungpunkt f"ur das Programm angegeben werden (r3).}
       \item{unterst"utzt zus"atzlich die 68HC16-Familie von Motorola (r3);}
-      \item{P2HEX und P2BIN erlauben es jetzt, den Inhalt einer Code-Datei 
+      \item{P2HEX und P2BIN erlauben es jetzt, den Inhalt einer Code-Datei
             adre"sm"a"sig zu verschieben (r4);}
       \item{einem \tty{SHARED}-Befehl anh"angende Kommentare werden jetzt
             in die Share-Datei mit "ubertragen (r4);}
@@ -12062,18 +12103,18 @@ oder ich werde langsam alt...
       \item{unterst"utzt zus"atzlich den M16C von Mitsubishi (r5);}
       \item{unterst"utzt zus"atzlich den COP8 von National Semiconductor
             (r5);}
-      \item{zwei neue Befehle zur bedingten Assemblierung: \tty{IFB} und 
+      \item{zwei neue Befehle zur bedingten Assemblierung: \tty{IFB} und
             \tty{IFNB} (r5);}
-      \item{Mit dem \tty{EXITM}-Befehl ist es nun m"oglich, eine 
+      \item{Mit dem \tty{EXITM}-Befehl ist es nun m"oglich, eine
             Makroexpansion vorzeitig abzubrechen (r5);}
       \item{unterst"utzt zus"atzlich den MSP430 von Texas Instruments
             (r5);}
       \item{\tty{LISTING} kennt zus"atzlich die Varianten
-            \tty{NOSKIPPED} und \tty{PURECODE}, um nicht assemblierten 
+            \tty{NOSKIPPED} und \tty{PURECODE}, um nicht assemblierten
             Code aus dem Listing auszublenden (r5);}
       \item{unterst"utzt zus"atzlich die 78K0-Familie von NEC (r5);}
       \item{BIGENDIAN ist jetzt auch im PowerPC-Modus verf"ugbar (r5);}
-      \item{zus"atzlich ein \tty{BINCLUDE}-Befehl, um Bin"ardaten 
+      \item{zus"atzlich ein \tty{BINCLUDE}-Befehl, um Bin"ardaten
             einbinden zu k"onnen (r5);}
       \item{zus"atzliche TOLOWER- und LOWSTRING-Funktionen, um
                  Gro"s- in Kleinbuchstaben umzuwandeln (r5);}
@@ -12087,14 +12128,14 @@ oder ich werde langsam alt...
             in dem Namen von Symbolen, selbstdefinierten Funktionen,
             Makros, Makroparametern sowie Sektionen nach Gro"s-
             und Kleinschreibung unterschieden werden (r5);}
-      \item{\tty{SFRB} ber"ucksichtigt jetzt auch die Bildungsregeln 
+      \item{\tty{SFRB} ber"ucksichtigt jetzt auch die Bildungsregeln
             f"ur Bitadressen im RAM-Bereich; werden nicht bitadressierbare
             Speicherstellen angesprochen, erfolgt eine Warnung (r5);}
       \item{zus"atzliche Pseudobefehle \tty{PUSHV} und \tty{POPV}, um
             Symbolwerte tempor"ar zu sichern (r5);}
       \item{zus"atzliche Funktionen \tty{BITCNT, FIRSTBIT, LASTBIT} und
                  \tty{BITPOS} zur Bitverarbeitung (r5);}
-      \item{bei den CPU32-Prozessoren ist jetzt auch der 68360 
+      \item{bei den CPU32-Prozessoren ist jetzt auch der 68360
             ber"ucksichtigt (r5);}
       \item{unterst"utzt zus"atzlich die ST9-Familie von SGS-Thomson (r6);}
       \item{unterst"utzt zus"atzlich den SC/MP von National Semiconductor
@@ -12179,9 +12220,9 @@ oder ich werde langsam alt...
             Zielprozessor-Default zu setzen (r8);}
       \item{Key-Files k"onnen jetzt auch von der Kommandozeile aus
             referenziert werden (r8);}
-      \item{zus"atzliche Kommandozeilenoption {\tt shareout}, um die 
+      \item{zus"atzliche Kommandozeilenoption {\tt shareout}, um die
             Ausgabedatei f"ur SHARED-Definitionen zu setzen (r8);}
-      \item{neuer Pseudobefehl {\tt WRAPMODE}, um AVR-Prozessoren mit 
+      \item{neuer Pseudobefehl {\tt WRAPMODE}, um AVR-Prozessoren mit
             verk"urztem Programmz"ahler zu unterst"utzen (r8);}
       \item{unterst"utzt zus"atzlich die C20x-Befehlsuntermenge im
             C5x-Teil (r8);}
@@ -12205,7 +12246,7 @@ oder ich werde langsam alt...
 \item{Version 1.42:
       \begin{itemize}
       \item{Die Default-Zahlensyntax f"ur Atmel AVR ist jetzt C-Syntax;}
-      \item{zus"atzliche Kommandozeilenoption {\tt olist}, um die 
+      \item{zus"atzliche Kommandozeilenoption {\tt olist}, um die
             Listing-Ausgabedatei zu setzen;}
       \item{unterst"utzt zus"atzlich die F$^{2}$MC16L-Familie von Fujitsu;}
       \item{zus"atzlicher Befehl {\tt PACKING} f"ur die AVR-Familie;}
@@ -12218,7 +12259,7 @@ oder ich werde langsam alt...
             maximalen Verschachtelungstiefe von Makroexpansionen;}
       \item{zus"atzliche Kommandozeilenoption {\tt noicemask}, um
             die Menge der in einem NoICE-Debuginfofile gelisteten Segmente
-            zu steuern;} 
+            zu steuern;}
       \item{unterst"utzt zus"atzlich die 180x-Familie von Intersil;}
       \item{unterst"utzt zus"atzlich das address windowing des 68HC11K4;}
       \item{P2HEX kann jetzt die Adre"sfeldl"ange von AVR-Hex-Dateien
@@ -12355,7 +12396,7 @@ Makefile.def-samples} finden sich eine Reihe von Includes, die f"ur
 g"angige Plattformen funktionieren (aber nicht zwangsweise optimal sein
 m"ussen...).  Wenn die von Ihnen benutzte Plattform nicht dabei ist,
 k"onnen Sie die Beispieldatei {\tt Makefile.def.tmpl} als Ausgangspunkt
-verwenden (und das Ergebnis mir zukommen lassen!).  
+verwenden (und das Ergebnis mir zukommen lassen!).
 
 Ein weiterer Anlaufpunkt zum Abfangen von Systemabh"angigkeiten ist die
 Datei {\tt sysdefs.h}.  Praktisch alle Compiler definieren eine Reihe von
@@ -12371,11 +12412,11 @@ nicht standardgem"a"s vorhanden sind.  Was da so an Sachen anf"allt, liest
 man am besten selber nach.  Generell sind die \verb!#ifdef!-Statements in
 zwei Ebenen gegliedert: Zuerst wird eine bestimmte Prozessorplattform
 ausgew"ahlt, dann werden in diesem Abschnitt die Betriebssysteme
-auseinandersortiert.  
+auseinandersortiert.
 
 Wenn Sie AS auf eine neue Plattform portieren, m"ussen Sie zwei f"ur diese
 Plattform typische Symbole finden und {\tt sysdefs.h} passend erweitern
-(und wieder bin ich an dem Ergebnis interessiert...).  
+(und wieder bin ich an dem Ergebnis interessiert...).
 
 %%---------------------------------------------------------------------------
 
@@ -12395,7 +12436,7 @@ was f"ur Funktionen sie beinhalten:
 Diese Datei ist die Wurzel von AS: Sie enth"alt die {\em main()}-Funktion
 von AS, die Verarbeitung aller Kommandozeilenoptionen, die "ubergeordnete
 Steuerung aller Durchl"aufe durch die Quelldateien sowie Teile des
-Makroprozessors.  
+Makroprozessors.
 
 \subsubsection{asmallg.c}
 
@@ -12406,7 +12447,7 @@ hergeschaltet wird.
 
 \subsubsection{asmcode.c}
 
-In diesem Modul befindet sich die Verwaltung der Code-Ausgabedatei. 
+In diesem Modul befindet sich die Verwaltung der Code-Ausgabedatei.
 Exportiert wird ein Interface, mit dem sich eine Code-Datei "offnen
 und schlie"sen l"a"st, und das Routinen zum Einschreiben (und
 Zur"ucknehmen) von Code anbietet.  Eine wichtige Aufgabe dieses Moduls
@@ -12439,7 +12480,7 @@ anzeigt, ob Codeerzeugung momentan ein- oder ausgeschaltet ist.
 
 \subsubsection{asminclist.c}
 
-In diesem Modul ist die Listenstruktur definiert, "uber die AS die 
+In diesem Modul ist die Listenstruktur definiert, "uber die AS die
 Verschachtelung von Include-Dateien im Listing ausgeben kann.
 
 \subsubsection{asmitree.c}
@@ -12466,7 +12507,7 @@ hier eine ziemlich gro"se Prozedur \tty{EvalExpression}, welche einen
 (Formel-)ausdruck analysiert und auswertet.  Die Prozedur liefert das
 Ergebnis (Integer, Gleitkomma oder String) in einem varianten Record zur"uck.
 Zur Auswertung von Ausdr"ucken bei der Codeerzeugung sollten allerdings eher
-die Funktionen \tty{EvalIntExpression, EvalFloatExpression} und 
+die Funktionen \tty{EvalIntExpression, EvalFloatExpression} und
 \tty{EvalStringExpression} verwendet werden.  "Anderungen zum Einf"ugen neuer
 Prozessoren sind hier nicht erforderlich und sollten auch nur mit "au"serster
 "Uberlegung erfolgen, da man hier sozusagen an ,,die Wurzel'' von AS greift.
@@ -12543,7 +12584,7 @@ mehr erforderlich.
 
 \subsubsection{ioerrs.c}
 
-Hier ist die Umwandlung von Fehlernummern in Klartextmeldungen abgelegt. 
+Hier ist die Umwandlung von Fehlernummern in Klartextmeldungen abgelegt.
 Hoffentlich treffe ich nie auf ein System, auf dem die Nummern nicht als
 Makros definiert sind, dann kann ich n"amlich dieses Modul komplett
 umschreiben...
@@ -12778,11 +12819,11 @@ besseren Lesbarkeit.  Was allerdings erlaubt ist, ist, einzelne Meldungen
 die letzte m"ussen dann mit einem Backslash als Fortsetzungszeichen enden:
 \begin{verbatim}
 Message TestMessage2
- "Dies ist eine" \  
+ "Dies ist eine" \
  "zweizeilige Nachricht"
  "This is a" \
  "two-line message"
-\end{verbatim}  
+\end{verbatim}
 Wie bereits erw"ahnt, handelt es sich bei den Quelldateien um reine
 ASCII-Dateien; Sonderzeichen k"onnen in den Meldungstexten zwar
 eingetragen werden (und der Compiler wird sie auch so durchreichen), der
@@ -12828,7 +12869,7 @@ LaTeX-Dokument enthalten.  Andere Formate werden aus dieser mit Hilfe von
 mitgelieferten Werkzeugen automatisch erzeugt.  Zum einen reduziert dies
 den Umfang einer Quellcodedistribution, zum anderen m"ussen "Anderungen
 nicht an allen Formatversionen eines Dokumentes parallel vorgenommen
-werden, mit all den Gefahren von Inkonsistenzen.  
+werden, mit all den Gefahren von Inkonsistenzen.
 
 Als Quellformat wurde LaTeX verwendet, weil...weil...weil es eben schon
 immer vorhanden war.  Zudem ist TeX fast beliebig portierbar und pa"st
@@ -12836,9 +12877,9 @@ damit recht gut zum Anspruch von AS.  Eine Standard-Distribution erlaubt
 damit eine 'ordentliche' Ausgabe auf so ziemlich jedem Drucker; f"ur eine
 Konvertierung in die fr"uher immer vorhandene ASCII-Version liegt der
 Konverter {\em tex2doc} bei; zus"atzlich einen Konverter {\em tex2html},
-so da"s man die Anleitung direkt ins Internet stellen kann.  
+so da"s man die Anleitung direkt ins Internet stellen kann.
 
-Die Erzeugung der Dokumentation wird mit einem schlichten 
+Die Erzeugung der Dokumentation wird mit einem schlichten
 \begin{verbatim}
 make docs
 \end{verbatim}
@@ -12851,13 +12892,13 @@ selber aufgerufen.  Dies nat"urlich f"ur alle Sprachen nacheinander...
 \section{Testsuite}
 
 Da AS mit bin"aren Daten von genau vorgegebener Struktur umgeht, ist er
-naturgem"a"s etwas empfindlich f"ur System- und Compilerabh"angigkeiten. 
+naturgem"a"s etwas empfindlich f"ur System- und Compilerabh"angigkeiten.
 Um wenigstens eine gewisse Sicherheit zu geben, da"s alles korrekt
 durchgelaufen ist, liegt dem Assembler im Unterverzeichnis {\tt tests}
 eine Menge von Test-Assemblerquellen bei, mit denen man den frisch
 gebauten Assembler testen kann.  Diese Testprogramme sind in erster Linie
 darauf getrimmt, Fehler in der Umsetzung des Maschinenbefehlssatzes zu
-finden, die besonders gern bei variierenden Wortl"angen auftreten. 
+finden, die besonders gern bei variierenden Wortl"angen auftreten.
 Maschinenunabh"angige Features wie der Makroprozessor oder bedingte
 Assemblierung werden eher beil"aufig getestet, weil ich davon ausgehe,
 da"s sie "uberall funktionieren, wenn sie bei mir funktionieren...
@@ -12890,13 +12931,13 @@ Schritte beschreiben:
 
 Der f"ur den Prozessor zu w"ahlende Name mu"s zwei Kriterien erf"ullen:
 \begin{enumerate}
-\item{Der Name darf noch nicht von einem anderen Prozessor belegt sein.   
+\item{Der Name darf noch nicht von einem anderen Prozessor belegt sein.
       Beim Aufruf von AS ohne Parameter erh"alt man eine Liste der bereits
       vorhandenen Namen.}
-\item{Soll der Prozessorname vollst"andig in der Variablen \tty{MOMCPU}  
-      auftauchen, so darf er au"ser am Anfang keine Buchstaben au"serhalb 
+\item{Soll der Prozessorname vollst"andig in der Variablen \tty{MOMCPU}
+      auftauchen, so darf er au"ser am Anfang keine Buchstaben au"serhalb
       des Bereiches von A..F enthalten.  In der Variablen \tty{MOMCPUNAME}
-      liegt aber zur Assemblierzeit immer der volle Name vor.   
+      liegt aber zur Assemblierzeit immer der volle Name vor.
       Sonderzeichen sind generell nicht erlaubt, Kleinbuchstaben
       werden vom CPU-Befehl bei der Eingabe in Gro"sbuchtaben umgewandelt
       und sind daher auch nicht im Prozessornamen sinnvoll.}
@@ -12992,7 +13033,7 @@ Dazu m"ussen im Umschalter einige globale Variablen besetzt werden:
       bitte ich, den Wert mit mir abzusprechen.  Bis auf weiteres sollten
       keine Werte au"serhalb des Bereiches \$01..\$7f benutzt werden,
       diese sind f"ur Sonderzwecke (wie z.B. eine zuk"unftige Erweiterung
-      um einen Linker) reserviert.  Auch wenn dieser Wert in den meisten 
+      um einen Linker) reserviert.  Auch wenn dieser Wert in den meisten
       "alteren Codegeneratoren hart gesetzt wird, ist es die heute
       bevorzugte Methode, den Wert aus {\tt headids.h} per {\tt
       FindFamilyByName} zu holen.}
@@ -13050,7 +13091,7 @@ mit denen der Codegenerator sich in AS einbindet:
       zur"uckgeliefert zu werden.}
 \end{itemize}
 
-Optional kann ein Codegenerator auch noch folgende weitere Funktionszeiger 
+Optional kann ein Codegenerator auch noch folgende weitere Funktionszeiger
 besetzen:
 \begin{itemize}
 \item{\tty{ChkPC} : Obwohl AS die Programmz"ahler intern durchg"angig mit
@@ -13063,9 +13104,9 @@ besetzen:
       mu"s die Funktion TRUE zur"uckliefern, ansonsten FALSE.
       Diese Funktion mu"s ein Codegenerator nur implementieren, wenn er
       das Feld {\tt SegLimits} nicht belegt.  Das kann z.B. notwendig
-      werden, wenn der g"ultige Adre"sbereich eines Segments nicht 
+      werden, wenn der g"ultige Adre"sbereich eines Segments nicht
       zusammenh"angend ist.}
-\item{\tty{InternSymbol} : Manche Prozessoren, z.B. solche mit einer 
+\item{\tty{InternSymbol} : Manche Prozessoren, z.B. solche mit einer
       Registerbank im internen RAM, defineren diese 'Register' als Symbole
       vor, und es w"urde wenig Sinn machen, diese in einer separaten
       Include-Datei mit 256 oder m"oglicherweise noch mehr {\tt EQU}s
@@ -13122,7 +13163,7 @@ Wie Sie es schaffen, aus dem Mnemonic und den Argumenten die Code-Bytes zu
 erzeugen, ist weitgehend Ihnen "uberlassen.  Zur Verf"ugung stehen daf"ur
 nat"urlich "uber den Formelparser die Symboltabellen sowie die Routinen
 aus
-\tty{asmsub.c} und \tty{asmpars.c}.  Ich kann hier nur einige generelle 
+\tty{asmsub.c} und \tty{asmpars.c}.  Ich kann hier nur einige generelle
 Hinweise geben:
 \begin{itemize}
 \item{Versuchen Sie, die Prozessorbefehle in Gruppen aufzusplitten, die
@@ -13143,7 +13184,7 @@ Mit Sicherheit wird auch das Studium der vorhandenen Module weiterhelfen.
 
 Eine winzige "Anderung ist auch noch an den Quellen der Dienstprogramme
 n"otig, und zwar in der Routine {\tt Granularity()} in {\tt toolutils.c}:
-Falls eines der Adre"sr"aume dieses Prozessors eine andere Granularit"at 
+Falls eines der Adre"sr"aume dieses Prozessors eine andere Granularit"at
 als 1 hat, mu"s dort die Abfrage passend erg"anzt werden, sonst verz"ahlen
 sich PLIST, P2BIN und P2HEX...
 
@@ -13156,7 +13197,7 @@ von Programmierern gerne au"sen vor gelassen wird, insbesondere, wenn sie
 aus dem Land der unbegrenzten M"oglichkeiten kommen...
 
 Die Lokalisierung auf eine neue Sprache gliedert sich in zwei Teile: Die
-Anpassung der Programmmeldungen sowie die "Ubersetzung der Anleitung. 
+Anpassung der Programmmeldungen sowie die "Ubersetzung der Anleitung.
 Letzteres ist sicherlich eine Aufgabe herkulischen Ausma"ses, aber die
 Anpassung der Programmeldungen solle in ein bis zwei Nachmittagen "uber
 die B"uhne zu bekommen sein, wenn man sowohl die neue als auch eine der

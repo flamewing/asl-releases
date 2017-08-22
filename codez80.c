@@ -2501,21 +2501,21 @@ static void DecodeJP(Word Code)
     {
       CodeLen = 1;
       BAsmCode[0] = 0xe9;
-      OK = False;
+      return;
     }
     else if (!strcasecmp(ArgStr[1], "(IX)"))
     {
       CodeLen = 2;
       BAsmCode[0] = IXPrefix;
       BAsmCode[1] = 0xe9;
-      OK = False;
+      return;
     }
     else if (!strcasecmp(ArgStr[1],"(IY)"))
     {
       CodeLen = 2;
       BAsmCode[0] = IYPrefix;
       BAsmCode[1] = 0xe9;
-      OK = False;
+      return;
     }
     else
     {

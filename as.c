@@ -458,6 +458,7 @@
 #include "code78k0.h"
 #include "code78k2.h"
 #include "code78k3.h"
+#include "code78k4.h"
 #include "code7720.h"
 #include "code77230.h"
 #include "code53c8xx.h"
@@ -4571,6 +4572,7 @@ int main(int argc, char **argv)
     code78k0_init();
     code78k2_init();
     code78k3_init();
+    code78k4_init();
     code7720_init();
     code77230_init();
     codescmp_init();

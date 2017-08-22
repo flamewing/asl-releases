@@ -195,6 +195,7 @@ static TFamilyDescr Descrs[] =
   { "78K0"         , 0x007c, IntHex   },
   { "78K2"         , 0x0060, IntHex16 },
   { "78K3"         , 0x0058, IntHex   },
+  { "78K4"         , 0x0046, IntHex16 },
   { "7720"         , 0x007d, IntHex   },
   { "7725"         , 0x007e, IntHex   },
   { "77230"        , 0x007f, IntHex   },

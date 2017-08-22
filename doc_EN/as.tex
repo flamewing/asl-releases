@@ -14,11 +14,11 @@
 %%                         Alfred Arnold
 %%                         Stephan Kanthak
 %%                         Vittorio De Tomasi
-%% 
+%%
 %%         thanks to the authors of:
 %%                         FB-translator
 %%                         GNU-ispell
-%% 
+%%
 %% ------------------------------------------------------------------------------
 
 %%TITLE User's Manual for Macro Assembler AS
@@ -65,7 +65,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition June 2017}
+{\large Edition August 2017}
 \end{raggedright}
 
 \clearpage
@@ -139,22 +139,22 @@ Shortly said, the GPL covers the following points:
 \end{itemize}
 ...however, I really urge you to read the file COPYING for the details!
 
-To accelerate the error diagnose and correction, please add the 
+To accelerate the error diagnose and correction, please add the
 following details to the bug report:
 \begin{itemize}
 \item{hardware: \begin{itemize}
-                \item{processor type (with/without coprocessor)} 
+                \item{processor type (with/without coprocessor)}
                 \item{amount of memory installed}
                 \item{video card}
                 \item{hard-disk type(s) and their interface(s)}
                 \end{itemize}}
 \item{software: \begin{itemize}
-                \item{operating system (MS-DOS, Novell-DOS, DR-DOS, OS/2, 
+                \item{operating system (MS-DOS, Novell-DOS, DR-DOS, OS/2,
                       Windows) and version}
                 \item{resident (TSR) programs installed}
                 \item{version of AS including dates of the \tty{EXE}-files}
                 \end{itemize}}
-\item{if possible, the source file, in which the bug occurs} 
+\item{if possible, the source file, in which the bug occurs}
 \end{itemize}
 You can contact me as follows:
 \begin{itemize}
@@ -167,7 +167,7 @@ You can contact me as follows:
 \item{by E-Mail: \tty{alfred@ccac.rwth-aachen.de}}
 \end{itemize}
 If someone likes to meet me personally to ask questions and lives
-near Aachen (= Aix-la-Chapelle), you will be able to meet me there. 
+near Aachen (= Aix-la-Chapelle), you will be able to meet me there.
 You can do this most probably on thursdays from 8pm to 9pm at the
 computerclub inside the RWTH Aachen (Eilfschornsteinstrasse 16,
 cellar of philosophers' building, backdoor entry).
@@ -197,8 +197,8 @@ documentation:
 
 \section{General Capabilities of the Assembler}
 
-In contrast to ordinary assemblers, AS offers the possibility to 
-generate code for totally different processors.  At the moment, the 
+In contrast to ordinary assemblers, AS offers the possibility to
+generate code for totally different processors.  At the moment, the
 following processor families have been implemented:
 \begin{itemize}
 \item{Motorola 68000..68040,683xx incl. coprocessor and MMU}
@@ -224,7 +224,8 @@ following processor families have been implemented:
 \item{Mitsubishi M16}
 \item{Mitsubishi M16C}
 \item{Intel 4004/4040}
-\item{Intel MCS-48/41}
+\item{Intel MCS-48/41, including Siemens SAB80C382, and the OKI
+      variants}
 \item{Intel MCS-51/251, Dallas DS80C390}
 \item{Intel MCS-96/196(Nx)/296}
 \item{Intel 8080/8085}
@@ -275,6 +276,7 @@ following processor families have been implemented:
 \item{NEC 78K0}
 \item{NEC 78K2}
 \item{NEC 78K3}
+\item{NEC 78K4}
 \item{NEC $\mu$PD7720/7725}
 \item{NEC $\mu$PD77230}
 \item{Fujitsu F$^2$MC8L}
@@ -288,7 +290,6 @@ following processor families have been implemented:
 \end{itemize}
 under work / planned / in consideration :
 \begin{itemize}
-\item{NEC 78K4}
 \item{Analog Devices ADSP21xx}
 \item{SGS-Thomson ST20}
 \item{Texas Instruments TMS320C8x}
@@ -302,7 +303,7 @@ unloved, but now, however, present :
 \begin{itemize}
 \item{Intel 80x86, 80186, Nec V30\&V35 incl. coprocessor 8087}
 \end{itemize}
-The switch to a different code generator is allowed even within one 
+The switch to a different code generator is allowed even within one
 file, and as often as one wants!
 
 The reason for this flexibility is that AS has a history, which may also
@@ -312,7 +313,7 @@ extended the original assembler so that it was able to translate 8051
 mnemonics.  On this way (decline ?!) from the 68000 to 8051, some other
 processors were created as by-products.  All others were added over time
 due to user requests.  So At least for the processor-independent core of
-AS, one may assume that it is well-tested and free of obvious bugs. 
+AS, one may assume that it is well-tested and free of obvious bugs.
 However, I often do not have the chance to test a new code generator in
 practice (due to lack of appropriate hardware), so surprises are not
 impossible when working with new features.  You see, the things stated in
@@ -323,7 +324,7 @@ added some tools to work with it. Their description can be found in
 chapter \ref{ChapTools}.
 
 AS is a macro assembler, which means that the programmer has the
-possibility to define new ''commands'' by means of macros. 
+possibility to define new ''commands'' by means of macros.
 Additionally it masters conditional assembling.  Labels inside macros
 are automatically processed as being local.
 
@@ -335,10 +336,10 @@ controllers, there is the possibility to classify symbols by segmentation.
 So the assembler has a (limited) possibility to recognize accesses to
 wrong address spaces.
 
-The assembler does not know explicit limits in the nesting depth of 
-include files or macros; a limit is only given by the program stack 
-restricting the recursion depth.  Nor is there a limit for the 
-symbol length, which is only restricted by the maximum line length. 
+The assembler does not know explicit limits in the nesting depth of
+include files or macros; a limit is only given by the program stack
+restricting the recursion depth.  Nor is there a limit for the
+symbol length, which is only restricted by the maximum line length.
 
 From version 1.38 on, AS is a multipass-assembler.  This pompous term
 means no more than the fact that the number of passes through the
@@ -350,11 +351,11 @@ process all symbol references correctly. There is nothing more behind
 the term ''multipass'', so it will not be used further more in this
 documentation.
 
-After so much praise a bitter pill: AS cannot generate linkable code. 
-An extension with a linker needs considerable effort and is not planned 
+After so much praise a bitter pill: AS cannot generate linkable code.
+An extension with a linker needs considerable effort and is not planned
 at the moment.
 
-Those who want to take a look at the sources of AS can simply get the 
+Those who want to take a look at the sources of AS can simply get the
 Unix version of AS, which comes as source for self-compiling.  The sources
 are definitely not in a format that is targeted at easy understanding -
 the original Pascal version still raises its head at a couple of places,
@@ -368,7 +369,7 @@ Though AS started as a pure DOS \marginpar{{\em DOS}} program, there are a
 couple of versions available that are able to exploit a bit more than the
 Real Mode of an Intel CPU.  Their usage is kept as compatible to the DOS
 version as possible, but there are of course differences concerning
-installation and embedding into the operating system in question. 
+installation and embedding into the operating system in question.
 Sections in this manual that are only valid for a specific version of AS
 are marked with a corresponding sidemark (at this paragraph for the DOS
 version) aheaded to the paragraph.  In detail, the following further
@@ -383,7 +384,7 @@ the extender, but at least it works...
 There is a native OS/2 \marginpar{{\em OS/2}} version of AS for friends of
 IBM's OS/2 operating system.  Since version 1.41r8, this is a full 32-bit
 OS/2 application, which of course means that OS/2 2.x and at least an
-80386 CPU are mandatory.  
+80386 CPU are mandatory.
 
 You can leave \marginpar{{\em UNIX}} the area of PCs-only with the C
 version of AS that was designed to be compilable on a large number of UNIX
@@ -429,7 +430,7 @@ Sulu:   Aye aye, sir, going to pass two. \\
 }\end{raggedright}\end{quote}
 
 %%---------------------------------------------------------------------------
-      
+
 \section{Hardware Requirements}
 
 The hardware requirements of AS vary substantially from version to
@@ -447,10 +448,10 @@ advanced in its main memory needs: the program itself allocates less than
 512 Kbytes of memory.
 
 The version of AS \marginpar{{\em DPMI}} compiled for the DOS Protected
-Mode Interface (DPMI) requires at least 1 Mbyte of free extended memory. 
+Mode Interface (DPMI) requires at least 1 Mbyte of free extended memory.
 A total memory capacity of at least 2 Mbytes is therefore the absolute
 minimum given one does not have other tools in the XMS (like disk caches,
-RAM disks, or a hi-loaded DOS); the needs will rise then appropriately. 
+RAM disks, or a hi-loaded DOS); the needs will rise then appropriately.
 If one uses the DPMI version in a DOS box of OS/2, one has to assure that
 DPMI has been enabled via the box's DOS settings (set to \tty{on} or
 \tty{auto}) and that a sufficient amount of XMS memory has been assigned
@@ -715,7 +716,7 @@ With your favourite text editor, create a file named \tty{AS.RC} in the
 \tty{lib} directory with the following contents:
 \begin{verbatim}
 -i c:\as\include
-\end{verbatim}  
+\end{verbatim}
 This so-called {\em key file} tells AS where to search for its include
 files.  The following statement must be added to your \tty{AUTOEXEC.BAT}
 to tell AS to read this file:
@@ -757,7 +758,7 @@ only hint I can give here is a reference to appendix \ref{ChapSource}.
 \label{SectCallConvention}
 
 AS is a command line driven program, i.e. all parameters and file
-options are to be given in the command line.  
+options are to be given in the command line.
 
 A couple of message files belongs to AS (recognizable by their suffix {\tt
 MSG}) AS accesses to dynamically load the messages appropriate for the
@@ -780,7 +781,7 @@ environment variable under Unix.
 In order to fulfill \marginpar{{\em DOS}} AS's memory requirements under
 DOS, the various code generator modules of the DOS version were moved into
 an overlay which is part of the EXE file.  A separate OVR file like in
-earlier versions of AS therefore dose not exist any more, AS will however 
+earlier versions of AS therefore dose not exist any more, AS will however
 still attempt to reduce the overlaying delays by using eventually
 available EMS or XMS memory.  In case this results in
 trouble, you may suppress usage of EMS or XMS by setting the environment
@@ -792,12 +793,12 @@ suppress the using of XMS by the command:
 Since AS performs all in- and output via the operating system (and
 therefore it should run also on not 100\% compatible DOS-PC's) and
 needs some basic display control, it emits ANSI control sequences
-during the assembly.  
+during the assembly.
 In case you \marginpar{{\em DOS/}} should see strange characters in the
 messages displayed by AS, your \tty{CONFIG.SYS} is obviously lacking a
 line like this:
 \begin{verbatim}
-   device=ansi.sys 
+   device=ansi.sys
 \end{verbatim}
 but the further \marginpar{{\em DPMI}} functions of AS will not be
 influenced hereby.  Alternatively you are able to suppress the output of
@@ -819,24 +820,24 @@ named \tty{ASX.TMP} and placed in the current directory.  In any case, the
 swap file is deleted after program end.
 
 The command line parameters can roughly be divided into three categories:
-switches, key file references (see below) and file specifications. 
+switches, key file references (see below) and file specifications.
 Parameters of these two categories may be arbitrarily mixed in the command
 line.  The assembler evaluates at first all parameters and then assembles
 the specified files.  From this follow two things:
 \begin{itemize}
-\item{the specified switches affect all specified source files. If 
+\item{the specified switches affect all specified source files. If
       several source files shall be assembled with different switches,
       this has to be done in separate runs.}
-\item{it is possible to assemble more than one file in one shot and to 
-      bring it to the top, it is allowed that the file specs contain 
+\item{it is possible to assemble more than one file in one shot and to
+      bring it to the top, it is allowed that the file specs contain
       wildcards.}
 \end{itemize}
-Parameter switches are recognized by AS by starting with 
+Parameter switches are recognized by AS by starting with
 a slash (/) or hyphen (-).  There are switches that are only one
-character long and additionally switches composed of a whole word. 
+character long and additionally switches composed of a whole word.
 Whenever AS cannot interpret a switch as a whole word, it tries to
 interprete every letter as an individual switch.  For example, if you
-write 
+write
 \begin{verbatim}
  -queit
 \end{verbatim}
@@ -853,35 +854,35 @@ meaning depending on whether upper or lower case is used.
 At the moment, the following switches are defined:
 \ttindex{SHARED}
 \begin{itemize}
-\item{\tty{l}: sends assembler listing to console terminal (mostly screen).  
-      In case several passes have to be done, the listing of all 
+\item{\tty{l}: sends assembler listing to console terminal (mostly screen).
+      In case several passes have to be done, the listing of all
       passes will be send to the console (in opposite to the next
       option).}
 \item{\tty{L}: writes assembler listing into a file. The list file will get
-      the same name as the source file, only the extension is 
+      the same name as the source file, only the extension is
       replaced by \tty{LST}.  Except one uses... }
 \item{\tty{OLIST}: with a fiel name as argument allows to redirect the
       listing to a different file or a different path.  This option may
       be used multiple times in case multiple files are assembled with
       one execution.}
-\item{\tty{o}: Sets the new name of the code file generated by AS.  If this 
+\item{\tty{o}: Sets the new name of the code file generated by AS.  If this
       option is used multiple times, the names will be assigned, one
       after the other, to the source files which have to be
       assembled.  A negation (see below) of this option in
       connection with a name erases this name from the list.  A
       negation without a name erases the whole list.}
 \item{\tty{SHAREOUT}:ditto for a SHARE file eventually to be created.}
-\item{\tty{c}: SHARED-variables will be written in a format which permits 
-      an easy integration into a C-source file.  The extension of 
+\item{\tty{c}: SHARED-variables will be written in a format which permits
+      an easy integration into a C-source file.  The extension of
       the file is \tty{H}.}
-\item{\tty{p}: SHARED-variables will be written in a format which permits 
-      easy integration into the CONST-block of a Pascal program. 
+\item{\tty{p}: SHARED-variables will be written in a format which permits
+      easy integration into the CONST-block of a Pascal program.
       The extension of the file is \tty{INC}.}
-\item{\tty{a}: SHARED-variables will be written in a format which permits 
-      easy integration into an assembler source file. The 
+\item{\tty{a}: SHARED-variables will be written in a format which permits
+      easy integration into an assembler source file. The
       extension of the file is \tty{INC}.}
 \end{itemize}
-Concerning effect and function of the SHARED-symbols please see 
+Concerning effect and function of the SHARED-symbols please see
 chapters \ref{ChapShareMain} resp. \ref{ChapShareOrder}.
 \begin{itemize}
 \item{\tty{g [format]}: This switch instructs AS to create an additional
@@ -901,32 +902,32 @@ chapters \ref{ChapShareMain} resp. \ref{ChapShareOrder}.
       may be added.  The assignment of segments to bit positions may
       be taken from table \ref{TabSegmentNums}.}
 \item{\tty{w}: suppress issue of warnings;}
-\item{\tty{E [file]}: error messages and warnings produced by AS will be 
-      redirected to a file. Instead of a file, the 5 standard 
-      handles (STDIN..STDPRN) can also be specified as 
-      \tty{!0} to \tty{!4} . Default is \tty{!2}, meaning STDERR.  If the 
-      file option is left out, the name of the error file 
-      is the same as of the source file, but with the 
+\item{\tty{E [file]}: error messages and warnings produced by AS will be
+      redirected to a file. Instead of a file, the 5 standard
+      handles (STDIN..STDPRN) can also be specified as
+      \tty{!0} to \tty{!4} . Default is \tty{!2}, meaning STDERR.  If the
+      file option is left out, the name of the error file
+      is the same as of the source file, but with the
       extension \tty{LOG}.}
-\item{\tty{q}: This switch suppresses all messages of AS, the exceptions are 
-      error messages and outputs which are are forced from the 
-      source file.  The time needed for assembly is slightly reduced 
-      hereby and if you call AS from a shell there is no redirection 
-      required.  The disadvantage is that you may ''stay in the dark'' 
+\item{\tty{q}: This switch suppresses all messages of AS, the exceptions are
+      error messages and outputs which are are forced from the
+      source file.  The time needed for assembly is slightly reduced
+      hereby and if you call AS from a shell there is no redirection
+      required.  The disadvantage is that you may ''stay in the dark''
       for several minutes ... It is valid to write \tty{quiet} instead
       of \tty{q}.}
 \item{\tty{h}: write hexadecimal numbers in lowercase instead of capital
       letters. This option is primarily a question of personal
       taste.}
-\item{\tty{i $<$path list$>$}: issues a list of directories where the 
-      assembler shall automatically search for include 
+\item{\tty{i $<$path list$>$}: issues a list of directories where the
+      assembler shall automatically search for include
       files, in case it didn't find a file in the
       current directory.  The different directories
       have to be separated by semicolons.}
-\item{\tty{u}: calculate a list of areas which are occupied in the segments. 
-      This option is effective only in case a listing is 
-      produced. This option requires considerable additional 
-      memory and computing performance. In normal operation it 
+\item{\tty{u}: calculate a list of areas which are occupied in the segments.
+      This option is effective only in case a listing is
+      produced. This option requires considerable additional
+      memory and computing performance. In normal operation it
       should be switched off.}
 \item{\tty{C}: generates a list of cross references.  It lists which (global)
       symbols are used in files and lines.  This list will also be
@@ -935,14 +936,14 @@ chapters \ref{ChapShareMain} resp. \ref{ChapShareOrder}.
 \item{\tty{s}: issues a list of all sections (see chapter
       \ref{ChapLocSyms}).  The nesting is indicated  by indentations
       (Pascal like).}
-\item{\tty{t}: by means of this switch it is possible to separate single 
+\item{\tty{t}: by means of this switch it is possible to separate single
       components of the standard issued assembler-listing.  The assignment
       of bits to parts can be found in the next section, where the exact
       format of the assembly listing is explained.}
-\item{\tty{D}: defines symbols.  The symbols which are specified behind this 
-      option and separated by commas are written to the 
-      global symbol table before starting the assembly.  As default 
-      these symbols are written as integer numbers with the 
+\item{\tty{D}: defines symbols.  The symbols which are specified behind this
+      option and separated by commas are written to the
+      global symbol table before starting the assembly.  As default
+      these symbols are written as integer numbers with the
       value TRUE, by means of an appended equal sign, however, you
       can select other values.  The expression following the equals
       sign may include operators or internal functions, but \bb{not}
@@ -954,8 +955,8 @@ chapters \ref{ChapShareMain} resp. \ref{ChapShareOrder}.
       to be specified in the command line {\em before} any symbol
       definitions, otherwise symbol names will be converted to upper
       case at this place!}
-\item{\tty{A}: stores the list of global symbols in another, more compact 
-      form.  Use this option if the assembler crashes with a stack 
+\item{\tty{A}: stores the list of global symbols in another, more compact
+      form.  Use this option if the assembler crashes with a stack
       overflow because of too long symbol tables.  Sometimes this
       option can increase the processing speed of the assembler, but
       this depends on the sources.}
@@ -967,37 +968,37 @@ chapters \ref{ChapShareMain} resp. \ref{ChapShareOrder}.
       \ref{ChapErrMess} lists which error messages carry which extended
       messages.  At level 2 (maximum), the source line containing the
       error is additionally printed.}
-\item{\tty{n}: If this option is set, the error messages will be issued 
+\item{\tty{n}: If this option is set, the error messages will be issued
       additionally with their error number (see appendix
       \ref{ChapErrMess}).  This is primarily intended for use with shells
       or IDE's to make the identification of errors easier by those
       numbers.}
-\item{\tty{U}: This option switches AS to the case-sensitive mode, i.e. 
+\item{\tty{U}: This option switches AS to the case-sensitive mode, i.e.
       upper and lower case in the names of symbols, sections, macros,
       character sets, and user-defined functions will be distinguished.
       This is not the case by default.}
-\item{\tty{P}: Instructs AS to write the source text processed by macro 
-      processor and conditional assembly into a file.  Additional 
-      blank and pure comment lines are missing in this file.  The 
+\item{\tty{P}: Instructs AS to write the source text processed by macro
+      processor and conditional assembly into a file.  Additional
+      blank and pure comment lines are missing in this file.  The
       extension of this file is \tty{I}.}
-\item{\tty{M}: If this switch is given, AS generates a file, that contains 
+\item{\tty{M}: If this switch is given, AS generates a file, that contains
       definitions of macros defined in the source file that did not
       use the \tty{NOEXPORT} option.  This new file has the same name as
       the source file, only the extension is modified into \tty{MAC}.}
-\item{\tty{G}: this switch defines whether AS should produce code or not. 
-      If switched off, the processing will be stopped after the macro 
-      processor. This switch is activated by default (logically, 
+\item{\tty{G}: this switch defines whether AS should produce code or not.
+      If switched off, the processing will be stopped after the macro
+      processor. This switch is activated by default (logically,
       otherwise you would not get a code file). This switch can be
       used in conjunction with the \tty{P} switch, if only the macro
       processor of AS shall be used.}
-\item{\tty{r [n]}: issue warnings if situations occur that force a further 
-      pass. This information can be used to reduce the number of 
-      passes.  You may optionally specify the number of the 
+\item{\tty{r [n]}: issue warnings if situations occur that force a further
+      pass. This information can be used to reduce the number of
+      passes.  You may optionally specify the number of the
       first pass where issuing of such messages shall start.
       Without this argument, warnings will come starting with
       the first pass.  Be prepared for a bunch of messages!!}
 \item{\tty{cpu $<$name$>$}: this switch allows to set the target processor
-      AS shall generate code for, in case the source file does not contain 
+      AS shall generate code for, in case the source file does not contain
       a {\tt CPU} instruction and is not 68008 code.}
 \item{\tty{alias $<$new$>$=$<$old$>$}:
       defines the processor type \tty{$<$new$>$} to be an alias for the
@@ -1005,33 +1006,33 @@ chapters \ref{ChapShareMain} resp. \ref{ChapShareOrder}.
       processor aliases.}
 \item{{\tt gnuerrors}: display messages about errors resp. warnings not
       in the As standard format, but instaed in a format similar to the
-      GNU C compiler.  This simplifies the integration of AS into 
+      GNU C compiler.  This simplifies the integration of AS into
       environments tuned for this format, however also suppresses the
       display of precise error positions in macro bodies!}
 \end{itemize}
 As long as switches require no arguments and their concatenation does
-not result in a multi-letter switch, it is possible to specify several 
+not result in a multi-letter switch, it is possible to specify several
 switches at one time, as in the following example :
 \begin{verbatim}
  as test*.asm firstprog -cl /i c:\as\8051\include
 \end{verbatim}
-All files \tty{TEST*.ASM} as well as the file \tty{FIRSTPROG.ASM} will be 
-assembled, whereby listings of all files are displayed on the 
+All files \tty{TEST*.ASM} as well as the file \tty{FIRSTPROG.ASM} will be
+assembled, whereby listings of all files are displayed on the
 console terminal.  Additional sharefiles will be generated in the C-
-format.  The assembler should search for additional include files 
+format.  The assembler should search for additional include files
 in the directory \verb!C:\AS\8051\INCLUDE!.
 
-This example shows that the assembler assumes \tty{ASM} as the default 
+This example shows that the assembler assumes \tty{ASM} as the default
 extension for source files.
 
 A bit of caution should be applied when using switches that have
-optional arguments: if a file specification immediately follows such 
+optional arguments: if a file specification immediately follows such
 aswitch without the optional argument, AS will try to interprete the
 file specification as argument - what of course fails:
 \begin{verbatim}
  as -g test.asm
 \end{verbatim}
-The solution in this case would either be to move the -g option the  
+The solution in this case would either be to move the -g option the
 end or to specify an explicit MAP argument.
 
 
@@ -1059,20 +1060,20 @@ e.g.
 \begin{verbatim}
 set ASCMD=@c:\as\as.key
 \end{verbatim}
-In order to neutralize options in the \tty{ASCMD} variable (or in the 
+In order to neutralize options in the \tty{ASCMD} variable (or in the
 key file), prefix the option with a plus sign.  For example, if you
 do not want to generate an assembly listing in an individual case,
 the option can be retracted in this way:
 \begin{verbatim}
 as +L <file>
 \end{verbatim}
-Naturally it is not consequently logical to deny an option by a 
+Naturally it is not consequently logical to deny an option by a
 plus sign....  UNIX soit qui mal y pense.
 
 References to key files may not only come from the {\tt ASCMD} variable,
 but also directly from the command line.  Similarly to the {\tt ASCMD}
 variable, prepend the file's name with a \@ character:
-\begin{verbatim} 
+\begin{verbatim}
  as @<file> ....
 \end{verbatim}
 The options read from a key file in this situation are processed as if
@@ -1098,7 +1099,7 @@ In dependence of the assembly's outcome, the assembler ends with
 the following return codes:
 \begin{description}
 \item[0]{error free run, at maximum warnings occurred}
-\item[1]{The assembler displayed only its command-line parameters and 
+\item[1]{The assembler displayed only its command-line parameters and
          terminated immediately afterwards.}
 \item[2]{Errors occurred during assembly, no code file has been produced.}
 \item[3]{A fatal error occurred what led to immediate termination of the run.}
@@ -1109,7 +1110,7 @@ the following return codes:
          problem is reproducible!}
 \end{description}
 Similar to UNIX, OS/2 \marginpar{{\em OS/2}} extends an application's data
-segment on demand when the application really needs the memory. 
+segment on demand when the application really needs the memory.
 Therefore, an output like
 \begin{verbatim}
   511 KByte available memory
@@ -1201,7 +1202,7 @@ thorough studies, consult a reasonable programmer's manual, e.g.
 
 In the case of TLCS-9000, H8/500, and M16(C), the attribute serves
 both as an operand size specifier (if it is not obvious from the
-operands) and as a description of the instruction format to be used. 
+operands) and as a description of the instruction format to be used.
 A colon has to be used to separate the format from the operand size,
 e.g. like this:
 \begin{verbatim}
@@ -1214,14 +1215,14 @@ shortest possible format.  The allowed formats and operand sizes
 again depend on the machine instruction and may be looked up e.g. in
 \cite{Tosh900}, \cite{HitH8_5}, \cite{MitM16}, resp. \cite{MitM16C}.
 
-The number of instruction parameters depends on the mnemonic and is 
-principally located between 0 and 20.  The separation of the parameters 
-from each other is to be performed only by commas (exception: DSP56xxx, 
-its parallel data transfers are separated with blanks).  Commas that 
-are included in brackets or quotes, of course, are not taken into 
-consideration.  
+The number of instruction parameters depends on the mnemonic and is
+principally located between 0 and 20.  The separation of the parameters
+from each other is to be performed only by commas (exception: DSP56xxx,
+its parallel data transfers are separated with blanks).  Commas that
+are included in brackets or quotes, of course, are not taken into
+consideration.
 
-Instead of a comment at the end, the whole line can consist of 
+Instead of a comment at the end, the whole line can consist of
 comment if it starts in the first column with a semicolon.
 
 To separate the individual components you may also use tabulators
@@ -1231,7 +1232,7 @@ instead of spaces.
 
 \section{Format of the Listing}
 
-The listing produced by AS using the command line options i or I is 
+The listing produced by AS using the command line options i or I is
 roughly divisible into the following parts :
 \begin{enumerate}
 \item{issue of the source code assembled;}
@@ -1239,45 +1240,45 @@ roughly divisible into the following parts :
 \item{usage list;}
 \item{cross reference list.}
 \end{enumerate}
-The two last ones are only generated if they have been demanded by 
+The two last ones are only generated if they have been demanded by
 additional command line options.
 
-In the first part, AS lists the complete contents of all source files 
-including the produced code.  A line of this listing has the following 
+In the first part, AS lists the complete contents of all source files
+including the produced code.  A line of this listing has the following
 form:
 \begin{verbatim}
 [<n>] <line>/<address> <code> <source>
 \end{verbatim}
-In the field \tty{n}, AS displays the include nesting level.  The main file 
-(the file where assembly was started) has the depth 0, an included 
+In the field \tty{n}, AS displays the include nesting level.  The main file
+(the file where assembly was started) has the depth 0, an included
 file from there has depth 1 etc..  Depth 0 is not displayed.
 
-In the field \tty{line}, the source line number of the referenced file is 
-issued. The first line of a file has the number 1.  The address at 
-which the code generated from this line is written follows after the 
+In the field \tty{line}, the source line number of the referenced file is
+issued. The first line of a file has the number 1.  The address at
+which the code generated from this line is written follows after the
 slash in the field \tty{address}.
 
-The code produced is written behind \tty{address} in the field \tty{code}, 
-in hexadecimal notation. Depending on the processor type and actual 
+The code produced is written behind \tty{address} in the field \tty{code},
+in hexadecimal notation. Depending on the processor type and actual
 segment the values are formatted either as bytes or 16/32-bit-words.
 If more code is generated than the field can take, additional lines
 will be  generated, in which case only this field is used.
 
-Finally, in the field \tty{source}, the line of the source file is issued in 
+Finally, in the field \tty{source}, the line of the source file is issued in
 its original form.
 
 The symbol table was designed in a way that it can be displayed on an
 80-column display whenever possible. For symbols of ''normal length'',
 a double column output is used.  If symbols exceed (with their name
 and value) the limit of 40 columns (characters), they will be issued
-in a separate line. The output is done in alphabetical order. 
+in a separate line. The output is done in alphabetical order.
 Symbols that have been defined but were never used are marked with a
 star (*) as prefix.
 
-The parts mentioned so far as well as the list of all macros/functions 
-defined can be selectively masked out from the listing. 
-This can be done by the already mentioned command line switch \tty{-t}. 
-There is an internal byte inside AS whose bits represent which parts 
+The parts mentioned so far as well as the list of all macros/functions
+defined can be selectively masked out from the listing.
+This can be done by the already mentioned command line switch \tty{-t}.
+There is an internal byte inside AS whose bits represent which parts
 are to be written.  The assignment of bits to parts of the listing is
 listed in table \ref{TabTBits}.
 \par
@@ -1302,22 +1303,22 @@ All bits are set to 1 by default, when using the switch
 \begin{verbatim}
 -t <mask>
 \end{verbatim}
-Bits set in \tty{$<$mask$>$} are cleared, so that the respective listing 
-parts are suppressed.  Accordingly it is possible to switch on single 
-parts again with a plus sign, in case you had switched off too much 
-with the \tty{ASCMD} variable... If someone wants to have, for example, 
+Bits set in \tty{$<$mask$>$} are cleared, so that the respective listing
+parts are suppressed.  Accordingly it is possible to switch on single
+parts again with a plus sign, in case you had switched off too much
+with the \tty{ASCMD} variable... If someone wants to have, for example,
 only the symbol table, it is enough to write:
 \begin{verbatim}
--t 2  
+-t 2
 \end{verbatim}
-The usage list issues the occupied areas hexadecimally for every 
-single segment.  If the area has only one address, only this is written, 
+The usage list issues the occupied areas hexadecimally for every
+single segment.  If the area has only one address, only this is written,
 otherwise the first and last address.
 
-The cross reference list issues any defined symbol in alphabetical 
+The cross reference list issues any defined symbol in alphabetical
 order and has the following form:
 \begin{verbatim}
- symbol <symbol name> (=<value>,<file>/<line>): 
+ symbol <symbol name> (=<value>,<file>/<line>):
   file <file 1>:
   <n1>[(m1)]  ..... <nk>[(mk)]
   .
@@ -1327,13 +1328,13 @@ order and has the following form:
 \end{verbatim}
 The cross reference list lists for every symbol in which files and lines
 it has been used.  If a symbol was used several times in the same line,
-this would be indicated by a number in brackets behind the line number. 
+this would be indicated by a number in brackets behind the line number.
 If a symbol was never used, it would not appear in the list; The same is
 true for a file that does not contain any references for the symbol in
 question.
 
 \bb{CAUTION!}  AS can only print the listing correctly if it was
-previously informed about the output media's page length and width! 
+previously informed about the output media's page length and width!
 This has to be done with the \tty{PAGE} instruction (see there).  The
 preset default is a length of 60 lines and an unlimited line width.
 
@@ -1342,15 +1343,15 @@ preset default is a length of 60 lines and an unlimited line width.
 \section{Symbol Conventions}
 \label{SectSymConv}
 
-Symbols are allowed to be up to 255 characters long (as hinted already 
-in the introduction) and are being distinguished on the whole 
+Symbols are allowed to be up to 255 characters long (as hinted already
+in the introduction) and are being distinguished on the whole
 length, but the symbol names have to meet some conventions:
- 
-Symbol names are allowed to consist of a random combination of 
-letters, digits, underlines and dots, whereby the first character must 
-not be a digit. The dot is only allowed to meet the MCS-51 notation of 
-register bits and should - as far as possible - not be used in own symbol 
-names.  To separate symbol names in any case the underline (\tty{\_}) and not 
+
+Symbol names are allowed to consist of a random combination of
+letters, digits, underlines and dots, whereby the first character must
+not be a digit. The dot is only allowed to meet the MCS-51 notation of
+register bits and should - as far as possible - not be used in own symbol
+names.  To separate symbol names in any case the underline (\tty{\_}) and not
 the dot (\tty{.}) should be used .
 
 AS is by default not case-sensitive, i.e. it does not matter whether
@@ -1360,7 +1361,7 @@ makes a difference.  The predefined symbol \tty{CASESENSITIVE} signifies
 whether AS has been switched to this mode: TRUE means case-sensitiveness,
 and FALSE its absence.
 
-Table \ref{TabPredefined} shows the most important symbols which are 
+Table \ref{TabPredefined} shows the most important symbols which are
 predefined by AS.
 \begin{table*}[htb]
 \begin{center}\begin{tabular}{|l|l|}
@@ -1442,23 +1443,23 @@ symbol as argument.
 \begin{table}[htb]
 \begin{center}
 \begin{tabular}{|l|c|}
-\hline      
+\hline
 segment & return value \\
-\hline      
+\hline
 $<$none$>$ & 0 \\
-CODE & 1 \\ 
-DATA & 2 \\                                       
+CODE & 1 \\
+DATA & 2 \\
 IDATA & 3 \\
-XDATA & 4 \\                                      
-YDATA & 5 \\                                      
+XDATA & 4 \\
+YDATA & 5 \\
 BITDATA & 6 \\
 IO & 7 \\
-REG & 8 \\                                        
+REG & 8 \\
 ROMDATA & 9 \\
-$<$register symbol$>$ & 128 \\                     
-\hline                                            
-\end{tabular}                                     
-\end{center}                                      
+$<$register symbol$>$ & 128 \\
+\hline
+\end{tabular}
+\end{center}
 \caption{return values of the \tty{SYMTYPE} function\label{TabSegNums}}
 \end{table}
 
@@ -1518,7 +1519,7 @@ sign as a label, this is converted to symbol names of {\tt \_\_forwnn}
 respectively {\tt \_\_backmm}, with {\tt nn} respectively {\tt mm} being
 counters that start counting at zero.  Those symbols are referenced via
 the special names {\tt - -- ---} respectively {\tt + ++ +++}, which refer
-to the three last 'minus symbols' and the next three 'plus symbols'. 
+to the three last 'minus symbols' and the next three 'plus symbols'.
 Therefore, the selection between these two variants depends on whether one
 wants to forward- or backward-reference a symbol.
 
@@ -1570,7 +1571,7 @@ ptr:	dfs	2
 
 This is maybe the type of temporary symbols that is nearest to the concept
 of local symbols and sections.  Whenever a symbol's name begins with a dot
-(.), the symbol is not directly stored with this name in the symbol table. 
+(.), the symbol is not directly stored with this name in the symbol table.
 Instead, the name of the most recently-defined symbol not beginning with a
 dot is prepended to the symbols name.  This way, 'non-dotted' symbols take
 the role of section separators and 'dotted' symbol names may be reused
@@ -1694,12 +1695,12 @@ the following examples:
 'AB'   ==$4142
 'ABCD' ==$41424344
 \end{verbatim}
-It is important to write the characters in {\em single quotes}, to 
+It is important to write the characters in {\em single quotes}, to
 distinguish them from string constants (discussed somewhat later).
 
 \subsection{Floating Point Constants}
 
-Floating point constants are to be written in the usual scientific 
+Floating point constants are to be written in the usual scientific
 notation, which is known in the most general form:
 \begin{verbatim}
  [-]<integer digits>[.post decimal positions][E[-]exponent]
@@ -1714,10 +1715,10 @@ positions, e.g.  \tty{2.0} instead of \tty{2}.
 \label{SectStringConsts}
 
 String constants have to be included in {\em double quotation} marks (to
-distinguish them from the abovementioned ASCII-integers). In order to 
-make it possible to write quotation marks and special characters without 
-trouble in string constants, an ''escape mechanism'' has been implemented, 
-which should sound familiar for C programmers: 
+distinguish them from the abovementioned ASCII-integers). In order to
+make it possible to write quotation marks and special characters without
+trouble in string constants, an ''escape mechanism'' has been implemented,
+which should sound familiar for C programmers:
 
 The assembler understands a backslash (\verb!\!) with a following decimal
 number of three digits maximum in the string as a character with the
@@ -1736,7 +1737,7 @@ following abbreviations:
 \begin{verbatim}
 \b : Backspace           \a : Bell         \e : Escape
 \t : Tabulator           \n : Linefeed     \r : Carriage Return
-\\ : Backslash           \' or \H : Apostrophe 
+\\ : Backslash           \' or \H : Apostrophe
 \" or \I : Quotation marks
 \end{verbatim}
 Both upper and lower case characters may be used for the
@@ -1758,21 +1759,21 @@ transformation of capitals into lower case letters.  Integer results will
 by default be written in hexadecimal notation, which may be changed via
 the \tty{OUTRADIX} instruction.
 
-Except for the insertion of formula expressions, you can use this 
-''escape-mechanism'' as well in ASCII defined integer constants, 
+Except for the insertion of formula expressions, you can use this
+''escape-mechanism'' as well in ASCII defined integer constants,
 like this:
 \begin{verbatim}
      move.b   #'\n',d0
 \end{verbatim}
-However, everything has its limits, because the parser with higher 
-priority, which disassembles a line into op-code and parameters, does 
+However, everything has its limits, because the parser with higher
+priority, which disassembles a line into op-code and parameters, does
 not know what it is actually working with, e.g. here:
 \begin{verbatim}
      move.l   #'\'abc',d0
 \end{verbatim}
-After the third apostrophe, it will not find the comma any more, 
-because it presumes that it is the start of a further character 
-constant. An error message about a wrong parameter number is the result.  
+After the third apostrophe, it will not find the comma any more,
+because it presumes that it is the start of a further character
+constant. An error message about a wrong parameter number is the result.
 A workaround would be to write e.g., \verb!\i! instead of \verb!\'!.
 
 \subsection{Evaluation}
@@ -1783,7 +1784,7 @@ integer numbers, 80 bit for floating point numbers and 255 characters
 for strings.  An possible test of value range overflows is done only
 on the final result.
 
-The portable C version \marginpar{{\em UNIX}} only supports floating 
+The portable C version \marginpar{{\em UNIX}} only supports floating
 point values up to 64 bits (resulting in a maximum value of roughly
 $10^{308}$), but in turn features integer lengths of 64 bits on some
 platforms.
@@ -1831,18 +1832,18 @@ $<<$        & log. shift left  & 2 & yes   & no  & no  & 3 \\
 \end{tabular}\end{center}
 \caption{Operators Predefined by AS\label{TabOps}}
 \end{table*}
-''Rank'' is the priority of an operator at the separation of expressions 
-into subexpressions.  The operator with the highest rank will be 
-evaluated at the very end.  The order of evaluation can be defined by 
+''Rank'' is the priority of an operator at the separation of expressions
+into subexpressions.  The operator with the highest rank will be
+evaluated at the very end.  The order of evaluation can be defined by
 new bracketing.
 
-The compare operators deliver TRUE in case the condition fits, 
-and FALSE in case it doesn't.  For the logical operators an expression 
+The compare operators deliver TRUE in case the condition fits,
+and FALSE in case it doesn't.  For the logical operators an expression
 is TRUE in case it is not 0, otherwise it is FALSE.
 
-The mirroring of bits probably needs a little bit of explanation: the 
-operator mirrors the lowest bits in the first operand and leaves the 
-higher priority bits unchanged.  The number of bits which is to be 
+The mirroring of bits probably needs a little bit of explanation: the
+operator mirrors the lowest bits in the first operand and leaves the
+higher priority bits unchanged.  The number of bits which is to be
 mirrored is given by the right operand and may be between 1 and 32 .
 
 A small pitfall is hidden in the binary complement: As the
@@ -1853,7 +1854,7 @@ fitting mask is therefore unavoidable!
 
 \subsection{Functions}
 
-In addition to the operators, the assembler defines another line of 
+In addition to the operators, the assembler defines another line of
 primarily transcendental functions with floating point arguments which are
 listed in tables \ref{TabFuncs1} and \ref{TabFuncs2}.
 \begin{table*}[htbp]
@@ -1891,7 +1892,7 @@ ATANH    & inv. hyp. Tangent    & $arg < 1$            & floating point \\
 ACOTH    & inv. hyp. Cotangent  & $arg > 1$            & floating point \\
          &                      &                      & \\
 INT      & integer part         & $arg \in \rz$        & floating point \\
-\hline 
+\hline
 BITCNT   & number of one's      & integer              & integer \\
 FIRSTBIT & lowest 1-bit         & integer              & integer \\
 \hline
@@ -1903,8 +1904,8 @@ FIRSTBIT & lowest 1-bit         & integer              & integer \\
 \begin{center}\begin{tabular}{|l|l|l|l|}
 \hline
 name        & meaning              & argument & result \\
-\hline      
-\hline      
+\hline
+\hline
 LASTBIT     & highest 1-bit        & integer              & integer \\
 BITPOS      & unique 1-bit         & integer              & integer \\
             &                      &                      & \\
@@ -1953,7 +1954,7 @@ extracted as third parameter (a 0 means to extract all characters up to
 the end).  Similarly, \tty{CHARFROMSTR} expects the source string as
 first argument and the character position as second argument.  In case the
 position argument is larger or equal to the source string's length,
-\tty{SUBSTR} returns an empty string while \tty{CHARFROMSTR} returns -1. 
+\tty{SUBSTR} returns an empty string while \tty{CHARFROMSTR} returns -1.
 A position argument smaller than zero is treated as zero by \tty{SUBSTR},
 while \tty{CHARFROMSTR} will return -1 also in this case.
 
@@ -1969,7 +1970,7 @@ dbstr   macro   arg
         if      strlen(arg) > 0
          db     charfromstr(arg, strlen(arg) - 1) | 80h
         endif
-        endm 
+        endm
 \end{verbatim}
 
 \tty{STRSTR} returns the first occurence of the second string
@@ -2015,10 +2016,10 @@ manual):
 \begin{verbatim}
         move.l  #10,d0
 loop:   move.l  (a1),d1
-        beq     skip   
-        neg.l   d1     
+        beq     skip
+        neg.l   d1
 skip:   move.l  d1,(a1+)
-        dbra    d0,loop 
+        dbra    d0,loop
 \end{verbatim}
 If one overlooks the loop body with its branch statement, a program
 remains that is extremely simple to assemble: the only reference is
@@ -2116,7 +2117,7 @@ different ways:
       statement at the beginning where it has to be (all right, I'm
       already calming down...)}
 \item{For real die-hards: use the \tty{-Y} command line option.  This
-      option tells AS to forget the error message when the address 
+      option tells AS to forget the error message when the address
       change has been detected.  Not pretty, but...}
 \end{enumerate}
 Another tip regarding the \tty{EQU} instruction: AS cannot know in which
@@ -2138,7 +2139,7 @@ necessary.  Which is the essence you should learn from this section?
 \item{AS always tries to generate the shortest code possible.  A
       finite number of passes is needed for this.  If you do not tweak
       AS extremely, AS will know no mercy...}
-\item{Whenever sensible and possible, explicitly specify branch and 
+\item{Whenever sensible and possible, explicitly specify branch and
       address lengths.  There is a chance of significantly reducing the
       number of passes by this.}
 \item{Limit forward references to what is absolutely needed.  You make
@@ -2200,21 +2201,21 @@ AS, I have kept them in case someone really needs it.  The basic
 problem is to access certain symbols produced during assembly,
 because possibly someone would like to access the memory of the
 target system via this address information.  The assembler allows to
-export symbol values by means of \tty{SHARED} pseudo commands (see there). 
+export symbol values by means of \tty{SHARED} pseudo commands (see there).
 For this purpose, the assembler produces a text file with the required
 symbols and its values in the second pass.  This file may be included
 into a higher-level language or another assembler program.  The
 format of the text file (C, Pascal or Assembler) can be set by the
 command line switches \tty{p, c} or, \tty{a}.
 
-\bb{CAUTION!} If none of the switches is given, no file will be 
-generated and it makes no difference if \tty{SHARED}-commands are in the 
+\bb{CAUTION!} If none of the switches is given, no file will be
+generated and it makes no difference if \tty{SHARED}-commands are in the
 source text or not!
 
-When creating a Sharefile, AS does not check if a file with the 
-same name already exists, such a file  will be simply overwritten.  
-In my opinion a request does not make sense, because AS would 
-ask at each run if it should overwrite the old version of the 
+When creating a Sharefile, AS does not check if a file with the
+same name already exists, such a file  will be simply overwritten.
+In my opinion a request does not make sense, because AS would
+ask at each run if it should overwrite the old version of the
 Sharefile, and that would be really annoying...
 
 %%---------------------------------------------------------------------------
@@ -2229,7 +2230,7 @@ microcontroller families with user-definable peripherals has led to a
 steeply rising number of controllers that only deviate from a
 well-known type by a slightly modified peripheral set.  But the
 distinction among them is still important, e.g. for the design of
-include files that only define the appropriate subset of peripherals. 
+include files that only define the appropriate subset of peripherals.
 I have struggled up to now to integrate the most important
 reperesentatives of a processor family into AS (and I will continue
 to do this), but sometimes I just cannot keep pace with the
@@ -2262,7 +2263,7 @@ this.
 
 Not all pseudo instructions are defined for all processors.  A note
 that shows the range of validity is therefore prepended to every
-individual description. 
+individual description.
 
 %%---------------------------------------------------------------------------
 
@@ -2287,7 +2288,7 @@ VecCnt  set     0       ; somewhere at the beginning
         .
         .
         .
-DefVec  macro   Name    ; allocate a new vector 
+DefVec  macro   Name    ; allocate a new vector
 Name    equ     VecCnt
 VecCnt  set     VecCnt+4
         endm
@@ -2301,7 +2302,7 @@ constants and variables are internally stored in the same way, the only
 difference is that they are marked as unchangeable if defined via \tty{EQU}.
 Trying to change a constant with \tty{SET} will result in an error
 message.
- 
+
 \tty{EQU/SET} allow to define constants of all possible types, e.g.
 \begin{verbatim}
 IntTwo   equ    2
@@ -2311,7 +2312,7 @@ Some processors unfortunately have already a \tty{SET} instruction. For
 these targets, \tty{EVAL} must be used instead of \tty{SET}.
 
 A simple equation sign may be used instead of \tty{EQU}.  Similarly, one
-may simply write \tty{:=} instead of \tty{SET} resp. \tty{EVAL}. 
+may simply write \tty{:=} instead of \tty{SET} resp. \tty{EVAL}.
 Furthermore, there is an 'alternate' syntax that does not take
 the symbol's name from the label field, but instead from the
 first argument.  So for instance, it is valid to write:
@@ -2324,7 +2325,7 @@ For compatibility reasons to the original assembler, the KCPSM target also
 knows the {\tt CONSTANT} statement, which - in contrast to \tty{EQU} -
 takes both name and value as argument.  For example:
 \begin{verbatim}
-      CONSTANT  const1, 2 
+      CONSTANT  const1, 2
 \end{verbatim}
 {\tt CONSTANT} is however limited to integer constants.
 
@@ -2332,7 +2333,7 @@ Symbols defined with \tty{SET} or \tty{EQU} are typeless by default, but
 optionally a segment name (\tty{CODE, DATA, IDATA, XDATA, YDATA, BITDATA,
 IO}, or \tty{REG}) or \tty{MOMSEGMENT} for the currently active segment
 may be given as a second or thirsd parameter, allowing to assign the symbol to a
-specific address space.  AS does not check at this point if the used 
+specific address space.  AS does not check at this point if the used
 address space exists on the currently active target processor!
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2518,19 +2519,19 @@ symbolic name are given as arguments, for example:
 \subsection{LIV and RIV}
 \ttindex{LIV}\ttindex{RIV}
 
-{\em valid for: 8X30x} 
-                   
-\tty{LIV} and \tty{RIV} allow to define so-called ''IV bus objects''. 
-These are   
-groups of bits located in a peripheral memory cell with a length of 1 
-up to 8 bits, which can afterwards be referenced symbolically.  The  
+{\em valid for: 8X30x}
+
+\tty{LIV} and \tty{RIV} allow to define so-called ''IV bus objects''.
+These are
+groups of bits located in a peripheral memory cell with a length of 1
+up to 8 bits, which can afterwards be referenced symbolically.  The
 result is that one does not anymore have to specify address,
-position, and length separately for instructions that can refer to   
+position, and length separately for instructions that can refer to
 peripheral bit groups.  As the 8X30x processors feature two
-peripheral address spaces (a ''left'' and a ''right'' one), there are two 
-separate pseudo instructions.  The parameters of these instructions  
+peripheral address spaces (a ''left'' and a ''right'' one), there are two
+separate pseudo instructions.  The parameters of these instructions
 are however equal: three parameters have to be given that specify
-address, start position and length.  Further hints for the usage of  
+address, start position and length.  Further hints for the usage of
 bus objects can be found in section \ref{8X30xSpec} .
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2548,12 +2549,12 @@ for characters which assigns a target character to each source-code.  To
 modify this table (which initial translates 1:1), one has to use the
 \tty{CHARSET} instruction.  \tty{CHARSET} may be used with different
 numbers and types of parameters.  If there is only a single parameter, it
-has to be a string expression which is interpreted as a file name by AS. 
+has to be a string expression which is interpreted as a file name by AS.
 AS reads the first 256 bytes from this table and copies them into the
 translation table.  This allows to activate complex, externally generated
 tables with a single statement.  For all other variants, the first
 parameter has to be an integer in the range of 0 to 255 which designates
-the start index of the entries to be modified in the translation table. 
+the start index of the entries to be modified in the translation table.
 One or two parameters follow, giving the type of modification:
 
 A single additional integer modies exactly one entry.  For example,
@@ -2569,7 +2570,7 @@ characters, a simple
 \begin{verbatim}
         CHARSET 'a','z','A'
 \end{verbatim}
-translates all lower-case characters  automatically into the 
+translates all lower-case characters  automatically into the
 matching capital letters.
 
 For the last variant, a string follows the start index and contains the
@@ -2591,7 +2592,7 @@ above mentioned examples!
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{CODEPAGE}
-\ttindex{CODEPAGE}   
+\ttindex{CODEPAGE}
 
 {\em valid for: all processors}
 
@@ -2600,7 +2601,7 @@ character assignment between host and target platform, switching among
 different character {\em sets} can become quite tedious if several
 character sets have to be supported on the target platform.  The
 \tty{CODEPAGE} instruction however allows to define and keep different
-character sets and to switch with a single statement among them. 
+character sets and to switch with a single statement among them.
 \tty{CODEPAGE} expects one or two arguments: the name of the set to be
 used hereafter and optionally the name of another table that defines its
 initial contents (the second parameter therefore only has a meaning for
@@ -2786,6 +2787,8 @@ desired result when used as argument for \tty{ORG}.  The
 \hline
 \input{../doc_DE/taborg5.tex}
 \hline
+\multicolumn{10}{|l|}{$^{*}$ area for program code is limited to 1 MByte} \\
+\hline
 \end{tabular}\end{center}
 \caption{Address Ranges for \tty{ORG} --- Part 5\label{TabORG5}}
 \end{table*}
@@ -2803,13 +2806,13 @@ is 0.
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{RORG}
-\label{SectRORG} 
-\ttindex{RORG}   
+\label{SectRORG}
+\ttindex{RORG}
 
 {\em valid for: all processors}
 
 \tty{RORG} modifies the program counter just like \tty{ORG},
-however it does not expect an absolute address as argument. 
+however it does not expect an absolute address as argument.
 Instead, it expects a relative value (positive or negative) that
 is added to the current program counter.  A possible application
 of this statement is the reservation of a certain amount of
@@ -2848,7 +2851,7 @@ The differences in this family lie in additional instructions and
 addressing modes (starting from the 68020).  A small exception is the step
 to the 68030 that misses two instructions: \tty{CALLM} and \tty{RTM}.  The
 three representors of the 683xx family have the same processor core (a
-slightly reduced 68020 CPU), however completely different peripherals. 
+slightly reduced 68020 CPU), however completely different peripherals.
 MCF5200 represents the ColdFire family from Motorola, RISC processors
 downwardly binary compatible to the 680x0.  For the 68040, additional
 control registers (reachable via \tty{MOVEC}) and instructions for control
@@ -2897,7 +2900,7 @@ g) 6809/6309 and 6805/68HC(S)08
 \end{quote}
 These processors are partially source-code compatible to the other
 68xx processors, but they have a different binary code format and a
-significantly reduced (6805) resp. enhanced (6809) instruction set. 
+significantly reduced (6805) resp. enhanced (6809) instruction set.
 The 6309 is a CMOS version of the 6809 which is officially only
 compatible to the 6809, but inofficially offers more registers and a
 lot of new instructions (see \cite{Kaku}).
@@ -2952,11 +2955,11 @@ The CMOS version defines some additional instructions, as well as a number of
 some instruction/addressing mode combinations were added which were not
 possible on the 6502.  The W65C02S adds two opcodes to the 65C02 instruction
 set to give more fine-grained control over how to stop the CPU for low power
-modes.  The 65SC02 lacks the bit manipulation instructions of the          
+modes.  The 65SC02 lacks the bit manipulation instructions of the
 65C02.
 
 The 65C19 is {\em not} binary upward compatible to the original
-6502! Some addressing modes have been replaced by others. 
+6502! Some addressing modes have been replaced by others.
 Furthermore, this processor contains instruction set extensions
 that facilitate digital signal processing.
 
@@ -2974,7 +2977,7 @@ chip was used in video games) and to copy memory areas.
 
 The 6502UNDOC processor type enables access to the "undocumented"
 6502 instructions, i.e. the operations that result from the usage of bit
-combinations in the opcode that are not defined as instructions.  The 
+combinations in the opcode that are not defined as instructions.  The
 variants supported by AS are listed in the appendix containing processor-specific
 hints.
 %%-----------
@@ -3013,19 +3016,26 @@ possible due to mnemonic conflicts.
 \end{quote}
 %%-----------
 \begin{quote}
-u) 8021, 8022, 8039, 80C39, 8048, 80C48, 8041, 8042
+u) 8021, 8022, 8039, (MSM)80C39, 8048, (MSM)80C48, 8041, 8042, 80C382
 \end{quote}
 For the ROM-less versions 8039 and 80C39, the commands which are
 using the BUS (port 0) are forbidden.  The 8021 and 8022 are special
 versions with a strongly shrinked instruction set, for which the 8022
 has two A/D- converters and the necessary control-commands.  It is
-possible to transfer the CMOS-versions with the \tty{IDL}-command into a
-stop mode with lower current consumption.  The 8041 and 8042 have
-some additional instructions for controlling the bus interface, but
-in turn a few other commands were omitted.  Moreover, the code
-address space of these processors is not externally extendable,
-and so AS limits the code segment of these processors to 1 resp. 2
-Kbytes.
+possible to transfer the CMOS-versions with the \tty{IDL} resp.
+\tty{HALT} command into a stop mode with lower current consumption.
+The 8041 and 8042 have some additional instructions for controlling the
+bus interface, but in turn a few other commands were omitted.
+The code address space of 8041, 8042, 8021, and 8022 is not externally
+extendable, and so AS limits the code segment of these processors to
+one resp. two kilobytes.  The (SAB)80C382 is a variant especially
+designed by Siemens for usage in telephones.  It also knows a
+\tty{HALT} instruction, plus ist supports indirect addressing for
+\tty{DJNZ} and \tty{DEC}.  In turn, several instructions of the
+'generic' 8048 were left out.  The OKI variants (MSM...) also
+feature indirect addressing for \tty{DJNZ} and \tty{DEC}, plus
+enhanced control of power-down modes, plus the full basic MCS-48
+instrucion set.
 %%-----------
 \begin{quote}
 \begin{tabbing}
@@ -3056,9 +3066,9 @@ w) 8096 $\rightarrow$ 80196 $\rightarrow$ 80196N $\rightarrow$ 80296
 \end{quote}
 Apart from a different set of SFRs (which however strongly vary from
 version to version), the 80196 knows several new instructions and
-supports a 'windowing' mechanism to access the larger internal RAM. 
+supports a 'windowing' mechanism to access the larger internal RAM.
 The 80196N family extends the address space to 16 Mbytes and
-introduces a set of instructions to access addresses beyond 64Kbytes. 
+introduces a set of instructions to access addresses beyond 64Kbytes.
 The 80296 extends the CPU core by instructions for signal processing
 and a second windowing register, however removes the Peripheral
 Transaction Server (PTS) and therefore looses again two machine
@@ -3151,7 +3161,7 @@ parts only source-level compatible.
 %%-----------
 \begin{quote}
 ah) KCPSM
-\end{quote}  
+\end{quote}
 Both processor cores are not available as standalone components, they are
 provided as logic cores for gate arrays made by Xilinx The -3 variant
 offers a larger address space and some additional instructions.  Note that
@@ -3168,8 +3178,8 @@ two other ones represent versions 3.0 resp. 3.1.
 \begin{quote}
 aj) 96C141, 93C141
 \end{quote}
-These two processors represent the two variations of the processor 
-family: TLCS-900 and TLCS-900L.  The differences of these two variations 
+These two processors represent the two variations of the processor
+family: TLCS-900 and TLCS-900L.  The differences of these two variations
 will be discussed in detail in section \ref{TLCS900Spec}.
 %%-----------
 \begin{quote}
@@ -3190,7 +3200,7 @@ automatically.
 am) 47C00 $\rightarrow$ 470C00 $\rightarrow$ 470AC00
 \end{quote}
 These three variations of the TLCS-47-family have on-chip RAM and ROM
-of different size, which leads to several bank switching instructions 
+of different size, which leads to several bank switching instructions
 being added or suppressed.
 %%-----------
 \begin{quote}
@@ -3274,8 +3284,8 @@ implement a subset of the C5x instruction set.  The distinction among the
 C5x processors is currently not used by AS.
 %%-----------
 \begin{quote}
-ba) 320C541  
-\end{quote}  
+ba) 320C541
+\end{quote}
 This one at the moment represents the TMS320C54x family...
 %%-----------
 \begin{quote}
@@ -3338,13 +3348,13 @@ This is the only member of National Semiconductor's COP8 family that
 is currently supported.  I know that the family is substantially
 larger and that there are representors with differently large
 instruction sets which will be added when a need occurs.  It is a
-beginning, and National's documentation is quite extensive... 
+beginning, and National's documentation is quite extensive...
 %%-----------
 \begin{quote}
 bj) COP410 $\rightarrow$ COP420 $\rightarrow$ COP440 $\rightarrow$ COP444
 The COP42x derivates offer some additional instructions, plus other
 instructions have an extended operand range.
-\end{quote}  
+\end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
@@ -3400,27 +3410,32 @@ with.  Similar remarks like for the COP8 family apply!
 \begin{quote}
 bp) 78214
 \end{quote}
-This is currently the the representor of NEC's 78K2 family.
+This is currently the representor of NEC's 78K2 family.
 %%-----------
 \begin{quote}
 bq) 78310
 \end{quote}
-This is currently the the representor of NEC's 78K3 family.
+This is currently the representor of NEC's 78K3 family.
 %%-----------
 \begin{quote}
-br) 7720 $\rightarrow$ 7725
+br) 784026
+\end{quote}
+This is currently the representor of NEC's 78K4 family.
+%%-----------
+\begin{quote}
+bs) 7720 $\rightarrow$ 7725
 \end{quote}
 The $\mu$PD7725 offers larger address spaces and som more instructions
 compared to his predecessor. {\bf CAUTION!}  The processors are not binary
 compatible to each other!
 %%-----------
 \begin{quote}
-bs) 77230
+bt) 77230
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
-bt) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
+bu) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
     \> SYM53C875, SYM53C895
 \end{tabbing}
 \end{quote}
@@ -3429,30 +3444,30 @@ instruction variants, furthermore they are different in their set of
 internal registers.
 %%-----------
 \begin{quote}
-bu) MB89190  
-\end{quote}  
+bv) MB89190
+\end{quote}
 This processor type represents Fujitsu's F$^{2}$MC8L series...
 %%-----------
 \begin{quote}
-bv) MB9500
+bw) MB9500
 \end{quote}
 ...just like this one does it currently for the 16-bit variants from
 Fujitsu!
 %%-----------
 \begin{quote}
-bw) MSM5840, MSM5842, MSM58421, MSM58422, MSM5847 
+bx) MSM5840, MSM5842, MSM58421, MSM58422, MSM5847
 \end{quote}
 These variants of the OLMS-40 family differ in their instruction
 set and in the amount of internal program and data memory.
 %%-----------
 \begin{quote}
-bx) MSM5054, MSM5055, MSM5056, MSM6051, MSM6052
+by) MSM5054, MSM5055, MSM5056, MSM6051, MSM6052
 \end{quote}
 The as for the OLMS-40 family: differences in instruction
 set and the amount of internal program and data memory.
 %%-----------
 \begin{quote}
-by) 1802 $\rightarrow$ 1804, 1805, 1806 $\rightarrow$ 1804A,
+bz) 1802 $\rightarrow$ 1804, 1805, 1806 $\rightarrow$ 1804A,
 1805A, 1806A
 \end{quote}
 1804, 1805, and 1806 feature an instruction set that is slightly
@@ -3462,12 +3477,12 @@ an integrated timer.  The A variants extend the instruction set by
 subtraction in BCD format.
 %%-----------
 \begin{quote}
-by) XS1
+ca) XS1
 \end{quote}
 This type represents the XCore-"family".
 %%-----------
 \begin{quote}
-bz) 1750
+cb) 1750
 \end{quote}
 MIL STD 1750 is a standard, therefore there is only one
 (standard) variant...
@@ -3499,12 +3514,12 @@ the variable \tty{MOMCPU} you can define a macro that uses the machine
 instruction or emulates it depending on the processor type:
 \begin{verbatim}
 myrtd   macro   disp
-        if      MOMCPU<$68010 ; emulate for 68008 & 68000 
-         move.l (sp),disp(sp)   
-         lea    disp(sp),sp     
-         rts                    
-        elseif                  
-         rtd    #disp         ; direct use on >=68010 
+        if      MOMCPU<$68010 ; emulate for 68008 & 68000
+         move.l (sp),disp(sp)
+         lea    disp(sp),sp
+         rts
+        elseif
+         rtd    #disp         ; direct use on >=68010
         endif
         endm
 
@@ -3545,16 +3560,16 @@ variable which is either TRUE or FALSE.
 
 The commands have the following meanings in detail:
 \begin{itemize}
-\item{\tty{SUPMODE}: allows or prohibits commands, for whose execution the 
-      processor has to be within the supervisor mode.  The status 
+\item{\tty{SUPMODE}: allows or prohibits commands, for whose execution the
+      processor has to be within the supervisor mode.  The status
       variable is called \tty{INSUPMODE}.}
 \item{\tty{FPU}: allows or prohibits the commands of the numerical
       coprocessors 8087 resp. 68881 or 68882.  The status variable
       is called \tty{FPUAVAIL}.}
-\item{\tty{PMMU}: allows or prohibits the commands of the memory 
+\item{\tty{PMMU}: allows or prohibits the commands of the memory
       management unit 68851 resp. of  the built-in MMU of the 68030.
       \bb{CAUTION!} The 68030-MMU supports only a relatively small subset
-      of the 68851 instructions.  The assembler cannot test this! 
+      of the 68851 instructions.  The assembler cannot test this!
       The status variable is called \tty{PMMUAVAIL}.}
 \end{itemize}
 The usage of of instructions prohibited in this manner will generate a
@@ -3622,7 +3637,7 @@ single bytes within a 16-bit word.  In case this option is turned on
 DATA}, similar to the single characters of string arguments.  The value
 range of course reduces to -128...+255.  If this option is turned off
 (argument {\tt OFF}), each integer argument obtains its own word and may
-take values from -32768...+65535.  
+take values from -32768...+65535.
 
 This distinctin is only made for integer arguments of {\tt DATA}, strings
 will always be packed..  Keep further in mind that packing of values only
@@ -3681,7 +3696,7 @@ prefix, Intel provided two operating modes: the binary and the source
 mode.  The new processor is fully binary compatible to the 8051 in binary
 mode, all new instructions require the free opcode as prefix.  In source
 mode, the new instructions exchange their places in the code tables with
-the corresponding 8051 instructions, which in turn then need a prefix. 
+the corresponding 8051 instructions, which in turn then need a prefix.
 One has to inform AS whether the processor operates in source mode
 (\tty{ON}) or binary mode (\tty{OFF}) to enable AS to add prefixes when
 required.  The current setting may be read from the variable
@@ -3751,7 +3766,7 @@ the following segments with the following names are supported:
 \begin{itemize}
 \item{\tty{CODE}: program code;}
 \item{\tty{DATA}: directly addressable data (including SFRs);}
-\item{\tty{XDATA}: data in externally connected RAM or 
+\item{\tty{XDATA}: data in externally connected RAM or
       X-addressing space of the DSP56xxx or ROM data for the $\mu$PD772x;}
 \item{\tty{YDATA}: Y-addressing space of the DSP56xxx;}
 \item{\tty{IDATA}: indirectly addressable (internal) data; }
@@ -3810,9 +3825,9 @@ code will really be executed on the target system:
 \begin{verbatim}
         phase   <address>
 \end{verbatim}
-informs the assembler that the following code shall be executed at the 
-specified address.  The assembler calculates thereupon the difference to 
-the real program counter and adds this difference for the following 
+informs the assembler that the following code shall be executed at the
+specified address.  The assembler calculates thereupon the difference to
+the real program counter and adds this difference for the following
 operations:
 \begin{itemize}
 \item{address values in the listing}
@@ -3824,8 +3839,8 @@ this ''shifting'' is switched off by the instruction
 \begin{verbatim}
         dephase
 \end{verbatim}
-The assembler manages phase values for all defined segments, although 
-this instruction pair only makes real sense in the code segment.  
+The assembler manages phase values for all defined segments, although
+this instruction pair only makes real sense in the code segment.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3845,16 +3860,16 @@ following variables onto an internal stack:
 \item{currently active character translation table (set by
       \tty{CODEPAGE}).}
 \end{itemize}
-The counterpart \tty{RESTORE} pops the values saved last from this stack. 
+The counterpart \tty{RESTORE} pops the values saved last from this stack.
 These two commands were primarily designed for include files, to change
 the above mentioned variables in any way inside of these files, without
 loosing their original content.  This may be helpful e.g. in include files
 with own, fully debugged subroutines, to switch the listing generation
 off:
 \begin{verbatim}
-        SAVE            ; save old status 
+        SAVE            ; save old status
 
-        LISTING OFF     ; save paper 
+        LISTING OFF     ; save paper
 
         .               ; the actual code
         .
@@ -3889,7 +3904,7 @@ informs AS about these, \bb{no} machine code is generated that actually
 loads these values into the appropriate registers!
 
 A value defined with \tty{ASSUME} can be queried or integrated
-into expressions via the built-in function \tty{ASSUMEDVAL}. 
+into expressions via the built-in function \tty{ASSUMEDVAL}.
 This is the case for all architectures listed in the following
 sub-sections except for the 8086.
 
@@ -3952,7 +3967,7 @@ addressed via a couple of bank registers.  They carry the names DP
 (stack).  AS needs the current value of DP to check if absolute addresses
 are within the currently addressable bank; the other two registers are
 only used for indirect addressing and can therefore not be monitored; it
-is a question of personal taste whether one specifies their values or not. 
+is a question of personal taste whether one specifies their values or not.
 The BR register is in contrast important because it rules which 256-byte
 page may be accessed with short addresses.  It is common for all registers
 that AS does not assume \bb{any} default value for them as they are
@@ -4033,7 +4048,7 @@ moment, e.g.:
 \end{verbatim}
 It is possible to assign assumptions to all four segment registers in
 this way.  This instruction produces \bb{no} code, so the program itself
-has to do the actual load of the registers with the values. 
+has to do the actual load of the registers with the values.
 
 The usage of this instruction has on the one hand the result that AS is
 able to automatically put ahead prefixes at sporadic accesses into the
@@ -4118,7 +4133,7 @@ The default value is 0.
 \label{ST6Assume}
 
 The microcontrollers of the ST62 family are able to map a part (64 bytes)
-of the code area into the data area, e.g. to load constants from the ROM. 
+of the code area into the data area, e.g. to load constants from the ROM.
 This means also that at one moment only one part of the ROM can be
 addressed.  A special register rules which part it is.  AS cannot check
 the contents of this register directly, but it can be informed by this
@@ -4173,7 +4188,7 @@ to R4..R7.  This is mainly important for instructions that
 implicitly use one of these registers (i.e. instruction that do
 not encode the register number in the machine code).  However, it
 is also possible to inform the assembler about the changed
-mapping via a 
+mapping via a
 
 \begin{verbatim}
   assume rss:1
@@ -4183,6 +4198,29 @@ The assmebler will then insert the alternate register numbers
 into machine instructions that explicitly encode the register
 numbers.  Vice versa, \tty{R5} will be treated like \tty{A} instead
 of \tty{R1} in the source code.
+
+%%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+\subsubsection{78K4}
+
+78K4 was designed as an 'upgrade path' from 78K3, which is why
+this processor core contains the same RSS bit to control the
+mapping of registers AX and BC (though NEC discourages use of it
+in new code).
+
+Aside from many new instructins and addressing modes, the most
+significant extension is the larger address space of 16 MBytes,
+of which only the first MByte may be used for program code.  The
+CPU-internal RAM and all special function registers may be
+positioned either at the top of the first MByte or the top of the
+first 64 KByte page.  Choice is made via the \tty{LOCATION}
+machine instruction that either takes a 0 or 15 as argument. 
+Together with remapping RAM and SFRs, the processor also switches
+the address ranges that may be reached with short (8 bit)
+addresses.  Parallel to using \tty{LOCATION}, one has to inform
+the assembler about this setting via a \tty{ASSUME LOCATION:..}
+statement.  It will then use short addressing for the proper
+ranges.  The assembler will assume a default of 0 for LOCATION.
 
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
@@ -4292,7 +4330,7 @@ somewhat from its designers miserliness: registers of only 16 bits width
 are faced with an address space of 24 bits.  Once again, bank registers
 had to fill the gap.  In detail, these are PCB for the progam code, DTB
 for all data accesses, ADB for indirect accesses via RW2/RW6, and SSB/USB
-for the stacks.  They may all take values from 0 to 255 and are by default 
+for the stacks.  They may all take values from 0 to 255 and are by default
 assumed to be 0, with the exception of 0ffh for PCB.
 
 Furthermore, a DPR register exists that specifies which memory page within
@@ -4339,7 +4377,7 @@ with a longer sequence of same functionality, in case the branc target is
 out of reach for the instruction's displacement.  For example, the
 replacement sequence for {\tt bne} would be
 \begin{verbatim}
-        beq     skip  
+        beq     skip
         jmp     target
 skip:
 \end{verbatim}
@@ -4364,7 +4402,7 @@ should therefore use this feature with caution!
 {\em G"ultigkeit: 8080/8085}
 
 With \tty{ON} as argument, one can optionally write (almost) all
-8080 instructions in the form Zilog defined them for the Z80. 
+8080 instructions in the form Zilog defined them for the Z80.
 For instance, you simply use \tty{LD} with self-explaining
 operands instead of \tty{MVI, LXI, MOV, STA, LDA, SHLD, LHLD,
 LDAX, STAX} or \tty{SPHL}.
@@ -4393,7 +4431,7 @@ number of parameters which are being processed from left to right.
 \ttindex{DC}
 
 {\em valid for: 680x0, M*Core, 68xx, H8, SH7x00, DSP56xxx, XA, ST7}
-  
+
 This instruction places one or several constants of the type
 specified by the attribute into memory.  The attributes are the same ones as
 defined in section \ref{AttrTypes}, and there is additionally the
@@ -4423,16 +4461,16 @@ exponent at the read of such constants!
 
 The default attribute is \tty{W}, that means 16-bit-integer numbers.
 
-For the DSP56xxx, the data type is fixed to integer numbers (an attribute is 
+For the DSP56xxx, the data type is fixed to integer numbers (an attribute is
 therefore neither necessary nor allowed), which may be in the range
-of -8M up to 16M-1.  String constants are also allowed, whereby three characters 
+of -8M up to 16M-1.  String constants are also allowed, whereby three characters
 are packed into each word.
 
 Opposed to the standar Motorola ssembler, it is also valid to reserve
-memory space with this statement, by using a question mark as operand. 
+memory space with this statement, by using a question mark as operand.
 This is an extension added by some third-party suppliers for 68K
 assemblers, similar to what Intel assemblers provide.  However, it should
-be clear that usage of this feature may lead to portability problems. 
+be clear that usage of this feature may lead to portability problems.
 Furthermore, question marks as operands must not be mixed with 'normal'
 constants in a single statement.
 
@@ -4444,8 +4482,8 @@ constants in a single statement.
 {\em valid for: 680x0, M*Core, 68xx, H8, SH7x00, DSP56xxx, XA,, ST7}
 
 On the one hand, this instruction enables to reserve memory space for
-the specified count of numbers of the type given by the attribute. 
-Therefore, 
+the specified count of numbers of the type given by the attribute.
+Therefore,
 \begin{verbatim}
         DS.B    20
 \end{verbatim}
@@ -4467,7 +4505,7 @@ a
 \end{verbatim}
 in contrast to the next double word boundary.  Memory cells possibly
 staying unused thereby are neither zeroed nor filled with NOPs, they
-simply stay undefined. 
+simply stay undefined.
 
 The default for the operand length is - as usual - \tty{W}, i.e. 16 bits.
 
@@ -4518,7 +4556,7 @@ constant sequences or the reservation of whole memory blocks:
 \end{verbatim}
 As you can see, the \tty{DUP}-argument must be enclosed in parentheses,
 which is also why it may consist of several components, that may
-themselves be \tty{DUP}s...the stuff therefore works recursively. 
+themselves be \tty{DUP}s...the stuff therefore works recursively.
 \tty{DUP} is however also a place where one can get in touch with another
 limit of the assembler: a maximum of 1024 bytes of code or data may be
 generated in one line.  This is not valid for the reservation of memory,
@@ -4561,7 +4599,7 @@ Although this could easily be made by a macro, some people grown up
 with Motorola CPUs (Hi Michael!) suggest \tty{DS} to be a built-in
 instruction...I hope they are satisfied now \tty{;-)}
 
-{\tt DS8} is defined as an alias for {\tt DS} on the National SC14xxx. 
+{\tt DS8} is defined as an alias for {\tt DS} on the National SC14xxx.
 Beware that the code memory of these processors is organized in words of
 16 bits, it is therefore impossible to reserve individual bytes.  In case
 the argument of {\tt DS} is odd, it will be rounded up to the next even
@@ -4597,7 +4635,7 @@ shall be padded with a zero byte in MSP/TMS9900 mode.
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{DC8}
-\ttindex{DC8} 
+\ttindex{DC8}
 
 {\em valid for: SC144xx}
 
@@ -4611,7 +4649,7 @@ constants or strings to memory.
 
 {\em valid for: 6502, 68xx}
 
-\tty{ADR} resp. \tty{FDB} stores word constants when in 65xx/68xx mode. 
+\tty{ADR} resp. \tty{FDB} stores word constants when in 65xx/68xx mode.
 It is therefore the equivalent to \tty{DC.W} on the 68000 or \tty{DW} on
 Intel platforms.  Similarly to \tty{DC}, a repetition factor enclosed
 in brackets ([..]) may be prepended to every single parameter.
@@ -4630,7 +4668,7 @@ has no type, i.e. it belongs to no address space.  This behaviour is
 explained at the discussion on processor-specific hints.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-   
+
 \subsection{DW16}
 \ttindex{DW16}
 
@@ -4647,7 +4685,7 @@ DW}.
 
 {\em valid for: 320C2(0)x, 320C5x}
 
-LONG stores a 32-bit integer to memory with the order LoWord-HiWord. 
+LONG stores a 32-bit integer to memory with the order LoWord-HiWord.
 Note that when in 320C2(0)x/5x mode, the assembler assumes that a label
 on the left side of this instruction has no type, i.e. it belongs to
 no address space. This behaviour is explained in the
@@ -4941,14 +4979,14 @@ knows the following statements to work with such blocks:
 \subsection{MACRO}
 \ttindex{MACRO}\ttindex{ENDM}
 
-is probably the most important instruction for macro programming. 
+is probably the most important instruction for macro programming.
 The instruction sequence
 \begin{verbatim}
 <name>  MACRO   [parameter list]
         <instructions>
         ENDM
 \end{verbatim}
-defines the macro \tty{$<$name$>$} to be the enclosed instruction sequence. 
+defines the macro \tty{$<$name$>$} to be the enclosed instruction sequence.
 This definition by itself does not generate any code!  In turn, from
 now on the instruction sequence can simply be called by the name, the
 whole construct therefore shortens and simplifies programs.  A
@@ -5003,7 +5041,7 @@ defined:
       global macro named \tty{C\_B\_A} would be generated.  In contrast, if
       \tty{C} had been specified as target section, the macro would be named \tty{B\_A}
       and be assigned to section \tty{C}.  This option is turned off by default
-      and it only has an effect when it is used from within a section. 
+      and it only has an effect when it is used from within a section.
       The macro defined locally is not influenced by this option.}
 \item{\tty{EXPORT/NOEXPORT}: rules whether the definition of this macro
       shall be written to a separate file in case the \tty{-M} command line
@@ -5012,7 +5050,7 @@ defined:
       definition will not be written to the file.  The macro will be
       written with the concatenated name if the \tty{GLOBAL} option was
       additionally present.}
-\item{\tty{INTLABEL/NOINTLABEL} : rules whether a label defined in a line 
+\item{\tty{INTLABEL/NOINTLABEL} : rules whether a label defined in a line
       that calls this macro may be used as an additional parameter inside
       the label or not, instead of simply 'labeling' the line.}
 \item{\tty{GLOBALSYMBOLS/NOGLOBALSYMBOLS} : rules whether labels
@@ -5050,7 +5088,7 @@ mul     MACRO   para,parb
 \end{verbatim}
 It is important for the example above that the assembler converts all
 parameter names to upper case when operating in case-insensitive
-mode, but this conversion never takes place inside of string constants. 
+mode, but this conversion never takes place inside of string constants.
 Macro parameter names therefore have to be written in upper case when
 they appear in string constants.
 
@@ -5062,7 +5100,7 @@ parameters simply results from the position of arguments, i.e.
 the first argument is assigned to the first parameter, the second
 argument to the second parameter and so on.  If the number of
 arguments is smaller than the number of parameters, eventually
-defined default values or simply an empty string are inserted. 
+defined default values or simply an empty string are inserted.
 The same is valid for empty arguments in the argument list.
 
 Keyword arguments on the other hand explicitly define which
@@ -5108,7 +5146,7 @@ they cannot not be redeclared as explicit parameters:
 \item{{\tt ATTRIBUTE} refers to the attribute appended to the macro call,
       in case the currently active architecture supports attributes for
       machine instructions.  See below for an example!}
-\item{{\tt ALLARGS} refers to a comma-separated list of all arguments 
+\item{{\tt ALLARGS} refers to a comma-separated list of all arguments
       passed to a macro, usable e.g. to pass them on to a IRP statement.}
 \item{{\tt ARGCOUNT} refers to the actual count of parameters passed to
       a macro.  Note however that this number is never lower than the
@@ -5140,7 +5178,7 @@ this trick:
 \begin{verbatim}
 myinstr    macro {INTLABEL}
 __LABEL__  instr2
-           endm  
+           endm
 
            instr1
 ||         myinstr
@@ -5224,7 +5262,7 @@ extend existing instructions in their functionality, e.g. the
 TLCS-90's shift instructions:
 \begin{verbatim}
 srl     macro   op,n            ; shift by n places
-        rept    n               ; n simple instructions   
+        rept    n               ; n simple instructions
          !srl   op
         endm
         endm
@@ -5249,7 +5287,7 @@ sequentially inserted into the block of code.  For example, one can write
 to push a couple of registers to the stack, what results in
 \begin{verbatim}
         push    acc
-        push    b  
+        push    b
         push    dpl
         push    dph
 \end{verbatim}
@@ -5262,7 +5300,7 @@ every pass or not.
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{IRPC}
-\ttindex{IRPC}   
+\ttindex{IRPC}
 
 \tty{IRPC} is a variant of \tty{IRP} where the first argument's occurences
 in the lines up to \tty{ENDM} are successively replaced by the characters
@@ -5362,12 +5400,12 @@ completely break out of a nested construct, one has to use additional
 \subsection{SHIFT}
 \ttindex{SHIFT}
 
-{\tt SHIFT} is a tool to construct macros with variable argument lists: it 
+{\tt SHIFT} is a tool to construct macros with variable argument lists: it
 discards the first parameter, with the result that the second parameter
 takes its place and so on.  This way one could process a variable argument
 list...if you do it the right way.  For example, the following does not
 work...
-\begin{verbatim}   
+\begin{verbatim}
 pushlist  macro reg
           rept  ARGCOUNT
           push  reg
@@ -5385,8 +5423,8 @@ pushlist  macro reg
            shift
            pushlist ALLARGS
           endif
-          endm 
-\end{verbatim} 
+          endm
+\end{verbatim}
 Effectively, this is a recursion that shortens the argument list once per
 step.  The important trick is that a new macro expansion is started in
 each step...
@@ -5456,7 +5494,7 @@ errors.  Such definitions therefore should be done before the first
 call!
 
 The result's type may depend on the type of the input arguments as
-the arguments are textually inserted into the function's formula. 
+the arguments are textually inserted into the function's formula.
 For example, the function
 \begin{verbatim}
 double  function x,x+x
@@ -5486,7 +5524,7 @@ statements.  These statements shall be explained in the following section.
 
 The definiton of a structure is begun with the statement
 \tty{STRUCT} and ends with \tty{ENDSTRUCT} (lazy people may also
-write {\tt STRUC} resp.  {\tt ENDSTRUC} or {\tt ENDS} instead). 
+write {\tt STRUC} resp.  {\tt ENDSTRUC} or {\tt ENDS} instead).
 A optional label preceding these instructions is taken as the
 name of the structure to be defined; it is optional at the end of
 the definition and may be used to redefine the length symbol's
@@ -5495,7 +5533,7 @@ with \tty{STRUCT}, the cuurent program counter is saved and reset
 to zero.  All labels defined between \tty{STRUCT} and
 \tty{ENDSTRUCT} therefore are the offsets of the structure's data
 fields.  Reserving space is done via the same instructions that
-are also otherwise used for reserving space, like e.g. 
+are also otherwise used for reserving space, like e.g.
 \tty{DS.x} for Motorola CPUs or \tty{DB} \& co.  for Intel-style
 processors.  The rules for rounding up lengths to assure certain
 alignments also apply here - if one wants to define 'packed'
@@ -5536,12 +5574,12 @@ given with the \tty{ENDSTRUCT} statement.
 
 In practice, this may things may look like in this example:
 \begin{verbatim}
-Rec     STRUCT  
+Rec     STRUCT
 Ident   db      ?
 Pad     db      ?
 Pointer dd      ?
 Rec     ENDSTRUCT
-\end{verbatim}   
+\end{verbatim}
 In this example, the symbol {\tt REC\_LEN} would be assigned the value 6.
 
 \subsection{Usage}
@@ -5572,7 +5610,7 @@ the instance is being prepended, and the name of the super-structure is
 once again geing prepended to this concatenated name.  This may look like
 the following:
 \begin{verbatim}
-TreeRec struct  
+TreeRec struct
 left    dd         ?
 right   dd         ?
 data    Rec
@@ -5582,7 +5620,7 @@ TreeRec endstruct
 It is also allowed to define one structure inside of another
 structure:
 \begin{verbatim}
-TreeRec struct  
+TreeRec struct
 left    dd         ?
 right   dd         ?
 TreeData struct
@@ -5607,9 +5645,9 @@ the maximum of all elements' lengths.
 The name of a structure or union is optional if it is part of
 another (named) structure or union.  Elements of this structure
 will then become part of of the 'next higher' named structure.
-For example, 
+For example,
 \begin{verbatim}
-TreeRec struct  
+TreeRec struct
 left    dd         ?
 right   dd         ?
         struct
@@ -5617,7 +5655,7 @@ name      db         32 dup(?)
 id        dw         ?
         endstruct
 TreeRec endstruct
-\end{verbatim}   
+\end{verbatim}
 generates the symbols {\tt TREEREC\_NAME} and {\em TREEREC\_ID}.
 
 Futhermore, no symbol holding its length is generated for an
@@ -5736,7 +5774,7 @@ defined:
 It is valid to write {\tt ELSE} instead of {\tt ELSEIF} since everybody
 seems to be used to it...
 
-For every {IF...} statement, there has to be a corresponding {\tt ENDIF}. 
+For every {IF...} statement, there has to be a corresponding {\tt ENDIF}.
 'Open' constructs will lead to an error message at the end of an assembly
 path.  The way AS has 'paired' {\tt ENDIF} statements with {\tt IF}s may
 be deduced from the assembly listing: for {\tt ENDIF}, the line number of
@@ -5871,7 +5909,7 @@ page 2,   \> instruction \tty{NEWPAGE 1} \>  $\rightarrow$ page 2.1 \\
 page 2.1, \> instruction \tty{NEWPAGE 1} \>  $\rightarrow$ page 3.1 \\
 page 3.1, \> instruction \tty{NEWPAGE 0} \>  $\rightarrow$ page 3.2 \\
 page 3.2, \> instruction \tty{NEWPAGE 2} \>  $\rightarrow$ page 4.1.1 \\
-\end{tabbing}\end{quote} 
+\end{tabbing}\end{quote}
 \tty{NEWPAGE $<$number$>$} may therefore result in
 changes in different digits, depending on the current chapter depth.  An
 automatic form feed due to a line counter overflow or a \tty{NEWPAGE}
@@ -5891,7 +5929,7 @@ and if yes, which parts of it.  The simples usage is
 \begin{verbatim}
         macexp  off
 \end{verbatim}
-which completely turns off printing of the expanded code. 
+which completely turns off printing of the expanded code.
 Consequently, by issuing a
 \begin{verbatim}
         macexp  on
@@ -5970,7 +6008,7 @@ deactivate this mode again at the end of the listing.  The output of
 the needed control sequences can be automated with these instructions
 if one specifies the sequence that shall be sent to the output device
 prior to the listing with \tty{PRTINIT $<$string$>$} and similarly the
-deinitialization string with \tty{PRTEXIT $<$string$>$}. 
+deinitialization string with \tty{PRTEXIT $<$string$>$}.
 \tty{$<$string$>$} has to be a string expression in both cases.  The syntax
 rules for string constants allow to insert control characters into the
 string without too much tweaking.
@@ -6030,7 +6068,7 @@ used as argument. Only use simple constant numbers!
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{OUTRADIX}
-\ttindex{OUTRADIX}   
+\ttindex{OUTRADIX}
 
 \tty{OUTRADIX} can in a certain way be regarded as the opposite to
 \tty{RADIX}: This statement allows to configure which numbering system to
@@ -6073,7 +6111,7 @@ Especially the last item was something that always nagged me: once
 there was a label's name defined at the beginning of a 2000-lines
 program, there was no way to reuse it somehow - even not at the
 file's other end where routines with a completely different context
-were placed.  I was forced to use concatenated names in the style of 
+were placed.  I was forced to use concatenated names in the style of
 \begin{verbatim}
    <subprogram name>_<symbol name>
 \end{verbatim}
@@ -6321,7 +6359,7 @@ This setting is equal to the Pascal model that also only allows the
 ''father'' to see its children, but not the ''grandpa''.
 
 AS will quarrel about double-defined symbols if more than one section
-attempts to export a symbol of a certain name to the same upper section. 
+attempts to export a symbol of a certain name to the same upper section.
 This is by itself a correct reaction, and one needs to ''qualify'' symbols
 somehow to make them distinguishable if these exports were deliberate.  A
 \tty{GLOBAL} statement does just this.  The syntax of \tty{GLOBAL} is
@@ -6429,7 +6467,7 @@ the comment itself does not contain character sequences that close
 the comment (''*/'' resp. ''*)'').  AS does not check for this!
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-       
+
 \subsection{INCLUDE}
 \label{SectInclude}
 \ttindex{INCLUDE}
@@ -6451,7 +6489,7 @@ file is not found, a \bb{fatal} error occurs, i.e. assembly terminates
 immediately.
 
 For compatibility reasons, it is valid to enclose the file name in ''
-characters, i.e. 
+characters, i.e.
 \begin{verbatim}
         include stddef51
 \end{verbatim}
@@ -6495,7 +6533,7 @@ The same rules regarding search paths apply as for \tty{INCLUDE}.
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{MESSAGE, WARNING, ERROR, and FATAL}
-\ttindex{MESSAGE}\ttindex{WARNING}\ttindex{ERROR}\ttindex{FATAL}           
+\ttindex{MESSAGE}\ttindex{WARNING}\ttindex{ERROR}\ttindex{FATAL}
 {\em valid for: all processors}
 
 Though the assembler checks source files as strict as possible and
@@ -6524,13 +6562,13 @@ following way:
 \begin{verbatim}
 ROMSize equ     8000h   ; 27256 EPROM
 
-ProgStart: 
+ProgStart:
         .
         .
         <the program itself>
         .
         .
-ProgEnd:   
+ProgEnd:
 
         if      ProgEnd-ProgStart>ROMSize
          error  "\athe program is too long!"
@@ -6545,7 +6583,7 @@ instructions.
 
 \subsection{READ}
 \ttindex{READ}
-           
+
 {\em valid for: all processors}
 
 One could say that \tty{READ} is the counterpart to the previous
@@ -6569,7 +6607,7 @@ shown in the example should always be used to avoid bothering the
 user multiple times with questions.
 
 \tty{READ} is quite similar to \tty{SET} with the difference that the
-value is read from the keyboard instead of the instruction's arguments. 
+value is read from the keyboard instead of the instruction's arguments.
 This for example also implies that AS will automatically set the symbol's
 type (integer, float or string) or that it is valid to enter formula
 expressions instead of a simple constant.
@@ -6588,20 +6626,20 @@ symbol's name if it is omitted.
 
 By default, AS assigns a distinct syntax for integer constants to a
 processor family (which is in general equal to the manufacturer's
-specifications, as long as the syntax is not too bizarre...). 
+specifications, as long as the syntax is not too bizarre...).
 Everyone however has his own preferences for another syntax and may
 well live with the fact that his programs cannot be translated any
 more with the standard assembler.  If one places the instruction
 \begin{verbatim}
         RELAXED ON
-\end{verbatim}           
+\end{verbatim}
 right at the program's beginning, one may furtherly use any syntax
 for integer constants, even mixed in a program.  AS tries to guess
 automatically for every expression the syntax that was used.  This
 automatism does not always deliver the result one might have in mind,
 and this is also the reason why this option has to be enable
-explicitly: if there are no prefixes or postfixes that unambiguously 
-identify either Intel or Motorola syntax, the C mode will be used. 
+explicitly: if there are no prefixes or postfixes that unambiguously
+identify either Intel or Motorola syntax, the C mode will be used.
 Leading zeroes that are superfluous in other modes have a meaning in
 this mode:
 \begin{verbatim}
@@ -6620,7 +6658,7 @@ The current setting may be read from a symbol with the same name.
 
 \subsection{END}
 \ttindex{END}
-           
+
 {\em valid for: all processors}
 
 \tty{END} marks the end of an assembler program.  Lines that eventually
@@ -6648,7 +6686,7 @@ effect.
 
 When writing the individual code generators, I strived for a maximum
 amount of compatibility to the original assemblers.  However, I only did this
-as long as it did not mean an unacceptable additional amount of work. 
+as long as it did not mean an unacceptable additional amount of work.
 I listed important differences, details and pitfalls in the following
 chapter.
 
@@ -6695,7 +6733,7 @@ makes programmers' and tool developers' lifes simpler...how does one
 sensibly map something like this on a model for a programmer?
 
 The K4 architecture {\em extends} the HC11 address space by 2x512 Kbytes,
-which means that we now have a total address space of 64+1024=1088 Kbytes. 
+which means that we now have a total address space of 64+1024=1088 Kbytes.
 AS acts like this were one large unified addres space, with the following
 layout:
 \begin{itemize}
@@ -6731,7 +6769,7 @@ located at \$10000 would effectively result in a jump to address \$4003.
 \section{PowerPC}
 
 Of course, it is a bit crazy idea to add support in AS for a
-processor that was mostly designed for usage in work stations. 
+processor that was mostly designed for usage in work stations.
 Remember that AS mainly is targeted at programmers of single board
 computers.  But things that today represent the absolute high end in
 computing will be average tomorrow and maybe obsolete the next day,
@@ -6766,7 +6804,7 @@ parallel data transfers!
 Well...Motorola defined it that way, and I cannot change it.  Using
 tabs instead of spaces to separate the parallel operations is also
 allowed, and the individual operations' parts are again separated
-with commas, as one would expect it. 
+with commas, as one would expect it.
 
 \cite{Mot56} states that instead of using \tty{MOVEC, MOVEM, ANDI} or
 \tty{ORI}, it is also valid to use the more general Mnemonics \tty{MODE,
@@ -6793,14 +6831,14 @@ dollar sign.
 
 Unfortunately, Hitachi once again used their own format for
 hexadecimal numbers, and once again I was not able to reproduce this
-with AS...please use Motorola syntax! 
+with AS...please use Motorola syntax!
 
 When using literals and the \tty{LTORG} instruction, a few things have to
 be kept in mind if you do not want to suddenly get confronted with strange
 error messages:
 
 Literals exist due to the fact that the processor is unable to load
-constants out of a range of -128 to 127 with immediate addressing. 
+constants out of a range of -128 to 127 with immediate addressing.
 AS (and the Hitachi assembler) hide this inability by the automatic
 placement of constants in memory which are then referenced via
 PC-relative addressing.  The question that now arises is where to
@@ -6871,7 +6909,7 @@ effectively disabling any PC-relative addressing at this point.
 It is not possible to deduce the memory usage from the count and size
 of literals.  AS might need to insert a padding word to align a long
 word to an address that is evenly divisible by 4; on the other hand,
-AS might reuse parts of a 32-bit literal for other 16-bit literals. 
+AS might reuse parts of a 32-bit literal for other 16-bit literals.
 Of course multiple use of a literal with a certain value will create
 only one entry.  However, such optimizations are completely
 suppressed for forward references as AS does not know anything about
@@ -6896,10 +6934,10 @@ the first instruction will result in true immediate addressing, the
 second and third instruction will use a word literal:  As bit 7 in
 the number is set, the byte instruction will effectively create the
 value \$FFFFFFC0 in the register.  According to the convention, this
-wouldn't be the desired value in the second and third example. 
+wouldn't be the desired value in the second and third example.
 However, a word literal is also sufficient for the third case because
 the processor will copy a cleared bit 15 of the operand to bits
-16..31. 
+16..31.
 
 As one can see, the whole literal stuff is rather complex; I'm sorry but
 there was no chance of making things simpler.  It is unfortunately a
@@ -7112,9 +7150,9 @@ instead of
 Since the 6502's undocumented instructions naturally aren't listed in
 any data book, they shall be listed shortly at this place.  Of
 course, you are using them on your own risk.  There is no guarantee
-that all mask revisions will support all variants!  They anyhow do 
-not work for the CMOS successors of the 6502, since they allocated 
-the corresponding bit combinations with "official" instructions... 
+that all mask revisions will support all variants!  They anyhow do
+not work for the CMOS successors of the 6502, since they allocated
+the corresponding bit combinations with "official" instructions...
 
 The following symbols are used:
 
@@ -7140,14 +7178,14 @@ $\leftarrow$ \> assignment \\
 \end{tabbing}
 
 \begin{tabbing}
-Addressing Modes \= : \= \kill 
+Addressing Modes \= : \= \kill
 Instruction      \> : \> \tty{JAM} or \tty{KIL} or \tty{CRS} \\
 Function         \> : \> none, prozessor is halted \\
 Addressing Modes \> : \> implicit \\
 \end{tabbing}
 
 \begin{tabbing}
-Addressing Modes \= : \= \kill 
+Addressing Modes \= : \= \kill
 Instruction      \> : \> \tty{SLO} \\
 Function         \> : \> $M\leftarrow((M)<<1)|(A)$ \\
 Addressing Modes \> : \> absolute long/short, X-indexed long/short, \\
@@ -7155,14 +7193,14 @@ Addressing Modes \> : \> absolute long/short, X-indexed long/short, \\
 \end{tabbing}
 
 \begin{tabbing}
-Addressing Modes \= : \= \kill 
+Addressing Modes \= : \= \kill
 Instruction      \> : \> \tty{ANC} \\
 Function         \> : \> $A\leftarrow(A)\&(M), C\leftarrow A7$ \\
 Addressing Modes \> : \> immediate \\
 \end{tabbing}
 
 \begin{tabbing}
-Addressing Modes \= : \= \kill 
+Addressing Modes \= : \= \kill
 Instruction      \> : \> \tty{RLA} \\
 Function         \> : \> $M\leftarrow((M)<<1)\&(A)$ \\
 Addressing Modes \> : \> absolute long/short, X-indexed long/short, \\
@@ -7170,7 +7208,7 @@ Addressing Modes \> : \> absolute long/short, X-indexed long/short, \\
 \end{tabbing}
 
 \begin{tabbing}
-Addressing Modes \= : \= \kill 
+Addressing Modes \= : \= \kill
 Instruction      \> : \> \tty{SRE} \\
 Function         \> : \> $M\leftarrow((M)>>1)$\verb!^!$(A)$ \\
 Addressing Modes \> : \> absolute long/short, X-indexed long/short, \\
@@ -7178,14 +7216,14 @@ Addressing Modes \> : \> absolute long/short, X-indexed long/short, \\
 \end{tabbing}
 
 \begin{tabbing}
-Addressing Modes \= : \= \kill 
+Addressing Modes \= : \= \kill
 Instruction      \> : \> \tty{ASR} \\
 Function         \> : \> $A\leftarrow((A)\&(M))>>1$ \\
 Addressing Modes \> : \> immediate \\
 \end{tabbing}
 
 \begin{tabbing}
-Addressing Modes \= : \= \kill 
+Addressing Modes \= : \= \kill
 Instruction      \> : \> \tty{RRA} \\
 Function         \> : \> $M\leftarrow((M)>>>1)+(A)+(C)$ \\
 Addressing Modes \> : \> absolute long/short, X-indexed long/short, \\
@@ -7193,14 +7231,14 @@ Addressing Modes \> : \> absolute long/short, X-indexed long/short, \\
 \end{tabbing}
 
 \begin{tabbing}
-Addressing Modes \= : \= \kill 
+Addressing Modes \= : \= \kill
 Instruction      \> : \> \tty{ARR} \\
 Function         \> : \> $A\leftarrow((A)\&(M))>>>1$ \\
 Addressing Modes \> : \> immediate \\
 \end{tabbing}
 
 \begin{tabbing}
-Addressing Modes \= : \= \kill 
+Addressing Modes \= : \= \kill
 Instruction      \> : \> \tty{SAX} \\
 Function         \> : \> $M\leftarrow(A)\&(X)$ \\
 Addressing Modes \> : \> absolute long/short, Y-indexed short, \\
@@ -7208,42 +7246,42 @@ Addressing Modes \> : \> absolute long/short, Y-indexed short, \\
 \end{tabbing}
 
 \begin{tabbing}
-Addressing Modes \= : \= \kill 
+Addressing Modes \= : \= \kill
 Instruction      \> : \> \tty{ANE} \\
 Function         \> : \> $M\leftarrow((A)\&\$ee)|((X)\&(M))$ \\
 Addressing Modes \> : \> immediate \\
 \end{tabbing}
 
 \begin{tabbing}
-Addressing Modes \= : \= \kill 
+Addressing Modes \= : \= \kill
 Instruction      \> : \> \tty{SHA} \\
 Function         \> : \> $M\leftarrow(A)\&(X)\&(PCH+1)$ \\
 Addressing Modes \> : \> X/Y-indexed long \\
 \end{tabbing}
 
 \begin{tabbing}
-Addressing Modes \= : \= \kill 
+Addressing Modes \= : \= \kill
 Instruction      \> : \> \tty{SHS} \\
 Function         \> : \> $X\leftarrow(A)\&(X), S\leftarrow(X), M\leftarrow(X)\&(PCH+1)$ \\
 Addressing Modes \> : \> Y-indexed long \\
 \end{tabbing}
 
 \begin{tabbing}
-Addressing Modes \= : \= \kill 
+Addressing Modes \= : \= \kill
 Instruction      \> : \> \tty{SHY} \\
 Function         \> : \> $M\leftarrow(Y)\&(PCH+1)$ \\
 Addressing Modes \> : \> Y-indexed long \\
 \end{tabbing}
 
 \begin{tabbing}
-Addressing Modes \= : \= \kill 
+Addressing Modes \= : \= \kill
 Instruction      \> : \> \tty{SHX} \\
 Function         \> : \> $M\leftarrow(X)\&(PCH+1)$ \\
 Addressing Modes \> : \> X-indexed long \\
 \end{tabbing}
 
 \begin{tabbing}
-Addressing Modes \= : \= \kill 
+Addressing Modes \= : \= \kill
 Instruction      \> : \> \tty{LAX} \\
 Function         \> : \> $A,X\leftarrow(M)$ \\
 Addressing Modes \> : \> absolute long/short, Y-indexed long/short, \\
@@ -7251,7 +7289,7 @@ Addressing Modes \> : \> absolute long/short, Y-indexed long/short, \\
 \end{tabbing}
 
 \begin{tabbing}
-Addressing Modes \= : \= \kill 
+Addressing Modes \= : \= \kill
 Instruction      \> : \> \tty{LXA} \\
 Function         \> : \> $X{04}\leftarrow(X){04}\&(M){04}$, \\
                  \>   \> $A{04}\leftarrow(A){04}\&(M){04}$ \\
@@ -7259,14 +7297,14 @@ Addressing Modes \> : \> immediate \\
 \end{tabbing}
 
 \begin{tabbing}
-Addressing Modes \= : \= \kill 
+Addressing Modes \= : \= \kill
 Instruction      \> : \> \tty{LAE} \\
 Function         \> : \> $X,S,A\leftarrow((S)\&(M))$ \\
 Addressing Modes \> : \> Y-indexed long \\
 \end{tabbing}
 
 \begin{tabbing}
-Addressing Modes \= : \= \kill 
+Addressing Modes \= : \= \kill
 Instruction      \> : \> \tty{DCP} \\
 Function         \> : \> $M\leftarrow(M)-1, Flags\leftarrow((A)-(M))$ \\
 Addressing Modes \> : \> absolute long/short, X-indexed long/short, \\
@@ -7274,14 +7312,14 @@ Addressing Modes \> : \> absolute long/short, X-indexed long/short, \\
 \end{tabbing}
 
 \begin{tabbing}
-Addressing Modes \= : \= \kill 
+Addressing Modes \= : \= \kill
 Instruction      \> : \> \tty{SBX} \\
 Function         \> : \> $X\leftarrow((X)\&(A))-(M)$ \\
 Addressing Modes \> : \> immediate \\
 \end{tabbing}
 
 \begin{tabbing}
-Addressing Modes \= : \= \kill 
+Addressing Modes \= : \= \kill
 Instruction      \> : \> \tty{ISB} \\
 Function         \> : \> $M\leftarrow(M)+1, A\leftarrow(A)-(M)-(C)$ \\
 Addressing Modes \> : \> absolute long/short, X-indexed long/short, \\
@@ -7438,7 +7476,7 @@ instructions
 \begin{verbatim}
         psh     #$0f
         psh     a,b,#$0c
-        psh     a,b,x,y 
+        psh     a,b,x,y
 
 \end{verbatim}
 are equivalent.  As immediate expressions are still valid, AS stays
@@ -7448,9 +7486,9 @@ One thing I did not fully understand while studying the Mitsubishi
 assembler is the treatment of the \tty{PER} instruction: this instruction
 allows to push a 16-bit variable onto the stack whose address is
 specified relative to the program counter.  Therefore, it is an
-absolute addressing mode from the programmer's point of view. 
+absolute addressing mode from the programmer's point of view.
 Nevertheless, the Mitsubishi assembler requests immediate addressing,
-and the instructions argument is placed into the code just as-is. 
+and the instructions argument is placed into the code just as-is.
 One has to calculate the address in his own, which is something
 symbolic assemblers were designed for to avoid...as I wanted to stay
 compatible, AS contains a compromise:  If one chooses immediate
@@ -7497,7 +7535,7 @@ the following example
 \end{verbatim}
 register 0 is accessed with 32 bits, the size specification appended
 to the instruction is not used at all.  If an instruction does not
-contain any size specifications, word size (\tty{w}) will be used. 
+contain any size specifications, word size (\tty{w}) will be used.
 Remember: in contrast to the 68000 family, this means 32 bits instead
 of 16 bits!
 
@@ -7566,7 +7604,7 @@ messages.
 
 As the 8051 does not have instructions to to push the registers 0..7
 onto the stack, one has to work with absolute addresses.  However,
-these addresses depend on which register bank is currently active. 
+these addresses depend on which register bank is currently active.
 To make this situation a little bit better, the include files define
 the macro \tty{USING} that accepts the symbols \tty{Bank0...Bank3} as arguments.
 In response, the macro will assign the registers' correct absolute
@@ -7574,7 +7612,7 @@ addresses to the symbols \tty{AR0..AR7}.  This macro should be used after
 every change of the register banks.  The macro itself does \bb{not}
 generate any code to switch to the bank!
 
-The macro also makes bookkeeping about which banks have been used. 
+The macro also makes bookkeeping about which banks have been used.
 The result is stored in the integer variable \tty{RegUsage}: bit 0
 corresponds to bank 0, bit 1 corresponds to bank 1. and so on.  To
 output its contents after the source has been assembled, use
@@ -7614,7 +7652,7 @@ that overlaps other address spaces.  Instead, similar to other
 processors, bits are addressed with a two-dimensional address that
 consists of the memory location containing the bit and the bit's
 location in the byte.  One result is that in an expression like
-\tty{PSW.7}, AS will do the separation of address and bit position itself. 
+\tty{PSW.7}, AS will do the separation of address and bit position itself.
 Unlike to the 8051, it is not any more necessary to explicitly
 generate 8 bit symbols.  This has the other result that the \tty{SFRB}
 instruction does not exist any more.  If it is used in a program that
@@ -7626,7 +7664,7 @@ spaces on the 8051: the internal RAM (\tty{DATA} resp. \tty{IDATA}), the
 \tty{CODE} space that is now 16 Mbytes large.  The internal RAM starts at
 address 0, the internal ROM starts at address ff0000h, which is the
 address code has to be relocated to.  In contrast, the SFRs were moved to
-a separate address space (which AS refers to as the \tty{IO} segment). 
+a separate address space (which AS refers to as the \tty{IO} segment).
 However, they have the same addresses in this new address space as they
 used to have on the 8051.  The \tty{SFR} instructions knows of this
 difference and automatically assigns symbols to either the \tty{DATA} or
@@ -7637,17 +7675,17 @@ now contains the byte's address in bit 0..7, and the bit position in bits
 24..26.  Unfortunately, creating arrays of flags with a symbolic address
 is not that simple any more: On an 8051, one simply wrote:
 \begin{verbatim}
-        segment bitdata                  
+        segment bitdata
 
-bit1    db      ?                        
-bit2    db      ?                        
+bit1    db      ?
+bit2    db      ?
 
 or
 
 defbit  macro   name
 name    bit     cnt
 cnt     set     cnt+1
-        endm   
+        endm
 \end{verbatim}
 On a 251, only the second way still works, like this:
   \begin{verbatim}
@@ -7660,7 +7698,7 @@ bpos    set     bpos+1
         if      bpos=8
 bpos     set     0
 adr      set     adr+1
-        endif  
+        endif
         endm
 \end{verbatim}
 Another small detail: Intel now prefers \tty{CY} instead of \tty{C} as a
@@ -7715,7 +7753,7 @@ addressing via 8 bit registers).
 %%---------------------------------------------------------------------------
 
 \section{8080/8085}
-\label{8080Spec}   
+\label{8080Spec}
 
 As mentioned before, the statement
 \begin{verbatim}
@@ -7837,7 +7875,7 @@ Arguments         \= : \= \kill \\
 Instruction       \> : \> \tty{JX5 addr} \\
 Function          \> : \> jump to {\tt addr} if X5=1 \\
 Flags             \> : \> none \\
-Arguments         \> : \> {\tt addr} = absolute 16-bit address \\ 
+Arguments         \> : \> {\tt addr} = absolute 16-bit address \\
 \end{tabbing}
 
 Mit X5 ist dabei das ansonsten unbenutzte Bit 5 im PSW-Register gemeint.
@@ -7935,13 +7973,13 @@ by automatically inserting a \tty{WAIT} instruction prior to every 8087
 instruction.  If this is undesired for any reason, an \tty{N} has to be
 inserted after the \tty{F} in the mnemonic; for example,
 \begin{verbatim}
-        FINIT            
-        FSTSW   [vari]    
+        FINIT
+        FSTSW   [vari]
 \end{verbatim}
 becomes
 \begin{verbatim}
-        FNINIT           
-        FNSTSW  [vari]    
+        FNINIT
+        FNSTSW  [vari]
 \end{verbatim}
 This variant is valid for \bb{all} coprocessor instructions.
 
@@ -7952,7 +7990,7 @@ This variant is valid for \bb{all} coprocessor instructions.
 
 The processors of this family have been optimized for an easy manipulation
 of bit groups at peripheral addresses.  The instructions \tty{LIV} and
-\tty{RIV} were introduced to deal with such objects in a symbolic fashion. 
+\tty{RIV} were introduced to deal with such objects in a symbolic fashion.
 They work similar to \tty{EQU}, however they need three parameters:
 \begin{enumerate}
 \item{the address of the peripheral memory cell that contains the bit
@@ -8040,7 +8078,7 @@ delivered by Atmel.  Unfortunately, the simulator seems to have
 trouble with source file names longer than approx. 20 characters:
 Names are truncated and/or extended by strange special characters
 when the maximum length is exceeded.  AS therefore stores file name
-specifications in object files without a path specification. 
+specifications in object files without a path specification.
 Therefore, problems may arise when files like includes are not in the
 current directory.
 
@@ -8069,7 +8107,7 @@ this:
 \begin{verbatim}
  INC Rx              LD R,Rx             LD  Rx,n
  DEC Rx              LD Rx,R             LD  Rx,Ry
- ADD/ADC/SUB/SBC/AND/XOR/OR/CP A,Rx 
+ ADD/ADC/SUB/SBC/AND/XOR/OR/CP A,Rx
 \end{verbatim}
 \tty{Rx} and \tty{Ry} are synonyms for \tty{IXL, IXU, IYL} or \tty{IYU}.
 Keep however in mind that in the case of \tty{LD  Rx,Ry}, both registers
@@ -8081,14 +8119,14 @@ is now accessible as the \tty{SLIA} instruction.  \tty{SLIA} works like
 all other shift instructions, \tty{SLIA} also allows another undocumented
 variant:
 \begin{verbatim}
-        SLIA    R,(XY+d)                      
+        SLIA    R,(XY+d)
 \end{verbatim}
 In this case, \tty{R} is an arbitrary 8-bit register (excluding index
 register halves...), and \tty{(XY+d)} is a normal indexed address.  This
 operation has the additional effect of copying the result into the
 register.  This also works for the \tty{RES} and \tty{SET} instructions:
 \begin{verbatim}
-        SET/RES R,n,(XY+d)                 
+        SET/RES R,n,(XY+d)
 \end{verbatim}
 Furthermore, two hidden I/O instructions exist:
 \begin{verbatim}
@@ -8110,7 +8148,7 @@ existing Z80 programs without modification (of course, they execute a bit
 faster, roughly by a factor of 10...).  Therefore, all extended features
 can be enabled after a reset by setting two bits which are named XM
 (eXtended Mode, i.e. a 32-bit instead of a 16-bit address space)
-respectively LW (long word mode, i.e. 32-bit instead of 16-bit operands). 
+respectively LW (long word mode, i.e. 32-bit instead of 16-bit operands).
 One has to inform AS about their current setting with the instructions
 \tty{EXTMODE} resp. \tty{LWORDMODE}, to enable AS to check addresses and
 constants against the correct upper limits.  The toggle between 32- and
@@ -8234,7 +8272,7 @@ AS will not recognize the comma for parameter separation.  This
 problem can be circumvented by usage of an inverse single quote (`), for
 example
 \begin{verbatim}
-        ld      wa`,wa                              
+        ld      wa`,wa
 \end{verbatim}
 Toshiba delivers an own assembler for the TLCS-900 series (TAS900),
 which is different from AS in the following points:
@@ -8248,7 +8286,7 @@ which is different from AS in the following points:
       differentiation.}
 \item{TAS900 allows to write integer constants either in Intel or C
       notation (with a 0 prefix for octal or a 0x prefix for hexadecimal
-      constants).  By default, AS only supports the Intel notation. 
+      constants).  By default, AS only supports the Intel notation.
       With the help of the \tty{RELAXED} instruction, one also gets the C
       notation (among other).}
 \item{AS does not distinguish between upper and lower case.  In
@@ -8321,7 +8359,7 @@ The latter two have an extended functionality for AS.  Some TAS900
 pseudo instructions can be replaced with equivalent AS instructions (see
 table \ref{TabTAS900}).
 \par
-\begin{table*}[htbp]   
+\begin{table*}[htbp]
 \begin{center}\begin{tabular}{|l|l|l|}
 \hline
 TAS900           & AS                  &     meaning/function \\
@@ -8400,7 +8438,7 @@ addressing.
 
 \section{TLCS-870}
 
-Once again Toshiba...a company quite productive at the moment! 
+Once again Toshiba...a company quite productive at the moment!
 Especially this branch of the family (all Toshiba microcontrollers
 are quite similar in their binary coding and programming model) seems
 to be targeted towards the 8051 market: the method of separating the
@@ -8433,7 +8471,7 @@ difference that we are dealing with nibbles.
 
 Toshiba defined an ''extended instruction set'' for this processor
 family to facilitate the work with their limited instruction set.  In
-the case of AS, it is defined in the include file \tty{STDDEF47.INC}. 
+the case of AS, it is defined in the include file \tty{STDDEF47.INC}.
 However, some instructions that could not be realized as macros are
 ''builtins'' and are therefore also available without the include file:
 \begin{itemize}
@@ -8515,7 +8553,7 @@ programs written for ASM31T:
 
 Furthermore, AS currently lacks the capabilities to detect
 conflicting uses of functional units in a machine instructions.
-Toshiba's documentation is a bit difficult to understand in this 
+Toshiba's documentation is a bit difficult to understand in this
 respect...
 
 %%---------------------------------------------------------------------------
@@ -8529,12 +8567,12 @@ mode.  This ability is of course limited to direct accesses (i.e.
 without using the registers IPA...IPC), and there is one more
 pitfall: as local registers (registers with a number $>$127) are
 addressed relative to the stack pointer, but the bits in RBP always
-refer to absolute numbers, the check is NOT done for local registers. 
+refer to absolute numbers, the check is NOT done for local registers.
 An extension would require AS to know always the absolute value of
 SP, which would at least fail for recursive subroutines...
 
 %%---------------------------------------------------------------------------
-   
+
 \section{80C16x}
 
 As it was already explained in the discussion of the \tty{ASSUME}
@@ -8645,7 +8683,7 @@ to the start and target address.  However, this procedure is far more
 problematic compared to the 48's:
 \begin{enumerate}
 \item{The instructions are not any more one word long (up to three
-      words).  Therefore, it is not guaranteed that they can be 
+      words).  Therefore, it is not guaranteed that they can be
       skipped with a conditional branch.}
 \item{It is possible that the program counter crosses a page boundary
       while the program sequence is executed.  The setting of PA bits
@@ -8681,7 +8719,7 @@ smaller.  The only exception is the \tty{LCALL} instruction, which allows a
 jump with a 16-bit address.  It is translated with the following
 ''macro'':
 \begin{verbatim}
-        MOVLW   <addr15..8>   
+        MOVLW   <addr15..8>
         MOWF    3
         LCALL   <addr0..7>
 \end{verbatim}
@@ -8711,7 +8749,7 @@ instruction & in reality \\
 \tty{CLR addr}   & \tty{LDI addr,0} \\
 \tty{NOP}        & \tty{JRZ PC+1} \\
 \hline
-\end{tabular}\end{center}                                   
+\end{tabular}\end{center}
 \caption{Hidden Macros in the ST62's Instruction Set\label{TabHid62}}
 \end{table*}
 Especially the last case is a bit astonishing...unfortunately, some
@@ -8726,13 +8764,13 @@ does not mark pseudo instructions with a leading dot, the following
 instructions are identical:
 \begin{verbatim}
   ASCII, ASCIZ, BLOCK, BYTE, END, ENDM, EQU, ERROR, MACRO,
-  ORG, TITLE, WARNING 
+  ORG, TITLE, WARNING
 \end{verbatim}
 Table \ref{TabAST6} shows the instructions which have AS counterparts
 with similar function.
 \par
 \begin{table*}[htbp]
-\begin{center}\begin{tabular}{|l|l|l|}                      
+\begin{center}\begin{tabular}{|l|l|l|}
 \hline
 AST6            & AS                     & meaning/function \\
 \hline
@@ -8759,7 +8797,7 @@ AST6            & AS                     & meaning/function \\
 \hline
 \tty{.SET}      & \tty{EVAL}             & redefine variables \\
 \hline
-\end{tabular}\end{center}                                   
+\end{tabular}\end{center}
 \caption{Equivalent Instructions AST6$\leftrightarrow$AS\label{TabAST6}}
 \end{table*}
 
@@ -8794,7 +8832,7 @@ must not contain a dot, thought it would be legal in respect to the
 general symbol name conventions.  It is also valid to invert a
 symbolically referred bit:
 \begin{verbatim}
-bit2    bit     r5.3  
+bit2    bit     r5.3
         .
         .
         bld     r0.0,!bit2
@@ -8860,14 +8898,14 @@ value!
 
 Another hint that is well hidden in the data book: The \tty{SUBC}
 instruction internally needs more than one clock for completion, but
-the control unit already continues to execute the next instruction. 
+the control unit already continues to execute the next instruction.
 An instruction following \tty{SUBC} therefore may not access the
 accumulator.  AS does not check for such conditions!
 
 %%---------------------------------------------------------------------------
 
 \section{TMS320C2x}
-            
+
 As I did not write this code generator myself (that does not lower
 its quality by any standard), I can only roughly line out why there
 are some instructions that force a prefixed label to be untyped, i.e.
@@ -8903,7 +8941,7 @@ instruction by defining the label with \tty{EQU}, e.g.
 The syntax detail that created the biggest amount of headache for me
 while implementing this processor family is the splitting of parallel
 instructions into two separate source code lines.  Fortunately, both
-instructions of such a construct are also valid single instructions. 
+instructions of such a construct are also valid single instructions.
 AS therefore first generates the code for the first instruction and
 replaces it by the parallel machine code when a parallel construct is
 encountered in the second line.  This operation can be noticed in the
@@ -8914,7 +8952,7 @@ Compared to the TI assembler, AS is not as flexible regarding the
 position of the double lines that signify a parallel operation
 (\tty{||}): One either has to place them like a label (starting in the
 first column) or to prepend them to the second mnemonic.  The line
-parser of AS will run into trouble if you do something else... 
+parser of AS will run into trouble if you do something else...
 
 %%---------------------------------------------------------------------------
 
@@ -8947,7 +8985,7 @@ at other places...currently both variants are recognized by AS.
 
 This processor family belongs to the older families developed by TI
 and therefore TI's assemblers use their proprietary syntax for
-hexadecimal resp. binary constants (a prefixed $<$ resp. \tty{?} character). 
+hexadecimal resp. binary constants (a prefixed $<$ resp. \tty{?} character).
 As this format could not be realized for AS, the Intel syntax is used
 by default.  This is the format TI to which also switched over when
 introducing the successors, of this family, the 370 series of
@@ -8960,7 +8998,7 @@ the majority of these changes also into the 7000's instruction set:
 \begin{itemize}
 \item{It is valid to use the more common \tty{\#} sign for immediate addressing
       instead of the percent sign.}
-\item{If a port address (\tty{P...}) is used as source or destination in a 
+\item{If a port address (\tty{P...}) is used as source or destination in a
       \tty{AND, BTJO, BTJZ, MOV, OR}, or \tty{XOR} instruction, it is not necessary
       to use the mnemonic variant with an appended \tty{P} - the general
       form is sufficient.}
@@ -9002,7 +9040,7 @@ name    equ     addr+(bit<<16)
         endm
 \end{verbatim}
 but this technique would not lead to the \tty{EQU}-style syntax defined by
-TI (the symbol to be defined replaces the label field in a line). 
+TI (the symbol to be defined replaces the label field in a line).
 \bb{CAUTION!} Though \tty{DBIT} allows an arbitrary address, the pseudo
 instructions can only operate with addresses either in the range from
 0..255 or 1000h..10ffh.  The processor does not have an absolute
@@ -9032,11 +9070,11 @@ been moved to the file \tty{EMULMSP.INC}.
 Instruction emulation also covers some special cases not handled
 by the original TI assembler.  For instance,
 \begin{verbatim}
-    rlc  @r6+   
+    rlc  @r6+
 \end{verbatim}
 is automatically assembled as
 \begin{verbatim}
-    addc @r6+,-2(r6) 
+    addc @r6+,-2(r6)
 \end{verbatim}
 
 %%---------------------------------------------------------------------------
@@ -9092,7 +9130,7 @@ roughly estimate the pseudo instructions it will support by looking at
 other available target platforms.  With this in mind, the (few)
 SC144xx-specific instructions {\tt DC, DC8, DW16, DS, DS8, DS16, DW} were
 designed.  Of course, I didn't want to reinvent the wheel for pseudo
-instructions whose functionality is already part of the AS core. 
+instructions whose functionality is already part of the AS core.
 Therefore, here is a little table with equivalences.  The statements
 \tty{ALIGN, END, ENDM, EXITM, MACRO, ORG, RADIX, SET,} and \tty{REPT} both
 exist for the IAR assembler and AS and have same functionality.  Changes
@@ -9109,7 +9147,7 @@ IAR & AS & Funktion\\
 \tty{\#elif, ELIF, ELSEIF} & \tty{ELSEIF} & start another \\
                            &              & IF branch \\
 \tty{\#else, ELSE} & \tty{ELSE} & last branch of an IF \\
-                   &            & construct \\ 
+                   &            & construct \\
 \tty{\#endif, ENDIF} & \tty{ENDIF} & ends an IF construct \\
 \tty{\#error} & \tty{ERROR, FATAL} & create error message \\
 \tty{\#if, IF} & \tty{IF} & start an IF construct \\
@@ -9189,7 +9227,7 @@ take place when the symbol is actually used.
 \label{78K0Spec}
 
 NEC uses different ways to mark absolute addressing in its data
-books: 
+books:
 \begin{itemize}
 \item{absolute short: no prefix}
 \item{absolute long: prefix of \tty{!}}
@@ -9203,8 +9241,8 @@ practice.
 
 %%---------------------------------------------------------------------------
 
-\section{78K2/78K3}
-\label{78K23Spec}
+\section{78K2/78K3/78K4}
+\label{78K234Spec}
 
 Analogous to the 78K0, NEC here also uses dollar signs and exclamation
 marks to specify different lengths of address expressions.  The selection
@@ -9269,7 +9307,7 @@ whose formats are not self-explanatory.
 
 The format for code files generated by the assembler must be able to
 separate code parts that were generated for different target
-processors; therefore, it is a bit different from most other formats. 
+processors; therefore, it is a bit different from most other formats.
 Though the assembler package contains tools to deal with code files,
 I think is a question of good style to describe the format in short:
 
@@ -9338,7 +9376,7 @@ Header  & Family & Header  & Family \\
 
 The \tty{Segment} field signifies the address space the following code
 belongs to.  The assignment defined in table \ref{TabSegments} applies.
-\begin{table*}[htbp] 
+\begin{table*}[htbp]
 \begin{center}\begin{tabular}{|c|l||c|l|}
 \hline
 number  & segment               & number  & segment \\
@@ -9347,9 +9385,9 @@ number  & segment               & number  & segment \\
 \$00    & $<$undefined$>$       & \$01    & \tty{CODE} \\
 \$02    & \tty{DATA}            & \$03    & \tty{IDATA} \\
 \$04    & \tty{XDATA}           & \$05    & \tty{YDATA} \\
-\$06    & \tty{BDATA}           & \$07    & \tty{IO} \\              
+\$06    & \tty{BDATA}           & \$07    & \tty{IO} \\
 \$08    & \tty{REG}             & \$09    & \tty{ROMDATA} \\
-\hline              
+\hline
 \end{tabular}\end{center}
 \caption{Codings of the {\tt Segment} Field\label{TabSegments}
          \label{TabSegmentNums}}
@@ -9507,7 +9545,7 @@ until a fitting symbol is found.  This first line is followed by a
 number of further lines that describe the code areas used by this
 section.  Every single entry (exactly one entry per line) either
 describes a single address or an address range given by a lower and
-an upper bound (separation of lower and upper bound by a minus sign). 
+an upper bound (separation of lower and upper bound by a minus sign).
 These bounds are ''inclusive'', i.e. the bounds themselves also belong
 to the area.  Is is important to note that an area belonging to a
 section is not additionally listed for the section's parent sections
@@ -9519,7 +9557,7 @@ as the single entry already gives an unambiguous entry point for the
 symbol search path.  The description of a section is ended by an
 empty line or the end of the debug file.
 
-Program parts that lie out of any section are not listed separately. 
+Program parts that lie out of any section are not listed separately.
 This implicit ''root section'' carries the number -1 and is also used
 as parent section for sections that do not have a real parent
 section.
@@ -9596,7 +9634,7 @@ it doesn't already have one.
 
 \bb{CAUTION!} At this place, no wildcards are allowed!  If there is a
 necessity to list several files with one command, use the following
-''mini batch'': 
+''mini batch'':
 \begin{verbatim}
     for %n in (*.p) do plist %n
 \end{verbatim}
@@ -9608,7 +9646,7 @@ have the following meanings:
 \item{start address: absolute memory address that expresses the load
       destination for the code.}
 \item{length: length of this code chunk in bytes.}
-\item{end address: last address of this code chunk.  This address 
+\item{end address: last address of this code chunk.  This address
       is calculated as start address+length-1.}
 \end{itemize}
 All outputs are in hexadecimal notation.
@@ -9644,7 +9682,7 @@ Currently, BIND defines only one command line option:
       not be copied.  Without such an option, all
       records will be copied.  The headers given in
       the list correspond to the \tty{HeaderID} field of the
-      record structure described in section \ref{SectCodeFormat}. 
+      record structure described in section \ref{SectCodeFormat}.
       Individual headers in this list are separated
       with commas.}
 \end{itemize}
@@ -9723,7 +9761,7 @@ a word-oriented address space that increments addresses only by one
 per word.  This format is also the default.  With Format 1 (INHX16M),
 bytes are stored in their natural order.  This is the format
 Microchip uses for its own programming devices.  Format 2 (INHX8L)
-resp. 3 (INHX8H) split words into their lower resp. upper bytes. 
+resp. 3 (INHX8H) split words into their lower resp. upper bytes.
 With these formats, P2HEX has to be called twice to get the complete
 information, like in the following example:
 \begin{verbatim}
@@ -9755,12 +9793,12 @@ that is out of the window.  For example, to split an 8051 program
 into 4 2764 EPROMs, use the following commands:
 \begin{verbatim}
 p2hex <source file> eprom1 -f $31 -r $0000-$1fff
-p2hex <source file> eprom2 -f $31 -r $2000-$3fff 
-p2hex <source file> eprom3 -f $31 -r $4000-$5fff 
-p2hex <source file> eprom4 -f $31 -r $6000-$7fff 
+p2hex <source file> eprom2 -f $31 -r $2000-$3fff
+p2hex <source file> eprom3 -f $31 -r $4000-$5fff
+p2hex <source file> eprom4 -f $31 -r $6000-$7fff
 \end{verbatim}
 By default, the address window is 32 Kbytes large and starts at
-address 0.  
+address 0.
 
 \bb{CAUTION!} This type of splitting does not change the absolute
 addresses that will be written into the files!  If the addresses in
@@ -9791,7 +9829,7 @@ setting
 \begin{verbatim}
  -r $-$7fff
 \end{verbatim}
-limits the upper end to 32 Kbytes. 
+limits the upper end to 32 Kbytes.
 
 By using an offset, it is possible to move a file's contents to an
 arbitrary position.  This offset is simply appended to a file's name,
@@ -9878,20 +9916,20 @@ file:
       \$ff is used.  This value assures that every
       half-way intelligent EPROM burner will skip
       these areas.  This option allows to set different values,
-      for example if you want to 
-      generate an image for the EPROM versions of 
+      for example if you want to
+      generate an image for the EPROM versions of
       MCS-48 microcontrollers (empty cells of their
       EPROM array contain zeroes, so \$00 would be
       the correct value in this case).}
 \item{\tty{s}:  commands the program to calculate a checksum
-      of the binary file.  This sum is printed as 
+      of the binary file.  This sum is printed as
       a 32-bit value, and the two's complement of
       the least significant bit will be stored in
       the file's last byte.  This way, the modulus-
       256-sum of the file will become zero.}
-\item{\tty{m}:  is designed for the case that a CPU with a 
+\item{\tty{m}:  is designed for the case that a CPU with a
       16- or 32-bit data bus is used and the file
-      has to be split for several EPROMs.  The 
+      has to be split for several EPROMs.  The
       argument may have the following values:
       \begin{itemize}
       \item{\tty{ALL}: copy everything}
@@ -9904,7 +9942,7 @@ file:
       \end{itemize}}
 \end{itemize}
 To avoid confusions: If you use this option, the resulting binary file
-will become smaller because only a part of the source will be copied. 
+will become smaller because only a part of the source will be copied.
 Therefore, the resulting file will be smaller by a factor of 2 or 4
 compared to \tty{ALL}.  This is just natural...
 
@@ -9913,7 +9951,7 @@ it via the \tty{-e} command line option just like with P2HEX.  Upon
 request, P2BIN prepends the resulting image with this address.  The
 command line option
 \begin{verbatim}
--S 
+-S
 \end{verbatim}
 activates this function.  It expects a numeric specification ranging
 from 1 to 4 as parameter which specifies the length of the address
@@ -9938,7 +9976,7 @@ Enter the following values:
 \begin{verbatim}
  - Title: ~m~acro assembler
  - Program path: AS
- - Command line: 
+ - Command line:
       -E !1 $EDNAME $CAP MSG(AS2MSG) $NOSWAP $SAVE ALL
  - assign a hotkey if wanted (e.g. Shift-F7)
 \end{verbatim}
@@ -9958,7 +9996,7 @@ number 1.
 \tty{TURBO.EXE} (Real Mode) and \tty{BP.EXE} (Protected Mode) may be used for
 this way of working with AS.  I recommend however BP, as this version
 does not have to 'swap' half of the DOS memory before before AS is
-called. 
+called.
 
 %%===========================================================================
 \appendix
@@ -10161,7 +10199,7 @@ described by:
 \errentry{ 240}{NUL character in string, result is undefined}
                {warning}
                {A string constant contains a NUL character. Though this
-                works with the Pascal version, it is a problem for the 
+                works with the Pascal version, it is a problem for the
                 C version of AS since C itself terminates strings with
                 a NUL character. i.e. the string would have its end for
                 C just at this point...}
@@ -10192,7 +10230,7 @@ described by:
                 addressing}
                {warning}
                {A single X operand may be interpreted either as register X
-                or x-indexed addressing with zero displacement, since 
+                or x-indexed addressing with zero displacement, since
                 Motorola does not specify this variant.  AS chooses the
                 latter, which may not be the desired one.}
                {none}
@@ -10546,7 +10584,7 @@ described by:
                {none}
 \errentry{1600}{unexpected end of file}
                {error}
-               {It was tried to read past the end of a file with a 
+               {It was tried to read past the end of a file with a
                 \tty{BINCLUDE} statement.}
                {none}
 \errentry{1700}{ROM-offset must be in range 0..63}
@@ -10967,7 +11005,7 @@ one maybe does not find them immediately...
    operating systems ?}
 \item[A:]{Apart from the protected mode version that offers more memory when
    working under DOS, ports exist for OS/2 and Unix systems like
-   Linux (currently in test phase).  Versions that help operating 
+   Linux (currently in test phase).  Versions that help operating
    system manufacturers located in Redmont to become even richer are
    currently not planned.  I will gladly make the sources of AS
    available for someone else who wants to become active in this
@@ -10986,7 +11024,7 @@ one maybe does not find them immediately...
    difficult when more exotic or older architectures are wanted.  If
    the processor family in question is not in the list of families
    that are planned (see chapter 1), adding a data book to a request
-   will have a highly positive influence.  Borrowing books is also 
+   will have a highly positive influence.  Borrowing books is also
    fine.}
 \vspace{0.3cm}
 \item[Q:]{Having a free assembler is really fine, but I now also had use for
@@ -11027,7 +11065,7 @@ one maybe does not find them immediately...
 \item[Q:]{It seems that AS does not assemble my program up to the end.  It
    worked however with an older version of AS (1.39).}
 \item[A:]{Newer versions of AS no longer ignore the \tty{END} statement; they
-   actually terminate assembly when an \tty{END} is encountered. 
+   actually terminate assembly when an \tty{END} is encountered.
    Especially older include files made by some users tended to
    contain an \tty{END} statement at their end.  Simply remove the
    superfluous \tty{END} statements.}
@@ -11051,7 +11089,7 @@ one maybe does not find them immediately...
 \item[A:]{You probably did not set the address filter correctly.  This
    filter by default cuts out an area ranging from 0 to 32 Kbytes.
    If you program contains memory chunks outside this range, they
-   will be ignored.  If your code is completely beyond the 32K 
+   will be ignored.  If your code is completely beyond the 32K
    barrier (this is commonplace for processors of the 65xx and 68xx
    series), you will get the result you just described.  Simply
    set the address filter to a range that suits your needs (see the
@@ -11066,7 +11104,7 @@ one maybe does not find them immediately...
    address range specification for P2HEX and P2BIN, you may also use
    \tty{0x} instead of the dollar character, which removes this prblen
    completely.}
-\item[Q:]{I use AS on a Linux system, the loader program for my target 
+\item[Q:]{I use AS on a Linux system, the loader program for my target
           system however runs on a Windows machine. To simplify things,
           both systems access the same network drive.  Unfortunately, the
           Windows side refuses to read the hex files created by the Linux
@@ -11078,7 +11116,7 @@ one maybe does not find them immediately...
           depends on the Windows program's 'goodwill' whether it will
           accept text files in the Linux format or not.  If not, it is
           possible to transfer the files via FTP in ASCII mode instead
-          of a network drive.  Alternatively, the hex files can be 
+          of a network drive.  Alternatively, the hex files can be
           converted to the Windows format.  For example, the program
           {\em unix2dos} can be used to do this, or a small script under
           Linux:
@@ -11253,7 +11291,7 @@ implemented with the help of user-defined functions:
 \item{{\em invmask(start,bits)} returns one's complement to {\em
       mask()};}
 \item{{\em cutout(x,start,bits)} returns {\em bits} bits masked out from
-      {\em x} starting at position {\em start} without shifting them to 
+      {\em x} starting at position {\em start} without shifting them to
       position 0;}
 \item{{\em hi(x)} returns the second lowest byte (bits 8..15) of {\em
       x};}
@@ -11369,7 +11407,7 @@ problems!
 
 The TMS320C2x/5x code generators and the file \tty{STDDEF2x.INC} come
 from Thomas Sailer, ETH Zurich.  It's surprising, he only needed one
-weekend to understand my coding and to implement the new code generator. 
+weekend to understand my coding and to implement the new code generator.
 Either that was a long nightshift or I am slowly getting old...
 
 %%===========================================================================
@@ -11415,14 +11453,14 @@ Either that was a long nightshift or I am slowly getting old...
       \item{added string variables;}
       \item{The instructions \tty{TITLE, PRTINIT, PRTEXIT, ERROR},
             \tty{WARNING}, and \tty{FATAL} now expect a string expression.
-            Constants therefore now have to be enclosed in 
+            Constants therefore now have to be enclosed in
             '' instead of ' characters.  This is also true
             for \tty{DB}, \tty{DC.B}, and \tty{BYT};}
       \item{additional instruction \tty{ALIGN} to align the program
             counter for Intel processors;}
       \item{additional instruction \tty{LISTING} to turn the generation
             of an assembly listing on or off;}
-      \item{additional instruction \tty{CHARSET} for user-defined 
+      \item{additional instruction \tty{CHARSET} for user-defined
             character sets.}
       \end{itemize}}
 \item{version 1.34:
@@ -11441,7 +11479,7 @@ Either that was a long nightshift or I am slowly getting old...
       \end{itemize}}
 \item{version 1.35:
       \begin{itemize}
-      \item{additional function \tty{TOUPPER} to convert a single 
+      \item{additional function \tty{TOUPPER} to convert a single
             character to upper case;}
       \item{additional instruction \tty{FUNCTION} for user-defined
             functions;}
@@ -11456,7 +11494,7 @@ Either that was a long nightshift or I am slowly getting old...
       \end{itemize}}
 \item{version 1.36:
       \begin{itemize}
-      \item{additionally supports the PIC16C5x and PIC17C4x 
+      \item{additionally supports the PIC16C5x and PIC17C4x
             processor families;}
       \item{the assembly listing additionally shows the nesting
             depth of include files;}
@@ -11544,7 +11582,7 @@ Either that was a long nightshift or I am slowly getting old...
             (p1);}
       \item{P2HEX now also accepts dollar signs as start resp.
             stop address (p2);}
-      \item{additionally supports the TLCS-90 family from 
+      \item{additionally supports the TLCS-90 family from
             Toshiba (p2);}
       \item{P2HEX now also can output data in Tektronix and
             16 bit Intel Hex format (p2);}
@@ -11722,7 +11760,7 @@ Either that was a long nightshift or I am slowly getting old...
             Instruments (implementation done by Thomas Sailer,
             ETH Zurich, r3);}
       \item{the OS/2 version should now also correctly work with
-            long file names.  If one doesn't check every s**t 
+            long file names.  If one doesn't check every s**t
             personally... (r3);}
       \item{the new pseudo instruction \tty{BIGENDIAN} now allows to
             select in MCS-51/251 mode whether constants should
@@ -11778,7 +11816,7 @@ Either that was a long nightshift or I am slowly getting old...
       \item{the \tty{U} command line switch now allows to switch AS
             into a case sensitive mode that differentiates
             between upper and lower case in the names of symbols,
-            user-defined functions, macros, macro parameters, and 
+            user-defined functions, macros, macro parameters, and
             sections (r5);}
       \item{\tty{SFRB} now also knows the mapping rules for bit
             addresses in the RAM areas; warnings are generated
@@ -11853,7 +11891,7 @@ Either that was a long nightshift or I am slowly getting old...
       \item{instead of {\tt ELSEIF}, it is now valid to simply write {\tt
             ELSE} (r8);}
       \item{$==$ may be used as equality operator instead of $=$ (r8);}
-      \item{\tty{BRANCHEXT} for the Philips XA now allows to automatically 
+      \item{\tty{BRANCHEXT} for the Philips XA now allows to automatically
             extend the reach of short branches (r8);}
       \item{debug output is now also possible in NoICE format (r8);}
       \item{additionally supports the i960 family from Intel (r8);}
@@ -11873,7 +11911,7 @@ Either that was a long nightshift or I am slowly getting old...
             (r8);}
       \item{additional command line option {\tt shareout} to set the
             output file for SHARED definitions (r8);}
-      \item{new statement {\tt WRAPMODE} to support AVR processors with 
+      \item{new statement {\tt WRAPMODE} to support AVR processors with
             a shortened program counter (r8);}
       \item{additionally supports the C20x instruction subset in the C5x
             part (r8);}
@@ -11890,7 +11928,7 @@ Either that was a long nightshift or I am slowly getting old...
       \item{additionally supports the ACE family from Fairchild (r8);}
       \item{{\tt REG} is now also allowed for PowerPCs (r8);}
       \item{additional switch in P2HEX to relocate all addresses (r8);}
-      \item{The switch \tty{x} now additionally allows a second level 
+      \item{The switch \tty{x} now additionally allows a second level
             of detailness to print the source line in question (r8).}
       \end{itemize}}
 \item{version 1.42:
@@ -11900,7 +11938,7 @@ Either that was a long nightshift or I am slowly getting old...
             list file's name and location;}
       \item{additionally supports the F$^{2}$MC16L family from Fujitsu;}
       \item{additional instruction {\tt PACKING} for the AVR family;}
-      \item{additional implicit macro parameters {\tt ALLARGS} and 
+      \item{additional implicit macro parameters {\tt ALLARGS} and
             {\tt ARGCOUNT};}
       \item{additional instruction {\tt SHIFT} to process variable macro
             argument lists;}
@@ -11913,7 +11951,7 @@ Either that was a long nightshift or I am slowly getting old...
       \item{additionally supports the 68HC11K4 address windowing;}
       \item{P2HEX now allows to vary the address field length of AVR HEX
             files;}
-      \item{the new command line option {\tt -gnuerrors} allows to output 
+      \item{the new command line option {\tt -gnuerrors} allows to output
             error messages in a GNU C-style format;}
       \item{additionally supports the TMS320C54x family from Texas
             Instruments;}
@@ -11950,13 +11988,13 @@ Either that was a long nightshift or I am slowly getting old...
       \item{added function \tty{CHARFROMSTR};}
       \item{additionally allow Q for octal constants in Intel mode;}
       \item{add another variant for temporary symbols;}
-      \item{the PowerPC part has been extended by the MPC821 
+      \item{the PowerPC part has been extended by the MPC821
             (contribution by Marcin Cieslak);}
       \item{implicit macro parameters are always case-insensitive;}
       \item{add \tty{REG} statement to MSP430;}
       \item{additionally supports the XMOS XS1;}
       \item{additional parameters \tty{GLOBALSYMBOLS} and
-            \tty{NOGLOBALSYMBOLS} to control whether labels in   
+            \tty{NOGLOBALSYMBOLS} to control whether labels in
             macros are local or not;}
       \item{additionally supports the NEC 75xx series;}
       \item{additionally supports the TMS1000 controllers from
@@ -11967,7 +12005,7 @@ Either that was a long nightshift or I am slowly getting old...
       \end{itemize}}
 \end{itemize}
 
-%%===========================================================================        
+%%===========================================================================
 
 \cleardoublepage
 \chapter{Hints for the AS Source Code}
@@ -11995,7 +12033,7 @@ programs like AS.  Furthermore, my focus of operating systems had made a
 clear move towards Unix, and I probably could have waited arbitrarily long
 for a Borland Pascal for Linux (to all those remarking now that Borland
 would be working on something like that: this is {\em Vapourware}, don\'t
-believe them anything until you can go into a shop and actually buy it!). 
+believe them anything until you can go into a shop and actually buy it!).
 It was therefore clear that C was the way to go.
 
 After this eperience what results the usage of 'island systems' may have,
@@ -12042,7 +12080,7 @@ result!).
 
 A further component to capure system dependencies is the file {\tt
 sysdefs.h}.  Practically all compilers predefine a couple of preprocessor
-symbols that describe the target processor and the used operating system. 
+symbols that describe the target processor and the used operating system.
 For example, on a Sun Sparc under Solaris equipped with the GNU compiler,
 the symbols \verb!__sparc! and \verb!__SVR4!.  {\tt sysdefs.h} exploits
 these symbols to provide a homogeneous environment for the remaining,
@@ -12093,7 +12131,7 @@ execution by writing the code in larger blocks.
 \subsubsection{asmdebug.c}
 
 AS can optionally generate debug information for other tools like
-simulators or debuggers, allowing a backward reference to the source code. 
+simulators or debuggers, allowing a backward reference to the source code.
 They get collected in this module and can be output after assembly in one
 of several formats.
 
@@ -12131,7 +12169,7 @@ step-by-step basis...priorities as needed...
 
 \subsubsection{asmmac.c}
 
-Routines to store and execute macro constructs are located in this module. 
+Routines to store and execute macro constructs are located in this module.
 The real macro processor is (as already mentioned) in {\tt as.c}.
 
 \subsubsection{asmpars.c}
@@ -12161,20 +12199,20 @@ they are used.  Well...
 
 \subsubsection{chunks.c}
 
-This module defines a data type to deal with a list of address ranges. 
+This module defines a data type to deal with a list of address ranges.
 This functionality is needed by AS for allocation lists; furthermore,
 P2BIN and P2HEX use such lists to warn about overlaps.
 
 \subsubsection{cmdarg.c}
 
-This module implements the overall mechanism of command line arguments. 
+This module implements the overall mechanism of command line arguments.
 It needs a specification of allowed arguments, splits the command line and
 triggers the appropriate callbacks.   In detail, the mechanism includes
 the following:
 \begin{itemize}
 \item{Processing of arguments located in an environment variable or
       a corresponding file;}
-\item{Return of a set describing which command line arguments have not 
+\item{Return of a set describing which command line arguments have not
       been processed;}
 \item{A backdoor for situations when an overlaying IDE converts the passed
       command line completely into upper or lower case.}
@@ -12206,14 +12244,14 @@ result in the correct lengths.
 
 At this place, all processor families supported by AS are collected with
 their header IDs (see chapter \ref{SectCodeFormat}) and the output format
-to be used by default by P2HEX.  The target of this table is to centralize 
+to be used by default by P2HEX.  The target of this table is to centralize
 the addition of a new processor as most as possible, i.e. in contrast to
 earlier versions of AS, no further modifications of tool sources are
 necessary.
 
 \subsubsection{ioerrs.c}
 
-The conversion from error numbers to clear text messages is located here. 
+The conversion from error numbers to clear text messages is located here.
 I hope I'll never hit a system that does not define the numbers as macros,
 because I would have to rewrite this module completely...
 
@@ -12221,8 +12259,8 @@ because I would have to rewrite this module completely...
 
 The C version of AS reads all messages from files at runtime after the
 language to be used is clear.  The format of message files is not a simple
-one, but instead a special compact and preindexed format that is generated 
-at runtime by a program called 'rescomp' (we will talk about it later). 
+one, but instead a special compact and preindexed format that is generated
+at runtime by a program called 'rescomp' (we will talk about it later).
 This module is the counterpart to rescomp that reads the correct language
 part into a character field and offers functions to access the messages.
 
@@ -12299,7 +12337,7 @@ reading of code files.
 
 This is a minimal filter converting ANSI C source files to
 Kernighan-Ritchie style.  To be exact: only function heads are converted,
-even this only when they are roughly formatted like my programming style. 
+even this only when they are roughly formatted like my programming style.
 Noone should therefore think this were a universal C parser!
 
 \subsubsection{addcr.c}
@@ -12319,7 +12357,7 @@ be an adventure to get rid of...)
 
 \subsubsection{findhyphen.c}
 
-This is the submodule in {\em tex2doc} providing hyphenation of words. 
+This is the submodule in {\em tex2doc} providing hyphenation of words.
 The algorithm used for this is shamelessly stolen from TeX.
 
 \subsubsection{grhyph.c}
@@ -12369,7 +12407,7 @@ COUNTRY} setting is queried, while under Unix, the environment variables
 A source file for the message compiler {\em rescomp} usually has the
 suffix {\tt .res}.  The message compiler generates one or two files from a
 source:
-\begin{itemize}   
+\begin{itemize}
 \item{a binary file which is read at runtime by AS resp. its tools}
 \item{optionally one further C header file assigning an index number to
       all messages. These index numbers in combination with an index
@@ -12383,7 +12421,7 @@ control commands with parameters.  Empty lines and lines beginning with a
 semicolon are ignored.  Inclusion of other files is possible via the {\tt
 Include} statement:
 \begin{verbatim}
-Include <Datei> 
+Include <Datei>
 \end{verbatim}
 
 The first two statements in every source file must be two statements
@@ -12418,10 +12456,10 @@ Default EN
 These definitions are followed by an arbitrary number of {\tt Message}
 statements, i.e. definitions of messages:
 \begin{verbatim}
-Message ErrName 
- ": Fehler "    
- ": error "     
-\end{verbatim}  
+Message ErrName
+ ": Fehler "
+ ": error "
+\end{verbatim}
 In case {\em n} languages were announced via the {\tt Langs} statement,
 the message compiler takes {\bf exactly} the following {\em n} as the
 strings to be stored.  It is therefore impossible to leave out certain
@@ -12433,11 +12471,11 @@ source file; all lines except for the last one have to be ended with a
 backslash as continuation character:
 \begin{verbatim}
 Message TestMessage2
- "Dies ist eine" \  
+ "Dies ist eine" \
  "zweizeilige Nachricht"
  "This is a" \
  "two-line message"
-\end{verbatim}     
+\end{verbatim}
 As already mentioned, source files are pure ASCII files; national special
 characters may be placed in message texts (and the compiler will correctly
 pass them to the resulting file), a big disadvantage however is that such
@@ -12514,7 +12552,7 @@ least a minimum amount of secureness that everything went right during
 compilation, a set of test sources is provided in the subdirectory {\tt
 tests} that allows to test the freshly built assembler.  These programs
 are primarily trimmed to find faults in the translation of the machine
-instruction set, which are commonplace when integer lenghts vary. 
+instruction set, which are commonplace when integer lenghts vary.
 Target-independent features like the macro processors or conditional
 assembly are only casually tested, since I assume that they work
 everywhere when they work for me...
@@ -12536,7 +12574,7 @@ targets, but by coincidence not in the test cases.
 
 The probably most common reason to modify the source code of AS is to add
 a new target processor.   Apart from adding the new module to the
-Makefile, there are few places in other modules that need a modification. 
+Makefile, there are few places in other modules that need a modification.
 The new module will do the rest by registering itself in the list of code
 generators.  I will describe the needed steps in a cookbook style in the
 following sections:
@@ -12581,7 +12619,7 @@ by a call to the function
    CPUxxxx:=AddCPU('XXXX',SwitchTo_xxxx);
 \end{verbatim}
 \tty{'XXXX'} is the name chosen for the processor which later must be used
-in assembler programs to switch AS to this target processor. 
+in assembler programs to switch AS to this target processor.
 \tty{SwitchTo\_xxxx} (abbreviated as the ''switcher'' in the following) is
 a procedure without parameters that is called by AS when the switch to the
 new processor actually takes place.  \tty{AddCPU} delivers an integer
@@ -12606,7 +12644,7 @@ variables:
       constants).}
 \item{\tty{SegInits}: This array stores the initial program counter values
       for the individual segments (i.e. the values the program counters
-      will initially take when there is no \tty{ORG} statement).  There are 
+      will initially take when there is no \tty{ORG} statement).  There are
       only a few exceptions (like logically separated address spaces
       that physically overlap) which justify other initial values than
       0.}
@@ -12622,14 +12660,14 @@ variables:
       2.}
 \item{\tty{SegLimits}: This array stores the highest possible address for
       each segment, e.g. 65535 for a 16-bit address space.  This array
-      need not be filled in case the code generator takes over the 
+      need not be filled in case the code generator takes over the
       {\tt ChkPC} method.}
 \item{\tty{ConstMode}: This variable may take the values
       \tty{ConstModeIntel}, \tty{ConstModeMoto}, or \tty{ConstModeC}
       and rules which syntax has to be used to specify the base of
       integer constants.}
 \item{\tty{PCSymbol}: This variable contains the string an assembler program
-      may use to to get the current value of the program counter. 
+      may use to to get the current value of the program counter.
       Intel processors for example usually use a dollar sign.}
 \item{\tty{TurnWords}: If the target processor uses big-endian addressing and
       one of the fields in \tty{ListGran} is larger than one, set this flag
@@ -12664,7 +12702,7 @@ variables:
       target processor does not have attributes as one otherwise looses
       the opportunity to use macros with a name containing dots (e.g.
       to emulate other assemblers).}
-\item{\tty{AttrChars}: In case \tty{HasAttrs} is true, this string has to contain 
+\item{\tty{AttrChars}: In case \tty{HasAttrs} is true, this string has to contain
       all characters that can separate mnemonic and attribute.  In most
       cases, this string only contains a single dot.}
 \end{itemize}
@@ -12693,10 +12731,10 @@ generator:
       generator and that is not needed as long as the generator is not
       active.  It may point to an empty procedure in the simplest case.
       One example for the usage of this hook is the module \tty{CODE370} that
-      builds its instruction tables dynamically and frees them again after 
+      builds its instruction tables dynamically and frees them again after
       usage.}
 \item{\tty{IsDef}: Some processors know additional instructions that impose
-      a special meaning on a label in the first row like \tty{EQU} does.  One 
+      a special meaning on a label in the first row like \tty{EQU} does.  One
       example is the \tty{BIT} instruction found in an 8051 environment.  This
       function has to return TRUE if such a special instruction is
       present.  In the simplest case (no such instructions), the routine
@@ -12715,10 +12753,10 @@ pointers:
       case everything is fine, the function has to return TRUE, otherwise
       FALSE.  The code generator only has to implement this function if
       it did not set up the array {\tt SegLimits}.  This may e.g. become
-      necessary when the allowed range of addresses in a segment is 
+      necessary when the allowed range of addresses in a segment is
       non-continuous.}
 \item{\tty{InternSymbol} : Some processorcs, e.g. such with a register
-      bank in their internal RAM, predefine such 'registers' as symbols, 
+      bank in their internal RAM, predefine such 'registers' as symbols,
       and it wouldn't make much sense to define them in a separate include
       file with 256 or maybe more {\tt EQU}s.  This hook allows access to
       the code generator of AS: It obtains an expression as an ASCII
@@ -12804,7 +12842,7 @@ The localization to a new language can be split into two parts: the
 adaption of program messages and the translation of the manual.  The
 latter one is definitely a work of gigantic size, however, the adaption of
 program messages should be a work doable on two or three weekends, given
-that one knows both the new and one of the already present messages. 
+that one knows both the new and one of the already present messages.
 Unfortunately, this translation cannot be done on a step-by-step basis
 because the resource compiler currently cannot deal with a variable amount
 of languages for different messages, so the slogan is 'all or nothing'.

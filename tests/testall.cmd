@@ -93,8 +93,10 @@ call testall t_78c1x
 call testall t_78k0
 call testall t_78k2
 call testall t_78k3
+call testall t_78k4
 call testall t_8008
 call testall t_807x
+call testall t_80c382
 call testall t_821
 call testall t_85
 call testall t_870c
@@ -143,6 +145,7 @@ call testall t_msp430x
 call testall t_nestedstructs
 call testall t_olms40
 call testall t_olms50
+call testall t_oki48
 call testall t_parsys
 call testall t_s12x
 call testall t_scmp

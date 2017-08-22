@@ -791,7 +791,12 @@ static void AddTableEntry(const char *Part, char *Sep)
     *Ptr = '\0';
   }
   else
-    Ptr = (char *) realloc(Ptr, nlen + 1);
+  {
+    char *NewPtr = (char *) realloc(Ptr, nlen + 1);
+
+    if (NewPtr)
+      Ptr = NewPtr;
+  }
   if (UseSep)
     strcat(Ptr, Sep); strcat(Ptr, Part);
   ThisTable.Lines[CurrRow][CurrCol] = Ptr;

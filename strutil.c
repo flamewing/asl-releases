@@ -299,6 +299,7 @@ int mysprintf(va_alist) va_dcl
   dest = va_arg(pvar, char*);
   form = va_arg(pvar, char*);
   vsprintf(dest, form, pvar);
+  va_end(pvar);
 
   for (run = dest; *run != '\0'; run++);
   return run - dest;

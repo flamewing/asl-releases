@@ -2038,7 +2038,7 @@ void *ckmalloc(size_t s)
 #endif
 
   tmp = malloc(s);
-  if (!tmp)
+  if (!tmp && (s > 0))
     WrError(10006);
   return tmp;
 }

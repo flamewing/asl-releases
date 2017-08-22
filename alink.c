@@ -355,7 +355,7 @@ static void ProcessFile(int Index)
         ChkIO(TargName);
       if (!Write2(TargFile, &Len))
         ChkIO(TargName);
-      if (fwrite(Buffer, 1, Len, f) != Len)
+      if (fwrite(Buffer, 1, Len, TargFile) != Len)
         ChkIO(TargName);
       if (PartRun)
         PartRun = PartRun->Next;

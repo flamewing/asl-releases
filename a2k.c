@@ -63,7 +63,7 @@ char **argv;
   if (!inpfile)
   {
     perror(argv[1]);
-    return 2;
+    exit(2);
   }
 
   if (!strcmp(argv[2], "-"))
@@ -73,7 +73,7 @@ char **argv;
   if (!outfile)
   {
     perror(argv[2]);
-    return 2;
+    exit(2);
   }
 
   BufferFill = 0;

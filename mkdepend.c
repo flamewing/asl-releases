@@ -117,6 +117,7 @@ int main(int argc, char **argv)
       if (!used[z])
         fprintf(pDestFile, " %s", argv[z]);
     fprintf(pDestFile, "\n");
+    fclose(pDestFile);
   }
 
   return 0;

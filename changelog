@@ -1,6 +1,14 @@
 $Id: changelog,v 1.152 2017/06/28 17:05:00 alfred Exp $
 ------------------------------------------------------------------------------
 
+2017-08-21 [1.42 Bld 119]
+
+- Addition    : add NEC 78K4
+
+- Addition    : add Siemens SAB 80C382
+
+- Addition    : add OKI MCS-48 variants
+
 2017-07-30 [1.42 Bld 118]
 
 - Bugfix      : correct several flaws in 68K address mode decoder
