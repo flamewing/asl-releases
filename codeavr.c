@@ -267,7 +267,7 @@ static void DecodeDATA_AVR(Word Index)
   MaxV = ((ActPC == SegCode) && (!Packing)) ? 65535 : 255;
   MinV = (-((MaxV + 1) >> 1));
   AccFull = FALSE;
-  if (ChkArgCnt(0, 0))
+  if (ChkArgCnt(1, ArgCntMax))
   {
     OK = True;
     for (z = 1; z <= ArgCnt; z++)

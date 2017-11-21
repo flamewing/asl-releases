@@ -550,10 +550,10 @@ static void DecodeMOVE(Word Index)
   LongWord Tmp, DReg , AriOp = 0xff, ImmVal = 0x100;
   String Parts[8];
   Boolean OK;
-  UNUSED(Index);
   Word BigCPUMask = (1 << (CPU53C825 - CPU53C810))
                   | (1 << (CPU53C875 - CPU53C810))
                   | (1 << (CPU53C895 - CPU53C810));
+  UNUSED(Index);
 
   if (!ChkArgCnt(1, 3));
   else if (ArgCnt == 1) /* MOVE Register */

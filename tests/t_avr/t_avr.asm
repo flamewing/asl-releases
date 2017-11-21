@@ -227,3 +227,5 @@ next:
 
 	wdr
 
+	data	1,2,3
+	data	"abcd"

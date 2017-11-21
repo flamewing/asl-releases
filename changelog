@@ -1,6 +1,10 @@
 $Id: changelog,v 1.152 2017/06/28 17:05:00 alfred Exp $
 ------------------------------------------------------------------------------
 
+2017-11-21 [1.42 Bld 121]
+
+- Bugfix      : correct behaviour of DATA for Atmel AVR
+
 2017-11-20 [1.42 Bld 120]
 
 - Addition    : add more ATmega variants
