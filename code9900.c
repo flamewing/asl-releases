@@ -64,7 +64,9 @@
 #include "asmitree.h"
 #include "codepseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
 
+#include "code9900.h"
 
 static CPUVar CPU9900;
 
@@ -206,8 +208,8 @@ static void DecodeTwo(Word Code)
 {
   Word HPart;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (DecodeAdr(ArgStr[1]))
+  if (ChkArgCnt(2, 2)
+   && DecodeAdr(ArgStr[1]))
   {
     WAsmCode[0] = AdrPart;
     WAsmCode[1] = AdrVal;
@@ -224,8 +226,8 @@ static void DecodeTwo(Word Code)
 
 static void DecodeOne(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else if (DecodeAdr(ArgStr[1]))
+  if (ChkArgCnt(2, 2)
+   && DecodeAdr(ArgStr[1]))
   {
     Word HPart;
 
@@ -241,8 +243,8 @@ static void DecodeOne(Word Code)
 
 static void DecodeLDCR_STCR(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else if (DecodeAdr(ArgStr[1]))
+  if (ChkArgCnt(2, 2)
+   && DecodeAdr(ArgStr[1]))
   {
     Word HPart;
     Boolean OK;
@@ -267,8 +269,8 @@ static void DecodeLDCR_STCR(Word Code)
 
 static void DecodeShift(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else if (DecodeReg(ArgStr[1], WAsmCode + 0))
+  if (ChkArgCnt(2, 2)
+   && DecodeReg(ArgStr[1], WAsmCode + 0))
   {
     Word HPart;
 
@@ -282,8 +284,8 @@ static void DecodeShift(Word Code)
 
 static void DecodeImm(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else if (DecodeReg(ArgStr[1], WAsmCode + 0))
+  if (ChkArgCnt(2, 2)
+   && DecodeReg(ArgStr[1], WAsmCode + 0))
   {
     Boolean OK;
 
@@ -298,8 +300,8 @@ static void DecodeImm(Word Code)
 
 static void DecodeRegOrder(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (DecodeReg(ArgStr[1], WAsmCode + 0))
+  if (ChkArgCnt(1, 1)
+   && DecodeReg(ArgStr[1], WAsmCode + 0))
   {
     WAsmCode[0] += Code << 4;
     CodeLen = 2;
@@ -310,8 +312,8 @@ static void DecodeLMF(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (DecodeReg(ArgStr[1], WAsmCode + 0))
+  if (ChkArgCnt(2, 2)
+   && DecodeReg(ArgStr[1], WAsmCode + 0))
   {
     Boolean OK;
 
@@ -325,8 +327,8 @@ static void DecodeLMF(Word Code)
 
 static void DecodeMPYS_DIVS(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (DecodeAdr(ArgStr[1]))
+  if (ChkArgCnt(1, 1)
+   && DecodeAdr(ArgStr[1]))
   {
     WAsmCode[0] = Code + AdrPart;
     WAsmCode[1] = AdrVal;
@@ -336,8 +338,7 @@ static void DecodeMPYS_DIVS(Word Code)
 
 static void DecodeSBit(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
 
@@ -352,8 +353,7 @@ static void DecodeSBit(Word Code)
 
 static void DecodeJmp(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Integer AdrInt;
@@ -374,8 +374,7 @@ static void DecodeJmp(Word Code)
 
 static void DecodeLWPI_LIMI(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
 
@@ -390,8 +389,8 @@ static void DecodeLWPI_LIMI(Word Code)
 
 static void DecodeSing(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (DecodeAdr(ArgStr[1]))
+  if (ChkArgCnt(1, 1)
+   && DecodeAdr(ArgStr[1]))
   {
     WAsmCode[0] = (Code & 0x7fff) | AdrPart;
     WAsmCode[1] = AdrVal;
@@ -403,8 +402,7 @@ static void DecodeSing(Word Code)
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     WAsmCode[0] = Code & 0x7fff;
     CodeLen = 2;
@@ -421,8 +419,7 @@ static void DecodeBYTE(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt == 0) WrError(1110);
-  else
+  if (ChkArgCnt(1, ArgCntMax))
   {
     z = 1; OK = True;
     do
@@ -484,8 +481,7 @@ static void DecodeWORD(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt == 0) WrError(1110);
-  else
+  if (ChkArgCnt(1, ArgCntMax))
   {
     z = 1;
     OK = True;
@@ -512,8 +508,7 @@ static void DecodeBSS(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
     HVal16 = EvalIntExpression(ArgStr[1], Int16, &OK);

@@ -81,6 +81,7 @@
 #include "asmpars.h"
 #include "asmitree.h"
 #include "asmallg.h"
+#include "errmsg.h"
 
 #include "motpseudo.h"
 
@@ -138,8 +139,7 @@ static void DecodeBYT(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt == 0) WrError(1110);
-  else
+  if (ChkArgCnt(1, ArgCntMax))
   {
     ShortInt SpaceFlag = -1;
     int z = 1;
@@ -276,8 +276,7 @@ static void DecodeADR(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt == 0) WrError(1110);
-  else
+  if (ChkArgCnt(1, ArgCntMax))
   {
     int z = 1;
     Boolean OK = True;
@@ -398,8 +397,7 @@ static void DecodeFCC(Word Index)
   LongInt Rep,z2;
   UNUSED(Index);
 
-  if (ArgCnt == 0) WrError(1110);
-  else
+  if (ChkArgCnt(1, ArgCntMax))
   {
     z = 1;
     OK = True;
@@ -450,8 +448,7 @@ static void DecodeDFS(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
     HVal16 = EvalIntExpression(ArgStr[1], Int16, &OK);
@@ -857,8 +854,7 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
 
   if (Memo("DC"))
   {
-    if (ArgCnt == 0) WrError(1110);
-    else
+    if (ChkArgCnt(1, ArgCntMax))
     {
       OK = True;
       z = 1;
@@ -1042,8 +1038,7 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
 
   if (Memo("DS"))
   {
-    if (ArgCnt != 1) WrError(1110);
-    else
+    if (ChkArgCnt(1, 1))
     {
       FirstPassUnknown = False;
       HVal = EvalIntExpression(ArgStr[1], Int32, &ValOK);

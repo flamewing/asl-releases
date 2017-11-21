@@ -35,4 +35,6 @@ extern int MoveCodeChunkToList(tCodeChunkList *pCodeChunkList, tCodeChunk *pNewC
 extern void FreeCodeChunkList(tCodeChunkList *pCodeChunkList);
 extern Boolean RetrieveCodeFromChunkList(const tCodeChunkList *pCodeChunkList, LargeWord Start, Byte *pData, unsigned Count);
 
+extern LargeWord GetCodeChunksStored(const tCodeChunkList *pCodeChunkList);
+
 #endif /* _CODECHUNKS_H */

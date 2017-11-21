@@ -44,6 +44,8 @@
 #include "codevars.h" 
 #include "headids.h"
 #include "intpseudo.h"
+#include "errmsg.h"
+
 #include "code2650.h"
 
 /*--------------------------------------------------------------------------*/
@@ -87,8 +89,7 @@ static Boolean DecodeCondition(const char *pAsc, Byte *pRes)
 
 static void DecodeFixed(Word Index)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     BAsmCode[0] = Index; CodeLen = 1;
   }
@@ -98,7 +99,7 @@ static void DecodeOneReg(Word Index)
 {
   Byte Reg;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -110,8 +111,7 @@ static void DecodeImm(Word Index)
 {
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     BAsmCode[1] = EvalIntExpression(ArgStr[1], Int8, &OK);
     if (OK)
@@ -126,7 +126,7 @@ static void DecodeRegImm(Word Index)
   Byte Reg;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -144,7 +144,7 @@ static void DecodeRegAbs(Word Index)
   Word AbsVal;
   Boolean OK, IndFlag;
 
-  if ((ArgCnt < 2) || (ArgCnt > 4)) WrError(1110);
+  if (!ChkArgCnt(2, 4));
   else if (!DecodeReg(ArgStr[1], &DReg)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -198,7 +198,7 @@ static void DecodeRegRel(Word Index)
   Boolean IndFlag, OK;
   int Dist;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -225,7 +225,7 @@ static void DecodeCondAbs(Word Index)
   Word Address;
   Boolean OK, IndFlag;
   
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeCondition(ArgStr[1], &Cond)) WrXError(1360, ArgStr[1]);
   else
   {
@@ -249,7 +249,7 @@ static void DecodeCondRel(Word Index)
   Boolean IndFlag, OK;
   int Dist;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeCondition(ArgStr[1], &Cond)) WrXError(1360, ArgStr[1]);
   else
   {
@@ -276,7 +276,7 @@ static void DecodeRegAbs2(Word Index)
   Word AbsVal;
   Boolean IndFlag, OK;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -300,7 +300,7 @@ static void DecodeBrAbs(Word Index)
   Word AbsVal;
   Boolean IndFlag, OK;
 
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
+  if (!ChkArgCnt(1, 2));
   else if ((ArgCnt == 2) && (!DecodeReg(ArgStr[2], &Reg))) WrXError(1445, ArgStr[2]);
   else if (Reg != 3) WrError(1350);
   else
@@ -323,7 +323,7 @@ static void DecodeCond(Word Index)
 {
   Byte Cond;
   
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!DecodeCondition(ArgStr[1], &Cond)) WrXError(1360, ArgStr[1]);
   else
   {
@@ -336,8 +336,7 @@ static void DecodeZero(Word Index)
 {
   Boolean IndFlag, OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     BAsmCode[0] = Index;
     IndFlag = *ArgStr[1] == '*';

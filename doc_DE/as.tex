@@ -46,7 +46,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand August 2017}
+{\large Stand November 2017}
 \end{raggedright}
 
 \clearpage
@@ -584,7 +584,8 @@ Datei             & Funktion \\
 \hline
 REG96.INC         & Registeradressen MCS-96 \\
 REGACE.INC        & Registeradressen ACE \\
-REGAVR.INC        & Register- \& Bitadressen AVR-Familie \\
+REGAVROLD.INC     & Register- \& Bitadressen AVR-Familie (veraltet)\\
+REGAVR.INC        & Register- \& Bitadressen AVR-Familie (aktuell)\\
 REGCOP8.INC       & Registeradressen COP8 \\
 REGGP32.INC       & Registeradressen 68HC908GP32 \\
 REGHC12.INC       & Registeradressen 68HC12 \\
@@ -615,6 +616,9 @@ STDDEF90.INC      & Register- \& Speicheradressen TLCS-90 \\
 STDDEF96.INC      & Register- \& Speicheradressen TLCS-900 \\
 STDDEFXA.INC      & SFR-\& Bitadressen Philips XA \\
 STDDEFZ8.INC      & Registeradressen Z8-Familie \\
+AVR/\*.INC        & Register- \& Bitadressen AVR-Familie \\
+                  & (nicht direkt benutzen, REGAVR.INC \\
+                  & inkludieren) \\
 \hline
 \hline
 {\bf Verzeichnis LIB} & \\
@@ -2692,8 +2696,10 @@ Verwendet man keine \tty{CODEPAGE}-Anweisungen, so beziehen sich alle mit
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-\subsection{ENUM}
+\subsection{ENUM, NEXTENUM und ENUMCONF}
 \ttindex{ENUM}
+\ttindex{NEXTENUM}
+\ttindex{ENUMCONF}
 
 {\em G"ultigkeit: alle Prozessoren}
 
@@ -2708,24 +2714,48 @@ Symbole angegeben, wie in dem folgenden Beispiel:
 Dieser Befehl weist den Symbolen \tty{SymA}, \tty{SymB} und \tty{SymC}
 die Werte 0, 1 und 2 zu.
 \par
-\tty{ENUM}-Befehle sind von Hause aus einzeilig, d.h. bei einem neuen
-\tty{ENUM}-Befehl beginnt die Numerierung wieder bei Null.  Mehrzeilige
-Aufz"ahlungen kann man aber mit einem kleinen Trick erreichen, der
-die Tatsache ausnutzt, da"s man mit einer expliziten Zuweisung den
-internen Z"ahler neu setzen kann, wie in dem folgenden Fall:
-\begin{quote}{\tt
-        ENUM    Januar=1,Februar,M"arz,April,Mai,Juni}
-\end{quote}
-Hier werden den Monatsnamen die Zahlenwerte 1..6
-zugewiesen.  M"ochte man die Aufz"ahlung nun fortsetzen, geht
-das folgenderma"sen:
-\begin{quote}{\tt
-        ENUM    Juli=Juni+1,August,September,Oktober \\
-        ENUM    November=Oktober+1,Dezember
-}\end{quote}
+M"ochte man eine Aufz"ahlung "uber mehrere Zeilen verteilen, so
+verwendet man ab der zweiten Zeile den Befehle \tty{NEXTENUM}
+anstelle von \tty{ENUM}.  Der interne Z"ahler, der den Symbolen
+der Aufz"ahlung fortlaufende Werte zuweist, wird dann nicht
+wieder auf Null zur"uckgesetzt, wie in dem folgenden Fall:
+\begin{verbatim}
+        ENUM     Januar=1,Februar,Maerz,April,Mai,Juni \\
+        NEXTENUM Juli,August,September,Oktober \\
+        NEXTENUM November,Dezember \\
+\end{verbatim}
+An diesem Beispiel sieht man auch, da"s man einzelnen Symbolen
+explizit Werte anstelle des aktuellen Z"ahlerstandes zuweisen
+kann.  Der interne Z"ahler wird anhand dieses Wertes auch
+aktualisiert.
+
 Die Definition von Symbolen mit \tty{ENUM} gleicht einer Definition
 mit \tty{EQU}, d.h. es ist nicht m"oglich, einem Symbol einen neuen
 Wert zuzuweisen.
+
+Die \tty{ENUMCONF}-Anweisung erlaubt das Verhalten von \tty{ENUM}
+zu beeinflussen.  \tty{ENUMCONF} akzeptiert ein oder zwei
+Argumente, wobei das erste Argument immer der Wert ist, um den
+der interne Z"ahler pro Symbol in einer Aufz"ahlung hochgez"ahlt
+wird.  Mit einem
+\begin{verbatim}
+      ENUMCONF 2
+\end{verbatim}
+werden den Symbolen also zum Beispiel die Werte 0,2,4,6...
+anstelle 0,1,2,3... zugewiesen.
+
+Das zweite (optionale) Argument von \tty{ENUMCONF} bestimmt,
+welchen Adre"sraum die Symbole zugeordnet werden.  Per Default
+sind mit \tty{ENUM} definierte Symbole typenlos, man kann aber
+zum Beispiel mit einem
+\begin{verbatim}
+      ENUMCONF 1,CODE
+\end{verbatim}  
+bestimmen, daß sie im Instruktions-Adre"sraum liegen sollen.  Die
+Namen der Adre"sr"aume sind die gleichen wie beim
+\tty{SEGMENT}-Befehl (\ref{SEGMENT}), zus"atzlich ist als
+Argument ein \tty{NOTHING} erlaubt, um wieder typenlose Symbole
+zu erzeugen.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3044,7 +3074,7 @@ nicht m"oglich waren.  Der W65SC02 erg"anzt den
 der CPU feiner eingestellt werden k"onnen.  Dem 65SC02 fehlen die
 Bitmanipulationsbefehle des 65C02.
 
-Der 65C19 ist {\em nicht] bin"ar aufw"artskompatibel zum
+Der 65C19 ist {\em nicht} bin"ar aufw"artskompatibel zum
 originalen 6502!  Einige Adressierungsarten wurden durch andere
 ersetzt.  Des weiteren enth"alt dieser Prozessor
 Befehlssatzerweiterungen, die die Implementierung digitaler
@@ -3196,15 +3226,19 @@ Diese Prozessoren unterscheiden sich nur in der Gr"o"se des eingebauten
 ROMs, die in \tty{STDDEFXA.INC} definiert ist.
 %%-----------
 \begin{quote}
-ac) AT90S1200 $\rightarrow$ AT90S2313 $\rightarrow$ AT90S4414 $\rightarrow$
-    AT90S8515 $\rightarrow$ ATMEGA8 $\rightarrow$ ATMEGA16
+ac) AT90S1200, AT90S2313, AT90S4414, AT90S4433, AT90S4434, AT90S8515,
+    AT90S8535, ATMEGA48, ATMEGA8, ATMEGA8515, ATMEGA8535, ATMEGA88,
+    ATMEGA16, ATMEGA161, ATMEGA162, ATMEGA163, ATMEGA164, ATMEGA165,
+    ATMEGA168, ATMEGA169, ATMEGA32, ATMEGA323, ATMEGA324, ATMEGA325,
+    ATMEGA3250, ATMEGA328, ATMEGA329, ATMEGA3290, ATMEGA406, ATMEGA64,
+    ATMEGA640, ATMEGA644, ATMEGA644RFR2, ATMEGA645, ATMEGA6450, ATMEGA649,
+    ATMEGA6490, ATMEGA103, ATMEGA128, ATMEGA1280, ATMEGA1281, ATMEGA1284,
+    ATMEGA1284RFR2, ATMEGA2560, ATMEGA2561
 \end{quote}
-Der erste Vertreter der AVR-Reihe stellt die Minimalkonfiguration dar,
-ohne RAM-Speicher und demzufolge auch ohne Load/Store-Befehle.  Die
-n"achsten drei Prozessoren unterscheiden sich nur im Speicherausbau
-und in der eingebauten Peripherie, was in \tty{REGAVR.INC} differenziert
-wird.  "Ahnlich verh"alt es sich mit den Mega-AVRs, die gegen"uber den
-Vorg"angern aber auch neue Maschinenbefehle mitbringen.
+Die verschiedenen AVR-Varianten unterscheiden sich in erster Linie in
+der Gr"o"se des On-Chip-Speichers (Flash, SRAM, EEPROM) und der integrierten
+Peripherie (GPIO, Timer, UART, A/D-Wandler,...).  Die ATmegas bringen im
+Vergleich zu den AT90...-Vorg"angern auch neue Maschinenbefehle mit.
 %%-----------
 \begin{quote}
 ad) AM29245 $\rightarrow$ AM29243 $\rightarrow$ AM29240 $\rightarrow$ AM29000
@@ -3861,6 +3895,7 @@ l"a"st sich aus einem gleichnamigen Symbol auslesen.
 
 \subsection{SEGMENT}
 \ttindex{SEGMENT}
+\label{SEGMENT}
 
 {\em G"ultigkeit: alle Prozessoren}
 
@@ -10505,6 +10540,13 @@ Angaben:
                {Die bei einem Befehl (Prozessor oder Pseudo)
                 angegebene Operandenzahl liegt nicht in dem f"ur diesen
                 Befehl erlaubten Bereich.}
+               {Die erwartete Anzahl Argumente bzw. Operanden}
+\errentry{1112}{Kann Argument nicht in Teile aufspaltenl}
+               {Fehler}
+               {Bei bestimmten Prozessoeren (z.B. DSP56000)
+                m"ussen die kommaseparierten Argumente weiter in
+                Einzeloperanden aufgespalten werden, diese ist
+                fehlgeschlagen.}
                {keines}
 \errentry{1115}{Unpassende Optionenzahl}
                {Fehler}
@@ -10757,13 +10799,37 @@ Angaben:
                {Der benutzte Befehl existiert zwar
                 grunds"atzlich, das eingestellte Mitglied der
                 Prozessorfamilie beherrscht ihn aber noch nicht.}
+               {Die Prozessorvarianten, die diesen Befehl
+                unterst"utzen w"urden.}
+\errentry{1501}{FPU-Befehle nicht freigeschaltet}
+               {Fehler}
+               {Die FPU-Befehlssatzerweiterungen m"ussen erlaubt
+                werden, um diesen Befehl zu benutzen}
+               {keines}
+\errentry{1502}{PMMU-Befehle nicht freigeschaltet}
+               {Fehler}
+               {Die PMMU-Befehlssatzerweiterungen m"ussen erlaubt
+                werden, um diesen Befehl zu benutzen}
+               {keines}
+\errentry{1503}{voller PMMU-Befehlssatz nicht freigeschaltet}
+               {Fehler}
+               {Dieser Befehl ist nur im Befehlssatz der 
+                68851-PMMU enthalten, nicht im reduzierten
+                Befehlssatz der integrierten PMMU.}
+               {keines}
+\errentry{1504}{Z80-Syntax nicht erlaubt}
+               {Fehler}
+               {Dieser Befehl ist nur erlaubt, wenn die
+                Z80-Syntax für 8080/8085-Befehle freigeschaltet
+                wurde.}
                {keines}
 \errentry{1505}{Adressierungsart auf dem ... nicht vorhanden}
                {Fehler}
                {Der benutzte Adressierungsmodus existiert
                 zwar grunds"atzlich, das eingestellte Mitglied der
                 Prozessorfamilie beherrscht ihn aber noch nicht.}
-               {keines}
+               {Die Prozessorvarianten, die diesen
+                Adressierungsmodus unterst"utzen w"urden.}
 \errentry{1510}{Ung"ultige Bitstelle}
                {Fehler}
                {Die angegebene Bitnummer ist nicht erlaubt
@@ -10863,7 +10929,27 @@ Angaben:
 \errentry{1800}{offene Makrodefinition}
                {Fehler}
                {Eine Makrodefinition war am Dateiende nicht
-                zuende.  Vermutlich fehlt ein \tty{ENDM}.}
+                abgeschlossen.  Vermutlich fehlt ein \tty{ENDM}.}
+               {keines}
+\errentry{1801}{IRP ohne ENDM}
+               {Fehler}
+               {Ein IRP-Block war am Dateiende nicht
+                abgeschlossen.  Vermutlich fehlt ein \tty{ENDM}.}
+               {keines}
+\errentry{1802}{IRPC ohne ENDM}
+               {Fehler}
+               {Ein IRPC-Block war am Dateiende nicht
+                abgeschlossen.  Vermutlich fehlt ein \tty{ENDM}.}
+               {keines}
+\errentry{1803}{REPT ohne ENDM}
+               {Fehler}
+               {Ein REPT-Block war am Dateiende nicht
+                abgeschlossen.  Vermutlich fehlt ein \tty{ENDM}.}
+               {keines}
+\errentry{1804}{WHILE ohne ENDM}
+               {Fehler}
+               {Ein WHILE-Block war am Dateiende nicht
+                abgeschlossen.  Vermutlich fehlt ein \tty{ENDM}.}
                {keines}
 \errentry{1805}{EXITM au"serhalb eines Makrorumpfes}
                {Fehler}

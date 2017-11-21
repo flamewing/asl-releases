@@ -107,24 +107,13 @@
  *
  *****************************************************************************/
 
+#include <stdio.h>
+
 #include "chunks.h"
 #include "fileformat.h"
 #include "dynstring.h"
 #include "lstmacroexp.h"
-
-typedef unsigned CPUVar;
-
-typedef struct _TCPUDef
-         {
-	  struct _TCPUDef *Next;
-	  char *Name;
-	  CPUVar Number,Orig;
-	  void (*SwitchProc)(
-#ifdef __PROTOS__
-                             void
-#endif
-                            );
-	 } TCPUDef,*PCPUDef;
+#include "cpulist.h"
 
 typedef enum {TempNone = 0, TempInt = 1, TempFloat = 2, TempString = 4, TempAll = 7} TempType;
 
@@ -261,11 +250,11 @@ extern char SrcSuffix[],IncSuffix[],PrgSuffix[],LstSuffix[],
 
 extern char *EnvName;
 
-#define ParMax 20
+#define ArgCntMax 20
 
 #define ChapMax 4
 
-#define StructSeg (PCMax+1)
+#define StructSeg (PCMax + 1)
 
 extern char *SegNames[PCMax + 2];
 extern char SegShorts[PCMax + 2];
@@ -285,7 +274,7 @@ void
 );
 
 typedef Word WordField[6];          /* fuer Zahlenumwandlung */
-typedef char *ArgStrField[ParMax+1];/* Feld mit Befehlsparametern */
+typedef char *ArgStrField[ArgCntMax + 1]; /* Feld mit Befehlsparametern */
 typedef char *StringPtr;
 
 typedef enum
@@ -318,6 +307,8 @@ typedef struct _TSaveState
   Byte SaveListOn;
   tLstMacroExp SaveLstMacroExp;
   PTransTable SaveTransTable;
+  Integer SaveEnumSegment;
+  LongInt SaveEnumCurrentValue, SaveEnumIncrement;
 } TSaveState,*PSaveState;
 
 typedef struct _TForwardSymbol
@@ -398,6 +389,8 @@ extern Boolean MakeIncludeList;
 extern Boolean RelaxedMode;
 extern Word ListMask;
 extern ShortInt ExtendErrors;
+extern Integer EnumSegment;
+extern LongInt EnumIncrement, EnumCurrentValue;
 
 extern LongInt MomSectionHandle;
 extern PSaveSection SectionStack;
@@ -462,8 +455,6 @@ extern StringPtr ShareName;
 extern CPUVar MomCPU,MomVirtCPU;
 extern char DefCPU[20];
 extern char MomCPUIdent[20];
-extern PCPUDef FirstCPUDef;
-extern CPUVar CPUCnt;
 
 extern Boolean FPUAvail;
 extern Boolean DoPadding;
@@ -477,7 +468,7 @@ extern LargeWord RadixBase, OutRadixBase;
 extern StringPtr LabPart,OpPart,AttrPart,ArgPart,CommPart,LOpPart;
 extern char AttrSplit;
 extern ArgStrField ArgStr;
-extern Byte ArgCnt;
+extern int ArgCnt;
 extern StringPtr OneLine;
 #ifdef PROFILE_MEMO
 extern unsigned NumMemo;

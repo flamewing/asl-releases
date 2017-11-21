@@ -96,7 +96,7 @@ const char *Blanks(int cnt)
 /* eine Integerzahl in eine Hexstring umsetzen. Weitere vordere Stellen als */
 /* Nullen */
 
-int HexString(char *pDest, int DestSize, LargeWord i, Byte Stellen)
+int HexString2(char *pDest, int DestSize, LargeWord i, Byte Stellen, Boolean LowerCase)
 {
   int Cnt, Len = 0;
   LargeWord digit;
@@ -116,7 +116,7 @@ int HexString(char *pDest, int DestSize, LargeWord i, Byte Stellen)
     digit = i & 15;
     if (digit < 10)
       *(--ptr) = digit + '0';
-    else if (HexLowerCase)
+    else if (LowerCase)
       *(--ptr) = digit - 10 + 'a';
     else
       *(--ptr) = digit - 10 + 'A';
@@ -838,6 +838,33 @@ char *strcpy(char *pDest, const char *pSrc)
 }
 
 #endif
+
+/*--------------------------------------------------------------------------*/
+
+char *ParenthPos(char *pHaystack, char Needle)
+{
+  char *pRun;
+  int Level = 0;
+
+  for (pRun = pHaystack; *pRun; pRun++)
+  {
+    switch (*pRun)
+    {
+      case '(':
+        Level++;
+        break;
+      case ')':
+        if (Level < 1)
+          return NULL;
+        Level--;
+        break;
+      default:
+        if (*pRun == Needle && !Level)
+          return pRun;
+    }
+  }
+  return NULL;
+}
 
 /*--------------------------------------------------------------------------*/
 

@@ -466,17 +466,29 @@ Message ErrMsgMissingLTORG
  "unaufgel&ouml;ste Literale (LTORG fehlt)"
  "unresolved literals (missing LTORG)"
 
-Message ErrMsgNotOnThisCPU1
- "Befehl auf dem "
- "instruction not allowed on "
+Message ErrMsgInstructionNotOnThisCPUSupported
+ "Befehl auf dem %s nicht unterst&uuml;tzt"
+ "instruction not supported on %s"
 
-Message ErrMsgNotOnThisCPU2
- " nicht vorhanden"
- ""
+Message ErrMsgAddrModeNotOnThisCPUSupported
+ "Adressierungsart auf dem %s nicht unterst&uuml;tzt"
+ "addressing mode not supported on %s"
 
-Message ErrMsgNotOnThisCPU3
- "Adressierungsart auf dem "
- "addressing mode not allowed on "
+Message ErrMsgFPUNotEnabled
+ "FPU-Befehle nicht freigeschaltet"
+ "FPU instructions are not enabled"
+
+Message ErrMsgPMMUNotEnabled
+ "PMMU-Befehle nicht freigeschaltet"
+ "PMMU instructions are not enabled"
+
+Message ErrMsgFullPMMUNotEnabled
+ "voller PMMU-Befehlssatz nicht freigeschaltet"
+ "full PMMU instruction set is not enabed"
+
+Message ErrMsgZ80SyntaxNotEnabled
+ "Z80-Syntax nicht erlaubt"
+ "Z80 syntax was not allowed"
 
 Message ErrMsgInvBitPos
  "ung&uuml;ltige Bitstelle"
@@ -557,6 +569,22 @@ Message ErrMsgInvRegPair
 Message ErrMsgOpenMacro
  "offene Makrodefinition"
  "open macro definition"
+
+Message ErrMsgOpenIRP
+ "IRP ohne ENDM"
+ "IRP without ENDM"
+
+Message ErrMsgOpenIRPC
+ "IRPC ohne ENDM"
+ "IRPC without ENDM"
+
+Message ErrMsgOpenREPT
+ "REPT ohne ENDM"
+ "REPT without ENDM"
+
+Message ErrMsgOpenWHILE
+ "WHILE ohne ENDM"
+ "WHILE without ENDM"
 
 Message ErrMsgDoubleMacro
  "doppelte Makrodefinition"
@@ -833,6 +861,58 @@ Message ErrMsgExpected
 Message ErrMsgButGot
  "aber erhielt"
  "but got"
+
+Message ErrMsgArgCntZero
+ "erwarte kein Argument, erhielt %d"
+ "expected no argument but got %d"
+
+Message ErrMsgArgCntOne
+ "erwarte ein Argument, erhielt %d"
+ "expected one argument but got %d"
+
+Message ErrMsgArgCntMulti
+ "erwarte %d Argumente, erhielt %d"
+ "expected %d arguments but got %d"
+
+Message ErrMsgArgCntFromTo
+ "erwarte zwischen %d und %d Argumente, erhielt %d"
+ "expected between %d and %d arguments but got %d"
+
+Message ErrMsgArgCntEitherOr
+ "erwarte %d oder %d Argumente, erhielt %d"
+ "expected %d or %d arguments but got %d"
+
+Message ErrMsgAddrArgCnt
+ "Adre&szlig;ausdruck erwartet zwischen %d und %d Argumente, erhielt %d"
+ "address expression expects between %d and %d arguments but got %d"
+
+Message ErrMsgCannotSplitArg
+ "Kann Argument nicht in Teile aufspalten"
+ "failed splitting argument into parts"
+
+Message ErrMsgMinCPUSupported
+ "ab %s unterst&uuml;tzt"
+ "supported by %s and above"
+
+Message ErrMsgMaxCPUSupported
+ "bis %s unterst&uuml;tzt"
+ "supported by %s and below"
+
+Message ErrMsgRangeCPUSupported
+ "von %s bis %s unterst&uuml;tzt"
+ "supported by %s to %s" 
+
+Message ErrMsgOnlyCPUSupported1
+ "nur von "
+ "supported only by "
+
+Message ErrMsgOnlyCPUSupportedOr
+ " oder "
+ " or "
+
+Message ErrMsgOnlyCPUSupported2
+ " unterst&uuml;tzt"
+ ""
 
 Message OpTypeInt
  "Integer"

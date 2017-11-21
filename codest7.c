@@ -47,6 +47,7 @@
 #include "codepseudo.h"
 #include "motpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
 
 #include "codest7.h"
 
@@ -343,7 +344,7 @@ chk:
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
+  if (!ChkArgCnt(0, 0));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -358,7 +359,7 @@ static void DecodeLD(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -518,7 +519,7 @@ static void DecodeLD(Word Code)
 
 static void DecodePUSH_POP(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -543,7 +544,7 @@ static void DecodeCP(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -593,7 +594,7 @@ static void DecodeAri(Word Code)
 {
   LongInt Mask;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -617,7 +618,7 @@ static void DecodeAri(Word Code)
 
 static void DecodeRMW(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -649,7 +650,7 @@ static void DecodeMUL(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -668,7 +669,7 @@ static void DecodeMUL(Word Code)
 
 static void DecodeBRES_BSET(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (*AttrPart != '\0') WrError(1100);
   else if (*ArgStr[2] != '#') WrError(1350);
   else
@@ -690,7 +691,7 @@ static void DecodeBRES_BSET(Word Code)
 
 static void DecodeBTJF_BTJT(Word Code)
 {
-  if (ArgCnt != 3) WrError(1110);
+  if (!ChkArgCnt(3, 3));
   else if (*AttrPart != '\0') WrError(1100);
   else if (*ArgStr[2] != '#') WrError(1350);
   else
@@ -723,7 +724,7 @@ static void DecodeBTJF_BTJT(Word Code)
 
 static void DecodeJP_CALL(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -745,7 +746,7 @@ static void DecodeJP_CALL(Word Code)
 static void DecodeRel(Word Code)
 {
   if (*AttrPart != '\0') WrError(1100);
-  else if (ArgCnt != 1) WrError(1110);
+  else if (!ChkArgCnt(1, 1));
   else if (*ArgStr[1] == '[')
   {
     DecodeAdr(ArgStr[1], MModIAbs8);

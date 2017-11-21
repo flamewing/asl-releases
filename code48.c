@@ -43,6 +43,9 @@
 #include "asmitree.h"
 #include "intpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
+
+#include "code48.h"
 
 typedef struct
 {
@@ -135,9 +138,8 @@ static void DecodeAdr(const char *Asc_O)
 static void ChkN802X(void)
 {
   if (CodeLen == 0) return;
-  if ((MomCPU == CPU8021) || (MomCPU == CPU8022))
+  if (ChkExcludeCPUList(0, CPU8021, CPU8022, CPUNone) < 0)
   {
-    WrError(1500);
     CodeLen = 0;
   }
 }
@@ -145,9 +147,8 @@ static void ChkN802X(void)
 static void Chk802X(void)
 {
   if (CodeLen == 0) return;
-  if ((MomCPU != CPU8021) && (MomCPU != CPU8022))
+  if (ChkExactCPUList(0, CPU8021, CPU8022, CPUNone) < 0)
   {
-    WrError(1500);
     CodeLen = 0;
   }
 }
@@ -155,10 +156,8 @@ static void Chk802X(void)
 static void ChkCMOS(void)
 {
   if (CodeLen == 0) return;
-  if ((MomCPU != CPU80C39) && (MomCPU != CPU80C48) && (MomCPU != CPU80C382)
-   && (MomCPU != CPUMSM80C39) && (MomCPU != CPUMSM80C48))
+  if (ChkExactCPUList(0, CPU80C39, CPU80C48, CPU80C382, CPUMSM80C39, CPUMSM80C48, CPUNone) < 0)
   {
-    WrError(1500);
     CodeLen = 0;
   }
 }
@@ -166,9 +165,8 @@ static void ChkCMOS(void)
 static void ChkNUPI(void)
 {
   if (CodeLen == 0) return;
-  if ((MomCPU == CPU8041) || (MomCPU == CPU8042))
+  if (ChkExcludeCPUList(0, CPU8041, CPU8042, CPUNone) < 0)
   {
-    WrError(1500);
     CodeLen = 0;
   }
 }
@@ -176,9 +174,8 @@ static void ChkNUPI(void)
 static void ChkUPI(void)
 {
   if (CodeLen == 0) return;
-  if ((MomCPU != CPU8041) && (MomCPU != CPU8042))
+  if (ChkExactCPUList(0, CPU8041, CPU8042, CPUNone) < 0)
   {
-    WrError(1500);
     CodeLen = 0;
   }
 }
@@ -186,9 +183,8 @@ static void ChkUPI(void)
 static void ChkNSiemens(void)
 {
   if (CodeLen == 0) return;
-  if (MomCPU == CPU80C382)
+  if (!ChkExcludeCPU(CPU80C382))
   {
-    WrError(1500);
     CodeLen = 0;
   }
 }
@@ -196,9 +192,8 @@ static void ChkNSiemens(void)
 static void ChkOKI(void)
 {
   if (CodeLen == 0) return;
-  if ((MomCPU != CPUMSM80C39) && (MomCPU != CPUMSM80C48))
+  if (ChkExactCPUList(0, CPUMSM80C39, CPUMSM80C48, CPUNone) < 0)
   {
-    WrError(1500);
     CodeLen = 0;
   }
 }
@@ -206,9 +201,8 @@ static void ChkOKI(void)
 static void ChkSiemensOrOKI(void)
 {
   if (CodeLen == 0) return;
-  if ((MomCPU != CPU80C382) && (MomCPU != CPUMSM80C39) && (MomCPU != CPUMSM80C48))
+  if (ChkExactCPUList(0, CPU80C382, CPUMSM80C39, CPUMSM80C48, CPUNone) < 0)
   {
-    WrError(1500);
     CodeLen = 0;
   }
 }
@@ -216,9 +210,8 @@ static void ChkSiemensOrOKI(void)
 static void ChkExt(void)
 {
   if (CodeLen == 0) return;
-  if ((MomCPU == CPU8039) || (MomCPU == CPU80C39))
+  if (ChkExcludeCPUList(0, CPU8039, CPU80C39, CPUNone) < 0)
   {
-    WrError(1500);
     CodeLen = 0;
   }
 }
@@ -251,7 +244,7 @@ static Boolean IsIReg3(const char *pAsc)
 
 static void DecodeADD_ADDC(Word Code)
 {
-  if (ArgCnt!=2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (strcasecmp(ArgStr[1], "A")) WrError(1135);
   else
   {
@@ -280,7 +273,7 @@ static void DecodeADD_ADDC(Word Code)
 
 static void DecodeANL_ORL_XRL(Word Code)
 {
-  if (ArgCnt!=2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!strcasecmp(ArgStr[1], "A"))
   {
     DecodeAdr(ArgStr[2]);
@@ -337,7 +330,7 @@ static void DecodeANL_ORL_XRL(Word Code)
 
 static void DecodeCALL_JMP(Word Code)
 {
-  if (ArgCnt!=1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if ((EProgCounter() & 0x7fe) == 0x7fe) WrError(1900);
   else
   {
@@ -365,7 +358,7 @@ static void DecodeCALL_JMP(Word Code)
 
 static void DecodeCLR_CPL(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else
   {
     int z = 0;
@@ -397,7 +390,7 @@ static void DecodeCLR_CPL(Word Code)
 
 static void DecodeAcc(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (strcasecmp(ArgStr[1], "A")) WrError(1350);
   else
   {
@@ -410,7 +403,7 @@ static void DecodeDEC(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else
   {
     DecodeAdr(ArgStr[1]);
@@ -438,9 +431,8 @@ static void DecodeDEC(Word Code)
 
 static void DecodeDIS_EN(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU == CPU8021) WrError(1500);
-  else
+  if (!ChkArgCnt(1, 1));
+  else if (ChkExcludeCPU(CPU8021))
   {
     NLS_UpString(ArgStr[1]);
     if (!strcmp(ArgStr[1], "I"))
@@ -474,7 +466,7 @@ static void DecodeDJNZ(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else
   {
     DecodeAdr(ArgStr[1]);
@@ -511,7 +503,7 @@ static void DecodeENT0(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (strcasecmp(ArgStr[1], "CLK")) WrError(1135);
   else
   {
@@ -527,7 +519,7 @@ static void DecodeINC(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else
   {
     DecodeAdr(ArgStr[1]);
@@ -555,7 +547,7 @@ static void DecodeIN(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (strcasecmp(ArgStr[1], "A")) WrError(1350);
   else if (!strcasecmp(ArgStr[2], "DBB"))
   {
@@ -586,7 +578,7 @@ static void DecodeINS(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (strcasecmp(ArgStr[1], "A")) WrError(1350);
   else if (strcasecmp(ArgStr[2], "BUS")) WrError(1350);
   else
@@ -602,7 +594,7 @@ static void DecodeJMPP(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (strcasecmp(ArgStr[1], "@A")) WrError(1350);
   else
   {
@@ -615,7 +607,7 @@ static void DecodeCond(Word Index)
 {
   const CondOrder *pOrder = CondOrders + Index;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else
   {
     Boolean OK;
@@ -635,11 +627,8 @@ static void DecodeCond(Word Index)
           ChkN802X();
           break;
         case 1:
-          if (MomCPU == CPU8021)
-          {
-            WrError(1500);
+          if (!ChkExcludeCPU(CPU8021))
             CodeLen = 0;
-          }
           break;
         default:
           break;
@@ -665,7 +654,7 @@ static void DecodeJB(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else
   {
     Boolean OK;
@@ -690,7 +679,7 @@ static void DecodeMOV(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!strcasecmp(ArgStr[1], "A"))
   {
     if (!strcasecmp(ArgStr[2], "T"))
@@ -818,7 +807,7 @@ static void DecodeMOV(Word Code)
 
 static void DecodeANLD_ORLD_MOVD(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else
   {
     const char *pArg1 = ArgStr[1], *pArg2 = ArgStr[2];
@@ -847,7 +836,7 @@ static void DecodeANLD_ORLD_MOVD(Word Code)
 
 static void DecodeMOVP_MOVP3(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if ((strcasecmp(ArgStr[1], "A")) || (strcasecmp(ArgStr[2], "@A"))) WrError(1350);
   else
   {
@@ -861,7 +850,7 @@ static void DecodeMOVP1(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (strcasecmp(ArgStr[1], "P")) WrError(1350);
   else if (!IsIReg3(ArgStr[2])) WrError(1350);
   else
@@ -876,7 +865,7 @@ static void DecodeMOVX(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else
   {
     const char *pArg1 = ArgStr[1], *pArg2 = ArgStr[2];
@@ -908,7 +897,7 @@ static void DecodeNOP(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 0) WrError(1110);
+  if (!ChkArgCnt(0, 0));
   else
   {
     CodeLen = 1;
@@ -920,7 +909,7 @@ static void DecodeOUT(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (strcasecmp(ArgStr[1], "DBB")) WrError(1350);
   else if (strcasecmp(ArgStr[2], "A")) WrError(1350);
   else
@@ -936,7 +925,7 @@ static void DecodeOUTL(Word Code)
   UNUSED(Code);
 
   NLS_UpString(ArgStr[1]);
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else
   {
     NLS_UpString(ArgStr[1]);
@@ -969,7 +958,7 @@ static void DecodeOUTL(Word Code)
 
 static void DecodeRET_RETR(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
+  if (!ChkArgCnt(0, 0));
   else
   {
     CodeLen = 1;
@@ -983,9 +972,8 @@ static void DecodeSEL(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU == CPU8021) WrError(1500);
-  else
+  if (!ChkArgCnt(1, 1));
+  else if (ChkExcludeCPU(CPU8021))
   {
     Boolean OK = False;
     int z;
@@ -997,11 +985,8 @@ static void DecodeSEL(Word Code)
       CodeLen = 1;
       BAsmCode[0] = SelOrders[z].Code;
       OK = True;
-      if ((SelOrders[z].Is22) && (MomCPU != CPU8022))
-      {
+      if ((SelOrders[z].Is22) && !ChkExactCPU(CPU8022))
         CodeLen = 0;
-        WrError(1500);
-      }
       if (SelOrders[z].IsNUPI)
         ChkNUPI();
     }
@@ -1014,7 +999,7 @@ static void DecodeSTOP(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (strcasecmp(ArgStr[1], "TCNT")) WrError(1350);
   else
   {
@@ -1027,7 +1012,7 @@ static void DecodeSTRT(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else
   {
     NLS_UpString(ArgStr[1]);
@@ -1050,7 +1035,7 @@ static void DecodeXCH(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else
   {
     const char *pArg1 = ArgStr[1], *pArg2 = ArgStr[2];
@@ -1085,7 +1070,7 @@ static void DecodeXCHD(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else
   {
     const char *pArg1 = ArgStr[1], *pArg2 = ArgStr[2];
@@ -1113,9 +1098,8 @@ static void DecodeRAD(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 0) WrError(1110);
-  else if (MomCPU != CPU8022) WrError(1500);
-  else
+  if (!ChkArgCnt(0, 0));
+  else if (ChkExactCPU(CPU8022))
   {
     CodeLen = 1;
     BAsmCode[0] = 0x80;
@@ -1126,9 +1110,8 @@ static void DecodeRETI(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 0) WrError(1110);
-  else if (MomCPU != CPU8022) WrError(1500);
-  else
+  if (!ChkArgCnt(0, 0));
+  else if (ChkExactCPU(CPU8022))
   {
     CodeLen = 1;
     BAsmCode[0] = 0x93;
@@ -1139,8 +1122,7 @@ static void DecodeIDL_HALT(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     CodeLen = 1;
     BAsmCode[0] = (MomCPU == CPU80C382) ? 0xf3 : 0x01;
@@ -1150,7 +1132,7 @@ static void DecodeIDL_HALT(Word Code)
 
 static void DecodeOKIFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
+  if (!ChkArgCnt(0, 0));
   else
   {
     CodeLen = 1;
@@ -1163,7 +1145,7 @@ static void DecodeREG(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else
     AddRegDef(LabPart, ArgStr[1]);
 }

@@ -92,12 +92,40 @@
 #include "asmitree.h"
 #include "codepseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
 
-static CPUVar CPU90S1200, CPU90S2313, CPU90S4414, CPU90S8515,
-              CPUATMEGA8, CPUATMEGA16, CPUATMEGA32, CPUATMEGA64, CPUATMEGA128, CPUATMEGA256;
+#include "codeavr.h"
+
+#define FixedOrderCnt 27
+#define Reg1OrderCnt 10
+#define Reg2OrderCnt 12
+
+#define RegBankSize 32
+#define IOAreaStdSize 64
+#define IOAreaExtSize (IOAreaStdSize + 160)
+#define IOAreaExt2Size (IOAreaExtSize + 256)
+
+typedef struct
+{
+  Word Code;
+  CPUVar MinCPU;
+} FixedOrder;
+
+static CPUVar CPU90S1200, CPU90S2313, CPU90S4414, CPU90S4433, CPU90S4434, CPU90S8515, CPU90S8535,
+              CPUATMEGA48,
+              CPUATMEGA8, CPUATMEGA8515, CPUATMEGA8535, CPUATMEGA88,
+              CPUATMEGA16, CPUATMEGA161, CPUATMEGA162, CPUATMEGA163, CPUATMEGA164, CPUATMEGA165, CPUATMEGA168, CPUATMEGA169,
+              CPUATMEGA32, CPUATMEGA323, CPUATMEGA324, CPUATMEGA325, CPUATMEGA3250, CPUATMEGA328, CPUATMEGA329, CPUATMEGA3290,
+              CPUATMEGA406,
+              CPUATMEGA64, CPUATMEGA640, CPUATMEGA644, CPUATMEGA644RFR2, CPUATMEGA645, CPUATMEGA6450, CPUATMEGA649, CPUATMEGA6490,
+              CPUATMEGA103, CPUATMEGA128, CPUATMEGA1280, CPUATMEGA1281, CPUATMEGA1284, CPUATMEGA1284RFR2,
+              CPUATMEGA2560, CPUATMEGA2561, CPUATMEGA2564RFR2;
+
+static FixedOrder *FixedOrders, *Reg1Orders, *Reg2Orders;
 
 static Boolean WrapFlag;
 static LongInt ORMask, SignMask;
+static LargeWord IOAreaSize;
 
 static IntType AdrIntType;
 
@@ -161,14 +189,23 @@ static void DecodePORT(Word Index)
   CodeEquate(SegIO, 0, 0x3f);
 }
 
+static void DecodeSFR(Word Index)
+{
+  UNUSED(Index);
+
+  CodeEquate(SegData, RegBankSize, RegBankSize + IOAreaSize);
+}
+
 /* no argument */
 
-static void DecodeFixed(Word Code)
+static void DecodeFixed(Word Index)
 {
-  if (ArgCnt!=0) WrError(1110);
-  else
+  const FixedOrder *pOrder = FixedOrders + Index;
+
+  if (ChkArgCnt(0, 0)
+   && ChkMinCPU(pOrder->MinCPU))
   {
-    WAsmCode[0] = Code;
+    WAsmCode[0] = pOrder->Code;
     CodeLen = 1;
   }
 }
@@ -230,8 +267,7 @@ static void DecodeDATA_AVR(Word Index)
   MaxV = ((ActPC == SegCode) && (!Packing)) ? 65535 : 255;
   MinV = (-((MaxV + 1) >> 1));
   AccFull = FALSE;
-  if (ArgCnt == 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     OK = True;
     for (z = 1; z <= ArgCnt; z++)
@@ -268,37 +304,41 @@ static void DecodeREG(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt!=1) WrError(1110);
-  else AddRegDef(LabPart,ArgStr[1]);
+  if (ChkArgCnt(1, 1))
+    AddRegDef(LabPart,ArgStr[1]);
 }
 
 /* one register 0..31 */
 
-static void DecodeReg1(Word Code)
+static void DecodeReg1(Word Index)
 {
+  const FixedOrder *pOrder = Reg1Orders + Index;
   Word Reg;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
+  else if (!ChkMinCPU(pOrder->MinCPU));
   else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
   else
   {
-    WAsmCode[0] = Code | (Reg << 4);
+    WAsmCode[0] = pOrder->Code | (Reg << 4);
     CodeLen = 1;
   }
 }
 
 /* two registers 0..31 */
 
-static void DecodeReg2(Word Code)
+static void DecodeReg2(Word Index)
 {
+  const FixedOrder *pOrder = Reg2Orders + Index;
   Word Reg1, Reg2;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
+  else if (!ChkMinCPU(pOrder->MinCPU));
   else if (!DecodeReg(ArgStr[1], &Reg1)) WrXError(1445, ArgStr[1]);
   else if (!DecodeReg(ArgStr[2], &Reg2)) WrXError(1445, ArgStr[2]);
   else
   {
-    WAsmCode[0] = Code | (Reg2 & 15) | (Reg1 << 4) | ((Reg2 & 16) << 5);
+    WAsmCode[0] = pOrder->Code | (Reg2 & 15) | (Reg1 << 4) | ((Reg2 & 16) << 5);
     CodeLen = 1;
   }
 }
@@ -309,7 +349,7 @@ static void DecodeReg3(Word Code)
 {
   Word Reg;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -325,7 +365,7 @@ static void DecodeImm(Word Code)
   Word Reg, Const;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
   else if (Reg < 16) WrXError(1445, ArgStr[1]);
   else
@@ -344,8 +384,8 @@ static void DecodeADIW(Word Index)
   Word Reg, Const;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPU90S2313) WrError(1500);
+  if (!ChkArgCnt(2, 2));
+  else if (!ChkMinCPU(CPU90S2313));
   else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
   else if ((Reg < 24) || (Odd(Reg))) WrXError(1445, ArgStr[1]);
   else
@@ -366,8 +406,7 @@ static void DecodeLDST(Word Index)
   int RegI, MemI;
   Word Reg, Mem;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     if (Index) /* ST */
     {
@@ -398,9 +437,8 @@ static void DecodeLDDSTD(Word Index)
   Word Reg, Disp;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPU90S2313) WrXError(1500, OpPart);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkMinCPU(CPU90S2313))
   {
     if (Index) /* STD */
     {
@@ -434,8 +472,7 @@ static void DecodeINOUT(Word Index)
   Word Reg, Mem;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     if (Index) /* OUT */
     {
@@ -465,9 +502,8 @@ static void DecodeLDSSTS(Word Index)
   Word Reg;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPU90S2313) WrError(1500);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkMinCPU(CPU90S2313))
   {
     if (Index)
     {
@@ -498,8 +534,7 @@ static void DecodeBCLRSET(Word Index)
   Word Bit;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Bit = EvalIntExpression(ArgStr[1], UInt3, &OK);
     if (OK)
@@ -515,7 +550,7 @@ static void DecodeBit(Word Code)
   Word Reg, Bit;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -535,7 +570,7 @@ static void DecodeCBR(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
   else if (Reg < 16) WrXError(1445, ArgStr[1]);
   else
@@ -555,7 +590,7 @@ static void DecodeSER(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
   else if (Reg < 16) WrXError(1445, ArgStr[1]);
   else
@@ -570,8 +605,7 @@ static void DecodePBit(Word Code)
   Word Adr, Bit;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     Adr = EvalIntExpression(ArgStr[1], UInt5, &OK);
     if (OK)
@@ -594,8 +628,7 @@ static void DecodeRel(Word Code)
   LongInt AdrInt;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     AdrInt = EvalIntExpression(ArgStr[1], AdrIntType, &OK) - (EProgCounter() + 1);
     if (OK)
@@ -618,8 +651,7 @@ static void DecodeBRBSBC(Word Index)
   LongInt AdrInt;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     Bit = EvalIntExpression(ArgStr[1], UInt3, &OK);
     if (OK)
@@ -645,9 +677,8 @@ static void DecodeJMPCALL(Word Index)
   LongInt AdrInt;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < CPUATMEGA8) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && ChkMinCPU(CPUATMEGA8))
   {
     AdrInt = EvalIntExpression(ArgStr[1], UInt22, &OK);
     if (OK)
@@ -665,8 +696,7 @@ static void DecodeRJMPCALL(Word Index)
   LongInt AdrInt;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     AdrInt = EvalIntExpression(ArgStr[1], UInt22, &OK) - (EProgCounter() + 1);
     if (OK)
@@ -689,8 +719,8 @@ static void DecodeMULS(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPUATMEGA8) WrError(1500);
+  if (!ChkArgCnt(2, 2));
+  else if (!ChkMinCPU(CPUATMEGA8));
   else if (!DecodeReg(ArgStr[1], &Reg1)) WrXError(1445, ArgStr[1]);
   else if (Reg1 < 16) WrXError(1445, ArgStr[1]);
   else if (!DecodeReg(ArgStr[2], &Reg2)) WrXError(1445, ArgStr[2]);
@@ -706,8 +736,8 @@ static void DecodeMegaMUL(Word Index)
 {
   Word Reg1, Reg2;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPUATMEGA8) WrError(1500);
+  if (!ChkArgCnt(2, 2));
+  else if (!ChkMinCPU(CPUATMEGA8));
   else if (!DecodeReg(ArgStr[1], &Reg1)) WrXError(1445, ArgStr[1]);
   else if ((Reg1 < 16) || (Reg1 > 23)) WrXError(1445, ArgStr[1]);
   else if (!DecodeReg(ArgStr[2], &Reg2)) WrXError(1445, ArgStr[2]);
@@ -725,8 +755,8 @@ static void DecodeMOVW(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPUATMEGA8) WrError(1500);
+  if (!ChkArgCnt(2, 2));
+  else if (!ChkMinCPU(CPUATMEGA8));
   else if (!DecodeReg(ArgStr[1], &Reg1)) WrXError(1445, ArgStr[1]);
   else if (Reg1 & 1) WrXError(1445, ArgStr[1]);  
   else if (!DecodeReg(ArgStr[2], &Reg2)) WrXError(1445, ArgStr[2]);
@@ -746,8 +776,7 @@ static void DecodeLPM(Word Index)
 
   if (!ArgCnt)
   {
-    if (MomCPU < CPU90S2313) WrError(1500);
-    else
+    if (ChkMinCPU(CPU90S2313))
     {
       WAsmCode[0] = 0x95c8;
       CodeLen = 1;
@@ -755,7 +784,7 @@ static void DecodeLPM(Word Index)
   }
   else if (ArgCnt == 2)
   {
-    if (MomCPU < CPUATMEGA8) WrError(1500);
+    if (!ChkMinCPU(CPUATMEGA8));
     else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
     else if (!DecodeMem(ArgStr[2], &Adr)) WrError(1350);
     else if ((Adr != 0x00) && (Adr != 0x11)) WrError(1350);
@@ -766,7 +795,8 @@ static void DecodeLPM(Word Index)
       CodeLen = 1;
     }
   }
-  else WrError(1110);
+  else
+    (void)ChkArgCnt(2, 2);
 }
 
 static void DecodeELPM(Word Index)
@@ -775,13 +805,13 @@ static void DecodeELPM(Word Index)
 
   UNUSED(Index);
 
-  if (MomCPU < CPUATMEGA8) WrError(1500);
+  if (!ChkMinCPU(CPUATMEGA8));
   else if (!ArgCnt)
   {
     WAsmCode[0] = 0x95d8;
     CodeLen = 1;
   }
-  else if (ArgCnt != 2) WrError(1110);
+  else if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
   else if (!DecodeMem(ArgStr[2], &Adr)) WrError(1350);
   else if ((Adr != 0x00) && (Adr != 0x11)) WrError(1350);
@@ -798,20 +828,26 @@ static void DecodeELPM(Word Index)
 
 static void AddFixed(char *NName, CPUVar NMin, Word NCode)
 {
-  if (MomCPU >= NMin)
-    AddInstTable(InstTable, NName, NCode, DecodeFixed);
+  if (InstrZ >= FixedOrderCnt) exit(255);
+  FixedOrders[InstrZ].Code = NCode;
+  FixedOrders[InstrZ].MinCPU = NMin;
+  AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
 static void AddReg1(char *NName, CPUVar NMin, Word NCode)
 {
-  if (MomCPU >= NMin)
-    AddInstTable(InstTable, NName, NCode, DecodeReg1);
+  if (InstrZ >= Reg1OrderCnt) exit(255);
+  Reg1Orders[InstrZ].Code = NCode;
+  Reg1Orders[InstrZ].MinCPU = NMin;
+  AddInstTable(InstTable, NName, InstrZ++, DecodeReg1);
 }
    
 static void AddReg2(char *NName, CPUVar NMin, Word NCode)
 {
-  if (MomCPU >= NMin)
-    AddInstTable(InstTable, NName, NCode, DecodeReg2);
+  if (InstrZ >= Reg2OrderCnt) exit(255);
+  Reg2Orders[InstrZ].Code = NCode;
+  Reg2Orders[InstrZ].MinCPU = NMin;
+  AddInstTable(InstTable, NName, InstrZ++, DecodeReg2);
 }
 
 static void AddReg3(char *NName, Word NCode)
@@ -843,6 +879,7 @@ static void InitFields(void)
 {
   InstTable = CreateInstTable(203);
 
+  FixedOrders = (FixedOrder*)malloc(sizeof(*FixedOrders) * FixedOrderCnt); InstrZ = 0;
   AddFixed("IJMP" , CPU90S2313, 0x9409); AddFixed("ICALL" , CPU90S2313, 0x9509);
   AddFixed("RET"  , CPU90S1200, 0x9508); AddFixed("RETI"  , CPU90S1200, 0x9518);
   AddFixed("SEC"  , CPU90S1200, 0x9408);
@@ -858,12 +895,14 @@ static void InitFields(void)
   AddFixed("EIJMP", CPUATMEGA8, 0x9419); AddFixed("EICALL", CPUATMEGA8, 0x9519);
   AddFixed("SPM"  , CPUATMEGA8, 0x95e8); AddFixed("BREAK" , CPUATMEGA8, 0x9598);
 
+  Reg1Orders = (FixedOrder*)malloc(sizeof(*Reg1Orders) * Reg1OrderCnt); InstrZ = 0;
   AddReg1("COM"  , CPU90S1200, 0x9400); AddReg1("NEG"  , CPU90S1200, 0x9401);
   AddReg1("INC"  , CPU90S1200, 0x9403); AddReg1("DEC"  , CPU90S1200, 0x940a);
   AddReg1("PUSH" , CPU90S2313, 0x920f); AddReg1("POP"  , CPU90S2313, 0x900f);
   AddReg1("LSR"  , CPU90S1200, 0x9406); AddReg1("ROR"  , CPU90S1200, 0x9407);
   AddReg1("ASR"  , CPU90S1200, 0x9405); AddReg1("SWAP" , CPU90S1200, 0x9402);
 
+  Reg2Orders = (FixedOrder*)malloc(sizeof(*Reg2Orders) * Reg2OrderCnt); InstrZ = 0;
   AddReg2("ADD"  , CPU90S1200, 0x0c00); AddReg2("ADC"  , CPU90S1200, 0x1c00);
   AddReg2("SUB"  , CPU90S1200, 0x1800); AddReg2("SBC"  , CPU90S1200, 0x0800);
   AddReg2("AND"  , CPU90S1200, 0x2000); AddReg2("OR"   , CPU90S1200, 0x2800);
@@ -922,6 +961,7 @@ static void InitFields(void)
   AddInstTable(InstTable, "RCALL", 0x1000, DecodeRJMPCALL);
 
   AddInstTable(InstTable, "PORT", 0, DecodePORT);
+  AddInstTable(InstTable, "SFR" , 0, DecodeSFR);
   AddInstTable(InstTable, "RES" , 0, DecodeRES);
   AddInstTable(InstTable, "DATA", 0, DecodeDATA_AVR);
   AddInstTable(InstTable, "REG" , 0, DecodeREG);
@@ -942,6 +982,9 @@ static void InitFields(void)
 static void DeinitFields(void)
 {
   DestroyInstTable(InstTable);
+  free(FixedOrders);
+  free(Reg1Orders);
+  free(Reg2Orders);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -967,7 +1010,7 @@ static void InitCode_AVR(void)
 
 static Boolean IsDef_AVR(void)
 {
-  return (Memo("PORT") || Memo("REG"));
+  return (Memo("PORT") || Memo("REG") || Memo("SFR"));
 }
 
 static void SwitchFrom_AVR(void)
@@ -994,58 +1037,122 @@ static void SwitchTo_AVR(void)
   Grans[SegIO  ] = 1; ListGrans[SegIO  ] = 1; SegInits[SegIO  ] = 0;  SegLimits[SegIO] = 0x3f;
 
   if (MomCPU == CPU90S1200)
-  {
     SegLimits[SegCode] = 0x01ff;
-    SegLimits[SegData] = 0x5f;
-    AdrIntType = UInt9;
-  }
   else if (MomCPU == CPU90S2313)
-  {
     SegLimits[SegCode] = 0x03ff;
-    SegLimits[SegData] = 0xdf;
-    AdrIntType = UInt10;
-  }
-  else if (MomCPU == CPU90S4414)
-  {
+  else if ((MomCPU == CPU90S4414)
+        || (MomCPU == CPU90S4433)
+        || (MomCPU == CPU90S4434)
+        || (MomCPU == CPUATMEGA48))
     SegLimits[SegCode] = 0x07ff;
-    AdrIntType = UInt11;
-  }
-  else if ((MomCPU == CPU90S8515) || (MomCPU == CPUATMEGA8))
-  {
-    SegLimits[SegCode] = 0xfff;
-    SegLimits[SegData] = 0x3ff;
-    AdrIntType = UInt12;
-  }
-  else if (MomCPU == CPUATMEGA16)
-  {
+  else if ((MomCPU == CPU90S8515)
+        || (MomCPU == CPU90S8535)
+        || (MomCPU == CPUATMEGA8)
+        || (MomCPU == CPUATMEGA8515) 
+        || (MomCPU == CPUATMEGA8535) 
+        || (MomCPU == CPUATMEGA88))
+    SegLimits[SegCode] = 0x0fff;
+  else if ((MomCPU == CPUATMEGA16)
+        || (MomCPU == CPUATMEGA161)
+        || (MomCPU == CPUATMEGA162)
+        || (MomCPU == CPUATMEGA163)
+        || (MomCPU == CPUATMEGA164)
+       ||  (MomCPU == CPUATMEGA165)
+        || (MomCPU == CPUATMEGA168)
+        || (MomCPU == CPUATMEGA169))
     SegLimits[SegCode] = 0x1fff;
-    SegLimits[SegData] = 0x3ff;
-    AdrIntType = UInt13;
-  }
-  else if (MomCPU == CPUATMEGA32)
-  {
+  else if ((MomCPU == CPUATMEGA32)
+       ||  (MomCPU == CPUATMEGA323)
+       ||  (MomCPU == CPUATMEGA324)
+       ||  (MomCPU == CPUATMEGA325)
+       ||  (MomCPU == CPUATMEGA3250)
+       ||  (MomCPU == CPUATMEGA328)
+       ||  (MomCPU == CPUATMEGA329)
+       ||  (MomCPU == CPUATMEGA3290))
     SegLimits[SegCode] = 0x3fff;
-    SegLimits[SegData] = 0x7ff; 
-    AdrIntType = UInt14;
-  }
-  else if (MomCPU == CPUATMEGA64)
-  {
+  else if ((MomCPU == CPUATMEGA64)
+        || (MomCPU == CPUATMEGA640)
+        || (MomCPU == CPUATMEGA644)
+        || (MomCPU == CPUATMEGA644RFR2)
+        || (MomCPU == CPUATMEGA6450)
+        || (MomCPU == CPUATMEGA649)
+        || (MomCPU == CPUATMEGA6490))
     SegLimits[SegCode] = 0x7fff;
-    SegLimits[SegData] = 0xfff; 
-    AdrIntType = UInt15;
-  }
-  else if (MomCPU == CPUATMEGA128)
-  {
+  else if ((MomCPU == CPUATMEGA128)
+        || (MomCPU == CPUATMEGA103)
+        || (MomCPU == CPUATMEGA1280)
+        || (MomCPU == CPUATMEGA1281)
+        || (MomCPU == CPUATMEGA1284)
+        || (MomCPU == CPUATMEGA1284RFR2))
     SegLimits[SegCode] = 0xffff;
-    SegLimits[SegData] = 0xfff; 
-    AdrIntType = UInt16;
-  }
-  else if (MomCPU == CPUATMEGA256)
-  {
+  else if ((MomCPU == CPUATMEGA2560)
+        || (MomCPU == CPUATMEGA2561)
+        || (MomCPU == CPUATMEGA2564RFR2))
     SegLimits[SegCode] = 0x1ffff;
-    SegLimits[SegData] = 0x1fff; 
-    AdrIntType = UInt17;
-  }
+
+  if (MomCPU == CPU90S1200)
+    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaStdSize) + 0;
+  else if ((MomCPU == CPU90S2313)
+        || (MomCPU == CPU90S4433))
+    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaStdSize) + 128;
+  else if ((MomCPU == CPU90S4414)
+        || (MomCPU == CPU90S4434))
+    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaStdSize) + 256;
+  else if ((MomCPU == CPU90S8515)
+        || (MomCPU == CPU90S8535)
+        || (MomCPU == CPUATMEGA8515)
+        || (MomCPU == CPUATMEGA8535))
+    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaStdSize) + 512;
+  else if ((MomCPU == CPUATMEGA48)
+        || (MomCPU == CPUATMEGA88)
+        || (MomCPU == CPUATMEGA165))
+    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaExtSize) + 512;
+  else if ((MomCPU == CPUATMEGA8)
+        || (MomCPU == CPUATMEGA16)
+        || (MomCPU == CPUATMEGA161)
+        || (MomCPU == CPUATMEGA163))
+    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaStdSize) + 1024;
+  else if ((MomCPU == CPUATMEGA162)
+        || (MomCPU == CPUATMEGA164)
+        || (MomCPU == CPUATMEGA168)
+        || (MomCPU == CPUATMEGA169))
+    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaExtSize) + 1024;
+  else if ((MomCPU == CPUATMEGA32)
+        || (MomCPU == CPUATMEGA323))
+    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaStdSize) + 2048; 
+  else if ((MomCPU == CPUATMEGA324)
+        || (MomCPU == CPUATMEGA325)
+        || (MomCPU == CPUATMEGA3250)
+        || (MomCPU == CPUATMEGA328)
+        || (MomCPU == CPUATMEGA329)
+        || (MomCPU == CPUATMEGA3290)
+        || (MomCPU == CPUATMEGA406))
+    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaExtSize) + 2048;
+  else if (MomCPU == CPUATMEGA103)
+    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaStdSize) + 4096;
+  else if ((MomCPU == CPUATMEGA64)
+        || (MomCPU == CPUATMEGA644)
+        || (MomCPU == CPUATMEGA645)
+        || (MomCPU == CPUATMEGA6450)
+        || (MomCPU == CPUATMEGA649)
+        || (MomCPU == CPUATMEGA6490)
+        || (MomCPU == CPUATMEGA128))
+    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaExtSize) + 4096; 
+  else if ((MomCPU == CPUATMEGA640)
+        || (MomCPU == CPUATMEGA644RFR2)
+        || (MomCPU == CPUATMEGA1280)
+        || (MomCPU == CPUATMEGA1281)
+        || (MomCPU == CPUATMEGA2560)
+        || (MomCPU == CPUATMEGA2561))
+    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaExt2Size) + 8192;
+  else if ((MomCPU == CPUATMEGA1284)
+        || (MomCPU == CPUATMEGA1284RFR2))
+    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaExtSize) + 16384;
+  else if (MomCPU == CPUATMEGA2564RFR2)
+    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaExt2Size) + 32768;
+
+  SegLimits[SegData]--;
+  AdrIntType = GetSmallestUIntType(SegLimits[SegData]);
 
   SignMask = (SegLimits[SegCode] + 1) >> 1;
   ORMask = ((LongInt) - 1) - SegLimits[SegCode];
@@ -1062,16 +1169,60 @@ static void SwitchTo_AVR(void)
 
 void codeavr_init(void)
 {
-   CPU90S1200  = AddCPU("AT90S1200" , SwitchTo_AVR);
-   CPU90S2313  = AddCPU("AT90S2313" , SwitchTo_AVR);
-   CPU90S4414  = AddCPU("AT90S4414" , SwitchTo_AVR);
-   CPU90S8515  = AddCPU("AT90S8515" , SwitchTo_AVR);
-   CPUATMEGA8  = AddCPU("ATMEGA8"   , SwitchTo_AVR); 
-   CPUATMEGA16 = AddCPU("ATMEGA16"  , SwitchTo_AVR); 
-   CPUATMEGA32 = AddCPU("ATMEGA32"  , SwitchTo_AVR); 
-   CPUATMEGA64 = AddCPU("ATMEGA64"  , SwitchTo_AVR);
-   CPUATMEGA128 = AddCPU("ATMEGA128" , SwitchTo_AVR);
-   CPUATMEGA256 = AddCPU("ATMEGA256" , SwitchTo_AVR);
+   CPU90S1200    = AddCPU("AT90S1200"  , SwitchTo_AVR);
+   CPU90S2313    = AddCPU("AT90S2313"  , SwitchTo_AVR);
+   CPU90S4414    = AddCPU("AT90S4414"  , SwitchTo_AVR);
+   CPU90S4433    = AddCPU("AT90S4433"  , SwitchTo_AVR);
+   CPU90S4434    = AddCPU("AT90S4434"  , SwitchTo_AVR);
+   CPU90S8515    = AddCPU("AT90S8515"  , SwitchTo_AVR);
+   CPU90S8535    = AddCPU("AT90S8535"  , SwitchTo_AVR);
+
+   CPUATMEGA48   = AddCPU("ATMEGA48"   , SwitchTo_AVR);
+
+   CPUATMEGA8    = AddCPU("ATMEGA8"    , SwitchTo_AVR); 
+   CPUATMEGA8515 = AddCPU("ATMEGA8515" , SwitchTo_AVR);
+   CPUATMEGA8535 = AddCPU("ATMEGA8535" , SwitchTo_AVR);
+   CPUATMEGA88   = AddCPU("ATMEGA88"   , SwitchTo_AVR);
+
+   CPUATMEGA16   = AddCPU("ATMEGA16"   , SwitchTo_AVR); 
+   CPUATMEGA161  = AddCPU("ATMEGA161"  , SwitchTo_AVR);
+   CPUATMEGA162  = AddCPU("ATMEGA162"  , SwitchTo_AVR);
+   CPUATMEGA163  = AddCPU("ATMEGA163"  , SwitchTo_AVR);
+   CPUATMEGA164  = AddCPU("ATMEGA164"  , SwitchTo_AVR);
+   CPUATMEGA165  = AddCPU("ATMEGA165"  , SwitchTo_AVR);
+   CPUATMEGA168  = AddCPU("ATMEGA168"  , SwitchTo_AVR);
+   CPUATMEGA169  = AddCPU("ATMEGA169"  , SwitchTo_AVR);
+
+   CPUATMEGA32   = AddCPU("ATMEGA32"   , SwitchTo_AVR); 
+   CPUATMEGA323  = AddCPU("ATMEGA323"  , SwitchTo_AVR);
+   CPUATMEGA324  = AddCPU("ATMEGA324"  , SwitchTo_AVR);
+   CPUATMEGA325  = AddCPU("ATMEGA325"  , SwitchTo_AVR);
+   CPUATMEGA3250 = AddCPU("ATMEGA3250" , SwitchTo_AVR);
+   CPUATMEGA328  = AddCPU("ATMEGA328"  , SwitchTo_AVR);
+   CPUATMEGA329  = AddCPU("ATMEGA329"  , SwitchTo_AVR);
+   CPUATMEGA3290 = AddCPU("ATMEGA3290" , SwitchTo_AVR);
+
+   CPUATMEGA406  = AddCPU("ATMEGA406"  , SwitchTo_AVR);
+
+   CPUATMEGA64   = AddCPU("ATMEGA64"   , SwitchTo_AVR);
+   CPUATMEGA640  = AddCPU("ATMEGA640"  , SwitchTo_AVR);
+   CPUATMEGA644  = AddCPU("ATMEGA644"  , SwitchTo_AVR);
+   CPUATMEGA644RFR2 = AddCPU("ATMEGA644RFR2" , SwitchTo_AVR);
+   CPUATMEGA645  = AddCPU("ATMEGA645"  , SwitchTo_AVR);
+   CPUATMEGA6450 = AddCPU("ATMEGA6450" , SwitchTo_AVR);
+   CPUATMEGA649  = AddCPU("ATMEGA649"  , SwitchTo_AVR);
+   CPUATMEGA6490 = AddCPU("ATMEGA6490" , SwitchTo_AVR);
+
+   CPUATMEGA103  = AddCPU("ATMEGA103"  , SwitchTo_AVR);
+   CPUATMEGA128  = AddCPU("ATMEGA128"  , SwitchTo_AVR);
+   CPUATMEGA1280 = AddCPU("ATMEGA1280" , SwitchTo_AVR);
+   CPUATMEGA1281 = AddCPU("ATMEGA1281" , SwitchTo_AVR);
+   CPUATMEGA1284 = AddCPU("ATMEGA1284" , SwitchTo_AVR);
+   CPUATMEGA1284RFR2 = AddCPU("ATMEGA1284RFR2" , SwitchTo_AVR);
+
+   CPUATMEGA2560 = AddCPU("ATMEGA2560" , SwitchTo_AVR);
+   CPUATMEGA2561 = AddCPU("ATMEGA2561" , SwitchTo_AVR);
+   CPUATMEGA2564RFR2 = AddCPU("ATMEGA2564RFR2" , SwitchTo_AVR);
 
    AddInitPassProc(InitCode_AVR);
 }

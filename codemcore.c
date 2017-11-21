@@ -62,6 +62,9 @@
 #include "asmitree.h"
 #include "codevars.h"
 #include "intconsts.h"
+#include "errmsg.h"
+
+#include "codemcore.h"
 
 /*--------------------------------------------------------------------------*/
 /* Variablen */
@@ -222,8 +225,8 @@ static void DecodeREG(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt!=1) WrError(1110);
-  else AddRegDef(LabPart,ArgStr[1]);
+  if (ChkArgCnt(1, 1))
+    AddRegDef(LabPart,ArgStr[1]);
 }
 
 static void DecodeFixed(Word Index)
@@ -231,8 +234,7 @@ static void DecodeFixed(Word Index)
   FixedOrder *Instr = FixedOrders + Index;
 
   if (*AttrPart != '\0') WrError(1100);
-  else if (ArgCnt != 0) WrError(1110);
-  else
+  else if (ChkArgCnt(0, 0))
   {
     if ((Instr->Priv) && (!SupAllowed)) WrError(50);
     WAsmCode[0] = Instr->Code;
@@ -246,7 +248,7 @@ static void DecodeOneReg(Word Index)
   Word RegX;
 
   if (*AttrPart != '\0') WrError(1100);
-  else if (ArgCnt != 1) WrError(1110);
+  else if (!ChkArgCnt(1, 1));
   else if (!DecodeReg(ArgStr[1], &RegX)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -262,7 +264,7 @@ static void DecodeTwoReg(Word Index)
   Word RegX, RegY;
 
   if (*AttrPart != '\0') WrError(1100);
-  else if (ArgCnt != 2) WrError(1110);
+  else if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &RegX)) WrXError(1445, ArgStr[1]);
   else if (!DecodeReg(ArgStr[2], &RegY)) WrXError(1445, ArgStr[2]);
   else
@@ -280,7 +282,7 @@ static void DecodeUImm5(Word Index)
   Boolean OK;
 
   if (*AttrPart != '\0') WrError(1100);
-  else if (ArgCnt != 2) WrError(1110);
+  else if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &RegX)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -318,8 +320,7 @@ static void DecodeLJmp(Word Index)
   Boolean OK;
   
   if (*AttrPart != '\0') WrError(1100);
-  else if (ArgCnt != 1) WrError(1110);
-  else
+  else if (ChkArgCnt(1, 1))
   {
     Dest = EvalIntExpression(ArgStr[1], UInt32, &OK) - (EProgCounter() + 2);
     if (OK)
@@ -343,7 +344,7 @@ static void DecodeSJmp(Word Index)
   int l = 0;
   
   if (*AttrPart != '\0') WrError(1100);
-  else if (ArgCnt != 1) WrError(1110);
+  else if (!ChkArgCnt(1, 1));
   else if ((*ArgStr[1] != '[') || (ArgStr[1][l = strlen(ArgStr[1]) - 1] != ']')) WrError(1350);
   else
   {
@@ -374,7 +375,7 @@ static void DecodeBGENI(Word Index)
   UNUSED(Index);
 
   if (*AttrPart != '\0') WrError(1100);
-  else if (ArgCnt != 2) WrError(1110);
+  else if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &RegX)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -397,7 +398,7 @@ static void DecodeBMASKI(Word Index)
   UNUSED(Index);
 
   if (*AttrPart != '\0') WrError(1100);
-  else if (ArgCnt != 2) WrError(1110);
+  else if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &RegX)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -424,7 +425,7 @@ static void DecodeLdSt(Word Index)
   Word RegX, RegZ, NSize;
 
   if ((*AttrPart != '\0') && (Lo(Index) != 0xff)) WrError(1100);
-  else if (ArgCnt != 2) WrError(1110);
+  else if (!ChkArgCnt(2, 2));
   else if (OpSize > 2) WrError(1130);
   else
   {
@@ -446,7 +447,7 @@ static void DecodeLdStm(Word Index)
   Word RegF, RegL, RegI;
 
   if (*AttrPart != 0) WrError(1100);
-  else if (ArgCnt != 2) WrError(1110);
+  else if (!ChkArgCnt(2, 2));
   else if ((*ArgStr[2] != '(') || (ArgStr[2][l = strlen(ArgStr[2]) - 1] != ')')) WrError(1350);
   else
   {
@@ -478,7 +479,7 @@ static void DecodeLdStq(Word Index)
   Word RegF, RegL, RegX;
 
   if (*AttrPart != 0) WrError(1100);
-  else if (ArgCnt != 2) WrError(1110);
+  else if (!ChkArgCnt(2, 2));
   else if ((*ArgStr[2] != '(') || (ArgStr[2][l = strlen(ArgStr[2]) - 1] != ')')) WrError(1350);
   else
   {
@@ -511,7 +512,7 @@ static void DecodeLoopt(Word Index)
   UNUSED(Index);
 
   if (*AttrPart != '\0') WrError(1100);
-  else if (ArgCnt != 2) WrError(1110);
+  else if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &RegY)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -538,7 +539,7 @@ static void DecodeLrm(Word Index)
   UNUSED(Index);
   
   if (*AttrPart != '\0') WrError(1100);
-  else if (ArgCnt != 2) WrError(1110);
+  else if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &RegZ)) WrXError(1445, ArgStr[1]);
   else if ((RegZ == 0) || (RegZ == 15)) WrXError(1445, ArgStr[1]);
   else if ((*ArgStr[2] != '[') || (ArgStr[2][l = strlen(ArgStr[2]) - 1] != ']')) WrError(1350);
@@ -569,7 +570,7 @@ static void DecodeMcr(Word Index)
   Word RegX,CRegY;
 
   if (*AttrPart != '\0') WrError(1100);
-  else if (ArgCnt != 2) WrError(1110);
+  else if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &RegX)) WrXError(1445, ArgStr[1]);
   else if (!DecodeCReg(ArgStr[2], &CRegY)) WrXError(1440, ArgStr[2]);
   else
@@ -587,7 +588,7 @@ static void DecodeMovi(Word Index)
   UNUSED(Index);
 
   if (*AttrPart != '\0') WrError(1100);
-  else if (ArgCnt != 2) WrError(1110);
+  else if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &RegX)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -607,7 +608,7 @@ static void DecodeTrap(Word Index)
   UNUSED(Index);
 
   if (*AttrPart!='\0') WrError(1100);
-  else if (ArgCnt != 1) WrError(1110);
+  else if (!ChkArgCnt(1, 1));
   else if (*ArgStr[1] != '#') WrError(1120);
   else
   {

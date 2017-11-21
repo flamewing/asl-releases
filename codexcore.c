@@ -50,6 +50,8 @@
 #include "intpseudo.h"
 #include "asmitree.h"
 #include "codevars.h"
+#include "errmsg.h"
+
 #include "codexcore.h"
 
 /*--------------------------------------------------------------------------*/
@@ -100,15 +102,15 @@ static void CodeREG(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else AddRegDef(LabPart, ArgStr[1]);
+  if (ChkArgCnt(1, 1))
+    AddRegDef(LabPart, ArgStr[1]);
 }
 
 static void Code_3r(Word Index)
 {
   unsigned Op1, Op2, Op3;
 
-  if (ArgCnt != 3) WrError(1110);
+  if (!ChkArgCnt(3, 3));
   else if (!ParseReg(ArgStr[1], &Op1)) WrXError(1445, ArgStr[1]);
   else if (!ParseReg(ArgStr[2], &Op2)) WrXError(1445, ArgStr[2]);
   else if (!ParseReg(ArgStr[3], &Op3)) WrXError(1445, ArgStr[3]);
@@ -128,7 +130,7 @@ static void Code_2rus(Word Index)
   unsigned Op1, Op2, Op3;
   Boolean OK;
 
-  if (ArgCnt != 3) WrError(1110);
+  if (!ChkArgCnt(3, 3));
   else if (!ParseReg(ArgStr[1], &Op1)) WrXError(1445, ArgStr[1]);
   else if (!ParseReg(ArgStr[2], &Op2)) WrXError(1445, ArgStr[2]);
   else
@@ -157,7 +159,7 @@ static void Code_2r(Word Index)
 {
   unsigned Op1, Op2;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!ParseReg(ArgStr[1], &Op1)) WrXError(1445, ArgStr[1]);
   else if (!ParseReg(ArgStr[2], &Op2)) WrXError(1445, ArgStr[2]);
   else
@@ -177,7 +179,7 @@ static void Code_l3r(Word Index)
 {
   unsigned Op1, Op2, Op3;
 
-  if (ArgCnt != 3) WrError(1110);
+  if (!ChkArgCnt(3, 3));
   else if (!ParseReg(ArgStr[1], &Op1)) WrXError(1445, ArgStr[1]);
   else if (!ParseReg(ArgStr[2], &Op2)) WrXError(1445, ArgStr[2]);
   else if (!ParseReg(ArgStr[3], &Op3)) WrXError(1445, ArgStr[3]);
@@ -198,7 +200,7 @@ static void Code_l2rus(Word Index)
   unsigned Op1, Op2, Op3;
   Boolean OK;
 
-  if (ArgCnt != 3) WrError(1110);
+  if (!ChkArgCnt(3, 3));
   else if (!ParseReg(ArgStr[1], &Op1)) WrXError(1445, ArgStr[1]);
   else if (!ParseReg(ArgStr[2], &Op2)) WrXError(1445, ArgStr[2]);
   else
@@ -228,7 +230,7 @@ static void Code_1r(Word Index)
 {
   unsigned Op1;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!ParseReg(ArgStr[1], &Op1)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -241,7 +243,7 @@ static void Code_l2r(Word Index)
 {
   unsigned Op1, Op2;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!ParseReg(ArgStr[1], &Op1)) WrXError(1445, ArgStr[1]);
   else if (!ParseReg(ArgStr[2], &Op2)) WrXError(1445, ArgStr[2]);
   else
@@ -260,7 +262,7 @@ static void Code_l2r(Word Index)
 
 static void Code_u10(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else
   {
     LongWord Op1;
@@ -282,7 +284,7 @@ static void Code_u10(Word Index)
 
 static void Code_u6(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else
   {
     LongWord Op1;
@@ -306,7 +308,7 @@ static void Code_ru6(Word Index)
 {
   unsigned Op1;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!ParseReg(ArgStr[1], &Op1)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -331,7 +333,7 @@ static void Code_rus(Word Index)
 {
   unsigned Op1;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!ParseReg(ArgStr[1], &Op1)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -362,8 +364,7 @@ static void Code_rus(Word Index)
 
 static void Code_0r(Word Index)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     WAsmCode[0] = Index;
     CodeLen = 2;
@@ -374,7 +375,7 @@ static void Code_l4r(Word Index)
 {
   unsigned Op1, Op2, Op3, Op4;
 
-  if (ArgCnt != 4) WrError(1110);
+  if (!ChkArgCnt(4, 4));
   else if (!ParseReg(ArgStr[1], &Op1)) WrXError(1445, ArgStr[1]);
   else if (!ParseReg(ArgStr[2], &Op2)) WrXError(1445, ArgStr[2]);
   else if (!ParseReg(ArgStr[3], &Op3)) WrXError(1445, ArgStr[3]);
@@ -395,7 +396,7 @@ static void Code_l5r(Word Index)
 {
   unsigned Op1, Op2, Op3, Op4, Op5;
 
-  if (ArgCnt != 5) WrError(1110);
+  if (!ChkArgCnt(5, 5));
   else if (!ParseReg(ArgStr[1], &Op1)) WrXError(1445, ArgStr[1]);
   else if (!ParseReg(ArgStr[2], &Op4)) WrXError(1445, ArgStr[2]);
   else if (!ParseReg(ArgStr[3], &Op2)) WrXError(1445, ArgStr[3]);
@@ -422,7 +423,7 @@ static void Code_l6r(Word Index)
 {
   unsigned Op1, Op2, Op3, Op4, Op5, Op6;
 
-  if (ArgCnt != 6) WrError(1110);
+  if (!ChkArgCnt(6, 6));
   else if (!ParseReg(ArgStr[1], &Op1)) WrXError(1445, ArgStr[1]);
   else if (!ParseReg(ArgStr[2], &Op4)) WrXError(1445, ArgStr[2]);
   else if (!ParseReg(ArgStr[3], &Op2)) WrXError(1445, ArgStr[3]);
@@ -506,21 +507,23 @@ static void Code_BRU(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (ParseReg(ArgStr[1], &Op1))
+  if (ChkArgCnt(1, 1))
   {
-    WAsmCode[0] = 0x2fe0 | Op1;
-    CodeLen = 2;
+    if (ParseReg(ArgStr[1], &Op1))
+    {
+      WAsmCode[0] = 0x2fe0 | Op1;
+      CodeLen = 2;
+    }
+    else
+      Code_branch_core(0x7300, 1);
   }
-  else
-    Code_branch_core(0x7300, 1);
 }
 
 static void Code_cbranch(Word Index)
 {
   unsigned Op1;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!ParseReg(ArgStr[1], &Op1)) WrXError(1445, ArgStr[1]);
   else
     Code_branch_core(Index | (Op1 << 6), 2);
@@ -530,7 +533,7 @@ static void Code_r2r(Word Index)
 {
   unsigned Op1, Op2;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!ParseReg(ArgStr[1], &Op1)) WrXError(1445, ArgStr[1]);
   else if (!ParseReg(ArgStr[2], &Op2)) WrXError(1445, ArgStr[2]);
   else
@@ -551,7 +554,7 @@ static void Code_lr2r(Word Index)
   unsigned Op1, Op2;
   lr2r_Order *pOrder = lr2r_Orders + Index;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!ParseReg(ArgStr[1], &Op1)) WrXError(1445, ArgStr[1]);
   else if (!ParseReg(ArgStr[2], &Op2)) WrXError(1445, ArgStr[2]);
   else

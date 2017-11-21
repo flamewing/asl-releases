@@ -62,6 +62,7 @@
 
 #include "bpemu.h"
 #include "strutil.h"
+#include "errmsg.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
@@ -89,8 +90,13 @@ typedef struct
 
 #define NO_FWAIT_FLAG 0x2000
 
+#define FixedOrderCnt 43
+#define ReptOrderCnt 7
+#define ShiftOrderCnt 8
 #define Reg16OrderCnt 3
+#define ModRegOrderCnt 4
 #define StringOrderCnt 14
+#define RelOrderCnt 36
 
 #define SegRegCnt 3
 static char *SegRegNames[SegRegCnt + 1] =
@@ -125,7 +131,8 @@ static Byte SegAssumes[SegRegCnt + 1];
 
 static CPUVar CPU8086, CPU80186, CPUV30, CPUV35;
 
-static FixedOrder *StringOrders;
+static FixedOrder *FixedOrders, *StringOrders, *ReptOrders, *ShiftOrders,
+                  *ModRegOrders, *RelOrders;
 static AddOrder *Reg16Orders;
 
 /*------------------------------------------------------------------------------------*/
@@ -605,8 +612,7 @@ static void DecodeMOV(Word Index)
   Byte AdrByte;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1]);
     switch (AdrType)
@@ -722,8 +728,7 @@ static void DecodeMOV(Word Index)
 
 static void DecodeINCDEC(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1]);
     switch (AdrType)
@@ -761,8 +766,7 @@ static void DecodeINT(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     BAsmCode[CodeLen + 1] = EvalIntExpression(ArgStr[1], Int8, &OK);
     if (OK)
@@ -783,8 +787,7 @@ static void DecodeINOUT(Word Index)
 {
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     char *pPortArg = Index ? ArgStr[1] : ArgStr[2],
          *pRegArg = Index ? ArgStr[2] : ArgStr[1];
@@ -822,8 +825,7 @@ static void DecodeCALLJMP(Word Index)
   Word AdrWord;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     char *pAdr = ArgStr[1];
 
@@ -906,8 +908,7 @@ static void DecodeCALLJMP(Word Index)
 
 static void DecodePUSHPOP(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     OpSize = 1; DecodeAdr(ArgStr[1]);
     switch (AdrType)
@@ -932,7 +933,7 @@ static void DecodePUSHPOP(Word Index)
         CodeLen += 2 + AdrCnt;
         break;
       case TypeImm:
-        if (MomCPU < CPU80186) WrError(1500);
+        if (!ChkMinCPU(CPU80186));
         else if (Index == 1) WrError(1350);
         else
         {
@@ -960,8 +961,7 @@ static void DecodePUSHPOP(Word Index)
 
 static void DecodeNOTNEG(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1]);
     MinOneIs0();
@@ -996,9 +996,9 @@ static void DecodeRET(Word Index)
   Word AdrWord;
   Boolean OK;
 
-  if (ArgCnt > 1) WrError(1110);
+  if (!ChkArgCnt(0, 1));
   else if (ArgCnt == 0)
-   BAsmCode[CodeLen++] = 0xc3 | Index;
+    BAsmCode[CodeLen++] = 0xc3 | Index;
   else
   {
     AdrWord = EvalIntExpression(ArgStr[1], Int16, &OK);
@@ -1016,8 +1016,7 @@ static void DecodeTEST(Word Index)
   Byte AdrByte;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1]);
     switch (AdrType)
@@ -1095,8 +1094,7 @@ static void DecodeXCHG(Word Index)
   Byte AdrByte;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1]);
     switch (AdrType)
@@ -1164,8 +1162,7 @@ static void DecodeCALLJMPF(Word Index)
   Word AdrWord;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     p = QuotPos(ArgStr[1], ':');
     if (!p)
@@ -1212,9 +1209,8 @@ static void DecodeENTER(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPU80186) WrError(1500);
-  else
+  if (!ChkArgCnt(2, 2));
+  else if (ChkMinCPU(CPU80186))
   {
     AdrWord = EvalIntExpression(ArgStr[1], Int16, &OK);
     if (OK)
@@ -1232,11 +1228,13 @@ static void DecodeENTER(Word Index)
   AddPrefixes();
 }
 
-static void DecodeFixed(Word Code)
+static void DecodeFixed(Word Index)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
-    PutCode(Code);
+  const FixedOrder *pOrder = FixedOrders + Index;
+
+  if (ChkArgCnt(0, 0)
+   && ChkMinCPU(pOrder->MinCPU))
+    PutCode(pOrder->Code);
   AddPrefixes();
 }
 
@@ -1244,8 +1242,7 @@ static void DecodeALU2(Word Index)
 {
   Byte AdrByte;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1]);
     switch (AdrType)
@@ -1329,25 +1326,26 @@ static void DecodeALU2(Word Index)
   AddPrefixes();
 }
 
-static void DecodeRel(Word Code)
+static void DecodeRel(Word Index)
 {
+  const FixedOrder *pOrder = RelOrders + Index;
   Word AdrWord;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1)
+   && ChkMinCPU(pOrder->MinCPU))
   {
     AdrWord = EvalIntExpression(ArgStr[1], Int16, &OK);
     if (OK)
     {
       ChkSpace(SegCode);
       AdrWord -= EProgCounter() + 2;
-      if (Hi(Code) != 0)
+      if (Hi(pOrder->Code) != 0)
         AdrWord--;
       if ((AdrWord >= 0x80) && (AdrWord < 0xff80) && (!SymbolQuestionable)) WrError(1370);
       else
       {
-        PutCode(Code);
+        PutCode(pOrder->Code);
         BAsmCode[CodeLen++] = Lo(AdrWord);
       }
     }
@@ -1361,8 +1359,7 @@ static void DecodeASSUME(void)
   char *p;
   String SegPart, ValPart;
 
-  if (ArgCnt == 0) WrError(1110);
-  else
+  if (ChkArgCnt(1, ArgCntMax))
   {
     z = 1 ; OK = True;
     while ((z <= ArgCnt) && (OK))
@@ -1413,8 +1410,7 @@ static void DecodeFPUFixed(Word Code)
   if (!FPUEntry(&Code))
     return;
 
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     PutCode(Code);
     AddPrefixes();
@@ -1426,8 +1422,7 @@ static void DecodeFPUSt(Word Code)
   if (!FPUEntry(&Code))
     return;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1]);
     if (AdrType == TypeFReg)
@@ -1446,8 +1441,7 @@ static void DecodeFLD(Word Code)
   if (!FPUEntry(&Code))
     return;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1]);
     switch (AdrType)
@@ -1494,8 +1488,7 @@ static void DecodeFILD(Word Code)
   if (!FPUEntry(&Code))
     return;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1]);
     switch (AdrType)
@@ -1536,8 +1529,7 @@ static void DecodeFBLD(Word Code)
   if (!FPUEntry(&Code))
     return;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1]);
     switch (AdrType)
@@ -1567,8 +1559,7 @@ static void DecodeFST_FSTP(Word Code)
   if (!FPUEntry(&Code))
     return;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1]);
     switch (AdrType)
@@ -1614,8 +1605,7 @@ static void DecodeFIST_FISTP(Word Code)
   if (!FPUEntry(&Code))
     return;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1]);
     switch (AdrType)
@@ -1656,8 +1646,7 @@ static void DecodeFBSTP(Word Code)
   if (!FPUEntry(&Code))
     return;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1]);
     switch (AdrType)
@@ -1688,8 +1677,7 @@ static void DecodeFCOM_FCOMP(Word Code)
   if (!FPUEntry(&Code))
     return;     
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1]);
     switch (AdrType)
@@ -1725,8 +1713,7 @@ static void DecodeFICOM_FICOMP(Word Code)
   if (!FPUEntry(&Code))
     return;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1]);
     switch (AdrType)
@@ -1762,8 +1749,7 @@ static void DecodeFADD_FMUL(Word Code)
     BAsmCode[CodeLen + 1] = 0xc1 + Code;
     CodeLen += 2;
   }
-  else if (ArgCnt > 2) WrError(1110);
-  else 
+  else if (ChkArgCnt(0, 2))
   {
     char *pArg1 = ArgStr[1],
          *pArg2 = ArgStr[2],
@@ -1844,8 +1830,7 @@ static void DecodeFIADD_FIMUL(Word Code)
     pArg1 = ArgST;
     strcpy(ArgST, "ST");
   }
-  else if (ArgCnt != 2) WrError(1110);
-  else
+  else if (ChkArgCnt(1, 2))
   {
     DecodeAdr(pArg1);
     switch (AdrType)
@@ -1885,8 +1870,7 @@ static void DecodeFADDP_FMULP(Word Code)
   if (!FPUEntry(&Code))
     return;
    
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2]);
     switch (AdrType)
@@ -1924,8 +1908,7 @@ static void DecodeFSUB_FSUBR_FDIV_FDIVR(Word Code)
     BAsmCode[CodeLen + 1] = 0xe1 + (Code ^ 8);
     CodeLen += 2;
   }
-  else if (ArgCnt > 2) WrError(1110);
-  else
+  else if (ChkArgCnt(0, 2))
   {
     char *pArg1 = ArgStr[1],
          *pArg2 = ArgStr[2],
@@ -2005,8 +1988,7 @@ static void DecodeFISUB_FISUBR_FIDIV_FIDIVR(Word Code)
   if (!FPUEntry(&Code))
     return;
 
-  if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 2))
   {
     char *pArg1 = ArgStr[1],
          *pArg2 = ArgStr[2],
@@ -2062,8 +2044,7 @@ static void DecodeFSUBP_FSUBRP_FDIVP_FDIVRP(Word Code)
   if (!FPUEntry(&Code))
     return;
  
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2]);
     switch (AdrType)
@@ -2099,8 +2080,7 @@ static void DecodeFPU16(Word Code)
   if (!FPUEntry(&Code))
     return;
  
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     OpSize = 1;
     DecodeAdr(ArgStr[1]);
@@ -2124,8 +2104,7 @@ static void DecodeFSAVE_FRSTOR(Word Code)
   if (!FPUEntry(&Code))
     return;
  
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1]);
     switch (AdrType)
@@ -2144,10 +2123,12 @@ static void DecodeFSAVE_FRSTOR(Word Code)
   AddPrefixes();
 }
 
-static void DecodeRept(Word Code)
+static void DecodeRept(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  const FixedOrder *pOrder = ReptOrders + Index;
+
+  if (ChkArgCnt(1, 1)
+   && ChkMinCPU(pOrder->MinCPU))
   {
     int z2;
 
@@ -2155,10 +2136,9 @@ static void DecodeRept(Word Code)
       if (!strcasecmp(StringOrders[z2].Name,ArgStr[1]))
         break;
     if (z2 >= StringOrderCnt) WrError(1985);
-    else if (MomCPU < StringOrders[z2].MinCPU) WrError(1500);
-    else
+    else if (ChkMinCPU(StringOrders[z2].MinCPU))
     {
-      PutCode(Code);
+      PutCode(pOrder->Code);
       PutCode(StringOrders[z2].Code);
     }
   }
@@ -2169,6 +2149,9 @@ static void DecodeMul(Word Index)
 {
   Boolean OK;
   Word AdrWord;
+
+  if (!ChkArgCnt(1, (1 == Index) ? 3 : 1)) /* IMUL only 2/3 ops */
+    return;
 
   switch (ArgCnt)
   {
@@ -2199,9 +2182,7 @@ static void DecodeMul(Word Index)
       break;
     case 2:
     case 3:
-      if (MomCPU < CPU80186) WrError(1500);
-      else if (1 != Index) WrError(1110); /* IMUL only */
-      else
+      if (ChkMinCPU(CPU80186))
       {
         char *pArg1 = ArgStr[1],
              *pArg2 = (ArgCnt == 2) ? ArgStr[1] : ArgStr[2],
@@ -2248,31 +2229,30 @@ static void DecodeMul(Word Index)
         }
       }
       break;
-    default:
-      WrError(1110);
   }
   AddPrefixes();
 }
 
-static void DecodeModReg(Word Code)
+static void DecodeModReg(Word Index)
 {
   Byte AdrByte;
+  const FixedOrder *pOrder = ModRegOrders + Index;
 
-  NoSegCheck = Hi(Code) != 0;
-  if (ArgCnt != 2) WrError(1110);
-  else
+  NoSegCheck = Hi(pOrder->Code) != 0;
+  if (ChkArgCnt(2, 2)
+   && ChkMinCPU(pOrder->MinCPU))
   {
     DecodeAdr(ArgStr[1]);
     switch (AdrType)
     {
       case TypeReg16:
-        OpSize = Hi(Code) ? -1 : 2;
+        OpSize = Hi(pOrder->Code) ? -1 : 2;
         AdrByte = (AdrMode << 3);
         DecodeAdr(ArgStr[2]);
         switch (AdrType)
         {
           case TypeMem:
-            PutCode(Lo(Code));
+            PutCode(Lo(pOrder->Code));
             BAsmCode[CodeLen] = AdrByte + AdrMode;
             MoveAdr(1);
             CodeLen += 1 + AdrCnt;
@@ -2290,10 +2270,12 @@ static void DecodeModReg(Word Code)
   AddPrefixes();
 }
 
-static void DecodeShift(Word Code)
+static void DecodeShift(Word Index)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  const FixedOrder *pOrder = ShiftOrders + Index;
+
+  if (ChkArgCnt(2, 2)
+   && ChkMinCPU(pOrder->MinCPU))
   {
     DecodeAdr(ArgStr[1]);
     MinOneIs0();
@@ -2304,9 +2286,9 @@ static void DecodeShift(Word Code)
       case TypeReg16:
       case TypeMem:
         BAsmCode[CodeLen] = OpSize;
-        BAsmCode[CodeLen+1] = AdrMode + (Code << 3);
+        BAsmCode[CodeLen + 1] = AdrMode + (pOrder->Code << 3);
         if (AdrType != TypeMem)
-          BAsmCode[CodeLen+1] += 0xc0;
+          BAsmCode[CodeLen + 1] += 0xc0;
         MoveAdr(2);
         if (!strcasecmp(ArgStr[2], "CL"))
         {
@@ -2325,8 +2307,7 @@ static void DecodeShift(Word Code)
               BAsmCode[CodeLen] += 0xd0;
               CodeLen += 2 + AdrCnt;
             }
-            else if (MomCPU < CPU80186) WrError(1500);
-            else
+            else if (ChkMinCPU(CPU80186))
             {
               BAsmCode[CodeLen] += 0xc0;
               CodeLen += 3 + AdrCnt;
@@ -2344,9 +2325,8 @@ static void DecodeShift(Word Code)
 
 static void DecodeROL4_ROR4(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < CPUV30) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && ChkMinCPU(CPUV30))
   {
     DecodeAdr(ArgStr[1]);
     BAsmCode[CodeLen    ] = 0x0f;
@@ -2372,9 +2352,8 @@ static void DecodeROL4_ROR4(Word Code)
 
 static void DecodeBit1(Word Index)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPUV30) WrError(1500);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkMinCPU(CPUV30))
   {
     DecodeAdr(ArgStr[1]);
     if ((AdrType == TypeReg8) || (AdrType == TypeReg16))
@@ -2413,9 +2392,8 @@ static void DecodeBit1(Word Index)
 
 static void DecodeINS_EXT(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPUV30) WrError(1500);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkMinCPU(CPUV30))
   {
     DecodeAdr(ArgStr[1]);
     if (AdrType != TypeNone)
@@ -2456,9 +2434,8 @@ static void DecodeFPO2(Word Code)
 {
   UNUSED(Code);
 
-  if ((ArgCnt == 0) || (ArgCnt > 2)) WrError(1110);
-  else if (MomCPU < CPUV30) WrError(1500);
-  else
+  if (ChkArgCnt(1, 2)
+   && ChkMinCPU(CPUV30))
   {
     Byte AdrByte;
     Boolean OK;
@@ -2501,9 +2478,8 @@ static void DecodeBTCLR(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 3) WrError(1110);
-  else if (MomCPU < CPUV35) WrError(1500);
-  else
+  if (ChkArgCnt(3, 3)
+   && ChkMinCPU(CPUV35))
   {
     Boolean OK;
 
@@ -2537,8 +2513,7 @@ static void DecodeReg16(Word Index)
 {
   const AddOrder *pOrder = Reg16Orders + Index;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1]);
     switch (AdrType)
@@ -2559,46 +2534,44 @@ static void DecodeString(Word Index)
 {
   const FixedOrder *pOrder = StringOrders + Index;
 
-  if (ArgCnt != 0) WrError(1110);
-  else if (MomCPU < pOrder->MinCPU) WrError(1500);
-  else
+  if (ChkArgCnt(0, 0)
+   && ChkMinCPU(pOrder->MinCPU))
     PutCode(pOrder->Code);
   AddPrefixes();
 }
 
 /*---------------------------------------------------------------------------*/
 
-static void AddFPU(char *NName, CPUVar NMin, Word NCode, InstProc NProc)
+static void AddFPU(char *NName, Word NCode, InstProc NProc)
 {
-  if (MomCPU >= NMin)
-  {
-    char Instr[30];
+  char Instr[30];
 
-    AddInstTable(InstTable, NName, NCode, NProc);
-    sprintf(Instr, "%cN%s", *NName, NName + 1);
-    AddInstTable(InstTable, Instr, NCode | NO_FWAIT_FLAG, NProc);
-  }
+  AddInstTable(InstTable, NName, NCode, NProc);
+  sprintf(Instr, "%cN%s", *NName, NName + 1);
+  AddInstTable(InstTable, Instr, NCode | NO_FWAIT_FLAG, NProc);
 }
 
 static void AddFixed(char *NName, CPUVar NMin, Word NCode)
 {
-  if (MomCPU >= NMin)
-    AddInstTable(InstTable, NName, NCode, DecodeFixed);
+  if (InstrZ >= FixedOrderCnt) exit(255);
+  FixedOrders[InstrZ].Code = NCode;
+  FixedOrders[InstrZ].MinCPU = NMin;
+  AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
-static void AddFPUFixed(char *NName, CPUVar NMin, Word NCode)
+static void AddFPUFixed(char *NName, Word NCode)
 {
-  AddFPU(NName, NMin, NCode, DecodeFPUFixed);
+  AddFPU(NName, NCode, DecodeFPUFixed);
 }
 
-static void AddFPUSt(char *NName, CPUVar NMin, Word NCode)
+static void AddFPUSt(char *NName, Word NCode)
 {
-  AddFPU(NName, NMin, NCode, DecodeFPUSt);
+  AddFPU(NName, NCode, DecodeFPUSt);
 }
 
-static void AddFPU16(char *NName, CPUVar NMin, Word NCode)
+static void AddFPU16(char *NName, Word NCode)
 {
-  AddFPU(NName, NMin, NCode, DecodeFPU16);
+  AddFPU(NName, NCode, DecodeFPU16);
 }
 
 static void AddString(char *NName, CPUVar NMin, Word NCode)
@@ -2612,26 +2585,34 @@ static void AddString(char *NName, CPUVar NMin, Word NCode)
 
 static void AddRept(char *NName, CPUVar NMin, Word NCode)
 {
-  if (MomCPU >= NMin)
-    AddInstTable(InstTable, NName, NCode, DecodeRept);
+  if (InstrZ >= ReptOrderCnt) exit(255);
+  ReptOrders[InstrZ].Code = NCode;
+  ReptOrders[InstrZ].MinCPU = NMin;
+  AddInstTable(InstTable, NName, InstrZ++, DecodeRept);
 }
 
 static void AddRel(char *NName, CPUVar NMin, Word NCode)
 {
-  if (MomCPU >= NMin)
-    AddInstTable(InstTable, NName, NCode, DecodeRel);
+  if (InstrZ >= RelOrderCnt) exit(255);
+  RelOrders[InstrZ].MinCPU = NMin;
+  RelOrders[InstrZ].Code = NCode;
+  AddInstTable(InstTable, NName, InstrZ++, DecodeRel);
 }
 
 static void AddModReg(char *NName, CPUVar NMin, Word NCode)
 {
-  if (MomCPU >= NMin)
-    AddInstTable(InstTable, NName, NCode, DecodeModReg);
+  if (InstrZ >= ModRegOrderCnt) exit(255);
+  ModRegOrders[InstrZ].MinCPU = NMin;
+  ModRegOrders[InstrZ].Code = NCode;
+  AddInstTable(InstTable, NName, InstrZ++, DecodeModReg);
 }
 
 static void AddShift(char *NName, CPUVar NMin, Word NCode)
 {
-  if (MomCPU >= NMin)
-    AddInstTable(InstTable, NName, NCode, DecodeShift);
+  if (InstrZ >= ShiftOrderCnt) exit(255);
+  ShiftOrders[InstrZ].MinCPU = NMin;
+  ShiftOrders[InstrZ].Code = NCode;
+  AddInstTable(InstTable, NName, InstrZ++, DecodeShift);
 }
 
 static void AddReg16(char *NName, CPUVar NMin, Word NCode, Byte NAdd)
@@ -2674,39 +2655,40 @@ static void InitFields(void)
   AddInstTable(InstTable, "EXT", 0x33, DecodeINS_EXT);
   AddInstTable(InstTable, "FPO2", 0, DecodeFPO2);
   AddInstTable(InstTable, "BTCLR", 0, DecodeBTCLR);
-  AddFPU("FLD", CPU8086, 0, DecodeFLD);
-  AddFPU("FILD", CPU8086, 0, DecodeFILD);
-  AddFPU("FBLD", CPU8086, 0, DecodeFBLD);
-  AddFPU("FST", CPU8086, 0xd0, DecodeFST_FSTP);
-  AddFPU("FSTP", CPU8086, 0xd8, DecodeFST_FSTP);
-  AddFPU("FIST", CPU8086, 0x10, DecodeFIST_FISTP);
-  AddFPU("FISTP", CPU8086, 0x18, DecodeFIST_FISTP);
-  AddFPU("FBSTP", CPU8086, 0, DecodeFBSTP);
-  AddFPU("FCOM", CPU8086, 0xd0, DecodeFCOM_FCOMP);
-  AddFPU("FCOMP", CPU8086, 0xd8, DecodeFCOM_FCOMP);
-  AddFPU("FICOM", CPU8086, 0x10, DecodeFICOM_FICOMP);
-  AddFPU("FICOMP", CPU8086, 0x18, DecodeFICOM_FICOMP);
-  AddFPU("FADD", CPU8086, 0, DecodeFADD_FMUL);
-  AddFPU("FMUL", CPU8086, 8, DecodeFADD_FMUL);
-  AddFPU("FIADD", CPU8086, 0, DecodeFIADD_FIMUL);
-  AddFPU("FIMUL", CPU8086, 8, DecodeFIADD_FIMUL);
-  AddFPU("FADDP", CPU8086, 0, DecodeFADDP_FMULP);
-  AddFPU("FMULP", CPU8086, 8, DecodeFADDP_FMULP);
-  AddFPU("FDIV" , CPU8086, 16, DecodeFSUB_FSUBR_FDIV_FDIVR);
-  AddFPU("FDIVR", CPU8086, 24, DecodeFSUB_FSUBR_FDIV_FDIVR);
-  AddFPU("FSUB" , CPU8086,  0, DecodeFSUB_FSUBR_FDIV_FDIVR);
-  AddFPU("FSUBR", CPU8086,  8, DecodeFSUB_FSUBR_FDIV_FDIVR);
-  AddFPU("FIDIV" , CPU8086, 16, DecodeFISUB_FISUBR_FIDIV_FIDIVR);
-  AddFPU("FIDIVR", CPU8086, 24, DecodeFISUB_FISUBR_FIDIV_FIDIVR);
-  AddFPU("FISUB" , CPU8086,  0, DecodeFISUB_FISUBR_FIDIV_FIDIVR);
-  AddFPU("FISUBR", CPU8086,  8, DecodeFISUB_FISUBR_FIDIV_FIDIVR);
-  AddFPU("FDIVP" , CPU8086, 16, DecodeFSUBP_FSUBRP_FDIVP_FDIVRP);
-  AddFPU("FDIVRP", CPU8086, 24, DecodeFSUBP_FSUBRP_FDIVP_FDIVRP);
-  AddFPU("FSUBP" , CPU8086,  0, DecodeFSUBP_FSUBRP_FDIVP_FDIVRP);
-  AddFPU("FSUBRP", CPU8086,  8, DecodeFSUBP_FSUBRP_FDIVP_FDIVRP);
-  AddFPU("FSAVE" , CPU8086, 0x30, DecodeFSAVE_FRSTOR);
-  AddFPU("FRSTOR" , CPU8086, 0x20, DecodeFSAVE_FRSTOR);
+  AddFPU("FLD", 0, DecodeFLD);
+  AddFPU("FILD", 0, DecodeFILD);
+  AddFPU("FBLD", 0, DecodeFBLD);
+  AddFPU("FST", 0xd0, DecodeFST_FSTP);
+  AddFPU("FSTP", 0xd8, DecodeFST_FSTP);
+  AddFPU("FIST", 0x10, DecodeFIST_FISTP);
+  AddFPU("FISTP", 0x18, DecodeFIST_FISTP);
+  AddFPU("FBSTP", 0, DecodeFBSTP);
+  AddFPU("FCOM", 0xd0, DecodeFCOM_FCOMP);
+  AddFPU("FCOMP", 0xd8, DecodeFCOM_FCOMP);
+  AddFPU("FICOM", 0x10, DecodeFICOM_FICOMP);
+  AddFPU("FICOMP", 0x18, DecodeFICOM_FICOMP);
+  AddFPU("FADD", 0, DecodeFADD_FMUL);
+  AddFPU("FMUL", 8, DecodeFADD_FMUL);
+  AddFPU("FIADD", 0, DecodeFIADD_FIMUL);
+  AddFPU("FIMUL", 8, DecodeFIADD_FIMUL);
+  AddFPU("FADDP", 0, DecodeFADDP_FMULP);
+  AddFPU("FMULP", 8, DecodeFADDP_FMULP);
+  AddFPU("FDIV" , 16, DecodeFSUB_FSUBR_FDIV_FDIVR);
+  AddFPU("FDIVR", 24, DecodeFSUB_FSUBR_FDIV_FDIVR);
+  AddFPU("FSUB" ,  0, DecodeFSUB_FSUBR_FDIV_FDIVR);
+  AddFPU("FSUBR",  8, DecodeFSUB_FSUBR_FDIV_FDIVR);
+  AddFPU("FIDIV" , 16, DecodeFISUB_FISUBR_FIDIV_FIDIVR);
+  AddFPU("FIDIVR", 24, DecodeFISUB_FISUBR_FIDIV_FIDIVR);
+  AddFPU("FISUB" ,  0, DecodeFISUB_FISUBR_FIDIV_FIDIVR);
+  AddFPU("FISUBR",  8, DecodeFISUB_FISUBR_FIDIV_FIDIVR);
+  AddFPU("FDIVP" , 16, DecodeFSUBP_FSUBRP_FDIVP_FDIVRP);
+  AddFPU("FDIVRP", 24, DecodeFSUBP_FSUBRP_FDIVP_FDIVRP);
+  AddFPU("FSUBP" ,  0, DecodeFSUBP_FSUBRP_FDIVP_FDIVRP);
+  AddFPU("FSUBRP",  8, DecodeFSUBP_FSUBRP_FDIVP_FDIVRP);
+  AddFPU("FSAVE" , 0x30, DecodeFSAVE_FRSTOR);
+  AddFPU("FRSTOR" , 0x20, DecodeFSAVE_FRSTOR);
 
+  FixedOrders = (FixedOrder *) malloc(sizeof(FixedOrder) * FixedOrderCnt); InstrZ = 0;
   AddFixed("AAA",   CPU8086,  0x0037);  AddFixed("AAS",   CPU8086,  0x003f);
   AddFixed("AAM",   CPU8086,  0xd40a);  AddFixed("AAD",   CPU8086,  0xd50a);
   AddFixed("CBW",   CPU8086,  0x0098);  AddFixed("CLC",   CPU8086,  0x00f8);
@@ -2729,30 +2711,30 @@ static void InitFields(void)
   AddFixed("SEGSS", CPU8086,  0x0036);  AddFixed("SEGDS", CPU8086,  0x003e);
   AddFixed("FWAIT", CPU8086,  0x009b);  
 
-  AddFPUFixed("FCOMPP", CPU8086, 0xded9); AddFPUFixed("FTST",   CPU8086, 0xd9e4);
-  AddFPUFixed("FXAM",   CPU8086, 0xd9e5); AddFPUFixed("FLDZ",   CPU8086, 0xd9ee);
-  AddFPUFixed("FLD1",   CPU8086, 0xd9e8); AddFPUFixed("FLDPI",  CPU8086, 0xd9eb);
-  AddFPUFixed("FLDL2T", CPU8086, 0xd9e9); AddFPUFixed("FLDL2E", CPU8086, 0xd9ea);
-  AddFPUFixed("FLDLG2", CPU8086, 0xd9ec); AddFPUFixed("FLDLN2", CPU8086, 0xd9ed);
-  AddFPUFixed("FSQRT",  CPU8086, 0xd9fa); AddFPUFixed("FSCALE", CPU8086, 0xd9fd);
-  AddFPUFixed("FPREM",  CPU8086, 0xd9f8); AddFPUFixed("FRNDINT",CPU8086, 0xd9fc);
-  AddFPUFixed("FXTRACT",CPU8086, 0xd9f4); AddFPUFixed("FABS",   CPU8086, 0xd9e1);
-  AddFPUFixed("FCHS",   CPU8086, 0xd9e0); AddFPUFixed("FPTAN",  CPU8086, 0xd9f2);
-  AddFPUFixed("FPATAN", CPU8086, 0xd9f3); AddFPUFixed("F2XM1",  CPU8086, 0xd9f0);
-  AddFPUFixed("FYL2X",  CPU8086, 0xd9f1); AddFPUFixed("FYL2XP1",CPU8086, 0xd9f9);
-  AddFPUFixed("FINIT",  CPU8086, 0xdbe3); AddFPUFixed("FENI",   CPU8086, 0xdbe0);
-  AddFPUFixed("FDISI",  CPU8086, 0xdbe1); AddFPUFixed("FCLEX",  CPU8086, 0xdbe2);
-  AddFPUFixed("FINCSTP",CPU8086, 0xd9f7); AddFPUFixed("FDECSTP",CPU8086, 0xd9f6);
-  AddFPUFixed("FNOP",   CPU8086, 0xd9d0);
+  AddFPUFixed("FCOMPP", 0xded9); AddFPUFixed("FTST",   0xd9e4);
+  AddFPUFixed("FXAM",   0xd9e5); AddFPUFixed("FLDZ",   0xd9ee);
+  AddFPUFixed("FLD1",   0xd9e8); AddFPUFixed("FLDPI",  0xd9eb);
+  AddFPUFixed("FLDL2T", 0xd9e9); AddFPUFixed("FLDL2E", 0xd9ea);
+  AddFPUFixed("FLDLG2", 0xd9ec); AddFPUFixed("FLDLN2", 0xd9ed);
+  AddFPUFixed("FSQRT",  0xd9fa); AddFPUFixed("FSCALE", 0xd9fd);
+  AddFPUFixed("FPREM",  0xd9f8); AddFPUFixed("FRNDINT",0xd9fc);
+  AddFPUFixed("FXTRACT",0xd9f4); AddFPUFixed("FABS",   0xd9e1);
+  AddFPUFixed("FCHS",   0xd9e0); AddFPUFixed("FPTAN",  0xd9f2);
+  AddFPUFixed("FPATAN", 0xd9f3); AddFPUFixed("F2XM1",  0xd9f0);
+  AddFPUFixed("FYL2X",  0xd9f1); AddFPUFixed("FYL2XP1",0xd9f9);
+  AddFPUFixed("FINIT",  0xdbe3); AddFPUFixed("FENI",   0xdbe0);
+  AddFPUFixed("FDISI",  0xdbe1); AddFPUFixed("FCLEX",  0xdbe2);
+  AddFPUFixed("FINCSTP",0xd9f7); AddFPUFixed("FDECSTP",0xd9f6);
+  AddFPUFixed("FNOP",   0xd9d0);
 
-  AddFPUSt("FXCH",  CPU8086, 0xd9c8);
-  AddFPUSt("FFREE", CPU8086, 0xddc0);
+  AddFPUSt("FXCH",  0xd9c8);
+  AddFPUSt("FFREE", 0xddc0);
 
-  AddFPU16("FLDCW",  CPU8086, 0xd928);
-  AddFPU16("FSTCW",  CPU8086, 0xd938);
-  AddFPU16("FSTSW",  CPU8086, 0xdd38);
-  AddFPU16("FSTENV", CPU8086, 0xd930);
-  AddFPU16("FLDENV", CPU8086, 0xd920);
+  AddFPU16("FLDCW",  0xd928);
+  AddFPU16("FSTCW",  0xd938);
+  AddFPU16("FSTSW",  0xdd38);
+  AddFPU16("FSTENV", 0xd930);
+  AddFPU16("FLDENV", 0xd920);
 
   StringOrders = (FixedOrder *) malloc(sizeof(FixedOrder) * StringOrderCnt); InstrZ = 0;
   AddString("CMPSB", CPU8086,  0x00a6);
@@ -2770,6 +2752,7 @@ static void InitFields(void)
   AddString("OUTSB", CPU80186, 0x006e);
   AddString("OUTSW", CPU80186, 0x006f);
 
+  ReptOrders = (FixedOrder *) malloc(sizeof(*ReptOrders) * ReptOrderCnt); InstrZ = 0;
   AddRept("REP",   CPU8086,  0x00f3);
   AddRept("REPE",  CPU8086,  0x00f3);
   AddRept("REPZ",  CPU8086,  0x00f3);
@@ -2778,6 +2761,7 @@ static void InitFields(void)
   AddRept("REPC",  CPUV30,   0x0065);
   AddRept("REPNC", CPUV30,   0x0064);
 
+  RelOrders = (FixedOrder *) malloc(sizeof(*RelOrders) * RelOrderCnt); InstrZ = 0;
   AddRel("JA",    CPU8086, 0x0077); AddRel("JNBE",  CPU8086, 0x0077);
   AddRel("JAE",   CPU8086, 0x0073); AddRel("JNB",   CPU8086, 0x0073);
   AddRel("JB",    CPU8086, 0x0072); AddRel("JNAE",  CPU8086, 0x0072);
@@ -2797,11 +2781,13 @@ static void InitFields(void)
   AddRel("LOOPE", CPU8086, 0x00e1); AddRel("LOOPZ", CPU8086, 0x00e1);
   AddRel("LOOPNE",CPU8086, 0x00e0); AddRel("LOOPNZ",CPU8086, 0x00e0);
 
+  ModRegOrders = (FixedOrder *) malloc(sizeof(*ModRegOrders) * ModRegOrderCnt); InstrZ = 0;
   AddModReg("LDS",   CPU8086,  0x00c5);
   AddModReg("LEA",   CPU8086,  0x018d);
   AddModReg("LES",   CPU8086,  0x00c4);
   AddModReg("BOUND", CPU80186, 0x0062);
 
+  ShiftOrders = (FixedOrder *) malloc(sizeof(*ShiftOrders) * ShiftOrderCnt); InstrZ = 0;
   AddShift("SHL",   CPU8086, 4); AddShift("SAL",   CPU8086, 4);
   AddShift("SHR",   CPU8086, 5); AddShift("SAR",   CPU8086, 7);
   AddShift("ROL",   CPU8086, 0); AddShift("ROR",   CPU8086, 1);
@@ -2838,8 +2824,13 @@ static void InitFields(void)
 static void DeinitFields(void)
 {
   DestroyInstTable(InstTable);
+  free(FixedOrders);
+  free(ReptOrders);
+  free(ShiftOrders);
   free(StringOrders);
+  free(ModRegOrders);
   free(Reg16Orders);
+  free(RelOrders);
 }
 
 static void MakeCode_86(void)

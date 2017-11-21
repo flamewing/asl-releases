@@ -218,7 +218,9 @@ static void Process_LANGS(char *Line)
     if ((!*Part) || (Part[strlen(Part)-1] != ')')) SynError(Part);
     Part[strlen(Part) - 1] = '\0';
     p2 = strchr(Part, '(');
-    if (!p2) SynError(Part); *p2 = '\0';
+    if (!p2)
+      SynError(Part);
+    *p2 = '\0';
     PCat->CtryName = strdup(Part); p2++;
     do
     {
@@ -287,7 +289,9 @@ static void Process_MESSAGE(char *Line)
         OneLine[l - 1] = '\0'; KillPostBlanks(OneLine); l = strlen(OneLine);
       }
       if (*OneLine != '"') SynError(OneLine);
-      if (OneLine[l - 1] != '"') SynError(OneLine); OneLine[l - 1] = '\0';
+      if (OneLine[l - 1] != '"')
+        SynError(OneLine);
+      OneLine[l - 1] = '\0';
       strmaxcat(Msg, OneLine + 1, 4095);
     }
     while (Cont);

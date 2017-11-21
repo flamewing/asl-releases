@@ -49,10 +49,13 @@
 #include <ctype.h>
 
 #include "nls.h"
+#include "nlmessages.h"
+#include "as.rsc"
 #include "bpemu.h"
 #include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
+#include "errmsg.h"
 #include "asmpars.h"
 #include "asmitree.h"
 #include "codepseudo.h"
@@ -161,7 +164,10 @@ static void DecodeAdr(int Start, int Stop, Boolean LongAdr, Byte Mask)
   Stop -= Start - 1;
   if (Stop < 1)
   {
-    WrError(1110);
+    char Str[100];
+
+    sprintf(Str, getmessage(Num_ErrMsgAddrArgCnt), 1, 2, Stop - Start + 1);
+    WrXError(ErrNum_WrongArgCnt, Str);
     return;
   }
 
@@ -321,8 +327,7 @@ chk:
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     BAsmCode[0] = Hi(Code);
     BAsmCode[1] = Lo(Code);
@@ -334,8 +339,7 @@ static void DecodeEmu(Word Index)
 {
   EmuOrder *pOrder = EmuOrders + Index;
 
-  if (ArgCnt!=0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     BAsmCode[0] = Hi(pOrder->Code1);
     BAsmCode[1] = Lo(pOrder->Code1);
@@ -350,8 +354,7 @@ static void DecodeRel(Word Code)
   Boolean OK;
   LongInt AdrLong;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     AdrLong = EvalIntExpression(ArgStr[1], UInt24, &OK) - EProgCounter() - 6;
     if (AdrLong & 1) WrError(1325);
@@ -385,8 +388,7 @@ static void DecodeLRel(Word Code)
   Boolean OK;
   LongInt AdrLong;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     AdrLong = EvalIntExpression(ArgStr[1], UInt24, &OK) - EProgCounter() - 6;
     if (AdrLong & 1) WrError(1325);
@@ -406,11 +408,10 @@ static void DecodeGen(Word Index)
 {
   GenOrder *pOrder = GenOrders + Index;
 
-  if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 2))
   {
     OpSize = pOrder->Size;
-    DecodeAdr(1,ArgCnt, False, pOrder->AdrMask);
+    DecodeAdr(1, ArgCnt, False, pOrder->AdrMask);
     switch (AdrMode)
     {
       case ModDisp8:
@@ -461,8 +462,7 @@ static void DecodeGen(Word Index)
 
 static void DecodeAux(Word Code)
 {
-  if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 2))
   {
     OpSize = 1;
     DecodeAdr(1, ArgCnt, False, (*OpPart == 'S' ? 0 : MModImm) | MModDisp8 | MModDisp16 | MModAbs);
@@ -498,8 +498,7 @@ static void DecodeAux(Word Code)
 
 static void DecodeImm(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     OpSize = 1;
     DecodeAdr(1, 1, False, MModImm | MModImmExt);
@@ -522,8 +521,7 @@ static void DecodeImm(Word Code)
 
 static void DecodeExt(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     OpSize = 1;
     DecodeAdr(1, 1, False, MModAbs);
@@ -544,8 +542,7 @@ static void DecodeStkMult(Word Index)
   int z, z2;
   Boolean OK;
 
-  if (ArgCnt < 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, ArgCntMax))
   {
     OK = True;
     BAsmCode[1] = 0;
@@ -592,7 +589,7 @@ static void DecodeMov(Word Index)
       }
     }
   }
-  else if (ArgCnt != 3) WrError(1110);
+  else if (!ChkArgCnt(3, 3));
   else if (!strcasecmp(ArgStr[2], "X"))
   {
     BAsmCode[1] = EvalIntExpression(ArgStr[1], SInt8, &OK);
@@ -626,8 +623,7 @@ static void DecodeMov(Word Index)
 
 static void DecodeLogp(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     OpSize = 1; DecodeAdr(1, 1, False, MModImm);
     switch (AdrMode)
@@ -647,8 +643,7 @@ static void DecodeMac(Word Index)
   Byte Val;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     Val = EvalIntExpression(ArgStr[1], UInt4, &OK);
     if (OK)
@@ -668,8 +663,7 @@ static void DecodeBit8(Word Index)
 {
   Byte Mask;
 
-  if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
-  else
+  if (ChkArgCnt(2, 3))
   {
     OpSize = 0;
     DecodeAdr(ArgCnt, ArgCnt, False, MModImm);
@@ -707,8 +701,7 @@ static void DecodeBit8(Word Index)
 
 static void DecodeBit16(Word Index)
 {
-  if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
-  else
+  if (ChkArgCnt(2, 3))
   {
     OpSize = 1;
     DecodeAdr(ArgCnt, ArgCnt, False, MModImm);
@@ -741,8 +734,7 @@ static void DecodeBrBit(Word Index)
   Boolean OK;
   LongInt AdrLong;
 
-  if ((ArgCnt < 3) || (ArgCnt > 4)) WrError(1110);
-  else
+  if (ChkArgCnt(3, 4))
   {
     OpSize = 0; DecodeAdr(ArgCnt - 1, ArgCnt - 1, False, MModImm);
     if (AdrMode == ModImm)
@@ -804,8 +796,7 @@ static void DecodeBrBit(Word Index)
 
 static void DecodeJmpJsr(Word Index)
 {
-  if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 2))
   {
     OpSize = 1;
     DecodeAdr(1, ArgCnt, True, MModAbs20 | MModDisp20);
@@ -833,8 +824,7 @@ static void DecodeBsr(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     AdrLong = EvalIntExpression(ArgStr[1], UInt24, &OK) - EProgCounter() - 6;
     if (AdrLong & 1) WrError(1325);

@@ -128,7 +128,6 @@ extern LongInt TmpSymCounter,
                BackSymCounter;
 extern char TmpSymCounterVal[10];
 extern LongInt LocHandleCnt;
-extern Boolean BalanceTree;
 extern LongInt MomLocHandle;
 
 
@@ -137,6 +136,9 @@ extern void AsmParsInit(void);
 extern void InitTmpSymbols(void);
 
 extern Boolean SingleBit(LargeInt Inp, LargeInt *Erg);
+
+
+extern IntType GetSmallestUIntType(LargeWord MaxValue);
 
 
 extern LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult);

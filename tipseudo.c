@@ -42,6 +42,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmitree.h"
+#include "errmsg.h"
 
 #include "fourpseudo.h"
 #include "tipseudo.h"
@@ -66,11 +67,8 @@ static void pseudo_qxx(Integer num)
   Boolean ok = True;
   double res;
 
-  if (!ArgCnt)
-  {
-    WrError(1110);
+  if (!ChkArgCnt(1, ArgCntMax))
     return;
-  }
 
   for (z = 1; z <= ArgCnt; z++)
   {
@@ -104,11 +102,8 @@ static void pseudo_lqxx(Integer num)
   double res;
   LongInt resli;
 
-  if (!ArgCnt)
-  {
-    WrError(1110);
+  if (!ChkArgCnt(1, ArgCntMax))
     return;
-  }
 
   for (z = 1; z <= ArgCnt; z++)
   {
@@ -150,11 +145,8 @@ static void pseudo_store(tcallback callback)
   int z;
   TempResult t;
 
-  if (!ArgCnt)
-  {
-    WrError(1110);
+  if (!ChkArgCnt(1, ArgCntMax))
     return;
-  }
 
   define_untyped_label();
 
@@ -334,11 +326,8 @@ Boolean DecodeTIPseudo(void)
 
   if (Memo("FLOAT"))
   {
-    if (!ArgCnt)
-    {
-      WrError(1110);
+    if (!ChkArgCnt(1, ArgCntMax))
       return True;
-    }
     define_untyped_label();
     ok = True;
     for (z = 1; (z <= ArgCnt) && ok; z++)
@@ -365,11 +354,8 @@ Boolean DecodeTIPseudo(void)
 
   if (Memo("DOUBLE"))
   {
-    if (!ArgCnt)
-    {
-      WrError(1110);
+    if (!ChkArgCnt(1, ArgCntMax))
       return True;
-    }
     define_untyped_label();
     ok = True;
     for (z = 1; (z <= ArgCnt) && ok; z++)
@@ -399,11 +385,8 @@ Boolean DecodeTIPseudo(void)
 
   if (Memo("EFLOAT"))
   {
-    if (!ArgCnt)
-    {
-      WrError(1110);
+    if (!ChkArgCnt(1, ArgCntMax))
       return True;
-    }
     define_untyped_label();
     ok = True;
     for (z = 1; (z <= ArgCnt) && ok; z++)
@@ -425,11 +408,8 @@ Boolean DecodeTIPseudo(void)
 
   if (Memo("BFLOAT"))
   {
-    if (!ArgCnt)
-    {
-      WrError(1110);
+    if (!ChkArgCnt(1, ArgCntMax))
       return True;
-    }
     define_untyped_label();
     ok = True;
     for (z = 1; (z <= ArgCnt) && ok; z++)
@@ -453,11 +433,8 @@ Boolean DecodeTIPseudo(void)
 
   if (Memo("TFLOAT"))
   {
-    if (!ArgCnt)
-    {
-      WrError(1110);
+    if (!ChkArgCnt(1, ArgCntMax))
       return True;
-    }
     define_untyped_label();
     ok = True;
     for (z = 1; (z <= ArgCnt) && ok; z++)
@@ -596,8 +573,7 @@ static void DecodeSINGLE(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt == 0) WrError(1110);
-  else
+  if (ChkArgCnt(1, ArgCntMax))
   {
     OK = True;
     for (z = 1; z <= ArgCnt; z++)
@@ -620,8 +596,7 @@ static void DecodeEXTENDED(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt == 0) WrError(1110);
-  else
+  if (ChkArgCnt(1, ArgCntMax))
   {
     OK = True;
     for (z = 1; z <= ArgCnt; z++)
@@ -644,8 +619,7 @@ static void DecodeWORD(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt == 0) WrError(1110);
-  else
+  if (ChkArgCnt(1, ArgCntMax))
   {
     OK = True;
     for (z = 1; z <= ArgCnt; z++)
@@ -663,8 +637,7 @@ static void DecodeDATA34x(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt == 0) WrError(1110);
-  else
+  if (ChkArgCnt(1, ArgCntMax))
   {
     OK = True;
     for (z = 1; z <= ArgCnt; z++)
@@ -717,8 +690,7 @@ static void DecodeBSS(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
     Size = EvalIntExpression(ArgStr[1], UInt24, &OK);

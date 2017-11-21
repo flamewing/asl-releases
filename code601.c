@@ -68,6 +68,9 @@
 #include "codevars.h"
 #include "headids.h"
 #include "intconsts.h"
+#include "errmsg.h"
+
+#include "code601.h"
 
 typedef struct 
 {
@@ -346,11 +349,6 @@ static void ChkSup(void)
     WrError(50);
 }
 
-static Boolean ChkCPU(Byte Mask)
-{
-  return (((Mask >> (MomCPU - CPU403))&1) == 1);
-}
-
 static void SwapCode(LongWord *Code)
 {
   *Code = ((*Code & 0x1f) << 5) | ((*Code >> 5) & 0x1f);
@@ -364,9 +362,8 @@ static void DecodeFixed(Word Index)
 {
   const BaseOrder *pOrder = FixedOrders + Index;
 
-  if (ArgCnt != 0) WrError(1110);
-  else if (!ChkCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
-  else
+  if (!ChkArgCnt(0, 0));
+  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) >= 0)
   {
     CodeLen = 4;
     PutCode(pOrder->Code);
@@ -382,8 +379,8 @@ static void DecodeReg1(Word Index)
   const BaseOrder *pOrder = Reg1Orders + Index;
   LongWord Dest;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (!ChkCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
+  if (!ChkArgCnt(1, 1));
+  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
   else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
   else
   {
@@ -401,8 +398,8 @@ static void DecodeCReg1(Word Index)
   const BaseOrder *pOrder = CReg1Orders + Index;
   LongWord Dest;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (!ChkCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
+  if (!ChkArgCnt(1, 1));
+  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
   else if (!DecodeCondReg(ArgStr[1], &Dest)) WrError(1350);
   else if ((Dest & 3) != 0) WrError(1351);
   else
@@ -419,8 +416,8 @@ static void DecodeCBit1(Word Index)
   const BaseOrder *pOrder = CBit1Orders + Index;
   LongWord Dest;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (!ChkCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
+  if (!ChkArgCnt(1, 1));
+  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
   else if (!DecodeCondBit(ArgStr[1], &Dest)) WrError(1350);
   else
   {
@@ -436,8 +433,8 @@ static void DecodeFReg1(Word Index)
   const BaseOrder *pOrder = FReg1Orders + Index;
   LongWord Dest;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (!ChkCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
+  if (!ChkArgCnt(1, 1));
+  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
   else if (!DecodeFPReg(ArgStr[1], &Dest)) WrError(1350);
   else
   {
@@ -454,8 +451,8 @@ static void DecodeReg2(Word Index)
   LongWord Dest, Src1;
   const char *pArg2 = (ArgCnt == 2) ? ArgStr[2] : ArgStr[1];
 
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
-  else if (!ChkCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
+  if (!ChkArgCnt(1, 2));
+  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
   else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
   else if (!DecodeGenReg(pArg2, &Src1)) WrError(1350);
   else
@@ -472,8 +469,8 @@ static void DecodeCReg2(Word Index)
   const BaseOrder *pOrder = CReg2Orders + Index;
   LongWord Dest, Src1;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!ChkCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
+  if (!ChkArgCnt(2, 2));
+  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
   else if (!DecodeCondReg(ArgStr[1], &Dest)) WrError(1350);
   else if ((Dest & 3) != 0) WrError(1351);
   else if (!DecodeCondReg(ArgStr[2], &Src1)) WrError(1350);
@@ -493,8 +490,8 @@ static void DecodeFReg2(Word Index)
   LongWord Dest, Src1;
   const char *pArg2 = (ArgCnt == 2) ? ArgStr[2] : ArgStr[1];
 
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
-  else if (!ChkCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
+  if (!ChkArgCnt(1, 2));
+  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
   else if (!DecodeFPReg(ArgStr[1], &Dest)) WrError(1350);
   else if (!DecodeFPReg(pArg2, &Src1)) WrError(1350);
   else
@@ -512,8 +509,8 @@ static void DecodeReg2B(Word Index)
   LongWord Dest, Src1;
   const char *pArg2 = (ArgCnt == 2) ? ArgStr[2] : ArgStr[1];
 
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
-  else if (!ChkCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
+  if (!ChkArgCnt(1, 2));
+  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
   else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
   else if (!DecodeGenReg(pArg2, &Src1)) WrError(1350);
   else
@@ -532,8 +529,8 @@ static void DecodeReg2Swap(Word Index)
   LongWord Dest, Src1;
   const char *pArg2 = (ArgCnt == 2) ? ArgStr[2] : ArgStr[1];
 
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
-  else if (!ChkCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
+  if (!ChkArgCnt(1, 2));
+  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
   else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
   else if (!DecodeGenReg(pArg2, &Src1)) WrError(1350);
   else
@@ -550,8 +547,8 @@ static void DecodeNoDest(Word Index)
   const BaseOrder *pOrder = NoDestOrders + Index;
   LongWord Src2, Src1;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!ChkCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
+  if (!ChkArgCnt(2, 2));
+  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
   else if (!DecodeGenReg(ArgStr[1], &Src1)) WrError(1350);
   else if (!DecodeGenReg(ArgStr[2], &Src2)) WrError(1350);
   else
@@ -570,8 +567,8 @@ static void DecodeReg3(Word Index)
              *pArg3 = (ArgCnt == 2) ? ArgStr[2] : ArgStr[3];
   LongWord Src2, Src1, Dest;
 
-  if ((ArgCnt != 2) && (ArgCnt != 3)) WrError(1110);
-  else if (!ChkCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
+  if (!ChkArgCnt(2, 3));
+  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
   else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
   else if (!DecodeGenReg(pArg2, &Src1)) WrError(1350);
   else if (!DecodeGenReg(pArg3, &Src2)) WrError(1350);
@@ -591,8 +588,8 @@ static void DecodeCReg3(Word Index)
              *pArg3 = (ArgCnt == 2) ? ArgStr[2] : ArgStr[3];
   LongWord Src2, Src1, Dest;
 
-  if ((ArgCnt != 2) && (ArgCnt != 3)) WrError(1110);
-  else if (!ChkCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
+  if (!ChkArgCnt(2, 3));
+  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
   else if (!DecodeCondBit(ArgStr[1], &Dest)) WrError(1350);
   else if (!DecodeCondBit(pArg2, &Src1)) WrError(1350);
   else if (!DecodeCondBit(pArg3, &Src2)) WrError(1350);
@@ -612,8 +609,8 @@ static void DecodeFReg3(Word Index)
              *pArg3 = (ArgCnt == 2) ? ArgStr[2] : ArgStr[3];
   LongWord Src2, Src1, Dest;
 
-  if ((ArgCnt != 2) && (ArgCnt != 3)) WrError(1110);
-  else if (!ChkCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
+  if (!ChkArgCnt(2, 3));
+  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
   else if (!DecodeFPReg(ArgStr[1], &Dest)) WrError(1350);
   else if (!DecodeFPReg(pArg2, &Src1)) WrError(1350);
   else if (!DecodeFPReg(pArg3, &Src2)) WrError(1350);
@@ -633,8 +630,8 @@ static void DecodeReg3Swap(Word Index)
              *pArg3 = (ArgCnt == 2) ? ArgStr[2] : ArgStr[3];
   LongWord Src2, Src1, Dest;
 
-  if ((ArgCnt != 2) && (ArgCnt != 3)) WrError(1110);
-  else if (!ChkCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
+  if (!ChkArgCnt(2, 3));
+  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
   else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
   else if (!DecodeGenReg(pArg2, &Src1)) WrError(1350);
   else if (!DecodeGenReg(pArg3, &Src2)) WrError(1350);
@@ -652,8 +649,8 @@ static void DecodeMixed(Word Index)
   const BaseOrder *pOrder = MixedOrders + Index;
   LongWord Src2, Src1, Dest;
 
-  if (ArgCnt != 3) WrError(1110);
-  else if (!ChkCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
+  if (!ChkArgCnt(3, 3));
+  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
   else if (!DecodeFPReg(ArgStr[1], &Dest)) WrError(1350);
   else if (!DecodeGenReg(ArgStr[2], &Src1)) WrError(1350);
   else if (!DecodeGenReg(ArgStr[3], &Src2)) WrError(1350);
@@ -674,8 +671,8 @@ static void DecodeFReg4(Word Index)
              *pArg3 = (ArgCnt == 3) ? ArgStr[2] : ArgStr[3],
              *pArg4 = (ArgCnt == 3) ? ArgStr[3] : ArgStr[4];
 
-  if ((ArgCnt != 3) && (ArgCnt != 4)) WrError(1110);
-  else if (!ChkCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
+  if (!ChkArgCnt(3, 4));
+  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
   else if (!DecodeFPReg(ArgStr[1], &Dest)) WrError(1350);
   else if (!DecodeFPReg(pArg2, &Src1)) WrError(1350);
   else if (!DecodeFPReg(pArg3, &Src3)) WrError(1350);
@@ -694,8 +691,8 @@ static void DecodeRegDispOrder(Word Index)
   const BaseOrder *pOrder = RegDispOrders + Index;
   LongWord Src1, Dest;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!ChkCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
+  if (!ChkArgCnt(2, 2));
+  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
   else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
   else if (!DecodeRegDisp(ArgStr[2], &Src1)) WrError(1350);
   else
@@ -712,8 +709,8 @@ static void DecodeFRegDisp(Word Index)
   const BaseOrder *pOrder = FRegDispOrders + Index;
   LongWord Src1, Dest;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!ChkCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
+  if (!ChkArgCnt(2, 2));
+  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
   else if (!DecodeFPReg(ArgStr[1], &Dest)) WrError(1350);
   else if (!DecodeRegDisp(ArgStr[2], &Src1)) WrError(1350);
   else
@@ -731,8 +728,8 @@ static void DecodeReg2Imm(Word Index)
   LongWord Src1, Dest, Src2;
   Boolean OK;
 
-  if (ArgCnt != 3) WrError(1110);
-  else if (!ChkCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
+  if (!ChkArgCnt(3, 3));
+  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
   else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
   else if (!DecodeGenReg(ArgStr[2], &Src1)) WrError(1350);
   else
@@ -756,8 +753,8 @@ static void DecodeImm16(Word Index)
   const char *pArg2 = (ArgCnt == 2) ? ArgStr[1] : ArgStr[2],
              *pArg3 = (ArgCnt == 2) ? ArgStr[2] : ArgStr[3];
 
-  if ((ArgCnt != 2) && (ArgCnt != 3)) WrError(1110);
-  else if (!ChkCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
+  if (!ChkArgCnt(2, 3));
+  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
   else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
   else if (!DecodeGenReg(pArg2, &Src1)) WrError(1350);
   else
@@ -781,8 +778,8 @@ static void DecodeImm16Swap(Word Index)
   const char *pArg2 = (ArgCnt == 2) ? ArgStr[1] : ArgStr[2],
              *pArg3 = (ArgCnt == 2) ? ArgStr[2] : ArgStr[3];
 
-  if ((ArgCnt != 2) && (ArgCnt != 3)) WrError(1110);
-  else if (!ChkCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
+  if (!ChkArgCnt(2, 3));
+  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
   else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
   else if (!DecodeGenReg(pArg2, &Src1)) WrError(1350);
   else
@@ -804,7 +801,7 @@ static void DecodeFMUL_FMULS(Word Code)
              *pArg3 = (ArgCnt == 2) ? ArgStr[2] : ArgStr[3];
   LongWord Dest, Src1, Src2, LCode = (Code & 0x7fff);
 
-  if ((ArgCnt != 2) && (ArgCnt != 3)) WrError(1110);
+  if (!ChkArgCnt(2, 3));
   else if (!DecodeFPReg(ArgStr[1], &Dest)) WrError(1350);
   else if (!DecodeFPReg(pArg2, &Src1)) WrError(1350);
   else if (!DecodeFPReg(pArg3, &Src2)) WrError(1350);
@@ -820,7 +817,7 @@ static void DecodeLSWI_STSWI(Word Code)
   LongWord Dest, Src1, Src2, LCode = Code;
   Boolean OK;
 
-  if (ArgCnt != 3) WrError(1110);
+  if (!ChkArgCnt(3, 3));
   else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
   else if (!DecodeGenReg(ArgStr[2], &Src1)) WrError(1350);
   else
@@ -840,8 +837,8 @@ static void DecodeMTFB_MTTB(Word Code)
   Boolean OK;
   const char *pArg1 = ArgStr[1], *pArg2 = ArgStr[2];
 
-  if ((MomCPU != CPU821) && (MomCPU != CPU505)) WrError(1500);
-  if (ArgCnt == 1)
+  if (ChkExactCPUList(0, CPU821, CPU505, CPUNone) < 0);
+  else if (ArgCnt == 1)
   {
     pArg1 = ArgStr[1];
     if      ((Memo("MFTB")) || (Memo("MFTBL"))) pArg2 = "268";
@@ -855,7 +852,7 @@ static void DecodeMTFB_MTTB(Word Code)
     pArg1 = ArgStr[2];
     pArg2 = ArgStr[1];
   }
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
+  if (!ChkArgCnt(1, 2));
   else if (!DecodeGenReg(pArg1, &Dest)) WrError(1350);
   else
   {
@@ -881,7 +878,7 @@ static void DecodeMFSPR_MTSPR(Word Code)
              *pArg2 = (Code == 467) ? ArgStr[1] : ArgStr[2];
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeGenReg(pArg1, &Dest)) WrError(1350);
   else
   {
@@ -902,8 +899,8 @@ static void DecodeMFDCR_MTDCR(Word Code)
              *pArg2 = (Code == 451) ? ArgStr[1] : ArgStr[2];
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU >= CPU505) WrXError(1500, OpPart);
+  if (!ChkArgCnt(2, 2));
+  else if (ChkExactCPUList(0, CPU403, CPU403C, CPUNone) < 0);
   else if (!DecodeGenReg(pArg1, &Dest)) WrError(1350);
   else
   {
@@ -924,7 +921,7 @@ static void DecodeMFSR_MTSR(Word Code)
              *pArg2 = (Code == 210) ? ArgStr[1] : ArgStr[2];
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeGenReg(pArg1, &Dest)) WrError(1350);
   else
   {
@@ -945,7 +942,7 @@ static void DecodeMTCRF(Word Code)
 
   UNUSED(Code);
 
-  if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
+  if (!ChkArgCnt(1, 2));
   else if (!DecodeGenReg(ArgStr[ArgCnt], &Src1)) WrError(1350);
   else
   {
@@ -966,7 +963,7 @@ static void DecodeMTFSF(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeFPReg(ArgStr[2], &Src1)) WrError(1350);
   else
   {
@@ -984,7 +981,7 @@ static void DecodeMTFSFI(Word Code)
   LongWord Dest, Src1;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeCondReg(ArgStr[1], &Dest)) WrError(1350);
   else if ((Dest & 3) != 0) WrError(1351);
   else
@@ -1004,8 +1001,8 @@ static void DecodeRLMI(Word Code)
   LongWord Dest, Src1, Src2, Src3;
   Boolean OK;
 
-  if (ArgCnt != 5) WrError(1110);
-  else if (MomCPU < CPU6000) WrXError(1500, OpPart);
+  if (!ChkArgCnt(5, 5));
+  else if (!ChkMinCPU(CPU6000));
   else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
   else if (!DecodeGenReg(ArgStr[2], &Src1)) WrError(1350);
   else if (!DecodeGenReg(ArgStr[3], &Src2)) WrError(1350);
@@ -1031,7 +1028,7 @@ static void DecodeRLWNM(Word Code)
   LongWord Dest, Src1, Src2, Src3;
   Boolean OK;
 
-  if (ArgCnt != 5) WrError(1110);
+  if (!ChkArgCnt(5, 5));
   else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
   else if (!DecodeGenReg(ArgStr[2], &Src1)) WrError(1350);
   else if (!DecodeGenReg(ArgStr[3], &Src2)) WrError(1350);
@@ -1057,7 +1054,7 @@ static void DecodeRLWIMI_RLWINM(Word Code)
   LongWord Dest, Src1, Src2, Src3, LCode = Code & 0x7fff;
   Boolean OK;
 
-  if (ArgCnt != 5) WrError(1110);
+  if (!ChkArgCnt(5, 5));
   else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
   else if (!DecodeGenReg(ArgStr[2], &Src1)) WrError(1350);
   else
@@ -1087,7 +1084,7 @@ static void DecodeTLBIE(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!DecodeGenReg(ArgStr[1], &Src1)) WrError(1350);
   else
   {
@@ -1104,7 +1101,7 @@ static void DecodeTW(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 3) WrError(1110);
+  if (!ChkArgCnt(3, 3));
   else if (!DecodeGenReg(ArgStr[2], &Src1)) WrError(1350);
   else if (!DecodeGenReg(ArgStr[3], &Src2)) WrError(1350);
   else
@@ -1126,7 +1123,7 @@ static void DecodeTWI(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 3) WrError(1110);
+  if (!ChkArgCnt(3, 3));
   else if (!DecodeGenReg(ArgStr[2], &Src1)) WrError(1350);
   else
   {
@@ -1150,8 +1147,8 @@ static void DecodeWRTEEI(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU >= CPU505) WrXError(1500, OpPart);
+  if (!ChkArgCnt(1, 1));
+  else if (ChkExactCPUList(0, CPU403, CPU403C, CPUNone) < 0);
   else
   {
     Src1 = EvalIntExpression(ArgStr[1], UInt1, &OK) << 15;
@@ -1171,7 +1168,7 @@ static void DecodeCMP_CMPL(Word Code)
              *pArg3 = (ArgCnt == 3) ? ArgStr[2] : ArgStr[3],
              *pArg2 = (ArgCnt == 3) ? "0" : ArgStr[2];
 
-  if ((ArgCnt != 3) && (ArgCnt != 4)) WrError(1110);
+  if (!ChkArgCnt(3, 4));
   else if (!DecodeGenReg(pArg4, &Src2)) WrError(1350);
   else if (!DecodeGenReg(pArg3, &Src1)) WrError(1350);
   else if (!DecodeCondReg(ArgStr[1], &Dest)) WrError(1350);
@@ -1194,7 +1191,7 @@ static void DecodeFCMPO_FCMPU(Word Code)
 {
   LongWord Src1, Src2, Dest, LCode = Code;
 
-  if (ArgCnt != 3) WrError(1110);
+  if (!ChkArgCnt(3, 3));
   else if (!DecodeFPReg(ArgStr[3], &Src2)) WrError(1350);
   else if (!DecodeFPReg(ArgStr[2], &Src1)) WrError(1350);
   else if (!DecodeCondReg(ArgStr[1], &Dest)) WrError(1350);
@@ -1214,8 +1211,7 @@ static void DecodeCMPI_CMPLI(Word Code)
              *pArg3 = (ArgCnt == 3) ? ArgStr[2] : ArgStr[3],
              *pArg2 = (ArgCnt == 3) ? "0" : ArgStr[2];
 
-  if ((ArgCnt != 3) && (ArgCnt != 4)) WrError(1110);
-  else
+  if (ChkArgCnt(3, 4))
   {
     Src2 = EvalIntExpression(pArg4, Int16, &OK);
     if (OK)
@@ -1245,8 +1241,7 @@ static void DecodeB_BL_BA_BLA(Word Code)
   LongInt Dist;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Dist = EvalIntExpression(ArgStr[1], Int32, &OK);
     if (OK)
@@ -1271,8 +1266,7 @@ static void DecodeBC_BCL_BCA_BCLA(Word Code)
   LongInt Dist;
   Boolean OK;
 
-  if (ArgCnt != 3) WrError(1110);
-  else
+  if (ChkArgCnt(3, 3))
   {
     Src1 = EvalIntExpression(ArgStr[1], UInt5, &OK); /* BO */
     if (OK)
@@ -1304,8 +1298,7 @@ static void DecodeBCCTR_BCCTRL_BCLR_BCLRL(Word Code)
   LongWord Src1, Src2, LCode = Code;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     Src1 = EvalIntExpression(ArgStr[1], UInt5, &OK);
     if (OK)
@@ -1325,8 +1318,8 @@ static void DecodeTLBRE_TLBWE(Word Code)
   LongWord Src1, Src2, Src3, LCode = Code;
   Boolean OK;
 
-  if (ArgCnt != 3) WrError(1110);
-  else if (MomCPU != CPU403C) WrError(1500);
+  if (!ChkArgCnt(3, 3));
+  else if (!ChkExactCPU(CPU403C));
   else if (!DecodeGenReg(ArgStr[1], &Src1)) WrError(1350);
   else if (!DecodeGenReg(ArgStr[2], &Src2)) WrError(1350);
   else
@@ -1345,8 +1338,7 @@ static void DecodeREG(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
     AddRegDef(LabPart, ArgStr[1]);
 }
 

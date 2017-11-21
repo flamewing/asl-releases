@@ -798,7 +798,8 @@ static void AddTableEntry(const char *Part, char *Sep)
       Ptr = NewPtr;
   }
   if (UseSep)
-    strcat(Ptr, Sep); strcat(Ptr, Part);
+    strcat(Ptr, Sep);
+  strcat(Ptr, Part);
   ThisTable.Lines[CurrRow][CurrCol] = Ptr;
 }
 

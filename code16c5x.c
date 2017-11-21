@@ -53,6 +53,9 @@
 #include "codepseudo.h"
 #include "fourpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
+
+#include "code16c5x.h"
 
 static CPUVar CPU16C54, CPU16C55, CPU16C56, CPU16C57;
 
@@ -60,8 +63,7 @@ static CPUVar CPU16C54, CPU16C55, CPU16C56, CPU16C57;
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     CodeLen = 1;
     WAsmCode[0] = Code;
@@ -70,8 +72,7 @@ static void DecodeFixed(Word Code)
 
 static void DecodeLit(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word AdrWord = EvalIntExpression(ArgStr[1], Int8, &OK);
@@ -89,8 +90,7 @@ static void DecodeAri(Word Code)
   Boolean OK;
 
   Code &= 0x7fff;
-  if ((ArgCnt == 0) || (ArgCnt>2)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 2))
   {
     AdrWord = EvalIntExpression(ArgStr[1], UInt5, &OK);
     if (OK)
@@ -124,8 +124,7 @@ static void DecodeAri(Word Code)
 
 static void DecodeBit(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     Boolean OK;
     Word AdrWord = EvalIntExpression(ArgStr[2], UInt3, &OK);
@@ -144,8 +143,7 @@ static void DecodeBit(Word Code)
 
 static void DecodeF(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word AdrWord = EvalIntExpression(ArgStr[1], UInt5, &OK);
@@ -162,8 +160,7 @@ static void DecodeTRIS(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {   
     Boolean OK;
     Word AdrWord = EvalIntExpression(ArgStr[1], UInt3, &OK);
@@ -179,8 +176,7 @@ static void DecodeTRIS(Word Code)
 
 static void DecodeCALL_GOTO(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word AdrWord = EvalIntExpression(ArgStr[1], UInt16, &OK);
@@ -221,8 +217,7 @@ static void DecodeZERO(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
     Size = EvalIntExpression(ArgStr[1], Int16, &ValOK);

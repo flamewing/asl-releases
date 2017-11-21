@@ -80,6 +80,7 @@
 #include "motpseudo.h"
 #include "codevars.h"
 #include "intconsts.h"
+#include "errmsg.h"
 
 #include "codexa.h"
 
@@ -486,7 +487,7 @@ static void DecodeBIT(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else if (DecodeBitAddr(ArgStr[1], &BAdr))
   {
@@ -511,8 +512,7 @@ static void DecodeBIT(Word Index)
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     if (Hi(Code) != 0) BAsmCode[CodeLen++] = Hi(Code);
     BAsmCode[CodeLen++] = Lo(Code);
@@ -527,8 +527,7 @@ static void DecodeStack(Word Code)
   Word Mask;
   int i;
 
-  if (ArgCnt < 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, ArgCntMax))
   {
     HReg = 0xff; OK = True; Mask = 0;
     for (i = 1; i <= ArgCnt; i++)
@@ -605,8 +604,7 @@ static void DecodeALU(Word Index)
 {
   Byte HReg, HCnt, HVals[3], HMem;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModReg | MModMem);
     switch (AdrMode)
@@ -676,8 +674,7 @@ static void DecodeRegO(Word Index)
 {
   RegOrder *Op = RegOrders + Index;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModReg);
     switch (AdrMode)
@@ -698,7 +695,7 @@ static void DecodeShift(Word Index)
 {
   Byte HReg, HMem;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (OpSize > 2) WrError(1130);
   else
   {
@@ -747,8 +744,7 @@ static void DecodeRotate(Word Code)
 {
   Byte HReg, HMem;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModReg);
     switch (AdrMode)
@@ -778,7 +774,7 @@ static void DecodeRel(Word Index)
   Boolean OK;
   LongInt SaveLong, AdrLong;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -833,7 +829,7 @@ static void DecodeJBit(Word Index)
   Boolean OK;
   InvOrder *Op = JBitOrders + Index;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (*AttrPart != '\0') WrError(1100);
   else if (DecodeBitAddr(ArgStr[1], &BitAdr))
   {
@@ -899,7 +895,7 @@ static void DecodeMOV(Word Index)
   Byte HVals[3], HReg, HPart, HCnt;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!strcasecmp(ArgStr[1],"C"))
   {
     if (DecodeBitAddr(ArgStr[2], &AdrLong))
@@ -1047,7 +1043,7 @@ static void DecodeMOVC(Word Index)
   Byte HReg;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else
   {
     if ((*AttrPart == '\0') && (!strcasecmp(ArgStr[1], "A"))) OpSize = 0;
@@ -1102,7 +1098,7 @@ static void DecodeMOVX(Word Index)
   Byte HReg;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else
   {
     DecodeAdr(ArgStr[1], MModMem);
@@ -1147,8 +1143,7 @@ static void DecodeXCH(Word Index)
   Byte HReg, HPart, HVals[3];
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModMem);
     if (AdrMode == ModMem)
@@ -1219,8 +1214,7 @@ static void DecodeADDSMOVS(Word Index)
 {
   Byte HReg,HMem;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     HMem = OpSize; OpSize = -3;
     DecodeAdr(ArgStr[2], MModImm);
@@ -1253,8 +1247,7 @@ static void DecodeDIV(Word Index)
   Byte HReg;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModReg);
     if (AdrMode == ModReg)
@@ -1287,8 +1280,7 @@ static void DecodeDIVU(Word Index)
   int z;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModReg);
     if (AdrMode == ModReg)
@@ -1322,8 +1314,7 @@ static void DecodeMUL(Word Index)
   Byte HReg;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModReg);
     if (AdrMode == ModReg)
@@ -1356,8 +1347,7 @@ static void DecodeMULU(Word Index)
   Byte HReg;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModReg);
     if (AdrMode == ModReg)
@@ -1390,8 +1380,7 @@ static void DecodeLEA(Word Index)
   Byte HReg;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModReg);
     if (AdrMode == ModReg)
@@ -1423,7 +1412,7 @@ static void DecodeLEA(Word Index)
 
 static void DecodeANLORL(Word Index)
 {
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (*AttrPart) WrError(1100);
   else if (strcasecmp(ArgStr[1], "C")) WrError(1350);
   else
@@ -1450,7 +1439,7 @@ static void DecodeCLRSETB(Word Index)
 {
   LongInt AdrLong;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else if (DecodeBitAddr(ArgStr[1], &AdrLong))
   {
@@ -1465,7 +1454,7 @@ static void DecodeTRAP(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -1487,7 +1476,7 @@ static void DecodeCALL(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else if (*ArgStr[1] == '[')
   {
@@ -1531,7 +1520,7 @@ static void DecodeJMP(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else if (!strcasecmp(ArgStr[1], "[A+DPTR]"))
   {
@@ -1596,8 +1585,7 @@ static void DecodeCJNE(Word Index)
   Byte HReg;
   UNUSED(Index);
 
-  if (ArgCnt != 3) WrError(1110);
-  else
+  if (ChkArgCnt(3, 3))
   {
     FirstPassUnknown = False;
     AdrLong = SaveLong = EvalIntExpression(ArgStr[3], UInt24, &OK);
@@ -1698,8 +1686,7 @@ static void DecodeDJNZ(Word Index)
   Byte HReg;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     FirstPassUnknown = False;
     SaveLong = AdrLong = EvalIntExpression(ArgStr[2], UInt24, &OK);
@@ -1777,7 +1764,7 @@ static void DecodeFCALLJMP(Word Index)
   LongInt AdrLong;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {

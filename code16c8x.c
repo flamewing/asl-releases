@@ -63,6 +63,9 @@
 #include "codepseudo.h"
 #include "fourpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
+
+#include "code16c8x.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -92,8 +95,7 @@ static Word EvalFExpression(char *pAsc, Boolean *pOK)
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     WAsmCode[CodeLen++] = Code;
     if (Memo("OPTION"))
@@ -106,8 +108,7 @@ static void DecodeLit(Word Code)
   Word AdrWord;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     AdrWord = EvalIntExpression(ArgStr[1], Int8, &OK);
     if (OK)
@@ -123,8 +124,7 @@ static void DecodeAri(Word Code)
 
   Code &= 0x7fff;
 
-  if ((ArgCnt == 0) || (ArgCnt > 2)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 2))
   {
     AdrWord = EvalFExpression(ArgStr[1], &OK);
     if (OK)
@@ -160,8 +160,7 @@ static void DecodeBit(Word Code)
   Word AdrWord;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     AdrWord = EvalIntExpression(ArgStr[2], UInt3, &OK);
     if (OK)
@@ -181,8 +180,7 @@ static void DecodeF(Word Code)
   Word AdrWord;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     AdrWord = EvalFExpression(ArgStr[1], &OK);
     if (OK)
@@ -196,8 +194,7 @@ static void DecodeTRIS(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
     AdrWord=EvalIntExpression(ArgStr[1], UInt3, &OK);
@@ -217,8 +214,7 @@ static void DecodeJump(Word Index)
   Word AdrWord;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     AdrWord = EvalIntExpression(ArgStr[1], Int16, &OK);
     if (OK)
@@ -269,8 +265,7 @@ static void DecodeZERO(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
     Size = EvalIntExpression(ArgStr[1], Int16, &ValOK);
@@ -294,8 +289,7 @@ static void DecodeBANKSEL(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Adr = EvalIntExpression(ArgStr[1], UInt9, &ValOK);
     if (ValOK)

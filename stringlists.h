@@ -10,6 +10,8 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "datatypes.h"
+
 typedef struct sStringRec
 {
   struct sStringRec *Next;
@@ -42,6 +44,4 @@ extern StringList DuplicateStringList(StringList Src);
 extern Boolean StringListPresent(StringList List, char *Search);
 
 extern void DumpStringList(StringList List);
-
-extern void stringlists_init(void);
 #endif /* _STRINGLISTS_H */

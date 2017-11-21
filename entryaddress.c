@@ -45,9 +45,9 @@ void AddEntryAddress(LargeWord Address)
     pFirstEntryAddress = pNew;
 }
 
-LargeWord GetEntryAddress(void)
+LargeWord GetEntryAddress(Boolean UsePreferredAddress, LargeWord PreferredAddress)
 {
-  tEntryAddress *pOld;
+  tEntryAddress *pOld = NULL, *pPrev = NULL;
   LargeWord Result;
 
   if (!pFirstEntryAddress)
@@ -56,12 +56,40 @@ LargeWord GetEntryAddress(void)
     exit(255);
   }
 
-  pOld = pFirstEntryAddress;
-  pFirstEntryAddress = pOld->pNext;
+  if (UsePreferredAddress)
+  {
+    for (pPrev = NULL, pOld = pFirstEntryAddress; pOld; pPrev = pOld, pOld = pOld->pNext)
+      if (pOld->Address >= PreferredAddress)
+      {
+        if (pOld->Address > PreferredAddress)
+          pOld = NULL;
+        break;
+      }
+  }
+  if (!pOld)
+  {
+    pOld = pFirstEntryAddress;
+    pPrev = NULL;
+  }
+
+  if (pPrev)
+    pPrev->pNext = pOld->pNext;
+  else
+    pFirstEntryAddress = pOld->pNext;
 
   Result = pOld->Address;
   free(pOld);
   return Result;
+}
+
+void PrintEntryAddress(FILE *pFile)
+{
+  tEntryAddress *pRun;
+
+  fprintf(pFile, "(");
+  for (pRun = pFirstEntryAddress; pRun; pRun = pRun->pNext)
+    fprintf(pFile, " %llx", pRun->Address);
+  fprintf(pFile, ")\n");
 }
 
 void entryaddress_init()

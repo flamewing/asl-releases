@@ -65,7 +65,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition August 2017}
+{\large Edition November 2017}
 \end{raggedright}
 
 \clearpage
@@ -575,6 +575,7 @@ REG78310.INC      & register addresses \& vectors 78K3 \\
 REG78K0.INC       & register addresses 78K0 \\
 REG96.INC         & register addresses MCS-96 \\
 REGACE.INC        & register addresses ACE \\
+REGAVROLD.INC     & register and bit addresses AVR family (outdated)\\
 REGAVR.INC        & register and bit addresses AVR family \\
 REGCOP8.INC       & register addresses COP8 \\
 REGGP32.INC       & register addresses 68HC908GP32 \\
@@ -612,7 +613,9 @@ File              & Function \\
 \hline
 {\bf Directory INCLUDE} & \\
 \hline
-STDDEF62.INC      & register addresses and Makros ST6 \\
+AVR/\*.INC        & register and bit addresses AVR family \\
+                  & (do not include directly, use REGAVR.INC) \\
+STDDEF62.INC      & register addresses and macros ST6 \\
 STDDEF75.INC      & register addresses 75K0 \\
 STDDEF87.INC      & register and memory addresses TLCS-870 \\
 STDDEF90.INC      & register and memory addresses TLCS-90 \\
@@ -2617,8 +2620,10 @@ refer to this table.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-\subsection{ENUM}
+\subsection{ENUM, NEXTENUM, and ENUMCONF}
 \ttindex{ENUM}
+\ttindex{NEXTENUM}
+\ttindex{ENUMCONF}
 
 {\em valid for: all processors}
 
@@ -2632,23 +2637,46 @@ names of the symbols, like in the following example:
 This instruction will assign the values 0, 1, and 2 to the symbols
 \tty{SymA, SymB,} and \tty{SymC}.
 
-\tty{ENUM} instructions are always single-line instructions, i.e. the
-enumeration will again start at zero when a new \tty{ENUM} instruction is
-found.  Multi-line enumerations may however be achieved with a small trick
-that exploits the fact that the internal counter can be set to a new value
-with an explicit assignment, like in the following case:
+If you want to split an enumeration over more than one line, use
+\tty{NEXTENUM} instead of \tty{ENUM} for the second and all
+following lines.  The internal counter that assigns sequential
+values to alls symbols will then not be reset to zero, like in the
+following case:
 \begin{verbatim}
-        ENUM    January=1,February,March,April,May,June
+        ENUM     January=1,February,March,April,May,June
+        NEXTENUM July,August,September,October
+        NEXTENUM November,December
 \end{verbatim}
-The numeric values 1..6 are assigned to month names.  One can
-continue the enumeration in the following way:
-\begin{verbatim}
-        ENUM    July=June+1,August,September,October
-        ENUM    November=October+1,December
-\end{verbatim}
+This example also demonstrates that it is possible to assign
+explicit values to individual symbols.  The internal counter will
+be updated accordingly if this feature is used.
+
 A definition of a symbol with \tty{ENUM} is equal to a definition with
 \tty{EQU}, i.e. it is not possible to assign a new value to a symbol that
 already exists.
+
+The \tty{ENUMCONF} statement allows to influence the behaviour of
+\tty{ENUM}.  \tty{ENUMCONF} accepts one or two arguments.  The
+first argument is always the value the internal counter is
+incremented for every symbol in an enumeration.  For instance,
+the statement
+\begin{verbatim}
+      ENUMCONF 2
+\end{verbatim}
+has the effect that symbols get the values 0,2,4,6... instead of
+0,1,2,3...
+
+The second (optional) argument of \tty{ENUMCONF} rules which
+address space the defined symbols are assigned to.  By default,
+symbols defined by \tty{ENUM} are typeless.  For instance, the
+statement
+\begin{verbatim}
+      ENUMCONF 1,CODE
+\end{verbatim}
+defines that they should be assigned to the instruction address
+space.  The names of the address spaces are the same as for the
+\tty{SEGMENT} instruction (\ref{SEGMENT}), with the addition of
+\tty{NOTHING} to generate typeless symbols again.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3108,15 +3136,20 @@ These processors only differ in the size of their internal ROM which
 is defined in \tty{STDDEFXA.INC}.
 %%-----------
 \begin{quote}
-ac) AT90S1200 $\rightarrow$ AT90S2313 $\rightarrow$ AT90S4414 $\rightarrow$
-    AT90S8515 $\rightarrow$ ATMEGA8 $\rightarrow$ ATMEGA16
+ac) AT90S1200, AT90S2313, AT90S4414, AT90S4433, AT90S4434, AT90S8515,
+    AT90S8535, ATMEGA48, ATMEGA8, ATMEGA8515, ATMEGA8535, ATMEGA88,
+    ATMEGA16, ATMEGA161, ATMEGA162, ATMEGA163, ATMEGA164, ATMEGA165,
+    ATMEGA168, ATMEGA169, ATMEGA32, ATMEGA323, ATMEGA324, ATMEGA325,
+    ATMEGA3250, ATMEGA328, ATMEGA329, ATMEGA3290, ATMEGA406, ATMEGA64,
+    ATMEGA640, ATMEGA644, ATMEGA644RFR2, ATMEGA645, ATMEGA6450, ATMEGA649,
+    ATMEGA6490, ATMEGA103, ATMEGA128, ATMEGA1280, ATMEGA1281, ATMEGA1284,
+    ATMEGA1284RFR2, ATMEGA2560, ATMEGA2561
 \end{quote}
-The first member of the AVR series represents a minimum configuration
-without RAM memory and therefore lacks load/store instructions.  The
-next three processors only differ in their memory equipment and
-on-chip peripherals, what is differentiated in \tty{REGAVR.INC}.  The same
-is true for the MEGA AVRs, which also offer new machine instructions
-compared to their predecessors.
+The various AVR chip variants mainly differ in the amount of
+on-chip memory (flash, SRAM, EEPROM) an the set of built-in
+peripherals (GPIO, timers, UART, A/D converter...).  Compared to
+the AT90... predecessors, the ATmega chip also provide additional
+instructions.
 %%-----------
 \begin{quote}
 ad) AM29245 $\rightarrow$ AM29243 $\rightarrow$ AM29240 $\rightarrow$ AM29000
@@ -3752,6 +3785,7 @@ read from a symbol with same name.
 
 \subsection{SEGMENT}
 \ttindex{SEGMENT}
+\label{SEGMENT}
 
 {\em valid for: all processors}
 
@@ -10296,6 +10330,12 @@ described by:
                {The number of arguments issued for the instruction (processor or
                 pseudo) does not conform with the accepted number of
                 operands.}
+               {the expected number of arguments resp. operands}
+\errentry{1112}{failed splitting argument into parts}
+               {error}
+               {For some targets (e.g. DSP56000), the
+                comma-separated have to be split into individual
+                operands, which failed.}
                {none}
 \errentry{1115}{wrong number of operations}
                {error}
@@ -10524,12 +10564,35 @@ described by:
                {error}
                {Although the instruction is correct, it cannot be used with
                 the selected member of the CPU family.}
+               {The processor variants that would support this
+                instruction.}
+\errentry{1501}{FPU instructions are not enabled}
+               {error}
+               {FPU instruction set extensions must be enabled to
+                use this instruction.}
+               {none}
+\errentry{1502}{PMMU instructions are not enabled}
+               {error}
+               {PMMU instruction set extensions must be enabled
+                to use this instruction.}
+               {none}
+\errentry{1503}{full PMMU instruction set is not enabed}
+               {error}
+               {This instrction is only contained in the 68851's
+                instruction set, not in the reduced instruction
+                set of the integrated PMMU.}
+               {none}
+\errentry{1504}{Z80 syntax was not allowed}
+               {error}
+               {This instrction is only allowed if Z80 syntax
+                for 8080/8085 instructions has been enabled.}
                {none}
 \errentry{1505}{addressing mode not allowed on}
                {error}
                {Although the addressing mode used is correct, it cannot be
                 used with the selected member of the CPU family.}
-               {none}
+               {The processor variants that would support this
+                addressing mode.}
 \errentry{1510}{invalid bit position}
                {error}
                {Either the number of bits specified is not allowed, or
@@ -10625,7 +10688,27 @@ described by:
 \errentry{1800}{open macro definition}
                {error}
                {An incomplete macro definition was found. Probably an
-                \tty{ENDM} was forgotten.}
+                \tty{ENDM} statement is missing.}
+               {none}
+\errentry{1801}{IRP without ENDM}
+               {error}
+               {An incomplete IRP block was found. Probably an
+                \tty{ENDM} statement is missing.}
+               {none}
+\errentry{1802}{IRPC without ENDM}
+               {error}
+               {An incomplete IRPC block was found. Probably an
+                \tty{ENDM} statement is missing.}
+               {none}
+\errentry{1803}{REPT without ENDM}
+               {error}
+               {An incomplete REPT block was found. Probably an
+                \tty{ENDM} statement is missing.}
+               {none}
+\errentry{1804}{WHILE without ENDM}
+               {error}
+               {An incomplete WHILE block was found. Probably an
+                \tty{ENDM} statement is missing.}
                {none}
 \errentry{1805}{EXITM not called from within macro}
                {error}

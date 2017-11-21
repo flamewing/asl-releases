@@ -52,6 +52,9 @@
 #include "codepseudo.h"
 #include "intpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
+
+#include "codeace.h"
 
 enum
 {
@@ -108,10 +111,8 @@ static Boolean BigFlag, OpSize;
 
 static void ChkAdr(Word Mask)
 {
-  if ((AdrMode == ModXDisp) && (MomCPU < CPUACE1202))
-  {
-    AdrMode = ModNone; WrError(1505);
-  }
+  if ((AdrMode == ModXDisp) && !ChkMinCPUExt(CPUACE1202, ErrNum_AddrModeNotSupported))
+    AdrMode = ModNone;
   else if ((AdrMode != ModNone) && ((Mask & (1 << AdrMode)) == 0))
   {
     AdrMode = ModNone; WrError(1350);
@@ -209,8 +210,7 @@ static void DecodeAdr(char *Asc, Word Mask)
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     BAsmCode[0] = Code;
     CodeLen = 1;
@@ -221,8 +221,7 @@ static void DecodeAri(Word Index)
 {
   AriOrder *porder = AriOrders + Index;
 
-  if (ArgCnt != 2) WrError(1110);
-  else  
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc);
     if (AdrMode != ModNone)
@@ -258,8 +257,7 @@ static void DecodeSing(Word Index)
 {
   SingOrder *porder = SingOrders + Index;
 
-  if (ArgCnt != 1) WrError(1110);
-  else  
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModDir | MModX | MModAcc);
     switch (AdrMode)
@@ -287,8 +285,7 @@ static void DecodeBit(Word Index)
   BitOrder *porder = BitOrders + Index;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     Bit = EvalIntExpression(ArgStr[1], UInt8, &OK);
     if (OK)
@@ -333,8 +330,7 @@ static void DecodeIFEQ(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc | MModX | MModDir);
     switch (AdrMode)
@@ -397,8 +393,7 @@ static void DecodeIFGT(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc | MModX);
     switch (AdrMode)
@@ -449,8 +444,7 @@ static void DecodeIFLT(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModX);
     switch (AdrMode)
@@ -474,8 +468,7 @@ static void DecodeIFLT(Word Index)
 
 static void DecodeJMPJSR(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     OpSize = True;
     DecodeAdr(ArgStr[1], MModDir | MModXDisp);
@@ -502,8 +495,7 @@ static void DecodeJP(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Dist = EvalIntExpression(ArgStr[1], UInt12, &OK) - (EProgCounter() + 1);
     if (OK)
@@ -522,8 +514,7 @@ static void DecodeLD(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc | MModX | MModDir);
     switch (AdrMode)
@@ -590,8 +581,7 @@ static void DecodeLD(Word Index)
 
 static void DecodeRotate(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModAcc | MModDir);
     switch (AdrMode)
@@ -613,8 +603,7 @@ static void DecodeST(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc);
     switch (AdrMode)

@@ -39,6 +39,7 @@
 #include "intpseudo.h"
 #include "codevars.h"
 #include "headids.h"
+#include "errmsg.h"
 
 #include "code78k3.h"
 
@@ -672,8 +673,7 @@ static Boolean DecodeBitAdr(char *pAsc, LongWord *pResult)
 
 static void DecodeFixed(Word Index)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
     BAsmCode[CodeLen++] = Lo(Index);
 }
 
@@ -684,8 +684,7 @@ static void DecodeMOV(Word Is16)
   if (Is16)
     SetOpSize(1);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModReg16 | MModSP | MModShort | MModSFR
             | (Is16 ? 0 : (MModReg8 | MModSTBC | MModWDM | MModAbs | MModShortIndir | MModMem)));
@@ -947,8 +946,7 @@ static void DecodeXCH(Word Is16)
   if (Is16)
     SetOpSize(1);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModReg16 | MModShort | MModSFR
             | (Is16 ? 0 : (MModReg8 | MModShortIndir | MModMem)));
@@ -1120,7 +1118,7 @@ static void DecodeALU(Word Props)
   if (Is16)
     SetOpSize(1);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1],
               MModShort | MModSFR
@@ -1246,8 +1244,7 @@ static void DecodeALU(Word Props)
 
 static void DecodeMULDIV(Word Props)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     if (Props & 0x8000)
       SetOpSize(1);
@@ -1274,8 +1271,7 @@ static void DecodeINCDEC(Word Props)
 {
   const Byte Code = Props & 1;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     if (Props & 2)
       SetOpSize(1);
@@ -1315,11 +1311,8 @@ static void DecodeShift(Word Props)
   Boolean OK;
   Byte Shift;
 
-  if (ArgCnt != 2)
-  {
-    WrError(1110);
+  if (!ChkArgCnt(2, 2))
     return;
-  }
 
   Shift = EvalIntExpression(ArgStr[2], UInt3, &OK);
   if (!OK)
@@ -1349,7 +1342,7 @@ static void DecodeROLROR4(Word Code)
 {
   ShortInt Reg;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if ((Reg = DecodeIndReg16(ArgStr[1])) < 0) WrError(1350);
   else
   {
@@ -1364,8 +1357,8 @@ static void DecodeBIT(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (DecodeBitAdr(ArgStr[1], &Result))
+  if (ChkArgCnt(1, 1)
+   && DecodeBitAdr(ArgStr[1], &Result))
     EnterIntSymbol(LabPart, Result, SegNone, False);
 }
 
@@ -1376,8 +1369,7 @@ static void DecodeMOV1(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     if (!strcasecmp(ArgStr[1], "CY"))
       ArgPos = 2;
@@ -1403,7 +1395,7 @@ static void DecodeANDOR1(Word Index)
   LongWord Bit;
   char *pArg;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (strcasecmp(ArgStr[1], "CY")) WrError(1350);
   else
   {
@@ -1429,7 +1421,7 @@ static void DecodeXOR1(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (strcasecmp(ArgStr[1], "CY")) WrError(1350);
   else
   {
@@ -1449,7 +1441,7 @@ static void DecodeBit1(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!strcasecmp(ArgStr[1], "CY"))
   {
     BAsmCode[CodeLen++] = 0x40 | (9 - (Index >> 4));
@@ -1477,7 +1469,7 @@ static void DecodeCALL(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if ((Reg = DecodeIndReg16(ArgStr[1])) >= 0)
   {
     BAsmCode[CodeLen++] = 0x05;
@@ -1509,8 +1501,7 @@ static void DecodeCALLF(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     pAsc = (*ArgStr[1] == '!') ? ArgStr[1] + 1 : ArgStr[1];
     FirstPassUnknown = FALSE;
@@ -1538,8 +1529,7 @@ static void DecodeCALLT(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else 
+  if (ChkArgCnt(1, 1))
   {
     pAsc = ArgStr[1]; l = strlen(pAsc);
     if ((*pAsc != '[') || (pAsc[l - 1] != ']')) WrError(1350);
@@ -1570,8 +1560,7 @@ static void DecodePUSHPOP(Word Code)
   Boolean IsU = (Code & 2) || False;
   ShortInt Reg;
 
-  if (ArgCnt < 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, ArgCntMax))
   {
     Word Mask = 0, ThisMask;
     int z;
@@ -1624,7 +1613,7 @@ static void DecodeBR(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if ((Reg = DecodeIndReg16(ArgStr[1])) >= 0)
   {
     BAsmCode[CodeLen++] = 0x05;
@@ -1665,8 +1654,7 @@ static void DecodeBR(Word Code)
 
 static void DecodeBranch(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     if (Hi(Code))
       BAsmCode[CodeLen++] = Hi(Code);
@@ -1682,7 +1670,7 @@ static void DecodeBrBit(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (DecodeBitAdr(ArgStr[1], &Bit))
   {
     if ((Bit & 0xfffff800) == 0x01080000)
@@ -1717,8 +1705,7 @@ static void DecodeDBNZ(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModReg8 | MModShort);
     switch (AdrMode)
@@ -1746,7 +1733,7 @@ static void DecodeBRKCS(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if ((Bank = DecodeRegBank(ArgStr[1])) < 0) WrXError(1445, ArgStr[1]);
   else
   {
@@ -1759,8 +1746,7 @@ static void DecodeRETCS(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModAbs);
     switch (AdrMode)
@@ -1779,7 +1765,7 @@ static void DecodeString1(Word Code)
   UNUSED(Code);
 
   SetOpSize(0);
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (ChkAcc(ArgStr[2]))
   {
     DecodeAdr(ArgStr[1], MModMem);
@@ -1803,11 +1789,8 @@ static void DecodeString2(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2)
-  {
-    WrError(1110);
+  if (!ChkArgCnt(2, 2))
     return;
-  }
 
   DecodeAdr(ArgStr[1], MModMem);
   if (AdrMode != ModMem)
@@ -1840,7 +1823,7 @@ static void DecodeSEL(Word Code)
 
   UNUSED(Code);
 
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
+  if (!ChkArgCnt(1, 2));
   else if ((Bank = DecodeRegBank(ArgStr[1])) < 0) WrXError(1445, ArgStr[1]);
   else if ((ArgCnt == 2) && (strcasecmp(ArgStr[2], "ALT"))) WrXError(1445, ArgStr[2]);
   {

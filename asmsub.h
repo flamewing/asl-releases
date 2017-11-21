@@ -20,7 +20,6 @@ void
 #endif
 );
 
-
 extern Word ErrorCount,WarnCount;
 
 
@@ -28,15 +27,6 @@ extern void AsmSubInit(void);
 
 
 extern long GTime(void);
-
-
-extern CPUVar AddCPU(char *NewName, TSwitchProc Switcher);
-
-extern Boolean AddCPUAlias(char *OrigName, char *AliasName);
-
-extern void PrintCPUList(TSwitchProc NxtProc);
-
-extern void ClearCPUList(void);
 
 
 extern void UpString(char *s);
@@ -50,8 +40,6 @@ extern char *FirstBlank(char *s);
 extern void SplitString(char *Source, char *Left, char *Right, char *Trenner);
 
 extern void TranslateString(char *s, int Length);
-
-extern ShortInt StrCmp(const char *s1, const char *s2, LongInt Hand1, LongInt Hand2);
 
 extern ShortInt StrCaseCmp(const char *s1, const char *s2, LongInt Hand1, LongInt Hand2);
 
@@ -134,9 +122,6 @@ extern void WriteCopyrights(TSwitchProc NxtProc);
 extern Boolean ChkSymbName(char *sym);
 
 extern Boolean ChkMacSymbName(char *sym);
-
-
-extern Boolean ChkRange(LargeInt Value, LargeInt Min, LargeInt Max);
 
 
 extern void ChkIO(Word ErrNo);

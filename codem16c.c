@@ -76,6 +76,9 @@
 #include "asmitree.h"
 #include "intpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
+
+#include "codem16c.h"
 
 #define ModNone (-1)
 #define ModGen 0
@@ -427,11 +430,8 @@ static Boolean DecodeBitAdr(Boolean MayShort)
 
   /* Nur 1 oder 2 Argumente zugelassen */
 
-  if ((ArgCnt < 1) || (ArgCnt>2))
-  {
-    WrError(1110);
+  if (!ChkArgCnt(1, 2))
     return False;
-  }
 
   /* Ist Teil 1 ein Register ? */
 
@@ -439,8 +439,7 @@ static Boolean DecodeBitAdr(Boolean MayShort)
   {
     if (AdrMode < 6)
     {
-      if (ArgCnt != 2) WrError(1110);
-      else
+      if (ChkArgCnt(2, 2))
       {
         AdrVals[0] = EvalIntExpression(ArgStr[1], UInt4, &OK);
         if (OK)
@@ -643,7 +642,7 @@ static void CodeGen(Byte GenCode,Byte Imm1Code,Byte Imm2Code)
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
+  if (!ChkArgCnt(0, 0));
   else if (*AttrPart != '\0') WrError(1100);
   else if (strcmp(Format, " ")) WrError(1090);
   else if (!Hi(Code))
@@ -662,7 +661,7 @@ static void DecodeFixed(Word Code)
 static void DecodeString(Word Code)
 {
   if (OpSize == -1) OpSize = 1;
-  if (ArgCnt != 0) WrError(1110);
+  if (!ChkArgCnt(0, 0));
   else if ((OpSize != 0) && (OpSize != 1)) WrError(1130);
   else if (strcmp(Format," ")) WrError(1090);
   else if (!Hi(Code))
@@ -685,8 +684,8 @@ static void DecodeMOV(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (CheckFormat("GSQZ"))
+  if (ChkArgCnt(2, 2)
+   && CheckFormat("GSQZ"))
   {
     DecodeAdr(ArgStr[2], MModGen | MModSPRel);
     if (AdrType != ModNone)
@@ -845,8 +844,8 @@ static void DecodeLDC_STC(Word IsSTC)
 {
   Byte CReg;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (CheckFormat("G"))
+  if (ChkArgCnt(2, 2)
+   && CheckFormat("G"))
   {
     char *pRegArg = IsSTC ? ArgStr[1] : ArgStr[2],
          *pMemArg = IsSTC ? ArgStr[2] : ArgStr[1];
@@ -893,7 +892,7 @@ static void DecodeLDC_STC(Word IsSTC)
 
 static void DecodeLDCTX_STCTX(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -919,8 +918,8 @@ static void DecodeLDCTX_STCTX(Word Code)
 
 static void DecodeLDE_STE(Word IsLDE)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else if (CheckFormat("G"))
+  if (ChkArgCnt(2, 2)
+   && CheckFormat("G"))
   {
     char *pArg1 = IsLDE ? ArgStr[2] : ArgStr[1],
          *pArg2 = IsLDE ? ArgStr[1] : ArgStr[2];
@@ -956,8 +955,8 @@ static void DecodeMOVA(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (CheckFormat("G"))
+  if (ChkArgCnt(2, 2)
+   && CheckFormat("G"))
   {
     DecodeAdr(ArgStr[1], MModGen);
     if (AdrType != ModNone)
@@ -987,9 +986,9 @@ static void DecodeDir(Word Code)
   Boolean OK;
   Integer Num1;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (OpSize > 0) WrError(1130);
-  else if (CheckFormat("G"))
+  if (OpSize > 0) WrError(1130);
+  else if (ChkArgCnt(2, 2)
+        && CheckFormat("G"))
   {
     OK = True; Num1 = 0;
     if (!strcasecmp(ArgStr[2], "R0L"));
@@ -1016,8 +1015,8 @@ static void DecodeDir(Word Code)
 
 static void DecodePUSH_POP(Word IsPOP)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (CheckFormat("GS"))
+  if (ChkArgCnt(1, 1)
+   && CheckFormat("GS"))
   {
     DecodeAdr(ArgStr[1], MModGen | (IsPOP ? 0 : MModImm));
     if (AdrType != ModNone)
@@ -1078,8 +1077,8 @@ static void DecodePUSHC_POPC(Word Code)
 {
   Byte CReg;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (CheckFormat("G"))
+  if (ChkArgCnt(1, 1)
+   && CheckFormat("G"))
    if (DecodeCReg(ArgStr[1], &CReg))
    {
      BAsmCode[0] = 0xeb;
@@ -1094,8 +1093,7 @@ static void DecodePUSHM_POPM(Word IsPOPM)
   Boolean OK;
   Byte Reg;
 
-  if (ArgCnt < 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, ArgCntMax))
   {
     BAsmCode[1] = 0; OK = True; z = 1;
     while ((OK) && (z <= ArgCnt))
@@ -1121,8 +1119,8 @@ static void DecodePUSHA(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (CheckFormat("G"))
+  if (ChkArgCnt(1, 1)
+   && CheckFormat("G"))
   {
     DecodeAdr(ArgStr[1], MModGen);
     if (AdrType != ModNone)
@@ -1143,8 +1141,8 @@ static void DecodeXCHG(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (CheckFormat("G"))
+  if (ChkArgCnt(2, 2)
+   && CheckFormat("G"))
   {
     DecodeAdr(ArgStr[1], MModGen);
     if (AdrType != ModNone)
@@ -1180,8 +1178,8 @@ static void DecodeSTZ_STNZ(Word Code)
 {
   Byte SMode;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (CheckFormat("G"))
+  if (ChkArgCnt(2, 2)
+   && CheckFormat("G"))
   {
     if (OpSize == -1) OpSize++;
     DecodeAdr(ArgStr[2], MModGen);
@@ -1211,8 +1209,8 @@ static void DecodeSTZX(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 3) WrError(1110);
-  else if (CheckFormat("G"))
+  if (ChkArgCnt(3, 3)
+   && CheckFormat("G"))
   {
     if (OpSize == -1) OpSize++;
     DecodeAdr(ArgStr[3], MModGen);
@@ -1249,7 +1247,7 @@ static void DecodeADD(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!strcasecmp(ArgStr[2], "SP"))
   {
     if (OpSize == -1) OpSize = 1;
@@ -1375,8 +1373,8 @@ static void DecodeCMP(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (CheckFormat("GQS"))
+  if (ChkArgCnt(2, 2)
+   && CheckFormat("GQS"))
   {
     DecodeAdr(ArgStr[2], MModGen);
     if (AdrType != ModNone)
@@ -1463,8 +1461,8 @@ static void DecodeSUB(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (CheckFormat("GQS"))
+  if (ChkArgCnt(2, 2)
+   && CheckFormat("GQS"))
   {
     DecodeAdr(ArgStr[2], MModGen);
     if (AdrType != ModNone)
@@ -1545,8 +1543,8 @@ static void DecodeSUB(Word Code)
 
 static void DecodeGen1(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (CheckFormat("G"))
+  if (ChkArgCnt(1, 1)
+   && CheckFormat("G"))
   {
     DecodeAdr(ArgStr[1], MModGen);
     if (AdrType != ModNone)
@@ -1568,8 +1566,8 @@ static void DecodeGen2(Word Index)
 {
   Gen2Order *pOrder = Gen2Orders + Index;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (CheckFormat("G"))
+  if (ChkArgCnt(2, 2)
+   && CheckFormat("G"))
   {
     DecodeAdr(ArgStr[2], MModGen);
     if (AdrType != ModNone)
@@ -1592,8 +1590,8 @@ static void DecodeINC_DEC(Word IsDEC)
 {
   Byte SMode;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (CheckFormat("G"))
+  if (ChkArgCnt(1, 1)
+   && CheckFormat("G"))
   {
     DecodeAdr(ArgStr[1], MModGen);
     if (AdrType != ModNone)
@@ -1620,8 +1618,8 @@ static void DecodeDiv(Word Index)
 {
   Gen2Order *pOrder = DivOrders + Index;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (CheckFormat("G"))
+  if (ChkArgCnt(1, 1)
+   && CheckFormat("G"))
   {
     DecodeAdr(ArgStr[1], MModImm | MModGen);
     if (AdrType != ModNone)
@@ -1648,8 +1646,7 @@ static void DecodeDiv(Word Index)
 
 static void DecodeBCD(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2], MModGen);
     if (AdrType != ModNone)
@@ -1684,8 +1681,8 @@ static void DecodeEXTS(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (CheckFormat("G"))
+  if (ChkArgCnt(1, 1)
+   && CheckFormat("G"))
   {
     DecodeAdr(ArgStr[1], MModGen);
     if (OpSize == -1) OpSize = 0;
@@ -1723,8 +1720,8 @@ static void DecodeNOT(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (CheckFormat("GS"))
+  if (ChkArgCnt(1, 1)
+   && CheckFormat("GS"))
   {
     DecodeAdr(ArgStr[1], MModGen);
     if (AdrType != ModNone)
@@ -1768,8 +1765,8 @@ static void DecodeAND_OR(Word IsOR)
 {
   Byte SMode;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (CheckFormat("GS"))        /* RMS 01: The format codes are G and S, not G and Q */
+  if (ChkArgCnt(2, 2)
+   && CheckFormat("GS"))        /* RMS 01: The format codes are G and S, not G and Q */
   {
     DecodeAdr(ArgStr[2], MModGen);
     if (AdrType != ModNone)
@@ -1838,8 +1835,8 @@ static void DecodeROT(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (CheckFormat("G"))
+  if (ChkArgCnt(2, 2)
+   && CheckFormat("G"))
   {
     DecodeAdr(ArgStr[2], MModGen);
     if (AdrType != ModNone)
@@ -1886,8 +1883,8 @@ static void DecodeSHA_SHL(Word IsSHA)
 {
   ShortInt OpSize2;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (CheckFormat("G"))
+  if (ChkArgCnt(2, 2)
+   && CheckFormat("G"))
   {
     DecodeAdr(ArgStr[2], MModGen | MModReg32);
     if (AdrType != ModNone)
@@ -1971,7 +1968,7 @@ static void DecodeBit(Word Code)
 
 static void DecodeFCLR_FSET(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (strlen(ArgStr[1]) != 1) WrError(1350);
   else
   {
@@ -1993,8 +1990,7 @@ static void DecodeJMP(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;     /* RMS 12: Mod to allow JMP.S to work */           
     AdrLong = EvalIntExpression(ArgStr[1],UInt20,&OK);
@@ -2111,8 +2107,7 @@ static void DecodeJSR(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     AdrLong = EvalIntExpression(ArgStr[1], UInt20, &OK);
     Diff = AdrLong-EProgCounter();
@@ -2146,8 +2141,8 @@ static void DecodeJSR(Word Code)
 
 static void DecodeJMPI_JSRI(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (CheckFormat("G"))
+  if (ChkArgCnt(1, 1)
+   && CheckFormat("G"))
   {
     if (OpSize == 7)
       OpSize = 2;
@@ -2180,8 +2175,7 @@ static void DecodeJMPI_JSRI(Word Code)
 
 static void DecodeJMPS_JSRS(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     OpSize = 0;
     FirstPassUnknown = False;
@@ -2203,8 +2197,8 @@ static void DecodeJMPS_JSRS(Word Code)
 
 static void DecodeADJNZ_SBJNZ(Word IsSBJNZ)
 {
-  if (ArgCnt != 3) WrError(1110);
-  else if (CheckFormat("G"))
+  if (ChkArgCnt(3, 3)
+   && CheckFormat("G"))
   {
     DecodeAdr(ArgStr[2], MModGen);
     if (AdrType != ModNone)
@@ -2255,7 +2249,7 @@ static void DecodeINT(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else if (*ArgStr[1] != '#') WrError(1350);
   else
@@ -2296,7 +2290,7 @@ static void DecodeBM(Word Code)
 static void DecodeJ(Word Code)
 {
   Integer Num1 = 1 + Ord(Code >= 8);
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else if (strcmp(Format, " ")) WrError(1090);
   else
@@ -2327,7 +2321,7 @@ static void DecodeENTER(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else if (*ArgStr[1] != '#') WrError(1350);
   else
@@ -2348,7 +2342,7 @@ static void DecodeLDINTB(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else if (*ArgStr[1] != '#') WrError(1350);
   else
@@ -2374,7 +2368,7 @@ static void DecodeLDIPL(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else if (*ArgStr[1] != '#') WrError(1350);
   else

@@ -45,7 +45,9 @@
 #include "codepseudo.h"
 #include "intpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
 
+#include "code47c00.h"
 
 #define BitOrderCnt 4
 
@@ -176,16 +178,8 @@ chk:
 
 static void ChkCPU(Byte Mask)
 {
-  Byte NMask = (1 << (MomCPU - CPU47C00));
-
-  /* Don't ask me why, but NetBSD/Sun3 doesn't like writing 
-     everything in one formula when using -O3 :-( */
-
-  if (!(Mask & NMask))
-  {
-    WrError(1500);
+  if (ChkExactCPUMask(Mask, CPU47C00) < 0)
     CodeLen = 0;
-  }
 }
 
 static Boolean DualOp(char *s1, char *s2)
@@ -200,8 +194,7 @@ static Boolean DualOp(char *s1, char *s2)
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     CodeLen = 1;
     BAsmCode[0] = Code;
@@ -214,7 +207,7 @@ static void DecodeLD(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!strcasecmp(ArgStr[1], "DMB"))
   {
     SetOpSize(2);
@@ -299,7 +292,7 @@ static void DecodeLDL(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if ((strcasecmp(ArgStr[1], "A")) || (strcasecmp(ArgStr[2], "@DC"))) WrError(1350);
   else
   {
@@ -312,7 +305,7 @@ static void DecodeLDH(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if ((strcasecmp(ArgStr[1], "A")) || (strcasecmp(ArgStr[2], "@DC+"))) WrError(1350);
   else
   {
@@ -327,7 +320,7 @@ static void DecodeST(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!strcasecmp(ArgStr[1], "DMB"))
   {
     DecodeAdr(ArgStr[2], MModIHL);
@@ -404,7 +397,7 @@ static void DecodeMOV(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if ((!strcasecmp(ArgStr[1], "A")) && (!strcasecmp(ArgStr[2], "DMB")))
   {
     CodeLen = 3;
@@ -451,7 +444,7 @@ static void DecodeXCH(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (DualOp("A", "EIR"))
   {
     CodeLen = 1;
@@ -503,8 +496,7 @@ static void DecodeIN(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModPort);
     if (AdrType != ModNone)
@@ -532,8 +524,7 @@ static void DecodeOUT(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2], MModPort);
     if (AdrType != ModNone)
@@ -554,7 +545,7 @@ static void DecodeOUT(Word Code)
           BAsmCode[1] = 0xc0 + ((HReg & 0x10) << 1) + ((HReg & 0x0f) ^ 4);
           break;
         case ModImm:
-          if (HReg > 0x0f) WrError(1110);
+          if (HReg > 0x0f) WrError(1350);
           else
           {
             CodeLen = 2;
@@ -571,7 +562,7 @@ static void DecodeOUTB(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (strcasecmp(ArgStr[1], "@HL")) WrError(1350);
   else
   {
@@ -588,8 +579,7 @@ static void DecodeCMPR(Word Code)
 
   UNUSED(Code); 
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc | MModSAbs | MModH | MModL);
     switch (AdrType)
@@ -645,8 +635,7 @@ static void DecodeADD(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc | MModIHL | MModSAbs | MModL | MModH);
     switch (AdrType)
@@ -706,7 +695,7 @@ static void DecodeADDC(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if ((strcasecmp(ArgStr[1], "A")) || (strcasecmp(ArgStr[2], "@HL"))) WrError(1350);
   else
   {
@@ -719,7 +708,7 @@ static void DecodeSUBRC(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if ((strcasecmp(ArgStr[1], "A")) || (strcasecmp(ArgStr[2], "@HL"))) WrError(1350);
   else
   {
@@ -734,8 +723,7 @@ static void DecodeSUBR(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     OpSize = 0;
     DecodeAdr(ArgStr[2], MModImm);
@@ -762,8 +750,7 @@ static void DecodeSUBR(Word Code)
 
 static void DecodeINC_DEC(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModAcc | MModIHL | MModL);
     switch (AdrType)
@@ -788,8 +775,7 @@ static void DecodeINC_DEC(Word Code)
 
 static void DecodeAND_OR(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc | MModIHL);
     switch (AdrType)
@@ -827,7 +813,7 @@ static void DecodeXOR(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if ((strcasecmp(ArgStr[1], "A")) || (strcasecmp(ArgStr[2], "@HL"))) WrError(1350);
   else
   {
@@ -838,7 +824,7 @@ static void DecodeXOR(Word Code)
 
 static void DecodeROLC_RORC(Word Code)
 {
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
+  if (!ChkArgCnt(1, 2));
   else if (strcasecmp(ArgStr[1], "A")) WrError(1350);
   else
   {
@@ -1001,12 +987,12 @@ static void DecodeBit(Word Code)
     }
   }
   else
-    WrError(1110);
+    (void)ChkArgCnt(1, 2);
 }
 
 static void DecodeEICLR_DICLR(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (strcasecmp(ArgStr[1], "IL")) WrError(1350);
   else
   {
@@ -1028,8 +1014,7 @@ static void DecodeBSS(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word AdrWord = EvalIntExpression(ArgStr[1], Int16, &OK);
@@ -1051,8 +1036,7 @@ static void DecodeBS(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word AdrWord = EvalIntExpression(ArgStr[1], Int16, &OK);
@@ -1075,8 +1059,7 @@ static void DecodeBSL(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word AdrWord = EvalIntExpression(ArgStr[1], Int16, &OK);
@@ -1106,8 +1089,7 @@ static void DecodeB(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word AdrWord = EvalIntExpression(ArgStr[1], Int16, &OK);
@@ -1151,8 +1133,7 @@ static void DecodeCALLS(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word AdrWord = EvalIntExpression(ArgStr[1], Int16, &OK);
@@ -1175,8 +1156,7 @@ static void DecodeCALL(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word AdrWord = EvalIntExpression(ArgStr[1], Int16, &OK);

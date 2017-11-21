@@ -61,6 +61,7 @@
 #include "asmitree.h"
 #include "motpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
 
 #include "code6805.h"
 
@@ -302,12 +303,16 @@ static void DecodeAdr(Byte Start, Byte Stop, Word Mask)
     }
   }
 
-  else WrError(1110);
+  else
+    (void)ChkArgCnt(Start, Start + 1);
 
 chk:
   if ((AdrMode != ModNone) && (!(Mask & (1 << AdrMode))))
   {
-    WrError(((1 << AdrMode) & Mask08) ? 1505 : 1350);
+    if ((1 << AdrMode) & Mask08)
+      (void)ChkMinCPUExt(CPU68HC08, ErrNum_AddrModeNotSupported);
+    else
+      WrError(1350);
     AdrMode = ModNone;
     AdrCnt = 0;
   }
@@ -320,9 +325,8 @@ static void DecodeFixed(Word Index)
 {
   const BaseOrder *pOrder = FixedOrders + Index;
 
-  if (ArgCnt != 0) WrError(1110);
-  else if (MomCPU < pOrder->MinCPU) WrXError(1500, OpPart);
-  else
+  if (ChkArgCnt(0, 0)
+   && ChkMinCPU(pOrder->MinCPU))
   {
     CodeLen = 1;
     BAsmCode[0] = pOrder->Code;
@@ -333,9 +337,8 @@ static void DecodeMOV(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPU68HC08) WrXError(1500, OpPart);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkMinCPU(CPU68HC08))
   {
     OpSize = 0;
     DecodeAdr(1, 1, MModImm | MModDir | MModIxP);
@@ -386,9 +389,8 @@ static void DecodeRel(Word Index)
   Boolean OK;
   LongInt AdrInt;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < pOrder->MinCPU) WrXError(1500,OpPart);
-  else
+  if (ChkArgCnt(1, 1)
+   && ChkMinCPU(pOrder->MinCPU))
   {
     AdrInt = EvalIntExpression(ArgStr[1], AdrIntType, &OK) - (EProgCounter() + 2);
     if (OK)
@@ -409,9 +411,8 @@ static void DecodeCBEQx(Word Index)
   Boolean OK;
   LongInt AdrInt;
 
-  if (ArgCnt!=2) WrError(1110);
-  else if (MomCPU < CPU68HC08) WrXError(1500, OpPart);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkMinCPU(CPU68HC08))
   {
     OpSize = 0; DecodeAdr(1, 1, MModImm);
     if (AdrMode == ModImm)
@@ -440,7 +441,7 @@ static void DecodeCBEQ(Word Index)
 
   UNUSED(Index);
 
-  if (MomCPU < CPU68HC08) WrXError(1500, OpPart);
+  if (!ChkMinCPU(CPU68HC08));
   else if (ArgCnt == 2)
   {
     DecodeAdr(1, 1, MModDir | MModIxP);
@@ -504,7 +505,7 @@ static void DecodeCBEQ(Word Index)
     }
   }
   else
-    WrError(1110);
+    (void)ChkArgCnt(2, 3);
 }
 
 static void DecodeDBNZx(Word Index)
@@ -512,9 +513,8 @@ static void DecodeDBNZx(Word Index)
   Boolean OK;
   LongInt AdrInt;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < CPU68HC08) WrXError(1500, OpPart);
-  else
+  if (ChkArgCnt(1, 1)
+   && ChkMinCPU(CPU68HC08))
   {
     AdrInt = EvalIntExpression(ArgStr[1], AdrIntType, &OK) - (EProgCounter() + 2);
     if (OK)
@@ -538,9 +538,8 @@ static void DecodeDBNZ(Word Index)
 
   UNUSED(Index);
 
-  if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
-  else if (MomCPU < CPU68HC08) WrXError(1500, OpPart);
-  else
+  if (ChkArgCnt(2, 3)
+   && ChkMinCPU(CPU68HC08))
   {
     DecodeAdr(1, ArgCnt - 1, MModDir | MModIx | MModIx1 | MModSP1);
     switch (AdrMode)
@@ -586,8 +585,7 @@ static void DecodeALU(Word Index)
 {
   const ALUOrder *pOrder = ALUOrders + Index;
 
-  if (MomCPU < pOrder->MinCPU) WrXError(1500, OpPart);
-  else
+  if (ChkMinCPU(pOrder->MinCPU))
   {
     OpSize = pOrder->Size;
     DecodeAdr(1, ArgCnt, pOrder->Mask);
@@ -640,8 +638,7 @@ static void DecodeCPHX(Word Index)
 {
   UNUSED(Index);
 
-  if (MomCPU < CPU68HC08) WrXError(1500, OpPart);
-  else
+  if (ChkMinCPU(CPU68HC08))
   {
     Word Mask = MModImm | MModDir;
 
@@ -681,8 +678,7 @@ static void DecodeSTHX(Word Index)
 {
   UNUSED(Index);
 
-  if (MomCPU < CPU68HC08) WrXError(1500, OpPart);
-  else
+  if (ChkMinCPU(CPU68HC08))
   {
     Word Mask = MModDir;
 
@@ -717,8 +713,7 @@ static void DecodeLDHX(Word Index)
 {
   UNUSED(Index);
 
-  if (MomCPU < CPU68HC08) WrXError(1500, OpPart);
-  else
+  if (ChkMinCPU(CPU68HC08))
   {
     Word Mask = MModImm | MModDir;
 
@@ -773,8 +768,8 @@ static void DecodeAIx(Word Index)
 {
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < CPU68HC08) WrXError(1500, OpPart);
+  if (!ChkArgCnt(1, 1));
+  else if (!ChkMinCPU(CPU68HC08));
   else if (*ArgStr[1] != '#') WrError(1350);
   else
   {
@@ -791,8 +786,7 @@ static void DecodeRMW(Word Index)
 {
   const RMWOrder *pOrder = RMWOrders + Index;
 
-  if (MomCPU < pOrder->MinCPU) WrXError(1500, OpPart);
-  else
+  if (ChkMinCPU(pOrder->MinCPU))
   {
     DecodeAdr(1, ArgCnt, pOrder->Mask);
     if (AdrMode != ModNone)
@@ -826,8 +820,7 @@ static void DecodeBx(Word Index)
 {
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     BAsmCode[1] = EvalIntExpression(ArgStr[2], Int8, &OK);
     if (OK)
@@ -847,8 +840,7 @@ static void DecodeBRx(Word Index)
   Boolean OK;
   LongInt AdrInt;
 
-  if (ArgCnt!=3) WrError(1110);
-  else
+  if (ChkArgCnt(3, 3))
   {
     BAsmCode[1] = EvalIntExpression(ArgStr[2], Int8, &OK);
     if (OK)

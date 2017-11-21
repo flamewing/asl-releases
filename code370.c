@@ -51,7 +51,9 @@
 #include "asmitree.h"  
 #include "intpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
 
+#include "code370.h"
 
 typedef struct
 { 
@@ -361,8 +363,7 @@ static void PutCode(Word Code)
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
     PutCode(Code);
 }
 
@@ -374,8 +375,7 @@ static void DecodeDBIT(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     FirstPassUnknown = False;
     Bit = EvalIntExpression(ArgStr[1], UInt3, &OK);
@@ -406,8 +406,7 @@ static void DecodeMOV(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2], MModAccB + MModReg + MModPort + MModAbs + MModIReg + MModBRel
                        + MModSPRel + MModRegRel + MModAccA);
@@ -600,8 +599,7 @@ static void DecodeMOVW(Word Code)
   UNUSED(Code);
 
   OpSize = 1;
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2], MModReg);
     if (AdrType != ModNone)
@@ -643,8 +641,7 @@ static void DecodeMOVW(Word Code)
 
 static void DecodeRel8(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Integer AdrInt = EvalIntExpression(ArgStr[1], Int16, &OK) - (EProgCounter() + 2);
@@ -666,8 +663,7 @@ static void DecodeCMP(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2], MModAccA + MModAccB + MModReg);
     switch (AdrType)
@@ -757,8 +753,7 @@ static void DecodeCMP(Word Code)
 
 static void DecodeALU1(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2], MModAccA + MModAccB + MModReg);
     switch (AdrType)
@@ -825,9 +820,7 @@ static void DecodeALU2(Word Code)
   Boolean Rela = Hi(Code) != 0;
   Code &= 0xff;
 
-  if (((Rela) && (ArgCnt != 3))
-   || ((!Rela) && (ArgCnt != 2))) WrError(1110);
-  else
+  if (ChkArgCnt(Rela ? 3 : 2, Rela ? 3 : 2))
   {
     DecodeAdr(ArgStr[2], MModAccA + MModAccB + MModReg + MModPort);
     switch (AdrType)
@@ -930,8 +923,7 @@ static void DecodeJmp(Word Code)
   Boolean AddrRel = Hi(Code) != 0;
   Code &= 0xff;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdrRel(ArgStr[1], MModAbs + MModIReg + MModBRel + MModRegRel, AddrRel);
     switch (AdrType)
@@ -968,7 +960,7 @@ static void DecodeABReg(Word Code)
 
   Code &= 0xff;
 
-  if (ArgCnt != 1 + IsDJNZ) WrError(1110);
+  if (!ChkArgCnt(1 + IsDJNZ, 1 + IsDJNZ));
   else if (!strcasecmp(ArgStr[1], "ST"))
   {
     if (IsStack)
@@ -1022,8 +1014,7 @@ static void DecodeBit(Word Code)
 
   Code &= 0xff;
 
-  if (ArgCnt != 1 + Rela) WrError(1110);
-  else
+  if (ChkArgCnt(1 + Rela, 1 + Rela))
   {
     Boolean OK;
     LongInt Bit;
@@ -1071,8 +1062,7 @@ static void DecodeDIV(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2], MModAccA);
     if (AdrType != ModNone)
@@ -1093,8 +1083,7 @@ static void DecodeINCW(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2], MModReg);
     if (AdrType != ModNone)
@@ -1115,8 +1104,7 @@ static void DecodeLDST(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModImm);
     if (AdrType != ModNone)
@@ -1132,8 +1120,7 @@ static void DecodeTRAP(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
 
@@ -1150,8 +1137,7 @@ static void DecodeTST(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModAccA + MModAccB);
     switch (AdrType)

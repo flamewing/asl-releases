@@ -79,6 +79,7 @@
 #include "codepseudo.h"
 #include "motpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
 
 #include "code6809.h"
 
@@ -327,8 +328,7 @@ static void DecodeAdr(int ArgStartIdx, int ArgEndIdx)
   if ((AdrArgCnt >= 1) && (AdrArgCnt <= 2) && (!strcasecmp(LAsc, "--W")))
   {
     if ((AdrArgCnt == 2) && (*Asc != '\0')) WrError(1350);
-    else if (MomCPU<CPU6309) WrError(1505);
-    else
+    else if (ChkMinCPUExt(CPU6309, ErrNum_AddrModeNotSupported))
     {
       AdrCnt = 1;
       AdrVals[0] = 0xef + Ord(IndFlag);
@@ -376,8 +376,7 @@ static void DecodeAdr(int ArgStartIdx, int ArgEndIdx)
   if ((AdrArgCnt >= 1) && (AdrArgCnt <= 2) && (!strcasecmp(LAsc, "W++")))
   {
     if ((AdrArgCnt == 2) && (*Asc != '\0')) WrError(1350);
-    else if (MomCPU < CPU6309) WrError(1505);
-    else
+    else if (ChkMinCPUExt(CPU6309, ErrNum_AddrModeNotSupported))
     {
       AdrCnt = 1;
       AdrVals[0] = 0xcf + Ord(IndFlag);
@@ -671,7 +670,7 @@ static Boolean CodeCPUReg(char *Asc, Byte *Erg)
   for (z = 0; z < RegCnt; z++)
     if (!strcmp(Asc, RegNames[z]))
     {
-      if (((RegVals[z] & 6) == 6) && (MomCPU < CPU6309)) WrError(1505);
+      if (((RegVals[z] & 6) == 6) && !ChkMinCPUExt(CPU6309, ErrNum_AddrModeNotSupported));
       else
       {
         *Erg = RegVals[z];
@@ -727,8 +726,8 @@ static void DecodeFixed(Word Index)
 {
   const BaseOrder *pOrder = FixedOrders + Index;
 
-  if (ArgCnt != 0) WrError(1110);
-  else if (MomCPU < pOrder->MinCPU) WrError(1500);
+  if (!ChkArgCnt(0, 0));
+  else if (!ChkMinCPU(pOrder->MinCPU));
   else if (Hi(pOrder->Code) == 0)
   {
     BAsmCode[0] = Lo(pOrder->Code);
@@ -753,21 +752,23 @@ static void DecodeSWI(Word Code)
     BAsmCode[0] = 0x3f;
     CodeLen = 1;
   }
-  else if (ArgCnt != 1) WrError(1110);
-  else if (!strcasecmp(ArgStr[1], "2"))
+  else if (ChkArgCnt(1, 1))
   {
-    BAsmCode[0] = 0x10;
-    BAsmCode[1] = 0x3f;
-    CodeLen = 2;
+    if (!strcasecmp(ArgStr[1], "2"))
+    {
+      BAsmCode[0] = 0x10;
+      BAsmCode[1] = 0x3f;
+      CodeLen = 2;
+    }
+    else if (!strcasecmp(ArgStr[1], "3"))
+    {
+      BAsmCode[0] = 0x11;
+      BAsmCode[1] = 0x3f;
+      CodeLen = 2;
+    }
+    else
+      WrError(1135);
   }
-  else if (!strcasecmp(ArgStr[1], "3"))
-  {
-    BAsmCode[0] = 0x11;
-    BAsmCode[1] = 0x3f;
-    CodeLen = 2;
-  }
-  else
-    WrError(1135);
 }
 
 /* relative Spruenge */
@@ -777,8 +778,7 @@ static void DecodeRel(Word Index)
   Boolean LongFlag = (Index & 0x8000) || False;
   const RelOrder *pOrder = RelOrders + (Index & 0x7fff);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean ExtFlag = (LongFlag) && (Hi(pOrder->Code16) != 0), OK;
     Integer AdrInt = EvalIntExpression(ArgStr[1], UInt16, &OK);
@@ -824,9 +824,8 @@ static void DecodeALU(Word Index)
 {
   const ALUOrder *pOrder = ALUOrders + Index;
 
-  if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
-  else if (MomCPU < pOrder->MinCPU) WrError(1500);
-  else
+  if (ChkArgCnt(1, 2)
+   && ChkMinCPU(pOrder->MinCPU))
   {
     OpSize = pOrder->Op16;
     DecodeAdr(1, ArgCnt);
@@ -849,9 +848,8 @@ static void DecodeLDQ(Word Index)
 {
   UNUSED(Index);
 
-  if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
-  else if (MomCPU < CPU6309) WrError(1500);
-  else
+  if (ChkArgCnt(1, 2)
+   && ChkMinCPU(CPU6309))
   {
     OpSize = 2;
     DecodeAdr(1, ArgCnt);
@@ -877,9 +875,8 @@ static void DecodeRMW(Word Index)
 {
   const BaseOrder *pOrder = RMWOrders + Index;
 
-  if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
-  else if (MomCPU < pOrder->MinCPU) WrError(1500);
-  else
+  if (ChkArgCnt(1, 2)
+   && ChkMinCPU(pOrder->MinCPU))
   {
     DecodeAdr(1, ArgCnt);
     if (AdrMode != ModNone)
@@ -915,8 +912,7 @@ static void DecodeFlag(Word Index)
   char *p;
   int z2, z3;
 
-  if (ArgCnt < 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, ArgCntMax))
   {
     OK = True;
     BAsmCode[1] = (pOrder->Inv) ? 0xff : 0x00;
@@ -963,8 +959,8 @@ static void DecodeImm(Word Index)
 {
   const BaseOrder *pOrder = ImmOrders + Index;
 
-  if ((ArgCnt != 2) && (ArgCnt != 3)) WrError(1110);
-  else if (MomCPU < pOrder->MinCPU) WrError(1500);
+  if (!ChkArgCnt(2, 3));
+  else if (!ChkMinCPU(pOrder->MinCPU));
   else if (*ArgStr[1] != '#') WrError(1120);
   else
   {
@@ -1000,9 +996,9 @@ static void DecodeBit(Word Code)
 {
   int z2, z3;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPU6309) WrError(1500);
-  else if ((SplitBit(ArgStr[1], &z2)) && (SplitBit(ArgStr[2], &z3)))
+  if (ChkArgCnt(2, 2)
+   && ChkMinCPU(CPU6309)
+   && SplitBit(ArgStr[1], &z2) && SplitBit(ArgStr[2], &z3))
   {
     if (!CodeCPUReg(ArgStr[1], BAsmCode + 2)) WrError(1980);
     else if ((BAsmCode[2] < 8) || (BAsmCode[2] > 11)) WrError(1980);
@@ -1029,8 +1025,7 @@ static void DecodeBit(Word Code)
 
 static void DecodeTFR_TFM_EXG(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     int Inc1, Inc2;
 
@@ -1077,7 +1072,7 @@ static void DecodeTFR_TFM_EXG(Word Code)
 
 static void DecodeALU2(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!CodeCPUReg(ArgStr[1], BAsmCode + 3)) WrError(1980);
   else if (!CodeCPUReg(ArgStr[2], BAsmCode + 2)) WrError(1980);
   else if ((BAsmCode[1] != 13) && (BAsmCode[2] != 13) /* Z-Register mit allen kompatibel */
@@ -1097,8 +1092,7 @@ static void DecodeLEA(Word Index)
 {
   const BaseOrder *pOrder = LEAOrders + Index;
 
-  if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 2))
   {
     DecodeAdr(1, ArgCnt);
     if (AdrMode != ModNone)
@@ -1132,11 +1126,8 @@ static void DecodeStack(Word Index)
     {
       if (!strcasecmp(ArgStr[z2], "W"))
       {
-        if (MomCPU < CPU6309)
-        {
-          WrError(1500);
+        if (!ChkMinCPU(CPU6309))
           OK = False;
-        }
         else if (ArgCnt != 1)
         {
           WrError(1335);
@@ -1187,8 +1178,8 @@ static void DecodeStack(Word Index)
 
 static void DecodeBITMD_LDMD(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < CPU6309) WrError(1500);
+  if (!ChkArgCnt(1, 1));
+  else if (!ChkMinCPU(CPU6309));
   else if (*ArgStr[1] != '#') WrError(1120);
   else
   {
@@ -1571,7 +1562,7 @@ static void SwitchTo_6809(void)
 
   PCSymbol = "*";
   HeaderID = 0x63;
-  NOPCode = 0x9d;
+  NOPCode = 0x12;
   DivideChars = ",";
   HasAttrs = True;
   AttrChars = ".";

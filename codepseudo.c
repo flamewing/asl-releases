@@ -80,11 +80,10 @@
 #include "asmpars.h"
 #include "asmallg.h"
 #include "asmitree.h"
+#include "errmsg.h"
 
 #include "codepseudo.h"
 #include "motpseudo.h"
-
-#include "code68.h"
 
 /*****************************************************************************
  * Global Functions
@@ -130,8 +129,7 @@ void CodeEquate(ShortInt DestSeg, LargeInt Min, LargeInt Max)
   LargeInt Erg;
 
   FirstPassUnknown = False;
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1,  1))
   {
     Erg = EvalIntExpression(ArgStr[1], Int32, &OK);
     if ((OK) && (!FirstPassUnknown))

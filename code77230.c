@@ -69,6 +69,9 @@
 #include "asmitree.h"
 #include "headids.h"
 #include "codevars.h"            
+#include "errmsg.h"
+
+#include "code77230.h"
 
 /*---------------------------------------------------------------------------*/
 /* Definitionen */
@@ -159,9 +162,8 @@ static Boolean SplitArgs(int Count)
     return True;
   }
 
-  if (ArgCnt < Count) 
+  if (!ChkArgCnt(Count, ArgCntMax))
   {
-    WrError(1110);
     Error = True;
     return False;
   }
@@ -644,8 +646,7 @@ static Boolean DecodePseudo(void)
 
   if (Memo("DW"))
   {
-    if (ArgCnt < 1) WrError(1110);
-    else
+    if (ChkArgCnt(1, ArgCntMax))
     {
       z = 1; OK = True;
       while ((OK) && (z <= ArgCnt))
@@ -721,8 +722,7 @@ static Boolean DecodePseudo(void)
 
   if (Memo("DS"))
   {
-    if (ArgCnt != 1) WrError(1110);
-    else
+    if (ChkArgCnt(1, 1))
     {
       FirstPassUnknown = False;
       Size = EvalIntExpression(ArgStr[1], Int16, &OK);

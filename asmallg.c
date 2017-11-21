@@ -188,6 +188,7 @@
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
+#include "errmsg.h"
 #include "as.h"
 #include "asmpars.h"
 #include "asmmac.h"
@@ -212,23 +213,16 @@ static Boolean DefChkPC(LargeWord Addr)
     return (Addr <= SegLimits[ActPC]);
 }
 
-void SetCPU(CPUVar NewCPU, Boolean NotPrev)
+static void SetCPUCore(const tCPUDef *pCPUDef, Boolean NotPrev)
 {
   LongInt HCPU;
   char *z, *dest;
   Boolean ECPU;
   char s[20];
-  PCPUDef Lauf;
 
-  Lauf = FirstCPUDef;
-  while ((Lauf) && (Lauf->Number != NewCPU))
-    Lauf = Lauf->Next;
-  if (!Lauf)
-    return;
-
-  strmaxcpy(MomCPUIdent, Lauf->Name, sizeof(MomCPUIdent));
-  MomCPU = Lauf->Orig;
-  MomVirtCPU = Lauf->Number;
+  strmaxcpy(MomCPUIdent, pCPUDef->Name, sizeof(MomCPUIdent));
+  MomCPU = pCPUDef->Orig;
+  MomVirtCPU = pCPUDef->Number;
   strmaxcpy(s, MomCPUIdent, sizeof(s));
   for (z = dest = s; *z; z++)
     if (isxdigit(*z))
@@ -254,26 +248,33 @@ void SetCPU(CPUVar NewCPU, Boolean NotPrev)
   pASSUMERecs = NULL;
   pASSUMEOverride = NULL;
   if (!NotPrev) SwitchFrom();
-  Lauf->SwitchProc();
+  pCPUDef->SwitchProc();
 
   DontPrint = True;
 }
 
+void SetCPU(CPUVar NewCPU, Boolean NotPrev)
+{
+  const tCPUDef *pCPUDef;
+
+  pCPUDef = LookupCPUDefByVar(NewCPU);
+  if (pCPUDef)
+    SetCPUCore(pCPUDef, NotPrev);
+}
+
 Boolean SetNCPU(char *Name, Boolean NoPrev)
 {
-  PCPUDef Lauf;
+  const tCPUDef *pCPUDef;
 
-  Lauf = FirstCPUDef;
-  while ((Lauf) && (strcmp(Name, Lauf->Name)))
-    Lauf = Lauf->Next;
-  if (!Lauf)
+  pCPUDef = LookupCPUDefByName(Name);
+  if (!pCPUDef)
   {
     WrXError(1430, Name);
     return False;
   }
   else
   {
-    SetCPU(Lauf->Number, NoPrev);
+    SetCPUCore(pCPUDef, NoPrev);
     return True;
   }
 }
@@ -319,8 +320,8 @@ static void CodeSECTION(Word Index)
   PSaveSection Neu;
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (ExpandSymbol(ArgStr[1]))
+  if (ChkArgCnt(1, 1)
+   && ExpandSymbol(ArgStr[1]))
   {
     if (!ChkSymbName(ArgStr[1])) WrXError(1020, ArgStr[1]);
     else if ((PassNo == 1) && (GetSectionHandle(ArgStr[1], False, MomSectionHandle) != -2)) WrError(1483);
@@ -362,7 +363,7 @@ static void CodeENDSECTION(Word Index)
   PSaveSection Tmp;
   UNUSED(Index);
 
-  if (ArgCnt > 1) WrError(1110);
+  if (!ChkArgCnt(0, 1));
   else if (!SectionStack) WrError(1487);
   else if ((ArgCnt == 0) || (ExpandSymbol(ArgStr[1])))
   {
@@ -388,7 +389,7 @@ static void CodeCPU(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -407,8 +408,7 @@ static void CodeSETEQU(Word MayChange)
 
   FirstPassUnknown = False;
   if (*AttrPart != '\0') WrError(1100);
-  else if ((ArgCnt < ValIndex) || (ArgCnt > ValIndex + 1)) WrError(1110);
-  else
+  else if (ChkArgCnt(ValIndex, ValIndex + 1))
   {
     EvalExpression(ArgStr[ValIndex], &t);
     if (!FirstPassUnknown)
@@ -465,8 +465,7 @@ static void CodeORG(Word Index)
 
   FirstPassUnknown = False;
   if (*AttrPart != '\0') WrError(1100);
-  else if (ArgCnt != 1) WrError(1110);
-  else
+  else if (ChkArgCnt(1, 1))
   {
 #ifndef HAS64
     HVal = EvalIntExpression(ArgStr[1], UInt32, &ValOK);
@@ -491,8 +490,7 @@ static void CodeRORG(Word Index)
   FirstPassUnknown = False;
 
   if (*AttrPart != '\0') WrError(1100);
-  else if (ArgCnt != 1) WrError(1110);
-  else
+  else if (ChkArgCnt(1, 1))
   {
 #ifndef HAS64
     HVal = EvalIntExpression(ArgStr[1], SInt32, &ValOK);
@@ -656,7 +654,7 @@ static void CodePAGE(Word Index)
   Boolean ValOK;
   UNUSED(Index);
 
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
+  if (!ChkArgCnt(1, 2));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -690,7 +688,7 @@ static void CodeNEWPAGE(Word Index)
   Boolean ValOK;
   UNUSED(Index);
 
-  if (ArgCnt > 1) WrError(1110);
+  if (!ChkArgCnt(0, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -718,8 +716,7 @@ static void CodeString(Word Index)
   String tmp;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     EvalStringExpression(ArgStr[1], &OK, tmp);
     if (!OK) WrError(1970);
@@ -748,7 +745,7 @@ static void CodePHASE(Word Index)
   LongInt HVal;
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (ActPC == StructSeg) WrError(1553);
   else
   {
@@ -763,7 +760,7 @@ static void CodeDEPHASE(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 0) WrError(1110);
+  if (!ChkArgCnt(0, 0));
   else if (ActPC == StructSeg) WrError(1553);
   else
     Phases[ActPC] = 0;
@@ -776,8 +773,7 @@ static void CodeWARNING(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     EvalStringExpression(ArgStr[1], &OK, mess);
     if (!OK) WrError(1970);
@@ -793,8 +789,7 @@ static void CodeMESSAGE(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     EvalStringExpression(ArgStr[1], &OK, mess);
     if (!OK) WrError(1970);
@@ -814,8 +809,7 @@ static void CodeERROR(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     EvalStringExpression(ArgStr[1], &OK, mess);
     if (!OK) WrError(1970);
@@ -831,11 +825,10 @@ static void CodeFATAL(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     EvalStringExpression(ArgStr[1], &OK, mess);
-    if (!OK) WrError(1970);
+    if (!OK) WrError(11970);
     else
       WrErrorString(mess, "", False, True);
   }
@@ -850,7 +843,7 @@ static void CodeCHARSET(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (ArgCnt > 3) WrError(1110);
+  if (!ChkArgCnt(0, 3));
   else if (ArgCnt == 0)
   {
     for (z = 0; z < 256; z++)
@@ -867,8 +860,7 @@ static void CodeCHARSET(Word Index)
           t.Contents.Int &= 255;
         if (ChkRange(t.Contents.Int, 0, 255))
         {
-          if (ArgCnt < 2) WrError(1110);
-          else
+          if (ChkArgCnt(2, 2))
           {
             Start = t.Contents.Int;
             FirstPassUnknown = False;
@@ -914,8 +906,7 @@ static void CodeCHARSET(Word Index)
         }
         break;
       case TempString:
-        if (ArgCnt != 1) WrError(1110); /* Tabelle von Datei lesen */
-        else
+        if (ChkArgCnt(1, 1)) /* Tabelle von Datei lesen */
         {
           String Tmp;
 
@@ -958,7 +949,7 @@ static void CodeCODEPAGE(Word Index)
   int erg = 0;
   UNUSED(Index);
 
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
+  if (!ChkArgCnt(1, 2));
   else if (!ChkSymbName(ArgStr[1])) WrXError(1020, ArgStr[1]);
   else
   {
@@ -1012,8 +1003,7 @@ static void CodeFUNCTION(Word Index)
   int z;
   UNUSED(Index);
 
-  if (ArgCnt < 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, ArgCntMax))
   {
     OK = True;
     z = 1;
@@ -1041,8 +1031,7 @@ static void CodeSAVE(Word Index)
   PSaveState Neu;
   UNUSED(Index);
 
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     Neu = (PSaveState) malloc(sizeof(TSaveState));
     Neu->Next = FirstSaveState;
@@ -1051,6 +1040,9 @@ static void CodeSAVE(Word Index)
     Neu->SaveListOn = ListOn;
     Neu->SaveLstMacroExp = LstMacroExp;
     Neu->SaveTransTable = CurrTransTable;
+    Neu->SaveEnumSegment = EnumSegment;
+    Neu->SaveEnumIncrement = EnumIncrement;
+    Neu->SaveEnumCurrentValue = EnumCurrentValue;
     FirstSaveState = Neu;
   }
 }
@@ -1061,7 +1053,7 @@ static void CodeRESTORE(Word Index)
   PSaveState Old;
   UNUSED(Index);
 
-  if (ArgCnt != 0) WrError(1110);
+  if (!ChkArgCnt(0, 0));
   else if (!FirstSaveState) WrError(1450);
   else
   {
@@ -1085,7 +1077,7 @@ static void CodeMACEXP(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt < 1) WrError(1110);
+  if (!ChkArgCnt(1, ArgCntMax));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -1119,28 +1111,30 @@ static void CodeMACEXP(Word Index)
   }
 }
 
+static Boolean DecodeSegment(char *pArg, Integer StartSeg, Integer *pResult)
+{
+  Integer SegZ;
+  Word Mask;
+
+  NLS_UpString(pArg);
+  for (SegZ = StartSeg, Mask = 1 << StartSeg; SegZ <= PCMax; SegZ++, Mask <<= 1)
+    if ((ValidSegs & Mask) && !strcmp(pArg, SegNames[SegZ]))
+    {
+      *pResult = SegZ;
+      return True;
+    }
+  WrXError(1961, pArg);
+  return False;
+}
 
 static void CodeSEGMENT(Word Index)
 {
-  Byte SegZ;
-  Word Mask;
-  Boolean Found;
+  Integer NewSegment;
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
-  {
-    Found = False;
-    NLS_UpString(ArgStr[1]);
-    for (SegZ = 1, Mask = 2; SegZ <= PCMax; SegZ++, Mask <<= 1)
-      if (((ValidSegs&Mask) != 0) && (!strcmp(ArgStr[1], SegNames[SegZ])))
-      {
-        Found = True;
-        SetNSeg(SegZ);
-      }
-    if (!Found)
-      WrXError(1961, ArgStr[1]);
-  }
+  if (ChkArgCnt(1, 1)
+   && DecodeSegment(ArgStr[1], SegCode, &NewSegment))
+    SetNSeg(NewSegment);
 }
 
 
@@ -1151,8 +1145,7 @@ static void CodeLABEL(Word Index)
   UNUSED(Index);
 
   FirstPassUnknown = False;
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Erg = EvalIntExpression(ArgStr[1], Int32, &OK);
     if ((OK) && (!FirstPassUnknown))
@@ -1177,8 +1170,7 @@ static void CodeREAD(Word Index)
   LongInt SaveLocHandle;
   UNUSED(Index);
 
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 2))
   {
     if (ArgCnt == 2) EvalStringExpression(ArgStr[1], &OK, Exp);
     else
@@ -1234,8 +1226,7 @@ static void CodeRADIX(Word Index)
   Boolean OK;
   LargeWord tmp;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     tmp = ConstLongInt(ArgStr[1], &OK, 10);
     if (!OK) WrError(1135);
@@ -1256,8 +1247,7 @@ static void CodeALIGN(Word Index)
   LongInt NewPC;
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
     Dummy = EvalIntExpression(ArgStr[1], Int16, &OK);
@@ -1294,8 +1284,7 @@ static void CodeASSUME(Word Index)
     return;
   }
 
-  if (ArgCnt == 0) WrError(1110);
-  else
+  if (ChkArgCnt(1, ArgCntMax))
   {
     z1 = 1;
     OK = True;
@@ -1339,18 +1328,17 @@ static void CodeASSUME(Word Index)
   }
 }
 
-static void CodeENUM(Word Index)
+static void CodeENUM(Word IsNext)
 {
   int z;
   char *p = NULL;
   Boolean OK;
-  LongInt Counter, First = 0, Last = 0;
+  LongInt  First = 0, Last = 0;
   String SymPart;
-  UNUSED(Index);
 
-  Counter = 0;
-  if (ArgCnt == 0) WrError(1110);
-  else
+  if (!IsNext)
+    EnumCurrentValue = 0;
+  if (ChkArgCnt(1, ArgCntMax))
   {
     for (z = 1; z <= ArgCnt; z++)
     {
@@ -1359,7 +1347,7 @@ static void CodeENUM(Word Index)
       {
         strmaxcpy(SymPart, p + 1, 255);
         FirstPassUnknown = False;
-        Counter = EvalIntExpression(SymPart, Int32, &OK);
+        EnumCurrentValue = EvalIntExpression(SymPart, Int32, &OK);
         if (!OK)
           return;
         if (FirstPassUnknown)
@@ -1369,12 +1357,12 @@ static void CodeENUM(Word Index)
         }
         *p = '\0';
       }
-      EnterIntSymbol(ArgStr[z], Counter, SegNone, False);
+      EnterIntSymbol(ArgStr[z], EnumCurrentValue, EnumSegment, False);
       if (z == 1)
-        First = Counter;
+        First = EnumCurrentValue;
       else if (z == ArgCnt)
-        Last = Counter;
-      Counter++;
+        Last = EnumCurrentValue;
+      EnumCurrentValue += EnumIncrement;
     }
   }
   IntLine(SymPart, sizeof(SymPart), First);
@@ -1387,6 +1375,29 @@ static void CodeENUM(Word Index)
   }
 }
 
+static void CodeENUMCONF(Word Index)
+{
+  UNUSED(Index);
+
+  if (ChkArgCnt(1, 2))
+  {
+    Boolean OK;
+    LongInt NewIncrement;
+
+    NewIncrement = EvalIntExpression(ArgStr[1], Int32, &OK);
+    if (!OK)
+      return;
+    EnumIncrement = NewIncrement;
+
+    if (ArgCnt >= 2)
+    {
+      Integer NewSegment;
+
+      if (DecodeSegment(ArgStr[2], SegNone, &NewSegment))
+        EnumSegment = NewSegment;
+    }
+  }
+}
 
 static void CodeEND(Word Index)
 {
@@ -1394,8 +1405,7 @@ static void CodeEND(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (ArgCnt > 1) WrError(1110);
-  else
+  if (ChkArgCnt(0, 1))
   {
     if (ArgCnt == 1)
     {
@@ -1419,7 +1429,7 @@ static void CodeLISTING(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -1452,7 +1462,7 @@ static void CodeBINCLUDE(Word Index)
   String Name;
   UNUSED(Index);
 
-  if ((ArgCnt < 1) || (ArgCnt > 3)) WrError(1110);
+  if (!ChkArgCnt(1, 3));
   else if (ActPC == StructSeg) WrError(1940);
   else
   {
@@ -1537,8 +1547,7 @@ static void CodePUSHV(Word Index)
   int z;
   UNUSED(Index);
 
-  if (ArgCnt < 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, ArgCntMax))
   {
     if (!CaseSensitive)
       NLS_UpString(ArgStr[1]);
@@ -1552,8 +1561,7 @@ static void CodePOPV(Word Index)
   int z;
   UNUSED(Index);
 
-  if (ArgCnt < 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, ArgCntMax))
   {
     if (!CaseSensitive)
       NLS_UpString(ArgStr[1]);
@@ -1581,11 +1589,8 @@ static void CodeSTRUCT(Word IsUnion)
   char ExtChar;
   String StructName;
 
-  if (ArgCnt > 1)
-  {
-    WrError(1110);
+  if (!ChkArgCnt(0, 1))
     return;
-  }
 
   /* unnamed struct/union only allowed if embedded into at least one named struct/union */
 
@@ -1687,7 +1692,7 @@ static void CodeENDSTRUCT(Word IsUnion)
   PStructStack OStruct;
   TempResult t;
 
-  if (ArgCnt > 1) WrError(1110);
+  if (!ChkArgCnt(0, 1));
   else if (!StructStack) WrError(1550);
   else
   {
@@ -1784,8 +1789,7 @@ static void CodeEXTERN(Word Index)
   Byte Type;
   UNUSED(Index);
 
-  if (ArgCnt < 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, ArgCntMax))
   {
     i = 1;
     OK = True;
@@ -1817,8 +1821,7 @@ static void CodeNESTMAX(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
     Temp = EvalIntExpression(ArgStr[1], UInt32, &OK);
@@ -1834,8 +1837,7 @@ static void CodeSEGTYPE(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
     RelSegs = (mytoupper(*OpPart) == 'R');
 }
 
@@ -1847,35 +1849,34 @@ static void CodePPSyms(PForwardSymbol *Orig,
   int z;
   String Sym, Section;
 
-  if (ArgCnt == 0) WrError(1110);
-  else
-   for (z = 1; z <= ArgCnt; z++)
-   {
-     SplitString(ArgStr[z], Sym, Section, QuotPos(ArgStr[z], ':'));
-     if (!ExpandSymbol(Sym)) return;
-     if (!ExpandSymbol(Section)) return;
-     if (!CaseSensitive)
-       NLS_UpString(Sym);
-     Lauf = CodePPSyms_SearchSym(*Alt1, Sym);
-     if (Lauf) WrXError(1489, ArgStr[z]);
-     else
-     {
-       Lauf = CodePPSyms_SearchSym(*Alt2, Sym);
-       if (Lauf) WrXError(1489, ArgStr[z]);
-       else
-       {
-         Lauf = CodePPSyms_SearchSym(*Orig, Sym);
-         if (!Lauf)
-         {
-           Lauf = (PForwardSymbol) malloc(sizeof(TForwardSymbol));
-           Lauf->Next = (*Orig); *Orig = Lauf;
-           Lauf->Name = strdup(Sym);
-           Lauf->pErrorPos = GetErrorPos();
-         }
-         IdentifySection(Section, &(Lauf->DestSection));
-       }
-     }
-   }
+  if (ChkArgCnt(1, ArgCntMax))
+    for (z = 1; z <= ArgCnt; z++)
+    {
+      SplitString(ArgStr[z], Sym, Section, QuotPos(ArgStr[z], ':'));
+      if (!ExpandSymbol(Sym)) return;
+      if (!ExpandSymbol(Section)) return;
+      if (!CaseSensitive)
+        NLS_UpString(Sym);
+      Lauf = CodePPSyms_SearchSym(*Alt1, Sym);
+      if (Lauf) WrXError(1489, ArgStr[z]);
+      else
+      {
+        Lauf = CodePPSyms_SearchSym(*Alt2, Sym);
+        if (Lauf) WrXError(1489, ArgStr[z]);
+        else
+        {
+          Lauf = CodePPSyms_SearchSym(*Orig, Sym);
+          if (!Lauf)
+          {
+            Lauf = (PForwardSymbol) malloc(sizeof(TForwardSymbol));
+            Lauf->Next = (*Orig); *Orig = Lauf;
+            Lauf->Name = strdup(Sym);
+            Lauf->pErrorPos = GetErrorPos();
+          }
+          IdentifySection(Section, &(Lauf->DestSection));
+        }
+      }
+    }
 }
 
 /*------------------------------------------------------------------------*/
@@ -1894,8 +1895,7 @@ static void DecodeONOFF(Word Index)
   ONOFFTab *Tab = ONOFFList + Index;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     NLS_UpString(ArgStr[1]);
     if (*AttrPart != '\0') WrError(1100);
@@ -1960,6 +1960,7 @@ static const PseudoOrder Pseudos[] =
   {"ENDSTRUCT",  CodeENDSTRUCT  , 0 },
   {"ENDUNION",   CodeENDSTRUCT  , 1 },
   {"ENUM",       CodeENUM       , 0 },
+  {"ENUMCONF",   CodeENUMCONF   , 0 },
   {"EQU",        CodeSETEQU     , 0 },
   {"ERROR",      CodeERROR      , 0 },
   {"EXPORT_SYM", CodeEXPORT     , 0 },
@@ -1971,6 +1972,7 @@ static const PseudoOrder Pseudos[] =
   {"MESSAGE",    CodeMESSAGE    , 0 },
   {"NEWPAGE",    CodeNEWPAGE    , 0 },
   {"NESTMAX",    CodeNESTMAX    , 0 },
+  {"NEXTENUM",   CodeENUM       , 1 },
   {"ORG",        CodeORG        , 0 },
   {"OUTRADIX",   CodeRADIX      , 1 },
   {"PHASE",      CodePHASE      , 0 },

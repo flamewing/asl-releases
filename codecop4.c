@@ -48,6 +48,7 @@
 #include "codevars.h"
 #include "intpseudo.h"
 #include "natpseudo.h"
+#include "errmsg.h"
 
 #include "codecop4.h"
 
@@ -66,7 +67,6 @@ typedef struct
 } FixedOrder;
 
 static CPUVar CPUCOP410, CPUCOP420, CPUCOP440, CPUCOP444;
-static Word CurrCPUMask;
 static IntType AdrInt;
 
 static FixedOrder *FixedOrders, *ImmOrders;
@@ -78,9 +78,8 @@ static void DecodeFixed(Word Index)
 {
   FixedOrder *pOrder = FixedOrders + Index;
 
-  if (ArgCnt != 0) WrError(1110);
-  else if (!(CurrCPUMask & pOrder->CPUMask)) WrError(1500);
-  else
+  if (ChkArgCnt(0, 0)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPUCOP410) >= 0))
   {
     if (Hi(pOrder->Code))
       BAsmCode[CodeLen++] = Hi(pOrder->Code);
@@ -90,8 +89,7 @@ static void DecodeFixed(Word Index)
 
 static void DecodeSK(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Byte Bit;
     Boolean OK;
@@ -110,9 +108,8 @@ static void DecodeImm(Word Index)
 {
   FixedOrder *pOrder = ImmOrders + Index;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (!(CurrCPUMask & pOrder->CPUMask)) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPUCOP410) >= 0))
   {
     Byte Val;
     Boolean OK;
@@ -129,8 +126,7 @@ static void DecodeImm(Word Index)
 
 static void DecodeJmp(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Word Addr;
     Boolean OK;
@@ -146,8 +142,7 @@ static void DecodeJmp(Word Index)
  
 static void DecodeReg(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);  
-  else
+  if (ChkArgCnt(1, 1))
   {
     Byte Reg;
     Boolean OK;
@@ -164,8 +159,7 @@ static void DecodeAISC(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Byte Val;
     Boolean OK;
@@ -187,8 +181,7 @@ static void DecodeRMB(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);  
-  else
+  if (ChkArgCnt(1, 1))
   {
     Byte Reg;
     Boolean OK;
@@ -206,8 +199,7 @@ static void DecodeSMB(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {   
     Byte Reg;
     Boolean OK;
@@ -225,8 +217,7 @@ static void DecodeXAD(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {   
     Byte Reg1, Reg2;
     Boolean OK;
@@ -258,8 +249,7 @@ static void DecodeLBI(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {   
     Byte Reg, Val;
     Boolean OK;
@@ -275,8 +265,7 @@ static void DecodeLBI(Word Index)
       {
         if ((Val > 0) && (Val < 9))
         {
-          if (!(CurrCPUMask & (M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP440))) WrError(1500);
-          else
+          if (ChkExactCPUMask(M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP440, CPUCOP410) >= 0)
           {
             BAsmCode[CodeLen++] = 0x33;
             BAsmCode[CodeLen++] = 0x80 | (Reg << 4) | Val;
@@ -296,9 +285,8 @@ static void DecodeLDD(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!(CurrCPUMask & (M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP440))) WrError(1500);
-  else
+  if (ChkArgCnt(2, 2)
+   && (ChkExactCPUMask(M_CPUCOP420 | M_CPUCOP440 | M_CPUCOP440, CPUCOP410) >= 0))
   {   
     Byte Reg, Val;
     Boolean OK;
@@ -320,8 +308,7 @@ static void DecodeJSRP(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Word Addr;
     Boolean OK;
@@ -344,8 +331,7 @@ static void DecodeJP(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Word Addr, CurrPC;
     Boolean OK;
@@ -538,15 +524,6 @@ static void SwitchTo_COP4(void)
   PFamilyDescr pDescr;
 
   pDescr = FindFamilyByName("COP4");
-
-  if (MomCPU == CPUCOP410)
-    CurrCPUMask = M_CPUCOP410;
-  else if (MomCPU == CPUCOP420)
-    CurrCPUMask = M_CPUCOP420;
-  else if (MomCPU == CPUCOP440)
-    CurrCPUMask = M_CPUCOP440;
-  else if (MomCPU == CPUCOP444)
-    CurrCPUMask = M_CPUCOP444;
 
   TurnWords = False; ConstMode = ConstModeC; SetIsOccupied = False;
 

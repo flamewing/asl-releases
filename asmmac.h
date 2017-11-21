@@ -12,6 +12,8 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "errmsg.h"
+
 typedef struct _MacroRec
 {
   char *Name;            /* Name des Makros */
@@ -85,6 +87,7 @@ typedef struct _TOutputTag
   LongInt PubSect,GlobSect;
   Boolean DoExport, DoGlobCopy, UsesNumArgs, UsesAllArgs;
   String GName;
+  tErrorNum OpenErrMsg;
 } TOutputTag, *POutputTag;
 
 

@@ -9,6 +9,9 @@ copy *.msg %1
 md %2
 for %%i in (include\*.inc) do copy %%i %2
 for %%i in (%2\*.inc) do unumlaut %%i
+md %2\avr
+for %%i in (include\avr\*.inc) do copy %%i %2\avr
+for %%i in (%2\avr\*.inc) do unumlaut %%i
 
 md %3
 for %%i in (man\*.1) do copy %%i %3

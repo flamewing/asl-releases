@@ -24,6 +24,9 @@
 #include "asmpars.h"
 #include "asmitree.h"
 #include "codevars.h"            
+#include "errmsg.h"
+
+#include "code8x30x.h"
 
 /*****************************************************************************/
 
@@ -174,8 +177,7 @@ static void DecodeNOP(Word Code)     /* NOP = MOVE AUX,AUX */
 {
   UNUSED(Code);
 
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     WAsmCode[0] = 0x0000;
     CodeLen = 1;
@@ -186,8 +188,7 @@ static void DecodeHALT(Word Code)      /* HALT = JMP * */
 {
   UNUSED(Code);
 
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     WAsmCode[0] = 0xe000 | (EProgCounter() & 0x1fff);
     CodeLen = 1;
@@ -196,9 +197,8 @@ static void DecodeHALT(Word Code)      /* HALT = JMP * */
 
 static void DecodeXML_XMR(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < CPU8x305) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && ChkMinCPU(CPU8x305))
   {
     Boolean OK;
     Word Adr = EvalIntExpression(ArgStr[1], Int8, &OK);
@@ -214,8 +214,7 @@ static void DecodeSEL(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     LongInt Op = EvalIntExpression(ArgStr[1], UInt24, &OK);
@@ -236,13 +235,12 @@ static void DecodeXMIT(Word Code)
 
   UNUSED(Code);
 
-  if ((ArgCnt != 2) && (ArgCnt != 3)) WrError(1110);
-  else if (DecodeReg(ArgStr[2], &SrcReg, &SrcLen))
+  if (ChkArgCnt(2, 3)
+   && DecodeReg(ArgStr[2], &SrcReg, &SrcLen))
   {
     if (SrcReg < 16)
     {
-      if (ArgCnt != 2) WrError(1110);
-      else
+      if (ChkArgCnt(2, 2))
       {
         Adr = EvalIntExpression(ArgStr[1], Int8, &OK);
         if (OK)
@@ -286,8 +284,8 @@ static void DecodeAri(Word Code)
   char *p;
   Boolean OK;
 
-  if ((ArgCnt != 2) && (ArgCnt != 3)) WrError(1110);
-  else if (DecodeReg(ArgStr[ArgCnt], &DestReg, &DestLen))
+  if (ChkArgCnt(2, 3)
+   && DecodeReg(ArgStr[ArgCnt], &DestReg, &DestLen))
   {      
     if (DestReg < 16)         /* Ziel Register */
     {
@@ -379,8 +377,7 @@ static void DecodeXEC(Word Code)
 
   UNUSED(Code);
 
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 2))
   {
     p = HasDisp(ArgStr[1]);
     if (!p) WrError(1350);
@@ -392,8 +389,7 @@ static void DecodeXEC(Word Code)
       {
         if (SrcReg < 16)
         {
-          if (ArgCnt != 1) WrError(1110);
-          else
+          if (ChkArgCnt(1, 1))
           {
             WAsmCode[0] = EvalIntExpression(ArgStr[1], UInt8, &OK);
             if (OK)
@@ -435,8 +431,7 @@ static void DecodeJMP(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
 
@@ -458,13 +453,12 @@ static void DecodeNZT(Word Code)
 
   UNUSED(Code);
 
-  if ((ArgCnt != 2) && (ArgCnt != 3)) WrError(1110);
-  else if (DecodeReg(ArgStr[1], &SrcReg, &SrcLen))
+  if (ChkArgCnt(2, 3)
+   && DecodeReg(ArgStr[1], &SrcReg, &SrcLen))
   {
     if (SrcReg < 16)
     {
-      if (ArgCnt != 2) WrError(1110);
-      else
+      if (ChkArgCnt(2, 2))
       {
         Adr = EvalIntExpression(ArgStr[2], UInt13, &OK);
         if (OK)
@@ -516,8 +510,7 @@ static void DecodeLIV_RIV(Word Code)
   Word Len;
   Boolean OK;
 
-  if (ArgCnt != 3) WrError(1110);
-  else
+  if (ChkArgCnt(3, 3))
   {
     Adr = EvalIntExpression(ArgStr[1], UInt8, &OK);
     if (OK)

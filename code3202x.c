@@ -38,12 +38,14 @@
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
+#include "errmsg.h"
 #include "asmpars.h"
 #include "asmitree.h"
 #include "codevars.h"
 #include "codepseudo.h"
 #include "tipseudo.h"
 #include "endian.h"
+#include "errmsg.h"
 
 #include "code3202x.h"
 
@@ -107,7 +109,7 @@ static Word EvalARExpression(const char *asc, Boolean *OK)
 
 /* ---------------------------------------------------------------------- */
 
-static Boolean DecodeAdr(const char *arg, int aux, Boolean Must1)
+static Boolean DecodeAdr(const char *arg, int MinArgCnt, int aux, Boolean Must1)
 {
   const tAdrMode *pAdrMode = AdrModes;
   Byte h;
@@ -119,7 +121,7 @@ static Boolean DecodeAdr(const char *arg, int aux, Boolean Must1)
   {
     if (aux <= ArgCnt)
     {
-      WrError(1110);
+      (void)ChkArgCnt(MinArgCnt, aux - 1);
       return False;
     }
     h = EvalIntExpression(arg, Int16, &AdrOK);
@@ -154,9 +156,8 @@ static void DecodeCNFD(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt) WrError(1110);
-  else if (MomCPU == CPU32026) WrError(1500);
-  else
+  if (ChkArgCnt(0, 0)
+   && ChkExcludeCPU(CPU32026))
   {
     CodeLen = 1; 
     WAsmCode[0] = 0xce04; 
@@ -167,9 +168,8 @@ static void DecodeCNFP(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt) WrError(1110);
-  else if (MomCPU == CPU32026) WrError(1500);
-  else
+  if (ChkArgCnt(0, 0)
+   && ChkExcludeCPU(CPU32026))
   {
     CodeLen = 1; 
     WAsmCode[0] = 0xce05;
@@ -182,9 +182,8 @@ static void DecodeCONF(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU != CPU32026) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && ChkExactCPU(CPU32026))
   {
     WAsmCode[0] = 0xce3c | EvalIntExpression(ArgStr[1], UInt2, &OK);
     if (OK)
@@ -196,8 +195,7 @@ static void DecodeCONF(Word Code)
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     CodeLen = 1;
     WAsmCode[0] = Code;
@@ -210,12 +208,11 @@ static void DecodeJmp(Word Code)
 {
   Boolean OK;
 
-  if ((ArgCnt < 1) || (ArgCnt > 3)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 3))
   {
     if (ArgCnt > 1)
     {
-      OK = DecodeAdr(ArgStr[2], 3, False);
+      OK = DecodeAdr(ArgStr[2], 1, 3, False);
       if (OK  && (AdrMode < 0x80))
       {
         OK = False;
@@ -245,10 +242,9 @@ static void DecodeAdrInst(Word Index)
 {
   const AdrOrder *pOrder = AdrOrders + Index;
 
-  if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 2))
   {
-    if (DecodeAdr(ArgStr[1], 2, pOrder->Must1))
+    if (DecodeAdr(ArgStr[1], 1, 2, pOrder->Must1))
     {
       CodeLen = 1;
       WAsmCode[0] = pOrder->Code | AdrMode;
@@ -263,11 +259,10 @@ static void Decode2ndAdr(Word Index)
   const AdrOrder *pOrder = Adr2ndAdrOrders + Index;
   Boolean OK;
 
-  if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
-  else
+  if (ChkArgCnt(2, 3))
   {
     WAsmCode[1] = EvalIntExpression(ArgStr[1], Int16, &OK);
-    if (OK && DecodeAdr(ArgStr[2], 3, pOrder->Must1))
+    if (OK && DecodeAdr(ArgStr[2], 2, 3, pOrder->Must1))
     {
       CodeLen = 2; 
       WAsmCode[0] = pOrder->Code | AdrMode;
@@ -281,13 +276,12 @@ static void DecodeShiftAdr(Word Index)
 {
   const AdrShiftOrder *pOrder = AdrShiftOrders + Index;
 
-  if ((ArgCnt < 1) || (ArgCnt > 3)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 3))
   {
     Boolean OK;   
     Word AdrWord;
 
-    if (DecodeAdr(ArgStr[1], 3, False))
+    if (DecodeAdr(ArgStr[1], 1, 3, False))
     {
       if (ArgCnt < 2)
       {
@@ -320,10 +314,9 @@ static void DecodeIN_OUT(Word Code)
   Boolean OK;
   Word AdrWord;
 
-  if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
-  else
+  if (ChkArgCnt(2, 3))
   {
-    if (DecodeAdr(ArgStr[1], 3, False))
+    if (DecodeAdr(ArgStr[1], 2, 3, False))
     {
       AdrWord = EvalIntExpression(ArgStr[2], Int4, &OK);
       if (OK)
@@ -342,9 +335,7 @@ static void DecodeImm(Word Index)
 {
   const ImmOrder *pOrder = ImmOrders + Index;
 
-  if ((ArgCnt < 1) || (ArgCnt > 2) || 
-     ((ArgCnt == 2) && (pOrder->Mask != 0xffff))) WrError(1110);
-  else
+  if (ChkArgCnt(1, (pOrder->Mask != 0xffff) ? 1 : 2))
   {
     Boolean OK;
     LongInt AdrLong = EvalIntExpression(ArgStr[1], Int32, &OK);
@@ -389,8 +380,7 @@ static void DecodeLARP(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word AdrWord = EvalARExpression(ArgStr[1], &OK);
@@ -405,14 +395,14 @@ static void DecodeLARP(Word Code)
 
 static void DecodeLAR_SAR(Word Code)
 {
-  if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
+  if (ChkArgCnt(2, 3))
   {
     Boolean OK;
     Word AdrWord = EvalARExpression(ArgStr[1], &OK);
 
     if (OK)
     {
-      if (DecodeAdr(ArgStr[2], 3, False))
+      if (DecodeAdr(ArgStr[2], 2, 3, False))
       {
         CodeLen = 1;
         WAsmCode[0] = Code | AdrMode | (AdrWord << 8);
@@ -425,8 +415,7 @@ static void DecodeLARK(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     Boolean OK;
     Word AdrWord = EvalARExpression(ArgStr[1], &OK);
@@ -447,8 +436,7 @@ static void DecodeLRLK(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     Boolean OK;
     Word AdrWord = EvalARExpression(ArgStr[1], &OK);
@@ -469,8 +457,7 @@ static void DecodeLDPK(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
 
@@ -497,10 +484,9 @@ static void DecodeNORM(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
-    if (DecodeAdr(ArgStr[1], 2, False))
+    if (DecodeAdr(ArgStr[1], 1, 2, False))
     {
       if (AdrMode < 0x80) WrError(1350);
       else

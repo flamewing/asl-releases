@@ -58,6 +58,7 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "errmsg.h"
 
 #include "intpseudo.h"
 
@@ -780,8 +781,7 @@ Boolean DecodeIntelPseudo(Boolean Turn)
 
   if (Ident == 'S')
   {
-    if (ArgCnt != 1) WrError(1110);
-    else
+    if (ChkArgCnt(1, 1))
     {
       FirstPassUnknown = False;
       HVal = EvalIntExpression(ArgStr[1], Int32, &OK);

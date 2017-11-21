@@ -51,7 +51,9 @@
 #include "codepseudo.h"
 #include "fourpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
 
+#include "code3201x.h"
 
 typedef struct
 {
@@ -115,8 +117,7 @@ static void DecodeAdr(char *Arg, int Aux, Boolean Must1)
     else
       AdrOK = True;
   }
-  else if (Aux <= ArgCnt) WrError(1110);
-  else
+  else if (ChkArgCnt(1, Aux - 1))
   {
     h = 0;
     if ((strlen(Arg) > 3) && (!strncasecmp(Arg, "DAT", 3)))
@@ -152,8 +153,7 @@ static void DecodeAdr(char *Arg, int Aux, Boolean Must1)
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     CodeLen = 1;
     WAsmCode[0] = Code;
@@ -164,8 +164,7 @@ static void DecodeFixed(Word Code)
 
 static void DecodeJmp(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
 
@@ -182,8 +181,7 @@ static void DecodeJmp(Word Code)
 
 static void DecodeAdrInst(Word Code)
 {
-  if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 2))
   {
     DecodeAdr(ArgStr[1], 2, Code & 1);
     if (AdrOK)
@@ -202,8 +200,7 @@ static void DecodeAdrShift(Word Index)
   int Cnt;
   const AdrShiftOrder *pOrder = AdrShiftOrders + Index;
 
-  if ((ArgCnt < 1) || (ArgCnt > 3)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 3))
   {
     if (*ArgStr[1] == '*')
     {
@@ -265,8 +262,7 @@ static void DecodeAdrShift(Word Index)
 
 static void DecodeIN_OUT(Word Code)
 {
-  if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
-  else
+  if (ChkArgCnt(2, 3))
   {
     DecodeAdr(ArgStr[1], 3, False);
     if (AdrOK)
@@ -289,8 +285,7 @@ static void DecodeImm(Word Index)
 {
   const ImmOrder *pOrder = ImmOrders + Index;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     LongInt AdrLong = EvalIntExpression(ArgStr[1], Int32, &OK);
@@ -315,8 +310,7 @@ static void DecodeLARP(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word AdrWord = EvalARExpression(ArgStr[1], &OK);
@@ -330,8 +324,7 @@ static void DecodeLARP(Word Code)
 
 static void DecodeLAR_SAR(Word Code)
 {
-  if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
-  else
+  if (ChkArgCnt(2, 3))
   {
     Boolean OK;
     Word AdrWord = EvalARExpression(ArgStr[1], &OK);
@@ -351,8 +344,7 @@ static void DecodeLARK(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     Boolean OK;
     Word AdrWord = EvalARExpression(ArgStr[1], &OK);

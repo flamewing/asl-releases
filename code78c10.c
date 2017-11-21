@@ -53,6 +53,9 @@
 #include "codepseudo.h"
 #include "intpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
+
+#include "code78c10.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -391,8 +394,7 @@ static Boolean HasDisp(ShortInt Mode)
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     CodeLen = 0;
     if (Hi(Code) != 0)
@@ -409,7 +411,7 @@ static void DecodeMOV(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!strcasecmp(ArgStr[1], "A"))
   {
     if (Decode_sr1(ArgStr[2], &HReg))
@@ -494,8 +496,7 @@ static void DecodeMVI(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     ShortInt HReg;
     Boolean OK;
@@ -526,7 +527,7 @@ static void DecodeMVIW(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (Decode_wa(ArgStr[1], BAsmCode + 1))
   {
     BAsmCode[2] = EvalIntExpression(ArgStr[2], Int8, &OK);
@@ -545,7 +546,7 @@ static void DecodeMVIX(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!Decode_rpa1(ArgStr[1], &HReg)) WrError(1350);
   else
   {
@@ -563,7 +564,7 @@ static void DecodeLDAX_STAX(Word Code)
   ShortInt HReg;
   Boolean WasIndirect = False;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!Decode_rpa2(ArgStr[1], &WasIndirect, &HReg, (ShortInt *) BAsmCode + 1)) WrError(1350);
   else
   {
@@ -576,7 +577,7 @@ static void DecodeLDEAX_STEAX(Word Code)
 {
   ShortInt HReg;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!Decode_rpa3(ArgStr[1], &HReg, (ShortInt *) BAsmCode + 2)) WrError(1350);
   else
   {
@@ -594,7 +595,7 @@ static void DecodeLXI(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!Decode_rp2(ArgStr[1], &HReg)) WrError(1350);
   else
   {
@@ -613,7 +614,7 @@ static void DecodePUSH_POP(Word Code)
 {
   ShortInt HReg;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!Decode_rp1(ArgStr[1], &HReg)) WrError(1350);
   else
   {
@@ -628,8 +629,7 @@ static void DecodeDMOV(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     Boolean Swap = strcasecmp(ArgStr[1], "EA") || False;
     char *pArg1 = Swap ? ArgStr[2] : ArgStr[1],
@@ -662,8 +662,7 @@ static void DecodeALUImm(Word Code)
   ShortInt HVal8, HReg;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     HVal8 = EvalIntExpression(ArgStr[2], Int8, &OK);
     if (OK)
@@ -697,8 +696,7 @@ static void DecodeALUReg(Word Code)
 {
   ShortInt HReg;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     Boolean NoSwap = !strcasecmp(ArgStr[1], "A");
     char *pArg1 = NoSwap ? ArgStr[1] : ArgStr[2],
@@ -719,7 +717,7 @@ static void DecodeALUReg(Word Code)
 
 static void DecodeALURegW(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (Decode_wa(ArgStr[1], BAsmCode + 2))
   {
     CodeLen = 3;
@@ -732,7 +730,7 @@ static void DecodeALURegX(Word Code)
 {
   ShortInt HReg;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!Decode_rpa(ArgStr[1], &HReg)) WrError(1350);
   else
   {
@@ -746,7 +744,7 @@ static void DecodeALUEA(Word Code)
 {
   ShortInt HReg;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (strcasecmp(ArgStr[1], "EA")) WrError(1350);
   else if (!Decode_rp3(ArgStr[2], &HReg)) WrError(1350);
   else
@@ -761,7 +759,7 @@ static void DecodeALUImmW(Word Code)
 {
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (Decode_wa(ArgStr[1], BAsmCode + 1))
   {
     BAsmCode[2] = EvalIntExpression(ArgStr[2], Int8, &OK);
@@ -775,7 +773,7 @@ static void DecodeALUImmW(Word Code)
 
 static void DecodeAbs(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else
   {
     Boolean OK;
@@ -798,7 +796,7 @@ static void DecodeReg2(Word Code)
 {
   ShortInt HReg;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!Decode_r2(ArgStr[1], &HReg)) WrError(1350);
   else
   {
@@ -811,8 +809,8 @@ static void DecodeReg2(Word Code)
 
 static void DecodeWork(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (Decode_wa(ArgStr[1], BAsmCode + 1))
+  if (ChkArgCnt(1, 1)
+   && Decode_wa(ArgStr[1], BAsmCode + 1))
   {
     CodeLen = 2;
     BAsmCode[0] = Code;
@@ -821,7 +819,7 @@ static void DecodeWork(Word Code)
 
 static void DecodeEA(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (strcasecmp(ArgStr[1], "EA")) WrError(1350);
   else
   {
@@ -836,7 +834,7 @@ static void DecodeDCX_INX(Word Code)
 {
   ShortInt HReg;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!strcasecmp(ArgStr[1], "EA"))
   {
     CodeLen = 1;
@@ -855,7 +853,7 @@ static void DecodeEADD_ESUB(Word Code)
 {
   ShortInt HReg;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (strcasecmp(ArgStr[1], "EA")) WrError(1350);
   else if (!Decode_r2(ArgStr[2], &HReg)) WrError(1350);
   else
@@ -868,8 +866,7 @@ static void DecodeEADD_ESUB(Word Code)
 
 static void DecodeJR_JRE(Word IsJRE)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Integer AdrInt;
@@ -905,8 +902,7 @@ static void DecodeCALF(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Integer AdrInt;
@@ -930,8 +926,7 @@ static void DecodeCALT(Word Code)
 {
   UNUSED(Code);
  
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Integer AdrInt;
@@ -954,8 +949,7 @@ static void DecodeBIT(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     Boolean OK;
     ShortInt HReg;
@@ -973,7 +967,7 @@ static void DecodeSK_SKN(Word Code)
 {
   ShortInt HReg;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!Decode_f(ArgStr[1], &HReg)) WrError(1350);
   else
   {
@@ -987,7 +981,7 @@ static void DecodeSKIT_SKNIT(Word Code)
 {
   ShortInt HReg;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!Decode_irf(ArgStr[1], &HReg)) WrError(1350);
   else
   {

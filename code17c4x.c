@@ -54,6 +54,9 @@
 #include "codepseudo.h"
 #include "fourpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
+
+#include "code17c4x.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -63,8 +66,7 @@ static CPUVar CPU17C42;
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     CodeLen = 1;
     WAsmCode[0] = Code;
@@ -73,8 +75,7 @@ static void DecodeFixed(Word Code)
 
 static void DecodeLitt(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word AdrWord = EvalIntExpression(ArgStr[1], Int8, &OK);
@@ -91,8 +92,7 @@ static void DecodeAri(Word Code)
   Word DefaultDir = (Code >> 7) & 0x100;
 
   Code &= 0x7fff;
-  if ((ArgCnt == 0) || (ArgCnt > 2)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 2))
   {
     Boolean OK;
     Word AdrWord = EvalIntExpression(ArgStr[1], Int8, &OK);
@@ -127,8 +127,7 @@ static void DecodeAri(Word Code)
 
 static void DecodeBit(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     Boolean OK;
     Word AdrWord = EvalIntExpression(ArgStr[2], UInt3, &OK);
@@ -147,8 +146,7 @@ static void DecodeBit(Word Code)
 
 static void DecodeF(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word AdrWord = EvalIntExpression(ArgStr[1], Int8, &OK);
@@ -163,8 +161,7 @@ static void DecodeF(Word Code)
 
 static void DecodeMOVFP_MOVPF(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     char *pArg1 = (Code & 0x2000) ? ArgStr[2] : ArgStr[1],
          *pArg2 = (Code & 0x2000) ? ArgStr[1] : ArgStr[2];
@@ -186,8 +183,7 @@ static void DecodeMOVFP_MOVPF(Word Code)
 
 static void DecodeTABLRD_TABLWT(Word Code)
 {
-  if (ArgCnt != 3) WrError(1110);
-  else
+  if (ChkArgCnt(3, 3))
   {
     Boolean OK;
 
@@ -211,8 +207,7 @@ static void DecodeTABLRD_TABLWT(Word Code)
 
 static void DecodeTLRD_TLWT(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     Boolean OK;
 
@@ -232,8 +227,7 @@ static void DecodeTLRD_TLWT(Word Code)
 
 static void DecodeCALL_GOTO(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
 
@@ -254,8 +248,7 @@ static void DecodeLCALL(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
 
@@ -291,8 +284,7 @@ static void DecodeZERO(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
     Size = EvalIntExpression(ArgStr[1], Int16, &ValOK);

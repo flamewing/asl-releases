@@ -175,7 +175,3 @@ void DumpStringList(StringList List)
   }
   printf("\n");
 }
-
-void stringlists_init(void)
-{
-}

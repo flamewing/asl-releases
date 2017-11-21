@@ -33,6 +33,9 @@
 #include "codepseudo.h"
 #include "intpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
+
+#include "code75xx.h"
 
 static CPUVar CPU7566, CPU7508;
 static IntType CodeIntType, DataIntType;
@@ -50,15 +53,13 @@ static void PutCode(Word Code)
 
 static void DecodeFixed(Word Index)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
     PutCode(Index);
 }
 
 static void DecodeImm4(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word Value;
@@ -75,8 +76,7 @@ static void DecodeImm4(Word Index)
 
 static void DecodeImm5(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word Value;
@@ -89,8 +89,7 @@ static void DecodeImm5(Word Index)
 
 static void DecodeImm8(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word Value;
@@ -106,8 +105,7 @@ static void DecodeImm8(Word Index)
 
 static void DecodeImm2(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word Value;
@@ -120,8 +118,7 @@ static void DecodeImm2(Word Index)
 
 static void DecodeImm3(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word Value;
@@ -138,7 +135,7 @@ static void DecodeImm3(Word Index)
 
 static void DecodePR(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!strcasecmp(ArgStr[1], "HL-"))
     PutCode(Index | 0x10);
   else if (!strcasecmp(ArgStr[1], "HL+"))
@@ -155,8 +152,7 @@ static void DecodePR(Word Index)
 
 static void DecodeDataMem(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word Value;
@@ -173,8 +169,7 @@ static void DecodeDataMem(Word Index)
 
 static void DecodeAbs(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word Address;
@@ -200,8 +195,7 @@ static void DecodeAbs(Word Index)
 
 static void DecodeJCP(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word Address;
@@ -223,8 +217,7 @@ static void DecodeJCP(Word Index)
 
 static void DecodeCAL(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word Address;
@@ -245,8 +238,7 @@ static void DecodeCAL(Word Index)
 
 static void DecodeLHLT(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word Address;
@@ -267,8 +259,7 @@ static void DecodeLHLT(Word Index)
 
 static void DecodeCALT(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word Address;
@@ -289,8 +280,7 @@ static void DecodeCALT(Word Index)
 
 static void DecodeLogPort(Word Index)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     Boolean OK;
     Word Port, Mask;

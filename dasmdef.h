@@ -18,10 +18,13 @@ typedef struct sDisassInfo
   unsigned NextAddressCount;
   LargeWord NextAddresses[10];
   String SrcLine;
+  const char *pRemark;
 } tDisassInfo;
 
 extern tCodeChunkList CodeChunks;
-extern ChunkList UsedChunks;
+extern ChunkList UsedDataChunks, UsedCodeChunks;
+
+extern void(*Disassemble)(LargeWord Address, tDisassInfo *pInfo, Boolean IsData, int DataSize);
 
 extern void dasmdef_init(void);
 

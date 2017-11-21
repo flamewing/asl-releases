@@ -106,6 +106,7 @@
 #include "intpseudo.h"
 #include "codevars.h"
 #include "headids.h"
+#include "errmsg.h"
 
 #include "code78k2.h"
 
@@ -560,8 +561,7 @@ static Boolean DecodeBitAdr(char *pAsc, LongWord *pResult)
 
 static void DecodeFixed(Word Index)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
     *pCode++ = Index; 
 }
 
@@ -572,8 +572,7 @@ static void DecodeMOV(Word Index)
   UNUSED(Index);
 
   SetOpSize(0);
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModReg8 | MModShort | MModSFR | MModMem | MModAbs | MModPSW | MModSTBC);
     switch (AdrMode)
@@ -752,8 +751,7 @@ static void DecodeXCH(Word Index)
   UNUSED(Index);
 
   SetOpSize(0);
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {   
     DecodeAdr(ArgStr[1], MModReg8 | MModShort | MModSFR | MModMem);
 
@@ -847,8 +845,7 @@ static void DecodeMOVW(Word Index)
   UNUSED(Index);
 
   SetOpSize(1);
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModReg16 | MModSP | MModShort | MModSFR | MModMem);
     switch (AdrMode)
@@ -976,8 +973,7 @@ static void DecodeALU(Word Index)
   Byte HReg;
 
   SetOpSize(0);
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModReg8 | MModShort | MModSFR);
     switch (AdrMode)
@@ -1054,8 +1050,7 @@ static void DecodeALU16(Word Index)
 {
   static Byte Vals[3] = { 0, 2, 7 };
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     SetOpSize(1);
     if (ChkAcc(ArgStr[1]))
@@ -1088,8 +1083,7 @@ static void DecodeALU16(Word Index)
 
 static void DecodeMULDIV(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModReg8);
     switch (AdrMode)
@@ -1104,8 +1098,7 @@ static void DecodeMULDIV(Word Index)
 
 static void DecodeINCDEC(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModReg8 | MModShort);
     switch (AdrMode)
@@ -1123,8 +1116,7 @@ static void DecodeINCDEC(Word Index)
 
 static void DecodeINCDECW(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModReg16 | MModSP);
     switch (AdrMode)
@@ -1145,8 +1137,7 @@ static void DecodeShift8(Word Index)
   Boolean OK;
   Byte Shift;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModReg8);
     switch (AdrMode)
@@ -1168,8 +1159,7 @@ static void DecodeShift16(Word Index)
   Boolean OK;
   Byte Shift;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModReg16);
     switch (AdrMode)
@@ -1188,8 +1178,7 @@ static void DecodeShift16(Word Index)
 
 static void DecodeShift4(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModMem);
     switch (AdrMode)
@@ -1209,8 +1198,7 @@ static void DecodeShift4(Word Index)
 
 static void DecodePUSHPOP(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {                                                  
     DecodeAdr(ArgStr[1], MModReg16 | MModPSW | MModSFR);
     switch (AdrMode)
@@ -1233,8 +1221,7 @@ static void DecodeCALL(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModAbs | MModReg16);
     switch (AdrMode)
@@ -1260,8 +1247,7 @@ static void DecodeCALLF(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     pAsc = (*ArgStr[1] == '!') ? ArgStr[1] + 1 : ArgStr[1];
     FirstPassUnknown = FALSE;
@@ -1289,8 +1275,7 @@ static void DecodeCALLT(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else 
+  if (ChkArgCnt(1, 1))
   {
     pAsc = ArgStr[1]; l = strlen(pAsc);
     if ((*pAsc != '[') || (pAsc[l - 1] != ']')) WrError(1350);
@@ -1323,8 +1308,7 @@ static void DecodeBR(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     pAsc = ArgStr[1];
     Rel = (*pAsc == '$');
@@ -1368,8 +1352,7 @@ static void DecodeBranch(Word Index)
   char *pAsc;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {   
     pAsc = ArgStr[1];
     if (*pAsc == '$')
@@ -1396,8 +1379,7 @@ static void DecodeDBNZ(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {   
     DecodeAdr(ArgStr[1], MModShort | MModReg8);
     switch (AdrMode)
@@ -1441,7 +1423,7 @@ static void DecodeSEL(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (strncasecmp(ArgStr[1], "RB", 2)) WrError(1350);
   else
   {
@@ -1460,7 +1442,7 @@ static void DecodeBIT(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (DecodeBitAdr(ArgStr[1], &Result))
     EnterIntSymbol(LabPart, Result, SegNone, False);
 }
@@ -1472,8 +1454,7 @@ static void DecodeMOV1(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     if (!strcasecmp(ArgStr[1], "CY"))
       ArgPos = 2;
@@ -1499,7 +1480,7 @@ static void DecodeANDOR1(Word Index)
   LongWord Bit;
   char *pArg;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (strcasecmp(ArgStr[1], "CY")) WrError(1350);
   else
   {
@@ -1525,7 +1506,7 @@ static void DecodeXOR1(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (strcasecmp(ArgStr[1], "CY")) WrError(1350);
   else
   {
@@ -1545,7 +1526,7 @@ static void DecodeBit1(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!strcasecmp(ArgStr[1], "CY"))
   {
     *pCode++ = 0x40 | (9 - (Index >> 4));
@@ -1577,8 +1558,8 @@ static void DecodeBrBit(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (DecodeBitAdr(ArgStr[1], &Bit))
+  if (ChkArgCnt(2, 2)
+   && DecodeBitAdr(ArgStr[1], &Bit))
   {
     if ((Bit & 0xfffff800) == 0x01080000)
     {

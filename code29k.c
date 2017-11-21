@@ -58,6 +58,9 @@
 #include "intpseudo.h"
 #include "codevars.h"
 #include "intconsts.h"
+#include "errmsg.h"
+
+#include "code29k.h"
 
 typedef struct
 {
@@ -115,7 +118,7 @@ static Boolean IsSup(LongWord RegNo)
 
 static Boolean ChkCPU(CPUVar Min)
 {
-  return (MomCPU >= Min) ? True : StringListPresent(Emulations, OpPart);
+  return StringListPresent(Emulations, OpPart) ? True : ChkMinCPU(Min);
 }
 
 /*-------------------------------------------------------------------------*/
@@ -177,7 +180,7 @@ static void DecodeStd(Word Index)
   LongWord Dest, Src1, Src2, Src3;
   Boolean OK;
 
-  if ((ArgCnt > 3) || (ArgCnt < 2)) WrError(1110);
+  if (!ChkArgCnt(2, 3));
   else if (!DecodeReg(ArgStr[1], &Dest)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -215,15 +218,15 @@ static void DecodeNoImm(Word Index)
   Boolean OK;
   LongWord Dest, Src1, Src2;
 
-  if ((ArgCnt>3) || (ArgCnt < 2)) WrError(1110);
+  if (!ChkArgCnt(2, 3));
   else if (!DecodeReg(ArgStr[1], &Dest)) WrXError(1445, ArgStr[1]);
   else
   {
     OK = True;
     if (ArgCnt == 2) Src1 = Dest;
     else OK = DecodeReg(ArgStr[2], &Src1);
-    if (!OK) WrError(1445);
-    else if (!DecodeReg(ArgStr[ArgCnt], &Src2)) WrError(1445);
+    if (!OK) WrXError(1445, ArgStr[2]);
+    else if (!DecodeReg(ArgStr[ArgCnt], &Src2)) WrXError(1445, ArgStr[ArgCnt]);
     else
     {
       CodeLen = 4;
@@ -242,15 +245,14 @@ static void DecodeVec(Word Index)
   Boolean OK;
   LongWord Dest, Src1, Src2, Src3;
 
-  if (ArgCnt != 3) WrError(1110);
-  else
+  if (ChkArgCnt(3, 3))
   {
     FirstPassUnknown = False;
     Dest = EvalIntExpression(ArgStr[1], UInt8, &OK);
     if (FirstPassUnknown) Dest = 64;
     if (OK)
     {
-      if (!DecodeReg(ArgStr[2], &Src1)) WrError(1445);
+      if (!DecodeReg(ArgStr[2], &Src1)) WrXError(1445, ArgStr[2]);
       else
       {
         if (DecodeReg(ArgStr[ArgCnt], &Src2))
@@ -280,8 +282,7 @@ static void DecodeFixed(Word Code)
 {
   const StdOrder *pOrder = FixedOrders + Code;
 
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     CodeLen = 4;
     DAsmCode[0] = pOrder->Code << 24;
@@ -298,8 +299,7 @@ static void DecodeMem(Word Index)
   Boolean OK;
   LongWord AdrLong, Dest, Src1, Src2, Src3;
 
-  if ((ArgCnt != 3) && (ArgCnt != 4)) WrError(1110);
-  else
+  if (ChkArgCnt(3, 4))
   {
     if (ArgCnt == 3)
     {
@@ -346,9 +346,10 @@ static void DecodeJmp(Word Index)
   LongWord Dest, Src1, AdrLong;
   LongInt AdrInt;
   Boolean OK;
+  unsigned NumArgs = 1 + Ord(pOrder->HasReg);
 
-  if (ArgCnt != 1 + Ord(pOrder->HasReg)) WrError(1110);
-  else if (DecodeReg(ArgStr[ArgCnt], &Src1))
+  if (ChkArgCnt(NumArgs, NumArgs)
+   && DecodeReg(ArgStr[ArgCnt], &Src1))
   {
     if (!pOrder->HasReg)
     {
@@ -362,7 +363,7 @@ static void DecodeJmp(Word Index)
       DAsmCode[0] = ((pOrder->Code + 0x20) << 24) + (Dest << 8) + Src1;
     }
   }
-  else if (Immediate) WrError(1445);
+  else if (Immediate) WrError(1350);
   else
   {
     if (!pOrder->HasReg)
@@ -407,10 +408,10 @@ static void DecodeCLASS(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 3) WrError(1110);
-  else if (!ChkCPU(CPU29000)) WrError(1500);
-  else if (!DecodeReg(ArgStr[1], &Dest)) WrError(1445);
-  else if (!DecodeReg(ArgStr[2], &Src1)) WrError(1445);
+  if (!ChkArgCnt(3, 3));
+  else if (!ChkCPU(CPU29000));
+  else if (!DecodeReg(ArgStr[1], &Dest)) WrXError(1445, ArgStr[1]);
+  else if (!DecodeReg(ArgStr[2], &Src1)) WrXError(1445, ArgStr[2]);
   else
   {
     Src2 = EvalIntExpression(ArgStr[3], UInt2, &OK);
@@ -429,16 +430,15 @@ static void DecodeEMULATE(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 3) WrError(1110);
-  else
+  if (ChkArgCnt(3, 3))
   {
     FirstPassUnknown = False;
     Dest = EvalIntExpression(ArgStr[1], UInt8, &OK);
     if (FirstPassUnknown) Dest = 64;
     if (OK)
     {
-      if (!DecodeReg(ArgStr[2], &Src1)) WrError(1445);
-      else if (!DecodeReg(ArgStr[ArgCnt], &Src2)) WrError(1445);
+      if (!DecodeReg(ArgStr[2], &Src1)) WrXError(1445, ArgStr[2]);
+      else if (!DecodeReg(ArgStr[ArgCnt], &Src2)) WrXError(1445, ArgStr[ArgCnt]);
       else
       {
         CodeLen = 4;
@@ -457,9 +457,9 @@ static void DecodeSQRT(Word Code)
 
   UNUSED(Code);
 
-  if ((ArgCnt != 3) && (ArgCnt != 2)) WrError(1110);
-  else if (!ChkCPU(CPU29000)) WrError(1500);
-  else if (!DecodeReg(ArgStr[1], &Dest)) WrError(1445);
+  if (!ChkArgCnt(2, 3));
+  else if (!ChkCPU(CPU29000));
+  else if (!DecodeReg(ArgStr[1], &Dest)) WrXError(1445, ArgStr[1]);
   else
   {
     if (ArgCnt == 2)
@@ -469,7 +469,7 @@ static void DecodeSQRT(Word Code)
     }
     else
       OK = DecodeReg(ArgStr[2], &Src1);
-    if (!OK) WrError(1445);
+    if (!OK) WrXError(1445, ArgStr[2]);
     else
     {
       Src2 = EvalIntExpression(ArgStr[ArgCnt], UInt2, &OK);
@@ -489,8 +489,8 @@ static void DecodeCLZ(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!DecodeReg(ArgStr[1], &Dest)) WrError(1445);
+  if (!ChkArgCnt(2, 2));
+  else if (!DecodeReg(ArgStr[1], &Dest)) WrXError(1445, ArgStr[1]);
   else
   {
     if (DecodeReg(ArgStr[2], &Src1))
@@ -516,8 +516,8 @@ static void DecodeCONST(Word Code)
   LongWord AdrLong, Dest;
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!DecodeReg(ArgStr[1], &Dest)) WrError(1445);
+  if (!ChkArgCnt(2, 2));
+  else if (!DecodeReg(ArgStr[1], &Dest)) WrXError(1445, ArgStr[1]);
   else
   {
     AdrLong = EvalIntExpression(ArgStr[2], Int32, &OK);
@@ -546,8 +546,8 @@ static void DecodeCONSTH_CONSTN(Word IsHi)
   Boolean OK;
   LongWord AdrLong, Dest;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!DecodeReg(ArgStr[1], &Dest)) WrError(1445);
+  if (!ChkArgCnt(2, 2));
+  else if (!DecodeReg(ArgStr[1], &Dest)) WrXError(1445, ArgStr[1]);
   else
   {
     FirstPassUnknown = False;
@@ -573,10 +573,10 @@ static void DecodeCONVERT(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 6) WrError(1110);
-  else if (!ChkCPU(CPU29000)) WrError(1500);
-  else if (!DecodeReg(ArgStr[1], &Dest)) WrError(1445);
-  else if (!DecodeReg(ArgStr[2], &Src1)) WrError(1445);
+  if (!ChkArgCnt(6, 6));
+  else if (!ChkCPU(CPU29000));
+  else if (!DecodeReg(ArgStr[1], &Dest)) WrXError(1445, ArgStr[1]);
+  else if (!DecodeReg(ArgStr[2], &Src1)) WrXError(1445, ArgStr[2]);
   else
   {
     Src2 = 0;
@@ -607,9 +607,9 @@ static void DecodeEXHWS(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!DecodeReg(ArgStr[1], &Dest)) WrError(1445);
-  else if (!DecodeReg(ArgStr[2], &Src1)) WrError(1445);
+  if (!ChkArgCnt(2, 2));
+  else if (!DecodeReg(ArgStr[1], &Dest)) WrXError(1445, ArgStr[1]);
+  else if (!DecodeReg(ArgStr[2], &Src1)) WrXError(1445, ArgStr[2]);
   else
   {
     CodeLen = 4;
@@ -622,8 +622,7 @@ static void DecodeINV_IRETINV(Word Code)
   Boolean OK;
   LongWord Src1;
 
-  if (ArgCnt>1) WrError(1110);
-  else
+  if (ChkArgCnt(0, 1))
   {
     if (ArgCnt == 0)
     {
@@ -645,7 +644,7 @@ static void DecodeMFSR(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &Dest)) WrXError(1445, ArgStr[1]);
   else if (!DecodeSpReg(ArgStr[2], &Src1)) WrXError(1440, ArgStr[2]);
   else
@@ -663,7 +662,7 @@ static void DecodeMTSR(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeSpReg(ArgStr[1], &Dest)) WrXError(1440, ArgStr[1]);
   else if (!DecodeReg(ArgStr[2], &Src1)) WrXError(1445, ArgStr[2]);
   else
@@ -682,7 +681,7 @@ static void DecodeMTSRIM(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeSpReg(ArgStr[1], &Dest)) WrXError(1440, ArgStr[1]);
   else
   {
@@ -703,7 +702,7 @@ static void DecodeMFTLB(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &Dest)) WrXError(1445, ArgStr[1]);
   else if (!DecodeReg(ArgStr[2], &Src1)) WrXError(1445, ArgStr[2]);
   else
@@ -720,7 +719,7 @@ static void DecodeMTTLB(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &Dest)) WrXError(1445, ArgStr[1]);
   else if (!DecodeReg(ArgStr[2], &Src1)) WrXError(1445, ArgStr[2]);
   else
@@ -737,8 +736,7 @@ static void DecodeEMULATED(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt < 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, ArgCntMax))
     for (z = 1; z <= ArgCnt; z++)
     {
       NLS_UpString(ArgStr[z]);

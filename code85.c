@@ -65,6 +65,9 @@
 #include "intpseudo.h"
 #include "asmitree.h"
 #include "codevars.h"
+#include "errmsg.h"
+
+#include "code85.h"
 
 /*--------------------------------------------------------------------------------------------------*/
 
@@ -219,8 +222,7 @@ AdrFound:
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     CodeLen = 1;
     BAsmCode[0] = Code;
@@ -229,9 +231,8 @@ static void DecodeFixed(Word Code)
 
 static void DecodeFixed_Z80(Word Code)
 {
-  if (!AllowZ80Syntax) WrError(1500);
-  else if (ArgCnt != 0) WrError(1110);
-  else
+  if (!AllowZ80Syntax) WrError(ErrNum_Z80SyntaxNotEnabled);
+  else if (ChkArgCnt(0, 0))
   {
     CodeLen = 1;
     BAsmCode[0] = Code;
@@ -245,8 +246,7 @@ static void DecodeOp16(Word Code)
   Boolean OK;
   Word AdrWord;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     AdrWord = EvalIntExpression(ArgStr[1], Int16, &OK);
     if (OK)
@@ -265,8 +265,7 @@ static void DecodeOp8(Word Code)
   Boolean OK;
   Byte AdrByte;
 
-  if (ArgCnt!=1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     AdrByte = EvalIntExpression(ArgStr[1], Int8, &OK);
     if (OK)
@@ -282,7 +281,7 @@ static void DecodeALU(Word Code)
 {
   Byte Reg;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!DecodeReg8(ArgStr[1], &Reg)) WrXError(1980, ArgStr[1]);
   else
   {
@@ -297,7 +296,7 @@ static void DecodeMOV(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2,  2));
   else if (!DecodeReg8(ArgStr[1], &Dest)) WrXError(1980, ArgStr[1]);
   else if (!DecodeReg8(ArgStr[2], BAsmCode + 0)) WrXError(1980, ArgStr[2]);
   else
@@ -317,8 +316,7 @@ static void DecodeMVI(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     BAsmCode[1] = EvalIntExpression(ArgStr[2], Int8, &OK);
     if (OK)
@@ -341,8 +339,7 @@ static void DecodeLXI(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     AdrWord = EvalIntExpression(ArgStr[2], Int16, &OK);
     if (OK)
@@ -363,7 +360,7 @@ static void DecodeLDAX_STAX(Word Index)
 {
   Byte Reg;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!DecodeReg16(ArgStr[1], False, &Reg)) WrXError(1980, ArgStr[1]);
   else 
   {
@@ -389,8 +386,7 @@ static void DecodePUSH_POP(Word Index)
   Byte Reg;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     if ((!strcasecmp(ArgStr[1], "PSW"))
      || (AllowZ80Syntax && (!strcasecmp(ArgStr[1], "AF"))))
@@ -418,7 +414,7 @@ static void DecodeRST(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if ((MomCPU >= CPU8085U) && (!strcasecmp(ArgStr[1], "V")))
   {
     CodeLen = 1;
@@ -445,7 +441,7 @@ static void DecodeINR_DCR(Word Index)
 {
   Byte Reg;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!DecodeReg8(ArgStr[1], &Reg)) WrXError(1980, ArgStr[1]);
   else
   {
@@ -458,7 +454,7 @@ static void DecodeINX_DCX(Word Index)
 {
   Byte Reg;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!DecodeReg16(ArgStr[1], False, &Reg)) WrXError(1980, ArgStr[1]);
   else
   {
@@ -473,7 +469,7 @@ static void DecodeDAD(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!DecodeReg16(ArgStr[1], False, &Reg)) WrXError(1980, ArgStr[1]);
   else
   {
@@ -491,8 +487,8 @@ static void DecodeDSUB(Word Index)
   if (!ArgCnt)
     strcpy(ArgStr[++ArgCnt], "B");
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < CPU8085U) WrError(1500);
+  if (!ChkArgCnt(1, 1));
+  else if (!ChkMinCPU(CPU8085U));
   else if (!DecodeReg16(ArgStr[1], False, &Reg)) WrXError(1980, ArgStr[1]);
   else if (Reg != 0) WrXError(1980, ArgStr[1]);
   else
@@ -511,8 +507,8 @@ static void DecodeLHLX_SHLX(Word Index)
   if (!ArgCnt)
     strcpy(ArgStr[++ArgCnt], "D");
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < CPU8085U) WrError(1500);
+  if (!ChkArgCnt(1, 1));
+  else if (!ChkMinCPU(CPU8085U));
   else if (!DecodeReg16(ArgStr[1], False, &Reg)) WrXError(1980, ArgStr[1]);
   else if (Reg != 1) WrXError(1980, ArgStr[1]);
   else
@@ -527,8 +523,8 @@ static void DecodeLD(Word Code)
   Byte HVals[2];
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!AllowZ80Syntax) WrError(1500);
+  if (!ChkArgCnt(2, 2));
+  else if (!AllowZ80Syntax) WrError(ErrNum_Z80SyntaxNotEnabled);
   else
   {
     DecodeAdr_Z80(ArgStr[1], MModReg8 | MModIReg16 | MModAbs | MModReg16);
@@ -649,8 +645,8 @@ static void DecodeEX(Word Code)
 
   UNUSED(Code);   
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!AllowZ80Syntax) WrError(1500);
+  if (!ChkArgCnt(2, 2));
+  else if (!AllowZ80Syntax) WrError(ErrNum_Z80SyntaxNotEnabled);
   else
   {
     DecodeAdr_Z80(ArgStr[1], MModReg16 | MModIReg16);
@@ -760,7 +756,7 @@ static void DecodeADD(Word Code)
     } 
   }
   else
-    WrError(1110);
+    ChkArgCnt(1, AllowZ80Syntax ? 2 : 1);
 }
 
 static void DecodeADC(Word Code)
@@ -809,7 +805,7 @@ static void DecodeADC(Word Code)
     } 
   }
   else
-    WrError(1110);
+    ChkArgCnt(1, AllowZ80Syntax ? 2 : 1);
 }
 
 static void DecodeSUB(Word Code)
@@ -818,19 +814,11 @@ static void DecodeSUB(Word Code)
 
   UNUSED(Code);
 
-  if ((ArgCnt < 1) || (ArgCnt > 2))
-  {
-    WrError(1110);
+  if (!ChkArgCnt(1, AllowZ80Syntax ? 2 : 1))
     return;
-  }
 
   if (ArgCnt == 2) /* optional Z80 style */
   {
-    if (!AllowZ80Syntax)
-    {
-      WrError(1110);
-      return;
-    }
     DecodeAdr_Z80(ArgStr[1], MModReg8);
 
     switch (AdrMode)
@@ -881,15 +869,12 @@ static void DecodeALU8_Z80(Word Code)
 {
   if (!AllowZ80Syntax)
   {
-    WrError(1500);
+    WrError(ErrNum_Z80SyntaxNotEnabled);
     return;
   }
 
-  if ((ArgCnt < 1) || (ArgCnt > 2))
-  {
-    WrError(1110);
+  if (!ChkArgCnt(1, 2))
     return;
-  }
 
   if (ArgCnt == 2) /* A as dest */
   {
@@ -930,9 +915,8 @@ static void DecodeALU8_Z80(Word Code)
 
 static void DecodeINCDEC(Word Code)
 {
-  if (!AllowZ80Syntax) WrError(1500);
-  else if (ArgCnt != 1) WrError(1110);
-  else
+  if (!AllowZ80Syntax) WrError(ErrNum_Z80SyntaxNotEnabled);
+  else if (ChkArgCnt(1, 1))
   {
     DecodeAdr_Z80(ArgStr[1], MModReg8 | MModReg16 | MModIReg16);
     switch (AdrMode)
@@ -957,20 +941,11 @@ static void DecodeCP(Word Code)
 {
   UNUSED(Code);
 
-  if ((ArgCnt < 1) || (ArgCnt > 2))
-  {
-    WrError(1110);
+  if (!ChkArgCnt(1, AllowZ80Syntax ? 2 : 1))
     return;
-  }
 
   if (ArgCnt == 2) /* A as dest */
   {
-    if (!AllowZ80Syntax)
-    {
-      WrError(1110);
-      return;
-    }
-
     DecodeAdr_Z80(ArgStr[1], MModReg8);
 
     switch (AdrMode)
@@ -1023,19 +998,11 @@ static void DecodeJP(Word Code)
   Byte Condition;
   UNUSED(Code);
 
-  if ((ArgCnt < 1) || (ArgCnt > 2))
-  {
-    WrError(1110);
+  if (!ChkArgCnt(1, AllowZ80Syntax ? 2 : 1))
     return;
-  }
 
   if (ArgCnt == 2) /* Z80-style with condition */
   {
-    if (!AllowZ80Syntax)
-    {
-      WrError(1110);
-      return;
-    }
     if (!DecodeCondition(ArgStr[1], &Condition))
     {
       WrXError(1360, ArgStr[1]);
@@ -1043,7 +1010,7 @@ static void DecodeJP(Word Code)
     }
   }
   else
-   Condition = 0xff;
+    Condition = 0xff;
 
   OpSize = 1;
   DecodeAdr_Z80(ArgStr[ArgCnt], MModImm | (((ArgCnt == 1) && AllowZ80Syntax) ? MModIReg16 : 0));
@@ -1068,19 +1035,11 @@ static void DecodeCALL(Word Code)
   Byte Condition;
   UNUSED(Code);
 
-  if ((ArgCnt < 1) || (ArgCnt > 2))
-  {
-    WrError(1110);
+  if (!ChkArgCnt(1, AllowZ80Syntax ? 2 : 1))
     return;
-  }
 
   if (ArgCnt == 2) /* Z80-style with condition */
   {
-    if (!AllowZ80Syntax)
-    {
-      WrError(1110);
-      return;
-    }
     if (!DecodeCondition(ArgStr[1], &Condition))
     {
       WrXError(1360, ArgStr[1]);
@@ -1108,19 +1067,11 @@ static void DecodeRET(Word Code)
   Byte Condition;
   UNUSED(Code);
 
-  if (ArgCnt > 1)
-  {
-    WrError(1110);
+  if (!ChkArgCnt(0, AllowZ80Syntax ? 1 : 0))
     return;
-  }
 
   if (ArgCnt == 1) /* Z80-style with condition */
   {
-    if (!AllowZ80Syntax)
-    {
-      WrError(1110);
-      return;
-    }
     if (!DecodeCondition(ArgStr[1], &Condition)) WrXError(1360, ArgStr[1]);
     else
       BAsmCode[CodeLen++] = 0xc0 | (Condition << 3);
@@ -1133,18 +1084,11 @@ static void DecodeINOUT(Word Code)
 {
   Boolean OK;
 
-  if ((ArgCnt < 1) || (ArgCnt > 2))
-  {
-    WrError(1110);
+  if (!ChkArgCnt(1, AllowZ80Syntax ? 2 : 1))
     return;
-  }
+
   if (ArgCnt == 2) /* Z80-style with A */
   {
-    if (!AllowZ80Syntax)
-    {
-      WrError(1110);
-      return;
-    }
     DecodeAdr_Z80(ArgStr[Code == 0xdb ? 1 : 2], MModReg8);
     if ((AdrMode != ModNone) && (AdrVals[0] != AccReg))
     {

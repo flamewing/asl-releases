@@ -65,6 +65,7 @@
 #include "codepseudo.h"
 #include "motpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
 
 #include "codeh8_5.h"
 
@@ -182,7 +183,9 @@ static Boolean DecodeRegList(char *Asc, Byte *pErg)
     else
     {
       p = strchr(Part,'-');
-      if (!p) return False; *p = '\0'; 
+      if (!p)
+        return False;
+      *p = '\0'; 
       if (!DecodeReg(Part, &Reg1)) return False;
       if (!DecodeReg(p + 1, &Reg2)) return False;
       if (Reg1 > Reg2) Reg2 += 8;
@@ -500,7 +503,7 @@ static void CopyAdr(void)
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
+  if (!ChkArgCnt(0, 0));
   else if (OpSize != -1) WrError(1100);
   else if (strcmp(Format, " ")) WrError(1090);
   else
@@ -516,7 +519,7 @@ static void DecodeMOV(Word Dummy)
 {
   UNUSED(Dummy);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (CheckFormat("GEIFLS"))
   {
     if (OpSize == -1)
@@ -647,7 +650,7 @@ static void DecodeLDC_STC(Word IsSTC_16)
   Byte HReg;
   int CRegIdx = 2, AdrIdx = 1;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (strcmp(Format," ")) WrError(1090);
   else
   {
@@ -676,7 +679,7 @@ static void DecodeLDM(Word Dummy)
   UNUSED(Dummy);
 
   if (OpSize == -1) OpSize = 1;
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (OpSize != 1) WrError(1130);
   else if (strcmp(Format, " ")) WrError(1090);
   else if (!DecodeRegList(ArgStr[2], BAsmCode + 1)) WrError(1410);
@@ -699,7 +702,7 @@ static void DecodeSTM(Word Dummy)
   UNUSED(Dummy);
 
   if (OpSize == -1) OpSize = 1;
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (OpSize != 1) WrError(1130);
   else if (strcmp(Format, " ")) WrError(1090);
   else if (!DecodeRegList(ArgStr[1], BAsmCode + 1)) WrError(1410);
@@ -722,8 +725,8 @@ static void DecodeMOVTPE_MOVFPE(Word IsMOVTPE_16)
   Byte HReg;
   int RegIdx = 2, AdrIdx = 1;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (CheckFormat("G"))
+  if (ChkArgCnt(2, 2)
+   && CheckFormat("G"))
   {
     if (IsMOVTPE_16)
     {
@@ -752,8 +755,8 @@ static void DecodeADD_SUB(Word IsSUB_16)
 {
   LongInt AdrLong;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (CheckFormat("GQ"))
+  if (ChkArgCnt(2, 2)
+   && CheckFormat("GQ"))
   {
     if (OpSize == -1) SetOpSize(1);
     if ((OpSize != 0) && (OpSize != 1)) WrError(1130);
@@ -810,8 +813,8 @@ static void DecodeCMP(Word Dummy)
 {
   UNUSED(Dummy);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (CheckFormat("GEI"))
+  if (ChkArgCnt(2, 2)
+   && CheckFormat("GEI"))
   {
     if (OpSize == -1)
      SetOpSize((FormatCode == 2) ? 0 : 1);
@@ -882,8 +885,8 @@ static void DecodeRegEA(Word Index)
   Byte HReg;
   OneOrder *pOrder = RegEAOrders + Index;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (CheckFormat("G"))
+  if (ChkArgCnt(2, 2)
+   && CheckFormat("G"))
   {
     if (OpSize == -1) SetOpSize(pOrder->DefSize);
     if (!((1 << OpSize) & pOrder->SizeMask)) WrError(1130);
@@ -907,7 +910,7 @@ static void DecodeTwoReg(Word Index)
   Byte HReg;
   OneOrder *pOrder = TwoRegOrders + Index;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (strcmp(Format," ")) WrError(1090);
   else if (!DecodeReg(ArgStr[1],&HReg)) WrError(1350);
   else if (!DecodeReg(ArgStr[2],&AdrByte)) WrError(1350);
@@ -937,7 +940,7 @@ static void DecodeLog(Word Code)
 {
   Byte HReg;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeCReg(ArgStr[2], &HReg)) WrXError(1440, ArgStr[2]);
   else
   {
@@ -956,7 +959,7 @@ static void DecodeOne(Word Index)
 {
   OneOrder *pOrder = OneOrders + Index;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (CheckFormat("G"))
   {
     if (OpSize == -1) SetOpSize(pOrder->DefSize);
@@ -980,7 +983,7 @@ static void DecodeOneReg(Word Index)
   Byte HReg;
   OneOrder *pOrder = OneRegOrders + Index;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (strcmp(Format, " ")) WrError(1090);
   else if (!DecodeReg(ArgStr[1], &HReg)) WrError(1350);
   else
@@ -1001,8 +1004,7 @@ static void DecodeBit(Word Code)
   Boolean OK;
   Byte HReg;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     if (OpSize == -1) OpSize = 0;
     if ((OpSize != 0) && (OpSize != 1)) WrError(1130);
@@ -1040,7 +1042,7 @@ static void DecodeRel(Word Code)
   Boolean OK;
   LongInt AdrLong;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (strcmp(Format," ")) WrError(1090);
   else
   {
@@ -1089,8 +1091,8 @@ static void DecodeRel(Word Code)
 
 static void DecodeJMP_JSR(Word IsJSR_8)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (CheckFormat("G"))
+  if (ChkArgCnt(1, 1)
+   && CheckFormat("G"))
   {
     AbsBank = EProgCounter() >> 16;
     DecodeAdr(ArgStr[1], MModIReg | MModReg | MModDisp8 | MModDisp16 | MModAbs16);
@@ -1117,7 +1119,7 @@ static void DecodeJMP_JSR(Word IsJSR_8)
 
 static void DecodePJMP_PJSR(Word IsPJMP)
 {
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else if (strcmp(Format," ")) WrError(1090);
   else if (!Maximum) WrError(1997);
@@ -1155,7 +1157,7 @@ static void DecodeSCB(Word Code)
   LongInt AdrLong;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (*AttrPart != '\0') WrError(1100);
   else if (strcmp(Format," ")) WrError(1090);
   else if (!DecodeReg(ArgStr[1], &HReg)) WrError(1350);
@@ -1189,7 +1191,7 @@ static void DecodePRTD_RTD(Word IsPRTD)
   ShortInt HSize;
   Integer AdrInt;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (strcmp(Format," ")) WrError(1090);
   else if (*ArgStr[1] != '#') WrError(1120);
   else
@@ -1237,7 +1239,7 @@ static void DecodeLINK(Word Dummy)
 {
   UNUSED(Dummy);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (strcmp(Format," ")) WrError(1090);
   else
   {
@@ -1294,7 +1296,7 @@ static void DecodeUNLK(Word Dummy)
 {
   UNUSED(Dummy);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else if (strcmp(Format," ")) WrError(1090);
   else
@@ -1315,7 +1317,7 @@ static void DecodeTRAPA(Word Dummy)
 {
   UNUSED(Dummy);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else if (strcmp(Format," ")) WrError(1090);
   else if (*ArgStr[1] != '#') WrError(1120);

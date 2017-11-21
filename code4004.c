@@ -75,6 +75,7 @@
 #include "codevars.h"
 #include "headids.h"
 #include "fourpseudo.h"
+#include "errmsg.h"
 
 #include "code4004.h"
 
@@ -164,9 +165,10 @@ static Boolean DecodeRReg(char *pAsc, Byte *pErg)
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else if (MomCPU - CPU4004 < Hi(Code)) WrError(1500);
-  else
+  CPUVar MinCPU = CPU4004 + (CPUVar)Hi(Code);
+
+  if (ChkArgCnt(0, 0)
+   && ChkMinCPU(MinCPU))
   {
     BAsmCode[0] = Lo(Code);
     CodeLen = 1;
@@ -177,7 +179,7 @@ static void DecodeOneReg(Word Code)
 {
   Byte Erg;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!DecodeReg(ArgStr[1], &Erg)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -190,7 +192,7 @@ static void DecodeOneRReg(Word Code)
 {
   Byte Erg;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!DecodeRReg(ArgStr[1], &Erg)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -203,7 +205,7 @@ static void DecodeAccReg(Word Code)
 {
   Byte Erg;
 
-  if ((ArgCnt != 2) && (ArgCnt != 1)) WrError(1110);
+  if (!ChkArgCnt(1, 2));
   else if ((ArgCnt == 2) && (strcasecmp(ArgStr[1], "A"))) WrError(1350);
   else if (!DecodeReg(ArgStr[ArgCnt], &Erg)) WrXError(1445, ArgStr[ArgCnt]);
   else
@@ -217,8 +219,7 @@ static void DecodeImm4(Word Code)
 {
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else 
+  if (ChkArgCnt(1, 1))
   {
     BAsmCode[0] = EvalIntExpression(ArgStr[1], UInt4, &OK);
     if (OK)
@@ -234,8 +235,7 @@ static void DecodeFullJmp(Word Index)
   Word Adr;
   Boolean OK;
 
-  if (ArgCnt!=1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Adr = EvalIntExpression(ArgStr[1], UInt12, &OK);
     if (OK)
@@ -254,7 +254,7 @@ static void DecodeISZ(Word Index)
   Byte Erg;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &Erg)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -280,8 +280,7 @@ static void DecodeJCN(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     BAsmCode[0] = 0x10;
     for (pCond = ArgStr[1]; *pCond; pCond++)
@@ -315,7 +314,7 @@ static void DecodeFIM(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeRReg(ArgStr[1], BAsmCode)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -339,8 +338,7 @@ static void DecodeREG(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
     AddRegDef(LabPart,ArgStr[1]);
 }
 

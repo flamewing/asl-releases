@@ -28,6 +28,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "codepseudo.h"
+#include "errmsg.h"
 
 #include "natpseudo.h"
 
@@ -68,8 +69,7 @@ Boolean DecodeNatPseudo(Boolean *pBigFlag)
 
   if ((Memo("DSB")) || (Memo("DSW")))
   {
-    if (ArgCnt != 1) WrError(1110);
-    else
+    if (ChkArgCnt(1, 1))
     {
       FirstPassUnknown = False;
       Size = EvalIntExpression(ArgStr[1], UInt16, &ValOK);
@@ -89,8 +89,7 @@ Boolean DecodeNatPseudo(Boolean *pBigFlag)
 
   if (Memo("FB"))
   {
-    if (ArgCnt != 2) WrError(1110);
-    else
+    if (ChkArgCnt(2, 2))
     {
       FirstPassUnknown = False;
       Size = EvalIntExpression(ArgStr[1], UInt16, &ValOK);
@@ -114,8 +113,7 @@ Boolean DecodeNatPseudo(Boolean *pBigFlag)
 
   if (Memo("FW"))
   {
-    if (ArgCnt != 2) WrError(1110);
-    else
+    if (ChkArgCnt(2, 2))
     {
       FirstPassUnknown = False;
       Size = EvalIntExpression(ArgStr[1], UInt16, &ValOK);

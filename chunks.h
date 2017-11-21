@@ -14,7 +14,7 @@
 
 typedef struct
 {
-  LargeWord Start,Length;
+  LargeWord Start, Length;
 } OneChunk;
 
 typedef struct 
@@ -29,6 +29,8 @@ extern Boolean AddChunk(ChunkList *NChunk, LargeWord NewStart, LargeWord NewLen,
 extern void DeleteChunk(ChunkList *NChunk, LargeWord DelStart, LargeWord DelLen);
 
 extern Boolean AddressInChunk(ChunkList *NChunk, LargeWord Address);
+
+extern void SortChunks(ChunkList *NChunk);
 
 extern void InitChunk(ChunkList *NChunk);
 

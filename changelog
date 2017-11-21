@@ -1,6 +1,24 @@
 $Id: changelog,v 1.152 2017/06/28 17:05:00 alfred Exp $
 ------------------------------------------------------------------------------
 
+2017-11-20 [1.42 Bld 120]
+
+- Addition    : add more ATmega variants
+
+- Addition    : more flexible usage of ENUMs
+
+- Addition    : if a statement was called with an incorrect number of
+                arguments, the allowed range is printed as extended
+                error message
+
+- Addition    : if a statement or addressing mode is not supported on
+                the selected CPU, the CPU variants supporting it are
+                listed as extended error message
+
+- Addition    : if an ENDM statement is missing, print which type of
+                statement (macro defintion, REPT, IRP(C), WHILE) lacks
+                an ENDM.
+
 2017-08-21 [1.42 Bld 119]
 
 - Addition    : add NEC 78K4

@@ -45,6 +45,7 @@
 #include "fourpseudo.h"
 #include "codevars.h"
 #include "headids.h"
+#include "errmsg.h"
 
 #include "codeol50.h"
 
@@ -230,9 +231,8 @@ static void DecodeAri(Word Index)
 {
   const tAriOrder *pOrder = AriOrders + Index;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!CheckCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
-  else
+  if (ChkArgCnt(2, 2)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU5054) >= 0))
   {
     if (DecodeAdr(ArgStr[2], MModAP))
     {
@@ -259,9 +259,8 @@ static void DecodeADJUST(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!CheckCPU(M_5054 | M_5055)) WrXError(1500, OpPart);
-  else
+  if (ChkArgCnt(2, 2)
+   && (ChkExactCPUMask(M_5054 | M_5055, CPU5054) >= 0))
   {
     if (DecodeAdr(ArgStr[2], MModAP))
     {
@@ -282,9 +281,8 @@ static void DecodeAP(Word Index)
 {
   const tAPOrder *pOrder = APOrders + Index;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (!CheckCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
-  else
+  if (ChkArgCnt(1, 1)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU5054) >= 0))
   {
     if (DecodeAdr(ArgStr[1], MModAP))
     {
@@ -298,9 +296,8 @@ static void DecodeFixed(Word Index)
 {
   const tFixedOrder *pOrder = FixedOrders + Index;
 
-  if (ArgCnt != 0) WrError(1110);
-  else if (!CheckCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
-  else
+  if (ChkArgCnt(0, 0)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU5054) >= 0))
   {
     WAsmCode[0] = pOrder->Code;
     CodeLen = 1;
@@ -311,9 +308,8 @@ static void DecodeMOV(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!CheckCPU(M_5054 | M_5055 | M_5056 | M_6051 | M_6052)) WrXError(1500, OpPart);
-  else
+  if (ChkArgCnt(2, 2)
+   && (ChkExactCPUMask(M_5054 | M_5055 | M_5056 | M_6051 | M_6052, CPU5054) >= 0))
   {
     DecodeAdr(ArgStr[2], MModACC | MModAP | MModAX);
     switch (AdrMode)
@@ -366,9 +362,8 @@ static void DecodeAPAX(Word Index)
 {
   const tAPAXOrder *pOrder = APAXOrders + Index;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (!CheckCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
-  else
+  if (ChkArgCnt(1, 1)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU5054) >= 0))
   {
     DecodeAdr(ArgStr[1], MModAP | MModAX);
     switch (AdrMode)
@@ -387,8 +382,8 @@ static void DecodeAPAX(Word Index)
 
 static void DecodeJMPIO(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (!CheckCPU(M_5054 | M_5055 | M_5056 | M_6051 | M_6052)) WrXError(1500, OpPart);
+  if (ChkArgCnt(1, 1));
+  else if (ChkExactCPUMask(M_5054 | M_5055 | M_5056 | M_6051 | M_6052, CPU5054) < 0);
   else if (*ArgStr[1] != '@') WrError(1350);
   {
     if (DecodeAdr(ArgStr[1] + 1, MModAP))
@@ -403,8 +398,8 @@ static void DecodeJMP(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (!CheckCPU(M_5054 | M_5055 | M_5056 | M_6051 | M_6052)) WrXError(1500, OpPart);
+  if (!ChkArgCnt(1, 1));
+  else if (ChkExactCPUMask(M_5054 | M_5055 | M_5056 | M_6051 | M_6052, CPU5054) < 0);
   else if (*ArgStr[1] == '@')
     DecodeJMPIO(0x00d0);
   else
@@ -429,9 +424,8 @@ static void DecodeCALL(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (!CheckCPU(M_6051 | M_6052)) WrXError(1500, OpPart);
-  else
+  if (ChkArgCnt(1, 1)
+   && (ChkExactCPUMask(M_6051 | M_6052, CPU5054) >= 0))
   {
     Boolean OK;
 
@@ -448,9 +442,8 @@ static void DecodeMSA(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (!CheckCPU(M_6051)) WrXError(1500, OpPart);
-  else
+  if (ChkArgCnt(1, 1)
+   && (ChkExactCPUMask(M_6051, CPU5054) >= 0))
   {
     Boolean OK;
 
@@ -469,9 +462,8 @@ static void DecodeRel(Word Index)
   Boolean AllowMinus = CheckCPU(pOrder->MinusCPUMask),
        AllowPlus = CheckCPU(pOrder->PlusCPUMask);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (!AllowPlus && !AllowMinus) WrXError(1500, OpPart);
-  else
+  if (ChkArgCnt(1, 1)
+   && (ChkExactCPUMask(pOrder->MinusCPUMask | pOrder->PlusCPUMask, CPU5054) >= 0))
   {
     Boolean OK;
     Integer Distance = EvalIntExpression(ArgStr[1], CodeIntType, &OK) - (EProgCounter() + 1);
@@ -498,9 +490,8 @@ static void DecodeCtrl(Word Index)
 {
   const tCtrlOrder *pOrder = CtrlOrders + Index;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (!CheckCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
-  else
+  if (ChkArgCnt(1, 1)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU5054) >= 0))
   {
     DecodeAdr(ArgStr[1], MModImm | MModAP);
     switch (AdrMode)
@@ -527,9 +518,9 @@ static void DecodeDSP(Word Index)
 {
   const tDSPOrder *pOrder = DSPOrders + Index;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!CheckCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
-  else if (DecodeAdr(ArgStr[2], MModAP))
+  if (ChkArgCnt(2, 2)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU5054) >= 0)
+   && DecodeAdr(ArgStr[2], MModAP))
   {
     Boolean OK;
     Word Digit;
@@ -545,9 +536,8 @@ static void DecodeDSP(Word Index)
 
 static void DecodeINTENDSAB(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else if (!CheckCPU(M_5054 | M_5055 | M_6051)) WrXError(1500, OpPart);
-  else
+  if (ChkArgCnt(0, 0)
+   && (ChkExactCPUMask(M_5054 | M_5055 | M_6051, CPU5054) >= 0))
   {
     WAsmCode[0] = 0x04b0 | (Code & 0x0f);
     WAsmCode[1] = 0x0440 | ((Code >> 4) & 0x0f);
@@ -559,8 +549,8 @@ static void DecodeONOFF(Word Index)
 {
   const tONOFFOrder *pOrder = ONOFFOrders + Index;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (!CheckCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
+  if (!ChkArgCnt(1, 1));
+  else if (ChkExactCPUMask(pOrder->CPUMask, CPU5054) < 0);
   else if (!strcasecmp(ArgStr[1], "OFF"))
   {
     WAsmCode[0] = pOrder->Code | (2 << pOrder->Shift);
@@ -579,9 +569,8 @@ static void DecodeImm(Word Index)
 {
   const tImmOrder *pOrder = ImmOrders + Index;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (!CheckCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
-  else
+  if (ChkArgCnt(1, 1)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU5054) >= 0))
   {
     Boolean OK;
     Word Freq = EvalIntExpression(ImmPtr(ArgStr[1]), UInt4, &OK);
@@ -600,9 +589,8 @@ static void DecodeBUZZER(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != ReqArgCnt) WrError(1110);
-  else if (!CheckCPU(M_5054 | M_5055)) WrXError(1500, OpPart);
-  else
+  if (ChkArgCnt(ReqArgCnt, ReqArgCnt)
+   && (ChkExactCPUMask(M_5054 | M_5055, CPU5054) >= 0))
   {
     Boolean OK = True, OK2;
     Word Freq, Sound;
@@ -621,9 +609,8 @@ static void DecodeINP(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!CheckCPU(M_5056)) WrXError(1500, OpPart);
-  else
+  if (ChkArgCnt(2, 2)
+   && (ChkExactCPUMask(M_5056, CPU5054) >= 0))
   {
     Boolean OK;
     Word Port = EvalIntExpression(ArgStr[1], UInt4, &OK);
@@ -640,9 +627,8 @@ static void DecodeIN(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!CheckCPU(M_6052)) WrXError(1500, OpPart);
-  else
+  if (ChkArgCnt(2, 2)
+   && (ChkExactCPUMask(M_6052, CPU5054) >= 0))
   {
     Boolean OK;
     Word Port = EvalIntExpression(ArgStr[1], UInt4, &OK);
@@ -659,9 +645,8 @@ static void DecodeOUT(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!CheckCPU(M_5056 | M_6052)) WrXError(1500, OpPart);
-  else
+  if (ChkArgCnt(2, 2)
+   && (ChkExactCPUMask(M_5056 | M_6052, CPU5054) >= 0))
   {
     Boolean OK;
     Word Port = EvalIntExpression(ArgStr[2], (MomCPU == CPU6052) ? UInt5 : UInt4, &OK);
@@ -692,9 +677,8 @@ static void DecodeMem(Word Index)
 {
   const tMemOrder *pOrder = MemOrders + Index;
 
-  if (ArgCnt > 3) WrError(1110);
-  if (!CheckCPU(pOrder->CPUMask)) WrXError(1500, OpPart);
-  else
+  if (ChkArgCnt(0, 3)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU5054) >= 0))
   {
     WAsmCode[0] = pOrder->Code;
     if (ArgCnt < 1)

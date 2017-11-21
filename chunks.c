@@ -251,6 +251,27 @@ LargeWord ChunkSum(ChunkList *NChunk)
   return Sum;
 }
 
+/*--------------------------------------------------------------------------*/
+/* sort by address */
+
+static int CompareChunk(const void *c1, const void *c2)
+{
+  const OneChunk *pChunk1 = (const OneChunk*)c1,
+                 *pChunk2 = (const OneChunk*)c2;
+
+  if (pChunk1->Start < pChunk2->Start)
+    return -1;
+  else if (pChunk1->Start > pChunk2->Start)
+    return 1;
+  else
+    return 0;
+}
+
+void SortChunks(ChunkList *NChunk)
+{
+  qsort(NChunk->Chunks, NChunk->RealLen, sizeof(NChunk->Chunks[0]), CompareChunk);
+}
+
 void chunks_init(void)
 {
 }

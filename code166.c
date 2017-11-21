@@ -62,6 +62,9 @@
 #include "codepseudo.h"
 #include "intpseudo.h" 
 #include "codevars.h"
+#include "errmsg.h"
+
+#include "code166.h"
 
 typedef struct
 {
@@ -630,43 +633,11 @@ static Boolean DecodePref(char *Asc, Byte *Erg)
 
 /*-------------------------------------------------------------------------*/
 
-static Boolean DecodePseudo(void)
-{
-  Word Adr;
-  Byte Bit;
-
-  if (Memo("BIT"))
-  {
-    if (ArgCnt != 1) WrError(1110);
-    else if (DecodeBitAddr(ArgStr[1], &Adr, &Bit, True))
-    {
-      PushLocHandle(-1);
-      EnterIntSymbol(LabPart, (Adr << 4) + Bit, SegNone, False);
-      PopLocHandle();
-      sprintf(ListLine, "=%02xH.%1x", Adr, Bit);
-    }
-    return True;
-  }
-
-  if (Memo("REG"))
-  {
-    if (ArgCnt != 1) WrError(1110);
-    else
-      AddRegDef(LabPart, ArgStr[1]);
-    return True;
-  }
-
-  return False;
-}
-
-/*-------------------------------------------------------------------------*/
-
 static void DecodeFixed(Word Index)
 {
   const BaseOrder *pOrder = FixedOrders + Index;
 
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     CodeLen = 2;
     BAsmCode[0] = Lo(pOrder->Code1);
@@ -690,8 +661,7 @@ static void DecodeMOV(Word Code)
   OpSize = Hi(Code);
   Code = 1 - OpSize;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModReg | MModMReg | MModIReg | MModPreDec | MModPostInc | MModIndex | MModAbs, False, True);
     switch (AdrType)
@@ -868,8 +838,7 @@ static void DecodeMOVBS_MOVBZ(Word Code)
   Byte HReg;
   LongInt AdrLong;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     OpSize = 1;
     DecodeAdr(ArgStr[1], MModReg | MModMReg | MModAbs, False, True);
@@ -933,8 +902,7 @@ static void DecodeMOVBS_MOVBZ(Word Code)
 
 static void DecodePUSH_POP(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModMReg, False, Code & 0x10);
     switch (AdrType)
@@ -953,8 +921,7 @@ static void DecodeSCXT(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModMReg, False, True);
     switch (AdrType)
@@ -980,8 +947,7 @@ static void DecodeALU2(Word Code)
   OpSize = Hi(Code);
   Code = (1 - OpSize) + (Lo(Code)  << 4);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModReg | MModMReg | MModAbs, False, True);
     switch (AdrType)
@@ -1085,8 +1051,7 @@ static void DecodeCPL_NEG(Word Code)
   OpSize = Hi(Code);
 
   Code = Lo(Code) + ((1 - OpSize) << 5);
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModReg, False, True);
     if (AdrType == ModReg)
@@ -1100,8 +1065,7 @@ static void DecodeCPL_NEG(Word Code)
 
 static void DecodeDiv(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModReg, False, False);
     if (AdrType == ModReg)
@@ -1115,8 +1079,7 @@ static void DecodeDiv(Word Code)
 
 static void DecodeLoop(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModReg, False, True);
     if (AdrType == ModReg)
@@ -1155,8 +1118,7 @@ static void DecodeMul(Word Code)
 {
   Byte HReg;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModReg, False, False);
     switch (AdrType)
@@ -1181,8 +1143,7 @@ static void DecodeShift(Word Code)
 {
   Byte HReg;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     OpSize = 1;
     DecodeAdr(ArgStr[1], MModReg, False, True);
@@ -1218,17 +1179,16 @@ static void DecodeBit2(Word Code)
   Byte BOfs1, BOfs2;
   Word BAdr1, BAdr2;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
-   if (DecodeBitAddr(ArgStr[1], &BAdr1, &BOfs1, False))
-   if (DecodeBitAddr(ArgStr[2], &BAdr2, &BOfs2, False))
-   {
-     CodeLen = 4;
-     BAsmCode[0] = Code;
-     BAsmCode[1] = BAdr2;
-     BAsmCode[2] = BAdr1;
-     BAsmCode[3] = (BOfs2 << 4) + BOfs1;
-   }
+  if (ChkArgCnt(2, 2)
+   && DecodeBitAddr(ArgStr[1], &BAdr1, &BOfs1, False)
+   && DecodeBitAddr(ArgStr[2], &BAdr2, &BOfs2, False))
+  {
+    CodeLen = 4;
+    BAsmCode[0] = Code;
+    BAsmCode[1] = BAdr2;
+    BAsmCode[2] = BAdr1;
+    BAsmCode[3] = (BOfs2 << 4) + BOfs1;
+  }
 }
 
 static void DecodeBCLR_BSET(Word Code)
@@ -1236,8 +1196,8 @@ static void DecodeBCLR_BSET(Word Code)
   Byte BOfs;
   Word BAdr;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (DecodeBitAddr(ArgStr[1], &BAdr, &BOfs, False))
+  if (ChkArgCnt(1, 1)
+   && DecodeBitAddr(ArgStr[1], &BAdr, &BOfs, False))
   {
     CodeLen = 2;
     BAsmCode[0] = (BOfs << 4) + Code;
@@ -1250,8 +1210,7 @@ static void DecodeBFLDH_BFLDL(Word Code)
   Byte BOfs;
   Word BAdr;
 
-  if (ArgCnt != 3) WrError(1110);
-  else 
+  if (ChkArgCnt(3, 3))
   {
     strmaxcat(ArgStr[1], ".0", 255);
     if (DecodeBitAddr(ArgStr[1], &BAdr, &BOfs, False))
@@ -1284,8 +1243,7 @@ static void DecodeJMP(Word Code)
 {
   UNUSED(Code);
 
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 2))
   {
     int Cond = (ArgCnt == 1) ? TrueCond : DecodeCondition(ArgStr[1]);
     if (Cond >= ConditionCount) WrXError(1360, ArgStr[1]);
@@ -1335,8 +1293,7 @@ static void DecodeCALL(Word Code)
 {
   UNUSED(Code);
 
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 2))
   {
     int Cond = (ArgCnt == 1) ? TrueCond : DecodeCondition(ArgStr[1]);
     if (Cond >= ConditionCount) WrXError(1360, ArgStr[1]);
@@ -1387,8 +1344,7 @@ static void DecodeJMPR(Word Code)
 {
   UNUSED(Code);
 
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 2))
   {
     int Cond = (ArgCnt == 1) ? TrueCond : DecodeCondition(ArgStr[1]);
     if (Cond >= ConditionCount) WrXError(1360, ArgStr[1]);
@@ -1415,8 +1371,7 @@ static void DecodeCALLR(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     LongInt AdrLong = EvalIntExpression(ArgStr[ArgCnt], MemInt, &OK) - (EProgCounter() + 2);
@@ -1436,8 +1391,7 @@ static void DecodeCALLR(Word Code)
 
 static void DecodeJMPA_CALLA(Word Code)
 {
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 2))
   {
     int Cond = (ArgCnt == 1) ? TrueCond : DecodeCondition(ArgStr[1]);
     if (Cond >= ConditionCount) WrXError(1360, ArgStr[1]);
@@ -1463,8 +1417,7 @@ static void DecodeJMPA_CALLA(Word Code)
 
 static void DecodeJMPS_CALLS(Word Code)
 {
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 2))
   {
     Boolean OK;
     Word AdrWord;
@@ -1495,8 +1448,7 @@ static void DecodeJMPS_CALLS(Word Code)
 
 static void DecodeJMPI_CALLI(Word Code)
 {
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 2))
   {
     int Cond = (ArgCnt == 1) ? TrueCond : DecodeCondition(ArgStr[1]);
     if (Cond >= ConditionCount) WrXError(1360, ArgStr[1]);
@@ -1520,8 +1472,8 @@ static void DecodeBJmp(Word Code)
   Byte BOfs;
   Word BAdr;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (DecodeBitAddr(ArgStr[1], &BAdr, &BOfs, False))
+  if (ChkArgCnt(2, 2)
+   && DecodeBitAddr(ArgStr[1], &BAdr, &BOfs, False))
   {
     Boolean OK;
     LongInt AdrLong = EvalIntExpression(ArgStr[2], MemInt, &OK) - (EProgCounter() + 4);
@@ -1544,8 +1496,7 @@ static void DecodePCALL(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModMReg, False, False);
     switch (AdrType)
@@ -1570,8 +1521,7 @@ static void DecodeRETP(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModMReg, False, False);
     switch (AdrType)
@@ -1591,7 +1541,7 @@ static void DecodeTRAP(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*ArgStr[1] != '#') WrError(1350);
   else
   {
@@ -1612,9 +1562,9 @@ static void DecodeATOMIC(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < CPU80C167) WrError(1500);
-  else if (DecodePref(ArgStr[1], &HReg))
+  if (ChkArgCnt(1, 1)
+   && ChkMinCPU(CPU80C167)
+   && DecodePref(ArgStr[1], &HReg))
   {
     CodeLen = 2;
     BAsmCode[0] = 0xd1;
@@ -1628,9 +1578,9 @@ static void DecodeEXTR(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < CPU80C167) WrError(1500);
-  else if (DecodePref(ArgStr[1], &HReg))
+  if (ChkArgCnt(1, 1)
+   && ChkMinCPU(CPU80C167)
+   && DecodePref(ArgStr[1], &HReg))
   {
     CodeLen = 2;
     BAsmCode[0] = 0xd1;
@@ -1644,9 +1594,9 @@ static void DecodeEXTP_EXTPR(Word Code)
 {
   Byte HReg;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPU80C167) WrError(1500);
-  else if (DecodePref(ArgStr[2], &HReg))
+  if (ChkArgCnt(2, 2)
+   && ChkMinCPU(CPU80C167)
+   && DecodePref(ArgStr[2], &HReg))
   {
     DecodeAdr(ArgStr[1], MModReg | MModImm, False, False);
     switch (AdrType)
@@ -1677,9 +1627,9 @@ static void DecodeEXTS_EXTSR(Word Code)
   Byte HReg;
 
   OpSize = 0;
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPU80C167) WrError(1500);
-  else if (DecodePref(ArgStr[2], &HReg))
+  if (ChkArgCnt(2, 2)
+   && ChkMinCPU(CPU80C167)
+   && DecodePref(ArgStr[2], &HReg))
   {
     DecodeAdr(ArgStr[1], MModReg | MModImm, False, False);
     switch (AdrType)
@@ -1703,6 +1653,31 @@ static void DecodeEXTS_EXTSR(Word Code)
         break;
     }
   }
+}
+
+static void DecodeBIT(Word Code)
+{
+  Word Adr;
+  Byte Bit;
+
+  UNUSED(Code);
+
+ if (ChkArgCnt(1, 1)
+  && DecodeBitAddr(ArgStr[1], &Adr, &Bit, True))
+ {
+   PushLocHandle(-1);
+   EnterIntSymbol(LabPart, (Adr << 4) + Bit, SegNone, False);
+   PopLocHandle();
+   sprintf(ListLine, "=%02xH.%1x", Adr, Bit);
+ }
+}
+
+static void DecodeREG(Word Code)
+{
+  UNUSED(Code);
+
+  if (ChkArgCnt(1, 1))
+    AddRegDef(LabPart, ArgStr[1]);
 }
 
 /*-------------------------------------------------------------------------*/
@@ -1844,6 +1819,9 @@ static void InitFields(void)
   AddInstTable(InstTable, "MUL"  , InstrZ++, DecodeMul);
   AddInstTable(InstTable, "MULU" , InstrZ++, DecodeMul);
   AddInstTable(InstTable, "PRIOR", InstrZ++, DecodeMul);
+
+  AddInstTable(InstTable, "BIT" , 0, DecodeBIT);
+  AddInstTable(InstTable, "REG" , 0, DecodeREG);
 }
 
 static void DeinitFields(void)
@@ -1867,9 +1845,6 @@ static void MakeCode_166(void)
     return;
 
   /* Pseudoanweisungen */
-
-  if (DecodePseudo())
-    return;
 
   if (DecodeIntelPseudo(False))
     return;

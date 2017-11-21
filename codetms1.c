@@ -29,6 +29,7 @@
 #include "codevars.h"
 #include "headids.h"
 #include "intpseudo.h"
+#include "errmsg.h"
 
 #include "codetms1.h"
 
@@ -48,8 +49,7 @@ static const Byte BitMirr[16] =
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     BAsmCode[0] = Lo(Code);
     CodeLen = 1;
@@ -58,8 +58,7 @@ static void DecodeFixed(Word Code)
 
 static void DecodeConst4(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     BAsmCode[0] = EvalIntExpression(ArgStr[1], Int4, &OK);
@@ -73,8 +72,7 @@ static void DecodeConst4(Word Code)
 
 static void DecodeConst3(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     BAsmCode[0] = EvalIntExpression(ArgStr[1], UInt3, &OK);
@@ -88,8 +86,7 @@ static void DecodeConst3(Word Code)
 
 static void DecodeConst2(Word Code)
 {  
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     BAsmCode[0] = EvalIntExpression(ArgStr[1], UInt2, &OK);
@@ -103,8 +100,7 @@ static void DecodeConst2(Word Code)
 
 static void DecodeJmp(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {   
     Boolean OK;
     Word Addr;
@@ -125,8 +121,7 @@ static void DecodeJmpL(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {   
     Boolean OK;
     Word Addr;

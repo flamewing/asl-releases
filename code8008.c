@@ -24,6 +24,9 @@
 #include "headids.h"
 #include "codevars.h"
 #include "intpseudo.h"
+#include "errmsg.h"
+
+#include "code8008.h"
 
 /*---------------------------------------------------------------------------*/
 /* Variablen */
@@ -51,8 +54,7 @@ static Boolean DecodeReg(char *Asc, Byte *pErg)
 
 static void DecodeFixed(Word Index)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     BAsmCode[0] = Index;
     CodeLen = 1;
@@ -61,8 +63,7 @@ static void DecodeFixed(Word Index)
 
 static void DecodeImm(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
 
@@ -77,8 +78,7 @@ static void DecodeImm(Word Index)
 
 static void DecodeJmp(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word AdrWord;
@@ -99,8 +99,7 @@ static void DecodeRST(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word AdrWord;
@@ -135,8 +134,7 @@ static void DecodeINP(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
 
@@ -153,8 +151,7 @@ static void DecodeOUT(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Byte Addr;
     Boolean OK;
@@ -182,7 +179,7 @@ static void DecodeMOV(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &DReg)) WrXError(1445, ArgStr[1]);
   else if (!DecodeReg(ArgStr[2], &SReg)) WrXError(1445, ArgStr[2]);
   else if ((DReg == 7) && (SReg == 7)) WrError(1760); /* MOV M,M not allowed - asame opcode as HLT */
@@ -199,7 +196,7 @@ static void DecodeMVI(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &DReg)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -220,7 +217,7 @@ static void DecodeLXI(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &DReg)) WrXError(1445, ArgStr[1]);
   else if ((DReg != 1) && (DReg != 3) && (DReg != 5)) WrXError(1445, ArgStr[1]);
   else
@@ -245,7 +242,7 @@ static void DecodeSingleReg(Word Index)
   Byte Reg, Opcode = Lo(Index), Shift = Hi(Index) & 7;
   Boolean NoAM = (Index & 0x8000) || False;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
   else if (NoAM && ((Reg == 0) || (Reg == 7))) WrXError(1445, ArgStr[1]);
   else

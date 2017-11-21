@@ -135,7 +135,9 @@
 #include "asmitree.h"
 #include "codevars.h"
 #include "intconsts.h"
+#include "errmsg.h"
 
+#include "code68k.h"
 
 typedef struct
 {
@@ -220,37 +222,33 @@ static const Byte FSizeCodes[8] =
 
 static void ACheckCPU(CPUVar MinCPU)
 {
-  if (MomCPU < MinCPU)
+  if (!ChkMinCPUExt(MinCPU, ErrNum_AddrModeNotSupported))
   {
-    WrError(1505);
     AdrNum = 0;
     AdrCnt = 0;
   }
 }
 
-static void CheckCPU(CPUVar Level)
+static void CheckCPU(CPUVar MinCPU)
 {
-  if (MomCPU < Level)
+  if (!ChkMinCPU(MinCPU))
   {
-    WrError(1500);
     CodeLen = 0;
   }
 }
 
 static void Check020(void)
 {
-  if (MomCPU != CPU68020)
+  if (!ChkExactCPU(CPU68020))
   {
-    WrError(1500);
     CodeLen = 0;
   }
 }
 
 static void Check32(void)
 {
-  if ((MomCPU < CPU68332) || (MomCPU > CPU68360))
+  if (ChkExactCPUList(0, CPU68332, CPU68340, CPU68360, CPUNone) < 0)
   {
-    WrError(1500);
     CodeLen = 0;
   }
 }
@@ -631,12 +629,13 @@ static void DecodeAbs(char *Asc, ShortInt Size)
 
   FirstPassUnknown = False;
   HVal = EvalIntExpression(Asc, Int32, &ValOK);
-  if ((!FirstPassUnknown) && (OpSize > 0))
-    ChkEven(HVal);
-  HVal16 = HVal;
 
   if (ValOK)
   {
+    if ((!FirstPassUnknown) && (OpSize > 0))
+      ChkEven(HVal);
+    HVal16 = HVal;
+
     if (Size == -1)
       Size = (IsShortAdr(HVal)) ? 1 : 2;
     AdrNum = 10;
@@ -1035,10 +1034,7 @@ static void DecodeAdr(const char *Asc_O, Word Erl)
         {
           HVal = EvalIntExpression(OutDisp, (OutDispLen < 0) || (OutDispLen >= 2) ? SInt32 : SInt16, &ValOK);
           if (!ValOK)
-          {
-            WrError(1350);
             return;
-          }
           if ((ValOK) && (HVal == 0) && ((Madri & Erl) != 0) && (OutDispLen == -1))
           {
             AdrMode = 0x10 + AdrComps[0].ANummer;
@@ -1270,11 +1266,8 @@ static void DecodeAdr(const char *Asc_O, Word Erl)
     {
       /* erst ab 68020 erlaubt */
 
-      if (MomCPU < CPU68020)
-      {
-        WrError(1505);
+      if (!ChkMinCPUExt(CPU68020, ErrNum_AddrModeNotSupported))
         return;
-      }
 
       /* Unterscheidung Vor- <---> Nachindizierung: */
 
@@ -1524,7 +1517,7 @@ static void DecodeAdr(const char *Asc_O, Word Erl)
   }
 
 chk:
-  if (!(Erl & (1 << (AdrNum - 1))))
+  if ((AdrNum > 0) && (!(Erl & (1 << (AdrNum - 1)))))
   {
     WrError(1350);
     AdrNum = 0;
@@ -1599,12 +1592,11 @@ static void DecodeMOVE(Word Index)
   int z;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!strcasecmp(ArgStr[1], "USP"))
   {
     if ((*AttrPart != '\0') && (OpSize != 2)) WrError(1130);
-    else if (MomCPU == CPUCOLD) WrError(1500);
-    else
+    else if (ChkExcludeCPU(CPUCOLD))
     {
       DecodeAdr(ArgStr[2], Madr);
       if (AdrNum != 0)
@@ -1618,8 +1610,7 @@ static void DecodeMOVE(Word Index)
   else if (!strcasecmp(ArgStr[2], "USP"))
   {
     if ((*AttrPart != '\0') && (OpSize != 2)) WrError(1130);
-    else if (MomCPU == CPUCOLD) WrError(1500);
-    else
+    else if (ChkExcludeCPU(CPUCOLD))
     {
       DecodeAdr(ArgStr[1], Madr);
       if (AdrNum != 0)
@@ -1732,7 +1723,7 @@ static void DecodeLEA(Word Index)
   UNUSED(Index);
 
   if ((*AttrPart != '\0') && (OpSize != 2)) WrError(1130);
-  else if (ArgCnt != 2) WrError(1110);
+  else if (!ChkArgCnt(2, 2));
   else
   {
     DecodeAdr(ArgStr[2], Madr);
@@ -1765,8 +1756,8 @@ static void DecodeShift(Word Index)
     strcpy(ArgStr[1], "#1");
     ArgCnt = 2;
   }
-  if (ArgCnt != 2) WrError(1110);
-  else if ((*OpPart == 'R') && (MomCPU == CPUCOLD)) WrError(1500);
+  if (!ChkArgCnt(2, 2));
+  else if ((*OpPart == 'R') && (!ChkExcludeCPU(CPUCOLD)));
   else
   {
     DecodeAdr(ArgStr[2], Mdata | Madri | Mpost | Mpre | Mdadri | Maix | Mabs);
@@ -1822,11 +1813,8 @@ static void DecodeADDQSUBQ(Word Index)
   if (!CheckColdSize())
     return;
 
-  if (ArgCnt != 2)
-  {
-    WrError(1110);
+  if (!ChkArgCnt(2, 2))
     return;
-  }
 
   DecodeAdr(ArgStr[2], Mdata | Madr | Madri | Mpost | Mpre | Mdadri | Maix | Mabs);
   if (!AdrNum)
@@ -1862,8 +1850,7 @@ static void DecodeADDXSUBX(Word Index)
 {
   if (CheckColdSize())
   {
-    if (ArgCnt != 2) WrError(1110);
-    else
+    if (ChkArgCnt(2, 2))
     {
       DecodeAdr(ArgStr[1], Mdata | Mpre);
       if (AdrNum != 0)
@@ -1887,9 +1874,8 @@ static void DecodeCMPM(Word Index)
   UNUSED(Index);
 
   if (OpSize > 2) WrError(1130);
-  else if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU == CPUCOLD) WrError(1500);
-  else
+  else if (!ChkArgCnt(2, 2));
+  else if (ChkExcludeCPU(CPUCOLD))
   {
     DecodeAdr(ArgStr[1], Mpost);
     if (AdrNum == 4)
@@ -1933,8 +1919,7 @@ static void DecodeADDSUBCMP(Word Index)
 
   if (CheckColdSize())
   {
-    if (ArgCnt != 2) WrError(1110);
-    else
+    if (ChkArgCnt(2, 2))
     {
       DecodeAdr(ArgStr[2], DestMask);
       switch (AdrNum)
@@ -2027,7 +2012,7 @@ static void DecodeANDOR(Word Index)
   Word Op = Index & 3, Reg;
   char Variant = mytoupper(OpPart[strlen(OpPart) - 1]);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (CheckColdSize())
   {
     if ((strcasecmp(ArgStr[2], "CCR")) && (strcasecmp(ArgStr[2], "SR")))
@@ -2035,8 +2020,7 @@ static void DecodeANDOR(Word Index)
     if (!strcasecmp(ArgStr[2], "CCR"))     /* AND #...,CCR */
     {
       if ((*AttrPart != '\0') && (OpSize != 0)) WrError(1130);
-      else if ((MomCPU == CPU68008) || (MomCPU == CPUCOLD)) WrError(1500);
-      else
+      else if (ChkExcludeCPU(CPU68008) && ChkExcludeCPU(CPUCOLD))
       {
         WAsmCode[0] = 0x003c | (Op << 9);
         OpSize = 0;
@@ -2051,8 +2035,7 @@ static void DecodeANDOR(Word Index)
     else if (!strcasecmp(ArgStr[2], "SR")) /* AND #...,SR */
     {
       if ((*AttrPart != '\0') && (OpSize != 1)) WrError(1130);
-      else if (MomCPU == CPUCOLD) WrError(1500);
-      else
+      else if (ChkExcludeCPU(CPUCOLD))
       {
         WAsmCode[0] = 0x007c | (Op << 9);
         OpSize = 1;
@@ -2118,12 +2101,11 @@ static void DecodeEOR(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!strcasecmp(ArgStr[2], "CCR"))
   {
     if ((*AttrPart != '\0') && (OpSize != 0)) WrError(1130);
-    else if (MomCPU == CPUCOLD) WrError(1500);
-    else
+    else if (ChkExcludeCPU(CPUCOLD))
     {
       WAsmCode[0] = 0xa3c;
       OpSize = 0;
@@ -2138,8 +2120,7 @@ static void DecodeEOR(Word Index)
   else if (!strcasecmp(ArgStr[2], "SR"))
   {
     if (OpSize != 1) WrError(1130);
-    else if (MomCPU == CPUCOLD) WrError(1500);
-    else
+    else if (ChkExcludeCPU(CPUCOLD))
     {
       WAsmCode[0] = 0xa7c;
       DecodeAdr(ArgStr[1], Mimm);
@@ -2187,8 +2168,7 @@ static void DecodePEA(Word Index)
   UNUSED(Index);
 
   if ((*AttrPart != '\0') && (OpSize != 2)) WrError(1100);
-  else if (ArgCnt != 1) WrError(1110);
-  else
+  else if (ChkArgCnt(1, 1))
   {
     OpSize = 0;
     DecodeAdr(ArgStr[1], Madri | Mdadri | Maix | Mpc | Mpcidx | Mabs);
@@ -2208,8 +2188,7 @@ static void DecodeCLRTST(Word Index)
   Word w1;
 
   if (OpSize > 2) WrError(1130);
-  else if (ArgCnt != 1) WrError(1110);
-  else
+  else if (ChkArgCnt(1, 1))
   {
     w1 = Mdata | Madri | Mpost | Mpre | Mdadri | Maix | Mabs;
     if ((Index == 1) && (MomCPU >= CPU68332))
@@ -2233,8 +2212,7 @@ static void DecodeCLRTST(Word Index)
 static void DecodeJSRJMP(Word Index)
 {
   if (*AttrPart != '\0') WrError(1130);
-  else if (ArgCnt != 1) WrError(1110);
-  else
+  else if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], Madri | Mdadri | Maix | Mpc | Mpcidx | Mabs);
     if (AdrNum != 0)
@@ -2251,9 +2229,8 @@ static void DecodeJSRJMP(Word Index)
 static void DecodeNBCDTAS(Word Index)
 {
   if ((*AttrPart != '\0') && (OpSize != 0)) WrError(1130);
-  else if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU == CPUCOLD) WrError(1500);
-  else
+  else if (!ChkArgCnt(1, 1));
+  else if (ChkExcludeCPU(CPUCOLD))
   {
     OpSize = 0;
     DecodeAdr(ArgStr[1], Mdata | Madri | Mpost | Mpre | Mdadri | Maix | Mabs);
@@ -2271,8 +2248,8 @@ static void DecodeNBCDTAS(Word Index)
 
 static void DecodeNEGNOT(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (CheckColdSize())
+  if (ChkArgCnt(1, 1))
+  if (CheckColdSize())
   {
     if (MomCPU == CPUCOLD) DecodeAdr(ArgStr[1], Mdata);
     else DecodeAdr(ArgStr[1], Mdata | Madri | Mpost | Mpre | Mdadri | Maix | Mabs);
@@ -2290,8 +2267,7 @@ static void DecodeSWAP(Word Index)
   UNUSED(Index);
 
   if ((*AttrPart != '\0') && (OpSize != 2)) WrError(1130);
-  else if (ArgCnt != 1) WrError(1110);
-  else
+  else if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], Mdata);
     if (AdrNum != 0)
@@ -2307,8 +2283,7 @@ static void DecodeUNLK(Word Index)
   UNUSED(Index);
 
   if (*AttrPart != '\0') WrError(1130);
-  else if (ArgCnt != 1) WrError(1110);
-  else
+  else if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], Madr);
     if (AdrNum != 0)
@@ -2323,7 +2298,7 @@ static void DecodeEXT(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if ((OpSize == 0) || (OpSize > 2)) WrError(1130);
   else
   {
@@ -2340,8 +2315,8 @@ static void DecodeWDDATA(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU != CPUCOLD) WrError(1500);
+  if (!ChkArgCnt(1, 1));
+  else if (!ChkExcludeCPU(CPUCOLD));
   else if (OpSize > 2) WrError(1130);
   else
   {
@@ -2360,9 +2335,9 @@ static void DecodeWDEBUG(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU != CPUCOLD) WrError(1500);
-  else if (CheckColdSize())
+  if (ChkArgCnt(1, 1)
+   && ChkExcludeCPU(CPUCOLD)
+   && CheckColdSize())
   {
     DecodeAdr(ArgStr[1], Madri | Mdadri);
     if (AdrNum != 0)
@@ -2381,9 +2356,8 @@ static void DecodeFixed(Word Index)
   FixedOrder *FixedZ = FixedOrders + Index;
 
   if (*AttrPart != '\0') WrError(1100);
-  else if (ArgCnt != 0) WrError(1110);
-  else if ((FixedZ->CPUMask &(1 << (MomCPU - CPU68008))) == 0) WrError(1500);
-  else
+  else if (!ChkArgCnt(0, 0));
+  else if (ChkExactCPUMask(FixedZ->CPUMask, CPU68008))
   {
     CodeLen = 2;
     WAsmCode[0] = FixedZ->Code;
@@ -2397,7 +2371,7 @@ static void DecodeMOVEM(Word Index)
   int z;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if ((OpSize < 1) || (OpSize > 2)) WrError(1130);
   else if ((MomCPU == CPUCOLD) && (OpSize == 1)) WrError(1130);
   else
@@ -2440,7 +2414,7 @@ static void DecodeMOVEQ(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if ((*AttrPart != '\0') && (OpSize != 2)) WrError(1130);
   else
   {
@@ -2466,7 +2440,7 @@ static void DecodeSTOP(Word Index)
   UNUSED(Index);
 
   if (*AttrPart != '\0') WrError(1100);
-  else if (ArgCnt != 1) WrError(1110);
+  else if (!ChkArgCnt(1, 1));
   else if (*ArgStr[1] != '#') WrError(1120);
   else
   {
@@ -2488,7 +2462,7 @@ static void DecodeLPSTOP(Word Index)
   UNUSED(Index);
 
   if (*AttrPart != '\0') WrError(1100);
-  else if (ArgCnt != 1) WrError(1110);
+  else if (!ChkArgCnt(1, 1));
   else if (*ArgStr[1] != '#') WrError(1120);
   else
   {
@@ -2511,7 +2485,7 @@ static void DecodeTRAP(Word Index)
   UNUSED(Index);
 
   if (*AttrPart != '\0') WrError(1100);
-  else if (ArgCnt != 1) WrError(1110);
+  else if (!ChkArgCnt(1, 1));
   else if (*ArgStr[1] != '#') WrError(1120);
   else
   {
@@ -2531,8 +2505,8 @@ static void DecodeBKPT(Word Index)
   UNUSED(Index);
 
   if (*AttrPart != '\0') WrError(1100);
-  else if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU == CPUCOLD) WrError(1500);
+  else if (!ChkArgCnt(1, 1));
+  else if (!ChkExcludeCPU(CPUCOLD));
   else if (*ArgStr[1] != '#') WrError(1120);
   else
   {
@@ -2554,8 +2528,8 @@ static void DecodeRTD(Word Index)
   UNUSED(Index);
 
   if (*AttrPart != '\0') WrError(1100);
-  else if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU == CPUCOLD) WrError(1500);
+  else if (!ChkArgCnt(1, 1));
+  else if (!ChkExcludeCPU(CPUCOLD));
   else if (*ArgStr[1] != '#') WrError(1120);
   else
   {
@@ -2576,9 +2550,8 @@ static void DecodeEXG(Word Index)
   UNUSED(Index);
 
   if ((*AttrPart != '\0') && (OpSize != 2)) WrError(1130);
-  else if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU == CPUCOLD) WrError(1500);
-  else
+  else if (ChkArgCnt(2, 2)
+        && ChkExcludeCPU(CPUCOLD))
   {
     DecodeAdr(ArgStr[1], Mdata | Madr);
     if (AdrNum == 1)
@@ -2621,8 +2594,7 @@ static void DecodeMOVE16(Word Index)
   UNUSED(Index);
 
   if (*AttrPart != '\0') WrError(1100);
-  else if (ArgCnt != 2) WrError(1110);
-  else
+  else if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], Mpost | Madri | Mabs);
     if (AdrNum != 0)
@@ -2681,7 +2653,7 @@ static void DecodeCacheAll(Word Index)
   Word w1;
 
   if (*AttrPart != '\0') WrError(1100);
-  else if (ArgCnt != 1) WrError(1110);
+  else if (!ChkArgCnt(1, 1));
   else if (!CodeCache(ArgStr[1], &w1)) WrXError(1440, ArgStr[1]);
   else
   {
@@ -2697,7 +2669,7 @@ static void DecodeCache(Word Index)
   Word w1;
 
   if (*AttrPart != '\0') WrError(1100);
-  else if (ArgCnt != 2) WrError(1110);
+  else if (!ChkArgCnt(2, 2));
   else if (!CodeCache(ArgStr[1], &w1)) WrXError(1440, ArgStr[1]);
   else
   {
@@ -2715,8 +2687,8 @@ static void DecodeCache(Word Index)
 static void DecodeMUL_DIV(Word Code)
 {
 
-  if (ArgCnt != 2) WrError(1110);
-  else if ((MomCPU == CPUCOLD) && (*OpPart == 'D')) WrError(1500);
+  if (!ChkArgCnt(2, 2));
+  else if ((*OpPart == 'D') && !ChkExcludeCPU(CPUCOLD));
   else if (OpSize == 1)
   {
     DecodeAdr(ArgStr[2], Mdata);
@@ -2772,7 +2744,7 @@ static void DecodeDIVL(Word Index)
 
   if (*AttrPart == '\0')
     OpSize = 2;
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (OpSize != 2) WrError(1130);
   else if (!CodeRegPair(ArgStr[2], &w1, &w2)) WrXError(1760, ArgStr[2]);
   else
@@ -2792,9 +2764,8 @@ static void DecodeDIVL(Word Index)
 static void DecodeASBCD(Word Index)
 {
   if ((OpSize != 0) && (*AttrPart != '\0')) WrError(1130);
-  else if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU == CPUCOLD) WrError(1500);
-  else
+  else if (ChkArgCnt(2, 2)
+        && ChkExcludeCPU(CPUCOLD))
   {
     OpSize = 0;
     DecodeAdr(ArgStr[1], Mdata | Mpre);
@@ -2816,9 +2787,8 @@ static void DecodeCHK(Word Index)
   UNUSED(Index);
 
   if ((OpSize != 1) && (OpSize != 2)) WrError(1130);
-  else if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU == CPUCOLD) WrError(1500);
-  else
+  else if (ChkArgCnt(2, 2)
+        && ChkExcludeCPU(CPUCOLD))
   {
     DecodeAdr(ArgStr[1], Mdata | Madri | Mpost | Mpre | Mdadri | Maix | Mpc | Mpcidx | Mabs | Mimm);
     if (AdrNum != 0)
@@ -2841,9 +2811,8 @@ static void DecodeLINK(Word Index)
 
   if ((*AttrPart == '\0') && (MomCPU == CPUCOLD)) OpSize = 1;
   if ((OpSize < 1) || (OpSize > 2)) WrError(1130);
-  else if ((OpSize == 2) && (MomCPU < CPU68332)) WrError(1500);
-  else if (ArgCnt != 2) WrError(1110);
-  else
+  else if ((OpSize == 2) && !ChkMinCPU(CPU68332));
+  else if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], Madr);
     if (AdrNum != 0)
@@ -2865,9 +2834,8 @@ static void DecodeMOVEP(Word Index)
   UNUSED(Index);
 
   if ((OpSize == 0) || (OpSize > 2)) WrError(1130);
-  else if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU == CPUCOLD) WrError(1500);
-  else
+  else if (ChkArgCnt(2, 2)
+        && ChkExcludeCPU(CPUCOLD))
   {
     DecodeAdr(ArgStr[1], Mdata | Mdadri);
     if (AdrNum == 1)
@@ -2900,7 +2868,7 @@ static void DecodeMOVEC(Word Index)
   UNUSED(Index);
 
   if ((*AttrPart != '\0') && (OpSize != 2)) WrError(1130);
-  else if (ArgCnt != 2) WrError(1110);
+  else if (ChkArgCnt(2, 2))
   {
     if (DecodeCtrlReg(ArgStr[1], WAsmCode + 1))
     {
@@ -2932,10 +2900,9 @@ static void DecodeMOVES(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (OpSize > 2) WrError(1130);
-  else if (MomCPU == CPUCOLD) WrError(1500);
-  else
+  else if (ChkExcludeCPU(CPUCOLD))
   {
     DecodeAdr(ArgStr[1], Mdata | Madr | Madri | Mpost | Mpre | Mdadri | Maix | Mabs);
     if ((AdrNum == 1) || (AdrNum == 2))
@@ -2974,8 +2941,7 @@ static void DecodeCALLM(Word Index)
   UNUSED(Index);
 
   if (*AttrPart != '\0') WrError(1130);
-  else if (ArgCnt != 2) WrError(1110);
-  else
+  else if (ChkArgCnt(2, 2))
   {
     OpSize = 0;
     DecodeAdr(ArgStr[1], Mimm);
@@ -3001,8 +2967,7 @@ static void DecodeCAS(Word Index)
   UNUSED(Index);
 
   if (OpSize > 2) WrError(1130);
-  else if (ArgCnt != 3) WrError(1110);
-  else
+  else if (ChkArgCnt(3, 3))
   {
     DecodeAdr(ArgStr[1], Mdata);
     if (AdrNum != 0)
@@ -3032,7 +2997,7 @@ static void DecodeCAS2(Word Index)
   UNUSED(Index);
 
   if ((OpSize != 1) && (OpSize != 2)) WrError(1130);
-  else if (ArgCnt != 3) WrError(1110);
+  else if (!ChkArgCnt(3, 3));
   else if (!CodeRegPair(ArgStr[1], WAsmCode + 1, WAsmCode + 2)) WrXError(1760, ArgStr[1]);
   else if (!CodeRegPair(ArgStr[2], &w1, &w2)) WrXError(1760, ArgStr[2]);
   else
@@ -3054,8 +3019,7 @@ static void DecodeCAS2(Word Index)
 static void DecodeCMPCHK2(Word Index)
 {
   if (OpSize > 2) WrError(1130);
-  else if (ArgCnt != 2) WrError(1110);
-  else
+  else if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2], Mdata | Madr);
     if (AdrNum != 0)
@@ -3079,8 +3043,7 @@ static void DecodeEXTB(Word Index)
   UNUSED(Index);
 
   if ((OpSize != 2) && (*AttrPart != '\0')) WrError(1130);
-  else if (ArgCnt != 1) WrError(1110);
-  else
+  else if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], Mdata);
     if (AdrNum != 0)
@@ -3094,7 +3057,7 @@ static void DecodeEXTB(Word Index)
 
 static void DecodePACK(Word Index)
 {
-  if (ArgCnt != 3) WrError(1110);
+  if (!ChkArgCnt(3, 3));
   else if (*AttrPart != '\0') WrError(1130);
   else
   {
@@ -3125,8 +3088,7 @@ static void DecodeRTM(Word Index)
   UNUSED(Index);
 
   if (*AttrPart != '\0') WrError(1130);
-  else if (ArgCnt != 1) WrError(1110);
-  else
+  else if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], Mdata | Madr);
     if (AdrNum != 0)
@@ -3144,10 +3106,9 @@ static void DecodeTBL(Word Index)
   char *p;
   Word w2, Mode;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (OpSize > 2) WrError(1130);
-  else if (MomCPU < CPU68332) WrError(1500);
-  else
+  else if (ChkMinCPU(CPU68332))
   {
     DecodeAdr(ArgStr[2], Mdata);
     if (AdrNum != 0)
@@ -3200,12 +3161,10 @@ static void DecodeBits(Word Index)
   Word Mask, BitNum, BitMax;
   Byte SaveOpSize;
   unsigned ResCodeLen;
+  Boolean BitNumUnknown = False;
 
-  if (ArgCnt != 2)
-  {
-    WrError(1110);
+  if (!ChkArgCnt(2, 2))
     return;
-  }
 
   WAsmCode[0] = (Index << 6);
   ResCodeLen = 1;
@@ -3222,6 +3181,7 @@ static void DecodeBits(Word Index)
     case 11:
       WAsmCode[0] |= 0x800;
       WAsmCode[ResCodeLen++] = BitNum = AdrVals[0];
+      BitNumUnknown = FirstPassUnknown;
       break;
     default:
       return;
@@ -3251,7 +3211,7 @@ static void DecodeBits(Word Index)
   WAsmCode[0] |= AdrMode;
   CopyAdrVals(WAsmCode + ResCodeLen);
   CodeLen = (ResCodeLen << 1) + AdrCnt;
-  if (BitNum > BitMax)
+  if (!BitNumUnknown && (BitNum > BitMax))
     WrError(300);
 }
 
@@ -3259,7 +3219,7 @@ static void DecodeBits(Word Index)
 
 static void DecodeFBits(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1130);
   else if (!SplitBitField(ArgStr[1], WAsmCode + 1)) WrError(1750);
   else
@@ -3281,7 +3241,7 @@ static void DecodeFBits(Word Index)
 
 static void DecodeEBits(Word Index)
 {
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (*AttrPart != '\0') WrError(1130);
   else if (!SplitBitField(ArgStr[1], WAsmCode + 1)) WrError(1750);
   else
@@ -3309,7 +3269,7 @@ static void DecodeBFINS(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (*AttrPart != '\0') WrError(1130);
   else if (!SplitBitField(ArgStr[2], WAsmCode + 1)) WrError(1750);
   else
@@ -3343,8 +3303,7 @@ static void DecodeBcc(Word CondCode)
 
   /* nur ein Operand erlaubt */
 
-  else if (ArgCnt != 1) WrError(1110);
-  else
+  else if (ChkArgCnt(1, 1))
   {
     LongInt HVal;
     Integer HVal16;
@@ -3473,9 +3432,8 @@ static void DecodeScc(Word CondCode)
 static void DecodeDBcc(Word CondCode)
 {
   if (OpSize != 1) WrError(1130);
-  else if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU == CPUCOLD) WrError(1500);
-  else
+  else if (ChkArgCnt(2, 2)
+        && ChkExcludeCPU(CPUCOLD))
   {
     Boolean ValOK;
     LongInt HVal = EvalIntExpression(ArgStr[2], Int32, &ValOK);
@@ -3503,14 +3461,14 @@ static void DecodeDBcc(Word CondCode)
 
 static void DecodeTRAPcc(Word CondCode)
 {
-  int ChkArgCnt;
+  int ExpectArgCnt;
 
   if (*AttrPart == '\0')
     OpSize = 0;
-  ChkArgCnt = (OpSize == 0) ? 0 : 1;
+  ExpectArgCnt = (OpSize == 0) ? 0 : 1;
   if (OpSize > 2) WrError(1130);
-  else if (ArgCnt != ChkArgCnt) WrError(1110);
-  else if ((MomCPU == CPUCOLD) && (CondCode != 1)) WrError(1500);
+  else if (!ChkArgCnt(ExpectArgCnt, ExpectArgCnt));
+  else if ((CondCode != 1) && !ChkExcludeCPU(CPUCOLD));
   else
   {
     WAsmCode[0] = 0x50f8 + (CondCode << 8);
@@ -3672,9 +3630,8 @@ static void DecodeFPUOp(Word Index)
   if (*AttrPart == '\0')
     OpSize = 6;
   if (OpSize == 3) WrError(1130);
-  else if (!FPUAvail) WrError(1500);
-  else if (ArgCnt != 2) WrError(1110);
-  else
+  else if (!FPUAvail) WrError(ErrNum_FPUNotEnabled);
+  else if (ChkArgCnt(2, 2))
   {
     DecodeAdr(pArg2, Mfpn);
     if (AdrNum == 12)
@@ -3710,8 +3667,8 @@ static void DecodeFSAVE(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (!FPUAvail) WrError(1500);
+  if (!ChkArgCnt(1, 1));
+  else if (!FPUAvail) WrError(ErrNum_FPUNotEnabled);
   else if (*AttrPart != '\0') WrError(1130);
   else
   {
@@ -3730,8 +3687,8 @@ static void DecodeFRESTORE(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (!FPUAvail) WrError(1500);
+  if (!ChkArgCnt(1, 1));
+  else if (!FPUAvail) WrError(ErrNum_FPUNotEnabled);
   else if (*AttrPart != '\0') WrError(1130);
   else
   {
@@ -3750,8 +3707,8 @@ static void DecodeFNOP(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 0) WrError(1110);
-  else if (!FPUAvail) WrError(1500);
+  if (!ChkArgCnt(0, 0));
+  else if (!FPUAvail) WrError(ErrNum_FPUNotEnabled);
   else if (*AttrPart != '\0') WrError(1130);
   else
   {
@@ -3768,8 +3725,8 @@ static void DecodeFMOVE(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!FPUAvail) WrError(1500);
+  if (!ChkArgCnt(2, 2));
+  else if (!FPUAvail) WrError(ErrNum_FPUNotEnabled);
   else if (OpSize == 3) WrError(1130);
   else
   {
@@ -3884,8 +3841,8 @@ static void DecodeFMOVECR(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!FPUAvail) WrError(1500);
+  if (!ChkArgCnt(2, 2));
+  else if (!FPUAvail) WrError(ErrNum_FPUNotEnabled);
   else if ((*AttrPart != '\0') && (OpSize != 6)) WrError(1130);
   else
   {
@@ -3914,10 +3871,9 @@ static void DecodeFTST(Word Code)
   UNUSED(Code);
 
   if (*AttrPart == '\0') OpSize = 6;
-  else if (!FPUAvail) WrError(1500);
+  else if (!FPUAvail) WrError(ErrNum_FPUNotEnabled);
   else if (OpSize == 3) WrError(1130);
-  else if (ArgCnt != 1) WrError(1110);
-  else
+  else if (ChkArgCnt(1, 1))
   {
     RelPos = 4;
     DecodeAdr(ArgStr[1], Mdata | Madri | Mpost | Mpre | Mdadri | Maix | Mpc | Mpcidx | Mabs | Mimm | Mfpn);
@@ -3947,9 +3903,8 @@ static void DecodeFSINCOS(Word Code)
   if (*AttrPart == '\0')
     OpSize = 6;
   if (OpSize == 3) WrError(1130);
-  else if (!FPUAvail) WrError(1500);
-  else if (ArgCnt != 2) WrError(1110);
-  else
+  else if (!FPUAvail) WrError(ErrNum_FPUNotEnabled);
+  else if (ChkArgCnt(2, 2))
   {
     p = strrchr(ArgStr[2], ':');
     if (p)
@@ -3992,10 +3947,9 @@ static void DecodeFSINCOS(Word Code)
 
 static void DecodeFDMOVE_FSMOVE(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else if (!FPUAvail) WrError(1500);
-  else if (MomCPU < CPU68040) WrError(1500);
-  else
+  if (!ChkArgCnt(2, 2));
+  else if (!FPUAvail) WrError(ErrNum_FPUNotEnabled);
+  else if (ChkMinCPU(CPU68040))
   {
     DecodeAdr(ArgStr[2], Mfpn);
     if (AdrNum == 12)
@@ -4034,8 +3988,8 @@ static void DecodeFMOVEM(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!FPUAvail) WrError(1500);
+  if (!ChkArgCnt(2, 2));
+  else if (!FPUAvail) WrError(ErrNum_FPUNotEnabled);
   else
   {
     DecodeFRegList(ArgStr[2], &z1, &z2);
@@ -4092,12 +4046,11 @@ static void DecodeFMOVEM(Word Code)
 
 static void DecodeFBcc(Word CondCode)
 {
-  if (!FPUAvail) WrError(1500);
+  if (!FPUAvail) WrError(ErrNum_FPUNotEnabled);
   else
   {
     if ((OpSize != 1) && (OpSize != 2) && (OpSize != 6)) WrError(1130);
-    else if (ArgCnt != 1) WrError(1110);
-    else
+    else if (ChkArgCnt(1, 1))
     {
       LongInt HVal;
       Integer HVal16;
@@ -4142,12 +4095,11 @@ static void DecodeFBcc(Word CondCode)
 
 static void DecodeFDBcc(Word CondCode)
 {
-  if (!FPUAvail) WrError(1500);
+  if (!FPUAvail) WrError(ErrNum_FPUNotEnabled);
   else
   {
     if ((OpSize != 1) && (*AttrPart != '\0')) WrError(1130);
-    else if (ArgCnt != 2) WrError(1110);
-    else
+    else if (ChkArgCnt(2, 2))
     {
       DecodeAdr(ArgStr[1], Mdata);
       if (AdrNum != 0)
@@ -4173,10 +4125,9 @@ static void DecodeFDBcc(Word CondCode)
 
 static void DecodeFScc(Word CondCode)
 {
-  if (!FPUAvail) WrError(1500);
+  if (!FPUAvail) WrError(ErrNum_FPUNotEnabled);
   if ((OpSize != 0) && (*AttrPart != '\0')) WrError(1130);
-  else if (ArgCnt != 1) WrError(1110);
-  else
+  else if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], Mdata | Madri | Mpost | Mpre | Mdadri | Maix | Mabs);
     if (AdrNum != 0)
@@ -4191,14 +4142,13 @@ static void DecodeFScc(Word CondCode)
 
 static void DecodeFTRAPcc(Word CondCode)
 {
-  if (!FPUAvail) WrError(1500);
+  if (!FPUAvail) WrError(ErrNum_FPUNotEnabled);
   else
   {
     if (*AttrPart == '\0')
       OpSize = 0;
     if (OpSize > 2) WrError(1130);
-    else if (((OpSize == 0) && (ArgCnt != 0)) || ((OpSize != 0) && (ArgCnt != 1))) WrError(1110);
-    else
+    else if (ChkArgCnt(OpSize ? 1 : 0, OpSize ? 1 : 0))
     {
       WAsmCode[0] = 0xf278;
       WAsmCode[1] = CondCode;
@@ -4297,10 +4247,10 @@ static void DecodePSAVE(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1130);
-  else if (!PMMUAvail) WrError(1500);
-  else if (!FullPMMU) WrError(1500);
+  else if (!PMMUAvail) WrError(ErrNum_PMMUNotEnabled);
+  else if (!FullPMMU) WrError(ErrNum_FullPMMUNotEnabled);
   else
   {
     DecodeAdr(ArgStr[1], Madri | Mpre | Mdadri | Maix | Mabs);
@@ -4318,10 +4268,10 @@ static void DecodePRESTORE(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1130);
-  else if (!PMMUAvail) WrError(1500);
-  else if (!FullPMMU) WrError(1500);
+  else if (!PMMUAvail) WrError(ErrNum_PMMUNotEnabled);
+  else if (!FullPMMU) WrError(ErrNum_FullPMMUNotEnabled);
   else
   {
     DecodeAdr(ArgStr[1], Madri | Mpre | Mdadri | Maix | Mabs);
@@ -4340,9 +4290,8 @@ static void DecodePFLUSHA(Word Code)
   UNUSED(Code);
 
   if (*AttrPart != '\0') WrError(1130);
-  else if (!PMMUAvail) WrError(1500);
-  else if (ArgCnt != 0) WrError(1110);
-  else
+  else if (!PMMUAvail) WrError(ErrNum_PMMUNotEnabled);
+  else if (ChkArgCnt(0, 0))
   {
     if (MomCPU >= CPU68040)
     {
@@ -4364,9 +4313,8 @@ static void DecodePFLUSHAN(Word Code)
   UNUSED(Code);
 
   if (*AttrPart != '\0') WrError(1130);
-  else if (!PMMUAvail) WrError(1500);
-  else if (ArgCnt != 0) WrError(1110);
-  else
+  else if (!PMMUAvail) WrError(ErrNum_PMMUNotEnabled);
+  else if (ChkArgCnt(0, 0))
   {
     CodeLen = 2;
     WAsmCode[0] = 0xf510;
@@ -4378,12 +4326,11 @@ static void DecodePFLUSHAN(Word Code)
 static void DecodePFLUSH_PFLUSHS(Word Code)
 {
   if (*AttrPart != '\0') WrError(1130);
-  else if (!PMMUAvail) WrError(1500);
+  else if (!PMMUAvail) WrError(ErrNum_PMMUNotEnabled);
   else if (MomCPU >= CPU68040)
   {
-    if (Code) WrError(1500);
-    else if (ArgCnt != 1) WrError(1110);
-    else
+    if (Code) WrError(ErrNum_FullPMMUNotEnabled);
+    else if (ChkArgCnt(1, 1))
     {
       DecodeAdr(ArgStr[1], Madri);
       if (AdrNum != 0)
@@ -4394,8 +4341,8 @@ static void DecodePFLUSH_PFLUSHS(Word Code)
       }
     }
   }
-  else if ((ArgCnt != 2) && (ArgCnt != 3)) WrError(1110);
-  else if ((Code) && (!FullPMMU)) WrError(1500);
+  else if (!ChkArgCnt(2, 3));
+  else if ((Code) && (!FullPMMU)) WrError(ErrNum_FullPMMUNotEnabled);
   else if (!DecodeFC(ArgStr[1], WAsmCode + 1)) WrError(1710);
   else
   {
@@ -4433,9 +4380,8 @@ static void DecodePFLUSHN(Word Code)
   UNUSED(Code);
 
   if (*AttrPart != '\0') WrError(1100);
-  else if (!PMMUAvail) WrError(1500);
-  else if (ArgCnt != 1) WrError(1110);
-  else
+  else if (!PMMUAvail) WrError(ErrNum_PMMUNotEnabled);
+  else if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], Madri);
     if (AdrNum != 0)
@@ -4454,11 +4400,10 @@ static void DecodePFLUSHR(Word Code)
 
   if (*AttrPart == '\0')
     OpSize = 3;
-  else if (!PMMUAvail)
-    WrError(1500);
+  else if (!PMMUAvail) WrError(ErrNum_PMMUNotEnabled);
   if (OpSize != 3) WrError(1130);
-  else if (ArgCnt != 1) WrError(1110);
-  else if (!FullPMMU) WrError(1500);
+  else if (!ChkArgCnt(1, 1));
+  else if (!FullPMMU) WrError(ErrNum_FullPMMUNotEnabled);
   else
   {
     RelPos = 4;
@@ -4476,8 +4421,8 @@ static void DecodePFLUSHR(Word Code)
 static void DecodePLOADR_PLOADW(Word Code)
 {
   if (*AttrPart != '\0') WrError(1130);
-  else if (!PMMUAvail) WrError(1500);
-  else if (ArgCnt != 2) WrError(1110);
+  else if (!PMMUAvail) WrError(ErrNum_PMMUNotEnabled);
+  else if (!ChkArgCnt(2, 2));
   else if (!DecodeFC(ArgStr[1], WAsmCode + 1)) WrError(1710);
   else
   {
@@ -4498,8 +4443,8 @@ static void DecodePMOVE_PMOVEFD(Word Code)
   Byte z;
   unsigned Mask;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!PMMUAvail) WrError(1500);
+  if (!ChkArgCnt(2, 2));
+  else if (!PMMUAvail) WrError(ErrNum_PMMUNotEnabled);
   else
   {
     if (DecodePMMUReg(ArgStr[1], WAsmCode + 1, &z))
@@ -4561,11 +4506,10 @@ static void DecodePMOVE_PMOVEFD(Word Code)
 static void DecodePTESTR_PTESTW(Word Code)
 {
   if (*AttrPart != '\0') WrError(1130);
-  else if (!PMMUAvail) WrError(1500);
+  else if (!PMMUAvail) WrError(ErrNum_PMMUNotEnabled);
   else if (MomCPU >= CPU68040)
   {
-    if (ArgCnt != 1) WrError(1110);
-    else
+    if (ChkArgCnt(1, 1))
     {
       DecodeAdr(ArgStr[1], Madri);
       if (AdrNum != 0)
@@ -4576,8 +4520,7 @@ static void DecodePTESTR_PTESTW(Word Code)
       }
     }
   }
-  else if ((ArgCnt > 4) || (ArgCnt < 3)) WrError(1110);
-  else
+  else if (ChkArgCnt(3, 4))
   {
     if (!DecodeFC(ArgStr[1], WAsmCode + 1)) WrError(1710);
     else
@@ -4622,9 +4565,9 @@ static void DecodePVALID(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!PMMUAvail) WrError(1500);
-  else if (!FullPMMU) WrError(1500);
+  if (!ChkArgCnt(2, 2));
+  else if (!PMMUAvail) WrError(ErrNum_PMMUNotEnabled);
+  else if (!FullPMMU) WrError(ErrNum_FullPMMUNotEnabled);
   else if ((*AttrPart != '\0') && (OpSize != 2)) WrError(1130);
   else
   {
@@ -4650,12 +4593,12 @@ static void DecodePVALID(Word Code)
 
 static void DecodePBcc(Word CondCode)
 {
-  if (!PMMUAvail) WrError(1500);
+  if (!PMMUAvail) WrError(ErrNum_PMMUNotEnabled);
   else
   {
     if ((OpSize != 1) && (OpSize != 2) && (OpSize != 6)) WrError(1130);
-    else if (ArgCnt != 1) WrError(1110);
-    else if (!FullPMMU) WrError(1500);
+    else if (!ChkArgCnt(1, 1));
+    else if (!FullPMMU) WrError(ErrNum_FullPMMUNotEnabled);
     else
     {
       LongInt HVal;
@@ -4693,12 +4636,12 @@ static void DecodePBcc(Word CondCode)
 
 static void DecodePDBcc(Word CondCode)
 {
-  if (!PMMUAvail) WrError(1500);
+  if (!PMMUAvail) WrError(ErrNum_PMMUNotEnabled);
   else
   {
     if ((OpSize != 1) && (*AttrPart != '\0')) WrError(1130);
-    else if (ArgCnt != 2) WrError(1110);
-    else if (!FullPMMU) WrError(1500);
+    else if (!ChkArgCnt(2, 2));
+    else if (!FullPMMU) WrError(ErrNum_FullPMMUNotEnabled);
     else
     {
       DecodeAdr(ArgStr[1], Mdata);
@@ -4727,12 +4670,12 @@ static void DecodePDBcc(Word CondCode)
 
 static void DecodePScc(Word CondCode)
 {
-  if (!PMMUAvail) WrError(1500);
+  if (!PMMUAvail) WrError(ErrNum_PMMUNotEnabled);
   else
   {
     if ((OpSize != 0) && (*AttrPart != '\0')) WrError(1130);
-    else if (ArgCnt != 1) WrError(1110);
-    else if (!FullPMMU) WrError(1500);
+    else if (!ChkArgCnt(1, 1));
+    else if (!FullPMMU) WrError(ErrNum_FullPMMUNotEnabled);
     else
     {
       DecodeAdr(ArgStr[1], Mdata | Madri | Mpost | Mpre | Mdadri | Maix | Mabs);
@@ -4750,14 +4693,14 @@ static void DecodePScc(Word CondCode)
 
 static void DecodePTRAPcc(Word CondCode)
 {
-  if (!PMMUAvail) WrError(1500);
+  if (!PMMUAvail) WrError(ErrNum_PMMUNotEnabled);
   else
   {
     if (*AttrPart == '\0')
       OpSize = 0;
     if (OpSize > 2) WrError(1130);
-    else if (((OpSize == 0) && (ArgCnt != 0)) || ((OpSize != 0) && (ArgCnt != 1))) WrError(1110);
-    else if (!FullPMMU) WrError(1500);
+    else if (!ChkArgCnt(OpSize ? 1 : 0, OpSize ? 1 : 0));
+    else if (!FullPMMU) WrError(ErrNum_FullPMMUNotEnabled);
     else
     {
       WAsmCode[0] = 0xf078;
@@ -4805,7 +4748,7 @@ static void DecodeSTR(Word Index)
   int l, z;
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if ((l = strlen(ArgStr[1])) < 2) WrError(1135);
   else if (*ArgStr[1] != '\'') WrError(1135);
   else if (ArgStr[1][l - 1] != '\'') WrError(1135);

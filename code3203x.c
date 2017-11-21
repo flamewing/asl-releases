@@ -112,6 +112,7 @@
 #include "codevars.h"
 #include "tipseudo.h"
 #include "headids.h"
+#include "errmsg.h"
 
 #include "code3203x.h"
 
@@ -625,7 +626,7 @@ static unsigned MatchParIndex(Byte Mask, unsigned Index)
 
 static void DecodeFixed(Word Index)
 {
-  if (ArgCnt != 0) WrError(1110);
+  if (!ChkArgCnt(0, 0));
   else if (ThisPar) WrError(1950);
   else
   {
@@ -665,11 +666,8 @@ static void DecodeGen(Word Index)
   CurrGenInfo.pOrder = GenOrders + (Index & ~0x8000);
   CurrGenInfo.Is3 = (Index & 0x8000) || FALSE;
 
-  if (CurrGenInfo.pOrder->MinCPU > MomCPU)
-  {
-    WrError(1500);
+  if (!ChkMinCPU(CurrGenInfo.pOrder->MinCPU))
     return;
-  }
 
   /* Argumentzahl abgleichen */
 
@@ -682,7 +680,7 @@ static void DecodeGen(Word Index)
     }
     else
     {
-      WrError(1110);
+      (void)ChkArgCnt(2, 2);
       return;
     }
   }
@@ -702,7 +700,7 @@ static void DecodeGen(Word Index)
   }
   if ((ArgCnt < 2) || (ArgCnt > 3) || ((CurrGenInfo.Is3) && (!CurrGenInfo.pOrder->May3)))
   {
-    WrError(1110);
+    (void)ChkArgCnt(3, 3);
     return;
   }
 
@@ -1043,8 +1041,8 @@ static void DecodeLDA(Word Code)
 {
   Byte HReg;
 
-  if (ArgCnt != 2) WrError(1110); 
-  else if (!Is4x()) WrError(1500);
+  if (!ChkArgCnt(2, 2)); 
+  else if (!ChkMinCPU(CPU32040));
   else if (ThisPar) WrError(1950);
   else if (!DecodeReg(ArgStr[2], &HReg)) WrXError(1445, ArgStr[2]);
   else if ((HReg < 8) || (HReg > 20)) WrXError(1445, ArgStr[2]);
@@ -1094,7 +1092,7 @@ static void DecodeRot(Word Code)
 {
   Byte HReg;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (ThisPar) WrError(1950);
   else if (!DecodeReg(ArgStr[1], &HReg)) WrError(1350);
   else
@@ -1109,7 +1107,7 @@ static void DecodeStk(Word Code)
 {
   Byte HReg;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (ThisPar) WrError(1950);
   else if (!DecodeReg(ArgStr[1], &HReg)) WrError(1350);
   else
@@ -1127,7 +1125,7 @@ static void DecodeLDIcc_LDFcc(Word Code)
   LongWord CondCode = Lo(Code), InstrCode = ((LongWord)Hi(Code)) << 24;
   Byte HReg;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (ThisPar) WrError(1950);
   else
   {
@@ -1159,7 +1157,7 @@ static void DecodeNOP(Word Code)
     CodeLen = 1;
     DAsmCode[0] = NOPCode;
   }
-  else if (ArgCnt != 1) WrError(1110);
+  else if (!ChkArgCnt(1, 1));
   else if (ThisPar) WrError(1950);
   else
   {
@@ -1179,7 +1177,7 @@ static void DecodeSing(Word Index)
 {
   const SingOrder *pOrder = SingOrders + Index;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (ThisPar) WrError(1950);
   else
   {
@@ -1197,7 +1195,7 @@ static void DecodeLDP(Word Code)
 {
   UNUSED(Code);
 
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
+  if (!ChkArgCnt(1, 2));
   else if (ThisPar) WrError(1950);
   else if ((ArgCnt == 2) && (strcasecmp(ArgStr[2], "DP"))) WrError(1350);
   else
@@ -1219,8 +1217,8 @@ static void DecodeLdExp(Word Code)
   Boolean Swapped = (Code & 1) || False;
   Byte Src, Dest;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!Is4x()) WrError(1500);
+  if (!ChkArgCnt(2, 2));
+  else if (!ChkMinCPU(CPU32040));
   else if (ThisPar) WrError(1950);
   else if (!(Swapped ? DecodeReg(ArgStr[1], &Src) : DecodeExpReg(ArgStr[1], &Src))) WrXError(1445, ArgStr[1]);
   else if (!(Swapped ? DecodeExpReg(ArgStr[2], &Dest) : DecodeReg(ArgStr[2], &Dest))) WrXError(1445, ArgStr[2]);
@@ -1238,8 +1236,8 @@ static void DecodeRegImm(Word Code)
 {
   Byte Dest;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!Is4x()) WrError(1500);
+  if (!ChkArgCnt(2, 2));
+  else if (!ChkMinCPU(CPU32040));
   else if (ThisPar) WrError(1950);
   else if (!DecodeReg(ArgStr[2], &Dest)) WrXError(1445, ArgStr[2]);
   else
@@ -1261,8 +1259,8 @@ static void DecodeLDPK(Word Code)
 {
   Byte Dest;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (!Is4x()) WrError(1500);
+  if (!ChkArgCnt(1, 1));
+  else if (!ChkMinCPU(CPU32040));
   else if (ThisPar) WrError(1950);
   else if (!DecodeReg("DP", &Dest)) WrXError(1445, "DP");
   else
@@ -1282,8 +1280,8 @@ static void DecodeLDPK(Word Code)
 
 static void DecodeSTIK(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else if (!Is4x()) WrError(1500);
+  if (!ChkArgCnt(2, 2));
+  else if (!ChkMinCPU(CPU32040));
   else if (ThisPar) WrError(1950);
   else
   {
@@ -1315,7 +1313,7 @@ static void DecodeRPTB_C3x(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (ThisPar) WrError(1950);
   else
   {
@@ -1337,7 +1335,7 @@ static void DecodeRPTB_C4x(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (ThisPar) WrError(1950);
   else if (DecodeReg(ArgStr[1], &Reg))
   {
@@ -1372,8 +1370,8 @@ static void DecodeBR_BRD_CALL_C3x(Word Code)
 {
   Byte InstrCode = Lo(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (InstrCode == 0x63) WrError(1500); /* no LAJ on C3x */
+  if (!ChkArgCnt(1, 1));
+  else if (InstrCode == 0x63) (void)ChkMinCPU(CPU32040); /* no LAJ on C3x */
   else if (ThisPar) WrError(1950);
   else
   {
@@ -1393,7 +1391,7 @@ static void DecodeBR_BRD_CALL_LAJ_C4x(Word Code)
 {
   Byte InstrCode = Lo(Code), Dist = Hi(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (ThisPar) WrError(1950);
   else
   {
@@ -1420,9 +1418,9 @@ static void DecodeBcc(Word Code)
   LongInt Disp = DFlag ? 3 : 1;
   Byte HReg;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (ThisPar) WrError(1950);
-  else if ((Code & 0x80) && !Is4x()) WrError(1500);
+  else if ((Code & 0x80) && !ChkMinCPU(CPU32040));
   else if (DecodeReg(ArgStr[1], &HReg))
   {
     DAsmCode[0] = 0x68000000 + (CondCode << 16) + DFlag + HReg;
@@ -1450,7 +1448,7 @@ static void DecodeCALLcc(Word Code)
 {
   Byte HReg;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (ThisPar) WrError(1950);
   else if (DecodeReg(ArgStr[1], &HReg))
   {
@@ -1481,7 +1479,7 @@ static void DecodeDBcc(Word Code)
   LongInt Disp = DFlag ? 3 : 1;  
   Byte HReg, HReg2;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (ThisPar) WrError(1950);
   else if (!DecodeReg(ArgStr[1], &HReg2)) WrError(1350);
   else if ((HReg2 < 8) || (HReg2 > 15)) WrError(1350);
@@ -1524,8 +1522,8 @@ static void DecodeRETIcc_RETScc(Word Code)
   LongWord CondCode = Lo(Code),
            DFlag = ((LongWord)Hi(Code)) << 21;
 
-  if (ArgCnt != 0) WrError(1110);
-  else if ((DFlag & (1ul << 21)) && !Is4x()) WrError(1500);
+  if (!ChkArgCnt(0, 0));
+  else if ((DFlag & (1ul << 21)) && !ChkMinCPU(CPU32040));
   else if (ThisPar) WrError(1950);
   else
   {
@@ -1537,8 +1535,8 @@ static void DecodeRETIcc_RETScc(Word Code)
 
 static void DecodeTRAPcc(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if ((Code & 0x80) && !Is4x()) WrError(1500);
+  if (!ChkArgCnt(1, 1));
+  else if ((Code & 0x80) && !ChkMinCPU(CPU32040));
   else if (ThisPar) WrError(1950);
   else
   {

@@ -172,6 +172,8 @@ Boolean MakeIncludeList;                 /* Includeliste ? */
 Boolean RelaxedMode;		         /* alle Integer-Syntaxen zulassen ? */
 Word ListMask;                           /* Listingmaske */
 ShortInt ExtendErrors;	                 /* erweiterte Fehlermeldungen */
+Integer EnumSegment;                     /* ENUM state & config */
+LongInt EnumIncrement, EnumCurrentValue;
 Boolean NumericErrors;                   /* Fehlermeldungen mit Nummer */
 Boolean CodeOutput;		         /* Code erzeugen */
 Boolean MacProOutput;                    /* Makroprozessorausgabe schreiben */
@@ -237,8 +239,6 @@ StringPtr ShareName;                    /* Name des Sharefiles */
 CPUVar MomCPU,MomVirtCPU;               /* definierter/vorgegaukelter Prozessortyp */
 char DefCPU[20];                        /* per Kommandozeile vorgegebene CPU */
 char MomCPUIdent[20];                   /* dessen Name in ASCII */
-PCPUDef FirstCPUDef;                    /* Liste mit Prozessordefinitionen */
-CPUVar CPUCnt;	                        /* Gesamtzahl Prozessoren */
 
 Boolean FPUAvail;                       /* Koprozessor erlaubt ? */
 Boolean DoPadding;                      /* auf gerade Byte-Zahl ausrichten ? */
@@ -254,7 +254,7 @@ StringPtr LabPart, OpPart, AttrPart,    /* Komponenten der Zeile */
           ArgPart, CommPart, LOpPart;
 char AttrSplit;
 ArgStrField ArgStr;                     /* Komponenten des Arguments */
-Byte ArgCnt;                            /* Argumentzahl */
+int ArgCnt;                             /* Argumentzahl */
 StringPtr OneLine;                      /* eingelesene Zeile */
 #ifdef PROFILE_MEMO
 unsigned NumMemo;
@@ -375,8 +375,6 @@ void asmdef_init(void)
 {
   int z;
 
-  FirstCPUDef = NULL;
-  CPUCnt = 0;
   SwitchFrom = NullProc;
   InternSymbol = Default_InternSymbol;
 
@@ -392,7 +390,7 @@ void asmdef_init(void)
   PCSymbol = "--PC--SYMBOL--";
   *DefCPU = '\0';
 
-  for (z = 0; z <= ParMax; z++)
+  for (z = 0; z <= ArgCntMax; z++)
     ArgStr[z] = GetString();
   SourceFile = GetString();
   ClrEol = GetString();

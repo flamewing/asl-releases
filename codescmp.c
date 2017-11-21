@@ -45,6 +45,9 @@
 #include "asmitree.h"  
 #include "intpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
+
+#include "codescmp.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -145,8 +148,7 @@ static void ChkPage(void)
 
 static void DecodeFixed(Word Index)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     BAsmCode[0] = Index; CodeLen = 1;
   }
@@ -154,8 +156,7 @@ static void DecodeFixed(Word Index)
 
 static void DecodeImm(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
 
@@ -169,7 +170,7 @@ static void DecodeImm(Word Index)
 
 static void DecodeRegOrder(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!DecodeReg(ArgStr[1], BAsmCode+0)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -179,8 +180,8 @@ static void DecodeRegOrder(Word Index)
 
 static void DecodeMem(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (DecodeAdr(ArgStr[1], True, 0, BAsmCode + 0))
+  if (ChkArgCnt(1, 1))
+  if (DecodeAdr(ArgStr[1], True, 0, BAsmCode + 0))
   {
     BAsmCode[0] |= Index; CodeLen = 2; ChkPage();
   }
@@ -188,8 +189,8 @@ static void DecodeMem(Word Index)
 
 static void DecodeJmp(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (DecodeAdr(ArgStr[1], False, 1, BAsmCode + 0))
+  if (ChkArgCnt(1, 1))
+  if (DecodeAdr(ArgStr[1], False, 1, BAsmCode + 0))
   {
     BAsmCode[0] |= Index; CodeLen = 2; ChkPage();
   }
@@ -197,8 +198,8 @@ static void DecodeJmp(Word Index)
 
 static void DecodeLD(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (DecodeAdr(ArgStr[1], False, 0, BAsmCode + 0))
+  if (ChkArgCnt(1, 1))
+  if (DecodeAdr(ArgStr[1], False, 0, BAsmCode + 0))
   {
     BAsmCode[0] |= Index; CodeLen = 2; ChkPage();
   }

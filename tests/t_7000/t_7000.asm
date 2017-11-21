@@ -94,6 +94,7 @@ targ:	bf	targ
 	bt/s	targ
         bf/s	targ
 	bra	targ
+	braf	r2
 	bsr	targ
 	jmp	@r5
 	jsr	@r10

@@ -213,6 +213,7 @@
 
 #include "asmdef.h"
 #include "asmsub.h"
+#include "errmsg.h"
 #include "asmfnums.h"
 #include "asmrelocs.h"
 #include "chunks.h"
@@ -293,8 +294,6 @@ TTmpSymLog TmpSymLog[LOCSYMSIGHT];
 LongInt TmpSymLogDepth;
 
 LongInt LocHandleCnt;          /* mom. verwendeter lokaler Handle            */
-
-Boolean BalanceTree;           /* Symbolbaum ausbalancieren                  */
 
 static char BaseIds[3] =
 {
@@ -455,7 +454,21 @@ Boolean SingleBit(LargeInt Inp, LargeInt *Erg)
   while ((*Erg != LARGEBITS) && (!Odd(Inp)));
   return (*Erg != LARGEBITS) && (Inp == 1);
 }	
-	
+
+IntType GetSmallestUIntType(LargeWord MaxValue)
+{
+  IntType Result;
+
+  Result = (IntType) 0;
+  for (Result = (IntType) 0; Result < IntTypeCnt; Result++)
+  {
+    if (IntTypeDefs[Result].Min < 0)
+      continue;
+    if (IntTypeDefs[Result].Max >= MaxValue)
+      return Result;
+  }
+  return UInt32;
+}
 
 static Boolean ProcessBk(char **Start, char *Erg)
 {
@@ -1894,6 +1907,8 @@ void EvalExpression(const char *pExpr, TempResult *pErg)
 
   if (OpMax)
   {
+    int ThisArgCnt;
+
     pOp = Operators + OpMax;
 
     /* Minuszeichen sowohl mit einem als auch 2 Operanden */
@@ -1906,12 +1921,12 @@ void EvalExpression(const char *pExpr, TempResult *pErg)
 
     /* Operandenzahl pruefen */
 
-    if (((pOp->Dyadic) == (OpPos == 0))
-     || (OpPos == (int)strlen(Copy)-1))
-    {
-      WrError(1110);
+    if (OpPos == (int)strlen(Copy) - 1)
+      ThisArgCnt = 0;
+    else
+      ThisArgCnt = OpPos ? 2 : 1;
+    if (!ChkArgCntExt(ThisArgCnt, pOp->Dyadic ? 2 : 1, pOp->Dyadic ? 2 : 1))
       LEAVE;
-    }
 
     /* Teilausdruecke rekursiv auswerten */
 
@@ -5075,7 +5090,7 @@ void asmpars_init(void)
   snum = (char*)malloc(sizeof(char) * STRINGSIZE);
   FirstDefSymbol = NULL;
   FirstFunction = NULL;
-  BalanceTree = False;
+  BalanceTrees = False;
   IntTypeDefs[(int)Int32].Min--;
   IntTypeDefs[(int)SInt32].Min--;
 #ifdef HAS64

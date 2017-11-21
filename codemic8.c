@@ -67,8 +67,9 @@
 #include "intpseudo.h"
 #include "codevars.h"
 #include "headids.h"
-
+#include "errmsg.h"
 #include "codepseudo.h"
+
 #include "codemic8.h"
 
 #define ALUOrderCnt 14
@@ -145,16 +146,15 @@ static void DecodeRegDef(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else AddRegDef(LabPart, ArgStr[1]);
+  if (ChkArgCnt(1, 1))
+    AddRegDef(LabPart, ArgStr[1]);
 }
 
 static void DecodeFixed(Word Index)
 {
   FixedOrder *pOrder = FixedOrders + Index;
 
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     DAsmCode[0] = pOrder->Code;
     CodeLen = 1;
@@ -166,7 +166,7 @@ static void DecodeALU(Word Index)
   ALUOrder *pOrder = ALUOrders + Index;
   LongWord Src, DReg;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!IsWReg(ArgStr[1], &DReg)) WrXError(1445, ArgStr[1]);
   else if (IsWReg(ArgStr[2], &Src))
   {
@@ -193,7 +193,7 @@ static void DecodeALUI(Word Index)
   LongWord Src, DReg;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!IsWReg(ArgStr[1], &DReg)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -212,8 +212,7 @@ static void DecodeShortBranch(Word Index)
   LongInt Dest;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {   
     Dest = EvalIntExpression(ArgStr[1], CodeAddrInt, &OK);
     if (OK)
@@ -235,8 +234,7 @@ static void DecodeLongBranch(Word Index)
   LongInt Dest;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Dest = EvalIntExpression(ArgStr[1], CodeAddrInt, &OK);
     if (OK)
@@ -258,7 +256,7 @@ static void DecodeMem(Word Index)
   LongWord DReg, Src;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!IsWReg(ArgStr[1], &DReg)) WrXError(1445, ArgStr[1]);
   else if (IsWReg(ArgStr[2], &Src))
   {
@@ -282,7 +280,7 @@ static void DecodeMemI(Word Index)
   MemOrder *pOrder = MemOrders + Index;
   LongWord DReg, SReg;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!IsWReg(ArgStr[1], &DReg)) WrXError(1445, ArgStr[1]);
   else if (!IsWReg(ArgStr[2], &SReg)) WrXError(1445, ArgStr[2]);
   else
@@ -297,7 +295,7 @@ static void DecodeReg(Word Index)
   FixedOrder *pOrder = RegOrders + Index;
   LongWord Reg = 0;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!IsWReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
   {
     DAsmCode[0] = pOrder->Code | (Reg << 8);

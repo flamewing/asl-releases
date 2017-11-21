@@ -50,6 +50,7 @@
 #include "codepseudo.h"
 #include "motpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
 
 #include "codest6.h"
 
@@ -171,8 +172,7 @@ static Byte MirrBit(Byte inp)
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     CodeLen = 1;
     BAsmCode[0] = Code;
@@ -183,8 +183,7 @@ static void DecodeLD(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc | MModDir | MModInd);
     switch (AdrType)
@@ -245,8 +244,7 @@ static void DecodeLDI(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     Boolean OK;
 
@@ -274,8 +272,7 @@ static void DecodeLDI(Word Code)
 
 static void DecodeRel(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Integer AdrInt = EvalIntExpression(ArgStr[1], UInt16, &OK) - (EProgCounter() + 1);
@@ -293,8 +290,7 @@ static void DecodeRel(Word Code)
 
 static void DecodeJP_CALL(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Integer AdrInt = EvalIntExpression(ArgStr[1], Int16, &OK);
@@ -313,8 +309,7 @@ static void DecodeJP_CALL(Word Code)
 
 static void DecodeALU(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc);
     if (AdrType != ModNone)
@@ -338,8 +333,7 @@ static void DecodeALU(Word Code)
 
 static void DecodeALUImm(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc);
     if (AdrType != ModNone)
@@ -359,8 +353,7 @@ static void DecodeCLR(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModAcc | MModDir);
     switch (AdrType)
@@ -382,8 +375,7 @@ static void DecodeCLR(Word Code)
 
 static void DecodeAcc(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModAcc);
     if (AdrType != ModNone)
@@ -397,8 +389,7 @@ static void DecodeAcc(Word Code)
 
 static void DecodeINC_DEC(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModDir | MModInd);
     switch (AdrType)
@@ -426,8 +417,7 @@ static void DecodeINC_DEC(Word Code)
 
 static void DecodeSET_RES(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     Boolean OK;
 
@@ -447,8 +437,7 @@ static void DecodeSET_RES(Word Code)
 
 static void DecodeJRR_JRS(Word Code)
 {
-  if (ArgCnt != 3) WrError(1110);
-  else
+  if (ChkArgCnt(3, 3))
   {
     Boolean OK;
 
@@ -489,8 +478,7 @@ static void DecodeASCII_ASCIZ(Word IsZ)
   Boolean OK;
   String s;
 
-  if (ArgCnt == 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     z = 1;
     do

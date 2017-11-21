@@ -48,6 +48,9 @@
 #include "codevars.h"
 #include "intpseudo.h"
 #include "headids.h"
+#include "errmsg.h"
+
+#include "code1802.h"
 
 /*-------------------------------------------------------------------------*/
 /* Variables */
@@ -81,18 +84,15 @@ static CPUVar CPU1802,
 
 static Boolean PutCode(const tOrder *pOrder)
 {
-  if (pOrder->MinCPU > MomCPU)
-  {
-    WrXError(1500, OpPart);
-    return False;
-  }
-  else
+  if (ChkMinCPU(pOrder->MinCPU))
   {
     if (Hi(pOrder->Code))
       BAsmCode[CodeLen++] = Hi(pOrder->Code);
     BAsmCode[CodeLen++] = Lo(pOrder->Code);
     return True;
   }
+  else
+    return False;
 }
 
 /*-------------------------------------------------------------------------*/
@@ -109,8 +109,7 @@ static void DecodeFixed(Word Index)
 {
   const tOrder *pOrder = FixedOrders + Index;
 
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
     PutCode(pOrder);
 }
 
@@ -119,8 +118,8 @@ static void DecodeReg(Word Index)
   const tOrder *pOrder = RegOrders + Index;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (PutCode(pOrder))
+  if (ChkArgCnt(1, 1)
+   && PutCode(pOrder))
   {
     BAsmCode[CodeLen - 1] |= EvalIntExpression(ArgStr[1], UInt4, &OK);
     if (!OK)
@@ -132,8 +131,8 @@ static void DecodeRegNoZero(Word Index)
 {
   const tOrder *pOrder = RegNoZeroOrders + Index;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (PutCode(pOrder))
+  if (ChkArgCnt(1, 1)
+   && PutCode(pOrder))
   {
     Boolean OK;
     Byte Reg;
@@ -156,8 +155,8 @@ static void DecodeRegImm16(Word Index)
   const tOrder *pOrder = RegImm16Orders + Index;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (PutCode(pOrder))
+  if (ChkArgCnt(2, 2)
+   && PutCode(pOrder))
   {
     BAsmCode[CodeLen - 1] |= EvalIntExpression(ArgStr[1], UInt4, &OK);
     if (!OK) CodeLen = 0;
@@ -181,8 +180,8 @@ static void DecodeRegLBranch(Word Index)
   Boolean OK;
   Word Addr;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (PutCode(pOrder))
+  if (ChkArgCnt(2, 2)
+   && PutCode(pOrder))
   {
     BAsmCode[CodeLen - 1] |= EvalIntExpression(ArgStr[1], UInt4, &OK);
     if (!OK) CodeLen = 0;
@@ -206,8 +205,8 @@ static void DecodeImm(Word Index)
   const tOrder *pOrder = ImmOrders + Index;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (PutCode(pOrder))
+  if (ChkArgCnt(1, 1)
+   && PutCode(pOrder))
   {
     BAsmCode[CodeLen++] = EvalIntExpression(ArgStr[1], Int8, &OK);
     if (!OK) CodeLen = 0;
@@ -220,8 +219,8 @@ static void DecodeSBranch(Word Index)
   Word Addr;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (PutCode(pOrder))
+  if (ChkArgCnt(1, 1)
+   && PutCode(pOrder))
   {
     Addr = EvalIntExpression(ArgStr[1], UInt16, &OK);
     if (!OK) CodeLen = 0;
@@ -247,8 +246,8 @@ static void DecodeLBranch(Word Index)
   Word Addr;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (PutCode(pOrder))
+  if (ChkArgCnt(1, 1)
+   && PutCode(pOrder))
   {
     Addr = EvalIntExpression(ArgStr[1], UInt16, &OK);
     if (!OK) CodeLen = 0;
@@ -265,8 +264,7 @@ static void DecodeIO(Word Index)
   const tOrder *pOrder = IOOrders + Index;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else  
+  if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
     BAsmCode[0] = EvalIntExpression(ArgStr[1], UInt3, &OK);

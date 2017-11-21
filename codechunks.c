@@ -229,3 +229,14 @@ Boolean RetrieveCodeFromChunkList(const tCodeChunkList *pCodeChunkList, LargeWor
   }
   return True;
 }
+
+LargeWord GetCodeChunksStored(const tCodeChunkList *pCodeChunkList)
+{
+  LargeWord Sum = 0;
+  const tCodeChunk *pChunk;
+
+  for (pChunk = pCodeChunkList->Chunks; pChunk < pCodeChunkList->Chunks + pCodeChunkList->RealLen; pChunk++)
+    Sum += pChunk->Length;
+
+  return Sum;
+}

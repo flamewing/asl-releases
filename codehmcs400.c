@@ -48,6 +48,7 @@
 #include "fourpseudo.h"
 #include "codevars.h"
 #include "headids.h"
+#include "errmsg.h"
 
 #include "codehmcs400.h"
 
@@ -214,8 +215,7 @@ static void DecodeLD(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2], MModA | MModB | MModX | MModY | MModW | MModM | MModMInc | MModMDec | MModDir);
     switch (AdrMode)
@@ -357,8 +357,7 @@ static void DecodeXCH(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2], MModA | MModB | MModX | MModY | MModSPX | MModSPY | MModM | MModDir | MModMR);
     switch (AdrMode)
@@ -463,8 +462,7 @@ static void DecodeXCH(Word Code)
 
 static void DecodeINCDEC(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModY | MModB);
     switch (AdrMode)
@@ -483,8 +481,7 @@ static void DecodeADD(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2], MModA | MModY);
     switch (AdrMode)  
@@ -522,8 +519,7 @@ static void DecodeADC(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2], MModA);
     switch (AdrMode)  
@@ -549,8 +545,7 @@ static void DecodeSUB(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2], MModY);
     switch (AdrMode)  
@@ -572,8 +567,7 @@ static void DecodeSBC(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2], MModA);
     switch (AdrMode)  
@@ -601,8 +595,7 @@ static void DecodeOR(Word Code)
 
   if (ArgCnt == 0)
     WAsmCode[CodeLen++] = 0x144;
-  else if (ArgCnt != 2) WrError(1110);
-  else
+  else if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2], MModA);
     switch (AdrMode)  
@@ -631,8 +624,7 @@ static void DecodeAND(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2], MModA);
     switch (AdrMode)  
@@ -658,8 +650,7 @@ static void DecodeEOR(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2], MModA);
     switch (AdrMode)  
@@ -688,11 +679,9 @@ static void DecodeCP(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 3)
-  {
-    WrError(1110);
+  if (!ChkArgCnt(3, 3))
     return;
-  }
+
   if (!strcasecmp(ArgStr[1], "NE"))
     IsLE = False;
   else if (!strcasecmp(ArgStr[1], "LE"))
@@ -798,8 +787,7 @@ static void DecodeBit(Word Code)
     else
       WrError(1350);
   }
-  else if (ArgCnt != 2) WrError(1110);
-  else
+  else if (ChkArgCnt(2, 2))
   {
     Boolean OK;
     unsigned BitNo = EvalIntExpression(ArgStr[1], UInt2, &OK);
@@ -823,15 +811,13 @@ static void DecodeBit(Word Code)
 
 static void CodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
     WAsmCode[CodeLen++] = Code;
 }
 
 static void CodeImm(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word ImmVal = EvalIntExpression(ArgStr[1], (Code & 0x8000) ? UInt2 : Int4, &OK);
@@ -843,8 +829,7 @@ static void CodeImm(Word Code)
 
 static void CodeDir(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModDir);
     if (AdrMode == ModDir)
@@ -857,8 +842,7 @@ static void CodeDir(Word Code)
 
 static void CodeImmDir(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     Boolean OK;
     Word ImmVal = EvalIntExpression(ArgStr[1], (Code & 0x8000) ? UInt2 : Int4, &OK);
@@ -877,8 +861,7 @@ static void CodeImmDir(Word Code)
 
 static void CodeIO(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word DirVal;
@@ -895,8 +878,7 @@ static void CodeIO(Word Code)
 
 static void CodeLong(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word DirVal;
@@ -914,8 +896,7 @@ static void CodeLong(Word Code)
 
 static void CodeBR(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word DirVal;
@@ -934,8 +915,7 @@ static void CodeBR(Word Code)
 
 static void CodeCAL(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word DirVal;

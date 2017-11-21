@@ -33,6 +33,7 @@
 #include "fourpseudo.h"
 #include "codevars.h"
 #include "headids.h"
+#include "errmsg.h"
 
 #include "codeol40.h"
 
@@ -137,25 +138,13 @@ AdrFound:
   } 
 }
 
-static Boolean CheckCPU(Byte Mask)
-{
-  if (MomCPU == CPU5840)
-    Mask &= 0x01;
-  else if (MomCPU == CPU5842)
-    Mask &= 0x02;
-  else if (MomCPU == CPU58421)
-    Mask &= 0x04;
-  return !!Mask;
-}
-
 /*-------------------------------------------------------------------------*/
 
 static void DecodeLD(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModA | MModDPL | MModDPH | MModW | MModX | MModY | MModZ | MModPP | MModT);
     switch (AdrMode)
@@ -268,8 +257,7 @@ static void DecodeLD(Word Code)
 
 static void DecodeINCDEC(Word IsDEC)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModA | MModW | MModX | MModY | MModZ | MModDPL | MModM
                        | ((IsDEC && (MomCPU == CPU5840)) ? MModDPH : 0));
@@ -308,8 +296,7 @@ static void DecodeBit(Word Code)
     else
       WrError(1350);
   }
-  else if (ArgCnt != 2) WrError(1110);
-  else
+  else if (ChkArgCnt(1, 2))
   {
     Boolean OK;
     unsigned BitNo = EvalIntExpression(ArgStr[2], UInt2, &OK);
@@ -342,17 +329,15 @@ static void DecodeBit(Word Code)
 
 static void CodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else if (!CheckCPU(Hi(Code))) WrError(1500);
-  else
+  if (ChkArgCnt(0, 0)
+   && (ChkExactCPUMask(Hi(Code), CPU5840) >= 0))
     BAsmCode[CodeLen++] = Lo(Code);
 }
 
 static void CodeTHB(Word Code)
 {
-  if (ArgCnt > 1) WrError(1110);
-  else if (!CheckCPU(Hi(Code))) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && (ChkExactCPUMask(Hi(Code), CPU5840) >= 0))
   {
     Boolean OK = True;
     Word ImmVal = ArgCnt ? EvalIntExpression(ArgStr[1], UInt1, &OK) : 0;
@@ -370,9 +355,8 @@ static void CodeTHB(Word Code)
 
 static void CodeImm2(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (!CheckCPU(Hi(Code))) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && (ChkExactCPUMask(Hi(Code), CPU5840) >= 0))
   {
     Boolean OK;
     Word ImmVal = EvalIntExpression(ArgStr[1], UInt2, &OK);
@@ -384,9 +368,8 @@ static void CodeImm2(Word Code)
 
 static void CodeImm4(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (!CheckCPU(Hi(Code))) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && (ChkExactCPUMask(Hi(Code), CPU5840) >= 0))
   {
     Boolean OK;
     Word ImmVal = EvalIntExpression(ArgStr[1], Int4, &OK);
@@ -398,9 +381,8 @@ static void CodeImm4(Word Code)
 
 static void CodeLTI(Word Code)
 {
-  if (ArgCnt > 1) WrError(1110);
-  else if (!CheckCPU(Hi(Code))) WrError(1500);
-  else
+  if (ChkArgCnt(0, 1)
+   && (ChkExactCPUMask(Hi(Code), CPU5840) >= 0))
   {
     Boolean OK = True;
     Word ImmVal = ArgCnt ? EvalIntExpression(ArgStr[1], Int8, &OK) : 0;
@@ -423,9 +405,8 @@ static void CodeLTI(Word Code)
 
 static void CodeJC(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (!CheckCPU(Hi(Code))) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && (ChkExactCPUMask(Hi(Code), CPU5840) >= 0))
   {
     Boolean OK;
     Word Address;
@@ -444,9 +425,8 @@ static void CodeJC(Word Code)
 
 static void CodeJMP(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (!CheckCPU(Hi(Code))) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && (ChkExactCPUMask(Hi(Code), CPU5840) >= 0))
   {
     Boolean OK;
     Word Address;

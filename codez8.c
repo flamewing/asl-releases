@@ -104,6 +104,9 @@
 #include "intpseudo.h"
 #include "codevars.h"
 #include "headids.h"
+#include "errmsg.h"
+
+#include "codez8.h"
 
 typedef struct
 {
@@ -464,7 +467,7 @@ static void DecodeFixed(Word Index)
 {
   FixedOrder *pOrder = FixedOrders + Index;
 
-  if (ArgCnt != 0) WrError(1110);
+  if (!ChkArgCnt(0, 0));
   else
   {
     CodeLen = 1;
@@ -478,9 +481,8 @@ static void DecodeALU2(Word Index)
   Byte Save;
   int l = 0;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if ((pOrder->Ext) && (!IsEncore)) WrError(1500);
-  else
+  if (ChkArgCnt(2, 2)
+   && ((!pOrder->Ext) || ChkMinCPU(CPUeZ8)))
   {
     if (pOrder->Ext)
       BAsmCode[l++] = pOrder->Ext;
@@ -569,9 +571,8 @@ static void DecodeALUX(Word Index)
   ALU2Order *pOrder = ALUXOrders + Index;
   int l = 0;
 
-  if (ArgCnt!=2) WrError(1110);
-  else if (!IsEncore) WrError(1500);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkMinCPU(CPUeZ8))
   {
     if (pOrder->Ext)
       BAsmCode[l++] = pOrder->Ext;
@@ -604,9 +605,8 @@ static void DecodeALU1(Word Index)
   ALU1Order *pOrder = ALU1Orders + Index;
   int l = 0;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if ((pOrder->Ext) && (!IsEncore)) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && ((!pOrder->Ext) || ChkMinCPU(CPUeZ8)))
   {
     if (pOrder->Ext)
       BAsmCode[l++] = pOrder->Ext;
@@ -638,7 +638,7 @@ static void DecodeLD(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else
   {
     DecodeAdr(ArgStr[1], MModReg | MModWReg | MModIReg | MModIWReg | MModInd, False);
@@ -807,7 +807,7 @@ static void DecodeLDCE(Word Index)
 {
   Byte Save;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else
   {
     DecodeAdr(ArgStr[1], MModWReg | MModIWRReg | (((IsEncore) && (Index == 0xc2)) ? MModIWReg : 0), False);
@@ -848,7 +848,7 @@ static void DecodeLDCEI(Word Index)
 {
   Byte Save;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else
   {
     DecodeAdr(ArgStr[1], MModIWReg | MModIWRReg, False);
@@ -880,7 +880,7 @@ static void DecodeINC(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt!=1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else
   {
     DecodeAdr(ArgStr[1], MModWReg | MModReg | MModIReg, False);
@@ -912,7 +912,7 @@ static void DecodeJR(Word Index)
 
   UNUSED(Index);
 
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
+  if (!ChkArgCnt(1, 2));
   else
   {
     z = (ArgCnt == 1) ? TrueCond : DecodeCond(ArgStr[1]);
@@ -943,7 +943,7 @@ static void DecodeDJNZ(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else
   {
     DecodeAdr(ArgStr[1], MModWReg, False);
@@ -969,7 +969,7 @@ static void DecodeCALL(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else
   {
     DecodeAdr(ArgStr[1], MModIWRReg | MModIReg | MModReg, True);
@@ -1001,7 +1001,7 @@ static void DecodeJP(Word Index)
 
   UNUSED(Index);
 
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
+  if (!ChkArgCnt(1, 2));
   else
   {
     z = (ArgCnt == 1) ? TrueCond : DecodeCond(ArgStr[1]);                 
@@ -1046,7 +1046,7 @@ static void DecodeSRP(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt!=1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else
   {
     DecodeAdr(ArgStr[1], MModImm, False);
@@ -1066,9 +1066,8 @@ static void DecodeSRP(Word Index)
 
 static void DecodeStackExt(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (!IsEncore) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && ChkMinCPU(CPUeZ8))
   {
     DecodeAdr(ArgStr[1], MModXReg, False);
     if (AdrType == ModXReg)
@@ -1085,9 +1084,8 @@ static void DecodeTRAP(Word Index)
 {
   UNUSED(Index);
  
-  if (ArgCnt != 1) WrError(1110);
-  else if (!IsEncore) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && ChkMinCPU(CPUeZ8))
   {
     DecodeAdr(ArgStr[1], MModImm, False);
     if (AdrType == ModImm)
@@ -1103,9 +1101,8 @@ static void DecodeBSWAP(Word Index)
 {
   UNUSED(Index);
  
-  if (ArgCnt != 1) WrError(1110);
-  else if (!IsEncore) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && ChkMinCPU(CPUeZ8))
   {
     DecodeAdr(ArgStr[1], MModReg, False);
     if (AdrType == ModReg)
@@ -1121,9 +1118,8 @@ static void DecodeMULT(Word Index)
 {
   UNUSED(Index);
  
-  if (ArgCnt != 1) WrError(1110);
-  else if (!IsEncore) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && ChkMinCPU(CPUeZ8))
   {
     DecodeAdr(ArgStr[1], MModRReg | MModReg, False);
     switch (AdrType)
@@ -1148,9 +1144,8 @@ static void DecodeLDX(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!IsEncore) WrError(1500);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkMinCPU(CPUeZ8))
   {
     DecodeAdr(ArgStr[1], MModWReg | MModIWReg | MModReg | MModIReg | MModIWRReg | MModIndRR | MModXReg | MModWeird, False);
     switch (AdrType)
@@ -1306,7 +1301,7 @@ static void DecodeLDWX(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else
   {
     DecodeAdr(ArgStr[1], MModXReg, False);
@@ -1337,9 +1332,8 @@ static void DecodeLEA(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPUeZ8) WrError(1500);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkMinCPU(CPUeZ8))
   {
     DecodeAdr(ArgStr[1], MModWReg | MModRReg, False);
     switch (AdrType)
@@ -1380,9 +1374,8 @@ static void DecodeBIT(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 3) WrError(1110);
-  else if (MomCPU < CPUeZ8) WrError(1500);
-  else
+  if (ChkArgCnt(3, 3)
+   && ChkMinCPU(CPUeZ8))
   {
     BAsmCode[1] = EvalIntExpression(ArgStr[1], UInt1, &OK) << 7;
     if (OK)
@@ -1408,9 +1401,8 @@ static void DecodeBit(Word Index)
 {
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPUeZ8) WrError(1500);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkMinCPU(CPUeZ8))
   {
     BAsmCode[1] |= EvalIntExpression(ArgStr[1], UInt3, &OK) << 4;
     if (OK)
@@ -1435,9 +1427,8 @@ static void DecodeBTJ(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 4) WrError(1110);
-  else if (MomCPU < CPUeZ8) WrError(1500);
-  else
+  if (ChkArgCnt(4, 4)
+   && ChkMinCPU(CPUeZ8))
   {
     BAsmCode[1] = EvalIntExpression(ArgStr[1], UInt1, &OK) << 7;
     if (OK)
@@ -1484,9 +1475,8 @@ static void DecodeBtj(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 3) WrError(1110);
-  else if (MomCPU < CPUeZ8) WrError(1500);
-  else
+  if (ChkArgCnt(3, 3)
+   && ChkMinCPU(CPUeZ8))
   {
     BAsmCode[1] = Index | EvalIntExpression(ArgStr[1], UInt3, &OK) << 4;
     if (OK)
@@ -1696,7 +1686,7 @@ static Boolean DecodePseudo(void)
 
   if (Memo("REG"))
   {
-    if (ArgCnt != 1) WrError(1110);
+    if (!ChkArgCnt(1, 1));
     else AddRegDef(LabPart, ArgStr[1]);
     return True;
   }
@@ -1773,8 +1763,10 @@ static void SwitchTo_Z8(void)
   pASSUMERecs = ASSUMEeZ8s;
   ASSUMERecCnt = ASSUMEeZ8Count;
 
-  MakeCode=MakeCode_Z8; IsDef=IsDef_Z8;
-  SwitchFrom=SwitchFrom_Z8; InitFields();
+  MakeCode = MakeCode_Z8;
+  IsDef = IsDef_Z8;
+  SwitchFrom = SwitchFrom_Z8;
+  InitFields();
 }
 
 void codez8_init(void)

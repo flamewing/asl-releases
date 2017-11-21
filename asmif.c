@@ -43,6 +43,7 @@
 #include "bpemu.h"
 #include "chunks.h"
 #include "strutil.h"
+#include "errmsg.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
@@ -103,11 +104,8 @@ static void CodeIF(void)
 
   if (!IfAsm)
     IfExpr = 1;
-  else if (ArgCnt != 1)
-  {
-    WrError(1110);
+  else if (!ChkArgCnt(1, 1))
     IfExpr = 1;
-  }
   else
     IfExpr = GetIfVal(ArgStr[1]);
   if (IfAsm)
@@ -124,11 +122,8 @@ static void CodeIFDEF(Word Negate)
   ActiveIF = IfAsm;
 
   if (!IfAsm) IfExpr = 1;
-  else if (ArgCnt != 1)
-  {
-    WrError(1110);
+  else if (!ChkArgCnt(1, 1))
     IfExpr = 1;
-  }
   else
   {
     Defined = IsSymbolDefined(ArgStr[1]);
@@ -152,11 +147,8 @@ static void CodeIFUSED(Word Negate)
 
   if (!IfAsm)
     IfExpr = 1;
-  else if (ArgCnt != 1)
-  {
-    WrError(1110);
+  else if (!ChkArgCnt(1, 1))
     IfExpr = 1;
-  }
   else
   {
     Used = IsSymbolUsed(ArgStr[1]);
@@ -181,11 +173,8 @@ void CodeIFEXIST(Word Negate)
 
   if (!IfAsm)
     IfExpr = 1;
-  else if (ArgCnt != 1)
-  {
-    WrError(1110);
+  else if (!ChkArgCnt(1, 1))
     IfExpr = 1;
-  }
   else
   {
     strmaxcpy(ArgPart, (ArgStr[1][0] == '"') ? ArgStr[1] + 1 : ArgStr[1], 255);
@@ -256,7 +245,8 @@ static void CodeELSEIF(void)
         FirstIfSave->CaseFound = True;
     }
   }
-  else WrError(1110);
+  else
+    (void)ChkArgCnt(0, 1);
 
   ActiveIF = (!FirstIfSave) || (FirstIfSave->SaveIfAsm);
 }
@@ -266,8 +256,8 @@ static void CodeENDIF(void)
 {
   PIfSave NewSave;
 
-  if (ArgCnt != 0) WrError(1110);
-  if (!FirstIfSave) WrError(1840);
+  if (!ChkArgCnt(0, 0));
+  else if (!FirstIfSave) WrError(1840);
   else
   {
     if ((FirstIfSave->State != IfState_IFIF) && (FirstIfSave->State != IfState_IFELSE)) WrError(1480);
@@ -317,7 +307,7 @@ static void CodeSWITCH(void)
     NewSave->SaveExpr.Typ = TempInt;
     NewSave->SaveExpr.Contents.Int = 1;
     if (IfAsm)
-      WrError(1110);
+      (void)ChkArgCnt(1, 1);
   }
   else
   {
@@ -335,8 +325,7 @@ static void CodeCASE(void)
   TempResult t;
 
   if (!FirstIfSave) WrError(1840);
-  else if (!ArgCnt) WrError(1110);
-  else
+  else if (ChkArgCnt(1, ArgCntMax))
   {
     if ((FirstIfSave->State != IfState_CASESWITCH) && (FirstIfSave->State != IfState_CASECASE)) WrError(1480);
     else
@@ -388,8 +377,7 @@ static void CodeCASE(void)
 
 static void CodeELSECASE(void)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     if ((FirstIfSave->State != IfState_CASESWITCH) && (FirstIfSave->State != IfState_CASECASE)) WrError(1480);
     else
@@ -408,8 +396,8 @@ static void CodeENDCASE(void)
 {
   PIfSave NewSave;
 
-  if (ArgCnt != 0) WrError(1110);
-  if (!FirstIfSave) WrError(1840);
+  if (!ChkArgCnt(0, 0));
+  else if (!FirstIfSave) WrError(1840);
   else
   {
     if ((FirstIfSave->State != IfState_CASESWITCH)

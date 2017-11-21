@@ -49,6 +49,7 @@
 #include "codepseudo.h"
 #include "fourpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
 
 
 typedef struct
@@ -82,8 +83,7 @@ static void DecodeDATA_4500(Word Code)
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     CodeLen = 1;
     WAsmCode[0] = Code;
@@ -94,8 +94,7 @@ static void DecodeConst(Word Index)
 {
   const ConstOrder *pOrder = ConstOrders + Index;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
 
@@ -112,8 +111,7 @@ static void DecodeSZD(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     CodeLen = 2;
     WAsmCode[0] = 0x024;
@@ -125,8 +123,7 @@ static void DecodeSEA(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
 
@@ -144,8 +141,7 @@ static void DecodeB(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Word AdrWord;
     Boolean OK;
@@ -165,8 +161,7 @@ static void DecodeB(Word Code)
 
 static void DecodeBL_BML(Word Code)
 {
-  if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 2))
   {
     Boolean OK;
     Word AdrWord;
@@ -190,8 +185,7 @@ static void DecodeBL_BML(Word Code)
 
 static void DecodeBLA_BMLA(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word AdrWord;
@@ -210,8 +204,7 @@ static void DecodeBM(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word AdrWord;
@@ -233,8 +226,7 @@ static void DecodeLXY(Word Code)
 {
   UNUSED(Code);
 
-  if ((ArgCnt == 0) || (ArgCnt > 2)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 2))
   {
     Boolean OK;
     Word AdrWord;

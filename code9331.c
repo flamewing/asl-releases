@@ -41,6 +41,7 @@
 #include "asmitree.h"
 #include "headids.h"
 #include "codevars.h"
+#include "errmsg.h"
 
 #include "code9331.h"
 
@@ -383,7 +384,7 @@ static void DecodeMAIN(Word Code)
            LCode = Lo(Code);
   Boolean UseZS = Hi(Code) || False;
 
-  if (ArgCnt != 15) WrError(1110);
+  if (!ChkArgCnt(15, 15));
   else if (*ArgStr[1]) WrError(1350);
   else if (!DecodeXS(ArgStr[3], &Xs));
   else if (!DecodeYS(ArgStr[4], &Ys));
@@ -442,7 +443,7 @@ static void DecodeLDA(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 7) WrError(1110);
+  if (!ChkArgCnt(7, 7));
   else if (*ArgStr[1]) WrError(1350);
   else if (!DecodeDSTA(ArgStr[2], &DstA, &IntSize));
   else if (!DecodeWRF(ArgStr[4], &Wrf));
@@ -472,7 +473,7 @@ static void DecodeLDB(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 4) WrError(1110);
+  if (!ChkArgCnt(4, 4));
   else if (*ArgStr[1]) WrError(1350);
   else if (!DecodeDSTB(ArgStr[2], &DstB));
   else if (!DecodeFORM(ArgStr[4], &Form));
@@ -495,7 +496,7 @@ static void DecodeBR(Word Code)
 {
   LongWord Cp, Dps, Mode, Dest, Sour, Xcnt, Ofp;
 
-  if (ArgCnt != 9) WrError(1110);
+  if (!ChkArgCnt(9, 9));
   else if (*ArgStr[1]) WrError(1350);
   else if (!DecodeCP(ArgStr[3], &Cp));
   else if (!DecodeDPS(ArgStr[4], &Dps));
@@ -527,7 +528,7 @@ static void DecodeJC(Word Code)
 {
   LongWord F, Cp, Dps, Mode, Dest, Sour, Xcnt, Ofp;
 
-  if (ArgCnt != 10) WrError(1110);
+  if (!ChkArgCnt(10, 10));
   else if (*ArgStr[1]) WrError(1350);
   else if (!DecodeRegList(pFNames, ArgStr[3], &F));
   else if (!DecodeCP(ArgStr[4], &Cp));
@@ -563,7 +564,7 @@ static void DecodeRET(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 13) WrError(1110);
+  if (!ChkArgCnt(13, 13));
   else if (*ArgStr[1]) WrError(1350);
   else if (!DecodeXS(ArgStr[3], &Xs));
   else if (!DecodeYS(ArgStr[4], &Ys));
@@ -620,7 +621,7 @@ static void DecodeGMAx(Word Code)
 {
   LongWord Gfx, Gf, Wrf, Ws, Cp, Dps, Mode, Dest, Sour, Xcnt, Ofp;
 
-  if (ArgCnt != 12) WrError(1110);
+  if (!ChkArgCnt(12, 12));
   else if (*ArgStr[1]) WrError(1350);
   else if (!DecodeGFX(ArgStr[2], &Gfx));
   else if (!DecodeGF(ArgStr[3], &Gf));

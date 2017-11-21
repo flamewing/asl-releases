@@ -31,7 +31,7 @@ CODE_SRCS = codepseudo.c intpseudo.c motpseudo.c tipseudo.c natpseudo.c fourpseu
 	    codexcore.c \
             code1750.c
 
-DECODE_SRCS = deco87c800.c
+DECODE_SRCS = deco68.c deco87c800.c
 
 ST_SRCS = strutil.c stdhandl.c stringlists.c
 
@@ -40,11 +40,11 @@ NLS_SRCS = nls.c nlmessages.c
 ASM_SRCS = as.c asmdef.c asmsub.c lstmacroexp.c asmpars.c asmmac.c asmstructs.c asmcode.c asmdebug.c asmif.c \
            asmfnums.c asmrelocs.c asminclist.c asmitree.c asmallg.c
 
-AS_SRCS = version.c endian.c bpemu.c chunks.c trees.c dynstring.c cmdarg.c ioerrs.c headids.c
+AS_SRCS = version.c endian.c bpemu.c chunks.c cpulist.c errmsg.c trees.c dynstring.c cmdarg.c ioerrs.c headids.c
 
 DASM_SRCS = das.c dasmdef.c
 
-DAS_SRCS = version.c endian.c bpemu.c chunks.c codechunks.c entryaddress.c dynstring.c cmdarg.c ioerrs.c
+DAS_SRCS = version.c endian.c bpemu.c chunks.c trees.c codechunks.c entryaddress.c invaddress.c cpulist.c dynstring.c cmdarg.c ioerrs.c
 
 PLIST_SRCS = plist.c version.c toolutils.c headids.c\
 	     endian.c bpemu.c stringlists.c hex.c strutil.c cmdarg.c ioerrs.c
@@ -69,4 +69,4 @@ TEX2HTML_SRCS = tex2html.c asmitree.c strutil.c
 
 UNUMLAUT_SRCS = unumlaut.c
 
-MKDEPEND_SRCS = mkdepend.c
+MKDEPEND_SRCS = mkdepend.c stringlists.c strutil.c

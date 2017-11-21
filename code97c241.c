@@ -63,7 +63,9 @@
 #include "codepseudo.h"
 #include "intpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
 
+#include "code97c241.h"
 
 typedef struct 
 {
@@ -847,7 +849,7 @@ static char DecideGA(void)
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
+  if (!ChkArgCnt(0, 0));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -862,8 +864,7 @@ static void DecodeRMW(Word Index)
 
   if ((OpSize == -1) && (pOrder->Mask & 0x20))
     OpSize = 2;
-  if (ArgCnt!=1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     char *pArg = ArgStr[1];
 
@@ -888,8 +889,7 @@ static void DecodeRMW(Word Index)
 
 static void DecodeGASI1(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], 1, False, True);
     if (AdrOK)
@@ -1007,8 +1007,7 @@ static void DecodeGASI1(Word Code)
 
 static void DecodeGASI2(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], 1, False, True);
     if (AdrOK)
@@ -1111,7 +1110,7 @@ static void DecodeTrinom(Word Code)
 
   if (Code == 2) /* MAC */
     LowLim8 = 0;
-  if (ArgCnt != 3) WrError(1110);
+  if (!ChkArgCnt(3, 3));
   else if (!DecodeRegAdr(ArgStr[1], &Reg)) WrError(1350);
   else
   {
@@ -1153,7 +1152,7 @@ static void DecodeRLM_RRM(Word Code)
   int Cnt;
   Byte Reg;
 
-  if (ArgCnt != 3) WrError(1110);
+  if (!ChkArgCnt(3, 3));
   else if (!DecodeReg(ArgStr[2], &Reg)) WrError(1350);
   else if ((Reg >> 6) != 1) WrError(1130);
   else
@@ -1192,8 +1191,7 @@ static void DecodeRLM_RRM(Word Code)
 
 static void DecodeBit(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], 1, False, True);
     if (AdrOK)
@@ -1304,8 +1302,7 @@ static void DecodeBit(Word Code)
 
 static void DecodeShift(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], 1, False, True);
     if (AdrOK)
@@ -1401,8 +1398,7 @@ static void DecodeBField(Word Code)
   Byte Reg, Num1, Num2;
   Boolean OK;
 
-  if (ArgCnt != 4) WrError(1110);
-  else
+  if (ChkArgCnt(4, 4))
   {
     char *pArg1 = (Code == 2) ? ArgStr[2] : ArgStr[1],
          *pArg2 = (Code == 2) ? ArgStr[1] : ArgStr[2];
@@ -1463,8 +1459,7 @@ static void DecodeGAEq(Word Code)
 {
   if (Hi(Code))
     SetULowLims();
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], 1, False, True);
     if (AdrOK)
@@ -1545,8 +1540,7 @@ static void DecodeGAEq(Word Code)
 
 static void DecodeGAHalf(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], 1, False, True);
     if (AdrOK)
@@ -1632,8 +1626,7 @@ static void DecodeGAHalf(Word Code)
 
 static void DecodeGAFirst(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], 1, !(Memo("STCF") || Memo("TSET")), True);
     if (AdrOK)
@@ -1715,8 +1708,7 @@ static void DecodeGAFirst(Word Code)
 
 static void DecodeGASecond(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2], 0, True, True);
     if (AdrOK)
@@ -1794,8 +1786,7 @@ static void DecodeCHK_CHKS(Word IsSigned)
 {
   if (!IsSigned)
     SetULowLims();
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2], 1, False, True);
     if (AdrOK)
@@ -1865,7 +1856,7 @@ static void DecodeString(Word Code)
   Byte Reg;
   int Cnt;
 
-  if (ArgCnt != 3) WrError(1110);
+  if (!ChkArgCnt(3, 3));
   else if (!DecodeReg(ArgStr[3], &Reg)) WrError(1350);
   else if ((Reg >> 6) != 1) WrError(1130);
   else
@@ -1907,8 +1898,7 @@ static void DecodeEX(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], 1, False, True);
     if (AdrOK)
@@ -1983,7 +1973,7 @@ static void DecodeEX(Word Code)
 
 static void DecodeCALR_JR(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -2007,7 +1997,7 @@ static void DecodeJRC(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (*AttrPart!='\0') WrError(1100);
   else
   {
@@ -2036,7 +2026,7 @@ static void DecodeJRC(Word Code)
 
 static void DecodeJRBC_JRBS(Word Code)
 {
-  if (ArgCnt != 3) WrError(1110);
+  if (!ChkArgCnt(3, 3));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -2077,8 +2067,7 @@ static void DecodeDJNZ(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], 0, False, True);
     if (AdrOK)
@@ -2110,8 +2099,7 @@ static void DecodeDJNZC(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 3) WrError(1110);
-  else
+  if (ChkArgCnt(3, 3))
   {
     Word Condition;
 
@@ -2148,7 +2136,7 @@ static void DecodeDJNZC(Word Code)
 
 static void DecodeLINK_RETD(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -2176,7 +2164,7 @@ static void DecodeSWI(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -2192,8 +2180,7 @@ static void DecodeLDA(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2], 0, False, False);
     if (AdrOK)

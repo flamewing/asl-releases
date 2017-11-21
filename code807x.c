@@ -54,11 +54,15 @@
 #include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
+#include "errmsg.h"
 #include "asmpars.h"
 #include "asmitree.h"
 #include "headids.h"
 #include "intpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
+
+#include "code807x.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -133,12 +137,10 @@ static void DecodeAdr(int Index, Byte Mask, LongInt PCDelta)
 
   AdrMode = ModNone;
 
+  if (!ChkArgCnt(Index, ArgCntMax))
+    return;
+
   Cnt = ArgCnt - Index + 1;
-  if (!Cnt)
-  {
-    WrError(1110);
-    goto AdrFound;
-  }
 
   /* accumulator ? */
 
@@ -278,8 +280,7 @@ AdrFound:
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     BAsmCode[0] = Code;
     CodeLen = 1;
@@ -290,8 +291,7 @@ static void DecodeLD(Word Index)
 {
   UNUSED(Index);
 
-  if ((ArgCnt < 1) || (ArgCnt > 3)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 3))
   {
     DecodeAdr(1, MModAcc | MModReg | MModT | MModE | MModS, 0);
     switch (AdrMode)
@@ -400,8 +400,7 @@ static void DecodeST(Word Index)
 {
   UNUSED(Index);
 
-  if ((ArgCnt < 1) || (ArgCnt > 3)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 3))
   {   
     DecodeAdr(1, MModAcc, 0);
     switch (AdrMode)
@@ -425,8 +424,7 @@ static void DecodeXCH(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(1, MModE | MModAcc | MModReg, 0);
     switch (AdrMode)
@@ -462,8 +460,7 @@ static void DecodePLI(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(1, MModReg, 0);
     if (AdrMode == ModReg)
@@ -502,14 +499,13 @@ static void DecodeSSM(Word Code)
       }
       break;
     default:
-      WrError(1110);
+      (void)ChkArgCnt(0, 1);
   }
 }
 
 static void DecodeADDSUB(Word Index)
 {
-  if ((ArgCnt < 1) || (ArgCnt > 3)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 3))
   {   
     DecodeAdr(1, MModAcc, 0);
     switch (AdrMode)
@@ -537,8 +533,7 @@ static void DecodeADDSUB(Word Index)
 
 static void DecodeMulDiv(Word Index)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {   
     OpSize = 1;
     DecodeAdr(1, MModAcc, 0);
@@ -556,8 +551,7 @@ static void DecodeMulDiv(Word Index)
 
 static void DecodeLogic(Word Index)
 {
-  if ((ArgCnt < 1) || (ArgCnt > 3)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 3))
   {
     OpSize = 0;
     DecodeAdr(1, MModAcc | MModS, 0);
@@ -600,8 +594,7 @@ static void DecodeShift(Word Index)
 {
   ShiftOrder *POrder = ShiftOrders + Index;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(1, MModAcc, 0);
     if (AdrMode == ModAcc)
@@ -615,8 +608,7 @@ static void DecodeShift(Word Index)
 
 static void DecodeStack(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(1, MModAcc | MModReg, 0);
     switch (AdrMode)
@@ -638,8 +630,7 @@ static void DecodeStack(Word Index)
 
 static void DecodeIDLD(Word Index)
 {
-  if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
-  else
+  if (ChkArgCnt(2, 3))
   {
     DecodeAdr(1, MModAcc, 0);
     if (AdrMode == ModAcc)
@@ -664,8 +655,7 @@ static void DecodeJMPJSR(Word Index)
   Word Address;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Address = (EvalIntExpression(ArgStr[1], UInt16, &OK) - 1) & 0xffff;
     if (OK)
@@ -683,8 +673,7 @@ static void DecodeCALL(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     BAsmCode[0] = 0x10 | EvalIntExpression(ArgStr[1], UInt4, &OK);
     if (OK)
@@ -699,8 +688,7 @@ static void DecodeBranch(Word Code)
   if (ArgCnt == 1)
     strcpy(ArgStr[++ArgCnt], "PC");
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(1, MModMem, 2); /* !! regard pre-increment after branch */
     if (AdrMode == ModMem)

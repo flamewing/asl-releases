@@ -28,8 +28,9 @@
 #include "intpseudo.h"
 #include "codevars.h"
 #include "headids.h"
-
+#include "errmsg.h"
 #include "codepseudo.h"
+
 #include "codevector.h"
 
 static CPUVar CPUVector;
@@ -142,8 +143,7 @@ static Boolean DecodeXY(char *pAsc, Word *pX, Word *pY, Boolean Signed)
 
 static void DecodeFixed(Word Index)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     WAsmCode[0] = Index;
     CodeLen = 1;
@@ -154,8 +154,7 @@ static void DecodeJmp(Word Index)
 {
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     WAsmCode[0] = Index | EvalIntExpression(ArgStr[1], UInt12, &OK);
     if (OK)
@@ -169,7 +168,7 @@ static void DecodeLAbs(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeXY(ArgStr[1], &X, &Y, False));
   else if (!DecodeScale(ArgStr[2], &Scale));
   else
@@ -186,7 +185,7 @@ static void DecodeVctr(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 3) WrError(1110);
+  if (!ChkArgCnt(3, 3));
   else if (!DecodeXY(ArgStr[1], &X, &Y, True));
   else if (!DecodeScale(ArgStr[2], &Scale));
   else if (!DecodeBright(ArgStr[3], &Bright));
@@ -204,7 +203,7 @@ static void DecodeSVec(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 3) WrError(1110);
+  if (!ChkArgCnt(3, 3));
   else if (!DecodeXY(ArgStr[1], &X, &Y, True));
   else if ((X & 0xff) || (Y & 0xff)) WrError(1325);
   else if (!DecodeScale(ArgStr[2], &Scale));

@@ -17,14 +17,16 @@
  * - use tree functions
  *
  *****************************************************************************/
+
+extern Boolean BalanceTrees;
            
 typedef struct _TTree
-        {
-          struct _TTree *Left, *Right;
-          ShortInt Balance;
-          char *Name;
-          LongInt Attribute;
-        } TTree, *PTree;
+{
+  struct _TTree *Left, *Right;
+  ShortInt Balance;
+  char *Name;
+  LongInt Attribute;
+} TTree, *PTree;
 
 typedef void (*TTreeCallback)(PTree Node, void *pData);
 

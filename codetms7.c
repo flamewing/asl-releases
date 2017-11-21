@@ -47,7 +47,9 @@
 #include "asmitree.h"  
 #include "intpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
 
+#include "codetms7.h"
 
 #define ModNone (-1)
 #define ModAccA 0
@@ -248,15 +250,13 @@ static void PutCode(Word Code)
 
 static void DecodeFixed(Word Index)
 {
-  if (ArgCnt!=0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
     PutCode(Index);
 }
 
 static void DecodeRel8(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Integer AdrInt = EvalIntExpression(ArgStr[1], UInt16, &OK) - (EProgCounter() + 2);
@@ -276,8 +276,7 @@ static void DecodeRel8(Word Index)
 
 static void DecodeALU1(Word Index)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2], MModAccA | MModAccB | MModReg);
     switch (AdrType)
@@ -346,8 +345,7 @@ static void DecodeALU2(Word Index)
 
   Index &= ~0xc000;
 
-  if (((IsRela) && (ArgCnt != 3)) || ((!IsRela) && (ArgCnt != 2))) WrError(1110);
-  else
+  if (ChkArgCnt(IsRela ? 3 : 2, IsRela ? 3 : 2))
   {
     DecodeAdr(ArgStr[2], MModPort | (IsP ? 0 : MModAccA | MModAccB | MModReg));
     switch (AdrType)
@@ -443,8 +441,7 @@ static void DecodeALU2(Word Index)
 
 static void DecodeJmp(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModAbs | MModIReg | MModBRel);
     switch (AdrType)
@@ -470,8 +467,7 @@ static void DecodeJmp(Word Index)
 
 static void DecodeABReg(Word Index)
 {
-  if (((!Memo("DJNZ")) && (ArgCnt != 1))
-   || (( Memo("DJNZ")) && (ArgCnt != 2))) WrError(1110);
+  if (!ChkArgCnt(Memo("DJNZ") ? 2 : 1, Memo("DJNZ") ? 2 : 1));
   else if (!strcasecmp(ArgStr[1], "ST"))
   {
     if ((Memo("PUSH")) || (Memo("POP")))
@@ -519,8 +515,7 @@ static void DecodeABReg(Word Index)
 
 static void DecodeMOV(Word IsMOVP)
 {
-  if (ArgCnt!=2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2], MModPort| MModAccA| MModAccB |
                         (IsMOVP ? 0: MModReg| MModAbs | MModIReg| MModBRel));
@@ -677,8 +672,7 @@ static void DecodeLDA(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModAbs | MModBRel | MModIReg);
     switch (AdrType)
@@ -706,8 +700,7 @@ static void DecodeSTA(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModAbs | MModBRel | MModIReg);
     switch (AdrType)
@@ -736,8 +729,7 @@ static void DecodeMOVWD(Word Index)
   UNUSED(Index);
 
   OpSize = 1;
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2], MModReg);
     if (AdrType != ModNone)
@@ -772,8 +764,7 @@ static void DecodeMOVWD(Word Index)
 
 static void DecodeCMP(Word IsCMPA)
 {
-  if (((!IsCMPA) && (ArgCnt != 2)) || ((IsCMPA) && (ArgCnt != 1))) WrError(1110);
-  else
+  if (ChkArgCnt(IsCMPA ? 1 : 2, IsCMPA ? 1 : 2))
   {
     if (IsCMPA)
       AdrType = ModAccA;
@@ -857,8 +848,7 @@ static void DecodeTRAP(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
 
@@ -882,7 +872,7 @@ static void DecodeTST(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModAccA | MModAccB);
     switch (AdrType)

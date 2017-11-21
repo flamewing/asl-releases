@@ -39,6 +39,7 @@
 #include "codepseudo.h"
 #include "motpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
 
 #include "code6804.h"
 
@@ -122,8 +123,7 @@ static void DecodeFixed(Word Index)
 {
   const BaseOrder *pOrder = FixedOrders + Index;
 
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     if ((pOrder->Code >> 16) != 0)
       CodeLen = 3;
@@ -141,8 +141,7 @@ static void DecodeFixed(Word Index)
 
 static void DecodeRel(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Integer AdrInt = EvalIntExpression(ArgStr[1], Int16, &OK) - (EProgCounter() + 1);
@@ -162,8 +161,7 @@ static void DecodeRel(Word Code)
 
 static void DecodeJSR_JMP(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word AdrInt = EvalIntExpression(ArgStr[1], UInt12, &OK);
@@ -182,8 +180,7 @@ static void DecodeJSR_JMP(Word Code)
 
 static void DecodeALU(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], True);
     switch (AdrMode)
@@ -210,8 +207,7 @@ static void DecodeALU(Word Code)
 
 static void DecodeLDA_STA(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], !Code);
     switch (AdrMode)
@@ -244,7 +240,7 @@ static void DecodeLDA_STA(Word Code)
 
 static void DecodeLDXI_LDYI(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*ArgStr[1] != '#') WrError(1350);
   else
   {
@@ -264,7 +260,7 @@ static void DecodeMVI(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (*ArgStr[2] != '#') WrError(1350);
   else
   {
@@ -288,8 +284,7 @@ static void DecodeMVI(Word Code)
 
 static void DecodeINC_DEC(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], False);
     switch (AdrMode)
@@ -319,8 +314,7 @@ static void DecodeINC_DEC(Word Code)
 
 static void DecodeBSET_BCLR(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     Boolean OK;
     Byte Bit = EvalIntExpression(ArgStr[1], UInt3, &OK);
@@ -339,8 +333,7 @@ static void DecodeBSET_BCLR(Word Code)
 
 static void DecodeBRSET_BRCLR(Word Code)
 {
-  if (ArgCnt != 3) WrError(1110);
-  else
+  if (ChkArgCnt(3, 3))
   {
     Boolean OK;
     Byte Bit = EvalIntExpression(ArgStr[1], UInt3, &OK);

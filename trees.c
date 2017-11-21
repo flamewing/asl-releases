@@ -31,6 +31,24 @@
 
 #include "trees.h"
 
+Boolean BalanceTrees;
+
+static ShortInt StrCmp(const char *s1, const char *s2, LongInt Hand1, LongInt Hand2)
+{
+  int tmp;
+
+  tmp = (*s1) - (*s2);
+  if (!tmp)
+    tmp = strcmp(s1, s2);
+  if (!tmp)
+    tmp = Hand1 - Hand2;
+  if (tmp < 0)
+    return -1;
+  if (tmp > 0)
+    return 1;
+  return 0;
+}
+
 void IterTree(PTree Tree, TTreeCallback Callback, void *pData)
 {
   ChkStack();
@@ -137,7 +155,7 @@ Boolean EnterTree(PTree *PDest, PTree Neu, TTreeAdder Adder, void *pData)
   if (CompErg > 0)
   {
     Grown = EnterTree(&((*PDest)->Right), Neu, Adder, pData);
-    if ((BalanceTree) && (Grown))
+    if ((BalanceTrees) && (Grown))
      switch ((*PDest)->Balance)
      {
        case -1:
@@ -170,7 +188,7 @@ Boolean EnterTree(PTree *PDest, PTree Neu, TTreeAdder Adder, void *pData)
    else if (CompErg < 0)
    {
      Grown = EnterTree(&((*PDest)->Left), Neu, Adder, pData);
-     if ((BalanceTree) && (Grown))
+     if ((BalanceTrees) && (Grown))
        switch ((*PDest)->Balance)
        {
          case 1:

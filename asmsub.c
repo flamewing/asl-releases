@@ -171,6 +171,7 @@
 #include "stdinc.h"
 #include <string.h>
 #include <ctype.h>
+#include <stdarg.h>
 
 #include "version.h"
 #include "endian.h"
@@ -182,6 +183,7 @@
 #include "stringlists.h"
 #include "chunks.h"
 #include "ioerrs.h"
+#include "errmsg.h"
 #include "asmdef.h"
 #include "asmpars.h"
 #include "asmdebug.h"
@@ -220,102 +222,6 @@ void AsmSubInit(void)
   PageWidth = 0;
   ErrorCount = 0;
   WarnCount = 0;
-}
-
-/****************************************************************************/
-/* neuen Prozessor definieren */
-
-CPUVar AddCPU(char *NewName, TSwitchProc Switcher)
-{
-  PCPUDef Lauf, Neu;
-  char *p;
-
-  Neu = (PCPUDef) malloc(sizeof(TCPUDef));
-  Neu->Name = strdup(NewName);
-  /* kein UpString, weil noch nicht initialisiert ! */
-  for (p = Neu->Name; *p != '\0'; p++)
-    *p = mytoupper(*p);
-  Neu->SwitchProc = Switcher;
-  Neu->Next = NULL;
-  Neu->Number = Neu->Orig = CPUCnt;
-
-  Lauf = FirstCPUDef;
-  if (!Lauf)
-    FirstCPUDef = Neu;
-  else
-  {
-    while (Lauf->Next)
-      Lauf = Lauf->Next;
-    Lauf->Next = Neu;
-  }
-
-  return CPUCnt++;
-}
-
-Boolean AddCPUAlias(char *OrigName, char *AliasName)
-{
-  PCPUDef Lauf = FirstCPUDef, Neu;
-
-  while ((Lauf) && (strcmp(Lauf->Name, OrigName)))
-    Lauf = Lauf->Next;
-
-  if (!Lauf)
-    return False;
-  else
-  {
-    Neu = (PCPUDef) malloc(sizeof(TCPUDef));
-    Neu->Next = NULL;
-    Neu->Name = strdup(AliasName);
-    Neu->Number = CPUCnt++;
-    Neu->Orig = Lauf->Orig;
-    Neu->SwitchProc = Lauf->SwitchProc;
-    while (Lauf->Next)
-      Lauf = Lauf->Next;
-    Lauf->Next = Neu;
-    return True;
-  }
-}
-
-void PrintCPUList(TSwitchProc NxtProc)
-{
-  PCPUDef Lauf;
-  TSwitchProc Proc;
-  int cnt;
-
-  Lauf = FirstCPUDef;
-  Proc = NullProc;
-  cnt = 0;
-  while (Lauf)
-  {
-    if (Lauf->Number == Lauf->Orig)
-    {
-      if ((Lauf->SwitchProc != Proc) || (cnt == 7))
-      {
-        Proc = Lauf->SwitchProc;
-        printf("\n");
-        NxtProc();
-        cnt = 0;
-      }
-      printf("%-10s", Lauf->Name);
-      cnt++;
-    }
-    Lauf = Lauf->Next;
-  }
-  printf("\n");
-  NxtProc();
-}
-
-void ClearCPUList(void)
-{
-  PCPUDef Save;
-
-  while (FirstCPUDef)
-  {
-    Save = FirstCPUDef;
-    FirstCPUDef = Save->Next;
-    free(Save->Name);
-    free(Save);
-  }
 }
 
 /****************************************************************************/
@@ -580,22 +486,6 @@ void TranslateString(char *s, int Length)
     Length = strlen(s);
   for (pRun = s, pEnd = pRun + Length; pRun < pEnd; pRun++)
     *pRun = CharTransTable[((usint)(*pRun)) & 0xff];
-}
-
-ShortInt StrCmp(const char *s1, const char *s2, LongInt Hand1, LongInt Hand2)
-{
-  int tmp;
-
-  tmp = (*s1) - (*s2);
-  if (!tmp)
-    tmp = strcmp(s1, s2);
-  if (!tmp)
-    tmp = Hand1 - Hand2;
-  if (tmp < 0)
-    return -1;
-  if (tmp > 0)
-    return 1;
-  return 0;
 }
 
 ShortInt StrCaseCmp(const char *s1, const char *s2, LongInt Hand1, LongInt Hand2)
@@ -1161,7 +1051,8 @@ void WrErrorString(char *Message, char *Add, Boolean Warning, Boolean Fatal)
   if (!GNUErrors)
     strcpy(h, "> > >");
   p = GetErrorPos();
-  if (p[l = strlen(p) - 1] == ' ')
+  l = strlen(p) - 1;
+  if ((l >= 0) && (p[l] == ' '))
     p[l] = '\0';
   strmaxcat(h, p, 255);
   free(p);
@@ -1284,7 +1175,10 @@ static void WrErrorNum(Word Num)
     case 1100: msgno = Num_ErrMsgUseLessAttr; break;
     case 1105: msgno = Num_ErrMsgTooLongAttr; break;
     case 1107: msgno = Num_ErrMsgUndefAttr; break;
-    case 1110: msgno = Num_ErrMsgWrongArgCnt; break;
+    case ErrNum_WrongArgCnt:
+      msgno = Num_ErrMsgWrongArgCnt; break;
+    case ErrNum_CannotSplitArg:
+      msgno = Num_ErrMsgCannotSplitArg; break;
     case 1115: msgno = Num_ErrMsgWrongOptCnt; break;
     case 1120: msgno = Num_ErrMsgOnlyImmAddr; break;
     case 1130: msgno = Num_ErrMsgInvOpsize; break;
@@ -1333,14 +1227,18 @@ static void WrErrorNum(Word Num)
     case 1489: msgno = Num_ErrMsgContForward; break;
     case 1490: msgno = Num_ErrMsgInvFuncArgCnt; break;
     case 1495: msgno = Num_ErrMsgMissingLTORG; break;
-    case 1500: msgno = -1;
-               sprintf(h, "%s%s%s", getmessage(Num_ErrMsgNotOnThisCPU1),
-                       MomCPUIdent, getmessage(Num_ErrMsgNotOnThisCPU2));
-               break;
-    case 1505: msgno = -1;
-               sprintf(h, "%s%s%s", getmessage(Num_ErrMsgNotOnThisCPU3),
-                       MomCPUIdent, getmessage(Num_ErrMsgNotOnThisCPU2));
-               break;
+    case ErrNum_InstructionNotSupported:
+      msgno = -1;
+      sprintf(h, getmessage(Num_ErrMsgInstructionNotOnThisCPUSupported), MomCPUIdent);
+      break;
+    case ErrNum_FPUNotEnabled: msgno = Num_ErrMsgFPUNotEnabled; break;
+    case ErrNum_PMMUNotEnabled: msgno = Num_ErrMsgPMMUNotEnabled; break;
+    case ErrNum_FullPMMUNotEnabled: msgno = Num_ErrMsgFullPMMUNotEnabled; break;
+    case ErrNum_Z80SyntaxNotEnabled: msgno = Num_ErrMsgZ80SyntaxNotEnabled; break;
+    case ErrNum_AddrModeNotSupported:
+      msgno = -1;
+      sprintf(h, getmessage(Num_ErrMsgAddrModeNotOnThisCPUSupported), MomCPUIdent);
+      break;
     case 1510: msgno = Num_ErrMsgInvBitPos; break;
     case 1520: msgno = Num_ErrMsgOnlyOnOff; break;
     case 1530: msgno = Num_ErrMsgStackEmpty; break;
@@ -1361,6 +1259,10 @@ static void WrErrorNum(Word Num)
     case 1750: msgno = Num_ErrMsgInvBitMask; break;
     case 1760: msgno = Num_ErrMsgInvRegPair; break;
     case 1800: msgno = Num_ErrMsgOpenMacro; break;
+    case ErrNum_OpenIRP: msgno = Num_ErrMsgOpenIRP; break;
+    case ErrNum_OpenIRPC: msgno = Num_ErrMsgOpenIRPC; break;
+    case ErrNum_OpenREPT: msgno = Num_ErrMsgOpenREPT; break;
+    case ErrNum_OpenWHILE: msgno = Num_ErrMsgOpenWHILE; break;
     case 1805: msgno = Num_ErrMsgEXITMOutsideMacro; break;
     case 1810: msgno = Num_ErrMsgTooManyMacParams; break;
     case 1811: msgno = Num_ErrMsgUndefKeyArg; break;
@@ -1474,35 +1376,6 @@ void ChkXIO(Word ErrNo, const char *pPath)
   strmaxcat(s, ": ", 255);
   strmaxcat(s, GetErrorMsg(io), 255);
   WrXError(ErrNo, s);
-}
-
-/*--------------------------------------------------------------------------*/
-/* Bereichsfehler */
-
-Boolean ChkRange(LargeInt Value, LargeInt Min, LargeInt Max)
-{
-  char s1[100], s2[100];
-
-  if (Value < Min)
-  {
-    LargeString(s1, Value);
-    LargeString(s2, Min);
-    strmaxcat(s1, "<", 99);
-    strmaxcat(s1, s2, 99);
-    WrXError(1315, s1);
-    return False;
-  }
-  else if (Value > Max)
-  {
-    LargeString(s1, Value);
-    LargeString(s2, Max);
-    strmaxcat(s1, ">", 99);
-    strmaxcat(s1, s2, 99);
-    WrXError(1320, s1);
-    return False;
-  }
-  else
-    return True;
 }
 
 /****************************************************************************/

@@ -120,6 +120,7 @@
 #include "strutil.h"
 #include "bpemu.h"
 #include "chunks.h"
+#include "errmsg.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
@@ -562,7 +563,7 @@ static void ConstructTwoOpX(Word Code, const tAdrParts *pSrcParts, const tAdrPar
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
+  if (!ChkArgCnt(0, 0));
   else if (*AttrPart != '\0') WrError(1100);
   else if (OpSize != eOpSizeDefault) WrError(1130);
   else
@@ -576,7 +577,7 @@ static void DecodeTwoOp(Word Code)
 {
   tAdrParts SrcParts, DestParts;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (OpSize > eOpSizeW) WrError(1130);
   else
   {
@@ -599,11 +600,8 @@ static void DecodeTwoOpX(Word Code)
 
   Code &= ~1;
 
-  if (ArgCnt != 2)
-  {
-    WrError(1110);
+  if (!ChkArgCnt(2, 2))
     return;
-  }
 
   PCDist = 4;
   if (DecodeAdr(ArgStr[1], eExtModeYes, MModeAs, True, &SrcParts))
@@ -627,11 +625,8 @@ static void DecodeEmulOneToTwo(Word Code)
   SrcSpec = Lo(Code);
   Code &= 0xff00;
 
-  if (ArgCnt != 1)
-  {
-    WrError(1110);
+  if (!ChkArgCnt(1, 1))
     return;
-  }
 
   if (OpSize > eOpSizeW)
   {
@@ -713,7 +708,7 @@ static void DecodeBR(Word Code)
   tAdrParts DstParts, SrcParts;
 
   PCDist = 2;
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else if (DecodeAdr(ArgStr[1], eExtModeNo, MModeAs, True, &SrcParts))
   {
@@ -735,11 +730,8 @@ static void DecodeEmulOneToTwoX(Word Code)
   SrcSpec = Lo(Code);
   Code &= 0xff00;
 
-  if (ArgCnt != 1)
-  {
-    WrError(1110);
+  if (!ChkArgCnt(1, 1))
     return;
-  }
 
   /* Decode operand:
       - Ad modes always allowed
@@ -815,8 +807,8 @@ static void DecodePOP(Word Code)
   tAdrParts DstParts, SrcParts;
 
   PCDist = 2;
-  if (ArgCnt != 1) WrError(1110);
-  else if (DecodeAdr(ArgStr[1], eExtModeNo, MModeAd, True, &DstParts))
+  if (ChkArgCnt(1, 1)
+   && DecodeAdr(ArgStr[1], eExtModeNo, MModeAd, True, &DstParts))
   {
     if (Odd(EProgCounter())) WrError(180);
     ResetAdr(&SrcParts);
@@ -831,8 +823,8 @@ static void DecodePOPX(Word Code)
   tAdrParts DstParts, SrcParts;
 
   PCDist = 4;
-  if (ArgCnt != 1) WrError(1110);
-  else if (DecodeAdr(ArgStr[1], eExtModeYes, MModeAd, True, &DstParts))
+  if (ChkArgCnt(1, 1)
+   && DecodeAdr(ArgStr[1], eExtModeYes, MModeAd, True, &DstParts))
   {
     if (Odd(EProgCounter())) WrError(180);
     ResetAdr(&SrcParts);
@@ -846,7 +838,7 @@ static void DecodeOneOp(Word Index)
 {
   const OneOpOrder *pOrder = OneOpOrders + Index;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (OpSize > eOpSizeW) WrError(1130);
   else if ((OpSize == eOpSizeB) && (!pOrder->MayByte)) WrError(1130);
   else
@@ -868,7 +860,7 @@ static void DecodeOneOpX(Word Index)
 {
   const OneOpOrder *pOrder = OneOpOrders + Index;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if ((OpSize == eOpSizeB) && (!pOrder->MayByte)) WrError(1130);
   else
   {
@@ -910,7 +902,7 @@ static void DecodeMOVA(Word Code)
   UNUSED(Code);
 
   OpSize = 2;
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -991,16 +983,18 @@ static void DecodeMOVA(Word Code)
 
 static void DecodeBRA(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  strcpy(ArgStr[2], "PC");
-  ArgCnt++;
-  DecodeMOVA(Code);
+  if (ChkArgCnt(1, 1))
+  {
+    strcpy(ArgStr[2], "PC");
+    ArgCnt++;
+    DecodeMOVA(Code);
+  }
 }
 
 static void DecodeCLRA(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (DecodeReg(ArgStr[1], &WAsmCode[0]))
+  if (ChkArgCnt(1, 1)
+   && DecodeReg(ArgStr[1], &WAsmCode[0]))
   {
     WAsmCode[0] |= Code;
     CodeLen = 2;
@@ -1009,8 +1003,8 @@ static void DecodeCLRA(Word Code)
 
 static void DecodeTSTA(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (DecodeReg(ArgStr[1], &WAsmCode[0]))
+  if (ChkArgCnt(1, 1)
+   && DecodeReg(ArgStr[1], &WAsmCode[0]))
   {
     WAsmCode[0] |= Code;
     WAsmCode[1] = 0x0000;
@@ -1020,8 +1014,8 @@ static void DecodeTSTA(Word Code)
 
 static void DecodeDECDA_INCDA(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (DecodeReg(ArgStr[1], &WAsmCode[0]))
+  if (ChkArgCnt(1, 1)
+   && DecodeReg(ArgStr[1], &WAsmCode[0]))
   {
     WAsmCode[0] |= Code;
     WAsmCode[1] = 2;
@@ -1033,7 +1027,7 @@ static void DecodeADDA_SUBA_CMPA(Word Code)
 {
   OpSize = 2;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (*AttrPart != '\0') WrError(1100);
   else if (!DecodeReg(ArgStr[2], &WAsmCode[0])) WrXError(1445, ArgStr[2]);
   else
@@ -1061,7 +1055,7 @@ static void DecodeADDA_SUBA_CMPA(Word Code)
 
 static void DecodeRxM(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (OpSize == eOpSizeB) WrError(1130);
   else if (!DecodeReg(ArgStr[2], &WAsmCode[0])) WrXError(1445, ArgStr[2]);
   else if (ArgStr[1][0] != '#') WrError(1120);
@@ -1094,7 +1088,7 @@ static void DecodeCALLA(Word Code)
 
   OpSize = 2;
   PCDist = 2;
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else if (DecodeAdr(ArgStr[1], eExtModeYes, 15, True, &AdrParts))
   {
@@ -1128,7 +1122,7 @@ static void DecodeCALLA(Word Code)
 
 static void DecodePUSHM_POPM(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (OpSize == 0) WrError(1130);
   else if (!DecodeReg(ArgStr[2], &WAsmCode[0])) WrXError(1445, ArgStr[2]);
   else if (ArgStr[1][0] != '#') WrError(1120);
@@ -1157,7 +1151,7 @@ static void DecodeJmp(Word Code)
   Integer AdrInt; 
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (OpSize != eOpSizeDefault) WrError(1130);
   {
     AdrInt = EvalIntExpression(ArgStr[1], UInt16, &OK) - (EProgCounter() + 2);
@@ -1183,8 +1177,7 @@ static void DecodeBYTE(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt == 0) WrError(1110);
-  else
+  if (ChkArgCnt(1, ArgCntMax))
   {
     z = 1; OK = True;
     do
@@ -1242,8 +1235,7 @@ static void DecodeWORD(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt == 0) WrError(1110);
-  else
+  if (ChkArgCnt(1, ArgCntMax))
   {
     z = 1; OK = True;
     do
@@ -1268,8 +1260,7 @@ static void DecodeBSS(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt!=1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
     HVal16 = EvalIntExpression(ArgStr[1], Int16, &OK);
@@ -1288,8 +1279,8 @@ static void DecodeRegDef(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else AddRegDef(LabPart, ArgStr[1]);
+  if (ChkArgCnt(1, 1))
+    AddRegDef(LabPart, ArgStr[1]);
 }
 
 static void DecodeRPT(Word Code)
@@ -1299,11 +1290,8 @@ static void DecodeRPT(Word Code)
 
   /* fundamentals */
 
-  if (ArgCnt < 1)
-  {
-    WrError(1110);
+  if (!ChkArgCnt(1, ArgCntMax))
     return;
-  }
   if (*AttrPart != '\0')
   {
     WrError(1100);
@@ -1315,7 +1303,7 @@ static void DecodeRPT(Word Code)
   pOpPart = FirstBlank(ArgStr[1]);
   if (!pOpPart)
   {
-    WrError(1110);
+    WrError(ErrNum_CannotSplitArg);
     return;
   }
   *pOpPart++ = '\0';
@@ -1329,7 +1317,7 @@ static void DecodeRPT(Word Code)
   pArgPart1 = FirstBlank(pOpPart);
   if (!pArgPart1)
   {
-    WrError(1110);
+    WrError(ErrNum_CannotSplitArg);
     return;
   }
   *pArgPart1++ = '\0';

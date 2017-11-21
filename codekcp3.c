@@ -49,8 +49,9 @@
 #include "intpseudo.h"
 #include "codevars.h"
 #include "headids.h"
-
+#include "errmsg.h"
 #include "codepseudo.h"
+
 #include "codekcp3.h"
 
 #define RegOrderCnt 10
@@ -134,24 +135,23 @@ static void DecodeReg(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else AddRegDef(LabPart, ArgStr[1]);
+  if (ChkArgCnt(1, 1))
+    AddRegDef(LabPart, ArgStr[1]);
 }
 
 static void DecodeNameReg(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else AddRegDef(ArgStr[2], ArgStr[1]);
+  if (ChkArgCnt(2, 2))
+    AddRegDef(ArgStr[2], ArgStr[1]);
 }
 
 static void DecodeConstant(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {   
     TempResult t;
     Boolean OK;
@@ -174,7 +174,7 @@ static void DecodeOneReg(Word Index)
   FixedOrder *pOrder = RegOrders + Index;
   LongWord Reg;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!IsWReg(ArgStr[1], &Reg)) WrError(1350);
   else
   {
@@ -189,7 +189,7 @@ static void DecodeALU(Word Index)
   LongWord Src, DReg;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!IsWReg(ArgStr[1], &DReg)) WrError(1350);
   else if (IsWReg(ArgStr[2], &Src))
   {
@@ -212,8 +212,8 @@ static void DecodeJmp(Word Index)
   LongWord Addr, Cond;
   Boolean OK;
 
-  if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
-  else if (IsCond(1, &Cond))
+  if (ChkArgCnt(1, 2)
+   && IsCond(1, &Cond))
   {
     Addr = EvalIntExpression(ArgStr[ArgCnt], UInt10, &OK);
     if (OK)
@@ -231,8 +231,8 @@ static void DecodeRet(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt > 1) WrError(1110);
-  else if (IsCond(0, &Cond))
+  if (ChkArgCnt(0, 1)
+   && IsCond(0, &Cond))
   {
     DAsmCode[0] = 0x2a000 | (Cond << 10);
     CodeLen = 1;
@@ -243,28 +243,33 @@ static void DecodeReti(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (!strcasecmp(ArgStr[1], "DISABLE"))
+  if (ChkArgCnt(1, 1))
   {
-    DAsmCode[0] = 0x38000;
-    CodeLen = 1;
+    if (!strcasecmp(ArgStr[1], "DISABLE"))
+    {
+      DAsmCode[0] = 0x38000;
+      CodeLen = 1;
+    }
+    else if (!strcasecmp(ArgStr[1], "ENABLE"))
+    {
+      DAsmCode[0] = 0x38001;
+      CodeLen = 1;
+    }
+    else
+      WrError(1350);
   }
-  else if (!strcasecmp(ArgStr[1], "ENABLE"))
-  {
-    DAsmCode[0] = 0x38001;
-    CodeLen = 1;
-  }
-  else WrError(1350);
 }
 
 static void DecodeInt(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (strcasecmp(ArgStr[1], "INTERRUPT")) WrError(1350);
-  else
+  if (ChkArgCnt(1, 1))
   {
-    DAsmCode[0] = 0x3c000 | Index;
-    CodeLen = 1;
+    if (strcasecmp(ArgStr[1], "INTERRUPT")) WrError(1350);
+    else
+    {
+      DAsmCode[0] = 0x3c000 | Index;
+      CodeLen = 1;
+    }
   }
 }
 
@@ -273,7 +278,7 @@ static void DecodeMem(Word Index)
   LongWord Reg, Addr;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!IsWReg(ArgStr[1], &Reg)) WrError(1350);
   else 
   {
@@ -301,7 +306,7 @@ static void DecodeIO(Word Index)
   LongWord Reg, Addr;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!IsWReg(ArgStr[1], &Reg)) WrError(1350);
   else 
   {
@@ -328,8 +333,7 @@ static void DecodeNop(Word Index)
 {
   UNUSED (Index);
 
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     DAsmCode[0] = NOPCode;
     CodeLen = 1;

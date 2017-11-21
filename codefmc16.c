@@ -53,11 +53,13 @@
 #include "asmpars.h"
 #include "asmsub.h"
 #include "asmallg.h"
+#include "errmsg.h"
 #include "codepseudo.h"
 #include "intpseudo.h"
 #include "asmitree.h"
 #include "codevars.h"
 #include "headids.h"
+#include "errmsg.h"
 
 #include "codefmc16.h"
 
@@ -475,8 +477,7 @@ static void CopyVals(int Offset)
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     BAsmCode[0] = Code;
     CodeLen = 1;
@@ -487,8 +488,7 @@ static void DecodeALU8(Word Code)
 {
   int HCnt;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     SetOpSize(0);
     DecodeAdr(ArgStr[1], MModAcc | MModReg | MModMem);
@@ -537,8 +537,7 @@ static void DecodeLog8(Word Code)
 {
   int HCnt;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     SetOpSize(0);
     DecodeAdr(ArgStr[1], MModAcc | MModReg | MModMem | ((Code < 6) ? MModCCR : 0));
@@ -588,8 +587,8 @@ static void DecodeLog8(Word Code)
 
 static void DecodeCarry8(Word Index)
 {
-  if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
-  else if (DecodeAdr(ArgStr[1], MModAcc))
+  if (ChkArgCnt(1, 2)
+   && DecodeAdr(ArgStr[1], MModAcc))
   {
     if (ArgCnt == 1)
     {
@@ -608,9 +607,9 @@ static void DecodeCarry8(Word Index)
 
 static void DecodeCarry16(Word Index)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else if ((DecodeAdr(ArgStr[1], MModAcc))
-        && (DecodeAdr(ArgStr[2], MModReg | MModMem)))
+  if (ChkArgCnt(2, 2)
+   && DecodeAdr(ArgStr[1], MModAcc)
+   && DecodeAdr(ArgStr[2], MModReg | MModMem))
   {
     BAsmCode[0] = 0x76 + Index;
     BAsmCode[1] = AdrPart | 0x40;
@@ -621,8 +620,8 @@ static void DecodeCarry16(Word Index)
 
 static void DecodeAcc(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (DecodeAdr(ArgStr[1], MModAcc))
+  if (ChkArgCnt(1, 1)
+   && DecodeAdr(ArgStr[1], MModAcc))
   {
     BAsmCode[0] = Code;
     CodeLen = 1;
@@ -631,17 +630,13 @@ static void DecodeAcc(Word Code)
 
 static void DecodeShift(Word Code)
 {
-  if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
-  else if (DecodeAdr(ArgStr[1], MModAcc))
+  if (ChkArgCnt(Hi(Code) ? 1 : 2, 2)
+   && DecodeAdr(ArgStr[1], MModAcc))
   {
     if (ArgCnt == 1)
     {
-      if (!Hi(Code)) WrError(1110);
-      else
-      {
-        BAsmCode[0] = Lo(Code);
-        CodeLen = 1;
-      }
+      BAsmCode[0] = Lo(Code);
+      CodeLen = 1;
     }
     else
     {
@@ -662,8 +657,8 @@ static void DecodeShift(Word Code)
 
 static void DecodeAdd32(Word Index)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else if (DecodeAdr(ArgStr[1], MModAcc))
+  if (ChkArgCnt(2, 2)
+   && DecodeAdr(ArgStr[1], MModAcc))
   {
     SetOpSize(2);
     if (DecodeAdr(ArgStr[2], MModImm | MModMem | MModReg))
@@ -689,8 +684,8 @@ static void DecodeAdd32(Word Index)
 
 static void DecodeLog32(Word Index)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else if (DecodeAdr(ArgStr[1], MModAcc))
+  if (ChkArgCnt(2, 2)
+   && DecodeAdr(ArgStr[1], MModAcc))
   {
     if (DecodeAdr(ArgStr[2], MModMem | MModReg))
     {
@@ -708,7 +703,7 @@ static void DecodeADDSP(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*ArgStr[1] != '#') WrError(1120);
   else
   {
@@ -730,7 +725,7 @@ static void DecodeAdd16(Word Index)
 {
   int HCnt;
 
-  if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
+  if (!ChkArgCnt(1, 2));
   else if (ArgCnt == 1)
   {
     if (DecodeAdr(ArgStr[1], MModAcc))
@@ -782,8 +777,8 @@ static void DecodeBBcc(Word Index)
   LongInt Addr;
   Boolean OK;
   
-  if (ArgCnt != 2) WrError(1110);
-  else if (SplitBit(ArgStr[1], &BitPos))
+  if ((ChkArgCnt(2, 2))
+   && (SplitBit(ArgStr[1], &BitPos)))
   {
     HLen = 0;
     DecodeAdr(ArgStr[1], MModMem | MModDir | MModIO);
@@ -832,8 +827,7 @@ static void DecodeBranch(Word Code)
   LongInt Addr;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Addr = EvalIntExpression(ArgStr[1], UInt24, &OK) - (EProgCounter() + 2);
     if (OK)
@@ -854,7 +848,7 @@ static void DecodeJmp16(Word Index)
   LongWord Addr;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*ArgStr[1] == '@')
   {
     SetOpSize(1);
@@ -894,7 +888,7 @@ static void DecodeJmp24(Word Index)
   LongWord Addr;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*ArgStr[1] == '@')
   {
     SetOpSize(2);
@@ -925,7 +919,7 @@ static void DecodeCALLV(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*ArgStr[1] != '#') WrError(1120);
   else
   {
@@ -940,8 +934,7 @@ static void DecodeCmpBranch(Word Index)
   int HCnt;
   Boolean OK;
 
-  if (ArgCnt != 3) WrError(1110);
-  else
+  if (ChkArgCnt(3, 3))
   {
     SetOpSize(Index); HCnt = 0;
     if (DecodeAdr(ArgStr[1], MModMem | MModReg | MModAcc))
@@ -987,8 +980,8 @@ static void DecodeBit(Word Index)
 {
   Byte BitPos;
   
-  if (ArgCnt != 1) WrError(1110);
-  else if (SplitBit(ArgStr[1], &BitPos))
+  if ((ChkArgCnt(1, 1))
+   && (SplitBit(ArgStr[1], &BitPos)))
   {
     DecodeAdr(ArgStr[1], MModMem | MModDir | MModIO);
     if (AdrMode != ModNone)
@@ -1022,8 +1015,8 @@ static void DecodeCMP(Word Index)
 {
   UNUSED(Index);
 
-  if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
-  else if (DecodeAdr(ArgStr[1], MModAcc))
+  if (ChkArgCnt(1, 2)
+   && DecodeAdr(ArgStr[1], MModAcc))
   {
     if (ArgCnt == 1)
     {
@@ -1058,8 +1051,7 @@ static void DecodeDBNZ(Word Index)
   LongInt Addr;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     SetOpSize(Index);
     if (DecodeAdr(ArgStr[1], MModReg | MModMem))
@@ -1085,8 +1077,7 @@ static void DecodeIncDec(Word Code)
 {
   static Byte Sizes[3] = {2, 0, 1};
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     SetOpSize(Sizes[(Code & 3) - 1]);
     if (DecodeAdr(ArgStr[1], MModMem | MModReg))
@@ -1103,8 +1094,8 @@ static void DecodeMulDiv(Word Index)
 {
   MulDivOrder *POrder = MulDivOrders + Index;
 
-  if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
-  else if (DecodeAdr(ArgStr[1], MModAcc))
+  if (ChkArgCnt(1, 2)
+   && DecodeAdr(ArgStr[1], MModAcc))
   {
     if (ArgCnt == 1)
     {
@@ -1132,8 +1123,8 @@ static void DecodeMulDiv(Word Index)
 
 static void DecodeSeg(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (DecodeAdr(ArgStr[1], MModSeg))
+  if (ChkArgCnt(1, 1)
+   && DecodeAdr(ArgStr[1], MModSeg))
   {
     BAsmCode[0] = 0x6e;
     BAsmCode[1] = Code + AdrPart;
@@ -1143,8 +1134,8 @@ static void DecodeSeg(Word Code)
 
 static void DecodeString(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else if (DecodeAdr(ArgStr[1], MModSeg))
+  if (ChkArgCnt(2, 2)
+   && DecodeAdr(ArgStr[1], MModSeg))
   {
     BAsmCode[1] = AdrPart << 2;
     if (DecodeAdr(ArgStr[2], MModSeg))
@@ -1162,7 +1153,7 @@ static void DecodeINT(Word Index)
   LongWord Addr;
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*ArgStr[1] == '#')
   {
     BAsmCode[1] = EvalIntExpression(ArgStr[1] + 1, UInt8, &OK);
@@ -1193,8 +1184,7 @@ static void DecodeINTP(Word Index)
   LongWord Addr;
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Addr = EvalIntExpression(ArgStr[1], UInt24, &OK);
     if (OK)
@@ -1212,7 +1202,7 @@ static void DecodeJCTX(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*ArgStr[1] != '@') WrError(1350);
   else if (DecodeAdr(ArgStr[1] + 1, MModAcc))
   {
@@ -1225,8 +1215,7 @@ static void DecodeLINK(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     SetOpSize(0);
     if (DecodeAdr(ArgStr[1], MModImm))
@@ -1243,7 +1232,7 @@ static void DecodeMOV(Word Index)
   Byte HPart, HCnt;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (((!strcasecmp(ArgStr[1], "@AL")) || (!strcasecmp(ArgStr[1], "@A")))
        && ((!strcasecmp(ArgStr[2], "AH" )) || (!strcasecmp(ArgStr[2], "T" ))))
   {
@@ -1479,8 +1468,7 @@ static void DecodeMOV(Word Index)
         
 static void DecodeMOVB(Word Index)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     if (!strcasecmp(ArgStr[1], "A"))
       Index = 2;
@@ -1489,8 +1477,8 @@ static void DecodeMOVB(Word Index)
     else
       WrError(1350);
     if ((Index > 0)
-     && (SplitBit(ArgStr[Index], BAsmCode + 1))
-     && (DecodeAdr(ArgStr[Index], MModDir | MModIO | MModMem)))
+     && SplitBit(ArgStr[Index], BAsmCode + 1)
+     && DecodeAdr(ArgStr[Index], MModDir | MModIO | MModMem))
     {
       BAsmCode[0] = 0x6c;
       BAsmCode[1] += (2 - Index) << 5;
@@ -1518,8 +1506,7 @@ static void DecodeMOVEA(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     SetOpSize(1);
     DecodeAdr(ArgStr[1], MModAcc | MModReg);
@@ -1553,8 +1540,7 @@ static void DecodeMOVL(Word Index)
   Byte HCnt;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     SetOpSize(2);
     DecodeAdr(ArgStr[1], MModAcc | MModMem | MModReg);
@@ -1595,8 +1581,8 @@ static void DecodeMOVN(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (DecodeAdr(ArgStr[1], MModAcc))
+  if (ChkArgCnt(2, 2)
+   && DecodeAdr(ArgStr[1], MModAcc))
   {
     if (*ArgStr[2] != '#') WrError(1120);
     else
@@ -1613,7 +1599,7 @@ static void DecodeMOVW(Word Index)
   Byte HPart, HCnt;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (((!strcasecmp(ArgStr[1], "@AL")) || (!strcasecmp(ArgStr[1], "@A")))
        && ((!strcasecmp(ArgStr[2], "AH" )) || (!strcasecmp(ArgStr[2], "T" ))))
   {
@@ -1810,8 +1796,8 @@ static void DecodeMOVX(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (DecodeAdr(ArgStr[1], MModAcc))
+  if (ChkArgCnt(2, 2)
+   && DecodeAdr(ArgStr[1], MModAcc))
   {
     SetOpSize(0);
     DecodeAdr(ArgStr[2], MModImm | MModIAcc | MModRDisp | MModDir | MModIO | MModReg | MModMem);
@@ -1867,8 +1853,7 @@ static void DecodeMOVX(Word Index)
 
 static void DecodeNEGNOT(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     SetOpSize((OpPart[3] == 'W') ? 1 : 0);
     DecodeAdr(ArgStr[1], MModAcc | MModReg | MModMem);
@@ -1892,8 +1877,8 @@ static void DecodeNRML(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (DecodeAdr(ArgStr[1], MModAcc))
+  if (ChkArgCnt(2, 2)
+   && DecodeAdr(ArgStr[1], MModAcc))
   {
     SetOpSize(0);
     if (DecodeAdr(ArgStr[2], MModReg))
@@ -1915,7 +1900,7 @@ static void DecodeStack(Word Index)
   Byte HReg;
   char *p;
 
-  if (ArgCnt == 0) WrError(1110);
+  if (!ChkArgCnt(1, ArgCntMax));
   else if ((ArgCnt == 1) && (!strcasecmp(ArgStr[1], "A")))
   {
     BAsmCode[0] = Index;
@@ -1969,8 +1954,7 @@ static void DecodeStack(Word Index)
 
 static void DecodeRotate(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModAcc | MModReg | MModMem);
     switch (AdrMode)
@@ -1996,9 +1980,9 @@ static void DecodeSBBS(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if ((SplitBit(ArgStr[1], BAsmCode + 1))
-       && (DecodeAdr(ArgStr[1], MModMem)))
+  if (ChkArgCnt(2, 2)
+   && SplitBit(ArgStr[1], BAsmCode + 1)
+   && DecodeAdr(ArgStr[1], MModMem))
   {
     if (AdrPart != ABSMODE) WrError(1350);
     else
@@ -2021,9 +2005,9 @@ static void DecodeSBBS(Word Index)
 
 static void DecodeWBit(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if ((SplitBit(ArgStr[1], BAsmCode + 1))
-       && (DecodeAdr(ArgStr[1], MModIO)))
+  if (ChkArgCnt(1, 1)
+   && SplitBit(ArgStr[1], BAsmCode + 1)
+   && DecodeAdr(ArgStr[1], MModIO))
   {
     BAsmCode[0] = 0x6c;
     BAsmCode[1] += Index;
@@ -2035,8 +2019,7 @@ static void DecodeExchange(Word Index)
 {
   Byte HPart, HCnt;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     SetOpSize(Index);
     DecodeAdr(ArgStr[1], MModAcc | MModReg | MModMem);
@@ -2092,8 +2075,7 @@ static void DecodeExchange(Word Index)
 
 static void DecodeBank(Word Index)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     BAsmCode[0] = Index + 4;
     CodeLen = 1;

@@ -77,6 +77,9 @@
 #include "intpseudo.h"
 #include "headids.h"
 #include "intconsts.h"
+#include "errmsg.h"
+
+#include "code960.h"
 
 /*--------------------------------------------------------------------------*/
 
@@ -374,8 +377,7 @@ static void DecodeFixed(Word Index)
 {
   FixedOrder *Op = FixedOrders + Index;
    
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     DAsmCode[0] = Op->Code;
     CodeLen = 4;
@@ -388,6 +390,7 @@ static void DecodeReg(Word Index)
   LongWord DReg = 0, DMode = 0;
   LongWord S1Reg = 0, S1Mode = 0;
   LongWord S2Reg = 0, S2Mode = 0;
+  unsigned NumArgs = 1 + Ord(Op->Src2Type != NoneOp) + Ord(Op->DestType != NoneOp);
 
   if ((Op->DestType != NoneOp) && (ArgCnt == 1 + Ord(Op->Src2Type != NoneOp))) 
   {
@@ -395,8 +398,8 @@ static void DecodeReg(Word Index)
     ArgCnt++;
   }
 
-  if (ArgCnt != 1 + Ord(Op->Src2Type != NoneOp) + Ord(Op->DestType != NoneOp)) WrError(1110);
-  else if (((Op->DestType >= SingleOp) || (Op->Src1Type >= SingleOp)) && (!FPUAvail)) WrXError(1200,OpPart);
+  if (!ChkArgCnt(NumArgs, NumArgs));
+  else if (((Op->DestType >= SingleOp) || (Op->Src1Type >= SingleOp)) && (!FPUAvail)) WrXError(1200, OpPart);
   else if (((Op->DestType == NoneOp) || (DecodeAdr(ArgStr[ArgCnt], MModReg | (Op->DestType >= SingleOp ? MModFReg :0 ), Op->DestType, &DReg, &DMode)))
         && (DecodeAdr(ArgStr[1], MModReg | (Op->Src1Type >= SingleOp ? MModFReg : 0) | (Op->Imm1 ? MModImm : 0 ), Op->Src1Type, &S1Reg, &S1Mode))
         && ((Op->Src2Type == NoneOp) || (DecodeAdr(ArgStr[2], MModReg | (Op->Src2Type >= SingleOp ? MModFReg : 0) | (Op->Imm2 ? MModImm : 0), Op->Src2Type, &S2Reg, &S2Mode))))
@@ -421,8 +424,9 @@ static void DecodeCobr(Word Index)
   LongWord S2Reg = 0, S2Mode = 0;
   LongInt AdrInt;
   Boolean OK;
+  unsigned NumArgs = 1 + 2 * Ord(Op->HasSrc);
 
-  if (ArgCnt != 1 + 2 * Ord(Op->HasSrc)) WrError(1110);
+  if (!ChkArgCnt(NumArgs, NumArgs));
   else if ((DecodeAdr(ArgStr[1], MModReg | (Op->HasSrc ? MModImm : 0), IntOp, &S1Reg, &S1Mode))
         && ((!Op->HasSrc) || (DecodeAdr(ArgStr[2], MModReg, IntOp, &S2Reg, &S2Mode))))
   {
@@ -454,8 +458,7 @@ static void DecodeCtrl(Word Index)
   LongInt AdrInt;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
     AdrInt = EvalIntExpression(ArgStr[1], UInt32, &OK) - EProgCounter();
@@ -479,8 +482,9 @@ static void DecodeMemO(Word Index)
   LongWord Reg = 0, Mem = 0;
   int MemType;
   ShortInt MemPos = (Op->RegPos > 0) ? 3 - Op->RegPos : 1;
+  unsigned NumArgs = 1 + Ord(Op->RegPos > 0);
 
-  if (ArgCnt != 1 + Ord(Op->RegPos > 0)) WrError(1110);
+  if (!ChkArgCnt(NumArgs, NumArgs));
   else if ((Op->RegPos > 0) && (!DecodeIReg(ArgStr[Op->RegPos], &Reg))) WrXError(1445, ArgStr[Op->RegPos]);
   else if (Reg & OpMasks[Op->Type]) WrXError(1445, ArgStr[Op->RegPos]);
   else if ((MemType = DecodeMem(ArgStr[MemPos],&Mem,DAsmCode+1)) >= 0)
@@ -490,50 +494,47 @@ static void DecodeMemO(Word Index)
   }
 }
 
-static Boolean DecodePseudo(void)
+static void DecodeWORD(Word Code)
 {
+  Boolean OK;
   int z;
+
+  UNUSED(Code);
+
+  if (ChkArgCnt(1, ArgCntMax))
+  {
+    OK = True;
+    z = 1;
+    while ((z <= ArgCnt) && (OK))
+    {
+      DAsmCode[z - 1] = EvalIntExpression(ArgStr[z], Int32, &OK);
+      z++;
+    }
+    if (OK)
+      CodeLen = 4 * ArgCnt;
+  }
+}
+
+static void DecodeSPACE(Word Code)
+{
   Boolean OK;
   LongWord Size;
 
-  if (Memo("WORD"))
-  {
-    if (ArgCnt < 1) WrError(1110);
-    else
-    {
-      OK = True;
-      z = 1;
-      while ((z <= ArgCnt) && (OK))
-      {
-        DAsmCode[z - 1] = EvalIntExpression(ArgStr[z], Int32, &OK);
-        z++;
-      }
-      if (OK)
-        CodeLen = 4 * ArgCnt;
-    }
-    return True;
-  }
+  UNUSED(Code);
 
-  if (Memo("SPACE"))
+  if (ChkArgCnt(1, 1))
   {
-    if (ArgCnt != 1) WrError(1110);
-    else
+    FirstPassUnknown = False;
+    Size = EvalIntExpression(ArgStr[1], UInt16, &OK);
+    if (FirstPassUnknown) WrError(1820);
+    if ((OK) && (!FirstPassUnknown))
     {
-      FirstPassUnknown = False;
-      Size = EvalIntExpression(ArgStr[1], UInt16, &OK);
-      if (FirstPassUnknown) WrError(1820);
-      if ((OK) && (!FirstPassUnknown))
-      {
-        DontPrint = True;
-        if (!Size) WrError(290);
-        CodeLen = Size;
-        BookKeeping();
-      }
+      DontPrint = True;
+      if (!Size) WrError(290);
+      CodeLen = Size;
+      BookKeeping();
     }
-    return True;
   }
-
-  return False;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -551,9 +552,6 @@ static void MakeCode_960(void)
   /* Pseudoanweisungen */
 
   if (DecodeIntelPseudo(False))
-    return;
-
-  if (DecodePseudo())
     return;
 
   /* Befehlszaehler nicht ausgerichtet? */
@@ -809,6 +807,9 @@ static void InitFields(void)
   SpecRegs = (SpecReg*) malloc(sizeof(SpecReg)*SpecRegCnt); InstrZ = 0;
   AddSpecReg("FP" , 31); AddSpecReg("PFP", 0);
   AddSpecReg("SP" ,  1); AddSpecReg("RIP", 2);
+
+  AddInstTable(InstTable, "WORD", 0, DecodeWORD);
+  AddInstTable(InstTable, "SPACE", 0, DecodeSPACE);
 }
 
 static void DeinitFields(void)

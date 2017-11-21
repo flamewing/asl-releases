@@ -67,6 +67,7 @@
 #include "motpseudo.h"
 #include "codevars.h"
 #include "intconsts.h"
+#include "errmsg.h"
 
 #include "code7000.h"
 
@@ -702,10 +703,9 @@ static void DecodeFixed(Word Index)
 {
   const FixedOrder *pOrder = FixedOrders + Index;
 
-  if (ArgCnt != 0) WrError(1110);
+  if (!ChkArgCnt(0, 0));
   else if (*AttrPart != '\0') WrError(1100);
-  else if (MomCPU < pOrder->MinCPU) WrError(1500);
-  else
+  else if (ChkMinCPU(pOrder->MinCPU))
   {
     SetCode(pOrder->Code);
     if ((!SupAllowed) && (pOrder->Priv)) WrError(50);
@@ -720,7 +720,7 @@ static void DecodeMOV(Word Code)
 
   if (OpSize == -1)
     SetOpSize(2);
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (OpSize > 2) WrError(1130);
   else if (DecodeReg(ArgStr[1], &HReg))
   {
@@ -806,7 +806,7 @@ static void DecodeMOVA(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[2], &HReg)) WrError(1350);
   else if (HReg != 0) WrError(1350);
   else
@@ -822,7 +822,7 @@ static void DecodePREF(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -837,8 +837,7 @@ static void DecodeLDC_STC(Word IsLDC)
   if (OpSize == -1)
     SetOpSize(2);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     char *pArg1 = IsLDC ? ArgStr[2] : ArgStr[1],
          *pArg2 = IsLDC ? ArgStr[1] : ArgStr[2];
@@ -870,8 +869,7 @@ static void DecodeLDS_STS(Word IsLDS)
   if (OpSize == -1)
     SetOpSize(2);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     char *pArg1 = IsLDS ? ArgStr[2] : ArgStr[1],
          *pArg2 = IsLDS ? ArgStr[1] : ArgStr[2];
@@ -901,10 +899,9 @@ static void DecodeOneReg(Word Index)
 {
   const OneRegOrder *pOrder = OneRegOrders + Index;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
-  else if (MomCPU < pOrder->MinCPU) WrError(1500);
-  else
+  else if (ChkMinCPU(pOrder->MinCPU))
   {
     DecodeAdr(ArgStr[1], MModReg, False);
     if (AdrMode != ModNone)
@@ -925,7 +922,7 @@ static void DecodeTAS(Word Code)
 
   if (OpSize == -1)
     SetOpSize(0);
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (OpSize != 0) WrError(1130);
   else
   {
@@ -939,10 +936,9 @@ static void DecodeTwoReg(Word Index)
 {
   const TwoRegOrder *pOrder = TwoRegOrders + Index;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if ((*AttrPart != '\0') && (OpSize != pOrder->DefSize)) WrError(1100);
-  else if (MomCPU < pOrder->MinCPU) WrError(1500);
-  else
+  else if (ChkMinCPU(pOrder->MinCPU))
   {
     DecodeAdr(ArgStr[1], MModReg, False);
     if (AdrMode != ModNone)
@@ -961,9 +957,8 @@ static void DecodeMulReg(Word Index)
 {
   const FixedMinOrder *pOrder = MulRegOrders + Index;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < pOrder->MinCPU) WrError(1500);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkMinCPU(pOrder->MinCPU))
   {
     if (*AttrPart == '\0')
       OpSize = 2;
@@ -988,7 +983,7 @@ static void DecodeBW(Word Index)
 
   if (OpSize == -1)
     SetOpSize(1);
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if ((OpSize != 0) && (OpSize != 1)) WrError(1130);
   else
   {
@@ -1009,9 +1004,9 @@ static void DecodeMAC(Word Code)
 
   if (OpSize == -1)
     SetOpSize(1);
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if ((OpSize != 1) && (OpSize != 2)) WrError(1130);
-  else if ((OpSize == 2) && (MomCPU < CPU7600)) WrError(1500);
+  else if ((OpSize == 2) && !ChkMinCPU(CPU7600));
   else
   {
     DecodeAdr(ArgStr[1], MModPostInc, False);
@@ -1029,7 +1024,7 @@ static void DecodeADD(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -1057,7 +1052,7 @@ static void DecodeCMPEQ(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -1087,8 +1082,7 @@ static void DecodeLog(Word Code)
 {
   Word HReg;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[2], MModReg | MModGBRR0, False);
     switch (AdrMode)
@@ -1126,7 +1120,7 @@ static void DecodeTRAPA(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -1140,9 +1134,9 @@ static void DecodeTRAPA(Word Code)
 
 static void DecodeBT_BF(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (*AttrPart != '\0') WrError(1110);
-  else if ((Code & 0x400) && (MomCPU < CPU7600)) WrError(1500);
+  if (!ChkArgCnt(1, 1));
+  else if (*AttrPart != '\0') WrError(1100);
+  else if ((Code & 0x400) && !ChkMinCPU(CPU7600));
   else
   {
     Boolean OK;
@@ -1167,8 +1161,8 @@ static void DecodeBT_BF(Word Code)
 
 static void DecodeBRA_BSR(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (*AttrPart != '\0') WrError(1110);
+  if (!ChkArgCnt(1, 1));
+  else if (*AttrPart != '\0') WrError(1100);
   else
   {
     Boolean OK;
@@ -1192,8 +1186,8 @@ static void DecodeBRA_BSR(Word Code)
 
 static void DecodeJSR_JMP(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (*AttrPart != '\0') WrError(1130);
+  if (!ChkArgCnt(1, 1));
+  else if (*AttrPart != '\0') WrError(1100);
   else
   {
     DecodeAdr(ArgStr[1], MModIReg, False);
@@ -1220,11 +1214,8 @@ static void DecodeDCT_DCF(Word Cond)
 
   /* strip off DSP condition */
 
-  if (ArgCnt < 1) 
-  {
-    WrError(1110);
+  if (!ChkArgCnt(1, ArgCntMax))
     return;
-  }
     
   pos = FirstBlank(ArgStr[1]);
   if (!pos)
@@ -1311,7 +1302,7 @@ static void DecodeLTORG(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 0) WrError(1110);
+  if (!ChkArgCnt(0, 0));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -1467,7 +1458,7 @@ static void InitFields(void)
   AddOneReg("LDBR"  , 0x0021, CPU7000, True , False);
   AddOneReg("STBR"  , 0x0020, CPU7000, True , False);
   AddOneReg("DT"    , 0x4010, CPU7600, False, False);
-  AddOneReg("BRAF"  , 0x0032, CPU7600, False, True );
+  AddOneReg("BRAF"  , 0x0023, CPU7600, False, True );
   AddOneReg("BSRF"  , 0x0003, CPU7600, False, True );
 
   TwoRegOrders = (TwoRegOrder *) malloc(sizeof(TwoRegOrder) * TwoRegOrderCount); InstrZ = 0;

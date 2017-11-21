@@ -56,6 +56,9 @@
 #include "codepseudo.h" 
 #include "intpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
+
+#include "code96.h"
 
 enum { ModNone = -1, ModDir = 0, ModMem = 1, ModImm = 2 };
 
@@ -414,8 +417,7 @@ static Boolean GetShort(Word Code, LongInt Dist)
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
     BAsmCode[(CodeLen = 1) - 1] = Code;
 }
 
@@ -426,8 +428,7 @@ static void DecodeALU3(Word Code)
 
   OpSize = Hi(Code) & 3;
 
-  if ((ArgCnt != 2) && (ArgCnt != 3)) WrError(1110);
-  else
+  if (ChkArgCnt(2, 3))
   {
     Start = 0;
     Special = (Hi(Code) & 0x40) || FALSE;
@@ -484,8 +485,7 @@ static void DecodeALU2(Word Code)
 
   OpSize = Hi(Code) & 3;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     Start = 0;
     Special = (Hi(Code) & 0x40) || FALSE;
@@ -521,9 +521,8 @@ static void DecodeCMPL(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPU80196) WrError(1500);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkMinCPU(CPU80196))
   {
     OpSize = 2;
     DecodeAdr(ArgStr[1], MModDir, False);
@@ -545,8 +544,7 @@ static void DecodePUSH_POP(Word IsPOP)
 {
   OpSize = 1;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModMem | (IsPOP ? 0 : MModImm), False);
     if (AdrType != ModNone)
@@ -560,8 +558,7 @@ static void DecodePUSH_POP(Word IsPOP)
 
 static void DecodeBMOV(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     OpSize = 2;
     DecodeAdr(ArgStr[1], MModDir, False);
@@ -584,8 +581,7 @@ static void DecodeALU1(Word Code)
 {
   OpSize = Hi(Code) & 3;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModDir, False);
     if (AdrType != ModNone)
@@ -605,9 +601,8 @@ static void DecodeXCH(Word Code)
 
   OpSize = Hi(Code) & 3;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPU80196) WrError(1500);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkMinCPU(CPU80196))
   {
     DecodeAdr(ArgStr[1], MModMem | MModDir, False);
     switch (AdrType)
@@ -648,8 +643,7 @@ static void DecodeXCH(Word Code)
 
 static void DecodeLDBZE_LDBSE(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     OpSize = 0;
     DecodeAdr(ArgStr[2], MModMem | MModImm, False);
@@ -675,8 +669,7 @@ static void DecodeNORML(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     OpSize = 0;
     DecodeAdr(ArgStr[2], MModDir, False);
@@ -700,9 +693,8 @@ static void DecodeIDLPD(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < CPU80196) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && ChkMinCPU(CPU80196))
   {
     OpSize = 0;
     DecodeAdr(ArgStr[1], MModImm, False);
@@ -719,8 +711,7 @@ static void DecodeShift(Word Code)
 {
   OpSize = Hi(Code) & 3;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModDir, False);
     if (AdrType != ModNone)
@@ -747,8 +738,7 @@ static void DecodeSKIP(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     OpSize = 0;
     DecodeAdr(ArgStr[1], MModDir, False);
@@ -765,9 +755,8 @@ static void DecodeELD_EST(Word Code)
 {
   OpSize = Hi(Code) & 3;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPU80196N) WrError(1500);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkMinCPU(CPU80196N))
   {
     DecodeAdr(ArgStr[2], MModMem, True);
     if (AdrType == ModMem)
@@ -793,9 +782,8 @@ static void DecodeELD_EST(Word Code)
 
 static void DecodeMac(Word Code)
 {
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
-  else if (MomCPU < CPU80296) WrError(1500);
-  else
+  if (ChkArgCnt(1, 2)
+   && ChkMinCPU(CPU80296))
   {
     OpSize = 1;
     BAsmCode[0] = 0x4c + (Ord(ArgCnt == 1) << 5);
@@ -827,9 +815,8 @@ static void DecodeMac(Word Code)
 
 static void DecodeMVAC_MSAC(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPU80296) WrError(1500);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkMinCPU(CPU80296))
   {
     OpSize = 2;
     DecodeAdr(ArgStr[1], MModDir, False);
@@ -856,9 +843,8 @@ static void DecodeMVAC_MSAC(Word Code)
 
 static void DecodeRpt(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < CPU80296) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && ChkMinCPU(CPU80296))
   {
     OpSize = 1;
     DecodeAdr(ArgStr[1], MModImm | MModMem, False);
@@ -879,8 +865,7 @@ static void DecodeRpt(Word Code)
 
 static void DecodeRel(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     LongInt AdrInt = EvalIntExpression(ArgStr[1], MemInt, &OK) - (EProgCounter() + 2);
@@ -900,8 +885,7 @@ static void DecodeRel(Word Code)
 
 static void DecodeSCALL_LCALL_CALL(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     LongWord AdrWord = EvalIntExpression(ArgStr[1], MemInt, &OK);
@@ -938,7 +922,7 @@ static void DecodeSCALL_LCALL_CALL(Word Code)
 static void DecodeBR_LJMP_SJMP(Word Code)
 {
   OpSize = 1;
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if ((Code == 0xff) && (QuotPos(ArgStr[1], '[')))
   {
     DecodeAdr(ArgStr[1], MModMem, False);
@@ -990,9 +974,8 @@ static void DecodeTIJMP(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 3) WrError(1110);
-  else if (MomCPU < CPU80196) WrError(1500);
-  else
+  if (ChkArgCnt(3, 3)
+   && ChkMinCPU(CPU80196))
   {
     OpSize = 1;
     DecodeAdr(ArgStr[1], MModDir, False);
@@ -1018,9 +1001,8 @@ static void DecodeTIJMP(Word Code)
 
 static void DecodeDJNZ_DJNZW(Word Size)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else if ((Size) && (MomCPU < CPU80196)) WrError(1500);
-  else
+  if (ChkArgCnt(2, 2)
+   && (!Size || ChkMinCPU(CPU80196)))
   {
     OpSize = Size;
     DecodeAdr(ArgStr[1], MModDir, False);
@@ -1048,8 +1030,7 @@ static void DecodeDJNZ_DJNZW(Word Size)
 
 static void DecodeJBC_JBS(Word Code)
 {
-  if (ArgCnt != 3) WrError(1110);
-  else
+  if (ChkArgCnt(3, 3))
   {
     Boolean OK;
 
@@ -1082,9 +1063,8 @@ static void DecodeECALL(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU<CPU80196N) WrError(1500);
-  else  
+  if (ChkArgCnt(1, 1)
+   && ChkMinCPU(CPU80196N))
   {
     Boolean OK;
     LongInt AdrInt = EvalIntExpression(ArgStr[1], MemInt, &OK) - (EProgCounter() + 4);
@@ -1104,8 +1084,8 @@ static void DecodeEJMP_EBR(Word Code)
   UNUSED(Code);
 
   OpSize = 1;
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < CPU80196N) WrError(1500);
+  if (!ChkArgCnt(1, 1));
+  else if (!ChkMinCPU(CPU80196N));
   else if (*ArgStr[1] == '[')
   {
     DecodeAdr(ArgStr[1], MModMem, False);

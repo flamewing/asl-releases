@@ -40,6 +40,9 @@
 #include "asmitree.h"
 #include "codevars.h"
 #include "headids.h"
+#include "errmsg.h"
+
+#include "codefmc8.h"
 
 /*--------------------------------------------------------------------------*/
 /* Definitionen */
@@ -242,8 +245,7 @@ static Boolean DecodeBitAdr(char *Asc, Byte *Adr, Byte *Bit)
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     BAsmCode[0] = Code;
     CodeLen = 1;
@@ -252,8 +254,7 @@ static void DecodeFixed(Word Code)
 
 static void DecodeAcc(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModAcc);
     if (AdrMode != ModNone)
@@ -266,8 +267,7 @@ static void DecodeAcc(Word Code)
 
 static void DecodeALU(Word Code)
 {
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc);
     if (AdrMode != ModNone)
@@ -297,8 +297,7 @@ static void DecodeRel(Word Code)
   Integer Adr;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Adr = EvalIntExpression(ArgStr[1], UInt16, &OK) - (EProgCounter() + 2);
     if (OK)
@@ -319,8 +318,7 @@ static void DecodeMOV(Word Index)
   Byte HReg;
   UNUSED(Index);
   
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     OpSize = 0;
     DecodeAdr(ArgStr[1], MModAcc | MModDir | MModIIX | MModIEP | MModExt | MModReg | MModIA);
@@ -451,8 +449,7 @@ static void DecodeMOVW(Word Index)
   UNUSED(Index);
 
   OpSize = 1;
-  if (ArgCnt != 2) WrError(1110);
-  else 
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc | MModDir | MModIIX | MModExt | MModIEP | MModReg16 | MModIA | MModPS);
     switch(AdrMode)
@@ -591,7 +588,7 @@ static void DecodeBit(Word Index)
 {
   Byte Adr, Bit;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!DecodeBitAdr(ArgStr[1], &Adr, &Bit)) WrError(1350);
   else
   {
@@ -605,8 +602,7 @@ static void DecodeXCH(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc | MModT);
     switch (AdrMode)
@@ -636,8 +632,7 @@ static void DecodeXCHW(Word Index)
   Byte HReg;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc | MModT | MModReg16 | MModPC);
     switch (AdrMode)
@@ -690,8 +685,7 @@ static void DecodeXCHW(Word Index)
 
 static void DecodeINCDEC(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModReg);
     if (AdrMode != ModNone)
@@ -704,8 +698,7 @@ static void DecodeINCDEC(Word Index)
 
 static void DecodeINCDECW(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModAcc | MModReg16);
     switch (AdrMode)
@@ -727,8 +720,7 @@ static void DecodeCMP(Word Index)
   Byte HReg;
   UNUSED(Index);
 
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc | MModDir | MModIIX | MModIEP | MModReg);
     switch (AdrMode)
@@ -751,8 +743,7 @@ static void DecodeCMP(Word Index)
         }
         break;
       case ModDir:
-        if (ArgCnt != 2) WrError(1110);
-        else
+        if (ChkArgCnt(2, 2))
         {
           BAsmCode[1] = AdrVals[0];
           DecodeAdr(ArgStr[2], MModImm);
@@ -765,8 +756,7 @@ static void DecodeCMP(Word Index)
         }
         break;
       case ModIIX:
-        if (ArgCnt != 2) WrError(1110);
-        else
+        if (ChkArgCnt(2, 2))
         {
           BAsmCode[1] = AdrVals[0];
           DecodeAdr(ArgStr[2], MModImm);
@@ -779,8 +769,7 @@ static void DecodeCMP(Word Index)
         }
         break;
       case ModIEP:
-        if (ArgCnt != 2) WrError(1110);
-        else
+        if (ChkArgCnt(2, 2))
         {
           DecodeAdr(ArgStr[2], MModImm);
           if (AdrMode != ModNone)
@@ -792,8 +781,7 @@ static void DecodeCMP(Word Index)
         }
         break;
       case ModReg:
-        if (ArgCnt != 2) WrError(1110);
-        else
+        if (ChkArgCnt(2, 2))
         {
           HReg = AdrPart;
           DecodeAdr(ArgStr[2], MModImm);
@@ -815,7 +803,7 @@ static void DecodeBitBr(Word Index)
   Boolean OK;
   Integer Adr;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeBitAdr(ArgStr[1], &BAdr, &Bit)) WrError(1350);
   else
   {
@@ -836,8 +824,7 @@ static void DecodeBitBr(Word Index)
 
 static void DecodeJmp(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModExt | ((Index) ? 0 : MModIA));
     switch (AdrMode)
@@ -860,7 +847,7 @@ static void DecodeCALLV(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*ArgStr[1] != '#') WrError(1120);
   else
   {
@@ -872,8 +859,7 @@ static void DecodeCALLV(Word Index)
 
 static void DecodeStack(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else  
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModAcc | MModReg16);
     switch (AdrMode)

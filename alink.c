@@ -29,7 +29,6 @@
 #include "toolutils.h"
 
 #include "ioerrs.h"
-#include "version.h"
 
 #include "alink.rsc"
 

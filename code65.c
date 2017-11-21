@@ -65,6 +65,7 @@
 #include "codepseudo.h"
 #include "motpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
 
 #include "code65.h"
 
@@ -454,7 +455,7 @@ static void DecodeAdr(tAdrResult *pResult, const NormOrder *pOrder)
 
   else
   {
-    WrError(1110);
+    (void)ChkArgCnt(0, 2);
     ChkFlags();
   }
 }
@@ -472,9 +473,8 @@ static void DecodeFixed(Word Index)
 {
   const FixedOrder *pOrder = FixedOrders + Index;
 
-  if (ArgCnt != 0) WrError(1110);
-  else if (!CPUAllowed(pOrder->CPUFlag)) WrError(1500);
-  else
+  if (ChkArgCnt(0, 0)
+   && (ChkExactCPUMask(pOrder->CPUFlag, CPU6502) >= 0))
   {
     CodeLen = 1;
     BAsmCode[0] = pOrder->Code;
@@ -493,9 +493,8 @@ static void DecodeFixed(Word Index)
 
 static void DecodeSEB_CLB(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU != CPUM740) WrError(1500);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkExactCPU(CPUM740))
   {
     Boolean ValOK;
     Byte BitNo = EvalIntExpression(ArgStr[1], UInt3, &ValOK);
@@ -524,9 +523,8 @@ static void DecodeBBC_BBS(Word Code)
   Boolean ValOK;
   int b;
 
-  if (ArgCnt != 3) WrError(1110);
-  else if (MomCPU != CPUM740) WrError(1500);
-  else
+  if (ChkArgCnt(3, 3)
+   && ChkExactCPU(CPUM740))
   {
     BAsmCode[0] = EvalIntExpression(ArgStr[1], UInt3, &ValOK);
     if (ValOK)
@@ -565,9 +563,8 @@ static void DecodeBBR_BBS(Word Code)
 {
   Boolean ValOK;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!CPUAllowed(M_65C02 | M_W65C02S | M_65C19 | M_HUC6280)) WrError(1500);
-  else
+  if (ChkArgCnt(2, 2)
+   && (ChkExactCPUMask(M_65C02 | M_W65C02S | M_65C19 | M_HUC6280, CPU6502) >= 0))
   {
     BAsmCode[1] = EvalIntExpression(ArgStr[1], UInt8, &ValOK);
     if (ValOK)
@@ -592,9 +589,8 @@ static void DecodeBBR_BBS(Word Code)
 
 static void DecodeRMB_SMB(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (!CPUAllowed(M_65C02 | M_W65C02S | M_65C19 | M_HUC6280)) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && (ChkExactCPUMask(M_65C02 | M_W65C02S | M_65C19 | M_HUC6280, CPU6502) >= 0))
   {
     Boolean ValOK;
 
@@ -610,9 +606,8 @@ static void DecodeRMB_SMB(Word Code)
 
 static void DecodeRBA_SBA(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else if (!CPUAllowed(M_65C19)) WrError(1500);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkExactCPU(CPU65C19))
   {
     Boolean OK;
     Word Addr;
@@ -634,9 +629,8 @@ static void DecodeRBA_SBA(Word Code)
 
 static void DecodeBAR_BAS(Word Code)
 {
-  if (ArgCnt != 3) WrError(1110);
-  else if (!CPUAllowed(M_65C19)) WrError(1500);
-  else
+  if (ChkArgCnt(3, 3)
+   && ChkExactCPU(CPU65C19))
   {
     Boolean OK;
     Word Addr;
@@ -670,9 +664,8 @@ static void DecodeSTI(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (!CPUAllowed(M_65C19)) WrError(1500);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkExactCPU(CPU65C19))
   {
     Boolean OK;
 
@@ -695,9 +688,8 @@ static void DecodeLDM(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU != CPUM740) WrError(1500);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkExactCPU(CPUM740))
   {
     BAsmCode[0] = 0x3c;
     BAsmCode[2] = EvalIntExpression(ArgStr[2], UInt8, &ValOK);
@@ -719,9 +711,8 @@ static void DecodeJSB(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU != CPU65C19) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && ChkExactCPU(CPU65C19))
   {
     Boolean OK;
     Word Addr;
@@ -760,8 +751,7 @@ static void DecodeNorm(Word Index)
       AdrResult.AdrVals[AdrCnt++] = 0;
     }
     if (pOrder->Codes[AdrResult.ErgMode] == -1) WrError(1350);
-    else if (!CPUAllowed(Hi(pOrder->Codes[AdrResult.ErgMode]))) WrError(1500);
-    else
+    else if (ChkExactCPUMask(Hi(pOrder->Codes[AdrResult.ErgMode]), CPU6502) >= 0)
     {
       BAsmCode[0] = Lo(pOrder->Codes[AdrResult.ErgMode]); 
       memcpy(BAsmCode + 1, AdrResult.AdrVals, AdrResult.AdrCnt);
@@ -787,11 +777,9 @@ static void DecodeTST(Word Index)
     Boolean OK;
     int z;
 
-    if (ArgCnt < 1)
-    {
-      WrError(1110);
+    if (!ChkArgCnt(1, ArgCntMax))
       return;
-    }
+
     ImmVal = EvalIntExpression(ImmStart(ArgStr[1]), Int8, &OK);
     if (!OK)
       return;
@@ -819,9 +807,8 @@ static void DecodeCond(Word Index)
 {
   const CondOrder *pOrder = CondOrders + Index;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (!CPUAllowed(pOrder->CPUFlag)) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && (ChkExactCPUMask(pOrder->CPUFlag, CPU6502) >= 0))
   {
     Integer AdrInt;
     Boolean ValOK;
@@ -843,9 +830,8 @@ static void DecodeCond(Word Index)
 
 static void DecodeTransfer(Word Code)
 {
-  if (ArgCnt != 3) WrError(1110);
-  else if (MomCPU != CPUHUC6280) WrError(1500);
-  else
+  if (ChkArgCnt(3, 3)
+   && ChkExactCPU(CPUHUC6280))
   {
     Boolean OK;
     Word Address;

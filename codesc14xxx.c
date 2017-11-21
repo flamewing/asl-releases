@@ -23,6 +23,9 @@
 #include "headids.h"
 #include "asmitree.h"
 #include "codevars.h"
+#include "errmsg.h"
+
+#include "codesc14xxx.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -57,9 +60,8 @@ static void DecodeFixed(Word Index)
   Boolean OK;
   Byte Value;
 
-  if ((ArgCnt > 1) || ((ArgCnt == 0) && (POp->MinArg != POp->MaxArg))) WrError(1110);
-  else if (!(POp->CPUMask & CurrMask)) WrError(1500);
-  else
+  if (ChkArgCnt((POp->MinArg != POp->MaxArg) ? 1 : 0, (POp->MinArg != POp->MaxArg) ? 1 : 0)
+   && (ChkExactCPUMask(POp->CPUMask, CPU14400) >= 0))
   {
     OK = True;
     if (ArgCnt == 0) Value = 0;
@@ -98,8 +100,7 @@ static void DecodeDS(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
     cnt = EvalIntExpression(ArgStr[1], UInt16, &OK);
@@ -124,8 +125,7 @@ static void DecodeDS16(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
     cnt = EvalIntExpression(ArgStr[1], UInt16, &OK);
@@ -152,8 +152,7 @@ static void DecodeDC(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt == 0) WrError(1110);
-  else
+  if (ChkArgCnt(1, ArgCntMax))
   {
     z = 1; OK = TRUE; Toggle = FALSE;
     while ((OK) && (z <= ArgCnt))
@@ -193,8 +192,7 @@ static void DecodeDW(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt == 0) WrError(1110);
-  else  
+  if (ChkArgCnt(1, ArgCntMax))
   {
     z = 1; OK = TRUE;
     while ((OK) && (z <= ArgCnt))

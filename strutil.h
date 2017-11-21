@@ -41,11 +41,17 @@
  *
  *****************************************************************************/
 
+#include <stdio.h>
+
+#include "datatypes.h"
+
 extern Boolean HexLowerCase;
 
 extern const char *Blanks(int cnt);
 
-extern int HexString(char *pDest, int DestSize, LargeWord i, Byte Stellen);
+#define HexString(pDest, DestSize, i, Stellen) HexString2(pDest, DestSize, i, Stellen, HexLowerCase)
+
+extern int HexString2(char *pDest, int DestSize, LargeWord i, Byte Stellen, Boolean LowerCase);
 
 extern int SysString(char *pDest, int DestSize, LargeWord i, LargeWord System, int Stellen);
 
@@ -95,6 +101,8 @@ extern void ReadLn(FILE *Datei, char *Zeile);
 extern int ReadLnCont(FILE *Datei, char *Zeile, int MaxLen);
 
 extern LongInt ConstLongInt(const char *inp, Boolean *pErr, LongInt Base);
+
+extern char *ParenthPos(char *pHaystack, char Needle);
 
 extern void KillBlanks(char *s);
 

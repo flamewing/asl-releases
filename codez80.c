@@ -84,6 +84,9 @@
 #include "intpseudo.h"
 #include "codevars.h"
 #include "intconsts.h"
+#include "errmsg.h"
+
+#include "codez80.h"
 
 /*-------------------------------------------------------------------------*/
 /* Instruktionsgruppendefinitionen */
@@ -660,9 +663,8 @@ static void DecodeFixed(Word Index)
 {
   BaseOrder *POrder = FixedOrders + Index;
 
-  if (ArgCnt != 0) WrError(1110);
-  else if (MomCPU < POrder->MinCPU) WrError(1500);
-  else
+  if (ChkArgCnt(0, 0)
+   && ChkMinCPU(POrder->MinCPU))
   {
     if (POrder->Len == 2)
     {
@@ -679,8 +681,8 @@ static void DecodeAcc(Word Index)
 {
   BaseOrder *POrder = AccOrders + Index;
 
-  if (ArgCnt > 1) WrError(1110);
-  else if (MomCPU < POrder->MinCPU) WrError(1500);
+  if (!ChkArgCnt(0, 1));
+  else if (!ChkMinCPU(POrder->MinCPU));
   else if ((ArgCnt) && (strcasecmp(ArgStr[1], "A"))) WrError(1350);
   else
   {
@@ -699,8 +701,8 @@ static void DecodeHL(Word Index)
 {
   BaseOrder *POrder = HLOrders + Index;
 
-  if (ArgCnt > 1) WrError(1110);
-  else if (MomCPU < POrder->MinCPU) WrError(1500);
+  if (!ChkArgCnt(0, 1));
+  else if (!ChkMinCPU(POrder->MinCPU));
   else if ((ArgCnt) && (strcasecmp(ArgStr[1], "HL"))) WrError(1350);
   else
   {
@@ -721,8 +723,7 @@ static void DecodeLD(Word IsLDW)
   int z;
   Byte HVals[5];
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1]);
     switch (AdrMode)
@@ -841,8 +842,7 @@ static void DecodeLD(Word IsLDW)
             case ModImm: /* LD (HL)/(XY+D),imm8:16:32 */
               if ((z == 0) && (IsLDW))
               {
-                if (MomCPU<CPUZ380) WrError(1500);
-                else
+                if (ChkMinCPU(CPUZ380))
                 {
                   BAsmCode[PrefixCnt] = 0xed;
                   BAsmCode[PrefixCnt + 1] = 0x36;
@@ -859,7 +859,7 @@ static void DecodeLD(Word IsLDW)
               }
               break;
             case ModReg16: /* LD (HL)/(XY+D),R16/XY */
-              if (MomCPU<CPUZ380) WrError(1500);
+              if (!ChkMinCPU(CPUZ380));
               else if (AdrPart == 3) WrError(1350);
               else if (HLen == 0)
               {
@@ -945,7 +945,7 @@ static void DecodeLD(Word IsLDW)
           switch (AdrMode)
           {
             case ModInt: /* LD HL,I */
-              if (MomCPU < CPUZ380) WrError(1500);
+              if (!ChkMinCPU(CPUZ380));
               else if (AdrByte != 3) WrError(1350);
               else
               {
@@ -956,7 +956,7 @@ static void DecodeLD(Word IsLDW)
               break;
             case ModReg8:
               if (AdrPart != 6) WrError(1350);
-              else if (MomCPU < CPUZ380) WrError(1500);
+              else if (!ChkMinCPU(CPUZ380));
               else if (PrefixCnt == 0) /* LD R16,(HL) */
               {
                 BAsmCode[0] = 0xdd;
@@ -973,7 +973,7 @@ static void DecodeLD(Word IsLDW)
               break;
             case ModReg16:
               if (AdrPart == 3) WrError(1350);
-              else if (MomCPU < CPUZ380) WrError(1500);
+              else if (!ChkMinCPU(CPUZ380));
               else if (PrefixCnt == 0) /* LD R16,R16 */
               {
                 if (AdrPart == 2)
@@ -991,8 +991,7 @@ static void DecodeLD(Word IsLDW)
               }
               break;
             case ModIndReg16: /* LD R16,(R16) */
-              if (MomCPU < CPUZ380) WrError(1500);
-              else
+              if (ChkMinCPU(CPUZ380))
               {
                 CodeLen = 2;
                 BAsmCode[0] = 0xdd;
@@ -1022,8 +1021,7 @@ static void DecodeLD(Word IsLDW)
               }
               break;
             case ModSPRel: /* LD R16,(SP+D) */
-              if (MomCPU<CPUZ380) WrError(1500);
-              else
+              if (ChkMinCPU(CPUZ380))
               {
                 BAsmCode[PrefixCnt] = 0xdd;
                 BAsmCode[PrefixCnt + 1] = 0xcb;
@@ -1045,7 +1043,7 @@ static void DecodeLD(Word IsLDW)
           {
             case ModReg8:
               if (AdrPart != 6) WrError(1350);
-              else if (MomCPU < CPUZ380) WrError(1500);
+              else if (!ChkMinCPU(CPUZ380));
               else if (AdrCnt == 0) /* LD XY,(HL) */
               {
                 BAsmCode[PrefixCnt] = 0x33;
@@ -1063,7 +1061,7 @@ static void DecodeLD(Word IsLDW)
               }
               break;
             case ModReg16:
-              if (MomCPU < CPUZ380) WrError(1500);
+              if (!ChkMinCPU(CPUZ380));
               else if (AdrPart == 3) WrError(1350);
               else if (PrefixCnt == 1) /* LD XY,R16 */
               {
@@ -1079,8 +1077,7 @@ static void DecodeLD(Word IsLDW)
               }
               break;
             case ModIndReg16:
-              if (MomCPU < CPUZ380) WrError(1500);
-              else /* LD XY,(R16) */
+              if (ChkMinCPU(CPUZ380)) /* LD XY,(R16) */
               {
                 BAsmCode[PrefixCnt] = 0x03 + (AdrPart << 4);
                 CodeLen = PrefixCnt + 1;
@@ -1097,8 +1094,7 @@ static void DecodeLD(Word IsLDW)
               CodeLen = PrefixCnt + 1 + AdrCnt;
               break;
             case ModSPRel: /* LD XY,(SP+D) */
-              if (MomCPU<CPUZ380) WrError(1500);
-              else
+              if (ChkMinCPU(CPUZ380))
               {
                 BAsmCode[PrefixCnt] = 0xcb;
                 memcpy(BAsmCode + PrefixCnt + 1, AdrVals, AdrCnt);
@@ -1133,7 +1129,7 @@ static void DecodeLD(Word IsLDW)
             break;
           case ModReg16:
             if (AdrPart == 3) WrError(1350);
-            else if (MomCPU < CPUZ380) WrError(1500);
+            else if (!ChkMinCPU(CPUZ380));
             else if (PrefixCnt == 0) /* LD (R16),R16 */
             {
               if (AdrPart == 2)
@@ -1150,8 +1146,7 @@ static void DecodeLD(Word IsLDW)
             break;
           case ModImm:
             if (!IsLDW) WrError(1350);
-            else if (MomCPU < CPUZ380) WrError(1500);
-            else
+            else if (ChkMinCPU(CPUZ380))
             {
               CodeLen = PrefixCnt;
               BAsmCode[CodeLen++] = 0xed;
@@ -1207,8 +1202,7 @@ static void DecodeLD(Word IsLDW)
         }
         else if (!strcasecmp(ArgStr[2], "HL")) /* LD I,HL */
         {
-         if (MomCPU < CPUZ380) WrError(1500);
-         else
+         if (ChkMinCPU(CPUZ380))
          {
            CodeLen = 2;
            BAsmCode[0] = 0xdd;
@@ -1227,8 +1221,7 @@ static void DecodeLD(Word IsLDW)
         else WrError(1350);
         break;
       case ModSPRel:
-        if (MomCPU < CPUZ380) WrError(1500);
-        else
+        if (ChkMinCPU(CPUZ380))
         {
           HLen = AdrCnt;
           memcpy(HVals, AdrVals, AdrCnt);
@@ -1283,7 +1276,7 @@ static void DecodeALU8(Word Code)
       pSrcArg = ArgStr[2];
       break;
     default:
-      WrError(1110);
+      (void)ChkArgCnt(1, 2);
       return;
   }
 
@@ -1353,8 +1346,8 @@ static void DecodeALU8(Word Code)
 
 static void DecodeALU16(Word Code)
 {
-  if ((ArgCnt != 2) && (ArgCnt != 1)) WrError(1110);
-  else if (MomCPU < CPUZ380) WrError(1500);
+  if (!ChkArgCnt(1, 2));
+  else if (!ChkMinCPU(CPUZ380));
   else if ((ArgCnt == 2) && (strcasecmp(ArgStr[1], "HL"))) WrError(1350);
   else
   {
@@ -1402,8 +1395,7 @@ static void DecodeADD(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1]);
     switch (AdrMode)
@@ -1438,18 +1430,18 @@ static void DecodeADD(Word Index)
           switch (AdrMode)
           {
             case ModImm:
-              if (MomCPU == CPUZ380)
+              switch (ChkExactCPUList(0, CPUZ380, CPUR2000, CPUNone))
               {
-                BAsmCode[0] = 0xed; BAsmCode[1] = 0x82;
-                memcpy(BAsmCode + 2, AdrVals, AdrCnt);
-                CodeLen = 2 + AdrCnt;
+                case 0:
+                  BAsmCode[0] = 0xed; BAsmCode[1] = 0x82;
+                  memcpy(BAsmCode + 2, AdrVals, AdrCnt);
+                  CodeLen = 2 + AdrCnt;
+                  break;
+                case 1:
+                  BAsmCode[0] = 0x27; BAsmCode[1] = 0[AdrVals];
+                  CodeLen = 2;
+                  break;
               }
-              else if (MomCPU == CPUR2000)
-              {
-                BAsmCode[0] = 0x27; BAsmCode[1] = 0[AdrVals];
-                CodeLen = 2;
-              }
-              else WrError(1500);
               break;
             default:
               if (AdrMode != ModNone) WrError(1350);
@@ -1475,8 +1467,7 @@ static void DecodeADD(Word Index)
               break;
             case ModAbs:
               if (HasPrefixes) WrError(1350);
-              else if (MomCPU<CPUZ380) WrError(1500);
-              else
+              else if (ChkMinCPU(CPUZ380))
               {
                 CodeLen = PrefixCnt;
                 BAsmCode[CodeLen++] = 0xed;
@@ -1499,8 +1490,8 @@ static void DecodeADDW(Word Index)
 {
   UNUSED(Index);
 
-  if ((ArgCnt != 2) && (ArgCnt != 1)) WrError(1110);
-  else if (MomCPU < CPUZ380) WrError(1500);
+  if (!ChkArgCnt(1, 2));
+  else if (!ChkMinCPU(CPUZ380));
   else if ((ArgCnt == 2) && (strcasecmp(ArgStr[1], "HL"))) WrError(1350);
   else
   {
@@ -1546,8 +1537,7 @@ static void DecodeADDW(Word Index)
 
 static void DecodeADC_SBC(Word IsSBC)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1]);
     switch (AdrMode)
@@ -1607,8 +1597,8 @@ static void DecodeADC_SBC(Word IsSBC)
 
 static void DecodeADCW_SBCW(Word Code)
 {
-  if ((ArgCnt != 2) && (ArgCnt != 1)) WrError(1110);
-  else if (MomCPU < CPUZ380) WrError(1500);
+  if (!ChkArgCnt(1, 2));
+  else if (!ChkMinCPU(CPUZ380));
   else if ((ArgCnt == 2) && (strcasecmp(ArgStr[1], "HL"))) WrError(1350);
   else
   {
@@ -1656,8 +1646,7 @@ static void DecodeINC_DEC(Word Index)
 {
   Word IsDEC = (Index & 1), IsWord = (Index & 2);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1]);
     switch (AdrMode)
@@ -1685,8 +1674,8 @@ static void DecodeShift8(Word Code)
 {
   Boolean OK;
 
-  if ((ArgCnt == 0) || (ArgCnt > 2)) WrError(1110);
-  else if ((Code == 6) && (MomCPU != CPUZ80U)) WrError(1500); /* SLIA/SLS undok. Z80 */
+  if (!ChkArgCnt(1, 2));
+  else if ((Code == 6) && (!ChkExactCPU(CPUZ80U))); /* SLIA/SLS undok. Z80 */
   else
   {
     OpSize = 0;
@@ -1699,11 +1688,8 @@ static void DecodeShift8(Word Code)
         {
           if (ArgCnt == 1)
             OK = True;
-          else if (MomCPU != CPUZ80U)
-          {
-            WrError(1500);
+          else if (!ChkExactCPU(CPUZ80U))
             OK = False;
-          }
           else if ((AdrPart != 6) || (PrefixCnt != 1) || (!DecodeReg8(ArgStr[1], &AdrPart)))
           {
             WrError(1350);
@@ -1728,9 +1714,8 @@ static void DecodeShift8(Word Code)
 
 static void DecodeShift16(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < CPUZ380) WrError(1500);
-  else
+  if (!ChkArgCnt(1, 1));
+  else if (ChkMinCPU(CPUZ380))
   {
     OpSize = 1; DecodeAdr(ArgStr[1]);
     switch (AdrMode)
@@ -1777,7 +1762,7 @@ static void DecodeShift16(Word Code)
 
 static void DecodeBit(Word Code)
 {
-  if ((ArgCnt != 2) && (ArgCnt != 3)) WrError(1110);
+  if (!ChkArgCnt(2, 3));
   else
   {
     DecodeAdr(ArgStr[ArgCnt]);
@@ -1795,11 +1780,8 @@ static void DecodeBit(Word Code)
           {
             if (ArgCnt == 2)
               OK = True;
-            else if (MomCPU != CPUZ80U)
-            {
-              WrError(1500);
+            else if (!ChkExactCPU(CPUZ80U))
               OK = False;
-            }
             else if ((AdrPart != 6) || (PrefixCnt != 1) || (Code == 0) || (!DecodeReg8(ArgStr[1], &AdrPart)))
             {
               WrError(1350);
@@ -1827,9 +1809,8 @@ static void DecodeMLT(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < CPUZ180) WrError(1500);
-  else
+  if (!ChkArgCnt(1, 1));
+  else if (ChkMinCPU(CPUZ180))
   {
     DecodeAdr(ArgStr[1]);
     if ((AdrMode != ModReg16) || (PrefixCnt != 0)) WrError(1350);
@@ -1858,11 +1839,11 @@ static void DecodeMULT_DIV(Word Code)
       pSrcArg = ArgStr[2];
       break;
     default:
-      WrError(1110);
+      (void)ChkArgCnt(1, 2);
       return;
   }
 
-  if (MomCPU < CPUZ380) WrError(1500);
+  if (!ChkMinCPU(CPUZ380));
   else if (strcasecmp(pDestArg, "HL")) WrError(1350);
   else
   {
@@ -1915,9 +1896,8 @@ static void DecodeTST(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < CPUZ180) WrError(1500);
-  else
+  if (!ChkArgCnt(1, 1));
+  else if (ChkMinCPU(CPUZ180))
   {
     OpSize = 0; DecodeAdr(ArgStr[1]);
     switch (AdrMode)
@@ -1947,9 +1927,8 @@ static void DecodeSWAP(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < CPUZ380) WrError(1500);
-  else
+  if (!ChkArgCnt(1, 1));
+  else if (ChkMinCPU(CPUZ380))
   {
     DecodeAdr(ArgStr[1]);
     switch (AdrMode)
@@ -1978,11 +1957,10 @@ static void DecodeSWAP(Word Index)
 
 static void DecodePUSH_POP(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!strcasecmp(ArgStr[1], "SR"))
   {
-    if (MomCPU < CPUZ380) WrError(1500);
-    else
+    if (ChkMinCPU(CPUZ380))
     {
       CodeLen = 2;
       BAsmCode[0] = 0xed;
@@ -2004,8 +1982,7 @@ static void DecodePUSH_POP(Word Code)
         BAsmCode[PrefixCnt] = 0xc1 + (AdrPart << 4) + Code;
         break;
       case ModImm:
-        if (MomCPU < CPUZ380) WrError(1500);
-        else
+        if (ChkMinCPU(CPUZ380))
         {
           CodeLen = PrefixCnt;
           BAsmCode[CodeLen++] = 0xfd;
@@ -2031,7 +2008,7 @@ static void DecodeEX(Word Index)
   if (!strncasecmp(ArgStr[2], "AF\'", 3))
     ArgStr[2][3] = '\0';
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (ParPair("DE", "HL"))
   {
     BAsmCode[0] = 0xeb;
@@ -2066,8 +2043,7 @@ static void DecodeEX(Word Index)
   }
   else if (ParPair("(HL)", "A"))
   {
-    if (MomCPU < CPUZ380) WrError(1500);
-    else
+    if (ChkMinCPU(CPUZ380))
     {
       BAsmCode[0] = 0xed;
       BAsmCode[1] = 0x37;
@@ -2097,7 +2073,7 @@ static void DecodeEX(Word Index)
           {
             case ModReg8:
               if ((AdrPart == 6) || (PrefixCnt != 0)) WrError(1350);
-              else if (MomCPU < CPUZ380) WrError(1500);
+              else if (!ChkMinCPU(CPUZ380));
               else if ((AdrByte == 7) && (!OK))
               {
                 BAsmCode[0] = 0xed;
@@ -2133,7 +2109,7 @@ static void DecodeEX(Word Index)
           {
             case ModReg16:
               if (AdrPart == 3) WrError(1350);
-              else if (MomCPU < CPUZ380) WrError(1500);
+              else if (!ChkMinCPU(CPUZ380));
               else if (OK)
               {
                 if (AdrPart == 2)
@@ -2184,7 +2160,7 @@ static void DecodeEX(Word Index)
           {
             case ModReg16:
               if (AdrPart == 3) WrError(1350);
-              else if (MomCPU < CPUZ380) WrError(1500);
+              else if (!ChkMinCPU(CPUZ380));
               else if (OK)
               {
                 if ((PrefixCnt != 2) || (BAsmCode[0] != BAsmCode[1])) WrError(1350);
@@ -2227,9 +2203,8 @@ static void DecodeTSTI(Word Code)
 {
   UNUSED(Code);
 
-  if (MomCPU != CPUZ80U) WrError(1500);
-  else if (ArgCnt!=0) WrError(1110);
-  else
+  if (ChkExactCPU(CPUZ80U)
+   && ChkArgCnt(0, 0))
   {
     BAsmCode[0] = 0xed;
     BAsmCode[1] = 0x70;
@@ -2241,7 +2216,7 @@ static void DecodeIN_OUT(Word IsOUT)
 {
   if ((ArgCnt == 1) && (!IsOUT))
   {
-    if (MomCPU != CPUZ80U) WrError(1500);
+    if (!ChkExactCPU(CPUZ80U));
     else if (strcasecmp(ArgStr[1], "(C)")) WrError(1350);
     else
     {
@@ -2250,7 +2225,7 @@ static void DecodeIN_OUT(Word IsOUT)
       CodeLen = 2;
     }
   }
-  else if (ArgCnt != 2) WrError(1110);
+  else if (!ChkArgCnt(2, 2));
   else
   {
     char *pPortArg = IsOUT ? ArgStr[1] : ArgStr[2],
@@ -2280,8 +2255,7 @@ static void DecodeIN_OUT(Word IsOUT)
             BAsmCode[1] = 0x71;
             CodeLen = 2;
           }
-          else if (MomCPU < CPUZ380) WrError(1500);
-          else
+          else if (ChkMinCPU(CPUZ380))
           {
             BAsmCode[0] = 0xed;
             BAsmCode[1] = 0x71;
@@ -2311,9 +2285,8 @@ static void DecodeIN_OUT(Word IsOUT)
 
 static void DecodeINW_OUTW(Word IsOUTW)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPUZ380) WrError(1500);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkMinCPU(CPUZ380))
   {
     char *pPortArg = IsOUTW ? ArgStr[1] : ArgStr[2],
          *pRegArg  = IsOUTW ? ArgStr[2] : ArgStr[1];
@@ -2359,9 +2332,8 @@ static void DecodeINW_OUTW(Word IsOUTW)
 
 static void DecodeIN0_OUT0(Word IsOUT0)
 {
-  if ((ArgCnt != 2) && (ArgCnt != 1)) WrError(1110);
-  else if (MomCPU < CPUZ180) WrError(1500);
-  else
+  if (ChkArgCnt(1, 2)
+   && ChkMinCPU(CPUZ180))
   {
     Boolean OK;
     char *pRegArg, *pPortArg;
@@ -2412,9 +2384,8 @@ static void DecodeINA_INAW_OUTA_OUTAW(Word Code)
   Word IsIn = Code & 8;
   LongWord AdrLong;
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPUZ380) WrError(1500);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkMinCPU(CPUZ380))
   {
     char *pRegArg = IsIn ? ArgStr[1] : ArgStr[2],
          *pPortArg = IsIn ? ArgStr[2] : ArgStr[1];
@@ -2452,9 +2423,8 @@ static void DecodeTSTIO(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < CPUZ180) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && ChkMinCPU(CPUZ180))
   {
     Boolean OK;
 
@@ -2479,7 +2449,7 @@ static void DecodeRET(Word Code)
     CodeLen = 1;
     BAsmCode[0] = 0xc9;
   }
-  else if (ArgCnt != 1) WrError(1110);
+  else if (!ChkArgCnt(0, 1));
   else if (!DecodeCondition(ArgStr[1], &Cond)) WrXError(1360, ArgStr[1]);
   else
   {
@@ -2533,7 +2503,8 @@ static void DecodeJP(Word Code)
   }
   else
   {
-    WrError(1110); OK = False;
+    (void)ChkArgCnt(1, 2);
+    OK = False;
   }
   if (OK)
   {
@@ -2593,7 +2564,7 @@ static void DecodeCALL(Word Code)
         WrXError(1360, ArgStr[1]);
       break;
     default:
-      WrError(1110);
+      (void)ChkArgCnt(1, 2);
       OK = False;
   }
 
@@ -2657,7 +2628,7 @@ static void DecodeJR(Word Code)
         WrXError(1360, ArgStr[1]);
       break;
     default:
-      WrError(1110);
+      (void)ChkArgCnt(1, 2);
       OK = False;
   }
 
@@ -2730,14 +2701,13 @@ static void DecodeCALR(Word Code)
         WrXError(1360, ArgStr[1]);
       break;
     default:
-      WrError(1110);
+      (void)ChkArgCnt(1, 2);
       OK = False;
   }
 
   if (OK)
   {
-    if (MomCPU < CPUZ380) WrError(1500);
-    else
+    if (ChkMinCPU(CPUZ380))
     {
       LongInt AdrLInt;
 
@@ -2787,8 +2757,7 @@ static void DecodeDJNZ(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     LongInt AdrLInt;
@@ -2838,8 +2807,7 @@ static void DecodeRST(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Byte AdrByte;
@@ -2876,9 +2844,8 @@ static void DecodeEI_DI(Word Code)
     BAsmCode[0] = 0xf3 + Code;
     CodeLen = 1;
   }
-  else if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < CPUZ380) WrError(1500);
-  else
+  else if (ChkArgCnt(1, 1)
+        && ChkMinCPU(CPUZ380))
   {
     Boolean OK;
 
@@ -2896,8 +2863,7 @@ static void DecodeIM(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Byte AdrByte;
     Boolean OK;
@@ -2906,7 +2872,7 @@ static void DecodeIM(Word Code)
     if (OK)
     {
       if (AdrByte > 3) WrError(1320);
-      else if ((AdrByte == 3) && (MomCPU < CPUZ380)) WrError(1500);
+      else if ((AdrByte == 3) && (!ChkMinCPU(CPUZ380)));
       else
       {
         if (AdrByte == 3)
@@ -2928,8 +2894,8 @@ static void DecodeLDCTL(Word Code)
   UNUSED(Code);
 
   OpSize = 0;
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPUZ380) WrError(1500);
+  if (!ChkArgCnt(2, 2));
+  else if (!ChkMinCPU(CPUZ380));
   else if (DecodeSFR(ArgStr[1], &AdrByte))
   {
     DecodeAdr(ArgStr[2]);
@@ -2996,9 +2962,8 @@ static void DecodeLDCTL(Word Code)
 
 static void DecodeRESC_SETC(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < CPUZ380) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && ChkMinCPU(CPUZ380))
   {
     Byte AdrByte = 0xff;
 
@@ -3020,9 +2985,8 @@ static void DecodeDDIR(Word Code)
 {
   UNUSED(Code);
 
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
-  else if (MomCPU < CPUZ380) WrError(1500);
-  else
+  if (ChkArgCnt(1, 2)
+   && ChkMinCPU(CPUZ380))
   {
     Boolean OK;
     int z;

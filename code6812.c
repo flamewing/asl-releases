@@ -102,6 +102,7 @@
 #include "codepseudo.h"
 #include "motpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
 
 #include "code6812.h"
 
@@ -705,9 +706,9 @@ static void DecodeFixed(Word Index)
 {
   FixedOrder *pOrder = FixedOrders + Index;
 
-  if (ArgCnt != 0) WrError(1110);
+  if (!ChkArgCnt(0, 0));
   else if (*AttrPart != '\0') WrError(1100);
-  else if (MomCPU < pOrder->MinCPU) WrError(1500);
+  else if (!ChkMinCPU(pOrder->MinCPU));
   else
   {
     if (Hi(pOrder->Code))
@@ -720,8 +721,8 @@ static void DecodeGen(Word Index)
 {
   GenOrder *pOrder = GenOrders + Index;
 
-  if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
-  else if (MomCPU < pOrder->MinCPU) WrError(1500);
+  if (!ChkArgCnt(1, 2));
+  else if (!ChkMinCPU(pOrder->MinCPU));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -772,7 +773,7 @@ static void DecodeLEA(Word Index)
 {
   FixedOrder *pOrder = LEAOrders + Index;
 
-  if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
+  if (!ChkArgCnt(1, 2));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -793,7 +794,7 @@ static void DecodeBranch(Word Index)
   LongInt Address;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart!='\0') WrError(1100);
   else
   {
@@ -817,7 +818,7 @@ static void DecodeLBranch(Word Index)
   LongInt Address;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -838,7 +839,7 @@ static void DecodeJmp(Word Index)
   JmpOrder *pOrder = JmpOrders + Index;
   Word Mask;
   
-  if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
+  if (!ChkArgCnt(1, 2));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -878,7 +879,7 @@ static void DecodeLoop(Word Index)
   LongInt Address;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (*AttrPart != '\0') WrError(1100);
   else if (!DecodeReg(ArgStr[1], &HReg)) WrXError(1445, ArgStr[1]);
   else
@@ -905,7 +906,7 @@ static void DecodeLoop(Word Index)
 
 static void DecodeETBL(Word Index)
 {
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
+  if (!ChkArgCnt(1, 2));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -928,7 +929,7 @@ static void DecodeEMACS(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -949,7 +950,7 @@ static void DecodeTransfer(Word Index)
   Byte Reg1, Reg2;
   Byte ExtMask;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (*AttrPart != '\0') WrError(1100);
   else if (!DecodeReg(ArgStr[2], &Reg2)) WrXError(1445, ArgStr[2]);
   else if (eRegPC == Reg2) WrXError(1445, ArgStr[2]);
@@ -971,7 +972,7 @@ static void DecodeSEX(Word Index)
   Byte Reg1, Reg2;
   Byte ExtMask;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (*AttrPart != '\0') WrError(1100);
   else if (!DecodeReg(ArgStr[2], &Reg2)) WrXError(1445, ArgStr[2]);
   else if (ActRegSize != 1) WrXError(1445, ArgStr[2]);
@@ -1008,7 +1009,7 @@ static void DecodeMOV(Word Index)
       break;
   }
 
-  if ((ArgCnt < 2) || (ArgCnt > 4)) WrError(1110);
+  if (!ChkArgCnt(2, 4));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -1105,7 +1106,7 @@ static void DecodeMOV(Word Index)
 
 static void DecodeLogic(Word Index)
 {
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -1127,7 +1128,7 @@ static void DecodeBit(Word Index)
   if ((ArgCnt == 1) || (ArgCnt == 2))
     Try2Split(ArgCnt);
 
-  if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
+  if (!ChkArgCnt(2, 3));
   else if (*AttrPart!='\0') WrError(1100);
   else
   {
@@ -1164,12 +1165,11 @@ static void DecodeCALL(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt < 1) WrError(1110);
+  if (!ChkArgCnt(1, 3));
   else if (*AttrPart != '\0') WrError(1100);
   else if (*ArgStr[1] == '[')
   {
-    if (ArgCnt != 1) WrError(1110);
-    else
+    if (ChkArgCnt(1, 1))
     {
       ExPos = 1; DecodeAdr(1, 1, MModDIdx | MModIIdx2);
       if (AdrMode != ModNone)
@@ -1182,8 +1182,7 @@ static void DecodeCALL(Word Index)
   }
   else
   {
-    if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
-    else
+    if (ChkArgCnt(2, 3))
     {
       Boolean OK;
       Byte Page = EvalIntExpression(ArgStr[ArgCnt], UInt8, &OK);
@@ -1211,9 +1210,8 @@ static void DecodePCALL(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt < 1) WrError(1110);
-  else if (MomCPU != CPU6812X) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && ChkMinCPU(CPU6812X))
   {
     Addr = EvalIntExpression(ArgStr[1], UInt24, &OK);
     if (OK)
@@ -1245,7 +1243,7 @@ static void DecodeBrBit(Word Index)
     Try2Split(2);
   }
 
-  if ((ArgCnt < 3) || (ArgCnt > 4)) WrError(1110);
+  if (!ChkArgCnt(3, 4));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -1294,7 +1292,7 @@ static void DecodeTRAP(Word Index)
 
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -1322,8 +1320,8 @@ static void DecodeBTAS(Word Index)
 {
   UNUSED(Index);
 
-  if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
-  else if (MomCPU < CPU6812X) WrError(1500); 
+  if (!ChkArgCnt(2, 3));
+  else if (!ChkMinCPU(CPU6812X)); 
   else if (*AttrPart != '\0') WrError(1100);
   else
   {

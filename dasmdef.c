@@ -6,13 +6,20 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "stdinc.h"
 #include "dasmdef.h"
 
 tCodeChunkList CodeChunks;
-ChunkList UsedChunks;
+ChunkList UsedCodeChunks, UsedDataChunks;
+
+void(*Disassemble)(LargeWord Address, tDisassInfo *pInfo, Boolean IsData, int DataSize);
+
+FILE *Debug;
 
 void dasmdef_init(void)
 {
   InitCodeChunkList(&CodeChunks);
-  InitChunk(&UsedChunks);
+  InitChunk(&UsedDataChunks);
+  InitChunk(&UsedCodeChunks);
+  Disassemble = NULL;
 }

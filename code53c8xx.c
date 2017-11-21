@@ -27,6 +27,9 @@
 #include "strutil.h"
 #include "codevars.h"
 #include "intconsts.h"
+#include "errmsg.h"
+
+#include "code53c8xx.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -327,8 +330,7 @@ static CompType DecodeComp(char *Inp, LongWord *Outp)
 
 static void DecodeFixed(Word Index)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     DAsmCode[0] = ((LongWord) Index) << 24;
     DAsmCode[1] = 0x00000000;
@@ -356,8 +358,7 @@ static void DecodeJmps(Word Index)
       *ArgStr[1] = '\0';
     }
   }
-  if ((ArgCnt != 2) && (ArgCnt!= 1)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 2))
   {
     if (ArgCnt == 1)
     {
@@ -415,9 +416,8 @@ static void DecodeCHMOV(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if ((MomCPU != CPU53C825) && (MomCPU != CPU53C875) && (MomCPU != CPU53C895)) WrError(1500);
-  else if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
-  else
+  if ((ChkExactCPUList(0, CPU53C825, CPU53C875, CPU53C895, CPUNone) >= 0)
+   && ChkArgCnt(2, 3))
   {
     GetToken(ArgStr[ArgCnt], Token);
     if (!strcasecmp(Token, "WITH"))
@@ -476,8 +476,7 @@ static void DecodeFlags(Word Index)
   Boolean OK;
   String Token;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     OK = True;
     DAsmCode[0] = ((LongWord) Index) << 24;
@@ -518,8 +517,8 @@ static void DecodeRegTrans(Word Index)
   LongWord Reg, Cnt;
   Boolean OK;
 
-  if (ArgCnt != 3) WrError(1110);
-  else if (MomCPU == CPU53C815) WrError(1500);
+  if (!ChkArgCnt(3, 3));
+  else if (!ChkExcludeCPU(CPU53C815));
   else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -546,16 +545,17 @@ static void DecodeRegTrans(Word Index)
 
 static void DecodeMOVE(Word Index)
 {
-  Boolean WithCarry, BigCPU;
+  Boolean WithCarry;
   String Token;
   LongWord Tmp, DReg , AriOp = 0xff, ImmVal = 0x100;
   String Parts[8];
   Boolean OK;
   UNUSED(Index);
+  Word BigCPUMask = (1 << (CPU53C825 - CPU53C810))
+                  | (1 << (CPU53C875 - CPU53C810))
+                  | (1 << (CPU53C895 - CPU53C810));
 
-  BigCPU = (MomCPU == CPU53C825) || (MomCPU == CPU53C875) || (MomCPU == CPU53C895);
-
-  if ((ArgCnt > 3) || (ArgCnt < 1)) WrError(1110);
+  if (!ChkArgCnt(1, 3));
   else if (ArgCnt == 1) /* MOVE Register */
   {
     ArgCnt = 0;
@@ -704,8 +704,7 @@ static void DecodeMOVE(Word Index)
                     case SFBR:
                       ImmVal = 8;
                     case REGISTER:
-                      if (!BigCPU) WrError(1500);
-                      else
+                      if (ChkExactCPUMask(BigCPUMask, CPU53C810) >= 0)
                       {
                         DAsmCode[0] |= 0x28800000 + (ImmVal << 16);
                         CodeLen = 8;
@@ -741,8 +740,7 @@ static void DecodeMOVE(Word Index)
                   switch (DecodeComp(Parts[4], &ImmVal))
                   {
                     case SFBR:
-                      if (!BigCPU) WrError(1500);
-                      else
+                      if (ChkExactCPUMask(BigCPUMask, CPU53C810) >= 0)
                       {
                         DAsmCode[0] |= 0x30800000;
                         CodeLen = 8;
@@ -750,8 +748,7 @@ static void DecodeMOVE(Word Index)
                       break;
                     case REGISTER:
                       if (DReg != ImmVal) WrError(1350);
-                      else if (!BigCPU) WrError(1500);
-                      else
+                      else if (ChkExactCPUMask(BigCPUMask, CPU53C810) >= 0)
                       {
                         DAsmCode[0] |= 0x38800000;
                         CodeLen = 8;
@@ -875,8 +872,6 @@ static void DecodeMOVE(Word Index)
       }
     }
   }
-  else
-    WrError(1110);
 }
 
 static void DecodeSELECT(Word MayATN)
@@ -885,8 +880,7 @@ static void DecodeSELECT(Word MayATN)
   LongInt Dist;
   int l;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DAsmCode[0] = 0x40000000;
     OK = True;
@@ -939,8 +933,7 @@ static void DecodeWAIT(Word Index)
   LongInt Dist;
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     GetToken(ArgStr[1], Token);
     KillPrefBlanks(ArgStr[1]);

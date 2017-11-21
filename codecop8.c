@@ -52,6 +52,9 @@
 #include "intpseudo.h"
 #include "natpseudo.h"
 #include "codevars.h"
+#include "errmsg.h"
+
+#include "codecop8.h"
 
 #define ModNone (-1)
 #define ModAcc 0
@@ -137,8 +140,7 @@ chk:
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     BAsmCode[0] = Code;
     CodeLen = 1;
@@ -151,8 +153,7 @@ static void DecodeLD(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc | MModDir | MModBInd | MModBInc | MModBDec);
     switch (AdrMode)
@@ -266,8 +267,7 @@ static void DecodeX(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     char *pAccArg, *pMemArg;
 
@@ -323,8 +323,7 @@ static void DecodeX(Word Code)
 
 static void DecodeAcc(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModAcc);
     if (AdrMode != ModNone)
@@ -337,8 +336,7 @@ static void DecodeAcc(Word Code)
 
 static void DecodeAccMem(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc);
     if (AdrMode != ModNone)
@@ -370,8 +368,7 @@ static void DecodeANDSZ(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc);
     if (AdrMode != ModNone)
@@ -391,8 +388,7 @@ static void DecodeIFEQ(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc | MModDir);
     switch (AdrMode)
@@ -436,8 +432,7 @@ static void DecodeIFNE(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc);
     switch (AdrMode)
@@ -471,7 +466,7 @@ static void DecodeIFBNE(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (*ArgStr[1] != '#') WrError(1350);
   else
   {
@@ -488,8 +483,7 @@ static void DecodeIFBNE(Word Code)
 
 static void DecodeBit(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     Boolean OK;
 
@@ -516,8 +510,7 @@ static void DecodeBit(Word Code)
 
 static void DecodeJMP_JSR(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
 
@@ -538,8 +531,7 @@ static void DecodeJMP_JSR(Word Code)
 
 static void DecodeJMPL_JSRL(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
 
@@ -559,8 +551,7 @@ static void DecodeJP(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
 
@@ -588,8 +579,7 @@ static void DecodeDRSZ(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
     DecodeAdr(ArgStr[1], MModDir);

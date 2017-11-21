@@ -94,6 +94,9 @@
 #include "codevars.h"
 #include "fileformat.h"
 #include "intconsts.h"
+#include "errmsg.h"
+
+#include "code51.h"
 
 /*-------------------------------------------------------------------------*/
 /* Daten */
@@ -540,7 +543,10 @@ static void DecodeAdr(char *Asc_O, Word Mask)
 chk:
   if ((AdrMode != ModNone) && ((Mask & (1 << AdrMode)) == 0))
   {
-    WrError((ExtMask & (1 << AdrMode)) ? 1505 : 1350);
+    if (ExtMask & (1 << AdrMode))
+      (void)ChkMinCPUExt(CPU80251, ErrNum_AddrModeNotSupported);
+    else
+      WrError(1350);
     AdrCnt = 0;
     AdrMode = ModNone;
   }
@@ -690,7 +696,7 @@ static void DecodeMOV(Word Index)
   Integer AdrInt;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (IsCarry(ArgStr[1]))
   {
     switch (DecodeBitAdr(ArgStr[2], &AdrLong, True))
@@ -751,8 +757,7 @@ static void DecodeMOV(Word Index)
           case ModReg:
             if ((AdrPart < 8) && (!SrcMode))
               PutCode(0xe8 + AdrPart);
-            else if (MomCPU < CPU80251) WrError(1505);
-            else
+            else if (ChkMinCPUExt(CPU80251, ErrNum_AddrModeNotSupported))
             {
               PutCode(0x17c);
               BAsmCode[CodeLen++] = (AccReg << 4) + AdrPart;
@@ -800,8 +805,7 @@ static void DecodeMOV(Word Index)
               PutCode(0xf8 + HReg);
             else if ((OpSize == 0) && (HReg == AccReg) && (AdrPart < 8))
               PutCode(0xe8 + AdrPart);
-            else if (MomCPU < CPU80251) WrError(1505);
-            else             
+            else if (ChkMinCPUExt(CPU80251, ErrNum_AddrModeNotSupported))
             {
               PutCode(0x17c + OpSize); 
               if (OpSize == 2)
@@ -853,8 +857,7 @@ static void DecodeMOV(Word Index)
               TransferAdrRelocs(CodeLen);
               BAsmCode[CodeLen++] = AdrVals[0];
             }
-            else if (MomCPU < CPU80251) WrError(1505);
-            else
+            else if (ChkMinCPUExt(CPU80251, ErrNum_AddrModeNotSupported))
             {
               PutCode(0x17e);
               BAsmCode[CodeLen++] = 0x01 + (HReg << 4) + (OpSize << 2);
@@ -885,8 +888,7 @@ static void DecodeMOV(Word Index)
               TransferAdrRelocs(CodeLen);
               BAsmCode[CodeLen++] = AdrVals[0];
             }
-            else if (MomCPU < CPU80251) WrError(1505);
-            else
+            else if (ChkMinCPUExt(CPU80251, ErrNum_AddrModeNotSupported))
             {
               PutCode(0x17e);
               BAsmCode[CodeLen++] = (HReg << 4) + (OpSize << 2);
@@ -982,8 +984,7 @@ static void DecodeMOV(Word Index)
               TransferBackupAdrRelocs(CodeLen);
               BAsmCode[CodeLen++] = HReg;
             }
-            else if (MomCPU < CPU80251) WrError(1505);
-            else
+            else if (ChkMinCPUExt(CPU80251, ErrNum_AddrModeNotSupported))
             {
               PutCode(0x17a);
               BAsmCode[CodeLen++] = 0x01 + (AdrPart << 4) + (OpSize << 2);
@@ -1039,7 +1040,7 @@ static void DecodeLogic(Word Index)
 
   /* Index: ORL=0 ANL=1 XRL=2 */
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (IsCarry(ArgStr[1]))
   {
     if (Index == 2) WrError(1350);
@@ -1214,8 +1215,7 @@ static void DecodeMOVC(Word Index)
 {
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc);
     switch (AdrMode)
@@ -1237,9 +1237,8 @@ static void DecodeMOVH(Word Index)
   Byte HReg;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPU80251) WrError(1500);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkMinCPU(CPU80251))
   {
     DecodeAdr(ArgStr[1], MModReg);
     switch (AdrMode)
@@ -1274,9 +1273,8 @@ static void DecodeMOVZS(Word Index)
   UNUSED(Index);
 
   z = Ord(Memo("MOVS")) << 4;
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPU80251) WrError(1500);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkMinCPU(CPU80251))
   {
     DecodeAdr(ArgStr[1], MModReg);
     switch (AdrMode)
@@ -1306,8 +1304,7 @@ static void DecodeMOVX(Word Index)
   int z;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     z = 0;
     if ((!strcasecmp(ArgStr[2], "A")) || ((MomCPU >= CPU80251) && (!strcasecmp(ArgStr[2], "R11"))))
@@ -1339,8 +1336,7 @@ static void DecodeStack(Word Index)
   /* Index: PUSH=0 POP=1 PUSHW=2 */
 
   z = (Index & 1) << 4;
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     if (*ArgStr[1] == '#')
       SetOpSize(Ord(Index == 2));
@@ -1353,16 +1349,14 @@ static void DecodeStack(Word Index)
         BAsmCode[CodeLen++] = AdrVals[0];
         break;
       case ModReg:
-        if (MomCPU < CPU80251) WrError(1505);
-        else
+        if (ChkMinCPUExt(CPU80251, ErrNum_AddrModeNotSupported))
         {
           PutCode(0x1ca + z);
           BAsmCode[CodeLen++] = 0x08 + (AdrPart << 4) + OpSize + (Ord(OpSize == 2));
         }
         break;
       case ModImm:
-        if (MomCPU < CPU80251) WrError(1505);
-        else
+        if (ChkMinCPUExt(CPU80251, ErrNum_AddrModeNotSupported))
         {
           PutCode(0x1ca);
           BAsmCode[CodeLen++] = 0x02 + (OpSize << 2);
@@ -1380,8 +1374,7 @@ static void DecodeXCH(Word Index)
   Byte HReg;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc | MModReg | MModIReg8 | MModDir8);
     switch (AdrMode)
@@ -1450,8 +1443,7 @@ static void DecodeXCHD(Word Index)
   Byte HReg;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc | MModIReg8);
     switch (AdrMode)
@@ -1489,8 +1481,7 @@ static void DecodeABranch(Word Index)
 
   /* Index: AJMP = 0 ACALL = 1 */
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     AdrLong = EvalIntExpression(ArgStr[1], Int24, &OK);
     if (OK)
@@ -1529,8 +1520,8 @@ static void DecodeLBranch(Word Index)
 
   /* Index: LJMP=0 LCALL=1 */
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < CPU8051) WrError(1500);
+  if (!ChkArgCnt(1, 1));
+  else if (!ChkMinCPU(CPU8051));
   else if (*ArgStr[1] == '@')
   {
     DecodeAdr(ArgStr[1], MModIReg);
@@ -1583,8 +1574,8 @@ static void DecodeEBranch(Word Index)
 
   /* Index: AJMP=0 ACALL=1 */
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < CPU80251) WrError(1500);
+  if (!ChkArgCnt(1, 1));
+  else if (!ChkMinCPU(CPU80251));
   else if (*ArgStr[1] == '@')
   {
     DecodeAdr(ArgStr[1], MModIReg);
@@ -1620,7 +1611,7 @@ static void DecodeJMP(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!strcasecmp(ArgStr[1], "@A+DPTR"))
     PutCode(0x73);
   else if (*ArgStr[1] == '@')
@@ -1675,7 +1666,7 @@ static void DecodeCALL(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-    if (ArgCnt != 1) WrError(1110);
+    if (!ChkArgCnt(1, 1));
     else if (*ArgStr[1] == '@')
     {
       DecodeAdr(ArgStr[1], MModIReg);
@@ -1715,8 +1706,7 @@ static void DecodeDJNZ(Word Index)
   Boolean OK, Questionable;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     AdrLong = EvalIntExpression(ArgStr[2], UInt24, &OK);
     SubPCRefReloc();
@@ -1762,8 +1752,7 @@ static void DecodeCJNE(Word Index)
   Byte HReg;
   UNUSED(Index);
 
-  if (ArgCnt != 3) WrError(1110);
-  else
+  if (ChkArgCnt(3, 3))
   {
     AdrLong = EvalIntExpression(ArgStr[3], UInt24, &OK);
     SubPCRefReloc();
@@ -1851,8 +1840,7 @@ static void DecodeADD(Word Index)
   Byte HReg;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc | MModReg);
     switch (AdrMode)
@@ -1887,8 +1875,7 @@ static void DecodeADD(Word Index)
             break;
           case ModReg:
             if ((AdrPart < 8) && (!SrcMode)) PutCode(0x28 + AdrPart);
-            else if (MomCPU < CPU80251) WrError(1505);
-            else
+            else if (ChkMinCPUExt(CPU80251, ErrNum_AddrModeNotSupported))
             {
               PutCode(0x12c);
               BAsmCode[CodeLen++] = AdrPart + (AccReg << 4);
@@ -1897,8 +1884,7 @@ static void DecodeADD(Word Index)
         }
         break;
       case ModReg:
-        if (MomCPU < CPU80251) WrError(1505);
-        else
+        if (ChkMinCPUExt(CPU80251, ErrNum_AddrModeNotSupported))
         {
           HReg = AdrPart;
           DecodeAdr(ArgStr[2], MModImm | MModReg | MModDir8 | MModDir16 | MModIReg8 | MModIReg);
@@ -1977,9 +1963,8 @@ static void DecodeSUBCMP(Word Index)
   /* Index: SUB=0 CMP=1 */
 
   z = 0x90 + (Index << 5);
-  if (ArgCnt != 2) WrError(1110);
-  else if (MomCPU < CPU80251) WrError(1500);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkMinCPU(CPU80251))
   {
     DecodeAdr(ArgStr[1], MModReg);
     switch (AdrMode)
@@ -2050,8 +2035,7 @@ static void DecodeADDCSUBB(Word Index)
 
   /* Index: ADDC=0 SUBB=1 */
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModAcc);
     switch (AdrMode)
@@ -2095,7 +2079,7 @@ static void DecodeINCDEC(Word Index)
   /* Index: INC=0 DEC=1 */
 
   z = Index << 4;
-  if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
+  if (!ChkArgCnt(1, 2));
   else if (*pArg2 != '#') WrError(1350);
   else
   {
@@ -2142,8 +2126,7 @@ static void DecodeINCDEC(Word Index)
               PutCode(0x04 + z);
             else if ((AdrPart < 8) && (OpSize == 0) && (HReg == 0) && (!SrcMode))
               PutCode(0x08 + z + AdrPart);
-            else if (MomCPU < CPU80251) WrError(1505);
-            else
+            else if (ChkMinCPUExt(CPU80251, ErrNum_AddrModeNotSupported))
             {
               PutCode(0x10b + z);
               BAsmCode[CodeLen++] = (AdrPart << 4) + (OpSize << 2) + HReg;
@@ -2179,7 +2162,7 @@ static void DecodeMULDIV(Word Index)
   /* Index: DIV=0 MUL=1 */
 
   z = Index << 5;
-  if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
+  if (!ChkArgCnt(1, 2));
   else if (ArgCnt == 1) 
   {
     if (strcasecmp(ArgStr[1], "AB")) WrError(1350);
@@ -2197,7 +2180,7 @@ static void DecodeMULDIV(Word Index)
         switch (AdrMode)
         {
           case ModReg:
-            if (MomCPU < CPU80251) WrError(1505);
+            if (!ChkMinCPUExt(CPU80251, ErrNum_AddrModeNotSupported));
             else if (OpSize == 2) WrError(1350);
             else
             {
@@ -2219,7 +2202,7 @@ static void DecodeBits(Word Index)
   /* Index: CPL=0 CLR=1 SETB=2 */
 
   z = Index << 4;
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (!strcasecmp(ArgStr[1], "A"))
   {
     if (Memo("SETB")) WrError(1350);
@@ -2249,9 +2232,8 @@ static void DecodeShift(Word Index)
 
   /* Index: SRA=0 SRL=1 SLL=3 */
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < CPU80251) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && ChkMinCPU(CPU80251))
   {
     z = Index << 4;
     DecodeAdr(ArgStr[1], MModReg);
@@ -2275,9 +2257,8 @@ static void DecodeCond(Word Index)
   LongInt AdrLong;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < FixedZ->MinCPU) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && ChkMinCPU(FixedZ->MinCPU))
   {
     AdrLong = EvalIntExpression(ArgStr[1], UInt24, &OK);
     SubPCRefReloc();
@@ -2301,8 +2282,7 @@ static void DecodeBCond(Word Index)
   LongInt AdrLong, BitLong;
   Boolean OK, Questionable;
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     AdrLong = EvalIntExpression(ArgStr[2], UInt24, &OK);
     SubPCRefReloc();
@@ -2342,9 +2322,8 @@ static void DecodeAcc(Word Index)
 {
   FixedOrder *FixedZ = AccOrders + Index;
 
-  if (ArgCnt != 1) WrError(1110);
-  else if (MomCPU < FixedZ->MinCPU) WrError(1500);
-  else
+  if (ChkArgCnt(1, 1)
+   && ChkMinCPU(FixedZ->MinCPU))
   {
     DecodeAdr(ArgStr[1], MModAcc);
     switch (AdrMode)
@@ -2360,9 +2339,8 @@ static void DecodeFixed(Word Index)
 {
   FixedOrder *FixedZ = FixedOrders + Index;
 
-  if (ArgCnt != 0) WrError(1110);
-  else if (MomCPU < FixedZ->MinCPU) WrError(1500);
-  else
+  if (ChkArgCnt(0, 0)
+   && ChkMinCPU(FixedZ->MinCPU))
     PutCode(FixedZ->Code);
 }
 
@@ -2375,8 +2353,8 @@ static void DecodeSFR(Word Index)
   UNUSED(Index);
 
   FirstPassUnknown = False;
-  if (ArgCnt != 1) WrError(1110);
-  else if ((Memo("SFRB")) && (MomCPU >= CPU80251)) WrError(1500);
+  if (!ChkArgCnt(1, 1));
+  else if (Memo("SFRB") && !ChkMaxCPU(CPU80C390));
   else
   {
     AdrByte = EvalIntExpression(ArgStr[1], (MomCPU >= CPU80251) ? UInt9 : UInt8, &OK);
@@ -2420,7 +2398,7 @@ static void DecodeBIT(Word Index)
   LongInt AdrLong;
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
+  if (!ChkArgCnt(1, 1));
   else if (MomCPU >= CPU80251)
   {
     if (DecodeBitAdr(ArgStr[1], &AdrLong, False) == ModBit251)
@@ -2454,8 +2432,7 @@ static void DecodePORT(Word Index)
 {
   UNUSED(Index);
 
-  if (MomCPU < CPU80251) WrError(1500);
-  else
+  if (ChkMinCPU(CPU80251));
     CodeEquate(SegIO, 0, 0x1ff);
 }
 
@@ -2463,8 +2440,7 @@ static void DecodeREG(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
     AddRegDef(LabPart, ArgStr[1]);
 }
 

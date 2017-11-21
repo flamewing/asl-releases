@@ -366,10 +366,13 @@
 #include "stringlists.h"
 #include "cmdarg.h"
 #include "asmitree.h"
+#include "trees.h"
 #include "chunks.h"
 #include "asminclist.h"
 #include "asmfnums.h"
 #include "asmdef.h"
+#include "cpulist.h"
+#include "errmsg.h"
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmmac.h"
@@ -541,7 +544,7 @@ static PInputTag GenerateProcessor(void)
   return PInp;
 }
 
-static POutputTag GenerateOUTProcessor(SimpProc Processor)
+static POutputTag GenerateOUTProcessor(SimpProc Processor, tErrorNum OpenErrMsg)
 {
   POutputTag POut;
 
@@ -559,6 +562,7 @@ static POutputTag GenerateOUTProcessor(SimpProc Processor)
   POut->UsesNumArgs =
   POut->UsesAllArgs = False;
   *POut->GName = '\0';
+  POut->OpenErrMsg = OpenErrMsg;
 
   return POut;
 }
@@ -831,7 +835,7 @@ static void AddWaitENDM_Processor(void)
 {
   POutputTag Neu;
 
-  Neu = GenerateOUTProcessor(WaitENDM_Processor);
+  Neu = GenerateOUTProcessor(WaitENDM_Processor, ErrNum_OpenMacro);
   Neu->Next = FirstOutputTag;
   FirstOutputTag = Neu;
 }
@@ -910,13 +914,13 @@ static void MACRO_OutProcessor(void)
     /* reserved argument names are never case-sensitive */
 
     if (HasAttrs)
-      CompressLine(AttrName, ParMax + 1, s, FALSE);
-    if (CompressLine(ArgCName, ParMax + 2, s, FALSE) > 0)
+      CompressLine(AttrName, ArgCntMax + 1, s, FALSE);
+    if (CompressLine(ArgCName, ArgCntMax + 2, s, FALSE) > 0)
       FirstOutputTag->UsesNumArgs = TRUE;
-    if (CompressLine(AllArgName, ParMax + 3, s, FALSE) > 0)
+    if (CompressLine(AllArgName, ArgCntMax + 3, s, FALSE) > 0)
       FirstOutputTag->UsesAllArgs = TRUE;
     if (FirstOutputTag->Mac->LocIntLabel)
-      CompressLine(LabelName, ParMax + 4, s, FALSE);
+      CompressLine(LabelName, ArgCntMax + 4, s, FALSE);
 
     AddStringListLast(&(FirstOutputTag->Mac->FirstLine), s);
   }
@@ -990,13 +994,13 @@ Boolean MACRO_Processor(PInputTag PInp, char *erg)
   /* process special parameters */
 
   if (HasAttrs)
-    ExpandLine(PInp->SaveAttr, ParMax + 1, erg);
+    ExpandLine(PInp->SaveAttr, ArgCntMax + 1, erg);
   if (PInp->UsesNumArgs)
-    ExpandLine(PInp->NumArgs, ParMax + 2, erg);
+    ExpandLine(PInp->NumArgs, ArgCntMax + 2, erg);
   if (PInp->UsesAllArgs)
-    ExpandLine(PInp->AllArgs, ParMax + 3, erg);
+    ExpandLine(PInp->AllArgs, ArgCntMax + 3, erg);
   if (PInp->Macro->LocIntLabel)
-    ExpandLine(PInp->SaveLabel, ParMax + 4, erg);
+    ExpandLine(PInp->SaveLabel, ArgCntMax + 4, erg);
 
   CurrLine = PInp->StartLine;
   InMacroFlag = True;
@@ -1180,7 +1184,7 @@ static void ReadMacro(void)
 
   /* create tag */
 
-  Context.pOutputTag = GenerateOUTProcessor(MACRO_OutProcessor);
+  Context.pOutputTag = GenerateOUTProcessor(MACRO_OutProcessor, ErrNum_OpenMacro);
   Context.pOutputTag->Next = FirstOutputTag;
 
   /* check arguments, sort out control directives */
@@ -1467,7 +1471,7 @@ static void ExpandEXITM(void)
 {
   WasMACRO = True;
 
-  if (ArgCnt != 0) WrError(1110);
+  if (!ChkArgCnt(0, 0));
   else if (!FirstInputTag) WrError(1805);
   else if (!FirstInputTag->IsMacro) WrError(1805);
   else if (IfAsm)
@@ -1487,7 +1491,7 @@ static void ExpandSHIFT(void)
 
   WasMACRO = True;
 
-  if (ArgCnt != 0) WrError(1110);
+  if (!ChkArgCnt(0, 0));
   else if (!FirstInputTag) WrError(1805);
   else if (!FirstInputTag->IsMacro) WrError(1805);
   else if (IfAsm)
@@ -1749,17 +1753,14 @@ static void ExpandIRP(void)
   Context.ArgCnt = 0;
   Context.Params = NULL;
 
-  Context.pOutputTag = GenerateOUTProcessor(IRP_OutProcessor);
+  Context.pOutputTag = GenerateOUTProcessor(IRP_OutProcessor, ErrNum_OpenIRP);
   Context.pOutputTag->Next      = FirstOutputTag;
   ProcessMacroArgs(ProcessIRPArgs, &Context);
 
   /* at least parameter & one arg */
 
-  if (Context.ArgCnt < 2)
-  {
-    WrError(1110);
+  if (!ChkArgCntExt(Context.ArgCnt, 2, ArgCntMax))
     Context.ErrFlag = True;
-  }
   if (Context.ErrFlag)
   {
     ClearStringList(&(Context.pOutputTag->ParamNames));
@@ -1915,17 +1916,14 @@ static void ExpandIRPC(void)
   Context.GlobalSymbols = False;
   Context.ArgCnt = 0;
 
-  Context.pOutputTag = GenerateOUTProcessor(IRP_OutProcessor);
+  Context.pOutputTag = GenerateOUTProcessor(IRP_OutProcessor, ErrNum_OpenIRPC);
   Context.pOutputTag->Next = FirstOutputTag;
   ProcessMacroArgs(ProcessIRPCArgs, &Context);
 
   /* parameter & string */
 
-  if (Context.ArgCnt != 2)
-  {
-    WrError(1110);
+  if (!ChkArgCntExt(Context.ArgCnt, 2, ArgCntMax))
     Context.ErrFlag = True;
-  }
   if (Context.ErrFlag)
   {
     ClearStringList(&(Context.pOutputTag->ParamNames));
@@ -2119,11 +2117,8 @@ static void ExpandREPT(void)
 
   /* rept count must be present only once */
 
-  if (Context.ArgCnt != 1)
-  {
-    WrError(1110);
+  if (!ChkArgCntExt(Context.ArgCnt, 1, 1))
     Context.ErrFlag = True;
-  }
   if (Context.ErrFlag)
   {
     AddWaitENDM_Processor();
@@ -2144,7 +2139,7 @@ static void ExpandREPT(void)
 
   /* 3. einbetten */
 
-  Neu = GenerateOUTProcessor(REPT_OutProcessor);
+  Neu = GenerateOUTProcessor(REPT_OutProcessor, ErrNum_OpenREPT);
   Neu->Next      = FirstOutputTag;
   Neu->Tag       = Tag;
   FirstOutputTag = Neu;
@@ -2334,11 +2329,8 @@ static void ExpandWHILE(void)
 
   /* condition must be present only once */
 
-  if (Context.ArgCnt != 1)
-  {
-    WrError(1110);
+  if (!ChkArgCntExt(Context.ArgCnt, 1, 1))
     Context.ErrFlag = True;
-  }
   if (Context.ErrFlag)
   {
     AddWaitENDM_Processor();
@@ -2359,7 +2351,7 @@ static void ExpandWHILE(void)
 
   /* 3. einbetten */
 
-  Neu = GenerateOUTProcessor(WHILE_OutProcessor);
+  Neu = GenerateOUTProcessor(WHILE_OutProcessor, ErrNum_OpenWHILE);
   Neu->Next      = FirstOutputTag;
   Neu->Tag       = Tag;
   FirstOutputTag = Neu;
@@ -2425,26 +2417,24 @@ static void INCLUDE_Restorer(PInputTag PInp)
 
 static void ExpandINCLUDE(Boolean SearchPath)
 {
+  String FileName;
   PInputTag Tag;
 
   if (!IfAsm)
     return;
 
-  if (ArgCnt != 1)
-  {
-    WrError(1110);
+  if (!ChkArgCnt(1, 1))
     return;
-  }
 
-  strmaxcpy(ArgPart, (*ArgStr[1] == '"') ? (ArgStr[1] + 1) : ArgStr[1], 255);
-  if ((*ArgPart) && (ArgPart[strlen(ArgPart) - 1] == '"'))
-    ArgPart[strlen(ArgPart) - 1] = '\0';
-  AddSuffix(ArgPart, IncSuffix); strmaxcpy(ArgStr[1], ArgPart, 255);
+  strmaxcpy(FileName, (*ArgStr[1] == '"') ? (ArgStr[1] + 1) : ArgStr[1], 255);
+  if ((*FileName) && (FileName[strlen(FileName) - 1] == '"'))
+    FileName[strlen(FileName) - 1] = '\0';
+  AddSuffix(FileName, IncSuffix); strmaxcpy(ArgStr[1], FileName, 255);
   if (SearchPath)
   {
-    strmaxcpy(ArgPart, FExpand(FSearch(ArgPart, IncludeList)), 255);
-    if ((*ArgPart) && (ArgPart[strlen(ArgPart) - 1] == '/'))
-      strmaxcat(ArgPart, ArgStr[1], 255);
+    strmaxcpy(FileName, FExpand(FSearch(FileName, IncludeList)), 255);
+    if ((*FileName) && (FileName[strlen(FileName) - 1] == '/'))
+      strmaxcat(FileName, ArgStr[1], 255);
   }
 
   /* Tag erzeugen */
@@ -2459,23 +2449,23 @@ static void ExpandINCLUDE(Boolean SearchPath)
   /* Sicherung alter Daten */
 
   Tag->StartLine = MomLineCounter;
-  strmaxcpy(Tag->SpecName, ArgPart, 255);
+  strmaxcpy(Tag->SpecName, FileName, 255);
   strmaxcpy(Tag->SaveAttr, CurrFileName, 255);
 
   /* Datei oeffnen */
 
 #ifdef __CYGWIN32__
-  DeCygwinPath(ArgPart);
+  DeCygwinPath(FileName);
 #endif
-  Tag->Datei = fopen(ArgPart, "r");
-  if (!Tag->Datei) ChkXIO(10001, ArgPart);
+  Tag->Datei = fopen(FileName, "r");
+  if (!Tag->Datei) ChkXIO(10001, ArgStr[1]);
   setvbuf(Tag->Datei, Tag->Buffer, _IOFBF, BufferArraySize);
 
   /* neu besetzen */
 
-  strmaxcpy(CurrFileName, ArgPart, 255); Tag->LineZ = MomLineCounter = 0;
-  NextIncDepth++; AddFile(ArgPart);
-  PushInclude(ArgPart);
+  strmaxcpy(CurrFileName, FileName, 255); Tag->LineZ = MomLineCounter = 0;
+  NextIncDepth++; AddFile(FileName);
+  PushInclude(FileName);
 
   /* einhaengen */
 
@@ -3042,11 +3032,11 @@ static void SplitLine(void)
         *i = '\0';
       strcpy(ArgStr[++ArgCnt], run);
       KillPostBlanks(ArgStr[ArgCnt]);
-      if ((lpos) && (ArgCnt != ParMax))
+      if ((lpos) && (ArgCnt != ArgCntMax))
         *ArgStr[++ArgCnt] = '\0';
       run = !i ? i : i + 1;
     }
-    while ((run) && (ArgCnt != ParMax) && (!lpos));
+    while ((run) && (ArgCnt != ArgCntMax) && (!lpos));
 
   if ((run) && (*run != '\0')) WrError(1140);
 
@@ -3129,7 +3119,9 @@ static void ProcessFile(String FileName)
   /* irgendeine Makrodefinition nicht abgeschlossen ? */
 
   if (FirstOutputTag)
-    WrError(1800);
+  {
+    WrError(FirstOutputTag->OpenErrMsg);
+  }
 
   dbgexit("ProcessFile");
 }
@@ -3235,6 +3227,10 @@ static void AssembleFile_InitPass(void)
   CurrTransTable->Table = (unsigned char *) malloc(256 * sizeof(char));
   for (z = 0; z < 256; z++)
     CurrTransTable->Table[z] = z;
+
+  EnumSegment = SegNone;
+  EnumIncrement = 1;
+  EnumCurrentValue = 0;
 
   strmaxcpy(CurrFileName, "INTERNAL", 255);
   AddFile(CurrFileName);
@@ -3919,7 +3915,7 @@ static CMDResult CMD_BalanceTree(Boolean Negate, const char *Arg)
 {
   UNUSED(Arg);
 
-  BalanceTree = !Negate;
+  BalanceTrees = !Negate;
   return CMDOK;
 }
 
@@ -4478,7 +4474,6 @@ int main(int argc, char **argv)
     bpemu_init();
     stdhandl_init();
     strutil_init();
-    stringlists_init();
     chunks_init();
     NLS_Initialize();
 
@@ -4491,6 +4486,7 @@ int main(int argc, char **argv)
     asmitree_init();
 
     asmdef_init();
+    cpulist_init();
     asmsub_init();
     asmpars_init();
 

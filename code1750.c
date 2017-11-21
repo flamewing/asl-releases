@@ -39,6 +39,7 @@
 #include "codevars.h"
 #include "headids.h"
 #include "endian.h"
+#include "errmsg.h"
 
 #include "code1750.h"
 
@@ -233,8 +234,7 @@ static Boolean DecodeXIOCmd(const char *pAsc, Word *pResult)
 
 static void DecodeNone(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
     PutCode(Code);
 }
 
@@ -242,7 +242,7 @@ static void DecodeR(Word Code)
 {
   Word Ra, Rb;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &Ra)) WrXError(1445, ArgStr[1]);
   else if (!DecodeReg(ArgStr[2], &Rb)) WrXError(1445, ArgStr[2]);
   else
@@ -254,7 +254,7 @@ static void DecodeRImm(Word Code)
   Word N, Rb;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[2], &Rb)) WrXError(1445, ArgStr[2]);
   else
   {
@@ -269,7 +269,7 @@ static void DecodeIS(Word Code)
   Word N, Ra;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &Ra)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -286,7 +286,7 @@ static void DecodeMem(Word Code)
 {
   Word Ra;
 
-  if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
+  if (!ChkArgCnt(2, 3));
   else if (!DecodeReg(ArgStr[1], &Ra)) WrXError(1445, ArgStr[1]);
   else if (!DecodeAdr(2, ArgCnt)) WrError(1350);
   else
@@ -300,7 +300,7 @@ static void DecodeImOcx(Word Code)
 {
   Word Ra;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &Ra)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -319,7 +319,7 @@ static void DecodeB(Word Code)
 {
   Word Br;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeBaseReg(ArgStr[1], &Br)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -335,7 +335,7 @@ static void DecodeBX(Word Code)
 {
   Word Br, Rx;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeBaseReg(ArgStr[1], &Br)) WrXError(1445, ArgStr[1]);
   else if (!DecodeReg(ArgStr[2], &Rx)) WrXError(1445, ArgStr[2]);
   else if (0 == Rx) WrXError(1350, "!R0");
@@ -345,8 +345,7 @@ static void DecodeBX(Word Code)
 
 static void DecodeICR(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     LargeInt Diff = EvalIntExpression(ArgStr[1], UInt16, &OK) - EProgCounter();
@@ -362,8 +361,7 @@ static void DecodeICR(Word Code)
 
 static void DecodeS(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean OK;
     Word Value = EvalIntExpression(ArgStr[1], UInt4, &OK);
@@ -375,7 +373,7 @@ static void DecodeS(Word Code)
 
 static void DecodeIM1_16(Word Code)
 {
-  if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
+  if (!ChkArgCnt(2, 3));
   else if (!DecodeAdr(2, ArgCnt)) WrError(1350);
   else
   {
@@ -399,7 +397,7 @@ static void DecodeXMem(Word Code)
 {
   Word Ra;
 
-  if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
+  if (!ChkArgCnt(2, 3));
   else if (!DecodeReg(ArgStr[1], &Ra)) WrXError(1445, ArgStr[1]);
   else if (DecodeAdr(2, ArgCnt))
   {
@@ -413,7 +411,7 @@ static void DecodeImmR(Word Code)
   Word Rb, N;
   Boolean OK;
 
-  if (ArgCnt != 2) WrError(1110);    
+  if (!ChkArgCnt(2, 2));    
   else if (!DecodeReg(ArgStr[2], &Rb)) WrXError(1445, ArgStr[2]);
   else
   {
@@ -428,7 +426,7 @@ static void DecodeJump(Word Code)
 {
   Word Cond;
 
-  if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
+  if (!ChkArgCnt(2, 3));
   else if (!DecodeCondition(ArgStr[1], &Cond)) WrXError(1360, ArgStr[1]);
   else if (!DecodeAdr(2, ArgCnt)) WrError(1350);
   else
@@ -440,7 +438,7 @@ static void DecodeJump(Word Code)
 
 static void DecodeAddr(Word Code)
 {
-  if ((ArgCnt < 1) || (ArgCnt > 2)) WrError(1110);
+  if (!ChkArgCnt(1, 2));
   else if (!DecodeAdr(1, ArgCnt)) WrError(1350);
   else
   {
@@ -451,7 +449,7 @@ static void DecodeAddr(Word Code)
 
 static void DecodeIM_0_15(Word Code)
 {
-  if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
+  if (!ChkArgCnt(2, 3));
   else if (!DecodeAdr(2, ArgCnt)) WrError(1350);
   else
   {
@@ -470,7 +468,7 @@ static void DecodeSR(Word Code)
 {
   Word R;
 
-  if (ArgCnt != 1) WrError(1110);    
+  if (!ChkArgCnt(1, 1));    
   else if (!DecodeReg(ArgStr[1], &R)) WrXError(1445, ArgStr[1]);
   else
     PutCode(Code | (R << 4));
@@ -480,7 +478,7 @@ static void DecodeXIO(Word Code)
 {
   Word Ra, Cmd;
 
-  if ((ArgCnt < 2) || (ArgCnt > 3)) WrError(1110);
+  if (!ChkArgCnt(2, 3));
   else if (!DecodeReg(ArgStr[1], &Ra)) WrXError(1445, ArgStr[1]);
   else if (DecodeXIOCmd(ArgStr[2], &Cmd))
   {
@@ -534,11 +532,8 @@ static void DecodeFLOAT(Word Extended)
   Word Exponent, Word0, Word1, Word2;
   Integer SignedExponent;
 
-  if (ArgCnt < 1)
-  {
-    WrError(1110);
+  if (!ChkArgCnt(1, ArgCntMax))
     return;
-  }
 
   for (z = 1; z <= ArgCnt; z++)
   {

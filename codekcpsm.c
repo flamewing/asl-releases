@@ -63,6 +63,9 @@
 #include "intpseudo.h"
 #include "codevars.h"
 #include "headids.h"
+#include "errmsg.h"
+
+#include "codekcpsm.h"
 
 #undef DEBUG_PRINTF
 
@@ -211,8 +214,7 @@ static int DecodeCond(char *Asc)
 
 static void DecodeFixed(Word Code)
 {
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
   {
     CodeLen = 1; 
     WAsmCode[0] = Code;
@@ -223,8 +225,7 @@ static void DecodeLOAD(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModWReg, SegNone);
     switch (AdrType)
@@ -265,8 +266,7 @@ static void DecodeLOAD(Word Code)
 
 static void DecodeALU2(Word Code)
 {
-  if (ArgCnt!=2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModWReg, SegNone);
     switch (AdrType)
@@ -295,8 +295,7 @@ static void DecodeALU2(Word Code)
 
 static void DecodeALU1(Word Code)
 {
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     DecodeAdr(ArgStr[1], MModWReg, SegNone);
     switch (AdrType)
@@ -313,8 +312,7 @@ static void DecodeCALL(Word Code)
 {
   UNUSED(Code);
 
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 2))
   {
     int Cond = (ArgCnt == 1) ? TrueCond : DecodeCond(ArgStr[1]);
 
@@ -338,8 +336,7 @@ static void DecodeJUMP(Word Code)
 {
   UNUSED(Code);
 
-  if ((ArgCnt != 1) && (ArgCnt != 2)) WrError(1110);
-  else
+  if (ChkArgCnt(1, 2))
   {
     int Cond = (ArgCnt == 1) ? TrueCond : DecodeCond(ArgStr[1]);
 
@@ -363,8 +360,7 @@ static void DecodeRETURN(Word Code)
 {
   UNUSED(Code);
 
-  if ((ArgCnt != 0) && (ArgCnt != 1)) WrError(1110);
-  else
+  if (ChkArgCnt(0, 1))
   {
     int Cond = (ArgCnt == 0) ? TrueCond : DecodeCond(ArgStr[1]);
 
@@ -379,8 +375,7 @@ static void DecodeRETURN(Word Code)
 
 static void DecodeIOop(Word Code)
 {
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     DecodeAdr(ArgStr[1], MModWReg, SegNone);
     switch (AdrType)
@@ -411,8 +406,7 @@ static void DecodeRETURNI(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     NLS_UpString(ArgStr[1]);      
     if (!strcmp(ArgStr[1], "ENABLE"))
@@ -432,8 +426,7 @@ static void DecodeENABLE_DISABLE(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     NLS_UpString(ArgStr[1]);      
     if (!strcasecmp(ArgStr[1], "INTERRUPT"))
@@ -448,8 +441,7 @@ static void DecodeREG(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
     AddRegDef(LabPart, ArgStr[1]);
 }
 
@@ -457,17 +449,15 @@ static void DecodeNAMEREG(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
-   AddRegDef(ArgStr[2], ArgStr[1]);
+  if (ChkArgCnt(2, 2))
+    AddRegDef(ArgStr[2], ArgStr[1]);
 }
 
 static void DecodeCONSTANT(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 2) WrError(1110);
-  else
+  if (ChkArgCnt(2, 2))
   {
     TempResult t;
     Boolean OK;

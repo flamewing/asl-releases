@@ -120,6 +120,7 @@ call testall t_cop4
 call testall t_cop8
 call testall t_dc
 call testall t_dx
+call testall t_enum
 call testall t_ez8
 call testall t_f2mc8l
 call testall t_f2mc16

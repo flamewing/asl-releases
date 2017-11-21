@@ -28,6 +28,7 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "errmsg.h"
 
 #include "fourpseudo.h"
 
@@ -35,8 +36,7 @@ void DecodeRES(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Boolean ValOK;
     Word Size;
@@ -63,8 +63,7 @@ void DecodeDATA(IntType CodeIntType, IntType DataIntType)
   LargeWord ValMask = IntTypeDefs[ValIntType].Mask;
   LargeWord UnknownMask = ValMask / 2;
 
-  if (ArgCnt == 0) WrError(1110);
-  else
+  if (ChkArgCnt(1, ArgCntMax))
   {
     ValOK = True;
     for (z = 1; ValOK && (z <= ArgCnt); z++)

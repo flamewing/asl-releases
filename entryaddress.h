@@ -9,12 +9,15 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include <stdio.h>
+
 #include "datatypes.h"
 
 void entryaddress_init();
 
 extern Boolean EntryAddressAvail(void);
 extern void AddEntryAddress(LargeWord Address);
-extern LargeWord GetEntryAddress(void);
+extern void PrintEntryAddress(FILE *pDestFile);
+extern LargeWord GetEntryAddress(Boolean UsePreferredAddress, LargeWord PreferredAddress);
 
 #endif /* _ENTRYADDRESS_H */

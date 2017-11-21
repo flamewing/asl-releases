@@ -70,6 +70,9 @@
 #include "asmitree.h"
 #include "headids.h"
 #include "codevars.h"            
+#include "errmsg.h"
+
+#include "code7720.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -142,8 +145,7 @@ static void DecodeJmp(Word Code)
   Word Dest;
   Boolean OK;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     Dest = EvalIntExpression(ArgStr[1], MemInt, &OK);
     if (OK)
@@ -167,8 +169,7 @@ static void DecodeDATA_7720(Word Index)
   else
     MaxV = 65535;
   MinV = (-((MaxV + 1) >> 1));
-  if (ArgCnt == 0) WrError(1110);
-  else
+  if (ChkArgCnt(1, ArgCntMax))
   {
     OK = True;
     z = 1;
@@ -234,8 +235,7 @@ static void DecodeRES(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
     Size = EvalIntExpression(ArgStr[1], Int16, &OK);
@@ -259,7 +259,7 @@ static void DecodeALU2(Word Code)
   if (!ChkOpPresent(ALUField))
     return;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[2], &Src, ALUSrcRegs, ALUSrcRegCnt)) WrXError(1445, ArgStr[2]);
   else
   {
@@ -284,8 +284,7 @@ static void DecodeALU1(Word Code)
   if (!ChkOpPresent(ALUField))
     return;
 
-  if (ArgCnt != 1) WrError(1110);
-  else
+  if (ChkArgCnt(1, 1))
   {
     if ((strlen(ArgStr[1]) == 4) && (!strncasecmp(ArgStr[1], "ACC", 3)))
     {
@@ -313,8 +312,7 @@ static void DecodeDPL(Word Index)
   if (!ChkOpPresent(DPLField))
     return;
 
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
     ActCode |= (((LongWord)Index) << DPLPos);
 }
 
@@ -323,8 +321,7 @@ static void DecodeDPH(Word Index)
   if (!ChkOpPresent(DPHField))
     return;
 
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
     ActCode |= (((LongWord)Index) << 9);
 }
 
@@ -333,8 +330,8 @@ static void DecodeRP(Word Index)
   if (!ChkOpPresent(RPField))
     return;
 
-  if (ArgCnt != 0) WrError(1110);
-  else ActCode |= (((LongWord)Index) << 8);
+  if (ChkArgCnt(0, 0))
+    ActCode |= (((LongWord)Index) << 8);
 }
 
 static void DecodeRET(Word Index)
@@ -344,8 +341,7 @@ static void DecodeRET(Word Index)
   if (!ChkOpPresent(RetField))
     return;
 
-  if (ArgCnt != 0) WrError(1110);
-  else
+  if (ChkArgCnt(0, 0))
     ActCode |= (1l << TypePos);
 }
 
@@ -356,7 +352,7 @@ static void DecodeLDI(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &Reg, DestRegs, DestRegCnt)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -412,7 +408,7 @@ static void DecodeMOV(Word Index)
   if (!ChkOpPresent(MoveField))
     return;
 
-  if (ArgCnt != 2) WrError(1110);
+  if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1], &Dest, DestRegs, DestRegCnt)) WrXError(1445, ArgStr[1]);
   else if (!DecodeReg(ArgStr[2], &Src, SrcRegs, SrcRegCnt)) WrXError(1445, ArgStr[2]);
   else
