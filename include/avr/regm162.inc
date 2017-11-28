@@ -304,7 +304,7 @@ UDR1		port	0x03		; UART1 I/O Data Register
 UCSR1A		port	0x02		; UART1 Control & Status Register A
 MPCM1		equ	0		; UART1 multi processor communication mode
 U2X1		equ	1		; UART1 double transmission speed
-PE1		equ	2		; UART1 parity error
+UPE1		equ	2		; UART1 parity error
 DOR1		equ	3		; UART1 Overrun
 FE1		equ	4		; UART1 Framing Error
 UDRE1		equ	5		; UART1 Data Register Empty

@@ -186,12 +186,6 @@ OCIE2		equ	7		; timer/counter 2 output compare interrupt enable
 
 TIFR		port	0x38		; timer interrupt status register
 
-ASSR		port	0x30		; Asynchronous Status Register
-TCR2UB		equ	0		; Timer/Counter Control Register 2 Update Busy
-OCR2UB		equ	1		; Output Compare Register 2
-TCN2UB		equ	2		; Timer/Counter 2 Update Busy
-AS2		equ	3		; Asynchronous Timer/Counter 2
-
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 

@@ -1,6 +1,16 @@
 $Id: changelog,v 1.152 2017/06/28 17:05:00 alfred Exp $
 ------------------------------------------------------------------------------
 
+2017-11-27 [1.42 Bld 122]
+
+- Bugfix      : correct double ASSR defintion for ATmega8/16/32
+
+- Bugfix      : correct UPE definition for ATmega162
+
+- Bugfix      : correct SFR area size for ATmega1284RFR2
+
+- Addition    : add a first batch of ATtiny variants
+
 2017-11-21 [1.42 Bld 121]
 
 - Bugfix      : correct behaviour of DATA for Atmel AVR

@@ -112,6 +112,10 @@ typedef struct
 } FixedOrder;
 
 static CPUVar CPU90S1200, CPU90S2313, CPU90S4414, CPU90S4433, CPU90S4434, CPU90S8515, CPU90S8535,
+              CPUATTINY13, CPUATTINY26, CPUATTINY2313, CPUATTINY2313A, CPUATTINY4313,
+              CPUATTINY24, CPUATTINY44, CPUATTINY84,
+              CPUATTINY25, CPUATTINY45, CPUATTINY85,
+              CPUATTINY261, CPUATTINY261A, CPUATTINY461, CPUATTINY461A, CPUATTINY861, CPUATTINY861A,
               CPUATMEGA48,
               CPUATMEGA8, CPUATMEGA8515, CPUATMEGA8535, CPUATMEGA88,
               CPUATMEGA16, CPUATMEGA161, CPUATMEGA162, CPUATMEGA163, CPUATMEGA164, CPUATMEGA165, CPUATMEGA168, CPUATMEGA169,
@@ -678,7 +682,7 @@ static void DecodeJMPCALL(Word Index)
   Boolean OK;
 
   if (ChkArgCnt(1, 1)
-   && ChkMinCPU(CPUATMEGA8))
+   && ChkMinCPU(CPUATMEGA48))
   {
     AdrInt = EvalIntExpression(ArgStr[1], UInt22, &OK);
     if (OK)
@@ -720,7 +724,7 @@ static void DecodeMULS(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 2));
-  else if (!ChkMinCPU(CPUATMEGA8));
+  else if (!ChkMinCPU(CPUATMEGA48));
   else if (!DecodeReg(ArgStr[1], &Reg1)) WrXError(1445, ArgStr[1]);
   else if (Reg1 < 16) WrXError(1445, ArgStr[1]);
   else if (!DecodeReg(ArgStr[2], &Reg2)) WrXError(1445, ArgStr[2]);
@@ -737,7 +741,7 @@ static void DecodeMegaMUL(Word Index)
   Word Reg1, Reg2;
 
   if (!ChkArgCnt(2, 2));
-  else if (!ChkMinCPU(CPUATMEGA8));
+  else if (!ChkMinCPU(CPUATMEGA48));
   else if (!DecodeReg(ArgStr[1], &Reg1)) WrXError(1445, ArgStr[1]);
   else if ((Reg1 < 16) || (Reg1 > 23)) WrXError(1445, ArgStr[1]);
   else if (!DecodeReg(ArgStr[2], &Reg2)) WrXError(1445, ArgStr[2]);
@@ -756,7 +760,7 @@ static void DecodeMOVW(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 2));
-  else if (!ChkMinCPU(CPUATMEGA8));
+  else if (!ChkMinCPU(CPUATTINY13));
   else if (!DecodeReg(ArgStr[1], &Reg1)) WrXError(1445, ArgStr[1]);
   else if (Reg1 & 1) WrXError(1445, ArgStr[1]);  
   else if (!DecodeReg(ArgStr[2], &Reg2)) WrXError(1445, ArgStr[2]);
@@ -784,7 +788,7 @@ static void DecodeLPM(Word Index)
   }
   else if (ArgCnt == 2)
   {
-    if (!ChkMinCPU(CPUATMEGA8));
+    if (!ChkMinCPU(CPUATTINY13));
     else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
     else if (!DecodeMem(ArgStr[2], &Adr)) WrError(1350);
     else if ((Adr != 0x00) && (Adr != 0x11)) WrError(1350);
@@ -805,7 +809,7 @@ static void DecodeELPM(Word Index)
 
   UNUSED(Index);
 
-  if (!ChkMinCPU(CPUATMEGA8));
+  if (!ChkMinCPU(CPUATMEGA48));
   else if (!ArgCnt)
   {
     WAsmCode[0] = 0x95d8;
@@ -892,8 +896,8 @@ static void InitFields(void)
   AddFixed("CLT"  , CPU90S1200, 0x94e8); AddFixed("SEH"   , CPU90S1200, 0x9458);
   AddFixed("CLH"  , CPU90S1200, 0x94d8); AddFixed("NOP"   , CPU90S1200, 0x0000);
   AddFixed("SLEEP", CPU90S1200, 0x9588); AddFixed("WDR"   , CPU90S1200, 0x95a8);
-  AddFixed("EIJMP", CPUATMEGA8, 0x9419); AddFixed("EICALL", CPUATMEGA8, 0x9519);
-  AddFixed("SPM"  , CPUATMEGA8, 0x95e8); AddFixed("BREAK" , CPUATMEGA8, 0x9598);
+  AddFixed("EIJMP", CPUATMEGA48,0x9419); AddFixed("EICALL", CPUATMEGA48,0x9519);
+  AddFixed("SPM"  , CPUATTINY13,0x95e8); AddFixed("BREAK" , CPUATTINY13,0x9598);
 
   Reg1Orders = (FixedOrder*)malloc(sizeof(*Reg1Orders) * Reg1OrderCnt); InstrZ = 0;
   AddReg1("COM"  , CPU90S1200, 0x9400); AddReg1("NEG"  , CPU90S1200, 0x9401);
@@ -908,7 +912,7 @@ static void InitFields(void)
   AddReg2("AND"  , CPU90S1200, 0x2000); AddReg2("OR"   , CPU90S1200, 0x2800);
   AddReg2("EOR"  , CPU90S1200, 0x2400); AddReg2("CPSE" , CPU90S1200, 0x1000);
   AddReg2("CP"   , CPU90S1200, 0x1400); AddReg2("CPC"  , CPU90S1200, 0x0400);
-  AddReg2("MOV"  , CPU90S1200, 0x2c00); AddReg2("MUL"  , CPUATMEGA8, 0x9c00);
+  AddReg2("MOV"  , CPU90S1200, 0x2c00); AddReg2("MUL"  , CPUATMEGA48,0x9c00);
 
   AddReg3("CLR"  , 0x2400); AddReg3("TST"  , 0x2000); AddReg3("LSL"  , 0x0c00);
   AddReg3("ROL"  , 0x1c00);
@@ -1036,21 +1040,38 @@ static void SwitchTo_AVR(void)
   Grans[SegData] = 1; ListGrans[SegData] = 1; SegInits[SegData] = 32;
   Grans[SegIO  ] = 1; ListGrans[SegIO  ] = 1; SegInits[SegIO  ] = 0;  SegLimits[SegIO] = 0x3f;
 
-  if (MomCPU == CPU90S1200)
+  if ((MomCPU == CPU90S1200)
+   || (MomCPU == CPUATTINY13))
     SegLimits[SegCode] = 0x01ff;
-  else if (MomCPU == CPU90S2313)
+  else if ((MomCPU == CPU90S2313)
+        || (MomCPU == CPUATTINY26)
+        || (MomCPU == CPUATTINY2313)
+        || (MomCPU == CPUATTINY2313A)
+        || (MomCPU == CPUATTINY24)
+        || (MomCPU == CPUATTINY25)
+        || (MomCPU == CPUATTINY261)
+        || (MomCPU == CPUATTINY261A))
     SegLimits[SegCode] = 0x03ff;
   else if ((MomCPU == CPU90S4414)
         || (MomCPU == CPU90S4433)
         || (MomCPU == CPU90S4434)
-        || (MomCPU == CPUATMEGA48))
+        || (MomCPU == CPUATTINY4313)
+        || (MomCPU == CPUATMEGA48)
+        || (MomCPU == CPUATTINY44)
+        || (MomCPU == CPUATTINY45)
+        || (MomCPU == CPUATTINY461)
+        || (MomCPU == CPUATTINY461A))
     SegLimits[SegCode] = 0x07ff;
   else if ((MomCPU == CPU90S8515)
         || (MomCPU == CPU90S8535)
         || (MomCPU == CPUATMEGA8)
         || (MomCPU == CPUATMEGA8515) 
         || (MomCPU == CPUATMEGA8535) 
-        || (MomCPU == CPUATMEGA88))
+        || (MomCPU == CPUATMEGA88)
+        || (MomCPU == CPUATTINY84)
+        || (MomCPU == CPUATTINY85)
+        || (MomCPU == CPUATTINY861)
+        || (MomCPU == CPUATTINY861A))
     SegLimits[SegCode] = 0x0fff;
   else if ((MomCPU == CPUATMEGA16)
         || (MomCPU == CPUATMEGA161)
@@ -1092,16 +1113,34 @@ static void SwitchTo_AVR(void)
 
   if (MomCPU == CPU90S1200)
     SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaStdSize) + 0;
+  else if (MomCPU == CPUATTINY13)
+    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaStdSize) + 64;
   else if ((MomCPU == CPU90S2313)
-        || (MomCPU == CPU90S4433))
+        || (MomCPU == CPU90S4433)
+        || (MomCPU == CPUATTINY26)
+        || (MomCPU == CPUATTINY2313)
+        || (MomCPU == CPUATTINY2313A)
+        || (MomCPU == CPUATTINY24)
+        || (MomCPU == CPUATTINY25)
+        || (MomCPU == CPUATTINY261)
+        || (MomCPU == CPUATTINY261A))
     SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaStdSize) + 128;
   else if ((MomCPU == CPU90S4414)
-        || (MomCPU == CPU90S4434))
+        || (MomCPU == CPU90S4434)
+        || (MomCPU == CPUATTINY4313)
+        || (MomCPU == CPUATTINY44)
+        || (MomCPU == CPUATTINY45)
+        || (MomCPU == CPUATTINY461)
+        || (MomCPU == CPUATTINY461A))
     SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaStdSize) + 256;
   else if ((MomCPU == CPU90S8515)
         || (MomCPU == CPU90S8535)
         || (MomCPU == CPUATMEGA8515)
-        || (MomCPU == CPUATMEGA8535))
+        || (MomCPU == CPUATMEGA8535)
+        || (MomCPU == CPUATTINY84)
+        || (MomCPU == CPUATTINY85)
+        || (MomCPU == CPUATTINY861)
+        || (MomCPU == CPUATTINY861A))
     SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaStdSize) + 512;
   else if ((MomCPU == CPUATMEGA48)
         || (MomCPU == CPUATMEGA88)
@@ -1145,9 +1184,10 @@ static void SwitchTo_AVR(void)
         || (MomCPU == CPUATMEGA2560)
         || (MomCPU == CPUATMEGA2561))
     SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaExt2Size) + 8192;
-  else if ((MomCPU == CPUATMEGA1284)
-        || (MomCPU == CPUATMEGA1284RFR2))
+  else if (MomCPU == CPUATMEGA1284)
     SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaExtSize) + 16384;
+  else if (MomCPU == CPUATMEGA1284RFR2)
+    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaExt2Size) + 16384;
   else if (MomCPU == CPUATMEGA2564RFR2)
     SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaExt2Size) + 32768;
 
@@ -1176,6 +1216,25 @@ void codeavr_init(void)
    CPU90S4434    = AddCPU("AT90S4434"  , SwitchTo_AVR);
    CPU90S8515    = AddCPU("AT90S8515"  , SwitchTo_AVR);
    CPU90S8535    = AddCPU("AT90S8535"  , SwitchTo_AVR);
+
+   CPUATTINY13   = AddCPU("ATTINY13"   , SwitchTo_AVR);
+   CPUATTINY26   = AddCPU("ATTINY26"   , SwitchTo_AVR);
+   CPUATTINY2313 = AddCPU("ATTINY2313" , SwitchTo_AVR);
+   CPUATTINY2313A= AddCPU("ATTINY2313A", SwitchTo_AVR);
+   CPUATTINY4313 = AddCPU("ATTINY4313" , SwitchTo_AVR);
+   CPUATTINY24   = AddCPU("ATTINY24"   , SwitchTo_AVR);
+   CPUATTINY44   = AddCPU("ATTINY44"   , SwitchTo_AVR);
+   CPUATTINY84   = AddCPU("ATTINY84"   , SwitchTo_AVR);
+   CPUATTINY25   = AddCPU("ATTINY25"   , SwitchTo_AVR);
+   CPUATTINY45   = AddCPU("ATTINY45"   , SwitchTo_AVR);
+   CPUATTINY85   = AddCPU("ATTINY85"   , SwitchTo_AVR);
+
+   CPUATTINY261  = AddCPU("ATTINY261"  , SwitchTo_AVR);
+   CPUATTINY261A = AddCPU("ATTINY261A" , SwitchTo_AVR);
+   CPUATTINY461  = AddCPU("ATTINY461"  , SwitchTo_AVR);
+   CPUATTINY461A = AddCPU("ATTINY461A" , SwitchTo_AVR);
+   CPUATTINY861  = AddCPU("ATTINY861"  , SwitchTo_AVR);
+   CPUATTINY861A = AddCPU("ATTINY861A" , SwitchTo_AVR);
 
    CPUATMEGA48   = AddCPU("ATMEGA48"   , SwitchTo_AVR);
 

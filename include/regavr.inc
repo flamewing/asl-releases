@@ -36,6 +36,45 @@ __regavrinc	equ     1
 		case	"AT90S8535"
 		  include "avr/reg8535.inc"
 
+		case	"ATTINY13"
+		  include "avr/regtn13.inc"
+
+		case	"ATTINY26"
+		  include "avr/regtn26.inc"
+
+                case	"ATTINY2313","ATTINY2313A"
+		  include "avr/regt2313.inc"
+
+		case	"ATTINY4313"
+		  include "avr/regt4313.inc"
+
+		case	"ATTINY24"
+		  include "avr/regtn24.inc"
+
+		case	"ATTINY44"
+		  include "avr/regtn44.inc"
+
+		case	"ATTINY84"
+		  include "avr/regtn84.inc"
+
+		case	"ATTINY25"
+		  include "avr/regtn25.inc"
+
+		case	"ATTINY45"
+		  include "avr/regtn45.inc"
+
+		case	"ATTINY85"
+		  include "avr/regtn85.inc"
+
+		case	"ATTINY261","ATTINY261A"
+		  include "avr/regtn261.inc"
+
+		case	"ATTINY461","ATTINY461A"
+		  include "avr/regtn461.inc"
+
+		case	"ATTINY861","ATTINY861A"
+		  include "avr/regtn861.inc"
+
 		case	"ATMEGA48"
 		  include "avr/regm48.inc"
 
@@ -155,6 +194,8 @@ __regavrinc	equ     1
 
 		elsecase
                   error  "wrong processor type set: only AT90S1200, AT90S2313, AT90S4414, AT90S4433, AT90S4434, AT90S8535, AT90S8515, ATMEGA48, ATMEGA8, ATMEGA8515, ATMEGA8535, ATMEGA88,"
+		  error	 "ATTINY13, ATTINY26, ATTINY2313(A), ATTINY4313, ATTINY24, ATTINY44, ATTINY84, ATTINY25, ATTINY45, ATTINY85,"
+                  error	 "ATTINY261(A), ATTINY461(A), ATTINY861(A),"
                   error  "ATMEGA16, ATMEGA161, ATMEGA162, ATMEGA164, ATMEGA165, ATMEGA168, ATMEGA169, ATMEGA32, ATMEGA323, ATMEGA324, ATMEGA325, ATMEGA3250, ATMEGA328, ATMEGA329, ATMEGA3290,"
                   error  "ATMEGA406, ATMEGA64, ATMEGA640, ATMEGA644, ATMEGA644RFR2, ATMEGA645, ATMEGA6450, ATMEGA649, ATMEGA6490, ATMEGA103, ATMEGA128, ATMEGA1280, ATMEGA1281, ATMEGA1284, ATMEGA1284RFR2,"
                   fatal  "ATMEGA2560, ATMEGA2561 or ATMEGA2564RFR2 allowed!"
@@ -468,6 +509,7 @@ PL7		 equ	 7
 		endif
 
 		ifdef	 PCMSK0
+		ifndef	 PCINT0
 PCINT0		 equ	  0
 PCINT1		 equ	  1
 PCINT2		 equ	  2
@@ -477,7 +519,9 @@ PCINT5		 equ	  5
 PCINT6		 equ	  6
 PCINT7		 equ	  7
 		endif
+		endif
 		ifdef	 PCMSK1
+		ifndef   PCINT8
 PCINT8		 equ	  0
 PCINT9		 equ	  1
 PCINT10		 equ	  2
@@ -487,7 +531,9 @@ PCINT13		 equ	  5
 PCINT14		 equ	  6
 PCINT15		 equ	  7
 		endif
+		endif
 		ifdef	 PCMSK2
+		ifndef	 PCINT16
 PCINT16		 equ	  0
 PCINT17		 equ	  1
 PCINT18		 equ	  2
@@ -497,7 +543,9 @@ PCINT21		 equ	  5
 PCINT22		 equ	  6
 PCINT23		 equ	  7
 		endif
-		ifdef	 PCMSK3
+		endif
+		ifdef	PCMSK3
+		ifndef	PCINT16
 PCINT24		 equ	  0
 PCINT25		 equ	  1
 PCINT26		 equ	  2
@@ -506,6 +554,7 @@ PCINT28		 equ	  4
 PCINT29		 equ	  5
 PCINT30		 equ	  6
 PCINT31		 equ	  7
+		endif
 		endif
 
 		ifdef PCICR
