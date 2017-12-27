@@ -190,6 +190,7 @@
 #include "asmsub.h"
 #include "errmsg.h"
 #include "as.h"
+#include "as.rsc"
 #include "asmpars.h"
 #include "asmmac.h"
 #include "asmstructs.h"
@@ -197,6 +198,7 @@
 #include "asmrelocs.h"
 #include "asmitree.h"
 #include "codepseudo.h"
+#include "nlmessages.h"
 
 /*--------------------------------------------------------------------------*/
 
@@ -248,7 +250,7 @@ static void SetCPUCore(const tCPUDef *pCPUDef, Boolean NotPrev)
   pASSUMERecs = NULL;
   pASSUMEOverride = NULL;
   if (!NotPrev) SwitchFrom();
-  pCPUDef->SwitchProc();
+  pCPUDef->SwitchProc(pCPUDef->pUserData);
 
   DontPrint = True;
 }
@@ -1039,6 +1041,7 @@ static void CodeSAVE(Word Index)
     Neu->SavePC = ActPC;
     Neu->SaveListOn = ListOn;
     Neu->SaveLstMacroExp = LstMacroExp;
+    Neu->SaveLstMacroExpOverride = LstMacroExpOverride;
     Neu->SaveTransTable = CurrTransTable;
     Neu->SaveEnumSegment = EnumSegment;
     Neu->SaveEnumIncrement = EnumIncrement;
@@ -1067,6 +1070,7 @@ static void CodeRESTORE(Word Index)
       SetCPU(Old->SaveCPU, False);
     EnterIntSymbol(ListOnName, ListOn = Old->SaveListOn, 0, True);
     SetLstMacroExp(Old->SaveLstMacroExp);
+    LstMacroExpOverride = Old->SaveLstMacroExpOverride;
     CurrTransTable = Old->SaveTransTable;
     free(Old);
   }
@@ -1075,9 +1079,17 @@ static void CodeRESTORE(Word Index)
 
 static void CodeMACEXP(Word Index)
 {
-  UNUSED(Index);
+  if (Index & 0x10)
+  {
+    char Msg[70];
 
-  if (!ChkArgCnt(1, ArgCntMax));
+    sprintf(Msg, getmessage(Num_ErrMsgDeprecated_Instead), "MACEXP_DFT");
+    WrXError(ErrNum_Deprecated, Msg);
+  }
+
+  /* allow zero arguments for MACEXP_OVR, to remove all overrides */
+
+  if (!ChkArgCnt((Index & 0x0f) ? 0 : 1, ArgCntMax));
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
@@ -1105,6 +1117,8 @@ static void CodeMACEXP(Word Index)
     if (OK)
     {
       if (!ChkLstMacroExpMod(&LstMacroExpMod)) WrError(2110);
+      else if (Index) /* Override */
+        LstMacroExpOverride = LstMacroExpMod;
       else
         SetLstMacroExp(ApplyLstMacroExpMod(LstMacroExp, &LstMacroExpMod));
     }
@@ -1985,7 +1999,9 @@ static const PseudoOrder Pseudos[] =
   {"RADIX",      CodeRADIX      , 0 },
   {"READ",       CodeREAD       , 0 },
   {"RESTORE",    CodeRESTORE    , 0 },
-  {"MACEXP",     CodeMACEXP     , 0 },
+  {"MACEXP",     CodeMACEXP     , 0x10 },
+  {"MACEXP_DFT", CodeMACEXP     , 0 },
+  {"MACEXP_OVR", CodeMACEXP     , 1 },
   {"RORG",       CodeRORG       , 0 },
   {"RSEG",       CodeSEGTYPE    , 0 },
   {"SAVE",       CodeSAVE       , 0 },

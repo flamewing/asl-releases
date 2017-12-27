@@ -267,6 +267,7 @@ Byte ChapDepth;                         /* momentane Kapitelverschachtelung */
 StringPtr ListLine;                     /* alternative Ausgabe vor Listing fuer EQU */
 Byte PageLength, PageWidth;             /* Seitenlaenge/breite in Zeilen/Spalten */
 tLstMacroExp LstMacroExp;               /* Makroexpansionen auflisten */
+tLstMacroExpMod LstMacroExpOverride;    /* Override macro expansion ? */
 Boolean DottedStructs;                  /* structure elements with dots */
 StringPtr PrtInitString;                /* Druckerinitialisierungsstring */
 StringPtr PrtExitString;                /* Druckerdeinitialisierungsstring */

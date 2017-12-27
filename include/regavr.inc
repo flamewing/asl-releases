@@ -21,6 +21,12 @@ __regavrinc	equ     1
 		case	"AT90S2313"
 		  include "avr/reg2313.inc"
 
+		case	"AT90S2323","AT90S2343"
+		  include "avr/reg2323.inc"
+
+		case	"AT90S2333"
+		  include "avr/reg2333.inc"
+
 		case	"AT90S4414"
 		  include "avr/reg4414.inc"
 
@@ -33,11 +39,17 @@ __regavrinc	equ     1
 		case	"AT90S8515"
 		  include "avr/reg8515.inc"
 
+		case	"AT90C8534"
+		  include "avr/reg8534.inc"
+
 		case	"AT90S8535"
 		  include "avr/reg8535.inc"
 
 		case	"ATTINY13"
 		  include "avr/regtn13.inc"
+
+		case	"ATTINY13A"
+		  include "avr/regtn13a.inc"
 
 		case	"ATTINY26"
 		  include "avr/regtn26.inc"
@@ -48,13 +60,13 @@ __regavrinc	equ     1
 		case	"ATTINY4313"
 		  include "avr/regt4313.inc"
 
-		case	"ATTINY24"
+		case	"ATTINY24","ATTINY24A"
 		  include "avr/regtn24.inc"
 
-		case	"ATTINY44"
+		case	"ATTINY44","ATTINY44A"
 		  include "avr/regtn44.inc"
 
-		case	"ATTINY84"
+		case	"ATTINY84","ATTINY84A"
 		  include "avr/regtn84.inc"
 
 		case	"ATTINY25"
@@ -74,6 +86,69 @@ __regavrinc	equ     1
 
 		case	"ATTINY861","ATTINY861A"
 		  include "avr/regtn861.inc"
+
+		case	"ATTINY48"
+		  include "avr/regtn48.inc"
+
+		case	"ATTINY88"
+		  include "avr/regtn88.inc"
+
+		case	"ATTINY43U"
+		  include "avr/regtn43u.inc"
+
+		case	"ATTINY441"
+		  include "avr/regtn441.inc"
+
+		case	"ATTINY841"
+		  include "avr/regtn841.inc"
+
+		case	"ATTINY828"
+		  include "avr/regtn828.inc"
+
+		case	"ATTINY1634"
+		  include "avr/regtn1634.inc"
+
+		case	"ATTINY87"
+		  include "avr/regtn87.inc"
+
+		case	"ATTINY167"
+		  include "avr/regtn167.inc"
+
+		case	"ATTINY4"
+		  include "avr/regtn4.inc"
+
+		case	"ATTINY5"
+		  include "avr/regtn5.inc"
+
+		case	"ATTINY9"
+		  include "avr/regtn9.inc"
+
+		case	"ATTINY10"
+		  include "avr/regtn10.inc"
+
+		case	"ATTINY20"
+		  include "avr/regtn20.inc"
+
+		case	"ATTINY40"
+		  include "avr/regtn40.inc"
+
+		case	"ATTINY102"
+		  include "avr/regtn102.inc"
+
+		case	"ATTINY104"
+		  include "avr/regtn104.inc"
+
+		case	"ATTINY28"
+		  include "avr/regtn28.inc"
+
+		case	"ATTINY11"
+		  include "avr/regtn11.inc"
+
+		case	"ATTINY12"
+		  include "avr/regtn12.inc"
+
+		case	"ATTINY15"
+		  include "avr/regtn15.inc"
 
 		case	"ATMEGA48"
 		  include "avr/regm48.inc"
@@ -193,12 +268,15 @@ __regavrinc	equ     1
 		  include "avr/reg2564rfr2.inc"
 
 		elsecase
-                  error  "wrong processor type set: only AT90S1200, AT90S2313, AT90S4414, AT90S4433, AT90S4434, AT90S8535, AT90S8515, ATMEGA48, ATMEGA8, ATMEGA8515, ATMEGA8535, ATMEGA88,"
-		  error	 "ATTINY13, ATTINY26, ATTINY2313(A), ATTINY4313, ATTINY24, ATTINY44, ATTINY84, ATTINY25, ATTINY45, ATTINY85,"
-                  error	 "ATTINY261(A), ATTINY461(A), ATTINY861(A),"
-                  error  "ATMEGA16, ATMEGA161, ATMEGA162, ATMEGA164, ATMEGA165, ATMEGA168, ATMEGA169, ATMEGA32, ATMEGA323, ATMEGA324, ATMEGA325, ATMEGA3250, ATMEGA328, ATMEGA329, ATMEGA3290,"
-                  error  "ATMEGA406, ATMEGA64, ATMEGA640, ATMEGA644, ATMEGA644RFR2, ATMEGA645, ATMEGA6450, ATMEGA649, ATMEGA6490, ATMEGA103, ATMEGA128, ATMEGA1280, ATMEGA1281, ATMEGA1284, ATMEGA1284RFR2,"
-                  fatal  "ATMEGA2560, ATMEGA2561 or ATMEGA2564RFR2 allowed!"
+		  error  "wrong processor type set: only AT90S1200, AT90S2313, AT90S4414, AT90S4433, AT90S4434, AT90S8515, AT90C8534, AT90S8535,"
+		  error	 "ATTINY13(A), ATTINY26, ATTINY2313(A), ATTINY4313, ATTINY24(A), ATTINY44(A), ATTINY84(A), ATTINY25, ATTINY45, ATTINY85,"
+		  error	 "ATTINY261(A), ATTINY461(A), ATTINY861(A), ATTINY48, ATTINY88, ATTINY43U, ATTINY441, ATTINY841, ATTINY828, ATTINY1634,"
+		  error	 "ATTINY87, ATTINY167, ATTINY4, ATTINY5, ATTINY9, ATTINY10, ATTINY20, ATTINY40, ATTINY102, ATTINY104, ATTINY28,"
+		  error	 "ATTINY11, ATTINY12, ATTINY15,"
+		  error	 "ATMEGA48, ATMEGA8, ATMEGA8515, ATMEGA8535, ATMEGA88,"
+		  error  "ATMEGA16, ATMEGA161, ATMEGA162, ATMEGA164, ATMEGA165, ATMEGA168, ATMEGA169, ATMEGA32, ATMEGA323, ATMEGA324, ATMEGA325, ATMEGA3250, ATMEGA328, ATMEGA329, ATMEGA3290,"
+		  error  "ATMEGA406, ATMEGA64, ATMEGA640, ATMEGA644, ATMEGA644RFR2, ATMEGA645, ATMEGA6450, ATMEGA649, ATMEGA6490, ATMEGA103, ATMEGA128, ATMEGA1280, ATMEGA1281, ATMEGA1284, ATMEGA1284RFR2,"
+		  fatal  "ATMEGA2560, ATMEGA2561 or ATMEGA2564RFR2 allowed!"
                 endcase
 
                 if      MOMPASS=1
@@ -271,15 +349,17 @@ RAMPZ1		 equ	 1
 ; Deduce remaining GPIO registers
 
 		ifdef	PINA
-		 defreg	 DDRA,PINA,1
-DDA0		 equ	 0
-DDA1		 equ	 1
-DDA2		 equ	 2
-DDA3		 equ	 3
-DDA4		 equ	 4
-DDA5		 equ	 5
-DDA6		 equ	 6
-DDA7		 equ	 7
+		 ifndef	 PACR
+		  defreg	 DDRA,PINA,1
+DDA0		  equ	 0
+DDA1		  equ	 1
+DDA2		  equ	 2
+DDA3		  equ	 3
+DDA4		  equ	 4
+DDA5		  equ	 5
+DDA6		  equ	 6
+DDA7		  equ	 7
+		 endif
 		 defreg	 PORTA,PINA,2
 PA0		 equ	 0
 PA1		 equ	 1
@@ -292,24 +372,26 @@ PA7		 equ	 7
 		endif
 
 		ifdef	PINB
-		 defreg	 DDRB,PINB,1
-DDB0		 equ	 0
-DDB1		 equ	 1
-DDB2		 equ	 2
-DDB3		 equ	 3
-DDB4		 equ	 4
-DDB5		 equ	 5
-DDB6		 equ	 6
-DDB7		 equ	 7
-		 defreg	 PORTB,PINB,2
-PB0		 equ	 0
-PB1		 equ	 1
-PB2		 equ	 2
-PB3		 equ	 3
-PB4		 equ	 4
-PB5		 equ	 5
-PB6		 equ	 6
-PB7		 equ	 7
+		 ifndef   PINB_inponly
+                  defreg	 DDRB,PINB,1
+DDB0		  equ	 0
+DDB1		  equ	 1
+DDB2		  equ	 2
+DDB3		  equ	 3
+DDB4		  equ	 4
+DDB5		  equ	 5
+DDB6		  equ	 6
+DDB7		  equ	 7
+		  defreg	 PORTB,PINB,2
+PB0		  equ	 0
+PB1		  equ	 1
+PB2		  equ	 2
+PB3		  equ	 3
+PB4		  equ	 4
+PB5		  equ	 5
+PB6		  equ	 6
+PB7		  equ	 7
+		 endif
 		endif
 
 		ifdef	PINC

@@ -2432,7 +2432,7 @@ static void DecodePORT(Word Index)
 {
   UNUSED(Index);
 
-  if (ChkMinCPU(CPU80251));
+  if (ChkMinCPU(CPU80251))
     CodeEquate(SegIO, 0, 0x1ff);
 }
 

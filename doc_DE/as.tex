@@ -46,7 +46,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand November 2017}
+{\large Stand Dezember 2017}
 \end{raggedright}
 
 \clearpage
@@ -2751,7 +2751,7 @@ zum Beispiel mit einem
 \begin{verbatim}
       ENUMCONF 1,CODE
 \end{verbatim}  
-bestimmen, daß sie im Instruktions-Adre"sraum liegen sollen.  Die
+bestimmen, da"s sie im Instruktions-Adre"sraum liegen sollen.  Die
 Namen der Adre"sr"aume sind die gleichen wie beim
 \tty{SEGMENT}-Befehl (\ref{SEGMENT}), zus"atzlich ist als
 Argument ein \tty{NOTHING} erlaubt, um wieder typenlose Symbole
@@ -2910,7 +2910,7 @@ Mittel der Wahl.
 \hline
 \input{taborg5.tex}
 \hline
-\multicolumn{10}{|l|}{$^{*}$ Bereich für Programmcode auf 1 MByte
+\multicolumn{10}{|l|}{$^{*}$ Bereich f"ur Programmcode auf 1 MByte
 begrenzt} \\
 \hline
 \end{tabular}\end{center}
@@ -3146,7 +3146,7 @@ Steuerung der Busschnittstelle, daf"ur fehlen aber einige andere Befehle.
 Beim 8041, 8042, 8021 und 8022 ist der Programmadre"sraum nicht
 extern erweiterbar, weshalb AS das Codesegment bei diesen Prozessoren
 auf 1 bzw. 2 Kbyte begrenzt.  Der (SAB)80C382 ist eine von
-Siemens speziell für Telefone entwickelte Variante, die ebenfalls
+Siemens speziell f"ur Telefone entwickelte Variante, die ebenfalls
 einen \tty{HALT}-Befehl kennt sowie \tty{DJNZ} und \tty{DEC} auch
 mit indirekter Adressierung erlaubt.  Im Gegenzug wurden einige
 Befehle des 'normalen' 8048 entfernt. Die OKI-Varienaten (MSM...)
@@ -3226,10 +3226,15 @@ Diese Prozessoren unterscheiden sich nur in der Gr"o"se des eingebauten
 ROMs, die in \tty{STDDEFXA.INC} definiert ist.
 %%-----------
 \begin{quote}
-ac) AT90S1200, AT90S2313, AT90S4414, AT90S4433, AT90S4434, AT90S8515,
-    AT90S8535, ATTINY13, ATTINY26, ATTINY2313, ATTINY2313A, ATTINY4313,
-    ATTINY24, ATTINY44, ATTINY84, ATTINY25, ATTINY45, ATTINY85,
-    ATTINY261, ATTINY261A, ATTINY461, ATTINY461A, ATTINY861, ATTINY861A,
+ac) AT90S1200, AT90S2313, AT90S2323, AT90S233, AT90S2343, AT90S4414,
+    AT90S4433, AT90S4434, AT90S8515, AT90C8534, AT90S8535,
+    ATTINY4, ATTINY5, ATTINY9, ATTINY10, ATTINY11, ATTINY12,
+    ATTINY13, ATTINY13A, ATTINY15, ATTINY20, ATTINY24(A), ATTINY25,
+    ATTINY26, ATTINY28, ATTINY40, ATTINY44(A), ATTINY45, ATTINY48,
+    ATTINY84(A), ATTINY85, ATTINY87, ATTINY88, ATTINY102, ATTINY104,
+    ATTINY167, ATTINY261, ATTINY261A, ATTINY43U, ATTINY441, ATTINY461,
+    ATTINY461A, ATTINY828, ATTINY841, ATTINY861, ATTINY861A, ATTINY1634,
+    ATTINY2313, ATTINY2313A, ATTINY4313,
     ATMEGA48, ATMEGA8, ATMEGA8515, ATMEGA8535, ATMEGA88,
     ATMEGA16, ATMEGA161, ATMEGA162, ATMEGA163, ATMEGA164, ATMEGA165,
     ATMEGA168, ATMEGA169, ATMEGA32, ATMEGA323, ATMEGA324, ATMEGA325,
@@ -4014,7 +4019,8 @@ Variablen auf einen internen Stapel:
 \item{Flag, ob Listing ein- oder ausgeschaltet ist (mit \tty{LISTING}
       gesetzt);}
 \item{Flags, zu welchem Teil Expansionen folgender Makos im Listing
-      ausgegeben werden sollen (mit \tty{MACEXP} gesetzt).}
+      ausgegeben werden sollen (mit \tty{MACEXP\_DFT/MACEXP\_OVR}
+      gesetzt).}
 \item{momentan aktive Zeichen"ubersetzungstabelle (mit \tty{CODEPAGE}
       gesetzt).}
 \end{itemize}
@@ -4438,7 +4444,7 @@ Verwendung in neuem Code abr"at).
 
 Neben vielen neuen Befehlen und Adressierungsarten ist die
 wesentliche Erweiterung der gr"o"sere Adre"raum von 16 MByte, von
-dem allerdings nur das erste MByte für Programmcode genutzt
+dem allerdings nur das erste MByte f"ur Programmcode genutzt
 werden kann.  Das CPU-interne RAM sowie die Special Function
 Register k"onnen wahlweise am oberen Ende des ersten MByte oder
 der ersten 64 KByte Seite liegen.  Dies teilt man dem Prozessor
@@ -5173,6 +5179,7 @@ folgende Befehle:
 
 \subsection{MACRO}
 \ttindex{MACRO}\ttindex{ENDM}
+\label{SectMacros}
 
 ist der wohl wichtigste Befehl zur Makroprogrammierung.  Mit der
 Befehlsfolge
@@ -5213,16 +5220,16 @@ sind.  Es sind folgende Steuerparameter definiert:
 \begin{itemize}
 \item{\tty{EXPAND/NOEXPAND} : legen fest, ob bei der sp"ateren
       Verwendung diese Makros der expandierte Code mit angezeigt
-      werden soll.  Default ist der durch den Pseudobefehl \tty{MACEXP}
-      festgelegte Wert.}
+      werden soll.  Default ist der durch den Pseudobefehl
+      \tty{MACEXP\_DFT} festgelegte Wert.}
 \item{\tty{EXPIF/NOEXPIF} : legen fest, ob bei der sp"ateren
       Verwendung diese Makros Befehle zur bedingten Assemblierung
       und dadurch ausgeschlossener Code angezeigt werden soll.  Default
-      ist der durch den Pseudobefehl \tty{MACEXP} festgelegte Wert.}
+      ist der durch den Pseudobefehl \tty{MACEXP\_DFT} festgelegte Wert.}
 \item{\tty{EXPMACRO/NOEXPMACRO} : legen fest, ob bei der sp"ateren
       Verwendung diese Makros darin definierte Makros angezeigt werden
-      sollen.  Default ist der durch den Pseudobefehl \tty{MACEXP}
-      festgelegte Wert.}
+      sollen.  Default ist der durch den Pseudobefehl
+      \tty{MACEXP\_DFT} festgelegte Wert.}
 \item{\tty{PUBLIC[:Sektionsname]} : ordnet das Makro nicht der
       aktuellen, sondern einer ihr "ubergeordneten Sektion zu.
       Auf diese Weise kann eine Sektion Makros f"ur die ,,Au"senwelt''
@@ -6132,68 +6139,85 @@ um sozusagen ein neues Hauptkapitel zu beginnen.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-\subsection{MACEXP}
+\subsection{MACEXP\_DFT und MACEXP\_OVR}
 \ttindex{MACEXP}
+\ttindex{MACEXP\_DFT}
+\ttindex{MACEXP\_OVR}
 
 Ist ein Makro einmal ausgestestet und 'fertig', m"ochte man es bei
-Benutzung vielleicht gar nicht mehr im Listing sehen.  Mit diesem
-Pseudobefehl kann man steuern, ob der aus einem Makro expandierte
-Code ausgegeben wird, und wenn ja, zu welchen Teilen.  Im
-einfachsten Fall schaltet ein
-\begin{verbatim}
-        MACEXP  off
-\end{verbatim}
-die Ausgabe des expandierten Codes komplett aus.  Sinngem"a"s schaltet
-ein
-\begin{verbatim}
-        MACEXP  on
-\end{verbatim}
-die vollst"andige Listingform wieder an, dies ist auch die Default-Vorgabe.
-\par
-\tty{MACEXP} kennt neben diesem globalen Ein- und Ausschalter
-noch Wege, nur Teile des expandierten Makros zu listen.  Dazu
-werden die Zeilen in einem Makrorumpf in drei Klassen eingeteilt:
-\begin{enumerate}
-\item{Befehle zur bedingte Assemblierung, sowie Code-Zeilen, die
-      wegen bedingter Assemblierung nicht ausgef"uhrt werden,
-      k"onnen "uber die Argumente \tty{IF} bzw. \tty{NOIF} ein- und
-      ausgeblendet werden.}
+Benutzung vielleicht gar nicht mehr im Listing sehen.  Wie im
+Abschnitt "uber Makros (\ref{SectMacros}) erl"autert, kann man bei der
+Definition eines Makros "uber Zusatzargumente steuern, ob und wenn ja
+welche Teile des Makro-Rumpfes im Listing expandiert werden.  F"ur den
+Fall, da"s eine ganze Reihe von Makros in Folge definiert werden,
+mu"s man dies jedoch nicht f"ur jedes Makro einzeln festlegen.  Der
+Befehl \tty{MACEXP\_DFT} setzt f"ur alle im folgenden definerten Makros,
+welche Teile ihres Rumpfes expandiert werden sollen:
+\begin{itemize}
+\item{\tty{ON} bzw. \tty{OFF} schalten die Expansion komplett
+      ein bzw. aus.}
+\item{Mit den Argumenten \tty{IF} bzw. \tty{NOIF} werden Befehle
+      im Rumpf zur bedingten Assemblierung und derentwegen nicht
+      assemblierte Code-Teile aus- bzw. eingeblendet.}
 \item{Makro-Definitionen (dazu z"ahlen auch \tty{REPT},
       \tty{WHILE} und \tty{IRP(C)}) k"onnen "uber die Argumente
       \tty{MACRO} bzw. \tty{NOMACRO} ein- und
       ausgeblendet werden.}
-\item{Alle andere ist der 'Rest'.}
-\end{enumerate}
-Die einzelnen Schalter wirken relativ zur aktuellen Einstellung:
-ist z.B. initial alles eingeschaltet, sorgt ein
-\begin{verbatim}
-        MACEXP  noif,nomacro
-\end{verbatim}
-daf"ur, da"s nur noch das gelistet wird, was weder eine
-Makrodefinition ist noch per bedingter Assemblierung
-ausgeschlossen wurde.
+\end{itemize}
+Default ist \tty{ON}, d.h. im folgenden definierte Makros werden
+komplett expandiert, au"ser nat"urlich bei den einzelnen Makros wurde
+dies durch Direktiven "ubersteuert.  Weiterhin wirken angegebene Schalte
+relativ zur aktuellen Einstellung: ist z.B. initial alles eingeschaltet,
+sorgt ein
+\begin{quote}{\tt
+        MACEXP\_DFT  noif,nomacro
+}\end{quote}
+daf"ur, da"s nur noch das gelistet wird, was weder eine Makrodefinition
+ist noch per bedingter Assemblierung ausgeschlossen wurde.
 \par
-Zwischen der Bedeutung von \tty{MACEXP} f"ur Makros und der f"ur alle
-anderen makroartigen Konstrukte (z.B. \tty{REPT}) besteht ein subtiler
-Unterschied: W"ahrend Makros intern eigene Flags besitzen, die anzeigt,
-welche Teile bei einer Expansionen dieses Makros ausgegeben werden sollen
-oder nicht, wirkt \tty{MACEXP} direkt auf alle anderen Konstrukte, die
-,,vor Ort'' aufgel"ost werden.  Der Sinn dieser Differenzierung besteht
-darin, da"s es Makros geben kann, die ausgetestet sind und die man nicht
-mehr sehen will, andere aber sehr wohl noch.  \tty{MACEXP} dient hier als
-Default f"ur das bei der Definition des Makros zu setzende Flag, der mit
-den Steuerparametern \tty{(NO)EXPAND/(NO)EXPMACRO/(NO)EXPIF} "ubersteuert
-werden kann.
+Mit diesem Befehl und den pro Makro setzbaren Direktiven l"a"st sich
+f"ur jedes einzlene Makro genau festlegen, welche Teile bei einer
+Expansion im Listing erscheinen sollen und welche nicht.  Es kann
+jedoch in der Praxis auch vorkommen, da"s man ein bestimmtes Makro an
+einzelnen Stellen im Quellcode expandiert haben m"ochte, an anderen
+jedoch nicht.  Dies ist mit dem Befehl \tty{MACEXP\_OVR} m"oglich: er
+akzeptiert die gleichen Argumente, diese wirken jedoch als Overrides
+f"ur alle im folgenden {\em expandierten} Makros, im Gegensatz zu
+\tty{MACEXP\_DFT}, das auf alle im folgenden {\em definierten} Makros
+wirkt.  Ist zum Beispiel f"ur ein Makro festgelegt worden, da"s weder
+Makrodefinitionen noch per bedingte Assemblierung ausgeschlossene
+Teile gelistet werden sollen, so schaltet ein
+\begin{quote}{\tt
+	MACEXP\_OVR  MACRO
+}\end{quote}
+f"ur folgende Expansionen das Listen von Makrodefinitionen wieder ein,
+w"ahrend ein
+\begin{quote}{\tt
+	MACEXP\_OVR ON
+}\end{quote}
+wieder alles ins Listing expandiert.  \tty{MACEXP\_OVR} ohne
+Argumente schaltet wiederum s"amtliche Overrides aus, Makros
+verhalten sich bei der Expansion wieder so, wie zum Zeitpunkt ihrer
+Definition festgelegt.
+\par
+Beide Befehle wirken ebenfalls auf andere Makro-artige Konstrukte
+(\tty{REPT, IRP, IRPC WHILE}), da diese aber einmalig ,,in-place''
+expandiert werden, verschwimmt der funktionale Unterschied zwischen
+den beiden Befehlen - im Zweifelsfalle hat aber der per
+\tty{MACEXP\_OVR} gesetzte Override eine h"ohere Priorit"at.
 
-Die momentane Einstellung l"a"st sich aus dem Symbol \tty{MACEXP} auslesen.
+Die momentane mit \tty{MACEXP\_DFT} gesetzte Einstellung l"a"st sich
+aus dem Symbol \tty{MACEXP} auslesen.  Anstelle von \tty{MACEXP\_DFT}
+darf auch einfach \tty{MACEXP} geschrieben werden, davon sollte aber
+in neuen Programmen kein Gebrauch mehr gemacht werden.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{LISTING}
 \ttindex{LISTING}
 
-funktioniert wie \tty{MACEXP} und akzeptiert die gleichen Parameter,
-arbeitet aber wesentlich radikaler: Mit
+Mit diesem Befehl kann das Listing komplett ein- und ausgeschaltet
+werden. Nach einem
 \begin{verbatim}
         LISTING off
 \end{verbatim}
@@ -9014,7 +9038,7 @@ AST6           &   AS                & Bedeutung/Funktion \\
 \hline
 \tty{.INPUT}   &  \tty{INCLUDE}               & Include-Datei einbinden \\
 \hline
-\tty{.LIST}    &  \tty{LISTING}, \tty{MACEXP} & Listing-Einstellung \\
+\tty{.LIST}    &  \tty{LISTING}, \tty{MACEXP\_DFT} & Listing-Einstellung \\
 \hline
 \tty{.PL}      &  \tty{PAGE}                  & Seitenl"ange Listing \\
 \hline
@@ -10500,6 +10524,11 @@ Angaben:
                 Verwendung von Schl"usselwortparametern auftreten.
                 Das zuletzt angegebene Argument wird benutzt.}
                {Name des Makroparameters}
+\errentry{ 330}{veraltete Anweisung}
+               {Warnung}
+               {Dies Anweisung ist veraltet und sollte nicht mehr
+                in neuen Programmen verwendet werden.}
+               {Die Anweisung, die stattdessen verwendet werden sollte.}
 \errentry{1000}{Symbol doppelt definiert}
                {Fehler}
                {Einem Symbol wurde durch ein Label oder
@@ -10824,7 +10853,7 @@ Angaben:
 \errentry{1504}{Z80-Syntax nicht erlaubt}
                {Fehler}
                {Dieser Befehl ist nur erlaubt, wenn die
-                Z80-Syntax für 8080/8085-Befehle freigeschaltet
+                Z80-Syntax f"ur 8080/8085-Befehle freigeschaltet
                 wurde.}
                {keines}
 \errentry{1505}{Adressierungsart auf dem ... nicht vorhanden}
@@ -11223,14 +11252,14 @@ Angaben:
                {keines}
 \errentry{2100}{unbekanntes Makro-Expansions-Argument}
                {Fehler}
-               {Ein \tty{MACEXP} gegebenes Argument konnte nicht
+               {Ein \tty{MACEXP\_DFT/OVR} gegebenes Argument konnte nicht
                 interpretiert werden.}
                {das unbekannte Argument}
 \errentry{2110}{widerspr"uchliche Angaben zur Makro-Expansion}
                {Fehler}
                {Eine Angabe zur Makroexpansion und ihr genaues
-                Gegenteil d"urfen nicht gleichzeitig al Argument
-                von \tty{MACEXP} verwendet werden.}
+                Gegenteil d"urfen nicht gleichzeitig als Argument
+                von \tty{MACEXP\_DFT/OVR} verwendet werden.}
                {keines}
 \errentry{10001}{Fehler bein "Offnen der Datei}
                {fatal}

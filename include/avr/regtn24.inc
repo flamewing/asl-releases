@@ -7,7 +7,7 @@ __regtn24inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGTN24.INC                                             *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATtiny24                       *
+;*   Contains bit & register definitions for ATtiny24(A)                    *
 ;*                                                                          *
 ;****************************************************************************
 

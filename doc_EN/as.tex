@@ -3136,10 +3136,16 @@ These processors only differ in the size of their internal ROM which
 is defined in \tty{STDDEFXA.INC}.
 %%-----------
 \begin{quote}
-ac) AT90S1200, AT90S2313, AT90S4414, AT90S4433, AT90S4434, AT90S8515,
-    AT90S8535, ATTINY13, ATTINY26, ATTINY2313, ATTINY2313A, ATTINY4313,
-    ATTINY24, ATTINY44, ATTINY84, ATTINY25, ATTINY45, ATTINY85,
-    ATTINY261, ATTINY261A, ATTINY461, ATTINY461A, ATTINY861, ATTINY861A,
+ac) 
+    AT90S1200, AT90S2313, AT90S2323, AT90S233, AT90S2343, AT90S4414,
+    AT90S4433, AT90S4434, AT90S8515, AT90C8534, AT90S8535,
+    ATTINY4, ATTINY5, ATTINY9, ATTINY10, ATTINY11, ATTINY12,
+    ATTINY13, ATTINY13A, ATTINY15, ATTINY20, ATTINY24(A), ATTINY25,
+    ATTINY26, ATTINY28, ATTINY40, ATTINY44(A), ATTINY45, ATTINY48,
+    ATTINY84(A), ATTINY85, ATTINY87, ATTINY88, ATTINY102, ATTINY104,
+    ATTINY167, ATTINY261, ATTINY261A, ATTINY43U, ATTINY441, ATTINY461,
+    ATTINY461A, ATTINY828, ATTINY841, ATTINY861, ATTINY861A, ATTINY1634,
+    ATTINY2313, ATTINY2313A, ATTINY4313,
     ATMEGA48, ATMEGA8, ATMEGA8515, ATMEGA8535, ATMEGA88,
     ATMEGA16, ATMEGA161, ATMEGA162, ATMEGA163, ATMEGA164, ATMEGA165,
     ATMEGA168, ATMEGA169, ATMEGA32, ATMEGA323, ATMEGA324, ATMEGA325,
@@ -3894,7 +3900,8 @@ following variables onto an internal stack:
 \item{currently active memory area (set by \tty{SEGMENT});}
 \item{the flag whether listing is switched on or off (set by \tty{LISTING});}
 \item{the flags that define which part of expanded macros shall be
-      printed in the assembly listing (set by \tty{MACEXP}).}
+      printed in the assembly listing (set by
+      \tty{/MACEXP\_DFT/MACEXP\_OVR}).}
 \item{currently active character translation table (set by
       \tty{CODEPAGE}).}
 \end{itemize}
@@ -5016,6 +5023,7 @@ knows the following statements to work with such blocks:
 
 \subsection{MACRO}
 \ttindex{MACRO}\ttindex{ENDM}
+\label{SectMacros}
 
 is probably the most important instruction for macro programming.
 The instruction sequence
@@ -5054,15 +5062,17 @@ defined:
 \begin{itemize}
 \item{\tty{EXPAND/NOEXPAND}: rule whether the enclosed code shall
       be written to the listing when the macro is expanded.  The
-      default is the value set by the pseudo instruction \tty{MACEXP}.}
+      default is the value set by the pseudo instruction
+      \tty{MACEXP\_DFT}.}
 \item{\tty{EXPIF/NOEXPIF}: rule whether instructions for
       conditional assembly and code excluded by it shall
       be written to the listing when the macro is expanded.  The
-      default is the value set by the pseudo instruction \tty{MACEXP}.}
+      default is the value set by the pseudo instruction
+      \tty{MACEXP\_DFT}.}
 \item{\tty{EXPMACRO/NOEXPMACRO}: rule whether macros defined in
       the macro's body shall be written to the listing when the macro
       is expanded.  The default is the value set by the pseudo instruction
-      \tty{MACEXP}.}
+      \tty{MACEXP\_DFT}.}
 \item{\tty{PUBLIC[:section name]}: assigns the macro to a parent section
       instead of the current section.  A section can make macros
       accessible for the outer code this way.  If the section
@@ -5957,57 +5967,78 @@ done to start a new 'main chapter'.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-\subsection{MACEXP}
+\subsection{MACEXP\_DFT and MACEXP\_OVR}
 \ttindex{MACEXP}
+\ttindex{MACEXP\_DFT}
+\ttindex{MACEXP\_OVR}
 
 Once a macro is tested and 'done', one might not want to see it
-in the listing when it is used.  This pseudo instruction controls
-whether the code expanded form a macro is printed in the listing,
-and if yes, which parts of it.  The simples usage is
+in the listing when it is used.  As described in the section about
+defining and using macros (\ref{SectMacros}), additional arguments to
+the \tty{MACRO} statement allow to control whether a macro's body is
+expanded upon its usage and if yes, which parts of it.  In case that
+several macros are defined in a row, it is not necessary to give
+these directives for every single macro.  The pseudo instruction
+\tty{MACEXP\_DFT} defines for all following macros which parts shall
+be expanded upon invocation of the macro:
+\begin{itemize}
+\item{\tty{ON} resp. \tty{OFF} enable or disable expansion
+      completely.}
+\item{The arguments \tty{IF} resp. \tty{NOIF} enable or disable
+      expansion of instructions for conditional assembly, plus
+      the expansion of code parts the were excluded because of
+      conditional assembly.}
+\item{Macro definitions (which includes \tty{REPT}, \tty{WHILE}
+      and \tty{IRP(C)}) may be excluded from or included in the
+      expanded parts via the arguments \tty{MACRO} resp.
+      \tty{NOMACRO}.}
+\end{itemize}
+The default is \tty{ON}, i.e. defined macros will be expanded
+completely, of course unless specific expansion arguments were given
+to individual macros.  Furthermore, arguments given to
+\tty{MACEXP\_DFT} work relative to the current setting: for instance,
+if expansion is turned on completely initially, the statement
 \begin{verbatim}
-        macexp  off
+	MACEXP_DFT  noif,nomacro
 \end{verbatim}
-which completely turns off printing of the expanded code.
-Consequently, by issuing a
+has the result that for macros defined in succession, only code parts
+that are no macro definition and that are not excluded via
+conditional assembly will be listed.
+\par
+This instruction plus the per-macro directives provide fine-grained
+per-macro over the parts being expanded.  However, there may be cases
+in practice where one wants to see the expanded code of a macro at
+one place and not at the other.  This is possible by using the
+statement \tty{MACEXP\_OVR}: it accepts the same arguemnts like
+\tty{MACEXP\_DFT}, these however act as overrides for all macros being
+{\em expanded} in the following code.  This is in contrast to
+\tty{MACEXP\_DFT} which influences macros being {\em defined} in the
+following code.  For instance, if one defined for a macro that
+neither macro definitions nor conditional assembly shall be expanded
+in the listing, a
 \begin{verbatim}
-        macexp  on
+	MACEXP_OVR  MACRO
 \end{verbatim}
-the complete listing is turned on again.  This is also the default.
-
-Aside from this global switch, \tty{MACEXP} has means to disable
-listing of parts of the macro's contents.  The code contained in
-a macro gets divided into three classes:
-\begin{enumerate}
-\item{Instructions for conditional assembly and instructions that
-      are not executed because of conditional assembly can be
-      removed from or added to the listing via the arguments
-      \tty{IF} resp. \tty{NOIF}.}
-\item{Macro definitions (including \tty{REPT}, \tty{WHILE} and
-      \tty{IRP(C)}) can be removed from or added to the listing
-      via the arguments \tty{MACRO} resp. \tty{NOMACRO}.}
-\item{Anything else is the 'rest'...}
-\end{enumerate}
-The individual switcheswork on the current setting.  For
-instance, if printing of everything is initially enabled, a
+re-enables expansion of macro definitions for its following usages,
+while a
 \begin{verbatim}
-        MACEXP  noif,nomacro
+	MACEXP_OVR  ON
 \end{verbatim}
-has the effect that only the contents of a macro are listed that
-are neither part of a macro defintion nor were excluded via
-conditional assembly.
+forces expansion of the complete macro body in the listing.
+\tty{MACEXP\_OVR} without arguments again disables all overrides,
+macros will again behave as individually specified upon definition.
+\par
+Both statements also have an effect on other macro-like constructs
+(\tty{REPT, IRP, IRPC WHILE}).  However, since these are expanded
+only one and ,,in-place'', the functional difference of these two
+statements becomes minimal.  In case of differences, the override set
+via \tty{MACEXP\_OVR} has a higher priority.
 
-There is a subtle difference between the meaning of \tty{MACEXP} for
-macros and for all other macro-like constructs (e.g. \tty{REPT}): while a
-macro contains internal flags that rules which parts of its body
-shall be listed or not, \tty{MACEXP} directly influences all other
-constructs that are resolved 'in place'.  The reason for this
-differentiation is that there may be macros that are tested and their
-expansion is therefore unnecessary, but all other macros still shall be
-expanded.  \tty{MACEXP} serves as a default for the macro's internal
-flags when it is defined, and it may be overridden by the
-\tty{(NO)EXPAND}, \tty{(NO)EXPIF}, and \tty{(NO)EXPMAC} directives.
-
-The current setting may be read from the symbol \tty{MACEXP}.
+The Setting currently made via \tty{MACEXP\_DFT} may be read from the
+predefined symbol \tty{MACEXP}.  For backward compatibility reasons,
+it is possible to use the statement \tty{MACEXP} instead of
+\tty{MACEXP\_DFT}.  However, one should not make use of this in new
+programs.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -8825,7 +8856,7 @@ AST6            & AS                     & meaning/function \\
 \hline
 \tty{.INPUT}    & \tty{INCLUDE}          & insert include file \\
 \hline
-\tty{.LIST}     & \tty{LISTING, MACEXP}  & settings for listing \\
+\tty{.LIST}     & \tty{LISTING, MACEXP\_DFT}  & settings for listing \\
 \hline
 \tty{.PL}       & \tty{PAGE}             & page length of listing \\
 \hline
@@ -10290,6 +10321,11 @@ described by:
                 keyword arguments.  The last argument is actually
                 used.}
                {name of the macro parameter}
+\errentry{ 330}{deprecated instruction}
+               {warning}
+               {This instruction is deprecated and should not be used any
+                more in new programs.}
+               {the instruction that should be used instead.}
 \errentry{1000}{symbol double defined}
                {error}
                {A new value is assigned to a symbol, using a label or a

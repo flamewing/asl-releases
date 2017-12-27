@@ -252,6 +252,14 @@ Message ErrMsgMacArgRedef
  "Makro-Argument umdefiniert"
  "macro argument redefined"
 
+Message ErrMsgDeprecated
+ "veraltete Anweisung"
+ "deprecated instruction"
+
+Message ErrMsgDeprecated_Instead
+ "%s benutzen"
+ "use %s"
+
 ;*****
 
 Message ErrMsgDoubleDef

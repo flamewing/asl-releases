@@ -138,6 +138,7 @@ call testall t_longline
 call testall t_m16
 call testall t_m16c
 call testall t_macargs
+call testall t_macovr
 call testall t_mcore
 call testall t_mic51
 call testall t_mico8
@@ -161,6 +162,7 @@ call testall t_tmpsym
 call testall t_tms1000
 call testall t_tms1100
 call testall t_tms7
+call testall t_tnavr
 call testall t_vector
 call testall t_w65c02s
 call testall t_xa

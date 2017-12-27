@@ -2,9 +2,9 @@
 /*****************************************************************************/
 /* AS-Portierung                                                             */
 /*                                                                           */
-/* Codegenerator Atmel AVR                                                   */             
+/* Codegenerator Atmel AVR                                                   */
 /*                                                                           */
-/* Historie: 26.12.1996 Grundsteinlegung                                     */             
+/* Historie: 26.12.1996 Grundsteinlegung                                     */
 /*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
 /*           18. 8.1998 BookKeeping-Aufruf bei RES                           */
 /*           15.10.1998 LDD/STD mit <reg>+<symbol> ging nicht                */
@@ -15,67 +15,6 @@
 /*            7. 5.2000 Packing hinzugefuegt                                 */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeavr.c,v 1.11 2016/09/29 16:43:37 alfred Exp $                     */
-/*****************************************************************************
- * $Log: codeavr.c,v $
- * Revision 1.11  2016/09/29 16:43:37  alfred
- * - introduce common DecodeDATA/DecodeRES functions
- *
- * Revision 1.10  2014/11/05 15:47:15  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.9  2014/06/22 08:13:30  alfred
- * - rework to current style
- *
- * Revision 1.8  2009/04/10 08:58:31  alfred
- * - correct address ranges for AVRs
- *
- * Revision 1.7  2008/11/23 10:39:17  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.6  2007/11/24 22:48:06  alfred
- * - some NetBSD changes
- *
- * Revision 1.5  2006/12/14 21:03:37  alfred
- * - correct target assignment
- *
- * Revision 1.4  2006/07/31 18:44:20  alfred
- * - add LPM variation with operands, devices up to ATmega256
- *
- * Revision 1.3  2006/03/05 18:07:42  alfred
- * - remove double InstTable variable
- *
- * Revision 1.2  2005/10/02 10:00:45  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.1  2003/11/06 02:49:22  alfred
- * - recreated
- *
- * Revision 1.9  2003/05/02 21:23:11  alfred
- * - strlen() updates
- *
- * Revision 1.8  2003/02/26 19:18:25  alfred
- * - add/use EvalIntDisplacement()
- *
- * Revision 1.7  2003/02/07 22:57:51  alfred
- * - fix empty left hand in offset
- *
- * Revision 1.6  2002/11/04 19:05:01  alfred
- * - silenced compiler warning
- *
- * Revision 1.5  2002/08/14 18:43:49  alfred
- * - warn null allocation, remove some warnings
- *
- * Revision 1.4  2002/05/11 20:12:46  alfred
- * - added MEGA instructions
- *
- * Revision 1.3  2002/04/20 19:26:30  alfred
- * - add MEGA8, use instruction hash table
- *
- * Revision 1.2  2002/04/06 20:24:10  alfred
- * - fixed alignment in DATA statement
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -105,31 +44,39 @@
 #define IOAreaExtSize (IOAreaStdSize + 160)
 #define IOAreaExt2Size (IOAreaExtSize + 256)
 
+typedef enum
+{
+  eCoreNone,
+  eCoreMinTiny,
+  eCore90S1200,
+  eCoreClassic, /* AT90Sxxxx */
+  eCoreTiny, /* ATtiny up to 8KB flash */
+  eCoreTiny16K,
+  eCoreMega,
+} tCPUCore;
+
+#define MinCoreMask(c) ((Word)(0xffffu << (c)))
+
 typedef struct
 {
   Word Code;
-  CPUVar MinCPU;
+  Word CoreMask;
 } FixedOrder;
 
-static CPUVar CPU90S1200, CPU90S2313, CPU90S4414, CPU90S4433, CPU90S4434, CPU90S8515, CPU90S8535,
-              CPUATTINY13, CPUATTINY26, CPUATTINY2313, CPUATTINY2313A, CPUATTINY4313,
-              CPUATTINY24, CPUATTINY44, CPUATTINY84,
-              CPUATTINY25, CPUATTINY45, CPUATTINY85,
-              CPUATTINY261, CPUATTINY261A, CPUATTINY461, CPUATTINY461A, CPUATTINY861, CPUATTINY861A,
-              CPUATMEGA48,
-              CPUATMEGA8, CPUATMEGA8515, CPUATMEGA8535, CPUATMEGA88,
-              CPUATMEGA16, CPUATMEGA161, CPUATMEGA162, CPUATMEGA163, CPUATMEGA164, CPUATMEGA165, CPUATMEGA168, CPUATMEGA169,
-              CPUATMEGA32, CPUATMEGA323, CPUATMEGA324, CPUATMEGA325, CPUATMEGA3250, CPUATMEGA328, CPUATMEGA329, CPUATMEGA3290,
-              CPUATMEGA406,
-              CPUATMEGA64, CPUATMEGA640, CPUATMEGA644, CPUATMEGA644RFR2, CPUATMEGA645, CPUATMEGA6450, CPUATMEGA649, CPUATMEGA6490,
-              CPUATMEGA103, CPUATMEGA128, CPUATMEGA1280, CPUATMEGA1281, CPUATMEGA1284, CPUATMEGA1284RFR2,
-              CPUATMEGA2560, CPUATMEGA2561, CPUATMEGA2564RFR2;
+typedef struct
+{
+  const char *pName;
+  LongWord FlashEnd;
+  Word RAMSize, IOAreaSize;
+  Boolean RegistersMapped;
+  tCPUCore Core;
+} tCPUProps;
 
 static FixedOrder *FixedOrders, *Reg1Orders, *Reg2Orders;
 
 static Boolean WrapFlag;
 static LongInt ORMask, SignMask;
-static LargeWord IOAreaSize;
+static const tCPUProps *pCurrCPUProps;
 
 static IntType AdrIntType;
 
@@ -143,6 +90,24 @@ static LongInt CutAdr(LongInt Adr)
     return (Adr | ORMask);
   else
     return (Adr & SegLimits[SegCode]);
+}
+
+static Boolean ChkMinCore(tCPUCore MinCore)
+{
+  if (pCurrCPUProps->Core < MinCore)
+  {
+    WrError(1500);
+    return False;
+  }
+  return True;
+}
+
+static Boolean ChkCoreMask(Word CoreMask)
+{
+  if ((1 << pCurrCPUProps->Core) & CoreMask)
+    return True;
+  WrError(1500);
+  return False;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -162,13 +127,15 @@ static Boolean DecodeReg(char *Asc, Word *Erg)
   else
   {
     *Erg = ConstLongInt(Asc + 1, &io, 10);
-    return ((io) && (*Erg < 32));
+    return ((io)
+         && ((*Erg >= 16) || (pCurrCPUProps->Core != eCoreMinTiny))
+         && (*Erg < 32));
   }
 }
 
 static Boolean DecodeMem(char * Asc, Word *Erg)
 {
-  if (strcasecmp(Asc, "X") == 0) *Erg=0x1c;
+  if (strcasecmp(Asc, "X") == 0) *Erg = 0x1c;
   else if (strcasecmp(Asc, "X+") == 0) *Erg = 0x1d;
   else if (strcasecmp(Asc, "-X") == 0) *Erg = 0x1e;
   else if (strcasecmp(Asc, "Y" ) == 0) *Erg = 0x08;
@@ -195,9 +162,10 @@ static void DecodePORT(Word Index)
 
 static void DecodeSFR(Word Index)
 {
+  LargeWord Start = (pCurrCPUProps->RegistersMapped ? RegBankSize : 0);
   UNUSED(Index);
 
-  CodeEquate(SegData, RegBankSize, RegBankSize + IOAreaSize);
+  CodeEquate(SegData, Start, Start + pCurrCPUProps->IOAreaSize);
 }
 
 /* no argument */
@@ -206,8 +174,7 @@ static void DecodeFixed(Word Index)
 {
   const FixedOrder *pOrder = FixedOrders + Index;
 
-  if (ChkArgCnt(0, 0)
-   && ChkMinCPU(pOrder->MinCPU))
+  if (ChkArgCnt(0, 0) && ChkCoreMask(pOrder->CoreMask))
   {
     WAsmCode[0] = pOrder->Code;
     CodeLen = 1;
@@ -320,7 +287,7 @@ static void DecodeReg1(Word Index)
   Word Reg;
 
   if (!ChkArgCnt(1, 1));
-  else if (!ChkMinCPU(pOrder->MinCPU));
+  else if (!ChkCoreMask(pOrder->CoreMask));
   else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
   else
   {
@@ -337,7 +304,7 @@ static void DecodeReg2(Word Index)
   Word Reg1, Reg2;
 
   if (!ChkArgCnt(2, 2));
-  else if (!ChkMinCPU(pOrder->MinCPU));
+  else if (!ChkCoreMask(pOrder->CoreMask));
   else if (!DecodeReg(ArgStr[1], &Reg1)) WrXError(1445, ArgStr[1]);
   else if (!DecodeReg(ArgStr[2], &Reg2)) WrXError(1445, ArgStr[2]);
   else
@@ -389,7 +356,7 @@ static void DecodeADIW(Word Index)
   Boolean OK;
 
   if (!ChkArgCnt(2, 2));
-  else if (!ChkMinCPU(CPU90S2313));
+  else if (!ChkMinCore(eCoreClassic));
   else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
   else if ((Reg < 24) || (Odd(Reg))) WrXError(1445, ArgStr[1]);
   else
@@ -422,7 +389,7 @@ static void DecodeLDST(Word Index)
     }
     if (!DecodeReg(ArgStr[RegI], &Reg)) WrXError(1445, ArgStr[RegI]);
     else if (!DecodeMem(ArgStr[MemI], &Mem)) WrError(1350);
-    else if ((MomCPU < CPU90S2313) && (Mem != 0)) WrError(1351);
+    else if ((pCurrCPUProps->Core == eCore90S1200) && (Mem != 0)) WrError(1351);
     else
     {
       WAsmCode[0] = 0x8000 | Index | (Reg << 4) | (Mem & 0x0f) | ((Mem & 0x10) << 8);
@@ -442,7 +409,7 @@ static void DecodeLDDSTD(Word Index)
   Boolean OK;
 
   if (ChkArgCnt(2, 2)
-   && ChkMinCPU(CPU90S2313))
+   && ChkMinCore(eCoreClassic))
   {
     if (Index) /* STD */
     {
@@ -507,7 +474,7 @@ static void DecodeLDSSTS(Word Index)
   Boolean OK;
 
   if (ChkArgCnt(2, 2)
-   && ChkMinCPU(CPU90S2313))
+   && ChkCoreMask(MinCoreMask(eCoreClassic) | (1 << eCoreMinTiny)))
   {
     if (Index)
     {
@@ -524,7 +491,7 @@ static void DecodeLDSSTS(Word Index)
       if (OK)
       {
         ChkSpace(SegData);
-        WAsmCode[0] = 0x9000 | Index | (Reg << 4); 
+        WAsmCode[0] = 0x9000 | Index | (Reg << 4);
         CodeLen = 2;
       }
     }
@@ -682,7 +649,7 @@ static void DecodeJMPCALL(Word Index)
   Boolean OK;
 
   if (ChkArgCnt(1, 1)
-   && ChkMinCPU(CPUATMEGA48))
+   && ChkMinCore(eCoreTiny16K))
   {
     AdrInt = EvalIntExpression(ArgStr[1], UInt22, &OK);
     if (OK)
@@ -724,7 +691,7 @@ static void DecodeMULS(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 2));
-  else if (!ChkMinCPU(CPUATMEGA48));
+  else if (!ChkMinCore(eCoreMega));
   else if (!DecodeReg(ArgStr[1], &Reg1)) WrXError(1445, ArgStr[1]);
   else if (Reg1 < 16) WrXError(1445, ArgStr[1]);
   else if (!DecodeReg(ArgStr[2], &Reg2)) WrXError(1445, ArgStr[2]);
@@ -741,7 +708,7 @@ static void DecodeMegaMUL(Word Index)
   Word Reg1, Reg2;
 
   if (!ChkArgCnt(2, 2));
-  else if (!ChkMinCPU(CPUATMEGA48));
+  else if (!ChkMinCore(eCoreMega));
   else if (!DecodeReg(ArgStr[1], &Reg1)) WrXError(1445, ArgStr[1]);
   else if ((Reg1 < 16) || (Reg1 > 23)) WrXError(1445, ArgStr[1]);
   else if (!DecodeReg(ArgStr[2], &Reg2)) WrXError(1445, ArgStr[2]);
@@ -760,13 +727,13 @@ static void DecodeMOVW(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 2));
-  else if (!ChkMinCPU(CPUATTINY13));
+  else if (!ChkMinCore(eCoreTiny));
   else if (!DecodeReg(ArgStr[1], &Reg1)) WrXError(1445, ArgStr[1]);
-  else if (Reg1 & 1) WrXError(1445, ArgStr[1]);  
+  else if (Reg1 & 1) WrXError(1445, ArgStr[1]);
   else if (!DecodeReg(ArgStr[2], &Reg2)) WrXError(1445, ArgStr[2]);
-  else if (Reg2 & 1) WrXError(1445, ArgStr[2]);  
+  else if (Reg2 & 1) WrXError(1445, ArgStr[2]);
   else
-  {   
+  {
     WAsmCode[0] = 0x0100 | ((Reg1 >> 1) << 4) | (Reg2 >> 1);
     CodeLen = 1;
   }
@@ -780,7 +747,7 @@ static void DecodeLPM(Word Index)
 
   if (!ArgCnt)
   {
-    if (ChkMinCPU(CPU90S2313))
+    if (ChkMinCore(eCoreClassic))
     {
       WAsmCode[0] = 0x95c8;
       CodeLen = 1;
@@ -788,7 +755,7 @@ static void DecodeLPM(Word Index)
   }
   else if (ArgCnt == 2)
   {
-    if (!ChkMinCPU(CPUATTINY13));
+    if (!ChkMinCore(eCoreTiny));
     else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
     else if (!DecodeMem(ArgStr[2], &Adr)) WrError(1350);
     else if ((Adr != 0x00) && (Adr != 0x11)) WrError(1350);
@@ -809,7 +776,7 @@ static void DecodeELPM(Word Index)
 
   UNUSED(Index);
 
-  if (!ChkMinCPU(CPUATMEGA48));
+  if (!ChkMinCore(eCoreMega));
   else if (!ArgCnt)
   {
     WAsmCode[0] = 0x95d8;
@@ -830,27 +797,27 @@ static void DecodeELPM(Word Index)
 /*---------------------------------------------------------------------------*/
 /* dynamic code table handling                                               */
 
-static void AddFixed(char *NName, CPUVar NMin, Word NCode)
+static void AddFixed(char *NName, Word NMin, Word NCode)
 {
   if (InstrZ >= FixedOrderCnt) exit(255);
   FixedOrders[InstrZ].Code = NCode;
-  FixedOrders[InstrZ].MinCPU = NMin;
+  FixedOrders[InstrZ].CoreMask = NMin;
   AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
-static void AddReg1(char *NName, CPUVar NMin, Word NCode)
+static void AddReg1(char *NName, Word NMin, Word NCode)
 {
   if (InstrZ >= Reg1OrderCnt) exit(255);
   Reg1Orders[InstrZ].Code = NCode;
-  Reg1Orders[InstrZ].MinCPU = NMin;
+  Reg1Orders[InstrZ].CoreMask = NMin;
   AddInstTable(InstTable, NName, InstrZ++, DecodeReg1);
 }
-   
-static void AddReg2(char *NName, CPUVar NMin, Word NCode)
+
+static void AddReg2(char *NName, Word NMin, Word NCode)
 {
   if (InstrZ >= Reg2OrderCnt) exit(255);
   Reg2Orders[InstrZ].Code = NCode;
-  Reg2Orders[InstrZ].MinCPU = NMin;
+  Reg2Orders[InstrZ].CoreMask = NMin;
   AddInstTable(InstTable, NName, InstrZ++, DecodeReg2);
 }
 
@@ -884,35 +851,38 @@ static void InitFields(void)
   InstTable = CreateInstTable(203);
 
   FixedOrders = (FixedOrder*)malloc(sizeof(*FixedOrders) * FixedOrderCnt); InstrZ = 0;
-  AddFixed("IJMP" , CPU90S2313, 0x9409); AddFixed("ICALL" , CPU90S2313, 0x9509);
-  AddFixed("RET"  , CPU90S1200, 0x9508); AddFixed("RETI"  , CPU90S1200, 0x9518);
-  AddFixed("SEC"  , CPU90S1200, 0x9408);
-  AddFixed("CLC"  , CPU90S1200, 0x9488); AddFixed("SEN"   , CPU90S1200, 0x9428);
-  AddFixed("CLN"  , CPU90S1200, 0x94a8); AddFixed("SEZ"   , CPU90S1200, 0x9418);
-  AddFixed("CLZ"  , CPU90S1200, 0x9498); AddFixed("SEI"   , CPU90S1200, 0x9478);
-  AddFixed("CLI"  , CPU90S1200, 0x94f8); AddFixed("SES"   , CPU90S1200, 0x9448);
-  AddFixed("CLS"  , CPU90S1200, 0x94c8); AddFixed("SEV"   , CPU90S1200, 0x9438);
-  AddFixed("CLV"  , CPU90S1200, 0x94b8); AddFixed("SET"   , CPU90S1200, 0x9468);
-  AddFixed("CLT"  , CPU90S1200, 0x94e8); AddFixed("SEH"   , CPU90S1200, 0x9458);
-  AddFixed("CLH"  , CPU90S1200, 0x94d8); AddFixed("NOP"   , CPU90S1200, 0x0000);
-  AddFixed("SLEEP", CPU90S1200, 0x9588); AddFixed("WDR"   , CPU90S1200, 0x95a8);
-  AddFixed("EIJMP", CPUATMEGA48,0x9419); AddFixed("EICALL", CPUATMEGA48,0x9519);
-  AddFixed("SPM"  , CPUATTINY13,0x95e8); AddFixed("BREAK" , CPUATTINY13,0x9598);
+  AddFixed("IJMP" , MinCoreMask(eCoreClassic) | (1 << eCoreMinTiny), 0x9409);
+  AddFixed("ICALL", MinCoreMask(eCoreClassic) | (1 << eCoreMinTiny), 0x9509);
+  AddFixed("RET"  , MinCoreMask(eCoreMinTiny), 0x9508); AddFixed("RETI"  , MinCoreMask(eCoreMinTiny), 0x9518);
+  AddFixed("SEC"  , MinCoreMask(eCoreMinTiny), 0x9408);
+  AddFixed("CLC"  , MinCoreMask(eCoreMinTiny), 0x9488); AddFixed("SEN"   , MinCoreMask(eCoreMinTiny), 0x9428);
+  AddFixed("CLN"  , MinCoreMask(eCoreMinTiny), 0x94a8); AddFixed("SEZ"   , MinCoreMask(eCoreMinTiny), 0x9418);
+  AddFixed("CLZ"  , MinCoreMask(eCoreMinTiny), 0x9498); AddFixed("SEI"   , MinCoreMask(eCoreMinTiny), 0x9478);
+  AddFixed("CLI"  , MinCoreMask(eCoreMinTiny), 0x94f8); AddFixed("SES"   , MinCoreMask(eCoreMinTiny), 0x9448);
+  AddFixed("CLS"  , MinCoreMask(eCoreMinTiny), 0x94c8); AddFixed("SEV"   , MinCoreMask(eCoreMinTiny), 0x9438);
+  AddFixed("CLV"  , MinCoreMask(eCoreMinTiny), 0x94b8); AddFixed("SET"   , MinCoreMask(eCoreMinTiny), 0x9468);
+  AddFixed("CLT"  , MinCoreMask(eCoreMinTiny), 0x94e8); AddFixed("SEH"   , MinCoreMask(eCoreMinTiny), 0x9458);
+  AddFixed("CLH"  , MinCoreMask(eCoreMinTiny), 0x94d8); AddFixed("NOP"   , MinCoreMask(eCoreMinTiny), 0x0000);
+  AddFixed("SLEEP", MinCoreMask(eCoreMinTiny), 0x9588); AddFixed("WDR"   , MinCoreMask(eCoreMinTiny), 0x95a8);
+  AddFixed("EIJMP", MinCoreMask(eCoreMega   ), 0x9419); AddFixed("EICALL", MinCoreMask(eCoreMega   ), 0x9519);
+  AddFixed("SPM"  , MinCoreMask(eCoreTiny   ), 0x95e8);
+  AddFixed("BREAK" , MinCoreMask(eCoreTiny   ) | (1 << eCoreMinTiny), 0x9598);
 
   Reg1Orders = (FixedOrder*)malloc(sizeof(*Reg1Orders) * Reg1OrderCnt); InstrZ = 0;
-  AddReg1("COM"  , CPU90S1200, 0x9400); AddReg1("NEG"  , CPU90S1200, 0x9401);
-  AddReg1("INC"  , CPU90S1200, 0x9403); AddReg1("DEC"  , CPU90S1200, 0x940a);
-  AddReg1("PUSH" , CPU90S2313, 0x920f); AddReg1("POP"  , CPU90S2313, 0x900f);
-  AddReg1("LSR"  , CPU90S1200, 0x9406); AddReg1("ROR"  , CPU90S1200, 0x9407);
-  AddReg1("ASR"  , CPU90S1200, 0x9405); AddReg1("SWAP" , CPU90S1200, 0x9402);
+  AddReg1("COM"  , MinCoreMask(eCoreMinTiny), 0x9400); AddReg1("NEG"  , MinCoreMask(eCoreMinTiny), 0x9401);
+  AddReg1("INC"  , MinCoreMask(eCoreMinTiny), 0x9403); AddReg1("DEC"  , MinCoreMask(eCoreMinTiny), 0x940a);
+  AddReg1("PUSH" , MinCoreMask(eCoreClassic) | (1 << eCoreMinTiny), 0x920f);
+  AddReg1("POP"  , MinCoreMask(eCoreClassic) | (1 << eCoreMinTiny), 0x900f);
+  AddReg1("LSR"  , MinCoreMask(eCoreMinTiny), 0x9406); AddReg1("ROR"  , MinCoreMask(eCoreMinTiny), 0x9407);
+  AddReg1("ASR"  , MinCoreMask(eCoreMinTiny), 0x9405); AddReg1("SWAP" , MinCoreMask(eCoreMinTiny), 0x9402);
 
   Reg2Orders = (FixedOrder*)malloc(sizeof(*Reg2Orders) * Reg2OrderCnt); InstrZ = 0;
-  AddReg2("ADD"  , CPU90S1200, 0x0c00); AddReg2("ADC"  , CPU90S1200, 0x1c00);
-  AddReg2("SUB"  , CPU90S1200, 0x1800); AddReg2("SBC"  , CPU90S1200, 0x0800);
-  AddReg2("AND"  , CPU90S1200, 0x2000); AddReg2("OR"   , CPU90S1200, 0x2800);
-  AddReg2("EOR"  , CPU90S1200, 0x2400); AddReg2("CPSE" , CPU90S1200, 0x1000);
-  AddReg2("CP"   , CPU90S1200, 0x1400); AddReg2("CPC"  , CPU90S1200, 0x0400);
-  AddReg2("MOV"  , CPU90S1200, 0x2c00); AddReg2("MUL"  , CPUATMEGA48,0x9c00);
+  AddReg2("ADD"  , MinCoreMask(eCoreMinTiny), 0x0c00); AddReg2("ADC"  , MinCoreMask(eCoreMinTiny), 0x1c00);
+  AddReg2("SUB"  , MinCoreMask(eCoreMinTiny), 0x1800); AddReg2("SBC"  , MinCoreMask(eCoreMinTiny), 0x0800);
+  AddReg2("AND"  , MinCoreMask(eCoreMinTiny), 0x2000); AddReg2("OR"   , MinCoreMask(eCoreMinTiny), 0x2800);
+  AddReg2("EOR"  , MinCoreMask(eCoreMinTiny), 0x2400); AddReg2("CPSE" , MinCoreMask(eCoreMinTiny), 0x1000);
+  AddReg2("CP"   , MinCoreMask(eCoreMinTiny), 0x1400); AddReg2("CPC"  , MinCoreMask(eCoreMinTiny), 0x0400);
+  AddReg2("MOV"  , MinCoreMask(eCoreMinTiny), 0x2c00); AddReg2("MUL"  , MinCoreMask(eCoreMega   ), 0x9c00);
 
   AddReg3("CLR"  , 0x2400); AddReg3("TST"  , 0x2000); AddReg3("LSL"  , 0x0c00);
   AddReg3("ROL"  , 0x1c00);
@@ -1023,7 +993,7 @@ static void SwitchFrom_AVR(void)
   ClearONOFF();
 }
 
-static void SwitchTo_AVR(void)
+static void SwitchTo_AVR(void *pUser)
 {
   TurnWords = False;
   ConstMode = ConstModeC;
@@ -1040,158 +1010,14 @@ static void SwitchTo_AVR(void)
   Grans[SegData] = 1; ListGrans[SegData] = 1; SegInits[SegData] = 32;
   Grans[SegIO  ] = 1; ListGrans[SegIO  ] = 1; SegInits[SegIO  ] = 0;  SegLimits[SegIO] = 0x3f;
 
-  if ((MomCPU == CPU90S1200)
-   || (MomCPU == CPUATTINY13))
-    SegLimits[SegCode] = 0x01ff;
-  else if ((MomCPU == CPU90S2313)
-        || (MomCPU == CPUATTINY26)
-        || (MomCPU == CPUATTINY2313)
-        || (MomCPU == CPUATTINY2313A)
-        || (MomCPU == CPUATTINY24)
-        || (MomCPU == CPUATTINY25)
-        || (MomCPU == CPUATTINY261)
-        || (MomCPU == CPUATTINY261A))
-    SegLimits[SegCode] = 0x03ff;
-  else if ((MomCPU == CPU90S4414)
-        || (MomCPU == CPU90S4433)
-        || (MomCPU == CPU90S4434)
-        || (MomCPU == CPUATTINY4313)
-        || (MomCPU == CPUATMEGA48)
-        || (MomCPU == CPUATTINY44)
-        || (MomCPU == CPUATTINY45)
-        || (MomCPU == CPUATTINY461)
-        || (MomCPU == CPUATTINY461A))
-    SegLimits[SegCode] = 0x07ff;
-  else if ((MomCPU == CPU90S8515)
-        || (MomCPU == CPU90S8535)
-        || (MomCPU == CPUATMEGA8)
-        || (MomCPU == CPUATMEGA8515) 
-        || (MomCPU == CPUATMEGA8535) 
-        || (MomCPU == CPUATMEGA88)
-        || (MomCPU == CPUATTINY84)
-        || (MomCPU == CPUATTINY85)
-        || (MomCPU == CPUATTINY861)
-        || (MomCPU == CPUATTINY861A))
-    SegLimits[SegCode] = 0x0fff;
-  else if ((MomCPU == CPUATMEGA16)
-        || (MomCPU == CPUATMEGA161)
-        || (MomCPU == CPUATMEGA162)
-        || (MomCPU == CPUATMEGA163)
-        || (MomCPU == CPUATMEGA164)
-       ||  (MomCPU == CPUATMEGA165)
-        || (MomCPU == CPUATMEGA168)
-        || (MomCPU == CPUATMEGA169))
-    SegLimits[SegCode] = 0x1fff;
-  else if ((MomCPU == CPUATMEGA32)
-       ||  (MomCPU == CPUATMEGA323)
-       ||  (MomCPU == CPUATMEGA324)
-       ||  (MomCPU == CPUATMEGA325)
-       ||  (MomCPU == CPUATMEGA3250)
-       ||  (MomCPU == CPUATMEGA328)
-       ||  (MomCPU == CPUATMEGA329)
-       ||  (MomCPU == CPUATMEGA3290))
-    SegLimits[SegCode] = 0x3fff;
-  else if ((MomCPU == CPUATMEGA64)
-        || (MomCPU == CPUATMEGA640)
-        || (MomCPU == CPUATMEGA644)
-        || (MomCPU == CPUATMEGA644RFR2)
-        || (MomCPU == CPUATMEGA6450)
-        || (MomCPU == CPUATMEGA649)
-        || (MomCPU == CPUATMEGA6490))
-    SegLimits[SegCode] = 0x7fff;
-  else if ((MomCPU == CPUATMEGA128)
-        || (MomCPU == CPUATMEGA103)
-        || (MomCPU == CPUATMEGA1280)
-        || (MomCPU == CPUATMEGA1281)
-        || (MomCPU == CPUATMEGA1284)
-        || (MomCPU == CPUATMEGA1284RFR2))
-    SegLimits[SegCode] = 0xffff;
-  else if ((MomCPU == CPUATMEGA2560)
-        || (MomCPU == CPUATMEGA2561)
-        || (MomCPU == CPUATMEGA2564RFR2))
-    SegLimits[SegCode] = 0x1ffff;
+  pCurrCPUProps = (const tCPUProps*)pUser;
 
-  if (MomCPU == CPU90S1200)
-    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaStdSize) + 0;
-  else if (MomCPU == CPUATTINY13)
-    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaStdSize) + 64;
-  else if ((MomCPU == CPU90S2313)
-        || (MomCPU == CPU90S4433)
-        || (MomCPU == CPUATTINY26)
-        || (MomCPU == CPUATTINY2313)
-        || (MomCPU == CPUATTINY2313A)
-        || (MomCPU == CPUATTINY24)
-        || (MomCPU == CPUATTINY25)
-        || (MomCPU == CPUATTINY261)
-        || (MomCPU == CPUATTINY261A))
-    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaStdSize) + 128;
-  else if ((MomCPU == CPU90S4414)
-        || (MomCPU == CPU90S4434)
-        || (MomCPU == CPUATTINY4313)
-        || (MomCPU == CPUATTINY44)
-        || (MomCPU == CPUATTINY45)
-        || (MomCPU == CPUATTINY461)
-        || (MomCPU == CPUATTINY461A))
-    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaStdSize) + 256;
-  else if ((MomCPU == CPU90S8515)
-        || (MomCPU == CPU90S8535)
-        || (MomCPU == CPUATMEGA8515)
-        || (MomCPU == CPUATMEGA8535)
-        || (MomCPU == CPUATTINY84)
-        || (MomCPU == CPUATTINY85)
-        || (MomCPU == CPUATTINY861)
-        || (MomCPU == CPUATTINY861A))
-    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaStdSize) + 512;
-  else if ((MomCPU == CPUATMEGA48)
-        || (MomCPU == CPUATMEGA88)
-        || (MomCPU == CPUATMEGA165))
-    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaExtSize) + 512;
-  else if ((MomCPU == CPUATMEGA8)
-        || (MomCPU == CPUATMEGA16)
-        || (MomCPU == CPUATMEGA161)
-        || (MomCPU == CPUATMEGA163))
-    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaStdSize) + 1024;
-  else if ((MomCPU == CPUATMEGA162)
-        || (MomCPU == CPUATMEGA164)
-        || (MomCPU == CPUATMEGA168)
-        || (MomCPU == CPUATMEGA169))
-    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaExtSize) + 1024;
-  else if ((MomCPU == CPUATMEGA32)
-        || (MomCPU == CPUATMEGA323))
-    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaStdSize) + 2048; 
-  else if ((MomCPU == CPUATMEGA324)
-        || (MomCPU == CPUATMEGA325)
-        || (MomCPU == CPUATMEGA3250)
-        || (MomCPU == CPUATMEGA328)
-        || (MomCPU == CPUATMEGA329)
-        || (MomCPU == CPUATMEGA3290)
-        || (MomCPU == CPUATMEGA406))
-    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaExtSize) + 2048;
-  else if (MomCPU == CPUATMEGA103)
-    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaStdSize) + 4096;
-  else if ((MomCPU == CPUATMEGA64)
-        || (MomCPU == CPUATMEGA644)
-        || (MomCPU == CPUATMEGA645)
-        || (MomCPU == CPUATMEGA6450)
-        || (MomCPU == CPUATMEGA649)
-        || (MomCPU == CPUATMEGA6490)
-        || (MomCPU == CPUATMEGA128))
-    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaExtSize) + 4096; 
-  else if ((MomCPU == CPUATMEGA640)
-        || (MomCPU == CPUATMEGA644RFR2)
-        || (MomCPU == CPUATMEGA1280)
-        || (MomCPU == CPUATMEGA1281)
-        || (MomCPU == CPUATMEGA2560)
-        || (MomCPU == CPUATMEGA2561))
-    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaExt2Size) + 8192;
-  else if (MomCPU == CPUATMEGA1284)
-    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaExtSize) + 16384;
-  else if (MomCPU == CPUATMEGA1284RFR2)
-    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaExt2Size) + 16384;
-  else if (MomCPU == CPUATMEGA2564RFR2)
-    SegLimits[SegData] = RegBankSize + (IOAreaSize = IOAreaExt2Size) + 32768;
+  SegLimits[SegCode] = pCurrCPUProps->FlashEnd;
+  SegLimits[SegData] = (pCurrCPUProps->RegistersMapped ? RegBankSize : 0)
+                     + pCurrCPUProps->IOAreaSize
+                     + pCurrCPUProps->RAMSize
+                     - 1;
 
-  SegLimits[SegData]--;
   AdrIntType = GetSmallestUIntType(SegLimits[SegData]);
 
   SignMask = (SegLimits[SegCode] + 1) >> 1;
@@ -1207,81 +1033,118 @@ static void SwitchTo_AVR(void)
   InitFields();
 }
 
+static const tCPUProps CPUProps[] =
+{
+  { "AT90S1200"      ,  0x01ff, 0x0000, IOAreaStdSize , True , eCore90S1200   },
+  { "AT90S2313"      ,  0x03ff, 0x0080, IOAreaStdSize , True , eCoreClassic   },
+  { "AT90S2323"      ,  0x03ff, 0x0080, IOAreaStdSize , True , eCoreClassic   },
+  { "AT90S2333"      ,  0x03ff, 0x0080, IOAreaStdSize , True , eCoreClassic   }, /* == ATtiny22 */
+  { "AT90S2343"      ,  0x03ff, 0x0080, IOAreaStdSize , True , eCoreClassic   },
+  { "AT90S4414"      ,  0x07ff, 0x0100, IOAreaStdSize , True , eCoreClassic   },
+  { "AT90S4433"      ,  0x07ff, 0x0080, IOAreaStdSize , True , eCoreClassic   },
+  { "AT90S4434"      ,  0x07ff, 0x0100, IOAreaStdSize , True , eCoreClassic   },
+  { "AT90S8515"      ,  0x0fff, 0x0200, IOAreaStdSize , True , eCoreClassic   },
+  { "AT90C8534"      ,  0x0fff, 0x0100, IOAreaStdSize , True , eCoreClassic   },
+  { "AT90S8535"      ,  0x0fff, 0x0200, IOAreaStdSize , True , eCoreClassic   },
+
+  { "ATTINY4"        ,  0x00ff, 0x0020, IOAreaStdSize , False, eCoreMinTiny   },
+  { "ATTINY5"        ,  0x00ff, 0x0020, IOAreaStdSize , False, eCoreMinTiny   },
+  { "ATTINY9"        ,  0x01ff, 0x0020, IOAreaStdSize , False, eCoreMinTiny   },
+  { "ATTINY10"       ,  0x01ff, 0x0020, IOAreaStdSize , False, eCoreMinTiny   },
+  { "ATTINY11"       ,  0x01ff, 0x0000, IOAreaStdSize , True , eCore90S1200   },
+  { "ATTINY12"       ,  0x01ff, 0x0000, IOAreaStdSize , True , eCore90S1200   },
+  { "ATTINY13"       ,  0x01ff, 0x0040, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY13A"      ,  0x01ff, 0x0040, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY15"       ,  0x01ff, 0x0000, IOAreaStdSize , True , eCore90S1200   },
+  { "ATTINY20"       ,  0x03ff, 0x0080, IOAreaStdSize , False, eCoreMinTiny   },
+  { "ATTINY24"       ,  0x03ff, 0x0080, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY24A"      ,  0x03ff, 0x0080, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY25"       ,  0x03ff, 0x0080, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY26"       ,  0x03ff, 0x0080, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY28"       ,  0x03ff, 0x0000, IOAreaStdSize , True , eCore90S1200   },
+  { "ATTINY40"       ,  0x07ff, 0x0100, IOAreaStdSize , False, eCoreMinTiny   },
+  { "ATTINY44"       ,  0x07ff, 0x0100, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY44A"      ,  0x07ff, 0x0100, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY45"       ,  0x07ff, 0x0100, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY48"       ,  0x07ff, 0x0100, IOAreaExtSize , True , eCoreTiny      },
+  { "ATTINY84"       ,  0x0fff, 0x0200, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY84A"      ,  0x0fff, 0x0200, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY85"       ,  0x0fff, 0x0200, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY87"       ,  0x0fff, 0x0200, IOAreaExtSize , True , eCoreTiny16K   },
+  { "ATTINY88"       ,  0x0fff, 0x0200, IOAreaExtSize , True , eCoreTiny      },
+  { "ATTINY102"      ,  0x01ff, 0x0020, IOAreaStdSize , False, eCoreMinTiny   },
+  { "ATTINY104"      ,  0x01ff, 0x0020, IOAreaStdSize , False, eCoreMinTiny   },
+  { "ATTINY167"      ,  0x1fff, 0x0200, IOAreaExtSize , True , eCoreTiny16K   },
+  { "ATTINY261"      ,  0x03ff, 0x0080, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY261A"     ,  0x03ff, 0x0080, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY43U"      ,  0x07ff, 0x0100, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY441"      ,  0x07ff, 0x0100, IOAreaExtSize , True , eCoreTiny      },
+  { "ATTINY461"      ,  0x07ff, 0x0100, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY461A"     ,  0x07ff, 0x0100, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY828"      ,  0x0fff, 0x0200, IOAreaExtSize , True , eCoreTiny      },
+  { "ATTINY841"      ,  0x0fff, 0x0200, IOAreaExtSize , True , eCoreTiny      },
+  { "ATTINY861"      ,  0x0fff, 0x0200, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY861A"     ,  0x0fff, 0x0200, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY1634"     ,  0x1fff, 0x0400, IOAreaExtSize , True , eCoreTiny16K   },
+  { "ATTINY2313"     ,  0x03ff, 0x0080, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY2313A"    ,  0x03ff, 0x0080, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY4313"     ,  0x07ff, 0x0100, IOAreaStdSize , True , eCoreTiny      },
+
+  { "ATMEGA48"       ,  0x07ff, 0x0200, IOAreaExtSize , True , eCoreMega      },
+
+  { "ATMEGA8"        ,  0x0fff, 0x0400, IOAreaStdSize , True , eCoreMega      },
+  { "ATMEGA8515"     ,  0x0fff, 0x0200, IOAreaStdSize , True , eCoreMega      },
+  { "ATMEGA8535"     ,  0x0fff, 0x0200, IOAreaStdSize , True , eCoreMega      },
+  { "ATMEGA88"       ,  0x0fff, 0x0200, IOAreaExtSize , True , eCoreMega      },
+
+  { "ATMEGA16"       ,  0x1fff, 0x0400, IOAreaStdSize , True , eCoreMega      },
+  { "ATMEGA161"      ,  0x1fff, 0x0400, IOAreaStdSize , True , eCoreMega      },
+  { "ATMEGA162"      ,  0x1fff, 0x0400, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA163"      ,  0x1fff, 0x0400, IOAreaStdSize , True , eCoreMega      },
+  { "ATMEGA164"      ,  0x1fff, 0x0400, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA165"      ,  0x1fff, 0x0200, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA168"      ,  0x1fff, 0x0400, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA169"      ,  0x1fff, 0x0400, IOAreaExtSize , True , eCoreMega      },
+
+  { "ATMEGA32"       ,  0x3fff, 0x0800, IOAreaStdSize , True , eCoreMega      },
+  { "ATMEGA323"      ,  0x3fff, 0x0800, IOAreaStdSize , True , eCoreMega      },
+  { "ATMEGA324"      ,  0x3fff, 0x0800, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA325"      ,  0x3fff, 0x0800, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA3250"     ,  0x3fff, 0x0800, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA328"      ,  0x3fff, 0x0800, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA329"      ,  0x3fff, 0x0800, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA3290"     ,  0x3fff, 0x0800, IOAreaExtSize , True , eCoreMega      },
+
+  { "ATMEGA406"      ,  0x4fff, 0x0800, IOAreaExtSize , True , eCoreMega      },
+
+  { "ATMEGA64"       ,  0x7fff, 0x1000, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA640"      ,  0x7fff, 0x2000, IOAreaExt2Size, True , eCoreMega      },
+  { "ATMEGA644"      ,  0x7fff, 0x1000, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA644RFR2"  ,  0x7fff, 0x2000, IOAreaExt2Size, True , eCoreMega      },
+  { "ATMEGA645"      ,  0x7fff, 0x1000, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA6450"     ,  0x7fff, 0x1000, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA649"      ,  0x7fff, 0x1000, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA6490"     ,  0x7fff, 0x1000, IOAreaExtSize , True , eCoreMega      },
+
+  { "ATMEGA103"      ,  0xffff, 0x1000, IOAreaStdSize , True , eCoreMega      },
+  { "ATMEGA128"      ,  0xffff, 0x1000, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA1280"     ,  0xffff, 0x2000, IOAreaExt2Size, True , eCoreMega      },
+  { "ATMEGA1281"     ,  0xffff, 0x2000, IOAreaExt2Size, True , eCoreMega      },
+  { "ATMEGA1284"     ,  0xffff, 0x4000, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA1284RFR2" ,  0xffff, 0x4000, IOAreaExt2Size, True , eCoreMega      },
+
+  { "ATMEGA2560"     , 0x1ffff, 0x2000, IOAreaExt2Size, True , eCoreMega      },
+  { "ATMEGA2561"     , 0x1ffff, 0x2000, IOAreaExt2Size, True , eCoreMega      },
+  { "ATMEGA2564RFR2" , 0x1ffff, 0x8000, IOAreaExt2Size, True , eCoreMega      },
+  { NULL             ,     0x0, 0     , 0             , False, eCoreNone      },
+};
+
 void codeavr_init(void)
 {
-   CPU90S1200    = AddCPU("AT90S1200"  , SwitchTo_AVR);
-   CPU90S2313    = AddCPU("AT90S2313"  , SwitchTo_AVR);
-   CPU90S4414    = AddCPU("AT90S4414"  , SwitchTo_AVR);
-   CPU90S4433    = AddCPU("AT90S4433"  , SwitchTo_AVR);
-   CPU90S4434    = AddCPU("AT90S4434"  , SwitchTo_AVR);
-   CPU90S8515    = AddCPU("AT90S8515"  , SwitchTo_AVR);
-   CPU90S8535    = AddCPU("AT90S8535"  , SwitchTo_AVR);
+  const tCPUProps *pProp;
 
-   CPUATTINY13   = AddCPU("ATTINY13"   , SwitchTo_AVR);
-   CPUATTINY26   = AddCPU("ATTINY26"   , SwitchTo_AVR);
-   CPUATTINY2313 = AddCPU("ATTINY2313" , SwitchTo_AVR);
-   CPUATTINY2313A= AddCPU("ATTINY2313A", SwitchTo_AVR);
-   CPUATTINY4313 = AddCPU("ATTINY4313" , SwitchTo_AVR);
-   CPUATTINY24   = AddCPU("ATTINY24"   , SwitchTo_AVR);
-   CPUATTINY44   = AddCPU("ATTINY44"   , SwitchTo_AVR);
-   CPUATTINY84   = AddCPU("ATTINY84"   , SwitchTo_AVR);
-   CPUATTINY25   = AddCPU("ATTINY25"   , SwitchTo_AVR);
-   CPUATTINY45   = AddCPU("ATTINY45"   , SwitchTo_AVR);
-   CPUATTINY85   = AddCPU("ATTINY85"   , SwitchTo_AVR);
-
-   CPUATTINY261  = AddCPU("ATTINY261"  , SwitchTo_AVR);
-   CPUATTINY261A = AddCPU("ATTINY261A" , SwitchTo_AVR);
-   CPUATTINY461  = AddCPU("ATTINY461"  , SwitchTo_AVR);
-   CPUATTINY461A = AddCPU("ATTINY461A" , SwitchTo_AVR);
-   CPUATTINY861  = AddCPU("ATTINY861"  , SwitchTo_AVR);
-   CPUATTINY861A = AddCPU("ATTINY861A" , SwitchTo_AVR);
-
-   CPUATMEGA48   = AddCPU("ATMEGA48"   , SwitchTo_AVR);
-
-   CPUATMEGA8    = AddCPU("ATMEGA8"    , SwitchTo_AVR); 
-   CPUATMEGA8515 = AddCPU("ATMEGA8515" , SwitchTo_AVR);
-   CPUATMEGA8535 = AddCPU("ATMEGA8535" , SwitchTo_AVR);
-   CPUATMEGA88   = AddCPU("ATMEGA88"   , SwitchTo_AVR);
-
-   CPUATMEGA16   = AddCPU("ATMEGA16"   , SwitchTo_AVR); 
-   CPUATMEGA161  = AddCPU("ATMEGA161"  , SwitchTo_AVR);
-   CPUATMEGA162  = AddCPU("ATMEGA162"  , SwitchTo_AVR);
-   CPUATMEGA163  = AddCPU("ATMEGA163"  , SwitchTo_AVR);
-   CPUATMEGA164  = AddCPU("ATMEGA164"  , SwitchTo_AVR);
-   CPUATMEGA165  = AddCPU("ATMEGA165"  , SwitchTo_AVR);
-   CPUATMEGA168  = AddCPU("ATMEGA168"  , SwitchTo_AVR);
-   CPUATMEGA169  = AddCPU("ATMEGA169"  , SwitchTo_AVR);
-
-   CPUATMEGA32   = AddCPU("ATMEGA32"   , SwitchTo_AVR); 
-   CPUATMEGA323  = AddCPU("ATMEGA323"  , SwitchTo_AVR);
-   CPUATMEGA324  = AddCPU("ATMEGA324"  , SwitchTo_AVR);
-   CPUATMEGA325  = AddCPU("ATMEGA325"  , SwitchTo_AVR);
-   CPUATMEGA3250 = AddCPU("ATMEGA3250" , SwitchTo_AVR);
-   CPUATMEGA328  = AddCPU("ATMEGA328"  , SwitchTo_AVR);
-   CPUATMEGA329  = AddCPU("ATMEGA329"  , SwitchTo_AVR);
-   CPUATMEGA3290 = AddCPU("ATMEGA3290" , SwitchTo_AVR);
-
-   CPUATMEGA406  = AddCPU("ATMEGA406"  , SwitchTo_AVR);
-
-   CPUATMEGA64   = AddCPU("ATMEGA64"   , SwitchTo_AVR);
-   CPUATMEGA640  = AddCPU("ATMEGA640"  , SwitchTo_AVR);
-   CPUATMEGA644  = AddCPU("ATMEGA644"  , SwitchTo_AVR);
-   CPUATMEGA644RFR2 = AddCPU("ATMEGA644RFR2" , SwitchTo_AVR);
-   CPUATMEGA645  = AddCPU("ATMEGA645"  , SwitchTo_AVR);
-   CPUATMEGA6450 = AddCPU("ATMEGA6450" , SwitchTo_AVR);
-   CPUATMEGA649  = AddCPU("ATMEGA649"  , SwitchTo_AVR);
-   CPUATMEGA6490 = AddCPU("ATMEGA6490" , SwitchTo_AVR);
-
-   CPUATMEGA103  = AddCPU("ATMEGA103"  , SwitchTo_AVR);
-   CPUATMEGA128  = AddCPU("ATMEGA128"  , SwitchTo_AVR);
-   CPUATMEGA1280 = AddCPU("ATMEGA1280" , SwitchTo_AVR);
-   CPUATMEGA1281 = AddCPU("ATMEGA1281" , SwitchTo_AVR);
-   CPUATMEGA1284 = AddCPU("ATMEGA1284" , SwitchTo_AVR);
-   CPUATMEGA1284RFR2 = AddCPU("ATMEGA1284RFR2" , SwitchTo_AVR);
-
-   CPUATMEGA2560 = AddCPU("ATMEGA2560" , SwitchTo_AVR);
-   CPUATMEGA2561 = AddCPU("ATMEGA2561" , SwitchTo_AVR);
-   CPUATMEGA2564RFR2 = AddCPU("ATMEGA2564RFR2" , SwitchTo_AVR);
+  for (pProp = CPUProps; pProp->pName; pProp++)
+    (void)AddCPUUser(pProp->pName, SwitchTo_AVR, (void*)pProp);
 
    AddInitPassProc(InitCode_AVR);
 }

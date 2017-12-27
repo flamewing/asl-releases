@@ -7,7 +7,7 @@ __regtnx4inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGTNX4.INC                                             *
 ;*                                                                          *
-;*   Contains common bit & register definitions for ATtiny24/44/84          *
+;*   Contains common bit & register definitions for ATtiny24(A)/44(A)/84(A) *
 ;*                                                                          *
 ;****************************************************************************
 

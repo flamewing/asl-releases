@@ -1,9 +1,14 @@
-$Id: changelog,v 1.152 2017/06/28 17:05:00 alfred Exp $
-------------------------------------------------------------------------------
+2017-12-26 [1.42 Bld 123]
+
+- Addition    : add ATtiny48/88/43u/441/841/828/1634/87/167/
+                4/5/9/10/20/40/102/104/28/11/12/15/13A/24A/44A/
+                84A, AT90S2323/2333/2343/8534
+
+- Addition    : replace MACEXP with MACEXP_DFT/MACEXP_OVR
 
 2017-11-27 [1.42 Bld 122]
 
-- Bugfix      : correct double ASSR defintion for ATmega8/16/32
+- Bugfix      : correct double ASSR definition for ATmega8/16/32
 
 - Bugfix      : correct UPE definition for ATmega162
 

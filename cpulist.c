@@ -20,7 +20,7 @@ static int MaxNameLen = 0;
 /****************************************************************************/
 /* neuen Prozessor definieren */
 
-CPUVar AddCPU(char *NewName, tCPUSwitchProc Switcher)
+CPUVar AddCPUUser(const char *NewName, tCPUSwitchUserProc Switcher, void *pUserData)
 {
   tpCPUDef Lauf, Neu;
   char *p;
@@ -32,6 +32,7 @@ CPUVar AddCPU(char *NewName, tCPUSwitchProc Switcher)
   for (p = Neu->Name; *p != '\0'; p++)
     *p = mytoupper(*p);
   Neu->SwitchProc = Switcher;
+  Neu->pUserData = pUserData;
   Neu->Next = NULL;
   Neu->Number = Neu->Orig = CPUCnt;
 
@@ -50,6 +51,16 @@ CPUVar AddCPU(char *NewName, tCPUSwitchProc Switcher)
   }
 
   return CPUCnt++;
+}
+
+static void SwitchNoUserProc(void *pUserData)
+{
+  ((tCPUSwitchProc)pUserData)();
+}
+
+CPUVar AddCPU(const char *NewName, tCPUSwitchProc Switcher)
+{
+  return AddCPUUser(NewName, SwitchNoUserProc, Switcher);
 }
 
 Boolean AddCPUAlias(char *OrigName, char *AliasName)
@@ -87,8 +98,9 @@ void IterateCPUList(tCPUListIterator Iterator, void *pUser)
 typedef struct
 {
   int cnt, perline;
-  tCPUSwitchProc Proc;
-  tCPUSwitchProc NxtProc;
+  tCPUSwitchUserProc Proc;
+  void *pUserData;
+  tPrintNextCPUProc NxtProc;
 } tPrintContext;
 
 static void PrintIterator(const tCPUDef *pCPUDef, void *pUser)
@@ -99,9 +111,12 @@ static void PrintIterator(const tCPUDef *pCPUDef, void *pUser)
 
   if (pCPUDef->Number == pCPUDef->Orig)
   {
-    if ((pCPUDef->SwitchProc != pContext->Proc) || (pContext->cnt == pContext->perline))
+    Boolean Unequal = (pCPUDef->SwitchProc != pContext->Proc)
+                   || (pCPUDef->SwitchProc == SwitchNoUserProc && (pContext->pUserData != pCPUDef->pUserData));
+    if (Unequal || (pContext->cnt == pContext->perline))
     {
       pContext->Proc = pCPUDef->SwitchProc;
+      pContext->pUserData = pCPUDef->pUserData;
       printf("\n");
       pContext->NxtProc();
       pContext->cnt = 0;
@@ -111,11 +126,12 @@ static void PrintIterator(const tCPUDef *pCPUDef, void *pUser)
   }
 }
 
-void PrintCPUList(tCPUSwitchProc NxtProc)
+void PrintCPUList(tPrintNextCPUProc NxtProc)
 {
   tPrintContext Context;
 
   Context.Proc = NULL;
+  Context.pUserData = NULL;
   Context.cnt = 0;
   Context.NxtProc = NxtProc;
   Context.perline = 80 / MaxNameLen;

@@ -1452,7 +1452,10 @@ static void ExpandMacro(PMacroRec OneMacro)
   {
     if (IfAsm)
     {
+      /* override has higher prio, so apply as second */
+
       NextDoLst = ApplyLstMacroExpMod(DoLst, &OneMacro->LstMacroExpMod);
+      NextDoLst = ApplyLstMacroExpMod(NextDoLst, &LstMacroExpOverride);
       Tag->Next = FirstInputTag;
       FirstInputTag = Tag;
       MacroNestLevel++;
@@ -1668,6 +1671,7 @@ static void IRP_OutProcessor(void)
     if (IfAsm)
     {
       NextDoLst = DoLst & LstMacroExp;
+      NextDoLst = ApplyLstMacroExpMod(NextDoLst, &LstMacroExpOverride);
       Tmp->Tag->Next = FirstInputTag;
       FirstInputTag = Tmp->Tag;
     }
@@ -2044,6 +2048,7 @@ static void REPT_OutProcessor(void)
     if ((IfAsm) && (Tmp->Tag->ParCnt > 0))
     {
       NextDoLst = DoLst & LstMacroExp;
+      NextDoLst = ApplyLstMacroExpMod(NextDoLst, &LstMacroExpOverride);
       Tmp->Tag->Next = FirstInputTag;
       FirstInputTag = Tmp->Tag;
     }
@@ -2264,6 +2269,7 @@ static void WHILE_OutProcessor(void)
     if ((IfAsm) && (OK))
     {
       NextDoLst = DoLst & LstMacroExp;
+      NextDoLst = ApplyLstMacroExpMod(NextDoLst, &LstMacroExpOverride);
       Tmp->Tag->Next = FirstInputTag;
       FirstInputTag = Tmp->Tag;
     }
@@ -3277,6 +3283,7 @@ static void AssembleFile_InitPass(void)
   SetFlag(&DoBranchExt, BranchExtName, False);
   EnterIntSymbol(ListOnName, ListOn = 1, SegNone, True);
   SetLstMacroExp(eLstMacroExpAll);
+  InitLstMacroExpMod(&LstMacroExpOverride);
   SetFlag(&RelaxedMode, RelaxedName, False);
   EnterIntSymbol(NestMaxName, NestMax = DEF_NESTMAX, SegNone, True);
   CopyDefSymbols();

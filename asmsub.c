@@ -1168,6 +1168,7 @@ static void WrErrorNum(Word Num)
     case  300: msgno = Num_ErrMsgBitNumberTruncated; break;
     case  310: msgno = Num_ErrMsgInvRegisterPointer; break;
     case  320: msgno = Num_ErrMsgMacArgRedef; break;
+    case ErrNum_Deprecated: msgno = Num_ErrMsgDeprecated; break;
     case 1000: msgno = Num_ErrMsgDoubleDef; break;
     case 1010: msgno = Num_ErrMsgSymbolUndef; break;
     case 1020: msgno = Num_ErrMsgInvSymName; break;

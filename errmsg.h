@@ -13,6 +13,7 @@
 
 typedef enum
 {
+  ErrNum_Deprecated = 330,
   ErrNum_WrongArgCnt = 1110,
   ErrNum_CannotSplitArg = 1112,
   ErrNum_InvOpSize = 1130,

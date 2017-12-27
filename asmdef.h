@@ -306,6 +306,7 @@ typedef struct _TSaveState
   Integer SavePC;
   Byte SaveListOn;
   tLstMacroExp SaveLstMacroExp;
+  tLstMacroExpMod SaveLstMacroExpOverride;
   PTransTable SaveTransTable;
   Integer SaveEnumSegment;
   LongInt SaveEnumCurrentValue, SaveEnumIncrement;
@@ -481,6 +482,7 @@ extern Byte ChapDepth;
 extern StringPtr ListLine;
 extern Byte PageLength, PageWidth;
 extern tLstMacroExp LstMacroExp;
+extern tLstMacroExpMod LstMacroExpOverride;
 extern Boolean DottedStructs;
 extern StringPtr PrtInitString;
 extern StringPtr PrtExitString;

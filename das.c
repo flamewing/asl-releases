@@ -322,7 +322,7 @@ static CMDResult CMD_CPU(Boolean Negate, const char *pArg)
   if (!pCPUDef)
     return ArgError(Num_ErrMsgUnknownCPU, pArg);
 
-  pCPUDef->SwitchProc();
+  pCPUDef->SwitchProc(pCPUDef->pUserData);
 
   return CMDArg;
 }
