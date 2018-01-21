@@ -7,7 +7,7 @@ __regm48inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGM48.INC                                              *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATmega48                       *
+;*   Contains Bit & Register Definitions for ATmega48                       *
 ;*                                                                          *
 ;****************************************************************************
 

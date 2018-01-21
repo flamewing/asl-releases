@@ -7,7 +7,7 @@ __reg4433inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REG4433.INC                                             *
 ;*                                                                          *
-;*   Contains bit & register definitions for AT90S4433                      *
+;*   Contains Bit & Register Definitions for AT90S4433                      *
 ;*                                                                          *
 ;****************************************************************************
 

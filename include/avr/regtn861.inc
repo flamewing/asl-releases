@@ -7,7 +7,7 @@ __regtn861inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGTN861.INC                                            *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATtiny861(A)                   *
+;*   Contains Bit & Register Definitions for ATtiny861(A)                   *
 ;*                                                                          *
 ;****************************************************************************
 

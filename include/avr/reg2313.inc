@@ -7,7 +7,7 @@ __reg2313inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REG2313.INC                                             *
 ;*                                                                          *
-;*   Contains bit & register definitions for AT90S2313                      *
+;*   Contains Bit & Register Definitions for AT90S2313                      *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -23,16 +23,15 @@ FLASHEND	label	0x7ff
 ; Chip Configuration
 
 MCUCR		port	0x35		; MCU General Control Register
-SM		equ	4		; choose idle/powerdown mode
-SE		equ	5		; enable sleep mode
+SM		avrbit	MCUCR,4		; Choose Idle/Powerdown Mode
+SE		avrbit	MCUCR,5		; Enable Sleep Mode
 
 ;----------------------------------------------------------------------------
 ; EEPROM
 
 		include	"avr/ee90.inc"
 
-		; bits in EECR
-EEMWE		equ	 2		; EEPROM Master Write Enable
+EEMWE		avrbit	 EECR,2		; EEPROM Master Write Enable
 
 ;----------------------------------------------------------------------------
 ; GPIO
@@ -44,75 +43,74 @@ PIND		port	0x10		; Port D @ 0x10 (IO) ff.
 ; Interrupt Vectors
 
 		enumconf 1,code
-		enum	 INT0_vect=1		; external interrupt request 0
-		nextenum INT1_vect		; external interrupt request 1
-		nextenum TIMER1_CAPT_vect	; timer/counter 1 capture event
-		nextenum TIMER1_COMP_vect	; timer/counter 1 compare match
-		nextenum TIMER1_OVF_vect	; timer/counter 1 overflow
-		nextenum TIMER0_OVF_vect	; timer/counter 0 overflow
-		nextenum UART_RX_vect		; UART Rx complete
-		nextenum UART_UDRE_vect		; UART data register empty
-		nextenum UART_TX_vect		; UART Tx complete
-		nextenum ANA_COMP_vect		; analog comparator
+		enum	 INT0_vect=1		; External Interrupt Request 0
+		nextenum INT1_vect		; External Interrupt Request 1
+		nextenum TIMER1_CAPT_vect	; Timer/Counter 1 Capture Event
+		nextenum TIMER1_COMP_vect	; Timer/Counter 1 Compare Match
+		nextenum TIMER1_OVF_vect	; Timer/Counter 1 Overflow
+		nextenum TIMER0_OVF_vect	; Timer/Counter 0 Overflow
+		nextenum UART_RX_vect		; UART Rx Complete
+		nextenum UART_UDRE_vect		; UART Data Register Empty
+		nextenum UART_TX_vect		; UART Tx Complete
+		nextenum ANA_COMP_vect		; Analog Comparator
 
 ;----------------------------------------------------------------------------
 ; External Interrupts
 
-		; bits in MCUCR
-ISC00		equ	0		; external interrupt 0 sense control
-ISC01		equ	1
-ISC10		equ	2		; external interrupt 1 sense control
-ISC11		equ	3
+ISC00		avrbit	MCUCR,0		; External Interrupt 0 Sense Control
+ISC01		avrbit	MCUCR,1
+ISC10		avrbit	MCUCR,2		; External Interrupt 1 Sense Control
+ISC11		avrbit	MCUCR,3
 
 GIMSK		port	0x3b		; General Interrupt Mask Register
-INT0		equ     6		;  enable external Interrupt 0
-INT1		equ	7		;  enable external Interrupt 1
+INT0		avrbit	GIMSK,6		; Enable External Interrupt 0
+INT1		avrbit	GIMSK,7		; Enable External Interrupt 1
 
 GIFR		port	0x3a		; External Interrupt-Flags
-INTF0		equ	6		;  external Interrupt 0 occured
-INTF1		equ	7		;  external Interrupt 1 occured
+INTF0		avrbit	GIFR,6		; External Interrupt 0 Occured
+INTF1		avrbit	GIFR,7		; External Interrupt 1 Occured
 
 ;----------------------------------------------------------------------------
 ; Timers
 
-TCCR0		port	0x33		; timer/counter 0 control register
-CS00		equ	0		; clock select
-CS01		equ	1
-CS02		equ	2
-TCNT0		port	0x32		; timer/counter 0 value
+TCCR0		port	0x33		; Timer/Counter 0 Control Register
+CS00		avrbit	TCCR0,0		; Clock Select
+CS01		avrbit	TCCR0,1
+CS02		avrbit	TCCR0,2
+TCNT0		port	0x32		; Timer/Counter 0 Value
 
-TCCR1A		port	0x2f		; timer/counter 1 control register A
-PWM10		equ	0		; mode of pulse width modulator
-PWM11		equ	1
-COM1A0		equ	6		; timer/counter 1 compare mode
-COM1A1		equ	7
-TCCR1B		port	0x2e		; timer/counter 1 control register B
-CS10		equ	0		; prescaler setting
-CS11		equ	1
-CS12		equ	2
-CTC1		equ	3		; clear after equality?
-ICES1		equ	6		; capture slope selection
-ICNC1		equ	7		; capture noise filter
-TCNT1L		port	0x2c		; timer/counter 1 value LSB
-TCNT1H		port	0x2d		; timer/counter 1 value MSB
-OCR1AL		port	0x2a		; timer/counter 1 output compare value A LSB
-OCR1AH		port	0x2b		; timer/counter 1 output compare value A MSB
-ICR1L		port	0x24		; timer/counter 1 input capture value LSB
-ICR1H		port	0x25		; timer/counter 1 input capture value MSB
+TCCR1A		port	0x2f		; Timer/Counter 1 Control Register A
+PWM10		avrbit	TCCR1A,0	; Mode of Pulse Width Modulator
+PWM11		avrbit	TCCR1A,1
+COM1A0		avrbit	TCCR1A,6	; Timer/Counter 1 Compare Mode
+COM1A1		avrbit	TCCR1A,7
+TCCR1B		port	0x2e		; Timer/Counter 1 Control Register B
+CS10		avrbit	TCCR1B,0	; Prescaler Setting
+CS11		avrbit	TCCR1B,1
+CS12		avrbit	TCCR1B,2
+CTC1		avrbit	TCCR1B,3	; Clear After Equality?
+ICES1		avrbit	TCCR1B,6	; Capture Slope Selection
+ICNC1		avrbit	TCCR1B,7	; Capture Noise Filter
+TCNT1L		port	0x2c		; Timer/Counter 1 Value LSB
+TCNT1H		port	0x2d		; Timer/Counter 1 Value MSB
+OCR1AL		port	0x2a		; Timer/Counter 1 Output Compare Value A LSB
+OCR1AH		port	0x2b		; Timer/Counter 1 Output Compare Value A MSB
+ICR1L		port	0x24		; Timer/Counter 1 Input Capture Value LSB
+ICR1H		port	0x25		; Timer/Counter 1 Input Capture Value MSB
 
-TIMSK		port	0x39		; timer mask register
-TOIE0		equ	1		; timer/counter 0 overflow interrupt enable
-TICIE1		equ	3		; timer/counter 1 input capture interrupt enable
-OCIE1A		equ	6		; timer/counter 1 output compare interrupt enable
-TOIE1		equ	7		; timer/counter 1 overflow interrupt enable
+TIMSK		port	0x39		; Timer Interrupt Mask Register
+TOIE0		avrbit	TIMSK,1		; Timer/Counter 0 Overflow Interrupt Enable
+TICIE1		avrbit	TIMSK,3		; Timer/Counter 1 Input Capture Interrupt Enable
+OCIE1A		avrbit	TIMSK,6		; Timer/Counter 1 Output Compare Interrupt Enable
+TOIE1		avrbit	TIMSK,7		; Timer/Counter 1 Overflow Interrupt Enable
 
-TIFR		port	0x38		; timer interrupt status register
+TIFR		port	0x38		; Timer Interrupt Flag Register
 
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
 		include	"avr/wdm21.inc"
-WDTOE		equ	4		; turn-off enable
+WDTOE		avrbit	WDTCR,4		; Turn-Off Enable
 
 ;----------------------------------------------------------------------------
 ; UART

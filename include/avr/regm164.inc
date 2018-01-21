@@ -7,7 +7,7 @@ __regm164inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGM164.INC                                             *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATmega164                      *
+;*   Contains Bit & Register Definitions for ATmega164                      *
 ;*                                                                          *
 ;****************************************************************************
 

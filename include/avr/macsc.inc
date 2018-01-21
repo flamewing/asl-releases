@@ -7,17 +7,17 @@ __macscinc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File MACSC.INC                                               *
 ;*                                                                          *
-;*   Contains bit & register definitions for RFRF2 MAC Symbol Counter       *
+;*   Contains Bit & Register Definitions for RFRF2 MAC Symbol Counter       *
 ;*                                                                          *
 ;****************************************************************************
 
 SCCSR		sfr	0xdb		; Symbol Counter Compare Source Register
-SCCS31		equ	5		; Symbol Counter Compare Source select register for Compare Unit 3
-SCCS30		equ	4	
-SCCS21		equ	3		; Symbol Counter Compare Source select register for Compare Unit 2
-SCCS20		equ	2
-SCCS11		equ	1		; Symbol Counter Compare Source select register for Compare Unit 1
-SCCS10		equ	0
+SCCS31		avrbit	SCCSR,5		; Symbol Counter Compare Source Select Register for Compare Unit 3
+SCCS30		avrbit	SCCSR,4	
+SCCS21		avrbit	SCCSR,3		; Symbol Counter Compare Source Select Register for Compare Unit 2
+SCCS20		avrbit	SCCSR,2
+SCCS11		avrbit	SCCSR,1		; Symbol Counter Compare Source Select Register for Compare Unit 1
+SCCS10		avrbit	SCCSR,0
 
 SCCNTHH		sfr	0xe4		; Symbol Counter Register HH-Byte
 SCCNTHL		sfr	0xe3		; Symbol Counter Register HL-Byte
@@ -60,39 +60,39 @@ SCOCR3LH	sfr	0xee		; Symbol Counter Output Compare Register 3 LH-Byte
 SCOCR3LL	sfr	0xed		; Symbol Counter Output Compare Register 3 LL-Byte
 
 SCCR0		sfr	0xdc		; Symbol Counter Control Register 0
-SCRES		equ	7		; Symbol Counter Synchronization
-SCMBTS		equ	6		; Manual Beacon Timestamp
-SCEN		equ	5		; Symbol Counter enable
-SCCKSEL		equ	4		; Symbol Counter Clock Source select
-SCTSE		equ	3		; Symbol Counter Automatic Timestamping enable
-SCCMP3		equ	2		; Symbol Counter Compare Unit 3 Mode select
-SCCMP2		equ	1		; Symbol Counter Compare Unit 2 Mode select
-SCCMP1		equ	0		; Symbol Counter Compare Unit 1 Mode select
+SCRES		avrbit	SCCR0,7		; Symbol Counter Synchronization
+SCMBTS		avrbit	SCCR0,6		; Manual Beacon Timestamp
+SCEN		avrbit	SCCR0,5		; Symbol Counter Enable
+SCCKSEL		avrbit	SCCR0,4		; Symbol Counter Clock Source Select
+SCTSE		avrbit	SCCR0,3		; Symbol Counter Automatic Timestamping Enable
+SCCMP3		avrbit	SCCR0,2		; Symbol Counter Compare Unit 3 Mode Select
+SCCMP2		avrbit	SCCR0,1		; Symbol Counter Compare Unit 2 Mode Select
+SCCMP1		avrbit	SCCR0,0		; Symbol Counter Compare Unit 1 Mode Select
 
 SCCR1		sfr	0xdd		; Symbol Counter Control Register 1
-SCBTSM		equ	5		; Symbol Counter Beacon Timestamp Mask Register
-SCCKDIV2	equ	4		; Clock divider for synchronous clock source (16MHz Transceiver Clock)
-SCCKDIV1	equ	3
-SCCKDIV0	equ	2
-SCEECLK		equ	1		; Enable External Clock Source on PG2
-SCENBO		equ	0		; Backoff Slot Counter enable
+SCBTSM		avrbit	SCCR1,5		; Symbol Counter Beacon Timestamp Mask Register
+SCCKDIV2	avrbit	SCCR1,4		; Clock divider for synchronous Clock source (16MHz Transceiver Clock)
+SCCKDIV1	avrbit	SCCR1,3
+SCCKDIV0	avrbit	SCCR1,2
+SCEECLK		avrbit	SCCR1,1		; Enable External Clock Source on PG2
+SCENBO		avrbit	SCCR1,0		; Backoff Slot Counter Enable
 
 SCSR		sfr	0xde		; Symbol Counter Status Register
-SCBSY		equ	0		; Symbol Counter busy
+SCBSY		avrbit	SCSR,0		; Symbol Counter busy
 
 SCIRQS		sfr	0xe0		; Symbol Counter Interrupt Status Register
-IRQSBO		equ	4		; Backoff Slot Counter IRQ
-IRQSOF		equ	3		; Symbol Counter Overflow IRQ
-IRQSCP3		equ	2		; Compare Unit 3 Compare Match IRQ
-IRQSCP2		equ	1		; Compare Unit 2 Compare Match IRQ
-IRQSCP1		equ	0		; Compare Unit 1 Compare Match IRQ
+IRQSBO		avrbit	SCIRQS,4	; Backoff Slot Counter IRQ
+IRQSOF		avrbit	SCIRQS,3	; Symbol Counter Overflow IRQ
+IRQSCP3		avrbit	SCIRQS,2	; Compare Unit 3 Compare Match IRQ
+IRQSCP2		avrbit	SCIRQS,1	; Compare Unit 2 Compare Match IRQ
+IRQSCP1		avrbit	SCIRQS,0	; Compare Unit 1 Compare Match IRQ
 
 SCIRQM		sfr	0xdf		; Symbol Counter Interrupt Mask Register
-IRQMBO		equ	4		; Backoff Slot Counter IRQ enable
-IRQMOF		equ	3		; Symbol Counter Overflow IRQ enable
-IRQMCP3		equ	2		; Symbol Counter Compare Match 3 IRQ enable
-IRQMCP2		equ	1		; Symbol Counter Compare Match 2 IRQ enable
-IRQMCP1		equ	0		; Symbol Counter Compare Match 1 IRQ enable
+IRQMBO		avrbit	SCIRQM,4	; Backoff Slot Counter IRQ Enable
+IRQMOF		avrbit	SCIRQM,3	; Symbol Counter Overflow IRQ Enable
+IRQMCP3		avrbit	SCIRQM,2	; Symbol Counter Compare Match 3 IRQ Enable
+IRQMCP2		avrbit	SCIRQM,1	; Symbol Counter Compare Match 2 IRQ Enable
+IRQMCP1		avrbit	SCIRQM,0	; Symbol Counter Compare Match 1 IRQ Enable
 
 		restore			; re-enable listing
 

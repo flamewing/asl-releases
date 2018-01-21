@@ -7,7 +7,7 @@ __regtn12inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGTN12.INC                                             *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATtiny12                       *
+;*   Contains Bit & Register Definitions for ATtiny12                       *
 ;*                                                                          *
 ;****************************************************************************
 

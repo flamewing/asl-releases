@@ -7,7 +7,7 @@ __regt4313inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGT4313.INC                                            *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATtiny4313                     *
+;*   Contains Bit & Register Definitions for ATtiny4313                     *
 ;*                                                                          *
 ;****************************************************************************
 

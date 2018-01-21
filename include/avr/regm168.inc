@@ -7,7 +7,7 @@ __regm168inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGM168.INC                                             *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATmega168                      *
+;*   Contains Bit & Register Definitions for ATmega168                      *
 ;*                                                                          *
 ;****************************************************************************
 

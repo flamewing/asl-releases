@@ -7,7 +7,7 @@ __regtn87inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGTN87.INC                                             *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATtiny87                       *
+;*   Contains Bit & Register Definitions for ATtiny87                       *
 ;*                                                                          *
 ;****************************************************************************
 

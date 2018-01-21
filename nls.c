@@ -197,10 +197,10 @@ void NLS_Initialize(void)
 
   NLSInfo.Country = cinfo.country;
   NLSInfo.CodePage = cinfo.codepage;
-  NLSInfo.DecSep = strdup(cinfo.szDecimal);
-  NLSInfo.DataSep = strdup(cinfo.szDataSeparator);
-  NLSInfo.ThouSep = strdup(cinfo.szThousandsSeparator);
-  NLSInfo.Currency = strdup(cinfo.szCurrency);
+  NLSInfo.DecSep = as_strdup(cinfo.szDecimal);
+  NLSInfo.DataSep = as_strdup(cinfo.szDataSeparator);
+  NLSInfo.ThouSep = as_strdup(cinfo.szThousandsSeparator);
+  NLSInfo.Currency = as_strdup(cinfo.szCurrency);
   NLSInfo.CurrDecimals = cinfo.cDecimalPlace;
   NLSInfo.CurrFmt = (CurrFormat) cinfo.fsCurrencyFmt;
 #endif
@@ -274,7 +274,7 @@ void NLS_Initialize(void)
 
 #ifdef OS2_NLS
   NLSInfo.DateFmt = (DateFormat) cinfo.fsDateFmt;
-  NLSInfo.DateSep = strdup(cinfo.szDateSeparator);
+  NLSInfo.DateSep = as_strdup(cinfo.szDateSeparator);
   DidDate = True;
 #endif
 
@@ -337,7 +337,7 @@ void NLS_Initialize(void)
         if (!NLSInfo.DateSep)
         {
           run++;
-          cpy = NLSInfo.DateSep = strdup("                  ");
+          cpy = NLSInfo.DateSep = as_strdup("                  ");
           while ((*run != ' ') && (*run != '%'))
             *(cpy++) = *(run++);
           *cpy = '\0';
@@ -371,7 +371,7 @@ void NLS_Initialize(void)
 
 #ifdef OS2_NLS
   NLSInfo.TimeFmt = (TimeFormat) cinfo.fsTimeFmt;
-  NLSInfo.TimeSep = strdup(cinfo.szTimeSeparator);
+  NLSInfo.TimeSep = as_strdup(cinfo.szTimeSeparator);
   DidDate = True;
 #endif
 
@@ -421,18 +421,16 @@ void NLS_Initialize(void)
             break;
           case 'T':
             fflush(stdout);
-            fprintf(stderr, "\nwarning, detected non-ANSI time format specifier '%%T'\n");
             run = "H:%M:%S";
             break;
           case 'R':
             fflush(stdout);
-            fprintf(stderr, "\nwarning, detected non-ANSI time format specifier '%%R'\n");
             run = "H:%M";
             break;
         }
         if (!NLSInfo.TimeSep)
         {
-          run++; cpy = NLSInfo.TimeSep = strdup("                  ");
+          run++; cpy = NLSInfo.TimeSep = as_strdup("                  ");
           while ((*run != '\0') && (*run != ' ') && (*run != '%'))
            *(cpy++) = (*(run++));
           *cpy = '\0';

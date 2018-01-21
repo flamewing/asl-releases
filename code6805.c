@@ -199,7 +199,7 @@ static void DecodeAdr(Byte Start, Byte Stop, Word Mask)
       if ((ZeroMode == 0) && (AdrWord == 0) && (Mask & MModIx) && (tmode1 == ModIx1))
         AdrMode = ModIx;
 
-      else if (((Mask && (1 << tmode2)) == 0) || (ZeroMode == 2) || ((ZeroMode == 0) && (Hi(AdrWord) == 0)))
+      else if (((Mask & (1 << tmode2)) == 0) || (ZeroMode == 2) || ((ZeroMode == 0) && (Hi(AdrWord) == 0)))
       {
         if (FirstPassUnknown)
           AdrWord &= 0xff;

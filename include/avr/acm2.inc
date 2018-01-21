@@ -7,13 +7,13 @@ __acm2inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File ACM.INC                                                 *
 ;*                                                                          *
-;* Contains bit & register definitions for 2nd Gen ATmega Analog Comparator *
+;* Contains Bit & Register Definitions for 2nd Gen ATmega Analog Comparator *
 ;*                                                                          *
 ;****************************************************************************
 
 		include	"avr/ac90.inc"
 
-AINBG		equ	6		; bandgap select
+AINBG		avrbit	ACSR,6		; Bandgap Select
 
 		restore			; re-enable listing
 

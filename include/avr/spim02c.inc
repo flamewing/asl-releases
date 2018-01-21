@@ -7,26 +7,26 @@ __spim0inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGSPIM02C.INC                                          *
 ;*                                                                          *
-;*   Contains SPI0 bit & register definitions for newer ATmegas             *
+;*   Contains SPI0 bit & Register definitions for newer ATmegas             *
 ;*                                                                          *
 ;****************************************************************************
 
-SPCR0		port	0x2c		; SPI0 control register
-SPR00		equ	0		; clock select
-SPR01		equ	1
-CPHA0		equ	2		; clock phase
-CPOL0		equ	3		; clock polarity
-MSTR0		equ	4		; master/slave selection
-DORD0		equ	5		; bit order
-SPE0		equ	6		; enable SPI
-SPIE0		equ	7		; SPI interrupt enable
+SPCR0		port	0x2c		; SPI0 Control Register
+SPR00		avrbit	SPCR0,0		; Clock Select
+SPR01		avrbit	SPCR0,1
+CPHA0		avrbit	SPCR0,2		; Clock Phase
+CPOL0		avrbit	SPCR0,3		; Clock Polarity
+MSTR0		avrbit	SPCR0,4		; Master/Slave Selection
+DORD0		avrbit	SPCR0,5		; Bit Order
+SPE0		avrbit	SPCR0,6		; Enable SPI
+SPIE0		avrbit	SPCR0,7		; SPI Interrupt Enable
 
-SPSR0		port	0x2d		; SPI0 status register
-SPI2X0		equ	0		; double speed mode
-WCOL0		equ	6		; write collision
-SPIF0		equ	7		; SPI0 interrupt occured?
+SPSR0		port	0x2d		; SPI0 Status Register
+SPI2X0		avrbit	SPSR0,0		; Double Speed Mode
+WCOL0		avrbit	SPSR0,6		; Write Collision
+SPIF0		avrbit	SPSR0,7		; SPI0 Interrupt Occured?
 
-SPDR0		port	0x2e		; SPI0 data register
+SPDR0		port	0x2e		; SPI0 Data Register
 
 		restore			; re-enable listing
 

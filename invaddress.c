@@ -52,8 +52,8 @@ void AddInvSymbol(const char *pSymbolName, LargeWord Value)
 
   MakeInvSymbolName(Name, sizeof(Name), Value);
   pNew = (tInvSymbol*)calloc(1, sizeof(*pNew));
-  pNew->Tree.Name = strdup(Name);
-  pNew->pSymbolName = strdup(pSymbolName);
+  pNew->Tree.Name = as_strdup(Name);
+  pNew->pSymbolName = as_strdup(pSymbolName);
 
   pTreeRoot = &(pInvSymbolRoot->Tree);
   EnterTree(&pTreeRoot, &(pNew->Tree), InvSymbolAdder, NULL);

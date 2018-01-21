@@ -165,7 +165,7 @@ void opencatalog(PMsgCat Catalog, const char *File, const char *Path, LongInt Ms
           MsgFile = NULL;
         else
         {
-          char *pCopy = strdup(ptr);
+          char *pCopy = as_strdup(ptr);
 #ifdef __CYGWIN32__
           DeCygWinDirList(pCopy);
 #endif

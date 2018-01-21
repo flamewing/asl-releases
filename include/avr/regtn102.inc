@@ -7,7 +7,7 @@ __regtn102inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGTN102.INC                                            *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATtiny102                      *
+;*   Contains Bit & Register Definitions for ATtiny102                      *
 ;*                                                                          *
 ;****************************************************************************
 

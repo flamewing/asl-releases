@@ -7,34 +7,33 @@ __adcm8inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File ADCM8.INC                                               *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATmega8 A/D converter          *
+;*   Contains Bit & Register Definitions for ATmega8 A/D Converter          *
 ;*                                                                          *
 ;****************************************************************************
 
 ADMUX		port	0x07		; Multiplexer Selection
-REFS1		equ	7		; reference selection bits
-REFS0		equ	6
-ADLAR		equ	5		; left adjust right
-MUX3		equ	3		; multiplexer
-MUX2		equ	2
-MUX1		equ	1
-MUX0		equ	0
+REFS1		avrbit	ADMUX,7		; Reference Selection Bits
+REFS0		avrbit	ADMUX,6
+ADLAR		avrbit	ADMUX,5		; Left Adjust Right
+MUX3		avrbit	ADMUX,3		; Multiplexer
+MUX2		avrbit	ADMUX,2
+MUX1		avrbit	ADMUX,1
+MUX0		avrbit	ADMUX,0
 
-ADCSR		port	0x06		; control/status register
-ADEN		equ	7		; enable ADC
-ADSC		equ	6		; start conversion
-ADFR		equ	5		; free running select
-ADIF		equ	4		; interrupt flag
-ADIE		equ	3		; interrupt enable
-ADPS2		equ	2		; prescaler select
-ADPS1		equ	1
-ADPS0		equ	0
+ADCSR		port	0x06		; Control/Status Register
+ADEN		avrbit	ADCSR,7		; Enable ADC
+ADSC		avrbit	ADCSR,6		; Start Conversion
+ADFR		avrbit	ADCSR,5		; Free Running Select
+ADIF		avrbit	ADCSR,4		; Interrupt Flag
+ADIE		avrbit	ADCSR,3		; Interrupt Enable
+ADPS2		avrbit	ADCSR,2		; Prescaler Select
+ADPS1		avrbit	ADCSR,1
+ADPS0		avrbit	ADCSR,0
 
 ADCH		port	0x05		; Data Register
 ADCL		port	0x04
 
-		; bits in SFIOR
-ACME		equ	3		; analog comparator multiplexer enable
+ACME		avrbit	SFIOR,3		; Analog Comparator Multiplexer Enable
 
 		restore			; re-enable listing
 

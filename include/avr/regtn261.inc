@@ -7,7 +7,7 @@ __regtn261inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGTN261.INC                                            *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATtiny261(A)                   *
+;*   Contains Bit & Register Definitions for ATtiny261(A)                   *
 ;*                                                                          *
 ;****************************************************************************
 

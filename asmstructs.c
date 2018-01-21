@@ -132,7 +132,7 @@ void AddStructElem(PStructRec StructRec, char *Name, Boolean IsStruct, LongInt O
   Neu = (PStructElem) malloc(sizeof(TStructElem));
   if (Neu)
   {
-    Neu->Name = strdup(Name);
+    Neu->Name = as_strdup(Name);
     if (!CaseSensitive)
       NLS_UpString(Neu->Name);
     Neu->IsStruct = IsStruct;
@@ -231,7 +231,7 @@ void AddStruct(PStructRec StructRec, char *Name, Boolean Protest)
   if (Node)
   {
     Node->Tree.Left = Node->Tree.Right = NULL;
-    Node->Tree.Name = strdup(Name);
+    Node->Tree.Name = as_strdup(Name);
     if (!CaseSensitive)
       NLS_UpString(Node->Tree.Name);
     Node->Tree.Attribute = MomSectionHandle;

@@ -3219,7 +3219,7 @@ static void EnterSymbol(PSymbolEntry Neu, Boolean MayChange, LongInt ResHandle)
       }
       Copy = (PSymbolEntry) calloc(1, sizeof(TSymbolEntry));
       *Copy = (*Neu);
-      Copy->Tree.Name = strdup(CombName);
+      Copy->Tree.Name = as_strdup(CombName);
       Copy->Tree.Attribute = Lauf->DestSection;
       Copy->Relocs = DupRelocs(Neu->Relocs);
       if (Copy->SymWert.Typ == TempString)
@@ -3272,7 +3272,7 @@ void EnterIntSymbolWithFlags(const char *Name_O, LargeInt Wert, Byte Typ, Boolea
   }
 
   Neu = (PSymbolEntry) calloc(1, sizeof(TSymbolEntry));
-  Neu->Tree.Name = strdup(Name);
+  Neu->Tree.Name = as_strdup(Name);
   Neu->SymWert.Typ = TempInt;
   Neu->SymWert.Contents.IWert = Wert;
   Neu->SymType = Typ;
@@ -3309,7 +3309,7 @@ void EnterExtSymbol(const char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChan
   }
 
   Neu = (PSymbolEntry) calloc(1, sizeof(TSymbolEntry));
-  Neu->Tree.Name = strdup(Name);
+  Neu->Tree.Name = as_strdup(Name);
   Neu->SymWert.Typ = TempInt;
   Neu->SymWert.Contents.IWert = Wert;
   Neu->SymType = Typ;
@@ -3317,7 +3317,7 @@ void EnterExtSymbol(const char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChan
   Neu->RefList = NULL;
   Neu->Relocs = (PRelocEntry) malloc(sizeof(TRelocEntry));
   Neu->Relocs->Next = NULL;
-  Neu->Relocs->Ref = strdup(Name);
+  Neu->Relocs->Ref = as_strdup(Name);
   Neu->Relocs->Add = True;
 
   if ((MomLocHandle == -1) || (DestHandle != -2))
@@ -3348,7 +3348,7 @@ void EnterRelSymbol(const char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChan
   }
 
   Neu = (PSymbolEntry) calloc(1, sizeof(TSymbolEntry));
-  Neu->Tree.Name = strdup(Name);
+  Neu->Tree.Name = as_strdup(Name);
   Neu->SymWert.Typ = TempInt;
   Neu->SymWert.Contents.IWert = Wert;
   Neu->SymType = Typ;
@@ -3356,7 +3356,7 @@ void EnterRelSymbol(const char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChan
   Neu->RefList = NULL;
   Neu->Relocs = (PRelocEntry) malloc(sizeof(TRelocEntry));
   Neu->Relocs->Next = NULL;
-  Neu->Relocs->Ref = strdup(RelName_SegStart);
+  Neu->Relocs->Ref = as_strdup(RelName_SegStart);
   Neu->Relocs->Add = True;
 
   if ((MomLocHandle == -1) || (DestHandle != -2))
@@ -3387,7 +3387,7 @@ void EnterFloatSymbol(const char *Name_O, Double Wert, Boolean MayChange)
     return;
   }
   Neu = (PSymbolEntry) calloc(1, sizeof(TSymbolEntry));
-  Neu->Tree.Name = strdup(Name);
+  Neu->Tree.Name = as_strdup(Name);
   Neu->SymWert.Typ = TempFloat;
   Neu->SymWert.Contents.FWert = Wert;
   Neu->SymType = 0;
@@ -3423,7 +3423,7 @@ void EnterDynStringSymbol(const char *Name_O, const tDynString *pValue, Boolean 
     return;
   }
   Neu = (PSymbolEntry) calloc(1, sizeof(TSymbolEntry));
-  Neu->Tree.Name = strdup(Name);
+  Neu->Tree.Name = as_strdup(Name);
   Neu->SymWert.Contents.String.Contents = (char*)malloc(pValue->Length);
   memcpy(Neu->SymWert.Contents.String.Contents, pValue->Contents, pValue->Length);
   Neu->SymWert.Contents.String.Length = pValue->Length;
@@ -4123,7 +4123,7 @@ Boolean PushSymbol(char *SymName_O, char *StackName_O)
   if ((!LStack) || (strcmp(LStack->Name, StackName)>0))
   {
     NStack = (PSymbolStack) malloc(sizeof(TSymbolStack));
-    NStack->Name = strdup(StackName);
+    NStack->Name = as_strdup(StackName);
     NStack->Contents = NULL;
     NStack->Next = LStack;
     if (!PStack)
@@ -4256,8 +4256,8 @@ void EnterFunction(char *FName, char *FDefinition, Byte NewCnt)
   Neu = (PFunction) malloc(sizeof(TFunction));
   Neu->Next = FirstFunction;
   Neu->ArguCnt = NewCnt;
-  Neu->Name = strdup(FName);
-  Neu->Definition = strdup(FDefinition);
+  Neu->Name = as_strdup(FName);
+  Neu->Definition = as_strdup(FDefinition);
   FirstFunction = Neu;
 }
 
@@ -4400,7 +4400,7 @@ void AddDefSymbol(char *Name, TempResult *Value)
 
   Neu = (PDefSymbol) malloc(sizeof(TDefSymbol));
   Neu->Next = FirstDefSymbol;
-  Neu->SymName = strdup(Name);
+  Neu->SymName = as_strdup(Name);
   Neu->Wert = (*Value);
   FirstDefSymbol = Neu;
 }
@@ -4456,6 +4456,16 @@ void CopyDefSymbols(void)
   }
 }
 
+const TempResult *FindDefSymbol(const char *pName)
+{
+  PDefSymbol pRun;
+
+  for (pRun = FirstDefSymbol; pRun; pRun = pRun->Next)
+    if (!strcmp(pName, pRun->SymName))
+      return &pRun->Wert;
+  return NULL;
+}
+
 void PrintSymbolDepth(void)
 {
   LongInt TreeMin, TreeMax;
@@ -4491,7 +4501,7 @@ LongInt GetSectionHandle(char *SName_O, Boolean AddEmpt, LongInt Parent)
     {
       Lauf = (PCToken) malloc(sizeof(TCToken));
       Lauf->Parent = MomSectionHandle;
-      Lauf->Name = strdup(SName);
+      Lauf->Name = as_strdup(SName);
       Lauf->Next = NULL;
       InitChunk(&(Lauf->Usage));
       if (!Prev)
@@ -4794,7 +4804,7 @@ static PRegDef LookupReg(char *Name, Boolean CreateNew)
   if ((!Run) && (CreateNew))
   {
     Neu = (PRegDef) malloc(sizeof(TRegDef));
-    Neu->Orig = strdup(Name);
+    Neu->Orig = as_strdup(Name);
     Neu->Left = Neu->Right = NULL;
     Neu->Defs = NULL;
     Neu->DoneDefs = NULL;
@@ -4841,7 +4851,7 @@ void AddRegDef(char *Orig_N, char *Repl_N)
     Neu = (PRegDefList) malloc(sizeof(TRegDefList));
     Neu->Next = Node->Defs;
     Neu->Section = MomSectionHandle;
-    Neu->Value = strdup(Repl);
+    Neu->Value = as_strdup(Repl);
     Neu->Used = False;
     Node->Defs = Neu;
   }

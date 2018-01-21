@@ -7,25 +7,25 @@ __spi90inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File SPI90.INC                                               *
 ;*                                                                          *
-;*   Contains bit & register definitions for AT90Sxx SPI Interface          *
+;*   Contains Bit & Register Definitions for AT90Sxx SPI Interface          *
 ;*                                                                          *
 ;****************************************************************************
 
-SPCR		port	0x0d		; SPI control register
-SPR0		equ	0		; clock select
-SPR1		equ	1
-CPHA		equ	2		; clock phase
-CPOL		equ	3		; clock polarity
-MSTR		equ	4		; master/slave selection
-DORD		equ	5		; bit order
-SPE		equ	6		; enable SPI
-SPIE		equ	7		; SPI interrupt enable
+SPCR		port	0x0d		; SPI Control Register
+SPR0		avrbit	SPCR,0		; Clock Select
+SPR1		avrbit	SPCR,1
+CPHA		avrbit	SPCR,2		; Clock Phase
+CPOL		avrbit	SPCR,3		; Clock Polarity
+MSTR		avrbit	SPCR,4		; Master/Slave Selection
+DORD		avrbit	SPCR,5		; Bit Order
+SPE		avrbit	SPCR,6		; Enable SPI
+SPIE		avrbit	SPCR,7		; SPI Interrupt Enable
 
-SPSR		port	0x0e		; SPI status register
-WCOL		equ	6		; write collision
-SPIF		equ	7		; SPI interrupt occured?
+SPSR		port	0x0e		; SPI Status Register
+WCOL		avrbit	SPSR,6		; Write Collision
+SPIF		avrbit	SPSR,7		; SPI Interrupt Occured?
 
-SPDR		port	0x0f		; SPI data register
+SPDR		port	0x0f		; SPI Data Register
 
 		restore			; re-enable listing
 

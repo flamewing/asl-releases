@@ -7,15 +7,15 @@ __wdm21inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGWDM21.INC                                            *
 ;*                                                                          *
-;*   Contains bit & register definitions for Watchdog @ 0x21                *
+;*   Contains Bit & Register Definitions for Watchdog @ 0x21                *
 ;*                                                                          *
 ;****************************************************************************
 
 WDTCR		port	0x21		; Watchdog Control Register
-WDP0		equ	0		; Prescaler
-WDP1		equ	1
-WDP2		equ	2
-WDE		equ	3		; Enable watchdog
+WDP0		avrbit	WDTCR,0		; Prescaler
+WDP1		avrbit	WDTCR,1
+WDP2		avrbit	WDTCR,2
+WDE		avrbit	WDTCR,3		; Enable Watchdog
 
 		restore			; re-enable listing
 

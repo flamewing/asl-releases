@@ -27,7 +27,7 @@ CPUVar AddCPUUser(const char *NewName, tCPUSwitchUserProc Switcher, void *pUserD
   int l;
 
   Neu = (tpCPUDef) malloc(sizeof(tCPUDef));
-  Neu->Name = strdup(NewName);
+  Neu->Name = as_strdup(NewName);
   /* kein UpString, weil noch nicht initialisiert ! */
   for (p = Neu->Name; *p != '\0'; p++)
     *p = mytoupper(*p);
@@ -76,10 +76,11 @@ Boolean AddCPUAlias(char *OrigName, char *AliasName)
   {
     Neu = (tpCPUDef) malloc(sizeof(tCPUDef));
     Neu->Next = NULL;
-    Neu->Name = strdup(AliasName);
+    Neu->Name = as_strdup(AliasName);
     Neu->Number = CPUCnt++;
     Neu->Orig = Lauf->Orig;
     Neu->SwitchProc = Lauf->SwitchProc;
+    Neu->pUserData = Lauf->pUserData;
     while (Lauf->Next)
       Lauf = Lauf->Next;
     Lauf->Next = Neu;

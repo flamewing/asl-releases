@@ -94,6 +94,7 @@
 
 #include <errno.h>
 
+#include "strutil.h"
 #include "stringlists.h"
 #include "chunks.h"
 
@@ -222,6 +223,7 @@ Boolean (*IsDef)();
 void (*SwitchFrom)();
 void (*InternSymbol)();
 #endif
+DissectBitProc DissectBit;
 
 StringPtr IncludeList;	                /* Suchpfade fuer Includedateien */
 Integer IncDepth, NextIncDepth;         /* Verschachtelungstiefe INCLUDEs */
@@ -344,6 +346,11 @@ void Default_InternSymbol(char *Asc, TempResult *Erg)
   Erg->Typ = TempNone;
 }
 
+void Default_DissectBit(char *pDest, int DestSize, LargeWord BitSpec)
+{
+  HexString(pDest, DestSize, BitSpec, 0);
+}
+
 static char *GetString(void)
 {
   return malloc(STRINGSIZE * sizeof(char));
@@ -378,6 +385,7 @@ void asmdef_init(void)
 
   SwitchFrom = NullProc;
   InternSymbol = Default_InternSymbol;
+  DissectBit = Default_DissectBit;
 
   SetMaxCodeLen(MaxCodeLen_Ini);
 

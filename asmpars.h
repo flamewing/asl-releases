@@ -244,6 +244,7 @@ extern void RemoveDefSymbol(char *Name);
 
 extern void CopyDefSymbols(void);
 
+extern const TempResult *FindDefSymbol(const char *pName);
 
 extern void PrintCrossList(void);
 

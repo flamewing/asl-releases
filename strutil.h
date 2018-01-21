@@ -59,13 +59,7 @@ extern void HexBlankString(char *pDest, unsigned DestSize, LargeWord i, Byte Ste
 
 extern char *LargeString(char *pDest, LargeInt i);
 
-#ifdef NEEDS_STRDUP
-extern char *strdup(const char *s);
-#endif
-#ifdef CKMALLOC
-#define strdup(s) mystrdup(s)
-extern char *mystrdup(const char *s);
-#endif
+extern char *as_strdup(const char *s);
 
 #ifdef NEEDS_CASECMP
 extern int strcasecmp(const char *src1, const char *src2);

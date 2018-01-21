@@ -7,7 +7,7 @@ __regtn88inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGTN88.INC                                             *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATtiny88                       *
+;*   Contains Bit & Register Definitions for ATtiny88                       *
 ;*                                                                          *
 ;****************************************************************************
 

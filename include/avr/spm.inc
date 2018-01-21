@@ -7,18 +7,18 @@ __spminc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File SPM.INC                                                 *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATmega program memory access   *
+;*   Contains Bit & Register Definitions for ATmega program memory access   *
 ;*                                                                          *
 ;****************************************************************************
 
 SPMCR		port	0x37		; Store Program Memory Control Register
-SPMIE		equ	7		; interrupt enable
-RWWSB		equ	6		; read-while-write section busy
-RWWSRE		equ	4		; read-while-write section rd enable
-BLBSET		equ	3		; boot lock bit set
-PGWRT		equ	2		; page write
-PGERS		equ	1		; page erase
-SPMEN		equ	0		; store program memory enable
+SPMIE		avrbit	SPMCR,7		; Interrupt Enable
+RWWSB		avrbit	SPMCR,6		; Read-While-Write Section Busy
+RWWSRE		avrbit	SPMCR,4		; Read-While-Write Section Rd Enable
+BLBSET		avrbit	SPMCR,3		; Boot Lock Bit Set
+PGWRT		avrbit	SPMCR,2		; Page Write
+PGERS		avrbit	SPMCR,1		; Page Erase
+SPMEN		avrbit	SPMCR,0		; Store Program Memory Enable
 
 		restore			; re-enable listing
 

@@ -7,7 +7,7 @@ __regtn48inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGTN48.INC                                             *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATtiny48                       *
+;*   Contains Bit & Register Definitions for ATtiny48                       *
 ;*                                                                          *
 ;****************************************************************************
 

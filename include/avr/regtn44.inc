@@ -7,7 +7,7 @@ __regtn44inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGTN44.INC                                             *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATtiny44(A)                    *
+;*   Contains Bit & Register Definitions for ATtiny44(A)                    *
 ;*                                                                          *
 ;****************************************************************************
 

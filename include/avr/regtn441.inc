@@ -7,7 +7,7 @@ __regtn441inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGTN441.INC                                            *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATtiny441                      *
+;*   Contains Bit & Register Definitions for ATtiny441                      *
 ;*                                                                          *
 ;****************************************************************************
 

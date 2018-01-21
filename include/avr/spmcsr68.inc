@@ -7,18 +7,18 @@ __spmcsr68inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File SPMCSR68.INC                                            *
 ;*                                                                          *
-;*Contains bit & register definitions for newer ATmega program memory access*
+;*Contains Bit & Register Definitions for Newer ATmega Program Memory Access*
 ;*                                                                          *
 ;****************************************************************************
 
 SPMCSR		sfr	0x68		; Store Program Memory Control/Status Register
-SPMIE		equ	7		; interrupt enable
-RWWSB		equ	6		; read-while-write section busy
-RWWSRE		equ	4		; read-while-write section rd enable
-BLBSET		equ	3		; boot lock bit set
-PGWRT		equ	2		; page write
-PGERS		equ	1		; page erase
-SPMEN		equ	0		; store program memory enable
+SPMIE		avrbit	SPMCSR,7	; Interrupt Enable
+RWWSB		avrbit	SPMCSR,6	; Read-While-Write Section Busy
+RWWSRE		avrbit	SPMCSR,4	; Read-While-Write Section Read Enable
+BLBSET		avrbit	SPMCSR,3	; Boot Lock Bit set
+PGWRT		avrbit	SPMCSR,2	; Page Write
+PGERS		avrbit	SPMCSR,1	; Page Erase
+SPMEN		avrbit	SPMCSR,0	; Store Program Memory Enable
 
 		restore			; re-enable listing
 

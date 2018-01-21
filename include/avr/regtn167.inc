@@ -7,7 +7,7 @@ __regtn167inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGTN167.INC                                            *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATtiny167                      *
+;*   Contains Bit & Register Definitions for ATtiny167                      *
 ;*                                                                          *
 ;****************************************************************************
 

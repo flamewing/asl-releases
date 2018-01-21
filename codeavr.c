@@ -44,6 +44,9 @@
 #define IOAreaExtSize (IOAreaStdSize + 160)
 #define IOAreaExt2Size (IOAreaExtSize + 256)
 
+#define BitFlag_Data 0x800000ul
+#define BitFlag_IO 0x400000ul
+
 typedef enum
 {
   eCoreNone,
@@ -80,7 +83,7 @@ static const tCPUProps *pCurrCPUProps;
 
 static IntType AdrIntType;
 
-static char *WrapFlagName = "WRAPMODE";
+static const char *WrapFlagName = "WRAPMODE";
 
 /*---------------------------------------------------------------------------*/
 
@@ -108,6 +111,19 @@ static Boolean ChkCoreMask(Word CoreMask)
     return True;
   WrError(1500);
   return False;
+}
+
+static void DissectBit_AVR(char *pDest, int DestSize, LargeWord Inp)
+{
+  LongWord BitSpec = Inp;
+
+  UNUSED(DestSize);
+  sprintf(pDest, "0x%0*x(%c).%d",
+          (BitSpec & BitFlag_IO) ? 2 : 3,
+          (BitSpec >> 3) & 0xffff,
+          (BitSpec & BitFlag_Data) ? SegShorts[SegData]
+                                   : ((BitSpec & BitFlag_IO) ? SegShorts[SegIO] : SegShorts[SegNone]),
+          BitSpec & 7);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -146,6 +162,64 @@ static Boolean DecodeMem(char * Asc, Word *Erg)
   else if (strcasecmp(Asc, "-Z") == 0) *Erg = 0x12;
   else return False;
   return True;
+}
+
+static Boolean DecodeBitArg2(const char *pRegArg, const char *pBitArg, LongWord *pResult)
+{
+  Boolean OK;
+  LongWord Addr;
+
+  *pResult = EvalIntExpression(pBitArg, UInt3, &OK);
+  if (!OK)
+    return False;
+
+  FirstPassUnknown = False;
+  Addr = EvalIntExpression(pRegArg, UInt9, &OK);
+  if (!OK)
+    return False;
+
+  if (TypeFlag & (1 << SegIO))
+  {
+    if (!FirstPassUnknown && !ChkRange(Addr, 0, IOAreaStdSize - 1))
+      return False;
+    *pResult |= BitFlag_IO | (Addr & 0x3f) << 3;
+    return True;
+  }
+  else
+  {
+    ChkSpace(SegData);
+
+    if (!FirstPassUnknown && !ChkRange(Addr, 0, SegLimits[SegData]))
+      return False;
+    *pResult |= ((TypeFlag & (1 << SegData)) ? BitFlag_Data : 0) | (Addr & 0x1ff) << 3;
+    return True;
+  }
+}
+
+static Boolean DecodeBitArg(int Start, int Stop, LongWord *pResult)
+{
+  if (Start == Stop)
+  {
+    char *pPos = QuotPos(ArgStr[Start], '.');
+    Boolean OK;
+
+    if (pPos)
+    {
+      *pPos = '\0';
+      return DecodeBitArg2(ArgStr[Start], pPos + 1, pResult);
+    }
+    *pResult = EvalIntExpression(ArgStr[Start], UInt16, &OK);
+    if (OK)
+      ChkSpace(SegBData);
+    return OK;
+  }
+  else if (Stop == Start + 1)
+    return DecodeBitArg2(ArgStr[Start], ArgStr[Stop], pResult);
+  else
+  {
+    WrError(1110);
+    return False;
+  }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -573,21 +647,18 @@ static void DecodeSER(Word Index)
 
 static void DecodePBit(Word Code)
 {
-  Word Adr, Bit;
-  Boolean OK;
+  LongWord BitSpec;
 
-  if (ChkArgCnt(2, 2))
+  if (DecodeBitArg(1, ArgCnt, &BitSpec))
   {
-    Adr = EvalIntExpression(ArgStr[1], UInt5, &OK);
-    if (OK)
+    Word Bit = BitSpec & 7,
+         Adr = (BitSpec >> 3) & 0xffff;
+
+    if (BitSpec & BitFlag_Data) WrError(70);
+    if (ChkRange(Adr, 0, 31))
     {
-      ChkSpace(SegIO);
-      Bit = EvalIntExpression(ArgStr[2], UInt3, &OK);
-      if (OK)
-      {
-        WAsmCode[0] = Code | Bit | (Adr << 3);
-        CodeLen = 1;
-      }
+      WAsmCode[0] = Code | Bit | (Adr << 3);
+      CodeLen = 1;
     }
   }
 }
@@ -794,6 +865,25 @@ static void DecodeELPM(Word Index)
   }
 }
 
+static void DecodeBIT(Word Code)
+{
+  LongWord BitSpec;
+
+  if (DecodeBitArg(1, ArgCnt, &BitSpec))
+  {
+    *ListLine = '=';
+    DissectBit_AVR(ListLine + 1, STRINGSIZE - 3, BitSpec);
+    PushLocHandle(-1);
+    EnterIntSymbol(LabPart, BitSpec, SegBData, False);
+    PopLocHandle();
+    if (MakeUseList)
+    {
+      if (AddChunk(SegChunks + SegBData, BitSpec, 1, False))
+        WrError(90);
+    }
+  }
+}
+
 /*---------------------------------------------------------------------------*/
 /* dynamic code table handling                                               */
 
@@ -939,6 +1029,7 @@ static void InitFields(void)
   AddInstTable(InstTable, "RES" , 0, DecodeRES);
   AddInstTable(InstTable, "DATA", 0, DecodeDATA_AVR);
   AddInstTable(InstTable, "REG" , 0, DecodeREG);
+  AddInstTable(InstTable, "BIT" , 0, DecodeBIT);
 
   AddInstTable(InstTable, "MULS", 0, DecodeMULS);
 
@@ -984,7 +1075,10 @@ static void InitCode_AVR(void)
 
 static Boolean IsDef_AVR(void)
 {
-  return (Memo("PORT") || Memo("REG") || Memo("SFR"));
+  return (Memo("PORT")
+       || Memo("REG")
+       || Memo("SFR")
+       || Memo("BIT"));
 }
 
 static void SwitchFrom_AVR(void)
@@ -1018,7 +1112,7 @@ static void SwitchTo_AVR(void *pUser)
                      + pCurrCPUProps->RAMSize
                      - 1;
 
-  AdrIntType = GetSmallestUIntType(SegLimits[SegData]);
+  AdrIntType = GetSmallestUIntType(SegLimits[SegCode]);
 
   SignMask = (SegLimits[SegCode] + 1) >> 1;
   ORMask = ((LongInt) - 1) - SegLimits[SegCode];
@@ -1030,6 +1124,7 @@ static void SwitchTo_AVR(void *pUser)
   MakeCode = MakeCode_AVR;
   IsDef = IsDef_AVR;
   SwitchFrom = SwitchFrom_AVR;
+  DissectBit = DissectBit_AVR;
   InitFields();
 }
 
@@ -1046,6 +1141,10 @@ static const tCPUProps CPUProps[] =
   { "AT90S8515"      ,  0x0fff, 0x0200, IOAreaStdSize , True , eCoreClassic   },
   { "AT90C8534"      ,  0x0fff, 0x0100, IOAreaStdSize , True , eCoreClassic   },
   { "AT90S8535"      ,  0x0fff, 0x0200, IOAreaStdSize , True , eCoreClassic   },
+  { "AT90USB646"     ,  0x7fff, 0x1000, IOAreaExtSize , True , eCoreMega      },
+  { "AT90USB647"     ,  0x7fff, 0x1000, IOAreaExtSize , True , eCoreMega      },
+  { "AT90USB1286"    ,  0xffff, 0x2000, IOAreaExtSize , True , eCoreMega      },
+  { "AT90USB1287"    ,  0xffff, 0x2000, IOAreaExtSize , True , eCoreMega      },
 
   { "ATTINY4"        ,  0x00ff, 0x0020, IOAreaStdSize , False, eCoreMinTiny   },
   { "ATTINY5"        ,  0x00ff, 0x0020, IOAreaStdSize , False, eCoreMinTiny   },
@@ -1096,6 +1195,7 @@ static const tCPUProps CPUProps[] =
   { "ATMEGA8515"     ,  0x0fff, 0x0200, IOAreaStdSize , True , eCoreMega      },
   { "ATMEGA8535"     ,  0x0fff, 0x0200, IOAreaStdSize , True , eCoreMega      },
   { "ATMEGA88"       ,  0x0fff, 0x0200, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA8U2"      ,  0x0fff, 0x0200, IOAreaExtSize , True , eCoreMega      },
 
   { "ATMEGA16"       ,  0x1fff, 0x0400, IOAreaStdSize , True , eCoreMega      },
   { "ATMEGA161"      ,  0x1fff, 0x0400, IOAreaStdSize , True , eCoreMega      },
@@ -1105,6 +1205,8 @@ static const tCPUProps CPUProps[] =
   { "ATMEGA165"      ,  0x1fff, 0x0200, IOAreaExtSize , True , eCoreMega      },
   { "ATMEGA168"      ,  0x1fff, 0x0400, IOAreaExtSize , True , eCoreMega      },
   { "ATMEGA169"      ,  0x1fff, 0x0400, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA16U2"     ,  0x1fff, 0x0200, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA16U4"     ,  0x1fff, 0x0500, IOAreaExtSize , True , eCoreMega      },
 
   { "ATMEGA32"       ,  0x3fff, 0x0800, IOAreaStdSize , True , eCoreMega      },
   { "ATMEGA323"      ,  0x3fff, 0x0800, IOAreaStdSize , True , eCoreMega      },
@@ -1114,6 +1216,9 @@ static const tCPUProps CPUProps[] =
   { "ATMEGA328"      ,  0x3fff, 0x0800, IOAreaExtSize , True , eCoreMega      },
   { "ATMEGA329"      ,  0x3fff, 0x0800, IOAreaExtSize , True , eCoreMega      },
   { "ATMEGA3290"     ,  0x3fff, 0x0800, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA32U2"     ,  0x3fff, 0x0400, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA32U4"     ,  0x3fff, 0x0a00, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA32U6"     ,  0x3fff, 0x0a00, IOAreaExtSize , True , eCoreMega      },
 
   { "ATMEGA406"      ,  0x4fff, 0x0800, IOAreaExtSize , True , eCoreMega      },
 

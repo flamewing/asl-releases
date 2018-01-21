@@ -7,7 +7,7 @@ __reg2233inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REG2233.INC                                             *
 ;*                                                                          *
-;*   Contains bit & register definitions for AT90S2233                      *
+;*   Contains Bit & Register Definitions for AT90S2233                      *
 ;*                                                                          *
 ;****************************************************************************
 

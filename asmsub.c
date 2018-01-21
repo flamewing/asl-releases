@@ -1423,13 +1423,14 @@ void ChkSpace(Byte Space)
 /****************************************************************************/
 /* eine Chunkliste im Listing ausgeben & Speicher loeschen */
 
-void PrintChunk(ChunkList *NChunk)
+void PrintChunk(ChunkList *NChunk, DissectBitProc Dissect, int ItemsPerLine)
 {
   LargeWord NewMin, FMin;
   Boolean Found;
   Word p = 0, z;
   int BufferZ;
   String BufferS;
+  int MaxItemLen = 79 / ItemsPerLine;
 
   NewMin = 0;
   BufferZ = 0;
@@ -1454,16 +1455,16 @@ void PrintChunk(ChunkList *NChunk)
     {
       char Num[30];
 
-      HexString(Num, sizeof(Num), NChunk->Chunks[p].Start, 0);
+      Dissect(Num, sizeof(Num), NChunk->Chunks[p].Start);
       strmaxcat(BufferS, Num, 255);
       if (NChunk->Chunks[p].Length != 1)
       {
         strmaxcat(BufferS, "-", 255);
-        HexString(Num, sizeof(Num), NChunk->Chunks[p].Start + NChunk->Chunks[p].Length - 1, 0);
+        Dissect(Num, sizeof(Num), NChunk->Chunks[p].Start + NChunk->Chunks[p].Length - 1);
         strmaxcat(BufferS, Num, 255);
       }
-      strmaxcat(BufferS, Blanks(19 - strlen(BufferS) % 19), 255);
-      if (++BufferZ == 4)
+      strmaxcat(BufferS, Blanks(MaxItemLen - strlen(BufferS) % MaxItemLen), 255);
+      if (++BufferZ == ItemsPerLine)
       {
         WrLstLine(BufferS);
         *BufferS = '\0';
@@ -1498,7 +1499,9 @@ void PrintUseList(void)
         strmaxcat(s, "-", 255);
       WrLstLine(s);
       WrLstLine("");
-      PrintChunk(SegChunks + z);
+      PrintChunk(SegChunks + z,
+                 (z == SegBData) ? DissectBit : Default_DissectBit,
+                 (z == SegBData) ? 3 : 4);
       WrLstLine("");
     }
 }

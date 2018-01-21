@@ -82,7 +82,7 @@ void AddFile(char *FName)
 
   Neu = (PToken) malloc(sizeof(TToken));
   Neu->Next = NULL;
-  Neu->Name = strdup(FName);
+  Neu->Name = as_strdup(FName);
   Neu->FirstAddr = ADRMAX;
   Neu->LastAddr = 0;
   if (!FirstFile)

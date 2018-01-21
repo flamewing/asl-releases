@@ -37,7 +37,7 @@ static Boolean AddSingle(PInstTreeNode *Node, char *NName, InstProc NProc, Word 
     (*Node)->Proc = NProc;
     (*Node)->Index = NIndex;
     (*Node)->Balance = 0;
-    (*Node)->Name = strdup(NName);
+    (*Node)->Name = as_strdup(NName);
     Result = True;
   }
   else if (strcmp(NName, (*Node)->Name) < 0)
@@ -236,7 +236,7 @@ void AddInstTable(PInstTable tab, const char *Name, Word Index, InstProc Proc)
   {
     if (!tab->Entries[h0].Name)
     {
-      tab->Entries[h0].Name = (tab->Dynamic) ? strdup(Name) : (char*)Name;
+      tab->Entries[h0].Name = (tab->Dynamic) ? as_strdup(Name) : (char*)Name;
       tab->Entries[h0].Proc = Proc;
       tab->Entries[h0].Index = Index;
       tab->Entries[h0].Coll = z;

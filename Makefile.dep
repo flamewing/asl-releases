@@ -10,7 +10,7 @@ asmcode.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h version.h endia
 
 asmdebug.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h endian.h chunks.h asmdef.h fileformat.h dynstring.h lstmacroexp.h cpulist.h asmsub.h asmerr.h asmpars.h asmfnums.h asmdebug.h
 
-asmdef.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h stringlists.h chunks.h asmdef.h fileformat.h dynstring.h lstmacroexp.h cpulist.h asmsub.h asmerr.h
+asmdef.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h stringlists.h chunks.h asmdef.h fileformat.h dynstring.h lstmacroexp.h cpulist.h asmsub.h asmerr.h
 
 asmfnums.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h chunks.h asmdef.h fileformat.h dynstring.h lstmacroexp.h cpulist.h asmsub.h asmerr.h intconsts.h asmfnums.h
 
@@ -294,7 +294,7 @@ trees.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h endian.h nls.h as
 
 umlaut.o: sysdefs.h specchars.h
 
-unumlaut.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h
+unumlaut.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h
 
 version.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h
 

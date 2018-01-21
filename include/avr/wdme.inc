@@ -5,21 +5,21 @@ __wdmeinc	equ	1
 
 ;****************************************************************************
 ;*                                                                          *
-;*   AS 1.42 - File REGSKEL.INC                                             *
+;*   AS 1.42 - File WDME.INC                                                *
 ;*                                                                          *
-;*   Contains bit & register definitions for enhanced Watchdog              *
+;*   Contains Bit & Register Definitions for Enhanced Watchdog              *
 ;*                                                                          *
 ;****************************************************************************
 
 WDTCSR		sfr	0x60		; Watchdog Control/Status Register
-WDP0		equ	0		; Prescaler
-WDP1		equ	1
-WDP2		equ	2
-WDE		equ	3		; Enable watchdog
-WDCE		equ	4		; change enable
-WDP3		equ	5
-WDIE		equ	6		; interrupt enable
-WDIF		equ	7		; interrupt flag
+WDP0		avrbit	WDTCSR,0	; Prescaler
+WDP1		avrbit	WDTCSR,1
+WDP2		avrbit	WDTCSR,2
+WDE		avrbit	WDTCSR,3	; Enable Watchdog
+WDCE		avrbit	WDTCSR,4	; Change Enable
+WDP3		avrbit	WDTCSR,5
+WDIE		avrbit	WDTCSR,6	; Interrupt Enable
+WDIF		avrbit	WDTCSR,7	; Interrupt Flag
 
 		restore			; re-enable listing
 

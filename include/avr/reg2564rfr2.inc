@@ -7,7 +7,7 @@ __reg2564rfr2inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGM644RFR2.INC                                         *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATmega2564RFR2                 *
+;*   Contains Bit & Register Definitions for ATmega2564RFR2                 *
 ;*                                                                          *
 ;****************************************************************************
 

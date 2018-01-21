@@ -106,7 +106,8 @@ char *FExpand(char *Src)
   for (p = CurrentDir; *p; p++)
     if (*p == '/') *p = '\\';
 #else /* UNIX */
-  getcwd(CurrentDir,255);
+  if (!getcwd(CurrentDir, 255))
+    0[CurrentDir] = '\0';
 #endif
 
   if ((*CurrentDir) && (CurrentDir[strlen(CurrentDir) - 1] != PATHSEP))

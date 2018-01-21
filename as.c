@@ -941,7 +941,7 @@ static void MACRO_OutProcessor(void)
       if ((FirstOutputTag->DoGlobCopy) && (SectionStack))
       {
         GMacro = (PMacroRec) malloc(sizeof(MacroRec));
-        GMacro->Name = strdup(FirstOutputTag->GName);
+        GMacro->Name = as_strdup(FirstOutputTag->GName);
         GMacro->ParamCount = FirstOutputTag->Mac->ParamCount;
         GMacro->FirstLine = DuplicateStringList(FirstOutputTag->Mac->FirstLine);
         GMacro->ParamNames = DuplicateStringList(FirstOutputTag->Mac->ParamNames);
@@ -1246,7 +1246,7 @@ static void ReadMacro(void)
   }
 
   OneMacro->UseCounter = 0;
-  OneMacro->Name = strdup(LabPart);
+  OneMacro->Name = as_strdup(LabPart);
   OneMacro->ParamCount = Context.ParamCount;
   OneMacro->FirstLine = NULL;
   OneMacro->LstMacroExpMod = Context.LstMacroExpMod;
@@ -1386,7 +1386,7 @@ static void ExpandMacro(PMacroRec OneMacro)
               WrXError(320, pParamName->Content);
               free(pArg->Content);
             }
-            pArg->Content = strdup(p);
+            pArg->Content = as_strdup(p);
             break;
           }
         if (!pParamName)
@@ -1418,7 +1418,7 @@ static void ExpandMacro(PMacroRec OneMacro)
           WrXError(320, pParamName->Content);
           free(pArg->Content);
         }
-        pArg->Content = strdup(ArgStr[z1]);
+        pArg->Content = as_strdup(ArgStr[z1]);
       }
 
       /* excess unnamed arguments: append at end of list */
@@ -1432,7 +1432,7 @@ static void ExpandMacro(PMacroRec OneMacro)
     for (pParamName = OneMacro->ParamNames, pArg = Tag->Params, pDefault = OneMacro->ParamDefVals;
              pParamName; pParamName = pParamName->Next, pArg = pArg->Next, pDefault = pDefault->Next)
       if (!pArg->Content)
-        pArg->Content = strdup(pDefault->Content);
+        pArg->Content = as_strdup(pDefault->Content);
 
     /* 4. Zeilenliste anhaengen */
 
@@ -2514,7 +2514,7 @@ char *GetErrorPos(void)
 {
   String ActPos;
   PInputTag RunTag;
-  char *ErgPos = strdup(""), *tmppos;
+  char *ErgPos = as_strdup(""), *tmppos;
   Boolean Last;
 
   /* for GNU error message style: */
@@ -3229,7 +3229,7 @@ static void AssembleFile_InitPass(void)
   TransTables =
   CurrTransTable = (PTransTable) malloc(sizeof(TTransTable));
   CurrTransTable->Next = NULL;
-  CurrTransTable->Name = strdup("STANDARD");
+  CurrTransTable->Name = as_strdup("STANDARD");
   CurrTransTable->Table = (unsigned char *) malloc(256 * sizeof(char));
   for (z = 0; z < 256; z++)
     CurrTransTable->Table[z] = z;
@@ -3267,8 +3267,10 @@ static void AssembleFile_InitPass(void)
     NLS_CurrDateString(DateS);
     NLS_CurrTimeString(False, TimeS);
   }
-  EnterStringSymbol(DateName, DateS, True);
-  EnterStringSymbol(TimeName, TimeS, True);
+  if (!FindDefSymbol(DateName))
+    EnterStringSymbol(DateName, DateS, True);
+  if (!FindDefSymbol(TimeName))
+    EnterStringSymbol(TimeName, TimeS, True);
 
   SetFlag(&DoPadding, DoPaddingName, True);
 
@@ -4280,7 +4282,7 @@ static Boolean CMD_CPUAlias_ChkCPUName(char *s)
 {
   int z;
 
-  for(z = 0; z < (int)strlen(s); z++)
+  for (z = 0; z < (int)strlen(s); z++)
     if (!isalnum((unsigned int) s[z]))
       return False;
   return True;

@@ -7,7 +7,7 @@ __regtn461inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGTN461.INC                                            *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATtiny461(A)                   *
+;*   Contains Bit & Register Definitions for ATtiny461(A)                   *
 ;*                                                                          *
 ;****************************************************************************
 

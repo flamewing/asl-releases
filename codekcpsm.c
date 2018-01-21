@@ -521,7 +521,7 @@ static void InitFields(void)
 
   AddFixed("EI"     , 0x8030);  AddFixed("DI"     , 0x8010);
   AddFixed("RETIE"  , 0x80f0);  AddFixed("RETID"  , 0x80d0);
-  AddFixed("NOP"    , 0xc000); //fake
+  AddFixed("NOP"    , 0xc000); /* fake */
 
   AddALU2("ADD"   , 0x04);
   AddALU2("ADDCY" , 0x05);
@@ -597,7 +597,7 @@ static void SwitchTo_KCPSM(void)
 
   PCSymbol = "$";
   HeaderID = FoundDescr->Id;
-  NOPCode = 0xc0; //nop = load s0,s0
+  NOPCode = 0xc0; /* nop = load s0,s0 */
   DivideChars = ",";
   HasAttrs = False;
 

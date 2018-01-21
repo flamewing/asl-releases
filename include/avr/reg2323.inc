@@ -7,73 +7,72 @@ __reg2323inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REG2323.INC                                             *
 ;*                                                                          *
-;*   Contains bit & register definitions for AT90S2323/2343                 *
+;*   Contains Bit & Register Definitions for AT90S2323/2343                 *
 ;*                                                                          *
 ;****************************************************************************
 
 ;----------------------------------------------------------------------------
 ; Memory Limits
 
-E2END		equ     127		; end address EEPROM
-RAMSTART	equ	0x60,data	; start address SRAM
-RAMEND		equ     0xdf,data	; end address SRAM
-FLASHEND	label   2047		; end address Flash
+E2END		equ     127		; End Address EEPROM
+RAMSTART	equ	0x60,data	; Start Address SRAM
+RAMEND		equ     0xdf,data	; End Address SRAM
+FLASHEND	label   2047		; End Address Flash
 
 ;----------------------------------------------------------------------------
 ; Chip Configuration
 
 MCUCR		port	0x35		; MCU General Control Register
-SM		equ	4		; choose Idle/Powerdown mode
-SE		equ	5		; enable sleep mode
+SM		avrbit	MCUCR,4		; Choose Idle/Powerdown Mode
+SE		avrbit	MCUCR,5		; Enable Sleep Mode
 
 MCUSR		port	0x34		; MCU Satus Register
-PORF		equ	0		; Power-On Reset Flag
-EXTRF		equ	1		; Externel Reset Flag
+PORF		avrbit	MCUSR,0		; Power-On Reset Flag
+EXTRF		avrbit	MCUSR,1		; Externel Reset Flag
 
 ;----------------------------------------------------------------------------
 ; EEPROM
 
 		include	"avr/ee90.inc"
 
-		; bits in EECR
-EEMWE		equ	2		; Multiple Write Emable
+EEMWE		avrbit	EECR,2		; Multiple Write Emable
 
 ;----------------------------------------------------------------------------
 ; GPIO
 
-PINB		port	0x16		; Port B @ 0x16 (IO) ff. (bits 0..4)
+PINB		port	0x16		; Port B @ 0x16 (IO) ff.
+__PORTB_BITS	equ	0x1f		; (bits 0..4)
 
 ;----------------------------------------------------------------------------
 ; Interrupt Vectors
 
 		enumconf 1,code
-		enum	INT0_vect=1		; external interrupt request 0
-		nextenum TIMER0_OVF_vect	; timer/counter 0 overflow
+		enum	 INT0_vect=1		; External Interrupt Request 0
+		nextenum TIMER0_OVF_vect	; Timer/Counter 0 Overflow
 
 ;----------------------------------------------------------------------------
 ; External Interrupts
 
-		; bits in MCUCR
-ISC00		equ	0		; external interrupt 0 sense control
-ISC01		equ	1
+ISC00		avrbit	MCUCR,0		; External Interrupt 0 Sense Control
+ISC01		avrbit	MCUCR,1
 
 GIMSK		port	0x3b		; General Interrupt Mask Register
-INT0		equ	6		;  enable external Interrupt 0
+INT0		avrbit	GIMSK,6		; Enable External Interrupt 0
 
 GIFR		port	0x3a		; General Interrput Flag Register
-INTF0		equ	6
+INTF0		avrbit	GIFR,6
 
 ;----------------------------------------------------------------------------
 ; Timers
 
 TCCR0		port	0x33		; Timer/Counter 0 Control Register
-CS00		equ	0		; Clock Select
-CS01		equ	1
-CS02		equ	2
+CS00		avrbit	TCCR0,0		; Clock Select
+CS01		avrbit	TCCR0,1
+CS02		avrbit	TCCR0,2
 TCNT0		port	0x32		; Timer/Counter 0 Value
 
 TIMSK		port	0x39		; Timer Interrupt Mask Register
-TOIE0		equ	1		; Timer/Counter 0 Overflow Interrupt Enable
+TOIE0		avrbit	TIMSK,1		; Timer/Counter 0 Overflow Interrupt Enable
 
 TIFR		port	0x38		; Timer Interrupt Status Register
 
@@ -82,8 +81,7 @@ TIFR		port	0x38		; Timer Interrupt Status Register
 
 		include	"avr/wdm21.inc"
 
-		; bits in WDTCR
-WDTOE		equ	3		; Watchdog Turn-Off Enable
+WDTOE		avrbit	WDTCR,3		; Watchdog Turn-Off Enable
 
 		restore
 

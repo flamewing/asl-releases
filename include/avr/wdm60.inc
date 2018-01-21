@@ -7,16 +7,16 @@ __wdm60inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File WDM60.INC                                               *
 ;*                                                                          *
-;*   Contains bit & register definitions for watchdog @ 0x60                *
+;*   Contains Bit & Register Definitions for Watchdog @ 0x60                *
 ;*                                                                          *
 ;****************************************************************************
 
 WDTCR		sfr	0x60		; Watchdog Control Register
-WDP0		equ	0		; Prescaler
-WDP1		equ	1
-WDP2		equ	2
-WDE		equ	3		; Enable watchdog
-WDCE		equ	4		; change enable
+WDP0		avrbit	WDTCR,0		; Prescaler
+WDP1		avrbit	WDTCR,1
+WDP2		avrbit	WDTCR,2
+WDE		avrbit	WDTCR,3		; Enable Watchdog
+WDCE		avrbit	WDTCR,4		; Change Enable
 
 		restore			; re-enable listing
 

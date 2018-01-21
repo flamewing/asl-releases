@@ -5,17 +5,16 @@ __eeminc	equ	1
 
 ;****************************************************************************
 ;*                                                                          *
-;*   AS 1.42 - File REGSKEL.INC                                             *
+;*   AS 1.42 - File EEM.INC                                                 *
 ;*                                                                          *
-;*   Contains bit & register definitions for EEPROM on older ATmegas        *
+;*   Contains Bit & Register Definitions for EEPROM on Older ATmegas        *
 ;*                                                                          *
 ;****************************************************************************
 
 		include	"avr/ee90.inc"
 
-		; additional bits in EECR
-EEMWE		equ	2		; EEPROM Master Write Enable
-EERIE		equ	3		; enable ready interrupt
+EEMWE		avrbit	EECR,2		; EEPROM Master Write Enable
+EERIE		avrbit	EECR,3		; Enable Ready Interrupt
 
 		restore			; re-enable listing
 

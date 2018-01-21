@@ -7,7 +7,7 @@ __regtn25inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGTN25.INC                                             *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATtiny25                       *
+;*   Contains Bit & Register Definitions for ATtiny25                       *
 ;*                                                                          *
 ;****************************************************************************
 

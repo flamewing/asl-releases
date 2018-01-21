@@ -5,9 +5,9 @@ __eem2inc	equ	1
 
 ;****************************************************************************
 ;*                                                                          *
-;*   AS 1.42 - File REGSKEL.INC                                             *
+;*   AS 1.42 - File EEM2.INC                                                *
 ;*                                                                          *
-;*   Contains bit & register definitions for EEPROM on newer ATmegas        *
+;*   Contains Bit & Register Definitions for EEPROM on newer ATmegas        *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -21,10 +21,10 @@ EEAR		port	0x21
 EEDR		port	0x20		; EEPROM Data Register
 
 EECR            port    0x1f		; EEPROM Control Register
-EERE            equ     0		; Read Enable
-EEPE            equ     1		; Program Enable
-EEMPE		equ	2		; EEPROM Master Program Enable
-EERIE		equ	3		; enable ready interrupt
+EERE            avrbit	EECR,0		; Read Enable
+EEPE            avrbit	EECR,1		; Program Enable
+EEMPE		avrbit	EECR,2		; EEPROM Master Program Enable
+EERIE		avrbit	EECR,3		; Enable Ready Interrupt
 
 		restore			; re-enable listing
 

@@ -7,57 +7,57 @@ __twiminc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGTWIM70.INC                                           *
 ;*                                                                          *
-;* Contains bit & register definitions for newer ATmega TWI Interface @0x70 *
+;* Contains Bit & Register Definitions for newer ATmega TWI Interface @0x70 *
 ;*                                                                          *
 ;****************************************************************************
 
-TWBR		sfr	0x70		; bit rate register
-TWBR0		equ	0
-TWBR1		equ	1
-TWBR2		equ	2
-TWBR3		equ	3
-TWBR4		equ	4
-TWBR5		equ	5
-TWBR6		equ	6
-TWBR7		equ	7
+TWBR		sfr	0x70		; Bit Rate Register
+TWBR0		avrbit	TWBR,0
+TWBR1		avrbit	TWBR,1
+TWBR2		avrbit	TWBR,2
+TWBR3		avrbit	TWBR,3
+TWBR4		avrbit	TWBR,4
+TWBR5		avrbit	TWBR,5
+TWBR6		avrbit	TWBR,6
+TWBR7		avrbit	TWBR,7
 
-TWCR		sfr	0x74		; control register
-TWINT		equ	7		; interrupt flag
-TWEA		equ	6		; enable acknowledge bit
-TWSTA		equ	5		; start condition
-TWSTO		equ	4		; stop condition
-TWWC		equ	3		; write collision flag
-TWEN		equ	2		; enable bit
-TWIE		equ	0		; interupt enable
+TWCR		sfr	0x74		; Control Register
+TWINT		avrbit	TWCR,7		; Interrupt Flag
+TWEA		avrbit	TWCR,6		; Enable Acknowledge Bit
+TWSTA		avrbit	TWCR,5		; Start Condition
+TWSTO		avrbit	TWCR,4		; Stop Condition
+TWWC		avrbit	TWCR,3		; Write Collision Flag
+TWEN		avrbit	TWCR,2		; Enable Bit
+TWIE		avrbit	TWCR,0		; Interrupt Enable
 
-TWSR		sfr	0x71		; status register
-TWS7		equ	7		; status
-TWS6		equ	6
-TWS5		equ	5
-TWS4		equ	4
-TWS3		equ	3
-TWPS1		equ	1		; prescaler
-TWPS0		equ	0
+TWSR		sfr	0x71		; Status Register
+TWS7		avrbit	TWSR,7		; Status
+TWS6		avrbit	TWSR,6
+TWS5		avrbit	TWSR,5
+TWS4		avrbit	TWSR,4
+TWS3		avrbit	TWSR,3
+TWPS1		avrbit	TWSR,1		; Prescaler
+TWPS0		avrbit	TWSR,0
 
-TWDR		sfr	0x73		; data register
-TWD0		equ	0
-TWD1		equ	1
-TWD2		equ	2
-TWD3		equ	3
-TWD4		equ	4
-TWD5		equ	5
-TWD6		equ	6
-TWD7		equ	7
+TWDR		sfr	0x73		; Data Register
+TWD0		avrbit	TWDR,0
+TWD1		avrbit	TWDR,1
+TWD2		avrbit	TWDR,2
+TWD3		avrbit	TWDR,3
+TWD4		avrbit	TWDR,4
+TWD5		avrbit	TWDR,5
+TWD6		avrbit	TWDR,6
+TWD7		avrbit	TWDR,7
 
-TWAR		sfr	0x72		; (slave) address register
-TWGCE		equ	0		; general call recognition bit
-TWA0		equ	1		; slave address	
-TWA1		equ	2
-TWA2		equ	3
-TWA3		equ	4
-TWA4		equ	5
-TWA5		equ	6
-TWA6		equ	7
+TWAR		sfr	0x72		; (Slave) Address Register
+TWGCE		avrbit	TWAR,0		; General Call Recognition Bit
+TWA0		avrbit	TWAR,1		; Slave Address	
+TWA1		avrbit	TWAR,2
+TWA2		avrbit	TWAR,3
+TWA3		avrbit	TWAR,4
+TWA4		avrbit	TWAR,5
+TWA5		avrbit	TWAR,6
+TWA6		avrbit	TWAR,7
 
 		restore			; re-enable listing
 

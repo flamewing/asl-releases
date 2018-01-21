@@ -7,7 +7,7 @@ __regtn4inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGTN4.INC                                              *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATtiny4                        *
+;*   Contains Bit & Register Definitions for ATtiny4                        *
 ;*                                                                          *
 ;****************************************************************************
 

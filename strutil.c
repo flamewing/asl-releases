@@ -213,16 +213,10 @@ char *LargeString(char *pDest, LargeInt i)
 
 
 /*---------------------------------------------------------------------------*/
-/* manche haben's nicht... */
+/* strdup() is not part of ANSI C89 */
 
-#if defined(NEEDS_STRDUP) || defined(CKMALLOC)
-#ifdef CKMALLOC
-char *mystrdup(const char *s)
+char *as_strdup(const char *s)
 {
-#else
-char *strdup(const char *s)
-{
-#endif
   char *ptr = (char *) malloc(strlen(s) + 1);
 #ifdef CKMALLOC
   if (!ptr)
@@ -235,7 +229,6 @@ char *strdup(const char *s)
     strcpy(ptr, s);
   return ptr;
 }
-#endif
 
 #ifdef NEEDS_CASECMP
 int strcasecmp(const char *src1, const char *src2)

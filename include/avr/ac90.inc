@@ -7,20 +7,20 @@ __ac90inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File AC90.INC                                                *
 ;*                                                                          *
-;*   Contains bit & register definitions for AT90Sxxxx Analog Comparator    *
+;*   Contains Bit & Register Definitions for AT90Sxxxx Analog Comparator    *
 ;*                                                                          *
 ;****************************************************************************
 
-ACSR		port    0x08            ; Komparator-Steuer/Statusregister:
-ACIS0		equ     0               ;  Interrupt-Mode
-ACIS1		equ     1
-		ifdef	TCNT1L		; if timer 1 present...
-ACIC	         equ     2              ;  ...use Comparator als capture signal for Timer 1?
+ACSR		port	0x08            ; Analog Comparator ControlStatus Register
+ACIS0		avrbit	ACSR,0		; Interrupt-Mode
+ACIS1		avrbit	ACSR,1
+		ifdef	TCNT1L		; if Timer 1 present...
+ACIC	         avrbit	 ACSR,2		; ...use Comparator as Capture Signal for Timer 1?
 		endif
-ACIE		equ     3               ;  Interrupt Enable
-ACI		equ     4               ;  Interrupt Flag
-ACO		equ     5               ;  Analog Comparator Output
-ACD		equ	7		;  Disable
+ACIE		avrbit	ACSR,3		; Interrupt Enable
+ACI		avrbit	ACSR,4		; Interrupt Flag
+ACO		avrbit	ACSR,5		; Analog Comparator Output
+ACD		avrbit	ACSR,7		; Disable
 
 		restore			; re-enable listing
 

@@ -7,13 +7,13 @@ __acminc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File ACM.INC                                                 *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATmega Analog Comparator       *
+;*   Contains Bit & Register Definitions for ATmega Analog Comparator       *
 ;*                                                                          *
 ;****************************************************************************
 
 		include	"avr/ac90.inc"
 
-ACBG		equ	6		; bandgap select
+ACBG		avrbit	ACSR,6		; Bandgap Select
 
 		restore			; re-enable listing
 

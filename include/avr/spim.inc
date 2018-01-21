@@ -7,13 +7,13 @@ __spiminc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGSPIM.INC                                             *
 ;*                                                                          *
-;*  Contains bit & register definitions for ATmega SPI Interface (incl. 2x) *
+;*  Contains Bit & Register Definitions for ATmega SPI Interface (incl. 2x) *
 ;*                                                                          *
 ;****************************************************************************
 
 		include	"avr/spi90.inc"
 
-SPI2X		equ	0		; double speed mode
+SPI2X		avrbit	SPSR,0		; Double Speed Mode
 
 		restore			; re-enable listing
 

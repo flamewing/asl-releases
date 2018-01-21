@@ -7,7 +7,7 @@ __regm640inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGM640.INC                                             *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATmega640                      *
+;*   Contains Bit & Register Definitions for ATmega640                      *
 ;*                                                                          *
 ;****************************************************************************
 

@@ -7,7 +7,7 @@ __regtn45inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGTN45.INC                                             *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATtiny45                       *
+;*   Contains Bit & Register Definitions for ATtiny45                       *
 ;*                                                                          *
 ;****************************************************************************
 

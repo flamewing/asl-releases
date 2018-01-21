@@ -169,7 +169,7 @@ void AddException(char *Name)
   else
     *(dest++) = *src;
   *dest = '\0';
-  New->word = strdup(tmp);
+  New->word = as_strdup(tmp);
   if (New->poscnt)
   {
     New->posis = (int *) malloc(sizeof(int) * New->poscnt);

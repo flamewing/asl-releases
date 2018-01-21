@@ -7,7 +7,7 @@ __regm1281inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGM1281.INC                                            *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATmega1281                     *
+;*   Contains Bit & Register Definitions for ATmega1281                     *
 ;*                                                                          *
 ;****************************************************************************
 

@@ -7,7 +7,7 @@ __regskelinc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGSKEL.INC                                             *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATSkel                         *
+;*   Contains Bit & Register Definitions for ATSkel                         *
 ;*                                                                          *
 ;****************************************************************************
 

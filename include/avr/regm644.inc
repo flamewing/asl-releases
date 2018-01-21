@@ -7,7 +7,7 @@ __regm644inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGM644.INC                                             *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATmega644                      *
+;*   Contains Bit & Register Definitions for ATmega644                      *
 ;*                                                                          *
 ;****************************************************************************
 

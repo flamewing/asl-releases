@@ -7,44 +7,44 @@ __adcm78inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File ADCM78.INC                                              *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATmega A/D Converter @ 0x78    *
+;*   Contains Bit & Register Definitions for ATmega A/D Converter @ 0x78    *
 ;*                                                                          *
 ;****************************************************************************
 
 ADMUX		sfr	0x7c		; Multiplexer Selection
-REFS1		equ	7		; reference selection bits
-REFS0		equ	6
-ADLAR		equ	5		; left adjust right
-MUX3		equ	3		; multiplexer
-MUX2		equ	2
-MUX1		equ	1
-MUX0		equ	0
+REFS1		avrbit	ADMUX,7		; Reference Selection Bits
+REFS0		avrbit	ADMUX,6
+ADLAR		avrbit	ADMUX,5		; Left Adjust Right
+MUX3		avrbit	ADMUX,3		; Multiplexer
+MUX2		avrbit	ADMUX,2
+MUX1		avrbit	ADMUX,1
+MUX0		avrbit	ADMUX,0
 
 ADCSRA		sfr	0x7a		; Control/Status Register A
-ADEN		equ	7		; enable ADC
-ADSC		equ	6		; start conversion
-ADATE		equ	5		; Auto Trigger Enable
-ADIF		equ	4		; interrupt flag
-ADIE		equ	3		; interrupt enable
-ADPS2		equ	2		; prescaler select
-ADPS1		equ	1
-ADPS0		equ	0
+ADEN		avrbit	ADCSRA,7	; Enable ADC
+ADSC		avrbit	ADCSRA,6	; Start Conversion
+ADATE		avrbit	ADCSRA,5	; Auto Trigger Enable
+ADIF		avrbit	ADCSRA,4	; Interrupt Flag
+ADIE		avrbit	ADCSRA,3	; Interrupt Enable
+ADPS2		avrbit	ADCSRA,2	; Prescaler Select
+ADPS1		avrbit	ADCSRA,1
+ADPS0		avrbit	ADCSRA,0
 
 ADCSRB		sfr	0x7b		; Control/Status Register B
-ACME		equ	6		; analog multiplexer comparator enable
-ADTS2		equ	2		; auto trigger source
-ADTS1		equ	1
-ADTS0		equ	0
+ACME		avrbit	ADCSRB,6	; Analog Multiplexer Comparator Enable
+ADTS2		avrbit	ADCSRB,2	; Auto Trigger Source
+ADTS1		avrbit	ADCSRB,1
+ADTS0		avrbit	ADCSRB,0
 
 DIDR0		sfr	0x7e		; Digital Input Disable Register 0
-ADC0D		equ	0		; disable digital input on ADC0
-ADC1D		equ	1		; disable digital input on ADC1
-ADC2D		equ	2		; disable digital input on ADC2
-ADC3D		equ	3		; disable digital input on ADC3
-ADC4D		equ	4		; disable digital input on ADC4
-ADC5D		equ	5		; disable digital input on ADC5
-ADC6D		equ	6		; disable digital input on ADC6
-ADC7D		equ	7		; disable digital input on ADC7
+ADC0D		avrbit	DIDR0,0		; Disable Digital Input on ADC0
+ADC1D		avrbit	DIDR0,1		; Disable Digital Input on ADC1
+ADC2D		avrbit	DIDR0,2		; Disable Digital Input on ADC2
+ADC3D		avrbit	DIDR0,3		; Disable Digital Input on ADC3
+ADC4D		avrbit	DIDR0,4		; Disable Digital Input on ADC4
+ADC5D		avrbit	DIDR0,5		; Disable Digital Input on ADC5
+ADC6D		avrbit	DIDR0,6		; Disable Digital Input on ADC6
+ADC7D		avrbit	DIDR0,7		; Disable Digital Input on ADC7
 
 ADCH		sfr	0x79		; Data Register
 ADCL		sfr	0x78

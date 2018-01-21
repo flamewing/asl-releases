@@ -258,14 +258,14 @@ static void AddLabel(char *Name, char *Value)
       warning(err);
       DoRepass = True;
       free(Run->Value);
-      Run->Value = strdup(Value);
+      Run->Value = as_strdup(Value);
     }
   }
   else
   {
     Neu = (PRefSave) malloc(sizeof(TRefSave));
-    Neu->RefName = strdup(Name);
-    Neu->Value = strdup(Value);
+    Neu->RefName = as_strdup(Name);
+    Neu->Value = as_strdup(Value);
     Neu->Next = Run;
     if (!Prev)
       FirstRefSave = Neu;
@@ -292,14 +292,14 @@ static void AddCite(char *Name, char *Value)
       warning(err);
       DoRepass = True;
       free(Run->Value);
-      Run->Value = strdup(Value);
+      Run->Value = as_strdup(Value);
     }
   }
   else
   {
     Neu = (PRefSave) malloc(sizeof(TRefSave));
-    Neu->RefName = strdup(Name);
-    Neu->Value = strdup(Value);
+    Neu->RefName = as_strdup(Name);
+    Neu->Value = as_strdup(Value);
     Neu->Next = Run;
     if (!Prev)
       FirstCiteSave = Neu;
@@ -1139,7 +1139,7 @@ static void AddToc(char *Line)
 
   NewTocSave = (PTocSave) malloc(sizeof(TTocSave));
   NewTocSave->Next = NULL;
-  NewTocSave->TocName = strdup(Line);
+  NewTocSave->TocName = as_strdup(Line);
   if (FirstTocSave == NULL) FirstTocSave = NewTocSave;
   else
   {
@@ -1158,7 +1158,7 @@ static void TeXFlushLine(Word Index)
 
   if (CurrEnv == EnvTabular)
   {
-    for (CurrCol++; CurrCol < ThisTable.TColumnCount; ThisTable.Lines[CurrRow][CurrCol++] = strdup(""));
+    for (CurrCol++; CurrCol < ThisTable.TColumnCount; ThisTable.Lines[CurrRow][CurrCol++] = as_strdup(""));
     CurrRow++;
     if (CurrRow == MAXROWS)
       error("too many rows in table");
@@ -2003,7 +2003,7 @@ static void TeXIndex(Word Index)
     neu = (PIndexSave) malloc(sizeof(TIndexSave));
     neu->Next = run;
     neu->RefCnt = 1;
-    neu->Name = strdup(Token);
+    neu->Name = as_strdup(Token);
     if (!prev)
       FirstIndex = neu;
     else

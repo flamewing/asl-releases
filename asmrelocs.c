@@ -131,7 +131,7 @@ PRelocEntry DupRelocs(PRelocEntry src)
   {
     Neu = (PRelocEntry) malloc(sizeof(TRelocEntry));
     Neu->Next = NULL;
-    Neu->Ref = strdup(SRun->Ref);
+    Neu->Ref = as_strdup(SRun->Ref);
     Neu->Add = SRun->Add;
     if (!First)
       First = Neu;
@@ -208,7 +208,7 @@ void SubPCRefReloc(void)
   /* in case we did not find one, add a new one */
 
   New = (PRelocEntry) malloc(sizeof(TRelocEntry));
-  New->Ref = strdup(RelName_SegStart);
+  New->Ref = as_strdup(RelName_SegStart);
   New->Add = FALSE;
   New->Next = NULL;
   if (Prev)
@@ -223,7 +223,7 @@ void AddExport(char *Name, LargeInt Value, LongWord Flags)
 
   PNew = (PExportEntry) malloc(sizeof(TExportEntry));
   PNew->Next = NULL;
-  PNew->Name = strdup(Name);
+  PNew->Name = as_strdup(Name);
   PNew->Value = Value;
   PNew->Flags = Flags;
   if (!ExportList)

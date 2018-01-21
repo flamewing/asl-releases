@@ -7,7 +7,7 @@ __regm2561inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGM2561.INC                                            *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATmega2561                     *
+;*   Contains Bit & Register Definitions for ATmega2561                     *
 ;*                                                                          *
 ;****************************************************************************
 

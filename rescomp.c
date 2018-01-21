@@ -221,7 +221,7 @@ static void Process_LANGS(char *Line)
     if (!p2)
       SynError(Part);
     *p2 = '\0';
-    PCat->CtryName = strdup(Part); p2++;
+    PCat->CtryName = as_strdup(Part); p2++;
     do
     {
       for (p3 = p2; ((*p3) && (*p3 != ',')); p3++);
@@ -307,7 +307,7 @@ static void Process_MESSAGE(char *Line)
     List = (PMsgList) malloc(sizeof(TMsgList));
     List->Next = NULL;
     List->Position = z->TotLength;
-    List->Contents = strdup(Msg);
+    List->Contents = as_strdup(Msg);
     if (!z->Messages) z->Messages = List;
     else z->LastMessage->Next = List;
     z->LastMessage = List;
@@ -341,7 +341,7 @@ int main(int argc, char **argv)
   if (argc == 4)
   {
     HFile = fopenchk(argv[3], 3, "w");
-    IncSym = strdup(argv[3]);
+    IncSym = as_strdup(argv[3]);
     for (p = IncSym; *p; p++)
      if (isalpha(((unsigned int) *p) & 0xff))
        *p = mytoupper(*p);

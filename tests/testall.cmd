@@ -118,6 +118,7 @@ call testall t_buf32
 call testall t_cmdcpu
 call testall t_cop4
 call testall t_cop8
+call testall t_cpualias
 call testall t_dc
 call testall t_dx
 call testall t_enum

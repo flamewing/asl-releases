@@ -7,7 +7,7 @@ __regm88inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGM88.INC                                              *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATmega88                       *
+;*   Contains Bit & Register Definitions for ATmega88                       *
 ;*                                                                          *
 ;****************************************************************************
 

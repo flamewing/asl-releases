@@ -43,7 +43,7 @@ void AddStringListFirst(StringList *List, const char *NewStr)
   StringRecPtr Neu;
 
   Neu=(StringRecPtr) malloc(sizeof(StringRec));
-  Neu->Content = NewStr ? strdup(NewStr) : NULL;
+  Neu->Content = NewStr ? as_strdup(NewStr) : NULL;
   Neu->Next = (*List);
   *List = Neu;
 }
@@ -53,7 +53,7 @@ void AddStringListLast(StringList *List, const char *NewStr)
   StringRecPtr Neu, Lauf;
 
   Neu = (StringRecPtr) malloc(sizeof(StringRec)); 
-  Neu->Content = NewStr ? strdup(NewStr) : NULL;
+  Neu->Content = NewStr ? as_strdup(NewStr) : NULL;
   Neu->Next = NULL;
   if (!*List)
     *List = Neu;

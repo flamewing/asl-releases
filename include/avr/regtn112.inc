@@ -1,13 +1,13 @@
-		ifndef	__regtn101inc
-__regtn101inc	equ	1
+		ifndef	__regtn112inc
+__regtn112inc	equ	1
                 save
                 listing off   ; kein Listing ueber diesen File
 
 ;****************************************************************************
 ;*                                                                          *
-;*   AS 1.42 - File REGTN101.INC                                            *
+;*   AS 1.42 - File REGTN112.INC                                            *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATtiny10/11                    *
+;*   Contains Bit & Register Definitions for ATtiny11/12                    *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -15,12 +15,12 @@ __regtn101inc	equ	1
 ; Chip Configuration
 
 MCUCR		port	0x35		; MCU Control Register
-SM		equ	4		; Sleep Mode Select
-SE		equ	5		; Sleep Mode Enable
+SM		avrbit	MCUCR,4		; Sleep Mode Select
+SE		avrbit	MCUCR,5		; Sleep Mode Enable
 
 MCUSR		port	0x34		; MCU Status Register
-EXTRF		equ	1		; External Reset Occured
-PORF		equ	0		; Power-Fail Reset Occured
+EXTRF		avrbit	MCUSR,1		; External Reset Occured
+PORF		avrbit	MCUSR,0		; Power-Fail Reset Occured
 
 
 		if	MOMCPUNAME="ATTINY12"
@@ -34,21 +34,21 @@ OSCCAL		 port	0x31		; Oscillator Calibration
 EEAR		port	0x1e		; EEPROM Address Register
 EEDR		port	0x1d		; EEPROM Data Register
 EECR		port	0x1c		; EEPROM Control Register
-EERE		equ	0		; EEPROM Read Enable
-EEWE		equ	1		; EEPROM Write Enable
-EEMWE		equ	2		; EEPROM Multiple Write Enable
-EERIE		equ	3		; EEPROM Ready Interrupt Enable
+EERE		avrbit	EECR,0		; EEPROM Read Enable
+EEWE		avrbit	EECR,1		; EEPROM Write Enable
+EEMWE		avrbit	EECR,2		; EEPROM Multiple Write Enable
+EERIE		avrbit	EECR,3		; EEPROM Ready Interrupt Enable
 		endif
 
 ;----------------------------------------------------------------------------
 ; GPIO
 
-		; bits in MCUCR
 		if	MOMCPUNAME="ATTINY12"
-PUD		 equ	6		; Pull-Up Disable
+PUD		 avrbit	MCUCR,6		; Pull-Up Disable
 		endif
 
-PINB		port	0x16		; Port B @ 0x16 (bits 0..5)
+PINB		port	0x16		; Port B @ 0x16
+__PORTB_BITS	equ	0x3f		; (bits 0..5)
 
 ;----------------------------------------------------------------------------
 ; Interrupt Vectors
@@ -66,28 +66,28 @@ PINB		port	0x16		; Port B @ 0x16 (bits 0..5)
 ; External Interrupts
 
 		; bits in MCUCR
-ISC00		equ	0		; Interrupt Sense Control 0
-ISC01		equ	1
+ISC00		avrbit	MCUCR,0		; Interrupt Sense Control 0
+ISC01		avrbit	MCUCR,1
 
 GIMSK		port	0x3b		; Global Interrupt Mask Register
-PCIE		equ	5		; Enable Pin Change Interrupt
-INT0		equ	6		; Enable External Interrupt 0
+PCIE		avrbit	GIMSK,5		; Enable Pin Change Interrupt
+INT0		avrbit	GIMSK,6		; Enable External Interrupt 0
 
 GIFR		port	0x3a		; Interrupt Flag Register
-PCIF		equ	5		; Pin Change Interrupt Occured
-INTF0		equ	6		; External Interrupt 0 Occured
+PCIF		avrbit	GIFR,5		; Pin Change Interrupt Occured
+INTF0		avrbit	GIFR,6		; External Interrupt 0 Occured
 
 ;----------------------------------------------------------------------------
 ; Timers
 
 TCCR0		port	0x33		; Timer/Counter 0 Control Register
-CS00            equ     0               ; Timer/Counter 0 Clock Select
-CS01            equ     1
-CS02            equ     2
+CS00            avrbit	TCCR0,0		; Timer/Counter 0 Clock Select
+CS01            avrbit	TCCR0,1
+CS02            avrbit	TCCR0,2
 TCNT0		port	0x32		; Timer/Counter 0 Value
 
 TIMSK		port	0x39		; Timer Mask Register
-TOIE0		equ	1		; Timer/Counter 0 Overflow Interrupt Enable
+TOIE0		avrbit	TIMSK,1		; Timer/Counter 0 Overflow Interrupt Enable
 
 TIFR		port	0x38		; Timer Flag Register
 
@@ -96,19 +96,17 @@ TIFR		port	0x38		; Timer Flag Register
 
 		include	"avr/wdm21.inc"
 
-		; bits in WDTCR
-WDTOE		equ	4		; Enable Time-Out Interrupt
+WDTOE		avrbit	WDTCR,4		; Enable Time-Out Interrupt
 
 ;----------------------------------------------------------------------------
 ; Analog Comparator
 
 		include	"avr/ac90.inc"
 
-		; bits in ACSR
 		if	MOMCPUNAME="ATTINY12"
-AINBG		 equ	6		; Enable Band Gap
+AINBG		 avrbit	ACSR,6		; Enable Band Gap
 		endif
 
 		restore
 
-		endif			; __regtn101inc
+		endif			; __regtn112inc

@@ -1,3 +1,13 @@
+2018-01-21 [1.42 Bld 124]
+
+- Addition    : add ATmega{8|16|32}U2,
+                    ATmega{16|32}U4,
+                    ATmega32U6,AT90USB646/647,AT90USB1286/1287
+
+- Bugfix      : correct address space deduction for AVR
+
+- Bugfix      : defining CPU aliases for AVR works again
+
 2017-12-26 [1.42 Bld 123]
 
 - Addition    : add ATtiny48/88/43u/441/841/828/1634/87/167/

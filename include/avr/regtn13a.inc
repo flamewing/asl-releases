@@ -7,7 +7,7 @@ __regt13ainc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGTN13A.INC                                            *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATtiny13A                      *
+;*   Contains Bit & Register Definitions for ATtiny13A                      *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -17,12 +17,12 @@ __regt13ainc	equ	1
 ; Chip Configuration
 
 BODCR		port	0x30		; Brown-Out Detection Control Register
-BODSE		equ	0		; BOD Sleep Enable
-BODS		equ	1		; BOD Sleep
+BODSE		avrbit	BODCR,0		; BOD Sleep Enable
+BODS		avrbit	BODCR,1		; BOD Sleep
 
 PRR		port	0x25		; Power Reduction Register
-PRTIM0		equ	1		; Power Reduction Timer 0
-PRADC		equ	0		; Power Reduction A/D Converter
+PRTIM0		avrbit	PRR,1		; Power Reduction Timer 0
+PRADC		avrbit	PRR,0		; Power Reduction A/D Converter
 
 		restore
 

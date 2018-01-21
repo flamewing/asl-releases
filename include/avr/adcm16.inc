@@ -7,35 +7,34 @@ __adcm16inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File ADCM16.INC                                              *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATmega16-like A/D Converter    *
+;*   Contains Bit & Register Definitions for ATmega16-like A/D Converter    *
 ;*                                                                          *
 ;****************************************************************************
 
 ADMUX		port	0x07		; Multiplexer Selection
-REFS1		equ	7		; reference selection bits
-REFS0		equ	6
-ADLAR		equ	5		; left adjust right
-MUX4		equ	4
-MUX3		equ	3		; multiplexer
-MUX2		equ	2
-MUX1		equ	1
-MUX0		equ	0
+REFS1		avrbit	ADMUX,7		; Reference Selection Bits
+REFS0		avrbit	ADMUX,6
+ADLAR		avrbit	ADMUX,5		; Left Adjust Right
+MUX4		avrbit	ADMUX,4
+MUX3		avrbit	ADMUX,3		; Multiplexer
+MUX2		avrbit	ADMUX,2
+MUX1		avrbit	ADMUX,1
+MUX0		avrbit	ADMUX,0
 
 ADCSRA		port	0x06		; Control/Status Register A
-ADEN		equ	7		; enable ADC
-ADSC		equ	6		; start conversion
-ADATE		equ	5		; Auto Trigger Enable
-ADIF		equ	4		; interrupt flag
-ADIE		equ	3		; interrupt enable
-ADPS2		equ	2		; prescaler select
-ADPS1		equ	1
-ADPS0		equ	0
+ADEN		avrbit	ADCSRA,7	; Enable ADC
+ADSC		avrbit	ADCSRA,6	; Start Conversion
+ADATE		avrbit	ADCSRA,5	; Auto Trigger Enable
+ADIF		avrbit	ADCSRA,4	; Interrupt Flag
+ADIE		avrbit	ADCSRA,3	; Interrupt Enable
+ADPS2		avrbit	ADCSRA,2	; Prescaler Select
+ADPS1		avrbit	ADCSRA,1
+ADPS0		avrbit	ADCSRA,0
 
 ADCH		port	0x05		; Data Register
 ADCL		port	0x04
 
-		; bits in SFIOR
-ACME		equ	3		; analog comparator mux enable
+ACME		avrbit	SFIOR,3		; Analog Comparator Mux Enable
 
 		restore			; re-enable listing
 

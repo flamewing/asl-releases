@@ -1,5 +1,7 @@
 #include "stdinc.h"
 
+#include "strutil.h"
+
 #include "chardefs.h"
 
 typedef struct
@@ -55,7 +57,7 @@ int main(int argc, char **argv)
 
     for (z = 1; z < argc; z++)
     {
-      argv[z] = strdup(argv[z]);
+      argv[z] = as_strdup(argv[z]);
       for (p = argv[z]; *p; p++)
         if (*p == '\\')
           *p = '/';      

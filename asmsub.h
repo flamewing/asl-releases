@@ -88,8 +88,6 @@ extern Word ListGran(void);
 extern void ChkSpace(Byte Space);
 
 
-extern void PrintChunk(ChunkList *NChunk);
-
 extern void PrintUseList(void);
 
 extern void ClearUseList(void);

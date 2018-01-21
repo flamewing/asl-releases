@@ -7,7 +7,7 @@ __regt2313inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGT2313.INC                                            *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATtiny2313(A)                  *
+;*   Contains Bit & Register Definitions for ATtiny2313(A)                  *
 ;*                                                                          *
 ;****************************************************************************
 

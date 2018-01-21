@@ -7,46 +7,46 @@ __regt1024inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGT1024.INC                                            *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATtiny102/104                  *
+;*   Contains Bit & Register Definitions for ATtiny102/104                  *
 ;*                                                                          *
 ;****************************************************************************
 
 ;----------------------------------------------------------------------------
 ; Chip Configuration
 
-VLMCSR		port	0x34		; VCC Level Monitoring Control and Status register
-VLM0		equ	0		; Trigger Level of Voltage Level Monitor
-VLM1		equ	1
-VLM2		equ	2
-VLMIE		equ	6		; VLM Interrupt Enable
-VLMF		equ	7		; VLM Flag
+VLMCSR		port	0x34		; VCC Level Monitoring Control and Status Register
+VLM0		avrbit	VLMCSR,0	; Trigger Level of Voltage Level Monitor
+VLM1		avrbit	VLMCSR,1
+VLM2		avrbit	VLMCSR,2
+VLMIE		avrbit	VLMCSR,6	; VLM Interrupt Enable
+VLMF		avrbit	VLMCSR,7	; VLM Flag
 
 RSTFLR		port	0x3b		; Reset Flag Register
-WDRF		equ	3		; Watchdog Reset Flag
-EXTRF		equ	1		; External Reset Flag
-PORF		equ	0		; Power-on Reset Flag
+WDRF		avrbit	RSTFLR,3	; Watchdog Reset Flag
+EXTRF		avrbit	RSTFLR,1	; External Reset Flag
+PORF		avrbit	RSTFLR,0	; Power-on Reset Flag
 
 OSCCAL		port	0x39		; Oscillator Calibration
 
 CLKPSR		port	0x36		; Clock Prescaler Register
-CLKPS0		equ	0		; Clock Prescaler Select
-CLKPS1		equ	1
-CLKPS2		equ	2
+CLKPS0		avrbit	CLKPSR,0	; Clock Prescaler Select
+CLKPS1		avrbit	CLKPSR,1
+CLKPS2		avrbit	CLKPSR,2
 
 CLKMSR		port	0x37		; Clock Main Settings Register
-CLKMS0		equ	0		; Clock Main Select Bits
-CLKMS1		equ	1
+CLKMS0		avrbit	CLKMSR,0	; Clock Main Select Bits
+CLKMS1		avrbit	CLKMSR,1
 
 SMCR		port	0x3a		; Sleep Mode Control Register
-SE		equ	0		; Sleep Mode Enable
-SM0		equ	1		; Sleep Mode Select
-SM1		equ	2
-SM2		equ	3
+SE		avrbit	SMCR,0		; Sleep Mode Enable
+SM0		avrbit	SMCR,1		; Sleep Mode Select
+SM1		avrbit	SMCR,2
+SM2		avrbit	SMCR,3
 
 PRR		port	0x35		; Power Reduction Register
-PRTIM0		equ	0		; Power Reduction Timer/Counter 0
-PRADC		equ	1		; Power Reduction A/D Converter
-PRUSART0	equ	2		; Power Reduction USART
+PRTIM0		avrbit	PRR,0		; Power Reduction Timer/Counter 0
+PRADC		avrbit	PRR,1		; Power Reduction A/D Converter
+PRUSART0	avrbit	PRR,2		; Power Reduction USART
 
 CCP		port	0x3c		; Configuration Change Protection Register
 
@@ -54,58 +54,65 @@ CCP		port	0x3c		; Configuration Change Protection Register
 ; EEPROM/Flash Access
 
 NVMCSR		port	0x32		; Non-Volatile Memory Control and Status Register
-NVMBSY		equ	7		; Non-Volatile Memory Busy
+NVMBSY		avrbit	NVMCSR,7	; Non-Volatile Memory Busy
 
 NVMCMD		port	0x33		; Non-Volatile Memory Command Register
-NVMCMD0		equ	0		; Non-Volatile Memory Command
-NVMCMD1		equ	1
-NVMCMD2		equ	2
-NVMCMD3		equ	3
-NVMCMD4		equ	4
-NVMCMD5		equ	5
+NVMCMD0		avrbit	NVMCMD,0	; Non-Volatile Memory Command
+NVMCMD1		avrbit	NVMCMD,1
+NVMCMD2		avrbit	NVMCMD,2
+NVMCMD3		avrbit	NVMCMD,3
+NVMCMD4		avrbit	NVMCMD,4
+NVMCMD5		avrbit	NVMCMD,5
 
 ;----------------------------------------------------------------------------
 ; GPIO
 
-PINA		port	0x00		; Port A @ 0x00 (IO) ff. (bits 0..2 on ATmega102)
+PINA		port	0x00		; Port A @ 0x00 (IO) ff.
+		if	MOMCPUNAME="ATTINY102"
+__PORTA_BITS	 equ	0x07		; (bits 0..2 on ATtiny102)
+		endif
 PUEA		port	0x03		; Pull-Up Enable Port A
-PUEA0		equ	0
-PUEA1		equ	1
-PUEA2		equ	2
+PUEA0		avrbit	PUEA,0
+PUEA1		avrbit	PUEA,1
+PUEA2		avrbit	PUEA,2
 		if	MOMCPUNAME="ATTINY104"
-PUEA3		 equ	3
-PUEA4		 equ	4
-PUEA5		 equ	5
-PUEA6		 equ	6
-PUEA7		 equ	7
+PUEA3		 avrbit	PUEA,3
+PUEA4		 avrbit	PUEA,4
+PUEA5		 avrbit	PUEA,5
+PUEA6		 avrbit	PUEA,6
+PUEA7		 avrbit	PUEA,7
 		endif
-PINB		port	0x04		; Port B @ 0x04 (IO) ff. (bits 1..3 on ATmega102, bits 0..3 on ATmega104)
+PINB		port	0x04		; Port B @ 0x04 (IO) ff.
 PUEB		port	0x07		; Pull-Up Enable Port B
-		if	MOMCPUNAME="ATTINY104"
-PUEB0		 equ	0
-PUEB1		 equ	1
-PUEB2		 equ	2
+		if	MOMCPUNAME="ATTINY102"
+__PORTB_BITS	 equ	0x0e		; (bits 1..3 on ATtiny102)
 		endif
-PUEB3		equ	3
+		if	MOMCPUNAME="ATTINY104"
+__PORTB_BITS	 equ	0x0f		; (bits 0..3 on ATtiny104)
+PUEB0		 avrbit	PUEB,0
+		endif
+PUEB1		avrbit	PUEB,1
+PUEB2		avrbit	PUEB,2
+PUEB3		avrbit	PUEB,3
 
 PCMSK0		port	0x0f		; Pin-Change Mask Register 0
-PCINT0		equ	0		; Enable Pin-Change Interrupt 0
-PCINT1		equ	1		; Enable Pin-Change Interrupt 1
-PCINT2		equ	2		; Enable Pin-Change Interrupt 2
-PCINT3		equ	3		; Enable Pin-Change Interrupt 3
-PCINT4		equ	4		; Enable Pin-Change Interrupt 4
-PCINT5		equ	5		; Enable Pin-Change Interrupt 5
-PCINT6		equ	6		; Enable Pin-Change Interrupt 6
-PCINT7		equ	7		; Enable Pin-Change Interrupt 7
+PCINT0		avrbit	PCMSK0,0	; Enable Pin-Change Interrupt 0
+PCINT1		avrbit	PCMSK0,1	; Enable Pin-Change Interrupt 1
+PCINT2		avrbit	PCMSK0,2	; Enable Pin-Change Interrupt 2
+PCINT3		avrbit	PCMSK0,3	; Enable Pin-Change Interrupt 3
+PCINT4		avrbit	PCMSK0,4	; Enable Pin-Change Interrupt 4
+PCINT5		avrbit	PCMSK0,5	; Enable Pin-Change Interrupt 5
+PCINT6		avrbit	PCMSK0,6	; Enable Pin-Change Interrupt 6
+PCINT7		avrbit	PCMSK0,7	; Enable Pin-Change Interrupt 7
 PCMSK1		port	0x10		; Pin-Change Mask Register 1
-PCINT8		equ	0		; Enable Pin-Change Interrupt 8
-PCINT9		equ	1		; Enable Pin-Change Interrupt 9
-PCINT10		equ	2		; Enable Pin-Change Interrupt 10
-PCINT11		equ	3		; Enable Pin-Change Interrupt 11
+PCINT8		avrbit	PCMSK1,0	; Enable Pin-Change Interrupt 8
+PCINT9		avrbit	PCMSK1,1	; Enable Pin-Change Interrupt 9
+PCINT10		avrbit	PCMSK1,2	; Enable Pin-Change Interrupt 10
+PCINT11		avrbit	PCMSK1,3	; Enable Pin-Change Interrupt 11
 
 PORTCR		port	0x16		; Port Control Register
-BBMA		equ	0		; Break-Before-Make Mode Enable Port A
-BBMB		equ	1		; Break-Before-Make Mode Enable Port B
+BBMA		avrbit	PORTCR,0	; Break-Before-Make Mode Enable Port A
+BBMB		avrbit	PORTCR,1	; Break-Before-Make Mode Enable Port B
 
 PCICR		port	0x12		; Pin-Change Interrupt Control Register
 
@@ -115,7 +122,7 @@ PCIFR		port	0x11		; Pin-Change Interrupt Flag Register
 ; Interrupt Vectors
 
 		enumconf 1,code
-		enum	 INT0_vect=1		; external interrupt request 0
+		enum	 INT0_vect=1		; External Interrupt Request 0
 		nextenum PCINT0_vect		; Pin Change Interrupt 0
 		nextenum PCINT1_vect		; Pin Change Interrupt 1
 		nextenum TIM0_CAPT_vect		; Timer/Counter 0 Capture
@@ -135,36 +142,36 @@ PCIFR		port	0x11		; Pin-Change Interrupt Flag Register
 ; External Interrupts
 
 EICRA		port	0x15		; External Interrupt Control Register A
-ISC00		equ	0		; Interrupt Sense Control 0
-ISC01		equ	1
+ISC00		avrbit	EICRA,0		; Interrupt Sense Control 0
+ISC01		avrbit	EICRA,1
 
 EIMSK		port	0x13		; External Interrupt Mask Register
-INT0		equ	0		; Enable External Interrupt 0
+INT0		avrbit	EIMSK,0		; Enable External Interrupt 0
 
 EIFR		port	0x14		; External Interrupt Flag Register
-INTF0		equ	0		; External Interrupt 0 occured
+INTF0		avrbit	EIFR,0		; External Interrupt 0 Occured
 
 ;----------------------------------------------------------------------------
 ; Timers
 
 TCCR0A		port	0x2e		; Timer/Counter 0 Control Register A
-WGM00		equ	0		; Timer/Tounter 0 Waveform Generation Mode
-WGM01		equ	1
-COM0B0		equ	4		; Timer/Counter 0 Output Compare Mode B
-COM0B1		equ	5
-COM0A0		equ	6		; Timer/Counter 0 Output Compare Mode A
-COM0A1		equ	7
+WGM00		avrbit	TCCR0A,0	; Timer/Tounter 0 Waveform Generation Mode
+WGM01		avrbit	TCCR0A,1
+COM0B0		avrbit	TCCR0A,4	; Timer/Counter 0 Output Compare Mode B
+COM0B1		avrbit	TCCR0A,5
+COM0A0		avrbit	TCCR0A,6	; Timer/Counter 0 Output Compare Mode A
+COM0A1		avrbit	TCCR0A,7
 TCCR0B		port	0x2d		; Timer/Counter 0 Control Register B
-CS00            equ     0               ; Timer/Counter 0 Clock Select
-CS01            equ     1
-CS02            equ     2
-WGM02		equ	3
-WGM03		equ	4
-ICES0		equ	6		; Timer/Counter 0 Input Capture Edge Select
-ICNC0		equ	7		; Timer/Counter 0 Input Capture Noise Canceling
+CS00            avrbit	TCCR0B,0	; Timer/Counter 0 Clock Select
+CS01            avrbit	TCCR0B,1
+CS02            avrbit	TCCR0B,2
+WGM02		avrbit	TCCR0B,3
+WGM03		avrbit	TCCR0B,4
+ICES0		avrbit	TCCR0B,6	; Timer/Counter 0 Input Capture Edge Select
+ICNC0		avrbit	TCCR0B,7	; Timer/Counter 0 Input Capture Noise Canceling
 TCCR0C		port	0x2c		; Timer/Counter 0 Control Register C
-FOC0B		equ	6		; Timer/Counter 0 Force Output Compare Match B
-FOC0A		equ	7		; Timer/Counter 0 Force Output Compare Match A
+FOC0B		avrbit	TCCR0C,6	; Timer/Counter 0 Force Output Compare Match B
+FOC0A		avrbit	TCCR0C,7	; Timer/Counter 0 Force Output Compare Match A
 TCNT0L		port	0x28		; Timer/Counter 0 Value LSB
 TCNT0H		port	0x29		; Timer/Counter 0 Value MSB
 OCR0AL		port	0x26		; Timer/Counter 0 Output Compare Value A LSB
@@ -175,129 +182,129 @@ ICR0L		port	0x22		; Timer/Counter 0 Input Capture Register LSB
 ICR0H		port	0x23		; Timer/Counter 0 Input Capture Register MSB
 
 TIMSK0		port	0x2b		; Timer/Counter 0 Interrupt Mask Register
-TOIE0		equ	0		; Timer/Counter 0 Overflow Interrupt Enable
-OCIE0A		equ	1		; Timer/Counter 0 Output Compare Interrupt Enable A
-OCIE0B		equ	2		; Timer/Counter 0 Output Compare Interrupt Enable B
-ICIE0		equ	5		; Timer/Counter 0 Input Capture Interrupt Enable
+TOIE0		avrbit	TIMSK0,0	; Timer/Counter 0 Overflow Interrupt Enable
+OCIE0A		avrbit	TIMSK0,1	; Timer/Counter 0 Output Compare Interrupt Enable A
+OCIE0B		avrbit	TIMSK0,2	; Timer/Counter 0 Output Compare Interrupt Enable B
+ICIE0		avrbit	TIMSK0,5	; Timer/Counter 0 Input Capture Interrupt Enable
 
 TIFR0		port	0x2a		; Timer/Counter 0 Interrupt Status Register
 
 GTCCR		port	0x2f		; General Timer/Counter Control Register
-PSR		equ	0		; Prescaler 0 Reset Timer/Counter 0
-REMAP		equ	1		; Timer Pin Mapping
-TSM		equ	7		; Timer/Counter Synchronization Mode
+PSR		avrbit	GTCCR,0		; Prescaler 0 Reset Timer/Counter 0
+REMAP		avrbit	GTCCR,1		; Timer Pin Mapping
+TSM		avrbit	GTCCR,7		; Timer/Counter Synchronization Mode
 
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
 WDTCSR		port	0x31		; Watchdog Control/Status Register
-WDP0		equ	0		; Prescaler
-WDP1		equ	1
-WDP2		equ	2
-WDE		equ	3		; Enable Watchdog
-WDP3		equ	5
-WDIE		equ	6		; Watchdog Interrupt Enable
-WDIF		equ	7		; Watchdog Interrupt Flag
+WDP0		avrbit	WDTCSR,0	; Prescaler
+WDP1		avrbit	WDTCSR,1
+WDP2		avrbit	WDTCSR,2
+WDE		avrbit	WDTCSR,3	; Enable Watchdog
+WDP3		avrbit	WDTCSR,5
+WDIE		avrbit	WDTCSR,6	; Watchdog Interrupt Enable
+WDIF		avrbit	WDTCSR,7	; Watchdog Interrupt Flag
 
 ;----------------------------------------------------------------------------
 ; Analog Comparator
 
 ACSRA		port    0x1f		; Analog Comparator Control and Status Register A
-ACIS0		equ     0		; Interrupt-Mode
-ACIS1		equ     1
-ACIC		equ	2		; Use Comparator As Capture Signal For Timer 0?
-ACIE		equ     3               ; Interrupt Enable
-ACI		equ     4               ; Interrupt Flag
-ACO		equ     5               ; Analog Comparator Output
-ACBG		equ	6		; Analog Comparator Band Gap Select
-ACD		equ	7		; Disable
+ACIS0		avrbit	ACSRA,0		; Interrupt-Mode
+ACIS1		avrbit	ACSRA,1
+ACIC		avrbit	ACSRA,2		; Use Comparator As Capture Signal For Timer 0?
+ACIE		avrbit	ACSRA,3		; Interrupt Enable
+ACI		avrbit	ACSRA,4		; Interrupt Flag
+ACO		avrbit	ACSRA,5		; Analog Comparator Output
+ACBG		avrbit	ACSRA,6		; Analog Comparator Band Gap Select
+ACD		avrbit	ACSRA,7		; Disable
 
 ACSRB		port	0x1e		; Analog Comparator Control and Status Register B
-ACOE		equ	1		; Analog Comparator Output Enable
-ACPMUX		equ	0		; Analog Comparator Positive Input Multiplexer
+ACOE		avrbit	ACSRB,1		; Analog Comparator Output Enable
+ACPMUX		avrbit	ACSRB,0		; Analog Comparator Positive Input Multiplexer
 
 ;----------------------------------------------------------------------------
 ; A/D Converter
 
 ADMUX		port	0x1b		; ADC Multiplexer Selection Register
-MUX0		equ	0		; Analog Channel Selection
-MUX1		equ	1
-MUX2		equ	2
-REFS0		equ	6		; Reference Selection
-REFS1		equ	7
+MUX0		avrbit	ADMUX,0		; Analog Channel Selection
+MUX1		avrbit	ADMUX,1
+MUX2		avrbit	ADMUX,2
+REFS0		avrbit	ADMUX,6		; Reference Selection
+REFS1		avrbit	ADMUX,7
 
 ADCSRA		port	0x1d		; ADC Control/Status Register A
-ADEN		equ	7		; Enable ADC
-ADSC		equ	6		; Start Conversion
-ADATE		equ	5		; ADC Auto Trigger Enable
-ADIF		equ	4		; Interrupt Flag
-ADIE		equ	3		; Interrupt Enable
-ADPS2		equ	2		; Prescaler Select
-ADPS1		equ	1
-ADPS0		equ	0
+ADEN		avrbit	ADCSRA,7	; Enable ADC
+ADSC		avrbit	ADCSRA,6	; Start Conversion
+ADATE		avrbit	ADCSRA,5	; ADC Auto Trigger Enable
+ADIF		avrbit	ADCSRA,4	; Interrupt Flag
+ADIE		avrbit	ADCSRA,3	; Interrupt Enable
+ADPS2		avrbit	ADCSRA,2	; Prescaler Select
+ADPS1		avrbit	ADCSRA,1
+ADPS0		avrbit	ADCSRA,0
 
 ADCSRB		port	0x1c		; ADC Control/Status Register A
-ADTS0		equ	0		; ADC Auto Trigger Source
-ADTS1		equ	1
-ADTS2		equ	2
+ADTS0		avrbit	ADCSRB,0	; ADC Auto Trigger Source
+ADTS1		avrbit	ADCSRB,1
+ADTS2		avrbit	ADCSRB,2
 
 ADCL		port	0x19		; ADC Conversion Result LSB
 ADCH		port	0x1a		; ADC Conversion Result MSB
 
 DIDR0		port	0x17		; Digital Input Disable Register 0
-ADC0D		equ	0		; ADC0 Digital Input Disable
-ADC1D		equ	1		; ADC1 Digital Input Disable
-ADC2D		equ	2		; ADC2 Digital Input Disable
-ADC3D		equ	3		; ADC3 Digital Input Disable
-ADC4D		equ	4		; ADC4 Digital Input Disable
-ADC5D		equ	5		; ADC5 Digital Input Disable
-ADC6D		equ	6		; ADC6 Digital Input Disable
-ADC7D		equ	7		; ADC7 Digital Input Disable
+ADC0D		avrbit	DIDR0,0		; ADC0 Digital Input Disable
+ADC1D		avrbit	DIDR0,1		; ADC1 Digital Input Disable
+ADC2D		avrbit	DIDR0,2		; ADC2 Digital Input Disable
+ADC3D		avrbit	DIDR0,3		; ADC3 Digital Input Disable
+ADC4D		avrbit	DIDR0,4		; ADC4 Digital Input Disable
+ADC5D		avrbit	DIDR0,5		; ADC5 Digital Input Disable
+ADC6D		avrbit	DIDR0,6		; ADC6 Digital Input Disable
+ADC7D		avrbit	DIDR0,7		; ADC7 Digital Input Disable
 
 ;----------------------------------------------------------------------------
 ; USART
 
-UDR0		port	0x08		; USART I/O Data Register 0
+UDR0		port	0x08		; USART0 I/O Data Register
 
-UCSR0A		port	0x0e		; USART Control and Status Register 0 A
-RXC0		equ	7		; USART Receive Complete
-TXC0		equ	6		; USART Transmit Complete
-UDRE0		equ	5		; USART Data Register Empty
-FE0		equ	4		; Frame Error
-DOR0		equ	3		; Data OverRun
-UPE0		equ	2		; USART Parity Error
-U2X0		equ	1		; Double the USART Transmission Speed
-MPCM0		equ	0		; Multi-processor Communication Mode
+UCSR0A		port	0x0e		; USART0 Control and Status Register A
+RXC0		avrbit	UCSR0A,7	; USART0 Receive Complete
+TXC0		avrbit	UCSR0A,6	; USART0 Transmit Complete
+UDRE0		avrbit	UCSR0A,5	; USART0 Data Register Empty
+FE0		avrbit	UCSR0A,4	; USART0 Frame Error
+DOR0		avrbit	UCSR0A,3	; USART0 Data OverRun
+UPE0		avrbit	UCSR0A,2	; USART0 Parity Error
+U2X0		avrbit	UCSR0A,1	; USART0 Double Transmission Speed
+MPCM0		avrbit	UCSR0A,0	; USART0 Multi Processor Communication Mode
 
-UCSR0B		port	0x0d		; USART Control and Status Register 0 B
-RXCIE0		equ	7		; RX Complete Interrupt Enable 0
-TXCIE0		equ	6		; TX Complete Interrupt Enable 0
-UDRIE0		equ	5		; USART Data Register Empty Interrupt Enable 0
-RXEN0		equ	4		; Receiver Enable 0
-TXEN0		equ	3		; Transmitter Enable 0
-UCSZ02		equ	2		; Character Size 0
-RXB80		equ	1		; Receive Data Bit 8 0
-TXB80		equ	0		; Transmit Data Bit 8 0
+UCSR0B		port	0x0d		; USART0 Control and Status Register B
+RXCIE0		avrbit	UCSR0B,7	; USART0 RX Complete Interrupt Enable
+TXCIE0		avrbit	UCSR0B,6	; USART0 TX Complete Interrupt Enable
+UDRIE0		avrbit	UCSR0B,5	; USART0 Data Register Empty Interrupt Enable
+RXEN0		avrbit	UCSR0B,4	; USART0 Receiver Enable
+TXEN0		avrbit	UCSR0B,3	; USART0 Transmitter Enable
+UCSZ02		avrbit	UCSR0B,2	; USART0 Character Size
+RXB80		avrbit	UCSR0B,1	; USART0 Receive Data Bit 8
+TXB80		avrbit	UCSR0B,0	; USART0 Transmit Data Bit 8
 
-UCSR0C		port	0x0c		; USART Control and Status Register 0 C
-UMSEL01		equ	7		; USART Mode Select 0
-UMSEL00		equ	6
-UPM01		equ	5		; USART Parity Mode 0
-UPM00		equ	4
-USBS0		equ	3		; USART Stop Bit Select 0
-UCSZ01		equ	2		; USART Character Size
-UDORD0		equ	2		; USART Data Order
-UCSZ00		equ	1
-UCPHA0		equ	1		; USART Character Size
-UCPOL0		equ	0		; USERT Clock Phase
+UCSR0C		port	0x0c		; USART0 Control and Status Register C
+UMSEL01		avrbit	UCSR0C,7	; USART0 Mode Select
+UMSEL00		avrbit	UCSR0C,6
+UPM01		avrbit	UCSR0C,5	; USART0 Parity Mode
+UPM00		avrbit	UCSR0C,4
+USBS0		avrbit	UCSR0C,3	; USART0 Stop Bit Select
+UCSZ01		avrbit	UCSR0C,2	; USART0 Character Size
+UDORD0		avrbit	UCSR0C,2	; USART0 Data Order
+UCSZ00		avrbit	UCSR0C,1
+UCPHA0		avrbit	UCSR0C,1	; USART0 Character Size
+UCPOL0		avrbit	UCSR0C,0	; USERT0 Clock Phase
 
-UCSR0D		port	0x0b		; USART Control and Status Register 0 D
-RXSIE		equ	7		; USART RX Start Interrupt Enable
-RXS		equ	6		; USART RX Start
-SFDE		equ	5		; Start Frame Detection Enable
+UCSR0D		port	0x0b		; USART0 Control and Status Register D
+RXSIE		avrbit	UCSR0D,7	; USART0 RX Start Interrupt Enable
+RXS		avrbit	UCSR0D,6	; USART0 RX Start
+SFDE		avrbit	UCSR0D,5	; Start0 Frame Detection Enable
 
-UBRR0L		port	0x09		; USART Baud Rate 0 Register LSB
-UBRR0H		port	0x0a		; USART Baud Rate 0 Register MSB
+UBRR0L		port	0x09		; USART0 Baud Rate Register LSB
+UBRR0H		port	0x0a		; USART0 Baud Rate Register MSB
 
 		restore
 

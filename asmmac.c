@@ -69,10 +69,10 @@ static void EnterDefine(char *Name, char *Definition)
 
   Neu = (PDefinement) malloc(sizeof(TDefinement));
   Neu->Next = FirstDefine;
-  Neu->TransFrom = strdup(Name);
+  Neu->TransFrom = as_strdup(Name);
   if (!CaseSensitive)
     NLS_UpString(Neu->TransFrom);
-  Neu->TransTo = strdup(Definition);
+  Neu->TransTo = as_strdup(Definition);
   l = strlen(Name);
   for (z = 0; z < 256; Neu->Compiled[z++] = l);
   for (z = 0; z < l - 1; z++)
@@ -321,7 +321,7 @@ void AddMacro(PMacroRec Neu, LongInt DefSect, Boolean Protest)
   NewNode = (PMacroNode) malloc(sizeof(TMacroNode));
   NewNode->Tree.Left = NULL;
   NewNode->Tree.Right = NULL;
-  NewNode->Tree.Name = strdup(Neu->Name);
+  NewNode->Tree.Name = as_strdup(Neu->Name);
   NewNode->Tree.Attribute = DefSect;
   NewNode->Contents = Neu;
 

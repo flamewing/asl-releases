@@ -273,6 +273,13 @@ void
 #endif
 );
 
+typedef void (*DissectBitProc)(
+#ifdef __PROTOS__
+char *pDest, int DestSize, LargeWord Inp
+#endif
+);
+
+
 typedef Word WordField[6];          /* fuer Zahlenumwandlung */
 typedef char *ArgStrField[ArgCntMax + 1]; /* Feld mit Befehlsparametern */
 typedef char *StringPtr;
@@ -441,6 +448,7 @@ extern Boolean (*ChkPC)(LargeWord Addr);
 extern Boolean (*IsDef)(void);
 extern void (*SwitchFrom)(void);
 extern void (*InternSymbol)(char *Asc, TempResult *Erg);
+extern DissectBitProc DissectBit;
 
 extern StringPtr IncludeList;
 extern Integer IncDepth,NextIncDepth;
@@ -513,6 +521,8 @@ extern void NullProc(void);
 extern int SetMaxCodeLen(LongWord NewMaxCodeLen);
 
 extern void Default_InternSymbol(char *Asc, TempResult *Erg);
+
+extern void Default_DissectBit(char *pDest, int DestSize, LargeWord BitSpec);
 
 
 extern void asmdef_init(void);

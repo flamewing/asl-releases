@@ -7,7 +7,7 @@ __ee90inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File EE90.INC                                                *
 ;*                                                                          *
-;*   Contains bit & register definitions for EEPROM section on AT90Sxxxx    *
+;*   Contains Bit & Register Definitions for EEPROM section on AT90Sxxxx    *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -15,17 +15,17 @@ __ee90inc	equ	1
 ; EEPROM
 
 		if E2END>=256
-EEARL		port	 0x1e		; EEPROM Address Register
-EEARH		port	 0x1f
+EEARL		 port	 0x1e		; EEPROM Address Register
+EEARH		 port	 0x1f
 		elseif
-EEAR		port    0x1e
+EEAR		 port	 0x1e
 		endif
 
 EEDR		port	0x1d		; EEPROM Data Register
 
-EECR            port    0x1c		; EEPROM Control Register
-EERE            equ     0		; Read Enable
-EEWE            equ     1		; Write Enable
+EECR            port	0x1c		; EEPROM Control Register
+EERE		avrbit	EECR,0		; Read Enable
+EEWE		avrbit	EECR,1		; Write Enable
 
 		restore			; re-enable listing
 

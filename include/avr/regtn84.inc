@@ -7,7 +7,7 @@ __regtn84inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REGTN84.INC                                             *
 ;*                                                                          *
-;*   Contains bit & register definitions for ATtiny84(A)                    *
+;*   Contains Bit & Register Definitions for ATtiny84(A)                    *
 ;*                                                                          *
 ;****************************************************************************
 

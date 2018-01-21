@@ -7,24 +7,24 @@ __reg1200inc	equ	1
 ;*                                                                          *
 ;*   AS 1.42 - File REG1200.INC                                             *
 ;*                                                                          *
-;*   Contains bit & register definitions for AT90S1200                      *
+;*   Contains Bit & Register Definitions for AT90S1200                      *
 ;*                                                                          *
 ;****************************************************************************
 
 ;----------------------------------------------------------------------------
 ; Memory Limits
 
-E2END		equ     63		; end address EEPROM
-RAMSTART	equ	0x60,data	; start address SRAM
-RAMEND		equ     95,data		; end address SRAM (i.e. no SRAM!)
-FLASHEND	label   1023		; end address Flash
+E2END		equ     63		; End Address EEPROM
+RAMSTART	equ	0x60,data	; Start Address SRAM
+RAMEND		equ     95,data		; End Address SRAM (i.e. no SRAM!)
+FLASHEND	label   1023		; End Address Flash
 
 ;----------------------------------------------------------------------------
 ; Chip Configuration
 
 MCUCR		port	0x35		; MCU General Control Register
-SM		equ	4		; choose Idle/Powerdown mode
-SE		equ	5		; enable sleep mode
+SM		avrbit	MCUCR,4		; Choose Idle/Powerdown Mode
+SE		avrbit	MCUCR,5		; Enable Sleep Mode
 
 ;----------------------------------------------------------------------------
 ; EEPROM
@@ -36,38 +36,38 @@ SE		equ	5		; enable sleep mode
 
 PINB		port	0x16		; Port B @ 0x16 (IO) ff.
 PIND		port	0x10		; Port D @ 0x10 (IO) ff.
+__PORTD_BITS	equ	0x7f		; (bits 0..6)
 
 ;----------------------------------------------------------------------------
 ; Interrupt Vectors
 
 		enumconf 1,code
-		enum	INT0_vect=1		; external interrupt request 0
-		nextenum TIMER0_OVF_vect	; timer/counter 0 overflow
-		nextenum ANA_COMP_vect		; analog comparator
+		enum	INT0_vect=1		; External Interrupt Request 0
+		nextenum TIMER0_OVF_vect	; Timer/Counter 0 Overflow
+		nextenum ANA_COMP_vect		; Analog Comparator
 
 ;----------------------------------------------------------------------------
 ; External Interrupts
 
-		; bits in MCUCR
-ISC00		equ	0		; external interrupt 0 sense control
-ISC01		equ	1
+ISC00		avrbit	MCUCR,0		; External Interrupt 0 Sense Control
+ISC01		avrbit	MCUCR,1
 
 GIMSK		port	0x3b		; General Interrupt Mask Register
-INT0		equ	6		;  enable external Interrupt 0
+INT0		avrbit	GIMSK,6		; Enable External Interrupt 0
 
 ;----------------------------------------------------------------------------
 ; Timers
 
-TCCR0		port	0x33		; timer/counter 0 control register
-CS00		equ	0		; clock select
-CS01		equ	1
-CS02		equ	2
-TCNT0		port	0x32		; timer/counter 0 value
+TCCR0		port	0x33		; Timer/Counter 0 Control Register
+CS00		avrbit	TCCR0,0		; Clock Select
+CS01		avrbit	TCCR0,1
+CS02		avrbit	TCCR0,2
+TCNT0		port	0x32		; Timer/Counter 0 Value
 
-TIMSK		port	0x39		; timer interrupt mask register
-TOIE0		equ	1		; timer/counter 0 overflow interrupt enable
+TIMSK		port	0x39		; Timer Interrupt Mask Register
+TOIE0		avrbit	TIMSK,1		; Timer/Counter 0 Overflow Interrupt Enable
 
-TIFR		port	0x38		; timer interrupt status register
+TIFR		port	0x38		; Timer Interrupt Status Register
 
 ;----------------------------------------------------------------------------
 ; Watchdog Timer

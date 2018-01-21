@@ -982,7 +982,7 @@ static void CodeCODEPAGE(Word Index)
       {
         New = (PTransTable) malloc(sizeof(TTransTable));
         New->Next = Run;
-        New->Name = strdup(ArgStr[1]);
+        New->Name = as_strdup(ArgStr[1]);
         New->Table = (unsigned char *) malloc(256 * sizeof(char));
         memcpy(New->Table, Source->Table, 256 * sizeof(char));
         if (!Prev)
@@ -1079,6 +1079,9 @@ static void CodeRESTORE(Word Index)
 
 static void CodeMACEXP(Word Index)
 {
+  /* will deprecate this in 1..2 years, 2018-01-21 */
+
+#if 0
   if (Index & 0x10)
   {
     char Msg[70];
@@ -1086,6 +1089,7 @@ static void CodeMACEXP(Word Index)
     sprintf(Msg, getmessage(Num_ErrMsgDeprecated_Instead), "MACEXP_DFT");
     WrXError(ErrNum_Deprecated, Msg);
   }
+#endif
 
   /* allow zero arguments for MACEXP_OVR, to remove all overrides */
 
@@ -1649,7 +1653,7 @@ static void CodeSTRUCT(Word IsUnion)
   }
 
   NStruct = (PStructStack) malloc(sizeof(TStructStack));
-  NStruct->Name = strdup(StructName);
+  NStruct->Name = as_strdup(StructName);
   NStruct->pBaseName = NStruct->Name + strlen(NStruct->Name) - strlen(LabPart); /* NULL -> complain too long */
   NStruct->SaveCurrPC = ProgCounter();
   DoExt = True;
@@ -1884,7 +1888,7 @@ static void CodePPSyms(PForwardSymbol *Orig,
           {
             Lauf = (PForwardSymbol) malloc(sizeof(TForwardSymbol));
             Lauf->Next = (*Orig); *Orig = Lauf;
-            Lauf->Name = strdup(Sym);
+            Lauf->Name = as_strdup(Sym);
             Lauf->pErrorPos = GetErrorPos();
           }
           IdentifySection(Section, &(Lauf->DestSection));
