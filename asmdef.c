@@ -252,8 +252,9 @@ Boolean DoBranchExt;                    /* Spruenge automatisch verlaengern */
 LargeWord RadixBase;                    /* Default-Zahlensystem im Formelparser*/
 LargeWord OutRadixBase;                 /* dito fuer Ausgabe */
 
-StringPtr LabPart, OpPart, AttrPart,    /* Komponenten der Zeile */
-          ArgPart, CommPart, LOpPart;
+tLineComp ArgStrPos[ArgCntMax + 1];
+StringPtr AttrPart, LOpPart;            /* Komponenten der Zeile */
+tStrComp LabPart, CommPart, ArgPart, OpPart;
 char AttrSplit;
 ArgStrField ArgStr;                     /* Komponenten des Arguments */
 int ArgCnt;                             /* Argumentzahl */
@@ -274,7 +275,6 @@ Boolean DottedStructs;                  /* structure elements with dots */
 StringPtr PrtInitString;                /* Druckerinitialisierungsstring */
 StringPtr PrtExitString;                /* Druckerdeinitialisierungsstring */
 StringPtr PrtTitleString;               /* Titelzeile */
-StringPtr ExtendError;                  /* erweiterte Fehlermeldung */
 
 LongInt MomSectionHandle;               /* mom. Namensraum */
 PSaveSection SectionStack;              /* gespeicherte Sektionshandles */
@@ -324,8 +324,6 @@ void AsmDefInit(void)
   PrtInitString[0] = '\0';
   PrtExitString[0] = '\0';
   PrtTitleString[0] = '\0';
-
-  ExtendError[0] = '\0';
 
   CurrFileName[0] = '\0';
   MomLineCounter = 0;
@@ -413,18 +411,17 @@ void asmdef_init(void)
   MacroName = GetString();
   MacProName = GetString();
   ShareName = GetString();
-  LabPart = GetString();
-  OpPart = GetString();
+  StrCompAlloc(&LabPart);
+  StrCompAlloc(&OpPart);
   AttrPart = GetString();
-  ArgPart = GetString();
-  CommPart = GetString();
+  StrCompAlloc(&ArgPart);
+  StrCompAlloc(&CommPart);
   LOpPart = GetString();
   OneLine = GetString();
   ListLine = GetString();
   PrtInitString = GetString();
   PrtExitString = GetString();
   PrtTitleString = GetString();
-  ExtendError = GetString();
 
   SegInits = (LargeWord*)malloc((PCMax + 1) * sizeof(LargeWord));
   SegLimits = (LargeWord*)malloc((PCMax + 1) * sizeof(LargeWord));

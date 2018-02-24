@@ -597,8 +597,8 @@ static void  MakeCode_OLMS40(void)
   if (Memo(""))
     return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 

@@ -482,8 +482,8 @@ static void MakeCode_3201X(void)
   if (Memo(""))
     return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_3201X(void)

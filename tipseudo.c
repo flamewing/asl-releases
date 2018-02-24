@@ -53,10 +53,10 @@
 
 static void define_untyped_label(void)
 {
-  if (LabPart[0])
+  if (LabPart.Str[0])
   {
     PushLocHandle(-1);
-    EnterIntSymbol(LabPart, EProgCounter(), SegNone, False);
+    EnterIntSymbol(LabPart.Str, EProgCounter(), SegNone, False);
     PopLocHandle();
   }
 }
@@ -305,20 +305,20 @@ Boolean DecodeTIPseudo(void)
 
   /* Qxx */
 
-  if ((OpPart[0] == 'Q') && (OpPart[1] >= '0') && (OpPart[1] <= '9') &&
-     (OpPart[2] >= '0') && (OpPart[2] <= '9') && (OpPart[3] == '\0'))
+  if ((OpPart.Str[0] == 'Q') && (OpPart.Str[1] >= '0') && (OpPart.Str[1] <= '9') &&
+     (OpPart.Str[2] >= '0') && (OpPart.Str[2] <= '9') && (OpPart.Str[3] == '\0'))
   {
-    pseudo_qxx(10 * (OpPart[1] - '0') + OpPart[2] - '0');
+    pseudo_qxx(10 * (OpPart.Str[1] - '0') + OpPart.Str[2] - '0');
     return True;
   }
 
   /* LQxx */
 
-  if ((OpPart[0] == 'L') && (OpPart[1] == 'Q') && (OpPart[2] >= '0') && 
-     (OpPart[2] <= '9') && (OpPart[3] >= '0') && (OpPart[3] <= '9') && 
-     (OpPart[4] == '\0'))
+  if ((OpPart.Str[0] == 'L') && (OpPart.Str[1] == 'Q') && (OpPart.Str[2] >= '0') && 
+     (OpPart.Str[2] <= '9') && (OpPart.Str[3] >= '0') && (OpPart.Str[3] <= '9') && 
+     (OpPart.Str[4] == '\0'))
   {
-    pseudo_lqxx(10 * (OpPart[2] - '0') + OpPart[3] - '0');
+    pseudo_lqxx(10 * (OpPart.Str[2] - '0') + OpPart.Str[3] - '0');
     return True;
   }
 

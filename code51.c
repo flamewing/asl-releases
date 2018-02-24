@@ -2362,7 +2362,7 @@ static void DecodeSFR(Word Index)
     {
       PushLocHandle(-1);
       DSeg = (MomCPU >= CPU80251) ? SegIO : SegData;
-      EnterIntSymbol(LabPart, AdrByte, DSeg, False);
+      EnterIntSymbol(LabPart.Str, AdrByte, DSeg, False);
       if (MakeUseList)
       {
         if (AddChunk(SegChunks + DSeg, AdrByte, 1, False))
@@ -2406,7 +2406,7 @@ static void DecodeBIT(Word Index)
       char ByteStr[20], BitStr[10];
 
       PushLocHandle(-1);
-      EnterIntSymbol(LabPart, AdrLong, SegNone, False);
+      EnterIntSymbol(LabPart.Str, AdrLong, SegNone, False);
       PopLocHandle();
       HexString(ByteStr, sizeof(ByteStr), AdrLong & 0xff, 2);
       HexString(BitStr, sizeof(BitStr), AdrLong >> 24, 1);
@@ -2420,7 +2420,7 @@ static void DecodeBIT(Word Index)
       char ByteStr[20];
 
       PushLocHandle(-1);
-      EnterIntSymbol(LabPart, AdrLong, SegBData, False);
+      EnterIntSymbol(LabPart.Str, AdrLong, SegBData, False);
       PopLocHandle();
       HexString(ByteStr, sizeof(ByteStr), AdrLong, 2);
       sprintf(ListLine, "=%s", ByteStr);
@@ -2441,7 +2441,7 @@ static void DecodeREG(Word Code)
   UNUSED(Code);
 
   if (ChkArgCnt(1, 1))
-    AddRegDef(LabPart, ArgStr[1]);
+    AddRegDef(LabPart.Str, ArgStr[1]);
 }
 
 /*-------------------------------------------------------------------------*/
@@ -2589,7 +2589,7 @@ static void MakeCode_51(void)
 
   /* zu ignorierendes */
 
-  if (*OpPart == '\0') return;
+  if (*OpPart.Str == '\0') return;
 
   /* Pseudoanweisungen */
 
@@ -2598,13 +2598,13 @@ static void MakeCode_51(void)
 
   /* suchen */
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_51(void)
 {
-  switch (*OpPart)
+  switch (*OpPart.Str)
   {
     case 'B':
       return Memo("BIT");

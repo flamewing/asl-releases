@@ -1444,7 +1444,7 @@ static void DecodeBIT(Word Index)
 
   if (!ChkArgCnt(1, 1));
   else if (DecodeBitAdr(ArgStr[1], &Result))
-    EnterIntSymbol(LabPart, Result, SegNone, False);
+    EnterIntSymbol(LabPart.Str, Result, SegNone, False);
 }
 
 static void DecodeMOV1(Word Index)
@@ -1721,8 +1721,8 @@ static void MakeCode_78K2(void)
   if (DecodeIntelPseudo(False)) return;
 
   pCode = BAsmCode;
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200,OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
   else
     CodeLen = pCode - BAsmCode;
 }

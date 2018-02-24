@@ -636,7 +636,7 @@ static void MakeList(void)
   EffLen = CodeLen * Granularity();
 
 #if 0
-  fprintf(stderr, "[%s] WasIF %u WasMACRO %u DoLst %u\n", OpPart, WasIF, WasMACRO, DoLst);
+  fprintf(stderr, "[%s] WasIF %u WasMACRO %u DoLst %u\n", OpPart.Str, WasIF, WasMACRO, DoLst);
 #endif
   if (WasIF)
     ThisDoLst = !!(DoLst & eLstMacroExpIf);
@@ -1174,11 +1174,11 @@ static void ReadMacro(void)
 
   if (PassNo != 1)
     Context.ErrFlag = True;
-  else if (!ExpandSymbol(LabPart))
+  else if (!ExpandSymbol(LabPart.Str))
     Context.ErrFlag = True;
-  else if (!ChkSymbName(LabPart))
+  else if (!ChkSymbName(LabPart.Str))
   {
-    WrXError(1020, LabPart);
+    WrXError(1020, LabPart.Str);
     Context.ErrFlag = True;
   }
 
@@ -1214,7 +1214,7 @@ static void ReadMacro(void)
 
   if (Context.pOutputTag->DoGlobCopy)
   {
-    strmaxcpy(Context.pOutputTag->GName, LabPart, 255);
+    strmaxcpy(Context.pOutputTag->GName, LabPart.Str, 255);
     RunSection = SectionStack;
     HSect = MomSectionHandle;
     while ((HSect != Context.pOutputTag->GlobSect) && (RunSection != NULL))
@@ -1240,13 +1240,13 @@ static void ReadMacro(void)
   {
     errno = 0;
     fprintf(MacroFile, "%s MACRO %s\n",
-            Context.pOutputTag->DoGlobCopy ? Context.pOutputTag->GName : LabPart,
+            Context.pOutputTag->DoGlobCopy ? Context.pOutputTag->GName : LabPart.Str,
             Context.PList);
     ChkIO(10004);
   }
 
   OneMacro->UseCounter = 0;
-  OneMacro->Name = as_strdup(LabPart);
+  OneMacro->Name = as_strdup(LabPart.Str);
   OneMacro->ParamCount = Context.ParamCount;
   OneMacro->FirstLine = NULL;
   OneMacro->LstMacroExpMod = Context.LstMacroExpMod;
@@ -1327,7 +1327,7 @@ static void ExpandMacro(PMacroRec OneMacro)
     strmaxcpy(Tag->SpecName, OneMacro->Name, 255);
     strmaxcpy(Tag->SaveAttr, AttrPart, 255);
     if (OneMacro->LocIntLabel)
-      strmaxcpy(Tag->SaveLabel, LabPart, 255);
+      strmaxcpy(Tag->SaveLabel, LabPart.Str, 255);
     Tag->IsMacro   = True;
 
     /* 2. Store special parameters - in the original form.
@@ -1390,7 +1390,7 @@ static void ExpandMacro(PMacroRec OneMacro)
             break;
           }
         if (!pParamName)
-          WrXError(1811, ArgStr[z1]);
+          WrXErrorPos(ErrNum_UndefKeyArg, ArgStr[z1], &ArgStrPos[z1]);
 
         /* set flag that no unnamed args are any longer allowed */
 
@@ -2620,12 +2620,12 @@ static Boolean InputEnd(void)
 
 Boolean HasLabel(void)
 {
-  if (!*LabPart)
+  if (!*LabPart.Str)
     return False;
   if (IsDef())
     return False;
 
-  switch (*OpPart)
+  switch (*OpPart.Str)
   {
     case '=':
       return (!Memo("="));
@@ -2681,18 +2681,18 @@ static void Produce_Code(void)
 
   /* Makrosuche unterdruecken ? */
 
-  if (*OpPart == '!')
+  if (*OpPart.Str == '!')
   {
     SearchMacros = False;
-    strmov(OpPart, OpPart + 1);
+    strmov(OpPart.Str, OpPart.Str + 1);
   }
   else
   {
     SearchMacros = True;
-    ExpandSymbol(OpPart);
+    ExpandSymbol(OpPart.Str);
   }
-  strcpy(LOpPart, OpPart);
-  NLS_UpString(OpPart);
+  strcpy(LOpPart, OpPart.Str);
+  NLS_UpString(OpPart.Str);
 
   /* Prozessor eingehaengt ? */
 
@@ -2720,11 +2720,11 @@ static void Produce_Code(void)
   if ((IfAsm) && ((!IsMacro) || (!OneMacro->LocIntLabel)))
   {
     if (HasLabel())
-      HandleLabel(LabPart, EProgCounter());
+      HandleLabel(LabPart.Str, EProgCounter());
   }
 
   Found = False;
-  switch (*OpPart)
+  switch (*OpPart.Str)
   {
     case 'I':
       /* Makroliste ? */
@@ -2753,7 +2753,7 @@ static void Produce_Code(void)
     WasIF = Found = CodeIFs();
 
   if (!Found)
-    switch (*OpPart)
+    switch (*OpPart.Str)
     {
       case 'M':
         /* Makrodefinition ? */
@@ -2798,6 +2798,13 @@ static void Produce_Code(void)
         sprintf(ListLine, "%*s(MACRO-%u)", MacroNestLevel - 1, "", MacroNestLevel);
       else
         strmaxcpy(ListLine, "(MACRO)", 255);
+
+      /* Macro call itself must not appear in expanded output.  However, a label
+         in the same line that is not consumed by the macro must.  In this case,
+         dump the source line with the OpPart (macro's name) muted out. */
+
+      if (MacProOutput && !OneMacro->LocIntLabel)
+        PrintOneLineMuted(MacProFile, OneLine, &OpPart.Pos);
     }
   }
 
@@ -2822,7 +2829,7 @@ static void Produce_Code(void)
       }
       else if (!CodeGlobalPseudo())
         MakeCode();
-      if ((MacProOutput) && ((*OpPart != '\0') || (*LabPart != '\0') || (*CommPart != '\0')))
+      if (MacProOutput && ((*OpPart.Str != '\0') || (*LabPart.Str != '\0') || (*CommPart.Str != '\0')))
       {
         errno = 0;
         fprintf(MacProFile, "%s\n", OneLine);
@@ -2890,98 +2897,116 @@ static void Produce_Code(void)
 
 /*--- Zeile in Listing zerteilen -------------------------------------------*/
 
+static int strmemcpy(char *pDest, int DestSize, const char *pSrc, int SrcLen)
+{
+  if (DestSize < SrcLen + 1)
+    SrcLen = DestSize - 1;
+  if (SrcLen < 0)
+    SrcLen = 0;
+  memmove(pDest, pSrc, SrcLen);
+  pDest[SrcLen] = '\0';
+  return SrcLen;
+}
+
 static void SplitLine(void)
 {
-  jmp_buf Retry;
-  String h;
-  char *i, *k, *p, *div, *run;
-  int l;
-  Boolean lpos;
+  const char *pRun, *pEnd, *pPos;
 
   Retracted = False;
 
-  /* Kommentar loeschen */
+  /* run preprocessor */
 
-  strmaxcpy(h, OneLine, 255);
-  i = QuotPos(h, ';');
-  if (i)
+  ExpandDefines(OneLine);
+  pRun = OneLine;
+  pEnd = pRun + strlen(pRun);
+
+  /* If comment is present, ignore everything after it: */
+
+  pPos = QuotPos(pRun, ';');
+  if (pPos)
   {
-    strcpy(CommPart, i + 1);
-    *i = '\0';
+    CommPart.Pos.StartCol = pPos - OneLine;
+    CommPart.Pos.Len = strmemcpy(CommPart.Str, STRINGSIZE, pPos, pEnd - pPos);
+    pEnd = pPos;
   }
   else
-    *CommPart = '\0';
+    StrCompReset(&CommPart);
 
-  /* alles in Grossbuchstaben wandeln, Praeprozessor laufen lassen */
+  /* Non-blank character in first column is always label: */
 
-  ExpandDefines(h);
-
-  /* Label abspalten */
-
-  if ((*h) && (!myisspace(*h)))
+  if ((pRun < pEnd) && (*pRun) && (!myisspace(*pRun)))
   {
-    for (i = h; *i; i++)
-      if ((myisspace(*i)) || (*i == ':'))
+    for (pPos = pRun; pPos < pEnd; pPos++)
+      if ((myisspace(*pPos)) || (*pPos == ':'))
         break;
-    if (!*i)
+    LabPart.Pos.StartCol = pRun - OneLine;
+    if (pPos >= pEnd)
     {
-      strcpy(LabPart, h);
-      *h = '\0';
+      LabPart.Pos.Len = strmemcpy(LabPart.Str, STRINGSIZE, pRun, pEnd - pRun);
+      pRun = pEnd;
     }
     else
     {
-      *i = '\0';
-      strcpy(LabPart, h);
-      strmov(h, i + 1);
+      LabPart.Pos.Len = strmemcpy(LabPart.Str, STRINGSIZE, pRun, pPos - pRun);
+      pRun = pPos + 1;
     }
-    if (LabPart[l = (strlen(LabPart) - 1)] == ':')
-      LabPart[l] = '\0';
+    if (LabPart.Str[LabPart.Pos.Len - 1] == ':') /* needed? */
+      LabPart.Str[--LabPart.Pos.Len] = '\0';
   }
   else
-    *LabPart = '\0';
+    StrCompReset(&LabPart);
 
   /* Opcode & Argument trennen */
 
-  setjmp(Retry);
-  KillPrefBlanks(h);
-  i = FirstBlank(h);
-
-  /* If potential OpPart starts with argument divider,
-     OpPart is empty and rest of line is all-arguments: */
-
-  if (strchr(DivideChars, *h))
+  while (True)
   {
-    *OpPart = '\0';
-    strmaxcpy(ArgPart, h, 255);
-  }
-  else
-  {
-    SplitString(h, OpPart, ArgPart, i);
+    for (; (pRun < pEnd) && myisspace(*pRun); pRun++);
+    for (pPos = pRun; (pPos < pEnd) && !myisspace(*pPos); pPos++);
 
-    /* Falls noch kein Label da war, kann es auch ein Label sein */
+    /* If potential OpPart starts with argument divider,
+       OpPart is empty and rest of line is all-arguments: */
 
-    i = strchr(OpPart, ':');
-    if ((*LabPart == '\0') && (i) && (i[1] == '\0'))
+    if (strchr(DivideChars, *pRun))
     {
-      *i = '\0';
-      strcpy(LabPart, OpPart);
-      strcpy(OpPart, i + 1);
-      if (*OpPart == '\0')
-      {
-        strcpy(h, ArgPart);
-        longjmp(Retry, 1);
-      }
+      StrCompReset(&OpPart);
+      ArgPart.Pos.StartCol = pRun - OneLine;
+      ArgPart.Pos.Len = strmemcpy(ArgPart.Str, STRINGSIZE, pRun, pEnd - pRun);
     }
+    else
+    {
+      /* copy out OpPart */
+
+      OpPart.Pos.StartCol = pRun - OneLine;
+      OpPart.Pos.Len = strmemcpy(OpPart.Str, STRINGSIZE, pRun, pPos - pRun);
+
+      /* continue after OpPart separator */
+
+      pRun = (pPos < pEnd) ? pPos + 1 : pEnd;
+
+      /* Falls noch kein Label da war, kann es auch ein Label sein */
+
+      if ((*LabPart.Str == '\0') && OpPart.Pos.Len && (OpPart.Str[OpPart.Pos.Len - 1] == ':'))
+      {
+        OpPart.Str[--OpPart.Pos.Len] = '\0';
+        StrCompCopy(&LabPart, &OpPart);
+        continue; /* -> retry finding opcode */
+      }
+
+      /* save remainder to ArgPart */
+
+      ArgPart.Pos.StartCol = pRun - OneLine;
+      ArgPart.Pos.Len = strmemcpy(ArgPart.Str, STRINGSIZE, pRun, pEnd - pRun);
+    }
+    break;
   }
 
   ArgCnt = 0;
 
   /* trailing separator on OpPart means we have to push in another empty argument */
 
-  l = strlen(OpPart);
-  if (l && strchr(DivideChars, OpPart[l - 1]))
+  if (OpPart.Pos.Len && strchr(DivideChars, OpPart.Str[OpPart.Pos.Len - 1]))
   {
-    OpPart[l - 1] = '\0';
+    OpPart.Str[--OpPart.Pos.Len] = '\0';
     strcpy(ArgStr[++ArgCnt], "");
   }
 
@@ -2989,21 +3014,24 @@ static void SplitLine(void)
 
   if (HasAttrs)
   {
-    k = NULL; AttrSplit = ' ';
-    for (run = AttrChars; *run != '\0'; run++)
+    const char *pActAttrChar;
+    char *pAttrPos, *pActAttrPos;
+
+    pAttrPos = NULL; AttrSplit = ' ';
+    for (pActAttrChar = AttrChars; *pActAttrChar; pActAttrChar++)
     {
-      p = strchr(OpPart, *run);
-      if (p) if ((!k) || (p < k))
-        k = p;
+      pActAttrPos = strchr(OpPart.Str, *pActAttrChar);
+      if (pActAttrPos && ((!pAttrPos) || (pActAttrPos < pAttrPos)))
+        pAttrPos = pActAttrPos;
     }
-    if (k)
+    if (pAttrPos)
     {
-      AttrSplit = (*k);
-      strmaxcpy(AttrPart, k + 1, 255);
-      *k = '\0';
-      if ((*OpPart == '\0') && (*AttrPart != '\0'))
+      AttrSplit = (*pAttrPos);
+      strmaxcpy(AttrPart, pAttrPos + 1, 255);
+      *pAttrPos = '\0';
+      if ((*OpPart.Str == '\0') && (*AttrPart != '\0'))
       {
-        strmaxcpy(OpPart, AttrPart, 255);
+        strmaxcpy(OpPart.Str, AttrPart, 255);
         *AttrPart = '\0';
       }
     }
@@ -3013,38 +3041,45 @@ static void SplitLine(void)
   else
     *AttrPart = '\0';
 
-  KillPostBlanks(ArgPart);
+  KillPostBlanks(ArgPart.Str);
 
   /* Argumente zerteilen: Da alles aus einem String kommt und die Teile alle auch
      so lang sind, koennen wir uns Laengenabfragen sparen */
 
-  strcpy(h, ArgPart);
-  run = h;
-  if (*run != '\0')
-    do
-    {
-      while ((*run != '\0') && (isspace((unsigned char)*run)))
-        run++;
-      i = NULL;
-      for (div = DivideChars; *div != '\0'; div++)
-      {
-        p = QuotPos(run, *div);
-        if (p)
-          if ((!i) || (p < i))
-            i = p;
-      }
-      lpos = ((i) && (i[1] == '\0'));
-      if (i)
-        *i = '\0';
-      strcpy(ArgStr[++ArgCnt], run);
-      KillPostBlanks(ArgStr[ArgCnt]);
-      if ((lpos) && (ArgCnt != ArgCntMax))
-        *ArgStr[++ArgCnt] = '\0';
-      run = !i ? i : i + 1;
-    }
-    while ((run) && (ArgCnt != ArgCntMax) && (!lpos));
+  if (*ArgPart.Str)
+  {
+    const char *pDivPos, *pActDiv, *pActDivPos;
 
-  if ((run) && (*run != '\0')) WrError(1140);
+    pRun = ArgPart.Str;
+    pEnd = pRun + strlen(pRun);
+    pActDivPos = NULL;
+
+    /* A separator found in the previous iteration forces another argument,
+       even if it will be empty because the separator is right at the end: */
+
+    while ((pRun < pEnd) || pActDivPos)
+    {
+      while (*pRun && myisspace(*pRun))
+        pRun++;
+      pDivPos = pEnd;
+      for (pActDiv = DivideChars; *pActDiv; pActDiv++)
+      {
+        pActDivPos = QuotPos(pRun, *pActDiv);
+        if (pActDivPos && (pActDivPos < pDivPos))
+          pDivPos = pActDivPos;
+      }
+      if (ArgCnt >= ArgCntMax)
+      {
+        WrError(1140);
+        break;
+      }
+      ArgCnt++;
+      ArgStrPos[ArgCnt].Len = strmemcpy(ArgStr[ArgCnt], STRINGSIZE, pRun, pDivPos - pRun);
+      ArgStrPos[ArgCnt].StartCol = ArgPart.Pos.StartCol + (pRun - ArgPart.Str);
+      KillPostBlanks(ArgStr[ArgCnt]);
+      pRun = (pDivPos < pEnd) ? pDivPos + 1 : pEnd;
+    }
+  }
 
   Produce_Code();
 }

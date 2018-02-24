@@ -643,7 +643,7 @@ static void DecodeShift(Word Code)
       SetOpSize(0);
       if (DecodeAdr(ArgStr[2], MModReg))
       {
-        if (AdrPart != 0) WrXError(1445, ArgStr[2]);
+        if (AdrPart != 0) WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
         else
         {
           BAsmCode[0] = 0x6f;
@@ -1855,7 +1855,7 @@ static void DecodeNEGNOT(Word Index)
 {
   if (ChkArgCnt(1, 1))
   {
-    SetOpSize((OpPart[3] == 'W') ? 1 : 0);
+    SetOpSize((OpPart.Str[3] == 'W') ? 1 : 0);
     DecodeAdr(ArgStr[1], MModAcc | MModReg | MModMem);
     switch (AdrMode)
     {
@@ -2298,8 +2298,8 @@ static void MakeCode_F2MC16(void)
 
   OpSize = -1;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_F2MC16(void)

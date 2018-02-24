@@ -180,13 +180,13 @@ static void DecodeAdr(Byte Start, Byte Stop, Word Mask)
       tmode2 = ModSP2;
       if (MomCPU < CPU68HC08)
       {
-        WrXError(1445, ArgStr[Stop]);
+        WrXErrorPos(ErrNum_InvReg, ArgStr[Stop], &ArgStrPos[Stop]);
         goto chk;
       }
     }
     else
     {
-      WrXError(1445, ArgStr[Stop]);
+      WrXErrorPos(ErrNum_InvReg, ArgStr[Stop], &ArgStrPos[Stop]);
       goto chk;
     }
 
@@ -482,7 +482,7 @@ static void DecodeCBEQ(Word Index)
     }
     else
     {
-      WrXError(1445, ArgStr[2]);
+      WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
       OK = False;
     }
     if (OK)
@@ -1053,8 +1053,8 @@ static void MakeCode_6805(void)
   if (DecodeMoto16Pseudo(OpSize, True))
     return;
 
-  l = strlen(OpPart);
-  ch = OpPart[l - 1];
+  l = strlen(OpPart.Str);
+  ch = OpPart.Str[l - 1];
   if ((ch >= '0') && (ch <= '7'))
   {
     int z;
@@ -1064,11 +1064,11 @@ static void MakeCode_6805(void)
     *ArgStr[1] = ch;
     ArgStr[1][1] = '\0';
     ArgCnt++;
-    OpPart[l - 1] = '\0';
+    OpPart.Str[l - 1] = '\0';
   }
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200,OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_6805(void)

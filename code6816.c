@@ -238,7 +238,7 @@ static void DecodeAdr(int Start, int Stop, Boolean LongAdr, Byte Mask)
     else if (!strcasecmp(ArgStr[Start + 1], "Z"))
       AdrPart = 0x20;
     else
-      WrXError(1445, ArgStr[Start + 1]);
+      WrXErrorPos(ErrNum_InvReg, ArgStr[Start + 1], &ArgStrPos[Start + 1]);
     if (AdrPart != 0xff)
     {
       if (!strcasecmp(ArgStr[Start], "E"))
@@ -465,7 +465,7 @@ static void DecodeAux(Word Code)
   if (ChkArgCnt(1, 2))
   {
     OpSize = 1;
-    DecodeAdr(1, ArgCnt, False, (*OpPart == 'S' ? 0 : MModImm) | MModDisp8 | MModDisp16 | MModAbs);
+    DecodeAdr(1, ArgCnt, False, (*OpPart.Str == 'S' ? 0 : MModImm) | MModDisp8 | MModDisp16 | MModAbs);
     switch (AdrMode)
     {
       case ModDisp8:
@@ -488,7 +488,7 @@ static void DecodeAux(Word Code)
       case ModImm:
         BAsmCode[0] = 0x37;
         BAsmCode[1] = Code + 0x30;
-        if (*OpPart=='L') BAsmCode[1] -= 0x40;
+        if (*OpPart.Str == 'L') BAsmCode[1] -= 0x40;
         memcpy(BAsmCode + 2, AdrVals, AdrCnt);
         CodeLen = 2 + AdrCnt;
        break;
@@ -555,7 +555,7 @@ static void DecodeStkMult(Word Index)
           z2++;
         if (z2 >= RegCnt)
         {
-          WrXError(1445, ArgStr[z]);
+          WrXErrorPos(ErrNum_InvReg, ArgStr[z], &ArgStrPos[z]);
           OK = False;
         }
         else
@@ -1135,8 +1135,8 @@ static void MakeCode_6816(void)
   if (DecodeMoto16Pseudo(OpSize, True))
     return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static void InitCode_6816(void)

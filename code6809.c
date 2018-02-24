@@ -1120,7 +1120,7 @@ static void DecodeStack(Word Index)
 
   /* S oder U einsetzen, entsprechend Opcode */
 
-  *StackRegNames[StackRegCnt - 2] = OpPart[strlen(OpPart) - 1] ^ ('S' ^ 'U');
+  *StackRegNames[StackRegCnt - 2] = OpPart.Str[strlen(OpPart.Str) - 1] ^ ('S' ^ 'U');
   for (z2 = 1; z2 <= ArgCnt; z2++)
     if (OK)
     {
@@ -1173,7 +1173,7 @@ static void DecodeStack(Word Index)
     } 
   }
   else
-    WrXError(1980, ArgStr[z2 - 1]);
+    WrXErrorPos(ErrNum_InvRegName, ArgStr[z2 - 1], &ArgStrPos[z2 - 1]);
 }
 
 static void DecodeBITMD_LDMD(Word Code)
@@ -1528,8 +1528,8 @@ static void MakeCode_6809(void)
   if (DecodeMoto16Pseudo(OpSize, True))
     return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static void InitCode_6809()

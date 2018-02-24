@@ -33,7 +33,7 @@ CODE_SRCS = codepseudo.c intpseudo.c motpseudo.c tipseudo.c natpseudo.c fourpseu
 
 DECODE_SRCS = deco68.c deco87c800.c
 
-ST_SRCS = strutil.c stdhandl.c stringlists.c
+ST_SRCS = strutil.c stdhandl.c stringlists.c strcomp.c
 
 NLS_SRCS = nls.c nlmessages.c
 

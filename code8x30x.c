@@ -301,7 +301,7 @@ static void DecodeAri(Word Code)
           {
             if (DecodeReg(ArgStr[1], &SrcReg, &SrcLen))
             {
-              if (SrcReg >= 16) WrXError(1445, ArgStr[1]);
+              if (SrcReg >= 16) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
               else
               {
                 WAsmCode[0] = (Code << 13) | (SrcReg << 8) | (Rot << 5) | DestReg;
@@ -325,7 +325,7 @@ static void DecodeAri(Word Code)
         if (GetLen(ArgStr[2], &Rot))
          if (DecodeReg(ArgStr[1], &SrcReg, &SrcLen))
          {
-           if (SrcReg < 16) WrXError(1445, ArgStr[1]);
+           if (SrcReg < 16) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
            else if ((SrcLen != -1) && (SrcLen != Rot)) WrError(1131);
            else
            {
@@ -520,7 +520,7 @@ static void DecodeLIV_RIV(Word Code)
        if (GetLen(ArgStr[3], &Len))
        {
          PushLocHandle(-1);
-         EnterIntSymbol(LabPart, Code | (Adr << 16) | (Ofs << 8) | (Len & 7), SegNone, False);
+         EnterIntSymbol(LabPart.Str, Code | (Adr << 16) | (Ofs << 8) | (Len & 7), SegNone, False);
          PopLocHandle();
        }
     }
@@ -571,8 +571,8 @@ static void MakeCode_8x30X(void)
 
   /* Pseudoanweisungen */
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_8x30X(void)

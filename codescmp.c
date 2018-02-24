@@ -171,7 +171,7 @@ static void DecodeImm(Word Index)
 static void DecodeRegOrder(Word Index)
 {
   if (!ChkArgCnt(1, 1));
-  else if (!DecodeReg(ArgStr[1], BAsmCode+0)) WrXError(1445, ArgStr[1]);
+  else if (!DecodeReg(ArgStr[1], BAsmCode + 0)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else
   {
     BAsmCode[0] |= Index; CodeLen = 1;
@@ -280,8 +280,8 @@ static void MakeCode_SCMP(void)
 
   if (DecodeIntelPseudo(False)) return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200,OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_SCMP(void)
@@ -313,5 +313,3 @@ void codescmp_init(void)
 {
   CPUSCMP = AddCPU("SC/MP", SwitchTo_SCMP);
 }
-
-

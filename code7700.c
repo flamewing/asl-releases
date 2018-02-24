@@ -1168,7 +1168,7 @@ static void DecodePSH_PUL(Word Code)
         if (OK)
           BAsmCode[1] |= 1l << PushRegCodes[Start];
         else
-          WrXError(1980, ArgStr[z]);
+          WrXErrorPos(ErrNum_InvRegName, ArgStr[z], &ArgStrPos[z]);
       }
       z++;
     }
@@ -1462,8 +1462,8 @@ static void MakeCode_7700(void)
   if (DecodeIntelPseudo(False))
     return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static void InitCode_7700(void)

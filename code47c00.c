@@ -1257,8 +1257,8 @@ static void MakeCode_47C00(void)
   if (DecodeIntelPseudo(False))
     return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_47C00(void)

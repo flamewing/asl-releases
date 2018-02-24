@@ -1570,7 +1570,7 @@ static void DecodePMADCond(Word Index)
   else if (ThisPar) WrError(1950);
   else if (LastRep) WrError(1560);
   else if (!DecodeCondition(2, WAsmCode, &index, &OK))
-    WrXError(OK ? 1360 : 1365, ArgStr[index]);
+    WrXErrorPos(OK ? ErrNum_UndefCond : ErrNum_IncompCond, ArgStr[index], &ArgStrPos[index]);
   else
   {
     WAsmCode[1] = EvalIntExpression(ArgStr[1], UInt16, &OK);
@@ -1755,7 +1755,7 @@ static void DecodeXC(Word Index)
   else if (ThisPar) WrError(1950);
   else if (LastRep) WrError(1560);
   else if (!DecodeCondition(2, WAsmCode, &errindex, &OK))
-    WrXError(OK ? 1360 : 1365, ArgStr[errindex]);
+    WrXErrorPos(OK ? ErrNum_UndefCond : ErrNum_IncompCond, ArgStr[errindex], &ArgStrPos[errindex]);
   else
   {
     FirstPassUnknown = False;
@@ -2238,8 +2238,8 @@ static void DecodeSACCD(Word Index)
      && (MakeXY(AdrVals, True)))
     {
       *WAsmCode |= ((*AdrVals) << 4);
-      if (!DecodeCondition(3, WAsmCode + 1, &index, &OK)) WrXError(1360, ArgStr[index]);
-      else if ((WAsmCode[1] & 0xf0) != 0x40) WrXError(1360, ArgStr[index]);
+      if (!DecodeCondition(3, WAsmCode + 1, &index, &OK)) WrXErrorPos(ErrNum_UndefCond, ArgStr[index], &ArgStrPos[index]);
+      else if ((WAsmCode[1] & 0xf0) != 0x40) WrXErrorPos(ErrNum_UndefCond, ArgStr[index], &ArgStrPos[index]);
       else
       {
         *WAsmCode |= WAsmCode[1] & 15;
@@ -2261,8 +2261,8 @@ static void DecodeStoreCC(Word Index)
   else if ((DecodeAdr(ArgStr[1], MModMem)) && (MakeXY(AdrVals, True)))
   {
     *WAsmCode = Index | ((*AdrVals) << 4);
-    if (!DecodeCondition(2, WAsmCode + 1, &index, &OK)) WrXError(1360, ArgStr[index]);
-    else if ((WAsmCode[1] & 0xf0) != 0x40) WrXError(1360, ArgStr[index]);
+    if (!DecodeCondition(2, WAsmCode + 1, &index, &OK)) WrXErrorPos(ErrNum_UndefCond, ArgStr[index], &ArgStrPos[index]);
+    else if ((WAsmCode[1] & 0xf0) != 0x40) WrXErrorPos(ErrNum_UndefCond, ArgStr[index], &ArgStrPos[index]);
     else
     {
       *WAsmCode |= WAsmCode[1] & 15;
@@ -2735,15 +2735,15 @@ static void MakeCode_32054x(void)
   CodeLen = 0;
   DontPrint = False;
 
-  ThisPar = !strcmp(LabPart, "||");
-  if ((strlen(OpPart) > 2) && (!strncmp(OpPart, "||", 2)))
+  ThisPar = !strcmp(LabPart.Str, "||");
+  if ((strlen(OpPart.Str) > 2) && (!strncmp(OpPart.Str, "||", 2)))
   {
-    ThisPar = True; strmov(OpPart, OpPart + 2);
+    ThisPar = True; strmov(OpPart.Str, OpPart.Str + 2);
   }
 
   /* zu ignorierendes */
 
-  if (*OpPart == '\0')
+  if (*OpPart.Str == '\0')
     return;
 
   if (DecodePseudo())
@@ -2756,8 +2756,8 @@ static void MakeCode_32054x(void)
 
   ThisRep = False;
   ForcePageZero = False;
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
   else
     LastOpCode = *WAsmCode;
   LastRep = ThisRep;
@@ -2772,7 +2772,7 @@ static void InitCode_32054x(void)
 
 static Boolean IsDef_32054x(void)
 {
-  return (!strcmp(LabPart, "||"));
+  return (!strcmp(LabPart.Str, "||"));
 }
 
 static void SwitchFrom_32054x(void)

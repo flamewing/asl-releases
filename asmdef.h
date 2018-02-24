@@ -112,6 +112,7 @@
 #include "chunks.h"
 #include "fileformat.h"
 #include "dynstring.h"
+#include "strcomp.h"
 #include "lstmacroexp.h"
 #include "cpulist.h"
 
@@ -282,8 +283,6 @@ char *pDest, int DestSize, LargeWord Inp
 
 typedef Word WordField[6];          /* fuer Zahlenumwandlung */
 typedef char *ArgStrField[ArgCntMax + 1]; /* Feld mit Befehlsparametern */
-typedef char *StringPtr;
-
 typedef enum
 {
   ConstModeIntel,     /* Hex xxxxh, Oct xxxxo, Bin xxxxb */
@@ -474,7 +473,9 @@ extern Boolean DoBranchExt;
 
 extern LargeWord RadixBase, OutRadixBase;
 
-extern StringPtr LabPart,OpPart,AttrPart,ArgPart,CommPart,LOpPart;
+extern tLineComp ArgStrPos[ArgCntMax + 1];
+extern StringPtr AttrPart, LOpPart;
+extern tStrComp LabPart, CommPart, ArgPart, OpPart;
 extern char AttrSplit;
 extern ArgStrField ArgStr;
 extern int ArgCnt;
@@ -495,7 +496,6 @@ extern Boolean DottedStructs;
 extern StringPtr PrtInitString;
 extern StringPtr PrtExitString;
 extern StringPtr PrtTitleString;
-extern StringPtr ExtendError;
 
 extern Byte StopfZahl;
 

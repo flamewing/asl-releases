@@ -647,7 +647,7 @@ static void DecodeFixed(Word Index)
       CodeLen = 4;
       BAsmCode[2] = Lo(pOrder->Code2);
       BAsmCode[3] = Hi(pOrder->Code2);
-      if ((!strncmp(OpPart, "RET", 3)) && (SPChanged))
+      if ((!strncmp(OpPart.Str, "RET", 3)) && (SPChanged))
         WrXError(200, RegNames[5]);
     }
   }
@@ -1246,14 +1246,14 @@ static void DecodeJMP(Word Code)
   if (ChkArgCnt(1, 2))
   {
     int Cond = (ArgCnt == 1) ? TrueCond : DecodeCondition(ArgStr[1]);
-    if (Cond >= ConditionCount) WrXError(1360, ArgStr[1]);
+    if (Cond >= ConditionCount) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
     else
     {
       DecodeAdr(ArgStr[ArgCnt], MModAbs | MModLAbs | MModIReg, True, False);
       switch (AdrType)
       {
         case ModLAbs:
-          if (Cond != TrueCond) WrXError(1360, ArgStr[1]);
+          if (Cond != TrueCond) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
           else
           {
             CodeLen = 2 + AdrCnt;
@@ -1296,14 +1296,14 @@ static void DecodeCALL(Word Code)
   if (ChkArgCnt(1, 2))
   {
     int Cond = (ArgCnt == 1) ? TrueCond : DecodeCondition(ArgStr[1]);
-    if (Cond >= ConditionCount) WrXError(1360, ArgStr[1]);
+    if (Cond >= ConditionCount) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
     else
     {
       DecodeAdr(ArgStr[ArgCnt], MModAbs | MModLAbs | MModIReg, True, False);
       switch (AdrType)
       {
         case ModLAbs:
-          if (Cond != TrueCond) WrXError(1360, ArgStr[1]);
+          if (Cond != TrueCond) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
           else
           {
             CodeLen = 2 + AdrCnt;
@@ -1347,7 +1347,7 @@ static void DecodeJMPR(Word Code)
   if (ChkArgCnt(1, 2))
   {
     int Cond = (ArgCnt == 1) ? TrueCond : DecodeCondition(ArgStr[1]);
-    if (Cond >= ConditionCount) WrXError(1360, ArgStr[1]);
+    if (Cond >= ConditionCount) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
     else
     {
       Boolean OK;
@@ -1394,7 +1394,7 @@ static void DecodeJMPA_CALLA(Word Code)
   if (ChkArgCnt(1, 2))
   {
     int Cond = (ArgCnt == 1) ? TrueCond : DecodeCondition(ArgStr[1]);
-    if (Cond >= ConditionCount) WrXError(1360, ArgStr[1]);
+    if (Cond >= ConditionCount) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
     else
     {
       Boolean OK;
@@ -1451,7 +1451,7 @@ static void DecodeJMPI_CALLI(Word Code)
   if (ChkArgCnt(1, 2))
   {
     int Cond = (ArgCnt == 1) ? TrueCond : DecodeCondition(ArgStr[1]);
-    if (Cond >= ConditionCount) WrXError(1360, ArgStr[1]);
+    if (Cond >= ConditionCount) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
     else
     {
       DecodeAdr(ArgStr[ArgCnt], MModIReg, True, False);
@@ -1666,7 +1666,7 @@ static void DecodeBIT(Word Code)
   && DecodeBitAddr(ArgStr[1], &Adr, &Bit, True))
  {
    PushLocHandle(-1);
-   EnterIntSymbol(LabPart, (Adr << 4) + Bit, SegNone, False);
+   EnterIntSymbol(LabPart.Str, (Adr << 4) + Bit, SegNone, False);
    PopLocHandle();
    sprintf(ListLine, "=%02xH.%1x", Adr, Bit);
  }
@@ -1677,7 +1677,7 @@ static void DecodeREG(Word Code)
   UNUSED(Code);
 
   if (ChkArgCnt(1, 1))
-    AddRegDef(LabPart, ArgStr[1]);
+    AddRegDef(LabPart.Str, ArgStr[1]);
 }
 
 /*-------------------------------------------------------------------------*/
@@ -1868,8 +1868,8 @@ static void MakeCode_166(void)
      ExtSFRs = False;
    }
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static void InitCode_166(void)

@@ -245,8 +245,8 @@ static void DecodeAdr(int Index, Byte Mask, LongInt PCDelta)
     }
 
     OK = GetReg16(ArgStr[Index + 1], &AdrPart);
-    if (!OK) WrXError(1445, ArgStr[Index + 1]);
-    else if ((Incr) && (AdrPart < 2)) WrXError(1445, ArgStr[Index + 1]);
+    if (!OK) WrXErrorPos(ErrNum_InvReg, ArgStr[Index + 1], &ArgStrPos[Index + 1]);
+    else if ((Incr) && (AdrPart < 2)) WrXErrorPos(ErrNum_InvReg, ArgStr[Index + 1], &ArgStrPos[Index + 1]);
     else
     {
       if (Incr)
@@ -491,7 +491,7 @@ static void DecodeSSM(Word Code)
       CodeLen = 1;
       break;
     case 1:
-      if ((!GetReg16(ArgStr[1], BAsmCode + 0)) || (BAsmCode[0] < 2)) WrXError(1445, ArgStr[1]);
+      if ((!GetReg16(ArgStr[1], BAsmCode + 0)) || (BAsmCode[0] < 2)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
       else
       {
         BAsmCode[0] |= 0x2c;
@@ -791,8 +791,8 @@ static void MakeCode_807x(void)
 
    if (DecodeIntelPseudo(False)) return;
 
-   if (!LookupInstTable(InstTable,OpPart))
-     WrXError(1200,OpPart);
+   if (!LookupInstTable(InstTable, OpPart.Str))
+     WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_807x(void)

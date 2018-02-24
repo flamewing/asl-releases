@@ -1339,7 +1339,7 @@ static void DecodeREG(Word Code)
   UNUSED(Code);
 
   if (ChkArgCnt(1, 1))
-    AddRegDef(LabPart, ArgStr[1]);
+    AddRegDef(LabPart.Str, ArgStr[1]);
 }
 
 /*-------------------------------------------------------------------------*/
@@ -2047,8 +2047,8 @@ static void MakeCode_601(void)
   if (DecodeIntelPseudo(BigEnd))
     return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_601(void)

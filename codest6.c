@@ -511,21 +511,21 @@ static void DecodeASCII_ASCIZ(Word IsZ)
 static void DecodeBYTE(Word Code)
 {
   UNUSED(Code);
-  strmaxcpy(OpPart, "BYT", 255);
+  strmaxcpy(OpPart.Str, "BYT", 255);
   DecodeMotoPseudo(False);
 }
 
 static void DecodeWORD(Word Code)
 {
   UNUSED(Code);
-  strmaxcpy(OpPart, "ADR", 255);
+  strmaxcpy(OpPart.Str, "ADR", 255);
   DecodeMotoPseudo(False);
 }
 
 static void DecodeBLOCK(Word Code)
 {
   UNUSED(Code);
-  strmaxcpy(OpPart, "DFS", 255);
+  strmaxcpy(OpPart.Str, "DFS", 255);
   DecodeMotoPseudo(False);
 }
 
@@ -610,8 +610,8 @@ static void MakeCode_ST62(void)
 
   if (Memo("")) return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200,OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static void InitCode_ST62(void)

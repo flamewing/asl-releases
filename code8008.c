@@ -180,8 +180,8 @@ static void DecodeMOV(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeReg(ArgStr[1], &DReg)) WrXError(1445, ArgStr[1]);
-  else if (!DecodeReg(ArgStr[2], &SReg)) WrXError(1445, ArgStr[2]);
+  else if (!DecodeReg(ArgStr[1], &DReg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+  else if (!DecodeReg(ArgStr[2], &SReg)) WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
   else if ((DReg == 7) && (SReg == 7)) WrError(1760); /* MOV M,M not allowed - asame opcode as HLT */
   else
   {
@@ -197,7 +197,7 @@ static void DecodeMVI(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeReg(ArgStr[1], &DReg)) WrXError(1445, ArgStr[1]);
+  else if (!DecodeReg(ArgStr[1], &DReg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else
   {
     Boolean OK;
@@ -218,8 +218,8 @@ static void DecodeLXI(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeReg(ArgStr[1], &DReg)) WrXError(1445, ArgStr[1]);
-  else if ((DReg != 1) && (DReg != 3) && (DReg != 5)) WrXError(1445, ArgStr[1]);
+  else if (!DecodeReg(ArgStr[1], &DReg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+  else if ((DReg != 1) && (DReg != 3) && (DReg != 5)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else
   {
     Boolean OK;
@@ -243,8 +243,8 @@ static void DecodeSingleReg(Word Index)
   Boolean NoAM = (Index & 0x8000) || False;
 
   if (!ChkArgCnt(1, 1));
-  else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
-  else if (NoAM && ((Reg == 0) || (Reg == 7))) WrXError(1445, ArgStr[1]);
+  else if (!DecodeReg(ArgStr[1], &Reg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+  else if (NoAM && ((Reg == 0) || (Reg == 7))) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else
   {
     BAsmCode[0] = Opcode | (Reg << Shift);
@@ -478,7 +478,8 @@ static void MakeCode_8008(void)
 
   /* der Rest */
 
-  if (!LookupInstTable(InstTable, OpPart)) WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_8008(void)

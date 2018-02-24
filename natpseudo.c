@@ -51,21 +51,21 @@ Boolean DecodeNatPseudo(Boolean *pBigFlag)
 
   if (Memo("ADDR"))
   {
-    strcpy(OpPart, "DB");
+    strcpy(OpPart.Str, "DB");
     *pBigFlag = True;
   }
 
   if (Memo("ADDRW"))
   {
-    strcpy(OpPart, "DW");
+    strcpy(OpPart.Str, "DW");
     *pBigFlag = True;
   }
 
   if (Memo("BYTE"))
-    strcpy(OpPart, "DB");
+    strcpy(OpPart.Str, "DB");
 
   if (Memo("WORD"))
-    strcpy(OpPart,"DW");
+    strcpy(OpPart.Str, "DW");
 
   if ((Memo("DSB")) || (Memo("DSW")))
   {

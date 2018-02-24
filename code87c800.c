@@ -1312,7 +1312,7 @@ static void DecodeJRS(Word Code)
     Boolean OK;
 
     Condition = DecodeCondition(ArgStr[1], ConditionCnt - 2);
-    if (Condition >= ConditionCnt) WrXError(1360, ArgStr[1]);
+    if (Condition >= ConditionCnt) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
     else
     {
       AdrInt = EvalIntExpression(ArgStr[2], Int16, &OK) - (EProgCounter() + 2);
@@ -1339,7 +1339,7 @@ static void DecodeJR(Word Code)
     Boolean OK;
 
     Condition = (ArgCnt == 1) ? -1 : DecodeCondition(ArgStr[1], 0);
-    if (Condition >= ConditionCnt) WrXError(1360, ArgStr[1]);
+    if (Condition >= ConditionCnt) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
     else
     {
       AdrInt = EvalIntExpression(ArgStr[ArgCnt], Int16, &OK) - (EProgCounter() + 2);
@@ -1543,8 +1543,8 @@ static void MakeCode_87C800(void)
   if (DecodeIntelPseudo(False))
     return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_87C800(void)

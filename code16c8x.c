@@ -400,8 +400,8 @@ static void MakeCode_16c8x(void)
 
   /* seek instruction */
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200,OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_16c8x(void)

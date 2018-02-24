@@ -490,7 +490,7 @@ static void DecodeAdr(int Start, int Stop, Word Mask)
         *p = '\0';
       if (!p) WrError(1350);
       else if (!DecodeBaseReg(p + 1, AdrVals))
-        WrXError(1445, p + 1);
+        WrXError(ErrNum_InvReg, p + 1);
       else if (!strcasecmp(ArgStr[Start], "D"))
       {
         AdrVals[0] = (AdrVals[0] << 3) | 0xe7;
@@ -581,8 +581,8 @@ static void DecodeAdr(int Start, int Stop, Word Mask)
 
     if (AutoFlag)
     {
-      if (!DecodeBaseReg(ArgStr[Stop], AdrVals)) WrXError(1445, ArgStr[Stop]);
-      else if (AdrVals[0] == eBaseRegPC) WrXError(1445, ArgStr[Stop]);
+      if (!DecodeBaseReg(ArgStr[Stop], AdrVals)) WrXErrorPos(ErrNum_InvReg, ArgStr[Stop], &ArgStrPos[Stop]);
+      else if (AdrVals[0] == eBaseRegPC) WrXErrorPos(ErrNum_InvReg, ArgStr[Stop], &ArgStrPos[Stop]);
       else
       {
         FirstPassUnknown = False;
@@ -618,7 +618,7 @@ static void DecodeAdr(int Start, int Stop, Word Mask)
 
     else
     {
-      if (!DecodeBaseReg(ArgStr[Stop], AdrVals)) WrXError(1445, ArgStr[Stop]);
+      if (!DecodeBaseReg(ArgStr[Stop], AdrVals)) WrXErrorPos(ErrNum_InvReg, ArgStr[Stop], &ArgStrPos[Stop]);
       else if (DecodeIdxReg(ArgStr[Start], AdrVals + 1))
       {
         AdrVals[0] = (AdrVals[0] << 3) | AdrVals[1] | 0xe4;
@@ -881,11 +881,11 @@ static void DecodeLoop(Word Index)
 
   if (!ChkArgCnt(2, 2));
   else if (*AttrPart != '\0') WrError(1100);
-  else if (!DecodeReg(ArgStr[1], &HReg)) WrXError(1445, ArgStr[1]);
+  else if (!DecodeReg(ArgStr[1], &HReg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else
   {
     OK = (HReg <= eRegB) || ((HReg >= eRegD) && (HReg <= eRegSP));
-    if (!OK) WrXError(1445, ArgStr[1]);
+    if (!OK) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
     else
     {
       Address = EvalIntExpression(ArgStr[2], AddrInt, &OK) - (EProgCounter() + 3);
@@ -952,10 +952,10 @@ static void DecodeTransfer(Word Index)
 
   if (!ChkArgCnt(2, 2));
   else if (*AttrPart != '\0') WrError(1100);
-  else if (!DecodeReg(ArgStr[2], &Reg2)) WrXError(1445, ArgStr[2]);
-  else if (eRegPC == Reg2) WrXError(1445, ArgStr[2]);
-  else if (!DecodeReg(ArgStr[1], &Reg1)) WrXError(1445, ArgStr[1]);
-  else if (eRegPC == Reg1) WrXError(1445, ArgStr[1]);
+  else if (!DecodeReg(ArgStr[2], &Reg2)) WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
+  else if (eRegPC == Reg2) WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[1]);
+  else if (!DecodeReg(ArgStr[1], &Reg1)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+  else if (eRegPC == Reg1) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else if (!ChkRegPair(Reg1, Reg2, &ExtMask)) WrError(1760);
   else
   {
@@ -974,12 +974,12 @@ static void DecodeSEX(Word Index)
 
   if (!ChkArgCnt(2, 2));
   else if (*AttrPart != '\0') WrError(1100);
-  else if (!DecodeReg(ArgStr[2], &Reg2)) WrXError(1445, ArgStr[2]);
-  else if (ActRegSize != 1) WrXError(1445, ArgStr[2]);
-  else if (eRegPC == Reg2) WrXError(1445, ArgStr[2]);
-  else if (!DecodeReg(ArgStr[1], &Reg1)) WrXError(1445, ArgStr[1]);
-  else if (ActRegSize != 0) WrXError(1445, ArgStr[1]);
-  else if (eRegPC == Reg1) WrXError(1445, ArgStr[1]);
+  else if (!DecodeReg(ArgStr[2], &Reg2)) WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
+  else if (ActRegSize != 1) WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
+  else if (eRegPC == Reg2) WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
+  else if (!DecodeReg(ArgStr[1], &Reg1)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+  else if (ActRegSize != 0) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+  else if (eRegPC == Reg1) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else if (!ChkRegPair(Reg1, Reg2, &ExtMask)) WrError(1760);
   else
   {
@@ -1721,8 +1721,8 @@ static void MakeCode_6812(void)
   if (DecodeMotoPseudo(True)) return;
   if (DecodeMoto16Pseudo(OpSize,True)) return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static void InitCode_6812(void)

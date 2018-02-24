@@ -192,8 +192,8 @@ static void DiscardArgs(void)
       if (*p2 == '\0') break;
     Eaten = (*p2 == '\0');
     *p2 = '\0';
-    strmov(OpPart, p);
-    NLS_UpString(OpPart);
+    strmov(OpPart.Str, p);
+    NLS_UpString(OpPart.Str);
     if (Eaten)
     {
       for (z = 1; z < ArgCnt; z++)
@@ -208,7 +208,7 @@ static void DiscardArgs(void)
     }
   }
   else
-    *OpPart = '\0';
+    *OpPart.Str = '\0';
   if (DiscCnt > 0)
   {
     for (z = 0; z <= ArgCnt - DiscCnt; z++)
@@ -278,14 +278,12 @@ static void DecodeMOV(Word Index)
     return;
   if (!DecodeReg(ArgStr[1], &DReg, DestRegs, DestRegCnt))
   {
-    WrXError(1445,
-    ArgStr[1]);
+    WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
     Error = True;
   }
   else if (!DecodeReg(ArgStr[2], &SReg, SrcRegs, SrcRegCnt))
   {
-    WrXError(1445,
-    ArgStr[2]);
+    WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
     Error = True;
   }
   else
@@ -302,7 +300,7 @@ static void DecodeLDI(Word Index)
     return;
   if (!DecodeReg(ArgStr[1], &DReg, DestRegs, DestRegCnt))
   {
-    WrXError(1445, ArgStr[1]);
+    WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
     Error = True;
   }
   else
@@ -333,7 +331,7 @@ static void DecodeALU1(Word Index)
   if ((!DecodeReg(ArgStr[1], &DReg, DestRegs, DestRegCnt))
    || (DReg < 16) || (DReg > 23))
   {
-    WrXError(1445, ArgStr[1]);
+    WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
     Error = True;
   }
   else
@@ -350,12 +348,12 @@ static void DecodeALU2(Word Index)
   if ((!DecodeReg(ArgStr[1], &DReg, DestRegs, DestRegCnt))
    || (DReg < 16) || (DReg > 23))                         
   {                                              
-    WrXError(1445, ArgStr[1]);
+    WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
     Error = True;             
   }                                                
   else if (!DecodeReg(ArgStr[2], &SReg, ALUSrcRegs, ALUSrcRegCnt))
   {                                              
-    WrXError(1445, ArgStr[2]);
+    WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
     Error = True;             
   }
   else
@@ -1004,13 +1002,13 @@ static void MakeCode_77230(void)
   memset(InstrComps, 0, sizeof(LongWord) * InstrCnt);
   do
   {
-    if (!LookupInstTable(InstTable, OpPart))
+    if (!LookupInstTable(InstTable, OpPart.Str))
     {
-      WrXError(1200, OpPart);
+      WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
       Error = True;
     }
   }
-  while ((!Error) && (*OpPart != '\0'));
+  while ((!Error) && (*OpPart.Str != '\0'));
 
   /* passende Verknuepfung suchen */
 

@@ -672,8 +672,8 @@ static void MakeCode_COP8(void)
 
   if (DecodeIntelPseudo(BigFlag)) return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200,OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_COP8(void)

@@ -237,7 +237,7 @@ static Word DecodeCond(int argp)
   }
 
   if ((cnttp > 1) || (cntzl > 1) || (cntv > 1) || (cntc > 1)) 
-    WrXError(1200, ArgStr[argp]); /* invalid condition */
+    WrXErrorPos(ErrNum_UndefCond, ArgStr[argp], &ArgStrPos[argp]);
 
   return ret;
 }
@@ -343,7 +343,7 @@ static void DecodeCmdPlu(Word Index)
       }
     }
   }
-  else if (strlen(OpPart) == 4) WrError(1120);
+  else if (strlen(OpPart.Str) == 4) WrError(1120);
   else
   {
     if (ChkArgCnt(1, 2))
@@ -579,7 +579,7 @@ static void DecodeCLRSETC(Word Index)
         }
         return;
       }
-    WrXError(1445, ArgStr[1]); /* invalid instruction */
+    WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]); /* invalid instruction */
   }
 }
 
@@ -1309,8 +1309,8 @@ static void MakeCode_3205x(void)
 
   /* per Hash-Tabelle */
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 /* ---------------------------------------------------------------------- */

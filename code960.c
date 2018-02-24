@@ -399,7 +399,7 @@ static void DecodeReg(Word Index)
   }
 
   if (!ChkArgCnt(NumArgs, NumArgs));
-  else if (((Op->DestType >= SingleOp) || (Op->Src1Type >= SingleOp)) && (!FPUAvail)) WrXError(1200, OpPart);
+  else if (((Op->DestType >= SingleOp) || (Op->Src1Type >= SingleOp)) && (!FPUAvail)) WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
   else if (((Op->DestType == NoneOp) || (DecodeAdr(ArgStr[ArgCnt], MModReg | (Op->DestType >= SingleOp ? MModFReg :0 ), Op->DestType, &DReg, &DMode)))
         && (DecodeAdr(ArgStr[1], MModReg | (Op->Src1Type >= SingleOp ? MModFReg : 0) | (Op->Imm1 ? MModImm : 0 ), Op->Src1Type, &S1Reg, &S1Mode))
         && ((Op->Src2Type == NoneOp) || (DecodeAdr(ArgStr[2], MModReg | (Op->Src2Type >= SingleOp ? MModFReg : 0) | (Op->Imm2 ? MModImm : 0), Op->Src2Type, &S2Reg, &S2Mode))))
@@ -485,8 +485,8 @@ static void DecodeMemO(Word Index)
   unsigned NumArgs = 1 + Ord(Op->RegPos > 0);
 
   if (!ChkArgCnt(NumArgs, NumArgs));
-  else if ((Op->RegPos > 0) && (!DecodeIReg(ArgStr[Op->RegPos], &Reg))) WrXError(1445, ArgStr[Op->RegPos]);
-  else if (Reg & OpMasks[Op->Type]) WrXError(1445, ArgStr[Op->RegPos]);
+  else if ((Op->RegPos > 0) && (!DecodeIReg(ArgStr[Op->RegPos], &Reg))) WrXErrorPos(ErrNum_InvReg, ArgStr[Op->RegPos], &ArgStrPos[Op->RegPos]);
+  else if (Reg & OpMasks[Op->Type]) WrXErrorPos(ErrNum_InvReg, ArgStr[Op->RegPos], &ArgStrPos[Op->RegPos]);
   else if ((MemType = DecodeMem(ArgStr[MemPos],&Mem,DAsmCode+1)) >= 0)
   {
     DAsmCode[0] = (Op->Code << 24) + (Reg << 19) + Mem;
@@ -561,8 +561,8 @@ static void MakeCode_960(void)
 
   /* CPU-Anweisungen */
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 /*--------------------------------------------------------------------------*/

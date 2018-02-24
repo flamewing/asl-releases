@@ -142,7 +142,7 @@ static void DecodeRegNoZero(Word Index)
     if (!OK) CodeLen = 0;
     else if ((!FirstPassUnknown) && (0 == Reg))
     {
-      WrXError(1445, ArgStr[1]);
+      WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
       CodeLen = 0;
     }
     else
@@ -524,7 +524,7 @@ static void MakeCode_1802(void)
 
   /* to be ignored */
 
-  if (*OpPart == '\0') return;
+  if (*OpPart.Str == '\0') return;
 
   /* Pseudo Instructions */
 
@@ -532,8 +532,8 @@ static void MakeCode_1802(void)
 
   /* search */
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_1802(void)

@@ -426,7 +426,7 @@ static void DecodeAdr(tAdrResult *pResult, const NormOrder *pOrder)
           else if (!strcasecmp(ArgStr[2], "Y"))
             pResult->ErgMode = ModZIY;
           else
-            WrXError(1445, ArgStr[2]);
+            WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
         }
       }
       else
@@ -442,7 +442,7 @@ static void DecodeAdr(tAdrResult *pResult, const NormOrder *pOrder)
           else if (!strcasecmp(ArgStr[2], "Y"))
             pResult->ErgMode = ModIY;
           else
-            WrXError(1445, ArgStr[2]);
+            WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
           if (pResult->ErgMode != -1)
           {
             if ((pResult->AdrVals[1] == 0) && (ZeroMode == 0))
@@ -2025,8 +2025,8 @@ static void MakeCode_65(void)
     return;
   }
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static void InitCode_65(void)

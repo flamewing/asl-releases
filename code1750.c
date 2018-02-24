@@ -103,6 +103,24 @@ static Boolean DecodeBaseReg(const char *pAsc, Word *pResult)
   return True;
 }
 
+static Boolean DecodeArgReg(unsigned Index, Word *pResult)
+{
+  Boolean Result = DecodeReg(ArgStr[Index], pResult);
+
+  if (!Result)
+    WrXErrorPos(ErrNum_InvReg, ArgStr[Index], &ArgStrPos[Index]);
+  return Result;
+}
+
+static Boolean DecodeArgBaseReg(unsigned Index, Word *pResult)
+{
+  Boolean Result = DecodeBaseReg(ArgStr[Index], pResult);
+
+  if (!Result)
+    WrXErrorPos(ErrNum_InvReg, ArgStr[Index], &ArgStrPos[Index]);
+  return Result;
+}
+
 static Boolean DecodeAdr(int StartIdx, int StopIdx)
 {
   Boolean OK;
@@ -114,8 +132,9 @@ static Boolean DecodeAdr(int StartIdx, int StopIdx)
   if (StopIdx > StartIdx)
   {
     OK = False;
-    if (!DecodeReg(ArgStr[StartIdx + 1], &AdrReg)) WrXError(1445, ArgStr[StartIdx + 1]);
-    else if (AdrReg == 0) WrXError(1350, "!R0");
+    if (!DecodeArgReg(StartIdx + 1, &AdrReg));
+    else if (AdrReg == 0)
+      WrXErrorPos(1350, "!R0", &ArgStrPos[StartIdx + 1]);
     else
       OK = True;
     return OK;
@@ -164,7 +183,16 @@ static Boolean DecodeCondition(const char *pAsc, Word *pResult)
   return False;
 }
 
-static Boolean DecodeXIOCmd(const char *pAsc, Word *pResult)
+static Boolean DecodeArgCondition(unsigned Index, Word *pResult)
+{
+  Boolean Result = DecodeCondition(ArgStr[Index], pResult);
+
+  if (!Result)
+    WrXErrorPos(ErrNum_UndefCond, ArgStr[Index], &ArgStrPos[Index]);
+  return Result;
+}
+
+static Boolean DecodeArgXIOCmd(unsigned Index, Word *pResult)
 {
   static const tCondition XIO[] =
   {
@@ -211,21 +239,21 @@ static Boolean DecodeXIOCmd(const char *pAsc, Word *pResult)
     { "RCS",  0xC001 },
     { "ITA",  0xC00A },
     { "ITB",  0xC00E },
-    { NULL, 0xFFFF }
+    { NULL,   0xFFFF }
   };
   const tCondition *pRun;
   Boolean OK;
 
-  if (isalpha(*pAsc))
+  if (isalpha(ArgStr[Index][0]))
   {
     for (pRun = XIO; pRun->pName; pRun++)
-      if (!strcasecmp(pAsc, pRun->pName))
+      if (!strcasecmp(ArgStr[Index], pRun->pName))
       {
         *pResult = pRun->Code;
         return True;
       }
   }
-  *pResult = EvalIntExpression(pAsc, UInt16, &OK);
+  *pResult = EvalIntExpression(ArgStr[Index], UInt16, &OK);
   return OK;
 }
 
@@ -242,10 +270,9 @@ static void DecodeR(Word Code)
 {
   Word Ra, Rb;
 
-  if (!ChkArgCnt(2, 2));
-  else if (!DecodeReg(ArgStr[1], &Ra)) WrXError(1445, ArgStr[1]);
-  else if (!DecodeReg(ArgStr[2], &Rb)) WrXError(1445, ArgStr[2]);
-  else
+  if (ChkArgCnt(2, 2)
+   && DecodeArgReg(1, &Ra)
+   && DecodeArgReg(2, &Rb))
     PutCode(Code | (Ra << 4) | Rb);
 }
 
@@ -254,9 +281,7 @@ static void DecodeRImm(Word Code)
   Word N, Rb;
   Boolean OK;
 
-  if (!ChkArgCnt(2, 2));
-  else if (!DecodeReg(ArgStr[2], &Rb)) WrXError(1445, ArgStr[2]);
-  else
+  if (ChkArgCnt(2, 2) && DecodeArgReg(2, &Rb))
   {
     N = EvalIntExpression(ArgStr[1], UInt4, &OK);
     if (OK)
@@ -269,9 +294,7 @@ static void DecodeIS(Word Code)
   Word N, Ra;
   Boolean OK;
 
-  if (!ChkArgCnt(2, 2));
-  else if (!DecodeReg(ArgStr[1], &Ra)) WrXError(1445, ArgStr[1]);
-  else
+  if (ChkArgCnt(2, 2) && DecodeArgReg(1, &Ra))
   {
     FirstPassUnknown = False;
     N = EvalIntExpression(ArgStr[2], UInt5, &OK);
@@ -286,10 +309,9 @@ static void DecodeMem(Word Code)
 {
   Word Ra;
 
-  if (!ChkArgCnt(2, 3));
-  else if (!DecodeReg(ArgStr[1], &Ra)) WrXError(1445, ArgStr[1]);
-  else if (!DecodeAdr(2, ArgCnt)) WrError(1350);
-  else
+  if (ChkArgCnt(2, 3)
+   && DecodeArgReg(1, &Ra)
+   && DecodeAdr(2, ArgCnt))
   {
     PutCode(Code | (Ra << 4) | AdrReg);
     PutCode(AdrWord);
@@ -300,9 +322,7 @@ static void DecodeImOcx(Word Code)
 {
   Word Ra;
 
-  if (!ChkArgCnt(2, 2));
-  else if (!DecodeReg(ArgStr[1], &Ra)) WrXError(1445, ArgStr[1]);
-  else
+  if (ChkArgCnt(2, 2) && DecodeArgReg(1, &Ra))
   {
     Boolean OK;
     Word ImmVal = EvalIntExpression(ArgStr[2], Int16, &OK);
@@ -319,9 +339,7 @@ static void DecodeB(Word Code)
 {
   Word Br;
 
-  if (!ChkArgCnt(2, 2));
-  else if (!DecodeBaseReg(ArgStr[1], &Br)) WrXError(1445, ArgStr[1]);
-  else
+  if (ChkArgCnt(2, 2) && DecodeArgBaseReg(1, &Br))
   {
     Boolean OK;
     Word LoByte = EvalIntExpression(ArgStr[2], UInt8, &OK);
@@ -336,9 +354,9 @@ static void DecodeBX(Word Code)
   Word Br, Rx;
 
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeBaseReg(ArgStr[1], &Br)) WrXError(1445, ArgStr[1]);
-  else if (!DecodeReg(ArgStr[2], &Rx)) WrXError(1445, ArgStr[2]);
-  else if (0 == Rx) WrXError(1350, "!R0");
+  else if (!DecodeArgBaseReg(1, &Br));
+  else if (!DecodeArgReg(2, &Rx));
+  else if (0 == Rx) WrXErrorPos(ErrNum_InvAddrMode, "!R0", &ArgStrPos[2]);
   else
     PutCode(Code | (Br << 8) | Rx);
 }
@@ -373,9 +391,7 @@ static void DecodeS(Word Code)
 
 static void DecodeIM1_16(Word Code)
 {
-  if (!ChkArgCnt(2, 3));
-  else if (!DecodeAdr(2, ArgCnt)) WrError(1350);
-  else
+  if (ChkArgCnt(2, 3) && DecodeAdr(2, ArgCnt))
   {
     Boolean OK;
     Word N;
@@ -397,9 +413,9 @@ static void DecodeXMem(Word Code)
 {
   Word Ra;
 
-  if (!ChkArgCnt(2, 3));
-  else if (!DecodeReg(ArgStr[1], &Ra)) WrXError(1445, ArgStr[1]);
-  else if (DecodeAdr(2, ArgCnt))
+  if (ChkArgCnt(2, 3)
+   && DecodeArgReg(1, &Ra)
+   && DecodeAdr(2, ArgCnt))
   {
     PutCode(Code | (Ra << 4) | AdrReg);
     PutCode(AdrWord);
@@ -411,9 +427,7 @@ static void DecodeImmR(Word Code)
   Word Rb, N;
   Boolean OK;
 
-  if (!ChkArgCnt(2, 2));    
-  else if (!DecodeReg(ArgStr[2], &Rb)) WrXError(1445, ArgStr[2]);
-  else
+  if (ChkArgCnt(2, 2) && DecodeArgReg(2, &Rb))
   {
     N = EvalIntExpression(ArgStr[1], UInt4, &OK);
 
@@ -426,10 +440,9 @@ static void DecodeJump(Word Code)
 {
   Word Cond;
 
-  if (!ChkArgCnt(2, 3));
-  else if (!DecodeCondition(ArgStr[1], &Cond)) WrXError(1360, ArgStr[1]);
-  else if (!DecodeAdr(2, ArgCnt)) WrError(1350);
-  else
+  if (ChkArgCnt(2, 3)
+   && DecodeArgCondition(1, &Cond)
+   && DecodeAdr(2, ArgCnt))
   {
     PutCode(Code | (Cond << 4) | AdrReg);
     PutCode(AdrWord);
@@ -438,9 +451,7 @@ static void DecodeJump(Word Code)
 
 static void DecodeAddr(Word Code)
 {
-  if (!ChkArgCnt(1, 2));
-  else if (!DecodeAdr(1, ArgCnt)) WrError(1350);
-  else
+  if (ChkArgCnt(1, 2) && DecodeAdr(1, ArgCnt))
   {
     PutCode(Code | AdrReg);
     PutCode(AdrWord);
@@ -449,9 +460,7 @@ static void DecodeAddr(Word Code)
 
 static void DecodeIM_0_15(Word Code)
 {
-  if (!ChkArgCnt(2, 3));
-  else if (!DecodeAdr(2, ArgCnt)) WrError(1350);
-  else
+  if (ChkArgCnt(2, 3) && DecodeAdr(2, ArgCnt))
   {
     Boolean OK;
     Word N = EvalIntExpression(ArgStr[1], UInt4, &OK);
@@ -468,9 +477,7 @@ static void DecodeSR(Word Code)
 {
   Word R;
 
-  if (!ChkArgCnt(1, 1));    
-  else if (!DecodeReg(ArgStr[1], &R)) WrXError(1445, ArgStr[1]);
-  else
+  if (ChkArgCnt(1, 1)  && DecodeArgReg(1, &R))
     PutCode(Code | (R << 4));
 }
 
@@ -478,16 +485,16 @@ static void DecodeXIO(Word Code)
 {
   Word Ra, Cmd;
 
-  if (!ChkArgCnt(2, 3));
-  else if (!DecodeReg(ArgStr[1], &Ra)) WrXError(1445, ArgStr[1]);
-  else if (DecodeXIOCmd(ArgStr[2], &Cmd))
+  if (ChkArgCnt(2, 3)
+   && DecodeArgReg(1, &Ra)
+   && DecodeArgXIOCmd(2, &Cmd))
   {
     if (ArgCnt == 3)
     {
       Word Ri;
 
-      if (!DecodeReg(ArgStr[3], &Ri)) WrXError(1445, ArgStr[3]);
-      else if (Ri == 0) WrXError(1350, "!R0");
+      if (!DecodeArgReg(3, &Ri));
+      else if (Ri == 0) WrXErrorPos(1350, "!R0", &ArgStrPos[3]);
       else
       {
         PutCode(Code | (Ra << 4) | Ri);
@@ -660,6 +667,8 @@ static void DecodeFLOAT(Word Extended)
 
 static void DecodeDATA_1750(Word Code)
 {
+  UNUSED(Code);
+
   DecodeDATA(UInt16, UInt16);
 }
 
@@ -910,8 +919,8 @@ static void MakeCode_1750(void)
   if (Memo(""))
     return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_1750(void)

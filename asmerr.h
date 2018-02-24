@@ -18,11 +18,18 @@
  *
  *****************************************************************************/
 
-extern void WrErrorString(char *Message, char *Add, Boolean Warning, Boolean Fatal);
+struct sLineComp;
+struct sStrComp;
+extern void WrErrorString(char *Message, char *Add, Boolean Warning, Boolean Fatal,
+                          const char *pExtendError, const struct sLineComp *pLineComp);
 
 extern void WrError(Word Num);
 
-extern void WrXError(Word Num, const char *Message);
+extern void WrXError(Word Num, const char *pExtError);
+
+extern void WrXErrorPos(Word Num, const char *pExtError, const struct sLineComp *pLineComp);
+
+extern void WrStrErrorPos(Word Num, const struct sStrComp *pStrComp);
 
 #endif /* _ASMERR_H */
 

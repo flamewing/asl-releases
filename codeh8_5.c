@@ -659,7 +659,7 @@ static void DecodeLDC_STC(Word IsSTC_16)
       CRegIdx = 1;
       AdrIdx = 2;
     }
-    if (!DecodeCReg(ArgStr[CRegIdx],&HReg)) WrXError(1440, ArgStr[2]);
+    if (!DecodeCReg(ArgStr[CRegIdx],&HReg)) WrXErrorPos(ErrNum_InvCtrlReg, ArgStr[2], &ArgStrPos[2]);
     else
     {
       DecodeAdr(ArgStr[AdrIdx], IsSTC_16 ? MModNoImm : MModAll);
@@ -941,7 +941,7 @@ static void DecodeLog(Word Code)
   Byte HReg;
 
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeCReg(ArgStr[2], &HReg)) WrXError(1440, ArgStr[2]);
+  else if (!DecodeCReg(ArgStr[2], &HReg)) WrXErrorPos(ErrNum_InvCtrlReg, ArgStr[2], &ArgStrPos[2]);
   else
   {
     DecodeAdr(ArgStr[1], MModImm);
@@ -1545,8 +1545,8 @@ static void MakeCode_H8_5(void)
 
   /* Sonderfaelle */
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean ChkPC_H8_5(LargeWord Addr)

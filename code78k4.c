@@ -2780,7 +2780,7 @@ static void DecodeBIT(Word Code)
     t.Typ = TempInt;
     t.Contents.Int = Result;
     SetListLineVal(&t);
-    EnterIntSymbol(LabPart, Result, SegNone, False);
+    EnterIntSymbol(LabPart.Str, Result, SegNone, False);
   }
 }
 
@@ -2817,7 +2817,7 @@ static void DecodePUSH_POP(Word Code)
         Address.AdrMode = ModPSW;
       else
       {
-        WrXError(1350, ArgStr[z]);
+        WrXErrorPos(ErrNum_InvAddrMode, ArgStr[z], &ArgStrPos[z]);
         return;
       }
       if (!SetOpSize(1))
@@ -2838,7 +2838,7 @@ static void DecodePUSH_POP(Word Code)
 
       if (IsU && (Address.AdrVal == 5))
       {
-        WrXError(1350, ArgStr[z]);
+        WrXErrorPos(ErrNum_InvAddrMode, ArgStr[z], &ArgStrPos[z]);
         return;
       }
     }
@@ -3048,7 +3048,7 @@ static void DecodeBRKCS(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(1, 1));
-  else if (!DecodeRB(ArgStr[1], BAsmCode + 1)) WrXError(1445, ArgStr[1]);
+  else if (!DecodeRB(ArgStr[1], BAsmCode + 1)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else
   {
     BAsmCode[CodeLen++] = 0x05;
@@ -3210,7 +3210,7 @@ static void DecodeSEL(Word Code)
   if (!ChkArgCnt(1, 2))
     return;
 
-  if (!DecodeRB(ArgStr[1], &Bank)) WrXError(1445, ArgStr[1]);
+  if (!DecodeRB(ArgStr[1], &Bank)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else
   {
     BAsmCode[CodeLen++] = 0x05;
@@ -3457,8 +3457,8 @@ static void MakeCode_78K4(void)
   if (DecodeIntelPseudo(False))
     return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_78K4(void)

@@ -495,7 +495,7 @@ static void MakeCode_COP4(void)
 
   /* zu ignorierendes */
 
-  if (*OpPart == '\0') return;
+  if (*OpPart.Str == '\0') return;
 
   /* pseudo instructions */
 
@@ -505,8 +505,8 @@ static void MakeCode_COP4(void)
 
   /* machine instructions */
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static void SwitchFrom_COP4(void)

@@ -1458,7 +1458,7 @@ static void DecodeBIT(Word Code)
       if (!FirstPassUnknown)
       {
         PushLocHandle(-1);
-        EnterIntSymbol(LabPart, BErg, SegNone, False);
+        EnterIntSymbol(LabPart.Str, BErg, SegNone, False);
         sprintf(ListLine, "=%s", BName);
         PopLocHandle();
       }
@@ -1561,8 +1561,8 @@ static void MakeCode_75K0(void)
   if (DecodeIntelPseudo(True))
     return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static void InitCode_75K0(void)

@@ -136,7 +136,7 @@ static void DecodeReg(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(1, 1))
-    AddRegDef(LabPart, ArgStr[1]);
+    AddRegDef(LabPart.Str, ArgStr[1]);
 }
 
 static void DecodeNameReg(Word Index)
@@ -444,8 +444,8 @@ static void MakeCode_KCPSM3(void)
 
    if (DecodeIntelPseudo(True)) return;
 
-   if (!LookupInstTable(InstTable, OpPart))
-     WrXError(1200, OpPart);
+   if (!LookupInstTable(InstTable, OpPart.Str))
+     WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static void SwitchTo_KCPSM3(void)

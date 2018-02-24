@@ -429,7 +429,7 @@ static Boolean DecodeAdr(char *Asc, tExtMode ExtMode, Byte Mask, Boolean MayImm,
 
   if (!PCDist)
   {
-    fprintf(stderr, "internal error: PCDist not set for '%s'\n", OpPart);
+    fprintf(stderr, "internal error: PCDist not set for '%s'\n", OpPart.Str);
     exit(10);
   }
   CurrPC = EProgCounter() + PCDist;
@@ -910,7 +910,7 @@ static void DecodeMOVA(Word Code)
     DecodeAdr(ArgStr[2], eExtModeYes, 15, False, &AdrParts);
     if (AdrParts.WasAbs)
     {
-      if (!DecodeReg(ArgStr[1], &WAsmCode[0])) WrXError(1445, ArgStr[1]);
+      if (!DecodeReg(ArgStr[1], &WAsmCode[0])) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
       else
       {
         if (Odd(EProgCounter())) WrError(180);
@@ -968,7 +968,7 @@ static void DecodeMOVA(Word Code)
         break;
       case eModeRegDisp:
         if (!ChkRange(AdrParts.Val, 0, 0xffff));
-        else if (!DecodeReg(ArgStr[1], &WAsmCode[0])) WrXError(1445, ArgStr[1]);
+        else if (!DecodeReg(ArgStr[1], &WAsmCode[0])) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
         else
         {
           if (Odd(EProgCounter())) WrError(180);
@@ -1029,7 +1029,7 @@ static void DecodeADDA_SUBA_CMPA(Word Code)
 
   if (!ChkArgCnt(2, 2));
   else if (*AttrPart != '\0') WrError(1100);
-  else if (!DecodeReg(ArgStr[2], &WAsmCode[0])) WrXError(1445, ArgStr[2]);
+  else if (!DecodeReg(ArgStr[2], &WAsmCode[0])) WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
   else
   {
     tAdrParts AdrParts;
@@ -1057,7 +1057,7 @@ static void DecodeRxM(Word Code)
 {
   if (!ChkArgCnt(2, 2));
   else if (OpSize == eOpSizeB) WrError(1130);
-  else if (!DecodeReg(ArgStr[2], &WAsmCode[0])) WrXError(1445, ArgStr[2]);
+  else if (!DecodeReg(ArgStr[2], &WAsmCode[0])) WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
   else if (ArgStr[1][0] != '#') WrError(1120);
   else
   {
@@ -1124,7 +1124,7 @@ static void DecodePUSHM_POPM(Word Code)
 {
   if (!ChkArgCnt(2, 2));
   else if (OpSize == 0) WrError(1130);
-  else if (!DecodeReg(ArgStr[2], &WAsmCode[0])) WrXError(1445, ArgStr[2]);
+  else if (!DecodeReg(ArgStr[2], &WAsmCode[0])) WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
   else if (ArgStr[1][0] != '#') WrError(1120);
   else
   {
@@ -1280,7 +1280,7 @@ static void DecodeRegDef(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(1, 1))
-    AddRegDef(LabPart, ArgStr[1]);
+    AddRegDef(LabPart.Str, ArgStr[1]);
 }
 
 static void DecodeRPT(Word Code)
@@ -1321,14 +1321,14 @@ static void DecodeRPT(Word Code)
     return;
   }
   *pArgPart1++ = '\0';
-  strcpy(OpPart, pOpPart);
-  UpString(OpPart);
+  strcpy(OpPart.Str, pOpPart);
+  UpString(OpPart.Str);
   KillPrefBlanks(pArgPart1);
   strmov(ArgStr[1], pArgPart1);
 
   /* split off new attribute part: */
 
-  pAttrPart = strrchr(OpPart, '.');
+  pAttrPart = strrchr(OpPart.Str, '.');
   if (pAttrPart)
   {
     strcpy(AttrPart, pAttrPart + 1);
@@ -1538,8 +1538,8 @@ static void MakeCode_MSP(void)
 
   /* alles aus der Tabelle */
  
-  if (!LookupInstTable(InstTable,OpPart))
-    WrXError(1200,OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_MSP(void)

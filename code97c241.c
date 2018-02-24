@@ -2003,7 +2003,7 @@ static void DecodeJRC(Word Code)
   {
     Word Condition;
 
-    if (!DecodeCondition(ArgStr[1], &Condition)) WrXError(1360, ArgStr[1]);
+    if (!DecodeCondition(ArgStr[1], &Condition)) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
     else
     {
       LongInt AdrInt;
@@ -2103,7 +2103,7 @@ static void DecodeDJNZC(Word Code)
   {
     Word Condition;
 
-    if (!DecodeCondition(ArgStr[2], &Condition)) WrXError(1360, ArgStr[2]);
+    if (!DecodeCondition(ArgStr[2], &Condition)) WrXErrorPos(ErrNum_UndefCond, ArgStr[2], &ArgStrPos[2]);
     else
     {
       Condition %= 16;
@@ -2465,15 +2465,13 @@ static void MakeCode_97C241(void)
 
   if (DecodeIntelPseudo(False)) return;
 
-  if (LookupInstTable(InstTable, OpPart))
+  if (LookupInstTable(InstTable, OpPart.Str))
   {
     AddPrefixes();
     return;
   }
 
-  /* vermischtes... */
-
-  WrXError(1200,OpPart);
+  WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_97C241(void)

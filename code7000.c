@@ -1208,7 +1208,7 @@ static void DecodeDCT_DCF(Word Cond)
 
   if (!DSPAvail)
   {
-    WrXError(1200, OpPart);
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
     return;
   }
 
@@ -1220,7 +1220,7 @@ static void DecodeDCT_DCF(Word Cond)
   pos = FirstBlank(ArgStr[1]);
   if (!pos)
   {
-    strcpy(OpPart, ArgStr[1]);
+    strcpy(OpPart.Str, ArgStr[1]);
     for (z = 1; z < ArgCnt; z++)
       strcpy(ArgStr[z], ArgStr[z + 1]);
     ArgCnt--;
@@ -1228,7 +1228,7 @@ static void DecodeDCT_DCF(Word Cond)
   else
   {
     *pos = '\0';
-    strcpy(OpPart, ArgStr[1]);
+    strcpy(OpPart.Str, ArgStr[1]);
     strcpy(ArgStr[1], pos + 1);
   }
 
@@ -1574,8 +1574,8 @@ static void MakeCode_7000(void)
   if (DecodeMoto16Pseudo(OpSize, True))
     return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static void InitCode_7000(void)

@@ -688,7 +688,7 @@ static void DecodeCP(Word Code)
     IsLE = True;
   else
   {
-    WrXError(1360, ArgStr[1]);
+    WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
     return;
   }
   DecodeAdr(ArgStr[3], MModA | MModB | (IsLE ? 0 : MModM | MModDir | MModY) | MModImm);
@@ -1113,8 +1113,8 @@ static void  MakeCode_HMCS400(void)
   if (Memo(""))
     return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 

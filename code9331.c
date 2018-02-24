@@ -397,7 +397,7 @@ static void DecodeMAIN(Word Code)
   else if (!DecodeDEST(ArgStr[11], &Dest, True));
   else if (!DecodeSOUR(ArgStr[12], &Sour, True));
   else if (!DecodeXCNT(ArgStr[13], &Xcnt));
-  else if (Xcnt == 2) WrXError(1445, ArgStr[13]);
+  else if (Xcnt == 2) WrXErrorPos(ErrNum_InvReg, ArgStr[13], &ArgStrPos[13]);
   else if (!DecodeOFP(ArgStr[14], &Ofp));
   else if (!DecodeER(ArgStr[15], &Er));
   else
@@ -428,7 +428,7 @@ static void DecodeMAIN(Word Code)
         DAsmCode[0] |= 0x00080000ul;
         break;
       default:
-        WrXError(1380, ArgStr[2]);
+        WrXErrorPos(ErrNum_InvShiftArg, ArgStr[2], &ArgStrPos[2]);
         return;
     }
 
@@ -449,9 +449,9 @@ static void DecodeLDA(Word Code)
   else if (!DecodeWRF(ArgStr[4], &Wrf));
   else if (!DecodeDEST(ArgStr[5], &Dest, False));
   else if (!DecodeSOUR(ArgStr[6], &Sour, False));
-  else if (Sour > 14) WrXError(1445, ArgStr[6]);
+  else if (Sour > 14) WrXErrorPos(ErrNum_InvReg, ArgStr[6], &ArgStrPos[6]);
   else if (!DecodeXCNT(ArgStr[7], &Xcnt));
-  else if (Xcnt == 2) WrXError(1445, ArgStr[7]);
+  else if (Xcnt == 2) WrXErrorPos(ErrNum_InvReg, ArgStr[7], &ArgStrPos[7]);
   else
   {
     Boolean OK;
@@ -576,7 +576,7 @@ static void DecodeRET(Word Code)
   else if (!DecodeDEST(ArgStr[10], &Dest, True));
   else if (!DecodeSOUR(ArgStr[11], &Sour, True));
   else if (!DecodeXCNT(ArgStr[12], &Xcnt));
-  else if (Xcnt == 2) WrXError(1445, ArgStr[12]);
+  else if (Xcnt == 2) WrXErrorPos(ErrNum_InvReg, ArgStr[12], &ArgStrPos[12]);
   else if (!DecodeOFP(ArgStr[13], &Ofp));
   else
   {
@@ -604,7 +604,7 @@ static void DecodeRET(Word Code)
         DAsmCode[0] |= 0x00080000ul;
         break;
       default:
-        WrXError(1380, ArgStr[2]);
+        WrXErrorPos(ErrNum_InvShiftArg, ArgStr[2], &ArgStrPos[2]);
         return;
     }
 
@@ -633,7 +633,7 @@ static void DecodeGMAx(Word Code)
   else if (!DecodeDEST(ArgStr[9], &Dest, True));
   else if (!DecodeSOUR(ArgStr[10], &Sour, True));
   else if (!DecodeXCNT(ArgStr[11], &Xcnt));
-  else if (Xcnt == 2) WrXError(1445, ArgStr[11]);
+  else if (Xcnt == 2) WrXErrorPos(ErrNum_InvReg, ArgStr[11], &ArgStrPos[11]);
   else if (!DecodeOFP(ArgStr[12], &Ofp));
   else
   {
@@ -713,15 +713,15 @@ static void MakeCode_9331(void)
     switch (ArgCnt)
     {
       case 12:
-        strmaxcpy(OpPart, "GMA", sizeof(OpPart));
+        strmaxcpy(OpPart.Str, "GMA", sizeof(OpPart));
         break;
       case 15:
-        strmaxcpy(OpPart, "NOP", sizeof(OpPart));
+        strmaxcpy(OpPart.Str, "NOP", sizeof(OpPart));
         break;
       case 0:
         return;
       default:
-        WrXError(1200, OpPart);
+        WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
         return;
     }
   }
@@ -734,8 +734,8 @@ static void MakeCode_9331(void)
   for (z = 1; z < ArgCnt; z++)
     StripComment(ArgStr[z]);
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_9331(void)

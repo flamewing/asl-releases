@@ -597,7 +597,7 @@ static Boolean FPUEntry(Word *pCode)
 {
   if (!FPUAvail)
   {
-    WrXError(1200, OpPart);
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
     return FALSE;
   }
 
@@ -2854,8 +2854,8 @@ static void MakeCode_86(void)
 
   /* vermischtes */
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static void InitCode_86(void)

@@ -1359,7 +1359,7 @@ static void DecodeBIT(Word Index)
 
   if (ChkArgCnt(1, 1)
    && DecodeBitAdr(ArgStr[1], &Result))
-    EnterIntSymbol(LabPart, Result, SegNone, False);
+    EnterIntSymbol(LabPart.Str, Result, SegNone, False);
 }
 
 static void DecodeMOV1(Word Index)
@@ -1577,7 +1577,7 @@ static void DecodePUSHPOP(Word Code)
       else if (((Reg = DecodeReg16(ArgStr[z])) < 0)
             || (IsU && (Reg == 5)))
       {
-        WrXError(1445, ArgStr[z]);
+        WrXErrorPos(ErrNum_InvReg, ArgStr[z], &ArgStrPos[z]);
         return;
       }
       else
@@ -1587,7 +1587,7 @@ static void DecodePUSHPOP(Word Code)
 
       if (Mask & ThisMask)
       {
-        WrXError(1410, ArgStr[z]);
+        WrXErrorPos(ErrNum_InvRegList, ArgStr[z], &ArgStrPos[z]);
         return;
       }
       else
@@ -1711,7 +1711,7 @@ static void DecodeDBNZ(Word Code)
     switch (AdrMode)
     {
       case ModReg8:
-        if ((AdrVal != CReg8()) && (AdrVal != BReg8())) WrXError(1445, ArgStr[1]);
+        if ((AdrVal != CReg8()) && (AdrVal != BReg8())) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
         else
           BAsmCode[CodeLen++] = 0x30 | (AdrVal & 3);
         break;
@@ -1734,7 +1734,7 @@ static void DecodeBRKCS(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(1, 1));
-  else if ((Bank = DecodeRegBank(ArgStr[1])) < 0) WrXError(1445, ArgStr[1]);
+  else if ((Bank = DecodeRegBank(ArgStr[1])) < 0) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else
   {
     BAsmCode[CodeLen++] = 0x05;
@@ -1824,8 +1824,8 @@ static void DecodeSEL(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(1, 2));
-  else if ((Bank = DecodeRegBank(ArgStr[1])) < 0) WrXError(1445, ArgStr[1]);
-  else if ((ArgCnt == 2) && (strcasecmp(ArgStr[2], "ALT"))) WrXError(1445, ArgStr[2]);
+  else if ((Bank = DecodeRegBank(ArgStr[1])) < 0) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+  else if ((ArgCnt == 2) && (strcasecmp(ArgStr[2], "ALT"))) WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
   {
     BAsmCode[CodeLen++] = 0x05;
     BAsmCode[CodeLen++] = 0xa8 | Bank | ((ArgCnt - 1) << 4);
@@ -1984,8 +1984,8 @@ static void MakeCode_78K3(void)
   if (DecodeIntelPseudo(False))
     return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_78K3(void)

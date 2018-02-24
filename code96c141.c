@@ -934,7 +934,7 @@ static void DecodeJPCALL(Word Index)
   if (ChkArgCnt(1, 2))
   {
     z = (ArgCnt == 1) ? DefaultCondition : DecodeCondition(ArgStr[1]);
-    if (z >= ConditionCnt) WrXError(1360, ArgStr[1]);
+    if (z >= ConditionCnt) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
     else
     {
       OpSize = 2;
@@ -988,7 +988,7 @@ static void DecodeJR(Word Index)
   if (ChkArgCnt(1, 2))
   {
     z = (ArgCnt==1) ? DefaultCondition : DecodeCondition(ArgStr[1]);
-    if (z>=ConditionCnt) WrXError(1360, ArgStr[1]);
+    if (z>=ConditionCnt) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
     else
     {
       AdrLong = EvalIntExpression(ArgStr[ArgCnt], Int32, &OK);
@@ -1058,7 +1058,7 @@ static void DecodeRET(Word Index)
   if (ChkArgCnt(0, 1))
   {
     z = (ArgCnt == 0) ? DefaultCondition : DecodeCondition(ArgStr[1]);
-    if (z >= ConditionCnt) WrXError(1360, ArgStr[1]);
+    if (z >= ConditionCnt) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
     else if (z == DefaultCondition) 
     {
       CodeLen = 1;
@@ -2317,7 +2317,7 @@ static void DecodeSCC(Word Code)
   if (ChkArgCnt(2, 2))
   {
     int Cond = DecodeCondition(ArgStr[1]);
-    if (Cond >= ConditionCnt) WrXError(1360, ArgStr[1]);
+    if (Cond >= ConditionCnt) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
     else
     {
       DecodeAdr(ArgStr[2], MModReg | MModXReg);
@@ -2599,8 +2599,8 @@ static void MakeCode_96C141(void)
 
   /* vermischt */
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200,OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean ChkPC_96C141(LargeWord Addr)

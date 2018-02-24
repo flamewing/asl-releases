@@ -1815,7 +1815,7 @@ static void DecodeBIT(Word Code)
     if (AdrMode == ModWReg)
     {
       PushLocHandle(-1);
-      EnterIntSymbol(LabPart, (AdrPart << 4) + Bit, SegNone, False);
+      EnterIntSymbol(LabPart.Str, (AdrPart << 4) + Bit, SegNone, False);
       PopLocHandle();
       sprintf(ListLine,"=r%d.%s%c", (int)AdrPart,
               (Odd(Bit))?"!":"", (Bit >> 1)+AscOfs);
@@ -1966,8 +1966,8 @@ static void MakeCode_ST9(void)
 
   if (DecodeIntelPseudo(True)) return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200,OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static void InitCode_ST9(void)

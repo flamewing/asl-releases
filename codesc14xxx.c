@@ -411,8 +411,8 @@ static void MakeCode_sc14xxx(void)
 
   if (Memo("")) return;
 
-  if (!LookupInstTable(InstTable,OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_sc14xxx(void)

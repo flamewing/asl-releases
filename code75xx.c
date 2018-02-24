@@ -147,7 +147,7 @@ static void DecodePR(Word Index)
   else if ((MomCPU == CPU7508) && (!strcasecmp(ArgStr[1], "DE")))
     PutCode(Index | 0x01);
   else
-    WrXError(1135, ArgStr[1]);
+    WrXErrorPos(1135, ArgStr[1], &ArgStrPos[1]);
 }
 
 static void DecodeDataMem(Word Index)
@@ -508,8 +508,8 @@ static void MakeCode_75xx(void)
 
   if (DecodeIntelPseudo(True)) return;
 
-  if (!LookupInstTable(InstTable,OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_75xx(void)

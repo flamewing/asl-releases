@@ -147,7 +147,7 @@ static void DecodeAdr(Byte Start, Byte Stop, Word Mask)
     }
     else
     {
-      WrXError(1445, ArgStr[Stop]);
+      WrXErrorPos(ErrNum_InvReg, ArgStr[Stop], &ArgStrPos[Stop]);
       goto chk;
     }
   }
@@ -422,7 +422,7 @@ static void DecodeCBEQ(Word Index)
   }
   else if (ArgCnt == 3)
   {
-    if ((*(ArgStr[1]) != 0) || (strcasecmp(ArgStr[2], "X"))) WrXError(1445, ArgStr[2]); 
+    if ((*(ArgStr[1]) != 0) || (strcasecmp(ArgStr[2], "X"))) WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
     else
     {
       BAsmCode[0] = 0x31; BAsmCode[1] = 0x0e;
@@ -889,19 +889,19 @@ static void MakeCode_68rs08(void)
   if (DecodeMoto16Pseudo(OpSize, True))
     return;
 
-  l = strlen(OpPart);
-  ch = OpPart[l - 1];
+  l = strlen(OpPart.Str);
+  ch = OpPart.Str[l - 1];
   if ((ch >= '0') && (ch <= '7'))
   {
     int z;
 
     for (z = ArgCnt; z >= 1; z--) strcpy(ArgStr[z + 1], ArgStr[z]);
     *ArgStr[1] = ch; ArgStr[1][1] = '\0'; ArgCnt++;
-    OpPart[l - 1] = '\0';
+    OpPart.Str[l - 1] = '\0';
   }
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200,OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_68rs08(void)

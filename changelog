@@ -1,3 +1,14 @@
+2018-02-24 [1.42 Bld 125]
+
+- Bugfix      : correct argument checking for CHARSET
+
+- Bugfix      : If a line calling a macro contains a label not consumed
+                by the macro, output the line (minus tha macro call)
+                in the -P output
+
+- Addition    : Optionally display column and position in source line
+                for some errors
+
 2018-01-21 [1.42 Bld 124]
 
 - Addition    : add ATmega{8|16|32}U2,

@@ -389,14 +389,14 @@ static void ExpandStruct_One(PStructRec StructRec, char *pVarPrefix, char *pStru
 
 void ExpandStruct(PStructRec StructRec)
 {
-  if (!LabPart[0]) WrError(2040);
+  if (!LabPart.Str[0]) WrError(2040);
   else
   {
     String CompVarName, CompStructName;
 
-    strmaxcpy(CompVarName, LabPart, sizeof(CompVarName));
+    strmaxcpy(CompVarName, LabPart.Str, sizeof(CompVarName));
     strmaxcpy(CompStructName, LOpPart, sizeof(CompStructName));
-    ExpandStruct_One(StructRec, LabPart, LOpPart, EProgCounter());
+    ExpandStruct_One(StructRec, LabPart.Str, LOpPart, EProgCounter());
     CodeLen = StructRec->TotLen;
     BookKeeping();
     DontPrint = True;

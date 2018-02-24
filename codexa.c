@@ -491,7 +491,7 @@ static void DecodeBIT(Word Index)
   else if (*AttrPart != '\0') WrError(1100);
   else if (DecodeBitAddr(ArgStr[1], &BAdr))
   {
-    EnterIntSymbol(LabPart, BAdr, SegNone, False);
+    EnterIntSymbol(LabPart.Str, BAdr, SegNone, False);
     switch ((BAdr & 0x3ff) >> 8)
     {
       case 0:
@@ -1787,7 +1787,7 @@ static void DecodeFCALLJMP(Word Index)
 
 static Boolean IsRealDef(void)
 {
-  switch (*OpPart)
+  switch (*OpPart.Str)
   {
     case 'P':
       return Memo("PORT");
@@ -1824,11 +1824,11 @@ static void MakeCode_XA(void)
   /* Labels muessen auf geraden Adressen liegen */
 
   if ( (ActPC == SegCode) && (!IsRealDef()) &&
-       ((*LabPart != '\0') ||((ArgCnt == 1) && (!strcmp(ArgStr[1], "$")))) )
+       ((*LabPart.Str != '\0') ||((ArgCnt == 1) && (!strcmp(ArgStr[1], "$")))) )
   {
     ForceAlign();
-    if (*LabPart != '\0') 
-      EnterIntSymbol(LabPart, EProgCounter() + CodeLen, ActPC, False);
+    if (*LabPart.Str != '\0') 
+      EnterIntSymbol(LabPart.Str, EProgCounter() + CodeLen, ActPC, False);
   }
 
   if (DecodeMoto16Pseudo(OpSize,False)) return;
@@ -1840,8 +1840,8 @@ static void MakeCode_XA(void)
 
   /* via Tabelle suchen */
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 /*-------------------------------------------------------------------------*/

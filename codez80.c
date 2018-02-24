@@ -2450,7 +2450,7 @@ static void DecodeRET(Word Code)
     BAsmCode[0] = 0xc9;
   }
   else if (!ChkArgCnt(0, 1));
-  else if (!DecodeCondition(ArgStr[1], &Cond)) WrXError(1360, ArgStr[1]);
+  else if (!DecodeCondition(ArgStr[1], &Cond)) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
   else
   {
     CodeLen = 1;
@@ -2499,7 +2499,7 @@ static void DecodeJP(Word Code)
     if (OK)
       Cond <<= 3;
     else
-      WrXError(1360, ArgStr[1]);
+      WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
   }
   else
   {
@@ -2561,7 +2561,7 @@ static void DecodeCALL(Word Code)
       if (OK)
         Condition <<= 3;
       else
-        WrXError(1360, ArgStr[1]);
+        WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
       break;
     default:
       (void)ChkArgCnt(1, 2);
@@ -2625,7 +2625,7 @@ static void DecodeJR(Word Code)
       if (OK)
         Condition += 4;
       else
-        WrXError(1360, ArgStr[1]);
+        WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
       break;
     default:
       (void)ChkArgCnt(1, 2);
@@ -2698,7 +2698,7 @@ static void DecodeCALR(Word Code)
       if (OK)
         Condition <<= 3;
       else
-        WrXError(1360, ArgStr[1]);
+        WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
       break;
     default:
       (void)ChkArgCnt(1, 2);
@@ -3022,7 +3022,7 @@ static void ModIntel(Word Code)
 
   /* M80 compatibility: DEFB->DB, DEFW->DW */
 
-  strmov(OpPart + 1, OpPart + 3);
+  strmov(OpPart.Str + 1, OpPart.Str + 3);
   DecodeIntelPseudo(False);
 }
 
@@ -3213,12 +3213,12 @@ static void StripPref(const char *Arg, Byte Opcode)
 
   /* do we have a prefix ? */
 
-  if (!strcmp(OpPart, Arg))
+  if (!strcmp(OpPart.Str, Arg))
   {
     /* add to code */
 
     BAsmCode[PrefixCnt++] = Opcode;
-    *OpPart = '\0';
+    *OpPart.Str = '\0';
 
     /* cut true opcode out of next argument */
 
@@ -3239,8 +3239,8 @@ static void StripPref(const char *Arg, Byte Opcode)
       /* copy out new opcode */
  
       *ptr = '\0';
-      strcpy(OpPart, ArgStr[1]);
-      NLS_UpString(OpPart);
+      strcpy(OpPart.Str, ArgStr[1]);
+      NLS_UpString(OpPart.Str);
 
       /* cut down arg or eliminate it completely */
 
@@ -3290,8 +3290,8 @@ static void MakeCode_Z80(void)
 
   if (DecodeIntelPseudo(False)) return;
 
-  if (!LookupInstTable(InstTable,OpPart))
-    WrXError(1200,OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static void InitCode_Z80(void)

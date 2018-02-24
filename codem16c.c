@@ -1106,7 +1106,7 @@ static void DecodePUSHM_POPM(Word IsPOPM)
       }
     }
     if (!OK)
-      WrXError(1440, ArgStr[z]);
+      WrXErrorPos(ErrNum_InvCtrlReg, ArgStr[z], &ArgStrPos[z]);
     else
     {
       BAsmCode[0] = 0xec + IsPOPM;
@@ -1578,7 +1578,7 @@ static void DecodeGen2(Word Index)
       {
         if (OpSize == -1) WrError(1132);
         else if ((OpSize != 0) && (OpSize != 1)) WrError(1130);
-        else if ((*OpPart == 'M') && ((AdrMode2 == 3) || (AdrMode2 == 5) || (AdrMode2 - OpSize == 1))) WrError(1350);
+        else if ((*OpPart.Str == 'M') && ((AdrMode2 == 3) || (AdrMode2 == 5) || (AdrMode2 - OpSize == 1))) WrError(1350);
         else
           CodeGen(pOrder->Code1, pOrder->Code2, pOrder->Code3);
       }
@@ -1973,7 +1973,7 @@ static void DecodeFCLR_FSET(Word Code)
   else
   {
     char *p = strchr(Flags, mytoupper(*ArgStr[1]));
-    if (!p) WrXError(1440, ArgStr[1]);
+    if (!p) WrXErrorPos(ErrNum_InvCtrlReg, ArgStr[1], &ArgStrPos[1]);
     else
     {
       BAsmCode[0] = 0xeb;
@@ -2628,8 +2628,8 @@ static void MakeCode_M16C(void)
 
   if (DecodeIntelPseudo(False)) return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200,OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_M16C(void)

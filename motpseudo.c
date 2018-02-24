@@ -486,7 +486,7 @@ Boolean DecodeMotoPseudo(Boolean Turn)
   }
 
   M16Turn = Turn;
-  return LookupInstTable(InstTable,OpPart);
+  return LookupInstTable(InstTable, OpPart.Str);
 }
 
 static void DigIns(char Ch, int Pos, Byte *pDest)
@@ -849,7 +849,7 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
       WSize = 0;
   }
 
-  if (*OpPart != 'D')
+  if (*OpPart.Str != 'D')
     return False;
 
   if (Memo("DC"))

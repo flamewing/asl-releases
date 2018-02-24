@@ -222,6 +222,24 @@ static Boolean DecodeBitArg(int Start, int Stop, LongWord *pResult)
   }
 }
 
+static const LargeWord
+       AllRegMask = 0xfffffffful,
+       UpperHalfRegMask = 0xffff0000ul,
+       Reg16_23Mask = 0x00ff0000ul,
+       EvenRegMask = 0x55555555ul,
+       UpperEightEvenRegMask = 0x55000000ul;
+
+static Boolean DecodeArgReg(unsigned ArgIndex, Word *pReg, LargeWord RegMask)
+{
+  Boolean Result;
+
+  Result = DecodeReg(ArgStr[ArgIndex], pReg)
+        && (RegMask & (1ul << *pReg));
+  if (!Result)
+    WrXErrorPos(ErrNum_InvReg, ArgStr[ArgIndex], &ArgStrPos[ArgIndex]);
+  return Result;
+}
+
 /*---------------------------------------------------------------------------*/
 /* individual decoders                                                       */
 
@@ -350,7 +368,7 @@ static void DecodeREG(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(1, 1))
-    AddRegDef(LabPart,ArgStr[1]);
+    AddRegDef(LabPart.Str,ArgStr[1]);
 }
 
 /* one register 0..31 */
@@ -360,10 +378,9 @@ static void DecodeReg1(Word Index)
   const FixedOrder *pOrder = Reg1Orders + Index;
   Word Reg;
 
-  if (!ChkArgCnt(1, 1));
-  else if (!ChkCoreMask(pOrder->CoreMask));
-  else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
-  else
+  if (ChkArgCnt(1, 1)
+   && ChkCoreMask(pOrder->CoreMask)
+   && DecodeArgReg(1, &Reg, AllRegMask))
   {
     WAsmCode[0] = pOrder->Code | (Reg << 4);
     CodeLen = 1;
@@ -377,11 +394,10 @@ static void DecodeReg2(Word Index)
   const FixedOrder *pOrder = Reg2Orders + Index;
   Word Reg1, Reg2;
 
-  if (!ChkArgCnt(2, 2));
-  else if (!ChkCoreMask(pOrder->CoreMask));
-  else if (!DecodeReg(ArgStr[1], &Reg1)) WrXError(1445, ArgStr[1]);
-  else if (!DecodeReg(ArgStr[2], &Reg2)) WrXError(1445, ArgStr[2]);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkCoreMask(pOrder->CoreMask)
+   && DecodeArgReg(1, &Reg1, AllRegMask)
+   && DecodeArgReg(2, &Reg2, AllRegMask))
   {
     WAsmCode[0] = pOrder->Code | (Reg2 & 15) | (Reg1 << 4) | ((Reg2 & 16) << 5);
     CodeLen = 1;
@@ -394,9 +410,7 @@ static void DecodeReg3(Word Code)
 {
   Word Reg;
 
-  if (!ChkArgCnt(1, 1));
-  else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
-  else
+  if (ChkArgCnt(1, 1) && DecodeArgReg(1, &Reg, AllRegMask))
   {
     WAsmCode[0] = Code | (Reg & 15) | (Reg << 4) | ((Reg & 16) << 5);
     CodeLen = 1;
@@ -410,10 +424,7 @@ static void DecodeImm(Word Code)
   Word Reg, Const;
   Boolean OK;
 
-  if (!ChkArgCnt(2, 2));
-  else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
-  else if (Reg < 16) WrXError(1445, ArgStr[1]);
-  else
+  if (ChkArgCnt(2, 2) && DecodeArgReg(1, &Reg, UpperHalfRegMask))
   {
     Const = EvalIntExpression(ArgStr[2], Int8, &OK);
     if (OK)
@@ -429,11 +440,9 @@ static void DecodeADIW(Word Index)
   Word Reg, Const;
   Boolean OK;
 
-  if (!ChkArgCnt(2, 2));
-  else if (!ChkMinCore(eCoreClassic));
-  else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
-  else if ((Reg < 24) || (Odd(Reg))) WrXError(1445, ArgStr[1]);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkMinCore(eCoreClassic)
+   && DecodeArgReg(1, &Reg, UpperEightEvenRegMask))
   {
     Const = EvalIntExpression(ArgStr[2], UInt6, &OK);
     if (OK)
@@ -453,15 +462,9 @@ static void DecodeLDST(Word Index)
 
   if (ChkArgCnt(2, 2))
   {
-    if (Index) /* ST */
-    {
-      MemI = 1; RegI = 2;
-    }
-    else
-    {
-      MemI = 2; RegI = 1;
-    }
-    if (!DecodeReg(ArgStr[RegI], &Reg)) WrXError(1445, ArgStr[RegI]);
+    RegI = Index ? 2 : 1; /* ST */
+    MemI = 3 - RegI;
+    if (!DecodeArgReg(RegI, &Reg, AllRegMask));
     else if (!DecodeMem(ArgStr[MemI], &Mem)) WrError(1350);
     else if ((pCurrCPUProps->Core == eCore90S1200) && (Mem != 0)) WrError(1351);
     else
@@ -485,21 +488,14 @@ static void DecodeLDDSTD(Word Index)
   if (ChkArgCnt(2, 2)
    && ChkMinCore(eCoreClassic))
   {
-    if (Index) /* STD */
-    {
-      MemI = 1; RegI = 2;
-    }
-    else
-    {
-      MemI = 2; RegI = 1;
-    }
+    RegI = Index ? 2 : 1; /* STD */
+    MemI = 3 - RegI;
     OK = True;
     if (mytoupper(*ArgStr[MemI]) == 'Y') Index += 8;
     else if (mytoupper(*ArgStr[MemI]) == 'Z');
     else OK = False;
     if (!OK) WrError(1350);
-    else if (!DecodeReg(ArgStr[RegI], &Reg)) WrXError(1445, ArgStr[RegI]);
-    else
+    else if (DecodeArgReg(RegI, &Reg, AllRegMask))
     {
       Disp = EvalIntDisplacement(ArgStr[MemI] + 1, UInt6, &OK);
       if (OK)
@@ -519,16 +515,9 @@ static void DecodeINOUT(Word Index)
 
   if (ChkArgCnt(2, 2))
   {
-    if (Index) /* OUT */
-    {
-      RegI = 2; MemI = 1;
-    }
-    else
-    {
-      RegI = 1; MemI = 2;
-    }
-    if (!DecodeReg(ArgStr[RegI], &Reg)) WrXError(1445, ArgStr[RegI]);
-    else
+    RegI = Index ? 2 : 1; /* OUT */
+    MemI = 3 - RegI;
+    if (DecodeArgReg(RegI, &Reg, AllRegMask))
     {
       Mem = EvalIntExpression(ArgStr[MemI], UInt6, &OK);
       if (OK)
@@ -550,16 +539,9 @@ static void DecodeLDSSTS(Word Index)
   if (ChkArgCnt(2, 2)
    && ChkCoreMask(MinCoreMask(eCoreClassic) | (1 << eCoreMinTiny)))
   {
-    if (Index)
-    {
-      RegI = 2; MemI = 1;
-    }
-    else
-    {
-      RegI = 1; MemI = 2;
-    }
-    if (!DecodeReg(ArgStr[RegI], &Reg)) WrXError(1445, ArgStr[RegI]);
-    else
+    RegI = Index ? 2 : 1; /* STS */
+    MemI = 3 - RegI;
+    if (DecodeArgReg(RegI, &Reg, AllRegMask))
     {
       WAsmCode[1] = EvalIntExpression(ArgStr[MemI], UInt16, &OK);
       if (OK)
@@ -596,8 +578,7 @@ static void DecodeBit(Word Code)
   Boolean OK;
 
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
-  else
+  else if (DecodeArgReg(1, &Reg, AllRegMask))
   {
     Bit = EvalIntExpression(ArgStr[2], UInt3, &OK);
     if (OK)
@@ -615,10 +596,7 @@ static void DecodeCBR(Word Index)
 
   UNUSED(Index);
 
-  if (!ChkArgCnt(2, 2));
-  else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
-  else if (Reg < 16) WrXError(1445, ArgStr[1]);
-  else
+  if (ChkArgCnt(2, 2) && DecodeArgReg(1, &Reg, UpperHalfRegMask))
   {
     Mask = EvalIntExpression(ArgStr[2], Int8, &OK) ^ 0xff;
     if (OK)
@@ -635,10 +613,7 @@ static void DecodeSER(Word Index)
 
   UNUSED(Index);
 
-  if (!ChkArgCnt(1, 1));
-  else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
-  else if (Reg < 16) WrXError(1445, ArgStr[1]);
-  else
+  if (ChkArgCnt(1, 1) && DecodeArgReg(1, &Reg, UpperHalfRegMask))
   {
     WAsmCode[0] = 0xef0f | ((Reg & 0x0f) << 4);
     CodeLen = 1;
@@ -761,13 +736,10 @@ static void DecodeMULS(Word Index)
 
   UNUSED(Index);
 
-  if (!ChkArgCnt(2, 2));
-  else if (!ChkMinCore(eCoreMega));
-  else if (!DecodeReg(ArgStr[1], &Reg1)) WrXError(1445, ArgStr[1]);
-  else if (Reg1 < 16) WrXError(1445, ArgStr[1]);
-  else if (!DecodeReg(ArgStr[2], &Reg2)) WrXError(1445, ArgStr[2]);
-  else if (Reg2 < 16) WrXError(1445, ArgStr[2]);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkMinCore(eCoreMega)
+   && DecodeArgReg(1, &Reg1, UpperHalfRegMask)
+   && DecodeArgReg(2, &Reg2, UpperHalfRegMask))
   {
     WAsmCode[0] = 0x0200 | ((Reg1 & 15) << 4) | (Reg2 & 15);
     CodeLen = 1;
@@ -778,13 +750,10 @@ static void DecodeMegaMUL(Word Index)
 {
   Word Reg1, Reg2;
 
-  if (!ChkArgCnt(2, 2));
-  else if (!ChkMinCore(eCoreMega));
-  else if (!DecodeReg(ArgStr[1], &Reg1)) WrXError(1445, ArgStr[1]);
-  else if ((Reg1 < 16) || (Reg1 > 23)) WrXError(1445, ArgStr[1]);
-  else if (!DecodeReg(ArgStr[2], &Reg2)) WrXError(1445, ArgStr[2]);
-  else if ((Reg2 < 16) || (Reg2 > 23)) WrXError(1445, ArgStr[2]);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkMinCore(eCoreMega)
+   && DecodeArgReg(1, &Reg1, Reg16_23Mask)
+   && DecodeArgReg(2, &Reg2, Reg16_23Mask))
   {
     WAsmCode[0] = Index | ((Reg1 & 7) << 4) | (Reg2 & 7);
     CodeLen = 1;
@@ -797,13 +766,10 @@ static void DecodeMOVW(Word Index)
 
   UNUSED(Index);
 
-  if (!ChkArgCnt(2, 2));
-  else if (!ChkMinCore(eCoreTiny));
-  else if (!DecodeReg(ArgStr[1], &Reg1)) WrXError(1445, ArgStr[1]);
-  else if (Reg1 & 1) WrXError(1445, ArgStr[1]);
-  else if (!DecodeReg(ArgStr[2], &Reg2)) WrXError(1445, ArgStr[2]);
-  else if (Reg2 & 1) WrXError(1445, ArgStr[2]);
-  else
+  if (ChkArgCnt(2, 2)
+   && ChkMinCore(eCoreTiny)
+   && DecodeArgReg(1, &Reg1, EvenRegMask)
+   && DecodeArgReg(2, &Reg2, EvenRegMask))
   {
     WAsmCode[0] = 0x0100 | ((Reg1 >> 1) << 4) | (Reg2 >> 1);
     CodeLen = 1;
@@ -827,7 +793,7 @@ static void DecodeLPM(Word Index)
   else if (ArgCnt == 2)
   {
     if (!ChkMinCore(eCoreTiny));
-    else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
+    else if (!DecodeArgReg(1, &Reg, AllRegMask));
     else if (!DecodeMem(ArgStr[2], &Adr)) WrError(1350);
     else if ((Adr != 0x00) && (Adr != 0x11)) WrError(1350);
     else
@@ -854,7 +820,7 @@ static void DecodeELPM(Word Index)
     CodeLen = 1;
   }
   else if (!ChkArgCnt(2, 2));
-  else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
+  else if (!DecodeArgReg(1, &Reg, AllRegMask));
   else if (!DecodeMem(ArgStr[2], &Adr)) WrError(1350);
   else if ((Adr != 0x00) && (Adr != 0x11)) WrError(1350);
   else
@@ -869,12 +835,14 @@ static void DecodeBIT(Word Code)
 {
   LongWord BitSpec;
 
+  UNUSED(Code);
+
   if (DecodeBitArg(1, ArgCnt, &BitSpec))
   {
     *ListLine = '=';
     DissectBit_AVR(ListLine + 1, STRINGSIZE - 3, BitSpec);
     PushLocHandle(-1);
-    EnterIntSymbol(LabPart, BitSpec, SegBData, False);
+    EnterIntSymbol(LabPart.Str, BitSpec, SegBData, False);
     PopLocHandle();
     if (MakeUseList)
     {
@@ -1064,8 +1032,8 @@ static void MakeCode_AVR(void)
 
   /* all done via table :-) */
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static void InitCode_AVR(void)

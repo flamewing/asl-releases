@@ -177,13 +177,15 @@ void CodeIFEXIST(Word Negate)
     IfExpr = 1;
   else
   {
-    strmaxcpy(ArgPart, (ArgStr[1][0] == '"') ? ArgStr[1] + 1 : ArgStr[1], 255);
-    if (ArgPart[strlen(ArgPart) - 1] == '"')
-      ArgPart[strlen(ArgPart) - 1] = '\0';
-    AddSuffix(ArgPart, IncSuffix);
+    String FileName;
+
+    strmaxcpy(FileName, (ArgStr[1][0] == '"') ? ArgStr[1] + 1 : ArgStr[1], STRINGSIZE);
+    if (FileName[strlen(FileName) - 1] == '"')
+      FileName[strlen(FileName) - 1] = '\0';
+    AddSuffix(FileName, IncSuffix);
     strmaxcpy(NPath, IncludeList, 255);
     strmaxprep(NPath, ".:", 255);
-    Found = (*(FSearch(ArgPart, NPath)) != '\0');
+    Found = (*(FSearch(FileName, NPath)) != '\0');
     if (IfAsm)
       strmaxcpy(ListLine, Found ? "=>FOUND" : "=>NOT FOUND", 255);
     IfExpr = Negate ? !Found : Found;
@@ -424,7 +426,7 @@ Boolean CodeIFs(void)
 
   ActiveIF = False;
 
-  switch (mytoupper(*OpPart))
+  switch (mytoupper(*OpPart.Str))
   {
     case 'I':
       if (Memo("IF")) CodeIF();

@@ -325,7 +325,7 @@ static void CodeSECTION(Word Index)
   if (ChkArgCnt(1, 1)
    && ExpandSymbol(ArgStr[1]))
   {
-    if (!ChkSymbName(ArgStr[1])) WrXError(1020, ArgStr[1]);
+    if (!ChkSymbName(ArgStr[1])) WrXErrorPos(ErrNum_InvSymName, ArgStr[1], &ArgStrPos[1]);
     else if ((PassNo == 1) && (GetSectionHandle(ArgStr[1], False, MomSectionHandle) != -2)) WrError(1483);
     else
     {
@@ -406,7 +406,7 @@ static void CodeSETEQU(Word MayChange)
 {
   TempResult t;
   Integer DestSeg;
-  int ValIndex = *LabPart ? 1 : 2;
+  int ValIndex = *LabPart.Str ? 1 : 2;
 
   FirstPassUnknown = False;
   if (*AttrPart != '\0') WrError(1100);
@@ -431,10 +431,10 @@ static void CodeSETEQU(Word MayChange)
               break;
         }
       }
-      if (DestSeg > PCMax) WrXError(1961, ArgStr[ValIndex + 1]);
+      if (DestSeg > PCMax) WrXErrorPos(ErrNum_UnknownSegment, ArgStr[ValIndex + 1], &ArgStrPos[ValIndex + 1]);
       else
       {
-        const char *pName = *LabPart ? LabPart : ArgStr[1];
+        const char *pName = *LabPart.Str ? LabPart.Str : ArgStr[1];
 
         SetListLineVal(&t);
         PushLocHandle(-1);
@@ -513,13 +513,13 @@ static void CodeSHARED_BuildComment(char *c)
   switch (ShareMode)
   {
     case 1:
-      sprintf(c, "(* %s *)", CommPart);
+      sprintf(c, "(* %s *)", CommPart.Str);
       break;
     case 2:
-      sprintf(c, "/* %s */", CommPart);
+      sprintf(c, "/* %s */", CommPart.Str);
       break;
     case 3:
-      sprintf(c, "; %s", CommPart);
+      sprintf(c, "; %s", CommPart.Str);
       break;
   }
 }
@@ -534,7 +534,7 @@ static void CodeSHARED(Word Index)
   UNUSED(Index);
 
   if (ShareMode == 0) WrError(30);
-  else if ((ArgCnt == 0) && (*CommPart != '\0'))
+  else if ((ArgCnt == 0) && (*CommPart.Str != '\0'))
   {
     CodeSHARED_BuildComment(c);
     errno = 0;
@@ -547,7 +547,7 @@ static void CodeSHARED(Word Index)
        continue;
      if (!ChkSymbName(ArgStr[z]))
      {
-       WrXError(1020, ArgStr[z]);
+       WrXErrorPos(ErrNum_InvSymName, ArgStr[z], &ArgStrPos[z]);
        continue;
      }
      if (IsSymbolString(ArgStr[z]))
@@ -590,7 +590,7 @@ static void CodeSHARED(Word Index)
      }
      if (ValOK)
      {
-       if ((z == 1) && (*CommPart != '\0'))
+       if ((z == 1) && (*CommPart.Str != '\0'))
        {
          CodeSHARED_BuildComment(c);
          strmaxprep(c, " ", 255);
@@ -617,7 +617,7 @@ static void CodeSHARED(Word Index)
      {
        Repass = True;
        if ((MsgIfRepass) && (PassNo >= PassNoForMessage))
-         WrXError(170, ArgStr[z]);
+         WrXErrorPos(ErrNum_RepassUnknown, ArgStr[z], &ArgStrPos[z]);
      }
    }
 }
@@ -637,7 +637,7 @@ static void CodeEXPORT(Word Index)
       if (Relocs == NULL)
         AddExport(ArgStr[z], Value, 0);
       else if ((Relocs->Next != NULL) || (strcmp(Relocs->Ref, RelName_SegStart)))
-        WrXError(1156, ArgStr[z]);
+        WrXErrorPos(ErrNum_Unexportable, ArgStr[z], &ArgStrPos[z]);
       else
         AddExport(ArgStr[z], Value, RelFlag_Relative);
     }
@@ -645,7 +645,7 @@ static void CodeEXPORT(Word Index)
     {
       Repass = True;
       if ((MsgIfRepass) && (PassNo >= PassNoForMessage))
-        WrXError(170,ArgStr[z]);
+        WrXErrorPos(ErrNum_RepassUnknown, ArgStr[z], &ArgStrPos[z]);
     }
   }
 }
@@ -780,7 +780,7 @@ static void CodeWARNING(Word Index)
     EvalStringExpression(ArgStr[1], &OK, mess);
     if (!OK) WrError(1970);
     else
-      WrErrorString(mess, "", True, False);
+      WrErrorString(mess, "", True, False, NULL, NULL);
   }
 }
 
@@ -816,7 +816,7 @@ static void CodeERROR(Word Index)
     EvalStringExpression(ArgStr[1], &OK, mess);
     if (!OK) WrError(1970);
     else
-      WrErrorString(mess, "", False, False);
+      WrErrorString(mess, "", False, False, NULL, NULL);
   }
 }
 
@@ -832,7 +832,7 @@ static void CodeFATAL(Word Index)
     EvalStringExpression(ArgStr[1], &OK, mess);
     if (!OK) WrError(11970);
     else
-      WrErrorString(mess, "", False, True);
+      WrErrorString(mess, "", False, True, NULL, NULL);
   }
 }
 
@@ -862,7 +862,7 @@ static void CodeCHARSET(Word Index)
           t.Contents.Int &= 255;
         if (ChkRange(t.Contents.Int, 0, 255))
         {
-          if (ChkArgCnt(2, 2))
+          if (ChkArgCnt(2, 3))
           {
             Start = t.Contents.Int;
             FirstPassUnknown = False;
@@ -952,7 +952,7 @@ static void CodeCODEPAGE(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(1, 2));
-  else if (!ChkSymbName(ArgStr[1])) WrXError(1020, ArgStr[1]);
+  else if (!ChkSymbName(ArgStr[1])) WrXErrorPos(ErrNum_InvSymName, ArgStr[1], &ArgStrPos[1]);
   else
   {
     if (!CaseSensitive)
@@ -971,7 +971,7 @@ static void CodeCODEPAGE(Word Index)
           break;
     }
 
-    if (!Source) WrXError(1610, ArgStr[2]);
+    if (!Source) WrXErrorPos(ErrNum_UnknownCodepage, ArgStr[2], &ArgStrPos[2]);
     else
     {
       for (Prev = NULL, Run = TransTables; Run; Prev = Run, Run = Run->Next)
@@ -1013,7 +1013,7 @@ static void CodeFUNCTION(Word Index)
     {
       OK = (OK && ChkMacSymbName(ArgStr[z]));
       if (!OK)
-        WrXError(1020, ArgStr[z]);
+        WrXErrorPos(ErrNum_InvSymName, ArgStr[z], &ArgStrPos[z]);
       z++;
     }
     while ((z < ArgCnt) && (OK));
@@ -1022,7 +1022,7 @@ static void CodeFUNCTION(Word Index)
       strmaxcpy(FName, ArgStr[ArgCnt], 255);
       for (z = 1; z < ArgCnt; z++)
         CompressLine(ArgStr[z], z, FName, CaseSensitive);
-      EnterFunction(LabPart, FName, ArgCnt - 1);
+      EnterFunction(LabPart.Str, FName, ArgCnt - 1);
     }
   }
 }
@@ -1114,7 +1114,7 @@ static void CodeMACEXP(Word Index)
         OK = False;
       if (!OK)
       {
-        WrXError(2100, ArgStr[z]);
+        WrXErrorPos(ErrNum_UnknownMacExpMod, ArgStr[z], &ArgStrPos[z]);
         break;
       }
     }
@@ -1171,7 +1171,7 @@ static void CodeLABEL(Word Index)
       char s[40];
 
       PushLocHandle(-1);
-      EnterIntSymbol(LabPart, Erg, SegCode, False);
+      EnterIntSymbol(LabPart.Str, Erg, SegCode, False);
       IntLine(s, sizeof(s), Erg);
       sprintf(ListLine, "=%s", s);
       PopLocHandle();
@@ -1612,7 +1612,7 @@ static void CodeSTRUCT(Word IsUnion)
 
   /* unnamed struct/union only allowed if embedded into at least one named struct/union */
 
-  if (!*LabPart)
+  if (!*LabPart.Str)
   {
     if (!pInnermostNamedStruct)
     {
@@ -1622,39 +1622,39 @@ static void CodeSTRUCT(Word IsUnion)
   }
   else
   {
-    if (!ChkSymbName(LabPart))
+    if (!ChkSymbName(LabPart.Str))
     {
-      WrXError(1020, LabPart);
+      WrXError(1020, LabPart.Str);
       return;
     }
     if (!CaseSensitive)
-      NLS_UpString(LabPart);
+      NLS_UpString(LabPart.Str);
   }
 
   /* compose name of nested structures */
 
-  if (*LabPart)
-    BuildStructName(StructName, sizeof(StructName), LabPart);
+  if (*LabPart.Str)
+    BuildStructName(StructName, sizeof(StructName), LabPart.Str);
   else
     *StructName = '\0';
 
   /* If named and embedded into another struct, add as element to innermost named parent struct.
      Add up all offsets of unnamed structs in between. */
 
-  if (StructStack && (*LabPart))
+  if (StructStack && (*LabPart.Str))
   {
     PStructStack pRun;
     LargeWord Offset = ProgCounter();
 
     for (pRun = StructStack; pRun && pRun != pInnermostNamedStruct; pRun = pRun->Next)
       Offset += pRun->SaveCurrPC;
-    AddStructElem(pInnermostNamedStruct->StructRec, LabPart, True, Offset);
-    AddStructSymbol(LabPart, ProgCounter());
+    AddStructElem(pInnermostNamedStruct->StructRec, LabPart.Str, True, Offset);
+    AddStructSymbol(LabPart.Str, ProgCounter());
   }
 
   NStruct = (PStructStack) malloc(sizeof(TStructStack));
   NStruct->Name = as_strdup(StructName);
-  NStruct->pBaseName = NStruct->Name + strlen(NStruct->Name) - strlen(LabPart); /* NULL -> complain too long */
+  NStruct->pBaseName = NStruct->Name + strlen(NStruct->Name) - strlen(LabPart.Str); /* NULL -> complain too long */
   NStruct->SaveCurrPC = ProgCounter();
   DoExt = True;
   ExtChar = DottedStructs ? '.' : '_';
@@ -1673,7 +1673,7 @@ static void CodeSTRUCT(Word IsUnion)
         ExtChar = '_';
       else
       {
-        WrXError(1554, ArgStr[z]);
+        WrXErrorPos(ErrNum_InvStructDir, ArgStr[z], &ArgStrPos[z]);
         OK = False;
       }
     }
@@ -1715,14 +1715,14 @@ static void CodeENDSTRUCT(Word IsUnion)
   else
   {
     if (IsUnion && !StructStack->StructRec->IsUnion)
-      WrXError(2080, StructStack->Name);
+      WrXError(ErrNum_STRUCTEndedByENDUNION, StructStack->Name);
 
-    if (*LabPart == '\0') OK = True;
+    if (*LabPart.Str == '\0') OK = True;
     else
     {
       if (!CaseSensitive)
-        NLS_UpString(LabPart);
-      OK = !strcmp(LabPart, StructStack->pBaseName);
+        NLS_UpString(LabPart.Str);
+      OK = !strcmp(LabPart.Str, StructStack->pBaseName);
       if (!OK) WrError(1552);
     }
     if (OK)
@@ -1856,7 +1856,7 @@ static void CodeSEGTYPE(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(0, 0))
-    RelSegs = (mytoupper(*OpPart) == 'R');
+    RelSegs = (mytoupper(*OpPart.Str) == 'R');
 }
 
 static void CodePPSyms(PForwardSymbol *Orig,
@@ -1876,11 +1876,11 @@ static void CodePPSyms(PForwardSymbol *Orig,
       if (!CaseSensitive)
         NLS_UpString(Sym);
       Lauf = CodePPSyms_SearchSym(*Alt1, Sym);
-      if (Lauf) WrXError(1489, ArgStr[z]);
+      if (Lauf) WrXErrorPos(ErrNum_ContForward, ArgStr[z], &ArgStrPos[z]);
       else
       {
         Lauf = CodePPSyms_SearchSym(*Alt2, Sym);
-        if (Lauf) WrXError(1489, ArgStr[z]);
+        if (Lauf) WrXErrorPos(ErrNum_ContForward, ArgStr[z], &ArgStrPos[z]);
         else
         {
           Lauf = CodePPSyms_SearchSym(*Orig, Sym);
@@ -2023,7 +2023,7 @@ static const PseudoOrder Pseudos[] =
 
 Boolean CodeGlobalPseudo(void)
 {
-  switch (*OpPart)
+  switch (*OpPart.Str)
   {
     case 'S':
       if ((!SetIsOccupied) && (Memo("SET")))
@@ -2049,10 +2049,10 @@ Boolean CodeGlobalPseudo(void)
       break;
   }
 
-  if (LookupInstTable(ONOFFTable, OpPart))
+  if (LookupInstTable(ONOFFTable, OpPart.Str))
     return True;
 
-  if (LookupInstTable(PseudoTable, OpPart))
+  if (LookupInstTable(PseudoTable, OpPart.Str))
     return True;
 
   if (SectionStack)

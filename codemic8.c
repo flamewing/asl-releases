@@ -147,7 +147,7 @@ static void DecodeRegDef(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(1, 1))
-    AddRegDef(LabPart, ArgStr[1]);
+    AddRegDef(LabPart.Str, ArgStr[1]);
 }
 
 static void DecodeFixed(Word Index)
@@ -167,13 +167,13 @@ static void DecodeALU(Word Index)
   LongWord Src, DReg;
 
   if (!ChkArgCnt(2, 2));
-  else if (!IsWReg(ArgStr[1], &DReg)) WrXError(1445, ArgStr[1]);
+  else if (!IsWReg(ArgStr[1], &DReg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else if (IsWReg(ArgStr[2], &Src))
   {
     DAsmCode[0] = pOrder->Code | (DReg << 8) | (Src << 3);
     CodeLen = 1;
   }
-  else if (!pOrder->MayImm) WrXError(1445, ArgStr[2]);
+  else if (!pOrder->MayImm) WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
   else
   {
     Boolean OK;
@@ -194,7 +194,7 @@ static void DecodeALUI(Word Index)
   Boolean OK;
 
   if (!ChkArgCnt(2, 2));
-  else if (!IsWReg(ArgStr[1], &DReg)) WrXError(1445, ArgStr[1]);
+  else if (!IsWReg(ArgStr[1], &DReg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else
   {
     Src = EvalIntExpression(ArgStr[2], Int8, &OK);
@@ -257,7 +257,7 @@ static void DecodeMem(Word Index)
   Boolean OK;
 
   if (!ChkArgCnt(2, 2));
-  else if (!IsWReg(ArgStr[1], &DReg)) WrXError(1445, ArgStr[1]);
+  else if (!IsWReg(ArgStr[1], &DReg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else if (IsWReg(ArgStr[2], &Src))
   {
     DAsmCode[0] = pOrder->Code | (DReg << 8) | ((Src & 0x1f) << 3) | 2;
@@ -281,8 +281,8 @@ static void DecodeMemI(Word Index)
   LongWord DReg, SReg;
 
   if (!ChkArgCnt(2, 2));
-  else if (!IsWReg(ArgStr[1], &DReg)) WrXError(1445, ArgStr[1]);
-  else if (!IsWReg(ArgStr[2], &SReg)) WrXError(1445, ArgStr[2]);
+  else if (!IsWReg(ArgStr[1], &DReg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+  else if (!IsWReg(ArgStr[2], &SReg)) WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
   else
   {
     DAsmCode[0] = pOrder->Code | (DReg << 8) | (SReg << 3) | 2;
@@ -296,7 +296,7 @@ static void DecodeReg(Word Index)
   LongWord Reg = 0;
 
   if (!ChkArgCnt(1, 1));
-  else if (!IsWReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
+  else if (!IsWReg(ArgStr[1], &Reg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   {
     DAsmCode[0] = pOrder->Code | (Reg << 8);
     CodeLen = 1;
@@ -526,8 +526,8 @@ static void MakeCode_Mico8(void)
 
    if (DecodeIntelPseudo(True)) return;
 
-   if (!LookupInstTable(InstTable, OpPart))
-     WrXError(1200, OpPart);
+   if (!LookupInstTable(InstTable, OpPart.Str))
+     WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static void SwitchTo_Mico8(void)

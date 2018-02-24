@@ -869,7 +869,7 @@ static void DecodeStack(Word Index)
         CodeLen = 1;
         break;
       case ModReg16:
-        if (AdrPart != 2) WrXError(1445, ArgStr[1]);
+        if (AdrPart != 2) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
         else
         {
           BAsmCode[0] = 0x41 + (Index << 4);
@@ -968,8 +968,8 @@ static void MakeCode_F2MC8(void)
 
   if (DecodeIntelPseudo(False)) return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_F2MC8(void)

@@ -139,7 +139,7 @@ void CodeEquate(ShortInt DestSeg, LargeInt Min, LargeInt Max)
       else
       {
         PushLocHandle(-1);
-        EnterIntSymbol(LabPart, Erg, DestSeg, False);
+        EnterIntSymbol(LabPart.Str, Erg, DestSeg, False);
         PopLocHandle();
         if (MakeUseList)
          if (AddChunk(SegChunks + DestSeg, Erg, 1, False)) WrError(90);

@@ -393,7 +393,7 @@ static void DecodeDBIT(Word Code)
         char Str[30];
 
         PushLocHandle(-1);
-        EnterIntSymbol(LabPart, (((LongInt)Bit) << 16) + Adr, SegNone, False);
+        EnterIntSymbol(LabPart.Str, (((LongInt)Bit) << 16) + Adr, SegNone, False);
         HexString(Str, sizeof(Str), Adr, 0);
         sprintf(ListLine, "=%s:%c", Str, Bit + '0');
         PopLocHandle();
@@ -1261,8 +1261,8 @@ static void MakeCode_370(void)
   if (DecodeIntelPseudo(True))
     return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_370(void)

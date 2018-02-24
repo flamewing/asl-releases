@@ -1114,7 +1114,7 @@ static void DecodeJRS(Word Code)
     Boolean OK;
 
     Condition = DecodeCondition(ArgStr[1], ConditionCnt - 2);
-    if ((Condition >= ConditionCnt) || (Condition < ConditionCnt - 2)) WrXError(1360, ArgStr[1]); /* only T/F allowed */
+    if ((Condition >= ConditionCnt) || (Condition < ConditionCnt - 2)) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]); /* only T/F allowed */
     else
     {
       AdrInt = EvalIntExpression(ArgStr[2], Int16, &OK) - (EProgCounter() + 2);
@@ -1141,7 +1141,7 @@ static void DecodeJR(Word Code)
     Boolean OK;
 
     Condition = (ArgCnt == 1) ? -1 : DecodeCondition(ArgStr[1], 0);
-    if (Condition >= ConditionCnt) WrXError(1360, ArgStr[1]);
+    if (Condition >= ConditionCnt) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
     else
     {
       int Delta = ((Condition < 0) || (!Hi(Conditions[Condition].Code))) ? 2 : 3;
@@ -1171,7 +1171,7 @@ static void DecodeJ(Word Code)
   {
     int CondIndex = (ArgCnt == 1) ? -1 : DecodeCondition(ArgStr[1], 0);
 
-    if (CondIndex >= ConditionCnt) WrXError(1360, ArgStr[1]);
+    if (CondIndex >= ConditionCnt) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
     else
     {
       Word CondCode = (CondIndex >= 0) ? Conditions[CondIndex].Code : 0;
@@ -1181,7 +1181,7 @@ static void DecodeJ(Word Code)
       switch (AdrType)
       {
         case ModReg16: /* -> JP */
-          if (CondIndex >= 0) WrXError(1360, ArgStr[1]);
+          if (CondIndex >= 0) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
           else
           {
             CodeLen = 2;
@@ -1190,7 +1190,7 @@ static void DecodeJ(Word Code)
           }
           break;
         case ModMem: /* -> JP */
-          if (CondIndex >= 0) WrXError(1360, ArgStr[1]);
+          if (CondIndex >= 0) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
           else
           {
             CodeLen = 2 + AdrCnt;
@@ -1302,7 +1302,7 @@ static void DecodeUnimplemented(Word Code)
 {
   UNUSED(Code);
 
-  WrXError(2060, OpPart);
+  WrStrErrorPos(2060, &OpPart);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1418,8 +1418,8 @@ static void MakeCode_870C(void)
   if (DecodeIntelPseudo(False))
     return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_870C(void)

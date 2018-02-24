@@ -403,11 +403,11 @@ char *RQuotPos(char *s, char Zeichen)
 }
 
 /*--------------------------------------------------------------------------*/
-/* ermittelt das erste Leerzeichen in einem String */
+/* ermittelt das erste (nicht-) Leerzeichen in einem String */
 
-char *FirstBlank(char *s)
+char *FirstBlank(const char *s)
 {
-  char *h, *Min = NULL;
+  const char *h, *Min = NULL;
 
   h = strchr(s, ' ');
   if (h)
@@ -417,7 +417,7 @@ char *FirstBlank(char *s)
   if (h)
     if ((!Min) || (h < Min))
       Min = h;
-  return Min;
+  return (char*)Min;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -438,6 +438,24 @@ void SplitString(char *Source, char *Left, char *Right, char *Trenner)
     *Right = '\0';
   else
     strmov(Right, Trenner + 1);
+}
+
+void KillPrefBlanksPos(char *pStr, struct sLineComp *pPos)
+{
+  int OldLen = strlen(pStr), NewLen;
+
+  KillPrefBlanks(pStr);
+  NewLen = strlen(pStr);
+  pPos->StartCol += OldLen - NewLen;
+  pPos->Len -= OldLen - NewLen;
+}
+
+void KillPostBlanksPos(char *pStr, struct sLineComp *pPos)
+{
+  int OldLen = strlen(pStr);
+
+  KillPostBlanks(pStr);
+  pPos->Len -= OldLen - strlen(pStr);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -952,6 +970,119 @@ void SetListLineVal(TempResult *t)
   }
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     PrintOneLineMuted(FILE *pFile, const char *pLine, const sLineComp *pMuteComponent)
+ * \brief  print a line, with a certain component muted out (i.e. replaced by spaces)
+ * \param  pFile where to write
+ * \param  pLine line to print
+ * \param  pMuteComponent component to mute in printout
+ * ------------------------------------------------------------------------ */
+
+void PrintOneLineMuted(FILE *pFile, const char *pLine, const struct sLineComp *pMuteComponent)
+{
+  int z;
+
+  errno = 0;
+  for (z = 0; z < strlen(pLine); z++)
+    if ((pMuteComponent->StartCol < 0)
+     || (z < pMuteComponent->StartCol)
+     || (z >= pMuteComponent->StartCol + pMuteComponent->Len))
+      fputc(pLine[z], pFile);
+    else
+      fputc(' ', pFile);
+  fputc('\n', pFile);
+  ChkIO(10002);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     PrLineMarker(FILE *pFile, const char *pLine, const char *pPrefix, const char *pTrailer,
+                        char Marker, const struct sLineComp *pLineComp)
+ * \brief  print a line, optionally with a marking of a component below
+ * \param  pFile where to write
+ * \param  pLine line to print/underline
+ * \param  pPrefix what to print before (under)line
+ * \param  pTrailer what to print after (under)line
+ * \param  Marker character to use for marking
+ * \param  pLineComp position and length of optional marker
+ * ------------------------------------------------------------------------ */
+
+/* replace TABs in line with spaces - column counting counts TAB as one character */
+
+char TabCompressed(char in)
+{
+  return (in == '\t') ? ' ' : (myisprint(in) ? in : '*');
+}
+
+void PrLineMarker(FILE *pFile, const char *pLine, const char *pPrefix, const char *pTrailer,
+                  char Marker, const struct sLineComp *pLineComp)
+{
+  const char *pRun;
+  int z;
+
+  fputs(pPrefix, pFile);
+  for (pRun = pLine; *pRun; pRun++)
+    fputc(TabCompressed(*pRun), pFile);
+  fprintf(pFile, "%s\n", pTrailer);
+
+  if (pLineComp && (pLineComp->StartCol >= 0) && (pLineComp->Len > 0))
+  {
+    fputs(pPrefix, pFile);
+    if (pLineComp->StartCol > 0)
+      fprintf(pFile, "%*s", pLineComp->StartCol, "");
+    for (z = 0; z < pLineComp->Len; z++)
+      fputc(Marker, pFile);
+    fprintf(pFile, "%s\n", pTrailer);
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     GenLineForMarking(char *pDest, unsigned DestSize, const char *pSrc, const char *pPrefix)
+ * \brief  generate a line, in compressed form for optional marking of a component below
+ * \param  pDest where to write
+ * \param  DestSize destination buffer size
+ * \param  pSrc line to print/underline
+ * \param  pPrefix what to print before (under)line
+ * ------------------------------------------------------------------------ */
+
+void GenLineForMarking(char *pDest, unsigned DestSize, const char *pSrc, const char *pPrefix)
+{
+  char *pRun;
+
+  strmaxcpy(pDest, pPrefix, DestSize);
+  pRun = pDest + strlen(pDest);
+
+  /* replace TABs in line with spaces - column counting counts TAB as one character */
+
+  for (; *pSrc && (pRun - pDest + 1 < DestSize); pSrc++)
+    *pRun++ = TabCompressed(*pSrc);
+  *pRun = '\0';
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     GenLineMarker(char *pDest, unsigned DestSize, char Marker, const struct sLineComp *pLineComp, * const char *pPrefix)
+ * \brief  print a line, optionally with a marking of a component below
+ * \param  pDest where to write
+ * \param  DestSize destination buffer size
+ * \param  Marker character to use for marking
+ * \param  pLineComp position and length of optional marker
+ * \param  pPrefix what to print before (under)line
+ * ------------------------------------------------------------------------ */
+
+void GenLineMarker(char *pDest, unsigned DestSize, char Marker, const struct sLineComp *pLineComp, const char *pPrefix)
+{
+  char *pRun;
+  int z;
+
+  strmaxcpy(pDest, pPrefix, DestSize);
+  pRun = pDest + strlen(pDest);
+
+  for (z = 0; (z < pLineComp->StartCol) && (pRun - pDest + 1 < DestSize); z++)
+    *pRun++ = ' ';
+  for (z = 0; (z < pLineComp->Len) && (pRun - pDest + 1 < DestSize); z++)
+    *pRun++ = Marker;
+  *pRun = '\0';
+}
+
 /****************************************************************************/
 /* einen Symbolnamen auf Gueltigkeit ueberpruefen */
 
@@ -1029,89 +1160,80 @@ static void EmergencyStop(void)
   }
 }
 
-static void PrPrintable(FILE *pFile, const char *pStr)
+void WrErrorString(char *pMessage, char *pAdd, Boolean Warning, Boolean Fatal,
+                   const char *pExtendError, const struct sLineComp *pLineComp)
 {
-  const char *pRun;
-
-  for (pRun = pStr; *pRun; pRun++)
-    if (myisprint(*pRun))
-      fputc(*pRun, pFile);
-    else
-      fprintf(pFile, "<0x%02x>", (unsigned char)*pRun);
-}
-
-void WrErrorString(char *Message, char *Add, Boolean Warning, Boolean Fatal)
-{
-  String h, h2;
+  String ErrStr[4];
+  unsigned ErrStrCount = 0, z;
   char *p;
-  FILE *errfile;
   int l;
+  const char *pLeadIn = GNUErrors ? "" : "> > > ";
+  FILE *pErrFile = ErrorFile ? ErrorFile : stdout;
 
-  *h = '\0';
-  if (!GNUErrors)
-    strcpy(h, "> > >");
+  strcpy(ErrStr[ErrStrCount], pLeadIn);
   p = GetErrorPos();
   l = strlen(p) - 1;
   if ((l >= 0) && (p[l] == ' '))
     p[l] = '\0';
-  strmaxcat(h, p, 255);
+  strmaxcat(ErrStr[ErrStrCount], p, 255);
   free(p);
-  if (Warning)
+  if (pLineComp)
   {
-    strmaxcat(h, ": ", 255);
-    strmaxcat(h, getmessage(Num_WarnName), 255);
-    strmaxcat(h, Add, 255);
-    strmaxcat(h, ": ", 255);
-    WarnCount++;
+    char Num[20];
+
+    sprintf(Num, ":%d", pLineComp->StartCol + 1);
+    strmaxcat(ErrStr[ErrStrCount], Num, 255);
   }
-  else
+  if (Warning || !GNUErrors)
   {
-    if (!GNUErrors)
-    {
-      strmaxcat(h, ": ", 255);
-      strmaxcat(h, getmessage(Num_ErrName), 255);
-    }
-    strmaxcat(h, Add, 255);
-    strmaxcat(h, ": ", 255);
+    strmaxcat(ErrStr[ErrStrCount], ": ", 255);
+    strmaxcat(ErrStr[ErrStrCount], getmessage(Warning ? Num_WarnName : Num_ErrName), 255);
+  }
+  strmaxcat(ErrStr[ErrStrCount], pAdd, 255);
+  strmaxcat(ErrStr[ErrStrCount], ": ", 255);
+  if (Warning)
+    WarnCount++;
+  else
     ErrorCount++;
+
+  strmaxcat(ErrStr[ErrStrCount], pMessage, 255);
+  if ((ExtendErrors > 0) && pExtendError)
+  {
+    if (GNUErrors)
+      strmaxcat(ErrStr[ErrStrCount], " '", 255);
+    else
+      strcpy(ErrStr[++ErrStrCount], pLeadIn);
+    strmaxcat(ErrStr[ErrStrCount], pExtendError, 255);
+    if (GNUErrors)
+      strmaxcat(ErrStr[ErrStrCount], "'", 255);
+  }
+  if ((ExtendErrors > 1) || ((ExtendErrors > 0) && pLineComp))
+  {
+    strcpy(ErrStr[++ErrStrCount], "");
+    GenLineForMarking(ErrStr[ErrStrCount], 255, OneLine, pLeadIn);
+    if (pLineComp)
+    {
+      strcpy(ErrStr[++ErrStrCount], "");
+      GenLineMarker(ErrStr[ErrStrCount], 255, '~', pLineComp, pLeadIn);
+    }
   }
 
   if ((strcmp(LstName, "/dev/null")) && (!Fatal))
   {
-    strmaxcpy(h2, h, 255);
-    strmaxcat(h2, Message, 255);
-    WrLstLine(h2);
-    if ((ExtendErrors > 0) && (*ExtendError != '\0'))
-    {
-      sprintf(h2, "> > > %s", ExtendError);
-      WrLstLine(h2);
-    }
-    if (ExtendErrors > 1)
-    {
-      sprintf(h2, "> > > %s", OneLine);
-      WrLstLine(h2);
-    }
+    for (z = 0; z <= ErrStrCount; z++)
+      WrLstLine(ErrStr[z]);
   }
 
   ForceErrorOpen();
-  if ((strcmp(LstName, "!1")) || (Fatal))
+  if (strcmp(LstName, "!1") || Fatal)
   {
-    errfile = (!ErrorFile) ? stdout : ErrorFile;
-    fprintf(errfile, "%s%s%s\n", h, Message, ClrEol);
-    if ((ExtendErrors > 0) && (*ExtendError != '\0'))
-    {
-      fprintf(errfile, "> > > ");
-      PrPrintable(errfile, ExtendError);
-      fprintf(errfile, "%s\n", ClrEol);
-    }
-    if (ExtendErrors > 1)
-      fprintf(errfile, "> > > %s%s\n", OneLine, ClrEol);
+    for (z = 0; z <= ErrStrCount; z++)
+      fprintf(pErrFile, "%s%s\n", ErrStr[z], ClrEol);
   }
-  *ExtendError = '\0';
 
   if (Fatal)
   {
-    fprintf(ErrorFile ? ErrorFile : stdout, "%s\n", getmessage(Num_ErrMsgIsFatal));
+    fprintf(pErrFile, "%s\n", getmessage(Num_ErrMsgIsFatal));
     EmergencyStop();
     exit(3);
   }
@@ -1120,7 +1242,7 @@ void WrErrorString(char *Message, char *Add, Boolean Warning, Boolean Fatal)
 /*--------------------------------------------------------------------------*/
 /* eine Fehlermeldung ueber Code ausgeben */
 
-static void WrErrorNum(Word Num)
+void WrXErrorPos(Word Num, const char *pExtendError, const struct sLineComp *pLineComp)
 {
   String h;
   char Add[11];
@@ -1152,7 +1274,8 @@ static void WrErrorNum(Word Num)
     case  140: msgno = Num_ErrMsgUnpredictable; break;
     case  150: msgno = Num_ErrMsgAlphaNoSense; break;
     case  160: msgno = Num_ErrMsgSenseless; break;
-    case  170: msgno = Num_ErrMsgRepassUnknown; break;
+    case ErrNum_RepassUnknown:
+      msgno = Num_ErrMsgRepassUnknown; break;
     case  180: msgno = Num_ErrMsgAddrNotAligned; break;
     case  190: msgno = Num_ErrMsgIOAddrNotAllowed; break;
     case  200: msgno = Num_ErrMsgPipeline; break;
@@ -1168,10 +1291,12 @@ static void WrErrorNum(Word Num)
     case  300: msgno = Num_ErrMsgBitNumberTruncated; break;
     case  310: msgno = Num_ErrMsgInvRegisterPointer; break;
     case  320: msgno = Num_ErrMsgMacArgRedef; break;
-    case ErrNum_Deprecated: msgno = Num_ErrMsgDeprecated; break;
+    case ErrNum_Deprecated:
+      msgno = Num_ErrMsgDeprecated; break;
     case 1000: msgno = Num_ErrMsgDoubleDef; break;
     case 1010: msgno = Num_ErrMsgSymbolUndef; break;
-    case 1020: msgno = Num_ErrMsgInvSymName; break;
+    case ErrNum_InvSymName:
+      msgno = Num_ErrMsgInvSymName; break;
     case 1090: msgno = Num_ErrMsgInvFormat; break;
     case 1100: msgno = Num_ErrMsgUseLessAttr; break;
     case 1105: msgno = Num_ErrMsgTooLongAttr; break;
@@ -1185,35 +1310,47 @@ static void WrErrorNum(Word Num)
     case 1130: msgno = Num_ErrMsgInvOpsize; break;
     case 1131: msgno = Num_ErrMsgConfOpSizes; break;
     case 1132: msgno = Num_ErrMsgUndefOpSizes; break;
-    case 1135: msgno = Num_ErrMsgInvOpType; break;
+    case ErrNum_InvOpType:
+      msgno = Num_ErrMsgInvOpType; break;
     case 1140: msgno = Num_ErrMsgTooMuchArgs; break;
     case 1150: msgno = Num_ErrMsgNoRelocs; break;
     case 1155: msgno = Num_ErrMsgUnresRelocs; break;
-    case 1156: msgno = Num_ErrMsgUnexportable; break;
-    case 1200: msgno = Num_ErrMsgUnknownOpcode; break;
+    case ErrNum_Unexportable:
+      msgno = Num_ErrMsgUnexportable; break;
+    case ErrNum_UnknownOpcode:
+      msgno = Num_ErrMsgUnknownOpcode; break;
     case 1300: msgno = Num_ErrMsgBrackErr; break;
     case 1310: msgno = Num_ErrMsgDivByZero; break;
     case 1315: msgno = Num_ErrMsgUnderRange; break;
-    case 1320: msgno = Num_ErrMsgOverRange; break;
+    case ErrNum_OverRange:
+      msgno = Num_ErrMsgOverRange; break;
     case 1325: msgno = Num_ErrMsgNotAligned; break;
     case 1330: msgno = Num_ErrMsgDistTooBig; break;
     case 1335: msgno = Num_ErrMsgInAccReg; break;
     case 1340: msgno = Num_ErrMsgNoShortAddr; break;
-    case 1350: msgno = Num_ErrMsgInvAddrMode; break;
+    case ErrNum_InvAddrMode:
+      msgno = Num_ErrMsgInvAddrMode; break;
     case 1351: msgno = Num_ErrMsgMustBeEven; break;
     case 1355: msgno = Num_ErrMsgInvParAddrMode; break;
-    case 1360: msgno = Num_ErrMsgUndefCond; break;
-    case 1365: msgno = Num_ErrMsgIncompCond; break;
+    case ErrNum_UndefCond:
+      msgno = Num_ErrMsgUndefCond; break;
+    case ErrNum_IncompCond:
+      msgno = Num_ErrMsgIncompCond; break;
     case 1370: msgno = Num_ErrMsgJmpDistTooBig; break;
     case 1375: msgno = Num_ErrMsgDistIsOdd; break;
-    case 1380: msgno = Num_ErrMsgInvShiftArg; break;
-    case 1390: msgno = Num_ErrMsgRange18; break;
+    case ErrNum_InvShiftArg:
+      msgno = Num_ErrMsgInvShiftArg; break;
+    case ErrNum_Range18:
+      msgno = Num_ErrMsgRange18; break;
     case 1400: msgno = Num_ErrMsgShiftCntTooBig; break;
-    case 1410: msgno = Num_ErrMsgInvRegList; break;
+    case ErrNum_InvRegList:
+      msgno = Num_ErrMsgInvRegList; break;
     case 1420: msgno = Num_ErrMsgInvCmpMode; break;
     case 1430: msgno = Num_ErrMsgInvCPUType; break;
-    case 1440: msgno = Num_ErrMsgInvCtrlReg; break;
-    case 1445: msgno = Num_ErrMsgInvReg; break;
+    case ErrNum_InvCtrlReg:
+      msgno = Num_ErrMsgInvCtrlReg; break;
+    case ErrNum_InvReg:
+      msgno = Num_ErrMsgInvReg; break;
     case 1450: msgno = Num_ErrMsgNoSaveFrame; break;
     case 1460: msgno = Num_ErrMsgNoRestoreFrame; break;
     case 1465: msgno = Num_ErrMsgUnknownMacArg; break;
@@ -1225,7 +1362,8 @@ static void WrErrorNum(Word Num)
     case 1486: msgno = Num_ErrMsgWrongEndSect; break;
     case 1487: msgno = Num_ErrMsgNotInSection; break;
     case 1488: msgno = Num_ErrMsgUndefdForward; break;
-    case 1489: msgno = Num_ErrMsgContForward; break;
+    case ErrNum_ContForward:
+      msgno = Num_ErrMsgContForward; break;
     case 1490: msgno = Num_ErrMsgInvFuncArgCnt; break;
     case 1495: msgno = Num_ErrMsgMissingLTORG; break;
     case ErrNum_InstructionNotSupported:
@@ -1248,17 +1386,20 @@ static void WrErrorNum(Word Num)
     case 1551: msgno = Num_ErrMsgOpenStruct; break;
     case 1552: msgno = Num_ErrMsgWrongStruct; break;
     case 1553: msgno = Num_ErrMsgPhaseDisallowed; break;
-    case 1554: msgno = Num_ErrMsgInvStructDir; break;
+    case ErrNum_InvStructDir:
+      msgno = Num_ErrMsgInvStructDir; break;
     case 1560: msgno = Num_ErrMsgNotRepeatable; break;
     case 1600: msgno = Num_ErrMsgShortRead; break;
-    case 1610: msgno = Num_ErrMsgUnknownCodepage; break;
+    case ErrNum_UnknownCodepage:
+      msgno = Num_ErrMsgUnknownCodepage; break;
     case 1700: msgno = Num_ErrMsgRomOffs063; break;
     case 1710: msgno = Num_ErrMsgInvFCode; break;
     case 1720: msgno = Num_ErrMsgInvFMask; break;
     case 1730: msgno = Num_ErrMsgInvMMUReg; break;
     case 1740: msgno = Num_ErrMsgLevel07; break;
     case 1750: msgno = Num_ErrMsgInvBitMask; break;
-    case 1760: msgno = Num_ErrMsgInvRegPair; break;
+    case ErrNum_InvRegPair:
+      msgno = Num_ErrMsgInvRegPair; break;
     case 1800: msgno = Num_ErrMsgOpenMacro; break;
     case ErrNum_OpenIRP: msgno = Num_ErrMsgOpenIRP; break;
     case ErrNum_OpenIRPC: msgno = Num_ErrMsgOpenIRPC; break;
@@ -1266,7 +1407,8 @@ static void WrErrorNum(Word Num)
     case ErrNum_OpenWHILE: msgno = Num_ErrMsgOpenWHILE; break;
     case 1805: msgno = Num_ErrMsgEXITMOutsideMacro; break;
     case 1810: msgno = Num_ErrMsgTooManyMacParams; break;
-    case 1811: msgno = Num_ErrMsgUndefKeyArg; break;
+    case ErrNum_UndefKeyArg:
+      msgno = Num_ErrMsgUndefKeyArg; break;
     case 1812: msgno = Num_ErrMsgNoPosArg; break;
     case 1815: msgno = Num_ErrMsgDoubleMacro; break;
     case 1820: msgno = Num_ErrMsgFirstPassCalc; break;
@@ -1286,10 +1428,12 @@ static void WrErrorNum(Word Num)
     case 1940: msgno = Num_ErrMsgNotInStruct; break;
     case 1950: msgno = Num_ErrMsgParNotPossible; break;
     case 1960: msgno = Num_ErrMsgInvSegment; break;
-    case 1961: msgno = Num_ErrMsgUnknownSegment; break;
+    case ErrNum_UnknownSegment:
+      msgno = Num_ErrMsgUnknownSegment; break;
     case 1962: msgno = Num_ErrMsgUnknownSegReg; break;
     case 1970: msgno = Num_ErrMsgInvString; break;
-    case 1980: msgno = Num_ErrMsgInvRegName; break;
+    case ErrNum_InvRegName:
+      msgno = Num_ErrMsgInvRegName; break;
     case 1985: msgno = Num_ErrMsgInvArg; break;
     case 1990: msgno = Num_ErrMsgNoIndir; break;
     case 1995: msgno = Num_ErrMsgNotInThisSegment; break;
@@ -1312,7 +1456,8 @@ static void WrErrorNum(Word Num)
     case 2050: msgno = Num_ErrMsgEmptyArgument; break;
     case 2060: msgno = Num_ErrMsgUnimplemented; break;
     case 2070: msgno = Num_ErrMsgFreestandingUnnamedStruct; break;
-    case 2080: msgno = Num_ErrMsgSTRUCTEndedByENDUNION; break;
+    case ErrNum_STRUCTEndedByENDUNION:
+      msgno = Num_ErrMsgSTRUCTEndedByENDUNION; break;
     case 2090: msgno = Num_ErrMsgAddrOnDifferentPage; break;
     case 2100: msgno = Num_ErrMsgUnknownMacExpMod; break;
     case 2110: msgno = Num_ErrMsgConflictingMacExpMod; break;
@@ -1335,19 +1480,22 @@ static void WrErrorNum(Word Num)
     sprintf(Add, " #%d", (int)Num);
   else
     *Add = '\0';
-  WrErrorString(h, Add, Num < 1000, Num >= 10000);
+  WrErrorString(h, Add, Num < 1000, Num >= 10000, pExtendError, pLineComp);
+}
+
+void WrStrErrorPos(Word Num, const struct sStrComp *pStrComp)
+{
+  WrXErrorPos(Num, pStrComp->Str, &pStrComp->Pos);
 }
 
 void WrError(Word Num)
 {
-  *ExtendError = '\0';
-  WrErrorNum(Num);
+  WrXErrorPos(Num, NULL, NULL);
 }
 
-void WrXError(Word Num, const char *Message)
+void WrXError(Word Num, const char *pExtError)
 {
-  strmaxcpy(ExtendError, Message, 255);
-  WrErrorNum(Num);
+  WrXErrorPos(Num, pExtError, NULL);
 }
 
 /*--------------------------------------------------------------------------*/

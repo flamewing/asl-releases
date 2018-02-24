@@ -1460,9 +1460,9 @@ static void DecodeImmMac(Word Code)
         pLeft++;
     }
     if ((*Mid == '\0') || (*Right == '\0')) WrError(ErrNum_CannotSplitArg);
-    else if (!DecodeALUReg(Right, &Reg1, False, False, True)) WrXError(1445, Right);
-    else if (!DecodeXYABReg(Mid, &Reg2)) WrXError(1445, Mid);
-    else if ((Reg2 < 4) || (Reg2 > 7)) WrXError(1445, Mid);
+    else if (!DecodeALUReg(Right, &Reg1, False, False, True)) WrXError(ErrNum_InvReg, Right);
+    else if (!DecodeXYABReg(Mid, &Reg2)) WrXError(ErrNum_InvReg, Mid);
+    else if ((Reg2 < 4) || (Reg2 > 7)) WrXError(ErrNum_InvReg, Mid);
     else if (*pLeft != '#') WrError(1120);
     else
     {
@@ -1497,11 +1497,11 @@ static void DecodeDMAC(Word Code)
     else if (*pLeft == '+')
       pLeft++;
     if ((*Mid == '\0') || (*Right == '\0')) WrError(ErrNum_CannotSplitArg);
-    else if (!DecodeALUReg(Right, &Reg1, False, False, True)) WrXError(1445, Right);
-    else if (!DecodeXYAB1Reg(Mid, &Reg2)) WrXError(1445, Mid);
-    else if (Reg2 < 4) WrXError(1445, Mid);
-    else if (!DecodeXYAB1Reg(pLeft, &Reg3)) WrXError(1445, Left);
-    else if (Reg3 < 4) WrXError(1445, Left);
+    else if (!DecodeALUReg(Right, &Reg1, False, False, True)) WrXError(ErrNum_InvReg, Right);
+    else if (!DecodeXYAB1Reg(Mid, &Reg2)) WrXError(ErrNum_InvReg, Mid);
+    else if (Reg2 < 4) WrXError(ErrNum_InvReg, Mid);
+    else if (!DecodeXYAB1Reg(pLeft, &Reg3)) WrXError(ErrNum_InvReg, Left);
+    else if (Reg3 < 4) WrXError(ErrNum_InvReg, Left);
     else
     {
       DAsmCode[0] = 0x012480 + Code + (Reg1 << 5) + Mac4Table[Reg3 - 4][Reg2 - 4];
@@ -1530,11 +1530,11 @@ static void DecodeMAC_MPY(Word Code)
     else if (*pLeft == '+')
       pLeft++;
     if ((*Mid == '\0') || (*Right == '\0')) WrError(ErrNum_CannotSplitArg);
-    else if (!DecodeALUReg(Right, &Reg1, False, False, True)) WrXError(1445, Right);
-    else if (!DecodeXYAB1Reg(Mid, &Reg2)) WrXError(1445, Mid);
-    else if (Reg2 < 4) WrXError(1445, Mid);
-    else if (!DecodeXYAB1Reg(pLeft, &Reg3)) WrXError(1445, Left);
-    else if (Reg3 < 4) WrXError(1445, Left);
+    else if (!DecodeALUReg(Right, &Reg1, False, False, True)) WrXError(ErrNum_InvReg, Right);
+    else if (!DecodeXYAB1Reg(Mid, &Reg2)) WrXError(ErrNum_InvReg, Mid);
+    else if (Reg2 < 4) WrXError(ErrNum_InvReg, Mid);
+    else if (!DecodeXYAB1Reg(pLeft, &Reg3)) WrXError(ErrNum_InvReg, Left);
+    else if (Reg3 < 4) WrXError(ErrNum_InvReg, Left);
     else
     {
       DAsmCode[0] = 0x012680 + Code + (Reg1 << 5) + Mac4Table[Reg3 - 4][Reg2 - 4];
@@ -1549,7 +1549,7 @@ static void DecodeINC_DEC(Word Code)
 
   if (!ChkArgCnt(1, 1));
   else if (!ChkMinCPU(CPU56002));
-  else if (!DecodeALUReg(ArgStr[1], &Reg1, False, False, True)) WrXError(1445, ArgStr[1]);
+  else if (!DecodeALUReg(ArgStr[1], &Reg1, False, False, True)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else
   {
     DAsmCode[0] = (LongWord)Code + Reg1;
@@ -1614,8 +1614,8 @@ static void DecodeNORMF(Word Code)
   {
     SplitArg(ArgStr[1], Left, Right);
     if (*Right == '\0') WrError(ErrNum_CannotSplitArg);
-    else if (!DecodeALUReg(Right, &Reg2, False, False, True)) WrXError(1445, Right);
-    else if (!DecodeXYAB1Reg(Left, &Reg1)) WrXError(1445, Left);
+    else if (!DecodeALUReg(Right, &Reg2, False, False, True)) WrXError(ErrNum_InvReg, Right);
+    else if (!DecodeXYAB1Reg(Left, &Reg1)) WrXError(ErrNum_InvReg, Left);
     else
     {
       CodeLen = 1;
@@ -1691,8 +1691,8 @@ static void DecodeEXTRACT_EXTRACTU(Word Code)
   {
     SplitArg(ArgStr[1], Left, Mid); SplitArg(Mid, Mid, Right);
     if ((*Mid == '\0') || (*Right == '\0')) WrError(ErrNum_CannotSplitArg);
-    else if (!DecodeALUReg(Right, &Reg1, False, False, True)) WrXError(1445, Right);
-    else if (!DecodeALUReg(Mid, &Reg2, False, False, True)) WrXError(1445, Mid);
+    else if (!DecodeALUReg(Right, &Reg1, False, False, True)) WrXError(ErrNum_InvReg, Right);
+    else if (!DecodeALUReg(Mid, &Reg2, False, False, True)) WrXError(ErrNum_InvReg, Mid);
     else if (*Left == '#')
     {
       DAsmCode[1] = EvalIntExpression(Left + 1, Int24, &OK);
@@ -1702,7 +1702,7 @@ static void DecodeEXTRACT_EXTRACTU(Word Code)
         CodeLen = 2;
       }
     }
-    else if (!DecodeXYAB1Reg(Left, &Reg3)) WrXError(1445, Left);
+    else if (!DecodeXYAB1Reg(Left, &Reg3)) WrXError(ErrNum_InvReg, Left);
     else
     {
       DAsmCode[0] = 0x0c1a00 + Code + Reg1 + (Reg2 << 4) + (Reg3 << 1);
@@ -1724,8 +1724,8 @@ static void DecodeINSERT(Word Code)
   {
     SplitArg(ArgStr[1], Left, Mid); SplitArg(Mid, Mid, Right);
     if ((*Mid == '\0') || (*Right == '\0')) WrError(ErrNum_CannotSplitArg);
-    else if (!DecodeALUReg(Right, &Reg1, False, False, True)) WrXError(1445, Right);
-    else if (!DecodeXYAB0Reg(Mid, &Reg2)) WrXError(1445, Mid);
+    else if (!DecodeALUReg(Right, &Reg1, False, False, True)) WrXError(ErrNum_InvReg, Right);
+    else if (!DecodeXYAB0Reg(Mid, &Reg2)) WrXError(ErrNum_InvReg, Mid);
     else if (*Left == '#')
     {
       DAsmCode[1] = EvalIntExpression(Left + 1, Int24, &OK);
@@ -1735,7 +1735,7 @@ static void DecodeINSERT(Word Code)
         CodeLen = 2;
       }
     }
-    else if (!DecodeXYAB1Reg(Left, &Reg3)) WrXError(1445, Left);
+    else if (!DecodeXYAB1Reg(Left, &Reg3)) WrXError(ErrNum_InvReg, Left);
     else
     {
       DAsmCode[0] = 0x0c1b00 + Reg1 + (Reg2 << 4) + (Reg3 << 1);
@@ -1756,8 +1756,8 @@ static void DecodeMERGE(Word Code)
   {
     SplitArg(ArgStr[1], Left, Right);
     if (*Right == '\0') WrError(ErrNum_CannotSplitArg);
-    else if (!DecodeALUReg(Right, &Reg1, False, False, True)) WrXError(1445, Right);
-    else if (!DecodeXYAB1Reg(Left, &Reg2)) WrXError(1445, Left);
+    else if (!DecodeALUReg(Right, &Reg1, False, False, True)) WrXError(ErrNum_InvReg, Right);
+    else if (!DecodeXYAB1Reg(Left, &Reg2)) WrXError(ErrNum_InvReg, Left);
     else
     {
       DAsmCode[0] = 0x0c1b80 + Reg1 + (Reg2 << 1);
@@ -1778,8 +1778,8 @@ static void DecodeCLB(Word Code)
   {
     SplitArg(ArgStr[1], Left, Right);
     if (*Right == '\0') WrError(ErrNum_CannotSplitArg);
-    else if (!DecodeALUReg(Left, &Reg1, False, False, True)) WrXError(1445, Left);
-    else if (!DecodeALUReg(Right, &Reg2, False, False, True)) WrXError(1445, Right);
+    else if (!DecodeALUReg(Left, &Reg1, False, False, True)) WrXError(ErrNum_InvReg, Left);
+    else if (!DecodeALUReg(Right, &Reg2, False, False, True)) WrXError(ErrNum_InvReg, Right);
     else
     {
       DAsmCode[0] = 0x0c1e00 + Reg2 + (Reg1 << 1);
@@ -1800,10 +1800,10 @@ static void DecodeCMPU(Word Code)
   {
     SplitArg(ArgStr[1], Left, Right);
     if (*Right == '\0') WrError(ErrNum_CannotSplitArg);
-    else if (!DecodeALUReg(Right, &Reg1, False, False, True)) WrXError(1445, Right);
-    else if (!DecodeXYABReg(Left, &Reg2)) WrXError(1445, Left);
+    else if (!DecodeALUReg(Right, &Reg1, False, False, True)) WrXError(ErrNum_InvReg, Right);
+    else if (!DecodeXYABReg(Left, &Reg2)) WrXError(ErrNum_InvReg, Left);
     else if ((Reg1 ^ Reg2) == 1) WrError(1760);
-    else if ((Reg2 & 6) == 2) WrXError(1445, Left);
+    else if ((Reg2 & 6) == 2) WrXError(ErrNum_InvReg, Left);
     else
     {
       if (Reg2 < 2)
@@ -1915,7 +1915,7 @@ static void DecodeMOVEM(Word Code)
         DAsmCode[0] = 0x074080 + Reg1 + (AdrMode << 8);
       }
     }
-    else if (!DecodeGeneralReg(Right, &Reg2)) WrXError(1445, Right);
+    else if (!DecodeGeneralReg(Right, &Reg2)) WrXError(ErrNum_InvReg, Right);
     else
     {
       DecodeAdr(Left, MModNoImm, MSegCode);
@@ -2225,7 +2225,7 @@ static void DecodeBRA_BSR(Word Code)
    && ChkMinCPU(CPU56300)
    && DecodeReg(ArgStr[1], &Reg1))
   {
-    if ((Reg1 < 16) || (Reg1 > 23)) WrXError(1445, ArgStr[1]);
+    if ((Reg1 < 16) || (Reg1 > 23)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
     else
     {
       Reg1 -= 16;
@@ -2269,7 +2269,7 @@ static void DecodeBcc(Word Condition)
    && ChkMinCPU(CPU56300)
    && DecodeReg(ArgStr[1], &Reg1))
   {
-    if ((Reg1 < 16) || (Reg1 > 23)) WrXError(1445, ArgStr[1]);
+    if ((Reg1 < 16) || (Reg1 > 23)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
     else
     {
       Reg1 -= 16;
@@ -2313,7 +2313,7 @@ static void DecodeBScc(Word Condition)
    && ChkMinCPU(CPU56300)
    && DecodeReg(ArgStr[1], &Reg1))
   {
-    if ((Reg1 < 16) || (Reg1 > 23)) WrXError(1445, ArgStr[1]);
+    if ((Reg1 < 16) || (Reg1 > 23)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
     else
     {
       Reg1 -= 16;
@@ -2358,8 +2358,8 @@ static void DecodeLUA_LEA(Word Code)
   {
     SplitArg(ArgStr[1], Left, Right);
     if ((*Left == '\0') || (*Right == '\0')) WrError(ErrNum_CannotSplitArg);
-    else if (!DecodeReg(Right, &Reg1)) WrXError(1445, Right);
-    else if (Reg1 > 31) WrXError(1445, Right);
+    else if (!DecodeReg(Right, &Reg1)) WrXError(ErrNum_InvReg, Right);
+    else if (Reg1 > 31) WrXError(ErrNum_InvReg, Right);
     else
     {
       DecodeAdr(Left, MModModInc | MModModDec | MModPostInc | MModPostDec | MModDisp, MSegXData);
@@ -2396,11 +2396,11 @@ static void DecodeLRA(Word Code)
   {
     SplitArg(ArgStr[1], Left, Right);
     if (*Right == '\0') WrError(ErrNum_CannotSplitArg);
-    else if (!DecodeGeneralReg(Right, &Reg1)) WrXError(1445, Right);
-    else if (Reg1 > 0x1f) WrXError(1445, Right);
+    else if (!DecodeGeneralReg(Right, &Reg1)) WrXError(ErrNum_InvReg, Right);
+    else if (Reg1 > 0x1f) WrXError(ErrNum_InvReg, Right);
     else if (DecodeGeneralReg(Left, &Reg2))
     {
-      if ((Reg2 < 16) || (Reg2 > 23)) WrXError(1445, Left);
+      if ((Reg2 < 16) || (Reg2 > 23)) WrXError(ErrNum_InvReg, Left);
       else
       {
         DAsmCode[0] = 0x04c000 + ((Reg2 & 7) << 8) + Reg1;
@@ -2626,7 +2626,7 @@ static void DecodeDO_DOR(Word Code)
         }
         else if (DecodeGeneralReg(Left, &Reg1))
         {
-          if (Reg1 == 0x3c) WrXError(1445, Left); /* kein SSH!! */
+          if (Reg1 == 0x3c) WrXError(ErrNum_InvReg, Left); /* kein SSH!! */
           else
           {
             CodeLen = 2;
@@ -2935,8 +2935,8 @@ static void MakeCode_56K(void)
   if (DecodePseudo())
     return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_56K(void)

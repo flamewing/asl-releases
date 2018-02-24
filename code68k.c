@@ -1757,7 +1757,7 @@ static void DecodeShift(Word Index)
     ArgCnt = 2;
   }
   if (!ChkArgCnt(2, 2));
-  else if ((*OpPart == 'R') && (!ChkExcludeCPU(CPUCOLD)));
+  else if ((*OpPart.Str == 'R') && (!ChkExcludeCPU(CPUCOLD)));
   else
   {
     DecodeAdr(ArgStr[2], Mdata | Madri | Mpost | Mpre | Mdadri | Maix | Mabs);
@@ -1774,7 +1774,7 @@ static void DecodeShift(Word Index)
           WAsmCode[0] |= (AdrNum == 1) ? 0x20 | (AdrMode << 9) : ((AdrVals[0] & 7) << 9);
         }
         else
-          WrXError(1380, ArgStr[1]);
+          WrXErrorPos(ErrNum_InvShiftArg, ArgStr[1], &ArgStrPos[1]);
       }
     }
     else if (AdrNum != 0)
@@ -1795,7 +1795,7 @@ static void DecodeShift(Word Index)
           if ((ValOK) && (HVal8 == 1))
             CodeLen = 2 + AdrCnt;
           else
-            WrXError(1390, ArgStr[1]);
+            WrXErrorPos(ErrNum_Range18, ArgStr[1], &ArgStrPos[1]);
         }
       }
     }
@@ -1836,7 +1836,7 @@ static void DecodeADDQSUBQ(Word Index)
   if (FirstPassUnknown) HVal8 = 1;
   if ((!ValOK) || (HVal8 < 1) | (HVal8 > 8))
   {
-    WrError(1390);
+    WrError(ErrNum_Range18);
     return;
   }
 
@@ -1896,7 +1896,7 @@ static void DecodeCMPM(Word Index)
 static void DecodeADDSUBCMP(Word Index)
 {
   Word Op = Index & 3, Reg;
-  char Variant = mytoupper(OpPart[strlen(OpPart) - 1]);
+  char Variant = mytoupper(OpPart.Str[strlen(OpPart.Str) - 1]);
   Word DestMask, SrcMask;
 
   if ('I' == Variant)
@@ -1913,7 +1913,7 @@ static void DecodeADDSUBCMP(Word Index)
     /* since CMP only reads operands, PC-relative addressing is also
        allowed for the second operand */
 
-    if (mytoupper(*OpPart) == 'C')
+    if (mytoupper(*OpPart.Str) == 'C')
       DestMask |= Mpc | Mpcidx;
   }
 
@@ -2010,7 +2010,7 @@ static void DecodeADDSUBCMP(Word Index)
 static void DecodeANDOR(Word Index)
 {
   Word Op = Index & 3, Reg;
-  char Variant = mytoupper(OpPart[strlen(OpPart) - 1]);
+  char Variant = mytoupper(OpPart.Str[strlen(OpPart.Str) - 1]);
 
   if (!ChkArgCnt(2, 2));
   else if (CheckColdSize())
@@ -2654,7 +2654,7 @@ static void DecodeCacheAll(Word Index)
 
   if (*AttrPart != '\0') WrError(1100);
   else if (!ChkArgCnt(1, 1));
-  else if (!CodeCache(ArgStr[1], &w1)) WrXError(1440, ArgStr[1]);
+  else if (!CodeCache(ArgStr[1], &w1)) WrXErrorPos(ErrNum_InvCtrlReg, ArgStr[1], &ArgStrPos[1]);
   else
   {
     WAsmCode[0] = 0xf418 + (w1 << 6) + (Index << 5);
@@ -2670,7 +2670,7 @@ static void DecodeCache(Word Index)
 
   if (*AttrPart != '\0') WrError(1100);
   else if (!ChkArgCnt(2, 2));
-  else if (!CodeCache(ArgStr[1], &w1)) WrXError(1440, ArgStr[1]);
+  else if (!CodeCache(ArgStr[1], &w1)) WrXErrorPos(ErrNum_InvCtrlReg, ArgStr[1], &ArgStrPos[1]);
   else
   {
     DecodeAdr(ArgStr[2], Madri);
@@ -2688,7 +2688,7 @@ static void DecodeMUL_DIV(Word Code)
 {
 
   if (!ChkArgCnt(2, 2));
-  else if ((*OpPart == 'D') && !ChkExcludeCPU(CPUCOLD));
+  else if ((*OpPart.Str == 'D') && !ChkExcludeCPU(CPUCOLD));
   else if (OpSize == 1)
   {
     DecodeAdr(ArgStr[2], Mdata);
@@ -2717,7 +2717,7 @@ static void DecodeMUL_DIV(Word Code)
       OK = CodeReg(ArgStr[2], &w1) && (w1 < 8);
       w2 = w1;
     }
-    if (!OK) WrXError(1760, ArgStr[2]);
+    if (!OK) WrXErrorPos(ErrNum_InvRegPair, ArgStr[2], &ArgStrPos[2]);
     else
     {
       WAsmCode[1] = w1 | (w2 << 12) | ((Code & 0x0100) << 3);
@@ -2746,7 +2746,7 @@ static void DecodeDIVL(Word Index)
     OpSize = 2;
   if (!ChkArgCnt(2, 2));
   else if (OpSize != 2) WrError(1130);
-  else if (!CodeRegPair(ArgStr[2], &w1, &w2)) WrXError(1760, ArgStr[2]);
+  else if (!CodeRegPair(ArgStr[2], &w1, &w2)) WrXErrorPos(ErrNum_InvRegPair, ArgStr[2], &ArgStrPos[2]);
   else
   {
     RelPos = 4;
@@ -2892,7 +2892,7 @@ static void DecodeMOVEC(Word Index)
       }
     }
     else
-      WrError(1440);
+      WrError(ErrNum_InvCtrlReg);
   }
 }
 
@@ -2998,13 +2998,13 @@ static void DecodeCAS2(Word Index)
 
   if ((OpSize != 1) && (OpSize != 2)) WrError(1130);
   else if (!ChkArgCnt(3, 3));
-  else if (!CodeRegPair(ArgStr[1], WAsmCode + 1, WAsmCode + 2)) WrXError(1760, ArgStr[1]);
-  else if (!CodeRegPair(ArgStr[2], &w1, &w2)) WrXError(1760, ArgStr[2]);
+  else if (!CodeRegPair(ArgStr[1], WAsmCode + 1, WAsmCode + 2)) WrXErrorPos(ErrNum_InvRegPair, ArgStr[1], &ArgStrPos[1]);
+  else if (!CodeRegPair(ArgStr[2], &w1, &w2)) WrXErrorPos(ErrNum_InvRegPair, ArgStr[2], &ArgStrPos[2]);
   else
   {
     WAsmCode[1] += (w1 << 6);
     WAsmCode[2] += (w2 << 6);
-    if (!CodeIndRegPair(ArgStr[3], &w1, &w2)) WrXError(1760, ArgStr[3]);
+    if (!CodeIndRegPair(ArgStr[3], &w1, &w2)) WrXErrorPos(ErrNum_InvRegPair, ArgStr[3], &ArgStrPos[3]);
     else
     {
       WAsmCode[1] += (w1 << 12);
@@ -3141,9 +3141,9 @@ static void DecodeTBL(Word Index)
           {
             WAsmCode[0] = 0xf800 | w2;
             WAsmCode[1] = 0x0000 | (OpSize << 6) | (Mode << 12) | AdrMode;
-            if (OpPart[3] == 'S')
+            if (OpPart.Str[3] == 'S')
               WAsmCode[1] |= 0x0800;
-            if (OpPart[strlen(OpPart) - 1] == 'N')
+            if (OpPart.Str[strlen(OpPart.Str) - 1] == 'N')
               WAsmCode[1] |= 0x0400;
             CodeLen = 4;
             Check32();
@@ -5121,7 +5121,7 @@ static void MakeCode_68K(void)
 
   /* Nullanweisung */
 
-  if ((*OpPart == '\0') && (*AttrPart == '\0') && (ArgCnt == 0))
+  if ((*OpPart.Str == '\0') && (*AttrPart == '\0') && (ArgCnt == 0))
     return;
 
   /* Pseudoanweisungen */
@@ -5133,8 +5133,8 @@ static void MakeCode_68K(void)
 
   if (Odd(EProgCounter())) WrError(180);
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static void InitCode_68K(void)

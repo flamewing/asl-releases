@@ -1173,7 +1173,7 @@ static void SplitOptions(void)
 {
   char *pSplit, *pSrc;
 
-  pSrc = OpPart;
+  pSrc = OpPart.Str;
   *Options[0] = *Options[1] = '\0';
   for (OptionCnt = 0; OptionCnt < 2; OptionCnt++)
   {
@@ -3181,8 +3181,8 @@ static void MakeCode_M16(void)
 
   SplitOptions();
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_M16(void)

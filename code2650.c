@@ -100,7 +100,7 @@ static void DecodeOneReg(Word Index)
   Byte Reg;
 
   if (!ChkArgCnt(1, 1));
-  else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
+  else if (!DecodeReg(ArgStr[1], &Reg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else
   {
     BAsmCode[0] = Index | Reg; CodeLen = 1;
@@ -127,7 +127,7 @@ static void DecodeRegImm(Word Index)
   Boolean OK;
 
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
+  else if (!DecodeReg(ArgStr[1], &Reg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else
   {
     BAsmCode[1] = EvalIntExpression(ArgStr[2], Int8, &OK);
@@ -145,7 +145,7 @@ static void DecodeRegAbs(Word Index)
   Boolean OK, IndFlag;
 
   if (!ChkArgCnt(2, 4));
-  else if (!DecodeReg(ArgStr[1], &DReg)) WrXError(1445, ArgStr[1]);
+  else if (!DecodeReg(ArgStr[1], &DReg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else
   {
     IndFlag = *ArgStr[2] == '*';
@@ -164,7 +164,7 @@ static void DecodeRegAbs(Word Index)
       }
       else
       {
-        if (!DecodeReg(ArgStr[3], &IReg)) WrXError(1445, ArgStr[3]);
+        if (!DecodeReg(ArgStr[3], &IReg)) WrXErrorPos(ErrNum_InvReg, ArgStr[3], &ArgStrPos[3]);
         else if (DReg != 0) WrError(1350);
         else
         {
@@ -199,7 +199,7 @@ static void DecodeRegRel(Word Index)
   int Dist;
 
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
+  else if (!DecodeReg(ArgStr[1], &Reg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else
   {
     BAsmCode[0] = Index | Reg;
@@ -226,7 +226,7 @@ static void DecodeCondAbs(Word Index)
   Boolean OK, IndFlag;
   
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeCondition(ArgStr[1], &Cond)) WrXError(1360, ArgStr[1]);
+  else if (!DecodeCondition(ArgStr[1], &Cond)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else
   {
     IndFlag = *ArgStr[2] == '*';
@@ -250,7 +250,7 @@ static void DecodeCondRel(Word Index)
   int Dist;
 
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeCondition(ArgStr[1], &Cond)) WrXError(1360, ArgStr[1]);
+  else if (!DecodeCondition(ArgStr[1], &Cond)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else
   {
     BAsmCode[0] = Index | Cond;
@@ -277,7 +277,7 @@ static void DecodeRegAbs2(Word Index)
   Boolean IndFlag, OK;
 
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
+  else if (!DecodeReg(ArgStr[1], &Reg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else
   {
     BAsmCode[0] = Index | Reg;
@@ -301,7 +301,7 @@ static void DecodeBrAbs(Word Index)
   Boolean IndFlag, OK;
 
   if (!ChkArgCnt(1, 2));
-  else if ((ArgCnt == 2) && (!DecodeReg(ArgStr[2], &Reg))) WrXError(1445, ArgStr[2]);
+  else if ((ArgCnt == 2) && (!DecodeReg(ArgStr[2], &Reg))) WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
   else if (Reg != 3) WrError(1350);
   else
   {
@@ -324,7 +324,7 @@ static void DecodeCond(Word Index)
   Byte Cond;
   
   if (!ChkArgCnt(1, 1));
-  else if (!DecodeCondition(ArgStr[1], &Cond)) WrXError(1360, ArgStr[1]);
+  else if (!DecodeCondition(ArgStr[1], &Cond)) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
   else
   {
     BAsmCode[0] = Index | Cond;
@@ -523,7 +523,7 @@ static void MakeCode_2650(void)
 
   /* Nullanweisung */
 
-  if ((*OpPart == '\0') && (ArgCnt == 0))
+  if ((*OpPart.Str == '\0') && (ArgCnt == 0))
     return;
 
   /* Pseudoanweisungen */
@@ -532,7 +532,7 @@ static void MakeCode_2650(void)
 
   /* try to split off first (register) operand from instruction */
 
-  pPos = strchr(OpPart, ',');
+  pPos = strchr(OpPart.Str, ',');
   if (pPos)
   {
     int ArgC;
@@ -546,8 +546,8 @@ static void MakeCode_2650(void)
 
   /* alles aus der Tabelle */
 
-  if (!LookupInstTable(InstTable,OpPart))
-    WrXError(1200,OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_2650(void)

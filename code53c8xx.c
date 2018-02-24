@@ -378,7 +378,7 @@ static void DecodeJmps(Word Index)
       l = strlen(ArgStr[1]);
       if ((!strncasecmp(ArgStr[1], "REL(", 4)) && (ArgStr[1][l - 1] == ')'))
       {
-        if (*OpPart == 'I') 
+        if (*OpPart.Str == 'I') 
         {
           WrError(1350);
           OK = False;
@@ -430,7 +430,7 @@ static void DecodeCHMOV(Word Index)
       return;
     }
     KillBlanks(ArgStr[ArgCnt]);
-    if (!DecodePhase(ArgStr[ArgCnt], &Phase)) WrXError(1350, ArgStr[ArgCnt]);
+    if (!DecodePhase(ArgStr[ArgCnt], &Phase)) WrXErrorPos(ErrNum_InvAddrMode, ArgStr[ArgCnt], &ArgStrPos[ArgCnt]);
     else
     {
       DAsmCode[0] |= Phase << 24;
@@ -519,7 +519,7 @@ static void DecodeRegTrans(Word Index)
 
   if (!ChkArgCnt(3, 3));
   else if (!ChkExcludeCPU(CPU53C815));
-  else if (!DecodeReg(ArgStr[1], &Reg)) WrXError(1445, ArgStr[1]);
+  else if (!DecodeReg(ArgStr[1], &Reg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else
   {
     FirstPassUnknown = False;
@@ -811,7 +811,7 @@ static void DecodeMOVE(Word Index)
         else
         {
           KillBlanks(ArgStr[2]);
-          if (!DecodePhase(ArgStr[2], &ImmVal)) WrXError(1350, ArgStr[2]);
+          if (!DecodePhase(ArgStr[2], &ImmVal)) WrXErrorPos(ErrNum_InvAddrMode, ArgStr[2], &ArgStrPos[2]);
           else
           {
             DAsmCode[0] |= ImmVal << 24;
@@ -856,7 +856,7 @@ static void DecodeMOVE(Word Index)
         else
         {
           KillBlanks(ArgStr[3]);
-          if (!DecodePhase(ArgStr[3], &ImmVal)) WrXError(1350, ArgStr[2]);
+          if (!DecodePhase(ArgStr[3], &ImmVal)) WrXErrorPos(ErrNum_InvAddrMode, ArgStr[2], &ArgStrPos[2]);
           else
           { 
             DAsmCode[0] |= ImmVal << 24;
@@ -1097,8 +1097,8 @@ static void MakeCode_53c8xx(void)
   if (Memo(""))
     return; 
 
-  if (!LookupInstTable(InstTable,OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_53c8xx(void)

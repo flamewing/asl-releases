@@ -386,7 +386,7 @@ static void DecodeAdr(int StartInd, int StopInd, Byte Erl)
     }
     else
     {
-      WrXError(1445, ArgStr[StopInd]);
+      WrXErrorPos(ErrNum_InvReg, ArgStr[StopInd], &ArgStrPos[StopInd]);
       ErrOcc = True;
     }
   }
@@ -975,7 +975,7 @@ static void MakeCode_68(void)
 
   /* zu ignorierendes */
 
-  if (*OpPart == '\0')
+  if (*OpPart.Str == '\0')
     return;
 
   /* Pseudoanweisungen */
@@ -987,8 +987,8 @@ static void MakeCode_68(void)
 
   /* gehashtes */
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static void InitCode_68(void)

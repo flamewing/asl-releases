@@ -1137,7 +1137,7 @@ static void DecodeJR(Word Code)
   if (ChkArgCnt(1, 2))
   {
     int Cond = (ArgCnt == 1) ? DefaultCondition : DecodeCondition(ArgStr[1]);
-    if (Cond >= ConditionCnt) WrXError(1360, ArgStr[1]);
+    if (Cond >= ConditionCnt) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
     else
     {
       Boolean OK;
@@ -1161,7 +1161,7 @@ static void DecodeCALL_JP(Word Code)
   if (ChkArgCnt(1, 2))
   {
     int Cond = (ArgCnt == 1) ? DefaultCondition : DecodeCondition(ArgStr[1]);
-    if (Cond >= ConditionCnt) WrXError(1360, ArgStr[1]);
+    if (Cond >= ConditionCnt) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
     else
     {
       OpSize = 1;
@@ -1213,7 +1213,7 @@ static void DecodeRET(Word Code)
       CodeLen = 1;
       BAsmCode[0] = 0x1e;
     }
-    else if (Cond >= ConditionCnt) WrXError(1360, ArgStr[1]);
+    else if (Cond >= ConditionCnt) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
     else
     {
       CodeLen = 2;
@@ -1429,8 +1429,8 @@ static void MakeCode_90C141(void)
 
   if (DecodeIntelPseudo(False)) return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 /*-------------------------------------------------------------------------*/

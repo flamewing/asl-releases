@@ -35,9 +35,13 @@ extern char *QuotPos(const char *s, char Zeichen);
 
 extern char *RQuotPos(char *s, char Zeichen);
 
-extern char *FirstBlank(char *s);
+extern char *FirstBlank(const char *s);
 
 extern void SplitString(char *Source, char *Left, char *Right, char *Trenner);
+
+struct sLineComp;
+extern void KillPrefBlanksPos(char *pStr, struct sLineComp *pPos);
+extern void KillPostBlanksPos(char *pStr, struct sLineComp *pPos);
 
 extern void TranslateString(char *s, int Length);
 
@@ -47,10 +51,10 @@ extern ShortInt StrCaseCmp(const char *s1, const char *s2, LongInt Hand1, LongIn
 static inline Boolean Memo(const char *s)
 {
   NumMemo++;
-  return !strcmp(OpPart, s);
+  return !strcmp(OpPart.Str, s);
 }
 #else
-# define Memo(s) (!strcmp(OpPart,(s)))
+# define Memo(s) (!strcmp(OpPart.Str,(s)))
 #endif
 
 
@@ -76,6 +80,12 @@ extern void WrLstLine(char *Line);
 
 extern void SetListLineVal(TempResult *t);
 
+struct sLineComp;
+extern void PrintOneLineMuted(FILE *pFile, const char *pLine, const struct sLineComp *pMuteComponent);
+extern void PrLineMarker(FILE *pFile, const char *pLine, const char *pPrefix, const char *pTrailer,
+                         char Marker, const struct sLineComp *pLineComp);
+extern void GenLineForMarking(char *pDest, unsigned DestSize, const char *pSrc, const char *pPrefix);
+extern void GenLineMarker(char *pDest, unsigned DestSize, char Marker, const struct sLineComp *pLineComp, const char *pPrefix);
 
 extern LargeWord ProgCounter(void);
 

@@ -180,7 +180,7 @@ static void DecodeOneReg(Word Code)
   Byte Erg;
 
   if (!ChkArgCnt(1, 1));
-  else if (!DecodeReg(ArgStr[1], &Erg)) WrXError(1445, ArgStr[1]);
+  else if (!DecodeReg(ArgStr[1], &Erg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else
   {
     BAsmCode[0] = Lo(Code) + Erg;
@@ -193,7 +193,7 @@ static void DecodeOneRReg(Word Code)
   Byte Erg;
 
   if (!ChkArgCnt(1, 1));
-  else if (!DecodeRReg(ArgStr[1], &Erg)) WrXError(1445, ArgStr[1]);
+  else if (!DecodeRReg(ArgStr[1], &Erg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else
   {
     BAsmCode[0] = Lo(Code) + Erg;
@@ -207,7 +207,7 @@ static void DecodeAccReg(Word Code)
 
   if (!ChkArgCnt(1, 2));
   else if ((ArgCnt == 2) && (strcasecmp(ArgStr[1], "A"))) WrError(1350);
-  else if (!DecodeReg(ArgStr[ArgCnt], &Erg)) WrXError(1445, ArgStr[ArgCnt]);
+  else if (!DecodeReg(ArgStr[ArgCnt], &Erg)) WrXErrorPos(ErrNum_InvReg, ArgStr[ArgCnt], &ArgStrPos[ArgCnt]);
   else
   {
     BAsmCode[0] = Lo(Code) + Erg;
@@ -255,7 +255,7 @@ static void DecodeISZ(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeReg(ArgStr[1], &Erg)) WrXError(1445, ArgStr[1]);
+  else if (!DecodeReg(ArgStr[1], &Erg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else
   {
     Adr = EvalIntExpression(ArgStr[2], UInt12, &OK);
@@ -292,7 +292,7 @@ static void DecodeJCN(Word Index)
         case 'N': BAsmCode[0] |= 8; break;
         default: BAsmCode[0] = 0xff;
       }
-    if (BAsmCode[0] == 0xff) WrXError(1360, ArgStr[1]);
+    if (BAsmCode[0] == 0xff) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
     else
     {
       AdrInt = EvalIntExpression(ArgStr[2], UInt12, &OK);
@@ -315,7 +315,7 @@ static void DecodeFIM(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeRReg(ArgStr[1], BAsmCode)) WrXError(1445, ArgStr[1]);
+  else if (!DecodeRReg(ArgStr[1], BAsmCode)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else
   {
     BAsmCode[1] = EvalIntExpression(ArgStr[2], Int8, &OK);
@@ -339,7 +339,7 @@ static void DecodeREG(Word Code)
   UNUSED(Code);
 
   if (ChkArgCnt(1, 1))
-    AddRegDef(LabPart,ArgStr[1]);
+    AddRegDef(LabPart.Str,ArgStr[1]);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -443,8 +443,8 @@ static void MakeCode_4004(void)
   if (Memo(""))
     return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_4004(void)

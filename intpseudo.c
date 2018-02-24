@@ -716,9 +716,9 @@ Boolean DecodeIntelPseudo(Boolean Turn)
   LongInt HVal;
   char Ident;
 
-  if ((strlen(OpPart )!= 2) || (*OpPart != 'D'))
+  if ((strlen(OpPart.Str) != 2) || (*OpPart.Str != 'D'))
     return False;
-  Ident = OpPart[1];
+  Ident = OpPart.Str[1];
 
   if ((Ident == 'B') || (Ident == 'W') || (Ident == 'D') || (Ident == 'Q') || (Ident == 'T'))
   {
@@ -727,28 +727,28 @@ Boolean DecodeIntelPseudo(Boolean Turn)
     {
       case 'B':
         LayoutFunc = LayoutByte;
-        if (*LabPart != '\0')
-          SetSymbolSize(LabPart, 0);
+        if (*LabPart.Str != '\0')
+          SetSymbolSize(LabPart.Str, 0);
         break;
       case 'W':
         LayoutFunc = LayoutWord;
-        if (*LabPart != '\0')
-          SetSymbolSize(LabPart, 1);
+        if (*LabPart.Str != '\0')
+          SetSymbolSize(LabPart.Str, 1);
         break;
       case 'D':
         LayoutFunc = LayoutDoubleWord;
-        if (*LabPart != '\0')
-          SetSymbolSize(LabPart, 2);
+        if (*LabPart.Str != '\0')
+          SetSymbolSize(LabPart.Str, 2);
         break;
       case 'Q':
         LayoutFunc = LayoutQuadWord;
-        if (*LabPart != '\0')
-          SetSymbolSize(LabPart, 3);
+        if (*LabPart.Str != '\0')
+          SetSymbolSize(LabPart.Str, 3);
         break;
       case 'T':
         LayoutFunc = LayoutTenBytes;
-        if (*LabPart != '\0')
-          SetSymbolSize(LabPart, 4);
+        if (*LabPart.Str != '\0')
+          SetSymbolSize(LabPart.Str, 4);
         break;
     }
 

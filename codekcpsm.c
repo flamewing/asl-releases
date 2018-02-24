@@ -316,7 +316,7 @@ static void DecodeCALL(Word Code)
   {
     int Cond = (ArgCnt == 1) ? TrueCond : DecodeCond(ArgStr[1]);
 
-    if (Cond >= CondCnt) WrXError(1360, ArgStr[1]);
+    if (Cond >= CondCnt) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
     else
     {
       DecodeAdr(ArgStr[ArgCnt], MModAbs | ModImm, SegCode);
@@ -340,7 +340,7 @@ static void DecodeJUMP(Word Code)
   {
     int Cond = (ArgCnt == 1) ? TrueCond : DecodeCond(ArgStr[1]);
 
-    if (Cond >= CondCnt) WrXError(1360, ArgStr[1]);
+    if (Cond >= CondCnt) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
     else
     {
       DecodeAdr(ArgStr[ArgCnt], MModAbs | MModImm, SegCode);
@@ -364,7 +364,7 @@ static void DecodeRETURN(Word Code)
   {
     int Cond = (ArgCnt == 0) ? TrueCond : DecodeCond(ArgStr[1]);
 
-    if (Cond >= CondCnt) WrXError(1360, ArgStr[1]);
+    if (Cond >= CondCnt) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
     else
     {
       WAsmCode[0] = 0x8080 | (Conditions[Cond].Code << 10);
@@ -442,7 +442,7 @@ static void DecodeREG(Word Code)
   UNUSED(Code);
 
   if (ChkArgCnt(1, 1))
-    AddRegDef(LabPart, ArgStr[1]);
+    AddRegDef(LabPart.Str, ArgStr[1]);
 }
 
 static void DecodeNAMEREG(Word Code)
@@ -571,8 +571,8 @@ static void MakeCode_KCPSM(void)
 
   if (DecodeIntelPseudo(True)) return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static Boolean IsDef_KCPSM(void)

@@ -229,7 +229,7 @@ static Boolean CheckOpt(char *Asc)
         Flag = False;
     }
     if (!Flag)
-      WrXError(1445, Asc);
+      WrXError(ErrNum_InvReg, Asc);
     erg = Flag;
   }
   else
@@ -243,7 +243,7 @@ static Boolean ReiterateOpPart(void)
   char *p;
   int z;
 
-  if (!CheckOpt(OpPart))
+  if (!CheckOpt(OpPart.Str))
     return False;
 
   if (ArgCnt<1)
@@ -254,7 +254,7 @@ static Boolean ReiterateOpPart(void)
   p = FirstBlank(ArgStr[1]);
   if (!p)
   {
-    strcpy(OpPart, ArgStr[1]);
+    strcpy(OpPart.Str, ArgStr[1]);
     for (z = 2; z <= ArgCnt; z++)
       strcpy(ArgStr[z - 1], ArgStr[z]);
     ArgCnt--;
@@ -262,12 +262,12 @@ static Boolean ReiterateOpPart(void)
   else
   {
     *p = '\0';
-    strcpy(OpPart, ArgStr[1]);
+    strcpy(OpPart.Str, ArgStr[1]);
     strcpy(ArgStr[1], p + 1);
     KillPrefBlanks(ArgStr[1]);
   }
-  NLS_UpString(OpPart);
-  p = strchr(OpPart, '.');
+  NLS_UpString(OpPart.Str);
+  p = strchr(OpPart.Str, '.');
   if (!p)
     *AttrPart = '\0';
   else
@@ -357,7 +357,7 @@ static Boolean DecodeSReg(char *Asc, LongWord *Reg, Boolean Quarrel)
       *Reg += RVal;
   }
   if ((!TFlag) && (Quarrel))
-    WrXError(1445, Asc);
+    WrXError(ErrNum_InvReg, Asc);
   return TFlag;
 }
 
@@ -499,7 +499,7 @@ static Boolean DecodeMem(char *Asc, LongWord *Erg, LongWord Scale)
   }
   if (!DecodeSReg(RegPart, &BaseReg, False))
   {
-    WrXError(1445, RegPart);
+    WrXError(ErrNum_InvReg, RegPart);
     return False;
   }
   AddSrc(BaseReg);
@@ -945,7 +945,7 @@ static void DecodeMemO(Word Index)
   {
     char *pArg1, *pArg2;
 
-    IsStore = (*OpPart) == 'S';
+    IsStore = (*OpPart.Str) == 'S';
     pArg1 = IsStore ? ArgStr[2] : ArgStr[1];
     pArg2 = IsStore ? ArgStr[1] : ArgStr[2];
     if (IsStore)
@@ -2187,7 +2187,7 @@ static void DecodeMVC(Word Code)
     else if (DecodeCtrlReg(ArgStr[2], &CReg, True))
       z = 1;
     else
-      WrXError(1440, ArgStr[1]);
+      WrXErrorPos(ErrNum_InvCtrlReg, ArgStr[1], &ArgStrPos[1]);
     if (z > 0)
     {
       if (DecodeAdr(ArgStr[z], MModReg, False, &S1Reg))
@@ -2583,10 +2583,10 @@ static Boolean DecodeInst(void)
 
   /* ueber Tabelle: */
 
-  if (LookupInstTable(InstTable, OpPart))
+  if (LookupInstTable(InstTable, OpPart.Str))
     return __erg;
 
-  WrXError(1200, OpPart);
+  WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
   return False;
 }
 
@@ -2705,7 +2705,7 @@ static void MakeCode_3206X(void)
 
   /* zu ignorierendes */
 
-  if ((*OpPart == '\0') && (*LabPart == '\0'))
+  if ((*OpPart.Str == '\0') && (*LabPart.Str == '\0'))
     return;
 
   /* Pseudoanweisungen */
@@ -2720,17 +2720,17 @@ static void MakeCode_3206X(void)
 
   /* Optionen aus Label holen */
 
-  if (*LabPart != '\0')
-    if ((!strcmp(LabPart, "||")) || (*LabPart == '['))
-     if (!CheckOpt(LabPart))
+  if (*LabPart.Str != '\0')
+    if ((!strcmp(LabPart.Str, "||")) || (*LabPart.Str == '['))
+     if (!CheckOpt(LabPart.Str))
        return;
 
   /* eventuell falsche Mnemonics verwerten */
 
-  if (!strcmp(OpPart, "||"))
+  if (!strcmp(OpPart.Str, "||"))
     if (!ReiterateOpPart())
       return;
-  if (*OpPart == '[')
+  if (*OpPart.Str == '[')
     if (!ReiterateOpPart())
       return;
 
@@ -2981,7 +2981,7 @@ static void DeinitFields(void)
 
 static Boolean IsDef_3206X(void)
 {
-  return (!strcmp(LabPart, "||")) || (*LabPart == '[');
+  return (!strcmp(LabPart.Str, "||")) || (*LabPart.Str == '[');
 }
 
 static void SwitchFrom_3206X(void)

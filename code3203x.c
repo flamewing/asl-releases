@@ -813,7 +813,7 @@ static void DecodeGen(Word Index)
         CurrGenInfo.Src1Part = CurrGenInfo.Src2Part;
         break;
       case ModInd:
-        if (((strcmp(OpPart, "TSTB")) && (strcmp(OpPart, "CMPI")) && (strcmp(OpPart, "CMPF")))
+        if (((strcmp(OpPart.Str, "TSTB")) && (strcmp(OpPart.Str, "CMPI")) && (strcmp(OpPart.Str, "CMPF")))
         ||  ((CurrGenInfo.Src2Mode == ModDir) || (CurrGenInfo.Src2Mode == ModImm))
         ||  ((CurrGenInfo.Src2Mode == ModInd) && ((CurrGenInfo.Src2Part & 0xe000) == 0) && (Lo(CurrGenInfo.Src2Part) != 1))
         ||  (((AdrPart & 0xe000) == 0) && (Lo(AdrPart) != 1)))
@@ -939,7 +939,7 @@ static void DecodeGen(Word Index)
         DAsmCode[0] = 0xc0000000 + (((LongWord)HReg2) << 25)
                     + (((LongWord)PrevGenInfo.DestPart) << 22)
                     + (CurrGenInfo.Src2Part & 0xff00) + Hi(PrevGenInfo.Src2Part);
-        if ((!strcmp(PrevOp, OpPart)) && (*OpPart == 'L'))
+        if ((!strcmp(PrevOp, OpPart.Str)) && (*OpPart.Str == 'L'))
         {
           DAsmCode[0] += ((LongWord)CurrGenInfo.DestPart) << 19;
           if (PrevGenInfo.DestPart == CurrGenInfo.DestPart) WrError(140);
@@ -1016,7 +1016,7 @@ static void DecodeGen(Word Index)
   /* ...sequentiell */
   else
   {
-    strcpy(PrevOp, OpPart);
+    strcpy(PrevOp, OpPart.Str);
     PrevARs = ARs;
     PrevGenInfo = CurrGenInfo;
     if (CurrGenInfo.Is3)
@@ -1044,8 +1044,8 @@ static void DecodeLDA(Word Code)
   if (!ChkArgCnt(2, 2)); 
   else if (!ChkMinCPU(CPU32040));
   else if (ThisPar) WrError(1950);
-  else if (!DecodeReg(ArgStr[2], &HReg)) WrXError(1445, ArgStr[2]);
-  else if ((HReg < 8) || (HReg > 20)) WrXError(1445, ArgStr[2]);
+  else if (!DecodeReg(ArgStr[2], &HReg)) WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
+  else if ((HReg < 8) || (HReg > 20)) WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
   else
   {
     Boolean RegClash;
@@ -1220,8 +1220,8 @@ static void DecodeLdExp(Word Code)
   if (!ChkArgCnt(2, 2));
   else if (!ChkMinCPU(CPU32040));
   else if (ThisPar) WrError(1950);
-  else if (!(Swapped ? DecodeReg(ArgStr[1], &Src) : DecodeExpReg(ArgStr[1], &Src))) WrXError(1445, ArgStr[1]);
-  else if (!(Swapped ? DecodeExpReg(ArgStr[2], &Dest) : DecodeReg(ArgStr[2], &Dest))) WrXError(1445, ArgStr[2]);
+  else if (!(Swapped ? DecodeReg(ArgStr[1], &Src) : DecodeExpReg(ArgStr[1], &Src))) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+  else if (!(Swapped ? DecodeExpReg(ArgStr[2], &Dest) : DecodeReg(ArgStr[2], &Dest))) WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
   else
   {
     DAsmCode[0] = (((LongWord)Code) << 23)
@@ -1239,7 +1239,7 @@ static void DecodeRegImm(Word Code)
   if (!ChkArgCnt(2, 2));
   else if (!ChkMinCPU(CPU32040));
   else if (ThisPar) WrError(1950);
-  else if (!DecodeReg(ArgStr[2], &Dest)) WrXError(1445, ArgStr[2]);
+  else if (!DecodeReg(ArgStr[2], &Dest)) WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
   else
   {
     DecodeAdr(ArgStr[1], MModImm, False);
@@ -1262,7 +1262,7 @@ static void DecodeLDPK(Word Code)
   if (!ChkArgCnt(1, 1));
   else if (!ChkMinCPU(CPU32040));
   else if (ThisPar) WrError(1950);
-  else if (!DecodeReg("DP", &Dest)) WrXError(1445, "DP");
+  else if (!DecodeReg("DP", &Dest)) WrXError(ErrNum_InvReg, "DP");
   else
   {
     DecodeAdr(ArgStr[1], MModImm, False);
@@ -1888,11 +1888,11 @@ static void MakeCode_3203X(void)
   CodeLen = 0;
   DontPrint = False;
 
-  ThisPar = (!strcmp(LabPart, "||"));
-  if ((strlen(OpPart) > 2) && (!strncmp(OpPart, "||", 2)))
+  ThisPar = (!strcmp(LabPart.Str, "||"));
+  if ((strlen(OpPart.Str) > 2) && (!strncmp(OpPart.Str, "||", 2)))
   {
     ThisPar = True;
-    strmov(OpPart, OpPart + 2);
+    strmov(OpPart.Str, OpPart.Str + 2);
   }
   if ((!NextPar) && (ThisPar))
   {
@@ -1906,9 +1906,9 @@ static void MakeCode_3203X(void)
   if (Memo(""))
     return;
 
-  if (!LookupInstTable(InstTable, OpPart))
+  if (!LookupInstTable(InstTable, OpPart.Str))
   {
-    WrXError(1200, OpPart);
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
     NextPar = False;
   }
 }
@@ -1920,7 +1920,7 @@ static void InitCode_3203x(void)
 
 static Boolean IsDef_3203X(void)
 {
-  return (!strcmp(LabPart, "||"));
+  return (!strcmp(LabPart.Str, "||"));
 }
 
 static void SwitchFrom_3203X(void)

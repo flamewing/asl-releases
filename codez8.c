@@ -1687,7 +1687,7 @@ static Boolean DecodePseudo(void)
   if (Memo("REG"))
   {
     if (!ChkArgCnt(1, 1));
-    else AddRegDef(LabPart, ArgStr[1]);
+    else AddRegDef(LabPart.Str, ArgStr[1]);
     return True;
   }
 
@@ -1709,8 +1709,8 @@ static void MakeCode_Z8(void)
   if (DecodeIntelPseudo(True))
     return;
 
-  if (!LookupInstTable(InstTable, OpPart))
-    WrXError(1200, OpPart);
+  if (!LookupInstTable(InstTable, OpPart.Str))
+    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
 }
 
 static void InitCode_Z8(void)
