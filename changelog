@@ -1,3 +1,11 @@
+2018-02-28 [1.42 Bld 126]
+
+- Addition    : add AT43USB355
+
+- Bugfix      : when writing line to .i file that contained a macro
+                call and a label, only write out the label, plus an
+                eventual comment.
+
 2018-02-24 [1.42 Bld 125]
 
 - Bugfix      : correct argument checking for CHARSET
@@ -8,7 +16,6 @@
 
 - Addition    : Optionally display column and position in source line
                 for some errors
-
 2018-01-21 [1.42 Bld 124]
 
 - Addition    : add ATmega{8|16|32}U2,

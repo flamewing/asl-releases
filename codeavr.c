@@ -81,7 +81,8 @@ static Boolean WrapFlag;
 static LongInt ORMask, SignMask;
 static const tCPUProps *pCurrCPUProps;
 
-static IntType AdrIntType;
+static IntType CodeAdrIntType,
+               DataAdrIntType;
 
 static const char *WrapFlagName = "WRAPMODE";
 
@@ -174,7 +175,7 @@ static Boolean DecodeBitArg2(const char *pRegArg, const char *pBitArg, LongWord 
     return False;
 
   FirstPassUnknown = False;
-  Addr = EvalIntExpression(pRegArg, UInt9, &OK);
+  Addr = EvalIntExpression(pRegArg, DataAdrIntType, &OK);
   if (!OK)
     return False;
 
@@ -222,19 +223,19 @@ static Boolean DecodeBitArg(int Start, int Stop, LongWord *pResult)
   }
 }
 
-static const LargeWord
+static const LongWord
        AllRegMask = 0xfffffffful,
        UpperHalfRegMask = 0xffff0000ul,
        Reg16_23Mask = 0x00ff0000ul,
        EvenRegMask = 0x55555555ul,
        UpperEightEvenRegMask = 0x55000000ul;
 
-static Boolean DecodeArgReg(unsigned ArgIndex, Word *pReg, LargeWord RegMask)
+static Boolean DecodeArgReg(unsigned ArgIndex, Word *pReg, LongWord RegMask)
 {
   Boolean Result;
 
   Result = DecodeReg(ArgStr[ArgIndex], pReg)
-        && (RegMask & (1ul << *pReg));
+        && ((RegMask >> *pReg) & 1);
   if (!Result)
     WrXErrorPos(ErrNum_InvReg, ArgStr[ArgIndex], &ArgStrPos[ArgIndex]);
   return Result;
@@ -647,7 +648,7 @@ static void DecodeRel(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    AdrInt = EvalIntExpression(ArgStr[1], AdrIntType, &OK) - (EProgCounter() + 1);
+    AdrInt = EvalIntExpression(ArgStr[1], CodeAdrIntType, &OK) - (EProgCounter() + 1);
     if (OK)
     {
       if (WrapFlag) AdrInt = CutAdr(AdrInt);
@@ -673,7 +674,7 @@ static void DecodeBRBSBC(Word Index)
     Bit = EvalIntExpression(ArgStr[1], UInt3, &OK);
     if (OK)
     {
-      AdrInt = EvalIntExpression(ArgStr[2], AdrIntType, &OK) - (EProgCounter() + 1);
+      AdrInt = EvalIntExpression(ArgStr[2], CodeAdrIntType, &OK) - (EProgCounter() + 1);
       if (OK)
       {
         if (WrapFlag) AdrInt = CutAdr(AdrInt);
@@ -1080,7 +1081,8 @@ static void SwitchTo_AVR(void *pUser)
                      + pCurrCPUProps->RAMSize
                      - 1;
 
-  AdrIntType = GetSmallestUIntType(SegLimits[SegCode]);
+  CodeAdrIntType = GetSmallestUIntType(SegLimits[SegCode]);
+  DataAdrIntType = GetSmallestUIntType(SegLimits[SegData]);
 
   SignMask = (SegLimits[SegCode] + 1) >> 1;
   ORMask = ((LongInt) - 1) - SegLimits[SegCode];
@@ -1113,6 +1115,8 @@ static const tCPUProps CPUProps[] =
   { "AT90USB647"     ,  0x7fff, 0x1000, IOAreaExtSize , True , eCoreMega      },
   { "AT90USB1286"    ,  0xffff, 0x2000, IOAreaExtSize , True , eCoreMega      },
   { "AT90USB1287"    ,  0xffff, 0x2000, IOAreaExtSize , True , eCoreMega      },
+
+  { "AT43USB355"     ,  0x2fff, 0x0400, 0x2000-RegBankSize, True , eCoreClassic   }, /* allow USB registers @ 0x1fxx */
 
   { "ATTINY4"        ,  0x00ff, 0x0020, IOAreaStdSize , False, eCoreMinTiny   },
   { "ATTINY5"        ,  0x00ff, 0x0020, IOAreaStdSize , False, eCoreMinTiny   },

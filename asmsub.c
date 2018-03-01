@@ -971,25 +971,36 @@ void SetListLineVal(TempResult *t)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     PrintOneLineMuted(FILE *pFile, const char *pLine, const sLineComp *pMuteComponent)
+ * \fn     PrintOneLineMuted(FILE *pFile, const char *pLine,
+                             const struct sLineComp *pMuteComponent,
+                             const struct sLineComp *pMuteComponent2)
  * \brief  print a line, with a certain component muted out (i.e. replaced by spaces)
  * \param  pFile where to write
  * \param  pLine line to print
  * \param  pMuteComponent component to mute in printout
  * ------------------------------------------------------------------------ */
 
-void PrintOneLineMuted(FILE *pFile, const char *pLine, const struct sLineComp *pMuteComponent)
+static Boolean CompMatch(int Col, const struct sLineComp *pComp)
+{
+  return (pComp
+       && (pComp->StartCol >= 0)
+       && (Col >= pComp->StartCol)
+       && (Col < pComp->StartCol + pComp->Len));
+}
+
+void PrintOneLineMuted(FILE *pFile, const char *pLine,
+                       const struct sLineComp *pMuteComponent,
+                       const struct sLineComp *pMuteComponent2)
 {
   int z;
+  Boolean Match;
 
   errno = 0;
   for (z = 0; z < strlen(pLine); z++)
-    if ((pMuteComponent->StartCol < 0)
-     || (z < pMuteComponent->StartCol)
-     || (z >= pMuteComponent->StartCol + pMuteComponent->Len))
-      fputc(pLine[z], pFile);
-    else
-      fputc(' ', pFile);
+  {
+    Match = CompMatch(z, pMuteComponent) || CompMatch(z, pMuteComponent2);
+    fputc(Match ? ' ' : pLine[z], pFile);
+  }
   fputc('\n', pFile);
   ChkIO(10002);
 }

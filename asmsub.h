@@ -81,7 +81,9 @@ extern void WrLstLine(char *Line);
 extern void SetListLineVal(TempResult *t);
 
 struct sLineComp;
-extern void PrintOneLineMuted(FILE *pFile, const char *pLine, const struct sLineComp *pMuteComponent);
+extern void PrintOneLineMuted(FILE *pFile, const char *pLine,
+                              const struct sLineComp *pMuteComponent,
+                              const struct sLineComp *pMuteComponent2);
 extern void PrLineMarker(FILE *pFile, const char *pLine, const char *pPrefix, const char *pTrailer,
                          char Marker, const struct sLineComp *pLineComp);
 extern void GenLineForMarking(char *pDest, unsigned DestSize, const char *pSrc, const char *pPrefix);

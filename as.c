@@ -2803,8 +2803,8 @@ static void Produce_Code(void)
          in the same line that is not consumed by the macro must.  In this case,
          dump the source line with the OpPart (macro's name) muted out. */
 
-      if (MacProOutput && !OneMacro->LocIntLabel)
-        PrintOneLineMuted(MacProFile, OneLine, &OpPart.Pos);
+      if (MacProOutput && (LabPart.Pos.StartCol >= 0) && !OneMacro->LocIntLabel)
+        PrintOneLineMuted(MacProFile, OneLine, &OpPart.Pos, &ArgPart.Pos);
     }
   }
 
