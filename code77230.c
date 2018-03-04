@@ -620,14 +620,10 @@ static void DecodeNAL(Word Index)
 
   FirstPassUnknown = False;
   Value = EvalIntExpression(ArgStr[1], UInt13, &Error);
-  if (FirstPassUnknown)
-    Value = (Value & 0x1ff) | (EProgCounter() & 0x1e00);
   Error = !Error;
   if (!Error)
   {
-    if ((!SymbolQuestionable) && ((Value ^ EProgCounter()) & 0x1e00))
-      WrError(1910);
-    else
+    if (ChkSamePage(Value, EProgCounter(), 9))
       AddComp(InstrNAL, Value & 0x1ff);
   }
   DiscardArgs();  

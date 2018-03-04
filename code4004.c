@@ -258,11 +258,11 @@ static void DecodeISZ(Word Index)
   else if (!DecodeReg(ArgStr[1], &Erg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
   else
   {
+    FirstPassUnknown = False;
     Adr = EvalIntExpression(ArgStr[2], UInt12, &OK);
     if (OK)
     {
-      if ((!SymbolQuestionable) && (Hi(EProgCounter() + 1) != Hi(Adr))) WrError(1910);
-      else
+      if (ChkSamePage(EProgCounter() + 1, Adr, 8))
       {
         BAsmCode[0] = 0x70 + Erg;
         BAsmCode[1] = Lo(Adr);

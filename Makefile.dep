@@ -72,7 +72,7 @@ code4500.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h chunks.h asmde
 
 code47c00.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h code47c00.h
 
-code48.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h stringlists.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h asmsub.h asmerr.h asmpars.h asmitree.h intpseudo.h codevars.h errmsg.h code48.h
+code48.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h nls.h strutil.h stringlists.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h asmsub.h asmerr.h asmpars.h asmitree.h intpseudo.h codevars.h errmsg.h code48.h
 
 code51.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h asmsub.h asmerr.h asmpars.h asmallg.h asmrelocs.h codepseudo.h intpseudo.h asmitree.h codevars.h intconsts.h errmsg.h code51.h
 
@@ -238,7 +238,7 @@ endian.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h endian.h
 
 entryaddress.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h entryaddress.h
 
-errmsg.o: datatypes.h sysdefs.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h strutil.h asmsub.h asmerr.h nlmessages.h as.rsc errmsg.h
+errmsg.o: datatypes.h sysdefs.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h asmpars.h strutil.h asmsub.h asmerr.h nlmessages.h as.rsc errmsg.h
 
 findhyphen.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h ushyph.h
 

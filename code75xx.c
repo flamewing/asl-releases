@@ -202,14 +202,9 @@ static void DecodeJCP(Word Index)
 
     FirstPassUnknown = FALSE;
     Address = EvalIntExpression(ArgStr[1], CodeIntType, &OK);
-    if (OK)
+    if (OK && ChkSamePage(Address, EProgCounter() + 1, 6))
     {
-      Word NextAddr = (EProgCounter() + 1) & SegLimits[SegCode];
-      Word PageMask = SegLimits[SegCode] & (~0x3f);
-
-      if ((!FirstPassUnknown) && ((NextAddr & PageMask) != (Address & PageMask))) WrError(1910);
-      else
-        PutCode(Index | (Address & 0x3f));
+      PutCode(Index | (Address & 0x3f));
       ChkSpace(SegCode);
     }
   }

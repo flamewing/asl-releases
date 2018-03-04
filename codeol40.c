@@ -413,9 +413,7 @@ static void CodeJC(Word Code)
 
     FirstPassUnknown = False;
     Address = EvalIntExpression(ArgStr[1], CodeIntType, &OK);
-    if (!OK);
-    else if (((((int)EProgCounter()) + 1) & 0xffc0) != (Address & 0xffc0)) WrError(1910);
-    else
+    if (OK && ChkSamePage(EProgCounter() + 1, Address, 6))
     {
       ChkSpace(SegCode);
       BAsmCode[CodeLen++] = Lo(Code) | (Address & 0x3f);

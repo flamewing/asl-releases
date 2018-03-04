@@ -31,6 +31,7 @@
  *****************************************************************************/
 
 #include "stdinc.h"
+#include "bpemu.h"
 #include <string.h>
 #include <ctype.h>
 
@@ -487,12 +488,13 @@ static void DecodeDJNZ(Word Code)
     if (CodeLen > 0)
     {
       Boolean OK;
-      Word AdrWord = EvalIntExpression(ArgStr[2], Int16, &OK);
+      Word AdrWord;
 
+      FirstPassUnknown = False;
+      AdrWord = EvalIntExpression(ArgStr[2], Int16, &OK);
       if (OK)
       {
-        if (((((int)EProgCounter()) + CodeLen) & 0xff00) != (AdrWord & 0xff00)) WrError(1910);
-        else
+        if (ChkSamePage(EProgCounter() + CodeLen, AdrWord, 8))
           BAsmCode[CodeLen++] = AdrWord & 0xff;
       }
     }
@@ -611,11 +613,12 @@ static void DecodeCond(Word Index)
   else
   {
     Boolean OK;
-    Word AdrWord = EvalIntExpression(ArgStr[1], UInt12, &OK);
+    Word AdrWord;
 
+    FirstPassUnknown = False;
+    AdrWord = EvalIntExpression(ArgStr[1], UInt12, &OK);
     if (!OK);
-    else if (((((int)EProgCounter()) + 1) & 0xff00) != (AdrWord & 0xff00)) WrError(1910);
-    else
+    else if (ChkSamePage(EProgCounter() + 1, AdrWord, 8))
     {
       CodeLen = 2;
       BAsmCode[0] = pOrder->Code;
@@ -661,10 +664,12 @@ static void DecodeJB(Word Code)
     AdrVal = EvalIntExpression(ArgStr[1], UInt3, &OK);
     if (OK)
     {
-      Word AdrWord = EvalIntExpression(ArgStr[2], UInt12, &OK);
+      Word AdrWord;
+
+      FirstPassUnknown = False;
+      AdrWord = EvalIntExpression(ArgStr[2], UInt12, &OK);
       if (!OK);
-      else if (((((int)EProgCounter()) + 1) & 0xff00) != (AdrWord & 0xff00)) WrError(1910);
-      else
+      else if (ChkSamePage(EProgCounter() + 1, AdrWord, 8))
       {
         CodeLen = 2;
         BAsmCode[0] = 0x12 + (AdrVal << 5);

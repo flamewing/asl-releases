@@ -117,6 +117,7 @@ static Boolean DecodeAdr(char *Asc, Boolean MayInc, Byte PCDisp, Byte *Arg)
 
   /* no carry in PC from bit 11 to 12; additionally handle preincrement */
 
+  FirstPassUnknown = False;
   Target = EvalIntExpression(Asc, UInt16, &OK);
   if (OK)
   {
@@ -126,7 +127,7 @@ static Boolean DecodeAdr(char *Asc, Boolean MayInc, Byte PCDisp, Byte *Arg)
     if (SymbolQuestionable)
       Target = PCVal;
 
-    if ((Target & 0xf000) != (PCVal & 0xf000)) WrError(1910);
+    if (!ChkSamePage(Target, PCVal, 12));
     else if ((Disp > 0x7f) && (Disp <= 0xf80)) WrError(1370);
     else
     {

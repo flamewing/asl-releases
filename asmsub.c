@@ -1432,7 +1432,8 @@ void WrXErrorPos(Word Num, const char *pExtendError, const struct sLineComp *pLi
     case 1890: msgno = Num_ErrMsgInvArgPair; break;
     case 1900: msgno = Num_ErrMsgNotOnThisAddress; break;
     case 1905: msgno = Num_ErrMsgNotFromThisAddress; break;
-    case 1910: msgno = Num_ErrMsgTargOnDiffPage; break;
+    case ErrNum_TargOnDiffPage:
+      msgno = Num_ErrMsgTargOnDiffPage; break;
     case 1920: msgno = Num_ErrMsgCodeOverflow; break;
     case 1925: msgno = Num_ErrMsgAdrOverflow; break;
     case 1930: msgno = Num_ErrMsgMixDBDS; break;

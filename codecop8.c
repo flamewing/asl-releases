@@ -513,18 +513,16 @@ static void DecodeJMP_JSR(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
+    Word AdrWord;
 
-    Word AdrWord = EvalIntExpression(ArgStr[1], UInt16, &OK);
-    if (OK)
+    FirstPassUnknown = False;
+    AdrWord = EvalIntExpression(ArgStr[1], UInt16, &OK);
+    if (OK && ChkSamePage(EProgCounter() + 2, AdrWord, 12))
     {
-      if (((EProgCounter() + 2) >> 12) != (AdrWord >> 12)) WrError(1910);
-      else
-      {
-        ChkSpace(SegCode);
-        BAsmCode[0] = 0x20 + Code + ((AdrWord >> 8) & 15);
-        BAsmCode[1] = Lo(AdrWord);
-        CodeLen = 2;
-      }
+      ChkSpace(SegCode);
+      BAsmCode[0] = 0x20 + Code + ((AdrWord >> 8) & 15);
+      BAsmCode[1] = Lo(AdrWord);
+      CodeLen = 2;
     }
   }
 }

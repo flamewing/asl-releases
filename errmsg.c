@@ -11,6 +11,7 @@
 
 #include "datatypes.h"
 #include "asmdef.h"
+#include "asmpars.h"
 #include "strutil.h"
 #include "asmsub.h"
 #include "nlmessages.h"
@@ -472,4 +473,23 @@ int ChkExactCPUMaskExt(Word CPUMask, CPUVar FirstCPU, tErrorNum ErrorNum)
   strmaxcat(Str, getmessage(Num_ErrMsgOnlyCPUSupported2), sizeof(Str));
   WrXError(ErrorNum ? ErrorNum : ErrNum_InstructionNotSupported, Str);
   return -1;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     ChkSamePage(LargeWord Addr1, LargeWord Addr2, unsigned PageBits)
+ * \brief  check whether two addresses are of same page
+ * \param  Addr1, Addr2 addresses to check
+ * \param  PageBits page size in bits
+ * \return TRUE if OK
+ * ------------------------------------------------------------------------ */
+
+Boolean ChkSamePage(LargeWord Addr1, LargeWord Addr2, unsigned PageBits)
+{
+  LargeWord Mask = ~((1ul << PageBits) - 1);
+  Boolean Result = ((Addr1 & Mask) == (Addr2 & Mask))
+                 || FirstPassUnknown
+                 || SymbolQuestionable;
+  if (!Result)
+    WrError(ErrNum_TargOnDiffPage);
+  return Result;
 }

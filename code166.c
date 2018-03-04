@@ -1398,11 +1398,13 @@ static void DecodeJMPA_CALLA(Word Code)
     else
     {
       Boolean OK;
-      LongInt AdrLong = EvalIntExpression(ArgStr[ArgCnt], MemInt, &OK);
+      LongInt AdrLong;
+
+      FirstPassUnknown = False;
+      AdrLong = EvalIntExpression(ArgStr[ArgCnt], MemInt, &OK);
       if (OK)
       {
-        if ((AdrLong >> 16) != (EProgCounter() >> 16)) WrError(1910);
-        else
+        if (ChkSamePage(AdrLong, EProgCounter(), 16))
         {
           CodeLen = 4;
           BAsmCode[0] = Code;

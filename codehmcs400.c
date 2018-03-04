@@ -903,9 +903,7 @@ static void CodeBR(Word Code)
 
     FirstPassUnknown = False;
     DirVal = EvalIntExpression(ArgStr[1], CodeIntType, &OK);
-    if (!OK);
-    else if (((((int)EProgCounter()) + 1) & 0xff00) != (DirVal & 0xff00)) WrError(1910);
-    else
+    if (OK && ChkSamePage(EProgCounter() + 1, DirVal, 8))
     {
       ChkSpace(SegCode);
       WAsmCode[CodeLen++] = Code | (DirVal & 0xff);

@@ -1483,14 +1483,14 @@ static void DecodeABranch(Word Index)
 
   if (ChkArgCnt(1, 1))
   {
+    FirstPassUnknown = False;
     AdrLong = EvalIntExpression(ArgStr[1], Int24, &OK);
     if (OK)
     {
       ChkSpace(SegCode);
       if (MomCPU == CPU80C390)
       {
-        if ((!SymbolQuestionable) && (((((long)EProgCounter()) + 3) >> 19) != (AdrLong >> 19))) WrError(1910);
-        else
+        if (ChkSamePage(EProgCounter() + 3, AdrLong, 19))
         {
           PutCode(0x01 + (Index << 4) + (((AdrLong >> 16) & 7) << 5));
           BAsmCode[CodeLen++] = Hi(AdrLong);
@@ -1500,7 +1500,7 @@ static void DecodeABranch(Word Index)
       }
       else
       {
-        if ((!SymbolQuestionable) && (((((long)EProgCounter()) + 2) >> 11) != (AdrLong >> 11))) WrError(1910);
+        if (!ChkSamePage(EProgCounter(), AdrLong, 11));
         else if (Chk504(EProgCounter())) WrError(1900);
         else
         {
@@ -1553,7 +1553,7 @@ static void DecodeLBranch(Word Index)
       }
       else
       {
-        if ((MomCPU >= CPU80251) && (((((long)EProgCounter()) + 3) >> 16) != (AdrLong >> 16))) WrError(1910);
+        if ((MomCPU >= CPU80251) && !ChkSamePage(EProgCounter() + 3, AdrLong, 16));
         else
         {
           ChkSpace(SegCode);
@@ -1641,14 +1641,14 @@ static void DecodeJMP(Word Index)
         PutCode(0x01 + ((Hi(AdrLong) & 7) << 5));
         BAsmCode[CodeLen++] = Lo(AdrLong);
       }
-      else if (MomCPU < CPU8051) WrError(1910);
+      else if (MomCPU < CPU8051) WrError(ErrNum_TargOnDiffPage);
       else if (((((long)EProgCounter()) + 3) >> 16) == (AdrLong >> 16))
       {
         PutCode(0x02);
         BAsmCode[CodeLen++] = Hi(AdrLong); 
         BAsmCode[CodeLen++] = Lo(AdrLong);
       }
-      else if (MomCPU < CPU80251) WrError(1910);
+      else if (MomCPU < CPU80251) WrError(ErrNum_TargOnDiffPage);
       else
       {
         PutCode(0x18a);
@@ -1680,6 +1680,7 @@ static void DecodeCALL(Word Index)
     }
     else
     {
+      FirstPassUnknown = False;
       AdrLong = EvalIntExpression(ArgStr[1], UInt24, &OK);
       if (OK)
       {
@@ -1688,9 +1689,8 @@ static void DecodeCALL(Word Index)
           PutCode(0x11 + ((Hi(AdrLong) & 7) << 5));
           BAsmCode[CodeLen++] = Lo(AdrLong);
         }
-        else if (MomCPU < CPU8051) WrError(1910);
-        else if ((AdrLong >> 16) != ((((long)EProgCounter()) + 3) >> 16)) WrError(1910);
-        else
+        else if (MomCPU < CPU8051) WrError(ErrNum_TargOnDiffPage);
+        else if (ChkSamePage(AdrLong, EProgCounter() + 3, 16))
         {
           PutCode(0x12);
           BAsmCode[CodeLen++] = Hi(AdrLong);

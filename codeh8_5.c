@@ -1050,8 +1050,7 @@ static void DecodeRel(Word Code)
     AdrLong = EvalIntExpression(ArgStr[1], UInt24, &OK);
     if (OK)
     {
-      if (((AdrLong >> 16) != (((int)EProgCounter()) >> 16)) &&
-          (!FirstPassUnknown) && (!SymbolQuestionable)) WrError(1910);
+      if (!ChkSamePage(AdrLong, EProgCounter(), 16));
       else if ((EProgCounter() & 0xffff) >= 0xfffc) WrError(1905);
       else
       {
@@ -1167,8 +1166,7 @@ static void DecodeSCB(Word Code)
     AdrLong = EvalIntExpression(ArgStr[2], UInt24, &OK);
     if (OK)
     {
-      if (((AdrLong >> 16) != (((int)EProgCounter()) >> 16)) &&
-          (!FirstPassUnknown) && (!SymbolQuestionable)) WrError(1910);
+      if (!ChkSamePage(AdrLong, EProgCounter(), 16));
       else if ((EProgCounter() & 0xffff)>=0xfffc) WrError(1905);
       else
       {

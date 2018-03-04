@@ -47,6 +47,7 @@ typedef enum
   ErrNum_OpenREPT = 1803,
   ErrNum_OpenWHILE = 1804,
   ErrNum_UndefKeyArg = 1811,
+  ErrNum_TargOnDiffPage = 1910,
   ErrNum_UnknownSegment = 1961,
   ErrNum_InvRegName = 1980,
   ErrNum_STRUCTEndedByENDUNION = 2080,
@@ -79,5 +80,7 @@ extern int ChkExcludeCPUList(tErrorNum ErrorNum, ...);
 
 extern int ChkExactCPUMaskExt(Word CPUMask, CPUVar FirstCPU, tErrorNum ErrorNum);
 #define ChkExactCPUMask(CPUMask, FirstCPU) ChkExactCPUMaskExt(CPUMask, FirstCPU, ErrNum_InstructionNotSupported)
+
+extern Boolean ChkSamePage(LargeWord Addr1, LargeWord Addr2, unsigned PageBits);
 
 #endif /* _ERRMSG_H */

@@ -222,15 +222,13 @@ static void DecodeSBranch(Word Index)
   if (ChkArgCnt(1, 1)
    && PutCode(pOrder))
   {
+    FirstPassUnknown = False;
     Addr = EvalIntExpression(ArgStr[1], UInt16, &OK);
     if (!OK) CodeLen = 0;
     else
     {
-      if ((Hi(EProgCounter() + 1) != Hi(Addr)) && (!SymbolQuestionable))
-      {
-        WrError(1910);
+      if (!ChkSamePage(EProgCounter() + 1, Addr, 8))
         CodeLen = 0;
-      }
       else
       {
         ChkSpace(SegCode);

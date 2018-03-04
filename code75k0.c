@@ -1301,10 +1301,13 @@ static void DecodeBRCB(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    Integer AdrInt = EvalIntExpression(ArgStr[1], UInt16, &OK);
+    Integer AdrInt;
+
+    FirstPassUnknown = False;
+    AdrInt = EvalIntExpression(ArgStr[1], UInt16, &OK);
     if (OK)
     {
-      if ((AdrInt >> 12) != (EProgCounter() >> 12)) WrError(1910);
+      if (!ChkSamePage(AdrInt, EProgCounter(), 12));
       else if ((EProgCounter() & 0xfff) >= 0xffe) WrError(1905);
       else
       {

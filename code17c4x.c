@@ -230,12 +230,13 @@ static void DecodeCALL_GOTO(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
+    Word AdrWord;
 
-    Word AdrWord = EvalIntExpression(ArgStr[1], UInt16, &OK);
+    FirstPassUnknown = False;
+    AdrWord = EvalIntExpression(ArgStr[1], UInt16, &OK);
     if (OK)
     {
-      if (((ProgCounter() ^ AdrWord) & 0xe000) != 0) WrError(1910);
-      else
+      if (ChkSamePage(ProgCounter(), AdrWord, 13))
       {
         WAsmCode[0] = Code + (AdrWord & 0x1fff);
         CodeLen = 1;

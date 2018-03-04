@@ -460,15 +460,12 @@ static void DecodeNZT(Word Code)
     {
       if (ChkArgCnt(2, 2))
       {
+        FirstPassUnknown = False;
         Adr = EvalIntExpression(ArgStr[2], UInt13, &OK);
-        if (OK)
+        if (OK && ChkSamePage(Adr, EProgCounter(), 8))
         {
-          if ((!SymbolQuestionable) && ((Adr >> 8) != (EProgCounter() >> 8))) WrError(1910);
-          else
-          {
-            WAsmCode[0] = 0xa000 | (SrcReg << 8) | (Adr & 0xff);
-            CodeLen = 1;
-          }
+          WAsmCode[0] = 0xa000 | (SrcReg << 8) | (Adr & 0xff);
+          CodeLen = 1;
         }
       }
     }
@@ -486,15 +483,12 @@ static void DecodeNZT(Word Code)
         if ((SrcLen != -1) && (Rot != SrcLen)) WrError(1131);
         else
         {
+          FirstPassUnknown = False;
           Adr = EvalIntExpression(ArgStr[ArgCnt], UInt13, &OK);
-          if (OK)
+          if (OK && ChkSamePage(Adr, EProgCounter(), 5))
           {
-            if ((!SymbolQuestionable) && ((Adr >> 5) != (EProgCounter() >> 5))) WrError(1910);
-            else
-            {
-              WAsmCode[0] = 0xa000 | (SrcReg << 8) | (Rot << 5) | (Adr & 0x1f);
-              CodeLen = 1;
-            }
+            WAsmCode[0] = 0xa000 | (SrcReg << 8) | (Rot << 5) | (Adr & 0x1f);
+            CodeLen = 1;
           }
         }
       }

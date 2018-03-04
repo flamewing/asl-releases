@@ -1017,17 +1017,15 @@ static void DecodeBSS(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    Word AdrWord = EvalIntExpression(ArgStr[1], Int16, &OK);
+    Word AdrWord;
 
-    if (OK)
+    FirstPassUnknown = False;
+    AdrWord = EvalIntExpression(ArgStr[1], Int16, &OK);
+    if (OK && ChkSamePage(AdrWord, EProgCounter() + 1, 6))
     {
-      if ((!SymbolQuestionable) && ((AdrWord >> 6) != ((EProgCounter() + 1) >> 6))) WrError(1910);
-      else
-      {
-        ChkSpace(SegCode);
-        CodeLen = 1;
-        BAsmCode[0] = 0x80 + (AdrWord & 0x3f);
-      }
+      ChkSpace(SegCode);
+      CodeLen = 1;
+      BAsmCode[0] = 0x80 + (AdrWord & 0x3f);
     }
   }
 }
@@ -1039,18 +1037,16 @@ static void DecodeBS(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    Word AdrWord = EvalIntExpression(ArgStr[1], Int16, &OK);
+    Word AdrWord;
 
-    if (OK)
+    FirstPassUnknown = False;
+    AdrWord = EvalIntExpression(ArgStr[1], Int16, &OK);
+    if (OK && ChkSamePage(AdrWord, EProgCounter() + 2, 12))
     {
-      if (((!SymbolQuestionable) && (AdrWord >> 12) != ((EProgCounter() + 2) >> 12))) WrError(1910);
-      else
-      {
-        ChkSpace(SegCode);
-        CodeLen = 2;
-        BAsmCode[0] = 0x60 + (Hi(AdrWord) & 15);
-        BAsmCode[1] = Lo(AdrWord);
-      }
+      ChkSpace(SegCode);
+      CodeLen = 2;
+      BAsmCode[0] = 0x60 + (Hi(AdrWord) & 15);
+      BAsmCode[1] = Lo(AdrWord);
     }
   }
 }
@@ -1159,18 +1155,16 @@ static void DecodeCALL(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    Word AdrWord = EvalIntExpression(ArgStr[1], Int16, &OK);
+    Word AdrWord;
 
-    if (OK)
+    FirstPassUnknown = False;
+    AdrWord = EvalIntExpression(ArgStr[1], Int16, &OK);
+    if (OK && ChkSamePage(AdrWord, EProgCounter(), 11))
     {
-      if ((!SymbolQuestionable) && (((AdrWord ^ EProgCounter()) & 0x3800) != 0)) WrError(1910);
-      else
-      {
-        ChkSpace(SegCode);
-        CodeLen = 2;
-        BAsmCode[0] = 0x20 + (Hi(AdrWord) & 7);
-        BAsmCode[1] = Lo(AdrWord);
-      }
+      ChkSpace(SegCode);
+      CodeLen = 2;
+      BAsmCode[0] = 0x20 + (Hi(AdrWord) & 7);
+      BAsmCode[1] = Lo(AdrWord);
     }
   }
 }
