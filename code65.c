@@ -206,7 +206,7 @@ static Word EvalAddress(const char *pAsc, IntType Type, Boolean *pOK)
     /* within one of the 8K pages? */
 
     for (Page = 0; Page < 8; Page++)
-      if (((AbsAddress >> 13) & 255) == MPR[Page])
+      if ((LargeInt)((AbsAddress >> 13) & 255) == MPR[Page])
         break;
     if (Page >= 8)
     {
@@ -2069,7 +2069,7 @@ static void SwitchTo_65(void)
   {
     static ASSUMERec ASSUME740s[] =
     {
-      { "SP", &SpecPage, 0, 0xff, -1 }
+      { "SP", &SpecPage, 0, 0xff, -1, NULL }
     };
 
     pASSUMERecs = ASSUME740s;
@@ -2080,14 +2080,14 @@ static void SwitchTo_65(void)
   {
     static ASSUMERec ASSUME6280s[] =
     {
-      { "MPR0", MPR + 0, 0, 0xff, -1 },
-      { "MPR1", MPR + 1, 0, 0xff, -1 },
-      { "MPR2", MPR + 2, 0, 0xff, -1 },
-      { "MPR3", MPR + 3, 0, 0xff, -1 },
-      { "MPR4", MPR + 4, 0, 0xff, -1 },
-      { "MPR5", MPR + 5, 0, 0xff, -1 },
-      { "MPR6", MPR + 6, 0, 0xff, -1 },
-      { "MPR7", MPR + 7, 0, 0xff, -1 },
+      { "MPR0", MPR + 0, 0, 0xff, -1, NULL },
+      { "MPR1", MPR + 1, 0, 0xff, -1, NULL },
+      { "MPR2", MPR + 2, 0, 0xff, -1, NULL },
+      { "MPR3", MPR + 3, 0, 0xff, -1, NULL },
+      { "MPR4", MPR + 4, 0, 0xff, -1, NULL },
+      { "MPR5", MPR + 5, 0, 0xff, -1, NULL },
+      { "MPR6", MPR + 6, 0, 0xff, -1, NULL },
+      { "MPR7", MPR + 7, 0, 0xff, -1, NULL },
     };
 
     pASSUMERecs = ASSUME6280s;

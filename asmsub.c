@@ -985,18 +985,18 @@ static Boolean CompMatch(int Col, const struct sLineComp *pComp)
   return (pComp
        && (pComp->StartCol >= 0)
        && (Col >= pComp->StartCol)
-       && (Col < pComp->StartCol + pComp->Len));
+       && (Col < pComp->StartCol + (int)pComp->Len));
 }
 
 void PrintOneLineMuted(FILE *pFile, const char *pLine,
                        const struct sLineComp *pMuteComponent,
                        const struct sLineComp *pMuteComponent2)
 {
-  int z;
+  int z, Len = strlen(pLine);
   Boolean Match;
 
   errno = 0;
-  for (z = 0; z < strlen(pLine); z++)
+  for (z = 0; z < Len; z++)
   {
     Match = CompMatch(z, pMuteComponent) || CompMatch(z, pMuteComponent2);
     fputc(Match ? ' ' : pLine[z], pFile);
@@ -1040,7 +1040,7 @@ void PrLineMarker(FILE *pFile, const char *pLine, const char *pPrefix, const cha
     fputs(pPrefix, pFile);
     if (pLineComp->StartCol > 0)
       fprintf(pFile, "%*s", pLineComp->StartCol, "");
-    for (z = 0; z < pLineComp->Len; z++)
+    for (z = 0; z < (int)pLineComp->Len; z++)
       fputc(Marker, pFile);
     fprintf(pFile, "%s\n", pTrailer);
   }
@@ -1089,7 +1089,7 @@ void GenLineMarker(char *pDest, unsigned DestSize, char Marker, const struct sLi
 
   for (z = 0; (z < pLineComp->StartCol) && (pRun - pDest + 1 < DestSize); z++)
     *pRun++ = ' ';
-  for (z = 0; (z < pLineComp->Len) && (pRun - pDest + 1 < DestSize); z++)
+  for (z = 0; (z < (int)pLineComp->Len) && (pRun - pDest + 1 < DestSize); z++)
     *pRun++ = Marker;
   *pRun = '\0';
 }

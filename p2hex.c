@@ -848,7 +848,7 @@ static CMDResult CMD_DestFormat(Boolean Negate, const char *pArg)
   {
     Default, MotoS, IntHex, IntHex16, IntHex32, MOSHex, TekHex, TiDSK, Atmel, Mico8
   };
-  int z;
+  unsigned z;
   String Arg;
 
   strmaxcpy(Arg, pArg, 255);

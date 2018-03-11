@@ -972,7 +972,7 @@ static void SwitchTo_29K(void)
 {
   static ASSUMERec ASSUME29Ks[] = 
   {
-    {"RBP", &Reg_RBP, 0, 0xff, 0x00000000}
+    {"RBP", &Reg_RBP, 0, 0xff, 0x00000000, NULL}
   };
   static const int ASSUME29KCount = sizeof(ASSUME29Ks) / sizeof(*ASSUME29Ks);
   TurnWords = True;

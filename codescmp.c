@@ -128,7 +128,7 @@ static Boolean DecodeAdr(char *Asc, Boolean MayInc, Byte PCDisp, Byte *Arg)
       Target = PCVal;
 
     if (!ChkSamePage(Target, PCVal, 12));
-    else if ((Disp > 0x7f) && (Disp <= 0xf80)) WrError(1370);
+    else if ((Disp > 0x7f) && (Disp < 0xf80)) WrError(1370);
     else
     {
       BAsmCode[1] = Disp & 0xff;

@@ -464,7 +464,7 @@ IntType GetSmallestUIntType(LargeWord MaxValue)
   {
     if (IntTypeDefs[Result].Min < 0)
       continue;
-    if (IntTypeDefs[Result].Max >= MaxValue)
+    if (IntTypeDefs[Result].Max >= (LargeInt)MaxValue)
       return Result;
   }
   return UInt32;
@@ -968,7 +968,8 @@ LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
   {
     Boolean NegFlag = False;
     TConstMode ActMode = ConstModeC;
-    int Search;
+    unsigned BaseIdx;
+    int Digit;
     Byte Base;
     char ch;
     Boolean Found;
@@ -1000,8 +1001,8 @@ LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
 
       if ((!Found) && (l >= 2))
       {
-        for (Search = 0; Search < 3; Search++)
-          if (*pExpr == BaseIds[Search])
+        for (BaseIdx = 0; BaseIdx < 3; BaseIdx++)
+          if (*pExpr == BaseIds[BaseIdx])
           {
             ActMode = ConstModeMoto;
             Found = True;
@@ -1014,8 +1015,8 @@ LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
         ch = mytoupper(pExpr[l - 1]);
         if (DigitVal(ch, RadixBase) == -1)
         {
-          for (Search = 0; Search < sizeof(BaseLetters) / sizeof(*BaseLetters); Search++)
-            if (ch == BaseLetters[Search])
+          for (BaseIdx = 0; BaseIdx < sizeof(BaseLetters) / sizeof(*BaseLetters); BaseIdx++)
+            if (ch == BaseLetters[BaseIdx])
             {
               ActMode = ConstModeIntel;
               Found = True;
@@ -1053,20 +1054,20 @@ LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
         ch = mytoupper(pExpr[l - 1]);
         if (DigitVal(ch, RadixBase) == -1)
         {
-          for (Search = 0; Search < sizeof(BaseLetters) / sizeof(*BaseLetters); Search++)
-            if (ch == BaseLetters[Search])
+          for (BaseIdx = 0; BaseIdx < sizeof(BaseLetters) / sizeof(*BaseLetters); BaseIdx++)
+            if (ch == BaseLetters[BaseIdx])
             {
-              Base = BaseVals[Search];
+              Base = BaseVals[BaseIdx];
               l--;
               break;
             }
         }
         break;
       case ConstModeMoto:
-        for (Search = 0; Search < 3; Search++)
-          if (*pExpr == BaseIds[Search])
+        for (BaseIdx = 0; BaseIdx < 3; BaseIdx++)
+          if (*pExpr == BaseIds[BaseIdx])
           {
-            Base = BaseVals[Search];
+            Base = BaseVals[BaseIdx];
             pExpr++; l--;
             break;
           }
@@ -1139,10 +1140,10 @@ LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
 
     while (l > 0)
     {
-      Search = DigitVal(mytoupper(*pExpr), Base);
-      if (Search == -1)
+      Digit = DigitVal(mytoupper(*pExpr), Base);
+      if (Digit == -1)
         return -1;
-      Wert = Wert * Base + Search;
+      Wert = Wert * Base + Digit;
       pExpr++; l--;
     }
 
@@ -2126,11 +2127,13 @@ void EvalExpression(const char *pExpr, TempResult *pErg)
 
     else if (!strcmp(ftemp, "ASSUMEDVAL"))
     {
-      for (z1 = 0; z1 < ASSUMERecCnt; z1++)
-        if (!strcasecmp(Copy, pASSUMERecs[z1].Name))
+      unsigned IdxAssume;
+
+      for (IdxAssume = 0; IdxAssume < ASSUMERecCnt; IdxAssume++)
+        if (!strcasecmp(Copy, pASSUMERecs[IdxAssume].Name))
         {
           pErg->Typ = TempInt;
-          pErg->Contents.Int = *(pASSUMERecs[z1].Dest);
+          pErg->Contents.Int = *(pASSUMERecs[IdxAssume].Dest);
           LEAVE;
         }
       WrXError(1010, Copy);

@@ -74,7 +74,7 @@ static CPUVar CPUST6210, CPUST6215, CPUST6220, CPUST6225;
 #define ASSUME62Count 1
 static ASSUMERec ASSUME62s[ASSUME62Count] =
 {
-  {"ROMBASE", &WinAssume, 0, 0x3f, 0x40}
+  {"ROMBASE", &WinAssume, 0, 0x3f, 0x40, NULL}
 };
 
 /*---------------------------------------------------------------------------------*/

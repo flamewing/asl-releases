@@ -83,7 +83,7 @@ static SReg *SRegs;
 
 static ASSUMERec ASSUME78C10s[] =
 {
-  {"V" , &WorkArea, 0, 0xff, 0x100}
+  {"V" , &WorkArea, 0, 0xff, 0x100, NULL}
 };
 
 /*--------------------------------------------------------------------------------*/

@@ -228,6 +228,11 @@ Byte Hi(Word inp)
   return ((inp >> 8) & 0xff);
 }
 
+LongWord HiWord(LongWord Src)
+{
+  return ((Src >> 16) & 0xffff);
+}
+
 Boolean Odd(int inp)
 {
   return ((inp & 1) == 1);

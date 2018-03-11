@@ -1287,7 +1287,8 @@ static void CodeALIGN(Word Index)
 
 static void CodeASSUME(Word Index)
 {
-  int z1, z2;
+  int z1;
+  unsigned z2;
   Boolean OK;
   LongInt HVal;
   String RegPart, ValPart;

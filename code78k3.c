@@ -88,7 +88,7 @@ static LongInt Reg_RSS;
 
 static ASSUMERec ASSUME78K3s[] =
 { 
-  {"RSS" , &Reg_RSS , 0,  0x1,  0x0},
+  {"RSS" , &Reg_RSS , 0,  0x1,  0x0, NULL},
 };
 
 /*-------------------------------------------------------------------------*/

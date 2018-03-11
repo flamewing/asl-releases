@@ -111,8 +111,8 @@ static Boolean AssumeByte;
 static LongInt Reg_RSS, Reg_LOCATION;
 static ASSUMERec ASSUME78K4s[] =
 {
-  {"RSS"      , &Reg_RSS      , 0,  0x1,  0x0},
-  {"LOCATION" , &Reg_LOCATION , 0,  0xf,  0x0},
+  {"RSS"      , &Reg_RSS      , 0,  0x1,  0x0, NULL},
+  {"LOCATION" , &Reg_LOCATION , 0,  0xf,  0x0, NULL},
 };
 
 /*-------------------------------------------------------------------------*/
@@ -2787,7 +2787,7 @@ static void DecodeBIT(Word Code)
 static void DecodePUSH_POP(Word Code)
 {
   tEncodedAddress Address, SumAddress;
-  unsigned z;
+  int z;
   Boolean IsU, IsPUSH;
 
   if (Code & 15)

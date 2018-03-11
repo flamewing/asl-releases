@@ -1,4 +1,4 @@
-                include         parsys.i68
+                include         parsys.inc
 
                 page            60
                 cpu             68000
@@ -184,14 +184,14 @@ S_LibName:      dc.b    "FLOAT",0
 
                 supmode         off
 
-                include         float.i68
+                include         float.inc
 
 ;----------------------------------------------------------------------------
 ; Gleitkommalibrary, mit 68881:
 
                 supmode         off
 
-                include         float81.i68
+                include         float81.inc
 
 ;----------------------------------------------------------------------------
 ; Die Startsequenz:

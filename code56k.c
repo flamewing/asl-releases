@@ -471,6 +471,7 @@ static void DecodeAdr(char *Asc_O, Word Erl, Byte ErlSeg)
     SegCode, SegXData, SegYData, SegLData
   };
   int z, l;
+  unsigned SegIndex;
   Boolean OK;
   Byte OrdVal;
   String Asc;
@@ -497,10 +498,10 @@ static void DecodeAdr(char *Asc_O, Word Erl, Byte ErlSeg)
 
   /* Zielsegment vorgegeben ? */
 
-  for (z = 0; z < SegCount; z++)
-    if ((mytoupper(*Asc_O) == SegNames[z]) && (Asc_O[1] == ':'))
+  for (SegIndex = 0; SegIndex < SegCount; SegIndex++)
+    if ((mytoupper(*Asc_O) == SegNames[SegIndex]) && (Asc_O[1] == ':'))
     {
-      AdrSeg = SegVals[z];
+      AdrSeg = SegVals[SegIndex];
       Asc_O += 2;
     }
   strmaxcpy(Asc, Asc_O, 255);
@@ -628,6 +629,10 @@ static Boolean DecodeOpPair(char *Left, char *Right, Byte WorkSeg,
     if (DecodeALUReg(Right, Reg2, WorkSeg == SegXData, WorkSeg == SegYData, True))
     {
       *Dir = 2;
+      *AType = ModNone;
+      *AMode = 0;
+      *ACnt = 0;
+      *AVal = 0;
       Result = True;
     }
     else
@@ -2778,7 +2783,7 @@ static void AddMix(const char *pName, Word Code, InstProc Proc, unsigned Mask)
 
 static void AddCondition(const char *pName, InstProc Proc)
 {
-  int z;
+  unsigned z;
   char TmpName[30];
   Word Code;
 

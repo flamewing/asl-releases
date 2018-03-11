@@ -368,7 +368,7 @@ static void DecodeADR(Word Index)
               break;
             case TempString:
             {
-              LongInt z3;
+              unsigned z3;
 
               for (z3 = 0; z3 < Res.Contents.Ascii.Length; z3++)
                 PutADR(Res.Contents.Ascii.Contents[z3]);

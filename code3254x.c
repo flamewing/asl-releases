@@ -2785,9 +2785,9 @@ static void SwitchTo_32054x(void)
 #define ASSUME3254xCount (sizeof(ASSUME3254xs) / sizeof(*ASSUME3254xs))
   static ASSUMERec ASSUME3254xs[] =
   {
-    {"CPL", &Reg_CPL, 0,      1,       0},
-    {"DP" , &Reg_DP , 0,  0x1ff,   0x200},
-    {"SP" , &Reg_SP , 0, 0xffff, 0x10000}
+    {"CPL", &Reg_CPL, 0,      1,       0, NULL},
+    {"DP" , &Reg_DP , 0,  0x1ff,   0x200, NULL},
+    {"SP" , &Reg_SP , 0, 0xffff, 0x10000, NULL}
   };
 
   PFamilyDescr FoundDescr;

@@ -135,7 +135,7 @@ static ShortInt OpSize;
 #define ASSUMEXACount 1
 static ASSUMERec ASSUMEXAs[ASSUMEXACount] =
 {
-  {"DS", &Reg_DS, 0, 0xff, 0x100}
+  {"DS", &Reg_DS, 0, 0xff, 0x100, NULL}
 };
 
 /*-------------------------------------------------------------------------*/

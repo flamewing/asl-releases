@@ -1,21 +1,16 @@
-# $Id: makedefs.files,v 1.10 2015/08/30 11:36:05 alfred Exp $
-
-BASEARCH1FILES = *.c *.h man/*.1 \
-            INSTALL README README.OS2 README.DOS README.LANGS README.KR TODO BENCHES Makefile Makefile.dos Makefile.os2 Makefile.w32 Makefile.def.tmpl \
+BASEARCHFILES = *.c *.h man/*.1 \
+            INSTALL README README.OS2 README.DOS README.LANGS README.KR TODO BENCHES Makefile Makefile.dos Makefile.os2 Makefile.def.tmpl \
             COPYING install.sh install.bat install.cmd instw32.cmd marks.asm \
-            *.res objdefs.* makedefs.* rscdeps asl.def \
+            *.res objdefs.dos objdefs.unix makedefs.files makedefs.src makedefs.str rscdeps asl.def \
             include/*.inc include/avr/*.inc \
-            Makefile.def-samples/M*
-BASEARCH2FILES = doc_DE/Makefile doc_DE/*.tex doc_EN/Makefile doc_EN/*.tex \
-            tests/testall* tests/warnlog* \
-            tests/t_*/t_* tests/t_*/asflags tests/t_*/*.i* tests/t_*/*.ASM tests/t_bas52/bas52.* tests/t_m16/mkm16.cpp
+            Makefile.def-samples/ \
+            doc_DE/Makefile doc_DE/*.tex doc_EN/Makefile doc_EN/*.tex \
+            tests/testall tests/testall.bat tests/testall.cmd tests/warnlog.DE tests/warnlog.EN \
+            tests/t_*/
 
-DISTARCHFILES = $(BASEARCH1FILES) $(BASEARCH2FILES) asl-$(VERSION).lsm changelog
+DISTARCHFILES = $(BASEARCHFILES) asl-$(VERSION).lsm changelog
 
-ARCH1FILES = $(BASEARCH1FILES)
-ARCH2FILES = $(BASEARCH2FILES) header.tmpl *.lsm changelog
-
-ARCHFILES = $(ARCH1FILES) $(ARCH2FILES)
+ARCHFILES = $(BASEARCHFILES) header.tmpl *.lsm changelog
 
 # set *EXEXTENSION im Makefile.def if you need a specific extension for 
 # the executables (e.g. .exe for OS/2 or Windows)

@@ -12,12 +12,12 @@
         SEGMENT CODE
         USING 0
 
-        INCLUDE MAKRO1.ASM
-        INCLUDE TAST1.ASM
-        INCLUDE MEM1.ASM
-        INCLUDE TEACH1.ASM
-        INCLUDE RUN1.ASM
-        INCLUDE DEBUG.ASM
+        include makro1.asm
+        include tast1.asm
+        include mem1.asm
+        include teach1.asm
+        include run1.asm
+        include debug.asm
 ;=====================================================================
 ; Definitionen der Funktionen der Teach- In Einheit
 

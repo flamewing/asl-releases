@@ -26,6 +26,8 @@ extern Byte Lo(Word inp);
 
 extern Byte Hi(Word inp);
 
+extern LongWord HiWord(LongWord Src);
+
 extern Boolean Odd (int inp);
 
 extern Boolean DirScan(char *Mask, charcallback callback);

@@ -565,7 +565,7 @@ static void Code_lr2r(Word Index)
 
 static void Add_lr2r(char *NName, Word NCode1, Word NCode2)
 {
-  if (InstrZ >= (sizeof(lr2r_Orders) / sizeof(*lr2r_Orders)))
+  if (InstrZ >= (int)(sizeof(lr2r_Orders) / sizeof(*lr2r_Orders)))
     exit(255);
   lr2r_Orders[InstrZ].Opcode1 = NCode1;
   lr2r_Orders[InstrZ].Opcode2 = NCode2;

@@ -1159,7 +1159,7 @@ static void SwitchTo_6816(void)
 #define ASSUME6816Count (sizeof(ASSUME6816s) / sizeof(*ASSUME6816s))
   static ASSUMERec ASSUME6816s[11] =
   {
-    { "EK" , &Reg_EK , 0 , 0xff , 0x100 }
+    { "EK" , &Reg_EK , 0 , 0xff , 0x100, NULL }
   };
 
   TurnWords = False;

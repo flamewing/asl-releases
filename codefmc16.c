@@ -125,12 +125,12 @@ static LongInt Reg_PCB, Reg_DTB, Reg_ADB, Reg_USB, Reg_SSB, Reg_DPR;
 #define ASSUMEF2MC16Count 6
 static ASSUMERec ASSUMEF2MC16s[ASSUMEF2MC16Count] =
 {
-  { "PCB"    , &Reg_PCB,     0x00, 0xff, 0x100 },
-  { "DTB"    , &Reg_DTB,     0x00, 0xff, 0x100 },
-  { "ADB"    , &Reg_ADB,     0x00, 0xff, 0x100 },
-  { "USB"    , &Reg_USB,     0x00, 0xff, 0x100 },
-  { "SSB"    , &Reg_SSB,     0x00, 0xff, 0x100 },
-  { "DPR"    , &Reg_DPR,     0x00, 0xff, 0x100 }
+  { "PCB"    , &Reg_PCB,     0x00, 0xff, 0x100, NULL },
+  { "DTB"    , &Reg_DTB,     0x00, 0xff, 0x100, NULL },
+  { "ADB"    , &Reg_ADB,     0x00, 0xff, 0x100, NULL },
+  { "USB"    , &Reg_USB,     0x00, 0xff, 0x100, NULL },
+  { "SSB"    , &Reg_SSB,     0x00, 0xff, 0x100, NULL },
+  { "DPR"    , &Reg_DPR,     0x00, 0xff, 0x100, NULL }
 };
 
 /*--------------------------------------------------------------------------*/
@@ -152,7 +152,7 @@ static Boolean DecodeAdr(char *Asc, int Mask)
   Integer AdrVal;
   LongWord ImmVal;
   Boolean OK;
-  int z;
+  unsigned Index;
   static char *SpecNames[7] = {"DTB", "ADB", "SSB", "USB", "DPR", "\a", "PCB"};
 
   AdrMode = ModNone; AdrCnt = 0;
@@ -191,22 +191,22 @@ static Boolean DecodeAdr(char *Asc, int Mask)
 
   if (Mask & MModSeg)
   {
-    for (z = 0; z < (int)sizeof(BankNames) / sizeof(char *); z++)
-      if (!strcasecmp(Asc, BankNames[z]))
+    for (Index = 0; Index < sizeof(BankNames) / sizeof(char *); Index++)
+      if (!strcasecmp(Asc, BankNames[Index]))
       {
         AdrMode = ModSeg;
-        AdrPart = z;
+        AdrPart = Index;
         goto found;
       }
   }
 
   if (Mask & MModSpec)
   {
-    for (z = 0; z < (int)sizeof(SpecNames) / sizeof(char *); z++)
-      if (strcasecmp(Asc, SpecNames[z]) == 0)
+    for (Index = 0; Index < sizeof(SpecNames) / sizeof(char *); Index++)
+      if (strcasecmp(Asc, SpecNames[Index]) == 0)
       {
         AdrMode = ModSpec;
-        AdrPart = z;
+        AdrPart = Index;
         goto found;
       }
   }
@@ -877,7 +877,7 @@ static void DecodeJmp16(Word Index)
       BAsmCode[1] = Addr & 0xff;
       BAsmCode[2] = (Addr >> 8) & 0xff;
       CodeLen = 3;
-      if (((Addr >> 16) & 0xff) != Reg_PCB)
+      if (((Addr >> 16) & 0xff) != (LongWord)Reg_PCB)
         WrError(75);
     }
   }
@@ -2140,7 +2140,7 @@ static void AddString(char *NName, Byte NCode)
 
 static void InitFields(void)
 {
-  int z;
+  unsigned z;
 
   InstTable = CreateInstTable(201);
 

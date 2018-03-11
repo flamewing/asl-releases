@@ -84,7 +84,7 @@ enum
 #define MModMem    (1 << ModMem)
 #define MModImm    (1 << ModImm)
 
-static int DefaultCondition;
+static unsigned DefaultCondition;
 
 static ShortInt AdrType;
 static Byte AdrMode;
@@ -1160,7 +1160,8 @@ static void DecodeCALL_JP(Word Code)
 {
   if (ChkArgCnt(1, 2))
   {
-    int Cond = (ArgCnt == 1) ? DefaultCondition : DecodeCondition(ArgStr[1]);
+    unsigned Cond = (ArgCnt == 1) ? DefaultCondition : DecodeCondition(ArgStr[1]);
+
     if (Cond >= ConditionCnt) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
     else
     {
@@ -1207,7 +1208,8 @@ static void DecodeRET(Word Code)
 
   if (ChkArgCnt(0, 1))
   {
-    int Cond = (ArgCnt == 0) ? DefaultCondition : DecodeCondition(ArgStr[1]);
+    unsigned Cond = (ArgCnt == 0) ? DefaultCondition : DecodeCondition(ArgStr[1]);
+
     if (Cond == DefaultCondition)
     {
       CodeLen = 1;

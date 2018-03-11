@@ -157,8 +157,8 @@ static LongInt Reg_P6, Reg_PM6;
 
 static ASSUMERec ASSUME78K2s[] =
 {
-  {"P6"  , &Reg_P6  , 0,  0xf,  0x10},
-  {"PM6" , &Reg_PM6 , 0,  0xf,  0x10}
+  {"P6"  , &Reg_P6  , 0,  0xf,  0x10, NULL},
+  {"PM6" , &Reg_PM6 , 0,  0xf,  0x10, NULL}
 };
 
 /*-------------------------------------------------------------------------*/

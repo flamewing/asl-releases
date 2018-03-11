@@ -121,7 +121,7 @@ static LongInt DPAssume;
 #define ASSUMEST9Count 1
 static ASSUMERec ASSUMEST9s[ASSUMEST9Count] =
 {
-  {"DP", &DPAssume, 0,  1, 0x0}
+  {"DP", &DPAssume, 0,  1, 0x0, NULL}
 };
 
 /*--------------------------------------------------------------------------*/

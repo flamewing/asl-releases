@@ -543,7 +543,7 @@ static void DecodeAdr(int Start, int Stop, Word Mask)
         if (Mask & MModExtPg)
         {
           Mask |= MModExt;
-          if (((EProgCounter() >> 16) != (AdrWord >> 16))
+          if ((HiWord(EProgCounter()) != HiWord(AdrWord))
            && ((AdrWord & 0xc000) == 0x8000)
            && ((EProgCounter() & 0xc000) == 0x8000)
            && (!FirstPassUnknown))
@@ -1792,8 +1792,8 @@ static void SwitchTo_6812(void)
 #define ASSUME6812Count (sizeof(ASSUME6812s) / sizeof(*ASSUME6812s))
    static const ASSUMERec ASSUME6812s[] =
    {
-     { "DIRECT" , &Reg_Direct , 0,  0xff,  0x100 },
-     { "GPAGE"  , &Reg_GPage  , 0,  0x7f,   0x80 }
+     { "DIRECT" , &Reg_Direct , 0,  0xff,  0x100, NULL },
+     { "GPAGE"  , &Reg_GPage  , 0,  0x7f,   0x80, NULL }
    };
 
    pASSUMERecs = ASSUME6812s;

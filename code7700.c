@@ -153,13 +153,13 @@ static CPUVar CPU65816, CPUM7700, CPUM7750, CPUM7751;
 
 static ASSUMERec ASSUME7700s[] =
 {
-  { "PG" , &Reg_PG , 0,   0xff,   0x100 },
-  { "DT" , &Reg_DT , 0,   0xff,   0x100 },
-  { "PBR", &Reg_PG , 0,   0xff,   0x100 },
-  { "DBR", &Reg_DT , 0,   0xff,   0x100 },
-  { "X"  , &Reg_X  , 0,      1,      -1 },
-  { "M"  , &Reg_M  , 0,      1,      -1 },
-  { "DPR", &Reg_DPR, 0, 0xffff, 0x10000 }
+  { "PG" , &Reg_PG , 0,   0xff,   0x100, NULL },
+  { "DT" , &Reg_DT , 0,   0xff,   0x100, NULL },
+  { "PBR", &Reg_PG , 0,   0xff,   0x100, NULL },
+  { "DBR", &Reg_DT , 0,   0xff,   0x100, NULL },
+  { "X"  , &Reg_X  , 0,      1,      -1, NULL },
+  { "M"  , &Reg_M  , 0,      1,      -1, NULL },
+  { "DPR", &Reg_DPR, 0, 0xffff, 0x10000, NULL }
 };
 
 /*---------------------------------------------------------------------------*/

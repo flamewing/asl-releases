@@ -129,11 +129,13 @@ static OneOrder *RegEAOrders;
 static OneOrder *TwoRegOrders;
 
 #define ASSUMEH8_5Count 4
-static ASSUMERec ASSUMEH8_5s[ASSUMEH8_5Count]=
-               {{"DP", &Reg_DP, 0, 0xff, -1},
-                {"EP", &Reg_EP, 0, 0xff, -1},
-                {"TP", &Reg_TP, 0, 0xff, -1},
-                {"BR", &Reg_BR, 0, 0xff, -1}};
+static ASSUMERec ASSUMEH8_5s[ASSUMEH8_5Count] =
+{
+  {"DP", &Reg_DP, 0, 0xff, -1, NULL},
+  {"EP", &Reg_EP, 0, 0xff, -1, NULL},
+  {"TP", &Reg_TP, 0, 0xff, -1, NULL},
+  {"BR", &Reg_BR, 0, 0xff, -1, NULL}
+};
 
 /*-------------------------------------------------------------------------*/
 /* Adressparsing */

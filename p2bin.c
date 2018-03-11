@@ -80,7 +80,7 @@ static Byte FillVal;
 static Boolean DoCheckSum;
 
 static Byte SizeDiv;
-static LongInt ANDMask, ANDEq;
+static LongWord ANDMask, ANDEq;
 static ShortInt StartHeader;
 
 static ChunkList UsedList;
@@ -219,7 +219,6 @@ static void ProcessFile(const char *FileName, LongWord Offset)
   LongWord ErgStart, ErgStop;
   LongInt NextPos;
   Word ErgLen = 0;
-  LongInt z;
   Byte Gran;
 
   SrcFile = fopen(FileName, OPENRDMODE);
@@ -305,10 +304,12 @@ static void ProcessFile(const char *FileName, LongWord Offset)
           if (SizeDiv == 1) ResLen = TransLen;
           else
           {
+            LongWord Addr;
+
             ResLen = 0;
-            for (z = 0; z < (LongInt)TransLen; z++)
-              if (((ErgStart * Gran + z) & ANDMask) == ANDEq)
-                Buffer[ResLen++] = Buffer[z];
+            for (Addr = 0; Addr < (LongInt)TransLen; Addr++)
+              if (((ErgStart * Gran + Addr) & ANDMask) == ANDEq)
+                Buffer[ResLen++] = Buffer[Addr];
           }
           if (fwrite(Buffer, 1, ResLen, TargFile) != ResLen)
             ChkIO(TargName);

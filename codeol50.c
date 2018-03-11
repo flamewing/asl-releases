@@ -1042,7 +1042,7 @@ static void SwitchTo_OLMS50(void)
 {
   static ASSUMERec ASSUMEs[] =
 {
-  { "P", &PRegAssume, 0, 0x3, 0x8 }
+  { "P", &PRegAssume, 0, 0x3, 0x8, NULL }
 };
 
   PFamilyDescr pDescr;

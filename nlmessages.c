@@ -239,7 +239,7 @@ void opencatalog(PMsgCat Catalog, const char *File, const char *Path, LongInt Ms
   Catalog->MsgCount = (StrStart - MomPos) >> 2;
   Catalog->StrPosis = (LongInt *) malloc(sizeof(LongInt)*Catalog->MsgCount);
   Catalog->StrPosis[0] = 0;
-  if (fread(Catalog->StrPosis + 1, 4, Catalog->MsgCount - 1, MsgFile) + 1 != Catalog->MsgCount)
+  if ((int)fread(Catalog->StrPosis + 1, 4, Catalog->MsgCount - 1, MsgFile) + 1 != Catalog->MsgCount)
     error(ERdMsg);
   if (BigEndian)
     DSwap(Catalog->StrPosis + 1, (Catalog->MsgCount - 1) << 2);
@@ -254,7 +254,7 @@ void opencatalog(PMsgCat Catalog, const char *File, const char *Path, LongInt Ms
 
   fseek(MsgFile, StrStart, SEEK_SET);
   Catalog->MsgBlock = (char *) malloc(MomLength);
-  if (fread(Catalog->MsgBlock, 1, MomLength, MsgFile) != MomLength)
+  if ((int)fread(Catalog->MsgBlock, 1, MomLength, MsgFile) != MomLength)
     error(ERdMsg);
 
   fclose(MsgFile);

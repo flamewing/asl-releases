@@ -199,7 +199,7 @@ static void DecodeDATA_7720(Word Index)
         case TempString:
         {
           unsigned z2;
-          LongInt Trans;
+          LongWord Trans;
           int Pos;
 
           Max = ((ActPC == SegCode) && (MomCPU >= CPU7725)) ? 3 : 2;

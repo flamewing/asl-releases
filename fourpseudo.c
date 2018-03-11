@@ -95,7 +95,8 @@ void DecodeDATA(IntType CodeIntType, IntType DataIntType)
         case TempString:
         {
           unsigned char *cp;
-          int z2, bpos;
+          unsigned z2;
+          int bpos;
           LongWord TransCh;
 
           for (z2 = 0, cp = (unsigned char *)t.Contents.Ascii.Contents, bpos = 0;

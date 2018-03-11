@@ -113,10 +113,10 @@ static Boolean ExtSFRs;
 #define ASSUME166Count 4
 static ASSUMERec ASSUME166s[ASSUME166Count] =
 {
-  { "DPP0", DPPAssumes + 0, 0, 15, -1 },
-  { "DPP1", DPPAssumes + 1, 0, 15, -1 },
-  { "DPP2", DPPAssumes + 2, 0, 15, -1 },
-  { "DPP3", DPPAssumes + 3, 0, 15, -1 }
+  { "DPP0", DPPAssumes + 0, 0, 15, -1, NULL },
+  { "DPP1", DPPAssumes + 1, 0, 15, -1, NULL },
+  { "DPP2", DPPAssumes + 2, 0, 15, -1, NULL },
+  { "DPP3", DPPAssumes + 3, 0, 15, -1, NULL }
 };
 
 /*-------------------------------------------------------------------------*/
@@ -270,7 +270,7 @@ static void DecideAbsolute(Boolean InCode, LongInt DispAcc, Word Mask, Boolean D
 
   if (InCode)
   {
-    if (((EProgCounter() >> 16) == (DispAcc >> 16)) && (Mask & MModAbs))
+    if ((HiWord(EProgCounter()) == HiWord(DispAcc)) && (Mask & MModAbs))
     {
       AdrType = ModAbs;
       AdrCnt = 2;

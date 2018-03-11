@@ -1,7 +1,6 @@
 include Makefile.def
 
 CURRDIR=./
-TAPE=/dev/ntape
 DATE=`date +"%d%m%Y"`
 
 include makedefs.src
@@ -102,6 +101,14 @@ bindist:
 	rm -rf asl-$(VERSION)
 	gzip -9 -f asl-$(VERSION)-bin.tar 
 
+win32-bindist: $(UNUMLAUTTARGET)
+	rm -rf as
+	mkdir as
+	cmd /cinstw32.cmd as\\bin as\\include as\\man as\\lib as\\doc
+	cd as; zip -9 -r ../as$(VERSION).zip *.*
+	zip -9 -r as$(VERSION).zip bin/cyg*
+	rm -rf as
+
 #---------------------------------------------------------------------------
 # the Debian package (only works under Debian Linux!!!)
 
@@ -156,69 +163,22 @@ debian: docs debversion
 #---------------------------------------------------------------------------
 # for my own use only...
 
-tape: unjunk
-	tar cvf $(TAPE) $(ARCHFILES)
-
-disk: unjunk archive
-	mcopy -nvm asport.tar.gz a:ASPORT.TGZ
-
-disks: unjunk archives
-	echo Insert disk 1...
-	read tmp
-	mcopy -nvm asport1.tar.gz a:ASPORT1.TGZ
-	echo Insert disk 2...
-	read tmp
-	mcopy -nvm asport2.tar.gz a:ASPORT2.TGZ
-
 archive: unjunk asport.tar.gz
-
-barchive: unjunk asport.tar.bz2
-
-archives: unjunk asport1.tar.gz asport2.tar.gz
 
 asport.tar.gz: $(ARCHFILES)
 	tar cvf asport.tar $(ARCHFILES)
 	gzip -9 -f asport.tar
 
-asport.tar.bz2: $(ARCHFILES)
-	tar cvf asport.tar $(ARCHFILES)
-	bzip2 asport.tar
-
-asport1.tar.gz: $(ARCH1FILES)
-	tar cvf asport1.tar $(ARCH1FILES)
-	gzip -9 -f asport1.tar
-
-asport2.tar.gz: $(ARCH2FILES)
-	tar cvf asport2.tar $(ARCH2FILES)
-	gzip -9 -f asport2.tar
-
-snap: unjunk
-	-mount /mo
-	-mkdir -p /mo/public/asport/snap_$(DATE)
-	tar cf - $(ARCHFILES) | (cd /mo/public/asport/snap_$(DATE); tar xvf -)
-	umount /mo
-
 unjunk:
-	rm -f tmp.* n.c include/stddef56.inc asmpars.cas.c include/fileform* config.h test.h loc.c gennop.c \
-           nops.asm bind.* asmutils.* asmmessages.* filenums.* includelist.* tests/warnlog_* \
-           insttree.* flt1750.* t_65.* test87c8.* testst9.* testst7.* testtms7.* test3203.* \
-           ioerrors.new.c codeallg.* ASM*.c *_msg*.h p2BIN.* \
-           decodecmd.* ioerrors.* stringutil.* *split.c marks.c equs.h \
-	   `find . -name "testlog" -print` \
+	rm -f `find . -name "testlog" -print` \
 	   `find . -name "*~" -print` \
 	   `find . -name "core" -print` \
-           `find . -name "*.core" -print` \
+	   `find . -name "*.core" -print` \
 	   `find . -name "*.lst" -print` \
 	   `find . -name "lst" -print` \
-           `find . -name "*.noi" -print`
+	   `find . -name "*.noi" -print`
 	cd doc_DE; $(MAKE) clean RM="rm -f"
 	cd doc_EN; $(MAKE) clean RM="rm -f"
-
-tlink: all text1.p text2.p alink
-	./alink -vv text1 text2 text
-	./p2bin -r 0-0xff text
-
-#include Makefile.dep
 
 #---------------------------------------------------------------------------
 

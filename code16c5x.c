@@ -207,6 +207,8 @@ static void DecodeSFR(Word Code)
 
 static void DecodeDATA_16C5x(Word Code)
 {
+  UNUSED(Code);
+
   DecodeDATA(Int12, Int8);
 }
 

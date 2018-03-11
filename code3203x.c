@@ -1933,7 +1933,7 @@ static void SwitchTo_3203X(void)
 #define ASSUME3203Count sizeof(ASSUME3203s) / sizeof(*ASSUME3203s)
   static ASSUMERec ASSUME3203s[] =
   {
-    { "DP", &DPValue, -1, 0xff, 0x100 }
+    { "DP", &DPValue, -1, 0xff, 0x100, NULL }
   };
   const TFamilyDescr *pDescr;
 

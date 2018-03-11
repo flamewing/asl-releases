@@ -1270,7 +1270,7 @@ static void SwitchTo_47C00(void)
 #define ASSUME47Count (sizeof(ASSUME47s) / sizeof(*ASSUME47s))
   static ASSUMERec ASSUME47s[] =
   {
-    { "DMB", &DMBAssume, 0, 3, 4 }
+    { "DMB", &DMBAssume, 0, 3, 4, NULL }
   };
 
   TurnWords = False;

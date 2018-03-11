@@ -192,7 +192,9 @@ static IntType RegSpaceType;
 
 #define ASSUMEeZ8Count 1
 static ASSUMERec ASSUMEeZ8s[ASSUMEeZ8Count] =
-               {{"RP" , &RPVal , 0, 0xff, 0x100}};
+{
+  {"RP" , &RPVal , 0, 0xff, 0x100, NULL}
+};
 
 /*--------------------------------------------------------------------------*/ 
 /* address expression decoding routines */

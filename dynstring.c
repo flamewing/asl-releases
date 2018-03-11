@@ -43,7 +43,7 @@ unsigned DynString2DynString(tDynString *pDest, const tDynString *pSrc)
 
 unsigned DynStringAppend(tDynString *pDest, const char *pSrc, int SrcLen)
 {
-  unsigned TransLen;
+  int TransLen;
 
   if (SrcLen < 0)
     SrcLen = strlen(pSrc);

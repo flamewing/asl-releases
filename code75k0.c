@@ -430,6 +430,11 @@ static void PutCode(Word Code)
   }
 }
 
+static Word PageNum(Word Inp)
+{
+  return ((Inp >> 12) & 15);
+}
+
 /*-------------------------------------------------------------------------*/
 /* Instruction Decoders */
 
@@ -1275,7 +1280,7 @@ static void DecodeBR(Word Code)
             PutCode(0xf0 + 15 + Dist);
         }
       }
-      else if ((!BrLong) && ((AdrInt >> 12) == (EProgCounter() >> 12)) && ((EProgCounter() & 0xfff) < 0xffe))
+      else if ((!BrLong) && (PageNum(AdrInt) == PageNum(EProgCounter())) && ((EProgCounter() & 0xfff) < 0xffe))
       {
         BAsmCode[0] = 0x50 + ((AdrInt >> 8) & 15);
         BAsmCode[1] = Lo(AdrInt);
@@ -1585,7 +1590,7 @@ static void SwitchFrom_75K0(void)
 
 static ASSUMERec ASSUME75s[] =
 {
-  {"MBS", &MBSValue, 0, 0x0f, 0x10},
+  {"MBS", &MBSValue, 0, 0x0f, 0x10, NULL},
   {"MBE", &MBEValue, 0, 0x01, 0x01, CheckMBE}
 };
 #define ASSUME75Count (sizeof(ASSUME75s) / sizeof(*ASSUME75s))
