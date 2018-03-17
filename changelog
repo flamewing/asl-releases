@@ -1,3 +1,7 @@
+2018-03-16 [1.42 Bld 129]
+
+- Bugfix      : correct assumption of length of forward JSR/JMP on 68HC12
+
 2018-03-11 [1.42 Bld 128]
 
 - Bugfix      : correct distance range checking on SC/MP

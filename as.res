@@ -802,6 +802,10 @@ Message ErrMsgConflictingMacExpMod
  "widerspr&uuml;chliche Angaben zur Makro-Expansion"
  "contradicting macro expansion specifications"
 
+Message ErrMsgInvalidPrepDir
+ "unbekannte Pr&auml;prozessoranweisung"
+ "unknown preprocessing directive"
+
 Message ErrMsgOpeningFile
  "Fehler beim &Ouml;ffnen der Datei"
  "error in opening file"

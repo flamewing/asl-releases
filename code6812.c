@@ -116,7 +116,7 @@ typedef struct
 {
   Word Code;
   CPUVar MinCPU;
-  Boolean MayImm,MayDir,MayExt;
+  Boolean MayImm, MayDir, MayExt;
   ShortInt ThisOpSize;
 } GenOrder;
 
@@ -521,7 +521,7 @@ static void DecodeAdr(int Start, int Stop, Word Mask)
     AdrWord = EvalIntExpression(ArgStr[Start], AddrInt, &OK);
     if (FirstPassUnknown)
     {
-      if ((!(Mask & MModExt)) || (ShortMode == eShortModeYes))
+      if ((!(Mask & (MModExt | MModExtPg))) || (ShortMode == eShortModeYes))
         AdrWord = (Reg_Direct << 8) | Lo(AdrWord);
     }
 

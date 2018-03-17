@@ -192,6 +192,8 @@ void Preprocess(void)
   }
   else if (!strcasecmp(Cmd, "UNDEF"))
     RemoveDefine(h);
+  else
+    WrXError(ErrNum_InvalidPrepDir, Cmd);
 
   CodeLen = 0;
 }

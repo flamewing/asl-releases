@@ -1064,7 +1064,7 @@ void GenLineForMarking(char *pDest, unsigned DestSize, const char *pSrc, const c
 
   /* replace TABs in line with spaces - column counting counts TAB as one character */
 
-  for (; *pSrc && (pRun - pDest + 1 < DestSize); pSrc++)
+  for (; *pSrc && (pRun - pDest + 1 < (int)DestSize); pSrc++)
     *pRun++ = TabCompressed(*pSrc);
   *pRun = '\0';
 }
@@ -1087,9 +1087,9 @@ void GenLineMarker(char *pDest, unsigned DestSize, char Marker, const struct sLi
   strmaxcpy(pDest, pPrefix, DestSize);
   pRun = pDest + strlen(pDest);
 
-  for (z = 0; (z < pLineComp->StartCol) && (pRun - pDest + 1 < DestSize); z++)
+  for (z = 0; (z < pLineComp->StartCol) && (pRun - pDest + 1 < (int)DestSize); z++)
     *pRun++ = ' ';
-  for (z = 0; (z < (int)pLineComp->Len) && (pRun - pDest + 1 < DestSize); z++)
+  for (z = 0; (z < (int)pLineComp->Len) && (pRun - pDest + 1 < (int)DestSize); z++)
     *pRun++ = Marker;
   *pRun = '\0';
 }
@@ -1473,6 +1473,8 @@ void WrXErrorPos(Word Num, const char *pExtendError, const struct sLineComp *pLi
     case 2090: msgno = Num_ErrMsgAddrOnDifferentPage; break;
     case 2100: msgno = Num_ErrMsgUnknownMacExpMod; break;
     case 2110: msgno = Num_ErrMsgConflictingMacExpMod; break;
+    case ErrNum_InvalidPrepDir:
+      msgno = Num_ErrMsgInvalidPrepDir; break;
     case 10001: msgno = Num_ErrMsgOpeningFile; break;
     case 10002: msgno = Num_ErrMsgListWrError; break;
     case 10003: msgno = Num_ErrMsgFileReadError; break;

@@ -52,6 +52,7 @@ typedef enum
   ErrNum_InvRegName = 1980,
   ErrNum_STRUCTEndedByENDUNION = 2080,
   ErrNum_UnknownMacExpMod = 2100,
+  ErrNum_InvalidPrepDir = 2120,
 } tErrorNum;
 
 extern Boolean ChkRange(LargeInt Value, LargeInt Min, LargeInt Max);
