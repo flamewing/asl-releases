@@ -38,23 +38,37 @@
 #include <time.h>
 #include <ctype.h>
 
-#ifdef LOCALE_NLS
-#include <locale.h>
-#include <langinfo.h>
-#endif
-
-#ifdef OS2_NLS
-#define INCL_DOSNLS
-#include <os2.h>
-#endif
-
-#ifdef DOS_NLS
-#include <dos.h>
-#endif
-
 #include "strutil.h"
 
 #include "nls.h"
+
+/*-------------------------------------------------------------------------------*/
+
+typedef struct
+{
+  Word Country;        /* = internationale Vorwahl */
+  Word CodePage;       /* mom. gewaehlter Zeichensatz */
+  void (*DateString)(Word Year, Word Month, Word Day, char *Dest);
+  void (*TimeString)(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest);
+#if (defined OS2_NLS) || (defined DOS_NLS)
+  DateFormat DateFmt;  /* Datumsreihenfolge */
+  char *DateSep;       /* Trennzeichen zwischen Datumskomponenten */
+  TimeFormat TimeFmt;  /* 12/24-Stundenanzeige */
+  char *TimeSep;       /* Trennzeichen zwischen Zeitkomponenten */
+#elif defined LOCALE_NLS
+  const char *DateFmtStr;
+  const char *TimeFmtStr;
+#endif
+  char *Currency;      /* Waehrungsname */
+  CurrFormat CurrFmt;  /* Anzeigeformat Waehrung */
+  Byte CurrDecimals;   /* Nachkommastellen Waehrungsbetraege */
+  char *ThouSep;       /* Trennzeichen fuer Tausenderbloecke */
+  char *DecSep;        /* Trennzeichen fuer Nachkommastellen */
+  char *DataSep;       /* ??? */
+  Boolean Initialized;
+} NLS_CountryInfo;
+
+/*-------------------------------------------------------------------------------*/
 
 CharTable UpCaseTable;               /* Umsetzungstabellen */
 CharTable LowCaseTable;
@@ -74,479 +88,15 @@ static void TranslateString(char *s, CharTable Table)
 #endif
 
 /*-------------------------------------------------------------------------------*/
-/* Da es moeglich ist, die aktuelle Codeseite im Programmlauf zu wechseln,
-   ist die Initialisierung in einer getrennten Routine untergebracht.  Nach
-   einem Wechsel stellt ein erneuter Aufruf wieder korrekte Verhaeltnisse
-   her.  Wen das stoert, der schreibe einfach einen Aufruf in den Initiali-
-   sierungsteil der Unit hinein. */
 
-#ifdef DOS_NLS
-typedef struct
+static void DumpNLSInfo(void)
 {
-  Byte TimeFmt;
-  Byte DateFmt;
-  char Currency[2];
-  char ThouSep[2];
-  char DecSep[2];
-  Byte Reserved[24];
-} Dos2CountryInfo;
-typedef struct
-{
-  Word DateFmt;
-  char Currency[5];
-  char ThouSep[2];
-  char DecSep[2];
-  char DateSep[2];
-  char TimeSep[2];
-  Byte CurrFmt;
-  Byte CurrDecimals;
-  Byte TimeFmt;
-  char *UpCasePtr;
-  char DataSep[2];
-  Byte Dummy[8];
-} Dos3CountryInfo;
-typedef struct
-{
-  Byte SubFuncNo;
-  char *Result;
-} DosTableRec;
-
-char *DosCopy(char *Src, int Len)
-{
-  char *res = malloc(sizeof(char)*(Len + 1));
-  memcpy(res, Src, Len);
-  res[Len] = '\0';
-  return res;
-}
-
-void StandardUpCases(void)
-{
-  char *s1, *s2;
-
-  s1 = CH_ae; s2 = CH_Ae; UpCaseTable[((unsigned int) *s1) & 0xff] = *s2;
-  s1 = CH_oe; s2 = CH_Oe; UpCaseTable[((unsigned int) *s1) & 0xff] = *s2;
-  s1 = CH_ue; s2 = CH_Ue; UpCaseTable[((unsigned int) *s1) & 0xff] = *s2;
-}
-#endif
-
-void NLS_Initialize(void)
-{
-  char *tmpstr, *run, *cpy;
-  Word FmtBuffer;
-  int z;
 #ifdef DEBUG_NLS
-  int z2;
-#endif
-  Boolean DidDate;
+  int z, z2;
 
-#ifdef LOCALE_NLS
-  struct lconv *lc;
-#endif
-
-#ifdef OS2_NLS
-  COUNTRYCODE ccode;
-  COUNTRYINFO cinfo;
-  ULONG erglen;
-#endif
-
-#ifdef DOS_NLS
-  union REGS Regs;
-  struct SREGS SRegs;
-  void *info;
-  Dos2CountryInfo DOS2Info;
-  Dos3CountryInfo DOS3Info;
-  DosTableRec DOSTablePtr;
-#endif
-
-   /* get currency format, separators */
-
-#ifdef NO_NLS
-  NLSInfo.DecSep = ".";
-  NLSInfo.DataSep = ",";
-  NLSInfo.ThouSep = ",";
-  NLSInfo.Currency = "$";
-  NLSInfo.CurrDecimals = 2;
-  NLSInfo.CurrFmt = CurrFormatPreNoBlank;
-#endif
-
-#ifdef LOCALE_NLS
-  lc = localeconv();
-
-  NLSInfo.DecSep = lc->mon_decimal_point ? lc->decimal_point : ".";
-
-  NLSInfo.ThouSep = lc->mon_thousands_sep ? lc->mon_thousands_sep : ",";
-
-  NLSInfo.DataSep = ",";
-
-  NLSInfo.Currency = lc->currency_symbol ? lc->currency_symbol : "$";
-
-  NLSInfo.CurrDecimals = lc->int_frac_digits;
-  if (NLSInfo.CurrDecimals > 4)
-    NLSInfo.CurrDecimals = 2;
-
-  if (lc->p_cs_precedes)
-    NLSInfo.CurrFmt = lc->p_sep_by_space ? CurrFormatPreBlank : CurrFormatPreNoBlank;
-  else
-    NLSInfo.CurrFmt = lc->p_sep_by_space ? CurrFormatPostBlank : CurrFormatPostNoBlank;
-#endif
-
-#ifdef OS2_NLS
-  ccode.country = 0;
-  ccode.codepage = 0;
-  DosQueryCtryInfo(sizeof(cinfo), &ccode, &cinfo, &erglen);
-
-  NLSInfo.Country = cinfo.country;
-  NLSInfo.CodePage = cinfo.codepage;
-  NLSInfo.DecSep = as_strdup(cinfo.szDecimal);
-  NLSInfo.DataSep = as_strdup(cinfo.szDataSeparator);
-  NLSInfo.ThouSep = as_strdup(cinfo.szThousandsSeparator);
-  NLSInfo.Currency = as_strdup(cinfo.szCurrency);
-  NLSInfo.CurrDecimals = cinfo.cDecimalPlace;
-  NLSInfo.CurrFmt = (CurrFormat) cinfo.fsCurrencyFmt;
-#endif
-
-#ifdef DOS_NLS
-  if (_osmajor < 3)
-    NLSInfo.CodePage = 437;
-  else if (_osminor < 30)
-    NLSInfo.CodePage = 437;
-  else
-  {
-    Regs.x.ax = 0x6601;
-    int86(0x21, &Regs, &Regs);
-    NLSInfo.CodePage = Regs.x.bx;
-  }
-
-  Regs.x.ax = 0x3800;
-  info = (_osmajor < 3) ? (void*)&DOS2Info : (void*)&DOS3Info;
-  SRegs.ds = FP_SEG(info);
-  Regs.x.dx = FP_OFF(info);
-  int86x(0x21, &Regs, &Regs, &SRegs);
-  NLSInfo.Country = Regs.x.bx;
-  if (_osmajor >= 3)
-  {
-    NLSInfo.DecSep = DosCopy(DOS3Info.DecSep, 2);
-    NLSInfo.DataSep = DosCopy(DOS3Info.DataSep, 2);
-    NLSInfo.ThouSep = DosCopy(DOS3Info.ThouSep, 2);
-    NLSInfo.Currency = DosCopy(DOS3Info.Currency, 5);
-    NLSInfo.CurrDecimals = DOS3Info.CurrDecimals;
-    NLSInfo.CurrFmt = (CurrFormat) DOS3Info.CurrFmt;
-  }
-  /* DOS 2 kennt noch nicht soviel, daher muessen wir selber etwas beisteuern */
-  else
-  {
-    NLSInfo.DecSep = DosCopy(DOS2Info.DecSep, 2);
-    NLSInfo.DataSep = ",";
-    NLSInfo.ThouSep = DosCopy(DOS2Info.ThouSep, 2);
-    NLSInfo.Currency = DosCopy(DOS2Info.Currency, 2);
-    NLSInfo.CurrDecimals = (NLSInfo.Country == 39) ? 0 : 2;
-    switch (NLSInfo.Country)
-    {
-      case 1:
-      case 39:
-        NLSInfo.CurrFmt = CurrFormatPreNoBlank;
-        break;
-      case 3:
-      case 33:
-      case 34:
-      case 358:
-        NLSInfo.CurrFmt = CurrFormatPostBlank;
-        break;
-      default:
-        NLSInfo.CurrFmt = CurrFormatPreBlank;
-    }
-  }
-#endif
-
-  /* get date format */
-
-#ifdef NO_NLS
-  tmpstr = "%m/%d/%y";
-  DidDate = False;
-#endif
-
-#ifdef LOCALE_NLS
-  tmpstr = nl_langinfo(D_FMT);
-  if ((!tmpstr) || (*tmpstr == '\0'))
-    tmpstr = "%m/%d/%y";
-  DidDate = False;
-#endif
-
-#ifdef OS2_NLS
-  NLSInfo.DateFmt = (DateFormat) cinfo.fsDateFmt;
-  NLSInfo.DateSep = as_strdup(cinfo.szDateSeparator);
-  DidDate = True;
-#endif
-
-#ifdef DOS_NLS
-  if (_osmajor >= 3)
-  {
-    NLSInfo.DateFmt = (DateFormat) DOS3Info.DateFmt;
-    NLSInfo.DateSep = DosCopy(DOS3Info.DateSep, 2);
-  }
-  else
-  {
-    NLSInfo.DateFmt = (DateFormat) DOS2Info.DateFmt;
-    switch (NLSInfo.Country)
-    {
-      case 3:
-      case 47:
-      case 351:
-      case 32:
-      case 33:
-      case 39:
-      case 34:
-        NLSInfo.DateSep = "/";
-        break;
-      case 49:
-      case 358:
-      case 41:
-        NLSInfo.DateSep = ".";
-        break;
-      case 972:
-        NLSInfo.DateSep = " ";
-        break;
-      default:
-        NLSInfo.DateSep = "-";
-    }
-  }
-  DidDate = True;
-#endif
-
-  if (!DidDate)
-  {
-    NLSInfo.DateSep = NULL;
-    FmtBuffer = 0;
-    run = tmpstr;
-    while (*run != '\0')
-      if (*run == '%')
-      {
-        FmtBuffer <<= 4;
-        switch (toupper(*(++run)))
-        {
-          case 'D':
-            FmtBuffer += 1;
-            break;
-          case 'M':
-            FmtBuffer += 2;
-            break;
-          case 'Y':
-            FmtBuffer += 3;
-            break;
-        }
-        if (!NLSInfo.DateSep)
-        {
-          run++;
-          cpy = NLSInfo.DateSep = as_strdup("                  ");
-          while ((*run != ' ') && (*run != '%'))
-            *(cpy++) = *(run++);
-          *cpy = '\0';
-        }
-        else
-          run++;
-      }
-      else
-        run++;
-    if (FmtBuffer == 0x213)
-      NLSInfo.DateFmt = DateFormatMTY;
-    else if (FmtBuffer == 0x123)
-      NLSInfo.DateFmt = DateFormatTMY;
-    else
-      NLSInfo.DateFmt = DateFormatYMT;
-  }
-
-  /* get time format */
-
-#ifdef NO_NLS
-  tmpstr = "%H:%M:%S";
-  DidDate = False;
-#endif
-
-#ifdef LOCALE_NLS
-  tmpstr = nl_langinfo(T_FMT);
-  if ((!tmpstr) || (*tmpstr == '\0'))
-    tmpstr = "%H:%M:%S";
-  DidDate = False;
-#endif
-
-#ifdef OS2_NLS
-  NLSInfo.TimeFmt = (TimeFormat) cinfo.fsTimeFmt;
-  NLSInfo.TimeSep = as_strdup(cinfo.szTimeSeparator);
-  DidDate = True;
-#endif
-
-#ifdef DOS_NLS
-  if (_osmajor >= 3)
-  {
-    NLSInfo.TimeFmt = (TimeFormat) DOS3Info.TimeFmt;
-    NLSInfo.TimeSep = DosCopy(DOS3Info.TimeSep, 2);
-  }
-  else
-  {
-    NLSInfo.TimeFmt = (TimeFormat) DOS2Info.TimeFmt;
-    switch (NLSInfo.Country)
-    {
-      case 41:
-      case 46:
-      case 47:
-      case 358:
-        NLSInfo.TimeSep = ".";
-        break;
-      default:
-        NLSInfo.TimeSep = ":";
-    }
-  }
-  DidDate = True;
-#endif
-
-  if (!DidDate)
-  {
-    NLSInfo.TimeSep = NULL;
-    FmtBuffer = 0;
-    run = tmpstr;
-    while (*run != '\0')
-      if (*run == '%')
-      {
-        FmtBuffer <<= 4;
-        switch (toupper(*(++run)))
-        {
-          case 'S':
-            FmtBuffer += 1;
-            break;
-          case 'M':
-            FmtBuffer += 2;
-            break;
-          case 'H':
-            FmtBuffer += 3;
-            break;
-          case 'T':
-            fflush(stdout);
-            run = "H:%M:%S";
-            break;
-          case 'R':
-            fflush(stdout);
-            run = "H:%M";
-            break;
-        }
-        if (!NLSInfo.TimeSep)
-        {
-          run++; cpy = NLSInfo.TimeSep = as_strdup("                  ");
-          while ((*run != '\0') && (*run != ' ') && (*run != '%'))
-           *(cpy++) = (*(run++));
-          *cpy = '\0';
-        }
-        else
-          run++;
-      }
-      else
-        run++;
-    NLSInfo.TimeFmt = TimeFormatEurope;
-  }
-
-  /* get lower->upper case table */
-
-#if defined(NO_NLS) || defined(LOCALE_NLS)
-  for (z = 0; z < 256; z++)
-    UpCaseTable[z] = toupper(z);
-#endif
-
-#ifdef OS2_NLS
-  for (z = 0; z < 256; z++)
-    UpCaseTable[z] = (char) z;
-  for (z = 'a'; z <= 'z'; z++)
-    UpCaseTable[z] -= 'a' - 'A';
-  DosMapCase(sizeof(UpCaseTable), &ccode, UpCaseTable);
-#endif
-
-#ifdef DOS_NLS
-  for (z = 0; z < 256; z++)
-    UpCaseTable[z] = (char) z;
-  for (z = 'a'; z <= 'z'; z++)
-    UpCaseTable[z] -= 'a' - 'A';
-#ifdef __DPMI16__
-  StandardUpCases();
-#else
-  if ((((Word)_osmajor) * 100) + _osminor >= 330)
-  {
-    Regs.x.ax = 0x6502;
-    Regs.x.bx = NLSInfo.CodePage;
-    Regs.x.dx = NLSInfo.Country;
-    Regs.x.cx = sizeof(DOSTablePtr);
-    info = &DOSTablePtr;
-    SRegs.es = FP_SEG(info);
-    Regs.x.di = FP_OFF(info);
-    int86x(0x21, &Regs, &Regs, &SRegs);
-    if (Regs.x.cx == sizeof(DOSTablePtr))
-    {
-      DOSTablePtr.Result += sizeof(Word);
-      memcpy(UpCaseTable + 128, DOSTablePtr.Result, 128);
-    }
-    else
-      StandardUpCases();
-  }
-  else
-    StandardUpCases();
-#endif
-#endif
-
-  /* get upper->lower case table */
-
-#if defined(NO_NLS) || defined(LOCALE_NLS)
-  for (z = 0; z < 256; z++)
-    LowCaseTable[z] = tolower(z);
-#endif
-
-#if defined(OS2_NLS) || defined(DOS_NLS)
-  for (z = 0; z < 256; z++)
-    LowCaseTable[z] = (char) z;
-  for (z = 255; z >= 0; z--)
-    if (UpCaseTable[z] != (char) z)
-      LowCaseTable[((unsigned int) UpCaseTable[z])&0xff] = (char) z;
-#endif
-
-  /* get collation table */
-
-#if defined(NO_NLS) || defined(LOCALE_NLS)
-  for (z = 0; z < 256; z++)
-    CollateTable[z] = z;
-  for (z = 'a'; z <= 'z'; z++)
-    CollateTable[z] = toupper(z);
-#endif
-
-#ifdef OS2_NLS
-  for (z = 0; z < 256; z++)
-    CollateTable[z] = (char) z;
-  DosQueryCollate(sizeof(CollateTable), &ccode, CollateTable, &erglen);
-#endif
-
-#ifdef DOS_NLS
-  for (z = 0; z < 256; z++)
-    CollateTable[z] = (char) z;
-  for (z = 'a'; z <= 'z'; z++)
-    CollateTable[z] = (char) (z - ('a' - 'A'));
-#ifndef __DPMI16__
-  if ((((Word)_osmajor)*100) + _osminor >= 330)
-  {
-    Regs.x.ax = 0x6506;
-    Regs.x.bx = NLSInfo.CodePage;
-    Regs.x.dx = NLSInfo.Country;
-    Regs.x.cx = sizeof(DOSTablePtr);
-    info = &DOSTablePtr;
-    SRegs.es = FP_SEG(info);
-    Regs.x.di = FP_OFF(info);
-    int86x(0x21, &Regs, &Regs, &SRegs);
-    if (Regs.x.cx == sizeof(DOSTablePtr))
-    {
-      DOSTablePtr.Result += sizeof(Word);
-      memcpy(CollateTable, DOSTablePtr.Result, 256);
-    }
-  }
-#endif
-#endif
-
-#ifdef DEBUG_NLS
   printf("Country      = %d\n", NLSInfo.Country);
   printf("CodePage     = %d\n", NLSInfo.CodePage);
+#if (defined OS2_NLS) || (defined DOS_NLS)
   printf("DateFmt      = ");
   switch(NLSInfo.DateFmt)
   {
@@ -579,6 +129,10 @@ void NLS_Initialize(void)
       printf("???\n");
   }
   printf("TimeSep      = %s\n", NLSInfo.TimeSep);
+#elif defined LOCALE_NLS
+  printf("DateFmtStr   = %s\n", NLSInfo.DateFmtStr);
+  printf("TimeFmtStr   = %s\n", NLSInfo.TimeFmtStr);
+#endif
   printf("Currency     = %s\n", NLSInfo.Currency);
   printf("CurrFmt      = ");
   switch (NLSInfo.CurrFmt)
@@ -644,17 +198,14 @@ void NLS_Initialize(void)
     putchar ('\n');
     putchar('\n');
   }
-
-  exit(0);
-#endif
+#endif /* DEBUG_NLS */
 }
 
-void NLS_GetCountryInfo(NLS_CountryInfo *Info)
-{
-  *Info = NLSInfo;
-}
+/*-------------------------------------------------------------------------------*/
 
-void NLS_DateString(Word Year, Word Month, Word Day, char *Dest)
+#if (defined OS2_NLS) || (defined DOS_NLS)
+
+static void DOS_OS2_DateString(Word Year, Word Month, Word Day, char *Dest)
 {
   switch (NLSInfo.DateFmt)
   {
@@ -670,17 +221,7 @@ void NLS_DateString(Word Year, Word Month, Word Day, char *Dest)
   }
 }
 
-void NLS_CurrDateString(char *Dest)
-{
-  time_t timep;
-  struct tm *trec;
-
-  time(&timep);
-  trec = localtime(&timep);
-  NLS_DateString(trec->tm_year + 1900, trec->tm_mon + 1, trec->tm_mday, Dest);
-}
-
-void NLS_TimeString(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest)
+static void DOS_OS2_TimeString(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest)
 {
   Word OriHour;
   String ext;
@@ -700,6 +241,340 @@ void NLS_TimeString(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest
   }
   if (NLSInfo.TimeFmt == TimeFormatUSA)
     strcat(Dest, (OriHour > 12) ? "p" : "a");
+}
+#endif /* OS2_NLS || DOS_NLS */
+
+/*-------------------------------------------------------------------------------*/
+
+#if defined OS2_NLS
+
+#define INCL_DOSNLS
+#include <os2.h>
+
+static void QueryInfo(void)
+{
+  COUNTRYCODE ccode;
+  COUNTRYINFO cinfo;
+  ULONG erglen;
+  int z;
+
+  ccode.country = 0;
+  ccode.codepage = 0;
+  DosQueryCtryInfo(sizeof(cinfo), &ccode, &cinfo, &erglen);
+
+  NLSInfo.Country = cinfo.country;
+  NLSInfo.CodePage = cinfo.codepage;
+  NLSInfo.DecSep = as_strdup(cinfo.szDecimal);
+  NLSInfo.DataSep = as_strdup(cinfo.szDataSeparator);
+  NLSInfo.ThouSep = as_strdup(cinfo.szThousandsSeparator);
+  NLSInfo.Currency = as_strdup(cinfo.szCurrency);
+  NLSInfo.CurrDecimals = cinfo.cDecimalPlace;
+  NLSInfo.CurrFmt = (CurrFormat) cinfo.fsCurrencyFmt;
+  NLSInfo.DateFmt = (DateFormat) cinfo.fsDateFmt;
+  NLSInfo.DateSep = as_strdup(cinfo.szDateSeparator);
+  NLSInfo.DateString = DOS_OS2_DateString;
+  NLSInfo.TimeFmt = (TimeFormat) cinfo.fsTimeFmt;
+  NLSInfo.TimeSep = as_strdup(cinfo.szTimeSeparator);
+  NLSInfo.TimeString = DOS_OS2_TimeString;
+  for (z = 0; z < 256; z++)
+    UpCaseTable[z] = (char) z;
+  for (z = 'a'; z <= 'z'; z++)
+    UpCaseTable[z] -= 'a' - 'A';
+  DosMapCase(sizeof(UpCaseTable), &ccode, UpCaseTable);
+  for (z = 0; z < 256; z++)
+    LowCaseTable[z] = (char) z;
+  for (z = 255; z >= 0; z--)
+    if (UpCaseTable[z] != (char) z)
+      LowCaseTable[((unsigned int) UpCaseTable[z])&0xff] = (char) z;
+  for (z = 0; z < 256; z++)
+    CollateTable[z] = (char) z;
+  DosQueryCollate(sizeof(CollateTable), &ccode, CollateTable, &erglen);
+}
+
+#elif defined DOS_NLS
+
+#include <dos.h>
+
+typedef struct
+{
+  Byte SubFuncNo;
+  char *Result;
+} DosTableRec;
+
+char *DosCopy(char *Src, int Len)
+{
+  char *res = malloc(sizeof(char)*(Len + 1));
+  memcpy(res, Src, Len);
+  res[Len] = '\0';
+  return res;
+}
+
+void StandardUpCases(void)
+{
+  char *s1, *s2;
+
+  s1 = CH_ae; s2 = CH_Ae; UpCaseTable[((unsigned int) *s1) & 0xff] = *s2;
+  s1 = CH_oe; s2 = CH_Oe; UpCaseTable[((unsigned int) *s1) & 0xff] = *s2;
+  s1 = CH_ue; s2 = CH_Ue; UpCaseTable[((unsigned int) *s1) & 0xff] = *s2;
+}
+
+static void QueryInfo(void)
+{
+  union REGS Regs;
+  struct SREGS SRegs;
+  struct COUNTRY country_info;
+  DosTableRec DOSTablePtr;
+  int z;
+
+  if (_osmajor < 3)
+  {
+    fprintf(stderr, "requires DOS 3.x or above\n");
+    exit(255);
+  }
+
+  if (_osminor < 30)
+    NLSInfo.CodePage = 437;
+  else
+  {
+    Regs.x.ax = 0x6601;
+    int86(0x21, &Regs, &Regs);
+    NLSInfo.CodePage = Regs.x.bx;
+  }
+
+  country(0x0000, &country_info);
+
+  NLSInfo.DecSep = DosCopy(country_info.co_desep, 2);
+  NLSInfo.DataSep = DosCopy(country_info.co_dtsep, 2);
+  NLSInfo.ThouSep = DosCopy(country_info.co_thsep, 2);
+  NLSInfo.Currency = DosCopy(country_info.co_curr, 5);
+  NLSInfo.CurrDecimals = country_info.co_digits;
+  NLSInfo.CurrFmt = (CurrFormat) country_info.co_currstyle;
+
+  NLSInfo.Country = strcmp(NLSInfo.Currency, "DM") ? 1 : 49;
+
+  NLSInfo.DateFmt = (DateFormat) country_info.co_date;
+  NLSInfo.DateSep = DosCopy(country_info.co_dtsep, 2);
+  NLSInfo.DateString = DOS_OS2_DateString;
+
+  NLSInfo.TimeFmt = (TimeFormat) country_info.co_time;
+  NLSInfo.TimeSep = DosCopy(country_info.co_tmsep, 2);
+  NLSInfo.TimeString = DOS_OS2_TimeString;
+
+  for (z = 0; z < 256; z++)
+    UpCaseTable[z] = (char) z;
+  for (z = 'a'; z <= 'z'; z++)
+    UpCaseTable[z] -= 'a' - 'A';
+#ifdef __DPMI16__
+  StandardUpCases();
+#else
+  if ((((Word)_osmajor) * 100) + _osminor >= 330)
+  {
+    Regs.x.ax = 0x6502;
+    Regs.x.bx = NLSInfo.CodePage;
+    Regs.x.dx = NLSInfo.Country;
+    Regs.x.cx = sizeof(DOSTablePtr);
+    info = &DOSTablePtr;
+    SRegs.es = FP_SEG(info);
+    Regs.x.di = FP_OFF(info);
+    int86x(0x21, &Regs, &Regs, &SRegs);
+    if (Regs.x.cx == sizeof(DOSTablePtr))
+    {
+      DOSTablePtr.Result += sizeof(Word);
+      memcpy(UpCaseTable + 128, DOSTablePtr.Result, 128);
+    }
+    else
+      StandardUpCases();
+  }
+  else
+    StandardUpCases();
+#endif /* __DPMI16__ */
+
+  for (z = 0; z < 256; z++)
+    LowCaseTable[z] = (char) z;
+  for (z = 255; z >= 0; z--)
+    if (UpCaseTable[z] != (char) z)
+      LowCaseTable[((unsigned int) UpCaseTable[z])&0xff] = (char) z;
+
+  for (z = 0; z < 256; z++)
+    CollateTable[z] = (char) z;
+  for (z = 'a'; z <= 'z'; z++)
+    CollateTable[z] = (char) (z - ('a' - 'A'));
+#ifndef __DPMI16__
+  if ((((Word)_osmajor)*100) + _osminor >= 330)
+  {
+    Regs.x.ax = 0x6506;
+    Regs.x.bx = NLSInfo.CodePage;
+    Regs.x.dx = NLSInfo.Country;
+    Regs.x.cx = sizeof(DOSTablePtr);
+    info = &DOSTablePtr;
+    SRegs.es = FP_SEG(info);
+    Regs.x.di = FP_OFF(info);
+    int86x(0x21, &Regs, &Regs, &SRegs);
+    if (Regs.x.cx == sizeof(DOSTablePtr))
+    {
+      DOSTablePtr.Result += sizeof(Word);
+      memcpy(CollateTable, DOSTablePtr.Result, 256);
+    }
+  }
+#endif /* __DPMI16__ */
+}
+
+#elif defined LOCALE_NLS
+
+#include <locale.h>
+#include <langinfo.h>
+
+static void Locale_DateString(Word Year, Word Month, Word Day, char *Dest)
+{
+  struct tm tm;
+
+  tm.tm_year = Year;
+  tm.tm_mon = Month;
+  tm.tm_mday = Day;
+  strftime(Dest, 255, NLSInfo.DateFmtStr, &tm);
+}
+
+static void Locale_TimeString(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest)
+{
+  struct tm tm;
+
+  (void)Sec100;
+  tm.tm_hour = Hour;
+  tm.tm_min = Minute;
+  tm.tm_sec = Second;
+  strftime(Dest, 255, NLSInfo.TimeFmtStr, &tm);
+}
+
+static void QueryInfo(void)
+{
+  struct lconv *lc;
+  int z;
+
+  lc = localeconv();
+
+  NLSInfo.DecSep = lc->mon_decimal_point ? lc->decimal_point : ".";
+
+  NLSInfo.ThouSep = lc->mon_thousands_sep ? lc->mon_thousands_sep : ",";
+
+  NLSInfo.DataSep = ",";
+
+  NLSInfo.Currency = lc->currency_symbol ? lc->currency_symbol : "$";
+
+  NLSInfo.CurrDecimals = lc->int_frac_digits;
+  if (NLSInfo.CurrDecimals > 4)
+    NLSInfo.CurrDecimals = 2;
+
+  if (lc->p_cs_precedes)
+    NLSInfo.CurrFmt = lc->p_sep_by_space ? CurrFormatPreBlank : CurrFormatPreNoBlank;
+  else
+    NLSInfo.CurrFmt = lc->p_sep_by_space ? CurrFormatPostBlank : CurrFormatPostNoBlank;
+
+  NLSInfo.DateFmtStr = nl_langinfo(D_FMT);
+  if (!NLSInfo.DateFmtStr || !*NLSInfo.DateFmtStr)
+    NLSInfo.DateFmtStr = "%m/%d/%y";
+  NLSInfo.DateString = Locale_DateString;
+
+  NLSInfo.TimeFmtStr = nl_langinfo(T_FMT);
+  if (!NLSInfo.TimeFmtStr || !*NLSInfo.TimeFmtStr)
+    NLSInfo.TimeFmtStr = "%H:%M:%S";
+  NLSInfo.TimeString = Locale_TimeString;
+
+  for (z = 0; z < 256; z++)
+    UpCaseTable[z] = toupper(z);
+
+  for (z = 0; z < 256; z++)
+    LowCaseTable[z] = tolower(z);
+
+  for (z = 0; z < 256; z++)
+    CollateTable[z] = z;
+  for (z = 'a'; z <= 'z'; z++)
+    CollateTable[z] = toupper(z);
+}
+
+#else /* NO_NLS */
+
+static void Default_DateString(Word Year, Word Month, Word Day, char *Dest)
+{
+  sprintf(Dest, "%u/%u/%u", Month, Day, Year);
+}
+
+static void Default_TimeString(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest)
+{
+  (void)Sec100;
+  sprintf(Dest, "%u:%u:%u", Hour, Minute, Second);
+}
+
+static void QueryInfo(void)
+{
+  int z;
+
+  NLSInfo.DecSep = ".";
+  NLSInfo.DataSep = ",";
+  NLSInfo.ThouSep = ",";
+  NLSInfo.Currency = "$";
+  NLSInfo.CurrDecimals = 2;
+  NLSInfo.CurrFmt = CurrFormatPreNoBlank;
+  NLSInfo.DateString = Default_DateString;
+  NLSInfo.TimeString = Default_TimeString;
+
+  for (z = 0; z < 256; z++)
+    UpCaseTable[z] = toupper(z);
+
+  for (z = 0; z < 256; z++)
+    LowCaseTable[z] = tolower(z);
+
+  for (z = 0; z < 256; z++)
+    CollateTable[z] = z;
+  for (z = 'a'; z <= 'z'; z++)
+    CollateTable[z] = toupper(z);
+}
+
+#endif /* xxx_NLS */
+
+/*-------------------------------------------------------------------------------*/
+/* Da es moeglich ist, die aktuelle Codeseite im Programmlauf zu wechseln,
+   ist die Initialisierung in einer getrennten Routine untergebracht.  Nach
+   einem Wechsel stellt ein erneuter Aufruf wieder korrekte Verhaeltnisse
+   her.  Wen das stoert, der schreibe einfach einen Aufruf in den Initiali-
+   sierungsteil der Unit hinein. */
+
+void NLS_Initialize(void)
+{
+  QueryInfo();
+
+  DumpNLSInfo();
+
+  NLSInfo.Initialized = True;
+}
+
+void NLS_DateString(Word Year, Word Month, Word Day, char *Dest)
+{
+  if (!NLSInfo.DateString)
+  {
+    fprintf(stderr, "NLS not yet initialized\n");
+    exit(255);
+  }
+  NLSInfo.DateString(Year, Month, Day, Dest);
+}
+
+void NLS_CurrDateString(char *Dest)
+{
+  time_t timep;
+  struct tm *trec;
+
+  time(&timep);
+  trec = localtime(&timep);
+  NLS_DateString(trec->tm_year + 1900, trec->tm_mon + 1, trec->tm_mday, Dest);
+}
+
+void NLS_TimeString(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest)
+{
+  if (!NLSInfo.TimeString)
+  {
+    fprintf(stderr, "NLS not yet initialized\n");
+    exit(255);
+  }
+  NLSInfo.TimeString(Hour, Minute, Second, Sec100, Dest);
 }
 
 void NLS_CurrTimeString(Boolean Use100, char *Dest)
@@ -793,6 +668,16 @@ int NLS_StrCmp(const char *s1, const char *s2)
     s2++;
   }
   return ((int) CollateTable[((unsigned int)*s1) & 0xff] - CollateTable[((unsigned int)*s2) & 0xff]);
+}
+
+Word NLS_GetCountryCode(void)
+{
+  if (!NLSInfo.Initialized)
+  {
+    fprintf(stderr, "NLS_GetCountryCode() called before initialization\n");
+    exit(255);
+  }
+  return NLSInfo.Country;
 }
 
 void nls_init(void)

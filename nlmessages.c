@@ -99,19 +99,14 @@ void opencatalog(PMsgCat Catalog, const char *File, const char *Path, LongInt Ms
   FILE *MsgFile;
   char str[2048], *ptr;
   const char *pSep;
-#if defined(DOS_NLS) || defined (OS2_NLS)
-  NLS_CountryInfo NLSInfo;
-#else
+  Word CountryCode;
   char *lcstring;
-#endif
   LongInt DefPos = -1, MomPos, DefLength = 0, MomLength, z, StrStart, CtryCnt, Ctrys[100];
   Boolean fi, Gotcha;
 
   /* get reference for finding out which language set to use */
 
-#if defined(DOS_NLS) || defined (OS2_NLS)
-  NLS_GetCountryInfo(&NLSInfo);
-#else
+  CountryCode = NLS_GetCountryCode();
   lcstring = getenv("LC_MESSAGES");
   if (!lcstring)
     lcstring = getenv("LC_ALL");
@@ -119,7 +114,6 @@ void opencatalog(PMsgCat Catalog, const char *File, const char *Path, LongInt Ms
     lcstring = getenv("LANG");
   if (!lcstring)
     lcstring = "";
-#endif
 
   /* find first valid message file: current directory has prio 1: */
 
@@ -215,13 +209,11 @@ void opencatalog(PMsgCat Catalog, const char *File, const char *Path, LongInt Ms
         DefPos = MomPos;
         DefLength = MomLength;
       }
-#if defined(DOS_NLS) || defined (OS2_NLS)
       for (z = 0; z < CtryCnt; z++)
-        if (Ctrys[z] == NLSInfo.Country)
+        if (Ctrys[z] == CountryCode)
           Gotcha = True;
-#else
-      Gotcha = !strncasecmp(lcstring, str, strlen(str));
-#endif
+      if (!Gotcha)
+        Gotcha = !strncasecmp(lcstring, str, strlen(str));
     }
   }
   while ((*str != '\0') && (!Gotcha));
