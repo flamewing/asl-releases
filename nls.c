@@ -429,7 +429,7 @@ static void Locale_DateString(Word Year, Word Month, Word Day, char *Dest)
   struct tm tm;
 
   tm.tm_year = Year - 1900;
-  tm.tm_mon = Month;
+  tm.tm_mon = Month - 1;
   tm.tm_mday = Day;
   strftime(Dest, 255, NLSInfo.DateFmtStr, &tm);
 }

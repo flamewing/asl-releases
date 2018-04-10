@@ -300,7 +300,7 @@ char *QuotPos(const char *s, char Zeichen)
 {
   register ShortInt Brack = 0, AngBrack = 0;
   register const char *i;
-  register LongWord Flag = 0;
+  Boolean InSglQuot = False, InDblQuot = False;
   static Boolean First = True, Imp[256];
   Boolean Save;
   char *pResult = NULL;
@@ -319,7 +319,7 @@ char *QuotPos(const char *s, char Zeichen)
    {
      if (*i == Zeichen)
      {
-       if ((AngBrack | Brack | Flag) == 0)
+       if (!AngBrack && !Brack && !InSglQuot && !InDblQuot)
        {
          pResult = (char*)i;
          goto func_exit;
@@ -328,27 +328,27 @@ char *QuotPos(const char *s, char Zeichen)
      switch(*i)
      {
        case '"':
-         if ((!(Brack | AngBrack)) && (!(Flag & 2)))
-           Flag ^= 1;
+         if (!InSglQuot)
+           InDblQuot = !InDblQuot;
          break;
        case '\'':
-         if ((!(Brack | AngBrack)) && (!(Flag & 1)))
-           Flag ^= 2;
+         if (!InDblQuot)
+           InSglQuot = !InSglQuot;
          break;
        case '(':
-         if (!(AngBrack | Flag))
+         if (!AngBrack && !InDblQuot && !InSglQuot)
            Brack++;
          break;
        case ')':
-         if (!(AngBrack | Flag))
+         if (!AngBrack && !InDblQuot && !InSglQuot)
            Brack--;
          break;
        case '[':
-         if (!(Brack | Flag))
+         if (!Brack && !InDblQuot && !InSglQuot)
            AngBrack++;
          break;
        case ']':
-         if (!(Brack | Flag))
+         if (!Brack && !InDblQuot && !InSglQuot)
            AngBrack--;
          break;
      }

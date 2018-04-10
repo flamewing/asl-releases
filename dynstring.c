@@ -76,7 +76,7 @@ int DynStringFind(const tDynString *pHaystack, const tDynString *pNeedle)
 {
   int pos, maxpos = ((int)pHaystack->Length) - ((int)pNeedle->Length);
 
-  for (pos = 0; pos < maxpos; pos++)
+  for (pos = 0; pos <= maxpos; pos++)
     if (!memcmp(pHaystack->Contents + pos, pNeedle->Contents, pNeedle->Length))
       return pos;
 

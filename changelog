@@ -1,3 +1,10 @@
+2018-04-10 [1.42 Bld 132]
+
+- Bugfix      : correct result of strstr() if search string is at end
+                of string
+- Bugfix      : correct month display on locale systems (off-by-one)
+- Bugfix      : Also regard ' and " if enclosed in () or []
+
 2018-03-29 [1.42 Bld 131]
 
 - Bugfix      : correct date display on locale systems
