@@ -724,7 +724,7 @@ static void AddLine(const char *Part, char *Sep)
   if (*OutLineBuffer != '\0')
     strcat(OutLineBuffer, Sep);
   strcat(OutLineBuffer, Part);
-  if (strlen(OutLineBuffer) >= mlen)
+  if ((int)strlen(OutLineBuffer) >= mlen)
   {
     search = OutLineBuffer + mlen;
     while (search >= OutLineBuffer)
@@ -2723,7 +2723,7 @@ static Boolean TeXNLSSpec(char *Line)
 
   if (Found)
   {
-    if (strlen(Repl) != cnt)
+    if ((int)strlen(Repl) != cnt)
       memmove(Line + strlen(Repl), Line + cnt, strlen(Line) - cnt + 1);
     memcpy(Line, Repl, strlen(Repl));
     strcpy(SepString, BackSepString);

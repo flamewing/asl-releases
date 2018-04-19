@@ -723,7 +723,7 @@ static void AddLine(const char *Part, char *Sep)
   if (*OutLineBuffer != '\0')
     strcat(OutLineBuffer, Sep);
   strcat(OutLineBuffer, Part);
-  if (strlen(OutLineBuffer) >= mlen)
+  if ((int)strlen(OutLineBuffer) >= mlen)
   {
     search = OutLineBuffer + mlen;
     while (search >= OutLineBuffer)
@@ -1266,7 +1266,7 @@ static void EndSectionHeading(void)
   sprintf(run, "%s", Title);
 
   fprintf(outfile, "        %s\n        ", Line);
-  for (z = 0; z < strlen(Line); z++)
+  for (z = 0; z < (int)strlen(Line); z++)
     switch(Level)
     {
       case 0:
@@ -1358,7 +1358,7 @@ static void TeXBeginEnv(Word Index)
     case EnvBiblio:
       FlushLine(); fputc('\n', outfile);
       fprintf(outfile, "        %s\n        ", BiblioName);
-      for (z = 0; z < strlen(BiblioName); z++)
+      for (z = 0; z < (int)strlen(BiblioName); z++)
         fputc('=', outfile);
       fputc('\n', outfile);
       assert_token("{");
@@ -2440,6 +2440,7 @@ static void TeXCedilla(Word Index)
 
 static void TeXAsterisk(Word Index)
 {
+  (void)Index;
   DoAddNormal("*", BackSepString);
 }
 
@@ -2496,7 +2497,7 @@ static Boolean TeXNLSSpec(char *Line)
 
   if (Found)
   {
-    if (strlen(Repl) != cnt)
+    if ((int)strlen(Repl) != cnt)
       memmove(Line + strlen(Repl), Line + cnt, strlen(Line) - cnt + 1);
     memcpy(Line, Repl, strlen(Repl));
     strcpy(SepString, BackSepString);

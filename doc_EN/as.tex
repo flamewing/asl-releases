@@ -4988,8 +4988,10 @@ Example:
 \begin{verbatim}
         align     2
 \end{verbatim}
-aligns to an even address (PC mod 2 = 0).  The contents of the
-skipped addresses is left undefined.
+aligns to an even address (PC mod 2 = 0).  If Align is used in this form with
+only one argument, the contents of the skipped memory space is not defined. 
+An optinal second argument may be used to define the (byte) value
+used to fill the area.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

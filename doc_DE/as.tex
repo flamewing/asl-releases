@@ -5142,8 +5142,10 @@ Beispiel:
 \begin{verbatim}
         align 2
 \end{verbatim}
-macht den Programmz"ahler gerade.  Wie auch bei \tty{DS.x 0} ist der
-freibleibende Speicherraum undefiniert.
+macht den Programmz"ahler gerade.  Wird \tty{ALIGN} in dieser Form mit nur
+einem Argument verwendet, ist der Inhalt des dadurch frei bleibenden
+Speicherbereichs nicht definiert.  Alternativ kann als zweites Argument ein
+(Byte-)Wert angegeben werden, mit dem dieser Bereich gef"ullt wird.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

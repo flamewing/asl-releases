@@ -1260,26 +1260,40 @@ static void CodeRADIX(Word Index)
 
 static void CodeALIGN(Word Index)
 {
-  Word Dummy;
-  Boolean OK;
-  LongInt NewPC;
   UNUSED(Index);
 
-  if (ChkArgCnt(1, 1))
+  if (ChkArgCnt(1, 2))
   {
+    Word AlignValue;
+    Byte AlignFill = 0;
+    Boolean OK = True;
+    LongInt NewPC;
+
     FirstPassUnknown = False;
-    Dummy = EvalIntExpression(ArgStr[1], Int16, &OK);
+    if (2 == ArgCnt)
+      AlignFill = EvalIntExpression(ArgStr[2], Int8, &OK);
+    FirstPassUnknown = False;
+    if (OK)
+      AlignValue = EvalIntExpression(ArgStr[1], Int16, &OK);
     if (OK)
     {
       if (FirstPassUnknown) WrError(1820);
       else
       {
-        NewPC = ProgCounter() + Dummy - 1;
-        NewPC -= NewPC%Dummy;
-        CodeLen = NewPC - ProgCounter();
-        DontPrint = (CodeLen != 0);
-        if (DontPrint)
+        NewPC = EProgCounter() + AlignValue - 1;
+        NewPC -= NewPC % AlignValue;
+        CodeLen = NewPC - EProgCounter();
+        if (1 == ArgCnt)
+        {
+          DontPrint = !!CodeLen;
           BookKeeping();
+        }
+        else if (CodeLen > (LongInt)MaxCodeLen) WrError(1920);
+        else
+        {
+          memset(BAsmCode, AlignFill, CodeLen);
+          DontPrint = False;
+        }
       }
     }
   }
