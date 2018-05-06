@@ -247,10 +247,10 @@ static void DecodeAdr(Byte Start, Byte Stop, Word Mask)
     {
       switch (OpSize)
       {
-        case -1:
+        case eSymbolSizeUnknown:
           WrError(1132);
           break;
-        case 0:
+        case eSymbolSize8Bit:
           AdrVals[0] = EvalIntExpression(ArgStr[Start] + 1, Int8, &OK);
           if (OK)
           {
@@ -258,7 +258,7 @@ static void DecodeAdr(Byte Start, Byte Stop, Word Mask)
             AdrMode = ModImm;
           }
           break;
-        case 1:
+        case eSymbolSize16Bit:
           AdrWord = EvalIntExpression(ArgStr[Start] + 1, Int16, &OK);
           if (OK)
           {
@@ -340,7 +340,7 @@ static void DecodeMOV(Word Index)
   if (ChkArgCnt(2, 2)
    && ChkMinCPU(CPU68HC08))
   {
-    OpSize = 0;
+    OpSize = eSymbolSize8Bit;
     DecodeAdr(1, 1, MModImm | MModDir | MModIxP);
     switch (AdrMode)
     {
@@ -414,7 +414,7 @@ static void DecodeCBEQx(Word Index)
   if (ChkArgCnt(2, 2)
    && ChkMinCPU(CPU68HC08))
   {
-    OpSize = 0; DecodeAdr(1, 1, MModImm);
+    OpSize = eSymbolSize8Bit; DecodeAdr(1, 1, MModImm);
     if (AdrMode == ModImm)
     {
       BAsmCode[1] = AdrVals[0];
@@ -644,7 +644,7 @@ static void DecodeCPHX(Word Index)
 
     if (MomCPU >= CPU68HCS08)
       Mask |= MModExt| MModSP1;
-    OpSize = 1;
+    OpSize = eSymbolSize16Bit;
     DecodeAdr(1, ArgCnt, Mask);
     if (AdrMode != ModNone)
     {
@@ -719,7 +719,7 @@ static void DecodeLDHX(Word Index)
 
     if (MomCPU >= CPU68HCS08)
       Mask |= MModExt| MModIx | MModIx1 | MModIx2 | MModSP1;
-    OpSize = 1;
+    OpSize = eSymbolSize16Bit;
     DecodeAdr(1, ArgCnt, Mask);
     if (AdrMode != ModNone)
     {
@@ -1022,24 +1022,12 @@ static void MakeCode_6805(void)
 
   CodeLen = 0;
   DontPrint = False;
-  OpSize = (-1);
+  OpSize = eSymbolSizeUnknown;
 
   /* deduce operand size - no size is zero-length string -> '\0' */
 
-  switch (mytoupper(*AttrPart))
-  {
-    case 'B': OpSize = 0; break;
-    case 'W': OpSize = 1; break;
-    case 'L': OpSize = 2; break;
-    case 'Q': OpSize = 3; break;
-    case 'S': OpSize = 4; break;
-    case 'D': OpSize = 5; break;
-    case 'X': OpSize = 6; break;
-    case 'P': OpSize = 7; break;
-    case '\0': break;
-    default:
-      WrError(1107); return;
-  }
+  if (!DecodeMoto16AttrSize(*AttrPart, &OpSize, False))
+    return;
 
   /* zu ignorierendes */
 

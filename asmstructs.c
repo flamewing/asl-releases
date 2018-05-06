@@ -69,12 +69,14 @@
 #include "strutil.h"
 
 #include "trees.h"
+#include "errmsg.h"
 
 #include "as.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmstructs.h"
+#include "errmsg.h"
 
 #include "as.rsc"
 
@@ -119,34 +121,148 @@ void DestroyStructRec(PStructRec StructRec)
   {
     Old = StructRec->Elems;
     StructRec->Elems = Old->Next;
-    free(Old->Name);
+    if (Old->pElemName) free(Old->pElemName);
+    if (Old->pRefElemName) free(Old->pRefElemName);
     free(Old);
   }
   free(StructRec);
 }
 
-void AddStructElem(PStructRec StructRec, char *Name, Boolean IsStruct, LongInt Offset)
-{
-  PStructElem Neu, Run;
+/*!------------------------------------------------------------------------
+ * \fn     CreateStructElem(const char *pElemName)
+ * \brief  create a new entry for a structure definition
+ * \param  pElemName name of the structure element
+ * \return * to element or NULL if allocation failed
+ * ------------------------------------------------------------------------ */
 
-  Neu = (PStructElem) malloc(sizeof(TStructElem));
-  if (Neu)
+void ExpandStructStd(const char *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
+{
+  HandleLabel(pVarName, Base + pStructElem->Offset);
+}
+
+PStructElem CreateStructElem(const char *pElemName)
+{
+  PStructElem pNeu;
+
+  pNeu = (PStructElem) calloc(1, sizeof(TStructElem));
+  if (pNeu)
   {
-    Neu->Name = as_strdup(Name);
+    pNeu->pElemName = as_strdup(pElemName);
     if (!CaseSensitive)
-      NLS_UpString(Neu->Name);
-    Neu->IsStruct = IsStruct;
-    Neu->Offset = Offset;
-    Neu->Next = NULL;
-    if (!StructRec->Elems)
-      StructRec->Elems = Neu;
-    else
+      NLS_UpString(pNeu->pElemName);
+    pNeu->pRefElemName = NULL;
+    pNeu->ExpandFnc = ExpandStructStd;
+    pNeu->Offset = 0;
+    pNeu->BitPos = pNeu->BitWidthM1 = -1;
+    pNeu->OpSize = eSymbolSizeUnknown;
+    pNeu->Next = NULL;
+  }
+  return pNeu;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     AddStructElem(PStructRec pStructRec, PStructElem pElement)
+ * \brief  add a new element to a structure definition
+ * \param  pStructRec structure to extend
+ * \param  pElement new element
+ * ------------------------------------------------------------------------ */
+
+void AddStructElem(PStructRec pStructRec, PStructElem pElement)
+{
+  PStructElem pRun;
+
+  if (!CaseSensitive && pElement->pRefElemName)
+    NLS_UpString(pElement->pRefElemName);
+
+  if (!pStructRec->Elems)
+    pStructRec->Elems = pElement;
+  else
+  {
+    for (pRun = pStructRec->Elems; pRun->Next; pRun = pRun->Next);
+    pRun->Next = pElement;
+  }
+  BumpStructLength(pStructRec, pElement->Offset);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     SetStructElemSize(PStructRec pStructRec, const char *pElemName, ShortInt Size)
+ * \brief  set the operand size of a structure's element
+ * \param  pStructRec structure the element is contained in
+ * \param  pElemName element's name
+ * \param  Sizeoperand size to set
+ * ------------------------------------------------------------------------ */
+
+void SetStructElemSize(PStructRec pStructRec, const char *pElemName, ShortInt Size)
+{
+  PStructElem pRun;
+  int Match;
+
+  for (pRun = pStructRec->Elems; pRun; pRun = pRun->Next)
+  {
+    Match = CaseSensitive ? strcmp(pElemName, pRun->pElemName) : strcasecmp(pElemName, pRun->pElemName);
+    if (!Match)
     {
-      for (Run = StructRec->Elems; Run->Next; Run = Run->Next);
-      Run->Next = Neu;
+      pRun->OpSize = Size;
+      break;
     }
   }
-  BumpStructLength(StructRec, Offset);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     ResolveStructReferences(PStructRec pStructRec)
+ * \brief  resolve referenced elements in structure
+ * \param  pStructRec structure to work on
+ * ------------------------------------------------------------------------ */
+
+void ResolveStructReferences(PStructRec pStructRec)
+{
+  Boolean AllResolved, DidResolve;
+  PStructElem pRun, pRef;
+
+  /* iterate over list until all symbols resolved, or we failed to resolve at least one per pass */
+
+  do
+  {
+    AllResolved = True;
+    DidResolve = False;
+
+    for (pRun = pStructRec->Elems; pRun; pRun = pRun->Next)
+      if (pRun->pRefElemName)
+      {
+        /* Only resolve to elements that already have been resolved.
+           That's why we may need more than one pass.  */
+
+        for (pRef = pStructRec->Elems; pRef; pRef = pRef->Next)
+        {
+          if (!strcmp(pRun->pRefElemName, pRef->pElemName) && !pRef->pRefElemName)
+          {
+            pRun->Offset = pRef->Offset;
+            if (pRun->OpSize == eSymbolSizeUnknown)
+              pRun->OpSize = pRef->OpSize;
+            free(pRun->pRefElemName);
+            pRun->pRefElemName = NULL;
+            DidResolve = True;
+            break;
+          }
+        }
+        if (!pRef)
+          AllResolved = False;
+      }
+  }
+  while (!AllResolved && DidResolve);
+  if (!AllResolved)
+  {
+    String Str;
+
+    for (pRun = pStructRec->Elems; pRun; pRun = pRun->Next)
+      if (pRun->pRefElemName)
+      {
+        strmaxcpy(Str, pRun->pElemName, STRINGSIZE);
+        strmaxcat(Str, " -> ", STRINGSIZE);
+        strmaxcat(Str, pRun->pRefElemName, STRINGSIZE);
+        WrXError(ErrNum_UnresolvedStructRef, Str);
+      }
+  }
 }
 
 void BuildStructName(char *pResult, unsigned ResultLen, const char *pName)
@@ -205,7 +321,7 @@ static Boolean StructAdder(PTree *PDest, PTree Neu, void *pData)
   if ((*Node)->Defined)
   {
     if (Protest)
-      WrXError(1815, Neu->Name);
+      WrXError(ErrNum_DoubleStruct, Neu->Name);
     else
     {
       DestroyStructRec((*Node)->StructRec);
@@ -297,6 +413,7 @@ static void PrintDef(PTree Tree, void *pData)
   PStructElem Elem;
   TPrintContext *pContext = (TPrintContext*)pData;
   String s;
+  char NumStr[30], NumStr2[30];
   UNUSED(pData);
 
   WrLstLine("");
@@ -311,8 +428,27 @@ static void PrintDef(PTree Tree, void *pData)
   WrLstLine(s);
   for (Elem = Node->StructRec->Elems; Elem; Elem = Elem->Next)
   {
-    sprintf(s, "%3" PRILongInt " ", Elem->Offset);
-    strmaxcat(s, Elem->Name, 255);
+    sprintf(s, "%3" PRILongInt, Elem->Offset);
+    if (Elem->BitPos >= 0)
+    {
+      if (Elem->BitWidthM1 >= 0)
+        sprintf(NumStr, ".%d-%d", Elem->BitPos, Elem->BitPos + Elem->BitWidthM1);
+      else
+        sprintf(NumStr, ".%d", Elem->BitPos);
+    }
+    else
+      *NumStr = '\0';
+    sprintf(NumStr2, "%-6s", NumStr);
+    strmaxcat(s, NumStr2, STRINGSIZE);
+    if (Elem->OpSize != eSymbolSizeUnknown)
+    {
+      sprintf(NumStr, "(%d)", Elem->OpSize);
+      strmaxcat(s, NumStr, STRINGSIZE);
+    }
+    else
+      strmaxcat(s, "   ", STRINGSIZE);
+    strmaxcat(s, " ", STRINGSIZE);
+    strmaxcat(s, Elem->pElemName, STRINGSIZE);
     WrLstLine(s);
   }
 }
@@ -369,14 +505,14 @@ static void ExpandStruct_One(PStructRec StructRec, char *pVarPrefix, char *pStru
   {
     for (StructElem = StructRec->Elems; StructElem; StructElem = StructElem->Next)
     {
-      strmaxcpy(pVarPrefix + VarLen + 1, StructElem->Name, RemVarLen);
-      HandleLabel(pVarPrefix, Base + StructElem->Offset);
+      strmaxcpy(pVarPrefix + VarLen + 1, StructElem->pElemName, RemVarLen);
+      StructElem->ExpandFnc(pVarPrefix, StructElem, Base);
       if (StructElem->IsStruct)
       {
         TStructRec *pSubStruct;
         Boolean Found;
 
-        strmaxcpy(pStructPrefix + StructLen + 1, StructElem->Name, RemStructLen);
+        strmaxcpy(pStructPrefix + StructLen + 1, StructElem->pElemName, RemStructLen);
         Found = FoundStruct(&pSubStruct, pStructPrefix);
         if (Found)
           ExpandStruct_One(pSubStruct, pVarPrefix, pStructPrefix, Base + StructElem->Offset);

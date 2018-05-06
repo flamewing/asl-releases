@@ -152,6 +152,7 @@ call testall t_olms50
 call testall t_oki48
 call testall t_parsys
 call testall t_s12x
+call testall t_s12z
 call testall t_scmp
 call testall t_secdri
 call testall t_shift

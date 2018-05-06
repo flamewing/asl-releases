@@ -252,7 +252,7 @@ Boolean DoBranchExt;                    /* Spruenge automatisch verlaengern */
 LargeWord RadixBase;                    /* Default-Zahlensystem im Formelparser*/
 LargeWord OutRadixBase;                 /* dito fuer Ausgabe */
 
-tLineComp ArgStrPos[ArgCntMax + 1];
+tLineComp ArgStrPos[ArgCntMax + 1], AttrPartPos;
 StringPtr AttrPart, LOpPart;            /* Komponenten der Zeile */
 tStrComp LabPart, CommPart, ArgPart, OpPart;
 char AttrSplit;

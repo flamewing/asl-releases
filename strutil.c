@@ -581,13 +581,13 @@ int ReadLnCont(FILE *Datei, char *Zeile, int MaxLen)
 /* erg: Zeiger auf Ergebnis-Longint */
 /* liefert TRUE, falls fehlerfrei, sonst FALSE */
 
-LongInt ConstLongInt(const char *inp, Boolean *pErr, LongInt Base)
+LargeInt ConstLongInt(const char *inp, Boolean *pErr, LongInt Base)
 {
   static const char Prefixes[4] = { '$', '@', '%', '\0' }; /* die moeglichen Zahlensysteme */
   static const char Postfixes[4] = { 'H', 'O', '\0', '\0' };
   static const LongInt Bases[3] = { 16, 8, 2 };            /* die dazugehoerigen Basen */
-  LongInt erg;
-  LongInt z, val, vorz = 1;  /* Vermischtes */
+  LargeInt erg, val;
+  int z, vorz = 1;  /* Vermischtes */
   int InpLen = strlen(inp);
 
   /* eventuelles Vorzeichen abspalten */
@@ -675,7 +675,7 @@ LongInt ConstLongInt(const char *inp, Boolean *pErr, LongInt Base)
   {
     /* Vorzeichen beruecksichtigen */
 
-    erg*=vorz;
+    erg *= vorz;
     *pErr = True;
   }
 

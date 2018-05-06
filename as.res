@@ -260,6 +260,14 @@ Message ErrMsgDeprecated_Instead
  "%s benutzen"
  "use %s"
 
+Message ErrMsgSrcLEThanDest
+ "Quelloperand l&auml;nger oder gleich Zieloperand"
+ "source operand is longer or same size as destination operand"
+
+Message ErrMsgTrapValidInstruction
+ "TRAP-Nummer ist g&uuml;ltige Instruktion"
+ "TRAP number represents valid instruction"
+
 ;*****
 
 Message ErrMsgDoubleDef
@@ -418,6 +426,10 @@ Message ErrMsgInvReg
  "ung&uuml;ltiges Register"
  "invalid register"
 
+Message ErrMsgDoubleReg
+ "Register mehr als einmal gelistet"
+ "register(s) listed more than once"
+
 Message ErrMsgNoSaveFrame
  "RESTORE ohne SAVE"
  "RESTORE without SAVE"
@@ -533,6 +545,14 @@ Message ErrMsgPhaseDisallowed
 Message ErrMsgInvStructDir
  "Ung&uuml;ltige STRUCT-Direktive"
  "invalid STRUCT directive"
+
+Message ErrMsgDoubleStruct
+ "Struktur redefiniert"
+ "structure re-defined"
+
+Message ErrMsgUnresolvedStructRef
+ "nicht aufl&ouml;sbare Strukturelement-Referenz"
+ "unresolvable structure element reference"
 
 Message ErrMsgNotRepeatable
  "Anweisung nicht wiederholbar"

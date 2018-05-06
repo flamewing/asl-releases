@@ -30,4 +30,6 @@ extern void AddMoto16PseudoONOFF(void);
 
 extern Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn);
 
+extern Boolean DecodeMoto16AttrSize(char SizeSpec, ShortInt *pResult, Boolean Allow24);
+
 #endif /* _MOTPSEUDO_H */

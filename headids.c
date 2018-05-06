@@ -127,6 +127,7 @@ static TFamilyDescr Descrs[] =
   { "6805/HC08"    , 0x0062, MotoS    },
   { "6809"         , 0x0063, MotoS    },
   { "68HC12"       , 0x0066, MotoS    },
+  { "S12Z"         , 0x0045, MotoS    },
   { "68HC16"       , 0x0065, MotoS    },
   { "68RS08"       , 0x005e, MotoS    },
   { "H8/300(H}"    , 0x0068, MotoS    },

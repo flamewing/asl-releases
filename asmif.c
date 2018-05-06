@@ -221,31 +221,26 @@ static void CodeELSEIF(void)
 {
   LongInt IfExpr;
 
-  if (!FirstIfSave) WrError(1840);
+  if (!FirstIfSave || (FirstIfSave->State != IfState_IFIF)) WrError(1840);
   else if (ArgCnt == 0)
   {
-    if (FirstIfSave->State != IfState_IFIF) WrError(1480);
-    else if (FirstIfSave->SaveIfAsm)
+    if (FirstIfSave->SaveIfAsm)
       AddBoolFlag(IfAsm = (!FirstIfSave->CaseFound));
     FirstIfSave->State = IfState_IFELSE;
   }
   else if (ArgCnt == 1)
   {
-    if (FirstIfSave->State != IfState_IFIF) WrError(1480);
+    if (!FirstIfSave->SaveIfAsm)
+      IfExpr = 1;
+    else if (FirstIfSave->CaseFound)
+      IfExpr = 0;
     else
-    {
-      if (!FirstIfSave->SaveIfAsm)
-        IfExpr = 1;
-      else if (FirstIfSave->CaseFound)
-        IfExpr = 0;
-      else
-        IfExpr = GetIfVal(ArgStr[1]);
-      IfAsm = ((FirstIfSave->SaveIfAsm) && (IfExpr != 0) && (!FirstIfSave->CaseFound));
-      if (FirstIfSave->SaveIfAsm)
-        AddBoolFlag(IfExpr != 0);
-      if (IfExpr != 0)
-        FirstIfSave->CaseFound = True;
-    }
+      IfExpr = GetIfVal(ArgStr[1]);
+    IfAsm = ((FirstIfSave->SaveIfAsm) && (IfExpr != 0) && (!FirstIfSave->CaseFound));
+    if (FirstIfSave->SaveIfAsm)
+      AddBoolFlag(IfExpr != 0);
+    if (IfExpr != 0)
+      FirstIfSave->CaseFound = True;
   }
   else
     (void)ChkArgCnt(0, 1);
@@ -259,18 +254,14 @@ static void CodeENDIF(void)
   PIfSave NewSave;
 
   if (!ChkArgCnt(0, 0));
-  else if (!FirstIfSave) WrError(1840);
+  else if (!FirstIfSave || ((FirstIfSave->State != IfState_IFIF) && (FirstIfSave->State != IfState_IFELSE))) WrError(1840);
   else
   {
-    if ((FirstIfSave->State != IfState_IFIF) && (FirstIfSave->State != IfState_IFELSE)) WrError(1480);
-    else
-    {
-      IfAsm = FirstIfSave->SaveIfAsm;
-      NewSave = FirstIfSave;
-      FirstIfSave = NewSave->Next;
-      sprintf(ListLine, "[%u]", (unsigned)NewSave->StartLine);
-      free(NewSave);
-    }
+    IfAsm = FirstIfSave->SaveIfAsm;
+    NewSave = FirstIfSave;
+    FirstIfSave = NewSave->Next;
+    sprintf(ListLine, "[%u]", (unsigned)NewSave->StartLine);
+    free(NewSave);
   }
 
   ActiveIF = IfAsm;

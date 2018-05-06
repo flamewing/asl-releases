@@ -97,8 +97,8 @@
 
 static CPUVar CPUST7;
 
-static ShortInt AdrType;
-static Byte AdrPart,OpSize,PrefixCnt;
+static ShortInt AdrType, OpSize;
+static Byte AdrPart, PrefixCnt;
 static Byte AdrVals[3];
 
 /*--------------------------------------------------------------------------*/
@@ -844,7 +844,7 @@ static void DeinitFields(void)
 
 static void MakeCode_ST7(void)
 {
-  CodeLen = 0; DontPrint = False; OpSize = 1; PrefixCnt = 0;
+  CodeLen = 0; DontPrint = False; OpSize = eSymbolSize16Bit; PrefixCnt = 0;
 
   /* zu ignorierendes */
 
@@ -852,22 +852,8 @@ static void MakeCode_ST7(void)
 
   /* Attribut verarbeiten */
 
-  if (*AttrPart!='\0')
-  {
-    switch (mytoupper(*AttrPart))
-    {
-      case 'B': OpSize = 0; break;
-      case 'W': OpSize = 1; break;
-      case 'L': OpSize = 2; break;
-      case 'Q': OpSize = 3; break;
-      case 'S': OpSize = 4; break;
-      case 'D': OpSize = 5; break;
-      case 'X': OpSize = 6; break;
-      case 'P': OpSize = 7; break;
-      default:
-       WrError(1107); return;
-    }
-  }
+  if (!DecodeMoto16AttrSize(*AttrPart, &OpSize, False))
+    return;
 
   /* Pseudoanweisungen */
 

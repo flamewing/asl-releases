@@ -248,8 +248,13 @@ static void DecodeBYT(Word Index)
 
     if (!OK)
       CodeLen = 0;
-    else if (SpaceFlag == 1)
-      DontPrint = True;
+    else
+    {
+      if (SpaceFlag == 1)
+        DontPrint = True;
+      if (*LabPart.Str)
+        SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize8Bit);
+    }
   }
 }
 
@@ -384,8 +389,13 @@ static void DecodeADR(Word Index)
 
     if (!OK)
       CodeLen = 0;
-    else if (SpaceFlag)
-      DontPrint = True;
+    else
+    {
+      if (SpaceFlag)
+        DontPrint = True;
+      if (*LabPart.Str)
+        SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize16Bit);
+    }
   }
 }
 
@@ -607,6 +617,13 @@ static void EnterWord(LargeWord w)
   CodeLen += 2;
 }
 
+static void EnterPointer(LargeWord w)
+{
+  EnterByte((w >> 16) & 0xff);
+  EnterByte((w >>  8) & 0xff);
+  EnterByte((w      ) & 0xff);
+}
+
 static void EnterLWord(LargeWord l)
 {
   if (ListGran() == 1)
@@ -775,7 +792,7 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
   LongInt z2;
   char *zp;
   LongInt WSize, Rep = 0;
-  LongInt NewPC,HVal;
+  LongInt NewPC, HVal;
   TempResult t;
   Boolean OK, ValOK;
   ShortInt SpaceFlag;
@@ -787,22 +804,27 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
 
   switch (OpSize)
   {
-    case 0:
+    case eSymbolSize8Bit:
       WSize = 1;
       EnterInt = EnterByte;
       IntTypeEnum = Int8;
       break;
-    case 1:
+    case eSymbolSize16Bit:
       WSize = 2;
       EnterInt = EnterWord;
       IntTypeEnum = Int16;
       break;
-    case 2:
+    case eSymbolSize24Bit:
+      WSize = 3;
+      EnterInt = EnterPointer;
+      IntTypeEnum = Int24;
+      break;
+    case eSymbolSize32Bit:
       WSize = 4;
       EnterInt = EnterLWord;
       IntTypeEnum = Int32;
       break;
-    case 3:
+    case eSymbolSize64Bit:
       WSize = 8;
       EnterInt = EnterQWord;
 #ifdef HAS64
@@ -811,14 +833,14 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
       IntTypeEnum = Int32;
 #endif
       break;
-    case 4:
+    case eSymbolSizeFloat32Bit:
       WSize = 4;
       ConvertFloat = Double_2_ieee4;
       EnterFloat = EnterIEEE4;
       FloatTypeEnum = Float32;
       Swap = DWSwap;
       break;
-    case 5:
+    case eSymbolSizeFloat64Bit:
       WSize = 8;
       ConvertFloat = Double_2_ieee8;
       EnterFloat = EnterIEEE8;
@@ -832,14 +854,14 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
        large enough and the two (garbage) bytes at the end will not be used
        by EnterIEEE10() anyway: */
 
-    case 6:
+    case eSymbolSizeFloat96Bit:
       WSize = 12;
       ConvertFloat = Double_2_ieee10;
       EnterFloat = EnterIEEE10;
       FloatTypeEnum = Float80;
       Swap = WSwap;
       break;
-    case 7:
+    case eSymbolSizeFloatDec96Bit:
       WSize = 12;
       ConvertFloat = ConvertMotoFloatDec;
       EnterFloat = EnterMotoFloatDec;
@@ -1033,6 +1055,8 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
           EnterByte(0);
       }
     }
+    if (*LabPart.Str)
+      SetSymbolOrStructElemSize(LabPart.Str, OpSize);
     return True;
   }
 
@@ -1040,27 +1064,30 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
   {
     if (ChkArgCnt(1, 1))
     {
+      LongWord NumPad = 0;
+
       FirstPassUnknown = False;
       HVal = EvalIntExpression(ArgStr[1], Int32, &ValOK);
       if (FirstPassUnknown)
         WrError(1820);
       if ((ValOK) && (!FirstPassUnknown))
       {
+        Boolean OddSize = (eSymbolSize8Bit == OpSize) || (eSymbolSize24Bit == OpSize);
+
         DontPrint = True;
-        if (0 == OpSize)
+        if (OddSize)
         {
           if ((HVal & 1) && (DoPadding))
-            HVal++;
+            NumPad++;
         }
 
-        /* value of 0 means aligning the PC.  Doesn't make sense
-           for bytes, since all adresses are integral numbers :-) */
+        /* value of 0 means aligning the PC.  Doesn't make sense for bytes and 24 bit values */
 
-        if (HVal == 0)
+        if ((HVal == 0) && !OddSize)
         {
-          NewPC = ProgCounter() + WSize - 1;
-          NewPC = NewPC-(NewPC % WSize);
-          CodeLen = NewPC - ProgCounter();
+          NewPC = EProgCounter() + WSize - 1;
+          NewPC -= NewPC % WSize;
+          CodeLen = NewPC - EProgCounter();
           if (CodeLen == 0)
           {
             DontPrint = False;
@@ -1069,14 +1096,44 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
           }
         }
         else
-          CodeLen = HVal * WSize;
+          CodeLen = HVal * WSize + NumPad;
         if (DontPrint)
           BookKeeping();
       }
     }
+    if (*LabPart.Str)
+      SetSymbolOrStructElemSize(LabPart.Str, OpSize);
     return True;
   }
 
   return False;
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     DecodeMoto16AttrSize(char SizeSpec, ShortInt *pResult, Boolean Allow24)
+ * \brief  decode Motorola-style operand size character
+ * \param  SizeSpec size specifier character
+ * \param  pResult returns result size
+ * \param  Allow24 allow 'p' as specifier for 24 Bits (S12Z-specific)
+ * \return True if decoded
+ * ------------------------------------------------------------------------ */
+
+Boolean DecodeMoto16AttrSize(char SizeSpec, ShortInt *pResult, Boolean Allow24)
+{
+  switch (mytoupper(SizeSpec))
+  {
+    case 'B': *pResult = eSymbolSize8Bit; break;
+    case 'W': *pResult = eSymbolSize16Bit; break;
+    case 'L': *pResult = eSymbolSize32Bit; break;
+    case 'Q': *pResult = eSymbolSize64Bit; break;
+    case 'S': *pResult = eSymbolSizeFloat32Bit; break;
+    case 'D': *pResult = eSymbolSizeFloat64Bit; break;
+    case 'X': *pResult = eSymbolSizeFloat96Bit; break;
+    case 'P': *pResult = Allow24 ? eSymbolSize24Bit : eSymbolSizeFloatDec96Bit; break;
+    case '\0': break;
+    default:
+      WrError(1107);
+      return False;
+  }
+  return True;
+}

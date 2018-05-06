@@ -178,10 +178,10 @@ static void DecodeAdr(int Start, int Stop, Boolean LongAdr, Byte Mask)
     s = SplitSize(ArgStr[Start] + 1, &Size);
     switch (OpSize)
     {
-      case -1:
+      case eSymbolSizeUnknown:
         WrError(1132);
         break;
-      case 0:
+      case eSymbolSize8Bit:
         AdrVals[0] = EvalIntExpression(s, Int8, &OK);
         if (OK)
         {
@@ -189,7 +189,7 @@ static void DecodeAdr(int Start, int Stop, Boolean LongAdr, Byte Mask)
           AdrMode = ModImm;
         }
         break;
-      case 1:
+      case eSymbolSize16Bit:
         V16 = EvalIntExpression(s, (Size == ShortDisp) ? SInt8 : Int16, &OK);
         if ((Size == NoDisp) && (V16 >= -128) && (V16 <= 127) && ((Mask & MModImmExt) != 0))
           Size = ShortDisp;
@@ -210,7 +210,7 @@ static void DecodeAdr(int Start, int Stop, Boolean LongAdr, Byte Mask)
           }
         }
         break;
-      case 2:
+      case eSymbolSize32Bit:
         V32 = EvalIntExpression(s, Int32, &OK);
         if (OK)
         {
@@ -437,7 +437,7 @@ static void DecodeGen(Word Index)
         CodeLen = 2 + AdrCnt;
         break;
       case ModImm:
-        if (OpSize == 0)
+        if (OpSize == eSymbolSize8Bit)
         {
           BAsmCode[0] = pOrder->Code + 0x30;
           BAsmCode[1] = AdrVals[0];
@@ -464,7 +464,7 @@ static void DecodeAux(Word Code)
 {
   if (ChkArgCnt(1, 2))
   {
-    OpSize = 1;
+    OpSize = eSymbolSize16Bit;
     DecodeAdr(1, ArgCnt, False, (*OpPart.Str == 'S' ? 0 : MModImm) | MModDisp8 | MModDisp16 | MModAbs);
     switch (AdrMode)
     {
@@ -500,7 +500,7 @@ static void DecodeImm(Word Code)
 {
   if (ChkArgCnt(1, 1))
   {
-    OpSize = 1;
+    OpSize = eSymbolSize16Bit;
     DecodeAdr(1, 1, False, MModImm | MModImmExt);
     switch (AdrMode)
     {
@@ -523,7 +523,7 @@ static void DecodeExt(Word Code)
 {
   if (ChkArgCnt(1, 1))
   {
-    OpSize = 1;
+    OpSize = eSymbolSize16Bit;
     DecodeAdr(1, 1, False, MModAbs);
     switch (AdrMode)
     {
@@ -625,7 +625,7 @@ static void DecodeLogp(Word Index)
 {
   if (ChkArgCnt(1, 1))
   {
-    OpSize = 1; DecodeAdr(1, 1, False, MModImm);
+    OpSize = eSymbolSize16Bit; DecodeAdr(1, 1, False, MModImm);
     switch (AdrMode)
     {
       case ModImm:
@@ -665,7 +665,7 @@ static void DecodeBit8(Word Index)
 
   if (ChkArgCnt(2, 3))
   {
-    OpSize = 0;
+    OpSize = eSymbolSize8Bit;
     DecodeAdr(ArgCnt, ArgCnt, False, MModImm);
     switch (AdrMode)
     {
@@ -703,7 +703,7 @@ static void DecodeBit16(Word Index)
 {
   if (ChkArgCnt(2, 3))
   {
-    OpSize = 1;
+    OpSize = eSymbolSize16Bit;
     DecodeAdr(ArgCnt, ArgCnt, False, MModImm);
     switch (AdrMode)
     {
@@ -736,7 +736,7 @@ static void DecodeBrBit(Word Index)
 
   if (ChkArgCnt(3, 4))
   {
-    OpSize = 0; DecodeAdr(ArgCnt - 1, ArgCnt - 1, False, MModImm);
+    OpSize = eSymbolSize8Bit; DecodeAdr(ArgCnt - 1, ArgCnt - 1, False, MModImm);
     if (AdrMode == ModImm)
     {
       BAsmCode[1] = AdrVals[0];
@@ -798,7 +798,7 @@ static void DecodeJmpJsr(Word Index)
 {
   if (ChkArgCnt(1, 2))
   {
-    OpSize = 1;
+    OpSize = eSymbolSize16Bit;
     DecodeAdr(1, ArgCnt, True, MModAbs20 | MModDisp20);
     switch (AdrMode)
     {
@@ -1104,24 +1104,13 @@ static void MakeCode_6816(void)
   CodeLen = 0;
   DontPrint = False;
   AdrCnt = 0;
-  OpSize = -1;
+  OpSize = eSymbolSizeUnknown;
 
   /* Operandengroesse festlegen. ACHTUNG! Das gilt nur fuer die folgenden
      Pseudobefehle! Die Maschinenbefehle ueberschreiben diesen Wert! */
 
-  if (*AttrPart!='\0')
-    switch (mytoupper(*AttrPart))
-    {
-      case 'B': OpSize = 0; break;
-      case 'W': OpSize = 1; break;
-      case 'L': OpSize = 2; break;
-      case 'Q': OpSize = 3; break;
-      case 'S': OpSize = 4; break;
-      case 'D': OpSize = 5; break;
-      case 'X': OpSize = 6; break;
-      case 'P': OpSize = 7; break;
-      default: WrError(1107); return;
-    }
+  if (!DecodeMoto16AttrSize(*AttrPart, &OpSize, False))
+    return;
 
   /* zu ignorierendes */
 

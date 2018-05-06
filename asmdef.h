@@ -473,7 +473,7 @@ extern Boolean DoBranchExt;
 
 extern LargeWord RadixBase, OutRadixBase;
 
-extern tLineComp ArgStrPos[ArgCntMax + 1];
+extern tLineComp ArgStrPos[ArgCntMax + 1], AttrPartPos;
 extern StringPtr AttrPart, LOpPart;
 extern tStrComp LabPart, CommPart, ArgPart, OpPart;
 extern char AttrSplit;

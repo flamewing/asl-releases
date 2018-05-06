@@ -270,7 +270,7 @@ static void DecodeAdr(int StartInd, int StopInd, Byte Erl)
     {
       if (MModImm & Erl)
       {
-        if (OpSize == 1)
+        if (OpSize == eSymbolSize16Bit)
         {
           AdrWord = EvalIntExpression(Asc + 1, Int16, &OK);
           if (OK)
@@ -478,7 +478,7 @@ static void DecodeALU16(Word Index)
 {
   const ALU16Order *forder = ALU16Orders + Index;
 
-  OpSize = 1;
+  OpSize = eSymbolSize16Bit;
   if (ChkArgCnt(1, 2)
    && ChkMinCPU(forder->MinCPU))
   {
@@ -946,32 +946,12 @@ static void MakeCode_68(void)
   DontPrint = False;
   PrefCnt = 0;
   AdrCnt = 0;
-  OpSize = 0;
+  OpSize = eSymbolSize8Bit;
 
   /* Operandengroesse festlegen */
 
-  if (*AttrPart!='\0')
-    switch (mytoupper(*AttrPart))
-    {
-     case 'B':
-       OpSize = 0; break;
-     case 'W':
-       OpSize = 1; break;
-     case 'L':
-       OpSize = 2; break;
-     case 'Q':
-       OpSize = 3; break;
-     case 'S':
-       OpSize = 4; break;
-     case 'D':
-       OpSize = 5; break;
-     case 'X':
-       OpSize = 6; break;
-     case 'P':
-       OpSize = 7; break;
-     default:
-       WrError(1107); return;
-    }
+  if (!DecodeMoto16AttrSize(*AttrPart, &OpSize, False))
+    return;
 
   /* zu ignorierendes */
 

@@ -394,6 +394,7 @@
 #include "code6805.h"
 #include "code6809.h"
 #include "code6812.h"
+#include "codes12z.h"
 #include "code6816.h"
 #include "code68rs08.h"
 #include "codeh8_3.h"
@@ -2650,13 +2651,16 @@ Boolean HasLabel(void)
   }
 }
 
-void HandleLabel(char *Name, LargeWord Value)
+void HandleLabel(const char *Name, LargeWord Value)
 {
   /* structure element ? */
 
   if (pInnermostNamedStruct)
   {
-    AddStructElem(pInnermostNamedStruct->StructRec, Name, False, Value);
+    PStructElem pElement = CreateStructElem(Name);
+
+    pElement->Offset = Value;
+    AddStructElem(pInnermostNamedStruct->StructRec, pElement);
     AddStructSymbol(Name, Value);
   }
 
@@ -3028,18 +3032,29 @@ static void SplitLine(void)
     {
       AttrSplit = (*pAttrPos);
       strmaxcpy(AttrPart, pAttrPos + 1, 255);
+      AttrPartPos.StartCol = OpPart.Pos.StartCol + (pAttrPos + 1 - OpPart.Str);
+      AttrPartPos.Len = strlen(AttrPart);
+      
       *pAttrPos = '\0';
       if ((*OpPart.Str == '\0') && (*AttrPart != '\0'))
       {
         strmaxcpy(OpPart.Str, AttrPart, 255);
+        OpPart.Pos = AttrPartPos;
         *AttrPart = '\0';
+        LineCompReset(&AttrPartPos);
       }
     }
     else
+    {
+      LineCompReset(&AttrPartPos);
       *AttrPart = '\0';
+    }
   }
   else
+  {
+    LineCompReset(&AttrPartPos);
     *AttrPart = '\0';
+  }
 
   KillPostBlanks(ArgPart.Str);
 
@@ -4551,6 +4566,7 @@ int main(int argc, char **argv)
     code6805_init();
     code6809_init();
     code6812_init();
+    codes12z_init();
     code6816_init();
     code68rs08_init();
     codeh8_3_init();

@@ -217,7 +217,7 @@ static Boolean DefChkPC(LargeWord Addr)
 
 static void SetCPUCore(const tCPUDef *pCPUDef, Boolean NotPrev)
 {
-  LongInt HCPU;
+  LargeInt HCPU;
   char *z, *dest;
   Boolean ECPU;
   char s[20];
@@ -1660,10 +1660,13 @@ static void CodeSTRUCT(Word IsUnion)
   {
     PStructStack pRun;
     LargeWord Offset = ProgCounter();
+    PStructElem pElement = CreateStructElem(LabPart.Str);
 
     for (pRun = StructStack; pRun && pRun != pInnermostNamedStruct; pRun = pRun->Next)
       Offset += pRun->SaveCurrPC;
-    AddStructElem(pInnermostNamedStruct->StructRec, LabPart.Str, True, Offset);
+    pElement->Offset = Offset;
+    pElement->IsStruct = True;
+    AddStructElem(pInnermostNamedStruct->StructRec, pElement);
     AddStructSymbol(LabPart.Str, ProgCounter());
   }
 
@@ -1748,6 +1751,10 @@ static void CodeENDSTRUCT(Word IsUnion)
 
       OStruct = StructStack;
       StructStack = OStruct->Next;
+
+      /* resolve referenced symbols in structure */
+
+      ResolveStructReferences(OStruct->StructRec);
 
       /* find new innermost named struct */
 

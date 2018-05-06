@@ -454,7 +454,7 @@ static void DecodeAdr(int Start, int Stop, Word Mask)
     {
       switch (OpSize)
       {
-        case -1:
+        case eSymbolSizeUnknown:
           WrError(1132);
           break;
         case 0:
@@ -1110,7 +1110,7 @@ static void DecodeLogic(Word Index)
   else if (*AttrPart != '\0') WrError(1100);
   else
   {
-    OpSize = 0; DecodeAdr(1, 1, MModImm);
+    OpSize = eSymbolSize8Bit; DecodeAdr(1, 1, MModImm);
     if (AdrMode == ModImm)
     {
       BAsmCode[0] = 0x10 | Index;
@@ -1326,7 +1326,7 @@ static void DecodeBTAS(Word Index)
   else
   {
     ExPos = 2;
-    OpSize = 0;
+    OpSize = eSymbolSize8Bit;
     DecodeAdr(1, ArgCnt -1, MModDir | MModExt | MModIdx | MModIdx1 | ModIdx2 | ModDIdx);
     if (AdrMode != ModNone)
     {
@@ -1692,24 +1692,12 @@ static void MakeCode_6812(void)
 {
   CodeLen = 0;
   DontPrint = False;
-  OpSize = -1;
+  OpSize = eSymbolSizeUnknown;
 
   /* Operandengroesse festlegen */
 
-  if (*AttrPart != '\0')
-    switch (mytoupper(*AttrPart))
-    {
-      case 'B': OpSize = 0; break;
-      case 'W': OpSize = 1; break;
-      case 'L': OpSize = 2; break;
-      case 'Q': OpSize = 3; break;
-      case 'S': OpSize = 4; break;
-      case 'D': OpSize = 5; break;
-      case 'X': OpSize = 6; break;
-      case 'P': OpSize = 7; break;
-      default:
-        WrError(1107); return;
-    }
+  if (!DecodeMoto16AttrSize(*AttrPart, &OpSize, False))
+    return;
 
   /* zu ignorierendes */
 

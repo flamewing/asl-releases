@@ -43,12 +43,20 @@
  * Revision 1.9  2002/11/10 16:27:32  alfred
  *****************************************************************************/
    
+struct sStructElem;
+
+typedef void (*tStructElemExpandFnc)(const char *pVarName, const struct sStructElem *pStructElem, LargeWord Base);
+
 typedef struct sStructElem
 {
   struct sStructElem *Next;
-  char *Name;
+  char *pElemName, *pRefElemName;
   Boolean IsStruct;
+  tStructElemExpandFnc ExpandFnc;
   LongInt Offset;
+  ShortInt BitPos; /* -1 -> no bit position */
+  ShortInt BitWidthM1; /* -1 -> no bit field, otherwise actual width minus one */
+  ShortInt OpSize;
 } TStructElem, *PStructElem;
 
 typedef struct sStructRec
@@ -77,9 +85,15 @@ extern void DestroyStructRec(PStructRec StructRec);
 
 extern void BuildStructName(char *pResult, unsigned ResultLen, const char *pName);
 
-extern void AddStructElem(PStructRec StructRec, char *Name, Boolean IsStruct, LongInt Offset);
+extern PStructElem CreateStructElem(const char *pElemName);
+
+extern void AddStructElem(PStructRec pStructRec, PStructElem pElement);
+
+extern void SetStructElemSize(PStructRec pStructRec, const char *pElemName, ShortInt Size);
 
 extern void AddStructSymbol(const char *pName, LargeWord Value);
+
+extern void ResolveStructReferences(PStructRec pStructRec);
 
 extern void BumpStructLength(PStructRec StructRec, LongInt Length);
 

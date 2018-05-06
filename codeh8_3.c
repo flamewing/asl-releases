@@ -105,7 +105,7 @@
 #define M_CPUH8_300H  (1 << 4)
 
 
-static ShortInt OpSize;     /* Groesse=8*(2^OpSize) */
+static ShortInt OpSize;
 static ShortInt AdrMode;    /* Ergebnisadressmodus */
 static Byte AdrPart;        /* Adressierungsmodusbits im Opcode */
 static Word AdrVals[6];     /* Adressargument */
@@ -126,7 +126,7 @@ static MomSize_t MomSize;
 
 static void SetOpSize(ShortInt Size)
 {
-  if (OpSize == -1)
+  if (OpSize == eSymbolSizeUnknown)
     OpSize = Size;
   else if (Size != OpSize)
   {
@@ -355,10 +355,10 @@ static void DecodeAdr(char *Asc, Word Mask)
   {
     switch (OpSize)
     {
-      case -1:
+      case eSymbolSizeUnknown:
         WrError(1132);
         break;
-      case 0:
+      case eSymbolSize8Bit:
         HReg = EvalIntExpression(Asc + 1, Int8, &OK);
         if (OK)
         {
@@ -367,7 +367,7 @@ static void DecodeAdr(char *Asc, Word Mask)
           AdrMode = ModImm;
         }
         break;
-      case 1:
+      case eSymbolSize16Bit:
         AdrVals[0] = EvalIntExpression(Asc + 1, Int16, &OK);
         if (OK)
         {
@@ -375,7 +375,7 @@ static void DecodeAdr(char *Asc, Word Mask)
           AdrMode = ModImm;
         }
         break;
-      case 2:
+      case eSymbolSize32Bit:
         HLong = EvalIntExpression(Asc + 1, Int32, &OK);
         if (OK)
         {
@@ -536,8 +536,8 @@ static void DecodeAdr(char *Asc, Word Mask)
   DecideAbsolute(Asc,Mask);
 
 chk:
-  if (((AdrMode == ModReg) && (OpSize == 2))
-   || ((AdrMode == ModReg) && (OpSize == 1) && (AdrPart > 7))
+  if (((AdrMode == ModReg) && (OpSize == eSymbolSize32Bit))
+   || ((AdrMode == ModReg) && (OpSize == eSymbolSize16Bit) && (AdrPart > 7))
    || (AdrMode == ModAbs24)
    || (AdrMode == ModInd24))
   {
@@ -559,11 +559,11 @@ static LongInt ImmVal(void)
 {
   switch (OpSize)
   {
-    case 0:
+    case eSymbolSize8Bit:
       return Lo(AdrVals[0]);
-    case 1:
+    case eSymbolSize16Bit:
       return AdrVals[0];
-    case 2:
+    case eSymbolSize32Bit:
       return (((LongInt)AdrVals[0]) << 16) + AdrVals[1];
     default:
       WrError(10000);
@@ -589,15 +589,15 @@ static void DecodeEEPMOV(Word Code)
 {
   UNUSED(Code);
 
-  if (OpSize == -1)
+  if (OpSize == eSymbolSizeUnknown)
     OpSize = Ord(!CPU16);
-  if (OpSize > 1) WrError(1130);
+  if (OpSize > eSymbolSize16Bit) WrError(1130);
   else if (!ChkArgCnt(0, 0));
-  else if ((OpSize == 1) && !ChkCPU32(ErrNum_AddrModeNotSupported));
+  else if ((OpSize == eSymbolSize16Bit) && !ChkCPU32(ErrNum_AddrModeNotSupported));
   else
   {
     CodeLen = 4;
-    WAsmCode[0] = (OpSize == 0) ? 0x7b5c : 0x7bd4;
+    WAsmCode[0] = (OpSize == eSymbolSize8Bit) ? 0x7b5c : 0x7bd4;
     WAsmCode[1] = 0x598f;
   }
 }
@@ -615,31 +615,31 @@ static void DecodeMOV(Word Code)
     {
       case ModReg:
         HReg = AdrPart;
-        DecodeAdr(ArgStr[1], MModReg | MModIReg | MModPostInc | MModInd | MModImm | ((OpSize == 0) ? MModAbs : (MModAbs16 | MModAbs24)));
+        DecodeAdr(ArgStr[1], MModReg | MModIReg | MModPostInc | MModInd | MModImm | ((OpSize == eSymbolSize8Bit) ? MModAbs : (MModAbs16 | MModAbs24)));
         switch (AdrMode)
         {
           case ModReg:
           {
-            int z = (OpSize == 2) ? 3 : OpSize;
+            int z = (OpSize == eSymbolSize32Bit) ? 3 : OpSize;
 
             CodeLen = 2;
             WAsmCode[0] = 0x0c00 + (z << 8) + (AdrPart << 4) + HReg;
-            if (OpSize == 2)
+            if (OpSize == eSymbolSize32Bit)
               WAsmCode[0] += 0x80;
             break;
           }
           case ModIReg:
             switch (OpSize)
             {
-              case 0:
+              case eSymbolSize8Bit:
                 CodeLen = 2;
                 WAsmCode[0] = 0x6800 + (AdrPart << 4) + HReg;
                 break;
-              case 1:
+              case eSymbolSize16Bit:
                 CodeLen = 2;
                 WAsmCode[0] = 0x6900 + (AdrPart << 4) + HReg;
                 break;
-              case 2:
+              case eSymbolSize32Bit:
                 CodeLen = 4;
                 WAsmCode[0] = 0x0100;
                 WAsmCode[1] = 0x6900 + (AdrPart << 4) + HReg;
@@ -649,15 +649,15 @@ static void DecodeMOV(Word Code)
           case ModPostInc:
             switch (OpSize)
             {
-              case 0:
+              case eSymbolSize8Bit:
                 CodeLen = 2;
                 WAsmCode[0] = 0x6c00 + (AdrPart << 4) + HReg;
                 break;
-              case 1:
+              case eSymbolSize16Bit:
                 CodeLen = 2;
                 WAsmCode[0] = 0x6d00 + (AdrPart << 4) + HReg;
                 break;
-              case 2:
+              case eSymbolSize32Bit:
                 CodeLen = 4;
                 WAsmCode[0] = 0x0100;
                 WAsmCode[1] = 0x6d00 + (AdrPart << 4) + HReg;
@@ -667,17 +667,17 @@ static void DecodeMOV(Word Code)
           case ModInd16:
             switch (OpSize)
             {
-              case 0:
+              case eSymbolSize8Bit:
                 CodeLen = 4;
                 WAsmCode[0] = 0x6e00 + (AdrPart << 4) + HReg;
                 WAsmCode[1] = AdrVals[0];
                 break;
-              case 1:
+              case eSymbolSize16Bit:
                 CodeLen = 4;
                 WAsmCode[0] = 0x6f00 + (AdrPart << 4) + HReg;
                 WAsmCode[1] = AdrVals[0];
                 break;
-              case 2:
+              case eSymbolSize32Bit:
                 CodeLen = 6;
                 WAsmCode[0] = 0x0100;
                 WAsmCode[1] = 0x6f00 + (AdrPart << 4) + HReg;
@@ -688,19 +688,19 @@ static void DecodeMOV(Word Code)
           case ModInd24:
             switch (OpSize)
             {
-              case 0:
+              case eSymbolSize8Bit:
                 CodeLen = 8;
                 WAsmCode[0] = 0x7800 + (AdrPart << 4);
                 WAsmCode[1] = 0x6a20 + HReg;
                 memcpy(WAsmCode + 2, AdrVals, AdrCnt);
                 break;
-              case 1:
+              case eSymbolSize16Bit:
                 CodeLen = 8;
                 WAsmCode[0] = 0x7800 + (AdrPart << 4);
                 WAsmCode[1] = 0x6b20 + HReg;
                 memcpy(WAsmCode + 2, AdrVals, AdrCnt);
                 break;
-              case 2:
+              case eSymbolSize32Bit:
                 CodeLen = 10;
                 WAsmCode[0] = 0x0100;
                 WAsmCode[1] = 0x7800 + (AdrPart << 4);
@@ -716,17 +716,17 @@ static void DecodeMOV(Word Code)
           case ModAbs16:
             switch (OpSize)
             {
-              case 0:
+              case eSymbolSize8Bit:
                 CodeLen = 4;
                 WAsmCode[0] = 0x6a00 + HReg;
                 WAsmCode[1] = AdrVals[0];
                 break;
-              case 1:
+              case eSymbolSize16Bit:
                 CodeLen = 4;
                 WAsmCode[0] = 0x6b00 + HReg;
                 WAsmCode[1] = AdrVals[0];
                 break;
-              case 2:
+              case eSymbolSize32Bit:
                 CodeLen = 6;
                 WAsmCode[0] = 0x0100;
                 WAsmCode[1] = 0x6b00 + HReg;
@@ -737,17 +737,17 @@ static void DecodeMOV(Word Code)
           case ModAbs24:
             switch (OpSize)
             {
-              case 0:
+              case eSymbolSize8Bit:
                 CodeLen = 6;
                 WAsmCode[0] = 0x6a20 + HReg;
                 memcpy(WAsmCode + 1, AdrVals, AdrCnt);
                 break;
-              case 1:
+              case eSymbolSize16Bit:
                 CodeLen = 6;
                 WAsmCode[0] = 0x6b20 + HReg;
                 memcpy(WAsmCode + 1, AdrVals, AdrCnt);
                 break;
-              case 2:
+              case eSymbolSize32Bit:
                 CodeLen = 8;
                 WAsmCode[0] = 0x0100;
                 WAsmCode[1] = 0x6b20 + HReg;
@@ -758,16 +758,16 @@ static void DecodeMOV(Word Code)
           case ModImm:
             switch (OpSize)
             {
-              case 0:
+              case eSymbolSize8Bit:
                 CodeLen = 2;
                 WAsmCode[0] = 0xf000 + (((Word)HReg) << 8) + Lo(AdrVals[0]);
                 break;
-              case 1:
+              case eSymbolSize16Bit:
                 CodeLen = 4;
                 WAsmCode[0] = 0x7900 + HReg;
                 WAsmCode[1] = AdrVals[0];
                 break;
-              case 2:
+              case eSymbolSize32Bit:
                 CodeLen = 6;
                 WAsmCode[0] = 0x7a00 + HReg;
                 memcpy(WAsmCode + 1, AdrVals, AdrCnt);
@@ -783,15 +783,15 @@ static void DecodeMOV(Word Code)
         {
           switch (OpSize)
           {
-            case 0:
+            case eSymbolSize8Bit:
               CodeLen = 2;
               WAsmCode[0] = 0x6880 + (HReg << 4) + AdrPart;
               break;
-            case 1:
+            case eSymbolSize16Bit:
               CodeLen = 2;
               WAsmCode[0] = 0x6980 + (HReg << 4) + AdrPart;
               break;
-            case 2:
+            case eSymbolSize32Bit:
               CodeLen = 4;
               WAsmCode[0] = 0x0100;
               WAsmCode[1] = 0x6980 + (HReg << 4) + AdrPart;
@@ -806,13 +806,13 @@ static void DecodeMOV(Word Code)
         {
           switch (OpSize)
           {
-            case 0:
+            case eSymbolSize8Bit:
              CodeLen=2; WAsmCode[0]=0x6c80+(HReg << 4)+AdrPart;
              break;
-            case 1:
+            case eSymbolSize16Bit:
              CodeLen=2; WAsmCode[0]=0x6d80+(HReg << 4)+AdrPart;
              break;
-            case 2:
+            case eSymbolSize32Bit:
              CodeLen=4; WAsmCode[0]=0x0100;
              WAsmCode[1]=0x6d80+(HReg << 4)+AdrPart;
              break;
@@ -827,15 +827,15 @@ static void DecodeMOV(Word Code)
         {
           switch (OpSize)
           {
-            case 0:
+            case eSymbolSize8Bit:
               CodeLen = 4;
               WAsmCode[0] = 0x6e80 + (HReg << 4) + AdrPart;
               break;
-            case 1:
+            case eSymbolSize16Bit:
               CodeLen = 4;
               WAsmCode[0] = 0x6f80 + (HReg << 4) + AdrPart;
               break;
-            case 2:
+            case eSymbolSize32Bit:
               CodeLen = 6;
               WAsmCode[0] = 0x0100;
               WAsmCode[2] = WAsmCode[1];
@@ -852,17 +852,17 @@ static void DecodeMOV(Word Code)
         {
           switch (OpSize)
           {
-            case 0:
+            case eSymbolSize8Bit:
               CodeLen = 8;
               WAsmCode[0] = 0x7800 + (HReg << 4);
               WAsmCode[1] = 0x6aa0 + AdrPart;
               break;
-            case 1:
+            case eSymbolSize16Bit:
               CodeLen = 8;
               WAsmCode[0] = 0x7800 + (HReg << 4);
               WAsmCode[1] = 0x6ba0 + AdrPart;
               break;
-            case 2:
+            case eSymbolSize32Bit:
               CodeLen = 10;
               WAsmCode[0] = 0x0100;
               WAsmCode[4] = WAsmCode[3];
@@ -880,16 +880,16 @@ static void DecodeMOV(Word Code)
         {
           switch (OpSize)
           {
-            case 0:
+            case eSymbolSize8Bit:
               CodeLen = 2;
               WAsmCode[0] = 0x3000 + (((Word)AdrPart) << 8) + HReg;
               break;
-            case 1:
+            case eSymbolSize16Bit:
               CodeLen = 4;
               WAsmCode[0] = 0x6b80 + AdrPart;
               WAsmCode[1] = 0xff00 + HReg;
               break;
-            case 2:
+            case eSymbolSize32Bit:
               CodeLen = 6;
               WAsmCode[0] = 0x0100;
               WAsmCode[1] = 0x6b80 + AdrPart;
@@ -905,15 +905,15 @@ static void DecodeMOV(Word Code)
         {
           switch (OpSize)
           {
-            case 0:
+            case eSymbolSize8Bit:
               CodeLen = 4;
               WAsmCode[0] = 0x6a80 + AdrPart;
               break;
-            case 1:
+            case eSymbolSize16Bit:
               CodeLen = 4;
               WAsmCode[0] = 0x6b80 + AdrPart;
               break;
-            case 2:
+            case eSymbolSize32Bit:
               CodeLen = 6;
               WAsmCode[0] = 0x0100;
               WAsmCode[2] = WAsmCode[1];
@@ -929,15 +929,15 @@ static void DecodeMOV(Word Code)
         {
           switch (OpSize)
           {
-            case 0:
+            case eSymbolSize8Bit:
               CodeLen = 6;
               WAsmCode[0] = 0x6aa0 + AdrPart;
               break;
-            case 1:
+            case eSymbolSize16Bit:
               CodeLen = 6;
               WAsmCode[0] = 0x6ba0 + AdrPart;
               break;
-            case 2:
+            case eSymbolSize32Bit:
               CodeLen = 8;
               WAsmCode[0] = 0x0100;
               WAsmCode[3] = WAsmCode[2];
@@ -962,7 +962,7 @@ static void DecodeMOVTPE_MOVFPE(Word CodeTPE)
     DecodeAdr(pRegArg, MModReg);
     if (AdrMode != ModNone)
     {
-      if (OpSize != 0) WrError(1130);
+      if (OpSize != eSymbolSize8Bit) WrError(1130);
       else
       {
         Byte HReg = AdrPart;
@@ -985,10 +985,10 @@ static void DecodePUSH_POP(Word Code)
     DecodeAdr(ArgStr[1], MModReg);
     if (AdrMode != ModNone)
     {
-      if (OpSize == 0) WrError(1130);
-      else if ((OpSize != 2) || ChkCPU32(ErrNum_AddrModeNotSupported))
+      if (OpSize == eSymbolSize8Bit) WrError(1130);
+      else if ((OpSize != eSymbolSize32Bit) || ChkCPU32(ErrNum_AddrModeNotSupported))
       {
-        if (OpSize == 2)
+        if (OpSize == eSymbolSize32Bit)
           WAsmCode[0] = 0x0100;
         CodeLen = 2 * OpSize;
         WAsmCode[(CodeLen - 2) >> 1] = Code + AdrPart;
@@ -1007,7 +1007,7 @@ static void DecodeLDC_STC(Word CodeIsSTC)
     if (strcasecmp(pRegArg, "CCR")) WrError(1350);
     else
     {
-       SetOpSize(0);
+       SetOpSize(eSymbolSize8Bit);
        DecodeAdr(pMemArg, MModReg | MModIReg | MModInd | MModAbs16 | MModAbs24 | (CodeIsSTC ? MModPreDec : (MModImm | MModPostInc)));
        switch (AdrMode)
        {
@@ -1071,7 +1071,7 @@ static void DecodeADD_SUB(Word IsSUB)
       DecodeAdr(ArgStr[1], MModReg | MModImm);
       if (AdrMode != ModNone)
       {
-        if (((OpSize > 1) || ((OpSize == 1) && (AdrMode == ModImm))) && !ChkCPU32(ErrNum_AddrModeNotSupported));
+        if (((OpSize > eSymbolSize16Bit) || ((OpSize == eSymbolSize16Bit) && (AdrMode == ModImm))) && !ChkCPU32(ErrNum_AddrModeNotSupported));
         else
         {
           switch (AdrMode)
@@ -1079,7 +1079,7 @@ static void DecodeADD_SUB(Word IsSUB)
             case ModImm:
               switch (OpSize)
               {
-                case 0:
+                case eSymbolSize8Bit:
                   if (IsSUB) WrError(1350);
                   else
                   {
@@ -1087,12 +1087,12 @@ static void DecodeADD_SUB(Word IsSUB)
                     WAsmCode[0] = 0x8000 + (((Word)HReg) << 8) + Lo(AdrVals[0]);
                   }
                   break;
-                case 1:
+                case eSymbolSize16Bit:
                   CodeLen = 4;
                   WAsmCode[1] = AdrVals[0];
                   WAsmCode[0] = 0x7910 + (IsSUB << 5) + HReg;
                   break;
-                case 2:
+                case eSymbolSize32Bit:
                   CodeLen = 6;
                   memcpy(WAsmCode + 1, AdrVals, 4);
                   WAsmCode[0] = 0x7a10 + (IsSUB << 5) + HReg;
@@ -1102,15 +1102,15 @@ static void DecodeADD_SUB(Word IsSUB)
             case ModReg:
               switch (OpSize)
               {
-                case 0:
+                case eSymbolSize8Bit:
                   CodeLen = 2;
                   WAsmCode[0] = 0x0800 + (IsSUB << 12) + (AdrPart << 4) + HReg;
                   break;
-                case 1:
+                case eSymbolSize16Bit:
                   CodeLen = 2;
                   WAsmCode[0] = 0x0900 + (IsSUB << 12) + (AdrPart << 4) + HReg;
                   break;
-                case 2:
+                case eSymbolSize32Bit:
                   CodeLen = 2;
                   WAsmCode[0] = 0x0a00 + (IsSUB << 12) + 0x80 + (AdrPart << 4) + HReg;
                   break;
@@ -1136,7 +1136,7 @@ static void DecodeCMP(Word Code)
       DecodeAdr(ArgStr[1], MModReg | MModImm);
       if (AdrMode != ModNone)
       {
-        if (((OpSize > 1) || ((OpSize == 1) && (AdrMode == ModImm))) && !ChkCPU32(ErrNum_AddrModeNotSupported));
+        if (((OpSize > eSymbolSize16Bit) || ((OpSize == eSymbolSize16Bit) && (AdrMode == ModImm))) && !ChkCPU32(ErrNum_AddrModeNotSupported));
         else
         {
           switch (AdrMode)
@@ -1144,16 +1144,16 @@ static void DecodeCMP(Word Code)
             case ModImm:
               switch (OpSize)
               {
-                case 0:
+                case eSymbolSize8Bit:
                   CodeLen = 2;
                   WAsmCode[0] = 0xa000 + (((Word)HReg) << 8) + Lo(AdrVals[0]);
                   break;
-                case 1:
+                case eSymbolSize16Bit:
                   CodeLen = 4;
                   WAsmCode[1] = AdrVals[0];
                   WAsmCode[0] = 0x7920 + HReg;
                   break;
-                case 2:
+                case eSymbolSize32Bit:
                   CodeLen = 6;
                   memcpy(WAsmCode + 1, AdrVals, 4);
                   WAsmCode[0] = 0x7a20 + HReg;
@@ -1162,15 +1162,15 @@ static void DecodeCMP(Word Code)
             case ModReg:
               switch (OpSize)
               {
-                case 0:
+                case eSymbolSize8Bit:
                   CodeLen = 2;
                   WAsmCode[0] = 0x1c00 + (AdrPart << 4) + HReg;
                   break;
-                case 1:
+                case eSymbolSize16Bit:
                   CodeLen = 2;
                   WAsmCode[0] = 0x1d00 + (AdrPart << 4) + HReg;
                   break;
-                case 2:
+                case eSymbolSize32Bit:
                   CodeLen = 2;
                   WAsmCode[0] = 0x1f80 + (AdrPart << 4) + HReg;
                   break;
@@ -1190,7 +1190,7 @@ static void DecodeLogic(Word Code)
     DecodeAdr(ArgStr[2], MModReg);
     if (AdrMode != ModNone)
     {
-      if ((OpSize <= 0) || ChkCPU32(ErrNum_AddrModeNotSupported))
+      if ((OpSize == eSymbolSizeUnknown) || ChkCPU32(ErrNum_AddrModeNotSupported))
       {
         Byte HReg = AdrPart;
         DecodeAdr(ArgStr[1], MModImm | MModReg);
@@ -1199,16 +1199,16 @@ static void DecodeLogic(Word Code)
           case ModImm:
             switch (OpSize)
             {
-              case 0:
+              case eSymbolSize8Bit:
                 CodeLen = 2;
                 WAsmCode[0] = 0xc000 + (Code << 12) + (((Word)HReg) << 8) + Lo(AdrVals[0]);
                 break;
-              case 1:
+              case eSymbolSize16Bit:
                 CodeLen = 4;
                 WAsmCode[1] = AdrVals[0];
                 WAsmCode[0] = 0x7940 + (Code << 4) + HReg;
                 break;
-              case 2:
+              case eSymbolSize32Bit:
                 CodeLen = 6;
                 memcpy(WAsmCode + 1, AdrVals, AdrCnt);
                 WAsmCode[0] = 0x7a40 + (Code << 4) + HReg;
@@ -1218,15 +1218,15 @@ static void DecodeLogic(Word Code)
           case ModReg:
             switch (OpSize)
             {
-              case 0:
+              case eSymbolSize8Bit:
                 CodeLen = 2;
                 WAsmCode[0] = 0x1400 + (Code << 8) + (AdrPart << 4) + HReg;
                 break;
-              case 1:
+              case eSymbolSize16Bit:
                 CodeLen = 2;
                 WAsmCode[0] = 0x6400 + (Code << 8) + (AdrPart << 4) + HReg;
                 break;
-              case 2:
+              case eSymbolSize32Bit:
                 CodeLen = 4;
                 WAsmCode[0] = 0x01f0;
                 WAsmCode[1] = 0x6400 + (Code << 8) + (AdrPart << 4) + HReg;
@@ -1241,7 +1241,7 @@ static void DecodeLogic(Word Code)
 
 static void DecodeLogicBit(Word Code)
 {
-  SetOpSize(0);
+  SetOpSize(eSymbolSize8Bit);
   if (!ChkArgCnt(2, 2));
   else if (strcasecmp(ArgStr[2], "CCR")) WrError(1350);
   else
@@ -1262,7 +1262,7 @@ static void DecodeADDX_SUBX(Word IsSUBX)
     DecodeAdr(ArgStr[2], MModReg);
     if (AdrMode != ModNone)
     {
-      if (OpSize != 0) WrError(1130);
+      if (OpSize != eSymbolSize8Bit) WrError(1130);
       else
       {
         Byte HReg = AdrPart;
@@ -1290,7 +1290,7 @@ static void DecodeADDS_SUBS(Word IsSUBS)
     DecodeAdr(ArgStr[2], MModReg);
     if (AdrMode != ModNone)
     {
-      if (((CPU16) && (OpSize != 1)) || ((!CPU16) && (OpSize != 2))) WrError(1130);
+      if (((CPU16) && (OpSize != eSymbolSize16Bit)) || ((!CPU16) && (OpSize != eSymbolSize32Bit))) WrError(1130);
       else
       {
         Byte HReg = AdrPart;
@@ -1320,12 +1320,12 @@ static void DecodeMul(Word Code)
 {
   if (ChkArgCnt(2, 2))
   {
-    if (OpSize != -1) OpSize++;
+    if (OpSize != eSymbolSizeUnknown) OpSize++;
     DecodeAdr(ArgStr[2], MModReg);
     if (AdrMode != ModNone)
     {
-      if (OpSize == 0) WrError(1130);
-      else if ((OpSize != 2) || ChkCPU32(ErrNum_AddrModeNotSupported))
+      if (OpSize == eSymbolSize8Bit) WrError(1130);
+      else if ((OpSize != eSymbolSize32Bit) || ChkCPU32(ErrNum_AddrModeNotSupported))
       {
         Byte HReg = AdrPart;
         OpSize--;
@@ -1367,7 +1367,7 @@ static void DecodeBit1(Word Code)
         DecodeAdr(ArgStr[2], MModReg | MModIReg | MModAbs8);
         if (AdrMode != ModNone)
         {
-          if (OpSize > 0) WrError(1130);
+          if (OpSize > eSymbolSize8Bit) WrError(1130);
           else
           {
             switch (AdrMode)
@@ -1428,7 +1428,7 @@ static void DecodeBit2(Word Code)
       DecodeAdr(ArgStr[2], MModReg | MModIReg | MModAbs8);
       if (AdrMode != ModNone)
       {
-        if (OpSize > 0) WrError(1130);
+        if (OpSize > eSymbolSize8Bit) WrError(1130);
         else
         {
           switch (AdrMode)
@@ -1469,7 +1469,7 @@ static void DecodeINC_DEC(Word Code)
     DecodeAdr(ArgStr[ArgCnt], MModReg);
     if (AdrMode != ModNone)
     {
-      if ((OpSize <= 0) || ChkCPU32(ErrNum_AddrModeNotSupported))
+      if ((OpSize <= eSymbolSize8Bit) || ChkCPU32(ErrNum_AddrModeNotSupported))
       {
         HReg = AdrPart;
         if (ArgCnt == 1)
@@ -1489,7 +1489,7 @@ static void DecodeINC_DEC(Word Code)
               WrError(1315);
               OK = False;
             }
-            else if (((OpSize == 0) && (z > 1)) || (z > 2))
+            else if (((OpSize == eSymbolSize8Bit) && (z > 1)) || (z > 2))
             {
               WrError(1320);
               OK = False;
@@ -1502,13 +1502,13 @@ static void DecodeINC_DEC(Word Code)
           z--;
           switch (OpSize)
           {
-            case 0:
+            case eSymbolSize8Bit:
               WAsmCode[0] = Code + 0x0a00 + HReg;
               break;
-            case 1:
+            case eSymbolSize16Bit:
               WAsmCode[0] = Code + 0x0b50 + HReg + (z << 7);
               break;
-            case 2:
+            case eSymbolSize32Bit:
               WAsmCode[0] = Code + 0x0b70 + HReg + (z << 7);
               break;
           }
@@ -1525,18 +1525,18 @@ static void DecodeShift(Word Code)
     DecodeAdr(ArgStr[1], MModReg);
     if (AdrMode != ModNone)
     {
-      if ((OpSize <= 0) || ChkCPU32(ErrNum_AddrModeNotSupported))
+      if ((OpSize <= eSymbolSize8Bit) || ChkCPU32(ErrNum_AddrModeNotSupported))
       {
         CodeLen = 2;
         switch (OpSize)
         {
-          case 0:
+          case eSymbolSize8Bit:
             WAsmCode[0] = Code + AdrPart;
             break;
-          case 1:
+          case eSymbolSize16Bit:
             WAsmCode[0] = Code + AdrPart + 0x10;
             break;
-          case 2:
+          case eSymbolSize32Bit:
             WAsmCode[0] = Code + AdrPart + 0x30;
             break;
         }
@@ -1552,18 +1552,18 @@ static void DecodeNEG_NOT(Word Code)
     DecodeAdr(ArgStr[1], MModReg);
     if (AdrMode != ModNone)
     {
-      if ((OpSize <= 0) || ChkCPU32(ErrNum_AddrModeNotSupported))
+      if ((OpSize <= eSymbolSize8Bit) || ChkCPU32(ErrNum_AddrModeNotSupported))
       {
         CodeLen = 2;
         switch (OpSize)
         {
-          case 0:
+          case eSymbolSize8Bit:
             WAsmCode[0] = Code + 0x1700 + AdrPart;
             break;
-          case 1:
+          case eSymbolSize16Bit:
             WAsmCode[0] = Code + 0x1710 + AdrPart;
             break;
-          case 2:
+          case eSymbolSize32Bit:
             WAsmCode[0] = Code + 0x1730 + AdrPart;
             break;
         }
@@ -1580,16 +1580,16 @@ static void DecodeEXTS_EXTU(Word IsEXTS)
     DecodeAdr(ArgStr[1], MModReg);
     if (AdrMode != ModNone)
     {
-      if ((OpSize != 1) && (OpSize != 2)) WrError(1130);
+      if ((OpSize != eSymbolSize16Bit) && (OpSize != 2)) WrError(1130);
       else
       {
         CodeLen = 2;
         switch (OpSize)
         {
-          case 1:
+          case eSymbolSize16Bit:
             WAsmCode[0] = IsEXTS ? 0x17d0 : 0x1750;
             break;
-          case 2:
+          case eSymbolSize32Bit:
             WAsmCode[0] = IsEXTS ? 0x17f0 : 0x1770;
             break;
         }
@@ -1606,7 +1606,7 @@ static void DecodeDAA_DAS(Word Code)
     DecodeAdr(ArgStr[1], MModReg);
     if (AdrMode != ModNone)
     {
-      if (OpSize != 0) WrError(1130);
+      if (OpSize != eSymbolSize8Bit) WrError(1130);
       else
       {
         CodeLen = 2;
@@ -1619,26 +1619,26 @@ static void DecodeDAA_DAS(Word Code)
 static void DecodeCond(Word Code)
 {
   if (!ChkArgCnt(1, 1));
-  else if ((OpSize != -1) && (OpSize != 4) && (OpSize != 2)) WrError(1130);
+  else if ((OpSize != eSymbolSizeUnknown) && (OpSize != eSymbolSizeFloat32Bit) && (OpSize != eSymbolSize32Bit)) WrError(1130);
   else
   {
     Boolean OK;
     LongInt AdrLong = EvalIntExpression(ArgStr[1], Int24, &OK) - (EProgCounter() + 2);
     if (OK)
     {
-      if (OpSize == -1)
+      if (OpSize == eSymbolSizeUnknown)
       {
         if ((AdrLong >= -128) && (AdrLong <= 127))
-          OpSize = 4;
+          OpSize = eSymbolSizeFloat32Bit;
         else
         {
-          OpSize = 2;
+          OpSize = eSymbolSize32Bit;
           AdrLong -= 2;
         }
       }
-      else if (OpSize == 2)
-        AdrLong-=2;
-      if (OpSize == 2)
+      else if (OpSize == eSymbolSize32Bit)
+        AdrLong -= 2;
+      if (OpSize == eSymbolSize32Bit)
       {
         if ((!SymbolQuestionable) && ((AdrLong < -32768) || (AdrLong > 32767))) WrError(1370);
         else if (ChkCPU32(ErrNum_AddrModeNotSupported))
@@ -1695,29 +1695,29 @@ static void DecodeBSR(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(1, 1));
-  else if ((OpSize != -1) && (OpSize != 4) && (OpSize != 2)) WrError(1130);
+  else if ((OpSize != eSymbolSizeUnknown) && (OpSize != eSymbolSizeFloat32Bit) && (OpSize != eSymbolSize32Bit)) WrError(1130);
   else
   {
     Boolean OK;
     LongInt AdrLong = EvalIntExpression(ArgStr[1], Int24, &OK) - (EProgCounter() + 2);
     if (OK)
     {
-      if (OpSize == -1)
+      if (OpSize == eSymbolSizeUnknown)
       {
         if ((AdrLong >= -128) && (AdrLong <= 127))
-          OpSize = 4;
+          OpSize = eSymbolSizeFloat32Bit;
         else
         {
-          OpSize = 2;
+          OpSize = eSymbolSize32Bit;
           AdrLong -= 2;
         }
       }
       else
       {
-        if (OpSize == 2)
+        if (OpSize == eSymbolSize32Bit)
           AdrLong -= 2;
       }
-      if (OpSize == 2)
+      if (OpSize == eSymbolSize32Bit)
       {
         if ((!SymbolQuestionable) && ((AdrLong < -32768) || (AdrLong > 32767))) WrError(1370);
         else if (ChkCPU32(ErrNum_AddrModeNotSupported))
@@ -1878,7 +1878,7 @@ static void DeinitFields(void)
 
 static void MakeCode_H8_3(void)
 {
-  CodeLen = 0; DontPrint = False; OpSize = -1;
+  CodeLen = 0; DontPrint = False; OpSize = eSymbolSizeUnknown;
 
   /* zu ignorierendes */
 
@@ -1888,24 +1888,16 @@ static void MakeCode_H8_3(void)
 
   if (*AttrPart != '\0')
   {
+    ShortInt ThisSize;
+
     if (strlen(AttrPart) != 1)
     {
       WrXError(1105, AttrPart);
       return;
     }
-    switch (mytoupper(*AttrPart))
-    {
-      case 'B': SetOpSize(0); break;
-      case 'W': SetOpSize(1); break;
-      case 'L': SetOpSize(2); break;
-      case 'Q': SetOpSize(3); break;
-      case 'S': SetOpSize(4); break;
-      case 'D': SetOpSize(5); break;
-      case 'X': SetOpSize(6); break;
-      case 'P': SetOpSize(7); break;
-      default:
-        WrError(1107); return;
-    }
+    if (!DecodeMoto16AttrSize(*AttrPart, &ThisSize, False))
+      return;
+    SetOpSize(ThisSize);
   }
 
   if (DecodeMoto16Pseudo(OpSize, True)) return;

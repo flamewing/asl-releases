@@ -277,7 +277,7 @@ static void DecodeMOV(Word Index)
 
   if (ChkArgCnt(2, 2))
   {
-    OpSize = 0;
+    OpSize = eSymbolSize8Bit;
     DecodeAdr(1, 1, MModImm | MModDir | MModIX);
     switch (AdrMode)
     {
@@ -366,7 +366,7 @@ static void DecodeCBEQx(Word Index)
 
   if (ChkArgCnt(2, 2))
   {
-    OpSize = 0;
+    OpSize = eSymbolSize8Bit;
     DecodeAdr(1, 1, MModImm);
     if (AdrMode == ModImm)
     {
@@ -858,24 +858,12 @@ static void MakeCode_68rs08(void)
   int l;
   char ch;
 
-  CodeLen = 0; DontPrint = False; OpSize = (-1);
+  CodeLen = 0; DontPrint = False; OpSize = eSymbolSizeUnknown;
 
   /* deduce operand size No size is zero-length string -> '\0' */
 
-  switch (mytoupper(*AttrPart))
-  {
-    case 'B': OpSize = 0; break;
-    case 'W': OpSize = 1; break;
-    case 'L': OpSize = 2; break;
-    case 'Q': OpSize = 3; break;
-    case 'S': OpSize = 4; break;
-    case 'D': OpSize = 5; break;
-    case 'X': OpSize = 6; break;
-    case 'P': OpSize = 7; break;
-    case '\0': break;
-    default:
-      WrError(1107); return;
-  }
+  if (!DecodeMoto16AttrSize(*AttrPart, &OpSize, False))
+    return;
 
   /* zu ignorierendes */
 

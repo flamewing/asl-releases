@@ -727,28 +727,28 @@ Boolean DecodeIntelPseudo(Boolean Turn)
     {
       case 'B':
         LayoutFunc = LayoutByte;
-        if (*LabPart.Str != '\0')
-          SetSymbolSize(LabPart.Str, 0);
+        if (*LabPart.Str)
+          SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize8Bit);
         break;
       case 'W':
         LayoutFunc = LayoutWord;
-        if (*LabPart.Str != '\0')
-          SetSymbolSize(LabPart.Str, 1);
+        if (*LabPart.Str)
+          SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize16Bit);
         break;
       case 'D':
         LayoutFunc = LayoutDoubleWord;
-        if (*LabPart.Str != '\0')
-          SetSymbolSize(LabPart.Str, 2);
+        if (*LabPart.Str)
+          SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize32Bit);
         break;
       case 'Q':
         LayoutFunc = LayoutQuadWord;
-        if (*LabPart.Str != '\0')
-          SetSymbolSize(LabPart.Str, 3);
+        if (*LabPart.Str)
+          SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize64Bit);
         break;
       case 'T':
         LayoutFunc = LayoutTenBytes;
-        if (*LabPart.Str != '\0')
-          SetSymbolSize(LabPart.Str, 4);
+        if (*LabPart.Str)
+          SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize80Bit);
         break;
     }
 

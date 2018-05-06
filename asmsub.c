@@ -1304,6 +1304,10 @@ void WrXErrorPos(Word Num, const char *pExtendError, const struct sLineComp *pLi
     case  320: msgno = Num_ErrMsgMacArgRedef; break;
     case ErrNum_Deprecated:
       msgno = Num_ErrMsgDeprecated; break;
+    case ErrNum_SrcLEThanDest:
+      msgno = Num_ErrMsgSrcLEThanDest; break;
+    case ErrNum_TrapValidInstruction:
+      msgno = Num_ErrMsgTrapValidInstruction; break;
     case 1000: msgno = Num_ErrMsgDoubleDef; break;
     case 1010: msgno = Num_ErrMsgSymbolUndef; break;
     case ErrNum_InvSymName:
@@ -1362,6 +1366,8 @@ void WrXErrorPos(Word Num, const char *pExtendError, const struct sLineComp *pLi
       msgno = Num_ErrMsgInvCtrlReg; break;
     case ErrNum_InvReg:
       msgno = Num_ErrMsgInvReg; break;
+    case ErrNum_DoubleReg:
+      msgno = Num_ErrMsgDoubleReg; break;
     case 1450: msgno = Num_ErrMsgNoSaveFrame; break;
     case 1460: msgno = Num_ErrMsgNoRestoreFrame; break;
     case 1465: msgno = Num_ErrMsgUnknownMacArg; break;
@@ -1399,6 +1405,10 @@ void WrXErrorPos(Word Num, const char *pExtendError, const struct sLineComp *pLi
     case 1553: msgno = Num_ErrMsgPhaseDisallowed; break;
     case ErrNum_InvStructDir:
       msgno = Num_ErrMsgInvStructDir; break;
+    case ErrNum_DoubleStruct:
+      msgno = Num_ErrMsgDoubleStruct; break;
+    case ErrNum_UnresolvedStructRef:
+      msgno = Num_ErrMsgUnresolvedStructRef; break;
     case 1560: msgno = Num_ErrMsgNotRepeatable; break;
     case 1600: msgno = Num_ErrMsgShortRead; break;
     case ErrNum_UnknownCodepage:

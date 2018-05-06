@@ -81,6 +81,8 @@ registered trademarks of Intel Corp. .
 
 {\em Motorola and ColdFire} are registered trademarks of Motorola Inc. .
 
+{\em MagniV} is a registered trademark of Freescale Semiconductor.
+
 {\em PicoBlaze} is a registered trademark of Xilinx Inc.
 
 {\em UNIX} is a registered trademark of the The Open Group.
@@ -209,6 +211,7 @@ following processor families have been implemented:
 \item{Motorola/Freescale 6805, 68HC(S)08}
 \item{Motorola 6809 / Hitachi 6309}
 \item{Motorola/Freescale 68HC12(X) including XGATE}
+\item{Freescale/NXP S12Z (''MagniV'')}
 \item{Motorola 68HC16}
 \item{Freescale 68RS08}
 \item{Hitachi H8/300(H)}
@@ -582,6 +585,7 @@ REGGP32.INC       & register addresses 68HC908GP32 \\
 REGHC12.INC       & register addresses 68HC12 \\
 REGM16C.INC       & register addresses Mitsubishi M16C \\
 REGMSP.INC        & register addresses TI MSP430 \\
+REGS12Z.INC       & register and bit addresses S12Z family \\
 REGST9.INC        & register and Makrodefinitionen ST9 \\
 REGZ380.INC       & register addresses Z380 \\
 STDDEF04.INC      & register addresses 6804 \\
@@ -615,6 +619,8 @@ File              & Function \\
 \hline
 AVR/\*.INC        & register and bit addresses AVR family \\
                   & (do not include directly, use REGAVR.INC) \\
+S12Z/\*.INC       & register and bit addresses S12Z family \\
+                  & (do not include directly, use REGS12Z.INC) \\
 STDDEF62.INC      & register addresses and macros ST6 \\
 STDDEF75.INC      & register addresses 75K0 \\
 STDDEF87.INC      & register and memory addresses TLCS-870 \\
@@ -2477,6 +2483,87 @@ JBIT0}, and \tty{JBIT}.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+\subsection{DEFBIT}
+\ttindex{DEFBIT}
+
+{\em valid for: S12Z}
+
+The S12Z family's processor core provides instructions to manipulate
+individual bits in registers or memory cells.  To conveniently
+address bits in the CPU's I/O area (first 4 Kbytes of the address
+space), a bit may be given a symbolic name.  The bit is defined by
+its memory address and the bit position:
+\begin{verbatim}
+<name>         defbit[.size]   <address>,<position>
+\end{verbatim}
+The \tty{address} must be located within the first 4 Kbytes, and the
+operand size may be 8, 16, or 32 bits (\tty{size}=b/w/l).
+Consequently, the \tty{position} may at most be 7, 15 or 31.  If no
+operand size is given, byte size (.b) is assumed.  A bit defined
+this way may be used as argument for the instructions {\tt BCLR,
+BSET, BTGL, BRSET,} and {\tt BRCLR}:
+\begin{verbatim}
+mybit   defbit.b  $200,4
+        bclr.b    $200,#4
+        bclr      mybit
+\end{verbatim}
+Both uses of {\tt bclr} in this example generate identical code.
+Since a bit defined this way ''knows'' its size, the size attribute
+may be omitted when using it.
+
+It is also possible to define bits that are located within a
+structure's element:
+\begin{verbatim}
+mystruct struct    dots
+reg      ds.w      1
+flag     defbit    reg,4
+         ends
+
+         org       $100
+data     mystruct
+
+         bset      data.flag  ; same as bset.w $100,#4
+\end{verbatim}
+
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\subsection{DEFBITFIELD}
+\ttindex{DEFBITFIELD}
+
+{\em valid for: S12Z}
+
+The S12Z family's CPU core not only deals with individual bits, it
+is also able to extract a field of consecutive bits from an
+8/16/24/32 value or to insert a bit field into such a value. Similar
+to \tty{DEFBIT}, a bit field may be defined symbolically:
+\begin{verbatim}
+<Name>     defbitfield[.size] <address>,<width>:<position>
+\end{verbatim}
+Opposed to individual bits, an operand size of 24 bits (.p) is also
+alloweed.  The range of \tty{position} and \tty{width} is accordingly 
+0 to 23 resp. 1 to 24.  It is also allowed to define bit fields as
+parts of structures:
+\begin{verbatim}
+mystruct struct      dots
+reg      ds.w        1
+clksel   defbitfield reg,4:8
+         ends
+
+         org       $100
+data     mystruct
+
+         bfext     d2,data.clksel ; fetch $100.w bits 4..11
+                                  ; to D2 bits 0..7
+         bfins     data.clksel,d2 ; insert D2 bits 0..7 into
+                                  ; $100.w bits 4..11
+\end{verbatim}
+The internal representation of bits defined via \tty{DEFBIT} is
+equivalent to bit fields with a width of one.  Therefore, a
+symbolically defined bit may also be used as argument for
+\tty{BFINS} and \tty{BFEXT}.
+
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 \subsection{PORT}
 \ttindex{PORT}
 
@@ -2940,11 +3027,27 @@ The 12X core offers a couple of new instructions, and existing
 instructions were were enriched with new addressing modes.
 %%-----------
 \begin{quote}
-i) 68HC16
+i) S912ZVC19F0MKH, S912ZVC19F0MLF, S912ZVCA19F0MKH,\\
+   S912ZVCA19F0MLF, S912ZVCA19F0WKH, S912ZVH128F2CLQ,\\
+   S912ZVH128F2CLL, S912ZVH64F2CLQ,  S912ZVHY64F1CLQ,\\
+   S912ZVHY32F1CLQ, S912ZVHY64F1CLL, S912ZVHY32F1CLL,\\
+   S912ZVHL64F1CLQ, S912ZVHL32F1CLQ, S912ZVHL64F1CLL,\\
+   S912ZVHL32F1CLL, S912ZVFP64F1CLQ, S912ZVFP64F1CLL,\\
+   S912ZVH128F2VLQ, S912ZVH128F2VLL, S912ZVH64F2VLQ,\\
+   S912ZVHY64F1VLQ, S912ZVHY32F1VLQ, S912ZVHY64F1VL,\\
+   S912ZVHY32F1VLL, S912ZVHL64F1VLQ 
+\end{quote}
+All variants contain the same processor core and the same
+instruction set, only the on-chip peripherals and the
+amount of built-in memory (RAM, Flash-ROM, EEPROM)
+vary from device to device.
+%%-----------
+\begin{quote}
+j) 68HC16
 \end{quote}
 %%-----------
 \begin{quote}
-j) HD6413308 $\rightarrow$ HD6413309
+k) HD6413308 $\rightarrow$ HD6413309
 \end{quote}
 These both names represent the 300 and 300H variants of the H8
 family; the H version owns a larger address space (16Mbytes instead
@@ -2953,14 +3056,14 @@ instructions and addressing modes.  It is still binary upward
 compatible.
 %%-----------
 \begin{quote}
-k) HD6475328 $\rightarrow$ HD6475348 $\rightarrow$ HD6475368 $\rightarrow$ HD6475388
+l) HD6475328 $\rightarrow$ HD6475348 $\rightarrow$ HD6475368 $\rightarrow$ HD6475388
 \end{quote}
 These processors all share the same CPU core; the different types are
 only needed to include the correct subset of registers in the file
 \tty{REG53X.INC}.
 %%-----------
 \begin{quote}
-l) SH7000 $\rightarrow$ SH7600 $\longrightarrow$ SH7700
+m) SH7000 $\rightarrow$ SH7600 $\longrightarrow$ SH7700
 \end{quote}
 The processor core of the 7600 offers a few more instructions that
 close gaps in the 7000's instruction set (delayed conditional and
@@ -2970,13 +3073,13 @@ furthermore offers a second register bank, better shift instructions, and
 instructions to control the cache.
 %%-----------
 \begin{quote}
-m)HD614023 $\longrightarrow$ HD614043 $\longrightarrow$ HD614081
+n)HD614023 $\longrightarrow$ HD614043 $\longrightarrow$ HD614081
 \end{quote}
 These three variants of the HMCS400 series differ by the size of
 the internal ROM and RAM.
 %%-----------
 \begin{quote}
-n) 6502 $\rightarrow$ 65(S)C02 $\rightarrow$ W65C02S / 65C19 / MELPS740 /
+o) 6502 $\rightarrow$ 65(S)C02 $\rightarrow$ W65C02S / 65C19 / MELPS740 /
    HUC6280 / 6502UNDOC
 \end{quote}
 The CMOS version defines some additional instructions, as well as a number of
@@ -3010,7 +3113,7 @@ variants supported by AS are listed in the appendix containing processor-specifi
 hints.
 %%-----------
 \begin{quote}
-o) MELPS7700, 65816
+p) MELPS7700, 65816
 \end{quote}
 Apart from a '16-bit-version' of the 6502's instruction set, these
 processors both offer some instruction set extensions.  These are
@@ -3019,32 +3122,32 @@ predecessors (65C02 resp. MELPS-740).  Partially, different
 mnemonics are used for the same operations.
 %%-----------
 \begin{quote}
-p) MELPS4500
+q) MELPS4500
 \end{quote}
 %%-----------
 \begin{quote}
-q) M16
+r) M16
 \end{quote}
 %%-----------
 \begin{quote}
-r) M16C
+s) M16C
 \end{quote}
 %%-----------
 \begin{quote}
-s) 4004 $\rightarrow$ 4040
+t) 4004 $\rightarrow$ 4040
 \end{quote}
 Opposed to its predecessor, the 4040 features about a dozen additional
 machine instructions.
 %%-----------
 \begin{quote}
-t) 8008 $\rightarrow$ 8008NEW
+u) 8008 $\rightarrow$ 8008NEW
 Intel redefined the mnemonics around 1975, the second variant reflects
 this new instruction set.  A simultaneous support of both sets was not
 possible due to mnemonic conflicts.
 \end{quote}
 %%-----------
 \begin{quote}
-u) 8021, 8022, 8039, (MSM)80C39, 8048, (MSM)80C48, 8041, 8042, 80C382
+v) 8021, 8022, 8039, (MSM)80C39, 8048, (MSM)80C48, 8041, 8042, 80C382
 \end{quote}
 For the ROM-less versions 8039 and 80C39, the commands which are
 using the BUS (port 0) are forbidden.  The 8021 and 8022 are special
@@ -3068,7 +3171,7 @@ instrucion set.
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-v) \> 87C750 $\rightarrow$ 8051, 8052, 80C320, 80C501, 80C502, \\
+w) \> 87C750 $\rightarrow$ 8051, 8052, 80C320, 80C501, 80C502, \\
    \> 80C504, 80515, and 80517 \\
    \> $\rightarrow$ 80C390 \\
    \> $\rightarrow$ 80C251
@@ -3090,7 +3193,7 @@ and architecture only as far as it was necessary for the 16 Mbytes large
 address spaces.
 %%-----------
 \begin{quote}
-w) 8096 $\rightarrow$ 80196 $\rightarrow$ 80196N $\rightarrow$ 80296
+x) 8096 $\rightarrow$ 80196 $\rightarrow$ 80196N $\rightarrow$ 80296
 \end{quote}
 Apart from a different set of SFRs (which however strongly vary from
 version to version), the 80196 knows several new instructions and
@@ -3103,7 +3206,7 @@ Transaction Server (PTS) and therefore looses again two machine
 instructions.
 %%-----------
 \begin{quote}
-x) 8080 $\rightarrow$ 8085 $\rightarrow$ 8085UNDOC
+y) 8080 $\rightarrow$ 8085 $\rightarrow$ 8085UNDOC
 \end{quote}
 The 8085 knows the additional commands \tty{RIM} and \tty{SIM} for
 controlling the interrupt mask and the two I/O-pins.  The type {\tt
@@ -3111,7 +3214,7 @@ controlling the interrupt mask and the two I/O-pins.  The type {\tt
 by Intel.  These instructions are documented in section \ref{8085Spec}.
 %%-----------
 \begin{quote}
-y) 8086 $\rightarrow$ 80186 $\rightarrow$ V30 $\rightarrow$ V35
+z) 8086 $\rightarrow$ 80186 $\rightarrow$ V30 $\rightarrow$ V35
 \end{quote}
 Only new instructions are added in this family.  The corresponding
 8-bit versions are not mentioned due to their instruction
@@ -3119,41 +3222,47 @@ compatibility, so one e.g. has to choose 8086 for an 8088-based
 system.
 %%-----------
 \begin{quote}
-z) 80960
+aa) 80960
 \end{quote}
 %%-----------
 \begin{quote}
-aa) 8X300 $\rightarrow$ 8X305
+ab) 8X300 $\rightarrow$ 8X305
 \end{quote}
 The 8X305 features a couple of additional registers that miss on the
 8X300.  Additionally, it can do new operations with these registers
 (like direct writing of 8 bit values to peripheral addresses).
 %%-----------
 \begin{quote}
-ab) XAG1, XAG2, XAG3
+ac) XAG1, XAG2, XAG3
 \end{quote}
 These processors only differ in the size of their internal ROM which
 is defined in \tty{STDDEFXA.INC}.
 %%-----------
 \begin{quote}
-ac) 
-    AT90S1200, AT90S2313, AT90S2323, AT90S233, AT90S2343, AT90S4414,
-    AT90S4433, AT90S4434, AT90S8515, AT90C8534, AT90S8535,
-    ATTINY4, ATTINY5, ATTINY9, ATTINY10, ATTINY11, ATTINY12,
-    ATTINY13, ATTINY13A, ATTINY15, ATTINY20, ATTINY24(A), ATTINY25,
-    ATTINY26, ATTINY28, ATTINY40, ATTINY44(A), ATTINY45, ATTINY48,
-    ATTINY84(A), ATTINY85, ATTINY87, ATTINY88, ATTINY102, ATTINY104,
-    ATTINY167, ATTINY261, ATTINY261A, ATTINY43U, ATTINY441, ATTINY461,
-    ATTINY461A, ATTINY828, ATTINY841, ATTINY861, ATTINY861A, ATTINY1634,
-    ATTINY2313, ATTINY2313A, ATTINY4313,
-    ATMEGA48, ATMEGA8, ATMEGA8515, ATMEGA8535, ATMEGA88,
-    ATMEGA8U2, ATMEGA16U2, ATMEGA32U2, ATMEGA16U4, ATMEGA32U4,
-    ATMEGA32U6, AT90USB646, AT90USB647, AT90USB1286, AT90USB1287, AT43USB355,
-    ATMEGA16, ATMEGA161, ATMEGA162, ATMEGA163, ATMEGA164, ATMEGA165,
-    ATMEGA168, ATMEGA169, ATMEGA32, ATMEGA323, ATMEGA324, ATMEGA325,
-    ATMEGA3250, ATMEGA328, ATMEGA329, ATMEGA3290, ATMEGA406, ATMEGA64,
-    ATMEGA640, ATMEGA644, ATMEGA644RFR2, ATMEGA645, ATMEGA6450, ATMEGA649,
-    ATMEGA6490, ATMEGA103, ATMEGA128, ATMEGA1280, ATMEGA1281, ATMEGA1284,
+ad) AT90S1200, AT90S2313, AT90S2323, AT90S233, AT90S2343,\\
+    AT90S4414, AT90S4433, AT90S4434, AT90S8515,\\
+    AT90C8534, AT90S8535, ATTINY4, ATTINY5, ATTINY9,\\
+    ATTINY10, ATTINY11, ATTINY12, ATTINY13, ATTINY13A,\\
+    ATTINY15, ATTINY20, ATTINY24(A), ATTINY25,\\
+    ATTINY26, ATTINY28, ATTINY40, ATTINY44(A),\\
+    ATTINY45, ATTINY48, ATTINY84(A), ATTINY85,\\
+    ATTINY87, ATTINY88, ATTINY102, ATTINY104,\\
+    ATTINY167, ATTINY261, ATTINY261A, ATTINY43U,\\
+    ATTINY441, ATTINY461, ATTINY461A, ATTINY828,\\
+    ATTINY841, ATTINY861, ATTINY861A, ATTINY1634,\\
+    ATTINY2313, ATTINY2313A, ATTINY4313, ATMEGA48,\\
+    ATMEGA8, ATMEGA8515, ATMEGA8535, ATMEGA88,\\
+    ATMEGA8U2, ATMEGA16U2, ATMEGA32U2,\\
+    ATMEGA16U4, ATMEGA32U4, ATMEGA32U6, AT90USB646,\\
+    AT90USB647, AT90USB1286, AT90USB1287, AT43USB355,\\
+    ATMEGA16, ATMEGA161, ATMEGA162, ATMEGA163,\\
+    ATMEGA164, ATMEGA165, ATMEGA168, ATMEGA169,\\
+    ATMEGA32, ATMEGA323, ATMEGA324, ATMEGA325,\\
+    ATMEGA3250, ATMEGA328, ATMEGA329, ATMEGA3290,\\
+    ATMEGA406, ATMEGA64, ATMEGA640, ATMEGA644,\\
+    ATMEGA644RFR2, ATMEGA645, ATMEGA6450,\\
+    ATMEGA649, ATMEGA6490, ATMEGA103, ATMEGA128,\\
+    ATMEGA1280, ATMEGA1281, ATMEGA1284,\\
     ATMEGA1284RFR2, ATMEGA2560, ATMEGA2561
 \end{quote}
 The various AVR chip variants mainly differ in the amount of
@@ -3164,7 +3273,7 @@ instructions, while the ATtinys do not support the multiplication
 instructions.
 %%-----------
 \begin{quote}
-ad) AM29245 $\rightarrow$ AM29243 $\rightarrow$ AM29240 $\rightarrow$ AM29000
+ae) AM29245 $\rightarrow$ AM29243 $\rightarrow$ AM29240 $\rightarrow$ AM29000
 \end{quote}
 The further one moves to the right in this list, the fewer the
 instructions become that have to be emulated in software.  While e.g.
@@ -3174,7 +3283,7 @@ serves as a 'generic' type that understands all instructions in
 hardware.
 %%-----------
 \begin{quote}
-ae) 80C166 $\rightarrow$ 80C167,80C165,80C163
+af) 80C166 $\rightarrow$ 80C167,80C165,80C163
 \end{quote}
 80C167 and 80C165/163 have an address space of 16 Mbytes instead of 256
 Kbytes, and furthermore they know some additional instructions for
@@ -3183,7 +3292,7 @@ extended addressing modes and atomic instruction sequences.  They are
 amount of on-chip peripherals.
 %%-----------
 \begin{quote}
-af) Z80 $\rightarrow$ Z80UNDOC $\rightarrow$ Z180 $\rightarrow$ Z380
+ag) Z80 $\rightarrow$ Z80UNDOC $\rightarrow$ Z180 $\rightarrow$ Z380
 \end{quote}
 While there are only a few additional instructions for the Z180, the
 Z380 owns 32-bit registers, a linear address space of 4 Gbytes, a
@@ -3196,7 +3305,7 @@ with the additional instructions can be found in the chapter
 with processor specific hints.
 %%-----------
 \begin{quote}
-ag) Z8601, Z8604, Z8608, Z8630, Z8631 $\rightarrow$ eZ8
+ah) Z8601, Z8604, Z8608, Z8630, Z8631 $\rightarrow$ eZ8
 \end{quote}
 The variants with Z8 core only differ in internal memory size and
 on-chip peripherals, i.e. the choice does not have an effect on the
@@ -3205,7 +3314,7 @@ which brings along a strongly extended instruction set that is in wide
 parts only source-level compatible.
 %%-----------
 \begin{quote}
-ah) KCPSM
+ai) KCPSM
 \end{quote}
 Both processor cores are not available as standalone components, they are
 provided as logic cores for gate arrays made by Xilinx The -3 variant
@@ -3213,7 +3322,7 @@ offers a larger address space and some additional instructions.  Note that
 it is not binary upward-compatible!
 %%-----------
 \begin{quote}
-ai) MICO8\_05, MICO8\_V3, MICO8\_V31
+aj) MICO8\_05, MICO8\_V3, MICO8\_V31
 \end{quote}
 Lattice unfortunately changed the machine instructions more than once, so
 different targets became necessary to provide continued support for older
@@ -3221,18 +3330,18 @@ projects.  The first variant is the one described in the 2005 manual, the
 two other ones represent versions 3.0 resp. 3.1.
 %%-----------
 \begin{quote}
-aj) 96C141, 93C141
+ak) 96C141, 93C141
 \end{quote}
 These two processors represent the two variations of the processor
 family: TLCS-900 and TLCS-900L.  The differences of these two variations
 will be discussed in detail in section \ref{TLCS900Spec}.
 %%-----------
 \begin{quote}
-ak) 90C141
+al) 90C141
 \end{quote}
 %%-----------
 \begin{quote}
-al) 87C00, 87C20, 87C40, 87C70
+am) 87C00, 87C20, 87C40, 87C70
 \end{quote}
 The processors of the TLCS-870 series have an identical CPU core, but
 different peripherals depending on the type.  In part registers with
@@ -3242,39 +3351,39 @@ possible by different types to provide the correct symbol set
 automatically.
 %%-----------
 \begin{quote}
-am) 47C00 $\rightarrow$ 470C00 $\rightarrow$ 470AC00
+an) 47C00 $\rightarrow$ 470C00 $\rightarrow$ 470AC00
 \end{quote}
 These three variations of the TLCS-47-family have on-chip RAM and ROM
 of different size, which leads to several bank switching instructions
 being added or suppressed.
 %%-----------
 \begin{quote}
-an) 97C241
+ao) 97C241
 \end{quote}
 %%-----------
 \begin{quote}
-ao) TC9331
+ap) TC9331
 \end{quote}
 %%-----------
 \begin{quote}
-ap) 16C54 $\rightarrow$ 16C55 $\rightarrow$ 16C56 $\rightarrow$ 16C57
+aq) 16C54 $\rightarrow$ 16C55 $\rightarrow$ 16C56 $\rightarrow$ 16C57
 \end{quote}
 These processors differ by the available code area, i.e. by the address
 limit after which AS reports overruns.
 %%-----------
 \begin{quote}
-aq) 16C84, 16C64
+ar) 16C84, 16C64
 \end{quote}
 Analog to the MCS-51 family, no distinction is made in the code generator,
 the different numbers only serve to include the correct SFRs in
 \tty{STDDEF18.INC}.
 %%-----------
 \begin{quote}
-ar) 17C42
+as) 17C42
 \end{quote}
 %%-----------
 \begin{quote}
-as) ST6210/ST6215$\rightarrow$ST6220/ST6225
+at) ST6210/ST6215$\rightarrow$ST6220/ST6225
 \end{quote}
 The only distinction AS makes between the two pairs is the smaller
 addressing space (2K instead 4K) of the first ones.  The detailed
@@ -3282,11 +3391,11 @@ distinction serves to provide an automatic distinction in the source
 file which hardware is available (analog to the 8051/52/515).
 %%-----------
 \begin{quote}
-at) ST7
+au) ST7
 \end{quote}
 %%-----------
 \begin{quote}
-au) ST9020, ST9030, ST9040, ST9050
+av) ST9020, ST9030, ST9040, ST9050
 \end{quote}
 These 4 names represent the four ''sub-families'' of the ST9 family,
 which only differ in their on-chip peripherals.  Their processor
@@ -3294,24 +3403,24 @@ cores are identical, which is why this distinction is again only used
 in the include file containing the peripheral addresses.
 %%-----------
 \begin{quote}
-av) 6804
+aw) 6804
 \end{quote}
 %%-----------
 \begin{quote}
-aw) 32010$\rightarrow$32015
+ax) 32010$\rightarrow$32015
 \end{quote}
 The TMS32010 owns just 144 bytes of internal RAM, and so AS limits
 addresses in the data segment just up to this amount.  This restriction
 does not apply for the 32015, the full range from 0..255 can be used.
 %%-----------
 \begin{quote}
-ax) 320C25 $\rightarrow$ 320C26 $\rightarrow$ 320C28
+ay) 320C25 $\rightarrow$ 320C26 $\rightarrow$ 320C28
 \end{quote}
 These processors only differ slightly in their on-chip peripherals
 and in their configuration instructions.
 %%-----------
 \begin{quote}
-ay) 320C30, 320C31 $\rightarrow$ 320C40, 320C44
+az) 320C30, 320C31 $\rightarrow$ 320C40, 320C44
 \end{quote}
 The 320C31 is a reduced version with the same instruction set,
 however fewer peripherals.  The distinction is exploited in
@@ -3322,25 +3431,25 @@ version of the C40, with less peripherals and a smaller address
 space.
 %%-----------
 \begin{quote}
-az) 320C203 $\rightarrow$ 320C50, 320C51, 320C53
+ba) 320C203 $\rightarrow$ 320C50, 320C51, 320C53
 \end{quote}
 The first one represents the C20x family of signal processors which
 implement a subset of the C5x instruction set.  The distinction among the
 C5x processors is currently not used by AS.
 %%-----------
 \begin{quote}
-ba) 320C541
+bb) 320C541
 \end{quote}
 This one at the moment represents the TMS320C54x family...
 %%-----------
 \begin{quote}
-bb) TMS9900
+bc) TMS9900
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bc) \> TMS70C00, TMS70C20, TMS70C40,\\
+bd) \> TMS70C00, TMS70C20, TMS70C40,\\
     \> TMS70CT20, TMS70CT40,\\
     \> TMS70C02, TMS70C42, TMS70C82,\\
     \> TMS70C08, TMS70C48\\
@@ -3354,21 +3463,21 @@ RAM and the same on-chip peripherals, they differ only in the amount of
 integrated ROM.
 %%-----------
 \begin{quote}
-bd) 370C010, 370C020, 370C030, 370C040 and 370C050
+be) 370C010, 370C020, 370C030, 370C040 and 370C050
 \end{quote}
 Similar to the MCS-51 family, the different types are only used to
 differentiate the peripheral equipment in \tty{STDDEF37.INC}; the
 instruction set is always the same.
 %%-----------
 \begin{quote}
-be) MSP430 $\rightarrow$ MSP430X
+bf) MSP430 $\rightarrow$ MSP430X
 The X variant of the CPU core extends the address space from 64
 KiBytes to 1 MiByte and augments the instruction set, e.g. by
 prefixed to repeat instructions.
 \end{quote}
 %%-----------
 \begin{quote}
-bf) TMS1000, TMS1100, TMS1200, TMS1300
+bg) TMS1000, TMS1100, TMS1200, TMS1300
 \end{quote}
 TMS1000 and TMS1200 each provide 1 KByte of ROM and 64 nibbles of
 RAM, while TMS1100 and TMS1300 provide twice the amount of RAM
@@ -3377,17 +3486,17 @@ default instruction set fot TMS1100 and TMS1300(AS only knows the
 default instruction sets!)
 %%-----------
 \begin{quote}
-bg) SC/MP
+bh) SC/MP
 \end{quote}
 %%-----------
 \begin{quote}
-bh) 8070
+bi) 8070
 \end{quote}
 This processor represents the whole 807x family (which consists at least
 of the 8070, 8072, and 8073), which however shares identical CPU cores.
 %%-----------
 \begin{quote}
-bi) COP87L84
+bj) COP87L84
 \end{quote}
 This is the only member of National Semiconductor's COP8 family that
 is currently supported.  I know that the family is substantially
@@ -3396,7 +3505,7 @@ instruction sets which will be added when a need occurs.  It is a
 beginning, and National's documentation is quite extensive...
 %%-----------
 \begin{quote}
-bj) COP410 $\rightarrow$ COP420 $\rightarrow$ COP440 $\rightarrow$ COP444
+bk) COP410 $\rightarrow$ COP420 $\rightarrow$ COP440 $\rightarrow$ COP444
 The COP42x derivates offer some additional instructions, plus other
 instructions have an extended operand range.
 \end{quote}
@@ -3404,7 +3513,7 @@ instructions have an extended operand range.
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bk) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
+bl) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
     \> SC14420, SC14421, SC14422, SC14424 \\
 \end{tabbing}
 \end{quote}
@@ -3413,14 +3522,14 @@ instructions, since each of them supports different B field formats and
 their architecture has been optimized over time.
 %%-----------
 \begin{quote}
-bl) 7810$\rightarrow$78C10
+bm) 7810$\rightarrow$78C10
 \end{quote}
 The NMOS version has no stop-mode; the respective command and the ZCM
 register are omitted.  \bb{CAUTION!}  NMOS and CMOS version partially
 differ in the reset values of some registers!
 %%-----------
 \begin{quote}
-bm) 7500 $\leftrightarrow$ 7508
+bn) 7500 $\leftrightarrow$ 7508
 \end{quote}
 There are two different types of CPU cores in the $\mu$PD75xx
 family: the 7566 represents the the 'instruction set B', which
@@ -3431,7 +3540,7 @@ CAUTION!} These instruction sets are not 100\% binary compatible!
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bn) \> 75402,\\
+bo) \> 75402,\\
     \> 75004, 75006, 75008,\\
     \> 75268,\\
     \> 75304, 75306, 75308, 75312, 75316,\\
@@ -3447,40 +3556,40 @@ peripherals on the one hand and by their instruction set's power on
 the other hand.
 %%-----------
 \begin{quote}
-bo) 78070
+bp) 78070
 \end{quote}
 This is currently the only member of NEC's 78K0 family I am familiar
 with.  Similar remarks like for the COP8 family apply!
 %%-----------
 \begin{quote}
-bp) 78214
+bq) 78214
 \end{quote}
 This is currently the representor of NEC's 78K2 family.
 %%-----------
 \begin{quote}
-bq) 78310
+br) 78310
 \end{quote}
 This is currently the representor of NEC's 78K3 family.
 %%-----------
 \begin{quote}
-br) 784026
+bs) 784026
 \end{quote}
 This is currently the representor of NEC's 78K4 family.
 %%-----------
 \begin{quote}
-bs) 7720 $\rightarrow$ 7725
+bt) 7720 $\rightarrow$ 7725
 \end{quote}
 The $\mu$PD7725 offers larger address spaces and som more instructions
 compared to his predecessor. {\bf CAUTION!}  The processors are not binary
 compatible to each other!
 %%-----------
 \begin{quote}
-bt) 77230
+bu) 77230
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
-bu) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
+bv) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
     \> SYM53C875, SYM53C895
 \end{tabbing}
 \end{quote}
@@ -3489,30 +3598,30 @@ instruction variants, furthermore they are different in their set of
 internal registers.
 %%-----------
 \begin{quote}
-bv) MB89190
+bw) MB89190
 \end{quote}
 This processor type represents Fujitsu's F$^{2}$MC8L series...
 %%-----------
 \begin{quote}
-bw) MB9500
+bx) MB9500
 \end{quote}
 ...just like this one does it currently for the 16-bit variants from
 Fujitsu!
 %%-----------
 \begin{quote}
-bx) MSM5840, MSM5842, MSM58421, MSM58422, MSM5847
+by) MSM5840, MSM5842, MSM58421, MSM58422, MSM5847
 \end{quote}
 These variants of the OLMS-40 family differ in their instruction
 set and in the amount of internal program and data memory.
 %%-----------
 \begin{quote}
-by) MSM5054, MSM5055, MSM5056, MSM6051, MSM6052
+bz) MSM5054, MSM5055, MSM5056, MSM6051, MSM6052
 \end{quote}
 The as for the OLMS-40 family: differences in instruction
 set and the amount of internal program and data memory.
 %%-----------
 \begin{quote}
-bz) 1802 $\rightarrow$ 1804, 1805, 1806 $\rightarrow$ 1804A,
+ca) 1802 $\rightarrow$ 1804, 1805, 1806 $\rightarrow$ 1804A,
 1805A, 1806A
 \end{quote}
 1804, 1805, and 1806 feature an instruction set that is slightly
@@ -3522,12 +3631,12 @@ an integrated timer.  The A variants extend the instruction set by
 subtraction in BCD format.
 %%-----------
 \begin{quote}
-ca) XS1
+cb) XS1
 \end{quote}
 This type represents the XCore-"family".
 %%-----------
 \begin{quote}
-cb) 1750
+cc) 1750
 \end{quote}
 MIL STD 1750 is a standard, therefore there is only one
 (standard) variant...
@@ -4814,8 +4923,8 @@ HP28...
 \subsection{DATA}
 \ttindex{DATA}
 
-{\em valid for: PIC, 320xx, AVR, MELPS-4500, HMCS400, 4004/4040,
- $\mu$PD772x, OLMS-40/50}
+{\em valid for: PIC, 320xx, AVR, MELPS-4500, HMCS400,\\
+     4004/4040, $\mu$PD772x, OLMS-40/50}
 
 This command stores data in the current segment.  Both integer
 values as well as character strings are supported.  On
@@ -10330,6 +10439,18 @@ described by:
                {This instruction is deprecated and should not be used any
                 more in new programs.}
                {the instruction that should be used instead.}
+\errentry{ 340}{source operand is longer or same size as destination operand}
+               {warning}
+               {The source operand's size is larger than the destination operand's
+                size, expressed in bits.  Sign or zero extension does not make sense
+                with these arguments.  See the CPU's reference manual for its behaviour
+                in this situation.}
+               {none}
+\errentry{ 350}{TRAP number represents valid instruction}
+               {warning}
+               {A TRAP with this number uses the same machine code as a 
+                machine instruction supported by the CPU.}
+               {keines}
 \errentry{1000}{symbol double defined}
                {error}
                {A new value is assigned to a symbol, using a label or a
@@ -10536,6 +10657,11 @@ described by:
                {The register used, although valid, cannot be used in this
                 context.}
                {none}
+\errentry{1446}{register(s) listed more than once}
+               {error}
+               {A register appears more than once in the list of registers
+                to be saved or restored.}
+               {none}
 \errentry{1450}{RESTORE without SAVE}
                {error}
                {A \tty{RESTORE} command was found, that cannot be coupled with a
@@ -10681,9 +10807,20 @@ described by:
                {none}
 \errentry{1554}{invalid \tty{STRUCT} directive}
                {error}
-               {Only \tty{EXTNAMES} resp. \tty{NOEXTNAMES} are allowed as
-                directives of a \tty{STRUCT} statement.}
+               {Only \tty{EXTNAMES}, \tty{NOEXTNAMES}, \tty{DOTS},
+                and \tty{NODOTS} are allowed as directives of a
+                \tty{STRUCT} statement.}
                {the unknown directive}
+\errentry{1555}{structure re-defined}
+               {error}
+               {A structure of this name has already been defined.}
+               {the name of the structure}
+\errentry{1556}{unresolvable structure element reference}
+               {error}
+               {An element in a structure references to another
+                element, however this referenced element was not
+                defined or itself has an unresolvable reference.}
+               {the name of the element itself and the referenced one}
 \errentry{1560}{instruction is not repeatable}
                {error}
                {This machine instruction cannot be repeated via a {\tt

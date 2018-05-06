@@ -148,7 +148,7 @@ static char *FlagChars = "CVZNIHFE";
 
 static ShortInt AdrMode;
 static Byte AdrVals[5];
-static Byte OpSize;
+static ShortInt OpSize;
 static Boolean ExtFlag;
 static LongInt DPRValue;
 
@@ -235,7 +235,7 @@ static void DecodeAdr(int ArgStartIdx, int ArgEndIdx)
   {
     switch (OpSize)
     {
-      case 2:
+      case eSymbolSize32Bit:
         AdrLong = EvalIntExpression(Asc + 1, Int32, &OK);
         if (OK)
         {
@@ -246,7 +246,7 @@ static void DecodeAdr(int ArgStartIdx, int ArgEndIdx)
           AdrCnt = 4;
         }
         break;
-      case 1:
+      case eSymbolSize16Bit:
         AdrWord = EvalIntExpression(Asc + 1, Int16, &OK);
         if (OK)
         {
@@ -255,7 +255,7 @@ static void DecodeAdr(int ArgStartIdx, int ArgEndIdx)
           AdrCnt = 2;
         }
         break;
-      case 0:
+      case eSymbolSize8Bit:
         AdrVals[0] = EvalIntExpression(Asc + 1, Int8, &OK);
         if (OK)
           AdrCnt = 1;
@@ -851,7 +851,7 @@ static void DecodeLDQ(Word Index)
   if (ChkArgCnt(1, 2)
    && ChkMinCPU(CPU6309))
   {
-    OpSize = 2;
+    OpSize = eSymbolSize32Bit;
     DecodeAdr(1, ArgCnt);
     if (AdrMode == ModImm)
     {
@@ -1496,25 +1496,13 @@ static void MakeCode_6809(void)
 {
   CodeLen = 0;
   DontPrint = False;
-  OpSize = 0;
+  OpSize = eSymbolSize8Bit;
   ExtFlag = False;
 
   /* deduce operand size No size is zero-length string -> '\0' */
 
-  switch (mytoupper(*AttrPart))
-  {
-    case 'B': OpSize = 0; break;
-    case 'W': OpSize = 1; break;
-    case 'L': OpSize = 2; break;
-    case 'Q': OpSize = 3; break;
-    case 'S': OpSize = 4; break;
-    case 'D': OpSize = 5; break;
-    case 'X': OpSize = 6; break;
-    case 'P': OpSize = 7; break;
-    case '\0': break;
-    default:
-      WrError(1107); return;
-  }
+  if (!DecodeMoto16AttrSize(*AttrPart, &OpSize, False))
+    return;
 
   /* zu ignorierendes */
 

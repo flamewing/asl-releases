@@ -216,6 +216,7 @@
 #include "errmsg.h"
 #include "asmfnums.h"
 #include "asmrelocs.h"
+#include "asmstructs.h"
 #include "chunks.h"
 #include "trees.h"
 
@@ -241,6 +242,7 @@ tIntTypeDef IntTypeDefs[IntTypeCnt] =
   { 0x0000007fl,       -128l,        127l }, /* SInt8 */
   { 0x000000ffl,          0l,        255l }, /* UInt8 */
   { 0x000000ffl,       -128l,        255l }, /* Int8 */
+  { 0x000000ffl,       -256l,        255l }, /* SInt9 */
   { 0x000001ffl,          0l,        511l }, /* UInt9 */
   { 0x000003ffl,          0l,       1023l }, /* UInt10 */
   { 0x000003ffl,       -512l,       1023l }, /* Int10 */
@@ -250,6 +252,7 @@ tIntTypeDef IntTypeDefs[IntTypeCnt] =
   { 0x00001fffl,          0l,       8191l }, /* UInt13 */
   { 0x00003fffl,          0l,      16383l }, /* UInt14 */
   { 0x00003fffl,      -8192l,      16383l }, /* Int14 */
+  { 0x00003fffl,     -16384l,      32767l }, /* SInt15 */
   { 0x00007fffl,          0l,      32767l }, /* UInt15 */
   { 0x00007fffl,     -32768l,      32767l }, /* SInt16 */
   { 0x0000ffffl,          0l,      65535l }, /* UInt16 */
@@ -3713,23 +3716,28 @@ Boolean GetStringSymbol(const char *Name, char *Wert)
   return (Lauf != NULL);
 }
 
-void SetSymbolSize(const char *Name, ShortInt Size)
+void SetSymbolOrStructElemSize(const char *Name, ShortInt Size)
 {
-  PSymbolEntry Lauf;
-  Boolean HRef;
-  String NName;
+  if (pInnermostNamedStruct)
+    SetStructElemSize(pInnermostNamedStruct->StructRec, Name, Size);
+  else
+  {
+    PSymbolEntry Lauf;
+    Boolean HRef;
+    String NName;
 
-  strmaxcpy(NName, Name, 255);
-  if (!ExpandSymbol(NName))
-    return;
-  HRef = DoRefs;
-  DoRefs = False;
-  Lauf = FindLocNode(NName, TempInt);
-  if (!Lauf)
-    Lauf = FindNode(Name, TempInt);
-  if (Lauf)
-    Lauf->SymSize = Size;
-  DoRefs = HRef;
+    strmaxcpy(NName, Name, 255);
+    if (!ExpandSymbol(NName))
+      return;
+    HRef = DoRefs;
+    DoRefs = False;
+    Lauf = FindLocNode(NName, TempInt);
+    if (!Lauf)
+      Lauf = FindNode(Name, TempInt);
+    if (Lauf)
+      Lauf->SymSize = Size;
+    DoRefs = HRef;
+  }
 }
 
 ShortInt GetSymbolSize(const char *Name)
@@ -3883,7 +3891,10 @@ static void PrintSymbolList_PNode(PTree Tree, void *pData)
   TempResult t;
 
   ConvertSymbolVal(&(Node->SymWert), &t);
-  StrSym(&t, False, s1, sizeof(s1));
+  if ((t.Typ == TempInt) && DissectBit && (Node->SymType == SegBData))
+    DissectBit(s1, sizeof(s1), t.Contents.Int);
+  else
+    StrSym(&t, False, s1, sizeof(s1));
 
   strmaxcpy(sh, Tree->Name, 255);
   if (Tree->Attribute != -1)

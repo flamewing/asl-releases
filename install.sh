@@ -40,11 +40,15 @@ fi
 if [ "${INCPATH}" != "" ]; then
  ${MKDIRHIER} ${INCPATH}
  chmod 755 ${INCPATH}
- for i in include/*.inc; do
-  base=`basename $i`
-  echo ${INCPATH}/$base
-  cp $i ${INCPATH}
-  chmod 644 ${INCPATH}/$base
+ for path in . avr s12z s12z/vh s12z/vc s12z/vca; do
+  mkdir ${INCPATH}/${path}
+  chmod 755 ${INCPATH}/${path}
+  for file in include/${path}/*.inc; do
+   base=`basename ${file}`
+   echo ${INCPATH}/${path}/${base}
+   cp ${file} ${INCPATH}/${path}
+   chmod 644 ${INCPATH}/${path}/$base
+  done
  done
 fi
 

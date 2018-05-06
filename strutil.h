@@ -94,7 +94,7 @@ extern void ReadLn(FILE *Datei, char *Zeile);
 
 extern int ReadLnCont(FILE *Datei, char *Zeile, int MaxLen);
 
-extern LongInt ConstLongInt(const char *inp, Boolean *pErr, LongInt Base);
+extern LargeInt ConstLongInt(const char *inp, Boolean *pErr, LongInt Base);
 
 extern char *ParenthPos(char *pHaystack, char Needle);
 

@@ -75,27 +75,27 @@ typedef enum
   UInt1    ,
   UInt2    ,
   UInt3    ,
-  SInt4    ,UInt4    , Int4    ,
-  SInt5    ,UInt5    , Int5    ,
-  SInt6    ,UInt6    ,
-  SInt7    ,UInt7    ,
-  SInt8    ,UInt8    , Int8    ,
-  UInt9    ,
+  SInt4    , UInt4   , Int4    ,
+  SInt5    , UInt5   , Int5    ,
+  SInt6    , UInt6   ,
+  SInt7    , UInt7   ,
+  SInt8    , UInt8   , Int8    ,
+  SInt9    , UInt9    ,
   UInt10   , Int10   ,
   UInt11   ,
   UInt12   , Int12   ,
   UInt13   ,
   UInt14   , Int14   ,
-  UInt15   ,
-  SInt16   ,UInt16   , Int16   ,
+  SInt15   , UInt15  ,
+  SInt16   , UInt16  , Int16   ,
   UInt17   ,
   UInt18   ,
-  SInt20   ,UInt20   , Int20   ,
+  SInt20   , UInt20  , Int20   ,
   UInt21   ,
   UInt22   ,
   UInt23   ,
-  SInt24   ,UInt24   , Int24   ,
-  SInt32   ,UInt32   , Int32   ,
+  SInt24   , UInt24  , Int24   ,
+  SInt32   , UInt32  , Int32   ,
 #ifdef HAS64
   Int64   ,
 #endif
@@ -117,6 +117,21 @@ typedef enum
   FloatCo,
   FloatTypeCnt
 } FloatType;
+
+typedef enum
+{
+  eSymbolSizeUnknown = -1,
+  eSymbolSize8Bit = 0,
+  eSymbolSize16Bit = 1,
+  eSymbolSize32Bit = 2,
+  eSymbolSize64Bit = 3,
+  eSymbolSize80Bit = 4, /* Intel 80 Bit extended float */
+  eSymbolSizeFloat32Bit = 5,
+  eSymbolSizeFloat64Bit = 6,
+  eSymbolSizeFloat96Bit = 7,
+  eSymbolSize24Bit = 8,
+  eSymbolSizeFloatDec96Bit = 9
+} tSymbolSize;
 
 extern tIntTypeDef IntTypeDefs[IntTypeCnt];
 extern Boolean FirstPassUnknown;
@@ -193,7 +208,7 @@ extern void ResetSymbolDefines(void);
 extern void PrintSymbolDepth(void);
 
 
-extern void SetSymbolSize(const char *Name, ShortInt Size);
+extern void SetSymbolOrStructElemSize(const char *Name, ShortInt Size);
 
 extern ShortInt GetSymbolSize(const char *Name);
 

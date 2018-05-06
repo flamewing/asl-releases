@@ -95,7 +95,7 @@ typedef struct
 } CReg;
 
 static CPUVar CPUMCORE;
-static Byte OpSize;
+static ShortInt OpSize;
 
 static FixedOrder *FixedOrders;
 static FixedOrder *OneRegOrders;
@@ -486,13 +486,13 @@ static void DecodeLdSt(Word Index)
 
   if ((*AttrPart != '\0') && (Lo(Index) != 0xff)) WrError(1100);
   else if (!ChkArgCnt(2, 2));
-  else if (OpSize > 2) WrError(1130);
+  else if (OpSize > eSymbolSize32Bit) WrError(1130);
   else
   {
     if (Lo(Index) != 0xff) OpSize = Lo(Index);
     if (DecodeArgReg(1, &RegZ, AllRegMask) && DecodeAdr(ArgStr[2], &RegX))
     {
-      NSize = (OpSize == 2) ? 0 : OpSize + 1;
+      NSize = (OpSize == eSymbolSize32Bit) ? 0 : OpSize + 1;
       WAsmCode[0] = 0x8000 + (NSize << 13) + (Hi(Index) << 12) + (RegZ << 8) + RegX;
       CodeLen = 2;
     }
@@ -800,23 +800,19 @@ static void MakeCode_MCORE(void)
 {
   CodeLen = 0;
 
-  OpSize = 2;
+  OpSize = eSymbolSize32Bit;
   DontPrint = False;
 
-  if (*AttrPart!='\0')
+  /* operand size identifiers slightly differ from '68K Standard': */
+
+  switch (mytoupper(*AttrPart))
   {
-    switch (mytoupper(*AttrPart))
-    {
-      case 'B': OpSize = 0; break;
-      case 'H': OpSize = 1; break;
-      case 'W': OpSize = 2; break;
-      case 'Q': OpSize = 3; break;
-      case 'S': OpSize = 4; break;
-      case 'D': OpSize = 5; break;
-      case 'X': OpSize = 6; break;
-      case 'P': OpSize = 7; break;
-      default: WrError(1107); return;
-    }
+    case 'H': OpSize = eSymbolSize16Bit; break;
+    case 'W': OpSize = eSymbolSize32Bit; break;
+    case 'L': WrError(1107); return;
+    default:
+     if (!DecodeMoto16AttrSize(*AttrPart, &OpSize, False))
+       return;
   }
 
   /* Nullanweisung */
