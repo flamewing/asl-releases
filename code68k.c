@@ -2357,7 +2357,7 @@ static void DecodeFixed(Word Index)
 
   if (*AttrPart != '\0') WrError(1100);
   else if (!ChkArgCnt(0, 0));
-  else if (ChkExactCPUMask(FixedZ->CPUMask, CPU68008))
+  else if (ChkExactCPUMask(FixedZ->CPUMask, CPU68008) >= 0)
   {
     CodeLen = 2;
     WAsmCode[0] = FixedZ->Code;

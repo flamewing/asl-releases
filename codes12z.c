@@ -234,9 +234,10 @@ static void ResetAdrVals(tAdrVals *pVals)
   pVals->ShiftLSB = 0;
 }
 
-static char IsIncDec(char ch)
+static Boolean IsIncDec(char ch, char *pRes)
 {
-  return ((ch == '+') || (ch == '-')) ? ch : '\0';
+  *pRes = ((ch == '+') || (ch == '-')) ? ch : '\0';
+  return !!*pRes;
 }
 
 static int strmemcpy(char *pDest, int DestSize, const char *pSrc, int SrcLen)
@@ -403,7 +404,7 @@ static Boolean DecodeAdr(int ArgIndex, unsigned ModeMask, tAdrVals *pVals)
         }
         AdrRegPresent = True;
       }
-      else if ((IncChar = IsIncDec(*pComp)) && DecodeAdrRegStr(pComp + 1, &AdrIncReg))
+      else if (IsIncDec(*pComp, &IncChar) && DecodeAdrRegStr(pComp + 1, &AdrIncReg))
       {
         if (IncMode)
         {
@@ -412,7 +413,7 @@ static Boolean DecodeAdr(int ArgIndex, unsigned ModeMask, tAdrVals *pVals)
         }
         IncMode = (IncChar == '+') ? eIncModePreInc : eIncModePreDec;
       }
-      else if ((IncChar = IsIncDec(pComp[l - 1])))
+      else if (IsIncDec(pComp[l - 1], &IncChar))
       {
         pComp[l - 1] = '\0';
         if (!DecodeAdrRegStr(pComp, &AdrIncReg))

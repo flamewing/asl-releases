@@ -46,7 +46,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand Januar 2018}
+{\large Stand Juni 2018}
 \end{raggedright}
 
 \clearpage
@@ -10185,7 +10185,11 @@ p2hex <Quelldatei> eprom2 -f $31 -r $2000-$3fff
 p2hex <Quelldatei> eprom3 -f $31 -r $4000-$5fff
 p2hex <Quelldatei> eprom4 -f $31 -r $6000-$7fff
 \end{verbatim}
-Defaultm"a"sig ist das Fenster 32 KByte gro"s und beginnt bei Adresse 0.
+Anstelle einer festen Adresse kann man als Anfang bzw. Ende auch ein
+einfaches Dollarzeichen oder ein '0x' angeben.  Dies bedeutet, daﬂ die
+niedrigste bzw. h"ochste in der Quelldatei gefundene Adresse als Anfang
+bzw. Ende genommen wird.  Der Default f"ur den Bereich ist '0x-0x', d.h.
+es werden alle Daten aus der Quelldatei "ubernommen.
 \par
 \bb{ACHTUNG!} Die Splittung "andert nichts an den absoluten Adressen, die
 in den Hexfiles stehen!  Sollen die Adressen im Hexfile bei 0 beginnen,
@@ -10200,22 +10204,6 @@ verschieben, kann man den Schalter
 \end{verbatim}
 verwenden.  Der dabei angegebene Wert ist ein {\em Offset}, d.h. er wird
 auf die in der Code-Datei angegebenen Adressen aufaddiert.
-\par
-Als Sonderwert f"ur Start-und Endadresse beim r-Parameter ist ein
-schlichtes Dollar-Zeichen (\$) bzw. ein '0x' erlaubt.  Dies kennzeichnet
-die erste bzw. letzte in der Programmdatei belegte Adresse.  Wer also
-sicher sein will, da"s immer das ganze Programm in der Hex-Datei abgelegt
-wird, braucht sich mit dem Schalter
-\begin{verbatim}
- -r $-$
-\end{verbatim}
-keine Gedanken mehr zu machen.  Dollarzeichen und feste Adressen
-lassen sich selbstverst"andlich auch gemischt verwenden, z.B. kann
-mit
-\begin{verbatim}
- -r $-$7fff
-\end{verbatim}
-das obere Ende auf die ersten 32K begrenzt werden.
 \par
 Den Inhalt einer Datei kann man mit einem Offset auf eine beliebige
 Position verschieben; diesen Offset h"angt man einfach in Klammern an
@@ -11663,13 +11651,11 @@ den ersten Blick...
 \item[F:]{Mein Programm wird zwar korrekt assembliert, bei der Umwandlung
           mit P2BIN oder P2HEX erhalte ich aber nur eine leere Datei.}
 \item[A:]{Dann haben Sie wahrscheinlich das Adre"s\-fil\-ter nicht korrekt
-          eingestellt.  De\-faul\-tm"a"sig reicht der Filter von 0 bis 32
-	  Kbyte, falls Ihr Programm Teile au"serhalb dieses Bereiches
-	  besitzen sollte, werden diese nicht "ubernommen.  Sollte Ihr
-	  Code komplett jenseits 32 Kbyte liegen (wie es bei 65er und
-	  68er-Prozessoren "ublich ist), dann erhalten Sie das von Ihnen
-	  geschilderte Ergebnis.  Setzen Sie das Adre"sfilter einfach auf
-	  einen passenden Bereich (s. das Kapitel zu P2BIN/P2HEX).}
+          eingestellt.  De\-faul\-tm"a"sig ist der Filter abgeschaltet, d.h.
+          alle Daten werden "ubernommen, wenn ein manuell eingestellter
+          Bereichsfilter nicht zu den benutzten Adressen pa"st, kann man
+          mit der '-r' Option aber (versehentlich) auch leere Dateien
+          erzeugen.}
 \vspace{0.3cm}
 \item[F:]{Ich bekomme unter Unix bei der Benutzung von P2BIN oder P2HEX
           das Dollarzeichen nicht eingegeben.  Die automatische

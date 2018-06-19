@@ -1073,8 +1073,8 @@ int main(int argc, char **argv)
 
   StartAdr = 0;
   StopAdr = 0x7fff;
-  StartAuto = False;
-  StopAuto = False;
+  StartAuto = True;
+  StopAuto = True;
   StartData = 0;
   StopData = 0x1fff;
   EntryAdr = -1;
@@ -1112,7 +1112,7 @@ int main(int argc, char **argv)
   }
   AddSuffix(TargName, HexSuffix);
 
-  if ((StartAuto) || (StopAuto))
+  if (StartAuto || StopAuto)
   {
     if (StartAuto)
       StartAdr = INTCONST_ffffffff;
@@ -1126,8 +1126,13 @@ int main(int argc, char **argv)
           ProcessGroup(ParamStr[z], MeasureFile);
     if (StartAdr > StopAdr)
     {
-      errno = 0; printf("%s\n", getmessage(Num_ErrMsgAutoFailed)); ChkIO(OutName); exit(1);
+      errno = 0;
+      printf("%s\n", getmessage(Num_ErrMsgAutoFailed));
+      ChkIO(OutName);
+      exit(1);
     }
+    printf("%s: 0x%s-", getmessage(Num_InfoMessDeducedRange), HexLong(StartAdr));
+    printf("0x%s\n", HexLong(StopAdr));
   }
 
   OpenTarget();

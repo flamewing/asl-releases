@@ -637,8 +637,8 @@ int main(int argc, char **argv)
 
   StartAdr = 0;
   StopAdr = 0x7fff;
-  StartAuto = False;
-  StopAuto = False;
+  StartAuto = True;
+  StopAuto = True;
   FillVal = 0xff;
   DoCheckSum = False;
   SizeDiv = 1;
@@ -691,6 +691,8 @@ int main(int argc, char **argv)
       ChkIO(OutName);
       exit(1);
     }
+    printf("%s: 0x%s-", getmessage(Num_InfoMessDeducedRange), HexLong(StartAdr));
+    printf("0x%s\n", HexLong(StopAdr));
   }
 
   OpenTarget();

@@ -65,7 +65,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition January 2018}
+{\large Edition June 2018}
 \end{raggedright}
 
 \clearpage
@@ -9979,8 +9979,11 @@ p2hex <source file> eprom2 -f $31 -r $2000-$3fff
 p2hex <source file> eprom3 -f $31 -r $4000-$5fff
 p2hex <source file> eprom4 -f $31 -r $6000-$7fff
 \end{verbatim}
-By default, the address window is 32 Kbytes large and starts at
-address 0.
+It is allowed to specifiy a single dollar character or '0x' as start
+or stop address.  This means that the lowest resp. highest address found
+in the source file shall be taken as start resp. stop address.  The
+default range is '0x-0x', i.e. all data from the source file is
+transferred.
 
 \bb{CAUTION!} This type of splitting does not change the absolute
 addresses that will be written into the files!  If the addresses in
@@ -9997,22 +10000,6 @@ use the switch
 The value given is an {\em offset}, i.e. it is added to the addresses
 given in the code file.
 \par
-A special value for start and stop address arguments is a single
-dollar sign (\tty{\$}) or '0x'.  This stands for the very first resp.
-last address that has been used in the code file.  So, if you want to
-be sure that always the whole program is stored in the hex file, set
-the address filter
-\begin{verbatim}
- -r $-$
-\end{verbatim}
-and you do not have to worry about address filters any more.  Dollar
-signs and fixed addresses may of course me mixed.  For example, the
-setting
-\begin{verbatim}
- -r $-$7fff
-\end{verbatim}
-limits the upper end to 32 Kbytes.
-
 By using an offset, it is possible to move a file's contents to an
 arbitrary position.  This offset is simply appended to a file's name,
 surrounded with parentheses.  For example, if the code in a file
@@ -11350,14 +11337,11 @@ one maybe does not find them immediately...
 \vspace{0.3cm}
 \item[Q:]{Assembly of my program works perfectly, however I get an empty
    file when I try to convert it with P2HEX or P2BIN.}
-\item[A:]{You probably did not set the address filter correctly.  This
-   filter by default cuts out an area ranging from 0 to 32 Kbytes.
-   If you program contains memory chunks outside this range, they
-   will be ignored.  If your code is completely beyond the 32K
-   barrier (this is commonplace for processors of the 65xx and 68xx
-   series), you will get the result you just described.  Simply
-   set the address filter to a range that suits your needs (see the
-   chapter dealing with P2BIN/P2HEX).}
+\item[A:]{You probably did not set the address filter correctly.  By
+   default, the filter is disabled, i.e. all data is copied to the
+   HEX or binary file.  It is however possible to create an empty file
+   if a manually set range does not fit to the addresses used by your
+   program.}
 \vspace{0.3cm}
 \item[Q:]{I cannot enter the dollar character when using P2BIN or P2HEX
    under Unix.  The automatic address range setting does not work, instead

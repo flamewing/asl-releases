@@ -61,6 +61,10 @@ Message InfoMessHelp
  "         -S [L|B]<length>  :  prepend entry address to image\n" \
  "         -k                :  automatically erase source files\n"
 
+Message InfoMessDeducedRange
+ "Ermittelter Adre&szlig;bereich"
+ "Deduced address range"
+
 Message WarnEmptyFile
  "Warnung: keine Daten &uuml;bertragen, falsche/fehlende -r Option?\n"
  "Warning: no data transferred, wrong/missing -r option?\n"

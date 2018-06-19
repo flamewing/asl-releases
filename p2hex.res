@@ -102,6 +102,10 @@ Message InfoMessHelp
  "         -k                : automatically erase source files\n" \
  "         -avrlen <2|3>     : set address field length of Atmel format\n"
 
+Message InfoMessDeducedRange
+ "Ermittelter Adre&szlig;bereich"
+ "Deduced address range"
+
 Message WarnDOption
  "Warnung: -d - Option ist veraltet, siehe Handbuch\n"
  "Warning: -d option is obsolete, see manual\n"
