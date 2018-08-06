@@ -3990,11 +3990,15 @@ operations:
 \item{program counter references in relative jumps and address expressions}
 \item{readout of the program counter via the symbols * or \$}
 \end{itemize}
-this ''shifting'' is switched off by the instruction
+By using the instruction
 \begin{verbatim}
-        dephase
+        DEPHASE
 \end{verbatim}
-The assembler manages phase values for all defined segments, although
+, this ''shifting'' is reverted to the value previous to the most
+recent \tty{PHASE} instruction.  \tty{PHASE} und \tty{DEPHASE} may be used
+in a nested manner.
+\par
+The assembler keeps phase values for all defined segments, although
 this instruction pair only makes real sense in the code segment.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

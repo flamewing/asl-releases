@@ -67,6 +67,7 @@ call testall t_403
 call testall t_4500
 call testall t_47c00
 call testall t_48
+call testall t_53c8xx
 call testall t_56000
 call testall t_56300
 call testall t_65
@@ -99,6 +100,7 @@ call testall t_807x
 call testall t_80c382
 call testall t_821
 call testall t_85
+call testall t_86
 call testall t_870c
 call testall t_87c800
 call testall t_8X30x
@@ -151,6 +153,7 @@ call testall t_olms40
 call testall t_olms50
 call testall t_oki48
 call testall t_parsys
+call testall t_phase
 call testall t_s12x
 call testall t_s12z
 call testall t_scmp

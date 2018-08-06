@@ -1,3 +1,12 @@
+2018-08-06 [1.42 Bld 136]
+
+- Addition    : allow nested use of PHASE and DEPHASE
+- Addition    : allow some pseudo-ops and aliases for operators/phases for 53C8XX
+- Bugfix      : fix assembly of 8086 OUT <imm>,AX/AL
+- Bugfix      : fix assembly of 78K4 CALLF/CALLT/RETCS with !-marked argument
+- Bugfix      : fix assembly of DSAREL() expressions on 53C8xx
+- Bugfix      : fix specification of data register as 68K PMMU function code
+
 2018-06-18 [1.42 Bld 135]
 
 - Bugfix      : some instructions no longer worked on 68008

@@ -1253,15 +1253,20 @@ si	set	"INSTR"
 	endm
 
 	callf	0c23h
+	callf	!0c23h
 	callt	[60h]
+	callt	[!60h]
 	callt	[40h]
+	callt	[!40h]
 	callt	[7eh]
+	callt	[!7eh]
 	brk
 	brkcs	rb6
 	ret
 	reti
 	retb
 	retcs	addr16
+	retcs	!addr16
 	retcsb	addr16
 
 	bnz	PC+1

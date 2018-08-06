@@ -76,7 +76,7 @@ code48.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h nls.h st
 
 code51.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h asmsub.h asmerr.h asmpars.h asmallg.h asmrelocs.h codepseudo.h intpseudo.h asmitree.h codevars.h intconsts.h errmsg.h code51.h
 
-code53c8xx.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h asmsub.h asmerr.h asmpars.h asmitree.h headids.h strutil.h codevars.h intconsts.h errmsg.h code53c8xx.h
+code53c8xx.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h asmsub.h asmerr.h asmpars.h asmitree.h headids.h strutil.h codevars.h intconsts.h intpseudo.h errmsg.h code53c8xx.h
 
 code56k.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h chunks.h errmsg.h cpulist.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h codevars.h intconsts.h code56k.h
 

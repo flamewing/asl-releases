@@ -802,7 +802,7 @@ static void DecodeINOUT(Word Index)
           BAsmCode[CodeLen++] = 0xec | OpSize | Index;
         else
         {
-          BAsmCode[CodeLen + 1] = EvalIntExpression(ArgStr[2], UInt8, &OK);
+          BAsmCode[CodeLen + 1] = EvalIntExpression(pPortArg, UInt8, &OK);
           if (OK)
           {
             ChkSpace(SegIO);

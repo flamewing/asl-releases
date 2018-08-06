@@ -1005,6 +1005,7 @@ static void DeinitFields(void)
   free(APAXOrders);
   free(FixedOrders);
   free(RelOrders);
+  free(CtrlOrders);
   free(DSPOrders);
   free(ONOFFOrders);
   free(ImmOrders);

@@ -278,6 +278,7 @@ StringPtr PrtTitleString;               /* Titelzeile */
 
 LongInt MomSectionHandle;               /* mom. Namensraum */
 PSaveSection SectionStack;              /* gespeicherte Sektionshandles */
+tSavePhase *pPhaseStacks[PCMax];	/* saves nested PHASE values */
 
 LongWord MaxCodeLen = 0;                /* max. length of generated code */
 LongInt CodeLen;                        /* Laenge des erzeugten Befehls */

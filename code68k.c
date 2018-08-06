@@ -563,7 +563,7 @@ static Boolean ClassComp(AdrComp *C)
   }
 
   C->Art = Disp;
-  if (C->Name[strlen(C->Name) - 2] == '.')
+  if ((strlen(C->Name) >= 2) && (C->Name[strlen(C->Name) - 2] == '.'))
   {
     switch (mytoupper(C->Name[strlen(C->Name) - 1]))
     {
@@ -4198,7 +4198,7 @@ static Boolean DecodeFC(char *Asc, Word *erg)
 
   if ((strlen(Asc) == 2) && (*Asc == 'D') && ValReg(Asc[1]))
   {
-    *erg = Asc[2] - '0' + 8;
+    *erg = Asc[1] - '0' + 8;
     return True;
   }
 

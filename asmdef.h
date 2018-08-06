@@ -120,9 +120,9 @@ typedef enum {TempNone = 0, TempInt = 1, TempFloat = 2, TempString = 4, TempAll 
 
 typedef struct _RelocEntry
 {
- struct _RelocEntry *Next;
- char *Ref;
- Byte Add;
+  struct _RelocEntry *Next;
+  char *Ref;
+  Byte Add;
 } TRelocEntry, *PRelocEntry;
 
 typedef Word tSymbolFlags;
@@ -134,14 +134,14 @@ enum
 
 typedef struct
 {
- TempType Typ;
- LongWord Flags;
- PRelocEntry Relocs;
- union
+  TempType Typ;
+  LongWord Flags;
+  PRelocEntry Relocs;
+  union
   {
-   LargeInt Int;
-   Double Float;
-   tDynString Ascii;
+    LargeInt Int;
+    Double Float;
+    tDynString Ascii;
   } Contents;
 } TempResult;
 
@@ -162,33 +162,42 @@ typedef struct
 } SymbolVal;
 
 typedef struct _TCrossRef
-         {
-          struct _TCrossRef *Next;
-          Byte FileNum;
-          LongInt LineNum;
-          Integer OccNum;
-         } TCrossRef,*PCrossRef;
+{
+  struct _TCrossRef *Next;
+  Byte FileNum;
+  LongInt LineNum;
+  Integer OccNum;
+} TCrossRef,*PCrossRef;
 
 
 typedef struct _TPatchEntry
-        {
-          struct _TPatchEntry *Next;
-          LargeWord Address;
-          char *Ref;
-          Word len;
-          LongWord RelocType;
-        } TPatchEntry, *PPatchEntry;
+{
+  struct _TPatchEntry *Next;
+  LargeWord Address;
+  char *Ref;
+  Word len;
+  LongWord RelocType;
+} TPatchEntry, *PPatchEntry;
 
 typedef struct _TExportEntry
-        {
-          struct _TExportEntry *Next;
-          char *Name;
-          Word len;
-          LongWord Flags;
-          LargeWord Value;
-        } TExportEntry, *PExportEntry;
+{
+  struct _TExportEntry *Next;
+  char *Name;
+  Word len;
+  LongWord Flags;
+  LargeWord Value;
+} TExportEntry, *PExportEntry;
 
-typedef enum {DebugNone,DebugMAP,DebugAOUT,DebugCOFF,DebugELF,DebugAtmel,DebugNoICE} DebugType;
+typedef enum
+{
+  DebugNone,
+  DebugMAP,
+  DebugAOUT,
+  DebugCOFF,
+  DebugELF,
+  DebugAtmel,
+  DebugNoICE
+} DebugType;
 
 #define Char_NUL 0
 #define Char_BEL '\a'
@@ -295,7 +304,7 @@ typedef struct _TFunction
 {
   struct _TFunction *Next;
   Byte ArguCnt;
-  StringPtr Name,Definition;
+  StringPtr Name, Definition;
 } TFunction, *PFunction;
 
 typedef struct _TTransTable
@@ -324,21 +333,27 @@ typedef struct _TForwardSymbol
   StringPtr Name;
   LongInt DestSection;
   StringPtr pErrorPos;
-} TForwardSymbol,*PForwardSymbol;
+} TForwardSymbol, *PForwardSymbol;
 
 typedef struct _TSaveSection
 {
   struct _TSaveSection *Next;
-  PForwardSymbol LocSyms,GlobSyms,ExportSyms;
+  PForwardSymbol LocSyms, GlobSyms, ExportSyms;
   LongInt Handle;
-} TSaveSection,*PSaveSection;
+} TSaveSection, *PSaveSection;
+
+typedef struct sSavePhase
+{
+  struct sSavePhase *pNext;
+  LargeWord SaveValue;
+} tSavePhase;
 
 typedef struct _TDefinement
 {
   struct _TDefinement *Next;
-  StringPtr TransFrom,TransTo;
+  StringPtr TransFrom, TransTo;
   Byte Compiled[256];
-} TDefinement,*PDefinement;
+} TDefinement, *PDefinement;
 
 typedef struct _ASSUMERec
 {
@@ -401,6 +416,7 @@ extern LongInt EnumIncrement, EnumCurrentValue;
 
 extern LongInt MomSectionHandle;
 extern PSaveSection SectionStack;
+extern tSavePhase *pPhaseStacks[PCMax];
 
 extern LongInt CodeLen;
 extern Byte *BAsmCode;

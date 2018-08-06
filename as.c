@@ -3258,6 +3258,8 @@ static void AssembleFile_InitPass(void)
   FirstSaveState = NULL;
   StructStack =
   pInnermostNamedStruct = NULL;
+  for (z = 0; z < PCMax; z++)
+    pPhaseStacks[z] = NULL;
 
   InitPass();
 
@@ -3364,9 +3366,19 @@ static void AssembleFile_InitPass(void)
 
 static void AssembleFile_ExitPass(void)
 {
+  tSavePhase *pSavePhase;
+  int z;
+
   SwitchFrom();
   ClearLocStack();
   ClearStacks();
+  for (z = 0; z < PCMax; z++)
+    while (pPhaseStacks[z])
+    {
+      pSavePhase = pPhaseStacks[z];
+      pPhaseStacks[z] = pSavePhase->pNext;
+      free(pSavePhase);
+    }
   TossRegDefs(-1);
   if (FirstIfSave)
     WrError(1470);

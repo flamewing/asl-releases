@@ -753,7 +753,15 @@ static void CodePHASE(Word Index)
   {
     HVal = EvalIntExpression(ArgStr[1], Int32, &OK);
     if (OK)
+    {
+      tSavePhase *pSavePhase;
+
+      pSavePhase = (tSavePhase*)calloc(1, sizeof (*pSavePhase));
+      pSavePhase->SaveValue = Phases[ActPC]; 
+      pSavePhase->pNext = pPhaseStacks[ActPC];
+      pPhaseStacks[ActPC] = pSavePhase;
       Phases[ActPC] = HVal - ProgCounter();
+    }
   }
 }
 
@@ -764,6 +772,15 @@ static void CodeDEPHASE(Word Index)
 
   if (!ChkArgCnt(0, 0));
   else if (ActPC == StructSeg) WrError(1553);
+  else if (pPhaseStacks[ActPC])
+  {
+    tSavePhase *pSavePhase;
+
+    pSavePhase = pPhaseStacks[ActPC];
+    pPhaseStacks[ActPC] = pSavePhase->pNext;
+    Phases[ActPC] = pSavePhase->SaveValue;
+    free(pSavePhase);
+  }
   else
     Phases[ActPC] = 0;
 }

@@ -27,6 +27,7 @@
 #include "strutil.h"
 #include "codevars.h"
 #include "intconsts.h"
+#include "intpseudo.h"
 #include "errmsg.h"
 
 #include "code53c8xx.h"
@@ -92,7 +93,7 @@ static void GetToken(char *Src, char *Dest)
       p[1] = '\0';
       strcpy(Dest, start);
       p[1] = Save;
-      strcpy(Src, p + 1);
+      strmov(Src, p + 1);
     }
   }
 
@@ -102,7 +103,7 @@ static void GetToken(char *Src, char *Dest)
   {
     *Dest = *p;
     Dest[1] = '\0';
-    strcpy(Src, p + 1);
+    strmov(Src, p + 1);
   }
 
   /* Wort ? */
@@ -116,7 +117,7 @@ static void GetToken(char *Src, char *Dest)
     *p = '\0';
     strcpy(Dest, start); 
     *p = Save;
-    strcpy(Src, p);
+    strmov(Src, p);
   }
 }
 
@@ -172,10 +173,13 @@ static Boolean DecodePhase(char *Name, LongWord *Result)
   *Result = 8;
   if (!strcasecmp(Name, "DATA_OUT")) *Result = 0;
   else if (!strcasecmp(Name, "DATA_IN")) *Result = 1;
+  else if (!strcasecmp(Name, "CMD")) *Result = 2;
   else if (!strcasecmp(Name, "COMMAND")) *Result = 2;
   else if (!strcasecmp(Name, "STATUS")) *Result = 3;
   else if (!strcasecmp(Name, "RES4")) *Result = 4;
   else if (!strcasecmp(Name, "RES5")) *Result = 5;
+  else if (!strcasecmp(Name, "MSG_OUT")) *Result = 6;
+  else if (!strcasecmp(Name, "MSG_IN")) *Result = 7;
   else if (!strcasecmp(Name, "MESSAGE_OUT")) *Result = 6;
   else if (!strcasecmp(Name, "MESSAGE_IN")) *Result = 7;
   return (*Result < 8);
@@ -528,10 +532,12 @@ static void DecodeRegTrans(Word Index)
       Cnt = 1;
     if ((OK) && (ChkRange(Cnt, 1, 4)))
     {
+      int l = strlen(ArgStr[3]);
       DAsmCode[0] = 0xe0000000 + (((LongInt) Index) << 24) + (Reg << 16) + Cnt;
       if ((!strncasecmp(ArgStr[3], "DSAREL(", 7))
-       && (ArgStr[3][strlen(ArgStr[3]) - 1] == ')'))
+       && (ArgStr[3][l - 1] == ')'))
       {
+        ArgStr[3][--l] = '\0';
         DAsmCode[0] |= 0x10000000;
         DAsmCode[1] = EvalIntExpression(ArgStr[3] + 6, SInt24, &OK) & 0xffffff;
       }
@@ -679,11 +685,14 @@ static void DecodeMOVE(Word Index)
       if (strcasecmp(Parts[3], "TO")) WrError(1350);
       else
       {
-        if (!strcasecmp(Parts[1], "XOR"))
+        if ((!strcasecmp(Parts[1], "XOR"))
+         || (!strcasecmp(Parts[1], "^")))
           AriOp = 3;
-        else if (!strcasecmp(Parts[1], "OR"))
+        else if ((!strcasecmp(Parts[1], "OR"))
+              || (!strcasecmp(Parts[1], "|")))
           AriOp = 2;
-        else if (!strcasecmp(Parts[1], "AND"))
+        else if ((!strcasecmp(Parts[1], "AND"))
+              || (!strcasecmp(Parts[1], "&")))
           AriOp = 4;
         else if (!strcmp(Parts[1], "+"))
           AriOp = 6;
@@ -1096,6 +1105,9 @@ static void MakeCode_53c8xx(void)
 
   if (Memo(""))
     return; 
+
+  if (DecodeIntelPseudo(False))
+    return;
 
   if (!LookupInstTable(InstTable, OpPart.Str))
     WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);

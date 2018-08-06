@@ -431,6 +431,9 @@ static void Locale_DateString(Word Year, Word Month, Word Day, char *Dest)
   tm.tm_year = Year - 1900;
   tm.tm_mon = Month - 1;
   tm.tm_mday = Day;
+  tm.tm_hour = 0;
+  tm.tm_min = 0;
+  tm.tm_sec = 0;
   strftime(Dest, 255, NLSInfo.DateFmtStr, &tm);
 }
 
@@ -439,6 +442,9 @@ static void Locale_TimeString(Word Hour, Word Minute, Word Second, Word Sec100, 
   struct tm tm;
 
   (void)Sec100;
+  tm.tm_year = 0;
+  tm.tm_mon = 0;
+  tm.tm_mday = 1;
   tm.tm_hour = Hour;
   tm.tm_min = Minute;
   tm.tm_sec = Second;

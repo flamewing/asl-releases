@@ -3006,7 +3006,7 @@ static void DecodeCALLF(Word Code)
     if (*pAsc == '!')
       pAsc++;
     FirstPassUnknown = False;
-    Addr = EvalIntExpression(ArgStr[1], UInt12, &OK);
+    Addr = EvalIntExpression(pAsc, UInt12, &OK);
     if (FirstPassUnknown)
       Addr |= 0x800;
     if (OK && ChkRange(Addr, 0x800, 0xfff))
@@ -3032,7 +3032,7 @@ static void DecodeCALLT(Word Code)
     if (*pAsc == '!')
       pAsc++;
     FirstPassUnknown = False;
-    Addr = EvalIntExpression(ArgStr[1], UInt7, &OK);
+    Addr = EvalIntExpression(pAsc, UInt7, &OK);
     if (FirstPassUnknown)
       Addr = (Addr | 0x40) & 0xfe;
     if (OK && (Addr & 1)) WrError(1325);
@@ -3067,7 +3067,7 @@ static void DecodeRETCS(Word Code)
 
     if (*pAsc == '!')
       pAsc++;
-    Addr = EvalIntExpression(ArgStr[1], UInt16, &OK);
+    Addr = EvalIntExpression(pAsc, UInt16, &OK);
     if (OK)
     {
       PutCode(Code);
