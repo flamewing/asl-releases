@@ -252,113 +252,60 @@ void WriteCopyrights(TSwitchProc NxtProc)
 /* ermittelt das erste/letzte Auftauchen eines Zeichens ausserhalb */
 /* "geschuetzten" Bereichen */
 
-#if 0
-char *QuotPos(const char *s, char Zeichen)
-{
-  register int Cnt = 0;
-  register char *i;
-  register char ch, Cmp2, Cmp3;
-
-  for (i = s; (ch = *i) != '\0'; i++)
-   if (Cnt == 0)
-   {
-     if (ch == Zeichen)
-       return i;
-     else
-       switch (ch)
-       {
-         case '"':
-         case '\'':
-           Cmp2 = '\0';
-           Cmp3 = ch;
-           Cnt = 1;
-           break;
-         case '(':
-           Cmp2 = '(';
-           Cmp3 = ')';
-           Cnt = 1;
-           break;
-         case '[':
-           Cmp2 = '[';
-           Cmp3 = ']';
-           Cnt = 1;
-           break;
-       }
-   }
-   else
-   {
-     if (ch == Cmp2)
-       Cnt++;
-     else if (ch == Cmp3)
-       Cnt--;
-   }
-
-  return NULL;
-}
-#else
-char *QuotPos(const char *s, char Zeichen)
+char *QuotMultPos(const char *s, const char *pSearch)
 {
   register ShortInt Brack = 0, AngBrack = 0;
   register const char *i;
   Boolean InSglQuot = False, InDblQuot = False;
-  static Boolean First = True, Imp[256];
-  Boolean Save;
-  char *pResult = NULL;
 
-  if (First)
+  for (i = s; *i; i++)
   {
-    memset(Imp, False, 256);
-    Imp['"'] = Imp['\''] = Imp['('] = Imp[')'] = Imp['['] = Imp[']'] = True;
-    First = False;
+    if (strchr(pSearch, *i))
+    {
+      if (!AngBrack && !Brack && !InSglQuot && !InDblQuot)
+        return (char*)i;
+    }
+    switch (*i)
+    {
+      case '"':
+        if (!InSglQuot)
+          InDblQuot = !InDblQuot;
+        break;
+      case '\'':
+        if (!InDblQuot)
+          InSglQuot = !InSglQuot;
+        break;
+      case '(':
+        if (!AngBrack && !InDblQuot && !InSglQuot)
+          Brack++;
+        break;
+      case ')':
+        if (!AngBrack && !InDblQuot && !InSglQuot)
+          Brack--;
+        break;
+      case '[':
+        if (!Brack && !InDblQuot && !InSglQuot)
+          AngBrack++;
+        break;
+      case ']':
+        if (!Brack && !InDblQuot && !InSglQuot)
+          AngBrack--;
+        break;
+    }
   }
 
-  Save = Imp[(unsigned char)Zeichen];
-  Imp[(unsigned char)Zeichen] = True;
-  for (i = s; *i != '\0'; i++)
-   if (Imp[(unsigned char)*i])
-   {
-     if (*i == Zeichen)
-     {
-       if (!AngBrack && !Brack && !InSglQuot && !InDblQuot)
-       {
-         pResult = (char*)i;
-         goto func_exit;
-       }
-     }
-     switch(*i)
-     {
-       case '"':
-         if (!InSglQuot)
-           InDblQuot = !InDblQuot;
-         break;
-       case '\'':
-         if (!InDblQuot)
-           InSglQuot = !InSglQuot;
-         break;
-       case '(':
-         if (!AngBrack && !InDblQuot && !InSglQuot)
-           Brack++;
-         break;
-       case ')':
-         if (!AngBrack && !InDblQuot && !InSglQuot)
-           Brack--;
-         break;
-       case '[':
-         if (!Brack && !InDblQuot && !InSglQuot)
-           AngBrack++;
-         break;
-       case ']':
-         if (!Brack && !InDblQuot && !InSglQuot)
-           AngBrack--;
-         break;
-     }
-   }
-
-func_exit:
-  Imp[(unsigned char)Zeichen] = Save;
-  return pResult;
+  return NULL;
 }
-#endif
+
+char *QuotPos(const char *s, char Zeichen)
+{
+  char Tmp[2];
+
+  Tmp[0] = Zeichen;
+  Tmp[1] = '\0';
+  return QuotMultPos(s, Tmp);
+}
+
 char *RQuotPos(char *s, char Zeichen)
 {
   ShortInt Brack = 0, AngBrack = 0;
@@ -438,24 +385,6 @@ void SplitString(char *Source, char *Left, char *Right, char *Trenner)
     *Right = '\0';
   else
     strmov(Right, Trenner + 1);
-}
-
-void KillPrefBlanksPos(char *pStr, struct sLineComp *pPos)
-{
-  int OldLen = strlen(pStr), NewLen;
-
-  KillPrefBlanks(pStr);
-  NewLen = strlen(pStr);
-  pPos->StartCol += OldLen - NewLen;
-  pPos->Len -= OldLen - NewLen;
-}
-
-void KillPostBlanksPos(char *pStr, struct sLineComp *pPos)
-{
-  int OldLen = strlen(pStr);
-
-  KillPostBlanks(pStr);
-  pPos->Len -= OldLen - strlen(pStr);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1267,122 +1196,196 @@ void WrXErrorPos(Word Num, const char *pExtendError, const struct sLineComp *pLi
 
   switch (Num)
   {
-    case    0: msgno = Num_ErrMsgUselessDisp; break;
-    case   10: msgno = Num_ErrMsgShortAddrPossible; break;
-    case   20: msgno = Num_ErrMsgShortJumpPossible; break;
-    case   30: msgno = Num_ErrMsgNoShareFile; break;
-    case   40: msgno = Num_ErrMsgBigDecFloat; break;
-    case   50: msgno = Num_ErrMsgPrivOrder; break;
-    case   60: msgno = Num_ErrMsgDistNull; break;
-    case   70: msgno = Num_ErrMsgWrongSegment; break;
-    case   75: msgno = Num_ErrMsgInAccSegment; break;
-    case   80: msgno = Num_ErrMsgPhaseErr; break;
-    case   90: msgno = Num_ErrMsgOverlap; break;
-    case  100: msgno = Num_ErrMsgNoCaseHit; break;
-    case  110: msgno = Num_ErrMsgInAccPage; break;
-    case  120: msgno = Num_ErrMsgRMustBeEven; break;
-    case  130: msgno = Num_ErrMsgObsolete; break;
-    case  140: msgno = Num_ErrMsgUnpredictable; break;
-    case  150: msgno = Num_ErrMsgAlphaNoSense; break;
-    case  160: msgno = Num_ErrMsgSenseless; break;
+    case ErrNum_UselessDisp:
+      msgno = Num_ErrMsgUselessDisp; break;
+    case ErrNum_ShortAddrPossible:
+      msgno = Num_ErrMsgShortAddrPossible; break;
+    case ErrNum_ShortJumpPossible:
+      msgno = Num_ErrMsgShortJumpPossible; break;
+    case ErrNum_NoShareFile:
+      msgno = Num_ErrMsgNoShareFile; break;
+    case ErrNum_BigDecFloat:
+      msgno = Num_ErrMsgBigDecFloat; break;
+    case ErrNum_PrivOrder:
+      msgno = Num_ErrMsgPrivOrder; break;
+    case ErrNum_DistNull:
+      msgno = Num_ErrMsgDistNull; break;
+    case ErrNum_WrongSegment:
+      msgno = Num_ErrMsgWrongSegment; break;
+    case ErrNum_InAccSegment:
+      msgno = Num_ErrMsgInAccSegment; break;
+    case ErrNum_PhaseErr:
+      msgno = Num_ErrMsgPhaseErr; break;
+    case ErrNum_Overlap:
+      msgno = Num_ErrMsgOverlap; break;
+    case ErrNum_NoCaseHit:
+      msgno = Num_ErrMsgNoCaseHit; break;
+    case ErrNum_InAccPage:
+      msgno = Num_ErrMsgInAccPage; break;
+    case ErrNum_RMustBeEven:
+      msgno = Num_ErrMsgRMustBeEven; break;
+    case ErrNum_Obsolete:
+      msgno = Num_ErrMsgObsolete; break;
+    case ErrNum_Unpredictable:
+      msgno = Num_ErrMsgUnpredictable; break;
+    case ErrNum_AlphaNoSense:
+      msgno = Num_ErrMsgAlphaNoSense; break;
+    case ErrNum_Senseless:
+      msgno = Num_ErrMsgSenseless; break;
     case ErrNum_RepassUnknown:
       msgno = Num_ErrMsgRepassUnknown; break;
-    case  180: msgno = Num_ErrMsgAddrNotAligned; break;
-    case  190: msgno = Num_ErrMsgIOAddrNotAllowed; break;
-    case  200: msgno = Num_ErrMsgPipeline; break;
-    case  210: msgno = Num_ErrMsgDoubleAdrRegUse; break;
-    case  220: msgno = Num_ErrMsgNotBitAddressable; break;
-    case  230: msgno = Num_ErrMsgStackNotEmpty; break;
-    case  240: msgno = Num_ErrMsgNULCharacter; break;
-    case  250: msgno = Num_ErrMsgPageCrossing; break;
-    case  260: msgno = Num_ErrMsgWOverRange; break;
-    case  270: msgno = Num_ErrMsgNegDUP; break;
-    case  280: msgno = Num_ErrMsgConvIndX; break;
-    case  290: msgno = Num_ErrMsgNullResMem; break;
-    case  300: msgno = Num_ErrMsgBitNumberTruncated; break;
-    case  310: msgno = Num_ErrMsgInvRegisterPointer; break;
-    case  320: msgno = Num_ErrMsgMacArgRedef; break;
+    case  ErrNum_AddrNotAligned:
+      msgno = Num_ErrMsgAddrNotAligned; break;
+    case ErrNum_IOAddrNotAllowed:
+      msgno = Num_ErrMsgIOAddrNotAllowed; break;
+    case ErrNum_Pipeline:
+      msgno = Num_ErrMsgPipeline; break;
+    case ErrNum_DoubleAdrRegUse:
+      msgno = Num_ErrMsgDoubleAdrRegUse; break;
+    case ErrNum_NotBitAddressable:
+      msgno = Num_ErrMsgNotBitAddressable; break;
+    case ErrNum_StackNotEmpty:
+      msgno = Num_ErrMsgStackNotEmpty; break;
+    case ErrNum_NULCharacter:
+      msgno = Num_ErrMsgNULCharacter; break;
+    case ErrNum_PageCrossing:
+      msgno = Num_ErrMsgPageCrossing; break;
+    case ErrNum_WOverRange:
+      msgno = Num_ErrMsgWOverRange; break;
+    case ErrNum_NegDUP:
+      msgno = Num_ErrMsgNegDUP; break;
+    case ErrNum_ConvIndX:
+      msgno = Num_ErrMsgConvIndX; break;
+    case ErrNum_NullResMem:
+      msgno = Num_ErrMsgNullResMem; break;
+    case ErrNum_BitNumberTruncated:
+      msgno = Num_ErrMsgBitNumberTruncated; break;
+    case ErrNum_InvRegisterPointer:
+      msgno = Num_ErrMsgInvRegisterPointer; break;
+    case ErrNum_MacArgRedef:
+      msgno = Num_ErrMsgMacArgRedef; break;
     case ErrNum_Deprecated:
       msgno = Num_ErrMsgDeprecated; break;
     case ErrNum_SrcLEThanDest:
       msgno = Num_ErrMsgSrcLEThanDest; break;
     case ErrNum_TrapValidInstruction:
       msgno = Num_ErrMsgTrapValidInstruction; break;
-    case 1000: msgno = Num_ErrMsgDoubleDef; break;
-    case 1010: msgno = Num_ErrMsgSymbolUndef; break;
+    case ErrNum_DoubleDef:
+      msgno = Num_ErrMsgDoubleDef; break;
+    case ErrNum_SymbolUndef:
+      msgno = Num_ErrMsgSymbolUndef; break;
     case ErrNum_InvSymName:
       msgno = Num_ErrMsgInvSymName; break;
-    case 1090: msgno = Num_ErrMsgInvFormat; break;
-    case 1100: msgno = Num_ErrMsgUseLessAttr; break;
-    case 1105: msgno = Num_ErrMsgTooLongAttr; break;
-    case 1107: msgno = Num_ErrMsgUndefAttr; break;
+    case ErrNum_InvFormat:
+      msgno = Num_ErrMsgInvFormat; break;
+    case ErrNum_UseLessAttr:
+      msgno = Num_ErrMsgUseLessAttr; break;
+    case ErrNum_TooLongAttr:
+      msgno = Num_ErrMsgTooLongAttr; break;
+    case ErrNum_UndefAttr:
+      msgno = Num_ErrMsgUndefAttr; break;
     case ErrNum_WrongArgCnt:
       msgno = Num_ErrMsgWrongArgCnt; break;
     case ErrNum_CannotSplitArg:
       msgno = Num_ErrMsgCannotSplitArg; break;
-    case 1115: msgno = Num_ErrMsgWrongOptCnt; break;
-    case 1120: msgno = Num_ErrMsgOnlyImmAddr; break;
-    case 1130: msgno = Num_ErrMsgInvOpsize; break;
-    case 1131: msgno = Num_ErrMsgConfOpSizes; break;
-    case 1132: msgno = Num_ErrMsgUndefOpSizes; break;
+    case ErrNum_WrongOptCnt:
+      msgno = Num_ErrMsgWrongOptCnt; break;
+    case ErrNum_OnlyImmAddr:
+      msgno = Num_ErrMsgOnlyImmAddr; break;
+    case ErrNum_InvOpsize:
+      msgno = Num_ErrMsgInvOpsize; break;
+    case ErrNum_ConfOpSizes:
+      msgno = Num_ErrMsgConfOpSizes; break;
+    case ErrNum_UndefOpSizes:
+      msgno = Num_ErrMsgUndefOpSizes; break;
     case ErrNum_InvOpType:
       msgno = Num_ErrMsgInvOpType; break;
-    case 1140: msgno = Num_ErrMsgTooMuchArgs; break;
-    case 1150: msgno = Num_ErrMsgNoRelocs; break;
-    case 1155: msgno = Num_ErrMsgUnresRelocs; break;
+    case ErrNum_TooMuchArgs:
+      msgno = Num_ErrMsgTooMuchArgs; break;
+    case ErrNum_NoRelocs:
+      msgno = Num_ErrMsgNoRelocs; break;
+    case ErrNum_UnresRelocs:
+      msgno = Num_ErrMsgUnresRelocs; break;
     case ErrNum_Unexportable:
       msgno = Num_ErrMsgUnexportable; break;
     case ErrNum_UnknownOpcode:
       msgno = Num_ErrMsgUnknownOpcode; break;
-    case 1300: msgno = Num_ErrMsgBrackErr; break;
-    case 1310: msgno = Num_ErrMsgDivByZero; break;
-    case 1315: msgno = Num_ErrMsgUnderRange; break;
+    case ErrNum_BrackErr:
+      msgno = Num_ErrMsgBrackErr; break;
+    case ErrNum_DivByZero:
+      msgno = Num_ErrMsgDivByZero; break;
+    case ErrNum_UnderRange:
+      msgno = Num_ErrMsgUnderRange; break;
     case ErrNum_OverRange:
       msgno = Num_ErrMsgOverRange; break;
-    case 1325: msgno = Num_ErrMsgNotAligned; break;
-    case 1330: msgno = Num_ErrMsgDistTooBig; break;
-    case 1335: msgno = Num_ErrMsgInAccReg; break;
-    case 1340: msgno = Num_ErrMsgNoShortAddr; break;
+    case ErrNum_NotAligned:
+      msgno = Num_ErrMsgNotAligned; break;
+    case ErrNum_DistTooBig:
+      msgno = Num_ErrMsgDistTooBig; break;
+    case ErrNum_InAccReg:
+      msgno = Num_ErrMsgInAccReg; break;
+    case ErrNum_NoShortAddr:
+      msgno = Num_ErrMsgNoShortAddr; break;
     case ErrNum_InvAddrMode:
       msgno = Num_ErrMsgInvAddrMode; break;
-    case 1351: msgno = Num_ErrMsgMustBeEven; break;
-    case 1355: msgno = Num_ErrMsgInvParAddrMode; break;
+    case ErrNum_MustBeEven:
+      msgno = Num_ErrMsgMustBeEven; break;
+    case ErrNum_InvParAddrMode:
+      msgno = Num_ErrMsgInvParAddrMode; break;
     case ErrNum_UndefCond:
       msgno = Num_ErrMsgUndefCond; break;
     case ErrNum_IncompCond:
       msgno = Num_ErrMsgIncompCond; break;
-    case 1370: msgno = Num_ErrMsgJmpDistTooBig; break;
-    case 1375: msgno = Num_ErrMsgDistIsOdd; break;
+    case ErrNum_JmpDistTooBig:
+      msgno = Num_ErrMsgJmpDistTooBig; break;
+    case ErrNum_DistIsOdd:
+      msgno = Num_ErrMsgDistIsOdd; break;
     case ErrNum_InvShiftArg:
       msgno = Num_ErrMsgInvShiftArg; break;
     case ErrNum_Range18:
       msgno = Num_ErrMsgRange18; break;
-    case 1400: msgno = Num_ErrMsgShiftCntTooBig; break;
+    case ErrNum_ShiftCntTooBig:
+      msgno = Num_ErrMsgShiftCntTooBig; break;
     case ErrNum_InvRegList:
       msgno = Num_ErrMsgInvRegList; break;
-    case 1420: msgno = Num_ErrMsgInvCmpMode; break;
-    case 1430: msgno = Num_ErrMsgInvCPUType; break;
+    case ErrNum_InvCmpMode:
+      msgno = Num_ErrMsgInvCmpMode; break;
+    case ErrNum_InvCPUType:
+      msgno = Num_ErrMsgInvCPUType; break;
     case ErrNum_InvCtrlReg:
       msgno = Num_ErrMsgInvCtrlReg; break;
     case ErrNum_InvReg:
       msgno = Num_ErrMsgInvReg; break;
     case ErrNum_DoubleReg:
       msgno = Num_ErrMsgDoubleReg; break;
-    case 1450: msgno = Num_ErrMsgNoSaveFrame; break;
-    case 1460: msgno = Num_ErrMsgNoRestoreFrame; break;
-    case 1465: msgno = Num_ErrMsgUnknownMacArg; break;
-    case 1470: msgno = Num_ErrMsgMissEndif; break;
-    case 1480: msgno = Num_ErrMsgInvIfConst; break;
-    case 1483: msgno = Num_ErrMsgDoubleSection; break;
-    case 1484: msgno = Num_ErrMsgInvSection; break;
-    case 1485: msgno = Num_ErrMsgMissingEndSect; break;
-    case 1486: msgno = Num_ErrMsgWrongEndSect; break;
-    case 1487: msgno = Num_ErrMsgNotInSection; break;
-    case 1488: msgno = Num_ErrMsgUndefdForward; break;
+    case ErrNum_NoSaveFrame:
+      msgno = Num_ErrMsgNoSaveFrame; break;
+    case ErrNum_NoRestoreFrame:
+      msgno = Num_ErrMsgNoRestoreFrame; break;
+    case ErrNum_UnknownMacArg:
+      msgno = Num_ErrMsgUnknownMacArg; break;
+    case ErrNum_MissEndif:
+      msgno = Num_ErrMsgMissEndif; break;
+    case ErrNum_InvIfConst:
+      msgno = Num_ErrMsgInvIfConst; break;
+    case ErrNum_DoubleSection:
+      msgno = Num_ErrMsgDoubleSection; break;
+    case ErrNum_InvSection:
+      msgno = Num_ErrMsgInvSection; break;
+    case ErrNum_MissingEndSect:
+      msgno = Num_ErrMsgMissingEndSect; break;
+    case ErrNum_WrongEndSect:
+      msgno = Num_ErrMsgWrongEndSect; break;
+    case ErrNum_NotInSection:
+      msgno = Num_ErrMsgNotInSection; break;
+    case ErrNum_UndefdForward:
+      msgno = Num_ErrMsgUndefdForward; break;
     case ErrNum_ContForward:
       msgno = Num_ErrMsgContForward; break;
-    case 1490: msgno = Num_ErrMsgInvFuncArgCnt; break;
-    case 1495: msgno = Num_ErrMsgMissingLTORG; break;
+    case ErrNum_InvFuncArgCnt:
+      msgno = Num_ErrMsgInvFuncArgCnt; break;
+    case ErrNum_MsgMissingLTORG:
+      msgno = Num_ErrMsgMissingLTORG; break;
     case ErrNum_InstructionNotSupported:
       msgno = -1;
       sprintf(h, getmessage(Num_ErrMsgInstructionNotOnThisCPUSupported), MomCPUIdent);
@@ -1395,102 +1398,178 @@ void WrXErrorPos(Word Num, const char *pExtendError, const struct sLineComp *pLi
       msgno = -1;
       sprintf(h, getmessage(Num_ErrMsgAddrModeNotOnThisCPUSupported), MomCPUIdent);
       break;
-    case 1510: msgno = Num_ErrMsgInvBitPos; break;
-    case 1520: msgno = Num_ErrMsgOnlyOnOff; break;
-    case 1530: msgno = Num_ErrMsgStackEmpty; break;
-    case 1540: msgno = Num_ErrMsgNotOneBit; break;
-    case 1550: msgno = Num_ErrMsgMissingStruct; break;
-    case 1551: msgno = Num_ErrMsgOpenStruct; break;
-    case 1552: msgno = Num_ErrMsgWrongStruct; break;
-    case 1553: msgno = Num_ErrMsgPhaseDisallowed; break;
+    case ErrNum_InvBitPos:
+      msgno = Num_ErrMsgInvBitPos; break;
+    case ErrNum_OnlyOnOff:
+      msgno = Num_ErrMsgOnlyOnOff; break;
+    case ErrNum_StackEmpty:
+      msgno = Num_ErrMsgStackEmpty; break;
+    case ErrNum_NotOneBit:
+      msgno = Num_ErrMsgNotOneBit; break;
+    case ErrNum_MissingStruct:
+      msgno = Num_ErrMsgMissingStruct; break;
+    case ErrNum_OpenStruct:
+      msgno = Num_ErrMsgOpenStruct; break;
+    case ErrNum_WrongStruct:
+      msgno = Num_ErrMsgWrongStruct; break;
+    case ErrNum_PhaseDisallowed:
+      msgno = Num_ErrMsgPhaseDisallowed; break;
     case ErrNum_InvStructDir:
       msgno = Num_ErrMsgInvStructDir; break;
     case ErrNum_DoubleStruct:
       msgno = Num_ErrMsgDoubleStruct; break;
     case ErrNum_UnresolvedStructRef:
       msgno = Num_ErrMsgUnresolvedStructRef; break;
-    case 1560: msgno = Num_ErrMsgNotRepeatable; break;
-    case 1600: msgno = Num_ErrMsgShortRead; break;
+    case ErrNum_NotRepeatable:
+      msgno = Num_ErrMsgNotRepeatable; break;
+    case ErrNum_ShortRead:
+      msgno = Num_ErrMsgShortRead; break;
     case ErrNum_UnknownCodepage:
       msgno = Num_ErrMsgUnknownCodepage; break;
-    case 1700: msgno = Num_ErrMsgRomOffs063; break;
-    case 1710: msgno = Num_ErrMsgInvFCode; break;
-    case 1720: msgno = Num_ErrMsgInvFMask; break;
-    case 1730: msgno = Num_ErrMsgInvMMUReg; break;
-    case 1740: msgno = Num_ErrMsgLevel07; break;
-    case 1750: msgno = Num_ErrMsgInvBitMask; break;
+    case ErrNum_RomOffs063:
+      msgno = Num_ErrMsgRomOffs063; break;
+    case ErrNum_InvFCode:
+      msgno = Num_ErrMsgInvFCode; break;
+    case ErrNum_InvFMask:
+      msgno = Num_ErrMsgInvFMask; break;
+    case ErrNum_InvMMUReg:
+      msgno = Num_ErrMsgInvMMUReg; break;
+    case ErrNum_Level07:
+      msgno = Num_ErrMsgLevel07; break;
+    case ErrNum_InvBitMask:
+      msgno = Num_ErrMsgInvBitMask; break;
     case ErrNum_InvRegPair:
       msgno = Num_ErrMsgInvRegPair; break;
-    case 1800: msgno = Num_ErrMsgOpenMacro; break;
-    case ErrNum_OpenIRP: msgno = Num_ErrMsgOpenIRP; break;
-    case ErrNum_OpenIRPC: msgno = Num_ErrMsgOpenIRPC; break;
-    case ErrNum_OpenREPT: msgno = Num_ErrMsgOpenREPT; break;
-    case ErrNum_OpenWHILE: msgno = Num_ErrMsgOpenWHILE; break;
-    case 1805: msgno = Num_ErrMsgEXITMOutsideMacro; break;
-    case 1810: msgno = Num_ErrMsgTooManyMacParams; break;
+    case ErrNum_OpenMacro:
+      msgno = Num_ErrMsgOpenMacro; break;
+    case ErrNum_OpenIRP:
+      msgno = Num_ErrMsgOpenIRP; break;
+    case ErrNum_OpenIRPC:
+      msgno = Num_ErrMsgOpenIRPC; break;
+    case ErrNum_OpenREPT:
+      msgno = Num_ErrMsgOpenREPT; break;
+    case ErrNum_OpenWHILE:
+      msgno = Num_ErrMsgOpenWHILE; break;
+    case ErrNum_EXITMOutsideMacro:
+      msgno = Num_ErrMsgEXITMOutsideMacro; break;
+    case ErrNum_TooManyMacParams:
+      msgno = Num_ErrMsgTooManyMacParams; break;
     case ErrNum_UndefKeyArg:
       msgno = Num_ErrMsgUndefKeyArg; break;
-    case 1812: msgno = Num_ErrMsgNoPosArg; break;
-    case 1815: msgno = Num_ErrMsgDoubleMacro; break;
-    case 1820: msgno = Num_ErrMsgFirstPassCalc; break;
-    case 1830: msgno = Num_ErrMsgTooManyNestedIfs; break;
-    case 1840: msgno = Num_ErrMsgMissingIf; break;
-    case 1850: msgno = Num_ErrMsgRekMacro; break;
-    case 1860: msgno = Num_ErrMsgUnknownFunc; break;
-    case 1870: msgno = Num_ErrMsgInvFuncArg; break;
-    case 1880: msgno = Num_ErrMsgFloatOverflow; break;
-    case 1890: msgno = Num_ErrMsgInvArgPair; break;
-    case 1900: msgno = Num_ErrMsgNotOnThisAddress; break;
-    case 1905: msgno = Num_ErrMsgNotFromThisAddress; break;
+    case ErrNum_NoPosArg:
+      msgno = Num_ErrMsgNoPosArg; break;
+    case ErrNum_DoubleMacro:
+      msgno = Num_ErrMsgDoubleMacro; break;
+    case ErrNum_FirstPassCalc:
+      msgno = Num_ErrMsgFirstPassCalc; break;
+    case ErrNum_TooManyNestedIfs:
+      msgno = Num_ErrMsgTooManyNestedIfs; break;
+    case ErrNum_MissingIf:
+      msgno = Num_ErrMsgMissingIf; break;
+    case ErrNum_RekMacro:
+      msgno = Num_ErrMsgRekMacro; break;
+    case ErrNum_UnknownFunc:
+      msgno = Num_ErrMsgUnknownFunc; break;
+    case ErrNum_InvFuncArg:
+      msgno = Num_ErrMsgInvFuncArg; break;
+    case ErrNum_FloatOverflow:
+      msgno = Num_ErrMsgFloatOverflow; break;
+    case ErrNum_InvArgPair:
+      msgno = Num_ErrMsgInvArgPair; break;
+    case ErrNum_NotOnThisAddress:
+      msgno = Num_ErrMsgNotOnThisAddress; break;
+    case ErrNum_NotFromThisAddress:
+      msgno = Num_ErrMsgNotFromThisAddress; break;
     case ErrNum_TargOnDiffPage:
       msgno = Num_ErrMsgTargOnDiffPage; break;
-    case 1920: msgno = Num_ErrMsgCodeOverflow; break;
-    case 1925: msgno = Num_ErrMsgAdrOverflow; break;
-    case 1930: msgno = Num_ErrMsgMixDBDS; break;
-    case 1940: msgno = Num_ErrMsgNotInStruct; break;
-    case 1950: msgno = Num_ErrMsgParNotPossible; break;
-    case 1960: msgno = Num_ErrMsgInvSegment; break;
+    case ErrNum_CodeOverflow:
+      msgno = Num_ErrMsgCodeOverflow; break;
+    case ErrNum_AdrOverflow:
+      msgno = Num_ErrMsgAdrOverflow; break;
+    case ErrNum_MixDBDS:
+      msgno = Num_ErrMsgMixDBDS; break;
+    case ErrNum_NotInStruct:
+      msgno = Num_ErrMsgNotInStruct; break;
+    case ErrNum_ParNotPossible:
+      msgno = Num_ErrMsgParNotPossible; break;
+    case ErrNum_InvSegment:
+      msgno = Num_ErrMsgInvSegment; break;
     case ErrNum_UnknownSegment:
       msgno = Num_ErrMsgUnknownSegment; break;
-    case 1962: msgno = Num_ErrMsgUnknownSegReg; break;
-    case 1970: msgno = Num_ErrMsgInvString; break;
+    case ErrNum_UnknownSegReg:
+      msgno = Num_ErrMsgUnknownSegReg; break;
+    case ErrNum_InvString:
+      msgno = Num_ErrMsgInvString; break;
     case ErrNum_InvRegName:
       msgno = Num_ErrMsgInvRegName; break;
-    case 1985: msgno = Num_ErrMsgInvArg; break;
-    case 1990: msgno = Num_ErrMsgNoIndir; break;
-    case 1995: msgno = Num_ErrMsgNotInThisSegment; break;
-    case 1996: msgno = Num_ErrMsgNotInMaxmode; break;
-    case 1997: msgno = Num_ErrMsgOnlyInMaxmode; break;
-    case 2000: msgno = Num_ErrMsgPackCrossBoundary; break;
-    case 2001: msgno = Num_ErrMsgUnitMultipleUsed; break;
-    case 2002: msgno = Num_ErrMsgMultipleLongRead; break;
-    case 2003: msgno = Num_ErrMsgMultipleLongWrite; break;
-    case 2004: msgno = Num_ErrMsgLongReadWithStore; break;
-    case 2005: msgno = Num_ErrMsgTooManyRegisterReads; break;
-    case 2006: msgno = Num_ErrMsgOverlapDests; break;
-    case 2008: msgno = Num_ErrMsgTooManyBranchesInExPacket; break;
-    case 2009: msgno = Num_ErrMsgCannotUseUnit; break;
-    case 2010: msgno = Num_ErrMsgInvEscSequence; break;
-    case 2020: msgno = Num_ErrMsgInvPrefixCombination; break;
-    case 2030: msgno = Num_ErrConstantRedefinedAsVariable; break;
-    case 2035: msgno = Num_ErrVariableRedefinedAsConstant; break;
-    case 2040: msgno = Num_ErrMsgStructNameMissing; break;
-    case 2050: msgno = Num_ErrMsgEmptyArgument; break;
-    case 2060: msgno = Num_ErrMsgUnimplemented; break;
-    case 2070: msgno = Num_ErrMsgFreestandingUnnamedStruct; break;
+    case ErrNum_InvArg:
+      msgno = Num_ErrMsgInvArg; break;
+    case ErrNum_NoIndir:
+      msgno = Num_ErrMsgNoIndir; break;
+    case ErrNum_NotInThisSegment:
+      msgno = Num_ErrMsgNotInThisSegment; break;
+    case ErrNum_NotInMaxmode:
+      msgno = Num_ErrMsgNotInMaxmode; break;
+    case ErrNum_OnlyInMaxmode:
+      msgno = Num_ErrMsgOnlyInMaxmode; break;
+    case ErrNum_PackCrossBoundary:
+      msgno = Num_ErrMsgPackCrossBoundary; break;
+    case ErrNum_UnitMultipleUsed:
+      msgno = Num_ErrMsgUnitMultipleUsed; break;
+    case ErrNum_MultipleLongRead:
+      msgno = Num_ErrMsgMultipleLongRead; break;
+    case ErrNum_MultipleLongWrite:
+      msgno = Num_ErrMsgMultipleLongWrite; break;
+    case ErrNum_LongReadWithStore:
+      msgno = Num_ErrMsgLongReadWithStore; break;
+    case ErrNum_TooManyRegisterReads:
+      msgno = Num_ErrMsgTooManyRegisterReads; break;
+    case ErrNum_OverlapDests:
+      msgno = Num_ErrMsgOverlapDests; break;
+    case ErrNum_TooManyBranchesInExPacket:
+      msgno = Num_ErrMsgTooManyBranchesInExPacket; break;
+    case ErrNum_CannotUseUnit:
+      msgno = Num_ErrMsgCannotUseUnit; break;
+    case ErrNum_InvEscSequence:
+      msgno = Num_ErrMsgInvEscSequence; break;
+    case ErrNum_InvPrefixCombination:
+      msgno = Num_ErrMsgInvPrefixCombination; break;
+    case ErrNum_ConstantRedefinedAsVariable:
+      msgno = Num_ErrMsgConstantRedefinedAsVariable; break;
+    case ErrNum_VariableRedefinedAsConstant:
+      msgno = Num_ErrMsgVariableRedefinedAsConstant; break;
+    case ErrNum_StructNameMissing:
+      msgno = Num_ErrMsgStructNameMissing; break;
+    case ErrNum_EmptyArgument:
+      msgno = Num_ErrMsgEmptyArgument; break;
+    case ErrNum_Unimplemented:
+      msgno = Num_ErrMsgUnimplemented; break;
+    case ErrNum_FreestandingUnnamedStruct:
+      msgno = Num_ErrMsgFreestandingUnnamedStruct; break;
     case ErrNum_STRUCTEndedByENDUNION:
       msgno = Num_ErrMsgSTRUCTEndedByENDUNION; break;
-    case 2090: msgno = Num_ErrMsgAddrOnDifferentPage; break;
-    case 2100: msgno = Num_ErrMsgUnknownMacExpMod; break;
-    case 2110: msgno = Num_ErrMsgConflictingMacExpMod; break;
+    case ErrNum_AddrOnDifferentPage:
+      msgno = Num_ErrMsgAddrOnDifferentPage; break;
+    case ErrNum_UnknownMacExpMod:
+      msgno = Num_ErrMsgUnknownMacExpMod; break;
+    case ErrNum_ConflictingMacExpMod:
+      msgno = Num_ErrMsgConflictingMacExpMod; break;
     case ErrNum_InvalidPrepDir:
       msgno = Num_ErrMsgInvalidPrepDir; break;
-    case 10001: msgno = Num_ErrMsgOpeningFile; break;
-    case 10002: msgno = Num_ErrMsgListWrError; break;
-    case 10003: msgno = Num_ErrMsgFileReadError; break;
-    case 10004: msgno = Num_ErrMsgFileWriteError; break;
-    case 10006: msgno = Num_ErrMsgHeapOvfl; break;
-    case 10007: msgno = Num_ErrMsgStackOvfl; break;
+    case ErrNum_InternalError:
+      msgno = Num_ErrMsgInternalError; break;
+    case ErrNum_OpeningFile:
+      msgno = Num_ErrMsgOpeningFile; break;
+    case ErrNum_ListWrError:
+      msgno = Num_ErrMsgListWrError; break;
+    case ErrNum_FileReadError:
+      msgno = Num_ErrMsgFileReadError; break;
+    case ErrNum_FileWriteError:
+      msgno = Num_ErrMsgFileWriteError; break;
+    case ErrNum_HeapOvfl:
+      msgno = Num_ErrMsgHeapOvfl; break;
+    case ErrNum_StackOvfl:
+      msgno = Num_ErrMsgStackOvfl; break;
     default  : msgno = -1;
                sprintf(h, "%s %d", getmessage(Num_ErrMsgIntError), (int) Num);
   }
@@ -1536,7 +1615,7 @@ void ChkIO(Word ErrNo)
   WrXError(ErrNo, GetErrorMsg(io));
 }
 
-void ChkXIO(Word ErrNo, const char *pPath)
+void ChkStrIO(Word ErrNo, const struct sStrComp *pComp)
 {
   int io;
   String s;
@@ -1545,10 +1624,10 @@ void ChkXIO(Word ErrNo, const char *pPath)
   if ((io == 0) || (io == 19) || (io == 25))
     return;
 
-  strmaxcpy(s, pPath, 255);
+  strmaxcpy(s, pComp->Str, 255);
   strmaxcat(s, ": ", 255);
   strmaxcat(s, GetErrorMsg(io), 255);
-  WrXError(ErrNo, s);
+  WrStrErrorPos(ErrNo, pComp);
 }
 
 /****************************************************************************/
@@ -1589,7 +1668,7 @@ void ChkSpace(Byte Space)
 {
   Byte Mask = 0xff - (1 << Space);
 
-  if ((TypeFlag&Mask) != 0) WrError(70);
+  if ((TypeFlag&Mask) != 0) WrError(ErrNum_WrongSegment);
 }
 
 /****************************************************************************/
@@ -1886,7 +1965,7 @@ void BookKeeping(void)
 {
   if (MakeUseList)
     if (AddChunk(SegChunks + ActPC, ProgCounter(), CodeLen, ActPC == SegCode))
-      WrError(90);
+      WrError(ErrNum_Overlap);
   if (DebugMode != DebugNone)
   {
     AddSectionUsage(ProgCounter(), CodeLen);
@@ -2057,7 +2136,7 @@ void ChkStack(void)
 {
   LongWord avail = stackavail();
   if (avail < MinStack)
-    WrError(10007);
+    WrError(ErrNum_StackOvfl);
   if (avail < LowStack)
     LowStack = avail;
 }
@@ -2083,12 +2162,12 @@ void *ckmalloc(size_t s)
 
 #ifdef __TURBOC__
   if (coreleft() < HEAPRESERVE + s)
-    WrError(10006);
+    WrError(ErrNum_HeapOvfl);
 #endif
 
   tmp = malloc(s);
   if (!tmp && (s > 0))
-    WrError(10006);
+    WrError(ErrNum_HeapOvfl);
   return tmp;
 }
 
@@ -2098,12 +2177,12 @@ void *ckrealloc(void *p, size_t s)
 
 #ifdef __TURBOC__
   if (coreleft() < HEAPRESERVE + s)
-    WrError(10006);
+    WrError(ErrNum_HeapOvfl);
 #endif
 
   tmp = realloc(p, s);
   if (!tmp)
-    WrError(10006);
+    WrError(ErrNum_HeapOvfl);
   return tmp;
 }
 #endif

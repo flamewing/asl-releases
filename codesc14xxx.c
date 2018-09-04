@@ -68,7 +68,7 @@ static void DecodeFixed(Word Index)
     else
     {
       FirstPassUnknown = False;
-      Value = EvalIntExpression(ArgStr[1], Int8, &OK);
+      Value = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
       if (FirstPassUnknown) Value = POp->MinArg;
       if (OK) OK = ChkRange(Value, POp->MinArg, POp->MaxArg);
     }
@@ -103,13 +103,13 @@ static void DecodeDS(Word Code)
   if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
-    cnt = EvalIntExpression(ArgStr[1], UInt16, &OK);
+    cnt = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
     if (OK)
     {
-      if (FirstPassUnknown) WrError(1820);
+      if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
       else
       {
-        if (!cnt) WrError(290);
+        if (!cnt) WrError(ErrNum_NullResMem);
         CodeLen = (cnt + 1) >> 1;
         DontPrint = True;
         BookKeeping();
@@ -128,13 +128,13 @@ static void DecodeDS16(Word Code)
   if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
-    cnt = EvalIntExpression(ArgStr[1], UInt16, &OK);
+    cnt = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
     if (OK)
     {
-      if (FirstPassUnknown) WrError(1820);
+      if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
       else
       {
-        if (!cnt) WrError(290);
+        if (!cnt) WrError(ErrNum_NullResMem);
         CodeLen = cnt;
         DontPrint = True;
         BookKeeping();
@@ -158,7 +158,7 @@ static void DecodeDC(Word Code)
     while ((OK) && (z <= ArgCnt))
     {
       FirstPassUnknown = False;
-      EvalExpression(ArgStr[z], &t);
+      EvalStrExpression(&ArgStr[z], &t);
       switch (t.Typ)
       {
         case TempInt:
@@ -172,7 +172,7 @@ static void DecodeDC(Word Code)
             PutByte(CharTransTable[((usint) *p) & 0xff]);
           break;
         case TempFloat:
-          WrError(1135);
+          WrError(ErrNum_InvOpType);
         default:
           OK = False;
       }
@@ -197,7 +197,7 @@ static void DecodeDW(Word Code)
     z = 1; OK = TRUE;
     while ((OK) && (z <= ArgCnt))
     {
-      WAsmCode[z - 1] = EvalIntExpression(ArgStr[z], Int16, &OK);
+      WAsmCode[z - 1] = EvalStrIntExpression(&ArgStr[z], Int16, &OK);
       z++;
     }
     if (OK)

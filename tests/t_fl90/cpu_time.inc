@@ -1,28 +1,28 @@
 ; CPU_TIME.INC
 ;******************************************************************************
-;* Zeitmessmodul fÅr TLCS 90                                                  *
+;* Zeitmessmodul fuer TLCS 90                                                 *
 ;*                                                                            *
-;* Originale fÅr den TLCS 900 von Oli(ver Sellke)                             *
+;* Originale fuer den TLCS 900 von Oli(ver Sellke)                            *
 ;* Implementierung TLCS 90 von Alfred Arnold, Dezember 1993                   *
 ;*                                                                            *
-;*  Routine     Funktion                Eingabe Ausgabe  Stack    LÑnge       *
+;*  Routine     Funktion                Eingabe Ausgabe  Stack    Laenge      *
 ;*                                                                            *
 ;* InitTimer    Timer initialisieren     ----    ----    0 Byte   6 Byte      *
 ;* StartTimer   Timer starten            ----    ----    0 Byte   7 Byte      *
 ;* StopTime     Timer stoppen & Ausgabe  ----    ----    6 Byte 117 Byte *)   *
 ;*                                                                            *
-;*      *) bei hoher Auflîsung                                                *
+;*      *) bei hoher Aufloesung                                               *
 ;*                                                                            *
 ;* - Die Routinen benutzen Timer 4, dieser darf nicht von der Anwendung       *
 ;*   benutzt werden!!                                                         *
-;* - Die Auflîsung kann Åber das Symbol BigTime umgeschaltet werden:          *
+;* - Die Aufloesung kann ueber das Symbol BigTime umgeschaltet werden:        *
 ;*                                                                            *
-;*       BigTime       Auflîsung    Maximalzeit                               *
+;*       BigTime       Aufloesung    Maximalzeit                              *
 ;*       definiert      0,8 us       52,428 ms                                *
 ;*       undefiniert   12,8 us      838,848 ms                                *
 ;*                                                                            *
-;* - Die Datei MON.INC wird fÅr die EinsprÅnge des TDBTMP90-Monitors benîtigt.*
-;* - MACROS.INC mu· vorher eingebunden werden                                 *
+;* - Die Datei MON.INC wird fuer die Einspruenge des TDBTMP90-Monitors benoetigt.*
+;* - MACROS.INC muss vorher eingebunden werden                                *
 ;*                                                                            *
 ;******************************************************************************
 
@@ -51,7 +51,7 @@
 ; Timer starten
 
                 proc    StartTimer
-                set     2,(T4MOD)       ; Timer lîschen
+                set     2,(T4MOD)       ; Timer loeschen
                 res     2,(T4MOD)
                 set     4,(TRUN)        ; Timer starten
                 ret
@@ -66,11 +66,11 @@
 DivLoop:        sll     l               ; Divident hochschieben
                 rl      h
                 rla
-                srl     h               ; fÅr nachher
+                srl     h               ; fuer nachher
                 rr      l
-                sub     a,c             ; pa·t Divisor hinein ?
+                sub     a,c             ; passt Divisor hinein ?
                 jr      nc,DivOK
-                add     a,c             ; nein, zurÅcknehmen
+                add     a,c             ; nein, zuruecknehmen
                 scf                     ; ins Ergebnis 0 einschieben
 DivOK:          ccf                     ; neues Ergebnisbit
                 rl      l               ; Ergebnis in HL einschieben
@@ -93,7 +93,7 @@ DivOK:          ccf                     ; neues Ergebnisbit
                 ld      hl,(CAP1L)      ; Wert auslesen
 
                 ifdef   BigTime
-                 ld     a,h             ; gro·e Periode: x128...
+                 ld     a,h             ; grosse Periode: x128...
                  ld     h,l
                  ld     l,0
                  srla
@@ -109,21 +109,21 @@ DivOK:          ccf                     ; neues Ergebnisbit
                  endm
                  ld     c,10            ; ...Teilen durch 10
                 endif
-                call    Div24           ; Division durchfÅhren
-                ifdef   BigTime         ; Kommatrennung fÅr gro·e Periode
+                call    Div24           ; Division durchfuehren
+                ifdef   BigTime         ; Kommatrennung fuer grosse Periode
                  ld     a,0
                  call   Div24
                  ld     d,a             ; Rest merken
                 endif
-                ld      e,0             ; ZeichenzÑhler nullen
+                ld      e,0             ; Zeichenzaehler nullen
                 ld      c,10            ; Teilerfaktor konstant
 InLoop:         ld      a,0             ; Erweiterung auf 24 Bit
                 call    Div24           ; einmal teilen
                 push    af              ; Zeichen auf LIFO merken
                 inc     e               ; ein Zeichen mehr
-                or      hl,hl           ; noch etwas Åbrig ?
+                or      hl,hl           ; noch etwas uebrig ?
                 jr      nz,InLoop
-                ld      a,5             ; Leerzeichen fÅr Ausrichtung
+                ld      a,5             ; Leerzeichen fuer Ausrichtung
                 sub     a,e             ; Zahl berechnen
                 jr      z,OutErg        ; Nullschleife abfangen
                 ld      b,a             ; ansonsten passende Zahl Leerzeichen
@@ -134,7 +134,7 @@ OutLoop:        pop     af
                 add     a,'0'
                 call    CONOUT
                 djnz    OutLoop
-                ifdef   BigTime         ; bei gro·er Auflîsung Nachkommastellen
+                ifdef   BigTime         ; bei grosser Aufloesung Nachkommastellen
                  ld     a,'.'
                  call   CONOUT
                  ld     l,d             ; Zehner/Einerzerlegung
@@ -156,7 +156,7 @@ OutLoop:        pop     af
                 ld      a,'s'
                 call    CONOUT
 
-                pop     bc              ; Register zurÅck
+                pop     bc              ; Register zurueck
                 pop     de
                 pop     hl
                 pop     af

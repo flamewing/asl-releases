@@ -147,7 +147,7 @@ static void DecodeRegDef(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(1, 1))
-    AddRegDef(LabPart.Str, ArgStr[1]);
+    AddRegDef(LabPart.Str, ArgStr[1].Str);
 }
 
 static void DecodeFixed(Word Index)
@@ -167,18 +167,18 @@ static void DecodeALU(Word Index)
   LongWord Src, DReg;
 
   if (!ChkArgCnt(2, 2));
-  else if (!IsWReg(ArgStr[1], &DReg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
-  else if (IsWReg(ArgStr[2], &Src))
+  else if (!IsWReg(ArgStr[1].Str, &DReg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+  else if (IsWReg(ArgStr[2].Str, &Src))
   {
     DAsmCode[0] = pOrder->Code | (DReg << 8) | (Src << 3);
     CodeLen = 1;
   }
-  else if (!pOrder->MayImm) WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
+  else if (!pOrder->MayImm) WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
   else
   {
     Boolean OK;
 
-    Src = EvalIntExpression(ArgStr[2], Int8, &OK);
+    Src = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
     if (OK)
     {
       DAsmCode[0] = pOrder->Code | (1 << 13) | (DReg << 8) | (Src & 0xff);
@@ -194,10 +194,10 @@ static void DecodeALUI(Word Index)
   Boolean OK;
 
   if (!ChkArgCnt(2, 2));
-  else if (!IsWReg(ArgStr[1], &DReg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+  else if (!IsWReg(ArgStr[1].Str, &DReg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
   else
   {
-    Src = EvalIntExpression(ArgStr[2], Int8, &OK);
+    Src = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
     if (OK)
     {
       DAsmCode[0] = pOrder->Code | (1 << 13) | (DReg << 8) | (Src & 0xff);
@@ -214,11 +214,11 @@ static void DecodeShortBranch(Word Index)
 
   if (ChkArgCnt(1, 1))
   {   
-    Dest = EvalIntExpression(ArgStr[1], CodeAddrInt, &OK);
+    Dest = EvalStrIntExpression(&ArgStr[1], CodeAddrInt, &OK);
     if (OK)
     {
       Dest -= EProgCounter();
-      if (((Dest < -512) || (Dest > 511)) && (!SymbolQuestionable)) WrError(1370);
+      if (((Dest < -512) || (Dest > 511)) && (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
       else
       {
         DAsmCode[0] = pOrder->Code | (Dest & 0x3ff);
@@ -236,11 +236,11 @@ static void DecodeLongBranch(Word Index)
 
   if (ChkArgCnt(1, 1))
   {
-    Dest = EvalIntExpression(ArgStr[1], CodeAddrInt, &OK);
+    Dest = EvalStrIntExpression(&ArgStr[1], CodeAddrInt, &OK);
     if (OK)
     {
       Dest -= EProgCounter();
-      if (((Dest < -2048) || (Dest > 2047)) && (!SymbolQuestionable)) WrError(1370);
+      if (((Dest < -2048) || (Dest > 2047)) && (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
       else
       {
         DAsmCode[0] = pOrder->Code | (Dest & 0xfff);
@@ -257,15 +257,15 @@ static void DecodeMem(Word Index)
   Boolean OK;
 
   if (!ChkArgCnt(2, 2));
-  else if (!IsWReg(ArgStr[1], &DReg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
-  else if (IsWReg(ArgStr[2], &Src))
+  else if (!IsWReg(ArgStr[1].Str, &DReg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+  else if (IsWReg(ArgStr[2].Str, &Src))
   {
     DAsmCode[0] = pOrder->Code | (DReg << 8) | ((Src & 0x1f) << 3) | 2;
     CodeLen = 1;
   }
   else
   {
-    Src = EvalIntExpression(ArgStr[2], DataAddrInt, &OK);
+    Src = EvalStrIntExpression(&ArgStr[2], DataAddrInt, &OK);
     if (OK)
     {
       ChkSpace(pOrder->Space);
@@ -281,8 +281,8 @@ static void DecodeMemI(Word Index)
   LongWord DReg, SReg;
 
   if (!ChkArgCnt(2, 2));
-  else if (!IsWReg(ArgStr[1], &DReg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
-  else if (!IsWReg(ArgStr[2], &SReg)) WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
+  else if (!IsWReg(ArgStr[1].Str, &DReg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+  else if (!IsWReg(ArgStr[2].Str, &SReg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
   else
   {
     DAsmCode[0] = pOrder->Code | (DReg << 8) | (SReg << 3) | 2;
@@ -296,7 +296,7 @@ static void DecodeReg(Word Index)
   LongWord Reg = 0;
 
   if (!ChkArgCnt(1, 1));
-  else if (!IsWReg(ArgStr[1], &Reg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+  else if (!IsWReg(ArgStr[1].Str, &Reg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
   {
     DAsmCode[0] = pOrder->Code | (Reg << 8);
     CodeLen = 1;

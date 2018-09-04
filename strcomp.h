@@ -25,10 +25,34 @@ struct sStrComp
 typedef struct sStrComp tStrComp;
 
 extern void StrCompAlloc(tStrComp *pComp);
+extern void StrCompFree(tStrComp *pComp);
 
 extern void StrCompReset(tStrComp *pComp);
 extern void LineCompReset(tLineComp *pComp);
 
-extern void StrCompCopy(tStrComp *pDest, tStrComp *pSrc);
+extern void StrCompMkTemp(tStrComp *pComp, char *pStr);
+
+extern void StrCompRefRight(tStrComp *pDest, const tStrComp *pSrc, int StartOffs);
+
+extern void StrCompCopy(tStrComp *pDest, const tStrComp *pSrc);
+
+extern void StrCompSplitRight(tStrComp *pSrc, tStrComp *pDest, char *pSrcSplitPos);
+
+extern void StrCompSplitLeft(tStrComp *pSrc, tStrComp *pDest, char *pSrcSplitPos);
+
+extern void StrCompSplitCopy(tStrComp *pLeft, tStrComp *pRight, const tStrComp *pSrc, char *pSplitPos);
+extern char StrCompSplitRef(tStrComp *pLeft, tStrComp *pRight, const tStrComp *pSrc, char *pSplitPos);
+
+extern void StrCompShorten(struct sStrComp *pComp, int Delta);
+
+extern int StrCompCutLeft(struct sStrComp *pComp, int Delta);
+extern void StrCompIncRefLeft(struct sStrComp *pComp, int Delta);
+
+extern void KillPrefBlanksStrComp(struct sStrComp *pComp);
+extern void KillPrefBlanksStrCompRef(struct sStrComp *pComp);
+
+extern void KillPostBlanksStrComp(struct sStrComp *pComp);
+
+extern void DumpStrComp(const char *pTitle, const struct sStrComp *pComp);
 
 #endif /* _STRCOMP_H */

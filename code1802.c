@@ -121,7 +121,7 @@ static void DecodeReg(Word Index)
   if (ChkArgCnt(1, 1)
    && PutCode(pOrder))
   {
-    BAsmCode[CodeLen - 1] |= EvalIntExpression(ArgStr[1], UInt4, &OK);
+    BAsmCode[CodeLen - 1] |= EvalStrIntExpression(&ArgStr[1], UInt4, &OK);
     if (!OK)
       CodeLen = 0;
   }
@@ -138,11 +138,11 @@ static void DecodeRegNoZero(Word Index)
     Byte Reg;
 
     FirstPassUnknown = FALSE;
-    Reg = EvalIntExpression(ArgStr[1], UInt4, &OK);
+    Reg = EvalStrIntExpression(&ArgStr[1], UInt4, &OK);
     if (!OK) CodeLen = 0;
     else if ((!FirstPassUnknown) && (0 == Reg))
     {
-      WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+      WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
       CodeLen = 0;
     }
     else
@@ -158,11 +158,11 @@ static void DecodeRegImm16(Word Index)
   if (ChkArgCnt(2, 2)
    && PutCode(pOrder))
   {
-    BAsmCode[CodeLen - 1] |= EvalIntExpression(ArgStr[1], UInt4, &OK);
+    BAsmCode[CodeLen - 1] |= EvalStrIntExpression(&ArgStr[1], UInt4, &OK);
     if (!OK) CodeLen = 0;
     else
     {
-      Word Arg = EvalIntExpression(ArgStr[2], Int16, &OK);
+      Word Arg = EvalStrIntExpression(&ArgStr[2], Int16, &OK);
 
       if (!OK) CodeLen = 0;
       else
@@ -183,11 +183,11 @@ static void DecodeRegLBranch(Word Index)
   if (ChkArgCnt(2, 2)
    && PutCode(pOrder))
   {
-    BAsmCode[CodeLen - 1] |= EvalIntExpression(ArgStr[1], UInt4, &OK);
+    BAsmCode[CodeLen - 1] |= EvalStrIntExpression(&ArgStr[1], UInt4, &OK);
     if (!OK) CodeLen = 0;
     else
     {
-      Addr = EvalIntExpression(ArgStr[2], UInt16, &OK);
+      Addr = EvalStrIntExpression(&ArgStr[2], UInt16, &OK);
       if (!OK)
         CodeLen = 0;
       else
@@ -208,7 +208,7 @@ static void DecodeImm(Word Index)
   if (ChkArgCnt(1, 1)
    && PutCode(pOrder))
   {
-    BAsmCode[CodeLen++] = EvalIntExpression(ArgStr[1], Int8, &OK);
+    BAsmCode[CodeLen++] = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
     if (!OK) CodeLen = 0;
   }
 }
@@ -223,17 +223,13 @@ static void DecodeSBranch(Word Index)
    && PutCode(pOrder))
   {
     FirstPassUnknown = False;
-    Addr = EvalIntExpression(ArgStr[1], UInt16, &OK);
-    if (!OK) CodeLen = 0;
+    Addr = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
+    if (!OK || !ChkSamePage(EProgCounter() + 1, Addr, 8))
+      CodeLen = 0;
     else
     {
-      if (!ChkSamePage(EProgCounter() + 1, Addr, 8))
-        CodeLen = 0;
-      else
-      {
-        ChkSpace(SegCode);
-        BAsmCode[CodeLen++] = Lo(Addr);
-      }
+      ChkSpace(SegCode);
+      BAsmCode[CodeLen++] = Lo(Addr);
     }
   }
 }
@@ -247,7 +243,7 @@ static void DecodeLBranch(Word Index)
   if (ChkArgCnt(1, 1)
    && PutCode(pOrder))
   {
-    Addr = EvalIntExpression(ArgStr[1], UInt16, &OK);
+    Addr = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
     if (!OK) CodeLen = 0;
     {
       ChkSpace(SegCode);
@@ -265,11 +261,11 @@ static void DecodeIO(Word Index)
   if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
-    BAsmCode[0] = EvalIntExpression(ArgStr[1], UInt3, &OK);
+    BAsmCode[0] = EvalStrIntExpression(&ArgStr[1], UInt3, &OK);
     if (OK)
     {
       if (FirstPassUnknown) BAsmCode[0] = 1;
-      if (BAsmCode[0] == 0) WrError(1315);
+      if (BAsmCode[0] == 0) WrError(ErrNum_UnderRange);
       else
       {
         BAsmCode[0] |= pOrder->Code;

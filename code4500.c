@@ -98,7 +98,7 @@ static void DecodeConst(Word Index)
   {
     Boolean OK;
 
-    WAsmCode[0] = EvalIntExpression(ArgStr[1], pOrder->Max, &OK);
+    WAsmCode[0] = EvalStrIntExpression(&ArgStr[1], pOrder->Max, &OK);
     if (OK)
     {
       CodeLen = 1;
@@ -127,7 +127,7 @@ static void DecodeSEA(Word Code)
   {
     Boolean OK;
 
-    WAsmCode[1] = EvalIntExpression(ArgStr[1], UInt4, &OK);
+    WAsmCode[1] = EvalStrIntExpression(&ArgStr[1], UInt4, &OK);
     if (OK)
     {
       CodeLen = 2;
@@ -147,7 +147,7 @@ static void DecodeB(Word Code)
     Boolean OK;
 
     FirstPassUnknown = False;
-    AdrWord = EvalIntExpression(ArgStr[1], UInt13, &OK);
+    AdrWord = EvalStrIntExpression(&ArgStr[1], UInt13, &OK);
     if (OK && ChkSamePage(EProgCounter(), AdrWord, 7))
     {
       CodeLen = 1;
@@ -164,12 +164,12 @@ static void DecodeBL_BML(Word Code)
     Word AdrWord;
 
     if (ArgCnt == 1)
-      AdrWord = EvalIntExpression(ArgStr[1], UInt13, &OK);
+      AdrWord = EvalStrIntExpression(&ArgStr[1], UInt13, &OK);
     else
     {
-      AdrWord = EvalIntExpression(ArgStr[1], UInt6, &OK) << 7;
+      AdrWord = EvalStrIntExpression(&ArgStr[1], UInt6, &OK) << 7;
       if (OK)
-        AdrWord += EvalIntExpression(ArgStr[2], UInt7, &OK);
+        AdrWord += EvalStrIntExpression(&ArgStr[2], UInt7, &OK);
     }
     if (OK)
     {
@@ -187,7 +187,7 @@ static void DecodeBLA_BMLA(Word Code)
     Boolean OK;
     Word AdrWord;
 
-    AdrWord = EvalIntExpression(ArgStr[1], UInt6, &OK);
+    AdrWord = EvalStrIntExpression(&ArgStr[1], UInt6, &OK);
     if (OK)
     {
       CodeLen = 2;
@@ -206,10 +206,10 @@ static void DecodeBM(Word Code)
     Boolean OK;
     Word AdrWord;
 
-    AdrWord = EvalIntExpression(ArgStr[1], UInt13, &OK);
+    AdrWord = EvalStrIntExpression(&ArgStr[1], UInt13, &OK);
     if (OK)
     {
-      if ((AdrWord >> 7) != 2) WrError(1905);
+      if ((AdrWord >> 7) != 2) WrError(ErrNum_NotFromThisAddress);
       else
       {
         CodeLen = 1;
@@ -229,12 +229,12 @@ static void DecodeLXY(Word Code)
     Word AdrWord;
 
     if (ArgCnt == 1)
-      AdrWord = EvalIntExpression(ArgStr[1], Int8, &OK);
+      AdrWord = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
     else
     {
-      AdrWord = EvalIntExpression(ArgStr[1], Int4, &OK) << 4;
+      AdrWord = EvalStrIntExpression(&ArgStr[1], Int4, &OK) << 4;
       if (OK)
-        AdrWord += EvalIntExpression(ArgStr[2], Int4, &OK);
+        AdrWord += EvalStrIntExpression(&ArgStr[2], Int4, &OK);
     }
     if (OK)
     {

@@ -1,11 +1,11 @@
 ; CONOUT.INC
 ;******************************************************************************
-;* Konsolenausgabe fÅr Micro-ICE TLCS900                                      *
+;* Konsolenausgabe fuer Micro-ICE TLCS900                                     *
 ;*                                                                            *
 ;* Routinen CONOUT, PSTR, A_ASC von Oliver Sellke                             *
 ;* Routine WriteDec von Alfred Arnold, Oktober 1993                           *
-;* 20.11.1993 StrTerm C-konform auf 00h geÑndert                              *
-;*            TXTAUS hinzugefÅgt                                              *
+;* 20.11.1993 StrTerm C-konform auf 00h geaendert                             *
+;*            TXTAUS hinzugefuegt                                             *
 ;*                                                                            *
 ;*  Routine     Funktion         Eingabe                    Stack             *
 ;*                                                                            *
@@ -40,19 +40,19 @@ INTES0          EQU     077H
                 PUSH    A               ;sichern
                 RES     7,A             ;MSB ausblenden (nur ASCII!)
 CONOUT1:        BIT     7,(INTES0)      ;ist der Buffer frei?
-                JR      Z,CONOUT1       ;Wenn nicht, dann weiter prÅfen
-                LD      (INTES0),0Dh    ;Flag rÅcksetzen
+                JR      Z,CONOUT1       ;Wenn nicht, dann weiter pruefen
+                LD      (INTES0),0Dh    ;Flag ruecksetzen
                 LD      (SC0BUF),A      ;Zeichen in Transmit-Buffer
                 ifdef   SIODelay
                  PUSH    HL             ;sichern
-                 LD      HL,80H         ;Verzîgerungszeit laden
-WAIT:            DEC     1,HL           ;ZÑhler - 1
-                 CP      HL,0           ;Ist ZÑhler = 0?
+                 LD      HL,80H         ;Verzˆgerungszeit laden
+WAIT:            DEC     1,HL           ;Zaehler - 1
+                 CP      HL,0           ;Ist Zaehler = 0?
                  JR      NZ,WAIT        ;Wenn nicht, dann weiter DEC
                  POP     HL             ;restaurieren
                 endif
                 POP     A               ;restaurieren
-                RET                     ;ZurÅck zum Aufruf
+                RET                     ;Zurueck zum Aufruf
                 endp
 
 ;******************************************************************************
@@ -66,7 +66,7 @@ Schl:           ld      a,(xhl+)        ; ein Zeichen holen
                 jr      eq,Ende
                 call    CONOUT          ; nein, ausgeben
                 jr      Schl            ; Go on...
-Ende:           pop     a               ; Register zurÅck
+Ende:           pop     a               ; Register zurueck
                 pop     xhl
                 ret
                 endp
@@ -81,7 +81,7 @@ Ende:           pop     a               ; Register zurÅck
                 PUSH    F               ;sichern
                 PUSH    A               ;dito
 PSTR1:          LD      A,(XHL)         ;Zeichen holen
-                INC     1,C             ;ZeichenzÑhler + 1
+                INC     1,C             ;Zeichenzaehler + 1
                 INC     1,XHL           ;Zeichenzeiger + 1
                 CP      A,StrTerm       ;Endemarkierung erwischt?
                 JR      Z,PSTR2         ;Wenn ja, dann Ende
@@ -89,12 +89,12 @@ PSTR1:          LD      A,(XHL)         ;Zeichen holen
                 JR      Z,PSTR1         ;Wenn ja, dann nicht ausgeben
                 CALL    CONOUT          ;Zeichen ausgeben
                 AND     A,A             ;War das 8. Bit gesetzt?
-                JR      P,PSTR1         ;Wenn nicht, dann nÑchstes Zeichen
+                JR      P,PSTR1         ;Wenn nicht, dann naechstes Zeichen
 PSTR2:          POP     A               ;restaurieren
                 POP     F               ;dito
-                LD      (XSP+4),XHL     ;RÅcksprungadresse restaurieren
-                POP     XHL             ;RÅcksprungadresse abspeichern
-                RET                     ;ZurÅck zum Aufruf
+                LD      (XSP+4),XHL     ;Ruecksprungadresse restaurieren
+                POP     XHL             ;Ruecksprungadresse abspeichern
+                RET                     ;Zurueck zum Aufruf
                 endp
 
 ;******************************************************************************
@@ -124,13 +124,13 @@ A_ASC01:        ADD     A,'0'           ;Offset ASCII
                 push    xwa             ; Register retten
                 push    de
 
-                sub     de,de           ; E zÑhlt echte Stellenzahl, D=1 falls Null
-InLoop:         extz    xwa             ; fÅr Division vorbereiten
+                sub     de,de           ; E zaehlt echte Stellenzahl, D=1 falls Null
+InLoop:         extz    xwa             ; fuer Division vorbereiten
                 div     xwa,10          ; letzte Stelle ausmaskieren
                 add     qa,'0'          ; ASCII-Offset
                 cp      d,1             ; schon im Nullbereich ?
                 jr      ne,NormVal
-                ld      qa,b            ; ja, dann gewÅnschtes Leerzeichen
+                ld      qa,b            ; ja, dann gewuenschtes Leerzeichen
 NormVal:        push    qa              ; ein Zeichen mehr
                 inc     e
                 or      wa,wa           ; schon Null ?

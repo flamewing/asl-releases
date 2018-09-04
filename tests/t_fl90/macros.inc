@@ -1,6 +1,6 @@
 ; MACROS.INC
 ;******************************************************************************
-;* überall gebrauchte Makros                                                  *
+;* ueberall gebrauchte Makros                                                 *
 ;*                                                                            *
 ;* Alfred Arnold, Oktober 1993                                                *
 ;******************************************************************************
@@ -13,7 +13,7 @@ LocalSize       eval    0
 name            label   $
                 endm
 
-subproc         macro   name,{NoExpand} ; Prozedureintritt für private Routine
+subproc         macro   name,{NoExpand} ; Prozedureintritt fuer private Routine
                 section name
                 forward LocalSize       ; lokal reservierter Speicher auf Stack
 LocalSize       eval    0
@@ -35,23 +35,23 @@ link            macro   reg,count,{NoExpand} ; Stack-Rahmen einrichten
                 endm
 
 unlk            macro   reg,{NoExpand}  ; Stack-Rahmen abbauen
-                ld      sp,reg          ; Speicherreservierung zurücknehmen
-                pop     reg             ; alten Basepointer zurück
+                ld      sp,reg          ; Speicherreservierung zuruecknehmen
+                pop     reg             ; alten Basepointer zurueck
                 endm
 
 retd            macro   dist,{NoExpand} ; Return and Deallocate
                 if      dist<>0
                  push   hl              ; Arbeitsregister retten
-                 ld     hl,(sp+2)       ; Rücksprungadresse umkopieren
+                 ld     hl,(sp+2)       ; Ruecksprungadresse umkopieren
                  ld     (sp+2+dist),hl
-                 ld     hl,(sp)         ; Arbeitsregister zurück
-                 add    sp,2+dist       ; Stack aufräumen
+                 ld     hl,(sp)         ; Arbeitsregister zurueck
+                 add    sp,2+dist       ; Stack aufraeumen
                 endif
                 ret
                 endm
 
 DefLocal        macro   Name,Size,{NoExpand} ; eine lokale Variable definieren
-LocalSize       eval    LocalSize-Size  ; zählt lok. reservierten Speicher
+LocalSize       eval    LocalSize-Size  ; zaehlt lok. reservierten Speicher
 Name            equ     LocalSize       ; liegt an neuem unteren Ende des Stackrahmens
                 endm
 

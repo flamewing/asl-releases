@@ -247,6 +247,8 @@ static CPUVar CPU403, CPU403C, CPU505, CPU601, CPU821, CPU6000;
 #define T63 63l
 #endif
 
+static const tStrComp ZeroComp = { { -1, 0 }, "0" };
+
 /*-------------------------------------------------------------------------*/
 
 static void PutCode(LongWord Code)
@@ -261,7 +263,7 @@ static void PutCode(LongWord Code)
 
 /*-------------------------------------------------------------------------*/
 
-static Boolean DecodeGenReg(const char *Asc, LongWord *Erg)
+static Boolean DecodeGenRegCore(const char *Asc, LongWord *Erg)
 {
   Boolean io;
   char *s;
@@ -278,62 +280,86 @@ static Boolean DecodeGenReg(const char *Asc, LongWord *Erg)
   }
 }
 
-static Boolean DecodeFPReg(const char *Asc, LongWord *Erg)
+static Boolean DecodeGenReg(const tStrComp *pComp, LongWord *Erg)
 {
-  Boolean io;
+  Boolean Result = DecodeGenRegCore(pComp->Str, Erg);
+  if (!Result)
+    WrStrErrorPos(ErrNum_InvReg, pComp);
+  return Result;
+}
+
+static Boolean DecodeFPReg(const tStrComp *pComp, LongWord *Erg)
+{
+  Boolean io, Result;
   char *s;
 
-  if (FindRegDef(Asc, &s))
-    Asc = s;
+  if (!FindRegDef(pComp->Str, &s))
+    s = pComp->Str;
 
-  if ((strlen(Asc) < 3) || (mytoupper(*Asc) != 'F') || (mytoupper(Asc[1]) != 'R'))
-    return False;
+  if ((strlen(s) < 3) || (mytoupper(*s) != 'F') || (mytoupper(s[1]) != 'R'))
+    Result = False;
   else
   {
-    *Erg = ConstLongInt(Asc + 2, &io, 10);
-    return ((io) && (*Erg <= 31));
+    *Erg = ConstLongInt(s + 2, &io, 10);
+    Result =  (io && (*Erg <= 31));
   }
+  if (!Result)
+    WrStrErrorPos(ErrNum_InvReg, pComp);
+  return Result;
 }
 
-static Boolean DecodeCondReg(char *Asc, LongWord *Erg)
+static Boolean DecodeCondReg(const tStrComp *pComp, LongWord *Erg)
 {
-  Boolean OK;
+  Boolean OK, Result;
 
-  *Erg = EvalIntExpression(Asc, UInt3, &OK) << 2;
-  return ((OK) && (*Erg <= 31));
+  *Erg = EvalStrIntExpression(pComp, UInt3, &OK) << 2;
+  Result = (OK && (*Erg <= 31));
+  if (!Result)
+    WrStrErrorPos(ErrNum_InvAddrMode, pComp);
+  return Result;
 }
 
-static Boolean  DecodeCondBit(const char *Asc, LongWord *Erg)
+static Boolean DecodeCondBit(const tStrComp *pComp, LongWord *Erg)
 {
-  Boolean OK;
+  Boolean OK, Result;
 
-  *Erg = EvalIntExpression(Asc, UInt5, &OK);
-  return ((OK) && (*Erg <= 31));
+  *Erg = EvalStrIntExpression(pComp, UInt5, &OK);
+  Result = (OK && (*Erg <= 31));
+  if (!Result)
+    WrStrErrorPos(ErrNum_InvAddrMode, pComp);
+  return Result;
 }
 
-static Boolean DecodeRegDisp(char *Asc, LongWord *Erg)
+static Boolean DecodeRegDisp(tStrComp *pComp, LongWord *Erg)
 {
   char *p;
-  int l = strlen(Asc);
+  int l = strlen(pComp->Str);
   LongInt Disp;
-  Boolean OK;
+  Boolean OK, Result = False;
+  tStrComp DispArg, RegArg;
 
-  if (Asc[l - 1] != ')')
-    return False;
-  Asc[l - 1] = '\0';  l--;
-  p = Asc + l - 1;
-  while ((p >= Asc) && (*p != '('))
+  if (pComp->Str[l - 1] != ')')
+    goto func_exit;
+  pComp->Str[l - 1] = '\0';  l--;
+  p = pComp->Str + l - 1;
+  while ((p >= pComp->Str) && (*p != '('))
     p--;
-  if (p < Asc)
-    return False;
-  if (!DecodeGenReg(p + 1, Erg))
-    return False;
+  if (p < pComp->Str)
+    goto func_exit;
+  StrCompSplitRef(&DispArg, &RegArg, pComp, p);
+  if (!DecodeGenRegCore(RegArg.Str, Erg))
+    goto func_exit;
   *p = '\0';
-  Disp = EvalIntExpression(Asc, Int16, &OK);
+  Disp = EvalStrIntExpression(&DispArg, Int16, &OK);
   if (!OK)
-    return False;
+    goto func_exit;
   *Erg = (*Erg << 16) + (Disp & 0xffff);
-  return True;
+  Result = True;
+
+func_exit:
+  if (!Result)
+    WrStrErrorPos(ErrNum_InvAddrMode, pComp);
+  return Result;
 }
 
 /*-------------------------------------------------------------------------*/
@@ -346,7 +372,7 @@ static LongWord ExtractPoint(Word Code)
 static void ChkSup(void)
 {
   if (!SupAllowed)
-    WrError(50);
+    WrError(ErrNum_PrivOrder);
 }
 
 static void SwapCode(LongWord *Code)
@@ -362,8 +388,8 @@ static void DecodeFixed(Word Index)
 {
   const BaseOrder *pOrder = FixedOrders + Index;
 
-  if (!ChkArgCnt(0, 0));
-  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) >= 0)
+  if (ChkArgCnt(0, 0)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU403) >= 0))
   {
     CodeLen = 4;
     PutCode(pOrder->Code);
@@ -379,10 +405,9 @@ static void DecodeReg1(Word Index)
   const BaseOrder *pOrder = Reg1Orders + Index;
   LongWord Dest;
 
-  if (!ChkArgCnt(1, 1));
-  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
-  else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
-  else
+  if (ChkArgCnt(1, 1)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU403) >= 0)
+   && DecodeGenReg(&ArgStr[1], &Dest))
   {
     CodeLen = 4;
     PutCode(pOrder->Code + (Dest << 21));
@@ -400,8 +425,8 @@ static void DecodeCReg1(Word Index)
 
   if (!ChkArgCnt(1, 1));
   else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
-  else if (!DecodeCondReg(ArgStr[1], &Dest)) WrError(1350);
-  else if ((Dest & 3) != 0) WrError(1351);
+  else if (!DecodeCondReg(&ArgStr[1], &Dest));
+  else if ((Dest & 3) != 0) WrStrErrorPos(ErrNum_MustBeEven, &ArgStr[1]);
   else
   {
     CodeLen = 4;
@@ -416,10 +441,9 @@ static void DecodeCBit1(Word Index)
   const BaseOrder *pOrder = CBit1Orders + Index;
   LongWord Dest;
 
-  if (!ChkArgCnt(1, 1));
-  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
-  else if (!DecodeCondBit(ArgStr[1], &Dest)) WrError(1350);
-  else
+  if (ChkArgCnt(1, 1)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU403) >= 0)
+   && DecodeCondBit(&ArgStr[1], &Dest))
   {
     CodeLen = 4;
     PutCode(pOrder->Code + (Dest << 21));
@@ -433,10 +457,9 @@ static void DecodeFReg1(Word Index)
   const BaseOrder *pOrder = FReg1Orders + Index;
   LongWord Dest;
 
-  if (!ChkArgCnt(1, 1));
-  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
-  else if (!DecodeFPReg(ArgStr[1], &Dest)) WrError(1350);
-  else
+  if (ChkArgCnt(1, 1)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU403) >= 0)
+   && DecodeFPReg(&ArgStr[1], &Dest))
   {
     CodeLen = 4;
     PutCode(pOrder->Code + (Dest << 21));
@@ -449,13 +472,12 @@ static void DecodeReg2(Word Index)
 {
   const BaseOrder *pOrder = Reg2Orders + Index;
   LongWord Dest, Src1;
-  const char *pArg2 = (ArgCnt == 2) ? ArgStr[2] : ArgStr[1];
+  const tStrComp *pArg2 = (ArgCnt == 2) ? &ArgStr[2] : &ArgStr[1];
 
-  if (!ChkArgCnt(1, 2));
-  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
-  else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
-  else if (!DecodeGenReg(pArg2, &Src1)) WrError(1350);
-  else
+  if (ChkArgCnt(1, 2)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU403) >= 0)
+   && DecodeGenReg(&ArgStr[1], &Dest)
+   && DecodeGenReg(pArg2, &Src1))
   {
     CodeLen = 4;
     PutCode(pOrder->Code + (Dest << 21) + (Src1 << 16));
@@ -471,10 +493,10 @@ static void DecodeCReg2(Word Index)
 
   if (!ChkArgCnt(2, 2));
   else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
-  else if (!DecodeCondReg(ArgStr[1], &Dest)) WrError(1350);
-  else if ((Dest & 3) != 0) WrError(1351);
-  else if (!DecodeCondReg(ArgStr[2], &Src1)) WrError(1350);
-  else if ((Src1 & 3) != 0) WrError(1351);
+  else if (!DecodeCondReg(&ArgStr[1], &Dest));
+  else if ((Dest & 3) != 0) WrStrErrorPos(ErrNum_MustBeEven, &ArgStr[1]);
+  else if (!DecodeCondReg(&ArgStr[2], &Src1));
+  else if ((Src1 & 3) != 0) WrStrErrorPos(ErrNum_MustBeEven, &ArgStr[2]);
   else
   {
     CodeLen = 4;
@@ -488,13 +510,12 @@ static void DecodeFReg2(Word Index)
 {
   const BaseOrder *pOrder = FReg2Orders + Index;
   LongWord Dest, Src1;
-  const char *pArg2 = (ArgCnt == 2) ? ArgStr[2] : ArgStr[1];
+  const tStrComp *pArg2 = (ArgCnt == 2) ? &ArgStr[2] : &ArgStr[1];
 
-  if (!ChkArgCnt(1, 2));
-  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
-  else if (!DecodeFPReg(ArgStr[1], &Dest)) WrError(1350);
-  else if (!DecodeFPReg(pArg2, &Src1)) WrError(1350);
-  else
+  if (ChkArgCnt(1, 2)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU403) >= 0)
+   && DecodeFPReg(&ArgStr[1], &Dest)
+   && DecodeFPReg(pArg2, &Src1))
   {
     CodeLen = 4;
     PutCode(pOrder->Code + (Dest << 21) + (Src1 << 11));
@@ -507,13 +528,12 @@ static void DecodeReg2B(Word Index)
 {
   const BaseOrder *pOrder = Reg2BOrders + Index;
   LongWord Dest, Src1;
-  const char *pArg2 = (ArgCnt == 2) ? ArgStr[2] : ArgStr[1];
+  const tStrComp *pArg2 = (ArgCnt == 2) ? &ArgStr[2] : &ArgStr[1];
 
-  if (!ChkArgCnt(1, 2));
-  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
-  else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
-  else if (!DecodeGenReg(pArg2, &Src1)) WrError(1350);
-  else
+  if (ChkArgCnt(1, 2)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU403) >= 0)
+   && DecodeGenReg(&ArgStr[1], &Dest)
+   && DecodeGenReg(pArg2, &Src1))
   {
     CodeLen = 4;
     PutCode(pOrder->Code + (Dest << 21) + (Src1 << 11));
@@ -527,13 +547,12 @@ static void DecodeReg2Swap(Word Index)
 {
   const BaseOrder *pOrder = Reg2SwapOrders + Index;
   LongWord Dest, Src1;
-  const char *pArg2 = (ArgCnt == 2) ? ArgStr[2] : ArgStr[1];
+  const tStrComp *pArg2 = (ArgCnt == 2) ? &ArgStr[2] : &ArgStr[1];
 
-  if (!ChkArgCnt(1, 2));
-  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
-  else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
-  else if (!DecodeGenReg(pArg2, &Src1)) WrError(1350);
-  else
+  if (ChkArgCnt(1, 2)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU403) >= 0)
+   && DecodeGenReg(&ArgStr[1], &Dest)
+   && DecodeGenReg(pArg2, &Src1))
   {
     CodeLen = 4;
     PutCode(pOrder->Code + (Dest << 16) + (Src1 << 21));
@@ -547,11 +566,10 @@ static void DecodeNoDest(Word Index)
   const BaseOrder *pOrder = NoDestOrders + Index;
   LongWord Src2, Src1;
 
-  if (!ChkArgCnt(2, 2));
-  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
-  else if (!DecodeGenReg(ArgStr[1], &Src1)) WrError(1350);
-  else if (!DecodeGenReg(ArgStr[2], &Src2)) WrError(1350);
-  else
+  if (ChkArgCnt(2, 2)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU403) >= 0)
+   && DecodeGenReg(&ArgStr[1], &Src1)
+   && DecodeGenReg(&ArgStr[2], &Src2))
   {
     CodeLen = 4;
     PutCode(pOrder->Code + (Src1 << 16) + (Src2 << 11));
@@ -563,16 +581,15 @@ static void DecodeNoDest(Word Index)
 static void DecodeReg3(Word Index)
 {
   const BaseOrder *pOrder = Reg3Orders + Index;
-  const char *pArg2 = (ArgCnt == 2) ? ArgStr[1] : ArgStr[2],
-             *pArg3 = (ArgCnt == 2) ? ArgStr[2] : ArgStr[3];
+  const tStrComp *pArg2 = (ArgCnt == 2) ? &ArgStr[1] : &ArgStr[2],
+                 *pArg3 = (ArgCnt == 2) ? &ArgStr[2] : &ArgStr[3];
   LongWord Src2, Src1, Dest;
 
-  if (!ChkArgCnt(2, 3));
-  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
-  else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
-  else if (!DecodeGenReg(pArg2, &Src1)) WrError(1350);
-  else if (!DecodeGenReg(pArg3, &Src2)) WrError(1350);
-  else
+  if (ChkArgCnt(2, 3)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU403) >= 0)
+   && DecodeGenReg(&ArgStr[1], &Dest)
+   && DecodeGenReg(pArg2, &Src1)
+   && DecodeGenReg(pArg3, &Src2))
   {
     CodeLen = 4;
     PutCode(pOrder->Code + (Dest << 21) + (Src1 << 16) + (Src2 << 11));
@@ -584,16 +601,15 @@ static void DecodeReg3(Word Index)
 static void DecodeCReg3(Word Index)
 {
   const BaseOrder *pOrder = CReg3Orders + Index;
-  const char *pArg2 = (ArgCnt == 2) ? ArgStr[1] : ArgStr[2],
-             *pArg3 = (ArgCnt == 2) ? ArgStr[2] : ArgStr[3];
+  const tStrComp *pArg2 = (ArgCnt == 2) ? &ArgStr[1] : &ArgStr[2],
+                 *pArg3 = (ArgCnt == 2) ? &ArgStr[2] : &ArgStr[3];
   LongWord Src2, Src1, Dest;
 
-  if (!ChkArgCnt(2, 3));
-  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
-  else if (!DecodeCondBit(ArgStr[1], &Dest)) WrError(1350);
-  else if (!DecodeCondBit(pArg2, &Src1)) WrError(1350);
-  else if (!DecodeCondBit(pArg3, &Src2)) WrError(1350);
-  else
+  if (ChkArgCnt(2, 3)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU403) >= 0)
+   && DecodeCondBit(&ArgStr[1], &Dest)
+   && DecodeCondBit(pArg2, &Src1)
+   && DecodeCondBit(pArg3, &Src2))
   {
     CodeLen = 4;
     PutCode(pOrder->Code + (Dest << 21) + (Src1 << 16) + (Src2 << 11));
@@ -605,16 +621,15 @@ static void DecodeCReg3(Word Index)
 static void DecodeFReg3(Word Index)
 {
   const BaseOrder *pOrder = FReg3Orders + Index;
-  const char *pArg2 = (ArgCnt == 2) ? ArgStr[1] : ArgStr[2],
-             *pArg3 = (ArgCnt == 2) ? ArgStr[2] : ArgStr[3];
+  const tStrComp *pArg2 = (ArgCnt == 2) ? &ArgStr[1] : &ArgStr[2],
+                 *pArg3 = (ArgCnt == 2) ? &ArgStr[2] : &ArgStr[3];
   LongWord Src2, Src1, Dest;
 
-  if (!ChkArgCnt(2, 3));
-  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
-  else if (!DecodeFPReg(ArgStr[1], &Dest)) WrError(1350);
-  else if (!DecodeFPReg(pArg2, &Src1)) WrError(1350);
-  else if (!DecodeFPReg(pArg3, &Src2)) WrError(1350);
-  else
+  if (ChkArgCnt(2, 3)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU403) >= 0)
+   && DecodeFPReg(&ArgStr[1], &Dest)
+   && DecodeFPReg(pArg2, &Src1)
+   && DecodeFPReg(pArg3, &Src2))
   {
     CodeLen = 4;
     PutCode(pOrder->Code + (Dest << 21) + (Src1 << 16) + (Src2 << 11));
@@ -626,16 +641,15 @@ static void DecodeFReg3(Word Index)
 static void DecodeReg3Swap(Word Index)
 {
   const BaseOrder *pOrder = Reg3SwapOrders + Index;
-  const char *pArg2 = (ArgCnt == 2) ? ArgStr[1] : ArgStr[2],
-             *pArg3 = (ArgCnt == 2) ? ArgStr[2] : ArgStr[3];
+  const tStrComp *pArg2 = (ArgCnt == 2) ? &ArgStr[1] : &ArgStr[2],
+                 *pArg3 = (ArgCnt == 2) ? &ArgStr[2] : &ArgStr[3];
   LongWord Src2, Src1, Dest;
 
-  if (!ChkArgCnt(2, 3));
-  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
-  else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
-  else if (!DecodeGenReg(pArg2, &Src1)) WrError(1350);
-  else if (!DecodeGenReg(pArg3, &Src2)) WrError(1350);
-  else
+  if (ChkArgCnt(2, 3)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU403) >= 0)
+   && DecodeGenReg(&ArgStr[1], &Dest)
+   && DecodeGenReg(pArg2, &Src1)
+   && DecodeGenReg(pArg3, &Src2))
   {
     CodeLen = 4;
     PutCode(pOrder->Code + (Dest << 16) + (Src1 << 21) + (Src2 << 11));
@@ -649,12 +663,11 @@ static void DecodeMixed(Word Index)
   const BaseOrder *pOrder = MixedOrders + Index;
   LongWord Src2, Src1, Dest;
 
-  if (!ChkArgCnt(3, 3));
-  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
-  else if (!DecodeFPReg(ArgStr[1], &Dest)) WrError(1350);
-  else if (!DecodeGenReg(ArgStr[2], &Src1)) WrError(1350);
-  else if (!DecodeGenReg(ArgStr[3], &Src2)) WrError(1350);
-  else
+  if (ChkArgCnt(3, 3)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU403) >= 0)
+   && DecodeFPReg(&ArgStr[1], &Dest)
+   && DecodeGenReg(&ArgStr[2], &Src1)
+   && DecodeGenReg(&ArgStr[3], &Src2))
    {
      CodeLen = 4;
      PutCode(pOrder->Code + (Dest << 21) + (Src1 << 16) + (Src2 << 11));
@@ -667,17 +680,16 @@ static void DecodeFReg4(Word Index)
 {
   const BaseOrder *pOrder = FReg4Orders + Index;
   LongWord Src3, Src2, Src1, Dest;
-  const char *pArg2 = (ArgCnt == 3) ? ArgStr[1] : ArgStr[2],
-             *pArg3 = (ArgCnt == 3) ? ArgStr[2] : ArgStr[3],
-             *pArg4 = (ArgCnt == 3) ? ArgStr[3] : ArgStr[4];
+  const tStrComp *pArg2 = (ArgCnt == 3) ? &ArgStr[1] : &ArgStr[2],
+                 *pArg3 = (ArgCnt == 3) ? &ArgStr[2] : &ArgStr[3],
+                 *pArg4 = (ArgCnt == 3) ? &ArgStr[3] : &ArgStr[4];
 
-  if (!ChkArgCnt(3, 4));
-  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
-  else if (!DecodeFPReg(ArgStr[1], &Dest)) WrError(1350);
-  else if (!DecodeFPReg(pArg2, &Src1)) WrError(1350);
-  else if (!DecodeFPReg(pArg3, &Src3)) WrError(1350);
-  else if (!DecodeFPReg(pArg4, &Src2)) WrError(1350);
-  else
+  if (ChkArgCnt(3, 4)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU403) >= 0)
+   && DecodeFPReg(&ArgStr[1], &Dest)
+   && DecodeFPReg(pArg2, &Src1)
+   && DecodeFPReg(pArg3, &Src3)
+   && DecodeFPReg(pArg4, &Src2))
   {
     CodeLen = 4;
     PutCode(pOrder->Code + (Dest << 21) + (Src1 << 16) + (Src2 << 11) + (Src3 << 6));
@@ -691,11 +703,10 @@ static void DecodeRegDispOrder(Word Index)
   const BaseOrder *pOrder = RegDispOrders + Index;
   LongWord Src1, Dest;
 
-  if (!ChkArgCnt(2, 2));
-  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
-  else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
-  else if (!DecodeRegDisp(ArgStr[2], &Src1)) WrError(1350);
-  else
+  if (ChkArgCnt(2, 2)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU403) >= 0)
+   && DecodeGenReg(&ArgStr[1], &Dest)
+   && DecodeRegDisp(&ArgStr[2], &Src1))
   {
     PutCode(pOrder->Code + (Dest << 21) + Src1);
     CodeLen = 4;
@@ -709,11 +720,10 @@ static void DecodeFRegDisp(Word Index)
   const BaseOrder *pOrder = FRegDispOrders + Index;
   LongWord Src1, Dest;
 
-  if (!ChkArgCnt(2, 2));
-  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
-  else if (!DecodeFPReg(ArgStr[1], &Dest)) WrError(1350);
-  else if (!DecodeRegDisp(ArgStr[2], &Src1)) WrError(1350);
-  else
+  if (ChkArgCnt(2, 2)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU403) >= 0)
+   && DecodeFPReg(&ArgStr[1], &Dest)
+   && DecodeRegDisp(&ArgStr[2], &Src1))
   {
     PutCode(pOrder->Code + (Dest << 21) + Src1);
     CodeLen = 4;
@@ -728,13 +738,12 @@ static void DecodeReg2Imm(Word Index)
   LongWord Src1, Dest, Src2;
   Boolean OK;
 
-  if (!ChkArgCnt(3, 3));
-  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
-  else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
-  else if (!DecodeGenReg(ArgStr[2], &Src1)) WrError(1350);
-  else
+  if (ChkArgCnt(3, 3)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU403) >= 0)
+   && DecodeGenReg(&ArgStr[1], &Dest)
+   && DecodeGenReg(&ArgStr[2], &Src1))
   {
-    Src2 = EvalIntExpression(ArgStr[3], UInt5, &OK);
+    Src2 = EvalStrIntExpression(&ArgStr[3], UInt5, &OK);
     if (OK)
     {
       PutCode(pOrder->Code + (Src1 << 21) + (Dest << 16) + (Src2 << 11));
@@ -750,16 +759,15 @@ static void DecodeImm16(Word Index)
   const BaseOrder *pOrder = Imm16Orders + Index;
   LongWord Src1, Dest, Imm;
   Boolean OK;
-  const char *pArg2 = (ArgCnt == 2) ? ArgStr[1] : ArgStr[2],
-             *pArg3 = (ArgCnt == 2) ? ArgStr[2] : ArgStr[3];
+  const tStrComp *pArg2 = (ArgCnt == 2) ? &ArgStr[1] : &ArgStr[2],
+                 *pArg3 = (ArgCnt == 2) ? &ArgStr[2] : &ArgStr[3];
 
-  if (!ChkArgCnt(2, 3));
-  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
-  else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
-  else if (!DecodeGenReg(pArg2, &Src1)) WrError(1350);
-  else
+  if (ChkArgCnt(2, 3)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU403) >= 0)
+   && DecodeGenReg(&ArgStr[1], &Dest)
+   && DecodeGenReg(pArg2, &Src1))
   {
-    Imm = EvalIntExpression(pArg3, Int16, &OK);
+    Imm = EvalStrIntExpression(pArg3, Int16, &OK);
     if (OK)
     {
       CodeLen = 4;
@@ -775,16 +783,15 @@ static void DecodeImm16Swap(Word Index)
   const BaseOrder *pOrder = Imm16SwapOrders + Index;
   LongWord Src1, Dest, Imm;
   Boolean OK;
-  const char *pArg2 = (ArgCnt == 2) ? ArgStr[1] : ArgStr[2],
-             *pArg3 = (ArgCnt == 2) ? ArgStr[2] : ArgStr[3];
+  const tStrComp *pArg2 = (ArgCnt == 2) ? &ArgStr[1] : &ArgStr[2],
+                 *pArg3 = (ArgCnt == 2) ? &ArgStr[2] : &ArgStr[3];
 
-  if (!ChkArgCnt(2, 3));
-  else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
-  else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
-  else if (!DecodeGenReg(pArg2, &Src1)) WrError(1350);
-  else
+  if (ChkArgCnt(2, 3)
+   && (ChkExactCPUMask(pOrder->CPUMask, CPU403) >= 0)
+   && DecodeGenReg(&ArgStr[1], &Dest)
+   && DecodeGenReg(pArg2, &Src1))
   {
-    Imm = EvalIntExpression(pArg3, Int16, &OK);
+    Imm = EvalStrIntExpression(pArg3, Int16, &OK);
     if (OK)
     {
       CodeLen = 4;
@@ -797,15 +804,14 @@ static void DecodeImm16Swap(Word Index)
 
 static void DecodeFMUL_FMULS(Word Code)
 {
-  const char *pArg2 = (ArgCnt == 2) ? ArgStr[1] : ArgStr[2],
-             *pArg3 = (ArgCnt == 2) ? ArgStr[2] : ArgStr[3];
+  const tStrComp *pArg2 = (ArgCnt == 2) ? &ArgStr[1] : &ArgStr[2],
+                 *pArg3 = (ArgCnt == 2) ? &ArgStr[2] : &ArgStr[3];
   LongWord Dest, Src1, Src2, LCode = (Code & 0x7fff);
 
-  if (!ChkArgCnt(2, 3));
-  else if (!DecodeFPReg(ArgStr[1], &Dest)) WrError(1350);
-  else if (!DecodeFPReg(pArg2, &Src1)) WrError(1350);
-  else if (!DecodeFPReg(pArg3, &Src2)) WrError(1350);
-  else
+  if (ChkArgCnt(2, 3)
+   && DecodeFPReg(&ArgStr[1], &Dest)
+   && DecodeFPReg(pArg2, &Src1)
+   && DecodeFPReg(pArg3, &Src2))
   {
     PutCode((LCode << 26) + (25 << 1) + (Dest << 21) + (Src1 << 16) + (Src2 << 6) + ExtractPoint(Code));
     CodeLen = 4;
@@ -817,12 +823,11 @@ static void DecodeLSWI_STSWI(Word Code)
   LongWord Dest, Src1, Src2, LCode = Code;
   Boolean OK;
 
-  if (!ChkArgCnt(3, 3));
-  else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
-  else if (!DecodeGenReg(ArgStr[2], &Src1)) WrError(1350);
-  else
+  if (ChkArgCnt(3, 3)
+   && DecodeGenReg(&ArgStr[1], &Dest)
+   && DecodeGenReg(&ArgStr[2], &Src1))
   {
-    Src2 = EvalIntExpression(ArgStr[3], UInt5, &OK);
+    Src2 = EvalStrIntExpression(&ArgStr[3], UInt5, &OK);
     if (OK)
     {
       PutCode((T31 << 26) + (LCode << 1) + (Dest << 21) + (Src1 << 16) + (Src2 << 11));
@@ -835,28 +840,29 @@ static void DecodeMTFB_MTTB(Word Code)
 {
   LongWord LCode = Code, Src1, Dest;
   Boolean OK;
-  const char *pArg1 = ArgStr[1], *pArg2 = ArgStr[2];
+  const tStrComp *pArg1 = &ArgStr[1], *pArg2 = &ArgStr[2];
+  tStrComp TmpComp = { { -1, 0 }, NULL };
 
   if (ChkExactCPUList(0, CPU821, CPU505, CPUNone) < 0);
   else if (ArgCnt == 1)
   {
-    pArg1 = ArgStr[1];
-    if      ((Memo("MFTB")) || (Memo("MFTBL"))) pArg2 = "268";
-    else if (Memo("MFTBU")) pArg2 = "269";
-    else if ((Memo("MTTB")) || (Memo("MTTBL"))) pArg2 = "284";
-    else if (Memo("MTTBU")) pArg2 = "285"; 
+    pArg1 = &ArgStr[1];
+    if      ((Memo("MFTB")) || (Memo("MFTBL"))) TmpComp.Str = (char*)"268";
+    else if (Memo("MFTBU")) TmpComp.Str = (char*)"269";
+    else if ((Memo("MTTB")) || (Memo("MTTBL"))) TmpComp.Str = (char*)"284";
+    else if (Memo("MTTBU")) TmpComp.Str = (char*)"285"; 
+    pArg2 = &TmpComp;
     /* already swapped */
   }
   else if ((ArgCnt == 2) && (Code == 467)) /* MTxx */
   {
-    pArg1 = ArgStr[2];
-    pArg2 = ArgStr[1];
+    pArg1 = &ArgStr[2];
+    pArg2 = &ArgStr[1];
   }
-  if (!ChkArgCnt(1, 2));
-  else if (!DecodeGenReg(pArg1, &Dest)) WrError(1350);
-  else
+  if (ChkArgCnt(1, 2)
+   && DecodeGenReg(pArg1, &Dest))
   {
-    Src1 = EvalIntExpression(pArg2, UInt10, &OK);
+    Src1 = EvalStrIntExpression(pArg2, UInt10, &OK);
     if (OK)
     {
       if ((Src1 == 268) || (Src1 == 269) || (Src1 == 284) || (Src1 == 285))
@@ -866,7 +872,7 @@ static void DecodeMTFB_MTTB(Word Code)
         CodeLen = 4;
       }
       else
-        WrError(1440);
+        WrError(ErrNum_InvCtrlReg);
     }
   }
 }
@@ -874,15 +880,14 @@ static void DecodeMTFB_MTTB(Word Code)
 static void DecodeMFSPR_MTSPR(Word Code)
 {
   LongWord Dest, Src1, LCode = Code;
-  const char *pArg1 = (Code == 467) ? ArgStr[2] : ArgStr[1],
-             *pArg2 = (Code == 467) ? ArgStr[1] : ArgStr[2];
+  const tStrComp *pArg1 = (Code == 467) ? &ArgStr[2] : &ArgStr[1],
+                 *pArg2 = (Code == 467) ? &ArgStr[1] : &ArgStr[2];
   Boolean OK;
 
-  if (!ChkArgCnt(2, 2));
-  else if (!DecodeGenReg(pArg1, &Dest)) WrError(1350);
-  else
+  if (ChkArgCnt(2, 2)
+   && DecodeGenReg(pArg1, &Dest))
   {
-    Src1 = EvalIntExpression(pArg2, UInt10, &OK);
+    Src1 = EvalStrIntExpression(pArg2, UInt10, &OK);
     if (OK)
     {
       SwapCode(&Src1);
@@ -895,16 +900,15 @@ static void DecodeMFSPR_MTSPR(Word Code)
 static void DecodeMFDCR_MTDCR(Word Code)
 {
   LongWord LCode = Code, Src1, Dest;
-  const char *pArg1 = (Code == 451) ? ArgStr[2] : ArgStr[1],
-             *pArg2 = (Code == 451) ? ArgStr[1] : ArgStr[2];
+  const tStrComp *pArg1 = (Code == 451) ? &ArgStr[2] : &ArgStr[1],
+                 *pArg2 = (Code == 451) ? &ArgStr[1] : &ArgStr[2];
   Boolean OK;
 
-  if (!ChkArgCnt(2, 2));
-  else if (ChkExactCPUList(0, CPU403, CPU403C, CPUNone) < 0);
-  else if (!DecodeGenReg(pArg1, &Dest)) WrError(1350);
-  else
+  if (ChkArgCnt(2, 2)
+   && (ChkExactCPUList(0, CPU403, CPU403C, CPUNone) >= 0)
+   && DecodeGenReg(pArg1, &Dest))
   {
-    Src1 = EvalIntExpression(pArg2, UInt10, &OK);
+    Src1 = EvalStrIntExpression(pArg2, UInt10, &OK);
     if (OK)
     {
       SwapCode(&Src1);
@@ -917,15 +921,14 @@ static void DecodeMFDCR_MTDCR(Word Code)
 static void DecodeMFSR_MTSR(Word Code)
 {
   LongWord LCode = Code, Src1, Dest;
-  const char *pArg1 = (Code == 210) ? ArgStr[2] : ArgStr[1],
-             *pArg2 = (Code == 210) ? ArgStr[1] : ArgStr[2];
+  const tStrComp *pArg1 = (Code == 210) ? &ArgStr[2] : &ArgStr[1],
+                 *pArg2 = (Code == 210) ? &ArgStr[1] : &ArgStr[2];
   Boolean OK;
 
-  if (!ChkArgCnt(2, 2));
-  else if (!DecodeGenReg(pArg1, &Dest)) WrError(1350);
-  else
+  if (ChkArgCnt(2, 2)
+   && DecodeGenReg(pArg1, &Dest))
   {
-    Src1 = EvalIntExpression(pArg2, UInt4, &OK);
+    Src1 = EvalStrIntExpression(pArg2, UInt4, &OK);
     if (OK)
     {
       PutCode((T31 << 26) + (Dest << 21) + (Src1 << 16) + (LCode << 1));
@@ -942,12 +945,11 @@ static void DecodeMTCRF(Word Code)
 
   UNUSED(Code);
 
-  if (!ChkArgCnt(1, 2));
-  else if (!DecodeGenReg(ArgStr[ArgCnt], &Src1)) WrError(1350);
-  else
+  if (ChkArgCnt(1, 2)
+   && DecodeGenReg(&ArgStr[ArgCnt], &Src1))
   {
     OK = True;
-    Dest = (ArgCnt == 1) ? 0xff : EvalIntExpression(ArgStr[1], UInt8, &OK);
+    Dest = (ArgCnt == 1) ? 0xff : EvalStrIntExpression(&ArgStr[1], UInt8, &OK);
     if (OK)
     {
       PutCode((T31 << 26) + (Src1 << 21) + (Dest << 12) + (144 << 1));
@@ -963,11 +965,10 @@ static void DecodeMTFSF(Word Code)
 
   UNUSED(Code);
 
-  if (!ChkArgCnt(2, 2));
-  else if (!DecodeFPReg(ArgStr[2], &Src1)) WrError(1350);
-  else
+  if (ChkArgCnt(2, 2)
+   && DecodeFPReg(&ArgStr[2], &Src1))
   {
-    Dest = EvalIntExpression(ArgStr[1], UInt8, &OK);
+    Dest = EvalStrIntExpression(&ArgStr[1], UInt8, &OK);
     if (OK)
     {
       PutCode((T63 << 26) + (Dest << 17) + (Src1 << 11) + (711 << 1) + ExtractPoint(Code));
@@ -982,11 +983,11 @@ static void DecodeMTFSFI(Word Code)
   Boolean OK;
 
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeCondReg(ArgStr[1], &Dest)) WrError(1350);
-  else if ((Dest & 3) != 0) WrError(1351);
+  else if (!DecodeCondReg(&ArgStr[1], &Dest));
+  else if ((Dest & 3) != 0) WrStrErrorPos(ErrNum_MustBeEven, &ArgStr[1]);
   else
   {
-    Src1 = EvalIntExpression(ArgStr[2], UInt4, &OK);
+    Src1 = EvalStrIntExpression(&ArgStr[2], UInt4, &OK);
     if (OK)
     {
       PutCode((T63 << 26) + (Dest << 21) + (Src1 << 12) + (134 << 1) + ExtractPoint(Code));
@@ -1001,17 +1002,16 @@ static void DecodeRLMI(Word Code)
   LongWord Dest, Src1, Src2, Src3;
   Boolean OK;
 
-  if (!ChkArgCnt(5, 5));
-  else if (!ChkMinCPU(CPU6000));
-  else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
-  else if (!DecodeGenReg(ArgStr[2], &Src1)) WrError(1350);
-  else if (!DecodeGenReg(ArgStr[3], &Src2)) WrError(1350);
-  else
+  if (ChkArgCnt(5, 5)
+   && ChkMinCPU(CPU6000)
+   && DecodeGenReg(&ArgStr[1], &Dest)
+   && DecodeGenReg(&ArgStr[2], &Src1)
+   && DecodeGenReg(&ArgStr[3], &Src2))
   {
-    Src3 = EvalIntExpression(ArgStr[4], UInt5, &OK);
+    Src3 = EvalStrIntExpression(&ArgStr[4], UInt5, &OK);
     if (OK)
     {
-      Imm = EvalIntExpression(ArgStr[5], UInt5, &OK);
+      Imm = EvalStrIntExpression(&ArgStr[5], UInt5, &OK);
       if (OK)
       {
         PutCode((T22 << 26) + (Src1 << 21) + (Dest << 16)
@@ -1028,16 +1028,15 @@ static void DecodeRLWNM(Word Code)
   LongWord Dest, Src1, Src2, Src3;
   Boolean OK;
 
-  if (!ChkArgCnt(5, 5));
-  else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
-  else if (!DecodeGenReg(ArgStr[2], &Src1)) WrError(1350);
-  else if (!DecodeGenReg(ArgStr[3], &Src2)) WrError(1350);
-  else
+  if (ChkArgCnt(5, 5)
+   && DecodeGenReg(&ArgStr[1], &Dest)
+   && DecodeGenReg(&ArgStr[2], &Src1)
+   && DecodeGenReg(&ArgStr[3], &Src2))
   {
-    Src3 = EvalIntExpression(ArgStr[4], UInt5, &OK);
+    Src3 = EvalStrIntExpression(&ArgStr[4], UInt5, &OK);
     if (OK)
     {
-      Imm = EvalIntExpression(ArgStr[5], UInt5, &OK);
+      Imm = EvalStrIntExpression(&ArgStr[5], UInt5, &OK);
       if (OK)
       {
         PutCode((T23 << 26) + (Src1 << 21) + (Dest << 16)
@@ -1054,18 +1053,17 @@ static void DecodeRLWIMI_RLWINM(Word Code)
   LongWord Dest, Src1, Src2, Src3, LCode = Code & 0x7fff;
   Boolean OK;
 
-  if (!ChkArgCnt(5, 5));
-  else if (!DecodeGenReg(ArgStr[1], &Dest)) WrError(1350);
-  else if (!DecodeGenReg(ArgStr[2], &Src1)) WrError(1350);
-  else
+  if (ChkArgCnt(5, 5)
+   && DecodeGenReg(&ArgStr[1], &Dest)
+   && DecodeGenReg(&ArgStr[2], &Src1))
   {
-    Src2 = EvalIntExpression(ArgStr[3], UInt5, &OK);
+    Src2 = EvalStrIntExpression(&ArgStr[3], UInt5, &OK);
     if (OK)
     {
-      Src3 = EvalIntExpression(ArgStr[4], UInt5, &OK);
+      Src3 = EvalStrIntExpression(&ArgStr[4], UInt5, &OK);
       if (OK)
       {
-        Imm = EvalIntExpression(ArgStr[5], UInt5, &OK);
+        Imm = EvalStrIntExpression(&ArgStr[5], UInt5, &OK);
         if (OK)
         {
           PutCode((T20 << 26) + (Dest << 16) + (Src1 << 21)
@@ -1084,9 +1082,8 @@ static void DecodeTLBIE(Word Code)
 
   UNUSED(Code);
 
-  if (!ChkArgCnt(1, 1));
-  else if (!DecodeGenReg(ArgStr[1], &Src1)) WrError(1350);
-  else
+  if (ChkArgCnt(1, 1)
+   && DecodeGenReg(&ArgStr[1], &Src1))
   {
     PutCode((T31 << 26) + (Src1 << 11) + (306 << 1));
     CodeLen = 4;
@@ -1101,12 +1098,11 @@ static void DecodeTW(Word Code)
 
   UNUSED(Code);
 
-  if (!ChkArgCnt(3, 3));
-  else if (!DecodeGenReg(ArgStr[2], &Src1)) WrError(1350);
-  else if (!DecodeGenReg(ArgStr[3], &Src2)) WrError(1350);
-  else
+  if (ChkArgCnt(3, 3)
+   && DecodeGenReg(&ArgStr[2], &Src1)
+   && DecodeGenReg(&ArgStr[3], &Src2))
   {
-    Dest = EvalIntExpression(ArgStr[1], UInt5, &OK);
+    Dest = EvalStrIntExpression(&ArgStr[1], UInt5, &OK);
     if (OK)
     {
       PutCode((T31 << 26) + (Dest << 21) + (Src1 << 16) + (Src2 << 11) + (4 << 1));
@@ -1123,14 +1119,13 @@ static void DecodeTWI(Word Code)
 
   UNUSED(Code);
 
-  if (!ChkArgCnt(3, 3));
-  else if (!DecodeGenReg(ArgStr[2], &Src1)) WrError(1350);
-  else
+  if (ChkArgCnt(3, 3)
+   && DecodeGenReg(&ArgStr[2], &Src1))
   {
-    Imm = EvalIntExpression(ArgStr[3], Int16, &OK);
+    Imm = EvalStrIntExpression(&ArgStr[3], Int16, &OK);
     if (OK)
     {
-      Dest = EvalIntExpression(ArgStr[1], UInt5, &OK);
+      Dest = EvalStrIntExpression(&ArgStr[1], UInt5, &OK);
       if (OK)
       {
         PutCode((T3 << 26) + (Dest << 21) + (Src1 << 16) + (Imm & 0xffff));
@@ -1147,11 +1142,10 @@ static void DecodeWRTEEI(Word Code)
 
   UNUSED(Code);
 
-  if (!ChkArgCnt(1, 1));
-  else if (ChkExactCPUList(0, CPU403, CPU403C, CPUNone) < 0);
-  else
+  if (ChkArgCnt(1, 1)
+   && (ChkExactCPUList(0, CPU403, CPU403C, CPUNone) >= 0))
   {
-    Src1 = EvalIntExpression(ArgStr[1], UInt1, &OK) << 15;
+    Src1 = EvalStrIntExpression(&ArgStr[1], UInt1, &OK) << 15;
     if (OK)
     {
       PutCode((T31 << 26) + Src1 + (163 << 1));
@@ -1164,18 +1158,18 @@ static void DecodeCMP_CMPL(Word Code)
 {
   LongWord Src1, Src2, Src3, Dest, LCode = Code;
   Boolean OK;
-  const char *pArg4 = (ArgCnt == 3) ? ArgStr[3] : ArgStr[4],
-             *pArg3 = (ArgCnt == 3) ? ArgStr[2] : ArgStr[3],
-             *pArg2 = (ArgCnt == 3) ? "0" : ArgStr[2];
+  const tStrComp *pArg4 = (ArgCnt == 3) ? &ArgStr[3] : &ArgStr[4],
+                 *pArg3 = (ArgCnt == 3) ? &ArgStr[2] : &ArgStr[3],
+                 *pArg2 = (ArgCnt == 3) ? &ZeroComp : &ArgStr[2];
 
   if (!ChkArgCnt(3, 4));
-  else if (!DecodeGenReg(pArg4, &Src2)) WrError(1350);
-  else if (!DecodeGenReg(pArg3, &Src1)) WrError(1350);
-  else if (!DecodeCondReg(ArgStr[1], &Dest)) WrError(1350);
-  else if ((Dest & 3) != 0) WrError(1351);
+  else if (!DecodeGenReg(pArg4, &Src2));
+  else if (!DecodeGenReg(pArg3, &Src1));
+  else if (!DecodeCondReg(&ArgStr[1], &Dest));
+  else if ((Dest & 3) != 0) WrStrErrorPos(ErrNum_MustBeEven, &ArgStr[1]);
   else
   {
-    Src3 = EvalIntExpression(pArg2, UInt1, &OK);
+    Src3 = EvalStrIntExpression(pArg2, UInt1, &OK);
     if (OK)
     {
       PutCode((T31 << 26) + (Dest << 21) + (Src3 << 21) + (Src1 << 16)
@@ -1192,10 +1186,10 @@ static void DecodeFCMPO_FCMPU(Word Code)
   LongWord Src1, Src2, Dest, LCode = Code;
 
   if (!ChkArgCnt(3, 3));
-  else if (!DecodeFPReg(ArgStr[3], &Src2)) WrError(1350);
-  else if (!DecodeFPReg(ArgStr[2], &Src1)) WrError(1350);
-  else if (!DecodeCondReg(ArgStr[1], &Dest)) WrError(1350);
-  else if ((Dest & 3) != 0) WrError(1351);
+  else if (!DecodeFPReg(&ArgStr[3], &Src2));
+  else if (!DecodeFPReg(&ArgStr[2], &Src1));
+  else if (!DecodeCondReg(&ArgStr[1], &Dest));
+  else if ((Dest & 3) != 0) WrStrErrorPos(ErrNum_MustBeEven, &ArgStr[1]);
   else
   {
     PutCode((T63 << 26) + (Dest << 21) + (Src1 << 16) + (Src2 << 11) + (LCode << 1));
@@ -1207,21 +1201,21 @@ static void DecodeCMPI_CMPLI(Word Code)
 {
   LongWord Src1, Src2, Src3, Dest, LCode = Code;
   Boolean OK;
-  const char *pArg4 = (ArgCnt == 3) ? ArgStr[3] : ArgStr[4],
-             *pArg3 = (ArgCnt == 3) ? ArgStr[2] : ArgStr[3],
-             *pArg2 = (ArgCnt == 3) ? "0" : ArgStr[2];
+  const tStrComp *pArg4 = (ArgCnt == 3) ? &ArgStr[3] : &ArgStr[4],
+                 *pArg3 = (ArgCnt == 3) ? &ArgStr[2] : &ArgStr[3],
+                 *pArg2 = (ArgCnt == 3) ? &ZeroComp : &ArgStr[2];
 
   if (ChkArgCnt(3, 4))
   {
-    Src2 = EvalIntExpression(pArg4, Int16, &OK);
+    Src2 = EvalStrIntExpression(pArg4, Int16, &OK);
     if (OK)
     {
-      if (!DecodeGenReg(pArg3, &Src1)) WrError(1350);
-      else if (!DecodeCondReg(ArgStr[1], &Dest)) WrError(1350);
-      else if ((Dest & 3) != 0) WrError(1351);
+      if (!DecodeGenReg(pArg3, &Src1));
+      else if (!DecodeCondReg(&ArgStr[1], &Dest));
+      else if ((Dest & 3) != 0) WrStrErrorPos(ErrNum_MustBeEven, &ArgStr[1]);
       else
       {
-        Src3 = EvalIntExpression(pArg2, UInt1, &OK);
+        Src3 = EvalStrIntExpression(pArg2, UInt1, &OK);
         if (OK)
         {
           PutCode((T10 << 26) + (Dest << 21) + (Src3 << 21)
@@ -1243,14 +1237,14 @@ static void DecodeB_BL_BA_BLA(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    Dist = EvalIntExpression(ArgStr[1], Int32, &OK);
+    Dist = EvalStrIntExpression(&ArgStr[1], Int32, &OK);
     if (OK)
     {
       if (!(Code & 2))
         Dist -= EProgCounter();
-      if ((!SymbolQuestionable) && (Dist > 0x1ffffff)) WrError(1320);
-      else if ((!SymbolQuestionable) && (Dist < -0x2000000l)) WrError(1315);
-      else if ((Dist & 3) != 0) WrError(1375);
+      if ((!SymbolQuestionable) && (Dist > 0x1ffffff)) WrError(ErrNum_OverRange);
+      else if ((!SymbolQuestionable) && (Dist < -0x2000000l)) WrError(ErrNum_UnderRange);
+      else if ((Dist & 3) != 0) WrError(ErrNum_DistIsOdd);
       else
       {
         PutCode((T18 << 26) + (Dist & 0x03fffffc) + LCode);
@@ -1268,20 +1262,20 @@ static void DecodeBC_BCL_BCA_BCLA(Word Code)
 
   if (ChkArgCnt(3, 3))
   {
-    Src1 = EvalIntExpression(ArgStr[1], UInt5, &OK); /* BO */
+    Src1 = EvalStrIntExpression(&ArgStr[1], UInt5, &OK); /* BO */
     if (OK)
     {
-      Src2 = EvalIntExpression(ArgStr[2], UInt5, &OK); /* BI */
+      Src2 = EvalStrIntExpression(&ArgStr[2], UInt5, &OK); /* BI */
       if (OK)
       {
-        Dist = EvalIntExpression(ArgStr[3], Int32, &OK); /* ADR */
+        Dist = EvalStrIntExpression(&ArgStr[3], Int32, &OK); /* ADR */
         if (OK)
         {
           if (!(Code & 2))
             Dist -= EProgCounter();
-          if ((!SymbolQuestionable) && (Dist > 0x7fff)) WrError(1320);
-          else if ((!SymbolQuestionable) && (Dist < -0x8000l)) WrError(1315);
-          else if ((Dist & 3) != 0) WrError(1375);
+          if ((!SymbolQuestionable) && (Dist > 0x7fff)) WrError(ErrNum_OverRange);
+          else if ((!SymbolQuestionable) && (Dist < -0x8000l)) WrError(ErrNum_UnderRange);
+          else if ((Dist & 3) != 0) WrError(ErrNum_DistIsOdd);
           else
           {
             PutCode((T16 << 26) + (Src1 << 21) + (Src2 << 16) + (Dist & 0xfffc) + LCode);
@@ -1300,10 +1294,10 @@ static void DecodeBCCTR_BCCTRL_BCLR_BCLRL(Word Code)
 
   if (ChkArgCnt(2, 2))
   {
-    Src1 = EvalIntExpression(ArgStr[1], UInt5, &OK);
+    Src1 = EvalStrIntExpression(&ArgStr[1], UInt5, &OK);
     if (OK)
     {
-      Src2 = EvalIntExpression(ArgStr[2], UInt5, &OK);
+      Src2 = EvalStrIntExpression(&ArgStr[2], UInt5, &OK);
       if (OK)
       {
         PutCode((T19 << 26) + (Src1 << 21) + (Src2 << 16) + LCode);
@@ -1318,13 +1312,12 @@ static void DecodeTLBRE_TLBWE(Word Code)
   LongWord Src1, Src2, Src3, LCode = Code;
   Boolean OK;
 
-  if (!ChkArgCnt(3, 3));
-  else if (!ChkExactCPU(CPU403C));
-  else if (!DecodeGenReg(ArgStr[1], &Src1)) WrError(1350);
-  else if (!DecodeGenReg(ArgStr[2], &Src2)) WrError(1350);
-  else
+  if (ChkArgCnt(3, 3)
+   && ChkExactCPU(CPU403C)
+   && DecodeGenReg(&ArgStr[1], &Src1)
+   && DecodeGenReg(&ArgStr[2], &Src2))
   {
-    Src3 = EvalIntExpression(ArgStr[3], UInt1, &OK);
+    Src3 = EvalStrIntExpression(&ArgStr[3], UInt1, &OK);
     if (OK)
     {
       PutCode((T31 << 26) + (Src1 << 21) + (Src2 << 16) +
@@ -1339,7 +1332,7 @@ static void DecodeREG(Word Code)
   UNUSED(Code);
 
   if (ChkArgCnt(1, 1))
-    AddRegDef(LabPart.Str, ArgStr[1]);
+    AddRegDef(LabPart.Str, ArgStr[1].Str);
 }
 
 /*-------------------------------------------------------------------------*/
@@ -2039,7 +2032,7 @@ static void MakeCode_601(void)
 
   /* Nullanweisung */
 
-  if ((Memo("")) && (*AttrPart == '\0') && (ArgCnt == 0))
+  if (Memo("") && !*AttrPart.Str && (ArgCnt == 0))
     return;
 
   /* Pseudoanweisungen */

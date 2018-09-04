@@ -56,18 +56,18 @@ Boolean IfAsm;       /* FALSE: in einer neg. IF-Sequenz-->kein Code */
 
 static Boolean ActiveIF;
 
-static LongInt GetIfVal(char *Cond)
+static LongInt GetIfVal(const tStrComp *pCond)
 {
   Boolean IfOK;
   LongInt Tmp;
 
   FirstPassUnknown = False;
-  Tmp = EvalIntExpression(Cond, Int32, &IfOK);
+  Tmp = EvalStrIntExpression(pCond, Int32, &IfOK);
   if ((FirstPassUnknown) || (!IfOK))
   {
     Tmp = 1;
-    if (FirstPassUnknown) WrError(1820);
-    else if (!IfOK) WrError(1135);
+    if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
+    else if (!IfOK) WrError(ErrNum_InvOpType);
   }
 
   return Tmp;
@@ -107,7 +107,7 @@ static void CodeIF(void)
   else if (!ChkArgCnt(1, 1))
     IfExpr = 1;
   else
-    IfExpr = GetIfVal(ArgStr[1]);
+    IfExpr = GetIfVal(&ArgStr[1]);
   if (IfAsm)
     AddBoolFlag(IfExpr != 0);
   PushIF(IfExpr);
@@ -126,7 +126,7 @@ static void CodeIFDEF(Word Negate)
     IfExpr = 1;
   else
   {
-    Defined = IsSymbolDefined(ArgStr[1]);
+    Defined = IsSymbolDefined(ArgStr[1].Str);
     if (IfAsm)
       strmaxcpy(ListLine, (Defined) ? "=>DEFINED" : "=>UNDEFINED", 255);
     if (!Negate)
@@ -151,7 +151,7 @@ static void CodeIFUSED(Word Negate)
     IfExpr = 1;
   else
   {
-    Used = IsSymbolUsed(ArgStr[1]);
+    Used = IsSymbolUsed(ArgStr[1].Str);
     if (IfAsm)
       strmaxcpy(ListLine, (Used) ? "=>USED" : "=>UNUSED", 255);
     if (!Negate)
@@ -179,7 +179,7 @@ void CodeIFEXIST(Word Negate)
   {
     String FileName;
 
-    strmaxcpy(FileName, (ArgStr[1][0] == '"') ? ArgStr[1] + 1 : ArgStr[1], STRINGSIZE);
+    strmaxcpy(FileName, (ArgStr[1].Str[0] == '"') ? ArgStr[1].Str + 1 : ArgStr[1].Str, STRINGSIZE);
     if (FileName[strlen(FileName) - 1] == '"')
       FileName[strlen(FileName) - 1] = '\0';
     AddSuffix(FileName, IncSuffix);
@@ -207,7 +207,7 @@ static void CodeIFB(Word Negate)
   else
   {
     for (z = 1; z <= ArgCnt; z++)
-      if (strlen(ArgStr[z++]) > 0)
+      if (strlen(ArgStr[z++].Str) > 0)
         Blank = False;
     if (IfAsm)
       strmaxcpy(ListLine, (Blank) ? "=>BLANK" : "=>NOT BLANK", 255);
@@ -221,7 +221,7 @@ static void CodeELSEIF(void)
 {
   LongInt IfExpr;
 
-  if (!FirstIfSave || (FirstIfSave->State != IfState_IFIF)) WrError(1840);
+  if (!FirstIfSave || (FirstIfSave->State != IfState_IFIF)) WrError(ErrNum_MissingIf);
   else if (ArgCnt == 0)
   {
     if (FirstIfSave->SaveIfAsm)
@@ -235,7 +235,7 @@ static void CodeELSEIF(void)
     else if (FirstIfSave->CaseFound)
       IfExpr = 0;
     else
-      IfExpr = GetIfVal(ArgStr[1]);
+      IfExpr = GetIfVal(&ArgStr[1]);
     IfAsm = ((FirstIfSave->SaveIfAsm) && (IfExpr != 0) && (!FirstIfSave->CaseFound));
     if (FirstIfSave->SaveIfAsm)
       AddBoolFlag(IfExpr != 0);
@@ -254,7 +254,7 @@ static void CodeENDIF(void)
   PIfSave NewSave;
 
   if (!ChkArgCnt(0, 0));
-  else if (!FirstIfSave || ((FirstIfSave->State != IfState_IFIF) && (FirstIfSave->State != IfState_IFELSE))) WrError(1840);
+  else if (!FirstIfSave || ((FirstIfSave->State != IfState_IFIF) && (FirstIfSave->State != IfState_IFELSE))) WrError(ErrNum_MissingIf);
   else
   {
     IfAsm = FirstIfSave->SaveIfAsm;
@@ -268,16 +268,16 @@ static void CodeENDIF(void)
 }
 
 
-static void EvalIfExpression(char *Cond, TempResult *erg)
+static void EvalIfExpression(const tStrComp *pCond, TempResult *erg)
 {
   FirstPassUnknown = False;
-  EvalExpression(Cond, erg);
+  EvalStrExpression(pCond, erg);
   if ((erg->Typ == TempNone) || (FirstPassUnknown))
   {
     erg->Typ = TempInt;
     erg->Contents.Int = 1;
     if (FirstPassUnknown)
-      WrError(1820);
+      WrError(ErrNum_FirstPassCalc);
   }
 }
 
@@ -304,7 +304,7 @@ static void CodeSWITCH(void)
   }
   else
   {
-    EvalIfExpression(ArgStr[1], &(NewSave->SaveExpr));
+    EvalIfExpression(&ArgStr[1], &(NewSave->SaveExpr));
     SetListLineVal(&(NewSave->SaveExpr));
   }
   FirstIfSave = NewSave;
@@ -317,10 +317,10 @@ static void CodeCASE(void)
   int z;
   TempResult t;
 
-  if (!FirstIfSave) WrError(1840);
+  if (!FirstIfSave) WrError(ErrNum_MissingIf);
   else if (ChkArgCnt(1, ArgCntMax))
   {
-    if ((FirstIfSave->State != IfState_CASESWITCH) && (FirstIfSave->State != IfState_CASECASE)) WrError(1480);
+    if ((FirstIfSave->State != IfState_CASESWITCH) && (FirstIfSave->State != IfState_CASECASE)) WrError(ErrNum_InvIfConst);
     else
     {
       if (!FirstIfSave->SaveIfAsm)
@@ -333,7 +333,7 @@ static void CodeCASE(void)
         z = 1;
         do
         {
-          EvalIfExpression(ArgStr[z], &t);
+          EvalIfExpression(&ArgStr[z], &t);
           eq = (FirstIfSave->SaveExpr.Typ == t.Typ);
           if (eq)
            switch (t.Typ)
@@ -372,7 +372,7 @@ static void CodeELSECASE(void)
 {
   if (ChkArgCnt(0, 0))
   {
-    if ((FirstIfSave->State != IfState_CASESWITCH) && (FirstIfSave->State != IfState_CASECASE)) WrError(1480);
+    if ((FirstIfSave->State != IfState_CASESWITCH) && (FirstIfSave->State != IfState_CASECASE)) WrError(ErrNum_InvIfConst);
     else
       IfAsm = (FirstIfSave->SaveIfAsm && (!FirstIfSave->CaseFound));
     if (FirstIfSave->SaveIfAsm)
@@ -390,16 +390,16 @@ static void CodeENDCASE(void)
   PIfSave NewSave;
 
   if (!ChkArgCnt(0, 0));
-  else if (!FirstIfSave) WrError(1840);
+  else if (!FirstIfSave) WrError(ErrNum_MissingIf);
   else
   {
     if ((FirstIfSave->State != IfState_CASESWITCH)
     && (FirstIfSave->State != IfState_CASECASE)
-    && (FirstIfSave->State != IfState_CASEELSE)) WrError(1480);
+    && (FirstIfSave->State != IfState_CASEELSE)) WrError(ErrNum_InvIfConst);
     else
     {
       IfAsm = FirstIfSave->SaveIfAsm;
-      if (!FirstIfSave->CaseFound) WrError(100);
+      if (!FirstIfSave->CaseFound) WrError(ErrNum_NoCaseHit);
       NewSave = FirstIfSave;
       FirstIfSave = NewSave->Next;
       sprintf(ListLine, "[%u]", (unsigned)NewSave->StartLine);

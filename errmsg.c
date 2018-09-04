@@ -43,7 +43,7 @@ Boolean ChkRange(LargeInt Value, LargeInt Min, LargeInt Max)
     LargeString(s2, Min);
     strmaxcat(s1, "<", sizeof(s1));
     strmaxcat(s1, s2, sizeof(s1));
-    WrXError(1315, s1);
+    WrXError(ErrNum_UnderRange, s1);
     return False;
   }
   else if (Value > Max)
@@ -52,7 +52,7 @@ Boolean ChkRange(LargeInt Value, LargeInt Min, LargeInt Max)
     LargeString(s2, Max);
     strmaxcat(s1, ">", sizeof(s1));
     strmaxcat(s1, s2, sizeof(s1));
-    WrXError(1320, s1);
+    WrXError(ErrNum_OverRange, s1);
     return False;
   }
   else
@@ -60,15 +60,16 @@ Boolean ChkRange(LargeInt Value, LargeInt Min, LargeInt Max)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     ChkArgCntExt(int ThisCnt, int MinCnt, int MaxCnt)
+ * \fn     ChkArgCntExtPos(int ThisCnt, int MinCnt, int MaxCnt, const struct sLineComp *pComp)
  * \brief  check whether argument count is within given range and issue error if not
  * \param  ThisCnt count to check
  * \param  MinCnt minimum allowed count
  * \param  MaxCnt maximum allowed count
+ * \param  pComp position in source line (optional)
  * \return TRUE if in-range and no error
  * ------------------------------------------------------------------------ */
 
-Boolean ChkArgCntExt(int ThisCnt, int MinCnt, int MaxCnt)
+Boolean ChkArgCntExtPos(int ThisCnt, int MinCnt, int MaxCnt, const struct sLineComp *pComp)
 {
   if ((ThisCnt < MinCnt) || (ThisCnt > MaxCnt))
   {
@@ -87,7 +88,10 @@ Boolean ChkArgCntExt(int ThisCnt, int MinCnt, int MaxCnt)
       default:
         sprintf(Str, getmessage(Num_ErrMsgArgCntMulti), MinCnt, ThisCnt);
     }
-    WrXError(ErrNum_WrongArgCnt, Str);
+    if (pComp)
+      WrXErrorPos(ErrNum_WrongArgCnt, Str, pComp);
+    else
+      WrXError(ErrNum_WrongArgCnt, Str);
     return False;
   }
   else

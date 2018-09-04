@@ -22,6 +22,7 @@
 #include "asmsub.h"
 #include "asmcode.h"
 #include "asmrelocs.h"
+#include "errmsg.h"
 #include "fileformat.h"
 
 /*---------------------------------------------------------------------------*/
@@ -147,7 +148,7 @@ void SetRelocs(PRelocEntry List)
 {
   if (LastRelocs)
   {
-    WrError(1155);
+    WrError(ErrNum_UnresRelocs);
     FreeRelocs(&LastRelocs);
   }
   LastRelocs = List;

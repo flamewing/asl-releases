@@ -42,12 +42,12 @@ void DecodeRES(Word Code)
     Word Size;
 
     FirstPassUnknown = False;
-    Size = EvalIntExpression(ArgStr[1], Int16, &ValOK);
-    if (FirstPassUnknown) WrError(1820);
+    Size = EvalStrIntExpression(&ArgStr[1], Int16, &ValOK);
+    if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
     if ((ValOK) && (!FirstPassUnknown))
     {
       DontPrint = True;
-      if (!Size) WrError(290);
+      if (!Size) WrError(ErrNum_NullResMem);
       CodeLen = Size;
       BookKeeping();
     }
@@ -69,7 +69,7 @@ void DecodeDATA(IntType CodeIntType, IntType DataIntType)
     for (z = 1; ValOK && (z <= ArgCnt); z++)
     {
       FirstPassUnknown = False;
-      EvalExpression(ArgStr[z], &t);
+      EvalStrExpression(&ArgStr[z], &t);
       if ((t.Typ == TempInt) && (FirstPassUnknown))
         t.Contents.Int &= UnknownMask;
 
@@ -78,7 +78,7 @@ void DecodeDATA(IntType CodeIntType, IntType DataIntType)
         case TempInt:
           if (!RangeCheck(t.Contents.Int, ValIntType))
           {
-            WrError(1320);
+            WrError(ErrNum_OverRange);
             ValOK = False;
           }
           else if (ValMask <= 0xff)
@@ -89,7 +89,7 @@ void DecodeDATA(IntType CodeIntType, IntType DataIntType)
             DAsmCode[CodeLen++] = t.Contents.Int & ValMask;
           break;
         case TempFloat:
-          WrError(1135);
+          WrError(ErrNum_InvOpType);
           ValOK = False;
           break;
         case TempString:

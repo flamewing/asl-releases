@@ -782,11 +782,11 @@ Message ErrMsgInvPrefixCombination
  "ung&uuml;ltige Pr&auml;fix-Kombination"
  "invalid combination of prefixes"
 
-Message ErrConstantRedefinedAsVariable
+Message ErrMsgConstantRedefinedAsVariable
  "Konstante kann nicht als Variable redefiniert werden"
  "constants cannot be redefined as variables"
 
-Message ErrVariableRedefinedAsConstant
+Message ErrMsgVariableRedefinedAsConstant
  "Variable kann nicht als Konstante redefiniert werden"
  "variables cannot be redefined as constants"
 
@@ -825,6 +825,10 @@ Message ErrMsgConflictingMacExpMod
 Message ErrMsgInvalidPrepDir
  "unbekannte Pr&auml;prozessoranweisung"
  "unknown preprocessing directive"
+
+Message ErrMsgInternalError
+ "interner Fehler"
+ "internal error"
 
 Message ErrMsgOpeningFile
  "Fehler beim &Ouml;ffnen der Datei"

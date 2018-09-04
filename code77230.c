@@ -154,7 +154,7 @@ static Boolean SplitArgs(int Count)
   {
     if (ArgCnt > 0)
     {
-      DiscPtr = ArgStr[1] - 1;
+      DiscPtr = ArgStr[1].Str - 1;
       SplittedArg = 1;
     }
     else
@@ -168,7 +168,7 @@ static Boolean SplitArgs(int Count)
     return False;
   }
 
-  for (p = ArgStr[SplittedArg]; isspace(((usint)*p) & 0xff); p++);
+  for (p = ArgStr[SplittedArg].Str; isspace(((usint)*p) & 0xff); p++);
   p1 = QuotPos(p, ' ');
   p2 = QuotPos(p, '\t');
   DiscPtr = ((!p1) || ((p2) && (p2 < p1))) ? p2 : p1;
@@ -197,14 +197,14 @@ static void DiscardArgs(void)
     if (Eaten)
     {
       for (z = 1; z < ArgCnt; z++)
-        strmov(ArgStr[z], ArgStr[z + 1]);
+        strmov(ArgStr[z].Str, ArgStr[z + 1].Str);
       ArgCnt--;
     }
     else
     {
       if (p2)
         for (p2++; myisspace(*p2); p2++);
-      strmov(ArgStr[SplittedArg], p2);
+      strmov(ArgStr[SplittedArg].Str, p2);
     }
   }
   else
@@ -212,7 +212,7 @@ static void DiscardArgs(void)
   if (DiscCnt > 0)
   {
     for (z = 0; z <= ArgCnt - DiscCnt; z++)
-      strmov(ArgStr[z + 1], ArgStr[z + DiscCnt]);
+      strmov(ArgStr[z + 1].Str, ArgStr[z + DiscCnt].Str);
     ArgCnt -= DiscCnt - 1;
   }
 }
@@ -221,7 +221,7 @@ static void AddComp(int Index, LongWord Value)
 {
   if ((InstrMask & (1l << Index)) != 0)
   {
-    WrError(1355);
+    WrError(ErrNum_InvParAddrMode);
     Error = True;
   }
   else
@@ -262,7 +262,7 @@ static void DecodeJmp(Word Index)
     Error = True;
   }
   else
-    Adr = EvalIntExpression(ArgStr[1], UInt13, &Error);
+    Adr = EvalStrIntExpression(&ArgStr[1], UInt13, &Error);
   Error = !Error;
   if (!Error)
     AddComp(InstrBranch, Lo(Op->Code) + (Adr << 5));
@@ -276,14 +276,14 @@ static void DecodeMOV(Word Index)
 
   if (!SplitArgs(2))
     return;
-  if (!DecodeReg(ArgStr[1], &DReg, DestRegs, DestRegCnt))
+  if (!DecodeReg(ArgStr[1].Str, &DReg, DestRegs, DestRegCnt))
   {
-    WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+    WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
     Error = True;
   }
-  else if (!DecodeReg(ArgStr[2], &SReg, SrcRegs, SrcRegCnt))
+  else if (!DecodeReg(ArgStr[2].Str, &SReg, SrcRegs, SrcRegCnt))
   {
-    WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
+    WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
     Error = True;
   }
   else
@@ -298,13 +298,13 @@ static void DecodeLDI(Word Index)
 
   if (!SplitArgs(2))
     return;
-  if (!DecodeReg(ArgStr[1], &DReg, DestRegs, DestRegCnt))
+  if (!DecodeReg(ArgStr[1].Str, &DReg, DestRegs, DestRegCnt))
   {
-    WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+    WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
     Error = True;
   }
   else
-    Src = EvalIntExpression(ArgStr[2], Int24, &Error);
+    Src = EvalStrIntExpression(&ArgStr[2], Int24, &Error);
   Error = !Error;
   if (!Error)
     AddComp(InstrLDI, (Src << 5) + DReg);
@@ -328,10 +328,10 @@ static void DecodeALU1(Word Index)
 
   if (!SplitArgs(1))
     return;
-  if ((!DecodeReg(ArgStr[1], &DReg, DestRegs, DestRegCnt))
+  if ((!DecodeReg(ArgStr[1].Str, &DReg, DestRegs, DestRegCnt))
    || (DReg < 16) || (DReg > 23))
   {
-    WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+    WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
     Error = True;
   }
   else
@@ -345,15 +345,15 @@ static void DecodeALU2(Word Index)
   LongWord DReg, SReg;                                      
                                                       
   if (!SplitArgs(2)) return;                       
-  if ((!DecodeReg(ArgStr[1], &DReg, DestRegs, DestRegCnt))
+  if ((!DecodeReg(ArgStr[1].Str, &DReg, DestRegs, DestRegCnt))
    || (DReg < 16) || (DReg > 23))                         
-  {                                              
-    WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+  {
+    WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
     Error = True;             
   }                                                
-  else if (!DecodeReg(ArgStr[2], &SReg, ALUSrcRegs, ALUSrcRegCnt))
-  {                                              
-    WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
+  else if (!DecodeReg(ArgStr[2].Str, &SReg, ALUSrcRegs, ALUSrcRegCnt))
+  {
+    WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
     Error = True;             
   }
   else
@@ -439,7 +439,7 @@ static void DecodeBASE(Word Index)
 
   if (!SplitArgs(1))
     return;
-  Value = EvalIntExpression(ArgStr[1], UInt3, &Error);
+  Value = EvalStrIntExpression(&ArgStr[1], UInt3, &Error);
   Error = !Error;
   if (!Error)
     AddComp(Index, Value);
@@ -455,7 +455,7 @@ static void DecodeRPC(Word Index)
     return;
 
   FirstPassUnknown = False;
-  Value = EvalIntExpression(ArgStr[1], UInt4, &Error);
+  Value = EvalStrIntExpression(&ArgStr[1], UInt4, &Error);
   if (FirstPassUnknown)
     Value &= 7;
   Error = (Value > 9) ? True : !Error;
@@ -492,7 +492,7 @@ static void DecodeBM(Word Index)
   if ((InstrMask & (1 << InstrEM)) != 0)
   {
     Error = (InstrComps[InstrEM] == 0);
-    if (Error) WrError(1355);
+    if (Error) WrError(ErrNum_InvParAddrMode);
     else
       AddComp(InstrBM, Index);
   }
@@ -512,7 +512,7 @@ static void DecodeEM(Word Index)
   {
     Error = (Index == 0);
     if (Error)
-      WrError(1355);
+      WrError(ErrNum_InvParAddrMode);
     else
       AddComp(InstrEM, Index);
   }
@@ -587,7 +587,7 @@ static void DecodeSHV(Word Index)
     return;
 
   FirstPassUnknown = False;
-  Value = EvalIntExpression(ArgStr[1], UInt6, &Error);
+  Value = EvalStrIntExpression(&ArgStr[1], UInt6, &Error);
   if (FirstPassUnknown)
     Value &= 31;
   Error = (Value > 46) ? True : !Error;
@@ -603,7 +603,7 @@ static void DecodeRPS(Word Index)
   
   if (!SplitArgs(1))
     return;
-  Value = EvalIntExpression(ArgStr[1], UInt9, &Error);
+  Value = EvalStrIntExpression(&ArgStr[1], UInt9, &Error);
   Error = !Error;
   if (!Error)
     AddComp(InstrRPS, Value);
@@ -619,7 +619,7 @@ static void DecodeNAL(Word Index)
     return;
 
   FirstPassUnknown = False;
-  Value = EvalIntExpression(ArgStr[1], UInt13, &Error);
+  Value = EvalStrIntExpression(&ArgStr[1], UInt13, &Error);
   Error = !Error;
   if (!Error)
   {
@@ -646,13 +646,13 @@ static Boolean DecodePseudo(void)
       while ((OK) && (z <= ArgCnt))
       {
         FirstPassUnknown = FALSE;
-        EvalExpression(ArgStr[z], &t);
+        EvalStrExpression(&ArgStr[z], &t);
         switch(t.Typ)
         {
           case TempInt:
             if (!RangeCheck(t.Contents.Int, Int32))
             {
-              WrError(1320);
+              WrError(ErrNum_OverRange);
               OK = False;
               break;
             }
@@ -661,7 +661,7 @@ static Boolean DecodePseudo(void)
           case TempFloat:
             if (!FloatRangeCheck(t.Contents.Float, Float32))
             {
-              WrError(1320);
+              WrError(ErrNum_OverRange);
               OK = False;
               break;
             }
@@ -719,17 +719,17 @@ static Boolean DecodePseudo(void)
     if (ChkArgCnt(1, 1))
     {
       FirstPassUnknown = False;
-      Size = EvalIntExpression(ArgStr[1], Int16, &OK);
+      Size = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
       if (FirstPassUnknown)
       {
-        WrError(1820);
+        WrError(ErrNum_FirstPassCalc);
         OK = False;
       }
       if (OK)
       {
         DontPrint = True;
         if (!Size)
-          WrError(290);
+          WrError(ErrNum_NullResMem);
         CodeLen = Size;
         BookKeeping();
       }
@@ -983,7 +983,7 @@ static void MakeCode_77230(void)
 
   /* Nullanweisung */
 
-  if ((Memo("")) && (*AttrPart == '\0') && (ArgCnt == 0))
+  if (Memo("") && !*AttrPart.Str && (ArgCnt == 0))
     return;
 
   /* Pseudoanweisungen */
@@ -1136,7 +1136,7 @@ static void MakeCode_77230(void)
         CodeLen = 1;
         break;
       default:
-        WrError(1355);
+        WrError(ErrNum_InvParAddrMode);
     }
   }
 }

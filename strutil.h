@@ -102,13 +102,15 @@ extern void KillBlanks(char *s);
 
 extern int CopyNoBlanks(char *pDest, const char *pSrc, int MaxLen);
 
-extern void KillPrefBlanks(char *s);
+extern int KillPrefBlanks(char *s);
 
-extern void KillPostBlanks(char *s);
+extern int KillPostBlanks(char *s);
 
 extern int strqcmp(const char *s1, const char *s2);
   
 extern char *strmov(char *pDest, const char *pSrc);
+
+extern int strmemcpy(char *pDest, int DestSize, const char *pSrc, int SrcLen);
   
 extern void strutil_init(void);
 

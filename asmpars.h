@@ -69,7 +69,7 @@
  * - added ClearSectionUsage()
  *
  *****************************************************************************/
-           
+
 typedef enum
 {
   UInt1    ,
@@ -133,6 +133,9 @@ typedef enum
   eSymbolSizeFloatDec96Bit = 9
 } tSymbolSize;
 
+struct sStrComp;
+struct sRelocEntry;
+
 extern tIntTypeDef IntTypeDefs[IntTypeCnt];
 extern Boolean FirstPassUnknown;
 extern Boolean SymbolQuestionable;
@@ -187,7 +190,7 @@ extern void EnterStringSymbol(const char *Name_O, const char *pValue, Boolean Ma
 
 extern void EnterDynStringSymbol(const char *Name_O, const tDynString *pValue, Boolean MayChange);
 
-extern Boolean GetIntSymbol(const char *Name, LargeInt *Wert, PRelocEntry *Relocs);
+extern Boolean GetIntSymbol(const char *Name, LargeInt *Wert, struct sRelocEntry **Relocs);
 
 extern Boolean GetFloatSymbol(const char *Name, Double *Wert);
 
@@ -226,15 +229,17 @@ extern Integer GetSymbolType(const char *Name);
 
 extern void EvalExpression(const char *pExpr, TempResult *Erg);
 
-extern LargeInt EvalIntExpressionWithFlags(const char *pExpr, IntType Type, Boolean *pResult, tSymbolFlags *pFlags);
+extern void EvalStrExpression(const struct sStrComp *pExpr, TempResult *pErg);
 
-#define EvalIntExpression(pExpr, Type, pResult) EvalIntExpressionWithFlags(pExpr, Type, pResult, NULL)
+extern LargeInt EvalStrIntExpressionWithFlags(const struct sStrComp *pExpr, IntType Type, Boolean *pResult, tSymbolFlags *pFlags);
+#define EvalStrIntExpression(pExpr, Type, pResult) EvalStrIntExpressionWithFlags(pExpr, Type, pResult, NULL)
 
-extern LargeInt EvalIntDisplacement(char *pExpr, IntType Type, Boolean *pResult);
+extern LargeInt EvalStrIntExpressionOffsWithFlags(const struct sStrComp *pExpr, int Offset, IntType Type, Boolean *pResult, tSymbolFlags *pFlags);
+#define EvalStrIntExpressionOffs(pExpr, Offset, Type, pResult) EvalStrIntExpressionOffsWithFlags(pExpr, Offset, Type, pResult, NULL)
 
-extern Double EvalFloatExpression(const char *pExpr, FloatType Typ, Boolean *pResult);
+extern Double EvalStrFloatExpression(const struct sStrComp *pExpr, FloatType Typ, Boolean *pResult);
 
-extern void EvalStringExpression(const char *pExpr, Boolean *pResult, char *pEvalResult);
+extern void EvalStrStringExpression(const struct sStrComp *pExpr, Boolean *pResult, char *pEvalResult);
 
 
 extern Boolean PushSymbol(char *SymName_O, char *StackName_O);

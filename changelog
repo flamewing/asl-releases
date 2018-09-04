@@ -1,3 +1,7 @@
+2018-09-04 [1.42 Bld 137]
+
+- Change      : Huge internal reworks to allow reporting column of error
+
 2018-08-06 [1.42 Bld 136]
 
 - Addition    : allow nested use of PHASE and DEPHASE

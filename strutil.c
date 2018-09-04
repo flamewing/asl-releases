@@ -757,7 +757,7 @@ int CopyNoBlanks(char *pDest, const char *pSrc, int MaxLen)
 /*--------------------------------------------------------------------------*/
 /* fuehrende Leerzeichen loeschen */
 
-void KillPrefBlanks(char *s)
+int KillPrefBlanks(char *s)
 {
   char *z = s;
 
@@ -765,17 +765,23 @@ void KillPrefBlanks(char *s)
     z++;
   if (z != s)
     strmov(s, z);
+  return z - s;
 }
 
 /*--------------------------------------------------------------------------*/
 /* anhaengende Leerzeichen loeschen */
 
-void KillPostBlanks(char *s)
+int KillPostBlanks(char *s)
 {
   char *z = s + strlen(s) - 1;
+  int count = 0;
 
   while ((z >= s) && (isspace((unsigned char)*z)))
+  {
     *(z--) = '\0';
+    count++;
+  }
+  return count;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -831,6 +837,27 @@ char *strcpy(char *pDest, const char *pSrc)
 }
 
 #endif
+
+/*!------------------------------------------------------------------------
+ * \fn     strmemcpy(char *pDest, int DestSize, const char *pSrc, int SrcLen)
+ * \brief  copy string with length limitation
+ * \param  pDest where to write
+ * \param  DestSize destination capacity
+ * \param  pSrc copy source
+ * \param  SrcLen # of characters to copy at most
+ * \return actual, possibly limited length
+ * ------------------------------------------------------------------------ */
+
+int strmemcpy(char *pDest, int DestSize, const char *pSrc, int SrcLen)
+{
+  if (DestSize < SrcLen + 1)
+    SrcLen = DestSize - 1;
+  if (SrcLen < 0)
+    SrcLen = 0;
+  memmove(pDest, pSrc, SrcLen);
+  pDest[SrcLen] = '\0';
+  return SrcLen;
+}
 
 /*--------------------------------------------------------------------------*/
 

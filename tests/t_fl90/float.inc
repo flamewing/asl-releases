@@ -1,11 +1,11 @@
 ; FLOAT.INC
 ;******************************************************************************
-;* Gleitkommabibliothek fÅr TLCS 90                                           *
+;* Gleitkommabibliothek fuer TLCS 90                                          *
 ;*                                                                            *
-;* Originale fÅr den Z80 aus mc 12/88,1/89                                    *
+;* Originale fuer den Z80 aus mc 12/88,1/89                                   *
 ;* Portierung auf TLCS 90 von Alfred Arnold, Dezember 1993                    *
 ;*                                                                            *
-;*  Routine  Funktion             Eingabe Ausgabe  Stack    LÑnge  Zeit/10MHz *
+;*  Routine  Funktion             Eingabe Ausgabe  Stack    Laenge  Zeit/10MHz *
 ;*                                                                            *
 ;*  fadd     Addition             2*Stack  BC-DE  14 Byte 347 Byte   248 us   *
 ;*  fsub     Subtraktion          2*Stack  BC-DE  14 Byte  12 Byte   255 us   *
@@ -18,21 +18,21 @@
 ;*  fftoa    Float-->ASCII        3*Stack  -----  40 Byte 451 Byte     *)     *
 ;*  fatof    ASCII-->Float        Stack  C,BC-DE  42 Byte 396 Byte     *)     *
 ;*                                                                            *
-;*  *) Die AusfÅhrungszeiten streuen je nach Operand sehr stark und kînnen    *
+;*  *) Die Ausfuehrungszeiten streuen je nach Operand sehr stark und koennen  *
 ;*     bei den ASCII-Funktionen bei vielen Millisekunden liegen.              *
 ;*                                                                            *
-;*  - Parametereingabe Åber den Stack bedeutet, da· die Parameter mittels     *
-;*    PUSH vor dem Aufruf auf den Stack gelegt werden mÅssen.  Diese Werte    *
+;*  - Parametereingabe ueber den Stack bedeutet, dass die Parameter mittels   *
+;*    PUSH vor dem Aufruf auf den Stack gelegt werden muessen.  Diese Werte   *
 ;*    werden von den Unterroutinen am Ende automatisch vom Stack entfernt.    *
-;*    Der zur öbergabe benîtigte Platz ist bei den Angaben zur Stackbelastung *
+;*    Der zur öbergabe benoetigte Platz ist bei den Angaben zur Stackbelastung *
 ;*    eingerechnet!                                                           *
-;*  - Wollen Sie einzelne Routinen entfernen, so beachten Sie, da· fsub Teile *
+;*  - Wollen Sie einzelne Routinen entfernen, so beachten Sie, dass fsub Teile *
 ;*    aus fadd, fdiv Teile aus fmul sowie fftoi Teile aus fitof verwendet !   *
 ;*  - Gleitkommaformat ist IEEE Single (32 Bit)                               *
 ;*  - Integerwerte bei fmul2, fitof und fftoi sind vorzeichenbehaftet         *
 ;*  - Da die Routinen lokale Labels verwenden, ist mindestens AS 1.39 erfor-  *
 ;*    derlich                                                                 *
-;*  - MACROS.INC mu· vorher eingebunden werden                                *
+;*  - MACROS.INC muss vorher eingebunden werden                               *
 ;******************************************************************************
 
                 section float
@@ -43,10 +43,10 @@
 MaxExpo         equ     255
 Bias            equ     127
 
-OpSize          equ     4               ; Grî·e eines Operanden
+OpSize          equ     4               ; Groesse eines Operanden
 
 fIX_alt         equ     0               ; Top of Stack liegt IX
-FAdr            equ     2               ; RÅcksprungadresse
+FAdr            equ     2               ; Ruecksprungadresse
 Op2             equ     4               ; Adresse Operand 2
 Op1             equ     Op2+OpSize      ; Adresse Operand 1
 
@@ -74,14 +74,14 @@ cpsh            macro   reg,op,{NoExpand}
                 push    af              ; Register retten
                 push    hl
 
-                public  AddSub:Parent   ; Einsprung fÅr fsub
+                public  AddSub:Parent   ; Einsprung fuer fsub
 
 AddSub:         ld      a,(ix+Op1+3)    ; Vorzeichen Operand 1 laden
                 ld      e,a             ; Ergebnisvorzeichen in E, Bit 7
-                xor     a,(ix+Op2+3)    ; mit Vorzeichen von Op2 verknÅpfen
+                xor     a,(ix+Op2+3)    ; mit Vorzeichen von Op2 verknuepfen
                 ld      d,a             ; Subtraktionsflag in D, Bit 7
-                res     7,(ix+Op1+3)    ; Vorzeichen in Mantisse 1 lîschen
-                res     7,(ix+Op2+3)    ; Vorzeichen in Mantisse 2 lîschen
+                res     7,(ix+Op1+3)    ; Vorzeichen in Mantisse 1 loeschen
+                res     7,(ix+Op2+3)    ; Vorzeichen in Mantisse 2 loeschen
 
 ; Die Operanden sind jetzt in der Form 0eee eeee efff ... ffff
 
@@ -100,7 +100,7 @@ AddSub:         ld      a,(ix+Op1+3)    ; Vorzeichen Operand 1 laden
                 xor     a,d
                 ld      e,a
 
-Ad_1:           ld      a,(ix+Op1+2)    ; Exponent der grî·eren Zahl laden
+Ad_1:           ld      a,(ix+Op1+2)    ; Exponent der groesseren Zahl laden
                 ld      c,(ix+Op1+3)
                 slaa
                 rl      c
@@ -113,7 +113,7 @@ Den1:           ld      a,(ix+Op2+2)    ; dito Zahl 2
                 jr      z,Den2
                 set     7,(ix+Op2+2)
 
-Den2:           push    bc              ; jetzt die Register fÅr den
+Den2:           push    bc              ; jetzt die Register fuer den
                 push    de              ; Blocktransferbefehl retten
                 ld      bc,2*OpSize-1   ; beide Operanden verschieben
                 ld      hl,ix           ; HL zeigt auf letztes Byte
@@ -129,7 +129,7 @@ Den2:           push    bc              ; jetzt die Register fÅr den
                 ld      (ix+Op2),a
                 ld      a,c             ; Differenz der Exponenten berechnen
                 sub     a,b
-                ld      b,a             ; Differenz nach B fÅr LOOP-Befehl
+                ld      b,a             ; Differenz nach B fuer LOOP-Befehl
                 jr      z,N_Anp         ; falls Null, keine Anpassung
                 cp      a,25            ; mehr als 24? (Abfrage mit Carry
                 jp      c,Anp           ; erfordert Vergleich mit 25)
@@ -150,12 +150,12 @@ N_Anp:          bit     7,d             ; Addition oder Subtraktion ?
                 ld      hl,(ix+Op1+2)
                 adc     hl,(ix+Op2+2)
                 ld      (ix+Op1+2),hl
-                jr      nc,Round        ; kein öberlauf-->zum Runden
-                rr      (ix+Op1+3)      ; öberlauf einschieben
+                jr      nc,Round        ; kein Ueberlauf-->zum Runden
+                rr      (ix+Op1+3)      ; Ueberlauf einschieben
                 rr      (ix+Op1+2)
                 rr      (ix+Op1+1)
                 rr      (ix+Op1)
-                inc     bc              ; Exponent erhîhen (B ist 0 durch
+                inc     bc              ; Exponent erhoehen (B ist 0 durch
                 jr      Round           ; Schleife), zum Runden
 
 Subtract:       ld      hl,(ix+Op1)     ; beide Mantissen werden voneinander
@@ -164,7 +164,7 @@ Subtract:       ld      hl,(ix+Op1)     ; beide Mantissen werden voneinander
                 ld      hl,(ix+Op1+2)
                 sbc     hl,(ix+Op2+2)
                 ld      (ix+Op1+2),hl
-                jr      m,Round         ; bei fÅhrender Eins zum Runden
+                jr      m,Round         ; bei fuehrender Eins zum Runden
                 jr      nz,Norm         ; ungleich 0 ?  Dann zum Normalisieren
                 cp      hl,(ix+Op1)     ; Rest der Mantisse auch Null ?
                 jr      eq,Zero         ; alles Null --> Ergebnis ist Null
@@ -174,27 +174,27 @@ Norm:           ld      a,b             ; Exponent noch nicht Null ?
                 jr      z,Round
                 dec     bc              ; Exponent erniedrigen
                 sla     (ix+Op1)        ; Mantisse normalisieren, bis
-                rl      (ix+Op1+1)      ; fÅhrende Eins auftaucht
+                rl      (ix+Op1+1)      ; fuehrende Eins auftaucht
                 rl      (ix+Op1+2)
                 rl      (ix+Op1+3)
                 jr      p,Norm          ; noch keine Eins-->weitermachen
 
 Round:          add     (ix+Op1),80h    ; jetzt Runden auf Bit hinter Mantisse
-                jr      nc,NoOver       ; kein öbertrag ?
-                inc     (ix+Op1+1)      ; doch, nÑchstes Mantissenbyte
-                jr      nz,NoOver       ; behandeln, jetzt auf Null prÅfen,
+                jr      nc,NoOver       ; kein Uebertrag ?
+                inc     (ix+Op1+1)      ; doch, naechstes Mantissenbyte
+                jr      nz,NoOver       ; behandeln, jetzt auf Null pruefen,
                 inc     (ix+Op1+2)      ; da der INC-Befehl kein Carry liefert
                 jr      nz,NoOver
                 inc     (ix+Op1+3)
                 jr      nz,NoOver
-                scf                     ; fÅhrende Eins erzeugen
-                rr      (ix+Op1+3)      ; bei öberlauf Mantisse durch
+                scf                     ; fuehrende Eins erzeugen
+                rr      (ix+Op1+3)      ; bei Ueberlauf Mantisse durch
                 rr      (ix+Op1+2)      ; Rechtsschieben wieder normalisieren
-                rr      (ix+Op1+1)      ; (nur fÅr 24 Bit notwendig)
+                rr      (ix+Op1+1)      ; (nur fuer 24 Bit notwendig)
                 inc     bc              ; und Exponent korrigieren
 
 NoOver:         xor     a,a             ; A = 0
-                cp      a,(ix+Op1+3)    ; Mantisse auf Null prÅfen
+                cp      a,(ix+Op1+3)    ; Mantisse auf Null pruefen
                 jr      nz,NoZero
                 cp      a,(ix+Op1+2)
                 jr      nz,NoZero
@@ -208,7 +208,7 @@ Zero:           ld      b,a             ; Null-Ergebnis aufbauen
 
 NoZero:         cp      a,b             ; A ist Null
                 ld      a,MaxExpo       ; Exponent oberes Byte ungleich Null ?
-                jr      nz,Over         ; dann ist öberlauf eingetreten
+                jr      nz,Over         ; dann ist Ueberlauf eingetreten
                 cp      a,c             ; oder genau MaxExpo erreicht ?
                 jr      nz,NoUe
 Over:           ld      c,a             ; Exponent auf MaxExpo setzen
@@ -221,7 +221,7 @@ Over:           ld      c,a             ; Exponent auf MaxExpo setzen
 NoUe:           xor     a,a             ; A = 0
                 cp      a,c             ; Exponent Null (Zahl denormalisiert ?
                 jr      z,DeNorm        ; ja -->
-                sla     (ix+Op1+1)      ; fÅhrendes Bit wird nicht gespeichert
+                sla     (ix+Op1+1)      ; fuehrendes Bit wird nicht gespeichert
                 rl      (ix+Op1+2)      ; daher Mantisse um 1 Bit nach links
                 rl      (ix+Op1+3)
 
@@ -239,7 +239,7 @@ Exit:           pop     hl              ; Register restaurieren
                 pop     af
 
                 unlk    ix              ; Austritt
-                retd    2*OpSize        ; Parameter abrÑumen
+                retd    2*OpSize        ; Parameter abraeumen
                 endp
 
 ;------------------------------------------------------------------------------
@@ -263,7 +263,7 @@ Exit:           pop     hl              ; Register restaurieren
 
                 proc    fmul
 
-                DefLocal temp,6         ; Platz TemporÑrvariable
+                DefLocal temp,6         ; Platz Temporaervariable
 
                 link    ix,LocalSize    ; Platz auf Stack reservieren
 
@@ -287,7 +287,7 @@ Exit:           pop     hl              ; Register restaurieren
                 dec     de              ; Bias kompensieren
 Den1:           ld      hl,(ix+Op1)     ; jetzt restliche Bytes verschieben
                 ld      (ix+Op1+1),hl
-                xor     hl,hl           ; unterste Mantissenbits lîschen
+                xor     hl,hl           ; unterste Mantissenbits loeschen
                 ld      (ix+Op1),h      ; Form: ffff ... ffff 0000 0000
 
                 ld      (ix+temp+4),hl  ; lokale Variable mit Null vorbesetzen
@@ -311,18 +311,18 @@ Den2:
                 jr      nc,NoZero
                 jp      MulZero         ; ja, dann ist Ergebnis Null
 
-NoZero:         ld      b,24            ; SchleifenzÑhler Multiplikation
+NoZero:         ld      b,24            ; Schleifenzaehler Multiplikation
                 ld      de,0            ; Hilfsregister Multiplikand
                 push    hl              ; HL zum Addieren benutzen
 Multiply:       srl     (ix+Op1+3)      ; Multiplikand nach rechts schieben
                 rr      (ix+Op1+2)
                 rr      (ix+Op1+1)
                 rr      (ix+Op1)
-                rr      d               ; DE als VerlÑngerung von Operand 1
+                rr      d               ; DE als Verlaengerung von Operand 1
                 rr      e
                 sla     (ix+Op2)        ; Multiplikator nach links schieben
                 rl      (ix+Op2+1)
-                rl      (ix+Op2+2)      ; falls fÅhrendes Bit 0, nicht addieren
+                rl      (ix+Op2+2)      ; falls fuehrendes Bit 0, nicht addieren
                 jr      nc,NoAdd
                 ld      hl,(ix+temp)    ; sonst aufaddieren
                 add     hl,de
@@ -337,7 +337,7 @@ NoAdd:          djnz    Multiply        ; Schleife durchlaufen
                 pop     hl
                 ld      a,(ix+temp+5)
                 or      a,a             ; Flags setzen
-                jp      m,MulRound      ; bei fÅhrender Eins zum Runden
+                jp      m,MulRound      ; bei fuehrender Eins zum Runden
                 jr      nz,Normalize    ; ansonsten normalisieren
                 cp      a,(ix+temp+4)
                 jr      nz,Normalize
@@ -359,29 +359,29 @@ Norm1:          cp      hl,0            ; Exponent=0 ?
                 rl      (ix+temp+3)
                 rl      (ix+temp+4)
                 rl      (ix+temp+5)
-                jp      p,Norm1         ; ...bis fÅhrende Eins auftaucht
+                jp      p,Norm1         ; ...bis fuehrende Eins auftaucht
 
-                public  MulRound:Parent ; Einsprung fÅr Division
+                public  MulRound:Parent ; Einsprung fuer Division
 MulRound:       ld      a,(ix+temp+2)   ; jetzt Runden auf Bit hinter Mantisse
                 add     a,80h
-                jr      nc,NoOver       ; kein öbertrag
-                inc     (ix+temp+3)     ; doch, nÑchstes Mantissenbyte
-                jr      nz,NoOver       ; behandeln, jetzt auf Null prÅfen
+                jr      nc,NoOver       ; kein Uebertrag
+                inc     (ix+temp+3)     ; doch, naechstes Mantissenbyte
+                jr      nz,NoOver       ; behandeln, jetzt auf Null pruefen
                 inc     (ix+temp+4)     ; da INC kein Carry liefert
                 jr      nz,NoOver
                 inc     (ix+temp+5)
                 jr      nz,NoOver
                 scf                     ; Eins erzeugen
-                rr      (ix+temp+5)     ; bei öberlauf Mantisse durch
+                rr      (ix+temp+5)     ; bei Ueberlauf Mantisse durch
                 rr      (ix+temp+4)     ; Rechtsschieben wieder normalisieren
                 rr      (ix+temp+3)
                 inc     hl              ; und Exponent korrigieren
 
-NoOver:         cp      hl,MaxExpo      ; Exponent prÅfen
-                jr      ult,NoUeber     ; kein öberlauf
+NoOver:         cp      hl,MaxExpo      ; Exponent pruefen
+                jr      ult,NoUeber     ; kein Ueberlauf
 
-                public  MulOver:Parent  ; Einsprung fÅr fdiv
-MulOver:        ld      hl,MaxExpo      ; öberlauf: Exponent=MaxExpo
+                public  MulOver:Parent  ; Einsprung fuer fdiv
+MulOver:        ld      hl,MaxExpo      ; Ueberlauf: Exponent=MaxExpo
                 ld      (ix+temp+5),h
                 ld      (ix+temp+4),h
                 ld      (ix+temp+3),h
@@ -390,7 +390,7 @@ MulOver:        ld      hl,MaxExpo      ; öberlauf: Exponent=MaxExpo
 NoUeber:        xor     a,a             ; A=0
                 cp      a,l             ; Exponent ist Null ?
                 jr      z,DeNorm        ; ja, Ergebnis ist denormalisiert
-                sla     (ix+temp+3)     ; nein, fÅhrende=implizite Eins
+                sla     (ix+temp+3)     ; nein, fuehrende=implizite Eins
                 rl      (ix+temp+4)     ; rausschieben
                 rl      (ix+temp+5)
 
@@ -404,13 +404,13 @@ DeNorm:         sla     c               ; Vorzeichen in Carry schieben
                 rr      d
                 rr      e               ; Form: seee eeee efff ffff ... ffff
 
-Result:         pop     hl              ; Register zurÅck
+Result:         pop     hl              ; Register zurueck
                 pop     af
 
                 unlk    ix              ; Stackrahmen abbauen
-                retd    2*OpSize        ; Operanden abrÑumen
+                retd    2*OpSize        ; Operanden abraeumen
 
-                public  MulZero:Parent  ; Einsprung fÅr fdiv
+                public  MulZero:Parent  ; Einsprung fuer fdiv
 MulZero:        xor     a,a             ; Ergebnis ist Null
                 ld      b,a
                 ld      c,a
@@ -419,7 +419,7 @@ MulZero:        xor     a,a             ; Ergebnis ist Null
                 jr      Result
 
 Underrun:       ld      a,l             ; Exponent in A
-                neg     a               ; negieren fÅr SchleifenzÑhler
+                neg     a               ; negieren fuer Schleifenzaehler
                 cp      a,24            ; totaler Unterlauf ?
                 jr      nc,MulZero      ; ja, dann ist Ergebnis Null
                 ld      b,a             ; Mantisse denormalisieren
@@ -437,7 +437,7 @@ Shr:            srl     (ix+temp+5)     ; bis Exponent Null ist
 
                 proc    fdiv
 
-                DefLocal temp,6         ; Platz TemporÑrvariable
+                DefLocal temp,6         ; Platz Temporaervariable
 
                 link    ix,LocalSize    ; 6 Byte Platz auf Stack reservieren
 
@@ -478,7 +478,7 @@ Den2:
                 rr      (ix+Op2+2)
                 rr      (ix+Op2+1)
                 rr      (ix+Op2)        ; Form: 0fff ... ffff f000 0000
-                jr      nz,NoZero1      ; Mantisse 2 auf Null prÅfen
+                jr      nz,NoZero1      ; Mantisse 2 auf Null pruefen
                 cp      a,(ix+Op2+1)
                 jr      nz,NoZero1
                 cp      a,(ix+Op2+2)
@@ -487,7 +487,7 @@ Den2:
                 jr      nz,NoZero1
                 jp      MulOver
 
-NoZero1:        xor     a,a             ; Carry-Flag lîschen
+NoZero1:        xor     a,a             ; Carry-Flag loeschen
                 sbc     hl,de           ; Exponenten subtrahieren
                 add     hl,Bias         ; Bias addieren
                 jr      p,NoZero        ; Exponent negativ ?
@@ -495,7 +495,7 @@ NoZero1:        xor     a,a             ; Carry-Flag lîschen
                 jr      nc,NoZero
                 jp      MulZero         ; ja, dann ist das Ergebnis Null
 NoZero:
-                add     hl,25           ; Exponent um 25 erhîhen; jetzt ist er sicher grî·er als Null
+                add     hl,25           ; Exponent um 25 erhoehen; jetzt ist er sicher groesser als Null
                 xor     a,a             ; A=0
                 ld      bc,(ix+Op1+1)   ; Divident in Register kopieren
                 ld      d,(ix+Op1)
@@ -516,7 +516,7 @@ NoZero2:
 
 NormLoop:       bit     6,(ix+Op2+3)    ; ist der Divisor normalisiert ?
                 jr      nz,Norm         ; ja-->
-                inc     hl              ; nein, Exponent erhîhen
+                inc     hl              ; nein, Exponent erhoehen
                 sla     (ix+Op2)        ; Divisor verschieben bis in
                 rl      (ix+Op2+1)      ; Form 01ff ...
                 rl      (ix+Op2+2)
@@ -530,8 +530,8 @@ Norm:           srl     b
                 push    iy              ; Exponent nach IY
                 ld      iy,hl
 Loop:           ld      (ix+Op1+2),bc   ; Divident zwischenspeichern
-                                        ; die SpeicherplÑtze von Op1
-                ld      (ix+Op1),de     ; stehen zur VerfÅgung, da wir Op1
+                                        ; die Speicherplaetze von Op1
+                ld      (ix+Op1),de     ; stehen zur Verfuegung, da wir Op1
                                         ; in die Register BC-DE kopiert haben
                 ld      hl,de           ; jetzt Divisor abziehen
                 sub     hl,(ix+Op2)
@@ -539,8 +539,8 @@ Loop:           ld      (ix+Op1+2),bc   ; Divident zwischenspeichern
                 ld      hl,bc
                 sbc     hl,(ix+Op2+2)
                 ld      bc,hl
-                jr      nc,IsOne        ; kein Carry: Divisor pa·t
-                ld      de,(ix+Op1)     ; ansonsten zurÅckkopieren
+                jr      nc,IsOne        ; kein Carry: Divisor passt
+                ld      de,(ix+Op1)     ; ansonsten zurueckkopieren
                 ld      bc,(ix+Op1+2)   ; Carry bleibt erhalten!
 IsOne:          ccf                     ; Carry-Flag umdrehen
                 rl      (ix+temp+2)     ; Ergebnis aufbauen
@@ -554,17 +554,17 @@ IsOne:          ccf                     ; Carry-Flag umdrehen
 
                 add     iy,-1           ; Exponent erniedrigen
                 jr      z,DeNorm        ; falls Null, dann denormalisiert
-                bit     0,(ix+temp+5)   ; fÅhrende Eins in Ergebnis-Mantisse ?
+                bit     0,(ix+temp+5)   ; fuehrende Eins in Ergebnis-Mantisse ?
                 jr      z,Loop          ; nein, weiter rechnen
 
-DeNorm:         ld      hl,iy           ; Exponent zurÅck
-                ld      b,(ix+temp+5)   ; hîchstes Bit merken
+DeNorm:         ld      hl,iy           ; Exponent zurueck
+                ld      b,(ix+temp+5)   ; hoechstes Bit merken
                 ld      a,(ix+temp+4)
                 ld      (ix+temp+5),a   ; Mantisse in Form
                 ld      iy,(ix+temp+2)  ; ffff ... ffff 0000 0000
                 ld      (ix+temp+3),iy
                 pop     iy              ; IY erst jetzt freigeben
-                rr      b               ; hîchstes Bit einschieben
+                rr      b               ; hoechstes Bit einschieben
                 rr      (ix+temp+5)
                 rr      (ix+temp+4)
                 rr      (ix+temp+3)
@@ -616,7 +616,7 @@ NoZero3:
 
 Positive:       ld      l,Bias+32       ; Exponent vorbesetzen
 Shift:          dec     l
-                sla     e               ; Mantisse verschieben, bis fÅhrende
+                sla     e               ; Mantisse verschieben, bis fuehrende
                 rl      d               ; Eins auftaucht
                 rl      c
                 rl      b
@@ -632,7 +632,7 @@ Shift:          dec     l
                 rr      e
 
                 public  ItofResult:Parent
-ItofResult:     pop     hl              ; Register zurÅck
+ItofResult:     pop     hl              ; Register zurueck
                 pop     af
                 unlk    ix              ; abbauen
                 retd    4               ; Ende
@@ -651,7 +651,7 @@ ItofResult:     pop     hl              ; Register zurÅck
 
                 ld      d,(ix+Op2)      ; Operand in Register laden
                 ld      bc,(ix+Op2+1)   ; Reihenfolge: EBCD
-                ld      e,(ix+Op2+3)    ; erspart spÑter Vertauschungen
+                ld      e,(ix+Op2+3)    ; erspart spaeter Vertauschungen
 
                 ld      h,e             ; Vorzeichen in H, Bit 7
                 ld      a,e             ; Exponent in A aufbauen
@@ -663,8 +663,8 @@ ItofResult:     pop     hl              ; Register zurÅck
                 ld      l,a             ; Exponent nach L kopieren
                 jp      m,Zero          ; falls keiner Null, Ergebnis Null
                 ld      a,30
-                cp      a,l             ; grî·er 30 ?
-                jr      c,Over          ; dann öberlauf
+                cp      a,l             ; groesser 30 ?
+                jr      c,Over          ; dann Ueberlauf
                 ld      e,0             ; Zahl jetzt in BCDE in der Form
                 inc     a               ; 1fff ... ffff 0000 0000
 
@@ -744,8 +744,8 @@ NoZero:         sla     e               ; Operand 1 verschieben
                 add     a,h             ; A=0+H
                 jr      m,Div           ; Falls Op2<0-->Division
                 add     a,b             ; A=Summe der Exponenten
-                ld      b,a             ; zurÅck nach B
-                jr      c,Over          ; bei öberlauf-->
+                ld      b,a             ; zurueck nach B
+                jr      c,Over          ; bei Ueberlauf-->
                 cp      a,MaxExpo       ; oder genau MaxExpo
                 jr      z,Over
 
@@ -755,13 +755,13 @@ Result:         sla     l               ; Vorzeichen in Carry schieben
                 rr      d
                 rr      e               ; Ergebnis zusammensetzen
 
-Zero:           pop     hl              ; Register zurÅck
+Zero:           pop     hl              ; Register zurueck
                 pop     af
 
                 unlk    ix              ; Stackrahmen abbauen
                 retd    4               ; Ende
 
-Over:           ld      b,MaxExpo       ; öberlauf: Exponent=MaxExpo
+Over:           ld      b,MaxExpo       ; Ueberlauf: Exponent=MaxExpo
                 xor     a,a             ;           Mantisse=0
                 ld      c,a
                 ld      d,a
@@ -769,7 +769,7 @@ Over:           ld      b,MaxExpo       ; öberlauf: Exponent=MaxExpo
                 jr      Result
 
 Div:            add     a,b             ; A = Summe der Exponenten
-                ld      b,a             ; zurÅck nach B
+                ld      b,a             ; zurueck nach B
                 jr      z,Div2
                 jr      p,Result        ; falls >0, Ergebnis abliefern
 Div2:           scf                     ; implizite Eins real machen
@@ -791,11 +791,11 @@ Denorm:         xor     a,a             ; A = 0
                 ld      b,a             ; totaler Unterlauf, Ergebnis = Null
                 jr      Zero
 
-NoZero2:        inc     b               ; Exponent erhîhen
+NoZero2:        inc     b               ; Exponent erhoehen
                 jr      Denorm          ; weiter denormalisieren
 
 DDD:            add     a,b             ; Summe der Exponenten bilden
-                ld      b,a             ; zurÅck nach B
+                ld      b,a             ; zurueck nach B
                 jr      Denorm
 
 Den:            add     a,h             ; A=0+H
@@ -803,14 +803,14 @@ Den:            add     a,h             ; A=0+H
 NoOver:         sla     e               ; Multiplikation: Eine
                 rl      d               ; denormalisierte Mantisse
                 rl      c               ; wird wieder normalisiert
-                jr      c,Stop          ; bis fÅhrende Eins rausfliegt
+                jr      c,Stop          ; bis fuehrende Eins rausfliegt
                 dec     h               ; oder Operand 2 = Null
                 jr      nz,NoOver
                 jr      Result
 
 Stop:           ld      a,h             ; Summe der Exponenten bilden
                 add     a,b
-                ld      b,a             ; zurÅck nach B
+                ld      b,a             ; zurueck nach B
                 jr      Result
 
                 endp
@@ -968,7 +968,7 @@ DontSet7:       ld      hl,(ix+Op)      ; x auf neues Alignment umstellen
                 ld      de,(ix+Op+2)
                 ld      (ix+Op),de
                 ld      (ix+Op+2),hl
-                ld      hl,1000h        ; m2 - obere HÑlfte schon 0
+                ld      hl,1000h        ; m2 - obere Haelfte schon 0
                 ld      (ix+m2),hl
 Loop20:         ld      hl,(ix+Op)      ; xx2 = x
                 ld      (ix+xx2),hl
@@ -1034,24 +1034,24 @@ Finish:         ld      hl,(ix+Op)      ; Aufrunden notwendig ?
                 sub     hl,(ix+XRoot+2)
                 ld      (ix+Op+2),hl
                 jr      ule,NoInc
-                incw    (ix+XRoot)      ; wenn ja, durchfÅhren
+                incw    (ix+XRoot)      ; wenn ja, durchfuehren
                 jr      nz,NoInc
                 incw    (ix+XRoot)
-NoInc:          res     7,(ix+XRoot+2)  ; impl. Eins lîschen
+NoInc:          res     7,(ix+XRoot+2)  ; impl. Eins loeschen
                 ld      hl,(ix+XRoot+2) ; Exponent einbauen
                 or      hl,iy
                 ld      bc,hl           ; Ergebnis in BC-DE
                 ld      de,(ix+XRoot)
                 jr      End
 
-DomainError:    ld      bc,0ffc0h       ; - NAN zuÅckgeben
+DomainError:    ld      bc,0ffc0h       ; - NAN zuueckgeben
                 ld      de,0
                 jr      End
 
 Zero:           ld      bc,0            ; Ergebnis 0
                 ld      de,bc
 
-End:            pop     iy              ; Register zurÅck
+End:            pop     iy              ; Register zurueck
                 pop     hl
                 pop     af
 
@@ -1069,7 +1069,7 @@ End:            pop     iy              ; Register zurÅck
                 push    iy
                 push    hl
 
-                ld      bc,(One+2)      ; Ausgangspunkt fÅrs Multiplizieren
+                ld      bc,(One+2)      ; Ausgangspunkt fuers Multiplizieren
                 ld      de,(One)
                 ld      ix,(Ten+2)      ; zu benutzende Potenz
                 ld      iy,(Ten)
@@ -1091,7 +1091,7 @@ IsPos:
                 call    fmul
 IsEven:         srl     h
                 rr      l
-                push    bc              ; nÑchste Potenz berechnen
+                push    bc              ; naechste Potenz berechnen
                 push    de
                 push    ix              ; durch quadrieren
                 push    iy
@@ -1104,7 +1104,7 @@ IsEven:         srl     h
                 pop     bc
                 jr      IsPos           ; weitersuchen
 End:
-                pop     hl              ; Register zurÅck
+                pop     hl              ; Register zurueck
                 pop     iy
                 pop     ix
 
@@ -1145,8 +1145,8 @@ IsPos:          bit     7,(ix+Format+1) ; Pluszeichen ausgeben ?
                 jr      nz,GoOn
                 ld      (iy),'+'
                 inc     iy
-GoOn:           res     7,(ix+Format+1) ; Plusflag lîschen
-                ld      de,0            ; Nullflag & ZÑhler lîschen
+GoOn:           res     7,(ix+Format+1) ; Plusflag loeschen
+                ld      de,0            ; Nullflag & Zaehler loeschen
 
 InLoop:         ld      hl,0            ; Division vorbereiten
                 ld      (ix+Temp),hl    ; dazu auf 64 Bit erweitern
@@ -1160,15 +1160,15 @@ DivLoop:        sll     (ix+Op)         ; eins weiterschieben
                 rl      (ix+Temp+1)
                 rl      (ix+Temp+2)
                 rl      (ix+Temp+3)
-                srl     (ix+Op)         ; fÅr nachher
+                srl     (ix+Op)         ; fuer nachher
                 ld      hl,(ix+Temp)    ; probeweise abziehen
                 sub     hl,10
                 ld      (ix+Temp),hl
                 ld      hl,(ix+Temp+2)
                 sbc     hl,0
                 ld      (ix+Temp+2),hl
-                jr      nc,DivOK        ; pa·t es ?
-                ld      hl,(ix+Temp)    ; nein, zurÅcknehmen
+                jr      nc,DivOK        ; passt es ?
+                ld      hl,(ix+Temp)    ; nein, zuruecknehmen
                 add     hl,10
                 ld      (ix+Temp),hl
                 ld      hl,(ix+Temp+2)
@@ -1183,7 +1183,7 @@ DivOK:          ccf                     ; neues Ergebnisbit
                 add     a,'0'
                 bit     0,d             ; schon im Nullbereich ?
                 jr      z,NormVal
-                ld      a,(ix+Format)   ; ja, dann gewÅnschtes Leerzeichen
+                ld      a,(ix+Format)   ; ja, dann gewuenschtes Leerzeichen
 NormVal:        push    af              ; auf LIFO legen
                 inc     e               ; ein Zeichen mehr
                 ld      a,(ix+Op)       ; Quotient Null ?
@@ -1203,7 +1203,7 @@ OutLoop:        pop     af
                 inc     iy
                 djnz    OutLoop
 
-                pop     hl              ; Register zurÅck
+                pop     hl              ; Register zurueck
                 pop     de
                 pop     bc
                 pop     af
@@ -1221,10 +1221,10 @@ OutLoop:        pop     af
 Op              equ     8               ; Lage Eingabe auf Stack
 Format          equ     6               ; Lage Formatdeskriptor auf Stack
 Buffer          equ     4               ; Pufferadresse
-                DefLocal Copy,4         ; TemporÑrkopie der Zahl
+                DefLocal Copy,4         ; Temporaerkopie der Zahl
                 DefLocal ExpSave,2      ; berechneter Exponent
 
-                link    ix,LocalSize    ; Platz fÅr Exponenten/Kopie der Zahl
+                link    ix,LocalSize    ; Platz fuer Exponenten/Kopie der Zahl
 
                 push    af              ; Register retten
                 push    de
@@ -1236,7 +1236,7 @@ Buffer          equ     4               ; Pufferadresse
                 ld      hl,(ix+Op)      ; Zahl kopieren
                 ld      (ix+Copy),hl
                 ld      hl,(ix+Op+2)
-                res     7,h             ; dabei Vorzeichen lîschen
+                res     7,h             ; dabei Vorzeichen loeschen
                 ld      (ix+Copy+2),hl
 
                 ld      a,'+'           ; Annahme positiv
@@ -1254,7 +1254,7 @@ WrMantSgn:      ld      (iy),a          ; Vorzeichen ablegen
 NoMantSgn:
                 ld      l,(ix+Op+3)     ; Exponent herausholen...
                 ld      h,0             ; ...auf 16 Bit erweitern...
-                ld      bc,(ix+Op+1)    ; ...und in Quelle lîschen
+                ld      bc,(ix+Op+1)    ; ...und in Quelle loeschen
                 ld      (ix+Op+2),bc
                 ld      b,(ix+Op)
                 ld      c,0
@@ -1269,7 +1269,7 @@ NoMantSgn:
                 or      a,(ix+Op+2)     ; nicht normalisieren
                 or      a,(ix+Op+1)
                 jr      z,IsNull
-Normalize:      sll     (ix+Op+1)       ; ansonsten schieben, bis fÅhrende
+Normalize:      sll     (ix+Op+1)       ; ansonsten schieben, bis fuehrende
                 rl      (ix+Op+2)       ; Eins da
                 rl      (ix+Op+3)
                 jr      c,IsNormal
@@ -1289,7 +1289,7 @@ IsNull:
                 bit     7,b             ; Zahl negativ ?
                 jr      z,NoCorr
                 push    bc              ; dann noch eins abziehen wegen
-                push    de              ; unterer Gau·klammer
+                push    de              ; unterer Gaussklammer
                 cpsh    bc,One
                 call    fsub
 NoCorr:         push    bc              ; den Ausflug in Float beenden
@@ -1311,7 +1311,7 @@ Again:          ld      (ix+Copy),de    ; Ergebnis zwischen 1...9,999 retten
                 push    bc              ; Vorkommastelle berechnen
                 push    de
                 call    fftoi
-                cp      e,10            ; doch etwas drÅber ?
+                cp      e,10            ; doch etwas drueber ?
                 jr      ult,NoRoundErr
                 ld      bc,(ix+Copy+2)  ; dann nocheinmal zehnteln
                 push    bc
@@ -1324,7 +1324,7 @@ Again:          ld      (ix+Copy),de    ; Ergebnis zwischen 1...9,999 retten
 NoRoundErr:     add     e,'0'           ; Vorkommastelle nach ASCII
                 ld      (iy),e          ; ablegen
                 inc     iy
-                sub     e,'0'           ; wieder rÅckgÑngig machen
+                sub     e,'0'           ; wieder rueckgaengig machen
                 cp      (ix+Format),0   ; gar keine Nachkommastellen ?
                 jr      eq,NoComma
                 ld      (iy),'.'        ; Dezimalpunkt ausgeben
@@ -1354,12 +1354,12 @@ NoRoundErr:     add     e,'0'           ; Vorkommastelle nach ASCII
                 call    fftoi
                 push    bc              ; entspr. ausgeben
                 push    de
-                ld      b,(ix+Format)   ; Format fÅr fOutDec aufbauen
+                ld      b,(ix+Format)   ; Format fuer fOutDec aufbauen
                 set     7,b             ; kein Pluszeichen
-                ld      c,'0'           ; FÅllzeichen Nullen
+                ld      c,'0'           ; Fuellzeichen Nullen
                 push    bc
                 call    fOutDec
-                bit     5,(ix+Format+1) ; Nullen am Ende abrÑumen ?
+                bit     5,(ix+Format+1) ; Nullen am Ende abraeumen ?
                 jr      nz,CleanZeros
 NoComma:
                 ld      a,(ix+Format+1) ; falls Minimalstellenzahl Exponent=0
@@ -1385,7 +1385,7 @@ NoComma:
 
 End:            ld      (iy),0          ; NUL-Zeichen als Terminierer
                 ld      de,iy           ; Endezeiger nach DE
-                pop     hl              ; Register zurÅck
+                pop     hl              ; Register zurueck
                 pop     iy
                 ex      de,hl           ; zur Subtraktion tauschen
                 sub     hl,de           ; = Zahl geschriebener Zeichen
@@ -1414,7 +1414,7 @@ IsNAN:          ld      (iy),'N'        ; nein: NAN
 
 CleanZeros:     cp      (iy-1),'0'      ; Null am Ende ?
                 jr      nz,CleanNoZero  ; nein, Ende
-                dec     iy              ; ja: ZÑhler runter, so da· Åber-
+                dec     iy              ; ja: Zaehler runter, so dass ueber-
                 jr      CleanZeros      ; schrieben wird und neuer Versuch
 CleanNoZero:    cp      (iy-1),'.'      ; evtl. Komma entfernbar ?
                 jr      nz,Ready        ; nein-->
@@ -1431,8 +1431,8 @@ Ready:          jrl     NoComma
 SrcAddr         equ     4               ; Lage Parameter auf Stack
                 DefLocal Flags,2        ; Steuerflags
                 DefLocal Exp,2          ; Speicher Exponent
-                DefLocal Mant,4         ; Speicher fÅr Mantissenzwischenwert
-                DefLocal Factor,4       ; Speicher fÅr Zehnerpotenz
+                DefLocal Mant,4         ; Speicher fuer Mantissenzwischenwert
+                DefLocal Factor,4       ; Speicher fuer Zehnerpotenz
 
                 link    ix,LocalSize    ; Stackrahmen aufbauen
 
@@ -1482,7 +1482,7 @@ MinPhase3:      set     2,(ix+Flags+1)  ; ...bei Exponent Bit 2
 NoMinus:
                 cp      a,'.'           ; Umschaltung Phase 2 (Nachkomma) ?
                 jr      ne,NoPoint
-                cp      (ix+Flags),1    ; bish. Phase mu· Eins sein
+                cp      (ix+Flags),1    ; bish. Phase muss Eins sein
                 jp      ne,Error
                 ld      (ix+Flags),2    ; neue Phase eintragen
                 set     0,(ix+Flags+1)  ; Nachkomma darf kein Vorzeichen haben
@@ -1492,11 +1492,11 @@ NoMinus:
                 ld      (ix+Factor+2),bc
                 jr      ReadLoop
 NoPoint:
-                cp      a,'e'           ; kleines & gro·es E zulassen
+                cp      a,'e'           ; kleines & grosses E zulassen
                 jr      eq,IsE
                 cp      a,'E'
                 jr      ne,NoE
-IsE:            cp      (ix+Flags),3    ; vorh. Phase mu· 1 oder 2 sein
+IsE:            cp      (ix+Flags),3    ; vorh. Phase muss 1 oder 2 sein
                 jp      eq,Error
                 ld      (ix+Flags),3    ; vermerken
                 res     0,(ix+Flags+1)  ; Vorzeichen wieder zulassen
@@ -1524,7 +1524,7 @@ NoE:
                 push    bc
                 push    de
                 call    fadd
-                ld      (ix+Mant),de    ; Mantisse zurÅcklegen
+                ld      (ix+Mant),de    ; Mantisse zuruecklegen
                 ld      (ix+Mant+2),bc
                 jrl     ReadLoop
 NoPhase1:
@@ -1544,7 +1544,7 @@ NoPhase1:
                 push    de
                 cpsh    bc,ix+Mant
                 call    fadd
-                ld      (ix+Mant),de    ; Mantisse zurÅcklegen
+                ld      (ix+Mant),de    ; Mantisse zuruecklegen
                 ld      (ix+Mant+2),bc
                 cpsh    bc,ix+Factor    ; Faktor * 1/10
                 cpsh    bc,Tenth
@@ -1579,7 +1579,7 @@ ExpPos:         call    fPot10          ; Zehnerpotenz des Exponenten bilden
                 set     7,b
 ManPos:         rcf                     ; Ende ohne Fehler
 
-End:            pop     iy              ; Register zurÅck
+End:            pop     iy              ; Register zurueck
                 pop     hl
                 pop     af
 

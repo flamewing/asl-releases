@@ -95,30 +95,34 @@ static Boolean M16Turn = False;
  * Local Functions
  *****************************************************************************/
 
-static Boolean CutRep(char *pAsc, LongInt *pErg)
+static Boolean CutRep(tStrComp *pDest, const tStrComp *pSrc, LongInt *pErg)
 {
-  if (*pAsc != '[')
+  tStrComp Src = *pSrc;
+
+  KillPrefBlanksStrCompRef(&Src);
+  if (*Src.Str != '[')
   {
     *pErg = 1;
+    *pDest = *pSrc;
     return True;
   }
   else
   {
-    char *pStart, *pEnd;
+    tStrComp RepArg;
+    char *pEnd;
     Boolean OK;
 
-    pStart = pAsc + 1;
-    pEnd = QuotPos(pStart, ']');
+    pEnd = QuotPos(Src.Str + 1, ']');
     if (!pEnd)
     {
-      WrError(1300);
+      WrError(ErrNum_BrackErr);
       return False;
     }
     else
     {
-      *pEnd = '\0';
-      *pErg = EvalIntExpression(pStart, Int32, &OK);
-      strmov(pAsc, pEnd + 1);
+      StrCompSplitRef(&RepArg, pDest, &Src, pEnd);
+      StrCompIncRefLeft(&RepArg, 1);
+      *pErg = EvalStrIntExpression(&RepArg, Int32, &OK);
       return OK;
     }
   }
@@ -142,29 +146,28 @@ static void DecodeBYT(Word Index)
   if (ChkArgCnt(1, ArgCntMax))
   {
     ShortInt SpaceFlag = -1;
-    int z = 1;
-    Boolean OK = True;
+    tStrComp *pArg, Arg;
     LongInt Rep;
+    Boolean OK = True;
 
-    do
+    forallargs (pArg, OK)
     {
-      if (!*ArgStr[z])
+      if (!*pArg->Str)
       {
         OK = FALSE;
-        WrError(2050);
+        WrError(ErrNum_EmptyArgument);
         break;
       }
 
-      KillBlanks(ArgStr[z]);
-      OK = CutRep(ArgStr[z], &Rep);
+      OK = CutRep(&Arg, pArg, &Rep);
       if (!OK)
         break;
 
-      if (!strcmp(ArgStr[z], "?"))
+      if (!strcmp(Arg.Str, "?"))
       {
         if (SpaceFlag == 0)
         {
-          WrError(1930);
+          WrError(ErrNum_MixDBDS);
           OK = FALSE;
         }
         else
@@ -175,7 +178,7 @@ static void DecodeBYT(Word Index)
       }
       else if (SpaceFlag == 1)
       {
-        WrError(1930);
+        WrError(ErrNum_MixDBDS);
         OK = FALSE;
       }
       else
@@ -184,18 +187,18 @@ static void DecodeBYT(Word Index)
 
         SpaceFlag = 0;
 
-        EvalExpression(ArgStr[z], &t);
+        EvalStrExpression(&Arg, &t);
         switch (t.Typ)
         {
           case TempInt:
             if (!RangeCheck(t.Contents.Int, Int8))
             {
-              WrError(1320);
+              WrStrErrorPos(ErrNum_OverRange, &Arg);
               OK = False;
             }
             else if (SetMaxCodeLen(CodeLen + Rep))
             {
-              WrError(1920);
+              WrError(ErrNum_CodeOverflow);
               OK = False;
             }
             else
@@ -208,7 +211,7 @@ static void DecodeBYT(Word Index)
             break;
 
           case TempFloat:
-            WrError(1135);
+            WrError(ErrNum_InvOpType);
             OK = False;
             break;
 
@@ -221,7 +224,7 @@ static void DecodeBYT(Word Index)
 
             if (SetMaxCodeLen(CodeLen + (Rep * l)))
             {
-              WrError(1920);
+              WrError(ErrNum_CodeOverflow);
               OK = False;
             }
             else
@@ -241,10 +244,7 @@ static void DecodeBYT(Word Index)
             break;
         }
       }
-
-      z++;
     }
-    while ((z <= ArgCnt) && (OK));
 
     if (!OK)
       CodeLen = 0;
@@ -283,29 +283,29 @@ static void DecodeADR(Word Index)
 
   if (ChkArgCnt(1, ArgCntMax))
   {
-    int z = 1;
+    tStrComp *pArg, Arg;
     Boolean OK = True;
     LongInt Rep;
     ShortInt SpaceFlag = -1;
 
-    do
+    forallargs (pArg, OK)
     {
-      if (!*ArgStr[z])
+      if (!*pArg->Str)
       {
         OK = FALSE;
-        WrError(2050);
+        WrError(ErrNum_EmptyArgument);
         break;
       }
 
-      OK = CutRep(ArgStr[z], &Rep);
+      OK = CutRep(&Arg, pArg, &Rep);
       if (!OK)
         break;
 
-      if (!strcmp(ArgStr[z], "?"))
+      if (!strcmp(Arg.Str, "?"))
       {
         if (SpaceFlag == 0)
         {
-          WrError(1930);
+          WrError(ErrNum_MixDBDS);
           OK = False;
         }
         else
@@ -316,7 +316,7 @@ static void DecodeADR(Word Index)
       }
       else if (SpaceFlag == 1)
       {
-        WrError(1930);
+        WrError(ErrNum_MixDBDS);
         OK = False;
       }
       else
@@ -326,7 +326,7 @@ static void DecodeADR(Word Index)
 
         SpaceFlag = 0;
         FirstPassUnknown = False;
-        EvalExpression(ArgStr[z], &Res);
+        EvalStrExpression(&Arg, &Res);
 
         switch (Res.Typ)
         {
@@ -335,7 +335,7 @@ static void DecodeADR(Word Index)
               Res.Contents.Int &= 0xffff;
             if (!RangeCheck(Res.Contents.Int, Int16))
             {
-              WrError(1320);
+              WrError(ErrNum_OverRange);
               Res.Typ = TempNone;
             }
             Cnt = 1;
@@ -345,7 +345,7 @@ static void DecodeADR(Word Index)
             TranslateString(Res.Contents.Ascii.Contents, Res.Contents.Ascii.Length);
             break;
           case TempFloat:
-            WrError(1135);
+            WrError(ErrNum_InvOpType);
             /* no break */
           default:
             Res.Typ = TempNone;
@@ -360,7 +360,7 @@ static void DecodeADR(Word Index)
 
         if (SetMaxCodeLen(CodeLen + ((Cnt * Rep) << 1)))
         {
-          WrError(1920);
+          WrError(ErrNum_CodeOverflow);
           OK = False;
           break;
         }
@@ -383,9 +383,7 @@ static void DecodeADR(Word Index)
               break;
           }
       }
-      z++;
     }
-    while ((z <= ArgCnt) && (OK));
 
     if (!OK)
       CodeLen = 0;
@@ -403,34 +401,34 @@ static void DecodeFCC(Word Index)
 {
   String SVal;
   Boolean OK;
-  int z, z3, l;
+  tStrComp *pArg, Arg;
+  int z3, l;
   LongInt Rep,z2;
   UNUSED(Index);
 
   if (ChkArgCnt(1, ArgCntMax))
   {
-    z = 1;
     OK = True;
 
-    do
+    forallargs (pArg, OK)
     {
-      if (!*ArgStr[z])
+      if (!*pArg->Str)
       {
         OK = FALSE;
-        WrError(2050);
+        WrError(ErrNum_EmptyArgument);
         break;
       }
 
-      OK = CutRep(ArgStr[z], &Rep);
+      OK = CutRep(&Arg, pArg, &Rep);
       if (!OK)
         break;
 
-      EvalStringExpression(ArgStr[z], &OK, SVal);
+      EvalStrStringExpression(&Arg, &OK, SVal);
       if (OK)
       {
         if (SetMaxCodeLen(CodeLen + Rep * strlen(SVal)))
         {
-          WrError(1920);
+          WrError(ErrNum_CodeOverflow);
           OK = False;
         }
         else
@@ -442,10 +440,7 @@ static void DecodeFCC(Word Index)
               PutByte(SVal[z3]);
         }
       }
-
-      z++;
     }
-    while ((z <= ArgCnt) && (OK));
 
     if (!OK)
       CodeLen = 0;
@@ -461,15 +456,15 @@ static void DecodeDFS(Word Index)
   if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
-    HVal16 = EvalIntExpression(ArgStr[1], Int16, &OK);
+    HVal16 = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
     if (FirstPassUnknown)
-      WrError(1820);
+      WrError(ErrNum_FirstPassCalc);
     else if (OK)
     {
       DontPrint = True;
       CodeLen = HVal16;
       if (!HVal16)
-        WrError(290);
+        WrError(ErrNum_NullResMem);
       BookKeeping();
     }
   }
@@ -781,7 +776,7 @@ void AddMoto16PseudoONOFF(void)
 
 Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
 {
-  Byte z;
+  tStrComp *pArg, Arg;
   void (*EnterInt)(LargeWord) = NULL;
   void (*ConvertFloat)(Double, Byte*, Boolean) = NULL;
   void (*EnterFloat)(Word*) = NULL;
@@ -879,34 +874,33 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
     if (ChkArgCnt(1, ArgCntMax))
     {
       OK = True;
-      z = 1;
       SpaceFlag = -1;
 
-      while ((z <= ArgCnt) && (OK))
+      forallargs (pArg, OK)
       {
-        if (!*ArgStr[z])
+        if (!*pArg->Str)
         {
           OK = FALSE;
-          WrError(2050);
+          WrError(ErrNum_EmptyArgument);
           break;
         }
 
         FirstPassUnknown = False;
-        OK = CutRep(ArgStr[z], &Rep);
+        OK = CutRep(&Arg, pArg, &Rep);
         if (!OK)
           break;
         if (FirstPassUnknown)
         {
           OK = FALSE;
-          WrError(1820);
+          WrError(ErrNum_FirstPassCalc);
           break;
         }
 
-        if (!strcmp(ArgStr[z], "?"))
+        if (!strcmp(Arg.Str, "?"))
         {
           if (SpaceFlag == 0)
           {
-            WrError(1930);
+            WrError(ErrNum_MixDBDS);
             OK = FALSE;
           }
           else
@@ -917,7 +911,7 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
         }
         else if (SpaceFlag == 1)
         {
-          WrError(1930);
+          WrError(ErrNum_MixDBDS);
           OK = FALSE;
         }
         else
@@ -925,7 +919,7 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
           SpaceFlag = 0;
 
           FirstPassUnknown = False;
-          EvalExpression(ArgStr[z], &t);
+          EvalStrExpression(&Arg, &t);
 
           switch (t.Typ)
           {
@@ -940,18 +934,18 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
                 }
                 else
                 {
-                  WrError(1135);
+                  WrError(ErrNum_InvOpType);
                   OK = False;
                 }
               }
               else if ((!FirstPassUnknown) && (!RangeCheck(t.Contents.Int, IntTypeEnum)))
               {
-                WrError(1320);
+                WrError(ErrNum_OverRange);
                 OK = False;
               }
               else if (SetMaxCodeLen(CodeLen + (Rep * WSize)))
               {
-                WrError(1920);
+                WrError(ErrNum_CodeOverflow);
                 OK = False;
               }
               else
@@ -962,17 +956,17 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
             case TempFloat:
               if ((!ConvertFloat) || (!EnterFloat))
               {
-                WrError(1135);
+                WrError(ErrNum_InvOpType);
                 OK = False;
               }
               else if (!FloatRangeCheck(t.Contents.Float, FloatTypeEnum))
               {
-                WrError(1320);
+                WrError(ErrNum_OverRange);
                 OK = False;
               }
               else if (SetMaxCodeLen(CodeLen + (Rep * WSize)))
               {
-                WrError(1920);
+                WrError(ErrNum_CodeOverflow);
                 OK = False;
               }
               else
@@ -991,7 +985,7 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
                 {
                   if (SetMaxCodeLen(CodeLen + (Rep * WSize * t.Contents.Ascii.Length)))
                   {
-                    WrError(1920);
+                    WrError(ErrNum_CodeOverflow);
                     OK = False;
                   }
                   else
@@ -1008,13 +1002,13 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
                 }
                 else
                 {
-                  WrError(1135);
+                  WrError(ErrNum_InvOpType);
                   OK = False;
                 }
               }
               else if (SetMaxCodeLen(CodeLen + Rep * t.Contents.Ascii.Length))
               {
-                WrError(1920);
+                WrError(ErrNum_CodeOverflow);
                 OK = False;
               }
               else
@@ -1025,13 +1019,11 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
               OK = False;
               break;
             default:
-              WrError(1135);
+              WrError(ErrNum_InvOpType);
               OK = False;
           }
 
         }
-
-        z++;
       }
 
       /* purge results if an error occured */
@@ -1067,9 +1059,9 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
       LongWord NumPad = 0;
 
       FirstPassUnknown = False;
-      HVal = EvalIntExpression(ArgStr[1], Int32, &ValOK);
+      HVal = EvalStrIntExpression(&ArgStr[1], Int32, &ValOK);
       if (FirstPassUnknown)
-        WrError(1820);
+        WrError(ErrNum_FirstPassCalc);
       if ((ValOK) && (!FirstPassUnknown))
       {
         Boolean OddSize = (eSymbolSize8Bit == OpSize) || (eSymbolSize24Bit == OpSize);
@@ -1092,7 +1084,7 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
           {
             DontPrint = False;
             if (WSize == 1)
-              WrError(290);
+              WrError(ErrNum_NullResMem);
           }
         }
         else
@@ -1132,7 +1124,7 @@ Boolean DecodeMoto16AttrSize(char SizeSpec, ShortInt *pResult, Boolean Allow24)
     case 'P': *pResult = Allow24 ? eSymbolSize24Bit : eSymbolSizeFloatDec96Bit; break;
     case '\0': break;
     default:
-      WrError(1107);
+      WrError(ErrNum_UndefAttr);
       return False;
   }
   return True;

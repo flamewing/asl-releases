@@ -210,6 +210,7 @@
 #include "nlmessages.h"
 #include "as.rsc"
 #include "strutil.h"
+#include "strcomp.h"
 
 #include "asmdef.h"
 #include "asmsub.h"
@@ -219,6 +220,8 @@
 #include "asmstructs.h"
 #include "chunks.h"
 #include "trees.h"
+#include "operator.h"
+#include "function.h"
 
 #include "asmpars.h"
 
@@ -353,19 +356,6 @@ typedef struct sCToken
   ChunkList Usage;
 } TCToken, *PCToken;
 
-typedef struct
-{
-  char *Id;
-  int IdLen;
-  Boolean Dyadic;
-  Byte Priority;
-  Boolean MayInt;
-  Boolean MayFloat;
-  Boolean MayString;
-  Boolean Present;
-  void (*pFunc)(TempResult *pErg, TempResult *pLVal, TempResult *pRVal);
-} Operator;
-
 typedef struct sLocHeap
 {
   struct sLocHeap *Next;
@@ -441,7 +431,7 @@ Boolean FloatRangeCheck(Double Wert, FloatType Typ)
     default:
       return False;
   }
-/**   if (Typ == FloatDec) && (fabs(Wert) > 1e1000) WrError(40);**/
+/**   if (Typ == FloatDec) && (fabs(Wert) > 1e1000) WrError(ErrNum_BigDecFloat);**/
 }
 
 Boolean SingleBit(LargeInt Inp, LargeInt *Erg)
@@ -543,7 +533,7 @@ static Boolean ProcessBk(char **Start, char *Erg)
           cnt++;
           if (Digit >= System)
           {
-            WrError(1320);
+            WrError(ErrNum_OverRange);
             return False;
           }
           Acc = (Acc * System) + Digit;
@@ -555,7 +545,7 @@ static Boolean ProcessBk(char **Start, char *Erg)
       *Erg = Acc;
       return True;
     default:
-      WrError(2010);
+      WrError(ErrNum_InvEscSequence);
       return False;
   }
 }
@@ -583,6 +573,7 @@ Boolean ExpandSymbol(char *Name)
 {
   char *p1, *p2;
   String h;
+  tStrComp HArg;
   Boolean OK;
 
   do
@@ -594,16 +585,17 @@ Boolean ExpandSymbol(char *Name)
     p2 = QuotPos(h, '}');
     if (!p2)
     {
-      WrXError(1020, Name);
+      WrXError(ErrNum_InvSymName, Name);
       return False;
     }
     strcpy(p1, p2 + 1);
     *p2 = '\0';
     FirstPassUnknown = False;
-    EvalStringExpression(h, &OK, h);
+    StrCompMkTemp(&HArg, h);
+    EvalStrStringExpression(&HArg, &OK, h);
     if (FirstPassUnknown)
     {
-      WrError(1820);
+      WrError(ErrNum_FirstPassCalc);
       return False;
     }
     if (!CaseSensitive)
@@ -679,11 +671,14 @@ static Boolean ChkTmp1(char *Name, Boolean Define)
   return Result;
 }
 
-static Boolean ChkTmp2(char *Name, Boolean Define)
+static Boolean ChkTmp2(char *pDest, const char *pSrc, Boolean Define)
 {
-  char *Src;
+  const char *pRun, *pBegin, *pEnd;
   int Cnt;
   Boolean Result = FALSE;
+
+  for (pBegin = pSrc; myisspace(*pBegin); pBegin++);
+  for (pEnd = pSrc + strlen(pSrc); (pEnd > pBegin) && myisspace(*(pEnd - 1)); pEnd--);
 
   /* Note: We have to deal with three symbol definitions:
 
@@ -699,17 +694,17 @@ static Boolean ChkTmp2(char *Name, Boolean Define)
 
   /* backward references ? */
 
-  if (*Name == '-')
+  if (*pBegin == '-')
   {
-    for (Src = Name; *Src; Src++)
-      if (*Src != '-')
+    for (pRun = pBegin; *pRun; pRun++)
+      if (*pRun != '-')
         break;
-    Cnt = Src - Name;
-    if (!*Src)
+    Cnt = pRun - pBegin;
+    if (pRun == pEnd)
     {
       if ((Define) && (Cnt == 1))
       {
-        sprintf(Name, "__back%d", BackSymCounter);
+        sprintf(pDest, "__back%d", BackSymCounter);
         AddTmpSymLog(TRUE, BackSymCounter);
         BackSymCounter++;
         Result = TRUE;
@@ -721,7 +716,7 @@ static Boolean ChkTmp2(char *Name, Boolean Define)
       else if (Cnt <= TmpSymLogDepth)
       {
         Cnt--;
-        sprintf(Name, "__%s%d",
+        sprintf(pDest, "__%s%d",
                 TmpSymLog[Cnt].Back ? "back" : "forw",
                 TmpSymLog[Cnt].Counter);
         Result = TRUE;
@@ -731,22 +726,22 @@ static Boolean ChkTmp2(char *Name, Boolean Define)
 
   /* forward references ? */
 
-  else if (*Name == '+')
+  else if (*pBegin == '+')
   {
-    for (Src = Name; *Src; Src++)
-      if (*Src != '+')
+    for (pRun = pBegin; *pRun; pRun++)
+      if (*pRun != '+')
         break;
-    Cnt = Src - Name;
-    if (!*Src)
+    Cnt = pRun - pBegin;
+    if (pRun == pEnd)
     {
       if ((Define) && (Cnt == 1))
       {
-        sprintf(Name, "__forw%d", FwdSymCounter++);
+        sprintf(pDest, "__forw%d", FwdSymCounter++);
         Result = TRUE;
       }
       else if (Cnt <= LOCSYMSIGHT)
       {
-        sprintf(Name, "__forw%d", FwdSymCounter + (Cnt - 1));
+        sprintf(pDest, "__forw%d", FwdSymCounter + (Cnt - 1));
         Result = TRUE;
       }
     }
@@ -754,10 +749,10 @@ static Boolean ChkTmp2(char *Name, Boolean Define)
 
   /* slash: only allowed for definition, but add to log for backward ref. */
 
-  else if ((!strcmp(Name, "/")) && (Define))
+  else if ((pEnd - pBegin == 1) && (*pBegin == '/') && Define)
   {
     AddTmpSymLog(FALSE, FwdSymCounter);
-    sprintf(Name, "__forw%d", FwdSymCounter);
+    sprintf(pDest, "__forw%d", FwdSymCounter);
     FwdSymCounter++;
     Result = TRUE;
   }
@@ -793,7 +788,7 @@ static Boolean ChkTmp(char *Name, Boolean Define)
 
   if (ChkTmp1(Name, Define))
     Result = TRUE;
-  if (ChkTmp2(Name, Define))
+  if (ChkTmp2(Name, Name, Define))
     Result = TRUE;
   if (ChkTmp3(Name, Define))
     Result = TRUE;
@@ -834,7 +829,7 @@ Boolean IdentifySection(char *Name, LongInt *Erg)
     }
     if (*Erg == -2)
     {
-      WrError(1484);
+      WrError(ErrNum_InvSection);
       return False;
     }
     else
@@ -852,7 +847,7 @@ Boolean IdentifySection(char *Name, LongInt *Erg)
       SLauf = SLauf->Next;
     if (!SLauf)
     {
-      WrError(1484);
+      WrError(ErrNum_InvSection);
       return False;
     }
     else
@@ -880,7 +875,7 @@ static Boolean GetSymSection(char *Name, LongInt *Erg)
   Name[l - 1] = ']';
   if (Name + l - q <= 1)
   {
-    WrXError(1020, Name);
+    WrXError(ErrNum_InvSymName, Name);
     return False;
   }
 
@@ -1161,13 +1156,13 @@ LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
     return Wert;
   else if (HardRanges)
   {
-    WrError(1320);
+    WrError(ErrNum_OverRange);
     return -1;
   }
   else
   {
     *pResult = True;
-    WrError(260);
+    WrError(ErrNum_WOverRange);
     return Wert&IntTypeDefs[(int)Typ].Mask;
   }
 }
@@ -1281,12 +1276,12 @@ void ConstStringVal(const char *pExpr, tDynString *pDest, Boolean *pResult)
         EvalExpression(pCurr, &t);
         if (FirstPassUnknown)
         {
-          WrXError(1820, pCurr);
+          WrXError(ErrNum_FirstPassCalc, pCurr);
           return;
         }
         if (t.Relocs)
         {
-          WrError(1150);
+          WrError(ErrNum_NoRelocs);
           FreeRelocs(&t.Relocs);
           return;
         }
@@ -1352,421 +1347,39 @@ const char *Name, TempType SearchType
  * Result:      implicitly in pErg
  *****************************************************************************/
 
-
-static void EvalExpression_ChgFloat(TempResult *pTemp)
-{
-  if (pTemp->Typ != TempInt)
-    return;
-  pTemp->Typ = TempFloat;
-  pTemp->Contents.Float = pTemp->Contents.Int;
-}
-
-static void EvalExpression_DummyOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
-{
-  UNUSED(pLVal);
-  UNUSED(pRVal);
-  UNUSED(pErg);
-}
-
-static void EvalExpression_OneComplOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
-{
-  UNUSED(pLVal);
-  pErg->Typ = TempInt;
-  pErg->Contents.Int = ~(pRVal->Contents.Int);
-}
-
-static void EvalExpression_ShLeftOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
-{
-  pErg->Typ = TempInt;
-  pErg->Contents.Int = pLVal->Contents.Int << pRVal->Contents.Int;
-}
-
-static void EvalExpression_ShRightOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
-{
-  pErg->Typ = TempInt;
-  pErg->Contents.Int = pLVal->Contents.Int >> pRVal->Contents.Int;
-}
-
-static void EvalExpression_BitMirrorOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
-{
-  int z;
-
-  if ((pRVal->Contents.Int < 1) || (pRVal->Contents.Int > 32)) WrError(1320);
-  else
-  {
-    pErg->Typ = TempInt;
-    pErg->Contents.Int = (pLVal->Contents.Int >> pRVal->Contents.Int) << pRVal->Contents.Int;
-    pRVal->Contents.Int--;
-    for (z = 0; z <= pRVal->Contents.Int; z++)
-    {
-      if ((pLVal->Contents.Int & (1 << (pRVal->Contents.Int - z))) != 0)
-        pErg->Contents.Int |= (1 << z);
-    }
-  }
-}
-
-static void EvalExpression_BinAndOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
-{
-  pErg->Typ = TempInt;
-  pErg->Contents.Int = pLVal->Contents.Int & pRVal->Contents.Int;
-}
-
-static void EvalExpression_BinOrOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
-{
-  pErg->Typ = TempInt;
-  pErg->Contents.Int = pLVal->Contents.Int | pRVal->Contents.Int;
-}
-
-static void EvalExpression_BinXorOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
-{
-  pErg->Typ = TempInt;
-  pErg->Contents.Int = pLVal->Contents.Int ^ pRVal->Contents.Int;
-}
-
-static void EvalExpression_PotOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
-{
-  LargeInt HVal;
-
-  switch (pErg->Typ = pLVal->Typ)
-  {
-    case TempInt:
-      if (pRVal->Contents.Int < 0) pErg->Contents.Int = 0;
-      else
-      {
-        pErg->Contents.Int = 1;
-        while (pRVal->Contents.Int > 0)
-        {
-          if (pRVal->Contents.Int & 1)
-            pErg->Contents.Int *= pLVal->Contents.Int;
-          pRVal->Contents.Int >>= 1;
-          if (pRVal->Contents.Int != 0)
-            pLVal->Contents.Int *= pLVal->Contents.Int;
-        }
-      }
-      break;
-    case TempFloat:
-      if (pRVal->Contents.Float == 0.0)
-        pErg->Contents.Float = 1.0;
-      else if (pLVal->Contents.Float == 0.0)
-        pErg->Contents.Float = 0.0;
-      else if (pLVal->Contents.Float > 0)
-        pErg->Contents.Float = pow(pLVal->Contents.Float, pRVal->Contents.Float);
-      else if ((fabs(pRVal->Contents.Float) <= ((double)MaxLongInt)) && (floor(pRVal->Contents.Float) == pRVal->Contents.Float))
-      {
-        HVal = (LongInt) floor(pRVal->Contents.Float + 0.5);
-        if (HVal < 0)
-        {
-          pLVal->Contents.Float = 1 / pLVal->Contents.Float;
-          HVal = -HVal;
-        }
-        pErg->Contents.Float = 1.0;
-        while (HVal > 0)
-        {
-          if ((HVal & 1) == 1)
-            pErg->Contents.Float *= pLVal->Contents.Float;
-          pLVal->Contents.Float *= pLVal->Contents.Float;
-          HVal >>= 1;
-        }
-      }
-      else
-      {
-        WrError(1890);
-        pErg->Typ = TempNone;
-      }
-      break;
-    default:
-      break;
-  }
-}
-
-static void EvalExpression_MultOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
-{
-  switch (pErg->Typ = pLVal->Typ)
-  {
-    case TempInt:
-      pErg->Contents.Int = pLVal->Contents.Int * pRVal->Contents.Int;
-      break;
-    case TempFloat:
-      pErg->Contents.Float = pLVal->Contents.Float * pRVal->Contents.Float;
-      break;
-    default:
-      break;
-  }
-}
-
-static void EvalExpression_DivOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
-{
-  switch (pLVal->Typ)
-  {
-    case TempInt:
-      if (pRVal->Contents.Int == 0) WrError(1310);
-      else
-      {
-        pErg->Typ = TempInt;
-        pErg->Contents.Int = pLVal->Contents.Int / pRVal->Contents.Int;
-      }
-      break;
-    case TempFloat:
-      if (pRVal->Contents.Float == 0.0) WrError(1310);
-      else
-      {
-        pErg->Typ = TempFloat;
-        pErg->Contents.Float = pLVal->Contents.Float / pRVal->Contents.Float;
-      }
-    default:
-      break;
-  }
-}
-
-static void EvalExpression_ModOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
-{
-  if (pRVal->Contents.Int == 0) WrError(1310);
-  else
-  {
-    pErg->Typ = TempInt;
-    pErg->Contents.Int = pLVal->Contents.Int % pRVal->Contents.Int;
-  }
-}
-
-static void EvalExpression_AddOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
-{
-  switch (pErg->Typ = pLVal->Typ)
-  {
-    case TempInt:
-      pErg->Contents.Int = pLVal->Contents.Int + pRVal->Contents.Int;
-      pErg->Relocs = MergeRelocs(&(pLVal->Relocs), &(pRVal->Relocs), TRUE);
-      break;
-    case TempFloat:
-      pErg->Contents.Float = pLVal->Contents.Float + pRVal->Contents.Float;
-      break;
-    case TempString:
-      DynString2DynString(&pErg->Contents.Ascii, &pLVal->Contents.Ascii);
-      DynStringAppendDynString(&pErg->Contents.Ascii, &pRVal->Contents.Ascii);
-      break;
-    default:
-      break;
-  }
-}
-
-static void EvalExpression_SubOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
-{
-  switch (pErg->Typ = pLVal->Typ)
-  {
-    case TempInt:
-      pErg->Contents.Int = pLVal->Contents.Int - pRVal->Contents.Int;
-      pErg->Relocs = MergeRelocs(&(pLVal->Relocs), &(pRVal->Relocs), FALSE);
-      break;
-    case TempFloat:
-      pErg->Contents.Float = pLVal->Contents.Float - pRVal->Contents.Float;
-      break;
-    default:
-      break;
-  }
-}
-
-static void EvalExpression_LogNotOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
-{
-  UNUSED(pLVal);
-  pErg->Typ = TempInt;
-  pErg->Contents.Int = (pRVal->Contents.Int == 0) ? 1 : 0;
-}
-
-static void EvalExpression_LogAndOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
-{
-  pErg->Typ = TempInt;
-  pErg->Contents.Int = ((pLVal->Contents.Int != 0) && (pRVal->Contents.Int != 0)) ? 1 : 0;
-}
-
-static void EvalExpression_LogOrOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
-{
-  pErg->Typ = TempInt;
-  pErg->Contents.Int = ((pLVal->Contents.Int != 0) || (pRVal->Contents.Int != 0)) ? 1 : 0;
-}
-
-static void EvalExpression_LogXorOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
-{
-  pErg->Typ = TempInt;
-  pErg->Contents.Int = ((pLVal->Contents.Int != 0) != (pRVal->Contents.Int != 0)) ? 1 : 0;
-}
-
-static void EvalExpression_EqOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
-{
-  pErg->Typ = TempInt;
-  switch (pLVal->Typ)
-  {
-    case TempInt:
-      pErg->Contents.Int = (pLVal->Contents.Int == pRVal->Contents.Int) ? 1 : 0;
-      break;
-    case TempFloat:
-      pErg->Contents.Int = (pLVal->Contents.Float == pRVal->Contents.Float) ? 1 : 0;
-      break;
-    case TempString:
-      pErg->Contents.Int = (DynStringCmp(&pLVal->Contents.Ascii, &pRVal->Contents.Ascii) == 0) ? 1 : 0;
-      break;
-    default:
-      break;
-  }
-}
-
-static void EvalExpression_GtOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
-{
-  pErg->Typ = TempInt;
-  switch (pLVal->Typ)
-  {
-    case TempInt:
-      pErg->Contents.Int = (pLVal->Contents.Int > pRVal->Contents.Int) ? 1 : 0;
-      break;
-    case TempFloat:
-      pErg->Contents.Int = (pLVal->Contents.Float > pRVal->Contents.Float) ? 1 : 0;
-      break;
-    case TempString:
-      pErg->Contents.Int = (DynStringCmp(&pLVal->Contents.Ascii, &pRVal->Contents.Ascii) > 0) ? 1 : 0;
-      break;
-    default:
-      break;
-  }
-}
-
-static void EvalExpression_LtOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
-{
-  pErg->Typ = TempInt;
-  switch (pLVal->Typ)
-  {
-    case TempInt:
-      pErg->Contents.Int = (pLVal->Contents.Int < pRVal->Contents.Int) ? 1 : 0;
-      break;
-    case TempFloat:
-      pErg->Contents.Int = (pLVal->Contents.Float < pRVal->Contents.Float) ? 1 : 0;
-      break;
-    case TempString:
-      pErg->Contents.Int = (DynStringCmp(&pLVal->Contents.Ascii, &pRVal->Contents.Ascii) < 0) ? 1 : 0;
-      break;
-    default:
-      break;
-  }
-}
-
-static void EvalExpression_LeOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
-{
-  pErg->Typ = TempInt;
-  switch (pLVal->Typ)
-  {
-    case TempInt:
-      pErg->Contents.Int = (pLVal->Contents.Int <= pRVal->Contents.Int) ? 1 : 0;
-      break;
-    case TempFloat:
-      pErg->Contents.Int = (pLVal->Contents.Float <= pRVal->Contents.Float) ? 1 : 0;
-      break;
-    case TempString:
-      pErg->Contents.Int = (DynStringCmp(&pLVal->Contents.Ascii, &pRVal->Contents.Ascii) <= 0) ? 1 : 0;
-      break;
-    default:
-      break;
-  }
-}
-
-static void EvalExpression_GeOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
-{
-  pErg->Typ = TempInt;
-  switch (pLVal->Typ)
-  {
-    case TempInt:
-      pErg->Contents.Int = (pLVal->Contents.Int >= pRVal->Contents.Int) ? 1 : 0;
-      break;
-    case TempFloat:
-      pErg->Contents.Int = (pLVal->Contents.Float >= pRVal->Contents.Float) ? 1 : 0;
-      break;
-    case TempString:
-      pErg->Contents.Int = (DynStringCmp(&pLVal->Contents.Ascii, &pRVal->Contents.Ascii) >= 0) ? 1 : 0;
-      break;
-    default:
-      break;
-  }
-}
-
-static void EvalExpression_UneqOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
-{
-  pErg->Typ = TempInt;
-  switch (pLVal->Typ)
-  {
-    case TempInt:
-      pErg->Contents.Int = (pLVal->Contents.Int != pRVal->Contents.Int) ? 1 : 0;
-      break;
-    case TempFloat:
-      pErg->Contents.Int = (pLVal->Contents.Float != pRVal->Contents.Float) ? 1 : 0;
-      break;
-    case TempString:
-      pErg->Contents.Int = (DynStringCmp(&pLVal->Contents.Ascii, &pRVal->Contents.Ascii) != 0) ? 1 : 0;
-      break;
-    default:
-      break;
-  }
-}
-
 #define LEAVE goto func_exit
 
-void EvalExpression(const char *pExpr, TempResult *pErg)
+void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
 {
-  static const Operator Operators[] =
-  {
-    {" " , 1 , False,  0, False, False, False, False, EvalExpression_DummyOp},
-    {"~" , 1 , False,  1, True , False, False, False, EvalExpression_OneComplOp},
-    {"<<", 2 , True ,  3, True , False, False, False, EvalExpression_ShLeftOp},
-    {">>", 2 , True ,  3, True , False, False, False, EvalExpression_ShRightOp},
-    {"><", 2 , True ,  4, True , False, False, False, EvalExpression_BitMirrorOp},
-    {"&" , 1 , True ,  5, True , False, False, False, EvalExpression_BinAndOp},
-    {"|" , 1 , True ,  6, True , False, False, False, EvalExpression_BinOrOp},
-    {"!" , 1 , True ,  7, True , False, False, False, EvalExpression_BinXorOp},
-    {"^" , 1 , True ,  8, True , True , False, False, EvalExpression_PotOp},
-    {"*" , 1 , True , 11, True , True , False, False, EvalExpression_MultOp},
-    {"/" , 1 , True , 11, True , True , False, False, EvalExpression_DivOp},
-    {"#" , 1 , True , 11, True , False, False, False, EvalExpression_ModOp},
-    {"+" , 1 , True , 13, True , True , True , False, EvalExpression_AddOp},
-    {"-" , 1 , True , 13, True , True , False, False, EvalExpression_SubOp},
-    {"~~", 2 , False,  2, True , False, False, False, EvalExpression_LogNotOp},
-    {"&&", 2 , True , 15, True , False, False, False, EvalExpression_LogAndOp},
-    {"||", 2 , True , 16, True , False, False, False, EvalExpression_LogOrOp},
-    {"!!", 2 , True , 17, True , False, False, False, EvalExpression_LogXorOp},
-    {"=" , 1 , True , 23, True , True , True , False, EvalExpression_EqOp},
-    {"==", 2 , True , 23, True , True , True , False, EvalExpression_EqOp},
-    {">" , 1 , True , 23, True , True , True , False, EvalExpression_GtOp},
-    {"<" , 1 , True , 23, True , True , True , False, EvalExpression_LtOp},
-    {"<=", 2 , True , 23, True , True , True , False, EvalExpression_LeOp},
-    {">=", 2 , True , 23, True , True , True , False, EvalExpression_GeOp},
-    {"<>", 2 , True , 23, True , True , True , False, EvalExpression_UneqOp},
-    /* termination marker */
-    {NULL, 0 , False,  0, False, False, False, False, NULL}
-  },
-  /* minus may have one or two operands */
-  MinusMonadicOperator =
-  {
-    "-" ,1 , False, 13, True , True , False, False, EvalExpression_SubOp
-  };
   const Operator *pOp;
-  const Operator *FOps[sizeof(Operators) / sizeof(*Operators)];
+  const Operator *FOps[OPERATOR_MAXCNT];
   LongInt FOpCnt = 0;
 
-  Boolean OK, FFound;
-  TempResult LVal, RVal, MVal;
+  Boolean OK;
+  tStrComp InArgs[3];
+  TempResult InVals[3];
   int z1, cnt;
   char Save = '\0';
   sint LKlamm, RKlamm, WKlamm, zop;
   sint OpMax, OpPos = -1;
   Boolean InHyp, InQuot;
-  Double  FVal;
   PSymbolEntry Ptr;
   PFunction ValFunc;
-  String Copy, stemp, ftemp;
+  tStrComp CopyComp, STempComp;
+  String CopyStr, stemp;
   char *KlPos, *zp, *DummyPtr, *pOpPos;
+  const tFunction *pFunction;
   PRelocEntry TReloc;
 
   ChkStack();
 
-  if (MakeDebug)
-    fprintf(Debug, "Parse '%s'\n", pExpr);
+  StrCompMkTemp(&CopyComp, CopyStr);
+  StrCompMkTemp(&STempComp, stemp);
 
-  memset(&LVal, 0, sizeof(LVal));
-  memset(&RVal, 0, sizeof(RVal));
+  if (MakeDebug)
+    fprintf(Debug, "Parse '%s'\n", pExpr->Str);
+
+  memset(InVals, 0, sizeof(InVals));
 
   /* Annahme Fehler */
 
@@ -1774,19 +1387,19 @@ void EvalExpression(const char *pExpr, TempResult *pErg)
   pErg->Relocs = NULL;
   pErg->Flags = 0;
 
-  (void)CopyNoBlanks(Copy, pExpr, STRINGSIZE);
+  StrCompCopy(&CopyComp, pExpr);
+  KillPrefBlanksStrComp(&CopyComp);
+  KillPostBlanksStrComp(&CopyComp);
 
   /* sort out local symbols like - and +++.  Do it now to get them out of the
      formula parser's way. */
 
-  if (ChkTmp2(Copy, FALSE))
-    strmaxcpy(stemp, Copy, STRINGSIZE);
-  else
-    strmaxcpy(stemp, pExpr, STRINGSIZE);
+  ChkTmp2(CopyComp.Str, CopyComp.Str, FALSE);
+  StrCompCopy(&STempComp, &CopyComp);
 
   /* Programmzaehler ? */
 
-  if ((PCSymbol) && (!strcasecmp(Copy, PCSymbol)))
+  if ((PCSymbol) && (!strcasecmp(CopyComp.Str, PCSymbol)))
   {
     pErg->Typ = TempInt;
     pErg->Contents.Int = EProgCounter();
@@ -1796,7 +1409,7 @@ void EvalExpression(const char *pExpr, TempResult *pErg)
 
   /* Konstanten ? */
 
-  pErg->Contents.Int = ConstIntVal(Copy, (IntType) (IntTypeCnt-1), &OK);
+  pErg->Contents.Int = ConstIntVal(CopyComp.Str, (IntType) (IntTypeCnt - 1), &OK);
   if (OK)
   {
     pErg->Typ = TempInt;
@@ -1804,7 +1417,7 @@ void EvalExpression(const char *pExpr, TempResult *pErg)
     LEAVE;
   }
 
-  pErg->Contents.Float = ConstFloatVal(Copy, Float80, &OK);
+  pErg->Contents.Float = ConstFloatVal(CopyComp.Str, Float80, &OK);
   if (OK)
   {
     pErg->Typ = TempFloat;
@@ -1812,7 +1425,7 @@ void EvalExpression(const char *pExpr, TempResult *pErg)
     LEAVE;
   }
 
-  ConstStringVal(Copy, &pErg->Contents.Ascii, &OK);
+  ConstStringVal(CopyComp.Str, &pErg->Contents.Ascii, &OK);
   if (OK)
   {
     pErg->Typ = TempString;
@@ -1823,7 +1436,7 @@ void EvalExpression(const char *pExpr, TempResult *pErg)
   /* durch Codegenerator gegebene Konstanten ? */
 
   pErg->Relocs = NULL;
-  InternSymbol(Copy, pErg);
+  InternSymbol(CopyComp.Str, pErg);
   if (pErg->Typ != TempNone)
     LEAVE;
 
@@ -1837,14 +1450,14 @@ void EvalExpression(const char *pExpr, TempResult *pErg)
   InQuot = False;
   for (pOp = Operators + 1; pOp->Id; pOp++)
   {
-    pOpPos = (pOp->IdLen == 1) ? (strchr(Copy, *pOp->Id)) : (strstr(Copy, pOp->Id));
+    pOpPos = (pOp->IdLen == 1) ? (strchr(CopyComp.Str, *pOp->Id)) : (strstr(CopyComp.Str, pOp->Id));
     if (pOpPos)
       FOps[FOpCnt++] = pOp;
   }
 
   /* nach Operator hoechster Rangstufe ausserhalb Klammern suchen */
 
-  for (zp = Copy; *zp; zp++)
+  for (zp = CopyComp.Str; *zp; zp++)
   {
     switch (*zp)
     {
@@ -1889,7 +1502,7 @@ void EvalExpression(const char *pExpr, TempResult *pErg)
               if (Operators[LocOpMax].Priority >= Operators[OpMax].Priority)
               {
                 OpMax = LocOpMax;
-                OpPos = zp - Copy;
+                OpPos = zp - CopyComp.Str;
               }
             }
           }
@@ -1903,7 +1516,7 @@ void EvalExpression(const char *pExpr, TempResult *pErg)
 
   if (LKlamm != RKlamm)
   {
-    WrXError(1300, Copy);
+    WrStrErrorPos(ErrNum_BrackErr, &CopyComp);
     LEAVE;
   }
 
@@ -1911,7 +1524,7 @@ void EvalExpression(const char *pExpr, TempResult *pErg)
 
   if (OpMax)
   {
-    int ThisArgCnt;
+    int ThisArgCnt, CompLen;
 
     pOp = Operators + OpMax;
 
@@ -1925,91 +1538,99 @@ void EvalExpression(const char *pExpr, TempResult *pErg)
 
     /* Operandenzahl pruefen */
 
-    if (OpPos == (int)strlen(Copy) - 1)
+    CompLen = strlen(CopyComp.Str);
+    if (CompLen <= 1)
       ThisArgCnt = 0;
+    else if (!OpPos || (OpPos == (int)strlen(CopyComp.Str) - 1))
+      ThisArgCnt = 1;
     else
-      ThisArgCnt = OpPos ? 2 : 1;
-    if (!ChkArgCntExt(ThisArgCnt, pOp->Dyadic ? 2 : 1, pOp->Dyadic ? 2 : 1))
+      ThisArgCnt = 2;
+    if (!ChkArgCntExtPos(ThisArgCnt, pOp->Dyadic ? 2 : 1, pOp->Dyadic ? 2 : 1, &CopyComp.Pos))
       LEAVE;
 
     /* Teilausdruecke rekursiv auswerten */
 
-    Save = Copy[OpPos];
-    Copy[OpPos] = '\0';
-    EvalExpression(Copy + OpPos + strlen(pOp->Id), &RVal);
+    Save = StrCompSplitRef(&InArgs[0], &InArgs[1], &CopyComp, CopyComp.Str + OpPos);
+    StrCompIncRefLeft(&InArgs[1], strlen(pOp->Id) - 1);
+    EvalStrExpression(&InArgs[1], &InVals[1]);
     if (pOp->Dyadic)
-      EvalExpression(Copy, &LVal);
-    else if (RVal.Typ == TempFloat)
+      EvalStrExpression(&InArgs[0], &InVals[0]);
+    else if (InVals[1].Typ == TempFloat)
     {
-      LVal.Typ = TempFloat;
-      LVal.Contents.Float = 0.0;
+      InVals[0].Typ = TempFloat;
+      InVals[0].Contents.Float = 0.0;
     }
     else
     {
-      LVal.Typ = TempInt;
-      LVal.Contents.Int = 0;
-      LVal.Relocs = NULL;
+      InVals[0].Typ = TempInt;
+      InVals[0].Contents.Int = 0;
+      InVals[0].Relocs = NULL;
     }
-    Copy[OpPos] = Save;
+    CopyComp.Str[OpPos] = Save;
 
     /* Abbruch, falls dabei Fehler */
 
-    if ((LVal.Typ == TempNone) || (RVal.Typ == TempNone))
+    if ((InVals[0].Typ == TempNone) || (InVals[1].Typ == TempNone))
       LEAVE;
 
     /* relokatible Symbole nur fuer + und - erlaubt */
 
-    if ((OpMax != 12) && (OpMax != 13) && (LVal.Relocs || RVal.Relocs))
+    if ((OpMax != 12) && (OpMax != 13) && (InVals[0].Relocs || InVals[1].Relocs))
     {
-      WrError(1150);
+      WrStrErrorPos(ErrNum_NoRelocs, &CopyComp);
       LEAVE;
     }
 
     /* both operands for a dyadic operator must have same type */
 
-    if ((pOp->Dyadic) && (LVal.Typ != RVal.Typ))
+    if ((pOp->Dyadic) && (InVals[0].Typ != InVals[1].Typ))
     {
-      if ((LVal.Typ == TempString) || (RVal.Typ == TempString))
-      {
-        WrError(1135);
-        LEAVE;
-      }
-      if (LVal.Typ == TempInt)
-        EvalExpression_ChgFloat(&LVal);
-      if (RVal.Typ == TempInt)
-        EvalExpression_ChgFloat(&RVal);
+      for (z1 = 0; z1 < 2; z1++)
+        switch (InVals[z1].Typ)
+        {
+          case TempString:
+            WrStrErrorPos(ErrNum_InvOpType, &InArgs[z1]);
+            break;
+          case TempInt:
+            TempResultToFloat(&InVals[z1]);
+            break;
+          case TempFloat:
+            break;
+          default:
+            exit(255);
+        }
     }
 
     /* optionally convert int to float if operator only supports float */
 
-    switch (RVal.Typ)
+    switch (InVals[1].Typ)
     {
       case TempInt:
         if (!pOp->MayInt)
         {
           if (!pOp->MayFloat)
           {
-            WrError(1135);
+            WrStrErrorPos(ErrNum_InvOpType, &InArgs[1]);
             LEAVE;
           }
           else
           {
-            EvalExpression_ChgFloat(&RVal);
-            if (pOp->Dyadic) EvalExpression_ChgFloat(&LVal);
+            TempResultToFloat(&InVals[1]);
+            if (pOp->Dyadic) TempResultToFloat(&InVals[0]);
           }
         }
         break;
       case TempFloat:
         if (!pOp->MayFloat)
         {
-          WrError(1135);
+          WrStrErrorPos(ErrNum_InvOpType, &InArgs[1]);
           LEAVE;
         }
         break;
       case TempString:
         if (!pOp->MayString)
         {
-          WrError(1135);
+          WrStrErrorPos(ErrNum_InvOpType, &InArgs[1]);
           LEAVE;
         }
         break;
@@ -2019,7 +1640,7 @@ void EvalExpression(const char *pExpr, TempResult *pErg)
 
     /* Operanden abarbeiten */
 
-    pOp->pFunc(pErg, &LVal, &RVal);
+    pOp->pFunc(pErg, &InVals[0], &InVals[1]);
     LEAVE;
   } /* if (OpMax) */
 
@@ -2027,748 +1648,237 @@ void EvalExpression(const char *pExpr, TempResult *pErg)
 
   if (LKlamm != 0)
   {
+    tStrComp FName, FArg, Remainder;
+    
     /* erste Klammer suchen, Funktionsnamen abtrennen */
 
-    KlPos = strchr(Copy, '(');
+    KlPos = strchr(CopyComp.Str, '(');
 
     /* Funktionsnamen abschneiden */
 
-    *KlPos = '\0';
-    strmaxcpy(ftemp, Copy, 255);
-    strmov(Copy, KlPos + 1);
-    Copy[strlen(Copy)-1] = '\0';
+    StrCompSplitRef(&FName, &FArg, &CopyComp, KlPos);
+    StrCompShorten(&FArg, 1);
 
     /* Nullfunktion: nur Argument */
 
-    if (ftemp[0] == '\0')
+    if (*FName.Str == '\0')
     {
-      EvalExpression(Copy, &LVal);
-      *pErg = LVal;
+      EvalStrExpression(&FArg, &InVals[0]);
+      *pErg = InVals[0];
       LEAVE;
     }
 
     /* selbstdefinierte Funktion ? */
 
-    ValFunc = FindFunction(ftemp);
+    ValFunc = FindFunction(FName.Str);
     if (ValFunc)
     {
-      char *pArg = Copy;
+      char CompArgStr[255];
+      tStrComp CompArg;
 
-      strmaxcpy(ftemp, ValFunc->Definition, 255);
+      StrCompMkTemp(&CompArg, CompArgStr);
+      strmaxcpy(CompArg.Str, ValFunc->Definition, 255);
       for (z1 = 1; z1 <= ValFunc->ArguCnt; z1++)
       {
-        if (!pArg)
+        if (!*FArg.Str)
         {
-          WrError(1490);
+          WrError(ErrNum_InvFuncArgCnt);
           LEAVE;
         }
 
-        KlPos = QuotPos(pArg, ',');
+        KlPos = QuotPos(FArg.Str, ',');
         if (KlPos)
-          *KlPos = '\0';
+          StrCompSplitRef(&FArg, &Remainder, &FArg, KlPos);
 
-        EvalExpression(pArg, &LVal);
-        if (LVal.Relocs)
+        EvalStrExpression(&FArg, &InVals[0]);
+        if (InVals[0].Relocs)
         {
-          WrError(1150);
-          FreeRelocs(&LVal.Relocs);
+          WrStrErrorPos(ErrNum_NoRelocs, &FArg);
+          FreeRelocs(&InVals[0].Relocs);
           return;
         }
 
-        if (!KlPos)
-          pArg = NULL;
+        if (KlPos)
+          FArg = Remainder;
         else
-          pArg = KlPos + 1;
+          StrCompReset(&FArg);
 
         strmaxcpy(stemp, "(", 255);
-        switch (LVal.Typ)
-        {
-          case TempInt:
-          {
-            String s;
-
-            LargeString(s, LVal.Contents.Int);
-            sprintf(stemp + 1, "%s", s);
-            break;
-          }
-          case TempFloat:
-            sprintf(stemp + 1, "%0.16e", LVal.Contents.Float);
-            KillBlanks(stemp);
-            break;
-          case TempString:
-            stemp[1] = '"';
-            snstrlenprint(stemp + 2, 252, LVal.Contents.Ascii.Contents, LVal.Contents.Ascii.Length);
-            strmaxcat(stemp, "\"", 255);
-            break;
-          default:
-            LEAVE;
-        }
+        if (TempResultToPlainString(stemp + 1, &InVals[0], 253))
+          LEAVE;
         strmaxcat(stemp,")", 255);
-        ExpandLine(stemp, z1, ftemp);
+        ExpandLine(stemp, z1, CompArg.Str);
       }
-      if (pArg)
+      if (*FArg.Str)
       {
-        WrError(1490);
+        WrError(ErrNum_InvFuncArgCnt);
         LEAVE;
       }
-      EvalExpression(ftemp, pErg);
+      EvalStrExpression(&CompArg, pErg);
       LEAVE;
     }
 
     /* hier einmal umwandeln ist effizienter */
 
-    NLS_UpString(ftemp);
+    NLS_UpString(FName.Str);
 
     /* symbolbezogene Funktionen */
 
-    if (!strcmp(ftemp, "SYMTYPE"))
+    if (!strcmp(FName.Str, "SYMTYPE"))
     {
       pErg->Typ = TempInt;
-      pErg->Contents.Int = FindRegDef(Copy, &DummyPtr) ? 0x80 : GetSymbolType(Copy);
+      pErg->Contents.Int = FindRegDef(FArg.Str, &DummyPtr) ? 0x80 : GetSymbolType(FArg.Str);
       LEAVE;
     }
 
-    else if (!strcmp(ftemp, "ASSUMEDVAL"))
+    else if (!strcmp(FName.Str, "ASSUMEDVAL"))
     {
       unsigned IdxAssume;
 
       for (IdxAssume = 0; IdxAssume < ASSUMERecCnt; IdxAssume++)
-        if (!strcasecmp(Copy, pASSUMERecs[IdxAssume].Name))
+        if (!strcasecmp(FArg.Str, pASSUMERecs[IdxAssume].Name))
         {
           pErg->Typ = TempInt;
           pErg->Contents.Int = *(pASSUMERecs[IdxAssume].Dest);
           LEAVE;
         }
-      WrXError(1010, Copy);
+      WrStrErrorPos(ErrNum_SymbolUndef, &FArg);
       LEAVE;
     }
 
     /* Unterausdruck auswerten (interne Funktionen maxmimal mit drei Argumenten) */
 
-    z1 = 0; KlPos = Copy;
+    cnt = 0;
     do
     {
-      zp = QuotPos(KlPos, ',');
-      if (zp) *zp = '\0';
-      switch (z1)
+      zp = QuotPos(FArg.Str, ',');
+      if (zp)
+        StrCompSplitRef(&InArgs[cnt], &Remainder, &FArg, zp);
+      else
+        InArgs[cnt] = FArg;
+      if (cnt < 3)
       {
-        case 0:
-          EvalExpression(KlPos, &LVal);
-          if (LVal.Typ == TempNone)
-            LEAVE;
-          TReloc = LVal.Relocs;
-          break;
-        case 1:
-          EvalExpression(KlPos, &MVal);
-          if (MVal.Typ == TempNone)
-            LEAVE;
-          TReloc = MVal.Relocs;
-          break;
-        case 2:
-          EvalExpression(KlPos, &RVal);
-          if (RVal.Typ == TempNone)
-            LEAVE;
-          TReloc = RVal.Relocs;
-          break;
-        default:
-          WrError(1490);
+        EvalStrExpression(&InArgs[cnt], &InVals[cnt]);
+        if (InVals[cnt].Typ == TempNone)
           LEAVE;
+        TReloc = InVals[cnt].Relocs;
+      }
+      else
+      {
+        WrError(ErrNum_InvFuncArgCnt);
+        LEAVE;
       }
       if (TReloc)
       {
-        WrError(1150);
+        WrStrErrorPos(ErrNum_NoRelocs, &InArgs[cnt]);
         FreeRelocs(&TReloc);
         LEAVE;
       }
       if (zp)
-        KlPos = zp + 1;
-      z1++;
+        FArg = Remainder;
+      cnt++;
     }
     while (zp);
 
-    /* ein paar Funktionen mit zwei, drei Argumenten */
+    /* search function */
 
-    if (z1 == 3)
+    for (pFunction = Functions; pFunction->pName; pFunction++)
+      if (!strcmp(FName.Str, pFunction->pName))
+        break;
+    if (!pFunction->pName)
     {
-      if (!strcmp(ftemp, "SUBSTR"))
-      {
-        if ((LVal.Typ != TempString) || (MVal.Typ != TempInt) || (RVal.Typ != TempInt)) WrError(1135);
-        else
-        {
-          cnt = LVal.Contents.Ascii.Length - MVal.Contents.Int;
-          if ((RVal.Contents.Int != 0) && (RVal.Contents.Int < cnt))
-            cnt = RVal.Contents.Int;
-          if (cnt < 0)
-            cnt = 0;
-          pErg->Contents.Ascii.Length = 0;
-          DynStringAppend(&pErg->Contents.Ascii, LVal.Contents.Ascii.Contents + MVal.Contents.Int, cnt);
-          pErg->Typ = TempString;
-        }
-      }
-      else
-        WrXError(1860, ftemp);
-      LEAVE;
-    }
-    else if (z1 == 2)
-    {
-      if (!strcmp(ftemp, "STRSTR"))
-      {
-        if ((LVal.Typ != TempString) || (MVal.Typ != TempString)) WrError(1135);
-        else
-        {
-          pErg->Contents.Int = DynStringFind(&LVal.Contents.Ascii, &MVal.Contents.Ascii);
-          pErg->Typ = TempInt;
-        }
-      }
-      else if (!strcmp(ftemp, "CHARFROMSTR"))
-      {
-        if ((LVal.Typ != TempString) || (MVal.Typ != TempInt)) WrError(1135);
-        else
-        {
-          pErg->Typ = TempInt;
-          pErg->Contents.Int = ((MVal.Contents.Int >= 0) && (MVal.Contents.Int < LVal.Contents.Ascii.Length)) ? LVal.Contents.Ascii.Contents[MVal.Contents.Int] : -1;
-        }
-      }
-      else
-        WrXError(1860, ftemp);
+      WrStrErrorPos(ErrNum_UnknownFunc, &FName);
       LEAVE;
     }
 
-    /* expression type ? */
+    /* argument checking */
 
-    if (!strcmp(ftemp, "EXPRTYPE"))
+    if ((cnt < pFunction->MinNumArgs) || (cnt > pFunction->MaxNumArgs))
     {
-      pErg->Typ = TempInt;
-      switch (LVal.Typ)
-      {
-        case TempInt:
-          pErg->Contents.Int = 0;
-          break;
-        case TempFloat:
-          pErg->Contents.Int = 1;
-          break;
-        case TempString:
-          pErg->Contents.Int = 2;
-          break;
-        default:
-          pErg->Contents.Int = -1;
-      }
+      WrError(ErrNum_InvFuncArgCnt);
       LEAVE;
     }
-
-    /* Funktionen fuer Stringargumente */
-
-    if (LVal.Typ == TempString)
+    for (z1 = 0; z1 < cnt; z1++)
     {
-      /* in Grossbuchstaben wandeln ? */
-
-      if (!strcmp(ftemp, "UPSTRING"))
+      if ((InVals[z1].Typ == TempInt) && (!(pFunction->ArgTypes[z1] & (1 << TempInt))))
+        TempResultToFloat(&InVals[z1]);
+      if (!(pFunction->ArgTypes[z1] & (1 << InVals[z1].Typ)))
       {
-        pErg->Typ = TempString;
-        DynString2DynString(&pErg->Contents.Ascii, &LVal.Contents.Ascii);
-        for (KlPos = pErg->Contents.Ascii.Contents;
-             KlPos < pErg->Contents.Ascii.Contents + pErg->Contents.Ascii.Length;
-             KlPos++)
-          *KlPos = mytoupper(*KlPos);
-      }
-
-      /* in Kleinbuchstaben wandeln ? */
-
-      else if (!strcmp(ftemp, "LOWSTRING"))
-      {
-        pErg->Typ = TempString;
-        DynString2DynString(&pErg->Contents.Ascii, &LVal.Contents.Ascii);
-        for (KlPos = pErg->Contents.Ascii.Contents;
-             KlPos < pErg->Contents.Ascii.Contents + pErg->Contents.Ascii.Length;
-             KlPos++)
-          *KlPos = mytolower(*KlPos);
-      }
-
-      /* Laenge ermitteln ? */
-
-      else if (!strcmp(ftemp, "STRLEN"))
-      {
-        pErg->Typ = TempInt;
-        pErg->Contents.Int = LVal.Contents.Ascii.Length;
-      }
-
-      /* Parser aufrufen ? */
-
-      else if (!strcmp(ftemp, "VAL"))
-      {
-        String Tmp;
-
-        DynString2CString(Tmp, &LVal.Contents.Ascii, sizeof(Tmp));
-        EvalExpression(Tmp, pErg);
-      }
-
-      /* nix gefunden ? */
-
-      else
-      {
-        WrXError(1860, ftemp);
-        pErg->Typ = TempNone;
+        WrStrErrorPos(ErrNum_InvOpType, &InArgs[z1]);
+        LEAVE;
       }
     }
-
-    /* Funktionen fuer Zahlenargumente */
-
-    else
-    {
-      FFound = False;
-      pErg->Typ = TempNone;
-
-      /* reine Integerfunktionen */
-
-      if (!strcmp(ftemp, "TOUPPER"))
-      {
-        if (LVal.Typ != TempInt) WrError(1135);
-        else if ((LVal.Contents.Int < 0) || (LVal.Contents.Int > 255)) WrError(1320);
-        else
-        {
-          pErg->Typ = TempInt;
-          pErg->Contents.Int = toupper(LVal.Contents.Int);
-        }
-        FFound = True;
-      }
-
-      else if (!strcmp(ftemp, "TOLOWER"))
-      {
-        if (LVal.Typ != TempInt) WrError(1135);
-        else if ((LVal.Contents.Int < 0) || (LVal.Contents.Int > 255)) WrError(1320);
-        else
-        {
-          pErg->Typ = TempInt;
-          pErg->Contents.Int = tolower(LVal.Contents.Int);
-        }
-        FFound = True;
-      }
-
-      else if (!strcmp(ftemp, "BITCNT"))
-      {
-        if (LVal.Typ != TempInt) WrError(1135);
-        else
-        {
-          pErg->Typ = TempInt;
-          pErg->Contents.Int = 0;
-          for (z1 = 0; z1 < LARGEBITS; z1++)
-          {
-            pErg->Contents.Int += (LVal.Contents.Int & 1);
-            LVal.Contents.Int = LVal.Contents.Int >> 1;
-          }
-        }
-        FFound = True;
-      }
-
-      else if (!strcmp(ftemp, "FIRSTBIT"))
-      {
-        if (LVal.Typ != TempInt) WrError(1135);
-        else
-        {
-          pErg->Typ = TempInt;
-          pErg->Contents.Int = 0;
-          do
-          {
-            if (!Odd(LVal.Contents.Int))
-              pErg->Contents.Int++;
-            LVal.Contents.Int = LVal.Contents.Int >> 1;
-          }
-          while ((pErg->Contents.Int < LARGEBITS) && (!Odd(LVal.Contents.Int)));
-          if (pErg->Contents.Int >= LARGEBITS)
-            pErg->Contents.Int = -1;
-        }
-        FFound = True;
-      }
-
-      else if (!strcmp(ftemp, "LASTBIT"))
-      {
-        if (LVal.Typ != TempInt) WrError(1135);
-        else
-        {
-          pErg->Typ = TempInt;
-          pErg->Contents.Int = -1;
-          for (z1 = 0; z1 < LARGEBITS; z1++)
-          {
-            if (Odd(LVal.Contents.Int))
-              pErg->Contents.Int = z1;
-            LVal.Contents.Int = LVal.Contents.Int >> 1;
-          }
-        }
-        FFound = True;
-      }
-
-      else if (!strcmp(ftemp, "BITPOS"))
-      {
-        if (LVal.Typ != TempInt) WrError(1135);
-        else
-        {
-          pErg->Typ = TempInt;
-          if (!SingleBit(LVal.Contents.Int, &pErg->Contents.Int))
-          {
-            pErg->Contents.Int = -1;
-            WrError(1540);
-          }
-        }
-        FFound = True;
-      }
-
-      /* variable Integer/Float-Funktionen */
-
-      else if (!strcmp(ftemp, "ABS"))
-      {
-        switch (pErg->Typ = LVal.Typ)
-        {
-          case TempInt:
-            pErg->Contents.Int = (LVal.Contents.Int < 0) ? -LVal.Contents.Int : LVal.Contents.Int;
-            break;
-          case TempFloat:
-            pErg->Contents.Float = fabs(LVal.Contents.Float);
-            break;
-          default:
-            break;
-        }
-        FFound = True;
-      }
-
-      else if (!strcmp(ftemp, "SGN"))
-      {
-        pErg->Typ = TempInt;
-        switch (LVal.Typ)
-        {
-          case TempInt:
-            if (LVal.Contents.Int < 0)
-              pErg->Contents.Int = -1;
-            else if (LVal.Contents.Int > 0)
-              pErg->Contents.Int = 1;
-            else
-              pErg->Contents.Int = 0;
-            break;
-          case TempFloat:
-            if (LVal.Contents.Float < 0)
-              pErg->Contents.Int = -1;
-            else if (LVal.Contents.Float > 0)
-              pErg->Contents.Int = 1;
-            else
-              pErg->Contents.Int = 0;
-            break;
-          default:
-            break;
-        }
-        FFound = True;
-      }
-
-      /* Funktionen Float und damit auch Int */
-
-      if (!FFound)
-      {
-        /* Typkonvertierung */
-
-        EvalExpression_ChgFloat(&LVal);
-        pErg->Typ = TempFloat;
-
-        /* Integerwandlung */
-
-        if (!strcmp(ftemp, "INT"))
-        {
-          if (fabs(LVal.Contents.Float) > MaxLargeInt)
-          {
-            pErg->Typ = TempNone;
-            WrError(1320);
-          }
-          else
-          {
-            pErg->Typ = TempInt;
-            pErg->Contents.Int = (LargeInt) floor(LVal.Contents.Float);
-          }
-        }
-
-        /* Quadratwurzel */
-
-        else if (!strcmp(ftemp, "SQRT"))
-        {
-          if (LVal.Contents.Float < 0)
-          {
-            pErg->Typ = TempNone;
-            WrError(1870);
-          }
-          else pErg->Contents.Float = sqrt(LVal.Contents.Float);
-        }
-
-        /* trigonometrische Funktionen */
-
-        else if (!strcmp(ftemp, "SIN"))
-          pErg->Contents.Float = sin(LVal.Contents.Float);
-        else if (!strcmp(ftemp, "COS"))
-          pErg->Contents.Float = cos(LVal.Contents.Float);
-        else if (!strcmp(ftemp, "TAN"))
-        {
-          if (cos(LVal.Contents.Float) == 0.0)
-          {
-            pErg->Typ = TempNone;
-            WrError(1870);
-          }
-          else
-            pErg->Contents.Float = tan(LVal.Contents.Float);
-        }
-        else if (!strcmp(ftemp, "COT"))
-        {
-          if ((FVal = sin(LVal.Contents.Float)) == 0.0)
-          {
-            pErg->Typ = TempNone;
-            WrError(1870);
-          }
-          else
-            pErg->Contents.Float = cos(LVal.Contents.Float)/FVal;
-        }
-
-        /* inverse trigonometrische Funktionen */
-
-        else if (!strcmp(ftemp, "ASIN"))
-        {
-          if (fabs(LVal.Contents.Float) > 1)
-          {
-            pErg->Typ = TempNone;
-            WrError(1870);
-          }
-          else
-            pErg->Contents.Float = asin(LVal.Contents.Float);
-        }
-        else if (!strcmp(ftemp, "ACOS"))
-        {
-          if (fabs(LVal.Contents.Float) > 1)
-          {
-            pErg->Typ = TempNone;
-            WrError(1870);
-          }
-          else
-            pErg->Contents.Float = acos(LVal.Contents.Float);
-        }
-        else if (!strcmp(ftemp, "ATAN"))
-          pErg->Contents.Float = atan(LVal.Contents.Float);
-        else if (!strcmp(ftemp, "ACOT"))
-          pErg->Contents.Float = M_PI / 2 - atan(LVal.Contents.Float);
-
-        /* exponentielle & hyperbolische Funktionen */
-
-        else if (!strcmp(ftemp, "EXP"))
-        {
-          if (LVal.Contents.Float>709)
-          {
-            pErg->Typ = TempNone;
-            WrError(1880);
-          }
-          else
-            pErg->Contents.Float = exp(LVal.Contents.Float);
-        }
-        else if (!strcmp(ftemp, "ALOG"))
-        {
-          if (LVal.Contents.Float>308)
-          {
-            pErg->Typ = TempNone;
-            WrError(1880);
-          }
-          else
-            pErg->Contents.Float = exp(LVal.Contents.Float * log(10.0));
-        }
-        else if (!strcmp(ftemp, "ALD"))
-        {
-          if (LVal.Contents.Float>1022)
-          {
-            pErg->Typ = TempNone;
-            WrError(1880);
-          }
-          else
-            pErg->Contents.Float = exp(LVal.Contents.Float * log(2.0));
-        }
-        else if (!strcmp(ftemp, "SINH"))
-        {
-          if (LVal.Contents.Float > 709)
-          {
-            pErg->Typ = TempNone;
-            WrError(1880);
-          }
-          else
-            pErg->Contents.Float = sinh(LVal.Contents.Float);
-        }
-        else if (!strcmp(ftemp, "COSH"))
-        {
-          if (LVal.Contents.Float > 709)
-          {
-            pErg->Typ = TempNone;
-            WrError(1880);
-          }
-          else
-            pErg->Contents.Float = cosh(LVal.Contents.Float);
-        }
-        else if (!strcmp(ftemp, "TANH"))
-        {
-          if (LVal.Contents.Float > 709)
-          {
-            pErg->Typ = TempNone;
-            WrError(1880);
-          }
-          else
-            pErg->Contents.Float = tanh(LVal.Contents.Float);
-        }
-        else if (!strcmp(ftemp, "COTH"))
-        {
-          if (LVal.Contents.Float > 709)
-          {
-            pErg->Typ = TempNone;
-            WrError(1880);
-          }
-          else if ((FVal = tanh(LVal.Contents.Float)) == 0.0)
-          {
-            pErg->Typ = TempNone;
-            WrError(1870);
-          }
-          else 
-            pErg->Contents.Float = 1.0 / FVal;
-        }
-
-        /* logarithmische & inverse hyperbolische Funktionen */
-
-        else if (!strcmp(ftemp, "LN"))
-        {
-          if (LVal.Contents.Float <= 0)
-          {
-            pErg->Typ = TempNone;
-            WrError(1870);
-          }
-          else
-            pErg->Contents.Float = log(LVal.Contents.Float);
-        }
-        else if (!strcmp(ftemp, "LOG"))
-        {
-          if (LVal.Contents.Float <= 0)
-          {
-            pErg->Typ = TempNone;
-            WrError(1870);
-          }
-          else
-            pErg->Contents.Float = log10(LVal.Contents.Float);
-        }
-        else if (!strcmp(ftemp, "LD"))
-        {
-          if (LVal.Contents.Float <= 0)
-          {
-            pErg->Typ = TempNone;
-            WrError(1870);
-          }
-          else
-            pErg->Contents.Float = log(LVal.Contents.Float) / log(2.0);
-        }
-        else if (!strcmp(ftemp, "ASINH"))
-          pErg->Contents.Float = log(LVal.Contents.Float+sqrt(LVal.Contents.Float*LVal.Contents.Float + 1));
-        else if (!strcmp(ftemp, "ACOSH"))
-        {
-          if (LVal.Contents.Float < 1)
-          {
-            pErg->Typ = TempNone;
-            WrError(1880);
-          }
-          else pErg->Contents.Float = log(LVal.Contents.Float+sqrt(LVal.Contents.Float*LVal.Contents.Float - 1));
-        }
-        else if (!strcmp(ftemp, "ATANH"))
-        {
-          if (fabs(LVal.Contents.Float) >= 1)
-          {
-            pErg->Typ = TempNone;
-            WrError(1880);
-          }
-          else
-            pErg->Contents.Float = 0.5 * log((1 + LVal.Contents.Float) / (1 - LVal.Contents.Float));
-        }
-        else if (!strcmp(ftemp, "ACOTH"))
-        {
-          if (fabs(LVal.Contents.Float) <= 1)
-          {
-            pErg->Typ = TempNone;
-            WrError(1880);
-          }
-          else
-            pErg->Contents.Float = 0.5 * log((LVal.Contents.Float + 1) / (LVal.Contents.Float - 1));
-        }
-
-        /* nix gefunden ? */
-
-        else
-        {
-          WrXError(1860, ftemp);
-          pErg->Typ = TempNone;
-        }
-      }
-    }
+    pFunction->pFunc(pErg, InVals, cnt);
     LEAVE;
   }
 
   /* nichts dergleichen, dann einfaches Symbol: urspruenglichen Wert wieder
-     herstellen, dann Pruefung auf $$-tempraere Symbole */
+     herstellen, dann Pruefung auf $$-temporaere Symbole */
 
-  strmaxcpy(Copy, stemp, 255);
-  KillPrefBlanks(Copy);
-  KillPostBlanks(Copy);
+  StrCompCopy(&CopyComp, &STempComp);
+  KillPrefBlanksStrComp(&CopyComp);
+  KillPostBlanksStrComp(&CopyComp);
 
-  ChkTmp1(Copy, FALSE);
+  ChkTmp1(CopyComp.Str, FALSE);
 
   /* interne Symbole ? */
 
-  if (!strcasecmp(Copy, "MOMFILE"))
+  if (!strcasecmp(CopyComp.Str, "MOMFILE"))
   {
     pErg->Typ = TempString;
     CString2DynString(&pErg->Contents.Ascii, CurrFileName);
     LEAVE;
   }
 
-  if (!strcasecmp(Copy, "MOMLINE"))
+  if (!strcasecmp(CopyComp.Str, "MOMLINE"))
   {
     pErg->Typ = TempInt;
     pErg->Contents.Int = CurrLine;
     LEAVE;
   }
 
-  if (!strcasecmp(Copy, "MOMPASS"))
+  if (!strcasecmp(CopyComp.Str, "MOMPASS"))
   {
     pErg->Typ = TempInt;
     pErg->Contents.Int = PassNo;
     LEAVE;
   }
 
-  if (!strcasecmp(Copy, "MOMSECTION"))
+  if (!strcasecmp(CopyComp.Str, "MOMSECTION"))
   {
     pErg->Typ  =  TempString;
     CString2DynString(&pErg->Contents.Ascii, GetSectionName(MomSectionHandle));
     LEAVE;
   }
 
-  if (!strcasecmp(Copy, "MOMSEGMENT"))
+  if (!strcasecmp(CopyComp.Str, "MOMSEGMENT"))
   {
     pErg->Typ = TempString;
     CString2DynString(&pErg->Contents.Ascii, SegNames[ActPC]);
     LEAVE;
   }
 
-  if (!ExpandSymbol(Copy))
+  if (!ExpandSymbol(CopyComp.Str))
     LEAVE;
 
-  KlPos = strchr(Copy, '[');
+  KlPos = strchr(CopyComp.Str, '[');
   if (KlPos)
   {
     Save = (*KlPos);
     *KlPos = '\0';
   }
-  OK = ChkSymbName(Copy);
+  OK = ChkSymbName(CopyComp.Str);
   if (KlPos)
     *KlPos = Save;
   if (!OK)
   {
-    WrXError(1020, Copy);
+    WrStrErrorPos(ErrNum_InvSymName, &CopyComp);
     LEAVE;
   }
 
-  Ptr = FindLocNode(Copy, TempAll);
+  Ptr = FindLocNode(CopyComp.Str, TempAll);
   if (!Ptr)
-    Ptr = FindNode(Copy, TempAll);
+    Ptr = FindNode(CopyComp.Str, TempAll);
   if (Ptr)
   {
     switch (pErg->Typ = Ptr->SymWert.Typ)
@@ -2813,21 +1923,28 @@ void EvalExpression(const char *pExpr, TempResult *pErg)
     pErg->Contents.Int = EProgCounter();
     Repass = True;
     if ((MsgIfRepass) && (PassNo >= PassNoForMessage))
-      WrXError(170, Copy);
+      WrStrErrorPos(ErrNum_RepassUnknown, &CopyComp);
     FirstPassUnknown = True;
   }
 
   /* alles war nix, Fehler */
 
   else
-    WrXError(1010, Copy);
+    WrStrErrorPos(ErrNum_SymbolUndef, &CopyComp);
 
 func_exit:
 
-  if (LVal.Relocs)
-    FreeRelocs(&LVal.Relocs);
-  if (RVal.Relocs)
-    FreeRelocs(&RVal.Relocs);
+  for (z1 = 0; z1 < 3; z1++)
+    if (InVals[z1].Relocs)
+      FreeRelocs(&InVals[z1].Relocs);
+}
+
+void EvalExpression(const char *pExpr, TempResult *pErg)
+{
+  tStrComp Expr;
+
+  StrCompMkTemp(&Expr, (char*)pExpr);
+  EvalStrExpression(&Expr, pErg);
 }
 
 static const int TypeNums[] =
@@ -2835,7 +1952,7 @@ static const int TypeNums[] =
   0, Num_OpTypeInt, Num_OpTypeFloat, 0, Num_OpTypeString, 0, 0, 0
 };
 
-LargeInt EvalIntExpressionWithFlags(const char *pExpr, IntType Type, Boolean *pResult, tSymbolFlags *pFlags)
+LargeInt EvalStrIntExpressionWithFlags(const tStrComp *pComp, IntType Type, Boolean *pResult, tSymbolFlags *pFlags)
 {
   TempResult t;
   LargeInt Result;
@@ -2849,7 +1966,7 @@ LargeInt EvalIntExpressionWithFlags(const char *pExpr, IntType Type, Boolean *pR
   if (pFlags)
     *pFlags = 0;
 
-  EvalExpression(pExpr, &t);
+  EvalStrExpression(pComp, &t);
   SetRelocs(t.Relocs);
   switch (t.Typ)
   {
@@ -2886,7 +2003,7 @@ LargeInt EvalIntExpressionWithFlags(const char *pExpr, IntType Type, Boolean *pR
         sprintf(Msg, "%s %s %s %s",
                 getmessage(Num_ErrMsgExpected), getmessage(Num_OpTypeInt),
                 getmessage(Num_ErrMsgButGot), getmessage(TypeNums[t.Typ]));
-        WrXError(1135, Msg);
+        WrStrErrorPos(ErrNum_InvOpType, pComp);
       }
       FreeRelocs(&LastRelocs);
       return -1;
@@ -2900,12 +2017,12 @@ LargeInt EvalIntExpressionWithFlags(const char *pExpr, IntType Type, Boolean *pR
     if (HardRanges)
     {
       FreeRelocs(&LastRelocs);
-      WrError(1320);
+      WrStrErrorPos(ErrNum_OverRange, pComp);
       return -1;
     }
     else
     {
-      WrError(260);
+      WrStrErrorPos(ErrNum_WOverRange, pComp);
       *pResult = True;
       return Result & IntTypeDefs[(int)Type].Mask;
     }
@@ -2917,29 +2034,20 @@ LargeInt EvalIntExpressionWithFlags(const char *pExpr, IntType Type, Boolean *pR
   }
 }
 
-LargeInt EvalIntDisplacement(char *pExpr, IntType Type, Boolean *pResult)
+LargeInt EvalStrIntExpressionOffsWithFlags(const tStrComp *pExpr, int Offset, IntType Type, Boolean *pResult, tSymbolFlags *pFlags)
 {
-  char SaveLeft;
-  LargeInt Result;
+  if (Offset)
+  {
+    tStrComp Comp;
 
-  /* save the original character.  We assume there is space to the left! */
-
-  pExpr--;
-  SaveLeft = *pExpr;
-  *pExpr = '0';
-
-  /* evaluate */
-
-  Result = EvalIntExpression(pExpr, Type, pResult);
-
-  /* restore character */
-
-  *pExpr = SaveLeft;
-
-  return Result;
+    StrCompRefRight(&Comp, pExpr, Offset);
+    return EvalStrIntExpressionWithFlags(&Comp, Type, pResult, pFlags);
+  }
+  else
+    return EvalStrIntExpressionWithFlags(pExpr, Type, pResult, pFlags);
 }
 
-Double EvalFloatExpression(const char *pExpr, FloatType Type, Boolean *pResult)
+Double EvalStrFloatExpression(const tStrComp *pExpr, FloatType Type, Boolean *pResult)
 {
   TempResult t;
 
@@ -2949,7 +2057,7 @@ Double EvalFloatExpression(const char *pExpr, FloatType Type, Boolean *pResult)
   SymbolQuestionable = False;
   FirstPassUnknown = False;
 
-  EvalExpression(pExpr, &t);
+  EvalStrExpression(pExpr, &t);
   switch (t.Typ)
   {
     case TempNone:
@@ -2964,7 +2072,7 @@ Double EvalFloatExpression(const char *pExpr, FloatType Type, Boolean *pResult)
       sprintf(Msg, "%s %s %s %s",
               getmessage(Num_ErrMsgExpected), getmessage(Num_OpTypeFloat),
               getmessage(Num_ErrMsgButGot), getmessage(Num_OpTypeString));
-      WrXError(1135, Msg);
+      WrStrErrorPos(ErrNum_InvOpType, pExpr);
       return -1;
     }
     default:
@@ -2973,7 +2081,7 @@ Double EvalFloatExpression(const char *pExpr, FloatType Type, Boolean *pResult)
 
   if (!FloatRangeCheck(t.Contents.Float, Type))
   {
-    WrError(1320);
+    WrStrErrorPos(ErrNum_OverRange, pExpr);
     return -1;
   }
 
@@ -2981,7 +2089,7 @@ Double EvalFloatExpression(const char *pExpr, FloatType Type, Boolean *pResult)
   return t.Contents.Float;
 }
 
-void EvalStringExpression(const char *pExpr, Boolean *pResult, char *pEvalResult)
+void EvalStrStringExpression(const tStrComp *pExpr, Boolean *pResult, char *pEvalResult)
 {
   TempResult t;
 
@@ -2992,7 +2100,7 @@ void EvalStringExpression(const char *pExpr, Boolean *pResult, char *pEvalResult
   SymbolQuestionable = False;
   FirstPassUnknown = False;
 
-  EvalExpression(pExpr, &t);
+  EvalStrExpression(pExpr, &t);
   if (t.Typ != TempString)
   {
     *pEvalResult = '\0';
@@ -3003,7 +2111,7 @@ void EvalStringExpression(const char *pExpr, Boolean *pResult, char *pEvalResult
       sprintf(Msg, "%s %s %s %s",
               getmessage(Num_ErrMsgExpected), getmessage(Num_OpTypeString),
               getmessage(Num_ErrMsgButGot), getmessage(TypeNums[t.Typ]));
-      WrXError(1135, Msg);
+      WrXError(ErrNum_InvOpType, Msg);
     }
   }
   else
@@ -3085,7 +2193,7 @@ static Boolean SymbolAdder(PTree *PDest, PTree Neu, void *pData)
               GetFileName((*Node)->FileNum), (long)((*Node)->LineNum));
       strmaxcat(serr, snum, 255);
     }
-    WrXError(1000, serr);
+    WrXError(ErrNum_DoubleDef, serr);
     FreeSymbolEntry(&NewEntry, TRUE);
     return False;
   }
@@ -3131,7 +2239,7 @@ static Boolean SymbolAdder(PTree *PDest, PTree Neu, void *pData)
              strmaxcat(serr, GetSectionName(Neu->Attribute), 255);
              strmaxcat(serr, "]", 255);
            }
-           WrXError(80, serr);
+           WrXError(ErrNum_PhaseErr, serr);
          }
        }
     }
@@ -3273,7 +2381,7 @@ void EnterIntSymbolWithFlags(const char *Name_O, LargeInt Wert, Byte Typ, Boolea
   (void)ChkTmp(Name, TRUE);
   if (!ChkSymbName(Name))
   {
-    WrXError(1020, Name);
+    WrXError(ErrNum_InvSymName, Name);
     return;
   }
 
@@ -3310,7 +2418,7 @@ void EnterExtSymbol(const char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChan
     return;
   if (!ChkSymbName(Name))
   {
-    WrXError(1020, Name);
+    WrXError(ErrNum_InvSymName, Name);
     return;
   }
 
@@ -3349,7 +2457,7 @@ void EnterRelSymbol(const char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChan
     return;
   if (!ChkSymbName(Name))
   {
-    WrXError(1020, Name);
+    WrXError(ErrNum_InvSymName, Name);
     return;
   }
 
@@ -3389,7 +2497,7 @@ void EnterFloatSymbol(const char *Name_O, Double Wert, Boolean MayChange)
   (void)ChkTmp(Name, TRUE);
   if (!ChkSymbName(Name))
   {
-    WrXError(1020, Name);
+    WrXError(ErrNum_InvSymName, Name);
     return;
   }
   Neu = (PSymbolEntry) calloc(1, sizeof(TSymbolEntry));
@@ -3425,7 +2533,7 @@ void EnterDynStringSymbol(const char *Name_O, const tDynString *pValue, Boolean 
   (void)ChkTmp(Name, TRUE);
   if (!ChkSymbName(Name))
   {
-    WrXError(1020, Name);
+    WrXError(ErrNum_InvSymName, Name);
     return;
   }
   Neu = (PSymbolEntry) calloc(1, sizeof(TSymbolEntry));
@@ -3657,7 +2765,7 @@ Boolean GetIntSymbol(const char *Name, LargeInt *Wert, PRelocEntry *Relocs)
   else
   {
     if (PassNo > MaxSymPass)
-      WrXError(1010, Name);
+      WrXError(ErrNum_SymbolUndef, Name);
     else
       FirstPassUnknown = True;
     *Wert = EProgCounter();
@@ -3684,7 +2792,7 @@ Boolean GetFloatSymbol(const char *Name, Double *Wert)
   else
   {
     if (PassNo>MaxSymPass)
-      WrXError(1010, Name);
+      WrXError(ErrNum_SymbolUndef, Name);
     *Wert = 0;
   }
   return (Lauf != NULL);
@@ -3710,7 +2818,7 @@ Boolean GetStringSymbol(const char *Name, char *Wert)
   else
   {
     if (PassNo > MaxSymPass)
-      WrXError(1010, Name);
+      WrXError(ErrNum_SymbolUndef, Name);
     *Wert = '\0';
   }
   return (Lauf != NULL);
@@ -4113,7 +3221,7 @@ Boolean PushSymbol(char *SymName_O, char *StackName_O)
   Src = FindNode(SymName, TempAll);
   if (!Src)
   {
-    WrXError(1010, SymName);
+    WrXError(ErrNum_SymbolUndef, SymName);
     return False;
   }
 
@@ -4122,7 +3230,7 @@ Boolean PushSymbol(char *SymName_O, char *StackName_O)
     return False;
   if (!ChkSymbName(StackName))
   {
-    WrXError(1020, StackName);
+    WrXError(ErrNum_InvSymName, StackName);
     return False;
   }
 
@@ -4169,7 +3277,7 @@ Boolean PopSymbol(char *SymName_O, char *StackName_O)
   Dest = FindNode(SymName, TempAll);
   if (!Dest)
   {
-    WrXError(1010, SymName);
+    WrXError(ErrNum_SymbolUndef, SymName);
     return False;
   }
 
@@ -4178,7 +3286,7 @@ Boolean PopSymbol(char *SymName_O, char *StackName_O)
     return False;
   if (!ChkSymbName(StackName))
   {
-    WrXError(1020, StackName);
+    WrXError(ErrNum_InvSymName, StackName);
     return False;
   }
 
@@ -4192,7 +3300,7 @@ Boolean PopSymbol(char *SymName_O, char *StackName_O)
 
   if ((!LStack) || (strcmp(LStack->Name, StackName)>0))
   {
-    WrXError(1530, StackName);
+    WrXError(ErrNum_StackEmpty, StackName);
     return False;
   }
 
@@ -4232,7 +3340,7 @@ void ClearStacks(void)
       z++;
     }
     sprintf(s, "%s(%d)",  Act->Name,  z);
-    WrXError(230, s);
+    WrXError(ErrNum_StackNotEmpty, s);
     free(Act->Name);
     FirstStack = Act->Next;
     free(Act);
@@ -4256,14 +3364,14 @@ void EnterFunction(char *FName, char *FDefinition, Byte NewCnt)
 
   if (!ChkSymbName(FName))
   {
-    WrXError(1020, FName);
+    WrXError(ErrNum_InvSymName, FName);
     return;
   }
 
   if (FindFunction(FName))
   {
     if (PassNo == 1)
-      WrXError(1000, FName);
+      WrXError(ErrNum_DoubleDef, FName);
     return;
   }
 
@@ -4849,17 +3957,17 @@ void AddRegDef(char *Orig_N, char *Repl_N)
   }
   if (!ChkSymbName(Orig))
   {
-    WrXError(1020, Orig);
+    WrXError(ErrNum_InvSymName, Orig);
     return;
   }
   if (!ChkSymbName(Repl))
   {
-    WrXError(1020, Repl);
+    WrXError(ErrNum_InvSymName, Repl);
     return;
   }
   Node = LookupReg(Orig, True);
   if ((Node->Defs) && (Node->Defs->Section == MomSectionHandle))
-    WrXError(1000, Orig);
+    WrXError(ErrNum_DoubleDef, Orig);
   else
   {
     Neu = (PRegDefList) malloc(sizeof(TRegDefList));

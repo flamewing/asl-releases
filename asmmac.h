@@ -13,6 +13,7 @@
 /*****************************************************************************/
 
 #include "errmsg.h"
+#include "strcomp.h"
 
 typedef struct _MacroRec
 {
@@ -49,7 +50,8 @@ typedef struct _TInputTag
   StringList Params;
   LongInt LineCnt, LineZ;
   StringRecPtr Lines, LineRun;
-  String SpecName, SaveAttr, SaveLabel, AllArgs;
+  String SpecNameStr, SaveAttr, SaveLabel, AllArgs;
+  tStrComp SpecName;
   ShortString NumArgs;
   Boolean IsEmpty, FromFile, UsesAllArgs, UsesNumArgs;
   FILE *Datei;

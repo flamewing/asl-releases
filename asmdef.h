@@ -115,15 +115,7 @@
 #include "strcomp.h"
 #include "lstmacroexp.h"
 #include "cpulist.h"
-
-typedef enum {TempNone = 0, TempInt = 1, TempFloat = 2, TempString = 4, TempAll = 7} TempType;
-
-typedef struct _RelocEntry
-{
-  struct _RelocEntry *Next;
-  char *Ref;
-  Byte Add;
-} TRelocEntry, *PRelocEntry;
+#include "tempresult.h"
 
 typedef Word tSymbolFlags;
 enum
@@ -131,24 +123,12 @@ enum
   NextLabelFlag_AfterBSR = 1 << 0
 };
 
+struct sRelocEntry;
 
 typedef struct
 {
   TempType Typ;
-  LongWord Flags;
-  PRelocEntry Relocs;
-  union
-  {
-    LargeInt Int;
-    Double Float;
-    tDynString Ascii;
-  } Contents;
-} TempResult;
-
-typedef struct
-{
-  TempType Typ;
-  TRelocEntry *Relocs;
+  struct sRelocEntry *Relocs;
   union
   {
     LargeInt IWert;
@@ -291,7 +271,6 @@ char *pDest, int DestSize, LargeWord Inp
 
 
 typedef Word WordField[6];          /* fuer Zahlenumwandlung */
-typedef char *ArgStrField[ArgCntMax + 1]; /* Feld mit Befehlsparametern */
 typedef enum
 {
   ConstModeIntel,     /* Hex xxxxh, Oct xxxxo, Bin xxxxb */
@@ -489,17 +468,19 @@ extern Boolean DoBranchExt;
 
 extern LargeWord RadixBase, OutRadixBase;
 
-extern tLineComp ArgStrPos[ArgCntMax + 1], AttrPartPos;
-extern StringPtr AttrPart, LOpPart;
-extern tStrComp LabPart, CommPart, ArgPart, OpPart;
+extern tStrComp ArgStr[ArgCntMax + 1];
+extern StringPtr LOpPart;
+extern tStrComp LabPart, CommPart, ArgPart, OpPart, AttrPart;
 extern char AttrSplit;
-extern ArgStrField ArgStr;
 extern int ArgCnt;
 extern StringPtr OneLine;
 #ifdef PROFILE_MEMO
 extern unsigned NumMemo;
 extern unsigned long NumMemoSum, NumMemoCnt;
 #endif
+
+#define forallargs(pArg, cond) \
+        for (pArg = ArgStr + 1; (cond) && (pArg <= ArgStr + ArgCnt); pArg++)
 
 extern Byte LstCounter;
 extern Word PageCounter[ChapMax+1];

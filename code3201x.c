@@ -83,31 +83,32 @@ static ImmOrder *ImmOrders;
 
 /*----------------------------------------------------------------------------*/
 
-static Word EvalARExpression(char *Asc, Boolean *OK)
+static Word EvalARExpression(const tStrComp *pArg, Boolean *OK)
 {
   *OK = True;
-  if (!strcasecmp(Asc, "AR0"))
+  if (!strcasecmp(pArg->Str, "AR0"))
     return 0;
-  if (!strcasecmp(Asc, "AR1"))
+  if (!strcasecmp(pArg->Str, "AR1"))
     return 1;
-  return EvalIntExpression(Asc, UInt1, OK);
+  return EvalStrIntExpression(pArg, UInt1, OK);
 }
 
-static void DecodeAdr(char *Arg, int Aux, Boolean Must1)
+static void DecodeAdr(const tStrComp *pArg, int Aux, Boolean Must1)
 {
   Byte h;
   char *p;
+  char *Arg = pArg->Str;
 
   AdrOK = False;
 
-  if ((!strcmp(Arg, "*")) || (!strcmp(Arg, "*-")) || (!strcmp(Arg, "*+")))
+  if ((!strcmp(pArg->Str, "*")) || (!strcmp(pArg->Str, "*-")) || (!strcmp(pArg->Str, "*+")))
   {
     AdrMode = 0x88;
     if (strlen(Arg) == 2)
-      AdrMode += (Arg[1] == '+') ? 0x20 : 0x10;
+      AdrMode += (pArg->Str[1] == '+') ? 0x20 : 0x10;
     if (Aux <= ArgCnt)
     {
-      h = EvalARExpression(ArgStr[Aux], &AdrOK);
+      h = EvalARExpression(&ArgStr[Aux], &AdrOK);
       if (AdrOK)
       {
         AdrMode &= 0xf7;
@@ -120,22 +121,22 @@ static void DecodeAdr(char *Arg, int Aux, Boolean Must1)
   else if (ChkArgCnt(1, Aux - 1))
   {
     h = 0;
-    if ((strlen(Arg) > 3) && (!strncasecmp(Arg, "DAT", 3)))
+    if ((strlen(pArg->Str) > 3) && (!strncasecmp(pArg->Str, "DAT", 3)))
     {
       AdrOK = True;
-      for (p = Arg + 3; *p != '\0'; p++)
+      for (p = pArg->Str + 3; *p != '\0'; p++)
         if ((*p > '9') || (*p < '0'))
           AdrOK = False;
       if (AdrOK)
-        h = EvalIntExpression(Arg + 3, UInt8, &AdrOK);
+        h = EvalStrIntExpressionOffs(pArg, 3, UInt8, &AdrOK);
     }
     if (!AdrOK)
-      h = EvalIntExpression(Arg, Int8, &AdrOK);
+      h = EvalStrIntExpression(pArg, Int8, &AdrOK);
     if (AdrOK)
     {
       if ((Must1) && (h < 0x80) && (!FirstPassUnknown))
       {
-        WrError(1315);
+        WrError(ErrNum_UnderRange);
         AdrOK = False;
       }
       else
@@ -168,7 +169,7 @@ static void DecodeJmp(Word Code)
   {
     Boolean OK;
 
-    WAsmCode[1] = EvalIntExpression(ArgStr[1], UInt12, &OK);
+    WAsmCode[1] = EvalStrIntExpression(&ArgStr[1], UInt12, &OK);
     if (OK)
     {
       CodeLen = 2;
@@ -183,7 +184,7 @@ static void DecodeAdrInst(Word Code)
 {
   if (ChkArgCnt(1, 2))
   {
-    DecodeAdr(ArgStr[1], 2, Code & 1);
+    DecodeAdr(&ArgStr[1], 2, Code & 1);
     if (AdrOK)
     {
       CodeLen = 1;
@@ -202,11 +203,11 @@ static void DecodeAdrShift(Word Index)
 
   if (ChkArgCnt(1, 3))
   {
-    if (*ArgStr[1] == '*')
+    if (*ArgStr[1].Str == '*')
     {
       if (ArgCnt == 2)
       {
-        if (!strncasecmp(ArgStr[2], "AR", 2))
+        if (!strncasecmp(ArgStr[2].Str, "AR", 2))
         {
           HasSh = False;
           Cnt = 2;
@@ -228,7 +229,7 @@ static void DecodeAdrShift(Word Index)
       Cnt = 3;
       HasSh = (ArgCnt == 2);
     }
-    DecodeAdr(ArgStr[1], Cnt, False);
+    DecodeAdr(&ArgStr[1], Cnt, False);
     if (AdrOK)
     {
       Boolean OK;
@@ -241,13 +242,13 @@ static void DecodeAdrShift(Word Index)
       }
       else
       {
-        AdrWord = EvalIntExpression(ArgStr[2], Int4, &OK);
+        AdrWord = EvalStrIntExpression(&ArgStr[2], Int4, &OK);
         if ((OK) && (FirstPassUnknown))
           AdrWord = 0;
       }
       if (OK)
       {
-        if ((pOrder->AllowShifts & (1 << AdrWord)) == 0) WrError(1380);
+        if ((pOrder->AllowShifts & (1 << AdrWord)) == 0) WrError(ErrNum_InvShiftArg);
         else
         {
           CodeLen = 1;
@@ -264,11 +265,11 @@ static void DecodeIN_OUT(Word Code)
 {
   if (ChkArgCnt(2, 3))
   {
-    DecodeAdr(ArgStr[1], 3, False);
+    DecodeAdr(&ArgStr[1], 3, False);
     if (AdrOK)
     {
       Boolean OK;
-      Word AdrWord = EvalIntExpression(ArgStr[2], UInt3, &OK);
+      Word AdrWord = EvalStrIntExpression(&ArgStr[2], UInt3, &OK);
       if (OK)
       {
         ChkSpace(SegIO);
@@ -288,13 +289,13 @@ static void DecodeImm(Word Index)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    LongInt AdrLong = EvalIntExpression(ArgStr[1], Int32, &OK);
+    LongInt AdrLong = EvalStrIntExpression(&ArgStr[1], Int32, &OK);
     if (OK)
     {
       if (FirstPassUnknown)
         AdrLong &= pOrder->Mask;
-      if (AdrLong < pOrder->Min) WrError(1315);
-      else if (AdrLong > pOrder->Max) WrError(1320);
+      if (AdrLong < pOrder->Min) WrError(ErrNum_UnderRange);
+      else if (AdrLong > pOrder->Max) WrError(ErrNum_OverRange);
       else
       {
         CodeLen = 1;
@@ -313,7 +314,7 @@ static void DecodeLARP(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    Word AdrWord = EvalARExpression(ArgStr[1], &OK);
+    Word AdrWord = EvalARExpression(&ArgStr[1], &OK);
     if (OK)
     {
       CodeLen = 1;
@@ -327,10 +328,10 @@ static void DecodeLAR_SAR(Word Code)
   if (ChkArgCnt(2, 3))
   {
     Boolean OK;
-    Word AdrWord = EvalARExpression(ArgStr[1], &OK);
+    Word AdrWord = EvalARExpression(&ArgStr[1], &OK);
     if (OK)
     {
-      DecodeAdr(ArgStr[2], 3, False);
+      DecodeAdr(&ArgStr[2], 3, False);
       if (AdrOK)
       {
         CodeLen = 1;
@@ -347,10 +348,10 @@ static void DecodeLARK(Word Code)
   if (ChkArgCnt(2, 2))
   {
     Boolean OK;
-    Word AdrWord = EvalARExpression(ArgStr[1], &OK);
+    Word AdrWord = EvalARExpression(&ArgStr[1], &OK);
     if (OK)
     {
-      WAsmCode[0] = EvalIntExpression(ArgStr[2], Int8, &OK);
+      WAsmCode[0] = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
       if (OK)
       {
         CodeLen = 1;

@@ -94,7 +94,7 @@ static void DecodeSK(Word Index)
     Byte Bit;
     Boolean OK;
 
-    Bit = EvalIntExpression(ArgStr[1], UInt2, &OK);
+    Bit = EvalStrIntExpression(&ArgStr[1], UInt2, &OK);
     if (OK)
     {
       if (Index)
@@ -114,7 +114,7 @@ static void DecodeImm(Word Index)
     Byte Val;
     Boolean OK;
 
-    Val = EvalIntExpression(ArgStr[1], Int4, &OK);
+    Val = EvalStrIntExpression(&ArgStr[1], Int4, &OK);
     if (OK)
     {
       if (Hi(pOrder->Code))
@@ -131,7 +131,7 @@ static void DecodeJmp(Word Index)
     Word Addr;
     Boolean OK;
  
-    Addr = EvalIntExpression(ArgStr[1], AdrInt, &OK);
+    Addr = EvalStrIntExpression(&ArgStr[1], AdrInt, &OK);
     if (OK)
     {
       BAsmCode[CodeLen++] = Index | Hi(Addr);
@@ -147,7 +147,7 @@ static void DecodeReg(Word Index)
     Byte Reg;
     Boolean OK;
 
-    Reg = EvalIntExpression(ArgStr[1], UInt2, &OK);   
+    Reg = EvalStrIntExpression(&ArgStr[1], UInt2, &OK);   
     if (OK)
     {
       BAsmCode[CodeLen++] = Index | ((Reg & 3) << 4);;
@@ -165,12 +165,12 @@ static void DecodeAISC(Word Index)
     Boolean OK;
 
     FirstPassUnknown = False;
-    Val = EvalIntExpression(ArgStr[1], Int4, &OK);
+    Val = EvalStrIntExpression(&ArgStr[1], Int4, &OK);
     if (FirstPassUnknown)
       Val = 1;
     if (OK)
     {
-      if (!Val) WrError(1315);
+      if (!Val) WrError(ErrNum_UnderRange);
       else
         BAsmCode[CodeLen++] = 0x50 | (Val & 0x0f);
     }
@@ -187,7 +187,7 @@ static void DecodeRMB(Word Index)
     Boolean OK;
     static Byte Vals[4] = { 0x4c, 0x45, 0x42, 0x43 };
  
-    Reg = EvalIntExpression(ArgStr[1], UInt2, &OK);
+    Reg = EvalStrIntExpression(&ArgStr[1], UInt2, &OK);
     if (OK)
     {
       BAsmCode[CodeLen++] = Vals[Reg & 3];
@@ -205,7 +205,7 @@ static void DecodeSMB(Word Index)
     Boolean OK;
     static Byte Vals[4] = { 0x4d, 0x47, 0x46, 0x4b };
  
-    Reg = EvalIntExpression(ArgStr[1], UInt2, &OK);
+    Reg = EvalStrIntExpression(&ArgStr[1], UInt2, &OK);
     if (OK)
     {
       BAsmCode[CodeLen++] = Vals[Reg & 3];                
@@ -223,18 +223,18 @@ static void DecodeXAD(Word Index)
     Boolean OK;
  
     FirstPassUnknown = False;
-    Reg1 = EvalIntExpression(ArgStr[1], UInt2, &OK);
+    Reg1 = EvalStrIntExpression(&ArgStr[1], UInt2, &OK);
     if ((FirstPassUnknown) && (MomCPU < CPUCOP420))
       Reg1 = 3;
     if (OK)
     {
       FirstPassUnknown = False;
-      Reg2 = EvalIntExpression(ArgStr[2], UInt4, &OK);
+      Reg2 = EvalStrIntExpression(&ArgStr[2], UInt4, &OK);
       if ((FirstPassUnknown) && (MomCPU < CPUCOP420))
         Reg2 = 15;
       if (OK)
       {
-        if ((MomCPU < CPUCOP420) && ((Reg1 != 3) || (Reg2 != 15))) WrError(1350);
+        if ((MomCPU < CPUCOP420) && ((Reg1 != 3) || (Reg2 != 15))) WrError(ErrNum_InvAddrMode);
         else
         {
           BAsmCode[CodeLen++] = 0x23;
@@ -254,11 +254,11 @@ static void DecodeLBI(Word Index)
     Byte Reg, Val;
     Boolean OK;
  
-    Reg = EvalIntExpression(ArgStr[1], UInt2, &OK);
+    Reg = EvalStrIntExpression(&ArgStr[1], UInt2, &OK);
     if (OK)
     {
       FirstPassUnknown = False;
-      Val = EvalIntExpression(ArgStr[2], UInt4, &OK);
+      Val = EvalStrIntExpression(&ArgStr[2], UInt4, &OK);
       if (FirstPassUnknown)
         Val = 0;
       if (OK)
@@ -291,10 +291,10 @@ static void DecodeLDD(Word Index)
     Byte Reg, Val;
     Boolean OK;
  
-    Reg = EvalIntExpression(ArgStr[1], UInt2, &OK);
+    Reg = EvalStrIntExpression(&ArgStr[1], UInt2, &OK);
     if (OK)
     {
-      Val = EvalIntExpression(ArgStr[2], UInt4, &OK);
+      Val = EvalStrIntExpression(&ArgStr[2], UInt4, &OK);
       if (OK)
       {
         BAsmCode[CodeLen++] = 0x23;
@@ -314,13 +314,13 @@ static void DecodeJSRP(Word Index)
     Boolean OK;
  
     FirstPassUnknown = FALSE;
-    Addr = EvalIntExpression(ArgStr[1], AdrInt, &OK);
+    Addr = EvalStrIntExpression(&ArgStr[1], AdrInt, &OK);
     if (FirstPassUnknown)
       Addr = 2 << 6;
     if (OK)
     {
-      if (((Addr >> 6) != 2) || (Addr == 0xbf)) WrError(1905);
-      else if ((EProgCounter() >> 7) == 1) WrError(1900);
+      if (((Addr >> 6) != 2) || (Addr == 0xbf)) WrError(ErrNum_NotFromThisAddress);
+      else if ((EProgCounter() >> 7) == 1) WrError(ErrNum_NotOnThisAddress);
       else
         BAsmCode[CodeLen++] = 0x80 | (Addr & 0x3f);
     }
@@ -337,14 +337,14 @@ static void DecodeJP(Word Index)
     Boolean OK;
  
     FirstPassUnknown = FALSE;
-    Addr = EvalIntExpression(ArgStr[1], AdrInt, &OK);
+    Addr = EvalStrIntExpression(&ArgStr[1], AdrInt, &OK);
     if (FirstPassUnknown)
       Addr = EProgCounter() & (~0x1f);
     if (OK)
     {
       CurrPC = EProgCounter();
       if ((Addr & 0x3f) == 0x3f)
-        WrError(1905);
+        WrError(ErrNum_NotFromThisAddress);
       if (((CurrPC >> 7) == 1) && ((Addr >> 7) == 1))
         BAsmCode[CodeLen++] = 0x80 | (Addr & 0x7f);
       else
@@ -362,7 +362,7 @@ static void DecodeJP(Word Index)
         if (PossPage == (Addr >> 6))
           BAsmCode[CodeLen++] = 0xc0 | (Addr & 0x3f);
         else
-          WrError(1905);
+          WrError(ErrNum_NotFromThisAddress);
       }
     }
   }   

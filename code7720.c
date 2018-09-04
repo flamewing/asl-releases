@@ -129,7 +129,7 @@ static Boolean ChkOpPresent(OpComps Comp)
 {
   if ((UsedOpFields&(1l << Comp)) != 0)
   {
-    WrError(1355); return False;
+    WrError(ErrNum_InvParAddrMode); return False;
   }
   else
   {
@@ -147,7 +147,7 @@ static void DecodeJmp(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    Dest = EvalIntExpression(ArgStr[1], MemInt, &OK);
+    Dest = EvalStrIntExpression(&ArgStr[1], MemInt, &OK);
     if (OK)
     {
       DAsmCode[0] = (2l << TypePos) + (((LongWord)Code) << 13) + (Dest << AddrPos);
@@ -176,7 +176,7 @@ static void DecodeDATA_7720(Word Index)
     while ((OK) & (z <= ArgCnt))
     {
       FirstPassUnknown = False;
-      EvalExpression(ArgStr[z], &t);
+      EvalStrExpression(&ArgStr[z], &t);
       if ((FirstPassUnknown) && (t.Typ == TempInt))
         t.Contents.Int &= MaxV;
 
@@ -193,7 +193,7 @@ static void DecodeDATA_7720(Word Index)
           }
           break;
         case TempFloat:
-          WrError(1135);
+          WrError(ErrNum_InvOpType);
           OK = False;
           break;
         case TempString:
@@ -238,13 +238,13 @@ static void DecodeRES(Word Index)
   if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
-    Size = EvalIntExpression(ArgStr[1], Int16, &OK);
-    if (FirstPassUnknown) WrError(1820);
+    Size = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
+    if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
     if ((OK) && (!FirstPassUnknown))
     {
       DontPrint = True;
       if (!Size)
-        WrError(290);
+        WrError(ErrNum_NullResMem);
       CodeLen = Size;
       BookKeeping();
     }
@@ -260,17 +260,17 @@ static void DecodeALU2(Word Code)
     return;
 
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeReg(ArgStr[2], &Src, ALUSrcRegs, ALUSrcRegCnt)) WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
+  else if (!DecodeReg(ArgStr[2].Str, &Src, ALUSrcRegs, ALUSrcRegCnt)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
   else
   {
-    if ((strlen(ArgStr[1]) == 4) && (!strncasecmp(ArgStr[1], "ACC", 3)))
+    if ((strlen(ArgStr[1].Str) == 4) && (!strncasecmp(ArgStr[1].Str, "ACC", 3)))
     {
-      ch = mytoupper(ArgStr[1][3]);
+      ch = mytoupper(ArgStr[1].Str[3]);
       if ((ch>='A') && (ch<='B'))
         Acc = ch - 'A';
     }
     if (Acc == 0xff)
-      WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+      WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
     else
       ActCode |= (((LongWord)Code) << ALUPos) + (Acc << AccPos) + (Src << ALUSrcPos);
   }
@@ -286,14 +286,14 @@ static void DecodeALU1(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    if ((strlen(ArgStr[1]) == 4) && (!strncasecmp(ArgStr[1], "ACC", 3)))
+    if ((strlen(ArgStr[1].Str) == 4) && (!strncasecmp(ArgStr[1].Str, "ACC", 3)))
     {
-      ch = mytoupper(ArgStr[1][3]);
+      ch = mytoupper(ArgStr[1].Str[3]);
       if ((ch >= 'A') && (ch <= 'B'))
         Acc = ch - 'A';
     }
     if (Acc == 0xff)
-      WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+      WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
     else
       ActCode |= (((LongWord)Code) << ALUPos) + (Acc << AccPos);
   }
@@ -353,10 +353,10 @@ static void DecodeLDI(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeReg(ArgStr[1], &Reg, DestRegs, DestRegCnt)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+  else if (!DecodeReg(ArgStr[1].Str, &Reg, DestRegs, DestRegCnt)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
   else
   {
-    Value = EvalIntExpression(ArgStr[2], Int16, &OK);
+    Value = EvalStrIntExpression(&ArgStr[2], Int16, &OK);
     if (OK)
     {
       DAsmCode[0] = (3l << TypePos) + Reg + (Value << ImmValPos);
@@ -374,22 +374,20 @@ static void DecodeOP(Word Index)
   UsedOpFields = 0;
   ActCode = 0;
 
-  if (ArgCnt > 1)
+  if (ArgCnt >= 1)
   {
-    p = FirstBlank(ArgStr[1]);
+    p = FirstBlank(ArgStr[1].Str);
     if (p)
     {
-      *p = '\0';
-      strmaxcpy(OpPart.Str, ArgStr[1], 255);
+      StrCompSplitLeft(&ArgStr[1], &OpPart, p);
       NLS_UpString(OpPart.Str);
-      strmov(ArgStr[1], p + 1);
-      KillPrefBlanks(ArgStr[1]);
+      KillPrefBlanksStrComp(&ArgStr[1]);
     }
     else
     {
-      strmaxcpy(OpPart.Str, ArgStr[1], 255);
+      StrCompCopy(&OpPart, &ArgStr[1]);
       for (z = 1; z < ArgCnt; z++)
-        strcpy(ArgStr[z], ArgStr[z + 1]);
+        StrCompCopy(&ArgStr[z], &ArgStr[z + 1]);
       ArgCnt--;
     }
     if (!LookupInstTable(OpTable, OpPart.Str))
@@ -409,8 +407,8 @@ static void DecodeMOV(Word Index)
     return;
 
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeReg(ArgStr[1], &Dest, DestRegs, DestRegCnt)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
-  else if (!DecodeReg(ArgStr[2], &Src, SrcRegs, SrcRegCnt)) WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
+  else if (!DecodeReg(ArgStr[1].Str, &Dest, DestRegs, DestRegCnt)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+  else if (!DecodeReg(ArgStr[2].Str, &Src, SrcRegs, SrcRegCnt)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
   else
     ActCode |= Dest + (Src << 4);
 }
@@ -569,7 +567,7 @@ static void MakeCode_7720(void)
 
   /* Nullanweisung */
 
-  if ((Memo("")) && (*AttrPart == '\0') && (ArgCnt == 0))
+  if (Memo("") && !*AttrPart.Str && (ArgCnt == 0))
     return;
 
   /* direkte Anweisungen */

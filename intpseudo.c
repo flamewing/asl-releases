@@ -68,7 +68,7 @@
 
 typedef Boolean (*TLayoutFunc)(
 #ifdef __PROTOS__
-                               const char *Asc, Word *Cnt, Boolean Turn
+                               const tStrComp *pArg, Word *Cnt, Boolean Turn
 #endif
                                );
 
@@ -101,7 +101,7 @@ static Boolean PreLayoutChk(const char *pExpr, Boolean *pResult, Word *pCnt, int
 
     if (DSFlag == DSConstant)
     {
-      WrError(1930);
+      WrError(ErrNum_MixDBDS);
       *pResult = False;
     }
     else
@@ -118,7 +118,7 @@ static Boolean PreLayoutChk(const char *pExpr, Boolean *pResult, Word *pCnt, int
 
   else if (DSFlag == DSSpace)
   {
-    WrError(1930);
+    WrError(ErrNum_MixDBDS);
     *pResult = False;
     return True;
   }
@@ -130,7 +130,7 @@ static Boolean PreLayoutChk(const char *pExpr, Boolean *pResult, Word *pCnt, int
     DSFlag = DSConstant;
     if (SetMaxCodeLen(CodeLen + 2))
     {
-      WrError(1920);
+      WrError(ErrNum_CodeOverflow);
       *pResult = False;
       return True;
     }
@@ -146,14 +146,14 @@ static Boolean PreLayoutChk(const char *pExpr, Boolean *pResult, Word *pCnt, int
  * Result:      TRUE if no errors occured
  *****************************************************************************/
 
-static Boolean LayoutByte(const char *pExpr, Word *pCnt, Boolean BigEndian)
+static Boolean LayoutByte(const tStrComp *pExpr, Word *pCnt, Boolean BigEndian)
 {
   Boolean Result;
   TempResult t;
 
   UNUSED(BigEndian);
 
-  if (PreLayoutChk(pExpr, &Result, pCnt, 1))
+  if (PreLayoutChk(pExpr->Str, &Result, pCnt, 1))
     return Result;
 
   /* PreLayoutChk() has checked for at least one byte free space
@@ -161,13 +161,13 @@ static Boolean LayoutByte(const char *pExpr, Word *pCnt, Boolean BigEndian)
      a string argument: */
 
   FirstPassUnknown = False;
-  EvalExpression(pExpr, &t);
+  EvalStrExpression(pExpr, &t);
   Result = False;
   switch (t.Typ)
   {
     case TempInt:
       if (FirstPassUnknown) t.Contents.Int &= 0xff;
-      if (!RangeCheck(t.Contents.Int, Int8)) WrError(1320);
+      if (!RangeCheck(t.Contents.Int, Int8)) WrError(ErrNum_OverRange);
       else
       {
         BAsmCode[CodeLen++] = t.Contents.Int;
@@ -176,12 +176,12 @@ static Boolean LayoutByte(const char *pExpr, Word *pCnt, Boolean BigEndian)
       }
       break;
     case TempFloat: 
-      WrError(1135);
+      WrError(ErrNum_InvOpType);
       break;
     case TempString:
       TranslateString(t.Contents.Ascii.Contents, t.Contents.Ascii.Length);
       *pCnt = t.Contents.Ascii.Length;
-      if (SetMaxCodeLen(CodeLen + (*pCnt))) WrError(1920);
+      if (SetMaxCodeLen(CodeLen + (*pCnt))) WrError(ErrNum_CodeOverflow);
       else
       {
         memcpy(BAsmCode + CodeLen, t.Contents.Ascii.Contents, *pCnt);
@@ -218,12 +218,12 @@ static void PutWord(Word w, Boolean BigEndian)
   CodeLen += 2;
 }
 
-static Boolean LayoutWord(const char *pExpr, Word *pCnt, Boolean BigEndian)
+static Boolean LayoutWord(const tStrComp *pExpr, Word *pCnt, Boolean BigEndian)
 {
   Boolean Result;
   TempResult t;
 
-  if (PreLayoutChk(pExpr, &Result, pCnt, 2))
+  if (PreLayoutChk(pExpr->Str, &Result, pCnt, 2))
     return Result;
 
   /* PreLayoutChk() has checked for at least two bytes free space
@@ -231,14 +231,14 @@ static Boolean LayoutWord(const char *pExpr, Word *pCnt, Boolean BigEndian)
      a string argument: */
 
   FirstPassUnknown = False;
-  EvalExpression(pExpr, &t);
+  EvalStrExpression(pExpr, &t);
   Result = True; *pCnt = 0;
   switch (t.Typ)
   {
     case TempInt:
       if (FirstPassUnknown)
         t.Contents.Int &= 0xffff;
-      if (!RangeCheck(t.Contents.Int, Int16)) WrError(1320);
+      if (!RangeCheck(t.Contents.Int, Int16)) WrError(ErrNum_OverRange);
       else
       {
         PutWord(t.Contents.Int, BigEndian);
@@ -247,12 +247,12 @@ static Boolean LayoutWord(const char *pExpr, Word *pCnt, Boolean BigEndian)
       }
       break;
     case TempFloat:
-      WrError(1135);
+      WrError(ErrNum_InvOpType);
       break;
     case TempString:
       TranslateString(t.Contents.Ascii.Contents, t.Contents.Ascii.Length);
       *pCnt = t.Contents.Ascii.Length * 2;
-      if (SetMaxCodeLen(CodeLen + (*pCnt))) WrError(1920);
+      if (SetMaxCodeLen(CodeLen + (*pCnt))) WrError(ErrNum_CodeOverflow);
       else
       {
         unsigned z;
@@ -295,28 +295,26 @@ static void PutDWord(LongWord l, Boolean BigEndian)
   CodeLen += 4;
 }
 
-static Boolean LayoutDoubleWord(const char *pExpr, Word *pCnt, Boolean BigEndian)
+static Boolean LayoutDoubleWord(const tStrComp *pExpr, Word *pCnt, Boolean BigEndian)
 {
   TempResult erg;
   Boolean Result = False;
-  String Copy;
 
-  if (PreLayoutChk(pExpr, &Result, pCnt, 4))
+  if (PreLayoutChk(pExpr->Str, &Result, pCnt, 4))
     return Result;
 
   /* PreLayoutChk() has checked for at least four bytes free space
      in output buffer, so we only need to check again in case of
      a string argument: */
 
-  CopyNoBlanks(Copy, pExpr, STRINGSIZE);
-  EvalExpression(Copy, &erg);
+  EvalStrExpression(pExpr, &erg);
   Result = False;
   switch (erg.Typ)
   {
     case TempNone:
       break;
     case TempInt:
-      if (!RangeCheck(erg.Contents.Int, Int32)) WrError(1320);
+      if (!RangeCheck(erg.Contents.Int, Int32)) WrError(ErrNum_OverRange);
       else
       {
         PutDWord(erg.Contents.Int, BigEndian);
@@ -325,7 +323,7 @@ static Boolean LayoutDoubleWord(const char *pExpr, Word *pCnt, Boolean BigEndian
       }
       break;
     case TempFloat:
-      if (!FloatRangeCheck(erg.Contents.Float, Float32)) WrError(1320);
+      if (!FloatRangeCheck(erg.Contents.Float, Float32)) WrError(ErrNum_OverRange);
       else
       {
         Double_2_ieee4(erg.Contents.Float, BAsmCode + CodeLen, False);
@@ -337,7 +335,7 @@ static Boolean LayoutDoubleWord(const char *pExpr, Word *pCnt, Boolean BigEndian
     case TempString:
       TranslateString(erg.Contents.Ascii.Contents, erg.Contents.Ascii.Length);
       *pCnt = erg.Contents.Ascii.Length * 4;
-      if (SetMaxCodeLen(CodeLen + (*pCnt))) WrError(1920);
+      if (SetMaxCodeLen(CodeLen + (*pCnt))) WrError(ErrNum_CodeOverflow);
       else
       {   
         unsigned z;
@@ -348,7 +346,7 @@ static Boolean LayoutDoubleWord(const char *pExpr, Word *pCnt, Boolean BigEndian
       }
       break;
     case TempAll:
-      WrError(1135);
+      WrError(ErrNum_InvOpType);
   }
 
   if (Result)
@@ -409,21 +407,19 @@ static void PutQWord(LargeWord l, Boolean BigEndian)
   CodeLen += 8;
 }
 
-static Boolean LayoutQuadWord(const char *pExpr, Word *pCnt, Boolean BigEndian)
+static Boolean LayoutQuadWord(const tStrComp *pExpr, Word *pCnt, Boolean BigEndian)
 {
   Boolean Result;
   TempResult erg;
-  String Copy;
 
-  if (PreLayoutChk(pExpr, &Result, pCnt, 8))
+  if (PreLayoutChk(pExpr->Str, &Result, pCnt, 8))
     return Result;
 
   /* PreLayoutChk() has checked for at least eight bytes free space
      in output buffer, so we only need to check again in case of
      a string argument: */
 
-  CopyNoBlanks(Copy, pExpr, STRINGSIZE);
-  EvalExpression(Copy, &erg);
+  EvalStrExpression(pExpr, &erg);
   Result = False;
   switch(erg.Typ)
   {
@@ -443,7 +439,7 @@ static Boolean LayoutQuadWord(const char *pExpr, Word *pCnt, Boolean BigEndian)
     case TempString:
       TranslateString(erg.Contents.Ascii.Contents, erg.Contents.Ascii.Length);
       *pCnt = erg.Contents.Ascii.Length * 8; 
-      if (SetMaxCodeLen(CodeLen + (*pCnt))) WrError(1920);
+      if (SetMaxCodeLen(CodeLen + (*pCnt))) WrError(ErrNum_CodeOverflow);
       else  
       {   
         unsigned z;
@@ -454,7 +450,7 @@ static Boolean LayoutQuadWord(const char *pExpr, Word *pCnt, Boolean BigEndian)
       }
       break;
     case TempAll:
-      WrError(1135);
+      WrError(ErrNum_InvOpType);
       return Result;
   }
 
@@ -473,21 +469,19 @@ static Boolean LayoutQuadWord(const char *pExpr, Word *pCnt, Boolean BigEndian)
  * Result:      TRUE if no errors occured
  *****************************************************************************/
 
-static Boolean LayoutTenBytes(const char *pExpr, Word *pCnt, Boolean BigEndian)
+static Boolean LayoutTenBytes(const tStrComp *pExpr, Word *pCnt, Boolean BigEndian)
 {
   Boolean Result;
   TempResult erg;
-  String Copy;
 
-  if (PreLayoutChk(pExpr, &Result, pCnt, 10))
+  if (PreLayoutChk(pExpr->Str, &Result, pCnt, 10))
     return Result;
 
   /* PreLayoutChk() has checked for at least eight bytes free space
      in output buffer, so we only need to check again in case of
      a string argument: */
 
-  CopyNoBlanks(Copy, pExpr, STRINGSIZE);
-  EvalExpression(Copy, &erg);
+  EvalStrExpression(pExpr, &erg);
   Result = False;
   switch(erg.Typ)
   {
@@ -506,7 +500,7 @@ static Boolean LayoutTenBytes(const char *pExpr, Word *pCnt, Boolean BigEndian)
     case TempString:
       TranslateString(erg.Contents.Ascii.Contents, erg.Contents.Ascii.Length);
       *pCnt = erg.Contents.Ascii.Length * 10;
-      if (SetMaxCodeLen(CodeLen + (*pCnt))) WrError(1920);
+      if (SetMaxCodeLen(CodeLen + (*pCnt))) WrError(ErrNum_CodeOverflow);
       else
       {
         unsigned z;
@@ -520,7 +514,7 @@ static Boolean LayoutTenBytes(const char *pExpr, Word *pCnt, Boolean BigEndian)
       }
       break;
     case TempAll:
-      WrError(1135);
+      WrError(ErrNum_InvOpType);
       return Result;
   }
 
@@ -575,7 +569,7 @@ static void DecodeIntelPseudo_HandleQuote(int *pDepth, Byte *pQuote, char Ch)
   }
 }
 
-static Boolean DecodeIntelPseudo_LayoutMult(const char *pArg, Word *Cnt,
+static Boolean DecodeIntelPseudo_LayoutMult(const tStrComp *pArg, Word *Cnt,
                                             TLayoutFunc LayoutFunc,
                                             Boolean Turn)
 {
@@ -589,8 +583,8 @@ static Boolean DecodeIntelPseudo_LayoutMult(const char *pArg, Word *Cnt,
 
   Depth = Quote = 0;
   LastValid = FALSE;
-  pDupFnd = NULL; Len = strlen(pArg);
-  for (pRun = pArg; pRun < pArg + Len - 2; pRun++)
+  pDupFnd = NULL; Len = strlen(pArg->Str);
+  for (pRun = pArg->Str; pRun < pArg->Str + Len - 2; pRun++)
   {
     DecodeIntelPseudo_HandleQuote(&Depth, &Quote, *pRun);
     if ((!Depth) && (!Quote))
@@ -611,23 +605,25 @@ static Boolean DecodeIntelPseudo_LayoutMult(const char *pArg, Word *Cnt,
   if (pDupFnd)
   {
     LongInt DupCnt;
-    char *pDupPart, *pPart, *pSep, *pRun;
+    char *pSep, *pRun;
     Word SumCnt, ECnt, SInd;
-    String Copy;
+    String CopyStr;
+    tStrComp Copy, DupArg, RemArg, ThisRemArg;
 
     /* operate on copy */
 
-    strmaxcpy(Copy, pArg, 255);
-    pSep = Copy + (pDupFnd - pArg);
+    StrCompMkTemp(&Copy, CopyStr);
+    StrCompCopy(&Copy, pArg);
+    pSep = Copy.Str + (pDupFnd - pArg->Str);
 
     /* evaluate count */
 
     FirstPassUnknown = False;
-    *pSep = '\0';
-    DupCnt = EvalIntExpression(Copy, Int32, &OK);
+    StrCompSplitRef(&DupArg, &RemArg, &Copy, pSep);
+    DupCnt = EvalStrIntExpression(&DupArg, Int32, &OK);
     if (FirstPassUnknown)
     {
-      WrError(1820); return False;
+      WrError(ErrNum_FirstPassCalc); return False;
     }
     if (!OK)
       return False;
@@ -637,26 +633,26 @@ static Boolean DecodeIntelPseudo_LayoutMult(const char *pArg, Word *Cnt,
     if (DupCnt <= 0)
     {
       if (DupCnt < 0)
-        WrError(270);
+        WrStrErrorPos(ErrNum_NegDUP, &DupArg);
       return True;
     }
 
     /* split into parts and evaluate */
 
-    pDupPart = pSep + 3;
-    while (myisspace(*pDupPart))
-      pDupPart++;
+    StrCompIncRefLeft(&RemArg, 2);
+    KillPrefBlanksStrCompRef(&RemArg);
     SumCnt = 0;
-    Len = strlen(pDupPart); 
-    if ((strlen(pDupPart) >= 2) && (*pDupPart == '(') && (pDupPart[Len - 1] == ')'))
+    Len = strlen(RemArg.Str); 
+    if ((Len >= 2) && (*RemArg.Str == '(') && (RemArg.Str[Len - 1] == ')'))
     {
-      pDupPart++;
-      pDupPart[Len - 2] = '\0';
+      StrCompIncRefLeft(&RemArg, 1);
+      StrCompShorten(&RemArg, 1);
+      Len -= 2;
     }
-    while (*pDupPart)
+    do
     {
       pSep = NULL; Quote = Depth = 0;
-      for (pRun = pDupPart; *pRun; pRun++)
+      for (pRun = RemArg.Str; *pRun; pRun++)
       {
         DecodeIntelPseudo_HandleQuote(&Depth, &Quote, *pRun);
         if ((!Depth) && (!Quote) && (*pRun == ','))
@@ -665,18 +661,15 @@ static Boolean DecodeIntelPseudo_LayoutMult(const char *pArg, Word *Cnt,
           break;
         }
       }
-      pPart = pDupPart; 
-      if (!pSep)
-        pDupPart = "";
-      else
-      {
-        *pSep = '\0';
-        pDupPart = pSep + 1;
-      }
-      if (!DecodeIntelPseudo_LayoutMult(pPart, &ECnt, LayoutFunc, Turn))
-        return False; 
+      if (pSep)
+        StrCompSplitRef(&RemArg, &ThisRemArg, &RemArg, pSep);
+      if (!DecodeIntelPseudo_LayoutMult(&RemArg, &ECnt, LayoutFunc, Turn))
+        return False;
       SumCnt += ECnt;
+      if (pSep)
+        RemArg = ThisRemArg;
     }
+    while (pSep);
 
     /* replicate result */
 
@@ -685,7 +678,7 @@ static Boolean DecodeIntelPseudo_LayoutMult(const char *pArg, Word *Cnt,
       SInd = CodeLen - SumCnt;
       if (SetMaxCodeLen(CodeLen + SumCnt * (DupCnt - 1)))
       {
-        WrError(1920); return False;
+        WrError(ErrNum_CodeOverflow); return False;
       }
       for (z = 1; z <= DupCnt - 1; z++)
       {
@@ -710,7 +703,7 @@ static Boolean DecodeIntelPseudo_LayoutMult(const char *pArg, Word *Cnt,
 Boolean DecodeIntelPseudo(Boolean Turn)
 {
   Word Dummy;
-  int z;
+  tStrComp *pArg;
   TLayoutFunc LayoutFunc = NULL;
   Boolean OK;
   LongInt HVal;
@@ -752,27 +745,25 @@ Boolean DecodeIntelPseudo(Boolean Turn)
         break;
     }
 
-    z = 1;
-    do
+    OK = True;
+    forallargs(pArg, OK)
     {
-      if (!*ArgStr[z])
+      if (!*pArg->Str)
       {
         OK = FALSE;
-        WrError(2050);
+        WrError(ErrNum_EmptyArgument);
       }
       else
-        OK = DecodeIntelPseudo_LayoutMult(ArgStr[z], &Dummy, LayoutFunc, Turn);
+        OK = DecodeIntelPseudo_LayoutMult(pArg, &Dummy, LayoutFunc, Turn);
       if (!OK)
         CodeLen = 0;
-      z++;
     }
-    while ((OK) && (z <= ArgCnt));
 
     DontPrint = (DSFlag == DSSpace);
     if (DontPrint)
     {
       BookKeeping();
-      if (!CodeLen) WrError(290);
+      if (!CodeLen) WrError(ErrNum_NullResMem);
     }
     if (OK)
       ActListGran = 1;
@@ -784,14 +775,14 @@ Boolean DecodeIntelPseudo(Boolean Turn)
     if (ChkArgCnt(1, 1))
     {
       FirstPassUnknown = False;
-      HVal = EvalIntExpression(ArgStr[1], Int32, &OK);
-      if (FirstPassUnknown) WrError(1820);
+      HVal = EvalStrIntExpression(&ArgStr[1], Int32, &OK);
+      if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
       else if (OK)
       {
         DontPrint = True;
         CodeLen = HVal;
         if (!HVal)
-          WrError(290);
+          WrError(ErrNum_NullResMem);
         BookKeeping();
       }
     }

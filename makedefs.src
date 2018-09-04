@@ -38,7 +38,7 @@ ST_SRCS = strutil.c stdhandl.c stringlists.c strcomp.c
 NLS_SRCS = nls.c nlmessages.c
 
 ASM_SRCS = as.c asmdef.c asmsub.c lstmacroexp.c asmpars.c asmmac.c asmstructs.c asmcode.c asmdebug.c asmif.c \
-           asmfnums.c asmrelocs.c asminclist.c asmitree.c asmallg.c
+           asmfnums.c asmrelocs.c tempresult.c operator.c function.c asminclist.c asmitree.c asmallg.c
 
 AS_SRCS = version.c endian.c bpemu.c chunks.c cpulist.c errmsg.c trees.c dynstring.c cmdarg.c ioerrs.c headids.c
 

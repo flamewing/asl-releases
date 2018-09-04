@@ -252,11 +252,10 @@ Boolean DoBranchExt;                    /* Spruenge automatisch verlaengern */
 LargeWord RadixBase;                    /* Default-Zahlensystem im Formelparser*/
 LargeWord OutRadixBase;                 /* dito fuer Ausgabe */
 
-tLineComp ArgStrPos[ArgCntMax + 1], AttrPartPos;
-StringPtr AttrPart, LOpPart;            /* Komponenten der Zeile */
-tStrComp LabPart, CommPart, ArgPart, OpPart;
+tStrComp ArgStr[ArgCntMax + 1];         /* Komponenten der Zeile */
+StringPtr LOpPart;
+tStrComp LabPart, CommPart, ArgPart, OpPart, AttrPart;
 char AttrSplit;
-ArgStrField ArgStr;                     /* Komponenten des Arguments */
 int ArgCnt;                             /* Argumentzahl */
 StringPtr OneLine;                      /* eingelesene Zeile */
 #ifdef PROFILE_MEMO
@@ -399,7 +398,7 @@ void asmdef_init(void)
   *DefCPU = '\0';
 
   for (z = 0; z <= ArgCntMax; z++)
-    ArgStr[z] = GetString();
+    StrCompAlloc(&ArgStr[z]);
   SourceFile = GetString();
   ClrEol = GetString();
   CursUp = GetString();
@@ -414,7 +413,7 @@ void asmdef_init(void)
   ShareName = GetString();
   StrCompAlloc(&LabPart);
   StrCompAlloc(&OpPart);
-  AttrPart = GetString();
+  StrCompAlloc(&AttrPart);
   StrCompAlloc(&ArgPart);
   StrCompAlloc(&CommPart);
   LOpPart = GetString();

@@ -180,7 +180,7 @@ static void DecodeOneReg(Word Code)
   Byte Erg;
 
   if (!ChkArgCnt(1, 1));
-  else if (!DecodeReg(ArgStr[1], &Erg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+  else if (!DecodeReg(ArgStr[1].Str, &Erg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
   else
   {
     BAsmCode[0] = Lo(Code) + Erg;
@@ -193,7 +193,7 @@ static void DecodeOneRReg(Word Code)
   Byte Erg;
 
   if (!ChkArgCnt(1, 1));
-  else if (!DecodeRReg(ArgStr[1], &Erg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+  else if (!DecodeRReg(ArgStr[1].Str, &Erg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
   else
   {
     BAsmCode[0] = Lo(Code) + Erg;
@@ -206,8 +206,8 @@ static void DecodeAccReg(Word Code)
   Byte Erg;
 
   if (!ChkArgCnt(1, 2));
-  else if ((ArgCnt == 2) && (strcasecmp(ArgStr[1], "A"))) WrError(1350);
-  else if (!DecodeReg(ArgStr[ArgCnt], &Erg)) WrXErrorPos(ErrNum_InvReg, ArgStr[ArgCnt], &ArgStrPos[ArgCnt]);
+  else if ((ArgCnt == 2) && (strcasecmp(ArgStr[1].Str, "A"))) WrError(ErrNum_InvAddrMode);
+  else if (!DecodeReg(ArgStr[ArgCnt].Str, &Erg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[ArgCnt]);
   else
   {
     BAsmCode[0] = Lo(Code) + Erg;
@@ -221,7 +221,7 @@ static void DecodeImm4(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    BAsmCode[0] = EvalIntExpression(ArgStr[1], UInt4, &OK);
+    BAsmCode[0] = EvalStrIntExpression(&ArgStr[1], UInt4, &OK);
     if (OK)
     {
       BAsmCode[0] += Lo(Code);
@@ -237,7 +237,7 @@ static void DecodeFullJmp(Word Index)
 
   if (ChkArgCnt(1, 1))
   {
-    Adr = EvalIntExpression(ArgStr[1], UInt12, &OK);
+    Adr = EvalStrIntExpression(&ArgStr[1], UInt12, &OK);
     if (OK)
     {
       BAsmCode[0] = 0x40 + (Index << 4) + Hi(Adr);
@@ -255,19 +255,16 @@ static void DecodeISZ(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeReg(ArgStr[1], &Erg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+  else if (!DecodeReg(ArgStr[1].Str, &Erg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
   else
   {
     FirstPassUnknown = False;
-    Adr = EvalIntExpression(ArgStr[2], UInt12, &OK);
-    if (OK)
+    Adr = EvalStrIntExpression(&ArgStr[2], UInt12, &OK);
+    if (OK && ChkSamePage(EProgCounter() + 1, Adr, 8))
     {
-      if (ChkSamePage(EProgCounter() + 1, Adr, 8))
-      {
-        BAsmCode[0] = 0x70 + Erg;
-        BAsmCode[1] = Lo(Adr);
-        CodeLen = 2;
-      }
+      BAsmCode[0] = 0x70 + Erg;
+      BAsmCode[1] = Lo(Adr);
+      CodeLen = 2;
     }
   }
 }
@@ -283,7 +280,7 @@ static void DecodeJCN(Word Index)
   if (ChkArgCnt(2, 2))
   {
     BAsmCode[0] = 0x10;
-    for (pCond = ArgStr[1]; *pCond; pCond++)
+    for (pCond = ArgStr[1].Str; *pCond; pCond++)
       switch (mytoupper(*pCond))
       {
         case 'Z': BAsmCode[0] |= 4; break;
@@ -292,13 +289,13 @@ static void DecodeJCN(Word Index)
         case 'N': BAsmCode[0] |= 8; break;
         default: BAsmCode[0] = 0xff;
       }
-    if (BAsmCode[0] == 0xff) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
+    if (BAsmCode[0] == 0xff) WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
     else
     {
-      AdrInt = EvalIntExpression(ArgStr[2], UInt12, &OK);
+      AdrInt = EvalStrIntExpression(&ArgStr[2], UInt12, &OK);
       if (OK)
       {
-        if ((!SymbolQuestionable) && (Hi(EProgCounter() + 2) != Hi(AdrInt))) WrError(1370);
+        if ((!SymbolQuestionable) && (Hi(EProgCounter() + 2) != Hi(AdrInt))) WrError(ErrNum_JmpDistTooBig);
         else
         {
           BAsmCode[1] = Lo(AdrInt);
@@ -315,10 +312,10 @@ static void DecodeFIM(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeRReg(ArgStr[1], BAsmCode)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+  else if (!DecodeRReg(ArgStr[1].Str, BAsmCode)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
   else
   {
-    BAsmCode[1] = EvalIntExpression(ArgStr[2], Int8, &OK);
+    BAsmCode[1] = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
     if (OK)
     {
       BAsmCode[0] |= 0x20;
@@ -339,7 +336,7 @@ static void DecodeREG(Word Code)
   UNUSED(Code);
 
   if (ChkArgCnt(1, 1))
-    AddRegDef(LabPart.Str,ArgStr[1]);
+    AddRegDef(LabPart.Str, ArgStr[1].Str);
 }
 
 /*---------------------------------------------------------------------------*/

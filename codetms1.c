@@ -61,7 +61,7 @@ static void DecodeConst4(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    BAsmCode[0] = EvalIntExpression(ArgStr[1], Int4, &OK);
+    BAsmCode[0] = EvalStrIntExpression(&ArgStr[1], Int4, &OK);
     if (OK)
     {
       BAsmCode[0] = BitMirr[BAsmCode[0] & 0x0f] | (Code & 0xf0);
@@ -75,7 +75,7 @@ static void DecodeConst3(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    BAsmCode[0] = EvalIntExpression(ArgStr[1], UInt3, &OK);
+    BAsmCode[0] = EvalStrIntExpression(&ArgStr[1], UInt3, &OK);
     if (OK)
     {
       BAsmCode[0] = (BitMirr[BAsmCode[0] & 0x07] >> 1) | (Code & 0xf8);
@@ -89,7 +89,7 @@ static void DecodeConst2(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    BAsmCode[0] = EvalIntExpression(ArgStr[1], UInt2, &OK);
+    BAsmCode[0] = EvalStrIntExpression(&ArgStr[1], UInt2, &OK);
     if (OK)
     {
       BAsmCode[0] = (BitMirr[BAsmCode[0] & 0x03] >> 2) | (Code & 0xfc);
@@ -106,7 +106,7 @@ static void DecodeJmp(Word Code)
     Word Addr;
 
     FirstPassUnknown = FALSE;
-    Addr = EvalIntExpression(ArgStr[1], CodeAdrIntType, &OK);
+    Addr = EvalStrIntExpression(&ArgStr[1], CodeAdrIntType, &OK);
     if (!OK);
     else
     {
@@ -126,7 +126,7 @@ static void DecodeJmpL(Word Code)
     Boolean OK;
     Word Addr;
 
-    Addr = EvalIntExpression(ArgStr[1], CodeAdrIntType, &OK);
+    Addr = EvalStrIntExpression(&ArgStr[1], CodeAdrIntType, &OK);
     if (OK)
     {
       ChkSpace(SegCode);

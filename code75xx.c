@@ -64,7 +64,7 @@ static void DecodeImm4(Word Index)
     Boolean OK;
     Word Value;
 
-    Value = EvalIntExpression(ArgStr[1], Int4, &OK);
+    Value = EvalStrIntExpression(&ArgStr[1], Int4, &OK);
     if (OK)
     {
       PutCode(Index | (Value & 15));
@@ -81,7 +81,7 @@ static void DecodeImm5(Word Index)
     Boolean OK;
     Word Value;
 
-    Value = EvalIntExpression(ArgStr[1], Int5, &OK);
+    Value = EvalStrIntExpression(&ArgStr[1], Int5, &OK);
     if (OK)
       PutCode(Index | (Value & 31));
   }
@@ -94,7 +94,7 @@ static void DecodeImm8(Word Index)
     Boolean OK;
     Word Value;
 
-    Value = EvalIntExpression(ArgStr[1], Int8, &OK);
+    Value = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
     if (OK)
     {
       PutCode(Index);
@@ -110,7 +110,7 @@ static void DecodeImm2(Word Index)
     Boolean OK;
     Word Value;
 
-    Value = EvalIntExpression(ArgStr[1], UInt2, &OK);
+    Value = EvalStrIntExpression(&ArgStr[1], UInt2, &OK);
     if (OK)
       PutCode(Index | (Value & 3));
   }
@@ -123,7 +123,7 @@ static void DecodeImm3(Word Index)
     Boolean OK;
     Word Value;
 
-    Value = EvalIntExpression(ArgStr[1], UInt3, &OK);
+    Value = EvalStrIntExpression(&ArgStr[1], UInt3, &OK);
     if (OK)
     {
       PutCode(Index | (Value & 7));
@@ -136,18 +136,18 @@ static void DecodeImm3(Word Index)
 static void DecodePR(Word Index)
 {
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1], "HL-"))
+  else if (!strcasecmp(ArgStr[1].Str, "HL-"))
     PutCode(Index | 0x10);
-  else if (!strcasecmp(ArgStr[1], "HL+"))
+  else if (!strcasecmp(ArgStr[1].Str, "HL+"))
     PutCode(Index | 0x11);
-  else if (!strcasecmp(ArgStr[1], "HL"))
+  else if (!strcasecmp(ArgStr[1].Str, "HL"))
     PutCode(Index | 0x12);
-  else if ((MomCPU == CPU7508) && (!strcasecmp(ArgStr[1], "DL")))
+  else if ((MomCPU == CPU7508) && (!strcasecmp(ArgStr[1].Str, "DL")))
     PutCode(Index | 0x00);
-  else if ((MomCPU == CPU7508) && (!strcasecmp(ArgStr[1], "DE")))
+  else if ((MomCPU == CPU7508) && (!strcasecmp(ArgStr[1].Str, "DE")))
     PutCode(Index | 0x01);
   else
-    WrXErrorPos(1135, ArgStr[1], &ArgStrPos[1]);
+    WrStrErrorPos(ErrNum_InvOpType, &ArgStr[1]);
 }
 
 static void DecodeDataMem(Word Index)
@@ -157,7 +157,7 @@ static void DecodeDataMem(Word Index)
     Boolean OK;
     Word Value;
  
-    Value = EvalIntExpression(ArgStr[1], DataIntType, &OK);
+    Value = EvalStrIntExpression(&ArgStr[1], DataIntType, &OK);
     if (OK)
     {
       PutCode(Index);
@@ -184,7 +184,7 @@ static void DecodeAbs(Word Index)
       SegLimit = 0x1fff;
     }
 
-    Address = EvalIntExpression(ArgStr[1], Type, &OK);
+    Address = EvalStrIntExpression(&ArgStr[1], Type, &OK);
     if (OK)
     {
       PutCode(Index | (Address & SegLimit));
@@ -201,7 +201,7 @@ static void DecodeJCP(Word Index)
     Word Address;
 
     FirstPassUnknown = FALSE;
-    Address = EvalIntExpression(ArgStr[1], CodeIntType, &OK);
+    Address = EvalStrIntExpression(&ArgStr[1], CodeIntType, &OK);
     if (OK && ChkSamePage(Address, EProgCounter() + 1, 6))
     {
       PutCode(Index | (Address & 0x3f));
@@ -218,12 +218,12 @@ static void DecodeCAL(Word Index)
     Word Address;
  
     FirstPassUnknown = FALSE;
-    Address = EvalIntExpression(ArgStr[1], CodeIntType, &OK);
+    Address = EvalStrIntExpression(&ArgStr[1], CodeIntType, &OK);
     if (FirstPassUnknown)
       Address = (Address & 0x1c7) | 0x100;
     if (OK)
     {
-      if ((Address & 0x338) != 0x100) WrError(1320);
+      if ((Address & 0x338) != 0x100) WrError(ErrNum_OverRange);
       else
         PutCode(Index | ((Address & 0x0c0) >> 3) | (Address & 7));
       ChkSpace(SegCode);
@@ -239,12 +239,12 @@ static void DecodeLHLT(Word Index)
     Word Address;
  
     FirstPassUnknown = FALSE;
-    Address = EvalIntExpression(ArgStr[1], CodeIntType, &OK);
+    Address = EvalStrIntExpression(&ArgStr[1], CodeIntType, &OK);
     if (FirstPassUnknown)
       Address = (Address & 0x00cf) | 0x00c0;
     if (OK)
     {
-      if ((Address < 0xc0) || (Address > 0xcf)) WrError(1320);
+      if ((Address < 0xc0) || (Address > 0xcf)) WrError(ErrNum_OverRange);
       else
         PutCode(Index | (Address & 0xf));
       ChkSpace(SegCode);
@@ -260,12 +260,12 @@ static void DecodeCALT(Word Index)
     Word Address;
  
     FirstPassUnknown = FALSE;
-    Address = EvalIntExpression(ArgStr[1], CodeIntType, &OK);
+    Address = EvalStrIntExpression(&ArgStr[1], CodeIntType, &OK);
     if (FirstPassUnknown)
       Address = (Address & 0x00ff) | 0x00c0;
     if (OK)
     {
-      if ((Address < 0xd0) || (Address > 0xff)) WrError(1320);
+      if ((Address < 0xd0) || (Address > 0xff)) WrError(ErrNum_OverRange);
       else
         PutCode(Index | (Address & 0x3f));
       ChkSpace(SegCode);
@@ -280,11 +280,11 @@ static void DecodeLogPort(Word Index)
     Boolean OK;
     Word Port, Mask;
 
-    Port = EvalIntExpression(ArgStr[1], UInt4, &OK);
+    Port = EvalStrIntExpression(&ArgStr[1], UInt4, &OK);
     if (OK)
     {
       ChkSpace(SegIO);
-      Mask = EvalIntExpression(ArgStr[2], UInt4, &OK);
+      Mask = EvalStrIntExpression(&ArgStr[2], UInt4, &OK);
       if (OK)
         PutCode(Index | ((Mask & 15) << 4) | (Port & 15));
     }

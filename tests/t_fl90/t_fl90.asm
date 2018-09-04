@@ -1,12 +1,12 @@
 ; FTEST.ASM
 ;******************************************************************************
-;* Testet Gleitkommabibliothek f¸r TLCS90                                     *
+;* Testet Gleitkommabibliothek fuer TLCS90                                    *
 ;*                                                                            *
 ;* Hardware: TDB-TMP90                                                        *
-;* Software: AS 1.39p5 oder hˆher                                             *
+;* Software: AS 1.39p5 oder hoeher                                            *
 ;*           Includes MACROS.INC, FLOAT.INC, CPU_TIME.INC                     *
 ;*                                                                            *
-;* ‹bersetzen mit AS ftest oder beiliegendem Makefile                         *
+;* Uebersetzen mit AS ftest oder beiliegendem Makefile                        *
 ;*                                                                            *
 ;******************************************************************************
 
@@ -18,22 +18,22 @@
 
 CR              equ     13
 LF              equ     10
-Format_Tab      equ     0000100000000110b ; fftoa-Format f¸r tab. Ausgabe
-Format_Min      equ     0010001100000101b ; fftoa-Format f¸r minimale L‰nge
+Format_Tab      equ     0000100000000110b ; fftoa-Format fuer tab. Ausgabe
+Format_Min      equ     0010001100000101b ; fftoa-Format fuer minimale L‰nge
 ;                         ^<+>^^<--+--->
 ;                         | | ||   |
 ;                         | | ||   +------ Maximalzahl Nachkommastellen
-;                         | | |+---------- Mantissenpluszeichen unterdr¸cken
-;                         | | +----------- Exponentenpluszeichen unterdr¸cken
+;                         | | |+---------- Mantissenpluszeichen unterdruecken
+;                         | | +----------- Exponentenpluszeichen unterdruecken
 ;                         | +------------- Minimalstellenzahl Exponent
-;                         +--------------- anh‰ngende Nullen in Mantisse lˆschen
-Format          equ     Format_Tab      ; gew‰hltes fftoa-Format
+;                         +--------------- anhaengende Nullen in Mantisse loeschen
+Format          equ     Format_Tab      ; gewaehltes fftoa-Format
 
 ;------------------------------------------------------------------------------
 ; Vorgaben
 
                 include stddef90.inc    ; Registeradressen
-                include macros.inc      ; f¸r Unterroutinen benˆtigte Makros
+                include macros.inc      ; fuer Unterroutinen benoetigte Makros
                 include mon.inc         ; Einsprungadressen TDBTMP90-Monitor
 
                 section MainProg
@@ -137,7 +137,7 @@ OneOp           macro   Msg,Operation,Op1,Op2,{Expand}  ; Aufruf, Ausgabe und
 
                 endp
 
-                proc    fnop            ; Dummyroutine fÅr Overheadmessung
+                proc    fnop            ; Dummyroutine fuer Overheadmessung
 
                 link    ix,0
                 unlk    ix
@@ -146,11 +146,11 @@ OneOp           macro   Msg,Operation,Op1,Op2,{Expand}  ; Aufruf, Ausgabe und
 
                 endp
 
-CharBuffer:     db      30 dup (?)      ; Puffer fÅr fftoa
-InpBuffer:      db      "-123.456E-7",0 ; Puffer fÅr fatof
+CharBuffer:     db      30 dup (?)      ; Puffer fuer fftoa
+InpBuffer:      db      "-123.456E-7",0 ; Puffer fuer fatof
 
                 align   4
-Eins:           dd      1.0             ; benîtigte Konstanten
+Eins:           dd      1.0             ; benoetigte Konstanten
 MinEins:        dd      -1.0
 Zwei:           dd      2.0
 Pi:             dd      40490fdbh	; um Vergleichsfehler durch Rundung zu
@@ -162,13 +162,13 @@ IntEins:        dd      1
 IntThou:        dd      100000
 Erg:            dd      40 dup (?)      ; Ergebnisfeld
 
-                align   2               ; Platz fÅr Stack
+                align   2               ; Platz fuer Stack
                 db      300 dup (?)
 Stack:
                 endsection
 
 ;------------------------------------------------------------------------------
-; benîtigte Module
+; benoetigte Module
 
                 include cpu_time.inc     ; Zeitmessung
                 include float.inc        ; Gleitkommabibliothek

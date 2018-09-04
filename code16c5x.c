@@ -75,7 +75,7 @@ static void DecodeLit(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    Word AdrWord = EvalIntExpression(ArgStr[1], Int8, &OK);
+    Word AdrWord = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
     if (OK)
     {
       CodeLen = 1;
@@ -92,7 +92,7 @@ static void DecodeAri(Word Code)
   Code &= 0x7fff;
   if (ChkArgCnt(1, 2))
   {
-    AdrWord = EvalIntExpression(ArgStr[1], UInt5, &OK);
+    AdrWord = EvalStrIntExpression(&ArgStr[1], UInt5, &OK);
     if (OK)
     {
       ChkSpace(SegData);
@@ -102,16 +102,16 @@ static void DecodeAri(Word Code)
         CodeLen = 1;
         WAsmCode[0] += DefaultDir << 5;
       }
-      else if (!strcasecmp(ArgStr[2], "W"))
+      else if (!strcasecmp(ArgStr[2].Str, "W"))
         CodeLen = 1;
-      else if (!strcasecmp(ArgStr[2], "F"))
+      else if (!strcasecmp(ArgStr[2].Str, "F"))
       {
         CodeLen = 1;
         WAsmCode[0] += 0x20;
       }
       else
       {
-        AdrWord = EvalIntExpression(ArgStr[2], UInt1, &OK);
+        AdrWord = EvalStrIntExpression(&ArgStr[2], UInt1, &OK);
         if (OK)
         {
           CodeLen = 1;
@@ -127,10 +127,10 @@ static void DecodeBit(Word Code)
   if (ChkArgCnt(2, 2))
   {
     Boolean OK;
-    Word AdrWord = EvalIntExpression(ArgStr[2], UInt3, &OK);
+    Word AdrWord = EvalStrIntExpression(&ArgStr[2], UInt3, &OK);
     if (OK)
     {
-      WAsmCode[0] = EvalIntExpression(ArgStr[1], UInt5, &OK);
+      WAsmCode[0] = EvalStrIntExpression(&ArgStr[1], UInt5, &OK);
       if (OK)
       {
         CodeLen = 1;
@@ -146,7 +146,7 @@ static void DecodeF(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    Word AdrWord = EvalIntExpression(ArgStr[1], UInt5, &OK);
+    Word AdrWord = EvalStrIntExpression(&ArgStr[1], UInt5, &OK);
     if (OK)
     {
       CodeLen = 1;
@@ -163,7 +163,7 @@ static void DecodeTRIS(Word Code)
   if (ChkArgCnt(1, 1))
   {   
     Boolean OK;
-    Word AdrWord = EvalIntExpression(ArgStr[1], UInt3, &OK);
+    Word AdrWord = EvalStrIntExpression(&ArgStr[1], UInt3, &OK);
     if (OK)
      if (ChkRange(AdrWord, 5, 7))
      {
@@ -179,11 +179,11 @@ static void DecodeCALL_GOTO(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    Word AdrWord = EvalIntExpression(ArgStr[1], UInt16, &OK);
+    Word AdrWord = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
     if (OK)
     {
-      if (AdrWord > SegLimits[SegCode]) WrError(1320);
-      else if ((Code & 0x100) && ((AdrWord & 0x100) != 0)) WrError(1905);
+      if (AdrWord > SegLimits[SegCode]) WrError(ErrNum_OverRange);
+      else if ((Code & 0x100) && ((AdrWord & 0x100) != 0)) WrError(ErrNum_NotFromThisAddress);
       else
       {
         ChkSpace(SegCode);
@@ -222,11 +222,11 @@ static void DecodeZERO(Word Code)
   if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
-    Size = EvalIntExpression(ArgStr[1], Int16, &ValOK);
-    if (FirstPassUnknown) WrError(1820);
+    Size = EvalStrIntExpression(&ArgStr[1], Int16, &ValOK);
+    if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
     if ((ValOK) && (!FirstPassUnknown)) 
     {
-      if (SetMaxCodeLen(Size << 1)) WrError(1920);
+      if (SetMaxCodeLen(Size << 1)) WrError(ErrNum_CodeOverflow);
       else
       {
         CodeLen = Size;

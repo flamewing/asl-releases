@@ -76,10 +76,10 @@ static Word AdrVal,AdrPart;
 /*-------------------------------------------------------------------------*/
 /* Adressparser */
 
-static Boolean DecodeReg(char *Asc, Word *Erg)
+static Boolean DecodeReg(const tStrComp *pArg, Word *Erg)
 {
   Boolean OK;
-  *Erg = EvalIntExpression(Asc, UInt4, &OK);
+  *Erg = EvalStrIntExpression(pArg, UInt4, &OK);
   return OK;
 }
 
@@ -102,7 +102,7 @@ static char *HasDisp(char *Asc)
     }
     if (Lev != -1)
     {
-      WrError(1300);
+      WrError(ErrNum_BrackErr);
       p = NULL;
     }
   }
@@ -112,26 +112,27 @@ static char *HasDisp(char *Asc)
   return p;
 }
 
-static Boolean DecodeAdr(char *Asc)
+static Boolean DecodeAdr(const tStrComp *pArg)
 {
   Boolean IncFlag;
-  String Reg;
   Boolean OK;
   char *p;
 
-  AdrCnt=0;
+  AdrCnt = 0;
 
-  if (*Asc == '*')
+  if (*pArg->Str == '*')
   {
-    Asc++;
-    if (Asc[strlen(Asc) - 1] == '+')
+    tStrComp IArg;
+
+    StrCompRefRight(&IArg, pArg, 1);
+    if (IArg.Str[strlen(IArg.Str) - 1] == '+')
     {
       IncFlag = True;
-      Asc[strlen(Asc) - 1] = '\0';
+      StrCompShorten(&IArg, 1);
     }
     else
       IncFlag = False;
-    if (DecodeReg(Asc, &AdrPart))
+    if (DecodeReg(&IArg, &AdrPart))
     {
       AdrPart += 0x10 + (Ord(IncFlag) << 5);
       return True;
@@ -139,33 +140,37 @@ static Boolean DecodeAdr(char *Asc)
     return False;
   }
 
-  if (*Asc == '@')
+  if (*pArg->Str == '@')
   {
-    Asc++; p = HasDisp(Asc);
+    tStrComp IArg;
+
+    StrCompRefRight(&IArg, pArg, 1);
+    p = HasDisp(IArg.Str);
     if (!p)
     {
       FirstPassUnknown = False;
-      AdrVal = EvalIntExpression(Asc, UInt16, &OK);
+      AdrVal = EvalStrIntExpression(&IArg, UInt16, &OK);
       if (OK)
       {
         AdrPart = 0x20;
         AdrCnt = 1;
         if ((!FirstPassUnknown) && (IsWord) && (Odd(AdrVal)))
-          WrError(180);
+          WrError(ErrNum_AddrNotAligned);
         return True;
       }
     }
     else
     {
-      strmaxcpy(Reg, p + 1, 255);
-      Reg[strlen(Reg) - 1] = '\0';
-      if (DecodeReg(Reg, &AdrPart))
+      tStrComp Disp, Reg;
+
+      StrCompSplitRef(&Disp, &Reg, &IArg, p);
+      StrCompShorten(&Reg, 1);
+      if (DecodeReg(&Reg, &AdrPart))
       {
-        if (AdrPart == 0) WrXError(1445, Reg);
+        if (AdrPart == 0) WrStrErrorPos(ErrNum_InvReg, &Reg);
         else
         {
-          *p = '\0';
-          AdrVal = EvalIntExpression(Asc, Int16, &OK);
+          AdrVal = EvalStrIntExpression(&Disp, Int16, &OK);
           if (OK)
           {
             AdrPart += 0x20;
@@ -178,11 +183,11 @@ static Boolean DecodeAdr(char *Asc)
     return False;
   }  
 
-  if (DecodeReg(Asc, &AdrPart))
+  if (DecodeReg(pArg, &AdrPart))
     return True;
   else
   {
-    WrError(1350);
+    WrError(ErrNum_InvAddrMode);
     return False;
   }
 }
@@ -209,12 +214,12 @@ static void DecodeTwo(Word Code)
   Word HPart;
 
   if (ChkArgCnt(2, 2)
-   && DecodeAdr(ArgStr[1]))
+   && DecodeAdr(&ArgStr[1]))
   {
     WAsmCode[0] = AdrPart;
     WAsmCode[1] = AdrVal;
     HPart = AdrCnt;
-    if (DecodeAdr(ArgStr[2]))
+    if (DecodeAdr(&ArgStr[2]))
     {
       WAsmCode[0] += AdrPart << 6;
       WAsmCode[1 + HPart] = AdrVal;
@@ -227,13 +232,13 @@ static void DecodeTwo(Word Code)
 static void DecodeOne(Word Code)
 {
   if (ChkArgCnt(2, 2)
-   && DecodeAdr(ArgStr[1]))
+   && DecodeAdr(&ArgStr[1]))
   {
     Word HPart;
 
     WAsmCode[0] = AdrPart;
     WAsmCode[1] = AdrVal;
-    if (DecodeReg(ArgStr[2], &HPart))
+    if (DecodeReg(&ArgStr[2], &HPart))
     {
       WAsmCode[0] += (HPart << 6) + (Code << 10);
       CodeLen = (1 + AdrCnt) << 1;
@@ -244,7 +249,7 @@ static void DecodeOne(Word Code)
 static void DecodeLDCR_STCR(Word Code)
 {
   if (ChkArgCnt(2, 2)
-   && DecodeAdr(ArgStr[1]))
+   && DecodeAdr(&ArgStr[1]))
   {
     Word HPart;
     Boolean OK;
@@ -252,7 +257,7 @@ static void DecodeLDCR_STCR(Word Code)
     WAsmCode[0] = Code + AdrPart;
     WAsmCode[1] = AdrVal;
     FirstPassUnknown = False;
-    HPart = EvalIntExpression(ArgStr[2], UInt5, &OK);
+    HPart = EvalStrIntExpression(&ArgStr[2], UInt5, &OK);
     if (FirstPassUnknown)
       HPart = 1;
     if (OK)
@@ -270,11 +275,11 @@ static void DecodeLDCR_STCR(Word Code)
 static void DecodeShift(Word Code)
 {
   if (ChkArgCnt(2, 2)
-   && DecodeReg(ArgStr[1], WAsmCode + 0))
+   && DecodeReg(&ArgStr[1], WAsmCode + 0))
   {
     Word HPart;
 
-    if (DecodeReg(ArgStr[2], &HPart))
+    if (DecodeReg(&ArgStr[2], &HPart))
     {
       WAsmCode[0] += (HPart << 4) + (Code << 8);
       CodeLen = 2;
@@ -285,11 +290,11 @@ static void DecodeShift(Word Code)
 static void DecodeImm(Word Code)
 {
   if (ChkArgCnt(2, 2)
-   && DecodeReg(ArgStr[1], WAsmCode + 0))
+   && DecodeReg(&ArgStr[1], WAsmCode + 0))
   {
     Boolean OK;
 
-    WAsmCode[1] = EvalIntExpression(ArgStr[2], Int16, &OK);
+    WAsmCode[1] = EvalStrIntExpression(&ArgStr[2], Int16, &OK);
     if (OK)
     {
       WAsmCode[0] += Code;
@@ -301,7 +306,7 @@ static void DecodeImm(Word Code)
 static void DecodeRegOrder(Word Code)
 {
   if (ChkArgCnt(1, 1)
-   && DecodeReg(ArgStr[1], WAsmCode + 0))
+   && DecodeReg(&ArgStr[1], WAsmCode + 0))
   {
     WAsmCode[0] += Code << 4;
     CodeLen = 2;
@@ -313,22 +318,22 @@ static void DecodeLMF(Word Code)
   UNUSED(Code);
 
   if (ChkArgCnt(2, 2)
-   && DecodeReg(ArgStr[1], WAsmCode + 0))
+   && DecodeReg(&ArgStr[1], WAsmCode + 0))
   {
     Boolean OK;
 
-    WAsmCode[0] += 0x320 + (EvalIntExpression(ArgStr[2], UInt1, &OK) << 4);
+    WAsmCode[0] += 0x320 + (EvalStrIntExpression(&ArgStr[2], UInt1, &OK) << 4);
     if (OK)
       CodeLen = 2;
     if (!SupAllowed)
-      WrError(50);
+      WrError(ErrNum_PrivOrder);
   }
 }
 
 static void DecodeMPYS_DIVS(Word Code)
 {
   if (ChkArgCnt(1, 1)
-   && DecodeAdr(ArgStr[1]))
+   && DecodeAdr(&ArgStr[1]))
   {
     WAsmCode[0] = Code + AdrPart;
     WAsmCode[1] = AdrVal;
@@ -342,7 +347,7 @@ static void DecodeSBit(Word Code)
   {
     Boolean OK;
 
-    WAsmCode[0] = EvalIntExpression(ArgStr[1], SInt8, &OK);
+    WAsmCode[0] = EvalStrIntExpression(&ArgStr[1], SInt8, &OK);
     if (OK)
     {
       WAsmCode[0] = (WAsmCode[0] & 0xff) | Code;
@@ -358,11 +363,11 @@ static void DecodeJmp(Word Code)
     Boolean OK;
     Integer AdrInt;
 
-    AdrInt = EvalIntExpression(ArgStr[1], UInt16, &OK) - (EProgCounter() + 2);
+    AdrInt = EvalStrIntExpression(&ArgStr[1], UInt16, &OK) - (EProgCounter() + 2);
     if (OK)
     {
-      if (Odd(AdrInt)) WrError(1375);
-      else if ((!SymbolQuestionable) && ((AdrInt < -256) || (AdrInt > 254))) WrError(1370);
+      if (Odd(AdrInt)) WrError(ErrNum_DistIsOdd);
+      else if ((!SymbolQuestionable) && ((AdrInt < -256) || (AdrInt > 254))) WrError(ErrNum_JmpDistTooBig);
       else
       {
         WAsmCode[0] = ((AdrInt >> 1) & 0xff) | Code;
@@ -378,7 +383,7 @@ static void DecodeLWPI_LIMI(Word Code)
   {
     Boolean OK;
 
-    WAsmCode[1] = EvalIntExpression(ArgStr[1], UInt16, &OK);
+    WAsmCode[1] = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
     if (OK)
     {
       WAsmCode[0] = Code;
@@ -390,13 +395,13 @@ static void DecodeLWPI_LIMI(Word Code)
 static void DecodeSing(Word Code)
 {
   if (ChkArgCnt(1, 1)
-   && DecodeAdr(ArgStr[1]))
+   && DecodeAdr(&ArgStr[1]))
   {
     WAsmCode[0] = (Code & 0x7fff) | AdrPart;
     WAsmCode[1] = AdrVal;
     CodeLen=(1 + AdrCnt) << 1;
     if ((Code & 0x8000) && (!SupAllowed))
-      WrError(50);
+      WrError(ErrNum_PrivOrder);
   }
 }
 
@@ -407,7 +412,7 @@ static void DecodeFixed(Word Code)
     WAsmCode[0] = Code & 0x7fff;
     CodeLen = 2;
     if ((Code & 0x8000) && (!SupAllowed))
-      WrError(50);
+      WrError(ErrNum_PrivOrder);
   }
 }
 
@@ -424,31 +429,31 @@ static void DecodeBYTE(Word Code)
     z = 1; OK = True;
     do
     {
-      KillBlanks(ArgStr[z]);
+      KillBlanks(ArgStr[z].Str);
       FirstPassUnknown = False;
-      EvalExpression(ArgStr[z], &t);
+      EvalStrExpression(&ArgStr[z], &t);
       switch (t.Typ)
       {
         case TempInt:
           if (FirstPassUnknown)
             t.Contents.Int &= 0xff;
-          if (!RangeCheck(t.Contents.Int, Int8)) WrError(1320);
+          if (!RangeCheck(t.Contents.Int, Int8)) WrError(ErrNum_OverRange);
           else if (SetMaxCodeLen(CodeLen + 1))
           {
-            WrError(1920);
+            WrError(ErrNum_CodeOverflow);
             OK = False;
           }
           else
             PutByte(t.Contents.Int);
           break;
         case TempFloat:
-          WrError(1135);
+          WrError(ErrNum_InvOpType);
           OK = False;
           break;
         case TempString:
           if (SetMaxCodeLen(t.Contents.Ascii.Length + CodeLen))
           {
-            WrError(1920);
+            WrError(ErrNum_CodeOverflow);
             OK = False;
           }
           else
@@ -487,7 +492,7 @@ static void DecodeWORD(Word Code)
     OK = True;
     do
     {
-      HVal16 = EvalIntExpression(ArgStr[z], Int16, &OK);
+      HVal16 = EvalStrIntExpression(&ArgStr[z], Int16, &OK);
       if (OK)
       {
         WAsmCode[CodeLen >> 1] = HVal16;
@@ -511,13 +516,13 @@ static void DecodeBSS(Word Code)
   if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
-    HVal16 = EvalIntExpression(ArgStr[1], Int16, &OK);
-    if (FirstPassUnknown) WrError(1820);
+    HVal16 = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
+    if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
     else if (OK)
     {
       if ((DoPadding) && (Odd(HVal16)))
         HVal16++;
-      if (!HVal16) WrError(290);
+      if (!HVal16) WrError(ErrNum_NullResMem);
       DontPrint = True;
       CodeLen = HVal16;
       BookKeeping();

@@ -108,7 +108,7 @@ static StringList Emulations;
 static void ChkSup(void)
 {
   if (!SupAllowed)
-    WrError(50);
+    WrError(ErrNum_PrivOrder);
 }
 
 static Boolean IsSup(LongWord RegNo)
@@ -155,10 +155,10 @@ static Boolean DecodeReg(char *Asc, LongWord *Erg)
 
 static Boolean DecodeArgReg(int ArgIndex, LongWord *pRes)
 {
-  Boolean Result = DecodeReg(ArgStr[ArgIndex], pRes);
+  Boolean Result = DecodeReg(ArgStr[ArgIndex].Str, pRes);
 
   if (!Result)
-    WrXErrorPos(ErrNum_InvReg, ArgStr[ArgIndex], &ArgStrPos[ArgIndex]);
+    WrStrErrorPos(ErrNum_InvReg, &ArgStr[ArgIndex]);
   return Result;
 }
 
@@ -180,10 +180,10 @@ static Boolean DecodeSpReg(char *Asc_O, LongWord *Erg)
 
 static Boolean DecodeArgSpReg(int ArgIndex, LongWord *pRes)
 {
-  Boolean Result = DecodeSpReg(ArgStr[ArgIndex], pRes);
+  Boolean Result = DecodeSpReg(ArgStr[ArgIndex].Str, pRes);
 
   if (!Result)
-    WrXErrorPos(ErrNum_InvCtrlReg, ArgStr[ArgIndex], &ArgStrPos[ArgIndex]);
+    WrStrErrorPos(ErrNum_InvCtrlReg, &ArgStr[ArgIndex]);
   return Result;
 }
 
@@ -204,13 +204,13 @@ static void DecodeStd(Word Index)
     else OK = DecodeArgReg(2, &Src1);
     if (OK)
     {
-      if (DecodeReg(ArgStr[ArgCnt], &Src2))
+      if (DecodeReg(ArgStr[ArgCnt].Str, &Src2))
       {
         OK = True; Src3 = 0;
       }
       else
       {
-        Src2 = EvalIntExpression(ArgStr[ArgCnt], UInt8, &OK);
+        Src2 = EvalStrIntExpression(&ArgStr[ArgCnt], UInt8, &OK);
         Src3 = 0x1000000;
       }
       if (OK)
@@ -258,19 +258,19 @@ static void DecodeVec(Word Index)
   if (ChkArgCnt(3, 3))
   {
     FirstPassUnknown = False;
-    Dest = EvalIntExpression(ArgStr[1], UInt8, &OK);
+    Dest = EvalStrIntExpression(&ArgStr[1], UInt8, &OK);
     if (FirstPassUnknown) Dest = 64;
     if (OK)
     {
       if (DecodeArgReg(2, &Src1))
       {
-        if (DecodeReg(ArgStr[ArgCnt], &Src2))
+        if (DecodeReg(ArgStr[ArgCnt].Str, &Src2))
         {
           OK = True; Src3 = 0;
         }
         else
         {
-          Src2 = EvalIntExpression(ArgStr[ArgCnt], UInt8, &OK);
+          Src2 = EvalStrIntExpression(&ArgStr[ArgCnt], UInt8, &OK);
           Src3 = 0x1000000;
         }
         if (OK)
@@ -316,21 +316,21 @@ static void DecodeMem(Word Index)
     }
     else
     {
-      AdrLong = EvalIntExpression(ArgStr[1], Int32, &OK);
+      AdrLong = EvalStrIntExpression(&ArgStr[1], Int32, &OK);
       if (OK) OK = ChkRange(AdrLong, 0, 0);
     }
     if (OK)
     {
-      Dest = EvalIntExpression(ArgStr[ArgCnt - 2], UInt7, &OK);
+      Dest = EvalStrIntExpression(&ArgStr[ArgCnt - 2], UInt7, &OK);
       if (OK && DecodeArgReg(ArgCnt - 1, &Src1))
       {
-        if (DecodeReg(ArgStr[ArgCnt], &Src2))
+        if (DecodeReg(ArgStr[ArgCnt].Str, &Src2))
         {
           OK = True; Src3 = 0;
         }
         else
         {
-          Src2 = EvalIntExpression(ArgStr[ArgCnt], UInt8, &OK);
+          Src2 = EvalStrIntExpression(&ArgStr[ArgCnt], UInt8, &OK);
           Src3 = 0x1000000;
         }
         if (OK)
@@ -357,21 +357,21 @@ static void DecodeJmp(Word Index)
   unsigned NumArgs = 1 + Ord(pOrder->HasReg);
 
   if (ChkArgCnt(NumArgs, NumArgs)
-   && DecodeReg(ArgStr[ArgCnt], &Src1))
+   && DecodeReg(ArgStr[ArgCnt].Str, &Src1))
   {
     if (!pOrder->HasReg)
     {
       Dest = 0;
       OK = True;
     }
-    else OK = DecodeReg(ArgStr[1], &Dest);
+    else OK = DecodeReg(ArgStr[1].Str, &Dest);
     if (OK)
     {
       CodeLen = 4;
       DAsmCode[0] = ((pOrder->Code + 0x20) << 24) + (Dest << 8) + Src1;
     }
   }
-  else if (Immediate) WrError(1350);
+  else if (Immediate) WrError(ErrNum_InvAddrMode);
   else
   {
     if (!pOrder->HasReg)
@@ -380,14 +380,14 @@ static void DecodeJmp(Word Index)
       OK = True;
     }
     else
-      OK = DecodeReg(ArgStr[1], &Dest);
+      OK = DecodeReg(ArgStr[1].Str, &Dest);
     if (OK)
     {
-      AdrLong = EvalIntExpression(ArgStr[ArgCnt], Int32, &OK); 
+      AdrLong = EvalStrIntExpression(&ArgStr[ArgCnt], Int32, &OK); 
       AdrInt = AdrLong - EProgCounter();
       if (OK)
       {
-        if ((AdrLong & 3) != 0) WrError(1325);
+        if ((AdrLong & 3) != 0) WrError(ErrNum_NotAligned);
          else if ((AdrInt <= 0x1ffff) && (AdrInt >= -0x20000))
         {
           CodeLen = 4;
@@ -396,7 +396,7 @@ static void DecodeJmp(Word Index)
                       + ((AdrLong & 0x3fc00) << 6)
                       + (Dest << 8) + ((AdrLong & 0x3fc) >> 2);
         }
-        else if ((!SymbolQuestionable) && (AdrLong > 0x3fffff)) WrError(1370);
+        else if ((!SymbolQuestionable) && (AdrLong > 0x3fffff)) WrError(ErrNum_JmpDistTooBig);
         else
         {
           CodeLen = 4;
@@ -421,7 +421,7 @@ static void DecodeCLASS(Word Code)
    && DecodeArgReg(1, &Dest)
    && DecodeArgReg(2, &Src1))
   {
-    Src2 = EvalIntExpression(ArgStr[3], UInt2, &OK);
+    Src2 = EvalStrIntExpression(&ArgStr[3], UInt2, &OK);
     if (OK)
     {
       CodeLen = 4;
@@ -440,7 +440,7 @@ static void DecodeEMULATE(Word Code)
   if (ChkArgCnt(3, 3))
   {
     FirstPassUnknown = False;
-    Dest = EvalIntExpression(ArgStr[1], UInt8, &OK);
+    Dest = EvalStrIntExpression(&ArgStr[1], UInt8, &OK);
     if (FirstPassUnknown) Dest = 64;
     if (OK)
     {
@@ -476,7 +476,7 @@ static void DecodeSQRT(Word Code)
       OK = DecodeArgReg(2, &Src1);
     if (OK)
     {
-      Src2 = EvalIntExpression(ArgStr[ArgCnt], UInt2, &OK);
+      Src2 = EvalStrIntExpression(&ArgStr[ArgCnt], UInt2, &OK);
       if (OK)
       {
         CodeLen = 4;
@@ -495,13 +495,13 @@ static void DecodeCLZ(Word Code)
 
   if (ChkArgCnt(2, 2) && DecodeArgReg(1, &Dest))
   {
-    if (DecodeReg(ArgStr[2], &Src1))
+    if (DecodeReg(ArgStr[2].Str, &Src1))
     {
       OK = True; Src3 = 0;
     }
     else
     {
-      Src1 = EvalIntExpression(ArgStr[2], UInt8, &OK);
+      Src1 = EvalStrIntExpression(&ArgStr[2], UInt8, &OK);
       Src3 = 0x1000000;
     }
     if (OK)
@@ -520,7 +520,7 @@ static void DecodeCONST(Word Code)
 
   if (ChkArgCnt(2, 2) && DecodeArgReg(1, &Dest))
   {
-    AdrLong = EvalIntExpression(ArgStr[2], Int32, &OK);
+    AdrLong = EvalStrIntExpression(&ArgStr[2], Int32, &OK);
     if (OK)
     {
       CodeLen = 4;
@@ -549,7 +549,7 @@ static void DecodeCONSTH_CONSTN(Word IsHi)
   if (ChkArgCnt(2, 2) && DecodeArgReg(1, &Dest))
   {
     FirstPassUnknown = False;
-    AdrLong = EvalIntExpression(ArgStr[2], Int32, &OK);
+    AdrLong = EvalStrIntExpression(&ArgStr[2], Int32, &OK);
     if (FirstPassUnknown)
       AdrLong &= 0xffff;
     if ((!IsHi) && ((AdrLong >> 16) == 0xffff))
@@ -577,16 +577,16 @@ static void DecodeCONVERT(Word Code)
    && DecodeArgReg(2, &Src1))
   {
     Src2 = 0;
-    Src2 += EvalIntExpression(ArgStr[3], UInt1, &OK) << 7;
+    Src2 += EvalStrIntExpression(&ArgStr[3], UInt1, &OK) << 7;
     if (OK)
     {
-      Src2 += EvalIntExpression(ArgStr[4], UInt3, &OK) << 4;
+      Src2 += EvalStrIntExpression(&ArgStr[4], UInt3, &OK) << 4;
       if (OK)
       {
-        Src2 += EvalIntExpression(ArgStr[5], UInt2, &OK) << 2;
+        Src2 += EvalStrIntExpression(&ArgStr[5], UInt2, &OK) << 2;
         if (OK)
         {
-          Src2 += EvalIntExpression(ArgStr[6], UInt2, &OK);
+          Src2 += EvalStrIntExpression(&ArgStr[6], UInt2, &OK);
           if (OK)
           {
             CodeLen = 4;
@@ -624,7 +624,7 @@ static void DecodeINV_IRETINV(Word Code)
     {
       Src1 = 0; OK = True;
     }
-    else Src1 = EvalIntExpression(ArgStr[1], UInt2, &OK);
+    else Src1 = EvalStrIntExpression(&ArgStr[1], UInt2, &OK);
     if (OK)
     {
       CodeLen = 4;
@@ -677,7 +677,7 @@ static void DecodeMTSRIM(Word Code)
 
   if (ChkArgCnt(2, 2) && DecodeArgSpReg(1, &Dest))
   {
-    Src1 = EvalIntExpression(ArgStr[2], UInt16, &OK);
+    Src1 = EvalStrIntExpression(&ArgStr[2], UInt16, &OK);
     if (OK)
     {
       DAsmCode[0] = 0x04000000 + ((Src1 & 0xff00) << 8) + (Dest << 8) + Lo(Src1);
@@ -729,9 +729,9 @@ static void DecodeEMULATED(Word Code)
   if (ChkArgCnt(1, ArgCntMax))
     for (z = 1; z <= ArgCnt; z++)
     {
-      NLS_UpString(ArgStr[z]);
-      if (!StringListPresent(Emulations, ArgStr[z]))
-        AddStringListLast(&Emulations, ArgStr[z]);
+      NLS_UpString(ArgStr[z].Str);
+      if (!StringListPresent(Emulations, ArgStr[z].Str))
+        AddStringListLast(&Emulations, ArgStr[z].Str);
     }
 }
 
@@ -940,7 +940,7 @@ static void MakeCode_29K(void)
 
   /* Nullanweisung */
 
-  if (Memo("") && (*AttrPart == '\0') && (ArgCnt == 0))
+  if (Memo("") && !*AttrPart.Str && (ArgCnt == 0))
     return;
 
   /* Pseudoanweisungen */

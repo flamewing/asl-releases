@@ -76,11 +76,11 @@ static CPUVar CPU16C64, CPU16C84, CPU16C873, CPU16C874, CPU16C876, CPU16C877;
 /*--------------------------------------------------------------------------*/
 /* helper functions */
 
-static Word EvalFExpression(char *pAsc, Boolean *pOK)
+static Word EvalFExpression(tStrComp *pArg, Boolean *pOK)
 {
   LongInt h;
 
-  h = EvalIntExpression(pAsc, UInt9, pOK);
+  h = EvalStrIntExpression(pArg, UInt9, pOK);
   if (*pOK)
   {
     ChkSpace(SegData);
@@ -99,7 +99,7 @@ static void DecodeFixed(Word Code)
   {
     WAsmCode[CodeLen++] = Code;
     if (Memo("OPTION"))
-      WrError(130);
+      WrError(ErrNum_Obsolete);
   }
 }
 
@@ -110,7 +110,7 @@ static void DecodeLit(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    AdrWord = EvalIntExpression(ArgStr[1], Int8, &OK);
+    AdrWord = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
     if (OK)
       WAsmCode[CodeLen++] = Code | Lo(AdrWord);
   }
@@ -126,7 +126,7 @@ static void DecodeAri(Word Code)
 
   if (ChkArgCnt(1, 2))
   {
-    AdrWord = EvalFExpression(ArgStr[1], &OK);
+    AdrWord = EvalFExpression(&ArgStr[1], &OK);
     if (OK)
     {
       WAsmCode[0] = Code | AdrWord;
@@ -135,16 +135,16 @@ static void DecodeAri(Word Code)
         WAsmCode[0] |= DefaultDir;
         CodeLen = 1;
       }
-      else if (!strcasecmp(ArgStr[2], "W"))
+      else if (!strcasecmp(ArgStr[2].Str, "W"))
         CodeLen = 1;
-      else if (!strcasecmp(ArgStr[2], "F"))
+      else if (!strcasecmp(ArgStr[2].Str, "F"))
       {
          WAsmCode[0] |= 0x80;
         CodeLen = 1;
       }
       else
       {
-        AdrWord = EvalIntExpression(ArgStr[2], UInt1, &OK);
+        AdrWord = EvalStrIntExpression(&ArgStr[2], UInt1, &OK);
         if (OK)
         {
           WAsmCode[0] |= AdrWord << 7;
@@ -162,10 +162,10 @@ static void DecodeBit(Word Code)
 
   if (ChkArgCnt(2, 2))
   {
-    AdrWord = EvalIntExpression(ArgStr[2], UInt3, &OK);
+    AdrWord = EvalStrIntExpression(&ArgStr[2], UInt3, &OK);
     if (OK)
     {
-      WAsmCode[0] = EvalFExpression(ArgStr[1], &OK);
+      WAsmCode[0] = EvalFExpression(&ArgStr[1], &OK);
       if (OK)
       {
         WAsmCode[0] |= Code | (AdrWord << 7);
@@ -182,7 +182,7 @@ static void DecodeF(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    AdrWord = EvalFExpression(ArgStr[1], &OK);
+    AdrWord = EvalFExpression(&ArgStr[1], &OK);
     if (OK)
       WAsmCode[CodeLen++] = Code | AdrWord;
   }
@@ -197,14 +197,14 @@ static void DecodeTRIS(Word Index)
   if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
-    AdrWord=EvalIntExpression(ArgStr[1], UInt3, &OK);
+    AdrWord=EvalStrIntExpression(&ArgStr[1], UInt3, &OK);
     if (FirstPassUnknown)
       AdrWord = 5;
     if (OK)
       if (ChkRange(AdrWord, 5, 6))
       {
         WAsmCode[CodeLen++] = 0x0060 | AdrWord;
-        ChkSpace(SegData); WrError(130);
+        ChkSpace(SegData); WrError(ErrNum_Obsolete);
       }
   }
 }
@@ -216,10 +216,10 @@ static void DecodeJump(Word Index)
 
   if (ChkArgCnt(1, 1))
   {
-    AdrWord = EvalIntExpression(ArgStr[1], Int16, &OK);
+    AdrWord = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
     if (OK)
     {
-      if (AdrWord > (SegLimits[SegCode] - AddCodeSpace)) WrError(1320);
+      if (AdrWord > (SegLimits[SegCode] - AddCodeSpace)) WrError(ErrNum_OverRange);
       else
       {
         Word XORVal, Mask, RegBit;
@@ -268,11 +268,11 @@ static void DecodeZERO(Word Index)
   if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
-    Size = EvalIntExpression(ArgStr[1], Int16, &ValOK);
-    if (FirstPassUnknown) WrError(1820);
+    Size = EvalStrIntExpression(&ArgStr[1], Int16, &ValOK);
+    if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
     if ((ValOK) && (!FirstPassUnknown))
     {
-      if (SetMaxCodeLen(Size << Shift)) WrError(1920);
+      if (SetMaxCodeLen(Size << Shift)) WrError(ErrNum_CodeOverflow);
       else
       {
         CodeLen = Size;
@@ -291,7 +291,7 @@ static void DecodeBANKSEL(Word Index)
 
   if (ChkArgCnt(1, 1))
   {
-    Adr = EvalIntExpression(ArgStr[1], UInt9, &ValOK);
+    Adr = EvalStrIntExpression(&ArgStr[1], UInt9, &ValOK);
     if (ValOK)
     {
       WAsmCode[0] = 0x1283 | ((Adr &  0x80) << 3); /* BxF Status, 5 */

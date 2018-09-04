@@ -8,30 +8,30 @@
 ;* Target...: TLCS900-Family (TOSHIBA)        Compiler.: AS      V1.39p1 *
 ;* Project..: General Purpose / e.g. TMP96C141F / Watt Ihr Volt          *
 ;*                                                                       *
-;* Function.: Mit dieser Routine kann man die AusfÅhrungszeit die        *
-;*            ein Programm(teil) benîtigt ermitteln.                     *
+;* Function.: Mit dieser Routine kann man die Ausfuehrungszeit die       *
+;*            ein Programm(teil) benoetigt ermitteln.                    *
 ;*            Die Zeit wird mit Timer4 und CAP1 davon gemessen, d.h.     *
 ;*            dieser darf innerhalb des gemessenen Programm(teil)s       *
 ;*            nicht (!) benutzt werden.                                  *
 ;*            !!! Alle Zeiten beziehen sich auf einen 14,7456MHz Quarz!! *
 ;*            Zur Ausgabe des Messwertes werden Monitor-Routinen benutzt,*
 ;*            deshalb kann es auch nur unter Anwendung von diesem zur    *
-;*            AusfÅhrung gebracht werden.                                *
-;*            Wenn ein Programm(teil) getestet wird, dessen AusfÅhrungs- *
-;*            zeit unbekannt ist, sollte man die 8,681Ês Auflîsung wÑhlen*
+;*            Ausfuehrung gebracht werden.                               *
+;*            Wenn ein Programm(teil) getestet wird, dessen Ausfuehrungs-*
+;*            zeit unbekannt ist, sollte man die 8,681us Aufloesung waehlen *
 ;*            um einen Overrun des Counters zu verhindern. Wenn der Wert *
-;*            entsprechend klein ist ( <0FFF ), kann man die 0,543Ês Auf-*
-;*            lîsung wÑhlen um genauere Werte zu bekommen.               *
-;*            Au·erdem ist die Ermittlung der 16 grî·ten und 16 kleinsten*
-;*            Werte die bei mehreren DurchlÑufen erzielt wurden mîglich! *
-;*            Man kann so einige 1000 DurchlÑufe fahren mit immer unter- *
+;*            entsprechend klein ist ( <0FFF ), kann man die 0,543us Auf-*
+;*            loesung waehlen um genauere Werte zu bekommen.             *
+;*            Ausserdem ist die Ermittlung der 16 groessten und 16 kleinsten *
+;*            Werte die bei mehreren Durchlaeufen erzielt wurden moeglich! *
+;*            Man kann so einige 1000 Durchlaeufe fahren mit immer unter- *
 ;*            schiedlichen Randbedingungen auf die der zu testende Pro-  *
-;*            teil entsprechend reagiert und auch Zeit benîtigt.         *
+;*            teil entsprechend reagiert und auch Zeit benoetigt.        *
 ;*            So hat man sicher die minimale und maximale Laufzeit.      *
 ;*                                                                       *
 ;*            Bei allgemeiner Verwendung:                                *
-;*            Max.Me·wert=0FFFFH =  35.585Ês bei 0,543Ês Auflîsung       *
-;*            Max.Me·wert=0FFFFH = 568.909Ês bei 8,681Ês Auflîsung       *
+;*            Max.Me·wert=0FFFFH =  35.585us bei 0,543us Aufloesung      *
+;*            Max.Me·wert=0FFFFH = 568.909us bei 8,681us Aufloesung      *
 ;*                                                                       *
 ;* Hardware.: getested auf Micro-ICE TLCS900 mit 14,7456MHz Quarz !!!!   *
 ;*                                                                       *
@@ -41,11 +41,11 @@
 ;*  CPU_TIME     Uhr starten        ------              0 Byte           *
 ;*  CPU_STOP     Uhr stoppen        Zeit+Statistik      8 Byte           *
 ;*                                                                       *
-;*  - Der Prozessor mu· sich im Maximum-Modus befinden                   *
-;*  - Symbol BigTime definieren fÅr grî·ere Auflîsung                    *
+;*  - Der Prozessor muss sich im Maximum-Modus befinden                  *
+;*  - Symbol BigTime definieren fuer groessere Aufloesung                *
 ;*  - Da die Routinen lokale Labels verwenden, ist mindestens AS 1.39    *
 ;*    erforderlich                                                       *
-;*  - MACROS.INC mu· vorher, CONOUT.INC irgendwo eingebunden werden      *
+;*  - MACROS.INC muss vorher, CONOUT.INC irgendwo eingebunden werden     *
 ;*************************************************************************
 
 ;-------------------------------------------------------------------------
@@ -68,13 +68,13 @@ Overhead         equ    9
                 endif
 
 CPU_TI_FAA      db    40h dup (?)       ; FeldAnfangsAdresse, ab hier wer-
-                                        ; den 40H (64) RAM-Zellen benîtigt
+                                        ; den 40H (64) RAM-Zellen benoetigt
                                         ; gleich 2 * 16 Worte
 CPU_TI_CR       dd    ?                 ; CPU_TIME-Control-Register,
-                                        ; wird noch nicht benîtigt!!!
+                                        ; wird noch nicht benoetigt!!!
 
 ;*************************************************************************
-;Dieser Aufruf gehîrt in den Initialisierungsbereich des zu testenden
+;Dieser Aufruf gehoert in den Initialisierungsbereich des zu testenden
 ;Programmabschnittes!!
 
                 proc    CPU_TI_INI
@@ -83,20 +83,20 @@ CPU_TI_CR       dd    ?                 ; CPU_TIME-Control-Register,
 
                 PUSH    XDE             ;Wird gleich benutzt
                 PUSH    BC              ;Wird gleich benutzt
-                LD      B,10H           ;16 Wîrter fÅr Max.Werte werden gebraucht
+                LD      B,10H           ;16 Woerter fuer Max.Werte werden gebraucht
                 LD      XDE,CPU_TI_FAA  ;FeldAnfangsAdresse laden
-CPU_TI_INI1:    LDW     (XDE),00000H    ;Feldzelle fÅr Max.Werte initalisieren
-                INC     2,XDE           ;nÑchste Max.Wert-Feldzelle
+CPU_TI_INI1:    LDW     (XDE),00000H    ;Feldzelle fuer Max.Werte initalisieren
+                INC     2,XDE           ;naechste Max.Wert-Feldzelle
                                         ;adressieren
                 DJNZ    CPU_TI_INI1     ;Alle Max.Werte initialisiert?
-                LD      B,10H           ;16 Wîrter fÅr Min.Werte werden gebraucht
-CPU_TI_INI2:    LDW     (XDE),0FFFFH    ;Feldzelle fÅr Min.Werte initalisieren
-                INC     2,XDE           ;nÑchste Max.Wert-Feldzelle
+                LD      B,10H           ;16 Woerter fuer Min.Werte werden gebraucht
+CPU_TI_INI2:    LDW     (XDE),0FFFFH    ;Feldzelle fuer Min.Werte initalisieren
+                INC     2,XDE           ;naechste Max.Wert-Feldzelle
                                         ;adressieren
                 DJNZ    CPU_TI_INI2     ;Alle Min.Werte initialisiert?
                 POP     BC              ;Und wieder restaurieren
                 POP     XDE             ;hier auch...
-                RET                     ;ZurÅck zum Aufruf!
+                RET                     ;Zurueck zum Aufruf!
                 endp
 
 ;*************************************************************************
@@ -125,7 +125,7 @@ CPU_TI_INI2:    LDW     (XDE),0FFFFH    ;Feldzelle fÅr Min.Werte initalisieren
                 RES     5,(T4MOD)         ;Capture1 grabs count
                 CALL    CPU_TI_SOUT       ;Einzelausgabe des gemessenen Wertes
                 CALL    CPU_TI_SOR        ;gemessenen Wert ins Feld sortieren
-                RET                       ;ZurÅck zum Aufruf!
+                RET                       ;Zurueck zum Aufruf!
                 endp
 
 ;*************************************************************************
@@ -136,19 +136,19 @@ CPU_TI_INI2:    LDW     (XDE),0FFFFH    ;Feldzelle fÅr Min.Werte initalisieren
 CPU_TI_SOUT:    PUSH    A                 ; needed little later
                 PUSH    F                 ; needed little later
                 push    bc                ; needed little later
-                ld      wa,(cap1l)        ; gemesser Wert
+                ld      wa,(cap1l)        ; gemessener Wert
                 call    WriteTime
                 pop     bc                ; back to the roots ...
                 POP     F 
                 POP     A
-                RET                       ; ZurÅck zum Aufruf!
+                RET                       ; Zurueck zum Aufruf!
 
 ;*************************************************************************
 ;Hier werden die ermittelten Werte sortiert abgelegt!
-;Jeweils am Feldanfang steht der grî·te und der kleinste Wert.
+;Jeweils am Feldanfang steht der groesste und der kleinste Wert.
 ;Falls ein Wert einem anderen im Feld entspricht (gleicher Messwert)
 ;wird dieser nicht nochmal eingetragen!!!! 
-;!!Achtung diese Routine benîtigt max. 145Ês (14,7456MHz Quarz) 
+;!!Achtung diese Routine benoetigt max. 145Ês (14,7456MHz Quarz) 
 ;  im worst case!! Aber nur wenn Daten und Code 16Bit breit sind 
 ;  und keine Waitstates zugeschaltet sind (Micro-ICE TLCS900 default RAM)!
 
@@ -156,45 +156,45 @@ CPU_TI_SOR:     PUSH    HL              ;Wird gleich benutzt
                 PUSH    BC              ;Wird gleich benutzt
                 PUSH    XDE             ;Wird gleich benutzt
                                         ;Max.Werte sortiert ablegen!!!
-                LD      B,10H           ;16 Wîrter enthÑlt Max.Wert-Feld
+                LD      B,10H           ;16 Woerter enthaelt Max.Wert-Feld
                 LD      HL,(CAP1L)      ;gemessenen Wert aus Capture-Reg. holen
                 LD      XDE,CPU_TI_FAA  ;erste Max.Wert-Feldzelle adressieren
 CPU_TI_SOR1:    CP      HL,(XDE)        ;Wert mit Feldinhalt vergleichen
                 JR      ULT,CPU_TI_SOR2 ;Ist Wert kleiner als Feldinhalt?
                 JR      Z,CPU_TI_SOR3   ;Ist Wert gleich Feldinhalt? Abbrechen!
                 EX      (XDE),HL        ;Nein-->Wert mit Feldinhalt tauschen!
-CPU_TI_SOR2:    INC     2,XDE           ;nÑchste Feldzelle adressieren
+CPU_TI_SOR2:    INC     2,XDE           ;naechste Feldzelle adressieren
                 DJNZ    B,CPU_TI_SOR1   ;Alle 16 Max.Werte kontrolliert?
                                         ;Min.Werte sortiert ablegen!!!
-CPU_TI_SOR3:    LD      B,10H           ;16 Wîrter enthÑlt Min.Wert-Feld
+CPU_TI_SOR3:    LD      B,10H           ;16 Woerter enthaelt Min.Wert-Feld
                 LD      HL,(CAP1L)      ;gemessenen Wert aus Capture-Reg. holen
                 LD      XDE,CPU_TI_FAA+20H ;erste Min.Wert-Feldzelle adressieren
 CPU_TI_SOR4:    CP      HL,(XDE)        ;Wert mit Feldinhalt vergleichen
-                JR      UGT,CPU_TI_SOR5 ;Ist Wert grî·er als Feldinhalt?
+                JR      UGT,CPU_TI_SOR5 ;Ist Wert groesser als Feldinhalt?
                 JR      Z,CPU_TI_SOR6   ;Ist Wert gleich Feldinhalt? Abbrechen!
                 EX      (XDE),HL        ;Nein-->Wert mit Feldinhalt tauschen!
-CPU_TI_SOR5:    INC     2,XDE           ;nÑchste Feldzelle adressieren
+CPU_TI_SOR5:    INC     2,XDE           ;naechste Feldzelle adressieren
                 DJNZ    B,CPU_TI_SOR4   ;Alle 16 Min.Werte kontrolliert?
 CPU_TI_SOR6:    POP     XDE             ;Und wieder restaurieren
                 POP     BC              ;wieder restaurieren
                 POP     HL              ;hier auch...
-                RET                     ;ZurÅck zum Aufruf!
+                RET                     ;Zurueck zum Aufruf!
 
 ;*************************************************************************
 ;Hier werden die im Feld abgelegten Werte ausgeben. 
 
-CPU_TI_MOUT:                            ;Mu· noch geschrieben werden!
-                RET                     ;ZurÅck zum Aufruf!
+CPU_TI_MOUT:                            ;Muss noch geschrieben werden!
+                RET                     ;Zurueck zum Aufruf!
 
 ;*************************************************************************
 ; eine Zeitdifferenz in WA umrechnen und ausgeben
-; wegen der Auflîsung der Timer ist die letzte Stelle hinter dem Komma
-; bei hoher Auflîsung mit Vorsicht zu genie·en
+; wegen der Aufloesung der Timer ist die letzte Stelle hinter dem Komma
+; bei hoher Aufloesung mit Vorsicht zu geniessen
 
 WriteTime:      push    xwa             ; Register retten
                 push    bc
                 sub     wa,Overhead     ; Zeit korrigieren
-                ifdef   BigTime         ; Fall 1: niedrige Auflîsung
+                ifdef   BigTime         ; Fall 1: niedrige Aufloesung
                  mul    xwa,8681        ; -->Nanos in XWA
                  add    xwa,5000        ; !!Rundung!!
                  div    xwa,10000       ; Nanos , einzelne Mikros wegschmei·en
@@ -209,7 +209,7 @@ WriteTime:      push    xwa             ; Register retten
                  call   WriteDec
                  call   PSTR
                  db     " Milli",StrTerm
-                elseif                  ; Fall 2: hohe Auflîsung
+                elseif                  ; Fall 2: hohe Aufloesung
                  mul    xwa,543         ; -->Nanosekunden in XWA
                  div    xwa,1000        ; -->Nanos in QWA, Mikros in WA
                  ld     bc,2005h        ; Mikros 5-stellig mit Blanks
@@ -230,7 +230,7 @@ NoErr:           ld     bc,3001h        ; einstellig ausgeben
                 endif
                 call    PSTR
                 db      "sekunden",StrTerm ; gemeinsamer Rest
-                pop     bc              ; Register zurÅck
+                pop     bc              ; Register zurueck
                 pop     xwa
                 ret
 

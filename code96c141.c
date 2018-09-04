@@ -161,7 +161,7 @@ static void ChkMaximum(Boolean MustMax, Byte *Result)
   if (Maximum != MustMax)
   {
     *Result = 1;
-    WrError((MustMax) ? 1997 : 1996);
+    WrError((MustMax) ? ErrNum_OnlyInMaxmode : ErrNum_NotInMaxmode);
   }
 }
 
@@ -240,7 +240,7 @@ static Byte CodeEReg(char *Asc, Byte *ErgNo, Byte *ErgSize)
         }
         if (((*Asc == 'Q') || (Maximum)) && (Asc[2] > '3'))
         {
-          WrError(1320);
+          WrError(ErrNum_OverRange);
           Result = 1;
         }
         *ErgSize = 0;
@@ -265,7 +265,7 @@ static Byte CodeEReg(char *Asc, Byte *ErgNo, Byte *ErgSize)
         }
         if (((*Asc == 'Q') || (Maximum)) && (Asc[3] > '3'))
         {
-          WrError(1320);
+          WrError(ErrNum_OverRange);
           Result = 1;
         }
         *ErgSize = 1;
@@ -284,7 +284,7 @@ static Byte CodeEReg(char *Asc, Byte *ErgNo, Byte *ErgSize)
        ChkMaximum(True, &Result);
        if (Asc[3] > '3')
        {
-         WrError(1320); Result = 1;
+         WrError(ErrNum_OverRange); Result = 1;
        }
        *ErgSize = 2;
        return Result;
@@ -382,7 +382,7 @@ static void ChkL(CPUVar Must, Byte *Result)
 {
   if (MomCPU != Must)
   {
-    WrError(1440);
+    WrError(ErrNum_InvCtrlReg);
     *Result = 0;
   }
 }
@@ -455,7 +455,7 @@ static void SetOpSize(ShortInt NewSize)
     OpSize = NewSize;
   else if (OpSize != NewSize)
   {
-    WrError(1131);
+    WrError(ErrNum_ConfOpSizes);
     AdrType = ModNone;
   }
 }
@@ -491,27 +491,23 @@ static void ChkAdr(Byte Erl)
   if (AdrType != ModNone)
    if (!(Erl & (1 << AdrType)))
    {
-     WrError(1350);
+     WrError(ErrNum_InvAddrMode);
      AdrType = ModNone;
    }
 }
 
-static void DecodeAdr(char *Asc, Byte Erl)
+static void DecodeAdr(const tStrComp *pArg, Byte Erl)
 {
-  String HAsc;
   Byte HNum, HSize;
-  Boolean OK, NegFlag, NNegFlag, MustInd, FirstFlag;
-  Byte BaseReg, BaseSize;
-  Byte IndReg, IndSize;
-  Byte PartMask;
-  LongInt DispPart, DispAcc;
-  char *MPos, *PPos, *EPos;
+  LongInt DispAcc;
+  Boolean OK, MustInd;
+  int ArgLen;
 
   AdrType = ModNone;
 
   /* Register ? */
 
-  switch (CodeEReg(Asc, &HNum, &HSize))
+  switch (CodeEReg(pArg->Str, &HNum, &HSize))
   {
     case 1:
       ChkAdr(Erl);
@@ -531,7 +527,7 @@ static void DecodeAdr(char *Asc, Byte Erl)
 
   /* Steuerregister ? */
 
-  if (CodeCReg(Asc, &HNum, &HSize) == 2)
+  if (CodeCReg(pArg->Str, &HNum, &HSize) == 2)
   {
     AdrType = ModCReg;
     AdrMode = HNum;
@@ -542,14 +538,17 @@ static void DecodeAdr(char *Asc, Byte Erl)
 
   /* Predekrement ? */
 
-  if ((strlen(Asc) > 4)
-   && (Asc[strlen(Asc) - 1] == ')')
-   && (!strncmp(Asc, "(-", 2)))
+  ArgLen = strlen(pArg->Str);
+  if ((ArgLen > 4)
+   && (pArg->Str[ArgLen - 1] == ')')
+   && (!strncmp(pArg->Str, "(-", 2)))
   {
-    strcpy(HAsc, Asc + 2);
-    HAsc[strlen(HAsc) - 1] = '\0';
-    if (CodeEReg(HAsc, &HNum, &HSize) != 2) WrError(1350);
-    else if (!IsRegBase(HNum, HSize)) WrError(1350);
+    tStrComp RegComp;
+
+    StrCompRefRight(&RegComp, pArg, 2);
+    StrCompShorten(&RegComp, 1);
+    if (CodeEReg(RegComp.Str, &HNum, &HSize) != 2) WrError(ErrNum_InvAddrMode);
+    else if (!IsRegBase(HNum, HSize)) WrError(ErrNum_InvAddrMode);
     else
     {
       AdrType = ModMem;
@@ -565,14 +564,16 @@ static void DecodeAdr(char *Asc, Byte Erl)
 
   /* Postinkrement ? */
 
-  if ((strlen(Asc) > 4)
-   && (Asc[0] == '(')
-   && (!strncmp(Asc + strlen(Asc) - 2, "+)", 2)))
+  if ((ArgLen > 4)
+   && (pArg->Str[0] == '(')
+   && (!strncmp(pArg->Str + ArgLen - 2, "+)", 2)))
   {
-    strcpy(HAsc, Asc + 1);
-    HAsc[strlen(HAsc) - 2] = '\0';
-    if (CodeEReg(HAsc, &HNum, &HSize) != 2) WrError(1350);
-    else if (!IsRegBase(HNum, HSize)) WrError(1350);
+    tStrComp RegComp;
+
+    StrCompRefRight(&RegComp, pArg, 1);
+    StrCompShorten(&RegComp, 2);
+    if (CodeEReg(RegComp.Str, &HNum, &HSize) != 2) WrError(ErrNum_InvAddrMode);
+    else if (!IsRegBase(HNum, HSize)) WrError(ErrNum_InvAddrMode);
     else
     {
       AdrType = ModMem;
@@ -588,9 +589,15 @@ static void DecodeAdr(char *Asc, Byte Erl)
 
   /* Speicheroperand ? */
 
-  if (IsIndirect(Asc))
+  if (IsIndirect(pArg->Str))
   {
-    char *Rest, *HAsc;
+    LongInt DispPart;
+    char *EPos;
+    tStrComp Arg, Remainder;
+    Boolean NegFlag, NNegFlag, FirstFlag;
+    Byte BaseReg, BaseSize;
+    Byte IndReg, IndSize;
+    Byte PartMask;
 
     NegFlag = False;
     NNegFlag = False;
@@ -598,46 +605,29 @@ static void DecodeAdr(char *Asc, Byte Erl)
     PartMask = 0;
     DispAcc = 0;
     BaseReg = IndReg = BaseSize = IndSize = 0xff;
-    Rest = Asc + 1;
-    Rest[strlen(Rest) - 1] = '\0';
+
+    StrCompRefRight(&Arg, pArg, 1);
+    StrCompShorten(&Arg, 1);
 
     do
     {
-      MPos = QuotPos(Rest, '-');
-      PPos = QuotPos(Rest, '+');
-      if ((PPos) && ((!MPos) || (PPos<MPos)))
+      EPos = QuotMultPos(Arg.Str, "+-");
+      NNegFlag = EPos && (*EPos == '-');
+      if ((EPos == Arg.Str) || (EPos == Arg.Str + strlen(Arg.Str) - 1))
       {
-        EPos = PPos;
-        NNegFlag = False;
-      }
-      else if ((MPos) && ((!PPos) || (MPos<PPos)))
-      {
-        EPos = MPos;
-        NNegFlag = True;
-      }
-      else
-        EPos = NULL;
-      if ((EPos == Rest) || (EPos == Rest + strlen(Rest) - 1))
-      {
-        WrError(1350);
+        WrError(ErrNum_InvAddrMode);
         return;
       }
-      HAsc = Rest;
       if (EPos)
-      {
-        *EPos = '\0';
-        Rest = EPos + 1;
-      }
-      else
-        Rest = NULL;
-      KillPrefBlanks(HAsc);
-      KillPostBlanks(HAsc);
+        StrCompSplitRef(&Arg, &Remainder, &Arg, EPos);
+      KillPrefBlanksStrComp(&Arg);
+      KillPostBlanksStrComp(&Arg);
 
-      switch (CodeEReg(HAsc, &HNum, &HSize))
+      switch (CodeEReg(Arg.Str, &HNum, &HSize))
       {
         case 0:
           FirstPassUnknown = False;
-          DispPart = EvalIntExpression(HAsc, Int32, &OK);
+          DispPart = EvalStrIntExpression(&Arg, Int32, &OK);
           if (FirstPassUnknown) FirstFlag = True;
           if (!OK) return;
           if (NegFlag)
@@ -651,7 +641,7 @@ static void DecodeAdr(char *Asc, Byte Erl)
         case 2:
           if (NegFlag)
           {
-            WrError(1350); return;
+            WrError(ErrNum_InvAddrMode); return;
           }
           else
           {
@@ -669,7 +659,7 @@ static void DecodeAdr(char *Asc, Byte Erl)
             {
               if (PartMask & 2)
               {
-                WrError(1350); return;
+                WrError(ErrNum_InvAddrMode); return;
               }
               else
               {
@@ -682,7 +672,7 @@ static void DecodeAdr(char *Asc, Byte Erl)
             {
               if (PartMask & 4)
               {
-                WrError(1350); return;
+                WrError(ErrNum_InvAddrMode); return;
               }
               else
               {
@@ -697,8 +687,10 @@ static void DecodeAdr(char *Asc, Byte Erl)
 
       NegFlag = NNegFlag;
       NNegFlag = False;
+      if (EPos)
+        Arg = Remainder;
     }
-    while (Rest);
+    while (EPos);
 
     if ((DispAcc == 0) && (PartMask != 1))
       PartMask &= 6;
@@ -711,7 +703,7 @@ static void DecodeAdr(char *Asc, Byte Erl)
       case 2:
       case 3:
       case 7:
-        WrError(1350);
+        WrError(ErrNum_InvAddrMode);
         break;
       case 1:
         if (DispAcc<=0xff)
@@ -738,7 +730,7 @@ static void DecodeAdr(char *Asc, Byte Erl)
           AdrVals[1] = (DispAcc >>  8) & 0xff;
           AdrVals[2] = (DispAcc >> 16) & 0xff;
         }
-        else WrError(1925);
+        else WrError(ErrNum_AdrOverflow);
         break;
       case 4:
         if (IsRegCurrent(BaseReg, BaseSize, &AdrMode))
@@ -771,7 +763,7 @@ static void DecodeAdr(char *Asc, Byte Erl)
           AdrVals[1] = DispAcc & 0xff;
           AdrVals[2] = (DispAcc >> 8) & 0xff;
         }
-        else WrError(1320);
+        else WrError(ErrNum_OverRange);
         break;
       case 6:
         AdrType = ModMem;
@@ -792,10 +784,10 @@ static void DecodeAdr(char *Asc, Byte Erl)
   switch (OpSize)
   {
     case -1:
-      WrError(1132); 
+      WrError(ErrNum_UndefOpSizes); 
       break;
     case 0:
-      AdrVals[0] = EvalIntExpression(Asc, Int8, &OK);
+      AdrVals[0] = EvalStrIntExpression(pArg, Int8, &OK);
       if (OK)
       {
         AdrType = ModImm;
@@ -803,7 +795,7 @@ static void DecodeAdr(char *Asc, Byte Erl)
       }
       break;
     case 1:
-      DispAcc = EvalIntExpression(Asc, Int16, &OK);
+      DispAcc = EvalStrIntExpression(pArg, Int16, &OK);
       if (OK)
       {
         AdrType = ModImm;
@@ -813,7 +805,7 @@ static void DecodeAdr(char *Asc, Byte Erl)
       }
       break;
     case 2:
-      DispAcc = EvalIntExpression(Asc, Int32, &OK);
+      DispAcc = EvalStrIntExpression(pArg, Int32, &OK);
       if (OK)
       {
         AdrType = ModImm;
@@ -837,8 +829,8 @@ static void CorrMode(Byte Ref, Byte Adr)
 
 static Boolean ArgPair(const char *Val1, const char *Val2)
 {
-  return  (((!strcasecmp(ArgStr[1], Val1)) && (!strcasecmp(ArgStr[2], Val2)))
-        || ((!strcasecmp(ArgStr[1], Val2)) && (!strcasecmp(ArgStr[2], Val1))));
+  return  (((!strcasecmp(ArgStr[1].Str, Val1)) && (!strcasecmp(ArgStr[2].Str, Val2)))
+        || ((!strcasecmp(ArgStr[1].Str, Val2)) && (!strcasecmp(ArgStr[2].Str, Val1))));
 }
 
 static LongInt ImmVal(void)
@@ -882,7 +874,7 @@ static void CheckSup(void)
 {
   if ((MomCPU == CPU96C141)
    && (!SupAllowed))
-    WrError(50);
+    WrError(ErrNum_PrivOrder);
 }
 
 static int DecodeCondition(const char *pAsc)
@@ -908,8 +900,8 @@ static void DecodeMULA(Word Index)
 
   if (ChkArgCnt(1, 1))
   {
-    DecodeAdr(ArgStr[1], MModReg | MModXReg);
-    if ((AdrType != ModNone) && (OpSize != 2)) WrError(1130);
+    DecodeAdr(&ArgStr[1], MModReg | MModXReg);
+    if ((AdrType != ModNone) && (OpSize != 2)) WrError(ErrNum_InvOpsize);
     else switch (AdrType)
     {
       case ModReg:
@@ -933,17 +925,17 @@ static void DecodeJPCALL(Word Index)
 
   if (ChkArgCnt(1, 2))
   {
-    z = (ArgCnt == 1) ? DefaultCondition : DecodeCondition(ArgStr[1]);
-    if (z >= ConditionCnt) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
+    z = (ArgCnt == 1) ? DefaultCondition : DecodeCondition(ArgStr[1].Str);
+    if (z >= ConditionCnt) WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
     else
     {
       OpSize = 2;
-      DecodeAdr(ArgStr[ArgCnt], MModMem | MModImm);
+      DecodeAdr(&ArgStr[ArgCnt], MModMem | MModImm);
       if (AdrType == ModImm) 
       {
         if (AdrVals[3] != 0) 
         {
-          WrError(1320);
+          WrError(ErrNum_OverRange);
           AdrType=ModNone;
         }
         else if (AdrVals[2] != 0) 
@@ -987,17 +979,17 @@ static void DecodeJR(Word Index)
 
   if (ChkArgCnt(1, 2))
   {
-    z = (ArgCnt==1) ? DefaultCondition : DecodeCondition(ArgStr[1]);
-    if (z>=ConditionCnt) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
+    z = (ArgCnt==1) ? DefaultCondition : DecodeCondition(ArgStr[1].Str);
+    if (z >= ConditionCnt) WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
     else
     {
-      AdrLong = EvalIntExpression(ArgStr[ArgCnt], Int32, &OK);
+      AdrLong = EvalStrIntExpression(&ArgStr[ArgCnt], Int32, &OK);
       if (OK) 
       {
         if (Index==1) 
         {
           AdrLong -= EProgCounter() + 3;
-          if (((AdrLong > 0x7fffl) || (AdrLong < -0x8000l)) && (!SymbolQuestionable)) WrError(1330);
+          if (((AdrLong > 0x7fffl) || (AdrLong < -0x8000l)) && (!SymbolQuestionable)) WrError(ErrNum_DistTooBig);
           else
           {
             CodeLen = 3;
@@ -1007,14 +999,14 @@ static void DecodeJR(Word Index)
             if (!FirstPassUnknown) 
             {
               AdrLong++;
-              if ((AdrLong >= -128) && (AdrLong <= 127)) WrError(20);
+              if ((AdrLong >= -128) && (AdrLong <= 127)) WrError(ErrNum_ShortJumpPossible);
             }
           }
         }
         else
         {
           AdrLong -= EProgCounter() + 2;
-          if (((AdrLong > 127) || (AdrLong < -128)) && (!SymbolQuestionable)) WrError(1330);
+          if (((AdrLong > 127) || (AdrLong < -128)) && (!SymbolQuestionable)) WrError(ErrNum_DistTooBig);
           else
           {
             CodeLen = 2;
@@ -1035,10 +1027,10 @@ static void DecodeCALR(Word Index)
   
   if (ChkArgCnt(1, 1))
   {
-    AdrLong = EvalIntExpression(ArgStr[1], Int32, &OK) - (EProgCounter() + 3);
+    AdrLong = EvalStrIntExpression(&ArgStr[1], Int32, &OK) - (EProgCounter() + 3);
     if (OK) 
     {
-      if (((AdrLong < -32768) || (AdrLong > 32767)) && (!SymbolQuestionable)) WrError(1330);
+      if (((AdrLong < -32768) || (AdrLong > 32767)) && (!SymbolQuestionable)) WrError(ErrNum_DistTooBig);
       else
       {
         CodeLen = 3;
@@ -1057,8 +1049,8 @@ static void DecodeRET(Word Index)
 
   if (ChkArgCnt(0, 1))
   {
-    z = (ArgCnt == 0) ? DefaultCondition : DecodeCondition(ArgStr[1]);
-    if (z >= ConditionCnt) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
+    z = (ArgCnt == 0) ? DefaultCondition : DecodeCondition(ArgStr[1].Str);
+    if (z >= ConditionCnt) WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
     else if (z == DefaultCondition) 
     {
       CodeLen = 1;
@@ -1081,7 +1073,7 @@ static void DecodeRETD(Word Index)
 
   if (ChkArgCnt(1, 1))
   {
-    AdrWord = EvalIntExpression(ArgStr[1], Int16, &OK);
+    AdrWord = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
     if (OK) 
     {
       CodeLen = 3;
@@ -1107,16 +1099,16 @@ static void DecodeDJNZ(Word Index)
       OpSize = 0;
     }
     else
-      DecodeAdr(ArgStr[1], MModReg | MModXReg);
+      DecodeAdr(&ArgStr[1], MModReg | MModXReg);
     if (AdrType != ModNone) 
     {
-      if (OpSize == 2) WrError(1130);
+      if (OpSize == 2) WrError(ErrNum_InvOpsize);
       else
       {
-        AdrLong = EvalIntExpression(ArgStr[ArgCnt], Int32, &OK) - (EProgCounter() + 3 + Ord(AdrType == ModXReg));
+        AdrLong = EvalStrIntExpression(&ArgStr[ArgCnt], Int32, &OK) - (EProgCounter() + 3 + Ord(AdrType == ModXReg));
         if (OK) 
         {
-          if (((AdrLong < -128) || (AdrLong > 127)) && (!SymbolQuestionable)) WrError(1370);
+          if (((AdrLong < -128) || (AdrLong > 127)) && (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
           else 
            switch (AdrType)
            {
@@ -1147,8 +1139,8 @@ static void DecodeEX(Word Index)
 
   /* work around the parser problem related to the ' character */
 
-  if (!strncasecmp(ArgStr[2], "F\'", 2))
-    ArgStr[2][2] = '\0';
+  if (!strncasecmp(ArgStr[2].Str, "F\'", 2))
+    ArgStr[2].Str[2] = '\0';
 
   if (!ChkArgCnt(2, 2));
   else if ((ArgPair("F", "F\'")) || (ArgPair("F`", "F"))) 
@@ -1158,15 +1150,15 @@ static void DecodeEX(Word Index)
   }
   else
   {
-    DecodeAdr(ArgStr[1], MModReg | MModXReg | MModMem);
-    if (OpSize == 2) WrError(1130);
+    DecodeAdr(&ArgStr[1], MModReg | MModXReg | MModMem);
+    if (OpSize == 2) WrError(ErrNum_InvOpsize);
     else 
     {
       switch (AdrType)
       {
         case ModReg:
           HReg = AdrMode;
-          DecodeAdr(ArgStr[2], MModReg | MModXReg | MModMem);
+          DecodeAdr(&ArgStr[2], MModReg | MModXReg | MModMem);
           switch (AdrType)
           {
             case ModReg:
@@ -1190,7 +1182,7 @@ static void DecodeEX(Word Index)
           break;
         case ModXReg:
           HReg = AdrMode;
-          DecodeAdr(ArgStr[2], MModReg);
+          DecodeAdr(&ArgStr[2], MModReg);
           if (AdrType == ModReg) 
           {
             CodeLen = 3;
@@ -1204,7 +1196,7 @@ static void DecodeEX(Word Index)
           HReg = AdrCnt;
           BAsmCode[0] = AdrMode;
           memcpy(BAsmCode + 1, AdrVals, AdrCnt);
-          DecodeAdr(ArgStr[2], MModReg);
+          DecodeAdr(&ArgStr[2], MModReg);
           if (AdrType == ModReg) 
           {
             CodeLen = 2 + HReg;
@@ -1221,11 +1213,11 @@ static void DecodeEX(Word Index)
 static void DecodeBS1x(Word Index)
 {
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1], "A")) WrError(1135);
+  else if (strcasecmp(ArgStr[1].Str, "A")) WrError(ErrNum_InvOpType);
   else
   {
-    DecodeAdr(ArgStr[2], MModReg | MModXReg);
-    if (OpSize != 1) WrError(1130);
+    DecodeAdr(&ArgStr[2], MModReg | MModXReg);
+    if (OpSize != 1) WrError(ErrNum_InvOpsize);
     else switch (AdrType)
     {
       case ModReg:
@@ -1250,14 +1242,14 @@ static void DecodeLDA(Word Index)
 
   if (ChkArgCnt(2, 2))
   {
-    DecodeAdr(ArgStr[1], MModReg);
+    DecodeAdr(&ArgStr[1], MModReg);
     if (AdrType != ModNone) 
     {
-      if (OpSize < 1) WrError(1130);
+      if (OpSize < 1) WrError(ErrNum_InvOpsize);
       else
       {
         HReg = AdrMode;
-        DecodeAdr(ArgStr[2], MModMem);
+        DecodeAdr(&ArgStr[2], MModMem);
         if (AdrType != ModNone) 
         {
           CodeLen = 2 + AdrCnt;
@@ -1278,16 +1270,16 @@ static void DecodeLDAR(Word Index)
 
   if (ChkArgCnt(2, 2))
   {
-    AdrLong = EvalIntExpression(ArgStr[2], Int32, &OK) - (EProgCounter() + 4);
+    AdrLong = EvalStrIntExpression(&ArgStr[2], Int32, &OK) - (EProgCounter() + 4);
     if (OK) 
     {
-      if (((AdrLong < -32768) || (AdrLong > 32767)) && (!SymbolQuestionable)) WrError(1330);
+      if (((AdrLong < -32768) || (AdrLong > 32767)) && (!SymbolQuestionable)) WrError(ErrNum_DistTooBig);
       else
       {
-        DecodeAdr(ArgStr[1], MModReg);
+        DecodeAdr(&ArgStr[1], MModReg);
         if (AdrType != ModNone) 
         {
-          if (OpSize < 1) WrError(1130);
+          if (OpSize < 1) WrError(ErrNum_InvOpsize);
           else
           {
             CodeLen = 5;
@@ -1310,12 +1302,12 @@ static void DecodeLDC(Word Index)
 
   if (ChkArgCnt(2, 2))
   {
-    DecodeAdr(ArgStr[1], MModReg | MModXReg| MModCReg);
+    DecodeAdr(&ArgStr[1], MModReg | MModXReg| MModCReg);
     HReg = AdrMode;
     switch (AdrType)
     {
       case ModReg:
-        DecodeAdr(ArgStr[2], MModCReg);
+        DecodeAdr(&ArgStr[2], MModCReg);
         if (AdrType != ModNone) 
         {
           CodeLen = 3;
@@ -1325,7 +1317,7 @@ static void DecodeLDC(Word Index)
         }
         break;
       case ModXReg:
-        DecodeAdr(ArgStr[2], MModCReg);
+        DecodeAdr(&ArgStr[2], MModCReg);
         if (AdrType != ModNone) 
         {
           CodeLen = 4;
@@ -1336,7 +1328,7 @@ static void DecodeLDC(Word Index)
         };
         break;
       case ModCReg:
-        DecodeAdr(ArgStr[2], MModReg | MModXReg);
+        DecodeAdr(&ArgStr[2], MModReg | MModXReg);
         switch (AdrType)
         {
           case ModReg:
@@ -1365,13 +1357,13 @@ static void DecodeLDX(Word Index)
 
   if (ChkArgCnt(2, 2))
   {
-    DecodeAdr(ArgStr[1], MModMem);
+    DecodeAdr(&ArgStr[1], MModMem);
     if (AdrType != ModNone) 
     {
-      if (AdrMode != 0x40) WrError(1350);
+      if (AdrMode != 0x40) WrError(ErrNum_InvAddrMode);
       else
       {
-        BAsmCode[4] = EvalIntExpression(ArgStr[2], Int8, &OK);
+        BAsmCode[4] = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
         if (OK) 
         {
           CodeLen = 6;
@@ -1394,11 +1386,11 @@ static void DecodeLINK(Word Index)
 
   if (ChkArgCnt(2, 2))
   {
-    AdrWord = EvalIntExpression(ArgStr[2], Int16, &OK);
+    AdrWord = EvalStrIntExpression(&ArgStr[2], Int16, &OK);
     if (OK) 
     {
-      DecodeAdr(ArgStr[1], MModReg | MModXReg);
-      if ((AdrType != ModNone) && (OpSize != 2)) WrError(1130);
+      DecodeAdr(&ArgStr[1], MModReg | MModXReg);
+      if ((AdrType != ModNone) && (OpSize != 2)) WrError(ErrNum_InvOpsize);
       else 
        switch (AdrType)
        {
@@ -1431,12 +1423,12 @@ static void DecodeLD(Word Code)
 
   if (ChkArgCnt(2, 2))
   {
-    DecodeAdr(ArgStr[1], MModReg | MModXReg | MModMem);
+    DecodeAdr(&ArgStr[1], MModReg | MModXReg | MModMem);
     switch (AdrType)
     {
       case ModReg:
         HReg = AdrMode;
-        DecodeAdr(ArgStr[2], MModReg | MModXReg| MModMem| MModImm);
+        DecodeAdr(&ArgStr[2], MModReg | MModXReg| MModMem| MModImm);
         switch (AdrType)
         {
           case ModReg:
@@ -1478,7 +1470,7 @@ static void DecodeLD(Word Code)
         break;
       case ModXReg:
         HReg = AdrMode;
-        DecodeAdr(ArgStr[2], MModReg + MModImm);
+        DecodeAdr(&ArgStr[2], MModReg + MModImm);
         switch (AdrType)
         {
           case ModReg:
@@ -1515,7 +1507,7 @@ static void DecodeLD(Word Code)
         HReg = AdrCnt;
         MinOneIs0 = True;
         memcpy(BAsmCode + 1, AdrVals, AdrCnt);
-        DecodeAdr(ArgStr[2], MModReg | MModMem | MModImm);
+        DecodeAdr(&ArgStr[2], MModReg | MModMem | MModImm);
         switch (AdrType)
         {
          case ModReg:
@@ -1528,7 +1520,7 @@ static void DecodeLD(Word Code)
            if (OpSize == -1) OpSize = 0;
            ShDest = IsShort(BAsmCode[0]);
            ShSrc = IsShort(AdrMode);
-           if (!(ShDest || ShSrc)) WrError(1350);
+           if (!(ShDest || ShSrc)) WrError(ErrNum_InvAddrMode);
            else
            {
              if ((ShDest && (!ShSrc))) OK = True;
@@ -1616,10 +1608,10 @@ static void DecodeImm(Word Index)
       OK = True;
     }
     else
-      AdrWord = EvalIntExpression(ArgStr[1], Int8, &OK);
+      AdrWord = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
     if (OK) 
     {
-      if (((Maximum) && (AdrWord > ImmZ->MaxMax)) || ((!Maximum) && (AdrWord > ImmZ->MinMax))) WrError(1320);
+      if (((Maximum) && (AdrWord > ImmZ->MaxMax)) || ((!Maximum) && (AdrWord > ImmZ->MinMax))) WrError(ErrNum_OverRange);
       else if (Hi(ImmZ->Code) == 0) 
       {
         CodeLen = 1;
@@ -1653,10 +1645,10 @@ static void DecodeReg(Word Index)
 
   if (ChkArgCnt(1, 1))
   {
-    DecodeAdr(ArgStr[1], MModReg | MModXReg);
+    DecodeAdr(&ArgStr[1], MModReg | MModXReg);
     if (AdrType != ModNone) 
     {
-      if (((1 << OpSize) & RegZ->OpMask) == 0) WrError(1130);
+      if (((1 << OpSize) & RegZ->OpMask) == 0) WrError(ErrNum_InvOpsize);
       else if (AdrType == ModReg) 
       {
         BAsmCode[0] = Hi(RegZ->Code) + 8 + (OpSize << 4) + AdrMode;
@@ -1681,12 +1673,12 @@ static void DecodeALU2(Word Code)
   SetInstrOpSize(Hi(Code));
   if (ChkArgCnt(2, 2))
   {
-    DecodeAdr(ArgStr[1], MModReg | MModXReg | MModMem);
+    DecodeAdr(&ArgStr[1], MModReg | MModXReg | MModMem);
     switch (AdrType)
     {
       case ModReg:
         HReg=AdrMode;
-        DecodeAdr(ArgStr[2],MModReg | MModXReg | MModMem | MModImm);
+        DecodeAdr(&ArgStr[2], MModReg | MModXReg | MModMem | MModImm);
         switch (AdrType)
         {
           case ModReg:
@@ -1725,7 +1717,7 @@ static void DecodeALU2(Word Code)
         break;
       case ModXReg:
         HReg = AdrMode;
-        DecodeAdr(ArgStr[2], MModImm);
+        DecodeAdr(&ArgStr[2], MModImm);
         switch (AdrType)
         {
           case ModImm:
@@ -1752,7 +1744,7 @@ static void DecodeALU2(Word Code)
         HReg = AdrCnt;
         BAsmCode[0] = AdrMode;
         memcpy(BAsmCode + 1, AdrVals, AdrCnt);
-        DecodeAdr(ArgStr[2], MModReg | MModImm);
+        DecodeAdr(&ArgStr[2], MModReg | MModImm);
         switch (AdrType)
         {
           case ModReg:
@@ -1778,17 +1770,17 @@ static void DecodePUSH_POP(Word Code)
   SetInstrOpSize(Hi(Code));
 
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1], "F"))
+  else if (!strcasecmp(ArgStr[1].Str, "F"))
   {
     CodeLen = 1;
     BAsmCode[0] = 0x18 + Lo(Code);
   }
-  else if (!strcasecmp(ArgStr[1], "A"))
+  else if (!strcasecmp(ArgStr[1].Str, "A"))
   {
     CodeLen = 1;
     BAsmCode[0] = 0x14 + Lo(Code);
   }
-  else if (!strcasecmp(ArgStr[1], "SR"))
+  else if (!strcasecmp(ArgStr[1].Str, "SR"))
   {
     CodeLen = 1;
     BAsmCode[0] = 0x02 + Lo(Code);
@@ -1797,7 +1789,7 @@ static void DecodePUSH_POP(Word Code)
   else
   {
     MinOneIs0 = True;
-    DecodeAdr(ArgStr[1], MModReg | MModXReg | MModMem | (Lo(Code) ? 0 : MModImm));
+    DecodeAdr(&ArgStr[1], MModReg | MModXReg | MModMem | (Lo(Code) ? 0 : MModImm));
     switch (AdrType)
     {
       case ModReg:
@@ -1856,12 +1848,12 @@ static void DecodeShift(Word Code)
     OK = True;
     if (ArgCnt == 1) 
       HReg = 1;
-    else if (!strcasecmp(ArgStr[1], "A"))
+    else if (!strcasecmp(ArgStr[1].Str, "A"))
       HReg = 0xff;
     else
     {
       FirstPassUnknown = False;
-      HReg = EvalIntExpression(ArgStr[1], Int8, &OK);
+      HReg = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
       if (OK) 
       {
         if (FirstPassUnknown)
@@ -1870,7 +1862,7 @@ static void DecodeShift(Word Code)
         {
           if ((HReg == 0) || (HReg > 16)) 
           {
-            WrError(1320);
+            WrError(ErrNum_OverRange);
             OK = False;
           }
           else
@@ -1880,7 +1872,7 @@ static void DecodeShift(Word Code)
     }
     if (OK) 
     {
-      DecodeAdr(ArgStr[ArgCnt],MModReg | MModXReg | ((HReg == 0xff) ? 0 : MModMem));
+      DecodeAdr(&ArgStr[ArgCnt], MModReg | MModXReg | ((HReg == 0xff) ? 0 : MModMem));
       switch (AdrType)
       {
         case ModReg:
@@ -1904,7 +1896,7 @@ static void DecodeShift(Word Code)
             BAsmCode[CodeLen++] = HReg;
           break;
         case ModMem:
-          if (HReg != 1) WrError(1350);
+          if (HReg != 1) WrError(ErrNum_InvAddrMode);
           else
           {
             if (OpSize == -1)
@@ -1926,8 +1918,8 @@ static void DecodeMulDiv(Word Code)
 
   if (ChkArgCnt(2, 2))
   {
-    DecodeAdr(ArgStr[1], MModReg | MModXReg);
-    if (OpSize == 0) WrError(1130);
+    DecodeAdr(&ArgStr[1], MModReg | MModXReg);
+    if (OpSize == 0) WrError(ErrNum_InvOpsize);
     else
     {
       if ((AdrType == ModReg) && (OpSize == 1))
@@ -1945,7 +1937,7 @@ static void DecodeMulDiv(Word Code)
       switch (AdrType)
       {
         case ModReg:
-          DecodeAdr(ArgStr[2], MModReg | MModXReg | MModMem | MModImm);
+          DecodeAdr(&ArgStr[2], MModReg | MModXReg | MModMem | MModImm);
           switch (AdrType)
           {
             case ModReg:
@@ -1974,7 +1966,7 @@ static void DecodeMulDiv(Word Code)
           }
           break;
         case ModXReg:
-          DecodeAdr(ArgStr[2], MModImm);
+          DecodeAdr(&ArgStr[2], MModImm);
           if (AdrType == ModImm) 
           {
             CodeLen = 3 + AdrCnt;
@@ -1996,15 +1988,15 @@ static void DecodeBitCF(Word Code)
 
   if (ChkArgCnt(2, 2))
   {
-    DecodeAdr(ArgStr[2],MModReg | MModXReg | MModMem);
+    DecodeAdr(&ArgStr[2], MModReg | MModXReg | MModMem);
     if (AdrType!=ModNone) 
     {
-      if (OpSize == 2) WrError(1130);
+      if (OpSize == 2) WrError(ErrNum_InvOpsize);
       else
       {
         if (AdrType == ModMem)
           OpSize = 0;
-        if (!strcasecmp(ArgStr[1], "A"))
+        if (!strcasecmp(ArgStr[1].Str, "A"))
         {
           BitPos = 0xff;
           OK = True;
@@ -2012,7 +2004,7 @@ static void DecodeBitCF(Word Code)
         else
         {
           FirstPassUnknown = False;
-          BitPos = EvalIntExpression(ArgStr[1], (OpSize == 0) ? UInt3 : Int4, &OK);
+          BitPos = EvalStrIntExpression(&ArgStr[1], (OpSize == 0) ? UInt3 : Int4, &OK);
         }
         if (OK) 
          switch (AdrType)
@@ -2057,15 +2049,15 @@ static void DecodeBit(Word Code)
 
   if (ChkArgCnt(2, 2))
   {
-    DecodeAdr(ArgStr[2], MModReg | MModXReg | MModMem);
+    DecodeAdr(&ArgStr[2], MModReg | MModXReg | MModMem);
     if (AdrType == ModMem)
       OpSize = 0;
     if (AdrType != ModNone) 
     {
-      if (OpSize == 2) WrError(1130);
+      if (OpSize == 2) WrError(ErrNum_InvOpsize);
       else
       {
-        BitPos = EvalIntExpression(ArgStr[1], (OpSize == 0) ? UInt3 : Int4, &OK);
+        BitPos = EvalStrIntExpression(&ArgStr[1], (OpSize == 0) ? UInt3 : Int4, &OK);
         if (OK)
         { 
           switch (AdrType)
@@ -2113,21 +2105,21 @@ static void DecodeINC_DEC(Word Code)
       OK = True;
     }
     else
-      Incr = EvalIntExpression(ArgStr[1], Int4, &OK);
+      Incr = EvalStrIntExpression(&ArgStr[1], Int4, &OK);
     if (OK) 
     {
       if (FirstPassUnknown)
         Incr &= 7;
       else if ((Incr < 1) || (Incr > 8)) 
       {
-        WrError(1320);
+        WrError(ErrNum_OverRange);
         OK = False;
       }
     }
     if (OK) 
     {
       Incr &= 7;    /* 8-->0 */
-      DecodeAdr(ArgStr[ArgCnt], MModReg | MModXReg | MModMem);
+      DecodeAdr(&ArgStr[ArgCnt], MModReg | MModXReg | MModMem);
       switch (AdrType)
       {
         case ModReg:
@@ -2169,25 +2161,25 @@ static void DecodeCPxx(Word Code)
     else
     {
       Byte HReg;
-      int l = strlen(ArgStr[2]);
+      int l = strlen(ArgStr[2].Str);
       const char *CmpStr;
 
-      if (!strcasecmp(ArgStr[1], "A"))
+      if (!strcasecmp(ArgStr[1].Str, "A"))
         OpSize = 0;
-      else if (!strcasecmp(ArgStr[1], "WA"))
+      else if (!strcasecmp(ArgStr[1].Str, "WA"))
         OpSize = 1;
       CmpStr = (Code & 0x02) ? "-)" : "+)";
       if (OpSize == -1) OK = False;
-      else if ((l < 2) || (*ArgStr[2] != '(') || (strcasecmp(ArgStr[2] + l - 2, CmpStr))) OK = False;
+      else if ((l < 2) || (*ArgStr[2].Str != '(') || (strcasecmp(ArgStr[2].Str + l - 2, CmpStr))) OK = False;
       else
       {
-        ArgStr[2][l - 2] = '\0';
-        if (CodeEReg(ArgStr[2] + 1, &AdrMode, &HReg) != 2) OK = False;
+        ArgStr[2].Str[l - 2] = '\0';
+        if (CodeEReg(ArgStr[2].Str + 1, &AdrMode, &HReg) != 2) OK = False;
         else if (!IsRegBase(AdrMode, HReg)) OK = False;
         else if (!IsRegCurrent(AdrMode, HReg, &AdrMode)) OK = False;
       }
       if (!OK)
-        WrError(1135);
+        WrError(ErrNum_InvOpType);
     }
     if (OK) 
     {
@@ -2204,7 +2196,7 @@ static void DecodeLDxx(Word Code)
 
   if (OpSize == -1)
     OpSize = 0;
-  if (OpSize == 2) WrError(1130);
+  if (OpSize == 2) WrError(ErrNum_InvOpsize);
   else if (ChkArgCntExtEitherOr(ArgCnt, 0, 2))
   {
     Boolean OK;
@@ -2217,29 +2209,29 @@ static void DecodeLDxx(Word Code)
     else
     {
       char *CmpStr;
-      int l1 = strlen(ArgStr[1]),
-          l2 = strlen(ArgStr[2]);
+      int l1 = strlen(ArgStr[1].Str),
+          l2 = strlen(ArgStr[2].Str);
 
       OK = True;
       CmpStr = (Code & 0x02) ? "-)" : "+)";
-      if ((*ArgStr[1] != '(') || (*ArgStr[2] != '(')
+      if ((*ArgStr[1].Str != '(') || (*ArgStr[2].Str != '(')
        || (l1 < 3) || (l2 < 3)
-       || (strcasecmp(ArgStr[1] + l1 - 2, CmpStr))
-       || (strcasecmp(ArgStr[2] + l2 - 2, CmpStr)))
+       || (strcasecmp(ArgStr[1].Str + l1 - 2, CmpStr))
+       || (strcasecmp(ArgStr[2].Str + l2 - 2, CmpStr)))
         OK = False;
       else
       {
-        ArgStr[1][l1 - 2] = '\0';
-        ArgStr[2][l2 - 2] = '\0';
-        if ((!strcasecmp(ArgStr[1] + 1,"XIX")) && (!strcasecmp(ArgStr[2] + 1, "XIY")))
+        ArgStr[1].Str[l1 - 2] = '\0';
+        ArgStr[2].Str[l2 - 2] = '\0';
+        if ((!strcasecmp(ArgStr[1].Str + 1,"XIX")) && (!strcasecmp(ArgStr[2].Str + 1, "XIY")))
           HReg = 2;
-        else if ((Maximum) && (!strcasecmp(ArgStr[1] + 1, "XDE")) && (!strcasecmp(ArgStr[2] + 1 , "XHL")));
-        else if ((!Maximum) && (!strcasecmp(ArgStr[1] + 1, "DE")) && (!strcasecmp(ArgStr[2] + 1 , "HL")));
+        else if ((Maximum) && (!strcasecmp(ArgStr[1].Str + 1, "XDE")) && (!strcasecmp(ArgStr[2].Str + 1 , "XHL")));
+        else if ((!Maximum) && (!strcasecmp(ArgStr[1].Str + 1, "DE")) && (!strcasecmp(ArgStr[2].Str + 1 , "HL")));
         else
           OK = False;
       }
     }
-    if (!OK) WrError(1350);
+    if (!OK) WrError(ErrNum_InvAddrMode);
     else
     {
       CodeLen = 2;
@@ -2256,19 +2248,19 @@ static void DecodeMINC_MDEC(Word Code)
     Word AdrWord;
     Boolean OK;
 
-    AdrWord = EvalIntExpression(ArgStr[1], Int16, &OK);
+    AdrWord = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
     if (OK) 
     {
       Byte Pwr;
       Byte ByteSize = 1 << (Code & 3);
 
-      if (!IsPwr2(AdrWord, &Pwr)) WrError(1135);
-      else if ((Pwr == 0) || ((ByteSize == 2) && (Pwr < 2)) || ((ByteSize == 4) && (Pwr < 3))) WrError(1135);
+      if (!IsPwr2(AdrWord, &Pwr)) WrError(ErrNum_InvOpType);
+      else if ((Pwr == 0) || ((ByteSize == 2) && (Pwr < 2)) || ((ByteSize == 4) && (Pwr < 3))) WrError(ErrNum_InvOpType);
       else
       {
         AdrWord -= ByteSize;
-        DecodeAdr(ArgStr[2], MModReg | MModXReg);
-        if ((AdrType != ModNone) && (OpSize != 1)) WrError(1130);
+        DecodeAdr(&ArgStr[2], MModReg | MModXReg);
+        if ((AdrType != ModNone) && (OpSize != 1)) WrError(ErrNum_InvOpsize);
         else 
          switch (AdrType)
          {
@@ -2296,10 +2288,10 @@ static void DecodeMINC_MDEC(Word Code)
 static void DecodeRLD_RRD(Word Code) 
 {
   if (!ChkArgCnt(1, 2));
-  else if ((ArgCnt == 2) && (strcasecmp(ArgStr[1], "A"))) WrError(1350);
+  else if ((ArgCnt == 2) && (strcasecmp(ArgStr[1].Str, "A"))) WrError(ErrNum_InvAddrMode);
   else
   {
-    DecodeAdr(ArgStr[ArgCnt], MModMem);
+    DecodeAdr(&ArgStr[ArgCnt], MModMem);
     if (AdrType != ModNone)
     {
       CodeLen = 2 + AdrCnt;
@@ -2316,12 +2308,12 @@ static void DecodeSCC(Word Code)
 
   if (ChkArgCnt(2, 2))
   {
-    int Cond = DecodeCondition(ArgStr[1]);
-    if (Cond >= ConditionCnt) WrXErrorPos(ErrNum_UndefCond, ArgStr[1], &ArgStrPos[1]);
+    int Cond = DecodeCondition(ArgStr[1].Str);
+    if (Cond >= ConditionCnt) WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
     else
     {
-      DecodeAdr(ArgStr[2], MModReg | MModXReg);
-      if (OpSize > 1) WrError(1132);
+      DecodeAdr(&ArgStr[2], MModReg | MModXReg);
+      if (OpSize > 1) WrError(ErrNum_UndefOpSizes);
       else 
       {
          switch (AdrType)

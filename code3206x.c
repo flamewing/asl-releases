@@ -248,31 +248,29 @@ static Boolean ReiterateOpPart(void)
 
   if (ArgCnt<1)
   {
-    WrError(1210);
+    WrError(ErrNum_WrongArgCnt);
     return False;
   }
-  p = FirstBlank(ArgStr[1]);
+  p = FirstBlank(ArgStr[1].Str);
   if (!p)
   {
-    strcpy(OpPart.Str, ArgStr[1]);
+    StrCompCopy(&OpPart, &ArgStr[1]);
     for (z = 2; z <= ArgCnt; z++)
-      strcpy(ArgStr[z - 1], ArgStr[z]);
+      StrCompCopy(&ArgStr[z - 1], &ArgStr[z]);
     ArgCnt--;
   }
   else
   {
-    *p = '\0';
-    strcpy(OpPart.Str, ArgStr[1]);
-    strcpy(ArgStr[1], p + 1);
-    KillPrefBlanks(ArgStr[1]);
+    StrCompSplitLeft(&ArgStr[1], &OpPart, p);
+    KillPrefBlanksStrComp(&ArgStr[1]);
   }
   NLS_UpString(OpPart.Str);
   p = strchr(OpPart.Str, '.');
   if (!p)
-    *AttrPart = '\0';
+    *AttrPart.Str = '\0';
   else
   {
-    strcpy(AttrPart, p + 1);
+    strcpy(AttrPart.Str, p + 1);
     *p = '\0';
   }
   return True;
@@ -383,7 +381,7 @@ static Boolean DecodeReg(char *Asc, LongWord *Reg, Boolean *PFlag, Boolean Quarr
     else if ((Odd(*Reg)) || (NextReg != (*Reg) + 1) || ((((*Reg) ^ NextReg) & 0x10) != 0))
     {
       if (Quarrel)
-        WrXError(1760, Asc);
+        WrXError(ErrNum_InvRegPair, Asc);
       return False;
     }
     else
@@ -407,99 +405,98 @@ static Boolean DecodeCtrlReg(char *Asc, LongWord *Erg, Boolean Write)
 /* Was bedeutet das r-Feld im Adressoperanden mit kurzem Offset ???
    und wie ist das genau mit der Skalierung gemeint ??? */
 
-static Boolean DecodeMem(char *Asc, LongWord *Erg, LongWord Scale)
+static Boolean DecodeMem(const tStrComp *pArg, LongWord *Erg, LongWord Scale)
 {
-  String RegPart, DispPart;
   LongInt DispAcc, Mode;
   LongWord BaseReg, IndReg;
   int l;
   char Counter;
   char *p;
   Boolean OK;
+  tStrComp Arg = *pArg, DispArg, RegArg;
 
   /* das muss da sein */
 
-  if (*Asc != '*')
+  if (*pArg->Str != '*')
   {
-    WrError(1350);
+    WrError(ErrNum_InvAddrMode);
     return False;
   }
-  Asc++;
+  StrCompIncRefLeft(&Arg, 1);
 
   /* teilen */
 
-  p = strchr(Asc, '[');
+  p = strchr(Arg.Str, '[');
   Counter = ']';
   if (!p)
   {
-    p = strchr(Asc, '(');
+    p = strchr(Arg.Str, '(');
     Counter = ')';
   }
   if (p)
   {
-    if (Asc[strlen(Asc) - 1] != Counter)
+    if (Arg.Str[strlen(Arg.Str) - 1] != Counter)
     {
-      WrError(1350);
+      WrError(ErrNum_InvAddrMode);
       return False;
     }
-    Asc[strlen(Asc) - 1] = '\0';
-    *p = '\0';
-    strmaxcpy(RegPart, Asc, 255);
-    strmaxcpy(DispPart, p + 1, 255);
+    StrCompSplitRef(&RegArg, &DispArg, &Arg, p);
+    StrCompShorten(&DispArg, 1);
   }
   else
   {
-    strcpy(RegPart, Asc);
-    *DispPart = '\0';
+    RegArg = Arg;
+    DispArg.Str = "";
+    LineCompReset(&DispArg.Pos);
   }
 
   /* Registerfeld entschluesseln */
 
-  l = strlen(RegPart);
+  l = strlen(RegArg.Str);
   Mode = 1; /* Default ist *+R */
-  if (*RegPart == '+')
+  if (*RegArg.Str == '+')
   {
-    strmov(RegPart, RegPart + 1);
+    StrCompIncRefLeft(&RegArg, 1);
     Mode = 1;
-    if (*RegPart == '+')
+    if (*RegArg.Str == '+')
     {
-      strmov(RegPart, RegPart + 1);
+      StrCompIncRefLeft(&RegArg, 1);
       Mode = 9;
     }
   }
-  else if (*RegPart == '-')
+  else if (*RegArg.Str == '-')
   {
-    strmov(RegPart, RegPart + 1);
+    StrCompIncRefLeft(&RegArg, 1);
     Mode = 0;
-    if (*RegPart == '-')
+    if (*RegArg.Str == '-')
     {
-      strmov(RegPart, RegPart + 1);
+      StrCompIncRefLeft(&RegArg, 1);
       Mode = 8;
     }
   }
-  else if (RegPart[l - 1] == '+')
+  else if (RegArg.Str[l - 1] == '+')
   {
-    if (RegPart[l - 2] != '+')
+    if (RegArg.Str[l - 2] != '+')
     {
-      WrError(1350);
+      WrError(ErrNum_InvAddrMode);
       return False;
     }
-    RegPart[l - 2] = '\0';
+    StrCompShorten(&RegArg, 2);
     Mode = 11;
   }
-  else if (RegPart[l - 1] == '-')
+  else if (RegArg.Str[l - 1] == '-')
   {
-    if (RegPart[l - 2] != '-')
+    if (RegArg.Str[l - 2] != '-')
     {
-      WrError(1350);
+      WrError(ErrNum_InvAddrMode);
       return False;
     }
-    RegPart[l - 2] = '\0';
+    StrCompShorten(&RegArg, 2);
     Mode = 10;
   }
-  if (!DecodeSReg(RegPart, &BaseReg, False))
+  if (!DecodeSReg(RegArg.Str, &BaseReg, False))
   {
-    WrXError(ErrNum_InvReg, RegPart);
+    WrStrErrorPos(ErrNum_InvReg, &RegArg);
     return False;
   }
   AddSrc(BaseReg);
@@ -507,16 +504,16 @@ static Boolean DecodeMem(char *Asc, LongWord *Erg, LongWord Scale)
   /* kein Offsetfeld ? --> Skalierungsgroesse bei Autoinkrement/De-
      krement, sonst 0 */
 
-  if (*DispPart == '\0')
+  if (*DispArg.Str == '\0')
     DispAcc = (Mode < 2) ? 0 : Scale;
 
   /* Register als Offsetfeld? Dann Bit 2 in Modus setzen */
 
-  else if (DecodeSReg(DispPart, &IndReg, False))
+  else if (DecodeSReg(DispArg.Str, &IndReg, False))
   {
     if ((IndReg ^ BaseReg) > 15)
     {
-      WrError(1350);
+      WrError(ErrNum_InvAddrMode);
       return False;
     }
     Mode += 4;
@@ -528,7 +525,7 @@ static Boolean DecodeMem(char *Asc, LongWord *Erg, LongWord Scale)
   else
   {
     FirstPassUnknown = False;
-    DispAcc = EvalIntExpression(DispPart, UInt15, &OK);
+    DispAcc = EvalStrIntExpression(&DispArg, UInt15, &OK);
     if (!OK)
       return False;
     if (FirstPassUnknown)
@@ -537,7 +534,7 @@ static Boolean DecodeMem(char *Asc, LongWord *Erg, LongWord Scale)
     {
       if (DispAcc % Scale != 0)
       {
-        WrError(1325);
+        WrError(ErrNum_NotAligned);
         return False;
       }
       else
@@ -553,7 +550,7 @@ static Boolean DecodeMem(char *Asc, LongWord *Erg, LongWord Scale)
 
   if (((Mode & 4) == 0) && (DispAcc > 31))
   {
-    if ((BaseReg < 0x1e) || (Mode != 1)) WrError(1350);
+    if ((BaseReg < 0x1e) || (Mode != 1)) WrError(ErrNum_InvAddrMode);
     else
     {
       *Erg = ((DispAcc & 0x7fff) << 8) + ((BaseReg & 1) << 7) + 12;
@@ -571,28 +568,28 @@ static Boolean DecodeMem(char *Asc, LongWord *Erg, LongWord Scale)
   return False;
 }
 
-static Boolean DecodeAdr(char *Asc, Byte Mask, Boolean Signed, LongWord *AdrVal)
+static Boolean DecodeAdr(const tStrComp *pArg, Byte Mask, Boolean Signed, LongWord *AdrVal)
 {
   Boolean OK;
 
   AdrMode = ModNone;
 
-  if (DecodeReg(Asc, AdrVal, &OK, False))
+  if (DecodeReg(pArg->Str, AdrVal, &OK, False))
   {
     AdrMode = (OK) ? ModLReg : ModReg;
   }
   else
   {
     *AdrVal = Signed ? 
-              EvalIntExpression(Asc, SInt5, &OK) & 0x1f : 
-              EvalIntExpression(Asc, UInt5, &OK);
+              EvalStrIntExpression(pArg, SInt5, &OK) & 0x1f : 
+              EvalStrIntExpression(pArg, UInt5, &OK);
     if (OK)
       AdrMode = ModImm;
   }
 
   if ((AdrMode != ModNone) && (((1 << AdrMode) & Mask) == 0))
   {
-    WrError(1350);
+    WrError(ErrNum_InvAddrMode);
     AdrMode = ModNone;
     return False;
   }
@@ -611,7 +608,7 @@ static Boolean ChkUnit(LongWord Reg, TUnit U1, TUnit U2)
     return True;
   else
   {
-    WrError(1107);
+    WrError(ErrNum_UndefAttr);
     return False;
   }
 }
@@ -675,7 +672,7 @@ static Boolean DecideUnit(LongWord Reg, char *Units)
   UnitFlag = (ThisUnit - FirstUnit) & 1;
   if (IsCross(Reg))
   {
-    WrError(1107);
+    WrError(ErrNum_UndefAttr);
     return False;
   }
   else
@@ -705,7 +702,7 @@ static Boolean DecodePseudo(void)
       OK = True;
       for (z = 0; z < ArgCnt; z++)
       {
-        t.Contents.Float = EvalFloatExpression(ArgStr[z + 1], Float32, &OK);
+        t.Contents.Float = EvalStrFloatExpression(&ArgStr[z + 1], Float32, &OK);
         if (!OK)
           break;
         Double_2_ieee4(t.Contents.Float, (Byte *) (DAsmCode + z), BigEndian);
@@ -725,7 +722,7 @@ static Boolean DecodePseudo(void)
       for (z = 0; z < ArgCnt; z++)
       {
         z2 = z << 1;
-        t.Contents.Float = EvalFloatExpression(ArgStr[z + 1], Float64, &OK);
+        t.Contents.Float = EvalStrFloatExpression(&ArgStr[z + 1], Float64, &OK);
         if (!OK)
           break;
         Double_2_ieee8(t.Contents.Float, (Byte *) (DAsmCode + z2), BigEndian);
@@ -751,7 +748,7 @@ static Boolean DecodePseudo(void)
       for (z = 1; z <= ArgCnt; z++)
        if (OK)
        {
-         EvalExpression(ArgStr[z], &t);
+         EvalStrExpression(&ArgStr[z], &t);
          switch (t.Typ)
          {
            case TempInt:
@@ -759,7 +756,7 @@ static Boolean DecodePseudo(void)
              if (!RangeCheck(t.Contents.Int, Int32))
              {
                OK = False;
-               WrError(1320);
+               WrError(ErrNum_OverRange);
              }
              else
 #endif
@@ -769,7 +766,7 @@ static Boolean DecodePseudo(void)
              if (!FloatRangeCheck(t.Contents.Float, Float32))
              {
                OK = False;
-               WrError(1320);
+               WrError(ErrNum_OverRange);
              }
              else
              {
@@ -804,12 +801,12 @@ static Boolean DecodePseudo(void)
     if (ChkArgCnt(1, 1))
     {
       FirstPassUnknown = False;
-      Size = EvalIntExpression(ArgStr[1], UInt24, &OK);
-      if (FirstPassUnknown) WrError(1820);
+      Size = EvalStrIntExpression(&ArgStr[1], UInt24, &OK);
+      if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
       if ((OK) && (!FirstPassUnknown))
       {
         DontPrint = True;
-        if (!Size) WrError(290);
+        if (!Size) WrError(ErrNum_NullResMem);
         CodeLen = Size;
         BookKeeping();
       }
@@ -858,7 +855,7 @@ static void DecodeIDLE(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(0, 0));
-  else if ((ThisCross) || (ThisUnit != NoUnit)) WrError(1107);
+  else if ((ThisCross) || (ThisUnit != NoUnit)) WrError(ErrNum_UndefAttr);
   else
   {
     ThisInst = 0x0001e000;
@@ -873,7 +870,7 @@ static void DecodeNOP(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(0, 1));
-  else if ((ThisCross) || (ThisUnit != NoUnit)) WrError(1107);
+  else if ((ThisCross) || (ThisUnit != NoUnit)) WrError(ErrNum_UndefAttr);
   else
   {
     if (ArgCnt == 0)
@@ -884,7 +881,7 @@ static void DecodeNOP(Word Index)
     else
     {
       FirstPassUnknown = False;
-      Count = EvalIntExpression(ArgStr[1], UInt4, &OK);
+      Count = EvalStrIntExpression(&ArgStr[1], UInt4, &OK);
       Count = FirstPassUnknown ? 0 : Count - 1;
       OK = ChkRange(Count, 0, 8);
     }
@@ -903,18 +900,18 @@ static void DecodeMul(Word Index)
 
   if (ChkArgCnt(3, 3))
   {
-    if ((DecodeAdr(ArgStr[3], MModReg, POrder->DSign, &DReg))
+    if ((DecodeAdr(&ArgStr[3], MModReg, POrder->DSign, &DReg))
      && (ChkUnit(DReg, M1, M2)))
     {
-      if (DecodeAdr(ArgStr[2], MModReg, POrder->SSign2, &S2Reg))
+      if (DecodeAdr(&ArgStr[2], MModReg, POrder->SSign2, &S2Reg))
       {
         AddSrc(S2Reg);
-        DecodeAdr(ArgStr[1], (POrder->MayImm?MModImm:0) + MModReg, POrder->SSign1, &S1Reg);
+        DecodeAdr(&ArgStr[1], (POrder->MayImm ? MModImm : 0) + MModReg, POrder->SSign1, &S1Reg);
         switch (AdrMode)
         {
           case ModReg:
-            if ((ThisCross) && (!IsCross(S2Reg)) && (!IsCross(S1Reg))) WrError(1350);
-            else if ((IsCross(S2Reg)) && (IsCross(S1Reg))) WrError(1350);
+            if ((ThisCross) && (!IsCross(S2Reg)) && (!IsCross(S1Reg))) WrError(ErrNum_InvAddrMode);
+            else if ((IsCross(S2Reg)) && (IsCross(S1Reg))) WrError(ErrNum_InvAddrMode);
             else
             {
               if (IsCross(S1Reg))
@@ -943,11 +940,11 @@ static void DecodeMemO(Word Index)
 
   if (ChkArgCnt(2, 2))
   {
-    char *pArg1, *pArg2;
+    const tStrComp *pArg1, *pArg2;
 
     IsStore = (*OpPart.Str) == 'S';
-    pArg1 = IsStore ? ArgStr[2] : ArgStr[1];
-    pArg2 = IsStore ? ArgStr[1] : ArgStr[2];
+    pArg1 = IsStore ? &ArgStr[2] : &ArgStr[1];
+    pArg2 = IsStore ? &ArgStr[1] : &ArgStr[2];
     if (IsStore)
       ThisStore = True;
     if (DecodeAdr(pArg2, MModReg, False, &DReg))
@@ -981,9 +978,9 @@ static void DecodeSTP(Word Index)
   if (ChkArgCnt(1, 1)
    && ChkUnit(0x10, S1, S2))
   {
-    if (DecodeAdr(ArgStr[1], MModReg, False, &S2Reg))
+    if (DecodeAdr(&ArgStr[1], MModReg, False, &S2Reg))
     {
-      if ((ThisCross) || (S2Reg < 16)) WrError(1350);
+      if ((ThisCross) || (S2Reg < 16)) WrError(ErrNum_InvAddrMode);
       else
       {
         AddSrc(S2Reg);
@@ -1000,12 +997,12 @@ static void DecodeABS(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(2, 2)
-   && DecodeReg(ArgStr[2], &DReg, &DPFlag, True)
+   && DecodeReg(ArgStr[2].Str, &DReg, &DPFlag, True)
    && ChkUnit(DReg, L1, L2)
-   && DecodeReg(ArgStr[1], &S1Reg, &S1Flag, True))
+   && DecodeReg(ArgStr[1].Str, &S1Reg, &S1Flag, True))
   {
-    if (DPFlag != S1Flag) WrError(1350);
-    else if ((ThisCross) && ((S1Reg >> 4) == UnitFlag)) WrError(1350);
+    if (DPFlag != S1Flag) WrError(ErrNum_InvAddrMode);
+    else if ((ThisCross) && ((S1Reg >> 4) == UnitFlag)) WrError(ErrNum_InvAddrMode);
     else
     {
       SetCross(S1Reg);
@@ -1033,25 +1030,25 @@ static void DecodeADD(Word Index)
 
   if (ChkArgCnt(3, 3))
   {
-    DecodeAdr(ArgStr[3], MModReg + MModLReg, True, &DReg);
+    DecodeAdr(&ArgStr[3], MModReg + MModLReg, True, &DReg);
     UnitFlag = DReg >> 4;
     switch (AdrMode)
     {
       case ModLReg:      /* ADD ?,?,long */
         AddLDest(DReg);
-        DecodeAdr(ArgStr[1], MModReg + MModLReg + MModImm, True, &S1Reg);
+        DecodeAdr(&ArgStr[1], MModReg + MModLReg + MModImm, True, &S1Reg);
         switch (AdrMode)
         {
           case ModReg:    /* ADD int,?,long */
             AddSrc(S1Reg);
-            DecodeAdr(ArgStr[2], MModReg + MModLReg, True, &S2Reg);
+            DecodeAdr(&ArgStr[2], MModReg + MModLReg, True, &S2Reg);
             switch (AdrMode)
             {
               case ModReg: /* ADD int,int,long */
                 if (ChkUnit(DReg, L1, L2))
                 {
-                  if ((ThisCross) && (!IsCross(S1Reg)) && (!IsCross(S2Reg))) WrError(1350);
-                  else if ((IsCross(S1Reg)) && (IsCross(S2Reg))) WrError(1350);
+                  if ((ThisCross) && (!IsCross(S1Reg)) && (!IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
+                  else if ((IsCross(S1Reg)) && (IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
                   else
                   {
                     AddSrc(S2Reg);
@@ -1065,8 +1062,8 @@ static void DecodeADD(Word Index)
               case ModLReg:/* ADD int,long,long */
                 if (ChkUnit(DReg, L1, L2))
                 {
-                  if (IsCross(S2Reg)) WrError(1350);
-                  else if ((ThisCross) && (!IsCross(S1Reg))) WrError(1350);
+                  if (IsCross(S2Reg)) WrError(ErrNum_InvAddrMode);
+                  else if ((ThisCross) && (!IsCross(S1Reg))) WrError(ErrNum_InvAddrMode);
                   else
                   {
                     AddLSrc(S2Reg);
@@ -1079,14 +1076,14 @@ static void DecodeADD(Word Index)
             break;
           case ModLReg:   /* ADD long,?,long */
             AddLSrc(S1Reg);
-            DecodeAdr(ArgStr[2], MModReg + MModImm, True, &S2Reg);
+            DecodeAdr(&ArgStr[2], MModReg + MModImm, True, &S2Reg);
             switch (AdrMode)
             {
               case ModReg: /* ADD long,int,long */
                 if (ChkUnit(DReg, L1, L2))
                 {
-                  if (IsCross(S1Reg)) WrError(1350);
-                  else if ((ThisCross) && (!IsCross(S2Reg))) WrError(1350);
+                  if (IsCross(S1Reg)) WrError(ErrNum_InvAddrMode);
+                  else if ((ThisCross) && (!IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
                   else
                   {
                     AddSrc(S2Reg);
@@ -1098,8 +1095,8 @@ static void DecodeADD(Word Index)
               case ModImm: /* ADD long,imm,long */
                 if (ChkUnit(DReg, L1, L2))
                 {
-                  if (IsCross(S1Reg)) WrError(1350);
-                  else if (ThisCross) WrError(1350);
+                  if (IsCross(S1Reg)) WrError(ErrNum_InvAddrMode);
+                  else if (ThisCross) WrError(ErrNum_InvAddrMode);
                   else
                     __erg = CodeL(0x20, DReg, S2Reg, S1Reg);
                 }
@@ -1107,12 +1104,12 @@ static void DecodeADD(Word Index)
              }
              break;
            case ModImm:    /* ADD imm,?,long */
-             if (DecodeAdr(ArgStr[2], MModLReg, True, &S2Reg))
+             if (DecodeAdr(&ArgStr[2], MModLReg, True, &S2Reg))
              {         /* ADD imm,long,long */
                if (ChkUnit(DReg, L1, L2))
                {
-                 if (IsCross(S2Reg)) WrError(1350);
-                 else if (ThisCross) WrError(1350);
+                 if (IsCross(S2Reg)) WrError(ErrNum_InvAddrMode);
+                 else if (ThisCross) WrError(ErrNum_InvAddrMode);
                  else
                  {
                    AddLSrc(S2Reg);
@@ -1125,18 +1122,18 @@ static void DecodeADD(Word Index)
         break;
       case ModReg:       /* ADD ?,?,int */
         AddDest(DReg);
-        DecodeAdr(ArgStr[1], MModReg + MModImm, True, &S1Reg);
+        DecodeAdr(&ArgStr[1], MModReg + MModImm, True, &S1Reg);
         switch (AdrMode)
         {
           case ModReg:    /* ADD int,?,int */
             AddSrc(S1Reg);
-            DecodeAdr(ArgStr[2], MModReg + MModImm, True, &S2Reg);
+            DecodeAdr(&ArgStr[2], MModReg + MModImm, True, &S2Reg);
             switch (AdrMode)
             {
               case ModReg: /* ADD int,int,int */
                 AddSrc(S2Reg);
-                if (((DReg ^ S1Reg) > 15) && ((DReg ^ S2Reg)>15)) WrError(1350);
-                else if ((ThisCross) && ((DReg ^ S1Reg) < 16) && ((DReg ^ S2Reg) < 15)) WrError(1350);
+                if (((DReg ^ S1Reg) > 15) && ((DReg ^ S2Reg)>15)) WrError(ErrNum_InvAddrMode);
+                else if ((ThisCross) && ((DReg ^ S1Reg) < 16) && ((DReg ^ S2Reg) < 15)) WrError(ErrNum_InvAddrMode);
                 else
                 {
                   if ((S1Reg ^ DReg) > 15)
@@ -1156,13 +1153,13 @@ static void DecodeADD(Word Index)
                         __erg = CodeD(0x10, DReg, S1Reg, S2Reg);
                         break;
                       default:
-                        WrError(2009);
+                        WrError(ErrNum_CannotUseUnit);
                     }
                   }
                 }
                 break;
               case ModImm: /* ADD int,imm,int */
-                if ((ThisCross) && ((S1Reg ^ DReg) < 16)) WrError(1350);
+                if ((ThisCross) && ((S1Reg ^ DReg) < 16)) WrError(ErrNum_InvAddrMode);
                 else
                 {
                   SetCross(S1Reg);
@@ -1176,17 +1173,17 @@ static void DecodeADD(Word Index)
                         __erg = CodeS(0x06, DReg, S2Reg, S1Reg);
                         break;
                       default:
-                        WrError(2009);
+                        WrError(ErrNum_CannotUseUnit);
                     }
                 }
                 break;
             }
             break;
           case ModImm:   /* ADD imm,?,int */
-            if (DecodeAdr(ArgStr[2], MModReg, True, &S2Reg))
+            if (DecodeAdr(&ArgStr[2], MModReg, True, &S2Reg))
             {
               AddSrc(S2Reg);
-              if ((ThisCross) && ((S2Reg ^ DReg) < 16)) WrError(1350);
+              if ((ThisCross) && ((S2Reg ^ DReg) < 16)) WrError(ErrNum_InvAddrMode);
               else
               {
                 SetCross(S2Reg);
@@ -1200,7 +1197,7 @@ static void DecodeADD(Word Index)
                       __erg = CodeS(0x06, DReg, S1Reg, S2Reg);
                       break;
                     default:
-                      WrError(2009);
+                      WrError(ErrNum_CannotUseUnit);
                   }
               }
             }
@@ -1218,29 +1215,29 @@ static void DecodeADDU(Word Index)
 
   if (ChkArgCnt(3, 3))
   {
-    DecodeAdr(ArgStr[3], MModReg + MModLReg, False, &DReg);
+    DecodeAdr(&ArgStr[3], MModReg + MModLReg, False, &DReg);
     switch (AdrMode)
     {
       case ModReg:      /* ADDU ?,?,int */
         if (ChkUnit(DReg, D1, D2))
         {
           AddDest(DReg);
-          DecodeAdr(ArgStr[1], MModReg + MModImm, False, &S1Reg);
+          DecodeAdr(&ArgStr[1], MModReg + MModImm, False, &S1Reg);
           switch (AdrMode)
           {
             case ModReg: /* ADDU int,?,int */
-              if (IsCross(S1Reg)) WrError(1350);
+              if (IsCross(S1Reg)) WrError(ErrNum_InvAddrMode);
               else
               {
                 AddSrc(S1Reg);
-                if (DecodeAdr(ArgStr[2], MModImm, False, &S2Reg))
+                if (DecodeAdr(&ArgStr[2], MModImm, False, &S2Reg))
                  __erg = CodeD(0x12, DReg, S2Reg, S1Reg);
               }
               break;
             case ModImm: /* ADDU imm,?,int */
-              if (DecodeAdr(ArgStr[2], MModReg, False, &S2Reg))
+              if (DecodeAdr(&ArgStr[2], MModReg, False, &S2Reg))
               {
-                if (IsCross(S2Reg)) WrError(1350);
+                if (IsCross(S2Reg)) WrError(ErrNum_InvAddrMode);
                 else
                 {
                   AddSrc(S2Reg);
@@ -1255,17 +1252,17 @@ static void DecodeADDU(Word Index)
         if (ChkUnit(DReg, L1, L2))
         {
           AddLDest(DReg);
-          DecodeAdr(ArgStr[1], MModReg + MModLReg, False, &S1Reg);
+          DecodeAdr(&ArgStr[1], MModReg + MModLReg, False, &S1Reg);
           switch (AdrMode)
           {
             case ModReg: /* ADDU int,?,long */
               AddSrc(S1Reg);
-              DecodeAdr(ArgStr[2], MModReg + MModLReg, False, &S2Reg);
+              DecodeAdr(&ArgStr[2], MModReg + MModLReg, False, &S2Reg);
               switch (AdrMode)
               {
                 case ModReg: /* ADDU int,int,long */
-                  if ((IsCross(S1Reg)) && (IsCross(S2Reg))) WrError(1350);
-                  else if ((ThisCross) && (((S1Reg ^ DReg) < 16) && ((S2Reg ^ DReg) < 16))) WrError(1350);
+                  if ((IsCross(S1Reg)) && (IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
+                  else if ((ThisCross) && (((S1Reg ^ DReg) < 16) && ((S2Reg ^ DReg) < 16))) WrError(ErrNum_InvAddrMode);
                   else
                   {
                     if ((S1Reg ^ DReg) > 15)
@@ -1275,8 +1272,8 @@ static void DecodeADDU(Word Index)
                   }
                   break;
                 case ModLReg: /* ADDU int,long,long */
-                  if (IsCross(S2Reg)) WrError(1350);
-                  else if ((ThisCross) && ((S1Reg ^ DReg) < 16)) WrError(1350);
+                  if (IsCross(S2Reg)) WrError(ErrNum_InvAddrMode);
+                  else if ((ThisCross) && ((S1Reg ^ DReg) < 16)) WrError(ErrNum_InvAddrMode);
                   else
                   {
                     AddLSrc(S2Reg);
@@ -1287,13 +1284,13 @@ static void DecodeADDU(Word Index)
               }
               break;
             case ModLReg:
-              if (IsCross(S1Reg)) WrError(1350);
+              if (IsCross(S1Reg)) WrError(ErrNum_InvAddrMode);
               else
               {
                 AddLSrc(S1Reg);
-                if (DecodeAdr(ArgStr[2], MModReg, False, &S2Reg))
+                if (DecodeAdr(&ArgStr[2], MModReg, False, &S2Reg))
                 {
-                  if ((ThisCross) && ((S2Reg ^ DReg) < 16)) WrError(1350);
+                  if ((ThisCross) && ((S2Reg ^ DReg) < 16)) WrError(ErrNum_InvAddrMode);
                   else
                   {
                     AddSrc(S2Reg); SetCross(S2Reg);
@@ -1317,22 +1314,22 @@ static void DecodeSUB(Word Index)
 
   if (ChkArgCnt(3, 3))
   {
-    DecodeAdr(ArgStr[3], MModReg + MModLReg, True, &DReg);
+    DecodeAdr(&ArgStr[3], MModReg + MModLReg, True, &DReg);
     switch (AdrMode)
     {
       case ModReg:
         AddDest(DReg);
-        DecodeAdr(ArgStr[1], MModReg + MModImm, True, &S1Reg);
+        DecodeAdr(&ArgStr[1], MModReg + MModImm, True, &S1Reg);
         switch (AdrMode)
         {
           case ModReg:
             AddSrc(S1Reg);
-            DecodeAdr(ArgStr[2], MModReg + MModImm, True, &S2Reg);
+            DecodeAdr(&ArgStr[2], MModReg + MModImm, True, &S2Reg);
             switch (AdrMode)
             {
               case ModReg:
-               if ((ThisCross) && ((S1Reg ^ DReg) < 16) && ((S2Reg ^ DReg) < 16)) WrError(1350);
-               else if (((S1Reg ^ DReg) > 15) && ((S2Reg ^ DReg) > 15)) WrError(1350);
+               if ((ThisCross) && ((S1Reg ^ DReg) < 16) && ((S2Reg ^ DReg) < 16)) WrError(ErrNum_InvAddrMode);
+               else if (((S1Reg ^ DReg) > 15) && ((S2Reg ^ DReg) > 15)) WrError(ErrNum_InvAddrMode);
                else
                {
                  AddSrc(S2Reg);
@@ -1354,23 +1351,23 @@ static void DecodeSUB(Word Index)
                        __erg = CodeD(0x11, DReg, S2Reg, S1Reg);
                        break;
                      default:
-                       WrError(2009);
+                       WrError(ErrNum_CannotUseUnit);
                    }
                }
                break;
               case ModImm:
                if (ChkUnit(DReg, D1, D2))
                {
-                 if ((ThisCross) || ((S1Reg ^ DReg) > 15)) WrError(1350);
+                 if ((ThisCross) || ((S1Reg ^ DReg) > 15)) WrError(ErrNum_InvAddrMode);
                  else __erg = CodeD(0x13, DReg, S2Reg, S1Reg);
                }
                break;
             }
             break;
           case ModImm:
-            if (DecodeAdr(ArgStr[2], MModReg, True, &S2Reg))
+            if (DecodeAdr(&ArgStr[2], MModReg, True, &S2Reg))
             {
-              if ((ThisCross) && ((S2Reg ^ DReg) < 16)) WrError(1350);
+              if ((ThisCross) && ((S2Reg ^ DReg) < 16)) WrError(ErrNum_InvAddrMode);
               else
               {
                 AddSrc(S2Reg);
@@ -1384,7 +1381,7 @@ static void DecodeSUB(Word Index)
                       __erg = CodeS(0x16, DReg, S1Reg, S2Reg);
                       break;
                     default:
-                      WrError(2009);
+                      WrError(ErrNum_CannotUseUnit);
                   }
               }
             }
@@ -1395,13 +1392,13 @@ static void DecodeSUB(Word Index)
         AddLDest(DReg);
         if (ChkUnit(DReg, L1, L2))
         {
-          DecodeAdr(ArgStr[1], MModImm + MModReg, True, &S1Reg);
+          DecodeAdr(&ArgStr[1], MModImm + MModReg, True, &S1Reg);
           switch (AdrMode)
           {
             case ModImm:
-              if (DecodeAdr(ArgStr[2], MModLReg, True, &S2Reg))
+              if (DecodeAdr(&ArgStr[2], MModLReg, True, &S2Reg))
               {
-                if ((ThisCross) || (/*NOT*/ IsCross(S2Reg))) WrError(1350);
+                if ((ThisCross) || (/*NOT*/ IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
                 else
                 {
                   AddLSrc(S2Reg);
@@ -1411,10 +1408,10 @@ static void DecodeSUB(Word Index)
               break;
             case ModReg:
               AddSrc(S1Reg);
-              if (DecodeAdr(ArgStr[2], MModReg, True, &S2Reg))
+              if (DecodeAdr(&ArgStr[2], MModReg, True, &S2Reg))
               {
-                if ((ThisCross) && (!IsCross(S1Reg)) && (!IsCross(S2Reg))) WrError(1350);
-                else if ((IsCross(S1Reg)) && (IsCross(S2Reg))) WrError(1350);
+                if ((ThisCross) && (!IsCross(S1Reg)) && (!IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
+                else if ((IsCross(S1Reg)) && (IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
                 else
                 {
                   AddSrc(S2Reg);
@@ -1439,17 +1436,17 @@ static void DecodeSUBU(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(3, 3)
-   && DecodeAdr(ArgStr[3], MModLReg, False, &DReg)
+   && DecodeAdr(&ArgStr[3], MModLReg, False, &DReg)
    && ChkUnit(DReg, L1, L2))
   {
     AddLDest(DReg);
-    if (DecodeAdr(ArgStr[1], MModReg, False, &S1Reg))
+    if (DecodeAdr(&ArgStr[1], MModReg, False, &S1Reg))
     {
       AddSrc(S1Reg);
-      if (DecodeAdr(ArgStr[2], MModReg, False, &S2Reg))
+      if (DecodeAdr(&ArgStr[2], MModReg, False, &S2Reg))
       {
-        if ((ThisCross) && (!IsCross(S1Reg)) && (!IsCross(S2Reg))) WrError(1350);
-        else if ((IsCross(S1Reg)) && (IsCross(S2Reg))) WrError(1350);
+        if ((ThisCross) && (!IsCross(S1Reg)) && (!IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
+        else if ((IsCross(S1Reg)) && (IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
         else
         {
           AddSrc(S2Reg);
@@ -1469,16 +1466,16 @@ static void DecodeSUBC(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(3, 3)
-   && DecodeAdr(ArgStr[3], MModReg, False, &DReg)
+   && DecodeAdr(&ArgStr[3], MModReg, False, &DReg)
    && ChkUnit(DReg, L1, L2))
   {
     AddLDest(DReg);
-    if (DecodeAdr(ArgStr[1], MModReg, False, &S1Reg))
+    if (DecodeAdr(&ArgStr[1], MModReg, False, &S1Reg))
     {
-      if (DecodeAdr(ArgStr[2], MModReg, False, &S2Reg))
+      if (DecodeAdr(&ArgStr[2], MModReg, False, &S2Reg))
       {
-        if ((ThisCross) && (!IsCross(S2Reg))) WrError(1350);
-        else if (IsCross(S1Reg)) WrError(1350);
+        if ((ThisCross) && (!IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
+        else if (IsCross(S1Reg)) WrError(ErrNum_InvAddrMode);
         else
         {
           AddSrc(S2Reg);
@@ -1496,24 +1493,24 @@ static void DecodeLinAdd(Word Index)
   FixedOrder *POrder = LinAddOrders + Index;
 
   if (!ChkArgCnt(3, 3));
-  else if (ThisCross) WrError(1350);
+  else if (ThisCross) WrError(ErrNum_InvAddrMode);
   else
   {
-    if ((DecodeAdr(ArgStr[3], MModReg, True, &DReg))
+    if ((DecodeAdr(&ArgStr[3], MModReg, True, &DReg))
      && (ChkUnit(DReg, D1, D2)))
     {
       AddDest(DReg);
-      if (DecodeAdr(ArgStr[1], MModReg, True, &S2Reg))
+      if (DecodeAdr(&ArgStr[1], MModReg, True, &S2Reg))
       {
-        if (IsCross(S2Reg)) WrError(1350);
+        if (IsCross(S2Reg)) WrError(ErrNum_InvAddrMode);
         else
         {
           AddSrc(S2Reg);
-          DecodeAdr(ArgStr[2], MModReg + MModImm, False, &S1Reg);
+          DecodeAdr(&ArgStr[2], MModReg + MModImm, False, &S1Reg);
           switch (AdrMode)
           {
             case ModReg:
-              if (IsCross(S1Reg)) WrError(1350);
+              if (IsCross(S1Reg)) WrError(ErrNum_InvAddrMode);
               else
               {
                 AddSrc(S1Reg);
@@ -1538,11 +1535,11 @@ static void DecodeADDK(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(2, 2)
-   && DecodeAdr(ArgStr[2], MModReg, False, &DReg)
+   && DecodeAdr(&ArgStr[2], MModReg, False, &DReg)
    && ChkUnit(DReg, S1, S2))
   {
     AddDest(DReg);
-    Value = EvalIntExpression(ArgStr[1], SInt16, &OK);
+    Value = EvalStrIntExpression(&ArgStr[1], SInt16, &OK);
     if (OK)
     {
       ThisInst = 0x50 + (UnitFlag << 1) + ((Value & 0xffff) << 7) + (DReg << 23);
@@ -1558,17 +1555,17 @@ static void DecodeADD2_SUB2(Word Index)
 
   Index = (Index << 5) + 1;
   if (ChkArgCnt(3, 3)
-   && DecodeAdr(ArgStr[3], MModReg, True, &DReg)
+   && DecodeAdr(&ArgStr[3], MModReg, True, &DReg)
    && ChkUnit(DReg, S1, S2))
   {
     AddDest(DReg);
-    if (DecodeAdr(ArgStr[1], MModReg, True, &S1Reg))
+    if (DecodeAdr(&ArgStr[1], MModReg, True, &S1Reg))
     {
       AddSrc(S1Reg);
-      if (DecodeAdr(ArgStr[2], MModReg, True, &S2Reg))
+      if (DecodeAdr(&ArgStr[2], MModReg, True, &S2Reg))
       {
-        if ((ThisCross) && (!IsCross(S1Reg)) && (!IsCross(S2Reg))) WrError(1350);
-        else if ((IsCross(S1Reg)) && (IsCross(S2Reg))) WrError(1350);
+        if ((ThisCross) && (!IsCross(S1Reg)) && (!IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
+        else if ((IsCross(S1Reg)) && (IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
         else
         {
           OK = True; AddSrc(S2Reg);
@@ -1576,7 +1573,7 @@ static void DecodeADD2_SUB2(Word Index)
           {
             if (Index > 1)
             {
-              WrError(1350);
+              WrError(ErrNum_InvAddrMode);
               OK = False;
             }
             else SwapReg(&S1Reg, &S2Reg);
@@ -1601,18 +1598,18 @@ static void DecodeMV(Word Index)
 
   if (ChkArgCnt(2, 2))
   {
-    DecodeAdr(ArgStr[2], MModReg + MModLReg, True, &DReg);
+    DecodeAdr(&ArgStr[2], MModReg + MModLReg, True, &DReg);
     UnitFlag = DReg >> 4;
     switch (AdrMode)
     {
       case ModLReg:      /* MV ?,long */
         AddLDest(DReg);
-        if (DecodeAdr(ArgStr[1], MModLReg, True, &SReg))
+        if (DecodeAdr(&ArgStr[1], MModLReg, True, &SReg))
         {                 /* MV long,long */
           if (ChkUnit(DReg, L1, L2))
           {
-            if (IsCross(SReg)) WrError(1350);
-            else if (ThisCross) WrError(1350);
+            if (IsCross(SReg)) WrError(ErrNum_InvAddrMode);
+            else if (ThisCross) WrError(ErrNum_InvAddrMode);
             else
             {
               AddLSrc(SReg);
@@ -1624,10 +1621,10 @@ static void DecodeMV(Word Index)
 
       case ModReg:       /* MV ?,int */
         AddDest(DReg);
-        if (DecodeAdr(ArgStr[1], MModReg, True, &SReg))
+        if (DecodeAdr(&ArgStr[1], MModReg, True, &SReg))
         {
           AddSrc(SReg);
-          if ((ThisCross) && ((SReg ^ DReg) < 16)) WrError(1350);
+          if ((ThisCross) && ((SReg ^ DReg) < 16)) WrError(ErrNum_InvAddrMode);
           else
           {
             SetCross(SReg);
@@ -1644,7 +1641,7 @@ static void DecodeMV(Word Index)
                   __erg = CodeD(0x12, DReg, 0, SReg);
                   break;
                 default:
-                  WrError(2009);
+                  WrError(ErrNum_CannotUseUnit);
               }
           }
         }
@@ -1662,14 +1659,14 @@ static void DecodeNEG(Word Index)
 
   if (ChkArgCnt(2, 2))
   {
-    DecodeAdr(ArgStr[2], MModReg + MModLReg, True, &DReg);
+    DecodeAdr(&ArgStr[2], MModReg + MModLReg, True, &DReg);
     switch (AdrMode)
     {
       case ModReg:
         AddDest(DReg);
-        if (DecodeAdr(ArgStr[1], MModReg, True, &SReg))
+        if (DecodeAdr(&ArgStr[1], MModReg, True, &SReg))
         {
-          if ((ThisCross) && ((SReg ^ DReg) < 16)) WrError(1350);
+          if ((ThisCross) && ((SReg ^ DReg) < 16)) WrError(ErrNum_InvAddrMode);
           else
           {
             AddSrc(SReg);
@@ -1683,7 +1680,7 @@ static void DecodeNEG(Word Index)
                   __erg = CodeS(0x16, DReg, 0, SReg);
                   break;
                 default:
-                  WrError(2009);
+                  WrError(ErrNum_CannotUseUnit);
               }
           }
         }
@@ -1692,9 +1689,9 @@ static void DecodeNEG(Word Index)
         AddLDest(DReg);
         if (ChkUnit(DReg, L1, L2))
         {
-          if (DecodeAdr(ArgStr[1], MModLReg, True, &SReg))
+          if (DecodeAdr(&ArgStr[1], MModLReg, True, &SReg))
           {
-            if ((ThisCross) || (IsCross(SReg))) WrError(1350);
+            if ((ThisCross) || (IsCross(SReg))) WrError(ErrNum_InvAddrMode);
             else
             {
               AddLSrc(SReg);
@@ -1718,21 +1715,21 @@ static void DecodeLogic(Word Index)
 
   if (ChkArgCnt(3, 3))
   {
-    if (DecodeAdr(ArgStr[3], MModReg, True, &DReg))
+    if (DecodeAdr(&ArgStr[3], MModReg, True, &DReg))
     {
       AddDest(DReg);
-      DecodeAdr(ArgStr[1], MModImm + MModReg, True, &S1Reg);
+      DecodeAdr(&ArgStr[1], MModImm + MModReg, True, &S1Reg);
       WithImm = False;
       switch (AdrMode)
       {
         case ModImm:
-          OK = DecodeAdr(ArgStr[2], MModReg, True, &S2Reg);
+          OK = DecodeAdr(&ArgStr[2], MModReg, True, &S2Reg);
           if (OK) AddSrc(S2Reg);
           WithImm = True;
           break;
         case ModReg:
           AddSrc(S1Reg);
-          OK = DecodeAdr(ArgStr[2], MModImm + MModReg, True, &S2Reg);
+          OK = DecodeAdr(&ArgStr[2], MModImm + MModReg, True, &S2Reg);
           switch (AdrMode)
           {
             case ModImm:
@@ -1752,8 +1749,8 @@ static void DecodeLogic(Word Index)
       }
       if ((OK) && (DecideUnit(DReg, "LS")))
       {
-        if ((!WithImm) && (IsCross(S1Reg)) && (IsCross(S2Reg))) WrError(1350);
-        else if ((ThisCross) && (!IsCross(S2Reg)) && ((WithImm) || (!IsCross(S1Reg)))) WrError(1350);
+        if ((!WithImm) && (IsCross(S1Reg)) && (IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
+        else if ((ThisCross) && (!IsCross(S2Reg)) && ((WithImm) || (!IsCross(S1Reg)))) WrError(ErrNum_InvAddrMode);
         else
         {
           if ((!WithImm) && (IsCross(S1Reg)))
@@ -1768,7 +1765,7 @@ static void DecodeLogic(Word Index)
               __erg = CodeS(Code2 - Ord(WithImm), DReg, S1Reg, S2Reg);
               break;
             default:
-              WrError(2009);
+              WrError(ErrNum_CannotUseUnit);
           }
         }
       }
@@ -1786,15 +1783,15 @@ static void DecodeNOT(Word Index)
 
   if (ChkArgCnt(2, 2))
   {
-    if (DecodeAdr(ArgStr[2], MModReg, True, &DReg))
+    if (DecodeAdr(&ArgStr[2], MModReg, True, &DReg))
     {
       AddDest(DReg);
-      if (DecodeAdr(ArgStr[1], MModReg, True, &SReg))
+      if (DecodeAdr(&ArgStr[1], MModReg, True, &SReg))
       {
         AddSrc(SReg);
         if (DecideUnit(DReg, "LS"))
         {
-          if ((ThisCross) && (!IsCross(SReg))) WrError(1350);
+          if ((ThisCross) && (!IsCross(SReg))) WrError(ErrNum_InvAddrMode);
           else
           {
             SetCross(SReg);
@@ -1807,7 +1804,7 @@ static void DecodeNOT(Word Index)
                 __erg = CodeS(0x0a, DReg, 0x1f, SReg);
                 break;
               default:
-                WrError(2009);
+                WrError(ErrNum_CannotUseUnit);
             }
           }
         }
@@ -1825,8 +1822,8 @@ static void DecodeZERO(Word Index)
 
   if (ChkArgCnt(1, 1))
   {
-    DecodeAdr(ArgStr[1], MModReg + MModLReg, True, &DReg);
-    if ((ThisCross) || (IsCross(DReg))) WrError(1350);
+    DecodeAdr(&ArgStr[1], MModReg + MModLReg, True, &DReg);
+    if ((ThisCross) || (IsCross(DReg))) WrError(ErrNum_InvAddrMode);
     else
       switch (AdrMode)
       {
@@ -1846,7 +1843,7 @@ static void DecodeZERO(Word Index)
                 __erg = CodeD(0x11, DReg, DReg, DReg);
                 break;
               default:
-                WrError(2009);
+                WrError(ErrNum_CannotUseUnit);
             }
           break;
         case ModLReg:
@@ -1866,19 +1863,19 @@ static void DecodeCLR_EXT_EXTU_SET(Word Code)
 
   if (ChkArgCnt(3, 4))
   {
-    if ((DecodeAdr(ArgStr[ArgCnt], MModReg, IsEXT, &DReg))
+    if ((DecodeAdr(&ArgStr[ArgCnt], MModReg, IsEXT, &DReg))
      && (ChkUnit(DReg, S1, S2)))
     {
       AddDest(DReg);
-      if (DecodeAdr(ArgStr[1], MModReg, IsEXT, &S2Reg))
+      if (DecodeAdr(&ArgStr[1], MModReg, IsEXT, &S2Reg))
       {
         AddSrc(S2Reg);
         if (ArgCnt == 3)
         {
-          if (DecodeAdr(ArgStr[2], MModReg, False, &S1Reg))
+          if (DecodeAdr(&ArgStr[2], MModReg, False, &S1Reg))
           {
-            if (IsCross(S1Reg)) WrError(1350);
-            else if ((ThisCross) && (!IsCross(S2Reg))) WrError(1350);
+            if (IsCross(S1Reg)) WrError(ErrNum_InvAddrMode);
+            else if ((ThisCross) && (!IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
             else
             {
               SetCross(S2Reg);
@@ -1886,13 +1883,13 @@ static void DecodeCLR_EXT_EXTU_SET(Word Code)
             }
           }
         }
-        else if ((ThisCross) || (IsCross(S2Reg))) WrError(1350);
+        else if ((ThisCross) || (IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
         else
         {
-          S1Reg = EvalIntExpression(ArgStr[2], UInt5, &OK);
+          S1Reg = EvalStrIntExpression(&ArgStr[2], UInt5, &OK);
           if (OK)
           {
-            HReg = EvalIntExpression(ArgStr[3], UInt5, &OK);
+            HReg = EvalStrIntExpression(&ArgStr[3], UInt5, &OK);
             if (OK)
             {
               ThisInst = (DReg << 23) + (S2Reg << 18) + (S1Reg << 13)
@@ -1912,21 +1909,21 @@ static void DecodeCmp(Word Index)
   LongWord DReg, S1Reg, S2Reg;
 
   if (ChkArgCnt(3, 3)
-   && DecodeAdr(ArgStr[3], MModReg, False, &DReg)
+   && DecodeAdr(&ArgStr[3], MModReg, False, &DReg)
    && ChkUnit(DReg, L1, L2))
   {
     AddDest(DReg);
-    DecodeAdr(ArgStr[1], MModReg + MModImm, pOrder->WithImm, &S1Reg);
+    DecodeAdr(&ArgStr[1], MModReg + MModImm, pOrder->WithImm, &S1Reg);
     switch (AdrMode)
     {
       case ModReg:
         AddSrc(S1Reg);
-        DecodeAdr(ArgStr[2], MModReg + MModLReg, pOrder->WithImm, &S2Reg);
+        DecodeAdr(&ArgStr[2], MModReg + MModLReg, pOrder->WithImm, &S2Reg);
         switch (AdrMode)
         {
           case ModReg:
-            if ((IsCross(S1Reg)) && (IsCross(S2Reg))) WrError(1350);
-            else if ((ThisCross) && (!IsCross(S1Reg)) && (!IsCross(S2Reg))) WrError(1350);
+            if ((IsCross(S1Reg)) && (IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
+            else if ((ThisCross) && (!IsCross(S1Reg)) && (!IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
             else
             {
               AddSrc(S2Reg);
@@ -1936,8 +1933,8 @@ static void DecodeCmp(Word Index)
             }
             break;
           case ModLReg:
-            if (IsCross(S2Reg)) WrError(1350);
-            else if ((ThisCross) && (!IsCross(S1Reg))) WrError(1350);
+            if (IsCross(S2Reg)) WrError(ErrNum_InvAddrMode);
+            else if ((ThisCross) && (!IsCross(S1Reg))) WrError(ErrNum_InvAddrMode);
             else
             {
               AddLSrc(S2Reg); SetCross(S1Reg);
@@ -1947,11 +1944,11 @@ static void DecodeCmp(Word Index)
         }
         break;
       case ModImm:
-        DecodeAdr(ArgStr[2], MModReg + MModLReg, pOrder->WithImm, &S2Reg);
+        DecodeAdr(&ArgStr[2], MModReg + MModLReg, pOrder->WithImm, &S2Reg);
         switch (AdrMode)
         {
           case ModReg:
-            if ((ThisCross) && (!IsCross(S2Reg))) WrError(1350);
+            if ((ThisCross) && (!IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
             else
             {
               AddSrc(S2Reg); SetCross(S2Reg);
@@ -1959,7 +1956,7 @@ static void DecodeCmp(Word Index)
             }
             break;
           case ModLReg:
-            if ((ThisCross) || (IsCross(S2Reg))) WrError(1350);
+            if ((ThisCross) || (IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
             else
             {
               AddLSrc(S2Reg);
@@ -1978,17 +1975,17 @@ static void DecodeLMBD(Word Code)
   UNUSED(Code);
 
   if (ChkArgCnt(3, 3)
-   && DecodeAdr(ArgStr[3], MModReg, False, &DReg)
+   && DecodeAdr(&ArgStr[3], MModReg, False, &DReg)
    && ChkUnit(DReg, L1, L2))
   {
     AddDest(DReg);
-    if (DecodeAdr(ArgStr[2], MModReg, False, &S2Reg))
+    if (DecodeAdr(&ArgStr[2], MModReg, False, &S2Reg))
     {
-      if ((ThisCross) && (!IsCross(S2Reg))) WrError(1350);
+      if ((ThisCross) && (!IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
       else
       {
         SetCross(S2Reg);
-        if (DecodeAdr(ArgStr[1], MModImm + MModReg, False, &S1Reg))
+        if (DecodeAdr(&ArgStr[1], MModImm + MModReg, False, &S1Reg))
         {
           if (AdrMode == ModReg)
             AddSrc(S1Reg);
@@ -2006,15 +2003,15 @@ static void DecodeNORM(Word Code)
   UNUSED(Code);
 
   if (ChkArgCnt(2, 2)
-   && DecodeAdr(ArgStr[2], MModReg, False, &DReg)
+   && DecodeAdr(&ArgStr[2], MModReg, False, &DReg)
    && ChkUnit(DReg, L1, L2))
   {
     AddDest(DReg);
-    DecodeAdr(ArgStr[1], MModReg + MModLReg, True, &S2Reg);
+    DecodeAdr(&ArgStr[1], MModReg + MModLReg, True, &S2Reg);
     switch (AdrMode)
     {
       case ModReg:
-        if ((ThisCross) && (!IsCross(S2Reg))) WrError(1350);
+        if ((ThisCross) && (!IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
         else
         {
           SetCross(S2Reg); AddSrc(S2Reg);
@@ -2022,7 +2019,7 @@ static void DecodeNORM(Word Code)
         }
         break;
       case ModLReg:
-        if ((ThisCross) || (IsCross(S2Reg))) WrError(1350);
+        if ((ThisCross) || (IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
         else
         {
           AddLSrc(S2Reg);
@@ -2040,24 +2037,24 @@ static void DecodeSADD(Word Code)
   UNUSED(Code);
 
   if (ChkArgCnt(3, 3)
-   && DecodeAdr(ArgStr[3], MModReg + MModLReg, True, &DReg)
+   && DecodeAdr(&ArgStr[3], MModReg + MModLReg, True, &DReg)
    && ChkUnit(DReg, L1, L2))
   {
     switch (AdrMode)
     {
       case ModReg:
         AddDest(DReg);
-        DecodeAdr(ArgStr[1], MModReg + MModImm, True, &S1Reg);
+        DecodeAdr(&ArgStr[1], MModReg + MModImm, True, &S1Reg);
         switch (AdrMode)
         {
           case ModReg:
             AddSrc(S1Reg);
-            DecodeAdr(ArgStr[2], MModReg + MModImm, True, &S2Reg);
+            DecodeAdr(&ArgStr[2], MModReg + MModImm, True, &S2Reg);
             switch (AdrMode)
             {
               case ModReg:
-               if ((ThisCross) && (!IsCross(S1Reg)) && (!IsCross(S2Reg))) WrError(1350);
-               else if ((IsCross(S1Reg)) && (IsCross(S2Reg))) WrError(1350);
+               if ((ThisCross) && (!IsCross(S1Reg)) && (!IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
+               else if ((IsCross(S1Reg)) && (IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
                else
                {
                  AddSrc(S2Reg);
@@ -2067,7 +2064,7 @@ static void DecodeSADD(Word Code)
                }
                break;
               case ModImm:
-               if ((ThisCross) && (!IsCross(S1Reg))) WrError(1350);
+               if ((ThisCross) && (!IsCross(S1Reg))) WrError(ErrNum_InvAddrMode);
                else
                {
                  SetCross(S1Reg);
@@ -2077,9 +2074,9 @@ static void DecodeSADD(Word Code)
             }
             break;
           case ModImm:
-            if (DecodeAdr(ArgStr[2], MModReg, True, &S2Reg))
+            if (DecodeAdr(&ArgStr[2], MModReg, True, &S2Reg))
             {
-              if ((ThisCross) && (!IsCross(S2Reg))) WrError(1350);
+              if ((ThisCross) && (!IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
               else
               {
                 SetCross(S2Reg);
@@ -2091,14 +2088,14 @@ static void DecodeSADD(Word Code)
         break;
       case ModLReg:
         AddLDest(DReg);
-        DecodeAdr(ArgStr[1], MModReg + MModLReg + MModImm, True, &S1Reg);
+        DecodeAdr(&ArgStr[1], MModReg + MModLReg + MModImm, True, &S1Reg);
         switch (AdrMode)
         {
           case ModReg:
             AddSrc(S1Reg);
-            if (DecodeAdr(ArgStr[2], MModLReg, True, &S2Reg))
+            if (DecodeAdr(&ArgStr[2], MModLReg, True, &S2Reg))
             {
-              if ((ThisCross) && (!IsCross(S1Reg))) WrError(1350);
+              if ((ThisCross) && (!IsCross(S1Reg))) WrError(ErrNum_InvAddrMode);
               else
               {
                 AddLSrc(S2Reg); SetCross(S1Reg);
@@ -2107,15 +2104,15 @@ static void DecodeSADD(Word Code)
             }
             break;
           case ModLReg:
-            if (IsCross(S1Reg)) WrError(1350);
+            if (IsCross(S1Reg)) WrError(ErrNum_InvAddrMode);
             else
             {
               AddLSrc(S1Reg);
-              DecodeAdr(ArgStr[2], MModReg + MModImm, True, &S2Reg);
+              DecodeAdr(&ArgStr[2], MModReg + MModImm, True, &S2Reg);
               switch (AdrMode)
               {
                 case ModReg:
-                  if ((ThisCross) && (!IsCross(S2Reg))) WrError(1350);
+                  if ((ThisCross) && (!IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
                   else
                   {
                     AddSrc(S2Reg); SetCross(S2Reg);
@@ -2129,9 +2126,9 @@ static void DecodeSADD(Word Code)
             }
             break;
           case ModImm:
-            if (DecodeAdr(ArgStr[2], MModLReg, True, &S2Reg))
+            if (DecodeAdr(&ArgStr[2], MModLReg, True, &S2Reg))
             {
-              if (IsCross(S2Reg)) WrError(1350);
+              if (IsCross(S2Reg)) WrError(ErrNum_InvAddrMode);
               else
               {
                 AddLSrc(S2Reg);
@@ -2152,13 +2149,13 @@ static void DecodeSAT(Word Code)
   UNUSED(Code);
 
   if (ChkArgCnt(2, 2)
-   && DecodeAdr(ArgStr[2], MModReg, True, &DReg)
+   && DecodeAdr(&ArgStr[2], MModReg, True, &DReg)
    && ChkUnit(DReg, L1, L2))
   {
     AddDest(DReg);
-    if (DecodeAdr(ArgStr[1], MModLReg, True, &S2Reg))
+    if (DecodeAdr(&ArgStr[1], MModLReg, True, &S2Reg))
     {
-      if ((ThisCross) || (IsCross(S2Reg))) WrError(1350);
+      if ((ThisCross) || (IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
       else
       {
         AddLSrc(S2Reg);
@@ -2174,7 +2171,7 @@ static void DecodeMVC(Word Code)
 
   UNUSED(Code);
 
-  if ((ThisUnit != NoUnit) && (ThisUnit != S2)) WrError(1350);
+  if ((ThisUnit != NoUnit) && (ThisUnit != S2)) WrError(ErrNum_InvAddrMode);
   else if (ChkArgCnt(2, 2))
   {
     int z;
@@ -2182,17 +2179,17 @@ static void DecodeMVC(Word Code)
     z = 0;
     ThisUnit = S2;
     UnitFlag = 1;
-    if (DecodeCtrlReg(ArgStr[1], &CReg, False))
+    if (DecodeCtrlReg(ArgStr[1].Str, &CReg, False))
       z = 2;
-    else if (DecodeCtrlReg(ArgStr[2], &CReg, True))
+    else if (DecodeCtrlReg(ArgStr[2].Str, &CReg, True))
       z = 1;
     else
-      WrXErrorPos(ErrNum_InvCtrlReg, ArgStr[1], &ArgStrPos[1]);
+      WrStrErrorPos(ErrNum_InvCtrlReg, &ArgStr[1]);
     if (z > 0)
     {
-      if (DecodeAdr(ArgStr[z], MModReg, False, &S1Reg))
+      if (DecodeAdr(&ArgStr[z], MModReg, False, &S1Reg))
       {
-        if ((ThisCross) && ((z == 2) || (IsCross(S1Reg)))) WrError(1350);
+        if ((ThisCross) && ((z == 2) || (IsCross(S1Reg)))) WrError(ErrNum_InvAddrMode);
         else
         {
           if (z == 1)
@@ -2219,15 +2216,15 @@ static void DecodeMVK(Word Code)
 
   if (ChkArgCnt(2, 2))
   {
-    if (DecodeAdr(ArgStr[2], MModReg, True, &DReg))
+    if (DecodeAdr(&ArgStr[2], MModReg, True, &DReg))
      if (ChkUnit(DReg, S1, S2))
      {
        if (Memo("MVKLH"))
-         S1Reg = EvalIntExpression(ArgStr[1], Int16, &OK);
+         S1Reg = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
        else if (Memo("MVKL"))
-         S1Reg = EvalIntExpression(ArgStr[1], SInt16, &OK);
+         S1Reg = EvalStrIntExpression(&ArgStr[1], SInt16, &OK);
        else
-         S1Reg = EvalIntExpression(ArgStr[1], Int32, &OK);
+         S1Reg = EvalStrIntExpression(&ArgStr[1], Int32, &OK);
        if (OK)
        {
          AddDest(DReg);
@@ -2246,24 +2243,24 @@ static void DecodeSHL(Word Code)
 
   if (ChkArgCnt(3, 3))
   {
-    DecodeAdr(ArgStr[3], MModReg + MModLReg, True, &DReg);
+    DecodeAdr(&ArgStr[3], MModReg + MModLReg, True, &DReg);
     if ((AdrMode != ModNone) && (ChkUnit(DReg, S1, S2)))
      switch (AdrMode)
      {
        case ModReg:
          AddDest(DReg);
-         if (DecodeAdr(ArgStr[1], MModReg, True, &S2Reg))
+         if (DecodeAdr(&ArgStr[1], MModReg, True, &S2Reg))
          {
-           if ((ThisCross) && (!IsCross(S2Reg))) WrError(1350);
+           if ((ThisCross) && (!IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
            else
            {
              AddSrc(S2Reg);
              SetCross(S2Reg);
-             DecodeAdr(ArgStr[2], MModReg + MModImm, False, &S1Reg);
+             DecodeAdr(&ArgStr[2], MModReg + MModImm, False, &S1Reg);
              switch (AdrMode)
              {
                case ModReg:
-                 if (IsCross(S1Reg)) WrError(1350);
+                 if (IsCross(S1Reg)) WrError(ErrNum_InvAddrMode);
                  else
                  {
                    AddSrc(S1Reg);
@@ -2279,19 +2276,19 @@ static void DecodeSHL(Word Code)
          break;
        case ModLReg:
          AddLDest(DReg);
-         DecodeAdr(ArgStr[1], MModReg + MModLReg, True, &S2Reg);
+         DecodeAdr(&ArgStr[1], MModReg + MModLReg, True, &S2Reg);
          switch (AdrMode)
          {
            case ModReg:
-             if ((ThisCross) && (!IsCross(S2Reg))) WrError(1350);
+             if ((ThisCross) && (!IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
              else
              {
                AddSrc(S2Reg); SetCross(S2Reg);
-               DecodeAdr(ArgStr[2], MModImm + MModReg, False, &S1Reg);
+               DecodeAdr(&ArgStr[2], MModImm + MModReg, False, &S1Reg);
                switch (AdrMode)
                {
                  case ModReg:
-                   if (IsCross(S1Reg)) WrError(1350);
+                   if (IsCross(S1Reg)) WrError(ErrNum_InvAddrMode);
                    else
                    {
                      AddSrc(S1Reg);
@@ -2305,15 +2302,15 @@ static void DecodeSHL(Word Code)
              }
              break;
            case ModLReg:
-             if ((ThisCross) || (IsCross(S2Reg))) WrError(1350);
+             if ((ThisCross) || (IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
              else
              {
                AddLSrc(S2Reg);
-               DecodeAdr(ArgStr[2], MModImm + MModReg, False, &S1Reg);
+               DecodeAdr(&ArgStr[2], MModImm + MModReg, False, &S1Reg);
                switch (AdrMode)
                {
                  case ModReg:
-                   if (IsCross(S1Reg)) WrError(1350);
+                   if (IsCross(S1Reg)) WrError(ErrNum_InvAddrMode);
                    else
                    {
                      AddSrc(S1Reg);
@@ -2339,23 +2336,23 @@ static void DecodeSHR_SHRU(Word Code)
 
   if (ChkArgCnt(3, 3))
   {
-    DecodeAdr(ArgStr[3], MModReg + MModLReg, HasSign, &DReg);
+    DecodeAdr(&ArgStr[3], MModReg + MModLReg, HasSign, &DReg);
     if ((AdrMode != ModNone) && (ChkUnit(DReg, S1, S2)))
      switch (AdrMode)
      {
        case ModReg:
          AddDest(DReg);
-         if (DecodeAdr(ArgStr[1], MModReg, HasSign, &S2Reg))
+         if (DecodeAdr(&ArgStr[1], MModReg, HasSign, &S2Reg))
          {
-           if ((ThisCross) && (!IsCross(S2Reg))) WrError(1350);
+           if ((ThisCross) && (!IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
            else
            {
              AddSrc(S2Reg); SetCross(S2Reg);
-             DecodeAdr(ArgStr[2], MModReg + MModImm, False, &S1Reg);
+             DecodeAdr(&ArgStr[2], MModReg + MModImm, False, &S1Reg);
              switch (AdrMode)
              {
                case ModReg:
-                 if (IsCross(S1Reg)) WrError(1350);
+                 if (IsCross(S1Reg)) WrError(ErrNum_InvAddrMode);
                  else
                  {
                    AddSrc(S1Reg);
@@ -2371,17 +2368,17 @@ static void DecodeSHR_SHRU(Word Code)
          break;
        case ModLReg:
          AddLDest(DReg);
-         if (DecodeAdr(ArgStr[1], MModLReg, HasSign, &S2Reg))
+         if (DecodeAdr(&ArgStr[1], MModLReg, HasSign, &S2Reg))
          {
-           if ((ThisCross) || (IsCross(S2Reg))) WrError(1350);
+           if ((ThisCross) || (IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
            else
            {
              AddLSrc(S2Reg);
-             DecodeAdr(ArgStr[2], MModReg + MModImm, False, &S1Reg);
+             DecodeAdr(&ArgStr[2], MModReg + MModImm, False, &S1Reg);
              switch (AdrMode)
              {
                case ModReg:
-                 if (IsCross(S1Reg)) WrError(1350);
+                 if (IsCross(S1Reg)) WrError(ErrNum_InvAddrMode);
                  else
                  {
                    AddSrc(S1Reg);
@@ -2407,21 +2404,21 @@ static void DecodeSSHL(Word Code)
 
   if (ChkArgCnt(3, 3))
   {
-    if (DecodeAdr(ArgStr[3], MModReg, True, &DReg))
+    if (DecodeAdr(&ArgStr[3], MModReg, True, &DReg))
      if (ChkUnit(DReg, S1, S2))
      {
        AddDest(DReg);
-       if (DecodeAdr(ArgStr[1], MModReg, True, &S2Reg))
+       if (DecodeAdr(&ArgStr[1], MModReg, True, &S2Reg))
        {
-         if ((ThisCross) && (!IsCross(S2Reg))) WrError(1350);
+         if ((ThisCross) && (!IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
          else
          {
            AddSrc(S2Reg); SetCross(S2Reg);
-           DecodeAdr(ArgStr[2], MModReg + MModImm, False, &S1Reg);
+           DecodeAdr(&ArgStr[2], MModReg + MModImm, False, &S1Reg);
            switch (AdrMode)
            {
              case ModReg:
-               if (IsCross(S1Reg)) WrError(1350);
+               if (IsCross(S1Reg)) WrError(ErrNum_InvAddrMode);
                else
                {
                  AddSrc(S1Reg);
@@ -2446,21 +2443,21 @@ static void DecodeSSUB(Word Code)
 
   if (ChkArgCnt(3, 3))
   {
-    DecodeAdr(ArgStr[3], MModReg + MModLReg, True, &DReg);
+    DecodeAdr(&ArgStr[3], MModReg + MModLReg, True, &DReg);
     if ((AdrMode != ModNone) && (ChkUnit(DReg, L1, L2)))
      switch (AdrMode)
      {
        case ModReg:
         AddDest(DReg);
-        DecodeAdr(ArgStr[1], MModReg + MModImm, True, &S1Reg);
+        DecodeAdr(&ArgStr[1], MModReg + MModImm, True, &S1Reg);
         switch (AdrMode)
         {
           case ModReg:
             AddSrc(S1Reg);
-            if (DecodeAdr(ArgStr[2], MModReg, True, &S2Reg))
+            if (DecodeAdr(&ArgStr[2], MModReg, True, &S2Reg))
             {
-              if ((ThisCross) && (!IsCross(S1Reg)) && (!IsCross(S2Reg))) WrError(1350);
-              else if ((IsCross(S1Reg)) && (IsCross(S2Reg))) WrError(1350);
+              if ((ThisCross) && (!IsCross(S1Reg)) && (!IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
+              else if ((IsCross(S1Reg)) && (IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
               else if (IsCross(S1Reg))
               {
                 ThisCross = True;
@@ -2474,9 +2471,9 @@ static void DecodeSSUB(Word Code)
             }
             break;
           case ModImm:
-            if (DecodeAdr(ArgStr[2], MModReg, True, &S2Reg))
+            if (DecodeAdr(&ArgStr[2], MModReg, True, &S2Reg))
             {
-              if ((ThisCross) && (!IsCross(S2Reg))) WrError(1350);
+              if ((ThisCross) && (!IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
               else
               {
                 AddSrc(S2Reg); SetCross(S2Reg);
@@ -2488,11 +2485,11 @@ static void DecodeSSUB(Word Code)
         break;
        case ModLReg:
         AddLDest(DReg);
-         if (DecodeAdr(ArgStr[1], MModImm, True, &S1Reg))
+         if (DecodeAdr(&ArgStr[1], MModImm, True, &S1Reg))
          {
-           if (DecodeAdr(ArgStr[2], MModLReg, True, &S2Reg))
+           if (DecodeAdr(&ArgStr[2], MModLReg, True, &S2Reg))
            {
-             if ((ThisCross) || (IsCross(S2Reg))) WrError(1350);
+             if ((ThisCross) || (IsCross(S2Reg))) WrError(ErrNum_InvAddrMode);
              else
              {
                AddLSrc(S2Reg);
@@ -2515,28 +2512,28 @@ static void DecodeB(Word Code)
 
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1350);
-  else if (ThisCross) WrError(1350);
-  else if ((ThisUnit != NoUnit) && (ThisUnit != S1) && (ThisUnit != S2)) WrError(1350);
+  if (ArgCnt != 1) WrError(ErrNum_InvAddrMode);
+  else if (ThisCross) WrError(ErrNum_InvAddrMode);
+  else if ((ThisUnit != NoUnit) && (ThisUnit != S1) && (ThisUnit != S2)) WrError(ErrNum_InvAddrMode);
   else
   {
     OK = True;
     S2Reg = 0;
     WithImm = False;
     Code1 = 0;
-    if (!strcasecmp(ArgStr[1], "IRP"))
+    if (!strcasecmp(ArgStr[1].Str, "IRP"))
     {
       Code1 = 0x03;
       S2Reg = 0x06;
     }
-    else if (!strcasecmp(ArgStr[1], "NRP"))
+    else if (!strcasecmp(ArgStr[1].Str, "NRP"))
     {
       Code1 = 0x03;
       S2Reg = 0x07;
     }
-    else if (DecodeReg(ArgStr[1], &S2Reg, &OK, False))
+    else if (DecodeReg(ArgStr[1].Str, &S2Reg, &OK, False))
     {
-      if (OK) WrError(1350);
+      if (OK) WrError(ErrNum_InvAddrMode);
       OK = !OK;
       Code1 = 0x0d;
     }
@@ -2552,11 +2549,11 @@ static void DecodeB(Word Code)
 
         /* branches relative to fetch packet */
 
-        Dist = EvalIntExpression(ArgStr[1] , Int32, &OK) - (PacketAddr & (~31));
+        Dist = EvalStrIntExpression(&ArgStr[1], Int32, &OK) - (PacketAddr & (~31));
         if (OK)
         {
-          if ((Dist & 3) != 0) WrError(1325);
-          else if ((!SymbolQuestionable) && ((Dist > 0x3fffff) || (Dist < -0x400000))) WrError(1370);
+          if ((Dist & 3) != 0) WrError(ErrNum_NotAligned);
+          else if ((!SymbolQuestionable) && ((Dist > 0x3fffff) || (Dist < -0x400000))) WrError(ErrNum_JmpDistTooBig);
           else
           {
             ThisInst = 0x10 + ((Dist & 0x007ffffc) << 5) + (UnitFlag << 1);
@@ -2602,7 +2599,7 @@ static void ChkPacket(void)
 
   EndAddr = PacketAddr + ((ParCnt << 2) - 1);
   if ((PacketAddr >> 5) != (EndAddr >> 5))
-    WrError(2000);
+    WrError(ErrNum_PackCrossBoundary);
 
   /* doppelte Units,Crosspaths,Adressierer,Zielregister */
 
@@ -2613,7 +2610,7 @@ static void ChkPacket(void)
         /* doppelte Units */
 
         if ((ParRecs[z1].U != NoUnit) && (ParRecs[z1].U == ParRecs[z2].U))
-          WrXError(2001, UnitNames[ParRecs[z1].U]);
+          WrXError(ErrNum_UnitMultipleUsed, UnitNames[ParRecs[z1].U]);
 
         /* Crosspaths */
 
@@ -2623,26 +2620,26 @@ static void ChkPacket(void)
           *TestUnit = z + '0';
           TestUnit[1] = 'X';
           TestUnit[2] = '\0';
-          WrXError(2001, TestUnit);
+          WrXError(ErrNum_UnitMultipleUsed, TestUnit);
         }
 
         z = ParRecs[z1].AddrUsed & ParRecs[z2].AddrUsed;
 
         /* Adressgeneratoren */
 
-        if ((z & 1) == 1) WrXError(2001, "Addr. A");
-        if ((z & 2) == 2) WrXError(2001, "Addr. B");
+        if ((z & 1) == 1) WrXError(ErrNum_UnitMultipleUsed, "Addr. A");
+        if ((z & 2) == 2) WrXError(ErrNum_UnitMultipleUsed, "Addr. B");
 
         /* Hauptspeicherpfade */
 
-        if ((z & 4) == 4) WrXError(2001, "LdSt. A");
-        if ((z & 8) == 8) WrXError(2001, "LdSt. B");
+        if ((z & 4) == 4) WrXError(ErrNum_UnitMultipleUsed, "LdSt. A");
+        if ((z & 8) == 8) WrXError(ErrNum_UnitMultipleUsed, "LdSt. B");
 
         /* ueberlappende Zielregister */
 
         z = ParRecs[z1].DestMask & ParRecs[z2].DestMask;
         if (z != 0)
-          WrXError(2006, RegName(FindReg(z)));
+          WrXError(ErrNum_OverlapDests, RegName(FindReg(z)));
 
         if ((ParRecs[z1].U & 1) == (ParRecs[z2].U & 1))
         {
@@ -2652,19 +2649,19 @@ static void ChkPacket(void)
           /* mehrere Long-Reads */
 
           if ((ParRecs[z1].LongSrc) && (ParRecs[z2].LongSrc))
-            WrXError(2002, TestUnit);
+            WrXError(ErrNum_MultipleLongRead, TestUnit);
 
           /* mehrere Long-Writes */
 
           if ((ParRecs[z1].LongDest) && (ParRecs[z2].LongDest))
-            WrXError(2003, TestUnit);
+            WrXError(ErrNum_MultipleLongWrite, TestUnit);
 
           /* Long-Read mit Store */
 
           if ((ParRecs[z1].StoreUsed) && (ParRecs[z2].LongSrc))
-            WrXError(2004, TestUnit);
+            WrXError(ErrNum_LongReadWithStore, TestUnit);
           if ((ParRecs[z2].StoreUsed) && (ParRecs[z1].LongSrc))
-            WrXError(2004, TestUnit);
+            WrXError(ErrNum_LongReadWithStore, TestUnit);
         }
       }
 
@@ -2687,7 +2684,7 @@ static void ChkPacket(void)
 
   for (z1 = 0; z1 < 32; z1++)
     if (RegReads[z1] > 4)
-      WrXError(2005, RegName(z1));
+      WrXError(ErrNum_TooManyRegisterReads, RegName(z1));
 
   /* more than one branch to an absolute address */
 
@@ -2696,7 +2693,7 @@ static void ChkPacket(void)
     if (ParRecs[z1].AbsBranch)
       BranchCnt++;
   if (BranchCnt > 1)
-    WrError(2008);
+    WrError(ErrNum_TooManyBranchesInExPacket);
 }
 
 static void MakeCode_3206X(void)
@@ -2741,26 +2738,26 @@ static void MakeCode_3206X(void)
 
   ThisUnit = NoUnit;
   ThisCross = False;
-  if (*AttrPart != '\0')
+  if (*AttrPart.Str)
   {
-    if (mytoupper(AttrPart[strlen(AttrPart) - 1]) == 'X')
+    if (mytoupper(AttrPart.Str[strlen(AttrPart.Str) - 1]) == 'X')
     {
       ThisCross = True;
-      AttrPart[strlen(AttrPart) - 1] = '\0';
+      AttrPart.Str[strlen(AttrPart.Str) - 1] = '\0';
     }
-    if (*AttrPart == '\0') ThisUnit = NoUnit;
+    if (*AttrPart.Str == '\0') ThisUnit = NoUnit;
     else 
       for (; ThisUnit != LastUnit; ThisUnit++)
-        if (!strcasecmp(AttrPart, UnitNames[ThisUnit]))
+        if (!strcasecmp(AttrPart.Str, UnitNames[ThisUnit]))
           break;
     if (ThisUnit == LastUnit)
     {
-      WrError(1107);
+      WrError(ErrNum_UndefAttr);
       return;
     }
     if (((ThisUnit == D1) || (ThisUnit == D2)) && (ThisCross))
     {
-      WrError(1350);
+      WrError(ErrNum_InvAddrMode);
       return;
     }
   }

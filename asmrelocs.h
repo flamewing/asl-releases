@@ -13,6 +13,15 @@
 /*                                                                          */
 /****************************************************************************/
 
+struct sRelocEntry
+{
+  struct sRelocEntry *Next;
+  char *Ref;
+  Byte Add;
+};
+typedef struct sRelocEntry TRelocEntry, *PRelocEntry;
+
+
 extern PRelocEntry LastRelocs;
 
 extern PRelocEntry MergeRelocs(PRelocEntry *list1, PRelocEntry *list2,

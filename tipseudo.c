@@ -63,29 +63,29 @@ static void define_untyped_label(void)
 
 static void pseudo_qxx(Integer num)
 {
-  int z;
+  tStrComp *pArg;
   Boolean ok = True;
   double res;
 
   if (!ChkArgCnt(1, ArgCntMax))
     return;
 
-  for (z = 1; z <= ArgCnt; z++)
+  forallargs (pArg, True)
   {
-    if (!*ArgStr[z])
+    if (!*pArg->Str)
     {
       ok = False;
       break;
     }
 
-    res = ldexp(EvalFloatExpression(ArgStr[z], Float64, &ok), num);
+    res = ldexp(EvalStrFloatExpression(pArg, Float64, &ok), num);
     if (!ok)
       break;
 
     if ((res > 32767.49) || (res < -32768.49))
     {
       ok = False;
-      WrError(1320);
+      WrError(ErrNum_OverRange);
       break;
     }
     WAsmCode[CodeLen++] = res;
@@ -97,7 +97,7 @@ static void pseudo_qxx(Integer num)
 
 static void pseudo_lqxx(Integer num)
 {
-  int z;
+  tStrComp *pArg;
   Boolean ok = True;
   double res;
   LongInt resli;
@@ -105,22 +105,22 @@ static void pseudo_lqxx(Integer num)
   if (!ChkArgCnt(1, ArgCntMax))
     return;
 
-  for (z = 1; z <= ArgCnt; z++)
+  forallargs (pArg, True)
   {
-    if (!*ArgStr[z])
+    if (!*pArg->Str)
     {
       ok = False;
       break;
     }
 
-    res = ldexp(EvalFloatExpression(ArgStr[z], Float64, &ok), num);
+    res = ldexp(EvalStrFloatExpression(pArg, Float64, &ok), num);
     if (!ok) 
       break;
 
     if ((res > 2147483647.49) || (res < -2147483647.49))
     {
       ok = False;
-      WrError(1320);
+      WrError(ErrNum_OverRange);
       break;
     }
     resli = res;
@@ -142,7 +142,7 @@ static void pseudo_store(tcallback callback)
 {
   Boolean ok = True;
   int adr = 0;
-  int z;
+  tStrComp *pArg;
   TempResult t;
 
   if (!ChkArgCnt(1, ArgCntMax))
@@ -150,22 +150,22 @@ static void pseudo_store(tcallback callback)
 
   define_untyped_label();
 
-  for (z = 1; ok && (z <= ArgCnt); z++)
+  forallargs (pArg, ok)
   {
-    if (!*ArgStr[z])
+    if (!*pArg->Str)
     {
       ok = False;
       break;
     }
 
-    EvalExpression(ArgStr[z], &t);
+    EvalStrExpression(pArg, &t);
     switch(t.Typ)
     {
       case TempInt:
         callback(&ok, &adr, t.Contents.Int);
         break;
       case TempFloat:
-        WrError(1135);
+        WrError(ErrNum_InvOpType);
         return;
       case TempString:
       {
@@ -177,7 +177,7 @@ static void pseudo_store(tcallback callback)
         break;
       }
       default:
-        WrError(1135);
+        WrError(ErrNum_InvOpType);
         ok = False;
         break;
     }
@@ -191,7 +191,7 @@ static void wr_code_byte(Boolean *ok, int *adr, LongInt val)
 {
   if ((val < -128) || (val > 0xff))
   {
-    WrError(1320);
+    WrError(ErrNum_OverRange);
     *ok = False;
     return;
   }
@@ -203,7 +203,7 @@ static void wr_code_word(Boolean *ok, int *adr, LongInt val)
 {
   if ((val < -32768) || (val > 0xffff))
   {
-    WrError(1320);
+    WrError(ErrNum_OverRange);
     *ok = False;
     return;
   }
@@ -224,7 +224,7 @@ static void wr_code_byte_hilo(Boolean *ok, int *adr, LongInt val)
 {
   if ((val < -128) || (val > 0xff))
   {
-    WrError(1320);
+    WrError(ErrNum_OverRange);
     *ok = False;
     return;
   }
@@ -239,7 +239,7 @@ static void wr_code_byte_lohi(Boolean *ok, int *adr, LongInt val)
 {
   if ((val < -128) || (val > 0xff))
   {
-    WrError(1320);
+    WrError(ErrNum_OverRange);
     *ok = False;
     return;
   }
@@ -257,7 +257,8 @@ static void wr_code_byte_lohi(Boolean *ok, int *adr, LongInt val)
 Boolean DecodeTIPseudo(void)
 {
   Boolean ok;
-  int z, exp;
+  tStrComp *pArg;
+  int exp;
   double dbl, mant;
   float flt;
   long lmant;
@@ -330,14 +331,14 @@ Boolean DecodeTIPseudo(void)
       return True;
     define_untyped_label();
     ok = True;
-    for (z = 1; (z <= ArgCnt) && ok; z++)
+    forallargs (pArg, ok)
     {
-      if (!*ArgStr[z])
+      if (!*pArg->Str)
       {
         ok = False;
         break;
       }
-      flt = EvalFloatExpression(ArgStr[z], Float32, &ok);
+      flt = EvalStrFloatExpression(pArg, Float32, &ok);
       memcpy(WAsmCode+CodeLen, &flt, sizeof(float));
       if (BigEndian)
       {
@@ -358,14 +359,14 @@ Boolean DecodeTIPseudo(void)
       return True;
     define_untyped_label();
     ok = True;
-    for (z = 1; (z <= ArgCnt) && ok; z++)
+    forallargs (pArg, ok)
     {
-      if (!*ArgStr[z])
+      if (!*pArg->Str)
       {
         ok = False;
         break;
       }
-      dbl = EvalFloatExpression(ArgStr[z], Float64, &ok);
+      dbl = EvalStrFloatExpression(pArg, Float64, &ok);
       memcpy(WAsmCode+CodeLen, &dbl, sizeof(dbl));
       if (BigEndian)
       {
@@ -389,14 +390,14 @@ Boolean DecodeTIPseudo(void)
       return True;
     define_untyped_label();
     ok = True;
-    for (z = 1; (z <= ArgCnt) && ok; z++)
+    forallargs (pArg, ok)
     {
-      if (!*ArgStr[z])
+      if (!*pArg->Str)
       {
         ok = False;
         break;
       }
-      dbl = EvalFloatExpression(ArgStr[z], Float64, &ok);
+      dbl = EvalStrFloatExpression(pArg, Float64, &ok);
       mant = frexp(dbl, &exp);
       WAsmCode[CodeLen++] = ldexp(mant, 15);
       WAsmCode[CodeLen++] = exp-1;
@@ -412,14 +413,14 @@ Boolean DecodeTIPseudo(void)
       return True;
     define_untyped_label();
     ok = True;
-    for (z = 1; (z <= ArgCnt) && ok; z++)
+    forallargs (pArg, ok)
     {
-      if (!*ArgStr[z])
+      if (!*pArg->Str)
       {
         ok = False;
         break;
       }
-      dbl = EvalFloatExpression(ArgStr[z], Float64, &ok);
+      dbl = EvalStrFloatExpression(pArg, Float64, &ok);
       mant = frexp(dbl, &exp);
       lmant = ldexp(mant, 31);
       WAsmCode[CodeLen++] = (lmant & 0xffff);
@@ -437,14 +438,14 @@ Boolean DecodeTIPseudo(void)
       return True;
     define_untyped_label();
     ok = True;
-    for (z = 1; (z <= ArgCnt) && ok; z++)
+    forallargs (pArg, ok)
     {
-      if (!*ArgStr[z])
+      if (!*pArg->Str)
       {
         ok = False;
         break;
       }
-      dbl = EvalFloatExpression(ArgStr[z], Float64, &ok);
+      dbl = EvalStrFloatExpression(pArg, Float64, &ok);
       mant = frexp(dbl, &exp);
       mant = modf(ldexp(mant, 15), &dbl);
       WAsmCode[CodeLen + 3] = dbl;
@@ -568,7 +569,7 @@ Boolean ExtToTIC34xExt(Double Inp, LongWord *ErgL, LongWord *ErgH)
 static void DecodeSINGLE(Word Code)
 {
   Double f;
-  int z;
+  tStrComp *pArg;
   Boolean OK;
 
   UNUSED(Code);
@@ -576,10 +577,10 @@ static void DecodeSINGLE(Word Code)
   if (ChkArgCnt(1, ArgCntMax))
   {
     OK = True;
-    for (z = 1; z <= ArgCnt; z++)
+    forallargs (pArg, True)
       if (OK)
       {
-        f = EvalFloatExpression(ArgStr[z], Float64, &OK);
+        f = EvalStrFloatExpression(pArg, Float64, &OK);
         if (OK)
           OK = OK && ExtToTIC34xSingle(f, DAsmCode + (CodeLen++));
       }
@@ -591,7 +592,7 @@ static void DecodeSINGLE(Word Code)
 static void DecodeEXTENDED(Word Code)
 {
   Double f;
-  int z;
+  tStrComp *pArg;
   Boolean OK;
 
   UNUSED(Code);
@@ -599,10 +600,10 @@ static void DecodeEXTENDED(Word Code)
   if (ChkArgCnt(1, ArgCntMax))
   {
     OK = True;
-    for (z = 1; z <= ArgCnt; z++)
+    forallargs (pArg, True)
       if (OK)
       {
-        f = EvalFloatExpression(ArgStr[z], Float64, &OK);
+        f = EvalStrFloatExpression(pArg, Float64, &OK);
         if (OK)
           OK = OK && ExtToTIC34xExt(f, DAsmCode + CodeLen + 1, DAsmCode + CodeLen);
         CodeLen += 2;
@@ -615,15 +616,15 @@ static void DecodeEXTENDED(Word Code)
 static void DecodeWORD(Word Code)
 {
   Boolean OK;
-  int z;
+  tStrComp *pArg;
 
   UNUSED(Code);
 
   if (ChkArgCnt(1, ArgCntMax))
   {
     OK = True;
-    for (z = 1; z <= ArgCnt; z++)
-      if (OK) DAsmCode[CodeLen++] = EvalIntExpression(ArgStr[z], Int32, &OK);
+    forallargs (pArg, True)
+      if (OK) DAsmCode[CodeLen++] = EvalStrIntExpression(pArg, Int32, &OK);
     if (!OK)
       CodeLen = 0;
   }
@@ -633,17 +634,17 @@ static void DecodeDATA34x(Word Code)
 {
   Boolean OK;
   TempResult t;
-  int z;
+  tStrComp *pArg;
 
   UNUSED(Code);
 
   if (ChkArgCnt(1, ArgCntMax))
   {
     OK = True;
-    for (z = 1; z <= ArgCnt; z++)
+    forallargs (pArg, True)
       if (OK)
       {
-        EvalExpression(ArgStr[z], &t);
+        EvalStrExpression(pArg, &t);
         switch (t.Typ)
         {
           case TempInt:
@@ -651,7 +652,7 @@ static void DecodeDATA34x(Word Code)
             if (!RangeCheck(t.Contents.Int, Int32))
             {
               OK = False;
-              WrError(1320);
+              WrError(ErrNum_OverRange);
             }
             else
 #endif
@@ -693,13 +694,13 @@ static void DecodeBSS(Word Code)
   if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
-    Size = EvalIntExpression(ArgStr[1], UInt24, &OK);
-    if (FirstPassUnknown) WrError(1820);
+    Size = EvalStrIntExpression(&ArgStr[1], UInt24, &OK);
+    if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
     if ((OK) && (!FirstPassUnknown))
     {
       DontPrint = True;
       if (!Size)
-        WrError(290);
+        WrError(ErrNum_NullResMem);
       CodeLen = Size;
       BookKeeping();
     }

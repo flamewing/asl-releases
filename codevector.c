@@ -52,38 +52,40 @@ static Boolean Is4(const char *pAsc, Word *pResult)
   return (*pResult <= 15);
 }
 
-static Boolean DecodeScale(char *pAsc, Word *pResult)
+static Boolean DecodeScale(tStrComp *pArg, Word *pResult)
 {
   Boolean OK;
 
-  KillPrefBlanks(pAsc); KillPostBlanks(pAsc);
+  KillPrefBlanksStrComp(pArg);
+  KillPostBlanksStrComp(pArg);
 
-  if ((toupper(*pAsc) == 'S') && (Is4(pAsc + 1, pResult)))
+  if ((toupper(*pArg->Str) == 'S') && (Is4(pArg->Str + 1, pResult)))
     return True;
 
-  *pResult = EvalIntExpression(pAsc, UInt4, &OK);
+  *pResult = EvalStrIntExpression(pArg, UInt4, &OK);
   return OK;
 }
 
-static Boolean DecodeBright(char *pAsc, Word *pResult)
+static Boolean DecodeBright(tStrComp *pArg, Word *pResult)
 {
   Boolean OK;
 
-  KillPrefBlanks(pAsc); KillPostBlanks(pAsc);
+  KillPrefBlanksStrComp(pArg);
+  KillPostBlanksStrComp(pArg);
 
-  if ((toupper(*pAsc) == 'Z') && (Is4(pAsc + 1, pResult)))
+  if ((toupper(*pArg->Str) == 'Z') && (Is4(pArg->Str + 1, pResult)))
     return True;
 
-  *pResult = EvalIntExpression(pAsc, UInt4, &OK);
+  *pResult = EvalStrIntExpression(pArg, UInt4, &OK);
   return OK;
 }
 
-static Boolean DecodeSign(char *pAsc, Word *pResult, Boolean Signed)
+static Boolean DecodeSign(tStrComp *pArg, Word *pResult, Boolean Signed)
 {
   LongInt Val;
   Boolean OK;
 
-  Val = EvalIntExpression(pAsc, SInt16, &OK);
+  Val = EvalStrIntExpression(pArg, SInt16, &OK);
   if (!OK)
     return False;
 
@@ -100,38 +102,41 @@ static Boolean DecodeSign(char *pAsc, Word *pResult, Boolean Signed)
   return True;
 }
 
-static Boolean DecodeXY(char *pAsc, Word *pX, Word *pY, Boolean Signed)
+static Boolean DecodeXY(tStrComp *pArg, Word *pX, Word *pY, Boolean Signed)
 {
+  tStrComp Tot, Left, Right;
   char *pEnd, *pPos;
 
-  KillPrefBlanks(pAsc); KillPostBlanks(pAsc);
+  KillPrefBlanksStrComp(pArg);
+  KillPostBlanksStrComp(pArg);
 
-  if (*pAsc != '(')
+  if (*pArg->Str != '(')
   {
-    WrError(1300);
+    WrError(ErrNum_BrackErr);
     return False;
   }
-  pAsc++;
+  StrCompRefRight(&Tot, pArg, 1);
 
-  pEnd = pAsc + strlen(pAsc) - 1;
+  pEnd = Tot.Str + strlen(Tot.Str) - 1;
   if (*pEnd != ')')
   {
-    WrError(1300);
+    WrError(ErrNum_BrackErr);
     return False; 
   }
   *pEnd = '\0';
+  Tot.Pos.Len--;
 
-  pPos = strchr(pAsc, ',');
+  pPos = strchr(Tot.Str, ',');
   if (!pPos)
   {
-    WrError(1100);
+    WrError(ErrNum_UseLessAttr);
     return False; 
   }
-  *pPos = '\0';
+  StrCompSplitRef(&Left, &Right, &Tot, pPos);
 
-  if (!DecodeSign(pAsc, pX, Signed))
+  if (!DecodeSign(&Left, pX, Signed))
     return False;
-  if (!DecodeSign(pPos + 1, pY, Signed))
+  if (!DecodeSign(&Right, pY, Signed))
     return False;
 
   return True;
@@ -156,7 +161,7 @@ static void DecodeJmp(Word Index)
 
   if (ChkArgCnt(1, 1))
   {
-    WAsmCode[0] = Index | EvalIntExpression(ArgStr[1], UInt12, &OK);
+    WAsmCode[0] = Index | EvalStrIntExpression(&ArgStr[1], UInt12, &OK);
     if (OK)
       CodeLen = 1;
   }
@@ -169,8 +174,8 @@ static void DecodeLAbs(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeXY(ArgStr[1], &X, &Y, False));
-  else if (!DecodeScale(ArgStr[2], &Scale));
+  else if (!DecodeXY(&ArgStr[1], &X, &Y, False));
+  else if (!DecodeScale(&ArgStr[2], &Scale));
   else
   {
     WAsmCode[0] = 0xa000 | Y;
@@ -186,9 +191,9 @@ static void DecodeVctr(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(3, 3));
-  else if (!DecodeXY(ArgStr[1], &X, &Y, True));
-  else if (!DecodeScale(ArgStr[2], &Scale));
-  else if (!DecodeBright(ArgStr[3], &Bright));
+  else if (!DecodeXY(&ArgStr[1], &X, &Y, True));
+  else if (!DecodeScale(&ArgStr[2], &Scale));
+  else if (!DecodeBright(&ArgStr[3], &Bright));
   else
   {
     WAsmCode[0] = (Scale << 12) | Y;
@@ -204,11 +209,11 @@ static void DecodeSVec(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(3, 3));
-  else if (!DecodeXY(ArgStr[1], &X, &Y, True));
-  else if ((X & 0xff) || (Y & 0xff)) WrError(1325);
-  else if (!DecodeScale(ArgStr[2], &Scale));
-  else if (Scale > 3) WrError(1320);
-  else if (!DecodeBright(ArgStr[3], &Bright));
+  else if (!DecodeXY(&ArgStr[1], &X, &Y, True));
+  else if ((X & 0xff) || (Y & 0xff)) WrError(ErrNum_NotAligned);
+  else if (!DecodeScale(&ArgStr[2], &Scale));
+  else if (Scale > 3) WrError(ErrNum_OverRange);
+  else if (!DecodeBright(&ArgStr[3], &Bright));
   else
   {
     WAsmCode[0] = 0xf000

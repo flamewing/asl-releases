@@ -18,6 +18,8 @@
  *
  *****************************************************************************/
 
+#include "datatypes.h"
+
 struct sLineComp;
 struct sStrComp;
 extern void WrErrorString(char *Message, char *Add, Boolean Warning, Boolean Fatal,

@@ -72,41 +72,41 @@ static BaseOrder *FixedOrders;
 
 /*--------------------------------------------------------------------------*/
 
-static void DecodeAdr(char *Asc, Boolean MayImm)
+static void DecodeAdr(const tStrComp *pArg, Boolean MayImm)
 {
   Boolean OK;
 
   AdrMode = ModNone;
 
-  if (!strcasecmp(Asc, "(X)"))
+  if (!strcasecmp(pArg->Str, "(X)"))
   {
     AdrMode = ModInd;
     AdrVal = 0x00;
     goto chk;
   }
-  if (!strcasecmp(Asc, "(Y)"))
+  if (!strcasecmp(pArg->Str, "(Y)"))
   {
     AdrMode = ModInd;
     AdrVal = 0x10;
     goto chk;
   }
 
-  if (*Asc == '#')
+  if (*pArg->Str == '#')
   {
-    AdrVal = EvalIntExpression(Asc + 1, Int8, &OK);
+    AdrVal = EvalStrIntExpressionOffs(pArg, 1, Int8, &OK);
     if (OK)
       AdrMode = ModImm;
     goto chk;
   }
 
-  AdrVal = EvalIntExpression(Asc, Int8, &OK);
+  AdrVal = EvalStrIntExpression(pArg, Int8, &OK);
   if (OK)
     AdrMode = ModDir;
 
 chk:
   if ((AdrMode == ModImm) && (!MayImm))
   {
-    WrError(1350); AdrMode = ModNone;
+    WrError(ErrNum_InvAddrMode); AdrMode = ModNone;
   }
 }
 
@@ -144,11 +144,11 @@ static void DecodeRel(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    Integer AdrInt = EvalIntExpression(ArgStr[1], Int16, &OK) - (EProgCounter() + 1);
+    Integer AdrInt = EvalStrIntExpression(&ArgStr[1], Int16, &OK) - (EProgCounter() + 1);
 
     if (OK)
     {
-      if ((!SymbolQuestionable) && ((AdrInt < -16) || (AdrInt > 15))) WrError(1370);
+      if ((!SymbolQuestionable) && ((AdrInt < -16) || (AdrInt > 15))) WrError(ErrNum_JmpDistTooBig);
       else
       {
         CodeLen = 1;
@@ -164,7 +164,7 @@ static void DecodeJSR_JMP(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    Word AdrInt = EvalIntExpression(ArgStr[1], UInt12, &OK);
+    Word AdrInt = EvalStrIntExpression(&ArgStr[1], UInt12, &OK);
 
     if (OK)
     {
@@ -182,7 +182,7 @@ static void DecodeALU(Word Code)
 {
   if (ChkArgCnt(1, 1))
   {
-    DecodeAdr(ArgStr[1], True);
+    DecodeAdr(&ArgStr[1], True);
     switch (AdrMode)
     {
       case ModInd:
@@ -209,7 +209,7 @@ static void DecodeLDA_STA(Word Code)
 {
   if (ChkArgCnt(1, 1))
   {
-    DecodeAdr(ArgStr[1], !Code);
+    DecodeAdr(&ArgStr[1], !Code);
     switch (AdrMode)
     {
       case ModInd:
@@ -241,12 +241,12 @@ static void DecodeLDA_STA(Word Code)
 static void DecodeLDXI_LDYI(Word Code)
 {
   if (!ChkArgCnt(1, 1));
-  else if (*ArgStr[1] != '#') WrError(1350);
+  else if (*ArgStr[1].Str != '#') WrError(ErrNum_InvAddrMode);
   else
   {
     Boolean OK;
 
-    BAsmCode[2] = EvalIntExpression(ArgStr[1] + 1, Int8, &OK);
+    BAsmCode[2] = EvalStrIntExpressionOffs(&ArgStr[1], 1, Int8, &OK);
     if (OK)
     {
       CodeLen = 3;
@@ -261,16 +261,16 @@ static void DecodeMVI(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(2, 2));
-  else if (*ArgStr[2] != '#') WrError(1350);
+  else if (*ArgStr[2].Str != '#') WrError(ErrNum_InvAddrMode);
   else
   {
     Boolean OK;
 
-    BAsmCode[1] = EvalIntExpression(ArgStr[1], Int8, &OK);
+    BAsmCode[1] = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
     if (OK)
     {
       ChkSpace(SegData);
-      BAsmCode[2] = EvalIntExpression(ArgStr[2] + 1, Int8, &OK);
+      BAsmCode[2] = EvalStrIntExpressionOffs(&ArgStr[2], 1, Int8, &OK);
       if (OK)
       {
         BAsmCode[0] = 0xb0;
@@ -286,7 +286,7 @@ static void DecodeINC_DEC(Word Code)
 {
   if (ChkArgCnt(1, 1))
   {
-    DecodeAdr(ArgStr[1], False);
+    DecodeAdr(&ArgStr[1], False);
     switch (AdrMode)
     {
       case ModInd:
@@ -317,11 +317,11 @@ static void DecodeBSET_BCLR(Word Code)
   if (ChkArgCnt(2, 2))
   {
     Boolean OK;
-    Byte Bit = EvalIntExpression(ArgStr[1], UInt3, &OK);
+    Byte Bit = EvalStrIntExpression(&ArgStr[1], UInt3, &OK);
     if (OK)
     {
       BAsmCode[0] = Code + Bit;
-      BAsmCode[1] = EvalIntExpression(ArgStr[2], Int8, &OK);
+      BAsmCode[1] = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
       if (OK)
       {
         CodeLen = 2;
@@ -336,21 +336,21 @@ static void DecodeBRSET_BRCLR(Word Code)
   if (ChkArgCnt(3, 3))
   {
     Boolean OK;
-    Byte Bit = EvalIntExpression(ArgStr[1], UInt3, &OK);
+    Byte Bit = EvalStrIntExpression(&ArgStr[1], UInt3, &OK);
 
     if (OK)
     {
       BAsmCode[0] = Code + Bit;
-      BAsmCode[1] = EvalIntExpression(ArgStr[2], Int8, &OK);
+      BAsmCode[1] = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
       if (OK)
       {
         Integer AdrInt;
 
         ChkSpace(SegData);
-        AdrInt = EvalIntExpression(ArgStr[3], Int16, &OK) - (EProgCounter() + 3);
+        AdrInt = EvalStrIntExpression(&ArgStr[3], Int16, &OK) - (EProgCounter() + 3);
         if (OK)
         {
-          if ((!SymbolQuestionable) && ((AdrInt < -128) || (AdrInt > 127))) WrError(1370);
+          if ((!SymbolQuestionable) && ((AdrInt < -128) || (AdrInt > 127))) WrError(ErrNum_JmpDistTooBig);
           else
           {
             ChkSpace(SegCode);

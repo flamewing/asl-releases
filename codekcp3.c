@@ -111,7 +111,7 @@ static Boolean IsCond(int OtherArgCnt, LongWord *pErg)
   }
 
   for (*pErg = 0; *pErg < (sizeof(Conds) / sizeof(*Conds)); (*pErg)++)
-    if (!strcasecmp(Conds[*pErg], ArgStr[1]))
+    if (!strcasecmp(Conds[*pErg], ArgStr[1].Str))
     {
       *pErg |= 4;
       return True;
@@ -136,7 +136,7 @@ static void DecodeReg(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(1, 1))
-    AddRegDef(LabPart.Str, ArgStr[1]);
+    AddRegDef(LabPart.Str, ArgStr[1].Str);
 }
 
 static void DecodeNameReg(Word Index)
@@ -144,7 +144,7 @@ static void DecodeNameReg(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(2, 2))
-    AddRegDef(ArgStr[2], ArgStr[1]);
+    AddRegDef(ArgStr[2].Str, ArgStr[1].Str);
 }
 
 static void DecodeConstant(Word Index)
@@ -157,13 +157,13 @@ static void DecodeConstant(Word Index)
     Boolean OK;
 
     FirstPassUnknown = FALSE;
-    t.Contents.Int = EvalIntExpression(ArgStr[2], Int32, &OK);
+    t.Contents.Int = EvalStrIntExpression(&ArgStr[2], Int32, &OK);
     if ((OK) && (!FirstPassUnknown))
     {
       t.Typ = TempInt;
       SetListLineVal(&t);
       PushLocHandle(-1); 
-      EnterIntSymbol(ArgStr[1], t.Contents.Int, SegNone, False);
+      EnterIntSymbol(ArgStr[1].Str, t.Contents.Int, SegNone, False);
       PopLocHandle();
     }
   }
@@ -175,7 +175,7 @@ static void DecodeOneReg(Word Index)
   LongWord Reg;
 
   if (!ChkArgCnt(1, 1));
-  else if (!IsWReg(ArgStr[1], &Reg)) WrError(1350);
+  else if (!IsWReg(ArgStr[1].Str, &Reg)) WrError(ErrNum_InvAddrMode);
   else
   {
     DAsmCode[0] = pOrder->Code | (Reg << 8);
@@ -190,15 +190,15 @@ static void DecodeALU(Word Index)
   Boolean OK;
 
   if (!ChkArgCnt(2, 2));
-  else if (!IsWReg(ArgStr[1], &DReg)) WrError(1350);
-  else if (IsWReg(ArgStr[2], &Src))
+  else if (!IsWReg(ArgStr[1].Str, &DReg)) WrError(ErrNum_InvAddrMode);
+  else if (IsWReg(ArgStr[2].Str, &Src))
   {
     DAsmCode[0] = pOrder->Code | 0x1000 | (DReg << 8) | (Src << 4);
     CodeLen = 1;
   }
   else
   {
-    Src = EvalIntExpression(ArgStr[2], Int8, &OK);
+    Src = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
     if (OK)
     {
       DAsmCode[0] = pOrder->Code | (DReg << 8) | (Src & 0xff);
@@ -215,7 +215,7 @@ static void DecodeJmp(Word Index)
   if (ChkArgCnt(1, 2)
    && IsCond(1, &Cond))
   {
-    Addr = EvalIntExpression(ArgStr[ArgCnt], UInt10, &OK);
+    Addr = EvalStrIntExpression(&ArgStr[ArgCnt], UInt10, &OK);
     if (OK)
     {
       ChkSpace(SegCode);
@@ -245,18 +245,18 @@ static void DecodeReti(Word Index)
 
   if (ChkArgCnt(1, 1))
   {
-    if (!strcasecmp(ArgStr[1], "DISABLE"))
+    if (!strcasecmp(ArgStr[1].Str, "DISABLE"))
     {
       DAsmCode[0] = 0x38000;
       CodeLen = 1;
     }
-    else if (!strcasecmp(ArgStr[1], "ENABLE"))
+    else if (!strcasecmp(ArgStr[1].Str, "ENABLE"))
     {
       DAsmCode[0] = 0x38001;
       CodeLen = 1;
     }
     else
-      WrError(1350);
+      WrError(ErrNum_InvAddrMode);
   }
 }
 
@@ -264,7 +264,7 @@ static void DecodeInt(Word Index)
 {
   if (ChkArgCnt(1, 1))
   {
-    if (strcasecmp(ArgStr[1], "INTERRUPT")) WrError(1350);
+    if (strcasecmp(ArgStr[1].Str, "INTERRUPT")) WrError(ErrNum_InvAddrMode);
     else
     {
       DAsmCode[0] = 0x3c000 | Index;
@@ -279,18 +279,18 @@ static void DecodeMem(Word Index)
   Boolean OK;
 
   if (!ChkArgCnt(2, 2));
-  else if (!IsWReg(ArgStr[1], &Reg)) WrError(1350);
+  else if (!IsWReg(ArgStr[1].Str, &Reg)) WrError(ErrNum_InvAddrMode);
   else 
   {
     DAsmCode[0] = (((LongWord)Index) << 13) | (Reg << 8);
-    if (IsIWReg(ArgStr[2], &Addr))
+    if (IsIWReg(ArgStr[2].Str, &Addr))
     {
       DAsmCode[0] |= 0x01000 | (Addr << 4);
       CodeLen = 1;
     }
     else
     {
-      Addr = EvalIntExpression(ArgStr[2], UInt6, &OK);
+      Addr = EvalStrIntExpression(&ArgStr[2], UInt6, &OK);
       if (OK)
       {
         ChkSpace(SegData);
@@ -307,18 +307,18 @@ static void DecodeIO(Word Index)
   Boolean OK;
 
   if (!ChkArgCnt(2, 2));
-  else if (!IsWReg(ArgStr[1], &Reg)) WrError(1350);
+  else if (!IsWReg(ArgStr[1].Str, &Reg)) WrError(ErrNum_InvAddrMode);
   else 
   {
     DAsmCode[0] = (((LongWord)Index) << 13) | (Reg << 8);
-    if (IsIWReg(ArgStr[2], &Addr))
+    if (IsIWReg(ArgStr[2].Str, &Addr))
     {
       DAsmCode[0] |= 0x01000 | (Addr << 4);
       CodeLen = 1;
     }
     else
     {
-      Addr = EvalIntExpression(ArgStr[2], UInt8, &OK);
+      Addr = EvalStrIntExpression(&ArgStr[2], UInt8, &OK);
       if (OK)
       {
         ChkSpace(SegIO);

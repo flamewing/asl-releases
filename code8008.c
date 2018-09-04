@@ -67,7 +67,7 @@ static void DecodeImm(Word Index)
   {
     Boolean OK;
 
-    BAsmCode[1] = EvalIntExpression(ArgStr[1], Int8, &OK);
+    BAsmCode[1] = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
     if (OK)
     {
       BAsmCode[0] = Index;
@@ -83,7 +83,7 @@ static void DecodeJmp(Word Index)
     Boolean OK;
     Word AdrWord;
 
-    AdrWord = EvalIntExpression(ArgStr[1], UInt14, &OK);
+    AdrWord = EvalStrIntExpression(&ArgStr[1], UInt14, &OK);
     if (OK)
     {
       BAsmCode[0] = Index;
@@ -106,7 +106,7 @@ static void DecodeRST(Word Index)
     UNUSED(Index);
 
     FirstPassUnknown = False;
-    AdrWord = EvalIntExpression(ArgStr[1], UInt14, &OK);
+    AdrWord = EvalStrIntExpression(&ArgStr[1], UInt14, &OK);
     if (FirstPassUnknown) AdrWord &= 0x38;
     if (OK)
     {
@@ -118,7 +118,7 @@ static void DecodeRST(Word Index)
           CodeLen = 1;
           ChkSpace(SegCode);
         }
-        else if ((AdrWord & 7) != 0) WrError(1325);
+        else if ((AdrWord & 7) != 0) WrError(ErrNum_NotAligned);
         else
         {
           BAsmCode[0] = AdrWord + 0x05;
@@ -138,7 +138,7 @@ static void DecodeINP(Word Index)
   {
     Boolean OK;
 
-    BAsmCode[0] = 0x41 | (EvalIntExpression(ArgStr[1], UInt3, &OK) << 1);
+    BAsmCode[0] = 0x41 | (EvalStrIntExpression(&ArgStr[1], UInt3, &OK) << 1);
     if (OK)
     {
       CodeLen = 1;
@@ -157,12 +157,12 @@ static void DecodeOUT(Word Index)
     Boolean OK;
 
     FirstPassUnknown = FALSE;
-    Addr = EvalIntExpression(ArgStr[1], UInt5, &OK);
+    Addr = EvalStrIntExpression(&ArgStr[1], UInt5, &OK);
     if (FirstPassUnknown)
       Addr |= 0x08;
     if (OK)
     {
-      if (Addr < 8) WrError(1315);
+      if (Addr < 8) WrError(ErrNum_UnderRange);
       else
       {
         BAsmCode[0] = 0x41 | (Addr << 1);
@@ -180,9 +180,9 @@ static void DecodeMOV(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeReg(ArgStr[1], &DReg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
-  else if (!DecodeReg(ArgStr[2], &SReg)) WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
-  else if ((DReg == 7) && (SReg == 7)) WrError(1760); /* MOV M,M not allowed - asame opcode as HLT */
+  else if (!DecodeReg(ArgStr[1].Str, &DReg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+  else if (!DecodeReg(ArgStr[2].Str, &SReg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+  else if ((DReg == 7) && (SReg == 7)) WrError(ErrNum_InvRegPair); /* MOV M,M not allowed - asame opcode as HLT */
   else
   {
     BAsmCode[0] = 0xc0 | (DReg << 3) | SReg;
@@ -197,12 +197,12 @@ static void DecodeMVI(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeReg(ArgStr[1], &DReg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+  else if (!DecodeReg(ArgStr[1].Str, &DReg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
   else
   {
     Boolean OK;
 
-    BAsmCode[1] = EvalIntExpression(ArgStr[2], Int8, &OK);
+    BAsmCode[1] = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
     if (OK)
     {
       BAsmCode[0] = 0x06 | (DReg << 3);
@@ -218,14 +218,14 @@ static void DecodeLXI(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeReg(ArgStr[1], &DReg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
-  else if ((DReg != 1) && (DReg != 3) && (DReg != 5)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+  else if (!DecodeReg(ArgStr[1].Str, &DReg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+  else if ((DReg != 1) && (DReg != 3) && (DReg != 5)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
   else
   {
     Boolean OK;
     Word Val;
 
-    Val = EvalIntExpression(ArgStr[2], Int16, &OK);
+    Val = EvalStrIntExpression(&ArgStr[2], Int16, &OK);
     if (OK)
     {
       BAsmCode[2] = 0x06 | ((DReg + 1) << 3);
@@ -243,8 +243,8 @@ static void DecodeSingleReg(Word Index)
   Boolean NoAM = (Index & 0x8000) || False;
 
   if (!ChkArgCnt(1, 1));
-  else if (!DecodeReg(ArgStr[1], &Reg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
-  else if (NoAM && ((Reg == 0) || (Reg == 7))) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+  else if (!DecodeReg(ArgStr[1].Str, &Reg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+  else if (NoAM && ((Reg == 0) || (Reg == 7))) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
   else
   {
     BAsmCode[0] = Opcode | (Reg << Shift);

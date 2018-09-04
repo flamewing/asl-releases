@@ -78,7 +78,7 @@ static void DecodeLitt(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    Word AdrWord = EvalIntExpression(ArgStr[1], Int8, &OK);
+    Word AdrWord = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
     if (OK)
     {
       WAsmCode[0] = Code + (AdrWord & 0xff);
@@ -95,7 +95,7 @@ static void DecodeAri(Word Code)
   if (ChkArgCnt(1, 2))
   {
     Boolean OK;
-    Word AdrWord = EvalIntExpression(ArgStr[1], Int8, &OK);
+    Word AdrWord = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
     if (OK)
     {
       ChkSpace(SegData);
@@ -105,16 +105,16 @@ static void DecodeAri(Word Code)
         CodeLen = 1;
         WAsmCode[0] += DefaultDir;
       }
-      else if (strcasecmp(ArgStr[2], "W") == 0)
+      else if (strcasecmp(ArgStr[2].Str, "W") == 0)
         CodeLen = 1;
-      else if (strcasecmp(ArgStr[2], "F") == 0)
+      else if (strcasecmp(ArgStr[2].Str, "F") == 0)
       {
         CodeLen = 1;
         WAsmCode[0] += 0x100;
       }
       else
       {
-        AdrWord = EvalIntExpression(ArgStr[2], UInt1, &OK);
+        AdrWord = EvalStrIntExpression(&ArgStr[2], UInt1, &OK);
         if (OK)
         {
           CodeLen = 1;
@@ -130,10 +130,10 @@ static void DecodeBit(Word Code)
   if (ChkArgCnt(2, 2))
   {
     Boolean OK;
-    Word AdrWord = EvalIntExpression(ArgStr[2], UInt3, &OK);
+    Word AdrWord = EvalStrIntExpression(&ArgStr[2], UInt3, &OK);
     if (OK)
     {
-      WAsmCode[0] = EvalIntExpression(ArgStr[1], Int8, &OK);
+      WAsmCode[0] = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
        if (OK)
        {
          CodeLen = 1;
@@ -149,7 +149,7 @@ static void DecodeF(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    Word AdrWord = EvalIntExpression(ArgStr[1], Int8, &OK);
+    Word AdrWord = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
     if (OK)
     {
       CodeLen = 1;
@@ -163,15 +163,15 @@ static void DecodeMOVFP_MOVPF(Word Code)
 {
   if (ChkArgCnt(2, 2))
   {
-    char *pArg1 = (Code & 0x2000) ? ArgStr[2] : ArgStr[1],
-         *pArg2 = (Code & 0x2000) ? ArgStr[1] : ArgStr[2];
+    tStrComp *pArg1 = (Code & 0x2000) ? &ArgStr[2] : &ArgStr[1],
+             *pArg2 = (Code & 0x2000) ? &ArgStr[1] : &ArgStr[2];
     Boolean OK;
     Word AdrWord;
 
-    AdrWord = EvalIntExpression(pArg1, UInt5, &OK);
+    AdrWord = EvalStrIntExpression(pArg1, UInt5, &OK);
     if (OK)
     {
-      WAsmCode[0] = EvalIntExpression(pArg2, Int8, &OK);
+      WAsmCode[0] = EvalStrIntExpression(pArg2, Int8, &OK);
       if (OK)
       {
         WAsmCode[0] = Code + Lo(WAsmCode[0]) + (AdrWord << 8);
@@ -187,14 +187,14 @@ static void DecodeTABLRD_TABLWT(Word Code)
   {
     Boolean OK;
 
-    WAsmCode[0] = Lo(EvalIntExpression(ArgStr[3], Int8, &OK));
+    WAsmCode[0] = Lo(EvalStrIntExpression(&ArgStr[3], Int8, &OK));
     if (OK)
     {
-      Word AdrWord = EvalIntExpression(ArgStr[2], UInt1, &OK);
+      Word AdrWord = EvalStrIntExpression(&ArgStr[2], UInt1, &OK);
       if (OK)
       {
         WAsmCode[0] += AdrWord << 8;
-        AdrWord = EvalIntExpression(ArgStr[1], UInt1, &OK);
+        AdrWord = EvalStrIntExpression(&ArgStr[1], UInt1, &OK);
         if (OK)
         {
           WAsmCode[0] += Code + (AdrWord << 9);
@@ -211,10 +211,10 @@ static void DecodeTLRD_TLWT(Word Code)
   {
     Boolean OK;
 
-    WAsmCode[0] = Lo(EvalIntExpression(ArgStr[2], Int8, &OK));
+    WAsmCode[0] = Lo(EvalStrIntExpression(&ArgStr[2], Int8, &OK));
     if (OK)
     {
-      Word AdrWord = EvalIntExpression(ArgStr[1], UInt1, &OK);
+      Word AdrWord = EvalStrIntExpression(&ArgStr[1], UInt1, &OK);
       if (OK)
       {
         WAsmCode[0] += (AdrWord << 9) + Code;
@@ -233,14 +233,11 @@ static void DecodeCALL_GOTO(Word Code)
     Word AdrWord;
 
     FirstPassUnknown = False;
-    AdrWord = EvalIntExpression(ArgStr[1], UInt16, &OK);
-    if (OK)
+    AdrWord = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
+    if (OK && ChkSamePage(ProgCounter(), AdrWord, 13))
     {
-      if (ChkSamePage(ProgCounter(), AdrWord, 13))
-      {
-        WAsmCode[0] = Code + (AdrWord & 0x1fff);
-        CodeLen = 1;
-      }
+      WAsmCode[0] = Code + (AdrWord & 0x1fff);
+      CodeLen = 1;
     }
   }
 }
@@ -253,7 +250,7 @@ static void DecodeLCALL(Word Code)
   {
     Boolean OK;
 
-    Word AdrWord = EvalIntExpression(ArgStr[1], UInt16, &OK);
+    Word AdrWord = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
     if (OK)
     {
       CodeLen = 3;
@@ -288,11 +285,11 @@ static void DecodeZERO(Word Code)
   if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
-    Size = EvalIntExpression(ArgStr[1], Int16, &ValOK);
-    if (FirstPassUnknown) WrError(1820);
+    Size = EvalStrIntExpression(&ArgStr[1], Int16, &ValOK);
+    if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
     if ((ValOK) && (!FirstPassUnknown))
     {
-      if (SetMaxCodeLen(Size << 1)) WrError(1920);
+      if (SetMaxCodeLen(Size << 1)) WrError(ErrNum_CodeOverflow);
       else
       {
         CodeLen = Size;

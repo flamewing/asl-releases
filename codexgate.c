@@ -77,10 +77,10 @@ static Boolean DecodeReg(char *pAsc, Word *pResult)
 
 static Boolean DecodeArgReg(int Index, Word *pReg)
 {
-  Boolean Result = DecodeReg(ArgStr[Index], pReg);
+  Boolean Result = DecodeReg(ArgStr[Index].Str, pReg);
 
   if (!Result)
-    WrXErrorPos(ErrNum_InvReg, ArgStr[Index], &ArgStrPos[Index]);
+    WrStrErrorPos(ErrNum_InvReg, &ArgStr[Index]);
   return Result;
 }
 
@@ -104,11 +104,11 @@ static void DecodeBranch(Word Index)
   if (ChkArgCnt(1, 1))
   {   
     FirstPassUnknown = False;
-    Dist = EvalIntExpression(ArgStr[1], UInt16, &OK) - (EProgCounter() + 2);
+    Dist = EvalStrIntExpression(&ArgStr[1], UInt16, &OK) - (EProgCounter() + 2);
     if (OK)
     {
-      if ((!SymbolQuestionable) && (Dist & 1)) WrError(1325);
-      else if ((!SymbolQuestionable) && ((Dist < -512) || (Dist > 510))) WrError(1325);
+      if ((!SymbolQuestionable) && (Dist & 1)) WrError(ErrNum_NotAligned);
+      else if ((!SymbolQuestionable) && ((Dist < -512) || (Dist > 510))) WrError(ErrNum_NotAligned);
       else
       {
         WAsmCode[0] = Index | ((Dist >> 1) & 0x01ff);
@@ -128,11 +128,11 @@ static void DecodeBRA(Word Index)
   if (ChkArgCnt(1, 1))
   {   
     FirstPassUnknown = False;
-    Dist = EvalIntExpression(ArgStr[1], UInt16, &OK) - (EProgCounter() + 2);
+    Dist = EvalStrIntExpression(&ArgStr[1], UInt16, &OK) - (EProgCounter() + 2);
     if (OK)
     {
-      if ((!SymbolQuestionable) && (Dist & 1)) WrError(1325);
-      else if ((!SymbolQuestionable) && ((Dist < -1024) || (Dist > 1022))) WrError(1325);
+      if ((!SymbolQuestionable) && (Dist & 1)) WrError(ErrNum_NotAligned);
+      else if ((!SymbolQuestionable) && ((Dist < -1024) || (Dist > 1022))) WrError(ErrNum_NotAligned);
       else
       {   
         WAsmCode[0] = 0x3c00 | ((Dist >> 1) & 0x03ff);
@@ -149,9 +149,9 @@ static void DecodeShift(Word Index)
 
   if (!ChkArgCnt(2, 2));
   else if (!DecodeArgReg(1, &DReg));
-  else if (*ArgStr[2] == '#')
+  else if (*ArgStr[2].Str == '#')
   {
-    SReg = EvalIntExpression(ArgStr[2] + 1, UInt4, &OK);
+    SReg = EvalStrIntExpressionOffs(&ArgStr[2], 1, UInt4, &OK);
     if (OK)
     {
       WAsmCode[0] = 0x0808 | Index | (DReg << 8) | (SReg << 4);
@@ -174,9 +174,9 @@ static void DecodeAriImm(Word Index)
   else if (!DecodeArgReg(1, &DReg));
   else if (ArgCnt == 2)
   {
-    if (*ArgStr[2] == '#')
+    if (*ArgStr[2].Str == '#')
     {
-      SReg1 = EvalIntExpression(ArgStr[2] + 1, Int16, &OK);
+      SReg1 = EvalStrIntExpressionOffs(&ArgStr[2], 1, Int16, &OK);
       if (OK)
       {
         WAsmCode[0] = 0x8000 | (Index << 12) | (DReg << 8) | Lo(SReg1);
@@ -204,10 +204,10 @@ static void DecodeImm8(Word Index)
 
   if (!ChkArgCnt(2, 2));
   else if (!DecodeArgReg(1, &DReg));
-  else if (*ArgStr[2] != '#') WrError(1120);
+  else if (*ArgStr[2].Str != '#') WrError(ErrNum_OnlyImmAddr);
   else
   {
-    Src = EvalIntExpression(ArgStr[2] + 1, Int8, &OK);
+    Src = EvalStrIntExpressionOffs(&ArgStr[2], 1, Int8, &OK);
     if (OK)
     {
       WAsmCode[0] = Index | (DReg << 8) | (Src & 0xff);
@@ -334,9 +334,9 @@ static void DecodeSem(Word Index)
   Boolean OK;
 
   if (!ChkArgCnt(1, 1));
-  else if (*ArgStr[1] == '#')
+  else if (*ArgStr[1].Str == '#')
   {
-    Reg = EvalIntExpression(ArgStr[1] + 1, UInt3, &OK);
+    Reg = EvalStrIntExpressionOffs(&ArgStr[1], 1, UInt3, &OK);
     if (OK)
     {
       WAsmCode[0] = Index | (Reg << 8);
@@ -379,17 +379,17 @@ static void DecodeTFR(Word Index)
   {
     Boolean OK = True;
 
-    if (!strcasecmp(ArgStr[2], "CCR"))
+    if (!strcasecmp(ArgStr[2].Str, "CCR"))
     {
       WAsmCode[0] = 0x00f8;
       RegIdx = 1;
     }
-    else if (!strcasecmp(ArgStr[1], "CCR"))
+    else if (!strcasecmp(ArgStr[1].Str, "CCR"))
     {
       WAsmCode[0] = 0x00f9;
       RegIdx = 2;
     }
-    else if (!strcasecmp(ArgStr[2], "PC"))
+    else if (!strcasecmp(ArgStr[2].Str, "PC"))
     {
       WAsmCode[0] = 0x00fa;
       RegIdx = 1;
@@ -397,7 +397,7 @@ static void DecodeTFR(Word Index)
     else
       OK = False;
     
-    if (!OK) WrError(1320);
+    if (!OK) WrError(ErrNum_OverRange);
     else if (DecodeArgReg(RegIdx, &Reg))
     {
       WAsmCode[0] |= (Reg << 8);
@@ -415,9 +415,9 @@ static void DecodeCmp(Word Index)
 
   if (ChkArgCnt(2, 2) && DecodeArgReg(1, &DReg))
   {
-    if (*ArgStr[2] == '#')
+    if (*ArgStr[2].Str == '#')
     {
-      Src = EvalIntExpression(ArgStr[2] + 1, Int16, &OK);
+      Src = EvalStrIntExpressionOffs(&ArgStr[2], 1, Int16, &OK);
       if (OK)
       {
         WAsmCode[0] = 0xd000 | (DReg << 8) | Lo(Src);
@@ -439,15 +439,15 @@ static void DecodeMem(Word Code)
 
   if (!ChkArgCnt(2, 2));
   else if (!DecodeArgReg(1, &DReg));
-  else if (*ArgStr[2] == '#')
+  else if (*ArgStr[2].Str == '#')
   {
-    if (!Memo("LDW")) WrError(1350);
+    if (!Memo("LDW")) WrError(ErrNum_InvAddrMode);
     else
     {
       Word Val;
       Boolean OK;
 
-      Val = EvalIntExpression(ArgStr[2] + 1, Int16, &OK);
+      Val = EvalStrIntExpressionOffs(&ArgStr[2], 1, Int16, &OK);
       if (OK)
       {
         WAsmCode[0] = 0xf000 | (DReg << 8) | Lo(Val);
@@ -456,29 +456,29 @@ static void DecodeMem(Word Code)
       }
     }
   }
-  else if (!IsIndirect(ArgStr[2])) WrError(1350);
+  else if (!IsIndirect(ArgStr[2].Str)) WrError(ErrNum_InvAddrMode);
   else
   {
-    int l = strlen(ArgStr[2]) - 2;
+    int l = strlen(ArgStr[2].Str) - 2;
     char *pPos;
     Word Base, Index;
     Boolean OK;
 
     /* remove parentheses */
 
-    memmove(ArgStr[2], ArgStr[2] + 1, l); ArgStr[2][l] = '\0';
+    memmove(ArgStr[2].Str, ArgStr[2].Str + 1, l); ArgStr[2].Str[l] = '\0';
 
     /* base present? */
 
-    pPos = strchr(ArgStr[2], ',');
+    pPos = strchr(ArgStr[2].Str, ',');
     if (pPos)
     {
       *pPos = '\0';
-      KillBlanks(ArgStr[2]);
-      OK = DecodeReg(ArgStr[2], &Base);
+      KillBlanks(ArgStr[2].Str);
+      OK = DecodeReg(ArgStr[2].Str, &Base);
       if (!OK)
-        WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
-      strmov(ArgStr[2], pPos + 1);
+        WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+      strmov(ArgStr[2].Str, pPos + 1);
     }
     else
     {
@@ -490,38 +490,38 @@ static void DecodeMem(Word Code)
 
     if (OK)
     {
-      KillPrefBlanksPos(ArgStr[2], &ArgStrPos[2]);
-      KillPostBlanksPos(ArgStr[2], &ArgStrPos[2]);
+      KillPrefBlanksStrComp(&ArgStr[2]);
+      KillPostBlanksStrComp(&ArgStr[2]);
 
-      if (*ArgStr[2] == '#')
-        Index = EvalIntExpression(ArgStr[2] + 1, UInt5, &OK);
-      else if (*ArgStr[2] == '-')
+      if (*ArgStr[2].Str == '#')
+        Index = EvalStrIntExpressionOffs(&ArgStr[2], 1, UInt5, &OK);
+      else if (*ArgStr[2].Str == '-')
       {
         Code |= 0x2000;
-        OK = DecodeReg(ArgStr[2] + 1, &Index);
+        OK = DecodeReg(ArgStr[2].Str + 1, &Index);
         if (OK)
           Index = (Index << 2) | 2;
         else
-          WrXErrorPos(ErrNum_InvReg, ArgStr[2] + 1, &ArgStrPos[2]);
+          WrXErrorPos(ErrNum_InvReg, ArgStr[2].Str + 1, &ArgStr[2].Pos);
       }
-      else if (((l = strlen(ArgStr[2])) > 1) && (ArgStr[2][l - 1] == '+'))
+      else if (((l = strlen(ArgStr[2].Str)) > 1) && (ArgStr[2].Str[l - 1] == '+'))
       {
         Code |= 0x2000;
-        ArgStr[2][l - 1] = '\0'; ArgStrPos[2].Len--;
-        OK = DecodeReg(ArgStr[2], &Index);
+        ArgStr[2].Str[l - 1] = '\0'; ArgStr[2].Pos.Len--;
+        OK = DecodeReg(ArgStr[2].Str, &Index);
         if (OK)
           Index = (Index << 2) | 1;
         else
-          WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
+          WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
       }
       else
       {
         Code |= 0x2000;
-        OK = DecodeReg(ArgStr[2], &Index);
+        OK = DecodeReg(ArgStr[2].Str, &Index);
         if (OK)
           Index = (Index << 2);
         else
-          WrXErrorPos(ErrNum_InvReg, ArgStr[2], &ArgStrPos[2]);
+          WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
       }
 
       if (OK)
@@ -656,7 +656,7 @@ static void MakeCode_XGATE(void)
 
   /* Befehlszaehler ungerade ? */
 
-  if (Odd(EProgCounter())) WrError(180);
+  if (Odd(EProgCounter())) WrError(ErrNum_AddrNotAligned);
 
   /* alles aus der Tabelle */
 

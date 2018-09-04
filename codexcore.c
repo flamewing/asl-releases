@@ -97,10 +97,10 @@ static Boolean ParseReg(const char *pAsc, unsigned *pResult)
 
 static Boolean ParseArgReg(int Index, unsigned *pResult)
 {
-  Boolean Result = ParseReg(ArgStr[Index], pResult);
+  Boolean Result = ParseReg(ArgStr[Index].Str, pResult);
 
   if (!Result)
-    WrXErrorPos(ErrNum_InvReg, ArgStr[Index], &ArgStrPos[Index]);
+    WrStrErrorPos(ErrNum_InvReg, &ArgStr[Index]);
   return Result;
 }
 
@@ -112,7 +112,7 @@ static void CodeREG(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(1, 1))
-    AddRegDef(LabPart.Str, ArgStr[1]);
+    AddRegDef(LabPart.Str, ArgStr[1].Str);
 }
 
 static void Code_3r(Word Index)
@@ -143,12 +143,12 @@ static void Code_2rus(Word Index)
    && ParseArgReg(2, &Op2))
   {
     FirstPassUnknown = FALSE;
-    Op3 = EvalIntExpression(ArgStr[3], UInt4, &OK);
+    Op3 = EvalStrIntExpression(&ArgStr[3], UInt4, &OK);
     if (FirstPassUnknown)
       Op3 &= 7;
     if (OK)
     {
-      if (Op3 > 11) WrXErrorPos(ErrNum_OverRange, ArgStr[3], &ArgStrPos[3]);
+      if (Op3 > 11) WrStrErrorPos(ErrNum_OverRange, &ArgStr[3]);
       else
       {
         WAsmCode[0] = Index
@@ -210,12 +210,12 @@ static void Code_l2rus(Word Index)
    && ParseArgReg(2, &Op2))
   {
     FirstPassUnknown = FALSE;
-    Op3 = EvalIntExpression(ArgStr[3], UInt4, &OK);
+    Op3 = EvalStrIntExpression(&ArgStr[3], UInt4, &OK);
     if (FirstPassUnknown)
       Op3 &= 7;
     if (OK)
     {
-      if (Op3 > 11) WrXErrorPos(ErrNum_OverRange, ArgStr[3], &ArgStrPos[3]);
+      if (Op3 > 11) WrStrErrorPos(ErrNum_OverRange, &ArgStr[3]);
       else
       {
         WAsmCode[0] = 0xf800
@@ -268,7 +268,7 @@ static void Code_u10(Word Index)
     LongWord Op1;
     Boolean OK;
 
-    Op1 = EvalIntExpression(ArgStr[1], UInt20, &OK);
+    Op1 = EvalStrIntExpression(&ArgStr[1], UInt20, &OK);
     if (OK)
     {
       if (Op1 > 0x3ff)
@@ -290,7 +290,7 @@ static void Code_u6(Word Index)
     LongWord Op1;
     Boolean OK;
 
-    Op1 = EvalIntExpression(ArgStr[1], UInt16, &OK);
+    Op1 = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
     if (OK)
     {
       if (Op1 > 0x3f)
@@ -313,7 +313,7 @@ static void Code_ru6(Word Index)
     LongWord Op2;
     Boolean OK;
 
-    Op2 = EvalIntExpression(ArgStr[2], UInt16, &OK);
+    Op2 = EvalStrIntExpression(&ArgStr[2], UInt16, &OK);
     if (OK)
     {
       if (Op2 > 0x3f)
@@ -337,12 +337,12 @@ static void Code_rus(Word Index)
     Boolean OK;
 
     FirstPassUnknown = FALSE;
-    Op2 = EvalIntExpression(ArgStr[2], UInt4, &OK);
+    Op2 = EvalStrIntExpression(&ArgStr[2], UInt4, &OK);
     if (FirstPassUnknown)
       Op2 &= 7;
     if (OK)
     {
-      if (Op2 > 11) WrXErrorPos(ErrNum_OverRange, ArgStr[2], &ArgStrPos[2]);
+      if (Op2 > 11) WrStrErrorPos(ErrNum_OverRange, &ArgStr[2]);
       else
       {
         unsigned Up = UpVal(Op2, Op1, 0, 0) + 27;
@@ -447,13 +447,13 @@ static void Code_branch_core(Word Code, int DistArgIndex)
   /* assume short branch for distance computation */
 
   FirstPassUnknown = FALSE;
-  Delta = EvalIntExpression(ArgStr[DistArgIndex], UInt32, &OK) - (EProgCounter() + 2);
+  Delta = EvalStrIntExpression(&ArgStr[DistArgIndex], UInt32, &OK) - (EProgCounter() + 2);
   if (FirstPassUnknown)
     Delta &= 0x1fffe;
 
   /* distance must be even */
 
-  if (Delta & 1) WrError(1325);
+  if (Delta & 1) WrError(ErrNum_NotAligned);
 
   /* short branch possible? */
 
@@ -477,7 +477,7 @@ static void Code_branch_core(Word Code, int DistArgIndex)
     /* correct delta for longer instruction */
 
     Delta -= 2;
-    if ((Delta < -131070) || (Delta >= 131070)) WrError(1370);
+    if ((Delta < -131070) || (Delta >= 131070)) WrError(ErrNum_JmpDistTooBig);
     else
     {
       Delta /= 2;
@@ -502,7 +502,7 @@ static void Code_BRU(Word Index)
 
   if (ChkArgCnt(1, 1))
   {
-    if (ParseReg(ArgStr[1], &Op1))
+    if (ParseReg(ArgStr[1].Str, &Op1))
     {
       WAsmCode[0] = 0x2fe0 | Op1;
       CodeLen = 2;
@@ -803,7 +803,7 @@ static void MakeCode_XCore(void)
 
   /* Odd Program Counter ? */
 
-  if (Odd(EProgCounter())) WrError(180);
+  if (Odd(EProgCounter())) WrError(ErrNum_AddrNotAligned);
 
   /* everything from hash table */
 

@@ -522,7 +522,8 @@ static PInputTag GenerateProcessor(void)
   InitStringList(&(PInp->Params));
   PInp->LineCnt = 0; PInp->LineZ = 1;
   PInp->Lines = PInp->LineRun = NULL;
-  PInp->SpecName[0] = '\0';
+  StrCompMkTemp(&PInp->SpecName, PInp->SpecNameStr);
+  StrCompReset(&PInp->SpecName);
   PInp->AllArgs[0] = '\0';
   PInp->NumArgs[0] = '\0';
   PInp->IsEmpty = False;
@@ -791,23 +792,27 @@ static Boolean MacroEnd(void)
     return False;
 }
 
-typedef void (*tMacroArgCallback)(Boolean CtrlArg, char *pArg, void *pUser);
+typedef void (*tMacroArgCallback)(Boolean CtrlArg, const tStrComp *pArg, void *pUser);
 
 static void ProcessMacroArgs(tMacroArgCallback Callback, void *pUser)
 {
-  int z1, l;
+  tStrComp *pArg;
+  int l;
 
-  for (z1 = 1; z1 <= ArgCnt; z1++)
+  for (pArg = ArgStr + 1; pArg <= ArgStr + ArgCnt; pArg++)
   {
-    l = strlen(ArgStr[z1]);
-    if ((l >= 2) && (ArgStr[z1][0] == '{') && (ArgStr[z1][l - 1] == '}'))
+    l = strlen(pArg->Str);
+    if ((l >= 2) && (pArg->Str[0] == '{') && (pArg->Str[l - 1] == '}'))
     {
-      ArgStr[z1][l - 1] = '\0';
-      Callback(TRUE, ArgStr[z1] + 1, pUser);
+      tStrComp Arg;
+
+      StrCompRefRight(&Arg, pArg, 1);
+      StrCompShorten(&Arg, 1);
+      Callback(TRUE, &Arg, pUser);
     }
     else
     {
-      Callback(FALSE, ArgStr[z1], pUser);
+      Callback(FALSE, pArg, pUser);
     }
   }
 }
@@ -1087,7 +1092,7 @@ static void ExpandPList(String PList, const char *pArg, Boolean CtrlArg)
     strmaxcat(PList, "}", 255);
 }
 
-static void ProcessMACROArgs(Boolean CtrlArg, char *pArg, void *pUser)
+static void ProcessMACROArgs(Boolean CtrlArg, const tStrComp *pArg, void *pUser)
 {
   tReadMacroContext *pContext = (tReadMacroContext*)pUser;
 
@@ -1095,64 +1100,65 @@ static void ProcessMACROArgs(Boolean CtrlArg, char *pArg, void *pUser)
   {
     Boolean DoMacExp;
 
-    if (ReadMacro_SearchArg(pArg, "EXPORT", &(pContext->pOutputTag->DoExport)));
-    else if (ReadMacro_SearchArg(pArg, "GLOBALSYMBOLS", &pContext->GlobalSymbols));
-    else if (ReadMacro_SearchArg(pArg, "EXPAND", &DoMacExp))
+    if (ReadMacro_SearchArg(pArg->Str, "EXPORT", &(pContext->pOutputTag->DoExport)));
+    else if (ReadMacro_SearchArg(pArg->Str, "GLOBALSYMBOLS", &pContext->GlobalSymbols));
+    else if (ReadMacro_SearchArg(pArg->Str, "EXPAND", &DoMacExp))
     {
       if (DoMacExp)
         pContext->LstMacroExpMod.SetAll = True;
       else
         pContext->LstMacroExpMod.ClrAll = True;
-      ExpandPList(pContext->PList, pArg, CtrlArg);
+      ExpandPList(pContext->PList, pArg->Str, CtrlArg);
     }
-    else if (ReadMacro_SearchArg(pArg, "EXPIF", &DoMacExp))
+    else if (ReadMacro_SearchArg(pArg->Str, "EXPIF", &DoMacExp))
     {
       if (DoMacExp)
         pContext->LstMacroExpMod.ORMask |= eLstMacroExpIf;
       else
         pContext->LstMacroExpMod.ANDMask |= eLstMacroExpIf;
-      ExpandPList(pContext->PList, pArg, CtrlArg);
+      ExpandPList(pContext->PList, pArg->Str, CtrlArg);
     }
-    else if (ReadMacro_SearchArg(pArg, "EXPMACRO", &DoMacExp))
+    else if (ReadMacro_SearchArg(pArg->Str, "EXPMACRO", &DoMacExp))
     {
       if (DoMacExp)
         pContext->LstMacroExpMod.ORMask |= eLstMacroExpMacro;
       else
         pContext->LstMacroExpMod.ANDMask |= eLstMacroExpMacro;
-      ExpandPList(pContext->PList, pArg, CtrlArg);
+      ExpandPList(pContext->PList, pArg->Str, CtrlArg);
     }
-    else if (ReadMacro_SearchArg(pArg, "INTLABEL", &pContext->DoIntLabel))
+    else if (ReadMacro_SearchArg(pArg->Str, "INTLABEL", &pContext->DoIntLabel))
     {
-      ExpandPList(pContext->PList, pArg, CtrlArg);
+      ExpandPList(pContext->PList, pArg->Str, CtrlArg);
     }
-    else if (ReadMacro_SearchSect(pArg, "GLOBAL", &(pContext->pOutputTag->DoGlobCopy), &(pContext->pOutputTag->GlobSect)));
-    else if (ReadMacro_SearchSect(pArg, "PUBLIC", &pContext->DoPublic, &(pContext->pOutputTag->PubSect)));
+    else if (ReadMacro_SearchSect(pArg->Str, "GLOBAL", &(pContext->pOutputTag->DoGlobCopy), &(pContext->pOutputTag->GlobSect)));
+    else if (ReadMacro_SearchSect(pArg->Str, "PUBLIC", &pContext->DoPublic, &(pContext->pOutputTag->PubSect)));
     else
     {
-      WrXError(1465, pArg);
+      WrStrErrorPos(ErrNum_UnknownMacArg, pArg);
       pContext->ErrFlag = True;
     }
   }
   else
   {
     char *pDefault;
+    tStrComp Arg = *pArg;
 
-    ExpandPList(pContext->PList, pArg, CtrlArg);
-    pDefault = QuotPos(pArg, '=');
+    ExpandPList(pContext->PList, Arg.Str, CtrlArg);
+    pDefault = QuotPos(Arg.Str, '=');
     if (pDefault)
     {
       *pDefault++ = '\0';
-      KillPostBlanks(pArg);
-      KillPrefBlanks(pArg);
+      KillPostBlanksStrComp(&Arg);
+      KillPrefBlanksStrComp(&Arg);
     }
-    if (!ChkMacSymbName(pArg))
+    if (!ChkMacSymbName(Arg.Str))
     {
-      WrXError(1020, pArg);
+      WrStrErrorPos(ErrNum_InvSymName, &Arg);
       pContext->ErrFlag = True;
     }
     if (!CaseSensitive)
-      UpString(pArg);
-    AddStringListLast(&(pContext->pOutputTag->ParamNames), pArg);
+      UpString(Arg.Str);
+    AddStringListLast(&(pContext->pOutputTag->ParamNames), Arg.Str);
     AddStringListLast(&(pContext->pOutputTag->ParamDefVals), pDefault ? pDefault : "");
     pContext->ParamCount++;
   }
@@ -1179,7 +1185,7 @@ static void ReadMacro(void)
     Context.ErrFlag = True;
   else if (!ChkSymbName(LabPart.Str))
   {
-    WrXError(1020, LabPart.Str);
+    WrXError(ErrNum_InvSymName, LabPart.Str);
     Context.ErrFlag = True;
   }
 
@@ -1270,7 +1276,7 @@ static Boolean MACRO_GetPos(PInputTag PInp, char *dest)
   String Tmp;
 
   sprintf(Tmp, LongIntFormat, PInp->LineZ - 1);
-  sprintf(dest, "%s(%s) ", PInp->SpecName, Tmp);
+  sprintf(dest, "%s(%s) ", PInp->SpecName.Str, Tmp);
   return False;
 }
 
@@ -1309,7 +1315,7 @@ static void ExpandMacro(PMacroRec OneMacro)
 
   CodeLen = 0;
 
-  if ((NestMax > 0) && (OneMacro->UseCounter > NestMax)) WrError(1850);
+  if ((NestMax > 0) && (OneMacro->UseCounter > NestMax)) WrError(ErrNum_RekMacro);
   else
   {
     OneMacro->UseCounter++;
@@ -1325,8 +1331,8 @@ static void ExpandMacro(PMacroRec OneMacro)
     Tag->GlobalSymbols = OneMacro->GlobalSymbols;
     Tag->UsesNumArgs = OneMacro->UsesNumArgs;
     Tag->UsesAllArgs = OneMacro->UsesAllArgs;
-    strmaxcpy(Tag->SpecName, OneMacro->Name, 255);
-    strmaxcpy(Tag->SaveAttr, AttrPart, 255);
+    strmaxcpy(Tag->SpecName.Str, OneMacro->Name, 255);
+    strmaxcpy(Tag->SaveAttr, AttrPart.Str, 255);
     if (OneMacro->LocIntLabel)
       strmaxcpy(Tag->SaveLabel, LabPart.Str, 255);
     Tag->IsMacro   = True;
@@ -1343,7 +1349,7 @@ static void ExpandMacro(PMacroRec OneMacro)
       for (z1 = 1; z1 <= ArgCnt; z1++)
       {
         if (z1 != 1) strmaxcat(Tag->AllArgs, ",", 255);
-        strmaxcat(Tag->AllArgs, ArgStr[z1], 255);
+        strmaxcat(Tag->AllArgs, ArgStr[z1].Str, 255);
       }
     }
     Tag->ParCnt = OneMacro->ParamCount;
@@ -1360,11 +1366,11 @@ static void ExpandMacro(PMacroRec OneMacro)
     NamedArgs = False;
     for (z1 = 1; z1 <= ArgCnt; z1++)
     {
-      if (!CaseSensitive) UpString(ArgStr[z1]);
+      if (!CaseSensitive) UpString(ArgStr[z1].Str);
 
       /* explicit name given? */
 
-      p = QuotPos(ArgStr[z1], '=');
+      p = QuotPos(ArgStr[z1].Str, '=');
 
       /* if parameter name given... */
 
@@ -1373,25 +1379,25 @@ static void ExpandMacro(PMacroRec OneMacro)
         /* split it off */
 
         *p++ = '\0';
-        KillPostBlanks(ArgStr[z1]);
+        KillPostBlanksStrComp(&ArgStr[z1]);
         KillPrefBlanks(p);
 
         /* search parameter by name */
 
         for (pParamName = OneMacro->ParamNames, pArg = Tag->Params;
              pParamName; pParamName = pParamName->Next, pArg = pArg->Next)
-          if (!strcmp(ArgStr[z1], pParamName->Content))
+          if (!strcmp(ArgStr[z1].Str, pParamName->Content))
           {
             if (pArg->Content)
             {
-              WrXError(320, pParamName->Content);
+              WrXError(ErrNum_MacArgRedef, pParamName->Content);
               free(pArg->Content);
             }
             pArg->Content = as_strdup(p);
             break;
           }
         if (!pParamName)
-          WrXErrorPos(ErrNum_UndefKeyArg, ArgStr[z1], &ArgStrPos[z1]);
+          WrStrErrorPos(ErrNum_UndefKeyArg, &ArgStr[z1]);
 
         /* set flag that no unnamed args are any longer allowed */
 
@@ -1401,11 +1407,11 @@ static void ExpandMacro(PMacroRec OneMacro)
       /* do not mix unnamed with named arguments: */
 
       else if (NamedArgs)
-        WrError(1812);
+        WrError(ErrNum_NoPosArg);
 
       /* empty positional parameters mean using defaults - insert non-empty args here: */
 
-      else if ((z1 <= OneMacro->ParamCount) && (strlen(ArgStr[z1]) > 0))
+      else if ((z1 <= OneMacro->ParamCount) && (strlen(ArgStr[z1].Str) > 0))
       {
         pArg = Tag->Params;
         pParamName = OneMacro->ParamNames;
@@ -1416,16 +1422,16 @@ static void ExpandMacro(PMacroRec OneMacro)
         }
         if (pArg->Content)
         {
-          WrXError(320, pParamName->Content);
+          WrXError(ErrNum_MacArgRedef, pParamName->Content);
           free(pArg->Content);
         }
-        pArg->Content = as_strdup(ArgStr[z1]);
+        pArg->Content = as_strdup(ArgStr[z1].Str);
       }
 
       /* excess unnamed arguments: append at end of list */
 
       else if (z1 > OneMacro->ParamCount)
-        AddStringListLast(&(Tag->Params), ArgStr[z1]);
+        AddStringListLast(&(Tag->Params), ArgStr[z1].Str);
     }
 
     /* 3c. fill in defaults */
@@ -1476,8 +1482,8 @@ static void ExpandEXITM(void)
   WasMACRO = True;
 
   if (!ChkArgCnt(0, 0));
-  else if (!FirstInputTag) WrError(1805);
-  else if (!FirstInputTag->IsMacro) WrError(1805);
+  else if (!FirstInputTag) WrError(ErrNum_EXITMOutsideMacro);
+  else if (!FirstInputTag->IsMacro) WrError(ErrNum_EXITMOutsideMacro);
   else if (IfAsm)
   {
     FirstInputTag->Cleanup(FirstInputTag);
@@ -1496,8 +1502,8 @@ static void ExpandSHIFT(void)
   WasMACRO = True;
 
   if (!ChkArgCnt(0, 0));
-  else if (!FirstInputTag) WrError(1805);
-  else if (!FirstInputTag->IsMacro) WrError(1805);
+  else if (!FirstInputTag) WrError(ErrNum_EXITMOutsideMacro);
+  else if (!FirstInputTag->IsMacro) WrError(ErrNum_EXITMOutsideMacro);
   else if (IfAsm)
   {
     for (RunTag = FirstInputTag; RunTag; RunTag = RunTag->Next)
@@ -1624,7 +1630,7 @@ static Boolean IRP_GetPos(PInputTag PInp, char *dest)
   else
   {
     IRPType = "IRPC";
-    sprintf(tmp, "'%c'", PInp->SpecName[ParZ - 1]);
+    sprintf(tmp, "'%c'", PInp->SpecName.Str[ParZ - 1]);
     IRPVal = tmp;
   }
 
@@ -1699,16 +1705,16 @@ typedef struct
   StringList Params;
 } tExpandIRPContext;
 
-static void ProcessIRPArgs(Boolean CtrlArg, char *pArg, void *pUser)
+static void ProcessIRPArgs(Boolean CtrlArg, const tStrComp *pArg, void *pUser)
 {
   tExpandIRPContext *pContext = (tExpandIRPContext*)pUser;
 
   if (CtrlArg)
   {
-    if (ReadMacro_SearchArg(pArg, "GLOBALSYMBOLS", &pContext->GlobalSymbols));
+    if (ReadMacro_SearchArg(pArg->Str, "GLOBALSYMBOLS", &pContext->GlobalSymbols));
     else
     {
-      WrXError(1465, pArg);
+      WrStrErrorPos(ErrNum_UnknownMacArg, pArg);
       pContext->ErrFlag = True;
     }
   }
@@ -1718,19 +1724,19 @@ static void ProcessIRPArgs(Boolean CtrlArg, char *pArg, void *pUser)
 
     if (0 == pContext->ArgCnt)
     {
-      if (!ChkMacSymbName(pArg))
+      if (!ChkMacSymbName(pArg->Str))
       {
-        WrXError(1020, pArg);
+        WrStrErrorPos(ErrNum_InvSymName, pArg);
         pContext->ErrFlag = True;
       }
       else
-        AddStringListFirst(&(pContext->pOutputTag->ParamNames), pArg);
+        AddStringListFirst(&(pContext->pOutputTag->ParamNames), pArg->Str);
     }
     else
     {
       if (!CaseSensitive)
-        UpString(pArg);
-      AddStringListLast(&(pContext->Params), pArg);
+        UpString(pArg->Str);
+      AddStringListLast(&(pContext->Params), pArg->Str);
     }
     pContext->ArgCnt++;
   }
@@ -1835,7 +1841,7 @@ Boolean IRPC_Processor(PInputTag PInp, char *erg)
 
   /* extract iteration parameter */
 
-  *tmp = PInp->SpecName[PInp->ParZ - 1];
+  *tmp = PInp->SpecName.Str[PInp->ParZ - 1];
   tmp[1] = '\0';
   ExpandLine(tmp, 1, erg);
 
@@ -1860,19 +1866,20 @@ typedef struct
   Boolean GlobalSymbols;
   int ArgCnt;
   POutputTag pOutputTag;
-  String Parameter;
+  String ParameterStr;
+  tStrComp Parameter;
 } tExpandIRPCContext;
 
-static void ProcessIRPCArgs(Boolean CtrlArg, char *pArg, void *pUser)
+static void ProcessIRPCArgs(Boolean CtrlArg, const tStrComp *pArg, void *pUser)
 {
   tExpandIRPCContext *pContext = (tExpandIRPCContext*)pUser;
 
   if (CtrlArg)
   {
-    if (ReadMacro_SearchArg(pArg, "GLOBALSYMBOLS", &pContext->GlobalSymbols));
+    if (ReadMacro_SearchArg(pArg->Str, "GLOBALSYMBOLS", &pContext->GlobalSymbols));
     else
     {
-      WrXError(1465, pArg);
+      WrStrErrorPos(ErrNum_UnknownMacArg, pArg);
       pContext->ErrFlag = True;
     }
   }
@@ -1880,19 +1887,20 @@ static void ProcessIRPCArgs(Boolean CtrlArg, char *pArg, void *pUser)
   {
     if (0 == pContext->ArgCnt)
     {
-      if (!ChkMacSymbName(pArg))
+      if (!ChkMacSymbName(pArg->Str))
       {
-        WrXError(1020, pArg);
+        WrStrErrorPos(ErrNum_InvSymName, pArg);
         pContext->ErrFlag = True;
       }
       else
-        AddStringListFirst(&(pContext->pOutputTag->ParamNames), pArg);
+        AddStringListFirst(&(pContext->pOutputTag->ParamNames), pArg->Str);
     }
     else
     {
       Boolean OK;
 
-      EvalStringExpression(pArg, &OK, pContext->Parameter);
+      EvalStrStringExpression(pArg, &OK, pContext->Parameter.Str);
+      pContext->Parameter.Pos = pArg->Pos;
       if (!OK)
         pContext->ErrFlag = True;
     }
@@ -1920,6 +1928,8 @@ static void ExpandIRPC(void)
   Context.ErrFlag = False;
   Context.GlobalSymbols = False;
   Context.ArgCnt = 0;
+  StrCompMkTemp(&Context.Parameter, Context.ParameterStr);
+  StrCompReset(&Context.Parameter);
 
   Context.pOutputTag = GenerateOUTProcessor(IRP_OutProcessor, ErrNum_OpenIRPC);
   Context.pOutputTag->Next = FirstOutputTag;
@@ -1939,7 +1949,7 @@ static void ExpandIRPC(void)
   /* 2. Tag erzeugen */
 
   Tag = GenerateProcessor();
-  Tag->ParCnt    = strlen(Context.Parameter);
+  Tag->ParCnt    = strlen(Context.Parameter.Str);
   Tag->Processor = IRPC_Processor;
   Tag->Restorer  = MACRO_Restorer;
   Tag->Cleanup   = IRP_Cleanup;
@@ -1948,7 +1958,7 @@ static void ExpandIRPC(void)
   Tag->ParZ      = 1;
   Tag->IsMacro   = True;
   *Tag->SaveAttr = '\0';
-  strmaxcpy(Tag->SpecName, Context.Parameter, 255);
+  StrCompCopy(&Tag->SpecName, &Context.Parameter);
 
   /* 4. einbetten */
 
@@ -2070,16 +2080,16 @@ typedef struct
   LongInt ReptCount;
 } tExpandREPTContext;
 
-static void ProcessREPTArgs(Boolean CtrlArg, char *pArg, void *pUser)
+static void ProcessREPTArgs(Boolean CtrlArg, const tStrComp *pArg, void *pUser)
 {
   tExpandREPTContext *pContext = (tExpandREPTContext*)pUser;
 
   if (CtrlArg)
   {
-    if (ReadMacro_SearchArg(pArg, "GLOBALSYMBOLS", &pContext->GlobalSymbols));
+    if (ReadMacro_SearchArg(pArg->Str, "GLOBALSYMBOLS", &pContext->GlobalSymbols));
     else
     {
-      WrXError(1465, pArg);
+      WrStrErrorPos(ErrNum_UnknownMacArg, pArg);
       pContext->ErrFlag = True;
     }
   }
@@ -2088,9 +2098,9 @@ static void ProcessREPTArgs(Boolean CtrlArg, char *pArg, void *pUser)
     Boolean ValOK;
 
     FirstPassUnknown = False;
-    pContext->ReptCount = EvalIntExpression(pArg, Int32, &ValOK);
+    pContext->ReptCount = EvalStrIntExpression(pArg, Int32, &ValOK);
     if (FirstPassUnknown)
-      WrError(1820);
+      WrStrErrorPos(ErrNum_FirstPassCalc, pArg);
     if ((!ValOK) || (FirstPassUnknown))
       pContext->ErrFlag = True;
     pContext->ArgCnt++;
@@ -2202,7 +2212,7 @@ Boolean WHILE_Processor(PInputTag PInp, char *erg)
 
   if (PInp->LineZ == 1)
   {
-    z = EvalIntExpression(PInp->SpecName, Int32, &OK);
+    z = EvalStrIntExpression(&PInp->SpecName, Int32, &OK);
     Result = (OK && (z != 0));
   }
   else
@@ -2263,9 +2273,9 @@ static void WHILE_OutProcessor(void)
     FirstOutputTag = FirstOutputTag->Next;
     Tmp->Tag->IsEmpty = !Tmp->Tag->Lines;
     FirstPassUnknown = False;
-    Erg = EvalIntExpression(Tmp->Tag->SpecName, Int32, &OK);
+    Erg = EvalStrIntExpression(&Tmp->Tag->SpecName, Int32, &OK);
     if (FirstPassUnknown)
-      WrError(1820);
+      WrError(ErrNum_FirstPassCalc);
     OK = (OK && (!FirstPassUnknown) && (Erg != 0));
     if ((IfAsm) && (OK))
     {
@@ -2288,25 +2298,26 @@ typedef struct
   Boolean ErrFlag;
   Boolean GlobalSymbols;
   int ArgCnt;
-  String SpecName;
+  String SpecNameStr;
+  tStrComp SpecName;
 } tExpandWHILEContext;
 
-static void ProcessWHILEArgs(Boolean CtrlArg, char *pArg, void *pUser)
+static void ProcessWHILEArgs(Boolean CtrlArg, const tStrComp *pArg, void *pUser)
 {
   tExpandWHILEContext *pContext = (tExpandWHILEContext*)pUser;
 
   if (CtrlArg)
   {
-    if (ReadMacro_SearchArg(pArg, "GLOBALSYMBOLS", &pContext->GlobalSymbols));
+    if (ReadMacro_SearchArg(pArg->Str, "GLOBALSYMBOLS", &pContext->GlobalSymbols));
     else
     {
-      WrXError(1465, pArg);
+      WrStrErrorPos(ErrNum_UnknownMacArg, pArg);
       pContext->ErrFlag = True;
     }
   }
   else
   {
-    strmaxcpy(pContext->SpecName, pArg, 255);
+    StrCompCopy(&pContext->SpecName, pArg);
     pContext->ArgCnt++;
   }
 }
@@ -2332,6 +2343,8 @@ static void ExpandWHILE(void)
   Context.GlobalSymbols = False;
   Context.ErrFlag = False;
   Context.ArgCnt = 0;
+  StrCompMkTemp(&Context.SpecName, Context.SpecNameStr);
+  StrCompReset(&Context.SpecName);
   ProcessMacroArgs(ProcessWHILEArgs, &Context);
 
   /* condition must be present only once */
@@ -2354,7 +2367,7 @@ static void ExpandWHILE(void)
   Tag->GlobalSymbols = Context.GlobalSymbols;
   Tag->IsMacro   = True;
   Tag->ParZ      = 1;
-  strmaxcpy(Tag->SpecName, Context.SpecName, 255);
+  StrCompCopy(&Tag->SpecName, &Context.SpecName);
 
   /* 3. einbetten */
 
@@ -2390,7 +2403,7 @@ static Boolean INCLUDE_GetPos(PInputTag PInp, char *dest)
   UNUSED(PInp);
 
   sprintf(Tmp, LongIntFormat, PInp->LineZ);
-  sprintf(dest, GNUErrors ? "%s:%s" : "%s(%s) ", NamePart(PInp->SpecName), Tmp);
+  sprintf(dest, GNUErrors ? "%s:%s" : "%s(%s) ", NamePart(PInp->SpecName.Str), Tmp);
   return !GNUErrors;
 }
 
@@ -2433,15 +2446,15 @@ static void ExpandINCLUDE(Boolean SearchPath)
   if (!ChkArgCnt(1, 1))
     return;
 
-  strmaxcpy(FileName, (*ArgStr[1] == '"') ? (ArgStr[1] + 1) : ArgStr[1], 255);
+  strmaxcpy(FileName, (*ArgStr[1].Str == '"') ? (ArgStr[1].Str + 1) : ArgStr[1].Str, 255);
   if ((*FileName) && (FileName[strlen(FileName) - 1] == '"'))
     FileName[strlen(FileName) - 1] = '\0';
-  AddSuffix(FileName, IncSuffix); strmaxcpy(ArgStr[1], FileName, 255);
+  AddSuffix(FileName, IncSuffix); strmaxcpy(ArgStr[1].Str, FileName, 255);
   if (SearchPath)
   {
     strmaxcpy(FileName, FExpand(FSearch(FileName, IncludeList)), 255);
     if ((*FileName) && (FileName[strlen(FileName) - 1] == '/'))
-      strmaxcat(FileName, ArgStr[1], 255);
+      strmaxcat(FileName, ArgStr[1].Str, 255);
   }
 
   /* Tag erzeugen */
@@ -2456,7 +2469,8 @@ static void ExpandINCLUDE(Boolean SearchPath)
   /* Sicherung alter Daten */
 
   Tag->StartLine = MomLineCounter;
-  strmaxcpy(Tag->SpecName, FileName, 255);
+  strmaxcpy(Tag->SpecName.Str, FileName, 255);
+  LineCompReset(&Tag->SpecName.Pos);
   strmaxcpy(Tag->SaveAttr, CurrFileName, 255);
 
   /* Datei oeffnen */
@@ -2465,7 +2479,7 @@ static void ExpandINCLUDE(Boolean SearchPath)
   DeCygwinPath(FileName);
 #endif
   Tag->Datei = fopen(FileName, "r");
-  if (!Tag->Datei) ChkXIO(10001, ArgStr[1]);
+  if (!Tag->Datei) ChkStrIO(10001, &ArgStr[1]);
   setvbuf(Tag->Datei, Tag->Buffer, _IOFBF, BufferArraySize);
 
   /* neu besetzen */
@@ -2864,7 +2878,7 @@ static void Produce_Code(void)
 #endif
 
     if ((ActPC != StructSeg) && (!ChkPC(PCs[ActPC] + CodeLen - 1)) && (CodeLen != 0))
-      WrError(1925);
+      WrError(ErrNum_AdrOverflow);
     else
     {
       LargeWord NewPC = PCs[ActPC] + CodeLen;
@@ -2873,7 +2887,7 @@ static void Produce_Code(void)
         BookKeeping();
       if (ActPC == StructSeg)
       {
-        if ((CodeLen != 0) && (!DontPrint)) WrError(1940);
+        if ((CodeLen != 0) && (!DontPrint)) WrError(ErrNum_NotInStruct);
         if (StructStack->StructRec->IsUnion)
         {
           BumpStructLength(StructStack->StructRec, CodeLen);
@@ -2900,17 +2914,6 @@ static void Produce_Code(void)
 }
 
 /*--- Zeile in Listing zerteilen -------------------------------------------*/
-
-static int strmemcpy(char *pDest, int DestSize, const char *pSrc, int SrcLen)
-{
-  if (DestSize < SrcLen + 1)
-    SrcLen = DestSize - 1;
-  if (SrcLen < 0)
-    SrcLen = 0;
-  memmove(pDest, pSrc, SrcLen);
-  pDest[SrcLen] = '\0';
-  return SrcLen;
-}
 
 static void SplitLine(void)
 {
@@ -3011,7 +3014,8 @@ static void SplitLine(void)
   if (OpPart.Pos.Len && strchr(DivideChars, OpPart.Str[OpPart.Pos.Len - 1]))
   {
     OpPart.Str[--OpPart.Pos.Len] = '\0';
-    strcpy(ArgStr[++ArgCnt], "");
+    strcpy(ArgStr[++ArgCnt].Str, "");
+    ArgStr[ArgCnt].Pos = ArgPart.Pos;
   }
 
   /* Attribut abspalten */
@@ -3031,32 +3035,23 @@ static void SplitLine(void)
     if (pAttrPos)
     {
       AttrSplit = (*pAttrPos);
-      strmaxcpy(AttrPart, pAttrPos + 1, 255);
-      AttrPartPos.StartCol = OpPart.Pos.StartCol + (pAttrPos + 1 - OpPart.Str);
-      AttrPartPos.Len = strlen(AttrPart);
+      AttrPart.Pos.StartCol = OpPart.Pos.StartCol + (pAttrPos + 1 - OpPart.Str);
+      AttrPart.Pos.Len = strmemcpy(AttrPart.Str, STRINGSIZE, pAttrPos + 1, strlen(pAttrPos + 1));
       
       *pAttrPos = '\0';
-      if ((*OpPart.Str == '\0') && (*AttrPart != '\0'))
+      if ((*OpPart.Str == '\0') && (*AttrPart.Str != '\0'))
       {
-        strmaxcpy(OpPart.Str, AttrPart, 255);
-        OpPart.Pos = AttrPartPos;
-        *AttrPart = '\0';
-        LineCompReset(&AttrPartPos);
+        StrCompCopy(&OpPart, &AttrPart);
+        StrCompReset(&AttrPart);
       }
     }
     else
-    {
-      LineCompReset(&AttrPartPos);
-      *AttrPart = '\0';
-    }
+      StrCompReset(&AttrPart);
   }
   else
-  {
-    LineCompReset(&AttrPartPos);
-    *AttrPart = '\0';
-  }
+    StrCompReset(&AttrPart);
 
-  KillPostBlanks(ArgPart.Str);
+  KillPostBlanksStrComp(&ArgPart);
 
   /* Argumente zerteilen: Da alles aus einem String kommt und die Teile alle auch
      so lang sind, koennen wir uns Laengenabfragen sparen */
@@ -3085,13 +3080,13 @@ static void SplitLine(void)
       }
       if (ArgCnt >= ArgCntMax)
       {
-        WrError(1140);
+        WrError(ErrNum_TooMuchArgs);
         break;
       }
       ArgCnt++;
-      ArgStrPos[ArgCnt].Len = strmemcpy(ArgStr[ArgCnt], STRINGSIZE, pRun, pDivPos - pRun);
-      ArgStrPos[ArgCnt].StartCol = ArgPart.Pos.StartCol + (pRun - ArgPart.Str);
-      KillPostBlanks(ArgStr[ArgCnt]);
+      ArgStr[ArgCnt].Pos.Len = strmemcpy(ArgStr[ArgCnt].Str, STRINGSIZE, pRun, pDivPos - pRun);
+      ArgStr[ArgCnt].Pos.StartCol = ArgPart.Pos.StartCol + (pRun - ArgPart.Str);
+      KillPostBlanksStrComp(&ArgStr[ArgCnt]);
       pRun = (pDivPos < pEnd) ? pDivPos + 1 : pEnd;
     }
   }
@@ -3381,13 +3376,13 @@ static void AssembleFile_ExitPass(void)
     }
   TossRegDefs(-1);
   if (FirstIfSave)
-    WrError(1470);
+    WrError(ErrNum_MissEndif);
   if (FirstSaveState)
-    WrError(1460);
+    WrError(ErrNum_NoRestoreFrame);
   if (SectionStack)
-    WrError(1485);
+    WrError(ErrNum_MissingEndSect);
   if (StructStack)
-    WrXError(1551, StructStack->Name);
+    WrXError(ErrNum_OpenStruct, StructStack->Name);
 }
 
 static void AssembleFile(char *Name)

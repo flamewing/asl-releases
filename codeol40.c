@@ -84,7 +84,7 @@ typedef struct
   tAdrMode AdrMode;
 } tNotation;
 
-static void DecodeAdr(const char *pArg, Word Mask)
+static void DecodeAdr(const tStrComp *pArg, Word Mask)
 {
   static const tNotation Notations[] =
   {
@@ -113,16 +113,13 @@ static void DecodeAdr(const char *pArg, Word Mask)
     Mask &= ~(MModW);
 
   for (pNot = Notations; pNot->pAsc; pNot++)
-    if (!strcasecmp(pArg, pNot->pAsc))
+    if (!strcasecmp(pArg->Str, pNot->pAsc))
     {
       AdrMode = pNot->AdrMode;
       goto AdrFound;
     }
 
-  if (0[pArg] == '#')
-    pArg++;
-
-  AdrVal = EvalIntExpression(pArg, OpSizeType, &OK);
+  AdrVal = EvalStrIntExpressionOffs(pArg, !!(0[pArg->Str] == '#'), OpSizeType, &OK);
   if (OK)
   {
     AdrMode = ModImm;
@@ -133,7 +130,7 @@ AdrFound:
 
   if ((AdrMode != ModNone) && (!(Mask & (1 << AdrMode))))
   {    
-    WrError(1350);
+    WrError(ErrNum_InvAddrMode);
     AdrMode = ModNone; AdrCnt = 0;
   } 
 }
@@ -146,11 +143,11 @@ static void DecodeLD(Word Code)
 
   if (ChkArgCnt(2, 2))
   {
-    DecodeAdr(ArgStr[1], MModA | MModDPL | MModDPH | MModW | MModX | MModY | MModZ | MModPP | MModT);
+    DecodeAdr(&ArgStr[1], MModA | MModDPL | MModDPH | MModW | MModX | MModY | MModZ | MModPP | MModT);
     switch (AdrMode)
     {
       case ModA:
-        DecodeAdr(ArgStr[2], MModImm | MModW | MModX | MModY | MModZ | MModM | MModDPL | MModTL | MModTH);
+        DecodeAdr(&ArgStr[2], MModImm | MModW | MModX | MModY | MModZ | MModM | MModDPL | MModTL | MModTH);
         switch (AdrMode)
         {
           case ModW:
@@ -177,7 +174,7 @@ static void DecodeLD(Word Code)
         }
         break;
       case ModDPL:
-        DecodeAdr(ArgStr[2], MModImm | MModA);
+        DecodeAdr(&ArgStr[2], MModImm | MModA);
         switch (AdrMode)
         {
           case ModImm:
@@ -191,7 +188,7 @@ static void DecodeLD(Word Code)
         }
         break;
       case ModDPH:
-        DecodeAdr(ArgStr[2], MModImm);
+        DecodeAdr(&ArgStr[2], MModImm);
         switch (AdrMode)
         {
           case ModImm:
@@ -208,7 +205,7 @@ static void DecodeLD(Word Code)
       {
         tAdrMode HMode = AdrMode;
 
-        DecodeAdr(ArgStr[2], MModA);
+        DecodeAdr(&ArgStr[2], MModA);
         switch (AdrMode)
         {
           case ModA:
@@ -220,7 +217,7 @@ static void DecodeLD(Word Code)
         break;
       }
       case ModPP:
-        DecodeAdr(ArgStr[2], MModA);
+        DecodeAdr(&ArgStr[2], MModA);
         switch (AdrMode)
         {
           case ModA:
@@ -232,7 +229,7 @@ static void DecodeLD(Word Code)
         break;
       case ModT:
         OpSizeType = Int8;
-        DecodeAdr(ArgStr[2], MModImm);
+        DecodeAdr(&ArgStr[2], MModImm);
         switch (AdrMode)
         {
           case ModImm:
@@ -241,7 +238,7 @@ static void DecodeLD(Word Code)
               BAsmCode[CodeLen++] = 0x68;
               BAsmCode[CodeLen++] = AdrVal;
             }
-            else if (AdrVal) WrError(1320);
+            else if (AdrVal) WrError(ErrNum_OverRange);
             else
               BAsmCode[CodeLen++] = 0x68;
             break;
@@ -259,7 +256,7 @@ static void DecodeINCDEC(Word IsDEC)
 {
   if (ChkArgCnt(1, 1))
   {
-    DecodeAdr(ArgStr[1], MModA | MModW | MModX | MModY | MModZ | MModDPL | MModM
+    DecodeAdr(&ArgStr[1], MModA | MModW | MModX | MModY | MModZ | MModDPL | MModM
                        | ((IsDEC && (MomCPU == CPU5840)) ? MModDPH : 0));
     switch (AdrMode)
     {
@@ -291,21 +288,21 @@ static void DecodeBit(Word Code)
 {
   if (ArgCnt == 1)
   {
-    if (!strcasecmp(ArgStr[1], "C"))
+    if (!strcasecmp(ArgStr[1].Str, "C"))
       BAsmCode[CodeLen++] = Hi(Code);
     else
-      WrError(1350);
+      WrError(ErrNum_InvAddrMode);
   }
   else if (ChkArgCnt(1, 2))
   {
     Boolean OK;
-    unsigned BitNo = EvalIntExpression(ArgStr[2], UInt2, &OK);
+    unsigned BitNo = EvalStrIntExpression(&ArgStr[2], UInt2, &OK);
 
     Code = Lo(Code);
 
     if (OK)
     {
-      DecodeAdr(ArgStr[1], ((Code == 2) ? MModA : MModPPI) | MModM);
+      DecodeAdr(&ArgStr[1], ((Code == 2) ? MModA : MModPPI) | MModM);
       switch (AdrMode)
       {
         case ModA:
@@ -340,13 +337,13 @@ static void CodeTHB(Word Code)
    && (ChkExactCPUMask(Hi(Code), CPU5840) >= 0))
   {
     Boolean OK = True;
-    Word ImmVal = ArgCnt ? EvalIntExpression(ArgStr[1], UInt1, &OK) : 0;
+    Word ImmVal = ArgCnt ? EvalStrIntExpression(&ArgStr[1], UInt1, &OK) : 0;
 
     if (OK)
     {
       if ((MomCPU == CPU5840) || (MomCPU == CPU5842))
         BAsmCode[CodeLen++] = Lo(Code) | (ImmVal & 1);
-      else if (ImmVal) WrError(1320);
+      else if (ImmVal) WrError(ErrNum_OverRange);
       else
         BAsmCode[CodeLen++] = Lo(Code);
     }
@@ -359,7 +356,7 @@ static void CodeImm2(Word Code)
    && (ChkExactCPUMask(Hi(Code), CPU5840) >= 0))
   {
     Boolean OK;
-    Word ImmVal = EvalIntExpression(ArgStr[1], UInt2, &OK);
+    Word ImmVal = EvalStrIntExpression(&ArgStr[1], UInt2, &OK);
 
     if (OK)
       BAsmCode[CodeLen++] = Lo(Code) | (ImmVal & 3);
@@ -372,7 +369,7 @@ static void CodeImm4(Word Code)
    && (ChkExactCPUMask(Hi(Code), CPU5840) >= 0))
   {
     Boolean OK;
-    Word ImmVal = EvalIntExpression(ArgStr[1], Int4, &OK);
+    Word ImmVal = EvalStrIntExpression(&ArgStr[1], Int4, &OK);
 
     if (OK)
       BAsmCode[CodeLen++] = Lo(Code) | (ImmVal & 15);
@@ -385,7 +382,7 @@ static void CodeLTI(Word Code)
    && (ChkExactCPUMask(Hi(Code), CPU5840) >= 0))
   {
     Boolean OK = True;
-    Word ImmVal = ArgCnt ? EvalIntExpression(ArgStr[1], Int8, &OK) : 0;
+    Word ImmVal = ArgCnt ? EvalStrIntExpression(&ArgStr[1], Int8, &OK) : 0;
 
     if (OK)
     {
@@ -396,7 +393,7 @@ static void CodeLTI(Word Code)
         BAsmCode[CodeLen++] = Lo(Code);
         BAsmCode[CodeLen++] = Lo(ImmVal);
       }
-      else if (ImmVal != 0) WrError(1320);
+      else if (ImmVal != 0) WrError(ErrNum_OverRange);
       else
         BAsmCode[CodeLen++] = Lo(Code);
     }
@@ -412,7 +409,7 @@ static void CodeJC(Word Code)
     Word Address;
 
     FirstPassUnknown = False;
-    Address = EvalIntExpression(ArgStr[1], CodeIntType, &OK);
+    Address = EvalStrIntExpression(&ArgStr[1], CodeIntType, &OK);
     if (OK && ChkSamePage(EProgCounter() + 1, Address, 6))
     {
       ChkSpace(SegCode);
@@ -430,7 +427,7 @@ static void CodeJMP(Word Code)
     Word Address;
 
     FirstPassUnknown = False;
-    Address = EvalIntExpression(ArgStr[1], CodeIntType, &OK);
+    Address = EvalStrIntExpression(&ArgStr[1], CodeIntType, &OK);
     if (OK)
     {
       ChkSpace(SegCode);

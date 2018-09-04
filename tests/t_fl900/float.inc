@@ -1,11 +1,11 @@
 ; FLOAT.INC
 ;******************************************************************************
-;* Gleitkommabibliothek fÅr TLCS 900                                          *
+;* Gleitkommabibliothek fuer TLCS 900                                         *
 ;*                                                                            *
-;* Originale fÅr den 68000 aus mc, bis auf die Quadratwurzel aus c't          *
+;* Originale fuer den 68000 aus mc, bis auf die Quadratwurzel aus c't         *
 ;* Portierung auf TLCS 900 von Alfred Arnold, Oktober 1993                    *
 ;*                                                                            *
-;*  Routine  Funktion             Eingabe Ausgabe  Stack    LÑnge  Zeit/14MHz *
+;*  Routine  Funktion             Eingabe Ausgabe  Stack    Laenge  Zeit/14MHz *
 ;*                                                                            *
 ;*  fadd     Addition             XWA+XHL    XWA  12 Byte 194 Byte    60 us   *
 ;*  fsub     Subtraktion          XWA-XHL    XWA  12 Byte   7 Byte    65 us   *
@@ -18,16 +18,16 @@
 ;*  fftoa    Float-->ASCII        XWA   (XHL),BC ~38 Byte 228 Byte ~4500 us   *
 ;*  fatof    ASCII-->Float     (XHL),BC XWA,[BC] ~40 Byte 260 Byte ~2300 us   *
 ;*                                                                            *
-;*  - Wollen Sie einzelne Routinen entfernen, so beachten Sie, da· fsub Teile *
+;*  - Wollen Sie einzelne Routinen entfernen, so beachten Sie, dass fsub Teile *
 ;*    aus fadd und fdiv Teile aus fmul verwendet !                            *
 ;*  - Gleitkommaformat ist IEEE Single (32 Bit)                               *
 ;*  - Integerwerte bei fmul2, fitof und fftoi sind vorzeichenbehaftet         *
-;*  - Der Prozessor mu· sich im Maximum-Modus befinden                        *
+;*  - Der Prozessor muss sich im Maximum-Modus befinden                       *
 ;*  - Da die Routinen lokale Labels verwenden, ist mindestens AS 1.39 erfor-  *
 ;*    derlich                                                                 *
-;*  - Die AusfÅhrungszeiten kînnen je nach Operand streuen, insbesondere bei  *
+;*  - Die Ausfuehrungszeiten koennen je nach Operand streuen, insbesondere bei *
 ;*    den Konvertierungsfunktionen                                            *
-;*  - MACROS.INC mu· vorher eingebunden werden                                *
+;*  - MACROS.INC muss vorher eingebunden werden                               *
 ;******************************************************************************
 
 ;------------------------------------------------------------------------------
@@ -37,15 +37,15 @@ shifta          macro   op,dest         ; Schieben, falls evtl. A>=16
                 push    a               ; A wird zerschossen
                 bit     4,a             ; Akku im Bereich 16..31 ?
                 jr      z,smaller
-                op      16,dest         ; dann einmal gro· schieben
+                op      16,dest         ; dann einmal gross schieben
 smaller:        push    f               ; Carry erhalten
-                and     a,15            ; obere Bits plÑtten
+                and     a,15            ; obere Bits plaetten
                 jr      z,fertig
                 pop     f               ; evtl. Rest verarbeiten
                 op      a,dest
                 jr      ende            ; Carry schon gut
 fertig:         pop     f
-ende:           pop     a               ; A zurÅck
+ende:           pop     a               ; A zurueck
                 endm
 
                 section FloatLib
@@ -79,8 +79,8 @@ Comma           equ     '.'
                 rlc     1,xhl
                 ld      xbc,xde         ; Differenz bilden
                 sub     xbc,xhl
-                jr      nc,NoSwap       ; evtl. vertauschen, so da·
-                ld      xwa,xhl         ; grî·ere in XDE
+                jr      nc,NoSwap       ; evtl. vertauschen, so dass
+                ld      xwa,xhl         ; groessere in XDE
                 ld      xhl,xde
                 ld      xde,xwa
 NoSwap:         ld      qa,e            ; Vorzeichen 1 ausmaskieren
@@ -95,7 +95,7 @@ NoSub:          sub     xbc,xbc         ; XBC initialisieren
                 or      e,e             ; falls <>0, implizite 1 einbauen
                 scc     nz,e
                 rrc     1,xde
-                ld      e,0             ; Bit 0..7 wieder plÑtten
+                ld      e,0             ; Bit 0..7 wieder plaetten
 
                 rlc     8,xhl           ; dito Exponent 2 extrahieren
                 ld      qc,l
@@ -105,28 +105,28 @@ NoSub:          sub     xbc,xbc         ; XBC initialisieren
                 ld      l,0
 
 ; Zwischenstand:
-;  - Mantissen linksbÅndig inkl. impliziter Eins in XDE und XHL
+;  - Mantissen linksbuendig inkl. impliziter Eins in XDE und XHL
 ;  - Exponent 1 in BC, Exponent 2 in QBC
 ;  - Ergebnisvorzeichen in QA, Bit 0
 ;  - Subtraktionsflag in QA, Bit 1
 
                 ld      wa,bc           ; Exponentendifferenz berechnen
                 sub     wa,qbc
-                cp      wa,24           ; >24, d.h. Zahl 2 vernachlÑssigbar gegen Zahl 1
-                jr      gt,Round        ; ja, Ergebnis ist grî·ere Zahl
+                cp      wa,24           ; >24, d.h. Zahl 2 vernachlaessigbar gegen Zahl 1
+                jr      gt,Round        ; ja, Ergebnis ist groessere Zahl
                 shifta  srl,xhl         ; ansonsten Mantisse 2 entspr. anpassen
 
 Add:            bit     1,qa            ; subtrahieren ?
                 jr      nz,Subtract     ; ja-->
                 add     xde,xhl         ; nein, Mantissen addieren
-                jr      nc,Round        ; kein öberlauf, runden
-                rr      1,xde           ; ansonsten öberlauf einschieben...
+                jr      nc,Round        ; kein Ueberlauf, runden
+                rr      1,xde           ; ansonsten Ueberlauf einschieben...
                 inc     bc              ; ...und Exponent korrigieren
                 jr      Round           ; normal weiter runden
 
 Subtract:       sub     xde,xhl         ; Mantissen subtrahieren
                 jr      z,Zero          ; falls Null, Gesamtergebnis 0
-                jr      m,Round         ; fÅhrende 1 noch da: zum Runden
+                jr      m,Round         ; fuehrende 1 noch da: zum Runden
 Normalize:      or      bc,bc           ; Exponent bereits Null ?
                 jr      z,Round         ; dann denormales Ergebnis
                 dec     bc              ; ansonsten Mantisse eins rauf, Exponent
@@ -135,12 +135,12 @@ Normalize:      or      bc,bc           ; Exponent bereits Null ?
 
 Round:          add     xde,80h         ; Rundung auf Bit hinter Mantisse
                 jr      nc,NoOver
-                rr      1,xde           ; Bei öberlauf korrigieren
+                rr      1,xde           ; Bei Ueberlauf korrigieren
                 inc     bc
-NoOver:         ld      e,0             ; Mantissenrest plÑtten
+NoOver:         ld      e,0             ; Mantissenrest plaetten
                 or      xde,xde         ; insgesamt 0 ?
                 jr      z,Zero          ; dann Ergebnis 0
-                cp      bc,MaxExpo      ; ExponentenÅberlauf ?
+                cp      bc,MaxExpo      ; Exponentenueberlauf ?
                 jr      lt,NoEOver
                 ld      bc,MaxExpo      ; ja: Unendlich: Exponent=Maximum
                 sub     xde,xde         ;                Mantisse=0
@@ -148,7 +148,7 @@ NoOver:         ld      e,0             ; Mantissenrest plÑtten
 
 NoEOver:        or      bc,bc           ; Exponent 0 ?
                 jr      z,Denormal      ; ja, denormal
-                sll     1,xde           ; fÅhrende Eins nicht speichern
+                sll     1,xde           ; fuehrende Eins nicht speichern
 Denormal:       ld      e,c             ; Exponenten einbauen
                 rrc     8,xde           ; nach oben schieben
                 rr      1,qa            ; Vorzeichen einbauen
@@ -156,7 +156,7 @@ Denormal:       ld      e,c             ; Exponenten einbauen
 
 Zero:           ld      xwa,xde         ; Ergebnis in Akku
 
-                pop     xhl             ; Register zurÅck
+                pop     xhl             ; Register zurueck
                 pop     xde
                 pop     xbc
 
@@ -191,7 +191,7 @@ Zero:           ld      xwa,xde         ; Ergebnis in Akku
 		ld      xiy,xwa         ; Op1 kopieren
                 xor     xiy,xhl         ; Ergebnisvorzeichen bestimmen
 
-                ex      wa,qwa          ; RegisterhÑlften Op1 vertauschen
+                ex      wa,qwa          ; Registerhaelften Op1 vertauschen
                 ld      xde,xwa         ; Op1 ab sofort in XDE
                 and     de,7fh          ; Exponent und Vz. behandeln
                 and     wa,7f80h        ; Exponent maskieren
@@ -213,12 +213,12 @@ Denorm2:
                 cp      bc,-24          ; totaler Unterlauf ?
 		jr      lt,MulZero      ; dann Ergebnis 0
 
-                ld      wa,de           ; beide oberen HÑlften multiplizieren
+                ld      wa,de           ; beide oberen Haelften multiplizieren
                 mul     xwa,hl
-                ex      wa,qwa          ; Ergebnis in oberer HÑlfte lagern
-                ld      wa,de           ; obere HÑlfte Op1 retten
-                ex      de,qde          ; untere HÑlfte Op1 holen
-                ld      ix,hl           ; untere HÑlfte Op1 * obere Op2
+                ex      wa,qwa          ; Ergebnis in oberer Haelfte lagern
+                ld      wa,de           ; obere Haelfte Op1 retten
+                ex      de,qde          ; untere Haelfte Op1 holen
+                ld      ix,hl           ; untere Haelfte Op1 * obere Op2
                 mul     xix,de
                 ex      hl,qhl          ; untere Op1 * untere Op2
                 mul     xde,hl
@@ -239,14 +239,14 @@ Nor:            or      bc,bc           ; Exponent Null ?
                 rl      1,xde           ; nein, Mantisse eins nachschieben
                 rl      1,xwa
                 dec     bc              ; und Exponent runter
-                or      xwa,xwa         ; fÅhrende Eins da ?
+                or      xwa,xwa         ; fuehrende Eins da ?
                 jr      p,Nor           ; nein, weiterschieben
 
 MulRound:       add     xwa,80h         ; Rundung
-                jr      nc,NoROver      ; dabei öberlauf ?
+                jr      nc,NoROver      ; dabei Ueberlauf ?
                 rr      1,xwa           ; ja: Mantisse & Exponent korrigieren
                 inc     bc
-NoROver:        cp      bc,MaxExpo      ; ExponentenÅberlauf ?
+NoROver:        cp      bc,MaxExpo      ; Exponentenueberlauf ?
                 jr      lt,NoEOver
 DivError:       ld      bc,MaxExpo      ; dann unendlich einstellen
                 sub     xwa,xwa
@@ -254,7 +254,7 @@ DivError:       ld      bc,MaxExpo      ; dann unendlich einstellen
 
 NoEOver:        or      bc,bc           ; Exponent 0 ?
                 jr      z,Denormal
-                sll     1,xwa           ; fÅhrende 1 lîschen
+                sll     1,xwa           ; fuehrende 1 loeschen
 
 Denormal:       ld      a,c             ; Exponent einbauen
                 rrc     8,xwa           ; hochschieben
@@ -279,8 +279,8 @@ Unterlauf:      cp      bc,-24          ; totaler Unterlauf ?
 		sub     wa,wa           ; Endexponent
                 ex      wa,bc           ; ist 0
 		shifta  srl,xde         ; Mantisse herunterschieben
-                ld      xwa,xde         ; Ergebnis zurÅck nach XWA
-                jr      MulRound        ; zurÅck mit Exponent 0
+                ld      xwa,xde         ; Ergebnis zurueck nach XWA
+                jr      MulRound        ; zurueck mit Exponent 0
 
                 endp
 
@@ -289,7 +289,7 @@ Unterlauf:      cp      bc,-24          ; totaler Unterlauf ?
 
                 proc    fdiv
 
-                push    xbc             ; Register retten (mu· gleich zu fmul sein)
+                push    xbc             ; Register retten (muss gleich zu fmul sein)
                 push    xde
                 push    xhl
                 push    xix
@@ -337,19 +337,19 @@ NormLoop:       bit     14,qhl          ; Divisor normalisiert ?
                 jr      NormLoop
 
 Normal:         sub     xwa,xwa         ; Ergebnisquotient vorbesetzen
-                add     bc,25           ; Exponent nicht grî·er als 0
+                add     bc,25           ; Exponent nicht groesser als 0
 
 Loop:           ld      xix,xde         ; Divident zwischenspeichern
                 sub     xde,xhl         ; probeweise abziehen
                 ccf                     ; Carry drehen
                 jr      c,IsOne         ; ungedrehter Carry=1: Divisor pa·t
-                ld      xde,xix         ; ansonsten zurÅckkopieren
+                ld      xde,xix         ; ansonsten zurueckkopieren
 IsOne:          rl      1,xwa           ; Ergebnisbit einschieben
                 sll     1,xde           ; Divident verschieben
                 dec     bc              ; Exponent runter
                 or      bc,bc
                 jr      z,Denorm        ; falls Null, denormalisieren
-                bit     8,qwa           ; fÅhrende Eins da ?
+                bit     8,qwa           ; fuehrende Eins da ?
                 jr      z,Loop          ; nein, weiterrechnen
 
 Denorm:         sll     7,xwa           ; Mantisse positionieren
@@ -377,14 +377,14 @@ Denorm:         sll     7,xwa           ; Mantisse positionieren
                 jr      m,Divide        ; (neg. Exponent=Division)
 
                 add     de,bc           ; Exponent addieren
-                cp      de,MaxExpo      ; öberlauf ?
+                cp      de,MaxExpo      ; Ueberlauf ?
                 jr      ge,Over         ; ja, Ergebnis unendlich
 Result:         ld      a,e             ; Ergebnisexponent einbauen
                 rrc     8,xwa           ; Exponent nach oben
                 rl      1,xde           ; Vorzeichen einschieben
                 rr      1,xwa
 
-Zero:           pop     xde             ; Register zurÅck
+Zero:           pop     xde             ; Register zurueck
                 pop     bc
                 ret
 
@@ -407,13 +407,13 @@ DDDenorm:       add     de,bc           ; Exponentensumme bilden
 
 Denorm:         or      bc,bc           ; Multiplikation oder Division ?
                 jr      m,DDDenorm
-                sub     a,a             ; alten Exponenten lîschen
+                sub     a,a             ; alten Exponenten loeschen
 Norm:           sll     1,xwa           ; normalisieren...
-                jr      c,Stop          ; bis fÅhrende Eins da
+                jr      c,Stop          ; bis fuehrende Eins da
                 dec     bc              ; oder 2. Exponent 0
                 or      bc,bc
                 jr      nz,Norm
-                jr      Result          ; Multiplikator kompl. fÅr Normalisierung draufgegangen
+                jr      Result          ; Multiplikator kompl. fuer Normalisierung draufgegangen
 Stop:           add     de,bc           ; Rest addieren
                 jr      Result          ; alles andere schon o.k.
 
@@ -442,7 +442,7 @@ Shift:          dec     bc              ; Mantisse verschieben
                 rr      1,qc            ; Vorzeichen einbauen
                 rr      1,xwa
 
-Result:         pop     xbc             ; Register zurÅck
+Result:         pop     xbc             ; Register zurueck
                 ret
 
                 endp
@@ -462,12 +462,12 @@ Result:         pop     xbc             ; Register zurÅck
                 sub     c,Bias          ; Bias abziehen
 
                 jr      m,Zero          ; neg. Exponent -> Zahl<0 -> Ergebnis 0
-                cp      c,31            ; öberlauf ?
+                cp      c,31            ; Ueberlauf ?
                 jr      ge,Over
 
-                scf                     ; fÅhrende Eins einschieben
+                scf                     ; fuehrende Eins einschieben
                 rr      1,xwa
-                sub     a,a             ; Exponent lîschen
+                sub     a,a             ; Exponent loeschen
 
 Shift:          srl     1,xwa           ; jetzt schieben, bis Ergebnis stimmt
                 inc     c
@@ -480,16 +480,16 @@ Shift:          srl     1,xwa           ; jetzt schieben, bis Ergebnis stimmt
                 cpl     qwa
                 inc     xwa
 
-Positive:       pop     bc              ; Register zurÅck
+Positive:       pop     bc              ; Register zurueck
                 ret
 
 Zero:           sub     xwa,xwa         ; Ergebnis 0
                 jr      Positive
 
-Over:           ld      xwa,7fffffffh   ; öberlauf: Maxint zurÅckgeben
+Over:           ld      xwa,7fffffffh   ; Ueberlauf: Maxint zurueckgeben
                 srl     1,b             ; negativ ?
                 jr      nc,Positive
-                cpl     wa              ; ja, neg. Maximum zurÅckgeben
+                cpl     wa              ; ja, neg. Maximum zurueckgeben
                 cpl     qwa
                 jr      Positive
 
@@ -550,7 +550,7 @@ WABCSame:       sub     xbc,xde
                 ld      xwa,xbc
                 or      de,4000h        ; xroot += m2
 DontSet7:       ex      wa,qwa          ; x auf neues Alignment umstellen
-                ld      hl,1000h        ; m2 - obere HÑlfte schon 0
+                ld      hl,1000h        ; m2 - obere Haelfte schon 0
 Loop20:         ld      xbc,xwa         ; xx2 = x
 Loop21:         sub     xbc,xde         ; xx2 -= xroot
                 srl     1,xde           ; xroot = xroot/2
@@ -566,18 +566,18 @@ DontSet2:       srl     2,xhl           ; m2 = m2/4
 
 Finish:         sub     xwa,xde         ; Aufrunden notwendig ?
                 jr      ule,NoInc
-                inc     xde             ; wenn ja, durchfÅhren
-NoInc:          res     7,qde           ; impl. Eins lîschen
+                inc     xde             ; wenn ja, durchfuehren
+NoInc:          res     7,qde           ; impl. Eins loeschen
                 or      xde,xix
                 ld      xwa,xde         ; Ergebnis in XWA
                 jr      End
 
-DomainError:    ld      xwa,0ffc00000h  ; -NAN zurÅckgeben
+DomainError:    ld      xwa,0ffc00000h  ; -NAN zurueckgeben
                 jr      End
 
 Zero:           sub     xwa,xwa         ; Ergebnis 0
 
-End:            pop     xix             ; Register zurÅck
+End:            pop     xix             ; Register zurueck
                 pop     xhl
                 pop     xde
                 pop     xbc
@@ -595,19 +595,19 @@ fPot10:
                 push    xbc             ; Register retten
                 push    xhl
 
-                ld      xwa,(One)       ; Ausgangspunkt fÅrs Multiplizieren
+                ld      xwa,(One)       ; Ausgangspunkt fuers Multiplizieren
                 ld      xhl,(Ten)       ; zu benutzende Potenz
                 or      bc,bc           ; negative Potenz ?
                 jr      p,IsPos
                 ld      xhl,(Tenth)     ; dann eben Zehntel multiplizieren
-                neg     bc              ; fÅr Schleife immer positiv
+                neg     bc              ; fuer Schleife immer positiv
 IsPos:
                 or      bc,bc           ; Noch weiter multiplizieren ?
                 jr      z,End
                 bit     0,bc            ; Restpotenz ungerade ?
                 jr      z,IsEven
                 call    fmul            ; ja: einzeln multiplizieren
-IsEven:         srl     1,bc            ; nÑchste Stelle
+IsEven:         srl     1,bc            ; naechste Stelle
                 push    xwa             ; neue Potenz berechnen
                 ld      xwa,xhl
                 call    fmul            ; durch quadrieren
@@ -615,7 +615,7 @@ IsEven:         srl     1,bc            ; nÑchste Stelle
                 pop     xwa
                 jr      IsPos           ; weiter nach Einsen suchen
 
-End:            pop     xhl             ; Register zurÅck
+End:            pop     xhl             ; Register zurueck
                 pop     xbc
                 ret
 
@@ -643,17 +643,17 @@ fOutDec:
 IsPos:          bit     7,c             ; Pluszeichen ausgeben ?
                 jr      nz,GoOn
                 ld      (xix+),'+'
-GoOn:           res     7,c             ; Plusflag lîschen
-                ld      qbc,0           ; Nullflag und ZÑhler lîschen
+GoOn:           res     7,c             ; Plusflag loeschen
+                ld      qbc,0           ; Nullflag und Zaehler loeschen
 
 InLoop:         ld      xhl,0           ; Division vorbereiten
                 ld      e,32            ; 32 Bit-Division
 DivLoop:        sll     1,xwa           ; eins weiterschieben
                 rl      1,xhl
-                srl     1,xwa           ; fÅr nachher
-                sub     xhl,10          ; pa·t Divisor hinein ?
+                srl     1,xwa           ; fuer nachher
+                sub     xhl,10          ; passt Divisor hinein ?
                 jr      nc,DivOK
-                add     xhl,10          ; nein, zurÅcknehmen...
+                add     xhl,10          ; nein, zuruecknehmen...
                 scf                     ; im Ergebnis 0 einschieben
 DivOK:          ccf                     ; neues Ergebnisbit
                 rl      1,xwa           ; Ergebnis in XWA einschieben...
@@ -662,7 +662,7 @@ DivOK:          ccf                     ; neues Ergebnisbit
                 add     l,'0'           ; ASCII-Offset addieren
                 bit     1,qb            ; schon im Nullbereich ?
                 jr      z,NormVal
-                ld      l,b             ; ja, dann gewÅnschtes Leerzeichen
+                ld      l,b             ; ja, dann gewuenschtes Leerzeichen
 NormVal:        push    l               ; auf LIFO legen
                 inc     qc              ; ein Zeichen mehr
                 or      xwa,xwa         ; Quotient Null ?
@@ -675,7 +675,7 @@ OutLoop:        pop     a               ; jetzt Zeichen umgekehrt ablegen
                 ld      (xix+),a
                 djnz    qc,OutLoop
 
-                pop     xhl             ; Register zurÅck
+                pop     xhl             ; Register zurueck
                 pop     de
                 pop     xbc
                 pop     xwa
@@ -689,10 +689,10 @@ OutLoop:        pop     a               ; jetzt Zeichen umgekehrt ablegen
 ; In:  Zahl in XWA
 ;      Zeiger auf Speicher in XHL
 ;      max. Anzahl Nachkommastellen in C
-;      B/Bit 0 setzen, falls Mantissen-Pluszeichen unerwÅnscht
-;      B/Bit 1 setzen, falls Exponenten-Pluszeichen unerwÅnscht
+;      B/Bit 0 setzen, falls Mantissen-Pluszeichen unerwuenscht
+;      B/Bit 1 setzen, falls Exponenten-Pluszeichen unerwuenscht
 ;      B/Bit 2..4 = Stellenzahl Exponent
-;      B/Bit 5 setzen, falls Nullen am Ende der Mantisse unerwÅnscht
+;      B/Bit 5 setzen, falls Nullen am Ende der Mantisse unerwuenscht
 ; Out: Zahl abgelegter Zeichen (exkl. NUL am Ende) in BC
 ;      (XHL) = gebildeter String
 
@@ -721,22 +721,22 @@ WrMantSgn:      ld      (xix+),c        ; Mantissenvorzeichen ablegen
 NoMantSgn:
                 ld      c,qh            ; Exponenten herausholen...
                 extz    bc              ; ...auf 16 Bit erweitern...
-                sll     8,xhl           ; ...und in Quelle lîschen
+                sll     8,xhl           ; ...und in Quelle loeschen
 
                 cp      bc,MaxExpo      ; Sonderwert (INF/NAN) ?
                 jrl     z,SpecialVals   ; ja-->
 
                 or      bc,bc           ; Zahl denormal ?
                 jr      nz,IsNormal     ; nein, normal weiter
-                or      xhl,xhl         ; bei kompl. Null auch Åberspringen
+                or      xhl,xhl         ; bei kompl. Null auch ueberspringen
                 jr      z,IsNull
-Normalize:      sll     1,xhl           ; ja: solange zÑhlen, bis 1 erscheint
+Normalize:      sll     1,xhl           ; ja: solange zaehlen, bis 1 erscheint
                 jr      c,IsNormal
                 dec     bc
                 jr      Normalize
 IsNormal:       sub     bc,Bias         ; Bias abziehen
 IsNull:
-                push    xwa             ; fÅr folgendes Zahl retten
+                push    xwa             ; fuer folgendes Zahl retten
                 ld      wa,bc           ; Zweierexponenten in Float wandeln
                 exts    xwa
                 call    fitof
@@ -745,17 +745,17 @@ IsNull:
                 or      xwa,xwa         ; Zahl negativ ?
                 jr      p,NoCorr
                 ld      xhl,(One)       ; dann nocheinmal korrigieren wg.
-                call    fsub            ; unterer Gau·klammer
+                call    fsub            ; unterer Gaussklammer
 NoCorr:         call    fftoi           ; Den Ausflug in Float beenden
                 ld      qbc,wa          ; den Zehnerexponenten retten
                 ld      bc,wa
                 call    fPot10          ; von diesem Exponenten Zehnerpotenz
                 ld      xhl,xwa         ; bilden
-                pop     xwa             ; alte Zahl zurÅck
+                pop     xwa             ; alte Zahl zurueck
                 call    fdiv            ; Teilen: Ergebnis ist Zahl zwischen
 Again:          ld      xhl,xwa         ; 1.0 und 9.9999..., diese retten
                 call    fftoi           ; Vorkommastelle berechnen
-                cp      a,10            ; doch etwas drÅber ?
+                cp      a,10            ; doch etwas drueber ?
                 jr      ult,NoRoundErr
                 ld      xwa,xhl         ; ja, dann noch einmal zehnteln
                 ld      xhl,(Tenth)
@@ -764,7 +764,7 @@ Again:          ld      xhl,xwa         ; 1.0 und 9.9999..., diese retten
                 jr      Again
 NoRoundErr:     add     a,'0'           ; diese nach ASCII wandeln...
                 ld      (xix+),a        ; ...und ablegen
-                sub     a,'0'           ; wieder rÅckgÑngig machen
+                sub     a,'0'           ; wieder rueckgaengig machen
                 cp      e,0             ; gar keine Nachkommastellen ?
                 jr      eq,NoComma
                 ld      (xix+),Comma    ; Dezimalpunkt ausgeben
@@ -772,7 +772,7 @@ NoRoundErr:     add     a,'0'           ; diese nach ASCII wandeln...
                 call    fsub            ; Differenz bilden
                 chg     15,qwa          ; war verkehrtherum...
                 ld      xhl,xwa         ; nach XHL verschieben, weil XWA gebraucht
-                ld      c,e             ; Zehnerpotenz fÅr Skalierung ausrechnen
+                ld      c,e             ; Zehnerpotenz fuer Skalierung ausrechnen
                 extz    bc              ; auf 16 Bit aufblasen
                 call    fPot10          ; Skalierungswert berechnen
                 call    fmul            ; hochmultiplizieren
@@ -783,7 +783,7 @@ NoRoundErr:     add     a,'0'           ; diese nach ASCII wandeln...
                 ld      c,e
                 set     7,c             ; kein Pluszeichen!
                 call    fOutDec
-                bit     5,d             ; Nullen am Ende abrÑumen ?
+                bit     5,d             ; Nullen am Ende abraeumen ?
                 jr      nz,CleanZeros
 NoComma:
                 ld      a,d             ; falls Minimalstellenzahl Exponent=0
@@ -801,12 +801,12 @@ NoComma:
                 and     c,87h           ; Bits ausmaskieren
                 call    fOutDec
 
-End:            pop     xwa             ; Register zurÅck
+End:            pop     xwa             ; Register zurueck
                 pop     xbc
                 pop     de
                 pop     xhl
                 ld      (xix),0         ; NUL-Zeichen im String nicht vergessen
-                sub     xix,xhl         ; StringlÑnge berechnen
+                sub     xix,xhl         ; Stringlaenge berechnen
                 ld      bc,ix
                 pop     xix
 
@@ -823,7 +823,7 @@ IsNAN:          ldw     (xix+),'AN'     ; nein: NAN einschreiben
 
 CleanZeros:     cp      (xix-1),'0'     ; steht da eine Null am Ende ?
                 jr      nz,CleanNoZero  ; nein, Ende
-                dec     xix             ; ja: ZÑhler runter, so da· Åber-
+                dec     xix             ; ja: Zaehler runter, so dass Ueber-
                 jr      CleanZeros      ; schrieben wird und neuer Versuch
 CleanNoZero:    cp      (xix-1),Comma   ; evtl. Komma entfernbar ?
                 jr      nz,NoComma      ; nein-->
@@ -882,18 +882,18 @@ MinPhase3:      set     2,qb            ; bei Exponent Bit 2
 NoMinus:
                 cp      a,'.'           ; Umschaltung zu Phase 2 (Nachkomma) ?
                 jr      ne,NoPoint
-                cp      qc,1            ; bish. Phase mu· eins sein
+                cp      qc,1            ; bish. Phase muss eins sein
                 jrl     ne,Error
                 ld      qc,2            ; neue Phase eintragen
                 set     0,qb            ; Nachkomma darf kein Vorzeichen haben
                 ld      xde,(Tenth)     ; im Nachkomma durch 10 teilen
                 jr      ReadLoop
 NoPoint:
-                cp      a,'e'           ; kleines und gro·es E zulassen
+                cp      a,'e'           ; kleines und grosses E zulassen
                 jr      eq,IsE
                 cp      a,'E'
                 jr      ne,NoE
-IsE:            cp      qc,3            ; vorherige Phase mu· 1 oder 2 sein
+IsE:            cp      qc,3            ; vorherige Phase muss 1 oder 2 sein
                 jr      eq,Error
                 ld      qc,3            ; vermerken
                 res     0,qb            ; Vorzeichen wieder zugelassen
@@ -914,7 +914,7 @@ NoE:
                 pop     xwa             ; Zahl nach Float wandeln
                 call    fitof
                 call    fadd            ; dazuaddieren
-                ld      xhl,xwa         ; Mantisse zurÅcklegen
+                ld      xhl,xwa         ; Mantisse zuruecklegen
                 jrl     ReadLoop
 NoPhase1:
                 cp      qc,2            ; Phase 2 (Nachkomma) :
@@ -929,7 +929,7 @@ NoPhase1:
                 ld      xwa,xde         ; nÑchste Skalierungspotenz ausrechnen
                 ld      xhl,(Tenth)
                 call    fmul
-                ld      xde,xwa         ; alles wieder zurÅck
+                ld      xde,xwa         ; alles wieder zurueck
                 pop     xhl
                 jrl     ReadLoop
 NoPhase2:
@@ -949,7 +949,7 @@ ExpPos:         call    fPot10          ; Zehnerpotenz des Exponenten bilden
                 set     15,qwa
 ManPos:         rcf                     ; Ende ohne Fehler
 
-                pop     xix             ; Register zurÅck
+                pop     xix             ; Register zurueck
                 pop     xhl
                 pop     xde
                 pop     xbc

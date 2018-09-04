@@ -19,6 +19,7 @@
 #include "endian.h"
 #include "chunks.h"
 #include "asmdef.h"
+#include "errmsg.h"
 #include "asmsub.h"
 #include "asmpars.h"
 #include "intconsts.h"
@@ -333,7 +334,7 @@ void RetractWords(Word Cnt)
   ErgLen = Cnt * Granularity();
   if (LenSoFar < ErgLen)
   {
-    WrError(1950);
+    WrError(ErrNum_ParNotPossible);
     return;
   }
 

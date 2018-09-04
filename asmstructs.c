@@ -525,7 +525,7 @@ static void ExpandStruct_One(PStructRec StructRec, char *pVarPrefix, char *pStru
 
 void ExpandStruct(PStructRec StructRec)
 {
-  if (!LabPart.Str[0]) WrError(2040);
+  if (!LabPart.Str[0]) WrError(ErrNum_StructNameMissing);
   else
   {
     String CompVarName, CompStructName;

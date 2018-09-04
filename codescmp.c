@@ -76,49 +76,52 @@ static Boolean DecodeReg(const char *pAsc, Byte *pErg)
   return True;
 }
 
-static Boolean DecodeAdr(char *Asc, Boolean MayInc, Byte PCDisp, Byte *Arg)
+static Boolean DecodeAdr(const tStrComp *pArg, Boolean MayInc, Byte PCDisp, Byte *Arg)
 {
   Word Target;
   Boolean OK;
-  int l = strlen(Asc);
+  int l = strlen(pArg->Str);
 
-  if ((l >= 4) && (Asc[l - 1] == ')') && (Asc[l-4] == '('))
+  if ((l >= 4) && (pArg->Str[l - 1] == ')') && (pArg->Str[l - 4] == '('))
   {
-    Asc[l - 1] = '\0'; 
-    if (DecodeReg(Asc + l - 3, Arg))
+    tStrComp Left, Right;
+
+    StrCompSplitRef(&Left, &Right, pArg, pArg->Str + l - 4);
+    StrCompShorten(&Right, 1);
+    if (DecodeReg(Right.Str, Arg))
     {
-      Asc[l - 4] = '\0';
-      if (*Asc == '@')
+      if (*Left.Str == '@')
       {
         if (!MayInc)
         {
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
           return False;
         }
-        strmov(Asc, Asc + 1); *Arg += 4;
+        StrCompIncRefLeft(&Left, 1);
+        *Arg += 4;
       }
-      if (!strcasecmp(Asc, "E"))
+      if (!strcasecmp(Left.Str, "E"))
         BAsmCode[1] = 0x80;
       else if (*Arg == 0)
       {
-        WrXError(1445, Asc + l - 3);
+        WrStrErrorPos(ErrNum_InvReg, &Right);
         return False;
       }
       else
       {
-        BAsmCode[1] = EvalIntExpression(Asc, SInt8, &OK);
+        BAsmCode[1] = EvalStrIntExpression(&Left, SInt8, &OK);
         if (!OK)
           return False;
       }
       return True;
     }
-    else Asc[l - 1] = ')';
+    else pArg->Str[l - 1] = ')';
   }
 
   /* no carry in PC from bit 11 to 12; additionally handle preincrement */
 
   FirstPassUnknown = False;
-  Target = EvalIntExpression(Asc, UInt16, &OK);
+  Target = EvalStrIntExpression(pArg, UInt16, &OK);
   if (OK)
   {
     Word PCVal = (EProgCounter() & 0xf000) + ((EProgCounter() + 1 + PCDisp) & 0xfff);
@@ -128,7 +131,7 @@ static Boolean DecodeAdr(char *Asc, Boolean MayInc, Byte PCDisp, Byte *Arg)
       Target = PCVal;
 
     if (!ChkSamePage(Target, PCVal, 12));
-    else if ((Disp > 0x7f) && (Disp < 0xf80)) WrError(1370);
+    else if ((Disp > 0x7f) && (Disp < 0xf80)) WrError(ErrNum_JmpDistTooBig);
     else
     {
       BAsmCode[1] = Disp & 0xff;
@@ -142,7 +145,7 @@ static Boolean DecodeAdr(char *Asc, Boolean MayInc, Byte PCDisp, Byte *Arg)
 static void ChkPage(void)
 {
   if (((EProgCounter()) & 0xf000) != ((EProgCounter() + CodeLen) & 0xf000))
-    WrError(250);
+    WrError(ErrNum_PageCrossing);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -161,7 +164,7 @@ static void DecodeImm(Word Index)
   {
     Boolean OK;
 
-    BAsmCode[1] = EvalIntExpression(ArgStr[1], Int8, &OK);
+    BAsmCode[1] = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
     if (OK)
     {
       BAsmCode[0] = Index; CodeLen = 2; ChkPage();
@@ -172,7 +175,7 @@ static void DecodeImm(Word Index)
 static void DecodeRegOrder(Word Index)
 {
   if (!ChkArgCnt(1, 1));
-  else if (!DecodeReg(ArgStr[1], BAsmCode + 0)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+  else if (!DecodeReg(ArgStr[1].Str, BAsmCode + 0)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
   else
   {
     BAsmCode[0] |= Index; CodeLen = 1;
@@ -182,7 +185,7 @@ static void DecodeRegOrder(Word Index)
 static void DecodeMem(Word Index)
 {
   if (ChkArgCnt(1, 1))
-  if (DecodeAdr(ArgStr[1], True, 0, BAsmCode + 0))
+  if (DecodeAdr(&ArgStr[1], True, 0, BAsmCode + 0))
   {
     BAsmCode[0] |= Index; CodeLen = 2; ChkPage();
   }
@@ -191,7 +194,7 @@ static void DecodeMem(Word Index)
 static void DecodeJmp(Word Index)
 {
   if (ChkArgCnt(1, 1))
-  if (DecodeAdr(ArgStr[1], False, 1, BAsmCode + 0))
+  if (DecodeAdr(&ArgStr[1], False, 1, BAsmCode + 0))
   {
     BAsmCode[0] |= Index; CodeLen = 2; ChkPage();
   }
@@ -200,7 +203,7 @@ static void DecodeJmp(Word Index)
 static void DecodeLD(Word Index)
 {
   if (ChkArgCnt(1, 1))
-  if (DecodeAdr(ArgStr[1], False, 0, BAsmCode + 0))
+  if (DecodeAdr(&ArgStr[1], False, 0, BAsmCode + 0))
   {
     BAsmCode[0] |= Index; CodeLen = 2; ChkPage();
   }

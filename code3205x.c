@@ -126,22 +126,22 @@ static CPUVar CPU32053;
 
 /* ---------------------------------------------------------------------- */
 
-static Word EvalARExpression(const char *asc, Boolean *OK)
+static Word EvalARExpression(const tStrComp *pArg, Boolean *OK)
 {
   *OK = True;
 
-  if ((mytoupper(asc[0]) == 'A')
-   && (mytoupper(asc[1]) == 'R')
-   && (asc[2] >= '0')
-   && (asc[2] <= '7')
-   && (asc[3] <= '\0'))
-     return asc[2] - '0';
-  return EvalIntExpression(asc, UInt3, OK);
+  if ((mytoupper(pArg->Str[0]) == 'A')
+   && (mytoupper(pArg->Str[1]) == 'R')
+   && (pArg->Str[2] >= '0')
+   && (pArg->Str[2] <= '7')
+   && (pArg->Str[3] <= '\0'))
+     return pArg->Str[2] - '0';
+  return EvalStrIntExpression(pArg, UInt3, OK);
 }
 
 /* ---------------------------------------------------------------------- */
 
-static Boolean DecodeAdr(char *arg, int MinArgCnt, int aux, Boolean Must1)
+static Boolean DecodeAdr(const tStrComp *pArg, int MinArgCnt, int aux, Boolean Must1)
 {
   Word h;
   tAdrMode *pAdrMode = AdrModes;
@@ -152,7 +152,7 @@ static Boolean DecodeAdr(char *arg, int MinArgCnt, int aux, Boolean Must1)
 
   /* Adressierungsmodus suchen */
 
-  while (pAdrMode->Name && strcasecmp(pAdrMode->Name, arg))
+  while (pAdrMode->Name && strcasecmp(pAdrMode->Name, pArg->Str))
    pAdrMode++;
 
   /* nicht gefunden: dann absolut */
@@ -169,7 +169,7 @@ static Boolean DecodeAdr(char *arg, int MinArgCnt, int aux, Boolean Must1)
 
     /* Adresse berechnen */
 
-    h = EvalIntExpression(arg, Int16, &AdrOK);
+    h = EvalStrIntExpression(pArg, Int16, &AdrOK);
     if (!AdrOK)
       return FALSE;
 
@@ -177,7 +177,7 @@ static Boolean DecodeAdr(char *arg, int MinArgCnt, int aux, Boolean Must1)
 
     if (Must1 && (h >= 0x80) && (!FirstPassUnknown))
     {
-      WrError(1315); 
+      WrError(ErrNum_UnderRange); 
       AdrOK = False;
       return FALSE;
     }
@@ -200,7 +200,7 @@ static Boolean DecodeAdr(char *arg, int MinArgCnt, int aux, Boolean Must1)
     AdrMode = pAdrMode->Mode;
     if (aux <= ArgCnt)
     {
-      h = EvalARExpression(ArgStr[aux], &AdrOK);
+      h = EvalARExpression(&ArgStr[aux], &AdrOK);
       if (AdrOK) AdrMode |= 0x8 | h;
     }
     else
@@ -220,11 +220,11 @@ static Word DecodeCond(int argp)
 
   while (argp <= ArgCnt)
   {
-    for (pCondition = Conditions; pCondition->Name && strcasecmp(pCondition->Name, ArgStr[argp]); pCondition++);
+    for (pCondition = Conditions; pCondition->Name && strcasecmp(pCondition->Name, ArgStr[argp].Str); pCondition++);
 
     if (!pCondition->Name)
     {
-      WrError(1360);
+      WrError(ErrNum_UndefCond);
       return ret;
     }
     ret &= pCondition->CodeAND;
@@ -237,19 +237,19 @@ static Word DecodeCond(int argp)
   }
 
   if ((cnttp > 1) || (cntzl > 1) || (cntv > 1) || (cntc > 1)) 
-    WrXErrorPos(ErrNum_UndefCond, ArgStr[argp], &ArgStrPos[argp]);
+    WrStrErrorPos(ErrNum_UndefCond, &ArgStr[argp]);
 
   return ret;
 }
 
 /* ---------------------------------------------------------------------- */
 
-static Word DecodeShift(char *arg, Boolean *OK)
+static Word DecodeShift(const tStrComp *pArg, Boolean *OK)
 {
   Word Shift;
 
   FirstPassUnknown = False;
-  Shift = EvalIntExpression(arg, UInt5, OK);
+  Shift = EvalStrIntExpression(pArg, UInt5, OK);
   if (*OK)
   {
     if (FirstPassUnknown) Shift &= 15;
@@ -278,7 +278,7 @@ static void DecodeCmdAdr(Word Index)
 
   if (ChkArgCnt(1, 2)
    && ChkMinCPU(pOrder->MinCPU)
-   && DecodeAdr(ArgStr[1], 1, 2, False))
+   && DecodeAdr(&ArgStr[1], 1, 2, False))
   {
     CodeLen = 1; 
     WAsmCode[0] = pOrder->Code | AdrMode;
@@ -302,10 +302,10 @@ static void DecodeCmdJmp(Word Index)
     }
     else if (ArgCnt > 1)
     {
-      OK = DecodeAdr(ArgStr[2], 1, 3, False);
+      OK = DecodeAdr(&ArgStr[2], 1, 3, False);
       if ((AdrMode < 0x80) && (OK))
       {
-        WrError(1350);
+        WrError(ErrNum_InvAddrMode);
         OK = FALSE;
       }
       AdrMode &= 0x7f;
@@ -315,7 +315,7 @@ static void DecodeCmdJmp(Word Index)
 
     if (OK)
     {
-      WAsmCode[1] = EvalIntExpression(ArgStr[1], Int16, &OK);
+      WAsmCode[1] = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
       if (OK)
       {
         CodeLen = 2; 
@@ -331,24 +331,24 @@ static void DecodeCmdPlu(Word Index)
   const FixedOrder *pOrder = PluOrders + Index;
 
   if (!ChkMinCPU(pOrder->MinCPU));
-  else if (*ArgStr[1] == '#')
+  else if (*ArgStr[1].Str == '#')
   {
     if (ChkArgCnt(2, 3))
     {
-      WAsmCode[1] = EvalIntExpression(ArgStr[1] + 1, Int16, &OK);
-      if ((OK) && (DecodeAdr(ArgStr[2], 2, 3, False))) 
+      WAsmCode[1] = EvalStrIntExpressionOffs(&ArgStr[1], 1, Int16, &OK);
+      if ((OK) && (DecodeAdr(&ArgStr[2], 2, 3, False))) 
       {
         CodeLen = 2;
         WAsmCode[0] = pOrder->Code | 0x0400 | AdrMode;
       }
     }
   }
-  else if (strlen(OpPart.Str) == 4) WrError(1120);
+  else if (strlen(OpPart.Str) == 4) WrError(ErrNum_OnlyImmAddr);
   else
   {
     if (ChkArgCnt(1, 2))
     {
-      if (DecodeAdr(ArgStr[1], 1, 2, False))
+      if (DecodeAdr(&ArgStr[1], 1, 2, False))
       {
         CodeLen = 1;
         WAsmCode[0] = pOrder->Code | AdrMode;
@@ -365,15 +365,15 @@ static void DecodeADDSUB(Word Index)
 
   if (ChkArgCnt(1, 3))
   {
-    if (*ArgStr[1] == '#')
+    if (*ArgStr[1].Str == '#')
     {
       if (ChkArgCnt(1, 2))
       {
         OK = True;
-        Shift = (ArgCnt == 1) ? 0 : EvalIntExpression(ArgStr[2], UInt4, &OK);
+        Shift = (ArgCnt == 1) ? 0 : EvalStrIntExpression(&ArgStr[2], UInt4, &OK);
         if (OK)
         {
-          AdrLong = EvalIntExpression(ArgStr[1] + 1, UInt16, &OK);
+          AdrLong = EvalStrIntExpressionOffs(&ArgStr[1], 1, UInt16, &OK);
           if (OK)
           {
             if ((Shift == 0) && (Hi(AdrLong) == 0))
@@ -393,10 +393,10 @@ static void DecodeADDSUB(Word Index)
     }
     else
     {
-      if (DecodeAdr(ArgStr[1], 1, 3, False))
+      if (DecodeAdr(&ArgStr[1], 1, 3, False))
       {
         OK = True;
-        Shift = (ArgCnt >= 2) ? DecodeShift(ArgStr[2], &OK) : 0;
+        Shift = (ArgCnt >= 2) ? DecodeShift(&ArgStr[2], &OK) : 0;
         if (OK)
         {
           CodeLen = 1;
@@ -418,13 +418,13 @@ static void DecodeADRSBRK(Word Index)
   if (!ChkArgCnt(1, 1))
     return;
 
-  if (*ArgStr[1] != '#')
+  if (*ArgStr[1].Str != '#')
   {
-    WrError(1120); /*invalid parameter*/
+    WrError(ErrNum_OnlyImmAddr); /*invalid parameter*/
     return;
   }
 
-  adr_word = EvalIntExpression(ArgStr[1] + 1, UInt8, &OK);
+  adr_word = EvalStrIntExpressionOffs(&ArgStr[1], 1, UInt8, &OK);
   if (OK)
   {
     CodeLen = 1;
@@ -438,13 +438,13 @@ static void DecodeLogic(Word Index)
   Word Shift;
 
   if (!ChkArgCnt(1, 2));
-  else if (*ArgStr[1] == '#')
+  else if (*ArgStr[1].Str == '#')
   {
-    WAsmCode[1] = EvalIntExpression((ArgStr[1]) + 1, UInt16, &OK);
+    WAsmCode[1] = EvalStrIntExpressionOffs(&ArgStr[1], 1, UInt16, &OK);
     if (OK)
     {
       OK = True;
-      Shift = (ArgCnt >= 2) ? DecodeShift(ArgStr[2], &OK) : 0;
+      Shift = (ArgCnt >= 2) ? DecodeShift(&ArgStr[2], &OK) : 0;
       if (OK)
       {
         CodeLen = 2;
@@ -457,7 +457,7 @@ static void DecodeLogic(Word Index)
   }
   else
   {
-    if (DecodeAdr(ArgStr[1], 1, 2, False))
+    if (DecodeAdr(&ArgStr[1], 1, 2, False))
     {
       CodeLen = 1; 
       WAsmCode[0] = (Index & 0xff00) | AdrMode;
@@ -473,8 +473,8 @@ static void DecodeBIT(Word Index)
 
   if (ChkArgCnt(2, 3))
   {
-    bit = EvalIntExpression(ArgStr[2], UInt4, &OK);
-    if ((OK) && (DecodeAdr(ArgStr[1], 2, 3, False)))
+    bit = EvalStrIntExpression(&ArgStr[2], UInt4, &OK);
+    if ((OK) && (DecodeAdr(&ArgStr[1], 2, 3, False)))
     {
       CodeLen = 1;
       WAsmCode[0] = 0x4000 | AdrMode | ((bit & 0xf) << 8);
@@ -488,48 +488,48 @@ static void DecodeBLDD(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 3));
-  else if (!strcasecmp(ArgStr[1], "BMAR"))
+  else if (!strcasecmp(ArgStr[1].Str, "BMAR"))
   {
     if (ChkMinCPU(CPU32050))
     {
-      if (DecodeAdr(ArgStr[2], 2, 3, False))
+      if (DecodeAdr(&ArgStr[2], 2, 3, False))
       {
         CodeLen = 1;
         WAsmCode[0] = 0xac00 | AdrMode;
       }
     }
   }
-  else if (!strcasecmp(ArgStr[2], "BMAR"))
+  else if (!strcasecmp(ArgStr[2].Str, "BMAR"))
   {
     if (ChkMinCPU(CPU32050))
     {
-      if (DecodeAdr(ArgStr[1], 2, 3, False))
+      if (DecodeAdr(&ArgStr[1], 2, 3, False))
       {
         CodeLen = 1;
         WAsmCode[0] = 0xad00 | AdrMode;
       }
     }
   }
-  else if (*ArgStr[1] == '#')
+  else if (*ArgStr[1].Str == '#')
   {
-    WAsmCode[1] = EvalIntExpression((ArgStr[1]) + 1, Int16, &OK);
-    if ((OK) && (DecodeAdr(ArgStr[2], 2, 3, False)))
+    WAsmCode[1] = EvalStrIntExpressionOffs(&ArgStr[1], 1, Int16, &OK);
+    if ((OK) && (DecodeAdr(&ArgStr[2], 2, 3, False)))
     {
       CodeLen = 2;
       WAsmCode[0] = 0xa800 | AdrMode;          
     }
   }
-  else if (*ArgStr[2] == '#')
+  else if (*ArgStr[2].Str == '#')
   {
-    WAsmCode[1] = EvalIntExpression((ArgStr[2]) + 1, Int16, &OK);
-    if ((OK) && (DecodeAdr(ArgStr[1], 2, 3, False)))
+    WAsmCode[1] = EvalStrIntExpressionOffs(&ArgStr[2], 1, Int16, &OK);
+    if ((OK) && (DecodeAdr(&ArgStr[1], 2, 3, False)))
     {
       CodeLen = 2;
       WAsmCode[0] = 0xa900 | AdrMode;
     }
   }
   else
-    WrError(1350); /* invalid addr mode */
+    WrError(ErrNum_InvAddrMode); /* invalid addr mode */
 }
 
 static void DecodeBLPD(Word Index)
@@ -538,26 +538,26 @@ static void DecodeBLPD(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 3));
-  else if (!strcasecmp(ArgStr[1], "BMAR"))
+  else if (!strcasecmp(ArgStr[1].Str, "BMAR"))
   {
     if (ChkMinCPU(CPU32050)
-     && DecodeAdr(ArgStr[2], 2, 3, False))
+     && DecodeAdr(&ArgStr[2], 2, 3, False))
     {
       CodeLen = 1;
       WAsmCode[0] = 0xa400 | AdrMode;
     }
   }
-  else if (*ArgStr[1] == '#')
+  else if (*ArgStr[1].Str == '#')
   {
-    WAsmCode[1] = EvalIntExpression((ArgStr[1]) + 1, Int16, &OK);
-    if ((OK) && (DecodeAdr(ArgStr[2], 2, 3, False)))
+    WAsmCode[1] = EvalStrIntExpressionOffs(&ArgStr[1], 1, Int16, &OK);
+    if ((OK) && (DecodeAdr(&ArgStr[2], 2, 3, False)))
     {
       CodeLen = 2;
       WAsmCode[0] = 0xa500 | AdrMode;          
     }
   }
   else
-    WrError(1350); /* invalid addressing mode */
+    WrError(ErrNum_InvAddrMode); /* invalid addressing mode */
 }
 
 static void DecodeCLRSETC(Word Index)
@@ -567,10 +567,10 @@ static void DecodeCLRSETC(Word Index)
   if (ChkArgCnt(1, 1))
   {
     WAsmCode[0] = Index;
-    NLS_UpString(ArgStr[1]);
+    NLS_UpString(ArgStr[1].Str);
 
     for (pBitTable = BitTable; pBitTable->name; pBitTable++)
-      if (!strcmp(ArgStr[1], pBitTable->name))
+      if (!strcmp(ArgStr[1].Str, pBitTable->name))
       {
         if (ChkMinCPU(pBitTable->MinCPU))
         {
@@ -579,7 +579,7 @@ static void DecodeCLRSETC(Word Index)
         }
         return;
       }
-    WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]); /* invalid instruction */
+    WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]); /* invalid instruction */
   }
 }
 
@@ -589,7 +589,7 @@ static void DecodeCMPRSPM(Word Index)
 
   if (ChkArgCnt(1, 1))
   {
-    WAsmCode[0] = Index | (EvalIntExpression(ArgStr[1], UInt2, &OK) & 3);
+    WAsmCode[0] = Index | (EvalStrIntExpression(&ArgStr[1], UInt2, &OK) & 3);
     if (OK)
       CodeLen = 1;
   }
@@ -600,9 +600,9 @@ static void DecodeIO(Word Index)
   Boolean OK;
 
   if (ChkArgCnt(2, 3)
-   && DecodeAdr(ArgStr[1], 2, 3, False))
+   && DecodeAdr(&ArgStr[1], 2, 3, False))
   {
-    WAsmCode[1] = EvalIntExpression(ArgStr[2], UInt16, &OK);
+    WAsmCode[1] = EvalStrIntExpression(&ArgStr[2], UInt16, &OK);
     if (OK)
     {
       ChkSpace(SegIO);
@@ -619,7 +619,7 @@ static void DecodeINTR(Word Index)
 
   if (ChkArgCnt(1, 1))
   {
-    WAsmCode[0] = EvalIntExpression(ArgStr[1], UInt5, &OK) | 0xbe60;
+    WAsmCode[0] = EvalStrIntExpression(&ArgStr[1], UInt5, &OK) | 0xbe60;
     if (OK)
       CodeLen = 1;
   }
@@ -633,15 +633,15 @@ static void DecodeLACC(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(1, 3));
-  else if (*ArgStr[1] == '#')
+  else if (*ArgStr[1].Str == '#')
   {
     if (ChkArgCnt(1, 2))
     {
-      AdrLong = EvalIntExpression(ArgStr[1] + 1, Int16, &OK);
+      AdrLong = EvalStrIntExpressionOffs(&ArgStr[1], 1, Int16, &OK);
       if (OK)
       {
         OK = True;
-        Shift = (ArgCnt > 1) ? EvalIntExpression(ArgStr[2], UInt4, &OK) : 0;
+        Shift = (ArgCnt > 1) ? EvalStrIntExpression(&ArgStr[2], UInt4, &OK) : 0;
         if (OK)
         {
           CodeLen = 2;
@@ -653,10 +653,10 @@ static void DecodeLACC(Word Index)
   }
   else
   {
-    if (DecodeAdr(ArgStr[1], 1, 3, False))
+    if (DecodeAdr(&ArgStr[1], 1, 3, False))
     {
       OK = True;
-      Shift = (ArgCnt >= 2) ? DecodeShift(ArgStr[2], &OK) : 0;
+      Shift = (ArgCnt >= 2) ? DecodeShift(&ArgStr[2], &OK) : 0;
       if (OK)
       {
         CodeLen = 1;
@@ -674,11 +674,11 @@ static void DecodeLACL(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (*ArgStr[1] == '#')
+  if (*ArgStr[1].Str == '#')
   {
     if (ChkArgCnt(1, 1))
     {
-      WAsmCode[0] = EvalIntExpression(ArgStr[1] + 1, UInt8, &OK);
+      WAsmCode[0] = EvalStrIntExpressionOffs(&ArgStr[1], 1, UInt8, &OK);
       if (OK)
       {
         CodeLen = 1;
@@ -690,7 +690,7 @@ static void DecodeLACL(Word Index)
   {
     if (ChkArgCnt(1, 2))
     {
-      if (DecodeAdr(ArgStr[1], 1, 2, False))
+      if (DecodeAdr(&ArgStr[1], 1, 2, False))
       {
         WAsmCode[0] = 0x6900 | AdrMode;
         CodeLen = 1;
@@ -708,14 +708,14 @@ static void DecodeLAR(Word Index)
 
   if (ChkArgCnt(2, 3))
   {
-    Reg = EvalARExpression(ArgStr[1], &OK);
+    Reg = EvalARExpression(&ArgStr[1], &OK);
     if (OK)
     {
-      if (*ArgStr[2] == '#')
+      if (*ArgStr[2].Str == '#')
       {
         if (!ChkArgCnt(2, 2))
           return;
-        AdrLong = EvalIntExpression(ArgStr[2] + 1, Int16, &OK) & 0xffff;
+        AdrLong = EvalStrIntExpressionOffs(&ArgStr[2], 1, Int16, &OK) & 0xffff;
         if (OK)
         {
           if (AdrLong > 255)
@@ -733,7 +733,7 @@ static void DecodeLAR(Word Index)
       }
       else
       {
-        if (DecodeAdr(ArgStr[2], 2, 3, False))
+        if (DecodeAdr(&ArgStr[2], 2, 3, False))
         {
           CodeLen = 1;
           WAsmCode[0] = 0x0000 | ((Reg & 7) << 8) | AdrMode;
@@ -749,11 +749,11 @@ static void DecodeLDP(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (*ArgStr[1] == '#')
+  if (*ArgStr[1].Str == '#')
   {
     if (ChkArgCnt(1, 1))
     {
-      konst = EvalIntExpression(ArgStr[1] + 1, UInt9, &OK);
+      konst = EvalStrIntExpressionOffs(&ArgStr[1], 1, UInt9, &OK);
       if (OK)
       {
         CodeLen = 1;
@@ -765,7 +765,7 @@ static void DecodeLDP(Word Index)
   {
     if (ChkArgCnt(1, 2))
     {
-      if (DecodeAdr(ArgStr[1], 1, 2, False))
+      if (DecodeAdr(&ArgStr[1], 1, 2, False))
       {
         CodeLen = 1;
         WAsmCode[0] = 0x0d00 | AdrMode;
@@ -780,11 +780,11 @@ static void DecodeLSST(Word Index)
   Boolean OK;
 
   if (!ChkArgCnt(2, 3));
-  else if (*ArgStr[1] != '#') WrError(1120); /* invalid instruction */
+  else if (*ArgStr[1].Str != '#') WrError(ErrNum_OnlyImmAddr); /* invalid instruction */
   else
   {
-    konst = EvalIntExpression(ArgStr[1] + 1, UInt1, &OK);
-    if ((OK) && (DecodeAdr(ArgStr[2], 2, 3, Index)))
+    konst = EvalStrIntExpressionOffs(&ArgStr[1], 1, UInt1, &OK);
+    if ((OK) && (DecodeAdr(&ArgStr[2], 2, 3, Index)))
     {
       CodeLen = 1;
       WAsmCode[0] = 0x0e00 | (Index << 15) | ((konst & 1) << 8) | AdrMode;
@@ -798,10 +798,10 @@ static void DecodeMAC(Word Index)
 
   if (ChkArgCnt(2, 3))
   {
-    WAsmCode[1] = EvalIntExpression(ArgStr[1], Int16, &OK);
+    WAsmCode[1] = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
     ChkSpace(SegCode);
 
-    if ((OK) && (DecodeAdr(ArgStr[2], 2, 3, False)))
+    if ((OK) && (DecodeAdr(&ArgStr[2], 2, 3, False)))
     {
       CodeLen = 2;
       WAsmCode[0] = 0xa200 | (Index << 8) | AdrMode;
@@ -814,12 +814,12 @@ static void DecodeMPY(Word Index)
   LongInt Imm;
   Boolean OK;
 
-  if (*ArgStr[1] == '#')
+  if (*ArgStr[1].Str == '#')
   {
     if (ChkArgCnt(1, 1))
     {
       FirstPassUnknown = FALSE;
-      Imm = EvalIntExpression(ArgStr[1] + 1, SInt16, &OK);
+      Imm = EvalStrIntExpressionOffs(&ArgStr[1], 1, SInt16, &OK);
       if (FirstPassUnknown)
         Imm &= 0xfff;
       if (OK)
@@ -844,7 +844,7 @@ static void DecodeMPY(Word Index)
   else
   {
     if (ChkArgCnt(1, 2)
-     && DecodeAdr(ArgStr[1], 1, 2, Index))
+     && DecodeAdr(&ArgStr[1], 1, 2, Index))
     {
       CodeLen = 1;
       WAsmCode[0] = 0x5400 | AdrMode;
@@ -857,9 +857,9 @@ static void DecodeNORM(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(1, 2)
-   && DecodeAdr(ArgStr[1], 1, 2, False))
+   && DecodeAdr(&ArgStr[1], 1, 2, False))
   {
-    if (AdrMode < 0x80) WrError(1350);
+    if (AdrMode < 0x80) WrError(ErrNum_InvAddrMode);
     else
     {
       CodeLen = 1;
@@ -885,11 +885,11 @@ static void DecodeRPT(Word Index)
   Boolean OK;
   UNUSED(Index);
 
-  if (*ArgStr[1] == '#')
+  if (*ArgStr[1].Str == '#')
   {
     if (ChkArgCnt(1, 1))
     {
-      Imm = EvalIntExpression(ArgStr[1] + 1, (MomCPU >= CPU32050) ? UInt16 : UInt8, &OK);
+      Imm = EvalStrIntExpressionOffs(&ArgStr[1], 1, (MomCPU >= CPU32050) ? UInt16 : UInt8, &OK);
       if (OK)
       {
         if (Imm > 255)
@@ -910,7 +910,7 @@ static void DecodeRPT(Word Index)
   {
     if (ChkArgCnt(1, 2))
     {
-      if (DecodeAdr(ArgStr[1], 1, 2, False))
+      if (DecodeAdr(&ArgStr[1], 1, 2, False))
       {
         CodeLen = 1;
         WAsmCode[0] = 0x0b00 | AdrMode;
@@ -927,9 +927,9 @@ static void DecodeSAC(Word Index)
   if (ChkArgCnt(1, 3))
   {
     OK = True;
-    Shift = (ArgCnt >= 2) ? EvalIntExpression(ArgStr[2], UInt3, &OK) : 0;
+    Shift = (ArgCnt >= 2) ? EvalStrIntExpression(&ArgStr[2], UInt3, &OK) : 0;
 
-    if ((DecodeAdr(ArgStr[1], 1, 3, False)) && (OK))
+    if ((DecodeAdr(&ArgStr[1], 1, 3, False)) && (OK))
     {
       CodeLen = 1;
       WAsmCode[0] = (Index << 11) | 0x9000 | AdrMode | ((Shift & 7) << 8);
@@ -945,9 +945,9 @@ static void DecodeSAR(Word Index)
 
   if (ChkArgCnt(2, 3))
   {
-    Reg = EvalARExpression(ArgStr[1], &OK);
+    Reg = EvalARExpression(&ArgStr[1], &OK);
 
-    if ((OK) && (DecodeAdr(ArgStr[2], 2, 3, False)))
+    if ((OK) && (DecodeAdr(&ArgStr[2], 2, 3, False)))
     {
       CodeLen = 1;
       WAsmCode[0] = 0x8000 | ((Reg & 7) << 8) | AdrMode;
@@ -965,7 +965,7 @@ static void DecodeBSAR(Word Index)
    && ChkMinCPU(CPU32050))
   {
     FirstPassUnknown = False;
-    Shift = EvalIntExpression(ArgStr[1], UInt5, &OK);
+    Shift = EvalStrIntExpression(&ArgStr[1], UInt5, &OK);
     if (FirstPassUnknown)
       Shift = 1;
     if (OK)
@@ -983,7 +983,7 @@ static void DecodeLSAMM(Word Index)
 {
   if (ChkArgCnt(1, 2)
    && ChkMinCPU(CPU32050)
-   && DecodeAdr(ArgStr[1], 1, 2, True))
+   && DecodeAdr(&ArgStr[1], 1, 2, True))
   {
     CodeLen = 1;
     WAsmCode[0] = 0x0800 | (Index << 15) | AdrMode;
@@ -996,11 +996,11 @@ static void DecodeLSMMR(Word Index)
 
   if (!ChkArgCnt(2, 3));
   else if (!ChkMinCPU(CPU32050));
-  else if (ArgStr[2][0] != '#') WrError(1120);
+  else if (ArgStr[2].Str[0] != '#') WrError(ErrNum_OnlyImmAddr);
   else
   {
-    WAsmCode[1] = EvalIntExpression(ArgStr[2] + 1, Int16, &OK);
-    if ((OK) && (DecodeAdr(ArgStr[1], 2, 3, True)))
+    WAsmCode[1] = EvalStrIntExpressionOffs(&ArgStr[2], 1, Int16, &OK);
+    if ((OK) && (DecodeAdr(&ArgStr[1], 2, 3, True)))
     {
       CodeLen = 2;
       WAsmCode[0] = 0x0900 | (Index << 15) | AdrMode;
@@ -1016,7 +1016,7 @@ static void DecodeRPTB(Word Index)
   if (ChkArgCnt(1, 1)
    && ChkMinCPU(CPU32050))
   {
-    WAsmCode[1] = EvalIntExpression(ArgStr[1], Int16, &OK);
+    WAsmCode[1] = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
     if (OK)
     {
       CodeLen = 2;
@@ -1032,10 +1032,10 @@ static void DecodeRPTZ(Word Index)
 
   if (!ChkArgCnt(1, 1));
   else if (!ChkMinCPU(CPU32050));
-  else if (*ArgStr[1] != '#') WrError(1120);
+  else if (*ArgStr[1].Str != '#') WrError(ErrNum_OnlyImmAddr);
   else
   {
-    WAsmCode[1] = EvalIntExpression(ArgStr[1] + 1, Int16, &OK);
+    WAsmCode[1] = EvalStrIntExpressionOffs(&ArgStr[1], 1, Int16, &OK);
     if (OK)
     {
       CodeLen = 2;
@@ -1054,10 +1054,10 @@ static void DecodeXC(Word Index)
    && ChkMinCPU(CPU32050))
   {
     FirstPassUnknown = False;
-    Mode = EvalIntExpression(ArgStr[1], UInt2, &OK);
+    Mode = EvalStrIntExpression(&ArgStr[1], UInt2, &OK);
     if (OK)
     {
-      if ((Mode != 1) && (Mode != 2) && (!FirstPassUnknown)) WrError(1315);
+      if ((Mode != 1) && (Mode != 2) && (!FirstPassUnknown)) WrError(ErrNum_UnderRange);
       else
       {
         CodeLen = 1;

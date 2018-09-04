@@ -104,7 +104,7 @@ static Boolean DecodeDSTA(const char *pArg, LongWord *pResult, IntType *pSize)
 
   if (!*pArg)
   {
-    WrXError(1445, pArg);
+    WrXError(ErrNum_InvReg, pArg);
     return False;
   }
 
@@ -170,7 +170,7 @@ static Boolean DecodeDEST(const char *pArg, LongWord *pResult, Boolean AllowAll)
       break;
   }
   if (!Result)
-    WrXError(1445, pArg);
+    WrXError(ErrNum_InvReg, pArg);
   return Result;
 }
 
@@ -208,7 +208,7 @@ static Boolean DecodeSOUR(const char *pArg, LongWord *pResult, Boolean AllowAll)
   }
 
   if (!Result)
-    WrXError(1445, pArg);
+    WrXError(ErrNum_InvReg, pArg);
   return Result;
 }
 
@@ -355,7 +355,7 @@ static Boolean DecodeGFX(const char *pArg, LongWord *pResult)
 
   if (!*pArg)
   {
-    WrXError(1445, pArg);
+    WrXError(ErrNum_InvReg, pArg);
     return False;
   }
 
@@ -385,28 +385,28 @@ static void DecodeMAIN(Word Code)
   Boolean UseZS = Hi(Code) || False;
 
   if (!ChkArgCnt(15, 15));
-  else if (*ArgStr[1]) WrError(1350);
-  else if (!DecodeXS(ArgStr[3], &Xs));
-  else if (!DecodeYS(ArgStr[4], &Ys));
-  else if (!DecodeZS(ArgStr[5], &Zs));
-  else if (!DecodeWRF(ArgStr[6], &Wrf));
-  else if (!DecodeWS(ArgStr[7], &Ws));
-  else if (!DecodeCP(ArgStr[8], &Cp));
-  else if (!DecodeDPS(ArgStr[9], &Dps));
-  else if (!DecodeMODE(ArgStr[10], &Mode));
-  else if (!DecodeDEST(ArgStr[11], &Dest, True));
-  else if (!DecodeSOUR(ArgStr[12], &Sour, True));
-  else if (!DecodeXCNT(ArgStr[13], &Xcnt));
-  else if (Xcnt == 2) WrXErrorPos(ErrNum_InvReg, ArgStr[13], &ArgStrPos[13]);
-  else if (!DecodeOFP(ArgStr[14], &Ofp));
-  else if (!DecodeER(ArgStr[15], &Er));
+  else if (*ArgStr[1].Str) WrError(ErrNum_InvAddrMode);
+  else if (!DecodeXS(ArgStr[3].Str, &Xs));
+  else if (!DecodeYS(ArgStr[4].Str, &Ys));
+  else if (!DecodeZS(ArgStr[5].Str, &Zs));
+  else if (!DecodeWRF(ArgStr[6].Str, &Wrf));
+  else if (!DecodeWS(ArgStr[7].Str, &Ws));
+  else if (!DecodeCP(ArgStr[8].Str, &Cp));
+  else if (!DecodeDPS(ArgStr[9].Str, &Dps));
+  else if (!DecodeMODE(ArgStr[10].Str, &Mode));
+  else if (!DecodeDEST(ArgStr[11].Str, &Dest, True));
+  else if (!DecodeSOUR(ArgStr[12].Str, &Sour, True));
+  else if (!DecodeXCNT(ArgStr[13].Str, &Xcnt));
+  else if (Xcnt == 2) WrStrErrorPos(ErrNum_InvReg, &ArgStr[13]);
+  else if (!DecodeOFP(ArgStr[14].Str, &Ofp));
+  else if (!DecodeER(ArgStr[15].Str, &Er));
   else
   {
     Boolean OK = True;
     Word Shift;
 
     FirstPassUnknown = False;
-    Shift = *ArgStr[2] ? EvalIntExpression(ArgStr[2], UInt3, &OK) : 0;
+    Shift = *ArgStr[2].Str ? EvalStrIntExpression(&ArgStr[2], UInt3, &OK) : 0;
     if (FirstPassUnknown)
       Shift = 0;
 
@@ -428,7 +428,7 @@ static void DecodeMAIN(Word Code)
         DAsmCode[0] |= 0x00080000ul;
         break;
       default:
-        WrXErrorPos(ErrNum_InvShiftArg, ArgStr[2], &ArgStrPos[2]);
+        WrStrErrorPos(ErrNum_InvShiftArg, &ArgStr[2]);
         return;
     }
 
@@ -444,18 +444,18 @@ static void DecodeLDA(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(7, 7));
-  else if (*ArgStr[1]) WrError(1350);
-  else if (!DecodeDSTA(ArgStr[2], &DstA, &IntSize));
-  else if (!DecodeWRF(ArgStr[4], &Wrf));
-  else if (!DecodeDEST(ArgStr[5], &Dest, False));
-  else if (!DecodeSOUR(ArgStr[6], &Sour, False));
-  else if (Sour > 14) WrXErrorPos(ErrNum_InvReg, ArgStr[6], &ArgStrPos[6]);
-  else if (!DecodeXCNT(ArgStr[7], &Xcnt));
-  else if (Xcnt == 2) WrXErrorPos(ErrNum_InvReg, ArgStr[7], &ArgStrPos[7]);
+  else if (*ArgStr[1].Str) WrError(ErrNum_InvAddrMode);
+  else if (!DecodeDSTA(ArgStr[2].Str, &DstA, &IntSize));
+  else if (!DecodeWRF(ArgStr[4].Str, &Wrf));
+  else if (!DecodeDEST(ArgStr[5].Str, &Dest, False));
+  else if (!DecodeSOUR(ArgStr[6].Str, &Sour, False));
+  else if (Sour > 14) WrStrErrorPos(ErrNum_InvReg, &ArgStr[6]);
+  else if (!DecodeXCNT(ArgStr[7].Str, &Xcnt));
+  else if (Xcnt == 2) WrStrErrorPos(ErrNum_InvReg, &ArgStr[7]);
   else
   {
     Boolean OK;
-    LongWord Value = EvalIntExpression(ArgStr[3], IntSize, &OK);
+    LongWord Value = EvalStrIntExpression(&ArgStr[3], IntSize, &OK);
 
     if (OK)
     {
@@ -474,13 +474,13 @@ static void DecodeLDB(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(4, 4));
-  else if (*ArgStr[1]) WrError(1350);
-  else if (!DecodeDSTB(ArgStr[2], &DstB));
-  else if (!DecodeFORM(ArgStr[4], &Form));
+  else if (*ArgStr[1].Str) WrError(ErrNum_InvAddrMode);
+  else if (!DecodeDSTB(ArgStr[2].Str, &DstB));
+  else if (!DecodeFORM(ArgStr[4].Str, &Form));
   else
   {
     Boolean OK;
-    LongWord Value = EvalIntExpression(ArgStr[3], UInt24, &OK);
+    LongWord Value = EvalStrIntExpression(&ArgStr[3], UInt24, &OK);
 
     if (OK)
     {
@@ -497,21 +497,21 @@ static void DecodeBR(Word Code)
   LongWord Cp, Dps, Mode, Dest, Sour, Xcnt, Ofp;
 
   if (!ChkArgCnt(9, 9));
-  else if (*ArgStr[1]) WrError(1350);
-  else if (!DecodeCP(ArgStr[3], &Cp));
-  else if (!DecodeDPS(ArgStr[4], &Dps));
-  else if (!DecodeMODE(ArgStr[5], &Mode));
-  else if (!DecodeDEST(ArgStr[6], &Dest, False));
-  else if (!DecodeSOUR(ArgStr[7], &Sour, False));
-  else if (!DecodeXCNT(ArgStr[8], &Xcnt));
-  else if (!DecodeOFP(ArgStr[9], &Ofp));
+  else if (*ArgStr[1].Str) WrError(ErrNum_InvAddrMode);
+  else if (!DecodeCP(ArgStr[3].Str, &Cp));
+  else if (!DecodeDPS(ArgStr[4].Str, &Dps));
+  else if (!DecodeMODE(ArgStr[5].Str, &Mode));
+  else if (!DecodeDEST(ArgStr[6].Str, &Dest, False));
+  else if (!DecodeSOUR(ArgStr[7].Str, &Sour, False));
+  else if (!DecodeXCNT(ArgStr[8].Str, &Xcnt));
+  else if (!DecodeOFP(ArgStr[9].Str, &Ofp));
   else
   {
     Boolean OK;
     LongWord Address;
 
     FirstPassUnknown = False;
-    Address = EvalIntExpression(ArgStr[2], UInt9, &OK);
+    Address = EvalStrIntExpression(&ArgStr[2], UInt9, &OK);
     if (FirstPassUnknown)
       Address &= 0xff;
     if (OK && ChkRange(Address, 0, SegLimits[SegCode]))
@@ -529,22 +529,22 @@ static void DecodeJC(Word Code)
   LongWord F, Cp, Dps, Mode, Dest, Sour, Xcnt, Ofp;
 
   if (!ChkArgCnt(10, 10));
-  else if (*ArgStr[1]) WrError(1350);
-  else if (!DecodeRegList(pFNames, ArgStr[3], &F));
-  else if (!DecodeCP(ArgStr[4], &Cp));
-  else if (!DecodeDPS(ArgStr[5], &Dps));
-  else if (!DecodeMODE(ArgStr[6], &Mode));
-  else if (!DecodeDEST(ArgStr[7], &Dest, False));
-  else if (!DecodeSOUR(ArgStr[8], &Sour, False));
-  else if (!DecodeXCNT(ArgStr[9], &Xcnt));
-  else if (!DecodeOFP(ArgStr[10], &Ofp));
+  else if (*ArgStr[1].Str) WrError(ErrNum_InvAddrMode);
+  else if (!DecodeRegList(pFNames, ArgStr[3].Str, &F));
+  else if (!DecodeCP(ArgStr[4].Str, &Cp));
+  else if (!DecodeDPS(ArgStr[5].Str, &Dps));
+  else if (!DecodeMODE(ArgStr[6].Str, &Mode));
+  else if (!DecodeDEST(ArgStr[7].Str, &Dest, False));
+  else if (!DecodeSOUR(ArgStr[8].Str, &Sour, False));
+  else if (!DecodeXCNT(ArgStr[9].Str, &Xcnt));
+  else if (!DecodeOFP(ArgStr[10].Str, &Ofp));
   else
   {
     Boolean OK;
     LongWord Address;
 
     FirstPassUnknown = False;
-    Address = EvalIntExpression(ArgStr[2], UInt9, &OK);
+    Address = EvalStrIntExpression(&ArgStr[2], UInt9, &OK);
     if (FirstPassUnknown)
       Address &= 0xff;
     if (OK && ChkRange(Address, 0, SegLimits[SegCode]))
@@ -565,26 +565,26 @@ static void DecodeRET(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(13, 13));
-  else if (*ArgStr[1]) WrError(1350);
-  else if (!DecodeXS(ArgStr[3], &Xs));
-  else if (!DecodeYS(ArgStr[4], &Ys));
-  else if (!DecodeWRF(ArgStr[5], &Wrf));
-  else if (!DecodeWS(ArgStr[6], &Ws));
-  else if (!DecodeCP(ArgStr[7], &Cp));
-  else if (!DecodeDPS(ArgStr[8], &Dps));
-  else if (!DecodeMODE(ArgStr[9], &Mode));
-  else if (!DecodeDEST(ArgStr[10], &Dest, True));
-  else if (!DecodeSOUR(ArgStr[11], &Sour, True));
-  else if (!DecodeXCNT(ArgStr[12], &Xcnt));
-  else if (Xcnt == 2) WrXErrorPos(ErrNum_InvReg, ArgStr[12], &ArgStrPos[12]);
-  else if (!DecodeOFP(ArgStr[13], &Ofp));
+  else if (*ArgStr[1].Str) WrError(ErrNum_InvAddrMode);
+  else if (!DecodeXS(ArgStr[3].Str, &Xs));
+  else if (!DecodeYS(ArgStr[4].Str, &Ys));
+  else if (!DecodeWRF(ArgStr[5].Str, &Wrf));
+  else if (!DecodeWS(ArgStr[6].Str, &Ws));
+  else if (!DecodeCP(ArgStr[7].Str, &Cp));
+  else if (!DecodeDPS(ArgStr[8].Str, &Dps));
+  else if (!DecodeMODE(ArgStr[9].Str, &Mode));
+  else if (!DecodeDEST(ArgStr[10].Str, &Dest, True));
+  else if (!DecodeSOUR(ArgStr[11].Str, &Sour, True));
+  else if (!DecodeXCNT(ArgStr[12].Str, &Xcnt));
+  else if (Xcnt == 2) WrStrErrorPos(ErrNum_InvReg, &ArgStr[12]);
+  else if (!DecodeOFP(ArgStr[13].Str, &Ofp));
   else
   {
     Boolean OK = True;
     Word Shift;
 
     FirstPassUnknown = False;
-    Shift = *ArgStr[2] ? EvalIntExpression(ArgStr[2], UInt3, &OK) : 0;
+    Shift = *ArgStr[2].Str ? EvalStrIntExpression(&ArgStr[2], UInt3, &OK) : 0;
     if (FirstPassUnknown)
       Shift = 0;
 
@@ -604,7 +604,7 @@ static void DecodeRET(Word Code)
         DAsmCode[0] |= 0x00080000ul;
         break;
       default:
-        WrXErrorPos(ErrNum_InvShiftArg, ArgStr[2], &ArgStrPos[2]);
+        WrStrErrorPos(ErrNum_InvShiftArg, &ArgStr[2]);
         return;
     }
 
@@ -622,19 +622,19 @@ static void DecodeGMAx(Word Code)
   LongWord Gfx, Gf, Wrf, Ws, Cp, Dps, Mode, Dest, Sour, Xcnt, Ofp;
 
   if (!ChkArgCnt(12, 12));
-  else if (*ArgStr[1]) WrError(1350);
-  else if (!DecodeGFX(ArgStr[2], &Gfx));
-  else if (!DecodeGF(ArgStr[3], &Gf));
-  else if (!DecodeWRF(ArgStr[4], &Wrf));
-  else if (!DecodeWS(ArgStr[5], &Ws));
-  else if (!DecodeCP(ArgStr[6], &Cp));
-  else if (!DecodeDPS(ArgStr[7], &Dps));
-  else if (!DecodeMODE(ArgStr[8], &Mode));
-  else if (!DecodeDEST(ArgStr[9], &Dest, True));
-  else if (!DecodeSOUR(ArgStr[10], &Sour, True));
-  else if (!DecodeXCNT(ArgStr[11], &Xcnt));
-  else if (Xcnt == 2) WrXErrorPos(ErrNum_InvReg, ArgStr[11], &ArgStrPos[11]);
-  else if (!DecodeOFP(ArgStr[12], &Ofp));
+  else if (*ArgStr[1].Str) WrError(ErrNum_InvAddrMode);
+  else if (!DecodeGFX(ArgStr[2].Str, &Gfx));
+  else if (!DecodeGF(ArgStr[3].Str, &Gf));
+  else if (!DecodeWRF(ArgStr[4].Str, &Wrf));
+  else if (!DecodeWS(ArgStr[5].Str, &Ws));
+  else if (!DecodeCP(ArgStr[6].Str, &Cp));
+  else if (!DecodeDPS(ArgStr[7].Str, &Dps));
+  else if (!DecodeMODE(ArgStr[8].Str, &Mode));
+  else if (!DecodeDEST(ArgStr[9].Str, &Dest, True));
+  else if (!DecodeSOUR(ArgStr[10].Str, &Sour, True));
+  else if (!DecodeXCNT(ArgStr[11].Str, &Xcnt));
+  else if (Xcnt == 2) WrStrErrorPos(ErrNum_InvReg, &ArgStr[11]);
+  else if (!DecodeOFP(ArgStr[12].Str, &Ofp));
   else
   {
     DAsmCode[0] = 0x0c000000ul | (((LongWord)Code) << 16)
@@ -732,7 +732,7 @@ static void MakeCode_9331(void)
      of program space anyway... */
 
   for (z = 1; z < ArgCnt; z++)
-    StripComment(ArgStr[z]);
+    StripComment(ArgStr[z].Str);
 
   if (!LookupInstTable(InstTable, OpPart.Str))
     WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);

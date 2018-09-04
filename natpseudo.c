@@ -72,14 +72,14 @@ Boolean DecodeNatPseudo(Boolean *pBigFlag)
     if (ChkArgCnt(1, 1))
     {
       FirstPassUnknown = False;
-      Size = EvalIntExpression(ArgStr[1], UInt16, &ValOK);
-      if (FirstPassUnknown) WrError(1820);
+      Size = EvalStrIntExpression(&ArgStr[1], UInt16, &ValOK);
+      if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
       else if (ValOK)
       {
         DontPrint = True;
         if (Memo("DSW"))
           Size += Size;
-        if (!Size) WrError(290);
+        if (!Size) WrError(ErrNum_NullResMem);
         CodeLen = Size;
         BookKeeping();
       }
@@ -92,14 +92,14 @@ Boolean DecodeNatPseudo(Boolean *pBigFlag)
     if (ChkArgCnt(2, 2))
     {
       FirstPassUnknown = False;
-      Size = EvalIntExpression(ArgStr[1], UInt16, &ValOK);
-      if (FirstPassUnknown) WrError(1820);
+      Size = EvalStrIntExpression(&ArgStr[1], UInt16, &ValOK);
+      if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
       else if (ValOK)
       {
-        if (SetMaxCodeLen(Size)) WrError(1920);
+        if (SetMaxCodeLen(Size)) WrError(ErrNum_CodeOverflow);
         else
         {
-          BAsmCode[0] = EvalIntExpression(ArgStr[2], Int8, &ValOK);
+          BAsmCode[0] = EvalStrIntExpression(&ArgStr[2], Int8, &ValOK);
           if (ValOK)
           {
             CodeLen = Size;
@@ -116,14 +116,14 @@ Boolean DecodeNatPseudo(Boolean *pBigFlag)
     if (ChkArgCnt(2, 2))
     {
       FirstPassUnknown = False;
-      Size = EvalIntExpression(ArgStr[1], UInt16, &ValOK);
-      if (FirstPassUnknown) WrError(1820);
+      Size = EvalStrIntExpression(&ArgStr[1], UInt16, &ValOK);
+      if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
       else if (ValOK)
       {
-        if (SetMaxCodeLen(Size << 1)) WrError(1920);
+        if (SetMaxCodeLen(Size << 1)) WrError(ErrNum_CodeOverflow);
         else
         {
-          Value = EvalIntExpression(ArgStr[2], Int16, &ValOK);
+          Value = EvalStrIntExpression(&ArgStr[2], Int16, &ValOK);
           if (ValOK)
           {
             Word z;

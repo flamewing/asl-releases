@@ -26,30 +26,38 @@
 
         bcc     *
 
-        bclr    0,$20
-        bclr    1,$20
-        bclr    2,$20
-        bclr    3,$20
-        bclr    4,$20
-        bclr    5,$20
-        bclr    6,$20
-        bclr    7,$20
-        bclr    0,d[x]
-        bclr    1,d[x]
-        bclr    2,d[x]
-        bclr    3,d[x]
-        bclr    4,d[x]
-        bclr    5,d[x]
-        bclr    6,d[x]
-        bclr    7,d[x]
-        bclr    0,x
-        bclr    1,x
-        bclr    2,x
-        bclr    3,x
-        bclr    4,x
-        bclr    5,x
-        bclr    6,x
-        bclr    7,x
+        bclr	0,$20
+        bclr0	$20
+        bclr	1,$20
+        bclr1	$20
+        bclr	2,$20
+        bclr2	$20
+        bclr	3,$20
+        bclr3	$20
+        bclr	4,$20
+        bclr4	$20
+        bclr	5,$20
+        bclr5	$20
+        bclr	6,$20
+        bclr6	$20
+        bclr	7,$20
+        bclr7	$20
+        bclr	0,d[x]
+        bclr	1,d[x]
+        bclr	2,d[x]
+        bclr	3,d[x]
+        bclr	4,d[x]
+        bclr	5,d[x]
+        bclr	6,d[x]
+        bclr	7,d[x]
+        bclr	0,x
+        bclr	1,x
+        bclr	2,x
+        bclr	3,x
+        bclr	4,x
+        bclr	5,x
+        bclr	6,x
+        bclr	7,x
 
         bcs     *
 
@@ -65,30 +73,38 @@
 
         bra     *
 
-        brclr   0,$20,*
-        brclr   1,$20,*
-        brclr   2,$20,*
-        brclr   3,$20,*
-        brclr   4,$20,*
-        brclr   5,$20,*
-        brclr   6,$20,*
-        brclr   7,$20,*
-        brclr   0,d[x],*
-        brclr   1,d[x],*
-        brclr   2,d[x],*
-        brclr   3,d[x],*
-        brclr   4,d[x],*
-        brclr   5,d[x],*
-        brclr   6,d[x],*
-        brclr   7,d[x],*
-        brclr   0,x,*
-        brclr   1,x,*
-        brclr   2,x,*
-        brclr   3,x,*
-        brclr   4,x,*
-        brclr   5,x,*
-        brclr   6,x,*
-        brclr   7,x,*
+        brclr	0,$20,*
+        brclr0	$20,*
+        brclr	1,$20,*
+        brclr1	$20,*
+        brclr	2,$20,*
+        brclr2	$20,*
+        brclr	3,$20,*
+        brclr3	$20,*
+        brclr	4,$20,*
+        brclr4	$20,*
+        brclr	5,$20,*
+        brclr5	$20,*
+        brclr	6,$20,*
+        brclr6	$20,*
+        brclr	7,$20,*
+        brclr7  $20,*
+        brclr	0,d[x],*
+        brclr	1,d[x],*
+        brclr	2,d[x],*
+        brclr	3,d[x],*
+        brclr	4,d[x],*
+        brclr	5,d[x],*
+        brclr	6,d[x],*
+        brclr	7,d[x],*
+        brclr	0,x,*
+        brclr	1,x,*
+        brclr	2,x,*
+        brclr	3,x,*
+        brclr	4,x,*
+        brclr	5,x,*
+        brclr	6,x,*
+        brclr	7,x,*
 
         brn     *
 

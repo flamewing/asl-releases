@@ -150,7 +150,7 @@ static Boolean SetOpSize(ShortInt NewSize)
     char Sizes[30];
 
     sprintf(Sizes, "%d<->%d", (int)((OpSize + 1) * 8), (int)((NewSize + 1) * 8));
-    WrXError(1131, Sizes);
+    WrXError(ErrNum_ConfOpSizes, Sizes);
     return False;
   }
   else
@@ -337,32 +337,35 @@ static Boolean ChkSFR(LongWord Addr, Byte *pShortAddr)
     return False;
 }
 
-static Boolean StripIndirect(char *pAsc)
+static Boolean StripIndirect(tStrComp *pArg)
 {
-  int l = strlen(pAsc);
+  int ArgLen = strlen(pArg->Str);
 
-  if ((l >= 2) && (*pAsc == '[') && (pAsc[l -1] == ']'))
+  if ((ArgLen >= 2) && (*pArg->Str == '[') && (pArg->Str[ArgLen - 1] == ']'))
   {
-    strmov(pAsc, pAsc + 1);
-    pAsc[l - 2] = '\0';
+    strmov(pArg->Str, pArg->Str + 1);
+    pArg->Str[ArgLen - 2] = '\0';
+    pArg->Pos.StartCol++;
+    pArg->Pos.Len -= 2;
     return True;
   }
   else
     return False;
 }
 
-static Boolean DecodeAdr(const char *pAsc, tAdrModeMask AdrModeMask, tEncodedAddress *pAddress)
+static Boolean DecodeAdr(const tStrComp *pArg, tAdrModeMask AdrModeMask, tEncodedAddress *pAddress)
 {
-  int z, l;
+  int z, ArgLen;
   LongWord Addr;
   ShortInt AddrSize;
   Boolean OK, Is16, IsShort1, IsShort2, IsSFR;
+  unsigned Offset;
 
   ClearEncodedAddress(pAddress);
 
   /* 8 bit Register? */
 
-  if ((pAddress->AdrVal = DecodeReg8(pAsc)) >= 0)
+  if ((pAddress->AdrVal = DecodeReg8(pArg->Str)) >= 0)
   {
     if (!SetOpSize(0))
       return False;
@@ -370,7 +373,7 @@ static Boolean DecodeAdr(const char *pAsc, tAdrModeMask AdrModeMask, tEncodedAdd
     goto AdrFound;
   }
 
-  if ((pAddress->AdrVal = DecodeReg8_U16(pAsc)) >= 0)
+  if ((pAddress->AdrVal = DecodeReg8_U16(pArg->Str)) >= 0)
   {
     if (!SetOpSize(0))
       return False;
@@ -378,7 +381,7 @@ static Boolean DecodeAdr(const char *pAsc, tAdrModeMask AdrModeMask, tEncodedAdd
     goto AdrFound;
   }
 
-  if ((pAddress->AdrVal = DecodeReg16(pAsc)) >= 0)
+  if ((pAddress->AdrVal = DecodeReg16(pArg->Str)) >= 0)
   {
     if (!SetOpSize(1))
       return False;
@@ -386,7 +389,7 @@ static Boolean DecodeAdr(const char *pAsc, tAdrModeMask AdrModeMask, tEncodedAdd
     goto AdrFound;
   }
 
-  if ((pAddress->AdrVal = DecodeReg24(pAsc)) >= 0)
+  if ((pAddress->AdrVal = DecodeReg24(pArg->Str)) >= 0)
   {
     if (!SetOpSize(2))
       return False;
@@ -394,7 +397,7 @@ static Boolean DecodeAdr(const char *pAsc, tAdrModeMask AdrModeMask, tEncodedAdd
     goto AdrFound;
   }
 
-  if (!strcasecmp(pAsc, "SP"))
+  if (!strcasecmp(pArg->Str, "SP"))
   {
     if (!SetOpSize(2))
       return False;
@@ -402,7 +405,7 @@ static Boolean DecodeAdr(const char *pAsc, tAdrModeMask AdrModeMask, tEncodedAdd
     goto AdrFound;
   }
 
-  if (!strcasecmp(pAsc, "STBC"))
+  if (!strcasecmp(pArg->Str, "STBC"))
   {
     if (!SetOpSize(0))
       return False;
@@ -410,7 +413,7 @@ static Boolean DecodeAdr(const char *pAsc, tAdrModeMask AdrModeMask, tEncodedAdd
     goto AdrFound;
   }
 
-  if (!strcasecmp(pAsc, "WDM"))
+  if (!strcasecmp(pArg->Str, "WDM"))
   {
     if (!SetOpSize(0))
       return False;
@@ -420,14 +423,14 @@ static Boolean DecodeAdr(const char *pAsc, tAdrModeMask AdrModeMask, tEncodedAdd
 
   /* immediate ? */
 
-  if (*pAsc == '#')
+  if (*pArg->Str == '#')
   {
     ExecAssumeByte();
     if ((OpSize >= 0) && (OpSize < 3))
     {
       static const IntType IntTypes[3] = { Int8, Int16, Int24 };
       Boolean OK;
-      LongWord Value = EvalIntExpression(pAsc + 1, IntTypes[OpSize], &OK);
+      LongWord Value = EvalStrIntExpressionOffs(pArg, 1, IntTypes[OpSize], &OK);
       if (OK)
       {
         ShortInt z;
@@ -441,48 +444,51 @@ static Boolean DecodeAdr(const char *pAsc, tAdrModeMask AdrModeMask, tEncodedAdd
       }
     }
     else
-      WrError(1132);
+      WrError(ErrNum_UndefOpSizes);
     goto AdrFound;
   }
 
   /* memory-indirect addressing? */
 
-  l = strlen(pAsc);
-  if ((l >= 2) && (pAsc[l - 1] == ']'))
+  ArgLen = strlen(pArg->Str);
+  if ((ArgLen >= 2) && (pArg->Str[ArgLen - 1] == ']'))
   {
     String Asc;
+    tStrComp Arg;
     char *pStart;
 
-    strmaxcpy(Asc, pAsc, 255);
+    StrCompMkTemp(&Arg, Asc);
+    StrCompCopy(&Arg, pArg);
 
     /* remove ']' */
 
-    Asc[l - 1] = '\0';
+    StrCompShorten(&Arg, 1);
 
-    pStart = RQuotPos(Asc, '[');
+    pStart = RQuotPos(Arg.Str, '[');
     if (!pStart)
     {
-      WrError(1300);
+      WrError(ErrNum_BrackErr);
       goto AdrFound;
     }
 
     /* purely indirect? */
 
-    if (pStart == Asc)
+    if (pStart == Arg.Str)
     {
       static char *Modes[] = { "TDE+", "WHL+", "TDE-", "WHL-", "TDE", "WHL", "VVP", "UUP",
                                "RG6+", "RG7+", "RG6-", "RG7-", "RG6", "RG7", "RG4", "RG5" };
       unsigned z;
       char *pSep, Save;
+      tStrComp Base, Remainder;
 
       /* skip '[' */
 
-      strmov(Asc, Asc + 1);
+      StrCompIncRefLeft(&Arg, 1);
 
       /* simple expression without displacement? */
 
       for (z = 0; z < sizeof(Modes) / sizeof(*Modes); z++)
-        if (!strcasecmp(Asc, Modes[z]))
+        if (!strcasecmp(Arg.Str, Modes[z]))
         {
           pAddress->AdrMode = ModMem;
           pAddress->AdrVal = 0x16;
@@ -494,20 +500,20 @@ static Boolean DecodeAdr(const char *pAsc, tAdrModeMask AdrModeMask, tEncodedAdd
       /* no -> extract base register. Its name ends with the first non-letter,
          which either means +/- or a blank */
 
-      for (pSep = Asc; *pSep; pSep++)
+      for (pSep = Arg.Str; *pSep; pSep++)
         if (!myisalpha(*pSep))
           break;
 
       /* decode base register.  SP is not otherwise handled. */
 
-      Save = *pSep; *pSep = '\0';
-      if (!strcasecmp(Asc, "SP"))
+      Save = StrCompSplitRef(&Base, &Remainder, &Arg, pSep);
+      if (!strcasecmp(Base.Str, "SP"))
         pAddress->AdrVals[0] = 1;
       else
       {
         int tmp;
 
-        tmp = DecodeReg24(Asc);
+        tmp = DecodeReg24(Base.Str);
         switch (tmp)
         {
           case -1: pAddress->AdrVals[0] = 0xff; break; /* no register */
@@ -516,7 +522,7 @@ static Boolean DecodeAdr(const char *pAsc, tAdrModeMask AdrModeMask, tEncodedAdd
           case 2: pAddress->AdrVals[0] = 0; break; /* TDE */
           case 3: pAddress->AdrVals[0] = 2; break; /* WHL */
           default:
-            WrXError(1445, Asc);
+            WrStrErrorPos(ErrNum_InvReg, &Base);
             goto AdrFound;
         }
       }
@@ -526,10 +532,10 @@ static Boolean DecodeAdr(const char *pAsc, tAdrModeMask AdrModeMask, tEncodedAdd
 
       if (0xff == pAddress->AdrVals[0])
       {
-        Boolean Is24 = (*Asc == '%');
+        unsigned Is24 = !!(*Arg.Str == '%');
 
         FirstPassUnknown = False;
-        Addr = EvalIntExpression(Is24 ? Asc + 1 : Asc, UInt24, &OK);
+        Addr = EvalStrIntExpressionOffs(&Arg, Is24, UInt24, &OK);
         if (OK)
         {
           if (FirstPassUnknown)
@@ -601,7 +607,7 @@ static Boolean DecodeAdr(const char *pAsc, tAdrModeMask AdrModeMask, tEncodedAdd
         }
         else
         {
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
           goto AdrFound;
         }
         tmp = DecodeReg16(pSep + 1);
@@ -621,17 +627,17 @@ static Boolean DecodeAdr(const char *pAsc, tAdrModeMask AdrModeMask, tEncodedAdd
             }
             /* fall-through */
           default:
-            WrError(1350);
+            WrError(ErrNum_InvAddrMode);
             goto AdrFound;
         }
       }
 
       /* it's a number: put a fake 0 in front so displacement expression evaluates correctly! */
 
-      if (pSep > Asc)
+      if (pSep > Arg.Str)
         pSep--;
       *pSep = '0';
-      pAddress->AdrVals[1] = EvalIntExpression(pSep, Int8, &OK);
+      pAddress->AdrVals[1] = EvalStrIntExpressionOffs(&Arg, pSep - Arg.Str, Int8, &OK);
       if (OK)
       {
         pAddress->AdrMode = ModMem;
@@ -645,15 +651,16 @@ static Boolean DecodeAdr(const char *pAsc, tAdrModeMask AdrModeMask, tEncodedAdd
 
     else
     {
+      tStrComp RegArg, DispArg;
       int tmp;
 
       /* split displacement + register */
 
-      *(pStart++) = '\0';
+      StrCompSplitRef(&DispArg, &RegArg, &Arg, pStart);
 
        /* handle base register */
 
-      tmp = DecodeReg8(pStart);
+      tmp = DecodeReg8(RegArg.Str);
       if ((tmp == AccReg8()) /* A */
        || (tmp == BReg8())) /* B */
       {
@@ -661,26 +668,26 @@ static Boolean DecodeAdr(const char *pAsc, tAdrModeMask AdrModeMask, tEncodedAdd
       }
       else if (tmp == -1)
       {
-        tmp = DecodeReg16(pStart);
+        tmp = DecodeReg16(RegArg.Str);
         if (tmp >= 6) /* DE/HL */
         {
           pAddress->AdrVals[0] = (tmp - 6) << 1;
         }
         else
         {
-          WrXError(1445, pStart);
+          WrStrErrorPos(ErrNum_InvReg, &RegArg);
           goto AdrFound;
         }
       }
       else
       {
-        WrXError(1445, pStart);
+        WrStrErrorPos(ErrNum_InvReg, &RegArg);
         goto AdrFound;
       }
 
       /* compute displacement */
 
-      Addr = EvalIntExpression(Asc, Int24, &OK);
+      Addr = EvalStrIntExpression(&DispArg, Int24, &OK);
       if (OK)
       {
         pAddress->AdrMode = ModMem;
@@ -692,24 +699,25 @@ static Boolean DecodeAdr(const char *pAsc, tAdrModeMask AdrModeMask, tEncodedAdd
         goto AdrFound;
       }
     }
-  }
+  } /* indirect */
 
-  /* absolut: */
+  /* absolute: */
 
-  if (*pAsc == '$')
+  Offset = 0;
+  if (pArg->Str[Offset] == '$')
   {
     pAddress->ForceRel = True;
-    pAsc++;
+    Offset++;
   }
   for (AddrSize = 0, z = 0; z < 2; z++)
-    if (*pAsc == '!')
+    if (pArg->Str[Offset] == '!')
     {
       AddrSize++;
-      pAsc++;
+      Offset++;
       pAddress->ForceAbs++;
     }
   FirstPassUnknown = False;
-  Addr = EvalIntExpression(pAsc, (AdrModeMask & MModAbs20) ? UInt20 : UInt24, &OK);
+  Addr = EvalStrIntExpressionOffs(pArg, Offset, (AdrModeMask & MModAbs20) ? UInt20 : UInt24, &OK);
   if (!OK)
     return False;
 
@@ -749,7 +757,7 @@ static Boolean DecodeAdr(const char *pAsc, tAdrModeMask AdrModeMask, tEncodedAdd
         pAddress->AdrVals[pAddress->AdrCnt++] = (Addr >>  8) & 0xff;
       }
       else
-        WrError(1320);
+        WrError(ErrNum_OverRange);
       break;
     case 0:
       if (IsShort1)
@@ -785,17 +793,17 @@ static Boolean DecodeAdr(const char *pAsc, tAdrModeMask AdrModeMask, tEncodedAdd
           pAddress->AdrVals[pAddress->AdrCnt++] = Lo(Addr);
         }
         else
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       else
-        WrError(1320);
+        WrError(ErrNum_OverRange);
       break;
   }
 
 AdrFound:
   if ((pAddress->AdrMode != ModNone) && (!(AdrModeMask & (1UL << pAddress->AdrMode))))
   {
-    WrError(1350);
+    WrError(ErrNum_InvAddrMode);
     ClearEncodedAddress(pAddress);
     return False;
   }
@@ -918,28 +926,29 @@ static Byte ModIsShort1(tAdrMode AdrMode)
   }
 }
 
-static Boolean DecodeBitAdr(char *pAsc, LongWord *pResult)
+static Boolean DecodeBitAdr(const tStrComp *pArg, LongWord *pResult)
 {
   char *pSplit;
   Boolean OK;
 
-  pSplit = RQuotPos(pAsc, '.');
+  pSplit = RQuotPos(pArg->Str, '.');
 
   if (pSplit)
   {
     tEncodedAddress Addr;
+    tStrComp AddrArg, BitArg;
 
-    *pSplit++ = '\0';
-    *pResult = EvalIntExpression(pSplit, UInt3, &OK) << 24;
+    StrCompSplitRef(&AddrArg, &BitArg, pArg, pSplit);
+    *pResult = EvalStrIntExpression(&BitArg, UInt3, &OK) << 24;
     if (OK)
     {
-      DecodeAdr(pAsc, MModReg8 | MModSFR | MModShort1 | MModShort2 | MModMem | MModAbsAll, &Addr);
+      DecodeAdr(&AddrArg, MModReg8 | MModSFR | MModShort1 | MModShort2 | MModMem | MModAbsAll, &Addr);
       switch (Addr.AdrMode)
       {
         case ModReg8:
           if ((Addr.AdrVal != AccReg8()) && (Addr.AdrVal != AccReg8() - 1))
           {
-            WrXError(1445, pAsc);
+            WrStrErrorPos(ErrNum_InvReg, &AddrArg);
             OK = FALSE;
           }
           else
@@ -971,7 +980,7 @@ static Boolean DecodeBitAdr(char *pAsc, LongWord *pResult)
           if ((Addr.AdrVal != 0x16) || ((Addr.AdrVals[0] & 0x0e) != 4))
           {
             OK = False;
-            WrError(1350);
+            WrError(ErrNum_InvAddrMode);
           }
           else
           {
@@ -997,24 +1006,22 @@ static Boolean DecodeBitAdr(char *pAsc, LongWord *pResult)
     }
   }
   else
-    *pResult = EvalIntExpression(pAsc, UInt32, &OK);
+    *pResult = EvalStrIntExpression(pArg, UInt32, &OK);
 
   return OK;
 }
 
-static void AppendRel8(const char *pAsc)
+static void AppendRel8(const tStrComp *pArg)
 {
   Boolean OK;
   LongInt Dist;
 
-  if (*pAsc == '$')
-    pAsc++;
   FirstPassUnknown = False;
-  Dist = EvalIntExpression(pAsc, UInt20, &OK) - (EProgCounter() + CodeLen + 1);
+  Dist = EvalStrIntExpressionOffs(pArg, !!(*pArg->Str == '$'), UInt20, &OK) - (EProgCounter() + CodeLen + 1);
   if (!OK) CodeLen = 0;
   else if (!FirstPassUnknown && ((Dist < -0x80) || (Dist > 0x7f)))
   {
-    WrError(1370);
+    WrError(ErrNum_JmpDistTooBig);
     CodeLen = 0;
   }
   else
@@ -1068,11 +1075,11 @@ static void DecodeBitOpCore2(LongWord BitAddr, Word Code)
       BAsmCode[CodeLen++] = (BitAddr >> 8) & 255;
       break;
     default:
-      WrError(1350);
+      WrError(ErrNum_InvAddrMode);
   }
 }
 
-static void DecodeBitOpCore(char *pBitArg, Word Code)
+static void DecodeBitOpCore(const tStrComp *pBitArg, Word Code)
 {
   LongWord BitAddr;
 
@@ -1087,13 +1094,13 @@ static void DecodeMOV1(Word Code)
 
   if (!ChkArgCnt(2, 2))
     return;
-  if (!strcasecmp(ArgStr[1], "CY"))
-    DecodeBitOpCore(ArgStr[2], 0x00);
-  else if (!strcasecmp(ArgStr[2], "CY"))
-    DecodeBitOpCore(ArgStr[1], 0x10);
+  if (!strcasecmp(ArgStr[1].Str, "CY"))
+    DecodeBitOpCore(&ArgStr[2], 0x00);
+  else if (!strcasecmp(ArgStr[2].Str, "CY"))
+    DecodeBitOpCore(&ArgStr[1], 0x10);
   else
   {
-    WrError(1350);
+    WrError(ErrNum_InvAddrMode);
     return;
   }
 }
@@ -1102,50 +1109,55 @@ static void DecodeAND1_OR1(Word Code)
 {
   if (!ChkArgCnt(2, 2))
     return;
-  if (strcasecmp(ArgStr[1], "CY"))
+  if (strcasecmp(ArgStr[1].Str, "CY"))
   {
-    WrError(1350);
+    WrError(ErrNum_InvAddrMode);
     return;
   }
-  if (*ArgStr[2] == '/')
-    DecodeBitOpCore(ArgStr[2] + 1, Code | 0x10);
+  if (*ArgStr[2].Str == '/')
+  {
+    tStrComp BitArg;
+
+    StrCompRefRight(&BitArg, &ArgStr[2], 1);
+    DecodeBitOpCore(&BitArg, Code | 0x10);
+  }
   else
-    DecodeBitOpCore(ArgStr[2], Code);
+    DecodeBitOpCore(&ArgStr[2], Code);
 }
 
 static void DecodeXOR1(Word Code)
 {
   if (!ChkArgCnt(2, 2))
     return;
-  if (strcasecmp(ArgStr[1], "CY"))
+  if (strcasecmp(ArgStr[1].Str, "CY"))
   {
-    WrError(1350);
+    WrError(ErrNum_InvAddrMode);
     return;
   }
-  DecodeBitOpCore(ArgStr[2], Code);
+  DecodeBitOpCore(&ArgStr[2], Code);
 }
 
 static void DecodeNOT1(Word Code)
 {
   if (!ChkArgCnt(1, 1))
     return;
-  if (!strcasecmp(ArgStr[1], "CY"))
+  if (!strcasecmp(ArgStr[1].Str, "CY"))
     BAsmCode[CodeLen++] = 0x42;
   else
-    DecodeBitOpCore(ArgStr[1], Code);
+    DecodeBitOpCore(&ArgStr[1], Code);
 }
 
 static void DecodeSET1_CLR1(Word Code)
 {
   if (!ChkArgCnt(1, 1))
     return;
-  if (!strcasecmp(ArgStr[1], "CY"))
+  if (!strcasecmp(ArgStr[1].Str, "CY"))
     BAsmCode[CodeLen++] = 0x41 - ((Code >> 4) & 1);
   else
   {
     LongWord BitAddr;
 
-    if (!DecodeBitAdr(ArgStr[1], &BitAddr))
+    if (!DecodeBitAdr(&ArgStr[1], &BitAddr))
       return;
     switch ((BitAddr >> 28) & 15)
     {
@@ -1177,14 +1189,14 @@ static void DecodeMOV(Word ForceOpSize)
   if (!ChkArgCnt(2, 2))
     return;
 
-  if (!strcasecmp(ArgStr[1], "CY"))
+  if (!strcasecmp(ArgStr[1].Str, "CY"))
   {
-    DecodeBitOpCore(ArgStr[2], 0x00);
+    DecodeBitOpCore(&ArgStr[2], 0x00);
     return;
   }
-  else if (!strcasecmp(ArgStr[2], "CY"))
+  else if (!strcasecmp(ArgStr[2].Str, "CY"))
   {
-    DecodeBitOpCore(ArgStr[1], 0x10);
+    DecodeBitOpCore(&ArgStr[1], 0x10);
     return;
   }
 
@@ -1197,14 +1209,14 @@ static void DecodeMOV(Word ForceOpSize)
     AdrModeMask |= MModReg16;
   if ((OpSize == -1) || (OpSize == 2))
     AdrModeMask |= MModReg24 | MModSP;
-  DecodeAdr(ArgStr[1], AdrModeMask, &Dest);
+  DecodeAdr(&ArgStr[1], AdrModeMask, &Dest);
   switch (Dest.AdrMode)
   {
     case ModReg8:
       AdrModeMask = MModImm | MModReg8 | MModShort1 | MModShort2 | MModSFR | MModAbsAll;
       if (Dest.AdrVal == AccReg8())
         AdrModeMask |= MModReg8_U16 | MModShortIndir_All | MModMem;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModReg8:
@@ -1291,12 +1303,12 @@ static void DecodeMOV(Word ForceOpSize)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
     case ModReg8_U16:
-      DecodeAdr(ArgStr[2], MModImm | MModReg8, &Src);
+      DecodeAdr(&ArgStr[2], MModImm | MModReg8, &Src);
       switch (Src.AdrMode)
       {
         case ModReg8:
@@ -1314,7 +1326,7 @@ static void DecodeMOV(Word ForceOpSize)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
@@ -1322,7 +1334,7 @@ static void DecodeMOV(Word ForceOpSize)
       AdrModeMask = MModImm | MModReg16 | MModShort1 | MModShort2 | MModSFR | MModAbsAll;
       if (Dest.AdrVal == AccReg16())
         AdrModeMask |= MModShortIndir_All | MModMem;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModImm:
@@ -1386,7 +1398,7 @@ static void DecodeMOV(Word ForceOpSize)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
@@ -1394,7 +1406,7 @@ static void DecodeMOV(Word ForceOpSize)
       AdrModeMask = MModImm | MModReg24 | MModAbs24 | MModShort1 | MModShort2;
       if (Dest.AdrVal == WHLReg)
         AdrModeMask |= MModShortIndir1_24 | MModShortIndir2_24 | MModMem | MModSP;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModImm:
@@ -1427,7 +1439,7 @@ static void DecodeMOV(Word ForceOpSize)
           BAsmCode[CodeLen++] = Src.AdrVals[0];
           break;
         case ModMem:
-          if ((Src.AdrVal == 0x16) && ((Src.AdrVals[0] == 1) || (Src.AdrVals[0] == 3))) WrError(1350);
+          if ((Src.AdrVal == 0x16) && ((Src.AdrVals[0] == 1) || (Src.AdrVals[0] == 3))) WrError(ErrNum_InvAddrMode);
           else
           {
             BAsmCode[CodeLen++] = Src.AdrVal;
@@ -1441,12 +1453,12 @@ static void DecodeMOV(Word ForceOpSize)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
     case ModSP:
-      DecodeAdr(ArgStr[2], MModImm | MModReg24, &Src);
+      DecodeAdr(&ArgStr[2], MModImm | MModReg24, &Src);
       switch (Src.AdrMode)
       {
         case ModImm:
@@ -1455,7 +1467,7 @@ static void DecodeMOV(Word ForceOpSize)
           AppendAdrVals(&Src);
           break;
         case ModReg24:
-          if (Src.AdrVal != WHLReg) WrError(1350);
+          if (Src.AdrVal != WHLReg) WrError(ErrNum_InvAddrMode);
           else
           {
             BAsmCode[CodeLen++] = 0x05;
@@ -1465,13 +1477,13 @@ static void DecodeMOV(Word ForceOpSize)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
     case ModSTBC:
     case ModWDM:
-      if (DecodeAdr(ArgStr[2], MModImm, &Src))
+      if (DecodeAdr(&ArgStr[2], MModImm, &Src))
       {
         BAsmCode[CodeLen++] = 0x09;
         BAsmCode[CodeLen++] = (Dest.AdrMode == ModSTBC) ? 0xc0: 0xc2;
@@ -1487,7 +1499,7 @@ static void DecodeMOV(Word ForceOpSize)
       if ((OpSize == -1) || (OpSize == 0)) AdrModeMask |= MModReg8;
       if ((OpSize == -1) || (OpSize == 1)) AdrModeMask |= MModReg16;
       if ((OpSize == -1) || (OpSize == 2)) AdrModeMask |= MModReg24;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModImm:
@@ -1528,7 +1540,7 @@ static void DecodeMOV(Word ForceOpSize)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
@@ -1539,7 +1551,7 @@ static void DecodeMOV(Word ForceOpSize)
       if ((OpSize == -1) || (OpSize == 0)) AdrModeMask |= MModReg8;
       if ((OpSize == -1) || (OpSize == 1)) AdrModeMask |= MModReg16;
       if ((OpSize == -1) || (OpSize == 2)) AdrModeMask |= MModReg24;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModImm:
@@ -1589,7 +1601,7 @@ static void DecodeMOV(Word ForceOpSize)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
@@ -1599,7 +1611,7 @@ static void DecodeMOV(Word ForceOpSize)
       if (OpSize != 2) AdrModeMask |= MModImm;
       if ((OpSize == -1) || (OpSize == 0)) AdrModeMask |= MModReg8;
       if ((OpSize == -1) || (OpSize == 1)) AdrModeMask |= MModReg16;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModImm:
@@ -1630,7 +1642,7 @@ static void DecodeMOV(Word ForceOpSize)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
@@ -1642,7 +1654,7 @@ static void DecodeMOV(Word ForceOpSize)
       if ((OpSize == -1) || (OpSize == 0)) AdrModeMask |= MModReg8;
       if ((OpSize == -1) || (OpSize == 1)) AdrModeMask |= MModReg16;
       if ((OpSize == -1) || (OpSize == 2)) AdrModeMask |= MModReg24;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModImm:
@@ -1671,7 +1683,7 @@ static void DecodeMOV(Word ForceOpSize)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
@@ -1681,11 +1693,11 @@ static void DecodeMOV(Word ForceOpSize)
       AdrModeMask = 0;
       if ((OpSize == -1) || (OpSize == 0)) AdrModeMask |= MModReg8;
       if ((OpSize == -1) || (OpSize == 1)) AdrModeMask |= MModReg16;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModReg8:
-          if (Src.AdrVal != AccReg8()) WrError(1350);
+          if (Src.AdrVal != AccReg8()) WrError(ErrNum_InvAddrMode);
           else
           {
             if (ModIsShort1(Dest.AdrMode))
@@ -1695,7 +1707,7 @@ static void DecodeMOV(Word ForceOpSize)
           }
           break;
         case ModReg16:
-          if (Src.AdrVal != AccReg16()) WrError(1350);
+          if (Src.AdrVal != AccReg16()) WrError(ErrNum_InvAddrMode);
           else
           {
             if (ModIsShort1(Dest.AdrMode))
@@ -1708,7 +1720,7 @@ static void DecodeMOV(Word ForceOpSize)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
@@ -1719,21 +1731,21 @@ static void DecodeMOV(Word ForceOpSize)
       if ((OpSize == -1) || (OpSize == 0)) AdrModeMask |= MModReg8;
       if ((OpSize == -1) || (OpSize == 1)) AdrModeMask |= MModReg16;
       if ((OpSize == -1) || (OpSize == 2)) AdrModeMask |= MModReg24;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModReg8:
-          if (Src.AdrVal != AccReg8()) WrError(1350);
+          if (Src.AdrVal != AccReg8()) WrError(ErrNum_InvAddrMode);
           else
             goto CommonRegIndir;
           break;
         case ModReg16:
-          if (Src.AdrVal != AccReg16()) WrError(1350);
+          if (Src.AdrVal != AccReg16()) WrError(ErrNum_InvAddrMode);
           else
             goto CommonRegIndir;
           break;
         case ModReg24:
-          if (Src.AdrVal != WHLReg) WrError(1350);
+          if (Src.AdrVal != WHLReg) WrError(ErrNum_InvAddrMode);
           else
             goto CommonRegIndir;
           break;
@@ -1747,7 +1759,7 @@ static void DecodeMOV(Word ForceOpSize)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
@@ -1757,23 +1769,23 @@ static void DecodeMOV(Word ForceOpSize)
       if ((OpSize == -1) || (OpSize == 0)) AdrModeMask |= MModReg8;
       if ((OpSize == -1) || (OpSize == 1)) AdrModeMask |= MModReg16;
       if ((OpSize == -1) || (OpSize == 2)) AdrModeMask |= MModReg24;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModReg8:
-          if (Src.AdrVal != AccReg8()) WrError(1350);
+          if (Src.AdrVal != AccReg8()) WrError(ErrNum_InvAddrMode);
           else if ((Dest.AdrVal == 0x16) && (Dest.AdrVals[0] < 6))
             BAsmCode[CodeLen++] = 0x50 + Dest.AdrVals[0];
           else
             goto CommonRegMem;
           break;
         case ModReg16:
-          if (Src.AdrVal != AccReg16()) WrError(1350);
+          if (Src.AdrVal != AccReg16()) WrError(ErrNum_InvAddrMode);
           else
             goto CommonRegMem;
           break;
         case ModReg24:
-          if (Src.AdrVal != WHLReg) WrError(1350);
+          if (Src.AdrVal != WHLReg) WrError(ErrNum_InvAddrMode);
           else
             goto CommonRegMem;
           break;
@@ -1784,13 +1796,13 @@ static void DecodeMOV(Word ForceOpSize)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
     case ModNone:
       break;
     default:
-      WrError(1350);
+      WrError(ErrNum_InvAddrMode);
   }
 }
 
@@ -1808,14 +1820,14 @@ static void DecodeXCH(Word ForceOpSize)
   AdrModeMask = MModShort1 | MModShort2 | MModSFR | MModAbsAll | MModShortIndir_All | MModMem;
   if ((OpSize == -1) || (OpSize == 0)) AdrModeMask |= MModReg8;
   if ((OpSize == -1) || (OpSize == 1)) AdrModeMask |= MModReg16;
-  DecodeAdr(ArgStr[1], AdrModeMask, &Dest);
+  DecodeAdr(&ArgStr[1], AdrModeMask, &Dest);
   switch (Dest.AdrMode)
   {
     case ModReg8:
       AdrModeMask = MModReg8 | MModShort2 | MModShort1 | MModSFR | MModAbsAll;
       if (Dest.AdrVal == AccReg8())
         AdrModeMask |= MModShortIndir_All | MModMem;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModReg8:
@@ -1881,7 +1893,7 @@ static void DecodeXCH(Word ForceOpSize)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
@@ -1889,7 +1901,7 @@ static void DecodeXCH(Word ForceOpSize)
       AdrModeMask = MModReg16 | MModShort1 | MModShort2 | MModSFR;
       if (Dest.AdrVal == AccReg16())
         AdrModeMask |= MModShortIndir_All | MModAbsAll | MModMem;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModReg16:
@@ -1933,7 +1945,7 @@ static void DecodeXCH(Word ForceOpSize)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
@@ -1942,7 +1954,7 @@ static void DecodeXCH(Word ForceOpSize)
       AdrModeMask = MModShort2 | MModShort1;
       if ((OpSize == -1) || (OpSize == 0)) AdrModeMask |= MModReg8;
       if ((OpSize == -1) || (OpSize == 1)) AdrModeMask |= MModReg16;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModReg8:
@@ -1976,7 +1988,7 @@ static void DecodeXCH(Word ForceOpSize)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
@@ -1985,7 +1997,7 @@ static void DecodeXCH(Word ForceOpSize)
       AdrModeMask = MModShort2 | MModShort1;
       if ((OpSize == -1) || (OpSize == 0)) AdrModeMask |= MModReg8;
       if ((OpSize == -1) || (OpSize == 1)) AdrModeMask |= MModReg16;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModReg8:
@@ -2009,7 +2021,7 @@ static void DecodeXCH(Word ForceOpSize)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
@@ -2017,7 +2029,7 @@ static void DecodeXCH(Word ForceOpSize)
       AdrModeMask = 0;
       if ((OpSize == -1) || (OpSize == 0)) AdrModeMask |= MModReg8;
       if ((OpSize == -1) || (OpSize == 1)) AdrModeMask |= MModReg16;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModReg8:
@@ -2033,7 +2045,7 @@ static void DecodeXCH(Word ForceOpSize)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
@@ -2042,7 +2054,7 @@ static void DecodeXCH(Word ForceOpSize)
       AdrModeMask = 0;
       if ((OpSize == -1) || (OpSize == 0)) AdrModeMask |= MModReg8;
       if ((OpSize == -1) || (OpSize == 1)) AdrModeMask |= MModReg16;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModReg8:
@@ -2051,7 +2063,7 @@ static void DecodeXCH(Word ForceOpSize)
           AppendAdrVals(&Dest);
           break;
         case ModReg16:
-          if (Src.AdrVal != AccReg16()) WrError(1350);
+          if (Src.AdrVal != AccReg16()) WrError(ErrNum_InvAddrMode);
           else
           {
             BAsmCode[CodeLen++] = 0x0a;
@@ -2062,7 +2074,7 @@ static void DecodeXCH(Word ForceOpSize)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
@@ -2073,11 +2085,11 @@ static void DecodeXCH(Word ForceOpSize)
       AdrModeMask = 0;
       if ((OpSize == -1) || (OpSize == 0)) AdrModeMask |= MModReg8;
       if ((OpSize == -1) || (OpSize == 1)) AdrModeMask |= MModReg16;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModReg8:
-          if (Src.AdrVal != AccReg8()) WrError(1350);
+          if (Src.AdrVal != AccReg8()) WrError(ErrNum_InvAddrMode);
           else
           {
             if (ModIsShort1(Dest.AdrMode))
@@ -2093,7 +2105,7 @@ static void DecodeXCH(Word ForceOpSize)
           }
           break;
         case ModReg16:
-          if (Src.AdrVal != AccReg16()) WrError(1350);
+          if (Src.AdrVal != AccReg16()) WrError(ErrNum_InvAddrMode);
           else
           {
             if (ModIsShort1(Dest.AdrMode))
@@ -2106,7 +2118,7 @@ static void DecodeXCH(Word ForceOpSize)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
@@ -2114,11 +2126,11 @@ static void DecodeXCH(Word ForceOpSize)
       AdrModeMask = 0;
       if ((OpSize == -1) || (OpSize == 0)) AdrModeMask |= MModReg8;
       if ((OpSize == -1) || (OpSize == 1)) AdrModeMask |= MModReg16;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModReg8:
-          if (Src.AdrVal != AccReg8()) WrError(1350);
+          if (Src.AdrVal != AccReg8()) WrError(ErrNum_InvAddrMode);
           else
           {
             BAsmCode[CodeLen++] = Dest.AdrVal;
@@ -2126,7 +2138,7 @@ static void DecodeXCH(Word ForceOpSize)
           }
           break;
         case ModReg16:
-          if (Src.AdrVal != AccReg16()) WrError(1350);
+          if (Src.AdrVal != AccReg16()) WrError(ErrNum_InvAddrMode);
           else
           {
             BAsmCode[CodeLen++] = Dest.AdrVal;
@@ -2136,14 +2148,14 @@ static void DecodeXCH(Word ForceOpSize)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
     case ModNone:
       break;
     default:
-      WrError(1350);
+      WrError(ErrNum_InvAddrMode);
   }
 }
 
@@ -2163,7 +2175,7 @@ static void DecodeALU(Word Code)
   if (!ChkArgCnt(2, 2))
     return;
 
-  if ((OpSize == -1) && (!strcasecmp(ArgStr[1], "CY")))
+  if ((OpSize == -1) && (!strcasecmp(ArgStr[1].Str, "CY")))
   {
     switch (Code)
     {
@@ -2188,14 +2200,14 @@ static void DecodeALU(Word Code)
     AdrModeMask |= MModReg16;
   if ((Code24 != 15) && ((OpSize == -1) || (OpSize == 2)))
     AdrModeMask |= MModReg24 | MModSP;
-  DecodeAdr(ArgStr[1], AdrModeMask, &Dest);
+  DecodeAdr(&ArgStr[1], AdrModeMask, &Dest);
   switch (Dest.AdrMode)
   {
     case ModReg8:
       AdrModeMask = MModImm | MModReg8 | MModShort1 | MModShort2 | MModSFR | MModAbsAll;
       if (Dest.AdrVal == AccReg8())
         AdrModeMask |= MModShortIndir_All | MModMem;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModImm:
@@ -2251,13 +2263,13 @@ static void DecodeALU(Word Code)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
     case ModReg16:
       AdrModeMask = MModImm | MModReg16 | MModShort1 | MModShort2 | MModSFR;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModImm:
@@ -2291,7 +2303,7 @@ static void DecodeALU(Word Code)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
@@ -2299,7 +2311,7 @@ static void DecodeALU(Word Code)
       AdrModeMask = MModImm | MModReg24;
       if (Dest.AdrVal == WHLReg)
         AdrModeMask |= MModShort1 | MModShort2;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModReg24:
@@ -2320,13 +2332,13 @@ static void DecodeALU(Word Code)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
     case ModSP:
       OpSize = 1; /* !!! ADDWG/SUBWG, i.e. 24-bit dest & 16-bit src */
-      DecodeAdr(ArgStr[2], MModImm, &Src);
+      DecodeAdr(&ArgStr[2], MModImm, &Src);
       switch (Src.AdrMode)
       {
         case ModImm:
@@ -2337,7 +2349,7 @@ static void DecodeALU(Word Code)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
@@ -2346,7 +2358,7 @@ static void DecodeALU(Word Code)
       AdrModeMask = MModImm | MModShort1 | MModShort2;
       if ((OpSize == -1) || (OpSize == 0)) AdrModeMask |= MModReg8;
       if ((OpSize == -1) || (OpSize == 1)) AdrModeMask |= MModReg16;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModImm:
@@ -2378,7 +2390,7 @@ static void DecodeALU(Word Code)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
@@ -2387,7 +2399,7 @@ static void DecodeALU(Word Code)
       AdrModeMask = MModImm | MModShort1 | MModShort2;
       if ((OpSize == -1) || (OpSize == 0)) AdrModeMask |= MModReg8;
       if ((OpSize == -1) || (OpSize == 1)) AdrModeMask |= MModReg16;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModImm:
@@ -2420,7 +2432,7 @@ static void DecodeALU(Word Code)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
@@ -2429,7 +2441,7 @@ static void DecodeALU(Word Code)
       AdrModeMask = MModImm;
       if ((OpSize == -1) || (OpSize == 0)) AdrModeMask |= MModReg8;
       if ((OpSize == -1) || (OpSize == 1)) AdrModeMask |= MModReg16;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModImm:
@@ -2451,7 +2463,7 @@ static void DecodeALU(Word Code)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
@@ -2461,11 +2473,11 @@ static void DecodeALU(Word Code)
     case ModShortIndir1_24:
       AdrModeMask = 0;
       if ((OpSize == -1) || (OpSize == 0)) AdrModeMask |= MModReg8;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModReg8:
-          if (Src.AdrVal != AccReg8()) WrError(1350);
+          if (Src.AdrVal != AccReg8()) WrError(ErrNum_InvAddrMode);
           else
           {
             if (ModIsShort1(Dest.AdrMode))
@@ -2478,7 +2490,7 @@ static void DecodeALU(Word Code)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
@@ -2486,11 +2498,11 @@ static void DecodeALU(Word Code)
     case ModAbs24:
       AdrModeMask = 0;
       if ((OpSize == -1) || (OpSize == 0)) AdrModeMask |= MModReg8;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModReg8:
-          if (Src.AdrVal != AccReg8()) WrError(1350);
+          if (Src.AdrVal != AccReg8()) WrError(ErrNum_InvAddrMode);
           else
           {
             BAsmCode[CodeLen++] = 0x0a;
@@ -2501,18 +2513,18 @@ static void DecodeALU(Word Code)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
 
     case ModMem:
       AdrModeMask = 0;
       if ((OpSize == -1) || (OpSize == 0)) AdrModeMask |= MModReg8;
-      DecodeAdr(ArgStr[2], AdrModeMask, &Src);
+      DecodeAdr(&ArgStr[2], AdrModeMask, &Src);
       switch (Src.AdrMode)
       {
         case ModReg8:
-          if (Src.AdrVal != AccReg8()) WrError(1350);
+          if (Src.AdrVal != AccReg8()) WrError(ErrNum_InvAddrMode);
           else
           {
             BAsmCode[CodeLen++] = Dest.AdrVal;
@@ -2522,13 +2534,13 @@ static void DecodeALU(Word Code)
         case ModNone:
           break;
         default:
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
       }
       break;
     case ModNone:
       break;
     default:
-      WrError(1350);
+      WrError(ErrNum_InvAddrMode);
   }
 }
 
@@ -2539,10 +2551,10 @@ static void DecodeADDWG_SUBWG(Word Code)
   if (ChkArgCnt(2, 2))
   {
     OpSize = 2;
-    if (DecodeAdr(ArgStr[1], MModSP, &Addr))
+    if (DecodeAdr(&ArgStr[1], MModSP, &Addr))
     {
       OpSize = 1; /* !!! ADDWG/SUBWG, i.e. 24-bit dest & 16-bit src */
-      if (DecodeAdr(ArgStr[2], MModImm, &Addr))
+      if (DecodeAdr(&ArgStr[2], MModImm, &Addr))
       {
         BAsmCode[CodeLen++] = 0x09;
         BAsmCode[CodeLen++] = 0x28 | Code;
@@ -2568,7 +2580,7 @@ static void DecodeMULU(Word Code)
     AdrModeMask |= MModReg8;
   if ((OpSize == -1) || (OpSize == 1))
     AdrModeMask |= MModReg16;
-  DecodeAdr(ArgStr[1], AdrModeMask, &Src);
+  DecodeAdr(&ArgStr[1], AdrModeMask, &Src);
   switch (Src.AdrMode)
   {
     case ModReg8:
@@ -2584,7 +2596,7 @@ static void DecodeMULU(Word Code)
     case ModNone:
       break;
     default:
-      WrError(1350);
+      WrError(ErrNum_InvAddrMode);
   }
 }
 
@@ -2594,7 +2606,7 @@ static void DecodeDIVUW(Word Code)
   UNUSED(Code);
 
   if (ChkArgCnt(1, 1)
-   && DecodeAdr(ArgStr[1], MModReg8, &Src))
+   && DecodeAdr(&ArgStr[1], MModReg8, &Src))
   {
     if (Src.AdrVal >= 8)
       BAsmCode[CodeLen++] = 0x3c;
@@ -2608,7 +2620,7 @@ static void DecodeMULW_DIVUX(Word Code)
   tEncodedAddress Src;
 
   if (ChkArgCnt(1, 1)
-   && DecodeAdr(ArgStr[1], MModReg16, &Src))
+   && DecodeAdr(&ArgStr[1], MModReg16, &Src))
   {
     BAsmCode[CodeLen++] = 0x05;
     BAsmCode[CodeLen++] = Code | Src.AdrVal;
@@ -2621,7 +2633,7 @@ static void DecodeMACW_MACSW(Word Code)
   {
     Boolean OK;
 
-    BAsmCode[2] = EvalIntExpression(ArgStr[1], UInt8, &OK);
+    BAsmCode[2] = EvalStrIntExpression(&ArgStr[1], UInt8, &OK);
     if (OK)
     {
       BAsmCode[CodeLen++] = 0x07;
@@ -2637,12 +2649,12 @@ static void DecodeSACW(Word Code)
   UNUSED(Code);
 
   if (ChkArgCnt(2, 2)
-   && DecodeAdr(ArgStr[1], MModMem, &Addr))
+   && DecodeAdr(&ArgStr[1], MModMem, &Addr))
   {
-    if ((Addr.AdrVal != 0x16) || (Addr.AdrVals[0] != 0x00)) WrError(1350);
-    else if (DecodeAdr(ArgStr[2], MModMem, &Addr))
+    if ((Addr.AdrVal != 0x16) || (Addr.AdrVals[0] != 0x00)) WrError(ErrNum_InvAddrMode);
+    else if (DecodeAdr(&ArgStr[2], MModMem, &Addr))
     {
-      if ((Addr.AdrVal != 0x16) || (Addr.AdrVals[0] != 0x01)) WrError(1350);
+      if ((Addr.AdrVal != 0x16) || (Addr.AdrVals[0] != 0x01)) WrError(ErrNum_InvAddrMode);
       else
       {
         BAsmCode[CodeLen++] = 0x09;
@@ -2671,7 +2683,7 @@ static void DecodeINCDEC(Word Code)
   if ((OpSize == -1) || (OpSize == 1)) AdrModeMask |= MModReg16 | MModShort1 | MModShort2;
   if ((OpSize == -1) || (OpSize == 2)) AdrModeMask |= MModReg24 | MModSP;
   AssumeByte = True;
-  DecodeAdr(ArgStr[1], AdrModeMask, &Addr);
+  DecodeAdr(&ArgStr[1], AdrModeMask, &Addr);
   switch (Addr.AdrMode)
   {
     case ModReg8:
@@ -2713,7 +2725,7 @@ static void DecodeINCDEC(Word Code)
     case ModNone:
       break;
     default:
-      WrError(1350);
+      WrError(ErrNum_InvAddrMode);
   }
 }
 
@@ -2726,7 +2738,7 @@ static void DecodeShift(Word Code)
 
   if (!ChkArgCnt(2, 2))
     return;
-  Shift = EvalIntExpression(ArgStr[2], UInt3, &OK);
+  Shift = EvalStrIntExpression(&ArgStr[2], UInt3, &OK);
   if (!OK)
     return;
 
@@ -2735,7 +2747,7 @@ static void DecodeShift(Word Code)
   AdrModeMask = 0;
   if ((OpSize == -1) || (OpSize == 0)) AdrModeMask |= MModReg8;
   if ((Code & 0x8000) && ((OpSize == -1) || (OpSize == 1))) AdrModeMask |= MModReg16;
-  DecodeAdr(ArgStr[1], AdrModeMask, &Addr);
+  DecodeAdr(&ArgStr[1], AdrModeMask, &Addr);
   switch (Addr.AdrMode)
   {
     case ModReg8:
@@ -2751,14 +2763,14 @@ static void DecodeShift(Word Code)
     case ModNone:
       break;
     default:
-      WrError(1350);
+      WrError(ErrNum_InvAddrMode);
   }
 }
 
 static void DecodeROR4_ROL4(Word Code)
 {
   if (!ChkArgCnt(1, 1));
-  else if (!DecodeMem3(ArgStr[1], BAsmCode + 1)) WrError(1350);
+  else if (!DecodeMem3(ArgStr[1].Str, BAsmCode + 1)) WrError(ErrNum_InvAddrMode);
   else
   {
     BAsmCode[CodeLen++] = 0x05;
@@ -2773,7 +2785,7 @@ static void DecodeBIT(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(1, 1));
-  else if (DecodeBitAdr(ArgStr[1], &Result))
+  else if (DecodeBitAdr(&ArgStr[1], &Result))
   {
     TempResult t;
 
@@ -2804,7 +2816,7 @@ static void DecodePUSH_POP(Word Code)
   for (z = 1; z <= ArgCnt; z++)
   {
     ClearEncodedAddress(&Address);
-    if (!strcasecmp(ArgStr[z], "PSW"))
+    if (!strcasecmp(ArgStr[z].Str, "PSW"))
     {
       /* PSW replaces UP in bitmask for PUSHU/POPU */
       if (IsU)
@@ -2817,7 +2829,7 @@ static void DecodePUSH_POP(Word Code)
         Address.AdrMode = ModPSW;
       else
       {
-        WrXErrorPos(ErrNum_InvAddrMode, ArgStr[z], &ArgStrPos[z]);
+        WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[z]);
         return;
       }
       if (!SetOpSize(1))
@@ -2831,14 +2843,14 @@ static void DecodePUSH_POP(Word Code)
 
       if ((z == 1) && (!IsU))
         AdrModeMask |= MModSFR | MModReg24;
-      if (!DecodeAdr(ArgStr[z], AdrModeMask, &Address))
+      if (!DecodeAdr(&ArgStr[z], AdrModeMask, &Address))
         return;
 
       /* UP not allowed for PUSHU(POPU */
 
       if (IsU && (Address.AdrVal == 5))
       {
-        WrXErrorPos(ErrNum_InvAddrMode, ArgStr[z], &ArgStrPos[z]);
+        WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[z]);
         return;
       }
     }
@@ -2853,7 +2865,7 @@ static void DecodePUSH_POP(Word Code)
     }
     else if ((Address.AdrMode != SumAddress.AdrMode) || (SumAddress.AdrMode != ModReg16))
     {
-      WrError(1350);
+      WrError(ErrNum_InvAddrMode);
       return;
     }
     else
@@ -2883,7 +2895,7 @@ static void DecodePUSH_POP(Word Code)
     case ModNone:
       break;
     default:
-      WrError(1350);
+      WrError(ErrNum_InvAddrMode);
   }
 }
 
@@ -2892,9 +2904,9 @@ static void DecodeCALL_BR(Word IsCALL)
   tEncodedAddress Addr;
 
   if (ChkArgCnt(1, 1)
-   && StripIndirect(ArgStr[1]))
+   && StripIndirect(&ArgStr[1]))
   {
-    DecodeAdr(ArgStr[1], MModReg16 | MModReg24, &Addr);
+    DecodeAdr(&ArgStr[1], MModReg16 | MModReg24, &Addr);
     switch (Addr.AdrMode)
     {
       case ModReg16:
@@ -2908,13 +2920,13 @@ static void DecodeCALL_BR(Word IsCALL)
       case ModNone:
         break;
       default:
-        WrError(1350);
+        WrError(ErrNum_InvAddrMode);
     }
   }
   else
   {
     FirstPassUnknown = False;
-    DecodeAdr(ArgStr[1], MModReg16 | MModReg24 | MModAbs16 | MModAbs20, &Addr);
+    DecodeAdr(&ArgStr[1], MModReg16 | MModReg24 | MModAbs16 | MModAbs20, &Addr);
     switch (Addr.AdrMode)
     {
       case ModReg16:
@@ -2964,7 +2976,7 @@ static void DecodeCALL_BR(Word IsCALL)
         }
         else if (IsCALL || Addr.ForceAbs)
         {
-          if (!FirstPassUnknown && !Dist16OK) WrError(1370);
+          if (!FirstPassUnknown && !Dist16OK) WrError(ErrNum_JmpDistTooBig);
           else
           {
             BAsmCode[CodeLen++] = IsCALL ? 0x3f : 0x43;
@@ -2974,7 +2986,7 @@ static void DecodeCALL_BR(Word IsCALL)
         }
         else
         {
-          if (!FirstPassUnknown && !Dist8OK) WrError(1370);
+          if (!FirstPassUnknown && !Dist8OK) WrError(ErrNum_JmpDistTooBig);
           else
           {
             BAsmCode[CodeLen++] = 0x14;
@@ -2987,7 +2999,7 @@ static void DecodeCALL_BR(Word IsCALL)
       case ModNone:
         break;
       default:
-        WrError(1350);
+        WrError(ErrNum_InvAddrMode);
     }
   }
 }
@@ -2996,17 +3008,14 @@ static void DecodeCALLF(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1350);
+  if (ArgCnt != 1) WrError(ErrNum_InvAddrMode);
   else
   {
     Boolean OK;
-    const char *pAsc = ArgStr[1];
     Word Addr;
 
-    if (*pAsc == '!')
-      pAsc++;
     FirstPassUnknown = False;
-    Addr = EvalIntExpression(pAsc, UInt12, &OK);
+    Addr = EvalStrIntExpressionOffs(&ArgStr[1], !!(*ArgStr[1].Str == '!'), UInt12, &OK);
     if (FirstPassUnknown)
       Addr |= 0x800;
     if (OK && ChkRange(Addr, 0x800, 0xfff))
@@ -3021,21 +3030,18 @@ static void DecodeCALLT(Word Code)
 {
   UNUSED(Code);
 
-  if (ArgCnt != 1) WrError(1350);
-  else if (!StripIndirect(ArgStr[1])) WrError(1350);
+  if (ArgCnt != 1) WrError(ErrNum_InvAddrMode);
+  else if (!StripIndirect(&ArgStr[1])) WrError(ErrNum_InvAddrMode);
   else
   {
     Boolean OK;
-    const char *pAsc = ArgStr[1];
     Word Addr;
 
-    if (*pAsc == '!')
-      pAsc++;
     FirstPassUnknown = False;
-    Addr = EvalIntExpression(pAsc, UInt7, &OK);
+    Addr = EvalStrIntExpressionOffs(&ArgStr[1], !!(*ArgStr[1].Str == '!'), UInt7, &OK);
     if (FirstPassUnknown)
       Addr = (Addr | 0x40) & 0xfe;
-    if (OK && (Addr & 1)) WrError(1325);
+    if (OK && (Addr & 1)) WrError(ErrNum_NotAligned);
     else if (OK && ChkRange(Addr, 0x40, 0xff))
     {
       BAsmCode[CodeLen++] = 0xe0 | ((Addr >> 1) & 0x1f);
@@ -3048,7 +3054,7 @@ static void DecodeBRKCS(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(1, 1));
-  else if (!DecodeRB(ArgStr[1], BAsmCode + 1)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+  else if (!DecodeRB(ArgStr[1].Str, BAsmCode + 1)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
   else
   {
     BAsmCode[CodeLen++] = 0x05;
@@ -3058,16 +3064,13 @@ static void DecodeBRKCS(Word Code)
 
 static void DecodeRETCS(Word Code)
 {
-  if (ArgCnt != 1) WrError(1350);
+  if (ArgCnt != 1) WrError(ErrNum_InvAddrMode);
   else
   {
     Boolean OK;
-    const char *pAsc = ArgStr[1];
     Word Addr;
 
-    if (*pAsc == '!')
-      pAsc++;
-    Addr = EvalIntExpression(pAsc, UInt16, &OK);
+    Addr = EvalStrIntExpressionOffs(&ArgStr[1], !!(*ArgStr[1].Str == '!'), UInt16, &OK);
     if (OK)
     {
       PutCode(Code);
@@ -3079,11 +3082,11 @@ static void DecodeRETCS(Word Code)
 
 static void DecodeRel(Word Code)
 {
-  if (ArgCnt != 1) WrError(1350);
+  if (ArgCnt != 1) WrError(ErrNum_InvAddrMode);
   else
   {
     PutCode(Code);
-    AppendRel8(ArgStr[1]);
+    AppendRel8(&ArgStr[1]);
   }
 }
 
@@ -3091,8 +3094,8 @@ static void DecodeBitRel(Word Code)
 {
   LongWord BitAddr;
 
-  if (ArgCnt != 2) WrError(1350);
-  else if (DecodeBitAdr(ArgStr[1], &BitAddr))
+  if (ArgCnt != 2) WrError(ErrNum_InvAddrMode);
+  else if (DecodeBitAdr(&ArgStr[1], &BitAddr))
   {
     switch ((BitAddr >> 28) & 15)
     {
@@ -3114,7 +3117,7 @@ static void DecodeBitRel(Word Code)
         DecodeBitOpCore2(BitAddr, Code);
     }
 
-    AppendRel8(ArgStr[2]);
+    AppendRel8(&ArgStr[2]);
   }
 }
 
@@ -3126,11 +3129,11 @@ static void DecodeDBNZ(Word Code)
 
   if (ArgCnt != 2)
   {
-    WrError(1350);
+    WrError(ErrNum_InvAddrMode);
     return;
   }
 
-  DecodeAdr(ArgStr[1], MModShort1 | MModShort2 | MModReg8, &Addr);
+  DecodeAdr(&ArgStr[1], MModShort1 | MModShort2 | MModReg8, &Addr);
   switch (Addr.AdrMode)
   {
     case ModShort1:
@@ -3147,18 +3150,18 @@ static void DecodeDBNZ(Word Code)
         BAsmCode[CodeLen++] = 0x32;
       else
       {
-        WrError(1350);
+        WrError(ErrNum_InvAddrMode);
         return;
       }
       break;
     case ModNone:
       return;
     default:
-      WrError(1350);
+      WrError(ErrNum_InvAddrMode);
       return;
   }
 
-  AppendRel8(ArgStr[2]);
+  AppendRel8(&ArgStr[2]);
 }
 
 static void DecodeLOCATION(Word Code)
@@ -3172,7 +3175,7 @@ static void DecodeLOCATION(Word Code)
     return;
 
   FirstPassUnknown = False;
-  Val = EvalIntExpression(ArgStr[1], UInt4, &OK);
+  Val = EvalStrIntExpression(&ArgStr[1], UInt4, &OK);
   if (!OK)
     return;
   if (FirstPassUnknown)
@@ -3192,7 +3195,7 @@ static void DecodeLOCATION(Word Code)
       BAsmCode[CodeLen++] = 0x00;
       break;
     default:
-      WrError(1320);
+      WrError(ErrNum_OverRange);
   }
 }
 
@@ -3202,15 +3205,15 @@ static void DecodeSEL(Word Code)
 
   UNUSED(Code);
 
-  if ((ArgCnt == 2) && (strcasecmp(ArgStr[2], "ALT")))
+  if ((ArgCnt == 2) && (strcasecmp(ArgStr[2].Str, "ALT")))
   {
-    WrError(1350);
+    WrError(ErrNum_InvAddrMode);
     return;
   }
   if (!ChkArgCnt(1, 2))
     return;
 
-  if (!DecodeRB(ArgStr[1], &Bank)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+  if (!DecodeRB(ArgStr[1].Str, &Bank)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
   else
   {
     BAsmCode[CodeLen++] = 0x05;
@@ -3223,7 +3226,7 @@ static void DecodeCHK(Word Code)
   tEncodedAddress Address;
 
   if (ChkArgCnt(1, 1)
-   && DecodeAdr(ArgStr[1], MModSFR, &Address))
+   && DecodeAdr(&ArgStr[1], MModSFR, &Address))
   {
     PutCode(Code);
     BAsmCode[CodeLen++] = Address.AdrVals[0];
@@ -3234,19 +3237,15 @@ static void DecodeMOVTBLW(Word Code)
 {
   Byte Addr, Value;
   Boolean OK;
-  const char *pAddr;
 
   UNUSED(Code);
 
   if (ChkArgCnt(2, 2))
   {
-    pAddr = ArgStr[1];
-    if (*pAddr == '!')
-      pAddr++;
-    Addr = EvalIntExpression(pAddr, UInt8, &OK);
+    Addr = EvalStrIntExpressionOffs(&ArgStr[1], !!(*ArgStr[1].Str == '!'), UInt8, &OK);
     if (OK)
     {
-      Value = EvalIntExpression(ArgStr[2], Int8, &OK);
+      Value = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
       if (OK)
       {
         BAsmCode[CodeLen++] = 0x09;
@@ -3263,13 +3262,13 @@ static void DecodeStringAcc(Word Code)
   tEncodedAddress Addr;
 
   if (ChkArgCnt(2, 2)
-   && DecodeAdr(ArgStr[2], MModReg8, &Addr))
+   && DecodeAdr(&ArgStr[2], MModReg8, &Addr))
   {
-    if (Addr.AdrVal != AccReg8()) WrError(1350);
-    else if (DecodeAdr(ArgStr[1], MModMem, &Addr))
+    if (Addr.AdrVal != AccReg8()) WrError(ErrNum_InvAddrMode);
+    else if (DecodeAdr(&ArgStr[1], MModMem, &Addr))
     {
-      if (Addr.AdrVal != 0x16) WrError(1350);
-      else if ((Addr.AdrVals[0] & 0xfd) != 0) WrError(1350);
+      if (Addr.AdrVal != 0x16) WrError(ErrNum_InvAddrMode);
+      else if ((Addr.AdrVals[0] & 0xfd) != 0) WrError(ErrNum_InvAddrMode);
       else
         PutCode(Code | ((Addr.AdrVals[0] & 2) << 3));
     }
@@ -3281,16 +3280,16 @@ static void DecodeStringString(Word Code)
   tEncodedAddress Addr;
 
   if (ChkArgCnt(2, 2)
-   && DecodeAdr(ArgStr[1], MModMem, &Addr))
+   && DecodeAdr(&ArgStr[1], MModMem, &Addr))
   {
     Byte Dir = Addr.AdrVals[0];
 
-    if (Addr.AdrVal != 0x16) WrError(1350);
-    else if ((Addr.AdrVals[0] & 0xfd) != 0) WrError(1350);
-    else if (DecodeAdr(ArgStr[2], MModMem, &Addr))
+    if (Addr.AdrVal != 0x16) WrError(ErrNum_InvAddrMode);
+    else if ((Addr.AdrVals[0] & 0xfd) != 0) WrError(ErrNum_InvAddrMode);
+    else if (DecodeAdr(&ArgStr[2], MModMem, &Addr))
     {
-      if (Addr.AdrVal != 0x16) WrError(1350);
-      else if (Addr.AdrVals[0] != Dir + 1) WrError(1350);
+      if (Addr.AdrVal != 0x16) WrError(ErrNum_InvAddrMode);
+      else if (Addr.AdrVals[0] != Dir + 1) WrError(ErrNum_InvAddrMode);
       else
         PutCode(Code | ((Dir & 2) << 3));
     }

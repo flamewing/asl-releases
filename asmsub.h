@@ -14,6 +14,9 @@
 /*                                                                           */
 /*****************************************************************************/
 
+struct sLineComp;
+struct sStrComp;
+
 typedef void (*TSwitchProc)(
 #ifdef __PROTOS__
 void
@@ -32,16 +35,13 @@ extern long GTime(void);
 extern void UpString(char *s);
 
 extern char *QuotPos(const char *s, char Zeichen);
+extern char *QuotMultPos(const char *s, const char *pSearch);
 
 extern char *RQuotPos(char *s, char Zeichen);
 
 extern char *FirstBlank(const char *s);
 
 extern void SplitString(char *Source, char *Left, char *Right, char *Trenner);
-
-struct sLineComp;
-extern void KillPrefBlanksPos(char *pStr, struct sLineComp *pPos);
-extern void KillPostBlanksPos(char *pStr, struct sLineComp *pPos);
 
 extern void TranslateString(char *s, int Length);
 
@@ -80,7 +80,6 @@ extern void WrLstLine(char *Line);
 
 extern void SetListLineVal(TempResult *t);
 
-struct sLineComp;
 extern void PrintOneLineMuted(FILE *pFile, const char *pLine,
                               const struct sLineComp *pMuteComponent,
                               const struct sLineComp *pMuteComponent2);
@@ -135,7 +134,7 @@ extern Boolean ChkMacSymbName(char *sym);
 
 
 extern void ChkIO(Word ErrNo);
-extern void ChkXIO(Word ErrNo, const char *pPath);
+extern void ChkStrIO(Word ErrNo, const struct sStrComp *pComp);
 
 
 extern void AddIncludeList(char *NewPath);

@@ -62,48 +62,53 @@ static Boolean IsInToken(char Inp)
   return ((Inp == '_') || (isalnum(((usint) Inp) & 0xff)));
 }
 
-static void GetToken(char *Src, char *Dest)
+static void GetToken(tStrComp *pSrc, tStrComp *pDest)
 {
-  char *p, *start, Save;
+  char *p;
 
-  /* Anfang suchen */
+  /* search token start, by skipping spaces */
 
-  for (p = Src; myisspace(*p); p++)
+  for (p = pSrc->Str; myisspace(*p); p++)
     if (*p == '\0') break;
+  StrCompCutLeft(pSrc, p - pSrc->Str);
   if (*p == '\0')
   {
-    *Dest = *Src = '\0';
+    StrCompReset(pDest);
     return;
   }
-  start = p;
+  pDest->Pos.StartCol = pSrc->Pos.StartCol;
 
   /* geklammerter Ausdruck ? */
 
-  if (*p == '(')
+  if (*pSrc->Str == '(')
   {
-    p = QuotPos(p, ')');
+    p = QuotPos(pSrc->Str, ')');
+
+    /* no closing ) -> copy all up to end */
+
     if (!p)
     {
-      strcpy(Dest, start);
-      *Src = '\0';
+      StrCompCopy(pDest, pSrc);
+      StrCompCutLeft(pSrc, strlen(pSrc->Str));
     }
+
+    /* otherwise, copy (...) */
+
     else
     {
-      Save = p[1];
-      p[1] = '\0';
-      strcpy(Dest, start);
-      p[1] = Save;
-      strmov(Src, p + 1);
+      pDest->Pos.Len = strmemcpy(pDest->Str, STRINGSIZE, pSrc->Str, p + 1 - pSrc->Str);
+      StrCompCutLeft(pSrc, p + 1 - pSrc->Str);
     }
   }
 
   /* Spezialtoken ? */
 
-  else if (!IsInToken(*p))
+  else if (!IsInToken(*pSrc->Str))
   {
-    *Dest = *p;
-    Dest[1] = '\0';
-    strmov(Src, p + 1);
+    pDest->Str[0] = *pSrc->Str;
+    pDest->Str[1] = '\0';
+    pDest->Pos.Len = 1;
+    StrCompCutLeft(pSrc, 1);
   }
 
   /* Wort ? */
@@ -113,60 +118,11 @@ static void GetToken(char *Src, char *Dest)
     for (; IsInToken(*p); p++)
       if (*p == '\0')
         break;
-    Save = *p;
-    *p = '\0';
-    strcpy(Dest, start); 
-    *p = Save;
-    strmov(Src, p);
+    pDest->Pos.Len = strmemcpy(pDest->Str, STRINGSIZE, pSrc->Str, p - pSrc->Str);
+    StrCompCutLeft(pSrc, p - pSrc->Str);
   }
 }
 
-#if 0
-static void GetRToken(char *Src, char *Dest)
-{
-  char *p;
-
-  KillPostBlanks(Src);
-
-  p = Src + strlen(Src) - 1;
-
-  /* geklammerter Ausdruck ? */ 
-
-  if (*p == ')')                
-  {                        
-    p = RQuotPos(p, ')');
-    if (!p)
-    {
-      strcpy(Dest, Src);
-      *Src = '\0';
-    }
-    else
-    {
-      strcpy(Dest, p);
-      *p = '\0';
-    }
-  }
-
-  /* Spezieltoken ? */
-
-  else if (!IsInToken(*p))   
-  {                        
-    *Dest = *p;
-    Dest[1] = '\0'; 
-    *p = '\0';
-  }
-
-  else
-  {
-    for (; IsInToken(*p); p--)
-      if (p <= Src) break;
-    if (!IsInToken(*p))
-      p++;
-    strcpy(Dest, p);
-    *p = '\0';
-  }
-}
-#endif
 
 static Boolean DecodePhase(char *Name, LongWord *Result)
 {
@@ -207,32 +163,34 @@ static Boolean Err(int Num, char *Msg)
   return False;
 }
 
-static Boolean DecodeCond(char *Src, LongWord *Dest)
+static Boolean DecodeCond(tStrComp *pSrc, LongWord *Dest)
 {
-  String Tok;
+  String TokStr;
+  tStrComp Tok;
   Boolean PhaseATNUsed, DataUsed, CarryUsed, MaskUsed;
   LongWord Tmp;
   Boolean OK;
 
   /* IF/WHEN/Nix-Unterscheidung - TRUE fuer Nix setzen */
 
-  GetToken(Src, Tok);
-  if (*Tok == '\0')
+  StrCompMkTemp(&Tok, TokStr);
+  GetToken(pSrc, &Tok);
+  if (*Tok.Str == '\0')
   {
     *Dest |= 0x00080000;
     return True;
   }
 
-  if (strcasecmp(Tok, "WHEN") == 0)
+  if (strcasecmp(Tok.Str, "WHEN") == 0)
     *Dest |= 0x00010000;
-  else if (strcasecmp(Tok, "IF") != 0)
-    return Err(1135, Tok);
+  else if (strcasecmp(Tok.Str, "IF") != 0)
+    return Err(1135, Tok.Str);
 
   /* Negierung? */
 
-  GetToken(Src, Tok);  
-  if (strcasecmp(Tok, "NOT") == 0)
-    GetToken(Src, Tok);
+  GetToken(pSrc, &Tok);  
+  if (strcasecmp(Tok.Str, "NOT") == 0)
+    GetToken(pSrc, &Tok);
   else
     *Dest |= 0x00080000;
 
@@ -241,7 +199,7 @@ static Boolean DecodeCond(char *Src, LongWord *Dest)
   PhaseATNUsed = DataUsed = MaskUsed = CarryUsed = False;
   do
   {
-    if (!strcasecmp(Tok, "ATN"))
+    if (!strcasecmp(Tok.Str, "ATN"))
     {
       if (PhaseATNUsed)
         return Err(1350, "2 x ATN/Phase");
@@ -252,7 +210,7 @@ static Boolean DecodeCond(char *Src, LongWord *Dest)
       PhaseATNUsed = True;
       *Dest |= 0x00020000;
     }
-    else if (DecodePhase(Tok, &Tmp))
+    else if (DecodePhase(Tok.Str, &Tmp))
     {
       if (PhaseATNUsed)
         return Err(1350, "2 x ATN/Phase");
@@ -261,7 +219,7 @@ static Boolean DecodeCond(char *Src, LongWord *Dest)
       PhaseATNUsed = True;
       *Dest |= 0x00020000 + (Tmp << 24);
     }
-    else if (!strcasecmp(Tok, "CARRY"))
+    else if (!strcasecmp(Tok.Str, "CARRY"))
     {
       if (CarryUsed)
         return Err(1350, "2 x Carry");
@@ -270,7 +228,7 @@ static Boolean DecodeCond(char *Src, LongWord *Dest)
       CarryUsed = True;
       *Dest |= 0x00200000;
     }
-    else if (!strcasecmp(Tok, "MASK"))
+    else if (!strcasecmp(Tok.Str, "MASK"))
     {
       if (CarryUsed)
         return Err(1350, "Carry + Data");
@@ -278,8 +236,8 @@ static Boolean DecodeCond(char *Src, LongWord *Dest)
         return Err(1350, "2 x Mask");
       if (!DataUsed)
         return Err(1350, "Mask + !Data");
-      GetToken(Src, Tok);
-      Tmp = EvalIntExpression(Tok, UInt8, &OK);
+      GetToken(pSrc, &Tok);
+      Tmp = EvalStrIntExpression(&Tok, UInt8, &OK);
       if (!OK)
         return False;
       MaskUsed = True;
@@ -291,21 +249,21 @@ static Boolean DecodeCond(char *Src, LongWord *Dest)
         return Err(1350, "Carry + Data");
       if (DataUsed)
         return Err(1350, "2 x Data");
-      Tmp = EvalIntExpression(Tok, UInt8, &OK);
+      Tmp = EvalStrIntExpression(&Tok, UInt8, &OK);
       if (!OK)
         return False;
       DataUsed = True;
       *Dest |= 0x00040000 + Tmp;
     }
-    GetToken(Src, Tok);
-    if (*Tok != '\0') 
+    GetToken(pSrc, &Tok);
+    if (*Tok.Str != '\0') 
     {
-      if (strcasecmp(Tok, "AND"))
-        return Err(1350, Tok);
-      GetToken(Src, Tok);
+      if (strcasecmp(Tok.Str, "AND"))
+        return Err(1350, Tok.Str);
+      GetToken(pSrc, &Tok);
     }
   }
-  while (*Tok != '\0');
+  while (*Tok.Str != '\0');
 
   return True;
 }
@@ -315,17 +273,17 @@ typedef enum
   NONE, SFBR, REGISTER, IMM8
 } CompType;
 
-static CompType DecodeComp(char *Inp, LongWord *Outp)
+static CompType DecodeComp(const tStrComp *pInp, LongWord *Outp)
 {
   Boolean OK;
 
-  if (!strcasecmp(Inp, "SFBR"))
+  if (!strcasecmp(pInp->Str, "SFBR"))
     return SFBR;
-  else if (DecodeReg(Inp, Outp))
+  else if (DecodeReg(pInp->Str, Outp))
     return REGISTER;
   else
   {
-    *Outp = EvalIntExpression(Inp, Int8, &OK) & 0xff;
+    *Outp = EvalStrIntExpression(pInp, Int8, &OK) & 0xff;
     return (OK) ?  IMM8 : NONE;
   }
 }
@@ -354,12 +312,12 @@ static void DecodeJmps(Word Index)
     if (Memo("INTFLY"))
     {
       ArgCnt = 1;
-      strcpy(ArgStr[1], "0");
+      strcpy(ArgStr[1].Str, "0");
     }
     else if (Memo("RETURN"))
     {
       ArgCnt = 1;
-      *ArgStr[1] = '\0';
+      *ArgStr[1].Str = '\0';
     }
   }
   if (ChkArgCnt(1, 2))
@@ -367,9 +325,9 @@ static void DecodeJmps(Word Index)
     if (ArgCnt == 1)
     {
       if (Memo("RETURN"))
-        strcpy(ArgStr[2], ArgStr[1]);
+        StrCompCopy(&ArgStr[2], &ArgStr[1]);
       else
-        *ArgStr[2] = '\0';
+        StrCompReset(&ArgStr[2]);
     }
     Buf = 0;
     if (Memo("RETURN"))
@@ -379,30 +337,30 @@ static void DecodeJmps(Word Index)
     }
     else
     {
-      l = strlen(ArgStr[1]);
-      if ((!strncasecmp(ArgStr[1], "REL(", 4)) && (ArgStr[1][l - 1] == ')'))
+      l = strlen(ArgStr[1].Str);
+      if ((!strncasecmp(ArgStr[1].Str, "REL(", 4)) && (ArgStr[1].Str[l - 1] == ')'))
       {
         if (*OpPart.Str == 'I') 
         {
-          WrError(1350);
+          WrError(ErrNum_InvAddrMode);
           OK = False;
         }
         Buf |= 0x00800000;
-        strmov(ArgStr[1], ArgStr[1] + 4);
-        ArgStr[1][l - 5] = '\0';
+        strmov(ArgStr[1].Str, ArgStr[1].Str + 4);
+        ArgStr[1].Str[l - 5] = '\0';
       }
-      Adr = EvalIntExpression(ArgStr[1], UInt32, &OK);
+      Adr = EvalStrIntExpression(&ArgStr[1], UInt32, &OK);
       if ((OK) && (Buf != 0))
       {
         Adr -= EProgCounter() + 8;
         if ((!SymbolQuestionable) && ((Adr > 0x7fffff) || (Adr < -0x800000)))
         {
-          WrError(1370);
+          WrError(ErrNum_JmpDistTooBig);
           OK = False;
         }
       }
     }
-    if ((OK) && (DecodeCond(ArgStr[2], &Buf)))
+    if ((OK) && (DecodeCond(&ArgStr[2], &Buf)))
     {
       DAsmCode[0] = 0x80000000 + (((LongWord) Index) << 27) + Buf;
       if (Memo("INTFLY")) DAsmCode[0] |= 0x00100000;
@@ -414,60 +372,63 @@ static void DecodeJmps(Word Index)
 
 static void DecodeCHMOV(Word Index)
 {
-  String Token;
-  char *Adr = NULL;
+  String TokenStr;
+  tStrComp Token, *pAdrArg;
   LongWord Phase;
   Boolean OK;
+
   UNUSED(Index);
+  StrCompMkTemp(&Token, TokenStr);  
 
   if ((ChkExactCPUList(0, CPU53C825, CPU53C875, CPU53C895, CPUNone) >= 0)
    && ChkArgCnt(2, 3))
   {
-    GetToken(ArgStr[ArgCnt], Token);
-    if (!strcasecmp(Token, "WITH"))
+    GetToken(&ArgStr[ArgCnt], &Token);
+    if (!strcasecmp(Token.Str, "WITH"))
       DAsmCode[0] = 0x08000000;
-    else if (!strcasecmp(Token, "WHEN"))
+    else if (!strcasecmp(Token.Str, "WHEN"))
       DAsmCode[0] = 0x00000000;
     else
     {
-      WrXError(1350, Token);
+      WrStrErrorPos(ErrNum_InvAddrMode, &Token);
       return;
     }
-    KillBlanks(ArgStr[ArgCnt]);
-    if (!DecodePhase(ArgStr[ArgCnt], &Phase)) WrXErrorPos(ErrNum_InvAddrMode, ArgStr[ArgCnt], &ArgStrPos[ArgCnt]);
+    KillPrefBlanksStrComp(&ArgStr[ArgCnt]);
+    KillPostBlanksStrComp(&ArgStr[ArgCnt]);
+    if (!DecodePhase(ArgStr[ArgCnt].Str, &Phase)) WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[ArgCnt]);
     else
     {
       DAsmCode[0] |= Phase << 24;
       OK = False;
       if (ArgCnt == 2)
       {
-        GetToken(ArgStr[1], Token);
-        if (strcasecmp(Token, "FROM")) WrError(1350);
+        GetToken(&ArgStr[1], &Token);
+        if (strcasecmp(Token.Str, "FROM")) WrError(ErrNum_InvAddrMode);
         else
         {
-          Adr = ArgStr[1];
+          pAdrArg = &ArgStr[1];
           DAsmCode[0] |= 0x10000000;
           OK = True;
         }
       }
       else
       {
-        Phase = EvalIntExpression(ArgStr[1], UInt24, &OK);
+        Phase = EvalStrIntExpression(&ArgStr[1], UInt24, &OK);
         if (OK)
         {
           DAsmCode[0] |= Phase;
-          if (!strncasecmp(ArgStr[2],"PTR", 3))
+          if (!strncasecmp(ArgStr[2].Str,"PTR", 3))
           {
-            strmov(ArgStr[2], ArgStr[2] + 4);
+            StrCompCutLeft(&ArgStr[2], 4);
             DAsmCode[0] |= 0x20000000;
           }
-          Adr = ArgStr[2];
+          pAdrArg = &ArgStr[2];
         }
       }
       if (OK)
       {
-        KillPrefBlanks(Adr);
-        DAsmCode[1] = EvalIntExpression(Adr, UInt32, &OK);
+        KillPrefBlanksStrComp(pAdrArg);
+        DAsmCode[1] = EvalStrIntExpression(pAdrArg, UInt32, &OK);
         if (OK)
           CodeLen = 8;
       }
@@ -478,36 +439,38 @@ static void DecodeCHMOV(Word Index)
 static void DecodeFlags(Word Index)
 {
   Boolean OK;
-  String Token;
+  String TokenStr;
+  tStrComp Token;
 
+  StrCompMkTemp(&Token, TokenStr);
   if (ChkArgCnt(1, 1))
   {
     OK = True;
     DAsmCode[0] = ((LongWord) Index) << 24;
     DAsmCode[1] = 0;
-    while ((OK) && (*ArgStr[1] != '\0'))
+    while ((OK) && (*ArgStr[1].Str != '\0'))
     {
-      GetToken(ArgStr[1], Token);
-      if (!strcasecmp(Token, "ACK"))
+      GetToken(&ArgStr[1], &Token);
+      if (!strcasecmp(Token.Str, "ACK"))
         DAsmCode[0] |= 0x00000040;
-      else if (!strcasecmp(Token, "ATN"))
+      else if (!strcasecmp(Token.Str, "ATN"))
         DAsmCode[0] |= 0x00000008;
-      else if (!strcasecmp(Token, "TARGET"))
+      else if (!strcasecmp(Token.Str, "TARGET"))
         DAsmCode[0] |= 0x00000200;
-      else if (!strcasecmp(Token, "CARRY"))
+      else if (!strcasecmp(Token.Str, "CARRY"))
         DAsmCode[0] |= 0x00000400;
       else
       {
         OK = False;
-        WrXError(1350, Token);
+        WrStrErrorPos(ErrNum_InvAddrMode, &Token);
       }
-      if ((OK) && (*ArgStr[1] != '\0'))
+      if (OK && (*ArgStr[1].Str != '\0'))
       {
-        GetToken(ArgStr[1], Token);
-        if (strcasecmp(Token, "AND"))
+        GetToken(&ArgStr[1], &Token);
+        if (strcasecmp(Token.Str, "AND"))
         {
           OK = False;
-          WrXError(1350, Token);
+          WrStrErrorPos(ErrNum_InvAddrMode, &Token);
         }
       }
     }
@@ -523,26 +486,26 @@ static void DecodeRegTrans(Word Index)
 
   if (!ChkArgCnt(3, 3));
   else if (!ChkExcludeCPU(CPU53C815));
-  else if (!DecodeReg(ArgStr[1], &Reg)) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+  else if (!DecodeReg(ArgStr[1].Str, &Reg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
   else
   {
     FirstPassUnknown = False;
-    Cnt = EvalIntExpression(ArgStr[2], UInt3, &OK);
+    Cnt = EvalStrIntExpression(&ArgStr[2], UInt3, &OK);
     if (FirstPassUnknown)
       Cnt = 1;
     if ((OK) && (ChkRange(Cnt, 1, 4)))
     {
-      int l = strlen(ArgStr[3]);
+      int l = strlen(ArgStr[3].Str);
       DAsmCode[0] = 0xe0000000 + (((LongInt) Index) << 24) + (Reg << 16) + Cnt;
-      if ((!strncasecmp(ArgStr[3], "DSAREL(", 7))
-       && (ArgStr[3][l - 1] == ')'))
+      if ((!strncasecmp(ArgStr[3].Str, "DSAREL(", 7))
+       && (ArgStr[3].Str[l - 1] == ')'))
       {
-        ArgStr[3][--l] = '\0';
+        ArgStr[3].Str[--l] = '\0';
         DAsmCode[0] |= 0x10000000;
-        DAsmCode[1] = EvalIntExpression(ArgStr[3] + 6, SInt24, &OK) & 0xffffff;
+        DAsmCode[1] = EvalStrIntExpressionOffs(&ArgStr[3], 6, SInt24, &OK) & 0xffffff;
       }
       else
-        DAsmCode[1] = EvalIntExpression(ArgStr[3], UInt32, &OK);
+        DAsmCode[1] = EvalStrIntExpression(&ArgStr[3], UInt32, &OK);
       if (OK)
         CodeLen = 8;
     }
@@ -551,26 +514,32 @@ static void DecodeRegTrans(Word Index)
 
 static void DecodeMOVE(Word Index)
 {
+#define MAXPARTS 8
   Boolean WithCarry;
-  String Token;
+  String TokenStr, PartStr[MAXPARTS];
+  tStrComp Token, Parts[MAXPARTS];
   LongWord Tmp, DReg , AriOp = 0xff, ImmVal = 0x100;
-  String Parts[8];
   Boolean OK;
+  int z;
   Word BigCPUMask = (1 << (CPU53C825 - CPU53C810))
                   | (1 << (CPU53C875 - CPU53C810))
                   | (1 << (CPU53C895 - CPU53C810));
-  UNUSED(Index);
 
+  UNUSED(Index);
+  StrCompMkTemp(&Token, TokenStr);
+  for (z = 0; z < MAXPARTS; z++)
+    StrCompMkTemp(&Parts[z], PartStr[z]);
+  
   if (!ChkArgCnt(1, 3));
   else if (ArgCnt == 1) /* MOVE Register */
   {
     ArgCnt = 0;
     do
     {
-      GetToken(ArgStr[1], Parts[ArgCnt++]);
+      GetToken(&ArgStr[1], &Parts[ArgCnt++]);
     }
-    while ((*ArgStr[1] != '\0') && (ArgCnt < 8));
-    if ((ArgCnt > 1) && (!strcasecmp(Parts[ArgCnt - 1], "CARRY")) && (!strcasecmp(Parts[ArgCnt - 1], "TO")))
+    while ((*ArgStr[1].Str != '\0') && (ArgCnt < MAXPARTS));
+    if ((ArgCnt > 1) && (!strcasecmp(Parts[ArgCnt - 1].Str, "CARRY")) && (!strcasecmp(Parts[ArgCnt - 1].Str, "TO")))
     {
       WithCarry = True;
       ArgCnt -= 2;
@@ -581,13 +550,13 @@ static void DecodeMOVE(Word Index)
     DAsmCode[1] = 0;
     if (ArgCnt == 3)
     {
-      if (WithCarry) WrError(1350);
-      else if (!strcasecmp(Parts[1], "TO")) /* MOVE */
+      if (WithCarry) WrError(ErrNum_InvAddrMode);
+      else if (!strcasecmp(Parts[1].Str, "TO")) /* MOVE */
       {
-        switch (DecodeComp(Parts[0], &ImmVal))
+        switch (DecodeComp(&Parts[0], &ImmVal))
         {
           case SFBR:
-            switch (DecodeComp(Parts[2], &ImmVal))
+            switch (DecodeComp(&Parts[2], &ImmVal))
             {
               case SFBR:
                 ImmVal = 8;
@@ -596,19 +565,19 @@ static void DecodeMOVE(Word Index)
                 CodeLen = 8;
                 break;
               default:
-                WrError(1350);
+                WrError(ErrNum_InvAddrMode);
             }
             break;
           case REGISTER:
             DReg = ImmVal;
-            switch (DecodeComp(Parts[2], &ImmVal))
+            switch (DecodeComp(&Parts[2], &ImmVal))
             {
               case SFBR: /* --> 0x00 OR reg to SFBR */
                 DAsmCode[0] += 0x32000000 + (DReg << 16);
                 CodeLen = 8;
                 break;
               case REGISTER:
-                if (ImmVal != DReg) WrError(1350);
+                if (ImmVal != DReg) WrError(ErrNum_InvAddrMode);
                 else
                 {
                   DAsmCode[0] += 0x3a000000 + (DReg << 16);
@@ -616,11 +585,11 @@ static void DecodeMOVE(Word Index)
                 }
                 break;
               default:
-                WrError(1350);
+                WrError(ErrNum_InvAddrMode);
             }
             break;
           case IMM8:
-            switch (DecodeComp(Parts[2], &DReg))
+            switch (DecodeComp(&Parts[2], &DReg))
             {
               case SFBR:
                 DReg = 8;
@@ -629,21 +598,21 @@ static void DecodeMOVE(Word Index)
                 CodeLen = 8;
                 break;
               default:
-                WrError(1350);
+                WrError(ErrNum_InvAddrMode);
             }
             break;
           default:
-            WrError(1350);
+            WrError(ErrNum_InvAddrMode);
             break;
         }
       } /* ... TO ... */
-      else if ((!strcasecmp(Parts[1], "SHL")) || (!strcasecmp(Parts[1], "SHR")))
+      else if ((!strcasecmp(Parts[1].Str, "SHL")) || (!strcasecmp(Parts[1].Str, "SHR")))
       {
-        AriOp = 1 + (Ord(mytoupper(Parts[1][2]) == 'R') << 2);
-        switch (DecodeComp(Parts[0], &DReg))
+        AriOp = 1 + (Ord(mytoupper(Parts[1].Str[2]) == 'R') << 2);
+        switch (DecodeComp(&Parts[0], &DReg))
         {
            case SFBR:
-             switch (DecodeComp(Parts[2], &DReg))
+             switch (DecodeComp(&Parts[2], &DReg))
              {
                case SFBR:
                  DReg = 8;
@@ -652,19 +621,19 @@ static void DecodeMOVE(Word Index)
                  CodeLen = 8;
                  break;
                default:
-                 WrError(1350);
+                 WrError(ErrNum_InvAddrMode);
              }
              break;
            case REGISTER:
              ImmVal = DReg;
-             switch (DecodeComp(Parts[2], &DReg))
+             switch (DecodeComp(&Parts[2], &DReg))
              {
                case SFBR:
                  DAsmCode[0] += 0x30000000 + (AriOp << 24) + (ImmVal << 16);
                  CodeLen = 8;
                  break;
                case REGISTER:
-                 if (DReg != ImmVal) WrError(1350);
+                 if (DReg != ImmVal) WrError(ErrNum_InvAddrMode);
                  else
                  {
                    DAsmCode[0] += 0x38000000 + (AriOp << 24) + (ImmVal << 16);
@@ -672,43 +641,43 @@ static void DecodeMOVE(Word Index)
                  }
                  break;
                default:
-                 WrError(1350);
+                 WrError(ErrNum_InvAddrMode);
              }
              break;
           default:
-            WrError(1350);
+            WrError(ErrNum_InvAddrMode);
         }
       } /* ... SHx ... */
     } /* ArgCnt == 3 */
     else if (ArgCnt == 5)
     {
-      if (strcasecmp(Parts[3], "TO")) WrError(1350);
+      if (strcasecmp(Parts[3].Str, "TO")) WrError(ErrNum_InvAddrMode);
       else
       {
-        if ((!strcasecmp(Parts[1], "XOR"))
-         || (!strcasecmp(Parts[1], "^")))
+        if ((!strcasecmp(Parts[1].Str, "XOR"))
+         || (!strcasecmp(Parts[1].Str, "^")))
           AriOp = 3;
-        else if ((!strcasecmp(Parts[1], "OR"))
-              || (!strcasecmp(Parts[1], "|")))
+        else if ((!strcasecmp(Parts[1].Str, "OR"))
+              || (!strcasecmp(Parts[1].Str, "|")))
           AriOp = 2;
-        else if ((!strcasecmp(Parts[1], "AND"))
-              || (!strcasecmp(Parts[1], "&")))
+        else if ((!strcasecmp(Parts[1].Str, "AND"))
+              || (!strcasecmp(Parts[1].Str, "&")))
           AriOp = 4;
-        else if (!strcmp(Parts[1], "+"))
+        else if (!strcmp(Parts[1].Str, "+"))
           AriOp = 6;
         if (WithCarry)
           AriOp = (AriOp == 6) ? 7 : 0xff;
-        if (AriOp == 0xff) WrError(1350);
+        if (AriOp == 0xff) WrError(ErrNum_InvAddrMode);
         else
         {
           DAsmCode[0] |= (AriOp << 24);
-          switch (DecodeComp(Parts[0], &ImmVal))
+          switch (DecodeComp(&Parts[0], &ImmVal))
           {
             case SFBR:
-              switch (DecodeComp(Parts[2], &ImmVal))
+              switch (DecodeComp(&Parts[2], &ImmVal))
               {
                 case SFBR:
-                  switch (DecodeComp(Parts[4], &ImmVal))
+                  switch (DecodeComp(&Parts[4], &ImmVal))
                   {
                     case SFBR:
                       ImmVal = 8;
@@ -720,11 +689,11 @@ static void DecodeMOVE(Word Index)
                       }
                       break;
                     default:
-                      WrError(1350);
+                      WrError(ErrNum_InvAddrMode);
                   }
                   break;
                 case IMM8:
-                  switch (DecodeComp(Parts[4], &DReg))
+                  switch (DecodeComp(&Parts[4], &DReg))
                   {
                     case SFBR:
                       DReg = 8;
@@ -733,20 +702,20 @@ static void DecodeMOVE(Word Index)
                       CodeLen = 8;
                       break;
                     default:
-                      WrError(1350);
+                      WrError(ErrNum_InvAddrMode);
                   }
                   break;
                 default:
-                  WrError(1350);
+                  WrError(ErrNum_InvAddrMode);
               }
               break;
             case REGISTER:
               DAsmCode[0] |= ImmVal << 16;
               DReg = ImmVal;
-              switch (DecodeComp(Parts[2], &ImmVal))
+              switch (DecodeComp(&Parts[2], &ImmVal))
               {
                 case SFBR:
-                  switch (DecodeComp(Parts[4], &ImmVal))
+                  switch (DecodeComp(&Parts[4], &ImmVal))
                   {
                     case SFBR:
                       if (ChkExactCPUMask(BigCPUMask, CPU53C810) >= 0)
@@ -756,7 +725,7 @@ static void DecodeMOVE(Word Index)
                       }
                       break;
                     case REGISTER:
-                      if (DReg != ImmVal) WrError(1350);
+                      if (DReg != ImmVal) WrError(ErrNum_InvAddrMode);
                       else if (ChkExactCPUMask(BigCPUMask, CPU53C810) >= 0)
                       {
                         DAsmCode[0] |= 0x38800000;
@@ -764,19 +733,19 @@ static void DecodeMOVE(Word Index)
                       }
                       break;
                     default:
-                      WrError(1350);
+                      WrError(ErrNum_InvAddrMode);
                   }
                   break;
                 case IMM8:
                   DAsmCode[0] |= (ImmVal << 8);
-                  switch (DecodeComp(Parts[4], &Tmp))
+                  switch (DecodeComp(&Parts[4], &Tmp))
                   {
                     case SFBR:
                       DAsmCode[0] |= 0x30000000;
                       CodeLen = 8;
                       break;
                     case REGISTER: 
-                      if (DReg != Tmp) WrError(1350);
+                      if (DReg != Tmp) WrError(ErrNum_InvAddrMode);
                       else
                       {
                         DAsmCode[0] |= 0x38000000;
@@ -784,43 +753,44 @@ static void DecodeMOVE(Word Index)
                       }
                       break;
                     default:
-                      WrError(1350);
+                      WrError(ErrNum_InvAddrMode);
                   }
                   break;
                 default:
-                  WrError(1350);
+                  WrError(ErrNum_InvAddrMode);
               }
               break;
             default:
-              WrError(1350);
+              WrError(ErrNum_InvAddrMode);
           }
         }
       }
     }  /* ArgCnt == 5 */
     else
-      WrError(1350);
+      WrError(ErrNum_InvAddrMode);
   }
   else if (ArgCnt == 2)
   {
-    GetToken(ArgStr[1], Token);
-    if (strcasecmp(Token, "FROM")) WrError(1350);
+    GetToken(&ArgStr[1], &Token);
+    if (strcasecmp(Token.Str, "FROM")) WrError(ErrNum_InvAddrMode);
     else
     {
       DAsmCode[0] = 0x00000000;
-      DAsmCode[1] = EvalIntExpression(ArgStr[1], Int32, &OK);
+      DAsmCode[1] = EvalStrIntExpression(&ArgStr[1], Int32, &OK);
       if (OK)
       {
-        GetToken(ArgStr[2], Token);
+        GetToken(&ArgStr[2], &Token);
         OK = True;
-        if (!strcasecmp(Token, "WHEN"))
+        if (!strcasecmp(Token.Str, "WHEN"))
           DAsmCode[0] |= 0x08000000;
-        else if (strcasecmp(Token, "WITH"))
+        else if (strcasecmp(Token.Str, "WITH"))
           OK = False;
-        if (!OK) WrError(1350);
+        if (!OK) WrError(ErrNum_InvAddrMode);
         else
         {
-          KillBlanks(ArgStr[2]);
-          if (!DecodePhase(ArgStr[2], &ImmVal)) WrXErrorPos(ErrNum_InvAddrMode, ArgStr[2], &ArgStrPos[2]);
+          KillPrefBlanksStrComp(&ArgStr[2]);
+          KillPostBlanksStrComp(&ArgStr[2]);
+          if (!DecodePhase(ArgStr[2].Str, &ImmVal)) WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[2]);
           else
           {
             DAsmCode[0] |= ImmVal << 24;
@@ -832,49 +802,50 @@ static void DecodeMOVE(Word Index)
   }
   else if (ArgCnt == 3)
   {
-    if (!strncasecmp(ArgStr[1], "MEMORY", 6))
+    if (!strncasecmp(ArgStr[1].Str, "MEMORY", 6))
     {
-      strmov(ArgStr[1], ArgStr[1] + 7);
-      if (!strncasecmp(ArgStr[1], "NO FLUSH", 8))
+      StrCompCutLeft(&ArgStr[1], 7);
+      if (!strncasecmp(ArgStr[1].Str, "NO FLUSH", 8))
       {
         DAsmCode[0] = 0xc1000000;
-        strmov(ArgStr[1], ArgStr[1] + 9);
+        StrCompCutLeft(&ArgStr[1], 9);
       }
       else DAsmCode[0] = 0xc0000000;
-      DAsmCode[0] |= EvalIntExpression(ArgStr[1], UInt24, &OK);
+      DAsmCode[0] |= EvalStrIntExpression(&ArgStr[1], UInt24, &OK);
       if (OK)
       {
-        DAsmCode[1] = EvalIntExpression(ArgStr[2], Int32, &OK);
+        DAsmCode[1] = EvalStrIntExpression(&ArgStr[2], Int32, &OK);
         if (OK)
         {
-          DAsmCode[2] = EvalIntExpression(ArgStr[3], Int32, &OK);
+          DAsmCode[2] = EvalStrIntExpression(&ArgStr[3], Int32, &OK);
           if (OK) CodeLen = 12;
         }
       }
     }
     else
     {
-      DAsmCode[0] = EvalIntExpression(ArgStr[1], UInt24, &OK);
+      DAsmCode[0] = EvalStrIntExpression(&ArgStr[1], UInt24, &OK);
       if (OK)
       {
-        GetToken(ArgStr[3], Token);
+        GetToken(&ArgStr[3], &Token);
         OK = True;
-        if (!strcasecmp(Token, "WHEN")) DAsmCode[0] |= 0x08000000;
-        else if (strcasecmp(Token, "WITH")) OK = False;
-        if (!OK) WrError(1350);
+        if (!strcasecmp(Token.Str, "WHEN")) DAsmCode[0] |= 0x08000000;
+        else if (strcasecmp(Token.Str, "WITH")) OK = False;
+        if (!OK) WrError(ErrNum_InvAddrMode);
         else
         {
-          KillBlanks(ArgStr[3]);
-          if (!DecodePhase(ArgStr[3], &ImmVal)) WrXErrorPos(ErrNum_InvAddrMode, ArgStr[2], &ArgStrPos[2]);
+          KillPrefBlanksStrComp(&ArgStr[3]);
+          KillPostBlanksStrComp(&ArgStr[3]);
+          if (!DecodePhase(ArgStr[3].Str, &ImmVal)) WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[3]);
           else
           { 
             DAsmCode[0] |= ImmVal << 24;
-            if (!strncasecmp(ArgStr[2], "PTR", 3))
+            if (!strncasecmp(ArgStr[2].Str, "PTR", 3))
             {
-              strmov(ArgStr[2], ArgStr[2] + 4);
+              StrCompCutLeft(&ArgStr[2], 4);
               DAsmCode[0] |= 0x20000000;
             }
-            DAsmCode[1] = EvalIntExpression(ArgStr[2], UInt32, &OK);
+            DAsmCode[1] = EvalStrIntExpression(&ArgStr[2], UInt32, &OK);
             if (OK) CodeLen = 8;
           }
         }
@@ -893,41 +864,45 @@ static void DecodeSELECT(Word MayATN)
   {
     DAsmCode[0] = 0x40000000;
     OK = True;
-    if (!strncasecmp(ArgStr[1], "ATN ", 4))
+    if (!strncasecmp(ArgStr[1].Str, "ATN ", 4))
     {
-      strmov(ArgStr[1], ArgStr[1] + 4);
-      KillPrefBlanks(ArgStr[1]);
+      strmov(ArgStr[1].Str, ArgStr[1].Str + 4);
+      ArgStr[1].Pos.StartCol += 4;
+      ArgStr[1].Pos.Len -= 4;
+      KillPrefBlanksStrComp(&ArgStr[1]);
       if (!MayATN)
         OK = False;
       else
         DAsmCode[0] |= 0x01000000;
     }
-    if (!OK) WrError(1350);
+    if (!OK) WrError(ErrNum_InvAddrMode);
     else
     {
-      if (!strncasecmp(ArgStr[1], "FROM ", 5))
+      if (!strncasecmp(ArgStr[1].Str, "FROM ", 5))
       {
-        strmov(ArgStr[1], ArgStr[1] + 5);
-        KillPrefBlanks(ArgStr[1]);
-        DAsmCode[0] |= 0x02000000 + EvalIntExpression(ArgStr[1], UInt24, &OK);
+        strmov(ArgStr[1].Str, ArgStr[1].Str + 5);
+        ArgStr[1].Pos.StartCol += 5;
+        ArgStr[1].Pos.Len -= 5;
+        KillPrefBlanksStrComp(&ArgStr[1]);
+        DAsmCode[0] |= 0x02000000 + EvalStrIntExpression(&ArgStr[1], UInt24, &OK);
       }
       else
-        DAsmCode[0] |= EvalIntExpression(ArgStr[1], UInt4, &OK) << 16;
+        DAsmCode[0] |= EvalStrIntExpression(&ArgStr[1], UInt4, &OK) << 16;
       if (OK)
       {
-        l = strlen(ArgStr[2]);
-        if ((!strncasecmp(ArgStr[2], "REL(", 4)) && (ArgStr[2][l - 1] == ')'))
+        l = strlen(ArgStr[2].Str);
+        if ((!strncasecmp(ArgStr[2].Str, "REL(", 4)) && (ArgStr[2].Str[l - 1] == ')'))
         {
           DAsmCode[0] |= 0x04000000;
-          ArgStr[2][l - 1] = '\0';
-          Dist = EvalIntExpression(ArgStr[2] + 4, UInt32, &OK) - (EProgCounter() + 8);
+          ArgStr[2].Str[l - 1] = '\0';
+          Dist = EvalStrIntExpressionOffs(&ArgStr[2], 4, UInt32, &OK) - (EProgCounter() + 8);
           if (OK)
           {
-            if ((!SymbolQuestionable) && ((Dist > 0x7fffff) || (Dist < -0x800000))) WrError(1370);
+            if ((!SymbolQuestionable) && ((Dist > 0x7fffff) || (Dist < -0x800000))) WrError(ErrNum_JmpDistTooBig);
             else DAsmCode[1] = Dist & 0xffffff;
           }
         }
-        else DAsmCode[1] = EvalIntExpression(ArgStr[2], UInt32, &OK);
+        else DAsmCode[1] = EvalStrIntExpression(&ArgStr[2], UInt32, &OK);
         if (OK) CodeLen = 8;
       }
     }
@@ -936,19 +911,21 @@ static void DecodeSELECT(Word MayATN)
 
 static void DecodeWAIT(Word Index)
 {
-  String Token;
-  int l;
+  String TokenStr;
+  tStrComp Token;
   Boolean OK;
   LongInt Dist;
+
   UNUSED(Index);
+  StrCompMkTemp(&Token, TokenStr);
 
   if (ChkArgCnt(1, 1))
   {
-    GetToken(ArgStr[1], Token);
-    KillPrefBlanks(ArgStr[1]);
-    if (!strcasecmp(Token, "DISCONNECT"))
+    GetToken(&ArgStr[1], &Token);
+    KillPrefBlanksStrComp(&ArgStr[1]);
+    if (!strcasecmp(Token.Str, "DISCONNECT"))
     {
-      if (*ArgStr[1] != '\0') WrError(1350);
+      if (*ArgStr[1].Str != '\0') WrError(ErrNum_InvAddrMode);
       else
       {
         DAsmCode[0] = 0x48000000;
@@ -956,17 +933,16 @@ static void DecodeWAIT(Word Index)
         CodeLen = 8;
       }
     }
-    else if ((!strcasecmp(Token, "RESELECT")) || (!strcasecmp(Token, "SELECT")))
+    else if ((!strcasecmp(Token.Str, "RESELECT")) || (!strcasecmp(Token.Str, "SELECT")))
     {
-      l = strlen(ArgStr[1]);
-      if ((!strncasecmp(ArgStr[1], "REL(", 4)) && (ArgStr[1][l - 1] == ')'))
+      if ((!strncasecmp(ArgStr[1].Str, "REL(", 4)) && (ArgStr[1].Str[strlen(ArgStr[1].Str) - 1] == ')'))
       {
-        ArgStr[1][l - 1] = '\0';
+        StrCompShorten(&ArgStr[1], 1);
         DAsmCode[0] = 0x54000000;
-        Dist = EvalIntExpression(ArgStr[1] + 4, UInt32, &OK) - (EProgCounter() + 8);
+        Dist = EvalStrIntExpressionOffs(&ArgStr[1], 4, UInt32, &OK) - (EProgCounter() + 8);
         if (OK)
         {
-          if ((!SymbolQuestionable) && ((Dist > 0x7fffff) || (Dist < -0x800000))) WrError(1370);
+          if ((!SymbolQuestionable) && ((Dist > 0x7fffff) || (Dist < -0x800000))) WrError(ErrNum_JmpDistTooBig);
           else
             DAsmCode[1] = Dist & 0xffffff;
         }
@@ -974,11 +950,11 @@ static void DecodeWAIT(Word Index)
       else
       {
         DAsmCode[0] = 0x50000000;
-        DAsmCode[1] = EvalIntExpression(ArgStr[1], UInt32, &OK);
+        DAsmCode[1] = EvalStrIntExpression(&ArgStr[1], UInt32, &OK);
       }
       if (OK)
       {
-        if (mytoupper(*Token) == 'S')
+        if (mytoupper(*Token.Str) == 'S')
           DAsmCode[0] |= 0x00000200;
         CodeLen = 8;
       }

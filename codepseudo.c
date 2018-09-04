@@ -129,20 +129,20 @@ void CodeEquate(ShortInt DestSeg, LargeInt Min, LargeInt Max)
   LargeInt Erg;
 
   FirstPassUnknown = False;
-  if (ChkArgCnt(1,  1))
+  if (ChkArgCnt(1, 1))
   {
-    Erg = EvalIntExpression(ArgStr[1], Int32, &OK);
+    Erg = EvalStrIntExpression(&ArgStr[1], Int32, &OK);
     if ((OK) && (!FirstPassUnknown))
     {
-      if (Min > Erg) WrError(1315);
-      else if (Erg > Max) WrError(1320);
+      if (Min > Erg) WrError(ErrNum_UnderRange);
+      else if (Erg > Max) WrError(ErrNum_OverRange);
       else
       {
         PushLocHandle(-1);
         EnterIntSymbol(LabPart.Str, Erg, DestSeg, False);
         PopLocHandle();
         if (MakeUseList)
-         if (AddChunk(SegChunks + DestSeg, Erg, 1, False)) WrError(90);
+         if (AddChunk(SegChunks + DestSeg, Erg, 1, False)) WrError(ErrNum_Overlap);
         t.Typ = TempInt; t.Contents.Int = Erg; SetListLineVal(&t);
       }
     }

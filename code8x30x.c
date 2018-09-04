@@ -34,45 +34,45 @@ static CPUVar CPU8x300, CPU8x305;
 
 /*-------------------------------------------------------------------------*/
 
-static Boolean DecodeReg(char *Asc, Word *Erg, ShortInt *ErgLen)
+static Boolean DecodeReg(const tStrComp *pArg, Word *Erg, ShortInt *ErgLen)
 {
   Boolean OK;
   Word Acc;
   LongInt Adr;
   char *z;
-  int Len = strlen(Asc);
+  int Len = strlen(pArg->Str);
 
   *ErgLen = -1;
 
-  if (!strcasecmp(Asc, "AUX"))
+  if (!strcasecmp(pArg->Str, "AUX"))
   {
     *Erg = 0;
     return True;
   }
 
-  if (!strcasecmp(Asc, "OVF"))
+  if (!strcasecmp(pArg->Str, "OVF"))
   {
     *Erg = 8;
     return True;
   }
 
-  if (!strcasecmp(Asc, "IVL"))
+  if (!strcasecmp(pArg->Str, "IVL"))
   {
     *Erg = 7;
     return True;
   }
 
-  if (!strcasecmp(Asc, "IVR"))
+  if (!strcasecmp(pArg->Str, "IVR"))
   {
     *Erg = 15;
     return True;
   }
 
-  if ((mytoupper(*Asc) == 'R') && (Len > 1) && (Len < 4))
+  if ((mytoupper(*pArg->Str) == 'R') && (Len > 1) && (Len < 4))
   {
     Acc = 0;
     OK = True;
-    for (z = Asc + 1; *z != '\0'; z++)
+    for (z = pArg->Str + 1; *z != '\0'; z++)
       if (OK)
       {
         if ((*z < '0') || (*z > '7'))
@@ -84,7 +84,7 @@ static Boolean DecodeReg(char *Asc, Word *Erg, ShortInt *ErgLen)
     {
       if ((MomCPU == CPU8x300) && (Acc > 9) && (Acc < 15))
       {
-        WrXError(1445, Asc);
+        WrStrErrorPos(ErrNum_InvReg, pArg);
         return False;
       }
       else *Erg = Acc;
@@ -92,23 +92,23 @@ static Boolean DecodeReg(char *Asc, Word *Erg, ShortInt *ErgLen)
     }
   }
 
-  if ((Len == 4) && (strncasecmp(Asc + 1, "IV", 2) == 0) && (Asc[3] >= '0') && (Asc[3] <= '7'))
+  if ((Len == 4) && (strncasecmp(pArg->Str + 1, "IV", 2) == 0) && (pArg->Str[3] >= '0') && (pArg->Str[3] <= '7'))
   {
-    if (mytoupper(*Asc) == 'L')
+    if (mytoupper(*pArg->Str) == 'L')
     {
-      *Erg = Asc[3]-'0' + 0x10;
+      *Erg = pArg->Str[3]-'0' + 0x10;
       return True;
     }
-    else if (mytoupper(*Asc) == 'R')
+    else if (mytoupper(*pArg->Str) == 'R')
     {
-      *Erg = Asc[3] - '0' + 0x18;
+      *Erg = pArg->Str[3] - '0' + 0x18;
       return True;
     }
   }
 
   /* IV - Objekte */
 
-  Adr = EvalIntExpression(Asc, UInt24, &OK);
+  Adr = EvalStrIntExpression(pArg, UInt24, &OK);
   if (OK)
   {
     *ErgLen = Adr & 7;
@@ -145,7 +145,7 @@ static char *HasDisp(char *Asc)
     }
     if (Lev != -1)
     {
-      WrError(1300);
+      WrError(ErrNum_BrackErr);
       return NULL;
     }
   }
@@ -155,12 +155,12 @@ static char *HasDisp(char *Asc)
   return z;
 }
 
-static Boolean GetLen(char *Asc, Word *Erg)
+static Boolean GetLen(const tStrComp *pArg, Word *Erg)
 {
   Boolean OK;
 
   FirstPassUnknown = False;
-  *Erg = EvalIntExpression(Asc, UInt4, &OK);
+  *Erg = EvalStrIntExpression(pArg, UInt4, &OK);
   if (!OK)
     return False;
   if (FirstPassUnknown)
@@ -201,7 +201,7 @@ static void DecodeXML_XMR(Word Code)
    && ChkMinCPU(CPU8x305))
   {
     Boolean OK;
-    Word Adr = EvalIntExpression(ArgStr[1], Int8, &OK);
+    Word Adr = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
     if (OK)
     {
       WAsmCode[0] = Code | (Adr & 0xff);
@@ -217,7 +217,7 @@ static void DecodeSEL(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    LongInt Op = EvalIntExpression(ArgStr[1], UInt24, &OK);
+    LongInt Op = EvalStrIntExpression(&ArgStr[1], UInt24, &OK);
     if (OK)
     {
       WAsmCode[0] = 0xc700 | ((Op & 0x10) << 7) | ((Op >> 16) & 0xff);
@@ -236,13 +236,13 @@ static void DecodeXMIT(Word Code)
   UNUSED(Code);
 
   if (ChkArgCnt(2, 3)
-   && DecodeReg(ArgStr[2], &SrcReg, &SrcLen))
+   && DecodeReg(&ArgStr[2], &SrcReg, &SrcLen))
   {
     if (SrcReg < 16)
     {
       if (ChkArgCnt(2, 2))
       {
-        Adr = EvalIntExpression(ArgStr[1], Int8, &OK);
+        Adr = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
         if (OK)
         {
           WAsmCode[0] = 0xc000 | (SrcReg << 8) | (Adr & 0xff);
@@ -257,15 +257,15 @@ static void DecodeXMIT(Word Code)
         Rot = 0xffff; OK = True;
       }
       else
-        OK = GetLen(ArgStr[3], &Rot);
+        OK = GetLen(&ArgStr[3], &Rot);
       if (OK)
       {
         if (Rot == 0xffff)
           Rot = (SrcLen == -1) ? 0 : SrcLen;
-        if ((SrcLen != -1) && (Rot != SrcLen)) WrError(1131);
+        if ((SrcLen != -1) && (Rot != SrcLen)) WrError(ErrNum_ConfOpSizes);
         else
         {
-          Adr = EvalIntExpression(ArgStr[1], Int5, &OK);
+          Adr = EvalStrIntExpression(&ArgStr[1], Int5, &OK);
           if (OK)
           {
             WAsmCode[0] = 0xc000 | (SrcReg << 8) | (Rot << 5) | (Adr & 0x1f);
@@ -285,23 +285,25 @@ static void DecodeAri(Word Code)
   Boolean OK;
 
   if (ChkArgCnt(2, 3)
-   && DecodeReg(ArgStr[ArgCnt], &DestReg, &DestLen))
+   && DecodeReg(&ArgStr[ArgCnt], &DestReg, &DestLen))
   {      
     if (DestReg < 16)         /* Ziel Register */
     {
       if (ArgCnt == 2)        /* wenn nur zwei Operanden und Ziel Register... */
       {
-        p = HasDisp(ArgStr[1]); /* kann eine Rotation dabei sein */
+        p = HasDisp(ArgStr[1].Str); /* kann eine Rotation dabei sein */
         if (p)
         {                 /* jau! */
-          ArgStr[1][strlen(ArgStr[1]) - 1] = '\0';
-          *p = '\0';
-          Rot = EvalIntExpression(p + 1, UInt3, &OK);
+          tStrComp RegArg, RotArg;
+
+          StrCompSplitRef(&RegArg, &RotArg, &ArgStr[1], p);
+          StrCompShorten(&RotArg, 1);
+          Rot = EvalStrIntExpression(&RotArg, UInt3, &OK);
           if (OK)
           {
-            if (DecodeReg(ArgStr[1], &SrcReg, &SrcLen))
+            if (DecodeReg(&RegArg, &SrcReg, &SrcLen))
             {
-              if (SrcReg >= 16) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
+              if (SrcReg >= 16) WrStrErrorPos(ErrNum_InvReg, &RegArg);
               else
               {
                 WAsmCode[0] = (Code << 13) | (SrcReg << 8) | (Rot << 5) | DestReg;
@@ -312,7 +314,7 @@ static void DecodeAri(Word Code)
         }
         else                   /* noi! */
         {
-          if (DecodeReg(ArgStr[1], &SrcReg, &SrcLen))
+          if (DecodeReg(&ArgStr[1], &SrcReg, &SrcLen))
           {
             WAsmCode[0] = (Code << 13) | (SrcReg << 8) | DestReg;
             if ((SrcReg >= 16) && (SrcLen != -1)) WAsmCode[0] += SrcLen << 5;
@@ -322,11 +324,11 @@ static void DecodeAri(Word Code)
       }
       else                     /* 3 Operanden --> Quelle ist I/O */
       {
-        if (GetLen(ArgStr[2], &Rot))
-         if (DecodeReg(ArgStr[1], &SrcReg, &SrcLen))
+        if (GetLen(&ArgStr[2], &Rot))
+         if (DecodeReg(&ArgStr[1], &SrcReg, &SrcLen))
          {
-           if (SrcReg < 16) WrXErrorPos(ErrNum_InvReg, ArgStr[1], &ArgStrPos[1]);
-           else if ((SrcLen != -1) && (SrcLen != Rot)) WrError(1131);
+           if (SrcReg < 16) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+           else if ((SrcLen != -1) && (SrcLen != Rot)) WrError(ErrNum_ConfOpSizes);
            else
            {
              WAsmCode[0] = (Code << 13) | (SrcReg << 8) | (Rot << 5) | DestReg;
@@ -343,21 +345,21 @@ static void DecodeAri(Word Code)
       }
       else                     /* 3 Argumente: Laenge=Laenge Ziel+Angabe */
       {
-        OK = GetLen(ArgStr[2], &Rot);
+        OK = GetLen(&ArgStr[2], &Rot);
         if (OK)
         {
           if (FirstPassUnknown) Rot = DestLen;
           if (DestLen == -1) DestLen = Rot;
           OK = Rot == DestLen;
-          if (!OK) WrError(1131);
+          if (!OK) WrError(ErrNum_ConfOpSizes);
         }
       }
       if (OK)
-       if (DecodeReg(ArgStr[1], &SrcReg, &SrcLen))
+       if (DecodeReg(&ArgStr[1], &SrcReg, &SrcLen))
        {
          if (Rot == 0xffff)
            Rot = ((SrcLen == -1)) ? 0 : SrcLen;
-         if ((DestReg >= 16) && (SrcLen != -1) && (SrcLen != Rot)) WrError(1131);
+         if ((DestReg >= 16) && (SrcLen != -1) && (SrcLen != Rot)) WrError(ErrNum_ConfOpSizes);
          else
          {
            WAsmCode[0] = (Code << 13) | (SrcReg << 8) | (Rot << 5) | DestReg;
@@ -379,19 +381,21 @@ static void DecodeXEC(Word Code)
 
   if (ChkArgCnt(1, 2))
   {
-    p = HasDisp(ArgStr[1]);
-    if (!p) WrError(1350);
+    p = HasDisp(ArgStr[1].Str);
+    if (!p) WrError(ErrNum_InvAddrMode);
     else 
     {
-      ArgStr[1][strlen(ArgStr[1]) - 1] = '\0';
-      *p = '\0';
-      if (DecodeReg(p + 1, &SrcReg, &SrcLen))
+      tStrComp DispArg, RegArg;
+
+      StrCompSplitRef(&DispArg, &RegArg, &ArgStr[1], p);
+      StrCompShorten(&RegArg, 1);
+      if (DecodeReg(&RegArg, &SrcReg, &SrcLen))
       {
         if (SrcReg < 16)
         {
           if (ChkArgCnt(1, 1))
           {
-            WAsmCode[0] = EvalIntExpression(ArgStr[1], UInt8, &OK);
+            WAsmCode[0] = EvalStrIntExpression(&DispArg, UInt8, &OK);
             if (OK)
             {
               WAsmCode[0] |= 0x8000 | (SrcReg << 8);
@@ -405,15 +409,15 @@ static void DecodeXEC(Word Code)
           {
             Rot = 0xffff; OK = True;
           }
-          else OK = GetLen(ArgStr[2], &Rot);
+          else OK = GetLen(&ArgStr[2], &Rot);
           if (OK)
           {
             if (Rot == 0xffff)
              Rot = (SrcLen == -1) ? 0 : SrcLen; 
-            if ((SrcLen != -1) && (Rot != SrcLen)) WrError(1131);
+            if ((SrcLen != -1) && (Rot != SrcLen)) WrError(ErrNum_ConfOpSizes);
             else
             {
-              WAsmCode[0] = EvalIntExpression(ArgStr[1], UInt5, &OK);
+              WAsmCode[0] = EvalStrIntExpression(&DispArg, UInt5, &OK);
               if (OK)
               {
                 WAsmCode[0] |= 0x8000 | (SrcReg << 8) | (Rot << 5);
@@ -435,7 +439,7 @@ static void DecodeJMP(Word Code)
   {
     Boolean OK;
 
-    WAsmCode[0] = EvalIntExpression(ArgStr[1], UInt13, &OK);
+    WAsmCode[0] = EvalStrIntExpression(&ArgStr[1], UInt13, &OK);
     if (OK)
     {
       WAsmCode[0] |= 0xe000;
@@ -454,14 +458,14 @@ static void DecodeNZT(Word Code)
   UNUSED(Code);
 
   if (ChkArgCnt(2, 3)
-   && DecodeReg(ArgStr[1], &SrcReg, &SrcLen))
+   && DecodeReg(&ArgStr[1], &SrcReg, &SrcLen))
   {
     if (SrcReg < 16)
     {
       if (ChkArgCnt(2, 2))
       {
         FirstPassUnknown = False;
-        Adr = EvalIntExpression(ArgStr[2], UInt13, &OK);
+        Adr = EvalStrIntExpression(&ArgStr[2], UInt13, &OK);
         if (OK && ChkSamePage(Adr, EProgCounter(), 8))
         {
           WAsmCode[0] = 0xa000 | (SrcReg << 8) | (Adr & 0xff);
@@ -475,16 +479,16 @@ static void DecodeNZT(Word Code)
       {
         Rot = 0xffff; OK = True;
       }
-      else OK = GetLen(ArgStr[2], &Rot);
+      else OK = GetLen(&ArgStr[2], &Rot);
       if (OK)
       {
         if (Rot == 0xffff)
          Rot = (SrcLen == -1) ? 0 : SrcLen;
-        if ((SrcLen != -1) && (Rot != SrcLen)) WrError(1131);
+        if ((SrcLen != -1) && (Rot != SrcLen)) WrError(ErrNum_ConfOpSizes);
         else
         {
           FirstPassUnknown = False;
-          Adr = EvalIntExpression(ArgStr[ArgCnt], UInt13, &OK);
+          Adr = EvalStrIntExpression(&ArgStr[ArgCnt], UInt13, &OK);
           if (OK && ChkSamePage(Adr, EProgCounter(), 5))
           {
             WAsmCode[0] = 0xa000 | (SrcReg << 8) | (Rot << 5) | (Adr & 0x1f);
@@ -506,12 +510,12 @@ static void DecodeLIV_RIV(Word Code)
 
   if (ChkArgCnt(3, 3))
   {
-    Adr = EvalIntExpression(ArgStr[1], UInt8, &OK);
+    Adr = EvalStrIntExpression(&ArgStr[1], UInt8, &OK);
     if (OK)
     {
-      Ofs = EvalIntExpression(ArgStr[2], UInt3, &OK);
+      Ofs = EvalStrIntExpression(&ArgStr[2], UInt3, &OK);
       if (OK)
-       if (GetLen(ArgStr[3], &Len))
+       if (GetLen(&ArgStr[3], &Len))
        {
          PushLocHandle(-1);
          EnterIntSymbol(LabPart.Str, Code | (Adr << 16) | (Ofs << 8) | (Len & 7), SegNone, False);

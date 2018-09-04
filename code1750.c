@@ -105,19 +105,19 @@ static Boolean DecodeBaseReg(const char *pAsc, Word *pResult)
 
 static Boolean DecodeArgReg(unsigned Index, Word *pResult)
 {
-  Boolean Result = DecodeReg(ArgStr[Index], pResult);
+  Boolean Result = DecodeReg(ArgStr[Index].Str, pResult);
 
   if (!Result)
-    WrXErrorPos(ErrNum_InvReg, ArgStr[Index], &ArgStrPos[Index]);
+    WrStrErrorPos(ErrNum_InvReg, &ArgStr[Index]);
   return Result;
 }
 
 static Boolean DecodeArgBaseReg(unsigned Index, Word *pResult)
 {
-  Boolean Result = DecodeBaseReg(ArgStr[Index], pResult);
+  Boolean Result = DecodeBaseReg(ArgStr[Index].Str, pResult);
 
   if (!Result)
-    WrXErrorPos(ErrNum_InvReg, ArgStr[Index], &ArgStrPos[Index]);
+    WrStrErrorPos(ErrNum_InvReg, &ArgStr[Index]);
   return Result;
 }
 
@@ -125,7 +125,7 @@ static Boolean DecodeAdr(int StartIdx, int StopIdx)
 {
   Boolean OK;
 
-  AdrWord = EvalIntExpression(ArgStr[StartIdx], Int16, &OK);
+  AdrWord = EvalStrIntExpression(&ArgStr[StartIdx], Int16, &OK);
   if (!OK)
     return False;
 
@@ -134,7 +134,7 @@ static Boolean DecodeAdr(int StartIdx, int StopIdx)
     OK = False;
     if (!DecodeArgReg(StartIdx + 1, &AdrReg));
     else if (AdrReg == 0)
-      WrXErrorPos(1350, "!R0", &ArgStrPos[StartIdx + 1]);
+      WrXErrorPos(1350, "!R0", &ArgStr[StartIdx + 1].Pos);
     else
       OK = True;
     return OK;
@@ -185,10 +185,10 @@ static Boolean DecodeCondition(const char *pAsc, Word *pResult)
 
 static Boolean DecodeArgCondition(unsigned Index, Word *pResult)
 {
-  Boolean Result = DecodeCondition(ArgStr[Index], pResult);
+  Boolean Result = DecodeCondition(ArgStr[Index].Str, pResult);
 
   if (!Result)
-    WrXErrorPos(ErrNum_UndefCond, ArgStr[Index], &ArgStrPos[Index]);
+    WrStrErrorPos(ErrNum_UndefCond, &ArgStr[Index]);
   return Result;
 }
 
@@ -244,16 +244,16 @@ static Boolean DecodeArgXIOCmd(unsigned Index, Word *pResult)
   const tCondition *pRun;
   Boolean OK;
 
-  if (isalpha(ArgStr[Index][0]))
+  if (isalpha(ArgStr[Index].Str[0]))
   {
     for (pRun = XIO; pRun->pName; pRun++)
-      if (!strcasecmp(ArgStr[Index], pRun->pName))
+      if (!strcasecmp(ArgStr[Index].Str, pRun->pName))
       {
         *pResult = pRun->Code;
         return True;
       }
   }
-  *pResult = EvalIntExpression(ArgStr[Index], UInt16, &OK);
+  *pResult = EvalStrIntExpression(&ArgStr[Index], UInt16, &OK);
   return OK;
 }
 
@@ -283,7 +283,7 @@ static void DecodeRImm(Word Code)
 
   if (ChkArgCnt(2, 2) && DecodeArgReg(2, &Rb))
   {
-    N = EvalIntExpression(ArgStr[1], UInt4, &OK);
+    N = EvalStrIntExpression(&ArgStr[1], UInt4, &OK);
     if (OK)
       PutCode(Code | (N << 4) | Rb);
   }
@@ -297,7 +297,7 @@ static void DecodeIS(Word Code)
   if (ChkArgCnt(2, 2) && DecodeArgReg(1, &Ra))
   {
     FirstPassUnknown = False;
-    N = EvalIntExpression(ArgStr[2], UInt5, &OK);
+    N = EvalStrIntExpression(&ArgStr[2], UInt5, &OK);
     if (OK && FirstPassUnknown)
       N = 1;
     if (OK && ChkRange(N, 1, 16))
@@ -325,7 +325,7 @@ static void DecodeImOcx(Word Code)
   if (ChkArgCnt(2, 2) && DecodeArgReg(1, &Ra))
   {
     Boolean OK;
-    Word ImmVal = EvalIntExpression(ArgStr[2], Int16, &OK);
+    Word ImmVal = EvalStrIntExpression(&ArgStr[2], Int16, &OK);
 
     if (OK)
     {
@@ -342,7 +342,7 @@ static void DecodeB(Word Code)
   if (ChkArgCnt(2, 2) && DecodeArgBaseReg(1, &Br))
   {
     Boolean OK;
-    Word LoByte = EvalIntExpression(ArgStr[2], UInt8, &OK);
+    Word LoByte = EvalStrIntExpression(&ArgStr[2], UInt8, &OK);
 
     if (OK)
       PutCode(Code | (Br << 8) | LoByte);
@@ -356,7 +356,7 @@ static void DecodeBX(Word Code)
   if (!ChkArgCnt(2, 2));
   else if (!DecodeArgBaseReg(1, &Br));
   else if (!DecodeArgReg(2, &Rx));
-  else if (0 == Rx) WrXErrorPos(ErrNum_InvAddrMode, "!R0", &ArgStrPos[2]);
+  else if (0 == Rx) WrXErrorPos(ErrNum_InvAddrMode, "!R0", &ArgStr[2].Pos);
   else
     PutCode(Code | (Br << 8) | Rx);
 }
@@ -366,11 +366,11 @@ static void DecodeICR(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    LargeInt Diff = EvalIntExpression(ArgStr[1], UInt16, &OK) - EProgCounter();
+    LargeInt Diff = EvalStrIntExpression(&ArgStr[1], UInt16, &OK) - EProgCounter();
 
     if (OK)
     {
-      if (!SymbolQuestionable && ((Diff < -128) || (Diff > 127))) WrError(1370);
+      if (!SymbolQuestionable && ((Diff < -128) || (Diff > 127))) WrError(ErrNum_JmpDistTooBig);
       else
         PutCode(Code | (Diff & 0xff));
     }
@@ -382,7 +382,7 @@ static void DecodeS(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    Word Value = EvalIntExpression(ArgStr[1], UInt4, &OK);
+    Word Value = EvalStrIntExpression(&ArgStr[1], UInt4, &OK);
 
     if (OK)
       PutCode(Code | Value);
@@ -397,7 +397,7 @@ static void DecodeIM1_16(Word Code)
     Word N;
 
     FirstPassUnknown = False;
-    N = EvalIntExpression(ArgStr[1], UInt5, &OK);
+    N = EvalStrIntExpression(&ArgStr[1], UInt5, &OK);
     if (OK && FirstPassUnknown)   
       N = 1;
 
@@ -429,7 +429,7 @@ static void DecodeImmR(Word Code)
 
   if (ChkArgCnt(2, 2) && DecodeArgReg(2, &Rb))
   {
-    N = EvalIntExpression(ArgStr[1], UInt4, &OK);
+    N = EvalStrIntExpression(&ArgStr[1], UInt4, &OK);
 
     if (OK)
       PutCode(Code | (N << 4) | Rb);
@@ -463,7 +463,7 @@ static void DecodeIM_0_15(Word Code)
   if (ChkArgCnt(2, 3) && DecodeAdr(2, ArgCnt))
   {
     Boolean OK;
-    Word N = EvalIntExpression(ArgStr[1], UInt4, &OK);
+    Word N = EvalStrIntExpression(&ArgStr[1], UInt4, &OK);
 
     if (OK)
     {
@@ -494,7 +494,7 @@ static void DecodeXIO(Word Code)
       Word Ri;
 
       if (!DecodeArgReg(3, &Ri));
-      else if (Ri == 0) WrXErrorPos(1350, "!R0", &ArgStrPos[3]);
+      else if (Ri == 0) WrXErrorPos(1350, "!R0", &ArgStr[3].Pos);
       else
       {
         PutCode(Code | (Ra << 4) | Ri);
@@ -544,7 +544,7 @@ static void DecodeFLOAT(Word Extended)
 
   for (z = 1; z <= ArgCnt; z++)
   {
-    Value = EvalFloatExpression(ArgStr[z], Float64, &OK);
+    Value = EvalStrFloatExpression(&ArgStr[z], Float64, &OK);
     if (!OK)
       break;
 
@@ -599,7 +599,7 @@ static void DecodeFLOAT(Word Extended)
 
     if (SignedExponent > 127)
     {
-      WrError(1320);
+      WrError(ErrNum_OverRange);
       break;
     }
 

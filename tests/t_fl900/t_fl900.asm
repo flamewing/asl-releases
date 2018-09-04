@@ -1,12 +1,12 @@
 ; FTEST.ASM
 ;******************************************************************************
-;* Testet Gleitkommabibliothek fr TLCS900                                    *
+;* Testet Gleitkommabibliothek fuer TLCS900                                   *
 ;*                                                                            *
 ;* Hardware: Micro-ICE TLCS900                                                *
-;* Software: AS 1.39p1 oder h”her                                             *
+;* Software: AS 1.39p1 oder hoeher                                            *
 ;*           Includes MACROS.INC, FLOAT.INC, CONOUT.INC, CPU_TIME.INC         *
 ;*                                                                            *
-;* šbersetzen mit AS ftest oder beiliegendem Makefile                         *
+;* Uebersetzen mit AS ftest oder beiliegendem Makefile                        *
 ;*                                                                            *
 ;******************************************************************************
 
@@ -18,16 +18,16 @@
 
 CR              equ     13
 LF              equ     10
-Format_Tab      equ     0000100000000110b ; fftoa-Format fr tab. Ausgabe
-Format_Min      equ     0010001100000101b ; fftoa-Format fr minimale L„nge
-;                         ³<Â>³³<ÄÄÂÄÄÄ>
-;                         ³ ³ ³³   ³
-;                         ³ ³ ³³   ÀÄÄÄÄÄÄ Maximalzahl Nachkommastellen
-;                         ³ ³ ³ÀÄÄÄÄÄÄÄÄÄÄ Mantissenpluszeichen unterdrcken
-;                         ³ ³ ÀÄÄÄÄÄÄÄÄÄÄÄ Exponentenpluszeichen unterdrcken
-;                         ³ ÀÄÄÄÄÄÄÄÄÄÄÄÄÄ Minimalstellenzahl Exponent
-;                         ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ anh„ngende Nullen Mantisse l”schen
-Format          equ     Format_Tab      ; gew„hltes fftoa-Format
+Format_Tab      equ     0000100000000110b ; fftoa-Format fuer tab. Ausgabe
+Format_Min      equ     0010001100000101b ; fftoa-Format fuer minimale Laenge
+;                         |<->||<------>
+;                         | | ||   |
+;                         | | ||   +------ Maximalzahl Nachkommastellen
+;                         | | |+---------- Mantissenpluszeichen unterdruecken
+;                         | | +----------- Exponentenpluszeichen unterdruecken
+;                         | +------------- Minimalstellenzahl Exponent
+;                         +--------------- anhaengende Nullen Mantisse loeschen
+Format          equ     Format_Tab      ; gewaehltes fftoa-Format
 
                 supmode on              ; Vorgaben
                 maxmode on
@@ -69,7 +69,7 @@ bench           macro   op,arg1,arg2,arg3,msg
 
                 proc    Main
 
-                max                     ; ohne das macht das keinen Spaá !
+                max                     ; ohne das macht das keinen Spass !
                 lda     xsp,(Stack)     ; etwas brauchen wir schon...
                 lda     xiz,(Ergs)      ; Zeiger auf Ergebnisfeld
                 call    CPU_TI_INI      ; Timer initialisieren
@@ -80,13 +80,13 @@ bench           macro   op,arg1,arg2,arg3,msg
                 ; Addition zweier fast gleicher Zahlen
                 bench   fadd,(FConst1),(FConst2),,"Laufzeit 1+2        : "
 
-                ; Addition zweier unterschiedl. groáer Zahlen
+                ; Addition zweier unterschiedl. grosser Zahlen
                 bench   fadd,(FConst1),(FConst100000),,"Laufzeit 1+100000   : "
 
                 ; Subtraktion zweier fast gleicher Zahlen
                 bench   fsub,(FConst1),(FConst2),,"Laufzeit 1-2        : "
 
-                ; Subtraktion zweier unterschiedl. groáer Zahlen
+                ; Subtraktion zweier unterschiedl. grosser Zahlen
                 bench   fsub,(FConst1),(FConst100000),,"Laufzeit 1-100000   : "
 
                 ; Multiplikation
@@ -130,7 +130,7 @@ bench           macro   op,arg1,arg2,arg3,msg
                 call    PSTR
                 db      13,10,StrTerm
 
-                swi     7               ; zum Monitor zurck
+                swi     7               ; zum Monitor zurueck
 
                 endp
 
@@ -144,7 +144,7 @@ fnop:           ld      xwa,0           ; Dummy
 ;------------------------------------------------------------------------------
 ; Gleitkommakonstanten
 
-                align   4               ; fr schnelleren Zugriff
+                align   4               ; fuer schnelleren Zugriff
 
 FConst1         dd      1.0
 FConst2         dd      2.0
@@ -153,7 +153,7 @@ FConstM1        dd      -1.0
 FConstM2        dd      -2.0
 FConstPi        dd      40490fdbh       ; um Vergleichsfehler durch Rundung zu 
 					; vermeiden
-Ergs            dd      30 dup (?)      ; Platz fr Ergebnisse
+Ergs            dd      30 dup (?)      ; Platz fuer Ergebnisse
 
 Buffer:         db      20 dup (?)
 InpBuffer:      db      "12.3456E-12",0

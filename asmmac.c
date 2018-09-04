@@ -51,7 +51,7 @@ static void EnterDefine(char *Name, char *Definition)
 
   if (!ChkSymbName(Name))
   {
-    WrXError(1020, Name);
+    WrXError(ErrNum_InvSymName, Name);
     return;
   };
 
@@ -61,7 +61,7 @@ static void EnterDefine(char *Name, char *Definition)
     if (!strcmp(Neu->TransFrom, Name))
     {
       if (PassNo == 1)
-        WrXError(1000, Name);
+        WrXError(ErrNum_DoubleDef, Name);
       return;
     }
     Neu = Neu->Next;
@@ -112,7 +112,7 @@ static void RemoveDefine(char *Name_O)
    }
 
    if (!Del)
-     WrXError(1010, Name);
+     WrXError(ErrNum_SymbolUndef, Name);
    else
      FreeDefine(Del);
 }
@@ -296,7 +296,7 @@ static Boolean MacroAdder(PTree *PDest, PTree Neu, void *pData)
   Node = (PMacroNode*) PDest;
   if ((*Node)->Defined)
   {
-    if (Protest) WrXError(1815, Neu->Name);
+    if (Protest) WrXError(ErrNum_DoubleMacro, Neu->Name);
     else
     {
       ClearMacroRec(&((*Node)->Contents), TRUE);
