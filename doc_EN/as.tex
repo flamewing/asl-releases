@@ -65,7 +65,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition June 2018}
+{\large Edition November 2018}
 \end{raggedright}
 
 \clearpage
@@ -203,7 +203,7 @@ In contrast to ordinary assemblers, AS offers the possibility to
 generate code for totally different processors.  At the moment, the
 following processor families have been implemented:
 \begin{itemize}
-\item{Motorola 68000..68040,683xx incl. coprocessor and MMU}
+\item{Motorola 68000..68040,, 683xx, and Coldfire incl. coprocessor and MMU}
 \item{Motorola ColdFire}
 \item{Motorola DSP5600x,DSP56300}\item{Motorola M-Core}
 \item{Motorola/IBM MPC601/MPC505/PPC403/MPC821}
@@ -580,6 +580,7 @@ REG96.INC         & register addresses MCS-96 \\
 REGACE.INC        & register addresses ACE \\
 REGAVROLD.INC     & register and bit addresses AVR family (outdated)\\
 REGAVR.INC        & register and bit addresses AVR family \\
+REGCOLD.INC       & register and bit addresses Coldfire family \\
 REGCOP8.INC       & register addresses COP8 \\
 REGGP32.INC       & register addresses 68HC908GP32 \\
 REGHC12.INC       & register addresses 68HC12 \\
@@ -619,6 +620,8 @@ File              & Function \\
 \hline
 AVR/\*.INC        & register and bit addresses AVR family \\
                   & (do not include directly, use REGAVR.INC) \\
+COLDFIRE/\*.INC   & register and bit addresses ColDfire family \\
+                  & (do not include directly, use REGCOLD.INC) \\
 S12Z/\*.INC       & register and bit addresses S12Z family \\
                   & (do not include directly, use REGS12Z.INC) \\
 STDDEF62.INC      & register addresses and macros ST6 \\
@@ -1018,6 +1021,9 @@ chapters \ref{ChapShareMain} resp. \ref{ChapShareOrder}.
       GNU C compiler.  This simplifies the integration of AS into
       environments tuned for this format, however also suppresses the
       display of precise error positions in macro bodies!}
+\item{{\tt maxerrors [n]}: instructs the assembler to terminate
+      assembly after the given number of errors.}
+\item{{\tt Werror}: instructs the assembler to treat warnings as errors.}
 \end{itemize}
 As long as switches require no arguments and their concatenation does
 not result in a multi-letter switch, it is possible to specify several
@@ -2958,19 +2964,23 @@ distinction:
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
 a) \> 68008 $\rightarrow$ 68000 $\rightarrow$ 68010 $\rightarrow$ 68012 $\rightarrow$ \\
-   \> MCF5200 $\rightarrow$ 68332 $\rightarrow$ 68340 $\rightarrow$ 68360 $\rightarrow$ \\
+   \> MCF5202 $\rightarrow$ MCF5204 $\rightarrow$ MCF5206 $\rightarrow$ MCF5208$\rightarrow$ \\
+   \> MCF52274 $\rightarrow$ MCF52277 $\rightarrow$ MCF5307 $\rightarrow$ MCF5329 $\rightarrow$ \\
+   \> MCF5373 $\rightarrow$ MCF5407 $\rightarrow$ MCF5470 $\rightarrow$ MCF5471 $\rightarrow$ \\
+   \> MCF5472 $\rightarrow$ MCF5473 $\rightarrow$ MCF5474 $\rightarrow$ MCF5475 $\rightarrow$ \\
+   \> 68332 $\rightarrow$ 68340 $\rightarrow$ 68360 $\rightarrow$ \\
    \> 68020 $\rightarrow$ 68030 $\rightarrow$ 68040
 \end{tabbing}
 \end{quote}
-The differences in this family lie in additional instructions and
+The differences in this family are additional instructions and
 addressing modes (starting from the 68020).  A small exception is the step
 to the 68030 that misses two instructions: \tty{CALLM} and \tty{RTM}.  The
-three representors of the 683xx family have the same processor core (a
+three representatives of the 683xx family have the same processor core (a
 slightly reduced 68020 CPU), however completely different peripherals.
-MCF5200 represents the ColdFire family from Motorola, RISC processors
-downwardly binary compatible to the 680x0.  For the 68040, additional
-control registers (reachable via \tty{MOVEC}) and instructions for control
-of the on-chip MMU and caches were added.
+MCF5xxx represents various ColdFire variants from Motorola/Freescale/NXP,
+RISC processors downwardly binary compatible to the 680x0.  For the 68040,
+additional control registers (reachable via \tty{MOVEC}) and instructions
+for control of the on-chip MMU and caches were added.
 %%-----------
 \begin{quote}
 b) 56000 $\longrightarrow$ 56002 $\longrightarrow$ 56300

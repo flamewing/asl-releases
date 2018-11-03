@@ -3,6 +3,7 @@ BASEARCHFILES = *.c *.h man/*.1 \
             COPYING install.sh install.bat install.cmd instw32.cmd marks.asm \
             *.res objdefs.dos objdefs.unix makedefs.files makedefs.src makedefs.str rscdeps asl.def \
             include/*.inc include/avr/*.inc include/s12z/*.inc include/s12z/vh/*.inc include/s12z/vca/*.inc include/s12z/vc/*.inc \
+            include/coldfire/*.inc \
             Makefile.def-samples/ \
             doc_DE/Makefile doc_DE/*.tex doc_EN/Makefile doc_EN/*.tex \
             tests/testall tests/testall.bat tests/testall.cmd tests/warnlog.DE tests/warnlog.EN \

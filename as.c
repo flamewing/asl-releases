@@ -4419,6 +4419,35 @@ static CMDResult CMD_NoICEMask(Boolean Negate, const char *Arg)
   }
 }
 
+static CMDResult CMD_MaxErrors(Boolean Negate, const char *Arg)
+{
+  if (Negate)
+  {
+    MaxErrors = 0;
+    return CMDOK;
+  }
+  else if (Arg[0] == '\0')
+    return CMDErr;
+  else
+  {
+    Boolean OK;
+    LongWord NewMaxErrors = ConstLongInt(Arg, &OK, 10);
+
+    if (!OK)
+      return CMDErr;
+    MaxErrors = NewMaxErrors;
+    return CMDArg;
+  }
+}
+
+static CMDResult CMD_TreatWarningsAsErrors(Boolean Negate, const char *Arg)
+{
+  UNUSED(Arg);
+
+  TreatWarningsAsErrors = !Negate;
+  return CMDOK;
+}
+
 static void ParamError(Boolean InEnv, char *Arg)
 {
   printf("%s%s\n", getmessage((InEnv) ? Num_ErrMsgInvEnvParam : Num_ErrMsgInvParam), Arg);
@@ -4446,6 +4475,7 @@ static CMDRec ASParams[] =
   { "L"             , CMD_ListFile        },
   { "l"             , CMD_ListConsole     },
   { "M"             , CMD_MacroOutput     },
+  { "MAXERRORS"     , CMD_MaxErrors       },
   { "n"             , CMD_NumericErrors   },
   { "NOICEMASK"     , CMD_NoICEMask       },
   { "o"             , CMD_OutFile         },
@@ -4462,6 +4492,7 @@ static CMDRec ASParams[] =
   { "U"             , CMD_CaseSensitive   },
   { "w"             , CMD_SuppWarns       },
   { "WARNRANGES"    , CMD_HardRanges      },
+  { "WERROR"        , CMD_TreatWarningsAsErrors },
   { "x"             , CMD_ExtendErrors    },
   { "X"             , CMD_MakeDebug       },
   { "Y"             , CMD_ThrowErrors     }
@@ -4714,6 +4745,8 @@ int main(int argc, char **argv)
   HardRanges = True;
   NoICEMask = 1 << SegCode;
   GNUErrors = False;
+  MaxErrors = 0;
+  TreatWarningsAsErrors = False;
 
   LineZ = 0;
 

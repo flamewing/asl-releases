@@ -1110,6 +1110,9 @@ void WrErrorString(char *pMessage, char *pAdd, Boolean Warning, Boolean Fatal,
   const char *pLeadIn = GNUErrors ? "" : "> > > ";
   FILE *pErrFile = ErrorFile ? ErrorFile : stdout;
 
+  if (TreatWarningsAsErrors && Warning && !Fatal)
+   Warning = False;
+
   strcpy(ErrStr[ErrStrCount], pLeadIn);
   p = GetErrorPos();
   l = strlen(p) - 1;
@@ -1172,8 +1175,15 @@ void WrErrorString(char *pMessage, char *pAdd, Boolean Warning, Boolean Fatal,
   }
 
   if (Fatal)
-  {
     fprintf(pErrFile, "%s\n", getmessage(Num_ErrMsgIsFatal));
+  else if (MaxErrors && (ErrorCount >= MaxErrors))
+  {
+    fprintf(pErrFile, "%s\n", getmessage(Num_ErrMsgTooManyErrors));
+    Fatal = True;
+  }
+
+  if (Fatal)
+  {
     EmergencyStop();
     exit(3);
   }
@@ -1576,7 +1586,8 @@ void WrXErrorPos(Word Num, const char *pExtendError, const struct sLineComp *pLi
   if (msgno != -1)
     strmaxcpy(h, getmessage(msgno), 255);
 
-  if (((Num == 1910) || (Num == 1370)) && (!Repass))
+  if (((Num == ErrNum_TargOnDiffPage) || (Num == ErrNum_JmpDistTooBig))
+   && !Repass)
     JmpErrors++;
 
   if (NumericErrors)

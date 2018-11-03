@@ -238,7 +238,7 @@ S_facoth_co68:
 
 S_fcos_co68:
                 fcos.s          d0,fp0
-                fmove.x         fp0,d0
+                fmove.s         fp0,d0
                 rts
 
 

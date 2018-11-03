@@ -1,3 +1,14 @@
+2018-11-02 [1.42 Bld 138]
+
+- Addition    : new command line swith -maxerrors to allow termination
+                of assembly after a given number of errors.
+- Addition    : new command line swith -Werror to treat warning as
+                errors
+- Bugfix      : correct value range of 68K MOVEQ instruction
+- Addition    : allow bit-addressable locations to be written in
+                internal representation for 80C16x
+- Addition    : reworked and extended ColdFire support
+
 2018-09-04 [1.42 Bld 137]
 
 - Change      : Huge internal reworks to allow reporting column of error

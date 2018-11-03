@@ -858,6 +858,10 @@ Message ErrMsgStackOvfl
  "Stapel&uuml;berlauf"
  "stack overflow"
  
+Message ErrMsgTooManyErrors
+ "zu viele Fehler, Assembler abgebrochen"
+ "too many errors, assembly terminated"
+
 Message ErrMsgIsFatal
  "Fataler Fehler, Assembler abgebrochen"
  "fatal error, assembly terminated"
@@ -1281,6 +1285,8 @@ Message InfoMessHelp
  "-i <Pfad>[:Pfad]... : Pfadliste f&uuml;r Includedateien\n" \
  "-D <Symbol>[,Symbol]... : Symbole vordefinieren\n" \
  "-gnuerrors: Fehlermeldungen im GNU-Format\n" \
+ "-maxerrors <Anzahl> : Assemblierung nach <Anzahl> Fehlern abbrechen\n" \
+ "-Werror : Warnungen als Fehler behandeln\n" \
  "-E [Name] : Zieldatei f&uuml;r Fehlerliste,\n" \
  "            !0..!4 f&uuml;r Standardhandles\n" \
  "            Default <Quelldatei>.LOG\n" \
@@ -1317,6 +1323,8 @@ Message InfoMessHelp
  "-i <path>[;path]... : list of paths for include files\n" \
  "-D <symbol>[,symbol]... : predefine symbols\n" \
  "-gnuerrors: error messages in GNU format\n" \
+ "-maxerrors <number>: terminate assembly after <number> errors\n" \
+ "-Werror : treat warnings as errors\n" \
  "-E <name> : target file for error list,\n" \
  "            !0..!4 for standard handles\n" \
  "            default is <srcname>.LOG\n" \

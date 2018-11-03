@@ -25,6 +25,9 @@ for %%i in (%2\s12z\vc\*.inc) do unumlaut %%i
 md %2\s12z\vca
 for %%i in (include\s12z\vca\*.inc) do copy %%i %2\s12z\vca
 for %%i in (%2\s12z\vca\*.inc) do unumlaut %%i
+md %2\coldfire
+for %%i in (include\coldfire\*.inc) do copy %%i %2\coldfire
+for %%i in (%2\coldfire\*.inc) do unumlaut %%i
 
 md %3
 for %%i in (man\*.1) do copy %%i %3

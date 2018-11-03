@@ -40,7 +40,7 @@ fi
 if [ "${INCPATH}" != "" ]; then
  ${MKDIRHIER} ${INCPATH}
  chmod 755 ${INCPATH}
- for path in . avr s12z s12z/vh s12z/vc s12z/vca; do
+ for path in . avr s12z s12z/vh s12z/vc s12z/vca coldfire; do
   mkdir ${INCPATH}/${path}
   chmod 755 ${INCPATH}/${path}
   for file in include/${path}/*.inc; do

@@ -392,6 +392,8 @@ extern Word ListMask;
 extern ShortInt ExtendErrors;
 extern Integer EnumSegment;
 extern LongInt EnumIncrement, EnumCurrentValue;
+extern LongWord MaxErrors;
+extern Boolean TreatWarningsAsErrors;
 
 extern LongInt MomSectionHandle;
 extern PSaveSection SectionStack;

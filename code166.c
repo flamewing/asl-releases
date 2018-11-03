@@ -553,27 +553,44 @@ static Boolean DecodeBitAddr(const tStrComp *pArg, Word *Adr, Byte *Bit, Boolean
         return False;
       if (FirstPassUnknown)
         LAdr = 0xfd00;
-      if (LAdr & 1)
+
+      /* full addresses must be even, since bitfields in memory are 16 bit: */
+
+      if ((LAdr > 0xff) && (LAdr & 1))
       {
-        WrError(ErrNum_NotAligned);
+        WrStrErrorPos(ErrNum_NotAligned, &AddrComp);
         return False;
       }
-      if ((LAdr >= 0xfd00) && (LAdr <= 0xfdfe))
+
+      /* coded bit address: */
+
+      if (LAdr <= 0xff)
+        *Adr = LAdr;
+
+      /* 1st RAM bank: */
+
+      else if ((LAdr >= 0xfd00) && (LAdr <= 0xfdfe))
         *Adr = (LAdr - 0xfd00)/2;
+
+      /* SFR space: */
+
       else if ((LAdr >= 0xff00) && (LAdr <= 0xffde))
       {
         if ((ExtSFRs) && (!MayBeOut))
         {
-          WrError(ErrNum_InAccReg);
+          WrStrErrorPos(ErrNum_InAccReg, &AddrComp);
           return False;
         }
         *Adr = 0x80 + ((LAdr - 0xff00) / 2);
       }
+
+      /* extended SFR space: */
+
       else if ((LAdr >= 0xf100) && (LAdr <= 0xf1de))
       {
         if ((!ExtSFRs) && (!MayBeOut))
         {
-          WrError(ErrNum_InAccReg);
+          WrStrErrorPos(ErrNum_InAccReg, &AddrComp);
           return False;
         }
         *Adr = 0x80 + ((LAdr - 0xf100) / 2);
@@ -582,7 +599,7 @@ static Boolean DecodeBitAddr(const tStrComp *pArg, Word *Adr, Byte *Bit, Boolean
       }
       else
       {
-        WrError(ErrNum_OverRange);
+        WrStrErrorPos(ErrNum_OverRange, &AddrComp);
         return False;
       }
     }

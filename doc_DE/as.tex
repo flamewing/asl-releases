@@ -46,7 +46,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand Juni 2018}
+{\large Stand November 2018}
 \end{raggedright}
 
 \clearpage
@@ -196,7 +196,7 @@ AS bietet im Gegensatz zu normalen Assemblern die M"oglichkeit, Code
 f"ur v"ollig verschiedene Prozessoren zu erzeugen.  Momentan sind
 folgende Prozessorfamilien implementiert:
 \begin{itemize}
-\item{Motorola 68000..68040,683xx inkl. Koprozessor und MMU}
+\item{Motorola 68000..68040, 683xx, Coldfire inkl. Koprozessor und MMU}
 \item{Motorola ColdFire}
 \item{Motorola DSP5600x,DSP56300}
 \item{Motorola/IBM MPC601/MPC505/PPC403/MPC821}
@@ -589,6 +589,7 @@ REG96.INC         & Registeradressen MCS-96 \\
 REGACE.INC        & Registeradressen ACE \\
 REGAVROLD.INC     & Register- \& Bitadressen AVR-Familie (veraltet)\\
 REGAVR.INC        & Register- \& Bitadressen AVR-Familie (aktuell)\\
+REGCOLD.INC       & Registeradressen ColdFire \\
 REGCOP8.INC       & Registeradressen COP8 \\
 REGGP32.INC       & Registeradressen 68HC908GP32 \\
 REGHC12.INC       & Registeradressen 68HC12 \\
@@ -639,6 +640,9 @@ AVR/\*.INC        & Register- \& Bitadressen AVR-Familie \\
                   & inkludieren) \\
 S12Z\/*.INC       & Register- \& Bitadressen S12Z-Familie \\
                   & (nicht direkt benutzen, REGS12Z.INC \\
+                  & inkludieren) \\
+COLDFIRE\/*.INC   & Register- \& Bitadressen ColdFire-Familie \\
+                  & (nicht direkt benutzen, REGCOLD.INC \\
                   & inkludieren) \\
 \hline
 \hline
@@ -1044,6 +1048,10 @@ bzw. \ref{ChapShareOrder}.
       Integration von AS in f"ur dieses Format ausgelegte Umgebungen,
       unterdr"uckt aber gleichzeitig die Anzeige der pr"azisen
       Fehlerposition innerhalb Makror"umpfen!}
+\item{{\tt maxerrors [n]}: Weist den Assembler an, nach der gegebenen
+      Anzahl von Fehlern die Assemblierung abzubrechen.}
+\item{{\tt Werror}: Weist den Assembler an, Warnungen als Fehler zu
+      behandeln.}
 \end{itemize}
 Sofern Schalter keine Argumente ben"otigen und ihre Zusammenziehung
 keinen mehrbuchstabigen Schalter ergibt, k"onnen mehrere Schalter
@@ -3053,7 +3061,11 @@ Familien dienen unterschiedliche Typen noch einmal zur Feinunterscheidung:
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
 a) \> 68008 $\rightarrow$ 68000 $\rightarrow$ 68010 $\rightarrow$ 68012 $\rightarrow$ \\
-   \> MCF5200 $\rightarrow$ 68332 $\rightarrow$ 68340 $\rightarrow$ 68360 $\rightarrow$ \\
+   \> MCF5202 $\rightarrow$ MCF5204 $\rightarrow$ MCF5206 $\rightarrow$ MCF5208$\rightarrow$ \\
+   \> MCF52274 $\rightarrow$ MCF52277 $\rightarrow$ MCF5307 $\rightarrow$ MCF5329 $\rightarrow$ MCF5373 $\rightarrow$ \\
+   \> MCF5407 $\rightarrow$ MCF5470 $\rightarrow$ MCF5471 $\rightarrow$ MCF5472 $\rightarrow$ MCF5473 $\rightarrow$ \\
+   \> MCF5474 $\rightarrow$ MCF5475 $\rightarrow$ \\
+   \> 68332 $\rightarrow$ 68340 $\rightarrow$ 68360 $\rightarrow$ \\
    \> 68020 $\rightarrow$ 68030 $\rightarrow$ 68040
 \end{tabbing}
 \end{quote}
@@ -3062,8 +3074,8 @@ und Adressierungsarten (ab 68020).  Eine kleine Ausnahme stellt der
 Schritt zum 68030 dar, dem 2 Befehle fehlen: \tty{CALLM} und \tty{RTM}.
 Die drei Vertreter der 683xx-Famile haben den gleichen Prozessorkern (eine
 leicht abgemagerte 68020-CPU), jedoch v"ollig unterschiedliche Peripherie.
-MCF5200 repr"asentiert die ColdFire-Familie von Motorola, zum 680x0 bin"ar
-abw"artskompatible RISC-Prozesoren. Beim 68040 kommen die zus"atzlichen
+MCF5xxx repr"asentiert verschiedene ColdFire-Varianten von Motorola/Freescale/NXP,
+zum 680x0 bin"ar abw"artskompatible RISC-Prozesoren. Beim 68040 kommen die zus"atzlichen
 Steuerregister (via \tty{MOVEC} erreichbar) f"ur On-Chip-MMU und Caches
 sowie einige Systembefehle f"ur selbige hinzu.
 %%-----------
@@ -10188,7 +10200,7 @@ p2hex <Quelldatei> eprom3 -f $31 -r $4000-$5fff
 p2hex <Quelldatei> eprom4 -f $31 -r $6000-$7fff
 \end{verbatim}
 Anstelle einer festen Adresse kann man als Anfang bzw. Ende auch ein
-einfaches Dollarzeichen oder ein '0x' angeben.  Dies bedeutet, daﬂ die
+einfaches Dollarzeichen oder ein '0x' angeben.  Dies bedeutet, da"s die
 niedrigste bzw. h"ochste in der Quelldatei gefundene Adresse als Anfang
 bzw. Ende genommen wird.  Der Default f"ur den Bereich ist '0x-0x', d.h.
 es werden alle Daten aus der Quelldatei "ubernommen.

@@ -17,7 +17,7 @@
 reg6833xinc     equ     1
 
                 if      (MOMCPUNAME<>"68332")&&(MOMCPUNAME<>"68340")&&(MOMCPUNAME<>"68360")
-                 fatal   "Falscher Prozessortyp eingestellt: nur 68332 oder 68340 erlaubt!"
+                 fatal   "Falscher Prozessortyp eingestellt: nur 68332, 68340 oder 68360 erlaubt!"
 		endif
 
 
