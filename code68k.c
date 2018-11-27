@@ -77,6 +77,7 @@ typedef struct
 typedef struct
 {
   const char *pName;
+  LongWord AddrSpaceMask;
   tFamily Family;
   tCfISA CfISA;
   tSuppFlags SuppFlags;
@@ -155,9 +156,14 @@ static const Byte FSizeCodes[10] =
 
 #define CopyAdrVals(Dest) memcpy(Dest, AdrVals, AdrCnt)
 
+static Boolean CheckFamilyCore(unsigned FamilyMask)
+{
+  return !!((FamilyMask >> pCurrCPUProps->Family) & 1);
+}
+
 static Boolean CheckFamily(unsigned FamilyMask)
 {
-  if ((FamilyMask >> pCurrCPUProps->Family) & 1)
+  if (CheckFamilyCore(FamilyMask))
     return True;
   WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
   CodeLen = 0;
@@ -175,7 +181,7 @@ static Boolean CheckISA(unsigned ISAMask)
 
 static Boolean CheckNoFamily(unsigned FamilyMask)
 {
-  if (!((FamilyMask >> pCurrCPUProps->Family) & 1))
+  if (!CheckFamilyCore(FamilyMask))
     return True;
   WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
   CodeLen = 0;
@@ -255,11 +261,11 @@ static void ClrAdrVals(void)
   AdrCnt = 0;
 }
 
-static Boolean ACheckFamily(unsigned FamilyMask)
+static Boolean ACheckFamily(unsigned FamilyMask, const tStrComp *pAdrComp)
 {
-  if ((FamilyMask >> pCurrCPUProps->Family) & 1)
+  if (CheckFamilyCore(FamilyMask))
     return True;
-  WrStrErrorPos(ErrNum_AddrModeNotSupported, &OpPart);
+  WrStrErrorPos(ErrNum_AddrModeNotSupported, pAdrComp);
   ClrAdrVals();
   return False;
 }
@@ -582,13 +588,19 @@ static void AdrCompToIndex(AdrComp *pComp)
   pComp->Scale = 0;
 }
 
-static Boolean IsShortAdr(LongInt Adr)
+static Boolean IsShortAdr(LongInt Addr)
 {
-  Word WHi = (Adr >> 16) & 0xffff,
-       WLo =  Adr        & 0xffff;
+  LongWord OrigAddr = (LongWord)Addr, ExtAddr;
 
-  return ((WHi == 0     ) && (WLo <= 0x7fff))
-      || ((WHi == 0xffff) && (WLo >= 0x8000));
+  /* Assuming we would code this address as short address... */
+
+  ExtAddr = OrigAddr & 0xffff;
+  if (ExtAddr & 0x8000)
+    ExtAddr |= 0xffff0000ul;
+
+  /* ...would this result in the same address on the bus? */
+
+  return (ExtAddr & pCurrCPUProps->AddrSpaceMask) == (OrigAddr & pCurrCPUProps->AddrSpaceMask);
 }
 
 static Boolean IsDisp8(LongInt Disp)
@@ -697,6 +709,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Erl)
   String ArgStr;
   tStrComp Arg;
   char CReg[10];
+  const unsigned ExtAddrFamilyMask = (1 << e68KGen3) | (1 << e68KGen2) | (1 << eCPU32);
 
   /* some insns decode the same arg twice, so we must keep the original string intact. */
 
@@ -970,7 +983,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Erl)
         continue;
       if (!ClassComp(&AdrComps[CompCnt]))
       {
-        WrError(ErrNum_InvAddrMode);
+        WrStrErrorPos(ErrNum_InvAddrMode, &AdrComps[CompCnt].Comp);
         return;
       }
 
@@ -1089,7 +1102,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Erl)
               AdrVals[0] = 0x0170;
               AdrVals[1] = (HVal >> 16) & 0xffff;
               AdrVals[2] = HVal & 0xffff;
-              ACheckFamily((1 << e68KGen3) | (1 << e68KGen2) | (1 << eCPU32));
+              ACheckFamily(ExtAddrFamilyMask, pArg);
               goto chk;
           }
         }
@@ -1141,7 +1154,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Erl)
               AdrCnt = 4;
               AdrVals[0] += 0x120;
               AdrVals[1] = HVal & 0xffff;
-              ACheckFamily((1 << e68KGen3) | (1 << e68KGen2) | (1 << eCPU32));
+              ACheckFamily(ExtAddrFamilyMask, pArg);
               goto chk;
             case 2:
               AdrNum = 7;
@@ -1149,7 +1162,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Erl)
               AdrVals[0] += 0x130;
               AdrVals[1] = HVal >> 16;
               AdrVals[2] = HVal & 0xffff;
-              ACheckFamily((1 << e68KGen3) | (1 << e68KGen2) | (1 << eCPU32));
+              ACheckFamily(ExtAddrFamilyMask, pArg);
               goto chk;
           }
         }
@@ -1164,19 +1177,21 @@ static void DecodeAdr(const tStrComp *pArg, Word Erl)
 
       if (CompCnt == 1)
       {
+        SymbolQuestionable = False;
         HVal = EvalStrIntExpression(&OutDisp, Int32, &ValOK) - (EProgCounter() + RelPos);
         if (!ValOK)
-        {
-          WrError(ErrNum_InvAddrMode);
           return;
-        }
         if (OutDispLen < 0)
+        {
+          if (SymbolQuestionable && !CheckFamilyCore(ExtAddrFamilyMask))
+            HVal &= 0x7fff;
           OutDispLen = (IsDisp16(HVal)) ? 1 : 2;
+        }
         switch (OutDispLen)
         {
           case 1:
             AdrMode = 0x3a;
-            if (!IsDisp16(HVal))
+            if (!SymbolQuestionable && !IsDisp16(HVal))
             {
               WrError(ErrNum_DistTooBig);
               return;
@@ -1192,7 +1207,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Erl)
             AdrVals[0] = 0x170;
             AdrVals[1] = HVal >> 16;
             AdrVals[2] = HVal & 0xffff;
-            ACheckFamily((1 << e68KGen3) | (1 << e68KGen2) | (1 << eCPU32));
+            ACheckFamily(ExtAddrFamilyMask, pArg);
             goto chk;
         }
       }
@@ -1202,19 +1217,21 @@ static void DecodeAdr(const tStrComp *pArg, Word Erl)
       else
       {
         AdrVals[0] = (AdrComps[1].INummer << 12) + (Ord(AdrComps[1].Long) << 11) + (AdrComps[1].Scale << 9);
+        SymbolQuestionable = False;
         HVal = EvalStrIntExpression(&OutDisp, Int32, &ValOK) - (EProgCounter() + RelPos);
         if (!ValOK)
-        {
-          WrError(ErrNum_InvAddrMode);
           return;
-        }
         if (OutDispLen < 0)
+        {
+          if (SymbolQuestionable && !CheckFamilyCore(ExtAddrFamilyMask))
+            HVal &= 0x7f;
           OutDispLen = GetDispLen(HVal);
+        }
         AdrMode = 0x3b;
         switch (OutDispLen)
         {
           case 0:
-            if (!IsDisp8(HVal))
+            if (!SymbolQuestionable && !IsDisp8(HVal))
             {
               WrError(ErrNum_DistTooBig);
               return;
@@ -1229,7 +1246,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Erl)
             }
             goto chk;
           case 1:
-            if (!IsDisp16(HVal))
+            if (!SymbolQuestionable && !IsDisp16(HVal))
             {
               WrError(ErrNum_DistTooBig);
               return;
@@ -1238,7 +1255,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Erl)
             AdrCnt = 4;
             AdrNum = 9;
             AdrVals[1] = HVal & 0xffff;
-            ACheckFamily((1 << e68KGen3) | (1 << e68KGen2) | (1 << eCPU32));
+            ACheckFamily(ExtAddrFamilyMask, pArg);
             goto chk;
           case 2:
             AdrVals[0] += 0x130;
@@ -1246,7 +1263,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Erl)
             AdrNum = 9;
             AdrVals[1] = HVal >> 16;
             AdrVals[2] = HVal & 0xffff;
-            ACheckFamily((1 << e68KGen3) | (1 << e68KGen2) | (1 << eCPU32));
+            ACheckFamily(ExtAddrFamilyMask, pArg);
             goto chk;
         }
       }
@@ -1263,7 +1280,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Erl)
         AdrVals[0] = AdrVals[0] + 0x0010;
         AdrCnt = 2;
         AdrNum = 7;
-        ACheckFamily((1 << e68KGen3) | (1 << e68KGen2) | (1 << eCPU32));
+        ACheckFamily(ExtAddrFamilyMask, pArg);
         goto chk;
       }
       else
@@ -1281,7 +1298,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Erl)
               AdrVals[1] = HVal & 0xffff;
               AdrNum = 7;
               AdrCnt = 4;
-              ACheckFamily((1 << e68KGen3) | (1 << e68KGen2) | (1 << eCPU32));
+              ACheckFamily(ExtAddrFamilyMask, pArg);
               goto chk;
             case 2:
               AdrVals[0] = AdrVals[0] + 0x0030;
@@ -1289,7 +1306,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Erl)
               AdrCnt = 6;
               AdrVals[1] = HVal >> 16;
               AdrVals[2] = HVal & 0xffff;
-              ACheckFamily((1 << e68KGen3) | (1 << e68KGen2) | (1 << eCPU32));
+              ACheckFamily(ExtAddrFamilyMask, pArg);
               goto chk;
           }
         }
@@ -1302,7 +1319,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Erl)
     {
       /* erst ab 68020 erlaubt */
 
-      if (!ACheckFamily((1 << e68KGen3) | (1 << e68KGen2)))
+      if (!ACheckFamily((1 << e68KGen3) | (1 << e68KGen2), pArg))
         return;
 
       /* Unterscheidung Vor- <---> Nachindizierung: */
@@ -1551,7 +1568,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Erl)
 chk:
   if ((AdrNum > 0) && (!(Erl & (1 << (AdrNum - 1)))))
   {
-    WrError(ErrNum_InvAddrMode);
+    WrStrErrorPos(ErrNum_InvAddrMode, pArg);
     AdrNum = 0;
   }
 }
@@ -1892,7 +1909,6 @@ static void DecodeMOVE(Word Index)
     if (*AttrPart.Str && (OpSize > eSymbolSize16Bit)) WrError(ErrNum_InvOpsize);
     else
     {
-      OpSize = eSymbolSize8Bit;
       DecodeAdr(&ArgStr[1], Mdata | Mimm | ((pCurrCPUProps->Family == eColdfire) ? 0 : Madri | Mpost | Mpre | Mdadri | Maix | Mpc | Mpcidx | Mabs));
       if (AdrNum != 0)
       {
@@ -5946,34 +5962,34 @@ static const tCtReg CtRegs_Cf_EMAC[] =
 static const tCPUProps CPUProps[] =
 {
   /* 68881/68882 may be attached memory-mapped and emulated on pre-68020 devices */
-  { "68008",    e68KGen1a, eCfISA_None  , eFlagExtFPU, { NULL } },
-  { "68000",    e68KGen1a, eCfISA_None  , eFlagExtFPU | eFlagLogCCR, { NULL } },
-  { "68010",    e68KGen1b, eCfISA_None  , eFlagExtFPU | eFlagLogCCR, { CtRegs_1040 } },
-  { "68012",    e68KGen1b, eCfISA_None  , eFlagExtFPU | eFlagLogCCR, { CtRegs_1040 } },
-  { "MCF5202",  eColdfire, eCfISA_A     , eFlagIntFPU, { CtRegs_5202 } },
-  { "MCF5204",  eColdfire, eCfISA_A     , eFlagIntFPU, { CtRegs_5202, CtRegs_5202_5204 } },
-  { "MCF5206",  eColdfire, eCfISA_A     , eFlagIntFPU, { CtRegs_5202, CtRegs_5202_5204 } },
-  { "MCF5208",  eColdfire, eCfISA_APlus , eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5208, CtRegs_Cf_CPU, CtRegs_Cf_EMAC } }, /* V2 */
-  { "MCF52274", eColdfire, eCfISA_APlus , eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5208, CtRegs_Cf_CPU, CtRegs_Cf_EMAC } }, /* V2 */
-  { "MCF52277", eColdfire, eCfISA_APlus , eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5208, CtRegs_Cf_CPU, CtRegs_Cf_EMAC } }, /* V2 */
-  { "MCF5307",  eColdfire, eCfISA_A     , eFlagIntFPU | eFlagMAC, { CtRegs_5202, CtRegs_5202_5307 } }, /* V3 */
-  { "MCF5329",  eColdfire, eCfISA_APlus , eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5329 } }, /* V3 */
-  { "MCF5373",  eColdfire, eCfISA_APlus , eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5329 } }, /* V3 */
-  { "MCF5407",  eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4 */
-  { "MCF5470",  eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
-  { "MCF5471",  eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
-  { "MCF5472",  eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
-  { "MCF5473",  eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
-  { "MCF5474",  eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
-  { "MCF5475",  eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
-  { "68332",    eCPU32   , eCfISA_None  , eFlagBranch32 | eFlagLogCCR | eFlagIdxScaling, { CtRegs_1040 } },
-  { "68340",    eCPU32   , eCfISA_None  , eFlagBranch32 | eFlagLogCCR | eFlagIdxScaling, { CtRegs_1040 } },
-  { "68360",    eCPU32   , eCfISA_None  , eFlagBranch32 | eFlagLogCCR | eFlagIdxScaling, { CtRegs_1040 } },
-  { "68020",    e68KGen2 , eCfISA_None  , eFlagBranch32 | eFlagLogCCR | eFlagIdxScaling | eFlagExtFPU | eFlagCALLM_RTM, { CtRegs_1040, CtRegs_2040, CtRegs_2030 } },
-  { "68030",    e68KGen2 , eCfISA_None  , eFlagBranch32 | eFlagLogCCR | eFlagIdxScaling | eFlagExtFPU | eFlagIntPMMU, { CtRegs_1040, CtRegs_2040, CtRegs_2030 } },
+  { "68008",    0x000ffffful, e68KGen1a, eCfISA_None  , eFlagExtFPU, { NULL } },
+  { "68000",    0x00fffffful, e68KGen1a, eCfISA_None  , eFlagExtFPU | eFlagLogCCR, { NULL } },
+  { "68010",    0x00fffffful, e68KGen1b, eCfISA_None  , eFlagExtFPU | eFlagLogCCR, { CtRegs_1040 } },
+  { "68012",    0x7ffffffful, e68KGen1b, eCfISA_None  , eFlagExtFPU | eFlagLogCCR, { CtRegs_1040 } },
+  { "MCF5202",  0xfffffffful, eColdfire, eCfISA_A     , eFlagIntFPU, { CtRegs_5202 } },
+  { "MCF5204",  0xfffffffful, eColdfire, eCfISA_A     , eFlagIntFPU, { CtRegs_5202, CtRegs_5202_5204 } },
+  { "MCF5206",  0xfffffffful, eColdfire, eCfISA_A     , eFlagIntFPU, { CtRegs_5202, CtRegs_5202_5204 } },
+  { "MCF5208",  0xfffffffful, eColdfire, eCfISA_APlus , eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5208, CtRegs_Cf_CPU, CtRegs_Cf_EMAC } }, /* V2 */
+  { "MCF52274", 0xfffffffful, eColdfire, eCfISA_APlus , eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5208, CtRegs_Cf_CPU, CtRegs_Cf_EMAC } }, /* V2 */
+  { "MCF52277", 0xfffffffful, eColdfire, eCfISA_APlus , eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5208, CtRegs_Cf_CPU, CtRegs_Cf_EMAC } }, /* V2 */
+  { "MCF5307",  0xfffffffful, eColdfire, eCfISA_A     , eFlagIntFPU | eFlagMAC, { CtRegs_5202, CtRegs_5202_5307 } }, /* V3 */
+  { "MCF5329",  0xfffffffful, eColdfire, eCfISA_APlus , eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5329 } }, /* V3 */
+  { "MCF5373",  0xfffffffful, eColdfire, eCfISA_APlus , eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5329 } }, /* V3 */
+  { "MCF5407",  0xfffffffful, eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4 */
+  { "MCF5470",  0xfffffffful, eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
+  { "MCF5471",  0xfffffffful, eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
+  { "MCF5472",  0xfffffffful, eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
+  { "MCF5473",  0xfffffffful, eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
+  { "MCF5474",  0xfffffffful, eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
+  { "MCF5475",  0xfffffffful, eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
+  { "68332",    0xfffffffful, eCPU32   , eCfISA_None  , eFlagBranch32 | eFlagLogCCR | eFlagIdxScaling, { CtRegs_1040 } },
+  { "68340",    0xfffffffful, eCPU32   , eCfISA_None  , eFlagBranch32 | eFlagLogCCR | eFlagIdxScaling, { CtRegs_1040 } },
+  { "68360",    0xfffffffful, eCPU32   , eCfISA_None  , eFlagBranch32 | eFlagLogCCR | eFlagIdxScaling, { CtRegs_1040 } },
+  { "68020",    0xfffffffful, e68KGen2 , eCfISA_None  , eFlagBranch32 | eFlagLogCCR | eFlagIdxScaling | eFlagExtFPU | eFlagCALLM_RTM, { CtRegs_1040, CtRegs_2040, CtRegs_2030 } },
+  { "68030",    0xfffffffful, e68KGen2 , eCfISA_None  , eFlagBranch32 | eFlagLogCCR | eFlagIdxScaling | eFlagExtFPU | eFlagIntPMMU, { CtRegs_1040, CtRegs_2040, CtRegs_2030 } },
   /* setting eFlagExtFPU assumes instructions of external FPU are emulated/provided by M68040FPSP! */
-  { "68040",    e68KGen3 , eCfISA_None  , eFlagBranch32 | eFlagLogCCR | eFlagIdxScaling | eFlagIntPMMU | eFlagExtFPU | eFlagIntFPU, { CtRegs_1040, CtRegs_2040, CtRegs_40 } },
-  { NULL   ,    e68KGen1a, eCfISA_None  , 0, { NULL } },
+  { "68040",    0xfffffffful, e68KGen3 , eCfISA_None  , eFlagBranch32 | eFlagLogCCR | eFlagIdxScaling | eFlagIntPMMU | eFlagExtFPU | eFlagIntFPU, { CtRegs_1040, CtRegs_2040, CtRegs_40 } },
+  { NULL   ,    0           , e68KGen1a, eCfISA_None  , 0, { NULL } },
 };
 
 void code68k_init(void)

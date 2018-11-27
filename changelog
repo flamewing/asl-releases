@@ -1,8 +1,14 @@
+2018-11-26 [1.42 Bld 139]
+
+- Bugfix      : allow word size for 68K move-to-CCR
+- Change      : regard address space limit for short addressing on 68K
+- Bugfix      : several fixes regarding forward references for 68K
+
 2018-11-02 [1.42 Bld 138]
 
 - Addition    : new command line swith -maxerrors to allow termination
                 of assembly after a given number of errors.
-- Addition    : new command line swith -Werror to treat warning as
+- Addition    : new command line switch -Werror to treat warnings as
                 errors
 - Bugfix      : correct value range of 68K MOVEQ instruction
 - Addition    : allow bit-addressable locations to be written in
