@@ -240,7 +240,10 @@ extern char SrcSuffix[],IncSuffix[],PrgSuffix[],LstSuffix[],
 
 extern char *EnvName;
 
-#define ArgCntMax 20
+/* This results from the tokenized representation of macro arguments
+   in macro bodys: (31*16) - 4 for special arguments: */
+
+#define ArgCntMax 476
 
 #define ChapMax 4
 
@@ -470,7 +473,7 @@ extern Boolean DoBranchExt;
 
 extern LargeWord RadixBase, OutRadixBase;
 
-extern tStrComp ArgStr[ArgCntMax + 1];
+extern tStrComp *ArgStr;
 extern StringPtr LOpPart;
 extern tStrComp LabPart, CommPart, ArgPart, OpPart, AttrPart;
 extern char AttrSplit;
@@ -501,7 +504,7 @@ extern Byte StopfZahl;
 extern Boolean SuppWarns;
 
 #define CharTransTable CurrTransTable->Table
-extern PTransTable TransTables,CurrTransTable;
+extern PTransTable TransTables, CurrTransTable;
 
 extern PFunction FirstFunction;
 
@@ -522,6 +525,8 @@ extern int SetMaxCodeLen(LongWord NewMaxCodeLen);
 extern void Default_InternSymbol(char *Asc, TempResult *Erg);
 
 extern void Default_DissectBit(char *pDest, int DestSize, LargeWord BitSpec);
+
+extern void IncArgCnt(void);
 
 
 extern void asmdef_init(void);

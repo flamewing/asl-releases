@@ -1716,7 +1716,7 @@ static void MakeCode_78K2(void)
 
   pCode = BAsmCode;
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
   else
     CodeLen = pCode - BAsmCode;
 }

@@ -506,7 +506,7 @@ static void MakeCode_COP4(void)
   /* machine instructions */
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static void SwitchFrom_COP4(void)

@@ -997,8 +997,8 @@ static void DecodeBRA(Word Code)
 {
   if (ChkArgCnt(1, 1))
   {
-    strcpy(ArgStr[2].Str, "PC");
-    ArgCnt++;
+    IncArgCnt();
+    strcpy(ArgStr[ArgCnt].Str, "PC");
     DecodeMOVA(Code);
   }
 }
@@ -1551,7 +1551,7 @@ static void MakeCode_MSP(void)
   /* alles aus der Tabelle */
  
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static Boolean IsDef_MSP(void)

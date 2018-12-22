@@ -373,7 +373,7 @@ static void DecodeJmps(Word Index)
 static void DecodeCHMOV(Word Index)
 {
   String TokenStr;
-  tStrComp Token, *pAdrArg;
+  tStrComp Token, *pAdrArg = NULL;
   LongWord Phase;
   Boolean OK;
 
@@ -516,8 +516,8 @@ static void DecodeMOVE(Word Index)
 {
 #define MAXPARTS 8
   Boolean WithCarry;
-  String TokenStr, PartStr[MAXPARTS];
-  tStrComp Token, Parts[MAXPARTS];
+  String TokenStr;
+  tStrComp Token;
   LongWord Tmp, DReg , AriOp = 0xff, ImmVal = 0x100;
   Boolean OK;
   int z;
@@ -527,28 +527,31 @@ static void DecodeMOVE(Word Index)
 
   UNUSED(Index);
   StrCompMkTemp(&Token, TokenStr);
-  for (z = 0; z < MAXPARTS; z++)
-    StrCompMkTemp(&Parts[z], PartStr[z]);
   
   if (!ChkArgCnt(1, 3));
   else if (ArgCnt == 1) /* MOVE Register */
   {
-    ArgCnt = 0;
+    String PartStr[MAXPARTS];
+    tStrComp Parts[MAXPARTS];
+    int PartCnt = 0;
+
+    for (z = 0; z < MAXPARTS; z++)
+      StrCompMkTemp(&Parts[z], PartStr[z]);
     do
     {
-      GetToken(&ArgStr[1], &Parts[ArgCnt++]);
+      GetToken(&ArgStr[1], &Parts[PartCnt++]);
     }
-    while ((*ArgStr[1].Str != '\0') && (ArgCnt < MAXPARTS));
-    if ((ArgCnt > 1) && (!strcasecmp(Parts[ArgCnt - 1].Str, "CARRY")) && (!strcasecmp(Parts[ArgCnt - 1].Str, "TO")))
+    while ((*ArgStr[1].Str != '\0') && (PartCnt < MAXPARTS));
+    if ((PartCnt > 1) && (!strcasecmp(Parts[PartCnt - 1].Str, "CARRY")) && (!strcasecmp(Parts[PartCnt - 1].Str, "TO")))
     {
       WithCarry = True;
-      ArgCnt -= 2;
+      PartCnt -= 2;
     }
     else
       WithCarry = False;
     DAsmCode[0] = 0x40000000;
     DAsmCode[1] = 0;
-    if (ArgCnt == 3)
+    if (PartCnt == 3)
     {
       if (WithCarry) WrError(ErrNum_InvAddrMode);
       else if (!strcasecmp(Parts[1].Str, "TO")) /* MOVE */
@@ -648,8 +651,8 @@ static void DecodeMOVE(Word Index)
             WrError(ErrNum_InvAddrMode);
         }
       } /* ... SHx ... */
-    } /* ArgCnt == 3 */
-    else if (ArgCnt == 5)
+    } /* PartCnt == 3 */
+    else if (PartCnt == 5)
     {
       if (strcasecmp(Parts[3].Str, "TO")) WrError(ErrNum_InvAddrMode);
       else
@@ -765,7 +768,7 @@ static void DecodeMOVE(Word Index)
           }
         }
       }
-    }  /* ArgCnt == 5 */
+    }  /* PartCnt == 5 */
     else
       WrError(ErrNum_InvAddrMode);
   }
@@ -1086,7 +1089,7 @@ static void MakeCode_53c8xx(void)
     return;
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static Boolean IsDef_53c8xx(void)

@@ -692,7 +692,7 @@ static void MakeCode_3202x(void)
     return;
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 /* ---------------------------------------------------------------------- */

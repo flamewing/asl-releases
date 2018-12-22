@@ -564,7 +564,7 @@ chk:
 static ShortInt DecodeBitAdr(tStrComp *pArg, LongInt *Erg, Boolean MayShorten)
 {
   Boolean OK;
-  char *pPos, Save;
+  char *pPos, Save = '\0';
   tStrComp RegPart, BitPart;
 
   pPos = RQuotPos(pArg->Str, '.');
@@ -2619,7 +2619,7 @@ static void MakeCode_51(void)
   /* suchen */
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static Boolean IsDef_51(void)

@@ -2036,7 +2036,7 @@ static void MakeCode_65(void)
   }
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static void InitCode_65(void)

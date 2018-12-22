@@ -1,3 +1,12 @@
+2018-12-21 [1.42 Bld 140]
+
+- Addition    : support Fairchild F8
+- Addition    : allow < and > modifiers on MCS-96 to force short resp.
+                long address coding
+- Addition    : allow < and > modifiers on C16x to force short resp.
+                long coding
+- Change      : remove limit of 20 instruction arguments
+
 2018-11-26 [1.42 Bld 139]
 
 - Bugfix      : allow word size for 68K move-to-CCR

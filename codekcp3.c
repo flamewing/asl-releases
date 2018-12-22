@@ -445,7 +445,7 @@ static void MakeCode_KCPSM3(void)
    if (DecodeIntelPseudo(True)) return;
 
    if (!LookupInstTable(InstTable, OpPart.Str))
-     WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+     WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static void SwitchTo_KCPSM3(void)

@@ -1980,7 +1980,7 @@ static void MakeCode_ST9(void)
   if (DecodeIntelPseudo(True)) return;
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static void InitCode_ST9(void)

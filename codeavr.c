@@ -1041,7 +1041,7 @@ static void MakeCode_AVR(void)
   /* all done via table :-) */
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static void InitCode_AVR(void)

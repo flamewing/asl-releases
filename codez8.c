@@ -1717,7 +1717,7 @@ static void MakeCode_Z8(void)
     return;
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static void InitCode_Z8(void)

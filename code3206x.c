@@ -2583,7 +2583,7 @@ static Boolean DecodeInst(void)
   if (LookupInstTable(InstTable, OpPart.Str))
     return __erg;
 
-  WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+  WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
   return False;
 }
 

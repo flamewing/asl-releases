@@ -537,16 +537,16 @@ static void MakeCode_2650(void)
   {
     int ArgC;
 
-    for (ArgC = ArgCnt; ArgC >= 1; ArgC--)
+    IncArgCnt();
+    for (ArgC = ArgCnt - 1; ArgC >= 1; ArgC--)
       StrCompCopy(&ArgStr[ArgC + 1], &ArgStr[ArgC]);
     StrCompSplitRight(&OpPart, &ArgStr[1], pPos);
-    ArgCnt++;
   }
 
   /* alles aus der Tabelle */
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static Boolean IsDef_2650(void)

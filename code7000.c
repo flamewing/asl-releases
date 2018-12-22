@@ -1213,7 +1213,7 @@ static void DecodeDCT_DCF(Word Cond)
 
   if (!DSPAvail)
   {
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
     return;
   }
 
@@ -1560,7 +1560,7 @@ static void MakeCode_7000(void)
     return;
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static void InitCode_7000(void)

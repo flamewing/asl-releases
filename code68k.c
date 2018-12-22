@@ -5764,7 +5764,7 @@ static void MakeCode_68K(void)
   if (Odd(EProgCounter())) WrError(ErrNum_AddrNotAligned);
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static void InitCode_68K(void)

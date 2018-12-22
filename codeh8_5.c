@@ -1540,7 +1540,7 @@ static void MakeCode_H8_5(void)
   /* Sonderfaelle */
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static Boolean ChkPC_H8_5(LargeWord Addr)

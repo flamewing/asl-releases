@@ -264,16 +264,13 @@ void SetCPU(CPUVar NewCPU, Boolean NotPrev)
     SetCPUCore(pCPUDef, NotPrev);
 }
 
-Boolean SetNCPU(char *Name, Boolean NoPrev)
+Boolean SetNCPU(const char *pName, Boolean NoPrev)
 {
   const tCPUDef *pCPUDef;
 
-  pCPUDef = LookupCPUDefByName(Name);
+  pCPUDef = LookupCPUDefByName(pName);
   if (!pCPUDef)
-  {
-    WrXError(ErrNum_InvCPUType, Name);
     return False;
-  }
   else
   {
     SetCPUCore(pCPUDef, NoPrev);
@@ -398,6 +395,8 @@ static void CodeCPU(Word Index)
     NLS_UpString(ArgStr[1].Str);
     if (SetNCPU(ArgStr[1].Str, False))
       SetNSeg(SegCode);
+    else
+      WrStrErrorPos(ErrNum_InvCPUType, &ArgStr[1]);
   }
 }
 
@@ -1038,7 +1037,7 @@ static void CodeFUNCTION(Word Index)
     {
       strmaxcpy(FName, ArgStr[ArgCnt].Str, 255);
       for (z = 1; z < ArgCnt; z++)
-        CompressLine(ArgStr[z].Str, z, FName, CaseSensitive);
+        CompressLine(ArgStr[z].Str, z, FName, STRINGSIZE, CaseSensitive);
       EnterFunction(LabPart.Str, FName, ArgCnt - 1);
     }
   }

@@ -273,6 +273,7 @@ following processor families have been implemented:
 \item{National Semiconductor COP8}
 \item{National Semiconductor SC144xx}
 \item{Fairchild ACE}
+\item{Fairchild F8}
 \item{NEC $\mu$PD 78(C)1x}
 \item{NEC $\mu$PD75xx}
 \item{NEC $\mu$PD 75xxx (alias 75K0)}
@@ -578,8 +579,9 @@ REG78310.INC      & register addresses \& vectors 78K3 \\
 REG78K0.INC       & register addresses 78K0 \\
 REG96.INC         & register addresses MCS-96 \\
 REGACE.INC        & register addresses ACE \\
+REGF8.INC         & register and memory addresses F8 \\
 REGAVROLD.INC     & register and bit addresses AVR family (outdated)\\
-REGAVR.INC        & register and bit addresses AVR family \\
+REGAVR.INC        & register and bit addresses AVR family (current) \\
 REGCOLD.INC       & register and bit addresses Coldfire family \\
 REGCOP8.INC       & register addresses COP8 \\
 REGGP32.INC       & register addresses 68HC908GP32 \\
@@ -2573,7 +2575,7 @@ symbolically defined bit may also be used as argument for
 \subsection{PORT}
 \ttindex{PORT}
 
-{\em valid for: 8080/8085/8086, XA, Z80, 320C2x/5x, TLCS-47, AVR}
+{\em valid for: 8080/8085/8086, XA, Z80, 320C2x/5x, TLCS-47, AVR, F8}
 
 \tty{PORT} works similar to \tty{EQU}, just the symbol becomes assigned to the
 I/O-address range.  Allowed values are 0..7 for the 3201x, 0..15 for the
@@ -3532,14 +3534,28 @@ instructions, since each of them supports different B field formats and
 their architecture has been optimized over time.
 %%-----------
 \begin{quote}
-bm) 7810$\rightarrow$78C10
+bm) ACE1101, ACE1202
+\end{quote}
+%%-----------
+\begin{quote}
+bn) MK3870, MK3872, MK3873, MK3874, MK3875, MK3876, \\
+    MK38C70
+\end{quote}
+The instruxction st of all F8 variants is the same, except for the
+ CMOS version than knows two new instructions (HET and HAL).
+Otherwise, they only differ by the amount of built-in memory (2 or
+4 Kbytes of ROM, 64 bytes of executable RAM or not) and the
+integrated peripherals (with or without serial port).
+%%-----------
+\begin{quote}
+bo) 7810$\rightarrow$78C10
 \end{quote}
 The NMOS version has no stop-mode; the respective command and the ZCM
 register are omitted.  \bb{CAUTION!}  NMOS and CMOS version partially
 differ in the reset values of some registers!
 %%-----------
 \begin{quote}
-bn) 7500 $\leftrightarrow$ 7508
+bp) 7500 $\leftrightarrow$ 7508
 \end{quote}
 There are two different types of CPU cores in the $\mu$PD75xx
 family: the 7566 represents the the 'instruction set B', which
@@ -3550,7 +3566,7 @@ CAUTION!} These instruction sets are not 100\% binary compatible!
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bo) \> 75402,\\
+bq) \> 75402,\\
     \> 75004, 75006, 75008,\\
     \> 75268,\\
     \> 75304, 75306, 75308, 75312, 75316,\\
@@ -3566,40 +3582,40 @@ peripherals on the one hand and by their instruction set's power on
 the other hand.
 %%-----------
 \begin{quote}
-bp) 78070
+br) 78070
 \end{quote}
 This is currently the only member of NEC's 78K0 family I am familiar
 with.  Similar remarks like for the COP8 family apply!
 %%-----------
 \begin{quote}
-bq) 78214
+bs) 78214
 \end{quote}
 This is currently the representor of NEC's 78K2 family.
 %%-----------
 \begin{quote}
-br) 78310
+bt) 78310
 \end{quote}
 This is currently the representor of NEC's 78K3 family.
 %%-----------
 \begin{quote}
-bs) 784026
+bu) 784026
 \end{quote}
 This is currently the representor of NEC's 78K4 family.
 %%-----------
 \begin{quote}
-bt) 7720 $\rightarrow$ 7725
+bv) 7720 $\rightarrow$ 7725
 \end{quote}
 The $\mu$PD7725 offers larger address spaces and som more instructions
 compared to his predecessor. {\bf CAUTION!}  The processors are not binary
 compatible to each other!
 %%-----------
 \begin{quote}
-bu) 77230
+bw) 77230
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
-bv) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
+bx) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
     \> SYM53C875, SYM53C895
 \end{tabbing}
 \end{quote}
@@ -3608,7 +3624,7 @@ instruction variants, furthermore they are different in their set of
 internal registers.
 %%-----------
 \begin{quote}
-bw) MB89190
+by) MB89190
 \end{quote}
 This processor type represents Fujitsu's F$^{2}$MC8L series...
 %%-----------
@@ -3619,19 +3635,19 @@ bx) MB9500
 Fujitsu!
 %%-----------
 \begin{quote}
-by) MSM5840, MSM5842, MSM58421, MSM58422, MSM5847
+bz) MSM5840, MSM5842, MSM58421, MSM58422, MSM5847
 \end{quote}
 These variants of the OLMS-40 family differ in their instruction
 set and in the amount of internal program and data memory.
 %%-----------
 \begin{quote}
-bz) MSM5054, MSM5055, MSM5056, MSM6051, MSM6052
+ca) MSM5054, MSM5055, MSM5056, MSM6051, MSM6052
 \end{quote}
 The as for the OLMS-40 family: differences in instruction
 set and the amount of internal program and data memory.
 %%-----------
 \begin{quote}
-ca) 1802 $\rightarrow$ 1804, 1805, 1806 $\rightarrow$ 1804A,
+cb) 1802 $\rightarrow$ 1804, 1805, 1806 $\rightarrow$ 1804A,
 1805A, 1806A
 \end{quote}
 1804, 1805, and 1806 feature an instruction set that is slightly
@@ -3641,12 +3657,12 @@ an integrated timer.  The A variants extend the instruction set by
 subtraction in BCD format.
 %%-----------
 \begin{quote}
-cb) XS1
+cc) XS1
 \end{quote}
 This type represents the XCore-"family".
 %%-----------
 \begin{quote}
-cc) 1750
+cd) 1750
 \end{quote}
 MIL STD 1750 is a standard, therefore there is only one
 (standard) variant...
@@ -4201,6 +4217,15 @@ register WSR1 to allow simultaneous mapping of two memory areas into
 the register file.  In case it is possible to address a memory cell
 via both areas, AS will always choose the way via WSR!
 
+For indirect addressing, displacements may be either short (8 bits,
+-128 to +127) or long (16 bits).  The assembler will automatically 
+will automatically use the shortest possible encoding for a given
+displacement.  It is however possible to enforce a 16-bit coding by
+prefixing the displacement argument with a bigger sign ((\verb!>!).
+similar is true for absolute addresses in the area from 0ff80h to
+0ffffh, which may be reached via a short offset relative to the 
+"null register".
+
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 \subsubsection{8086}
@@ -4279,6 +4304,22 @@ following style:
 The 80C167 knows some additional instructions that can override the
 page registers' function.  The chapter with processor-specific hints
 describes how these instructions influence the address generation.
+\par
+Some machine instructions have a shortened form that can be used if
+the argument is within a certain range:
+\begin{itemize}
+\item{\verb!MOV Rn,#<0..15>!}
+\item{\verb!ADD/ADDC/SUB/SUBC/CMP/XOR/AND/OR Rn, #<0..7>!}
+\item{\verb!LOOP Rn,#<0..15>!}
+\end{itemize}
+The assembler automatically uses to the shorter coding if possible.
+If one wants to enforce the longer coding, one may place a 'bigger'
+character right before the expression (behind the double cross character!).
+Vice versa, a 'smaller' character can be used to assure the shorter
+coding is used.  In case the operand does not fulfill the range
+restrictions for the shorter coding, an error is generated.  This syntax
+may also be used for branches and calls which may either have a short
+displacement or a long absolute argument.
 
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
@@ -10538,10 +10579,10 @@ described by:
                {error}
                {No more than 20 arguments can be given to any instruction}
                {none}
-\errentry{1200}{unknown opcode}
+\errentry{1200}{unknown instruction}
                {error}
-               {An  was used that is neither an AS instruction, nor a
-                known mnemonic for the current processor type.}
+               {An instruction was used that is neither an AS instruction, nor a
+                known macine instruction for the current processor type.}
                {none}
 \errentry{1300}{number of opening/closing brackets does not match}
                {error}

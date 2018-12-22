@@ -970,7 +970,7 @@ static void MakeCode_F2MC8(void)
   if (DecodeIntelPseudo(False)) return;
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static Boolean IsDef_F2MC8(void)

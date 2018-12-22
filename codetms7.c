@@ -1000,7 +1000,7 @@ static void MakeCode_TMS7(void)
   /* remainder */
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static Boolean IsDef_TMS7(void)

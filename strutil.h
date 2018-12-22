@@ -63,7 +63,7 @@ extern char *as_strdup(const char *s);
 
 #ifdef NEEDS_CASECMP
 extern int strcasecmp(const char *src1, const char *src2);
-extern int strncasecmp(const char *src1, const char *src2, int maxlen);
+extern int strncasecmp(const char *src1, const char *src2, size_t maxlen);
 #endif
 
 #ifdef NEEDS_STRSTR

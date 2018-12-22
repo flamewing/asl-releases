@@ -456,6 +456,7 @@
 #include "codecop8.h"
 #include "codesc14xxx.h"
 #include "codeace.h"
+#include "codef8.h"
 #include "code78c10.h"
 #include "code75xx.h"
 #include "code75k0.h"
@@ -915,18 +916,18 @@ static void MACRO_OutProcessor(void)
 
     l = FirstOutputTag->ParamNames;
     for (z = 1; z <= FirstOutputTag->Mac->ParamCount; z++)
-      CompressLine(GetStringListNext(&l), z, s, CaseSensitive);
+      CompressLine(GetStringListNext(&l), z, s, sizeof(s), CaseSensitive);
 
     /* reserved argument names are never case-sensitive */
 
     if (HasAttrs)
-      CompressLine(AttrName, ArgCntMax + 1, s, FALSE);
-    if (CompressLine(ArgCName, ArgCntMax + 2, s, FALSE) > 0)
+      CompressLine(AttrName, ArgCntMax + 1, s, sizeof(s), FALSE);
+    if (CompressLine(ArgCName, ArgCntMax + 2, s, sizeof(s), FALSE) > 0)
       FirstOutputTag->UsesNumArgs = TRUE;
-    if (CompressLine(AllArgName, ArgCntMax + 3, s, FALSE) > 0)
+    if (CompressLine(AllArgName, ArgCntMax + 3, s, sizeof(s), FALSE) > 0)
       FirstOutputTag->UsesAllArgs = TRUE;
     if (FirstOutputTag->Mac->LocIntLabel)
-      CompressLine(LabelName, ArgCntMax + 4, s, FALSE);
+      CompressLine(LabelName, ArgCntMax + 4, s, sizeof(s), FALSE);
 
     AddStringListLast(&(FirstOutputTag->Mac->FirstLine), s);
   }
@@ -993,20 +994,20 @@ Boolean MACRO_Processor(PInputTag PInp, char *erg)
   Lauf = PInp->Params;
   for (z = 1; z <= PInp->ParCnt; z++)
   {
-    ExpandLine(Lauf->Content, z, erg);
+    ExpandLine(Lauf->Content, z, erg, STRINGSIZE);
     Lauf = Lauf->Next;
   }
 
   /* process special parameters */
 
   if (HasAttrs)
-    ExpandLine(PInp->SaveAttr, ArgCntMax + 1, erg);
+    ExpandLine(PInp->SaveAttr, ArgCntMax + 1, erg, STRINGSIZE);
   if (PInp->UsesNumArgs)
-    ExpandLine(PInp->NumArgs, ArgCntMax + 2, erg);
+    ExpandLine(PInp->NumArgs, ArgCntMax + 2, erg, STRINGSIZE);
   if (PInp->UsesAllArgs)
-    ExpandLine(PInp->AllArgs, ArgCntMax + 3, erg);
+    ExpandLine(PInp->AllArgs, ArgCntMax + 3, erg, STRINGSIZE);
   if (PInp->Macro->LocIntLabel)
-    ExpandLine(PInp->SaveLabel, ArgCntMax + 4, erg);
+    ExpandLine(PInp->SaveLabel, ArgCntMax + 4, erg, STRINGSIZE);
 
   CurrLine = PInp->StartLine;
   InMacroFlag = True;
@@ -1564,7 +1565,7 @@ Boolean IRP_Processor(PInputTag PInp, char *erg)
 
   Lauf = PInp->Params; for (z = 1; z <= PInp->ParZ - 1; z++)
     Lauf = Lauf->Next;
-  ExpandLine(Lauf->Content, 1, erg);
+  ExpandLine(Lauf->Content, 1, erg, STRINGSIZE);
 
   /* end of body? then reset to line 1 and exit if this was the last iteration */
 
@@ -1663,7 +1664,7 @@ static void IRP_OutProcessor(void)
   if (FirstOutputTag->NestLevel > -1)
   {
     strmaxcpy(s, OneLine, 255); KillCtrl(s);
-    CompressLine(GetStringListFirst(FirstOutputTag->ParamNames, &Dummy), 1, s, CaseSensitive);
+    CompressLine(GetStringListFirst(FirstOutputTag->ParamNames, &Dummy), 1, s, sizeof(s), CaseSensitive);
     AddStringListLast(&(FirstOutputTag->Tag->Lines), s);
     FirstOutputTag->Tag->LineCnt++;
   }
@@ -1843,7 +1844,7 @@ Boolean IRPC_Processor(PInputTag PInp, char *erg)
 
   *tmp = PInp->SpecName.Str[PInp->ParZ - 1];
   tmp[1] = '\0';
-  ExpandLine(tmp, 1, erg);
+  ExpandLine(tmp, 1, erg, STRINGSIZE);
 
   /* end of body? then reset to line 1 and exit if this was the last iteration */
 
@@ -3014,7 +3015,8 @@ static void SplitLine(void)
   if (OpPart.Pos.Len && strchr(DivideChars, OpPart.Str[OpPart.Pos.Len - 1]))
   {
     OpPart.Str[--OpPart.Pos.Len] = '\0';
-    strcpy(ArgStr[++ArgCnt].Str, "");
+    IncArgCnt();
+    strcpy(ArgStr[ArgCnt].Str, "");
     ArgStr[ArgCnt].Pos = ArgPart.Pos;
   }
 
@@ -3080,10 +3082,10 @@ static void SplitLine(void)
       }
       if (ArgCnt >= ArgCntMax)
       {
-        WrError(ErrNum_TooMuchArgs);
+        WrError(ErrNum_TooManyArgs);
         break;
       }
-      ArgCnt++;
+      IncArgCnt();
       ArgStr[ArgCnt].Pos.Len = strmemcpy(ArgStr[ArgCnt].Str, STRINGSIZE, pRun, pDivPos - pRun);
       ArgStr[ArgCnt].Pos.StartCol = ArgPart.Pos.StartCol + (pRun - ArgPart.Str);
       KillPostBlanksStrComp(&ArgStr[ArgCnt]);
@@ -3323,8 +3325,11 @@ static void AssembleFile_InitPass(void)
 
   if (*DefCPU == '\0')
     SetCPU(0, True);
-  else if (!SetNCPU(DefCPU, True))
-    SetCPU(0, True);
+  else
+  {
+    if (!SetNCPU(DefCPU, True))
+      SetCPU(0, True);
+  }
 
   SetFlag(&SupAllowed, SupAllowedName, False);
   SetFlag(&FPUAvail, FPUAvailName, False);
@@ -4388,8 +4393,15 @@ static CMDResult CMD_SetCPU(Boolean Negate, const char *Arg)
   {
     if (*Arg == '\0')
       return CMDErr;
+
     strmaxcpy(DefCPU, Arg, sizeof(DefCPU) - 1);
     NLS_UpString(DefCPU);
+
+    if (!LookupCPUDefByName(DefCPU))
+    {
+      *DefCPU = '\0';
+      return CMDErr;
+    }
     return CMDArg;
   }
 }
@@ -4675,6 +4687,7 @@ int main(int argc, char **argv)
     codecop8_init();
     codesc14xxx_init();
     codeace_init();
+    codef8_init();
     code53c8xx_init();
     codef2mc8_init();
     codef2mc16_init();

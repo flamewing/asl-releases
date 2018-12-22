@@ -405,7 +405,7 @@ static void DecodeReg(Word Index)
   }
 
   if (!ChkArgCntExt(ActArgCnt, NumArgs, NumArgs));
-  else if (((Op->DestType >= SingleOp) || (Op->Src1Type >= SingleOp)) && (!FPUAvail)) WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+  else if (((Op->DestType >= SingleOp) || (Op->Src1Type >= SingleOp)) && (!FPUAvail)) WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
   else if (((Op->DestType == NoneOp) || (DecodeAdr(pDestArg, MModReg | (Op->DestType >= SingleOp ? MModFReg : 0), Op->DestType, &DReg, &DMode)))
         && (DecodeAdr(&ArgStr[1], MModReg | (Op->Src1Type >= SingleOp ? MModFReg : 0) | (Op->Imm1 ? MModImm : 0 ), Op->Src1Type, &S1Reg, &S1Mode))
         && ((Op->Src2Type == NoneOp) || (DecodeAdr(&ArgStr[2], MModReg | (Op->Src2Type >= SingleOp ? MModFReg : 0) | (Op->Imm2 ? MModImm : 0), Op->Src2Type, &S2Reg, &S2Mode))))
@@ -568,7 +568,7 @@ static void MakeCode_960(void)
   /* CPU-Anweisungen */
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 /*--------------------------------------------------------------------------*/

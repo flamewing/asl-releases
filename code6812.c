@@ -689,9 +689,9 @@ static void Try2Split(int Src)
     p--;
   if (p >= ArgStr[Src].Str)
   {
-    for (z = ArgCnt; z >= Src + 1; z--)
+    IncArgCnt();
+    for (z = ArgCnt - 1; z >= Src + 1; z--)
       StrCompCopy(&ArgStr[z + 1], &ArgStr[z]);
-    ArgCnt++;
     StrCompSplitRight(&ArgStr[Src], &ArgStr[Src + 1], p);
     KillPostBlanksStrComp(&ArgStr[Src]);
     KillPrefBlanksStrComp(&ArgStr[Src + 1]);
@@ -1696,7 +1696,7 @@ static void MakeCode_6812(void)
   if (DecodeMoto16Pseudo(OpSize,True)) return;
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static void InitCode_6812(void)

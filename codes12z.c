@@ -2642,7 +2642,7 @@ static void MakeCode_S12Z(void)
   if (DecodeMoto16Pseudo(OpSize, True)) return;
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static Boolean IsDef_S12Z(void)

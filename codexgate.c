@@ -661,7 +661,7 @@ static void MakeCode_XGATE(void)
   /* alles aus der Tabelle */
 
   if (!LookupInstTable(InstTable,OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static Boolean IsDef_XGATE(void)

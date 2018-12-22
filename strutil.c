@@ -247,7 +247,7 @@ int strcasecmp(const char *src1, const char *src2)
   return ((int) toupper(*src1)) - ((int) toupper(*src2));
 }	
 
-int strncasecmp(const char *src1, const char *src2, int len)
+int strncasecmp(const char *src1, const char *src2, size_t len)
 {
   if (!src1)
     src1 = "";

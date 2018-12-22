@@ -2322,7 +2322,7 @@ static void MakeCode_F2MC16(void)
   OpSize = -1;
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static Boolean IsDef_F2MC16(void)

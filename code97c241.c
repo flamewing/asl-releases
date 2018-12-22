@@ -2474,7 +2474,7 @@ static void MakeCode_97C241(void)
     return;
   }
 
-  WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+  WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static Boolean IsDef_97C241(void)

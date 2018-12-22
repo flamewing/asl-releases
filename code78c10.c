@@ -1160,7 +1160,7 @@ static void MakeCode_78C10(void)
   if (DecodeIntelPseudo(False)) return;
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static void InitCode_78C10(void)

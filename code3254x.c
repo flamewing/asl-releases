@@ -2754,7 +2754,7 @@ static void MakeCode_32054x(void)
   ThisRep = False;
   ForcePageZero = False;
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
   else
     LastOpCode = *WAsmCode;
   LastRep = ThisRep;

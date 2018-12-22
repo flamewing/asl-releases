@@ -190,6 +190,7 @@ static TFamilyDescr Descrs[] =
   { "COP8"         , 0x006f, IntHex   },
   { "SC14XXX"      , 0x006d, IntHex   },
   { "ACE"          , 0x0067, IntHex   },
+  { "F8"           , 0x0044, IntHex   },
   { "75xx"         , 0x005d, IntHex   },
   { "78(C)1x"      , 0x007a, IntHex   },
   { "75K0"         , 0x007b, IntHex   },

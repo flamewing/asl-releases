@@ -391,7 +391,7 @@ static void DecodeOP(Word Index)
       ArgCnt--;
     }
     if (!LookupInstTable(OpTable, OpPart.Str))
-      WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+      WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
   }
 
   DAsmCode[0] = ActCode;
@@ -590,7 +590,7 @@ static void MakeCode_7720(void)
 
   /* Hae??? */
 
-  WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+  WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static Boolean IsDef_7720(void)

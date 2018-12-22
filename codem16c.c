@@ -2630,7 +2630,7 @@ static void MakeCode_M16C(void)
   if (DecodeIntelPseudo(False)) return;
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static Boolean IsDef_M16C(void)

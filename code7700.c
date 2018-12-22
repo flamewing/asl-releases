@@ -612,7 +612,10 @@ static void DecodeAcc(Word Code)
 static void DecodeEXTS_EXTZ(Word Code)
 {
   if (ArgCnt == 0)
-    strmaxcpy(ArgStr[++ArgCnt].Str, "A", 255);
+  {
+    IncArgCnt();
+    strmaxcpy(ArgStr[ArgCnt].Str, "A", 255);
+  }
 
   if (ChkArgCnt(1, 1)
    && ChkMinCPU(CPUM7750))
@@ -1462,7 +1465,7 @@ static void MakeCode_7700(void)
     return;
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static void InitCode_7700(void)

@@ -1890,7 +1890,7 @@ static void MakeCode_XA(void)
   /* via Tabelle suchen */
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 /*-------------------------------------------------------------------------*/

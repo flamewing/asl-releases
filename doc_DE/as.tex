@@ -267,6 +267,7 @@ folgende Prozessorfamilien implementiert:
 \item{National Semiconductor COP8}
 \item{National Semiconductor SC144xx}
 \item{Fairchild ACE}
+\item{Fairchild F8}
 \item{NEC $\mu$PD78(C)1x}
 \item{NEC $\mu$PD75xx}
 \item{NEC $\mu$PD75xxx (alias 75K0)}
@@ -591,6 +592,7 @@ REGAVROLD.INC     & Register- \& Bitadressen AVR-Familie (veraltet)\\
 REGAVR.INC        & Register- \& Bitadressen AVR-Familie (aktuell)\\
 REGCOLD.INC       & Registeradressen ColdFire \\
 REGCOP8.INC       & Registeradressen COP8 \\
+REGF8.INC         & Register- \& Speicheradressen F8 \\
 REGGP32.INC       & Registeradressen 68HC908GP32 \\
 REGHC12.INC       & Registeradressen 68HC12 \\
 REGM16C.INC       & Registeradressen Mitsubishi M16C \\
@@ -2658,7 +2660,7 @@ f"ur \tty{BFINS} und \tty{BFEXT} verwendet werden.
 \subsection{PORT}
 \ttindex{PORT}
 
-{\em G"ultigkeit: 8080/8085/8086, XA, Z80, 320C2x/5x, TLCS-47, AVR}
+{\em G"ultigkeit: 8080/8085/8086, XA, Z80, 320C2x/5x, TLCS-47, AVR, F8}
 
 \tty{PORT} arbeitet analog zu \tty{SFR}, nur wird das Symbol dem I/O-Adre"sbereich
 zugeordnet.  Erlaubte Werte sind 0..7 beim 3201x, 0..15 beim 320C2x,
@@ -3641,14 +3643,29 @@ unterst"utzt werden und deren Architektur im Laufe der Zeit optimiert
 wurde.
 %%-----------
 \begin{quote}
-bm) 7810 $\rightarrow$ 78C10
+bm) ACE1101, ACE1202
+\end{quote}
+%%-----------
+\begin{quote}
+bn) MK3870, MK3872, MK3873, MK3874, MK3875, MK3876, \\
+    MK38C70
+\end{quote}
+Der Befehlssatz aller F8-Varianten ist identisch, mit Ausnahme
+der CMOS-Version, die zwei neue Befehle (HET und HAL) kennt.
+Ansonsten unterscheiden sie sich nur in der Menge des eingebauten
+Speichers (2 oder 4 KByte ROM, 64 Byte Executable RAM oder nicht)
+und in der eingebauten Peripherie (mit serieller Schnittstelle
+oder ohne).
+%%-----------
+\begin{quote}
+bo) 7810 $\rightarrow$ 78C10
 \end{quote}
 Die NMOS-Version besitzt keinen STOP-Modus; der entspechende Befehl sowie
 das ZCM-Register fehlen demzufolge.  \bb{VORSICHT!} NMOS- und CMOS-Version
 differieren zum Teil in den Reset-Werten einiger Register!
 %%-----------
 \begin{quote}
-bn) 7566 $\leftrightarrow$ 7508
+bp) 7566 $\leftrightarrow$ 7508
 \end{quote}
 Es existieren in der $\mu$PD75xx-Familie zwei verschiedene
 CPU-Kerne: Der 7566 repr"asentiert den 'instruction set B', der
@@ -3660,7 +3677,7 @@ sind nicht 100\%-ig bin"arkompatibel!
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bo) \> 75402, \\
+bq) \> 75402, \\
     \> 75004, 75006, 75008, \\
     \> 75268, \\
     \> 75304, 75306, 75308, 75312, 75316, \\
@@ -3676,41 +3693,41 @@ unterscheiden sich einmal durch ihre on-chip-Peripherie und
 zum anderen durch die M"achtigkeit des Befehlssatzes.
 %%-----------
 \begin{quote}
-bp) 78070
+br) 78070
 \end{quote}
 Dies ist das einzige, mir momentan vertraute Mitglied der
 78K0-Familie von NEC.  Es gelten "ahnliche Aussagen wie zur
 COP8-Familie!
 %%-----------
 \begin{quote}
-bq) 78214
+bs) 78214
 \end{quote}
 Dies ist momentan der Repr"asentant der 78K2-Familie von NEC.
 %%-----------
 \begin{quote}
-br) 78310
+bt) 78310
 \end{quote}
 Dies ist momentan der Repr"asentant der 78K3-Familie von NEC.
 %%-----------
 \begin{quote}
-bs) 784026
+bu) 784026
 \end{quote}
 Dies ist momentan der Repr"asentant der 78K4-Familie von NEC.
 %%-----------
 \begin{quote}
-bt) 7720 $\rightarrow$ 7725
+bv) 7720 $\rightarrow$ 7725
 \end{quote}
 Der $\mu$PD7725 bietet im Vergleich zu seinem Vorg"anger gr"o"sere
 Adre"sr"aume und einige zus"atzliche Befehle. {\bf VORSICHT!}  Die
 Prozessoren sind nicht zueinander bin"arkompatibel!
 %%-----------
 \begin{quote}
-bu) 77230
+bw) 77230
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
-bv) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
+bx) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
     \> SYM53C875, SYM53C895
 \end{tabbing}
 \end{quote}
@@ -3719,29 +3736,29 @@ einige Befehlsvarianten nicht, au"serdem unterscheiden sie sich in ihrem
 Satz interner Register.
 %%-----------
 \begin{quote}
-bw) MB89190
+by) MB89190
 \end{quote}
 Dieser Prozessortyp repr"asentiert die F$^{2}$MC8L-Serie von Fujitsu...
 %%-----------
 \begin{quote}
-bx) MB9500
+bz) MB9500
 \end{quote}
 ...so wie dieser es momentan f"ur die 16-Bit-Varianten von Fujitsu tut!
 %%-----------
 \begin{quote}
-by) MSM5840, MSM5842, MSM58421, MSM58422, MSM5847
+ca) MSM5840, MSM5842, MSM58421, MSM58422, MSM5847
 \end{quote}
 Diese Varianten der OLMS-40-Familie unterscheiden sich im
 Befehlssatz sowie im internen Programm- und Datenspeicher.
 %%-----------
 \begin{quote}
-bz) MSM5054, MSM5055, MSM5056, MSM6051, MSM6052
+cb) MSM5054, MSM5055, MSM5056, MSM6051, MSM6052
 \end{quote}
 Gleiches wie bei der OLMS-40-Familie: Unterschiede im
 Befehlssatz sowie im internen Programm- und Datenspeicher.
 %%-----------
 \begin{quote}
-ca) 1802 $\rightarrow$ 1804, 1805, 1806 $\rightarrow$ 1804A, 1805A
+cc) 1802 $\rightarrow$ 1804, 1805, 1806 $\rightarrow$ 1804A, 1805A
 1806A
 \end{quote}
 1804, 1805 und 1806 haben gegen"uber dem 'Original' 1802 einen leicht
@@ -3751,12 +3768,12 @@ Timer.  Die A-Versionen erweitern den Befehlssatz um \tty{DSAV},
 BCD-Format.
 %%-----------
 \begin{quote}
-cb) XS1
+cd) XS1
 \end{quote}
 Dieser Typ repr"asentiert die XCore-''Familie''.
 %%-----------
 \begin{quote}
-cc) 1750
+ce) 1750
 \end{quote}
 MIL STD 1750 ist ein Standard, also gibt es auch nur eine
 (Standard-)Variante...
@@ -4333,6 +4350,14 @@ gleichzeitig in das Registerfile einblenden zu k"onnen.  Sollte
 es m"oglich sein, eine Speicherzelle "uber beide Bereiche zu adressieren,
 so w"ahlt AS immer den Weg "uber \tty{WSR}!
 
+Bei indirekter Adressierung k"onnen Displacements wahlweise kurz (8 Bit,
+-128 bis +127) oder lang (16 Bit) sein.  Der Assembler w"ahlt automatisch
+anhand des Displacements die k"urzestm"ogliche Kodierung.  Es ist aber m"oglich,
+durch ein vorangestelltes Gr"o"ser-Zeichen (\verb!>!) eine 16-Bit-Kodierung
+des Displacements zu erzwingen.  Gleiches gilt für absolute Adressen im
+Bereich 0ff80h...0ffffh, die mit einem kurzen Offset relativ zum "Nullregister"
+adressiert werden k"onnen.
+
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 \subsubsection{8086}
@@ -4413,6 +4438,22 @@ Der 80C167 kennt noch einige Befehle, die die Seitenregister in ihrer
 Funktion "ubersteuern k"onnen.  Wie diese Befehle die Adre"sgenerierung
 beeinflussen, ist im Kapitel mit den prozessorspezifischen Hinweisen
 beschrieben.
+\par
+Einige Maschineninstruktionen kennen ein verk"urzte Kodierung, wenn das
+Argument in einem bestimmten Wertebereich liegt:
+\begin{itemize}
+\item{\verb!MOV Rn,#<0..15>!}
+\item{\verb!ADD/ADDC/SUB/SUBC/CMP/XOR/AND/OR Rn, #<0..7>!}
+\item{\verb!LOOP Rn,#<0..15>!}
+\end{itemize}
+Der Assembler verwendet im Default automatisch die k"urzere Kodierung
+wenn m"oglich.  Falls man die l"angere erzwingen m"ochte, schreibt
+man analog zum 65xx/68xx ein Gr"o"serzeichen vor den Operanden (hinter
+das Doppelkreuz!).  Umgekehrt kann man auch ein Kleinerzeichen schreiben,
+wenn man die kurze Korierung erzwingen will.  Falls der Operand nicht
+im erlaubten Wertebereich liegt, gibt es eine Fehlermeldung.  Singem"a"s
+das gleiche gilt für Spr"unge, die mit kurzem Displacement oder langem,
+ansoluten Argument kodiert werden k"onnen.
 
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 

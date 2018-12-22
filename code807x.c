@@ -682,7 +682,10 @@ static void DecodeBranch(Word Code)
   /* allow both syntaxes for PC-relative addressing */
 
   if (ArgCnt == 1)
-    strcpy(ArgStr[++ArgCnt].Str, "PC");
+  {
+    IncArgCnt();
+    strcpy(ArgStr[ArgCnt].Str, "PC");
+  }
 
   if (ChkArgCnt(2, 2))
   {
@@ -788,7 +791,7 @@ static void MakeCode_807x(void)
    if (DecodeIntelPseudo(False)) return;
 
    if (!LookupInstTable(InstTable, OpPart.Str))
-     WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+     WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static Boolean IsDef_807x(void)

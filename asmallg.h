@@ -12,7 +12,7 @@
 
 extern void SetCPU(CPUVar NewCPU, Boolean NotPrev);
 
-extern Boolean SetNCPU(char *Name, Boolean NotPrev);
+extern Boolean SetNCPU(const char *pName, Boolean NotPrev);
 
 extern void AddONOFF(const char *InstName, Boolean *Flag, const char *FlagName, Boolean Persist);
 

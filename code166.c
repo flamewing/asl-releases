@@ -135,6 +135,13 @@ enum
   ModLAbs = 8,
 };
 
+typedef enum
+{
+  eForceNone = 0,
+  eForceShort = 1,
+  eForceLong = 2,
+} tForceSize;
+
 #define MModReg (1 << ModReg)
 #define MModImm (1 << ModImm)
 #define MModIReg (1 << ModIReg)
@@ -148,6 +155,7 @@ enum
 static Byte AdrMode;
 static Byte AdrVals[2];
 static ShortInt AdrType;
+static tForceSize ForceSize;
 
 static Boolean IsReg(const char *Asc, Byte *Erg, Boolean WordWise)
 {
@@ -358,26 +366,40 @@ static void DecideAbsolute(Boolean InCode, LongInt DispAcc, Word Mask, Boolean D
   }
 }
 
+static int SplitForceSize(const char *pArg, tForceSize *pForceSize)
+{
+  switch (*pArg)
+  {
+    case '>': *pForceSize = eForceLong; return 1;
+    case '<': *pForceSize = eForceShort; return 1;
+    default: return 0;
+  }
+}
+
 static void DecodeAdr(const tStrComp *pArg, Word Mask, Boolean InCode, Boolean Dest)
 {
   LongInt HDisp, DispAcc;
   Boolean OK, NegFlag, NNegFlag;
   Byte HReg;
+  int Offs;
 
   AdrType = ModNone; AdrCnt = 0;
+  ForceSize = eForceNone;
 
   /* immediate ? */
 
   if (*pArg->Str == '#')
   {
+    Offs = SplitForceSize(pArg->Str + 1, &ForceSize);
+    FirstPassUnknown = False;
     switch (OpSize)
     {
       case 0:
-        AdrVals[0] = EvalStrIntExpressionOffs(pArg, 1, Int8, &OK);
+        AdrVals[0] = EvalStrIntExpressionOffs(pArg, 1 + Offs, Int8, &OK);
         AdrVals[1] = 0;
         break;
       case 1:
-        HDisp = EvalStrIntExpressionOffs(pArg, 1, Int16, &OK);
+        HDisp = EvalStrIntExpressionOffs(pArg, 1 + Offs, Int16, &OK);
         AdrVals[0] = Lo(HDisp);
         AdrVals[1] = Hi(HDisp);
         break;
@@ -433,7 +455,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask, Boolean InCode, Boolean D
       tStrComp Remainder;
       char *pSplitPos;
 
-      NegFlag = False;
+      NNegFlag = NegFlag = False;
       DispAcc = 0;
       AdrMode = 0xff;
       do
@@ -483,7 +505,9 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask, Boolean InCode, Boolean D
   }
   else
   {
-    DispAcc = EvalStrIntExpression(pArg, MemInt, &OK);
+    int Offset = SplitForceSize(pArg->Str, &ForceSize);
+
+    DispAcc = EvalStrIntExpressionOffs(pArg, Offset, MemInt, &OK);
     if (OK)
       DecideAbsolute(InCode, DispAcc, Mask, Dest);
   }
@@ -687,11 +711,20 @@ static void DecodeMOV(Word Code)
             BAsmCode[1] = (HReg << 4) + AdrMode;
             break;
           case ModImm:
-            if (WordVal() <= 15)
+          {
+            Boolean IsShort = WordVal() <= 15;
+
+            if (!ForceSize)
+              ForceSize = IsShort ? eForceShort : eForceLong;
+            if (ForceSize == eForceShort)
             {
-              CodeLen = 2;
-              BAsmCode[0] = 0xe0 + Code;
-              BAsmCode[1] = (WordVal() << 4) + HReg;
+              if (!IsShort && !SymbolQuestionable) WrStrErrorPos(ErrNum_OverRange, &ArgStr[2]);
+              else
+              {
+                CodeLen = 2;
+                BAsmCode[0] = 0xe0 + Code;
+                BAsmCode[1] = (WordVal() << 4) + HReg;
+              }
             }
             else
             {
@@ -701,6 +734,7 @@ static void DecodeMOV(Word Code)
               memcpy(BAsmCode + 2, AdrVals, 2);
             }
             break;
+          }
           case ModIReg:
             CodeLen = 2;
             BAsmCode[0] = 0xa8 + Code;
@@ -997,11 +1031,20 @@ static void DecodeALU2(Word Code)
             memcpy(BAsmCode + 2, AdrVals, AdrCnt);
             break;
           case ModImm:
-            if (WordVal() <= 7)
+          {
+            Boolean IsShort = WordVal() <= 7;
+
+            if (!ForceSize)
+              ForceSize = IsShort ? eForceShort : eForceLong;
+            if (ForceSize == eForceShort)
             {
-              CodeLen = 2;
-              BAsmCode[0] = 0x08 + Code;
-              BAsmCode[1] = (HReg << 4) + AdrVals[0];
+              if (!IsShort && !SymbolQuestionable) WrStrErrorPos(ErrNum_OverRange, &ArgStr[2]);
+              else
+              {
+                CodeLen = 2;
+                BAsmCode[0] = 0x08 + Code;
+                BAsmCode[1] = (HReg << 4) + AdrVals[0];
+              }
             }
             else
             {
@@ -1011,6 +1054,7 @@ static void DecodeALU2(Word Code)
               memcpy(BAsmCode + 2, AdrVals, 2);
             }
             break;
+          }
         }
         break;
       case ModMReg:
@@ -1105,11 +1149,20 @@ static void DecodeLoop(Word Code)
           memcpy(BAsmCode + 2, AdrVals, 2);
           break;
         case ModImm:
-          if (WordVal() < 16)
+        {
+          Boolean IsShort = WordVal() < 16;
+
+          if (!ForceSize)
+            ForceSize = IsShort ? eForceShort : eForceLong;
+          if (ForceSize == eForceShort)
           {
-            CodeLen = 2;
-            BAsmCode[0] = Code;
-            BAsmCode[1] += (WordVal() << 4);
+            if (!IsShort && !SymbolQuestionable) WrStrErrorPos(ErrNum_OverRange, &ArgStr[2]);
+            else
+            {
+              CodeLen = 2;
+              BAsmCode[0] = Code;
+              BAsmCode[1] += (WordVal() << 4);
+            }
           }
           else
           {
@@ -1119,6 +1172,7 @@ static void DecodeLoop(Word Code)
             memcpy(BAsmCode + 2, AdrVals, 2);
           }
           break;
+        }
       }
     }
   }
@@ -1170,7 +1224,7 @@ static void DecodeShift(Word Code)
             CodeLen = 2;
             break;
           case ModImm:
-            if (WordVal() > 15) WrError(ErrNum_OverRange);
+            if ((WordVal() > 15) && !SymbolQuestionable) WrStrErrorPos(ErrNum_OverRange, &ArgStr[2]);
             else
             {
               BAsmCode[0] = Code + 0x10;
@@ -1274,12 +1328,20 @@ static void DecodeJMP(Word Code)
           break;       
         case ModAbs:
         {
-          LongInt AdrLong = WordVal() - (EProgCounter() + 2);
-          if ((AdrLong <= 254) && (AdrLong >= -256) && ((AdrLong & 1) == 0))
+          LongInt AdrDist = WordVal() - (EProgCounter() + 2);
+          Boolean IsShort = (AdrDist <= 254) && (AdrDist >= -256) && ((AdrDist & 1) == 0);
+
+          if (!ForceSize)
+            ForceSize = IsShort ? eForceShort : eForceLong;
+          if (ForceSize == eForceShort)
           {
-            CodeLen = 2;
-            BAsmCode[0] = 0x0d + (Conditions[Cond].Code << 4);
-            BAsmCode[1] = (AdrLong / 2) & 0xff;
+            if (!IsShort && !SymbolQuestionable) WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[ArgCnt]);
+            else
+            {
+              CodeLen = 2;
+              BAsmCode[0] = 0x0d + (Conditions[Cond].Code << 4);
+              BAsmCode[1] = (AdrDist / 2) & 0xff;
+            }
           }
           else
           {
@@ -1325,11 +1387,19 @@ static void DecodeCALL(Word Code)
         case ModAbs:
         {
           LongInt AdrLong = WordVal() - (EProgCounter() + 2);
-          if ((AdrLong <= 254) && (AdrLong >= -256) && ((AdrLong&1) == 0) && (Cond == TrueCond))
+          Boolean IsShort = (AdrLong <= 254) && (AdrLong >= -256) && ((AdrLong & 1) == 0);
+
+          if (!ForceSize && (Cond == TrueCond))
+            ForceSize = IsShort ? eForceShort : eForceLong;
+          if (ForceSize == eForceShort)
           {
-            CodeLen = 2;
-            BAsmCode[0] = 0xbb;
-            BAsmCode[1] = (AdrLong / 2) & 0xff;
+            if (!IsShort && !SymbolQuestionable) WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[ArgCnt]);
+            else
+            {
+              CodeLen = 2;
+              BAsmCode[0] = 0xbb;
+              BAsmCode[1] = (AdrLong / 2) & 0xff;
+            }
           }
           else
           {
@@ -1878,7 +1948,7 @@ static void MakeCode_166(void)
    }
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static void InitCode_166(void)

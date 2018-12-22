@@ -1047,19 +1047,19 @@ static void MakeCode_6805(void)
   {
     int z;
 
-    for (z = ArgCnt; z >= 1; z--)
+    IncArgCnt();
+    for (z = ArgCnt - 1; z >= 1; z--)
       StrCompCopy(&ArgStr[z + 1], &ArgStr[z]);
     *ArgStr[1].Str = ch;
     ArgStr[1].Str[1] = '\0';
     ArgStr[1].Pos.StartCol = OpPart.Pos.StartCol + l - 1;
     ArgStr[1].Pos.Len = 1;
-    ArgCnt++;
     OpPart.Str[l - 1] = '\0';
     OpPart.Pos.Len--;
   }
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static Boolean IsDef_6805(void)

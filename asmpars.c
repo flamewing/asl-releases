@@ -1673,7 +1673,7 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
     ValFunc = FindFunction(FName.Str);
     if (ValFunc)
     {
-      char CompArgStr[255];
+      String CompArgStr;
       tStrComp CompArg;
 
       StrCompMkTemp(&CompArg, CompArgStr);
@@ -1707,7 +1707,7 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
         if (TempResultToPlainString(stemp + 1, &InVals[0], 253))
           LEAVE;
         strmaxcat(stemp,")", 255);
-        ExpandLine(stemp, z1, CompArg.Str);
+        ExpandLine(stemp, z1, CompArg.Str, sizeof(CompArgStr));
       }
       if (*FArg.Str)
       {

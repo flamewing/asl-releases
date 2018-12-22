@@ -104,9 +104,9 @@ extern void PrintUseList(void);
 extern void ClearUseList(void);
 
 
-extern int CompressLine(char *TokNam, Byte Num, char *Line, Boolean CompressLine);
+extern int CompressLine(const char *TokNam, unsigned TokenNum, char *Line, unsigned LineSize, Boolean CaseSensitive);
 
-extern void ExpandLine(char *TokNam, Byte Num, char *Line);
+extern void ExpandLine(const char *TokNam, unsigned TokenNum, char *Line, unsigned LineSize);
 
 extern void KillCtrl(char *Line);
 

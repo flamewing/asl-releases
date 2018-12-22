@@ -1918,7 +1918,7 @@ static void MakeCode_3203X(void)
 
   if (!LookupInstTable(InstTable, OpPart.Str))
   {
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
     NextPar = False;
   }
 }

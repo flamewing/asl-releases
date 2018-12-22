@@ -2592,7 +2592,7 @@ static void MakeCode_96C141(void)
   /* vermischt */
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static Boolean ChkPC_96C141(LargeWord Addr)

@@ -1428,7 +1428,7 @@ static void MakeCode_90C141(void)
   if (DecodeIntelPseudo(False)) return;
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 /*-------------------------------------------------------------------------*/

@@ -1310,7 +1310,7 @@ static void MakeCode_3205x(void)
   /* per Hash-Tabelle */
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 /* ---------------------------------------------------------------------- */

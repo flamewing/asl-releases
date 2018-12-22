@@ -1111,7 +1111,7 @@ void WrErrorString(char *pMessage, char *pAdd, Boolean Warning, Boolean Fatal,
   FILE *pErrFile = ErrorFile ? ErrorFile : stdout;
 
   if (TreatWarningsAsErrors && Warning && !Fatal)
-   Warning = False;
+    Warning = False;
 
   strcpy(ErrStr[ErrStrCount], pLeadIn);
   p = GetErrorPos();
@@ -1168,7 +1168,7 @@ void WrErrorString(char *pMessage, char *pAdd, Boolean Warning, Boolean Fatal,
   }
 
   ForceErrorOpen();
-  if (strcmp(LstName, "!1") || Fatal)
+  if (strcmp(LstName, "!1") || !ListOn)
   {
     for (z = 0; z <= ErrStrCount; z++)
       fprintf(pErrFile, "%s%s\n", ErrStr[z], ClrEol);
@@ -1310,16 +1310,16 @@ void WrXErrorPos(Word Num, const char *pExtendError, const struct sLineComp *pLi
       msgno = Num_ErrMsgUndefOpSizes; break;
     case ErrNum_InvOpType:
       msgno = Num_ErrMsgInvOpType; break;
-    case ErrNum_TooMuchArgs:
-      msgno = Num_ErrMsgTooMuchArgs; break;
+    case ErrNum_TooManyArgs:
+      msgno = Num_ErrMsgTooManyArgs; break;
     case ErrNum_NoRelocs:
       msgno = Num_ErrMsgNoRelocs; break;
     case ErrNum_UnresRelocs:
       msgno = Num_ErrMsgUnresRelocs; break;
     case ErrNum_Unexportable:
       msgno = Num_ErrMsgUnexportable; break;
-    case ErrNum_UnknownOpcode:
-      msgno = Num_ErrMsgUnknownOpcode; break;
+    case ErrNum_UnknownInstruction:
+      msgno = Num_ErrMsgUnknownInstruction; break;
     case ErrNum_BrackErr:
       msgno = Num_ErrMsgBrackErr; break;
     case ErrNum_DivByZero:
@@ -1905,47 +1905,57 @@ static Boolean CompressLine_NErl(char ch)
        || ((ch >= '0') && (ch <= '9')));
 }
 
-int CompressLine(char *TokNam, Byte Num, char *Line, Boolean ThisCaseSensitive)
-{
-  int z, e, tlen, llen;
-  Boolean cmpres;
-  int NumCompress = 0;
+static char Token[3] = { 0x01, 0x00, 0x00 };
+typedef int (*tCompareFnc)(const char *s1, const char *s2, size_t n);
 
-  z = 0;
-  tlen = strlen(TokNam);
-  llen = strlen(Line);
-  while (z <= llen - tlen)
+int ReplaceLine(char *pStr, unsigned StrSize, const char *pSearch, const char *pReplace, Boolean CaseSensitive)
+{
+  int SearchLen = strlen(pSearch), ReplaceLen = strlen(pReplace), StrLen = strlen(pStr), DeltaLen = ReplaceLen - SearchLen;
+  int NumReplace = 0, Pos, End, CmpRes, Avail, nCopy, nMove;
+  tCompareFnc Compare = CaseSensitive ? strncmp : strncasecmp;
+
+  Pos = 0;
+  while (Pos <= StrLen - SearchLen)
   {
-    e = z + tlen;
-    cmpres = ThisCaseSensitive ? strncmp(Line + z, TokNam, tlen) : strncasecmp(Line + z, TokNam, tlen);
-    if ((!cmpres)
-     && ((z == 0) || (!CompressLine_NErl(Line[z - 1])))
-     && ((e >= (int)strlen(Line)) || (!CompressLine_NErl(Line[e]))))
+    End = Pos + SearchLen;
+    CmpRes = Compare(&pStr[Pos], pSearch, SearchLen);
+    if ((!CmpRes)
+     && ((Pos == 0) || (!CompressLine_NErl(pStr[Pos - 1])))
+     && ((End >= StrLen) || (!CompressLine_NErl(pStr[End]))))
     {
-      strmov(Line + z + 1, Line + e);
-      Line[z] = Num;
-      llen = strlen(Line);
-      NumCompress++;
+      Avail = StrSize - 1 - Pos;
+      nCopy = ReplaceLen; if (nCopy > Avail) nCopy = Avail;
+      Avail -= nCopy;
+      nMove = StrLen - (Pos + SearchLen); if (nMove > Avail) nMove = Avail;
+      memmove(&pStr[Pos + nCopy], &pStr[Pos + SearchLen], nMove);
+      memcpy(&pStr[Pos], pReplace, nCopy);
+      pStr[Pos + nCopy + nMove] = '\0';
+      Pos += nCopy;
+      StrLen += DeltaLen;
+      NumReplace++;
     }
-    z++;
+    else
+      Pos++;
   }
-  return NumCompress;
+  return NumReplace;
 }
 
-void ExpandLine(char *TokNam, Byte Num, char *Line)
+static void SetToken(unsigned TokenNum)
 {
-  char *z;
+  Token[0] = (TokenNum >> 4) + 1;
+  Token[1] = (TokenNum & 15) + 1;
+}
 
-  do
-  {
-    z = strchr(Line, Num);
-    if (z)
-    {
-      strmov(z, z + 1);
-      strmaxins(Line, TokNam, z - Line, 255);
-    }
-  }
-  while (z != 0);
+int CompressLine(const char *TokNam, unsigned TokenNum, char *Line, unsigned LineSize, Boolean ThisCaseSensitive)
+{
+  SetToken(TokenNum);
+  return ReplaceLine(Line, LineSize, TokNam, Token, ThisCaseSensitive);
+}
+
+void ExpandLine(const char *TokNam, unsigned TokenNum, char *Line, unsigned LineSize)
+{
+  SetToken(TokenNum);
+  (void)ReplaceLine(Line, LineSize, Token, TokNam, True);
 }
 
 void KillCtrl(char *Line)

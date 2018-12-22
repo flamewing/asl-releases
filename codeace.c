@@ -743,7 +743,7 @@ static void MakeCode_ACE(void)
   if (DecodeIntelPseudo(BigFlag)) return;
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-   WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+   WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static Boolean IsDef_ACE(void)

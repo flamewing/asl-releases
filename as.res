@@ -326,13 +326,13 @@ Message ErrMsgInvOpType
  "unpassender Operandentyp"
  "invalid operand type"
 
-Message ErrMsgTooMuchArgs
+Message ErrMsgTooManyArgs
  "zuviele Argumente"
  "too many arguments"
 
-Message ErrMsgUnknownOpcode
+Message ErrMsgUnknownInstruction
  "unbekannter Befehl"
- "unknown opcode"
+ "unknown instruction"
 
 Message ErrMsgBrackErr
  "Klammerfehler"

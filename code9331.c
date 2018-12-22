@@ -721,7 +721,7 @@ static void MakeCode_9331(void)
       case 0:
         return;
       default:
-        WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+        WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
         return;
     }
   }
@@ -735,7 +735,7 @@ static void MakeCode_9331(void)
     StripComment(ArgStr[z].Str);
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static Boolean IsDef_9331(void)

@@ -100,6 +100,7 @@
 
 #include "asmdef.h"
 #include "asmsub.h"
+#include "errmsg.h"
 
 char SrcSuffix[] = ".asm";             /* Standardendungen: Hauptdatei */
 char IncSuffix[] = ".inc";             /* Includedatei */
@@ -254,11 +255,12 @@ Boolean DoBranchExt;                    /* Spruenge automatisch verlaengern */
 LargeWord RadixBase;                    /* Default-Zahlensystem im Formelparser*/
 LargeWord OutRadixBase;                 /* dito fuer Ausgabe */
 
-tStrComp ArgStr[ArgCntMax + 1];         /* Komponenten der Zeile */
+tStrComp *ArgStr;                       /* Komponenten der Zeile */
 StringPtr LOpPart;
 tStrComp LabPart, CommPart, ArgPart, OpPart, AttrPart;
 char AttrSplit;
 int ArgCnt;                             /* Argumentzahl */
+int AllocArgCnt;
 StringPtr OneLine;                      /* eingelesene Zeile */
 #ifdef PROFILE_MEMO
 unsigned NumMemo;
@@ -379,10 +381,25 @@ int SetMaxCodeLen(LongWord NewMaxCodeLen)
   return 0;
 }
 
+void IncArgCnt(void)
+{
+  if (ArgCnt >= ArgCntMax)
+    WrXError(ErrNum_InternalError, "MaxArgCnt");
+  ++ArgCnt;
+  if (ArgCnt >= AllocArgCnt)
+  {
+    unsigned NewSize = sizeof(*ArgStr) * (ArgCnt + 1); /* one more, [0] is unused */
+    int z;
+
+    ArgStr = ArgStr ? realloc(ArgStr, NewSize) : malloc(NewSize);
+    for (z = AllocArgCnt; z <= ArgCnt; z++)
+      StrCompAlloc(&ArgStr[z]);
+    AllocArgCnt = ArgCnt + 1;
+  }
+}
+
 void asmdef_init(void)
 {
-  int z;
-
   SwitchFrom = NullProc;
   InternSymbol = Default_InternSymbol;
   DissectBit = Default_DissectBit;
@@ -399,8 +416,8 @@ void asmdef_init(void)
   PCSymbol = "--PC--SYMBOL--";
   *DefCPU = '\0';
 
-  for (z = 0; z <= ArgCntMax; z++)
-    StrCompAlloc(&ArgStr[z]);
+  ArgStr = NULL;
+  AllocArgCnt = 0;
   SourceFile = GetString();
   ClrEol = GetString();
   CursUp = GetString();

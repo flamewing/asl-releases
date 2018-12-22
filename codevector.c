@@ -273,7 +273,7 @@ static void MakeCode_Vector(void)
   if (Memo("")) return;
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static void SwitchTo_Vector(void)

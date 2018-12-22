@@ -70,6 +70,13 @@ enum { ModNone = -1, ModDir = 0, ModMem = 1, ModImm = 2 };
 #define SFRStart 2
 #define SFRStop 0x17
 
+typedef enum
+{
+  eForceNone = 0,
+  eForceShort = 1,
+  eForceLong = 2,
+} tForceSize;
+
 static CPUVar CPU8096, CPU80196, CPU80196N, CPU80296;
 
 static Byte AdrMode;
@@ -147,6 +154,16 @@ static void ChkAdr(Byte Mask)
     WrError(ErrNum_InvAddrMode);
     AdrType = ModNone;
     AdrCnt = 0;
+  }
+}
+
+static int SplitForceSize(const char *pArg, tForceSize *pForceSize)
+{
+  switch (*pArg)
+  {
+    case '>': *pForceSize = eForceLong; return 1;
+    case '<': *pForceSize = eForceShort; return 1;
+    default: return 0;
   }
 }
 
@@ -237,10 +254,13 @@ static void DecodeAdr(const tStrComp *pArg, Byte Mask, Boolean AddrWide)
           }
           else
           {
-            AdrInt = EvalStrIntExpression(&Left, AddrWide ? Int24 : Int16, &OK);
+            tForceSize ForceSize = eForceNone;
+            int Offset = SplitForceSize(Left.Str, &ForceSize);
+
+            AdrInt = EvalStrIntExpressionOffs(&Left, Offset, AddrWide ? Int24 : Int16, &OK);
             if (OK)
             {
-              if (AdrInt == 0)
+              if ((AdrInt == 0) && !ForceSize)
               {
                 AdrType = ModMem;
                 AdrMode = 2;
@@ -250,29 +270,41 @@ static void DecodeAdr(const tStrComp *pArg, Byte Mask, Boolean AddrWide)
               else if (AddrWide)
               {
                 AdrType = ModMem;
-                AdrMode=3;
+                AdrMode= 3;
                 AdrCnt = 4;
                 AdrVals[0] = Reg;
                 AdrVals[1] = AdrInt & 0xff;
                 AdrVals[2] = (AdrInt >> 8) & 0xff;
                 AdrVals[3] = (AdrInt >> 16) & 0xff;
               }
-              else if ((AdrInt >= -128) && (AdrInt < 127))
-              {
-                AdrType = ModMem;
-                AdrMode = 3;
-                AdrCnt = 2;
-                AdrVals[0] = Reg;
-                AdrVals[1] = Lo(AdrInt);
-              }
               else
               {
-                AdrType = ModMem;
-                AdrMode = 3;
-                AdrCnt = 3;
-                AdrVals[0] = Reg + 1;
-                AdrVals[1] = Lo(AdrInt);
-                AdrVals[2] = Hi(AdrInt);
+                Boolean IsShort = (AdrInt >= -128) && (AdrInt <= 127);
+
+                if (!ForceSize)
+                  ForceSize = IsShort ? eForceShort : eForceLong;
+                if (ForceSize == eForceShort)
+                {
+                  if ((AdrInt > 127) && !SymbolQuestionable) WrStrErrorPos(ErrNum_OverRange, &Left);
+                  else if ((AdrInt < -128) && !SymbolQuestionable) WrStrErrorPos(ErrNum_UnderRange, &Left);
+                  else
+                  {
+                    AdrType = ModMem;
+                    AdrMode = 3;
+                    AdrCnt = 2;
+                    AdrVals[0] = Reg;
+                    AdrVals[1] = Lo(AdrInt);
+                  }
+                }
+                else
+                {
+                  AdrType = ModMem;
+                  AdrMode = 3;
+                  AdrCnt = 3;
+                  AdrVals[0] = Reg + 1;
+                  AdrVals[1] = Lo(AdrInt);
+                  AdrVals[2] = Hi(AdrInt);
+                }
               }
             }
           }
@@ -282,8 +314,11 @@ static void DecodeAdr(const tStrComp *pArg, Byte Mask, Boolean AddrWide)
   }
   else
   {
+    tForceSize ForceSize = eForceNone;
+    int Offset = SplitForceSize(pArg->Str, &ForceSize);
+
     FirstPassUnknown = False;
-    AdrWord = EvalStrIntExpression(pArg, MemInt, &OK);
+    AdrWord = EvalStrIntExpressionOffs(pArg, Offset, MemInt, &OK);
     if (FirstPassUnknown)
       AdrWord &= (0xffffffff - OMask);
     if (OK)
@@ -292,7 +327,7 @@ static void DecodeAdr(const tStrComp *pArg, Byte Mask, Boolean AddrWide)
       else
       {
         BReg = AdrWord & 0xffff;
-        if ((!(BReg & 0xffff0000)) && (ChkWork(&BReg)))
+        if ((!(BReg & 0xffff0000)) && ChkWork(&BReg) && !ForceSize)
         {
           AdrType = ModDir;
           AdrCnt = 1; 
@@ -308,22 +343,33 @@ static void DecodeAdr(const tStrComp *pArg, Byte Mask, Boolean AddrWide)
           AdrVals[2] = (AdrWord >> 8) & 0xff;
           AdrVals[3] = (AdrWord >> 16) & 0xff;
         }
-        else if (AdrWord >= 0xff80)
-        {
-          AdrType = ModMem;
-          AdrMode = 3;
-          AdrCnt = 2;
-          AdrVals[0] = 0;
-          AdrVals[1] = Lo(AdrWord);
-        }
         else
         {
-          AdrType = ModMem;
-          AdrMode = 3;
-          AdrCnt = 3;
-          AdrVals[0] = 1;
-          AdrVals[1] = Lo(AdrWord);
-          AdrVals[2] = Hi(AdrWord);
+          Boolean IsShort = AdrWord >= 0xff80;
+
+          if (!ForceSize)
+            ForceSize = IsShort ? eForceShort : eForceLong;
+          if (ForceSize == eForceShort)
+          {
+            if (!IsShort) WrStrErrorPos(ErrNum_UnderRange, pArg);
+            else
+            {
+              AdrType = ModMem;
+              AdrMode = 3;
+              AdrCnt = 2;
+              AdrVals[0] = 0;
+              AdrVals[1] = Lo(AdrWord);
+            }
+          }
+          else
+          {
+            AdrType = ModMem;
+            AdrMode = 3;
+            AdrCnt = 3;
+            AdrVals[0] = 1;
+            AdrVals[1] = Lo(AdrWord);
+            AdrVals[2] = Hi(AdrWord);
+          }
         }
       }
     }
@@ -1317,7 +1363,7 @@ static void MakeCode_96(void)
     return;
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static void InitCode_96(void)

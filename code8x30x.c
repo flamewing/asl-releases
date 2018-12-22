@@ -570,7 +570,7 @@ static void MakeCode_8x30X(void)
   /* Pseudoanweisungen */
 
   if (!LookupInstTable(InstTable, OpPart.Str))
-    WrStrErrorPos(ErrNum_UnknownOpcode, &OpPart);
+    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
 static Boolean IsDef_8x30X(void)
