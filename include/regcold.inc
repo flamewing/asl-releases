@@ -28,16 +28,20 @@ reg.__LABEL__	equ	start
 ;----------------------------------------------------------------------------
 ; commonly used macros
 
+__hexstr	macro		DEST,SRC
+DEST		set		"\{SRC}"
+		endm
+
 __decstr	macro		DEST,SRC
-		if		SRC<10
+		if		(SRC)<10
 DEST		set		"\{SRC}"
 		elseif
-DEST		set		"\{SRC/10}\{SRC#10}"
+DEST		set		"\{(SRC)/10}\{(SRC)#10}"
 		endif
 		endm
 
 __dec02str	macro		DEST,SRC
-DEST		set		"\{SRC/10}\{SRC#10}"
+DEST		set		"\{(SRC)/10}\{(SRC)#10}"
 		endm
 
 __enumregs	macro		ARG,START,END
@@ -49,11 +53,29 @@ __N		set		__N+1
 		endm
 		endm
 
-__enumbits	macro		Reg,Prefix,Cnt
+__enumbits	macro		Reg,Prefix,Cnt,NameOffs=0
 __N		set		0
 		rept		Cnt
-		__decstr	__NS,__N
+		__decstr	__NS,__N+NameOffs
 Prefix{"\{__NS}"} cfbit		Reg,__N
+__N		set		__N+1
+		endm
+		endm
+
+__enumbits_o	macro		Reg,Prefix,Start,Cnt,NameOffs=0
+__N		set		Start
+		rept		Cnt
+		__decstr	__NS,__N+(NameOffs)
+Prefix{"\{__NS}"} cfbit		Reg,__N
+__N		set		__N+1
+		endm
+		endm
+
+__enumbits2	macro		Reg,Prefix,Postfix,Cnt,NameOffs=0
+__N		set		0
+		rept		Cnt
+		__decstr	__NS,__N+NameOffs
+Prefix{"\{__NS}"}Postfix cfbit		Reg,__N
 __N		set		__N+1
 		endm
 		endm
@@ -97,9 +119,11 @@ __N		set		__N+1
 		  include "coldfire/mcf5474.inc"
 		case "MCF5475"
 		  include "coldfire/mcf5475.inc"
+		case "MCF51QM"
+		  include "coldfire/mcf51qm.inc"
 		  
 		elsecase
-		  error	"wrong processor type set: only MCF5204, MCF5206, MCF5208, MCF52274, MCF52277, MCF5307, MCF5329, MCF5373, MCF5407, or MCF5470 to MCF5475 allowed!"
+		  error	"wrong processor type set: only MCF5204, MCF5206, MCF5208, MCF52274, MCF52277, MCF5307, MCF5329, MCF5373, MCF5407, MCF5470 to MCF5475, MCF51QM allowed!"
 		endcase
 
 ;----------------------------------------------------------------------------

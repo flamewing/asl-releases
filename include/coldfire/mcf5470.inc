@@ -19,5 +19,5 @@ __has_fec1	equ	1
 		include	"coldfire/mcf547x.inc"
 		
 		restore
-		
+
 		endif				; __mcf5470inc

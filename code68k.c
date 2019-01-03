@@ -5387,6 +5387,121 @@ static void DecodeMxxAC(Word Code)
   CodeLen = 4;
 }
 
+static void DecodeCPBCBUSY(Word Code)
+{
+  if (pCurrCPUProps->CfISA == eCfISA_None) WrError(ErrNum_InstructionNotSupported);
+  else if (*AttrPart.Str && (OpSize != eSymbolSize16Bit)) WrError(ErrNum_InvOpSize);
+  else if (ChkArgCnt(1, 1))
+  {
+    Boolean OK;
+    LongInt Dist;
+
+    Dist = EvalStrIntExpression(&ArgStr[1], UInt32, &OK) - (EProgCounter() + 2);
+    if (OK)
+    {
+      if (!SymbolQuestionable && !IsDisp16(Dist)) WrError(ErrNum_JmpDistTooBig);
+      else
+      {
+        WAsmCode[0] = Code;
+        WAsmCode[1] = Dist & 0xffff;
+        CodeLen = 4;
+      }
+    }
+  }
+}
+
+static void DecodeCPLDST(Word Code)
+{
+  if (pCurrCPUProps->CfISA == eCfISA_None) WrError(ErrNum_InstructionNotSupported);
+  else if (ChkArgCnt(1, 4))
+  {
+    Boolean OK;
+    Word Reg;
+    const tStrComp *pEAArg = NULL, *pRnArg = NULL, *pETArg = NULL;
+
+    WAsmCode[0] = Code | (OpSize << 6);
+
+    /* CMD is always present and i bits 0..8 - immediate marker is optional
+       since it is always a constant. */
+
+    WAsmCode[1] = EvalStrIntExpressionOffs(&ArgStr[ArgCnt], !!(*ArgStr[ArgCnt].Str == '#'), UInt16, &OK);
+    if (!OK)
+      return;
+
+    if (ArgCnt >= 2)
+      pEAArg = &ArgStr[1];
+    switch (ArgCnt)
+    {
+      case 4:
+        pRnArg = &ArgStr[2];
+        pETArg = &ArgStr[3];
+        break;
+      case 3:
+        if (CodeReg(ArgStr[2].Str, &Reg))
+          pRnArg = &ArgStr[2];
+        else
+          pETArg = &ArgStr[2];
+        break;
+     }
+
+    if (pRnArg)
+    {
+      if (!CodeReg(pRnArg->Str, &Reg))
+      {
+        WrStrErrorPos(ErrNum_InvReg, pRnArg);
+        return;
+      }
+      WAsmCode[1] |= Reg << 12;
+    }
+    if (pETArg)
+    {
+      Word ET;
+
+      ET = EvalStrIntExpression(pETArg, UInt3, &OK);
+      if (!OK)
+        return;
+      WAsmCode[1] |= ET << 9;
+    }
+
+    if (pEAArg)
+    {
+      DecodeAdr(pEAArg, Mdata | Madr | Madri | Mpost | Mpre | Mdadri);
+      if (!AdrNum)
+        return;
+      WAsmCode[0] |= AdrMode;
+      CopyAdrVals(WAsmCode + 2);
+      CodeLen = 4 + AdrCnt;
+    }
+    else
+      CodeLen = 4;
+  }
+}
+
+static void DecodeCPNOP(Word Code)
+{
+  if (pCurrCPUProps->CfISA == eCfISA_None) WrError(ErrNum_InstructionNotSupported);
+  else if (ChkArgCnt(0, 1))
+  {
+    WAsmCode[0] = Code | (OpSize << 6);
+
+    /* CMD is always present and i bits 0..8 - immediate marker is optional
+       since it is always a constant. */
+
+    if (ArgCnt > 0)
+    {
+      Word ET;
+      Boolean OK;
+
+      ET = EvalStrIntExpression(&ArgStr[1], UInt3, &OK);
+      if (!OK)
+        return;
+      WAsmCode[1] |= ET << 9;
+    }
+
+    CodeLen = 4;
+  }
+}
+
 /*-------------------------------------------------------------------------*/
 /* Dekodierroutinen Pseudoinstruktionen: */
 
@@ -5719,6 +5834,15 @@ static void InitFields(void)
   AddInstTable(InstTable, "MSAAC" , 0x0101, DecodeMxxAC);
   AddInstTable(InstTable, "MSSAC" , 0x0103, DecodeMxxAC);
 
+  AddInstTable(InstTable, "CP0BCBUSY", 0xfcc0, DecodeCPBCBUSY);
+  AddInstTable(InstTable, "CP1BCBUSY", 0xfec0, DecodeCPBCBUSY);
+  AddInstTable(InstTable, "CP0LD", 0xfc00, DecodeCPLDST);
+  AddInstTable(InstTable, "CP1LD", 0xfe00, DecodeCPLDST);
+  AddInstTable(InstTable, "CP0ST", 0xfd00, DecodeCPLDST);
+  AddInstTable(InstTable, "CP1ST", 0xff00, DecodeCPLDST);
+  AddInstTable(InstTable, "CP0NOP", 0xfc00, DecodeCPNOP);
+  AddInstTable(InstTable, "CP1NOP", 0xfe00, DecodeCPNOP);
+
   PMMURegs = (PMMUReg*) malloc(sizeof(PMMUReg) * PMMURegCnt);
   InstrZ = 0;
   AddPMMUReg("TC"   , eSymbolSize32Bit, 16); AddPMMUReg("DRP"  , eSymbolSize64Bit, 17);
@@ -5959,6 +6083,13 @@ static const tCtReg CtRegs_Cf_EMAC[] =
   { NULL       , 0x000 },
 };
 
+static const tCtReg CtRegs_MCF51[] =
+{
+  { "VBR"      , 0x801 },
+  { "CPUCR"    , 0x802 },
+  { NULL       , 0x000 },
+};
+
 static const tCPUProps CPUProps[] =
 {
   /* 68881/68882 may be attached memory-mapped and emulated on pre-68020 devices */
@@ -5982,6 +6113,7 @@ static const tCPUProps CPUProps[] =
   { "MCF5473",  0xfffffffful, eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
   { "MCF5474",  0xfffffffful, eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
   { "MCF5475",  0xfffffffful, eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
+  { "MCF51QM",  0xfffffffful, eColdfire, eCfISA_C     , eFlagBranch32 | eFlagMAC | eFlagEMAC, { CtRegs_MCF51 } }, /* V1 */
   { "68332",    0xfffffffful, eCPU32   , eCfISA_None  , eFlagBranch32 | eFlagLogCCR | eFlagIdxScaling, { CtRegs_1040 } },
   { "68340",    0xfffffffful, eCPU32   , eCfISA_None  , eFlagBranch32 | eFlagLogCCR | eFlagIdxScaling, { CtRegs_1040 } },
   { "68360",    0xfffffffful, eCPU32   , eCfISA_None  , eFlagBranch32 | eFlagLogCCR | eFlagIdxScaling, { CtRegs_1040 } },

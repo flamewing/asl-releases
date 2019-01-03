@@ -164,10 +164,14 @@ debian: docs debversion
 # for my own use only...
 
 archive: unjunk asport.tar.gz
+zarchive: unjunk asport.zip
 
 asport.tar.gz: $(ARCHFILES)
 	tar cvf asport.tar $(ARCHFILES)
 	gzip -9 -f asport.tar
+
+asport.zip: $(ARCHFILES)
+	zip -9 -r asport $(ARCHFILES)
 
 unjunk:
 	rm -f `find . -name "testlog" -print` \

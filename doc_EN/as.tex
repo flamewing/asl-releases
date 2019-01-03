@@ -65,7 +65,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition November 2018}
+{\large Edition January 2019}
 \end{raggedright}
 
 \clearpage
@@ -2970,6 +2970,7 @@ a) \> 68008 $\rightarrow$ 68000 $\rightarrow$ 68010 $\rightarrow$ 68012 $\righta
    \> MCF52274 $\rightarrow$ MCF52277 $\rightarrow$ MCF5307 $\rightarrow$ MCF5329 $\rightarrow$ \\
    \> MCF5373 $\rightarrow$ MCF5407 $\rightarrow$ MCF5470 $\rightarrow$ MCF5471 $\rightarrow$ \\
    \> MCF5472 $\rightarrow$ MCF5473 $\rightarrow$ MCF5474 $\rightarrow$ MCF5475 $\rightarrow$ \\
+   \> MCF51QM $\rightarrow$ \\
    \> 68332 $\rightarrow$ 68340 $\rightarrow$ 68360 $\rightarrow$ \\
    \> 68020 $\rightarrow$ 68030 $\rightarrow$ 68040
 \end{tabbing}
@@ -4218,13 +4219,12 @@ the register file.  In case it is possible to address a memory cell
 via both areas, AS will always choose the way via WSR!
 
 For indirect addressing, displacements may be either short (8 bits,
--128 to +127) or long (16 bits).  The assembler will automatically 
-will automatically use the shortest possible encoding for a given
-displacement.  It is however possible to enforce a 16-bit coding by
-prefixing the displacement argument with a bigger sign ((\verb!>!).
-similar is true for absolute addresses in the area from 0ff80h to
-0ffffh, which may be reached via a short offset relative to the 
-"null register".
+-128 to +127) or long (16 bits).  The assembler will automatically
+use the shortest possible encoding for a given displacement.  It
+is however possible to enforce a 16-bit coding by prefixing the
+displacement argument with a bigger sign ((\verb!>!).  Similarly,
+absolute addresses in the area from 0ff80h to 0ffffh may be reached
+via a short offset relative to the "null register".
 
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 

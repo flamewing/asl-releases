@@ -47,5 +47,6 @@ for /A:D %%T in (t_*) do call testall %T%
 echo successes: %SUMPASS% >> ..\testlog
 echo failures: %SUMFAIL% >> ..\testlog
 type ..\testlog
+exit /B 0
 
 :end

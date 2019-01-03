@@ -209,3 +209,58 @@
 		  endm
 		 endm
 		endm
+
+		; test CAU
+
+		cpu		mcf51qm
+
+		include		"regcold.inc"
+
+		; it took me quite a while to get hold of cf_prm_coproc.pdf...
+
+		cp0ld.l		#CNOP		; NOP
+		cp0ld		#CNOP		; 32 bit is default opsize (and only one allowed for CAU)
+		cp0ld		d0,CNOP
+		cp0ld		d0,d0,CNOP
+		cp0ld		d0,0,CNOP
+		cp0ld		d0,d0,0,CNOP
+		cp0nop				; should be same...
+		cp0nop		0
+		cp0ld		d1,#LDR+CA0	; Load D1 -> CA0
+		cp0st		d2,#STR+CA1	; Store CA1 -> D2
+		cp0ld		d3,#ADR+CA2	; CA2 += D3
+		cp0ld		#ADRA+CA3	; CAA += CA3
+		cp0ld		d4,#XOR+CAA	; CAA ^= D4
+		cp0ld		#MVRA+CA5	; CAA <- CA5
+		cp0ld		#MVAR+CA6	; CA6 <- CAA
+		cp0ld		#AESS+CA7	; CA7 <- AES-subsitution(CA7)
+		cp0ld		#AESIS+CA8	; CA8 <- AES-inverse-subsitution(CA8)
+		cp0ld		d5,#AESC+CA1	; CA1 <- AES-column-operation(D5)
+		cp0ld		d6,#AESIC+CA2	; CA2 <- AES-inverse-column-operation(D6)
+		cp0ld		#AESR		; AES row shift op on CA0...CA3
+		cp0ld		#AESIR		; AES inverse row shift op on CA0...CA3
+		cp0ld		#DESR		; DES round on CA0...CA3
+		cp0ld		#DESR+IP	; " with initial permutation
+		cp0ld		#DESR+FP	; " with final permutation
+		cp0ld		#DESR+KSL2	; " with left 2 key update
+		cp0ld		#DESK		; DES key transformation
+		cp0ld		#DESK+CP	; " with key parity error detection
+		cp0ld		#DESK+DC	; " for decryption
+		cp0ld		#HASH+HFF	; MD5 F() operation
+		cp0ld		#HASH+HFG	; MD5 G() operation
+		cp0ld		#HASH+HFH	; MD5 H() operation
+		cp0ld		#HASH+HFI	; MD5 I() operation
+		cp0ld		#HASH+HFC	; SHA Ch() operation
+		cp0ld		#HASH+HFM	; SHA Maj() operation
+		cp0ld		#HASH+HF2C	; SHA-256 Ch() operation
+		cp0ld		#HASH+HF2M	; SHA-256 Maj() operation
+		cp0ld		#HASH+HF2S	; SHA-256 Sigma 0 operation
+		cp0ld		#HASH+HF2T	; SHA-256 Sigma 1 operation
+		cp0ld		#HASH+HF2U	; SHA-256 Sigma 0 operation
+		cp0ld		#HASH+HF2V	; SHA-256 Sigma 1 operation
+		cp0ld		#SHS		; secure hash shift on CAA...CA4
+		cp0ld		#MDS		; message digest shift on CAA...CA3
+		cp0ld		#SHS2		; secure hash shift 2 on CAA...CA8
+		cp0ld		#ILL		; illegal command
+		cp0bcbusy	*+4		; not needed for CAU?
+		cp1bcbusy	*-4

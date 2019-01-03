@@ -43,13 +43,13 @@
 #include "stdinc.h"
 #include <string.h>
 
-char *Version = "1.42 Beta [Bld 140]";
-char *DebVersion = "1.42bld140-1";
+char *Version = "1.42 Beta [Bld 141]";
+char *DebVersion = "1.42bld141-1";
 LongInt VerNo = 0x142f;
 
-char *InfoMessCopyright = "(C) 1992,2018 Alfred Arnold";
+char *InfoMessCopyright = "(C) 1992,2019 Alfred Arnold";
 
-LongInt Magic = 0x12372445;
+LongInt Magic = 0x12372545;
 
 void version_init(void)
 {
