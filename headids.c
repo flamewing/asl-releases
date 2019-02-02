@@ -207,6 +207,7 @@ static TFamilyDescr Descrs[] =
   { "OLMS-40"      , 0x004e, IntHex   },
   { "OLMS-50"      , 0x004d, IntHex   },
   { "1802"         , 0x0038, IntHex   },
+  { "SX20"         , 0x0043, IntHex   },
   { "KENBAK"       , 0x0027, IntHex   },
   { "ATARI_VECTOR" , 0x0002, IntHex   },
   { "XCore"        , 0x0006, MotoS    },

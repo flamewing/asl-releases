@@ -256,10 +256,11 @@ char *QuotMultPos(const char *s, const char *pSearch)
 {
   register ShortInt Brack = 0, AngBrack = 0;
   register const char *i;
-  Boolean InSglQuot = False, InDblQuot = False;
+  Boolean InSglQuot = False, InDblQuot = False, ThisEscaped = False, NextEscaped = False;
 
-  for (i = s; *i; i++)
+  for (i = s; *i; i++, ThisEscaped = NextEscaped)
   {
+    NextEscaped = False;
     if (strchr(pSearch, *i))
     {
       if (!AngBrack && !Brack && !InSglQuot && !InDblQuot)
@@ -268,12 +269,16 @@ char *QuotMultPos(const char *s, const char *pSearch)
     switch (*i)
     {
       case '"':
-        if (!InSglQuot)
+        if (!InSglQuot && !ThisEscaped)
           InDblQuot = !InDblQuot;
         break;
       case '\'':
-        if (!InDblQuot)
+        if (!InDblQuot && !ThisEscaped)
           InSglQuot = !InSglQuot;
+        break;
+      case '\\':
+        if ((InSglQuot || InDblQuot) && !ThisEscaped)
+          NextEscaped = True;
         break;
       case '(':
         if (!AngBrack && !InDblQuot && !InSglQuot)

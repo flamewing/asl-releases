@@ -688,24 +688,29 @@ LargeInt ConstLongInt(const char *inp, Boolean *pErr, LongInt Base)
 void KillBlanks(char *s)
 {
   char *z, *dest;
-  Boolean InHyp = False, InQuot = False;
+  Boolean InSgl = False, InDbl = False, ThisEscaped = False, NextEscaped = False;
 
   dest = s;
-  for (z = s; *z != '\0'; z++)
+  for (z = s; *z != '\0'; z++, ThisEscaped = NextEscaped)
   {
+    NextEscaped = False;
     switch (*z)
     {
       case '\'':
-        if (!InQuot)
-          InHyp = !InHyp;
+        if (!InDbl && !ThisEscaped)
+          InSgl = !InSgl;
         break;
       case '"':
-        if (!InHyp)
-          InQuot = !InQuot;
+        if (!InSgl && !ThisEscaped)
+          InDbl = !InDbl;
+        break;
+      case '\\':
+        if ((InSgl || InDbl) && !ThisEscaped)
+          NextEscaped = True;
         break;
     }
-    if ((!isspace((unsigned char)*z)) || (InHyp) || (InQuot))
-      *(dest++) = (*z);
+    if (!isspace((unsigned char)*z) || InSgl || InDbl)
+      *dest++ = *z;
   }
   *dest = '\0';
 }

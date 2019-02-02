@@ -246,6 +246,7 @@ folgende Prozessorfamilien implementiert:
 \item{Microchip PIC16C54..16C57}
 \item{Microchip PIC16C84/PIC16C64}
 \item{Microchip PIC17C42}
+\item{Parallax SX20/SX28}
 \item{SGS-Thomson ST6}
 \item{SGS-Thomson ST7}
 \item{SGS-Thomson ST9}
@@ -637,6 +638,7 @@ Datei             & Funktion \\
 \hline
 {\bf Verzeichnis INCLUDE} & \\
 \hline
+REGSX20.INC       & Register- \& Bitadressen Parallax SX20/28 \\
 AVR/\*.INC        & Register- \& Bitadressen AVR-Familie \\
                   & (nicht direkt benutzen, REGAVR.INC \\
                   & inkludieren) \\
@@ -2500,7 +2502,7 @@ erzeugt aber ein Symbol mit korrekten Attributen.
 \subsection{BIT}
 \ttindex{BIT}
 
-{\em G"ultigkeit: MCS-(2)51, XA, 80C166, 75K0, ST9, AVR}
+{\em G"ultigkeit: MCS-(2)51, XA, 80C166, 75K0, ST9, AVR, S12Z, SX20/28}
 
 \tty{BIT} dient dazu, ein einzelnes Bit einer Speicherstelle mit einem
 symbolischen Namen gleichzusetzen.  Da die Art und Weise, wie
@@ -3498,7 +3500,13 @@ as) 17C42
 \end{quote}
 %%-----------
 \begin{quote}
-at) ST6210/ST6215 $\rightarrow$ ST6220/ST6225
+at) SX20, SX28
+\end{quote}
+Der SX20 steckt in einem kleineren Geh"ause, weshalb der Port C
+fehlt.
+%%-----------
+\begin{quote}
+au) ST6210/ST6215 $\rightarrow$ ST6220/ST6225
 \end{quote}
 Die einzige Unterscheidung, die AS zwischen den beiden Paaren vornimmt, ist
 der bei den ersten beiden kleinere Adre"sraum (2K anstelle 4K).  Die
@@ -3506,11 +3514,11 @@ Feinunterscheidung dient zur automatischen Unterscheidung in der Quelldatei,
 welche Hardware jeweils vorhanden ist (analog zum 8051/52/515).
 %%-----------
 \begin{quote}
-au) ST7
+av) ST7
 \end{quote}
 %%-----------
 \begin{quote}
-av) ST9020, ST9030, ST9040, ST9050
+aw) ST9020, ST9030, ST9040, ST9050
 \end{quote}
 Diese 4 Namen vetreten die vier ,,Unterfamilien'' der ST9-Familie, die
 sich durch eine unterschiedliche Ausstattung mit On-Chip-Peripherie
@@ -3519,11 +3527,11 @@ Unterscheidung wieder nur im Includefile mit den Peripherieadressen zum
 Zuge kommt.
 %%-----------
 \begin{quote}
-aw) 6804
+ax) 6804
 \end{quote}
 %%-----------
 \begin{quote}
-ax) 32010 $\rightarrow$ 32015
+ay) 32010 $\rightarrow$ 32015
 \end{quote}
 Der TMS32010 besitzt nur 144 Byte internes RAM, weshalb AS Adressen im
 Datensegment auf eben diesen Bereich begrenzt.  F"ur den 32015 gilt diese
@@ -3531,13 +3539,13 @@ Beschr"ankung nicht, es kann der volle Bereich von 0--255 angesprochen
 werden.
 %%-----------
 \begin{quote}
-ay) 320C25 $\rightarrow$ 320C26 $\rightarrow$ 320C28
+az) 320C25 $\rightarrow$ 320C26 $\rightarrow$ 320C28
 \end{quote}
 Diese Prozessoren unterscheiden sich nur leicht in der
 On-Chip-Peripherie sowie den Konfigurationsbefehlen.
 %%-----------
 \begin{quote}
-az) 320C30, 320C31 $\rightarrow$ 320C40, 320C44
+ba) 320C30, 320C31 $\rightarrow$ 320C40, 320C44
 \end{quote}
 Der 320C31 ist eine etwas ,,abgespeckte'' Version des 320C30 mit dem
 gleichen Befehlssatz, jedoch weniger Peripherie.  In STDDEF3X.INC
@@ -3548,7 +3556,7 @@ der C44 eine abgespeckte Version des C40, mit weniger Peripherie
 und kleinerem Adre"raum.
 %%-----------
 \begin{quote}
-ba) 320C203 $\rightarrow$ 320C50, 320C51, 320C53
+bb) 320C203 $\rightarrow$ 320C50, 320C51, 320C53
 \end{quote}
 Ersterer ist der generelle Repr"asentant f"ur die
 C20x-Signalprozessorfamilie, die eine Untermenge des C5x-Befehlssatzes
@@ -3556,18 +3564,18 @@ implementieren.  Die Unterscheidung zwischen den verschiedenen
 C5x-Prozessoren wird von AS momentan nicht ausgenutzt.
 %%-----------
 \begin{quote}
-bb) 320C541
+bc) 320C541
 \end{quote}
 Dies ist momentan der Pepr"asentant f"ur die TMS320C54x-Familie...
 %%-----------
 \begin{quote}
-bc) TMS9900
+bd) TMS9900
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bd) \> TMS70C00, TMS70C20, TMS70C40, \\
+be) \> TMS70C00, TMS70C20, TMS70C40, \\
     \> TMS70CT20, TMS70CT40, \\
     \> TMS70C02, TMS70C42, TMS70C82, \\
     \> TMS70C08, TMS70C48 \\
@@ -3582,21 +3590,21 @@ interne RAM-Menge, unterscheiden sich also nur in der Menge
 eingebauten ROMs.
 %%-----------
 \begin{quote}
-be) 370C010, 370C020, 370C030, 370C040 und 370C050
+bf) 370C010, 370C020, 370C030, 370C040 und 370C050
 \end{quote}
 Analog zur MCS-51-Familie werden die unterschiedlichen Typen nur
 zur Unterscheidung der Peripherie in STDDEF37.INC genutzt, der
 Befehlssatz ist identisch.
 %%-----------
 \begin{quote}
-bf) MSP430 $\rightarrow$ MSP430X
+bg) MSP430 $\rightarrow$ MSP430X
 Die X-Variante des CPU-Kerns erweitert den Adre"sraum von 64
 KiByte auf 1 MiByte und erweitert den Befehlssatz, um
 Instrutionen mehrfach ausf"uhren zu k"onnen.
 \end{quote}
 %%-----------
 \begin{quote}
-bg) TMS1000, TMS1100, TMS1200, TMS1300
+bh) TMS1000, TMS1100, TMS1200, TMS1300
 \end{quote}
 F"ur TMS1000 und TMS1200 sind jeweils 1 KByte ROM und 64 Nibbles
 RAM vorgesehen, f"ur TMS1100 und TMS1300 jeweils das doppelte.  Des
@@ -3605,18 +3613,18 @@ Dewfault-Befehlssatz vorgesehen (AS kennt nur die Default-
 Befehlss"atze!).
 %%-----------
 \begin{quote}
-bh) SC/MP
+bi) SC/MP
 \end{quote}
 %%-----------
 \begin{quote}
-bi) 8070
+bj) 8070
 \end{quote}
 Dieser Prozessor repr"asentiert die gesamte 807x-Familie (die mindestens
 aus den 8070, 8072 und 8073 besteht), der jedoch ein einheitlicher
 CPU-Kern gemeinsam ist.
 %%-----------
 \begin{quote}
-bj) COP87L84
+bk) COP87L84
 \end{quote}
 Dies ist das momentan einzige unterst"utzte Mitglied der COP8-Familie
 von National Semiconductor.  Mir ist bekannt, da"s die Familie
@@ -3625,7 +3633,7 @@ Befehlssatz existieren, die nach Bedarf hinzukommen werden.  Es ist eben
 ein Anfang, und die Dokumentation von National ist ziemlich umfangreich...
 %%-----------
 \begin{quote}
-bk) COP410 $\rightarrow$ COP420 $\rightarrow$ COP440 $\rightarrow$ COP444
+bl) COP410 $\rightarrow$ COP420 $\rightarrow$ COP440 $\rightarrow$ COP444
 Die COP42x-Derivate bieten einige weitere Befehle, des weiteren wurden
 Befehlen in ihrem Wertebereich erweitert.
 \end{quote}
@@ -3633,7 +3641,7 @@ Befehlen in ihrem Wertebereich erweitert.
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bl) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
+bm) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
     \> SC14420, SC14421, SC14422, SC14424 \\
 \end{tabbing}
 \end{quote}
@@ -3643,11 +3651,11 @@ unterst"utzt werden und deren Architektur im Laufe der Zeit optimiert
 wurde.
 %%-----------
 \begin{quote}
-bm) ACE1101, ACE1202
+bn) ACE1101, ACE1202
 \end{quote}
 %%-----------
 \begin{quote}
-bn) MK3870, MK3872, MK3873, MK3874, MK3875, MK3876, \\
+bo) MK3870, MK3872, MK3873, MK3874, MK3875, MK3876, \\
     MK38C70
 \end{quote}
 Der Befehlssatz aller F8-Varianten ist identisch, mit Ausnahme
@@ -3658,14 +3666,14 @@ und in der eingebauten Peripherie (mit serieller Schnittstelle
 oder ohne).
 %%-----------
 \begin{quote}
-bo) 7810 $\rightarrow$ 78C10
+bp) 7810 $\rightarrow$ 78C10
 \end{quote}
 Die NMOS-Version besitzt keinen STOP-Modus; der entspechende Befehl sowie
 das ZCM-Register fehlen demzufolge.  \bb{VORSICHT!} NMOS- und CMOS-Version
 differieren zum Teil in den Reset-Werten einiger Register!
 %%-----------
 \begin{quote}
-bp) 7566 $\leftrightarrow$ 7508
+bq) 7566 $\leftrightarrow$ 7508
 \end{quote}
 Es existieren in der $\mu$PD75xx-Familie zwei verschiedene
 CPU-Kerne: Der 7566 repr"asentiert den 'instruction set B', der
@@ -3677,7 +3685,7 @@ sind nicht 100\%-ig bin"arkompatibel!
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bq) \> 75402, \\
+br) \> 75402, \\
     \> 75004, 75006, 75008, \\
     \> 75268, \\
     \> 75304, 75306, 75308, 75312, 75316, \\
@@ -3693,41 +3701,41 @@ unterscheiden sich einmal durch ihre on-chip-Peripherie und
 zum anderen durch die M"achtigkeit des Befehlssatzes.
 %%-----------
 \begin{quote}
-br) 78070
+bs) 78070
 \end{quote}
 Dies ist das einzige, mir momentan vertraute Mitglied der
 78K0-Familie von NEC.  Es gelten "ahnliche Aussagen wie zur
 COP8-Familie!
 %%-----------
 \begin{quote}
-bs) 78214
+bt) 78214
 \end{quote}
 Dies ist momentan der Repr"asentant der 78K2-Familie von NEC.
 %%-----------
 \begin{quote}
-bt) 78310
+bu) 78310
 \end{quote}
 Dies ist momentan der Repr"asentant der 78K3-Familie von NEC.
 %%-----------
 \begin{quote}
-bu) 784026
+bv) 784026
 \end{quote}
 Dies ist momentan der Repr"asentant der 78K4-Familie von NEC.
 %%-----------
 \begin{quote}
-bv) 7720 $\rightarrow$ 7725
+bw) 7720 $\rightarrow$ 7725
 \end{quote}
 Der $\mu$PD7725 bietet im Vergleich zu seinem Vorg"anger gr"o"sere
 Adre"sr"aume und einige zus"atzliche Befehle. {\bf VORSICHT!}  Die
 Prozessoren sind nicht zueinander bin"arkompatibel!
 %%-----------
 \begin{quote}
-bw) 77230
+bx) 77230
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
-bx) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
+by) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
     \> SYM53C875, SYM53C895
 \end{tabbing}
 \end{quote}
@@ -3736,29 +3744,29 @@ einige Befehlsvarianten nicht, au"serdem unterscheiden sie sich in ihrem
 Satz interner Register.
 %%-----------
 \begin{quote}
-by) MB89190
+bz) MB89190
 \end{quote}
 Dieser Prozessortyp repr"asentiert die F$^{2}$MC8L-Serie von Fujitsu...
 %%-----------
 \begin{quote}
-bz) MB9500
+ca) MB9500
 \end{quote}
 ...so wie dieser es momentan f"ur die 16-Bit-Varianten von Fujitsu tut!
 %%-----------
 \begin{quote}
-ca) MSM5840, MSM5842, MSM58421, MSM58422, MSM5847
+cb) MSM5840, MSM5842, MSM58421, MSM58422, MSM5847
 \end{quote}
 Diese Varianten der OLMS-40-Familie unterscheiden sich im
 Befehlssatz sowie im internen Programm- und Datenspeicher.
 %%-----------
 \begin{quote}
-cb) MSM5054, MSM5055, MSM5056, MSM6051, MSM6052
+cc) MSM5054, MSM5055, MSM5056, MSM6051, MSM6052
 \end{quote}
 Gleiches wie bei der OLMS-40-Familie: Unterschiede im
 Befehlssatz sowie im internen Programm- und Datenspeicher.
 %%-----------
 \begin{quote}
-cc) 1802 $\rightarrow$ 1804, 1805, 1806 $\rightarrow$ 1804A, 1805A
+cd) 1802 $\rightarrow$ 1804, 1805, 1806 $\rightarrow$ 1804A, 1805A
 1806A
 \end{quote}
 1804, 1805 und 1806 haben gegen"uber dem 'Original' 1802 einen leicht
@@ -3768,12 +3776,12 @@ Timer.  Die A-Versionen erweitern den Befehlssatz um \tty{DSAV},
 BCD-Format.
 %%-----------
 \begin{quote}
-cd) XS1
+ce) XS1
 \end{quote}
 Dieser Typ repr"asentiert die XCore-''Familie''.
 %%-----------
 \begin{quote}
-ce) 1750
+cf) 1750
 \end{quote}
 MIL STD 1750 ist ein Standard, also gibt es auch nur eine
 (Standard-)Variante...
@@ -4354,7 +4362,7 @@ Bei indirekter Adressierung k"onnen Displacements wahlweise kurz (8 Bit,
 -128 bis +127) oder lang (16 Bit) sein.  Der Assembler w"ahlt automatisch
 anhand des Displacements die k"urzestm"ogliche Kodierung.  Es ist aber m"oglich,
 durch ein vorangestelltes Gr"o"ser-Zeichen (\verb!>!) eine 16-Bit-Kodierung
-des Displacements zu erzwingen.  Gleiches gilt für absolute Adressen im
+des Displacements zu erzwingen.  Gleiches gilt f"ur absolute Adressen im
 Bereich 0ff80h...0ffffh, die mit einem kurzen Offset relativ zum "Nullregister"
 adressiert werden k"onnen.
 
@@ -4452,7 +4460,7 @@ man analog zum 65xx/68xx ein Gr"o"serzeichen vor den Operanden (hinter
 das Doppelkreuz!).  Umgekehrt kann man auch ein Kleinerzeichen schreiben,
 wenn man die kurze Korierung erzwingen will.  Falls der Operand nicht
 im erlaubten Wertebereich liegt, gibt es eine Fehlermeldung.  Singem"a"s
-das gleiche gilt für Spr"unge, die mit kurzem Displacement oder langem,
+das gleiche gilt f"ur Spr"unge, die mit kurzem Displacement oder langem,
 ansoluten Argument kodiert werden k"onnen.
 
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -9152,6 +9160,19 @@ sind deutlich kleiner.  Aus der Reihe f"allt nur \tty{LCALL}, der einen
         MOWF    3
         LCALL   <Adr0..7>
 \end{verbatim}
+
+%%---------------------------------------------------------------------------
+
+\section{SX20/28}
+
+Durch die beschr"ankte L"ange des Instruktionswortes ist es nicht
+m"oglich, darin eine vollst"andige Programmspeicher-Adresse (11 Bit)
+oder Datenspeicher-Adresse (8 Bit) unterzubringen.  Der Prozessor
+erg"anzt die gek"urzten Adressen um die PA-Bits aus dem
+STATUS-Register bzw. oberen Bits aus dem FSR-Register.  "Uber
+\tty{ASSUME}-Befehle teilt man dem Assembler deren aktuellen Inhalt
+mit.  Falls auf Adressen zugegriffen wird, die mit den vermerkten
+Werten nicht zugreifbar sind, erfolgt eine Warnung.
 
 %%---------------------------------------------------------------------------
 

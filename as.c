@@ -435,6 +435,7 @@
 #include "code16c5x.h"
 #include "code16c8x.h"
 #include "code17c4x.h"
+#include "codesx20.h"
 #include "codest6.h"
 #include "codest7.h"
 #include "codest9.h"
@@ -4657,6 +4658,7 @@ int main(int argc, char **argv)
     code16c5x_init();
     code16c8x_init();
     code17c4x_init();
+    codesx20_init();
     codest6_init();
     codest7_init();
     codest9_init();

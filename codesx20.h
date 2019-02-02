@@ -1,12 +1,13 @@
-#ifndef _CODEF8_H
-#define _CODEF8_H
-/* codef8.h */
+#ifndef _CODE_SX20_H
+#define _CODE_SX20_H
+/* codesx20.h */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
 /*                                                                           */
-/* Codegeneratormodul Fairchild F8                                           */
+/* AS - Target Parallax SX20                                                 */
 /*                                                                           */
 /*****************************************************************************/
 
-extern void codef8_init(void);
-#endif /* _CODEF8_H */
+extern void codesx20_init(void);
+
+#endif /* _CODE_SX20_H */

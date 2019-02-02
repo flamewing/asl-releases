@@ -710,6 +710,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Erl)
   tStrComp Arg;
   char CReg[10];
   const unsigned ExtAddrFamilyMask = (1 << e68KGen3) | (1 << e68KGen2) | (1 << eCPU32);
+  IntType DispIntType;
 
   /* some insns decode the same arg twice, so we must keep the original string intact. */
 
@@ -1075,10 +1076,16 @@ static void DecodeAdr(const tStrComp *pArg, Word Erl)
 
         else
         {
-          HVal = EvalStrIntExpression(&OutDisp, (OutDispLen < 0) || (OutDispLen >= 2) ? SInt32 : SInt16, &ValOK);
+          /* only try 32-bit displacement if explicitly requested, or 68020++ and no size given */
+
+          if (OutDispLen < 0)
+            DispIntType = CheckFamilyCore(ExtAddrFamilyMask) ? SInt32 : SInt16;
+          else
+            DispIntType = (OutDispLen >= 2) ? SInt32 : SInt16;
+          HVal = EvalStrIntExpression(&OutDisp, DispIntType, &ValOK);
           if (!ValOK)
             return;
-          if ((ValOK) && (HVal == 0) && ((Madri & Erl) != 0) && (OutDispLen == -1))
+          if (ValOK && (HVal == 0) && ((Madri & Erl) != 0) && (OutDispLen == -1))
           {
             AdrMode = 0x10 + AdrComps[0].ANummer;
             AdrNum = 3;
@@ -1114,7 +1121,14 @@ static void DecodeAdr(const tStrComp *pArg, Word Erl)
       {
         AdrVals[0] = (AdrComps[1].INummer << 12) + (Ord(AdrComps[1].Long) << 11) + (AdrComps[1].Scale << 9);
         AdrMode = 0x30 + AdrComps[0].ANummer;
-        HVal = EvalStrIntExpression(&OutDisp, Int32, &ValOK);
+
+        /* only try 32-bit displacement if explicitly requested, or 68020++ and no size given */
+
+        if (OutDispLen < 0)
+          DispIntType = CheckFamilyCore(ExtAddrFamilyMask) ? SInt32 : SInt8;
+        else
+          DispIntType = (OutDispLen >= 2) ? SInt32 : (OutDispLen >= 1 ? SInt16 : SInt8);
+        HVal = EvalStrIntExpression(&OutDisp, DispIntType, &ValOK);
         if (ValOK)
           switch (OutDispLen)
           {
@@ -6097,23 +6111,23 @@ static const tCPUProps CPUProps[] =
   { "68000",    0x00fffffful, e68KGen1a, eCfISA_None  , eFlagExtFPU | eFlagLogCCR, { NULL } },
   { "68010",    0x00fffffful, e68KGen1b, eCfISA_None  , eFlagExtFPU | eFlagLogCCR, { CtRegs_1040 } },
   { "68012",    0x7ffffffful, e68KGen1b, eCfISA_None  , eFlagExtFPU | eFlagLogCCR, { CtRegs_1040 } },
-  { "MCF5202",  0xfffffffful, eColdfire, eCfISA_A     , eFlagIntFPU, { CtRegs_5202 } },
-  { "MCF5204",  0xfffffffful, eColdfire, eCfISA_A     , eFlagIntFPU, { CtRegs_5202, CtRegs_5202_5204 } },
-  { "MCF5206",  0xfffffffful, eColdfire, eCfISA_A     , eFlagIntFPU, { CtRegs_5202, CtRegs_5202_5204 } },
-  { "MCF5208",  0xfffffffful, eColdfire, eCfISA_APlus , eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5208, CtRegs_Cf_CPU, CtRegs_Cf_EMAC } }, /* V2 */
-  { "MCF52274", 0xfffffffful, eColdfire, eCfISA_APlus , eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5208, CtRegs_Cf_CPU, CtRegs_Cf_EMAC } }, /* V2 */
-  { "MCF52277", 0xfffffffful, eColdfire, eCfISA_APlus , eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5208, CtRegs_Cf_CPU, CtRegs_Cf_EMAC } }, /* V2 */
-  { "MCF5307",  0xfffffffful, eColdfire, eCfISA_A     , eFlagIntFPU | eFlagMAC, { CtRegs_5202, CtRegs_5202_5307 } }, /* V3 */
-  { "MCF5329",  0xfffffffful, eColdfire, eCfISA_APlus , eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5329 } }, /* V3 */
-  { "MCF5373",  0xfffffffful, eColdfire, eCfISA_APlus , eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5329 } }, /* V3 */
-  { "MCF5407",  0xfffffffful, eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4 */
-  { "MCF5470",  0xfffffffful, eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
-  { "MCF5471",  0xfffffffful, eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
-  { "MCF5472",  0xfffffffful, eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
-  { "MCF5473",  0xfffffffful, eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
-  { "MCF5474",  0xfffffffful, eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
-  { "MCF5475",  0xfffffffful, eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
-  { "MCF51QM",  0xfffffffful, eColdfire, eCfISA_C     , eFlagBranch32 | eFlagMAC | eFlagEMAC, { CtRegs_MCF51 } }, /* V1 */
+  { "MCF5202",  0xfffffffful, eColdfire, eCfISA_A     , eFlagIntFPU | eFlagIdxScaling, { CtRegs_5202 } },
+  { "MCF5204",  0xfffffffful, eColdfire, eCfISA_A     , eFlagIntFPU | eFlagIdxScaling, { CtRegs_5202, CtRegs_5202_5204 } },
+  { "MCF5206",  0xfffffffful, eColdfire, eCfISA_A     , eFlagIntFPU | eFlagIdxScaling, { CtRegs_5202, CtRegs_5202_5204 } },
+  { "MCF5208",  0xfffffffful, eColdfire, eCfISA_APlus , eFlagIntFPU | eFlagIdxScaling | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5208, CtRegs_Cf_CPU, CtRegs_Cf_EMAC } }, /* V2 */
+  { "MCF52274", 0xfffffffful, eColdfire, eCfISA_APlus , eFlagIntFPU | eFlagIdxScaling | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5208, CtRegs_Cf_CPU, CtRegs_Cf_EMAC } }, /* V2 */
+  { "MCF52277", 0xfffffffful, eColdfire, eCfISA_APlus , eFlagIntFPU | eFlagIdxScaling | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5208, CtRegs_Cf_CPU, CtRegs_Cf_EMAC } }, /* V2 */
+  { "MCF5307",  0xfffffffful, eColdfire, eCfISA_A     , eFlagIntFPU | eFlagIdxScaling | eFlagMAC, { CtRegs_5202, CtRegs_5202_5307 } }, /* V3 */
+  { "MCF5329",  0xfffffffful, eColdfire, eCfISA_APlus , eFlagIntFPU | eFlagIdxScaling | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5329 } }, /* V3 */
+  { "MCF5373",  0xfffffffful, eColdfire, eCfISA_APlus , eFlagIntFPU | eFlagIdxScaling | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5329 } }, /* V3 */
+  { "MCF5407",  0xfffffffful, eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagIdxScaling | eFlagMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4 */
+  { "MCF5470",  0xfffffffful, eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagIdxScaling | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
+  { "MCF5471",  0xfffffffful, eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagIdxScaling | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
+  { "MCF5472",  0xfffffffful, eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagIdxScaling | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
+  { "MCF5473",  0xfffffffful, eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagIdxScaling | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
+  { "MCF5474",  0xfffffffful, eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagIdxScaling | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
+  { "MCF5475",  0xfffffffful, eColdfire, eCfISA_B     , eFlagBranch32 | eFlagIntFPU | eFlagIdxScaling | eFlagMAC | eFlagEMAC, { CtRegs_5202, CtRegs_5202_5407 } }, /* V4e */
+  { "MCF51QM",  0xfffffffful, eColdfire, eCfISA_C     , eFlagBranch32 | eFlagMAC | eFlagIdxScaling | eFlagEMAC, { CtRegs_MCF51 } }, /* V1 */
   { "68332",    0xfffffffful, eCPU32   , eCfISA_None  , eFlagBranch32 | eFlagLogCCR | eFlagIdxScaling, { CtRegs_1040 } },
   { "68340",    0xfffffffful, eCPU32   , eCfISA_None  , eFlagBranch32 | eFlagLogCCR | eFlagIdxScaling, { CtRegs_1040 } },
   { "68360",    0xfffffffful, eCPU32   , eCfISA_None  , eFlagBranch32 | eFlagLogCCR | eFlagIdxScaling, { CtRegs_1040 } },

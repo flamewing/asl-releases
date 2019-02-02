@@ -1,4 +1,11 @@
-2010-01-03 [1.42 Bld 141]
+2019-02-02 [1.42 Bld 142]
+
+- Addition    : Added Parallax SX20/28 target
+- Bugfix      : Fix some errors regarding escaped characters in quoted sections
+- Bugfix      : Allow index register scaling for Coldfire (again)
+- Bugfix      : Better handling of forward-defined displacements on 68K/Coldfire
+
+2019-01-03 [1.42 Bld 141]
 
 - Addition    : Added Coldfire target MCF51QM
 

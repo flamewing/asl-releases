@@ -1362,7 +1362,7 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
   char Save = '\0';
   sint LKlamm, RKlamm, WKlamm, zop;
   sint OpMax, OpPos = -1;
-  Boolean InHyp, InQuot;
+  Boolean InSgl, InDbl, NextEscaped, ThisEscaped;
   PSymbolEntry Ptr;
   PFunction ValFunc;
   tStrComp CopyComp, STempComp;
@@ -1446,8 +1446,10 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
   LKlamm = 0;
   RKlamm = 0;
   WKlamm = 0;
-  InHyp = False;
-  InQuot = False;
+  InSgl =
+  InDbl =
+  ThisEscaped =
+  NextEscaped = False;
   for (pOp = Operators + 1; pOp->Id; pOp++)
   {
     pOpPos = (pOp->IdLen == 1) ? (strchr(CopyComp.Str, *pOp->Id)) : (strstr(CopyComp.Str, pOp->Id));
@@ -1457,36 +1459,41 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
 
   /* nach Operator hoechster Rangstufe ausserhalb Klammern suchen */
 
-  for (zp = CopyComp.Str; *zp; zp++)
+  for (zp = CopyComp.Str; *zp; zp++, ThisEscaped = NextEscaped)
   {
+    NextEscaped = False;
     switch (*zp)
     {
       case '(':
-        if (!(InHyp || InQuot))
+        if (!(InSgl || InDbl))
           LKlamm++;
         break;
       case ')':
-        if (!(InHyp || InQuot))
+        if (!(InSgl || InDbl))
           RKlamm++;
         break;
       case '{':
-        if (!(InHyp || InQuot))
+        if (!(InSgl || InDbl))
           WKlamm++;
         break;
       case '}':
-        if (!(InHyp || InQuot))
+        if (!(InSgl || InDbl))
           WKlamm--;
         break;
       case '"':
-        if (!InHyp)
-          InQuot = !InQuot;
+        if (!InSgl && !ThisEscaped)
+          InDbl = !InDbl;
         break;
       case '\'':
-        if (!InQuot)
-          InHyp = !InHyp;
+        if (!InDbl && !ThisEscaped)
+          InSgl = !InSgl;
+        break;
+      case '\\':
+        if ((InDbl || InSgl) && !ThisEscaped)
+          NextEscaped = True;
         break;
       default:
-        if ((LKlamm == RKlamm) && (WKlamm == 0) && (!InHyp) && (!InQuot))
+        if ((LKlamm == RKlamm) && (WKlamm == 0) && (!InSgl) && (!InDbl))
         {
           Boolean OpFnd = False;
           sint OpLen = 0, LocOpMax = 0;

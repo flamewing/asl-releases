@@ -444,6 +444,8 @@ static void DecodeFCC(Word Index)
 
     if (!OK)
       CodeLen = 0;
+    else if (*LabPart.Str)
+      SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize8Bit);
   }
 }
 
@@ -466,6 +468,8 @@ static void DecodeDFS(Word Index)
       if (!HVal16)
         WrError(ErrNum_NullResMem);
       BookKeeping();
+      if (*LabPart.Str)
+        SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize8Bit);
     }
   }
 }

@@ -468,6 +468,8 @@ static void DecodeAdr(int ArgStartIdx, int ArgEndIdx)
     }
     else
       AdrInt = EvalStrIntExpressionOffs(pStartArg, Offset, Int16, &OK);
+    if (!OK)
+      return;
 
     /* Displacement 0 ? */
 

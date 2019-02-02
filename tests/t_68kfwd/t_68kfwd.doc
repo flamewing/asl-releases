@@ -1,0 +1,6 @@
++----------------------- Test Application 68KFWD ----------------------------+
+|                                                                            |
+| This tests some nasty constraints regarding 68K non-extended addressing    |
+| modes and forward definitions of associated symbols.                       |
+|                                                                            |
++----------------------------------------------------------------------------+
