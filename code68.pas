@@ -771,6 +771,8 @@ BEGIN
 
    MakeCode:=MakeCode_68; ChkPC:=ChkPC_68; IsDef:=IsDef_68;
    SwitchFrom:=SwitchFrom_68;
+
+   SetFlag(DoPadding,DoPaddingName,False);
 END;
 
 BEGIN

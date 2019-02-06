@@ -82,7 +82,7 @@ BEGIN
      ELSE IF NOT FullPMMU THEN WrError(1500)
      ELSE
       BEGIN
-       DecodeAdr(ArgStr[1],M3+M5+M6+M7+M10);
+       DecodeAdr(ArgStr[1],Madri+Mpre+Mdadri+Maix+Mabs);
        IF AdrNum<>0 THEN
 	BEGIN
 	 CodeLen:=2+AdrCnt; WAsmCode[0]:=$f100 OR AdrMode;
@@ -99,7 +99,7 @@ BEGIN
      ELSE IF NOT FullPMMU THEN WrError(1500)
      ELSE
       BEGIN
-       DecodeAdr(ArgStr[1],M3+M4+M6+M7+M10);
+       DecodeAdr(ArgStr[1],Madri+Mpost+Mdadri+Maix+Mabs);
        IF AdrNum<>0 THEN
 	BEGIN
 	 CodeLen:=2+AdrCnt; WAsmCode[0]:=$f140 OR AdrMode;
@@ -115,7 +115,27 @@ BEGIN
      ELSE IF ArgCnt<>0 THEN WrError(1110)
      ELSE
       BEGIN
-       CodeLen:=4; WAsmCode[0]:=$f000; WAsmCode[1]:=$2400; CheckSup;
+       IF MomCPU>=CPU68040 THEN
+        BEGIN
+         CodeLen:=2; WAsmCode[0]:=$f518;
+        END
+       ELSE
+        BEGIN
+         CodeLen:=4; WAsmCode[0]:=$f000; WAsmCode[1]:=$2400;
+        END;
+       CheckSup;
+      END;
+     Exit;
+    END;
+
+   IF Memo('FLUSHAN') THEN
+    BEGIN
+     IF AttrPart<>'' THEN WrError(1130)
+     ELSE IF ArgCnt<>0 THEN WrError(1110)
+     ELSE
+      BEGIN
+       CodeLen:=2; WAsmCode[0]:=$f510;
+       CheckCPU(CPU68040); CheckSup;
       END;
      Exit;
     END;
@@ -123,13 +143,28 @@ BEGIN
    IF Memo('FLUSH') OR Memo('FLUSHS') THEN
     BEGIN
      IF AttrPart<>'' THEN WrError(1130)
+     ELSE IF MomCPU>=CPU68040 THEN
+      BEGIN
+       IF Memo('FLUSHS') THEN WrError(1500)
+       ELSE IF ArgCnt<>1 THEN WrError(1110)
+       ELSE
+        BEGIN
+         DecodeAdr(ArgStr[1],Madri);
+         IF AdrNum<>0 THEN
+          BEGIN
+           WAsmCode[0]:=$f508+(AdrMode AND 7);
+           CodeLen:=2;
+           CheckSup;
+          END;
+        END;
+      END
      ELSE IF (ArgCnt<>2) AND (ArgCnt<>3) THEN WrError(1110)
      ELSE IF (Memo('FLUSHS')) AND (NOT FullPMMU) THEN WrError(1500)
      ELSE IF NOT DecodeFC(ArgStr[1],WAsmCode[1]) THEN WrError(1710)
      ELSE
       BEGIN
        OpSize:=0;
-       DecodeAdr(ArgStr[2],M11);
+       DecodeAdr(ArgStr[2],Mimm);
        IF AdrNum<>0 THEN
         BEGIN
          IF AdrVals[0]>15 THEN WrError(1720)
@@ -141,7 +176,7 @@ BEGIN
            IF ArgCnt=3 THEN
             BEGIN
              WAsmCode[1]:=WAsmCode[1] OR $800;
-             DecodeAdr(ArgStr[3],M3+M6+M7+M10);
+             DecodeAdr(ArgStr[3],Madri+Mdadri+Maix+Mabs);
              IF AdrNum=0 THEN CodeLen:=0
              ELSE
               BEGIN
@@ -150,6 +185,23 @@ BEGIN
               END;
             END;
           END;
+        END;
+      END;
+     Exit;
+    END;
+
+   IF Memo('FLUSHN') THEN
+    BEGIN
+     IF AttrPart<>'' THEN WrError(1100)
+     ELSE IF ArgCnt<>1 THEN WrError(1110)
+     ELSE
+      BEGIN
+       DecodeAdr(ArgStr[1],Madri);
+       IF AdrNum<>0 THEN
+        BEGIN
+         WAsmCode[0]:=$f500+(AdrMode AND 7);
+         CodeLen:=2;
+         CheckCPU(CPU68040); CheckSup;
         END;
       END;
      Exit;
@@ -164,7 +216,7 @@ BEGIN
      ELSE
       BEGIN
        RelPos:=4;
-       DecodeAdr(ArgStr[1],M3+M4+M5+M6+M7+M8+M9+M10+M11);
+       DecodeAdr(ArgStr[1],Madri+Mpost+Mpre+Mdadri+Maix+Mpc+Mpcidx+Mabs+Mimm);
        IF AdrNum<>0 THEN
         BEGIN
          WAsmCode[0]:=$f000 OR AdrMode; WAsmCode[1]:=$a000;
@@ -181,7 +233,7 @@ BEGIN
      ELSE IF NOT DecodeFC(ArgStr[1],WAsmCode[1]) THEN WrError(1710)
      ELSE
       BEGIN
-       DecodeAdr(ArgStr[2],M3+M6+M7+M10);
+       DecodeAdr(ArgStr[2],Madri+Mdadri+Maix+Mabs);
        IF AdrNum<>0 THEN
         BEGIN
          WAsmCode[0]:=$f000 OR AdrMode; WAsmCode[1]:=WAsmCode[1] OR $2000;
@@ -250,20 +302,34 @@ BEGIN
    IF Memo('TESTR') OR Memo('TESTW') THEN
     BEGIN
      IF AttrPart<>'' THEN WrError(1130)
+     ELSE IF MomCPU>=CPU68040 THEN
+      BEGIN
+       IF ArgCnt<>1 THEN WrError(1110)
+       ELSE
+        BEGIN
+         DecodeAdr(ArgStr[1],Madri);
+         IF AdrNum<>0 THEN
+          BEGIN
+           WAsmCode[0]:=$f548+(AdrMode AND 7)+(Ord(Memo('TESTR')) SHL 5);
+           CodeLen:=2;
+           CheckSup;
+          END;
+        END;
+      END
      ELSE IF (ArgCnt>4) OR (ArgCnt<3) THEN WrError(1110)
      ELSE
       BEGIN
        IF NOT DecodeFC(ArgStr[1],WAsmCode[1]) THEN WrError(1710)
        ELSE
         BEGIN
-         DecodeAdr(ArgStr[2],M3+M6+M7+M10);
+         DecodeAdr(ArgStr[2],Madri+Mdadri+Maix+Mabs);
          IF AdrNum<>0 THEN
           BEGIN
            WAsmCode[0]:=$f000 OR AdrMode; CodeLen:=4+AdrCnt;
            WAsmCode[1]:=WAsmCode[1] OR $8000;
            CopyAdrVals(WAsmCode[2]);
            IF OpPart='TESTR' THEN WAsmCode[1]:=WAsmCode[1] OR $200;
-           DecodeAdr(ArgStr[3],M11);
+           DecodeAdr(ArgStr[3],Mimm);
            IF AdrNum<>0 THEN
             IF AdrVals[0]>7 THEN
              BEGIN
@@ -274,7 +340,7 @@ BEGIN
               WAsmCode[1]:=WAsmCode[1] OR (AdrVals[0] SHL 10);
               IF ArgCnt=4 THEN
                BEGIN
-                DecodeAdr(ArgStr[4],M2);
+                DecodeAdr(ArgStr[4],Madr);
                 IF AdrNum=0 THEN CodeLen:=0
                 ELSE WAsmCode[1]:=WAsmCode[1] OR (AdrMode SHL 5); CheckSup;
                END;
@@ -293,7 +359,7 @@ BEGIN
      ELSE IF (AttrPart<>'') AND (OpSize<>2) THEN WrError(1130)
      ELSE
       BEGIN
-       DecodeAdr(ArgStr[2],M3+M6+M7+M10);
+       DecodeAdr(ArgStr[2],Madri+Mdadri+Maix+Mabs);
        IF AdrNum<>0 THEN
         BEGIN
          WAsmCode[0]:=$f000 OR AdrMode;
@@ -302,7 +368,7 @@ BEGIN
          IF NLS_StrCaseCmp(ArgStr[1],'VAL')=0 THEN
          ELSE
           BEGIN
-           DecodeAdr(ArgStr[1],M2);
+           DecodeAdr(ArgStr[1],Madr);
            IF AdrNum<>0 THEN
             BEGIN
              WAsmCode[1]:=WAsmCode[1] OR $400 OR (AdrMode AND 7);
@@ -369,7 +435,7 @@ BEGIN
        ELSE IF NOT FullPMMU THEN WrError(1500)
        ELSE
         BEGIN
-         DecodeAdr(ArgStr[1],M1);
+         DecodeAdr(ArgStr[1],Mdata);
          IF AdrNum<>0 THEN
           BEGIN
            WAsmCode[0]:=$f048 OR AdrMode; WAsmCode[1]:=z;
@@ -398,7 +464,7 @@ BEGIN
        ELSE IF NOT FullPMMU THEN WrError(1500)
        ELSE
         BEGIN
-         DecodeAdr(ArgStr[1],M1+M3+M4+M5+M6+M7+M10);
+         DecodeAdr(ArgStr[1],Mdata+Madri+Mpost+Mpre+Mdadri+Maix+Mabs);
          IF AdrNum<>0 THEN
           BEGIN
            CodeLen:=4+AdrCnt; WAsmCode[0]:=$f040 OR AdrMode;
@@ -430,7 +496,7 @@ BEGIN
           END
          ELSE
           BEGIN
-           DecodeAdr(ArgStr[1],M11);
+           DecodeAdr(ArgStr[1],Mimm);
            IF AdrNum<>0 THEN
             BEGIN
              WAsmCode[0]:=WAsmCode[0] OR (OpSize+1);

@@ -20,7 +20,7 @@
  {$IFDEF VIRTUALPASCAL}
   {$m 196608}
  {$ELSE}
-  {$m 15700,0,655360}
+  {$m 14600,0,655360}
  {$ENDIF}
 {$ENDIF}
 
@@ -55,7 +55,7 @@
              Code96C1,Code90C1,Code87C8,Code47C0,Code97C2,
              Code16C5,Code16C8,Code17C4,
              CodeST62,CodeST7,CodeST9,Code6804,
-             Code3201,Code3202,Code3203,Code3205,
+             Code3201,Code3202,Code3203,Code3205,Code3206,
              Code9900,CodeTMS7,Code370,
              CodeMSP,
              CodeSCMP,CodeCOP8,
@@ -109,6 +109,7 @@
 {$o Code3202}
 {$o Code3203}
 {$o Code3205}
+{$o Code3206}
 {$o Code9900}
 {$o CodeTMS7}
 {$o Code370}
@@ -132,6 +133,8 @@ VAR
    ParUnProcessed:CMDProcessed;     { bearbeitete Kommandozeilenparameter }
 
    ErrFlag:Boolean;     { Fehler aufgetreten }
+
+   InMacroFlag:Boolean;
 
 
 {$DEFINE MAIN}
@@ -214,7 +217,8 @@ BEGIN
      h:=h+' ';
     END;
    FOR z:=1 TO (8-Rest) SHR 2 DO
-    h:=h+'     ';
+    h:=h+'         ';
+   h:=h+'  ';
 END;
 
 BEGIN
@@ -251,6 +255,13 @@ BEGIN
       4:BEGIN
          n:=0; Gen4Line;
          WrLstLine(h+OneLine);
+{         IF CodeLen>0 THEN
+          BEGIN
+           h:='                    ';
+           FOR i:=31 DOWNTO 0 DO
+            IF (LongInt(1) SHL i) AND DAsmCode[0]<>0 THEN h:=h+'1' ELSE h:=h+'0';
+           WrLstLine(h);
+          END;}
          IF NOT DontPrint THEN
           WHILE n<EffLen DO
            BEGIN
@@ -439,6 +450,7 @@ BEGIN
      CurrLine:=StartLine;
 
      Str(LineZ,hs); ErrorPos:=OrigPos+' '+SpecName+'('+hs+')';
+     InMacroFlag:=True;
 
      IF LineZ=1 THEN PushLocHandle(GetLocHandle);
 
@@ -1249,6 +1261,7 @@ END;
 VAR
    HTag:PInputTag;
 BEGIN
+   InMacroFlag:=False;
    WHILE (FirstInputTag<>Nil) AND (FirstInputTag^.IsEmpty) DO
     WITH FirstInputTag^ DO
      BEGIN
@@ -1303,6 +1316,8 @@ BEGIN
          AND (NOT Memo('MACRO'))
          AND (NOT Memo('FUNCTION'))
          AND (NOT Memo('LABEL'))
+         AND (NOT Memo('STRUCT'))
+         AND (NOT Memo('ENDSTRUCT'))
          AND (NOT IsDef);
 END;
 
@@ -1311,7 +1326,8 @@ VAR
    z:Byte;
    OneMacro:PMacroRec;
    SearchMacros:Boolean;
-
+   ZStruct:PStructure;
+   tmp:String;
 BEGIN
    { Makrosuche unterdrÅcken ? }
 
@@ -1337,7 +1353,19 @@ BEGIN
    { evtl. voranstehendes Label ablegen }
 
    IF IfAsm THEN
-    IF HasLabel THEN EnterIntSymbol(LabPart,EProgCounter,ActPC,False);
+    IF HasLabel THEN
+     IF StructureStack<>Nil THEN
+      BEGIN
+       tmp:=LabPart;
+       ZStruct:=StructureStack;
+       WHILE ZStruct<>Nil DO
+        BEGIN
+         IF ZStruct^.DoExt THEN tmp:=ZStruct^.Name^+'_'+tmp;
+         ZStruct:=ZStruct^.Next;
+        END;
+       EnterIntSymbol(tmp,EProgCounter,SegNone,False);
+      END
+     ELSE EnterIntSymbol(LabPart,EProgCounter,ActPC,False);
 
    { Makroliste ? }
 
@@ -1419,26 +1447,26 @@ BEGIN
        Inc(CodeLen,ListGran DIV Granularity);
       END;
 
-     IF (NOT ChkPC) AND (CodeLen<>0) THEN WrError(1925)
+     IF (ActPC<>StructSeg) AND (NOT ChkPC) AND (CodeLen<>0) THEN WrError(1925)
      ELSE
       BEGIN
-       IF NOT DontPrint THEN
+       IF (NOT DontPrint) AND (ActPC<>StructSeg) THEN
         BEGIN
          IF MakeUseList THEN
           IF AddChunk(SegChunks[ActPC],ProgCounter,CodeLen,ActPC=SegCode) THEN WrError(90);
          IF DebugMode<>DebugNone THEN AddSectionUsage(ProgCounter,CodeLen);
         END;
        Inc(PCs[ActPC],CodeLen);
-       {IF ActPC<>SegCode THEN
+       IF ActPC=StructSeg THEN
         BEGIN
          IF (CodeLen<>0) AND (NOT DontPrint) THEN WrError(1940);
         END
-       ELSE} IF CodeOutput THEN
+       ELSE IF CodeOutput THEN
         BEGIN
          IF DontPrint THEN NewRecord ELSE WriteBytes;
         END;
        IF (DebugMode<>DebugNone) AND (CodeLen>0) AND (NOT DontPrint) THEN
-        AddLineInfo(True,CurrLine,CurrFileName,ActPC,PCs[ActPC]-CodeLen);
+        AddLineInfo(InMacroFlag,CurrLine,CurrFileName,ActPC,PCs[ActPC]-CodeLen);
       END;
     END;
 END;
@@ -1725,14 +1753,15 @@ BEGIN
    SectionStack:=Nil;
    FirstIfSave:=Nil;
    FirstSaveState:=Nil;
+   StructureStack:=Nil;
 
    InitPassProc;
 
    ActPC:=SegCode; PCs[ActPC]:=0; ENDOccured:=False;
    ErrorCount:=0; WarnCount:=0; LineSum:=0; MacLineSum:=0;
-   FOR z:=1 TO PCMax DO
+   FOR z:=1 TO StructSeg DO
     BEGIN
-     PCsUsed[z]:=(z=1);
+     PCsUsed[z]:=(z=SegCode);
      Phases[z]:=0;
      InitChunk(SegChunks[z]);
     END;
@@ -1751,6 +1780,7 @@ BEGIN
    EnterIntSymbol(FlagFalseName,0,0,True);
    EnterFloatSymbol(PiName,4*ArcTan(1),True);
    EnterIntSymbol(VerName,VerNo,0,True);
+   EnterStringSymbol(ArchName,ArchVal,True);
    EnterIntSymbol(Has64Name,0,0,True);
    EnterIntSymbol(CaseSensName,Ord(CaseSensitive),0,True);
    IF PassNo=0 THEN
@@ -1787,12 +1817,16 @@ BEGIN
 
    ClearStacks;
 
+   TossRegDefs(-1);
+
    IF FirstIfSave<>Nil THEN
     WrError(1470);
    IF FirstSaveState<>Nil THEN
     WrError(1460);
    IF SectionStack<>Nil THEN
     WrError(1485);
+   IF StructureStack<>Nil THEN
+    WrXError(1551,StructureStack^.Name^);
 END;
 
 BEGIN
@@ -1817,6 +1851,10 @@ BEGIN
      KillSuffix(ErrorName);
      AddSuffix(ErrorName,LogSuffix);
      Assign(ErrorFile,ErrorName);
+     {$i-}
+     Erase(ErrorFile);
+     IF IOResult=0 THEN;
+     {$i+}
     END;
 
    CASE ListMode OF
@@ -1945,6 +1983,7 @@ BEGIN
      BEGIN
       Close(LstFile);
       IF CodeOutput THEN Erase(PrgFile);
+      CleanupRegDefs;
       IF MakeUseList THEN ClearUseList;
       IF MakeCrossList THEN ClearCrossList;
       ClearDefineList;
@@ -1981,6 +2020,8 @@ BEGIN
    IF LstName<>'NUL' THEN
     BEGIN
      IF ListMask AND 2<>0 THEN PrintSymbolList;
+
+     IF ListMask AND 64<>0 THEN PrintRegDefs;
 
      IF ListMask AND 4<>0 THEN PrintMacroList;
 
@@ -2057,6 +2098,14 @@ BEGIN
    IF (ErrorCount>0) AND (Repass) AND (ListMode<>0) THEN
     WrLstLine(InfoMessNoPass);
 
+   Str(Round(MemAvail/1024):7,s); s:=s+InfoMessRemainMem;
+   IF NOT QuietMode THEN WriteLn(s,ClrEol);
+   IF ListMode=2 THEN WrLstLine(s);
+
+   Str(StackRes:7,s); s:=s+InfoMessRemainStack;
+   IF NOT QuietMode THEN WriteLn(s,ClrEol);
+   IF ListMode=2 THEN WrLstLine(s);
+
    Str(ErrorCount:7,s); s:=s+InfoMessErrCnt;
    IF ErrorCount<>1 THEN s:=s+InfoMessErrPCnt;
    IF NOT QuietMode THEN WriteLn(s,ClrEol);
@@ -2064,14 +2113,6 @@ BEGIN
 
    Str(WarnCount:7,s); s:=s+InfoMessWarnCnt;
    IF WarnCount<>1 THEN s:=s+InfoMessWarnPCnt;
-   IF NOT QuietMode THEN WriteLn(s,ClrEol);
-   IF ListMode=2 THEN WrLstLine(s);
-
-   Str(Round(MemAvail/1024):7,s); s:=s+InfoMessRemainMem;
-   IF NOT QuietMode THEN WriteLn(s,ClrEol);
-   IF ListMode=2 THEN WrLstLine(s);
-
-   Str(StackRes:7,s); s:=s+InfoMessRemainStack;
    IF NOT QuietMode THEN WriteLn(s,ClrEol);
    IF ListMode=2 THEN WrLstLine(s);
 
@@ -2084,6 +2125,7 @@ BEGIN
    { Speicher freigeben }
 
    ClearSymbolList;
+   ClearRegDefs;
    ClearMacroList;
    ClearFunctionList;
    ClearDefineList;
@@ -2140,7 +2182,7 @@ END;
         FUNCTION CMD_DebugMode(Negate:Boolean; Arg:String):CMDResult;
         Far;
 BEGIN
-{   UpString(Arg);
+   UpString(Arg);
 
    IF Negate THEN
     IF Arg<>'' THEN CMD_DebugMode:=CMDErr
@@ -2156,7 +2198,11 @@ BEGIN
     BEGIN
      DebugMode:=DebugMap; CMD_DebugMode:=CMDArg;
     END
-   ELSE IF Arg='A.OUT' THEN
+   ELSE IF Arg='ATMEL' THEN
+    BEGIN
+     DebugMode:=DebugAtmel; CMD_DebugMode:=CMDArg;
+    END
+   {ELSE IF Arg='A.OUT' THEN
     BEGIN
      DebugMode:=DebugAOUT; CMD_DebugMode:=CMDArg;
     END
@@ -2167,12 +2213,12 @@ BEGIN
    ELSE IF Arg='ELF' THEN
     BEGIN
      DebugMode:=DebugELF; CMD_DebugMode:=CMDArg;
-    END
-   ELSE CMD_DebugMode:=CMDErr;}
+    END}
+   ELSE CMD_DebugMode:=CMDErr;
 
-   IF Negate THEN DebugMode:=DebugNone
+   {IF Negate THEN DebugMode:=DebugNone
    ELSE DebugMode:=DebugMap;
-   CMD_DebugMode:=CMDOK;
+   CMD_DebugMode:=CMDOK;}
 END;
 
         FUNCTION CMD_ListConsole(Negate:Boolean; Arg:String):CMDResult;
@@ -2368,7 +2414,7 @@ BEGIN
      IF (err<>0) OR (erg>31) THEN CMD_ListMask:=CMDErr
      ELSE
       BEGIN
-       IF NOT Negate THEN ListMask:=ListMask AND (NOT erg)
+       IF Negate THEN ListMask:=ListMask AND (NOT erg)
        ELSE ListMask:=ListMask OR erg;
        CMD_ListMask:=CMDArg;
       END;
@@ -2424,6 +2470,13 @@ BEGIN
     BEGIN
      CMD_ErrorPath:=CMDArg; ErrorPath:=Arg;
     END;
+END;
+
+        FUNCTION CMD_HardRanges(Negate:Boolean; Arg:String):CMDResult;
+        Far;
+BEGIN
+   HardRanges:=Negate;
+   CMD_HardRanges:=CMDOK;
 END;
 
         FUNCTION CMD_OutFile(Negate:Boolean; Arg:String):CMDResult;
@@ -2486,7 +2539,7 @@ BEGIN
 END;
 
 CONST
-   ASParamCnt=30;
+   ASParamCnt=31;
    ASParams:ARRAY[1..ASParamCnt] OF CMDRec=
             ((Ident:'A'; Callback:CMD_BalanceTree),
              (Ident:'ALIAS'; Callback:CMD_CPUAlias),
@@ -2515,6 +2568,7 @@ CONST
              (Ident:'u'; Callback:CMD_UseList),
              (Ident:'U'; Callback:CMD_CaseSensitive),
              (Ident:'w'; Callback:CMD_SuppWarns),
+             (Ident:'WARNRANGES'; Callback:CMD_HardRanges),
              (Ident:'x'; Callback:CMD_ExtendErrors),
              (Ident:'X'; Callback:CMD_MakeDebug),
              (Ident:'Y'; Callback:CMD_ThrowErrors));
@@ -2605,12 +2659,12 @@ BEGIN
 
    ShareMode:=0; ListMode:=0; IncludeList:=''; SuppWarns:=False;
    MakeUseList:=False; MakeCrossList:=False; MakeSectionList:=False;
-   MakeIncludeList:=False; ListMask:=$3f;
+   MakeIncludeList:=False; ListMask:=$7f;
    MakeDebug:=False; ExtendErrors:=False;
    MacroOutput:=False; MacProOutput:=False; CodeOutput:=True;
    ErrorPath:='!2'; MsgIfRepass:=False; QuietMode:=False;
    NumericErrors:=False; DebugMode:=DebugNone; CaseSensitive:=False;
-   ThrowErrors:=False;
+   ThrowErrors:=False; HardRanges:=True;
 
    LineZ:=0;
 
@@ -2636,7 +2690,14 @@ BEGIN
    WrHead;
 
    ErrFlag:=False;
-   IF ErrorPath<>'' THEN ErrorName:=ErrorPath;
+   IF ErrorPath<>'' THEN
+    BEGIN
+     ErrorName:=ErrorPath;
+     {$i-}
+     Assign(ErrorFile,ErrorName); Erase(ErrorFile);
+     IF IOResult=0 THEN;
+     {$i+}
+    END;
    IsErrorOpen:=False;
 
    IF ParUnProcessed=[] THEN

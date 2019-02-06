@@ -4,9 +4,9 @@
 
 CONST
    {$IFDEF OS2}
-   Creator:ARRAY[1..14] OF Char='BIND/2 1.41r5á';
+   Creator:ARRAY[1..14] OF Char='BIND/2 1.41r7';
    {$ELSE}
-   Creator:ARRAY[1..12] OF Char='BIND 1.41r5á';
+   Creator:ARRAY[1..12] OF Char='BIND 1.41r7';
    {$ENDIF}
 
 VAR
@@ -137,7 +137,7 @@ CONST
 	      ((Ident:'f'; Callback:CMD_FilterList));
 
 BEGIN
-   NLS_Initialize; WrCopyRight('BIND/2 V1.41r6','BIND V1.41r6');
+   NLS_Initialize; WrCopyRight('BIND/2 V1.41r7','BIND V1.41r7');
 
    IF ParamCount=0 THEN
     BEGIN

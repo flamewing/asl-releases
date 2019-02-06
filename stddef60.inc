@@ -1,13 +1,13 @@
                 save
-                listing off   ; kein Listing Åber diesen File
+                listing off   ; kein Listing ¸ber diesen File
 
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.40 - Datei STDDEF60.INC                                           *
 ;*   								            *
-;*   Sinn : enthÑlt Makrodefinitionen fÅr den PowerPC                       *
+;*   Sinn : enth‰lt Makrodefinitionen f¸r den PowerPC                       *
 ;* 									    *
-;*   letzte énderungen : 29. 5.1994                                         *
+;*   letzte ƒnderungen : 29. 5.1994                                         *
 ;*                       26.12.1994 PPC403-Erweiterungen                    *
 ;*                       28.12.1994 MPC505-Erweiterungen                    *
 ;*                                                                          *
@@ -60,12 +60,12 @@ mf{"NAME"}      macro      reg
                  __defdcr BR5,0x85
                  __defdcr BR6,0x86
                  __defdcr BR7,0x87
-                 __defdcr DMACC0,0xc4   ; DMA KettenzÑhler (?)
+                 __defdcr DMACC0,0xc4   ; DMA Kettenz‰hler (?)
                  __defdcr DMACR0,0xc0   ; DMA Steuerregister Kanal 0..3
                  __defdcr DMACR1,0xc8
                  __defdcr DMACR2,0xd0
                  __defdcr DMACR3,0xd8
-                 __defdcr DMACT0,0xc1   ; DMA ZÑhlregister Kanal 0..3
+                 __defdcr DMACT0,0xc1   ; DMA Z‰hlregister Kanal 0..3
                  __defdcr DMACT1,0xc9
                  __defdcr DMACT2,0xd1
                  __defdcr DMACT3,0xd9
@@ -97,8 +97,8 @@ mf{"NAME"}      macro      reg
 		endm
 
                 __defspr XER,0x001      ; Integer Exception Register
-                __defspr LR,0x008       ; RÅcksprungadresse
-                __defspr CTR,0x009      ; ZÑhlregister
+                __defspr LR,0x008       ; R¸cksprungadresse
+                __defspr CTR,0x009      ; Z‰hlregister
                 __defspr SRR0,0x01a     ; Save/Restore-Register
                 __defspr SRR1,0x01b
                 __defspr SPRG0,0x110    ; Special Purpose-Register
@@ -114,7 +114,7 @@ mf{"NAME"}      macro      reg
                  __defspr DCCR,0x3fa    ; Steuerung Daten-Cache
                  __defspr DEAR,0x3d5    ; Exception-Adresse Datenzugriff
                  __defspr ESR,0x3d4     ; Exception-Syndrom Datenzugriff
-                 __defspr EVPR,0x3d6    ; Exception-Vektor-PrÑfix
+                 __defspr EVPR,0x3d6    ; Exception-Vektor-Pr‰fix
                  __defspr IAC1,0x3f4    ; Codeadresse Vergleichsregister
                  __defspr IAC2,0x3f5
                  __defspr ICCR,0x3fb    ; Steuerung Code-Cache
@@ -122,10 +122,10 @@ mf{"NAME"}      macro      reg
                  __defspr PBL2,0x3fe
                  __defspr PBU1,0x3fd    ; Obergrenzen
                  __defspr PBU2,0x3ff
-                 __defspr PIT,0x3d8     ; Timer
+                 __defspr PIT,0x3db     ; Timer
                  __defspr PVR,0x11f     ; Prozessorversion
-                 __defspr SRR2,0x01e    ; Save/Restore-Register
-                 __defspr SRR3,0x01f
+                 __defspr SRR2,0x3de    ; Save/Restore-Register
+                 __defspr SRR3,0x3df
                  __defspr TBHI,0x3dc    ; Zeitbasis
                  __defspr TBLO,0x3dd
                  __defspr TCR,0x3da     ; Timer Steuerregister
@@ -135,7 +135,7 @@ mf{"NAME"}      macro      reg
                  __defspr TBU,269
                  __defspr DSISR,18      ; zeigt Grund von Alignment-Exceptions an
                  __defspr DAR,19        ; Fehlerhafte Datenadresse nach Exception
-                 __defspr DEC,22        ; zÑhlt mit 1 MHz
+                 __defspr DEC,22        ; z‰hlt mit 1 MHz
                  __defspr EIE,80        ; Freigabe externer Interrupts
                  __defspr EID,81        ; Sperre externer Interrupts
                  __defspr NRE,82        ; Non-recoverable Exception
@@ -143,7 +143,7 @@ mf{"NAME"}      macro      reg
                  __defspr TBU_S,285
                  __defspr PVR,287       ; Prozessorversion
                  __defspr ICCST,560     ; Steuerung & Status Instruktionscache
-                 __defspr ICADR,561     ; Instruktionscache Adre·register
+                 __defspr ICADR,561     ; Instruktionscache Adreﬂregister
                  __defspr ICDAT,562     ; Instruktionscache Datenregister
                  __defspr FPECR,1022    ; Gleitkommaexception
                  __defspr CMPA,144      ; Vergleicherwert A..D
@@ -152,7 +152,7 @@ mf{"NAME"}      macro      reg
                  __defspr CMPD,147
                  __defspr ECR,148       ; Grund der Debug-Exception
                  __defspr DER,149       ; Freigabe Debug-Features
-                 __defspr COUNTA,150    ; Breakpoint ZÑhler
+                 __defspr COUNTA,150    ; Breakpoint Z‰hler
                  __defspr COUNTB,151
                  __defspr CMPE,152      ; Vergleicherwert E..G
                  __defspr CMPF,153
@@ -165,7 +165,7 @@ mf{"NAME"}      macro      reg
                  __defspr DPDR,630      ; Development-Port Daten
                  __defspr DPIR,631      ;     "        "   Instruktionen
                 case 0x601
-                 __defspr RTCU,0x004    ; ZÑhler
+                 __defspr RTCU,0x004    ; Z‰hler
                  __defspr RTCL,0x005
                  __defspr DEC,0x006
                  __defspr DSISR,0x012
@@ -187,7 +187,7 @@ mf{"NAME"}      macro      reg
                  __defspr HID5,0x3f5
                  __defspr HID15,0x3ff
                 case 0x6000
-                 __defspr MQ,0x000      ; obere HÑlfte Divident/Produkt
+                 __defspr MQ,0x000      ; obere H‰lfte Divident/Produkt
                 endcase
 
 ;============================================================================
@@ -199,7 +199,7 @@ sphs             equ     0x40000002     ; Status Handshake-Leitungen
 brdh             equ     0x40000004     ; Baudratenteiler
 brdl             equ     0x40000005
 spctl            equ     0x40000006     ; Steuerregister
-sprc             equ     0x40000007     ; Kommandoregister EmpfÑnger
+sprc             equ     0x40000007     ; Kommandoregister Empf‰nger
 sptc             equ     0x40000008     ; Kommandoregister Sender
 sprb             equ     0x40000009     ; Sende/Empfangspuffer
 sptb             equ     sprb
@@ -214,10 +214,10 @@ siumcr           equ     0x8007fc00     ; Basissteuerregister
 siutest1         equ     0x8007fc04
 memmap           equ     0x8007fc20     ; Speicherlayout
 specaddr         equ     0x8007fc24     ; erlauben Sperren spekulativer
-specmask         equ     0x8007fc28     ; LadevorgÑnge
+specmask         equ     0x8007fc28     ; Ladevorg‰nge
 termstat         equ     0x8007fc2c
 picsr            equ     0x8007fc40     ; Steuerung periodische Interrupts
-pit              equ     0x8007fc44     ; ZÑhlwert periodischer Interrupt-Timer
+pit              equ     0x8007fc44     ; Z‰hlwert periodischer Interrupt-Timer
 bmcr             equ     0x8007fc48     ; Steuerung Bus-Monitor
 rsr              equ     0x8007fc4c     ; Reset-Status
 sccr             equ     0x8007fc50     ; Steuerung Systemtakt
@@ -279,11 +279,11 @@ tstreps          equ     tstcntrab
 tstcreg1         equ     pcubase+0x18
 tstcreg2         equ     tstcreg1
 tstdreg          equ     pcubase+0x1c
-irqpend          equ     pcubase+0x20   ; auszufÅhrende Interrupts
-irqand           equ     pcubase+0x24   ; freigegebene&auszufÅhrende Interrupts
+irqpend          equ     pcubase+0x20   ; auszuf¸hrende Interrupts
+irqand           equ     pcubase+0x24   ; freigegebene&auszuf¸hrende Interrupts
 irqenable        equ     pcubase+0x28   ; freigegebene Interrupts
 pitqil           equ     pcubase+0x2c   ; Interruptebene PortQ/PIT
-swsr             equ     pcubase+0x40   ; Reload Watchdog auslîsen
+swsr             equ     pcubase+0x40   ; Reload Watchdog auslˆsen
 swcr             equ     pcubase+0x44   ; Steuerung Watchdog
 swtc             equ     swcr
 swr              equ     pcubase+0x48
@@ -443,7 +443,7 @@ rotlw.          macro   ra,rs,rb
                 endm
 
 ;----------------------------------------------------------------------------
-; vereinfachte SprÅnge
+; vereinfachte Spr¸nge
 
 __defjmp1       macro   NAME,m1,m2,{NoExpand}
 {"NAME"}        macro   adr

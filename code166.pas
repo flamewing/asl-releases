@@ -246,7 +246,10 @@ VAR
 	FUNCTION IsReg(Asc:String; VAR Erg:Byte; WordWise:Boolean):Boolean;
 VAR
    err:ValErgType;
+   s:StringPtr;
 BEGIN
+   IF FindRegDef(Asc,s) THEN Asc:=s^;
+
    IF (Length(Asc)<2) OR (UpCase(Asc[1])<>'R') THEN IsReg:=False
    ELSE IF (Length(Asc)>2) AND (UpCase(Asc[2])='L') AND (NOT WordWise) THEN
     BEGIN
@@ -627,6 +630,13 @@ BEGIN
      Exit;
     END;
 
+   IF Memo('REG') THEN
+    BEGIN
+     IF ArgCnt<>1 THEN WrError(1110)
+     ELSE AddRegDef(LabPart,ArgStr[1]);
+     Exit;
+    END;
+
    DecodePseudo:=False;
 END;
 
@@ -896,14 +906,20 @@ BEGIN
        CASE AdrType OF
        ModReg:
 	BEGIN
-	 HReg:=AdrMode; DecodeAdr(ArgStr[2],MModReg,False,False);
+         HReg:=AdrMode; DecodeAdr(ArgStr[2],MModReg+MModAbs,False,False);
 	 CASE AdrType OF
 	 ModReg:
 	  BEGIN
 	   CodeLen:=2; BAsmCode[0]:=$c0+Cond;
 	   BAsmCode[1]:=HReg+(AdrMode SHL 4);
 	  END;
-	 END;
+         ModAbs:
+	  BEGIN
+           CodeLen:=4; BAsmCode[0]:=$c2+Cond;
+           BAsmCode[1]:=$f0+HReg;
+	   Move(AdrVals,BAsmCode[2],AdrCnt);
+          END;
+         END;
 	END;
        ModMReg:
 	BEGIN
@@ -1337,7 +1353,7 @@ BEGIN
 	   ELSE
 	    BEGIN
 	     CodeLen:=2+AdrCnt; BAsmCode[0]:=$ca;
-	     BAsmCode[1]:=$c0+Conditions^[Cond].Code SHL 4;
+             BAsmCode[1]:=$00+Conditions^[Cond].Code SHL 4;
 	     Move(AdrVals,BAsmCode[2],AdrCnt);
 	    END
 	  END;
@@ -1588,7 +1604,7 @@ BEGIN
 	BEGIN
 	 CodeLen:=4; BAsmCode[0]:=$d7; BAsmCode[1]:=$40+(HReg SHL 4);
 	 IF Memo('EXTPR') THEN Inc(BAsmCode[1],$80);
-	 BAsmCode[2]:=(WordVal SHR 2) AND $7f; BAsmCode[3]:=WordVal AND 3;
+         BAsmCode[2]:=WordVal AND $ff; BAsmCode[3]:=(WordVal SHR 8) AND 3;
 	 ExtCounter:=HReg+1; MemMode:=MemModeFixedPage; MemPage:=WordVal AND $3ff;
 	END;
        END;
@@ -1651,7 +1667,7 @@ END;
 	FUNCTION IsDef_166:Boolean;
 	Far;
 BEGIN
-   IsDef_166:=Memo('BIT');
+   IsDef_166:=Memo('BIT') OR Memo('REG');
 END;
 
 	PROCEDURE SwitchFrom_166;

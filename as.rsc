@@ -41,6 +41,12 @@
 {*           29. 3.1997 Kommandozeilenoption g                              *}
 {*           29. 5.1997 Warnung wg. inkorrektem Listing                     *}
 {*           12. 7.1997 Kommandozeilenoption Y                              *}
+{*            5. 8.1997 Meldungen fÅr Strukturen                            *}
+{*           23. 8.1997 Atmel-Debug-Format                                  *}
+{*            7. 9.1997 Warnung BereichsÅberschreitung                      *}
+{*           24. 9.1997 Kopfzeile Registerdefinitionsliste                  *}
+{*           19.10.1997 Warnung neg. DUP-Anzahl                             *}
+{*           11. 1.1998 C6x-Fehlermeldungen                                 *}
 {*                                                                          *}
 {****************************************************************************}
 
@@ -82,6 +88,9 @@ CONST
    ErrMsgStackNotEmpty      = 'Stack ist nicht leer';
    ErrMsgNULCharacter       = 'NUL-Zeichen in Strings, Ergebnis undefiniert';
    ErrMsgPageCrossing       = 'Befehl '+Ch_ue+'berschreitet Seitengrenze';
+   ErrMsgWOverRange         = 'Bereichs'+Ch_ue+'berschreitung';
+   ErrMsgNegDUP             = 'negatives Argument f'+Ch_ue+'r DUP';
+
    ErrMsgDoubleDef          = 'Symbol doppelt definiert';
    ErrMsgSymbolUndef        = 'Symbol nicht definiert';
    ErrMsgInvSymName	    = 'Ung'+Ch_ue+'ltiger Symbolname';
@@ -141,6 +150,11 @@ CONST
    ErrMsgOnlyOnOff	    = 'Nur ON/OFF erlaubt';
    ErrMsgStackEmpty         = 'Stack ist leer oder nicht definiert';
    ErrMsgNotOneBit          = 'Nicht genau ein Bit gesetzt';
+   ErrMsgMissingStruct      = 'ENDSTRUCT ohne STRUCT';
+   ErrMsgOpenStruct         = 'offene Strukturdefinition';
+   ErrMsgWrongStruct        = 'falsches ENDSTRUCT';
+   ErrMsgPhaseDisallowed    = 'Phasendefinition nicht in Strukturen erlaubt';
+   ErrMsgInvStructDir       = 'Ung'+Ch_ue+'ltige STRUCT-Direktive';
    ErrMsgShortRead          = 'vorzeitiges Dateiende';
    ErrMsgRomOffs063	    = 'Rom-Offset geht nur von 0..63';
    ErrMsgInvFCode	    = 'Ung'+Ch_ue+'ltiger Funktionscode';
@@ -166,7 +180,7 @@ CONST
    ErrMsgTargOnDiffPage	    = 'Sprungziel nicht auf gleicher Seite';
    ErrMsgCodeOverflow	    = 'Code'+Ch_ue+'berlauf';
    ErrMsgMixDBDS	    = 'Konstanten und Platzhalter nicht mischbar';
-   ErrMsgOnlyInCode	    = 'Codeerzeugung nur im Codesegment zul'+Ch_ae+'ssig';
+   ErrMsgNotInStruct        = 'Codeerzeugung in Strukturdefinition nicht zul'+Ch_ae+'ssig';
    ErrMsgParNotPossible     = 'Paralleles Konstrukt nicht m'+Ch_oe+'glich';
    ErrMsgAdrOverflow	    = 'Adre'+Ch_sz+Ch_ue+'berlauf';
    ErrMsgInvSegment	    = 'ung'+Ch_ue+'ltiges Segment';
@@ -179,6 +193,13 @@ CONST
    ErrMsgNotInThisSegment   = 'nicht im aktuellen Segment erlaubt';
    ErrMsgNotInMaxmode       = 'nicht im Maximum-Modus zul'+Ch_ae+'ssig';
    ErrMsgOnlyInMaxmode      = 'nicht im Minimum-Modus zul'+Ch_ae+'ssig';
+   ErrMsgPacketNotAligned   = 'Instruktionspaket '+Ch_ue+'berschreitet 8-Wort-Grenze';
+   ErrMsgDoubleUnitUsed     = 'Funktionseinheit doppelt benutzt';
+   ErrMsgLongReads          = 'mehr als ein langer Leseoperand';
+   ErrMsgLongWrites         = 'mehr als ein langer Schreiboperand';
+   ErrMsgLongMem            = 'langer Leseoperand mit Speicherzugriff';
+   ErrMsgTooManyReads       = 'zu viele Lesezugriffe auf Register';
+   ErrMsgWriteConflict      = 'Schreibkonflikt auf Register';
    ErrMsgOpeningFile	    = 'Fehler beim '+Ch_goe+'ffnen der Datei';
    ErrMsgListWrError	    = 'Listingschreibfehler';
    ErrMsgFileReadError	    = 'Dateilesefehler';
@@ -213,6 +234,12 @@ CONST
    ListSymSumsMsg       = ' Symbole';
    ListUSymSumMsg       = ' unbenutztes Symbol';
    ListUSymSumsMsg      = ' unbenutzte Symbole';
+   ListRegDefListHead1  = '  Registerdefinitionen (*=unbenutzt):';
+   ListRegDefListHead2  = '  ------------------------------------';
+   ListRegDefSumMsg     = ' Definition';
+   ListRegDefSumsMsg    = ' Definitionen';
+   ListRegDefUSumMsg    = ' unbenutztes Definition';
+   ListRegDefUSumsMsg   = ' unbenutzte Definitionen';
    ListMacListHead1     = '  definierte Makros:';
    ListMacListHead2     = '  ------------------';
    ListMacSumMsg        = ' Makro';
@@ -296,7 +323,7 @@ CONST
                    '-s : Sektionsliste erzeugen           -t : Listing-Teile ein/ausblenden',
 		   '-u : Belegungsliste erzeugen          -C : Querverweisliste erzeugen',
                    '-I : Include-Verschachtelungsliste ausgeben',
-                   '-g : Debug-Informationen schreiben',
+                   '-g : Debug-Informationen schreiben [MAP/ATMEL]',
                    '-A : kompaktere Symbolablage',
                    '-U : Case-sensitiv arbeiten',
 		   '-x : erweiterte Fehlermeldungen       -n : Fehlermeldungen mit Nummer',

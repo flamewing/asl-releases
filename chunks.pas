@@ -26,6 +26,8 @@ TYPE
 
         PROCEDURE InitChunk(VAR NChunk:ChunkList);
 
+        PROCEDURE ClearChunk(VAR NChunk:ChunkList);
+
         FUNCTION IsUGreater(x1,x2:LongInt):Boolean;
 
         FUNCTION IsUGreaterEq(x1,x2:LongInt):Boolean;
@@ -41,6 +43,15 @@ BEGIN
      RealLen:=0; AllocLen:=0;
      Chunks:=Nil;
     END;
+END;
+
+{ l”schen }
+
+        PROCEDURE ClearChunk(VAR NChunk:ChunkList);
+BEGIN
+   WITH NChunk DO
+    IF AllocLen>0 THEN FreeMem(Chunks,AllocLen*SizeOf(OneChunk));
+   InitChunk(NChunk);
 END;
 
 

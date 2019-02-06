@@ -1657,11 +1657,11 @@ BEGIN
    Grans[SegCode]:=1; ListGrans[SegCode]:=2; SegInits[SegCode]:=0;
 
    MakeCode:=MakeCode_H8_3; ChkPC:=ChkPC_H8_3; IsDef:=IsDef_H8_3;
-   SwitchFrom:=SwitchFrom_H8_3;
+   SwitchFrom:=SwitchFrom_H8_3; InitFields;
 
    CPU16:=MomCPU<=CPUH8_300;
 
-   InitFields;
+   SetFlag(DoPadding,DoPaddingName,False);
 END;
 
 BEGIN

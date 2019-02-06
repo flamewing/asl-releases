@@ -15,37 +15,47 @@ IMPLEMENTATION
 
 TYPE
    FixedOrder=RECORD
-	       Name:String[7];
+               Name:String[8];
 	       Code:LongInt;
+               MinCPU:CPUVar;
 	      END;
 
    ParOrder=RECORD
 	     Name:String[4];
-	     Typ:(ParAB,ParXYAB,ParABXYnAB,ParABBA,ParXYnAB,ParMul);
+             Typ:(ParAB,ParABShl1,ParABShl2,ParXYAB,ParABXYnAB,ParABBA,ParXYnAB,ParMul,ParFixAB);
 	     Code:Byte;
 	    END;
 
 CONST
-   FixedOrderCnt=9;
-   FixedOrders:ARRAY[1..FixedOrderCnt] OF FixedOrder=
-	       ((Name:'NOP'    ; Code:$000000),
-		(Name:'ENDDO'  ; Code:$00008c),
-		(Name:'ILLEGAL'; Code:$000005),
-		(Name:'RESET'  ; Code:$000084),
-		(Name:'RTI'    ; Code:$000004),
-		(Name:'RTS'    ; Code:$00000c),
-		(Name:'STOP'   ; Code:$000087),
-		(Name:'SWI'    ; Code:$000006),
-		(Name:'WAIT'   ; Code:$000086));
+   D_CPU56000=0;
+   D_CPU56002=1;
+   D_CPU56300=2;
 
-   ParOrderCnt=29;
+   FixedOrderCnt=14;
+   FixedOrders:ARRAY[1..FixedOrderCnt] OF FixedOrder=
+               ((Name:'NOP'    ; Code:$000000; MinCPU:D_CPU56000),
+                (Name:'ENDDO'  ; Code:$00008c; MinCPU:D_CPU56000),
+                (Name:'ILLEGAL'; Code:$000005; MinCPU:D_CPU56000),
+                (Name:'RESET'  ; Code:$000084; MinCPU:D_CPU56000),
+                (Name:'RTI'    ; Code:$000004; MinCPU:D_CPU56000),
+                (Name:'RTS'    ; Code:$00000c; MinCPU:D_CPU56000),
+                (Name:'STOP'   ; Code:$000087; MinCPU:D_CPU56000),
+                (Name:'SWI'    ; Code:$000006; MinCPU:D_CPU56000),
+                (Name:'WAIT'   ; Code:$000086; MinCPU:D_CPU56000),
+                (Name:'DEBUG'  ; Code:$000200; MinCPU:D_CPU56300),
+                (Name:'PFLUSH' ; Code:$000003; MinCPU:D_CPU56300),
+                (Name:'PFLUSHUN'; Code:$000001; MinCPU:D_CPU56300),
+                (Name:'PFREE'  ; Code:$000002; MinCPU:D_CPU56300),
+                (Name:'TRAP'   ; Code:$000006; MinCPU:D_CPU56300));
+
+   ParOrderCnt=31;
    ParOrders:ARRAY[1..ParOrderCnt] OF ParOrder=
 	     ((Name:'ABS' ; Typ:ParAB;     Code:$26),
-	      (Name:'ASL' ; Typ:ParAB;     Code:$32),
-	      (Name:'ASR' ; Typ:ParAB;     Code:$22),
+              (Name:'ASL' ; Typ:ParABShl1; Code:$32),
+              (Name:'ASR' ; Typ:ParABShl1; Code:$22),
 	      (Name:'CLR' ; Typ:ParAB;     Code:$13),
-	      (Name:'LSL' ; Typ:ParAB;     Code:$33),
-	      (Name:'LSR' ; Typ:ParAB;     Code:$23),
+              (Name:'LSL' ; Typ:ParABShl2; Code:$33),
+              (Name:'LSR' ; Typ:ParABShl2; Code:$23),
 	      (Name:'NEG' ; Typ:ParAB;     Code:$36),
 	      (Name:'NOT' ; Typ:ParAB;     Code:$17),
 	      (Name:'RND' ; Typ:ParAB;     Code:$11),
@@ -64,11 +74,13 @@ CONST
 	      (Name:'SUBR'; Typ:ParABBA;   Code:$06),
 	      (Name:'AND' ; Typ:ParXYnAB;  Code:$46),
 	      (Name:'EOR' ; Typ:ParXYnAB;  Code:$43),
-	      (Name:'OR'  ; Typ:ParXYnAB;  Code:$42),
+              (Name:'OR'  ; Typ:ParXYnAB;  Code:$42),
 	      (Name:'MAC' ; Typ:ParMul;    Code:$82),
 	      (Name:'MACR'; Typ:ParMul;    Code:$83),
 	      (Name:'MPY' ; Typ:ParMul;    Code:$80),
-	      (Name:'MPYR'; Typ:ParMul;    Code:$81));
+              (Name:'MPYR'; Typ:ParMul;    Code:$81),
+              (Name:'MAX' ; Typ:ParFixAB;  Code:$1d),
+              (Name:'MAXM'; Typ:ParFixAB;  Code:$15));
 
    BitOrderCnt=4;
    BitOrders:ARRAY[0..BitOrderCnt-1] OF String[4]=('BCLR','BSET','BCHG','BTST');
@@ -76,7 +88,17 @@ CONST
    BitJmpOrderCnt=4;
    BitJmpOrders:ARRAY[0..BitOrderCnt-1] OF String[5]=('JCLR','JSET','JSCLR','JSSET');
 
+   BitBrOrderCnt=4;
+   BitBrOrders:ARRAY[0..BitOrderCnt-1] OF String[5]=('BRCLR','BRSET','BSCLR','BSSET');
+
+   ImmMacOrderCnt=4;
+   ImmMacOrders:ARRAY[0..ImmMacOrderCnt-1] OF String[5]=('MPYI','MPYRI','MACI','MACRI');
+
    MacTable:ARRAY[4..7,4..7] OF Byte=((0,2,5,4),(2,$ff,6,7),(5,6,1,3),(4,7,3,$ff));
+
+   Mac4Table:ARRAY[4..7,4..7] OF Byte=((0,13,10,4),(5,1,14,11),(2,6,8,15),(12,3,7,9));
+
+   Mac2Table:ARRAY[0..3] OF Byte=(1,3,2,0);
 
    ModNone=-1;
    ModImm=0;       MModImm=1 SHL ModImm;
@@ -88,6 +110,7 @@ CONST
    ModIndex=6;     MModIndex=1 SHL ModIndex;
    ModModDec=7;    MModModDec=1 SHL ModModDec;
    ModModInc=8;    MModModInc=1 SHL ModModInc;
+   ModDisp=9;      MModDisp=1 SHL ModDisp;
 
    MModNoExt=MModIReg+MModPreDec+MModPostDec+MModPostInc+MModIndex+
 	     MModModDec+MModModInc;
@@ -102,17 +125,19 @@ CONST
    MSegLData=1 SHL SegLData;
 
 VAR
-   CPU56000:CPUVar;
+   CPU56000,CPU56002,CPU56300:CPUVar;
+   AdrInt:IntType;
+   MemLimit:LongInt;
 
    TargSegment:Byte;
    AdrType:ShortInt;
-   AdrMode:Word;
+   AdrMode:LongInt;
    AdrVal:LongInt;
    AdrCnt:Byte;
    AdrSeg:Byte;
 
 
-	PROCEDURE SplitArg(VAR Orig,LDest,RDest:String);
+        PROCEDURE SplitArg(Orig:String; VAR LDest,RDest:String);
 VAR
    p:Integer;
 BEGIN
@@ -121,7 +146,204 @@ BEGIN
    LDest:=Copy(Orig,1,p-1);
 END;
 
-	PROCEDURE DecodeAdr(Asc:String; Erl:Word; ErlSeg:Byte);
+        PROCEDURE CutSize(VAR Asc:String; VAR ShortMode:Byte);
+BEGIN
+   IF Asc[1]='>' THEN
+    BEGIN
+     Delete(Asc,1,1); ShortMode:=2;
+    END
+   ELSE IF Asc[1]='<' THEN
+    BEGIN
+     Delete(Asc,1,1); ShortMode:=1;
+    END
+   ELSE ShortMode:=0;
+END;
+
+        FUNCTION DecodeReg(Asc:String; VAR Erg:LongInt):Boolean;
+CONST
+   RegCount=12;
+   RegNames:ARRAY[1..RegCount] OF String[2]=
+            ('X0','X1','Y0','Y1','A0','B0','A2','B2','A1','B1','A','B');
+VAR
+   z:Word;
+BEGIN
+   DecodeReg:=False;
+   FOR z:=1 TO RegCount DO
+    IF NLS_StrCaseCmp(Asc,RegNames[z])=0 THEN
+     BEGIN
+      Erg:=z+3; DecodeReg:=True; Exit;
+     END;
+   IF (Length(Asc)=2) AND (Asc[2]>='0') AND (Asc[2]<='7') THEN
+    CASE UpCase(Asc[1]) OF
+    'R':BEGIN
+         Erg:=16+Ord(Asc[2])-AscOfs; DecodeReg:=True;
+        END;
+    'N':BEGIN
+         Erg:=24+Ord(Asc[2])-AscOfs; DecodeReg:=True;
+        END;
+    END;
+END;
+
+
+        FUNCTION DecodeALUReg(Asc:String; VAR Erg:LongInt; MayX,MayY,MayAcc:Boolean):Boolean;
+BEGIN
+   DecodeALUReg:=False; IF NOT DecodeReg(Asc,Erg) THEN Exit;
+   CASE Erg OF
+   4,5:IF MayX THEN
+        BEGIN
+         DecodeALUReg:=True; Dec(Erg,4);
+        END;
+   6,7:IF MayY THEN
+        BEGIN
+         DecodeALUReg:=True; Dec(Erg,6);
+        END;
+   14,15:IF MayAcc THEN
+          BEGIN
+           DecodeALUReg:=True;
+           IF (MayX) OR (MayY) THEN Dec(Erg,12) ELSE Dec(Erg,14);
+          END;
+   END;
+END;
+
+        FUNCTION DecodeLReg(Asc:String; VAR Erg:LongInt):Boolean;
+CONST
+   RegCount=8;
+   RegNames:ARRAY[0..RegCount-1] OF String[3]=
+            ('A10','B10','X','Y','A','B','AB','BA');
+VAR
+   z:Word;
+BEGIN
+   DecodeLReg:=False;
+   FOR z:=0 TO RegCount-1 DO
+    IF NLS_StrCaseCmp(Asc,RegNames[z] )=0 THEN
+     BEGIN
+      Erg:=z; DecodeLReg:=True; Exit;
+     END;
+END;
+
+        FUNCTION DecodeXYABReg(Asc:String; VAR Erg:LongInt):Boolean;
+CONST
+   RegCount=8;
+   RegNames:ARRAY[0..RegCount-1] OF String[2]=
+            ('B','A','X','Y','X0','Y0','X1','Y1');
+VAR
+   z:Word;
+BEGIN
+   DecodeXYABReg:=False;
+   FOR z:=0 TO RegCount-1 DO
+    IF NLS_StrCaseCmp(Asc,RegNames[z])=0 THEN
+     BEGIN
+      Erg:=z; DecodeXYABReg:=True; Exit;
+     END;
+END;
+
+        FUNCTION DecodeXYAB0Reg(Asc:String; VAR Erg:LongInt):Boolean;
+CONST
+   RegCount=6;
+   RegNames:ARRAY[0..RegCount-1] OF String[2]=
+            ('A0','B0','X0','Y0','X1','Y1');
+VAR
+   z:Word;
+BEGIN
+   DecodeXYAB0Reg:=False;
+   FOR z:=0 TO RegCount-1 DO
+    IF NLS_StrCaseCmp(Asc,RegNames[z])=0 THEN
+     BEGIN
+      Erg:=z+2; DecodeXYAB0Reg:=True; Exit;
+     END;
+END;
+
+        FUNCTION DecodeXYAB1Reg(Asc:String; VAR Erg:LongInt):Boolean;
+CONST
+   RegCount=6;
+   RegNames:ARRAY[0..RegCount-1] OF String[2]=
+            ('A1','B1','X0','Y0','X1','Y1');
+VAR
+   z:Word;
+BEGIN
+   DecodeXYAB1Reg:=False;
+   FOR z:=0 TO RegCount-1 DO
+    IF NLS_StrCaseCmp(Asc,RegNames[z])=0 THEN
+     BEGIN
+      Erg:=z+2; DecodeXYAB1Reg:=True; Exit;
+     END;
+END;
+
+        FUNCTION DecodePCReg(Asc:String; VAR Erg:LongInt):Boolean;
+CONST
+   RegCount=8;
+   RegNames:ARRAY[1..RegCount] OF String[3]=
+            ('SZ','SR','OMR','SP','SSH','SSL','LA','LC');
+VAR
+   z:Word;
+BEGIN
+   DecodePCReg:=False;
+   FOR z:=1 TO RegCount DO
+    IF NLS_StrCaseCmp(Asc,RegNames[z])=0 THEN
+     BEGIN
+      Erg:=z-1; DecodePCReg:=True; Exit;
+     END;
+END;
+
+        FUNCTION DecodeAddReg(Asc:String; VAR Erg:LongInt):Boolean;
+BEGIN
+   DecodeAddReg:=True;
+   IF (Length(Asc)=2) AND (UpCase(Asc[1])='M') AND (Asc[2]>='0') AND (Asc[2]<='7') THEN
+    BEGIN
+     Erg:=Ord(Asc[2])-AscOfs; Exit;
+    END;
+   IF NLS_StrCaseCmp(Asc,'EP')=0 THEN
+    BEGIN
+     Erg:=$0a; Exit;
+    END;
+   IF NLS_StrCaseCmp(Asc,'VBA')=0 THEN
+    BEGIN
+     Erg:=$10; Exit;
+    END;
+   IF NLS_StrCaseCmp(Asc,'SC')=0 THEN
+    BEGIN
+     Erg:=$11; Exit;
+    END;
+   DecodeAddReg:=False;
+END;
+
+        FUNCTION DecodeGeneralReg(Asc:String; VAR Erg:LongInt):Boolean;
+BEGIN
+   DecodeGeneralReg:=True;
+   IF DecodeReg(Asc,Erg) THEN Exit;
+   IF DecodePCReg(Asc,Erg) THEN
+    BEGIN
+     Inc(Erg,$38); Exit;
+    END;
+   IF DecodeAddReg(Asc,Erg) THEN
+    BEGIN
+     Inc(Erg,$20); Exit;
+    END;
+   DecodeGeneralReg:=False;
+END;
+
+        FUNCTION DecodeControlReg(Asc:String; VAR Erg:LongInt):Boolean;
+BEGIN
+   DecodeControlReg:=True;
+   IF NLS_StrCaseCmp(Asc,'MR')=0 THEN Erg:=0
+   ELSE IF NLS_StrCaseCmp(Asc,'CCR')=0 THEN Erg:=1
+   ELSE IF (NLS_StrCaseCmp(Asc,'OMR')=0) OR (NLS_StrCaseCmp(Asc,'COM')=0) THEN Erg:=2
+   ELSE IF (NLS_StrCaseCmp(Asc,'EOM')=0) AND (MomCPU>=CPU56300) THEN Erg:=3
+   ELSE DecodeControlReg:=False;
+END;
+
+        FUNCTION DecodeCtrlReg(VAR Asc:String; VAR Erg:LongInt):Boolean;
+BEGIN
+   DecodeCtrlReg:=True;
+   IF DecodeAddReg(Asc,Erg) THEN Exit;
+   IF DecodePCReg(Asc,Erg) THEN
+    BEGIN
+     Inc(Erg,$18); Exit;
+    END;
+   DecodeCtrlReg:=False;
+END;
+
+        PROCEDURE DecodeAdr(Asc:String; Erl:Word; ErlSeg:Byte);
 LABEL
    Found;
 CONST
@@ -133,11 +355,15 @@ CONST
    SegNames:ARRAY[1..SegCount] OF Char='PXYL';
    SegVals:ARRAY[1..SegCount] OF Byte=(SegCode,SegXData,SegYData,SegLData);
 VAR
-   z,l:Integer;
+   z,l,pp,np:Integer;
    OK,BreakLoop:Boolean;
    OrdVal:Byte;
 BEGIN
    AdrType:=ModNone; AdrCnt:=0;
+
+   { Adressierungsmodi vom 56300 abschneiden }
+
+   IF (MomCPU<CPU56300) AND (Erl AND MModDisp<>0) THEN Dec(Erl,MModDisp);
 
    { Defaultsegment herausfinden }
 
@@ -191,9 +417,30 @@ BEGIN
       END;
     END;
 
+   { Register mit Displacement bei 56300 }
+
+   IF IsIndirect(Asc) THEN
+    BEGIN
+     Asc:=Copy(Asc,2,Length(Asc)-2);
+     pp:=Pos('+',Asc); np:=Pos('-',Asc);
+     IF (pp=0) OR ((np<>0) AND (np<pp)) THEN pp:=np;
+     IF pp<>0 THEN
+      IF (DecodeGeneralReg(Copy(Asc,1,pp-1),AdrMode)) AND (AdrMode>=16) AND (AdrMode<=23) THEN
+       BEGIN
+        Dec(AdrMode,16); FirstPassUnknown:=False;
+        AdrVal:=EvalIntExpression(Copy(Asc,pp,Length(Asc)-pp+1),Int24,OK);
+        IF OK THEN
+         BEGIN
+          IF FirstPassUnknown THEN AdrVal:=AdrVal AND 63;
+          AdrType:=ModDisp;
+         END;
+        Goto Found;
+       END;
+    END;
+
    { dann absolut }
 
-   AdrVal:=EvalIntExpression(Asc,Int16,OK);
+   AdrVal:=EvalIntExpression(Asc,AdrInt,OK);
    IF OK THEN
     BEGIN
      AdrType:=ModAbs; AdrMode:=$30; AdrCnt:=1;
@@ -210,124 +457,6 @@ Found:
     BEGIN
      WrError(1960); AdrCnt:=0; AdrType:=ModNone;
     END;
-END;
-
-	FUNCTION DecodeReg(Asc:String; VAR Erg:LongInt):Boolean;
-CONST
-   RegCount=12;
-   RegNames:ARRAY[1..RegCount] OF String[2]=
-	    ('X0','X1','Y0','Y1','A0','B0','A2','B2','A1','B1','A','B');
-VAR
-   z:Word;
-BEGIN
-   DecodeReg:=False;
-   FOR z:=1 TO RegCount DO
-    IF NLS_StrCaseCmp(Asc,RegNames[z])=0 THEN
-     BEGIN
-      Erg:=z+3; DecodeReg:=True; Exit;
-     END;
-   IF (Length(Asc)=2) AND (Asc[2]>='0') AND (Asc[2]<='7') THEN
-    CASE UpCase(Asc[1]) OF
-    'R':BEGIN
-	 Erg:=16+Ord(Asc[2])-AscOfs; DecodeReg:=True;
-	END;
-    'N':BEGIN
-	 Erg:=24+Ord(Asc[2])-AscOfs; DecodeReg:=True;
-	END;
-    END;
-END;
-
-
-	FUNCTION DecodeALUReg(Asc:String; VAR Erg:LongInt; MayX,MayY,MayAcc:Boolean):Boolean;
-BEGIN
-   DecodeALUReg:=False; IF NOT DecodeReg(Asc,Erg) THEN Exit;
-   CASE Erg OF
-   4,5:IF MayX THEN
-	BEGIN
-	 DecodeALUReg:=True; Dec(Erg,4);
-	END;
-   6,7:IF MayY THEN
-	BEGIN
-	 DecodeALUReg:=True; Dec(Erg,6);
-	END;
-   14,15:IF MayAcc THEN
-	  BEGIN
-	   DecodeALUReg:=True;
-	   IF (MayX) OR (MayY) THEN Dec(Erg,12) ELSE Dec(Erg,14);
-	  END;
-   END;
-END;
-
-	FUNCTION DecodeLReg(Asc:String; VAR Erg:LongInt):Boolean;
-CONST
-   RegCount=8;
-   RegNames:ARRAY[0..RegCount-1] OF String[3]=
-	    ('A10','B10','X','Y','A','B','AB','BA');
-VAR
-   z:Word;
-BEGIN
-   DecodeLReg:=False;
-   FOR z:=0 TO RegCount-1 DO
-    IF NLS_StrCaseCmp(Asc,RegNames[z] )=0 THEN
-     BEGIN
-      Erg:=z; DecodeLReg:=True; Exit;
-     END;
-END;
-
-	FUNCTION DecodeXYABReg(Asc:String; VAR Erg:LongInt):Boolean;
-CONST
-   RegCount=8;
-   RegNames:ARRAY[0..RegCount-1] OF String[2]=
-	    ('B','A','X','Y','X0','Y0','X1','Y1');
-VAR
-   z:Word;
-BEGIN
-   DecodeXYABReg:=False;
-   FOR z:=0 TO RegCount-1 DO
-    IF NLS_StrCaseCmp(Asc,RegNames[z])=0 THEN
-     BEGIN
-      Erg:=z; DecodeXYABReg:=True; Exit;
-     END;
-END;
-
-	FUNCTION DecodePCReg(Asc:String; VAR Erg:LongInt):Boolean;
-CONST
-   RegCount=7;
-   RegNames:ARRAY[1..RegCount] OF String[3]=
-	    ('SR','OMR','SP','SSH','SSL','LA','LC');
-VAR
-   z:Word;
-BEGIN
-   DecodePCReg:=False;
-   FOR z:=1 TO RegCount DO
-    IF NLS_StrCaseCmp(Asc,RegNames[z])=0 THEN
-     BEGIN
-      Erg:=z; DecodePCReg:=True; Exit;
-     END;
-END;
-
-	FUNCTION DecodeGeneralReg(Asc:String; VAR Erg:LongInt):Boolean;
-BEGIN
-   DecodeGeneralReg:=True;
-   IF DecodeReg(Asc,Erg) THEN Exit;
-   IF DecodePCReg(Asc,Erg) THEN
-    BEGIN
-     Inc(Erg,$38); Exit;
-    END;
-   IF (Length(Asc)=2) AND (UpCase(Asc[1])='M') AND (Asc[2]>='0') AND (Asc[2]<='7') THEN
-    BEGIN
-     Erg:=$20+Ord(Asc[2])-AscOfs; Exit;
-    END;
-   DecodeGeneralReg:=False;
-END;
-
-	FUNCTION DecodeControlReg(Asc:String; VAR Erg:LongInt):Boolean;
-BEGIN
-   DecodeControlReg:=True;
-   IF NLS_StrCaseCmp(Asc,'MR')=0 THEN Erg:=0
-   ELSE IF NLS_StrCaseCmp(Asc,'CCR')=0 THEN Erg:=1
-   ELSE IF NLS_StrCaseCmp(Asc,'OMR')=0 THEN Erg:=2
-   ELSE DecodeControlReg:=False;
 END;
 
 	FUNCTION DecodeOpPair(Left,Right:String; WorkSeg:Byte;
@@ -391,7 +520,36 @@ BEGIN
    DecodeTFR:=True;
 END;
 
-	FUNCTION DecodeMOVE(Start:Integer):Boolean;
+        FUNCTION DecodeRR(Asc:String; VAR Erg:LongInt):Boolean;
+VAR
+   Part1,Part2:LongInt;
+   Left,Right:String;
+BEGIN
+   DecodeRR:=False;
+   SplitArg(Asc,Left,Right);
+   IF NOT DecodeGeneralReg(Right,Part2) THEN Exit;
+   IF (Part2<16) OR (Part2>23) THEN Exit;
+   IF NOT DecodeGeneralReg(Left,Part1) THEN Exit;
+   IF (Part1<16) OR (Part1>23) THEN Exit;
+   Erg:=(Part2 AND 7)+((Part1 AND 7) SHL 8);
+   DecodeRR:=True;
+END;
+
+        FUNCTION DecodeCondition(Asc:String; VAR Erg:Word):Boolean;
+CONST
+   CondCount=18;
+   CondNames:ARRAY[0..CondCount-1] OF String[2]=
+             ('CC','GE','NE','PL','NN','EC','LC','GT','CS','LT','EQ','MI',
+              'NR','ES','LS','LE','HS','LO');
+BEGIN
+   Erg:=0;
+   WHILE (Erg<CondCount) AND (NLS_StrCaseCmp(CondNames[Erg],Asc)<>0) DO Inc(Erg);
+   IF Erg=CondCount-1 THEN Erg:=8;
+   DecodeCondition:=Erg<CondCount;
+   Erg:=Erg AND 15;
+END;
+
+        FUNCTION DecodeMOVE(Start:Integer):Boolean;
 
 	FUNCTION DecodeMOVE_0:Boolean;
 BEGIN
@@ -401,8 +559,31 @@ END;
 	FUNCTION DecodeMOVE_1:Boolean;
 VAR
    Left,Right:String;
-   RegErg,RegErg2,IsY,MixErg:LongInt;
+   RegErg,RegErg2,IsY,MixErg,l:LongInt;
+   Condition:Word;
+   SegMask:Byte;
 BEGIN
+   { Bedingungen ab 56300 }
+
+   IF  (NLS_StrCaseCmp(Copy(ArgStr[Start],1,2),'IF')=0) THEN
+    BEGIN
+     l:=Length(ArgStr[Start]);
+     IF NLS_StrCaseCmp(Copy(ArgStr[Start],l-1,2),'.U')=0 THEN
+      BEGIN
+       RegErg:=$1000; Dec(l,2);
+      END
+     ELSE RegErg:=0;
+     IF DecodeCondition(Copy(ArgStr[Start],3,l-2),Condition) THEN
+      IF MomCPU<CPU56300 THEN WrError(1505)
+      ELSE
+       BEGIN
+        DecodeMOVE_1:=True;
+        DAsmCode[0]:=$202000+(Condition SHL 8)+RegErg;
+        CodeLen:=1;
+        Exit;
+       END;
+    END;
+
    SplitArg(ArgStr[Start],Left,Right); DecodeMOVE_1:=False;
 
    { 1. Register-Update }
@@ -423,6 +604,7 @@ BEGIN
 
    IF DecodeReg(Right,RegErg) THEN
     BEGIN
+     AdrSeg:=SegNone;
      IF DecodeReg(Left,RegErg2) THEN
       BEGIN
        DecodeMOVE_1:=True;
@@ -431,51 +613,87 @@ BEGIN
       END
      ELSE
       BEGIN
-       DecodeAdr(Left,MModAll,MSegXData+MSegYData);
-       IsY:=Ord(AdrSeg=SegYData);
-       MixErg:=((RegErg AND $18) SHL 17)+(IsY SHL 19)+((RegErg AND 7) SHL 16);
-       IF (AdrType=ModImm) AND (AdrVal AND $ffffff00=0) THEN
-	BEGIN
-	 DecodeMOVE_1:=True;
-	 DAsmCode[0]:=$200000+(RegErg SHL 16)+((AdrVal AND $ff) SHL 8);
-	 CodeLen:=1;
-	END
-       ELSE IF (AdrType=ModAbs) AND (AdrVal<=63) AND (AdrVal>=0) THEN
-	BEGIN
-	 DecodeMOVE_1:=True;
-	 DAsmCode[0]:=$408000+MixErg+(AdrVal SHL 8);
-	 CodeLen:=1;
-	END
-       ELSE IF AdrType<>ModNone THEN
-	BEGIN
-	 DecodeMOVE_1:=True;
-	 DAsmCode[0]:=$40c000+MixErg+(AdrMode SHL 8); DAsmCode[1]:=AdrVal;
-	 CodeLen:=1+AdrCnt;
-	END;
+       SegMask:=MSegXData+MSegYData;
+       IF (RegErg=14) OR (RegErg=15) THEN Inc(SegMask,MSegLData);
+       DecodeAdr(Left,MModAll+MModDisp,SegMask);
+       IF AdrSeg<>SegLData THEN
+        BEGIN
+         IsY:=Ord(AdrSeg=SegYData);
+         MixErg:=((RegErg AND $18) SHL 17)+(IsY SHL 19)+((RegErg AND 7) SHL 16);
+         IF AdrType=ModDisp THEN
+          IF (AdrVal<63) AND (AdrVal>-64) AND (RegErg<=15) THEN
+           BEGIN
+            DAsmCode[0]:=$020090+((AdrVal AND 1) SHL 6)+((AdrVal AND $7e) SHL 10)
+                        +(AdrMode SHL 8)+(IsY SHL 5)+RegErg;
+            CodeLen:=1;
+           END
+          ELSE
+           BEGIN
+            DAsmCode[0]:=$0a70c0+(AdrMode SHL 8)+(IsY SHL 16)+RegErg;
+            DAsmCode[1]:=AdrVal;
+            CodeLen:=2;
+           END
+         ELSE IF (AdrType=ModImm) AND (AdrVal AND $ffffff00=0) THEN
+          BEGIN
+           DecodeMOVE_1:=True;
+           DAsmCode[0]:=$200000+(RegErg SHL 16)+((AdrVal AND $ff) SHL 8);
+           CodeLen:=1;
+          END
+         ELSE IF (AdrType=ModAbs) AND (AdrVal<=63) AND (AdrVal>=0) THEN
+          BEGIN
+           DecodeMOVE_1:=True;
+           DAsmCode[0]:=$408000+MixErg+(AdrVal SHL 8);
+           CodeLen:=1;
+          END
+         ELSE IF AdrType<>ModNone THEN
+          BEGIN
+           DecodeMOVE_1:=True;
+           DAsmCode[0]:=$40c000+MixErg+(AdrMode SHL 8); DAsmCode[1]:=AdrVal;
+           CodeLen:=1+AdrCnt;
+          END;
+        END;
       END;
-     Exit;
+     IF AdrSeg<>SegLData THEN Exit;
     END;
 
    { 3. Quelle ist Register }
 
    IF DecodeReg(Left,RegErg) THEN
     BEGIN
-     DecodeAdr(Right,MModNoImm,MSegXData+MSegYData);
-     IsY:=Ord(AdrSeg=SegYData);
-     MixErg:=((RegErg AND $18) SHL 17)+(IsY SHL 19)+((RegErg AND 7) SHL 16);
-     IF (AdrType=ModAbs) AND (AdrVal<=63) AND (AdrVal>=0) THEN
+     SegMask:=MSegXData+MSegYData; AdrSeg:=SegNone;
+     IF (RegErg=14) OR (RegErg=15) THEN Inc(SegMask,MSegLData);
+     DecodeAdr(Right,MModNoImm+MModDisp,SegMask);
+     IF AdrSeg<>SegLData THEN
       BEGIN
-       DecodeMOVE_1:=True;
-       DAsmCode[0]:=$400000+MixErg+(AdrVal SHL 8);
-       CodeLen:=1;
-      END
-     ELSE IF AdrType<>ModNone THEN
-      BEGIN
-       DecodeMOVE_1:=True;
-       DAsmCode[0]:=$404000+MixErg+(AdrMode SHL 8); DAsmCode[1]:=AdrVal;
-       CodeLen:=1+AdrCnt;
+       IsY:=Ord(AdrSeg=SegYData);
+       MixErg:=((RegErg AND $18) SHL 17)+(IsY SHL 19)+((RegErg AND 7) SHL 16);
+       IF AdrType=ModDisp THEN
+        IF (AdrVal<63) AND (AdrVal>-64) AND (RegErg<=15) THEN
+         BEGIN
+          DAsmCode[0]:=$020080+((AdrVal AND 1) SHL 6)+((AdrVal AND $7e) SHL 10)
+                      +(AdrMode SHL 8)+(IsY SHL 5)+RegErg;
+          CodeLen:=1;
+         END
+        ELSE
+         BEGIN
+          DAsmCode[0]:=$0a7080+(AdrMode SHL 8)+(IsY SHL 16)+RegErg;
+          DAsmCode[1]:=AdrVal;
+          CodeLen:=2;
+         END
+       ELSE IF (AdrType=ModAbs) AND (AdrVal<=63) AND (AdrVal>=0) THEN
+        BEGIN
+         DecodeMOVE_1:=True;
+         DAsmCode[0]:=$400000+MixErg+(AdrVal SHL 8);
+         CodeLen:=1;
+        END
+       ELSE IF AdrType<>ModNone THEN
+        BEGIN
+         DecodeMOVE_1:=True;
+         DAsmCode[0]:=$404000+MixErg+(AdrMode SHL 8); DAsmCode[1]:=AdrVal;
+         CodeLen:=1+AdrCnt;
+        END;
+       Exit;
       END;
-     Exit;
     END;
 
    { 4. Ziel ist langes Register }
@@ -535,10 +753,9 @@ BEGIN
 
    { 1. Spezialfall X auf rechter Seite ? }
 
-   IF NlS_StrCaseCmp(Left2,'X0')=0 THEN
+   IF (NLS_StrCaseCmp(Left2,'X0')=0) AND (NLS_StrCaseCmp(Left1,Right2)=0) THEN
     BEGIN
      IF NOT DecodeALUReg(Right2,RegErg,False,False,True) THEN WrError(1350)
-     ELSE IF Left1<>Right2 THEN WrError(1350)
      ELSE
       BEGIN
        DecodeAdr(Right1,MModNoImm,MSegXData);
@@ -555,10 +772,9 @@ BEGIN
 
    { 2. Spezialfall Y auf linker Seite ? }
 
-   IF NLS_StrCaseCmp(Left1,'Y0')=0 THEN
+   IF (NLS_StrCaseCmp(Left1,'Y0')=0) AND (NLS_StrCaseCmp(Right1,Left2)=0) THEN
     BEGIN
      IF NOT DecodeALUReg(Right1,RegErg,False,False,True) THEN WrError(1350)
-     ELSE IF Left2<>Right1 THEN WrError(1350)
      ELSE
       BEGIN
        DecodeAdr(Right2,MModNoImm,MSegYData);
@@ -629,21 +845,16 @@ BEGIN
    END;
 END;
 
-	FUNCTION DecodeCondition(Asc:String; VAR Erg:Word):Boolean;
-CONST
-   CondCount=18;
-   CondNames:ARRAY[0..CondCount-1] OF String[2]=
-	     ('CC','GE','NE','PL','NN','EC','LC','GT','CS','LT','EQ','MI',
-	      'NR','ES','LS','LE','HS','LO');
+        FUNCTION DecodeMix(Asc:String; VAR Erg:Word):Boolean;
 BEGIN
-   Erg:=0;
-   WHILE (Erg<CondCount) AND (NLS_StrCaseCmp(CondNames[Erg],Asc)<>0) DO Inc(Erg);
-   IF Erg=CondCount-1 THEN Erg:=8;
-   DecodeCondition:=Erg<CondCount;
-   Erg:=Erg AND 15;
+   DecodeMix:=True;
+   IF Asc='SS' THEN Erg:=0
+   ELSE IF Asc='SU' THEN Erg:=$100
+   ELSE IF Asc='UU' THEN Erg:=$140
+   ELSE DecodeMix:=False;
 END;
 
-	FUNCTION DecodePseudo:Boolean;
+        FUNCTION DecodePseudo:Boolean;
 VAR
    OK:Boolean;
    BCount:Integer;
@@ -656,13 +867,13 @@ BEGIN
 
    IF Memo('XSFR') THEN
     BEGIN
-     CodeEquate(SegXData,0,$ffff);
+     CodeEquate(SegXData,0,MemLimit);
      Exit;
     END;
 
    IF Memo('YSFR') THEN
     BEGIN
-     CodeEquate(SegYData,0,$ffff);
+     CodeEquate(SegYData,0,MemLimit);
      Exit;
     END;
 
@@ -672,7 +883,7 @@ BEGIN
      IF ArgCnt<>1 THEN WrError(1110)
      ELSE
       BEGIN
-       AdrWord:=EvalIntExpression(ArgStr[1],Int16,OK);
+       AdrWord:=EvalIntExpression(ArgStr[1],AdrInt,OK);
        IF (OK) AND (NOT FirstPassUnknown) THEN
 	BEGIN
 	 IF Memo('YSFR') THEN Segment:=SegYData ELSE Segment:=SegXData;
@@ -692,7 +903,7 @@ BEGIN
      ELSE
       BEGIN
        FirstPassUnknown:=False;
-       AdrWord:=EvalIntExpression(ArgStr[1],Int16,OK);
+       AdrWord:=EvalIntExpression(ArgStr[1],AdrInt,OK);
        IF FirstPassUnknown THEN WrError(1820);
        IF (OK) AND (NOT FirstPassUnknown) THEN
 	BEGIN
@@ -758,15 +969,301 @@ BEGIN
    DecodePseudo:=False;
 END;
 
+	FUNCTION DecodeJump:Boolean;
+VAR
+   AddVal,h,Reg1,Reg2,Reg3:LongInt;
+   Condition:Word;
+   z:Integer;
+   Left,Mid,Right:String;
+   OK:Boolean;
+BEGIN
+   DecodeJump:=True;
+
+   IF (Memo('JMP')) OR (Memo('JSR')) THEN
+    BEGIN
+     IF ArgCnt<>1 THEN WrError(1110)
+     ELSE
+      BEGIN
+       AddVal:=LongInt(Ord(Memo('JSR'))) SHL 16;
+       DecodeAdr(ArgStr[1],MModNoImm,MSegCode);
+       IF AdrType=ModAbs THEN
+        IF AdrVal AND $fff000=0 THEN
+	 BEGIN
+          CodeLen:=1; DAsmCode[0]:=$0c0000+AddVal+(AdrVal AND $fff);
+	 END
+	ELSE
+	 BEGIN
+	  CodeLen:=2; DAsmCode[0]:=$0af080+AddVal; DAsmCode[1]:=AdrVal;
+	 END
+       ELSE IF AdrType<>ModNone THEN
+	BEGIN
+	 CodeLen:=1; DAsmCode[0]:=$0ac080+AddVal+(AdrMode SHL 8);
+	END;
+      END;
+     Exit;
+    END;
+
+   IF (OpPart[1]='J') AND (DecodeCondition(Copy(OpPart,2,Length(OpPart)-1),Condition)) THEN
+    BEGIN
+     IF ArgCnt<>1 THEN WrError(1110)
+     ELSE
+      BEGIN
+       DecodeAdr(ArgStr[1],MModNoImm,MSegCode);
+       IF AdrType=ModAbs THEN
+        IF AdrVal AND $fff000=0 THEN
+	 BEGIN
+          CodeLen:=1; DAsmCode[0]:=$0e0000+(Condition SHL 12)+(AdrVal AND $fff);
+	 END
+	ELSE
+	 BEGIN
+	  CodeLen:=2; DAsmCode[0]:=$0af0a0+Condition; DAsmCode[1]:=AdrVal;
+	 END
+       ELSE IF AdrType<>ModNone THEN
+	BEGIN
+	 CodeLen:=1; DAsmCode[0]:=$0ac0a0+Condition+(AdrMode SHL 8);
+	END;
+      END;
+     Exit;
+    END;
+
+   IF (Copy(OpPart,1,2)='JS') AND (DecodeCondition(Copy(OpPart,3,Length(OpPart)-2),Condition)) THEN
+    BEGIN
+     IF ArgCnt<>1 THEN WrError(1110)
+     ELSE
+      BEGIN
+       DecodeAdr(ArgStr[1],MModNoImm,MSegCode);
+       IF AdrType=ModAbs THEN
+        IF AdrVal AND $fff000=0 THEN
+	 BEGIN
+          CodeLen:=1; DAsmCode[0]:=$0f0000+(Condition SHL 12)+(AdrVal AND $fff);
+	 END
+	ELSE
+	 BEGIN
+	  CodeLen:=2; DAsmCode[0]:=$0bf0a0+Condition; DAsmCode[1]:=AdrVal;
+	 END
+       ELSE IF AdrType<>ModNone THEN
+	BEGIN
+	 CodeLen:=1; DAsmCode[0]:=$0bc0a0+Condition+(AdrMode SHL 8);
+	END;
+      END;
+     Exit;
+    END;
+
+   FOR z:=0 TO BitJmpOrderCnt-1 DO
+    IF Memo(BitJmpOrders[z]) THEN
+     BEGIN
+      IF ArgCnt<>1 THEN WrError(1110)
+      ELSE
+       BEGIN
+	SplitArg(ArgStr[1],Left,Mid); SplitArg(Mid,Mid,Right);
+        IF (Mid='') OR (Right='') THEN WrError(1110)
+	ELSE IF Left[1]<>'#' THEN WrError(1120)
+	ELSE
+	 BEGIN
+          DAsmCode[1]:=EvalIntExpression(Right,AdrInt,OK);
+	  IF OK THEN
+	   BEGIN
+	    h:=EvalIntExpression(Copy(Left,2,Length(Left)-1),Int8,OK);
+	    IF FirstPassUnknown THEN h:=h AND 15;
+	    IF OK THEN
+	    IF (h<0) OR (h>23) THEN WrError(1320)
+	    ELSE
+	     BEGIN
+	      Reg2:=((z AND 1) SHL 5)+(LongInt(z SHR 1) SHL 16);
+	      IF DecodeGeneralReg(Mid,Reg1) THEN
+	       BEGIN
+		CodeLen:=2;
+                DAsmCode[0]:=$0ac000+h+Reg2+(Reg1 SHL 8);
+	       END
+	      ELSE
+	       BEGIN
+		DecodeAdr(Mid,MModNoImm,MSegXData+MSegYData);
+		Reg3:=Ord(AdrSeg=SegYData) SHL 6;
+		IF AdrType=ModAbs THEN
+		 IF (AdrVal>=0) AND (AdrVal<=63) THEN
+		  BEGIN
+		   CodeLen:=2;
+		   DAsmCode[0]:=$0a0080+h+Reg2+Reg3+(AdrVal SHL 8);
+		  END
+                 ELSE IF (AdrVal>=MemLimit-$3f) AND (AdrVal<=MemLimit) THEN
+		  BEGIN
+		   CodeLen:=2;
+		   DAsmCode[0]:=$0a8080+h+Reg2+Reg3+((AdrVal AND $3f) SHL 8);
+		  END
+                 ELSE IF (MomCPU>=CPU56300) AND (AdrVal>=MemLimit-$7f) AND (AdrVal<=MemLimit-$40) THEN
+		  BEGIN
+		   CodeLen:=2;
+                   Reg2:=((z AND 1) SHL 5)+(LongInt(z SHR 1) SHL 14);
+                   DAsmCode[0]:=$018080+h+Reg2+Reg3+((AdrVal AND $3f) SHL 8);
+                  END
+                 ELSE WrError(1320)
+		ELSE
+		 BEGIN
+		  CodeLen:=2;
+		  DAsmCode[0]:=$0a4080+h+Reg2+Reg3+(AdrMode SHL 8);
+		 END;
+	       END;
+	     END;
+	   END;
+	 END;
+       END;
+      Exit;
+     END;
+
+   IF (Memo('DO')) OR (Memo('DOR')) THEN
+    BEGIN
+     IF ArgCnt<>1 THEN WrError(1110)
+     ELSE IF (Memo('DOR')) AND (MomCPU<CPU56300) THEN WrError(1500)
+     ELSE
+      BEGIN
+       z:=Ord(Memo('DOR'));
+       SplitArg(ArgStr[1],Left,Right);
+       IF (Right='') THEN WrError(1110)
+       ELSE
+	BEGIN
+         DAsmCode[1]:=EvalIntExpression(Right,AdrInt,OK)-1;
+         IF Memo('DOR') THEN DAsmCode[1]:=(DAsmCode[1]-(EProgCounter+2)) AND $ffffff;
+	 IF OK THEN
+	  BEGIN
+	   ChkSpace(SegCode);
+           IF NLS_StrCaseCmp(Left,'FOREVER')=0 THEN
+            BEGIN
+             IF MomCPU<CPU56300 THEN WrError(1500)
+             ELSE
+              BEGIN
+               DAsmCode[0]:=$000203-z; CodeLen:=2;
+              END;
+            END
+           ELSE IF DecodeGeneralReg(Left,Reg1) THEN
+	    BEGIN
+             IF Reg1=$3c THEN WrXError(1445,Left) { kein SSH! }
+             ELSE
+              BEGIN
+               CodeLen:=2; DAsmCode[0]:=$06c000+(Reg1 SHL 8)+(z SHL 4);
+              END
+	    END
+	   ELSE IF Left[1]='#' THEN
+	    BEGIN
+             Reg1:=EvalIntExpression(Copy(Left,2,Length(Left)-1),UInt12,OK);
+	     IF OK THEN
+	      BEGIN
+	       CodeLen:=2;
+               DAsmCode[0]:=$060080+(Reg1 SHR 8)+((Reg1 AND $ff) SHL 8)+(z SHL 4);
+	      END;
+	    END
+	   ELSE
+	    BEGIN
+	     DecodeAdr(Left,MModNoImm,MSegXData+MSegYData);
+	     IF (AdrType=ModAbs) THEN
+	      IF (AdrVal<0) OR (AdrVal>63) THEN WrError(1320)
+	      ELSE
+	       BEGIN
+		CodeLen:=2;
+                DAsmCode[0]:=$060000+(AdrVal SHL 8)+(Ord(AdrSeg=SegYData) SHL 6)+(z SHL 4);
+	       END
+	     ELSE
+	      BEGIN
+	       CodeLen:=2;
+               DAsmCode[0]:=$064000+(AdrMode SHL 8)+(Ord(AdrSeg=SegYData) SHL 6)+(z SHL 4);
+	      END;
+	    END;
+	  END;
+	END;
+      END;
+     Exit;
+    END;
+
+   IF (Copy(OpPart,1,3)='BRK') AND (DecodeCondition(Copy(OpPart,4,Length(OpPart)-3),Condition)) THEN
+    BEGIN
+     IF ArgCnt<>0 THEN WrError(1110)
+     ELSE IF MomCPU<CPU56300 THEN WrError(1500)
+     ELSE
+      BEGIN
+       DAsmCode[0]:=$00000210+Condition;
+       CodeLen:=1;
+      END;
+     Exit;
+    END;
+
+   IF (Copy(OpPart,1,4)='TRAP') AND (DecodeCondition(Copy(OpPart,5,Length(OpPart)-4),Condition)) THEN
+    BEGIN
+     IF ArgCnt<>0 THEN WrError(1110)
+     ELSE IF MomCPU<CPU56300 THEN WrError(1500)
+     ELSE
+      BEGIN
+       DAsmCode[0]:=$000010+Condition;
+       CodeLen:=1;
+      END;
+     Exit;
+    END;
+
+   IF Memo('REP') THEN
+    BEGIN
+     IF ArgCnt<>1 THEN WrError(1110)
+     ELSE IF DecodeGeneralReg(ArgStr[1],Reg1) THEN
+      BEGIN
+       CodeLen:=1;
+       DAsmCode[0]:=$06c020+(Reg1 SHL 8);
+      END
+     ELSE
+      BEGIN
+       DecodeAdr(ArgStr[1],MModAll,MSegXData+MSegYData);
+       IF AdrType=ModImm THEN
+	IF (AdrVal<0) OR (AdrVal>$fff) THEN WrError(1320)
+	ELSE
+	 BEGIN
+	  CodeLen:=1;
+	  DAsmCode[0]:=$0600a0+(AdrVal SHR 8)+((AdrVal AND $ff) SHL 8);
+	 END
+       ELSE IF (AdrType=ModAbs) THEN
+        IF (AdrVal<0) OR (AdrVal>63) THEN WrError(1320)
+        ELSE
+         BEGIN
+          CodeLen:=1;
+          DAsmCode[0]:=$060020+(AdrVal SHL 8)+(Ord(AdrSeg=SegYData) SHL 6);
+         END
+       ELSE
+	BEGIN
+	 CodeLen:=1+AdrCnt; DAsmCode[1]:=AdrVal;
+	 DAsmCode[0]:=$064020+(AdrMode SHL 8)+(Ord(AdrSeg=SegYData) SHL 6);
+	END;
+      END;
+     Exit;
+    END;
+
+   DecodeJump:=False;
+END;
+
 	PROCEDURE MakeCode_56K;
 	Far;
 VAR
-   z:Integer;
-   AddVal,h,Reg1,Reg2,Reg3:LongInt;
+   z,pp,np:Integer;
+   AddVal,h,h2,Reg1,Reg2,Reg3,Dist:LongInt;
    HVal,HCnt,HMode,HType,HSeg:LongInt;
    Condition:Word;
    OK:Boolean;
    Left,Mid,Right:String;
+   ErrCode:Integer;
+   ErrString:String;
+   DontAdd:Boolean;
+   Size:Byte;
+
+   	PROCEDURE SetError(Code:Integer);
+BEGIN
+   ErrCode:=Code; ErrString:='';
+END;
+
+	PROCEDURE SetXError(Code:Integer; VAR Ext:String);
+BEGIN
+   ErrCode:=Code; ErrString:=Ext;
+END;
+
+	PROCEDURE PrError;
+BEGIN
+   IF ErrString<>'' THEN WrXError(ErrCode,ErrString)
+   ELSE IF ErrCode<>0 THEN WrError(ErrCode);
+END;
+
 BEGIN
    CodeLen:=0; DontPrint:=False;
 
@@ -785,6 +1282,7 @@ BEGIN
      IF Memo(Name) THEN
       BEGIN
        IF ArgCnt<>0 THEN WrError(1110)
+       ELSE IF MomCPU-CPU56000<MinCPU THEN WrError(1500)
        ELSE
 	BEGIN
 	 CodeLen:=1; DAsmCode[0]:=Code;
@@ -800,43 +1298,161 @@ BEGIN
       BEGIN
        IF DecodeMOVE(2) THEN
 	BEGIN
-	 OK:=True;
+	 ErrCode:=0; ErrString:=''; DontAdd:=False;
 	 CASE Typ OF
 	 ParAB:
 	  BEGIN
-	   IF DecodeALUReg(ArgStr[1],Reg1,False,False,True) THEN h:=Reg1 SHL 3
-	   ELSE OK:=False;
+	   IF NOT DecodeALUReg(ArgStr[1],Reg1,False,False,True) THEN SetXError(1445,ArgStr[1])
+	   ELSE h:=Reg1 SHL 3;
 	  END;
-	 ParXYAB:
+         ParFixAB:
+          BEGIN
+           IF NLS_StrCaseCmp(ArgStr[1],'A,B')<>0 THEN SetError(1760)
+           ELSE h:=0;
+          END;
+         ParABShl1:
+          BEGIN
+           IF Pos(',',ArgStr[1])=0 THEN
+            BEGIN
+             IF NOT DecodeALUReg(ArgStr[1],Reg1,False,False,True) THEN SetXError(1445,ArgStr[1])
+             ELSE h:=Reg1 SHL 3;
+            END
+           ELSE IF ArgCnt<>1 THEN SetError(1950)
+           ELSE IF MomCPU<CPU56300 THEN SetError(1500)
+           ELSE
+            BEGIN
+             SplitArg(ArgStr[1],Left,Right);
+             IF Pos(',',Right)=0 THEN Mid:=Right
+             ELSE SplitArg(Right,Mid,Right);
+             IF NOT DecodeALUReg(Right,Reg1,False,False,True) THEN SetXError(1445,Right)
+             ELSE IF NOT DecodeALUReg(Mid,Reg2,False,False,True) THEN SetXError(1445,Mid)
+             ELSE IF Left[1]='#' THEN
+              BEGIN
+               AddVal:=EvalIntExpression(Copy(Left,2,Length(Left)-1),UInt6,OK);
+               IF OK THEN
+                BEGIN
+                 DAsmCode[0]:=$0c1c00+((Code AND $10) SHL 4)+(Reg2 SHL 7)+
+                              (AddVal SHL 1)+Reg1;
+                 CodeLen:=1; DontAdd:=True;
+                END;
+              END
+             ELSE IF NOT DecodeXYAB1Reg(Left,Reg3) THEN SetXError(1445,Left)
+             ELSE
+              BEGIN
+               DAsmCode[0]:=$0c1e60-((Code AND $10) SHL 2)+(Reg2 SHL 4)+
+                            (Reg3 SHL 1)+Reg1;
+               CodeLen:=1; DontAdd:=True;
+              END;
+            END;
+          END;
+         ParABShl2:
+          BEGIN
+           IF Pos(',',ArgStr[1])=0 THEN
+            BEGIN
+             IF NOT DecodeALUReg(ArgStr[1],Reg1,False,False,True) THEN SetXError(1445,ArgStr[1])
+             ELSE h:=Reg1 SHL 3;
+            END
+           ELSE IF ArgCnt<>1 THEN SetError(1950)
+           ELSE IF MomCPU<CPU56300 THEN SetError(1500)
+           ELSE
+            BEGIN
+             SplitArg(ArgStr[1],Left,Right);
+             IF NOT DecodeALUReg(Right,Reg1,False,False,True) THEN SetXError(1445,Right)
+             ELSE IF Left[1]='#' THEN
+              BEGIN
+               AddVal:=EvalIntExpression(Copy(Left,2,Length(Left)-1),UInt5,OK);
+               IF OK THEN
+                BEGIN
+                 DAsmCode[0]:=$0c1e80+(($33-Code) SHL 2)+
+                              (AddVal SHL 1)+Reg1;
+                 CodeLen:=1; DontAdd:=True;
+                END;
+              END
+             ELSE IF NOT DecodeXYAB1Reg(Left,Reg3) THEN SetXError(1445,Left)
+             ELSE
+              BEGIN
+               DAsmCode[0]:=$0c1e10+(($33-Code) SHL 1)+
+                            (Reg3 SHL 1)+Reg1;
+               CodeLen:=1; DontAdd:=True;
+              END;
+            END;
+          END;
+         ParXYAB:
 	  BEGIN
 	   SplitArg(ArgStr[1],Left,Right);
-	   IF NOT DecodeALUReg(Right,Reg2,False,False,True) THEN OK:=False
-	   ELSE IF NOT DecodeLReg(Left,Reg1) THEN OK:=False
-	   ELSE IF (Reg1<2) OR (Reg1>3) THEN OK:=False
+	   IF NOT DecodeALUReg(Right,Reg2,False,False,True) THEN SetXError(1445,Right)
+	   ELSE IF NOT DecodeLReg(Left,Reg1) THEN SetXError(1445,Left)
+	   ELSE IF (Reg1<2) OR (Reg1>3) THEN SetXError(1445,Left)
 	   ELSE h:=(Reg2 SHL 3)+((Reg1-2) SHL 4);
 	  END;
 	 ParABXYnAB:
 	  BEGIN
 	   SplitArg(ArgStr[1],Left,Right);
-	   IF NOT DecodeALUReg(Right,Reg2,False,False,True) THEN OK:=False
-	   ELSE IF NOT DecodeXYABReg(Left,Reg1) THEN OK:=False
-	   ELSE IF Reg1 XOR Reg2=1 THEN OK:=False
+	   IF NOT DecodeALUReg(Right,Reg2,False,False,True) THEN SetXError(1445,Right)
+           ELSE IF Left[1]='#' THEN
+            BEGIN
+             IF Memo('CMPM') THEN SetError(1350)
+             ELSE IF MomCPU<CPU56300 THEN SetError(1500)
+             ELSE IF ArgCnt<>1 THEN SetError(1950)
+             ELSE
+              BEGIN
+               AddVal:=EvalIntExpression(Copy(Left,2,Length(Left)-1),UInt24,OK);
+               IF NOT OK THEN SetError(-1)
+               ELSE IF (AddVal>=0) AND (AddVal<=63) THEN
+                BEGIN
+                 DAsmCode[0]:=$014000+(AddVal SHL 8); h:=$80+(Reg2 SHL 3);
+                END
+               ELSE
+                BEGIN
+                 DAsmCode[0]:=$014000; h:=$c0+(Reg2 SHL 3);
+                 DAsmCode[1]:=AddVal AND $ffffff; CodeLen:=2;
+                END;
+              END
+            END
 	   ELSE
-	    BEGIN
-	     IF Reg1=0 THEN Reg1:=1; h:=(Reg2 SHL 3)+(Reg1 SHL 4);
-	    END;
+	    IF NOT DecodeXYABReg(Left,Reg1) THEN SetXError(1445,Left)
+            ELSE IF Reg1 XOR Reg2=1 THEN SetError(1760)
+            ELSE IF (Memo('CMPM')) AND (Reg1 AND 6=2) THEN SetXError(1445,Left)
+            ELSE
+	     BEGIN
+              IF Reg1=0 THEN Reg1:=Ord(NOT Memo('CMPM'));
+              h:=(Reg2 SHL 3)+(Reg1 SHL 4);
+	     END;
 	  END;
 	 ParABBA:
           IF NLS_StrCaseCmp(ArgStr[1],'B,A')=0 THEN h:=0
           ELSE IF NLS_StrCaseCmp(ArgStr[1],'A,B')=0 THEN h:=8
-	  ELSE OK:=False;
+	  ELSE SetXError(1760,ArgStr[1]);
 	 ParXYnAB:
 	  BEGIN
 	   SplitArg(ArgStr[1],Left,Right);
-	   IF NOT DecodeALUReg(Right,Reg2,False,False,True) THEN OK:=False
-	   ELSE IF NOT DecodeReg(Left,Reg1) THEN OK:=False
-	   ELSE IF (Reg1<4) OR (Reg1>7) THEN OK:=False
-	   ELSE h:=(Reg2 SHL 3)+(TurnXY(Reg1) SHL 4);
+	   IF NOT DecodeALUReg(Right,Reg2,False,False,True) THEN SetXError(1445,Right)
+           ELSE IF Left[1]='#' THEN
+            BEGIN
+             IF MomCPU<CPU56300 THEN SetError(1500)
+             ELSE IF ArgCnt<>1 THEN SetError(1950)
+             ELSE
+              BEGIN
+               AddVal:=EvalIntExpression(Copy(Left,2,Length(Left)-1),UInt24,OK);
+               IF NOT OK THEN SetError(-1)
+               ELSE IF (AddVal>=0) AND (AddVal<=63) THEN
+                BEGIN
+                 DAsmCode[0]:=$014080+(AddVal SHL 8)+(Reg2 SHL 3)+(Code AND 7);
+                 CodeLen:=1;
+                 DontAdd:=True;
+                END
+               ELSE
+                BEGIN
+                 DAsmCode[0]:=$0140c0+(Reg2 SHL 3)+(Code AND 7);
+                 DAsmCode[1]:=AddVal AND $ffffff; CodeLen:=2;
+                 DontAdd:=True;
+                END;
+              END
+            END
+	   ELSE
+	    IF NOT DecodeReg(Left,Reg1) THEN SetXError(1445,Left)
+	    ELSE IF (Reg1<4) OR (Reg1>7) THEN SetXError(1445,Left)
+	    ELSE h:=(Reg2 SHL 3)+(TurnXY(Reg1) SHL 4);
 	  END;
 	 ParMul:
 	  BEGIN
@@ -846,19 +1462,41 @@ BEGIN
 	     Delete(Left,1,1); Inc(h,4);
 	    END
 	   ELSE IF Left[1]='+' THEN Delete(Left,1,1);
-	   IF NOT DecodeALUReg(Right,Reg3,False,False,True) THEN OK:=False
-	   ELSE IF NOT DecodeReg(Left,Reg1) THEN OK:=False
-	   ELSE IF (Reg1<4) OR (Reg1>7) THEN OK:=False
-	   ELSE IF NOT DecodeReg(Mid,Reg2) THEN OK:=False
-	   ELSE IF (Reg2<4) OR (Reg2>7) THEN OK:=False
-	   ELSE IF MacTable[Reg1,Reg2]=$ff THEN OK:=False
+	   IF NOT DecodeALUReg(Right,Reg3,False,False,True) THEN SetXError(1445,Right)
+	   ELSE IF NOT DecodeReg(Left,Reg1) THEN SetXError(1445,Left)
+	   ELSE IF (Reg1<4) OR (Reg1>7) THEN SetXError(1445,Left)
+           ELSE IF Mid[1]='#' THEN
+            BEGIN
+             IF ArgCnt<>1 THEN WrError(1110)
+             ELSE IF MomCPU<CPU56300 THEN WrError(1500)
+             ELSE
+              BEGIN
+               FirstPassUnknown:=False;
+               AddVal:=EvalIntExpression(Copy(Mid,2,Length(Mid)-1),UInt24,OK);
+               IF FirstPassUnknown THEN AddVal:=1;
+               IF NOT (SingleBit(AddVal,AddVal)) OR (AddVal>22) THEN WrError(1540)
+               ELSE
+                BEGIN
+                 AddVal:=23-AddVal;
+                 DAsmCode[0]:=$010040+(AddVal SHL 8)+Mac2Table[Reg1 AND 3] SHL 4
+                             +(Reg3 SHL 3);
+                 CodeLen:=1;
+                END;
+              END;
+            END
+	   ELSE IF NOT DecodeReg(Mid,Reg2) THEN SetXError(1445,Mid)
+	   ELSE IF (Reg2<4) OR (Reg2>7) THEN SetXError(1445,Mid)
+	   ELSE IF MacTable[Reg1,Reg2]=$ff THEN SetError(1760)
 	   ELSE Inc(h,(Reg3 SHL 3)+(MacTable[Reg1,Reg2] SHL 4));
 	  END;
 	 END;
-	 IF OK THEN Inc(DAsmCode[0],Code+h)
+	 IF ErrCode=0 THEN
+          BEGIN
+           IF NOT DontAdd THEN Inc(DAsmCode[0],Code+h);
+          END
 	 ELSE
 	  BEGIN
-	   WrError(1350); CodeLen:=0;
+	   IF ErrCode>0 THEN PrError; CodeLen:=0;
 	  END;
 	END;
        Exit;
@@ -882,6 +1520,108 @@ BEGIN
      Exit;
     END;
 
+   FOR z:=0 TO ImmMacOrderCnt-1 DO
+    IF Memo(ImmMacOrders[z]) THEN
+     BEGIN
+      IF ArgCnt<>1 THEN WrError(1110)
+      ELSE IF MomCPU<CPU56300 THEN WrError(1500)
+      ELSE
+       BEGIN
+        SplitArg(ArgStr[1],Left,Mid); SplitArg(Mid,Mid,Right);
+        h:=0;
+        IF Left[1]='-' THEN
+         BEGIN
+          h:=4; Delete(Left,1,1);
+         END
+        ELSE IF Left[1]='+' THEN Delete(Left,1,1);
+        IF (Mid='') OR (Right='') THEN WrError(1110)
+        ELSE IF NOT DecodeALUReg(Right,Reg1,False,False,True) THEN WrXError(1445,Right)
+        ELSE IF NOT DecodeXYABReg(Mid,Reg2) THEN WrXError(1445,Mid)
+        ELSE IF (Reg2<4) OR (Reg2>7) THEN WrXError(1445,Mid)
+        ELSE IF Left[1]<>'#' THEN WrError(1120)
+        ELSE
+         BEGIN
+          DAsmCode[1]:=EvalIntExpression(Copy(Left,2,Length(Left)-1),Int24,OK);
+          IF OK THEN
+           BEGIN
+            DAsmCode[0]:=$0141c0+z+h+(Reg1 SHL 3)+((Reg2 AND 3) SHL 4);
+            CodeLen:=2;
+           END;
+         END;
+       END;
+      Exit;
+     END;
+
+   IF (Copy(OpPart,1,4)='DMAC') AND (DecodeMix(Copy(OpPart,5,Length(OpPart)-4),Condition)) THEN
+    BEGIN
+     IF ArgCnt<>1 THEN WrError(1110)
+     ELSE IF MomCPU<CPU56300 THEN WrError(1500)
+     ELSE
+      BEGIN
+       SplitArg(ArgStr[1],Left,Mid); SplitArg(Mid,Mid,Right);
+       IF Left[1]='-' THEN
+        BEGIN
+         Delete(Left,1,1); Inc(Condition,16);
+        END
+       ELSE IF Left[1]='+' THEN Delete(Left,1,1);
+       IF (Mid='') OR (Right='') THEN WrError(1110)
+       ELSE IF NOT DecodeALUReg(Right,Reg1,False,False,True) THEN WrXError(1445,Right)
+       ELSE IF NOT DecodeXYAB1Reg(Mid,Reg2) THEN WrXError(1445,Mid)
+       ELSE IF Reg2<4 THEN WrXError(1445,Mid)
+       ELSE IF NOT DecodeXYAB1Reg(Left,Reg3) THEN WrXError(1445,Left)
+       ELSE IF Reg3<4 THEN WrXError(1445,Left)
+       ELSE
+        BEGIN
+         DAsmCode[0]:=$012480+Condition+(Reg1 SHL 5)+Mac4Table[Reg3,Reg2];
+         CodeLen:=1;
+        END;
+      END;
+     Exit;
+    END;
+
+   IF ((Copy(OpPart,1,3)='MAC') OR (Copy(OpPart,1,3)='MPY'))
+   AND (DecodeMix(Copy(OpPart,4,Length(OpPart)-3),Condition)) THEN
+    BEGIN
+     IF Condition=0 THEN WrXError(1200,OpPart)
+     ELSE IF ArgCnt<>1 THEN WrError(1110)
+     ELSE IF MomCPU<CPU56300 THEN WrError(1500)
+     ELSE
+      BEGIN
+       IF OpPart[2]='A' THEN Dec(Condition,$100);
+       SplitArg(ArgStr[1],Left,Mid); SplitArg(Mid,Mid,Right);
+       IF Left[1]='-' THEN
+        BEGIN
+         Delete(Left,1,1); Inc(Condition,16);
+        END
+       ELSE IF Left[1]='+' THEN Delete(Left,1,1);
+       IF (Mid='') OR (Right='') THEN WrError(1110)
+       ELSE IF NOT DecodeALUReg(Right,Reg1,False,False,True) THEN WrXError(1445,Right)
+       ELSE IF NOT DecodeXYAB1Reg(Mid,Reg2) THEN WrXError(1445,Mid)
+       ELSE IF Reg2<4 THEN WrXError(1445,Mid)
+       ELSE IF NOT DecodeXYAB1Reg(Left,Reg3) THEN WrXError(1445,Left)
+       ELSE IF Reg3<4 THEN WrXError(1445,Left)
+       ELSE
+        BEGIN
+         DAsmCode[0]:=$012680+Condition+(Reg1 SHL 5)+Mac4Table[Reg3,Reg2];
+         CodeLen:=1;
+        END;
+      END;
+     Exit;
+    END;
+
+   IF (Memo('INC')) OR (Memo('DEC')) THEN
+    BEGIN
+     IF ArgCnt<>1 THEN WrError(1110)
+     ELSE IF MomCPU<CPU56002 THEN WrError(1500)
+     ELSE IF NOT DecodeALUReg(ArgStr[1],Reg1,False,False,True) THEN WrXError(1445,ArgStr[1])
+     ELSE
+      BEGIN
+       DAsmCode[0]:=$000008+(Ord(Memo('DEC')) SHL 1)++Reg1;
+       CodeLen:=1;
+      END;
+     Exit;
+    END;
+
    IF (Memo('ANDI')) OR (Memo('ORI')) THEN
     BEGIN
      IF ArgCnt<>1 THEN WrError(1110)
@@ -889,7 +1629,7 @@ BEGIN
       BEGIN
        SplitArg(ArgStr[1],Left,Right);
        IF (Left='') OR (Right='') THEN WrError(1110)
-       ELSE IF NOT DecodeControlReg(Right,Reg1) THEN WrError(1350)
+       ELSE IF NOT DecodeControlReg(Right,Reg1) THEN WrXError(1445,Right)
        ELSE IF Left[1]<>'#' THEN WrError(1120)
        ELSE
 	BEGIN
@@ -917,6 +1657,23 @@ BEGIN
        ELSE
 	BEGIN
 	 CodeLen:=1; DAsmCode[0]:=$01d815+((Reg1 AND 7) SHL 8)+(Reg2 SHL 3);
+	END;
+      END;
+     Exit;
+    END;
+
+   IF Memo('NORMF') THEN
+    BEGIN
+     IF ArgCnt<>1 THEN WrError(1110)
+     ELSE
+      BEGIN
+       SplitArg(ArgStr[1],Left,Right);
+       IF (Left='') OR (Right='') THEN WrError(1110)
+       ELSE IF NOT DecodeALUReg(Right,Reg2,False,False,True) THEN WrXError(1445,Right)
+       ELSE IF NOT DecodeXYAB1Reg(Left,Reg1) THEN WrXError(1445,Left)
+       ELSE
+	BEGIN
+         CodeLen:=1; DAsmCode[0]:=$0c1e20+Reg2+(Reg1 SHL 1);
 	END;
       END;
      Exit;
@@ -952,12 +1709,18 @@ BEGIN
 	       CodeLen:=1;
 	       DAsmCode[0]:=$0a0000+h+(AdrVal SHL 8)+Reg3+Reg2;
 	      END
-	     ELSE IF (AdrType=ModAbs) AND (AdrVal>=$ffc0) AND (AdrVal<=$ffff) THEN
+             ELSE IF (AdrType=ModAbs) AND (AdrVal>=MemLimit-$3f) AND (AdrVal<=MemLimit) THEN
 	      BEGIN
 	       CodeLen:=1;
 	       DAsmCode[0]:=$0a8000+h+((AdrVal AND $3f) SHL 8)+Reg3+Reg2;
 	      END
-	     ELSE IF AdrType<>ModNone THEN
+             ELSE IF (AdrType=ModAbs) AND (MomCPU>=CPU56300) AND (AdrVal>=MemLimit-$7f) AND (AdrVal<=MemLimit-$40) THEN
+	      BEGIN
+	       CodeLen:=1;
+               Reg2:=((z AND 1) SHL 5)+(LongInt(z SHR 1) SHL 14);
+               DAsmCode[0]:=$010000+h+((AdrVal AND $3f) SHL 8)+Reg3+Reg2;
+              END
+             ELSE IF AdrType<>ModNone THEN
 	      BEGIN
 	       CodeLen:=1+AdrCnt;
 	       DAsmCode[0]:=$0a4000+h+(AdrMode SHL 8)+Reg3+Reg2;
@@ -968,6 +1731,123 @@ BEGIN
        END;
       Exit;
      END;
+
+   IF (Memo('EXTRACT')) OR (Memo('EXTRACTU')) THEN
+    BEGIN
+     z:=Ord(Memo('EXTRACTU')) SHL 7;
+     IF ArgCnt<>1 THEN WrError(1110)
+     ELSE IF MomCPU<CPU56300 THEN WrError(1500)
+     ELSE
+      BEGIN
+       SplitArg(ArgStr[1],Left,Mid); SplitArg(Mid,Mid,Right);
+       IF (Mid='') OR (Right='') THEN WrError(1110)
+       ELSE IF NOT DecodeALUReg(Right,Reg1,False,False,True) THEN WrXError(1445,Right)
+       ELSE IF NOT DecodeALUReg(Mid,Reg2,False,False,True) THEN WrXError(1445,Mid)
+       ELSE IF Left[1]='#' THEN
+        BEGIN
+         DAsmCode[1]:=EvalIntExpression(Copy(Left,2,Length(Left)-1),Int24,OK);
+         IF OK THEN
+          BEGIN
+           DAsmCode[0]:=$0c1800+z+Reg1+(Reg2 SHL 4); CodeLen:=2;
+          END;
+        END
+       ELSE IF NOT DecodeXYAB1Reg(Left,Reg3) THEN WrXError(1445,Left)
+       ELSE
+        BEGIN
+         DAsmCode[0]:=$0c1a00+z+Reg1+(Reg2 SHL 4)+(Reg3 SHL 1);
+         CodeLen:=1;
+        END;
+      END;
+     Exit;
+    END;
+
+   IF Memo('INSERT') THEN
+    BEGIN
+     IF ArgCnt<>1 THEN WrError(1110)
+     ELSE IF MomCPU<CPU56300 THEN WrError(1500)
+     ELSE
+      BEGIN
+       SplitArg(ArgStr[1],Left,Mid); SplitArg(Mid,Mid,Right);
+       IF (Mid='') OR (Right='') THEN WrError(1110)
+       ELSE IF NOT DecodeALUReg(Right,Reg1,False,False,True) THEN WrXError(1445,Right)
+       ELSE IF NOT DecodeXYAB0Reg(Mid,Reg2) THEN WrXError(1445,Mid)
+       ELSE IF Left[1]='#' THEN
+        BEGIN
+         DAsmCode[1]:=EvalIntExpression(Copy(Left,2,Length(Left)-1),Int24,OK);
+         IF OK THEN
+          BEGIN
+           DAsmCode[0]:=$0c1900+Reg1+(Reg2 SHL 4); CodeLen:=2;
+          END;
+        END
+       ELSE IF NOT DecodeXYAB1Reg(Left,Reg3) THEN WrXError(1445,Left)
+       ELSE
+        BEGIN
+         DAsmCode[0]:=$0c1b00+Reg1+(Reg2 SHL 4)+(Reg3 SHL 1);
+         CodeLen:=1;
+        END;
+      END;
+     Exit;
+    END;
+
+   IF Memo('MERGE') THEN
+    BEGIN
+     IF ArgCnt<>1 THEN WrError(1110)
+     ELSE IF MomCPU<CPU56300 THEN WrError(1500)
+     ELSE
+      BEGIN
+       SplitArg(ArgStr[1],Left,Right);
+       If Right='' THEN WrError(1110)
+       ELSE IF NOT DecodeALUReg(Right,Reg1,False,False,True) THEN WrXError(1445,Right)
+       ELSE IF NOT DecodeXYAB1Reg(Left,Reg2) THEN WrXError(1445,Left)
+       ELSE
+        BEGIN
+         DAsmCode[0]:=$0c1b80+Reg1+(Reg2 SHL 1);
+         CodeLen:=1;
+        END;
+      END;
+     Exit;
+    END;
+
+   IF Memo('CLB') THEN
+    BEGIN
+     IF ArgCnt<>1 THEN WrError(1110)
+     ELSE IF MomCPU<CPU56300 THEN WrError(1500)
+     ELSE
+      BEGIN
+       SplitArg(ArgStr[1],Left,Right);
+       IF Right='' THEN WrError(1110)
+       ELSE IF NOT DecodeALUReg(Left,Reg1,False,False,True) THEN WrXError(1445,Left)
+       ELSE IF NOT DecodeALUReg(Right,Reg2,False,False,True) THEN WrXError(1445,Right)
+       ELSE
+        BEGIN
+         DAsmCode[0]:=$0c1e00+Reg2+(Reg1 SHL 1);
+         CodeLen:=1;
+        END;
+      END;
+     Exit;
+    END;
+
+   IF Memo('CMPU') THEN
+    BEGIN
+     IF ArgCnt<>1 THEN WrError(1110)
+     ELSE IF MomCPU<CPU56300 THEN WrError(1500)
+     ELSE
+      BEGIN
+       SplitArg(ArgStr[1],Left,Right);
+       IF (Right='') THEN WrError(1110)
+       ELSE IF NOT DecodeALUReg(Right,Reg1,False,False,True) THEN WrXError(1445,Right)
+       ELSE IF NOT DecodeXYABReg(Left,Reg2) THEN WrXError(1445,Left)
+       ELSE IF Reg1 XOR Reg2=1 THEN WrError(1760)
+       ELSE IF (Reg2 AND 6=2) THEN WrXError(1445,Left)
+       ELSE
+        BEGIN
+         IF Reg2<2 THEN Reg2:=0;
+         DAsmCode[0]:=$0c1ff0+(Reg2 SHL 1)+Reg1;
+         CodeLen:=1;
+        END;
+      END;
+     Exit;
+    END;
 
    { Datentransfer }
 
@@ -983,54 +1863,50 @@ BEGIN
      ELSE
       BEGIN
        SplitArg(ArgStr[1],Left,Right);
-       IF (Left='') OR (Right='') THEN WrError(1110)
-       ELSE IF DecodeGeneralReg(Left,Reg1) THEN
-	IF DecodeGeneralReg(Right,Reg2) THEN
-	 IF Reg1>=$20 THEN                            { S1,D2 }
-	  BEGIN
-	   CodeLen:=1; DAsmCode[0]:=$044080+(Reg2 SHL 8)+Reg1;
-	  END
-	 ELSE IF Reg2>=$20 THEN                       { S2,D1 }
-	  BEGIN
-	   CodeLen:=1; DAsmCode[0]:=$04c080+(Reg1 SHL 8)+Reg2;
-	  END
-	 ELSE WrError(1350)
-	ELSE IF Reg1<$20 THEN WrError(1350)
-	ELSE                                          { S1,ea/aa }
-	 BEGIN
-	  DecodeAdr(Right,MModNoImm,MSegXData+MSegYData);
-	  IF (AdrType=ModAbs) AND (AdrVal>=0) AND (AdrVal<=63) THEN
-	   BEGIN
-	    CodeLen:=1;
-	    DAsmCode[0]:=$050000+(AdrVal SHL 8)+(Ord(AdrSeg=SegYData) SHL 6)+Reg1;
-	   END
-	  ELSE IF AdrType<>ModNone THEN
-	   BEGIN
-	    CodeLen:=1+AdrCnt; DAsmCode[1]:=AdrVal;
-	    DAsmCode[0]:=$054000+(AdrMode SHL 8)+(Ord(AdrSeg=SegYData) SHL 6)+Reg1;
-	   END;
-	 END
-       ELSE IF NOT DecodeGeneralReg(Right,Reg2) THEN WrError(1350)
-       ELSE IF Reg2<$20 THEN WrError(1350)
-       ELSE    					      { ea/aa,D1 }
-	BEGIN
-	 DecodeAdr(Left,MModAll,MSegXData+MSegYData);
-	 IF (AdrType=ModImm) AND (AdrVal<=$ff) AND (AdrVal>=0) THEN
-	  BEGIN
-	   CodeLen:=1;
-	   DAsmCode[0]:=$050080+(AdrVal SHL 8)+Reg2;
-	  END
-	 ELSE IF (AdrType=ModAbs) AND (AdrVal>=0) AND (AdrVal<=63) THEN
-	  BEGIN
-	   CodeLen:=1;
-	   DAsmCode[0]:=$058000+(AdrVal SHL 8)+(Ord(AdrSeg=SegYData) SHL 6)+Reg2;
-	  END
-	 ELSE IF AdrType<>ModNone THEN
-	  BEGIN
-	   CodeLen:=1+AdrCnt; DAsmCode[1]:=AdrVal;
-	   DAsmCode[0]:=$05c000+(AdrMode SHL 8)+(Ord(AdrSeg=SegYData) SHL 6)+Reg2;
-	  END;
-	END
+       IF Right='' THEN WrError(1110)
+       ELSE IF DecodeCtrlReg(Left,Reg1) THEN
+        IF DecodeGeneralReg(Right,Reg2) THEN
+         BEGIN
+          DAsmCode[0]:=$0440a0+(Reg2 SHL 8)+Reg1; CodeLen:=1;
+         END
+        ELSE
+         BEGIN
+          DecodeAdr(Right,MModNoImm,MSegXData+MSegYData);
+          Reg3:=Ord(AdrSeg=SegYData) SHL 6;
+          IF (AdrType=ModAbs) AND (AdrVal<=63) THEN
+           BEGIN
+            DAsmCode[0]:=$050020+(AdrVal SHL 8)+Reg3+Reg1; CodeLen:=1;
+           END
+          ELSE
+           BEGIN
+            DAsmCode[0]:=$054020+(AdrMode SHL 8)+Reg3+Reg1;
+            DAsmCode[1]:=AdrVal; CodeLen:=1+AdrCnt;
+           END;
+         END
+       ELSE IF NOT DecodeCtrlReg(Right,Reg1) THEN WrXError(1445,Right)
+       ELSE
+        IF DecodeGeneralReg(Left,Reg2) THEN
+         BEGIN
+          DAsmCode[0]:=$04c0a0+(Reg2 SHL 8)+Reg1; CodeLen:=1;
+         END
+        ELSE
+         BEGIN
+          DecodeAdr(Left,MModAll,MSegXData+MSegYData);
+          Reg3:=Ord(AdrSeg=SegYData) SHL 6;
+          IF (AdrType=ModAbs) AND (AdrVal<=63) THEN
+           BEGIN
+            DAsmCode[0]:=$058020+(AdrVal SHL 8)+Reg3+Reg1; CodeLen:=1;
+           END
+          ELSE IF (AdrType=ModImm) AND (AdrVal<=255) THEN
+           BEGIN
+            DAsmCode[0]:=$0500a0+(AdrVal SHL 8)+Reg1; CodeLen:=1;
+           END
+          ELSE
+           BEGIN
+            DAsmCode[0]:=$05c020+(AdrMode SHL 8)+Reg3+Reg1;
+            DAsmCode[1]:=AdrVal; CodeLen:=1+AdrCnt;
+           END;
+         END;
       END;
      Exit;
     END;
@@ -1056,7 +1932,7 @@ BEGIN
 	   DAsmCode[0]:=$074080+Reg1+(AdrMode SHL 8);
 	  END;
 	END
-       ELSE IF NOT DecodeGeneralReg(Right,Reg2) THEN WrError(1350)
+       ELSE IF NOT DecodeGeneralReg(Right,Reg2) THEN WrXError(1445,Right)
        ELSE
 	BEGIN
 	 DecodeAdr(Left,MModNoImm,MSegCode);
@@ -1086,30 +1962,44 @@ BEGIN
 	BEGIN
 	 DecodeAdr(Right,MModAbs,MSegXData+MSegYData);
 	 IF AdrType<>ModNone THEN
-	  IF (AdrVal>$ffff) OR (AdrVal<$ffc0) THEN WrError(1315)
-	  ELSE
+          IF (AdrVal<=MemLimit) AND (AdrVal>=MemLimit-$3f) THEN
 	   BEGIN
 	    CodeLen:=1;
 	    DAsmCode[0]:=$08c000+(LongInt(Ord(AdrSeg=SegYData)) SHL 16)+
 			 (AdrVal AND $3f)+(Reg1 SHL 8);
-	   END;
+           END
+          ELSE IF (MomCPU>=CPU56300) AND (AdrVal<=MemLimit-$40) AND (AdrVal>=MemLimit-$7f) THEN
+           BEGIN
+            CodeLen:=1;
+            DAsmCode[0]:=$04c000+(Ord(AdrSeg=SegYData) SHL 5)+
+                         (Ord(AdrSeg=SegXData) SHL 7)+
+                         (AdrVal AND $1f)+((AdrVal AND $20) SHL 1)+(Reg1 SHL 8);
+           END
+          ELSE WrError(1315);
 	END
        ELSE IF DecodeGeneralReg(Right,Reg2) THEN
 	BEGIN
 	 DecodeAdr(Left,MModAbs,MSegXData+MSegYData);
 	 IF AdrType<>ModNone THEN
-	  IF (AdrVal>$ffff) OR (AdrVal<$ffc0) THEN WrError(1315)
-	  ELSE
+          IF (AdrVal<=MemLimit) AND (AdrVal>=MemLimit-$3f) THEN
 	   BEGIN
 	    CodeLen:=1;
 	    DAsmCode[0]:=$084000+(LongInt(Ord(AdrSeg=SegYData)) SHL 16)+
 			 (AdrVal AND $3f)+(Reg2 SHL 8);
-	   END;
-	END
+           END
+          ELSE IF (MomCPU>=CPU56300) AND (AdrVal<=MemLimit-$40) AND (AdrVal>=MemLimit-$7f) THEN
+           BEGIN
+            CodeLen:=1;
+            DAsmCode[0]:=$044000+(Ord(AdrSeg=SegYData) SHL 5)+
+                         (Ord(AdrSeg=SegXData) SHL 7)+
+                         (AdrVal AND $1f)+((AdrVal AND $20) SHL 1)+(Reg2 SHL 8);
+           END
+          ELSE WrError(1315);
+        END
        ELSE
 	BEGIN
 	 DecodeAdr(Left,MModAll,MSegXData+MSegYData+MSegCode);
-	 IF (AdrType=ModAbs) AND (AdrSeg<>SegCode) AND (AdrVal>=$ffc0) AND (AdrVal<=$ffff) THEN
+         IF (AdrType=ModAbs) AND (AdrSeg<>SegCode) AND (AdrVal>=MemLimit-$3f) AND (AdrVal<=MemLimit) THEN
 	  BEGIN
 	   HVal:=AdrVal AND $3f; HSeg:=AdrSeg;
 	   DecodeAdr(Right,MModNoImm,MSegXData+MSegYData+MSegCode);
@@ -1128,26 +2018,67 @@ BEGIN
 			   (Ord(AdrSeg=SegYData) SHL 6);
 	     END;
 	  END
-	 ELSE IF AdrType<>ModNone THEN
+         ELSE IF (AdrType=ModAbs) AND (MomCPU>=CPU56300) AND (AdrSeg<>SegCode) AND
+                 (AdrVal>=MemLimit-$7f) AND (AdrVal<=MemLimit-$40) THEN
+	  BEGIN
+	   HVal:=AdrVal AND $3f; HSeg:=AdrSeg;
+	   DecodeAdr(Right,MModNoImm,MSegXData+MSegYData+MSegCode);
+	   IF AdrType<>ModNone THEN
+	    IF AdrSeg=SegCode THEN
+	     BEGIN
+	      CodeLen:=1+AdrCnt; DAsmCode[1]:=AdrVal;
+              DAsmCode[0]:=$008000+HVal+(AdrMode SHL 8)+
+                           (Ord(HSeg=SegYData) SHL 6);
+	     END
+	    ELSE
+	     BEGIN
+	      CodeLen:=1+AdrCnt; DAsmCode[1]:=AdrVal;
+              DAsmCode[0]:=$070000+HVal+(AdrMode SHL 8)+
+                           (Ord(HSeg=SegYData) SHL 7)+
+                           (Ord(HSeg=SegXData) SHL 14)+
+                           (Ord(AdrSeg=SegYData) SHL 6);
+	     END;
+          END
+         ELSE IF AdrType<>ModNone THEN
 	  BEGIN
 	   HVal:=AdrVal; HCnt:=AdrCnt; HMode:=AdrMode; HType:=AdrType; HSeg:=AdrSeg;
 	   DecodeAdr(Right,MModAbs,MSegXData+MSegYData);
 	   IF AdrType<>ModNone THEN
-	    IF (AdrVal<$ffc0) OR (AdrVal>$ffff) THEN WrError(1315)
-	    ELSE IF HSeg=SegCode THEN
-	     BEGIN
-	      CodeLen:=1+HCnt; DAsmCode[1]:=HVal;
-	      DAsmCode[0]:=$08c040+(AdrVal AND $3f)+(HMode SHL 8)+
-			   (LongInt(Ord(AdrSeg=SegYData)) SHL 16);
-	     END
-	    ELSE
-	     BEGIN
-	      CodeLen:=1+HCnt; DAsmCode[1]:=HVal;
-	      DAsmCode[0]:=$08c080+(Word(AdrVal) AND $3f)+(HMode SHL 8)+
-			   (LongInt(Ord(AdrSeg=SegYData)) SHL 16)+
-			   (Ord(HSeg=SegYData) SHL 6);
-	     END;
-	  END;
+            IF (AdrVal>=MemLimit-$3f) AND (AdrVal<=MemLimit) THEN
+             BEGIN
+              IF HSeg=SegCode THEN
+               BEGIN
+                CodeLen:=1+HCnt; DAsmCode[1]:=HVal;
+                DAsmCode[0]:=$08c040+(AdrVal AND $3f)+(HMode SHL 8)+
+                             (LongInt(Ord(AdrSeg=SegYData)) SHL 16);
+               END
+              ELSE
+               BEGIN
+                CodeLen:=1+HCnt; DAsmCode[1]:=HVal;
+                DAsmCode[0]:=$08c080+(Word(AdrVal) AND $3f)+(HMode SHL 8)+
+                             (LongInt(Ord(AdrSeg=SegYData)) SHL 16)+
+                             (Ord(HSeg=SegYData) SHL 6);
+               END;
+             END
+            ELSE IF (MomCPU>=CPU56300) AND (AdrVal>=MemLimit-$7f) AND (AdrVal<=MemLimit-$40) THEN
+             BEGIN
+              IF HSeg=SegCode THEN
+               BEGIN
+                CodeLen:=1+HCnt; DAsmCode[1]:=HVal;
+                DAsmCode[0]:=$00c000+(AdrVal AND $3f)+(HMode SHL 8)+
+                             (Ord(AdrSeg=SegYData) SHL 6);
+               END
+              ELSE
+               BEGIN
+                CodeLen:=1+HCnt; DAsmCode[1]:=HVal;
+                DAsmCode[0]:=$078000+(Word(AdrVal) AND $3f)+(HMode SHL 8)+
+                             (Ord(AdrSeg=SegYData) SHL 7)+
+                             (Ord(AdrSeg=SegXData) SHL 14)+
+                             (Ord(HSeg=SegYData) SHL 6);
+               END;
+             END
+            ELSE WrError(1315);
+          END;
 	END;
       END;
      Exit;
@@ -1171,256 +2102,323 @@ BEGIN
    IF (OpPart[1]='T') AND (DecodeCondition(Copy(OpPart,2,Length(OpPart)-1),Condition)) THEN
     BEGIN
      IF (ArgCnt<>1) AND (ArgCnt<>2) THEN WrError(1110)
-     ELSE IF NOT DecodeTFR(ArgStr[1],Reg1) THEN WrError(1350)
-     ELSE IF ArgCnt=1 THEN
+     ELSE IF DecodeTFR(ArgStr[1],Reg1) THEN
       BEGIN
-       CodeLen:=1;
-       DAsmCode[0]:=$020000+(Condition SHL 12)+(Reg1 SHL 3);
+       IF ArgCnt=1 THEN
+        BEGIN
+         CodeLen:=1;
+         DAsmCode[0]:=$020000+(Condition SHL 12)+(Reg1 SHL 3);
+        END
+       ELSE IF NOT DecodeRR(ArgStr[2],Reg2) THEN WrError(1350)
+       ELSE
+        BEGIN
+         CodeLen:=1;
+         DAsmCode[0]:=$030000+(Condition SHL 12)+(Reg1 SHL 3)+Reg2;
+        END;
       END
+     ELSE IF ArgCnt<>1 THEN WrError(1110)
+     ELSE IF NOT DecodeRR(ArgStr[1],Reg1) THEN WrError(1350)
      ELSE
       BEGIN
-       SplitArg(ArgStr[2],Left,Right);
-       IF (Left='') OR (Right='') THEN WrError(1110)
-       ELSE IF NOT DecodeReg(Left,Reg2) THEN WrError(1350)
-       ELSE IF (Reg2<16) OR (Reg2>23) THEN WrError(1350)
-       ELSE IF NOT DecodeReg(Right,Reg3) THEN WrError(1350)
-       ELSE IF (Reg2<16) OR (Reg2>23) THEN WrError(1350)
-       ELSE
-	BEGIN
-	 Dec(Reg2,16); Dec(Reg3,16);
-	 CodeLen:=1;
-	 DAsmCode[0]:=$030000+(Condition SHL 12)+(Reg2 SHL 8)+(Reg1 SHL 3)+Reg3;
-	END;
-      END;
-     Exit;
-    END;
-
-   IF Memo('LUA') THEN
-    BEGIN
-     IF ArgCnt<>1 THEN WrError(1110)
-     ELSE
-      BEGIN
-       SplitArg(ArgStr[1],Left,Right);
-       IF (Left='') OR (Right='') THEN WrError(1110)
-       ELSE
-	BEGIN
-	 DecodeAdr(Left,MModModInc+MModModDec+MModPostInc+MModPostDec,MSegXData);
-	 IF AdrType<>ModNone THEN
-	  IF NOT DecodeReg(Right,Reg1) THEN WrError(1350)
-	  ELSE IF (Reg1<16) OR (Reg1>31) THEN WrError(1350)
-	  ELSE
-	   BEGIN
-	    CodeLen:=1;
-	    DAsmCode[0]:=$044000+(AdrMode SHL 8)+Reg1;
-	   END;
-	END
+       DAsmCode[0]:=$020800+(Condition SHL 12)+Reg1;
+       CodeLen:=1;
       END;
      Exit;
     END;
 
    { SprÅnge }
 
-   IF (Memo('JMP')) OR (Memo('JSR')) THEN
-    BEGIN
-     IF ArgCnt<>1 THEN WrError(1110)
-     ELSE
-      BEGIN
-       AddVal:=LongInt(Ord(Memo('JSR'))) SHL 16;
-       DecodeAdr(ArgStr[1],MModNoImm,MSegCode);
-       IF AdrType=ModAbs THEN
-	IF AdrVal AND $f000=0 THEN
-	 BEGIN
-	  CodeLen:=1; DAsmCode[0]:=$0c0000+AddVal+AdrVal;
-	 END
-	ELSE
-	 BEGIN
-	  CodeLen:=2; DAsmCode[0]:=$0af080+AddVal; DAsmCode[1]:=AdrVal;
-	 END
-       ELSE IF AdrType<>ModNone THEN
-	BEGIN
-	 CodeLen:=1; DAsmCode[0]:=$0ac080+AddVal+(AdrMode SHL 8);
-	END;
-      END;
-     Exit;
-    END;
-
-   IF (OpPart[1]='J') AND (DecodeCondition(Copy(OpPart,2,Length(OpPart)-1),Condition)) THEN
-    BEGIN
-     IF ArgCnt<>1 THEN WrError(1110)
-     ELSE
-      BEGIN
-       DecodeAdr(ArgStr[1],MModNoImm,MSegCode);
-       IF AdrType=ModAbs THEN
-	IF AdrVal AND $f000=0 THEN
-	 BEGIN
-	  CodeLen:=1; DAsmCode[0]:=$0e0000+(Condition SHL 12)+AdrVal;
-	 END
-	ELSE
-	 BEGIN
-	  CodeLen:=2; DAsmCode[0]:=$0af0a0+Condition; DAsmCode[1]:=AdrVal;
-	 END
-       ELSE IF AdrType<>ModNone THEN
-	BEGIN
-	 CodeLen:=1; DAsmCode[0]:=$0ac0a0+Condition+(AdrMode SHL 8);
-	END;
-      END;
-     Exit;
-    END;
-
-   IF (Copy(OpPart,1,2)='JS') AND (DecodeCondition(Copy(OpPart,3,Length(OpPart)-2),Condition)) THEN
-    BEGIN
-     IF ArgCnt<>1 THEN WrError(1110)
-     ELSE
-      BEGIN
-       DecodeAdr(ArgStr[1],MModNoImm,MSegCode);
-       IF AdrType=ModAbs THEN
-	IF AdrVal AND $f000=0 THEN
-	 BEGIN
-	  CodeLen:=1; DAsmCode[0]:=$0f0000+(Condition SHL 12)+AdrVal;
-	 END
-	ELSE
-	 BEGIN
-	  CodeLen:=2; DAsmCode[0]:=$0bf0a0+Condition; DAsmCode[1]:=AdrVal;
-	 END
-       ELSE IF AdrType<>ModNone THEN
-	BEGIN
-	 CodeLen:=1; DAsmCode[0]:=$0bc0a0+Condition+(AdrMode SHL 8);
-	END;
-      END;
-     Exit;
-    END;
-
-   FOR z:=0 TO BitJmpOrderCnt-1 DO
-    IF Memo(BitJmpOrders[z]) THEN
+   FOR z:=0 TO BitBrOrderCnt-1 DO
+    IF (Memo(BitBrOrders[z])) THEN
      BEGIN
       IF ArgCnt<>1 THEN WrError(1110)
+      ELSE IF MomCPU<CPU56300 THEN WrError(1500)
       ELSE
        BEGIN
-	SplitArg(ArgStr[1],Left,Mid); SplitArg(Mid,Mid,Right);
-	IF (Left='') OR (Mid='') OR (Right='') THEN WrError(1110)
-	ELSE IF Left[1]<>'#' THEN WrError(1120)
-	ELSE
-	 BEGIN
-	  DAsmCode[1]:=EvalIntExpression(Right,Int16,OK);
-	  IF OK THEN
-	   BEGIN
-	    h:=EvalIntExpression(Copy(Left,2,Length(Left)-1),Int8,OK);
-	    IF FirstPassUnknown THEN h:=h AND 15;
-	    IF OK THEN
-	    IF (h<0) OR (h>23) THEN WrError(1320)
-	    ELSE
-	     BEGIN
-	      Reg2:=((z AND 1) SHL 5)+(LongInt(z SHR 1) SHL 16);
-	      IF DecodeGeneralReg(Mid,Reg1) THEN
-	       BEGIN
-		CodeLen:=2;
-		DAsmCode[0]:=$0ac080+h+Reg2+(Reg1 SHL 8);
-	       END
-	      ELSE
-	       BEGIN
-		DecodeAdr(Mid,MModNoImm,MSegXData+MSegYData);
-		Reg3:=Ord(AdrSeg=SegYData) SHL 6;
-		IF AdrType=ModAbs THEN
-		 IF (AdrVal>=0) AND (AdrVal<=63) THEN
-		  BEGIN
-		   CodeLen:=2;
-		   DAsmCode[0]:=$0a0080+h+Reg2+Reg3+(AdrVal SHL 8);
-		  END
-		 ELSE IF (AdrVal>=$ffc0) AND (AdrVal<=$ffff) THEN
-		  BEGIN
-		   CodeLen:=2;
-		   DAsmCode[0]:=$0a8080+h+Reg2+Reg3+((AdrVal AND $3f) SHL 8);
-		  END
-		 ELSE WrError(1320)
-		ELSE
-		 BEGIN
-		  CodeLen:=2;
-		  DAsmCode[0]:=$0a4080+h+Reg2+Reg3+(AdrMode SHL 8);
-		 END;
-	       END;
-	     END;
-	   END;
-	 END;
+        h:=(z AND 1) SHL 5;
+        h2:=LongInt(z AND 2) SHL 15;
+        SplitArg(ArgStr[1],Left,Right); SplitArg(Right,Mid,Right);
+        IF (Left='') OR (Right='') Or (Mid='') THEN WrError(1110)
+        ELSE IF Left[1]<>'#' THEN WrError(1120)
+        ELSE
+         BEGIN
+          AddVal:=EvalIntExpression(Copy(Left,2,Length(Left)-1),Int8,OK);
+          IF FirstPassUnknown THEN AddVal:=AddVal AND 15;
+          IF OK THEN
+           IF (AddVal<0) OR (AddVal>23) THEN WrError(1320)
+           ELSE IF DecodeGeneralReg(Mid,Reg1) THEN
+            BEGIN
+             CodeLen:=1;
+             DAsmCode[0]:=$0cc080+AddVal+(Reg1 SHL 8)+h+h2;
+            END
+           ELSE
+            BEGIN
+             FirstPassUnknown:=False;
+             DecodeAdr(Mid,MModNoImm,MSegXData+MSegYData);
+             Reg3:=Ord(AdrSeg=SegYData) SHL 6;
+             IF (AdrType=ModAbs) AND (FirstPassUnknown) THEN AdrVal:=AdrVal AND $3f;
+             IF (AdrType=ModAbs) AND (AdrVal<=63) AND (AdrVal>=0) THEN
+              BEGIN
+               CodeLen:=1;
+               DAsmCode[0]:=$0c8080+AddVal+(AdrVal SHL 8)+Reg3+h+h2;
+              END
+             ELSE IF (AdrType=ModAbs) AND (AdrVal>=MemLimit-$3f) AND (AdrVal<=MemLimit) THEN
+              BEGIN
+               CodeLen:=1;
+               DAsmCode[0]:=$0cc000+AddVal+((AdrVal AND $3f) SHL 8)+Reg3+h+h2;
+              END
+             ELSE IF (AdrType=ModAbs) AND (AdrVal>=MemLimit-$7f) AND (AdrVal<=MemLimit-$40) THEN
+              BEGIN
+               CodeLen:=1;
+               DAsmCode[0]:=$048000+AddVal+((AdrVal AND $3f) SHL 8)+Reg3+h+(h2 SHR 9);
+              END
+             ELSE IF AdrType=ModAbs THEN WrError(1350)
+             ELSE IF AdrType<>ModNone THEN
+              BEGIN
+               CodeLen:=1;
+               DAsmCode[0]:=$0c8000+AddVal+(AdrMode SHL 8)+Reg3+h+h2;
+              END;
+            END;
+         END;
+        IF CodeLen=1 THEN
+         BEGIN
+          Dist:=EvalIntExpression(Right,AdrInt,OK)-(EProgCounter+2);
+          IF OK THEN
+           BEGIN
+            DAsmCode[1]:=Dist AND $ffffff; CodeLen:=2;
+           END
+          ELSE CodeLen:=0;
+         END;
        END;
       Exit;
      END;
 
-   IF Memo('DO') THEN
+   IF (Memo('BRA'))  OR (Memo('BSR')) THEN
+    BEGIN
+     IF Memo('BRA') THEN z:=$40 ELSE z:=0;
+     IF ArgCnt<>1 THEN WrError(1110)
+     ELSE IF MomCPU<CPU56300 THEN WrError(1500)
+     ELSE IF DecodeReg(ArgStr[1],Reg1) THEN
+      BEGIN
+       IF (Reg1<16) OR (Reg1>23) THEN WrXError(1445,ArgStr[1])
+       ELSE
+        BEGIN
+         Dec(Reg1,16);
+         DAsmCode[0]:=$0d1880+(Reg1 SHL 8)+z;
+         CodeLen:=1;
+        END;
+      END
+     ELSE
+      BEGIN
+       CutSize(ArgStr[1],Size);
+       Dist:=EvalIntExpression(ArgStr[1],AdrInt,OK)-(EProgCounter+1);
+       IF Size=0 THEN
+        IF (Dist>-256) AND (Dist<255) THEN Size:=1 ELSE Size:=2;
+       CASE Size OF
+       1:IF (NOT SymbolQuestionable) AND ((Dist<-256) OR (Dist>255)) THEN WrError(1370)
+         ELSE
+          BEGIN
+           Dist:=Dist AND $1ff;
+           DAsmCode[0]:=$050800+(z SHL 4)+((Dist AND $1e0) SHL 1)+(Dist AND $1f);
+           CodeLen:=1;
+          END;
+       2:BEGIN
+          Dec(Dist);
+          DAsmCode[0]:=$0d1080+z;
+          DAsmCode[1]:=Dist AND $ffffff;
+          CodeLen:=2;
+         END;
+       END;
+      END;
+     Exit;
+    END;
+
+   IF (OpPart[1]='B') AND (DecodeCondition(Copy(OpPart,2,Length(OpPart)-1),Condition)) THEN
+    BEGIN
+     IF ArgCnt<>1 THEN WrError(1110)
+     ELSE IF MomCPU<CPU56300 THEN WrError(1500)
+     ELSE IF DecodeReg(ArgStr[1],Reg1) THEN
+      BEGIN
+       IF (Reg1<16) OR (Reg1>23) THEN WrXError(1445,ArgStr[1])
+       ELSE
+        BEGIN
+         Dec(Reg1,16);
+         DAsmCode[0]:=$0d1840+(Reg1 SHL 8)+Condition;
+         CodeLen:=1;
+        END;
+      END
+     ELSE
+      BEGIN
+       CutSize(ArgStr[1],Size);
+       Dist:=EvalIntExpression(ArgStr[1],AdrInt,OK)-(EProgCounter+1);
+       IF Size=0 THEN
+        IF (Dist>-256) AND (Dist<255) THEN Size:=1 ELSE Size:=2;
+       CASE Size OF
+       1:IF (NOT SymbolQuestionable) AND ((Dist<-256) OR (Dist>255)) THEN WrError(1370)
+         ELSE
+          BEGIN
+           Dist:=Dist AND $1ff;
+           DAsmCode[0]:=$050400+(Condition SHL 12)+((Dist AND $1e0) SHL 1)+(Dist AND $1f);
+           CodeLen:=1;
+          END;
+       2:BEGIN
+          Dec(Dist);
+          DAsmCode[0]:=$0d1040+Condition;
+          DAsmCode[1]:=Dist AND $ffffff;
+          CodeLen:=2;
+         END;
+       END;
+      END;
+     Exit;
+    END;
+
+   IF (Copy(OpPart,1,2)='BS') AND (DecodeCondition(Copy(OpPart,3,Length(OpPart)-2),Condition)) THEN
+    BEGIN
+     IF ArgCnt<>1 THEN WrError(1110)
+     ELSE IF MomCPU<CPU56300 THEN WrError(1500)
+     ELSE IF DecodeReg(ArgStr[1],Reg1) THEN
+      BEGIN
+       IF (Reg1<16) OR (Reg1>23) THEN WrXError(1445,ArgStr[1])
+       ELSE
+        BEGIN
+         Dec(Reg1,16);
+         DAsmCode[0]:=$0d1800+(Reg1 SHL 8)+Condition;
+         CodeLen:=1;
+        END;
+      END
+     ELSE
+      BEGIN
+       CutSize(ArgStr[1],Size);
+       Dist:=EvalIntExpression(ArgStr[1],AdrInt,OK)-(EProgCounter+1);
+       IF Size=0 THEN
+        IF (Dist>-256) AND (Dist<255) THEN Size:=1 ELSE Size:=2;
+       CASE Size OF
+       1:IF (NOT SymbolQuestionable) AND ((Dist<-256) OR (Dist>255)) THEN WrError(1370)
+         ELSE
+          BEGIN
+           Dist:=Dist AND $1ff;
+           DAsmCode[0]:=$050000+(Condition SHL 12)+((Dist AND $1e0) SHL 1)+(Dist AND $1f);
+           CodeLen:=1;
+          END;
+       2:BEGIN
+          Dec(Dist);
+          DAsmCode[0]:=$0d1000+Condition;
+          DAsmCode[1]:=Dist AND $ffffff;
+          CodeLen:=2;
+         END;
+       END;
+      END;
+     Exit;
+    END;
+
+   IF (Memo('LUA')) OR (Memo('LEA')) THEN
     BEGIN
      IF ArgCnt<>1 THEN WrError(1110)
      ELSE
       BEGIN
        SplitArg(ArgStr[1],Left,Right);
        IF (Left='') OR (Right='') THEN WrError(1110)
+       ELSE IF NOT DecodeReg(Right,Reg1) THEN WrXError(1445,Right)
+       ELSE IF Reg1>31 THEN WrXError(1445,Right)
        ELSE
 	BEGIN
-	 DAsmCode[1]:=EvalIntExpression(Right,Int16,OK);
-	 IF OK THEN
-	  BEGIN
-	   ChkSpace(SegCode);
-	   IF DecodeGeneralReg(Left,Reg1) THEN
-	    BEGIN
-	     CodeLen:=2; DAsmCode[0]:=$06c000+(Reg1 SHL 8);
-	    END
-	   ELSE IF Left[1]='#' THEN
-	    BEGIN
-	     Reg1:=EvalIntExpression(Copy(Left,2,Length(Left)-1),Int12,OK);
-	     IF OK THEN
-	      BEGIN
-	       CodeLen:=2;
-	       DAsmCode[0]:=$060080+(Reg1 SHR 8)+((Reg1 AND $ff) SHL 8);
-	      END;
-	    END
-	   ELSE
-	    BEGIN
-	     DecodeAdr(Left,MModNoImm,MSegXData+MSegYData);
-	     IF (AdrType=ModAbs) THEN
-	      IF (AdrVal<0) OR (AdrVal>63) THEN WrError(1320)
-	      ELSE
-	       BEGIN
-		CodeLen:=2;
-		DAsmCode[0]:=$060000+(AdrVal SHL 8)+(Ord(AdrSeg=SegYData) SHL 6);
-	       END
-	     ELSE
-	      BEGIN
-	       CodeLen:=2;
-	       DAsmCode[0]:=$064000+(AdrMode SHL 8)+(Ord(AdrSeg=SegYData) SHL 6);
-	      END;
-	    END;
-	  END;
-	END;
+         DecodeAdr(Left,MModModInc+MModModDec+MModPostInc+MModPostDec+MModDisp,MSegXData);
+         IF AdrType=ModDisp THEN
+          BEGIN
+           IF ChkRange(AdrVal,-64,63) THEN
+            BEGIN
+             AdrVal:=AdrVal AND $7f;
+             DAsmCode[0]:=$040000+(Reg1-16)+(AdrMode SHL 8)+
+                          ((AdrVal AND $0f) SHL 4)+
+                          ((AdrVal AND $70) SHL 7);
+             CodeLen:=1;
+            END;
+          END
+         ELSE IF AdrType<>ModNone THEN
+          BEGIN
+           CodeLen:=1;
+           DAsmCode[0]:=$044000+(AdrMode SHL 8)+Reg1;
+          END;
+        END
       END;
      Exit;
     END;
 
-   IF Memo('REP') THEN
+   IF Memo('LRA') THEN
     BEGIN
      IF ArgCnt<>1 THEN WrError(1110)
-     ELSE IF DecodeGeneralReg(ArgStr[1],Reg1) THEN
-      BEGIN
-       CodeLen:=1;
-       DAsmCode[0]:=$06c020+(Reg1 SHL 8);
-      END
+     ELSE IF MomCPU<CPU56300 THEN WrError(1500)
      ELSE
       BEGIN
-       DecodeAdr(ArgStr[1],MModAll,MSegXData+MSegYData);
-       IF AdrType=ModImm THEN
-	IF (AdrVal<0) OR (AdrVal>$fff) THEN WrError(1320)
-	ELSE
-	 BEGIN
-	  CodeLen:=1;
-	  DAsmCode[0]:=$0600a0+(AdrVal SHR 8)+((AdrVal AND $ff) SHL 8);
-	 END
-       ELSE IF (AdrType=ModAbs) AND (AdrVal>=0) AND (AdrVal<=63) THEN
-	BEGIN
-	 CodeLen:=1;
-	 DAsmCode[0]:=$060020+(AdrVal SHL 8)+(Ord(AdrSeg=SegYData) SHL 6);
-	END
+       SplitArg(ArgStr[1],Left,Right);
+       IF Right='' THEN WrError(1110)
+       ELSE IF NOT DecodeGeneralReg(Right,Reg1) THEN WrXError(1445,Right)
+       ELSE IF Reg1>$1f THEN WrXError(1445,Right)
+       ELSE IF DecodeGeneralReg(Left,Reg2) THEN
+        BEGIN
+         IF (Reg2<16) OR (Reg2>23) THEN WrXError(1445,Left)
+         ELSE
+          BEGIN
+           DasmCode[0]:=$04c000+((Reg2 AND 7) SHL 8)+Reg1;
+           CodeLen:=1;
+          END;
+        END
        ELSE
-	BEGIN
-	 CodeLen:=1+AdrCnt; DAsmCode[1]:=AdrVal;
-	 DAsmCode[0]:=$064020+(AdrMode SHL 8)+(Ord(AdrSeg=SegYData) SHL 6);
-	END;
+        BEGIN
+         DAsmCode[1]:=EvalIntExpression(Left,AdrInt,OK)-(EProgCounter+2);
+         IF OK THEN
+          BEGIN
+           DAsmCode[0]:=$044040+Reg1;
+           CodeLen:=2;
+          END;
+        END;
+      END;
+     Exit;
+    END;
+
+   IF Memo('PLOCK') THEN
+    BEGIN
+     IF ArgCnt<>1 THEN WrError(1110)
+     ELSE IF MomCPU<CPU56300 THEN WrError(1500)
+     ELSE
+      BEGIN
+       DecodeAdr(ArgStr[1],MModNoImm,MSegCode);
+       IF AdrType<>ModNone THEN
+        BEGIN
+         DAsmCode[0]:=$0ac081+(AdrMode SHL 8); DAsmCode[1]:=AdrVal;
+         CodeLen:=2;
+        END;
+      END;
+     Exit;
+    END;
+
+   IF (Memo('PLOCKR')) OR (Memo('PUNLOCKR')) THEN
+    BEGIN
+     IF ArgCnt<>1 THEN WrError(1110)
+     ELSE IF MomCPU<CPU56300 THEN WrError(1500)
+     ELSE
+      BEGIN
+       DAsmCode[1]:=(EvalIntExpression(ArgStr[1],AdrInt,OK)-(EProgCounter+2)) AND $ffffff;
+       IF OK THEN
+        BEGIN
+         DAsmCode[0]:=$00000e+Ord(Memo('PLOCKR')); CodeLen:=2;
+        END;
+      END;
+     Exit;
+    END;
+
+   { SprÅnge }
+
+   IF DecodeJump THEN Exit;
+
+   IF (Copy(OpPart,1,5)='DEBUG') AND (DecodeCondition(Copy(OpPart,6,Length(OpPart)-5),Condition)) THEN
+    BEGIN
+     IF ArgCnt<>0 THEN WrError(1110)
+     ELSE IF MomCPU<CPU56300 THEN WrError(1500)
+     ELSE
+      BEGIN
+       DAsmCode[0]:=$00000300+Condition;
+       CodeLen:=1;
       END;
      Exit;
     END;
@@ -1436,7 +2434,7 @@ BEGIN
    CASE ActPC OF
    SegCode,
    SegXData,
-   SegYData : ok:=ProgCounter <=$ffff;
+   SegYData : ok:=ProgCounter <=MemLimit;
    ELSE ok:=False;
    END;
    ChkPC_56K:=(ok) AND (ProgCounter>=0);
@@ -1469,8 +2467,19 @@ BEGIN
 
    MakeCode:=MakeCode_56K; ChkPC:=ChkPC_56K; IsDef:=IsDef_56K;
    SwitchFrom:=SwitchFrom_56K;
+
+   IF MomCPU=CPU56300 THEN
+    BEGIN
+     MemLimit:=$ffffff; AdrInt:=UInt24;
+    END
+   ELSE
+    BEGIN
+     MemLimit:=$ffff; AdrInt:=UInt16;
+    END;
 END;
 
 BEGIN
    CPU56000:=AddCPU('56000',SwitchTo_56K);
+   CPU56002:=AddCPU('56002',SwitchTo_56K);
+   CPU56300:=AddCPU('56300',SwitchTo_56K);
 END.

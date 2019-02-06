@@ -209,7 +209,9 @@ END;
 	FUNCTION DecodeReg(VAR Asc:String; VAR Erg:Word):Boolean;
 VAR
    io:Integer;
+   s:StringPtr;
 BEGIN
+   IF FindRegDef(Asc,s) THEN Asc:=s^;
    IF (Length(Asc)<2) OR (Length(Asc)>3) OR (UpCase(Asc[1])<>'R') THEN DecodeReg:=False
    ELSE
     BEGIN
@@ -309,6 +311,13 @@ BEGIN
 	 END;
        IF NOT ValOK THEN CodeLen:=0;
       END;
+     Exit;
+    END;
+
+   IF Memo('REG') THEN
+    BEGIN
+     IF ArgCnt<>1 THEN WrError(1110)
+     ELSE AddRegDef(LabPart,ArgStr[1]);
      Exit;
     END;
 
@@ -482,7 +491,8 @@ BEGIN
        ELSE IF NOT DecodeReg(ArgStr[1],Reg1) THEN WrXError(1445,ArgStr[1])
        ELSE
 	BEGIN
-	 Reg2:=EvalIntExpression(Copy(ArgStr[2],2,Length(ArgStr[2])-1),UInt6,OK);
+         ArgStr[2][1]:='0';
+	 Reg2:=EvalIntExpression(ArgStr[2],UInt6,OK);
 	 IF OK THEN
 	  BEGIN
 	   WAsmCode[0]:=$8000+z+(Reg1 SHL 4)+(Reg2 AND 7)+((Reg2 AND $18) SHL 7)+((Reg2 AND $20) SHL 8);
@@ -585,6 +595,7 @@ BEGIN
     BEGIN
      IF ArgCnt<>2 THEN WrError(1110)
      ELSE IF NOT DecodeReg(ArgStr[1],Reg1) THEN WrXError(1445,ArgStr[1])
+     ELSE IF Reg1<16 THEN WrXError(1445,ArgStr[1])
      ELSE
       BEGIN
        Reg2:=EvalIntExpression(ArgStr[2],Int8,OK) XOR $ff;
@@ -742,7 +753,7 @@ END;
 	FUNCTION IsDef_AVR:Boolean;
 	Far;
 BEGIN
-   IsDef_AVR:=Memo('PORT');
+   IsDef_AVR:=Memo('PORT') OR Memo('REG');
 END;
 
 	PROCEDURE SwitchFrom_AVR;

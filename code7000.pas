@@ -15,9 +15,9 @@ INTERFACE
 IMPLEMENTATION
 
 CONST
-   FixedOrderCount=10;
+   FixedOrderCount=13;
    OneRegOrderCount=22;
-   TwoRegOrderCount=18;
+   TwoRegOrderCount=20;
    MulRegOrderCount=3;
    BWOrderCount=3;
    LogOrderCount=4;
@@ -39,8 +39,18 @@ CONST
 TYPE
    FixedOrder=RECORD
 	       Name:String[7];
+               MinCPU:CPUVar;
+               Priv:Boolean;
 	       Code:Word;
 	      END;
+
+   TwoRegOrder=RECORD
+	        Name:String[7];
+                MinCPU:CPUVar;
+	        Code:Word;
+                Priv:Boolean;
+                DefSize:ShortInt;
+	       END;
 
    FixedMinOrder=RECORD
                   Name:String[7];
@@ -50,7 +60,7 @@ TYPE
 
    FixedOrderArray=ARRAY[1..FixedOrderCount] OF FixedOrder;
    OneRegOrderArray=ARRAY[1..OneRegOrderCount] OF FixedMinOrder;
-   TwoRegOrderArray=ARRAY[1..TwoRegOrderCount] OF FixedOrder;
+   TwoRegOrderArray=ARRAY[1..TwoRegOrderCount] OF TwoRegOrder;
    MulRegOrderArray=ARRAY[1..MulRegOrderCount] OF FixedMinOrder;
    BWOrderArray=ARRAY[1..BWOrderCount] OF FixedOrder;
    LogOrderArray=ARRAY[0..LogOrderCount-1] OF String[3];
@@ -73,7 +83,7 @@ VAR
    ForwardCount:LongInt;
    SaveInitProc:PROCEDURE;
 
-   CPU7000,CPU7600:CPUVar;
+   CPU7000,CPU7600,CPU7700:CPUVar;
 
    FixedOrders:^FixedOrderArray;
    OneRegOrders:^OneRegOrderArray;
@@ -92,13 +102,14 @@ VAR
 VAR
    z:Word;
 
-	PROCEDURE AddFixed(NName:String; NCode:Word);
+	PROCEDURE AddFixed(NName:String; NCode:Word; NPriv:Boolean; NMin:CPUVar);
 BEGIN
    IF z=FixedOrderCount THEN Halt;
    Inc(z);
    WITH FixedOrders^[z] DO
     BEGIN
      Name:=NName; Code:=NCode;
+     Priv:=NPriv; MinCPU:=NMin;
     END;
 END;
 
@@ -112,13 +123,15 @@ BEGIN
     END;
 END;
 
-	PROCEDURE AddTwoReg(NName:String; NCode:Word);
+	PROCEDURE AddTwoReg(NName:String; NCode:Word; NPriv:Boolean; NMin:CPUVar; NDef:ShortInt);
 BEGIN
    IF z=TwoRegOrderCount THEN Halt;
    Inc(z);
    WITH TwoRegOrders^[z] DO
     BEGIN
      Name:=NName; Code:=NCode;
+     Priv:=NPriv; MinCPU:=NMin;
+     DefSize:=NDef;
     END;
 END;
 
@@ -144,11 +157,19 @@ END;
 
 BEGIN
    New(FixedOrders); z:=0;
-   AddFixed('CLRT'  ,$0008); AddFixed('CLRMAC',$0028);
-   AddFixed('NOP'   ,$0009); AddFixed('RTE'   ,$002b);
-   AddFixed('SETT'  ,$0018); AddFixed('SLEEP' ,$001b);
-   AddFixed('RTS'   ,$000b); AddFixed('DIV0U' ,$0019);
-   AddFixed('BRK'   ,$0000); AddFixed('RTB'   ,$0001);
+   AddFixed('CLRT'  ,$0008, False, CPU7000);
+   AddFixed('CLRMAC',$0028, False, CPU7000);
+   AddFixed('NOP'   ,$0009, False, CPU7000);
+   AddFixed('RTE'   ,$002b, False, CPU7000);
+   AddFixed('SETT'  ,$0018, False, CPU7000);
+   AddFixed('SLEEP' ,$001b, False, CPU7000);
+   AddFixed('RTS'   ,$000b, False, CPU7000);
+   AddFixed('DIV0U' ,$0019, False, CPU7000);
+   AddFixed('BRK'   ,$0000, True , CPU7000);
+   AddFixed('RTB'   ,$0001, True , CPU7000);
+   AddFixed('CLRS'  ,$0048, False, CPU7700);
+   AddFixed('SETS'  ,$0058, False, CPU7700);
+   AddFixed('LDTLB' ,$0038, True , CPU7700);
 
    New(OneRegOrders); z:=0;
    AddOneReg('MOVT'  ,$0029,CPU7000); AddOneReg('CMP/PZ',$4011,CPU7000);
@@ -164,15 +185,26 @@ BEGIN
    AddOneReg('BRAF'  ,$0032,CPU7600); AddOneReg('BSRF'  ,$0003,CPU7600);
 
    New(TwoRegOrders); z:=0;
-   AddTwoReg('XTRCT' ,$200d); AddTwoReg('ADDC'  ,$300e);
-   AddTwoReg('ADDV'  ,$300f); AddTwoReg('CMP/HS',$3002);
-   AddTwoReg('CMP/GE',$3003); AddTwoReg('CMP/HI',$3006);
-   AddTwoReg('CMP/GT',$3007); AddTwoReg('CMP/STR',$200c);
-   AddTwoReg('DIV1'  ,$3004); AddTwoReg('DIV0S' ,$2007);
-   AddTwoReg('MULS'  ,$200f); AddTwoReg('MULU'  ,$200e);
-   AddTwoReg('NEG'   ,$600b); AddTwoReg('NEGC'  ,$600a);
-   AddTwoReg('SUB'   ,$3008); AddTwoReg('SUBC'  ,$300a);
-   AddTwoReg('SUBV'  ,$300b); AddTwoReg('NOT'   ,$6007);
+   AddTwoReg('XTRCT' ,$200d, False, CPU7000,2);
+   AddTwoReg('ADDC'  ,$300e, False, CPU7000,2);
+   AddTwoReg('ADDV'  ,$300f, False, CPU7000,2);
+   AddTwoReg('CMP/HS',$3002, False, CPU7000,2);
+   AddTwoReg('CMP/GE',$3003, False, CPU7000,2);
+   AddTwoReg('CMP/HI',$3006, False, CPU7000,2);
+   AddTwoReg('CMP/GT',$3007, False, CPU7000,2);
+   AddTwoReg('CMP/STR',$200c,False, CPU7000,2);
+   AddTwoReg('DIV1'  ,$3004, False, CPU7000,2);
+   AddTwoReg('DIV0S' ,$2007, False, CPU7000,-1);
+   AddTwoReg('MULS'  ,$200f, False, CPU7000,1);
+   AddTwoReg('MULU'  ,$200e, False, CPU7000,1);
+   AddTwoReg('NEG'   ,$600b, False, CPU7000,2);
+   AddTwoReg('NEGC'  ,$600a, False, CPU7000,2);
+   AddTwoReg('SUB'   ,$3008, False, CPU7000,2);
+   AddTwoReg('SUBC'  ,$300a, False, CPU7000,2);
+   AddTwoReg('SUBV'  ,$300b, False, CPU7000,2);
+   AddTwoReg('NOT'   ,$6007, False, CPU7000,2);
+   AddTwoReg('SHAD'  ,$400c, False, CPU7700,2);
+   AddTwoReg('SHLD'  ,$400d, False, CPU7700,2);
 
    New(MulRegOrders); z:=0;
    AddMulReg('MUL'   ,$0007,CPU7600);
@@ -262,6 +294,35 @@ BEGIN
      Val(Copy(Asc,2,Length(Asc)-1),Erg,Err);
      DecodeReg:=(Err=0) AND (Erg<=15);
     END;
+END;
+
+	FUNCTION DecodeCtrlReg(Asc:String; VAR Erg:Byte):Boolean;
+VAR
+   MinCPU:CPUVar;
+BEGIN
+   MinCPU:=CPU7000; Erg:=$ff;
+   IF NLS_StrCaseCmp(Asc,'SR')=0 THEN Erg:=0
+   ELSE IF NLS_StrCaseCmp(Asc,'GBR')=0 THEN Erg:=1
+   ELSE IF NLS_StrCaseCmp(Asc,'VBR')=0 THEN Erg:=2
+   ELSE IF NLS_StrCaseCmp(Asc,'SSR')=0 THEN
+    BEGIN
+     Erg:=3; MinCPU:=CPU7700;
+    END
+   ELSE IF NLS_StrCaseCmp(Asc,'SPC')=0 THEN
+    BEGIN
+     Erg:=4; MinCPU:=CPU7700;
+    END
+   ELSE IF (Length(Asc)=7) AND (UpCase(Asc[1])='R')
+       AND (NLS_StrCaseCmp(Copy(Asc,3,5),'_BANK')=0)
+       AND (Asc[2]>='0') AND (Asc[2]<='7') THEN
+    BEGIN
+     Erg:=Ord(Asc[2])-AscOfs+8; MinCPU:=CPU7700;
+    END;
+   IF (Erg=$ff) OR (MomCPU<MinCPU) THEN
+    BEGIN
+     DecodeCtrlReg:=False; WrXError(1440,Asc);
+    END
+   ELSE DecodeCtrlReg:=True;
 END;
 
 	PROCEDURE DecodeAdr(Asc:String; Mask:Word; Signed:Boolean);
@@ -706,9 +767,13 @@ BEGIN
      IF Memo(Name) THEN
       BEGIN
        IF ArgCnt<>0 THEN WrError(1110)
+       ELSE IF MomCPU<MinCPU THEN WrError(1500)
        ELSE IF AttrPart<>'' THEN WrError(1100)
-       ELSE SetCode(Code);
-       IF (NOT SupAllowed) AND ((Memo('RTB')) OR (Memo('BRK'))) THEN WrError(50);
+       ELSE
+        BEGIN
+	 SetCode(Code);
+         IF (NOT SupAllowed) AND (Priv) THEN WrError(50);
+        END;
        Exit;
       END;
 
@@ -788,6 +853,21 @@ BEGIN
      Exit;
     END;
 
+   IF Memo('PREF') THEN
+    BEGIN
+     IF ArgCnt<>1 THEN WrError(1110)
+     ELSE IF AttrPart<>'' THEN WrError(1100)
+     ELSE
+      BEGIN
+       DecodeAdr(ArgStr[1],MModIReg,False);
+       IF AdrMode<>ModNone THEN
+        BEGIN
+         CodeLen:=2; WAsmCode[0]:=$0083+(AdrPart SHL 8);
+        END;
+      END;
+     Exit;
+    END;
+
    IF (Memo('LDC')) OR (Memo('STC')) THEN
     BEGIN
      IF OpSize=-1 THEN SetOpSize(2);
@@ -798,14 +878,7 @@ BEGIN
 	BEGIN
 	 ArgStr[3]:=ArgStr[1]; ArgStr[1]:=ArgStr[2]; ArgStr[2]:=ArgStr[3];
 	END;
-       IF NLS_StrCaseCmp(ArgStr[1],'SR')=0 THEN HReg:=0
-       ELSE IF NLS_StrCaseCmp(ArgStr[1],'GBR')=0 THEN HReg:=1
-       ELSE IF NLS_StrCaseCmp(ArgStr[1],'VBR')=0 THEN HReg:=2
-       ELSE
-	BEGIN
-	 WrError(1440); HReg:=$ff;
-	END;
-       IF HReg<$ff THEN
+       IF DecodeCtrlReg(ArgStr[1],HReg) THEN
 	BEGIN
 	 IF Memo('LDC') THEN DecodeAdr(ArgStr[2],MModReg+MModPostInc,False)
 	 ELSE DecodeAdr(ArgStr[2],MModReg+MModPreDec,False);
@@ -818,6 +891,7 @@ BEGIN
 	 ModPreDec:
 	  SetCode($4003+(AdrPart SHL 8)+(HReg SHL 4));
 	 END;
+         IF (AdrMode<>ModNone) AND (NOT SupAllowed) THEN WrError(50);
 	END;
       END;
      Exit;
@@ -902,7 +976,8 @@ BEGIN
      IF Memo(Name) THEN
       BEGIN
        IF ArgCnt<>2 THEN WrError(1110)
-       ELSE IF AttrPart<>'' THEN WrError(1100)
+       ELSE IF (AttrPart<>'') AND (OpSize<>DefSize) THEN WrError(1100)
+       ELSE IF MomCPU<MinCPU THEN WrError(1500)
        ELSE
 	BEGIN
 	 DecodeAdr(ArgStr[1],MModReg,False);
@@ -911,6 +986,7 @@ BEGIN
 	   WAsmCode[0]:=Code+(AdrPart SHL 4);
 	   DecodeAdr(ArgStr[2],MModReg,False);
 	   IF AdrMode<>ModNone THEN SetCode(WAsmCode[0]+(Word(AdrPart) SHL 8));
+           IF (NOT SupAllowed) AND (Priv) THEN WrError(1500);
 	  END;
 	END;
        Exit;
@@ -1182,16 +1258,17 @@ BEGIN
    Grans[SegCode]:=1; ListGrans[SegCode]:=2; SegInits[SegCode]:=0;
 
    MakeCode:=MakeCode_7000; ChkPC:=ChkPC_7000; IsDef:=IsDef_7000;
-   SwitchFrom:=SwitchFrom_7000;
+   SwitchFrom:=SwitchFrom_7000; InitFields;
 
    CurrDelayed:=False; PrevDelayed:=False;
 
-   InitFields;
+   SetFlag(DoPadding,DoPaddingName,False);
 END;
 
 BEGIN
    CPU7000:=AddCPU('SH7000',SwitchTo_7000);
    CPU7600:=AddCPU('SH7600',SwitchTo_7000);
+   CPU7700:=AddCPU('SH7700',SwitchTo_7000);
 
    SaveInitProc:=InitPassProc; InitPassProc:=InitCode_7000;
    FirstLiteral:=Nil;

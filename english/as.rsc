@@ -40,6 +40,12 @@
 {*           29. 3.1997 Kommandozeilenoption g                              *}
 {*           29. 5.1997 Warnung wg. inkorrektem Listing                     *}
 {*           12. 7.1997 Kommandozeilenoption Y                              *}
+{*           10. 8.1997 Meldungen fÅr Strukturen                            *}
+{*           23. 8.1997 Atmel-Debug-Format                                  *}
+{*            7. 9.1997 Warnung BereichsÅberschreitung                      *}
+{*           24. 9.1997 Kopfzeile Registerdefinitionsliste                  *}
+{*           19.10.1997 Warnung neg. DUP-Anzahl                             *}
+{*           11. 1.1998 C6x-Fehlermeldungen                                 *}
 {*                                                                          *}
 {****************************************************************************}
 
@@ -82,6 +88,9 @@ CONST
    ErrMsgNotBitAddressable  = 'memory location not bit addressable';
    ErrMsgStackNotEmpty      = 'stack is not empty';
    ErrMsgPageCrossing       = 'instruction crosses page boundary';
+   ErrMsgWOverRange         = 'range overflow';
+   ErrMsgNegDUP             = 'negative argument to DUP';
+
    ErrMsgDoubleDef          = 'symbol double defined';
    ErrMsgNULCharacter       = 'NUL character in string, result is undefined';
    ErrMsgIOAddrNotAllowed   = 'I/O-address must not be used here';
@@ -144,6 +153,11 @@ CONST
    ErrMsgOnlyOnOff          = 'only ON/OFF allowed';
    ErrMsgStackEmpty         = 'stack is empty or undefined';
    ErrMsgNotOneBit          = 'not exactly one bit is set';
+   ErrMsgMissingStruct      = 'ENDSTRUCT without STRUCT';
+   ErrMsgOpenStruct         = 'open structure definition';
+   ErrMsgWrongStruct        = 'wrong ENDSTRUCT';
+   ErrMsgPhaseDisallowed    = 'phase definition not allowed in structure definition';
+   ErrMsgInvStructDir       = 'invalid STRUCT directive';
    ErrMsgRomOffs063         = 'ROM-offset must be in range 0..63';
    ErrMsgShortRead          = 'unexpected end of file';
    ErrMsgInvFCode           = 'invalid function code';
@@ -169,7 +183,7 @@ CONST
    ErrMsgTargOnDiffPage     = 'jump target not on same page';
    ErrMsgCodeOverflow       = 'code overflow';
    ErrMsgMixDBDS            = 'constants and placeholders cannot be mixed';
-   ErrMsgOnlyInCode         = 'code may only be generated in code segment';
+   ErrMsgNotInStruct        = 'code must not be generated in structure definition';
    ErrMsgParNotPossible     = 'parallel construct not possible here';
    ErrMsgAdrOverflow        = 'address overflow';
    ErrMsgInvSegment         = 'invalid segment';
@@ -182,6 +196,13 @@ CONST
    ErrMsgNotInThisSegment   = 'not allowed in current segment';
    ErrMsgNotInMaxmode       = 'not allowed in maximum mode';
    ErrMsgOnlyInMaxmode      = 'not allowed in minimum mode';
+   ErrMsgPacketNotAligned   = 'instruction packet crosses 8 word boundary';
+   ErrMsgDoubleUnitUsed     = 'functional unit used double';
+   ErrMsgLongReads          = 'more than one long read operand';
+   ErrMsgLongWrites         = 'more than one long write operand';
+   ErrMsgLongMem            = 'long read operand with memory access';
+   ErrMsgTooManyReads       = 'too many read accesses to register';
+   ErrMsgWriteConflict      = 'write conflict on register';
    ErrMsgOpeningFile        = 'error in opening file';
    ErrMsgListWrError        = 'error in writing listing';
    ErrMsgFileReadError      = 'file read error';
@@ -216,6 +237,12 @@ CONST
    ListSymSumsMsg       = ' symbols';
    ListUSymSumMsg       = ' unused symbol';
    ListUSymSumsMsg      = ' unused symbols';
+   ListRegDefListHead1  = '  register definitions (*=unused):';
+   ListRegDefListHead2  = '  ------------------------------------';
+   ListRegDefSumMsg     = ' definition';
+   ListRegDefSumsMsg    = ' definitions';
+   ListRegDefUSumMsg    = ' unused definition';
+   ListRegDefUSumsMsg   = ' unused definitions';
    ListMacListHead1     = '  defined macros:';
    ListMacListHead2     = '  ---------------';
    ListMacSumMsg        = ' macro';
@@ -290,12 +317,12 @@ CONST
 		   '            !0..!4 for standard handles',
 		   '            default is <srcname>.LOG',
 		   '-r : generate messages if repassing necessary',
-                   !-Y : branch error suppression 8see manual)',
+                   '-Y : branch error suppression (see manual)',
 		   '-w : suppress warnings                +G : suppress code generation',
 		   '-s : generate section list            -t : enable/disable parts of listing',
 		   '-u : generate usage list              -C : generate cross reference list',
                    '-I : generate include nesting list',
-                   '-g : write debug info',
+                   '-g : write debug info [MAP/ATMEL]',
                    '-A : compact symbol table',
                    '-U : case-sensitive operation',
                    '-x : extended error messages          -n : add error #s to error messages',

@@ -11,9 +11,9 @@ INTERFACE
 
 TYPE
    IntType= (UInt1    ,UInt2    ,UInt3    ,SInt4    ,UInt4    , Int4    ,
-             SInt5    ,UInt5    , Int5    ,UInt6    ,UInt7    ,SInt8    ,UInt8    ,
+             SInt5    ,UInt5    , Int5    ,UInt6    ,SInt7    ,UInt7    ,SInt8    ,UInt8    ,
               Int8    ,SInt9    ,UInt9    ,UInt10   , Int10   ,UInt11   ,UInt12   , Int12   ,
-             UInt13   ,SInt16   ,UInt16   , Int16   ,UInt18   ,SInt20   ,
+             UInt13   ,UInt15   ,SInt16   ,UInt16   , Int16   ,UInt18   ,SInt20   ,
              UInt20   , Int20   ,UInt22   ,SInt24   ,UInt24   , Int24   , Int32);
 
    FloatType=(Float32,Float64,Float80,FloatDec,FloatCo);
@@ -21,25 +21,28 @@ TYPE
 CONST
    IntMasks:ARRAY[IntType] OF LongInt=
             ($00000001,$00000002,$00000007,$00000007,$0000000f,$0000000f,
-             $0000001f,$0000001f,$0000001f,$0000003f,$0000007f,$0000007f,$000000ff,
+             $0000001f,$0000001f,$0000001f,$0000003f,$0000007f,$0000007f,$0000007f,$000000ff,
              $000000ff,$000001ff,$000001ff,$000003ff,$000003ff,$000007ff,$00000fff,$00000fff,
-             $00001fff,$00007fff,$0000ffff,$0000ffff,$0003ffff,$0007ffff,
+             $00001fff,$0000ffff,$00007fff,$0000ffff,$0000ffff,$0003ffff,$0007ffff,
              $000fffff,$000fffff,$003fffff,$007fffff,$00ffffff,$00ffffff,$ffffffff);
    IntMins :ARRAY[IntType] OF LongInt=
             (        0,        0,        0,       -8,        0,       -8,
-                   -16,        0,      -16,        0,        0,     -128,        0,
+                   -16,        0,      -16,        0,      -64,        0,     -128,        0,
                   -128,     -256,        0,        0,     -511,        0,        0,    -2047,
-                     0,   -32768,        0,   -32768,        0,  -524288,
+                     0,        0,   -32768,        0,   -32768,        0,  -524288,
                      0,  -524288,        0, -8388608,        0, -8388608,-$7fffffff);
    IntMaxs :ARRAY[IntType] OF LongInt=
             (        1,        3,        7,        7,       15,       15,
-                    15,       31,       31,       63,      127,      127,      255,
+                    15,       31,       31,       63,       63,      127,      127,      255,
                    255,      255,      511,     1023,     1023,     2047,     4095,     4095,
-                  8191,    32767,    65535,    65535,   262143,   524287,
+                  8191,    32767,    32767,    65535,    65535,   262143,   524287,
                1048575,  1048575,  4194303,  8388607, 16777215, 16777215,$7fffffff);
 
 
         PROCEDURE AsmParsInit;
+
+
+        FUNCTION  SingleBit(Inp:LongInt; VAR Erg:LongInt):Boolean;
 
 
         FUNCTION  ConstIntVal(Asc:String; Typ:IntType; VAR Ok:Boolean):LongInt;
@@ -107,6 +110,8 @@ CONST
 
         FUNCTION  IsSymbolChangeable(Name:String):Boolean;
 
+        FUNCTION  GetSymbolType(Name:String):Integer;
+
 
         FUNCTION  PushSymbol(SymName,StackName:String):Boolean;
 
@@ -162,6 +167,20 @@ CONST
 
         PROCEDURE ClearLocStack;
 
+
+        PROCEDURE AddRegDef(Orig,Repl:String);
+
+        FUNCTION  FindRegDef(Name:String; VAR Erg:StringPtr):Boolean;
+
+        PROCEDURE TossRegDefs(Sect:LongInt);
+
+        PROCEDURE CleanupRegDefs;
+
+        PROCEDURE ClearRegDefs;
+
+        PROCEDURE PrintRegDefs;
+
+
         PROCEDURE _Init_AsmPars;
 
 VAR
@@ -187,8 +206,6 @@ CONST
    BaseLetters:ARRAY[0..2] OF Char='BOH';
    BaseVals:   ARRAY[0..2] OF Byte=(2,8,16);
 
-   PageWidth=80;
-
 TYPE
    PCrossRef=^TCrossRef;
    TCrossRef=RECORD
@@ -197,11 +214,13 @@ TYPE
               LineNum:LongInt;
               OccNum:Integer;
              END;
+
    SymbolVal=RECORD CASE Typ:TempType OF
               TempInt   :(IWert:LongInt);
               TempFloat :(FWert:Extended);
               TempString:(SWert:StringPtr);
              END;
+
    SymbolPtr=^SymbolEntry;
    SymbolEntry=RECORD
                 Left,Right:SymbolPtr;
@@ -254,16 +273,32 @@ TYPE
              MayString:Boolean;
              Present:Boolean;
             END;
+
    PLocHandle=^TLocHeap;
    TLocHeap=RECORD
              Next:PLocHandle;
              Cont:LongInt;
             END;
 
+   PRegDefList=^TRegDefList;
+   TRegDefList=RECORD
+                Next:PRegDefList;
+                Section:LongInt;
+                Value:StringPtr;
+                Used:Boolean;
+               END;
+   PRegDef=^TRegDef;
+   TRegDef=RECORD
+            Left,Right:PRegDef;
+            Orig:StringPtr;
+            Defs,DoneDefs:PRegDefList;
+           END;
+
 VAR
    FirstSymbol,FirstLocSymbol:SymbolPtr;
    FirstDefSymbol:PDefSymbol;
    FirstSection:PCToken;
+   FirstRegDef:PRegDef;
    DoRefs:Boolean;              { Querverweise protokollieren }
    FirstLocHandle:PLocHandle;
    FirstStack:PSymbolStack;
@@ -276,6 +311,7 @@ BEGIN
    FirstSection:=Nil;
    FirstLocHandle:=Nil;
    FirstStack:=Nil;
+   FirstRegDef:=Nil;
    DoRefs:=True;
 END;
 
@@ -295,6 +331,16 @@ BEGIN
    FloatDec:FloatRangeCheck:=True;
    END;
    IF (Typ=FloatDec) AND (Abs(Wert)>1e1000) THEN WrError(40);
+END;
+
+        FUNCTION SingleBit(Inp:LongInt; VAR Erg:LongInt):Boolean;
+BEGIN
+   Erg:=0;
+   REPEAT
+    IF NOT Odd(Inp) THEN Inc(Erg);
+    IF NOT Odd(Inp) THEN Inp:=Inp SHR 1;
+   UNTIL (Erg=32) OR (Odd(Inp));
+   SingleBit:=(Erg<>32) AND (Inp=1);
 END;
 
 
@@ -591,8 +637,14 @@ BEGIN
 
    IF NegFlag THEN Wert:=-Wert;
 
-   Ok:=RangeCheck(Wert,Typ);
-   IF Ok THEN ConstIntVal:=Wert ELSE WrError(1320);
+   OK:=RangeCheck(Wert,Typ);
+   IF OK THEN ConstIntVal:=Wert
+   ELSE IF HardRanges THEN WrError(1320)
+   ELSE
+    BEGIN
+     OK:=True; ConstIntVal:=Wert AND IntMasks[Typ];
+     WrError(260);
+    END;
 END;
 
         FUNCTION ConstFloatVal(Asc:String; Typ:FloatType; VAR Ok:Boolean):Extended;
@@ -766,6 +818,7 @@ VAR
    Ptr:SymbolPtr;
    ValFunc:PFunction;
    stemp,ftemp:^String;
+   DummyPtr:StringPtr;
 
         PROCEDURE ChgFloat(VAR T:TempResult);
 BEGIN
@@ -1209,6 +1262,20 @@ BEGIN
        Goto FreeVars;
       END;
 
+     { hier einmal umwandeln ist effizienter...}
+
+     NLS_UpString(ftemp^);
+
+     { symbolbezogene Funktionen }
+
+     IF ftemp^='SYMTYPE' THEN
+      BEGIN
+       Erg.Typ:=TempInt;
+       IF FindRegDef(Asc,DummyPtr) THEN Erg.Int:=$80
+       ELSE Erg.Int:=GetSymbolType(Asc);
+       Goto FreeVars;
+      END;
+
      { Unterausdruck auswerten (interne Funktionen nur mit einem Argument }
 
      EvalExpression(Asc,LVal^);
@@ -1216,10 +1283,6 @@ BEGIN
      { Abbruch bei Fehler }
 
      IF Typ=TempNone THEN Goto FreeVars;
-
-     { hier einmal umwandeln ist effizienter...}
-
-     NLS_UpString(ftemp^);
 
      { Funktionen fÅr Stringargumente }
 
@@ -1241,6 +1304,13 @@ BEGIN
          Erg.Typ:=TempString; Erg.Ascii:=LVal^.Ascii;
          FOR z1:=1 TO Length(Erg.Ascii) DO
           Erg.Ascii[z1]:=LowCase(Erg.Ascii[z1]);
+        END
+
+       { LÑnge ? }
+
+       ELSE IF ftemp^='STRLEN' THEN
+        BEGIN
+         Erg.Typ:=TempInt; Erg.Int:=Length(LVal^.Ascii);
         END
 
        { Parser aufrufen ? }
@@ -1344,12 +1414,7 @@ BEGIN
          ELSE
           BEGIN
            Erg.Typ:=TempInt;
-           Erg.Int:=0;
-           REPEAT
-            IF NOT Odd(LVal^.Int) THEN Inc(Erg.Int);
-            IF NOT Odd(LVal^.Int) THEN LVal^.Int:=LVal^.Int SHR 1;
-           UNTIL (Erg.Int=32) OR (Odd(LVal^.Int));
-           IF (Erg.Int=32) OR (LVal^.Int<>1) THEN
+           IF NOT SingleBit(LVal^.Int,Erg.Int) THEN
             BEGIN
              Erg.Int:=-1;
              WrError(1540);
@@ -1733,9 +1798,15 @@ BEGIN
 
    IF Typ<>Int32 THEN
     IF (t.Int<IntMins[Typ]) OR (t.Int>IntMaxs[Typ]) THEN
-     BEGIN
-      WrError(1320); Exit;
-     END;
+     IF NOT HardRanges THEN
+      BEGIN
+       t.Int:=t.Int AND IntMasks[Typ];
+       WrError(260);
+      END
+     ELSE
+      BEGIN
+       WrError(1320); Exit;
+      END;
 
    EvalIntExpression:=t.Int; Ok:=True;
 END;
@@ -2439,6 +2510,24 @@ BEGIN
    IsSymbolChangeable:=(Lauf<>Nil) AND (Lauf^.Changeable);
 END;
 
+        FUNCTION GetSymbolType(Name:String):Integer;
+VAR
+   Lauf:SymbolPtr;
+BEGIN
+   IF NOT ExpandSymbol(Name) THEN
+    BEGIN
+     GetSymbolType:=-1; Exit;
+    END;
+   Lauf:=FindLocNode(Name,TempInt);
+   IF Lauf=Nil THEN Lauf:=FindLocNode(Name,TempFloat);
+   IF Lauf=Nil THEN Lauf:=FindLocNode(Name,TempString);
+   IF Lauf=Nil THEN Lauf:=FindNode(Name,TempInt);
+   IF Lauf=Nil THEN Lauf:=FindNode(Name,TempFloat);
+   IF Lauf=Nil THEN Lauf:=FindNode(Name,TempString);
+   IF Lauf=Nil THEN GetSymbolType:=-1
+   ELSE GetSymbolType:=Lauf^.SymType;
+END;
+
         PROCEDURE ConvertSymboLVal(VAR Inp:SymboLVal; VAR Outp:TempResult);
 BEGIN
    Outp.Typ:=Inp.Typ;
@@ -2453,10 +2542,11 @@ END;
 VAR
    Zeilenrest:String;
    Sum,USum:LongInt;
+   ActPageWidth,cwidth:Integer;
 
         PROCEDURE AddOut(s:String);
 BEGIN
-   IF Length(s)+Length(Zeilenrest)>PageWidth THEN
+   IF Length(s)+Length(Zeilenrest)>ActPageWidth THEN
     BEGIN
      Dec(Byte(Zeilenrest[0]),2);
      WrLstLine(Zeilenrest); Zeilenrest:=s;
@@ -2475,8 +2565,8 @@ BEGIN
    sh:=Node^.SymName^;
    IF Node^.Attribute<>-1 THEN sh:=sh+' ['+GetSectionName(Node^.Attribute)+']';
    IF Node^.Used THEN sh:=' '+sh ELSE sh:='*'+sh;
-   l1:=(Length(s1)+Length(sh)+6) MOD 40;
-   s1:=sh+' : '+Blanks(38-l1)+s1+' '+SegShorts[Node^.SymType]+' | ';
+   l1:=(Length(s1)+Length(sh)+6) MOD cwidth;
+   s1:=sh+' : '+Blanks(cwidth-2-l1)+s1+' '+SegShorts[Node^.SymType]+' | ';
    AddOut(s1); Inc(Sum);
    IF NOT Node^.Used THEN Inc(USum);
 END;
@@ -2499,6 +2589,8 @@ BEGIN
    WrLstLine('');
 
    Zeilenrest:=''; Sum:=0; USum:=0;
+   ActPageWidth:=PageWidth; IF ActPageWidth=0 THEN ActPageWidth:=80;
+   cwidth:=ActPageWidth SHR 1;
    PrintNode(FirstSymbol);
    IF ZeilenRest<>'' THEN
     BEGIN
@@ -3087,7 +3179,7 @@ BEGIN
     BEGIN
      Tmp:=FirstSection;
      FreeMem(Tmp^.Name,Length(Tmp^.Name^)+1);
-     FreeMem(Tmp^.Usage.Chunks,Tmp^.Usage.AllocLen*SizeOf(OneChunk));
+     ClearChunk(Tmp^.Usage);
      FirstSection:=Tmp^.Next; Dispose(Tmp);
     END;
 END;
@@ -3220,6 +3312,214 @@ END;
 BEGIN
    WHILE MomLocHandle<>-1 DO PopLocHandle;
 END;
+
+{----------------------------------------------------------------------------}
+
+        FUNCTION LookupReg(VAR Name:String; CreateNew:Boolean):PRegDef;
+VAR
+   Run,Neu,Prev:PRegDef;
+BEGIN
+   Prev:=Nil; Run:=FirstRegDef;
+   WHILE (Run<>Nil) AND (Run^.Orig^<>Name) DO
+    BEGIN
+     Prev:=Run;
+     IF Run^.Orig^<Name THEN Run:=Run^.Left ELSE Run:=Run^.Right;
+    END;
+   IF (Run=Nil) AND (CreateNew) THEN
+    BEGIN
+     New(Neu);
+     GetMem(Neu^.Orig,Length(Name)+1); Neu^.Orig^:=Name;
+     Neu^.Left:=Nil; Neu^.Right:=Nil;
+     Neu^.Defs:=Nil; Neu^.DoneDefs:=Nil;
+     IF Prev=Nil THEN FirstRegDef:=Neu
+     ELSE IF Prev^.Orig^<Name THEN Prev^.Left:=Neu ELSE Prev^.Right:=Neu;
+     LookupReg:=Neu;
+    END
+   ELSE LookupReg:=Run;
+END;
+
+        PROCEDURE AddRegDef(Orig,Repl:String);
+VAR
+   Node:PRegDef;
+   Neu:PRegDefList;
+BEGIN
+   IF NOT CaseSensitive THEN
+    BEGIN
+     NLS_UpString(Orig); NLS_UpString(Repl);
+    END;
+   IF NOT ChkSymbName(Orig) THEN
+    BEGIN
+     WrXError(1020,Orig); Exit;
+    END;
+   IF NOT ChkSymbName(Repl) THEN
+    BEGIN
+     WrXError(1020,Repl); Exit;
+    END;
+   Node:=LookupReg(Orig,True);
+   IF (Node^.Defs<>Nil) AND (Node^.Defs^.Section=MomSectionHandle) THEN
+    WrXError(1000,Orig)
+   ELSE
+    BEGIN
+     New(Neu); Neu^.Next:=Node^.Defs; Neu^.Section:=MomSectionHandle;
+     GetMem(Neu^.Value,Length(Repl)+1); Neu^.Value^:=Repl;
+     Neu^.Used:=False;
+     Node^.Defs:=Neu;
+    END;
+END;
+
+        FUNCTION FindRegDef(Name:String; VAR Erg:StringPtr):Boolean;
+VAR
+   Sect:LongInt;
+   Node:PRegDef;
+   Def:PRegDefList;
+BEGIN
+   FindRegDef:=False;
+   IF Name[1]='[' THEN Exit;
+   IF NOT GetSymSection(Name,Sect) THEN Exit;
+   IF NOT CaseSensitive THEN NLS_UpString(Name);
+   Node:=LookupReg(Name,False);
+   IF Node=Nil THEN Exit;
+   Def:=Node^.Defs;
+   IF Sect<>-2 THEN
+    WHILE (Def<>Nil) AND (Def^.Section<>Sect) DO Def:=Def^.Next;
+   IF Def=Nil THEN Exit
+   ELSE
+    BEGIN
+     Erg:=Def^.Value; Def^.Used:=True; FindRegDef:=True;
+    END;
+END;
+
+
+        PROCEDURE TossRegDefs(Sect:LongInt);
+
+        PROCEDURE TossSingle(Node:PRegDef);
+VAR
+   Tmp:PRegDefList;
+BEGIN
+   IF Node=Nil THEN Exit; ChkStack;
+
+   IF (Node^.Defs<>Nil) AND (Node^.Defs^.Section=Sect) THEN
+    BEGIN
+     Tmp:=Node^.Defs; Node^.Defs:=Node^.Defs^.Next;
+     Tmp^.Next:=Node^.DoneDefs; Node^.DoneDefs:=Tmp;
+    END;
+
+   TossSingle(Node^.Left); TossSingle(Node^.Right);
+END;
+
+BEGIN
+   TossSingle(FirstRegDef);
+END;
+
+        PROCEDURE ClearRegDefList(Start:PRegDefList);
+VAR
+   Tmp:PRegDefList;
+BEGIN
+   WHILE Start<>Nil DO
+    BEGIN
+     Tmp:=Start; Start:=Start^.Next;
+     FreeMem(Tmp^.Value,Length(Tmp^.Value^)+1);
+     Dispose(Tmp);
+    END;
+END;
+
+        PROCEDURE CleanupRegDefs;
+
+        PROCEDURE CleanupNode(Node:PRegDef);
+BEGIN
+   IF Node=Nil THEN Exit; ChkStack;
+   ClearRegDefList(Node^.DoneDefs); Node^.DoneDefs:=Nil;
+   CleanupNode(Node^.Left); CleanupNode(Node^.Right);
+END;
+
+BEGIN
+   CleanupNode(FirstRegDef);
+END;
+
+        PROCEDURE ClearRegDefs;
+
+        PROCEDURE ClearNode(Node:PRegDef);
+BEGIN
+   IF Node=Nil THEN Exit; ChkStack;
+   ClearRegDefList(Node^.Defs); Node^.Defs:=Nil;
+   ClearRegDefList(Node^.DoneDefs); Node^.DoneDefs:=Nil;
+   ClearNode(Node^.Left); ClearNode(Node^.Right);
+   FreeMem(Node^.Orig,Length(Node^.Orig^)+1);
+   Dispose(Node);
+END;
+
+BEGIN
+   ClearNode(FirstRegDef);
+END;
+
+        PROCEDURE PrintRegDefs;
+VAR
+   buf:String;
+   ActPageWidth,cwidth:Integer;
+   Sum,USum:Integer;
+
+        PROCEDURE PNode(Node:PRegDef);
+VAR
+   Lauf:PRegDefList;
+   tmp:String;
+BEGIN
+   Lauf:=Node^.DoneDefs;
+   WHILE Lauf<>Nil DO
+    BEGIN
+     IF Lauf^.Used THEN tmp:=' ' ELSE tmp:='*';
+     tmp:=tmp+Node^.Orig^;
+     IF Lauf^.Section<>-1 THEN tmp:=tmp+'['+GetSectionName(Lauf^.Section)+']';
+     tmp:=tmp+' --> '+Lauf^.Value^;
+     IF Length(tmp)>cwidth-3 THEN
+      BEGIN
+       IF buf<>'' THEN WrLstLine(buf); buf:=''; WrLstLine(tmp);
+      END
+     ELSE
+      BEGIN
+       tmp:=tmp+Blanks(cwidth-3-Length(tmp));
+       IF buf='' THEN buf:=tmp
+       ELSE
+        BEGIN
+         buf:=buf+' | '+tmp; WrLstLine(buf); buf:='';
+        END;
+      END;
+     Inc(Sum); IF NOT Lauf^.Used THEN Inc(USum);
+     Lauf:=Lauf^.Next;
+    END;
+END;
+
+        PROCEDURE PrintSingle(Node:PRegDef);
+BEGIN
+   IF Node=Nil THEN Exit; ChkStack;
+
+   PrintSingle(Node^.Left);
+   PNode(Node);
+   PrintSingle(Node^.Right);
+END;
+
+BEGIN
+   IF FirstRegDef=Nil THEN Exit;
+
+   NewPage(ChapDepth,True);
+   WrLstLine(ListRegDefListHead1);
+   WrLstLine(ListRegDefListHead2);
+   WrLstLine('');
+
+   buf:=''; Sum:=0; USum:=0;
+   ActPageWidth:=PageWidth; IF ActPageWidth=0 THEN ActPageWidth:=80;
+   cwidth:=ActPageWidth SHR 1;
+   PrintSingle(FirstRegDef);
+
+   IF buf<>'' THEN WrLstLine(buf);
+   WrLstLine('');
+   Str(Sum:7,buf);
+   IF Sum=1 THEN WrLstLine(buf+ListRegDefSumMsg) ELSE WrLstLine(buf+ListRegDefSumsMsg);
+   Str(USum:7,buf);
+   IF USum=1 THEN WrLstLine(buf+ListRegDefUSumMsg) ELSE WrLstLine(buf+ListRegDefUSumsMsg);
+   WrLstLine('');
+END;
+
+{----------------------------------------------------------------------------}
 
         PROCEDURE _Init_AsmPars;
 BEGIN

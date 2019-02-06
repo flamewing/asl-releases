@@ -3,12 +3,12 @@
         Uses StdHandl,Hex,StringUt,AsmUtils,DecodeCm,NLS;
 
 CONST
-   HeaderCnt=53;
+   HeaderCnt=54;
    HeaderBytes:ARRAY[1..HeaderCnt] OF Byte=(
     $01,$05,$09,$11,$12,$13,$14,
     $19,$21,$29,$31,$32,$33,$39,$3a,
     $3b,$3c,$41,
-    $42,$48,$49,$4a,$4c,$51,$52,$53,
+    $42,$47,$48,$49,$4a,$4c,$51,$52,$53,
     $54,$55,$56,$61,$62,$63,
     $64,$65,$66,$68,$69,$6c,$6e,$6f,$70,
     $71,$72,$73,$74,$75,$76,
@@ -17,7 +17,7 @@ CONST
     '680x0     ','MPC601    ','DSP56000  ','65xx      ','MELPS-4500','M16       ','M16C      ',
     'MELPS-7700','MCS-48    ','29xxx     ','MCS-(2)51 ','ST9       ','ST7       ','MCS-96    ','8X30x     ',
     'AVR       ','XA        ','8080/8085 ',
-    '8086      ','TMS9900   ','TMS370xx  ','MSP430    ','80C166/167','Zx80      ','TLCS-900  ','TLCS-90   ',
+    '8086      ','TMS320C6x ','TMS9900   ','TMS370xx  ','MSP430    ','80C166/167','Zx80      ','TLCS-900  ','TLCS-90   ',
     'TLCS-870  ','TLCS-47xx ','TLCS-9000 ','68xx      ','6805/HC08 ','6809      ',
     '6804      ','68HC16    ','68HC12    ','H8/300(H) ','H8/500    ','SH7000    ','SC/MP     ','COP8      ','16C8x     ',
     '16C5x     ','17C4x     ','TMS7000   ','TMS3201x  ','TMS3202x  ','TMS320C3x ',
@@ -40,7 +40,7 @@ VAR
 {$i PList.rsc}
 
 BEGIN
-   NLS_Initialize; WrCopyRight('PLIST/2 V1.41r6','PLIST V1.41r6');
+   NLS_Initialize; WrCopyRight('PLIST/2 V1.41r7','PLIST V1.41r7');
 
    IF ParamCount=0 THEN
     BEGIN

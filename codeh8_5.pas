@@ -1435,9 +1435,9 @@ BEGIN
    Grans[SegCode]:=1; ListGrans[SegCode]:=1; SegInits[SegCode]:=0;
 
    MakeCode:=MakeCode_H8_5; ChkPC:=ChkPC_H8_5; IsDef:=IsDef_H8_5;
-   SwitchFrom:=SwitchFrom_H8_5;
+   SwitchFrom:=SwitchFrom_H8_5; InitFields;
 
-   InitFields;
+   SetFlag(DoPadding,DoPaddingName,False);
 END;
 
 BEGIN

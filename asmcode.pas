@@ -169,9 +169,8 @@ END;
 {---- Codedatei schlieáen ---------------------------------------------------}
 
        PROCEDURE CloseFile;
-CONST
-   h:String[20]='AS ';
 VAR
+   h:String;
    IO:Integer;
    Head:Byte;
 BEGIN
@@ -186,7 +185,7 @@ BEGIN
 
    {$i-} Head:=FileHeaderEnd; BlockWrite(PrgFile,Head,Sizeof(Head)); {$i-} ChkIO(10004);
 
-   IF PassNo=1 THEN h:=h+Version;
+   h:='AS '+Version+'/'+ArchVal;
    {$i-} BlockWrite(PrgFile,h[1],Length(h)); {$i+} ChkIO(10004);
    {$i-}
    Close(PrgFile); IF Magic<>0 THEN Erase(PrgFile); IO:=IOResult;

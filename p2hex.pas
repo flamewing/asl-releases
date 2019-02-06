@@ -9,7 +9,7 @@ CONST
    MaxLineLen=254;
 
 TYPE
-   OutFormat=(Default,MotoS,IntHex,IntHex16,IntHex32,MOSHex,TekHex,TiDSK);
+   OutFormat=(Default,MotoS,IntHex,IntHex16,IntHex32,MOSHex,TekHex,TiDSK,Atmel);
    ProcessProc=PROCEDURE(FileName:String; Offset:LongInt);
 
 VAR
@@ -21,7 +21,7 @@ VAR
 
    StartAdr,StopAdr,LineLen:LongInt;
    StartData,StopData,EntryAdr:LongInt;
-   StartAuto,StopAuto,EntryAdrPresent:Boolean;
+   StartAuto,StopAuto,EntryAdrPresent,AutoErase:Boolean;
    Seg,Ofs:Word;
    Dummy:LongInt;
    IntelMode:Byte;
@@ -115,7 +115,7 @@ BEGIN
        $62,$63,$64,$65,$66,$68,
        $69,$6c:
         ActFormat:=MotoS;
-       $12,$21,$31,$32,$33,$39,$3a,$3b,$41,
+       $12,$21,$31,$32,$33,$39,$3a,$41,
        $48,$49,$4a,$51,$53,$54,$55,$6e,$6f,
        $70,$71,$72,$73,$78,$79,$7a,
        $7b,$7c:
@@ -128,12 +128,15 @@ BEGIN
         ActFormat:=MOSHex;
        $74,$75,$77:
         ActFormat:=TiDSK;
+       $3b:
+        ActFormat:=Atmel;
        ELSE FormatError(FileName,FormatInvRecordHeaderMsg);
        END;
 
       CASE ActFormat OF
       MotoS,IntHex32:MaxAdr:=$ffffffff;
       IntHex16:MaxAdr:=$ffff0+$ffff;
+      Atmel:MaxAdr:=$ffffff;
       ELSE MaxAdr:=$ffff;
       END;
 
@@ -229,6 +232,7 @@ BEGIN
           FirstBank:=False;
          END;
         TekHex:BEGIN END;
+        Atmel:BEGIN END;
 	TiDSK:
 	 IF NOT DSKOccured THEN
 	  BEGIN
@@ -252,14 +256,16 @@ BEGIN
             FirstBank:=False;
            END;
 
-          { Recordl„nge ausrechnen, fr Intel32 auf 64K-Grenze begrenzen }
+          { Recordl„nge ausrechnen, fr Intel32 auf 64K-Grenze begrenzen
+            bei Atmel nur 2 Byte pro Zeile! }
 
           TransLen:=Min(LineLen,ErgLen);
           IF (ActFormat=IntHex32) AND ((ErgStart AND $ffff)+(TransLen DIV Gran)>=$10000) THEN
            BEGIN
             TransLen:=Gran*($10000-(ErgStart AND $ffff));
             FirstBank:=True;
-           END;
+           END
+          ELSE IF ActFormat=Atmel THEN TransLen:=Min(2,TransLen);
 
 	  { Start der Datenzeile }
 
@@ -322,6 +328,8 @@ BEGIN
 	    ChkIO(TargName);
 	    ChkSum:=0;
 	   END;
+          Atmel:
+           Write(TargFile,HexByte(ErgStart SHR 16),HexWord(ErgStart AND $ffff),':');
 	  END;
 
 	  { Daten selber }
@@ -349,6 +357,13 @@ BEGIN
 	     Inc(ChkSum,WBuffer[z]);
 	     Inc(SumLen,Gran);
 	    END
+          ELSE IF ActFormat=Atmel THEN
+           BEGIN
+            IF TransLen>=2 THEN
+             BEGIN
+              Write(TargFile,HexWord(WBuffer[0])); Inc(SumLen,2);
+             END;
+           END
 	  ELSE
 	   FOR z:=0 TO TransLen-1 DO
 	   IF (MultiMode<2) OR (z MOD Gran=MultiMode-2) THEN
@@ -386,6 +401,11 @@ BEGIN
 	    WriteLn(TargFile,'7',HexWord(ChkSum),'F');
 	    ChkIO(TargName);
 	   END;
+          Atmel:
+           BEGIN
+            WriteLn(TargFile);
+            ChkIO(TargName);
+           END;
 	  END;
 
 	  { Z„hler rauf }
@@ -408,18 +428,11 @@ BEGIN
             END;
            WriteLn(TargFile,HexByte($ff-3-MotRecType)); ChkIO(TargName);
           END;
-        MOSHex:
-         BEGIN
-	 END;
-        TekHex:
-         BEGIN
-         END;
-        TiDSK:
-         BEGIN
-         END;
-        IntHex,IntHex16,IntHex32:
-         BEGIN
-         END;
+        MOSHex:BEGIN END;
+        TekHex:BEGIN END;
+        TiDSK:BEGIN END;
+        IntHex,IntHex16,IntHex32:BEGIN END;
+        Atmel:BEGIN END;
         END;
        END;
       Seek(SrcFile,NextPos); ChkIO(FileName);
@@ -452,6 +465,14 @@ BEGIN
       Processor(Path+s.Name,Offset);
       FindNext(s);
      END;
+END;
+
+        PROCEDURE EraseFile(FileName:String; Offset:LongInt);
+        Far;
+VAR
+   f:File;
+BEGIN
+   Assign(f,FileName); Erase(f); ChkIO(FileName);
 END;
 
         PROCEDURE MeasureFile(FileName:String; Offset:LongInt);
@@ -554,6 +575,13 @@ BEGIN
    CMD_RelAdr:=CMDOK;
 END;
 
+        FUNCTION CMD_AutoErase(Negate:Boolean; Arg:String):CMDResult;
+	Far;
+BEGIN
+   AutoErase:=NOT Negate;
+   CMD_AutoErase:=CMDOK;
+END;
+
         FUNCTION CMD_Rec5(Negate:Boolean; Arg:String):CMDResult;
 	Far;
 BEGIN
@@ -609,9 +637,9 @@ END;
         FUNCTION CMD_DestFormat(Negate:Boolean; Arg:String):CMDResult;
 	Far;
 CONST
-   NameCnt=8;
-   Names:ARRAY[1..NameCnt] OF String[7]=('DEFAULT','MOTO','INTEL','INTEL16','INTEL32','MOS','TEK','DSK');
-   Format:ARRAY[1..NameCnt] OF OutFormat=(Default,MotoS,IntHex,IntHex16,IntHex32,MOSHex,TekHex,TiDSK);
+   NameCnt=9;
+   Names:ARRAY[1..NameCnt] OF String[7]=('DEFAULT','MOTO','INTEL','INTEL16','INTEL32','MOS','TEK','DSK','ATMEL');
+   Format:ARRAY[1..NameCnt] OF OutFormat=(Default,MotoS,IntHex,IntHex16,IntHex32,MOSHex,TekHex,TiDSK,Atmel);
 VAR
    err,z:Integer;
 BEGIN
@@ -673,7 +701,7 @@ BEGIN
     BEGIN
      CMD_EntryAdr:=CMDErr;
      Val(Arg,EntryAdr,err);
-     IF (err<>0) OR (EntryAdr<0) OR (EntryAdr>$FFFF) THEN Exit;
+     IF (err<>0) THEN Exit;
      CMD_EntryAdr:=CMDArg;
     END;
 END;
@@ -704,7 +732,7 @@ BEGIN
 END;
 
 CONST
-   P2HEXParamCnt=11;
+   P2HEXParamCnt=12;
    P2HEXParams:ARRAY[1..P2HEXParamCnt] OF CMDRec=
 	       ((Ident:'f'; Callback:CMD_FilterList),
 		(Ident:'r'; Callback:CMD_AdrRange),
@@ -716,13 +744,14 @@ CONST
 		(Ident:'s'; Callback:CMD_SepMoto),
 		(Ident:'d'; Callback:CMD_DataAdrRange),
                 (Ident:'e'; Callback:CMD_EntryAdr),
-                (Ident:'l'; Callback:CMD_LineLen));
+                (Ident:'l'; Callback:CMD_LineLen),
+                (Ident:'k'; Callback:CMD_AutoErase));
 
 VAR
    ChkSum:Word;
 
 BEGIN
-   NLS_Initialize; WrCopyRight('P2HEX/2 V1.41r6','P2HEX V1.41r6');
+   NLS_Initialize; WrCopyRight('P2HEX/2 V1.41r7','P2HEX V1.41r7');
 
    InitChunk(UsedList);
 
@@ -743,7 +772,7 @@ BEGIN
    EntryAdr:=-1; EntryAdrPresent:=False;
    RelAdr:=False; Rec5:=True; LineLen:=16;
    IntelMode:=0; MultiMode:=0; DestFormat:=Default;
-   TargName:='';
+   TargName:=''; AutoErase:=False;
    ProcessCMD(@P2HEXParams,P2HEXParamCnt,ParProcessed,'P2HEXCMD',ParamError);
 
    IF ParProcessed=[] THEN
@@ -861,4 +890,11 @@ BEGIN
     END;
 
    CloseTarget;
+
+   IF AutoErase THEN
+    BEGIN
+     IF ParProcessed=[] THEN ProcessGroup(SrcName,EraseFile)
+     ELSE FOR z:=1 TO ParamCount DO
+      IF z IN ParProcessed THEN ProcessGroup(ParamStr(z),EraseFile);
+    END;
 END.

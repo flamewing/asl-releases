@@ -136,7 +136,7 @@ BEGIN
    AddCond('JNC' ,$0050,CPU87C750);
    AddCond('JNZ' ,$0070,CPU87C750);
    AddCond('JZ'  ,$0060,CPU87C750);
-   AddCond('JE'  ,$01a8,CPU80251);
+   AddCond('JE'  ,$0168,CPU80251);
    AddCond('JG'  ,$0138,CPU80251);
    AddCond('JLE' ,$0128,CPU80251);
    AddCond('JNE' ,$0178,CPU80251);
@@ -225,7 +225,7 @@ LABEL
 VAR
    OK,FirstFlag:Boolean;
    HSize:Byte;
-   H16,PPos,MPos:Integer;
+   H16,PPos,MPos,DispPos:Integer;
    H32:LongInt;
    Part:String;
    ExtMask:Word;
@@ -304,7 +304,8 @@ BEGIN
      IF PPos=0 THEN PPos:=Length(Asc)+1;
      IF DecodeReg(Copy(Asc,2,PPos-2),AdrPart,HSize) THEN
       BEGIN
-       H32:=EvalIntExpression(Copy(Asc,PPos,Length(Asc)-PPos+1),SInt16,OK);
+       DispPos:=PPos; IF Asc[DispPos]='+' THEN Inc(DispPos);
+       H32:=EvalIntExpression(Copy(Asc,DispPos,Length(Asc)-DispPos+1),SInt16,OK);
        IF OK THEN
         CASE HSize OF
         0:IF (AdrPart>1) OR (H32<>0) THEN WrError(1350)
@@ -873,7 +874,7 @@ BEGIN
           ELSE
            BEGIN
             PutCode($119+(HSize SHL 4)+(OpSize SHL 6));
-            BAsmCode[CodeLen]:=(HReg SHL 4)+AdrPart;
+            BAsmCode[CodeLen]:=(AdrPart SHL 4)+HReg;
             BAsmCode[CodeLen+1]:=Hi(AdrInt);
             BAsmCode[CodeLen+2]:=Lo(AdrInt);
             Inc(CodeLen,3);
@@ -959,7 +960,7 @@ BEGIN
        CASE AdrMode OF
        ModAcc:
         IF NLS_StrCaseCmp(ArgStr[2],'@A+DPTR')=0 THEN PutCode($93)
-        ELSE IF NLS_StrCaseCmp(ArgStr[2],'@A+PC')=0 THEN PutCode($83);
+        ELSE IF NLS_StrCaseCmp(ArgStr[2],'@A+PC')=0 THEN PutCode($83)
         ELSE WrError(1350);
        END;
       END;
@@ -1069,7 +1070,7 @@ BEGIN
         ELSE
          BEGIN
           PutCode($1ca+z);
-          BAsmCode[CodeLen]:=$08+(AdrPart SHL 4)+OpSize+(3*Ord(OpSize=2));
+          BAsmCode[CodeLen]:=$08+(AdrPart SHL 4)+OpSize+(Ord(OpSize=2));
           Inc(CodeLen);
          END;
        ModImm:
@@ -1460,7 +1461,7 @@ BEGIN
              END;
            ModReg:
             IF (OpSize=0) AND (AdrPart=AccReg) AND (HReg=0) THEN PutCode($04+z)
-            ELSE IF (AdrPart<8) AND (OpSize=0) AND (NOT SrcMode) THEN PutCode($08+z+AdrPart)
+            ELSE IF (AdrPart<8) AND (OpSize=0) AND (HReg=0) AND (NOT SrcMode) THEN PutCode($08+z+AdrPart)
             ELSE IF MomCPU<CPU80251 THEN WrError(1505)
             ELSE
              BEGIN

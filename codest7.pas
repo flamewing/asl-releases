@@ -872,9 +872,9 @@ BEGIN
    Grans[SegCode]:=1; ListGrans[SegCode]:=1; SegInits[SegCode]:=0;
 
    MakeCode:=MakeCode_ST7; ChkPC:=ChkPC_ST7; IsDef:=IsDef_ST7;
-   SwitchFrom:=SwitchFrom_ST7;
+   SwitchFrom:=SwitchFrom_ST7; InitFields;
 
-   InitFields;
+   SetFlag(DoPadding,DoPaddingName,False);
 END;
 
 BEGIN

@@ -45,98 +45,120 @@ TYPE
 	     END;
 
 CONST
-   FixedOrderCount=35;
+   FixedOrderCount=37;
    FixedOrders:ARRAY[1..FixedOrderCount] OF FixedOrder=
-               ( (Name:'RTS'; CPUFlag:15; Code:$60),
-                 (Name:'RTI'; CPUFlag:15; Code:$40),
-                 (Name:'TAX'; CPUFlag:15; Code:$aa),
-                 (Name:'TXA'; CPUFlag:15; Code:$8a),
-                 (Name:'TAY'; CPUFlag:15; Code:$a8),
-                 (Name:'TYA'; CPUFlag:15; Code:$98),
-                 (Name:'TXS'; CPUFlag:15; Code:$9a),
-                 (Name:'TSX'; CPUFlag:15; Code:$ba),
-                 (Name:'DEX'; CPUFlag:15; Code:$ca),
-                 (Name:'DEY'; CPUFlag:15; Code:$88),
-                 (Name:'INX'; CPUFlag:15; Code:$e8),
-                 (Name:'INY'; CPUFlag:15; Code:$c8),
-                 (Name:'PHA'; CPUFlag:15; Code:$48),
-                 (Name:'PLA'; CPUFlag:15; Code:$68),
-                 (Name:'PHP'; CPUFlag:15; Code:$08),
-                 (Name:'PLP'; CPUFlag:15; Code:$28),
+               ( (Name:'RTS'; CPUFlag:31; Code:$60),
+                 (Name:'RTI'; CPUFlag:31; Code:$40),
+                 (Name:'TAX'; CPUFlag:31; Code:$aa),
+                 (Name:'TXA'; CPUFlag:31; Code:$8a),
+                 (Name:'TAY'; CPUFlag:31; Code:$a8),
+                 (Name:'TYA'; CPUFlag:31; Code:$98),
+                 (Name:'TXS'; CPUFlag:31; Code:$9a),
+                 (Name:'TSX'; CPUFlag:31; Code:$ba),
+                 (Name:'DEX'; CPUFlag:31; Code:$ca),
+                 (Name:'DEY'; CPUFlag:31; Code:$88),
+                 (Name:'INX'; CPUFlag:31; Code:$e8),
+                 (Name:'INY'; CPUFlag:31; Code:$c8),
+                 (Name:'PHA'; CPUFlag:31; Code:$48),
+                 (Name:'PLA'; CPUFlag:31; Code:$68),
+                 (Name:'PHP'; CPUFlag:31; Code:$08),
+                 (Name:'PLP'; CPUFlag:31; Code:$28),
                  (Name:'PHX'; CPUFlag: 6; Code:$da),
                  (Name:'PLX'; CPUFlag: 6; Code:$fa),
                  (Name:'PHY'; CPUFlag: 6; Code:$5a),
                  (Name:'PLY'; CPUFlag: 6; Code:$7a),
-                 (Name:'BRK'; CPUFlag:15; Code:$00),
+                 (Name:'BRK'; CPUFlag:31; Code:$00),
                  (Name:'STP'; CPUFlag: 8; Code:$42),
                  (Name:'SLW'; CPUFlag: 8; Code:$c2),
                  (Name:'FST'; CPUFlag: 8; Code:$e2),
                  (Name:'WIT'; CPUFlag: 8; Code:$c2),
-                 (Name:'NOP'; CPUFlag:15; Code:$ea),
-                 (Name:'CLI'; CPUFlag:15; Code:$58),
-                 (Name:'SEI'; CPUFlag:15; Code:$78),
-                 (Name:'CLC'; CPUFlag:15; Code:$18),
-                 (Name:'SEC'; CPUFlag:15; Code:$38),
-                 (Name:'CLD'; CPUFlag:15; Code:$d8),
-                 (Name:'SED'; CPUFlag:15; Code:$f8),
-                 (Name:'CLV'; CPUFlag:15; Code:$b8),
+                 (Name:'CLI'; CPUFlag:31; Code:$58),
+                 (Name:'SEI'; CPUFlag:31; Code:$78),
+                 (Name:'CLC'; CPUFlag:31; Code:$18),
+                 (Name:'SEC'; CPUFlag:31; Code:$38),
+                 (Name:'CLD'; CPUFlag:31; Code:$d8),
+                 (Name:'SED'; CPUFlag:31; Code:$f8),
+                 (Name:'CLV'; CPUFlag:31; Code:$b8),
                  (Name:'CLT'; CPUFlag: 8; Code:$12),
-                 (Name:'SET'; CPUFlag: 8; Code:$32));
+                 (Name:'SET'; CPUFlag: 8; Code:$32),
+                 (Name:'JAM'; CPUFlag:16; Code:$02),
+                 (Name:'CRS'; CPUFlag:16; Code:$02),
+                 (Name:'KIL'; CPUFlag:16; Code:$02));
 
-   NormOrderCount=31;
+   NormOrderCount=51;
    NormOrders:ARRAY[1..NormOrderCount] OF NormOrder=
 
 		       {  ZA    A    ZIX    IX   ZIY   IY    @X    @Y   (n16)  imm   ACC   NON   (n8)  spec }
 
-   ((Name:'LDA'; Codes:($0fa5,$0fad,$0fb5,$0fbd,   -1,$0fb9,$0fa1,$0fb1,   -1,$0fa9,   -1,   -1,$06b2,   -1)),
-    (Name:'LDX'; Codes:($0fa6,$0fae,   -1,   -1,$0fb6,$0fbe,   -1,   -1,   -1,$0fa2,   -1,   -1,   -1,   -1)),
-    (Name:'LDY'; Codes:($0fa4,$0fac,$0fb4,$0fbc,   -1,   -1,   -1,   -1,   -1,$0fa0,   -1,   -1,   -1,   -1)),
-    (Name:'STA'; Codes:($0f85,$0f8d,$0f95,$0f9d,   -1,$0f99,$0f81,$0f91,   -1,   -1,   -1,   -1,$0692,   -1)),
-    (Name:'STX'; Codes:($0f86,$0f8e,   -1,   -1,$0f96,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1)),
-    (Name:'STY'; Codes:($0f84,$0f8c,$0f94,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1)),
+   ((Name:'NOP'; Codes:($1004,$100c,$1014,$101c,   -1,   -1,   -1,   -1,   -1,$1080,   -1,$1fea,   -1,   -1)),
+    (Name:'LDA'; Codes:($1fa5,$1fad,$1fb5,$1fbd,   -1,$1fb9,$1fa1,$1fb1,   -1,$1fa9,   -1,   -1,$06b2,   -1)),
+    (Name:'LDX'; Codes:($1fa6,$1fae,   -1,   -1,$1fb6,$1fbe,   -1,   -1,   -1,$1fa2,   -1,   -1,   -1,   -1)),
+    (Name:'LDY'; Codes:($1fa4,$1fac,$1fb4,$1fbc,   -1,   -1,   -1,   -1,   -1,$1fa0,   -1,   -1,   -1,   -1)),
+    (Name:'STA'; Codes:($1f85,$1f8d,$1f95,$1f9d,   -1,$1f99,$1f81,$1f91,   -1,   -1,   -1,   -1,$0692,   -1)),
+    (Name:'STX'; Codes:($1f86,$1f8e,   -1,   -1,$1f96,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1)),
+    (Name:'STY'; Codes:($1f84,$1f8c,$1f94,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1)),
     (Name:'STZ'; Codes:($0664,$069c,$0674,$069e,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1)),
-    (Name:'ADC'; Codes:($0f65,$0f6d,$0f75,$0f7d,   -1,$0f79,$0f61,$0f71,   -1,$0f69,   -1,   -1,$0672,   -1)),
-    (Name:'SBC'; Codes:($0fe5,$0fed,$0ff5,$0ffd,   -1,$0ff9,$0fe1,$0ff1,   -1,$0fe9,   -1,   -1,$06f2,   -1)),
+    (Name:'ADC'; Codes:($1f65,$1f6d,$1f75,$1f7d,   -1,$1f79,$1f61,$1f71,   -1,$1f69,   -1,   -1,$0672,   -1)),
+    (Name:'SBC'; Codes:($1fe5,$1fed,$1ff5,$1ffd,   -1,$1ff9,$1fe1,$1ff1,   -1,$1fe9,   -1,   -1,$06f2,   -1)),
     (Name:'MUL'; Codes:(   -1,   -1,$0862,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1)),
     (Name:'DIV'; Codes:(   -1,   -1,$08e2,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1)),
-    (Name:'AND'; Codes:($0f25,$0f2d,$0f35,$0f3d,   -1,$0f39,$0f21,$0f31,   -1,$0f29,   -1,   -1,$0632,   -1)),
-    (Name:'ORA'; Codes:($0f05,$0f0d,$0f15,$0f1d,   -1,$0f19,$0f01,$0f11,   -1,$0f09,   -1,   -1,$0612,   -1)),
-    (Name:'EOR'; Codes:($0f45,$0f4d,$0f55,$0f5d,   -1,$0f59,$0f41,$0f51,   -1,$0f49,   -1,   -1,$0652,   -1)),
+    (Name:'AND'; Codes:($1f25,$1f2d,$1f35,$1f3d,   -1,$1f39,$1f21,$1f31,   -1,$1f29,   -1,   -1,$0632,   -1)),
+    (Name:'ORA'; Codes:($1f05,$1f0d,$1f15,$1f1d,   -1,$1f19,$1f01,$1f11,   -1,$1f09,   -1,   -1,$0612,   -1)),
+    (Name:'EOR'; Codes:($1f45,$1f4d,$1f55,$1f5d,   -1,$1f59,$1f41,$1f51,   -1,$1f49,   -1,   -1,$0652,   -1)),
     (Name:'COM'; Codes:($0844,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1)),
-    (Name:'BIT'; Codes:($0f24,$0f2c,$0634,$063c,   -1,   -1,   -1,   -1,   -1,$0689,   -1,   -1,   -1,   -1)),
+    (Name:'BIT'; Codes:($1f24,$1f2c,$0634,$063c,   -1,   -1,   -1,   -1,   -1,$0689,   -1,   -1,   -1,   -1)),
     (Name:'TST'; Codes:($0864,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1)),
-    (Name:'ASL'; Codes:($0f06,$0f0e,$0f16,$0f1e,   -1,   -1,   -1,   -1,   -1,   -1,$0f0a,$0f0a,   -1,   -1)),
-    (Name:'LSR'; Codes:($0f46,$0f4e,$0f56,$0f5e,   -1,   -1,   -1,   -1,   -1,   -1,$0f4a,$0f4a,   -1,   -1)),
-    (Name:'ROL'; Codes:($0f26,$0f2e,$0f36,$0f3e,   -1,   -1,   -1,   -1,   -1,   -1,$0f2a,$0f2a,   -1,   -1)),
-    (Name:'ROR'; Codes:($0f66,$0f6e,$0f76,$0f7e,   -1,   -1,   -1,   -1,   -1,   -1,$0f6a,$0f6a,   -1,   -1)),
+    (Name:'ASL'; Codes:($1f06,$1f0e,$1f16,$1f1e,   -1,   -1,   -1,   -1,   -1,   -1,$1f0a,$1f0a,   -1,   -1)),
+    (Name:'LSR'; Codes:($1f46,$1f4e,$1f56,$1f5e,   -1,   -1,   -1,   -1,   -1,   -1,$1f4a,$1f4a,   -1,   -1)),
+    (Name:'ROL'; Codes:($1f26,$1f2e,$1f36,$1f3e,   -1,   -1,   -1,   -1,   -1,   -1,$1f2a,$1f2a,   -1,   -1)),
+    (Name:'ROR'; Codes:($1f66,$1f6e,$1f76,$1f7e,   -1,   -1,   -1,   -1,   -1,   -1,$1f6a,$1f6a,   -1,   -1)),
     (Name:'RRF'; Codes:($0882,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1)),
     (Name:'TSB'; Codes:($0604,$060c,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1)),
     (Name:'TRB'; Codes:($0614,$061c,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1)),
-    (Name:'INC'; Codes:($0fe6,$0fee,$0ff6,$0ffe,   -1,   -1,   -1,   -1,   -1,   -1,$0e1a,$0e1a,   -1,   -1)),
-    (Name:'DEC'; Codes:($0fc6,$0fce,$0fd6,$0fde,   -1,   -1,   -1,   -1,   -1,   -1,$0e3a,$0e3a,   -1,   -1)),
-    (Name:'CMP'; Codes:($0fc5,$0fcd,$0fd5,$0fdd,   -1,$0fd9,$0fc1,$0fd1,   -1,$0fc9,   -1,   -1,$06d2,   -1)),
-    (Name:'CPX'; Codes:($0fe4,$0fec,   -1,   -1,   -1,   -1,   -1,   -1,   -1,$0fe0,   -1,   -1,   -1,   -1)),
-    (Name:'CPY'; Codes:($0fc4,$0fcc,   -1,   -1,   -1,   -1,   -1,   -1,   -1,$0fc0,   -1,   -1,   -1,   -1)),
-    (Name:'JMP'; Codes:(   -1,$0f4c,   -1,   -1,   -1,   -1,$067c,   -1,$0f6c,   -1,   -1,   -1,$08b2,   -1)),
-    (Name:'JSR'; Codes:(   -1,$0f20,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,$0802,$0822)));
+    (Name:'INC'; Codes:($1fe6,$1fee,$1ff6,$1ffe,   -1,   -1,   -1,   -1,   -1,   -1,$0e1a,$0e1a,   -1,   -1)),
+    (Name:'DEC'; Codes:($1fc6,$1fce,$1fd6,$1fde,   -1,   -1,   -1,   -1,   -1,   -1,$0e3a,$0e3a,   -1,   -1)),
+    (Name:'CMP'; Codes:($1fc5,$1fcd,$1fd5,$1fdd,   -1,$1fd9,$1fc1,$1fd1,   -1,$1fc9,   -1,   -1,$06d2,   -1)),
+    (Name:'CPX'; Codes:($1fe4,$1fec,   -1,   -1,   -1,   -1,   -1,   -1,   -1,$1fe0,   -1,   -1,   -1,   -1)),
+    (Name:'CPY'; Codes:($1fc4,$1fcc,   -1,   -1,   -1,   -1,   -1,   -1,   -1,$1fc0,   -1,   -1,   -1,   -1)),
+    (Name:'JMP'; Codes:(   -1,$1f4c,   -1,   -1,   -1,   -1,$067c,   -1,$1f6c,   -1,   -1,   -1,$08b2,   -1)),
+    (Name:'JSR'; Codes:(   -1,$1f20,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,$0802,$0822)),
+    (Name:'SLO'; Codes:($1007,$100f,$1017,$101f,   -1,$101b,$1003,$1013,   -1,   -1,   -1,   -1,   -1,   -1)),
+    (Name:'ANC'; Codes:(   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,$100b,   -1,   -1,   -1,   -1)),
+    (Name:'RLA'; Codes:($1027,$102f,$1037,$103f,   -1,$103b,$1023,$1033,   -1,   -1,   -1,   -1,   -1,   -1)),
+    (Name:'SRE'; Codes:($1047,$104f,$1057,$105f,   -1,$105b,$1043,$1053,   -1,   -1,   -1,   -1,   -1,   -1)),
+    (Name:'ASR'; Codes:(   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,$104b,   -1,   -1,   -1,   -1)),
+    (Name:'RRA'; Codes:($1067,$106f,$1077,$107f,   -1,$107b,$1063,$1073,   -1,   -1,   -1,   -1,   -1,   -1)),
+    (Name:'ARR'; Codes:(   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,$106b,   -1,   -1,   -1,   -1)),
+    (Name:'SAX'; Codes:($1087,$108f,   -1,   -1,$1097,   -1,$1083,   -1,   -1,   -1,   -1,   -1,   -1,   -1)),
+    (Name:'ANE'; Codes:(   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,$108b,   -1,   -1,   -1,   -1)),
+    (Name:'SHA'; Codes:(   -1,   -1,   -1,$1093,   -1,$109f,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1)),
+    (Name:'SHS'; Codes:(   -1,   -1,   -1,   -1,   -1,$109b,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1)),
+    (Name:'SHY'; Codes:(   -1,   -1,   -1,   -1,   -1,$109c,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1)),
+    (Name:'SHX'; Codes:(   -1,   -1,   -1,$109e,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1)),
+    (Name:'LAX'; Codes:($10a7,$10af,   -1,   -1,$10b7,$10bf,$10a3,$10b3,   -1,   -1,   -1,   -1,   -1,   -1)),
+    (Name:'LXA'; Codes:(   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,$10ab,   -1,   -1,   -1,   -1)),
+    (Name:'LAE'; Codes:(   -1,   -1,   -1,   -1,   -1,$10bb,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1)),
+    (Name:'DCP'; Codes:($10c7,$10cf,$10d7,$10df,   -1,$10db,$10c3,$10d3,   -1,   -1,   -1,   -1,   -1,   -1)),
+    (Name:'SBX'; Codes:(   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,$10cb,   -1,   -1,   -1,   -1)),
+    (Name:'ISB'; Codes:($10e7,$10ef,$10f7,$10ff,   -1,$10fb,$10e3,$10f3,   -1,   -1,   -1,   -1,   -1,   -1)));
 
     CondOrderCount=9;
     CondOrders:ARRAY[1..CondOrderCount] OF CondOrder=
-               ((Name:'BEQ'; CPUFlag:15; Code:$f0),
-                (Name:'BNE'; CPUFlag:15; Code:$d0),
-                (Name:'BPL'; CPUFlag:15; Code:$10),
-                (Name:'BMI'; CPUFlag:15; Code:$30),
-                (Name:'BCC'; CPUFlag:15; Code:$90),
-                (Name:'BCS'; CPUFlag:15; Code:$b0),
-                (Name:'BVC'; CPUFlag:15; Code:$50),
-                (Name:'BVS'; CPUFlag:15; Code:$70),
+               ((Name:'BEQ'; CPUFlag:31; Code:$f0),
+                (Name:'BNE'; CPUFlag:31; Code:$d0),
+                (Name:'BPL'; CPUFlag:31; Code:$10),
+                (Name:'BMI'; CPUFlag:31; Code:$30),
+                (Name:'BCC'; CPUFlag:31; Code:$90),
+                (Name:'BCS'; CPUFlag:31; Code:$b0),
+                (Name:'BVC'; CPUFlag:31; Code:$50),
+                (Name:'BVS'; CPUFlag:31; Code:$70),
                 (Name:'BRA'; CPUFlag:14; Code:$80));
 
 VAR
    CLI_SEI_Flag,ADC_SBC_Flag:Boolean;
 
    SaveInitProc:PROCEDURE;
-   CPU6502,CPU65SC02,CPU65C02,CPUM740:CPUVar;
+   CPU6502,CPU65SC02,CPU65C02,CPUM740,CPU6502U:CPUVar;
    SpecPage:LongInt;
 
 
@@ -672,10 +694,11 @@ BEGIN
 END;
 
 BEGIN
-   CPU6502  :=AddCPU('6502'    ,SwitchTo_65);
-   CPU65SC02:=AddCPU('65SC02'  ,SwitchTo_65);
-   CPU65C02 :=AddCPU('65C02'   ,SwitchTo_65);
-   CPUM740  :=AddCPU('MELPS740',SwitchTo_65);
+   CPU6502  :=AddCPU('6502'     ,SwitchTo_65);
+   CPU65SC02:=AddCPU('65SC02'   ,SwitchTo_65);
+   CPU65C02 :=AddCPU('65C02'    ,SwitchTo_65);
+   CPUM740  :=AddCPU('MELPS740' ,SwitchTo_65);
+   CPU6502U :=AddCPU('6502UNDOC',SwitchTo_65);
 
    SaveInitProc:=InitPassProc; InitPassProc:=InitCode_65;
 END.

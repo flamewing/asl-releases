@@ -8,6 +8,8 @@
 {*            5.10.1993 Fehlermeldungen nach TOOLS.RSC herausgezogen        *}
 {*            6.10.1993 englische šbersetzung begonnen                      *}
 {*            1.11.1993 Erkennung Programmname                              *}
+{*           26.10.1997 kill-Option                                         *}
+{*                      Header mit Startadresse                             *}
 {*                                                                          *}
 {****************************************************************************}
 
@@ -17,7 +19,7 @@
    InfoMessChecksum         = 'checksum: ';
 
    InfoMessHead2            = ' <source file(s)> <target file> [options]';
-   InfoMessHelpCnt          = 7;
+   InfoMessHelpCnt          = 10;
    InfoMessHelp : ARRAY[1..InfoMessHelpCnt] OF String[80]=
                   ('',
                    'options: -f <header list>  :  auszufilternde Records',
@@ -25,4 +27,7 @@
                    '         ($ = first resp. last occuring address)',
                    '         -l <8-bit-number> :  set filler value for unused cells',
                    '         -s                :  put checksum into file',
-                   '         -m <mode>         :  EPROM-mode (odd,even,byte0..byte3)');
+                   '         -m <mode>         :  EPROM-mode (odd,even,byte0..byte3)',
+                   '         -e <address>      :  set entry address',
+                   '         -S [L|B]<length>  :  prepend start address',
+                   '         -k                :  automatically erase source files');

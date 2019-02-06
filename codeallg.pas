@@ -122,6 +122,7 @@ BEGIN
       ChkEmptList(Tmp^.LocSyms);
       ChkEmptList(Tmp^.GlobSyms);
       ChkEmptList(Tmp^.ExportSyms);
+      TossRegDefs(MomSectionHandle);
       IF ArgCnt=0 THEN
        ListLine:='['+GetSectionName(MomSectionHandle)+']';
       SetMomSection(Tmp^.Handle);
@@ -171,6 +172,7 @@ BEGIN
         BEGIN
          NLS_UpString(ArgStr[2]);
          IF ArgStr[2]='MOMSEGMENT' THEN DestSeg:=ActPC
+         ELSE IF ArgStr[2]='' THEN DestSeg:=SegNone
          ELSE
           BEGIN
            DestSeg:=0;
@@ -366,6 +368,7 @@ VAR
    HVal:LongInt;
 BEGIN
    IF ArgCnt<>1 THEN WrError(1110)
+   ELSE IF ActPC=StructSeg THEN WrError(1553)
    ELSE
     BEGIN
      HVal:=EvalIntExpression(ArgStr[1],Int32,OK);
@@ -377,6 +380,7 @@ END;
         Far;
 BEGIN
    IF ArgCnt<>0 THEN WrError(1110)
+   ELSE IF ActPC=StructSeg THEN WrError(1553)
    ELSE Phases[ActPC]:=0;
 END;
 
@@ -786,14 +790,17 @@ BEGIN
        SetFileMode(0); Assign(F,Name); Reset(F,1); ChkIO(10001);
        IF Len=-1 THEN
         BEGIN
-         Len:=FileSize(F); ChkIO(10003);
+         Len:=FileSize(F)-Ofs; ChkIO(10003);
+         IF Len<0 THEN
+          BEGIN
+           WrError(1600); Close(F); Exit;
+          END;
         END;
        Seek(F,Ofs); ChkIO(10003);
        Rest:=Len; SaveTurnWords:=TurnWords; TurnWords:=False;
        REPEAT
         IF Rest<MaxCodeLen THEN Curr:=Rest ELSE Curr:=MaxCodeLen;
         BlockRead(F,BAsmCode,Curr,RLen); ChkIO(10003);
-        WriteLn(RLen);
         CodeLen:=RLen; WriteBytes;
         Dec(Rest,RLen);
        UNTIL (Rest=0) OR (RLen<>Curr);
@@ -831,6 +838,88 @@ BEGIN
      IF NOT CaseSensitive THEN NLS_UpString(ArgStr[1]);
      FOR z:=2 TO ArgCnt DO
       IF PopSymbol(ArgStr[z],ArgStr[1]) THEN;
+    END;
+END;
+
+        PROCEDURE CodeSTRUCT;
+        Far;
+VAR
+   NStruct:PStructure;
+   z:Integer;
+   OK:Boolean;
+BEGIN
+   IF ArgCnt>1 THEN WrError(1110)
+   ELSE IF NOT ChkSymbName(LabPart) THEN WrXError(1020,LabPart)
+   ELSE
+    BEGIN
+     IF NOT CaseSensitive THEN NLS_UpString(LabPart);
+     IF StructureStack<>Nil THEN StructureStack^.CurrPC:=ProgCounter;
+     New(NStruct);
+     WITH NStruct^ DO
+      BEGIN
+       GetMem(Name,Length(LabPart)+1); Name^:=LabPart;
+       CurrPC:=0; DoExt:=True;
+       Next:=StructureStack;
+      END;
+     OK:=True;
+     FOR z:=1 TO ArgCnt DO
+      IF OK THEN
+       IF NLS_StrCasecmp(ArgStr[z],'EXTNAMES')=0 THEN NStruct^.DoExt:=True
+       ELSE IF NLS_StrCaseCmp(ArgStr[z],'NOEXTNAMES')=0 THEN NStruct^.DoExt:=False
+       ELSE
+        BEGIN
+         WrXError(1554,ArgStr[z]); OK:=False;
+        END;
+     IF OK THEN
+      BEGIN
+       StructureStack:=NStruct;
+       IF ActPC<>StructSeg THEN StructSaveSeg:=ActPC; ActPC:=StructSeg;
+       PCs[ActPC]:=0;
+       Phases[ActPC]:=0;
+       Grans[ActPC]:=Grans[SegCode]; ListGrans[ActPC]:=ListGrans[SegCode];
+       ClearChunk(SegChunks[StructSeg]);
+       CodeLen:=0; DontPrint:=True;
+      END
+     ELSE
+      BEGIN
+       FreeMem(NStruct^.Name,Length(NStruct^.Name^)+1); Dispose(NStruct);
+      END;
+    END;
+END;
+
+        PROCEDURE CodeENDSTRUCT;
+        Far;
+VAR
+   OK:Boolean;
+   OStruct:PStructure;
+   t:TempResult;
+   tmp:String;
+BEGIN
+   IF ArgCnt>1 THEN WrError(1110)
+   ELSE IF StructureStack=Nil THEN WrError(1550)
+   ELSE
+    BEGIN
+     IF LabPart='' THEN OK:=True
+     ELSE
+      BEGIN
+       IF NOT CaseSensitive THEN NLS_UpString(LabPart);
+       OK:=LabPart=StructureStack^.Name^;
+       IF NOT OK THEN WrError(1552);
+      END;
+     IF OK THEN
+      BEGIN
+       OStruct:=StructureStack; StructureStack:=OStruct^.Next;
+       IF ArgCnt=0 THEN tmp:=OStruct^.Name^+'_len'
+       ELSE tmp:=ArgStr[1];
+       EnterIntSymbol(tmp,ProgCounter,SegNone,False);
+       t.Typ:=TempInt; t.Int:=ProgCounter; SetListLineVal(t);
+       FreeMem(OStruct^.Name,Length(OStruct^.Name^)+1);
+       Dispose(OStruct);
+       IF StructureStack=Nil THEN ActPC:=StructSaveSeg
+       ELSE Inc(PCs[ActPC],StructureStack^.CurrPC);
+       ClearChunk(SegChunks[StructSeg]);
+       CodeLen:=0; DontPrint:=True;
+      END;
     END;
 END;
 
@@ -887,7 +976,7 @@ TYPE
                    p:StringPtr;
 		  END;
 CONST
-   PseudoCnt=27;
+   PseudoCnt=29;
    Pseudos:ARRAY[1..PseudoCnt] OF PseudoOrder=
            ((Name:'ALIGN';      Proc:CodeALIGN     ),
             (Name:'BINCLUDE';   Proc:CodeBINCLUDE  ),
@@ -896,6 +985,7 @@ CONST
             (Name:'DEPHASE';    Proc:CodeDEPHASE   ),
             (Name:'END';        Proc:CodeEND       ),
             (Name:'ENDSECTION'; Proc:CodeENDSECTION),
+            (Name:'ENDSTRUCT';  Proc:CodeENDSTRUCT ),
             (Name:'ENUM';       Proc:CodeENUM      ),
             (Name:'ERROR';      Proc:CodeERROR     ),
             (Name:'FATAL';      Proc:CodeFATAL     ),
@@ -915,6 +1005,7 @@ CONST
             (Name:'SECTION';    Proc:CodeSECTION   ),
             (Name:'SEGMENT';    Proc:CodeSEGMENT   ),
             (Name:'SHARED';     Proc:CodeSHARED    ),
+            (Name:'STRUCT';     Proc:CodeSTRUCT    ),
             (Name:'WARNING';    Proc:CodeWARNING   ));
 
 

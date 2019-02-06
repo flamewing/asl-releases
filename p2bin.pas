@@ -17,15 +17,16 @@ VAR
    TargFile:File;
    SrcName,TargName:String;
 
-   StartAdr,StopAdr,RealFileLen:LongInt;
+   StartAdr,StopAdr,EntryAdr,RealFileLen:LongInt;
    MaxGran,Dummy:LongInt;
-   StartAuto,StopAuto:Boolean;
+   StartAuto,StopAuto,EntryAdrPresent,AutoErase:Boolean;
 
    FillVal:Byte;
    DoCheckSum:Boolean;
 
    SizeDiv:Byte;
    ANDMask,ANDEq:LongInt;
+   StartHeader:ShortInt;
 
    UsedList:ChunkList;
 
@@ -54,8 +55,13 @@ BEGIN
    Assign(TargFile,TargName); SetFileMode(2); Rewrite(TargFile,1);
    ChkIO(TargName); RealFileLen:=((StopAdr-StartAdr+1)*MaxGran) DIV SizeDiv;
 
-   FillChar(Buffer,BufferSize,FillVal);
+   IF StartHeader<>0 THEN
+    BEGIN
+     FillChar(Buffer,Abs(StartHeader),0);
+     BlockWrite(TargFile,Buffer,Abs(StartHeader)); ChkIO(TargName);
+    END;
 
+   FillChar(Buffer,BufferSize,FillVal);
    Rest:=RealFileLen;
    WHILE Rest<>0 DO
     BEGIN
@@ -69,13 +75,26 @@ END;
 CONST
    BufferSize=4096;
 VAR
-   Sum,Rest,Trans,z:LongInt;
+   Sum,Rest,Trans,z,bpos:LongInt;
    Buffer:ARRAY[0..BufferSize-1] OF Byte;
 BEGIN
+   IF (EntryAdrPresent) AND (StartHeader<>0) THEN
+    BEGIN
+     Seek(TargFile,0); ChkIO(TargName);
+     IF StartHeader>0 THEN bpos:=0 ELSE bpos:=-1-StartHeader;
+     bpos:=bpos SHL 3;
+     FOR z:=0 TO Abs(StartHeader)-1 DO
+      BEGIN
+       Buffer[z]:=(EntryAdr SHR bpos) AND $ff;
+       IF StartHeader>0 THEN Inc(bpos,8) ELSE Dec(bpos,8);
+      END;
+     BlockWrite(TargFile,Buffer,Abs(StartHeader)); ChkIO(TargName);
+    END;
+
    IF DoCheckSum THEN
     BEGIN
-     Rest:=FileSize(TargFile);
-     Seek(TargFile,0); ChkIO(TargName);
+     Rest:=FileSize(TargFile)-Abs(StartHeader);
+     Seek(TargFile,Abs(StartHeader)); ChkIO(TargName);
      Sum:=0;
      WHILE Rest<>0 DO
       BEGIN
@@ -127,6 +146,10 @@ BEGIN
     IF InpHeader=FileHeaderStartAdr THEN
      BEGIN
       BlockRead(SrcFile,ErgStart,SizeOf(ErgStart)); ChkIO(FileName);
+      IF NOT EntryAdrPresent THEN
+       BEGIN
+        EntryAdr:=ErgStart; EntryAdrPresent:=True;
+       END;
      END
     ELSE IF InpHeader<>FileHeaderEnd THEN
      BEGIN
@@ -163,7 +186,7 @@ BEGIN
 
 	{ in Zieldatei an passende Stelle }
 
-	Seek(TargFile,(ErgStart-StartAdr)*Gran DIV SizeDiv);
+        Seek(TargFile,((ErgStart-StartAdr)*Gran DIV SizeDiv)+Abs(StartHeader));
 
 	{ umkopieren }
 
@@ -192,6 +215,14 @@ BEGIN
    WriteLn('  (',SumLen,' Byte)'); ChkIO(OutName);
 
    Close(SrcFile); ChkIO(FileName);
+END;
+
+        PROCEDURE EraseFile(FileName:String; Offset:LongInt);
+        Far;
+VAR
+   f:File;
+BEGIN
+   Assign(f,FileName); Erase(f); ChkIO(FileName);
 END;
 
         PROCEDURE MeasureFile(FileName:String; Offset:LongInt);
@@ -345,7 +376,60 @@ BEGIN
     END;
 END;
 
-	FUNCTION CMD_FillVal(Negate:Boolean; Arg:String):CMDResult;
+        FUNCTION CMD_EntryAdr(Negate:Boolean; Arg:String):CMDResult;
+	Far;
+VAR
+  err : Integer;
+BEGIN
+   IF Negate THEN
+    BEGIN
+     EntryAdrPresent:=False;
+     CMD_EntryAdr:=CMDOK;
+    END
+   ELSE
+    BEGIN
+     CMD_EntryAdr:=CMDErr;
+     Val(Arg,EntryAdr,err);
+     IF (err<>0) THEN Exit;
+     CMD_EntryAdr:=CMDArg;
+    END;
+END;
+
+        FUNCTION CMD_StartHeader(Negate:Boolean; Arg:String):CMDResult;
+	Far;
+VAR
+  err : Integer;
+  Sgn : ShortInt;
+BEGIN
+   IF Negate THEN
+    BEGIN
+     StartHeader:=0;
+     CMD_StartHeader:=CMDOK;
+    END
+   ELSE
+    BEGIN
+     CMD_StartHeader:=CMDErr; Sgn:=1;
+     IF Arg='' THEN Exit;
+     IF UpCase(Arg[1])='L' THEN Delete(Arg,1,1)
+     ELSE IF UpCase(Arg[1])='B' THEN
+      BEGIN
+       Delete(Arg,1,1); Sgn:=-1;
+      END;
+     Val(Arg,StartHeader,err);
+     IF (err<>0) OR (StartHeader>4) THEN Exit;
+     StartHeader:=StartHeader*Sgn;
+     CMD_StartHeader:=CMDArg;
+    END;
+END;
+
+        FUNCTION CMD_AutoErase(Negate:Boolean; Arg:String):CMDResult;
+	Far;
+BEGIN
+   AutoErase:=NOT Negate;
+   CMD_AutoErase:=CMDOK;
+END;
+
+        FUNCTION CMD_FillVal(Negate:Boolean; Arg:String):CMDResult;
 	Far;
 VAR
    err:Integer;
@@ -362,16 +446,19 @@ BEGIN
 END;
 
 CONST
-   P2BINParamCnt=5;
+   P2BINParamCnt=8;
    P2BINParams:ARRAY[1..P2BINParamCnt] OF CMDRec=
 	       ((Ident:'f'; Callback:CMD_FilterList),
 		(Ident:'r'; Callback:CMD_AdrRange),
 		(Ident:'s'; Callback:CMD_CheckSum),
 		(Ident:'m'; Callback:CMD_ByteMode),
-		(Ident:'l'; Callback:CMD_FillVal));
+                (Ident:'l'; Callback:CMD_FillVal),
+                (Ident:'e'; Callback:CMD_EntryAdr),
+                (Ident:'k'; Callback:CMD_AutoErase),
+                (Ident:'S'; Callback:CMD_StartHeader));
 
 BEGIN
-   NLS_Initialize; WrCopyRight('P2BIN/2 V1.41r6','P2BIN V1.41r6');
+   NLS_Initialize; WrCopyRight('P2BIN/2 V1.41r7','P2BIN V1.41r7');
 
    InitChunk(UsedList);
 
@@ -387,6 +474,8 @@ BEGIN
 
    StartAdr:=0; StopAdr:=$7fff; StartAuto:=False; StopAuto:=False;
    FillVal:=$ff; DoCheckSum:=False; SizeDiv:=1; AndEq:=0;
+   AutoErase:=False; EntryAdr:=-1; EntryAdrPresent:=False;
+   StartHeader:=0;
    ProcessCMD(@P2BINParams,P2BINParamCnt,ParProcessed,'P2BINCMD',ParamError);
 
    IF ParProcessed=[] THEN
@@ -427,6 +516,12 @@ BEGIN
    ELSE FOR z:=1 TO ParamCount DO
     IF z IN ParProcessed THEN ProcessGroup(ParamStr(z),ProcessFile);
 
+   IF AutoErase THEN
+    BEGIN
+     IF ParProcessed=[] THEN ProcessGroup(SrcName,EraseFile)
+     ELSE FOR z:=1 TO ParamCount DO
+      IF z IN ParProcessed THEN ProcessGroup(ParamStr(z),EraseFile);
+    END;
 
    CloseTarget;
 END.

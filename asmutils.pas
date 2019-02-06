@@ -40,7 +40,7 @@ INTERFACE
         FUNCTION RemoveOffset(VAR Name:String; VAR Offset:LongInt):Boolean;
 
 CONST
-   Magic:LongInt=$1b342b4d;
+   Magic:LongInt=$1b34244d;
 
 {$i FILEFORM.INC}
 
@@ -56,7 +56,7 @@ VAR
 
 
 CONST
-   InfoMessCopyright:String[50]='(C) 1992,1997 Alfred Arnold';
+   InfoMessCopyright:String[50]='(C) 1992,1998 Alfred Arnold';
 
 	PROCEDURE WrCopyRight(OS2Msg,DOSMsg:String);
 BEGIN

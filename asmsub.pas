@@ -1337,6 +1337,8 @@ BEGIN
     230 : h:=ErrMsgStackNotEmpty;
     240 : h:=ErrMsgNULCharacter;
     250 : h:=ErrMsgPageCrossing;
+    260 : h:=ErrMsgWOverRange;
+    270 : h:=ErrMsgNegDUP;
    1000 : h:=ErrMsgDoubleDef;
    1010 : h:=ErrMsgSymbolUndef;
    1020 : h:=ErrMsgInvSymName;
@@ -1395,6 +1397,11 @@ BEGIN
    1520 : h:=ErrMsgOnlyOnOff;
    1530 : h:=ErrMsgStackEmpty;
    1540 : h:=ErrMsgNotOneBit;
+   1550 : h:=ErrMsgMissingStruct;
+   1551 : h:=ErrMsgOpenStruct;
+   1552 : h:=ErrMsgWrongStruct;
+   1553 : h:=ErrMsgPhaseDisallowed;
+   1554 : h:=ErrMsgInvStructDir;
    1600 : h:=ErrMsgShortRead;
    1700 : h:=ErrMsgRomOffs063;
    1710 : h:=ErrMsgInvFCode;
@@ -1421,7 +1428,7 @@ BEGIN
    1920 : h:=ErrMsgCodeOverflow;
    1925 : h:=ErrMsgAdrOverflow;
    1930 : h:=ErrMsgMixDBDS;
-   1940 : h:=ErrMsgOnlyInCode;
+   1940 : h:=ErrMsgNotInStruct;
    1950 : h:=ErrMsgParNotPossible;
    1960 : h:=ErrMsgInvSegment;
    1961 : h:=ErrMsgUnknownSegment;
@@ -1433,6 +1440,13 @@ BEGIN
    1995 : h:=ErrMsgNotInThisSegment;
    1996 : h:=ErrMsgNotInMaxmode;
    1997 : h:=ErrMsgOnlyInMaxmode;
+   2000 : h:=ErrMsgPacketNotAligned;
+   2001 : h:=ErrMsgDoubleUnitUsed;
+   2002 : h:=ErrMsgLongReads;
+   2003 : h:=ErrMsgLongWrites;
+   2004 : h:=ErrMsgLongMem;
+   2005 : h:=ErrMsgTooManyReads;
+   2006 : h:=ErrMsgWriteConflict;
    10001: h:=ErrMsgOpeningFile;
    10002: h:=ErrMsgListWrError;
    10003: h:=ErrMsgFileReadError;
@@ -1649,12 +1663,7 @@ END;
 VAR
    z:Integer;
 BEGIN
-   FOR z:=1 TO PCMax DO
-   WITH SegChunks[z] DO
-    BEGIN
-     FreeMem(Chunks,AllocLen*SizeOf(OneChunk));
-     InitChunk(SegChunks[z]);
-    END;
+   FOR z:=1 TO PCMax DO ClearChunk(SegChunks[z]);
 END;
 
 {****************************************************************************}

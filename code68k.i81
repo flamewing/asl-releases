@@ -165,14 +165,14 @@ BEGIN
      ELSE IF ArgCnt<>2 THEN WrError(1110)
      ELSE
       BEGIN
-       DecodeAdr(ArgStr[2],M12);
+       DecodeAdr(ArgStr[2],Mfpn);
        IF AdrNum=12 THEN
         BEGIN
          WAsmCode[0]:=$f200;
          WAsmCode[1]:=FPUOps[z].Code OR (AdrMode SHL 7);
          RelPos:=4;
-         IF OpSize IN [0..2,4] THEN DecodeAdr(ArgStr[1],M1+M3+M4+M5+M6+M7+M8+M9+M10+M11+M12)
-         ELSE DecodeAdr(ArgStr[1],M3+M4+M5+M6+M7+M8+M9+M10+M11+M12);
+         IF OpSize IN [0..2,4] THEN DecodeAdr(ArgStr[1],Mdata+Madri+Mpost+Mpre+Mdadri+Maix+Mpc+Mpcidx+Mabs+Mimm+Mfpn)
+         ELSE DecodeAdr(ArgStr[1],Madri+Mpost+Mpre+Mdadri+Maix+Mpc+Mpcidx+Mabs+Mimm+Mfpn);
          IF AdrNum=12 THEN
           BEGIN
            WAsmCode[1]:=WAsmCode[1] OR (AdrMode SHL 10);
@@ -195,7 +195,7 @@ BEGIN
      ELSE IF AttrPart<>'' THEN WrError(1130)
      ELSE
       BEGIN
-       DecodeAdr(ArgStr[1],M3+M5+M6+M7+M10);
+       DecodeAdr(ArgStr[1],Madri+Mpre+Mdadri+Maix+Mabs);
        IF AdrNum<>0 THEN
 	BEGIN
 	 CodeLen:=2+AdrCnt; WAsmCode[0]:=$f300 OR AdrMode;
@@ -211,7 +211,7 @@ BEGIN
      ELSE IF AttrPart<>'' THEN WrError(1130)
      ELSE
       BEGIN
-       DecodeAdr(ArgStr[1],M3+M4+M6+M7+M10);
+       DecodeAdr(ArgStr[1],Madri+Mpost+Mdadri+Maix+Mabs);
        IF AdrNum<>0 THEN
 	BEGIN
 	 CodeLen:=2+AdrCnt; WAsmCode[0]:=$f340 OR AdrMode;
@@ -245,14 +245,14 @@ BEGIN
          AttrPart:=Copy(AttrPart,1,z-1);
         END
        ELSE sk:='';
-       DecodeAdr(ArgStr[2],M1+M2+M3+M4+M5+M6+M7+M10+M12+M13);
+       DecodeAdr(ArgStr[2],Mdata+Madr+Madri+Mpost+Mpre+Mdadri+Maix+Mabs+Mfpn+Mfpcr);
        IF AdrNum=12 THEN                            { FMOVE.x <ea>/FPm,FPn ? }
         BEGIN
          WAsmCode[0]:=$f200; WAsmCode[1]:=AdrMode SHL 7;
          RelPos:=4;
          IF AttrPart='' THEN OpSize:=6;
-         IF OpSize IN [0..2,4] THEN DecodeAdr(ArgStr[1],M1+M3+M4+M5+M6+M7+M8+M9+M10+M10+M12)
-         ELSE DecodeAdr(ArgStr[1],M3+M4+M5+M6+M7+M8+M9+M10+M11+M12);
+         IF OpSize IN [0..2,4] THEN DecodeAdr(ArgStr[1],Mdata+Madri+Mpost+Mpre+Mdadri+Maix+Mpc+Mpcidx+Mabs+Mabs+Mfpn)
+         ELSE DecodeAdr(ArgStr[1],Madri+Mpost+Mpre+Mdadri+Maix+Mpc+Mpcidx+Mabs+Mimm+Mfpn);
          IF AdrNum=12 THEN                          { FMOVE.X FPm,FPn ? }
           BEGIN
            WAsmCode[1]:=WAsmCode[1] OR (AdrMode SHL 10);
@@ -272,8 +272,8 @@ BEGIN
           BEGIN
            RelPos:=4;
            WAsmCode[0]:=$f200; WAsmCode[1]:=$8000 OR (AdrMode SHL 10);
-           IF AdrMode=1 THEN DecodeAdr(ArgStr[1],M1+M2+M3+M4+M5+M6+M7+M8+M9+M10+M11)
-           ELSE DecodeAdr(ArgStr[1],M1+M3+M4+M5+M6+M7+M8+M9+M10+M11);
+           IF AdrMode=1 THEN DecodeAdr(ArgStr[1],Mdata+Madr+Madri+Mpost+Mpre+Mdadri+Maix+Mpc+Mpcidx+Mabs+Mimm)
+           ELSE DecodeAdr(ArgStr[1],Mdata+Madri+Mpost+Mpre+Mdadri+Maix+Mpc+Mpcidx+Mabs+Mimm);
            IF AdrNum<>0 THEN
             BEGIN
              WAsmCode[0]:=WAsmCode[0] OR AdrMode; CodeLen:=4+AdrCnt;
@@ -285,8 +285,8 @@ BEGIN
         BEGIN
          WAsmCode[0]:=$f200 OR AdrMode;
          CodeLen:=4+AdrCnt; CopyAdrVals(WAsmCode[2]);
-         IF AdrMode=1 THEN DecodeAdr(ArgStr[1],M13)
-         ELSE DecodeAdr(ArgStr[1],M12+M13);
+         IF AdrMode=1 THEN DecodeAdr(ArgStr[1],Mfpcr)
+         ELSE DecodeAdr(ArgStr[1],Mfpn+Mfpcr);
          IF AdrNum=12 THEN                          { FMOVE.x FPn,<ea> ? }
           BEGIN
            IF AttrPart='' THEN OpSize:=6;
@@ -295,7 +295,7 @@ BEGIN
             IF (Length(sk)>2) THEN
              BEGIN
               OpSize:=0; Delete(sk,1,1); Delete(sk,Length(sk),1);
-              DecodeAdr(sk,M1+M11);
+              DecodeAdr(sk,Mdata+Mimm);
               IF AdrNum=1 THEN WAsmCode[1]:=WAsmCode[1] OR (AdrMode SHL 4) OR $1000
               ELSE IF AdrNum=11 THEN WAsmCode[1]:=WAsmCode[1] OR (AdrVals[0] AND 127)
               ELSE CodeLen:=0;
@@ -329,12 +329,12 @@ BEGIN
      ELSE IF (AttrPart<>'') AND (OpSize<>6) THEN WrError(1130)
      ELSE
       BEGIN
-       DecodeAdr(ArgStr[2],M12);
+       DecodeAdr(ArgStr[2],Mfpn);
        IF AdrNum=12 THEN
         BEGIN
          WAsmCode[0]:=$f200; WAsmCode[1]:=$5c00 OR (AdrMode SHL 7);
          OpSize:=0;
-         DecodeAdr(ArgStr[1],M11);
+         DecodeAdr(ArgStr[1],Mimm);
          IF AdrNum=11 THEN
           IF AdrVals[0]>63 THEN WrError(1700)
           ELSE
@@ -355,7 +355,7 @@ BEGIN
      ELSE
       BEGIN
        RelPos:=4;
-       DecodeAdr(ArgStr[1],M1+M3+M4+M5+M6+M7+M8+M9+M10+M11+M12);
+       DecodeAdr(ArgStr[1],Mdata+Madri+Mpost+Mpre+Mdadri+Maix+Mpc+Mpcidx+Mabs+Mimm+Mfpn);
        IF AdrNum=12 THEN
         BEGIN
          WAsmCode[0]:=$f200; WAsmCode[1]:=$3a OR (AdrMode SHL 10);
@@ -384,17 +384,17 @@ BEGIN
          sk:=Copy(ArgStr[2],1,z-1); Delete(ArgStr[2],1,z);
         END
        ELSE sk:='';
-       DecodeAdr(sk,M12);
+       DecodeAdr(sk,Mfpn);
        IF AdrNum=12 THEN
         BEGIN
          WAsmCode[1]:=AdrMode OR $30;
-         DecodeAdr(ArgStr[2],M12);
+         DecodeAdr(ArgStr[2],Mfpn);
          IF AdrNum=12 THEN
           BEGIN
            WAsmCode[1]:=WAsmCode[1] OR (AdrMode SHL 7);
            RelPos:=4;
-           IF OpSize IN [0..2,4] THEN DecodeAdr(ArgStr[1],M1+M3+M4+M5+M6+M7+M8+M9+M10+M11+M12)
-           ELSE DecodeAdr(ArgStr[1],M3+M4+M5+M6+M7+M8+M9+M10+M11+M12);
+           IF OpSize IN [0..2,4] THEN DecodeAdr(ArgStr[1],Mdata+Madri+Mpost+Mpre+Mdadri+Maix+Mpc+Mpcidx+Mabs+Mimm+Mfpn)
+           ELSE DecodeAdr(ArgStr[1],Madri+Mpost+Mpre+Mdadri+Maix+Mpc+Mpcidx+Mabs+Mimm+Mfpn);
            IF AdrNum=12 THEN
             BEGIN
              WAsmCode[0]:=$f200; WAsmCode[1]:=WAsmCode[1] OR (AdrMode SHL 10);
@@ -468,7 +468,7 @@ BEGIN
        ELSE IF ArgCnt<>2 THEN WrError(1110)
        ELSE
         BEGIN
-         DecodeAdr(ArgStr[1],M1);
+         DecodeAdr(ArgStr[1],Mdata);
          IF AdrNum<>0 THEN
           BEGIN
            WAsmCode[0]:=$f248 OR AdrMode; WAsmCode[1]:=FPUConds[z].Code;
@@ -496,7 +496,7 @@ BEGIN
        ELSE IF ArgCnt<>1 THEN WrError(1110)
        ELSE
         BEGIN
-         DecodeAdr(ArgStr[1],M1+M3+M4+M5+M6+M7+M10);
+         DecodeAdr(ArgStr[1],Mdata+Madri+Mpost+Mpre+Mdadri+Maix+Mabs);
          IF AdrNum<>0 THEN
           BEGIN
            CodeLen:=4+AdrCnt; WAsmCode[0]:=$f240 OR AdrMode;
@@ -527,7 +527,7 @@ BEGIN
           END
          ELSE
           BEGIN
-           DecodeAdr(ArgStr[1],M11);
+           DecodeAdr(ArgStr[1],Mimm);
            IF AdrNum<>0 THEN
             BEGIN
              WAsmCode[0]:=WAsmCode[0] OR (OpSize+1);
@@ -552,8 +552,8 @@ BEGIN
          ELSE
           BEGIN
            RelPos:=4;
-           IF z1=3 THEN DecodeAdr(ArgStr[1],M3+M4+M5+M6+M7+M8+M9+M10)
-                   ELSE DecodeAdr(ArgStr[1],M3+M4+M6+M7+M8+M9+M10);
+           IF z1=3 THEN DecodeAdr(ArgStr[1],Madri+Mpost+Mpre+Mdadri+Maix+Mpc+Mpcidx+Mabs)
+                   ELSE DecodeAdr(ArgStr[1],Madri+Mpost+Mdadri+Maix+Mpc+Mpcidx+Mabs);
            WAsmCode[1]:=0; GenerateMovem;
           END;
         END
@@ -566,8 +566,8 @@ BEGIN
            THEN WrError(1130)
            ELSE
             BEGIN
-             IF z1=3 THEN DecodeAdr(ArgStr[2],M3+M4+M5+M6+M7+M10)
-                     ELSE DecodeAdr(ArgStr[2],M3+M5+M6+M7+M10);
+             IF z1=3 THEN DecodeAdr(ArgStr[2],Madri+Mpost+Mpre+Mdadri+Maix+Mabs)
+                     ELSE DecodeAdr(ArgStr[2],Madri+Mpre+Mdadri+Maix+Mabs);
              WAsmCode[1]:=$2000; GenerateMovem;
             END;
           END

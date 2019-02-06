@@ -342,7 +342,8 @@ VAR
 VAR
    z,Depth,Fnd:Integer;
    Part:String;
-   Rep,SumCnt,ECnt,SInd:Word;
+   SumCnt,ECnt,SInd:Word;
+   Rep:LongInt;
    OK,Hyp:Boolean;
 BEGIN
    LayoutMult:=False;
@@ -374,6 +375,14 @@ BEGIN
        WrError(1820); Exit;
       END;
      IF NOT OK THEN Exit;
+
+     { Nullargument vergessen, bei negativem warnen }
+
+     IF Rep<0 THEN WrError(270);
+     IF Rep<=0 THEN
+      BEGIN
+       LayoutMult:=True; Exit;
+      END;
 
      { Einzelteile bilden & evaluieren }
 
@@ -492,7 +501,32 @@ BEGIN
    DecodeIntelPseudo:=FALSE;
 END;
 
-	FUNCTION DecodeMotoPseudo(Turn:Boolean):Boolean;
+        FUNCTION CutRep(VAR Asc:String; VAR Erg:LongInt):Boolean;
+VAR
+   OK:Boolean;
+   p:Integer;
+BEGIN
+   IF QuotPos(Asc,'[')<>1 THEN
+    BEGIN
+     Erg:=1; CutRep:=True;
+    END
+   ELSE
+    BEGIN
+     Delete(Asc,1,1); p:=QuotPos(Asc,']');
+     IF p>Length(Asc) THEN
+      BEGIN
+       WrError(1300); CutRep:=False;
+      END
+     ELSE
+      BEGIN
+       Erg:=EvalIntExpression(Copy(Asc,1,p-1),Int32,OK);
+       CutRep:=OK;
+       Delete(Asc,1,p);
+      END;
+    END;
+END;
+
+        FUNCTION DecodeMotoPseudo(Turn:Boolean):Boolean;
 VAR
    OK:Boolean;
    z,z2:Integer;
@@ -500,6 +534,7 @@ VAR
    HVal16:Word;
    SVal:String;
    t:TempResult;
+   Rep:LongInt;
 BEGIN
    DecodeMotoPseudo:=True;
 
@@ -511,6 +546,7 @@ BEGIN
        z:=1; OK:=True;
        REPEAT
         KillBlanks(ArgStr[z]);
+        OK:=CutRep(ArgStr[z],Rep);
         FirstPassUnknown:=False;
         EvalExpression(ArgStr[z],t);
         CASE t.Typ OF
@@ -518,27 +554,32 @@ BEGIN
          BEGIN
           IF FirstPassUnknown THEN t.Int:=t.Int AND $ff;
           IF NOT RangeCheck(t.Int,Int8) THEN WrError(1320)
-          ELSE IF CodeLen=MaxCodeLen THEN
+          ELSE IF CodeLen+Rep>MaxCodeLen THEN
            BEGIN
             WrError(1920); OK:=False;
            END
           ELSE
            BEGIN
-            BAsmCode[CodeLen]:=t.Int; Inc(CodeLen);
+            FOR z2:=0 TO Rep-1 DO
+             BAsmCode[CodeLen+z2]:=t.Int;
+            Inc(CodeLen,Rep);
            END;
          END;
         TempFloat:
          WrError(1135);
         TempString:
-         IF Length(t.Ascii)+CodeLen>=MaxCodeLen THEN
+         IF (Length(t.Ascii)*Rep)+CodeLen>=MaxCodeLen THEN
           BEGIN
            WrError(1920); OK:=False;
           END
          ELSE
           BEGIN
            TranslateString(t.Ascii);
-           Move(t.Ascii[1],BAsmCode[CodeLen],Length(t.Ascii));
-           Inc(CodeLen,Length(t.Ascii));
+           FOR z2:=1 TO Rep DO
+            BEGIN
+             Move(t.Ascii[1],BAsmCode[CodeLen],Length(t.Ascii));
+             Inc(CodeLen,Length(t.Ascii));
+            END;
           END;
         END;
         Inc(z);
@@ -555,13 +596,24 @@ BEGIN
       BEGIN
        z:=1; OK:=True;
        REPEAT
-        HVal16:=EvalIntExpression(ArgStr[z],Int16,OK);
+        OK:=CutRep(ArgStr[z],Rep);
         IF OK THEN
-	 BEGIN
-          IF Turn THEN HVal16:=Swap(HVal16);
-	  WAsmCode[CodeLen SHR 1]:=HVal16;
-	  Inc(CodeLen,2);
-         END;
+         IF CodeLen+Rep*2>MaxCodeLen THEN
+          BEGIN
+           WrError(1920); OK:=False;
+          END
+         ELSE
+          BEGIN
+           HVal16:=EvalIntExpression(ArgStr[z],Int16,OK);
+           IF OK THEN
+            BEGIN
+             IF Turn THEN HVal16:=Swap(HVal16);
+             FOR z2:=1 TO Rep DO
+              BEGIN
+               WAsmCode[CodeLen SHR 1]:=HVal16; Inc(CodeLen,2);
+              END;
+            END;
+          END;
         Inc(z);
        UNTIL (z>ArgCnt) OR (NOT OK);
        IF NOT OK THEN CodeLen:=0;
@@ -576,18 +628,25 @@ BEGIN
       BEGIN
        z:=1; OK:=True;
        REPEAT
-        SVal:=EvalStringExpression(ArgStr[z],OK);
+        OK:=CutRep(ArgStr[z],Rep);
         IF OK THEN
-         IF CodeLen+Length(SVal)>=MaxCodeLen THEN
-          BEGIN
-           WrError(1920); OK:=False;
-          END
-         ELSE
-          BEGIN
-           TranslateString(SVal);
-           Move(SVal[1],BAsmCode[CodeLen],Length(SVal));
-           Inc(CodeLen,Length(SVal));
-          END;
+         BEGIN
+          SVal:=EvalStringExpression(ArgStr[z],OK);
+          IF OK THEN
+          IF CodeLen+(Length(SVal)*Rep)>=MaxCodeLen THEN
+           BEGIN
+            WrError(1920); OK:=False;
+           END
+          ELSE
+           BEGIN
+            TranslateString(SVal);
+            FOR z2:=1 TO Rep DO
+             BEGIN
+              Move(SVal[1],BAsmCode[CodeLen],Length(SVal));
+              Inc(CodeLen,Length(SVal));
+             END;
+           END;
+         END;
         Inc(z);
        UNTIL (z>ArgCnt) OR (NOT OK);
        IF NOT OK THEN CodeLen:=0;
@@ -689,20 +748,7 @@ BEGIN
        OK:=True; z:=1;
        REPEAT
 	FirstPassUnknown:=False;
-	IF QuotPos(ArgStr[z],'[')<>1 THEN Rep:=1
-	ELSE
-	 BEGIN
-	  Delete(ArgStr[z],1,1); p:=QuotPos(ArgStr[z],']');
-          IF p>Length(ArgStr[z]) THEN
-           BEGIN
-            WrError(1300); OK:=False;
-           END
-          ELSE
-           BEGIN
-            Rep:=EvalIntExpression(Copy(ArgStr[z],1,p-1),Int32,OK);
-            Delete(ArgStr[z],1,p);
-           END;
-	 END;
+        OK:=CutRep(ArgStr[z],Rep);
 	IF OK THEN
 	 IF FirstPassUnknown THEN WrError(1820)
 	 ELSE

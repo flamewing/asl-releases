@@ -1786,6 +1786,8 @@ BEGIN
 
    MakeCode:=MakeCode_XA; ChkPC:=ChkPC_XA; IsDef:=IsDef_XA;
    SwitchFrom:=SwitchFrom_XA; InitFields;
+
+   SetFlag(DoPadding,DoPaddingName,False);
 END;
 
 BEGIN

@@ -14,6 +14,8 @@
 {*            1.11.1993 Erkennung Programmname                              *}
 {*            9. 4.1994 Erweiterungen TI-DSK-Format                         *}
 {*           13. 3.1995 Erweiterungen Intel32-Format                        *}
+{*           23. 8.1997 Atmel-Hex-Format                                    *}
+{*           26.10.1997 kill-Option                                         *}
 {*                                                                          *}
 {****************************************************************************}
 
@@ -31,7 +33,7 @@
 { Ansagen }
 
    InfoMessHead2            = ' <source file(s)> <target file> [options]';
-   InfoMessHelpCnt          = 16;
+   InfoMessHelpCnt          = 17;
    InfoMessHelp : ARRAY[1..InfoMessHelpCnt] OF String[80]=
                   ('',
                    'options: -f <header list>  : records to filter out',
@@ -44,9 +46,10 @@
                    '         -F <Default|Moto|',
                    '             Intel|MOS|Tek|',
                    '             Intel16|DSK|',
-                   '             Intel32>      : target format',
+                   '             Intel32|Atmel>: target format',
                    '         +5                : supress S5-records',
                    '         -s                : separate terminators for S-record groups',
                    '         -d <start>-<stop> : set data range',
-                   '         -e <address>      : set start address');
+                   '         -e <address>      : set start address',
+                   '         -k                : automatically erase source files');
 

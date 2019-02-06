@@ -1436,18 +1436,18 @@ BEGIN
 
    IF Memo('MTCRF') THEN
     BEGIN
-     IF ArgCnt<>2 THEN WrError(1110)
-     ELSE IF NOT DecodeGenReg(ArgStr[2],Src1) THEN WrError(1350)
+     IF (ArgCnt<1) OR (ArgCnt>2) THEN WrError(1110)
+     ELSE IF NOT DecodeGenReg(ArgStr[ArgCnt],Src1) THEN WrError(1350)
      ELSE
       BEGIN
-       Dest:=EvalIntExpression(ArgStr[1],UInt9,OK);
+       OK:=True;
+       IF ArgCnt=1 THEN Dest:=$ff
+       ELSE Dest:=EvalIntExpression(ArgStr[1],UInt8,OK);
        IF OK THEN
-	IF Odd(Dest) THEN WrError(1351)
-	ELSE
-	 BEGIN
-          PutCode((31 SHL 26)+(Src1 SHL 26)+(Dest SHL 11)+(144 SHL 1));
-	  CodeLen:=4;
-	 END;
+        BEGIN
+         PutCode((31 SHL 26)+(Src1 SHL 26)+(Dest SHL 12)+(144 SHL 1));
+         CodeLen:=4;
+        END;
       END;
      Exit;
     END;

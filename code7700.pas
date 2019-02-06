@@ -263,7 +263,7 @@ BEGIN
    AddRMW('ASL',$0a,$06);
    IF MomCPU>=CPUM7700 THEN AddRMW('DEC',$1a,$c6) ELSE AddRMW('DEC',$3a,$c6);
    AddRMW('ROL',$2a,$26);
-   IF MomCPU>=CPUM7700 THEN AddRMW('INC',$3a,$c6) ELSE AddRMW('INC',$1a,$e6);
+   IF MomCPU>=CPUM7700 THEN AddRMW('INC',$3a,$e6) ELSE AddRMW('INC',$1a,$e6);
    AddRMW('LSR',$4a,$46);
    AddRMW('ROR',$6a,$66);
 

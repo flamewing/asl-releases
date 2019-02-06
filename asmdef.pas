@@ -32,7 +32,7 @@ TYPE
 		      TempString:(Ascii:String);
 		     END;
 
-   DebugType=(DebugNone,DebugMAP,DebugAOUT,DebugCOFF,DebugELF);
+   DebugType=(DebugNone,DebugMAP,DebugAtmel,DebugAOUT,DebugCOFF,DebugELF);
 
 {$i FILEFORM.INC}
 
@@ -61,7 +61,8 @@ CONST
    MacSuffix:String[4]='.MAC';              { Makroausgabe }
    PreSuffix:String[4]='.I';                { Ausgabe Makroprozessor }
    LogSuffix:String[4]='.LOG';              { Fehlerdatei }
-   MapSuffix:String[4]='.MAP';              { Debug-Info/Map-Format }
+   MAPSuffix:String[4]='.MAP';              { Debug-Info/Map-Format }
+   OBJSuffix:String[4]='.OBJ';              { dito Atmel }
 
    MomCPUName     :String[6]='MOMCPU';	    { mom. Prozessortyp }
    MomCPUIdentName:String[10]='MOMCPUNAME'; { mom. Prozessortyp }
@@ -81,15 +82,31 @@ CONST
    DateName       :String[4]='DATE'; 	    { Datum & Zeit }
    TimeName       :String[4]='TIME';
    VerName        :String[7]='VERSION';     { speichert Versionsnummer }
+   ArchName                 ='ARCHITECTURE';{ Zielarchitektur von AS }
    CaseSensName   :String[13]='CASESENSITIVE'; { zeigt Gro·/Kleinunterscheidung an }
 
    AttrName                 ='ATTRIBUTE';   { Attributansprache in Makros }
 
    DefStackName             ='DEFSTACK';    { Default-Stack }
 
-   Version:String[7]='1.41r6';
-   StartMagic=$1b342b4d;
-   VerNo:LongInt=$1416;
+   Version:String[7]='1.41r7';
+   StartMagic=$1b34244d;
+   VerNo:LongInt=$1417;
+
+   ArchVal:String[30]=
+   {$IFDEF MSDOS}
+   'i86-unknown-msdos';
+   {$ENDIF}
+   {$IFDEF DPMI}
+   'i286-unknown-dpmi';
+   {$ENDIF}
+   {$IFDEF OS2}
+    {$IFDEF VIRTUALPASCAL}
+   'i386-unknown-os2';
+    {$ELSE}
+   'i286-unknown-os2';
+    {$ENDIF}
+   {$ENDIF}
 
    EnvName='ASCMD';                         { Environment-Variable fÅr Default-
 					      Parameter }
@@ -97,6 +114,8 @@ CONST
    ParMax=20;
 
    ChapMax=4;
+
+   StructSeg=PCMax+1;
 
    SegNames:ARRAY[0..PCMax] OF String[10]=('NOTHING','CODE','DATA','IDATA',
                                            'XDATA','YDATA','BITDATA','IO','REG');
@@ -106,7 +125,7 @@ CONST
 
    MaxCodeLen=1024;
 
-   InfoMessCopyright:String[30]='(C) 1992,1997 Alfred Arnold';
+   InfoMessCopyright:String[30]='(C) 1992,1998 Alfred Arnold';
 
    ValidSymChars:SET OF Char=['A'..'Z','a'..'z',#128..#165,'0'..'9','_','.'];
 
@@ -158,21 +177,29 @@ TYPE
                 Compiled:ARRAY[Char] OF Byte;
 	       END;
 
+   PStructure=^TStructure;
+   TStructure=RECORD
+               Next:PStructure;
+               DoExt:Boolean;
+               Name:^String;
+               CurrPC:LongInt;
+              END;
+
 VAR
    SourceFile:String;                       { Hauptquelldatei }
 
    ClrEol:String[20];       	    { String fÅr lîschen bis Zeilenende }
    CursUp:String[10];		    {   "     "  Cursor hoch }
 
-   PCs:ARRAY[1..PCMax] OF LongInt;          { ProgrammzÑhler }
+   PCs:ARRAY[1..StructSeg] OF LongInt;      { ProgrammzÑhler }
    StartAdr:LongInt;                        { Programmstartadresse }
    StartAdrPresent:Boolean;                 {          "           definiert? }
-   Phases:ARRAY[1..PCMax] OF LongInt;       { Verschiebungen }
-   Grans:ARRAY[1..PCMax] OF Word; 	    { Grî·e der Adressierungselemente }
-   ListGrans:ARRAY[1..PCMax] OF Word; 	    { Wortgrî·e im Listing }
-   SegChunks:ARRAY[1..PCMax] OF ChunkList;  { Belegungen }
+   Phases:ARRAY[1..StructSeg] OF LongInt;   { Verschiebungen }
+   Grans:ARRAY[1..StructSeg] OF Word;       { Grî·e der Adressierungselemente }
+   ListGrans:ARRAY[1..StructSeg] OF Word;   { Wortgrî·e im Listing }
+   SegChunks:ARRAY[1..StructSeg] OF ChunkList;  { Belegungen }
    ActPC:Integer;                           { gewÑhlter ProgrammzÑhler }
-   PCsUsed:ARRAY[1..PCMax] OF Boolean;      { PCs bereits initialisiert ? }
+   PCsUsed:ARRAY[1..StructSeg] OF Boolean;  { PCs bereits initialisiert ? }
    SegInits:ARRAY[1..PCMax] OF LongInt;     { Segmentstartwerte }
    ValidSegs:SET OF 0..7;                   { erlaubte Segmente }
    ENDOccured:Boolean;	                    { END-Statement aufgetreten ? }
@@ -202,6 +229,7 @@ VAR
    MacProOutput:Boolean;	    { Makroprozessorausgabe schreiben }
    MacroOutput:Boolean;             { gelesene Makros schreiben }
    QuietMode:Boolean;               { keine Meldungen }
+   HardRanges:Boolean;              { Bereichsfehler echte Fehler ? }
    DivideChars:String[4];           { Trennzeichen fÅr Parameter }
    HasAttrs:Boolean;                { Opcode hat Attribut }
    AttrChars:String[4];             { Zeichen, mit denen Attribut abgetrennt wird }
@@ -306,6 +334,9 @@ VAR
    FirstFunction:PFunction;	    { Liste definierter Funktionen }
 
    FirstDefine:PDefinement;         { Liste von PrÑprozessor-Defines }
+
+   StructureStack:PStructure;       { momentan offene Strukturen }
+   StructSaveSeg:Integer;           { gesichertes Segment wÑhrend Strukturdef. }
 
    FirstSaveState:PSaveState;	    { gesicherte ZustÑnde }
 
