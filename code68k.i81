@@ -1,0 +1,582 @@
+       PROCEDURE DecodeFPUOrders;
+TYPE
+   FPUOp=RECORD
+          Name:String[6];
+          Code:Byte;
+          Dya:Boolean;
+         END;
+   FPUCond=RECORD
+            Name:String[4];
+            Code:Byte;
+           END;
+CONST
+   FPUOps:ARRAY[1..35] OF FPUOp=((Name:'INT'   ;Code:$01;Dya:False),
+                                 (Name:'SINH'  ;Code:$02;Dya:False),
+                                 (Name:'INTRZ' ;Code:$03;Dya:False),
+                                 (Name:'SQRT'  ;Code:$04;Dya:False),
+                                 (Name:'LOGNP1';Code:$06;Dya:False),
+                                 (Name:'ETOXM1';Code:$08;Dya:False),
+                                 (Name:'TANH'  ;Code:$09;Dya:False),
+				 (Name:'ATAN'  ;Code:$0a;Dya:False),
+                                 (Name:'ASIN'  ;Code:$0c;Dya:False),
+                                 (Name:'ATANH' ;Code:$0d;Dya:False),
+                                 (Name:'SIN'   ;Code:$0e;Dya:False),
+                                 (Name:'TAN'   ;Code:$0f;Dya:False),
+                                 (Name:'ETOX'  ;Code:$10;Dya:False),
+                                 (Name:'TWOTOX';Code:$11;Dya:False),
+                                 (Name:'TENTOX';Code:$12;Dya:False),
+                                 (Name:'LOGN'  ;Code:$14;Dya:False),
+                                 (Name:'LOG10' ;Code:$15;Dya:False),
+                                 (Name:'LOG2'  ;Code:$16;Dya:False),
+                                 (Name:'ABS'   ;Code:$18;Dya:False),
+                                 (Name:'COSH'  ;Code:$19;Dya:False),
+                                 (Name:'NEG'   ;Code:$1a;Dya:False),
+                                 (Name:'ACOS'  ;Code:$1c;Dya:False),
+                                 (Name:'COS'   ;Code:$1d;Dya:False),
+                                 (Name:'GETEXP';Code:$1e;Dya:False),
+                                 (Name:'GETMAN';Code:$1f;Dya:False),
+                                 (Name:'DIV'   ;Code:$20;Dya:True ),
+                                 (Name:'MOD'   ;Code:$21;Dya:True ),
+                                 (Name:'ADD'   ;Code:$22;Dya:True ),
+                                 (Name:'MUL'   ;Code:$23;Dya:True ),
+                                 (Name:'SGLDIV';Code:$24;Dya:True ),
+                                 (Name:'REM'   ;Code:$25;Dya:True ),
+                                 (Name:'SCALE' ;Code:$26;Dya:True ),
+                                 (Name:'SGLMUL';Code:$27;Dya:True ),
+                                 (Name:'SUB'   ;Code:$28;Dya:True ),
+                                 (Name:'CMP'   ;Code:$38;Dya:True ));
+   FPUConds:ARRAY[1..26] OF FPUCond=
+                                 ((Name:'EQ'  ;Code:$01),(Name:'NE'  ;Code:$0e),
+                                  (Name:'GT'  ;Code:$12),(Name:'NGT' ;Code:$1d),
+                                  (Name:'GE'  ;Code:$13),(Name:'NGE' ;Code:$1c),
+                                  (Name:'LT'  ;Code:$14),(Name:'NLT' ;Code:$1b),
+                                  (Name:'LE'  ;Code:$15),(Name:'NLE' ;Code:$1a),
+                                  (Name:'GL'  ;Code:$16),(Name:'NGL' ;Code:$19),
+                                  (Name:'GLE' ;Code:$17),(Name:'NGLE';Code:$18),
+                                  (Name:'OGT' ;Code:$02),(Name:'ULE' ;Code:$0d),
+                                  (Name:'OGE' ;Code:$03),(Name:'ULT' ;Code:$0c),
+                                  (Name:'OLT' ;Code:$04),(Name:'UGE' ;Code:$0b),
+                                  (Name:'OLE' ;Code:$05),(Name:'UGT' ;Code:$0a),
+                                  (Name:'OGL' ;Code:$06),(Name:'UEQ' ;Code:$09),
+                                  (Name:'OR'  ;Code:$07),(Name:'UN'  ;Code:$08));
+   SizeCodes:ARRAY[0..7] OF Byte=(6,4,0,7,1,5,2,3);
+VAR
+   z,z1,z2:Byte;
+   sk:String;
+
+       PROCEDURE DecodeFRegList(Asc:String; VAR Typ,Erg:Byte);
+VAR
+   s:String;
+   hw:Word;
+   h1,h2,h3:Byte;
+
+       FUNCTION DecodeOneReg(Asc:String; VAR h:Byte):Boolean;
+BEGIN
+   IF (Length(Asc)=3) AND (NLS_StrCaseCmp(Copy(Asc,1,2),'FP')=0) AND ValReg(Asc[3]) THEN
+    BEGIN
+     DecodeOneReg:=True; h:=Ord(Asc[3])-48;
+    END
+   ELSE DecodeOneReg:=False;
+END;
+
+BEGIN
+   Typ:=0; IF Asc='' THEN Exit;
+   IF (Length(Asc)=2) AND (Asc[1]='D') AND ValReg(Asc[2]) THEN
+    BEGIN
+     Typ:=1; Erg:=(Ord(Asc[2])-48) SHL 4; Exit;
+    END;
+   hw:=0;
+   REPEAT
+    h1:=Pos('/',Asc);
+    IF h1=0 THEN
+     BEGIN
+      s:=Asc; Asc:='';
+     END
+    ELSE
+     BEGIN
+      s:=Copy(Asc,1,h1-1); Delete(Asc,1,h1);
+     END;
+    IF NLS_StrCaseCmp(s,'FPCR')=0 THEN hw:=hw OR $400
+    ELSE IF NLS_StrCaseCmp(s,'FPSR')=0 THEN hw:=hw OR $200
+    ELSE IF NLS_StrCaseCmp(s,'FPIAR')=0 THEN hw:=hw OR $100
+    ELSE
+     BEGIN
+      h1:=Pos('-',s);
+      IF h1=0 THEN
+       BEGIN
+        IF NOT DecodeOneReg(s,h1) THEN Exit;
+        hw:=hw OR (1 SHL (7-h1));
+       END
+      ELSE
+       BEGIN
+        IF NOT DecodeOneReg(Copy(s,1,h1-1),h2) THEN Exit;
+        IF NOT DecodeOneReg(Copy(s,h1+1,Length(s)-h1),h3) THEN Exit;
+        FOR h1:=h2 TO h3 DO hw:=hw OR (1 SHL (7-h1));
+       END;
+     END;
+   UNTIL Asc='';
+   IF Hi(hw)=0 THEN
+    BEGIN
+     Typ:=2; Erg:=Lo(hw);
+    END
+   ELSE IF Lo(hw)=0 THEN
+    BEGIN
+     Typ:=3; Erg:=Hi(hw);
+    END;
+END;
+
+       Procedure GenerateMovem;
+VAR
+   hz2,z:Byte;
+BEGIN
+   IF AdrNum=0 THEN Exit;
+   CodeLen:=4+AdrCnt; CopyAdrVals(WAsmCode[2]);
+   WAsmCode[0]:=$f200 OR AdrMode;
+   CASE z1 OF
+   1,2:BEGIN
+        WAsmCode[1]:=WAsmCode[1] OR $c000;
+        IF z1=1 THEN WAsmCode[1]:=WAsmCode[1] OR $800;
+        IF AdrNum<>5 THEN WAsmCode[1]:=WAsmCode[1] OR $1000;
+        IF (AdrNum=5) AND (z1=2) THEN
+         BEGIN
+          hz2:=z2; z2:=0;
+          FOR z:=0 TO 7 DO
+           BEGIN
+            z2:=z2 SHL 1; IF Odd(hz2) THEN z2:=z2 OR 1;
+            hz2:=hz2 SHR 1;
+           END;
+         END;
+        WAsmCode[1]:=WAsmCode[1] OR z2;
+       END;
+   3:WAsmCode[1]:=WAsmCode[1] OR $8000 OR (Word(z2) SHL 10);
+   END;
+END;
+
+BEGIN
+   z:=1; WHILE (z<36) AND (OpPart<>FPUOps[z].Name) DO Inc(z);
+   IF z<36 THEN
+    BEGIN
+     IF (ArgCnt=1) AND (NOT FPUOps[z].Dya) THEN
+      BEGIN
+       ArgStr[2]:=ArgStr[1]; ArgCnt:=2;
+      END;
+     IF AttrPart='' THEN OpSize:=6;
+     IF OpSize=3 THEN WrError(1130)
+     ELSE IF ArgCnt<>2 THEN WrError(1110)
+     ELSE
+      BEGIN
+       DecodeAdr(ArgStr[2],M12);
+       IF AdrNum=12 THEN
+        BEGIN
+         WAsmCode[0]:=$f200;
+         WAsmCode[1]:=FPUOps[z].Code OR (AdrMode SHL 7);
+         RelPos:=4;
+         IF OpSize IN [0..2,4] THEN DecodeAdr(ArgStr[1],M1+M3+M4+M5+M6+M7+M8+M9+M10+M11+M12)
+         ELSE DecodeAdr(ArgStr[1],M3+M4+M5+M6+M7+M8+M9+M10+M11+M12);
+         IF AdrNum=12 THEN
+          BEGIN
+           WAsmCode[1]:=WAsmCode[1] OR (AdrMode SHL 10);
+           IF OpSize=6 THEN CodeLen:=4 ELSE WrError(1130);
+          END
+         ELSE IF AdrNum<>0 THEN
+          BEGIN
+           CodeLen:=4+AdrCnt; CopyAdrVals(WAsmCode[2]);
+           WAsmCode[0]:=WAsmCode[0] OR AdrMode;
+           WAsmCode[1]:=WAsmCode[1] OR $4000 OR (Word(SizeCodes[OpSize]) SHL 10);
+          END;
+        END;
+      END;
+     Exit;
+    END;
+
+   IF Memo('SAVE') THEN
+    BEGIN
+     IF ArgCnt<>1 THEN WrError(1110)
+     ELSE IF AttrPart<>'' THEN WrError(1130)
+     ELSE
+      BEGIN
+       DecodeAdr(ArgStr[1],M3+M5+M6+M7+M10);
+       IF AdrNum<>0 THEN
+	BEGIN
+	 CodeLen:=2+AdrCnt; WAsmCode[0]:=$f300 OR AdrMode;
+	 CopyAdrVals(WAsmCode[1]); CheckSup;
+	END;
+      END;
+     Exit;
+    END;
+
+   IF Memo('RESTORE') THEN
+    BEGIN
+     IF ArgCnt<>1 THEN WrError(1110)
+     ELSE IF AttrPart<>'' THEN WrError(1130)
+     ELSE
+      BEGIN
+       DecodeAdr(ArgStr[1],M3+M4+M6+M7+M10);
+       IF AdrNum<>0 THEN
+	BEGIN
+	 CodeLen:=2+AdrCnt; WAsmCode[0]:=$f340 OR AdrMode;
+	 CopyAdrVals(WAsmCode[1]); CheckSup;
+	END;
+      END;
+     Exit;
+    END;
+
+   IF Memo('NOP') THEN
+    BEGIN
+     IF ArgCnt<>0 THEN WrError(1110)
+     ELSE IF AttrPart<>'' THEN WrError(1130)
+     ELSE
+      BEGIN
+       CodeLen:=4; WAsmCode[0]:=$f280; WAsmCode[1]:=0;
+      END;
+     Exit;
+    END;
+
+   IF Memo('MOVE') THEN
+    BEGIN
+     IF ArgCnt<>2 THEN WrError(1110)
+     ELSE IF OpSize=3 THEN WrError(1130)
+     ELSE
+      BEGIN
+       z:=Pos('{',AttrPart);
+       IF z<>0 THEN                                 { k-Faktor abspalten }
+        BEGIN
+         sk:=Copy(AttrPart,z,Length(AttrPart)-z+1);
+         AttrPart:=Copy(AttrPart,1,z-1);
+        END
+       ELSE sk:='';
+       DecodeAdr(ArgStr[2],M1+M2+M3+M4+M5+M6+M7+M10+M12+M13);
+       IF AdrNum=12 THEN                            { FMOVE.x <ea>/FPm,FPn ? }
+        BEGIN
+         WAsmCode[0]:=$f200; WAsmCode[1]:=AdrMode SHL 7;
+         RelPos:=4;
+         IF AttrPart='' THEN OpSize:=6;
+         IF OpSize IN [0..2,4] THEN DecodeAdr(ArgStr[1],M1+M3+M4+M5+M6+M7+M8+M9+M10+M10+M12)
+         ELSE DecodeAdr(ArgStr[1],M3+M4+M5+M6+M7+M8+M9+M10+M11+M12);
+         IF AdrNum=12 THEN                          { FMOVE.X FPm,FPn ? }
+          BEGIN
+           WAsmCode[1]:=WAsmCode[1] OR (AdrMode SHL 10);
+           IF OpSize=6 THEN CodeLen:=4 ELSE WrError(1130);
+          END
+         ELSE IF AdrNum<>0 THEN                     { FMOVE.x <ea>,FPn ? }
+          BEGIN
+           CodeLen:=4+AdrCnt; CopyAdrVals(WAsmCode[2]);
+           WAsmCode[0]:=WAsmCode[0] OR AdrMode;
+           WAsmCode[1]:=WAsmCode[1] OR $4000 OR (Word(SizeCodes[OpSize]) SHL 10);
+          END;
+        END
+       ELSE IF AdrNum=13 THEN                       { FMOVE.L <ea>,FPcr ? }
+        BEGIN
+         IF (OpSize<>2) AND (AttrPart<>'') THEN WrError(1130)
+         ELSE
+          BEGIN
+           RelPos:=4;
+           WAsmCode[0]:=$f200; WAsmCode[1]:=$8000 OR (AdrMode SHL 10);
+           IF AdrMode=1 THEN DecodeAdr(ArgStr[1],M1+M2+M3+M4+M5+M6+M7+M8+M9+M10+M11)
+           ELSE DecodeAdr(ArgStr[1],M1+M3+M4+M5+M6+M7+M8+M9+M10+M11);
+           IF AdrNum<>0 THEN
+            BEGIN
+             WAsmCode[0]:=WAsmCode[0] OR AdrMode; CodeLen:=4+AdrCnt;
+             CopyAdrVals(WAsmCode[2]);
+            END;
+          END;
+        END
+       ELSE IF AdrNum<>0 THEN                       { FMOVE.x ????,<ea> ? }
+        BEGIN
+         WAsmCode[0]:=$f200 OR AdrMode;
+         CodeLen:=4+AdrCnt; CopyAdrVals(WAsmCode[2]);
+         IF AdrMode=1 THEN DecodeAdr(ArgStr[1],M13)
+         ELSE DecodeAdr(ArgStr[1],M12+M13);
+         IF AdrNum=12 THEN                          { FMOVE.x FPn,<ea> ? }
+          BEGIN
+           IF AttrPart='' THEN OpSize:=6;
+           WAsmCode[1]:=$6000  OR (Word(SizeCodes[OpSize]) SHL 10)OR (AdrMode SHL 7);
+           IF (OpSize=7) THEN
+            IF (Length(sk)>2) THEN
+             BEGIN
+              OpSize:=0; Delete(sk,1,1); Delete(sk,Length(sk),1);
+              DecodeAdr(sk,M1+M11);
+              IF AdrNum=1 THEN WAsmCode[1]:=WAsmCode[1] OR (AdrMode SHL 4) OR $1000
+              ELSE IF AdrNum=11 THEN WAsmCode[1]:=WAsmCode[1] OR (AdrVals[0] AND 127)
+              ELSE CodeLen:=0;
+             END
+            ELSE WAsmCode[1]:=WAsmCode[1] OR 17;
+          END
+         ELSE IF AdrNum=13 THEN                     { FMOVE.L FPcr,<ea> ? }
+          BEGIN
+           IF (AttrPart<>'') AND (OpSize<>2) THEN
+            BEGIN
+             WrError(1130); CodeLen:=0;
+            END
+           ELSE
+            BEGIN
+             WAsmCode[1]:=$a000 OR (AdrMode SHL 10);
+             IF (AdrMode<>1) AND (WAsmCode[0] AND $38=8) THEN
+              BEGIN
+               WrError(1350); CodeLen:=0;
+              END;
+            END;
+          END
+         ELSE CodeLen:=0;
+        END;
+      END;
+     Exit;
+    END;
+
+   IF Memo('MOVECR') THEN
+    BEGIN
+     IF ArgCnt<>2 THEN WrError(1110)
+     ELSE IF (AttrPart<>'') AND (OpSize<>6) THEN WrError(1130)
+     ELSE
+      BEGIN
+       DecodeAdr(ArgStr[2],M12);
+       IF AdrNum=12 THEN
+        BEGIN
+         WAsmCode[0]:=$f200; WAsmCode[1]:=$5c00 OR (AdrMode SHL 7);
+         OpSize:=0;
+         DecodeAdr(ArgStr[1],M11);
+         IF AdrNum=11 THEN
+          IF AdrVals[0]>63 THEN WrError(1700)
+          ELSE
+           BEGIN
+            CodeLen:=4;
+            WAsmCode[1]:=WAsmCode[1] OR AdrVals[0];
+           END;
+        END;
+      END;
+     Exit;
+    END;
+
+   IF Memo('TST') THEN
+    BEGIN
+     IF AttrPart='' THEN OpSize:=6;
+     IF OpSize=3 THEN WrError(1130)
+     ELSE IF ArgCnt<>1 THEN WrError(1110)
+     ELSE
+      BEGIN
+       RelPos:=4;
+       DecodeAdr(ArgStr[1],M1+M3+M4+M5+M6+M7+M8+M9+M10+M11+M12);
+       IF AdrNum=12 THEN
+        BEGIN
+         WAsmCode[0]:=$f200; WAsmCode[1]:=$3a OR (AdrMode SHL 10);
+         CodeLen:=4;
+        END
+       ELSE IF AdrNum<>0 THEN
+        BEGIN
+         WAsmCode[0]:=$f200 OR AdrMode;
+         WAsmCode[1]:=$403a OR (Word(SizeCodes[OpSize]) SHL 10);
+         CodeLen:=4+AdrCnt; CopyAdrVals(WAsmCode[2]);
+        END;
+      END;
+     Exit;
+    END;
+
+   IF Memo('SINCOS') THEN
+    BEGIN
+     IF AttrPart='' THEN OpSize:=6;
+     IF OpSize=3 THEN WrError(1130)
+     ELSE IF ArgCnt<>2 THEN WrError(1110)
+     ELSE
+      BEGIN
+       z:=Pos(':',ArgStr[2]);
+       IF z<>0 THEN
+        BEGIN
+         sk:=Copy(ArgStr[2],1,z-1); Delete(ArgStr[2],1,z);
+        END
+       ELSE sk:='';
+       DecodeAdr(sk,M12);
+       IF AdrNum=12 THEN
+        BEGIN
+         WAsmCode[1]:=AdrMode OR $30;
+         DecodeAdr(ArgStr[2],M12);
+         IF AdrNum=12 THEN
+          BEGIN
+           WAsmCode[1]:=WAsmCode[1] OR (AdrMode SHL 7);
+           RelPos:=4;
+           IF OpSize IN [0..2,4] THEN DecodeAdr(ArgStr[1],M1+M3+M4+M5+M6+M7+M8+M9+M10+M11+M12)
+           ELSE DecodeAdr(ArgStr[1],M3+M4+M5+M6+M7+M8+M9+M10+M11+M12);
+           IF AdrNum=12 THEN
+            BEGIN
+             WAsmCode[0]:=$f200; WAsmCode[1]:=WAsmCode[1] OR (AdrMode SHL 10);
+             CodeLen:=4;
+            END
+           ELSE IF AdrNum<>0 THEN
+            BEGIN
+             WAsmCode[0]:=$f200 OR AdrMode;
+             WAsmCode[1]:=WAsmCode[1] OR $4000 OR (Word(SizeCodes[OpSize]) SHL 10);
+             CodeLen:=4+AdrCnt; CopyAdrVals(WAsmCode[2]);
+            END;
+          END;
+        END;
+      END;
+     Exit;
+    END;
+
+   IF (OpPart[1]='B') THEN
+    BEGIN
+     Delete(OpPart,1,1);
+     z:=1;
+     WHILE (z<27) AND (FPUConds[z].Name<>OpPart) DO Inc(z);
+     IF z=27 THEN WrError(1360)
+     ELSE
+      BEGIN
+       IF (OpSize=1) AND (OpSize<>2) AND (OpSize<>6) THEN WrError(1130)
+       ELSE IF ArgCnt<>1 THEN WrError(1110)
+       ELSE
+	BEGIN
+	 HVal:=EValIntExpression(ArgStr[1],Int32,ValOK)-(EProgCounter+2);
+	 HVal16:=HVal;
+
+	 IF OpSize=1 THEN
+	  BEGIN
+	   IF HVal16=HVal THEN OpSize:=2 ELSE OpSize:=6;
+	  END;
+
+         IF OpSize=2 THEN
+          BEGIN
+           IF (HVal16<>HVal) AND (NOT SymbolQuestionable) THEN WrError(1370)
+           ELSE
+            BEGIN
+             CodeLen:=4; WAsmCode[0]:=$f280 OR FPUConds[z].Code;
+             WAsmCode[1]:=HVal16;
+            END;
+          END
+         ELSE
+          BEGIN
+           CodeLen:=6; WAsmCode[0]:=$f2c0 OR FPUConds[z].Code;
+           WAsmCode[2]:=HVal AND $ffff; WAsmCode[1]:=HVal SHR 16;
+	   IF (HVal16=HVal) AND (PassNo=2) AND (AttrPart='') THEN
+	    BEGIN
+	     WrError(20); WAsmCode[0]:=WAsmCode[0] XOR $40;
+             Dec(CodeLen,2); WAsmCode[1]:=WAsmCode[2]; Inc(StopfZahl);
+            END;
+          END;
+        END;
+      END;
+     Exit;
+    END;
+
+   IF (Copy(OpPart,1,2)='DB') THEN
+    BEGIN
+     Delete(OpPart,1,2);
+     z:=1;
+     WHILE (z<27) AND (FPUConds[z].Name<>OpPart) DO Inc(z);
+     IF z=27 THEN WrError(1360)
+     ELSE
+      BEGIN
+       IF (OpSize<>1) AND (AttrPart<>'') THEN WrError(1130)
+       ELSE IF ArgCnt<>2 THEN WrError(1110)
+       ELSE
+        BEGIN
+         DecodeAdr(ArgStr[1],M1);
+         IF AdrNum<>0 THEN
+          BEGIN
+           WAsmCode[0]:=$f248 OR AdrMode; WAsmCode[1]:=FPUConds[z].Code;
+           HVal:=EValIntExpression(ArgStr[2],Int32,ValOK)-(EProgCounter+4);
+           IF ValOK THEN
+            BEGIN
+             HVal16:=HVal; WAsmCode[2]:=HVal16;
+             IF (HVal16<>HVal) AND (NOT SymbolQuestionable) THEN WrError(1370) ELSE CodeLen:=6;
+            END;
+          END;
+        END;
+      END;
+     Exit;
+    END;
+
+   IF (OpPart[1]='S') THEN
+    BEGIN
+     Delete(OpPart,1,1);
+     z:=1;
+     WHILE (z<27) AND (FPUConds[z].Name<>OpPart) DO Inc(z);
+     IF z=27 THEN WrError(1360)
+     ELSE
+      BEGIN
+       IF (OpSize<>0) AND (AttrPart<>'') THEN WrError(1130)
+       ELSE IF ArgCnt<>1 THEN WrError(1110)
+       ELSE
+        BEGIN
+         DecodeAdr(ArgStr[1],M1+M3+M4+M5+M6+M7+M10);
+         IF AdrNum<>0 THEN
+          BEGIN
+           CodeLen:=4+AdrCnt; WAsmCode[0]:=$f240 OR AdrMode;
+           WAsmCode[1]:=FPUConds[z].Code; CopyAdrVals(WAsmCode[2]);
+          END;
+        END;
+      END;
+     Exit;
+    END;
+
+   IF (Copy(OpPart,1,4)='TRAP') THEN
+    BEGIN
+     Delete(OpPart,1,4);
+     z:=1;
+     WHILE (z<26) AND (FPUConds[z].Name<>OpPart) DO Inc(z);
+     IF z=27 THEN WrError(1360)
+     ELSE
+      BEGIN
+       IF (AttrPart='') THEN OpSize:=0;
+       IF OpSize>2 THEN WrError(1130)
+       ELSE IF ((OpSize=0)AND(ArgCnt<>0))OR((OpSize<>0)AND(ArgCnt<>1)) THEN WrError(1110)
+       ELSE
+        BEGIN
+         WAsmCode[0]:=$f278; WAsmCode[1]:=FPUConds[z].Code;
+         IF OpSize=0 THEN
+          BEGIN
+           WAsmCode[0]:=WAsmCode[0] OR 4; CodeLen:=4;
+          END
+         ELSE
+          BEGIN
+           DecodeAdr(ArgStr[1],M11);
+           IF AdrNum<>0 THEN
+            BEGIN
+             WAsmCode[0]:=WAsmCode[0] OR (OpSize+1);
+             CopyAdrVals(WAsmCode[2]); CodeLen:=4+AdrCnt;
+            END;
+          END;
+        END;
+      END;
+     Exit;
+    END;
+
+   IF Memo('MOVEM') THEN
+    BEGIN
+     IF ArgCnt<>2 THEN WrError(1110)
+     ELSE
+      BEGIN
+       DecodeFRegList(ArgStr[2],z1,z2);
+       IF z1<>0 THEN
+        BEGIN
+         IF (AttrPart<>'') AND (((z1<3) AND (OpSize<>6)) OR ((z1=3) AND (OpSize<>2)))
+         THEN WrError(1130)
+         ELSE
+          BEGIN
+           RelPos:=4;
+           IF z1=3 THEN DecodeAdr(ArgStr[1],M3+M4+M5+M6+M7+M8+M9+M10)
+                   ELSE DecodeAdr(ArgStr[1],M3+M4+M6+M7+M8+M9+M10);
+           WAsmCode[1]:=0; GenerateMovem;
+          END;
+        END
+       ELSE
+        BEGIN
+         DecodeFRegList(ArgStr[1],z1,z2);
+         IF z1<>0 THEN
+          BEGIN
+           IF (AttrPart<>'') AND (((z1<3) AND (OpSize<>6)) OR ((z1=3) AND (OpSize<>2)))
+           THEN WrError(1130)
+           ELSE
+            BEGIN
+             IF z1=3 THEN DecodeAdr(ArgStr[2],M3+M4+M5+M6+M7+M10)
+                     ELSE DecodeAdr(ArgStr[2],M3+M5+M6+M7+M10);
+             WAsmCode[1]:=$2000; GenerateMovem;
+            END;
+          END
+         ELSE WrError(1410);
+        END;
+      END;
+     Exit;
+    END;
+
+   WrError(1200);
+END;
+
