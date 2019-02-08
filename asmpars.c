@@ -1590,13 +1590,14 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
 
     /* both operands for a dyadic operator must have same type */
 
-    if ((pOp->Dyadic) && (InVals[0].Typ != InVals[1].Typ))
+    if (pOp->Dyadic && (InVals[0].Typ != InVals[1].Typ))
     {
       for (z1 = 0; z1 < 2; z1++)
         switch (InVals[z1].Typ)
         {
           case TempString:
-            WrStrErrorPos(ErrNum_InvOpType, &InArgs[z1]);
+            WrStrErrorPos(ErrNum_OpTypeMismatch, &CopyComp);
+            LEAVE;
             break;
           case TempInt:
             TempResultToFloat(&InVals[z1]);

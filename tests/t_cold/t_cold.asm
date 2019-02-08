@@ -156,17 +156,32 @@
 		cpu		mcf5470
 
 		irp		instr,mac,msac
-		 irp		shift,,<<0,>>0,<<1,>>1
-		  instr.l	a4,d3 shift
-		  instr.l	a4,d3 shift,(a5),a6,acc
-		  instr.l	a4,d3 shift,(1000,a5),a6,acc0
-		  instr.l	a4,d3 shift,(a5)&,a6
-		  instr.l	a4,d3 shift,(1000,a5)&,a6
-		  instr.l	a4,d3 shift,(a5)&mask,a6
-		  instr.l	a4,d3 shift,(1000,a5)&mask,a6
+		 irp		noshift,x
+		  instr.l	a4,d3
+		  instr.l	a4,d3,(a5),a6,acc
+		  instr.l	a4,d3,(1000,a5),a6,acc0
+		  instr.l	a4,d3,(a5)&,a6
+		  instr.l	a4,d3,(1000,a5)&,a6
+		  instr.l	a4,d3,(a5)&mask,a6
+		  instr.l	a4,d3,(1000,a5)&mask,a6
 		  irp		half1,l,u
 		  irp		half2,l,u
-		   instr.w	a4.half1,d3.half2 shift
+		   instr.w	a4.half1,d3.half2
+		   ; we might iterate here through mask arg and other EMAC ACCs either...
+		  endm
+		  endm
+		 endm
+		 irp		shift,<<0,>>0,<<,>>,<<1,>>1
+		  instr.l	a4,d3,shift
+		  instr.l	a4,d3,shift,(a5),a6,acc
+		  instr.l	a4,d3,shift,(1000,a5),a6,acc0
+		  instr.l	a4,d3,shift,(a5)&,a6
+		  instr.l	a4,d3,shift,(1000,a5)&,a6
+		  instr.l	a4,d3,shift,(a5)&mask,a6
+		  instr.l	a4,d3,shift,(1000,a5)&mask,a6
+		  irp		half1,l,u
+		  irp		half2,l,u
+		   instr.w	a4.half1,d3.half2,shift
 		   ; we might iterate here through mask arg and other EMAC ACCs either...
 		  endm
 		  endm
@@ -200,11 +215,19 @@
 		endm
 
 		irp		instr,maaac,masac,msaac,mssac
-		 irp		shift,,<<0,>>0,<<1,>>1
-		  instr.l	a4,d3 shift,acc1,acc3
+		 irp		noshift,x
+		  instr.l	a4,d3,acc1,acc3
 		  irp		half1,l,u
 		  irp		half2,l,u
-		   instr.w	 a4.half1,d3.half2 shift,acc1,acc3
+		   instr.w	 a4.half1,d3.half2,acc1,acc3
+		  endm
+		  endm
+		 endm
+		 irp		shift,<<0,>>0,<<1,>>1
+		  instr.l	a4,d3,shift,acc1,acc3
+		  irp		half1,l,u
+		  irp		half2,l,u
+		   instr.w	 a4.half1,d3.half2,shift,acc1,acc3
 		  endm
 		  endm
 		 endm

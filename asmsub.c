@@ -1315,6 +1315,8 @@ void WrXErrorPos(Word Num, const char *pExtendError, const struct sLineComp *pLi
       msgno = Num_ErrMsgUndefOpSizes; break;
     case ErrNum_InvOpType:
       msgno = Num_ErrMsgInvOpType; break;
+    case ErrNum_OpTypeMismatch:
+      msgno = Num_ErrMsgOpTypeMismatch; break;
     case ErrNum_TooManyArgs:
       msgno = Num_ErrMsgTooManyArgs; break;
     case ErrNum_NoRelocs:

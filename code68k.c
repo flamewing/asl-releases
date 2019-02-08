@@ -1694,47 +1694,49 @@ static Boolean DecodeRegList(const char *Asc_o, Word *Erg)
   return True;
 }
 
-static Boolean SplitMACScale(Word *pResult, tStrComp *pArg)
+static Boolean DecodeMACScale(const tStrComp *pArg, Word *pResult)
 {
-  /* Scale is only allowed on register arguments, so searching for << and >>
-     does not conflict with arithmetic expressions: */
+  int l = strlen(pArg->Str);
+  tStrComp ShiftArg;
+  Boolean Left = False, OK;
+  Word ShiftCnt;
 
-  char *pLPos = strstr(pArg->Str, "<<"),
-       *pRPos = strstr(pArg->Str, ">>"),
-       *pSplitPos;
-  tStrComp ScaleComp;
-  Word Shift;
-  Boolean OK;
+  /* allow empty argument */
 
-  /* default: no scaling */
-
-  *pResult = 0;
-  if (!pLPos && !pRPos)
+  if (!l)
+  {
+    *pResult = 0;
     return True;
+  }
+  /* left or right? */
 
-  /* use earlier occurence for splitting */
-
-  if (pLPos && pRPos)
-    pSplitPos = min(pLPos, pRPos);
+  if (l < 2)
+    return False;
+  if (!strncmp(pArg->Str, "<<", 2))
+    Left = True;
+  else if (!strncmp(pArg->Str, ">>", 2))
+    Left = False;
   else
-    pSplitPos = pLPos ? pLPos : pRPos;
+    return False;
 
-  /* Split off scale arg and clean up args */
+  /* evaluate shift cnt - empty count counts as one */
 
-  StrCompSplitRef(pArg, &ScaleComp, pArg, pSplitPos);
-  StrCompIncRefLeft(&ScaleComp, 1);
-  KillPostBlanksStrComp(pArg);
-
-  /* evaluate scale */
-
-  Shift = EvalStrIntExpression(&ScaleComp, UInt1, &OK);
+  StrCompRefRight(&ShiftArg, pArg, 2);
+  KillPrefBlanksStrCompRef(&ShiftArg);
+  if (!*ShiftArg.Str)
+  {
+    ShiftCnt = 1;
+    OK = True;
+  }
+  else
+    ShiftCnt = EvalStrIntExpression(&ShiftArg, UInt1, &OK);
   if (!OK)
     return False;
 
   /* codify */
 
-  if (Shift)
-    *pResult = (pSplitPos == pLPos) ? 1 : 3;
+  if (ShiftCnt)
+    *pResult = Left ? 1 : 3;
   else
     *pResult = 0;
   return True;
@@ -5233,7 +5235,11 @@ static void DecodeSATS(Word Code)
 
 static void DecodeMAC_MSAC(Word Code)
 {
-  Word Rx, Ry, Rw, Ux, Uy, Scale, Mask, AccNum;
+  Word Rx, Ry, Rw, Ux = 0, Uy = 0, Scale = 0, Mask, AccNum = 0;
+  int CurrArg, RemArgCnt;
+  Boolean ExplicitLoad = !!(Code & 0x8000);
+
+  Code &= 0x7fff;
 
   if (!(pCurrCPUProps->SuppFlags & eFlagMAC))
   {
@@ -5247,12 +5253,54 @@ static void DecodeMAC_MSAC(Word Code)
     return;
   }
 
-  if (!ChkArgCnt(2, 5))
+  /* 2 args is the absolute minimum.  6 is the maximum (Ry, Rx, scale, <ea>, Rw, ACC) */
+
+  if (!ChkArgCnt(2, 6))
     return;
 
-  /* assume ACC(0) if no accumulator given */
+  /* Ry and Rx are always present, and are always the first arguments: */
 
-  if (Odd(ArgCnt))
+  if (OpSize == eSymbolSize16Bit)
+  {
+    if (!SplitMACUpperLower(&Uy, &ArgStr[1])
+     || !SplitMACUpperLower(&Ux, &ArgStr[2]))
+      return;
+  }
+
+  DecodeAdr(&ArgStr[1], Mdata | Madr);
+  if (!AdrNum)
+    return;
+  Ry = AdrMode & 15;
+  DecodeAdr(&ArgStr[2], Mdata | Madr);
+  if (!AdrNum)
+    return;
+  Rx = AdrMode & 15;
+  CurrArg = 3;
+
+  /* Is a scale given as next argument? */
+
+  if ((ArgCnt >= CurrArg) && DecodeMACScale(&ArgStr[CurrArg], &Scale))
+    CurrArg++;
+
+  /* We now have between 0 and 3 args left:
+     0 -> no load, ACC0
+     1 -> ACCn
+     2 -> load, ACC0
+     3 -> load, ACCn
+     If the 'L' variant (MACL, MSACL) was given, a parallel
+     load was specified explicitly and there MUST be the <ea> and Rw arguments: */
+
+  RemArgCnt = ArgCnt - CurrArg + 1;
+  if ((RemArgCnt > 3)
+   || (ExplicitLoad && (RemArgCnt < 2)))
+  {
+    WrError(ErrNum_WrongArgCnt);
+    return;
+  }
+
+  /* assumed ACC(0) if no accumulator given */
+
+  if (Odd(RemArgCnt))
   {
     if (!DecodeMACACC(ArgStr[ArgCnt].Str, &AccNum))
     {
@@ -5260,65 +5308,46 @@ static void DecodeMAC_MSAC(Word Code)
       return;
     }
   }
-  else
-    AccNum = 0;
 
-  if (!SplitMACScale(&Scale, &ArgStr[2]))
-    return;
+  /* If parallel load, bit 7 of first word is set for MAC.  This bit is
+     used on EMAC to store accumulator # LSB.  To keep things upward-compatible,
+     accumulator # LSB is stored inverted on EMAC if a parallel load is present.
+     Since MAC only uses accumulator #0, this works for either target: */
 
-  if (OpSize == eSymbolSize16Bit)
+  if (RemArgCnt >= 2)
+    AccNum ^= 1;
+
+  /* Common things for variant with and without parallel load: */
+
+  WAsmCode[0] = 0xa000 | ((AccNum & 1) << 7);
+  WAsmCode[1] = ((OpSize - 1) << 11) | (Scale << 9) | Code | (Ux << 7) | (Uy << 6) | ((AccNum & 2) << 3);
+
+  /* With parallel load? */
+
+  if (RemArgCnt >= 2)
   {
-    if (!SplitMACUpperLower(&Ux, &ArgStr[1])
-     || !SplitMACUpperLower(&Uy, &ArgStr[2]))
-      return;
-  }
-  else
-    Ux = Uy = 0;
-
-  DecodeAdr(&ArgStr[1], Mdata | Madr);
-  if (!AdrNum)
-    return;
-  Rx = AdrMode & 15;
-  DecodeAdr(&ArgStr[2], Mdata | Madr);
-  if (!AdrNum)
-    return;
-  Ry = AdrMode & 15;
-
-  /* ACC msb (always 0 for non-EMAC) is always in second word bit 4 and not inverted: */
-
-  WAsmCode[0] = 0xa000;
-  WAsmCode[1] = Code | ((OpSize - 1) << 11) | (Scale << 9) | (Ux << 7) | (Uy << 6) | ((AccNum & 2) << 3);
-
-  /* 4/5 args -> with parallel load in arg 3/4 */
-
-  if (ArgCnt >= 4)
-  {
-    DecodeAdr(&ArgStr[4], Mdata | Madr);
+    DecodeAdr(&ArgStr[CurrArg + 1], Mdata | Madr);
     if (!AdrNum)
       return;
     Rw = AdrMode & 15;
 
-    if (!SplitMACANDMASK(&Mask, &ArgStr[3]))
+    if (!SplitMACANDMASK(&Mask, &ArgStr[CurrArg]))
       return;
-    DecodeAdr(&ArgStr[3], Madri | Mpre | Mpost | Mdadri);
+    DecodeAdr(&ArgStr[CurrArg], Madri | Mpre | Mpost | Mdadri);
     if (!AdrNum)
       return;
 
-    /* ACC lsb is inverted in bit 7 of first word: */
-
-    WAsmCode[0] |= 0x0080 | ((Rw & 7) << 9) | ((Rw & 8) << 3) | AdrMode | ((~AccNum & 1) << 7);
+    WAsmCode[0] |= ((Rw & 7) << 9) | ((Rw & 8) << 3) | AdrMode;
     WAsmCode[1] |= (Mask << 5) | (Rx << 12) | (Ry << 0);
     CodeLen = 4 + AdrCnt;
     CopyAdrVals(WAsmCode + 2);
   }
 
-  /* 2/3 args -> multiply/accumulate only */
+  /* multiply/accumulate only */
 
   else
   {
-    /* ACC lsb is non-inverted in bit 7 of first word: */
-
-    WAsmCode[0] |= Ry | ((Rx & 7) << 9) | ((Rx & 8) << 3) | ((AccNum & 1) << 7);
+    WAsmCode[0] |= Ry | ((Rx & 7) << 9) | ((Rx & 8) << 3);
     CodeLen = 4;
   }
 }
@@ -5346,7 +5375,7 @@ static void DecodeMOVCLR(Word Code)
 
 static void DecodeMxxAC(Word Code)
 {
-  Word Rx, Ry, Ux, Uy, Scale, ACCx, ACCw;
+  Word Rx, Ry, Ux, Uy, Scale = 0, ACCx, ACCw;
 
   if (!(pCurrCPUProps->SuppFlags & eFlagEMAC)
     || (pCurrCPUProps->CfISA < eCfISA_B))
@@ -5361,27 +5390,33 @@ static void DecodeMxxAC(Word Code)
     return;
   }
 
-  if (!ChkArgCnt(4, 4))
+  if (!ChkArgCnt(4, 5))
     return;
 
-  if (!DecodeMACACC(ArgStr[3].Str, &ACCx))
+  if (!DecodeMACACC(ArgStr[ArgCnt - 1].Str, &ACCx))
   {
-    WrStrErrorPos(ErrNum_InvReg, &ArgStr[3]);
+    WrStrErrorPos(ErrNum_InvReg, &ArgStr[ArgCnt - 1]);
     return;
   }
-  if (!DecodeMACACC(ArgStr[4].Str, &ACCw))
+  if (!DecodeMACACC(ArgStr[ArgCnt].Str, &ACCw))
   {
-    WrStrErrorPos(ErrNum_InvReg, &ArgStr[4]);
+    WrStrErrorPos(ErrNum_InvReg, &ArgStr[ArgCnt]);
     return;
   }
 
-  if (!SplitMACScale(&Scale, &ArgStr[2]))
-    return;
+  if (5 == ArgCnt)
+  {
+    if (!DecodeMACScale(&ArgStr[3], &Scale))
+    {
+      WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[3]);
+      return;
+    }
+  }
 
   if (OpSize == eSymbolSize16Bit)
   {
-    if (!SplitMACUpperLower(&Ux, &ArgStr[1])
-     || !SplitMACUpperLower(&Uy, &ArgStr[2]))
+    if (!SplitMACUpperLower(&Uy, &ArgStr[1])
+     || !SplitMACUpperLower(&Ux, &ArgStr[2]))
       return;
   }
   else
@@ -5390,11 +5425,11 @@ static void DecodeMxxAC(Word Code)
   DecodeAdr(&ArgStr[1], Mdata | Madr);
   if (!AdrNum)
     return;
-  Rx = AdrMode & 15;
+  Ry = AdrMode & 15;
   DecodeAdr(&ArgStr[2], Mdata | Madr);
   if (!AdrNum)
     return;
-  Ry = AdrMode & 15;
+  Rx = AdrMode & 15;
 
   WAsmCode[0] = 0xa000 | ((Rx & 7) << 9) | ((Rx & 8) << 3) | Ry | ((ACCx & 1) << 7);
   WAsmCode[1] = Code | ((OpSize - 1) << 11) | (Scale << 9) | (Ux << 7) | (Uy << 6) | ((ACCx & 2) << 3) | (ACCw << 2);
@@ -5842,6 +5877,8 @@ static void InitFields(void)
   AddInstTable(InstTable, "SATS", 0x0000, DecodeSATS);
   AddInstTable(InstTable, "MAC" , 0x0000, DecodeMAC_MSAC);
   AddInstTable(InstTable, "MSAC", 0x0100, DecodeMAC_MSAC);
+  AddInstTable(InstTable, "MACL" , 0x8000, DecodeMAC_MSAC);
+  AddInstTable(InstTable, "MSACL", 0x8100, DecodeMAC_MSAC);
   AddInstTable(InstTable, "MOVCLR" , 0x0000, DecodeMOVCLR);
   AddInstTable(InstTable, "MAAAC" , 0x0001, DecodeMxxAC);
   AddInstTable(InstTable, "MASAC" , 0x0003, DecodeMxxAC);

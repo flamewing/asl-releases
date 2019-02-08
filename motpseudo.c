@@ -211,7 +211,7 @@ static void DecodeBYT(Word Index)
             break;
 
           case TempFloat:
-            WrError(ErrNum_InvOpType);
+            WrStrErrorPos(ErrNum_InvOpType, &Arg);
             OK = False;
             break;
 

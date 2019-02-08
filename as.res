@@ -326,6 +326,10 @@ Message ErrMsgInvOpType
  "unpassender Operandentyp"
  "invalid operand type"
 
+Message ErrMsgOpTypeMismatch
+ "Operandentyp-Diskrepanz"
+ "operand type mismatch"
+
 Message ErrMsgTooManyArgs
  "zuviele Argumente"
  "too many arguments"

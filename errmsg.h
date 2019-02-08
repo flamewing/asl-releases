@@ -66,6 +66,7 @@ typedef enum
   ErrNum_UndefOpSizes = 1132,
   ErrNum_InvOpSize = 1130,
   ErrNum_InvOpType = 1135,
+  ErrNum_OpTypeMismatch = 1137,
   ErrNum_TooManyArgs = 1140,
   ErrNum_NoRelocs = 1150,
   ErrNum_UnresRelocs = 1155,
