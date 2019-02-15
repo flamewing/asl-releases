@@ -131,14 +131,16 @@ void StrCompSplitCopy(tStrComp *pLeft, tStrComp *pRight, const tStrComp *pSrc, c
 char StrCompSplitRef(tStrComp *pLeft, tStrComp *pRight, const tStrComp *pSrc, char *pSplitPos)
 {
   char Old = *pSplitPos;
+  /* save because pLeft and pSrc might be equal */
+  tLineComp SrcPos = pSrc->Pos;
 
   *pSplitPos = '\0';
   pLeft->Str = pSrc->Str;
-  pLeft->Pos.StartCol = pSrc->Pos.StartCol;
+  pLeft->Pos.StartCol = SrcPos.StartCol;
   pLeft->Pos.Len = pSplitPos - pLeft->Str;
   pRight->Str = pSrc->Str + (pLeft->Pos.Len + 1);
-  pRight->Pos.StartCol = pSrc->Pos.StartCol + (pLeft->Pos.Len + 1);
-  pRight->Pos.Len = pSrc->Pos.Len - (pLeft->Pos.Len + 1);
+  pRight->Pos.StartCol = SrcPos.StartCol + (pLeft->Pos.Len + 1);
+  pRight->Pos.Len = SrcPos.Len - (pLeft->Pos.Len + 1);
 
   return Old;
 }

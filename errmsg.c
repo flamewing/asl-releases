@@ -253,7 +253,8 @@ extern Boolean ChkExactCPUExt(CPUVar MatchCPU, tErrorNum ErrorNum)
 
 typedef struct
 {
-  const tCPUDef *pExcludeCPUDef, *pLastCPUDef;
+  const tCPUDef *pExcludeCPUDef;
+  const tCPUDef *pLastCPUDef;
   String Str;
   Boolean First;
   Word ExcludeMask;

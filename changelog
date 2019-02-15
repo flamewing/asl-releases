@@ -1,3 +1,7 @@
+2019-02-15 [1.42 Bld 144]
+
+- Bugfix      : correct/augment addressing modes for TLCS-900
+
 2019-02-08 [1.42 Bld 143]
 
 - Bugfix      : correct ColdFire MAC/EMAC syntax 

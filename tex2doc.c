@@ -203,7 +203,8 @@ static void SetLang(Boolean IsGerman)
     return;
 
   DestroyTree();
-  if ((GermanMode = IsGerman))
+  GermanMode = IsGerman;
+  if (GermanMode)
   {
     TableName = "Tabelle";
     BiblioName = "Literaturverzeichnis";

@@ -216,7 +216,8 @@ static void SetLang(Boolean IsGerman)
   if (GermanMode == IsGerman)
     return;
 
-  if ((GermanMode = IsGerman))
+  GermanMode = IsGerman;
+  if (GermanMode)
   {
     TableName = "Tabelle";
     BiblioName = "Literaturverzeichnis";

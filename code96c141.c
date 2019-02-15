@@ -5,62 +5,8 @@
 /* Codegenerator TLCS-900(L)                                                 */
 /*                                                                           */
 /* Historie: 27. 6.1996 Grundsteinlegung                                     */
-/*            9. 1.1999 ChkPC jetzt mit Adresse als Parameter                */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*           22. 5.2000 fixed decoding xhl0...xhl3                           */
-/*           14. 6.2000 fixed coding of minc/mdec                            */
-/*           18. 6.2000 fixed coding of bs1b                                 */
-/*           14. 1.2001 silenced warnings about unused parameters            */
-/*           19. 8.2001 fixed errors for lower halves of XIX...XSP           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code96c141.c,v 1.13 2017/06/07 19:49:28 alfred Exp $                          */
-/*****************************************************************************
- * $Log: code96c141.c,v $
- * Revision 1.13  2017/06/07 19:49:28  alfred
- * - resolve CPL conflict
- *
- * Revision 1.12  2015/05/25 08:38:35  alfred
- * - silence come warnings on old GCC versions
- *
- * Revision 1.11  2014/12/07 19:14:00  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.10  2014/08/11 21:10:27  alfred
- * - adapt to current style
- *
- * Revision 1.9  2010/08/27 14:52:42  alfred
- * - some more overlapping strcpy() cleanups
- *
- * Revision 1.8  2007/11/24 22:48:06  alfred
- * - some NetBSD changes
- *
- * Revision 1.7  2006/08/05 18:06:05  alfred
- * - remove debug printf
- *
- * Revision 1.6  2006/08/05 12:20:03  alfred
- * - regard spaces in indexed expressions for TLCS-900
- *
- * Revision 1.5  2005/09/08 16:53:42  alfred
- * - use common PInstTable
- *
- * Revision 1.4  2005/09/08 16:10:03  alfred
- * - fix Qxxn register decoding
- *
- * Revision 1.3  2004/11/16 17:43:09  alfred
- * - add missing hex mark on short mask
- *
- * Revision 1.2  2004/05/29 11:33:02  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- * Revision 1.1  2003/11/06 02:49:22  alfred
- * - recreated
- *
- * Revision 1.2  2002/10/20 09:22:25  alfred
- * - work around the parser problem related to the ' character
- *
- * Revision 1.7  2002/10/07 20:25:01  alfred
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -143,7 +89,7 @@ static ShortInt AdrType;
 static ShortInt OpSize;        /* -1/0/1/2 = nix/Byte/Word/Long */
 static Byte AdrMode;
 static Byte AdrVals[10];
-static Boolean MinOneIs0;
+static Boolean MinOneIs0, AutoIncSizeNeeded;
 
 static CPUVar CPU96C141,CPU93C141;
 
@@ -486,6 +432,69 @@ static Boolean IsRegCurrent(Byte No, Byte Size, Byte *Erg)
   }
 }
 
+static const char *pSizes = "124";
+
+static int GetPostInc(const char *pArg, int ArgLen, ShortInt *pOpSize)
+{
+  const char *pPos;
+
+  /* <reg>+ */
+
+  if ((ArgLen > 2) && (pArg[ArgLen - 1] == '+'))
+  {
+    *pOpSize = eSymbolSizeUnknown;
+    return 1;
+  }
+
+  /* <reg>++n, <reg>+:n */
+
+  if ((ArgLen > 4) && (pArg[ArgLen - 3] == '+') && strchr(":+", pArg[ArgLen - 2]) && (pPos = strchr(pSizes, pArg[ArgLen - 1])))
+  {
+    *pOpSize = pPos - pSizes;
+    return 3;
+  }
+  return False;
+}
+
+static Boolean GetPreDec(const char *pArg, int ArgLen, ShortInt *pOpSize, int *pCutoffLeft, int *pCutoffRight)
+{
+  const char *pPos;
+
+  /* n--<reg> */
+
+  if ((ArgLen > 4) && (pPos = strchr(pSizes, pArg[0])) && (pArg[1] == '-') && (pArg[2] == '-'))
+  {
+    *pOpSize = pPos - pSizes;
+    *pCutoffLeft = 3;
+    *pCutoffRight = 0;
+    return True;
+  }
+
+  if ((ArgLen > 2) && (pArg[0] == '-'))
+  {
+    *pCutoffLeft = 1;
+
+    /* -<reg>:n */
+
+    if ((ArgLen > 4) && (pArg[ArgLen - 2] == ':') && (pPos = strchr(pSizes, pArg[ArgLen - 1])))
+    {
+      *pOpSize = pPos - pSizes;
+      *pCutoffRight = 2;
+      return True;
+    }
+
+    /* -<reg> */
+
+    else
+    {
+      *pOpSize = eSymbolSizeUnknown;
+      *pCutoffRight = 0;
+      return True;
+    }
+  }
+  return False;
+}
+
 static void ChkAdr(Byte Erl)
 {
   if (AdrType != ModNone)
@@ -496,14 +505,269 @@ static void ChkAdr(Byte Erl)
    }
 }
 
+static void DecodeAdrMem(tStrComp *pArg)
+{
+  LongInt DispPart, DispAcc;
+  char *EPos;
+  tStrComp Remainder;
+  Boolean NegFlag, NNegFlag, FirstFlag, OK;
+  Byte BaseReg, BaseSize;
+  Byte IndReg, IndSize;
+  Byte PartMask;
+  Byte HNum, HSize;
+  int CutoffLeft, CutoffRight, ArgLen = strlen(pArg->Str);
+  ShortInt IncOpSize;
+
+  NegFlag = False;
+  NNegFlag = False;
+  FirstFlag = False;
+  PartMask = 0;
+  DispAcc = 0;
+  BaseReg = IndReg = BaseSize = IndSize = 0xff;
+
+  AdrType = ModNone;
+  AutoIncSizeNeeded = False;
+
+  /* post-increment */
+
+  if ((ArgLen > 2)
+   && (CutoffRight = GetPostInc(pArg->Str, ArgLen, &IncOpSize)))
+  {
+    String Reg;
+    tStrComp RegComp;
+
+    StrCompMkTemp(&RegComp, Reg);
+    StrCompCopy(&RegComp, pArg);
+    StrCompShorten(&RegComp, CutoffRight);
+    if (CodeEReg(RegComp.Str, &HNum, &HSize) == 2)
+    {
+      if (!IsRegBase(HNum, HSize)) WrStrErrorPos(ErrNum_InvAddrMode, &RegComp);
+      else
+      {
+        if (IncOpSize == eSymbolSizeUnknown)
+          IncOpSize = OpSize;
+        AdrType = ModMem;
+        AdrMode = 0x45;
+        AdrCnt = 1;
+        AdrVals[0] = HNum;
+        if (IncOpSize == eSymbolSizeUnknown)
+          AutoIncSizeNeeded = True;
+        else
+          AdrVals[0] += IncOpSize;
+      }
+      return;
+    }
+  }
+
+  /* pre-decrement ? */
+
+  if ((ArgLen > 2)
+   && GetPreDec(pArg->Str, ArgLen, &IncOpSize, &CutoffLeft, &CutoffRight))
+  {
+    String Reg;
+    tStrComp RegComp;
+
+    StrCompMkTemp(&RegComp, Reg);
+    StrCompCopy(&RegComp, pArg);
+    StrCompIncRefLeft(&RegComp, CutoffLeft);
+    StrCompShorten(&RegComp, CutoffRight);
+    if (CodeEReg(RegComp.Str, &HNum, &HSize) == 2)
+    {
+      if (!IsRegBase(HNum, HSize)) WrError(ErrNum_InvAddrMode);
+      else
+      {
+        if (IncOpSize == eSymbolSizeUnknown)
+          IncOpSize = OpSize;
+        AdrType = ModMem;
+        AdrMode = 0x44;
+        AdrCnt = 1;
+        AdrVals[0] = HNum;
+        if (IncOpSize == eSymbolSizeUnknown)
+          AutoIncSizeNeeded = True;
+        else
+          AdrVals[0] += IncOpSize;
+      }
+      return;
+    }
+  }
+
+  do
+  {
+    EPos = QuotMultPos(pArg->Str, "+-");
+    NNegFlag = EPos && (*EPos == '-');
+    if ((EPos == pArg->Str) || (EPos == pArg->Str + strlen(pArg->Str) - 1))
+    {
+      WrError(ErrNum_InvAddrMode);
+      return;
+    }
+    if (EPos)
+      StrCompSplitRef(pArg, &Remainder, pArg, EPos);
+    KillPrefBlanksStrComp(pArg);
+    KillPostBlanksStrComp(pArg);
+
+    switch (CodeEReg(pArg->Str, &HNum, &HSize))
+    {
+      case 0:
+        FirstPassUnknown = False;
+        DispPart = EvalStrIntExpression(pArg, Int32, &OK);
+        if (FirstPassUnknown) FirstFlag = True;
+        if (!OK) return;
+        if (NegFlag)
+          DispAcc -= DispPart;
+        else
+          DispAcc += DispPart;
+        PartMask |= 1;
+        break;
+      case 1:
+        break;
+      case 2:
+        if (NegFlag)
+        {
+          WrError(ErrNum_InvAddrMode); return;
+        }
+        else
+        {
+          Boolean MustInd;
+
+          if (HSize == 0)
+            MustInd = True;
+          else if (HSize == 2)
+            MustInd = False;
+          else if (!IsRegBase(HNum, HSize))
+            MustInd = True;
+          else if (PartMask & 4)
+            MustInd = True;
+          else
+            MustInd = False;
+          if (MustInd)
+          {
+            if (PartMask & 2)
+            {
+              WrError(ErrNum_InvAddrMode); return;
+            }
+            else
+            {
+              IndReg = HNum;
+              PartMask |= 2;
+              IndSize = HSize;
+            }
+          }
+          else
+          {
+            if (PartMask & 4)
+            {
+              WrError(ErrNum_InvAddrMode); return;
+            }
+            else
+            {
+              BaseReg = HNum;
+              PartMask |= 4;
+              BaseSize = HSize;
+            }
+          }
+        }
+        break;
+    }
+
+    NegFlag = NNegFlag;
+    NNegFlag = False;
+    if (EPos)
+      *pArg = Remainder;
+  }
+  while (EPos);
+
+  if ((DispAcc == 0) && (PartMask != 1))
+    PartMask &= 6;
+  if ((PartMask == 5) && (FirstFlag))
+    DispAcc &= 0x7fff;
+
+  switch (PartMask)
+  {
+    case 0:
+    case 2:
+    case 3:
+    case 7:
+      WrError(ErrNum_InvAddrMode);
+      break;
+    case 1:
+      if (DispAcc<=0xff)
+      {
+        AdrType = ModMem;
+        AdrMode = 0x40;
+        AdrCnt = 1;
+        AdrVals[0] = DispAcc;
+      }
+      else if (DispAcc < 0xffff)
+      {
+        AdrType = ModMem;
+        AdrMode = 0x41;
+        AdrCnt = 2;
+        AdrVals[0] = Lo(DispAcc);
+        AdrVals[1] = Hi(DispAcc);
+      }
+      else if (DispAcc<0xffffff)
+      {
+        AdrType = ModMem;
+        AdrMode = 0x42;
+        AdrCnt = 3;
+        AdrVals[0] = DispAcc         & 0xff;
+        AdrVals[1] = (DispAcc >>  8) & 0xff;
+        AdrVals[2] = (DispAcc >> 16) & 0xff;
+      }
+      else WrError(ErrNum_AdrOverflow);
+      break;
+    case 4:
+      if (IsRegCurrent(BaseReg, BaseSize, &AdrMode))
+      {
+        AdrType = ModMem;
+        AdrCnt = 0;
+      }
+      else
+      {
+        AdrType = ModMem;
+        AdrMode = 0x43;
+        AdrCnt = 1;
+        AdrVals[0] = BaseReg;
+      }
+      break;
+    case 5:
+      if ((DispAcc <= 127) && (DispAcc >= -128) && (IsRegCurrent(BaseReg, BaseSize, &AdrMode)))
+      {
+        AdrType = ModMem;
+        AdrMode += 8;
+        AdrCnt = 1;
+        AdrVals[0] = DispAcc & 0xff;
+      }
+      else if ((DispAcc <= 32767) && (DispAcc >= -32768))
+      {
+        AdrType = ModMem;
+        AdrMode = 0x43;
+        AdrCnt = 3;
+        AdrVals[0] = BaseReg + 1;
+        AdrVals[1] = DispAcc & 0xff;
+        AdrVals[2] = (DispAcc >> 8) & 0xff;
+      }
+      else WrError(ErrNum_OverRange);
+      break;
+    case 6:
+      AdrType = ModMem;
+      AdrMode = 0x43;
+      AdrCnt = 3;
+      AdrVals[0] = 3 + (IndSize << 2);
+      AdrVals[1] = BaseReg;
+      AdrVals[2] = IndReg;
+      break;
+  }
+}
+
 static void DecodeAdr(const tStrComp *pArg, Byte Erl)
 {
   Byte HNum, HSize;
   LongInt DispAcc;
-  Boolean OK, MustInd;
-  int ArgLen;
+  Boolean OK;
 
   AdrType = ModNone;
+  AutoIncSizeNeeded = False;
 
   /* Register ? */
 
@@ -536,244 +800,15 @@ static void DecodeAdr(const tStrComp *pArg, Byte Erl)
     return;
   }
 
-  /* Predekrement ? */
-
-  ArgLen = strlen(pArg->Str);
-  if ((ArgLen > 4)
-   && (pArg->Str[ArgLen - 1] == ')')
-   && (!strncmp(pArg->Str, "(-", 2)))
-  {
-    tStrComp RegComp;
-
-    StrCompRefRight(&RegComp, pArg, 2);
-    StrCompShorten(&RegComp, 1);
-    if (CodeEReg(RegComp.Str, &HNum, &HSize) != 2) WrError(ErrNum_InvAddrMode);
-    else if (!IsRegBase(HNum, HSize)) WrError(ErrNum_InvAddrMode);
-    else
-    {
-      AdrType = ModMem;
-      AdrMode = 0x44;
-      AdrCnt = 1;
-      AdrVals[0] = HNum;
-      if (OpSize != -1)
-        AdrVals[0] += OpSize;
-    }
-    ChkAdr(Erl);
-    return;
-  }
-
-  /* Postinkrement ? */
-
-  if ((ArgLen > 4)
-   && (pArg->Str[0] == '(')
-   && (!strncmp(pArg->Str + ArgLen - 2, "+)", 2)))
-  {
-    tStrComp RegComp;
-
-    StrCompRefRight(&RegComp, pArg, 1);
-    StrCompShorten(&RegComp, 2);
-    if (CodeEReg(RegComp.Str, &HNum, &HSize) != 2) WrError(ErrNum_InvAddrMode);
-    else if (!IsRegBase(HNum, HSize)) WrError(ErrNum_InvAddrMode);
-    else
-    {
-      AdrType = ModMem;
-      AdrMode = 0x45;
-      AdrCnt = 1;
-      AdrVals[0] = HNum;
-      if (OpSize != -1)
-        AdrVals[0] += OpSize;
-    }
-    ChkAdr(Erl);
-    return;
-  }
-
   /* Speicheroperand ? */
 
   if (IsIndirect(pArg->Str))
   {
-    LongInt DispPart;
-    char *EPos;
-    tStrComp Arg, Remainder;
-    Boolean NegFlag, NNegFlag, FirstFlag;
-    Byte BaseReg, BaseSize;
-    Byte IndReg, IndSize;
-    Byte PartMask;
-
-    NegFlag = False;
-    NNegFlag = False;
-    FirstFlag = False;
-    PartMask = 0;
-    DispAcc = 0;
-    BaseReg = IndReg = BaseSize = IndSize = 0xff;
+    tStrComp Arg;
 
     StrCompRefRight(&Arg, pArg, 1);
     StrCompShorten(&Arg, 1);
-
-    do
-    {
-      EPos = QuotMultPos(Arg.Str, "+-");
-      NNegFlag = EPos && (*EPos == '-');
-      if ((EPos == Arg.Str) || (EPos == Arg.Str + strlen(Arg.Str) - 1))
-      {
-        WrError(ErrNum_InvAddrMode);
-        return;
-      }
-      if (EPos)
-        StrCompSplitRef(&Arg, &Remainder, &Arg, EPos);
-      KillPrefBlanksStrComp(&Arg);
-      KillPostBlanksStrComp(&Arg);
-
-      switch (CodeEReg(Arg.Str, &HNum, &HSize))
-      {
-        case 0:
-          FirstPassUnknown = False;
-          DispPart = EvalStrIntExpression(&Arg, Int32, &OK);
-          if (FirstPassUnknown) FirstFlag = True;
-          if (!OK) return;
-          if (NegFlag)
-            DispAcc -= DispPart;
-          else
-            DispAcc += DispPart;
-          PartMask |= 1;
-          break;
-        case 1:
-          break;
-        case 2:
-          if (NegFlag)
-          {
-            WrError(ErrNum_InvAddrMode); return;
-          }
-          else
-          {
-            if (HSize == 0)
-              MustInd = True;
-            else if (HSize == 2)
-              MustInd = False;
-            else if (!IsRegBase(HNum, HSize))
-              MustInd = True;
-            else if (PartMask & 4)
-              MustInd = True;
-            else
-              MustInd = False;
-            if (MustInd)
-            {
-              if (PartMask & 2)
-              {
-                WrError(ErrNum_InvAddrMode); return;
-              }
-              else
-              {
-                IndReg = HNum;
-                PartMask |= 2;
-                IndSize = HSize;
-              }
-            }
-            else
-            {
-              if (PartMask & 4)
-              {
-                WrError(ErrNum_InvAddrMode); return;
-              }
-              else
-              {
-                BaseReg = HNum;
-                PartMask |= 4;
-                BaseSize = HSize;
-              }
-            }
-          }
-          break;
-      }
-
-      NegFlag = NNegFlag;
-      NNegFlag = False;
-      if (EPos)
-        Arg = Remainder;
-    }
-    while (EPos);
-
-    if ((DispAcc == 0) && (PartMask != 1))
-      PartMask &= 6;
-    if ((PartMask == 5) && (FirstFlag))
-      DispAcc &= 0x7fff;
-
-    switch (PartMask)
-    {
-      case 0:
-      case 2:
-      case 3:
-      case 7:
-        WrError(ErrNum_InvAddrMode);
-        break;
-      case 1:
-        if (DispAcc<=0xff)
-        {
-          AdrType = ModMem;
-          AdrMode = 0x40;
-          AdrCnt = 1;
-          AdrVals[0] = DispAcc;
-        }
-        else if (DispAcc < 0xffff)
-        {
-          AdrType = ModMem;
-          AdrMode = 0x41;
-          AdrCnt = 2;
-          AdrVals[0] = Lo(DispAcc);
-          AdrVals[1] = Hi(DispAcc);
-        }
-        else if (DispAcc<0xffffff)
-        {
-          AdrType = ModMem;
-          AdrMode = 0x42;
-          AdrCnt = 3;
-          AdrVals[0] = DispAcc         & 0xff;
-          AdrVals[1] = (DispAcc >>  8) & 0xff;
-          AdrVals[2] = (DispAcc >> 16) & 0xff;
-        }
-        else WrError(ErrNum_AdrOverflow);
-        break;
-      case 4:
-        if (IsRegCurrent(BaseReg, BaseSize, &AdrMode))
-        {
-          AdrType = ModMem;
-          AdrCnt = 0;
-        }
-        else
-        {
-          AdrType = ModMem;
-          AdrMode = 0x43;
-          AdrCnt = 1;
-          AdrVals[0] = BaseReg;
-        }
-        break;
-      case 5:
-        if ((DispAcc <= 127) && (DispAcc >= -128) && (IsRegCurrent(BaseReg, BaseSize, &AdrMode)))
-        {
-          AdrType = ModMem;
-          AdrMode += 8;
-          AdrCnt = 1;
-          AdrVals[0] = DispAcc & 0xff;
-        }
-        else if ((DispAcc <= 32767) && (DispAcc >= -32768))
-        {
-          AdrType = ModMem;
-          AdrMode = 0x43;
-          AdrCnt = 3;
-          AdrVals[0] = BaseReg + 1;
-          AdrVals[1] = DispAcc & 0xff;
-          AdrVals[2] = (DispAcc >> 8) & 0xff;
-        }
-        else WrError(ErrNum_OverRange);
-        break;
-      case 6:
-        AdrType = ModMem;
-        AdrMode = 0x43;
-        AdrCnt = 3;
-        AdrVals[0] = 3 + (IndSize << 2);
-        AdrVals[1] = BaseReg;
-        AdrVals[2] = IndReg;
-        break;
-    }
+    DecodeAdrMem(&Arg);
     ChkAdr(Erl); return;
   }
 
@@ -821,10 +856,10 @@ static void DecodeAdr(const tStrComp *pArg, Byte Erl)
 
 /*---------------------------------------------------------------------------*/
 
-static void CorrMode(Byte Ref, Byte Adr)
+static void SetAutoIncSize(Byte AdrModePos, Byte FixupPos)
 {
-  if ((BAsmCode[Ref] & 0x4e) == 0x44)
-    BAsmCode[Adr] = (BAsmCode[Adr] & 0xfc) | OpSize;
+  if ((BAsmCode[AdrModePos] & 0x4e) == 0x44)
+    BAsmCode[FixupPos] = (BAsmCode[FixupPos] & 0xfc) | OpSize;
 }
 
 static Boolean ArgPair(const char *Val1, const char *Val2)
@@ -1192,6 +1227,9 @@ static void DecodeEX(Word Index)
           }
           break;
         case ModMem:
+        {
+          Boolean FixupAutoIncSize = AutoIncSizeNeeded;
+
           MinOneIs0 = True;
           HReg = AdrCnt;
           BAsmCode[0] = AdrMode;
@@ -1200,11 +1238,13 @@ static void DecodeEX(Word Index)
           if (AdrType == ModReg) 
           {
             CodeLen = 2 + HReg;
-            CorrMode(0, 1);
+            if (FixupAutoIncSize)
+              SetAutoIncSize(0, 1);
             BAsmCode[0] += 0x80 + (OpSize << 4);
             BAsmCode[1 + HReg] = 0x30 + AdrMode;
           }
           break;
+        }
       }
     }
   }
@@ -1249,7 +1289,10 @@ static void DecodeLDA(Word Index)
       else
       {
         HReg = AdrMode;
-        DecodeAdr(&ArgStr[2], MModMem);
+        if (IsIndirect(ArgStr[2].Str))
+          DecodeAdr(&ArgStr[2], MModMem);
+        else
+          DecodeAdrMem(&ArgStr[2]);
         if (AdrType != ModNone) 
         {
           CodeLen = 2 + AdrCnt;
@@ -1503,6 +1546,9 @@ static void DecodeLD(Word Code)
         }
         break;
       case ModMem:
+      {
+        Boolean FixupAutoIncSize = AutoIncSizeNeeded;
+
         BAsmCode[0] = AdrMode;
         HReg = AdrCnt;
         MinOneIs0 = True;
@@ -1513,7 +1559,8 @@ static void DecodeLD(Word Code)
          case ModReg:
            CodeLen = 2 + HReg;
            BAsmCode[0] += 0xb0;
-           CorrMode(0, 1);
+           if (FixupAutoIncSize)
+             SetAutoIncSize(0, 1);
            BAsmCode[1 + HReg] = 0x40 + (OpSize << 4) + AdrMode;
            break;
          case ModMem:
@@ -1535,7 +1582,8 @@ static void DecodeLD(Word Code)
                BAsmCode[2 + AdrCnt] = BAsmCode[1];
                BAsmCode[0] = 0x80 + (OpSize << 4) + AdrMode;
                AdrMode = HReg;
-               CorrMode(0, 1);
+               if (FixupAutoIncSize)
+                 SetAutoIncSize(0, 1);
                memcpy(BAsmCode + 1, AdrVals, AdrCnt);
                BAsmCode[1 + AdrCnt] = 0x19;
              }
@@ -1545,11 +1593,12 @@ static void DecodeLD(Word Code)
                BAsmCode[2 + HReg] = AdrVals[0];
                BAsmCode[3 + HReg] = (AdrMode == 0x40) ? 0 : AdrVals[1];
                BAsmCode[0] += 0xb0;
-               CorrMode(0, 1);
+               if (FixupAutoIncSize)
+                 SetAutoIncSize(0, 1);
                BAsmCode[1 + HReg] = 0x14 + (OpSize << 1);
              }
-           }
            break;
+         }
          case ModImm:
           if (BAsmCode[0] == 0x40)
           {
@@ -1567,6 +1616,7 @@ static void DecodeLD(Word Code)
           break;
         }
         break;
+      }
     }
   }
 }
@@ -1740,6 +1790,9 @@ static void DecodeALU2(Word Code)
         }
         break;
       case ModMem:
+      {
+        Boolean FixupAutoIncSize = AutoIncSizeNeeded;
+
         MinOneIs0 = True;
         HReg = AdrCnt;
         BAsmCode[0] = AdrMode;
@@ -1749,7 +1802,8 @@ static void DecodeALU2(Word Code)
         {
           case ModReg:
             CodeLen = 2 + HReg;
-            CorrMode(0, 1);
+            if (FixupAutoIncSize)
+              SetAutoIncSize(0, 1);
             BAsmCode[0] += 0x80 + (OpSize << 4);
             BAsmCode[1 + HReg] = 0x88 + (Lo(Code) << 4) + AdrMode;
             break;
@@ -1761,6 +1815,7 @@ static void DecodeALU2(Word Code)
             break;
         };
         break;
+      }
     }
   }
 }

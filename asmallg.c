@@ -1954,7 +1954,8 @@ static int ONOFFCnt = 0;
 typedef struct
 {
   Boolean Persist, *FlagAddr;
-  const char *FlagName, *InstName;
+  const char *FlagName;
+  const char *InstName;
 } ONOFFTab;
 static ONOFFTab *ONOFFList;
 
