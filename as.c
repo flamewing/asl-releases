@@ -401,6 +401,7 @@
 #include "codeh8_5.h"
 #include "code7000.h"
 #include "code65.h"
+#include "codeh16.h"
 #include "code7700.h"
 #include "codehmcs400.h"
 #include "code4500.h"
@@ -4624,6 +4625,7 @@ int main(int argc, char **argv)
     codeh8_5_init();
     code7000_init();
     code65_init();
+    codeh16_init();
     code7700_init();
     codehmcs400_init();
     code4500_init();

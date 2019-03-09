@@ -1650,7 +1650,7 @@ static void CodeSTRUCT(Word IsUnion)
   char ExtChar;
   String StructName;
 
-  if (!ChkArgCnt(0, 1))
+  if (!ChkArgCnt(0, ArgCntMax))
     return;
 
   /* unnamed struct/union only allowed if embedded into at least one named struct/union */

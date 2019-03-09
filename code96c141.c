@@ -505,6 +505,28 @@ static void ChkAdr(Byte Erl)
    }
 }
 
+static tSymbolSize SplitSize(tStrComp *pArg)
+{
+  int l = strlen(pArg->Str);
+
+  if ((l >= 3) && !strcmp(pArg->Str + l - 2, ":8"))
+  {
+    StrCompShorten(pArg, 2);
+    return eSymbolSize8Bit;
+  }
+  if ((l >= 4) && !strcmp(pArg->Str + l - 3, ":16"))
+  {
+    StrCompShorten(pArg, 3);
+    return eSymbolSize16Bit;
+  }
+  if ((l >= 4) && !strcmp(pArg->Str + l - 3, ":24"))
+  {
+    StrCompShorten(pArg, 3);
+    return eSymbolSize24Bit;
+  }
+  return eSymbolSizeUnknown;
+}
+
 static void DecodeAdrMem(tStrComp *pArg)
 {
   LongInt DispPart, DispAcc;
@@ -517,6 +539,7 @@ static void DecodeAdrMem(tStrComp *pArg)
   Byte HNum, HSize;
   int CutoffLeft, CutoffRight, ArgLen = strlen(pArg->Str);
   ShortInt IncOpSize;
+  tSymbolSize DispSize;
 
   NegFlag = False;
   NNegFlag = False;
@@ -591,6 +614,7 @@ static void DecodeAdrMem(tStrComp *pArg)
     }
   }
 
+  DispSize = eSymbolSizeUnknown;
   do
   {
     EPos = QuotMultPos(pArg->Str, "+-");
@@ -608,6 +632,12 @@ static void DecodeAdrMem(tStrComp *pArg)
     switch (CodeEReg(pArg->Str, &HNum, &HSize))
     {
       case 0:
+      {
+        tSymbolSize ThisSize;
+
+        if ((ThisSize = SplitSize(pArg)) != eSymbolSizeUnknown)
+          if (ThisSize > DispSize)
+            DispSize = ThisSize;
         FirstPassUnknown = False;
         DispPart = EvalStrIntExpression(pArg, Int32, &OK);
         if (FirstPassUnknown) FirstFlag = True;
@@ -618,6 +648,7 @@ static void DecodeAdrMem(tStrComp *pArg)
           DispAcc += DispPart;
         PartMask |= 1;
         break;
+      }
       case 1:
         break;
       case 2:
@@ -676,10 +707,30 @@ static void DecodeAdrMem(tStrComp *pArg)
   }
   while (EPos);
 
-  if ((DispAcc == 0) && (PartMask != 1))
-    PartMask &= 6;
-  if ((PartMask == 5) && (FirstFlag))
-    DispAcc &= 0x7fff;
+  /* auto-deduce address/displacmeent size? */
+
+  if (DispSize == eSymbolSizeUnknown)
+  {
+    switch (PartMask)
+    {
+      case 1:
+        if (DispAcc <= 0xff)
+          DispSize = eSymbolSize8Bit;
+        else if (DispAcc < 0xffff)
+          DispSize = eSymbolSize16Bit;
+        else
+          DispSize = eSymbolSize24Bit;
+        break;
+      case 5:
+        if (!DispAcc)
+          PartMask &= ~1;
+        else if (RangeCheck(DispAcc, SInt8) && IsRegCurrent(BaseReg, BaseSize, &AdrMode))
+          DispSize = eSymbolSize8Bit;
+        else
+          DispSize = eSymbolSize16Bit;
+        break;
+    }
+  }
 
   switch (PartMask)
   {
@@ -690,31 +741,50 @@ static void DecodeAdrMem(tStrComp *pArg)
       WrError(ErrNum_InvAddrMode);
       break;
     case 1:
-      if (DispAcc<=0xff)
+      switch (DispSize)
       {
-        AdrType = ModMem;
-        AdrMode = 0x40;
-        AdrCnt = 1;
-        AdrVals[0] = DispAcc;
+        case eSymbolSize8Bit:
+          if (FirstFlag)
+            DispAcc &= 0xff;
+          if (DispAcc > 0xff) WrError(ErrNum_AdrOverflow);
+          else
+          {
+            AdrType = ModMem;
+            AdrMode = 0x40;
+            AdrCnt = 1;
+            AdrVals[0] = DispAcc;
+          }
+          break;
+        case eSymbolSize16Bit:
+          if (FirstFlag)
+            DispAcc &= 0xffff;
+          if (DispAcc > 0xffff) WrError(ErrNum_AdrOverflow);
+          else
+          {
+            AdrType = ModMem;
+            AdrMode = 0x41;
+            AdrCnt = 2;
+            AdrVals[0] = Lo(DispAcc);
+            AdrVals[1] = Hi(DispAcc);
+          }
+          break;
+        case eSymbolSize24Bit:
+          if (FirstFlag)
+            DispAcc &= 0xffffff;
+          if (DispAcc > 0xffffff) WrError(ErrNum_AdrOverflow);
+          else
+          {
+            AdrType = ModMem;
+            AdrMode = 0x42;
+            AdrCnt = 3;
+            AdrVals[0] = DispAcc         & 0xff;
+            AdrVals[1] = (DispAcc >>  8) & 0xff;
+            AdrVals[2] = (DispAcc >> 16) & 0xff;
+          }
+          break;
+        default:
+          break; /* assert(0)? */
       }
-      else if (DispAcc < 0xffff)
-      {
-        AdrType = ModMem;
-        AdrMode = 0x41;
-        AdrCnt = 2;
-        AdrVals[0] = Lo(DispAcc);
-        AdrVals[1] = Hi(DispAcc);
-      }
-      else if (DispAcc<0xffffff)
-      {
-        AdrType = ModMem;
-        AdrMode = 0x42;
-        AdrCnt = 3;
-        AdrVals[0] = DispAcc         & 0xff;
-        AdrVals[1] = (DispAcc >>  8) & 0xff;
-        AdrVals[2] = (DispAcc >> 16) & 0xff;
-      }
-      else WrError(ErrNum_AdrOverflow);
       break;
     case 4:
       if (IsRegCurrent(BaseReg, BaseSize, &AdrMode))
@@ -731,23 +801,39 @@ static void DecodeAdrMem(tStrComp *pArg)
       }
       break;
     case 5:
-      if ((DispAcc <= 127) && (DispAcc >= -128) && (IsRegCurrent(BaseReg, BaseSize, &AdrMode)))
+      switch (DispSize)
       {
-        AdrType = ModMem;
-        AdrMode += 8;
-        AdrCnt = 1;
-        AdrVals[0] = DispAcc & 0xff;
+        case eSymbolSize8Bit:
+          if (FirstFlag)
+            DispAcc &= 0x7f;
+          if (!IsRegCurrent(BaseReg, BaseSize, &AdrMode)) WrError(ErrNum_InvAddrMode);
+          else if (ChkRange(DispAcc, -128, 127))
+          {
+            AdrType = ModMem;
+            AdrMode += 8;
+            AdrCnt = 1;
+            AdrVals[0] = DispAcc & 0xff;
+          }
+          break;
+        case eSymbolSize16Bit:
+          if (FirstFlag)
+            DispAcc &= 0x7fff;
+          if (ChkRange(DispAcc, -32768, 32767))
+          {
+            AdrType = ModMem;
+            AdrMode = 0x43;
+            AdrCnt = 3;
+            AdrVals[0] = BaseReg + 1;
+            AdrVals[1] = DispAcc & 0xff;
+            AdrVals[2] = (DispAcc >> 8) & 0xff;
+          }
+          break;
+        case eSymbolSize24Bit:
+          WrError(ErrNum_InvAddrMode);
+          break;
+        default:
+          break; /* assert(0)? */
       }
-      else if ((DispAcc <= 32767) && (DispAcc >= -32768))
-      {
-        AdrType = ModMem;
-        AdrMode = 0x43;
-        AdrCnt = 3;
-        AdrVals[0] = BaseReg + 1;
-        AdrVals[1] = DispAcc & 0xff;
-        AdrVals[2] = (DispAcc >> 8) & 0xff;
-      }
-      else WrError(ErrNum_OverRange);
       break;
     case 6:
       AdrType = ModMem;

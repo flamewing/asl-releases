@@ -1375,6 +1375,8 @@ void WrXErrorPos(Word Num, const char *pExtendError, const struct sLineComp *pLi
       msgno = Num_ErrMsgInvReg; break;
     case ErrNum_DoubleReg:
       msgno = Num_ErrMsgDoubleReg; break;
+    case ErrNum_RegBankMismatch:
+      msgno = Num_ErrMsgRegBankMismatch; break;
     case ErrNum_NoSaveFrame:
       msgno = Num_ErrMsgNoSaveFrame; break;
     case ErrNum_NoRestoreFrame:

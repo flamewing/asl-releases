@@ -132,6 +132,7 @@ static TFamilyDescr Descrs[] =
   { "68RS08"       , 0x005e, MotoS    },
   { "H8/300(H}"    , 0x0068, MotoS    },
   { "H8/500"       , 0x0069, MotoS    },
+  { "H16"          , 0x0040, MotoS    },
   { "SH7x00"       , 0x006c, MotoS    },
   { "HMCS400"      , 0x0050, MotoS    },
   { "65xx"         , 0x0011, MOSHex   },

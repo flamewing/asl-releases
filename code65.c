@@ -1,56 +1,10 @@
 /* code65.c */
 /*****************************************************************************/
-/* AS-Portierung                                                             */
+/* AS                                                                        */
 /*                                                                           */
-/* Codegenerator 65xx/MELPS740                                               */
-/*                                                                           */
-/* Historie: 17. 8.1996 Grundsteinlegung                                     */
-/*           17.11.1998 ungueltiges Register wurde bei Indizierung nicht ab- */
-/*                      gefangen                                             */
-/*            2. 1.1999 ChkPC umgestellt                                     */
-/*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
+/* Code Generator 65xx/MELPS740                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code65.c,v 1.13 2017/06/28 16:49:02 alfred Exp $                      */
-/*****************************************************************************
- * $Log: code65.c,v $
- * Revision 1.13  2017/06/28 16:49:02  alfred
- * - complete HuC6280 support
- *
- * Revision 1.12  2017/06/11 16:33:05  alfred
- * - added HuC6280 target (larger address space yet unimplemented)
- *
- * Revision 1.11  2017/06/04 10:41:43  alfred
- * - add 65C19 target
- *
- * Revision 1.10  2017/06/02 20:01:21  alfred
- * - added W65C02S target
- *
- * Revision 1.9  2017/06/02 19:12:42  alfred
- * - use symbolic values for CPU support masks of instructions
- *
- * Revision 1.8  2014/11/16 13:15:07  alfred
- * - remove some superfluous semicolons
- *
- * Revision 1.7  2014/11/12 16:55:43  alfred
- * - rework to current style
- *
- * Revision 1.6  2014/11/05 15:47:14  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.5  2014/03/08 21:06:35  alfred
- * - rework ASSUME framework
- *
- * Revision 1.4  2010/08/27 14:52:41  alfred
- * - some more overlapping strcpy() cleanups
- *
- * Revision 1.3  2005/09/08 17:31:03  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 12:04:46  alfred
- * - relocated DecodeMot(16)Pseudo into separate module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -82,29 +36,31 @@ enum
   ModIndIX = 6,   /* (aa,X) */
   ModIndOX = 7,   /* (aa),X */
   ModIndOY = 8,   /* (aa),Y */
-  ModInd16 = 9,   /* (aabb) */
-  ModImm  = 10,   /* #aa */
-  ModAcc  = 11,   /* A */
-  ModNone = 12,   /* */
-  ModInd8 = 13,   /* (aa) */
-  ModSpec = 14,   /* \aabb */
+  ModIndOZ = 9,   /* (aa),Z (65CE02-specific) */
+  ModInd16 =10,   /* (aabb) */
+  ModImm   =11,   /* #aa */
+  ModAcc   =12,   /* A */
+  ModNone  =13,   /* */
+  ModInd8  =14,   /* (aa) */
+  ModIndSPY=15,   /* (aa,SP),Y (65CE02-specific) */
+  ModSpec = 16,   /* \aabb */
 };
 
 typedef struct
 {
-  Byte CPUFlag;
+  Word CPUFlag;
   Byte Code;
 } FixedOrder;
 
 typedef struct
 {
-  Integer Codes[ModSpec + 1];
+  LongInt Codes[ModSpec + 1];
 } NormOrder;
 
 typedef struct
 {
-  Byte CPUFlag;
-  Byte Code;
+  Word CPUFlag;
+  Byte CodeShort, CodeLong;
 } CondOrder;
 
 typedef struct
@@ -114,20 +70,21 @@ typedef struct
   Byte AdrVals[2];
 } tAdrResult;
 
-#define FixedOrderCount 67
-#define NormOrderCount 63
-#define CondOrderCount 10
+#define FixedOrderCount 78
+#define NormOrderCount 71
+#define CondOrderCount 11
 
 /* NOTE: keep in the same order as in registration in code65_init()! */
 
 #define M_6502      (1 << 0)
 #define M_65SC02    (1 << 1)
 #define M_65C02     (1 << 2)
-#define M_W65C02S   (1 << 3)
-#define M_65C19     (1 << 4)
-#define M_MELPS740  (1 << 5)
-#define M_HUC6280   (1 << 6)
-#define M_6502U     (1 << 7)
+#define M_65CE02    (1 << 3)
+#define M_W65C02S   (1 << 4)
+#define M_65C19     (1 << 5)
+#define M_MELPS740  (1 << 6)
+#define M_HUC6280   (1 << 7)
+#define M_6502U     (1 << 8)
 
 static Boolean CLI_SEI_Flag, ADC_SBC_Flag;
 
@@ -135,8 +92,8 @@ static FixedOrder *FixedOrders;
 static NormOrder *NormOrders;
 static CondOrder *CondOrders;
 
-static CPUVar CPU6502, CPU65SC02, CPU65C02, CPUW65C02S, CPU65C19, CPUM740, CPUHUC6280, CPU6502U;
-static LongInt SpecPage, MPR[8];
+static CPUVar CPU6502, CPU65SC02, CPU65C02, CPU65CE02, CPUW65C02S, CPU65C19, CPUM740, CPUHUC6280, CPU6502U;
+static LongInt SpecPage, RegB, MPR[8];
 
 /*---------------------------------------------------------------------------*/
 
@@ -162,7 +119,7 @@ static void ChkFlags(void)
   ADC_SBC_Flag = (Memo("ADC") || Memo("SBC"));
 }
 
-static Boolean CPUAllowed(Byte Flag)
+static Boolean CPUAllowed(Word Flag)
 {
   return (((Flag >> (MomCPU - CPU6502)) & 1) || False);
 }
@@ -174,9 +131,9 @@ static void InsNOP(void)
   BAsmCode[0] = NOPCode;
 }
 
-static Boolean IsAllowed(Word Val)
+static Boolean IsAllowed(LongInt Val)
 {
-  return (CPUAllowed(Hi(Val)) && (Val != 0xffff));
+  return (CPUAllowed(Val >> 8) && (Val != -1));
 }
 
 static void ChkZeroMode(tAdrResult *pResult, const NormOrder *pOrder, ShortInt ZeroMode)
@@ -233,8 +190,42 @@ static Word EvalAddress(const tStrComp *pArg, IntType Type, Boolean *pOK)
     }
     return AbsAddress;
   }
+
+  /* for the 65CE02, regard basepage register */
+
+  else if (MomCPU == CPU65CE02)
+  {
+    Word Address;
+
+    /* alwys get a full 16 bit address */
+
+    FirstPassUnknown = False;
+    Address = EvalStrIntExpression(pArg, UInt16, pOK);
+    if (!*pOK)
+      return 0;
+
+    /* short address requested? */
+
+    if ((Type != UInt16) && (Type != Int16))
+    {
+      if ((Hi(Address) != RegB) && !FirstPassUnknown)
+      {
+        pOK = False;
+        WrError(ErrNum_OverRange);
+      }
+      if (*pOK)
+        Address &= 0xff;
+    }
+    return Address;
+  }
+
   else
     return EvalStrIntExpression(pArg, Type, pOK);
+}
+
+static Boolean IsBasePage(Byte Page)
+{
+  return (MomCPU == CPU65CE02) ? (Page == RegB) : !Page;
 }
 
 static void DecodeAdr(tAdrResult *pResult, const NormOrder *pOrder)
@@ -267,11 +258,17 @@ static void DecodeAdr(tAdrResult *pResult, const NormOrder *pOrder)
 
     else if (*ArgStr[1].Str == '#')
     {
-      pResult->AdrVals[0] = EvalStrIntExpressionOffs(&ArgStr[1], 1, Int8, &ValOK);
+      IntType Type = Memo("PHW") ? Int16 : Int8;
+      Word Value;
+
+      Value = EvalStrIntExpressionOffs(&ArgStr[1], 1, Type, &ValOK);
       if (ValOK)
       {
         pResult->ErgMode = ModImm;
+        pResult->AdrVals[0] = Lo(Value);
         pResult->AdrCnt = 1;
+        if (Int16 == Type)
+          pResult->AdrVals[pResult->AdrCnt++] = Hi(Value);
       }
     }
 
@@ -306,7 +303,7 @@ static void DecodeAdr(tAdrResult *pResult, const NormOrder *pOrder)
         StrCompRefRight(&AddrArg, &ArgStr[1], 1);
         StrCompShorten(&AddrArg, 3);
         StrCompIncRefLeft(&AddrArg, ChkZero(&AddrArg, &ZeroMode));
-        if (Memo("JMP"))
+        if (Memo("JMP") || Memo("JSR"))
         {
           AdrWord = EvalAddress(&AddrArg, UInt16, &ValOK);
           if (ValOK)
@@ -358,7 +355,7 @@ static void DecodeAdr(tAdrResult *pResult, const NormOrder *pOrder)
             pResult->AdrCnt = 2;
             pResult->AdrVals[0] = Lo(AdrWord);
             pResult->AdrVals[1] = Hi(AdrWord);
-            if ((ZeroMode == 0) && (pResult->AdrVals[1] == 0))
+            if ((ZeroMode == 0) && IsBasePage(pResult->AdrVals[1]))
               ChkZeroMode(pResult, pOrder, ModInd8);
           }
         }
@@ -389,7 +386,7 @@ static void DecodeAdr(tAdrResult *pResult, const NormOrder *pOrder)
             pResult->AdrCnt = 2;
             pResult->AdrVals[0] = Lo(AdrWord);
             pResult->AdrVals[1] = Hi(AdrWord);
-            if ((ZeroMode == 0) && (pResult->AdrVals[1] == 0))
+            if ((ZeroMode == 0) && IsBasePage(pResult->AdrVals[1]))
               ChkZeroMode(pResult, pOrder, ModZA);
           }
         }
@@ -399,12 +396,36 @@ static void DecodeAdr(tAdrResult *pResult, const NormOrder *pOrder)
 
   else if (ArgCnt == 2)
   {
-    /* 7. X,Y-outer-indirekt ? */
+    Boolean Indir1 = IsIndirect(ArgStr[1].Str);
 
-    if ((IsIndirect(ArgStr[1].Str))
-     && ((!strcasecmp(ArgStr[2].Str, "X") || !strcasecmp(ArgStr[2].Str, "Y"))))
+    /* 7. stack-relative (65CE02-specific) ? */
+
+    if (Indir1 && !strcasecmp(ArgStr[2].Str, "Y") && (!strcasecmp(ArgStr[1].Str + strlen(ArgStr[1].Str) - 4, ",SP)")))
     {
-      Boolean IsY = (toupper(ArgStr[2].Str[0]) == 'Y');
+      if (*ArgStr[1].Str != '(') WrError(ErrNum_InvAddrMode);
+      else
+      {
+        tStrComp DistArg;
+
+        StrCompRefRight(&DistArg, &ArgStr[1], 1);
+        StrCompShorten(&DistArg, 4);
+        pResult->AdrVals[0] = EvalStrIntExpression(&DistArg, UInt8, &ValOK);
+        if (ValOK)
+        {
+          pResult->ErgMode = ModIndSPY;
+          pResult->AdrCnt = 1;
+        }
+      }
+    }
+
+    /* 8. X,Y,Z-outer-indirekt ? */
+
+    else if (Indir1
+          && (!strcasecmp(ArgStr[2].Str, "X")
+           || !strcasecmp(ArgStr[2].Str, "Y")
+           || !strcasecmp(ArgStr[2].Str, "Z")))
+    {
+      int Mode = toupper(ArgStr[2].Str[0]) - 'X';
       tStrComp AddrArg;
 
       StrCompRefRight(&AddrArg, &ArgStr[1], 1);
@@ -413,12 +434,12 @@ static void DecodeAdr(tAdrResult *pResult, const NormOrder *pOrder)
       pResult->AdrVals[0] = EvalAddress(&AddrArg, UInt8, &ValOK);
       if (ValOK)
       {
-        pResult->ErgMode = IsY ? ModIndOY :ModIndOX;
+        pResult->ErgMode = ModIndOX + Mode;
         pResult->AdrCnt = 1;
       }
     }
 
-    /* 8. X,Y-indiziert ? */
+    /* 9. X,Y-indiziert ? */
 
     else
     {
@@ -455,7 +476,7 @@ static void DecodeAdr(tAdrResult *pResult, const NormOrder *pOrder)
             WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
           if (pResult->ErgMode != -1)
           {
-            if ((pResult->AdrVals[1] == 0) && (ZeroMode == 0))
+            if (IsBasePage(pResult->AdrVals[1]) && (ZeroMode == 0))
               ChkZeroMode(pResult, pOrder, (!strcasecmp(ArgStr[2].Str, "X")) ? ModZIX : ModZIY);
           }
         }
@@ -493,7 +514,7 @@ static void DecodeFixed(Word Index)
     else if (MomCPU == CPUM740)
     {
       if (Memo("PLP"))
-        BAsmCode[CodeLen++] = NOPCode; 
+        BAsmCode[CodeLen++] = NOPCode;
       if ((ADC_SBC_Flag) && (Memo("SEC") || Memo("CLC") || Memo("CLD")))
         InsNOP();
     }
@@ -574,7 +595,7 @@ static void DecodeBBR_BBS(Word Code)
   Boolean ValOK;
 
   if (ChkArgCnt(2, 2)
-   && (ChkExactCPUMask(M_65C02 | M_W65C02S | M_65C19 | M_HUC6280, CPU6502) >= 0))
+   && (ChkExactCPUMask(M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_HUC6280, CPU6502) >= 0))
   {
     BAsmCode[1] = EvalStrIntExpression(&ArgStr[1], UInt8, &ValOK);
     if (ValOK)
@@ -600,7 +621,7 @@ static void DecodeBBR_BBS(Word Code)
 static void DecodeRMB_SMB(Word Code)
 {
   if (ChkArgCnt(1, 1)
-   && (ChkExactCPUMask(M_65C02 | M_W65C02S | M_65C19 | M_HUC6280, CPU6502) >= 0))
+   && (ChkExactCPUMask(M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_HUC6280, CPU6502) >= 0))
   {
     Boolean ValOK;
 
@@ -743,6 +764,18 @@ static void DecodeJSB(Word Code)
   }
 }
 
+static void DecodeAUG(Word Code)
+{
+  if (ChkArgCnt(0, 0) && ChkExactCPU(CPU65CE02))
+  {
+    BAsmCode[0] = Code;
+    BAsmCode[1] =
+    BAsmCode[2] =
+    BAsmCode[3] = 0x00;
+    CodeLen = 4;
+  }
+}
+
 static void DecodeNorm(Word Index)
 {
   const NormOrder *pOrder = NormOrders + Index;
@@ -761,9 +794,9 @@ static void DecodeNorm(Word Index)
       AdrResult.AdrVals[AdrCnt++] = 0;
     }
     if (pOrder->Codes[AdrResult.ErgMode] == -1) WrError(ErrNum_InvAddrMode);
-    else if (ChkExactCPUMask(Hi(pOrder->Codes[AdrResult.ErgMode]), CPU6502) >= 0)
+    else if (ChkExactCPUMask(pOrder->Codes[AdrResult.ErgMode] >> 8, CPU6502) >= 0)
     {
-      BAsmCode[0] = Lo(pOrder->Codes[AdrResult.ErgMode]); 
+      BAsmCode[0] = Lo(pOrder->Codes[AdrResult.ErgMode]);
       memcpy(BAsmCode + 1, AdrResult.AdrVals, AdrResult.AdrCnt);
       CodeLen = AdrResult.AdrCnt + 1;
       if ((AdrResult.ErgMode == ModInd16) && (MomCPU != CPU65C02) && (BAsmCode[1] == 0xff))
@@ -822,19 +855,48 @@ static void DecodeCond(Word Index)
   {
     Integer AdrInt;
     Boolean ValOK;
+    const Boolean MayShort = !!pOrder->CodeShort,
+                  MayLong = !!pOrder->CodeLong && (MomCPU == CPU65CE02);
+    Byte ForceSize;
 
-    AdrInt = EvalStrIntExpression(&ArgStr[1], UInt16, &ValOK) - (EProgCounter() + 2);
-    if (ValOK)
+    AdrInt = EvalStrIntExpressionOffs(&ArgStr[1], ChkZero(&ArgStr[1], &ForceSize), UInt16, &ValOK);
+    if (!ValOK)
+      return;
+    if (!ForceSize)
     {
-      if (((AdrInt > 127) || (AdrInt < -128)) && (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
+      if (!MayLong)
+        ForceSize = 2;
+      else if (!MayShort)
+        ForceSize = 1;
       else
-      {
-        BAsmCode[0] = pOrder->Code;
-        BAsmCode[1] = AdrInt & 0xff; 
-        CodeLen = 2;
-      }
-      ChkFlags();
+        ForceSize = RangeCheck(AdrInt - (EProgCounter() + 2), SInt8) ? 2 : 1;
     }
+
+    AdrInt -= EProgCounter() + (4 - ForceSize);
+    switch (ForceSize)
+    {
+      case 2:
+        if (!MayShort) WrError(ErrNum_InvAddrMode);
+        else if (((AdrInt > 127) || (AdrInt < -128)) && !SymbolQuestionable) WrError(ErrNum_JmpDistTooBig);
+        else
+        {
+          BAsmCode[0] = pOrder->CodeShort;
+          BAsmCode[1] = AdrInt & 0xff;
+          CodeLen = 2;
+        }
+        break;
+      case 1:
+        if (!MayLong) WrError(ErrNum_InvAddrMode);
+        else
+        {
+          BAsmCode[0] = pOrder->CodeLong;
+          BAsmCode[1] = AdrInt & 0xff;
+          BAsmCode[2] = (AdrInt >> 8) & 0xff;
+          CodeLen = 3;
+        }
+        break;
+    }
+    ChkFlags();
   }
 }
 
@@ -862,7 +924,7 @@ static void DecodeTransfer(Word Code)
 
 /*---------------------------------------------------------------------------*/
 
-static void AddFixed(char *NName, Byte NFlag, Byte NCode)
+static void AddFixed(char *NName, Word NFlag, Byte NCode)
 {
   if (InstrZ >= FixedOrderCount) exit(255);
   FixedOrders[InstrZ].CPUFlag = NFlag;
@@ -870,41 +932,44 @@ static void AddFixed(char *NName, Byte NFlag, Byte NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
-static void AddNorm(char *NName, Word ZACode, Word ACode, Word ZIXCode,
-                    Word IXCode, Word ZIYCode, Word IYCode, Word IndIXCode,
-                    Word IndOXCode, Word IndOYCode, Word Ind16Code, Word ImmCode, Word AccCode,
-                    Word NoneCode, Word Ind8Code, Word SpecCode)
+static void AddNorm(char *NName, LongWord ZACode, LongWord ACode, LongWord ZIXCode,
+                    LongWord IXCode, LongWord ZIYCode, LongWord IYCode, LongWord IndIXCode,
+                    LongWord IndOXCode, LongWord IndOYCode, LongWord IndOZCode, LongWord Ind16Code, LongWord ImmCode, LongWord AccCode,
+                    LongWord NoneCode, LongWord Ind8Code, LongWord IndSPYCode, LongWord SpecCode)
 {
   if (InstrZ >= NormOrderCount) exit(255);
   NormOrders[InstrZ].Codes[ModZA] = ZACode;
   NormOrders[InstrZ].Codes[ModA] = ACode;
   NormOrders[InstrZ].Codes[ModZIX] = ZIXCode;
   NormOrders[InstrZ].Codes[ModIX] = IXCode;
-  NormOrders[InstrZ].Codes[ModZIY] = ZIYCode;  
+  NormOrders[InstrZ].Codes[ModZIY] = ZIYCode;
   NormOrders[InstrZ].Codes[ModIY] = IYCode;
   NormOrders[InstrZ].Codes[ModIndIX] = IndIXCode;
   NormOrders[InstrZ].Codes[ModIndOX] = IndOXCode;
   NormOrders[InstrZ].Codes[ModIndOY] = IndOYCode;
+  NormOrders[InstrZ].Codes[ModIndOZ] = IndOZCode;
   NormOrders[InstrZ].Codes[ModInd16] = Ind16Code;
   NormOrders[InstrZ].Codes[ModImm] = ImmCode;
   NormOrders[InstrZ].Codes[ModAcc] = AccCode;
   NormOrders[InstrZ].Codes[ModNone] = NoneCode;
   NormOrders[InstrZ].Codes[ModInd8] = Ind8Code;
+  NormOrders[InstrZ].Codes[ModIndSPY] = IndSPYCode;
   NormOrders[InstrZ].Codes[ModSpec] = SpecCode;
   AddInstTable(InstTable, NName, InstrZ++, strcmp(NName, "TST") ? DecodeNorm : DecodeTST);
 }
 
-static void AddCond(char *NName, Byte NFlag, Byte NCode)
+static void AddCond(char *NName, Word NFlag, Byte NCodeShort, Byte NCodeLong)
 {
   if (InstrZ >= CondOrderCount) exit(255);
   CondOrders[InstrZ].CPUFlag = NFlag;
-  CondOrders[InstrZ].Code = NCode;
+  CondOrders[InstrZ].CodeShort = NCodeShort;
+  CondOrders[InstrZ].CodeLong = NCodeLong;
   AddInstTable(InstTable, NName, InstrZ++, DecodeCond);
 }
 
-static Word MkMask(Byte CPUMask, Byte Code)
+static LongWord MkMask(Word CPUMask, Byte Code)
 {
-  return (((Word)CPUMask) << 8) | Code;
+  return (((LongWord)CPUMask) << 8) | Code;
 }
 
 static void InitFields(void)
@@ -939,6 +1004,7 @@ static void InitFields(void)
   }
   AddInstTable(InstTable, "LDM", 0, DecodeLDM);
   AddInstTable(InstTable, "JSB", 0, DecodeJSB);
+  AddInstTable(InstTable, "AUG", 0x5c, DecodeAUG);
 
   AddInstTable(InstTable, "TAI"  , 0xf3, DecodeTransfer);
   AddInstTable(InstTable, "TDD"  , 0xc3, DecodeTransfer);
@@ -947,151 +1013,190 @@ static void InitFields(void)
   AddInstTable(InstTable, "TIN"  , 0xd3, DecodeTransfer);
 
   FixedOrders = (FixedOrder *) malloc(sizeof(FixedOrder) * FixedOrderCount); InstrZ = 0;
-  AddFixed("RTS", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x60);
-  AddFixed("RTI", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x40);
-  AddFixed("TAX", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xaa);
-  AddFixed("TXA", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x8a);
-  AddFixed("TAY", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xa8);
-  AddFixed("TYA", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x98);
-  AddFixed("TXS", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x9a);
-  AddFixed("TSX", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xba);
-  AddFixed("DEX", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xca);
-  AddFixed("DEY", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x88);
-  AddFixed("INX", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xe8);
-  AddFixed("INY", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xc8);
-  AddFixed("PHA", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x48);
-  AddFixed("PLA", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x68);
-  AddFixed("PHP", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x08);
-  AddFixed("PLP", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x28);
-  AddFixed("PHX",          M_65SC02 | M_65C02 | M_W65C02S | M_65C19              | M_HUC6280          , 0xda);
-  AddFixed("PLX",          M_65SC02 | M_65C02 | M_W65C02S | M_65C19              | M_HUC6280          , 0xfa);
-  AddFixed("PHY",          M_65SC02 | M_65C02 | M_W65C02S | M_65C19              | M_HUC6280          , 0x5a);
-  AddFixed("PLY",          M_65SC02 | M_65C02 | M_W65C02S | M_65C19              | M_HUC6280          , 0x7a);
-  AddFixed("BRK", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x00);
-  AddFixed("STP",                               M_W65C02S |           M_MELPS740                      , Is740 ? 0x42 : 0xdb);
-  AddFixed("WAI",                               M_W65C02S                                             , 0xcb);
-  AddFixed("SLW",                                                     M_MELPS740                      , 0xc2);
-  AddFixed("FST",                                                     M_MELPS740                      , 0xe2);
-  AddFixed("WIT",                                                     M_MELPS740                      , 0xc2);
-  AddFixed("CLI", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x58);
-  AddFixed("SEI", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x78);
-  AddFixed("CLC", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x18);
-  AddFixed("SEC", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x38);
-  AddFixed("CLD", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xd8);
-  AddFixed("SED", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xf8);
-  AddFixed("CLV", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xb8);
-  AddFixed("CLT",                                                     M_MELPS740                      , 0x12);
-  AddFixed("SET",                                                     M_MELPS740 | M_HUC6280          , Is740 ? 0x32 : 0xf4); /* !!! for HUC6280, is prefix for (x) instead of ACC as dest */
-  AddFixed("JAM",                                                                              M_6502U, 0x02);
-  AddFixed("CRS",                                                                              M_6502U, 0x02);
-  AddFixed("KIL",                                                                              M_6502U, 0x02);
-  AddFixed("CLW",                                           M_65C19                                   , 0x52);
-  AddFixed("MPY",                                           M_65C19                                   , 0x02);
-  AddFixed("MPA",                                           M_65C19                                   , 0x12);
-  AddFixed("PSH",                                           M_65C19                                   , 0x22);
-  AddFixed("PUL",                                           M_65C19                                   , 0x32);
-  AddFixed("PHW",                                           M_65C19                                   , 0x23);
-  AddFixed("PLW",                                           M_65C19                                   , 0x33);
-  AddFixed("RND",                                           M_65C19                                   , 0x42);
-  AddFixed("TAW",                                           M_65C19                                   , 0x62);
-  AddFixed("TWA",                                           M_65C19                                   , 0x72);
-  AddFixed("NXT",                                           M_65C19                                   , 0x8b);
-  AddFixed("LII",                                           M_65C19                                   , 0x9b);
-  AddFixed("LAI",                                           M_65C19                                   , 0xeb);
-  AddFixed("INI",                                           M_65C19                                   , 0xbb);
-  AddFixed("PHI",                                           M_65C19                                   , 0xcb);
-  AddFixed("PLI",                                           M_65C19                                   , 0xdb);
-  AddFixed("TIP",                                           M_65C19                                   , 0x03);
-  AddFixed("PIA",                                           M_65C19                                   , 0xfb);
-  AddFixed("LAN",                                           M_65C19                                   , 0xab);
-  AddFixed("CLA",                                                                  M_HUC6280          , 0x62);
-  AddFixed("CLX",                                                                  M_HUC6280          , 0x82);
-  AddFixed("CLY",                                                                  M_HUC6280          , 0xc2);
-  AddFixed("CSL",                                                                  M_HUC6280          , 0x54);
-  AddFixed("CSH",                                                                  M_HUC6280          , 0xd4);
-  AddFixed("SAY",                                                                  M_HUC6280          , 0x42);
-  AddFixed("SXY",                                                                  M_HUC6280          , 0x02);
+  AddFixed("RTS", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x60);
+  AddFixed("RTI", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x40);
+  AddFixed("TAX", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xaa);
+  AddFixed("TXA", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x8a);
+  AddFixed("TAY", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xa8);
+  AddFixed("TYA", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x98);
+  AddFixed("TXS", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x9a);
+  AddFixed("TSX", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xba);
+  AddFixed("TSY",                               M_65CE02                                                         , 0x0b);
+  AddFixed("TYS",                               M_65CE02                                                         , 0x2b);
+  AddFixed("TAZ",                               M_65CE02                                                         , 0x4b);
+  AddFixed("TAB",                               M_65CE02                                                         , 0x5b);
+  AddFixed("TZA",                               M_65CE02                                                         , 0x6b);
+  AddFixed("TBA",                               M_65CE02                                                         , 0x7b);
+  AddFixed("DEX", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xca);
+  AddFixed("DEY", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x88);
+  AddFixed("DEZ",                               M_65CE02                                                         , 0x3b);
+  AddFixed("INX", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xe8);
+  AddFixed("INY", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xc8);
+  AddFixed("INZ",                               M_65CE02                                                         , 0x1b);
+  AddFixed("PHA", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x48);
+  AddFixed("PLA", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x68);
+  AddFixed("PHP", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x08);
+  AddFixed("PLP", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x28);
+  AddFixed("PHX",          M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19              | M_HUC6280          , 0xda);
+  AddFixed("PLX",          M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19              | M_HUC6280          , 0xfa);
+  AddFixed("PHY",          M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19              | M_HUC6280          , 0x5a);
+  AddFixed("PLY",          M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19              | M_HUC6280          , 0x7a);
+  AddFixed("PHZ",                               M_65CE02                                                         , 0xdb);
+  AddFixed("PLZ",                               M_65CE02                                                         , 0xfb);
+  AddFixed("BRK", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x00);
+  AddFixed("STP",                                          M_W65C02S |           M_MELPS740                      , Is740 ? 0x42 : 0xdb);
+  AddFixed("WAI",                                          M_W65C02S                                             , 0xcb);
+  AddFixed("SLW",                                                                M_MELPS740                      , 0xc2);
+  AddFixed("FST",                                                                M_MELPS740                      , 0xe2);
+  AddFixed("WIT",                                                                M_MELPS740                      , 0xc2);
+  AddFixed("CLI", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x58);
+  AddFixed("SEI", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x78);
+  AddFixed("CLC", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x18);
+  AddFixed("SEC", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x38);
+  AddFixed("CLD", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xd8);
+  AddFixed("SED", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xf8);
+  AddFixed("CLE",                               M_65CE02                                                         , 0x02);
+  AddFixed("SEE",                               M_65CE02                                                         , 0x03);
+  AddFixed("CLV", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xb8);
+  AddFixed("CLT",                                                                M_MELPS740                      , 0x12);
+  AddFixed("SET",                                                                M_MELPS740 | M_HUC6280          , Is740 ? 0x32 : 0xf4); /* !!! for HUC6280, is prefix for (x) instead of ACC as dest */
+  AddFixed("JAM",                                                                                         M_6502U, 0x02);
+  AddFixed("CRS",                                                                                         M_6502U, 0x02);
+  AddFixed("KIL",                                                                                         M_6502U, 0x02);
+  AddFixed("CLW",                                                      M_65C19                                   , 0x52);
+  AddFixed("MPY",                                                      M_65C19                                   , 0x02);
+  AddFixed("MPA",                                                      M_65C19                                   , 0x12);
+  AddFixed("PSH",                                                      M_65C19                                   , 0x22);
+  AddFixed("PUL",                                                      M_65C19                                   , 0x32);
+  AddFixed("PLW",                                                      M_65C19                                   , 0x33);
+  AddFixed("RND",                                                      M_65C19                                   , 0x42);
+  AddFixed("TAW",                                                      M_65C19                                   , 0x62);
+  AddFixed("TWA",                                                      M_65C19                                   , 0x72);
+  AddFixed("NXT",                                                      M_65C19                                   , 0x8b);
+  AddFixed("LII",                                                      M_65C19                                   , 0x9b);
+  AddFixed("LAI",                                                      M_65C19                                   , 0xeb);
+  AddFixed("INI",                                                      M_65C19                                   , 0xbb);
+  AddFixed("PHI",                                                      M_65C19                                   , 0xcb);
+  AddFixed("PLI",                                                      M_65C19                                   , 0xdb);
+  AddFixed("TIP",                                                      M_65C19                                   , 0x03);
+  AddFixed("PIA",                                                      M_65C19                                   , 0xfb);
+  AddFixed("LAN",                                                      M_65C19                                   , 0xab);
+  AddFixed("CLA",                                                                             M_HUC6280          , 0x62);
+  AddFixed("CLX",                                                                             M_HUC6280          , 0x82);
+  AddFixed("CLY",                                                                             M_HUC6280          , 0xc2);
+  AddFixed("CSL",                                                                             M_HUC6280          , 0x54);
+  AddFixed("CSH",                                                                             M_HUC6280          , 0xd4);
+  AddFixed("SAY",                                                                             M_HUC6280          , 0x42);
+  AddFixed("SXY",                                                                             M_HUC6280          , 0x02);
 
   NormOrders = (NormOrder *) malloc(sizeof(NormOrder) * NormOrderCount); InstrZ = 0;
   AddNorm("NOP",
-  /* ZA    */ MkMask(                                                                             M_6502U, 0x04),
-  /* A     */ MkMask(                                                                             M_6502U, 0x0c),
-  /* ZIX   */ MkMask(                                                                             M_6502U, 0x14),
-  /* IX    */ MkMask(                                                                             M_6502U, 0x1c),
+  /* ZA    */ MkMask(                                                                                        M_6502U, 0x04),
+  /* A     */ MkMask(                                                                                        M_6502U, 0x0c),
+  /* ZIX   */ MkMask(                                                                                        M_6502U, 0x14),
+  /* IX    */ MkMask(                                                                                        M_6502U, 0x1c),
   /* ZIY   */     -1,
   /* IY    */     -1,
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
-  /* imm   */ MkMask(                                                                             M_6502U, 0x80),
+  /* imm   */ MkMask(                                                                                        M_6502U, 0x80),
   /* ACC   */     -1,
-  /* NON   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xea),
+  /* NON   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xea),
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("LDA",
-  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xa5),
-  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xad),
-  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xb5),
-  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xbd),
+  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xa5),
+  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xad),
+  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xb5),
+  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xbd),
   /* ZIY   */     -1,
-  /* IY    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xb9),
-  /* (n,X) */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0xa1),
-  /* (n),X */ MkMask(                                          M_65C19                                   , 0xb1),
-  /* (n),Y */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0xb1),
-  /* (n16) */ MkMask(                                                                 M_HUC6280          , 0xb2),
-  /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xa9),
+  /* IY    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xb9),
+  /* (n,X) */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0xa1),
+  /* (n),X */ MkMask(                                                     M_65C19                                   , 0xb1),
+  /* (n),Y */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0xb1),
+  /* (n),Z */ MkMask(                              M_65CE02                                                         , 0xb2),
+  /* (n16) */ MkMask(                                                                            M_HUC6280          , 0xb2),
+  /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xa9),
   /* ACC   */     -1,
   /* NON   */     -1,
-  /* (n8)  */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740             | M_6502U, Is65C19 ? 0xa1 : 0xb2),
+  /* (n8)  */ MkMask(M_6502 | M_65SC02 | M_65C02            | M_W65C02S | M_65C19 | M_MELPS740             | M_6502U, Is65C19 ? 0xa1 : 0xb2),
+  /*(n,SP),y*/MkMask(                              M_65CE02                                                         , 0xe2),
   /* spec  */     -1);
   AddNorm("LDX",
-  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xa6),
-  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xae),
+  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xa6),
+  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xae),
   /* ZIX   */     -1,
   /* IX    */     -1,
-  /* ZIY   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xb6),
-  /* IY    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xbe),
+  /* ZIY   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xb6),
+  /* IY    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xbe),
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
-  /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xa2),
+  /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xa2),
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("LDY",
-  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xa4),
-  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xac),
-  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xb4),
-  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xbc),
+  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xa4),
+  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xac),
+  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xb4),
+  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xbc),
   /* ZIY   */     -1,
   /* IY    */     -1,
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
-  /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xa0),
+  /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xa0),
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
+  /* spec  */     -1);
+  AddNorm("LDZ",
+  /* ZA    */     -1,
+  /* A     */ MkMask(                              M_65CE02                                                         , 0xab),
+  /* ZIX   */     -1,
+  /* IX    */ MkMask(                              M_65CE02                                                         , 0xbb),
+  /* ZIY   */     -1,
+  /* IY    */     -1,
+  /* (n,X) */     -1,
+  /* (n),X */     -1,
+  /* (n),Y */     -1,
+  /* (n),Z */     -1,
+  /* (n16) */     -1,
+  /* imm   */ MkMask(                              M_65CE02                                                         , 0xa3),
+  /* ACC   */     -1,
+  /* NON   */     -1,
+  /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("STA",
-  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x85),
-  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x8d),
-  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x95),
-  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x9d),
+  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x85),
+  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x8d),
+  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x95),
+  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x9d),
   /* ZIY   */     -1,
-  /* IY    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x99),
-  /* (n,X) */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0x81),
-  /* (n),X */ MkMask(                                          M_65C19                                   , 0x91),
-  /* (n),Y */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0x91),
-  /* (n16) */ MkMask(                                                                 M_HUC6280          , 0x92),
+  /* IY    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x99),
+  /* (n,X) */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0x81),
+  /* (n),X */ MkMask(                                                     M_65C19                                   , 0x91),
+  /* (n),Y */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0x91),
+  /* (n),Z */ MkMask(                              M_65CE02                                                         , 0x92),
+  /* (n16) */ MkMask(                                                                            M_HUC6280          , 0x92),
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
-  /* (n8)  */ MkMask(         M_65SC02 | M_65C02 | M_W65C02S | M_65C19                                   , Is65C19 ? 0x81 : 0x92),
+  /* (n8)  */ MkMask(         M_65SC02 | M_65C02            | M_W65C02S | M_65C19                                   , Is65C19 ? 0x81 : 0x92),
+  /*(n,SP),y*/MkMask(                              M_65CE02                                                         , 0x82),
   /* spec  */     -1);
   AddNorm("ST0",
   /* ZA    */     -1,
@@ -1103,11 +1208,13 @@ static void InitFields(void)
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
-  /* imm   */ MkMask(                                                                 M_HUC6280          , 0x03),
+  /* imm   */ MkMask(                                                                            M_HUC6280          , 0x03),
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("ST1",
   /* ZA    */     -1,
@@ -1119,11 +1226,13 @@ static void InitFields(void)
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
-  /* imm   */ MkMask(                                                                 M_HUC6280          , 0x13),
+  /* imm   */ MkMask(                                                                            M_HUC6280          , 0x13),
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("ST2",
   /* ZA    */     -1,
@@ -1135,190 +1244,214 @@ static void InitFields(void)
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
-  /* imm   */ MkMask(                                                                 M_HUC6280          , 0x23),
+  /* imm   */ MkMask(                                                                            M_HUC6280          , 0x23),
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("STX",
-  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x86),
-  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x8e),
+  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x86),
+  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x8e),
   /* ZIX   */     -1,
   /* IX    */     -1,
-  /* ZIY   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x96),
-  /* IY    */     -1,
+  /* ZIY   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x96),
+  /* IY    */ MkMask(                              M_65CE02                                                         , 0x9b),
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("STY",
-  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x84),
-  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x8c),
-  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x94),
-  /* IX    */     -1,
+  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x84),
+  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x8c),
+  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x94),
+  /* IX    */ MkMask(                              M_65CE02                                                         , 0x8b),
   /* ZIY   */     -1,
   /* IY    */     -1,
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("STZ",
-  /* ZA    */ MkMask(         M_65SC02 | M_65C02 | M_W65C02S                        | M_HUC6280          , 0x64),
-  /* A     */ MkMask(         M_65SC02 | M_65C02 | M_W65C02S                        | M_HUC6280          , 0x9c),
-  /* ZIX   */ MkMask(         M_65SC02 | M_65C02 | M_W65C02S                        | M_HUC6280          , 0x74),
-  /* IX    */ MkMask(         M_65SC02 | M_65C02 | M_W65C02S                        | M_HUC6280          , 0x9e),
+  /* ZA    */ MkMask(         M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S                        | M_HUC6280          , 0x64),
+  /* A     */ MkMask(         M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S                        | M_HUC6280          , 0x9c),
+  /* ZIX   */ MkMask(         M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S                        | M_HUC6280          , 0x74),
+  /* IX    */ MkMask(         M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S                        | M_HUC6280          , 0x9e),
   /* ZIY   */     -1,
   /* IY    */     -1,
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("ADC",
-  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x65),
-  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x6d),
-  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x75),
-  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x7d),
+  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x65),
+  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x6d),
+  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x75),
+  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x7d),
   /* ZIY   */     -1,
-  /* IY    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x79),
-  /* (n,X) */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0x61),
-  /* (n),X */ MkMask(                                          M_65C19                                   , 0x71),
-  /* (n),Y */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0x71),
-  /* (n16) */ MkMask(                                                                 M_HUC6280          , 0x72),
-  /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x69),
+  /* IY    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x79),
+  /* (n,X) */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0x61),
+  /* (n),X */ MkMask(                                                     M_65C19                                   , 0x71),
+  /* (n),Y */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0x71),
+  /* (n),Z */ MkMask(                              M_65CE02                                                         , 0x72),
+  /* (n16) */ MkMask(                                                                            M_HUC6280          , 0x72),
+  /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x69),
   /* ACC   */     -1,
   /* NON   */     -1,
-  /* (n8)  */ MkMask(         M_65SC02 | M_65C02 | M_W65C02S | M_65C19                                   , Is65C19 ? 0x61 : 0x72),
+  /* (n8)  */ MkMask(         M_65SC02 | M_65C02            | M_W65C02S | M_65C19                                   , Is65C19 ? 0x61 : 0x72),
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("ADD",
-  /* ZA    */ MkMask(                                          M_65C19                                   , 0x64),
+  /* ZA    */ MkMask(                                                     M_65C19                                   , 0x64),
   /* A     */     -1,
-  /* ZIX   */ MkMask(                                          M_65C19                                   , 0x74),
+  /* ZIX   */ MkMask(                                                     M_65C19                                   , 0x74),
   /* IX    */     -1,
   /* ZIY   */     -1,
   /* IY    */     -1,
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
-  /* imm   */ MkMask(                                          M_65C19                                   , 0x89),
+  /* imm   */ MkMask(                                                     M_65C19                                   , 0x89),
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("SBC",
-  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xe5),
-  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xed),
-  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xf5),
-  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xfd),
+  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xe5),
+  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xed),
+  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xf5),
+  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xfd),
   /* ZIY   */     -1,
-  /* IY    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xf9),
-  /* (n,X) */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0xe1),
-  /* (n),X */ MkMask(                                          M_65C19                                   , 0xf1),
-  /* (n),Y */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0xf1),
-  /* (n16) */ MkMask(                                                                 M_HUC6280          , 0xf2),
-  /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xe9),
+  /* IY    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xf9),
+  /* (n,X) */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0xe1),
+  /* (n),X */ MkMask(                                                     M_65C19                                   , 0xf1),
+  /* (n),Y */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0xf1),
+  /* (n),Z */ MkMask(                              M_65CE02                                                         , 0xf2),
+  /* (n16) */ MkMask(                                                                            M_HUC6280          , 0xf2),
+  /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xe9),
   /* ACC   */     -1,
   /* NON   */     -1,
-  /* (n8)  */ MkMask(         M_65SC02 | M_65C02 | M_W65C02S | M_65C19                                   , Is65C19 ? 0xe1 : 0xf2),
+  /* (n8)  */ MkMask(         M_65SC02 | M_65C02            | M_W65C02S | M_65C19                                   , Is65C19 ? 0xe1 : 0xf2),
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("MUL",
   /* ZA    */     -1,
   /* A     */     -1,
-  /* ZIX   */ MkMask(                                                    M_MELPS740                      , 0x62),
+  /* ZIX   */ MkMask(                                                               M_MELPS740                      , 0x62),
   /* IX    */     -1,
   /* ZIY   */     -1,
   /* IY    */     -1,
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("DIV",
   /* ZA    */     -1,
   /* A     */     -1,
-  /* ZIX   */ MkMask(                                                    M_MELPS740                      , 0xe2),
+  /* ZIX   */ MkMask(                                                               M_MELPS740                      , 0xe2),
   /* IX    */     -1,
   /* ZIY   */     -1,
   /* IY    */     -1,
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("AND",
-  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x25),
-  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x2d),
-  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x35),
-  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x3d),
+  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x25),
+  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x2d),
+  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x35),
+  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x3d),
   /* ZIY   */     -1,
-  /* IY    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x39),
-  /* (n,X) */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0x21),
-  /* (n),X */ MkMask(                                          M_65C19                                   , 0x31),
-  /* (n),Y */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0x31),
-  /* (n16) */ MkMask(                                                                 M_HUC6280          , 0x32),
-  /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x29),
+  /* IY    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x39),
+  /* (n,X) */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0x21),
+  /* (n),X */ MkMask(                                                     M_65C19                                   , 0x31),
+  /* (n),Y */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0x31),
+  /* (n),Z */ MkMask(                              M_65CE02                                                         , 0x32),
+  /* (n16) */ MkMask(                                                                            M_HUC6280          , 0x32),
+  /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x29),
   /* ACC   */     -1,
   /* NON   */     -1,
-  /* (n8)  */ MkMask(         M_65SC02 | M_65C02 | M_W65C02S | M_65C19                                   , Is65C19 ? 0x21 : 0x32),
+  /* (n8)  */ MkMask(         M_65SC02 | M_65C02            | M_W65C02S | M_65C19                                   , Is65C19 ? 0x21 : 0x32),
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("ORA",
-  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x05),
-  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x0d),
-  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x15),
-  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x1d),
+  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x05),
+  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x0d),
+  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x15),
+  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x1d),
   /* ZIY   */     -1,
-  /* IY    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x19),
-  /* (n,X) */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0x01),
-  /* (n),X */ MkMask(                                          M_65C19                                   , 0x11),
-  /* (n),Y */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0x11),
-  /* (n16) */ MkMask(                                                                 M_HUC6280          , 0x12),
-  /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x09),
+  /* IY    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x19),
+  /* (n,X) */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0x01),
+  /* (n),X */ MkMask(                                                     M_65C19                                   , 0x11),
+  /* (n),Y */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0x11),
+  /* (n),Z */ MkMask(                              M_65CE02                                                         , 0x12),
+  /* (n16) */ MkMask(                                                                            M_HUC6280          , 0x12),
+  /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x09),
   /* ACC   */     -1,
   /* NON   */     -1,
-  /* (n8)  */ MkMask(         M_65SC02 | M_65C02 | M_W65C02S | M_65C19                                   , Is65C19 ? 0x01 : 0x12),
+  /* (n8)  */ MkMask(         M_65SC02 | M_65C02            | M_W65C02S | M_65C19                                   , Is65C19 ? 0x01 : 0x12),
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("EOR",
-  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x45),
-  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x4d),
-  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x55),
-  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x5d),
+  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x45),
+  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x4d),
+  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x55),
+  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x5d),
   /* ZIY   */     -1,
-  /* IY    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x59),
-  /* (n,X) */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0x41),
-  /* (n),X */ MkMask(                                          M_65C19                                   , 0x51),
-  /* (n),Y */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0x51),
-  /* (n16) */ MkMask(                                                                 M_HUC6280          , 0x52),
-  /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x49),
+  /* IY    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x59),
+  /* (n,X) */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0x41),
+  /* (n),X */ MkMask(                                                     M_65C19                                   , 0x51),
+  /* (n),Y */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0x51),
+  /* (n),Z */ MkMask(                              M_65CE02                                                         , 0x52),
+  /* (n16) */ MkMask(                                                                            M_HUC6280          , 0x52),
+  /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x49),
   /* ACC   */     -1,
   /* NON   */     -1,
-  /* (n8)  */ MkMask(         M_65SC02 | M_65C02 | M_W65C02S | M_65C19                                   , Is65C19 ? 0x41 : 0x52),
+  /* (n8)  */ MkMask(         M_65SC02 | M_65C02            | M_W65C02S | M_65C19                                   , Is65C19 ? 0x41 : 0x52),
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("COM",
-  /* ZA    */ MkMask(                                                    M_MELPS740          , 0x44),
+  /* ZA    */ MkMask(                                                               M_MELPS740                      , 0x44),
   /* A     */     -1,
   /* ZIX   */     -1,
   /* IX    */     -1,
@@ -1327,63 +1460,89 @@ static void InitFields(void)
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("BIT",
-  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_HUC6280 | M_MELPS740 | M_6502U, 0x24),
-  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_HUC6280 | M_MELPS740 | M_6502U, 0x2c),
-  /* ZIX   */ MkMask(         M_65SC02 | M_65C02 | M_W65C02S           | M_HUC6280                       , 0x34),
-  /* IX    */ MkMask(         M_65SC02 | M_65C02 | M_W65C02S           | M_HUC6280                       , 0x3c),
+  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x24),
+  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x2c),
+  /* ZIX   */ MkMask(         M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S                        | M_HUC6280          , 0x34),
+  /* IX    */ MkMask(         M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S                        | M_HUC6280          , 0x3c),
   /* ZIY   */     -1,
   /* IY    */     -1,
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
-  /* imm   */ MkMask(         M_65SC02 | M_65C02 | M_W65C02S           | M_HUC6280                       , 0x89),
+  /* imm   */ MkMask(         M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S                        | M_HUC6280          , 0x89),
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("TST", /* TODO: 6280 */
-  /* ZA    */ MkMask(                                                    M_MELPS740 | M_HUC6280          , Is740 ? 0x64 : 0x83),
-  /* A     */ MkMask(                                                                 M_HUC6280          , 0x93),
-  /* ZIX   */ MkMask(                                                                 M_HUC6280          , 0xa3),
-  /* IX    */ MkMask(                                                                 M_HUC6280          , 0xb3),
+  /* ZA    */ MkMask(                                                               M_MELPS740 | M_HUC6280          , Is740 ? 0x64 : 0x83),
+  /* A     */ MkMask(                                                                            M_HUC6280          , 0x93),
+  /* ZIX   */ MkMask(                                                                            M_HUC6280          , 0xa3),
+  /* IX    */ MkMask(                                                                            M_HUC6280          , 0xb3),
   /* ZIY   */     -1,
   /* IY    */     -1,
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("ASL",
-  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x06),
-  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x0e),
-  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x16),
-  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x1e),
+  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x06),
+  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x0e),
+  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x16),
+  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x1e),
   /* ZIY   */     -1,
   /* IY    */     -1,
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
-  /* ACC   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x0a),
-  /* NON   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x0a),
+  /* ACC   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x0a),
+  /* NON   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x0a),
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("ASR",
-  /* ZA    */     -1,
+  /* ZA    */ MkMask(                              M_65CE02                                                         , 0x44),
   /* A     */     -1,
+  /* ZIX   */ MkMask(                              M_65CE02                                                         , 0x54),
+  /* IX    */     -1,
+  /* ZIY   */     -1,
+  /* IY    */     -1,
+  /* (n,X) */     -1,
+  /* (n),X */     -1,
+  /* (n),Y */     -1,
+  /* (n),Z */     -1,
+  /* (n16) */     -1,
+  /* imm   */ MkMask(                                                                                        M_6502U, 0x4b),
+  /* ACC   */ MkMask(                              M_65CE02             | M_65C19                                   , (MomCPU == CPU65CE02) ? 0x43 : 0x3a),
+  /* NON   */ MkMask(                              M_65CE02             | M_65C19                                   , (MomCPU == CPU65CE02) ? 0x43 : 0x3a),
+  /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
+  /* spec  */     -1);
+  AddNorm("ASW",
+  /* ZA    */     -1,
+  /* A     */ MkMask(                              M_65CE02                                                         , 0xcb),
   /* ZIX   */     -1,
   /* IX    */     -1,
   /* ZIY   */     -1,
@@ -1391,11 +1550,13 @@ static void InitFields(void)
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
-  /* imm   */ MkMask(                                                                             M_6502U, 0x4b),
-  /* ACC   */ MkMask(                                          M_65C19                                   , 0x3a),
-  /* NON   */ MkMask(                                          M_65C19                                   , 0x3a),
+  /* imm   */     -1,
+  /* ACC   */     -1,
+  /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("LAB",
   /* ZA    */     -1,
@@ -1407,11 +1568,13 @@ static void InitFields(void)
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
-  /* ACC   */ MkMask(                                          M_65C19                                   , 0x13),
-  /* NON   */ MkMask(                                          M_65C19                                   , 0x13),
+  /* ACC   */ MkMask(                                                     M_65C19                                   , 0x13),
+  /* NON   */ MkMask(                                                     M_65C19                                   , 0x13),
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("NEG",
   /* ZA    */     -1,
@@ -1423,62 +1586,88 @@ static void InitFields(void)
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
-  /* ACC   */ MkMask(                                          M_65C19                                   , 0x1a),
-  /* NON   */ MkMask(                                          M_65C19                                   , 0x1a),
+  /* ACC   */ MkMask(                              M_65CE02             | M_65C19                                   , (MomCPU == CPU65CE02) ? 0x42 : 0x1a),
+  /* NON   */ MkMask(                              M_65CE02             | M_65C19                                   , (MomCPU == CPU65CE02) ? 0x42 : 0x1a),
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("LSR",
-  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x46),
-  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x4e),
-  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x56),
-  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x5e),
+  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x46),
+  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x4e),
+  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x56),
+  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x5e),
   /* ZIY   */     -1,
   /* IY    */     -1,
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
-  /* ACC   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x4a),
-  /* NON   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x4a),
+  /* ACC   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x4a),
+  /* NON   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x4a),
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("ROL",
-  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x26),
-  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x2e),
-  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x36),
-  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x3e),
+  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x26),
+  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x2e),
+  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x36),
+  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x3e),
   /* ZIY   */     -1,
   /* IY    */     -1,
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
-  /* ACC   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x2a),
-  /* NON   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x2a),
+  /* ACC   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x2a),
+  /* NON   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x2a),
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
+  /* spec  */     -1);
+  AddNorm("ROW",
+  /* ZA    */     -1,
+  /* A     */ MkMask(                              M_65CE02                                                         , 0xeb),
+  /* ZIX   */     -1,
+  /* IX    */     -1,
+  /* ZIY   */     -1,
+  /* IY    */     -1,
+  /* (n,X) */     -1,
+  /* (n),X */     -1,
+  /* (n),Y */     -1,
+  /* (n),Z */     -1,
+  /* (n16) */     -1,
+  /* imm   */     -1,
+  /* ACC   */     -1,
+  /* NON   */     -1,
+  /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("ROR",
-  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x66),
-  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x6e),
-  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x76),
-  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x7e),
+  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x66),
+  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x6e),
+  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x76),
+  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x7e),
   /* ZIY   */     -1,
   /* IY    */     -1,
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
-  /* ACC   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x6a),
-  /* NON   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x6a),
+  /* ACC   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x6a),
+  /* NON   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x6a),
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("RRF",
-  /* ZA    */ MkMask(                                                    M_MELPS740                      , 0x82),
+  /* ZA    */ MkMask(                                                               M_MELPS740                      , 0x82),
   /* A     */     -1,
   /* ZIX   */     -1,
   /* IX    */     -1,
@@ -1487,15 +1676,17 @@ static void InitFields(void)
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("TSB",
-  /* ZA    */ MkMask(                   M_65SC02 | M_65C02 | M_W65C02S              | M_HUC6280          , 0x04),
-  /* A     */ MkMask(                   M_65SC02 | M_65C02 | M_W65C02S              | M_HUC6280          , 0x0c),
+  /* ZA    */ MkMask(                   M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S              | M_HUC6280          , 0x04),
+  /* A     */ MkMask(                   M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S              | M_HUC6280          , 0x0c),
   /* ZIX   */     -1,
   /* IX    */     -1,
   /* ZIY   */     -1,
@@ -1503,15 +1694,17 @@ static void InitFields(void)
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("TRB",
-  /* ZA    */ MkMask(                   M_65SC02 | M_65C02 | M_W65C02S              | M_HUC6280          , 0x14),
-  /* A     */ MkMask(                   M_65SC02 | M_65C02 | M_W65C02S              | M_HUC6280          , 0x1c),
+  /* ZA    */ MkMask(                   M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S              | M_HUC6280          , 0x14),
+  /* A     */ MkMask(                   M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S              | M_HUC6280          , 0x1c),
   /* ZIX   */     -1,
   /* IX    */     -1,
   /* ZIY   */     -1,
@@ -1519,63 +1712,107 @@ static void InitFields(void)
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("INC",
-  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xe6),
-  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xee),
-  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xf6),
-  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xfe),
+  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xe6),
+  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xee),
+  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xf6),
+  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xfe),
   /* ZIY   */     -1,
   /* IY    */     -1,
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
-  /* ACC   */ MkMask(         M_65SC02 | M_65C02 | M_W65C02S           | M_MELPS740 | M_HUC6280          , Is740 ? 0x3a : 0x1a), 
-  /* NON   */ MkMask(         M_65SC02 | M_65C02 | M_W65C02S           | M_MELPS740 | M_HUC6280          , Is740 ? 0x3a : 0x1a),
+  /* ACC   */ MkMask(         M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280          , Is740 ? 0x3a : 0x1a),
+  /* NON   */ MkMask(         M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280          , Is740 ? 0x3a : 0x1a),
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
+  /* spec  */     -1);
+  AddNorm("INW",
+  /* ZA    */ MkMask(                              M_65CE02                                                         , 0xe3),
+  /* A     */     -1,
+  /* ZIX   */     -1,
+  /* IX    */     -1,
+  /* ZIY   */     -1,
+  /* IY    */     -1,
+  /* (n,X) */     -1,
+  /* (n),X */     -1,
+  /* (n),Y */     -1,
+  /* (n),Z */     -1,
+  /* (n16) */     -1,
+  /* imm   */     -1,
+  /* ACC   */     -1,
+  /* NON   */     -1,
+  /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("DEC",
-  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xc6),
-  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xce),
-  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xd6),
-  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xde),
+  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xc6),
+  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xce),
+  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xd6),
+  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xde),
   /* ZIY   */     -1,
   /* IY    */     -1,
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
-  /* ACC   */ MkMask(         M_65SC02 | M_65C02 | M_W65C02S           | M_MELPS740 | M_HUC6280          , Is740 ? 0x1a : 0x3a), 
-  /* NON   */ MkMask(         M_65SC02 | M_65C02 | M_W65C02S           | M_MELPS740 | M_HUC6280          , Is740 ? 0x1a : 0x3a), 
+  /* ACC   */ MkMask(         M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280          , Is740 ? 0x1a : 0x3a),
+  /* NON   */ MkMask(         M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280          , Is740 ? 0x1a : 0x3a),
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
+  /* spec  */     -1);
+  AddNorm("DEW",
+  /* ZA    */ MkMask(                              M_65CE02                                                         , 0xc3),
+  /* A     */     -1,
+  /* ZIX   */     -1,
+  /* IX    */     -1,
+  /* ZIY   */     -1,
+  /* IY    */     -1,
+  /* (n,X) */     -1,
+  /* (n),X */     -1,
+  /* (n),Y */     -1,
+  /* (n),Z */     -1,
+  /* (n16) */     -1,
+  /* imm   */     -1,
+  /* ACC   */     -1,
+  /* NON   */     -1,
+  /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("CMP",
-  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xc5),
-  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xcd),
-  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xd5),
-  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xdd),
+  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xc5),
+  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xcd),
+  /* ZIX   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xd5),
+  /* IX    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xdd),
   /* ZIY   */     -1,
-  /* IY    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xd9),
-  /* (n,X) */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0xc1),
-  /* (n),X */ MkMask(                                          M_65C19                                   , 0xd1),
-  /* (n),Y */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0xd1),
-  /* (n16) */ MkMask(                                                                 M_HUC6280          , 0xd2),
-  /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xc9),
+  /* IY    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xd9),
+  /* (n,X) */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0xc1),
+  /* (n),X */ MkMask(                                                     M_65C19                                   , 0xd1),
+  /* (n),Y */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0xd1),
+  /* (n),Z */ MkMask(                              M_65CE02                                                         , 0xd2),
+  /* (n16) */ MkMask(                                                                            M_HUC6280          , 0xd2),
+  /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xc9),
   /* ACC   */     -1,
   /* NON   */     -1,
-  /* (n8)  */ MkMask(         M_65SC02 | M_65C02 | M_W65C02S | M_65C19                                   , Is65C19 ? 0xc1 : 0xd2),
+  /* (n8)  */ MkMask(         M_65SC02 | M_65C02            | M_W65C02S | M_65C19                                   , Is65C19 ? 0xc1 : 0xd2),
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("CPX",
-  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xe4),
-  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xec),
+  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xe4),
+  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xec),
   /* ZIX   */     -1,
   /* IX    */     -1,
   /* ZIY   */     -1,
@@ -1583,15 +1820,17 @@ static void InitFields(void)
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
-  /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xe0),
+  /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xe0),
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("CPY",
-  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xc4),
-  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xcc),
+  /* ZA    */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xc4),
+  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xcc),
   /* ZIX   */     -1,
   /* IX    */     -1,
   /* ZIY   */     -1,
@@ -1599,27 +1838,49 @@ static void InitFields(void)
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
-  /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xc0),
+  /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xc0),
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
+  /* spec  */     -1);
+  AddNorm("CPZ",
+  /* ZA    */ MkMask(                              M_65CE02                                                         , 0xd4),
+  /* A     */ MkMask(                              M_65CE02                                                         , 0xdc),
+  /* ZIX   */     -1,
+  /* IX    */     -1,
+  /* ZIY   */     -1,
+  /* IY    */     -1,
+  /* (n,X) */     -1,
+  /* (n),X */     -1,
+  /* (n),Y */     -1,
+  /* (n),Z */     -1,
+  /* (n16) */     -1,
+  /* imm   */ MkMask(                              M_65CE02                                                         , 0xc2),
+  /* ACC   */     -1,
+  /* NON   */     -1,
+  /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("JMP",
   /* ZA    */     -1,
-  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x4c),
+  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x4c),
   /* ZIX   */     -1,
   /* IX    */     -1,
   /* ZIY   */     -1,
   /* IY    */     -1,
-  /* (n,X) */ MkMask(         M_65SC02 | M_65C02 | M_W65C02S | M_65C19              | M_HUC6280          , 0x7c),
+  /* (n,X) */ MkMask(         M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19              | M_HUC6280          , 0x7c),
   /* (n),X */     -1,
   /* (n),Y */     -1,
-  /* (n16) */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x6c),
+  /* (n),Z */     -1,
+  /* (n16) */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x6c),
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
-  /* (n8)  */ MkMask(                                                    M_MELPS740                      , 0xb2),
+  /* (n8)  */ MkMask(                                                               M_MELPS740                      , 0xb2),
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("JPI",
   /* ZA    */     -1,
@@ -1631,15 +1892,35 @@ static void InitFields(void)
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
-  /* (n16) */ MkMask(                                          M_65C19                                   , 0x0c),
+  /* (n),Z */     -1,
+  /* (n16) */ MkMask(                                                     M_65C19                                   , 0x0c),
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("JSR",
   /* ZA    */     -1,
-  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x20),
+  /* A     */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x20),
+  /* ZIX   */     -1,
+  /* IX    */     -1,
+  /* ZIY   */     -1,
+  /* IY    */     -1,
+  /* (n,X) */ MkMask(                              M_65CE02                                                         , 0x23),
+  /* (n),X */     -1,
+  /* (n),Y */     -1,
+  /* (n),Z */     -1,
+  /* (n16) */ MkMask(                              M_65CE02                                                         , 0x22),
+  /* imm   */     -1,
+  /* ACC   */     -1,
+  /* NON   */     -1,
+  /* (n8)  */ MkMask(                                                               M_MELPS740                      , 0x02),
+  /*(n,SP),y*/    -1,
+  /* spec  */ MkMask(                                                               M_MELPS740                      , 0x22));
+  AddNorm("RTN",
+  /* ZA    */     -1,
+  /* A     */     -1,
   /* ZIX   */     -1,
   /* IX    */     -1,
   /* ZIY   */     -1,
@@ -1647,27 +1928,31 @@ static void InitFields(void)
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
-  /* imm   */     -1,
+  /* imm   */ MkMask(                              M_65CE02                                                         , 0x62),
   /* ACC   */     -1,
   /* NON   */     -1,
-  /* (n8)  */ MkMask(                                                    M_MELPS740                      , 0x02),
-  /* spec  */ MkMask(                                                    M_MELPS740                      , 0x22));
+  /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
+  /* spec  */     -1);
   AddNorm("SLO",
-  /* ZA    */ MkMask(                                                                             M_6502U, 0x07),
-  /* A     */ MkMask(                                                                             M_6502U, 0x0f),
-  /* ZIX   */ MkMask(                                                                             M_6502U, 0x17),
-  /* IX    */ MkMask(                                                                             M_6502U, 0x1f),
+  /* ZA    */ MkMask(                                                                                        M_6502U, 0x07),
+  /* A     */ MkMask(                                                                                        M_6502U, 0x0f),
+  /* ZIX   */ MkMask(                                                                                        M_6502U, 0x17),
+  /* IX    */ MkMask(                                                                                        M_6502U, 0x1f),
   /* ZIY   */     -1,
-  /* IY    */ MkMask(                                                                             M_6502U, 0x1b),
-  /* (n,X) */ MkMask(                                                                             M_6502U, 0x03),
+  /* IY    */ MkMask(                                                                                        M_6502U, 0x1b),
+  /* (n,X) */ MkMask(                                                                                        M_6502U, 0x03),
   /* (n),X */     -1,
-  /* (n),Y */ MkMask(                                                                             M_6502U, 0x13),
+  /* (n),Y */ MkMask(                                                                                        M_6502U, 0x13),
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("ANC",
   /* ZA    */     -1,
@@ -1679,59 +1964,67 @@ static void InitFields(void)
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
-  /* imm   */ MkMask(                                                                             M_6502U, 0x0b),
+  /* imm   */ MkMask(                                                                                        M_6502U, 0x0b),
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("RLA",
-  /* ZA    */ MkMask(                                                                             M_6502U, 0x27),
-  /* A     */ MkMask(                                                                             M_6502U, 0x2f),
-  /* ZIX   */ MkMask(                                                                             M_6502U, 0x37),
-  /* IX    */ MkMask(                                                                             M_6502U, 0x3f),
+  /* ZA    */ MkMask(                                                                                        M_6502U, 0x27),
+  /* A     */ MkMask(                                                                                        M_6502U, 0x2f),
+  /* ZIX   */ MkMask(                                                                                        M_6502U, 0x37),
+  /* IX    */ MkMask(                                                                                        M_6502U, 0x3f),
   /* ZIY   */     -1,
-  /* IY    */ MkMask(                                                                             M_6502U, 0x3b),
-  /* (n,X) */ MkMask(                                                                             M_6502U, 0x23),
+  /* IY    */ MkMask(                                                                                        M_6502U, 0x3b),
+  /* (n,X) */ MkMask(                                                                                        M_6502U, 0x23),
   /* (n),X */     -1,
-  /* (n),Y */ MkMask(                                                                             M_6502U, 0x33),
+  /* (n),Y */ MkMask(                                                                                        M_6502U, 0x33),
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("SRE",
-  /* ZA    */ MkMask(                                                                             M_6502U, 0x47),
-  /* A     */ MkMask(                                                                             M_6502U, 0x4f),
-  /* ZIX   */ MkMask(                                                                             M_6502U, 0x57),
-  /* IX    */ MkMask(                                                                             M_6502U, 0x5f),
+  /* ZA    */ MkMask(                                                                                        M_6502U, 0x47),
+  /* A     */ MkMask(                                                                                        M_6502U, 0x4f),
+  /* ZIX   */ MkMask(                                                                                        M_6502U, 0x57),
+  /* IX    */ MkMask(                                                                                        M_6502U, 0x5f),
   /* ZIY   */     -1,
-  /* IY    */ MkMask(                                                                             M_6502U, 0x5b),
-  /* (n,X) */ MkMask(                                                                             M_6502U, 0x43),
+  /* IY    */ MkMask(                                                                                        M_6502U, 0x5b),
+  /* (n,X) */ MkMask(                                                                                        M_6502U, 0x43),
   /* (n),X */     -1,
-  /* (n),Y */ MkMask(                                                                             M_6502U, 0x53),
+  /* (n),Y */ MkMask(                                                                                        M_6502U, 0x53),
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("RRA",
-  /* ZA    */ MkMask(                                                                             M_6502U, 0x67),
-  /* A     */ MkMask(                                                                             M_6502U, 0x6f),
-  /* ZIX   */ MkMask(                                                                             M_6502U, 0x77),
-  /* IX    */ MkMask(                                                                             M_6502U, 0x7f),
+  /* ZA    */ MkMask(                                                                                        M_6502U, 0x67),
+  /* A     */ MkMask(                                                                                        M_6502U, 0x6f),
+  /* ZIX   */ MkMask(                                                                                        M_6502U, 0x77),
+  /* IX    */ MkMask(                                                                                        M_6502U, 0x7f),
   /* ZIY   */     -1,
-  /* IY    */ MkMask(                                                                             M_6502U, 0x7b),
-  /* (n,X) */ MkMask(                                                                             M_6502U, 0x63),
+  /* IY    */ MkMask(                                                                                        M_6502U, 0x7b),
+  /* (n,X) */ MkMask(                                                                                        M_6502U, 0x63),
   /* (n),X */     -1,
-  /* (n),Y */ MkMask(                                                                             M_6502U, 0x73),
+  /* (n),Y */ MkMask(                                                                                        M_6502U, 0x73),
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */    -1);
   AddNorm("ARR",
   /* ZA    */     -1,
@@ -1743,27 +2036,31 @@ static void InitFields(void)
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
-  /* imm   */ MkMask(                                                                             M_6502U, 0x6b),
+  /* imm   */ MkMask(                                                                                        M_6502U, 0x6b),
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("SAX",
-  /* ZA    */ MkMask(                                                                             M_6502U, 0x87),
-  /* A     */ MkMask(                                                                             M_6502U, 0x8f),
+  /* ZA    */ MkMask(                                                                                        M_6502U, 0x87),
+  /* A     */ MkMask(                                                                                        M_6502U, 0x8f),
   /* ZIX   */     -1,
   /* IX    */     -1,
-  /* ZIY   */ MkMask(                                                                             M_6502U, 0x97),
+  /* ZIY   */ MkMask(                                                                                        M_6502U, 0x97),
   /* IY    */     -1,
-  /* (n,X) */ MkMask(                                                                             M_6502U, 0x83),
+  /* (n,X) */ MkMask(                                                                                        M_6502U, 0x83),
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
   /* ACC   */     -1,
-  /* NON   */ MkMask(                                                                 M_HUC6280          , 0x22),
+  /* NON   */ MkMask(                                                                            M_HUC6280          , 0x22),
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("ANE",
   /* ZA    */     -1,
@@ -1775,27 +2072,31 @@ static void InitFields(void)
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
-  /* imm   */ MkMask(                                                                             M_6502U, 0x8b),
+  /* imm   */ MkMask(                                                                                        M_6502U, 0x8b),
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("SHA",
   /* ZA    */     -1,
   /* A     */     -1,
   /* ZIX   */     -1,
-  /* IX    */ MkMask(                                                                             M_6502U, 0x93),
+  /* IX    */ MkMask(                                                                                        M_6502U, 0x93),
   /* ZIY   */     -1,
-  /* IY    */ MkMask(                                                                             M_6502U, 0x9f),
+  /* IY    */ MkMask(                                                                                        M_6502U, 0x9f),
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("SHS",
   /* ZA    */     -1,
@@ -1803,15 +2104,17 @@ static void InitFields(void)
   /* ZIX   */     -1,
   /* IX    */     -1,
   /* ZIY   */     -1,
-  /* IY    */ MkMask(                                                                             M_6502U, 0x9b),
+  /* IY    */ MkMask(                                                                                        M_6502U, 0x9b),
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("SHY",
   /* ZA    */     -1,
@@ -1819,47 +2122,53 @@ static void InitFields(void)
   /* ZIX   */     -1,
   /* IX    */     -1,
   /* ZIY   */     -1,
-  /* IY    */ MkMask(                                                                             M_6502U, 0x9c),
+  /* IY    */ MkMask(                                                                                        M_6502U, 0x9c),
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("SHX",
   /* ZA    */     -1,
   /* A     */     -1,
   /* ZIX   */     -1,
-  /* IX    */ MkMask(                                                                             M_6502U, 0x9e),
+  /* IX    */ MkMask(                                                                                        M_6502U, 0x9e),
   /* ZIY   */     -1,
   /* IY    */     -1,
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("LAX",
-  /* ZA    */ MkMask(                                                                             M_6502U, 0xa7),
-  /* A     */ MkMask(                                                                             M_6502U, 0xaf),
+  /* ZA    */ MkMask(                                                                                        M_6502U, 0xa7),
+  /* A     */ MkMask(                                                                                        M_6502U, 0xaf),
   /* ZIX   */     -1,
   /* IX    */     -1,
-  /* ZIY   */ MkMask(                                                                             M_6502U, 0xb7),
-  /* IY    */ MkMask(                                                                             M_6502U, 0xbf),
-  /* (n,X) */ MkMask(                                                                             M_6502U, 0xa3),
+  /* ZIY   */ MkMask(                                                                                        M_6502U, 0xb7),
+  /* IY    */ MkMask(                                                                                        M_6502U, 0xbf),
+  /* (n,X) */ MkMask(                                                                                        M_6502U, 0xa3),
   /* (n),X */     -1,
-  /* (n),Y */ MkMask(                                                                             M_6502U, 0xb3),
+  /* (n),Y */ MkMask(                                                                                        M_6502U, 0xb3),
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("LXA",
   /* ZA    */     -1,
@@ -1871,11 +2180,13 @@ static void InitFields(void)
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
-  /* imm   */ MkMask(                                                                             M_6502U, 0xab),
+  /* imm   */ MkMask(                                                                                        M_6502U, 0xab),
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("LAE",
   /* ZA    */     -1,
@@ -1883,31 +2194,35 @@ static void InitFields(void)
   /* ZIX   */     -1,
   /* IX    */     -1,
   /* ZIY   */     -1,
-  /* IY    */ MkMask(                                                                             M_6502U, 0xbb),
+  /* IY    */ MkMask(                                                                                        M_6502U, 0xbb),
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("DCP",
-  /* ZA    */ MkMask(                                                                             M_6502U, 0xc7),
-  /* A     */ MkMask(                                                                             M_6502U, 0xcf),
-  /* ZIX   */ MkMask(                                                                             M_6502U, 0xd7),
-  /* IX    */ MkMask(                                                                             M_6502U, 0xdf),
+  /* ZA    */ MkMask(                                                                                        M_6502U, 0xc7),
+  /* A     */ MkMask(                                                                                        M_6502U, 0xcf),
+  /* ZIX   */ MkMask(                                                                                        M_6502U, 0xd7),
+  /* IX    */ MkMask(                                                                                        M_6502U, 0xdf),
   /* ZIY   */     -1,
-  /* IY    */ MkMask(                                                                             M_6502U, 0xdb),
-  /* (n,X) */ MkMask(                                                                             M_6502U, 0xc3),
+  /* IY    */ MkMask(                                                                                        M_6502U, 0xdb),
+  /* (n,X) */ MkMask(                                                                                        M_6502U, 0xc3),
   /* (n),X */     -1,
-  /* (n),Y */ MkMask(                                                                             M_6502U, 0xd3),
+  /* (n),Y */ MkMask(                                                                                        M_6502U, 0xd3),
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("SBX",
   /* ZA    */     -1,
@@ -1919,43 +2234,49 @@ static void InitFields(void)
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
-  /* imm   */ MkMask(                                                                             M_6502U, 0xcb),
+  /* imm   */ MkMask(                                                                                        M_6502U, 0xcb),
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("ISB",
-  /* ZA    */ MkMask(                                                                             M_6502U, 0xe7),
-  /* A     */ MkMask(                                                                             M_6502U, 0xef),
-  /* ZIX   */ MkMask(                                                                             M_6502U, 0xf7),
-  /* IX    */ MkMask(                                                                             M_6502U, 0xff),
+  /* ZA    */ MkMask(                                                                                        M_6502U, 0xe7),
+  /* A     */ MkMask(                                                                                        M_6502U, 0xef),
+  /* ZIX   */ MkMask(                                                                                        M_6502U, 0xf7),
+  /* IX    */ MkMask(                                                                                        M_6502U, 0xff),
   /* ZIY   */     -1,
-  /* IY    */ MkMask(                                                                             M_6502U, 0xfb),
-  /* (n,X) */ MkMask(                                                                             M_6502U, 0xe3),
+  /* IY    */ MkMask(                                                                                        M_6502U, 0xfb),
+  /* (n,X) */ MkMask(                                                                                        M_6502U, 0xe3),
   /* (n),X */     -1,
-  /* (n),Y */ MkMask(                                                                             M_6502U, 0xf3),
+  /* (n),Y */ MkMask(                                                                                        M_6502U, 0xf3),
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("EXC",
   /* ZA    */     -1,
   /* A     */     -1,
-  /* ZIX   */ MkMask(                                          M_65C19                                   , 0xd4),
+  /* ZIX   */ MkMask(                                                     M_65C19                                   , 0xd4),
   /* IX    */     -1,
   /* ZIY   */     -1,
   /* IY    */     -1,
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("TAM",
   /* ZA    */     -1,
@@ -1967,11 +2288,13 @@ static void InitFields(void)
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
-  /* imm   */ MkMask(                                                                 M_HUC6280          , 0x53),
+  /* imm   */ MkMask(                                                                            M_HUC6280          , 0x53),
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("TMA",
   /* ZA    */     -1,
@@ -1983,24 +2306,47 @@ static void InitFields(void)
   /* (n,X) */     -1,
   /* (n),X */     -1,
   /* (n),Y */     -1,
+  /* (n),Z */     -1,
   /* (n16) */     -1,
-  /* imm   */ MkMask(                                                                 M_HUC6280          , 0x43),
+  /* imm   */ MkMask(                                                                            M_HUC6280          , 0x43),
   /* ACC   */     -1,
   /* NON   */     -1,
   /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
+  /* spec  */     -1);
+  AddNorm("PHW",
+  /* ZA    */     -1,
+  /* A     */ MkMask(                              M_65CE02                                                         , 0xfc),
+  /* ZIX   */     -1,
+  /* IX    */     -1,
+  /* ZIY   */     -1,
+  /* IY    */     -1,
+  /* (n,X) */     -1,
+  /* (n),X */     -1,
+  /* (n),Y */     -1,
+  /* (n),Z */     -1,
+  /* (n16) */     -1,
+  /* imm   */ MkMask(                              M_65CE02                                                         , 0xf4),
+  /* ACC   */     -1,
+  /* NON   */ MkMask(                                                     M_65C19                                   , 0x23),
+  /* (n8)  */     -1,
+  /*(n,SP),y*/    -1,
   /* spec  */     -1);
 
   CondOrders = (CondOrder *) malloc(sizeof(CondOrder) * CondOrderCount); InstrZ = 0;
-  AddCond("BEQ", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xf0);
-  AddCond("BNE", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xd0);
-  AddCond("BPL", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x10);
-  AddCond("BMI", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x30);
-  AddCond("BCC", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x90);
-  AddCond("BCS", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xb0);
-  AddCond("BVC", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x50);
-  AddCond("BVS", M_6502 | M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x70);
-  AddCond("BRA",          M_65SC02 | M_65C02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280          , 0x80);
-  AddCond("BSR",                                                                  M_HUC6280          , 0x44);
+  AddCond("BEQ", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xf0, 0xf3);
+  AddCond("BNE", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xd0, 0xd3);
+  AddCond("BPL", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x10, 0x13);
+  AddCond("BMI", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x30, 0x33);
+  AddCond("BCC", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x90, 0x93);
+  AddCond("BCS", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xb0, 0xb3);
+  AddCond("BVC", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x50, 0x53);
+  AddCond("BVS", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x70, 0x73);
+  AddCond("BRA",          M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280          , 0x80, 0x83);
+  AddCond("BRU",          M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280          , 0x80, 0x83);
+  AddCond("BSR",                               M_65CE02                                    | M_HUC6280          ,
+          (MomCPU == CPUHUC6280) ? 0x44 : 0x00,
+          (MomCPU == CPU65CE02) ? 0x63 : 0x00);
 }
 
 static void DeinitFields(void)
@@ -2104,6 +2450,17 @@ static void SwitchTo_65(void)
     ASSUMERecCnt = (sizeof(ASSUME6280s) / sizeof(*ASSUME6280s));
     SetIsOccupied = True;
   }
+  else if (MomCPU == CPU65CE02)
+  {
+    static ASSUMERec ASSUME65CE02s[] =
+    {
+      { "B", &RegB, 0, 0xff, 0, NULL }
+    };
+
+    pASSUMERecs = ASSUME65CE02s;
+    ASSUMERecCnt = (sizeof(ASSUME65CE02s) / sizeof(*ASSUME65CE02s));
+    SetIsOccupied = False;
+  }
   else
     SetIsOccupied = False;
 
@@ -2118,6 +2475,7 @@ void code65_init(void)
   CPU6502    = AddCPU("6502"     , SwitchTo_65);
   CPU65SC02  = AddCPU("65SC02"   , SwitchTo_65);
   CPU65C02   = AddCPU("65C02"    , SwitchTo_65);
+  CPU65CE02  = AddCPU("65CE02"   , SwitchTo_65);
   CPUW65C02S = AddCPU("W65C02S"  , SwitchTo_65);
   CPU65C19   = AddCPU("65C19"    , SwitchTo_65);
   CPUM740    = AddCPU("MELPS740" , SwitchTo_65);

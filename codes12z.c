@@ -750,7 +750,7 @@ static Boolean DecodeImmBitField(tStrComp *pArg, Word *pResult)
  * \return compact representation
  * ------------------------------------------------------------------------ */
 
-LongWord AssembleBitfieldSymbol(Byte BitPos, Byte Width, ShortInt OpSize, Word Address)
+static LongWord AssembleBitfieldSymbol(Byte BitPos, Byte Width, ShortInt OpSize, Word Address)
 {
   LongWord CodeOpSize = (OpSize == eSymbolSize24Bit) ? 3 : OpSize;
   int AddrShift = (OpSize == eSymbolSize24Bit) ? 5 : (3 + OpSize);
@@ -770,7 +770,7 @@ LongWord AssembleBitfieldSymbol(Byte BitPos, Byte Width, ShortInt OpSize, Word A
  * \return compact representation
  * ------------------------------------------------------------------------ */
 
-LongWord AssembleBitSymbol(Byte BitPos, ShortInt OpSize, Word Address)
+static LongWord AssembleBitSymbol(Byte BitPos, ShortInt OpSize, Word Address)
 {
   return AssembleBitfieldSymbol(BitPos, 1, OpSize, Address);
 }

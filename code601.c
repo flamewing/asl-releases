@@ -1337,7 +1337,7 @@ static void DecodeREG(Word Code)
 
 /*-------------------------------------------------------------------------*/
 
-static void AddFixed(char *NName1, char *NName2, LongInt NCode, Byte NMask)
+static void AddFixed(char *NName1, char *NName2, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= FixedOrderCount) exit(255);
   FixedOrders[InstrZ].Code = NCode;
@@ -1345,7 +1345,7 @@ static void AddFixed(char *NName1, char *NName2, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, MomCPU == CPU6000 ? NName2 : NName1, InstrZ++, DecodeFixed);
 }
 
-static void AddReg1(char *NName1, char *NName2, LongInt NCode, Byte NMask)
+static void AddReg1(char *NName1, char *NName2, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= Reg1OrderCount) exit(255);
   Reg1Orders[InstrZ].Code = NCode;
@@ -1353,7 +1353,7 @@ static void AddReg1(char *NName1, char *NName2, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, MomCPU == CPU6000 ? NName2 : NName1, InstrZ++, DecodeReg1);
 }
 
-static void AddCReg1(char *NName1, char *NName2, LongInt NCode, Byte NMask)
+static void AddCReg1(char *NName1, char *NName2, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= CReg1OrderCount) exit(255);
   CReg1Orders[InstrZ].Code = NCode;
@@ -1361,7 +1361,7 @@ static void AddCReg1(char *NName1, char *NName2, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, MomCPU == CPU6000 ? NName2 : NName1, InstrZ++, DecodeCReg1);
 }
 
-static void AddCBit1(char *NName1, char *NName2, LongInt NCode, Byte NMask)
+static void AddCBit1(char *NName1, char *NName2, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= CBit1OrderCount) exit(255);
   CBit1Orders[InstrZ].Code = NCode;
@@ -1369,7 +1369,7 @@ static void AddCBit1(char *NName1, char *NName2, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, MomCPU == CPU6000 ? NName2 : NName1, InstrZ++, DecodeCBit1);
 }
 
-static void AddFReg1(char *NName1, char *NName2, LongInt NCode, Byte NMask)
+static void AddFReg1(char *NName1, char *NName2, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= FReg1OrderCount) exit(255);
   FReg1Orders[InstrZ].Code = NCode;
@@ -1377,7 +1377,7 @@ static void AddFReg1(char *NName1, char *NName2, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, MomCPU == CPU6000 ? NName2 : NName1, InstrZ++, DecodeFReg1);
 }
 
-static void AddSReg2(char *NName, LongInt NCode, Byte NMask)
+static void AddSReg2(char *NName, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= Reg2OrderCount) exit(255);
   Reg2Orders[InstrZ].Code = NCode;
@@ -1385,7 +1385,7 @@ static void AddSReg2(char *NName, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, NName, InstrZ++, DecodeReg2);
 }
 
-static void AddReg2(char *NName1, char *NName2, LongInt NCode, Byte NMask, Boolean WithOE, Boolean WithFL)
+static void AddReg2(char *NName1, char *NName2, LongWord NCode, Byte NMask, Boolean WithOE, Boolean WithFL)
 {
   String NName;
   char *pSrcName = (MomCPU == CPU6000) ? NName2 : NName1;
@@ -1416,7 +1416,7 @@ static void AddCReg2(char *NName1, char *NName2, LongWord NCode, Byte NMask)
   AddInstTable(InstTable, (MomCPU == CPU6000) ? NName2 : NName1, InstrZ++, DecodeCReg2);
 }
 
-static void AddSFReg2(const char *NName, LongInt NCode, Byte NMask)
+static void AddSFReg2(const char *NName, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= FReg2OrderCount) exit(255);
   if (!NName) exit(255);
@@ -1425,7 +1425,7 @@ static void AddSFReg2(const char *NName, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, NName, InstrZ++, DecodeFReg2);
 }
 
-static void AddFReg2(const char *NName1, const char *NName2, LongInt NCode, Byte NMask, Boolean WithFL)
+static void AddFReg2(const char *NName1, const char *NName2, LongWord NCode, Byte NMask, Boolean WithFL)
 {
   const char *pSrcName = (MomCPU == CPU6000) ? NName2 : NName1;
 
@@ -1439,7 +1439,7 @@ static void AddFReg2(const char *NName1, const char *NName2, LongInt NCode, Byte
   }
 }
 
-static void AddReg2B(char *NName1, char *NName2, LongInt NCode, Byte NMask)
+static void AddReg2B(char *NName1, char *NName2, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= Reg2BOrderCount) exit(255);
   Reg2BOrders[InstrZ].Code = NCode;
@@ -1447,7 +1447,7 @@ static void AddReg2B(char *NName1, char *NName2, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, (MomCPU == CPU6000) ? NName2 : NName1, InstrZ++, DecodeReg2B);
 }
 
-static void AddSReg2Swap(char *NName, LongInt NCode, Byte NMask)
+static void AddSReg2Swap(char *NName, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= Reg2SwapOrderCount) exit(255);
   if (!NName) exit(255);
@@ -1456,7 +1456,7 @@ static void AddSReg2Swap(char *NName, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, NName, InstrZ++, DecodeReg2Swap);
 }
 
-static void AddReg2Swap(char *NName1, char *NName2, LongInt NCode, Byte NMask, Boolean WithOE, Boolean WithFL)
+static void AddReg2Swap(char *NName1, char *NName2, LongWord NCode, Byte NMask, Boolean WithOE, Boolean WithFL)
 {
   String NName;
   char *pSrcName = (MomCPU == CPU6000) ? NName2 : NName1;
@@ -1479,7 +1479,7 @@ static void AddReg2Swap(char *NName1, char *NName2, LongInt NCode, Byte NMask, B
   }
 }
 
-static void AddNoDest(char *NName1, char *NName2, LongInt NCode, Byte NMask)
+static void AddNoDest(char *NName1, char *NName2, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= NoDestOrderCount) exit(255);
   NoDestOrders[InstrZ].Code = NCode;
@@ -1487,7 +1487,7 @@ static void AddNoDest(char *NName1, char *NName2, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, (MomCPU == CPU6000) ? NName2 : NName1, InstrZ++, DecodeNoDest);
 }
 
-static void AddSReg3(char *NName, LongInt NCode, Byte NMask)
+static void AddSReg3(char *NName, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= Reg3OrderCount) exit(255);
   Reg3Orders[InstrZ].Code = NCode;
@@ -1495,7 +1495,7 @@ static void AddSReg3(char *NName, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, NName, InstrZ++, DecodeReg3);
 }
 
-static void AddReg3(char *NName1, char *NName2, LongInt NCode, Byte NMask, Boolean WithOE, Boolean WithFL)
+static void AddReg3(char *NName1, char *NName2, LongWord NCode, Byte NMask, Boolean WithOE, Boolean WithFL)
 {
   String NName;
   char *pSrcName = (MomCPU == CPU6000) ? NName2 : NName1;
@@ -1528,7 +1528,7 @@ static void AddCReg3(char *NName, LongWord NCode, CPUVar NMask)
   AddInstTable(InstTable, NName, InstrZ++, DecodeCReg3);
 }
 
-static void AddSFReg3(char *NName, LongInt NCode, Byte NMask)
+static void AddSFReg3(char *NName, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= FReg3OrderCount) exit(255);
   FReg3Orders[InstrZ].Code = NCode;
@@ -1536,7 +1536,7 @@ static void AddSFReg3(char *NName, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, NName, InstrZ++, DecodeFReg3);
 }
 
-static void AddFReg3(char *NName1, char *NName2, LongInt NCode, Byte NMask, Boolean WithFL)
+static void AddFReg3(char *NName1, char *NName2, LongWord NCode, Byte NMask, Boolean WithFL)
 {
   String NName;
   char *pSrcName = (MomCPU == CPU6000) ? NName2 : NName1;
@@ -1549,7 +1549,7 @@ static void AddFReg3(char *NName1, char *NName2, LongInt NCode, Byte NMask, Bool
   }
 }
 
-static void AddSReg3Swap(char *NName, LongInt NCode, Byte NMask)
+static void AddSReg3Swap(char *NName, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= Reg3SwapOrderCount) exit(255);
   Reg3SwapOrders[InstrZ].Code = NCode;
@@ -1557,7 +1557,7 @@ static void AddSReg3Swap(char *NName, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, NName, InstrZ++, DecodeReg3Swap);
 }
 
-static void AddReg3Swap(char *NName1, char *NName2, LongInt NCode, Byte NMask, Boolean WithFL)
+static void AddReg3Swap(char *NName1, char *NName2, LongWord NCode, Byte NMask, Boolean WithFL)
 {
   String NName;
   char *pSrcName = (MomCPU == CPU6000) ? NName2 : NName1;

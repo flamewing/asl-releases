@@ -1598,7 +1598,6 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
           case TempString:
             WrStrErrorPos(ErrNum_OpTypeMismatch, &CopyComp);
             LEAVE;
-            break;
           case TempInt:
             TempResultToFloat(&InVals[z1]);
             break;

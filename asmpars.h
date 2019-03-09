@@ -6,69 +6,9 @@
 /*                                                                           */
 /* Verwaltung von Symbolen und das ganze Drumherum...                        */
 /*                                                                           */
-/* Historie:  5. 5.1996 Grundsteinlegung                                     */
-/*           26. 6.1998 Codepages                                            */
-/*           16. 8.1998 NoICE-Symbolausgabe                                  */
-/*            6.12.1998 UInt14                                               */
-/*           12. 7.1999 angefangen mit externen Symbolen                     */
-/*           21. 5.2000 added TmpSymCounter                                  */
-/*           24. 5.2001 added UInt21 type                                    */
-/*            3. 8.2001 added SInt6 type                                     */
-/*           2001-10-20 added UInt23                                         */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.h,v 1.12 2017/04/02 11:10:36 alfred Exp $                     */
-/***************************************************************************** 
- * $Log: asmpars.h,v $
- * Revision 1.12  2017/04/02 11:10:36  alfred
- * - allow more fine-grained macro expansion in listing
- *
- * Revision 1.11  2017/02/26 16:57:48  alfred
- * - make some arguments const
- *
- * Revision 1.10  2016/10/07 20:03:04  alfred
- * - make some arguments const
- *
- * Revision 1.9  2016/09/29 16:43:36  alfred
- * - introduce common DecodeDATA/DecodeRES functions
- *
- * Revision 1.8  2015/08/28 17:22:27  alfred
- * - add special handling for labels following BSR
- *
- * Revision 1.7  2014/11/30 10:09:54  alfred
- * - rework to current style
- *
- * Revision 1.6  2009/04/10 08:58:31  alfred
- * - correct address ranges for AVRs
- *
- * Revision 1.5  2008/11/23 10:39:16  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.4  2005/10/02 10:00:44  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.3  2004/05/30 20:51:43  alfred
- * - major cleanups in Const... functions
- *
- * Revision 1.2  2004/05/28 16:12:08  alfred
- * - added some const definitions
- *
- * Revision 1.1  2003/11/06 02:49:19  alfred
- * - recreated
- *
- * Revision 1.5  2003/02/26 19:18:26  alfred
- * - add/use EvalIntDisplacement()
- *
- * Revision 1.4  2002/10/07 20:25:01  alfred
- * - added '/' nameless temporary symbols
- *
- * Revision 1.3  2002/09/29 17:05:41  alfred
- * - ass +/- temporary symbols
- *
- * Revision 1.2  2002/05/19 13:44:52  alfred
- * - added ClearSectionUsage()
- *
- *****************************************************************************/
+
+#include "symbolsize.h"
 
 typedef enum
 {
@@ -117,21 +57,6 @@ typedef enum
   FloatCo,
   FloatTypeCnt
 } FloatType;
-
-typedef enum
-{
-  eSymbolSizeUnknown = -1,
-  eSymbolSize8Bit = 0,
-  eSymbolSize16Bit = 1,
-  eSymbolSize32Bit = 2,
-  eSymbolSize64Bit = 3,
-  eSymbolSize80Bit = 4, /* Intel 80 Bit extended float */
-  eSymbolSizeFloat32Bit = 5,
-  eSymbolSizeFloat64Bit = 6,
-  eSymbolSizeFloat96Bit = 7,
-  eSymbolSize24Bit = 8,
-  eSymbolSizeFloatDec96Bit = 9
-} tSymbolSize;
 
 struct sStrComp;
 struct sRelocEntry;

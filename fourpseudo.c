@@ -76,7 +76,7 @@ void DecodeDATA(IntType CodeIntType, IntType DataIntType)
       switch (t.Typ)
       {
         case TempInt:
-          if (!RangeCheck(t.Contents.Int, ValIntType))
+          if (!SymbolQuestionable && !RangeCheck(t.Contents.Int, ValIntType))
           {
             WrError(ErrNum_OverRange);
             ValOK = False;

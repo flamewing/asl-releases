@@ -5,61 +5,6 @@
 /* structure handling                                                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmstructs.c,v 1.12 2016/09/22 15:36:15 alfred Exp $                 */
-/*****************************************************************************
- * $Log: asmstructs.c,v $
- * Revision 1.12  2016/09/22 15:36:15  alfred
- * - use platform-dependent format string for LongInt
- *
- * Revision 1.11  2016/09/12 19:46:56  alfred
- * - initialize some elements in constructor
- *
- * Revision 1.10  2015/10/28 17:54:33  alfred
- * - allow substructures of same name in different structures
- *
- * Revision 1.9  2015/10/23 08:43:33  alfred
- * - beef up & fix structure handling
- *
- * Revision 1.8  2015/10/18 20:08:52  alfred
- * - when expanding structure, also regard sub-structures
- *
- * Revision 1.7  2015/10/18 19:02:16  alfred
- * - first reork/fix of nested structure handling
- *
- * Revision 1.6  2014/12/07 19:13:59  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.5  2014/12/05 11:09:10  alfred
- * - eliminate Nil
- *
- * Revision 1.4  2013-02-14 21:05:31  alfred
- * - add missing bookkeeping for expanded structs
- *
- * Revision 1.3  2004/01/17 16:18:38  alfred
- * - fix some more GCC 3.3 quarrel
- *
- * Revision 1.2  2004/01/17 16:12:50  alfred
- * - some quirks for GCC 3.3
- *
- * Revision 1.1  2003/11/06 02:49:19  alfred
- * - recreated
- *
- * Revision 1.6  2002/11/20 20:25:04  alfred
- * - added unions
- *
- * Revision 1.5  2002/11/16 20:50:02  alfred
- * - added expansion routine
- *
- * Revision 1.4  2002/11/15 23:30:31  alfred
- * - added search routine
- *
- * Revision 1.3  2002/11/11 21:56:57  alfred
- * - store/display struct elements
- *
- * Revision 1.2  2002/11/11 21:12:32  alfred
- * - first working edition
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -70,6 +15,7 @@
 
 #include "trees.h"
 #include "errmsg.h"
+#include "symbolsize.h"
 
 #include "as.h"
 #include "asmdef.h"
@@ -442,7 +388,7 @@ static void PrintDef(PTree Tree, void *pData)
     strmaxcat(s, NumStr2, STRINGSIZE);
     if (Elem->OpSize != eSymbolSizeUnknown)
     {
-      sprintf(NumStr, "(%d)", Elem->OpSize);
+      sprintf(NumStr, "(%s)", GetSymbolSizeName(Elem->OpSize));
       strmaxcat(s, NumStr, STRINGSIZE);
     }
     else

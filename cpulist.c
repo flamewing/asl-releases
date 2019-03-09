@@ -53,14 +53,22 @@ CPUVar AddCPUUser(const char *NewName, tCPUSwitchUserProc Switcher, void *pUserD
   return CPUCnt++;
 }
 
+typedef struct
+{
+  tCPUSwitchProc Switcher;
+} tNoUserData;
+
 static void SwitchNoUserProc(void *pUserData)
 {
-  ((tCPUSwitchProc)pUserData)();
+  ((tNoUserData*)pUserData)->Switcher();
 }
 
 CPUVar AddCPU(const char *NewName, tCPUSwitchProc Switcher)
 {
-  return AddCPUUser(NewName, SwitchNoUserProc, Switcher);
+  tNoUserData *pData = (tNoUserData*)malloc(sizeof(*pData));
+  
+  pData->Switcher = Switcher;
+  return AddCPUUser(NewName, SwitchNoUserProc, pData);
 }
 
 Boolean AddCPUAlias(char *OrigName, char *AliasName)

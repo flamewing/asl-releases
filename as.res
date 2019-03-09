@@ -434,6 +434,10 @@ Message ErrMsgDoubleReg
  "Register mehr als einmal gelistet"
  "register(s) listed more than once"
 
+Message ErrMsgRegBankMismatch
+ "Register-Bank-Diskrepanz"
+ "register bank mismatch"
+
 Message ErrMsgNoSaveFrame
  "RESTORE ohne SAVE"
  "RESTORE without SAVE"

@@ -1,32 +1,10 @@
 /* tipseudo.c */
 /*****************************************************************************/
-/* AS-Portierung                                                             */
+/* AS                                                                        */
 /*                                                                           */
-/* Haeufiger benutzte Texas Instruments Pseudo-Befehle                       */
+/* Commonly Used TI-Style Pseudo Instructionso-Befehle                       */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: tipseudo.c,v 1.6 2016/09/29 16:43:37 alfred Exp $                    */
-/***************************************************************************** 
- * $Log: tipseudo.c,v $
- * Revision 1.6  2016/09/29 16:43:37  alfred
- * - introduce common DecodeDATA/DecodeRES functions
- *
- * Revision 1.5  2016/08/24 12:13:19  alfred
- * - begun with 320C4x support
- *
- * Revision 1.4  2014/11/03 17:36:12  alfred
- * - relocate IsDef() for common TI pseudo instructions
- *
- * Revision 1.3  2008/11/23 10:39:17  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.2  2004/05/29 14:57:56  alfred
- * - added missing include statements
- *
- * Revision 1.1  2004/05/29 12:18:06  alfred
- * - relocated DecodeTIPseudo() to separate module
- *
- *****************************************************************************/
 
 /*****************************************************************************
  * Includes
@@ -189,7 +167,7 @@ static void pseudo_store(tcallback callback)
 
 static void wr_code_byte(Boolean *ok, int *adr, LongInt val)
 {
-  if ((val < -128) || (val > 0xff))
+  if (!FirstPassUnknown && !SymbolQuestionable && !RangeCheck(val, Int8))
   {
     WrError(ErrNum_OverRange);
     *ok = False;
@@ -201,7 +179,7 @@ static void wr_code_byte(Boolean *ok, int *adr, LongInt val)
 
 static void wr_code_word(Boolean *ok, int *adr, LongInt val)
 {
-  if ((val < -32768) || (val > 0xffff))
+  if (!FirstPassUnknown && !SymbolQuestionable && !RangeCheck(val, Int16))
   {
     WrError(ErrNum_OverRange);
     *ok = False;
@@ -222,7 +200,7 @@ static void wr_code_long(Boolean *ok, int *adr, LongInt val)
 
 static void wr_code_byte_hilo(Boolean *ok, int *adr, LongInt val)
 {
-  if ((val < -128) || (val > 0xff))
+  if (!FirstPassUnknown && !SymbolQuestionable && !RangeCheck(val, Int8))
   {
     WrError(ErrNum_OverRange);
     *ok = False;
@@ -237,7 +215,7 @@ static void wr_code_byte_hilo(Boolean *ok, int *adr, LongInt val)
 
 static void wr_code_byte_lohi(Boolean *ok, int *adr, LongInt val)
 {
-  if ((val < -128) || (val > 0xff))
+  if (!FirstPassUnknown && !SymbolQuestionable && !RangeCheck(val, Int8))
   {
     WrError(ErrNum_OverRange);
     *ok = False;

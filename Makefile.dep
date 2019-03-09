@@ -2,33 +2,33 @@
 
 alink.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h version.h endian.h bpemu.h strutil.h nls.h nlmessages.h stringlists.h cmdarg.h toolutils.h fileformat.h asmerr.h ioerrs.h alink.rsc
 
-as.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h version.h endian.h bpemu.h stdhandl.h nls.h nlmessages.h as.rsc ioerrs.h strutil.h stringlists.h cmdarg.h asmitree.h trees.h chunks.h asminclist.h asmfnums.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h errmsg.h asmsub.h asmerr.h asmpars.h asmmac.h asmstructs.h asmif.h asmcode.h asmdebug.h asmrelocs.h asmallg.h codepseudo.h as.h code68k.h code56k.h code601.h codemcore.h codexgate.h code68.h code6805.h code6809.h code6812.h codes12z.h code6816.h code68rs08.h codeh8_3.h codeh8_5.h code7000.h code65.h code7700.h codehmcs400.h code4500.h codem16.h codem16c.h code4004.h code8008.h code48.h code51.h code96.h code85.h code86.h code960.h code8x30x.h code2650.h codexa.h codeavr.h code29k.h code166.h codez80.h codez8.h codekcpsm.h codekcp3.h codemic8.h code96c141.h code90c141.h code87c800.h code870c.h code47c00.h code97c241.h code9331.h code16c5x.h code16c8x.h code17c4x.h codesx20.h codest6.h codest7.h codest9.h code6804.h code3201x.h code3202x.h code3203x.h code3205x.h code3254x.h code3206x.h code9900.h codetms7.h code370.h codemsp.h codetms1.h codescmp.h code807x.h codecop4.h codecop8.h codesc14xxx.h codeace.h codef8.h code78c10.h code75xx.h code75k0.h code78k0.h code78k2.h code78k3.h code78k4.h code7720.h code77230.h code53c8xx.h codefmc8.h codefmc16.h codeol40.h codeol50.h code1802.h codevector.h codexcore.h code1750.h
+as.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h version.h endian.h bpemu.h stdhandl.h nls.h nlmessages.h as.rsc ioerrs.h strutil.h stringlists.h cmdarg.h asmitree.h trees.h chunks.h asminclist.h asmfnums.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h errmsg.h asmsub.h asmerr.h asmpars.h symbolsize.h asmmac.h asmstructs.h asmif.h asmcode.h asmdebug.h asmrelocs.h asmallg.h codepseudo.h as.h code68k.h code56k.h code601.h codemcore.h codexgate.h code68.h code6805.h code6809.h code6812.h codes12z.h code6816.h code68rs08.h codeh8_3.h codeh8_5.h code7000.h code65.h codeh16.h code7700.h codehmcs400.h code4500.h codem16.h codem16c.h code4004.h code8008.h code48.h code51.h code96.h code85.h code86.h code960.h code8x30x.h code2650.h codexa.h codeavr.h code29k.h code166.h codez80.h codez8.h codekcpsm.h codekcp3.h codemic8.h code96c141.h code90c141.h code87c800.h code870c.h code47c00.h code97c241.h code9331.h code16c5x.h code16c8x.h code17c4x.h codesx20.h codest6.h codest7.h codest9.h code6804.h code3201x.h code3202x.h code3203x.h code3205x.h code3254x.h code3206x.h code9900.h codetms7.h code370.h codemsp.h codetms1.h codescmp.h code807x.h codecop4.h codecop8.h codesc14xxx.h codeace.h codef8.h code78c10.h code75xx.h code75k0.h code78k0.h code78k2.h code78k3.h code78k4.h code7720.h code77230.h code53c8xx.h codefmc8.h codefmc16.h codeol40.h codeol50.h code1802.h codevector.h codexcore.h code1750.h
 
-asmallg.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h stringlists.h bpemu.h cmdarg.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h errmsg.h as.h as.rsc asmpars.h asmmac.h asmstructs.h asmcode.h asmrelocs.h asmitree.h codepseudo.h nlmessages.h
+asmallg.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h stringlists.h bpemu.h cmdarg.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h errmsg.h as.h as.rsc asmpars.h symbolsize.h asmmac.h asmstructs.h asmcode.h asmrelocs.h asmitree.h codepseudo.h nlmessages.h
 
-asmcode.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h version.h endian.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h errmsg.h asmsub.h asmerr.h asmpars.h intconsts.h asmrelocs.h
+asmcode.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h version.h endian.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h errmsg.h asmsub.h asmerr.h asmpars.h symbolsize.h intconsts.h asmrelocs.h
 
-asmdebug.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h endian.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmfnums.h asmdebug.h
+asmdebug.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h endian.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmfnums.h asmdebug.h
 
 asmdef.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h stringlists.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h errmsg.h
 
 asmfnums.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h intconsts.h asmfnums.h
 
-asmif.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h chunks.h strutil.h errmsg.h cpulist.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h tempresult.h asmsub.h asmerr.h asmpars.h asmif.h
+asmif.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h chunks.h strutil.h errmsg.h cpulist.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmif.h
 
 asminclist.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h chunks.h nls.h nlmessages.h as.rsc asmfnums.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asminclist.h
 
 asmitree.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h chunks.h strutil.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmitree.h
 
-asmmac.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h nlmessages.h as.rsc stringlists.h strutil.h chunks.h trees.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmif.h asmmac.h errmsg.h
+asmmac.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h nlmessages.h as.rsc stringlists.h strutil.h chunks.h trees.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmif.h asmmac.h errmsg.h
 
-asmpars.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h endian.h bpemu.h nls.h nlmessages.h as.rsc strutil.h strcomp.h asmdef.h chunks.h fileformat.h dynstring.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h errmsg.h asmfnums.h asmrelocs.h asmstructs.h trees.h operator.h function.h asmpars.h
+asmpars.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h endian.h bpemu.h nls.h nlmessages.h as.rsc strutil.h strcomp.h asmdef.h chunks.h fileformat.h dynstring.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h errmsg.h asmfnums.h asmrelocs.h asmstructs.h trees.h operator.h function.h asmpars.h symbolsize.h
 
 asmrelocs.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmcode.h asmrelocs.h errmsg.h
 
-asmstructs.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h nlmessages.h strutil.h trees.h errmsg.h cpulist.h as.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h tempresult.h asmsub.h asmerr.h asmpars.h asmstructs.h as.rsc
+asmstructs.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h nlmessages.h strutil.h trees.h errmsg.h cpulist.h symbolsize.h as.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h tempresult.h asmsub.h asmerr.h asmpars.h asmstructs.h as.rsc
 
-asmsub.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h version.h endian.h stdhandl.h nls.h nlmessages.h as.rsc strutil.h stringlists.h chunks.h ioerrs.h errmsg.h cpulist.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h tempresult.h asmpars.h asmdebug.h intconsts.h as.h asmsub.h asmerr.h
+asmsub.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h version.h endian.h stdhandl.h nls.h nlmessages.h as.rsc strutil.h stringlists.h chunks.h ioerrs.h errmsg.h cpulist.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h tempresult.h asmpars.h symbolsize.h asmdebug.h intconsts.h as.h asmsub.h asmerr.h
 
 bpemu.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h bpemu.h
 
@@ -36,193 +36,195 @@ chunks.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h chunks
 
 cmdarg.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h stringlists.h cmdarg.h nls.h nlmessages.h cmdarg.rsc
 
-code166.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h code166.h
+code166.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h code166.h
 
-code16c5x.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h fourpseudo.h codevars.h errmsg.h code16c5x.h
+code16c5x.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h fourpseudo.h codevars.h errmsg.h code16c5x.h
 
-code16c8x.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h chunks.h bpemu.h strutil.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h headids.h codepseudo.h fourpseudo.h codevars.h errmsg.h code16c8x.h
+code16c8x.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h chunks.h bpemu.h strutil.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h headids.h codepseudo.h fourpseudo.h codevars.h errmsg.h code16c8x.h
 
-code1750.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h fourpseudo.h codevars.h headids.h endian.h errmsg.h code1750.h
+code1750.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h fourpseudo.h codevars.h headids.h endian.h errmsg.h code1750.h
 
-code17c4x.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmitree.h asmpars.h codepseudo.h fourpseudo.h codevars.h errmsg.h code17c4x.h
+code17c4x.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmitree.h asmpars.h symbolsize.h codepseudo.h fourpseudo.h codevars.h errmsg.h code17c4x.h
 
-code1802.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h codevars.h intpseudo.h headids.h errmsg.h code1802.h
+code1802.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h codevars.h intpseudo.h headids.h errmsg.h code1802.h
 
-code2650.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h chunks.h bpemu.h strutil.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codevars.h headids.h intpseudo.h errmsg.h code2650.h
+code2650.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h chunks.h bpemu.h strutil.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codevars.h headids.h intpseudo.h errmsg.h code2650.h
 
-code29k.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h bpemu.h stringlists.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmallg.h asmitree.h codepseudo.h intpseudo.h codevars.h intconsts.h errmsg.h code29k.h
+code29k.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h bpemu.h stringlists.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmallg.h asmitree.h codepseudo.h intpseudo.h codevars.h intconsts.h errmsg.h code29k.h
 
-code3201x.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h fourpseudo.h codevars.h errmsg.h code3201x.h
+code3201x.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h fourpseudo.h codevars.h errmsg.h code3201x.h
 
-code3202x.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h errmsg.h asmpars.h asmitree.h codevars.h codepseudo.h tipseudo.h bpemu.h endian.h code3202x.h
+code3202x.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h errmsg.h asmpars.h symbolsize.h asmitree.h codevars.h codepseudo.h tipseudo.h bpemu.h endian.h code3202x.h
 
-code3203x.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h endian.h bpemu.h strutil.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmcode.h asmitree.h codepseudo.h codevars.h tipseudo.h headids.h errmsg.h code3203x.h
+code3203x.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h endian.h bpemu.h strutil.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmcode.h asmitree.h codepseudo.h codevars.h tipseudo.h headids.h errmsg.h code3203x.h
 
-code3205x.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h bpemu.h strutil.h chunks.h errmsg.h cpulist.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h codevars.h tipseudo.h endian.h code3205x.h
+code3205x.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h bpemu.h strutil.h chunks.h errmsg.h cpulist.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h codevars.h tipseudo.h endian.h code3205x.h
 
-code3206x.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h endian.h strutil.h bpemu.h nls.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmcode.h errmsg.h codepseudo.h asmitree.h codevars.h nlmessages.h intconsts.h as.rsc
+code3206x.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h endian.h strutil.h bpemu.h nls.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmcode.h errmsg.h codepseudo.h asmitree.h codevars.h nlmessages.h intconsts.h as.rsc
 
-code3254x.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmallg.h asmrelocs.h asmcode.h codepseudo.h tipseudo.h asmitree.h codevars.h headids.h errmsg.h code3254x.h
+code3254x.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmallg.h asmrelocs.h asmcode.h codepseudo.h tipseudo.h asmitree.h codevars.h headids.h errmsg.h code3254x.h
 
-code370.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h intpseudo.h codevars.h errmsg.h code370.h
+code370.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h intpseudo.h codevars.h errmsg.h code370.h
 
-code4004.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codevars.h headids.h fourpseudo.h errmsg.h code4004.h
+code4004.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codevars.h headids.h fourpseudo.h errmsg.h code4004.h
 
-code4500.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h fourpseudo.h codevars.h errmsg.h
+code4500.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h fourpseudo.h codevars.h errmsg.h
 
-code47c00.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h code47c00.h
+code47c00.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h code47c00.h
 
-code48.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h nls.h strutil.h stringlists.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h intpseudo.h codevars.h errmsg.h code48.h
+code48.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h nls.h strutil.h stringlists.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h intpseudo.h codevars.h errmsg.h code48.h
 
-code51.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmallg.h asmrelocs.h codepseudo.h intpseudo.h asmitree.h codevars.h intconsts.h errmsg.h code51.h
+code51.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmallg.h asmrelocs.h codepseudo.h intpseudo.h asmitree.h codevars.h intconsts.h errmsg.h code51.h
 
-code53c8xx.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h headids.h strutil.h codevars.h intconsts.h intpseudo.h errmsg.h code53c8xx.h
+code53c8xx.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h headids.h strutil.h codevars.h intconsts.h intpseudo.h errmsg.h code53c8xx.h
 
-code56k.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h chunks.h errmsg.h cpulist.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h codevars.h intconsts.h code56k.h
+code56k.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h chunks.h errmsg.h cpulist.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h codevars.h intconsts.h code56k.h
 
-code601.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h endian.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmallg.h asmitree.h intpseudo.h codevars.h headids.h intconsts.h errmsg.h code601.h
+code601.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h endian.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmallg.h asmitree.h intpseudo.h codevars.h headids.h intconsts.h errmsg.h code601.h
 
-code65.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmpars.h asmsub.h asmerr.h asmitree.h codepseudo.h motpseudo.h codevars.h errmsg.h code65.h
+code65.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmpars.h symbolsize.h asmsub.h asmerr.h asmitree.h codepseudo.h motpseudo.h codevars.h errmsg.h code65.h
 
-code68.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmpars.h asmallg.h asmsub.h asmerr.h errmsg.h codepseudo.h motpseudo.h asmitree.h codevars.h nlmessages.h as.rsc code68.h
+code68.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmpars.h symbolsize.h asmallg.h asmsub.h asmerr.h errmsg.h codepseudo.h motpseudo.h asmitree.h codevars.h nlmessages.h as.rsc code68.h
 
-code6804.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h motpseudo.h codevars.h errmsg.h code6804.h
+code6804.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h motpseudo.h codevars.h errmsg.h code6804.h
 
-code6805.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmpars.h asmsub.h asmerr.h asmitree.h motpseudo.h codevars.h errmsg.h code6805.h
+code6805.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmpars.h symbolsize.h asmsub.h asmerr.h asmitree.h motpseudo.h codevars.h errmsg.h code6805.h
 
-code6809.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmpars.h asmsub.h asmerr.h asmallg.h asmitree.h codepseudo.h motpseudo.h codevars.h errmsg.h code6809.h
+code6809.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmpars.h symbolsize.h asmsub.h asmerr.h asmallg.h asmitree.h codepseudo.h motpseudo.h codevars.h errmsg.h code6809.h
 
-code6812.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmpars.h asmsub.h asmerr.h asmallg.h asmitree.h codepseudo.h motpseudo.h codevars.h errmsg.h code6812.h
+code6812.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmpars.h symbolsize.h asmsub.h asmerr.h asmallg.h asmitree.h codepseudo.h motpseudo.h codevars.h errmsg.h code6812.h
 
-code6816.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h nlmessages.h as.rsc bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h errmsg.h asmpars.h asmitree.h codepseudo.h motpseudo.h codevars.h code6816.h
+code6816.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h nlmessages.h as.rsc bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h errmsg.h asmpars.h symbolsize.h asmitree.h codepseudo.h motpseudo.h codevars.h code6816.h
 
-code68k.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h bpemu.h endian.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmallg.h motpseudo.h asmitree.h codevars.h intconsts.h errmsg.h code68k.h
+code68k.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h bpemu.h endian.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmallg.h motpseudo.h asmitree.h codevars.h intconsts.h errmsg.h code68k.h
 
-code68rs08.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmpars.h asmsub.h asmerr.h asmitree.h motpseudo.h codevars.h errmsg.h code68rs08.h
+code68rs08.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmpars.h symbolsize.h asmsub.h asmerr.h asmitree.h motpseudo.h codevars.h errmsg.h code68rs08.h
 
-code7000.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmallg.h asmitree.h codepseudo.h motpseudo.h codevars.h intconsts.h errmsg.h code7000.h
+code7000.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmallg.h asmitree.h codepseudo.h motpseudo.h codevars.h intconsts.h errmsg.h code7000.h
 
-code75k0.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h code75k0.h
+code75k0.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h code75k0.h
 
-code75xx.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h headids.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h code75xx.h
+code75xx.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h headids.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h code75xx.h
 
-code7700.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h intpseudo.h motpseudo.h codevars.h errmsg.h code7700.h
+code7700.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h intpseudo.h motpseudo.h codevars.h errmsg.h code7700.h
 
-code7720.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h nls.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmcode.h asmitree.h headids.h codevars.h errmsg.h code7720.h
+code7720.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h nls.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmcode.h asmitree.h headids.h codevars.h errmsg.h code7720.h
 
-code77230.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h nls.h endian.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h headids.h codevars.h errmsg.h code77230.h
+code77230.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h nls.h endian.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h headids.h codevars.h errmsg.h code77230.h
 
-code78c10.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h code78c10.h
+code78c10.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h code78c10.h
 
-code78k0.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h intpseudo.h codevars.h errmsg.h code78k0.h
+code78k0.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h intpseudo.h codevars.h errmsg.h code78k0.h
 
-code78k2.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h headids.h errmsg.h code78k2.h
+code78k2.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h intpseudo.h codevars.h headids.h errmsg.h code78k2.h
 
-code78k3.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h headids.h errmsg.h code78k3.h
+code78k3.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h intpseudo.h codevars.h headids.h errmsg.h code78k3.h
 
-code78k4.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h headids.h errmsg.h code78k4.h
+code78k4.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h intpseudo.h codevars.h headids.h errmsg.h code78k4.h
 
-code8008.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h headids.h codevars.h intpseudo.h errmsg.h code8008.h
+code8008.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h headids.h codevars.h intpseudo.h errmsg.h code8008.h
 
-code807x.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h errmsg.h asmpars.h asmitree.h headids.h intpseudo.h codevars.h code807x.h
+code807x.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h errmsg.h asmpars.h symbolsize.h asmitree.h headids.h intpseudo.h codevars.h code807x.h
 
-code85.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmallg.h codepseudo.h intpseudo.h asmitree.h codevars.h errmsg.h code85.h
+code85.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmallg.h codepseudo.h intpseudo.h asmitree.h codevars.h errmsg.h code85.h
 
-code86.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h errmsg.h cpulist.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h tempresult.h asmsub.h asmerr.h asmpars.h asmallg.h codepseudo.h intpseudo.h asmitree.h codevars.h
+code86.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h errmsg.h cpulist.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmallg.h codepseudo.h intpseudo.h asmitree.h codevars.h
 
-code870c.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h headids.h errmsg.h code870c.h
+code870c.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h intpseudo.h codevars.h headids.h errmsg.h code870c.h
 
-code87c800.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h code87c800.h
+code87c800.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h code87c800.h
 
-code8x30x.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h chunks.h bpemu.h strutil.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codevars.h errmsg.h code8x30x.h
+code8x30x.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h chunks.h bpemu.h strutil.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codevars.h errmsg.h code8x30x.h
 
-code90c141.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h code90c141.h
+code90c141.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h code90c141.h
 
-code9331.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h headids.h codevars.h errmsg.h code9331.h
+code9331.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h headids.h codevars.h errmsg.h code9331.h
 
-code96.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h code96.h
+code96.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h code96.h
 
-code960.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h endian.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmallg.h asmitree.h codevars.h intpseudo.h headids.h intconsts.h errmsg.h code960.h
+code960.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h endian.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmallg.h asmitree.h codevars.h intpseudo.h headids.h intconsts.h errmsg.h code960.h
 
-code96c141.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmallg.h errmsg.h codepseudo.h intpseudo.h asmitree.h codevars.h code96c141.h
+code96c141.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmallg.h errmsg.h codepseudo.h intpseudo.h asmitree.h codevars.h code96c141.h
 
-code97c241.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h code97c241.h
+code97c241.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h code97c241.h
 
-code9900.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h endian.h bpemu.h nls.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmallg.h asmitree.h codepseudo.h codevars.h errmsg.h code9900.h
+code9900.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h endian.h bpemu.h nls.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmallg.h asmitree.h codepseudo.h codevars.h errmsg.h code9900.h
 
-codeace.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h chunks.h headids.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h codeace.h
+codeace.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h chunks.h headids.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h codeace.h
 
-codeavr.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h nls.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmallg.h asmitree.h codepseudo.h codevars.h errmsg.h codeavr.h
+codeavr.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h nls.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmallg.h asmitree.h codepseudo.h codevars.h errmsg.h codeavr.h
 
 codechunks.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h codechunks.h
 
-codecop4.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmpars.h asmsub.h asmerr.h asmitree.h headids.h codevars.h intpseudo.h natpseudo.h errmsg.h codecop4.h
+codecop4.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmpars.h symbolsize.h asmsub.h asmerr.h asmitree.h headids.h codevars.h intpseudo.h natpseudo.h errmsg.h codecop4.h
 
-codecop8.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h intpseudo.h natpseudo.h codevars.h errmsg.h codecop8.h
+codecop8.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h intpseudo.h natpseudo.h codevars.h errmsg.h codecop8.h
 
-codef8.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h chunks.h headids.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h codef8.h
+codef8.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h chunks.h headids.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h codef8.h
 
-codefmc16.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmpars.h asmsub.h asmerr.h asmallg.h errmsg.h codepseudo.h intpseudo.h asmitree.h codevars.h headids.h codefmc16.h
+codefmc16.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmpars.h symbolsize.h asmsub.h asmerr.h asmallg.h errmsg.h codepseudo.h intpseudo.h asmitree.h codevars.h headids.h codefmc16.h
 
-codefmc8.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmpars.h asmsub.h asmerr.h intpseudo.h asmitree.h codevars.h headids.h errmsg.h codefmc8.h
+codefmc8.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmpars.h symbolsize.h asmsub.h asmerr.h intpseudo.h asmitree.h codevars.h headids.h errmsg.h codefmc8.h
 
-codeh8_3.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmallg.h asmitree.h codepseudo.h motpseudo.h codevars.h errmsg.h codeh8_3.h
+codeh16.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h chunks.h headids.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmallg.h asmitree.h asmstructs.h codepseudo.h motpseudo.h codevars.h errmsg.h nls.h codeh16.h
 
-codeh8_5.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmallg.h asmitree.h codepseudo.h motpseudo.h codevars.h errmsg.h codeh8_5.h
+codeh8_3.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmallg.h asmitree.h codepseudo.h motpseudo.h codevars.h errmsg.h codeh8_3.h
 
-codehmcs400.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h fourpseudo.h codevars.h headids.h errmsg.h codehmcs400.h
+codeh8_5.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmallg.h asmitree.h codepseudo.h motpseudo.h codevars.h errmsg.h codeh8_5.h
 
-codekcp3.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h intpseudo.h codevars.h headids.h errmsg.h codepseudo.h codekcp3.h
+codehmcs400.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h fourpseudo.h codevars.h headids.h errmsg.h codehmcs400.h
 
-codekcpsm.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h intpseudo.h codevars.h headids.h errmsg.h codekcpsm.h
+codekcp3.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h intpseudo.h codevars.h headids.h errmsg.h codepseudo.h codekcp3.h
 
-codem16.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h nls.h strutil.h errmsg.h cpulist.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h intconsts.h
+codekcpsm.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h intpseudo.h codevars.h headids.h errmsg.h codekcpsm.h
 
-codem16c.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h intpseudo.h codevars.h errmsg.h codem16c.h
+codem16.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h nls.h strutil.h errmsg.h cpulist.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h intpseudo.h codevars.h intconsts.h
 
-codemcore.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h endian.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmallg.h codepseudo.h motpseudo.h asmitree.h codevars.h intconsts.h errmsg.h codemcore.h
+codem16c.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h intpseudo.h codevars.h errmsg.h codem16c.h
 
-codemic8.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h intpseudo.h codevars.h headids.h errmsg.h codepseudo.h codemic8.h
+codemcore.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h endian.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmallg.h codepseudo.h motpseudo.h asmitree.h codevars.h intconsts.h errmsg.h codemcore.h
 
-codemsp.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h endian.h strutil.h bpemu.h chunks.h errmsg.h cpulist.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h tempresult.h asmsub.h asmerr.h asmpars.h asmallg.h asmitree.h codepseudo.h codevars.h
+codemic8.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h intpseudo.h codevars.h headids.h errmsg.h codepseudo.h codemic8.h
 
-codeol40.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h fourpseudo.h codevars.h headids.h errmsg.h codeol40.h
+codemsp.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h endian.h strutil.h bpemu.h chunks.h errmsg.h cpulist.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmallg.h asmitree.h codepseudo.h codevars.h
 
-codeol50.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h fourpseudo.h codevars.h headids.h errmsg.h codeol50.h
+codeol40.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h fourpseudo.h codevars.h headids.h errmsg.h codeol40.h
 
-codepseudo.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h bpemu.h endian.h strutil.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmallg.h asmitree.h errmsg.h codepseudo.h motpseudo.h
+codeol50.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h fourpseudo.h codevars.h headids.h errmsg.h codeol50.h
 
-codes12z.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmpars.h asmsub.h asmerr.h asmallg.h asmitree.h asmstructs.h codepseudo.h motpseudo.h codevars.h errmsg.h headids.h codes12z.h
+codepseudo.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h bpemu.h endian.h strutil.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmallg.h asmitree.h errmsg.h codepseudo.h motpseudo.h
 
-codesc14xxx.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h codepseudo.h headids.h asmitree.h codevars.h errmsg.h codesc14xxx.h
+codes12z.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmpars.h symbolsize.h asmsub.h asmerr.h asmallg.h asmitree.h asmstructs.h codepseudo.h motpseudo.h codevars.h errmsg.h headids.h codes12z.h
 
-codescmp.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h intpseudo.h codevars.h errmsg.h codescmp.h
+codesc14xxx.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h codepseudo.h headids.h asmitree.h codevars.h errmsg.h codesc14xxx.h
 
-codest6.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h motpseudo.h codevars.h errmsg.h codest6.h
+codescmp.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h intpseudo.h codevars.h errmsg.h codescmp.h
 
-codest7.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h nls.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h motpseudo.h codevars.h errmsg.h codest7.h
+codest6.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h motpseudo.h codevars.h errmsg.h codest6.h
 
-codest9.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h codest9.h
+codest7.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h nls.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h motpseudo.h codevars.h errmsg.h codest7.h
 
-codesx20.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h chunks.h headids.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h fourpseudo.h codevars.h errmsg.h codef8.h
+codest9.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h codest9.h
 
-codetms1.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codevars.h headids.h intpseudo.h errmsg.h codetms1.h
+codesx20.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h chunks.h headids.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h fourpseudo.h codevars.h errmsg.h codef8.h
 
-codetms7.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h bpemu.h nls.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h intpseudo.h codevars.h errmsg.h codetms7.h
+codetms1.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codevars.h headids.h intpseudo.h errmsg.h codetms1.h
+
+codetms7.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h bpemu.h nls.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h intpseudo.h codevars.h errmsg.h codetms7.h
 
 codevars.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h asmitree.h
 
-codevector.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h intpseudo.h codevars.h headids.h errmsg.h codepseudo.h codevector.h
+codevector.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h intpseudo.h codevars.h headids.h errmsg.h codepseudo.h codevector.h
 
-codexa.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmallg.h asmitree.h codepseudo.h intpseudo.h motpseudo.h codevars.h intconsts.h errmsg.h codexa.h
+codexa.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmallg.h asmitree.h codepseudo.h intpseudo.h motpseudo.h codevars.h intconsts.h errmsg.h codexa.h
 
-codexcore.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h endian.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmallg.h headids.h codepseudo.h intpseudo.h asmitree.h codevars.h errmsg.h codexcore.h
+codexcore.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h endian.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmallg.h headids.h codepseudo.h intpseudo.h asmitree.h codevars.h errmsg.h codexcore.h
 
-codexgate.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h endian.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmallg.h headids.h codepseudo.h motpseudo.h asmitree.h codevars.h errmsg.h codexgate.h
+codexgate.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h endian.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmallg.h headids.h codepseudo.h motpseudo.h asmitree.h codevars.h errmsg.h codexgate.h
 
-codez8.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h codepseudo.h intpseudo.h codevars.h headids.h errmsg.h codez8.h
+codez8.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h intpseudo.h codevars.h headids.h errmsg.h codez8.h
 
-codez80.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmcode.h asmallg.h asmitree.h codepseudo.h intpseudo.h codevars.h intconsts.h errmsg.h codez80.h
+codez80.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmcode.h asmallg.h asmitree.h codepseudo.h intpseudo.h codevars.h intconsts.h errmsg.h codez80.h
 
 cpulist.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h cpulist.h
 
@@ -242,19 +244,19 @@ endian.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h endian.h
 
 entryaddress.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h entryaddress.h
 
-errmsg.o: datatypes.h sysdefs.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmpars.h strutil.h asmsub.h asmerr.h nlmessages.h as.rsc errmsg.h
+errmsg.o: datatypes.h sysdefs.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmpars.h symbolsize.h strutil.h asmsub.h asmerr.h nlmessages.h as.rsc errmsg.h
 
 findhyphen.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h ushyph.h
 
-fourpseudo.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h endian.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h errmsg.h fourpseudo.h
+fourpseudo.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h endian.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h errmsg.h fourpseudo.h
 
-function.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h dynstring.h strutil.h asmdef.h chunks.h fileformat.h strcomp.h lstmacroexp.h cpulist.h tempresult.h errmsg.h asmerr.h asmpars.h function.h
+function.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h dynstring.h strutil.h asmdef.h chunks.h fileformat.h strcomp.h lstmacroexp.h cpulist.h tempresult.h errmsg.h asmerr.h asmpars.h symbolsize.h function.h
 
 headids.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h headids.h
 
 hex.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h intconsts.h hex.h
 
-intpseudo.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h endian.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h errmsg.h intpseudo.h
+intpseudo.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h endian.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h errmsg.h intpseudo.h
 
 invaddress.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h trees.h invaddress.h
 
@@ -264,9 +266,9 @@ lstmacroexp.o: lstmacroexp.h datatypes.h sysdefs.h
 
 mkdepend.o: stringlists.h datatypes.h sysdefs.h
 
-motpseudo.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h endian.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h asmallg.h errmsg.h motpseudo.h
+motpseudo.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h endian.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h asmallg.h errmsg.h motpseudo.h
 
-natpseudo.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h codepseudo.h errmsg.h natpseudo.h
+natpseudo.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h codepseudo.h errmsg.h natpseudo.h
 
 nlmessages.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h endian.h bpemu.h nls.h nlmessages.h
 
@@ -292,17 +294,19 @@ stringlists.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h s
 
 strutil.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h
 
+symbolsize.o: symbolsize.h
+
 tempresult.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h tempresult.h dynstring.h
 
 tex2doc.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h asmitree.h strutil.h findhyphen.h ushyph.h grhyph.h
 
 tex2html.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h asmitree.h strutil.h
 
-tipseudo.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h endian.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h asmitree.h errmsg.h fourpseudo.h tipseudo.h bpemu.h
+tipseudo.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h endian.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h errmsg.h fourpseudo.h tipseudo.h bpemu.h
 
 toolutils.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h endian.h strutil.h stringlists.h cmdarg.h stdhandl.h ioerrs.h nls.h nlmessages.h tools.rsc toolutils.h fileformat.h asmerr.h version.h
 
-trees.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h endian.h nls.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h trees.h
+trees.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h endian.h nls.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h trees.h
 
 umlaut.o: sysdefs.h specchars.h
 
@@ -310,4 +314,4 @@ unumlaut.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h
 
 version.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h
 
-Makefile.dep: a2k.c addcr.c alink.c as.c asmallg.c asmcode.c asmdebug.c asmdef.c asmfnums.c asmif.c asminclist.c asmitree.c asmmac.c asmpars.c asmrelocs.c asmstructs.c asmsub.c bincmp.c bpemu.c chunks.c cmdarg.c code166.c code16c5x.c code16c8x.c code1750.c code17c4x.c code1802.c code2650.c code29k.c code3201x.c code3202x.c code3203x.c code3205x.c code3206x.c code3254x.c code370.c code4004.c code4500.c code47c00.c code48.c code51.c code53c8xx.c code56k.c code601.c code65.c code68.c code6804.c code6805.c code6809.c code6812.c code6816.c code68k.c code68rs08.c code7000.c code75k0.c code75xx.c code7700.c code7720.c code77230.c code78c10.c code78k0.c code78k2.c code78k3.c code78k4.c code8008.c code807x.c code85.c code86.c code870c.c code87c800.c code8x30x.c code90c141.c code9331.c code96.c code960.c code96c141.c code97c241.c code9900.c codeace.c codeavr.c codechunks.c codecop4.c codecop8.c codef8.c codefmc16.c codefmc8.c codeh8_3.c codeh8_5.c codehmcs400.c codekcp3.c codekcpsm.c codem16.c codem16c.c codemcore.c codemic8.c codemsp.c codeol40.c codeol50.c codepseudo.c codes12z.c codesc14xxx.c codescmp.c codest6.c codest7.c codest9.c codesx20.c codetms1.c codetms7.c codevars.c codevector.c codexa.c codexcore.c codexgate.c codez8.c codez80.c cpulist.c das.c dasmdef.c debversion.c deco68.c deco87c800.c dynstring.c endian.c entryaddress.c errmsg.c findhyphen.c fourpseudo.c function.c grhyph.c headids.c hex.c intpseudo.c invaddress.c ioerrs.c lstmacroexp.c mkdepend.c motpseudo.c natpseudo.c nlmessages.c nls.c operator.c p2bin.c p2hex.c pbind.c plist.c rescomp.c stdhandl.c strcomp.c stringlists.c strutil.c tempresult.c tex2doc.c tex2html.c tipseudo.c toolutils.c trees.c umlaut.c unumlaut.c ushyph.c version.c
+Makefile.dep: a2k.c addcr.c alink.c as.c asmallg.c asmcode.c asmdebug.c asmdef.c asmfnums.c asmif.c asminclist.c asmitree.c asmmac.c asmpars.c asmrelocs.c asmstructs.c asmsub.c bincmp.c bpemu.c chunks.c cmdarg.c code166.c code16c5x.c code16c8x.c code1750.c code17c4x.c code1802.c code2650.c code29k.c code3201x.c code3202x.c code3203x.c code3205x.c code3206x.c code3254x.c code370.c code4004.c code4500.c code47c00.c code48.c code51.c code53c8xx.c code56k.c code601.c code65.c code68.c code6804.c code6805.c code6809.c code6812.c code6816.c code68k.c code68rs08.c code7000.c code75k0.c code75xx.c code7700.c code7720.c code77230.c code78c10.c code78k0.c code78k2.c code78k3.c code78k4.c code8008.c code807x.c code85.c code86.c code870c.c code87c800.c code8x30x.c code90c141.c code9331.c code96.c code960.c code96c141.c code97c241.c code9900.c codeace.c codeavr.c codechunks.c codecop4.c codecop8.c codef8.c codefmc16.c codefmc8.c codeh16.c codeh8_3.c codeh8_5.c codehmcs400.c codekcp3.c codekcpsm.c codem16.c codem16c.c codemcore.c codemic8.c codemsp.c codeol40.c codeol50.c codepseudo.c codes12z.c codesc14xxx.c codescmp.c codest6.c codest7.c codest9.c codesx20.c codetms1.c codetms7.c codevars.c codevector.c codexa.c codexcore.c codexgate.c codez8.c codez80.c cpulist.c das.c dasmdef.c debversion.c deco68.c deco87c800.c dynstring.c endian.c entryaddress.c errmsg.c findhyphen.c fourpseudo.c function.c grhyph.c headids.c hex.c intpseudo.c invaddress.c ioerrs.c lstmacroexp.c mkdepend.c motpseudo.c natpseudo.c nlmessages.c nls.c operator.c p2bin.c p2hex.c pbind.c plist.c rescomp.c stdhandl.c strcomp.c stringlists.c strutil.c symbolsize.c tempresult.c tex2doc.c tex2html.c tipseudo.c toolutils.c trees.c umlaut.c unumlaut.c ushyph.c version.c

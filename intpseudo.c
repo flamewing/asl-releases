@@ -1,47 +1,10 @@
 /* intpseudo.c */
 /*****************************************************************************/
-/* AS-Portierung                                                             */
+/* AS                                                                        */
 /*                                                                           */
-/* Haeufiger benutzte Intel-Pseudo-Befehle                                   */
+/* Commonly Used Intel-Style Pseudo Instructions                             */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: intpseudo.c,v 1.11 2014/12/07 19:14:02 alfred Exp $                   */
-/***************************************************************************** 
- * $Log: intpseudo.c,v $
- * Revision 1.11  2014/12/07 19:14:02  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.10  2014/12/05 11:09:11  alfred
- * - eliminate Nil
- *
- * Revision 1.9  2013/12/21 19:46:51  alfred
- * - dynamically resize code buffer
- *
- * Revision 1.8  2010/03/14 10:45:15  alfred
- * - allow string arguments for DW/DD/DQ/DT
- *
- * Revision 1.7  2008/11/23 10:39:17  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.6  2007/11/24 22:48:08  alfred
- * - some NetBSD changes
- *
- * Revision 1.5  2005/11/04 19:38:00  alfred
- * - ignore case on DUP search
- *
- * Revision 1.4  2004/05/31 12:47:28  alfred
- * - use CopyNoBlanks()
- *
- * Revision 1.3  2004/05/29 14:57:56  alfred
- * - added missing include statements
- *
- * Revision 1.2  2004/05/29 12:04:48  alfred
- * - relocated DecodeMot(16)Pseudo into separate module
- *
- * Revision 1.1  2004/05/29 11:33:04  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 /*****************************************************************************
  * Includes
@@ -167,7 +130,7 @@ static Boolean LayoutByte(const tStrComp *pExpr, Word *pCnt, Boolean BigEndian)
   {
     case TempInt:
       if (FirstPassUnknown) t.Contents.Int &= 0xff;
-      if (!RangeCheck(t.Contents.Int, Int8)) WrError(ErrNum_OverRange);
+      if (!SymbolQuestionable && !RangeCheck(t.Contents.Int, Int8)) WrError(ErrNum_OverRange);
       else
       {
         BAsmCode[CodeLen++] = t.Contents.Int;
@@ -238,7 +201,7 @@ static Boolean LayoutWord(const tStrComp *pExpr, Word *pCnt, Boolean BigEndian)
     case TempInt:
       if (FirstPassUnknown)
         t.Contents.Int &= 0xffff;
-      if (!RangeCheck(t.Contents.Int, Int16)) WrError(ErrNum_OverRange);
+      if (!SymbolQuestionable && !RangeCheck(t.Contents.Int, Int16)) WrError(ErrNum_OverRange);
       else
       {
         PutWord(t.Contents.Int, BigEndian);
@@ -307,6 +270,7 @@ static Boolean LayoutDoubleWord(const tStrComp *pExpr, Word *pCnt, Boolean BigEn
      in output buffer, so we only need to check again in case of
      a string argument: */
 
+  FirstPassUnknown = False;
   EvalStrExpression(pExpr, &erg);
   Result = False;
   switch (erg.Typ)
@@ -314,7 +278,9 @@ static Boolean LayoutDoubleWord(const tStrComp *pExpr, Word *pCnt, Boolean BigEn
     case TempNone:
       break;
     case TempInt:
-      if (!RangeCheck(erg.Contents.Int, Int32)) WrError(ErrNum_OverRange);
+      if (FirstPassUnknown)
+        erg.Contents.Int &= 0xfffffffful;
+      if (!SymbolQuestionable && !RangeCheck(erg.Contents.Int, Int32)) WrError(ErrNum_OverRange);
       else
       {
         PutDWord(erg.Contents.Int, BigEndian);

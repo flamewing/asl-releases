@@ -165,7 +165,7 @@ static void PNode(PInstTreeNode Node, Word Lev)
   if (Node)
   {
     PNode(Node->Left, Lev + 1);
-    printf("%*s %s %p %p %d\n", 5 * Lev, "", Node->Name, Node->Left, Node->Right, Node->Balance);
+    printf("%*s %s %p %p %d\n", 5 * Lev, "", Node->Name, (void*)Node->Left, (void*)Node->Right, Node->Balance);
     PNode(Node->Right, Lev + 1);
   }
 }
