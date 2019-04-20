@@ -4,88 +4,7 @@
 /*                                                                           */
 /* Codegeneratormodul CPU12                                                  */
 /*                                                                           */
-/* Historie: 13.10.1996 Grundsteinlegung                                     */
-/*           25.10.1998 dir. 16-Bit-Modus von ...11 auf ...10 korrigiert     */
-/*            2. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code6812.c,v 1.25 2017/06/07 19:34:54 alfred Exp $                    */
-/*****************************************************************************
- * $Log: code6812.c,v $
- * Revision 1.25  2017/06/07 19:34:54  alfred
- * - add missing ClearONOFF()
- *
- * Revision 1.24  2017/06/07 19:08:10  alfred
- * - remove double LBGT instruction
- *
- * Revision 1.23  2016/09/12 18:31:48  alfred
- * - regard zero-length string
- *
- * Revision 1.22  2014/12/05 11:15:28  alfred
- * - eliminate AND/OR/NOT
- *
- * Revision 1.21  2014/11/14 12:08:01  alfred
- * - rework to current style
- *
- * Revision 1.20  2014/11/05 15:47:14  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.19  2014/03/08 21:06:36  alfred
- * - rework ASSUME framework
- *
- * Revision 1.18  2010/08/27 14:52:41  alfred
- * - some more overlapping strcpy() cleanups
- *
- * Revision 1.17  2010/04/17 13:14:20  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.16  2007/11/24 22:48:04  alfred
- * - some NetBSD changes
- *
- * Revision 1.15  2006/08/05 18:06:43  alfred
- * - silence some compiler warnings
- *
- * Revision 1.14  2006/04/10 18:41:55  alfred
- * *** empty log message ***
- *
- * Revision 1.13  2006/04/09 09:43:03  alfred
- * - limit check of page crossing
- *
- * Revision 1.12  2006/04/04 16:22:26  alfred
- * - missing adaptions to new address space size
- *
- * Revision 1.11  2006/03/19 09:50:06  alfred
- * - differentiate address type
- *
- * Revision 1.10  2006/03/18 11:18:13  alfred
- * - add paged address space
- *
- * Revision 1.9  2005/09/14 21:40:50  alfred
- * - optimze use of short/long displacement in forward references
- *
- * Revision 1.8  2005/09/10 16:36:11  alfred
- * - extended MOV addressing modes on 12X
- *
- * Revision 1.7  2005/09/10 14:35:11  alfred
- * - solved EXG/TFR/SEX for 6812X
- *
- * Revision 1.6  2005/09/08 16:53:41  alfred
- * - use common PInstTable
- *
- * Revision 1.5  2005/09/05 19:41:05  alfred
- * - added everything except for TFR/EXG/SEX/MOVx
- *
- * Revision 1.4  2005/09/04 21:34:05  alfred
- * - first 12X instructions
- *
- * Revision 1.3  2005/09/04 17:50:47  alfred
- * - rework to hash tables
- *
- * Revision 1.2  2004/05/29 12:04:46  alfred
- * - relocated DecodeMot(16)Pseudo into separate module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -227,7 +146,7 @@ static Boolean DecodeReg(const char *pAsc, Byte *pErg)
   Boolean Result;
   String Reg;
 
-  strmaxcpy(Reg, pAsc, 255);
+  strmaxcpy(Reg, pAsc, STRINGSIZE);
   UpString(Reg);
   Result = LookupInstTable(RegTable, Reg) && (ActReg != eNoReg);
 

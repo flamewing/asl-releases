@@ -4,68 +4,7 @@
 /*                                                                           */
 /* Codegenerator Zilog Z80/180/380                                           */
 /*                                                                           */
-/* Historie: 26. 8.1996 Grundsteinlegung                                     */
-/*            1. 2.1998 ChkPC ersetzt                                        */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*           2001-12-11 begun with Rabbit2000                                */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: codez80.c,v 1.15 2017/06/04 19:00:44 alfred Exp $                     */
-/*****************************************************************************
- * $Log: codez80.c,v $
- * Revision 1.15  2017/06/04 19:00:44  alfred
- * - add some aliases for Z80UNDOC
- *
- * Revision 1.14  2014/12/07 19:14:02  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.13  2014/12/05 11:58:16  alfred
- * - collapse STDC queries into one file
- *
- * Revision 1.12  2014/12/05 08:53:45  alfred
- * - eliminate remaining BEGIN/END
- *
- * Revision 1.11  2014/11/05 15:47:16  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.10  2014/06/20 17:39:22  alfred
- * - correctly report invalid conditions
- *
- * Revision 1.9  2014/06/19 10:12:17  alfred
- * - RRA is not equal to RR A regarding flags, so not warn about short addressing
- *
- * Revision 1.8  2014/06/15 09:17:49  alfred
- * - eliminate some Memo calls
- *
- * Revision 1.7  2014/06/02 21:10:43  alfred
- * - rework to current style
- *
- * Revision 1.6  2007/11/24 22:48:08  alfred
- * - some NetBSD changes
- *
- * Revision 1.5  2007/06/28 20:27:31  alfred
- * - silence some warnings on recent GNU C versions
- *
- * Revision 1.4  2006/08/05 12:01:39  alfred
- * - correct parsing of indexed expressions
- *
- * Revision 1.3  2005/09/08 16:53:43  alfred
- * - use common PInstTable
- *
- * Revision 1.2  2004/05/29 11:33:04  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- * Revision 1.1  2003/11/06 02:49:24  alfred
- * - recreated
- *
- * Revision 1.3  2003/05/02 21:23:12  alfred
- * - strlen() updates
- *
- * Revision 1.2  2002/10/20 09:22:25  alfred
- * - work around the parser problem related to the ' character
- *
- * Revision 1.7  2002/10/07 20:25:01  alfred
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -285,8 +224,9 @@ static void ChangeDDPrefix(char *Add)
 
 static Boolean IndexPrefix(void)
 {
-  return (BAsmCode[PrefixCnt - 1] == IXPrefix)
-      || (BAsmCode[PrefixCnt - 1] == IYPrefix);
+  return   ((PrefixCnt > 0)
+         && ((BAsmCode[PrefixCnt - 1] == IXPrefix)
+          || (BAsmCode[PrefixCnt - 1] == IYPrefix)));
 }
 
 /*--------------------------------------------------------------------------*/
@@ -773,8 +713,8 @@ static void DecodeLD(Word IsLDW)
           switch (AdrMode)
           {
             case ModReg8: /* LD R8, R8/RX8/(HL)/(XY+D) */
-              /* if (I(XY)+d) as target, cannot use H/L as source ! */
-              if (((AdrByte == 4) || (AdrByte == 5)) && (IndexPrefix()) && (AdrCnt == 0)) WrError(ErrNum_InvAddrMode);
+              /* if (I(XY)+d) as source, cannot use H/L as target ! */
+              if (((AdrByte == 4) || (AdrByte == 5)) && IndexPrefix() && (AdrCnt == 0)) WrError(ErrNum_InvAddrMode);
               else
               {
                 BAsmCode[PrefixCnt] = 0x40 + (AdrByte << 3) + AdrPart;
@@ -1970,9 +1910,9 @@ static void DecodePUSH_POP(Word Code)
   else
   {
     if (!strcasecmp(ArgStr[1].Str, "SP"))
-      strmaxcpy(ArgStr[1].Str, "A", 255);
+      strmaxcpy(ArgStr[1].Str, "A", STRINGSIZE);
     if (!strcasecmp(ArgStr[1].Str, "AF"))
-      strmaxcpy(ArgStr[1].Str, "SP", 255);
+      strmaxcpy(ArgStr[1].Str, "SP", STRINGSIZE);
     OpSize = 1; MayLW = True;
     DecodeAdr(&ArgStr[1]);
     switch (AdrMode)

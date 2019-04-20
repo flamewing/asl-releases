@@ -318,7 +318,7 @@ Boolean FoundStruct(PStructRec *Erg, const char *pName)
   PSaveSection Lauf;
   String Part;
 
-  strmaxcpy(Part, pName, 255);
+  strmaxcpy(Part, pName, STRINGSIZE);
   if (!CaseSensitive)
     NLS_UpString(Part);
 
@@ -364,12 +364,12 @@ static void PrintDef(PTree Tree, void *pData)
 
   WrLstLine("");
   pContext->Sum++;
-  strmaxcpy(s, Node->Tree.Name, 255);
+  strmaxcpy(s, Node->Tree.Name, STRINGSIZE);
   if (Node->Tree.Attribute != -1)
   {
-    strmaxcat(s, "[", 255);
-    strmaxcat(s, GetSectionName(Node->Tree.Attribute), 255);
-    strmaxcat(s, "]", 255);
+    strmaxcat(s, "[", STRINGSIZE);
+    strmaxcat(s, GetSectionName(Node->Tree.Attribute), STRINGSIZE);
+    strmaxcat(s, "]", STRINGSIZE);
   }
   WrLstLine(s);
   for (Elem = Node->StructRec->Elems; Elem; Elem = Elem->Next)

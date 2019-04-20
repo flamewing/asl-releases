@@ -4,8 +4,6 @@
 /*                                                                           */
 /* Verwaltung der Include-Verschachtelungsliste                              */
 /*                                                                           */
-/* Historie: 16. 5.1996 Grundsteinlegung                                     */
-/*                                                                           */
 /*****************************************************************************/
 
 #include "stdinc.h"
@@ -74,8 +72,8 @@ static void PrintIncludeList_PrintNode(PFileNode Node, int Indent)
 
   if (Node)
   {
-    strmaxcpy(h,Blanks(Indent), 255);
-    strmaxcat(h,GetFileName(Node->Name), 255);
+    strmaxcpy(h, Blanks(Indent), STRINGSIZE);
+    strmaxcat(h,GetFileName(Node->Name), STRINGSIZE);
     WrLstLine(h);
     for (z = 0; z < Node->Len; z++)
       PrintIncludeList_PrintNode(Node->Subs[z], Indent + 5);

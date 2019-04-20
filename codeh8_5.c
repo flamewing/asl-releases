@@ -4,51 +4,7 @@
 /*                                                                           */
 /* AS-Codegenerator H8/500                                                   */
 /*                                                                           */
-/* Historie: 24.12.1996 Grundsteinlegung                                     */
-/*            9. 1.1999 ChkPC jetzt mit Adresse als Parameter                */
-/*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: codeh8_5.c,v 1.13 2014/12/07 19:14:01 alfred Exp $                    */
-/*****************************************************************************
- * $Log: codeh8_5.c,v $
- * Revision 1.13  2014/12/07 19:14:01  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.12  2014/12/05 08:53:45  alfred
- * - eliminate remaining BEGIN/END
- *
- * Revision 1.11  2014/11/05 15:47:16  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.10  2014/06/15 15:22:01  alfred
- * - some cleanups
- *
- * Revision 1.9  2014/03/08 21:06:36  alfred
- * - rework ASSUME framework
- *
- * Revision 1.8  2010/04/17 13:14:23  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.7  2009/12/21 21:07:15  alfred
- * - allow unsigned 16 bit displacements
- *
- * Revision 1.6  2009/07/25 12:58:10  alfred
- * - update formatting style of remaining parts
- *
- * Revision 1.5  2009/07/25 12:10:07  alfred
- * - correct reg-to-reg move, update formatting style, use hash table
- *
- * Revision 1.4  2007/11/24 22:48:06  alfred
- * - some NetBSD changes
- *
- * Revision 1.3  2005/09/08 17:06:28  alfred
- * - dynamically allocate string
- *
- * Revision 1.2  2004/05/29 12:04:48  alfred
- * - relocated DecodeMot(16)Pseudo into separate module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -175,11 +131,11 @@ static Boolean DecodeRegList(char *Asc, Byte *pErg)
     p = QuotPos(Asc, ',');
     if (!p)
     {
-      strmaxcpy(Part, Asc, 255); *Asc = '\0';
+      strmaxcpy(Part, Asc, STRINGSIZE); *Asc = '\0';
     }
     else
     {
-      *p = '\0'; strmaxcpy(Part, Asc, 255); strmov(Asc, p + 1);
+      *p = '\0'; strmaxcpy(Part, Asc, STRINGSIZE); strmov(Asc, p + 1);
     }
     if (DecodeReg(Part,&Reg1)) *pErg |= (1 << Reg1);
     else

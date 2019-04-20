@@ -190,9 +190,14 @@
 
 back:	nop
 	jr	back
+	j	back	; -> jr
         jre     $-100
+	j	$-100	; -> jre
 	jr	forw
+	j	forw	; -> jr
+	j	end	; -> jr guessed in first pass, jre decided in second/third pass
         jre     $+100
+	j	$+100	; -> jre
 forw:	nop
 
 	ldax	b
@@ -334,3 +339,5 @@ forw:	nop
 	ldeax	hl++
 	ldeax	(hl++)
 	ldeax	(hl)++
+
+end:

@@ -4,37 +4,7 @@
 /*                                                                           */
 /* Befehle zur bedingten Assemblierung                                       */
 /*                                                                           */
-/* Historie: 15. 5.1996 Grundsteinlegung                                     */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: asmif.c,v 1.6 2016/11/24 22:41:46 alfred Exp $                       */
-/***************************************************************************** 
- * $Log: asmif.c,v $
- * Revision 1.6  2016/11/24 22:41:46  alfred
- * - add SELECT as alternative to SWITCH
- *
- * Revision 1.5  2014/12/01 15:43:55  alfred
- * - rework to current style
- *
- * Revision 1.4  2010/08/27 14:52:41  alfred
- * - some more overlapping strcpy() cleanups
- *
- * Revision 1.3  2008/11/23 10:39:15  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.2  2007/11/24 22:48:02  alfred
- * - some NetBSD changes
- *
- * Revision 1.1  2003/11/06 02:49:18  alfred
- * - recreated
- *
- * Revision 1.3  2002/07/14 18:39:57  alfred
- * - fixed TempAll-related warnings
- *
- * Revision 1.2  2002/05/01 15:56:09  alfred
- * - print start line of IF/SWITCH construct when it ends
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -76,7 +46,7 @@ static LongInt GetIfVal(const tStrComp *pCond)
 
 static void AddBoolFlag(Boolean Flag)
 {
-  strmaxcpy(ListLine, Flag ? "=>TRUE" : "=>FALSE", 255);
+  strmaxcpy(ListLine, Flag ? "=>TRUE" : "=>FALSE", STRINGSIZE);
 }
 
 
@@ -128,7 +98,7 @@ static void CodeIFDEF(Word Negate)
   {
     Defined = IsSymbolDefined(ArgStr[1].Str);
     if (IfAsm)
-      strmaxcpy(ListLine, (Defined) ? "=>DEFINED" : "=>UNDEFINED", 255);
+      strmaxcpy(ListLine, (Defined) ? "=>DEFINED" : "=>UNDEFINED", STRINGSIZE);
     if (!Negate)
       IfExpr = (Defined) ? 1 : 0;
     else
@@ -153,7 +123,7 @@ static void CodeIFUSED(Word Negate)
   {
     Used = IsSymbolUsed(ArgStr[1].Str);
     if (IfAsm)
-      strmaxcpy(ListLine, (Used) ? "=>USED" : "=>UNUSED", 255);
+      strmaxcpy(ListLine, (Used) ? "=>USED" : "=>UNUSED", STRINGSIZE);
     if (!Negate)
       IfExpr = (Used) ? 1 : 0;
     else
@@ -183,11 +153,11 @@ void CodeIFEXIST(Word Negate)
     if (FileName[strlen(FileName) - 1] == '"')
       FileName[strlen(FileName) - 1] = '\0';
     AddSuffix(FileName, IncSuffix);
-    strmaxcpy(NPath, IncludeList, 255);
-    strmaxprep(NPath, ".:", 255);
+    strmaxcpy(NPath, IncludeList, STRINGSIZE);
+    strmaxprep(NPath, ".:", STRINGSIZE);
     Found = (*(FSearch(FileName, NPath)) != '\0');
     if (IfAsm)
-      strmaxcpy(ListLine, Found ? "=>FOUND" : "=>NOT FOUND", 255);
+      strmaxcpy(ListLine, Found ? "=>FOUND" : "=>NOT FOUND", STRINGSIZE);
     IfExpr = Negate ? !Found : Found;
   }
   PushIF(IfExpr);
@@ -210,7 +180,7 @@ static void CodeIFB(Word Negate)
       if (strlen(ArgStr[z++].Str) > 0)
         Blank = False;
     if (IfAsm)
-      strmaxcpy(ListLine, (Blank) ? "=>BLANK" : "=>NOT BLANK", 255);
+      strmaxcpy(ListLine, (Blank) ? "=>BLANK" : "=>NOT BLANK", STRINGSIZE);
     IfExpr = Negate ? !Blank : Blank;
   }
   PushIF(IfExpr);

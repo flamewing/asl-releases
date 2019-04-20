@@ -4,51 +4,7 @@
 /*                                                                           */
 /* Codegenerator NEC 75K0                                                    */
 /*                                                                           */
-/* Historie: 31.12.1996 Grundsteinlegung                                     */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code75k0.c,v 1.13 2016/08/17 21:26:46 alfred Exp $                    */
-/*****************************************************************************
- * $Log: code75k0.c,v $
- * Revision 1.13  2016/08/17 21:26:46  alfred
- * - fix some errors and warnings detected by clang
- *
- * Revision 1.12  2014/12/14 17:58:47  alfred
- * - remove static variables in strutil.c
- *
- * Revision 1.11  2014/11/16 13:15:07  alfred
- * - remove some superfluous semicolons
- *
- * Revision 1.10  2014/11/05 15:47:15  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.9  2014/09/21 12:21:45  alfred
- * - compilable with Borland C again
- *
- * Revision 1.8  2014/09/09 17:07:26  alfred
- * - remove static string
- *
- * Revision 1.7  2014/09/08 20:36:21  alfred
- * - rework to current style
- *
- * Revision 1.6  2014/03/08 21:06:36  alfred
- * - rework ASSUME framework
- *
- * Revision 1.5  2010/04/17 13:14:22  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.4  2005/10/02 10:00:45  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.3  2005/09/08 17:31:04  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 11:33:01  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -383,7 +339,7 @@ static Boolean DecodeIntName(char *Asc, Byte *Erg)
   Byte LPart;
   String Asc_N;
 
-  strmaxcpy(Asc_N, Asc, 255);
+  strmaxcpy(Asc_N, Asc, STRINGSIZE);
   NLS_UpString(Asc_N);
   Asc = Asc_N;
 

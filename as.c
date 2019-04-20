@@ -4,348 +4,7 @@
 /*                                                                           */
 /* Hauptmodul                                                                */
 /*                                                                           */
-/* Historie:  4. 5.1996 Grundsteinlegung                                     */
-/*           24. 6.1998 Zeichenuebersetzungstabellen                         */
-/*           30. 6.1998 Ausgabe in MacPro-File auch wenn Zeile nur aus       */
-/*                      Kommentar oder Label besteht                         */
-/*           18. 7.1998 IRPC-Statement                                       */
-/*           24. 7.1998 Debug-Modus NoICE                                    */
-/*           25. 7.1998 Formate glattgezogen                                 */
-/*           16. 8.1998 Datei-Adressbereiche zuruecksetzen                   */
-/*           17. 8.1998 InMacroFlag nach asmdef verschoben                   */
-/*           19. 8.1998 BranchExt-Initialisierung                            */
-/*           25. 8.1998 i960-Initialisierung                                 */
-/*           28. 8.1998 32-Bit-Listen gehen auch korrekt mit                 */
-/*                      Codelaengen != 4*n um                                */
-/*           30. 8.1998 uPD7720-Initialisierung                              */
-/*                      Einrueckung fuer 'R' in Retracted-Zeilen im Listing  */
-/*                      war nicht korrekt                                    */
-/*           13. 9.1998 uPD77230-Initialisierung                             */
-/*           30. 9.1998 SYM53C8xx-Initialisierung                            */
-/*            3.12.1998 8008-Initialisierung                                 */
-/*            9. 1.1999 PCs erst nach Schreiben des Codes hochzaehlen        */
-/*                      ChkPC mit Adresse als Parameter                      */
-/*           30. 1.1999 Formate maschinenunabhaengig gemacht                 */
-/*           12. 2.1999 Compilerwarnungen beseitigt                          */
-/*           25. 3.1999 SC14xxx-Initialisierung                              */
-/*           17. 4.1999 CPU per Kommandozeile setzen                         */
-/*           18. 4.1999 Ausgabeliste Sharefiles                              */
-/*            4. 7.1999 F2MC8-Initialisierung                                */
-/*            8. 8.1999 Externliste immer am  Ende einer Zeile loeschen      */
-/*           14. 8.1999 Initialisierung ACE                                  */
-/*            5.11.1999 ExtendErrors, 2. Stufe                               */
-/*           19.11.1999 F2MC16-Initialisierung                               */
-/*            4.12.1999 IRP/REPT-Zeilenangabe in Klammern                    */
-/*            9. 1.2000 Zeilenzaehler mit plattformabhaengigem Formatstring  */
-/*           13. 2.2000 Ausgabename fuer Listing setzen                      */
-/*            8. 3.2000 'ambigious else'-Warnungen beseitigt                 */
-/*           20. 5.2000 added ArgCName, expansion of macro argument count    */
-/*           21. 5.2000 added TmpSymCounter initialization                   */
-/*            1. 6.2000 REPT/WHILE/IRP(C) not expanded without IfAsm         */
-/*                      added maximum nesting level for macros               */
-/*           24.12.2000 added -noicemask option                              */
-/*           14. 1.2001 silenced warnings about unused parameters            */
-/*                      set 'segment used' flag once code is generated       */
-/*           27. 1.2001 added 1802 initialization                            */
-/*           24. 3.2001 correctly handle predefined symbols when operating   */
-/*                      in case-sensitive mode                               */
-/*            9. 6.2001 moved initialization of DoPadding before CPU-specific*/
-/*                      initialization, to allow CPU-specific override       */
-/*           2001-07-07 added intiialization of C54x generator               */
-/*           2001-10-20 GNU error style possible                             */
-/*           2001-12-31 added IntLabel directive                             */
-/*           2002-01-26 changed end behaviour of while statement             */
-/*           2002-03-03 use FromFile, LineRun fields in input tag            */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.72 2017/06/16 19:06:08 alfred Exp $                         */
-/*****************************************************************************
- * $Log: as.c,v $
- * Revision 1.72  2017/06/16 19:06:08  alfred
- * - correct some overlapping strcpy() uses
- *
- * Revision 1.71  2017/04/02 11:10:36  alfred
- * - allow more fine-grained macro expansion in listing
- *
- * Revision 1.70  2017/02/26 16:20:46  alfred
- * - silence compiler warnings about unused function results
- *
- * Revision 1.69  2016/11/25 18:12:12  alfred
- * - first version to support OLMS-50
- *
- * Revision 1.68  2016/11/01 11:48:04  alfred
- * - add support for OKI OLMS-40
- *
- * Revision 1.67  2016/10/09 19:55:52  alfred
- * - first version of MIL STD 1750 support
- *
- * Revision 1.66  2016/09/30 19:37:17  alfred
- * - renamed HMCS40x to HMCS400
- *
- * Revision 1.65  2016/09/25 20:31:20  alfred
- * - add HMCS4x target
- *
- * Revision 1.64  2016/08/30 13:48:22  alfred
- * - yet another TC9331 speciality in the parser...
- *
- * Revision 1.63  2016/08/30 10:08:17  alfred
- * - regard empty OpPart with arguments
- *
- * Revision 1.62  2016/08/29 21:10:43  alfred
- * - begun with TC9331
- *
- * Revision 1.61  2016/08/29 17:07:04  alfred
- * - if last argument was empty, trailing blanks on second-last argument were not removed
- *
- * Revision 1.60  2016/08/26 19:03:56  alfred
- * - remove separate C4x decoder (was folded into C3x)
- *
- * Revision 1.59  2016/08/25 20:43:02  alfred
- * - C4x will be realized as extension of C3x target
- *
- * Revision 1.58  2016/08/24 12:13:18  alfred
- * - begun with 320C4x support
- *
- * Revision 1.57  2016/08/10 21:06:22  alfred
- * - begun with 78K3 support
- *
- * Revision 1.56  2016/06/23 15:57:21  alfred
- * - correct code output in respect to structure expansion
- *
- * Revision 1.55  2015/10/25 20:06:11  alfred
- * - regard new END... struction/union instructions
- *
- * Revision 1.54  2015/10/23 08:43:33  alfred
- * - beef up & fix structure handling
- *
- * Revision 1.53  2015/10/18 20:08:52  alfred
- * - when expanding structure, also regard sub-structures
- *
- * Revision 1.52  2015/10/18 19:02:15  alfred
- * - first reork/fix of nested structure handling
- *
- * Revision 1.51  2015/08/28 17:22:26  alfred
- * - add special handling for labels following BSR
- *
- * Revision 1.50  2015/08/05 18:28:05  alfred
- * - correct initial construction of ALLARGS, compute ALLARGS/NUMARGS only if needed
- *
- * Revision 1.49  2015/08/03 18:25:37  alfred
- * - add excess macro arguments to argument list for usage with SHIFT
- *
- * Revision 1.48  2015/04/20 18:40:29  alfred
- * - add TMS1000 support (no docs yet)
- *
- * Revision 1.47  2015/01/04 20:33:42  alfred
- * - avoid double build in parallel make
- * - begun with disassembler
- *
- * Revision 1.46  2014/12/14 17:58:46  alfred
- * - remove static variables in strutil.c
- *
- * Revision 1.45  2014/12/02 13:33:19  alfred
- * - do not use strncpy()
- *
- * Revision 1.44  2014/11/23 18:52:36  alfred
- * - use common allocator for OUTProcessor
- *
- * Revision 1.43  2014/11/23 18:27:09  alfred
- * - remove trailing blanks
- *
- * Revision 1.42  2014/11/17 23:51:31  alfred
- * - begun with TLCS-870/C
- *
- * Revision 1.41  2014/11/17 21:20:24  alfred
- * - rework to current style
- *
- * Revision 1.40  2014/11/16 18:52:07  alfred
- * - first step of rework
- *
- * Revision 1.39  2014/11/06 11:22:01  alfred
- * - replace hook chain for ClearUp, document new mechanism
- *
- * Revision 1.38  2014/11/05 15:47:13  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.37  2014/11/05 09:19:39  alfred
- * - remove static string
- *
- * Revision 1.36  2014/10/26 20:52:32  alfred
- * - cleanup tag only right before destruction because contents may be needed for GetPos()
- *
- * Revision 1.35  2014/10/26 20:43:11  alfred
- * - correct usage of parameter counter in IRP get position function
- *
- * Revision 1.34  2014/10/06 17:54:56  alfred
- * - display filename if include failed
- * - some valgrind workaraounds
- *
- * Revision 1.33  2014/09/21 13:15:16  alfred
- * - assure structure is initialized
- *
- * Revision 1.32  2014/09/14 13:22:32  alfred
- * - ass keyword arguments
- *
- * Revision 1.31  2014/06/15 09:17:08  alfred
- * - optional Memo profiling
- *
- * Revision 1.30  2014/05/29 10:59:05  alfred
- * - some const cleanups
- *
- * Revision 1.29  2013/12/21 19:46:50  alfred
- * - dynamically resize code buffer
- *
- * Revision 1.28  2013/12/17 18:54:17  alfred
- * - correct local symbol handle processing in IRPC
- *
- * Revision 1.27  2013-03-09 16:15:07  alfred
- * - add NEC 75xx
- *
- * Revision 1.26  2013-03-09 07:54:38  alfred
- * - add GLOBALSYMBOLS option
- *
- * Revision 1.25  2012-07-22 11:51:45  alfred
- * - begun with XCore target
- *
- * Revision 1.24  2012-05-26 13:49:19  alfred
- * - MSP additions, make implicit macro parameters always case-insensitive
- *
- * Revision 1.23  2012-01-14 14:34:58  alfred
- * - add some platforms
- *
- * Revision 1.22  2010/04/17 13:14:18  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.21  2010/02/27 14:17:26  alfred
- * - correct increment/decrement of macro nesting level
- *
- * Revision 1.20  2009/06/07 09:32:25  alfred
- * - add named temporary symbols
- *
- * Revision 1.19  2009/05/10 10:48:45  alfred
- * - display macro nesting in listing
- *
- * Revision 1.18  2008/04/13 20:23:46  alfred
- * - add Atari Vecor Processor target
- *
- * Revision 1.17  2007/11/24 22:48:02  alfred
- * - some NetBSD changes
- *
- * Revision 1.16  2007/04/30 10:19:19  alfred
- * - make default nesting level consistent
- *
- * Revision 1.15  2006/12/19 17:26:00  alfred
- * - allow full list mask range
- *
- * Revision 1.14  2006/10/10 10:41:12  alfred
- * - allocate FileMask dynamically
- *
- * Revision 1.13  2006/07/08 10:32:55  alfred
- * - added RS08
- *
- * Revision 1.12  2006/06/15 21:15:24  alfred
- * - cleanups in listing output
- *
- * Revision 1.11  2006/04/06 20:26:53  alfred
- * - add COP4
- *
- * Revision 1.10  2005/12/09 14:48:06  alfred
- * - added 2650
- *
- * Revision 1.9  2005/10/02 10:00:43  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.8  2005/09/11 18:10:50  alfred
- * - added XGATE
- *
- * Revision 1.7  2005/07/30 13:57:02  alfred
- * - add LatticeMico8
- *
- * Revision 1.6  2005/03/21 19:48:16  alfred
- * - shortened name to 8+3 (again...)
- *
- * Revision 1.5  2005/02/19 18:05:59  alfred
- * - use shorter name for 8+3 filesystems, correct bugs
- *
- * Revision 1.4  2005/02/19 14:10:14  alfred
- * - added KCPSM3
- *
- * Revision 1.3  2004/10/03 12:52:31  alfred
- * - MinGW adaptions
- *
- * Revision 1.2  2004/05/29 12:28:13  alfred
- * - remove unneccessary dummy fcn
- *
- * Revision 1.1  2003/11/06 02:49:18  alfred
- * - recreated
- *
- * Revision 1.24  2003/10/12 19:28:52  alfred
- * - created 78K/2
- *
- * Revision 1.23  2003/10/04 15:38:46  alfred
- * - differentiate constant/variable messages
- *
- * Revision 1.22  2003/05/02 21:23:08  alfred
- * - strlen() updates
- *
- * Revision 1.21  2003/03/29 18:45:50  alfred
- * - allow source file spec in key files
- *
- * Revision 1.20  2003/03/26 20:31:51  alfred
- * - some Win32 path fixes
- *
- * Revision 1.19  2003/03/16 18:53:42  alfred
- * - created 807x
- *
- * Revision 1.18  2003/03/09 10:28:27  alfred
- * - added KCPSM
- *
- * Revision 1.17  2003/02/02 13:00:05  alfred
- * - use ReadLnCont()
- *
- * Revision 1.16  2003/01/29 21:25:41  alfred
- * - do not convert IRP args when in case-sensitive mode
- *
- * Revision 1.15  2002/11/20 20:25:04  alfred
- * - added unions
- *
- * Revision 1.14  2002/11/16 20:53:11  alfred
- * - additions for structures
- *
- * Revision 1.13  2002/11/15 23:30:53  alfred
- * - relocated EnterLebel
- *
- * Revision 1.12  2002/11/11 21:56:57  alfred
- * - store/display struct elements
- *
- * Revision 1.11  2002/11/11 21:13:54  alfred
- * - basic structure handling
- *
- * Revision 1.10  2002/11/11 19:24:57  alfred
- * - new module for structs
- *
- * Revision 1.9  2002/11/10 16:27:32  alfred
- * - use free fcns for macros
- *
- * Revision 1.8  2002/11/04 19:19:37  alfred
- * - use struct separation character
- *
- * Revision 1.7  2002/10/07 20:25:01  alfred
- * - added '/' nameless temporary symbols
- *
- * Revision 1.6  2002/09/30 17:12:20  alfred
- * - added nameless symbol counter intialization
- *
- * Revision 1.5  2002/05/19 13:45:32  alfred
- * - clear section usage before starting new pass
- *
- * Revision 1.4  2002/05/01 15:35:46  alfred
- * - removed umlaut
- *
- * Revision 1.3  2002/03/10 10:47:20  alfred
- * - add CVS log
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -575,7 +234,7 @@ static POutputTag GenerateOUTProcessor(SimpProc Processor, tErrorNum OpenErrMsg)
 /*=========================================================================*/
 /* Listing erzeugen */
 
-static void MakeList_Gen2Line(char *h, Word EffLen, Word *n)
+static void MakeList_Gen2Line(char *pDest, unsigned DestLen, Word EffLen, Word *n)
 {
   int z, Rest;
   char Str[20];
@@ -588,22 +247,22 @@ static void MakeList_Gen2Line(char *h, Word EffLen, Word *n)
   for (z = 0; z < (Rest >> 1); z++)
   {
     HexString(Str, sizeof(Str), WAsmCode[(*n) >> 1], 4);
-    strmaxcat(h, Str, 255);
-    strmaxcat(h, " ", 255);
+    strmaxcat(pDest, Str, DestLen);
+    strmaxcat(pDest, " ", DestLen);
     (*n) += 2;
   }
   if (Rest & 1)
   {
     HexString(Str, sizeof(Str), BAsmCode[*n], 2);
-    strmaxcat(h, Str, 255);
-    strmaxcat(h, "   ", 255);
+    strmaxcat(pDest, Str, DestLen);
+    strmaxcat(pDest, "   ", DestLen);
     (*n)++;
   }
   for (z = 1; z <= (8 - Rest) >> 1; z++)
-    strmaxcat(h, "     ", 255);
+    strmaxcat(pDest, "     ", DestLen);
 }
 
-static void MakeList_Gen4Line(char *h, Word EffLen, Word *n)
+static void MakeList_Gen4Line(char *pDest, unsigned DestLen, Word EffLen, Word *n)
 {
   int z, Rest, wr = 0;
   char Str[20];
@@ -616,19 +275,19 @@ static void MakeList_Gen4Line(char *h, Word EffLen, Word *n)
   for (z = 0; z < (Rest >> 2); z++)
   {
     HexString(Str, sizeof(Str), DAsmCode[(*n) >> 2], 8);
-    strmaxcat(h, Str, 255);
-    strmaxcat(h, " ", 255);
+    strmaxcat(pDest, Str, DestLen);
+    strmaxcat(pDest, " ", DestLen);
     *n += 4;
     wr += 9;
   }
   for (z = 0; z < (Rest&3); z++)
   {
     HexString(Str, sizeof(Str), BAsmCode[(*n)++], 2);
-    strmaxcat(h, Str, 255);
-    strmaxcat(h, " ", 255);
+    strmaxcat(pDest, Str, DestLen);
+    strmaxcat(pDest, " ", DestLen);
     wr += 3;
   }
-  strmaxcat(h, Blanks(20 - wr), 255);
+  strmaxcat(pDest, Blanks(20 - wr), DestLen);
 }
 
 static void MakeList(void)
@@ -660,7 +319,7 @@ static void MakeList(void)
     /* Zeilennummer / Programmzaehleradresse: */
 
     if (IncDepth == 0)
-      strmaxcpy(h2, "   ", 255);
+      strmaxcpy(h2, "   ", sizeof(h));
     else
     {
       sprintf(Tmp, IntegerFormat, IncDepth);
@@ -670,20 +329,20 @@ static void MakeList(void)
     {
       sprintf(h3, Integ32Format, CurrLine);
       sprintf(h, "%5s/", h3);
-      strmaxcat(h2, h, 255);
+      strmaxcat(h2, h, sizeof(h));
     }
-    strmaxcpy(h, h2, 255);
+    strmaxcpy(h, h2, sizeof(h));
     HexBlankString(h2, sizeof(h2), EProgCounter() - CodeLen, 8);
-    strmaxcat(h, h2, 255);
-    strmaxcat(h, Retracted?" R ":" : ", 255);
+    strmaxcat(h, h2, sizeof(h));
+    strmaxcat(h, Retracted?" R ":" : ", sizeof(h));
 
     /* Extrawurst in Listing ? */
 
     if (*ListLine != '\0')
     {
-      strmaxcat(h, ListLine, 255);
-      strmaxcat(h, Blanks(20 - strlen(ListLine)), 255);
-      strmaxcat(h, OneLine, 255);
+      strmaxcat(h, ListLine, sizeof(h));
+      strmaxcat(h, Blanks(20 - strlen(ListLine)), sizeof(h));
+      strmaxcat(h, OneLine, sizeof(h));
       WrLstLine(h);
       *ListLine = '\0';
     }
@@ -696,28 +355,28 @@ static void MakeList(void)
       {
         case 4:
           n = 0;
-          MakeList_Gen4Line(h, EffLen, &n);
-          strmaxcat(h, OneLine, 255); WrLstLine(h);
+          MakeList_Gen4Line(h, sizeof(h), EffLen, &n);
+          strmaxcat(h, OneLine, sizeof(h)); WrLstLine(h);
           if (!DontPrint)
           {
             while (n < EffLen)
             {
-              strmaxcpy(h, "                    ", 255);
-              MakeList_Gen4Line(h, EffLen, &n);
+              strmaxcpy(h, "                    ", sizeof(h));
+              MakeList_Gen4Line(h, sizeof(h), EffLen, &n);
               WrLstLine(h);
             }
           }
           break;
         case 2:
           n = 0;
-          MakeList_Gen2Line(h, EffLen, &n);
-          strmaxcat(h, OneLine, 255); WrLstLine(h);
+          MakeList_Gen2Line(h, sizeof(h), EffLen, &n);
+          strmaxcat(h, OneLine, sizeof(h)); WrLstLine(h);
           if (!DontPrint)
           {
             while (n < EffLen)
             {
-              strmaxcpy(h, "                    ", 255);
-              MakeList_Gen2Line(h, EffLen, &n);
+              strmaxcpy(h, "                    ", sizeof(h));
+              MakeList_Gen2Line(h, sizeof(h), EffLen, &n);
               WrLstLine(h);
             }
           }
@@ -732,13 +391,13 @@ static void MakeList(void)
             if ((!DontPrint) && (EffLen > i))
             {
               HexString(Str, sizeof(Str), BAsmCode[i], 2);
-              strmaxcat(h, Str, 255);
-              strmaxcat(h, " ", 255);
+              strmaxcat(h, Str, sizeof(h));
+              strmaxcat(h, " ", sizeof(h));
             }
             else
-              strmaxcat(h, "   ", 255);
-          strmaxcat(h, "  ", 255);
-          strmaxcat(h, OneLine, 255);
+              strmaxcat(h, "   ", sizeof(h));
+          strmaxcat(h, "  ", sizeof(h));
+          strmaxcat(h, OneLine, sizeof(h));
           WrLstLine(h);
           if ((EffLen > 6) && (!DontPrint))
           {
@@ -748,15 +407,15 @@ static void MakeList(void)
               n--;
             for (i = 0; i <= n; i++)
             {
-              strmaxcpy(h, "              ", 255);
+              strmaxcpy(h, "              ", sizeof(h));
               if (ListMask & ListMask_LineNums)
-                strmaxcat(h, "      ", 255);
+                strmaxcat(h, "      ", sizeof(h));
               for (k = 0; k < 6; k++)
                 if (EffLen > i * 6 + k)
                 {
                   HexString(Str, sizeof(Str), BAsmCode[i * 6 + k + 6], 2);
-                  strmaxcat(h, Str, 255);
-                  strmaxcat(h, " ", 255);
+                  strmaxcat(h, Str, sizeof(h));
+                  strmaxcat(h, " ", sizeof(h));
                 }
                WrLstLine(h);
             }
@@ -870,8 +529,8 @@ static void ComputeMacroStrings(PInputTag Tag)
     while (Lauf)
     {
       if (Tag->AllArgs[0] != '\0')
-        strmaxcat(Tag->AllArgs, ",", 255);
-      strmaxcat(Tag->AllArgs, Lauf->Content, 255);
+        strmaxcat(Tag->AllArgs, ",", STRINGSIZE);
+      strmaxcat(Tag->AllArgs, Lauf->Content, STRINGSIZE);
       Lauf = Lauf->Next;
     }
   }
@@ -911,7 +570,7 @@ static void MACRO_OutProcessor(void)
 
   if (FirstOutputTag->NestLevel != -1)
   {
-    strmaxcpy(s, OneLine, 255);
+    strmaxcpy(s, OneLine, STRINGSIZE);
     KillCtrl(s);
 
     /* compress into tokens */
@@ -1051,13 +710,13 @@ static Boolean ReadMacro_SearchSect(char *Test_O, char *Comp, Boolean *Erg, Long
   char *p;
   String Test, Sect;
 
-  strmaxcpy(Test, Test_O, 255); KillBlanks(Test);
+  strmaxcpy(Test, Test_O, STRINGSIZE); KillBlanks(Test);
   p = strchr(Test, ':');
   if (!p)
     *Sect = '\0';
   else
   {
-    strmaxcpy(Sect, p + 1, 255);
+    strmaxcpy(Sect, p + 1, STRINGSIZE);
     *p = '\0';
   }
   if ((strlen(Test) > 2) && (!strncasecmp(Test, "NO", 2)) && (!strcasecmp(Test + 2, Comp)))
@@ -1087,12 +746,12 @@ typedef struct
 static void ExpandPList(String PList, const char *pArg, Boolean CtrlArg)
 {
   if (!*PList)
-    strmaxcat(PList, ",", 255);
+    strmaxcat(PList, ",", STRINGSIZE);
   if (CtrlArg)
-    strmaxcat(PList, "{", 255);
-  strmaxcat(PList, pArg, 255);
+    strmaxcat(PList, "{", STRINGSIZE);
+  strmaxcat(PList, pArg, STRINGSIZE);
   if (CtrlArg)
-    strmaxcat(PList, "}", 255);
+    strmaxcat(PList, "}", STRINGSIZE);
 }
 
 static void ProcessMACROArgs(Boolean CtrlArg, const tStrComp *pArg, void *pUser)
@@ -1224,13 +883,13 @@ static void ReadMacro(void)
 
   if (Context.pOutputTag->DoGlobCopy)
   {
-    strmaxcpy(Context.pOutputTag->GName, LabPart.Str, 255);
+    strmaxcpy(Context.pOutputTag->GName, LabPart.Str, STRINGSIZE);
     RunSection = SectionStack;
     HSect = MomSectionHandle;
     while ((HSect != Context.pOutputTag->GlobSect) && (RunSection != NULL))
     {
-      strmaxprep(Context.pOutputTag->GName, "_", 255);
-      strmaxprep(Context.pOutputTag->GName, GetSectionName(HSect), 255);
+      strmaxprep(Context.pOutputTag->GName, "_", STRINGSIZE);
+      strmaxprep(Context.pOutputTag->GName, GetSectionName(HSect), STRINGSIZE);
       HSect = RunSection->Handle;
       RunSection = RunSection->Next;
     }
@@ -1334,10 +993,10 @@ static void ExpandMacro(PMacroRec OneMacro)
     Tag->GlobalSymbols = OneMacro->GlobalSymbols;
     Tag->UsesNumArgs = OneMacro->UsesNumArgs;
     Tag->UsesAllArgs = OneMacro->UsesAllArgs;
-    strmaxcpy(Tag->SpecName.Str, OneMacro->Name, 255);
-    strmaxcpy(Tag->SaveAttr, AttrPart.Str, 255);
+    strmaxcpy(Tag->SpecName.Str, OneMacro->Name, STRINGSIZE);
+    strmaxcpy(Tag->SaveAttr, AttrPart.Str, STRINGSIZE);
     if (OneMacro->LocIntLabel)
-      strmaxcpy(Tag->SaveLabel, LabPart.Str, 255);
+      strmaxcpy(Tag->SaveLabel, LabPart.Str, STRINGSIZE);
     Tag->IsMacro   = True;
 
     /* 2. Store special parameters - in the original form.
@@ -1351,8 +1010,8 @@ static void ExpandMacro(PMacroRec OneMacro)
     {
       for (z1 = 1; z1 <= ArgCnt; z1++)
       {
-        if (z1 != 1) strmaxcat(Tag->AllArgs, ",", 255);
-        strmaxcat(Tag->AllArgs, ArgStr[z1].Str, 255);
+        if (z1 != 1) strmaxcat(Tag->AllArgs, ",", STRINGSIZE);
+        strmaxcat(Tag->AllArgs, ArgStr[z1].Str, STRINGSIZE);
       }
     }
     Tag->ParCnt = OneMacro->ParamCount;
@@ -1593,7 +1252,7 @@ static void IRP_Cleanup(PInputTag PInp)
   if (PInp->Processor == IRP_Processor)
   {
     for (Lauf = PInp->Params; Lauf->Next; Lauf = Lauf->Next);
-    strmaxcpy(PInp->SaveAttr, Lauf->Content, 255);
+    strmaxcpy(PInp->SaveAttr, Lauf->Content, STRINGSIZE);
   }
 
   ClearStringList(&(PInp->Lines));
@@ -1665,7 +1324,7 @@ static void IRP_OutProcessor(void)
 
   if (FirstOutputTag->NestLevel > -1)
   {
-    strmaxcpy(s, OneLine, 255); KillCtrl(s);
+    strmaxcpy(s, OneLine, STRINGSIZE); KillCtrl(s);
     CompressLine(GetStringListFirst(FirstOutputTag->ParamNames, &Dummy), 1, s, sizeof(s), CaseSensitive);
     AddStringListLast(&(FirstOutputTag->Tag->Lines), s);
     FirstOutputTag->Tag->LineCnt++;
@@ -2434,7 +2093,7 @@ Boolean INCLUDE_Processor(PInputTag PInp, char *Erg)
 static void INCLUDE_Restorer(PInputTag PInp)
 {
   MomLineCounter = PInp->StartLine;
-  strmaxcpy(CurrFileName, PInp->SaveAttr, 255);
+  strmaxcpy(CurrFileName, PInp->SaveAttr, STRINGSIZE);
   IncDepth--;
 }
 
@@ -2449,15 +2108,16 @@ static void ExpandINCLUDE(Boolean SearchPath)
   if (!ChkArgCnt(1, 1))
     return;
 
-  strmaxcpy(FileName, (*ArgStr[1].Str == '"') ? (ArgStr[1].Str + 1) : ArgStr[1].Str, 255);
+  strmaxcpy(FileName, (*ArgStr[1].Str == '"') ? (ArgStr[1].Str + 1) : ArgStr[1].Str, STRINGSIZE);
   if ((*FileName) && (FileName[strlen(FileName) - 1] == '"'))
     FileName[strlen(FileName) - 1] = '\0';
-  AddSuffix(FileName, IncSuffix); strmaxcpy(ArgStr[1].Str, FileName, 255);
+  AddSuffix(FileName, IncSuffix);
+  strmaxcpy(ArgStr[1].Str, FileName, STRINGSIZE);
   if (SearchPath)
   {
-    strmaxcpy(FileName, FExpand(FSearch(FileName, IncludeList)), 255);
+    strmaxcpy(FileName, FExpand(FSearch(FileName, IncludeList)), STRINGSIZE);
     if ((*FileName) && (FileName[strlen(FileName) - 1] == '/'))
-      strmaxcat(FileName, ArgStr[1].Str, 255);
+      strmaxcat(FileName, ArgStr[1].Str, STRINGSIZE);
   }
 
   /* Tag erzeugen */
@@ -2472,9 +2132,9 @@ static void ExpandINCLUDE(Boolean SearchPath)
   /* Sicherung alter Daten */
 
   Tag->StartLine = MomLineCounter;
-  strmaxcpy(Tag->SpecName.Str, FileName, 255);
+  strmaxcpy(Tag->SpecName.Str, FileName, STRINGSIZE);
   LineCompReset(&Tag->SpecName.Pos);
-  strmaxcpy(Tag->SaveAttr, CurrFileName, 255);
+  strmaxcpy(Tag->SaveAttr, CurrFileName, STRINGSIZE);
 
   /* Datei oeffnen */
 
@@ -2487,7 +2147,7 @@ static void ExpandINCLUDE(Boolean SearchPath)
 
   /* neu besetzen */
 
-  strmaxcpy(CurrFileName, FileName, 255); Tag->LineZ = MomLineCounter = 0;
+  strmaxcpy(CurrFileName, FileName, STRINGSIZE); Tag->LineZ = MomLineCounter = 0;
   NextIncDepth++; AddFile(FileName);
   PushInclude(FileName);
 
@@ -2818,7 +2478,7 @@ static void Produce_Code(void)
       if ((MacroNestLevel > 1) && (MacroNestLevel < 100))
         sprintf(ListLine, "%*s(MACRO-%u)", MacroNestLevel - 1, "", MacroNestLevel);
       else
-        strmaxcpy(ListLine, "(MACRO)", 255);
+        strmaxcpy(ListLine, "(MACRO)", STRINGSIZE);
 
       /* Macro call itself must not appear in expanded output.  However, a label
          in the same line that is not consumed by the macro must.  In this case,
@@ -2846,7 +2506,7 @@ static void Produce_Code(void)
       if (IsStruct)
       {
         ExpandStruct(OneStruct);
-        strmaxcpy(ListLine, OneStruct->IsUnion ? "(UNION)" : "(STRUCT)", 255);
+        strmaxcpy(ListLine, OneStruct->IsUnion ? "(UNION)" : "(STRUCT)", STRINGSIZE);
       }
       else if (!CodeGlobalPseudo())
         MakeCode();
@@ -3289,7 +2949,7 @@ static void AssembleFile_InitPass(void)
   EnumIncrement = 1;
   EnumCurrentValue = 0;
 
-  strmaxcpy(CurrFileName, "INTERNAL", 255);
+  strmaxcpy(CurrFileName, "INTERNAL", STRINGSIZE);
   AddFile(CurrFileName);
   CurrLine = 0;
 
@@ -3398,7 +3058,7 @@ static void AssembleFile(char *Name)
 
   dbgentry("AssembleFile");
 
-  strmaxcpy(SourceFile, Name, 255);
+  strmaxcpy(SourceFile, Name, STRINGSIZE);
   if (MakeDebug)
     fprintf(Debug, "File %s\n", SourceFile);
 
@@ -3412,17 +3072,17 @@ static void AssembleFile(char *Name)
 
   /* Kommandozeilenoptionen verarbeiten */
 
-  strmaxcpy(OutName, GetFromOutList(), 255);
+  strmaxcpy(OutName, GetFromOutList(), STRINGSIZE);
   if (OutName[0] == '\0')
   {
-    strmaxcpy(OutName, SourceFile, 255);
+    strmaxcpy(OutName, SourceFile, STRINGSIZE);
     KillSuffix(OutName);
     AddSuffix(OutName, PrgSuffix);
   }
 
   if (*ErrorPath == '\0')
   {
-    strmaxcpy(ErrorName, SourceFile, 255);
+    strmaxcpy(ErrorName, SourceFile, STRINGSIZE);
     KillSuffix(ErrorName);
     AddSuffix(ErrorName, LogSuffix);
     unlink(ErrorName);
@@ -3431,16 +3091,16 @@ static void AssembleFile(char *Name)
   switch (ListMode)
   {
     case 0:
-      strmaxcpy(LstName, NULLDEV, 255);
+      strmaxcpy(LstName, NULLDEV, STRINGSIZE);
       break;
     case 1:
-      strmaxcpy(LstName, "!1", 255);
+      strmaxcpy(LstName, "!1", STRINGSIZE);
       break;
     case 2:
-      strmaxcpy(LstName, GetFromListOutList(), 255);
+      strmaxcpy(LstName, GetFromListOutList(), STRINGSIZE);
       if (*LstName == '\0')
       {
-        strmaxcpy(LstName, SourceFile, 255);
+        strmaxcpy(LstName, SourceFile, STRINGSIZE);
         KillSuffix(LstName);
         AddSuffix(LstName, LstSuffix);
       }
@@ -3451,10 +3111,10 @@ static void AssembleFile(char *Name)
 
   if (ShareMode != 0)
   {
-    strmaxcpy(ShareName, GetFromShareOutList(), 255);
+    strmaxcpy(ShareName, GetFromShareOutList(), STRINGSIZE);
     if (*ShareName == '\0')
     {
-      strmaxcpy(ShareName, SourceFile, 255);
+      strmaxcpy(ShareName, SourceFile, STRINGSIZE);
       KillSuffix(ShareName);
       switch (ShareMode)
       {
@@ -3473,14 +3133,14 @@ static void AssembleFile(char *Name)
 
   if (MacProOutput)
   {
-    strmaxcpy(MacProName, SourceFile, 255);
+    strmaxcpy(MacProName, SourceFile, STRINGSIZE);
     KillSuffix(MacProName);
     AddSuffix(MacProName, PreSuffix);
   }
 
   if (MacroOutput)
   {
-    strmaxcpy(MacroName, SourceFile, 255);
+    strmaxcpy(MacroName, SourceFile, STRINGSIZE);
     KillSuffix(MacroName);
     AddSuffix(MacroName, MacSuffix);
   }
@@ -3594,13 +3254,13 @@ static void AssembleFile(char *Name)
           break;
       }
       ChkIO(10002);
-      fclose(ShareFile);
+      CloseIfOpen(&ShareFile);
     }
 
     if (MacProOutput)
-      fclose(MacProFile);
-    if ((MacroOutput) && (PassNo == 1))
-      fclose(MacroFile);
+      CloseIfOpen(&MacProFile);
+    if (MacroOutput && (PassNo == 1))
+      CloseIfOpen(&MacroFile);
 
     /* evtl. fuer naechsten Durchlauf aufraeumen */
 
@@ -3714,11 +3374,8 @@ static void AssembleFile(char *Name)
 
   ClearIncludeList();
 
-  if ((*ErrorPath == '\0') && (IsErrorOpen))
-  {
-    fclose(ErrorFile);
-    IsErrorOpen = False;
-  }
+  if (!*ErrorPath)
+    CloseIfOpen(&ErrorFile);
 
   ClearUp();
 
@@ -3731,13 +3388,13 @@ static void AssembleFile(char *Name)
   if (ListMode == 2)
   {
     WrLstLine("");
-    strmaxcat(s, getmessage(Num_InfoMessAssTime), 255);
+    strmaxcat(s, getmessage(Num_InfoMessAssTime), STRINGSIZE);
     WrLstLine(s);
     WrLstLine("");
   }
 
   Dec32BlankString(s, LineSum, 7);
-  strmaxcat(s, getmessage((LineSum == 1) ? Num_InfoMessAssLine : Num_InfoMessAssLines), 255);
+  strmaxcat(s, getmessage((LineSum == 1) ? Num_InfoMessAssLine : Num_InfoMessAssLines), STRINGSIZE);
   if (!QuietMode)
     printf("%s%s\n", s, ClrEol);
   if (ListMode == 2)
@@ -3746,7 +3403,7 @@ static void AssembleFile(char *Name)
   if (LineSum != MacLineSum)
   {
     Dec32BlankString(s, MacLineSum, 7);
-    strmaxcat(s, getmessage((MacLineSum == 1) ? Num_InfoMessMacAssLine : Num_InfoMessMacAssLines), 255);
+    strmaxcat(s, getmessage((MacLineSum == 1) ? Num_InfoMessMacAssLine : Num_InfoMessMacAssLines), STRINGSIZE);
     if (!QuietMode)
       printf("%s%s\n", s, ClrEol);
     if (ListMode == 2)
@@ -3754,7 +3411,7 @@ static void AssembleFile(char *Name)
   }
 
   Dec32BlankString(s, PassNo, 7);
-  strmaxcat(s, getmessage((PassNo == 1) ? Num_InfoMessPassCnt : Num_InfoMessPPassCnt), 255);
+  strmaxcat(s, getmessage((PassNo == 1) ? Num_InfoMessPassCnt : Num_InfoMessPPassCnt), STRINGSIZE);
   if (!QuietMode)
     printf("%s%s\n", s, ClrEol);
   if (ListMode == 2)
@@ -3779,7 +3436,7 @@ static void AssembleFile(char *Name)
 
   sprintf(s, "%s%s", Dec32BlankString(Tmp, ErrorCount, 7), getmessage(Num_InfoMessErrCnt));
   if (ErrorCount != 1)
-    strmaxcat(s, getmessage(Num_InfoMessErrPCnt), 255);
+    strmaxcat(s, getmessage(Num_InfoMessErrPCnt), STRINGSIZE);
   if (!QuietMode)
     printf("%s%s\n", s, ClrEol);
   if (ListMode == 2)
@@ -3787,7 +3444,7 @@ static void AssembleFile(char *Name)
 
   sprintf(s, "%s%s", Dec32BlankString(Tmp, WarnCount, 7), getmessage(Num_InfoMessWarnCnt));
   if (WarnCount != 1)
-    strmaxcat(s, getmessage(Num_InfoMessWarnPCnt), 255);
+    strmaxcat(s, getmessage(Num_InfoMessWarnPCnt), STRINGSIZE);
   if (!QuietMode)
     printf("%s%s\n", s, ClrEol);
   if (ListMode == 2)
@@ -3801,7 +3458,7 @@ static void AssembleFile(char *Name)
     WrLstLine(s);
 #endif
 
-  fclose(LstFile);
+  CloseIfOpen(&LstFile);
 
   /* verstecktes */
 
@@ -3868,7 +3525,7 @@ static CMDResult CMD_DebugMode(Boolean Negate, const char *pArg)
 {
   String Arg;
 
-  strmaxcpy(Arg, pArg, 255);
+  strmaxcpy(Arg, pArg, STRINGSIZE);
   UpString(Arg);
 
   if (Negate)
@@ -4007,7 +3664,7 @@ static CMDResult CMD_MakeDebug(Boolean Negate, const char *Arg)
   else if (MakeDebug)
   {
     MakeDebug = False;
-    fclose(Debug);
+    CloseIfOpen(&Debug);
   }
   return CMDOK;
 }
@@ -4143,19 +3800,19 @@ static CMDResult CMD_IncludeList(Boolean Negate, const char *Arg)
   if (*Arg == '\0') return CMDErr;
   else
   {
-    strmaxcpy(Copy, Arg, 255);
+    strmaxcpy(Copy, Arg, STRINGSIZE);
     do
     {
       p = strrchr(Copy, DIRSEP);
       if (!p)
       {
-        strmaxcpy(part, Copy, 255);
+        strmaxcpy(part, Copy, STRINGSIZE);
         *Copy = '\0';
       }
       else
       {
         *p = '\0';
-        strmaxcpy(part, p + 1, 255);
+        strmaxcpy(part, p + 1, STRINGSIZE);
       }
       if (Negate)
         RemoveIncludeList(part);
@@ -4196,19 +3853,19 @@ static CMDResult CMD_DefSymbol(Boolean Negate, const char *Arg)
   if (Arg[0] == '\0')
     return CMDErr;
 
-  strmaxcpy(Copy, Arg, 255);
+  strmaxcpy(Copy, Arg, STRINGSIZE);
   do
   {
     p = QuotPos(Copy, ',');
     if (!p)
     {
-      strmaxcpy(Part, Copy, 255);
+      strmaxcpy(Part, Copy, STRINGSIZE);
       Copy[0] = '\0';
     }
     else
     {
       *p = '\0';
-      strmaxcpy(Part, Copy, 255);
+      strmaxcpy(Part, Copy, STRINGSIZE);
       strmov(Copy, p + 1);
     }
    if (!CaseSensitive)
@@ -4216,13 +3873,13 @@ static CMDResult CMD_DefSymbol(Boolean Negate, const char *Arg)
    p = QuotPos(Part, '=');
    if (!p)
    {
-     strmaxcpy(Name, Part, 255);
+     strmaxcpy(Name, Part, STRINGSIZE);
      Part[0] = '\0';
    }
    else
    {
      *p = '\0';
-     strmaxcpy(Name, Part, 255);
+     strmaxcpy(Name, Part, STRINGSIZE);
      strmov(Part, p + 1);
    }
    if (!ChkSymbName(Name))
@@ -4263,7 +3920,7 @@ static CMDResult CMD_ErrorPath(Boolean Negate, const char *Arg)
   }
   else
   {
-    strmaxcpy(ErrorPath, Arg, 255);
+    strmaxcpy(ErrorPath, Arg, STRINGSIZE);
     return CMDArg;
   }
 }
@@ -4369,9 +4026,9 @@ static CMDResult CMD_CPUAlias(Boolean Negate, const char *Arg)
     else
     {
       *p = '\0';
-      strmaxcpy(s1, Arg, 255);
+      strmaxcpy(s1, Arg, STRINGSIZE);
       UpString(s1);
-      strmaxcpy(s2, p + 1, 255);
+      strmaxcpy(s2, p + 1, STRINGSIZE);
       UpString(s2);
       *p = '=';
       if (!(CMD_CPUAlias_ChkCPUName(s1) && CMD_CPUAlias_ChkCPUName(s2)))
@@ -4521,7 +4178,7 @@ extern void on_exit(void (*procp)(int status, caddr_t arg),caddr_t arg);
 static void GlobExitProc(int status, caddr_t arg)
 {
   if (MakeDebug)
-    fclose(Debug);
+    CloseIfOpen(&Debug);
 }
 
 #else
@@ -4529,7 +4186,7 @@ static void GlobExitProc(int status, caddr_t arg)
 static void GlobExitProc(void)
 {
   if (MakeDebug)
-    fclose(Debug);
+    CloseIfOpen(&Debug);
 }
 
 #endif
@@ -4718,7 +4375,7 @@ int main(int argc, char **argv)
   {
     case NoRedir:
       Env = getenv("USEANSI");
-      strmaxcpy(Dummy, Env ? Env : "Y", 255);
+      strmaxcpy(Dummy, Env ? Env : "Y", STRINGSIZE);
       if (mytoupper(Dummy[0]) == 'N')
       {
       }
@@ -4799,13 +4456,12 @@ int main(int argc, char **argv)
     strcpy(ErrorName, ErrorPath);
     unlink(ErrorName);
   }
-  IsErrorOpen = False;
 
   if (StringListEmpty(FileArgList))
   {
     printf("%s [%s] ", getmessage(Num_InvMsgSource), SrcSuffix);
     fflush(stdout);
-    if (!fgets(FileMask, 255, stdin))
+    if (!fgets(FileMask, STRINGSIZE, stdin))
       return 0;
     if ((*FileMask) && (FileMask[strlen(FileMask) - 1] == '\n'))
       FileMask[strlen(FileMask) - 1] = '\0';
@@ -4819,17 +4475,14 @@ int main(int argc, char **argv)
     pFile = GetStringListFirst(FileArgList, &Lauf);
     while ((pFile) && (*pFile))
     {
-      strmaxcpy(FileMask, pFile, 255);
+      strmaxcpy(FileMask, pFile, STRINGSIZE);
       AssembleGroup();
       pFile = GetStringListNext(&Lauf);
     }
   }
 
-  if ((ErrorPath[0] != '\0') && (IsErrorOpen))
-  {
-    fclose(ErrorFile);
-    IsErrorOpen = False;
-  }
+  if (*ErrorPath)
+    CloseIfOpen(&ErrorFile);
 
   ClearCPUList();
 

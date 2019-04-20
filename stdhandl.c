@@ -77,6 +77,15 @@ void RewriteStandard(FILE **T, String Path)
     *T = fopen(Path, "w");
 }
 
+void CloseIfOpen(FILE **ppFile)
+{
+  if (*ppFile)
+  {
+    fclose(*ppFile);
+    *ppFile = NULL;
+  }
+}
+
 void stdhandl_init(void)
 {
 #ifdef __EMX__

@@ -4,58 +4,7 @@
 /*                                                                           */
 /* Codegenerator 8086/V-Serie                                                */
 /*                                                                           */
-/* Historie:                                                                 */
-/*            2. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*           14. 1.2001 silenced warnings about unused parameters            */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code86.c,v 1.15 2017/06/07 19:29:05 alfred Exp $                      */
-/*****************************************************************************
- * $Log: code86.c,v $
- * Revision 1.15  2017/06/07 19:29:05  alfred
- * - correct registration of ROR4
- *
- * Revision 1.14  2014/12/07 19:14:00  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.13  2014/12/02 13:33:19  alfred
- * - do not use strncpy()
- *
- * Revision 1.12  2014/11/16 13:15:07  alfred
- * - remove some superfluous semicolons
- *
- * Revision 1.11  2014/11/05 15:47:15  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.10  2014/08/10 13:12:33  alfred
- * - rework to current style
- *
- * Revision 1.9  2014/06/09 12:46:02  alfred
- * - add missing parentheses
- *
- * Revision 1.8  2014/03/08 21:06:36  alfred
- * - rework ASSUME framework
- *
- * Revision 1.7  2010/08/27 14:52:42  alfred
- * - some more overlapping strcpy() cleanups
- *
- * Revision 1.6  2010/04/17 13:14:22  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.5  2008/04/06 09:37:52  alfred
- * - catch immediate addressing on invalid operand size, some reformatting
- *
- * Revision 1.4  2008/03/30 21:28:00  alfred
- * - correct intersegment CALL/JMP
- *
- * Revision 1.3  2005/09/08 16:53:42  alfred
- * - use common PInstTable
- *
- * Revision 1.2  2004/05/29 11:33:01  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -1375,12 +1324,12 @@ static void DecodeASSUME(void)
       if (p)
       {
         *p = '\0';
-        strmaxcpy(SegPart, ArgStr[z].Str, 255);
-        strmaxcpy(ValPart, p + 1, 255);
+        strmaxcpy(SegPart, ArgStr[z].Str, STRINGSIZE);
+        strmaxcpy(ValPart, p + 1, STRINGSIZE);
       }
       else
       {
-        strmaxcpy(SegPart, ArgStr[z].Str, 255);
+        strmaxcpy(SegPart, ArgStr[z].Str, STRINGSIZE);
         *ValPart = '\0';
       }
       z2 = 0;

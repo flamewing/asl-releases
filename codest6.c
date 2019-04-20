@@ -4,39 +4,7 @@
 /*                                                                           */
 /* Codegenerator ST6-Familie                                                 */
 /*                                                                           */
-/* Historie: 14.11.1996 Grundsteinlegung                                     */
-/*            2. 1.1998 ChkPC ersetzt                                        */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: codest6.c,v 1.9 2014/12/07 19:14:01 alfred Exp $                     */
-/*****************************************************************************
- * $Log: codest6.c,v $
- * Revision 1.9  2014/12/07 19:14:01  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.8  2014/11/05 15:47:16  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.7  2014/06/09 14:12:42  alfred
- * - convert to current style
- *
- * Revision 1.6  2014/03/08 21:06:37  alfred
- * - rework ASSUME framework
- *
- * Revision 1.5  2013/12/21 19:46:51  alfred
- * - dynamically resize code buffer
- *
- * Revision 1.4  2008/11/23 10:39:17  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.3  2005/09/08 17:31:05  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 12:04:48  alfred
- * - relocated DecodeMot(16)Pseudo into separate module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -511,21 +479,21 @@ static void DecodeASCII_ASCIZ(Word IsZ)
 static void DecodeBYTE(Word Code)
 {
   UNUSED(Code);
-  strmaxcpy(OpPart.Str, "BYT", 255);
+  strmaxcpy(OpPart.Str, "BYT", STRINGSIZE);
   DecodeMotoPseudo(False);
 }
 
 static void DecodeWORD(Word Code)
 {
   UNUSED(Code);
-  strmaxcpy(OpPart.Str, "ADR", 255);
+  strmaxcpy(OpPart.Str, "ADR", STRINGSIZE);
   DecodeMotoPseudo(False);
 }
 
 static void DecodeBLOCK(Word Code)
 {
   UNUSED(Code);
-  strmaxcpy(OpPart.Str, "DFS", 255);
+  strmaxcpy(OpPart.Str, "DFS", STRINGSIZE);
   DecodeMotoPseudo(False);
 }
 

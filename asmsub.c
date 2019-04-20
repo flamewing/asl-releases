@@ -4,168 +4,7 @@
 /*                                                                           */
 /* Unterfunktionen, vermischtes                                              */
 /*                                                                           */
-/* Historie:  4. 5.1996 Grundsteinlegung                                     */
-/*           13. 8.1997 KillBlanks-Funktionen nach stringutil.c geschoben    */
-/*           26. 6.1998 Fehlermeldung Codepage nicht gefunden                */
-/*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
-/*           17. 8.1998 Unterfunktion zur Buchhaltung Adressbereiche         */
-/*            1. 9.1998 FloatString behandelte Sonderwerte nicht korrekt     */
-/*           13. 9.1998 Prozessorliste macht Zeilenvorschub nach 6 Namen     */
-/*           14.10.1998 Fehlerzeilen mit > > >                               */
-/*           30. 1.1999 Formatstrings maschinenunabhaengig gemacht           */
-/*           18. 4.1999 Ausgabeliste Sharefiles                              */
-/*           13. 7.1999 Fehlermeldungen relokatible Symbole                  */
-/*           13. 9.1999 I/O-Fehler 25 ignorieren                             */
-/*            5.11.1999 ExtendErrors ist jetzt ShortInt                      */
-/*           13. 2.2000 Ausgabeliste Listing                                 */
-/*            6. 8.2000 added ValidSymChar array                             */
-/*           21. 7.2001 added not repeatable message                         */
-/*           2001-08-01 QuotPos also works for ) resp. ] characters          */
-/*           2001-09-03 added warning message about X-indexed conversion     */
-/*           2001-10-21 additions for GNU-style errors                       */
-/*           2002-03-31 fixed operand order of memset                        */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: asmsub.c,v 1.35 2017/04/02 11:10:37 alfred Exp $                      */
-/*****************************************************************************
- * $Log: asmsub.c,v $
- * Revision 1.35  2017/04/02 11:10:37  alfred
- * - allow more fine-grained macro expansion in listing
- *
- * Revision 1.34  2016/11/25 18:12:13  alfred
- * - first version to support OLMS-50
- *
- * Revision 1.33  2016/09/12 19:49:16  alfred
- * - use gettime() to get DOS time (int86 leaks memory per call)
- *
- * Revision 1.32  2016/09/11 15:39:49  alfred
- * - determine DOS time without floatig point
- *
- * Revision 1.31  2016/08/30 09:53:46  alfred
- * - make string argument const
- *
- * Revision 1.30  2015/10/23 08:43:33  alfred
- * - beef up & fix structure handling
- *
- * Revision 1.29  2015/08/05 18:28:06  alfred
- * - correct initial construction of ALLARGS, compute ALLARGS/NUMARGS only if needed
- *
- * Revision 1.28  2014/12/14 17:58:46  alfred
- * - remove static variables in strutil.c
- *
- * Revision 1.27  2014/12/05 11:58:15  alfred
- * - collapse STDC queries into one file
- *
- * Revision 1.26  2014/12/03 19:01:00  alfred
- * - remove static return value
- *
- * Revision 1.25  2014/11/28 22:02:25  alfred
- * - rework to current style
- *
- * Revision 1.24  2014/11/23 17:06:32  alfred
- * - add error #2060 (unimplemented)
- *
- * Revision 1.23  2014/11/10 13:15:13  alfred
- * - make arg of QuotPos() const
- *
- * Revision 1.22  2014/11/06 11:22:01  alfred
- * - replace hook chain for ClearUp, document new mechanism
- *
- * Revision 1.21  2014/11/05 15:47:13  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.20  2014/10/06 17:54:56  alfred
- * - display filename if include failed
- * - some valgrind workaraounds
- *
- * Revision 1.19  2014/09/14 13:22:33  alfred
- * - ass keyword arguments
- *
- * Revision 1.18  2014/05/29 10:59:05  alfred
- * - some const cleanups
- *
- * Revision 1.17  2014/03/08 10:52:07  alfred
- * - correctly handle escaped quotation marks
- *
- * Revision 1.16  2012-08-22 20:01:45  alfred
- * - regard UTF-8
- *
- * Revision 1.15  2012-05-26 13:49:19  alfred
- * - MSP additions, make implicit macro parameters always case-insensitive
- *
- * Revision 1.14  2011-10-20 14:00:40  alfred
- * - SRP handling more graceful on Z8
- *
- * Revision 1.13  2010/05/01 17:22:02  alfred
- * - use strmov()
- *
- * Revision 1.12  2010/04/17 13:14:19  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.11  2008/11/23 10:39:16  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.10  2008/08/10 11:57:48  alfred
- * - handle truncated bit numbers for 68K
- *
- * Revision 1.9  2008/01/02 22:32:21  alfred
- * - better heap checking for DOS target
- *
- * Revision 1.8  2007/11/24 22:48:02  alfred
- * - some NetBSD changes
- *
- * Revision 1.7  2007/09/24 17:51:48  alfred
- * - better handle non-printable characters
- *
- * Revision 1.6  2007/04/30 18:37:52  alfred
- * - add weird integer coding
- *
- * Revision 1.5  2006/12/09 19:54:53  alfred
- * - remove unplausible part in time computation
- *
- * Revision 1.4  2005/10/02 10:00:44  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.3  2004/10/03 11:44:58  alfred
- * - addition for MinGW
- *
- * Revision 1.2  2004/05/31 15:19:26  alfred
- * - add StrCaseCmp
- *
- * Revision 1.1  2003/11/06 02:49:19  alfred
- * - recreated
- *
- * Revision 1.12  2003/10/04 15:38:47  alfred
- * - differentiate constant/variable messages
- *
- * Revision 1.11  2003/10/04 14:00:39  alfred
- * - complain about empty arguments
- *
- * Revision 1.10  2003/09/21 21:15:54  alfred
- * - fix string length
- *
- * Revision 1.9  2003/05/20 17:45:03  alfred
- * - StrSym with length spec
- *
- * Revision 1.8  2003/05/02 21:23:09  alfred
- * - strlen() updates
- *
- * Revision 1.7  2002/11/16 20:52:18  alfred
- * - added ErrMsgStructNameMissing
- *
- * Revision 1.6  2002/11/04 19:04:26  alfred
- * - prevent modification of constants with SET
- *
- * Revision 1.5  2002/08/14 18:43:47  alfred
- * - warn null allocation, remove some warnings
- *
- * Revision 1.4  2002/05/13 18:17:13  alfred
- * - added error 2010/2020
- *
- * Revision 1.3  2002/05/12 20:56:28  alfred
- * - added 3206x error messages
- *
- *****************************************************************************/
 
 
 #include "stdinc.h"
@@ -469,7 +308,7 @@ void AddSuffix(char *s, char *Suff)
       p = z;
   Part = p ? p : s;
   if (!strchr(Part, '.'))
-    strmaxcat(s, Suff, 255);
+    strmaxcat(s, Suff, STRINGSIZE);
 }
 
 
@@ -498,7 +337,7 @@ char *PathPart(char *Name)
   static String s;
   char *p;
 
-  strmaxcpy(s, Name, 255);
+  strmaxcpy(s, Name, STRINGSIZE);
 
   p = strrchr(Name, PATHSEP);
 #ifdef DRSEP
@@ -768,26 +607,26 @@ void NewPage(ShortInt Level, Boolean WithFF)
   if ((strcmp(CurrFileName, "INTERNAL"))
    && (strcmp(NamePart(CurrFileName), NamePart(SourceFile))))
   {
-    strmaxcat(Header, "(", 255);
-    strmaxcat(Header, NamePart(CurrFileName), 255);
-    strmaxcat(Header, ")", 255);
+    strmaxcat(Header, "(", STRINGSIZE);
+    strmaxcat(Header, NamePart(CurrFileName), STRINGSIZE);
+    strmaxcat(Header, ")", STRINGSIZE);
   }
-  strmaxcat(Header, getmessage(Num_HeadingPageLab), 255);
+  strmaxcat(Header, getmessage(Num_HeadingPageLab), STRINGSIZE);
 
   for (z = ChapDepth; z >= 0; z--)
   {
     sprintf(s, IntegerFormat, PageCounter[z]);
-    strmaxcat(Header, s, 255);
+    strmaxcat(Header, s, STRINGSIZE);
     if (z != 0)
-      strmaxcat(Header, ".", 255);
+      strmaxcat(Header, ".", STRINGSIZE);
   }
 
-  strmaxcat(Header, " - ", 255);
+  strmaxcat(Header, " - ", STRINGSIZE);
   NLS_CurrDateString(s);
-  strmaxcat(Header, s, 255);
-  strmaxcat(Header, " ", 255);
+  strmaxcat(Header, s, STRINGSIZE);
+  strmaxcat(Header, " ", STRINGSIZE);
   NLS_CurrTimeString(False, s);
-  strmaxcat(Header, s, 255);
+  strmaxcat(Header, s, STRINGSIZE);
 
   if (PageWidth != 0)
     while (strlen(Header) > PageWidth)
@@ -1059,48 +898,33 @@ Boolean ChkMacSymbName(char *sym)
   return True;
 }
 
-/****************************************************************************/
-/* Fehlerkanal offen ? */
-
-static void ForceErrorOpen(void)
-{
-  if (!IsErrorOpen)
-  {
-    RewriteStandard(&ErrorFile, ErrorName);
-    IsErrorOpen = True;
-    if (!ErrorFile)
-      ChkIO(10001);
-  }
-}
-
 /*--------------------------------------------------------------------------*/
 /* eine Fehlermeldung mit Klartext ausgeben */
 
 static void EmergencyStop(void)
 {
-  if ((IsErrorOpen) && (ErrorFile))
-    fclose(ErrorFile);
-  fclose(LstFile);
+  CloseIfOpen(&ErrorFile);
+  CloseIfOpen(&LstFile);
   if (ShareMode != 0)
   {
-    fclose(ShareFile);
+    CloseIfOpen(&ShareFile);
     unlink(ShareName);
   }
   if (MacProOutput)
   {
-    fclose(MacProFile);
+    CloseIfOpen(&MacProFile);
     unlink(MacProName);
   }
   if (MacroOutput)
   {
-    fclose(MacroFile);
+    CloseIfOpen(&MacroFile);
     unlink(MacroName);
   }
   if (MakeDebug)
-    fclose(Debug);
+    CloseIfOpen(&Debug);
   if (CodeOutput)
   {
-    fclose(PrgFile);
+    CloseIfOpen(&PrgFile);
     unlink(OutName);
   }
 }
@@ -1113,7 +937,7 @@ void WrErrorString(char *pMessage, char *pAdd, Boolean Warning, Boolean Fatal,
   char *p;
   int l;
   const char *pLeadIn = GNUErrors ? "" : "> > > ";
-  FILE *pErrFile = ErrorFile ? ErrorFile : stdout;
+  FILE *pErrFile;
 
   if (TreatWarningsAsErrors && Warning && !Fatal)
     Warning = False;
@@ -1123,46 +947,46 @@ void WrErrorString(char *pMessage, char *pAdd, Boolean Warning, Boolean Fatal,
   l = strlen(p) - 1;
   if ((l >= 0) && (p[l] == ' '))
     p[l] = '\0';
-  strmaxcat(ErrStr[ErrStrCount], p, 255);
+  strmaxcat(ErrStr[ErrStrCount], p, STRINGSIZE);
   free(p);
   if (pLineComp)
   {
     char Num[20];
 
     sprintf(Num, ":%d", pLineComp->StartCol + 1);
-    strmaxcat(ErrStr[ErrStrCount], Num, 255);
+    strmaxcat(ErrStr[ErrStrCount], Num, STRINGSIZE);
   }
   if (Warning || !GNUErrors)
   {
-    strmaxcat(ErrStr[ErrStrCount], ": ", 255);
-    strmaxcat(ErrStr[ErrStrCount], getmessage(Warning ? Num_WarnName : Num_ErrName), 255);
+    strmaxcat(ErrStr[ErrStrCount], ": ", STRINGSIZE);
+    strmaxcat(ErrStr[ErrStrCount], getmessage(Warning ? Num_WarnName : Num_ErrName), STRINGSIZE);
   }
-  strmaxcat(ErrStr[ErrStrCount], pAdd, 255);
-  strmaxcat(ErrStr[ErrStrCount], ": ", 255);
+  strmaxcat(ErrStr[ErrStrCount], pAdd, STRINGSIZE);
+  strmaxcat(ErrStr[ErrStrCount], ": ", STRINGSIZE);
   if (Warning)
     WarnCount++;
   else
     ErrorCount++;
 
-  strmaxcat(ErrStr[ErrStrCount], pMessage, 255);
+  strmaxcat(ErrStr[ErrStrCount], pMessage, STRINGSIZE);
   if ((ExtendErrors > 0) && pExtendError)
   {
     if (GNUErrors)
-      strmaxcat(ErrStr[ErrStrCount], " '", 255);
+      strmaxcat(ErrStr[ErrStrCount], " '", STRINGSIZE);
     else
       strcpy(ErrStr[++ErrStrCount], pLeadIn);
-    strmaxcat(ErrStr[ErrStrCount], pExtendError, 255);
+    strmaxcat(ErrStr[ErrStrCount], pExtendError, STRINGSIZE);
     if (GNUErrors)
-      strmaxcat(ErrStr[ErrStrCount], "'", 255);
+      strmaxcat(ErrStr[ErrStrCount], "'", STRINGSIZE);
   }
   if ((ExtendErrors > 1) || ((ExtendErrors > 0) && pLineComp))
   {
     strcpy(ErrStr[++ErrStrCount], "");
-    GenLineForMarking(ErrStr[ErrStrCount], 255, OneLine, pLeadIn);
+    GenLineForMarking(ErrStr[ErrStrCount], STRINGSIZE, OneLine, pLeadIn);
     if (pLineComp)
     {
       strcpy(ErrStr[++ErrStrCount], "");
-      GenLineMarker(ErrStr[ErrStrCount], 255, '~', pLineComp, pLeadIn);
+      GenLineMarker(ErrStr[ErrStrCount], STRINGSIZE, '~', pLineComp, pLeadIn);
     }
   }
 
@@ -1172,7 +996,9 @@ void WrErrorString(char *pMessage, char *pAdd, Boolean Warning, Boolean Fatal,
       WrLstLine(ErrStr[z]);
   }
 
-  ForceErrorOpen();
+  if (!ErrorFile)
+    RewriteStandard(&ErrorFile, ErrorName);
+  pErrFile = ErrorFile ? ErrorFile : stdout;
   if (strcmp(LstName, "!1") || !ListOn)
   {
     for (z = 0; z <= ErrStrCount; z++)
@@ -1593,7 +1419,7 @@ void WrXErrorPos(Word Num, const char *pExtendError, const struct sLineComp *pLi
                sprintf(h, "%s %d", getmessage(Num_ErrMsgIntError), (int) Num);
   }
   if (msgno != -1)
-    strmaxcpy(h, getmessage(msgno), 255);
+    strmaxcpy(h, getmessage(msgno), STRINGSIZE);
 
   if (((Num == ErrNum_TargOnDiffPage) || (Num == ErrNum_JmpDistTooBig))
    && !Repass)
@@ -1644,9 +1470,9 @@ void ChkStrIO(Word ErrNo, const struct sStrComp *pComp)
   if ((io == 0) || (io == 19) || (io == 25))
     return;
 
-  strmaxcpy(s, pComp->Str, 255);
-  strmaxcat(s, ": ", 255);
-  strmaxcat(s, GetErrorMsg(io), 255);
+  strmaxcpy(s, pComp->Str, STRINGSIZE);
+  strmaxcat(s, ": ", STRINGSIZE);
+  strmaxcat(s, GetErrorMsg(io), STRINGSIZE);
   WrStrErrorPos(ErrNo, pComp);
 }
 
@@ -1727,14 +1553,14 @@ void PrintChunk(ChunkList *NChunk, DissectBitProc Dissect, int ItemsPerLine)
       char Num[30];
 
       Dissect(Num, sizeof(Num), NChunk->Chunks[p].Start);
-      strmaxcat(BufferS, Num, 255);
+      strmaxcat(BufferS, Num, STRINGSIZE);
       if (NChunk->Chunks[p].Length != 1)
       {
-        strmaxcat(BufferS, "-", 255);
+        strmaxcat(BufferS, "-", STRINGSIZE);
         Dissect(Num, sizeof(Num), NChunk->Chunks[p].Start + NChunk->Chunks[p].Length - 1);
-        strmaxcat(BufferS, Num, 255);
+        strmaxcat(BufferS, Num, STRINGSIZE);
       }
-      strmaxcat(BufferS, Blanks(MaxItemLen - strlen(BufferS) % MaxItemLen), 255);
+      strmaxcat(BufferS, Blanks(MaxItemLen - strlen(BufferS) % MaxItemLen), STRINGSIZE);
       if (++BufferZ == ItemsPerLine)
       {
         WrLstLine(BufferS);
@@ -1767,7 +1593,7 @@ void PrintUseList(void)
       strcpy(s, "  ");
       l = strlen(SegNames[z]) + strlen(getmessage(Num_ListSegListHead1)) + strlen(getmessage(Num_ListSegListHead2));
       for (z2 = 0; z2 < l; z2++)
-        strmaxcat(s, "-", 255);
+        strmaxcat(s, "-", STRINGSIZE);
       WrLstLine(s);
       WrLstLine("");
       PrintChunk(SegChunks + z,
@@ -1796,13 +1622,13 @@ static char *GetPath(char *Acc)
   p = strchr(Acc, DIRSEP);
   if (!p)
   {
-    strmaxcpy(tmp, Acc, 255);
+    strmaxcpy(tmp, Acc, STRINGSIZE);
     Acc[0] = '\0';
   }
   else
   {
     *p = '\0';
-    strmaxcpy(tmp, Acc, 255);
+    strmaxcpy(tmp, Acc, STRINGSIZE);
     strmov(Acc, p + 1);
   }
   return tmp;
@@ -1812,13 +1638,13 @@ void AddIncludeList(char *NewPath)
 {
   String Test;
 
-  strmaxcpy(Test, IncludeList, 255);
+  strmaxcpy(Test, IncludeList, STRINGSIZE);
   while (*Test != '\0')
     if (!strcmp(GetPath(Test), NewPath))
       return;
   if (*IncludeList != '\0')
-    strmaxprep(IncludeList, SDIRSEP, 255);
-  strmaxprep(IncludeList, NewPath, 255);
+    strmaxprep(IncludeList, SDIRSEP, STRINGSIZE);
+  strmaxprep(IncludeList, NewPath, STRINGSIZE);
 }
 
 
@@ -1827,7 +1653,7 @@ void RemoveIncludeList(char *RemPath)
   String Save;
   char *Part;
 
-  strmaxcpy(IncludeList, Save, 255);
+  strmaxcpy(IncludeList, Save, STRINGSIZE);
   IncludeList[0] = '\0';
   while (Save[0] != '\0')
   {
@@ -1835,8 +1661,8 @@ void RemoveIncludeList(char *RemPath)
     if (strcmp(Part, RemPath))
     {
       if (IncludeList[0] != '\0')
-        strmaxcat(IncludeList, SDIRSEP, 255);
-      strmaxcat(IncludeList, Part, 255);
+        strmaxcat(IncludeList, SDIRSEP, STRINGSIZE);
+      strmaxcat(IncludeList, Part, STRINGSIZE);
     }
   }
 }
@@ -2247,7 +2073,7 @@ void asmsub_init(void)
   MemFlag = getenv("ASXSWAP");
   if (MemFlag)
   {
-    strmaxcpy(MemVal, MemFlag, 255);
+    strmaxcpy(MemVal, MemFlag, STRINGSIZE);
     p = strchr(MemVal, ',');
     if (!p)
       strcpy(TempName, "ASX.TMP");

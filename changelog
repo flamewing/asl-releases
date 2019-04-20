@@ -1,3 +1,10 @@
+2019-04-20 [1.42 Bld 146]
+
+- Addition    : Added J as generic relative jump for 78C1x
+- Bugfix      : correct index underflow access on Z80 for some cases
+- Bugfix      : Allow spaces between function name and argument(s)
+- Bugfix      : Correct file closing/cleanup
+
 2019-03-09 [1.42 Bld 145]
 
 - Bugfix      : correct argument count check for STRUCT

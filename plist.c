@@ -4,51 +4,7 @@
 /*                                                                           */
 /* Anzeige des Inhalts einer Code-Datei                                      */
 /*                                                                           */
-/* Historie: 31. 5.1996 Grundsteinlegung                                     */
-/*           29. 8.1998 Tabellen auf HeadIds umgestellt                      */
-/*                      main-lokale Variablen dorthin verschoben             */
-/*           11. 9.1998 ROMDATA-Segment hinzugenommen                        */
-/*           15. 8.1999 Einrueckung der Endadresse korrigiert                */
-/*           21. 1.2000 Auflisten externe Referenzen                         */
-/*           26. 6.2000 list exports                                         */
-/*           30. 5.2001 move copy buffer to heap to avoid stack overflows on */
-/*                      DOS platforms                                        */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: plist.c,v 1.8 2017/02/26 16:20:46 alfred Exp $                       */
-/*****************************************************************************
- * $Log: plist.c,v $
- * Revision 1.8  2017/02/26 16:20:46  alfred
- * - silence compiler warnings about unused function results
- *
- * Revision 1.7  2014/12/07 19:14:02  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.6  2014/12/05 11:15:29  alfred
- * - eliminate AND/OR/NOT
- *
- * Revision 1.5  2014/12/05 11:09:11  alfred
- * - eliminate Nil
- *
- * Revision 1.4  2014/12/05 08:28:38  alfred
- * - rework to current style
- *
- * Revision 1.3  2014/05/29 10:59:06  alfred
- * - some const cleanups
- *
- * Revision 1.2  2012-09-02 16:55:23  alfred
- * - silence compiler warning about non-literal printf() format strinf
- *
- * Revision 1.1  2003/11/06 02:49:24  alfred
- * - recreated
- *
- * Revision 1.3  2003/03/29 18:45:51  alfred
- * - allow source file spec in key files
- *
- * Revision 1.2  2002/03/31 22:59:01  alfred
- * - added CVS header
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -107,12 +63,12 @@ int main(int argc, char **argv)
   {
     errno = 0;
     printf("%s", getmessage(Num_MessFileRequest));
-    if (!fgets(ProgName, 255, stdin))
+    if (!fgets(ProgName, STRINGSIZE, stdin))
       return 0;
     ChkIO(OutName);
   }
   else if (ParamCount == 1)
-    strmaxcpy(ProgName, ParamStr[1], 255);
+    strmaxcpy(ProgName, ParamStr[1], STRINGSIZE);
   else
   {
     errno = 0;
@@ -127,7 +83,7 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  AddSuffix(ProgName, getmessage(Num_Suffix));
+  AddSuffix(ProgName, STRINGSIZE, getmessage(Num_Suffix));
 
   ProgFile = fopen(ProgName, OPENRDMODE);
   if (!ProgFile)

@@ -20,5 +20,7 @@ extern TRedirected Redirected;
 
 extern void RewriteStandard(FILE **T, char *Path);
 
+extern void CloseIfOpen(FILE **ppFile);
+
 extern void stdhandl_init(void);
 #endif /* _STDHANDL_H */

@@ -2,66 +2,9 @@
 /*****************************************************************************/
 /* AS-Portierung                                                             */
 /*                                                                           */
-/* Codegenerator 6809/6309                                                   */
-/*                                                                           */
-/* Historie: 10.10.1996 Grundsteinlegung                                     */
-/*            2. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
-/*            3. 1.2001 fixed stack operations pushing/pulling opposite      */
-/*                      stack pointer                                        */
-/*            5. 1.2001 allow pushing/popping D as A/B                       */
-/*           13. 1.2001 fix D register access                                */
+/* Code Generator 6809/6309                                                  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6809.c,v 1.16 2017/06/07 19:21:45 alfred Exp $                    */
-/*****************************************************************************
- * $Log: code6809.c,v $
- * Revision 1.16  2017/06/07 19:21:45  alfred
- * - ad dmissing ClearONOFF() call
- *
- * Revision 1.15  2015/10/05 16:20:07  alfred
- * - correct CC coding for 6809
- *
- * Revision 1.14  2014/11/16 13:15:07  alfred
- * - remove some superfluous semicolons
- *
- * Revision 1.13  2014/11/14 13:05:03  alfred
- * - optimize out some string moves
- *
- * Revision 1.12  2014/11/14 10:44:52  alfred
- * - some more reworks
- *
- * Revision 1.11  2014/11/14 10:43:38  alfred
- * - rework to current style
- *
- * Revision 1.10  2014/11/05 15:47:14  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.9  2014/06/09 12:45:15  alfred
- * - add missing parentheses
- *
- * Revision 1.8  2014/03/08 21:06:36  alfred
- * - rework ASSUME framework
- *
- * Revision 1.7  2014/03/08 17:48:07  alfred
- * - make more tolerant regarding spaces
- *
- * Revision 1.6  2013-03-31 20:06:19  alfred
- * - allows Moto16 pseudo-ops for 6809
- *
- * Revision 1.5  2010/04/17 13:14:20  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.4  2007/11/24 22:48:04  alfred
- * - some NetBSD changes
- *
- * Revision 1.3  2005/09/08 17:31:04  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 12:04:46  alfred
- * - relocated DecodeMot(16)Pseudo into separate module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -213,6 +156,17 @@ static Boolean MayShort(Integer Arg)
   return ((Arg >= -128) && (Arg < 127));
 }
 
+static Boolean IsZeroOrEmpty(const tStrComp *pArg)
+{
+  Boolean OK;
+  LongInt Value;
+
+  if (!*pArg->Str)
+    return True;
+  Value = EvalStrIntExpression(pArg, Int32, &OK);
+  return OK && !Value;
+}
+
 static void DecodeAdr(int ArgStartIdx, int ArgEndIdx)
 {
   tStrComp *pStartArg, *pEndArg, IndirComps[2];
@@ -302,7 +256,7 @@ static void DecodeAdr(int ArgStartIdx, int ArgEndIdx)
 
   if ((AdrArgCnt >= 1) && (AdrArgCnt <= 2) && (strlen(pEndArg->Str) == 2) && (*pEndArg->Str == '-') && (CodeReg(pEndArg->Str + 1, &EReg)))
   {
-    if ((AdrArgCnt == 2) && (*pStartArg->Str != '\0')) WrError(ErrNum_InvAddrMode);
+    if ((AdrArgCnt == 2) && !IsZeroOrEmpty(pStartArg)) WrError(ErrNum_InvAddrMode);
     else
     {
       AdrCnt = 1;
@@ -314,7 +268,7 @@ static void DecodeAdr(int ArgStartIdx, int ArgEndIdx)
 
   if ((AdrArgCnt >= 1) && (AdrArgCnt <= 2) && (strlen(pEndArg->Str) == 3) && (!strncmp(pEndArg->Str, "--", 2)) && (CodeReg(pEndArg->Str + 2, &EReg)))
   {
-    if ((AdrArgCnt == 2) && (*pStartArg->Str != '\0')) WrError(ErrNum_InvAddrMode);
+    if ((AdrArgCnt == 2) && !IsZeroOrEmpty(pStartArg)) WrError(ErrNum_InvAddrMode);
     else
     {
       AdrCnt = 1;
@@ -326,7 +280,7 @@ static void DecodeAdr(int ArgStartIdx, int ArgEndIdx)
 
   if ((AdrArgCnt >= 1) && (AdrArgCnt <= 2) && (!strcasecmp(pEndArg->Str, "--W")))
   {
-    if ((AdrArgCnt == 2) && (*pStartArg->Str != '\0')) WrError(ErrNum_InvAddrMode);
+    if ((AdrArgCnt == 2) && !IsZeroOrEmpty(pStartArg)) WrError(ErrNum_InvAddrMode);
     else if (ChkMinCPUExt(CPU6309, ErrNum_AddrModeNotSupported))
     {
       AdrCnt = 1;
@@ -344,7 +298,7 @@ static void DecodeAdr(int ArgStartIdx, int ArgEndIdx)
     temp[1] = '\0';
     if (CodeReg(temp, &EReg))
     {
-      if ((AdrArgCnt == 2) && (*pStartArg->Str != '\0')) WrError(ErrNum_InvAddrMode);
+      if ((AdrArgCnt == 2) && !IsZeroOrEmpty(pStartArg)) WrError(ErrNum_InvAddrMode);
       else
       {
         AdrCnt = 1;
@@ -361,7 +315,7 @@ static void DecodeAdr(int ArgStartIdx, int ArgEndIdx)
     temp[1] = '\0';
     if (CodeReg(temp, &EReg))
     {
-      if ((AdrArgCnt == 2) && (*pStartArg->Str != '\0')) WrError(ErrNum_InvAddrMode);
+      if ((AdrArgCnt == 2) && !IsZeroOrEmpty(pStartArg)) WrError(ErrNum_InvAddrMode);
       else
       {
         AdrCnt = 1;
@@ -374,7 +328,7 @@ static void DecodeAdr(int ArgStartIdx, int ArgEndIdx)
 
   if ((AdrArgCnt >= 1) && (AdrArgCnt <= 2) && (!strcasecmp(pEndArg->Str, "W++")))
   {
-    if ((AdrArgCnt == 2) && (*pStartArg->Str != '\0')) WrError(ErrNum_InvAddrMode);
+    if ((AdrArgCnt == 2) && !IsZeroOrEmpty(pStartArg)) WrError(ErrNum_InvAddrMode);
     else if (ChkMinCPUExt(CPU6309, ErrNum_AddrModeNotSupported))
     {
       AdrCnt = 1;
@@ -666,7 +620,7 @@ static Boolean CodeCPUReg(char *Asc, Byte *Erg)
   unsigned z;
   String Asc_N;
 
-  strmaxcpy(Asc_N, Asc, 255); NLS_UpString(Asc_N); Asc = Asc_N;
+  strmaxcpy(Asc_N, Asc, STRINGSIZE); NLS_UpString(Asc_N); Asc = Asc_N;
 
   for (z = 0; z < RegCnt; z++)
     if (!strcmp(Asc, RegNames[z]))

@@ -4,41 +4,7 @@
 /*                                                                           */
 /* Codegenerator NEC uPD78(C)1x                                              */
 /*                                                                           */
-/* Historie: 29.12.1996 Grundsteinlegung                                     */
-/*            2. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*           24.10.2000 fixed some errors (MOV A<>mem/DCRW/ETMM/PUSH V/POP V)*/
-/*           25.10.2000 accesses wrong argument for mov nnn,a                */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code78c10.c,v 1.9 2016/10/22 17:54:20 alfred Exp $                   */
-/*****************************************************************************
- * $Log: code78c10.c,v $
- * Revision 1.9  2016/10/22 17:54:20  alfred
- * - add some alternate notations for 78C1x indirect addressing
- *
- * Revision 1.8  2014/11/05 15:47:15  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.7  2014/08/17 20:02:44  alfred
- * - rework to current style
- *
- * Revision 1.6  2014/03/08 21:06:36  alfred
- * - rework ASSUME framework
- *
- * Revision 1.5  2007/11/26 19:28:34  alfred
- * - change SKINT -> SKNIT
- *
- * Revision 1.4  2007/11/24 22:48:05  alfred
- * - some NetBSD changes
- *
- * Revision 1.3  2005/09/08 17:31:04  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 11:33:01  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -865,37 +831,41 @@ static void DecodeEADD_ESUB(Word Code)
   }
 }
 
-static void DecodeJR_JRE(Word IsJRE)
+static void DecodeJ_JR_JRE(Word Type)
 {
-  if (ChkArgCnt(1, 1))
-  {
-    Boolean OK;
-    Integer AdrInt;
+  Boolean OK;
+  Integer AdrInt;
 
-    AdrInt = EvalStrIntExpression(&ArgStr[1], Int16, &OK) - (EProgCounter() + 1 + IsJRE);
-    if (OK)
-    {
-      if (!IsJRE)
-      {
-        if ((!SymbolQuestionable) && ((AdrInt < -32) || (AdrInt > 31))) WrError(ErrNum_JmpDistTooBig);
-        else
-        {
-          CodeLen = 1;
-          BAsmCode[0] = 0xc0 + (AdrInt & 0x3f);
-        }
-      }
+  if (!ChkArgCnt(1, 1))
+    return;
+
+  AdrInt = EvalStrIntExpression(&ArgStr[1], Int16, &OK) - (EProgCounter() + 1);
+  if (!OK)
+    return;
+
+  if (!Type) /* generic J */
+    Type = RangeCheck(AdrInt, SInt6) ? 1 : 2;
+
+  switch (Type)
+  {
+    case 1: /* JR */
+      if (!SymbolQuestionable && !RangeCheck(AdrInt, SInt6)) WrError(ErrNum_JmpDistTooBig);
       else
       {
-        if ((!SymbolQuestionable) && ((AdrInt < -256) || (AdrInt > 255))) WrError(ErrNum_JmpDistTooBig);
-        else
-        {
-          if ((AdrInt >= -32) && (AdrInt <= 31)) WrError(ErrNum_ShortJumpPossible);
-          CodeLen = 2;
-          BAsmCode[0] = 0x4e + (Hi(AdrInt) & 1);
-          BAsmCode[1] = Lo(AdrInt);
-        }
+        CodeLen = 1;
+        BAsmCode[0] = 0xc0 + (AdrInt & 0x3f);
       }
-    }
+      break;
+    case 2:
+      AdrInt--; /* JRE is 2 bytes long */
+      if (!SymbolQuestionable && !RangeCheck(AdrInt, SInt9)) WrError(ErrNum_JmpDistTooBig);
+      else
+      {
+        CodeLen = 2;
+        BAsmCode[0] = 0x4e + (Hi(AdrInt) & 1);
+        BAsmCode[1] = Lo(AdrInt);
+      }
+      break;
   }
 }
 
@@ -1064,8 +1034,9 @@ static void InitFields(void)
   AddInstTable(InstTable, "INX", 0, DecodeDCX_INX);
   AddInstTable(InstTable, "EADD", 0x40, DecodeEADD_ESUB);
   AddInstTable(InstTable, "ESUB", 0x60, DecodeEADD_ESUB);
-  AddInstTable(InstTable, "JR", 0, DecodeJR_JRE);
-  AddInstTable(InstTable, "JRE", 1, DecodeJR_JRE);
+  AddInstTable(InstTable, "JR", 1, DecodeJ_JR_JRE);
+  AddInstTable(InstTable, "JRE", 2, DecodeJ_JR_JRE);
+  AddInstTable(InstTable, "J", 0, DecodeJ_JR_JRE);
   AddInstTable(InstTable, "CALF", 0, DecodeCALF);
   AddInstTable(InstTable, "CALT", 0, DecodeCALT);
   AddInstTable(InstTable, "BIT", 0, DecodeBIT);

@@ -4,91 +4,7 @@
 /*                                                                           */
 /* global benutzte Variablen                                                 */
 /*                                                                           */
-/* Historie:  4. 5.1996 Grundsteinlegung                                     */
-/*           24. 6.1998 Zeichenuebersetzungstabellen                         */
-/*           25. 7.1998 PassNo --> Integer                                   */
-/*           17. 8.1998 InMacroFlag hierher verschoben                       */
-/*           18. 8.1998 RadixBase hinzugenommen                              */
-/*                      ArgStr-Feld war eins zu kurz                         */
-/*           19. 8.1998 BranchExt-Variablen                                  */
-/*           29. 8.1998 ActListGran hinzugenommen                            */
-/*           11. 9.1998 ROMDATA-Segment hinzugenommen                        */
-/*            1. 1.1999 SegLimits dazugenommen                               */
-/*                      SegInits --> LargeInt                                */
-/*            9. 1.1999 ChkPC jetzt mit Adresse als Parameter                */
-/*           18. 1.1999 PCSymbol initialisiert                               */
-/*           17. 4.1999 DefCPU hinzugenommen                                 */
-/*           30. 5.1999 OutRadixBase hinzugenommen                           */
-/*            5.11.1999 ExtendErrors von Boolean nach ShortInt               */
-/*            7. 5.2000 Packing hinzugefuegt                                 */
-/*            1. 6.2000 added NestMax                                        */
-/*            2. 7.2000 updated year in copyright                            */
-/*            1.11.2000 added RelSegs flag                                   */
-/*           24.12.2000 added NoICEMask                                      */
-/*           14. 1.2001 silenced warnings about unused parameters            */
-/*           27. 3.2001 don't use a number as default PC symbol              */
-/*           2001-09-29 add segment name for STRUCT (just to be sure...)     */
-/*           2001-10-20 added GNU error flag                                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: asmdef.c,v 1.15 2017/04/02 11:10:36 alfred Exp $                     */
-/*****************************************************************************
- * $Log: asmdef.c,v $
- * Revision 1.15  2017/04/02 11:10:36  alfred
- * - allow more fine-grained macro expansion in listing
- *
- * Revision 1.14  2016/11/25 16:29:36  alfred
- * - allow SELECT as alternative to SWITCH
- *
- * Revision 1.13  2016/11/24 22:41:46  alfred
- * - add SELECT as alternative to SWITCH
- *
- * Revision 1.12  2015/08/28 17:22:26  alfred
- * - add special handling for labels following BSR
- *
- * Revision 1.11  2014/12/01 15:14:43  alfred
- * - rework to current style
- *
- * Revision 1.10  2014/11/23 18:29:29  alfred
- * - correct buffer overflow in MomCPUName
- *
- * Revision 1.9  2014/11/06 11:22:01  alfred
- * - replace hook chain for ClearUp, document new mechanism
- *
- * Revision 1.8  2014/11/05 15:47:13  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.7  2014/06/15 09:17:08  alfred
- * - optional Memo profiling
- *
- * Revision 1.6  2014/03/08 21:06:35  alfred
- * - rework ASSUME framework
- *
- * Revision 1.5  2013/12/21 19:46:50  alfred
- * - dynamically resize code buffer
- *
- * Revision 1.4  2006/08/05 20:05:27  alfred
- * - correct allocation size
- *
- * Revision 1.3  2006/08/05 18:25:47  alfred
- * - make some arrays dynamic to save data segment space
- *
- * Revision 1.2  2004/09/20 18:43:51  alfred
- * - correct allocation size
- *
- * Revision 1.1  2003/11/06 02:49:18  alfred
- * - recreated
- *
- * Revision 1.5  2003/09/21 21:15:54  alfred
- * - fix string length
- *
- * Revision 1.4  2002/11/23 15:53:27  alfred
- * - SegLimits are unsigned now
- *
- * Revision 1.3  2002/11/17 16:09:12  alfred
- * - added DottedStructs
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -193,11 +109,10 @@ Boolean CaseSensitive;                   /* Gross/Kleinschreibung unterscheiden 
 LongInt NestMax;                         /* max. nesting level of a macro */
 Boolean GNUErrors;                       /* GNU-error-style messages ? */
 
-FILE *PrgFile;                           /* Codedatei */
+FILE *PrgFile = NULL;                    /* Codedatei */
 
 StringPtr ErrorPath, ErrorName;          /* Ausgabedatei Fehlermeldungen */
 StringPtr OutName;                       /* Name Code-Datei */
-Boolean IsErrorOpen;
 StringPtr CurrFileName;                  /* mom. bearbeitete Datei */
 LongInt MomLineCounter;                  /* Position in mom. Datei */
 LongInt CurrLine;       	         /* virtuelle Position */
@@ -230,11 +145,11 @@ DissectBitProc DissectBit;
 
 StringPtr IncludeList;	                /* Suchpfade fuer Includedateien */
 Integer IncDepth, NextIncDepth;         /* Verschachtelungstiefe INCLUDEs */
-FILE *ErrorFile;                        /* Fehlerausgabe */
-FILE *LstFile;                          /* Listdatei */
-FILE *ShareFile;                        /* Sharefile */
-FILE *MacProFile;                       /* Makroprozessorausgabe */
-FILE *MacroFile;                        /* Ausgabedatei Makroliste */
+FILE *ErrorFile = NULL;                 /* Fehlerausgabe */
+FILE *LstFile = NULL;                   /* Listdatei */
+FILE *ShareFile = NULL;                 /* Sharefile */
+FILE *MacProFile = NULL;                /* Makroprozessorausgabe */
+FILE *MacroFile = NULL;                 /* Ausgabedatei Makroliste */
 Boolean InMacroFlag;                    /* momentan wird Makro expandiert */
 StringPtr LstName;                      /* Name der Listdatei */
 StringPtr MacroName, MacProName;

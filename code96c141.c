@@ -134,7 +134,7 @@ static Byte CodeEReg(char *Asc, Byte *ErgNo, Byte *ErgSize)
   String HAsc, Asc_N;
   Byte Result;
 
-  strmaxcpy(Asc_N, Asc, 255);
+  strmaxcpy(Asc_N, Asc, STRINGSIZE);
   NLS_UpString(Asc_N);
   Asc = Asc_N;
 

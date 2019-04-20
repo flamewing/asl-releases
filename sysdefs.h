@@ -1195,7 +1195,7 @@ typedef unsigned long long Card64;
 /*===========================================================================*/
 /* Intel x86_64 platforms */
 
-#ifdef __x86_64
+#if (defined __x86_64) || (defined __x86_64__)
 
 #define ARCHPRNAME "x86_64"
 

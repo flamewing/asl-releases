@@ -47,7 +47,7 @@ extern void WrCopyRight(const char *Msg);
 
 extern void DelSuffix(char *Name);
 
-extern void AddSuffix(char *Name, char *Suff);
+extern void AddSuffix(char *Name, unsigned NameSize, char *Suff);
 
 extern void FormatError(const char *Name, const char *Detail);
 

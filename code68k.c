@@ -356,7 +356,7 @@ static Boolean DecodeCtrlReg(char *Asc, Word *Erg)
   String Asc_N;
   const tCtReg *pReg;
 
-  strmaxcpy(Asc_N, Asc, 255);
+  strmaxcpy(Asc_N, Asc, STRINGSIZE);
   NLS_UpString(Asc_N);
   Asc = Asc_N;
 
@@ -1654,7 +1654,7 @@ static Boolean DecodeRegList(const char *Asc_o, Word *Erg)
   String Asc;
 
   *Erg = 0;
-  strmaxcpy(Asc, Asc_o, 255);
+  strmaxcpy(Asc, Asc_o, STRINGSIZE);
   pAsc = Asc;
   do
   {
@@ -3836,7 +3836,7 @@ static void DecodeFRegList(char *Asc_o, Byte *Typ, Byte *Erg)
   Byte h2, h3, z;
   char *h1;
 
-  strmaxcpy(Asc, Asc_o, 255);
+  strmaxcpy(Asc, Asc_o, STRINGSIZE);
   *Typ = 0;
   if (*Asc == '\0')
     return;

@@ -4,32 +4,7 @@
 /*                                                                           */
 /* Abhandlung landesspezifischer Unterschiede                                */
 /*                                                                           */
-/* Historie: 16. 5.1996 Grundsteinlegung                                     */
-/*           28. 7.1999 %T ist Abkuerzung fuer %H:%M:%S                      */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: nls.c,v 1.5 2014/12/07 19:14:02 alfred Exp $                         */
-/*****************************************************************************
- * $Log: nls.c,v $
- * Revision 1.5  2014/12/07 19:14:02  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.4  2014/12/03 20:42:45  alfred
- * - adapt to current style
- *
- * Revision 1.3  2013/12/17 18:17:19  alfred
- * - add missing break statement
- *
- * Revision 1.2  2010/08/27 14:52:43  alfred
- * - some more overlapping strcpy() cleanups
- *
- * Revision 1.1  2003/11/06 02:49:24  alfred
- * - recreated
- *
- * Revision 1.2  2002/05/11 20:24:35  alfred
- * - flush stdout before printing errors
- *
- *****************************************************************************/
 
 #undef DEBUG_NLS
 
@@ -434,7 +409,7 @@ static void Locale_DateString(Word Year, Word Month, Word Day, char *Dest)
   tm.tm_hour = 0;
   tm.tm_min = 0;
   tm.tm_sec = 0;
-  strftime(Dest, 255, NLSInfo.DateFmtStr, &tm);
+  strftime(Dest, STRINGSIZE, NLSInfo.DateFmtStr, &tm);
 }
 
 static void Locale_TimeString(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest)
@@ -448,7 +423,7 @@ static void Locale_TimeString(Word Hour, Word Minute, Word Second, Word Sec100, 
   tm.tm_hour = Hour;
   tm.tm_min = Minute;
   tm.tm_sec = Second;
-  strftime(Dest, 255, NLSInfo.TimeFmtStr, &tm);
+  strftime(Dest, STRINGSIZE, NLSInfo.TimeFmtStr, &tm);
 }
 
 static void QueryInfo(void)

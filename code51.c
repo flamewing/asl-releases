@@ -4,77 +4,7 @@
 /*                                                                           */
 /* Codegenerator fuer MCS-51/252 Prozessoren                                 */
 /*                                                                           */
-/* Historie:  5. 6.1996 Grundsteinlegung                                     */
-/*            9. 8.1998 kurze 8051-Bitadressen wurden im 80251-Sourcemodus   */
-/*                      immer lang gemacht                                   */
-/*           24. 8.1998 Kodierung fuer MOV dir8,Rm war falsch (Fehler im     */
-/*                      Manual!)                                             */
-/*            2. 1.1998 ChkPC-Routine entfernt                               */
-/*           19. 1.1999 Angefangen, Relocs zu uebertragen                    */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*           30.10.2000 started adding immediate relocs                      */
-/*            7. 1.2001 silenced warnings about unused parameters            */
-/*           2002-01-23 symbols defined with BIT must not be macro-local     */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code51.c,v 1.15 2016/01/30 17:15:01 alfred Exp $                     */
-/*****************************************************************************
- * $Log: code51.c,v $
- * Revision 1.15  2016/01/30 17:15:01  alfred
- * - allow register symbols on MCS-(2)51
- *
- * Revision 1.14  2014/12/14 17:58:47  alfred
- * - remove static variables in strutil.c
- *
- * Revision 1.13  2014/12/07 19:13:59  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.12  2014/12/05 11:58:15  alfred
- * - collapse STDC queries into one file
- *
- * Revision 1.11  2014/12/01 18:29:39  alfred
- * - replace Nil -> NULL
- *
- * Revision 1.10  2014/11/16 13:15:07  alfred
- * - remove some superfluous semicolons
- *
- * Revision 1.9  2014/11/08 17:47:31  alfred
- * - adapt to new style
- *
- * Revision 1.8  2014/11/05 15:47:14  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.7  2010/04/17 13:14:20  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.6  2007/11/24 22:48:04  alfred
- * - some NetBSD changes
- *
- * Revision 1.5  2006/02/27 20:21:17  alfred
- * - correct bit range for RAM bit areas
- *
- * Revision 1.4  2005/10/02 10:00:44  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.3  2005/09/08 16:53:41  alfred
- * - use common PInstTable
- *
- * Revision 1.2  2004/05/29 11:33:00  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- * Revision 1.1  2003/11/06 02:49:20  alfred
- * - recreated
- *
- * Revision 1.4  2003/06/22 13:14:43  alfred
- * - added 80251T
- *
- * Revision 1.3  2002/05/31 19:19:17  alfred
- * - added DS80C390 instruction variations
- *
- * Revision 1.2  2002/03/10 11:55:12  alfred
- * - do not issue futher error messages after failed address evaluation
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -1326,7 +1256,7 @@ static void DecodeMOVX(Word Index)
     {
       z = 0x10;
       strcpy(ArgStr[2].Str, ArgStr[1].Str);
-      strmaxcpy(ArgStr[1].Str, "A", 255);
+      strmaxcpy(ArgStr[1].Str, "A", STRINGSIZE);
     }
     if ((strcasecmp(ArgStr[1].Str, "A")) && ((MomCPU < CPU80251) || (!strcasecmp(ArgStr[2].Str, "R11")))) WrError(ErrNum_InvAddrMode);
     else if (!strcasecmp(ArgStr[2].Str, "@DPTR"))

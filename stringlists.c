@@ -132,7 +132,7 @@ char *GetAndCutStringList(StringList *List)
   {
     Hilf = (*List);
     *List = (*List)->Next;
-    strmaxcpy(Result, Hilf->Content, 255);
+    strmaxcpy(Result, Hilf->Content, STRINGSIZE);
     free(Hilf->Content);
     free(Hilf);
   }

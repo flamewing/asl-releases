@@ -4,9 +4,6 @@
 /*                                                                           */
 /* Emulation einiger Borland-Pascal-Funktionen                               */
 /*                                                                           */
-/* Historie: 20. 5.1996 Grundsteinlegung                                     */
-/*           2001-04-13 Win32 fixes                                          */
-/*                                                                           */
 /*****************************************************************************/
 
 #include "stdinc.h"
@@ -40,7 +37,7 @@ char *FExpand(char *Src)
 #endif /* DRSEP */
   char *p, *p2;
 
-  strmaxcpy(Copy, Src, 255);
+  strmaxcpy(Copy, Src, STRINGSIZE);
 
 #ifdef DRSEP
   p = strchr(Copy,DRSEP);
@@ -96,28 +93,28 @@ char *FExpand(char *Src)
     }
     else
       DrvNum = toupper(*DrvPart) - '@';
-    _getdcwd(DrvNum, CurrentDir, 255);
+    _getdcwd(DrvNum, CurrentDir, STRINGSIZE);
     if (CurrentDir[1] == ':')
       strmov(CurrentDir, CurrentDir + 2);
   }
 #elif (defined _WIN32) /* CygWIN */
-  if (!getcwd(CurrentDir, 255))
+  if (!getcwd(CurrentDir, STRINGSIZE))
     0[CurrentDir] = '\0';
   for (p = CurrentDir; *p; p++)
     if (*p == '/') *p = '\\';
 #else /* UNIX */
-  if (!getcwd(CurrentDir, 255))
+  if (!getcwd(CurrentDir, STRINGSIZE))
     0[CurrentDir] = '\0';
 #endif
 
   if ((*CurrentDir) && (CurrentDir[strlen(CurrentDir) - 1] != PATHSEP))
-    strmaxcat(CurrentDir, SPATHSEP, 255);
+    strmaxcat(CurrentDir, SPATHSEP, STRINGSIZE);
   if (*CurrentDir!=PATHSEP)
-    strmaxprep(CurrentDir, SPATHSEP, 255);
+    strmaxprep(CurrentDir, SPATHSEP, STRINGSIZE);
 
   if (*Copy == PATHSEP) 
   {
-    strmaxcpy(CurrentDir, SPATHSEP, 255);
+    strmaxcpy(CurrentDir, SPATHSEP, STRINGSIZE);
     strmov(Copy, Copy + 1);
   }
 
@@ -128,8 +125,8 @@ char *FExpand(char *Src)
   if (*DrvPart)
 #endif
   {
-    strmaxprep(CurrentDir, SDRSEP, 255);
-    strmaxprep(CurrentDir, DrvPart, 255);
+    strmaxprep(CurrentDir, SDRSEP, STRINGSIZE);
+    strmaxprep(CurrentDir, DrvPart, STRINGSIZE);
   }
 #endif
 
@@ -147,13 +144,13 @@ char *FExpand(char *Src)
     }
     else
     {
-      strmaxcat(CurrentDir, Copy, 255);
-      strmaxcat(CurrentDir, SPATHSEP, 255);
+      strmaxcat(CurrentDir, Copy, STRINGSIZE);
+      strmaxcat(CurrentDir, SPATHSEP, STRINGSIZE);
     }
     strmov(Copy, p + 1);
   }
 
-  strmaxcat(CurrentDir, Copy, 255);
+  strmaxcat(CurrentDir, Copy, STRINGSIZE);
 
   return CurrentDir; 
 }
@@ -170,7 +167,7 @@ char *FSearch(const char *File, char *Path)
   if (OK)
   {
     fclose(Dummy);
-    strmaxcpy(Component, File, 255);
+    strmaxcpy(Component, File, STRINGSIZE);
     return Component;
   }
 
@@ -185,12 +182,12 @@ char *FSearch(const char *File, char *Path)
       Save = *p;
       *p = '\0';
     }
-    strmaxcpy(Component, start, 255);
+    strmaxcpy(Component, start, STRINGSIZE);
 #ifdef __CYGWIN32__
     DeCygwinPath(Component);
 #endif
-    strmaxcat(Component, SPATHSEP, 255);
-    strmaxcat(Component, File, 255);
+    strmaxcat(Component, SPATHSEP, STRINGSIZE);
+    strmaxcat(Component, File, STRINGSIZE);
     if (p)
       *p = Save;
     Dummy = fopen(Component, "r");
@@ -290,7 +287,7 @@ Boolean DirScan(char *Mask, charcallback callback)
   }
   return True;
 #else
-  strmaxcpy(Name, Mask, 255);
+  strmaxcpy(Name, Mask, sizeof(Name));
   callback(Name);
   return True;
 #endif

@@ -4,60 +4,7 @@
 /*                                                                           */
 /* Konvertierung von AS-P-Dateien nach Hex                                   */
 /*                                                                           */
-/* Historie:  1. 6.1996 Grundsteinlegung                                     */
-/*           29. 8.1998 HeadIds verwendet fuer Default-Hex-Format            */
-/*           30. 5.1999 0x statt $ erlaubt                                   */
-/*            6. 7.1999 minimal S-Record-Adresslaenge setzbar                */
-/*                      Fehlerabfrage in CMD_Linelen war falsch              */
-/*           12.10.1999 Startadresse 16-Bit-Hex geaendert                    */
-/*           13.10.1999 Startadressen 20+32 Bit Intel korrigiert             */
-/*           24.10.1999 Relokation von Adressen (Thomas Eschenbach)          */
-/*           16.11.1999 CS:IP-Intel-Record korrigiert                        */
-/*            9. 1.2000 plattformabhaengige Formatstrings benutzen           */
-/*           24. 3.2000 added symbolic string for byte message               */
-/*            4. 7.2000 renamed ParProcessed to ParUnprocessed               */
-/*           14. 1.2001 silenced warnings about unused parameters            */
-/*           30. 5.2001 added avrlen parameter                               */
-/*           2001-08-30 set EntryAddrPresent when address given as argument  */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: p2hex.c,v 1.15 2017/06/28 16:41:46 alfred Exp $                       */
-/*****************************************************************************
- * $Log: p2hex.c,v $
- * Revision 1.15  2017/06/28 16:41:46  alfred
- * - rework Occured flags
- *
- * Revision 1.14  2017/02/26 16:35:16  alfred
- * - support Mico8 hex format
- *
- * Revision 1.13  2014/12/05 11:58:16  alfred
- * - collapse STDC queries into one file
- *
- * Revision 1.12  2014/12/05 07:41:18  alfred
- * - rework to current style
- *
- * Revision 1.11  2014/06/14 08:51:19  alfred
- * - put entry address for Intel8 into end record
- *
- * Revision 1.10  2014/05/29 10:59:05  alfred
- * - some const cleanups
- *
- * Revision 1.9  2012-08-19 09:37:51  alfred
- * - silence compiler warnings about printf without arguments
- *
- * Revision 1.8  2009/04/13 07:55:57  alfred
- * - silence Borland C++ warnings
- *
- * Revision 1.7  2007/11/24 22:48:08  alfred
- * - some NetBSD changes
- *
- * Revision 1.6  2006/12/19 17:26:42  alfred
- * - correctly regard IntOffset with granularities != 1
- *
- * Revision 1.5  2006/12/09 18:27:30  alfred
- * - add warning about empty output
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -643,11 +590,11 @@ static void ProcessGroup(char *GroupName_O, ProcessProc Processor)
   String Ext, GroupName;
 
   CurrProcessor = Processor;
-  strmaxcpy(GroupName, GroupName_O, 255);
-  strmaxcpy(Ext, GroupName, 255);
+  strmaxcpy(GroupName, GroupName_O, STRINGSIZE);
+  strmaxcpy(Ext, GroupName, STRINGSIZE);
   if (!RemoveOffset(GroupName, &CurrOffset))
     ParamError(False, Ext);
-  AddSuffix(GroupName, getmessage(Num_Suffix));
+  AddSuffix(GroupName, STRINGSIZE, getmessage(Num_Suffix));
 
   if (!DirScan(GroupName, Callback))
     fprintf(stderr, "%s%s%s\n", getmessage(Num_ErrMsgNullMaskA), GroupName, getmessage(Num_ErrMsgNullMaskB));
@@ -851,7 +798,7 @@ static CMDResult CMD_DestFormat(Boolean Negate, const char *pArg)
   unsigned z;
   String Arg;
 
-  strmaxcpy(Arg, pArg, 255);
+  strmaxcpy(Arg, pArg, STRINGSIZE);
   NLS_UpString(Arg);
 
   z = 0;
@@ -1101,16 +1048,16 @@ int main(int argc, char **argv)
   z = ParamCount;
   while ((z > 0) && (!ParUnprocessed[z]))
     z--;
-  strmaxcpy(TargName, ParamStr[z], 255);
+  strmaxcpy(TargName, ParamStr[z], STRINGSIZE);
   if (!RemoveOffset(TargName, &Dummy))
     ParamError(False, ParamStr[z]);
   ParUnprocessed[z] = False;
   if (ProcessedEmpty(ParUnprocessed))
   {
-    strmaxcpy(SrcName, ParamStr[z], 255);
+    strmaxcpy(SrcName, ParamStr[z], STRINGSIZE);
     DelSuffix(TargName);
   }
-  AddSuffix(TargName, HexSuffix);
+  AddSuffix(TargName, STRINGSIZE, HexSuffix);
 
   if (StartAuto || StopAuto)
   {

@@ -4,201 +4,7 @@
 /*                                                                           */
 /* Verwaltung von Symbolen und das ganze Drumherum...                        */
 /*                                                                           */
-/* Historie:  5. 5.1996 Grundsteinlegung                                     */
-/*            4. 1.1997 Umstellung wg. case-sensitiv                         */
-/*           24. 9.1997 Registersymbole                                      */
-/*           26. 6.1998 Codepages                                            */
-/*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
-/*           17. 7.1998 Korrektur Maskentabellen                             */
-/*           16. 8.1998 NoICE-Symbolausgabe                                  */
-/*           18. 8.1998 Benutzung RadixBase                                  */
-/*           19. 8.1998 == als Alias fuer = - Operator                       */
-/*            1. 9.1998 RefList nicht initialisiert bei Symbolen             */
-/*                      ACOT korrigiert                                      */
-/*            6.12.1998 UInt14                                               */
-/*           30. 1.1999 Formate maschinenunabhaengig gemacht                 */
-/*           12. 2.1999 Compilerwarnungen beseitigt                          */
-/*           17. 4.1999 Abfrage auf PCSymbol gegen Nullzeigerzugriff ge-     */
-/*                      schuetzt.                                            */
-/*           30. 5.1999 OutRadixBase beruecksichtigt                         */
-/*           12. 7.1999 angefangen mit externen Symbolen                     */
-/*           14. 7.1999 Relocs im Parser beruecksichtigt                     */
-/*            1. 8.1999 Relocs im Formelparser durch                         */
-/*            8. 8.1999 Relocs in EvalIntExpression beruecksichtigt          */
-/*            8. 3.2000 'ambigious else'-Warnungen beseitigt                 */
-/*           21. 5.2000 added TmpSymCounter                                  */
-/*            1. 6.2000 dump symbols explicitly as hex for NoICE             */
-/*           26. 6.2000 GetIntSymbol sets FirstPassUnknown                   */
-/*           14. 1.2001 silenced warnings about unused parameters            */
-/*           25. 5.2001 added UInt21                                         */
-/*            3. 8.2001 added SInt6                                          */
-/*           2001-10-04 better check for ASCII-like integer consts           */
-/*           2001-10-20 added UInt23                                         */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: asmpars.c,v 1.37 2017/04/02 11:10:36 alfred Exp $                     */
-/*****************************************************************************
- * $Log: asmpars.c,v $
- * Revision 1.37  2017/04/02 11:10:36  alfred
- * - allow more fine-grained macro expansion in listing
- *
- * Revision 1.36  2017/02/26 16:57:48  alfred
- * - make some arguments const
- *
- * Revision 1.35  2016/10/07 20:03:03  alfred
- * - make some arguments const
- *
- * Revision 1.34  2016/09/29 16:43:36  alfred
- * - introduce common DecodeDATA/DecodeRES functions
- *
- * Revision 1.33  2016/08/17 21:26:45  alfred
- * - fix some errors and warnings detected by clang
- *
- * Revision 1.32  2015/10/25 20:47:18  alfred
- * - correct two-column printout indentation of symbol list
- *
- * Revision 1.31  2015/08/28 17:22:26  alfred
- * - add special handling for labels following BSR
- *
- * Revision 1.30  2015/07/05 17:23:39  alfred
- * - disallow float constants starting with 0x
- *
- * Revision 1.29  2014/12/14 17:58:46  alfred
- * - remove static variables in strutil.c
- *
- * Revision 1.28  2014/12/07 19:13:58  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.27  2014/12/05 11:09:10  alfred
- * - eliminate Nil
- *
- * Revision 1.26  2014/12/03 19:01:00  alfred
- * - remove static return value
- *
- * Revision 1.25  2014/11/30 10:09:54  alfred
- * - rework to current style
- *
- * Revision 1.24  2014/04/15 05:57:03  alfred
- * - remove overlapping strcpy() when parsing function arguments
- *
- * Revision 1.23  2014/03/08 21:06:35  alfred
- * - rework ASSUME framework
- *
- * Revision 1.22  2014/03/08 17:26:14  alfred
- * - print out declaration position for unresolved forwards
- *
- * Revision 1.21  2013/12/21 19:46:51  alfred
- * - dynamically resize code buffer
- *
- * Revision 1.20  2013-03-09 16:15:08  alfred
- * - add NEC 75xx
- *
- * Revision 1.19  2010/04/17 13:14:19  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.18  2010/03/07 11:16:53  alfred
- * - allow DC.(float) on string operands
- *
- * Revision 1.17  2009/06/07 09:32:25  alfred
- * - add named temporary symbols
- *
- * Revision 1.16  2009/04/10 08:58:30  alfred
- * - correct address ranges for AVRs
- *
- * Revision 1.15  2008/11/23 10:39:15  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.14  2008/10/21 16:33:04  alfred
- * - added charfromstr() function
- *
- * Revision 1.13  2007/11/24 22:48:02  alfred
- * - some NetBSD changes
- *
- * Revision 1.12  2007/09/24 17:39:02  alfred
- * - correct handling of '-' operator
- *
- * Revision 1.11  2007/04/30 18:37:51  alfred
- * - add weird integer coding
- *
- * Revision 1.10  2006/10/10 10:41:41  alfred
- * - free up space in data segment
- *
- * Revision 1.9  2005/12/13 19:28:37  alfred
- * - correct format strings for 16-bit platforms
- *
- * Revision 1.8  2005/10/30 13:24:28  alfred
- * - allow strings as int constants
- *
- * Revision 1.7  2005/10/02 10:00:43  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.6  2004/05/31 12:47:40  alfred
- * - clean up operator handling
- *
- * Revision 1.5  2004/05/30 20:51:42  alfred
- * - major cleanups in Const... functions
- *
- * Revision 1.4  2004/05/28 16:12:07  alfred
- * - added some const definitions
- *
- * Revision 1.3  2004/01/17 16:18:38  alfred
- * - fix some more GCC 3.3 quarrel
- *
- * Revision 1.2  2004/01/17 16:12:49  alfred
- * - some quirks for GCC 3.3
- *
- * Revision 1.1  2003/11/06 02:49:18  alfred
- * - recreated
- *
- * Revision 1.17  2003/10/04 15:38:46  alfred
- * - differentiate constant/variable messages
- *
- * Revision 1.16  2003/05/20 17:45:02  alfred
- * - StrSym with length spec
- *
- * Revision 1.15  2003/05/02 21:23:08  alfred
- * - strlen() updates
- *
- * Revision 1.14  2003/02/26 19:18:25  alfred
- * - add/use EvalIntDisplacement()
- *
- * Revision 1.13  2003/02/02 12:15:21  alfred
- * - added exptype() function
- *
- * Revision 1.12  2002/11/10 15:08:34  alfred
- * - use tree functions
- *
- * Revision 1.11  2002/11/10 09:43:07  alfred
- * - relocated symbol node type
- *
- * Revision 1.10  2002/11/04 19:04:26  alfred
- * - prevent modification of constants with SET
- *
- * Revision 1.9  2002/10/10 17:11:33  alfred
- * - repaired $$ temp symbols
- *
- * Revision 1.8  2002/10/07 20:25:01  alfred
- * - added '/' nameless temporary symbols
- *
- * Revision 1.7  2002/09/29 17:05:40  alfred
- * - ass +/- temporary symbols
- *
- * Revision 1.6  2002/05/25 21:15:20  alfred
- * - Fix array definition
- *
- * Revision 1.5  2002/05/19 13:44:52  alfred
- * - added ClearSectionUsage()
- *
- * Revision 1.4  2002/05/18 16:10:14  alfred
- * - optimize search via Find(Loc)Node
- *
- * Revision 1.3  2002/05/13 18:14:09  alfred
- * - use error msg 2010
- *
- * Revision 1.2  2002/03/10 11:55:42  alfred
- * - state which operand type was expected/got
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -581,7 +387,7 @@ Boolean ExpandSymbol(char *Name)
     p1 = strchr(Name, '{');
     if (!p1)
       return True;
-    strmaxcpy(h, p1 + 1, 255);
+    strmaxcpy(h, p1 + 1, STRINGSIZE);
     p2 = QuotPos(h, '}');
     if (!p2)
     {
@@ -600,7 +406,7 @@ Boolean ExpandSymbol(char *Name)
     }
     if (!CaseSensitive)
       UpString(h);
-    strmaxins(Name, h, p1 - Name, 255);
+    strmaxins(Name, h, p1 - Name, STRINGSIZE);
   }
   while (p1);
   return True;
@@ -768,15 +574,15 @@ static Boolean ChkTmp3(char *Name, Boolean Define)
   {
     String Tmp;
 
-    strmaxcpy(Tmp, LastGlobSymbol, 255);
-    strmaxcat(Tmp, Name, 255);
-    strmaxcpy(Name, Tmp, 255);
+    strmaxcpy(Tmp, LastGlobSymbol, STRINGSIZE);
+    strmaxcat(Tmp, Name, STRINGSIZE);
+    strmaxcpy(Name, Tmp, STRINGSIZE);
 
     Result = TRUE;
   }
   else if (Define)
   {
-    strmaxcpy(LastGlobSymbol, Name, 255);
+    strmaxcpy(LastGlobSymbol, Name, STRINGSIZE);
   }
 
   return Result;
@@ -880,7 +686,7 @@ static Boolean GetSymSection(char *Name, LongInt *Erg)
   }
 
   Name[l - 1] = '\0';
-  strmaxcpy(Part, q + 1, 255);
+  strmaxcpy(Part, q + 1, STRINGSIZE);
   *q = '\0';
 
   return IdentifySection(Part, Erg);
@@ -1342,7 +1148,7 @@ const char *Name, TempType SearchType
 );
 
 /*****************************************************************************
- * Function:    EvalExpression
+ * Function:    EvalStrExpression
  * Purpose:     evaluate expression
  * Result:      implicitly in pErg
  *****************************************************************************/
@@ -1665,6 +1471,7 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
 
     StrCompSplitRef(&FName, &FArg, &CopyComp, KlPos);
     StrCompShorten(&FArg, 1);
+    KillPostBlanksStrComp(&FName);
 
     /* Nullfunktion: nur Argument */
 
@@ -1684,7 +1491,7 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
       tStrComp CompArg;
 
       StrCompMkTemp(&CompArg, CompArgStr);
-      strmaxcpy(CompArg.Str, ValFunc->Definition, 255);
+      strmaxcpy(CompArg.Str, ValFunc->Definition, STRINGSIZE);
       for (z1 = 1; z1 <= ValFunc->ArguCnt; z1++)
       {
         if (!*FArg.Str)
@@ -1710,10 +1517,10 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
         else
           StrCompReset(&FArg);
 
-        strmaxcpy(stemp, "(", 255);
-        if (TempResultToPlainString(stemp + 1, &InVals[0], 253))
+        strmaxcpy(stemp, "(", STRINGSIZE);
+        if (TempResultToPlainString(stemp + 1, &InVals[0], STRINGSIZE - 1))
           LEAVE;
-        strmaxcat(stemp,")", 255);
+        strmaxcat(stemp,")", STRINGSIZE);
         ExpandLine(stemp, z1, CompArg.Str, sizeof(CompArgStr));
       }
       if (*FArg.Str)
@@ -2123,7 +1930,7 @@ void EvalStrStringExpression(const tStrComp *pExpr, Boolean *pResult, char *pEva
   }
   else
   {
-    DynString2CString(pEvalResult, &t.Contents.Ascii, 255);
+    DynString2CString(pEvalResult, &t.Contents.Ascii, STRINGSIZE);
     *pResult = True;
   }
 }
@@ -2193,12 +2000,12 @@ static Boolean SymbolAdder(PTree *PDest, PTree Neu, void *pData)
 
   if (((*Node)->Defined) && (!(*Node)->Changeable) && (!EnterStruct->MayChange))
   {
-    strmaxcpy(serr, (*Node)->Tree.Name, 255);
+    strmaxcpy(serr, (*Node)->Tree.Name, STRINGSIZE);
     if (EnterStruct->DoCross)
     {
       sprintf(snum, ",%s %s:%ld", getmessage(Num_PrevDefMsg),
               GetFileName((*Node)->FileNum), (long)((*Node)->LineNum));
-      strmaxcat(serr, snum, 255);
+      strmaxcat(serr, snum, STRINGSIZE);
     }
     WrXError(ErrNum_DoubleDef, serr);
     FreeSymbolEntry(&NewEntry, TRUE);
@@ -2209,12 +2016,12 @@ static Boolean SymbolAdder(PTree *PDest, PTree Neu, void *pData)
 
   else if ( ((*Node)->Defined) && (EnterStruct->MayChange != (*Node)->Changeable) )
   {
-    strmaxcpy(serr, (*Node)->Tree.Name, 255);
+    strmaxcpy(serr, (*Node)->Tree.Name, STRINGSIZE);
     if (EnterStruct->DoCross)
     {
       sprintf(snum, ",%s %s:%ld", getmessage(Num_PrevDefMsg),
               GetFileName((*Node)->FileNum), (long)((*Node)->LineNum));
-      strmaxcat(serr, snum, 255);
+      strmaxcat(serr, snum, STRINGSIZE);
     }
     WrXError((*Node)->Changeable ? 2035 : 2030, serr);
     FreeSymbolEntry(&NewEntry, TRUE);
@@ -2239,12 +2046,12 @@ static Boolean SymbolAdder(PTree *PDest, PTree Neu, void *pData)
          Repass = True;
          if ((MsgIfRepass) && (PassNo >= PassNoForMessage))
          {
-           strmaxcpy(serr, Neu->Name, 255);
+           strmaxcpy(serr, Neu->Name, STRINGSIZE);
            if (Neu->Attribute != -1)
            {
-             strmaxcat(serr, "[", 255);
-             strmaxcat(serr, GetSectionName(Neu->Attribute), 255);
-             strmaxcat(serr, "]", 255);
+             strmaxcat(serr, "[", STRINGSIZE);
+             strmaxcat(serr, GetSectionName(Neu->Attribute), STRINGSIZE);
+             strmaxcat(serr, "]", STRINGSIZE);
            }
            WrXError(ErrNum_PhaseErr, serr);
          }
@@ -2328,13 +2135,13 @@ static void EnterSymbol(PSymbolEntry Neu, Boolean MayChange, LongInt ResHandle)
       Neu->Tree.Attribute = Lauf->DestSection;
     if (SearchErg == 3)
     {
-      strmaxcpy(CombName, Neu->Tree.Name, 255);
+      strmaxcpy(CombName, Neu->Tree.Name, STRINGSIZE);
       RunSect = SectionStack;
       MSect = MomSectionHandle;
       while ((MSect != Lauf->DestSection) && (RunSect))
       {
-        strmaxprep(CombName, "_", 255);
-        strmaxprep(CombName, GetSectionName(MSect), 255);
+        strmaxprep(CombName, "_", STRINGSIZE);
+        strmaxprep(CombName, GetSectionName(MSect), STRINGSIZE);
         MSect = RunSect->Handle;
         RunSect = RunSect->Next;
       }
@@ -2380,7 +2187,7 @@ void EnterIntSymbolWithFlags(const char *Name_O, LargeInt Wert, Byte Typ, Boolea
   LongInt DestHandle;
   String Name;
 
-  strmaxcpy(Name, Name_O, 255);
+  strmaxcpy(Name, Name_O, STRINGSIZE);
   if (!ExpandSymbol(Name))
     return;
   if (!GetSymSection(Name, &DestHandle))
@@ -2418,7 +2225,7 @@ void EnterExtSymbol(const char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChan
   LongInt DestHandle;
   String Name;
 
-  strmaxcpy(Name, Name_O, 255);
+  strmaxcpy(Name, Name_O, STRINGSIZE);
   if (!ExpandSymbol(Name))
     return;
   if (!GetSymSection(Name, &DestHandle))
@@ -2457,7 +2264,7 @@ void EnterRelSymbol(const char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChan
   LongInt DestHandle;
   String Name;
 
-  strmaxcpy(Name, Name_O, 255);
+  strmaxcpy(Name, Name_O, STRINGSIZE);
   if (!ExpandSymbol(Name))
     return;
   if (!GetSymSection(Name, &DestHandle))
@@ -2496,7 +2303,7 @@ void EnterFloatSymbol(const char *Name_O, Double Wert, Boolean MayChange)
   LongInt DestHandle;
   String Name;
 
-  strmaxcpy(Name, Name_O, 255);
+  strmaxcpy(Name, Name_O, STRINGSIZE);
   if (!ExpandSymbol(Name))
     return;
   if (!GetSymSection(Name, &DestHandle))
@@ -2532,7 +2339,7 @@ void EnterDynStringSymbol(const char *Name_O, const tDynString *pValue, Boolean 
   LongInt DestHandle;
   String Name;
 
-  strmaxcpy(Name, Name_O, 255);
+  strmaxcpy(Name, Name_O, STRINGSIZE);
   if (!ExpandSymbol(Name))
     return;
   if (!GetSymSection(Name, &DestHandle))
@@ -2651,7 +2458,7 @@ static PSymbolEntry FindNode(const char *Name_O, TempType SearchType)
   PSymbolEntry Result = NULL;
   String Name;
 
-  strmaxcpy(Name, Name_O, 255);
+  strmaxcpy(Name, Name_O, STRINGSIZE);
   ChkTmp3(Name, FALSE);
 
   if (!GetSymSection(Name, &DestSection))
@@ -2705,7 +2512,7 @@ static PSymbolEntry FindLocNode(const char *Name_O, TempType SearchType)
   PSymbolEntry Result = NULL;
   String Name;
 
-  strmaxcpy(Name, Name_O, 255);
+  strmaxcpy(Name, Name_O, STRINGSIZE);
   ChkTmp3(Name, FALSE);
   if (!CaseSensitive)
     NLS_UpString(Name);
@@ -2752,7 +2559,7 @@ Boolean GetIntSymbol(const char *Name, LargeInt *Wert, PRelocEntry *Relocs)
   PSymbolEntry Lauf;
   String NName;
 
-  strmaxcpy(NName, Name, 255);
+  strmaxcpy(NName, Name, STRINGSIZE);
   if (!ExpandSymbol(NName))
     return False;
   Lauf = FindLocNode(NName, TempInt);
@@ -2785,7 +2592,7 @@ Boolean GetFloatSymbol(const char *Name, Double *Wert)
   PSymbolEntry Lauf;
   String NName;
 
-  strmaxcpy(NName, Name, 255);
+  strmaxcpy(NName, Name, STRINGSIZE);
   if (!ExpandSymbol(NName))
     return False;
   Lauf = FindLocNode(Name, TempFloat);
@@ -2810,7 +2617,7 @@ Boolean GetStringSymbol(const char *Name, char *Wert)
   PSymbolEntry Lauf;
   String NName;
 
-  strmaxcpy(NName, Name, 255);
+  strmaxcpy(NName, Name, STRINGSIZE);
   if (!ExpandSymbol(NName))
     return False;
   Lauf = FindLocNode(NName, TempString);
@@ -2841,7 +2648,7 @@ void SetSymbolOrStructElemSize(const char *Name, ShortInt Size)
     Boolean HRef;
     String NName;
 
-    strmaxcpy(NName, Name, 255);
+    strmaxcpy(NName, Name, STRINGSIZE);
     if (!ExpandSymbol(NName))
       return;
     HRef = DoRefs;
@@ -2860,7 +2667,7 @@ ShortInt GetSymbolSize(const char *Name)
   PSymbolEntry Lauf;
   String NName;
 
-  strmaxcpy(NName, Name, 255);
+  strmaxcpy(NName, Name, STRINGSIZE);
   if (!ExpandSymbol(NName))
     return -1;
   Lauf = FindLocNode(NName, TempInt);
@@ -2874,7 +2681,7 @@ Boolean IsSymbolFloat(const char *Name)
   PSymbolEntry Lauf;
   String NName;
 
-  strmaxcpy(NName, Name, 255);
+  strmaxcpy(NName, Name, STRINGSIZE);
   if (!ExpandSymbol(NName))
     return False;
 
@@ -2889,7 +2696,7 @@ Boolean IsSymbolString(const char *Name)
   PSymbolEntry Lauf;
   String NName;
 
-  strmaxcpy(NName, Name, 255);
+  strmaxcpy(NName, Name, STRINGSIZE);
   if (!ExpandSymbol(NName))
     return False;
 
@@ -2904,7 +2711,7 @@ Boolean IsSymbolDefined(const char *Name)
   PSymbolEntry Lauf;
   String NName;
 
-  strmaxcpy(NName, Name, 255);
+  strmaxcpy(NName, Name, STRINGSIZE);
   if (!ExpandSymbol(NName))
     return False;
 
@@ -2919,7 +2726,7 @@ Boolean IsSymbolUsed(const char *Name)
   PSymbolEntry Lauf;
   String NName;
 
-  strmaxcpy(NName, Name, 255);
+  strmaxcpy(NName, Name, STRINGSIZE);
   if (!ExpandSymbol(NName))
     return False;
 
@@ -2934,7 +2741,7 @@ Boolean IsSymbolChangeable(const char *Name)
   PSymbolEntry Lauf;
   String NName;
 
-  strmaxcpy(NName, Name, 255);
+  strmaxcpy(NName, Name, STRINGSIZE);
   if (!ExpandSymbol(NName))
     return False;
 
@@ -2949,7 +2756,7 @@ Integer GetSymbolType(const char *Name)
   PSymbolEntry Lauf;
   String NName;
 
-  strmaxcpy(NName, Name, 255);
+  strmaxcpy(NName, Name, STRINGSIZE);
   if (!ExpandSymbol(NName))
     return -1;
 
@@ -2991,10 +2798,10 @@ static void PrintSymbolList_AddOut(char *s, char *Zeilenrest, int Width)
   {
     Zeilenrest[strlen(Zeilenrest) - 1] = '\0';
     WrLstLine(Zeilenrest);
-    strmaxcpy(Zeilenrest, s, 255);
+    strmaxcpy(Zeilenrest, s, STRINGSIZE);
   }
   else
-    strmaxcat(Zeilenrest, s, 255);
+    strmaxcat(Zeilenrest, s, STRINGSIZE);
 }
 
 static void PrintSymbolList_PNode(PTree Tree, void *pData)
@@ -3011,22 +2818,22 @@ static void PrintSymbolList_PNode(PTree Tree, void *pData)
   else
     StrSym(&t, False, s1, sizeof(s1));
 
-  strmaxcpy(sh, Tree->Name, 255);
+  strmaxcpy(sh, Tree->Name, STRINGSIZE);
   if (Tree->Attribute != -1)
   {
-    strmaxcat(sh, " [", 255);
-    strmaxcat(sh, GetSectionName(Tree->Attribute), 255);
-    strmaxcat(sh, "]", 255);
+    strmaxcat(sh, " [", STRINGSIZE);
+    strmaxcat(sh, GetSectionName(Tree->Attribute), STRINGSIZE);
+    strmaxcat(sh, "]", STRINGSIZE);
   }
-  strmaxprep(sh, (Node->Used) ? " " : "*", 255);
+  strmaxprep(sh, (Node->Used) ? " " : "*", STRINGSIZE);
   l1 = (strlen(s1) + strlen(sh) + 7);
   for (nBlanks = pContext->cwidth - 1 - l1; nBlanks < 0; nBlanks += pContext->cwidth);
-  strmaxprep(s1, Blanks(nBlanks), 255);
-  strmaxprep(s1, " : ", 255);
-  strmaxprep(s1, sh, 255);
-  strmaxcat(s1, " ", 255);
+  strmaxprep(s1, Blanks(nBlanks), STRINGSIZE);
+  strmaxprep(s1, " : ", STRINGSIZE);
+  strmaxprep(s1, sh, STRINGSIZE);
+  strmaxcat(s1, " ", STRINGSIZE);
   s1[l1 = strlen(s1)] = SegShorts[Node->SymType]; s1[l1 + 1] = '\0';
-  strmaxcat(s1, " | ", 255);
+  strmaxcat(s1, " | ", STRINGSIZE);
   PrintSymbolList_AddOut(s1, pContext->Zeilenrest, pContext->Width);
   pContext->Sum++;
   if (!Node->Used)
@@ -3221,7 +3028,7 @@ Boolean PushSymbol(char *SymName_O, char *StackName_O)
   PSymbolStackEntry Elem;
   String SymName, StackName;
 
-  strmaxcpy(SymName, SymName_O, 255);
+  strmaxcpy(SymName, SymName_O, STRINGSIZE);
   if (!ExpandSymbol(SymName))
     return False;
 
@@ -3232,7 +3039,7 @@ Boolean PushSymbol(char *SymName_O, char *StackName_O)
     return False;
   }
 
-  strmaxcpy(StackName, (*StackName_O == '\0') ? DefStackName : StackName_O, 255);
+  strmaxcpy(StackName, (*StackName_O == '\0') ? DefStackName : StackName_O, STRINGSIZE);
   if (!ExpandSymbol(StackName))
     return False;
   if (!ChkSymbName(StackName))
@@ -3277,7 +3084,7 @@ Boolean PopSymbol(char *SymName_O, char *StackName_O)
   PSymbolStackEntry Elem;
   String SymName, StackName;
 
-  strmaxcpy(SymName, SymName_O, 255);
+  strmaxcpy(SymName, SymName_O, STRINGSIZE);
   if (!ExpandSymbol(SymName))
     return False;
 
@@ -3288,7 +3095,7 @@ Boolean PopSymbol(char *SymName_O, char *StackName_O)
     return False;
   }
 
-  strmaxcpy(StackName, (*StackName_O == '\0') ? DefStackName : StackName_O, 255);
+  strmaxcpy(StackName, (*StackName_O == '\0') ? DefStackName : StackName_O, STRINGSIZE);
   if (!ExpandSymbol(StackName))
     return False;
   if (!ChkSymbName(StackName))
@@ -3364,7 +3171,7 @@ void EnterFunction(char *FName, char *FDefinition, Byte NewCnt)
 
   if (!CaseSensitive)
   {
-    strmaxcpy(FName_N, FName, 255);
+    strmaxcpy(FName_N, FName, STRINGSIZE);
     NLS_UpString(FName_N);
     FName = FName_N;
   }
@@ -3397,7 +3204,7 @@ PFunction FindFunction(char *Name)
 
   if (!CaseSensitive)
   {
-    strmaxcpy(Name_N, Name, 255);
+    strmaxcpy(Name_N, Name, STRINGSIZE);
     NLS_UpString(Name_N);
     Name = Name_N;
   }
@@ -3426,10 +3233,10 @@ void PrintFunctionList(void)
   cnt = False;
   while (Lauf)
   {
-    strmaxcat(OneS, Lauf->Name, 255);
+    strmaxcat(OneS, Lauf->Name, STRINGSIZE);
     if (strlen(Lauf->Name) < 37)
-      strmaxcat(OneS, Blanks(37-strlen(Lauf->Name)), 255);
-    if (!cnt) strmaxcat(OneS, " | ", 255);
+      strmaxcat(OneS, Blanks(37-strlen(Lauf->Name)), STRINGSIZE);
+    if (!cnt) strmaxcat(OneS, " | ", STRINGSIZE);
     else
     {
       WrLstLine(OneS);
@@ -3610,7 +3417,7 @@ LongInt GetSectionHandle(char *SName_O, Boolean AddEmpt, LongInt Parent)
   LongInt z;
   String SName;
 
-  strmaxcpy(SName, SName_O, 255);
+  strmaxcpy(SName, SName_O, STRINGSIZE);
   if (!CaseSensitive)
     NLS_UpString(SName);
 
@@ -3699,8 +3506,8 @@ static void PrintSectionList_PSection(LongInt Handle, int Indent)
   ChkStack();
   if (Handle != -1)
   {
-    strmaxcpy(h, Blanks(Indent << 1), 255);
-    strmaxcat(h, GetSectionName(Handle), 255);
+    strmaxcpy(h, Blanks(Indent << 1), STRINGSIZE);
+    strmaxcat(h, GetSectionName(Handle), STRINGSIZE);
     WrLstLine(h);
   }
   Lauf = FirstSection;
@@ -3794,21 +3601,21 @@ static void PrintCrossList_PNode(PTree Node, void *pData)
   ConvertSymbolVal(&(SymbolEntry->SymWert), &t);
   strcpy(h, " (=");
   StrSym(&t, False, h2, sizeof(h2));
-  strmaxcat(h, h2, 255);
-  strmaxcat(h, ", ", 255);
-  strmaxcat(h, GetFileName(SymbolEntry->FileNum), 255);
-  strmaxcat(h, ":", 255);
-  sprintf(h2, LongIntFormat, SymbolEntry->LineNum); strmaxcat(h, h2, 255);
-  strmaxcat(h, "):", 255);
+  strmaxcat(h, h2, STRINGSIZE);
+  strmaxcat(h, ", ", STRINGSIZE);
+  strmaxcat(h, GetFileName(SymbolEntry->FileNum), STRINGSIZE);
+  strmaxcat(h, ":", STRINGSIZE);
+  sprintf(h2, LongIntFormat, SymbolEntry->LineNum); strmaxcat(h, h2, STRINGSIZE);
+  strmaxcat(h, "):", STRINGSIZE);
   if (Node->Attribute != -1)
   {
-    strmaxprep(h, "] ", 255);
-    strmaxprep(h, GetSectionName(Node->Attribute), 255);
-    strmaxprep(h, " [", 255);
+    strmaxprep(h, "] ", STRINGSIZE);
+    strmaxprep(h, GetSectionName(Node->Attribute), STRINGSIZE);
+    strmaxprep(h, " [", STRINGSIZE);
   }
 
-  strmaxprep(h, Node->Name, 255);
-  strmaxprep(h, getmessage(Num_ListCrossSymName), 255);
+  strmaxprep(h, Node->Name, STRINGSIZE);
+  strmaxprep(h, getmessage(Num_ListCrossSymName), STRINGSIZE);
   WrLstLine(h);
 
   for (FileZ = 0; FileZ < GetFileCount(); FileZ++)
@@ -3821,21 +3628,21 @@ static void PrintCrossList_PNode(PTree Node, void *pData)
     if (Lauf)
     {
       strcpy(h, " ");
-      strmaxcat(h, getmessage(Num_ListCrossFileName), 255);
-      strmaxcat(h, GetFileName(FileZ), 255);
-      strmaxcat(h, " :", 255);
+      strmaxcat(h, getmessage(Num_ListCrossFileName), STRINGSIZE);
+      strmaxcat(h, GetFileName(FileZ), STRINGSIZE);
+      strmaxcat(h, " :", STRINGSIZE);
       WrLstLine(h);
       strcpy(LineAcc, "   ");
       while (Lauf)
       {
         sprintf(LinePart, "%5ld", (long)Lauf->LineNum);
-        strmaxcat(LineAcc, LinePart, 255);
+        strmaxcat(LineAcc, LinePart, STRINGSIZE);
         if (Lauf->OccNum != 1)
         {
           sprintf(LinePart, "(%2ld)", (long)Lauf->OccNum);
-          strmaxcat(LineAcc, LinePart, 255);
+          strmaxcat(LineAcc, LinePart, STRINGSIZE);
         }
-        else strmaxcat(LineAcc, "    ", 255);
+        else strmaxcat(LineAcc, "    ", STRINGSIZE);
         if (strlen(LineAcc) >= 72)
         {
           WrLstLine(LineAcc);
@@ -3955,8 +3762,8 @@ void AddRegDef(char *Orig_N, char *Repl_N)
   PRegDefList Neu;
   String Orig, Repl;
 
-  strmaxcpy(Orig, Orig_N, 255);
-  strmaxcpy(Repl, Repl_N, 255);
+  strmaxcpy(Orig, Orig_N, STRINGSIZE);
+  strmaxcpy(Repl, Repl_N, STRINGSIZE);
   if (!CaseSensitive)
   {
     NLS_UpString(Orig);
@@ -3996,7 +3803,7 @@ Boolean FindRegDef(const char *Name_N, char **Erg)
   if (*Name_N == '[')
     return FALSE;
 
-  strmaxcpy(Name, Name_N, 255);
+  strmaxcpy(Name, Name_N, STRINGSIZE);
 
   if (!GetSymSection(Name, &Sect))
     return False;
@@ -4116,7 +3923,7 @@ static void PrintRegDefs_PNode(PRegDef Node, char *buf, LongInt *Sum, LongInt *U
     }
     else
     {
-      strmaxcat(tmp, Blanks(cwidth - 3 - strlen(tmp)), 255);
+      strmaxcat(tmp, Blanks(cwidth - 3 - strlen(tmp)), STRINGSIZE);
       if (*buf == '\0')
         strcpy(buf, tmp);
       else

@@ -180,8 +180,8 @@ static void ReadSymbols(int Index)
 
   /* open this file - we're only reading */
 
-  strmaxcpy(SrcName, ParamStr[Index], 255);
-  DelSuffix(SrcName); AddSuffix(SrcName, getmessage(Num_Suffix));
+  strmaxcpy(SrcName, ParamStr[Index], STRINGSIZE);
+  DelSuffix(SrcName); AddSuffix(SrcName, STRINGSIZE, getmessage(Num_Suffix));
   if (Verbose >= 2)
     printf("%s '%s'...\n", getmessage(Num_InfoMsgGetSyms), SrcName);
   f = fopen(SrcName, OPENRDMODE);
@@ -302,8 +302,8 @@ static void ProcessFile(int Index)
 
   /* open this file - we're only reading */
 
-  strmaxcpy(SrcName, ParamStr[Index], 255);
-  DelSuffix(SrcName); AddSuffix(SrcName, getmessage(Num_Suffix));
+  strmaxcpy(SrcName, ParamStr[Index], STRINGSIZE);
+  DelSuffix(SrcName); AddSuffix(SrcName, STRINGSIZE, getmessage(Num_Suffix));
   if (Verbose >= 2)
     printf("%s '%s'...", getmessage(Num_InfoMsgOpenSrc), SrcName);
   else if (Verbose >= 1)
@@ -546,9 +546,9 @@ int main(int argc, char **argv)
   for (z = ParamCount; z > 0; z--)
     if (ParUnprocessed[z])
       break;
-  strmaxcpy(TargName, ParamStr[z], 255);
+  strmaxcpy(TargName, ParamStr[z], STRINGSIZE);
   DelSuffix(TargName);
-  AddSuffix(TargName, getmessage(Num_Suffix));
+  AddSuffix(TargName, STRINGSIZE, getmessage(Num_Suffix));
   ParUnprocessed[z] = False;
 
   /* walk over source file(s): */

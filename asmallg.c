@@ -1,180 +1,10 @@
+/* asmallg.c */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* von allen Codegeneratoren benutzte Pseudobefehle                          */
 /*                                                                           */
-/* Historie:  10. 5.1996 Grundsteinlegung                                    */
-/*            24. 6.1998 CODEPAGE-Kommando                                   */
-/*            17. 7.1998 CHARSET ohne Argumente                              */
-/*            17. 8.1998 BookKeeping-Aufruf bei ALIGN                        */
-/*            18. 8.1998 RADIX-Kommando                                      */
-/*             2. 1.1999 Standard-ChkPC-Routine                              */
-/*             9. 1.1999 BINCLUDE gefixt...                                  */
-/*            30. 5.1999 OUTRADIX-Kommando                                   */
-/*            12. 7.1999 EXTERN-Kommando                                     */
-/*             8. 3.2000 'ambigious else'-Warnungen beseitigt                */
-/*             1. 6.2000 reset error flag before checks in BINCLUDE          */
-/*                       added NESTMAX instruction                           */
-/*            26. 6.2000 added EXPORT instruction                            */
-/*             6. 7.2000 unknown symbol in EXPORT triggers repassing         */
-/*            30.10.2000 EXTERN also works for symbols without a segment spec*/
-/*             1.11.2000 added ASEG/RSEG                                     */
-/*            14. 1.2001 silenced warnings about unused parameters           */
-/*                       use SegInits also when segment hasn't been used up  */
-/*                       to now                                              */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: asmallg.c,v 1.38 2017/06/28 16:35:15 alfred Exp $                     */
-/*****************************************************************************
- * $Log: asmallg.c,v $
- * Revision 1.38  2017/06/28 16:35:15  alfred
- * - correct function call
- *
- * Revision 1.37  2017/06/03 08:25:00  alfred
- * - silence warning about unused argument
- *
- * Revision 1.36  2017/04/02 11:10:36  alfred
- * - allow more fine-grained macro expansion in listing
- *
- * Revision 1.35  2017/02/26 17:11:20  alfred
- * - allow alternate syntax for SET and EQU
- *
- * Revision 1.34  2017/02/26 16:20:46  alfred
- * - silence compiler warnings about unused function results
- *
- * Revision 1.33  2016/11/25 18:12:12  alfred
- * - first version to support OLMS-50
- *
- * Revision 1.32  2016/11/25 16:29:36  alfred
- * - allow SELECT as alternative to SWITCH
- *
- * Revision 1.31  2016/11/24 22:41:45  alfred
- * - add SELECT as alternative to SWITCH
- *
- * Revision 1.30  2016/10/07 20:03:03  alfred
- * - make some arguments const
- *
- * Revision 1.29  2016/09/12 18:44:53  alfred
- * - fix memory leak
- *
- * Revision 1.28  2015/10/28 17:54:33  alfred
- * - allow substructures of same name in different structures
- *
- * Revision 1.27  2015/10/23 08:43:33  alfred
- * - beef up & fix structure handling
- *
- * Revision 1.26  2015/10/20 17:31:25  alfred
- * - put all pseudo instructions into table for init
- *
- * Revision 1.25  2015/10/18 19:02:16  alfred
- * - first reork/fix of nested structure handling
- *
- * Revision 1.24  2015/10/06 16:42:23  alfred
- * - repair SHARED output in C mode
- *
- * Revision 1.23  2015/10/05 21:41:27  alfred
- * - correct C shared symbol output
- *
- * Revision 1.22  2014/12/14 17:58:46  alfred
- * - remove static variables in strutil.c
- *
- * Revision 1.21  2014/12/12 17:16:08  alfred
- * - repainr -cpu comman dline switch and provide test for it
- *
- * Revision 1.20  2014/12/07 19:13:58  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.19  2014/12/01 10:06:03  alfred
- * - remove trailing blank
- *
- * Revision 1.18  2014/12/01 09:26:14  alfred
- * - rework to current style
- *
- * Revision 1.17  2014/11/23 18:29:29  alfred
- * - correct buffer overflow in MomCPUName
- *
- * Revision 1.16  2014/11/05 09:28:34  alfred
- * - move array from BSS segement to hep
- *
- * Revision 1.15  2014/10/06 17:55:27  alfred
- * - remove debug printf
- *
- * Revision 1.14  2014/03/08 21:06:34  alfred
- * - rework ASSUME framework
- *
- * Revision 1.13  2014/03/08 17:26:14  alfred
- * - print out declaration position for unresolved forwards
- *
- * Revision 1.12  2014/03/08 16:18:46  alfred
- * - add RORG statement
- *
- * Revision 1.11  2012-05-26 13:49:19  alfred
- * - MSP additions, make implicit macro parameters always case-insensitive
- *
- * Revision 1.10  2012-01-16 19:31:18  alfred
- * - regard symbol name expansion in arguments for SHARED
- *
- * Revision 1.9  2010/08/27 14:52:41  alfred
- * - some more overlapping strcpy() cleanups
- *
- * Revision 1.8  2010/04/17 13:14:19  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.7  2008/11/23 10:39:15  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.6  2007/11/24 22:48:02  alfred
- * - some NetBSD changes
- *
- * Revision 1.5  2007/04/30 18:37:51  alfred
- * - add weird integer coding
- *
- * Revision 1.4  2006/08/05 18:26:32  alfred
- * - remove static string
- *
- * Revision 1.3  2005/10/02 10:00:43  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.2  2005/08/07 10:29:24  alfred
- * - remove mnemonic conflict with MICO8
- *
- * Revision 1.1  2003/11/06 02:49:18  alfred
- * - recreated
- *
- * Revision 1.12  2003/05/02 21:23:08  alfred
- * - strlen() updates
- *
- * Revision 1.11  2003/02/06 07:38:09  alfred
- * - add missing 'else'
- *
- * Revision 1.10  2003/02/02 12:05:01  alfred
- * - limit BINCLUDE transfer size to 256 bytes
- *
- * Revision 1.9  2002/11/23 15:53:27  alfred
- * - SegLimits are unsigned now
- *
- * Revision 1.8  2002/11/20 20:25:04  alfred
- * - added unions
- *
- * Revision 1.7  2002/11/17 16:09:12  alfred
- * - added DottedStructs
- *
- * Revision 1.6  2002/11/16 20:51:15  alfred
- * - adapted to structure changes
- *
- * Revision 1.5  2002/11/11 21:13:37  alfred
- * - add structure storage
- *
- * Revision 1.4  2002/11/11 19:24:57  alfred
- * - new module for structs
- *
- * Revision 1.3  2002/11/04 19:18:00  alfred
- * - add DOTS option for structs
- *
- * Revision 1.2  2002/07/14 18:39:57  alfred
- * - fixed TempAll-related warnings
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -346,9 +176,9 @@ static void CodeENDSECTION_ChkEmptList(PForwardSymbol *Root)
 
   while (*Root)
   {
-    strmaxcpy(XError, (*Root)->Name, 255);
-    strmaxcat(XError, ", ", 255);
-    strmaxcat(XError, (*Root)->pErrorPos, 255);
+    strmaxcpy(XError, (*Root)->Name, STRINGSIZE);
+    strmaxcat(XError, ", ", STRINGSIZE);
+    strmaxcat(XError, (*Root)->pErrorPos, STRINGSIZE);
     WrXError(ErrNum_UndefdForward, XError);
     free((*Root)->Name);
     free((*Root)->pErrorPos);
@@ -554,13 +384,13 @@ static void CodeSHARED(Word Index)
        ValOK = GetStringSymbol(pArg->Str, s);
        if (ShareMode == 1)
        {
-         strmaxprep(s, "\'", 255);
-         strmaxcat(s, "\'", 255);
+         strmaxprep(s, "\'", STRINGSIZE);
+         strmaxcat(s, "\'", STRINGSIZE);
        }
        else
        {
-         strmaxprep(s, "\"", 255);
-         strmaxcat(s, "\"", 255);
+         strmaxprep(s, "\"", STRINGSIZE);
+         strmaxcat(s, "\"", STRINGSIZE);
        }
      }
      else if (IsSymbolFloat(pArg->Str))
@@ -592,7 +422,7 @@ static void CodeSHARED(Word Index)
        if ((pArg == ArgStr + 1) && (*CommPart.Str != '\0'))
        {
          CodeSHARED_BuildComment(c);
-         strmaxprep(c, " ", 255);
+         strmaxprep(c, " ", STRINGSIZE);
        }
        else
          *c = '\0';
@@ -606,7 +436,7 @@ static void CodeSHARED(Word Index)
            fprintf(ShareFile, "#define %s %s%s\n", pArg->Str, s, c);
            break;
          case 3:
-           strmaxprep(s, IsSymbolChangeable(pArg->Str) ? "set " : "equ ", 255);
+           strmaxprep(s, IsSymbolChangeable(pArg->Str) ? "set " : "equ ", STRINGSIZE);
            fprintf(ShareFile, "%s %s%s\n", pArg->Str, s, c);
            break;
        }
@@ -726,13 +556,13 @@ static void CodeString(Word Index)
       switch (Index)
       {
         case 0:
-          strmaxcpy(PrtInitString, tmp, 255);
+          strmaxcpy(PrtInitString, tmp, STRINGSIZE);
           break;
         case 1:
-          strmaxcpy(PrtExitString, tmp, 255);
+          strmaxcpy(PrtExitString, tmp, STRINGSIZE);
           break;
         case 2:
-          strmaxcpy(PrtTitleString, tmp, 255);
+          strmaxcpy(PrtTitleString, tmp, STRINGSIZE);
           break;
       }
     }
@@ -1035,7 +865,7 @@ static void CodeFUNCTION(Word Index)
     while ((z < ArgCnt) && (OK));
     if (OK)
     {
-      strmaxcpy(FName, ArgStr[ArgCnt].Str, 255);
+      strmaxcpy(FName, ArgStr[ArgCnt].Str, STRINGSIZE);
       for (z = 1; z < ArgCnt; z++)
         CompressLine(ArgStr[z].Str, z, FName, STRINGSIZE, CaseSensitive);
       EnterFunction(LabPart.Str, FName, ArgCnt - 1);
@@ -1218,7 +1048,7 @@ static void CodeREAD(Word Index)
     {
       printf("%s", Exp.Str);
       fflush(stdout);
-      if (!fgets(Exp.Str, 255, stdin))
+      if (!fgets(Exp.Str, STRINGSIZE, stdin))
         OK = False;
       else
       {
@@ -1430,9 +1260,9 @@ static void CodeENUM(Word IsNext)
   sprintf(ListLine, "=%s", ListSymPart);
   if (ArgCnt != 1)
   {
-    strmaxcat(ListLine, "..", 255);
+    strmaxcat(ListLine, "..", STRINGSIZE);
     IntLine(ListSymPart, sizeof(ListSymPart), Last);
-    strmaxcat(ListLine, ListSymPart, 255);
+    strmaxcat(ListLine, ListSymPart, STRINGSIZE);
   }
 }
 
@@ -1555,15 +1385,15 @@ static void CodeBINCLUDE(Word Index)
     }
     if (OK)
     {
-      strmaxcpy(Name, ArgStr[1].Str, 255);
+      strmaxcpy(Name, ArgStr[1].Str, STRINGSIZE);
       if (*Name == '"')
         strmov(Name, Name + 1);
       if ((*Name) && (Name[strlen(Name) - 1] == '"'))
         Name[strlen(Name) - 1] = '\0';
-      strmaxcpy(ArgStr[1].Str, Name, 255);
-      strmaxcpy(Name, FExpand(FSearch(Name, IncludeList)), 255);
+      strmaxcpy(ArgStr[1].Str, Name, STRINGSIZE);
+      strmaxcpy(Name, FExpand(FSearch(Name, IncludeList)), STRINGSIZE);
       if ((*Name) && (Name[strlen(Name) - 1] == '/'))
-        strmaxcat(Name, ArgStr[1].Str, 255);
+        strmaxcat(Name, ArgStr[1].Str, STRINGSIZE);
       F = fopen(Name, OPENRDMODE);
       if (F == NULL) ChkIO(10001);
       errno = 0; FSize = FileSize(F); ChkIO(10003);

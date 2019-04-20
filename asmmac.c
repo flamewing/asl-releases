@@ -4,10 +4,6 @@
 /*                                                                           */
 /* Unterroutinen des Makroprozessors                                         */
 /*                                                                           */
-/* Historie: 16. 5.1996 Grundsteinlegung                                     */
-/*            1. 7.1998 Korrektur Boyer-Moore-Algorithmus, wenn Ungleichheit */
-/*                      nicht direkt am Ende                                 */
-/*                                                                           */
 /*****************************************************************************/
 
 #include "stdinc.h"
@@ -85,7 +81,7 @@ static void RemoveDefine(char *Name_O)
   PDefinement Lauf, Del;
   String Name;
 
-  strmaxcpy(Name, Name_O, 255);
+  strmaxcpy(Name, Name_O, STRINGSIZE);
   if (!CaseSensitive)
     NLS_UpString(Name);
 
@@ -133,10 +129,10 @@ void PrintDefineList(void)
   Lauf = FirstDefine;
   while (Lauf)
   {
-    strmaxcpy(OneS, Lauf->TransFrom, 255);
-    strmaxcat(OneS, Blanks(10 - (strlen(Lauf->TransFrom)%10)), 255);
-    strmaxcat(OneS, " = ", 255);
-    strmaxcat(OneS, Lauf->TransTo, 255);
+    strmaxcpy(OneS, Lauf->TransFrom, STRINGSIZE);
+    strmaxcat(OneS, Blanks(10 - (strlen(Lauf->TransFrom)%10)), STRINGSIZE);
+    strmaxcat(OneS, " = ", STRINGSIZE);
+    strmaxcat(OneS, Lauf->TransTo, STRINGSIZE);
     WrLstLine(OneS);
     Lauf = Lauf->Next;
   }
@@ -164,11 +160,11 @@ void Preprocess(void)
   char *p;
 
   p = strchr(OneLine, '#') + 1;
-  strmaxcpy(h, p, 255);
+  strmaxcpy(h, p, STRINGSIZE);
   p = FirstBlank(h);
   if (!p)
   {
-    strmaxcpy(Cmd, h, 255);
+    strmaxcpy(Cmd, h, STRINGSIZE);
     *h = '\0';
   }
   else
@@ -348,7 +344,7 @@ Boolean FoundMacro(PMacroRec *Erg)
   PSaveSection Lauf;
   String Part;
 
-  strmaxcpy(Part, LOpPart, 255);
+  strmaxcpy(Part, LOpPart, STRINGSIZE);
   if (!CaseSensitive)
     NLS_UpString(Part);
 
@@ -427,18 +423,18 @@ static void PrintMacroList_PNode(PTree Tree, void *pData)
   TMacroListContext *pContext = (TMacroListContext*) pData;
   String h;
 
-  strmaxcpy(h, Node->Contents->Name, 255);
+  strmaxcpy(h, Node->Contents->Name, STRINGSIZE);
   if (Node->Tree.Attribute != -1)
   {
-    strmaxcat(h, "[", 255);
-    strmaxcat(h, GetSectionName(Node->Tree.Attribute), 255);
-    strmaxcat(h, "]", 255);
+    strmaxcat(h, "[", STRINGSIZE);
+    strmaxcat(h, GetSectionName(Node->Tree.Attribute), STRINGSIZE);
+    strmaxcat(h, "]", STRINGSIZE);
   }
-  strmaxcat(pContext->OneS, h, 255);
+  strmaxcat(pContext->OneS, h, STRINGSIZE);
   if (strlen(h) < 37)
-    strmaxcat(pContext->OneS, Blanks(37 - strlen(h)), 255);
+    strmaxcat(pContext->OneS, Blanks(37 - strlen(h)), STRINGSIZE);
   if (!(pContext->cnt))
-    strmaxcat(pContext->OneS, " | ", 255);
+    strmaxcat(pContext->OneS, " | ", STRINGSIZE);
   else
   {
     WrLstLine(pContext->OneS);

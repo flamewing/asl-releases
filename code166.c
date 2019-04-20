@@ -4,49 +4,7 @@
 /*                                                                           */
 /* AS-Codegenerator Siemens 80C16x                                           */
 /*                                                                           */
-/* Historie: 11.11.1996 (alaaf) Grundsteinlegung                             */
-/*            9. 5.1998 Registersymbole                                      */
-/*            3. 1.1999 ChkPC angepasst                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code166.c,v 1.12 2014/12/07 19:13:59 alfred Exp $                     */
-/*****************************************************************************
- * $Log: code166.c,v $
- * Revision 1.12  2014/12/07 19:13:59  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.11  2014/11/05 15:47:13  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.10  2014/09/19 21:20:26  alfred
- * - rework to current style
- *
- * Revision 1.9  2014/03/08 21:06:35  alfred
- * - rework ASSUME framework
- *
- * Revision 1.8  2010/12/05 23:17:59  alfred
- * - use machine-dependent SFR start when transforming SFR addresses back to absolute
- *
- * Revision 1.7  2010/08/27 14:52:41  alfred
- * - some more overlapping strcpy() cleanups
- *
- * Revision 1.6  2010/04/17 13:14:19  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.5  2007/11/24 22:48:03  alfred
- * - some NetBSD changes
- *
- * Revision 1.4  2005/10/02 10:00:44  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.3  2005/09/08 17:31:02  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 11:33:00  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -1276,7 +1234,7 @@ static void DecodeBFLDH_BFLDL(Word Code)
 
   if (ChkArgCnt(3, 3))
   {
-    strmaxcat(ArgStr[1].Str, ".0", 255);
+    strmaxcat(ArgStr[1].Str, ".0", STRINGSIZE);
     if (DecodeBitAddr(&ArgStr[1], &BAdr, &BOfs, False))
     {
       OpSize = 0;

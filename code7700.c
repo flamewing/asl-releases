@@ -4,51 +4,7 @@
 /*                                                                           */
 /* AS-Codegeneratormodul MELPS-7700                                          */
 /*                                                                           */
-/* Historie:  5.11.1996 Grundsteinlegung                                     */
-/*            2. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code7700.c,v 1.13 2014/11/16 13:15:07 alfred Exp $                    */
-/*****************************************************************************
- * $Log: code7700.c,v $
- * Revision 1.13  2014/11/16 13:15:07  alfred
- * - remove some superfluous semicolons
- *
- * Revision 1.12  2014/11/05 15:47:15  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.11  2014/09/14 09:36:59  alfred
- * - add missing compiler warning silencing
- *
- * Revision 1.10  2014/08/31 13:14:12  alfred
- * - do not use snprintf
- *
- * Revision 1.9  2014/08/31 13:00:46  alfred
- * - rework to current style
- *
- * Revision 1.8  2014/08/11 21:11:54  alfred
- * - various 65816 fixes
- *
- * Revision 1.7  2014/03/08 21:06:36  alfred
- * - rework ASSUME framework
- *
- * Revision 1.6  2010/08/27 14:52:42  alfred
- * - some more overlapping strcpy() cleanups
- *
- * Revision 1.5  2010/04/17 13:14:22  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.4  2005/09/08 17:31:04  alfred
- * - add missing include
- *
- * Revision 1.3  2004/05/29 12:04:47  alfred
- * - relocated DecodeMot(16)Pseudo into separate module
- *
- * Revision 1.2  2004/05/29 11:33:01  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -614,7 +570,7 @@ static void DecodeEXTS_EXTZ(Word Code)
   if (ArgCnt == 0)
   {
     IncArgCnt();
-    strmaxcpy(ArgStr[ArgCnt].Str, "A", 255);
+    strmaxcpy(ArgStr[ArgCnt].Str, "A", STRINGSIZE);
   }
 
   if (ChkArgCnt(1, 1)

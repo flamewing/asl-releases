@@ -9517,6 +9517,16 @@ column exclusively for labels!
 
 %%---------------------------------------------------------------------------
 
+\section{78(C)1x}
+\label{78C1xSpec}
+
+For relative, unconditional instructions, there is the \tty{JR} instruction
+branch distance -32...+31, one byte), and the \tty{JRE} instruction (branch
+distance -256...+255, two bytes).  AS furthermore knows the \tty{J} pseudo
+instruction, which automatically selects the shortest possible variant.
+
+%%---------------------------------------------------------------------------
+
 \section{75K0}
 \label{75K0Spec}
 

@@ -59,8 +59,8 @@ static CMDResult ProcessParam(CMDRec *Def, Integer Cnt, char *O_Param,
   CMDResult TempRes;
   String s, Param, Next;
 
-  strmaxcpy(Param, O_Param, 255U); 
-  strmaxcpy(Next, O_Next, 255U);
+  strmaxcpy(Param, O_Param, STRINGSIZE);
+  strmaxcpy(Next, O_Next, STRINGSIZE);
 
   if ((*Next == '-')
    || (*Next == '+')
@@ -107,7 +107,7 @@ static CMDResult ProcessParam(CMDRec *Def, Integer Cnt, char *O_Param,
     TempRes = CMDOK;
 
     Search = 0;
-    strmaxcpy(s, Param + Start, 255);
+    strmaxcpy(s, Param + Start, STRINGSIZE);
     for (z = 0; z < (int)strlen(s); z++)
       s[z] = mytoupper(s[z]);
     for (Search = 0; Search < Cnt; Search++)
@@ -203,7 +203,7 @@ static void ProcessFile(char *Name_O, CMDRec *Def, Integer Cnt, CMDErrCallback E
   FILE *KeyFile;
   String Name, OneLine;
 
-  strmaxcpy(Name, Name_O, 255);
+  strmaxcpy(Name, Name_O, STRINGSIZE);
   ClrBlanks(OneLine);
 
   KeyFile = fopen(Name, "r");
@@ -228,7 +228,7 @@ void ProcessCMD(CMDRec *Def, Integer Cnt, CMDProcessed Unprocessed,
   char *pEnv;
 
   pEnv = getenv(EnvName);
-  strmaxcpy(OneLine, pEnv ? pEnv : "", 255);
+  strmaxcpy(OneLine, pEnv ? pEnv : "", STRINGSIZE);
 
   if (OneLine[0] == '@')
     ProcessFile(OneLine + 1, Def, Cnt, ErrProc);

@@ -6,106 +6,7 @@
 /*                                                                           */
 /* global benutzte Variablen und Definitionen                                */
 /*                                                                           */
-/* Historie:  4. 5.1996 Grundsteinlegung                                     */
-/*           24. 6.1998 Zeichenuebersetzungstabellen                         */
-/*           24. 7.1998 Debug-Modus NoICE                                    */
-/*           25. 7.1998 PassNo --> Integer                                   */
-/*           17. 8.1998 InMacroFlag hierher verschoben                       */
-/*           18. 8.1998 RadixBase hinzugenommen                              */
-/*                      ArgStr-Feld war eins zu kurz                         */
-/*           19. 8.1998 BranchExt-Variablen                                  */
-/*           29. 8.1998 ActListGran hinzugenommen                            */
-/*            1. 1.1999 SegLimits dazugenommen                               */
-/*                      SegInits --> LargeInt                                */
-/*            9. 1.1999 ChkPC jetzt mit Adresse als Parameter                */
-/*           17. 4.1999 DefCPU hinzugenommen                                 */
-/*           30. 5.1999 OutRadixBase hinzugenommen                           */
-/*           10. 7.1999 Symbolrecord hierher verschoben                      */
-/*           22. 9.1999 RelocEntry definiert                                 */
-/*            5.11.1999 ExtendErrors von Boolean nach ShortInt               */
-/*            7. 5.2000 Packing hinzugefuegt                                 */
-/*           20. 5.2000 added ArgCName, AllArgName                           */
-/*            1. 6.2000 added NestMax                                        */
-/*           26. 6.2000 added exports                                        */
-/*            1.11.2000 added RelSegs flag                                   */
-/*           24.12.2000 added NoICEMask                                      */
-/*           2001-09-29 add segment name for STRUCT (just to be sure...)     */
-/*           2001-10-20 added GNU error flag                                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: asmdef.h,v 1.17 2017/04/02 11:10:36 alfred Exp $                      */
-/*****************************************************************************
- * $Log: asmdef.h,v $
- * Revision 1.17  2017/04/02 11:10:36  alfred
- * - allow more fine-grained macro expansion in listing
- *
- * Revision 1.16  2016/11/25 16:29:36  alfred
- * - allow SELECT as alternative to SWITCH
- *
- * Revision 1.15  2016/11/24 22:41:46  alfred
- * - add SELECT as alternative to SWITCH
- *
- * Revision 1.14  2015/08/28 17:22:26  alfred
- * - add special handling for labels following BSR
- *
- * Revision 1.13  2014/11/23 18:29:29  alfred
- * - correct buffer overflow in MomCPUName
- *
- * Revision 1.12  2014/11/06 11:22:01  alfred
- * - replace hook chain for ClearUp, document new mechanism
- *
- * Revision 1.11  2014/11/05 15:47:13  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.10  2014/06/15 09:17:08  alfred
- * - optional Memo profiling
- *
- * Revision 1.9  2014/03/08 21:06:35  alfred
- * - rework ASSUME framework
- *
- * Revision 1.8  2014/03/08 17:26:14  alfred
- * - print out declaration position for unresolved forwards
- *
- * Revision 1.7  2013/12/21 19:46:50  alfred
- * - dynamically resize code buffer
- *
- * Revision 1.6  2009/05/10 10:48:09  alfred
- * - increase CPUVar space
- *
- * Revision 1.5  2008/11/23 10:39:15  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.4  2007/04/30 18:37:51  alfred
- * - add weird integer coding
- *
- * Revision 1.3  2006/08/05 18:25:48  alfred
- * - make some arrays dynamic to save data segment space
- *
- * Revision 1.2  2006/06/17 17:03:14  alfred
- * - add HCS08 remark
- *
- * Revision 1.1  2003/11/06 02:49:18  alfred
- * - recreated
- *
- * Revision 1.7  2002/11/23 15:53:27  alfred
- * - SegLimits are unsigned now
- *
- * Revision 1.6  2002/11/17 16:09:12  alfred
- * - added DottedStructs
- *
- * Revision 1.5  2002/11/11 21:12:05  alfred
- * - ListMAsk is 16 bits
- *
- * Revision 1.4  2002/11/10 09:43:07  alfred
- * - relocated symbol node type
- *
- * Revision 1.3  2002/11/04 19:19:08  alfred
- * - add separation character to structs
- *
- * Revision 1.2  2002/05/18 16:09:49  alfred
- * - TempTypes are bit masks
- *
- *****************************************************************************/
 
 #include <stdio.h>
 
@@ -429,7 +330,6 @@ extern FILE *PrgFile;
 
 extern StringPtr ErrorPath,ErrorName;
 extern StringPtr OutName;
-extern Boolean IsErrorOpen;
 extern StringPtr CurrFileName;
 extern LongInt CurrLine;
 extern LongInt MomLineCounter;

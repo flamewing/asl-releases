@@ -4,116 +4,7 @@
 /*                                                                           */
 /* Codegenerator Mitsubishi M16                                              */
 /*                                                                           */
-/* Historie: 27.12.1996 Grundsteinlegung                                     */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: codem16.c,v 1.34 2015/05/25 08:38:36 alfred Exp $                     */
-/*****************************************************************************
- * $Log: codem16.c,v $
- * Revision 1.34  2015/05/25 08:38:36  alfred
- * - silence come warnings on old GCC versions
- *
- * Revision 1.33  2014/12/07 19:14:01  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.32  2014/12/05 11:58:16  alfred
- * - collapse STDC queries into one file
- *
- * Revision 1.31  2014/11/23 18:38:23  alfred
- * - use sizeof()
- *
- * Revision 1.30  2014/11/16 13:15:08  alfred
- * - remove some superfluous semicolons
- *
- * Revision 1.29  2014/07/02 20:55:42  alfred
- * - complete rework of M16
- *
- * Revision 1.28  2014/06/29 18:49:18  alfred
- * - rework ENTER/EXITD
- *
- * Revision 1.27  2014/06/29 17:36:43  alfred
- * - rework TRAP
- *
- * Revision 1.26  2014/06/29 14:40:21  alfred
- * - rework branches
- *
- * Revision 1.25  2014/06/29 12:55:06  alfred
- * - completed reworking bit operations
- *
- * Revision 1.24  2014/06/29 12:46:25  alfred
- * - rework EXT(U)
- *
- * Revision 1.23  2014/06/29 12:28:00  alfred
- * - rework bit field orders
- *
- * Revision 1.22  2014/06/29 10:08:06  alfred
- * - correct bit op formats
- * - rework bit op orders
- *
- * Revision 1.21  2014/06/28 20:42:23  alfred
- * - rework WAIT
- *
- * Revision 1.20  2014/06/25 17:21:06  alfred
- * - rework MULX/DIVX
- *
- * Revision 1.19  2014/06/23 17:35:35  alfred
- * - rework CSI
- *
- * Revision 1.18  2014/06/22 08:24:50  alfred
- * - rework CHK
- *
- * Revision 1.17  2014/06/21 19:45:47  alfred
- * - got through all arithmetic orders
- *
- * Revision 1.16  2014/06/21 14:36:57  alfred
- * - rework GE2Orders
- *
- * Revision 1.15  2014/06/21 13:21:32  alfred
- * - rework CMP, fix operand size check foer CMP:L
- *
- * Revision 1.14  2014/06/21 12:23:53  alfred
- * - avoid infinite loop in chained mode
- * - work around -0x8000 problem on Turbo C
- *
- * Revision 1.13  2014/06/20 18:04:21  alfred
- * - converted ADD/SUB
- *
- * Revision 1.12  2014/06/19 11:35:25  alfred
- * - one more reowrk on M16
- *
- * Revision 1.11  2014/06/16 20:05:20  alfred
- * - reowrk MOV instruction
- *
- * Revision 1.10  2014/06/15 12:17:30  alfred
- * - some more M16 reworks
- *
- * Revision 1.9  2014/06/15 09:18:32  alfred
- * - first instruction reworks on M16
- *
- * Revision 1.8  2014/06/14 17:28:43  alfred
- * - first steps to clean up M16 decoder
- *
- * Revision 1.7  2014/06/14 16:18:58  alfred
- * - correct array initialization
- *
- * Revision 1.6  2010/08/27 14:52:42  alfred
- * - some more overlapping strcpy() cleanups
- *
- * Revision 1.5  2007/11/24 22:48:07  alfred
- * - some NetBSD changes
- *
- * Revision 1.4  2005/10/02 10:00:45  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.3  2005/09/08 17:06:29  alfred
- * - dynamically allocate string
- *
- * Revision 1.2  2004/05/29 11:33:03  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -209,14 +100,14 @@ static CPUVar CPUM16;
 
 static char *Format;
 static Byte FormatCode;
-static ShortInt DOpSize,OpSize[5];
+static ShortInt DOpSize, OpSize[5];
 static Word AdrMode[5];
 static ShortInt AdrType[5];
-static Byte AdrCnt1[5],AdrCnt2[5];
+static Byte AdrCnt1[5], AdrCnt2[5];
 static Word AdrVals[5][8];
 
 static Byte OptionCnt;
-static char Options[2][5];
+static char Options[2][10];
 
 static BitOrder *FixedLongOrders;
 static OneOrder *OneOrders;
@@ -1181,7 +1072,7 @@ static void SplitOptions(void)
     pSplit = QuotPos(pSrc, '/');
     if (!pSplit)
       break;
-    strmaxcpy(Options[OptionCnt], pSplit + 1, 255);
+    strmaxcpy(Options[OptionCnt], pSplit + 1, sizeof(Options[OptionCnt]));
     if (OptionCnt)
       *pSplit = '\0';
     else
@@ -2521,7 +2412,7 @@ static void DecodeBSR_BRA(Word IsBSR)
           else
           {
             AdrLong -= EProgCounter();
-            if ((!SymbolQuestionable) && ((AdrLong < -256) || (AdrLong>254))) WrError(ErrNum_JmpDistTooBig);
+            if ((!SymbolQuestionable) && ((AdrLong < -256) || (AdrLong > 254))) WrError(ErrNum_JmpDistTooBig);
             else if (Odd(AdrLong)) WrError(ErrNum_DistIsOdd);
             else
             {
@@ -3129,7 +3020,7 @@ static void MakeCode_M16(void)
       if (p)
       {
         if (p < AttrPart.Str + strlen(AttrPart.Str) - 1)
-          strmaxcpy(Format, p + 1, STRINGSIZE - 1);
+          strmaxcpy(Format, p + 1, STRINGSIZE);
         else
           strcpy(Format, " ");
         *p = '\0';
@@ -3141,7 +3032,7 @@ static void MakeCode_M16(void)
       p = strchr(AttrPart.Str, '.');
       if (!p)
       {
-        strmaxcpy(Format, AttrPart.Str, STRINGSIZE - 1);
+        strmaxcpy(Format, AttrPart.Str, STRINGSIZE);
         *AttrPart.Str = '\0';
       }
       else
@@ -3150,7 +3041,7 @@ static void MakeCode_M16(void)
         if (p == AttrPart.Str)
           strcpy(Format, " ");
         else
-          strmaxcpy(Format, AttrPart.Str, STRINGSIZE - 1);
+          strmaxcpy(Format, AttrPart.Str, STRINGSIZE);
       }
       break;
     default:

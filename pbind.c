@@ -4,13 +4,6 @@
 /*                                                                           */
 /* Bearbeitung von AS-P-Dateien                                              */
 /*                                                                           */
-/* Historie:  1. 6.1996 Grundsteinlegung                                     */
-/*            9. 1.2000 plattformabhaengige Formatstrings benutzen           */
-/*           24. 3.2000 added symbolic string for byte message               */
-/*            4. 7.2000 renamed ParProcessed to ParUnprocessed               */
-/*           30. 5.2001 move copy buffer to heap to avoid stack overflows on */
-/*                      DOS platforms                                        */
-/*                                                                           */
 /*****************************************************************************/
 
 #include "stdinc.h"
@@ -206,8 +199,8 @@ int main(int argc, char **argv)
   }
   else
   {
-    strmaxcpy(TargName, ParamStr[z], 255); ParUnprocessed[z] = False;
-    AddSuffix(TargName, getmessage(Num_Suffix));
+    strmaxcpy(TargName, ParamStr[z], STRINGSIZE); ParUnprocessed[z] = False;
+    AddSuffix(TargName, STRINGSIZE, getmessage(Num_Suffix));
   }
 
   OpenTarget();

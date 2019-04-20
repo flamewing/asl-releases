@@ -1,17 +1,8 @@
+/* asmdebug.c */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Verwaltung der Debug-Informationen zur Assemblierzeit                     */
-/*                                                                           */
-/* Historie: 16. 5.1996 Grundsteinlegung                                     */
-/*           24. 7.1998 NoICE-Format                                         */
-/*           25. 7.1998 Adresserfassung Dateien                              */
-/*           16. 8.1998 Case-Sensitivitaet NoICE                             */
-/*                      NoICE-Zeileninfo nach Dateien sortiert               */
-/*           29. 1.1999 uninitialisierten Speicherzugriff beseitigt          */
-/*            2. 5.1999 optional mehrere Records im Atmel-Format schreiben   */
-/*            1. 6.2000 explicitly write addresses as hex numbers for NoICE  */
-/*           2001-09-29 do not accept line info for pseudo segments          */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -155,7 +146,7 @@ static void DumpDebugInfo_MAP(void)
   String MAPName;
   char Tmp[30], Tmp2[30];
 
-  strmaxcpy(MAPName, SourceFile, 255);
+  strmaxcpy(MAPName, SourceFile, STRINGSIZE);
   KillSuffix(MAPName);
   AddSuffix(MAPName, MapSuffix);
   MAPFile = fopen(MAPName, "w");
@@ -225,7 +216,7 @@ static void DumpDebugInfo_Atmel(void)
   LongInt LTurn;
   Word WTurn;
 
-  strmaxcpy(OBJName, SourceFile, 255);
+  strmaxcpy(OBJName, SourceFile, STRINGSIZE);
   KillSuffix(OBJName);
   AddSuffix(OBJName, OBJSuffix);
   OBJFile = fopen(OBJName, OPENWRMODE);
@@ -299,7 +290,7 @@ static void DumpDebugInfo_NOICE(void)
   LargeWord Start, End;
   Boolean HadLines;
 
-  strmaxcpy(MAPName, SourceFile, 255);
+  strmaxcpy(MAPName, SourceFile, STRINGSIZE);
   KillSuffix(MAPName);
   AddSuffix(MAPName, ".noi");
   MAPFile = fopen(MAPName, "w");
