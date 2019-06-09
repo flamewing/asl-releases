@@ -30,6 +30,7 @@ typedef enum
   SInt16   , UInt16  , Int16   ,
   UInt17   ,
   UInt18   ,
+  UInt19   ,
   SInt20   , UInt20  , Int20   ,
   UInt21   ,
   UInt22   ,
@@ -82,13 +83,6 @@ extern Boolean SingleBit(LargeInt Inp, LargeInt *Erg);
 
 
 extern IntType GetSmallestUIntType(LargeWord MaxValue);
-
-
-extern LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult);
-
-extern Double ConstFloatVal(const char *pExpr, FloatType Typ, Boolean *pResult);
-
-extern void ConstStringVal(const char *pExpr, tDynString *pDest, Boolean *pResult);
 
 
 extern Boolean RangeCheck(LargeInt Wert, IntType Typ);

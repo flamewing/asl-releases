@@ -3,38 +3,7 @@
 /* AS                                                                       */
 /* Code Generator for Intersil 1802                                         */
 /*                                                                          */
-/* History: 27. 1.2001 begun                                                */
-/*           3. 2.2001 added 1805 instructions                              */
-/*                                                                          */
 /****************************************************************************/
-/* $Id: code1802.c,v 1.9 2017/01/29 20:52:51 alfred Exp $                   */
-/****************************************************************************
- * $Log: code1802.c,v $
- * Revision 1.9  2017/01/29 20:52:51  alfred
- * - clean up 18xx CPU types
- *
- * Revision 1.8  2017/01/08 12:36:02  alfred
- * - add 1804
- *
- * Revision 1.7  2017/01/08 10:45:28  alfred
- * - differentiate 1805 and 1805A instructions
- *
- * Revision 1.6  2017/01/08 10:27:07  alfred
- * - correct SCAL instruction
- *
- * Revision 1.5  2014/10/03 17:33:49  alfred
- * - adapt to current stype
- *
- * Revision 1.4  2007/11/27 11:24:39  alfred
- * - some instruction fixes
- *
- * Revision 1.3  2005/09/08 16:53:39  alfred
- * - use common PInstTable
- *
- * Revision 1.2  2004/05/29 11:33:00  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- ****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -548,7 +517,6 @@ static void SwitchTo_1802(void)
 
   TurnWords = FALSE;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = FoundDescr->Id;

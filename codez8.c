@@ -4,90 +4,7 @@
 /*                                                                           */
 /* Codegenerator Zilog Z8                                                    */
 /*                                                                           */
-/* Historie:  8.11.1996 Grundsteinlegung                                     */
-/*            2. 1.1998 ChkPC ersetzt                                        */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: codez8.c,v 1.15 2014/12/05 11:15:29 alfred Exp $                          *
- *****************************************************************************
- * $Log: codez8.c,v $
- * Revision 1.15  2014/12/05 11:15:29  alfred
- * - eliminate AND/OR/NOT
- *
- * Revision 1.14  2014/11/05 15:47:16  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.13  2014/03/08 21:06:37  alfred
- * - rework ASSUME framework
- *
- * Revision 1.12  2012-12-09 12:32:06  alfred
- * - Bld85
- *
- * Revision 1.11  2011-10-20 14:00:40  alfred
- * - SRP handling more graceful on Z8
- *
- * Revision 1.10  2011-08-01 20:01:10  alfred
- * - rework Z8 work register addressing
- *
- * Revision 1.9  2010-12-05 22:58:58  alfred
- * - allow arbitrary RP values on eZ8
- *
- * Revision 1.8  2010/04/17 13:14:24  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.7  2007/11/24 22:48:08  alfred
- * - some NetBSD changes
- *
- * Revision 1.6  2006/08/05 18:06:43  alfred
- * - silence some compiler warnings
- *
- * Revision 1.5  2005/10/02 10:00:46  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.4  2005/09/08 16:53:43  alfred
- * - use common PInstTable
- *
- * Revision 1.3  2004/11/21 20:35:29  alfred
- * - added ATM/LDWX
- *
- * Revision 1.2  2004/05/29 11:33:04  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- * Revision 1.1  2003/11/06 02:49:24  alfred
- * - recreated
- *
- * Revision 1.12  2003/08/16 17:24:46  alfred
- * - added call to SaveinitProc()
- *
- * Revision 1.11  2003/08/16 16:43:53  alfred
- * - change head id for eZ8, finished addressing modes
- *
- * Revision 1.10  2003/08/13 20:58:26  alfred
- * - added BTJ
- *
- * Revision 1.9  2003/08/12 17:05:16  alfred
- * - added BIT/LEA
- *
- * Revision 1.8  2003/08/11 21:31:08  alfred
- * - ad ModIndRR
- *
- * Revision 1.7  2003/08/11 21:26:42  alfred
- * - a bit more LDX
- *
- * Revision 1.6  2003/08/10 17:33:32  alfred
- * - fixed missing break
- *
- * Revision 1.5  2003/08/10 17:14:40  alfred
- * - so far...
- *
- * Revision 1.4  2003/08/03 19:10:58  alfred
- * - extended register set, register pointer
- *
- * Revision 1.3  2003/08/02 19:05:12  alfred
- * - cleanrd up, changed to hash table, begun with eZ8
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -1739,7 +1656,7 @@ static void SwitchTo_Z8(void)
 {
   PFamilyDescr pDescr;
 
-  TurnWords = False; ConstMode = ConstModeIntel; SetIsOccupied = False;
+  TurnWords = False; ConstMode = ConstModeIntel;
 
   IsEncore = (MomCPU == CPUeZ8);
 

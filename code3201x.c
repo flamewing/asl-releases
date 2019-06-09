@@ -4,38 +4,7 @@
 /*                                                                           */
 /* Codegenerator TMS3201x-Familie                                            */
 /*                                                                           */
-/* Historie: 28.11.1996 Grundsteinlegung                                     */
-/*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
-/*           18. 8.1992 BookKeeping-Aufruf in RES                            */
-/*            2. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code3201x.c,v 1.6 2016/09/29 16:43:36 alfred Exp $                          */
-/*****************************************************************************
- * $Log: code3201x.c,v $
- * Revision 1.6  2016/09/29 16:43:36  alfred
- * - introduce common DecodeDATA/DecodeRES functions
- *
- * Revision 1.5  2014/12/07 19:13:59  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.4  2014/10/06 18:53:05  alfred
- * - rework to current style
- *
- * Revision 1.3  2008/11/23 10:39:16  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.2  2005/09/08 17:31:03  alfred
- * - add missing include
- *
- * Revision 1.1  2003/11/06 02:49:19  alfred
- * - recreated
- *
- * Revision 1.2  2002/08/14 18:43:48  alfred
- * - warn null allocation, remove some warnings
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -501,7 +470,6 @@ static void SwitchTo_3201X(void)
 {
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = 0x74;

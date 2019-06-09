@@ -5,52 +5,6 @@
 /* Codegenerator LatticeMico8                                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codemic8.c,v 1.14 2014/12/07 19:14:01 alfred Exp $                   */
-/*****************************************************************************
- * $Log: codemic8.c,v $
- * Revision 1.14  2014/12/07 19:14:01  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.13  2014/12/05 11:15:28  alfred
- * - eliminate AND/OR/NOT
- *
- * Revision 1.12  2014/11/30 10:09:54  alfred
- * - rework to current style
- *
- * Revision 1.11  2010/12/11 22:52:39  alfred
- * - split up Mico 8 versions
- *
- * Revision 1.10  2010/01/01 14:31:49  alfred
- * - added some coding bugfixes
- *
- * Revision 1.9  2007/11/24 22:48:07  alfred
- * - some NetBSD changes
- *
- * Revision 1.8  2007/06/28 20:27:31  alfred
- * - silence some warnings on recent GNU C versions
- *
- * Revision 1.7  2005/10/02 10:00:46  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.6  2005/09/30 12:53:49  alfred
- * - correct include statements
- *
- * Revision 1.5  2005/09/08 16:53:43  alfred
- * - use common PInstTable
- *
- * Revision 1.4  2005/08/07 10:29:44  alfred
- * - allow instruction aliases for (I) variants
- *
- * Revision 1.3  2005/08/06 14:19:28  alfred
- * - assure long unsigned constants on 16-bit-platforms
- *
- * Revision 1.2  2005/08/06 13:35:11  alfred
- * - added INC/DEC
- *
- * Revision 1.1  2005/07/30 13:57:02  alfred
- * - add LatticeMico8
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <stdio.h>
@@ -536,7 +490,7 @@ static void SwitchTo_Mico8(void)
 
    FoundDescr = FindFamilyByName("Mico8");
 
-   TurnWords = True; ConstMode = ConstModeC; SetIsOccupied = False;
+   TurnWords = True; ConstMode = ConstModeC;
 
    PCSymbol = "$"; HeaderID = FoundDescr->Id;
 

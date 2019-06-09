@@ -3,40 +3,7 @@
  *
  * AS-Codegeneratormodul fuer die Texas Instruments TMS320C5x-Familie
  *
- * (C) 1996 Thomas Sailer <sailer@ife.ee.ethz.ch>
- *
- * 20.08.96: Erstellung
- *  7.07.1998 Fix Zugriffe auf CharTransTable wg. signed chars
- * 18.08.1998 BookKeeping-Aufruf in RES
- *  9. 1.1999 ChkPC jetzt ueber SegLimits
- * 30. 5.1999 Erweiterung auf C203 abgeschlossen, Hashtabelle fuer
- *            Prozessorbefehle erledigt
- *  9. 3.2000 'ambiguous else'-Warnungen beseitigt
- * 14. 1.2001 silenced warnings about unused parameters
- * 2001-11-11 use DecodeTIPSeudo
  */
-/* $Id: code3205x.c,v 1.7 2014/12/07 19:56:29 alfred Exp $                   */
-/*****************************************************************************
- * $Log: code3205x.c,v $
- * Revision 1.7  2014/12/07 19:56:29  alfred
- * - avoid uninitialized variable
- *
- * Revision 1.6  2014/11/03 19:49:35  alfred
- * - rework to current style
- *
- * Revision 1.5  2007/11/24 22:48:03  alfred
- * - some NetBSD changes
- *
- * Revision 1.4  2005/09/08 16:53:39  alfred
- * - use common PInstTable
- *
- * Revision 1.3  2004/09/26 14:42:44  alfred
- * - remove warning
- *
- * Revision 1.2  2004/05/29 12:18:05  alfred
- * - relocated DecodeTIPseudo() to separate module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -1333,7 +1300,6 @@ static void SwitchTo_3205x(void)
 {
   TurnWords = False;
   ConstMode = ConstModeIntel; 
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = 0x77; 

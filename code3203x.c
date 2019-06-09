@@ -2,97 +2,9 @@
 /*****************************************************************************/
 /* AS-Portierung                                                             */
 /*                                                                           */
-/* Codegenerator TMS320C3x-Familie                                           */               
-/*                                                                           */
-/* Historie: 12.12.1996 Grundsteinlegung                                     */               
-/*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
-/*           18. 8.1998 BookKeeping-Aufruf in RES                            */
-/*            3. 1.1998 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
+/* Codegenerator TMS320C3x/C4x-Familie                                       */               
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3203x.c,v 1.23 2017/06/07 19:38:43 alfred Exp $                       */
-/***************************************************************************** 
- * $Log: code3203x.c,v $
- * Revision 1.23  2017/06/07 19:38:43  alfred
- * - do not double-generate CALL and LAJ
- *
- * Revision 1.22  2016/10/21 20:05:56  alfred
- * - fix some bugs detected by pedantic GCC
- *
- * Revision 1.21  2016/09/12 17:31:41  alfred
- * - corrections for 16-bit compiler
- *
- * Revision 1.20  2016/08/27 07:31:51  alfred
- * - remove debug printf
- *
- * Revision 1.19  2016/08/27 07:12:25  alfred
- * - code format 0x76 now reflects C3x and C4x code
- *
- * Revision 1.18  2016/08/26 18:57:11  alfred
- * - add parallel versions of TOIEEE/FROMIEEE
- *
- * Revision 1.17  2016/08/26 18:43:13  alfred
- * - add new non-parallel C4x instructions
- *
- * Revision 1.16  2016/08/26 09:10:19  alfred
- * - add MPYSHI and MPYUHI
- *
- * Revision 1.15  2016/08/26 08:45:19  alfred
- * - regard different register names on C4x
- *
- * Revision 1.14  2016/08/25 21:45:50  alfred
- * - implement type 2 3-op generic format for C4x
- *
- * Revision 1.13  2016/08/25 20:56:22  alfred
- * - SrcxMode/Part designators consistent to syntax in TI manual (src2,src1,dst)
- *
- * Revision 1.12  2016/08/25 20:43:03  alfred
- * - C4x will be realized as extension of C3x target
- *
- * Revision 1.11  2016/08/24 12:13:19  alfred
- * - begun with 320C4x support
- *
- * Revision 1.10  2014/11/16 13:15:06  alfred
- * - remove some superfluous semicolons
- *
- * Revision 1.9  2014/11/05 15:47:14  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.8  2014/11/02 14:43:30  alfred
- * - rework to current style
- *
- * Revision 1.7  2014/03/08 21:06:35  alfred
- * - rework ASSUME framework
- *
- * Revision 1.6  2010/04/17 13:14:19  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.5  2008/11/23 10:39:16  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.4  2007/11/24 22:48:03  alfred
- * - some NetBSD changes
- *
- * Revision 1.3  2005/10/02 10:00:44  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.2  2005/09/08 17:31:03  alfred
- * - add missing include
- *
- * Revision 1.1  2003/11/06 02:49:19  alfred
- * - recreated
- *
- * Revision 1.4  2003/05/02 21:23:09  alfred
- * - strlen() updates
- *
- * Revision 1.3  2002/08/14 18:17:35  alfred
- * - warn about NULL allocation
- *
- * Revision 1.2  2002/07/14 18:39:58  alfred
- * - fixed TempAll-related warnings
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -1951,7 +1863,6 @@ static void SwitchTo_3203X(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = pDescr->Id;

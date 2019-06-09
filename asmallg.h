@@ -20,5 +20,9 @@ extern void ClearONOFF(void);
 
 extern Boolean CodeGlobalPseudo(void);
 
+struct sStrComp;
+
+extern void INCLUDE_SearchCore(struct sStrComp *pDest, const struct sStrComp *pArg, Boolean SearchPath);
+
 extern void codeallg_init(void);
 #endif /* _ASMALLG_H */

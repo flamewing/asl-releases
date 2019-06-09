@@ -4,72 +4,7 @@
 /*                                                                           */
 /* Codegenerator TMS320C6x                                                   */
 /*                                                                           */
-/* Historie: 24. 2.1997 Grundsteinlegung                                     */
-/*           22. 5.1998 Schoenheitsoperatioenen fuer K&R-Compiler            */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*           23. 1.1999 DecodeCtrlReg jetzt mit unsigned-Ergebnis            */
-/*           30. 1.1999 Formate maschinenunabhaengig gemacht                 */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*           14. 1.2001 silenced warnings about unused parameters            */
-/*           2001-11-19 B fix (input from Johannes)                          */
-/*           2001-11-26 scaling fix (input from Johannes)                    */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code3206x.c,v 1.11 2016/08/17 21:26:46 alfred Exp $                   */
-/***************************************************************************** 
- * $Log: code3206x.c,v $
- * Revision 1.11  2016/08/17 21:26:46  alfred
- * - fix some errors and warnings detected by clang
- *
- * Revision 1.10  2014/12/05 11:58:15  alfred
- * - collapse STDC queries into one file
- *
- * Revision 1.9  2014/11/16 13:15:07  alfred
- * - remove some superfluous semicolons
- *
- * Revision 1.8  2014/11/05 09:12:48  alfred
- * - rework to current style
- *
- * Revision 1.7  2010/04/17 13:14:19  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.6  2008/11/23 10:39:16  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.5  2007/11/24 22:48:03  alfred
- * - some NetBSD changes
- *
- * Revision 1.4  2005/09/08 16:53:40  alfred
- * - use common PInstTable
- *
- * Revision 1.3  2005/05/21 16:35:04  alfred
- * - removed variables available globally
- *
- * Revision 1.2  2003/12/07 14:01:16  alfred
- * - added missing static defs
- *
- * Revision 1.1  2003/11/06 02:49:19  alfred
- * - recreated
- *
- * Revision 1.8  2003/05/02 21:23:10  alfred
- * - strlen() updates
- *
- * Revision 1.7  2002/08/14 18:43:48  alfred
- * - warn null allocation, remove some warnings
- *
- * Revision 1.6  2002/07/14 18:39:58  alfred
- * - fixed TempAll-related warnings
- *
- * Revision 1.5  2002/05/12 20:57:58  alfred
- * - error msg 20000 -> 2009
- *
- * Revision 1.3  2002/05/12 13:59:47  alfred
- * - added pseudo instructions
- *
- * Revision 1.2  2002/05/11 16:47:22  alfred
- * - added pseudo instructions
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -2993,11 +2928,16 @@ static void SwitchFrom_3206X(void)
   }
 }
 
+static Boolean Chk34Arg(void)
+{
+  return (ArgCnt >= 3);
+}
+
 static void SwitchTo_3206X(void)
 {
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
+  SetIsOccupiedFnc = Chk34Arg;
 
   PCSymbol = "$";
   HeaderID = 0x47;
@@ -3005,7 +2945,6 @@ static void SwitchTo_3206X(void)
   DivideChars = ",";
   HasAttrs = True;
   AttrChars = ".";
-  SetIsOccupied = True;
 
   ValidSegs = 1 << SegCode;
   Grans[SegCode] = 1; ListGrans[SegCode] = 4; SegInits[SegCode] = 0;

@@ -4,16 +4,6 @@
 /*                                                                           */
 /* Codegenerator Atmel AVR                                                   */
 /*                                                                           */
-/* Historie: 26.12.1996 Grundsteinlegung                                     */
-/*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
-/*           18. 8.1998 BookKeeping-Aufruf bei RES                           */
-/*           15.10.1998 LDD/STD mit <reg>+<symbol> ging nicht                */
-/*            2. 5.1999 JMP/CALL momentan bei keinem Mitglied erlaubt        */
-/*                      WRAPMODE eingebaut                                   */
-/*           19.11.1999 Default-Hexmodus ist jetzt C                         */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*            7. 5.2000 Packing hinzugefuegt                                 */
-/*                                                                           */
 /*****************************************************************************/
 
 #include "stdinc.h"
@@ -1063,11 +1053,16 @@ static void SwitchFrom_AVR(void)
   ClearONOFF();
 }
 
+static Boolean ChkZeroArg(void)
+{
+  return (0 == ArgCnt);
+}
+
 static void SwitchTo_AVR(void *pUser)
 {
   TurnWords = False;
   ConstMode = ConstModeC;
-  SetIsOccupied = True;
+  SetIsOccupiedFnc = ChkZeroArg;
 
   PCSymbol = "*";
   HeaderID = 0x3b;

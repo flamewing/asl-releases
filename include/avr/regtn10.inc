@@ -19,7 +19,7 @@ RAMEND		equ     0x5f,data	; end address SRAM
 FLASHEND	label   1023		; end address Flash
 
 __HAS_ADC__	equ	1
-		include "avr/regtx459.inc"
+		include "regtx459.inc"
 
 		restore
 

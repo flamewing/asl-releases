@@ -4,38 +4,7 @@
 /*                                                                           */
 /* Codegeneratormodul ACE-Familie                                            */
 /*                                                                           */
-/* Historie: 14. 8.1999 Grundsteinlegung                                     */
-/*           15. 8.1999 Datensegment immer 256 Byte                          */
-/*                      angekuendigte Typen                                  */
-/*                      nur noch Intel-Pseudos                               */
-/*           16. 8.1999 Fehler beseitigt                                     */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*           14. 1.2001 silenced warnings about unused parameters            */
-/*                      removed undef'd processors                           */
-/*                      X-displacements are unsigned                         */
-/*                      unified segments                                     */
-/*                      changed segment limits/inits                         */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: codeace.c,v 1.6 2014/12/01 18:29:40 alfred Exp $                     */
-/*****************************************************************************
- * $Log: codeace.c,v $
- * Revision 1.6  2014/12/01 18:29:40  alfred
- * - replace Nil -> NULL
- *
- * Revision 1.5  2014/06/23 17:27:49  alfred
- * - reworked to current style
- *
- * Revision 1.4  2010/04/17 13:14:23  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.3  2005/09/08 16:53:42  alfred
- * - use common PInstTable
- *
- * Revision 1.2  2004/05/29 11:33:02  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -762,7 +731,6 @@ static void SwitchTo_ACE(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   Descr = FindFamilyByName("ACE");
   PCSymbol = "$";

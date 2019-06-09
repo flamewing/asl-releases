@@ -2,38 +2,9 @@
 /*****************************************************************************/
 /* AS-Portierung                                                             */
 /*                                                                           */
-/* Codegenerator TLCS-870                                                    */
+/* Codegenerator TLCS-870/C                                                  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code870c.c,v 1.8 2015/10/23 08:43:12 alfred Exp $                  */
-/*****************************************************************************
- * $Log: code870c.c,v $
- * Revision 1.8  2015/10/23 08:43:12  alfred
- * - display name of unimplemented instruction
- *
- * Revision 1.7  2014/11/23 17:53:46  alfred
- * - add J pseudo instruction
- * - correct P and M conditions
- *
- * Revision 1.6  2014/11/23 17:05:54  alfred
- * *** empty log message ***
- *
- * Revision 1.5  2014/11/22 11:47:36  alfred
- * - first complete TLCS-870/C target
- *
- * Revision 1.4  2014/11/21 22:11:37  alfred
- * - up to LD CF
- *
- * Revision 1.3  2014/11/19 22:55:01  alfred
- * - CMP works, possibly other ALU ops
- *
- * Revision 1.2  2014/11/18 18:33:28  alfred
- * - got up to before XCH
- *
- * Revision 1.1  2014/11/17 23:51:32  alfred
- * - begun with TLCS-870/C
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -1429,6 +1400,11 @@ static void SwitchFrom_870C(void)
   DeinitFields();
 }
 
+static Boolean TrueFnc(void)
+{
+  return True;
+}
+
 static void SwitchTo_870C(void)
 {
   PFamilyDescr FoundDescr;
@@ -1437,7 +1413,7 @@ static void SwitchTo_870C(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = True;
+  SetIsOccupiedFnc = TrueFnc;
 
   PCSymbol = "$";
   HeaderID = FoundDescr->Id;

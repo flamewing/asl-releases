@@ -49,7 +49,9 @@ typedef float Single;
 
 typedef Byte Boolean; 
 
-#define STRINGSIZE 256
+#ifndef STRINGSIZE
+# define STRINGSIZE 256
+#endif
 #define SHORTSTRINGSIZE 65
 
 typedef char String[STRINGSIZE];

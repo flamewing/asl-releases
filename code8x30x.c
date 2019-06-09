@@ -4,10 +4,6 @@
 /*                                                                           */
 /* Codegenerator Signetics 8X30x                                             */
 /*                                                                           */
-/* Historie: 25. 6.1997 Grundsteinlegung                                     */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
 
 #include "stdinc.h"
@@ -587,7 +583,6 @@ static void SwitchTo_8x30X(void)
 {
   TurnWords = False;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   PCSymbol = "*";
   HeaderID = 0x3a;

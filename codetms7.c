@@ -1008,7 +1008,7 @@ static void SwitchFrom_TMS7(void)
 
 static void SwitchTo_TMS7(void)
 {
-  TurnWords = False; ConstMode = ConstModeIntel; SetIsOccupied = False;
+  TurnWords = False; ConstMode = ConstModeIntel;
 
   PCSymbol = "$"; HeaderID = 0x73; NOPCode = 0x00;
   DivideChars = ","; HasAttrs = False;

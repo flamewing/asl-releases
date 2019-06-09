@@ -125,8 +125,8 @@ Boolean TurnWords;                       /* TRUE  = Motorola-Wortformat */
 Byte HeaderID;	                         /* Kennbyte des Codeheaders */
 char *PCSymbol;	                         /* Symbol, womit Programmzaehler erreicht wird. Inhalt Read Only! */
 TConstMode ConstMode;
-Boolean SetIsOccupied,			 /* TRUE: SET/SWITCH/PAGE ist Prozessorbefehl */
-        SwitchIsOccupied,
+Boolean (*SetIsOccupiedFnc)(void);       /* TRUE: SET instr, to be parsed by code generator */
+Boolean SwitchIsOccupied,                /* TRUE: SWITCH/PAGE ist Prozessorbefehl */
         PageIsOccupied;
 #ifdef __PROTOS__
 void (*MakeCode)(void);                  /* Codeerzeugungsprozedur */
@@ -311,6 +311,11 @@ void IncArgCnt(void)
       StrCompAlloc(&ArgStr[z]);
     AllocArgCnt = ArgCnt + 1;
   }
+}
+
+Boolean SetIsOccupied(void)
+{
+  return SetIsOccupiedFnc && SetIsOccupiedFnc();
 }
 
 void asmdef_init(void)

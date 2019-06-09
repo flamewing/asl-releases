@@ -86,8 +86,8 @@ LLDRL0		avrbit	LLDRL,0
 ;----------------------------------------------------------------------------
 ; EEPROM/Program Memory Access
 
-		include	"avr/eem2.inc"
-		include	"avr/spmcsr37.inc"
+		include	"eem2.inc"
+		include	"spmcsr37.inc"
 
 EEPM0		avrbit	EECR,4		; EEPROM Programming Mode
 EEPM1		avrbit	EECR,5
@@ -501,30 +501,30 @@ EXCLKAMR	avrbit	ASSR,7		; Enable External Clock Input for AMR
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
-		include	"avr/wdme.inc"
+		include	"wdme.inc"
 
 ;----------------------------------------------------------------------------
 ; U(S)ART
 
 __USART0_SPI__	equ	1
-		include	"avr/usartc0.inc"
+		include	"usartc0.inc"
 __USART1_SPI__	equ	1
-		include	"avr/usartc8.inc"
+		include	"usartc8.inc"
 
 ;----------------------------------------------------------------------------
 ; SPI
 
-		include	"avr/spim2c.inc"
+		include	"spim2c.inc"
 
 ;----------------------------------------------------------------------------
 ; TWI
 
-		include	"avr/twimb8.inc"
+		include	"twimb8.inc"
 
 ;----------------------------------------------------------------------------
 ; A/D Converter
 
-		include	"avr/adcm78.inc"
+		include	"adcm78.inc"
 
 MUX4		avrbit	ADMUX,4
 MUX5		avrbit	ADCSRB,3
@@ -564,17 +564,17 @@ BGCAL_FINE3	avrbit	BGCR,6
 ;----------------------------------------------------------------------------
 ; Analog Comparator
 
-		include	"avr/acm30.inc"
+		include	"acm30.inc"
 
 ;----------------------------------------------------------------------------
 ; 2.4 GHz Transceiver
 
-		include	"avr/tr24.inc"
+		include	"tr24.inc"
 
 ;----------------------------------------------------------------------------
 ; MAC Symbol Counter
 
-		include	"avr/macsc.inc"
+		include	"macsc.inc"
 
 		restore			; re-enable listing
 

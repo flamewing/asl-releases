@@ -4,59 +4,7 @@
 /*                                                                           */
 /* AS-Codegeneratormodul fuer die DSP56K-Familie                             */
 /*                                                                           */
-/* Historie: 10. 6.1996 Grundsteinlegung                                     */
-/*            7. 6.1998 563xx-Erweiterungen fertiggestellt                   */
-/*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
-/*           18. 8.1998 BookKeeping-Aufruf bei RES                           */
-/*            2. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 1.2000 PC-relativ geht relativ zur Instruktion selber und   */
-/*                      nicht zur INstruktion selber!                        */
-/*                      ShortMode wird bei absoluter Adressierung gemerkt    */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code56k.c,v 1.11 2016/09/12 18:20:21 alfred Exp $                     */
-/*****************************************************************************
- * $Log: code56k.c,v $
- * Revision 1.11  2016/09/12 18:20:21  alfred
- * - use memmove() for overlapping copy
- *
- * Revision 1.10  2016/08/17 21:26:46  alfred
- * - fix some errors and warnings detected by clang
- *
- * Revision 1.9  2014/12/07 19:13:59  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.8  2014/12/05 11:58:15  alfred
- * - collapse STDC queries into one file
- *
- * Revision 1.7  2014/11/10 15:25:26  alfred
- * - rework to current style
- *
- * Revision 1.6  2010/04/17 13:14:20  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.5  2008/12/14 20:22:03  alfred
- * - allow forcing of long addresses
- *
- * Revision 1.4  2008/11/23 10:39:16  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.3  2007/11/24 22:48:04  alfred
- * - some NetBSD changes
- *
- * Revision 1.2  2005/09/08 17:31:03  alfred
- * - add missing include
- *
- * Revision 1.1  2003/11/06 02:49:20  alfred
- * - recreated
- *
- * Revision 1.3  2003/05/02 21:23:10  alfred
- * - strlen() updates
- *
- * Revision 1.2  2002/08/14 18:43:48  alfred
- * - warn null allocation, remove some warnings
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -2959,7 +2907,6 @@ static void SwitchTo_56K(void)
 {
   TurnWords = True;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   PCSymbol = "*";
   HeaderID = 0x09;

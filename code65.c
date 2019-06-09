@@ -2405,11 +2405,15 @@ static void SwitchFrom_65(void)
   DeinitFields();
 }
 
+static Boolean ChkZeroArgs(void)
+{
+  return (0 == ArgCnt);
+}
+
 static void SwitchTo_65(void)
 {
   TurnWords = False;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = (MomCPU == CPUM740);
 
   PCSymbol = "*";
   HeaderID = 0x11;
@@ -2430,7 +2434,7 @@ static void SwitchTo_65(void)
 
     pASSUMERecs = ASSUME740s;
     ASSUMERecCnt = (sizeof(ASSUME740s) / sizeof(*ASSUME740s));
-    SetIsOccupied = True;
+    SetIsOccupiedFnc = ChkZeroArgs;
   }
   else if (MomCPU == CPUHUC6280)
   {
@@ -2448,7 +2452,7 @@ static void SwitchTo_65(void)
 
     pASSUMERecs = ASSUME6280s;
     ASSUMERecCnt = (sizeof(ASSUME6280s) / sizeof(*ASSUME6280s));
-    SetIsOccupied = True;
+    SetIsOccupiedFnc = ChkZeroArgs;
   }
   else if (MomCPU == CPU65CE02)
   {
@@ -2459,10 +2463,9 @@ static void SwitchTo_65(void)
 
     pASSUMERecs = ASSUME65CE02s;
     ASSUMERecCnt = (sizeof(ASSUME65CE02s) / sizeof(*ASSUME65CE02s));
-    SetIsOccupied = False;
   }
   else
-    SetIsOccupied = False;
+    SetIsOccupiedFnc = NULL;
 
   MakeCode = MakeCode_65;
   IsDef = IsDef_65;

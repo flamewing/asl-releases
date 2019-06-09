@@ -253,7 +253,7 @@ WDIF		avrbit	WDTCSR,7	; Watchdog Interrupt Occured?
 ;----------------------------------------------------------------------------
 ; Analog Comparator
 
-		include "avr/acm.inc"
+		include "acm.inc"
 
 ;----------------------------------------------------------------------------
 ; USART

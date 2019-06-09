@@ -4,64 +4,7 @@
 /*                                                                           */
 /* Codegenerator M16C                                                        */
 /*                                                                           */
-/* Historie: 17.12.1996 Grundsteinlegung                                     */
-/*           21. 9.1998 Kodierungsfehler: mov.b:s #0,...->dests vergessen    */
-/*                                        mov.x:s #imm,reg->OpSize invertiert*/
-/*                                        sub.x:q #imm4,...->falscher Opcode */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*   {RMS}    6. 2.1999 Fixed remaining code generation errors - M16C is now */
-/*                      100% correct, validated against reference assemblers */
-/*                      and official Mitsubishi documentation.               */
-/*                      Search for RMS: tags to see changes                  */
-/*   {RMS}    8. 2.1999 Fixed ChkPC SegLimit typo [M16s have 20 bits]        */
-/*   {RMS}   10. 2.1999 Accomodate JMP.S crossing 64k boundary bug in M16C   */
-/*   {RMS}    2. 4.1999 Made the JMP.S promotion fix CPU-dependent, and made */
-/*                      repairs to the JMP.S handling for forward label refs */
-/*                      so they now work. [JMP.S symbol] now works.          */
-/*   {RMS}   13.12.1999 One MORE fix to JMP[.S] - this time for something    */
-/*                      silly, and probably not that common.  But it caused  */
-/*                      a very annoying bug all the same: infinite phase     */
-/*                      errors causing an infinite number of passes! Oops. :)*/
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: codem16c.c,v 1.12 2014/12/07 19:14:01 alfred Exp $                    */
-/*****************************************************************************
- * $Log: codem16c.c,v $
- * Revision 1.12  2014/12/07 19:14:01  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.11  2014/12/05 11:15:28  alfred
- * - eliminate AND/OR/NOT
- *
- * Revision 1.10  2014/12/05 08:53:45  alfred
- * - eliminate remaining BEGIN/END
- *
- * Revision 1.9  2014/06/13 20:58:48  alfred
- * - adapt to current style
- *
- * Revision 1.8  2010/04/11 11:38:43  alfred
- * - correct SHA coding
- *
- * Revision 1.7  2010/04/04 08:31:16  alfred
- * - correct some coding details
- *
- * Revision 1.6  2010/03/27 14:21:04  alfred
- * - correct address range check
- *
- * Revision 1.5  2007/11/24 22:48:07  alfred
- * - some NetBSD changes
- *
- * Revision 1.4  2005/09/30 12:53:49  alfred
- * - correct include statements
- *
- * Revision 1.3  2005/09/08 17:06:29  alfred
- * - dynamically allocate string
- *
- * Revision 1.2  2004/05/29 11:33:03  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -2647,7 +2590,6 @@ static void SwitchTo_M16C(void)
 {
   TurnWords = True;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = 0x14;

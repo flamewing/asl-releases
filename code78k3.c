@@ -5,25 +5,6 @@
 /* Codegenerator 78K3-Familie                                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code78k3.c,v 1.5 2016/08/20 21:13:45 alfred Exp $
- *****************************************************************************
- * $Log: code78k3.c,v $
- * Revision 1.5  2016/08/20 21:13:45  alfred
- * - fix some pedantic CLANG errors
- *
- * Revision 1.4  2016/08/17 20:17:21  alfred
- * - added RSS handling and documentation for 78K3
- *
- * Revision 1.3  2016/08/14 20:01:12  alfred
- * - got through 78K3 machine instructions
- *
- * Revision 1.2  2016/08/12 22:37:03  alfred
- * - implemented 78K3 MOV instruction
- *
- * Revision 1.1  2016/08/10 21:06:22  alfred
- * - begun with 78K3 support
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -2028,7 +2009,6 @@ static void SwitchTo_78K3(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "PC";
   HeaderID = pDescr->Id;

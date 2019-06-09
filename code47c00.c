@@ -4,33 +4,7 @@
 /*                                                                           */
 /* Codegenerator Toshiba TLCS-47(0(A))                                       */
 /*                                                                           */
-/* Historie: 30.12.1996 Grundsteinlegung                                     */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code47c00.c,v 1.7 2014/12/07 19:13:59 alfred Exp $                   */
-/*****************************************************************************
- * $Log: code47c00.c,v $
- * Revision 1.7  2014/12/07 19:13:59  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.6  2014/11/06 13:59:38  alfred
- * - rework to current style
- *
- * Revision 1.5  2014/11/05 15:47:14  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.4  2014/03/08 21:06:35  alfred
- * - rework ASSUME framework
- *
- * Revision 1.3  2005/09/08 17:31:03  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 11:33:00  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -1265,6 +1239,11 @@ static void SwitchFrom_47C00(void)
   DeinitFields();
 }
 
+static Boolean TrueFnc(void)
+{
+  return True;
+}
+
 static void SwitchTo_47C00(void)
 {
 #define ASSUME47Count (sizeof(ASSUME47s) / sizeof(*ASSUME47s))
@@ -1275,7 +1254,7 @@ static void SwitchTo_47C00(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = True;
+  SetIsOccupiedFnc = TrueFnc;
 
   PCSymbol = "$";
   HeaderID = 0x55;

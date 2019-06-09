@@ -556,7 +556,7 @@ static void MACRO_OutProcessor(void)
   {
     errno = 0;
     fprintf(MacroFile, "%s\n", OneLine);
-    ChkIO(10004);
+    ChkIO(ErrNum_FileWriteError);
   }
 
   /* check for additional nested macros resp. end of definition */
@@ -911,7 +911,7 @@ static void ReadMacro(void)
     fprintf(MacroFile, "%s MACRO %s\n",
             Context.pOutputTag->DoGlobCopy ? Context.pOutputTag->GName : LabPart.Str,
             Context.PList);
-    ChkIO(10004);
+    ChkIO(ErrNum_FileWriteError);
   }
 
   OneMacro->UseCounter = 0;
@@ -2080,8 +2080,8 @@ Boolean INCLUDE_Processor(PInputTag PInp, char *Erg)
     *Erg = '\0';
   else
   {
-    Count = ReadLnCont(PInp->Datei, Erg, 256);
-    /**ChkIO(10003);**/
+    Count = ReadLnCont(PInp->Datei, Erg, STRINGSIZE);
+    /**ChkIO(ErrNum_FileReadError);**/
   }
   PInp->LineZ = CurrLine = (MomLineCounter += Count);
   if (feof(PInp->Datei))
@@ -2099,7 +2099,8 @@ static void INCLUDE_Restorer(PInputTag PInp)
 
 static void ExpandINCLUDE(Boolean SearchPath)
 {
-  String FileName;
+  tStrComp FNameArg;
+  String FNameArgStr;
   PInputTag Tag;
 
   if (!IfAsm)
@@ -2108,18 +2109,9 @@ static void ExpandINCLUDE(Boolean SearchPath)
   if (!ChkArgCnt(1, 1))
     return;
 
-  strmaxcpy(FileName, (*ArgStr[1].Str == '"') ? (ArgStr[1].Str + 1) : ArgStr[1].Str, STRINGSIZE);
-  if ((*FileName) && (FileName[strlen(FileName) - 1] == '"'))
-    FileName[strlen(FileName) - 1] = '\0';
-  AddSuffix(FileName, IncSuffix);
-  strmaxcpy(ArgStr[1].Str, FileName, STRINGSIZE);
-  if (SearchPath)
-  {
-    strmaxcpy(FileName, FExpand(FSearch(FileName, IncludeList)), STRINGSIZE);
-    if ((*FileName) && (FileName[strlen(FileName) - 1] == '/'))
-      strmaxcat(FileName, ArgStr[1].Str, STRINGSIZE);
-  }
-
+  StrCompMkTemp(&FNameArg, FNameArgStr);
+  INCLUDE_SearchCore(&FNameArg, &ArgStr[1], SearchPath);
+  
   /* Tag erzeugen */
 
   Tag = GenerateProcessor();
@@ -2132,24 +2124,24 @@ static void ExpandINCLUDE(Boolean SearchPath)
   /* Sicherung alter Daten */
 
   Tag->StartLine = MomLineCounter;
-  strmaxcpy(Tag->SpecName.Str, FileName, STRINGSIZE);
+  strmaxcpy(Tag->SpecName.Str, FNameArg.Str, STRINGSIZE);
   LineCompReset(&Tag->SpecName.Pos);
   strmaxcpy(Tag->SaveAttr, CurrFileName, STRINGSIZE);
 
   /* Datei oeffnen */
 
 #ifdef __CYGWIN32__
-  DeCygwinPath(FileName);
+  DeCygwinPath(FNameArg.Str);
 #endif
-  Tag->Datei = fopen(FileName, "r");
-  if (!Tag->Datei) ChkStrIO(10001, &ArgStr[1]);
+  Tag->Datei = fopen(FNameArg.Str, "r");
+  if (!Tag->Datei) ChkStrIO(ErrNum_OpeningFile, &ArgStr[1]);
   setvbuf(Tag->Datei, Tag->Buffer, _IOFBF, BufferArraySize);
 
   /* neu besetzen */
 
-  strmaxcpy(CurrFileName, FileName, STRINGSIZE); Tag->LineZ = MomLineCounter = 0;
-  NextIncDepth++; AddFile(FileName);
-  PushInclude(FileName);
+  strmaxcpy(CurrFileName, FNameArg.Str, STRINGSIZE); Tag->LineZ = MomLineCounter = 0;
+  NextIncDepth++; AddFile(FNameArg.Str);
+  PushInclude(FNameArg.Str);
 
   /* einhaengen */
 
@@ -2316,11 +2308,11 @@ Boolean HasLabel(void)
     case 'L':
       return (!Memo("LABEL"));
     case 'S':
-      return ((!Memo("SET")) || (SetIsOccupied)) && (!(Memo("STRUCT") || Memo("STRUC")));
+      return (!Memo("SET") || SetIsOccupied()) && (!(Memo("STRUCT") || Memo("STRUC")));
     case 'E':
       if (Memo("EQU") || Memo("ENDSTRUCT") || Memo("ENDS") || Memo("ENDSTRUC") || Memo("ENDUNION"))
         return False;
-      return !(Memo("EVAL") && SetIsOccupied);
+      return !Memo("EVAL");
     case 'U':
       return (!Memo("UNION"));
     default:
@@ -2514,7 +2506,7 @@ static void Produce_Code(void)
       {
         errno = 0;
         fprintf(MacProFile, "%s\n", OneLine);
-        ChkIO(10002);
+        ChkIO(ErrNum_ListWrError);
       }
     }
 
@@ -3183,7 +3175,7 @@ static void AssembleFile(char *Name)
     {
       ShareFile = fopen(ShareName, "w");
       if (!ShareFile)
-        ChkIO(10001);
+        ChkIO(ErrNum_OpeningFile);
       errno = 0;
       switch (ShareMode)
       {
@@ -3197,33 +3189,33 @@ static void AssembleFile(char *Name)
           fprintf(ShareFile, "; %s-Includefile f%sr Assembler-Programm\n", SourceFile, CH_ue);
           break;
       }
-      ChkIO(10002);
+      ChkIO(ErrNum_ListWrError);
     }
 
     if (MacProOutput)
     {
       MacProFile = fopen(MacProName, "w");
       if (!MacProFile)
-        ChkIO(10001);
+        ChkIO(ErrNum_OpeningFile);
     }
 
     if ((MacroOutput) && (PassNo == 1))
     {
       MacroFile = fopen(MacroName, "w");
       if (!MacroFile)
-        ChkIO(10001);
+        ChkIO(ErrNum_OpeningFile);
     }
 
     /* Listdatei oeffnen */
 
     RewriteStandard(&LstFile, LstName);
     if (!LstFile)
-      ChkIO(10001);
+      ChkIO(ErrNum_OpeningFile);
     if (!ListToNull)
     {
       errno = 0;
       fprintf(LstFile, "%s", PrtInitString);
-      ChkIO(10002);
+      ChkIO(ErrNum_ListWrError);
     }
     if ((ListMask & 1) != 0)
       NewPage(0, False);
@@ -3253,7 +3245,7 @@ static void AssembleFile(char *Name)
           fprintf(ShareFile, "; Ende Includefile f%sr Assembler-Programm\n", CH_ue);
           break;
       }
-      ChkIO(10002);
+      ChkIO(ErrNum_ListWrError);
       CloseIfOpen(&ShareFile);
     }
 
@@ -3360,7 +3352,7 @@ static void AssembleFile(char *Name)
     {
       errno = 0;
       fprintf(LstFile, "%s", PrtExitString);
-      ChkIO(10002);
+      ChkIO(ErrNum_ListWrError);
     }
   }
 
@@ -3659,7 +3651,7 @@ static CMDResult CMD_MakeDebug(Boolean Negate, const char *Arg)
     errno = 0;
     Debug = fopen("as.deb", "w");
     if (!Debug)
-      ChkIO(10002);
+      ChkIO(ErrNum_ListWrError);
   }
   else if (MakeDebug)
   {

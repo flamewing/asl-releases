@@ -5,46 +5,6 @@
 /* Codegenerator National INS807X.c                                          */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code807x.c,v 1.7 2015/08/19 16:27:20 alfred Exp $                   *
- *****************************************************************************
- * $Log: code807x.c,v $
- * Revision 1.7  2015/08/19 16:27:20  alfred
- * - correct 807x relative addressing
- *
- * Revision 1.6  2015/08/17 16:26:02  alfred
- * - allow address range 0xffxx for direct addressing on INS807x
- *
- * Revision 1.5  2015/08/14 21:03:29  alfred
- * - some additions/corrections to 807x target
- *
- * Revision 1.4  2015/08/14 19:50:18  alfred
- * - correct integer constant mode for INS807x (C instead of Intel)
- *
- * Revision 1.3  2005/09/08 16:53:42  alfred
- * - use common PInstTable
- *
- * Revision 1.2  2004/05/29 11:33:01  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- * Revision 1.1  2003/11/06 02:49:22  alfred
- * - recreated
- *
- * Revision 1.6  2003/05/02 21:23:11  alfred
- * - strlen() updates
- *
- * Revision 1.5  2003/03/30 12:50:21  alfred
- * - fixed some warnings
- *
- * Revision 1.4  2003/03/23 11:07:24  alfred
- * - documented 807x support
- *
- * Revision 1.3  2003/03/19 21:00:47  alfred
- * - first half done
- *
- * Revision 1.2  2003/03/16 19:22:25  alfred
- * - LD works
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -810,7 +770,7 @@ static void SwitchTo_807x(void)
 
    FoundDescr = FindFamilyByName("807x");
 
-   TurnWords = False; ConstMode = ConstModeC; SetIsOccupied = False;
+   TurnWords = False; ConstMode = ConstModeC;
 
    PCSymbol="$"; HeaderID = FoundDescr->Id; NOPCode = 0x00;
    DivideChars = ","; HasAttrs = False;

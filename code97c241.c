@@ -4,48 +4,7 @@
 /*                                                                           */
 /* Codegenerator TLCS-9000                                                   */
 /*                                                                           */
-/* Historie:                                                                 */
-/*            2. 1.1999 ChkPC umgebaut                                       */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code97c241.c,v 1.12 2016/07/01 17:43:50 alfred Exp $                  */
-/*****************************************************************************
- * $Log: code97c241.c,v $
- * Revision 1.12  2016/07/01 17:43:50  alfred
- * - allow enforcement of prefix for TLCS-9000
- *
- * Revision 1.11  2015/09/20 10:37:36  alfred
- * - silence some GCC warnings
- *
- * Revision 1.10  2014/12/07 19:14:00  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.9  2014/12/01 18:29:39  alfred
- * - replace Nil -> NULL
- *
- * Revision 1.8  2014/06/28 20:35:30  alfred
- * - rework to current style
- *
- * Revision 1.7  2010/04/17 13:14:23  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.6  2007/11/24 22:48:06  alfred
- * - some NetBSD changes
- *
- * Revision 1.5  2006/06/15 20:48:36  alfred
- * - correct function call
- *
- * Revision 1.4  2005/10/02 10:00:45  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.3  2005/09/08 17:31:04  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 11:33:02  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -2491,7 +2450,6 @@ static void SwitchTo_97C241(void)
 {
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = 0x56;

@@ -3493,7 +3493,6 @@ static void SwitchTo_78K4(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "PC";
   HeaderID = pDescr->Id;

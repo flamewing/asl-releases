@@ -203,7 +203,7 @@ TSM		avrbit	GTCCR,7		; Timer/Counter Synchronization Mode
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
-		include	"avr/wdm21.inc"
+		include	"wdm21.inc"
 
 WDCE		avrbit	WDTCR,4		; Change Enable
 WDP3		avrbit	WDTCR,5
@@ -213,7 +213,7 @@ WDIF		avrbit	WDTCR,7		; Watchdog Interrupt Occured?
 ;----------------------------------------------------------------------------
 ; Analog Comparator
 
-		include "avr/acm.inc"
+		include "acm.inc"
 
 ;----------------------------------------------------------------------------
 ; A/D Converter

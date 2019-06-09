@@ -3255,11 +3255,16 @@ static void SwitchFrom_Z80(void)
   ClearONOFF();
 }
 
+static Boolean ChkMoreOneArg(void)
+{
+  return (ArgCnt > 1);
+}
+
 static void SwitchTo_Z80(void)
 {
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = True;
+  SetIsOccupiedFnc = ChkMoreOneArg;
 
   PCSymbol = "$"; HeaderID = 0x51; NOPCode = 0x00;
   DivideChars = ","; HasAttrs = False;

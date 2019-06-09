@@ -59,8 +59,8 @@ XMM0		avrbit	XMCRB,0
 ;----------------------------------------------------------------------------
 ; EEPROM/Program Memory Access
 
-		include	"avr/eem.inc"
-		include	"avr/spmcsr68.inc"
+		include	"eem.inc"
+		include	"spmcsr68.inc"
 
 ;----------------------------------------------------------------------------
 ; JTAG
@@ -290,7 +290,7 @@ AS0		avrbit	ASSR,3		; Asynchronous Timer/Counter 0
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
-		include	"avr/wdm21.inc"
+		include	"wdm21.inc"
 WDCE		avrbit	WDTCR,4		; Change Enable
 
 ;----------------------------------------------------------------------------
@@ -368,22 +368,22 @@ UBRR1L		sfr	0x99		; UART1 Baud Rate Register LSB
 ;----------------------------------------------------------------------------
 ; SPI
 
-		include	"avr/spim.inc"
+		include	"spim.inc"
 
 ;----------------------------------------------------------------------------
 ; TWI
 
-		include	"avr/twim70.inc"
+		include	"twim70.inc"
 
 ;----------------------------------------------------------------------------
 ; A/D Converter
 
-		include	"avr/adcm16.inc"
+		include	"adcm16.inc"
 
 ;----------------------------------------------------------------------------
 ; Analog Comparator
 
-		include "avr/acm.inc"
+		include "acm.inc"
 
 		restore			; re-enable listing
 

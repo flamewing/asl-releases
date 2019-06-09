@@ -147,15 +147,16 @@ void CodeIFEXIST(Word Negate)
     IfExpr = 1;
   else
   {
-    String FileName;
+    String FileName, Dummy;
 
     strmaxcpy(FileName, (ArgStr[1].Str[0] == '"') ? ArgStr[1].Str + 1 : ArgStr[1].Str, STRINGSIZE);
     if (FileName[strlen(FileName) - 1] == '"')
       FileName[strlen(FileName) - 1] = '\0';
     AddSuffix(FileName, IncSuffix);
     strmaxcpy(NPath, IncludeList, STRINGSIZE);
-    strmaxprep(NPath, ".:", STRINGSIZE);
-    Found = (*(FSearch(FileName, NPath)) != '\0');
+    strmaxprep(NPath, SDIRSEP, STRINGSIZE);
+    strmaxprep(NPath, ".", STRINGSIZE);
+    Found = !FSearch(Dummy, sizeof(Dummy), FileName, CurrFileName, NPath);
     if (IfAsm)
       strmaxcpy(ListLine, Found ? "=>FOUND" : "=>NOT FOUND", STRINGSIZE);
     IfExpr = Negate ? !Found : Found;

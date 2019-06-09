@@ -19,7 +19,7 @@ RAMSTART	equ	0x100,data
 RAMEND		equ	0x10ff,data
 FLASHEND	label	0xffff
 
-		include "avr/regmxx4.inc"
+		include "regmxx4.inc"
 
 		restore			; re-enable listing
 

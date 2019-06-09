@@ -112,13 +112,13 @@ TIFR		port	0x38		; Timer Interrupt Flag Register
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
-		include	"avr/wdm21.inc"
+		include	"wdm21.inc"
 WDTOE		avrbit	WDTCR,4		; Turn-Off Enable
 
 ;----------------------------------------------------------------------------
 ; SPI
 
-		include	"avr/spi90.inc"
+		include	"spi90.inc"
 
 ;----------------------------------------------------------------------------
 ; A/D Converter

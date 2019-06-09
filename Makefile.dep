@@ -8,7 +8,7 @@ asmallg.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.h
 
 asmcode.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h version.h endian.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h errmsg.h asmsub.h asmerr.h asmpars.h symbolsize.h intconsts.h asmrelocs.h
 
-asmdebug.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h endian.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmfnums.h asmdebug.h
+asmdebug.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h endian.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmfnums.h errmsg.h asmdebug.h
 
 asmdef.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h stringlists.h chunks.h asmdef.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h errmsg.h
 
@@ -202,7 +202,7 @@ codescmp.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h nls.h strutil.
 
 codest6.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h bpemu.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h motpseudo.h codevars.h errmsg.h codest6.h
 
-codest7.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h nls.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h motpseudo.h codevars.h errmsg.h codest7.h
+codest7.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h nls.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h asmstructs.h asmallg.h codepseudo.h motpseudo.h codevars.h errmsg.h codest7.h
 
 codest9.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h bpemu.h strutil.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmsub.h asmerr.h asmpars.h symbolsize.h asmitree.h codepseudo.h intpseudo.h codevars.h errmsg.h codest9.h
 

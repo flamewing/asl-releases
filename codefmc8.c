@@ -4,28 +4,7 @@
 /*                                                                          */
 /* Codegenerator fuer Fujitsu-F2MC8L-Prozessoren                            */
 /*                                                                          */
-/* Historie:   4. 7.1999 Grundsteinlegung                                   */
-/*            29. 7.1999 doppelte Variable entfernt                         */
-/*             9. 3.2000 'ambiguous else'-Warnungen beseitigt               */
-/*           14. 1.2001 silenced warnings about unused parameters           */
-/*                                                                          */
 /****************************************************************************/
-/* $Id: codefmc8.c,v 1.5 2014/06/19 10:07:04 alfred Exp $                   */
-/****************************************************************************
- * $Log: codefmc8.c,v $
- * Revision 1.5  2014/06/19 10:07:04  alfred
- * - rework to current style
- *
- * Revision 1.4  2007/11/24 22:48:06  alfred
- * - some NetBSD changes
- *
- * Revision 1.3  2005/09/08 16:53:43  alfred
- * - use common PInstTable
- *
- * Revision 1.2  2004/05/29 11:33:03  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- ****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -991,7 +970,6 @@ static void SwitchTo_F2MC8(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = FoundDescr->Id;

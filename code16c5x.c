@@ -4,41 +4,7 @@
 /*                                                                           */
 /* AS - Codegenerator fuer PIC16C5x                                          */
 /*                                                                           */
-/* Historie: 19.8.1996 Grundsteinlegung                                      */
-/*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
-/*           17. 8.1998 RES mit Bookkeeping                                  */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code16c5x.c,v 1.7 2016/09/29 16:43:36 alfred Exp $                          */
-/*****************************************************************************
- * $Log: code16c5x.c,v $
- * Revision 1.7  2016/09/29 16:43:36  alfred
- * - introduce common DecodeDATA/DecodeRES functions
- *
- * Revision 1.6  2014/10/03 11:46:17  alfred
- * - rework to current style
- *
- * Revision 1.5  2014/09/21 12:09:01  alfred
- * - first steps of rework
- *
- * Revision 1.4  2013/12/21 19:46:51  alfred
- * - dynamically resize code buffer
- *
- * Revision 1.3  2008/11/23 10:39:16  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.2  2005/09/08 17:31:02  alfred
- * - add missing include
- *
- * Revision 1.1  2003/11/06 02:49:19  alfred
- * - recreated
- *
- * Revision 1.2  2002/08/14 18:43:48  alfred
- * - warn null allocation, remove some warnings
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -345,7 +311,6 @@ static void SwitchTo_16C5X(void)
 {
   TurnWords = False;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   PCSymbol = "*";
   HeaderID = 0x71;

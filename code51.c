@@ -2587,7 +2587,6 @@ static void SwitchTo_51(void)
 {
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = 0x31;

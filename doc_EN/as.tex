@@ -255,7 +255,7 @@ following processor families have been implemented:
 \item{Microchip PIC17C42}
 \item{Parallax SX20/28}
 \item{SGS-Thomson ST6}
-\item{SGS-Thomson ST7}
+\item{SGS-Thomson ST7/STM8}
 \item{SGS-Thomson ST9}
 \item{SGS-Thomson 6804}
 \item{Texas Instruments TMS32010/32015}
@@ -582,8 +582,8 @@ REG78K0.INC       & register addresses 78K0 \\
 REG96.INC         & register addresses MCS-96 \\
 REGACE.INC        & register addresses ACE \\
 REGF8.INC         & register and memory addresses F8 \\
-REGAVROLD.INC     & register and bit addresses AVR family (outdated)\\
-REGAVR.INC        & register and bit addresses AVR family (current) \\
+REGAVROLD.INC     & register and bit addresses AVR family (old)\\
+REGAVR.INC        & register and bit addresses AVR family \\
 REGCOLD.INC       & register and bit addresses Coldfire family \\
 REGCOP8.INC       & register addresses COP8 \\
 REGGP32.INC       & register addresses 68HC908GP32 \\
@@ -2330,7 +2330,8 @@ IntTwo   equ    2
 FloatTwo equ    2.0
 \end{verbatim}
 Some processors unfortunately have already a \tty{SET} instruction. For
-these targets, \tty{EVAL} must be used instead of \tty{SET}.
+these targets, \tty{EVAL} must be used instead of \tty{SET} if no
+differentiation via the argument count is possible.
 
 A simple equation sign may be used instead of \tty{EQU}.  Similarly, one
 may simply write \tty{:=} instead of \tty{SET} resp. \tty{EVAL}.
@@ -3048,14 +3049,18 @@ The 12X core offers a couple of new instructions, and existing
 instructions were were enriched with new addressing modes.
 %%-----------
 \begin{quote}
-i) S912ZVC19F0MKH, S912ZVC19F0MLF, S912ZVCA19F0MKH,\\
-   S912ZVCA19F0MLF, S912ZVCA19F0WKH, S912ZVH128F2CLQ,\\
-   S912ZVH128F2CLL, S912ZVH64F2CLQ,  S912ZVHY64F1CLQ,\\
-   S912ZVHY32F1CLQ, S912ZVHY64F1CLL, S912ZVHY32F1CLL,\\
-   S912ZVHL64F1CLQ, S912ZVHL32F1CLQ, S912ZVHL64F1CLL,\\
-   S912ZVHL32F1CLL, S912ZVFP64F1CLQ, S912ZVFP64F1CLL,\\
-   S912ZVH128F2VLQ, S912ZVH128F2VLL, S912ZVH64F2VLQ,\\
-   S912ZVHY64F1VLQ, S912ZVHY32F1VLQ, S912ZVHY64F1VL,\\
+i) S912ZVC19F0MKH, S912ZVC19F0MLF,\\
+   S912ZVCA19F0MKH, S912ZVCA19F0MLF,\\
+   S912ZVCA19F0WKH, S912ZVH128F2CLQ,\\
+   S912ZVH128F2CLL, S912ZVH64F2CLQ,\\
+   S912ZVHY64F1CLQ, S912ZVHY32F1CLQ,\\
+   S912ZVHY64F1CLL, S912ZVHY32F1CLL,\\
+   S912ZVHL64F1CLQ, S912ZVHL32F1CLQ,\\
+   S912ZVHL64F1CLL, S912ZVHL32F1CLL,\\
+   S912ZVFP64F1CLQ, S912ZVFP64F1CLL,\\
+   S912ZVH128F2VLQ, S912ZVH128F2VLL,\\
+   S912ZVH64F2VLQ, S912ZVHY64F1VLQ,\\
+   S912ZVHY32F1VLQ, S912ZVHY64F1VL,\\
    S912ZVHY32F1VLL, S912ZVHL64F1VLQ 
 \end{quote}
 All variants contain the same processor core and the same
@@ -3106,8 +3111,8 @@ o) HD641016
 This is currently the only target with H16 core.
 %%-----------
 \begin{quote}
-p) 6502 $\rightarrow$ 65(S)C02 $\rightarrow$ 65CE02 / W65C02S / 65C19 /
-   MELPS740 / HUC6280 / 6502UNDOC
+p) 6502 $\rightarrow$ 65(S)C02 \\
+   $\rightarrow$ 65CE02 / W65C02S / 65C19 / MELPS740 / HUC6280 / 6502UNDOC
 \end{quote}
 The CMOS version defines some additional instructions, as well as a number of
 some instruction/addressing mode combinations were added which were not
@@ -3425,8 +3430,34 @@ distinction serves to provide an automatic distinction in the source
 file which hardware is available (analog to the 8051/52/515).
 %%-----------
 \begin{quote}
-aw) ST7
+aw) ST7 \\
+    STM8 \\
+    STM8S001J3, STM8S003F3, STM8S003K3, STM8S005C6,\\
+    STM8S005K6, STM8S007C8, STM8S103F2, STM8S103F3,\\
+    STM8S103K3, STM8S105C4, STM8S105C6, STM8S105K4,\\
+    STM8S105K6, STM8S105S4, STM8S105S6, STM8S207MB,\\
+    STM8S207M8, STM8S207RB, STM8S207R8, STM8S207R6,\\
+    STM8S207CB, STM8S207C8, STM8S207C6, STM8S207SB,\\
+    STM8S207S8, STM8S207S6, STM8S207K8, STM8S207K6,\\
+    STM8S208MB, STM8S208RB, STM8S208R8, STM8S208R6,\\
+    STM8S208CB, STM8S208C8, STM8S208C6, STM8S208SB,\\
+    STM8S208S8, STM8S208S6, STM8S903K3, STM8S903F3,\\
+    STM8L050J3, STM8L051F3, STM8L052C6, STM8L052R8,\\
+    STM8L001J3, STM8L101F1, STM8L101F2, STM8L101G2,\\
+    STM8L101F3, STM8L101G3, STM8L101K3, STM8L151C2,\\
+    STM8L151K2, STM8L151G2, STM8L151F2, STM8L151C3,\\
+    STM8L151K3, STM8L151G3, STM8L151F3, STM8L151C4,\\
+    STM8L151C6, STM8L151K4, STM8L151K6, STM8L151G4,\\
+    STM8L151G6, STM8L152C4, STM8L152C6, STM8L152K4,\\
+    STM8L152K6, STM8L151R6, STM8L151C8, STM8L151M8,\\
+    STM8L151R8, STM8L152R6, STM8L152C8, STM8L152K8,\\
+    STM8L152M8, STM8L152R8, STM8L162M8, STM8L162R8,\\
+    STM8AF6366, STM8AF6388, STM8AF6213, STM8AF6223,\\
+    STM8AF6226
 \end{quote}
+The STM8 core extends the address space to 16 Mbytes and introduces
+a couple of new instructions.  Though many instructions have the same
+machine code as for ST7, it is not binary upward compatible.
 %%-----------
 \begin{quote}
 ax) ST9020, ST9030, ST9040, ST9050
@@ -3806,7 +3837,7 @@ instruction!
 \subsection{PADDING}
 \ttindex{PADDING}
 
-{\em valid for: 680x0, 68xx, M*Core, XA, H8, SH7000, MSP430(X), TMS9900, ST7}
+{\em valid for: 680x0, 68xx, M*Core, XA, H8, SH7000, MSP430(X), TMS9900, ST7/STM8}
 
 Processors of the 680x0 family are quite critical regarding odd addresses:
 instructions must not start on an odd address, and data accesses to odd
@@ -4675,7 +4706,7 @@ number of parameters which are being processed from left to right.
 \subsection{DC[.Size]}
 \ttindex{DC}
 
-{\em valid for: 680x0, M*Core, 68xx, H8, SH7x00, DSP56xxx, XA, ST7}
+{\em valid for: 680x0, M*Core, 68xx, H8, SH7x00, DSP56xxx, XA, ST7/STM8}
 
 This instruction places one or several constants of the type
 specified by the attribute into memory.  The attributes are the same ones as
@@ -4724,7 +4755,7 @@ constants in a single statement.
 \subsection{DS[.Size]}
 \ttindex{DS}
 
-{\em valid for: 680x0, M*Core, 68xx, H8, SH7x00, DSP56xxx, XA,, ST7}
+{\em valid for: 680x0, M*Core, 68xx, H8, SH7x00, DSP56xxx, XA, ST7/STM8}
 
 On the one hand, this instruction enables to reserve memory space for
 the specified count of numbers of the type given by the attribute.
@@ -6754,10 +6785,14 @@ editor or to create ''tool boxes''.
 In case that the file name does not have an extension, it will
 automatically be extended with \tty{INC}.
 
-Via the \tty{-i $<$path list$>$} option, one can specify a list of
-directories that will automatically be searched for the file.  If the
-file is not found, a \bb{fatal} error occurs, i.e. assembly terminates
-immediately.
+The assmebler primarily tries to open the file in the directory
+containing the source file with the \tty{INCLUDE} statenemt.  This
+means that a path contained in the file specification is relative
+to this file's directory, not to the directory the assembler was
+called from.  Via the \tty{-i $<$path list$>$} option, one can
+specify a list of directories that will automatically be searched
+for the file.  If the file is not found, a \bb{fatal} error occurs,
+i.e. assembly terminates immediately.
 
 For compatibility reasons, it is valid to enclose the file name in ''
 characters, i.e.
@@ -11131,6 +11166,11 @@ described by:
                {Jump command and destination must be in the same memory
                 page.}
                {none}
+\errentry{1911}{jump target not in same section}
+               {error}
+               {Jump command and destination must be in the same (64K)
+                memory section.}
+               {none}
 \errentry{1920}{code overflow}
                {error}
                {An attempt was made to generate more than 1024 code or
@@ -13096,8 +13136,11 @@ variables:
       one of the fields in \tty{ListGran} is larger than one, set this flag
       to true to get the correct byte order in the code output file.}
 \item{\tty{SetIsOccupied}: Some processors have a \tty{SET} machine instruction.
-      AS will allow \tty{SET} instructions to pass through to the code
-      generator and instead use \tty{EVAL} if this flag is set.}
+      If this callback is set to a non-NULL value, the code generator
+      may report back whether \tty{SET} shall not be interpreted as
+      pseudo instruction.  The return value may be constant \tty{True} or
+      or e.g. depend on the number of argument if a differentiation is
+      possible.}
 \item{\tty{HeaderID}: This variable contains the ID that is used to mark the
       current processor family in the the code output file (see the
       description of the code format described by AS).  I urge to

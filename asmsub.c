@@ -597,7 +597,7 @@ void NewPage(ShortInt Level, Boolean WithFF)
   {
     errno = 0;
     fprintf(LstFile, "%c", Char_FF);
-    ChkIO(10002);
+    ChkIO(ErrNum_ListWrError);
   }
 
   sprintf(Header, " AS V%s%s%s",
@@ -637,7 +637,7 @@ void NewPage(ShortInt Level, Boolean WithFF)
       {
         errno = 0;
         fprintf(LstFile, "%s\n", Header);
-        ChkIO(10002);
+        ChkIO(ErrNum_ListWrError);
       }
       Header[PageWidth] = Save;
       strmov(Header, Header + PageWidth);
@@ -647,18 +647,18 @@ void NewPage(ShortInt Level, Boolean WithFF)
   {
     errno = 0;
     fprintf(LstFile, "%s\n", Header);
-    ChkIO(10002);
+    ChkIO(ErrNum_ListWrError);
 
     if (PrtTitleString[0])
     {
       errno = 0;
       fprintf(LstFile, "%s\n", PrtTitleString);
-      ChkIO(10002);
+      ChkIO(ErrNum_ListWrError);
     }
 
     errno = 0;
     fprintf(LstFile, "\n\n");
-    ChkIO(10002);
+    ChkIO(ErrNum_ListWrError);
   }
 }
 
@@ -680,7 +680,7 @@ void WrLstLine(char *Line)
   {
     errno = 0;
     fprintf(LstFile, "%s\n", Line);
-    ChkIO(10002);
+    ChkIO(ErrNum_ListWrError);
   }
   else
   {
@@ -705,7 +705,7 @@ void WrLstLine(char *Line)
     {
       errno = 0;
       fprintf(LstFile, "%s\n", Line);
-      ChkIO(10002);
+      ChkIO(ErrNum_ListWrError);
       if ((++LstCounter) == PageLength)
         NewPage(0, True);
     }
@@ -775,7 +775,7 @@ void PrintOneLineMuted(FILE *pFile, const char *pLine,
     fputc(Match ? ' ' : pLine[z], pFile);
   }
   fputc('\n', pFile);
-  ChkIO(10002);
+  ChkIO(ErrNum_ListWrError);
 }
 
 /*!------------------------------------------------------------------------
@@ -1327,6 +1327,8 @@ void WrXErrorPos(Word Num, const char *pExtendError, const struct sLineComp *pLi
       msgno = Num_ErrMsgNotFromThisAddress; break;
     case ErrNum_TargOnDiffPage:
       msgno = Num_ErrMsgTargOnDiffPage; break;
+    case ErrNum_TargOnDiffSection:
+      msgno = Num_ErrMsgTargOnDiffSection; break;
     case ErrNum_CodeOverflow:
       msgno = Num_ErrMsgCodeOverflow; break;
     case ErrNum_AdrOverflow:

@@ -2,51 +2,9 @@
 /*****************************************************************************/
 /* AS-Portierung                                                             */
 /*                                                                           */
-/* Codegenerator xilinx kcpsm                                                */
-/*                                                                           */
-/* Historie: 27.02.2003 Grundsteinlegung                                     */
+/* Codegenerator Xilinx kcpsm                                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codekcpsm.c,v 1.8 2014/06/15 13:06:32 alfred Exp $                   */
-/*****************************************************************************
- * $Log: codekcpsm.c,v $
- * Revision 1.8  2014/06/15 13:06:32  alfred
- * - adapto to current style
- *
- * Revision 1.7  2007/11/24 22:48:07  alfred
- * - some NetBSD changes
- *
- * Revision 1.6  2005/10/02 10:22:58  alfred
- * - KCPSM(3) registers are literals
- *
- * Revision 1.5  2005/10/02 10:00:45  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.4  2005/09/30 12:53:49  alfred
- * - correct include statements
- *
- * Revision 1.3  2005/09/08 17:31:05  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 11:33:03  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- * Revision 1.1  2003/11/06 02:49:23  alfred
- * - recreated
- *
- * Revision 1.4  2003/03/16 18:53:43  alfred
- * - created 807x
- *
- * Revision 1.3  2003/03/15 13:36:39  alfred
- * - set output to big endian
- *
- * Revision 1.2  2003/03/14 21:36:02  alfred
- * - cleanups for KCPSM
- *
- * Revision 1.1  2003/03/09 10:28:28  alfred
- * - added KCPSM
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <stdio.h>
@@ -598,7 +556,6 @@ static void SwitchTo_KCPSM(void)
 
   TurnWords = True;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = FoundDescr->Id;

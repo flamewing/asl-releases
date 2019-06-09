@@ -155,54 +155,79 @@ char *FExpand(char *Src)
   return CurrentDir; 
 }
 
-char *FSearch(const char *File, char *Path)
+/*!------------------------------------------------------------------------
+ * \fn     FSearch(char *pDest, unsigned DestSize, const char *pFileToSearch, const char *pCurrFileName, const char *pSearchPath)
+ * \brief  search for file in given path(s)
+ * \param  pDest where to put result
+ * \param  DestSize size of result buffer
+ * \param  pFileToSearch file to search for
+ * \param  pCurrFileName file this file was referenced from
+ * \param  pSearchPath list of directories to search
+ * \return 0 if found or error code
+ * ------------------------------------------------------------------------ */
+
+static int AssembleAndCheck(char *pDest, unsigned DestSize, const char *pPath, unsigned PathLen, const char *pFileToSearch)
 {
-  static String Component;
-  char *p, *start, Save = '\0';
-  FILE *Dummy;
-  Boolean OK;  
-
-  Dummy = fopen(File,"r");
-  OK = (Dummy != NULL);
-  if (OK)
-  {
-    fclose(Dummy);
-    strmaxcpy(Component, File, STRINGSIZE);
-    return Component;
-  }
-
-  start = Path;
-  do
-  {
-    if (*start == '\0')
-      break;
-    p = strchr(start,DIRSEP);
-    if (p) 
-    {
-      Save = *p;
-      *p = '\0';
-    }
-    strmaxcpy(Component, start, STRINGSIZE);
+  FILE *pDummy;
+  
+  if (PathLen > DestSize - 1)
+    PathLen = DestSize - 1;
+  memcpy(pDest, pPath, PathLen);
+  pDest[PathLen] = '\0';
 #ifdef __CYGWIN32__
-    DeCygwinPath(Component);
+  DeCygwinPath(pDest);
 #endif
-    strmaxcat(Component, SPATHSEP, STRINGSIZE);
-    strmaxcat(Component, File, STRINGSIZE);
-    if (p)
-      *p = Save;
-    Dummy = fopen(Component, "r");
-    OK = Dummy != NULL;
-    if (OK)
-    {
-      fclose(Dummy);
-      return Component;
-    }
-    start = p + 1;
+  if (PathLen > 0)
+    strmaxcat(pDest, SPATHSEP, DestSize);
+  strmaxcat(pDest, pFileToSearch, DestSize);
+  pDummy = fopen(pDest, "r");
+  if (pDummy)
+  {
+    fclose(pDummy);
+    return 0;
   }
-  while (p);
+  else
+    return 2;
+}
 
-  *Component='\0';
-  return Component;
+int FSearch(char *pDest, unsigned DestSize, const char *pFileToSearch, const char *pCurrFileName, const char *pSearchPath)
+{
+  const char *pPos, *pStart;
+
+  if (pCurrFileName)
+  {
+#if (defined _WIN32) || (defined __EMX__) || (defined __IBMC__) || (defined __MSDOS__)
+    /* On systems with \ as path separator, we may get a mixture of / and \ in the path.
+       Assure we find the last one of either: */
+
+    pPos = strrmultchr(pCurrFileName, SPATHSEP "/");
+#else
+    pPos = strrchr(pCurrFileName, PATHSEP);
+#endif
+    if (!AssembleAndCheck(pDest, DestSize, pCurrFileName, pPos ? pPos - pCurrFileName : 0, pFileToSearch))
+      return 0;
+  }
+  else
+  {
+    if (!AssembleAndCheck(pDest, DestSize, NULL, 0, pFileToSearch))
+      return 0;
+  }
+
+  pStart = pSearchPath;
+  while (True)
+  {
+    pPos = strchr(pStart, DIRSEP);
+
+    if (!AssembleAndCheck(pDest, DestSize, pStart, pPos ? pPos - pStart : (int)strlen(pStart), pFileToSearch))
+      return 0;
+    if (pPos)
+      pStart =  pPos+ 1;
+    else
+      break;
+  }
+
+  *pDest = '\0';
+  return 2;
 }
 
 long FileSize(FILE *file)

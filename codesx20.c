@@ -620,7 +620,6 @@ static void SwitchTo_SX20(void)
 
   TurnWords = False;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   PCSymbol = "*";
   HeaderID = pDescr->Id;

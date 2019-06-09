@@ -44,7 +44,7 @@ static void FlushBuffer(void)
   if (CodeBufferFill > 0)
   {
     if (fwrite(CodeBuffer, 1, CodeBufferFill, PrgFile) != CodeBufferFill)
-      ChkIO(10004);
+      ChkIO(ErrNum_FileWriteError);
     CodeBufferFill = 0;
   }
 }
@@ -97,19 +97,19 @@ static void WrPatches(void)
     /* write header */
 
     T8 = FileHeaderRelocInfo;
-    if (fwrite(&T8, 1, 1, PrgFile) != 1) ChkIO(10004);
-    if (!Write4(PrgFile, &Cnt)) ChkIO(10004);
-    if (!Write4(PrgFile, &ExportCnt)) ChkIO(10004);
-    if (!Write4(PrgFile, &StrLen)) ChkIO(10004);
+    if (fwrite(&T8, 1, 1, PrgFile) != 1) ChkIO(ErrNum_FileWriteError);
+    if (!Write4(PrgFile, &Cnt)) ChkIO(ErrNum_FileWriteError);
+    if (!Write4(PrgFile, &ExportCnt)) ChkIO(ErrNum_FileWriteError);
+    if (!Write4(PrgFile, &StrLen)) ChkIO(ErrNum_FileWriteError);
 
     /* write patch entries */
 
     StrLen = 0;
     for (PatchLast = PatchList; PatchLast; PatchLast = PatchLast->Next)
     {
-      if (!Write8(PrgFile, &(PatchLast->Address))) ChkIO(10004);
-      if (!Write4(PrgFile, &StrLen)) ChkIO(10004);
-      if (!Write4(PrgFile, &(PatchLast->RelocType))) ChkIO(10004);
+      if (!Write8(PrgFile, &(PatchLast->Address))) ChkIO(ErrNum_FileWriteError);
+      if (!Write4(PrgFile, &StrLen)) ChkIO(ErrNum_FileWriteError);
+      if (!Write4(PrgFile, &(PatchLast->RelocType))) ChkIO(ErrNum_FileWriteError);
       StrLen += PatchLast->len;
     }
 
@@ -117,9 +117,9 @@ static void WrPatches(void)
 
     for (ExportLast = ExportList; ExportLast; ExportLast = ExportLast->Next)
     {
-      if (!Write4(PrgFile, &StrLen)) ChkIO(10004);
-      if (!Write4(PrgFile, &(ExportLast->Flags))) ChkIO(10004);
-      if (!Write8(PrgFile, &(ExportLast->Value))) ChkIO(10004);
+      if (!Write4(PrgFile, &StrLen)) ChkIO(ErrNum_FileWriteError);
+      if (!Write4(PrgFile, &(ExportLast->Flags))) ChkIO(ErrNum_FileWriteError);
+      if (!Write8(PrgFile, &(ExportLast->Value))) ChkIO(ErrNum_FileWriteError);
       StrLen += ExportLast->len;
     }
 
@@ -128,7 +128,7 @@ static void WrPatches(void)
     while (PatchList)
     {
       PatchLast = PatchList;
-      if (fwrite(PatchLast->Ref, 1, PatchLast->len, PrgFile) != PatchLast->len) ChkIO(10004);
+      if (fwrite(PatchLast->Ref, 1, PatchLast->len, PrgFile) != PatchLast->len) ChkIO(ErrNum_FileWriteError);
       free(PatchLast->Ref);
       PatchList = PatchLast->Next;
       free(PatchLast);
@@ -138,7 +138,7 @@ static void WrPatches(void)
     while (ExportList)
     {
       ExportLast = ExportList;
-      if (fwrite(ExportLast->Name, 1, ExportLast->len, PrgFile) != ExportLast->len) ChkIO(10004);
+      if (fwrite(ExportLast->Name, 1, ExportLast->len, PrgFile) != ExportLast->len) ChkIO(ErrNum_FileWriteError);
       free(ExportLast->Name);
       ExportList = ExportLast->Next;
       free(ExportLast);
@@ -158,10 +158,10 @@ static void WrRecHeader(void)
 
   ThisRel = RelSegs;
   b = ThisRel ? FileHeaderRelocRec : FileHeaderDataRec;
-  if (fwrite(&b, 1, 1, PrgFile) != 1) ChkIO(10004);
-  if (fwrite(&HeaderID, 1, 1, PrgFile) != 1) ChkIO(10004);
-  b = ActPC; if (fwrite(&b, 1, 1, PrgFile) != 1) ChkIO(10004);
-  b = Grans[ActPC]; if (fwrite(&b, 1, 1, PrgFile) != 1) ChkIO(10004);
+  if (fwrite(&b, 1, 1, PrgFile) != 1) ChkIO(ErrNum_FileWriteError);
+  if (fwrite(&HeaderID, 1, 1, PrgFile) != 1) ChkIO(ErrNum_FileWriteError);
+  b = ActPC; if (fwrite(&b, 1, 1, PrgFile) != 1) ChkIO(ErrNum_FileWriteError);
+  b = Grans[ActPC]; if (fwrite(&b, 1, 1, PrgFile) != 1) ChkIO(ErrNum_FileWriteError);
   fflush(PrgFile);
 }
 
@@ -181,12 +181,12 @@ void NewRecord(LargeWord NStart)
 
   if (LenSoFar == 0)
   {
-    if (fseek(PrgFile, RecPos, SEEK_SET) != 0) ChkIO(10003);
+    if (fseek(PrgFile, RecPos, SEEK_SET) != 0) ChkIO(ErrNum_FileReadError);
     WrRecHeader();
     h = NStart;
-    if (!Write4(PrgFile, &h)) ChkIO(10004);
+    if (!Write4(PrgFile, &h)) ChkIO(ErrNum_FileWriteError);
     LenPos = ftell(PrgFile);
-    if (!Write2(PrgFile, &LenSoFar)) ChkIO(10004);
+    if (!Write2(PrgFile, &LenSoFar)) ChkIO(ErrNum_FileWriteError);
   }
 
   /* otherwise full record */
@@ -202,20 +202,20 @@ void NewRecord(LargeWord NStart)
     if (PatchList || ExportList)
     {
       fflush(PrgFile);
-      if (fseek(PrgFile, RecPos, SEEK_SET) != 0) ChkIO(10003);
+      if (fseek(PrgFile, RecPos, SEEK_SET) != 0) ChkIO(ErrNum_FileReadError);
       Header = ThisRel ? FileHeaderRRelocRec : FileHeaderRDataRec;
-      if (fwrite(&Header, 1, 1, PrgFile) != 1) ChkIO(10004);
+      if (fwrite(&Header, 1, 1, PrgFile) != 1) ChkIO(ErrNum_FileWriteError);
     }
 
     /* fill in length of record */
 
     fflush(PrgFile);
-    if (fseek(PrgFile, LenPos, SEEK_SET) != 0) ChkIO(10003);
-    if (!Write2(PrgFile, &LenSoFar)) ChkIO(10004);
+    if (fseek(PrgFile, LenPos, SEEK_SET) != 0) ChkIO(ErrNum_FileReadError);
+    if (!Write2(PrgFile, &LenSoFar)) ChkIO(ErrNum_FileWriteError);
 
     /* go back to end of file */
 
-    if (fseek(PrgFile, h, SEEK_SET) != 0) ChkIO(10003);
+    if (fseek(PrgFile, h, SEEK_SET) != 0) ChkIO(ErrNum_FileReadError);
 
     /* write out reloc info */
 
@@ -229,9 +229,9 @@ void NewRecord(LargeWord NStart)
     WrRecHeader();
     ThisRel = RelSegs;
     PC = NStart;
-    if (!Write4(PrgFile, &PC)) ChkIO(10004);
+    if (!Write4(PrgFile, &PC)) ChkIO(ErrNum_FileWriteError);
     LenPos = ftell(PrgFile);
-    if (!Write2(PrgFile, &LenSoFar)) ChkIO(10004);
+    if (!Write2(PrgFile, &LenSoFar)) ChkIO(ErrNum_FileWriteError);
   }
 #if 0
   /* put in the hidden symbol for the relocatable segment ? */
@@ -256,7 +256,7 @@ void OpenFile(void)
 
   errno = 0;
   h = FileMagic;
-  if (!Write2(PrgFile,&h)) ChkIO(10004);
+  if (!Write2(PrgFile,&h)) ChkIO(ErrNum_FileWriteError);
 
   CodeBufferFill = 0;
   RecPos = ftell(PrgFile);
@@ -280,14 +280,14 @@ void CloseFile(void)
   if (StartAdrPresent)
   {
     Head = FileHeaderStartAdr;
-    if (fwrite(&Head,sizeof(Head), 1, PrgFile) != 1) ChkIO(10004);
+    if (fwrite(&Head,sizeof(Head), 1, PrgFile) != 1) ChkIO(ErrNum_FileWriteError);
     Adr = StartAdr;
-    if (!Write4(PrgFile,&Adr)) ChkIO(10004);
+    if (!Write4(PrgFile,&Adr)) ChkIO(ErrNum_FileWriteError);
   }
 
   Head = FileHeaderEnd;
-  if (fwrite(&Head,sizeof(Head), 1, PrgFile) != 1) ChkIO(10004);
-  if (fwrite(h, 1, strlen(h), PrgFile) != strlen(h)) ChkIO(10004);
+  if (fwrite(&Head,sizeof(Head), 1, PrgFile) != 1) ChkIO(ErrNum_FileWriteError);
+  if (fwrite(h, 1, strlen(h), PrgFile) != strlen(h)) ChkIO(ErrNum_FileWriteError);
   fclose(PrgFile);
   if (Magic)
     unlink(OutName);
@@ -320,7 +320,7 @@ void WriteBytes(void)
       CodeBufferFill = ErgLen;
     }
     else if (fwrite(BAsmCode, 1, ErgLen, PrgFile) != ErgLen)
-      ChkIO(10004);
+      ChkIO(ErrNum_FileWriteError);
   }
   LenSoFar += ErgLen;
   if ((TurnWords != 0) != (BigEndian != 0))
@@ -348,7 +348,7 @@ void RetractWords(Word Cnt)
   else
   {
     if (fseek(PrgFile, -(ErgLen - CodeBufferFill), SEEK_CUR) == -1)
-      ChkIO(10004);
+      ChkIO(ErrNum_FileWriteError);
     CodeBufferFill = 0;
   }
 

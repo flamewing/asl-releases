@@ -1445,7 +1445,7 @@ static void SwitchFrom_7700(void)
 
 static void SwitchTo_7700(void)
 {
-  TurnWords = False; ConstMode = ConstModeMoto; SetIsOccupied = False;
+  TurnWords = False; ConstMode = ConstModeMoto;
 
   PCSymbol = "*"; HeaderID = 0x19; NOPCode = 0xea;
   DivideChars = ","; HasAttrs = False;

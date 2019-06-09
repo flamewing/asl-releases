@@ -4,38 +4,7 @@
 /*                                                                           */
 /* Codegeneratormodul COP8-Familie                                           */
 /*                                                                           */
-/* Historie:  7.10.1996 Grundsteinlegung                                     */
-/*           18. 8.1998 BookKeeping-Aufruf bei DSx                           */
-/*            2. 1.1998 ChkPC umgebaut                                       */
-/*           14. 8.1999 Maskierung in ChkAdr falsch                          */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: codecop8.c,v 1.6 2014/06/21 12:21:57 alfred Exp $                    */
-/*****************************************************************************
- * $Log: codecop8.c,v $
- * Revision 1.6  2014/06/21 12:21:57  alfred
- * - adapt to current style
- *
- * Revision 1.5  2014/06/09 12:47:47  alfred
- * - add missing parentheses
- *
- * Revision 1.4  2006/04/09 12:40:11  alfred
- * - unify COP pseudo instructions
- *
- * Revision 1.3  2005/09/08 17:31:05  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 11:33:02  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- * Revision 1.1  2003/11/06 02:49:22  alfred
- * - recreated
- *
- * Revision 1.2  2002/08/14 18:43:49  alfred
- * - warn null allocation, remove some warnings
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -688,7 +657,6 @@ static void SwitchTo_COP8(void)
 {
   TurnWords = False;
   ConstMode = ConstModeC;
-  SetIsOccupied = False;
 
   PCSymbol = ".";
   HeaderID = 0x6f;

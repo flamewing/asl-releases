@@ -341,7 +341,8 @@ extern Boolean TurnWords;
 extern Byte HeaderID;
 extern char *PCSymbol;
 extern TConstMode ConstMode;
-extern Boolean SetIsOccupied, SwitchIsOccupied, PageIsOccupied;
+extern Boolean (*SetIsOccupiedFnc)(void);
+extern Boolean SwitchIsOccupied, PageIsOccupied;
 extern void (*MakeCode)(void);
 extern Boolean (*ChkPC)(LargeWord Addr);
 extern Boolean (*IsDef)(void);
@@ -427,6 +428,9 @@ extern void Default_InternSymbol(char *Asc, TempResult *Erg);
 extern void Default_DissectBit(char *pDest, int DestSize, LargeWord BitSpec);
 
 extern void IncArgCnt(void);
+
+
+extern Boolean SetIsOccupied(void);
 
 
 extern void asmdef_init(void);

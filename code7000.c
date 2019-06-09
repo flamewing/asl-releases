@@ -4,52 +4,7 @@
 /*                                                                           */
 /* Codegenerator SH7x00                                                      */
 /*                                                                           */
-/* Historie: 25.12.1996 Grundsteinlegung                                     */
-/*           12. 4.1998 SH7700-Erweiterungen                                 */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code7000.c,v 1.13 2014/12/14 17:58:47 alfred Exp $                    */
-/*****************************************************************************
- * $Log: code7000.c,v $
- * Revision 1.13  2014/12/14 17:58:47  alfred
- * - remove static variables in strutil.c
- *
- * Revision 1.12  2014/12/07 19:14:00  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.11  2014/12/05 11:58:16  alfred
- * - collapse STDC queries into one file
- *
- * Revision 1.10  2014/11/05 15:47:15  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.9  2014/09/09 17:00:33  alfred
- * - rework to current style
- *
- * Revision 1.8  2014/05/29 10:59:05  alfred
- * - some const cleanups
- *
- * Revision 1.7  2010/04/17 13:14:22  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.6  2007/11/24 22:48:05  alfred
- * - some NetBSD changes
- *
- * Revision 1.5  2006/12/19 17:50:18  alfred
- * - eliminate static local variable
- *
- * Revision 1.4  2005/10/02 10:00:45  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.3  2005/09/08 17:31:04  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 12:04:47  alfred
- * - relocated DecodeMot(16)Pseudo into separate module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -1587,7 +1542,6 @@ static void SwitchTo_7000(void)
 {
   TurnWords = True;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   PCSymbol = "*";
   HeaderID = 0x6c;

@@ -154,7 +154,7 @@ TSM		avrbit	GTCCR,7		; Timer Synchronization
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
-		include	"avr/wdm21.inc"
+		include	"wdm21.inc"
 
 WDCE		avrbit	WDTCR,4		; Watchdog Change Enable
 WDP3		avrbit	WDTCR,5		; 
@@ -164,7 +164,7 @@ WDTIF		avrbit	WDTCR,7		; Watchdog Timer Interrupt Flag
 ;----------------------------------------------------------------------------
 ; Analog Comparator
 
-		include "avr/acm.inc"
+		include "acm.inc"
 
 ;----------------------------------------------------------------------------
 ; A/D Converter

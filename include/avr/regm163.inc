@@ -38,7 +38,7 @@ OSCCAL		port	0x31		; Oscillator Calibration
 ;----------------------------------------------------------------------------
 ; EEPROM/Program Memory Access
 
-		include	"avr/eem.inc"
+		include	"eem.inc"
 
 SPMCR		port	0x37		; Store Program Memory Control Register
 ASB		avrbit	SPMCR,6		; Application Section Busy
@@ -166,7 +166,7 @@ AS2		avrbit	ASSR,3		; Asynchronous Timer/Counter 2
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
-		include	"avr/wdm21.inc"
+		include	"wdm21.inc"
 WDTOE		avrbit	WDTCR,4		; Turn-Off Enable
 
 ;----------------------------------------------------------------------------
@@ -209,22 +209,22 @@ UBRRHI		port	0x20		; Baud Rate Register MSB
 ;---------------------------------------------------------------------------- 
 ; SPI
 
-		include	"avr/spim.inc"
+		include	"spim.inc"
 
 ;----------------------------------------------------------------------------
 ; TWI
 
-		include	"avr/twim.inc"
+		include	"twim.inc"
 
 ;----------------------------------------------------------------------------
 ; A/D Converter
 
-		include	"avr/adcm8.inc"
+		include	"adcm8.inc"
 
 ;----------------------------------------------------------------------------
 ; Analog Comparator
 
-		include "avr/acm.inc"
+		include "acm.inc"
 
 		restore			; re-enable listing
 

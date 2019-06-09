@@ -3091,7 +3091,6 @@ static void SwitchTo_M16(void)
 {
   TurnWords = True;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = 0x13;

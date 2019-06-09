@@ -4,63 +4,7 @@
 /*                                                                           */
 /* Codegenerator Intel 4004                                                  */
 /*                                                                           */
-/* Historie:  1. 2.1998 Grundsteinlegung                                     */
-/*            3. 3.1998 weitere Fixed-Befehle hinzugefuegt                   */
-/*           28.11.1998 LookupInstTable ;-)                                  */
-/*                      JCN FIM...                                           */
-/*           29.11.1998 HeaderId symbolisch holen                            */
-/*            3.12.1998 DATA schrieb 16-Bit-Ints statt 8 Bit                 */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*           23. 1.1999 / / entfernt                                         */
-/*            2. 7.1999 Zus. Befehlsvarianten, andere Registersyntax         */
-/*            8. 9.1999 REG fehlte                                           */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*           14. 1.2001 silenced warnings about unused parameters            */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code4004.c,v 1.9 2016/09/29 16:43:36 alfred Exp $                          */
-/*****************************************************************************
- * $Log: code4004.c,v $
- * Revision 1.9  2016/09/29 16:43:36  alfred
- * - introduce common DecodeDATA/DecodeRES functions
- *
- * Revision 1.8  2014/11/06 11:10:13  alfred
- * - rework to current style
- *
- * Revision 1.7  2014/03/03 20:19:12  alfred
- * - correct data types
- *
- * Revision 1.6  2014/03/03 19:50:51  alfred
- * - allow register names R10...R15
- *
- * Revision 1.5  2008/11/23 10:39:16  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.4  2007/11/24 22:48:04  alfred
- * - some NetBSD changes
- *
- * Revision 1.3  2005/09/08 16:53:41  alfred
- * - use common PInstTable
- *
- * Revision 1.2  2005/05/21 16:35:04  alfred
- * - removed variables available globally
- *
- * Revision 1.1  2003/11/06 02:49:20  alfred
- * - recreated
- *
- * Revision 1.5  2003/05/24 21:16:59  alfred
- * - added 4040
- *
- * Revision 1.4  2003/05/02 21:23:10  alfred
- * - strlen() updates
- *
- * Revision 1.3  2003/02/01 18:04:53  alfred
- * - fixed JCN arguments
- *
- * Revision 1.2  2002/08/14 18:43:48  alfred
- * - warn null allocation, remove some warnings
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -462,7 +406,6 @@ static void SwitchTo_4004(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = FoundDescr->Id;

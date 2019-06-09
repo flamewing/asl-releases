@@ -597,9 +597,14 @@ static void SwitchFrom_ST62(void)
   DeinitFields();
 }
 
+static Boolean ChkMoreOneArg(void)
+{
+  return (ArgCnt > 1);
+}
+
 static void SwitchTo_ST62(void)
 {
-  TurnWords = False; ConstMode = ConstModeIntel; SetIsOccupied = True;
+  TurnWords = False; ConstMode = ConstModeIntel; SetIsOccupiedFnc = ChkMoreOneArg;
 
   PCSymbol = "PC"; HeaderID = 0x78; NOPCode = 0x04;
   DivideChars = ","; HasAttrs = False;

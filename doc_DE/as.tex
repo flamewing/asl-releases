@@ -249,7 +249,7 @@ folgende Prozessorfamilien implementiert:
 \item{Microchip PIC17C42}
 \item{Parallax SX20/SX28}
 \item{SGS-Thomson ST6}
-\item{SGS-Thomson ST7}
+\item{SGS-Thomson ST7/STM8}
 \item{SGS-Thomson ST9}
 \item{SGS-Thomson 6804}
 \item{Texas Instruments TMS32010/32015}
@@ -624,8 +624,6 @@ STDDEF75.INC      & Registeradressen 75K0 \\
 STDDEF87.INC      & Register- \& Speicheradressen TLCS-870 \\
 STDDEF90.INC      & Register- \& Speicheradressen TLCS-90 \\
 STDDEF96.INC      & Register- \& Speicheradressen TLCS-900 \\
-STDDEFXA.INC      & SFR-\& Bitadressen Philips XA \\
-STDDEFZ8.INC      & Registeradressen Z8-Familie \\
 \hline
 \end{tabular}\end{center}
 \caption{Standardumfang einer Bin"ardistribution - Teil 2
@@ -640,6 +638,8 @@ Datei             & Funktion \\
 \hline
 {\bf Verzeichnis INCLUDE} & \\
 \hline
+STDDEFXA.INC      & SFR-\& Bitadressen Philips XA \\
+STDDEFZ8.INC      & Registeradressen Z8-Familie \\
 REGSX20.INC       & Register- \& Bitadressen Parallax SX20/28 \\
 AVR/\*.INC        & Register- \& Bitadressen AVR-Familie \\
                   & (nicht direkt benutzen, REGAVR.INC \\
@@ -2401,7 +2401,9 @@ IntZwei   EQU   2
 FloatZwei EQU   2.0
 \end{verbatim}
 Einige Prozessoren besitzen leider bereits selber einen \tty{SET}-Befehl.
-Bei diesen mu"s \tty{EVAL} anstelle von \tty{SET} verwendet werden.
+Bei diesen mu"s \tty{EVAL} anstelle von \tty{SET} verwendet werden, falls
+sich der Maschinenbefehl nicht durch die andere Anzahl der Argumente 
+erkennen l"a"st.
 \par
 Anstelle von \tty{EQU} darf auch einfach ein Gleichheitszeichen geschrieben
 werden, analog kann man anstelle von \tty{SET} bzw. \tty{EVAL}
@@ -3145,14 +3147,18 @@ Der 12X-Kern bietet eine Reihe neuer Befehle, bzw. bestehende Befehle
 wurden um neue Adressierungsarten erg"anzt.
 %%-----------
 \begin{quote}
-i) S912ZVC19F0MKH, S912ZVC19F0MLF, S912ZVCA19F0MKH,\\
-   S912ZVCA19F0MLF, S912ZVCA19F0WKH, S912ZVH128F2CLQ,\\
-   S912ZVH128F2CLL, S912ZVH64F2CLQ,  S912ZVHY64F1CLQ,\\
-   S912ZVHY32F1CLQ, S912ZVHY64F1CLL, S912ZVHY32F1CLL,\\
-   S912ZVHL64F1CLQ, S912ZVHL32F1CLQ, S912ZVHL64F1CLL,\\
-   S912ZVHL32F1CLL, S912ZVFP64F1CLQ, S912ZVFP64F1CLL,\\
-   S912ZVH128F2VLQ, S912ZVH128F2VLL, S912ZVH64F2VLQ,\\
-   S912ZVHY64F1VLQ, S912ZVHY32F1VLQ, S912ZVHY64F1VL,\\
+i) S912ZVC19F0MKH, S912ZVC19F0MLF,\\
+   S912ZVCA19F0MKH, S912ZVCA19F0MLF,\\
+   S912ZVCA19F0WKH, S912ZVH128F2CLQ,\\
+   S912ZVH128F2CLL, S912ZVH64F2CLQ,\\
+   S912ZVHY64F1CLQ, S912ZVHY32F1CLQ,\\
+   S912ZVHY64F1CLL, S912ZVHY32F1CLL,\\
+   S912ZVHL64F1CLQ, S912ZVHL32F1CLQ,\\
+   S912ZVHL64F1CLL, S912ZVHL32F1CLL,\\
+   S912ZVFP64F1CLQ, S912ZVFP64F1CLL,\\
+   S912ZVH128F2VLQ, S912ZVH128F2VLL,\\
+   S912ZVH64F2VLQ, S912ZVHY64F1VLQ,\\
+   S912ZVHY32F1VLQ, S912ZVHY64F1VL,\\
    S912ZVHY32F1VLL, S912ZVHL64F1VLQ 
 \end{quote}
 Alle Derivate beinhalten den gleichen Prozessorkern und den
@@ -3527,8 +3533,35 @@ Feinunterscheidung dient zur automatischen Unterscheidung in der Quelldatei,
 welche Hardware jeweils vorhanden ist (analog zum 8051/52/515).
 %%-----------
 \begin{quote}
-aw) ST7
+aw) ST7 \\
+    STM8 \\
+    STM8S001J3, STM8S003F3, STM8S003K3, STM8S005C6,\\
+    STM8S005K6, STM8S007C8, STM8S103F2, STM8S103F3,\\
+    STM8S103K3, STM8S105C4, STM8S105C6, STM8S105K4,\\
+    STM8S105K6, STM8S105S4, STM8S105S6, STM8S207MB,\\
+    STM8S207M8, STM8S207RB, STM8S207R8, STM8S207R6,\\
+    STM8S207CB, STM8S207C8, STM8S207C6, STM8S207SB,\\
+    STM8S207S8, STM8S207S6, STM8S207K8, STM8S207K6,\\
+    STM8S208MB, STM8S208RB, STM8S208R8, STM8S208R6,\\
+    STM8S208CB, STM8S208C8, STM8S208C6, STM8S208SB,\\
+    STM8S208S8, STM8S208S6, STM8S903K3, STM8S903F3,\\
+    STM8L050J3, STM8L051F3, STM8L052C6, STM8L052R8,\\
+    STM8L001J3, STM8L101F1, STM8L101F2, STM8L101G2,\\
+    STM8L101F3, STM8L101G3, STM8L101K3, STM8L151C2,\\
+    STM8L151K2, STM8L151G2, STM8L151F2, STM8L151C3,\\
+    STM8L151K3, STM8L151G3, STM8L151F3, STM8L151C4,\\
+    STM8L151C6, STM8L151K4, STM8L151K6, STM8L151G4,\\
+    STM8L151G6, STM8L152C4, STM8L152C6, STM8L152K4,\\
+    STM8L152K6, STM8L151R6, STM8L151C8, STM8L151M8,\\
+    STM8L151R8, STM8L152R6, STM8L152C8, STM8L152K8,\\
+    STM8L152M8, STM8L152R8, STM8L162M8, STM8L162R8,\\
+    STM8AF6366, STM8AF6388, STM8AF6213, STM8AF6223,\\
+    STM8AF6226
 \end{quote}
+Der STM8-Kern erweitert den Adre"raum auf bis zu 16 MByte und f"uhrt
+eine ganze Reihe neuer Befehle ein.  Obwohl viele Befehle den
+gleichen Maschinencode wie beim ST7 haben, ist er nicht bin"ar
+aufw"artskompatibel.
 %%-----------
 \begin{quote}
 ax) ST9020, ST9030, ST9040, ST9050
@@ -3915,7 +3948,8 @@ diese Einstellung vor!  \tty{FULLPMMU} mu"s also auf jeden Fall nach dem
 \subsection{PADDING}
 \ttindex{PADDING}
 
-{\em G"ultigkeit: 680x0, 68xx, M*Core, XA, H8, SH7000, TMS9900, MSP430(X), ST7}
+{\em G"ultigkeit: 680x0, 68xx, M*Core, XA, H8, SH7000, TMS9900,\\
+     MSP430(X), ST7/STM8}
 
 Prozessoren der 680x0-Familie stehen ungeraden Adressen ziemlich
 kritisch gegen"uber: Befehle d"urfen nicht auf einer ungeraden Adresse
@@ -4810,7 +4844,7 @@ von Parametern angegeben werden, die der Reihe nach abgearbeitet werden.
 \subsection{DC[.size]}
 \ttindex{DC}
 
-{\em G"ultigkeit: 680x0, M*Core, 68xx, H8, SH7000, DSP56xxx, XA, ST7}
+{\em G"ultigkeit: 680x0, M*Core, 68xx, H8, SH7000, DSP56xxx, XA, ST7/STM8}
 
 Dieser Befehl legt eine oder mehrere Konstanten des beim durch
 das Attribut bestimmten Typs im Speicher ab.  Die Attribute entsprechen
@@ -4863,7 +4897,7 @@ Konstanten in einer Anweisung gemischt werden.
 \subsection{DS[.size]}
 \ttindex{DS}
 
-{\em G"ultigkeit: 680x0, M*Core, 68xx, H8, SH7x00, DSP56xxx, XA, ST7}
+{\em G"ultigkeit: 680x0, M*Core, 68xx, H8, SH7x00, DSP56xxx, XA, ST7/STM8}
 
 Mit diesem Befehl l"a"st sich zum einen Speicherplatz f"ur die angegebene
 Zahl im Attribut beschriebener Zahlen reservieren.  So reserviert
@@ -6918,12 +6952,16 @@ zu erzeugen.
 Falls der angegebene Dateiname keine Endung hat, wird er automatisch
 um die Endung \tty{INC} erweitert.
 \par
-Mit der Kommandozeilenoption
+Der Assembler versucht als erstes, die angegebene Datei in den Verzeichnis
+zu finden, in dem sich auch die Quelldatei befindet, die das \tty{INCLUDE}-Statement
+enth"alt - ein eventuell in der Dateiangabe enthaltener Pfad ist also relativ
+zu deren Pfad, und nicht zu dem Verzeichnis, von dem aus man den Assembler
+aufgerufen hat.  Mit der Kommandozeilenoption
 \begin{verbatim}
    -i <Pfadliste>
 \end{verbatim}
 l"a"st sich eine Liste von Verzeichnissen angeben, in denen automatisch
-zus"atzlich nach der Includedatei gesucht werden soll.  Wird die Datei
+zus"atzlich nach der Include-Datei gesucht werden soll.  Wird die Datei
 nicht gefunden, so ist dies ein \ii{fataler} Fehler, d.h. der Assembler
 bricht sofort ab.
 \par
@@ -7504,7 +7542,7 @@ angegeben:
        mov:q.l   #4,r7     ; Q- statt RQ-Format erzwungen 
        mov:g.l   #4,r7     ; G- statt RQ-Format erzwungen 
 \end{verbatim}
-Für Immediate-Argumente wird die ,,nat"urliche'' Operandenl"ange
+F"ur Immediate-Argumente wird die ,,nat"urliche'' Operandenl"ange
 benutzt, also z.B. 2 Bytes f"ur 16 Bits.  K"urzere oder l"angere
 Argumente lassen sich durch eine angeh"angte Operandengr"o"se
 (.b, .w, .l oder :8, :16, :32) erzwingen.  Bei Displacements oder
@@ -11384,6 +11422,11 @@ Angaben:
                {Sprungbefehl und Sprungziel m"ussen bei diesem
                 Befehl auf der gleichen Seite liegen.}
                {keines}
+\errentry{1911}{Sprungziel nicht in gleicher Sektion}
+               {Fehler}
+               {Sprungbefehl und Sprungziel m"ussen bei diesem
+                Befehl in der gleichen (64K-)Sektion liegen.}
+               {keines}
 \errentry{1920}{Code"uberlauf}
                {Fehler}
                {Es wurde versucht, mehr als 1024 Bytes Code oder
@@ -13457,10 +13500,11 @@ Dazu m"ussen im Umschalter einige globale Variablen besetzt werden:
       sollte und eines der Elemente von \tty{ListGrans} ungleich eins ist,
       sollte dieses Flag auf True gesetzt werden, um korrekte Code-Dateien
       zu erhalten.}
-\item{\tty{SetIsOccupied} : Einige Prozessoren verwenden \tty{SET} als
-      Maschinenbefehl.  Ist diese Variable gesetzt, so gibt AS \tty{SET}
-      -Befehle an den Codegenerator weiter und verwendet stattdessen
-      \tty{EVAL}.}
+\item{\tty{SetIsOccupiedFnc} : Einige Prozessoren verwenden \tty{SET} als
+      Maschinenbefehl.  Ist dieser Callback gesetzt, so kann der Codegenerator
+      dar"uber melden, da"s \tty{SET} nicht als Pseudo-Befehl interpretiert
+      werden soll.  Der R"uckgabewert kann konstant \tty{True} sein, die
+      Entscheidung kann aber auch z.B. anhand der Anzahl der Argumente fallen.}
 \item{\tty{HeaderID} : Dieses Byte enth"alt die Kennung, mit der in der Codedatei
       die Prozessorfamilie gekennzeichnet wird (siehe Abschnitt
       \ref{SectCodeFormat}).  Um Zweideutigkeiten zu vermeiden,

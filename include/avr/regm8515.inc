@@ -49,8 +49,8 @@ OSCCAL		port	0x04		; Oscillator Calibration
 ;----------------------------------------------------------------------------
 ; EEPROM/ProgramMemory Access
 
-		include	"avr/eem.inc"
-		include	"avr/spm.inc"
+		include	"eem.inc"
+		include	"spm.inc"
 
 ;----------------------------------------------------------------------------
 ; GPIO
@@ -168,23 +168,23 @@ TIFR		port	0x38		; Timer Interrupt Flag Register
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
-		include	"avr/wdm21.inc"
+		include	"wdm21.inc"
 WDCE		avrbit	WDTCR,4		; Change Enable
 
 ;----------------------------------------------------------------------------
 ; USART
 
-		include	"avr/usartm.inc"
+		include	"usartm.inc"
 
 ;----------------------------------------------------------------------------
 ; SPI
 
-		include	"avr/spim.inc"
+		include	"spim.inc"
 
 ;----------------------------------------------------------------------------
 ; Analog Comparator
 
-		include	"avr/acm.inc"
+		include	"acm.inc"
 
 		restore			; re-enable listing
 

@@ -923,7 +923,6 @@ static Boolean DecodeBitArg(LongWord *pResult, int Start, int Stop, ShortInt OpS
  * \param  pResult resulting encoded bit
  * \param  Start first argument
  * \param  Stop last argument
- * \param  OpSize register size (0/1/2 = 8/16/32 bit)
  * \return True if success
  * ------------------------------------------------------------------------ */
 
@@ -2661,7 +2660,6 @@ static void SwitchTo_S12Z(void)
   const PFamilyDescr pDescr = FindFamilyByName("S12Z");
   TurnWords = False;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   PCSymbol = "*";
   HeaderID = pDescr->Id;

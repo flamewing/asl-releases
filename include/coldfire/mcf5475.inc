@@ -16,7 +16,7 @@ __has_usb	equ	1
 __has_sec	equ	1
 __has_fec1	equ	1
 
-		include	"coldfire/mcf547x.inc"
+		include	"mcf547x.inc"
 		
 		restore
 		

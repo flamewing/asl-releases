@@ -4,44 +4,7 @@
 /*                                                                           */
 /* Codegeneratormodul CPU16                                                  */
 /*                                                                           */
-/* Historie: 15.10.1996 Grundsteinlegung                                     */
-/*            2. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
-/*           30. 8.2000 added Moto16 Pseudos                                 */
-/*            1. 7.2001 forgot to set AttrChars                              */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code6816.c,v 1.10 2014/12/05 11:15:28 alfred Exp $                    */
-/*****************************************************************************
- * $Log: code6816.c,v $
- * Revision 1.10  2014/12/05 11:15:28  alfred
- * - eliminate AND/OR/NOT
- *
- * Revision 1.9  2014/11/14 13:01:43  alfred
- * - rework to current style
- *
- * Revision 1.8  2014/11/05 15:47:14  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.7  2014/03/08 21:06:36  alfred
- * - rework ASSUME framework
- *
- * Revision 1.6  2007/11/24 22:48:05  alfred
- * - some NetBSD changes
- *
- * Revision 1.5  2006/07/23 12:58:16  alfred
- * - completed rework
- *
- * Revision 1.4  2006/07/22 20:33:16  alfred
- * - begun reworking to new style
- *
- * Revision 1.3  2005/09/08 17:31:04  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 12:04:46  alfred
- * - relocated DecodeMot(16)Pseudo into separate module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -1153,7 +1116,6 @@ static void SwitchTo_6816(void)
 
   TurnWords = False;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   PCSymbol = "*";
   HeaderID = 0x65;

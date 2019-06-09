@@ -4,19 +4,7 @@
 /*                                                                           */
 /* Codegenerator NEC 75xx                                                    */
 /*                                                                           */
-/* Historie: 2013-03-09 Grundsteinlegung                                     */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code75xx.c,v 1.2 2013/03/15 21:22:05 alfred Exp $                    */
-/*****************************************************************************
- * $Log: code75xx.c,v $
- * Revision 1.2  2013/03/15 21:22:05  alfred
- * - add 7508 instructions
- *
- * Revision 1.1  2013-03-09 16:15:08  alfred
- * - add NEC 75xx
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -519,7 +507,7 @@ static void SwitchFrom_75xx(void)
 
 static void SwitchTo_75xx(void)
 {
-  TurnWords = False; ConstMode = ConstModeIntel; SetIsOccupied = False;
+  TurnWords = False; ConstMode = ConstModeIntel;
 
   PCSymbol = "PC"; HeaderID = FindFamilyByName("75xx")->Id; NOPCode = 0x00;
   DivideChars = ","; HasAttrs = False;

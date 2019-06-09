@@ -1651,7 +1651,6 @@ static void SwitchTo_6812(void)
 {
   TurnWords = False;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   PCSymbol = "*";
   HeaderID = 0x66;

@@ -4,54 +4,7 @@
 /*                                                                           */
 /* Codegenerator 78K0-Familie                                                */
 /*                                                                           */
-/* Historie:  1.12.1996 Grundsteinlegung                                     */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code78k0.c,v 1.12 2014/12/07 19:14:00 alfred Exp $                          *
- ***************************************************************************** 
- * $Log: code78k0.c,v $
- * Revision 1.12  2014/12/07 19:14:00  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.11  2014/12/01 18:29:39  alfred
- * - replace Nil -> NULL
- *
- * Revision 1.10  2014/08/17 11:42:35  alfred
- * - reformat to current style
- *
- * Revision 1.9  2014/08/11 21:12:25  alfred
- * - first reworks
- *
- * Revision 1.8  2014/03/08 09:47:43  alfred
- * - fix DBNZ
- *
- * Revision 1.7  2010/08/27 14:52:42  alfred
- * - some more overlapping strcpy() cleanups
- *
- * Revision 1.6  2010/04/17 13:14:22  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.5  2007/11/24 22:48:05  alfred
- * - some NetBSD changes
- *
- * Revision 1.4  2006/12/09 18:01:34  alfred
- * - correct some coding errors
- *
- * Revision 1.3  2005/09/08 16:53:42  alfred
- * - use common PInstTable
- *
- * Revision 1.2  2004/05/29 11:33:01  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- * Revision 1.1  2003/11/06 02:49:21  alfred
- * - recreated
- *
- * Revision 1.2  2003/10/08 20:57:52  alfred
- * - transformed to hash table
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -1437,7 +1390,6 @@ static void SwitchTo_78K0(void)
 {
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "PC";
   HeaderID = 0x7c;

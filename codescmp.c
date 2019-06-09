@@ -4,33 +4,7 @@
 /*                                                                           */
 /* Codegenerator National SC/MP                                              */
 /*                                                                           */
-/* Historie: 17. 2.1996 Grundsteinlegung                                     */
-/*            2. 1.1998 ChkPC umgestellt                                     */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: codescmp.c,v 1.7 2013/03/07 20:10:11 alfred Exp $                    */
-/*****************************************************************************
- * $Log: codescmp.c,v $
- * Revision 1.7  2013/03/07 20:10:11  alfred
- * - correct PC-relative addressing for SC/MP
- *
- * Revision 1.6  2010/04/17 13:14:23  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.5  2009/04/13 07:36:50  alfred
- * - clean up SC/MP target, correct PC-relative addressing
- *
- * Revision 1.4  2007/11/24 22:48:07  alfred
- * - some NetBSD changes
- *
- * Revision 1.3  2005/09/08 17:31:05  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 11:33:03  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -300,7 +274,7 @@ static void SwitchFrom_SCMP(void)
 
 static void SwitchTo_SCMP(void)
 {
-  TurnWords = False; ConstMode = ConstModeC; SetIsOccupied = False;
+  TurnWords = False; ConstMode = ConstModeC;
 
   PCSymbol = "$"; HeaderID = 0x6e; NOPCode = 0x08;
   DivideChars = ","; HasAttrs = False;

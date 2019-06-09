@@ -5,28 +5,6 @@
 /* Codegenerator Signetics 2650                                              */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code2650.c,v 1.6 2014/12/07 19:13:59 alfred Exp $
- *****************************************************************************
- * $Log: code2650.c,v $
- * Revision 1.6  2014/12/07 19:13:59  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.5  2013-02-14 20:48:57  alfred
- * - allow UN as condition
- *
- * Revision 1.4  2012-12-31 11:21:29  alfred
- * - add Dx pseudo instructions to 2650 target
- *
- * Revision 1.3  2007/11/24 22:48:03  alfred
- * - some NetBSD changes
- *
- * Revision 1.2  2006/03/05 18:07:42  alfred
- * - remove double InstTable variable
- *
- * Revision 1.1  2005/12/09 14:48:06  alfred
- * - added 2650
- * 
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -563,7 +541,7 @@ static void SwitchTo_2650(void)
 {
   PFamilyDescr pDescr;
 
-  TurnWords = False; ConstMode = ConstModeMoto; SetIsOccupied = False;
+  TurnWords = False; ConstMode = ConstModeMoto;
 
   pDescr = FindFamilyByName("2650");
   PCSymbol = "$"; HeaderID = pDescr->Id; NOPCode = 0xc0;

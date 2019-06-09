@@ -159,13 +159,14 @@ void opencatalog(PMsgCat Catalog, const char *File, const char *Path, LongInt Ms
           MsgFile = NULL;
         else
         {
-          char *pCopy = as_strdup(ptr);
+          String Dest;
+          int Result;
+          
 #ifdef __CYGWIN32__
           DeCygWinDirList(pCopy);
 #endif
-          ptr = FSearch(File, pCopy);
-          MsgFile = (*ptr != '\0') ? myopen(ptr, MsgId1, MsgId2) : NULL;
-          free(pCopy);
+          Result = FSearch(Dest, sizeof(Dest), File, NULL, ptr);
+          MsgFile = Result ? NULL : myopen(Dest, MsgId1, MsgId2);
         }
       }
       if (!MsgFile)

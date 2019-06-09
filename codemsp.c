@@ -4,111 +4,7 @@
 /*                                                                           */
 /* Codegenerator MSP430                                                      */
 /*                                                                           */
-/* Historie:                                                                 */
-/*             18. 8.1998 BookKeeping-Aufruf bei BSS                         */
-/*              2. 1.1998 ChkPC umgestellt                                   */
-/*              9. 3.2000 'ambiguous else'-Warnungen beseitigt               */
-/*             2001-11-16 Endianness must be LSB first                       */
-/*             2002-01-27 allow immediate addressing for one-op instrs(doj)  */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: codemsp.c,v 1.26 2017/06/28 17:02:40 alfred Exp $                     */
-/***************************************************************************** 
- * $Log: codemsp.c,v $
- * Revision 1.26  2017/06/28 17:02:40  alfred
- * - correct MSP430 source operand conversion 0(Rn) -> @Rn
- *
- * Revision 1.25  2017/06/07 19:12:43  alfred
- * - remove double JNZ instruction
- *
- * Revision 1.24  2017/05/31 19:13:14  alfred
- * - MSP430(X): forgot to set PCDist for some instructions
- * - MSP430(X): also set upper 4 bits of displacement for emulated instruction
- * - correct commented code in t_msp430x
- *
- * Revision 1.23  2017/05/15 19:18:36  alfred
- * - correct encoding of TSTA
- *
- * Revision 1.22  2017/05/01 12:39:41  alfred
- * - complete 430X target
- *
- * Revision 1.21  2017/05/01 09:50:32  alfred
- * - correct CALLA range checking
- *
- * Revision 1.20  2017/04/21 20:00:46  alfred
- * - handle rtpc/rptz prefixes
- * - allow > operator to force long immediate
- *
- * Revision 1.19  2017/04/15 13:18:22  alfred
- * - implement emulated MSP instructions no longer via macros
- *
- * Revision 1.18  2017/04/14 10:01:57  alfred
- * - better handling of constant -1 depending on operand size
- *
- * Revision 1.17  2017/04/14 09:56:45  alfred
- * - add the new MSP430X instructions without prefix
- *
- * Revision 1.16  2017/04/03 19:40:47  alfred
- * - extend addresses for MSP430X address decoding
- *
- * Revision 1.15  2017/04/03 18:51:49  alfred
- * - extend/fix MSP430(X) operand sizes
- *
- * Revision 1.14  2017/04/03 18:10:47  alfred
- * - first reworks and cleanups for MSP430X
- *
- * Revision 1.13  2014/12/07 19:14:01  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.12  2014/12/05 11:15:28  alfred
- * - eliminate AND/OR/NOT
- *
- * Revision 1.11  2013/12/21 19:46:51  alfred
- * - dynamically resize code buffer
- *
- * Revision 1.10  2012-05-26 13:49:19  alfred
- * - MSP additions, make implicit macro parameters always case-insensitive
- *
- * Revision 1.9  2010/12/05 23:18:57  alfred
- * - improve erro arguments
- *
- * Revision 1.8  2008/11/23 10:39:17  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.7  2007/12/31 12:56:27  alfred
- * - rework to hash table
- *
- * Revision 1.6  2007/11/24 22:48:07  alfred
- * - some NetBSD changes
- *
- * Revision 1.5  2005/10/30 13:23:28  alfred
- * - warn about odd program counters
- *
- * Revision 1.4  2005/10/02 10:00:46  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.3  2005/09/30 08:31:48  alfred
- * - correct byte disposition for big-endian machines
- *
- * Revision 1.2  2005/09/08 17:31:05  alfred
- * - add missing include
- *
- * Revision 1.1  2003/11/06 02:49:23  alfred
- * - recreated
- *
- * Revision 1.5  2003/05/02 21:23:12  alfred
- * - strlen() updates
- *
- * Revision 1.4  2002/08/14 18:43:49  alfred
- * - warn null allocation, remove some warnings
- *
- * Revision 1.3  2002/07/27 17:44:50  alfred
- * - one more TempAll fix
- *
- * Revision 1.2  2002/07/14 18:39:59  alfred
- * - fixed TempAll-related warnings
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -1567,7 +1463,7 @@ static void SwitchFrom_MSP(void)
 
 static void SwitchTo_MSP(void)
 {
-  TurnWords = False; ConstMode = ConstModeIntel; SetIsOccupied = False;
+  TurnWords = False; ConstMode = ConstModeIntel;
 
   PCSymbol = "$"; HeaderID = 0x4a; NOPCode = 0x4303; /* = MOV #0,#0 */
   DivideChars = ","; HasAttrs = True; AttrChars = ".";

@@ -3,35 +3,8 @@
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator XCore                                                       */
+/*                                                                           */
 /*****************************************************************************/
-/* $Id: codexcore.c,v 1.8 2017/06/07 19:01:09 alfred Exp $                   */
-/*****************************************************************************
- * $Log: codexcore.c,v $
- * Revision 1.8  2017/06/07 19:01:09  alfred
- * - remove double instruction
- *
- * Revision 1.7  2016/08/17 21:26:47  alfred
- * - fix some errors and warnings detected by clang
- *
- * Revision 1.6  2014/12/07 19:14:02  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.5  2012-08-03 17:30:03  alfred
- * - completed machine instructions
- *
- * Revision 1.4  2012-08-02 20:15:03  alfred
- * - add lr2r instructions
- *
- * Revision 1.3  2012-07-29 09:44:43  alfred
- * - add more instructions
- *
- * Revision 1.2  2012-07-28 08:41:33  alfred
- * - add more instructions
- *
- * Revision 1.1  2012-07-22 11:51:45  alfred
- * - begun with XCore target
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -825,7 +798,7 @@ static void SwitchTo_XCore(void)
 {
   PFamilyDescr pDescr;
 
-  TurnWords = False; ConstMode = ConstModeMoto; SetIsOccupied = False;
+  TurnWords = False; ConstMode = ConstModeMoto;
 
   pDescr = FindFamilyByName("XCore");
   PCSymbol = "$"; HeaderID = pDescr->Id; NOPCode = 0x0000;

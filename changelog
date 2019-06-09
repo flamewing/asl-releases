@@ -1,3 +1,14 @@
+2019-06-09 [1.42 Bld 147]
+
+- Addition    : Make include file search strategy more C-like:
+                primarily search in the directory of the file
+                that contains the INCLUDE statement, not the
+                current directory the assembler was called from.
+- Change      : Allow forward references in "\{...}" expressions
+- Change      : Allow SET as both pseudo and machine instruction
+                if it can be differentiated by argument count.
+- Addition    : Add STM8 target
+
 2019-04-20 [1.42 Bld 146]
 
 - Addition    : Added J as generic relative jump for 78C1x

@@ -5,12 +5,6 @@
 /*                                                                           */
 /* Codegenerator SC14xxx                                                     */
 /*                                                                           */
-/* Historie: 25. 3.1999 Grundsteinlegung                                     */
-/*           27. 3.1999 Durch die Befehle durch                              */
-/*           19. 4.1999 Argumentbereich B_BR korrigiert                      */
-/*           20. 4.1999 Argumentbereich B_RST korrigiert                     */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
 
 #include "stdinc.h"
@@ -431,7 +425,7 @@ static void SwitchTo_sc14xxx(void)
 
   FoundDescr = FindFamilyByName("SC14XXX");
 
-  TurnWords = False; ConstMode = ConstModeC; SetIsOccupied = False;
+  TurnWords = False; ConstMode = ConstModeC;
   PCSymbol = "$"; HeaderID = FoundDescr->Id; NOPCode = 0x0000;
   DivideChars = ","; HasAttrs = False;
 

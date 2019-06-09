@@ -4,28 +4,7 @@
 /*                                                                           */
 /* Codegenerator 68RS08                                                      */
 /*                                                                           */
-/* Historie: 2006-06-02 initial version based on code6805.c                  */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code68rs08.c,v                                                       */
-/*****************************************************************************
- * $Log: code68rs08.c,v $
- * Revision 1.5  2014/11/14 12:24:36  alfred
- * - rework to current style
- *
- * Revision 1.4  2013-03-31 18:06:47  alfred
- * - add missing PADDING instruction
- *
- * Revision 1.3  2007/11/24 22:48:05  alfred
- * - some NetBSD changes
- *
- * Revision 1.2  2006/08/05 18:06:43  alfred
- * - silence some compiler warnings
- *
- * Revision 1.1  2006/07/08 10:32:55  alfred
- * - added RS08
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -911,7 +890,6 @@ static void SwitchTo_68rs08(void)
 {
   TurnWords = False;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   PCSymbol = "*";
   HeaderID = 0x5e;

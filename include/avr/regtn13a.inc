@@ -11,7 +11,7 @@ __regt13ainc	equ	1
 ;*                                                                          *
 ;****************************************************************************
 
-		include	"avr/regtn13.inc"	; upward compatible from ATtiny13
+		include	"regtn13.inc"	; upward compatible from ATtiny13
 
 ;----------------------------------------------------------------------------
 ; Chip Configuration

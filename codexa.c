@@ -4,64 +4,7 @@
 /*                                                                           */
 /* AS-Codegenerator Philips XA                                               */
 /*                                                                           */
-/* Historie: 25.10.1996 Grundsteinlegung                                     */
-/*           19. 8.1998 autom. Verlaengerung Spruenge                        */
-/*           23. 8.1998 Umbau auf Hash-Tabelle                               */
-/*                      lange Spruenge fuer JBC                              */
-/*           24. 8.1998 lange Spruenge fuer DJNZ CJNE                        */
-/*           25. 8.1998 nach Hashing ueberfluessige Namensfelder entfernt    */
-/*           14.10.1998 BRANCHEXT auch fuer BR-Befehle                       */
-/*                      Padding-Byte auch fuer Sprung auf sich selber        */
-/*                      Das $ zu verschieben ist aber noch etwas tricky...   */
-/*            9. 1.1999 ChkPC jetzt mit Adresse als Parameter                */
-/*           20. 1.1999 Formate maschinenunabhaengig gemacht                 */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*           14. 1.2001 silenced warnings about unused parameters            */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: codexa.c,v 1.14 2017/06/07 19:10:35 alfred Exp $                      */
-/*****************************************************************************
- * $Log: codexa.c,v $
- * Revision 1.14  2017/06/07 19:10:35  alfred
- * - remove double DIVU instruction
- *
- * Revision 1.13  2014/12/07 19:14:02  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.12  2014/12/05 11:58:16  alfred
- * - collapse STDC queries into one file
- *
- * Revision 1.11  2014/12/05 08:53:45  alfred
- * - eliminate remaining BEGIN/END
- *
- * Revision 1.10  2014/11/05 15:47:16  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.9  2014/06/15 09:18:09  alfred
- * - optimize IsDef a bit
- *
- * Revision 1.8  2014/06/08 14:47:46  alfred
- * - update to current style
- *
- * Revision 1.7  2014/03/08 21:06:37  alfred
- * - rework ASSUME framework
- *
- * Revision 1.6  2010/04/17 13:14:24  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.5  2007/11/24 22:48:07  alfred
- * - some NetBSD changes
- *
- * Revision 1.4  2005/09/08 16:53:43  alfred
- * - use common PInstTable
- *
- * Revision 1.3  2004/05/29 12:04:48  alfred
- * - relocated DecodeMot(16)Pseudo into separate module
- *
- * Revision 1.2  2004/05/29 11:33:04  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -2076,7 +2019,7 @@ static void SwitchFrom_XA(void)
 
 static void SwitchTo_XA(void)
 {
-  TurnWords = False; ConstMode = ConstModeIntel; SetIsOccupied = False;
+  TurnWords = False; ConstMode = ConstModeIntel;
 
   PCSymbol = "$"; HeaderID = 0x3c; NOPCode = 0x00;
   DivideChars = ","; HasAttrs = True; AttrChars = ".";

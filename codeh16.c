@@ -3072,7 +3072,6 @@ static void SwitchTo_H16(void)
 
   TurnWords = False;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   PCSymbol = "*";
   HeaderID = pDescr->Id;

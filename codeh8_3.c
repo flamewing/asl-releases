@@ -4,52 +4,7 @@
 /*                                                                           */
 /* Codegenerator H8/300(L/H)                                                 */
 /*                                                                           */
-/* Historie: 22.11.1996 Grundsteinlegung                                     */
-/*           15.10.1998 TRAPA nachgetragen                                   */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: codeh8_3.c,v 1.13 2017/06/07 19:42:56 alfred Exp $                    */
-/*****************************************************************************
- * $Log: codeh8_3.c,v $
- * Revision 1.13  2017/06/07 19:42:56  alfred
- * - remove superfluous double PADDING registration
- *
- * Revision 1.12  2015/09/20 10:37:35  alfred
- * - silence some GCC warnings
- *
- * Revision 1.11  2014/12/07 19:14:01  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.10  2014/12/05 11:15:28  alfred
- * - eliminate AND/OR/NOT
- *
- * Revision 1.9  2014/12/05 08:53:45  alfred
- * - eliminate remaining BEGIN/END
- *
- * Revision 1.8  2014/06/16 19:23:18  alfred
- * - adapt to current style
- *
- * Revision 1.7  2011-08-01 19:56:08  alfred
- * - add attribute type to error message
- *
- * Revision 1.6  2010/08/27 14:52:42  alfred
- * - some more overlapping strcpy() cleanups
- *
- * Revision 1.5  2010/04/17 13:14:23  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.4  2007/11/24 22:48:06  alfred
- * - some NetBSD changes
- *
- * Revision 1.3  2005/09/08 17:31:05  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 12:04:47  alfred
- * - relocated DecodeMot(16)Pseudo into separate module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -1922,7 +1877,6 @@ static void SwitchTo_H8_3(void)
 {
   TurnWords = True;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   PCSymbol = "*";
   HeaderID = 0x68;

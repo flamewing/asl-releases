@@ -98,13 +98,13 @@ PADAT		equ		MBAR+$1c9	; Port A Data Register (8b)
 
 ;----------------------------------------------------------------------------
 ; UART
-		include		"coldfire/52xxuart.inc"
+		include		"52xxuart.inc"
 		__defuart	"",MBAR+$140
 
 ;----------------------------------------------------------------------------
 ; Timers
 
-		include		"coldfire/52xxtmr.inc"
+		include		"52xxtmr.inc"
 		__deftimer	"1",MBAR+$100
 		__deftimer	"2",MBAR+$120
 

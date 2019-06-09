@@ -74,7 +74,8 @@ static void SetCPUCore(const tCPUDef *pCPUDef, Boolean NotPrev)
   }
 
   InternSymbol = Default_InternSymbol;
-  SetIsOccupied = SwitchIsOccupied = PageIsOccupied = False;
+  SetIsOccupiedFnc = NULL;
+  SwitchIsOccupied = PageIsOccupied = False;
   ChkPC = DefChkPC;
   ASSUMERecCnt = 0;
   pASSUMERecs = NULL;
@@ -367,7 +368,7 @@ static void CodeSHARED(Word Index)
   {
     CodeSHARED_BuildComment(c);
     errno = 0;
-    fprintf(ShareFile, "%s\n", c); ChkIO(10004);
+    fprintf(ShareFile, "%s\n", c); ChkIO(ErrNum_FileWriteError);
   }
   else
    forallargs (pArg, True)
@@ -440,7 +441,7 @@ static void CodeSHARED(Word Index)
            fprintf(ShareFile, "%s %s%s\n", pArg->Str, s, c);
            break;
        }
-       ChkIO(10004);
+       ChkIO(ErrNum_FileWriteError);
      }
      else if (PassNo == 1)
      {
@@ -760,8 +761,8 @@ static void CodeCHARSET(Word Index)
 
           DynString2CString(Tmp, &t.Contents.Ascii, sizeof(Tmp));
           f = fopen(Tmp, OPENRDMODE);
-          if (!f) ChkIO(10001);
-          if (fread(tfield, sizeof(char), 256, f) != 256) ChkIO(10003);
+          if (!f) ChkIO(ErrNum_OpeningFile);
+          if (fread(tfield, sizeof(char), 256, f) != 256) ChkIO(ErrNum_FileReadError);
           fclose(f);
           memcpy(CharTransTable, tfield, sizeof(char) * 256);
         }
@@ -1342,6 +1343,36 @@ static void CodeLISTING(Word Index)
   }
 }
 
+void INCLUDE_SearchCore(tStrComp *pDest, const tStrComp *pArg, Boolean SearchPath)
+{
+  StrCompCopy(pDest, &ArgStr[1]);
+
+  if (pDest->Str[0] == '"')
+  {
+    int l;
+    
+    StrCompIncRefLeft(pDest, 1);
+    l = strlen(pDest->Str);
+    if ((l > 0) && (pDest->Str[l - 1]  == '"'))
+      StrCompShorten(pDest, 1);
+    else
+    {
+      WrStrErrorPos(ErrNum_BrackErr, pArg);
+      return;
+    }
+  }
+  AddSuffix(pDest->Str, IncSuffix);
+  
+  if (SearchPath)
+  {
+    String FoundFileName;
+    
+    if (FSearch(FoundFileName, sizeof(FoundFileName), pDest->Str, CurrFileName, SearchPath ? IncludeList : ""))
+      ChkStrIO(ErrNum_OpeningFile, &ArgStr[1]);
+    strmaxcpy(pDest->Str, FExpand(FoundFileName), STRINGSIZE - 1);
+  }
+}
+
 static void CodeBINCLUDE(Word Index)
 {
   FILE *F;
@@ -1350,7 +1381,6 @@ static void CodeBINCLUDE(Word Index)
   Word RLen;
   Boolean OK, SaveTurnWords;
   LargeWord OldPC;
-  String Name;
   UNUSED(Index);
 
   if (!ChkArgCnt(1, 3));
@@ -1385,18 +1415,15 @@ static void CodeBINCLUDE(Word Index)
     }
     if (OK)
     {
-      strmaxcpy(Name, ArgStr[1].Str, STRINGSIZE);
-      if (*Name == '"')
-        strmov(Name, Name + 1);
-      if ((*Name) && (Name[strlen(Name) - 1] == '"'))
-        Name[strlen(Name) - 1] = '\0';
-      strmaxcpy(ArgStr[1].Str, Name, STRINGSIZE);
-      strmaxcpy(Name, FExpand(FSearch(Name, IncludeList)), STRINGSIZE);
-      if ((*Name) && (Name[strlen(Name) - 1] == '/'))
-        strmaxcat(Name, ArgStr[1].Str, STRINGSIZE);
-      F = fopen(Name, OPENRDMODE);
-      if (F == NULL) ChkIO(10001);
-      errno = 0; FSize = FileSize(F); ChkIO(10003);
+      tStrComp FNameArg;
+      String FNameArgStr;
+      
+      StrCompMkTemp(&FNameArg, FNameArgStr);
+      INCLUDE_SearchCore(&FNameArg, &ArgStr[1], True);
+
+      F = fopen(FNameArg.Str, OPENRDMODE);
+      if (F == NULL) ChkIO(ErrNum_OpeningFile);
+      errno = 0; FSize = FileSize(F); ChkIO(ErrNum_FileReadError);
       if (Len == -1)
       {
         if ((Len = FSize - Ofs) < 0)
@@ -1407,7 +1434,7 @@ static void CodeBINCLUDE(Word Index)
       if (!ChkPC(PCs[ActPC] + Len - 1)) WrError(ErrNum_AdrOverflow);
       else
       {
-        errno = 0; fseek(F, Ofs, SEEK_SET); ChkIO(10003);
+        errno = 0; fseek(F, Ofs, SEEK_SET); ChkIO(ErrNum_FileReadError);
         Rest = Len;
         SaveTurnWords = TurnWords;
         TurnWords = False;
@@ -1415,7 +1442,7 @@ static void CodeBINCLUDE(Word Index)
         do
         {
           Curr = (Rest <= 256) ? Rest : 256;
-          errno = 0; RLen = fread(BAsmCode, 1, Curr, F); ChkIO(10003);
+          errno = 0; RLen = fread(BAsmCode, 1, Curr, F); ChkIO(ErrNum_FileReadError);
           CodeLen = RLen;
           WriteBytes();
           PCs[ActPC] += CodeLen;
@@ -1903,14 +1930,14 @@ Boolean CodeGlobalPseudo(void)
   switch (*OpPart.Str)
   {
     case 'S':
-      if ((!SetIsOccupied) && (Memo("SET")))
+      if (!SetIsOccupied() && Memo("SET"))
       {
         CodeSETEQU(True);
         return True;
       }
       break;
     case 'E':
-      if ((SetIsOccupied) && (Memo("EVAL")))
+      if (Memo("EVAL"))
       {
         CodeSETEQU(True);
         return True;

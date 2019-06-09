@@ -4,54 +4,7 @@
 /*                                                                           */
 /* Codegenerator PowerPC-Familie                                             */
 /*                                                                           */
-/* Historie: 17.10.1996 Grundsteinlegung                                     */
-/*           30. 8.1998 Umstellung auf 32-Bit-Zugriffe                       */
-/*                      Header-ID per Abfrage                                */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.1999 MMU-Instruktionen                                    */
-/*           10. 3.1999 PPC403-MMU-Befehle                                   */
-/*           28. 3.1999 PPC403GB auf GC korrigiert (erst der hat eine MMU)   */
-/*            8. 9.1999 REG-Befehl nachgeruestet                             */
-/*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code601.c,v 1.12 2016/09/12 18:13:00 alfred Exp $                     */
-/*****************************************************************************
- * $Log: code601.c,v $
- * Revision 1.12  2016/09/12 18:13:00  alfred
- * - correct some errors found by valgrind
- *
- * Revision 1.11  2016/09/12 18:05:30  alfred
- * - correct some memory leaks
- *
- * Revision 1.10  2014/12/05 11:58:15  alfred
- * - collapse STDC queries into one file
- *
- * Revision 1.9  2014/11/12 09:57:17  alfred
- * - rework to current style
- *
- * Revision 1.8  2014/11/05 15:47:14  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.7  2014/06/09 12:48:07  alfred
- * - add missing parentheses
- *
- * Revision 1.6  2012-01-14 13:04:13  alfred
- * - merged in MPC821 support
- *
- * Revision 1.5  2007/11/24 22:48:04  alfred
- * - some NetBSD changes
- *
- * Revision 1.4  2005/10/02 10:00:45  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.3  2005/09/08 17:31:03  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 11:33:01  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -2081,7 +2034,6 @@ static void SwitchTo_601(void)
 
   TurnWords = True;
   ConstMode = ConstModeC;
-  SetIsOccupied = False;
 
   FoundDscr = FindFamilyByName("MPC601");
   if (!FoundDscr)

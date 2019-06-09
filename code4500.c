@@ -4,38 +4,7 @@
 /*                                                                           */
 /* Codegenerator MELPS-4500                                                  */
 /*                                                                           */
-/* Historie: 31.12.1996 (23.44!!) Grundsteinlegung                           */
-/*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
-/*           18. 8.1998 BookKeeping-Aufruf bei RES                           */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code4500.c,v 1.6 2017/07/05 12:26:46 alfred Exp $                    */
-/*****************************************************************************
- * $Log: code4500.c,v $
- * Revision 1.6  2017/07/05 12:26:46  alfred
- * - silence warning
- *
- * Revision 1.5  2016/09/29 16:43:36  alfred
- * - introduce common DecodeDATA/DecodeRES functions
- *
- * Revision 1.4  2014/11/06 11:58:16  alfred
- * - rework to current style
- *
- * Revision 1.3  2008/11/23 10:39:16  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.2  2005/09/08 17:31:03  alfred
- * - add missing include
- *
- * Revision 1.1  2003/11/06 02:49:20  alfred
- * - recreated
- *
- * Revision 1.2  2002/08/14 18:43:48  alfred
- * - warn null allocation, remove some warnings
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -350,7 +319,6 @@ static void SwitchTo_4500(void)
 {
   TurnWords = False;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   PCSymbol = "*";
   HeaderID = 0x12;

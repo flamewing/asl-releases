@@ -1527,7 +1527,7 @@ static void InitCode_H8_5(void)
 
 static void SwitchTo_H8_5(void)
 {
-  TurnWords = True; ConstMode = ConstModeMoto; SetIsOccupied = False;
+  TurnWords = True; ConstMode = ConstModeMoto;
 
   PCSymbol = "*"; HeaderID = 0x69; NOPCode = 0x00;
   DivideChars = ","; HasAttrs = True; AttrChars = ".:";

@@ -4,41 +4,7 @@
 /*                                                                           */
 /* Codegenerator PIC17C4x                                                    */
 /*                                                                           */
-/* Historie: 21.8.1996 Grundsteinlegung                                      */
-/*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
-/*           18. 8.1998 Bookkeeping-Aufruf in RES                            */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code17c4x.c,v 1.6 2016/09/29 16:43:36 alfred Exp $                          */
-/*****************************************************************************
- * $Log: code17c4x.c,v $
- * Revision 1.6  2016/09/29 16:43:36  alfred
- * - introduce common DecodeDATA/DecodeRES functions
- *
- * Revision 1.5  2014/10/03 13:18:15  alfred
- * - rework to current style
- *
- * Revision 1.4  2013/12/21 19:46:51  alfred
- * - dynamically resize code buffer
- *
- * Revision 1.3  2008/11/23 10:39:16  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.2  2005/09/08 17:31:03  alfred
- * - add missing include
- *
- * Revision 1.1  2003/11/06 02:49:19  alfred
- * - recreated
- *
- * Revision 1.3  2003/05/02 21:23:09  alfred
- * - strlen() updates
- *
- * Revision 1.2  2002/08/14 18:43:48  alfred
- * - warn null allocation, remove some warnings
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -430,7 +396,6 @@ static void SwitchTo_17c4x(void)
 {
   TurnWords = False;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   PCSymbol = "*";
   HeaderID = 0x72;

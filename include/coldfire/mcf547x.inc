@@ -198,7 +198,7 @@ __N		set		__N+1
 ; Edge Port Module
 
 MBAR_EPORT	equ		MBAR+$f00
-		include		"coldfire/52xxeport.inc"	; TODO: edge port 0 not defined on 547x
+		include		"52xxeport.inc"	; TODO: edge port 0 not defined on 547x
 		
 ;----------------------------------------------------------------------------
 ; GPIO
@@ -354,7 +354,7 @@ PAR_TOUT2	cfbit		PAR_TIMER,0	;  TOUT2 pin assignment.
 ; FlexBus
 
 MBAR_FBUS	equ		MBAR+$500
-		include		"coldfire/52xxfbus.inc"
+		include		"52xxfbus.inc"
 
 ;----------------------------------------------------------------------------
 ; SDRAM Controller
@@ -677,7 +677,7 @@ ITLMBK		cfbit		PASR,16		;  Internal master broken.
 
 		if		__has_sec
 MBAR_SEC	 equ		MBAR+$20000
-		 include	"coldfire/54xxsec.inc"
+		 include	"54xxsec.inc"
 		endif
 
 ;----------------------------------------------------------------------------
@@ -1086,7 +1086,7 @@ RXDATA		cffield		DRFDR{"\{__NS}"},0,16  ;  Receive data.
 ; I2C
 
 MBAR_I2C	equ		MBAR+$8f00
-		include 	"coldfire/52xxi2c.inc"
+		include 	"52xxi2c.inc"
 		
 I2ICR		equ		MBAR_I2C+$20	; I2C Interrupt Control Register (8b)
 BNBE		cfbit		I2ICR,3		;  Permits I2C module to generate an interrupt when the bus is NOT busy.
@@ -1099,13 +1099,13 @@ IE		cfbit		I2ICR,0		;  Routes the interrupt for the I2C module to the CPU.
 
                 if              __has_usb
 MBAR_USB2	 equ		MBAR+$b000
-		 include	"coldfire/54xxusb2.inc"
+		 include	"54xxusb2.inc"
 		endif
 
 ;----------------------------------------------------------------------------
 ; FEC
 
-		include		"coldfire/54xxfec.inc"
+		include		"54xxfec.inc"
 		__def54fec	"FEC0.",MBAR+$9000
 		if		__has_fec1
 		 __def54fec	"FEC1.",MBAR+$9800

@@ -2,37 +2,9 @@
 /*****************************************************************************/
 /* AS-Portierung                                                             */
 /*                                                                           */
-/* Codegenerator xilinx kcpsm3                                               */
+/* Codegenerator Xilinx kcpsm3                                               */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codekcp3.c,v 1.7 2014/06/16 20:05:10 alfred Exp $                   */
-/*****************************************************************************
- * $Log: codekcp3.c,v $
- * Revision 1.7  2014/06/16 20:05:10  alfred
- * - minor cleanups
- *
- * Revision 1.6  2007/11/24 22:48:07  alfred
- * - some NetBSD changes
- *
- * Revision 1.5  2005/10/02 10:22:58  alfred
- * - KCPSM(3) registers are literals
- *
- * Revision 1.4  2005/10/02 10:00:45  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.3  2005/09/30 12:53:49  alfred
- * - correct include statements
- *
- * Revision 1.2  2005/09/08 16:53:43  alfred
- * - use common PInstTable
- *
- * Revision 1.1  2005/03/21 19:48:16  alfred
- * - shortened name to 8+3 (again...)
- *
- * Revision 1.1  2005/02/19 18:05:59  alfred
- * - use shorter name for 8+3 filesystems, correct bugs
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <stdio.h>
@@ -454,7 +426,7 @@ static void SwitchTo_KCPSM3(void)
 
    FoundDescr = FindFamilyByName("KCPSM3");
 
-   TurnWords = True; ConstMode = ConstModeIntel; SetIsOccupied = False;
+   TurnWords = True; ConstMode = ConstModeIntel;
 
    PCSymbol = "$"; HeaderID = FoundDescr->Id;
 

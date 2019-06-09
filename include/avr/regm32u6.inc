@@ -20,7 +20,7 @@ RAMEND		equ	0xaff,data
 FLASHEND	label	0x7fff
 
 __USBHOSTMODE	equ	0
-		include	"avr/regmxu6.inc"
+		include	"regmxu6.inc"
 
 		restore			; re-enable listing
 

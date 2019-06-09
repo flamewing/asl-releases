@@ -24,7 +24,7 @@ FLASHEND	label	$ffffff
 
 __housing	equ	64
 __vca		equ	0
-		include	"s12z/vc/common.inc"
+		include	"common.inc"
 
 		restore			; re-enable listing
 

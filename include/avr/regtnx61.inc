@@ -237,7 +237,7 @@ TIFR		port	0x38		; Timer Interrupt Status Register 0
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
-		include	"avr/wdm21.inc"
+		include	"wdm21.inc"
 
 WDCE		avrbit	WDTCR,4		; Change Enable
 WDP3		avrbit	WDTCR,5

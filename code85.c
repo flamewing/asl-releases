@@ -4,51 +4,7 @@
 /*                                                                           */
 /* Codegenerator 8080/8085                                                   */
 /*                                                                           */
-/* Historie: 24.10.1996 Grundsteinlegung                                     */
-/*            2. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code85.c,v 1.11 2017/06/07 19:41:00 alfred Exp $                      */
-/***************************************************************************** 
- * $Log: code85.c,v $
- * Revision 1.11  2017/06/07 19:41:00  alfred
- * - add missing ClearONOFF()
- *
- * Revision 1.10  2016/11/24 22:42:26  alfred
- * - silence warning
- *
- * Revision 1.9  2016/10/07 20:39:07  alfred
- * - add Z80SYNTAX instruction
- *
- * Revision 1.8  2016/10/07 19:35:29  alfred
- * - first version of Z80 syntax ibn 8080/8085 target
- *
- * Revision 1.7  2016/04/26 14:13:50  alfred
- * - complain about wrong register names for PUSH/POP
- *
- * Revision 1.6  2014/12/07 19:14:00  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.5  2014/08/10 13:27:53  alfred
- * - rework to current style
- *
- * Revision 1.4  2007/11/24 22:48:05  alfred
- * - some NetBSD changes
- *
- * Revision 1.3  2005/09/08 16:53:42  alfred
- * - use common PInstTable
- *
- * Revision 1.2  2004/05/29 11:33:01  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- * Revision 1.1  2003/11/06 02:49:22  alfred
- * - recreated
- *
- * Revision 1.2  2002/11/09 13:27:12  alfred
- * - added hash table search, added undocumented 8085 instructions
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -1268,7 +1224,6 @@ static void SwitchTo_85(void)
 {
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = 0x41;

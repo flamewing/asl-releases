@@ -4,49 +4,7 @@
 /*                                                                           */
 /* Codegenerator TMS99xx                                                     */     
 /*                                                                           */
-/* Historie:  9. 3.1997 Grundsteinlegung                                     */     
-/*           18. 8.1998 BookKeeping-Aufruf bei BSS                           */
-/*            2. 1.1999 ChkPC angepasst                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code9900.c,v 1.8 2016/08/20 21:13:45 alfred Exp $                    */
-/***************************************************************************** 
- * $Log: code9900.c,v $
- * Revision 1.8  2016/08/20 21:13:45  alfred
- * - fix some pedantic CLANG errors
- *
- * Revision 1.7  2014/06/25 21:34:02  alfred
- * - rework to current style
- *
- * Revision 1.6  2013/12/21 19:46:51  alfred
- * - dynamically resize code buffer
- *
- * Revision 1.5  2008/11/23 10:39:17  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.4  2007/11/24 22:48:06  alfred
- * - some NetBSD changes
- *
- * Revision 1.3  2005/10/02 10:00:45  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.2  2005/09/08 17:31:05  alfred
- * - add missing include
- *
- * Revision 1.1  2003/11/06 02:49:22  alfred
- * - recreated
- *
- * Revision 1.4  2003/05/02 21:23:11  alfred
- * - strlen() updates
- *
- * Revision 1.3  2002/08/14 18:43:49  alfred
- * - warn null allocation, remove some warnings
- *
- * Revision 1.2  2002/07/14 18:39:59  alfred
- * - fixed TempAll-related warnings
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -682,7 +640,6 @@ static void SwitchTo_9900(void)
 {
   TurnWords = True;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = 0x48;

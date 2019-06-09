@@ -1546,7 +1546,7 @@ static ASSUMERec ASSUME75s[] =
 
 static void SwitchTo_75K0(void)
 {
-  TurnWords = False; ConstMode = ConstModeIntel; SetIsOccupied = False;
+  TurnWords = False; ConstMode = ConstModeIntel;
 
   PCSymbol = "PC"; HeaderID = 0x7b; NOPCode = 0x60;
   DivideChars = ","; HasAttrs = False;

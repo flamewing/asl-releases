@@ -68,6 +68,7 @@ tIntTypeDef IntTypeDefs[IntTypeCnt] =
   { 0x0000ffffl,     -32768l,      65535l }, /* Int16 */
   { 0x0001ffffl,          0l,     131071l }, /* UInt17 */
   { 0x0003ffffl,          0l,     262143l }, /* UInt18 */
+  { 0x0007ffffl,          0l,     524287l }, /* UInt19 */
   { 0x0007ffffl,    -524288l,     524287l }, /* SInt20 */
   { 0x000fffffl,          0l,    1048575l }, /* UInt20 */
   { 0x000fffffl,    -524288l,    1048575l }, /* Int20 */
@@ -721,7 +722,7 @@ static int DigitVal(char ch, int Base)
  * Result:      integer value
  *****************************************************************************/
 
-LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
+static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
 {
   Byte Digit;
   LargeInt Wert;
@@ -979,7 +980,7 @@ LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
  * Result:      value
  *****************************************************************************/
 
-Double ConstFloatVal(const char *pExpr, FloatType Typ, Boolean *pResult)
+static Double ConstFloatVal(const char *pExpr, FloatType Typ, Boolean *pResult)
 {
   Double Erg;
   char *pEnd;
@@ -1021,116 +1022,121 @@ Double ConstFloatVal(const char *pExpr, FloatType Typ, Boolean *pResult)
  * Result:      value
  *****************************************************************************/
 
-void ConstStringVal(const char *pExpr, tDynString *pDest, Boolean *pResult)
+static void ConstStringVal(const tStrComp *pExpr, TempResult *pDest, Boolean *pResult)
 {
-  String Copy;
-  char *pPos, *pCurr;
+  String CopyStr;
+  tStrComp Copy, Remainder;
+  char *pPos;
   int l, TLen;
 
+  StrCompMkTemp(&Copy, CopyStr);
   *pResult = False;
 
-  l = strlen(pExpr);
-  if ((l < 2) || (*pExpr != '"') || (pExpr[l - 1] != '"'))
+  l = strlen(pExpr->Str);
+  if ((l < 2) || (*pExpr->Str != '"') || (pExpr->Str[l - 1] != '"'))
     return;
 
-  strmaxcpy(Copy, pExpr + 1, STRINGSIZE);
-  Copy[strlen(Copy) - 1] = '\0';
+  StrCompCopy(&Copy, pExpr);
+  StrCompIncRefLeft(&Copy, 1);
+  StrCompShorten(&Copy, 1);
 
   /* go through source */
 
-  pCurr = Copy;
-  pDest->Length = 0;
-  while (*pCurr)
+  pDest->Typ = TempNone;
+  pDest->Contents.Ascii.Length = 0;
+  while (1)
   {
+    pPos = strchr(Copy.Str, '\\');
+    if (pPos)
+      StrCompSplitRef(&Copy, &Remainder, &Copy, pPos);
+
+    /* " before \ -> not a simple string but something like "...." ... " */
+
+    if (strchr(Copy.Str, '"'))
+      return;
+
     /* copy part up to next '\' verbatim: */
 
-    pPos = strchr(pCurr, '\\');
-    if (pPos)
-      *pPos = '\0';
-    if (strchr(pCurr, '"'))
-      return;
-    TLen = strlen(pCurr);
-    DynStringAppend(pDest, pCurr, TLen);
+    DynStringAppend(&pDest->Contents.Ascii, Copy.Str, strlen(Copy.Str));
 
     /* are we done? If not, advance pointer to behind '\' */
 
     if (!pPos)
       break;
-    pCurr = pPos + 1;
+    Copy = Remainder;
 
-    if (pPos)
+    /* treat escaped section: stringification? */
+
+    if (*Copy.Str == '{')
     {
-      /* stringification? */
+      TempResult t;
+      char *pStr;
+      String Str;
 
-      if (*pCurr == '{')
+      StrCompIncRefLeft(&Copy, 1);
+
+      /* cut out part in {...} */
+
+      pPos = QuotPos(Copy.Str, '}');
+      if (!pPos)
+        return;
+      StrCompSplitRef(&Copy, &Remainder, &Copy, pPos);
+      KillPrefBlanksStrCompRef(&Remainder);
+      KillPostBlanksStrComp(&Remainder);
+
+      /* evaluate expression */
+
+      FirstPassUnknown = False;
+      EvalStrExpression(&Copy, &t);
+      if (t.Relocs)
       {
-        TempResult t;
-        char *pStr;
-        String Str;
-
-        /* cut out part in {...} */
-
-        pPos = QuotPos(++pCurr, '}');
-        if (!pPos)
-          return;
-        *pPos = '\0';
-        KillBlanks(pCurr);
-
-        /* evaluate expression */
-
-        FirstPassUnknown = False;
-        EvalExpression(pCurr, &t);
-        if (FirstPassUnknown)
-        {
-          WrXError(ErrNum_FirstPassCalc, pCurr);
-          return;
-        }
-        if (t.Relocs)
-        {
-          WrError(ErrNum_NoRelocs);
-          FreeRelocs(&t.Relocs);
-          return;
-        }
-
-        /* append result */
-
-        switch (t.Typ)
-        {
-          case TempInt:
-            TLen = SysString(Str, sizeof(Str), t.Contents.Int, OutRadixBase, 0);
-            pStr = Str;
-            break;
-          case TempFloat:
-            pStr = FloatString(t.Contents.Float);
-            TLen = strlen(pStr);
-            break;
-          case TempString:
-            pStr = t.Contents.Ascii.Contents;
-            TLen = t.Contents.Ascii.Length;
-            break;
-          default:
-            return;
-        }
-        DynStringAppend(pDest, pStr, TLen);
-
-        /* advance source pointer to behind '}' */
-
-        pCurr = pPos + 1;
+        WrStrErrorPos(ErrNum_NoRelocs, &Copy);
+        FreeRelocs(&t.Relocs);
+        *pResult = True;
+        return;
       }
 
-      /* simple character escape: */
+      /* append result */
 
-      else
+      switch (t.Typ)
       {
-        char Res;
-
-        if (!ProcessBk(&pCurr, &Res))
+        case TempInt:
+          TLen = SysString(Str, sizeof(Str), t.Contents.Int, OutRadixBase, 0);
+          pStr = Str;
+          break;
+        case TempFloat:
+          pStr = FloatString(t.Contents.Float);
+          TLen = strlen(pStr);
+          break;
+        case TempString:
+          pStr = t.Contents.Ascii.Contents;
+          TLen = t.Contents.Ascii.Length;
+          break;
+        default:
+          *pResult = True;
           return;
-        DynStringAppend(pDest, &Res, 1);
       }
+      DynStringAppend(&pDest->Contents.Ascii, pStr, TLen);
+
+      /* advance source pointer to behind '}' */
+
+      Copy = Remainder;
+    }
+
+    /* simple character escape: */
+
+    else
+    {
+      char Res, *pNext = Copy.Str;
+
+      if (!ProcessBk(&pNext, &Res))
+        return;
+      DynStringAppend(&pDest->Contents.Ascii, &Res, 1);
+      StrCompIncRefLeft(&Copy, pNext - Copy.Str);
     }
   }
 
+  pDest->Typ = TempString;
   *pResult = True;
 }
 
@@ -1231,10 +1237,9 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
     LEAVE;
   }
 
-  ConstStringVal(CopyComp.Str, &pErg->Contents.Ascii, &OK);
+  ConstStringVal(&CopyComp, pErg, &OK);
   if (OK)
   {
-    pErg->Typ = TempString;
     pErg->Relocs = NULL;
     LEAVE;
   }
@@ -2893,20 +2898,20 @@ static void PrintDebSymbols_PNode(PTree Tree, void *pData)
 
   if (!DebContext->HWritten)
   {
-    fprintf(DebContext->f, "\n"); ChkIO(10004);
-    fprintf(DebContext->f, "Symbols in Segment %s\n", SegNames[DebContext->Space]); ChkIO(10004);
+    fprintf(DebContext->f, "\n"); ChkIO(ErrNum_FileWriteError);
+    fprintf(DebContext->f, "Symbols in Segment %s\n", SegNames[DebContext->Space]); ChkIO(ErrNum_FileWriteError);
     DebContext->HWritten = True;
   }
 
-  fprintf(DebContext->f, "%s", Node->Tree.Name); ChkIO(10004);
+  fprintf(DebContext->f, "%s", Node->Tree.Name); ChkIO(ErrNum_FileWriteError);
   l1 = strlen(Node->Tree.Name);
   if (Node->Tree.Attribute != -1)
   {
     sprintf(s, "[%d]", (int)Node->Tree.Attribute);
-    fprintf(DebContext->f, "%s", s); ChkIO(10004);
+    fprintf(DebContext->f, "%s", s); ChkIO(ErrNum_FileWriteError);
     l1 += strlen(s);
   }
-  fprintf(DebContext->f, "%s ", Blanks(37 - l1)); ChkIO(10004);
+  fprintf(DebContext->f, "%s ", Blanks(37 - l1)); ChkIO(ErrNum_FileWriteError);
   switch (Node->SymWert.Typ)
   {
     case TempInt:
@@ -2921,22 +2926,22 @@ static void PrintDebSymbols_PNode(PTree Tree, void *pData)
     default:
       break;
   }
-  ChkIO(10004);
+  ChkIO(ErrNum_FileWriteError);
   if (Node->SymWert.Typ == TempString)
   {
     errno = 0;
     l1 = fstrlenprint(DebContext->f, Node->SymWert.Contents.String.Contents, Node->SymWert.Contents.String.Length);
-    ChkIO(10004);
+    ChkIO(ErrNum_FileWriteError);
   }
   else
   {
     ConvertSymbolVal(&(Node->SymWert), &t);
     StrSym(&t, False, s, sizeof(s));
     l1 = strlen(s);
-    fprintf(DebContext->f, "%s", s); ChkIO(10004);
+    fprintf(DebContext->f, "%s", s); ChkIO(ErrNum_FileWriteError);
   }
   fprintf(DebContext->f, "%s %-3d %d\n", Blanks(25-l1), Node->SymSize, (int)Node->Used);
-  ChkIO(10004);
+  ChkIO(ErrNum_FileWriteError);
 }
 
 void PrintDebSymbols(FILE *f)
@@ -2964,9 +2969,9 @@ static void PrNoISection(PTree Tree, void *pData)
 
   if (((1 << Node->SymType) & NoICEMask) && (Node->Tree.Attribute == pContext->Handle) && (Node->SymWert.Typ == TempInt))
   {
-    errno = 0; fprintf(pContext->f, "DEFINE %s 0x", Node->Tree.Name); ChkIO(10004);
-    errno = 0; fprintf(pContext->f, LargeHIntFormat, Node->SymWert.Contents.IWert); ChkIO(10004);
-    errno = 0; fprintf(pContext->f, "\n"); ChkIO(10004);
+    errno = 0; fprintf(pContext->f, "DEFINE %s 0x", Node->Tree.Name); ChkIO(ErrNum_FileWriteError);
+    errno = 0; fprintf(pContext->f, LargeHIntFormat, Node->SymWert.Contents.IWert); ChkIO(ErrNum_FileWriteError);
+    errno = 0; fprintf(pContext->f, "\n"); ChkIO(ErrNum_FileWriteError);
   }
 }
 
@@ -2982,14 +2987,14 @@ void PrintNoISymbols(FILE *f)
   for (CurrSection = FirstSection; CurrSection; CurrSection = CurrSection->Next)
    if (ChunkSum(&CurrSection->Usage)>0)
    {
-     fprintf(f, "FUNCTION %s ", CurrSection->Name); ChkIO(10004);
-     fprintf(f, LargeIntFormat, ChunkMin(&CurrSection->Usage)); ChkIO(10004);
-     fprintf(f, "\n"); ChkIO(10004);
+     fprintf(f, "FUNCTION %s ", CurrSection->Name); ChkIO(ErrNum_FileWriteError);
+     fprintf(f, LargeIntFormat, ChunkMin(&CurrSection->Usage)); ChkIO(ErrNum_FileWriteError);
+     fprintf(f, "\n"); ChkIO(ErrNum_FileWriteError);
      IterTree((PTree)FirstSymbol, PrNoISection, &Context);
      Context.Handle++;
-     fprintf(f, "}FUNC "); ChkIO(10004);
-     fprintf(f, LargeIntFormat, ChunkMax(&CurrSection->Usage)); ChkIO(10004);
-     fprintf(f, "\n"); ChkIO(10004);
+     fprintf(f, "}FUNC "); ChkIO(ErrNum_FileWriteError);
+     fprintf(f, LargeIntFormat, ChunkMax(&CurrSection->Usage)); ChkIO(ErrNum_FileWriteError);
+     fprintf(f, "\n"); ChkIO(ErrNum_FileWriteError);
    }
 }
 
@@ -3542,20 +3547,20 @@ void PrintDebSections(FILE *f)
   Lauf = FirstSection; Cnt = 0;
   while (Lauf)
   {
-    fputs("\nInfo for Section ", f); ChkIO(10004);
-    fprintf(f, LongIntFormat, Cnt); ChkIO(10004);
-    fputc(' ', f); ChkIO(10004);
-    fputs(GetSectionName(Cnt), f); ChkIO(10004);
-    fputc(' ', f); ChkIO(10004);
-    fprintf(f, LongIntFormat, Lauf->Parent); ChkIO(10004);
-    fputc('\n', f); ChkIO(10004);
+    fputs("\nInfo for Section ", f); ChkIO(ErrNum_FileWriteError);
+    fprintf(f, LongIntFormat, Cnt); ChkIO(ErrNum_FileWriteError);
+    fputc(' ', f); ChkIO(ErrNum_FileWriteError);
+    fputs(GetSectionName(Cnt), f); ChkIO(ErrNum_FileWriteError);
+    fputc(' ', f); ChkIO(ErrNum_FileWriteError);
+    fprintf(f, LongIntFormat, Lauf->Parent); ChkIO(ErrNum_FileWriteError);
+    fputc('\n', f); ChkIO(ErrNum_FileWriteError);
     for (z = 0; z < Lauf->Usage.RealLen; z++)
     {
       l = Lauf->Usage.Chunks[z].Length;
       s = Lauf->Usage.Chunks[z].Start;
       HexString(Str, sizeof(Str), s, 0);
       fputs(Str, f);
-      ChkIO(10004);
+      ChkIO(ErrNum_FileWriteError);
       if (l == 1)
         fprintf(f, "\n");
       else
@@ -3563,7 +3568,7 @@ void PrintDebSections(FILE *f)
         HexString(Str, sizeof(Str), s + l - 1, 0);
         fprintf(f, "-%s\n", Str);
       }
-      ChkIO(10004);
+      ChkIO(ErrNum_FileWriteError);
     }
     Lauf = Lauf->Next;
     Cnt++;
@@ -4042,5 +4047,5 @@ void asmpars_init(void)
 #ifdef HAS64
   IntTypeDefs[(int)Int64].Min--;
 #endif
-  LastGlobSymbol = (char*)malloc(sizeof(char) * 256);
+  LastGlobSymbol = (char*)malloc(sizeof(char) * STRINGSIZE);
 }

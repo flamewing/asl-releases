@@ -2,29 +2,9 @@
 /*****************************************************************************/
 /* AS-Portierung                                                             */
 /*                                                                           */
-/* AS-Codeenerator Motorola/ST 6804                                          */
-/*                                                                           */
-/* Historie: 17.10.1996 Grundsteinlegung                                     */
-/*            2. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
+/* AS-Codegenerator Motorola/ST 6804                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code6804.c,v 1.5 2014/11/13 14:08:32 alfred Exp $                    */
-/*****************************************************************************
- * $Log: code6804.c,v $
- * Revision 1.5  2014/11/13 14:08:32  alfred
- * - rework to current style
- *
- * Revision 1.4  2014/06/09 12:46:51  alfred
- * - add missing parentheses
- *
- * Revision 1.3  2005/09/08 17:31:03  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 12:04:46  alfred
- * - relocated DecodeMot(16)Pseudo into separate module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -483,7 +463,6 @@ static void SwitchTo_6804(void)
 {
   TurnWords = False;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   PCSymbol = "PC";
   HeaderID = 0x64;

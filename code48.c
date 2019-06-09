@@ -4,31 +4,7 @@
 /*                                                                           */
 /* Codegeneratormodul MCS-48-Familie                                         */
 /*                                                                           */
-/* Historie: 16. 5.1996 Grundsteinlegung                                     */
-/*            2. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*            5. 1.2000 fixed accessing P1/P2 with lower case in ANL/ORL     */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code48.c,v 1.6 2016/01/30 16:46:37 alfred Exp $                      */
-/*****************************************************************************
- * $Log: code48.c,v $
- * Revision 1.6  2016/01/30 16:46:37  alfred
- * - add register symbols for MCS-48
- *
- * Revision 1.5  2014/11/06 18:19:35  alfred
- * - rework to current style
- *
- * Revision 1.4  2007/11/24 22:48:04  alfred
- * - some NetBSD changes
- *
- * Revision 1.3  2005/09/08 17:31:03  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 11:33:00  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include "bpemu.h"
@@ -1304,7 +1280,6 @@ static void SwitchTo_48(void)
 {
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = 0x21;

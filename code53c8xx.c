@@ -4,15 +4,6 @@
 /*                                                                           */
 /* Codegenerator SYM53C8xx                                                   */
 /*                                                                           */
-/* Historie: 30. 9.1998 angelegt                                             */
-/*            3.10.1998 erste Befehle (NOP JUMP CALL RETURN INT INTFLY)      */
-/*            4.10.1998 CHMOV CLEAR SET DISCONNECT LOAD STORE                */
-/*            7.10.1998 MOVE begonnen                                        */
-/*           15.11.1998 SELECT/RESELECT, WAIT                                */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*           14. 1.2001 silenced warnings about unused parameters            */
-/*                                                                           */
 /*****************************************************************************/
 
 #include "stdinc.h"
@@ -434,6 +425,11 @@ static void DecodeCHMOV(Word Index)
       }
     }
   }
+}
+
+static Boolean TrueFnc(void)
+{
+  return True;
 }
 
 static void DecodeFlags(Word Index)
@@ -1110,7 +1106,7 @@ static void SwitchTo_53c8xx(void)
 
   TurnWords = False;
   ConstMode = ConstModeC;
-  SetIsOccupied = True;
+  SetIsOccupiedFnc = TrueFnc;
   PCSymbol="$";
   HeaderID = FoundDescr->Id;
   NOPCode = 0;

@@ -4,48 +4,7 @@
 /*                                                                           */
 /* Codegenerator 68(HC)05/08                                                 */
 /*                                                                           */
-/* Historie:  9.10.1996 Grundsteinlegung                                     */
-/*            2. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
-/*           13. 3.2000 Adressraum fuer HC08 jetzt 64K                       */
-/*           2001-09-03 added warning message about X-indexed conversion     */
-/*           2001-09-03 added inx as alias for incx                          */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code6805.c,v 1.9 2014/11/13 14:29:48 alfred Exp $                    */
-/*****************************************************************************
- * $Log: code6805.c,v $
- * Revision 1.9  2014/11/13 14:29:48  alfred
- * - rework to current style
- *
- * Revision 1.8  2013-03-31 18:06:47  alfred
- * - add missing PADDING instruction
- *
- * Revision 1.7  2007/11/24 22:48:04  alfred
- * - some NetBSD changes
- *
- * Revision 1.6  2006/07/08 10:16:13  alfred
- * - remove double variable
- *
- * Revision 1.5  2006/06/17 14:25:29  alfred
- * - use hash table, add HCS08 target
- *
- * Revision 1.4  2005/09/08 17:31:04  alfred
- * - add missing include
- *
- * Revision 1.3  2004/05/29 12:04:46  alfred
- * - relocated DecodeMot(16)Pseudo into separate module
- *
- * Revision 1.2  2004/05/28 16:13:08  alfred
- * - added 16-bit Motorola ops
- *
- * Revision 1.1  2003/11/06 02:49:21  alfred
- * - recreated
- *
- * Revision 1.2  2002/03/31 23:09:32  alfred
- * - added 68HC05 CPU type
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -1076,7 +1035,6 @@ static void SwitchTo_6805(void)
 {
   TurnWords = False;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   PCSymbol = "*";
   HeaderID = 0x62;

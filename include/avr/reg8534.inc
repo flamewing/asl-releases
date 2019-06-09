@@ -29,7 +29,7 @@ SE		avrbit	MCUCR,5		; Enable Sleep Mode
 ;----------------------------------------------------------------------------
 ; EEPROM
 
-		include	"avr/ee90.inc"
+		include	"ee90.inc"
 
 EEMWE		avrbit	EECR,2		; EEPROM Master Write Enable
 EERIE		avrbit	EECR,3		; EEPROM Interrupt Enable

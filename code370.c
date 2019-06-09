@@ -4,39 +4,7 @@
 /*                                                                           */
 /* Codegenerator 370-Familie                                                 */
 /*                                                                           */
-/* Historie: 10.12.1996 Grundsteinlegung                                     */
-/*            2. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code370.c,v 1.9 2014/12/14 17:58:46 alfred Exp $                     */
-/*****************************************************************************
- * $Log: code370.c,v $
- * Revision 1.9  2014/12/14 17:58:46  alfred
- * - remove static variables in strutil.c
- *
- * Revision 1.8  2014/12/07 19:13:59  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.7  2014/11/05 17:51:13  alfred
- * - reworked to current style
- *
- * Revision 1.6  2010/04/17 13:14:20  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.5  2007/11/24 22:48:03  alfred
- * - some NetBSD changes
- *
- * Revision 1.4  2005/10/02 10:00:44  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.3  2005/09/08 17:31:03  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 11:33:00  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -1306,7 +1274,6 @@ static void SwitchTo_370(void)
 {
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = 0x49;

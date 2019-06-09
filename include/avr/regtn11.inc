@@ -18,7 +18,7 @@ RAMSTART	equ	0x60,data	; start address SRAM
 RAMEND		equ     0x5f,data	; end address SRAM (i.e. no SRAM)
 FLASHEND	label   1023		; end address Flash
 
-		include	"avr/regtn112.inc"
+		include	"regtn112.inc"
 
 		restore
 

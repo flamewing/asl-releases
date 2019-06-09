@@ -4,62 +4,7 @@
 /*                                                                           */
 /* haeufig benoetigte String-Funktionen                                      */
 /*                                                                           */
-/* Historie:  5. 5.1996 Grundsteinlegung                                     */
-/*           13. 8.1997 KillBlanks-Funktionen aus asmsub.c heruebergenommen  */
-/*           29. 8.1998 sprintf-Emulation                                    */
-/*           17. 4.1999 strcasecmp gegen Nullzeiger geschuetzt               */
-/*           30. 5.1999 ConstLongInt akzeptiert auch 0x fuer Hex-Zahlen      */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: strutil.c,v 1.17 2017/06/16 19:03:19 alfred Exp $                     */
-/*****************************************************************************
- * $Log: strutil.c,v $
- * Revision 1.17  2017/06/16 19:03:19  alfred
- * - remove superfluous 0x from output
- *
- * Revision 1.16  2016/03/25 19:05:57  alfred
- * - allow Intel hex notation for addresses passed to tools
- *
- * Revision 1.15  2014/12/14 17:58:47  alfred
- * - remove static variables in strutil.c
- *
- * Revision 1.14  2014/12/07 19:14:02  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.13  2014/12/03 19:01:00  alfred
- * - remove static return value
- *
- * Revision 1.12  2014/12/03 18:54:53  alfred
- * - rework to current style
- *
- * Revision 1.11  2013/12/18 22:21:54  alfred
- * - regard \ escaping for quotes
- *
- * Revision 1.10  2013/08/07 19:44:38  alfred
- * - add test for overlong lines
- *
- * Revision 1.9  2013/08/05 20:10:10  alfred
- * - handle overlong lines
- *
- * Revision 1.8  2012-08-19 09:39:02  alfred
- * - handle cases where strcpy is a macro
- *
- * Revision 1.7  2010/04/17 13:14:24  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.6  2008/11/23 10:39:17  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.5  2007/11/24 22:48:08  alfred
- * - some NetBSD changes
- *
- * Revision 1.4  2005/10/02 10:00:46  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.3  2004/05/30 20:54:26  alfred
- * - added CopyNoBlanks()
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -279,6 +224,24 @@ char *strstr(const char *haystack, const char *needle)
   return NULL;
 }
 #endif
+
+/*!------------------------------------------------------------------------
+ * \fn     strrmultchr(const char *haystack, const char *needles)
+ * \brief  find the last occurence of either character in string
+ * \param  haystack string to search in
+ * \param  needles characters to search for
+ * \return last occurence or NULL
+ * ------------------------------------------------------------------------ */
+
+char *strrmultchr(const char *haystack, const char *needles)
+{
+  const char *pPos;
+
+  for (pPos = haystack + strlen(haystack) - 1; pPos >= haystack; pPos--)
+    if (strchr(needles, *pPos))
+      return (char*)pPos;
+  return NULL;
+}
 
 #ifdef BROKEN_SPRINTF
 #include <varargs.h>

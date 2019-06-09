@@ -94,14 +94,14 @@ TIFR		port	0x38		; Timer Flag Register
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
-		include	"avr/wdm21.inc"
+		include	"wdm21.inc"
 
 WDTOE		avrbit	WDTCR,4		; Enable Time-Out Interrupt
 
 ;----------------------------------------------------------------------------
 ; Analog Comparator
 
-		include	"avr/ac90.inc"
+		include	"ac90.inc"
 
 		if	MOMCPUNAME="ATTINY12"
 AINBG		 avrbit	ACSR,6		; Enable Band Gap

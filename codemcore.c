@@ -4,46 +4,7 @@
 /*                                                                           */
 /* Codegenerator MCORE-Familie                                               */
 /*                                                                           */
-/* Historie:  31. 1.1998 Grundsteinlegung                                    */
-/*             3. 1.1999 ChkPC-Anpassung                                     */
-/*             9. 3.2000 'ambigious else'-Warnungen beseitigt                */
-/*           14. 1.2001 silenced warnings about unused parameters            */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: codemcore.c,v 1.11 2017/06/07 19:16:48 alfred Exp $                   */
-/*****************************************************************************
- * $Log: codemcore.c,v $
- * Revision 1.11  2017/06/07 19:16:48  alfred
- * - add missing ClearONOFF() call
- *
- * Revision 1.10  2016/08/17 21:26:46  alfred
- * - fix some errors and warnings detected by clang
- *
- * Revision 1.9  2014/12/07 19:14:01  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.8  2014/12/05 11:58:16  alfred
- * - collapse STDC queries into one file
- *
- * Revision 1.7  2014/12/05 08:53:45  alfred
- * - eliminate remaining BEGIN/END
- *
- * Revision 1.6  2014/06/10 10:27:15  alfred
- * - adapt to current style
- *
- * Revision 1.5  2007/11/24 22:48:07  alfred
- * - some NetBSD changes
- *
- * Revision 1.4  2005/09/08 16:53:43  alfred
- * - use common PInstTable
- *
- * Revision 1.3  2005/05/21 16:35:05  alfred
- * - removed variables available globally
- *
- * Revision 1.2  2004/05/29 12:04:48  alfred
- * - relocated DecodeMot(16)Pseudo into separate module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -848,7 +809,7 @@ static void SwitchFrom_MCORE(void)
 
 static void SwitchTo_MCORE(void)
 {
-  TurnWords = True; ConstMode = ConstModeMoto; SetIsOccupied = False;
+  TurnWords = True; ConstMode = ConstModeMoto;
 
    PCSymbol = "*"; HeaderID = 0x03; NOPCode = 0x1200; /* ==MOV r0,r0 */
    DivideChars = ","; HasAttrs = True; AttrChars = ".";

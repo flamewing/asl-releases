@@ -4,11 +4,6 @@
 /*                                                                           */
 /* Codegenerator Intel 8008                                                  */
 /*                                                                           */
-/* Historie:  3.12.1998 Grundsteinlegung                                     */
-/*            4.12.1998 FixedOrders begonnen                                 */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
 
 #include "stdinc.h"
@@ -498,7 +493,7 @@ static void SwitchTo_8008(void)
 
   FoundDescr = FindFamilyByName("8008");
 
-  TurnWords = False; ConstMode = ConstModeIntel; SetIsOccupied = False;
+  TurnWords = False; ConstMode = ConstModeIntel;
 
   PCSymbol = "$"; HeaderID = FoundDescr->Id; NOPCode = 0xc0;
   DivideChars = ","; HasAttrs = False;

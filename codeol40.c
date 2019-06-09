@@ -5,19 +5,6 @@
 /* Codegenerator OKI OLMS-40-Familie                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeol40.c,v 1.3 2016/11/24 22:43:12 alfred Exp $
- *****************************************************************************
- * $Log: codeol40.c,v $
- * Revision 1.3  2016/11/24 22:43:12  alfred
- * - correct comments about file name
- *
- * Revision 1.2  2016/11/01 13:43:31  alfred
- * - add OLMS-40 meta instructions
- *
- * Revision 1.1  2016/11/01 11:48:05  alfred
- * - add support for OKI OLMS-40
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -615,7 +602,6 @@ static void SwitchTo_OLMS40(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = pDescr->Id;

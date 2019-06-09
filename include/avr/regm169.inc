@@ -59,8 +59,8 @@ CLKPCE		avrbit	CLKPR,7		; Clock Prescaler Change Enable
 ;----------------------------------------------------------------------------
 ; EEPROM/Program Memory Access
 
-		include	"avr/eem2.inc"
-		include	"avr/spmcsr37.inc"
+		include	"eem2.inc"
+		include	"spmcsr37.inc"
 
 ;----------------------------------------------------------------------------
 ; JTAG
@@ -228,39 +228,39 @@ EXCLK		avrbit	ASSR,4		; Enable External Clock Input
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
-		include	"avr/wdm60.inc"
+		include	"wdm60.inc"
 
 ;----------------------------------------------------------------------------
 ; USART
 
-		include	"avr/usartc0.inc"
+		include	"usartc0.inc"
 
 ;----------------------------------------------------------------------------
 ; SPI
 
-		include	"avr/spim2c.inc"
+		include	"spim2c.inc"
 
 ;----------------------------------------------------------------------------
 ; USI
 
-		include	"avr/usimb8.inc"
+		include	"usimb8.inc"
 
 ;----------------------------------------------------------------------------
 ; A/D Converter
 
-		include	"avr/adcm78.inc"
+		include	"adcm78.inc"
 
 MUX4		avrbit	ADMUX,4
 
 ;----------------------------------------------------------------------------
 ; Analog Comparator
 
-		include "avr/acm30.inc"
+		include "acm30.inc"
 
 ;----------------------------------------------------------------------------
 ; LCD Controller
 
-		include "avr/lcd.inc"
+		include "lcd.inc"
 
 		restore			; re-enable listing
 

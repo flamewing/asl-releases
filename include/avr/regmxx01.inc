@@ -75,8 +75,8 @@ XMM0		avrbit	XMCRB,0
 ;----------------------------------------------------------------------------
 ; EEPROM/Program Memory Access
 
-		include	"avr/eem2.inc"
-		include	"avr/spmcsr37.inc"
+		include	"eem2.inc"
+		include	"spmcsr37.inc"
 
 EEPM0		avrbit	EECR,4		; EEPROM Programming Mode
 EEPM1		avrbit	EECR,5
@@ -461,15 +461,15 @@ EXCLK		avrbit	ASSR,6		; Enable External Clock Input
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
-		include	"avr/wdme.inc"
+		include	"wdme.inc"
 
 ;----------------------------------------------------------------------------
 ; USART
 
 __USART0_SPI__	equ	1
-		include	"avr/usartc0.inc"
+		include	"usartc0.inc"
 __USART1_SPI__	equ	1
-		include	"avr/usartc8.inc"
+		include	"usartc8.inc"
 
                 ifdef   ATmegaxx0
 
@@ -548,17 +548,17 @@ UBRR3L		sfr	0x134		; USART3 Baud Rate Register LSB
 ;----------------------------------------------------------------------------
 ; SPI
 
-		include	"avr/spim2c.inc"
+		include	"spim2c.inc"
 
 ;----------------------------------------------------------------------------
 ; TWI
 
-		include	"avr/twimb8.inc"
+		include	"twimb8.inc"
 
 ;----------------------------------------------------------------------------
 ; A/D Converter
 
-		include	"avr/adcm78.inc"
+		include	"adcm78.inc"
 
 MUX4		avrbit	ADMUX,4
 MUX5		avrbit	ADCSRB,3
@@ -576,7 +576,7 @@ ADC15D		avrbit	DIDR2,7		; Disable Digital Input on ADC15
 ;----------------------------------------------------------------------------
 ; Analog Comparator
 
-		include	"avr/acm30.inc"
+		include	"acm30.inc"
 
 		restore			; re-enable listing
 

@@ -2827,7 +2827,7 @@ static void SwitchFrom_86(void)
 
 static void SwitchTo_86(void)
 {
-  TurnWords = False; ConstMode = ConstModeIntel; SetIsOccupied = False;
+  TurnWords = False; ConstMode = ConstModeIntel;
 
   PCSymbol = "$"; HeaderID = 0x42; NOPCode = 0x90;
   DivideChars = ","; HasAttrs = False;

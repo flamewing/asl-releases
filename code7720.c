@@ -4,57 +4,7 @@
 /*                                                                           */
 /* Codegenerator NEC uPD772x                                                 */
 /*                                                                           */
-/* Historie: 30. 8.1998 Grundsteinlegung                                     */
-/*           31. 8.1998 RET-Anweisung                                        */
-/*            2. 9.1998 Verallgemeinerung auf 77C25                          */
-/*            5. 9.1998 Pseudo-Anweisungen                                   */
-/*           11. 9.1998 ROMData-Segment angelegt                             */
-/*           24. 9.1998 Korrekturen fuer DOS-Compiler                        */
-/*            2. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*           14. 1.2001 silenced warnings about unused parameters            */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code7720.c,v 1.9 2016/09/29 16:43:37 alfred Exp $                    */
-/***************************************************************************** 
- * $Log: code7720.c,v $
- * Revision 1.9  2016/09/29 16:43:37  alfred
- * - introduce common DecodeDATA/DecodeRES functions
- *
- * Revision 1.8  2014/12/07 19:14:00  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.7  2014/08/25 20:20:15  alfred
- * - rework to current style
- *
- * Revision 1.6  2010/04/17 13:14:22  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.5  2008/11/23 10:39:17  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.4  2007/11/24 22:48:05  alfred
- * - some NetBSD changes
- *
- * Revision 1.3  2005/09/08 16:53:42  alfred
- * - use common PInstTable
- *
- * Revision 1.2  2005/05/21 16:35:05  alfred
- * - removed variables available globally
- *
- * Revision 1.1  2003/11/06 02:49:21  alfred
- * - recreated
- *
- * Revision 1.4  2003/05/02 21:23:11  alfred
- * - strlen() updates
- *
- * Revision 1.3  2002/08/14 18:43:48  alfred
- * - warn null allocation, remove some warnings
- *
- * Revision 1.2  2002/07/14 18:39:58  alfred
- * - fixed TempAll-related warnings
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -609,7 +559,6 @@ static void SwitchTo_7720(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   if (MomCPU == CPU7725)
   {

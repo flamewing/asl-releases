@@ -1,35 +1,10 @@
-/* codeol40.c */
+/* codeol50.c */
 /*****************************************************************************/
 /* AS-Portierung                                                             */
 /*                                                                           */
-/* Codegenerator OKI OLMS-40-Familie                                         */
+/* Codegenerator OKI OLMS-50-Familie                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeol50.c,v 1.5 2017/01/08 10:27:37 alfred Exp $
- *****************************************************************************
- * $Log: codeol50.c,v $
- * Revision 1.5  2017/01/08 10:27:37  alfred
- * - add MSM6052
- *
- * Revision 1.4  2016/11/27 20:36:28  alfred
- * - add MSM6051
- *
- * Revision 1.3  2016/11/26 11:24:22  alfred
- * - add MSM5056
- *
- * Revision 1.2  2016/11/26 10:21:50  alfred
- * - add MSM5055
- *
- * Revision 1.1  2016/11/25 18:12:13  alfred
- * - first version to support OLMS-50
- *
- * Revision 1.2  2016/11/01 13:43:31  alfred
- * - add OLMS-40 meta instructions
- *
- * Revision 1.1  2016/11/01 11:48:05  alfred
- * - add support for OKI OLMS-40
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -1055,7 +1030,6 @@ static void SwitchTo_OLMS50(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
   SwitchIsOccupied = True;
   PageIsOccupied = True;
 

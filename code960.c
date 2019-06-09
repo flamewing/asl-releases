@@ -4,62 +4,7 @@
 /*                                                                           */
 /* Codegenerator i960-Familie                                                */
 /*                                                                           */
-/* Historie: 24. 8.1998 angelegt                                             */
-/*           25. 8.1998 Register-Format                                      */
-/*           27. 8.1998 Reg-Struktur hat getrennte Operandentypen            */
-/*                      Fixed+COBR-Anweisungen                               */
-/*           28. 8.1998 CTRL-Anweisungen                                     */
-/*                      MEM-Anweisungen                                      */
-/*                      MODPC privilegiert gemacht                           */
-/*                      Sonderregisternamen                                  */
-/*                      nicht ausgerichtete Instruktionen anmeckern          */
-/*           29. 8.1998 Abfrage Id per headerid-Modul                        */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*           23. 1.1999 Unsauberkeit in Zuweisung (-1 an unsigned) beseitigt */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*           14. 1.2001 silenced warnings about unused parameters            */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code960.c,v 1.11 2017/06/07 19:33:12 alfred Exp $                     */
-/*****************************************************************************
- * $Log: code960.c,v $
- * Revision 1.11  2017/06/07 19:33:12  alfred
- * - correct SCANBIT -> SPANBIT instruction
- *
- * Revision 1.10  2014/12/07 19:14:00  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.9  2014/12/05 11:58:16  alfred
- * - collapse STDC queries into one file
- *
- * Revision 1.8  2014/11/05 15:47:15  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.7  2014/07/12 14:45:17  alfred
- * - reworked to current style
- *
- * Revision 1.6  2010/04/17 13:14:23  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.5  2007/11/24 22:48:06  alfred
- * - some NetBSD changes
- *
- * Revision 1.4  2005/09/08 16:53:42  alfred
- * - use common PInstTable
- *
- * Revision 1.3  2005/05/21 16:35:05  alfred
- * - removed variables available globally
- *
- * Revision 1.2  2004/05/29 11:33:02  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- * Revision 1.1  2003/11/06 02:49:22  alfred
- * - recreated
- *
- * Revision 1.2  2002/08/14 18:43:49  alfred
- * - warn null allocation, remove some warnings
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -852,7 +797,6 @@ static void SwitchTo_960(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   FoundId = FindFamilyByName("i960");
   if (!FoundId)

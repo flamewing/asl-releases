@@ -4,55 +4,7 @@
 /*                                                                           */
 /* Codegenerator fuer 68xx Prozessoren                                       */
 /*                                                                           */
-/* Historie:  13. 8.1996 Grundsteinlegung                                    */
-/*             2. 1.1998 ChkPC ersetzt                                       */
-/*             9. 3.2000 'ambigious else'-Warnungen beseitigt                */
-/*            14. 1.2001 silenced warnings about unused parameters           */
-/*            29. 3.2001 added support for K4 banking scheme                 */
-/*            25. 5.2001 banking support in address parser, indices to only  */
-/*                       unsinged limited                                    */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code68.c,v 1.15 2017/06/07 20:41:31 alfred Exp $                      */
-/*****************************************************************************
- * $Log: code68.c,v $
- * Revision 1.15  2017/06/07 20:41:31  alfred
- * - add missing ClearONOFF()
- *
- * Revision 1.14  2014/11/13 09:06:49  alfred
- * - adapt to current style
- *
- * Revision 1.13  2014/11/05 15:47:14  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.12  2014/07/07 19:27:35  alfred
- * - do not allow JSR with direct mode on 6800
- *
- * Revision 1.11  2014/06/07 17:18:01  alfred
- * - rework to current style
- *
- * Revision 1.10  2014/03/08 21:06:35  alfred
- * - rework ASSUME framework
- *
- * Revision 1.9  2010/04/17 13:14:20  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.8  2009/04/13 07:53:46  alfred
- * - silence Borlanc C++ warning
- *
- * Revision 1.7  2007/11/24 22:48:04  alfred
- * - some NetBSD changes
- *
- * Revision 1.6  2005/11/16 22:03:34  alfred
- * - correct XGDX for 6301
- *
- * Revision 1.5  2005/09/08 16:53:41  alfred
- * - use common PInstTable
- *
- * Revision 1.4  2004/05/29 12:18:05  alfred
- * - relocated DecodeTIPseudo() to separate module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -992,7 +944,6 @@ static void SwitchTo_68(void)
   };
   TurnWords = False;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   PCSymbol = "*";
   HeaderID = 0x61;

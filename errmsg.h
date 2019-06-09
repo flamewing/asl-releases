@@ -159,6 +159,7 @@ typedef enum
   ErrNum_NotOnThisAddress = 1900,
   ErrNum_NotFromThisAddress = 1905,
   ErrNum_TargOnDiffPage = 1910,
+  ErrNum_TargOnDiffSection = 1911,
   ErrNum_CodeOverflow = 1920,
   ErrNum_AdrOverflow = 1925,
   ErrNum_MixDBDS = 1930,

@@ -5,34 +5,6 @@
 /* Codegenerator Hitachi HMCS400-Familie                                     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codehmcs400.c,v 1.4 2016/10/03 15:15:07 alfred Exp $
- *****************************************************************************
- * $Log: codehmcs400.c,v $
- * Revision 1.4  2016/10/03 15:15:07  alfred
- * - set end address for CODE segment
- *
- * Revision 1.3  2016/10/03 14:50:27  alfred
- * - correct instruction (AMEMD -> ANEMD)
- *
- * Revision 1.2  2016/09/30 21:09:05  alfred
- * - add SFR for HMCS400
- *
- * Revision 1.1  2016/09/30 19:37:17  alfred
- * - renamed HMCS40x to HMCS400
- *
- * Revision 1.4  2016/09/29 17:00:35  alfred
- * - add DATA/RES to HMCS400
- *
- * Revision 1.3  2016/09/28 20:55:27  alfred
- * - more instruction aliases for HMCS40x
- *
- * Revision 1.2  2016/09/26 18:59:09  alfred
- * - add alternative syntax for most HMCS40x instructions
- *
- * Revision 1.1  2016/09/25 20:31:21  alfred
- * - add HMCS4x target
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -1134,7 +1106,6 @@ static void SwitchTo_HMCS400(void)
 
   TurnWords = False;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   PCSymbol = "*";
   HeaderID = pDescr->Id;

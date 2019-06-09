@@ -2,66 +2,9 @@
 /*****************************************************************************/
 /* Macro Assembler AS                                                        */
 /*                                                                           */
-/* code generator for TI C54x DSP devices                                    */
-/*                                                                           */
-/* history:  2001-07-07: begun                                               */
-/*           2001-07-30: added simple accumulator instructions               */
-/*           2001-07-31: added address decoder                               */
-/*           2001-08-03: ADD SUB                                             */
-/*           2001-08-05: MemAccOrders                                        */
-/*           2001-08-18: MemConstOrders                                      */
-/*           2001-08-19: multiply orders begun                               */
-/*           2001-08-27: MPYA SQUR                                           */
-/*           2001-08-30: MACx begun                                          */
-/*           2001-08-31: MACD MACP MACSU MAS MASR MASAR                      */
-/*           2001-09-16: DADD                                                */
-/*           2001-09-29: AND OR XOR SFTA SFTL                                */
-/*           2001-09-30: FIRS BIT BITF                                       */
-/*           2001-10-03: CMPR                                                */
-/*           2001-10-14: B BD CALL CALLD                                     */
-/*           2001-10-17: B BD CC CCD                                         */
-/*           2001-10-20: FB FBD FCALL FCALLD                                 */
-/*           2001-10-24: RPT RPTB RPTBD                                      */
-/*           2001-10-25: RPTZ                                                */
-/*           2001-10-26: FRAME                                               */
-/*           2001-10-28: PSHM IDLE RSBX SSBX XC                              */
-/*           2001-11-01: remaining non-parallel ops                          */
-/*           2001-11-09: parallel ops                                        */
-/*           2001-11-11: added pseudo ops                                    */
-/*           2002-01-13: fixed undefined value of OK in some cases           */
+/* Code Generator for TI C54x DSP devices                                    */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3254x.c,v 1.10 2014/12/07 19:13:59 alfred Exp $                   */
-/*****************************************************************************
- * $Log: code3254x.c,v $
- * Revision 1.10  2014/12/07 19:13:59  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.9  2014/11/05 15:47:14  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.8  2014/11/05 14:35:19  alfred
- * - adapt to durrent style
- *
- * Revision 1.7  2014/03/08 21:06:35  alfred
- * - rework ASSUME framework
- *
- * Revision 1.6  2010/04/17 13:14:20  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.5  2007/11/24 22:48:03  alfred
- * - some NetBSD changes
- *
- * Revision 1.4  2005/09/08 16:53:41  alfred
- * - use common PInstTable
- *
- * Revision 1.3  2005/05/21 16:22:12  alfred
- * - remove double variables, correct call-by-reference arg
- *
- * Revision 1.2  2004/05/29 12:18:05  alfred
- * - relocated DecodeTIPseudo() to separate module
- *
- *****************************************************************************/
 
 /*-------------------------------------------------------------------------*/
 /* Includes */
@@ -2793,7 +2736,6 @@ static void SwitchTo_32054x(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = FoundDescr->Id;

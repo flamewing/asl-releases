@@ -1,4 +1,4 @@
-		ifndef	__regskelinc
+r		ifndef	__regskelinc
 __regskelinc	equ	1
                 save
                 listing off   ; no listing over this file

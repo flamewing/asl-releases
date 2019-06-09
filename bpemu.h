@@ -18,7 +18,7 @@ char *Name
 
 extern char *FExpand(char *Src);
 
-extern char *FSearch(const char *File, char *Path);
+extern int FSearch(char *pDest, unsigned DestSize, const char *FileToSearch, const char *pCurrFileName, const char *SearchPath);
 
 extern long FileSize(FILE *file);
 

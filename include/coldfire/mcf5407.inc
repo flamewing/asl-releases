@@ -70,7 +70,7 @@ SHOWDATA	cfbit		PARK,3		;  Enable internal register data bus to be driven on ext
 ; I2C
 
 MBAR_I2C	equ		MBAR+$280
-		include		"coldfire/52xxi2c.inc"
+		include		"52xxi2c.inc"
 
 ;----------------------------------------------------------------------------
 ; Interrupt Controller (like 5307)
@@ -224,14 +224,14 @@ __N		set		__N+1
 ;----------------------------------------------------------------------------
 ; Timer
 
-		include		"coldfire/52xxtmr.inc"
+		include		"52xxtmr.inc"
 		__deftimer	"0",MBAR+$140
 		__deftimer	"1",MBAR+$180
 
 ;----------------------------------------------------------------------------
 ; UARTs
 
-		include		"coldfire/53xxuart.inc"
+		include		"53xxuart.inc"
 		__defuart	"0",MBAR+$140
 		__defuart	"1",MBAR+$200
 

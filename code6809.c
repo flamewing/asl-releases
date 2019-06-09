@@ -1503,7 +1503,6 @@ static void SwitchTo_6809(void)
 
   TurnWords = False;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   PCSymbol = "*";
   HeaderID = 0x63;

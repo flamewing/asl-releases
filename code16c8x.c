@@ -4,49 +4,7 @@
 /*                                                                           */
 /* AS-Codegenerator PIC16C8x                                                 */
 /*                                                                           */
-/* Historie: 21.8.1996 Grundsteinlegung                                      */
-/*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
-/*           18. 8.1998 Bookkeeping-Aufruf bei RES                           */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*                      Sonderadressbereich PIC16C84                         */
-/*           2. 10.1999 ChkPC wurde nicht angebunden...                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code16c8x.c,v 1.9 2016/09/29 16:43:36 alfred Exp $                   */
-/*****************************************************************************
- * $Log: code16c8x.c,v $
- * Revision 1.9  2016/09/29 16:43:36  alfred
- * - introduce common DecodeDATA/DecodeRES functions
- *
- * Revision 1.8  2014/10/03 12:03:45  alfred
- * - rework to current style
- *
- * Revision 1.7  2013/12/21 19:46:51  alfred
- * - dynamically resize code buffer
- *
- * Revision 1.6  2008/11/23 10:39:16  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.5  2007/04/29 21:34:26  alfred
- * - add BANKSEL pseudo-instruction
- *
- * Revision 1.4  2006/08/05 18:07:55  alfred
- * - silence some warnings
- *
- * Revision 1.3  2005/09/08 16:53:39  alfred
- * - use common PInstTable
- *
- * Revision 1.2  2005/05/16 09:38:19  alfred
- * - major code cleanup, added types with 2K program space
- *
- * Revision 1.1  2003/11/06 02:49:19  alfred
- * - recreated
- *
- * Revision 1.2  2002/08/14 18:43:48  alfred
- * - warn null allocation, remove some warnings
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -428,7 +386,6 @@ static void SwitchTo_16c8x(void)
 
   TurnWords = False;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   pDescr = FindFamilyByName("16C8x");
   PCSymbol = "*";

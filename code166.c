@@ -1942,7 +1942,6 @@ static void SwitchTo_166(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
   OpSize = 1;
 
   PCSymbol = "$";

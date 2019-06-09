@@ -28,6 +28,18 @@ for %%i in (%2\s12z\vca\*.inc) do unumlaut %%i
 md %2\coldfire
 for %%i in (include\coldfire\*.inc) do copy %%i %2\coldfire
 for %%i in (%2\coldfire\*.inc) do unumlaut %%i
+md %2\stm8
+for %%i in (include\stm8\*.inc) do copy %%i %2\stm8
+for %%i in (%2\stm8\*.inc) do unumlaut %%i
+md %2\stm8\stm8s
+for %%i in (include\stm8\stm8s\*.inc) do copy %%i %2\stm8\stm8s
+for %%i in (%2\stm8\stm8s\*.inc) do unumlaut %%i
+md %2\stm8\stm8l
+for %%i in (include\stm8\stm8l\*.inc) do copy %%i %2\stm8\stm8l
+for %%i in (%2\stm8\stm8l\*.inc) do unumlaut %%i
+md %2\stm8\stm8af
+for %%i in (include\stm8\stm8af\*.inc) do copy %%i %2\stm8\stm8af
+for %%i in (%2\stm8\stm8af\*.inc) do unumlaut %%i
 
 md %3
 for %%i in (man\*.1) do copy %%i %3

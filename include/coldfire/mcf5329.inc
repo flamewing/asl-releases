@@ -477,42 +477,42 @@ IRW_DSE		cffield		DSCR_IRQ,0,2	;  IRQ Drive Strength Control
 MBAR_INTC0	equ		MBAR+$48000
 MBAR_INTC1	equ		MBAR+$4c000
 MBAR_INTC	equ		MBAR+$54000
-		include		"coldfire/52xxintc.inc"
+		include		"52xxintc.inc"
 
 ;----------------------------------------------------------------------------
 ; Edge Port Module
 
 MBAR_EPORT	equ		MBAR+$94000
-		include		"coldfire/52xxeport.inc"
+		include		"52xxeport.inc"
 
 ;----------------------------------------------------------------------------
 ; Enhanced DMA Controller
 
 MBAR_EDMA	equ		MBAR+$44000
-		include		"coldfire/52xxedma.inc"
+		include		"52xxedma.inc"
 
 ;----------------------------------------------------------------------------
 ; FlexBus
 
 MBAR_FBUS	equ		MBAR+$8000
-		include		"coldfire/52xxfbus.inc"
+		include		"52xxfbus.inc"
 
 ;----------------------------------------------------------------------------
 ; SDRAM Controller
 
 MBAR_SDRAM	equ		MBAR+$b8000
-		include		"coldfire/52xxdram.inc"
+		include		"52xxdram.inc"
 
 ;----------------------------------------------------------------------------
 ; Fast Ethernet Controller
 
 MBAR_FEC	equ		MBAR+$30000
-		include		"coldfire/52xxfec.inc"
+		include		"52xxfec.inc"
 
 ;----------------------------------------------------------------------------
 ; USB Host/On-the-Go
 
-		include		"coldfire/52xxusb.inc"
+		include		"52xxusb.inc"
 MBAR_USB	equ		MBAR+$b4000
 		__defusb	"USB.",MBAR_USB
 MBAR_OTG	equ		MBAR+$b0000
@@ -522,44 +522,44 @@ MBAR_OTG	equ		MBAR+$b0000
 ; LCD Controller
 
 MBAR_LCDC	equ		$ac000
-		include		"coldfire/52xxlcdc.inc"
+		include		"52xxlcdc.inc"
 
 ;----------------------------------------------------------------------------
 ; FlexCAN
 
 MBAR_CAN	equ		MBAR+$20000
 
-		include		"coldfire/52xxcan.inc"
+		include		"52xxcan.inc"
 
 ;----------------------------------------------------------------------------
 ; Synchronous Serial Interface
 
 MBAR_SSI	equ		MBAR+$bc000
-		include		"coldfire/52xxssi.inc"
+		include		"52xxssi.inc"
 
 ;----------------------------------------------------------------------------
 ; Real Time Clock
 
 MBAR_RTC	equ		MBAR+$a8000
-		include		"coldfire/52xxrtc.inc"
+		include		"52xxrtc.inc"
 XTL		cffield		RTC_CR,5,2	; Crystal selection.
 
 ;----------------------------------------------------------------------------
 ; Pulse-Width Modulation Module
 
 MBAR_PWM	equ		MBAR+$90000
-		include		"coldfire/52xxpwm.inc"
+		include		"52xxpwm.inc"
 
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
 MBAR_WDT	equ		MBAR+$98000
-		include		"coldfire/52xxwdt.inc"
+		include		"52xxwdt.inc"
 
 ;----------------------------------------------------------------------------
 ; Programmable Interrupt Timer
 
-		include		"coldfire/52xxpit.inc"
+		include		"52xxpit.inc"
 		__defpit	"0",MBAR+$80000
 		__defpit	"1",MBAR+$84000
 		__defpit	"2",MBAR+$88000
@@ -568,7 +568,7 @@ MBAR_WDT	equ		MBAR+$98000
 ;----------------------------------------------------------------------------
 ; DMA Timer
 
-		include		"coldfire/52xxdtim.inc"
+		include		"52xxdtim.inc"
 		__defdtim	"0",MBAR+$70000
 		__defdtim	"1",MBAR+$74000
 		__defdtim	"2",MBAR+$78000
@@ -578,12 +578,12 @@ MBAR_WDT	equ		MBAR+$98000
 ; Queued Serial Peripheral Interface
 
 MBAR_QSPI	equ		MBAR+$5c000
-		include		"coldfire/52xxqspi.inc"
+		include		"52xxqspi.inc"
 
 ;----------------------------------------------------------------------------
 ; UARTs
 
-		include		"coldfire/52xxuart.inc"
+		include		"52xxuart.inc"
 		__defuart	"0",MBAR+$60000
 		__defuart	"1",MBAR+$64000
 		__defuart	"2",MBAR+$68000
@@ -592,25 +592,25 @@ MBAR_QSPI	equ		MBAR+$5c000
 ; I2C
 
 MBAR_I2C	equ		MBAR+$58000
-		include		"coldfire/52xxi2c.inc"
+		include		"52xxi2c.inc"
 
 ;----------------------------------------------------------------------------
 ; Message Digest Hardware Accelerator
 
 MBAR_MDHA	equ		$ec080000
-		include		"coldfire/52xxmdha.inc"
+		include		"52xxmdha.inc"
 
 ;----------------------------------------------------------------------------
 ; Random Number Generator
 
 MBAR_RNG	equ		$ec088000
-		include		"coldfire/52xxrng.inc"
+		include		"52xxrng.inc"
 
 ;----------------------------------------------------------------------------
 ; Symmetric Key Hardware Accelerator
 
 MBAR_SKHA	equ		$ec084000
-		include		"coldfire/52xxskha.inc"
+		include		"52xxskha.inc"
 
 ;----------------------------------------------------------------------------
 

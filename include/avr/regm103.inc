@@ -46,7 +46,7 @@ XDIV0		avrbit	XDIV,0
 ;----------------------------------------------------------------------------
 ; EEPROM
 
-		include	"avr/eem.inc"
+		include	"eem.inc"
 
 ;----------------------------------------------------------------------------
 ; GPIO
@@ -185,18 +185,18 @@ AS0		avrbit	ASSR,3		; Asynchronous Timer/Counter 0
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
-		include	"avr/wdm21.inc"
+		include	"wdm21.inc"
 WDTOE		avrbit	WDTCR,4		; Turn-Off Enable
 
 ;----------------------------------------------------------------------------
 ; UART
 
-		include	"avr/uart90.inc"
+		include	"uart90.inc"
 
 ;----------------------------------------------------------------------------
 ; SPI
 
-		include	"avr/spi90.inc"
+		include	"spi90.inc"
 
 ;----------------------------------------------------------------------------
 ; A/D Converter
@@ -221,7 +221,7 @@ ADCL		port	0x04
 ;----------------------------------------------------------------------------
 ; Analog Comparator
 
-		include "avr/ac90.inc"
+		include "ac90.inc"
 
 		restore			; re-enable listing
 

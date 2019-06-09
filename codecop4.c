@@ -5,37 +5,6 @@
 /* Codegeneratormodul COP4-Familie                                           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codecop4.c,v 1.9 2014/03/03 19:54:17 alfred Exp $                   *
- *****************************************************************************
- * $Log: codecop4.c,v $
- * Revision 1.9  2014/03/03 19:54:17  alfred
- * - add COP444 target
- *
- * Revision 1.8  2013-06-16 17:18:20  alfred
- * - add COP440 target
- *
- * Revision 1.7  2006/08/05 18:07:31  alfred
- * - silence some warnings
- *
- * Revision 1.6  2006/05/22 17:17:11  alfred
- * - address space is 1K for COP42x
- *
- * Revision 1.5  2006/05/07 13:42:52  alfred
- * - regard JP target on next page
- *
- * Revision 1.4  2006/05/06 10:26:38  alfred
- * - add COP42x instructions
- *
- * Revision 1.3  2006/05/06 09:21:34  alfred
- * - catch invalid values for AISC & LBI
- *
- * Revision 1.2  2006/04/09 12:40:11  alfred
- * - unify COP pseudo instructions
- *
- * Revision 1.1  2006/04/06 20:26:54  alfred
- * - add COP4
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -525,7 +494,7 @@ static void SwitchTo_COP4(void)
 
   pDescr = FindFamilyByName("COP4");
 
-  TurnWords = False; ConstMode = ConstModeC; SetIsOccupied = False;
+  TurnWords = False; ConstMode = ConstModeC;
 
   PCSymbol = "."; HeaderID = pDescr->Id;
   NOPCode = 0x44;

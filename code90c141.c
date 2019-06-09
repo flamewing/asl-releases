@@ -4,34 +4,7 @@
 /*                                                                           */
 /* Codegenerator Toshiba TLCS-90                                             */
 /*                                                                           */
-/* Historie: 30.10.1996 Grundsteinlegung                                     */
-/*            2. 1.1999 ChkPC umgebaut                                       */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code90c141.c,v 1.5 2014/07/13 14:27:45 alfred Exp $                  */
-/*****************************************************************************
- * $Log: code90c141.c,v $
- * Revision 1.5  2014/07/13 14:27:45  alfred
- * - rework to current style
- *
- * Revision 1.4  2010/04/17 13:14:23  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.3  2006/08/05 12:05:37  alfred
- * - regard spaces in indexed expressions
- *
- * Revision 1.2  2004/05/29 11:33:02  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- * Revision 1.1  2003/11/06 02:49:22  alfred
- * - recreated
- *
- * Revision 1.2  2002/10/20 09:22:26  alfred
- * - work around the parser problem related to the ' character
- *
- * Revision 1.7  2002/10/07 20:25:01  alfred
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -1443,11 +1416,16 @@ static void SwitchFrom_90C141(void)
   DeinitFields();
 }
 
+static Boolean ChkMoreOneArg(void)
+{
+  return (ArgCnt > 1);
+}
+
 static void SwitchTo_90C141(void)
 {
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = True;
+  SetIsOccupiedFnc = ChkMoreOneArg;
 
   PCSymbol = "$";
   HeaderID = 0x53;

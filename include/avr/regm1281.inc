@@ -20,7 +20,7 @@ RAMEND		equ	0x21ff,data
 FLASHEND	label	0x1ffff
 
 ATmegaxx1	equ	1
-		include	"avr/regmxx01.inc"
+		include	"regmxx01.inc"
 
 		restore			; re-enable listing
 

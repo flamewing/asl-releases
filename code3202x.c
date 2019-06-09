@@ -5,30 +5,7 @@
  *
  * (C) 1996 Thomas Sailer <sailer@ife.ee.ethz.ch>
  *
- * 19.08.96: Erstellung
- * 18.01.97: Anpassungen fuer Case-Sensitivitaet
- *  7.07.1998 Fix Zugriffe auf CharTransTable wg. signed chars
- * 18.08.1998 BookKeeping-Aufruf bei RES
- *  9. 1.1999 ChkPC jetzt ueber SegLimits
- * 14. 1.2001 silenced warnings about unused parameters
- * 2001-11-11 moved pseudo ops to codepseudo.c
  */
-/* $Id: code3202x.c,v 1.5 2014/11/03 17:36:12 alfred Exp $                   */
-/*****************************************************************************
- * $Log: code3202x.c,v $
- * Revision 1.5  2014/11/03 17:36:12  alfred
- * - relocate IsDef() for common TI pseudo instructions
- *
- * Revision 1.4  2014/10/30 12:21:03  alfred
- * - rework to current style
- *
- * Revision 1.3  2007/11/24 22:48:03  alfred
- * - some NetBSD changes
- *
- * Revision 1.2  2004/05/29 12:18:05  alfred
- * - relocated DecodeTIPseudo() to separate module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -461,21 +438,17 @@ static void DecodeLDPK(Word Code)
   {
     Boolean OK;
 
-    WAsmCode[0] = ConstIntVal(ArgStr[1].Str, UInt9, &OK);
+    WAsmCode[0] = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
     if (OK)
     {
-      CodeLen = 1;
-      WAsmCode[0] = (WAsmCode[0] & 0x1ff) | 0xc800;
-    }
-    else
-    {
-      WAsmCode[0] = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
-      if (OK)
+      if (WAsmCode[0] < 0x1ff)
+        WAsmCode[0] |= 0xc800;
+      else
       {
         ChkSpace(SegData);
-        CodeLen = 1;
         WAsmCode[0] = ((WAsmCode[0] >> 7) & 0x1ff) | 0xc800;
       }
+      CodeLen = 1;
     }
   }
 }
@@ -715,7 +688,6 @@ static void SwitchTo_3202x(void)
 {
   TurnWords = False; 
   ConstMode = ConstModeIntel; 
-  SetIsOccupied = False;
   
   PCSymbol = "$";
   HeaderID = 0x75; 

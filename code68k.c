@@ -5963,7 +5963,6 @@ static void SwitchTo_68K(void *pUser)
 {
   TurnWords = True;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   PCSymbol = "*";
   HeaderID = 0x01;

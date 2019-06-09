@@ -4,43 +4,7 @@
 /*                                                                           */
 /* Codegenerator TLCS-870                                                    */
 /*                                                                           */
-/* Historie: 29.12.1996 Grundsteinlegung                                     */
-/*            2. 1.1999 ChkPC umgebaut                                       */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code87c800.c,v 1.10 2014/12/07 19:14:00 alfred Exp $                  */
-/*****************************************************************************
- * $Log: code87c800.c,v $
- * Revision 1.10  2014/12/07 19:14:00  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.9  2014/11/22 11:45:58  alfred
- * - correct some formatting errors
- * - correct handling of JR
- *
- * Revision 1.8  2014/11/17 23:51:32  alfred
- * - begun with TLCS-870/C
- *
- * Revision 1.7  2014/11/17 21:25:22  alfred
- * - some remaining cleanups
- *
- * Revision 1.6  2014/07/13 22:10:58  alfred
- * - reworked to current style
- *
- * Revision 1.5  2010/04/17 13:14:22  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.4  2007/11/24 22:48:05  alfred
- * - some NetBSD changes
- *
- * Revision 1.3  2005/09/08 17:31:04  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 11:33:02  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -1556,11 +1520,16 @@ static void SwitchFrom_87C800(void)
   DeinitFields();
 }
 
+static Boolean TrueFnc(void)
+{
+  return True;
+}
+
 static void SwitchTo_87C800(void)
 {
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = True;
+  SetIsOccupiedFnc = TrueFnc;
 
   PCSymbol = "$";
   HeaderID = 0x54;

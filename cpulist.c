@@ -108,7 +108,7 @@ typedef struct
 {
   int cnt, perline;
   tCPUSwitchUserProc Proc;
-  void *pUserData;
+  tCPUSwitchProc NoUserProc;
   tPrintNextCPUProc NxtProc;
 } tPrintContext;
 
@@ -120,12 +120,19 @@ static void PrintIterator(const tCPUDef *pCPUDef, void *pUser)
 
   if (pCPUDef->Number == pCPUDef->Orig)
   {
-    Boolean Unequal = (pCPUDef->SwitchProc != pContext->Proc)
-                   || (pCPUDef->SwitchProc == SwitchNoUserProc && (pContext->pUserData != pCPUDef->pUserData));
+    tCPUSwitchProc ThisNoUserProc = (pCPUDef->SwitchProc == SwitchNoUserProc) ? ((tNoUserData*)pCPUDef->pUserData)->Switcher : NULL;
+    Boolean Unequal;
+
+    if (pCPUDef->SwitchProc != pContext->Proc)
+      Unequal = True;
+    else if (pCPUDef->SwitchProc == SwitchNoUserProc)
+      Unequal = (pContext->NoUserProc != ThisNoUserProc);
+    else
+      Unequal = False;
     if (Unequal || (pContext->cnt == pContext->perline))
     {
       pContext->Proc = pCPUDef->SwitchProc;
-      pContext->pUserData = pCPUDef->pUserData;
+      pContext->NoUserProc = ThisNoUserProc;
       printf("\n");
       pContext->NxtProc();
       pContext->cnt = 0;
@@ -140,7 +147,7 @@ void PrintCPUList(tPrintNextCPUProc NxtProc)
   tPrintContext Context;
 
   Context.Proc = NULL;
-  Context.pUserData = NULL;
+  Context.NoUserProc = NULL;
   Context.cnt = 0;
   Context.NxtProc = NxtProc;
   Context.perline = 80 / MaxNameLen;

@@ -4,52 +4,7 @@
 /*                                                                           */
 /* Codegenerator NEC uPD77230                                                */
 /*                                                                           */
-/* Historie: 13. 9.1998 Grundsteinlegung                                     */
-/*           14. 9.1998 LDI/Destregs getestet                                */
-/*           16. 9.1998 das instruktionelle Kleingemuese begonnen            */
-/*           19. 9.1998 restliche CPU-Instruktionen                          */
-/*           27. 9.1998 DW-Anweisung                                         */
-/*           28. 9.1998 String-Argument fuer DW                              */
-/*                      DS                                                   */
-/*            2. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*           14. 1.2001 silenced warnings about unused parameters            */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code77230.c,v 1.9 2014/11/16 13:15:07 alfred Exp $                   */
-/*****************************************************************************
- * $Log: code77230.c,v $
- * Revision 1.9  2014/11/16 13:15:07  alfred
- * - remove some superfluous semicolons
- *
- * Revision 1.8  2014/08/24 10:16:29  alfred
- * - rework to current style
- *
- * Revision 1.7  2010/04/17 13:14:22  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.6  2008/11/23 10:39:17  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.5  2007/06/28 20:27:31  alfred
- * - silence some warnings on recent GNU C versions
- *
- * Revision 1.4  2005/09/08 16:53:42  alfred
- * - use common PInstTable
- *
- * Revision 1.3  2005/05/21 16:35:05  alfred
- * - removed variables available globally
- *
- * Revision 1.2  2004/09/26 14:40:24  alfred
- * - fix error warning
- *
- * Revision 1.1  2003/11/06 02:49:21  alfred
- * - recreated
- *
- * Revision 1.2  2002/08/14 18:43:48  alfred
- * - warn null allocation, remove some warnings
- *
- *****************************************************************************/
 
 /*---------------------------------------------------------------------------*/
 /* Includes */
@@ -1159,7 +1114,6 @@ static void SwitchTo_77230(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
   PCSymbol = "$";
   HeaderID = FoundDescr->Id;
   NOPCode = 0x00000000;

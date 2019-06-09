@@ -5,29 +5,6 @@
 /* Code Generator Toshiba TC9331                                             */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code9331.c,v 1.6 2016/09/11 15:28:51 alfred Exp $                    *
- *****************************************************************************
- * $Log: code9331.c,v $
- * Revision 1.6  2016/09/11 15:28:51  alfred
- * - silence warning about unused parameter
- *
- * Revision 1.5  2016/08/30 14:06:04  alfred
- * - regard ( ) comments
- * - correct machine codes for JC/JNC
- *
- * Revision 1.4  2016/08/30 12:00:49  alfred
- * - correct handling of Zs in MAIN instructions
- *
- * Revision 1.3  2016/08/30 10:36:45  alfred
- * - add some weird extras for B data area
- *
- * Revision 1.2  2016/08/30 10:14:46  alfred
- * - completed instructions
- *
- * Revision 1.1  2016/08/29 21:10:43  alfred
- * - begun with TC9331
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -756,7 +733,6 @@ static void SwitchTo_9331(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = pDescr->Id;

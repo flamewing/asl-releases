@@ -46,7 +46,7 @@ SM0		avrbit	EMCUCR,7	; Sleep Mode Select
 ;----------------------------------------------------------------------------
 ; EEPROM/Program Memory Access
 
-		include	"avr/eem.inc"
+		include	"eem.inc"
 
 SPMCR		port	0x37		; Store Program Memory Control Register
 LBSET		avrbit	SPMCR,3		; Lock Bit Set
@@ -185,7 +185,7 @@ AS2		avrbit	ASSR,3		; Asynchronous Timer/Counter 2
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
-		include	"avr/wdm21.inc"
+		include	"wdm21.inc"
 WDTOE		avrbit	WDTCR,4		; Turn-Off Enable
 
 ;----------------------------------------------------------------------------
@@ -238,12 +238,12 @@ UBRRHI		port	0x20		; UART0/1 Baud Rate Register MSB
 ;----------------------------------------------------------------------------
 ; SPI
 
-		include "avr/spim.inc"
+		include "spim.inc"
 
 ;----------------------------------------------------------------------------
 ; Analog Comparator
 
-		include "avr/acm2.inc"
+		include "acm2.inc"
 
 		restore			; re-enable listing
 

@@ -9,8 +9,8 @@
 #include "stdinc.h"
 #include <string.h>
 
-char *Version = "1.42 Beta [Bld 146]";
-char *DebVersion = "1.42bld146-1";
+char *Version = "1.42 Beta [Bld 147]";
+char *DebVersion = "1.42bld147-1";
 LongInt VerNo = 0x142f;
 
 char *InfoMessCopyright = "(C) 1992,2019 Alfred Arnold";

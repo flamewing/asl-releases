@@ -10,19 +10,6 @@
 /* a** up to finally do it.  But maybe someone still reads it...             */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code1750.c,v 1.3 2016/10/22 15:54:59 alfred Exp $
- *****************************************************************************
- * $Log: code1750.c,v $
- * Revision 1.3  2016/10/22 15:54:59  alfred
- * - add DATA command to 1750
- *
- * Revision 1.2  2016/10/16 10:00:04  alfred
- * - add fload/extended support
- *
- * Revision 1.1  2016/10/09 19:55:52  alfred
- * - first version of MIL STD 1750 support
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -941,7 +928,6 @@ static void SwitchTo_1750(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = pDescr->Id;

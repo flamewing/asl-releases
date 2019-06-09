@@ -87,12 +87,12 @@ XMBK		avrbit	XMCRB,7		; External Memory Bus-keeper Enable
 ;----------------------------------------------------------------------------
 ; EEPROM/Program Memory Access
 
-		include	"avr/eem2.inc"
+		include	"eem2.inc"
 
 EEPM0		avrbit	EECR,4		; EEPROM Programming Mode
 EEPM1		avrbit	EECR,5
 
-		include	"avr/spmcsr37.inc"
+		include	"spmcsr37.inc"
 		
 SIGRD		avrbit	SPMCSR,5	; Signature Read
 
@@ -350,7 +350,7 @@ EXCLK		avrbit	ASSR,6		; Enable External Clock Input
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
-		include	"avr/wdme.inc"
+		include	"wdme.inc"
 		
 ;----------------------------------------------------------------------------
 ; USART
@@ -393,22 +393,22 @@ UBRR1L		sfr	0xcd		; Baud Rate Register Low
 ;----------------------------------------------------------------------------
 ; SPI
 
-		include "avr/spim2c.inc"
+		include "spim2c.inc"
 
 ;----------------------------------------------------------------------------
 ; TWI
 
-		include	"avr/twimb8.inc"
+		include	"twimb8.inc"
 		
 ;----------------------------------------------------------------------------
 ; Analog Comparator
 
-		include "avr/acm30.inc"
+		include "acm30.inc"
 
 ;----------------------------------------------------------------------------
 ; A/D Converter
 
-		include	"avr/adcm78.inc"
+		include	"adcm78.inc"
 
 MUX4		avrbit	ADMUX,4
 
@@ -417,7 +417,7 @@ ADHSM		avrbit	ADCSRB,7	; A/D Converter High Speed Mode
 ;----------------------------------------------------------------------------
 ; USB
 
-		include	"avr/usbm.inc"
+		include	"usbm.inc"
 
 OTGPADE		avrbit	USBCON,4	; VBUS Pad Enable
 HOST		avrbit	USBCON,2	; Host Mode (conditional?)

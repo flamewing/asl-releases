@@ -4,44 +4,7 @@
 /*                                                                          */
 /* Codegenerator fuer Fujitsu-F2MC16L-Prozessoren                           */
 /*                                                                          */
-/* Historie: 19.11.1999 Grundsteinlegung, einfache Befehle                  */
-/*                      Adressparser, ADD                                   */
-/*           20.11.1999 SUB AND OR XOR ADDC SUBC                            */
-/*           24.11.1999 A... fertig                                         */
-/*           27.11.1999 C... fertig                                         */
-/*            1. 1.2000 Befehle durch                                       */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                */
-/*           14. 1.2001 silenced warnings about unused parameters           */
-/*                                                                          */
-/* TODO: PC-relativ Displacements berechnen                                 */
-/*       Registersymbole                                                    */
-/*       explizite Displacement-Laengenangaben (Adressen, ADDSP)            */
 /****************************************************************************/
-/* $Id: codefmc16.c,v 1.8 2014/11/05 15:47:15 alfred Exp $                  */
-/*****************************************************************************
- * $Log: codefmc16.c,v $
- * Revision 1.8  2014/11/05 15:47:15  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.7  2014/06/20 19:24:42  alfred
- * - reworked to current style
- *
- * Revision 1.6  2014/03/08 21:06:36  alfred
- * - rework ASSUME framework
- *
- * Revision 1.5  2007/11/24 22:48:06  alfred
- * - some NetBSD changes
- *
- * Revision 1.4  2007/06/28 20:27:31  alfred
- * - silence some warnings on recent GNU C versions
- *
- * Revision 1.3  2005/09/08 16:53:42  alfred
- * - use common PInstTable
- *
- * Revision 1.2  2004/05/29 12:04:47  alfred
- * - relocated DecodeMot(16)Pseudo into separate module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -2354,7 +2317,6 @@ static void SwitchTo_F2MC16(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = FoundDescr->Id;

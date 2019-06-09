@@ -4,91 +4,6 @@
 ;*                                                                           *
 ;* String-Definitionen fuer AS                                               *
 ;*                                                                           *
-;* Historie:  4. 5.1996 Grundsteinlegung                                     *
-;*           19. 1.1997 Kommandozeilenoption U                               *
-;*           21. 1.1997 Warnung nicht bitadressierbare Speicherstelle        *
-;*           22. 1.1997 Fehler;Warnungen fuer Stacks                         *
-;*            1. 2.1997 Warnung wegen NUL-Zeichen                            *
-;*           29. 3.1997 Kommandozeilenoption g                               *
-;*           30. 5.1997 Warnung wg. inkorrektem Listing                      *
-;*           12. 7.1997 Kommandozeilenoption Y                               *
-;*            5. 8.1997 Meldungen fuer Strukturen                            *
-;*            7. 9.1997 Warnung Bereichsueberschreitung                      *
-;*           24. 9.1997 Kopfzeile Registerdefinitionsliste                   *
-;*           19.10.1997 Warnung neg. DUP-Anzahl                              *
-;*           26. 6.1998 Fehlermeldung Codepage nicht gefunden                *
-;*           27. 6.1998 Meldungen fuer Codepage-Liste                        *
-;*           18. 4.1999 Kommandozeilenoptionen cpu, shareout                 *
-;*            2. 5.1999 'order' --> 'instruction'                            *
-;*           13. 7.1999 Fehlermeldungen fuer extern-Symbole                  *
-;*           13. 2.2000 Kommandozeilenoption olist                           *
-;*            1. 6.2000 changed error message 1850                           *
-;*           21. 7.2001 not repeatable error message                         *
-;*           2001-10-03 warning implicit X-conversion                        *
-;*           2001-10-17 error conflicting conditions                         *
-;*           2001-10-21 GNU error messages                                   *
-;*                                                                           *
-;*****************************************************************************
-;* $Id: as.res,v 1.8 2017/04/02 11:10:36 alfred Exp $                        *
-;*****************************************************************************
-;* $Log: as.res,v $
-;* Revision 1.8  2017/04/02 11:10:36  alfred
-;* - allow more fine-grained macro expansion in listing
-;*
-;* Revision 1.7  2016/11/25 18:12:12  alfred
-;* - first version to support OLMS-50
-;*
-;* Revision 1.6  2015/10/23 08:43:33  alfred
-;* - beef up & fix structure handling
-;*
-;* Revision 1.5  2014/11/23 17:06:32  alfred
-;* - add error #2060 (unimplemented)
-;*
-;* Revision 1.4  2014/09/14 13:22:33  alfred
-;* - ass keyword arguments
-;*
-;* Revision 1.3  2011-10-20 14:00:40  alfred
-;* - SRP handling more graceful on Z8
-;*
-;* Revision 1.2  2008/08/10 11:57:47  alfred
-;* - handle truncated bit numbers for 68K
-;*
-;* Revision 1.1  2003/11/06 02:53:05  alfred
-;* - recreated
-;*
-;* Revision 1.12  2003/10/04 15:38:46  alfred
-;* - differentiate constant/variable messages
-;*
-;* Revision 1.11  2003/10/04 14:00:39  alfred
-;* - complain about empty arguments
-;*
-;* Revision 1.10  2002/11/20 20:25:05  alfred
-;* - added unions
-;*
-;* Revision 1.9  2002/11/16 20:52:18  alfred
-;* - added ErrMsgStructNameMissing
-;*
-;* Revision 1.8  2002/11/11 21:13:02  alfred
-;* - messages fro struct list
-;*
-;* Revision 1.7  2002/11/04 19:04:26  alfred
-;* - prevent modification of constants with SET
-;*
-;* Revision 1.6  2002/10/28 19:39:10  alfred
-;* - clarified -g options
-;*
-;* Revision 1.5  2002/08/14 18:43:47  alfred
-;* - warn null allocation, remove some warnings
-;*
-;* Revision 1.4  2002/05/13 18:17:13  alfred
-;* - added error 2010/2020
-;*
-;* Revision 1.3  2002/05/12 20:56:28  alfred
-;* - added 3206x error messages
-;*
-;* Revision 1.2  2002/03/10 11:55:42  alfred
-;* - state which operand type was expected/got
-;*
 ;*****************************************************************************
 
 Include header.res
@@ -685,6 +600,10 @@ Message ErrMsgNotFromThisAddress
 Message ErrMsgTargOnDiffPage
  "Sprungziel nicht auf gleicher Seite"
  "jump target not on same page"
+
+Message ErrMsgTargOnDiffSection
+ "Sprungziel nicht in gleicher Sektion"
+ "jump target not in same section"
 
 Message ErrMsgCodeOverflow
  "Code&uuml;berlauf"

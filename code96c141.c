@@ -2764,11 +2764,16 @@ static void SwitchFrom_96C141(void)
   ClearONOFF();
 }
 
+static Boolean ChkMoreOneArg(void)
+{
+  return (ArgCnt > 1);
+}
+
 static void SwitchTo_96C141(void)
 {
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = True;
+  SetIsOccupiedFnc = ChkMoreOneArg;
 
   PCSymbol = "$";
   HeaderID = 0x52;

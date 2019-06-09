@@ -39,8 +39,8 @@ OSCCAL		port	0x31		; Oscillator Calibration
 ;----------------------------------------------------------------------------
 ; EEPROM/Program Memory Access
 
-		include	"avr/eem.inc"
-		include	"avr/spm.inc"
+		include	"eem.inc"
+		include	"spm.inc"
 
 ;----------------------------------------------------------------------------
 ; JTAG
@@ -187,28 +187,28 @@ TIFR		port	0x38		; Timer Interrupt Flag Register
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
-		include	"avr/wdm21.inc"
+		include	"wdm21.inc"
 WDTOE		avrbit	WDTCR,4		; Turn-Off Enable
 
 ;----------------------------------------------------------------------------
 ; USART
 
-		include	"avr/usartm.inc"
+		include	"usartm.inc"
 
 ;----------------------------------------------------------------------------
 ; SPI
 
-		include "avr/spim.inc"
+		include "spim.inc"
 
 ;----------------------------------------------------------------------------
 ; TWI
 
-		include "avr/twim.inc"
+		include "twim.inc"
 
 ;----------------------------------------------------------------------------
 ; A/D Converter
 
-		include	"avr/adcm16.inc"
+		include	"adcm16.inc"
 
 ADTS0		avrbit	SFIOR,5		; Auto Trigger Source
 ADTS1		avrbit	SFIOR,6
@@ -217,7 +217,7 @@ ADTS2		avrbit	SFIOR,7
 ;----------------------------------------------------------------------------
 ; Analog Comparator
 
-		include "avr/acm.inc"
+		include "acm.inc"
 
 		restore			; re-enable listing
 

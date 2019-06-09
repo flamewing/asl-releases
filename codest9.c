@@ -4,44 +4,7 @@
 /*                                                                           */
 /* Codegenerator SGS-Thomson ST9                                             */
 /*                                                                           */
-/* Historie: 10. 2.1997 Grundsteinlegung                                     */
-/*            1. 7.1998 Warnungen bei is...()-Funktionen beseitigt           */
-/*            2. 1.1999 ChkPC umgestellt                                     */
-/*           30. 1.1999 Formate maschinenunabhaengig gemacht                 */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: codest9.c,v 1.10 2014/12/07 19:14:01 alfred Exp $                     */
-/*****************************************************************************
- * $Log: codest9.c,v $
- * Revision 1.10  2014/12/07 19:14:01  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.9  2014/11/05 15:47:16  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.8  2014/06/08 21:17:57  alfred
- * - adapt to current style
- *
- * Revision 1.7  2014/03/08 21:06:37  alfred
- * - rework ASSUME framework
- *
- * Revision 1.6  2010/04/17 13:14:23  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.5  2007/06/28 20:27:31  alfred
- * - silence some warnings on recent GNU C versions
- *
- * Revision 1.4  2005/10/02 10:00:46  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.3  2005/09/08 17:31:05  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 11:33:03  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -2026,7 +1989,7 @@ static void InternSymbol_ST9(char *Asc, TempResult *Erg)
 
 static void SwitchTo_ST9(void)
 {
-  TurnWords = False; ConstMode = ConstModeIntel; SetIsOccupied = False;
+  TurnWords = False; ConstMode = ConstModeIntel;
 
   PCSymbol = "PC"; HeaderID = 0x32; NOPCode = 0xff;
   DivideChars = ","; HasAttrs = False;
