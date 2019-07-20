@@ -65,7 +65,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition March 2019}
+{\large Edition July 2019}
 \end{raggedright}
 
 \clearpage
@@ -95,7 +95,7 @@ Microsoft Corporation.
 All other trademarks not explicitly mentioned in this section and used in
 this manual are properties of their respective owners.
 
-\vspace{6cm}
+\vspace{5cm}
 
 This document has been processed with the LaTeX typesetting system, using
 the Linux operating system.
@@ -592,7 +592,9 @@ REGHC12.INC       & register addresses 68HC12 \\
 REGM16C.INC       & register addresses Mitsubishi M16C \\
 REGMSP.INC        & register addresses TI MSP430 \\
 REGS12Z.INC       & register and bit addresses S12Z family \\
-REGST9.INC        & register and Makrodefinitionen ST9 \\
+REGST7.INC        & register and macro definitions ST7 \\
+REGSTM8.INC       & register and macro definitions STM8 \\
+REGST9.INC        & register and macro definitions ST9 \\
 REGZ380.INC       & register addresses Z380 \\
 STDDEF04.INC      & register addresses 6804 \\
 STDDEF16.INC      & instruction macros and register addresses \\
@@ -603,9 +605,6 @@ STDDEF2X.INC      & register addresses TMS3202x \\
 STDDEF37.INC      & register and bit addresses TMS370xxx \\
 STDDEF3X.INC      & peripheral addresses TMS320C3x \\
 STDDEF4X.INC      & peripheral addresses TMS320C4x \\
-STDDEF47.INC      & instruction macros TLCS-47 \\
-STDDEF51.INC      & definition of SFRs and bits for \\
-                  & 8051/8052/80515 \\
 \hline
 \end{tabular}\end{center}
 \caption{Standard Contents of a Binary Distribution - Part 2
@@ -619,6 +618,9 @@ File              & Function \\
 \hline
 {\bf Directory INCLUDE} & \\
 \hline
+STDDEF47.INC      & instruction macros TLCS-47 \\
+STDDEF51.INC      & definition of SFRs and bits for \\
+                  & 8051/8052/80515 \\
 STDDEF56K.INC     & register addresses DSP56000 \\
 STDDEF5X.INC      & peripheral addresses TMS320C5x \\
 STDDEF60.INC      & instruction macros and register addresses \\
@@ -630,6 +632,10 @@ COLDFIRE/\*.INC   & register and bit addresses ColDfire family \\
                   & (do not include directly, use REGCOLD.INC) \\
 S12Z/\*.INC       & register and bit addresses S12Z family \\
                   & (do not include directly, use REGS12Z.INC) \\
+ST7/\*.INC        & register and bit addresses ST7 family \\
+                  & (do not include directly, use REGST7.INC) \\
+STM8/\*.INC       & register and bit addresses STM8 family \\
+                  & (do not include directly, use REGSTM8.INC) \\
 STDDEF62.INC      & register addresses and macros ST6 \\
 STDDEF75.INC      & register addresses 75K0 \\
 STDDEF87.INC      & register and memory addresses TLCS-870 \\
@@ -3431,6 +3437,12 @@ file which hardware is available (analog to the 8051/52/515).
 %%-----------
 \begin{quote}
 aw) ST7 \\
+    ST72251G1, ST72251G2, ST72311J2, ST72311J4, \\
+    ST72321BR6, ST72321BR7, ST72321BR9, ST72325S4, \\
+    ST72325S6, ST72325J7, ST72325R9, ST72324J6, \\
+    ST72324K6, ST72324J4, ST72324K4, ST72324J2, \\
+    ST72324JK21, ST72325S4, ST72325J7, ST72325R9, \\
+    ST72521BR6, ST72521BM9 \\
     STM8 \\
     STM8S001J3, STM8S003F3, STM8S003K3, STM8S005C6,\\
     STM8S005K6, STM8S007C8, STM8S103F2, STM8S103F3,\\
@@ -3453,7 +3465,18 @@ aw) ST7 \\
     STM8L151R8, STM8L152R6, STM8L152C8, STM8L152K8,\\
     STM8L152M8, STM8L152R8, STM8L162M8, STM8L162R8,\\
     STM8AF6366, STM8AF6388, STM8AF6213, STM8AF6223,\\
-    STM8AF6226
+    STM8AF6226, STM8AF6246, STM8AF6248, STM8AF6266,\\
+    STM8AF6268, STM8AF6269, STM8AF6286, STM8AF6288,\\
+    STM8AF6289, STM8AF628A, STM8AF62A6, STM8AF62A8,\\
+    STM8AF62A9, STM8AF62AA, STM8AF5268, STM8AF5269,\\
+    STM8AF5286, STM8AF5288, STM8AF5289, STM8AF528A,\\
+    STM8AF52A6, STM8AF52A8, STM8AF52A9, STM8AF52AA,\\
+    STM8AL3136, STM8AL3138, STM8AL3146, STM8AL3148,\\
+    STM8AL3166, STM8AL3168, STM8AL3L46, STM8AL3L48,\\
+    STM8AL3L66, STM8AL3L68, STM8AL3188, STM8AL3189,\\
+    STM8AL318A, STM8AL3L88, STM8AL3L89, STM8AL3L8A,\\
+    STM8TL52F4, STM8TL52G4, STM8TL53C4, STM8TL53F4,\\
+    STM8TL53G4
 \end{quote}
 The STM8 core extends the address space to 16 Mbytes and introduces
 a couple of new instructions.  Though many instructions have the same
@@ -5069,8 +5092,7 @@ recognizes the operand as a floating-point constant).
 
 {\em valid for: PIC}
 
-Generates a continuous string of zero words in memory.  The length is
-given by the argument and must not exceed 512.
+Generates a continuous string of zero words in memory.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -5081,9 +5103,7 @@ given by the argument and must not exceed 512.
 
 These instruction allow to fill memory blocks with a byte or word
 constant. The first operand specifies the size of the memory block
-while the second one sets the filling constant itself. The maximum
-supported block size is 1024 elements for \tty{FB} and 512 elements for
-\tty{FW}.
+while the second one sets the filling constant itself.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -10086,7 +10106,7 @@ uses the same conventions for file names.  In contrary to BIND, the
 target file is written as a Hex file, i.e. as a sequence of lines
 which represent the code as ASCII hex numbers.
 
-P2HEX knows 8 different target formats, which can be selected via the
+P2HEX knows nine different target formats, which can be selected via the
 command line parameter \tty{F}:
 \begin{itemize}
 \item{Motorola S-Records (\tty{-F Moto)})}
@@ -10098,6 +10118,7 @@ command line parameter \tty{F}:
 \item{Texas Instruments DSK (\tty{-F DSK})}
 \item{Atmel AVR Generic (\tty{-F Atmel}, see \cite{AVRObj})}
 \item{Lattice Mico8 prom\_init (\tty{-F Mico8})}
+\item{C arrays, for inclusion into C(++) source files (\tty{-F C})}
 \end{itemize}
 If no target format is explicitly specified, P2HEX will automatically
 choose one depending in the processor type:  S-Records for Motorola
@@ -10160,6 +10181,29 @@ deal with this record, one can suppress it with the option
 \begin{verbatim}
  +5  .
 \end{verbatim}
+The C format is different in the sense that it always has to be
+selected explicitly.  The output file is basically a complete piece of
+C or C++ code that contains the data as a list of C arrays.  Additionally to
+the data itself, a list of descriptors is written that describes the
+start, length, and end address of each data block.  The contents of these
+descriptors may be configured via the option
+\begin{verbatim}
+ -cformat <format>
+\end{verbatim}
+Each letter in \verb!format! defines an element of the descriptor:
+\begin{itemize}
+\item{A \verb!d! or \verb!D! defines a pointer to the data itself.
+      Usage of a lower or upper case letter defines whether lowercase
+      or uppercase letters are used for hexadecimal constants.}
+\item{An \verb!s! or \verb!S! defines the start address of the data,
+      either as {\em unsigned} or {\em unsigned long}.}
+\item{An \verb!l! or \verb!L! defines the length of the data,
+      either as {\em unsigned} or {\em unsigned long}.}
+\item{An \verb!e! or \verb!E! defines the end address of the data,
+      specifically the last address used by the data, either as
+      {\em unsigned} or {\em unsigned long}.} 
+\end{itemize}
+\par
 In case a source file contains code record for different processors,
 the different hex formats will also show up in the target file - it
 is therefore strongly advisable to use the filter function.

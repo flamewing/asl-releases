@@ -1,5 +1,7 @@
 /* intpseudo.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS                                                                        */
 /*                                                                           */
 /* Commonly Used Intel-Style Pseudo Instructions                             */
@@ -687,27 +689,27 @@ Boolean DecodeIntelPseudo(Boolean Turn)
       case 'B':
         LayoutFunc = LayoutByte;
         if (*LabPart.Str)
-          SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize8Bit);
+          SetSymbolOrStructElemSize(&LabPart, eSymbolSize8Bit);
         break;
       case 'W':
         LayoutFunc = LayoutWord;
         if (*LabPart.Str)
-          SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize16Bit);
+          SetSymbolOrStructElemSize(&LabPart, eSymbolSize16Bit);
         break;
       case 'D':
         LayoutFunc = LayoutDoubleWord;
         if (*LabPart.Str)
-          SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize32Bit);
+          SetSymbolOrStructElemSize(&LabPart, eSymbolSize32Bit);
         break;
       case 'Q':
         LayoutFunc = LayoutQuadWord;
         if (*LabPart.Str)
-          SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize64Bit);
+          SetSymbolOrStructElemSize(&LabPart, eSymbolSize64Bit);
         break;
       case 'T':
         LayoutFunc = LayoutTenBytes;
         if (*LabPart.Str)
-          SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize80Bit);
+          SetSymbolOrStructElemSize(&LabPart, eSymbolSize80Bit);
         break;
     }
 

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
 #ifndef LSTMACROEXP_H
 #define LSTMACROEXP_H
 

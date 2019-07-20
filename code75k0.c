@@ -1,5 +1,7 @@
 /* code75k0.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator NEC 75K0                                                    */
@@ -1415,7 +1417,7 @@ static void DecodeBIT(Word Code)
       if (!FirstPassUnknown)
       {
         PushLocHandle(-1);
-        EnterIntSymbol(LabPart.Str, BErg, SegNone, False);
+        EnterIntSymbol(&LabPart, BErg, SegNone, False);
         sprintf(ListLine, "=%s", BName);
         PopLocHandle();
       }

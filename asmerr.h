@@ -2,6 +2,8 @@
 #define _ASMERR_H
 /* asmerr.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Error Handling Functions                                                  */

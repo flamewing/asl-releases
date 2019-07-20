@@ -1,3 +1,8 @@
+2019-07-20 [1.42 Bld 148]
+
+- Addition    : Add P2HEX output format "C arrays".
+- Addition    : Add a couple of ST7/STM8 types
+
 2019-06-09 [1.42 Bld 147]
 
 - Addition    : Make include file search strategy more C-like:

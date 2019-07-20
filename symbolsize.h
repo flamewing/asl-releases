@@ -2,6 +2,8 @@
 #define _SYMBOLSIZE_H
 /* symbolsize.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* Macro Assembler AS                                                        */
 /*                                                                           */
 /* Definition of a symbol's/instruction's operand type & size                */

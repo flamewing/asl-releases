@@ -393,11 +393,7 @@ RI_10KPU	bit	RI_RCR,0	;  10 kOhm pull-up resistor
 ; LCD Controller
 
 		include "lcd.inc"
-		__deflcd $5400,44,22
-LCD_CR4		label	$542f
-LCD_PAGE_COM	bit	LCD_CR4,2	;  LCD_RAM page selector
-LCD_DUTY8	bit	LCD_CR4,1	;  1/8 duty enable
-LCD_B4		bit	LCD_CR4,0	;  1/4 bias enable
+		__deflcd $5400,44,22,1
 
 ;----------------------------------------------------------------------------
 ; CPU

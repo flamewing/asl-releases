@@ -1,5 +1,7 @@
 /* version.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Lagert die Versionsnummer                                                 */
@@ -9,8 +11,8 @@
 #include "stdinc.h"
 #include <string.h>
 
-char *Version = "1.42 Beta [Bld 147]";
-char *DebVersion = "1.42bld147-1";
+char *Version = "1.42 Beta [Bld 148]";
+char *DebVersion = "1.42bld148-1";
 LongInt VerNo = 0x142f;
 
 char *InfoMessCopyright = "(C) 1992,2019 Alfred Arnold";

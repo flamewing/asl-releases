@@ -1,5 +1,7 @@
 /* code6804.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* AS-Codegenerator Motorola/ST 6804                                         */

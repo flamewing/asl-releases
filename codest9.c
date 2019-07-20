@@ -1,5 +1,7 @@
 /* codest9.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator SGS-Thomson ST9                                             */
@@ -1791,7 +1793,7 @@ static void DecodeBIT(Word Code)
     if (AdrMode == ModWReg)
     {
       PushLocHandle(-1);
-      EnterIntSymbol(LabPart.Str, (AdrPart << 4) + Bit, SegNone, False);
+      EnterIntSymbol(&LabPart, (AdrPart << 4) + Bit, SegNone, False);
       PopLocHandle();
       sprintf(ListLine,"=r%d.%s%c", (int)AdrPart,
               (Odd(Bit)) ? "!" : "", (Bit >> 1) + AscOfs);

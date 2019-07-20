@@ -2,6 +2,8 @@
 #define _STDINC_H
 /* stdinc.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* globaler Einzug immer benoetigter includes                                */

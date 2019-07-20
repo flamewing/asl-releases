@@ -2,6 +2,8 @@
 #define _CODE8008_H
 /* code8008.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator Intel 8008                                                  */

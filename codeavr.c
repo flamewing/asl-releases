@@ -1,5 +1,7 @@
 /* codeavr.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator Atmel AVR                                                   */
@@ -840,7 +842,7 @@ static void DecodeBIT(Word Code)
     *ListLine = '=';
     DissectBit_AVR(ListLine + 1, STRINGSIZE - 3, BitSpec);
     PushLocHandle(-1);
-    EnterIntSymbol(LabPart.Str, BitSpec, SegBData, False);
+    EnterIntSymbol(&LabPart, BitSpec, SegBData, False);
     PopLocHandle();
     if (MakeUseList)
     {

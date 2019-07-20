@@ -1,5 +1,7 @@
 /* code166.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* AS-Codegenerator Siemens 80C16x                                           */
@@ -1703,7 +1705,7 @@ static void DecodeBIT(Word Code)
   && DecodeBitAddr(&ArgStr[1], &Adr, &Bit, True))
  {
    PushLocHandle(-1);
-   EnterIntSymbol(LabPart.Str, (Adr << 4) + Bit, SegNone, False);
+   EnterIntSymbol(&LabPart, (Adr << 4) + Bit, SegNone, False);
    PopLocHandle();
    sprintf(ListLine, "=%02xH.%1x", Adr, Bit);
  }

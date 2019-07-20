@@ -1,8 +1,9 @@
 #ifndef _CHUNKS_H
 #define _CHUNKS_H
-
 /* chunks.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Verwaltung von Adressbereichslisten                                       */

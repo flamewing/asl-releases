@@ -82,7 +82,7 @@ EXTI5_vect	label	$803c		; External interrupt 5
 EXTI6_vect	label	$8040		; External interrupt 6
 EXTI7_vect	label	$8044		; External interrupt 7
 LCD_vect	label	$8048		; LCD interrupt, shared with...
-AES_vect	label	$8048		; AEs interrupt
+AES_vect	label	$8048		; AES interrupt
 CLK_vect	label	$804c		; CLK system clock switch/CSS interrupt, shared with...
 TIM1_BRK_vect	label	$804c		; TIM1 break interrupt, shared with...
 DAC_vect	label	$804c		; DAC interrupt
@@ -267,7 +267,7 @@ PFHIS		bit	EXTI_CONF2,0	;  Port F[7:4] external interrupt select
 		__defusart "USART3",$53f0
 
 ;----------------------------------------------------------------------------
-; Timer 2/3
+; Timer 2/3/5
 
 		include	"tim235.inc"
 		__deftim235 "TIM2",$5250,1
@@ -422,7 +422,7 @@ RI_10KPU	bit	RI_RCR,0	;  10 kOhm pull-up resistor
 ; LCD Controller
 
 		include "lcd.inc"
-		__deflcd $5400,44,22
+		__deflcd $5400,44,22,1
 
 ;----------------------------------------------------------------------------
 ; Comparators

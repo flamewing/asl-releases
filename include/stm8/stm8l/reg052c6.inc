@@ -386,7 +386,7 @@ RI_10KPU	bit	RI_RCR,0	;  10 kOhm pull-up resistor
 ; LCD Controller
 
 		include "lcd.inc"
-		__deflcd $5400,24,14
+		__deflcd $5400,24,14,0
 
 ;----------------------------------------------------------------------------
 ; CPU

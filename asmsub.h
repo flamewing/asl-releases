@@ -2,6 +2,8 @@
 #define _ASMSUB_H
 /* asmsub.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Unterfunktionen, vermischtes                                              */

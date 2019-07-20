@@ -1,49 +1,12 @@
 /* tex2doc.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Konverter TeX-->ASCII-DOC                                                 */
 /*                                                                           */
-/* Historie: 9. 2.1998 Grundsteinlegung                                      */
-/*          20. 6.1998 Zentrierung                                           */
-/*          11. 7.1998 weitere Landessonderzeichen                           */
-/*          13. 7.1998 Cedilla                                               */
-/*          12. 9.1998 input-Statement                                       */
-/*          12. 1.1999 andere Kapitelherarchie fuer article                  */
-/*           14. 1.2001 silenced warnings about unused parameters            */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: tex2doc.c,v 1.8 2017/02/26 16:20:47 alfred Exp $                    */
-/*****************************************************************************
- * $Log: tex2doc.c,v $
- * Revision 1.8  2017/02/26 16:20:47  alfred
- * - silence compiler warnings about unused function results
- *
- * Revision 1.7  2014/12/05 08:06:29  alfred
- * - silence const warnings
- *
- * Revision 1.6  2014/12/03 16:05:44  alfred
- * - rework to current style
- *
- * Revision 1.5  2014/12/02 18:48:20  alfred
- * - partially reworked
- *
- * Revision 1.4  2014/03/08 21:06:00  alfred
- * - regard \*
- *
- * Revision 1.3  2010/12/12 14:31:41  alfred
- * - use strmov()
- *
- * Revision 1.2  2010/08/27 14:52:43  alfred
- * - some more overlapping strcpy() cleanups
- *
- * Revision 1.1  2003/11/06 02:49:25  alfred
- * - recreated
- *
- * Revision 1.3  2003/08/16 17:53:48  alfred
- * - updated to digest 2e header
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include "asmitree.h"
@@ -2788,7 +2751,8 @@ int main(int argc, char **argv)
     }
     else if (!strcmp(Line, "$"))
     {
-      if ((InMathMode = (!InMathMode)))
+      InMathMode = !InMathMode;
+      if (InMathMode)
       {
         strcpy(BackSepString, SepString);
         ReadToken(Line);

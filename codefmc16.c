@@ -1,5 +1,7 @@
 /* codefmc16.c */ 
 /****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS, C-Version                                                            */
 /*                                                                          */
 /* Codegenerator fuer Fujitsu-F2MC16L-Prozessoren                           */

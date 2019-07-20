@@ -1,5 +1,7 @@
 /* code51.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator fuer MCS-51/252 Prozessoren                                 */
@@ -2312,7 +2314,7 @@ static void DecodeSFR(Word Index)
     {
       PushLocHandle(-1);
       DSeg = (MomCPU >= CPU80251) ? SegIO : SegData;
-      EnterIntSymbol(LabPart.Str, AdrByte, DSeg, False);
+      EnterIntSymbol(&LabPart, AdrByte, DSeg, False);
       if (MakeUseList)
       {
         if (AddChunk(SegChunks + DSeg, AdrByte, 1, False))
@@ -2356,7 +2358,7 @@ static void DecodeBIT(Word Index)
       char ByteStr[20], BitStr[10];
 
       PushLocHandle(-1);
-      EnterIntSymbol(LabPart.Str, AdrLong, SegNone, False);
+      EnterIntSymbol(&LabPart, AdrLong, SegNone, False);
       PopLocHandle();
       HexString(ByteStr, sizeof(ByteStr), AdrLong & 0xff, 2);
       HexString(BitStr, sizeof(BitStr), AdrLong >> 24, 1);
@@ -2370,7 +2372,7 @@ static void DecodeBIT(Word Index)
       char ByteStr[20];
 
       PushLocHandle(-1);
-      EnterIntSymbol(LabPart.Str, AdrLong, SegBData, False);
+      EnterIntSymbol(&LabPart, AdrLong, SegBData, False);
       PopLocHandle();
       HexString(ByteStr, sizeof(ByteStr), AdrLong, 2);
       sprintf(ListLine, "=%s", ByteStr);

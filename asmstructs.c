@@ -1,5 +1,7 @@
 /* asmstructs.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* structure handling                                                        */
@@ -81,7 +83,7 @@ void DestroyStructRec(PStructRec StructRec)
  * \return * to element or NULL if allocation failed
  * ------------------------------------------------------------------------ */
 
-void ExpandStructStd(const char *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
+void ExpandStructStd(const tStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
 {
   HandleLabel(pVarName, Base + pStructElem->Offset);
 }
@@ -238,11 +240,13 @@ void AddStructSymbol(const char *pName, LargeWord Value)
 
   {
     String tmp, tmp2;
+    tStrComp TmpComp;
 
     sprintf(tmp2, "%s%c", pInnermostNamedStruct->Name, pInnermostNamedStruct->StructRec->ExtChar);
     strmaxcpy(tmp, pName, sizeof(tmp));
     strmaxprep(tmp, tmp2, sizeof(tmp));
-    EnterIntSymbol(tmp, Value, SegNone, False);
+    StrCompMkTemp(&TmpComp, tmp);
+    EnterIntSymbol(&TmpComp, Value, SegNone, False);
   }
 }
 
@@ -438,6 +442,7 @@ static void ExpandStruct_One(PStructRec StructRec, char *pVarPrefix, char *pStru
 {
   PStructElem StructElem;
   int VarLen, RemVarLen, StructLen, RemStructLen;
+  tStrComp TmpComp;
 
   VarLen = strlen(pVarPrefix);
   pVarPrefix[VarLen] = StructRec->ExtChar;
@@ -452,7 +457,8 @@ static void ExpandStruct_One(PStructRec StructRec, char *pVarPrefix, char *pStru
     for (StructElem = StructRec->Elems; StructElem; StructElem = StructElem->Next)
     {
       strmaxcpy(pVarPrefix + VarLen + 1, StructElem->pElemName, RemVarLen);
-      StructElem->ExpandFnc(pVarPrefix, StructElem, Base);
+      StrCompMkTemp(&TmpComp, pVarPrefix);
+      StructElem->ExpandFnc(&TmpComp, StructElem, Base);
       if (StructElem->IsStruct)
       {
         TStructRec *pSubStruct;
@@ -477,8 +483,8 @@ void ExpandStruct(PStructRec StructRec)
     String CompVarName, CompStructName;
 
     strmaxcpy(CompVarName, LabPart.Str, sizeof(CompVarName));
-    strmaxcpy(CompStructName, LOpPart, sizeof(CompStructName));
-    ExpandStruct_One(StructRec, LabPart.Str, LOpPart, EProgCounter());
+    strmaxcpy(CompStructName, pLOpPart, sizeof(CompStructName));
+    ExpandStruct_One(StructRec, LabPart.Str, pLOpPart, EProgCounter());
     CodeLen = StructRec->TotLen;
     BookKeeping();
     DontPrint = True;

@@ -2,6 +2,8 @@
 #define _NLS_H
 /* nls.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Abhandlung landesspezifischer Unterschiede                                */

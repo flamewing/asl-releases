@@ -1,5 +1,7 @@
 /* asmmac.c  */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Unterroutinen des Makroprozessors                                         */
@@ -344,7 +346,7 @@ Boolean FoundMacro(PMacroRec *Erg)
   PSaveSection Lauf;
   String Part;
 
-  strmaxcpy(Part, LOpPart, STRINGSIZE);
+  strmaxcpy(Part, pLOpPart, STRINGSIZE);
   if (!CaseSensitive)
     NLS_UpString(Part);
 

@@ -1,5 +1,7 @@
 /* code68s12z.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS                                                                        */
 /*                                                                           */
 /* Code Generator NXP S12Z                                                   */
@@ -1016,14 +1018,14 @@ static void DissectBit_S12Z(char *pDest, int DestSize, LargeWord Inp)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     ExpandS12ZBit(const char *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
+ * \fn     ExpandS12ZBit(const tStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
  * \brief  expands bit definition when a structure is instantiated
  * \param  pVarName desired symbol name
  * \param  pStructElem element definition
  * \param  Base base address of instantiated structure
  * ------------------------------------------------------------------------ */
 
-static void ExpandS12ZBit(const char *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
+static void ExpandS12ZBit(const tStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
 {
   ShortInt OpSize = (pStructElem->OpSize < 0) ? 0 : pStructElem->OpSize;
   LongWord Address = Base + pStructElem->Offset;
@@ -1039,18 +1041,18 @@ static void ExpandS12ZBit(const char *pVarName, const struct sStructElem *pStruc
 }
 
 /*!------------------------------------------------------------------------
- * \fn     ExpandS12ZBitfield(const char *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
+ * \fn     ExpandS12ZBitfield(const tStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
  * \brief  expands bit field definition when a structure is instantiated
  * \param  pVarName desired symbol name
  * \param  pStructElem element definition
  * \param  Base base address of instantiated structure
  * ------------------------------------------------------------------------ */
 
-static void ExpandS12ZBitfield(const char *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
+static void ExpandS12ZBitfield(const tStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
 {
   ShortInt OpSize = (pStructElem->OpSize < 0) ? 0 : pStructElem->OpSize;
   LongWord Address = Base + pStructElem->Offset;
-
+  
   if (!ChkRange(Address, 0, 0xfff)
    || !ChkRange(pStructElem->BitPos, 0, (8 << OpSize) - 1)
    || !ChkRange(pStructElem->BitPos + pStructElem->BitWidthM1, 0, (8 << OpSize) - 1))
@@ -2385,7 +2387,7 @@ static void DecodeDEFBIT(Word Code)
       *ListLine = '=';
       DissectBit_S12Z(ListLine + 1, STRINGSIZE - 3, BitSpec);
       PushLocHandle(-1);
-      EnterIntSymbol(LabPart.Str, BitSpec, SegBData, False);
+      EnterIntSymbol(&LabPart, BitSpec, SegBData, False);
       PopLocHandle();
       /* TODO: MakeUseList? */
     }
@@ -2435,7 +2437,7 @@ static void DecodeDEFBITFIELD(Word Code)
       *ListLine = '=';
       DissectBit_S12Z(ListLine + 1, STRINGSIZE - 3, BitfieldSpec);
       PushLocHandle(-1);
-      EnterIntSymbol(LabPart.Str, BitfieldSpec, SegBData, False);
+      EnterIntSymbol(&LabPart, BitfieldSpec, SegBData, False);
       PopLocHandle();
       /* TODO: MakeUseList? */
     }

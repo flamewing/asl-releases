@@ -1,5 +1,7 @@
 /* code7000.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator SH7x00                                                      */
@@ -566,9 +568,12 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask, Boolean Signed)
           Lauf->DefSection = MomSectionHandle;
           do
           {
+            tStrComp LStrComp;
+            
             LiteralName(Lauf, Name);
             sprintf(LComp.Str, "%s%s", Name, AdrStr);
-            LDef = IsSymbolDefined(LStr);
+            StrCompMkTemp(&LStrComp, LStr);
+            LDef = IsSymbolDefined(&LStrComp);
             if (LDef)
               Lauf->PassNo++;
           }
@@ -1195,6 +1200,7 @@ static void LTORG_16(void)
 {
   PLiteral Lauf;
   String Name;
+  tStrComp TmpComp;
 
   Lauf = FirstLiteral;
   while (Lauf)
@@ -1203,7 +1209,8 @@ static void LTORG_16(void)
     {
       WAsmCode[CodeLen >> 1] = Lauf->Value;
       LiteralName(Lauf, Name);
-      EnterIntSymbol(Name, EProgCounter() + CodeLen, SegCode, False);
+      StrCompMkTemp(&TmpComp, Name);
+      EnterIntSymbol(&TmpComp, EProgCounter() + CodeLen, SegCode, False);
       Lauf->PassNo = (-1);
       CodeLen += 2;
     }
@@ -1215,7 +1222,8 @@ static void LTORG_32(void)
 {
   PLiteral Lauf, EqLauf;
   String Name;
-
+  tStrComp TmpComp;
+  
   Lauf = FirstLiteral;
   while (Lauf)
   {
@@ -1228,7 +1236,8 @@ static void LTORG_32(void)
       WAsmCode[CodeLen >> 1] = (Lauf->Value >> 16);
       WAsmCode[(CodeLen >> 1) + 1] = (Lauf->Value & 0xffff);
       LiteralName(Lauf, Name);
-      EnterIntSymbol(Name, EProgCounter() + CodeLen, SegCode, False);
+      StrCompMkTemp(&TmpComp, Name);
+      EnterIntSymbol(&TmpComp, EProgCounter() + CodeLen, SegCode, False);
       Lauf->PassNo = -1;
       if (CompLiterals)
       {
@@ -1240,7 +1249,8 @@ static void LTORG_32(void)
            && (EqLauf->Value == Lauf->Value))
           {
             LiteralName(EqLauf, Name);
-            EnterIntSymbol(Name, EProgCounter() + CodeLen, SegCode, False);
+            StrCompMkTemp(&TmpComp, Name);
+            EnterIntSymbol(&TmpComp, EProgCounter() + CodeLen, SegCode, False);
             EqLauf->PassNo = -1;
           }
           EqLauf = EqLauf->Next;

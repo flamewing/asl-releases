@@ -1,10 +1,12 @@
 /* errmsg.h */
-/*****************************************************************************
- * Cross Assembler
- *
- * Error message definition & associated checking
- *
- *****************************************************************************/
+/*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
+/* Cross Assembler                                                           */
+/*                                                                           */
+/* Error message definition & associated checking                            */
+/*                                                                           */
+/*****************************************************************************/
 
 #include <string.h>
 #include <stdarg.h>

@@ -1,5 +1,7 @@
 /* asmdef.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* global benutzte Variablen                                                 */
@@ -171,7 +173,7 @@ LargeWord RadixBase;                    /* Default-Zahlensystem im Formelparser*
 LargeWord OutRadixBase;                 /* dito fuer Ausgabe */
 
 tStrComp *ArgStr;                       /* Komponenten der Zeile */
-StringPtr LOpPart;
+StringPtr pLOpPart;
 tStrComp LabPart, CommPart, ArgPart, OpPart, AttrPart;
 char AttrSplit;
 int ArgCnt;                             /* Argumentzahl */
@@ -355,7 +357,7 @@ void asmdef_init(void)
   StrCompAlloc(&AttrPart);
   StrCompAlloc(&ArgPart);
   StrCompAlloc(&CommPart);
-  LOpPart = GetString();
+  pLOpPart = GetString();
   OneLine = GetString();
   ListLine = GetString();
   PrtInitString = GetString();

@@ -1,5 +1,7 @@
 /* codeh16.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Code Generator Hitachi H16                                                */
@@ -1496,14 +1498,14 @@ static void DissectBit_H16(char *pDest, int DestSize, LargeWord Inp)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     ExpandH16Bit(const char *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
+ * \fn     ExpandH16Bit(const tStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
  * \brief  expands bit definition when a structure is instantiated
  * \param  pVarName desired symbol name
  * \param  pStructElem element definition
  * \param  Base base address of instantiated structure
  * ------------------------------------------------------------------------ */
 
-static void ExpandH16Bit(const char *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
+static void ExpandH16Bit(const tStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
 {
   tSymbolSize OpSize = (pStructElem->OpSize < 0) ? 0 : pStructElem->OpSize;
   LongWord Address = Base + pStructElem->Offset;
@@ -2796,7 +2798,7 @@ static void DecodeBIT(Word Code)
       *ListLine = '=';
       DissectBit_H16(ListLine + 1, STRINGSIZE - 3, BitSpec);
       PushLocHandle(-1);
-      EnterIntSymbol(LabPart.Str, BitSpec, SegBData, False);
+      EnterIntSymbol(&LabPart, BitSpec, SegBData, False);
       PopLocHandle();
       /* TODO: MakeUseList? */
     }

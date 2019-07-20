@@ -1,5 +1,7 @@
 /* code7720.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* Makroassembler AS                                                         */
 /*                                                                           */
 /* Codegenerator NEC uPD772x                                                 */

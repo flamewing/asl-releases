@@ -1,5 +1,7 @@
 /* code78k2.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator 78K2-Familie                                                */
@@ -1355,7 +1357,7 @@ static void DecodeBIT(Word Index)
 
   if (!ChkArgCnt(1, 1));
   else if (DecodeBitAdr(&ArgStr[1], &Result))
-    EnterIntSymbol(LabPart.Str, Result, SegNone, False);
+    EnterIntSymbol(&LabPart, Result, SegNone, False);
 }
 
 static void DecodeMOV1(Word Index)

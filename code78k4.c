@@ -1,5 +1,7 @@
 /* code78k4.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator 78K4-Familie                                                */
@@ -2792,7 +2794,7 @@ static void DecodeBIT(Word Code)
     t.Typ = TempInt;
     t.Contents.Int = Result;
     SetListLineVal(&t);
-    EnterIntSymbol(LabPart.Str, Result, SegNone, False);
+    EnterIntSymbol(&LabPart, Result, SegNone, False);
   }
 }
 

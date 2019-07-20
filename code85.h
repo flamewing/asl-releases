@@ -2,6 +2,8 @@
 #define _CODE85_H
 /* code85.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator 8080/8085                                                   */

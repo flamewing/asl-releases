@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+
 #include "version.c"  /* that is *no* error */
 
 #include <string.h>

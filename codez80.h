@@ -2,6 +2,8 @@
 #define _CODEZ80_H
 /* codez80.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator Zilog Z80/180/380                                           */

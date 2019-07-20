@@ -1,5 +1,7 @@
 /* asmif.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Befehle zur bedingten Assemblierung                                       */
@@ -96,7 +98,7 @@ static void CodeIFDEF(Word Negate)
     IfExpr = 1;
   else
   {
-    Defined = IsSymbolDefined(ArgStr[1].Str);
+    Defined = IsSymbolDefined(&ArgStr[1]);
     if (IfAsm)
       strmaxcpy(ListLine, (Defined) ? "=>DEFINED" : "=>UNDEFINED", STRINGSIZE);
     if (!Negate)
@@ -121,7 +123,7 @@ static void CodeIFUSED(Word Negate)
     IfExpr = 1;
   else
   {
-    Used = IsSymbolUsed(ArgStr[1].Str);
+    Used = IsSymbolUsed(&ArgStr[1]);
     if (IfAsm)
       strmaxcpy(ListLine, (Used) ? "=>USED" : "=>UNUSED", STRINGSIZE);
     if (!Negate)

@@ -2,6 +2,8 @@
 #define _CHARDEFS_H
 /* chardefs.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* system-dependant definition of national-specific characters               */

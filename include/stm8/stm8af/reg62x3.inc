@@ -192,7 +192,7 @@ EEPROM_vect	label	$8068		; EOP/WR_PG_DIS
 ; Timer 6
 
 		include	"stm8/stm8s/tim6.inc"
-		__deftim6 $5340,1
+		__deftim6 $5340
 
 ;----------------------------------------------------------------------------
 ; A/D Converter 1

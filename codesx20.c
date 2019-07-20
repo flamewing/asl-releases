@@ -1,5 +1,7 @@
 /* codesx20.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Code Generator Parallax SX20                                              */
@@ -481,7 +483,7 @@ static void DecodeBIT(Word Code)
     *ListLine = '=';
     DissectBit_SX20(ListLine + 1, STRINGSIZE - 3, BitSymbol);
     PushLocHandle(-1);
-    EnterIntSymbol(LabPart.Str, BitSymbol, SegBData, False);
+    EnterIntSymbol(&LabPart, BitSymbol, SegBData, False);
     PopLocHandle();
     /* TODO: MakeUseList? */
   }

@@ -2,6 +2,8 @@
 #define _ASMDEF_H
 /* asmdef.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* global benutzte Variablen und Definitionen                                */
@@ -375,7 +377,7 @@ extern Boolean DoBranchExt;
 extern LargeWord RadixBase, OutRadixBase;
 
 extern tStrComp *ArgStr;
-extern StringPtr LOpPart;
+extern StringPtr pLOpPart;
 extern tStrComp LabPart, CommPart, ArgPart, OpPart, AttrPart;
 extern char AttrSplit;
 extern int ArgCnt;

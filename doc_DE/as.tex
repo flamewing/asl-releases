@@ -46,7 +46,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand M"arz 2019}
+{\large Stand Juli 2019}
 \end{raggedright}
 
 \clearpage
@@ -601,6 +601,8 @@ REGHC12.INC       & Registeradressen 68HC12 \\
 REGM16C.INC       & Registeradressen Mitsubishi M16C \\
 REGMSP.INC        & Registeradressen TI MSP430 \\
 REGS12Z.INC       & Register- \& Bitadressen S12Z-Familie \\
+REGST7.INC        & Register- \& Makrodefinitionen ST7 \\
+REGSTM8.INC       & Register- \& Makrodefinitionen STM8 \\
 REGST9.INC        & Register- \& Makrodefinitionen ST9 \\
 REGZ380.INC       & Registeradressen Z380 \\
 STDDEF04.INC      & Registeradressen 6804 \\
@@ -622,8 +624,6 @@ STDDEF60.INC      & Befehlsmakros \& Registeradressen \\
 STDDEF62.INC      & Registeradressen \& Makros ST6 \\
 STDDEF75.INC      & Registeradressen 75K0 \\
 STDDEF87.INC      & Register- \& Speicheradressen TLCS-870 \\
-STDDEF90.INC      & Register- \& Speicheradressen TLCS-90 \\
-STDDEF96.INC      & Register- \& Speicheradressen TLCS-900 \\
 \hline
 \end{tabular}\end{center}
 \caption{Standardumfang einer Bin"ardistribution - Teil 2
@@ -638,17 +638,25 @@ Datei             & Funktion \\
 \hline
 {\bf Verzeichnis INCLUDE} & \\
 \hline
+STDDEF90.INC      & Register- \& Speicheradressen TLCS-90 \\
+STDDEF96.INC      & Register- \& Speicheradressen TLCS-900 \\
 STDDEFXA.INC      & SFR-\& Bitadressen Philips XA \\
 STDDEFZ8.INC      & Registeradressen Z8-Familie \\
 REGSX20.INC       & Register- \& Bitadressen Parallax SX20/28 \\
 AVR/\*.INC        & Register- \& Bitadressen AVR-Familie \\
                   & (nicht direkt benutzen, REGAVR.INC \\
                   & inkludieren) \\
+COLDFIRE\/*.INC   & Register- \& Bitadressen ColdFire-Familie \\
+                  & (nicht direkt benutzen, REGCOLD.INC \\
+                  & inkludieren) \\
 S12Z\/*.INC       & Register- \& Bitadressen S12Z-Familie \\
                   & (nicht direkt benutzen, REGS12Z.INC \\
                   & inkludieren) \\
-COLDFIRE\/*.INC   & Register- \& Bitadressen ColdFire-Familie \\
-                  & (nicht direkt benutzen, REGCOLD.INC \\
+ST7\/*.INC        & Register- \& Bitadressen S78-Familie \\
+                  & (nicht direkt benutzen, REGST7.INC \\
+                  & inkludieren) \\
+STM8\/*.INC       & Register- \& Bitadressen STM8-Familie \\
+                  & (nicht direkt benutzen, REGSTM8.INC \\
                   & inkludieren) \\
 \hline
 \hline
@@ -3534,6 +3542,12 @@ welche Hardware jeweils vorhanden ist (analog zum 8051/52/515).
 %%-----------
 \begin{quote}
 aw) ST7 \\
+    ST72251G1, ST72251G2, ST72311J2, ST72311J4, \\
+    ST72321BR6, ST72321BR7, ST72321BR9, ST72325S4, \\
+    ST72325S6, ST72325J7, ST72325R9, ST72324J6, \\
+    ST72324K6, ST72324J4, ST72324K4, ST72324J2, \\
+    ST72324JK21, ST72325S4, ST72325J7, ST72325R9, \\
+    ST72521BR6, ST72521BM9 \\
     STM8 \\
     STM8S001J3, STM8S003F3, STM8S003K3, STM8S005C6,\\
     STM8S005K6, STM8S007C8, STM8S103F2, STM8S103F3,\\
@@ -3556,7 +3570,18 @@ aw) ST7 \\
     STM8L151R8, STM8L152R6, STM8L152C8, STM8L152K8,\\
     STM8L152M8, STM8L152R8, STM8L162M8, STM8L162R8,\\
     STM8AF6366, STM8AF6388, STM8AF6213, STM8AF6223,\\
-    STM8AF6226
+    STM8AF6226, STM8AF6246, STM8AF6248, STM8AF6266,\\
+    STM8AF6268, STM8AF6269, STM8AF6286, STM8AF6288,\\
+    STM8AF6289, STM8AF628A, STM8AF62A6, STM8AF62A8,\\
+    STM8AF62A9, STM8AF62AA, STM8AF5268, STM8AF5269,\\
+    STM8AF5286, STM8AF5288, STM8AF5289, STM8AF528A,\\
+    STM8AF52A6, STM8AF52A8, STM8AF52A9, STM8AF52AA,\\
+    STM8AL3136, STM8AL3138, STM8AL3146, STM8AL3148,\\
+    STM8AL3166, STM8AL3168, STM8AL3L46, STM8AL3L48,\\
+    STM8AL3L66, STM8AL3L68, STM8AL3188, STM8AL3189,\\
+    STM8AL318A, STM8AL3L88, STM8AL3L89, STM8AL3L8A,\\
+    STM8TL52F4, STM8TL52G4, STM8TL53C4, STM8TL53F4,\\
+    STM8TL53G4
 \end{quote}
 Der STM8-Kern erweitert den Adre"raum auf bis zu 16 MByte und f"uhrt
 eine ganze Reihe neuer Befehle ein.  Obwohl viele Befehle den
@@ -5225,8 +5250,7 @@ wenn AS das Argument als Gleitkommazahl erkennt).
 {\em G"ultigkeit: PIC}
 
 Dieser Befehl legt einen durch den Parameter spezifizierte
-Zahl von Nullworten (=NOPs) im Speicher ab. Es k"onnen maximal
-512 Nullen mit einem Befehl abgelegt werden.
+Zahl von Nullworten (=NOPs) im Speicher ab.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -5238,8 +5262,7 @@ Zahl von Nullworten (=NOPs) im Speicher ab. Es k"onnen maximal
 Mit diesen Befehlen kann ein gr"o"serer Block von Speicher (dessen L"ange
 in Bytes bzw. Worten der erste Parameter angibt) mit einer Byte- bzw.
 Wortkonstanten gef"ullt werden, die durch den zweiten Parameter angegeben
-wird.  Die Maximalgr"o"se des Blocks betr"agt 1024 Elemente f"ur
-\tty{FB} bzw. 512 Elemente f"ur \tty{FW}.
+wird.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -10297,7 +10320,7 @@ bzgl. Dateinamen.  Im Gegensatz zu BIND wird die Zieldatei aber als
 Hexfile ausgegeben, d.h. als eine Folge von Zeilen, die den Code als
 ASCII-Hexzahlen enthalten.
 \par
-P2HEX kennt 8 verschiedene Zielformate, die "uber den
+P2HEX kennt neun verschiedene Zielformate, die "uber den
 Kommandozeilenparameter \bb{F} ausgew"ahlt werden k"onnen:
 \begin{itemize}
 \item{Motorola S-Record (\tty{-F Moto})}
@@ -10309,6 +10332,7 @@ Kommandozeilenparameter \bb{F} ausgew"ahlt werden k"onnen:
 \item{Texas Instruments DSK (\tty{-F DSK})}
 \item{Atmel AVR Generic (\tty{-F Atmel}, siehe \cite{AVRObj})}
 \item{Lattice Mico8 prom\_init (\tty{-F Mico8})}
+\item{C-Arrays, zum Inkludieren in C(++)-Quelldateien (\tty{-F C})}
 \end{itemize}
 Wird kein Zielformat explizit angegeben, so w"ahlt P2HEX anhand des
 Prozessortyps automatisch eines aus, und zwar S-Records f"ur Motorola-
@@ -10370,10 +10394,34 @@ Programm bekannt ist, kann man ihn mit der Option
 \end{verbatim}
 unterdr"ucken.
 \par
+Das C-Format f"allt insofern aus dem Rahmen, als da"s es immer explizit 
+ausgew"ahlt werden mu"s.  Die Ausgabedatei stellt im Prinzip ein vollst"andiges
+St"uck C- oder C++-Code dar, das die Daten als eine Liste von C-Arrays
+enth"alt.  Neben den eigentlichen Daten wird noch eine Liste von Deskriptoren
+geschrieben, die Start, L"ange und Ende der Datenbl"ocke 
+beschreiben.  Was diese Deskriptoren enthalten, kann mit der Option
+\begin{verbatim}
+ -cformat <Format>
+\end{verbatim}
+bestimmt werden.  Jeder Buchstabe in \verb!Format! legt ein Element des
+Deskriptors fest:
+\begin{itemize}
+\item{Ein \verb!d! oder \verb!D! definiert einen Zeiger auf die Daten.
+      "Uber den Gro"s- oder Kleinbuchstaben wird festgelegt, ob die Hex-
+      Konstanten Gro"s- oder Kleinbuchstaben verwenden sollen.}
+\item{Ein \verb!s! oder \verb!S! definiert die Startadresse der Daten,
+      wahlweise vom Typ {\em unsigned} oder {\em unsigned long}.}
+\item{Ein \verb!l! oder \verb!L! definiert die L"ange der Daten,
+      wahlweise vom Typ {\em unsigned} oder {\em unsigned long}.}
+\item{Ein \verb!e! oder \verb!E! definiert die Endadresse der Daten,
+      d.h. die letzte von den Daten benutzte Adresse,
+      wahlweise vom Typ {\em unsigned} oder {\em unsigned long}.}
+\end{itemize}
+\par
 Finden sich Code-Records verschiedener Prozessoren in einer Quelldatei,
 so erscheinen die verschiedenen Hexformate auch gemischt in der Zieldatei
 --- es empfiehlt sich also dringend, von der Filterfunktion Gebrauch zu
-machen.
+machen, oder ein fixes Format "uber die \verb!-F!-Option festzulegen.
 \par
 Neben dem Codetypenfilter kennt P2HEX noch ein Adre"sfilter, das n"utzlich
 ist, falls der Code auf mehrere EPROMs verteilt werden mu"s:

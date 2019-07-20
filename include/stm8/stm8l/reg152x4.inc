@@ -24,7 +24,7 @@ LCD_vect	label	$8048		; LCD interrupt
 ; LCD Controller
 
 		include "lcd.inc"
-		__deflcd $5400,28,14
+		__deflcd $5400,28,14,0
 
                 restore                 ; allow again
 

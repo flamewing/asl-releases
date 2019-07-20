@@ -1,55 +1,12 @@
 /* tex2html.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Konverter TeX-->HTML                                                      */
 /*                                                                           */
-/* Historie: 2. 4.1998 Grundsteinlegung (Transfer von tex2doc.c)             */
-/*           5. 4.1998 Sonderzeichen, Fonts, <>                              */
-/*           6. 4.1998 geordnete Listen                                      */
-/*          20. 6.1998 Ausrichtung links/rechts/zentriert                    */
-/*                     Ueberlagerte Textattribute                            */
-/*                     mehrspaltiger Index                                   */
-/*           5. 7.1998 Korrekturen in der Index-Ausgabe                      */
-/*          11. 7.1998 weitere Landessonderzeichen                           */
-/*          13. 7.1998 Cedilla                                               */
-/*          12. 9.1998 input-Statement                                       */
-/*          12. 1.1999 andere Kapitelhierarchie fuer article                 */
-/*          28. 3.1999 TeX-Kommando Huge ergaenzt                            */
-/*          14. 6.1999 mit optionaler Aufspaltung in Subdateien begonnen     */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: tex2html.c,v 1.8 2017/02/26 16:20:46 alfred Exp $                   */
-/*****************************************************************************
- * $Log: tex2html.c,v $
- * Revision 1.8  2017/02/26 16:20:46  alfred
- * - silence compiler warnings about unused function results
- *
- * Revision 1.7  2014/12/05 08:06:29  alfred
- * - silence const warnings
- *
- * Revision 1.6  2014/12/02 17:26:30  alfred
- * - rework to current style
- *
- * Revision 1.5  2014/03/08 21:06:00  alfred
- * - regard \*
- *
- * Revision 1.4  2010/08/27 14:52:43  alfred
- * - some more overlapping strcpy() cleanups
- *
- * Revision 1.3  2010/04/17 13:14:24  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.2  2004/11/20 21:32:27  alfred
- * - adaptions for MinGW
- *
- * Revision 1.1  2003/11/06 02:49:25  alfred
- * - recreated
- *
- * Revision 1.3  2003/08/16 17:53:48  alfred
- * - updated to digest 2e header
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include "asmitree.h"
@@ -3114,7 +3071,8 @@ int main(int argc, char **argv)
     }
     else if (!strcmp(Line, "$"))
     {
-      if ((InMathMode = (!InMathMode)))
+      InMathMode = !InMathMode;
+      if (InMathMode)
       {
         strcpy(BackSepString, SepString);
         ReadToken(Line);

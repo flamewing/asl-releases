@@ -1,5 +1,7 @@
 /* code8x30x.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator Signetics 8X30x                                             */
@@ -514,7 +516,7 @@ static void DecodeLIV_RIV(Word Code)
        if (GetLen(&ArgStr[3], &Len))
        {
          PushLocHandle(-1);
-         EnterIntSymbol(LabPart.Str, Code | (Adr << 16) | (Ofs << 8) | (Len & 7), SegNone, False);
+         EnterIntSymbol(&LabPart, Code | (Adr << 16) | (Ofs << 8) | (Len & 7), SegNone, False);
          PopLocHandle();
        }
     }

@@ -1,5 +1,7 @@
 /* codest7.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator SGS-Thomson ST7/STM8                                        */
@@ -8,7 +10,7 @@
 
 /* TODO:
  *
- * - implement actual CPU types instead of generic ST7/STM8
+ * - implement actual CPU types instead of generic ST7
  */
 
 #include "stdinc.h"
@@ -934,14 +936,14 @@ static void DissectBit_ST7(char *pDest, int DestSize, LargeWord Inp)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     ExpandST7Bit(const char *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
+ * \fn     ExpandST7Bit(const tStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
  * \brief  expands bit definition when a structure is instantiated
  * \param  pVarName desired symbol name
  * \param  pStructElem element definition
  * \param  Base base address of instantiated structure
  * ------------------------------------------------------------------------ */
 
-static void ExpandST7Bit(const char *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
+static void ExpandST7Bit(const tStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
 {
   LongWord Address = Base + pStructElem->Offset;
 
@@ -2202,7 +2204,7 @@ static void DecodeBIT(Word Code)
       *ListLine = '=';
       DissectBit_ST7(ListLine + 1, STRINGSIZE - 3, BitSpec);
       PushLocHandle(-1);
-      EnterIntSymbol(LabPart.Str, BitSpec, SegBData, False);
+      EnterIntSymbol(&LabPart, BitSpec, SegBData, False);
       PopLocHandle();
       /* TODO: MakeUseList? */
     }
@@ -2425,6 +2427,25 @@ static void SwitchTo_ST7(void *pUser)
 static const tCPUProps CPUProps[] =
 {
   { "ST7"         ,  Int16, eCoreST7  },
+  { "ST72251G1"   ,  Int16, eCoreST7  },
+  { "ST72251G2"   ,  Int16, eCoreST7  },
+  { "ST72311J2"   ,  Int16, eCoreST7  },
+  { "ST72311J4"   ,  Int16, eCoreST7  },
+  { "ST72321BR6"  ,  Int16, eCoreST7  },
+  { "ST72321BR7"  ,  Int16, eCoreST7  },
+  { "ST72321BR9"  ,  Int16, eCoreST7  },
+  { "ST72324J6"   ,  Int16, eCoreST7  },
+  { "ST72324K6"   ,  Int16, eCoreST7  },
+  { "ST72324J4"   ,  Int16, eCoreST7  },
+  { "ST72324K4"   ,  Int16, eCoreST7  },
+  { "ST72324J2"   ,  Int16, eCoreST7  },
+  { "ST72324K2"   ,  Int16, eCoreST7  },
+  { "ST72325S4"   ,  Int16, eCoreST7  },
+  { "ST72325S6"   ,  Int16, eCoreST7  },
+  { "ST72325J7"   ,  Int16, eCoreST7  },
+  { "ST72325R9"   ,  Int16, eCoreST7  },
+  { "ST72521BR6"  ,  Int16, eCoreST7  },
+  { "ST72521BM9"  ,  Int16, eCoreST7  },
   { "STM8"        ,  Int24, eCoreSTM8 },
   { "STM8S001J3"  ,  Int16, eCoreSTM8 },
   { "STM8S003F3"  ,  Int16, eCoreSTM8 },
@@ -2511,6 +2532,50 @@ static const tCPUProps CPUProps[] =
   { "STM8AF6213"  ,  Int16, eCoreSTM8 },
   { "STM8AF6223"  ,  Int16, eCoreSTM8 },
   { "STM8AF6226"  ,  Int16, eCoreSTM8 },
+  { "STM8AF6246"  ,  Int16, eCoreSTM8 },
+  { "STM8AF6248"  ,  Int16, eCoreSTM8 },
+  { "STM8AF6266"  ,  Int16, eCoreSTM8 },
+  { "STM8AF6268"  ,  Int16, eCoreSTM8 },
+  { "STM8AF6269"  ,  Int16, eCoreSTM8 },
+  { "STM8AF6286"  ,  Int24, eCoreSTM8 },
+  { "STM8AF6288"  ,  Int24, eCoreSTM8 },
+  { "STM8AF6289"  ,  Int24, eCoreSTM8 },
+  { "STM8AF628A"  ,  Int24, eCoreSTM8 },
+  { "STM8AF62A6"  ,  Int24, eCoreSTM8 },
+  { "STM8AF62A8"  ,  Int24, eCoreSTM8 },
+  { "STM8AF62A9"  ,  Int24, eCoreSTM8 },
+  { "STM8AF62AA"  ,  Int24, eCoreSTM8 },
+  { "STM8AF5268"  ,  Int16, eCoreSTM8 },
+  { "STM8AF5269"  ,  Int16, eCoreSTM8 },
+  { "STM8AF5286"  ,  Int24, eCoreSTM8 },
+  { "STM8AF5288"  ,  Int24, eCoreSTM8 },
+  { "STM8AF5289"  ,  Int24, eCoreSTM8 },
+  { "STM8AF528A"  ,  Int24, eCoreSTM8 },
+  { "STM8AF52A6"  ,  Int24, eCoreSTM8 },
+  { "STM8AF52A8"  ,  Int24, eCoreSTM8 },
+  { "STM8AF52A9"  ,  Int24, eCoreSTM8 },
+  { "STM8AF52AA"  ,  Int24, eCoreSTM8 },
+  { "STM8AL3136"  ,  Int16, eCoreSTM8 },
+  { "STM8AL3138"  ,  Int16, eCoreSTM8 },
+  { "STM8AL3146"  ,  Int16, eCoreSTM8 },
+  { "STM8AL3148"  ,  Int16, eCoreSTM8 },
+  { "STM8AL3166"  ,  Int16, eCoreSTM8 },
+  { "STM8AL3168"  ,  Int16, eCoreSTM8 },
+  { "STM8AL3L46"  ,  Int16, eCoreSTM8 },
+  { "STM8AL3L48"  ,  Int16, eCoreSTM8 },
+  { "STM8AL3L66"  ,  Int16, eCoreSTM8 },
+  { "STM8AL3L68"  ,  Int16, eCoreSTM8 },
+  { "STM8AL3188"  ,  Int24, eCoreSTM8 },
+  { "STM8AL3189"  ,  Int24, eCoreSTM8 },
+  { "STM8AL318A"  ,  Int24, eCoreSTM8 },
+  { "STM8AL3L88"  ,  Int24, eCoreSTM8 },
+  { "STM8AL3L89"  ,  Int24, eCoreSTM8 },
+  { "STM8AL3L8A"  ,  Int24, eCoreSTM8 },
+  { "STM8TL52F4"  ,  Int16, eCoreSTM8 },
+  { "STM8TL52G4"  ,  Int16, eCoreSTM8 },
+  { "STM8TL53C4"  ,  Int16, eCoreSTM8 },
+  { "STM8TL53F4"  ,  Int16, eCoreSTM8 },
+  { "STM8TL53G4"  ,  Int16, eCoreSTM8 },
   { NULL          ,  UInt1, 0         },
 };
 

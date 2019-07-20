@@ -2,6 +2,8 @@
 #define _STRUTIL_H
 /* strutil.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* haeufig benoetigte String-Funktionen                                      */
@@ -27,6 +29,8 @@ extern void HexBlankString(char *pDest, unsigned DestSize, LargeWord i, Byte Ste
 extern char *LargeString(char *pDest, LargeInt i);
 
 extern char *as_strdup(const char *s);
+
+extern int as_snprintf(char *pDest, int DestSize, const char *pFormat, ...);
 
 #ifdef NEEDS_CASECMP
 extern int strcasecmp(const char *src1, const char *src2);

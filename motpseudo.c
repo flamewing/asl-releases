@@ -1,5 +1,7 @@
 /* motpseudo.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS                                                                        */
 /*                                                                           */
 /* Commonly Used Motorola-Style Pseudo Instructions                          */
@@ -196,7 +198,7 @@ static void DecodeBYT(Word Index)
       if (SpaceFlag == 1)
         DontPrint = True;
       if (*LabPart.Str)
-        SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize8Bit);
+        SetSymbolOrStructElemSize(&LabPart, eSymbolSize8Bit);
     }
   }
 }
@@ -335,7 +337,7 @@ static void DecodeADR(Word Index)
       if (SpaceFlag)
         DontPrint = True;
       if (*LabPart.Str)
-        SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize16Bit);
+        SetSymbolOrStructElemSize(&LabPart, eSymbolSize16Bit);
     }
   }
 }
@@ -388,7 +390,7 @@ static void DecodeFCC(Word Index)
     if (!OK)
       CodeLen = 0;
     else if (*LabPart.Str)
-      SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize8Bit);
+      SetSymbolOrStructElemSize(&LabPart, eSymbolSize8Bit);
   }
 }
 
@@ -412,7 +414,7 @@ static void DecodeDFS(Word Index)
         WrError(ErrNum_NullResMem);
       BookKeeping();
       if (*LabPart.Str)
-        SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize8Bit);
+        SetSymbolOrStructElemSize(&LabPart, eSymbolSize8Bit);
     }
   }
 }
@@ -995,7 +997,7 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
       }
     }
     if (*LabPart.Str)
-      SetSymbolOrStructElemSize(LabPart.Str, OpSize);
+      SetSymbolOrStructElemSize(&LabPart, OpSize);
     return True;
   }
 
@@ -1041,7 +1043,7 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
       }
     }
     if (*LabPart.Str)
-      SetSymbolOrStructElemSize(LabPart.Str, OpSize);
+      SetSymbolOrStructElemSize(&LabPart, OpSize);
     return True;
   }
 

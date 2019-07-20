@@ -1,25 +1,11 @@
 /* deco87c800.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /*                                                                           */
 /* DissectorTLCS-870                                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: deco87c800.c,v 1.4 2015/02/07 16:31:51 alfred Exp $                  */
-/*****************************************************************************
- * $Log: deco87c800.c,v $
- * Revision 1.4  2015/02/07 16:31:51  alfred
- * - complete TLCs-870 instruction set
- *
- * Revision 1.3  2015/02/01 21:09:37  alfred
- * - one more...
- *
- * Revision 1.2  2015/02/01 20:44:31  alfred
- * - added some more instructions
- *
- * Revision 1.1  2015/01/26 22:19:09  alfred
- * - add more instructions to decoder
- *
- *****************************************************************************/
 
 #include "stdinc.h" 
 #include <ctype.h>

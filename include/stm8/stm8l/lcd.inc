@@ -14,7 +14,7 @@ __stm8llcdinc	equ	1
 ;*                                                                          *
 ;****************************************************************************
 
-__deflcd	macro	Base,NumSegs,NumRAM
+__deflcd	macro	Base,NumSegs,NumRAM,HasCR4
 LCD_CR1		label	Base+$00	; LCD control register 1
 LCD_BLINK	bfield	LCD_CR1,6,2	;  Blink enable
 LCD_BLINKF	bfield	LCD_CR1,3,3	;  Blink frequency
@@ -34,6 +34,12 @@ LCD_DEAD	bfield	LCD_CR3,0,3	;  Dead time enable
 LCD_FRQ 	label	Base+$03	; LCD frequency selection register
 LCD_PS		bfield	LCD_FRQ,4,4	;  CLK 16-bit prescaler
 LCD_DIV		bfield	LCD_FRQ,0,4	;  Divider from 16 to 31
+		if	HasCR4
+LCD_CR4		 label	$542f		; LCD control register 4
+LCD_PAGE_COM	 bit	LCD_CR4,2	;  LCD_RAM page selector
+LCD_DUTY8	 bit	LCD_CR4,1	;  1/8 duty enable
+LCDB4		 bit	LCD_CR4,0	;  1/4 bias enable
+		endif
 __I		set	0
 		rept	NumSegs
 		if	(__I&7)==0

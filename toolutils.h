@@ -2,15 +2,9 @@
 #define _TOOLUTILS_H
 /* toolutils.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
-/*                                                                           */
-/* Unterroutinen fuer die AS-Tools                                           */
-/*                                                                           */
-/* Historie: 31. 5.1996 Grundsteinlegung                                     */
-/*           30. 5.1999 Adresswildcard-Funktion                              */
-/*           22. 1.2000 Funktion zum Lesen von RelocInfos                    */
-/*           26. 6.2000 added exports                                        */
-/*            4. 7.2000 ReadRecordHeader transports record type              */
 /*                                                                           */
 /*****************************************************************************/
 

@@ -2,6 +2,8 @@
 #define _CODEST7_H
 /* codest7.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator SGS-Thomson ST7                                             */

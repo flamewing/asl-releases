@@ -1,5 +1,7 @@
 /* code3254x.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* Macro Assembler AS                                                        */
 /*                                                                           */
 /* Code Generator for TI C54x DSP devices                                    */

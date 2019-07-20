@@ -1,5 +1,7 @@
 /* codekcp3.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator Xilinx kcpsm3                                               */
@@ -135,7 +137,7 @@ static void DecodeConstant(Word Index)
       t.Typ = TempInt;
       SetListLineVal(&t);
       PushLocHandle(-1); 
-      EnterIntSymbol(ArgStr[1].Str, t.Contents.Int, SegNone, False);
+      EnterIntSymbol(&ArgStr[1], t.Contents.Int, SegNone, False);
       PopLocHandle();
     }
   }

@@ -1,5 +1,7 @@
 /* tipseudo.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS                                                                        */
 /*                                                                           */
 /* Commonly Used TI-Style Pseudo Instructionso-Befehle                       */
@@ -34,7 +36,7 @@ static void define_untyped_label(void)
   if (LabPart.Str[0])
   {
     PushLocHandle(-1);
-    EnterIntSymbol(LabPart.Str, EProgCounter(), SegNone, False);
+    EnterIntSymbol(&LabPart, EProgCounter(), SegNone, False);
     PopLocHandle();
   }
 }

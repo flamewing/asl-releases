@@ -1,8 +1,9 @@
 #ifndef _ENTRYADDRESS_H
 #define _ENTRYADDRESS_H
-
 /* entryaddress.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Maintain list of possible entry addresses                                 */

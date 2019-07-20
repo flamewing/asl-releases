@@ -2,6 +2,8 @@
 #define _SYSDEFS_H
 /* sysdefs.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS Port                                                                   */
 /*                                                                           */
 /* system-specific definitions                                               */

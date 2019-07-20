@@ -1,5 +1,7 @@
 /* code370.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator 370-Familie                                                 */
@@ -367,7 +369,7 @@ static void DecodeDBIT(Word Code)
         char Str[30];
 
         PushLocHandle(-1);
-        EnterIntSymbol(LabPart.Str, (((LongInt)Bit) << 16) + Adr, SegNone, False);
+        EnterIntSymbol(&LabPart, (((LongInt)Bit) << 16) + Adr, SegNone, False);
         HexString(Str, sizeof(Str), Adr, 0);
         sprintf(ListLine, "=%s:%c", Str, Bit + '0');
         PopLocHandle();

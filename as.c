@@ -1,5 +1,7 @@
 /* as.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Hauptmodul                                                                */
@@ -323,12 +325,12 @@ static void MakeList(void)
     else
     {
       sprintf(Tmp, IntegerFormat, IncDepth);
-      sprintf(h2, "(%s)", Tmp);
+      as_snprintf(h2, sizeof(h2), "(%s)", Tmp);
     }
     if (ListMask & ListMask_LineNums)
     {
       sprintf(h3, Integ32Format, CurrLine);
-      sprintf(h, "%5s/", h3);
+      as_snprintf(h, sizeof(h), "%5s/", h3);
       strmaxcat(h2, h, sizeof(h));
     }
     strmaxcpy(h, h2, sizeof(h));
@@ -726,8 +728,11 @@ static Boolean ReadMacro_SearchSect(char *Test_O, char *Comp, Boolean *Erg, Long
   }
   else if (!strcasecmp(Test, Comp))
   {
+    tStrComp TmpComp;
+
     *Erg = True;
-    return (IdentifySection(Sect, Section));
+    StrCompMkTemp(&TmpComp, Sect);
+    return (IdentifySection(&TmpComp, Section));
   }
   else
     return False;
@@ -832,6 +837,7 @@ static void ReadMacro(void)
   PMacroRec OneMacro;
   tReadMacroContext Context;
   LongInt HSect;
+  String MacroName;
 
   WasMACRO = True;
 
@@ -843,9 +849,9 @@ static void ReadMacro(void)
 
   if (PassNo != 1)
     Context.ErrFlag = True;
-  else if (!ExpandSymbol(LabPart.Str))
+  else if (!ExpandStrSymbol(MacroName, sizeof(MacroName), &LabPart))
     Context.ErrFlag = True;
-  else if (!ChkSymbName(LabPart.Str))
+  else if (!ChkSymbName(MacroName))
   {
     WrXError(ErrNum_InvSymName, LabPart.Str);
     Context.ErrFlag = True;
@@ -883,7 +889,7 @@ static void ReadMacro(void)
 
   if (Context.pOutputTag->DoGlobCopy)
   {
-    strmaxcpy(Context.pOutputTag->GName, LabPart.Str, STRINGSIZE);
+    strmaxcpy(Context.pOutputTag->GName, MacroName, STRINGSIZE);
     RunSection = SectionStack;
     HSect = MomSectionHandle;
     while ((HSect != Context.pOutputTag->GlobSect) && (RunSection != NULL))
@@ -909,13 +915,13 @@ static void ReadMacro(void)
   {
     errno = 0;
     fprintf(MacroFile, "%s MACRO %s\n",
-            Context.pOutputTag->DoGlobCopy ? Context.pOutputTag->GName : LabPart.Str,
+            Context.pOutputTag->DoGlobCopy ? Context.pOutputTag->GName : MacroName,
             Context.PList);
     ChkIO(ErrNum_FileWriteError);
   }
 
   OneMacro->UseCounter = 0;
-  OneMacro->Name = as_strdup(LabPart.Str);
+  OneMacro->Name = as_strdup(MacroName);
   OneMacro->ParamCount = Context.ParamCount;
   OneMacro->FirstLine = NULL;
   OneMacro->LstMacroExpMod = Context.LstMacroExpMod;
@@ -2320,25 +2326,25 @@ Boolean HasLabel(void)
   }
 }
 
-void HandleLabel(const char *Name, LargeWord Value)
+void HandleLabel(const tStrComp *pName, LargeWord Value)
 {
   /* structure element ? */
 
   if (pInnermostNamedStruct)
   {
-    PStructElem pElement = CreateStructElem(Name);
+    PStructElem pElement = CreateStructElem(pName->Str);
 
     pElement->Offset = Value;
     AddStructElem(pInnermostNamedStruct->StructRec, pElement);
-    AddStructSymbol(Name, Value);
+    AddStructSymbol(pName->Str, Value);
   }
 
   /* normal label */
 
   else if (RelSegs)
-    EnterRelSymbol(Name, Value, ActPC, False);
+    EnterRelSymbol(pName, Value, ActPC, False);
   else
-    EnterIntSymbolWithFlags(Name, Value, ActPC, False,
+    EnterIntSymbolWithFlags(pName, Value, ActPC, False,
                             Value == AfterBSRAddr ? NextLabelFlag_AfterBSR : 0);
 }
 
@@ -2357,14 +2363,15 @@ static void Produce_Code(void)
   if (*OpPart.Str == '!')
   {
     SearchMacros = False;
-    strmov(OpPart.Str, OpPart.Str + 1);
+    StrCompCutLeft(&OpPart, 1);
+    strcpy(pLOpPart, OpPart.Str);
   }
   else
   {
     SearchMacros = True;
-    ExpandSymbol(OpPart.Str);
+    ExpandStrSymbol(pLOpPart, STRINGSIZE, &OpPart);
+    strcpy(OpPart.Str, pLOpPart);
   }
-  strcpy(LOpPart, OpPart.Str);
   NLS_UpString(OpPart.Str);
 
   /* Prozessor eingehaengt ? */
@@ -2381,7 +2388,7 @@ static void Produce_Code(void)
   if (IsMacro)
     WasMACRO = True;
   if (!IsMacro)
-    IsStruct = FoundStruct(&OneStruct, LOpPart);
+    IsStruct = FoundStruct(&OneStruct, pLOpPart);
 
   /* no longer at an address right after a BSR? */
 
@@ -2393,7 +2400,7 @@ static void Produce_Code(void)
   if ((IfAsm) && ((!IsMacro) || (!OneMacro->LocIntLabel)))
   {
     if (HasLabel())
-      HandleLabel(LabPart.Str, EProgCounter());
+      HandleLabel(&LabPart, EProgCounter());
   }
 
   Found = False;
@@ -2893,6 +2900,7 @@ static void AssembleFile_InitPass(void)
   static char DateS[31], TimeS[31];
   int z;
   String ArchVal;
+  tStrComp TmpComp;
 
   dbgentry("AssembleFile_InitPass");
 
@@ -2953,27 +2961,34 @@ static void AssembleFile_InitPass(void)
   ResetSymbolDefines();
   ResetMacroDefines();
   ResetStructDefines();
-  EnterIntSymbol(FlagTrueName, 1, 0, True);
-  EnterIntSymbol(FlagFalseName, 0, 0, True);
-  EnterFloatSymbol(PiName, 4.0 * atan(1.0), True);
-  EnterIntSymbol(VerName, VerNo, 0, True);
+  StrCompMkTemp(&TmpComp, FlagTrueName); EnterIntSymbol(&TmpComp, 1, 0, True);
+  StrCompMkTemp(&TmpComp, FlagFalseName); EnterIntSymbol(&TmpComp, 0, 0, True);
+  StrCompMkTemp(&TmpComp, PiName); EnterFloatSymbol(&TmpComp, 4.0 * atan(1.0), True);
+  StrCompMkTemp(&TmpComp, VerName); EnterIntSymbol(&TmpComp, VerNo, 0, True);
   sprintf(ArchVal, "%s-%s", ARCHPRNAME, ARCHSYSNAME);
-  EnterStringSymbol(ArchName, ArchVal, True);
+  StrCompMkTemp(&TmpComp, ArchName); EnterStringSymbol(&TmpComp, ArchVal, True);
+  StrCompMkTemp(&TmpComp, Has64Name);
 #ifdef HAS64
-  EnterIntSymbol(Has64Name, 1, 0, True);
+  EnterIntSymbol(&TmpComp, 1, 0, True);
 #else
-  EnterIntSymbol(Has64Name, 0, 0, True);
+  EnterIntSymbol(&TmpComp, 0, 0, True);
 #endif
-  EnterIntSymbol(CaseSensName, Ord(CaseSensitive), 0, True);
+  StrCompMkTemp(&TmpComp, CaseSensName); EnterIntSymbol(&TmpComp, Ord(CaseSensitive), 0, True);
   if (PassNo == 0)
   {
     NLS_CurrDateString(DateS);
     NLS_CurrTimeString(False, TimeS);
   }
   if (!FindDefSymbol(DateName))
-    EnterStringSymbol(DateName, DateS, True);
+  {
+    StrCompMkTemp(&TmpComp, DateName);
+    EnterStringSymbol(&TmpComp, DateS, True);
+  }
   if (!FindDefSymbol(TimeName))
-    EnterStringSymbol(TimeName, TimeS, True);
+  {
+    StrCompMkTemp(&TmpComp, TimeName);
+    EnterStringSymbol(&TmpComp, TimeS, True);
+  }
 
   SetFlag(&DoPadding, DoPaddingName, True);
 
@@ -2989,11 +3004,11 @@ static void AssembleFile_InitPass(void)
   SetFlag(&FPUAvail, FPUAvailName, False);
   SetFlag(&Maximum, MaximumName, False);
   SetFlag(&DoBranchExt, BranchExtName, False);
-  EnterIntSymbol(ListOnName, ListOn = 1, SegNone, True);
+  StrCompMkTemp(&TmpComp, ListOnName); EnterIntSymbol(&TmpComp, ListOn = 1, SegNone, True);
   SetLstMacroExp(eLstMacroExpAll);
   InitLstMacroExpMod(&LstMacroExpOverride);
   SetFlag(&RelaxedMode, RelaxedName, False);
-  EnterIntSymbol(NestMaxName, NestMax = DEF_NESTMAX, SegNone, True);
+  StrCompMkTemp(&TmpComp, NestMaxName); EnterIntSymbol(&TmpComp, NestMax = DEF_NESTMAX, SegNone, True);
   CopyDefSymbols();
 
   /* initialize counter for temp symbols here after implicit symbols

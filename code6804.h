@@ -2,6 +2,8 @@
 #define _CODE6804_H
 /* code6804.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* AS-Codeenerator Motorola/ST 6804                                          */

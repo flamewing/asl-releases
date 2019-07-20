@@ -2,6 +2,8 @@
 #define _ASMPARS_H
 /* asmpars.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Verwaltung von Symbolen und das ganze Drumherum...                        */
@@ -9,6 +11,7 @@
 /*****************************************************************************/
 
 #include "symbolsize.h"
+#include "tempresult.h"
 
 typedef enum
 {
@@ -90,30 +93,26 @@ extern Boolean RangeCheck(LargeInt Wert, IntType Typ);
 extern Boolean FloatRangeCheck(Double Wert, FloatType Typ);
 
 
-extern Boolean IdentifySection(char *Name, LongInt *Erg);
+extern Boolean IdentifySection(const struct sStrComp *pName, LongInt *Erg);
 
 
-extern Boolean ExpandSymbol(char *Name);
+extern Boolean ExpandStrSymbol(char *pDest, unsigned DestSize, const tStrComp *pSrc);
 
-extern void EnterIntSymbolWithFlags(const char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange, tSymbolFlags Flags);
+extern void EnterIntSymbolWithFlags(const struct sStrComp *pName, LargeInt Wert, Byte Typ, Boolean MayChange, tSymbolFlags Flags);
 
-#define EnterIntSymbol(Name_O, Wert, Typ, MayChange) EnterIntSymbolWithFlags(Name_O, Wert, Typ, MayChange, 0)
+#define EnterIntSymbol(pName, Wert, Typ, MayChange) EnterIntSymbolWithFlags(pName, Wert, Typ, MayChange, 0)
 
-extern void EnterExtSymbol(const char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange);
+extern void EnterExtSymbol(const struct sStrComp *pName, LargeInt Wert, Byte Typ, Boolean MayChange);
 
-extern void EnterRelSymbol(const char *Name_O, LargeInt Wert, Byte Typ, Boolean MayChange);
+extern void EnterRelSymbol(const struct sStrComp *pName, LargeInt Wert, Byte Typ, Boolean MayChange);
 
-extern void EnterFloatSymbol(const char *Name_O, Double Wert, Boolean MayChange);
+extern void EnterFloatSymbol(const struct sStrComp *pName, Double Wert, Boolean MayChange);
 
-extern void EnterStringSymbol(const char *Name_O, const char *pValue, Boolean MayChange);
+extern void EnterStringSymbol(const struct sStrComp *pName, const char *pValue, Boolean MayChange);
 
-extern void EnterDynStringSymbol(const char *Name_O, const tDynString *pValue, Boolean MayChange);
+extern void EnterDynStringSymbol(const struct sStrComp *pName, const tDynString *pValue, Boolean MayChange);
 
-extern Boolean GetIntSymbol(const char *Name, LargeInt *Wert, struct sRelocEntry **Relocs);
-
-extern Boolean GetFloatSymbol(const char *Name, Double *Wert);
-
-extern Boolean GetStringSymbol(const char *Name, char *Wert);
+extern void LookupSymbol(const struct sStrComp *pName, TempResult *pValue, Boolean WantRelocs, TempType ReqType);
 
 extern void PrintSymbolList(void);
 
@@ -130,21 +129,17 @@ extern void ResetSymbolDefines(void);
 extern void PrintSymbolDepth(void);
 
 
-extern void SetSymbolOrStructElemSize(const char *Name, ShortInt Size);
+extern void SetSymbolOrStructElemSize(const struct sStrComp *pName, ShortInt Size);
 
-extern ShortInt GetSymbolSize(const char *Name);
+extern ShortInt GetSymbolSize(const struct sStrComp *pName);
 
-extern Boolean IsSymbolFloat(const char *Name);
+extern Boolean IsSymbolDefined(const struct sStrComp *pName);
 
-extern Boolean IsSymbolString(const char *Name);
+extern Boolean IsSymbolUsed(const struct sStrComp *pName);
 
-extern Boolean IsSymbolDefined(const char *Name);
+extern Boolean IsSymbolChangeable(const struct sStrComp *pName);
 
-extern Boolean IsSymbolUsed(const char *Name);
-
-extern Boolean IsSymbolChangeable(const char *Name);
-
-extern Integer GetSymbolType(const char *Name);
+extern Integer GetSymbolType(const struct sStrComp *pName);
 
 extern void EvalExpression(const char *pExpr, TempResult *Erg);
 
@@ -161,9 +156,9 @@ extern Double EvalStrFloatExpression(const struct sStrComp *pExpr, FloatType Typ
 extern void EvalStrStringExpression(const struct sStrComp *pExpr, Boolean *pResult, char *pEvalResult);
 
 
-extern Boolean PushSymbol(char *SymName_O, char *StackName_O);
+extern Boolean PushSymbol(const struct sStrComp *pSymName, const struct sStrComp *pStackName);
 
-extern Boolean PopSymbol(char *SymName_O, char *StackName_O);
+extern Boolean PopSymbol(const struct sStrComp *pSymName, const struct sStrComp *pStackName);
 
 extern void ClearStacks(void);
  

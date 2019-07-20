@@ -2,6 +2,8 @@
 #define _DATATYPES_H
 /* datatypes.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Port                                                                   */
 /*                                                                           */
 /* define some handy types & constants                                       */

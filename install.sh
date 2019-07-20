@@ -40,7 +40,7 @@ fi
 if [ "${INCPATH}" != "" ]; then
  ${MKDIRHIER} ${INCPATH}
  chmod 755 ${INCPATH}
- for path in . avr s12z s12z/vh s12z/vc s12z/vca coldfire stm8 stm8/stm8s stm8/stm8l stm8/stm8af; do
+ for path in . avr s12z s12z/vh s12z/vc s12z/vca coldfire st7 stm8 stm8/stm8s stm8/stm8l stm8/stm8af stm8/stm8al stm8/stm8t; do
   mkdir ${INCPATH}/${path}
   chmod 755 ${INCPATH}/${path}
   for file in include/${path}/*.inc; do

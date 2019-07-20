@@ -14,11 +14,11 @@ __stm8sgpioinc	equ	1
 
 __defgpio	macro	NAME,Base
 __NS		set	"\{NAME}_"
-{__NS}ODR	label	$5000		; data output latch register
-{__NS}IDR	label	$5001		; input pin value register
-{__NS}DDR	label	$5002		; data direction register
-{__NS}CR1	label	$5003		; control register 1
-{__NS}CR2	label	$5004		; control register 2
+{__NS}ODR	label	Base+$00	; Data Output Latch Register
+{__NS}IDR	label	Base+$01	; Input Pin Value Register
+{__NS}DDR	label	Base+$02	; Data Direction Register
+{__NS}CR1	label	Base+$03	; Control Register 1
+{__NS}CR2	label	Base+$04	; Control Register 2
 		endm
 
 		restore

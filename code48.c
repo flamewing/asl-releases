@@ -1,5 +1,7 @@
 /* code48.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegeneratormodul MCS-48-Familie                                         */

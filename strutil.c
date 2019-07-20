@@ -1,5 +1,7 @@
 /* strutil.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* haeufig benoetigte String-Funktionen                                      */
@@ -9,6 +11,7 @@
 #include "stdinc.h"
 #include <ctype.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include "strutil.h"
 #undef strlen   /* VORSICHT, Rekursion!!! */
@@ -173,6 +176,90 @@ char *as_strdup(const char *s)
   if (ptr != 0)
     strcpy(ptr, s);
   return ptr;
+}
+/*---------------------------------------------------------------------------*/
+/* ...so is snprintf... */
+
+static int AppendPad(char **ppDest, int *pDestSize, char Src, int Cnt)
+{
+  int AddCnt = Cnt;
+
+  if (AddCnt + 1 > *pDestSize)
+    AddCnt = *pDestSize - 1;
+  memset(*ppDest, Src, AddCnt);
+  *ppDest += AddCnt;
+  *pDestSize -= AddCnt;
+  return Cnt;
+}
+
+static int Append(char **ppDest, int *pDestSize, const char *pSrc, int Cnt, int MinPrintLen)
+{
+  int AddCnt = Cnt, PadLen, Result = 0;
+
+  PadLen = MinPrintLen - Cnt;
+  if (PadLen < 0)
+    PadLen = 0;
+
+  if (PadLen > 0)
+    Result += AppendPad(ppDest, pDestSize, ' ', PadLen);
+
+  if (AddCnt + 1 > *pDestSize)
+    AddCnt = *pDestSize - 1;
+  memcpy(*ppDest, pSrc, AddCnt);
+  *ppDest += AddCnt;
+  *pDestSize -= AddCnt;
+  return Result + Cnt;
+}
+
+int as_snprintf(char *pDest, int DestSize, const char *pFormat, ...)
+{
+  va_list ap;
+  int Result = 0;
+  Boolean InFormat = False;
+  int MinPrintLen = 0;
+
+  va_start(ap, pFormat);
+  for (; *pFormat; pFormat++)
+    if (InFormat)
+      switch (*pFormat)
+      {
+        case '0': case '1': case '2': case 3: case '4':
+        case '5': case '6': case '7': case 8: case '9':
+        {
+          /* if (!MinPrintLen && (*pFormat == '0'))... */
+          MinPrintLen = (MinPrintLen * 10) + (*pFormat - '0');
+          break;
+        }
+        case 'c':
+        {
+          char ch = va_arg(ap, int);
+
+          Result += Append(&pDest, &DestSize, &ch, 1, MinPrintLen);
+          InFormat = False;
+          break;
+        }
+        case 's':
+        {
+          const char *pStr = va_arg(ap, char*);
+
+          Result += Append(&pDest, &DestSize, pStr, strlen(pStr), MinPrintLen);
+          InFormat = False;
+          break;
+        }
+        default:
+          fprintf(stderr, "invalid format: '%c'\n", *pFormat);
+          exit(255);
+      }
+    else if (*pFormat == '%')
+    {
+      InFormat = True;
+      MinPrintLen = 0;
+    }
+    else
+      Result += Append(&pDest, &DestSize, pFormat, 1, 0);
+  va_end(ap);
+  *pDest++ = '\0';
+  return Result;
 }
 
 #ifdef NEEDS_CASECMP

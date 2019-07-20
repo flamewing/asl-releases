@@ -99,6 +99,8 @@ EXTI1_vect	label	$8018		; Port B external interrupts
 EXTI2_vect	label	$801c		; Port C external interrupts
 EXTI3_vect	label	$8020		; Port D external interrupts
 EXTI4_vect	label	$8024		; Port E external interrupts
+CAN_RX_vect	label	$8028		; beCAN RX interrupt
+CAN_TX_vect	label	$802c		; beCAN TX/ER/SC interrupt
 SPI_vect	label	$8030		; End of transfer
 TIM1_vect	label	$8034		; TIM1 update/overflow/underflow/trigger/break
 TIM1_CAPT_vect	label	$8038		; TIM1 capture/compare

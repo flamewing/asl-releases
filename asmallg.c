@@ -1,5 +1,7 @@
 /* asmallg.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* von allen Codegeneratoren benutzte Pseudobefehle                          */
@@ -69,8 +71,10 @@ static void SetCPUCore(const tCPUDef *pCPUDef, Boolean NotPrev)
   HCPU = ConstLongInt(s, &ECPU, 10);
   if (ParamCount != 0)
   {
-    EnterIntSymbol(MomCPUName, HCPU, SegNone, True);
-    EnterStringSymbol(MomCPUIdentName, MomCPUIdent, True);
+    tStrComp TmpComp;
+
+    StrCompMkTemp(&TmpComp, MomCPUName); EnterIntSymbol(&TmpComp, HCPU, SegNone, True);
+    StrCompMkTemp(&TmpComp, MomCPUIdentName); EnterStringSymbol(&TmpComp, MomCPUIdent, True);
   }
 
   InternSymbol = Default_InternSymbol;
@@ -148,13 +152,14 @@ static void IntLine(char *pDest, int DestSize, LongInt Inp)
 static void CodeSECTION(Word Index)
 {
   PSaveSection Neu;
+  String ExpName;
   UNUSED(Index);
 
   if (ChkArgCnt(1, 1)
-   && ExpandSymbol(ArgStr[1].Str))
+   && ExpandStrSymbol(ExpName, sizeof(ExpName), &ArgStr[1]))
   {
-    if (!ChkSymbName(ArgStr[1].Str)) WrStrErrorPos(ErrNum_InvSymName, &ArgStr[1]);
-    else if ((PassNo == 1) && (GetSectionHandle(ArgStr[1].Str, False, MomSectionHandle) != -2)) WrError(ErrNum_DoubleSection);
+    if (!ChkSymbName(ExpName)) WrStrErrorPos(ErrNum_InvSymName, &ArgStr[1]);
+    else if ((PassNo == 1) && (GetSectionHandle(ExpName, False, MomSectionHandle) != -2)) WrError(ErrNum_DoubleSection);
     else
     {
       Neu = (PSaveSection) malloc(sizeof(TSaveSection));
@@ -163,7 +168,7 @@ static void CodeSECTION(Word Index)
       Neu->LocSyms = NULL;
       Neu->GlobSyms = NULL;
       Neu->ExportSyms = NULL;
-      SetMomSection(GetSectionHandle(ArgStr[1].Str, True, MomSectionHandle));
+      SetMomSection(GetSectionHandle(ExpName, True, MomSectionHandle));
       SectionStack = Neu;
     }
   }
@@ -191,13 +196,14 @@ static void CodeENDSECTION_ChkEmptList(PForwardSymbol *Root)
 static void CodeENDSECTION(Word Index)
 {
   PSaveSection Tmp;
+  String ExpName;
   UNUSED(Index);
 
   if (!ChkArgCnt(0, 1));
   else if (!SectionStack) WrError(ErrNum_NotInSection);
-  else if ((ArgCnt == 0) || (ExpandSymbol(ArgStr[1].Str)))
+  else if ((ArgCnt == 0) || (ExpandStrSymbol(ExpName, sizeof(ExpName), &ArgStr[1])))
   {
-    if ((ArgCnt == 1) && (GetSectionHandle(ArgStr[1].Str, False, SectionStack->Handle) != MomSectionHandle)) WrError(ErrNum_WrongEndSect);
+    if ((ArgCnt == 1) && (GetSectionHandle(ExpName, False, SectionStack->Handle) != MomSectionHandle)) WrStrErrorPos(ErrNum_WrongEndSect, &ArgStr[1]);
     else
     {
       Tmp = SectionStack;
@@ -264,7 +270,7 @@ static void CodeSETEQU(Word MayChange)
       if (DestSeg > PCMax) WrStrErrorPos(ErrNum_UnknownSegment, &ArgStr[ValIndex + 1]);
       else
       {
-        const char *pName = *LabPart.Str ? LabPart.Str : ArgStr[1].Str;
+        const tStrComp *pName = *LabPart.Str ? &LabPart : &ArgStr[1];
 
         SetListLineVal(&t);
         PushLocHandle(-1);
@@ -357,10 +363,8 @@ static void CodeSHARED_BuildComment(char *c)
 static void CodeSHARED(Word Index)
 {
   tStrComp *pArg;
-  Boolean ValOK;
-  LargeInt HVal;
-  Double FVal;
   String s, c;
+  TempResult t;
   UNUSED(Index);
 
   if (ShareMode == 0) WrError(ErrNum_NoShareFile);
@@ -373,110 +377,92 @@ static void CodeSHARED(Word Index)
   else
    forallargs (pArg, True)
    {
-     if (!ExpandSymbol(pArg->Str))
-       continue;
-     if (!ChkSymbName(pArg->Str))
+     LookupSymbol(pArg, &t, False, TempAll);
+
+     switch (t.Typ)
      {
-       WrStrErrorPos(ErrNum_InvSymName, pArg);
-       continue;
+       case TempInt:
+         switch (ShareMode)
+         {
+           case 1:
+             s[0] = '$';
+             HexString(s + 1, sizeof(s) - 1, t.Contents.Int, 0);
+             break;
+           case 2:
+             s[0] = '0';
+             s[1] = 'x';
+             HexString(s + 2, sizeof(s) - 2, t.Contents.Int, 0);
+             break;
+           case 3:
+             IntLine(s, sizeof(s), t.Contents.Int);
+             break;
+         }
+         break;
+       case TempFloat:
+         sprintf(s, "%0.17g", t.Contents.Float);
+         break;
+       case TempString:
+         DynString2CString(s, &t.Contents.Ascii, sizeof(s));
+         if (ShareMode == 1)
+         {
+           strmaxprep(s, "\'", STRINGSIZE);
+           strmaxcat(s, "\'", STRINGSIZE);
+         }
+         else
+         {
+           strmaxprep(s, "\"", STRINGSIZE);
+           strmaxcat(s, "\"", STRINGSIZE);
+         }
+         break;
+       default:
+         continue;
      }
-     if (IsSymbolString(pArg->Str))
+
+     if ((pArg == ArgStr + 1) && (*CommPart.Str != '\0'))
      {
-       ValOK = GetStringSymbol(pArg->Str, s);
-       if (ShareMode == 1)
-       {
-         strmaxprep(s, "\'", STRINGSIZE);
-         strmaxcat(s, "\'", STRINGSIZE);
-       }
-       else
-       {
-         strmaxprep(s, "\"", STRINGSIZE);
-         strmaxcat(s, "\"", STRINGSIZE);
-       }
-     }
-     else if (IsSymbolFloat(pArg->Str))
-     {
-       ValOK = GetFloatSymbol(pArg->Str, &FVal);
-       sprintf(s, "%0.17g", FVal);
+       CodeSHARED_BuildComment(c);
+       strmaxprep(c, " ", STRINGSIZE);
      }
      else
+       *c = '\0';
+     errno = 0;
+     switch (ShareMode)
      {
-       ValOK = GetIntSymbol(pArg->Str, &HVal, NULL);
-       switch (ShareMode)
-       {
-         case 1:
-           s[0] = '$';
-           HexString(s + 1, sizeof(s) - 1, HVal, 0);
-           break;
-         case 2:
-           s[0] = '0';
-           s[1] = 'x';
-           HexString(s + 2, sizeof(s) - 2, HVal, 0);
-           break;
-         case 3:
-           IntLine(s, sizeof(s), HVal);
-           break;
-       }
+       case 1:
+         fprintf(ShareFile, "%s = %s;%s\n", pArg->Str, s, c);
+         break;
+       case 2:
+         fprintf(ShareFile, "#define %s %s%s\n", pArg->Str, s, c);
+         break;
+       case 3:
+         strmaxprep(s, IsSymbolChangeable(pArg) ? "set " : "equ ", STRINGSIZE);
+         fprintf(ShareFile, "%s %s%s\n", pArg->Str, s, c);
+         break;
      }
-     if (ValOK)
-     {
-       if ((pArg == ArgStr + 1) && (*CommPart.Str != '\0'))
-       {
-         CodeSHARED_BuildComment(c);
-         strmaxprep(c, " ", STRINGSIZE);
-       }
-       else
-         *c = '\0';
-       errno = 0;
-       switch (ShareMode)
-       {
-         case 1:
-           fprintf(ShareFile, "%s = %s;%s\n", pArg->Str, s, c);
-           break;
-         case 2:
-           fprintf(ShareFile, "#define %s %s%s\n", pArg->Str, s, c);
-           break;
-         case 3:
-           strmaxprep(s, IsSymbolChangeable(pArg->Str) ? "set " : "equ ", STRINGSIZE);
-           fprintf(ShareFile, "%s %s%s\n", pArg->Str, s, c);
-           break;
-       }
-       ChkIO(ErrNum_FileWriteError);
-     }
-     else if (PassNo == 1)
-     {
-       Repass = True;
-       if ((MsgIfRepass) && (PassNo >= PassNoForMessage))
-         WrStrErrorPos(ErrNum_RepassUnknown, pArg);
-     }
+     ChkIO(ErrNum_FileWriteError);
    }
 }
 
 static void CodeEXPORT(Word Index)
 {
   tStrComp *pArg;
-  LargeInt Value;
-  PRelocEntry Relocs;
+  TempResult t;
   UNUSED(Index);
 
   forallargs (pArg, True)
   {
     FirstPassUnknown = True;
-    if (GetIntSymbol(pArg->Str, &Value, &Relocs))
-    {
-      if (Relocs == NULL)
-        AddExport(pArg->Str, Value, 0);
-      else if ((Relocs->Next != NULL) || (strcmp(Relocs->Ref, RelName_SegStart)))
-        WrStrErrorPos(ErrNum_Unexportable, pArg);
-      else
-        AddExport(pArg->Str, Value, RelFlag_Relative);
-    }
+    LookupSymbol(pArg, &t, True, TempInt);
+    if (TempNone == t.Typ)
+      continue;
+    if (t.Relocs == NULL)
+      AddExport(pArg->Str, t.Contents.Int, 0);
+    else if ((t.Relocs->Next != NULL) || (strcmp(t.Relocs->Ref, RelName_SegStart)))
+      WrStrErrorPos(ErrNum_Unexportable, pArg);
     else
-    {
-      Repass = True;
-      if ((MsgIfRepass) && (PassNo >= PassNoForMessage))
-        WrStrErrorPos(ErrNum_RepassUnknown, pArg);
-    }
+      AddExport(pArg->Str, t.Contents.Int, RelFlag_Relative);
+    if (t.Relocs)
+      FreeRelocs(&t.Relocs);
   }
 }
 
@@ -587,7 +573,7 @@ static void CodePHASE(Word Index)
       tSavePhase *pSavePhase;
 
       pSavePhase = (tSavePhase*)calloc(1, sizeof (*pSavePhase));
-      pSavePhase->SaveValue = Phases[ActPC]; 
+      pSavePhase->SaveValue = Phases[ActPC];
       pSavePhase->pNext = pPhaseStacks[ActPC];
       pPhaseStacks[ActPC] = pSavePhase;
       Phases[ActPC] = HVal - ProgCounter();
@@ -907,6 +893,8 @@ static void CodeRESTORE(Word Index)
   else if (!FirstSaveState) WrError(ErrNum_NoSaveFrame);
   else
   {
+    tStrComp TmpComp;
+
     Old = FirstSaveState; FirstSaveState = Old->Next;
     if (Old->SavePC != ActPC)
     {
@@ -915,7 +903,7 @@ static void CodeRESTORE(Word Index)
     }
     if (Old->SaveCPU != MomCPU)
       SetCPU(Old->SaveCPU, False);
-    EnterIntSymbol(ListOnName, ListOn = Old->SaveListOn, 0, True);
+    StrCompMkTemp(&TmpComp, ListOnName); EnterIntSymbol(&TmpComp, ListOn = Old->SaveListOn, 0, True);
     SetLstMacroExp(Old->SaveLstMacroExp);
     LstMacroExpOverride = Old->SaveLstMacroExpOverride;
     CurrTransTable = Old->SaveTransTable;
@@ -1018,7 +1006,7 @@ static void CodeLABEL(Word Index)
       char s[40];
 
       PushLocHandle(-1);
-      EnterIntSymbol(LabPart.Str, Erg, SegCode, False);
+      EnterIntSymbol(&LabPart, Erg, SegCode, False);
       IntLine(s, sizeof(s), Erg);
       sprintf(ListLine, "=%s", s);
       PopLocHandle();
@@ -1066,19 +1054,14 @@ static void CodeREAD(Word Index)
         else switch (Erg.Typ)
         {
           case TempInt:
-            EnterIntSymbol(ArgStr[ArgCnt].Str, Erg.Contents.Int, SegNone, True);
+            EnterIntSymbol(&ArgStr[ArgCnt], Erg.Contents.Int, SegNone, True);
             break;
           case TempFloat:
-            EnterFloatSymbol(ArgStr[ArgCnt].Str, Erg.Contents.Float, True);
+            EnterFloatSymbol(&ArgStr[ArgCnt], Erg.Contents.Float, True);
             break;
           case TempString:
-          {
-            String Tmp;
-
-            DynString2CString(Tmp, &Erg.Contents.Ascii, sizeof(Tmp));
-            EnterStringSymbol(ArgStr[ArgCnt].Str, Tmp, True);
+            EnterDynStringSymbol(&ArgStr[ArgCnt], &Erg.Contents.Ascii, True);
             break;
-          }
           default:
             break;
         }
@@ -1249,7 +1232,7 @@ static void CodeENUM(Word IsNext)
         }
         *p = '\0';
       }
-      EnterIntSymbol(ArgStr[z].Str, EnumCurrentValue, EnumSegment, False);
+      EnterIntSymbol(&ArgStr[z], EnumCurrentValue, EnumSegment, False);
       if (z == 1)
         First = EnumCurrentValue;
       else if (z == ArgCnt)
@@ -1339,7 +1322,11 @@ static void CodeLISTING(Word Index)
       OK = False;
     if (!OK) WrStrErrorPos(ErrNum_OnlyOnOff, &ArgStr[1]);
     else
-      EnterIntSymbol(ListOnName, ListOn = Value, 0, True);
+    {
+      tStrComp TmpComp;
+
+      StrCompMkTemp(&TmpComp, ListOnName); EnterIntSymbol(&TmpComp, ListOn = Value, 0, True);
+    }
   }
 }
 
@@ -1350,7 +1337,7 @@ void INCLUDE_SearchCore(tStrComp *pDest, const tStrComp *pArg, Boolean SearchPat
   if (pDest->Str[0] == '"')
   {
     int l;
-    
+
     StrCompIncRefLeft(pDest, 1);
     l = strlen(pDest->Str);
     if ((l > 0) && (pDest->Str[l - 1]  == '"'))
@@ -1362,11 +1349,11 @@ void INCLUDE_SearchCore(tStrComp *pDest, const tStrComp *pArg, Boolean SearchPat
     }
   }
   AddSuffix(pDest->Str, IncSuffix);
-  
+
   if (SearchPath)
   {
     String FoundFileName;
-    
+
     if (FSearch(FoundFileName, sizeof(FoundFileName), pDest->Str, CurrFileName, SearchPath ? IncludeList : ""))
       ChkStrIO(ErrNum_OpeningFile, &ArgStr[1]);
     strmaxcpy(pDest->Str, FExpand(FoundFileName), STRINGSIZE - 1);
@@ -1417,7 +1404,7 @@ static void CodeBINCLUDE(Word Index)
     {
       tStrComp FNameArg;
       String FNameArgStr;
-      
+
       StrCompMkTemp(&FNameArg, FNameArgStr);
       INCLUDE_SearchCore(&FNameArg, &ArgStr[1], True);
 
@@ -1470,7 +1457,7 @@ static void CodePUSHV(Word Index)
     if (!CaseSensitive)
       NLS_UpString(ArgStr[1].Str);
     for (z = 2; z <= ArgCnt; z++)
-      PushSymbol(ArgStr[z].Str, ArgStr[1].Str);
+      PushSymbol(&ArgStr[z], &ArgStr[1]);
   }
 }
 
@@ -1484,7 +1471,7 @@ static void CodePOPV(Word Index)
     if (!CaseSensitive)
       NLS_UpString(ArgStr[1].Str);
     for (z = 2; z <= ArgCnt; z++)
-      PopSymbol(ArgStr[z].Str, ArgStr[1].Str);
+      PopSymbol(&ArgStr[z], &ArgStr[1]);
   }
 }
 
@@ -1661,13 +1648,15 @@ static void CodeENDSTRUCT(Word IsUnion)
         if (OStruct->Name[0])
         {
           String tmp2;
+          tStrComp TmpComp;
 
           sprintf(tmp2, "%s%clen", OStruct->Name, OStruct->StructRec->ExtChar);
-          EnterIntSymbol(tmp2, TotLen, SegNone, False);
+          StrCompMkTemp(&TmpComp, tmp2);
+          EnterIntSymbol(&TmpComp, TotLen, SegNone, False);
         }
       }
       else
-        EnterIntSymbol(ArgStr[1].Str, TotLen, SegNone, False);
+        EnterIntSymbol(&ArgStr[1], TotLen, SegNone, False);
 
       t.Typ = TempInt;
       t.Contents.Int = TotLen;
@@ -1733,7 +1722,7 @@ static void CodeEXTERN(Word Index)
       if (Type > PCMax) WrXError(ErrNum_UnknownSegment, Split + 1);
       else
       {
-        EnterExtSymbol(ArgStr[i].Str, 0, Type, FALSE);
+        EnterExtSymbol(&ArgStr[i], 0, Type, FALSE);
       }
       i++;
     }
@@ -1771,15 +1760,27 @@ static void CodePPSyms(PForwardSymbol *Orig,
                        PForwardSymbol *Alt2)
 {
   PForwardSymbol Lauf;
-  tStrComp *pArg;
+  tStrComp *pArg, SymArg, SectionArg;
   String Sym, Section;
+  char *pSplit;
 
   if (ChkArgCnt(1, ArgCntMax))
     forallargs (pArg, True)
     {
-      SplitString(pArg->Str, Sym, Section, QuotPos(pArg->Str, ':'));
-      if (!ExpandSymbol(Sym)) return;
-      if (!ExpandSymbol(Section)) return;
+      pSplit = QuotPos(pArg->Str, ':');
+      if (pSplit)
+      {
+        StrCompSplitRef(&SymArg, &SectionArg, pArg, pSplit);
+        if (!ExpandStrSymbol(Sym, sizeof(Sym), &SymArg))
+          return;
+      }
+      else
+      {
+        if (!ExpandStrSymbol(Sym, sizeof(Sym), pArg))
+          return;
+        *Section = '\0';
+        StrCompMkTemp(&SectionArg, Section);
+      }
       if (!CaseSensitive)
         NLS_UpString(Sym);
       Lauf = CodePPSyms_SearchSym(*Alt1, Sym);
@@ -1798,7 +1799,7 @@ static void CodePPSyms(PForwardSymbol *Orig,
             Lauf->Name = as_strdup(Sym);
             Lauf->pErrorPos = GetErrorPos();
           }
-          IdentifySection(Section, &(Lauf->DestSection));
+          IdentifySection(&SectionArg, &Lauf->DestSection);
         }
       }
     }

@@ -1,5 +1,7 @@
 /* codexa.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* AS-Codegenerator Philips XA                                               */
@@ -474,7 +476,7 @@ static void DecodeBIT(Word Index)
   else if (*AttrPart.Str) WrError(ErrNum_UseLessAttr);
   else if (DecodeBitAddr(&ArgStr[1], &BAdr))
   {
-    EnterIntSymbol(LabPart.Str, BAdr, SegNone, False);
+    EnterIntSymbol(&LabPart, BAdr, SegNone, False);
     switch ((BAdr & 0x3ff) >> 8)
     {
       case 0:
@@ -1820,7 +1822,7 @@ static void MakeCode_XA(void)
   {
     ForceAlign();
     if (*LabPart.Str != '\0') 
-      EnterIntSymbol(LabPart.Str, EProgCounter() + CodeLen, ActPC, False);
+      EnterIntSymbol(&LabPart, EProgCounter() + CodeLen, ActPC, False);
   }
 
   if (DecodeMoto16Pseudo(OpSize,False)) return;

@@ -1,5 +1,7 @@
 /* asmsub.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Unterfunktionen, vermischtes                                              */
@@ -34,7 +36,7 @@
 
 #ifdef __TURBOC__
 #ifdef __DPMI16__
-#define STKSIZE 40960
+#define STKSIZE 39936
 #else
 #define STKSIZE 49152
 #endif

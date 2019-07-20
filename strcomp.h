@@ -2,6 +2,8 @@
 #define _STRCOMP_H
 /* strcomp.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* Macro Assembler AS                                                        */
 /*                                                                           */
 /* Definition of a source line's component present after parsing             */
@@ -35,6 +37,8 @@ extern void StrCompMkTemp(tStrComp *pComp, char *pStr);
 extern void StrCompRefRight(tStrComp *pDest, const tStrComp *pSrc, int StartOffs);
 
 extern void StrCompCopy(tStrComp *pDest, const tStrComp *pSrc);
+
+extern void StrCompCopySub(tStrComp *pDest, const tStrComp *pSrc, unsigned Start, unsigned Count);
 
 extern void StrCompSplitRight(tStrComp *pSrc, tStrComp *pDest, char *pSrcSplitPos);
 

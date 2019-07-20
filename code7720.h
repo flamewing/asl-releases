@@ -2,6 +2,8 @@
 #define _CODE7720_H
 /* code7720.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* Makroassembler AS                                                         */
 /*                                                                           */
 /* Codegenerator NEC uPD7720                                                 */
