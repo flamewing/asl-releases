@@ -453,7 +453,7 @@ static void Disassemble_68(LargeWord Address, tDisassInfo *pInfo, Boolean AsData
     pInfo->NextAddresses[pInfo->NextAddressCount++] = (Address + pInfo->CodeLen) % 0xffff;
   
   if (nData != pInfo->CodeLen)
-    sprintf(pInfo->SrcLine + strlen(pInfo->SrcLine), " ; ouch %u != %u", nData, pInfo->CodeLen);
+    as_snprcatf(pInfo->SrcLine, sizeof(pInfo->SrcLine), " ; ouch %u != %u", nData, pInfo->CodeLen);
 }
 
 static void SwitchTo_68(void)

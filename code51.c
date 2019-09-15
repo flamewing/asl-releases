@@ -493,6 +493,13 @@ chk:
   }
 }
 
+static void DissectBit_251(char *pDest, int DestSize, LargeWord Inp)
+{
+  as_snprintf(pDest, DestSize, "=%02.*u%s.%u",
+              ListRadixBase, (unsigned)(Inp & 0xff), GetIntelSuffix(ListRadixBase),
+              (unsigned)(Inp >> 24));
+}
+
 static ShortInt DecodeBitAdr(tStrComp *pArg, LongInt *Erg, Boolean MayShorten)
 {
   Boolean OK;
@@ -2336,10 +2343,14 @@ static void DecodeSFR(Word Index)
         }
         if (MakeUseList)
           if (AddChunk(SegChunks + SegBData, BitStart, 8, False)) WrError(ErrNum_Overlap);
-        sprintf(ListLine, "=%02XH-%02XH", BitStart, BitStart + 7);
+        as_snprintf(ListLine, STRINGSIZE, "=%02.*u%s-%02.*u%s",
+                    ListRadixBase, (unsigned)BitStart, GetIntelSuffix(ListRadixBase),
+                    ListRadixBase, (unsigned)BitStart + 7, GetIntelSuffix(ListRadixBase));
       }
       else
-        sprintf(ListLine, "=%02XH", AdrByte);
+        as_snprintf(ListLine, STRINGSIZE, "=%02.*u%s",
+                    ListRadixBase, (unsigned)AdrByte, GetIntelSuffix(ListRadixBase));
+      LimitListLine();
       PopLocHandle();
     }
   }
@@ -2355,27 +2366,23 @@ static void DecodeBIT(Word Index)
   {
     if (DecodeBitAdr(&ArgStr[1], &AdrLong, False) == ModBit251)
     {
-      char ByteStr[20], BitStr[10];
-
       PushLocHandle(-1);
-      EnterIntSymbol(&LabPart, AdrLong, SegNone, False);
+      EnterIntSymbol(&LabPart, AdrLong, SegBData, False);
       PopLocHandle();
-      HexString(ByteStr, sizeof(ByteStr), AdrLong & 0xff, 2);
-      HexString(BitStr, sizeof(BitStr), AdrLong >> 24, 1);
-      sprintf(ListLine, "=%sH.%s", ByteStr, BitStr);
+      DissectBit_251(ListLine, STRINGSIZE, AdrLong);
+      LimitListLine();
     }
   }
   else
   {
     if (DecodeBitAdr(&ArgStr[1], &AdrLong, False) == ModBit51)
     {
-      char ByteStr[20];
-
       PushLocHandle(-1);
       EnterIntSymbol(&LabPart, AdrLong, SegBData, False);
       PopLocHandle();
-      HexString(ByteStr, sizeof(ByteStr), AdrLong, 2);
-      sprintf(ListLine, "=%s", ByteStr);
+      as_snprintf(ListLine, STRINGSIZE, "=%02.*u%s",
+                  ListRadixBase, (unsigned)AdrLong, GetIntelSuffix(ListRadixBase));
+      LimitListLine();
     }
   }
 }
@@ -2605,6 +2612,7 @@ static void SwitchTo_51(void)
     SegLimits[SegCode ] = 0xffffffl;
     Grans[SegIO   ] = 1; ListGrans[SegIO   ] = 1; SegInits[SegIO   ] = 0;
     SegLimits[SegIO   ] = 0x1ff;
+    DissectBit = DissectBit_251;
   }
 
   /* rest of the pack... */

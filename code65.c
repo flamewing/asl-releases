@@ -995,13 +995,13 @@ static void InitFields(void)
   AddInstTable(InstTable, "STI", 0, DecodeSTI);
   for (Bit = 0; Bit < 8; Bit++)
   {
-    sprintf(Name, "BBR%d", Bit);
+    as_snprintf(Name, sizeof(Name), "BBR%d", Bit);
     AddInstTable(InstTable, Name, (Bit << 4) + 0x0f, DecodeBBR_BBS);
-    sprintf(Name, "BBS%d", Bit);
+    as_snprintf(Name, sizeof(Name), "BBS%d", Bit);
     AddInstTable(InstTable, Name, (Bit << 4) + 0x8f, DecodeBBR_BBS);
-    sprintf(Name, "RMB%d", Bit);
+    as_snprintf(Name, sizeof(Name), "RMB%d", Bit);
     AddInstTable(InstTable, Name, (Bit << 4) + 0x07, DecodeRMB_SMB);
-    sprintf(Name, "SMB%d", Bit);
+    as_snprintf(Name, sizeof(Name), "SMB%d", Bit);
     AddInstTable(InstTable, Name, (Bit << 4) + 0x87, DecodeRMB_SMB);
   }
   AddInstTable(InstTable, "LDM", 0, DecodeLDM);

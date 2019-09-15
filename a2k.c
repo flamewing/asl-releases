@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "strutil.h"
 
 /*** valid sym. character */
 
@@ -122,14 +123,16 @@ char **argv;
 
       p = strchr(orig, '(');
       *p = '\0';
-      sprintf(dest, "\t%s", orig);
+      *dest = '\t';
+      strcpy(dest + 1, orig);
       strcat(dest, "(");
       strcpy(orig, p + 1);
 
       /* cut trailing ')' */
 
       for (p = orig + strlen(orig) - 1; *p != ')'; p--);
-        *p = '\0';
+
+      *p = '\0';
 
       /* loop through parameters: discard 'void' entries */
 
@@ -150,9 +153,9 @@ char **argv;
           strcpy(orig, p + 1);
         }
         for (p = single; isspace(*p); p++);
-          strcpy(single, p);
+        strcpy(single, p);
         for (p = single + strlen(single) - 1; isspace(*p); p--);
-          p[1] = '\0';
+        p[1] = '\0';
         if (!strncmp(single,"const ",6))
           strcpy(single, single + 6);
         if (strcmp(single,"void"))

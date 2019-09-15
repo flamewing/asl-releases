@@ -1493,8 +1493,7 @@ static void DissectBit_H16(char *pDest, int DestSize, LargeWord Inp)
   DissectBitSymbol(Inp, &Address, &BitPos, &OpSize);
   Attribute = "bwl"[OpSize];
 
-  UNUSED(DestSize);
-  sprintf(pDest, "$%lx(%c).%u", (unsigned long)Address, Attribute, BitPos);
+  as_snprintf(pDest, DestSize, "$%lx(%c).%u", (unsigned long)Address, Attribute, (unsigned)BitPos);
 }
 
 /*!------------------------------------------------------------------------
@@ -2818,21 +2817,21 @@ static void AddCondition(const char *pName, Word Code)
 {
   char Name[20];
 
-  sprintf(Name, "B%s", pName);
+  as_snprintf(Name, sizeof(Name), "B%s", pName);
   AddInstTable(InstTable, Name, Code, DecodeBranchGen);
-  sprintf(Name, "SET/%s", pName);
+  as_snprintf(Name, sizeof(Name), "SET/%s", pName);
   AddInstTable(InstTable, Name, Code, DecodeSET);
-  sprintf(Name, "TRAP/%s", pName);
+  as_snprintf(Name, sizeof(Name), "TRAP/%s", pName);
   AddInstTable(InstTable, Name, Code, DecodeTRAP);
-  sprintf(Name, "SCB/%s", pName);
+  as_snprintf(Name, sizeof(Name), "SCB/%s", pName);
   AddInstTable(InstTable, Name, Code, DecodeSCB);
-  sprintf(Name, "SCMP/%s/F", pName);
+  as_snprintf(Name, sizeof(Name), "SCMP/%s/F", pName);
   AddInstTable(InstTable, Name, 0x00a0 | (Code << 8), DecodeString);
-  sprintf(Name, "SCMP/%s/B", pName);
+  as_snprintf(Name, sizeof(Name), "SCMP/%s/B", pName);
   AddInstTable(InstTable, Name, 0x00d0 | (Code << 8), DecodeString);
-  sprintf(Name, "SSCH/%s/F", pName);
+  as_snprintf(Name, sizeof(Name), "SSCH/%s/F", pName);
   AddInstTable(InstTable, Name, 0x0080 | (Code << 8), DecodeString);
-  sprintf(Name, "SSCH/%s/B", pName);
+  as_snprintf(Name, sizeof(Name), "SSCH/%s/B", pName);
   /* per-instr. description gives 000 for both SSCH variants, taken from Figure 16-9: */
   AddInstTable(InstTable, Name, 0x00c0 | (Code << 8), DecodeString);
 }

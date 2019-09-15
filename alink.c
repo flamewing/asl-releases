@@ -503,7 +503,7 @@ int main(int argc, char **argv)
   cmdarg_init(*argv);
   toolutils_init(*argv);
 
-  sprintf(Ver,"ALINK/C V%s",Version);
+  as_snprintf(Ver, sizeof(Ver), "ALINK/C V%s", Version);
   WrCopyRight(Ver);
 
   /* no commandline arguments -->print help */
@@ -624,7 +624,7 @@ int main(int argc, char **argv)
   LHeader = FileHeaderEnd;
   if (fwrite(&LHeader, 1, 1, TargFile) != 1)
     ChkIO(TargName);
-  sprintf(Ver,"ALINK %s/%s-%s", Version, ARCHPRNAME, ARCHSYSNAME);
+  as_snprintf( Ver, sizeof(Ver), "ALINK %s/%s-%s", Version, ARCHPRNAME, ARCHSYSNAME);
   if (fwrite(Ver, 1, strlen(Ver), TargFile) != strlen(Ver))
     ChkIO(TargName);
 

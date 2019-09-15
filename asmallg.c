@@ -125,25 +125,23 @@ static void SetNSeg(Byte NSeg)
   }
 }
 
-static void IntLine(char *pDest, int DestSize, LongInt Inp)
+static void IntLine(char *pDest, int DestSize, LargeWord Inp, TConstMode ThisConstMode)
 {
-  HexString(pDest, DestSize, Inp, 0);
-  switch (ConstMode)
+  switch (ThisConstMode)
   {
     case ConstModeIntel:
-      strmaxcat(pDest, "H", DestSize);
+      as_snprintf(pDest, DestSize, "%lllx%s", Inp, GetIntelSuffix(16));
       if (*pDest > '9')
         strmaxprep(pDest, "0", DestSize);
       break;
     case ConstModeMoto:
-      strmaxprep(pDest, "$", DestSize);
+      as_snprintf(pDest, DestSize, "$%lllx", Inp);
       break;
     case ConstModeC:
-      strmaxprep(pDest, "0x", DestSize);
+      as_snprintf(pDest, DestSize, "0x%lllx", Inp);
       break;
     case ConstModeWeird:
-      strmaxprep(pDest, "x'", DestSize);
-      strmaxcat(pDest, "'", DestSize);
+      as_snprintf(pDest, DestSize, "x'%lllx'", Inp);
       break;
   }
 }
@@ -213,7 +211,7 @@ static void CodeENDSECTION(Word Index)
       CodeENDSECTION_ChkEmptList(&(Tmp->ExportSyms));
       TossRegDefs(MomSectionHandle);
       if (ArgCnt == 0)
-        sprintf(ListLine, "[%s]", GetSectionName(MomSectionHandle));
+        as_snprintf(ListLine, STRINGSIZE, "[%s]", GetSectionName(MomSectionHandle));
       SetMomSection(Tmp->Handle);
       free(Tmp);
     }
@@ -297,7 +295,7 @@ static void CodeSETEQU(Word MayChange)
 
 static void CodeORG(Word Index)
 {
-  LargeInt HVal;
+  LargeWord HVal;
   Boolean ValOK;
   UNUSED(Index);
 
@@ -311,7 +309,7 @@ static void CodeORG(Word Index)
     HVal = EvalStrIntExpression(&ArgStr[1], Int64, &ValOK);
 #endif
     if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
-    if ((ValOK) && (!FirstPassUnknown))
+    if (ValOK && !FirstPassUnknown && (PCs[ActPC] != HVal))
     {
       PCs[ActPC] = HVal;
       DontPrint = True;
@@ -344,18 +342,18 @@ static void CodeRORG(Word Index)
   }
 }
 
-static void CodeSHARED_BuildComment(char *c)
+static void CodeSHARED_BuildComment(char *c, int DestSize)
 {
   switch (ShareMode)
   {
     case 1:
-      sprintf(c, "(* %s *)", CommPart.Str);
+      as_snprintf(c, DestSize, "(* %s *)", CommPart.Str);
       break;
     case 2:
-      sprintf(c, "/* %s */", CommPart.Str);
+      as_snprintf(c, DestSize, "/* %s */", CommPart.Str);
       break;
     case 3:
-      sprintf(c, "; %s", CommPart.Str);
+      as_snprintf(c, DestSize, "; %s", CommPart.Str);
       break;
   }
 }
@@ -370,7 +368,7 @@ static void CodeSHARED(Word Index)
   if (ShareMode == 0) WrError(ErrNum_NoShareFile);
   else if ((ArgCnt == 0) && (*CommPart.Str != '\0'))
   {
-    CodeSHARED_BuildComment(c);
+    CodeSHARED_BuildComment(c, sizeof(c));
     errno = 0;
     fprintf(ShareFile, "%s\n", c); ChkIO(ErrNum_FileWriteError);
   }
@@ -385,32 +383,29 @@ static void CodeSHARED(Word Index)
          switch (ShareMode)
          {
            case 1:
-             s[0] = '$';
-             HexString(s + 1, sizeof(s) - 1, t.Contents.Int, 0);
+             IntLine(s, sizeof(s), t.Contents.Int, ConstModeMoto);
              break;
            case 2:
-             s[0] = '0';
-             s[1] = 'x';
-             HexString(s + 2, sizeof(s) - 2, t.Contents.Int, 0);
+             IntLine(s, sizeof(s), t.Contents.Int, ConstModeC);
              break;
            case 3:
-             IntLine(s, sizeof(s), t.Contents.Int);
+             IntLine(s, sizeof(s), t.Contents.Int, ConstMode);
              break;
          }
          break;
        case TempFloat:
-         sprintf(s, "%0.17g", t.Contents.Float);
+         as_snprintf(s, sizeof(s), "%0.17g", t.Contents.Float);
          break;
        case TempString:
-         DynString2CString(s, &t.Contents.Ascii, sizeof(s));
+         DynString2CString(s + 1, &t.Contents.Ascii, sizeof(s) - 1);
          if (ShareMode == 1)
          {
-           strmaxprep(s, "\'", STRINGSIZE);
+           *s = '\'';
            strmaxcat(s, "\'", STRINGSIZE);
          }
          else
          {
-           strmaxprep(s, "\"", STRINGSIZE);
+           *s = '\"';
            strmaxcat(s, "\"", STRINGSIZE);
          }
          break;
@@ -420,7 +415,7 @@ static void CodeSHARED(Word Index)
 
      if ((pArg == ArgStr + 1) && (*CommPart.Str != '\0'))
      {
-       CodeSHARED_BuildComment(c);
+       CodeSHARED_BuildComment(c, sizeof(c));
        strmaxprep(c, " ", STRINGSIZE);
      }
      else
@@ -921,7 +916,7 @@ static void CodeMACEXP(Word Index)
   {
     char Msg[70];
 
-    sprintf(Msg, getmessage(Num_ErrMsgDeprecated_Instead), "MACEXP_DFT");
+    as_snprintf(Msg, sizeof(Msg), getmessage(Num_ErrMsgDeprecated_Instead), "MACEXP_DFT");
     WrXError(ErrNum_Deprecated, Msg);
   }
 #endif
@@ -1003,12 +998,10 @@ static void CodeLABEL(Word Index)
     Erg = EvalStrIntExpression(&ArgStr[1], Int32, &OK);
     if ((OK) && (!FirstPassUnknown))
     {
-      char s[40];
-
       PushLocHandle(-1);
       EnterIntSymbol(&LabPart, Erg, SegCode, False);
-      IntLine(s, sizeof(s), Erg);
-      sprintf(ListLine, "=%s", s);
+      *ListLine = '=';
+      IntLine(ListLine + 1, STRINGSIZE - 1, Erg, ConstMode);
       PopLocHandle();
     }
   }
@@ -1030,7 +1023,7 @@ static void CodeREAD(Word Index)
     if (ArgCnt == 2) EvalStrStringExpression(&ArgStr[1], &OK, Exp.Str);
     else
     {
-      sprintf(Exp.Str, "Read %s ? ", ArgStr[1].Str);
+      as_snprintf(Exp.Str, sizeof(ExpStr), "Read %s ? ", ArgStr[1].Str);
       OK = True;
     }
     if (OK)
@@ -1208,7 +1201,6 @@ static void CodeENUM(Word IsNext)
   char *p = NULL;
   Boolean OK;
   LongInt  First = 0, Last = 0;
-  String ListSymPart;
   tStrComp SymPart;
 
   if (!IsNext)
@@ -1240,13 +1232,15 @@ static void CodeENUM(Word IsNext)
       EnumCurrentValue += EnumIncrement;
     }
   }
-  IntLine(ListSymPart, sizeof(ListSymPart), First);
-  sprintf(ListLine, "=%s", ListSymPart);
+  *ListLine = '=';
+  IntLine(ListLine + 1, STRINGSIZE - 1, First, ConstMode);
   if (ArgCnt != 1)
   {
+    int l;
+    
     strmaxcat(ListLine, "..", STRINGSIZE);
-    IntLine(ListSymPart, sizeof(ListSymPart), Last);
-    strmaxcat(ListLine, ListSymPart, STRINGSIZE);
+    l = strlen(ListLine);
+    IntLine(ListLine + l, STRINGSIZE - l, Last, ConstMode);
   }
 }
 
@@ -1650,7 +1644,7 @@ static void CodeENDSTRUCT(Word IsUnion)
           String tmp2;
           tStrComp TmpComp;
 
-          sprintf(tmp2, "%s%clen", OStruct->Name, OStruct->StructRec->ExtChar);
+          as_snprintf(tmp2, sizeof(tmp2), "%s%clen", OStruct->Name, OStruct->StructRec->ExtChar);
           StrCompMkTemp(&TmpComp, tmp2);
           EnterIntSymbol(&TmpComp, TotLen, SegNone, False);
         }

@@ -5607,14 +5607,14 @@ static void AddCond(char *NName, Byte NCode)
 
   if (NCode >= 2) /* BT is BRA and BF is BSR */
   {
-    sprintf(TmpName, "B%s", NName);
+    as_snprintf(TmpName, sizeof(TmpName), "B%s", NName);
     AddInstTable(InstTable, TmpName, NCode, DecodeBcc);
   }
-  sprintf(TmpName, "S%s", NName);
+  as_snprintf(TmpName, sizeof(TmpName), "S%s", NName);
   AddInstTable(InstTable, TmpName, NCode, DecodeScc);
-  sprintf(TmpName, "DB%s", NName);
+  as_snprintf(TmpName, sizeof(TmpName), "DB%s", NName);
   AddInstTable(InstTable, TmpName, NCode, DecodeDBcc);
-  sprintf(TmpName, "TRAP%s", NName);
+  as_snprintf(TmpName, sizeof(TmpName), "TRAP%s", NName);
   AddInstTable(InstTable, TmpName, NCode, DecodeTRAPcc);
 }
 
@@ -5631,13 +5631,13 @@ static void AddFPUCond(char *NName, Byte NCode)
 {
   char TmpName[30];
 
-  sprintf(TmpName, "FB%s", NName);
+  as_snprintf(TmpName, sizeof(TmpName), "FB%s", NName);
   AddInstTable(InstTable, TmpName, NCode, DecodeFBcc);
-  sprintf(TmpName, "FDB%s", NName);
+  as_snprintf(TmpName, sizeof(TmpName), "FDB%s", NName);
   AddInstTable(InstTable, TmpName, NCode, DecodeFDBcc);
-  sprintf(TmpName, "FS%s", NName);
+  as_snprintf(TmpName, sizeof(TmpName), "FS%s", NName);
   AddInstTable(InstTable, TmpName, NCode, DecodeFScc);
-  sprintf(TmpName, "FTRAP%s", NName);
+  as_snprintf(TmpName, sizeof(TmpName), "FTRAP%s", NName);
   AddInstTable(InstTable, TmpName, NCode, DecodeFTRAPcc);
 }
 
@@ -5645,13 +5645,13 @@ static void AddPMMUCond(char *NName)
 {
   char TmpName[30];
 
-  sprintf(TmpName, "PB%s", NName);
+  as_snprintf(TmpName, sizeof(TmpName), "PB%s", NName);
   AddInstTable(InstTable, TmpName, InstrZ, DecodePBcc);
-  sprintf(TmpName, "PDB%s", NName);
+  as_snprintf(TmpName, sizeof(TmpName), "PDB%s", NName);
   AddInstTable(InstTable, TmpName, InstrZ, DecodePDBcc);
-  sprintf(TmpName, "PS%s", NName);
+  as_snprintf(TmpName, sizeof(TmpName), "PS%s", NName);
   AddInstTable(InstTable, TmpName, InstrZ, DecodePScc);
-  sprintf(TmpName, "PTRAP%s", NName);
+  as_snprintf(TmpName, sizeof(TmpName), "PTRAP%s", NName);
   AddInstTable(InstTable, TmpName, InstrZ, DecodePTRAPcc);
   InstrZ++;
 }
@@ -6180,7 +6180,7 @@ void code68k_init(void)
 {
   const tCPUProps *pProp;
   for (pProp = CPUProps; pProp->pName; pProp++)
-    (void)AddCPUUser(pProp->pName, SwitchTo_68K, (void*)pProp);
+    (void)AddCPUUser(pProp->pName, SwitchTo_68K, (void*)pProp, NULL);
 
   AddInitPassProc(InitCode_68K);
 }

@@ -11,25 +11,23 @@
 /*****************************************************************************/
 
 #include <stdio.h>
+#include <stdarg.h>
 
 #include "datatypes.h"
 
-extern Boolean HexLowerCase;
+extern char HexStartCharacter;
 
 extern const char *Blanks(int cnt);
 
-#define HexString(pDest, DestSize, i, Stellen) HexString2(pDest, DestSize, i, Stellen, HexLowerCase)
+#define HexString(pDest, DestSize, i, Stellen) SysString(pDest, DestSize, i, 16, Stellen, HexStartCharacter)
 
-extern int HexString2(char *pDest, int DestSize, LargeWord i, Byte Stellen, Boolean LowerCase);
-
-extern int SysString(char *pDest, int DestSize, LargeWord i, LargeWord System, int Stellen);
-
-extern void HexBlankString(char *pDest, unsigned DestSize, LargeWord i, Byte Stellen);
-
-extern char *LargeString(char *pDest, LargeInt i);
+extern int SysString(char *pDest, int DestSize, LargeWord i, int System, int Stellen, char StartCharacter);
 
 extern char *as_strdup(const char *s);
 
+extern int as_vsnprcatf(char *pDest, int DestSize, const char *pFormat, va_list ap);
+extern int as_snprcatf(char *pDest, int DestSize, const char *pFormat, ...);
+extern int as_vsnprintf(char *pDest, int DestSize, const char *pFormat, va_list ap);
 extern int as_snprintf(char *pDest, int DestSize, const char *pFormat, ...);
 
 #ifdef NEEDS_CASECMP
@@ -42,11 +40,6 @@ extern char *strstr(const char *haystack, const char *needle);
 #endif
 
 extern char *strrmultchr(const char *haystack, const char *needles);
-
-#ifdef BROKEN_SPRINTF
-#define sprintf mysprintf
-extern int mysprintf();
-#endif
 
 extern int strmaxcpy(char *dest, const char *src, int Max);
 extern int strmaxcat(char *Dest, const char *Src, int MaxLen);

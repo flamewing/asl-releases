@@ -18,7 +18,7 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
-#include "asmitree.h"  
+#include "asmitree.h"
 #include "intpseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
@@ -26,7 +26,7 @@
 #include "code370.h"
 
 typedef struct
-{ 
+{
   char *Name;
   Word Code;
 } FixedOrder;
@@ -88,7 +88,7 @@ static char *HasDisp(char *Asc)
       if (Lev != -1)
         p--;
     }
-    if (p < Asc) 
+    if (p < Asc)
     {
       WrXError(ErrNum_BrackErr, Asc);
       return NULL;
@@ -204,8 +204,8 @@ static void DecodeAdrRel(const tStrComp *pArg, Word Mask, Boolean AddrRel)
               AdrCnt = 2;
               AdrType = ModImmRegRel;
             }
-          }  
-        } 
+          }
+        }
       }
     }
     goto chk;
@@ -335,6 +335,70 @@ static void PutCode(Word Code)
   }
 }
 
+static void DissectBitValue(LargeWord Symbol, Word *pAddr, Byte *pBit)
+{
+  *pAddr = Symbol & 0xffff;
+  *pBit = (Symbol >> 16) & 7;
+}
+
+static void DissectBit_370(char *pDest, int DestSize, LargeWord Symbol)
+{
+  Word Addr;
+  Byte Bit;
+
+  DissectBitValue(Symbol, &Addr, &Bit);
+
+  if (Addr < 2)
+    as_snprintf(pDest, DestSize, "%c", HexStartCharacter + Addr);
+  else
+    as_snprintf(pDest, DestSize, "%0.*u%s",
+                ListRadixBase, (unsigned)Addr, GetIntelSuffix(ListRadixBase));
+  as_snprcatf(pDest, DestSize, ".%c", Bit + '0');
+}
+
+static Boolean DecodeBitExpr(int Start, int Stop, LongWord *pResult)
+{
+  Boolean OK;
+
+  if (Start == Stop)
+  {
+    *pResult = EvalStrIntExpression(&ArgStr[Start], UInt19, &OK);
+    return OK;
+  }
+  else
+  {
+    Byte Bit;
+    Word Addr;
+
+    Bit = EvalStrIntExpression(&ArgStr[Start], UInt3, &OK);
+    if (!OK)
+      return OK;
+
+    if ((!strcasecmp(ArgStr[Stop].Str, "A")) || (!strcasecmp(ArgStr[Stop].Str, "B")))
+    {
+      Addr = toupper(*ArgStr[Stop].Str) - 'A';
+      OK = True;
+    }
+    else
+    {
+      FirstPassUnknown = False;
+      Addr = EvalStrIntExpression(&ArgStr[Stop], UInt16, &OK);
+      if (!OK)
+        return OK;
+      if (FirstPassUnknown)
+        Addr &= 0xff;
+      if (Addr & 0xef00) /* 00h...0ffh, 1000h...10ffh allowed */
+      {
+        WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[Stop]);
+        return False;
+      }
+    }
+
+    *pResult = (((LongWord)Bit) << 16) + Addr;
+    return True;
+  }
+}
+
 /****************************************************************************/
 
 static void DecodeFixed(Word Code)
@@ -345,36 +409,17 @@ static void DecodeFixed(Word Code)
 
 static void DecodeDBIT(Word Code)
 {
-  Boolean OK;
-  Byte Bit;
-  Word Adr;
+  LongWord Value;
 
   UNUSED(Code);
 
-  if (ChkArgCnt(2, 2))
+  if (ChkArgCnt(1, 2) && DecodeBitExpr(1, ArgCnt, &Value))
   {
-    FirstPassUnknown = False;
-    Bit = EvalStrIntExpression(&ArgStr[1], UInt3, &OK);
-    if ((OK) && (!FirstPassUnknown))
-    {
-      if ((!strcasecmp(ArgStr[2].Str, "A")) || (!strcasecmp(ArgStr[2].Str, "B")))
-      {
-        Adr = (*ArgStr[2].Str) - 'A';
-        OK = True;
-      }
-      else
-        Adr = EvalStrIntExpression(&ArgStr[2], Int16, &OK);
-      if ((OK) && (!FirstPassUnknown))
-      {
-        char Str[30];
-
-        PushLocHandle(-1);
-        EnterIntSymbol(&LabPart, (((LongInt)Bit) << 16) + Adr, SegNone, False);
-        HexString(Str, sizeof(Str), Adr, 0);
-        sprintf(ListLine, "=%s:%c", Str, Bit + '0');
-        PopLocHandle();
-      }
-    }
+    PushLocHandle(-1);
+    EnterIntSymbol(&LabPart, Value, SegBData, False);
+    *ListLine = '=';
+    DissectBit_370(ListLine + 1, STRINGSIZE - 1, Value);
+    PopLocHandle();
   }
 }
 
@@ -987,49 +1032,47 @@ static void DecodeABReg(Word Code)
 static void DecodeBit(Word Code)
 {
   int Rela = Hi(Code);
+  LongWord BitExpr;
 
   Code &= 0xff;
 
-  if (ChkArgCnt(1 + Rela, 1 + Rela))
+  if (ChkArgCnt(1 + Rela, 2 + Rela)
+   && DecodeBitExpr(1, ArgCnt - Rela, &BitExpr))
   {
     Boolean OK;
-    LongInt Bit;
+    Word Addr;
+    Byte Bit;
 
-    FirstPassUnknown = False;
-    Bit = EvalStrIntExpression(&ArgStr[1], Int32, &OK);
-    if (OK)
+    DissectBitValue(BitExpr, &Addr, &Bit);
+
+    BAsmCode[1] = 1 << Bit;
+    BAsmCode[2] = Lo(Addr);
+    switch (Hi(Addr))
     {
-      if (FirstPassUnknown)
-        Bit &= 0x000710ff;
-      BAsmCode[1] = 1 << ((Bit >> 16) & 7);
-      BAsmCode[2] = Lo(Bit);
-      switch (Hi(Bit))
-      {
-        case 0:
-          BAsmCode[0] = 0x70 + Code;
-          CodeLen = 3;
-          break;
-        case 16:
-          BAsmCode[0] = 0xa0 + Code;
-          CodeLen = 3;
-          break;
-        default:
-          WrError(ErrNum_InvAddrMode);
-      }
-      if ((CodeLen != 0) && (Rela))
-      {
-        Integer AdrInt = EvalStrIntExpression(&ArgStr[2], Int16, &OK) - (EProgCounter() + CodeLen + 1);
+      case 0x00:
+        BAsmCode[0] = 0x70 + Code;
+        CodeLen = 3;
+        break;
+      case 0x10:
+        BAsmCode[0] = 0xa0 + Code;
+        CodeLen = 3;
+        break;
+      default:
+        WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[ArgCnt - 1]);
+    }
+    if ((CodeLen != 0) && Rela)
+    {
+      Integer AdrInt = EvalStrIntExpression(&ArgStr[ArgCnt], Int16, &OK) - (EProgCounter() + CodeLen + 1);
 
-        if (!OK)
-          CodeLen = 0;
-        else if ((!FirstPassUnknown) && ((AdrInt > 127) || (AdrInt < -128)))
-        {
-          WrError(ErrNum_JmpDistTooBig);
-          CodeLen = 0;
-        }
-        else
-          BAsmCode[CodeLen++] = AdrInt & 0xff;
+      if (!OK)
+        CodeLen = 0;
+      else if ((!FirstPassUnknown) && ((AdrInt > 127) || (AdrInt < -128)))
+      {
+        WrError(ErrNum_JmpDistTooBig);
+        CodeLen = 0;
       }
+      else
+        BAsmCode[CodeLen++] = AdrInt & 0xff;
     }
   }
 }
@@ -1293,6 +1336,7 @@ static void SwitchTo_370(void)
   IsDef = IsDef_370;
   SwitchFrom = SwitchFrom_370;
   InternSymbol = InternSymbol_370;
+  DissectBit = DissectBit_370;
 
   InitFields();
 }

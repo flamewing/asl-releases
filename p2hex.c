@@ -15,7 +15,6 @@
 #include "version.h"
 #include "endian.h"
 #include "bpemu.h"
-#include "hex.h"
 #include "nls.h"
 #include "nlmessages.h"
 #include "p2hex.rsc"
@@ -106,10 +105,10 @@ static void Filename2CName(char *pDest, const char *pSrc)
   *pDest = '\0';
 }
 
-static void GetCBlockName(char *pDest, unsigned Num)
+static void GetCBlockName(char *pDest, int DestSize, unsigned Num)
 {
   if (Num > 0)
-    sprintf(pDest, "_%u", Num + 1);
+    as_snprintf(pDest, DestSize, "_%u", Num + 1);
   else
     *pDest = '\0';
 }
@@ -150,9 +149,9 @@ static void PrCData(FILE *pTargFile, char Ident, const char *pName,
     return;
 
   errno = 0;
-  fprintf(pTargFile, "#define %s%s_%s 0x%s%s\n",
+  fprintf(pTargFile, "#define %s%s_%s 0x%08lX%s\n",
           pCTargName, pCBlockName, pName,
-          HexLong(Value), pFormat);
+          LoDWord(Value), pFormat);
   ChkIO(TargName);
 }
 
@@ -323,7 +322,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
             {
               ChkSum = Lo(RecCnt) + Hi(RecCnt) + 3;
               errno = 0;
-              fprintf(TargFile, "S503%s%s\n", HexWord(RecCnt), HexByte(Lo(ChkSum ^ 0xff)));
+              fprintf(TargFile, "S503%04X%02X\n", LoWord(RecCnt), Lo(ChkSum ^ 0xff));
               ChkIO(TargName);
             }
             FormatOccured |= eMotoOccured;
@@ -342,7 +341,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
             HSeg = IntOffset >> 4;
             ChkSum = 4 + Lo(HSeg) + Hi(HSeg);
             IntOffset /= Gran;
-            errno = 0; fprintf(TargFile, ":02000002%s%s\n", HexWord(HSeg), HexByte(0x100 - ChkSum)); ChkIO(TargName);
+            errno = 0; fprintf(TargFile, ":02000002%04X%02X\n", LoWord(HSeg), Lo(0x100 - ChkSum)); ChkIO(TargName);
             if (MaxIntel < 1)
               MaxIntel = 1;
             break;
@@ -353,7 +352,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
             HSeg = IntOffset >> 16;
             ChkSum = 6 + Lo(HSeg) + Hi(HSeg);
             IntOffset /= Gran;
-            errno = 0; fprintf(TargFile, ":02000004%s%s\n", HexWord(HSeg), HexByte(0x100 - ChkSum)); ChkIO(TargName);
+            errno = 0; fprintf(TargFile, ":02000004%04X%02X\n", LoWord(HSeg), Lo(0x100 - ChkSum)); ChkIO(TargName);
             if (MaxIntel < 2)
               MaxIntel = 2;
             FirstBank = False;
@@ -372,7 +371,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
             }
             break;
           case eHexFormatC:
-            GetCBlockName(CBlockName, NumCBlocks);
+            GetCBlockName(CBlockName, sizeof(CBlockName), NumCBlocks);
             PrCData(TargFile, 's', "start", CTargName, CBlockName, ErgStart);
             PrCData(TargFile, 'l', "len", CTargName, CBlockName, ErgLen);
             PrCData(TargFile, 'e', "end", CTargName, CBlockName, ErgStart + ErgLen - 1);
@@ -400,7 +399,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
             HSeg = IntOffset >> 16;
             ChkSum = 6 + Lo(HSeg) + Hi(HSeg);
             errno = 0;
-            fprintf(TargFile, ":02000004%s%s\n", HexWord(HSeg), HexByte(0x100 - ChkSum));
+            fprintf(TargFile, ":02000004%04X%02X\n", LoWord(HSeg), Lo(0x100 - ChkSum));
             ChkIO(TargName);
             FirstBank = False;
           }
@@ -426,24 +425,24 @@ static void ProcessFile(const char *FileName, LongWord Offset)
           {
             case eHexFormatMotoS:
               errno = 0;
-              fprintf(TargFile, "S%c%s", '1' + MotRecType, HexByte(TransLen + 3 + MotRecType));
+              fprintf(TargFile, "S%c%02X", '1' + MotRecType, Lo(TransLen + 3 + MotRecType));
               ChkIO(TargName);
               ChkSum = TransLen + 3 + MotRecType;
               if (MotRecType >= 2)
               {
-                errno = 0; fprintf(TargFile, "%s", HexByte((ErgStart >> 24) & 0xff)); ChkIO(TargName);
+                errno = 0; fprintf(TargFile, "%02X", Lo(ErgStart >> 24)); ChkIO(TargName);
                 ChkSum += ((ErgStart >> 24) & 0xff);
               }
               if (MotRecType >= 1)
               {
-                errno = 0; fprintf(TargFile, "%s", HexByte((ErgStart >> 16) & 0xff)); ChkIO(TargName);
+                errno = 0; fprintf(TargFile, "%02X", Lo(ErgStart >> 16)); ChkIO(TargName);
                 ChkSum += ((ErgStart >> 16) & 0xff);
               }
-              errno = 0; fprintf(TargFile, "%s", HexWord(ErgStart & 0xffff)); ChkIO(TargName);
+              errno = 0; fprintf(TargFile, "%04X", LoWord(ErgStart)); ChkIO(TargName);
               ChkSum += Hi(ErgStart) + Lo(ErgStart);
               break;
             case eHexFormatMOS:
-              errno = 0; fprintf(TargFile, ";%s%s", HexByte(TransLen), HexWord(ErgStart & 0xffff)); ChkIO(TargName);
+              errno = 0; fprintf(TargFile, ";%02X%04X", Lo(TransLen), LoWord(ErgStart)); ChkIO(TargName);
               ChkSum += TransLen + Lo(ErgStart) + Hi(ErgStart);
               break;
             case eHexFormatIntel:
@@ -456,7 +455,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
               WrTransLen = (MultiMode < 2) ? TransLen : (TransLen / Gran);
               WrErgStart = (ErgStart - IntOffset) * ((MultiMode < 2) ? Gran : 1);
               errno = 0;
-              fprintf(TargFile, ":%s%s00", HexByte(WrTransLen), HexWord(WrErgStart));
+              fprintf(TargFile, ":%02X%04X00", Lo(WrTransLen), LoWord(WrErgStart));
               ChkIO(TargName);
               ChkSum = Lo(WrTransLen) + Hi(WrErgStart) + Lo(WrErgStart);
 
@@ -464,13 +463,13 @@ static void ProcessFile(const char *FileName, LongWord Offset)
             }
             case eHexFormatTek:
               errno = 0;
-              fprintf(TargFile, "/%s%s%s", HexWord(ErgStart), HexByte(TransLen),
-                                         HexByte(Lo(ErgStart) + Hi(ErgStart) + TransLen));
+              fprintf(TargFile, "/%04X%02X%02X", LoWord(ErgStart), Lo(TransLen),
+                                         Lo(Lo(ErgStart) + Hi(ErgStart) + TransLen));
               ChkIO(TargName);
               ChkSum = 0;
               break;
             case eHexFormatTiDSK:
-              errno = 0; fprintf(TargFile, "9%s", HexWord(/*Gran**/ErgStart));
+              errno = 0; fprintf(TargFile, "9%04X", LoWord(/*Gran**/ErgStart));
               ChkIO(TargName);
               ChkSum = 0;
               break;
@@ -478,7 +477,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
               for (z = (AVRLen - 1) << 3; z >= 0; z -= 8)
               {
                 errno = 0;
-                fputs(HexByte((ErgStart >> z) & 0xff), TargFile);
+                fprintf(TargFile, "%02X", Lo(ErgStart >> z));
                 ChkIO(TargName);
               }
               errno = 0;
@@ -522,9 +521,9 @@ static void ProcessFile(const char *FileName, LongWord Offset)
                 errno = 0;
                 if (((ErgStart + z >= StartData) && (ErgStart + z <= StopData))
                  || (InpSegment == SegData))
-                  fprintf(TargFile, "M%s", HexWord(WBuffer[z]));
+                  fprintf(TargFile, "M%04X", LoWord(WBuffer[z]));
                 else
-                  fprintf(TargFile, "B%s", HexWord(WBuffer[z]));
+                  fprintf(TargFile, "B%04X", LoWord(WBuffer[z]));
                 ChkIO(TargName);
                 ChkSum += WBuffer[z];
                 SumLen += Gran;
@@ -533,16 +532,14 @@ static void ProcessFile(const char *FileName, LongWord Offset)
             case eHexFormatAtmel:
               if (TransLen >= 2)
               {
-                fprintf(TargFile, "%s", HexWord(WBuffer[0]));
+                fprintf(TargFile, "%04X", LoWord(WBuffer[0]));
                 SumLen += 2;
               }
               break;
             case eHexFormatMico8:
               if (TransLen >= 4)
               {
-                fprintf(TargFile, "%s", HexNibble(Buffer[1] & 0x0f));
-                fprintf(TargFile, "%s", HexByte(Buffer[2]));
-                fprintf(TargFile, "%s", HexByte(Buffer[3]));
+                fprintf(TargFile, "%01X%02X%02X", Buffer[1] & 0x0f, Buffer[2] % 0xff, Buffer[3] & 0xff);
                 SumLen += 4;
               }
               break;
@@ -563,7 +560,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
               for (z = 0; z < (LongInt)TransLen; z++)
                 if ((MultiMode < 2) || (z % Gran == MultiMode - 2))
                 {
-                  errno = 0; fprintf(TargFile, "%s", HexByte(Buffer[z])); ChkIO(TargName);
+                  errno = 0; fprintf(TargFile, "%02X", Lo(Buffer[z])); ChkIO(TargName);
                   ChkSum += Buffer[z];
                   SumLen++;
                 }
@@ -575,28 +572,28 @@ static void ProcessFile(const char *FileName, LongWord Offset)
           {
             case eHexFormatMotoS:
               errno = 0;
-              fprintf(TargFile, "%s\n", HexByte(Lo(ChkSum ^ 0xff)));
+              fprintf(TargFile, "%02X\n", Lo(ChkSum ^ 0xff));
               ChkIO(TargName);
               break;
             case eHexFormatMOS:
               errno = 0;
-              fprintf(TargFile, "%s\n", HexWord(ChkSum));
+              fprintf(TargFile, "%04X\n", LoWord(ChkSum));
               break;
             case eHexFormatIntel:
             case eHexFormatIntel16:
             case eHexFormatIntel32:
               errno = 0;
-              fprintf(TargFile, "%s\n", HexByte(Lo(1 + (ChkSum ^ 0xff))));
+              fprintf(TargFile, "%02X\n", Lo(1 + (ChkSum ^ 0xff)));
               ChkIO(TargName);
               break;
             case eHexFormatTek:
               errno = 0;
-              fprintf(TargFile, "%s\n", HexByte(Lo(ChkSum)));
+              fprintf(TargFile, "%02X\n", Lo(ChkSum));
               ChkIO(TargName);
               break;
             case eHexFormatTiDSK:
               errno = 0;
-              fprintf(TargFile, "7%sF\n", HexWord(ChkSum));
+              fprintf(TargFile, "7%04XF\n", LoWord(ChkSum));
               ChkIO(TargName);
               break;
             case eHexFormatAtmel:
@@ -624,14 +621,14 @@ static void ProcessFile(const char *FileName, LongWord Offset)
             if (SepMoto)
             {
               errno = 0;
-              fprintf(TargFile, "S%c%s", '9' - MotRecType, HexByte(3 + MotRecType));
+              fprintf(TargFile, "S%c%02X", '9' - MotRecType, Lo(3 + MotRecType));
               ChkIO(TargName);
               for (z = 1; z <= 2 + MotRecType; z++)
               {
-                errno = 0; fprintf(TargFile, "%s", HexByte(0)); ChkIO(TargName);
+                errno = 0; fprintf(TargFile, "%02X", 0); ChkIO(TargName);
               }
               errno = 0;
-              fprintf(TargFile, "%s\n", HexByte(0xff - 3 - MotRecType));
+              fprintf(TargFile, "%02X\n", Lo(0xff - 3 - MotRecType));
               ChkIO(TargName);
             }
             break;
@@ -1128,17 +1125,15 @@ int main(int argc, char **argv)
   nls_init();
   NLS_Initialize();
 
-  hex_init();
   endian_init();
   bpemu_init();
-  hex_init();
   chunks_init();
   cmdarg_init(*argv);
   toolutils_init(*argv);
   nlmessages_init("p2hex.msg", *argv, MsgId1, MsgId2);
   ioerrs_init(*argv);
 
-  sprintf(Ver, "P2HEX/C V%s", Version);
+  as_snprintf(Ver, sizeof(Ver), "P2HEX/C V%s", Version);
   WrCopyRight(Ver);
 
   InitChunk(&UsedList);
@@ -1218,8 +1213,8 @@ int main(int argc, char **argv)
       ChkIO(OutName);
       exit(1);
     }
-    printf("%s: 0x%s-", getmessage(Num_InfoMessDeducedRange), HexLong(StartAdr));
-    printf("0x%s\n", HexLong(StopAdr));
+    printf("%s: 0x%08lX-", getmessage(Num_InfoMessDeducedRange), LoDWord(StartAdr));
+    printf("0x%08lX\n", LoDWord(StopAdr));
   }
 
   OpenTarget();
@@ -1245,24 +1240,24 @@ int main(int argc, char **argv)
 
   if ((FormatOccured & eMotoOccured) && (!SepMoto))
   {
-    errno = 0; fprintf(TargFile, "S%c%s", '9' - MaxMoto, HexByte(3 + MaxMoto)); ChkIO(TargName);
+    errno = 0; fprintf(TargFile, "S%c%02X", '9' - MaxMoto, Lo(3 + MaxMoto)); ChkIO(TargName);
     ChkSum = 3 + MaxMoto;
     if (!EntryAdrPresent)
       EntryAdr = 0;
     if (MaxMoto >= 2)
     {
-      errno = 0; fputs(HexByte((EntryAdr >> 24) & 0xff), TargFile); ChkIO(TargName);
+      errno = 0; fprintf(TargFile, "%02X", Lo(EntryAdr >> 24)); ChkIO(TargName);
       ChkSum += (EntryAdr >> 24) & 0xff;
     }
     if (MaxMoto >= 1)
     {
-      errno = 0; fputs(HexByte((EntryAdr >> 16) & 0xff), TargFile); ChkIO(TargName);
+      errno = 0; fprintf(TargFile, "%02X", Lo(EntryAdr >> 16)); ChkIO(TargName);
       ChkSum += (EntryAdr >> 16) & 0xff;
     }
-    errno = 0; fprintf(TargFile, "%s", HexWord(EntryAdr & 0xffff)); ChkIO(TargName);
+    errno = 0; fprintf(TargFile, "%04X", LoWord(EntryAdr & 0xffff)); ChkIO(TargName);
     ChkSum += (EntryAdr >> 8) & 0xff;
     ChkSum += EntryAdr & 0xff;
-    errno = 0; fprintf(TargFile, "%s\n", HexByte(0xff - (ChkSum & 0xff))); ChkIO(TargName);
+    errno = 0; fprintf(TargFile, "%02X\n", Lo(0xff - (ChkSum & 0xff))); ChkIO(TargName);
   }
 
   if (FormatOccured & eIntelOccured)
@@ -1276,7 +1271,7 @@ int main(int argc, char **argv)
         case 2:
           errno = 0; fprintf(TargFile, ":04000005"); ChkIO(TargName);
           ChkSum = 4 + 5;
-          errno = 0; fprintf(TargFile, "%s", HexLong(EntryAdr)); ChkIO(TargName);
+          errno = 0; fprintf(TargFile, "%08lX", LoDWord(EntryAdr)); ChkIO(TargName);
           ChkSum += ((EntryAdr >> 24) & 0xff) +
                     ((EntryAdr >> 16) & 0xff) +
                     ((EntryAdr >>  8) & 0xff) +
@@ -1286,7 +1281,7 @@ int main(int argc, char **argv)
         case 1:
           Seg = (EntryAdr >> 4) & 0xffff;
           Ofs = EntryAdr & 0x000f;
-          errno = 0; fprintf(TargFile, ":04000003%s%s", HexWord(Seg), HexWord(Ofs)); ChkIO(TargName);
+          errno = 0; fprintf(TargFile, ":04000003%04X%04X", LoWord(Seg), LoWord(Ofs)); ChkIO(TargName);
           ChkSum = 4 + 3 + Lo(Seg) + Hi(Seg) + Ofs;
           goto WrChkSum;
 
@@ -1295,7 +1290,7 @@ int main(int argc, char **argv)
           break;
 
         WrChkSum:
-          errno = 0; fprintf(TargFile, "%s\n", HexByte(0x100 - ChkSum)); ChkIO(TargName);
+          errno = 0; fprintf(TargFile, "%02X\n", Lo(0x100 - ChkSum)); ChkIO(TargName);
       }
     }
     errno = 0;
@@ -1304,7 +1299,7 @@ int main(int argc, char **argv)
       case 0:
       {
         ChkSum = 1 + Hi(EndRecAddr) + Lo(EndRecAddr);
-        fprintf(TargFile, ":00%s01%s\n", HexWord(EndRecAddr), HexByte(0x100 - ChkSum));
+        fprintf(TargFile, ":00%04X01%02X\n", LoWord(EndRecAddr), Lo(0x100 - ChkSum));
         break;
       }
       case 1:
@@ -1327,7 +1322,7 @@ int main(int argc, char **argv)
     if (EntryAdrPresent)
     {
       errno = 0;
-      fprintf(TargFile, "1%s7%sF\n", HexWord(EntryAdr), HexWord(EntryAdr));
+      fprintf(TargFile, "1%04X7%04XF\n", LoWord(EntryAdr), LoWord(EntryAdr));
       ChkIO(TargName);
     }
     errno = 0; fprintf(TargFile, ":\n"); ChkIO(TargName);
@@ -1371,7 +1366,7 @@ int main(int argc, char **argv)
             CTargName, CTargName, CTargName);
     for (ThisCBlock = 0; ThisCBlock < NumCBlocks; ThisCBlock++)
     {
-      GetCBlockName(CBlockName, ThisCBlock);
+      GetCBlockName(CBlockName, sizeof(CBlockName), ThisCBlock);
       fprintf(TargFile, "  {");
       for (pFormat = CFormat; *pFormat; pFormat++)
       {
@@ -1394,8 +1389,8 @@ int main(int argc, char **argv)
                       "};\n\n");
 
     if (EntryAdrPresent)
-      fprintf(TargFile, "#define %s_entry 0x%sul\n\n",
-              CTargName, HexLong(EntryAdr));
+      fprintf(TargFile, "#define %s_entry 0x%08lXul\n\n",
+              CTargName, LoDWord(EntryAdr));
     fprintf(TargFile,
             "#endif /* _%s_H */\n",
             CTargName);

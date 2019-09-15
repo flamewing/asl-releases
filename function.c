@@ -220,21 +220,11 @@ static void FuncABS(TempResult *pResult, const TempResult *pArgs, unsigned ArgCn
   {
     case TempInt:
       pResult->Typ = TempInt;
-      if (pArgs[0].Contents.Int < 0)
-        pResult->Contents.Int = -1;
-      else if (pArgs[0].Contents.Int > 0)
-        pResult->Contents.Int = 1;
-      else
-        pResult->Contents.Int = 0;
+      pResult->Contents.Int = (pArgs[0].Contents.Int  < 0) ? -pArgs[0].Contents.Int : pArgs[0].Contents.Int;
       break;
     case TempFloat:
       pResult->Typ = TempFloat;
-      if (pArgs[0].Contents.Float < 0)
-        pResult->Contents.Int = -1;
-      else if (pArgs[0].Contents.Float > 0)
-        pResult->Contents.Int = 1;
-      else
-        pResult->Contents.Int = 0;
+      pResult->Contents.Float = fabs(pArgs[0].Contents.Float);
       break;
     default:
       pResult->Typ = TempNone;

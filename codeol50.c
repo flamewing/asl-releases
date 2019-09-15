@@ -901,9 +901,9 @@ static void InitFields(void)
   AddAP("S2RATE"  , 0x34d0, M_6051);
   for (N = 0; N < 16; N++)
   {
-    sprintf(Op, "ADC%d", N);
+    as_snprintf(Op, sizeof(Op), "ADC%d", N);
     AddAP(Op, 0x3000 | (N << 4), M_6051);
-    sprintf(Op, "SBC%d", N);
+    as_snprintf(Op, sizeof(Op), "SBC%d", N);
     AddAP(Op, 0x3200 | (N << 4), M_6051);
   }
 

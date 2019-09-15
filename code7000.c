@@ -148,28 +148,16 @@ static void ChkDelayed(void)
 /*-------------------------------------------------------------------------*/
 /* Adressparsing */
 
-static char *LiteralName(PLiteral Lit, char *Result)
+static char *LiteralName(PLiteral Lit, char *Result, int ResultSize)
 {
-  String Tmp;
-  char PassStr[10];
-
+  as_snprintf(Result, ResultSize, "LITERAL_");
   if (Lit->IsForward)
-  {
-    strcpy(Tmp, "F_");
-    HexString(Tmp + 2, sizeof(Tmp) - 2, Lit->FCount, 8);
-  }
+    as_snprcatf(Result, ResultSize, "F_%08lllx", (LargeWord)Lit->FCount);
   else if (Lit->Is32)
-  {
-    strcpy(Tmp, "L_");
-    HexString(Tmp + 2, sizeof(Tmp) - 2, Lit->Value, 8);
-  }
+    as_snprcatf(Result, ResultSize, "L_%08lllx", (LargeWord)Lit->Value);
   else
-  {
-    strcpy(Tmp, "W_");
-    HexString(Tmp + 2, sizeof(Tmp) - 2, Lit->Value, 4);
-  }
-  HexString(PassStr, sizeof(PassStr), Lit->PassNo, 0);
-  sprintf(Result, "LITERAL_%s_%s", Tmp, PassStr);
+    as_snprcatf(Result, ResultSize, "W_%04x", (unsigned)Lit->Value);
+  as_snprcatf(Result, ResultSize, "_%x", (unsigned)Lit->PassNo);
   return Result;
 }
 /*
@@ -182,7 +170,7 @@ static void PrintLiterals(void)
   Lauf = FirstLiteral;
   while (Lauf)
   {
-    LiteralName(Lauf, Name);
+    LiteralName(Lauf, Name, sizeof(Name));
     WrLstLine(Name); Lauf = Lauf->Next;
   }
 }
@@ -570,8 +558,9 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask, Boolean Signed)
           {
             tStrComp LStrComp;
             
-            LiteralName(Lauf, Name);
-            sprintf(LComp.Str, "%s%s", Name, AdrStr);
+            as_snprintf(LComp.Str, STRINGSIZE, "%s%s", 
+                        LiteralName(Lauf, Name, sizeof(Name)),
+                        AdrStr);
             StrCompMkTemp(&LStrComp, LStr);
             LDef = IsSymbolDefined(&LStrComp);
             if (LDef)
@@ -587,8 +576,9 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask, Boolean Signed)
         /* Distanz abfragen - im naechsten Pass... */
 
         FirstPassUnknown = False;
-        LiteralName(Lauf, Name);
-        sprintf(LComp.Str, "%s%s", Name, AdrStr);
+        as_snprintf(LComp.Str, STRINGSIZE, "%s%s",
+                    LiteralName(Lauf, Name, sizeof(Name)),
+                    AdrStr);
         DispAcc = EvalStrIntExpression(&LComp, Int32, &OK) + p;
         if (OK)
         {
@@ -1208,7 +1198,7 @@ static void LTORG_16(void)
     if ((!Lauf->Is32) && (Lauf->DefSection == MomSectionHandle))
     {
       WAsmCode[CodeLen >> 1] = Lauf->Value;
-      LiteralName(Lauf, Name);
+      LiteralName(Lauf, Name, sizeof(Name));
       StrCompMkTemp(&TmpComp, Name);
       EnterIntSymbol(&TmpComp, EProgCounter() + CodeLen, SegCode, False);
       Lauf->PassNo = (-1);
@@ -1235,7 +1225,7 @@ static void LTORG_32(void)
       }
       WAsmCode[CodeLen >> 1] = (Lauf->Value >> 16);
       WAsmCode[(CodeLen >> 1) + 1] = (Lauf->Value & 0xffff);
-      LiteralName(Lauf, Name);
+      LiteralName(Lauf, Name, sizeof(Name));
       StrCompMkTemp(&TmpComp, Name);
       EnterIntSymbol(&TmpComp, EProgCounter() + CodeLen, SegCode, False);
       Lauf->PassNo = -1;
@@ -1248,7 +1238,7 @@ static void LTORG_32(void)
            && (EqLauf->DefSection == MomSectionHandle)
            && (EqLauf->Value == Lauf->Value))
           {
-            LiteralName(EqLauf, Name);
+            LiteralName(EqLauf, Name, sizeof(Name));
             StrCompMkTemp(&TmpComp, Name);
             EnterIntSymbol(&TmpComp, EProgCounter() + CodeLen, SegCode, False);
             EqLauf->PassNo = -1;

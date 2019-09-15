@@ -169,8 +169,9 @@ Boolean SupAllowed;                     /* Supervisormode freigegeben */
 Boolean Maximum;                        /* CPU nicht kastriert */
 Boolean DoBranchExt;                    /* Spruenge automatisch verlaengern */
 
-LargeWord RadixBase;                    /* Default-Zahlensystem im Formelparser*/
-LargeWord OutRadixBase;                 /* dito fuer Ausgabe */
+int RadixBase;                          /* Default-Zahlensystem im Formelparser*/
+int OutRadixBase;                       /* dito fuer Ausgabe */
+int ListRadixBase;                      /* ditto for listing */
 
 tStrComp *ArgStr;                       /* Komponenten der Zeile */
 StringPtr pLOpPart;

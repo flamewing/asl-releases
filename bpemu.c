@@ -15,6 +15,7 @@
 #include <ctype.h>
 
 #include "strutil.h"
+#include "intconsts.h"
 #include "bpemu.h"
 
 #ifdef __MSDOS__
@@ -252,9 +253,19 @@ Byte Hi(Word inp)
   return ((inp >> 8) & 0xff);
 }
 
-LongWord HiWord(LongWord Src)
+unsigned LoWord(LongWord Src)
+{
+  return (Src & 0xffff);
+}
+
+unsigned HiWord(LongWord Src)
 {
   return ((Src >> 16) & 0xffff);
+}
+
+unsigned long LoDWord(LargeWord Src)
+{
+  return Src & INTCONST_ffffffffl;
 }
 
 Boolean Odd(int inp)

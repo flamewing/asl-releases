@@ -423,7 +423,7 @@ static Boolean SplitBit(tStrComp *pDest, const tStrComp *pSrc, Byte *pErg)
     if (OK)
     {
       *pErg = (val & 15) ^ Inv;
-      sprintf(pDest->Str, "r%d", (int)(val >> 4));
+      as_snprintf(pDest->Str, STRINGSIZE, "r%d", (int)(val >> 4));
       return True;
     }
     return False;
@@ -1795,8 +1795,9 @@ static void DecodeBIT(Word Code)
       PushLocHandle(-1);
       EnterIntSymbol(&LabPart, (AdrPart << 4) + Bit, SegNone, False);
       PopLocHandle();
-      sprintf(ListLine,"=r%d.%s%c", (int)AdrPart,
-              (Odd(Bit)) ? "!" : "", (Bit >> 1) + AscOfs);
+      as_snprintf(ListLine, STRINGSIZE, "=r%d.%s%c",
+                  (int)AdrPart,
+                  (Odd(Bit)) ? "!" : "", (Bit >> 1) + AscOfs);
     }
   }
 }

@@ -2753,7 +2753,7 @@ static void DecodeRST(Word Code)
   {
     Boolean OK;
     Byte AdrByte;
-    LargeWord SaveRadixBase = RadixBase;
+    int SaveRadixBase = RadixBase;
 
 #if 0
     /* some people like to regard the RST argument as a literal

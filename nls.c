@@ -25,8 +25,8 @@ typedef struct
 {
   Word Country;        /* = internationale Vorwahl */
   Word CodePage;       /* mom. gewaehlter Zeichensatz */
-  void (*DateString)(Word Year, Word Month, Word Day, char *Dest);
-  void (*TimeString)(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest);
+  void (*DateString)(Word Year, Word Month, Word Day, char *Dest, int DestSize);
+  void (*TimeString)(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest, int DestSize);
 #if (defined OS2_NLS) || (defined DOS_NLS)
   DateFormat DateFmt;  /* Datumsreihenfolge */
   char *DateSep;       /* Trennzeichen zwischen Datumskomponenten */
@@ -182,26 +182,25 @@ static void DumpNLSInfo(void)
 
 #if (defined OS2_NLS) || (defined DOS_NLS)
 
-static void DOS_OS2_DateString(Word Year, Word Month, Word Day, char *Dest)
+static void DOS_OS2_DateString(Word Year, Word Month, Word Day, char *Dest, int DestSize)
 {
   switch (NLSInfo.DateFmt)
   {
     case DateFormatMTY:
-      sprintf(Dest, "%d%s%d%s%d", Month, NLSInfo.DateSep, Day, NLSInfo.DateSep, Year);
+      as_snprintf(Dest, DestSize, "%d%s%d%s%d", Month, NLSInfo.DateSep, Day, NLSInfo.DateSep, Year);
       break;
     case DateFormatTMY:
-      sprintf(Dest, "%d%s%d%s%d", Day, NLSInfo.DateSep, Month, NLSInfo.DateSep, Year);
+      as_snprintf(Dest, DestSize, "%d%s%d%s%d", Day, NLSInfo.DateSep, Month, NLSInfo.DateSep, Year);
       break;
     case DateFormatYMT:
-      sprintf(Dest, "%d%s%d%s%d", Year, NLSInfo.DateSep, Month, NLSInfo.DateSep, Day);
+      as_snprintf(Dest, DestSize, "%d%s%d%s%d", Year, NLSInfo.DateSep, Month, NLSInfo.DateSep, Day);
       break;
   }
 }
 
-static void DOS_OS2_TimeString(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest)
+static void DOS_OS2_TimeString(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest, int DestSize)
 {
   Word OriHour;
-  String ext;
 
   OriHour = Hour;
   if (NLSInfo.TimeFmt == TimeFormatUSA)
@@ -210,14 +209,11 @@ static void DOS_OS2_TimeString(Word Hour, Word Minute, Word Second, Word Sec100,
     if (Hour == 0)
       Hour = 12;
   }
-  sprintf(Dest, "%d%s%02d%s%02d", Hour, NLSInfo.TimeSep, Minute, NLSInfo.TimeSep, Second);
+  as_snprintf(Dest, DestSize, "%d%s%02d%s%02d", Hour, NLSInfo.TimeSep, Minute, NLSInfo.TimeSep, Second);
   if (Sec100 < 100)
-  {
-    sprintf(ext, "%s%02d", NLSInfo.DecSep, Sec100);
-    strcat(Dest, ext);
-  }
+    as_snprcatf(Dest, DestSize, "%s%02d", NLSInfo.DecSep, Sec100);
   if (NLSInfo.TimeFmt == TimeFormatUSA)
-    strcat(Dest, (OriHour > 12) ? "p" : "a");
+    as_snprcatf(Dest, DestSize, "%c", (OriHour > 12) ? 'p' : 'a');
 }
 #endif /* OS2_NLS || DOS_NLS */
 
@@ -401,7 +397,7 @@ static void QueryInfo(void)
 #include <locale.h>
 #include <langinfo.h>
 
-static void Locale_DateString(Word Year, Word Month, Word Day, char *Dest)
+static void Locale_DateString(Word Year, Word Month, Word Day, char *Dest, int DestSize)
 {
   struct tm tm;
 
@@ -411,10 +407,10 @@ static void Locale_DateString(Word Year, Word Month, Word Day, char *Dest)
   tm.tm_hour = 0;
   tm.tm_min = 0;
   tm.tm_sec = 0;
-  strftime(Dest, STRINGSIZE, NLSInfo.DateFmtStr, &tm);
+  strftime(Dest, DestSize, NLSInfo.DateFmtStr, &tm);
 }
 
-static void Locale_TimeString(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest)
+static void Locale_TimeString(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest, int DestSize)
 {
   struct tm tm;
 
@@ -425,7 +421,7 @@ static void Locale_TimeString(Word Hour, Word Minute, Word Second, Word Sec100, 
   tm.tm_hour = Hour;
   tm.tm_min = Minute;
   tm.tm_sec = Second;
-  strftime(Dest, STRINGSIZE, NLSInfo.TimeFmtStr, &tm);
+  strftime(Dest, DestSize, NLSInfo.TimeFmtStr, &tm);
 }
 
 static void QueryInfo(void)
@@ -476,15 +472,15 @@ static void QueryInfo(void)
 
 #else /* NO_NLS */
 
-static void Default_DateString(Word Year, Word Month, Word Day, char *Dest)
+static void Default_DateString(Word Year, Word Month, Word Day, char *Dest, int DestSize)
 {
-  sprintf(Dest, "%u/%u/%u", Month, Day, Year);
+  as_snprintf(Dest, DestSize, "%u/%u/%u", Month, Day, Year);
 }
 
-static void Default_TimeString(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest)
+static void Default_TimeString(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest, int DestSize)
 {
   (void)Sec100;
-  sprintf(Dest, "%u:%u:%u", Hour, Minute, Second);
+  as_snprintf(Dest, DestSize, "%u:%u:%u", Hour, Minute, Second);
 }
 
 static void QueryInfo(void)
@@ -530,54 +526,53 @@ void NLS_Initialize(void)
   NLSInfo.Initialized = True;
 }
 
-void NLS_DateString(Word Year, Word Month, Word Day, char *Dest)
+void NLS_DateString(Word Year, Word Month, Word Day, char *Dest, int DestSize)
 {
   if (!NLSInfo.DateString)
   {
     fprintf(stderr, "NLS not yet initialized\n");
     exit(255);
   }
-  NLSInfo.DateString(Year, Month, Day, Dest);
+  NLSInfo.DateString(Year, Month, Day, Dest, DestSize);
 }
 
-void NLS_CurrDateString(char *Dest)
+void NLS_CurrDateString(char *Dest, int DestSize)
 {
   time_t timep;
   struct tm *trec;
 
   time(&timep);
   trec = localtime(&timep);
-  NLS_DateString(trec->tm_year + 1900, trec->tm_mon + 1, trec->tm_mday, Dest);
+  NLS_DateString(trec->tm_year + 1900, trec->tm_mon + 1, trec->tm_mday, Dest, DestSize);
 }
 
-void NLS_TimeString(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest)
+void NLS_TimeString(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest, int DestSize)
 {
   if (!NLSInfo.TimeString)
   {
     fprintf(stderr, "NLS not yet initialized\n");
     exit(255);
   }
-  NLSInfo.TimeString(Hour, Minute, Second, Sec100, Dest);
+  NLSInfo.TimeString(Hour, Minute, Second, Sec100, Dest, DestSize);
 }
 
-void NLS_CurrTimeString(Boolean Use100, char *Dest)
+void NLS_CurrTimeString(Boolean Use100, char *Dest, int DestSize)
 {
   time_t timep;
   struct tm *trec;
 
   time(&timep); trec = localtime(&timep);
-  NLS_TimeString(trec->tm_hour, trec->tm_min, trec->tm_sec, Use100 ? 0 : 100, Dest);
+  NLS_TimeString(trec->tm_hour, trec->tm_min, trec->tm_sec, Use100 ? 0 : 100, Dest, DestSize);
 }
 
-void NLS_CurrencyString(double inp, char *erg)
+void NLS_CurrencyString(double inp, char *erg, int DestSize)
 {
-  char s[1024], form[1024];
+  char s[1024];
   char *p, *z;
 
   /* Schritt 1: mit passender Nachkommastellenzahl wandeln */
 
-  sprintf(form, "%%0.%df", NLSInfo.CurrDecimals);
-  sprintf(s, form, inp);
+  as_snprintf(s, sizeof(s), "%0.*f", (int)NLSInfo.CurrDecimals, inp);
 
   /* Schritt 2: vorne den Punkt suchen */
 
@@ -603,16 +598,16 @@ void NLS_CurrencyString(double inp, char *erg)
   switch (NLSInfo.CurrFmt)
   {
     case CurrFormatPreNoBlank:
-      sprintf(erg, "%s%s", NLSInfo.Currency, s);
+      as_snprintf(erg, DestSize, "%s%s", NLSInfo.Currency, s);
       break;
     case CurrFormatPreBlank:
-      sprintf(erg, "%s %s", NLSInfo.Currency, s);
+      as_snprintf(erg, DestSize, "%s %s", NLSInfo.Currency, s);
       break;
     case CurrFormatPostNoBlank:
-      sprintf(erg, "%s%s", s, NLSInfo.Currency);
+      as_snprintf(erg, DestSize, "%s%s", s, NLSInfo.Currency);
       break;
     case CurrFormatPostBlank:
-      sprintf(erg, "%s%s", s, NLSInfo.Currency);
+      as_snprintf(erg, DestSize, "%s%s", s, NLSInfo.Currency);
       break;
     default:
       strmov(p, p + strlen(NLSInfo.DecSep));

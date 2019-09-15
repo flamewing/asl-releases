@@ -221,7 +221,6 @@
 #define OPENUPMODE "r+"
 #define IEEEFLOAT
 #define NEEDS_CASECMP
-#define BROKEN_SPRINTF
 typedef signed char Integ8;
 typedef unsigned char Card8;
 typedef signed short Integ16;
@@ -478,7 +477,6 @@ typedef unsigned long long Card64;
 #define OPENUPMODE "r+"
 #define IEEEFLOAT
 #define NEEDS_STRDUP
-#define BROKEN_SPRINTF
 typedef signed char Integ8;
 typedef unsigned char Card8;
 typedef signed short Integ16;

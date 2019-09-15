@@ -22,7 +22,7 @@ static int MaxNameLen = 0;
 /****************************************************************************/
 /* neuen Prozessor definieren */
 
-CPUVar AddCPUUser(const char *NewName, tCPUSwitchUserProc Switcher, void *pUserData)
+CPUVar AddCPUUser(const char *NewName, tCPUSwitchUserProc Switcher, void *pUserData, tCPUFreeUserDataProc Freeer)
 {
   tpCPUDef Lauf, Neu;
   char *p;
@@ -34,6 +34,7 @@ CPUVar AddCPUUser(const char *NewName, tCPUSwitchUserProc Switcher, void *pUserD
   for (p = Neu->Name; *p != '\0'; p++)
     *p = mytoupper(*p);
   Neu->SwitchProc = Switcher;
+  Neu->FreeProc = Freeer;
   Neu->pUserData = pUserData;
   Neu->Next = NULL;
   Neu->Number = Neu->Orig = CPUCnt;
@@ -65,12 +66,17 @@ static void SwitchNoUserProc(void *pUserData)
   ((tNoUserData*)pUserData)->Switcher();
 }
 
+static void FreeNoUserProc(void *pUserData)
+{
+  free(pUserData);
+}
+
 CPUVar AddCPU(const char *NewName, tCPUSwitchProc Switcher)
 {
   tNoUserData *pData = (tNoUserData*)malloc(sizeof(*pData));
   
   pData->Switcher = Switcher;
-  return AddCPUUser(NewName, SwitchNoUserProc, pData);
+  return AddCPUUser(NewName, SwitchNoUserProc, pData, FreeNoUserProc);
 }
 
 Boolean AddCPUAlias(char *OrigName, char *AliasName)
@@ -152,7 +158,7 @@ void PrintCPUList(tPrintNextCPUProc NxtProc)
   Context.NoUserProc = NULL;
   Context.cnt = 0;
   Context.NxtProc = NxtProc;
-  Context.perline = 80 / MaxNameLen;
+  Context.perline = 79 / (MaxNameLen + 1);
   IterateCPUList(PrintIterator, &Context);
   printf("\n");
   NxtProc();
@@ -167,6 +173,8 @@ void ClearCPUList(void)
     Save = FirstCPUDef;
     FirstCPUDef = Save->Next;
     free(Save->Name);
+    if (Save->FreeProc)
+      Save->FreeProc(Save->pUserData);
     free(Save);
   }
 }

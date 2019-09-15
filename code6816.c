@@ -131,7 +131,7 @@ static void DecodeAdr(int Start, int Stop, Boolean LongAdr, Byte Mask)
   {
     char Str[100];
 
-    sprintf(Str, getmessage(Num_ErrMsgAddrArgCnt), 1, 2, Stop - Start + 1);
+    as_snprintf(Str, sizeof(Str), getmessage(Num_ErrMsgAddrArgCnt), 1, 2, Stop - Start + 1);
     WrXError(ErrNum_WrongArgCnt, Str);
     return;
   }

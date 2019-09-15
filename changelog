@@ -1,3 +1,11 @@
+2019-09-15 [1.42 Bld 149]
+
+- Bugfix      : built-in function abs() works again
+- Change      : ORG to same address no longer starts a new record
+                in output file
+- Addition    : new command line switch '-listradix' to set number
+                system in listing
+
 2019-07-20 [1.42 Bld 148]
 
 - Addition    : Add P2HEX output format "C arrays".

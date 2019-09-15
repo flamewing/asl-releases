@@ -76,6 +76,8 @@ static void DumpChunks(const ChunkList *NChunk, FILE *pDestFile)
 {
   tDumpIteratorData Data;
 
+  UNUSED(NChunk);
+
   Data.pDestFile = pDestFile;
   Data.Sum = 0;
   fprintf(pDestFile, "\t\t; disassembled area:\n");
@@ -199,9 +201,9 @@ static CMDResult CMD_EntryAddress(Boolean Negate, const char *pArg)
     {
       Byte Vector[8];
       char *pVectorAddress = NULL, *pAddrLen = NULL, *pEndianess = NULL;
-      LargeWord AddrLen, VectorAddress = 0;
+      LargeWord AddrLen, VectorAddress = 0, z;
       Boolean VectorMSB;
-      int z, l;
+      int l;
 
       pVectorAddress = Arg + 1;
       l = strlen(pVectorAddress);
@@ -262,7 +264,7 @@ static CMDResult CMD_EntryAddress(Boolean Negate, const char *pArg)
       {
         String Str;
 
-        sprintf(Str, "Vector_2_"); strmaxcat(Str, pName, sizeof(Str));
+        as_snprintf(Str, sizeof(Str), "Vector_2_%s", pName);
         AddInvSymbol(Str, VectorAddress);
       }
     }
@@ -332,7 +334,7 @@ static CMDResult CMD_HexLowerCase(Boolean Negate, const char *Arg)
 {
   UNUSED(Arg);
 
-  HexLowerCase = !Negate;
+  HexStartCharacter = Negate ? 'A' : 'a';
   return CMDOK;
 }
 
@@ -377,7 +379,8 @@ static void DisasmIterator(const OneChunk *pChunk, Boolean IsData, void *pUser)
   tDisasmData *pData = (tDisasmData*)pUser;
   const char *pLabel;
   Byte Code[100];
-  int z, DataSize = -1;
+  unsigned z;
+  int DataSize = -1;
 
   Address = pChunk->Start;
   HexString(NumString, sizeof(NumString), Address, 0);

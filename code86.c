@@ -2497,7 +2497,7 @@ static void AddFPU(char *NName, Word NCode, InstProc NProc)
   char Instr[30];
 
   AddInstTable(InstTable, NName, NCode, NProc);
-  sprintf(Instr, "%cN%s", *NName, NName + 1);
+  as_snprintf(Instr, sizeof(Instr), "%cN%s", *NName, NName + 1);
   AddInstTable(InstTable, Instr, NCode | NO_FWAIT_FLAG, NProc);
 }
 

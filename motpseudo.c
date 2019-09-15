@@ -462,8 +462,8 @@ void ConvertMotoFloatDec(Double F, Byte *pDest, Boolean NeedsBig)
 
   /* convert to ASCII, split mantissa & exponent */
 
-  sprintf(s, "%0.16e", F);
-  pSplit = strchr(s, 'e');
+  as_snprintf(s, sizeof(s), "%0.16e", F);
+  pSplit = strchr(s, HexStartCharacter + ('e' - 'a'));
   if (!pSplit)
   {
     strcpy(Man, s);

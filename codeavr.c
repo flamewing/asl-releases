@@ -110,13 +110,12 @@ static void DissectBit_AVR(char *pDest, int DestSize, LargeWord Inp)
 {
   LongWord BitSpec = Inp;
 
-  UNUSED(DestSize);
-  sprintf(pDest, "0x%0*x(%c).%d",
-          (BitSpec & BitFlag_IO) ? 2 : 3,
-          (BitSpec >> 3) & 0xffff,
-          (BitSpec & BitFlag_Data) ? SegShorts[SegData]
+  as_snprintf(pDest, DestSize, "0x%0*x(%c).%d",
+              (BitSpec & BitFlag_IO) ? 2 : 3,
+              (unsigned)((BitSpec >> 3) & 0xffff),
+              (BitSpec & BitFlag_Data) ? SegShorts[SegData]
                                    : ((BitSpec & BitFlag_IO) ? SegShorts[SegIO] : SegShorts[SegNone]),
-          BitSpec & 7);
+              (int)(BitSpec & 7));
 }
 
 /*---------------------------------------------------------------------------*/
@@ -1225,7 +1224,7 @@ void codeavr_init(void)
   const tCPUProps *pProp;
 
   for (pProp = CPUProps; pProp->pName; pProp++)
-    (void)AddCPUUser(pProp->pName, SwitchTo_AVR, (void*)pProp);
+    (void)AddCPUUser(pProp->pName, SwitchTo_AVR, (void*)pProp, NULL);
 
    AddInitPassProc(InitCode_AVR);
 }

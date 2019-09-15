@@ -383,7 +383,7 @@ static Boolean ChkAdr(Word Mask, int Index)
 
     AdrCnt1[Index] = AdrCnt2[Index] = 0;
     AdrType[Index] = ModNone;
-    sprintf(Str, "%d", Index);
+    as_snprintf(Str, sizeof(Str), "%d", Index);
     WrXError(ErrNum_InvAddrMode, Str);
     return False;
   }

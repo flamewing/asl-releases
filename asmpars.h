@@ -156,6 +156,9 @@ extern Double EvalStrFloatExpression(const struct sStrComp *pExpr, FloatType Typ
 extern void EvalStrStringExpression(const struct sStrComp *pExpr, Boolean *pResult, char *pEvalResult);
 
 
+extern const char *GetIntelSuffix(unsigned Radix);
+
+
 extern Boolean PushSymbol(const struct sStrComp *pSymName, const struct sStrComp *pStackName);
 
 extern Boolean PopSymbol(const struct sStrComp *pSymName, const struct sStrComp *pStackName);

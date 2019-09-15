@@ -898,30 +898,30 @@ Message OpTypeString
 
 Message HeadingFileNameLab
  " - Quelle "
- " - source file "
+ " - Source File "
 
 Message HeadingPageLab
  " - Seite "
- " - page "
+ " - Page "
 
 ;----------------------------------------------------------------------------
 ; Strings in Listing
 
 Message ListSymListHead1
  "  Symboltabelle (*=unbenutzt):"
- "  symbol table (* = unused):"
+ "  Symbol Table (* = unused):"
 
 Message ListSymListHead2
  "  ----------------------------"
- "  ------------------------"
+ "  --------------------------"
 
 Message ListSymSumMsg
  " Symbol"
- " symbol"
+ " Symbol"
 
 Message ListSymSumsMsg
  " Symbole"
- " symbols"
+ " Symbols"
 
 Message ListUSymSumMsg
  " unbenutztes Symbol"
@@ -933,7 +933,7 @@ Message ListUSymSumsMsg
 
 Message ListRegDefListHead1
  "  Registerdefinitionen (*=unbenutzt):"
- "  register definitions (*=unused):"
+ "  Register Definitions (*=unused):"
 
 Message ListRegDefListHead2
  "  -----------------------------------"
@@ -957,7 +957,7 @@ Message ListRegDefUSumsMsg
 
 Message ListCodepageListHead1
  "  Zeichentabellen:"
- "  codepages:"
+ "  Code Pages:"
 
 Message ListCodepageListHead2
  "  ----------------"
@@ -981,7 +981,7 @@ Message ListCodepageSumsMsg
 
 Message ListMacListHead1
  "  definierte Makros:"
- "  defined macros:"
+ "  Defined Macros:"
 
 Message ListMacListHead2
  "  ------------------"
@@ -997,7 +997,7 @@ Message ListMacSumsMsg
 
 Message ListStructListHead1
  "  definierte Strukturen/Unions:"
- "  defined structures/unions:"
+ "  Defined Structures/Unions:"
 
 Message ListStructListHead2
  "  -----------------------------"
@@ -1013,7 +1013,7 @@ Message ListStructSumsMsg
 
 Message ListFuncListHead1
  "  definierte Funktionen:"
- "  defined functions:"
+ "  Defined Functions:"
 
 Message ListFuncListHead2
  "  ----------------------"
@@ -1029,7 +1029,7 @@ Message ListDefListHead2
 
 Message ListSegListHead1
  "in "
- "space used in "
+ "Space Used in "
 
 Message ListSegListHead2
  " belegte Bereiche:"
@@ -1037,7 +1037,7 @@ Message ListSegListHead2
 
 Message ListCrossListHead1
  "  Querverweisliste:"
- "  cross reference list:"
+ "  Cross Reference List:"
 
 Message ListCrossListHead2
  "  -----------------"
@@ -1045,7 +1045,7 @@ Message ListCrossListHead2
 
 Message ListSectionListHead1
  "  Sektionen:"
- "  sections:"
+ "  Sections:"
 
 Message ListSectionListHead2
  "  ----------"
@@ -1053,7 +1053,7 @@ Message ListSectionListHead2
 
 Message ListIncludeListHead1
  "  Include-Verschachtelung:"
- "  nested include files:"
+ "  Nested Include Files:"
 
 Message ListIncludeListHead2
  "  ------------------------"
@@ -1088,7 +1088,7 @@ Message ListSecoName
 
 Message InfoMessAssembling
  "Assembliere "
- "assembling "
+ "Assembling "
 
 Message InfoMessPass
  "PASS "
@@ -1123,8 +1123,8 @@ Message InfoMessPPassCnt
  " passes"
 
 Message InfoMessNoPass
- "        zus&auml;tzliche erforderliche Durchl&auml;ufe wegen Fehlern nicht\n        durchgef&uuml;hrt, Listing m&ouml;glicherweise inkorrekt"
- "        additional necessary passes not started due to\n        errors, listing possibly incorrect"
+ "        zus&auml;tzliche erforderliche Durchl&auml;ufe wegen Fehlern nicht\n        durchgef&uuml;hrt, Listing m&ouml;glicherweise inkorrekt."
+ "        Additional necessary passes not started due to\n        errors, listing possibly incorrect."
 
 Message InfoMessMacAssLine
  " Zeile inkl. Makroexpansionen"
@@ -1160,19 +1160,19 @@ Message InfoMessRemainStack
 
 Message InfoMessNFilesFound
  ": keine Datei(en) zu assemblieren!"
- ": no file(s) to assemble!"
+ ": No file(s) to assemble!"
 
 Message InfoMessMacroAss
  "Makroassembler "
- "macro assembler "
+ "Macro Assembler "
 
 Message InfoMessVar
  "Version"
- "version"
+ "Version"
 
 Message InfoMessHead1
  "Aufruf : "
- "calling convention : "
+ "Calling Convention : "
 
 Message InfoMessHead2
  " [Optionen] [Datei] [Optionen] ..."
@@ -1184,15 +1184,15 @@ Message KeyWaitMsg
 
 Message ErrMsgInvParam
  "ung&uuml;ltige Option: "
- "invalid option: "
+ "Invalid option: "
 
 Message ErrMsgInvEnvParam
  "ung&uuml;ltige Environment-Option: "
- "invalid environment option: "
+ "Invalid environment option: "
 
 Message InvMsgSource
  "Quelldatei?"
- "source file?"
+ "Source file?"
 
 Message InfoMessHelp
  "--------\n" \
@@ -1209,6 +1209,7 @@ Message InfoMessHelp
  "-cpu <Name> : Zielprozessor setzen\n" \
  "-alias <neu>=<alt> : Prozessor-Alias definieren\n" \
  "-l : Listing auf Konsole              -L : Listing auf Datei\n" \
+ "-listradix <2...36>: Zahlensystem im Listing\n" \
  "-i <Pfad>[:Pfad]... : Pfadliste f&uuml;r Includedateien\n" \
  "-D <Symbol>[,Symbol]... : Symbole vordefinieren\n" \
  "-gnuerrors: Fehlermeldungen im GNU-Format\n" \
@@ -1247,6 +1248,7 @@ Message InfoMessHelp
  "-cpu <name> : set target processor\n" \
  "-alias <new>=<old> : define processor alias\n" \
  "-l : listing to console               -L : listing to file\n" \
+ "-listradix <2...36>: number system in listing\n" \
  "-i <path>[;path]... : list of paths for include files\n" \
  "-D <symbol>[,symbol]... : predefine symbols\n" \
  "-gnuerrors: error messages in GNU format\n" \

@@ -7,15 +7,16 @@
 
 #include "sysdefs.h"
 #include "specchars.h"
+#include "strutil.h"
 
 #define TMPNAME "tempfile"
 
-	int main(int argc, char **argv)
+int main(int argc, char **argv)
 {
    FILE *src,*dest;
    int ch;
    int z,z2,res;
-   unsigned char cmdline[1024];
+   char cmdline[1024];
    long charcnt,metacnt,crcnt;
 
    if (argc<2)
@@ -49,13 +50,16 @@
          default:
           for (z2=0; *specchars[z2]!=0000; z2++)
            if (ch==specchars[z2][0]) 
-            { fputc(specchars[z2][1],dest); metacnt++; break; }
+           {
+             fputc(specchars[z2][1],dest); metacnt++; break;
+           }
           if (*specchars[z2]==0000) fputc(ch,dest);
         }
       }
      fclose(src); fclose(dest);
-     sprintf(cmdline,"mv %s %s",TMPNAME,argv[z]); res=system(cmdline);
-     if (res!=0)
+     as_snprintf(cmdline, sizeof(cmdline), "mv %s %s", TMPNAME, argv[z]);
+     res = system(cmdline);
+     if (res != 0)
       {
        fprintf(stderr,"command \"%s\" failed\n",cmdline); exit(2);
       }

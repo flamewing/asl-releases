@@ -833,7 +833,7 @@ static void DecodeRMW(Word Index)
     if ((!IsIndirect(ArgStr[1].Str)) && (pOrder->Mask & 0x20))
     {
       StrCompReset(&ArgStr[2]);
-      sprintf(ArgStr[2].Str, "(%s)", ArgStr[1].Str);
+      as_snprintf(ArgStr[2].Str, STRINGSIZE, "(%s)", ArgStr[1].Str);
       pArg = &ArgStr[2];
     }
     DecodeAdr(pArg, 0, !(pOrder->Mask & 0x10), !(pOrder->Mask & 0x20));

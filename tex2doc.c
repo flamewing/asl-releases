@@ -211,7 +211,7 @@ static void AddLabel(char *Name, char *Value)
   {
     if (strcmp(Run->Value, Value))
     {
-      sprintf(err, "value of label '%s' has changed", Name);
+      as_snprintf(err, sizeof(err), "value of label '%s' has changed", Name);
       warning(err);
       DoRepass = True;
       free(Run->Value);
@@ -245,7 +245,7 @@ static void AddCite(char *Name, char *Value)
   {
     if (strcmp(Run->Value, Value))
     {
-      sprintf(err, "value of citation '%s' has changed", Name);
+      as_snprintf(err, sizeof(err), "value of citation '%s' has changed", Name);
       warning(err);
       DoRepass = True;
       free(Run->Value);
@@ -276,7 +276,7 @@ static void GetLabel(char *Name, char *Dest)
 
   if (!Run)
   {
-    sprintf(err, "undefined label '%s'", Name);
+    as_snprintf(err, sizeof(err), "undefined label '%s'", Name);
     warning(err); DoRepass = True;
   }
   strcpy(Dest, (!Run) ? "???" : Run->Value);
@@ -293,7 +293,7 @@ static void GetCite(char *Name, char *Dest)
 
   if (!Run)
   {
-    sprintf(err, "undefined citation '%s'", Name);
+    as_snprintf(err, sizeof(err), "undefined citation '%s'", Name);
     warning(err);
     DoRepass = True;
   }
@@ -564,7 +564,7 @@ static void assert_token(char *ref)
   ReadToken(token);
   if (strcmp(ref, token))
   {
-    sprintf(token, "\"%s\" expected", ref);
+    as_snprintf(token, sizeof(token), "\"%s\" expected", ref);
     error(token);
   }
 }
@@ -1031,29 +1031,28 @@ static void DoAddNormal(const char *Part, char *Sep)
   }
 }
 
-static void GetTableName(char *Dest)
+static void GetTableName(char *Dest, int DestSize)
 {
   if (InAppendix)
-    sprintf(Dest, "%c.%d", Chapters[0] + 'A', TableNum);
+    as_snprintf(Dest, DestSize, "%c.%d", Chapters[0] + 'A', TableNum);
   else
-    sprintf(Dest, "%d.%d", Chapters[0], TableNum);
+    as_snprintf(Dest, DestSize, "%d.%d", Chapters[0], TableNum);
 }
 
-static char *GetSectionName(char *Dest)
+static void GetSectionName(char *Dest, int DestSize)
 {
-  char *run = Dest;
   int z;
 
+  *Dest = '\0';
   for (z = 0; z <= 2; z++)
   {
     if ((z > 0) && (Chapters[z] == 0))
       break;
     if ((InAppendix) && (z == 0))
-      run += sprintf(run, "%c.", Chapters[z] + 'A');
+      as_snprcatf(Dest, DestSize, "%c.", Chapters[z] + 'A');
     else
-      run += sprintf(run, "%d.", Chapters[z]);
+      as_snprcatf(Dest, DestSize, "%d.", Chapters[z]);
   }
-  return run;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1213,21 +1212,21 @@ static void TeXNewSection(Word Level)
 static void EndSectionHeading(void)
 {
   int Level = LastLevel, z;
-  char Line[TOKLEN], Title[TOKLEN], *run;
+  char Line[TOKLEN], Title[TOKLEN];
   PTocSave NewTocSave, RunToc;
 
   strcpy(Title, OutLineBuffer);
   *OutLineBuffer = '\0';
 
-  run = Line;
+  *Line = '\0';
   if (Level < 3)
   {
-    run = GetSectionName(run);
-    run += sprintf(run, " ");
+    GetSectionName(Line, sizeof(Line));
+    as_snprcatf(Line, sizeof(Line), " ");
     if ((Level == 2) && (((strlen(Line) + strlen(Title))&1) == 0))
-      run += sprintf(run, " ");
+      as_snprcatf(Line, sizeof(Line), " ");
   }
-  sprintf(run, "%s", Title);
+  as_snprcatf(Line, sizeof(Line), "%s", Title);
 
   fprintf(outfile, "        %s\n        ", Line);
   for (z = 0; z < (int)strlen(Line); z++)
@@ -1252,10 +1251,8 @@ static void EndSectionHeading(void)
   {
     NewTocSave = (PTocSave) malloc(sizeof(TTocSave));
     NewTocSave->Next = NULL;
-    run = Line;
-    run = GetSectionName(run);
-    run += sprintf(run, " ");
-    sprintf(run, "%s", Title);
+    GetSectionName(Line, sizeof(Line));
+    as_snprcatf(Line, sizeof(Line), " %s", Title);
     NewTocSave->TocName = (char *) malloc(6 + Level + strlen(Line));
     strcpy(NewTocSave->TocName, Blanks(5 + Level));
     strcat(NewTocSave->TocName, Line);
@@ -1498,7 +1495,7 @@ static void TeXItem(Word Index)
       break;
     case EnvEnumerate:
       LeftMargin = ActLeftMargin - 4;
-      sprintf(NumString, "%3d ", ++EnumCounter);
+      as_snprintf(NumString, sizeof(NumString), "%3d ", ++EnumCounter);
       AddLine(NumString, "");
       break;
     case EnvDescription:
@@ -1508,7 +1505,7 @@ static void TeXItem(Word Index)
       {
         collect_token(Acc, "]");
         LeftMargin = ActLeftMargin - 4;
-        sprintf(NumString, "%3s ", Acc);
+        as_snprintf(NumString, sizeof(NumString), "%3s ", Acc);
         AddLine(NumString, "");
       }
       break;
@@ -1533,10 +1530,10 @@ static void TeXBibItem(Word Index)
   ++BibCounter;
 
   LeftMargin = ActLeftMargin - BibIndent - 3;
-  sprintf(Format, "[%%%dd] ", BibIndent);
-  sprintf(NumString, Format, BibCounter);
+  as_snprintf(Format, sizeof(Format), "[%%%dd] ", BibIndent);
+  as_snprintf(NumString, sizeof(NumString), Format, BibCounter);
   AddLine(NumString, "");
-  sprintf(NumString, "%d", BibCounter);
+  as_snprintf(NumString, sizeof(NumString), "%d", BibCounter);
   AddCite(Name, NumString);
   ReadToken(Token);
   *SepString = '\0';
@@ -1770,7 +1767,7 @@ static void TeXAddCaption(Word Index)
   SaveEnv(EnvCaption);
   AddLine(TableName, "");
   cnt = strlen(TableName);
-  GetTableName(tmp);
+  GetTableName(tmp, sizeof(tmp));
   strcat(tmp, ": ");
   AddLine(tmp, " ");
   cnt += 1 + strlen(tmp);
@@ -2020,10 +2017,10 @@ static void TeXWriteLabel(Word Index)
   collect_token(Name, "}");
 
   if (CurrEnv == EnvCaption)
-    GetTableName(Value);
+    GetTableName(Value, sizeof(Value));
   else
   {
-    GetSectionName(Value);
+    GetSectionName(Value, sizeof(Value));
     if ((*Value) && (Value[strlen(Value) - 1] == '.'))
       Value[strlen(Value) - 1] = '\0';
   }
@@ -2050,7 +2047,7 @@ static void TeXWriteCitation(Word Index)
   assert_token("{");
   collect_token(Name, "}");
   GetCite(Name, Value);
-  sprintf(Name, "[%s]", Value);
+  as_snprintf(Name, sizeof(Name), "[%s]", Value);
   DoAddNormal(Name, BackSepString);
 }
 
@@ -2515,7 +2512,7 @@ static void TeXInclude(Word Index)
   collect_token(Token, "}");
   if (!(infiles[IncludeNest] = fopen(Token, "r")))
   {
-    sprintf(Msg, "file %s not found", Token);
+    as_snprintf(Msg, sizeof(Msg), "file %s not found", Token);
     error(Msg);
   }
   else
@@ -2745,7 +2742,7 @@ int main(int argc, char **argv)
       else if (!LookupInstTable(TeXTable, Line))
         if (!TeXNLSSpec(Line))
         {
-          sprintf(Comp, "unknown TeX command %s", Line);
+          as_snprintf(Comp, sizeof(Comp), "unknown TeX command %s", Line);
           warning(Comp);
         }
     }

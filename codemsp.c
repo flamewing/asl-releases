@@ -1269,7 +1269,7 @@ static void AddTwoOp(char *NName, Word NCode)
   {
     char XName[20];
 
-    sprintf(XName, "%sX", NName);
+    as_snprintf(XName, sizeof(XName), "%sX", NName);
     AddInstTable(InstTable, XName, NCode, DecodeTwoOpX);
   }
 }
@@ -1294,7 +1294,7 @@ static void AddOneOp(char *NName, Boolean NMay, Boolean AllowX, Word NCode)
   {
     char XName[20];
 
-    sprintf(XName, "%sX", NName);
+    as_snprintf(XName, sizeof(XName), "%sX", NName);
     AddInstTable(InstTable, XName, InstrZ, DecodeOneOpX);
   }
   InstrZ++;

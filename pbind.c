@@ -165,7 +165,7 @@ int main(int argc, char **argv)
   NLS_Initialize();
   endian_init();
 
-  sprintf(Ver, "BIND/C V%s", Version);
+  as_snprintf(Ver, sizeof(Ver), "BIND/C V%s", Version);
   WrCopyRight(Ver);
 
   stdhandl_init();

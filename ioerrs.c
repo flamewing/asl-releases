@@ -11,6 +11,7 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
+#include "strutil.h"
 #include <errno.h>
 #include "nlmessages.h"
 #include "ioerrs.rsc"
@@ -190,7 +191,7 @@ char *GetErrorMsg(int number)
     return catgetmessage(&MsgCat,z->Msg);
   else
   {
-    sprintf(hs, "%s%d", catgetmessage(&MsgCat,Num_IoErrUnknown), number);
+    as_snprintf(hs, STRINGSIZE, "%s%d", catgetmessage(&MsgCat,Num_IoErrUnknown), number);
     return hs;
   }
 }

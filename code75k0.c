@@ -239,7 +239,56 @@ chk:
   }
 }
 
-static Boolean DecodeBitAddr(const tStrComp *pArg, Word *Erg, char *pBName)
+/* Bit argument coding:
+
+   aaaa01bbaaaaaaaa -> aaaaaaaaaaaa.bb
+           11bbxxxx -> 0ffxh.bb
+           10bbxxxx -> 0fbxh.bb
+           00bbxxxx -> @h+x.bb
+           0100xxxx -> 0fc0h+(x*4).@l
+ */
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectBit_75K0(char *pDest, int DestSize, LargeWord Inp)
+ * \brief  dissect compact storage of bit (field) into readable form for listing
+ * \param  pDest destination for ASCII representation
+ * \param  DestSize destination buffer size
+ * \param  Inp compact storage
+ * ------------------------------------------------------------------------ */
+
+static void DissectBit_75K0(char *pDest, int DestSize, LargeWord Inp)
+{
+  if (Hi(Inp))
+    as_snprintf(pDest, DestSize, "%03.*u%s.%c",
+                ListRadixBase, (unsigned)(((Inp >> 4) & 0xf00) + Lo(Inp)), GetIntelSuffix(ListRadixBase),
+                '0' + (Hi(Inp) & 3));
+  else switch ((Inp >> 6) & 3)
+  {
+    case 0:
+      as_snprintf(pDest, DestSize, "@%c+%0.*u%s.%c",
+                  HexStartCharacter + ('H' - 'A'),
+                  ListRadixBase, (unsigned)(Inp & 0x0f), GetIntelSuffix(ListRadixBase),
+                  '0' + ((Inp >> 4) & 3));
+      break;
+    case 1:
+      as_snprintf(pDest, DestSize, "%03.*u%s.@%c",
+                  ListRadixBase, (unsigned)(0xfc0 + ((Inp & 0x0f) << 2)), GetIntelSuffix(ListRadixBase),
+                  HexStartCharacter + ('L' - 'A'));
+      break;
+    case 2:
+      as_snprintf(pDest, DestSize, "%03.*u%s.%c",
+                  ListRadixBase, (unsigned)(0xfb0 + (Inp & 15)), GetIntelSuffix(ListRadixBase),
+                  '0' + ((Inp >> 4) & 3));
+      break;
+    case 3:
+      as_snprintf(pDest, DestSize, "%03.*u%s.%c",
+                  ListRadixBase, (unsigned)(0xff0 + (Inp & 15)), GetIntelSuffix(ListRadixBase),
+                  '0' + ((Inp >> 4) & 3));
+      break;
+  }
+}
+
+static Boolean DecodeBitAddr(const tStrComp *pArg, Word *Erg)
 {
   char *p;
   int Num;
@@ -272,11 +321,6 @@ static Boolean DecodeBitAddr(const tStrComp *pArg, Word *Erg, char *pBName)
       else if (ChkMinCPUExt(CPU75004, ErrNum_AddrModeNotSupported))
       {
         *Erg = 0x40 + ((Adr & 0x3c) >> 2);
-        if (pBName)
-        {
-          HexString(pBName, STRINGSIZE, Adr, 3);
-          strmaxcat(pBName, "H.@L", STRINGSIZE);
-        }
         return True;
       }
     }
@@ -294,13 +338,6 @@ static Boolean DecodeBitAddr(const tStrComp *pArg, Word *Erg, char *pBName)
           if (ChkMinCPUExt(CPU75004, ErrNum_AddrModeNotSupported))
           {
             *Erg = (Num << 4) + Adr;
-            if (pBName)
-            {
-              char Str[30];
-
-              HexString(Str, sizeof(Str), Adr,  1);
-              sprintf(pBName, "@H%s.%c", Str, Num + '0');
-            }
             return True;
           }
         }
@@ -320,13 +357,6 @@ static Boolean DecodeBitAddr(const tStrComp *pArg, Word *Erg, char *pBName)
             *Erg = 0xc0 + (Num << 4) + (Adr & 15);
           else
             *Erg = 0x400 + (((Word)Num) << 8) + Lo(Adr) + (Hi(Adr) << 12);
-          if (pBName)
-          {
-            char Str[30];
-
-            HexString(Str, sizeof(Str), Adr, 3);
-            sprintf(pBName, "%sH.%c", Str, '0' + Num);
-          }
           return True;
         }
       }
@@ -890,7 +920,7 @@ static void DecodeLog1(Word Code)
 
   if (!ChkArgCnt(2, 2));
   else if (strcasecmp(ArgStr[1].Str, "CY")) WrError(ErrNum_InvAddrMode);
-  else if (DecodeBitAddr(&ArgStr[2], &BVal, NULL))
+  else if (DecodeBitAddr(&ArgStr[2], &BVal))
   {
     if (Hi(BVal) != 0) WrError(ErrNum_InvAddrMode);
     else
@@ -1088,7 +1118,7 @@ static void DecodeMOV1(Word Code)
       Code = 0x9b;
     else OK = False;
     if (!OK) WrError(ErrNum_InvAddrMode);
-    else if (DecodeBitAddr(&ArgStr[((Code >> 2) & 3) - 1], &BVal, NULL))
+    else if (DecodeBitAddr(&ArgStr[((Code >> 2) & 3) - 1], &BVal))
     {
       if (Hi(BVal) != 0) WrError(ErrNum_InvAddrMode);
       else
@@ -1109,7 +1139,7 @@ static void DecodeSET1_CLR1(Word Code)
   if (!ChkArgCnt(1, 1));
   else if (!strcasecmp(ArgStr[1].Str, "CY"))
     PutCode(0xe6 + Code);
-  else if (DecodeBitAddr(&ArgStr[1], &BVal, NULL))
+  else if (DecodeBitAddr(&ArgStr[1], &BVal))
   {
     if (Hi(BVal) != 0)
     {
@@ -1138,7 +1168,7 @@ static void DecodeSKT_SKF(Word Code)
     else
       WrError(ErrNum_InvAddrMode);
   }
-  else if (DecodeBitAddr(&ArgStr[1], &BVal, NULL))
+  else if (DecodeBitAddr(&ArgStr[1], &BVal))
   {
     if (Hi(BVal) != 0)
     {
@@ -1172,7 +1202,7 @@ static void DecodeSKTCLR(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(1, 1));
-  else if (DecodeBitAddr(&ArgStr[1], &BVal, NULL))
+  else if (DecodeBitAddr(&ArgStr[1], &BVal))
   {
     if (Hi(BVal) != 0) WrError(ErrNum_InvAddrMode);
     else
@@ -1406,19 +1436,19 @@ static void DecodeSFR(Word Code)
 static void DecodeBIT(Word Code)
 {
   Word BErg;
-  String BName;
 
   UNUSED(Code);
 
   if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
-    if (DecodeBitAddr(&ArgStr[1], &BErg, BName))
+    if (DecodeBitAddr(&ArgStr[1], &BErg))
       if (!FirstPassUnknown)
       {
         PushLocHandle(-1);
-        EnterIntSymbol(&LabPart, BErg, SegNone, False);
-        sprintf(ListLine, "=%s", BName);
+        EnterIntSymbol(&LabPart, BErg, SegBData, False);
+        *ListLine = '=';
+        DissectBit_75K0(ListLine + 1,  STRINGSIZE- 1, BErg);
         PopLocHandle();
       }
   }
@@ -1563,6 +1593,7 @@ static void SwitchTo_75K0(void)
 
   MakeCode = MakeCode_75K0; IsDef = IsDef_75K0;
   SwitchFrom = SwitchFrom_75K0; InitFields();
+  DissectBit = DissectBit_75K0;
   SegLimits[SegCode] = ROMEnd;
 }
 

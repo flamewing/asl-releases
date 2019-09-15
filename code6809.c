@@ -1173,7 +1173,7 @@ static void AddRel(char *NName, Word NCode8, Word NCode16)
   RelOrders[InstrZ].Code8 = NCode8;
   RelOrders[InstrZ].Code16 = NCode16;
   AddInstTable(InstTable, NName, InstrZ, DecodeRel);
-  sprintf(LongName, "L%s", NName);
+  as_snprintf(LongName, sizeof(LongName), "L%s", NName);
   AddInstTable(InstTable, LongName, InstrZ | 0x8000, DecodeRel);
   InstrZ++;
 }
@@ -1193,7 +1193,7 @@ static void AddALU2(char *NName)
   char RName[30];
 
   AddInstTable(InstTable, NName, InstrZ, DecodeALU2);
-  sprintf(RName, "%sR", NName);
+  as_snprintf(RName, sizeof(RName), "%sR", NName);
   AddInstTable(InstTable, RName, InstrZ, DecodeALU2);
   InstrZ++;
 }

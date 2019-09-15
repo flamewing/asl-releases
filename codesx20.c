@@ -112,8 +112,7 @@ static void DissectBit_SX20(char *pDest, int DestSize, LargeWord Inp)
 
   SplitBitSymbol(Inp, &Address, &BitPos);
 
-  UNUSED(DestSize);
-  sprintf(pDest, "$%x.%u", Address, BitPos);
+  as_snprintf(pDest, DestSize, "$%x.%u", (unsigned)Address, (unsigned)BitPos);
 }
 
 /*!------------------------------------------------------------------------

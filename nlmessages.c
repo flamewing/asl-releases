@@ -52,7 +52,7 @@ char *catgetmessage(PMsgCat Catalog, int Num)
 
     if (!umess)
       umess = (char*)malloc(sizeof(char) * STRINGSIZE);
-    sprintf(umess, "catgetmessage: message number %d does not exist", Num);
+    as_snprintf(umess, STRINGSIZE, "catgetmessage: message number %d does not exist", Num);
     return umess;
   }
 }
@@ -149,7 +149,7 @@ void opencatalog(PMsgCat Catalog, const char *File, const char *Path, LongInt Ms
       ptr = getenv(MSGPATHNAME);
       if (ptr)
       {
-        sprintf(str, "%s%c%s", ptr, PATHSEP, File);
+        as_snprintf(str, sizeof(str), "%s%c%s", ptr, PATHSEP, File);
         MsgFile = myopen(str, MsgId1, MsgId2);
       }
       else
@@ -173,11 +173,11 @@ void opencatalog(PMsgCat Catalog, const char *File, const char *Path, LongInt Ms
       }
       if (!MsgFile)
       {
-        sprintf(str, "%s/%s", LIBDIR, File);
+        as_snprintf(str, sizeof(str), "%s/%s", LIBDIR, File);
         MsgFile = myopen(str, MsgId1, MsgId2);
         if (!MsgFile)
         {
-          sprintf(str, EOpenMsg, File);
+          as_snprintf(str, sizeof(str), EOpenMsg, File);
           error(str);
         }
       }

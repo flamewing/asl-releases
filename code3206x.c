@@ -261,7 +261,7 @@ static char *RegName(LongInt Num)
   static char s[5];
 
   Num &= 31;
-  sprintf(s, "%c%ld", 'A' + (Num >> 4), (long) (Num & 15));
+  as_snprintf(s, sizeof(s), "%c%ld", 'A' + (Num >> 4), (long) (Num & 15));
   return s;
 }
 

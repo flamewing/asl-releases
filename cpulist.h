@@ -28,6 +28,8 @@ void
 #endif
 );
 
+typedef void (*tCPUFreeUserDataProc)(void *pUserData);
+
 typedef unsigned CPUVar;
 #define CPUNone ((CPUVar)-1)
 
@@ -37,13 +39,14 @@ typedef struct sCPUDef
   char *Name;
   CPUVar Number, Orig;
   tCPUSwitchUserProc SwitchProc;
+  tCPUFreeUserDataProc FreeProc;
   void *pUserData;
 } tCPUDef, *tpCPUDef;
 
 typedef void (*tCPUListIterator)(const tCPUDef *pRun, void *pUser);
 
 extern CPUVar AddCPU(const char *NewName, tCPUSwitchProc Switcher);
-extern CPUVar AddCPUUser(const char *NewName, tCPUSwitchUserProc Switcher, void *pUserData);
+extern CPUVar AddCPUUser(const char *NewName, tCPUSwitchUserProc Switcher, void *pUserData, tCPUFreeUserDataProc Freeer);
 
 extern Boolean AddCPUAlias(char *OrigName, char *AliasName);
 

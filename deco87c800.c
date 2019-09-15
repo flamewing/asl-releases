@@ -57,7 +57,7 @@ static const char *MakeSymbolic(LargeWord Address, int AddrLen, const char *pSym
   {
     if (isdigit(*pBuffer))
       strmaxprep(pBuffer, "0", BufferSize);
-    strmaxcat(pBuffer, HexLowerCase ? "h" : "H", BufferSize);
+    as_snprcatf(pBuffer, BufferSize, "%c", HexStartCharacter + ('h' - 'a'));
     return pBuffer;
   }
 
@@ -99,16 +99,15 @@ static void SimpleNextAddress(tDisassInfo *pInfo, LargeWord ThisAddress)
 
 static void PrintData(char *pDest, size_t DestSize, const Byte *pData, unsigned DataLen)
 {
-  char *pRun, NumBuf[40];
+  char NumBuf[40];
   unsigned z;
 
-  pRun = pDest;
-  pRun += snprintf(pRun, DestSize, "db\t");
+  as_snprintf(pDest, DestSize, "db\t");
   for (z = 0; z < DataLen; z++)
   {
     if (z)
-      pRun += sprintf(pRun, ",");
-    pRun += sprintf(pRun, "%sh", ZeroHexString(NumBuf, sizeof(NumBuf), pData[z], 1));
+      as_snprcatf(pDest, DestSize, ",");
+    as_snprcatf(pDest, DestSize, "%sh", ZeroHexString(NumBuf, sizeof(NumBuf), pData[z], 1));
   }
 }
 
@@ -125,8 +124,8 @@ static void RegPrefix(LargeWord Address, tDisassInfo *pInfo, unsigned PrefixLen,
     case 0x01:
       pInfo->CodeLen = PrefixLen + 1;
       SimpleNextAddress(pInfo, Address);
-      snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "swap\t%c",
-               Reg8Names[SrcRegIndex]);
+      as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "swap\t%c",
+                  Reg8Names[SrcRegIndex]);
       break;
     case 0x02:
       if (SrcRegIndex > 3)
@@ -1089,22 +1088,22 @@ static void Disassemble_87C800(LargeWord Address, tDisassInfo *pInfo, Boolean As
       case 2:
       {
         Word Addr = (((Word)Data[0]) << 8) | Opcode;
-        snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "dw\t%s",
-                 MakeSymbolic(Addr, 2, NULL, NumBuf, sizeof(NumBuf)));
+        as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "dw\t%s",
+                    MakeSymbolic(Addr, 2, NULL, NumBuf, sizeof(NumBuf)));
         pInfo->CodeLen = 2;
         break;
       }
       default:
         pInfo->CodeLen = 1;
-        snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "db\t%sh",
-                 ZeroHexString(NumBuf, sizeof(NumBuf), Opcode, 1));
+        as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "db\t%sh",
+                    ZeroHexString(NumBuf, sizeof(NumBuf), Opcode, 1));
     }
     if (AsData)
       SimpleNextAddress(pInfo, Address);
   }
 
   if (nData != pInfo->CodeLen)
-    sprintf(pInfo->SrcLine + strlen(pInfo->SrcLine), " ; ouch %u != %u", nData, pInfo->CodeLen);
+    as_snprcatf(pInfo->SrcLine, sizeof(pInfo->SrcLine), " ; ouch %u != %u", nData, pInfo->CodeLen);
 }
 
 static void SwitchTo_87C800(void)

@@ -987,11 +987,11 @@ static void AddALU(Byte NCode, char *NNameI, char *NNameReg, char *NNameEA)
   AddInstTable(InstTable, NNameI, NCode, DecodeALUImm);
   AddInstTable(InstTable, NNameReg, NCode, DecodeALUReg);
   AddInstTable(InstTable, NNameEA, NCode, DecodeALUEA);
-  sprintf(Name, "%sW", NNameReg);
+  as_snprintf(Name, sizeof(Name), "%sW", NNameReg);
   AddInstTable(InstTable, Name, NCode, DecodeALURegW);
-  sprintf(Name, "%sX", NNameReg);
+  as_snprintf(Name, sizeof(Name), "%sX", NNameReg);
   AddInstTable(InstTable, Name, NCode, DecodeALURegX);
-  sprintf(Name, "%sW", NNameI);
+  as_snprintf(Name, sizeof(Name), "%sW", NNameI);
   AddInstTable(InstTable, Name, NCode, DecodeALUImmW);
 }
 

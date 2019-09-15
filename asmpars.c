@@ -488,7 +488,7 @@ static Boolean ChkTmp1(char *Name, Boolean Define)
     /* append number. only generate the number once */
 
     if (*TmpSymCounterVal == '\0')
-      sprintf(TmpSymCounterVal, "%d", TmpSymCounter);
+      as_snprintf(TmpSymCounterVal, sizeof(TmpSymCounterVal), "%d", TmpSymCounter);
     strcpy(Dest, TmpSymCounterVal);
     Result = TRUE;
   }
@@ -537,7 +537,7 @@ static Boolean ChkTmp2(char *pDest, const char *pSrc, Boolean Define)
     {
       if ((Define) && (Cnt == 1))
       {
-        sprintf(pDest, "__back%d", BackSymCounter);
+        as_snprintf(pDest, STRINGSIZE, "__back%d", (int)BackSymCounter);
         AddTmpSymLog(TRUE, BackSymCounter);
         BackSymCounter++;
         Result = TRUE;
@@ -549,9 +549,9 @@ static Boolean ChkTmp2(char *pDest, const char *pSrc, Boolean Define)
       else if (Cnt <= TmpSymLogDepth)
       {
         Cnt--;
-        sprintf(pDest, "__%s%d",
-                TmpSymLog[Cnt].Back ? "back" : "forw",
-                TmpSymLog[Cnt].Counter);
+        as_snprintf(pDest, STRINGSIZE, "__%s%d",
+                    TmpSymLog[Cnt].Back ? "back" : "forw",
+                    (int)TmpSymLog[Cnt].Counter);
         Result = TRUE;
       }
     }
@@ -569,12 +569,12 @@ static Boolean ChkTmp2(char *pDest, const char *pSrc, Boolean Define)
     {
       if ((Define) && (Cnt == 1))
       {
-        sprintf(pDest, "__forw%d", FwdSymCounter++);
+        as_snprintf(pDest, STRINGSIZE, "__forw%d", (int)FwdSymCounter++);
         Result = TRUE;
       }
       else if (Cnt <= LOCSYMSIGHT)
       {
-        sprintf(pDest, "__forw%d", FwdSymCounter + (Cnt - 1));
+        as_snprintf(pDest, STRINGSIZE, "__forw%d", (int)(FwdSymCounter + (Cnt - 1)));
         Result = TRUE;
       }
     }
@@ -585,7 +585,7 @@ static Boolean ChkTmp2(char *pDest, const char *pSrc, Boolean Define)
   else if ((pEnd - pBegin == 1) && (*pBegin == '/') && Define)
   {
     AddTmpSymLog(FALSE, FwdSymCounter);
-    sprintf(pDest, "__forw%d", FwdSymCounter);
+    as_snprintf(pDest, STRINGSIZE, "__forw%d", (int)FwdSymCounter);
     FwdSymCounter++;
     Result = TRUE;
   }
@@ -804,7 +804,7 @@ static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
     TConstMode ActMode = ConstModeC;
     unsigned BaseIdx;
     int Digit;
-    Byte Base;
+    int Base;
     char ch;
     Boolean Found;
 
@@ -1130,11 +1130,12 @@ static void ConstStringVal(const tStrComp *pExpr, TempResult *pDest, Boolean *pR
       switch (t.Typ)
       {
         case TempInt:
-          TLen = SysString(Str, sizeof(Str), t.Contents.Int, OutRadixBase, 0);
+          TLen = SysString(Str, sizeof(Str), t.Contents.Int, OutRadixBase, 0, HexStartCharacter);
           pStr = Str;
           break;
         case TempFloat:
-          pStr = FloatString(t.Contents.Float);
+          FloatString(Str, sizeof(Str), t.Contents.Float);
+          pStr = Str;
           TLen = strlen(pStr);
           break;
         case TempString:
@@ -1777,9 +1778,9 @@ LargeInt EvalStrIntExpressionWithFlags(const tStrComp *pComp, IntType Type, Bool
       {
         char Msg[50];
 
-        sprintf(Msg, "%s %s %s %s",
-                getmessage(Num_ErrMsgExpected), getmessage(Num_OpTypeInt),
-                getmessage(Num_ErrMsgButGot), getmessage(TypeNums[t.Typ]));
+        as_snprintf(Msg, sizeof(Msg), "%s %s %s %s",
+                    getmessage(Num_ErrMsgExpected), getmessage(Num_OpTypeInt),
+                    getmessage(Num_ErrMsgButGot), getmessage(TypeNums[t.Typ]));
         WrStrErrorPos(ErrNum_InvOpType, pComp);
       }
       FreeRelocs(&LastRelocs);
@@ -1846,9 +1847,9 @@ Double EvalStrFloatExpression(const tStrComp *pExpr, FloatType Type, Boolean *pR
     {
       char Msg[50];
  
-      sprintf(Msg, "%s %s %s %s",
-              getmessage(Num_ErrMsgExpected), getmessage(Num_OpTypeFloat),
-              getmessage(Num_ErrMsgButGot), getmessage(Num_OpTypeString));
+      as_snprintf(Msg, sizeof(Msg), "%s %s %s %s",
+                  getmessage(Num_ErrMsgExpected), getmessage(Num_OpTypeFloat),
+                  getmessage(Num_ErrMsgButGot), getmessage(Num_OpTypeString));
       WrStrErrorPos(ErrNum_InvOpType, pExpr);
       return -1;
     }
@@ -1885,9 +1886,9 @@ void EvalStrStringExpression(const tStrComp *pExpr, Boolean *pResult, char *pEva
     {
       char Msg[50];
 
-      sprintf(Msg, "%s %s %s %s",
-              getmessage(Num_ErrMsgExpected), getmessage(Num_OpTypeString),
-              getmessage(Num_ErrMsgButGot), getmessage(TypeNums[t.Typ]));
+      as_snprintf(Msg, sizeof(Msg), "%s %s %s %s",
+                  getmessage(Num_ErrMsgExpected), getmessage(Num_OpTypeString),
+                  getmessage(Num_ErrMsgButGot), getmessage(TypeNums[t.Typ]));
       WrXError(ErrNum_InvOpType, Msg);
     }
   }
@@ -1896,6 +1897,29 @@ void EvalStrStringExpression(const tStrComp *pExpr, Boolean *pResult, char *pEva
     DynString2CString(pEvalResult, &t.Contents.Ascii, STRINGSIZE);
     *pResult = True;
   }
+}
+
+
+/*!------------------------------------------------------------------------
+ * \fn     GetIntelSuffix(unsigned Radix)
+ * \brief  return Intel-stylw suffix letter fitting to number system
+ * \param  Radix req'd number system
+ * \return * to suffix string (may be empty)
+ * ------------------------------------------------------------------------ */
+
+const char *GetIntelSuffix(unsigned Radix)
+{
+  unsigned BaseIdx;
+
+  for (BaseIdx = 0; BaseIdx < sizeof(BaseLetters) / sizeof(*BaseLetters); BaseIdx++)
+    if (Radix == BaseVals[BaseIdx])
+    {
+      static char Result[2] = { '\0', '\0' };
+
+      Result[0] = BaseLetters[BaseIdx] + (HexStartCharacter - 'A');
+      return Result;
+    }
+  return "";
 }
 
 
@@ -1965,11 +1989,9 @@ static Boolean SymbolAdder(PTree *PDest, PTree Neu, void *pData)
   {
     strmaxcpy(serr, (*Node)->Tree.Name, STRINGSIZE);
     if (EnterStruct->DoCross)
-    {
-      sprintf(snum, ",%s %s:%ld", getmessage(Num_PrevDefMsg),
-              GetFileName((*Node)->FileNum), (long)((*Node)->LineNum));
-      strmaxcat(serr, snum, STRINGSIZE);
-    }
+      as_snprcatf(serr, STRINGSIZE, ",%s %s:%ld",
+                  getmessage(Num_PrevDefMsg),
+                  GetFileName((*Node)->FileNum), (long)((*Node)->LineNum));
     WrXError(ErrNum_DoubleDef, serr);
     FreeSymbolEntry(&NewEntry, TRUE);
     return False;
@@ -1981,11 +2003,9 @@ static Boolean SymbolAdder(PTree *PDest, PTree Neu, void *pData)
   {
     strmaxcpy(serr, (*Node)->Tree.Name, STRINGSIZE);
     if (EnterStruct->DoCross)
-    {
-      sprintf(snum, ",%s %s:%ld", getmessage(Num_PrevDefMsg),
-              GetFileName((*Node)->FileNum), (long)((*Node)->LineNum));
-      strmaxcat(serr, snum, STRINGSIZE);
-    }
+      as_snprcatf(serr, STRINGSIZE, ",%s %s:%ld",
+                  getmessage(Num_PrevDefMsg),
+                  GetFileName((*Node)->FileNum), (long)((*Node)->LineNum));
     WrXError((*Node)->Changeable ? 2035 : 2030, serr);
     FreeSymbolEntry(&NewEntry, TRUE);
     return False;
@@ -2538,7 +2558,7 @@ void LookupSymbol(const struct sStrComp *pComp, TempResult *pValue, Boolean Want
 {
   PSymbolEntry pEntry;
   String ExpName;
-  char Save, *pKlPos;
+  char Save = ' ', *pKlPos;
   Boolean NameOK;
 
   if (!ExpandStrSymbol(ExpName, sizeof(ExpName), pComp))
@@ -2801,7 +2821,7 @@ static void PrintSymbolList_PNode(PTree Tree, void *pData)
   if ((t.Typ == TempInt) && DissectBit && (Node->SymType == SegBData))
     DissectBit(s1, sizeof(s1), t.Contents.Int);
   else
-    StrSym(&t, False, s1, sizeof(s1));
+    StrSym(&t, False, s1, sizeof(s1), ListRadixBase);
 
   strmaxcpy(sh, Tree->Name, STRINGSIZE);
   if (Tree->Attribute != -1)
@@ -2847,13 +2867,13 @@ void PrintSymbolList(void)
     WrLstLine(Context.Zeilenrest);
   }
   WrLstLine("");
-  sprintf(Context.Zeilenrest, "%7lu%s",
-          (unsigned long)Context.Sum,
-          getmessage((Context.Sum == 1) ? Num_ListSymSumMsg : Num_ListSymSumsMsg));
+  as_snprintf(Context.Zeilenrest, sizeof(Context.Zeilenrest), "%7lu%s",
+              (unsigned long)Context.Sum,
+              getmessage((Context.Sum == 1) ? Num_ListSymSumMsg : Num_ListSymSumsMsg));
   WrLstLine(Context.Zeilenrest);
-  sprintf(Context.Zeilenrest, "%7lu%s",
-          (unsigned long)Context.USum,
-          getmessage((Context.USum == 1) ? Num_ListUSymSumMsg : Num_ListUSymSumsMsg));
+  as_snprintf(Context.Zeilenrest, sizeof(Context.Zeilenrest), "%7lu%s",
+              (unsigned long)Context.USum,
+              getmessage((Context.USum == 1) ? Num_ListUSymSumMsg : Num_ListUSymSumsMsg));
   WrLstLine(Context.Zeilenrest);
   WrLstLine("");
 }
@@ -2887,7 +2907,7 @@ static void PrintDebSymbols_PNode(PTree Tree, void *pData)
   l1 = strlen(Node->Tree.Name);
   if (Node->Tree.Attribute != -1)
   {
-    sprintf(s, "[%d]", (int)Node->Tree.Attribute);
+    as_snprintf(s, sizeof(s), "[%d]", (int)Node->Tree.Attribute);
     fprintf(DebContext->f, "%s", s); ChkIO(ErrNum_FileWriteError);
     l1 += strlen(s);
   }
@@ -2916,7 +2936,7 @@ static void PrintDebSymbols_PNode(PTree Tree, void *pData)
   else
   {
     ConvertSymbolVal(&(Node->SymWert), &t);
-    StrSym(&t, False, s, sizeof(s));
+    StrSym(&t, False, s, sizeof(s), 16);
     l1 = strlen(s);
     fprintf(DebContext->f, "%s", s); ChkIO(ErrNum_FileWriteError);
   }
@@ -3144,7 +3164,7 @@ void ClearStacks(void)
       free(Elem);
       z++;
     }
-    sprintf(s, "%s(%d)",  Act->Name,  z);
+    as_snprintf(s, sizeof(s), "%s(%d)", Act->Name, z);
     WrXError(ErrNum_StackNotEmpty, s);
     free(Act->Name);
     FirstStack = Act->Next;
@@ -3588,7 +3608,8 @@ static void PrintCrossList_PNode(PTree Node, void *pData)
   int FileZ;
   PCrossRef Lauf;
   String LinePart, LineAcc;
-  String h, h2;
+  String h, ValStr;
+  char LineStr[30];
   TempResult t;
   PSymbolEntry SymbolEntry = (PSymbolEntry) Node;
   UNUSED(pData);
@@ -3597,23 +3618,17 @@ static void PrintCrossList_PNode(PTree Node, void *pData)
     return;
 
   ConvertSymbolVal(&(SymbolEntry->SymWert), &t);
-  strcpy(h, " (=");
-  StrSym(&t, False, h2, sizeof(h2));
-  strmaxcat(h, h2, STRINGSIZE);
-  strmaxcat(h, ", ", STRINGSIZE);
-  strmaxcat(h, GetFileName(SymbolEntry->FileNum), STRINGSIZE);
-  strmaxcat(h, ":", STRINGSIZE);
-  sprintf(h2, LongIntFormat, SymbolEntry->LineNum); strmaxcat(h, h2, STRINGSIZE);
-  strmaxcat(h, "):", STRINGSIZE);
-  if (Node->Attribute != -1)
-  {
-    strmaxprep(h, "] ", STRINGSIZE);
-    strmaxprep(h, GetSectionName(Node->Attribute), STRINGSIZE);
-    strmaxprep(h, " [", STRINGSIZE);
-  }
+  StrSym(&t, False, ValStr, sizeof(ValStr), ListRadixBase);
+  as_snprintf(LineStr, sizeof(LineStr), LongIntFormat, SymbolEntry->LineNum);
 
-  strmaxprep(h, Node->Name, STRINGSIZE);
-  strmaxprep(h, getmessage(Num_ListCrossSymName), STRINGSIZE);
+  as_snprintf(h, sizeof(h), "%s%s",
+              getmessage(Num_ListCrossSymName), Node->Name);
+  if (Node->Attribute != -1)
+    as_snprcatf(h, sizeof(h), "[%s]", GetSectionName(Node->Attribute));
+  as_snprcatf(h, sizeof(h), " (=%s, %s:%s):",
+              ValStr, GetFileName(SymbolEntry->FileNum), LineStr);
+
+
   WrLstLine(h);
 
   for (FileZ = 0; FileZ < GetFileCount(); FileZ++)
@@ -3633,11 +3648,11 @@ static void PrintCrossList_PNode(PTree Node, void *pData)
       strcpy(LineAcc, "   ");
       while (Lauf)
       {
-        sprintf(LinePart, "%5ld", (long)Lauf->LineNum);
+        as_snprintf(LinePart, sizeof(LinePart), "%5ld", (long)Lauf->LineNum);
         strmaxcat(LineAcc, LinePart, STRINGSIZE);
         if (Lauf->OccNum != 1)
         {
-          sprintf(LinePart, "(%2ld)", (long)Lauf->OccNum);
+          as_snprintf(LinePart, sizeof(LinePart), "(%2ld)", (long)Lauf->OccNum);
           strmaxcat(LineAcc, LinePart, STRINGSIZE);
         }
         else strmaxcat(LineAcc, "    ", STRINGSIZE);
@@ -3908,7 +3923,7 @@ static void PrintRegDefs_PNode(PRegDef Node, char *buf, LongInt *Sum, LongInt *U
   for (Lauf = Node->DoneDefs; Lauf; Lauf = Lauf->Next)
   {
     if (Lauf->Section != -1)
-      sprintf(tmp2, "[%s]", GetSectionName(Lauf->Section));
+      as_snprintf(tmp2, sizeof(tmp2), "[%s]", GetSectionName(Lauf->Section));
     else
       *tmp2 = '\0';
     as_snprintf(tmp, sizeof(tmp), "%c%s%s --> %s", (Lauf->Used) ? ' ' : '*', Node->Orig, tmp2, Lauf->Value);
@@ -3973,13 +3988,13 @@ void PrintRegDefs(void)
   if (*buf != '\0')
     WrLstLine(buf);
   WrLstLine("");
-  sprintf(buf, "%7ld%s",
-          (long) Sum,
-          getmessage((Sum == 1) ? Num_ListRegDefSumMsg : Num_ListRegDefSumsMsg));
+  as_snprintf(buf, sizeof(buf), "%7ld%s",
+              (long) Sum,
+              getmessage((Sum == 1) ? Num_ListRegDefSumMsg : Num_ListRegDefSumsMsg));
   WrLstLine(buf);
-  sprintf(buf, "%7ld%s",
-          (long)USum,
-          getmessage((USum == 1) ? Num_ListRegDefUSumMsg : Num_ListRegDefUSumsMsg));
+  as_snprintf(buf, sizeof(buf), "%7ld%s",
+              (long)USum,
+              getmessage((USum == 1) ? Num_ListRegDefUSumMsg : Num_ListRegDefUSumsMsg));
   WrLstLine("");
 }
 
@@ -4016,14 +4031,15 @@ void PrintCodepages(void)
     for (z = cnt = 0; z < 256; z++)
       if (Table->Table[z] != z)
         cnt++;
-    sprintf(buf, "%s (%d%s)", Table->Name, cnt,
-            getmessage((cnt == 1) ? Num_ListCodepageChange : Num_ListCodepagePChange));
+    as_snprintf(buf, sizeof(buf), "%s (%d%s)", Table->Name, cnt,
+                getmessage((cnt == 1) ? Num_ListCodepageChange : Num_ListCodepagePChange));
     WrLstLine(buf);
     cnt2++;
   }
   WrLstLine("");
-  sprintf(buf, "%d%s", cnt2,
-          getmessage((cnt2 == 1) ? Num_ListCodepageSumMsg : Num_ListCodepageSumsMsg));
+  as_snprintf(buf, sizeof(buf), "%d%s", cnt2,
+              getmessage((cnt2 == 1) ? Num_ListCodepageSumMsg : Num_ListCodepageSumsMsg));
+  WrLstLine(buf);
 }
 
 /*--------------------------------------------------------------------------*/

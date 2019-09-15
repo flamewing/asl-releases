@@ -741,7 +741,7 @@ static void AddJmp(char *NName, CPUVar NMin, Boolean NHas, Boolean NInd, LongWor
   JmpOrders[InstrZ].Code = NCode;
   JmpOrders[InstrZ].MinCPU = NMin;
   AddInstTable(InstTable, NName, InstrZ, DecodeJmp);
-  sprintf(IName, "%sI", NName);
+  as_snprintf(IName, sizeof(IName), "%sI", NName);
   AddInstTable(InstTable, IName, 0x100 | InstrZ, DecodeJmp);
   InstrZ++;
 }

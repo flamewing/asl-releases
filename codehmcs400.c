@@ -923,7 +923,7 @@ static void AddX(const char *pOpPart, Word Code, InstProc Proc)
   char OpPart[30];
 
   AddInstTable(InstTable, pOpPart, Code, Proc);
-  sprintf(OpPart, "%sX", pOpPart);
+  as_snprintf(OpPart, sizeof(OpPart), "%sX", pOpPart);
   AddInstTable(InstTable, OpPart, Code | 1, Proc);
 }
 
@@ -932,11 +932,11 @@ static void AddXY(const char *pOpPart, Word Code, InstProc Proc)
   char OpPart[30];
 
   AddInstTable(InstTable, pOpPart, Code, Proc);
-  sprintf(OpPart, "%sX", pOpPart);
+  as_snprintf(OpPart, sizeof(OpPart), "%sX", pOpPart);
   AddInstTable(InstTable, OpPart, Code | 1, Proc);
-  sprintf(OpPart, "%sY", pOpPart);
+  as_snprintf(OpPart, sizeof(OpPart), "%sY", pOpPart);
   AddInstTable(InstTable, OpPart, Code | 2, Proc);
-  sprintf(OpPart, "%sXY", pOpPart);
+  as_snprintf(OpPart, sizeof(OpPart), "%sXY", pOpPart);
   AddInstTable(InstTable, OpPart, Code | 3, Proc);
 }
 

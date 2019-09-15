@@ -374,7 +374,7 @@ extern Boolean SupAllowed;
 extern Boolean Maximum;
 extern Boolean DoBranchExt;
 
-extern LargeWord RadixBase, OutRadixBase;
+extern int RadixBase, OutRadixBase, ListRadixBase;
 
 extern tStrComp *ArgStr;
 extern StringPtr pLOpPart;

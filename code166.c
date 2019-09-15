@@ -1707,7 +1707,7 @@ static void DecodeBIT(Word Code)
    PushLocHandle(-1);
    EnterIntSymbol(&LabPart, (Adr << 4) + Bit, SegNone, False);
    PopLocHandle();
-   sprintf(ListLine, "=%02xH.%1x", Adr, Bit);
+   as_snprintf(ListLine, STRINGSIZE, "=%02xH.%1x", (unsigned)Adr, (unsigned)Bit);
  }
 }
 
@@ -1726,7 +1726,7 @@ static void AddBInstTable(char *NName, Word NCode, InstProc Proc)
   char BName[30];
 
   AddInstTable(InstTable, NName, NCode | 0x0100, Proc);
-  sprintf(BName, "%sB", NName);
+  as_snprintf(BName, sizeof(BName), "%sB", NName);
   AddInstTable(InstTable, BName, NCode, Proc);
 }
 

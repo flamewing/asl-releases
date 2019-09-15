@@ -689,7 +689,7 @@ static Boolean SetOpSize(ShortInt NewOpSize)
   {
     char Str[30];
 
-    sprintf(Str, "%d -> %d", OpSize, NewOpSize);
+    as_snprintf(Str, sizeof(Str), "%d -> %d", (int)OpSize, (int)NewOpSize);
     WrXError(ErrNum_ConfOpSizes, Str);
     return False;
   }
@@ -1012,9 +1012,9 @@ static void DissectBit_S12Z(char *pDest, int DestSize, LargeWord Inp)
 
   UNUSED(DestSize);
   if (BitWidth > 1)
-    sprintf(pDest, "$%x(%c).%u:%u", Address, Attribute, BitWidth, BitPos);
+    as_snprintf(pDest, DestSize, "$%x(%c).%u:%u", (unsigned)Address, Attribute, (unsigned)BitWidth, (unsigned)BitPos);
   else
-    sprintf(pDest, "$%x(%c).%u", Address, Attribute, BitPos);
+    as_snprintf(pDest, DestSize, "$%x(%c).%u", (unsigned)Address, Attribute, (unsigned)BitPos);
 }
 
 /*!------------------------------------------------------------------------
@@ -2471,12 +2471,12 @@ static void AddCondition(const char *pName, Word Code, InstProc Proc)
 {
   char InstrName[20];
 
-  sprintf(InstrName, pName, "NE"); AddInstTable(InstTable, InstrName, Code | (0 << 4), Proc);
-  sprintf(InstrName, pName, "EQ"); AddInstTable(InstTable, InstrName, Code | (1 << 4), Proc);
-  sprintf(InstrName, pName, "PL"); AddInstTable(InstTable, InstrName, Code | (2 << 4), Proc);
-  sprintf(InstrName, pName, "MI"); AddInstTable(InstTable, InstrName, Code | (3 << 4), Proc);
-  sprintf(InstrName, pName, "GT"); AddInstTable(InstTable, InstrName, Code | (4 << 4), Proc);
-  sprintf(InstrName, pName, "LE"); AddInstTable(InstTable, InstrName, Code | (5 << 4), Proc);
+  as_snprintf(InstrName, sizeof(InstrName), pName, "NE"); AddInstTable(InstTable, InstrName, Code | (0 << 4), Proc);
+  as_snprintf(InstrName, sizeof(InstrName), pName, "EQ"); AddInstTable(InstTable, InstrName, Code | (1 << 4), Proc);
+  as_snprintf(InstrName, sizeof(InstrName), pName, "PL"); AddInstTable(InstTable, InstrName, Code | (2 << 4), Proc);
+  as_snprintf(InstrName, sizeof(InstrName), pName, "MI"); AddInstTable(InstTable, InstrName, Code | (3 << 4), Proc);
+  as_snprintf(InstrName, sizeof(InstrName), pName, "GT"); AddInstTable(InstTable, InstrName, Code | (4 << 4), Proc);
+  as_snprintf(InstrName, sizeof(InstrName), pName, "LE"); AddInstTable(InstTable, InstrName, Code | (5 << 4), Proc);
 }
 
 static void InitFields(void)

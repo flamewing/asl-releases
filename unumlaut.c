@@ -134,9 +134,9 @@ int main(int argc, char **argv)
   if (argc == 2)
   {
 #if defined (__MSDOS__) || defined(__EMX__)
-    sprintf(cmdline, "copy %s %s", TMPNAME, argv[1]);
+    as_snprintf(cmdline, sizeof(cmdline), "copy %s %s", TMPNAME, argv[1]);
 #else
-    snprintf(cmdline, sizeof(cmdline), "cp %s %s", TMPNAME, argv[1]);
+    as_snprintf(cmdline, sizeof(cmdline), "cp %s %s", TMPNAME, argv[1]);
 #endif
     doexec(cmdline);
     unlink(TMPNAME);

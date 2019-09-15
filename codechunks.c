@@ -92,6 +92,7 @@ int ReadCodeChunk(tCodeChunk *pChunk, const char *pFileName, LargeWord Start, La
   Byte *pCode = NULL;
   int Result;
 
+  UNUSED(Granularity);
   FreeCodeChunk(pChunk);
 
   pFile = fopen(pFileName, OPENRDMODE);
@@ -189,7 +190,7 @@ int MoveCodeChunkToList(tCodeChunkList *pCodeChunkList, tCodeChunk *pNewCodeChun
     if (Index > 0)
       CheckOverlap(pCodeChunkList->Chunks + Index - 1,
                    pCodeChunkList->Chunks + Index);
-    if (Index < pCodeChunkList->RealLen - 1)
+    if (Index < pCodeChunkList->RealLen - 1U)
       CheckOverlap(pCodeChunkList->Chunks + Index,
                    pCodeChunkList->Chunks + Index + 1);
   }

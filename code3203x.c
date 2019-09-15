@@ -806,7 +806,7 @@ static void DecodeGen(Word Index)
     for (ARIndex = 0; ARIndex < 8; ARIndex++)
       if (ARs & PrevARs & (1l << ARIndex))
       {
-        sprintf(Form, "AR%d", ARIndex);
+        as_snprintf(Form, sizeof(Form), "AR%d", (int)ARIndex);
         WrXError(ErrNum_DoubleAdrRegUse, Form);
       }
 
@@ -1485,39 +1485,39 @@ static void AddCondition(char *NName, Byte NCode)
 
   if (*NName)
   {
-    sprintf(InstName, "LDI%s", NName);
+    as_snprintf(InstName, sizeof(InstName), "LDI%s", NName);
     AddInstTable(InstTable, InstName, 0x5000 | NCode, DecodeLDIcc_LDFcc);
-    sprintf(InstName, "LDF%s", NName);
+    as_snprintf(InstName, sizeof(InstName), "LDF%s", NName);
     AddInstTable(InstTable, InstName, 0x4000 | NCode, DecodeLDIcc_LDFcc);
   }
-  sprintf(InstName, "B%s", NName);
+  as_snprintf(InstName, sizeof(InstName), "B%s", NName);
   AddInstTable(InstTable, InstName, 0x0000 | NCode, DecodeBcc);
-  sprintf(InstName, "B%sD", NName);
+  as_snprintf(InstName, sizeof(InstName), "B%sD", NName);
   AddInstTable(InstTable, InstName, 0x0100 | NCode, DecodeBcc);
-  sprintf(InstName, "B%sAF", NName);
+  as_snprintf(InstName, sizeof(InstName), "B%sAF", NName);
   AddInstTable(InstTable, InstName, 0x0580 | NCode, DecodeBcc);
-  sprintf(InstName, "B%sAT", NName);
+  as_snprintf(InstName, sizeof(InstName), "B%sAT", NName);
   AddInstTable(InstTable, InstName, 0x0380 | NCode, DecodeBcc);
   if (*NName)
   {
-    sprintf(InstName, "LAJ%s", NName);
+    as_snprintf(InstName, sizeof(InstName), "LAJ%s", NName);
     AddInstTable(InstTable, InstName, 0x4180 | NCode, DecodeBcc);
-    sprintf(InstName, "CALL%s", NName);
+    as_snprintf(InstName, sizeof(InstName), "CALL%s", NName);
     AddInstTable(InstTable, InstName, NCode, DecodeCALLcc);
   }
-  sprintf(InstName, "DB%s", NName);
+  as_snprintf(InstName, sizeof(InstName), "DB%s", NName);
   AddInstTable(InstTable, InstName, NCode, DecodeDBcc);
-  sprintf(InstName, "DB%sD", NName);
+  as_snprintf(InstName, sizeof(InstName), "DB%sD", NName);
   AddInstTable(InstTable, InstName, 0x100 | NCode, DecodeDBcc);
-  sprintf(InstName, "RETI%s", NName);
+  as_snprintf(InstName, sizeof(InstName), "RETI%s", NName);
   AddInstTable(InstTable, InstName, NCode, DecodeRETIcc_RETScc);
-  sprintf(InstName, "RETI%sD", NName);
+  as_snprintf(InstName, sizeof(InstName), "RETI%sD", NName);
   AddInstTable(InstTable, InstName, 0x100 | NCode, DecodeRETIcc_RETScc);
-  sprintf(InstName, "RETS%s", NName);
+  as_snprintf(InstName, sizeof(InstName), "RETS%s", NName);
   AddInstTable(InstTable, InstName, 0x400 | NCode, DecodeRETIcc_RETScc);
-  sprintf(InstName, "TRAP%s", NName);
+  as_snprintf(InstName, sizeof(InstName), "TRAP%s", NName);
   AddInstTable(InstTable, InstName, NCode, DecodeTRAPcc);
-  sprintf(InstName, "LAT%s", NName);
+  as_snprintf(InstName, sizeof(InstName), "LAT%s", NName);
   AddInstTable(InstTable, InstName, 0x80 | NCode, DecodeTRAPcc);
 }
 
@@ -1550,7 +1550,7 @@ static void AddGen(char *NName, CPUVar NMin, Boolean NMay1, Boolean NMay3,
 
   if (InstrZ >= GenOrderCount) exit(255);
 
-  sprintf(NName3, "%s3", NName);
+  as_snprintf(NName3, sizeof(NName3), "%s3", NName);
 
   GenOrders[InstrZ].ParIndex =
   GenOrders[InstrZ].ParIndex3 = ParOrderCount;

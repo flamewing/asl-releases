@@ -373,26 +373,26 @@ char *NamePart(char *Name)
 /****************************************************************************/
 /* eine Gleitkommazahl in einen String umwandeln */
 
-char *FloatString(Double f)
+void FloatString(char *pDest, int DestSize, Double f)
 {
 #define MaxLen 18
-  static String s;
-  char *p, *d;
+  char *p, *d, ExpChar = HexStartCharacter + ('E' - 'A');
   sint n, ExpVal, nzeroes;
   Boolean WithE, OK;
 
   /* 1. mit Maximallaenge wandeln, fuehrendes Vorzeichen weg */
 
-  sprintf(s, "%27.15e", f);
-  for (p = s; (*p == ' ') || (*p == '+'); p++);
-  if (p != s)
-    strmov(s, p);
+  (void)DestSize;
+  as_snprintf(pDest, DestSize, "%27.15e", f);
+  for (p = pDest; (*p == ' ') || (*p == '+'); p++);
+  if (p != pDest)
+    strmov(pDest, p);
 
   /* 2. Exponenten soweit als moeglich kuerzen, evtl. ganz streichen */
 
-  p = strchr(s, 'e');
+  p = strchr(pDest, ExpChar);
   if (!p)
-    return s;
+    return;
   switch (*(++p))
   {
     case '+':
@@ -407,11 +407,11 @@ char *FloatString(Double f)
     strmov(p, p + 1);
   WithE = (*p != '\0');
   if (!WithE)
-    s[strlen(s) - 1] = '\0';
+    pDest[strlen(pDest) - 1] = '\0';
 
   /* 3. Nullen am Ende der Mantisse entfernen, Komma bleibt noch */
 
-  p = WithE ? strchr(s, 'e') : s + strlen(s);
+  p = WithE ? strchr(pDest, ExpChar) : pDest + strlen(pDest);
   p--;
   while (*p == '0')
   {
@@ -421,25 +421,25 @@ char *FloatString(Double f)
 
   /* 4. auf die gewuenschte Maximalstellenzahl begrenzen */
 
-  p = WithE ? strchr(s, 'e') : s + strlen(s);
-  d = strchr(s, '.');
+  p = WithE ? strchr(pDest, ExpChar) : pDest + strlen(pDest);
+  d = strchr(pDest, '.');
   n = p - d - 1;
 
   /* 5. Maximallaenge ueberschritten ? */
 
-  if (strlen(s) > MaxLen)
-    strmov(d + (n - (strlen(s) - MaxLen)), d + n);
+  if (strlen(pDest) > MaxLen)
+    strmov(d + (n - (strlen(pDest) - MaxLen)), d + n);
 
   /* 6. Exponentenwert berechnen */
 
   if (WithE)
   {
-    p = strchr(s, 'e');
+    p = strchr(pDest, ExpChar);
     ExpVal = ConstLongInt(p + 1, &OK, 10);
   }
   else
   {
-    p = s + strlen(s);
+    p = pDest + strlen(pDest);
     ExpVal = 0;
   }
 
@@ -448,7 +448,7 @@ char *FloatString(Double f)
 
   if (ExpVal > 0)
   {
-    nzeroes = ExpVal - (p - strchr(s, '.') - 1); /* = Zahl von Nullen, die anzuhaengen waere */
+    nzeroes = ExpVal - (p - strchr(pDest, '.') - 1); /* = Zahl von Nullen, die anzuhaengen waere */
 
     /* 7a. nur Kommaverschiebung erforderlich. Exponenten loeschen und
           evtl. auch Komma */
@@ -456,12 +456,12 @@ char *FloatString(Double f)
     if (nzeroes <= 0)
     {
       *p = '\0';
-      d = strchr(s, '.');
+      d = strchr(pDest, '.');
       strmov(d, d + 1);
       if (nzeroes != 0)
       {
-        memmove(s + strlen(s) + nzeroes + 1, s + strlen(s) + nzeroes, -nzeroes);
-        s[strlen(s) - 1 + nzeroes] = '.';
+        memmove(pDest + strlen(pDest) + nzeroes + 1, pDest + strlen(pDest) + nzeroes, -nzeroes);
+        pDest[strlen(pDest) - 1 + nzeroes] = '.';
       }
     }
 
@@ -470,13 +470,13 @@ char *FloatString(Double f)
 
     else
     {
-      n = strlen(p) + 1 + (MaxLen - strlen(s)); /* = Anzahl freizubekommender Zeichen+Gutschrift */
+      n = strlen(p) + 1 + (MaxLen - strlen(pDest)); /* = Anzahl freizubekommender Zeichen+Gutschrift */
       if (n >= nzeroes)
       {
         *p = '\0';
-        d = strchr(s, '.');
+        d = strchr(pDest, '.');
         strmov(d, d + 1);
-        d = s + strlen(s);
+        d = pDest + strlen(pDest);
         for (n = 0; n < nzeroes; n++)
           *(d++) = '0';
         *d = '\0';
@@ -490,13 +490,13 @@ char *FloatString(Double f)
   else if (ExpVal < 0)
   {
     n = (-ExpVal) - (strlen(p)); /* = Verlaengerung nach Operation */
-    if (strlen(s) + n <= MaxLen)
+    if (strlen(pDest) + n <= MaxLen)
     {
       *p = '\0';
-      d = strchr(s, '.'); 
+      d = strchr(pDest, '.'); 
       strmov(d, d + 1);
-      d = (s[0] == '-') ? s + 1 : s;
-      memmove(d - ExpVal + 1, d, strlen(s) + 1);
+      d = (pDest[0] == '-') ? pDest + 1 : pDest;
+      memmove(d - ExpVal + 1, d, strlen(pDest) + 1);
       *(d++) = '0';
       *(d++) = '.';
       for (n = 0; n < -ExpVal - 1; n++)
@@ -508,48 +508,76 @@ char *FloatString(Double f)
   /* 9. Ueberfluessiges Komma entfernen */
 
   if (WithE)
-  {
-    p = strchr(s, 'e');
-    if (p)
-      *p = 'E';
-  }
+    p = strchr(pDest, ExpChar);
   else
-    p = s + strlen(s);
-  if ((p) && (*(p - 1) == '.'))
+    p = pDest + strlen(pDest);
+  if (p && (*(p - 1) == '.'))
     strmov(p - 1, p);
-
-  return s;
 }
 
 /****************************************************************************/
 /* Symbol in String wandeln */
 
-void StrSym(TempResult *t, Boolean WithSystem, char *Dest, int DestLen)
+void StrSym(TempResult *t, Boolean WithSystem, char *Dest, int DestLen, unsigned Radix)
 {
   switch (t->Typ)
   {
     case TempInt:
-      HexString(Dest, DestLen - 3, t->Contents.Int, 1);
+      SysString(Dest, DestLen - 3, t->Contents.Int, Radix, 1, HexStartCharacter);
       if (WithSystem)
         switch (ConstMode)
         {
           case ConstModeIntel:
-            strcat(Dest, "H");
+            switch (Radix)
+            {
+              case 16:
+                if (!isdigit(*Dest))
+                  strprep(Dest, "0");
+                /* fall-through */
+              case 8:
+              case 2:
+                as_snprcatf(Dest, DestLen, GetIntelSuffix(Radix));
+                break;
+            }
             break;
           case ConstModeMoto:
-            strprep(Dest, "$");
+            switch (Radix)
+            {
+              case 16:
+                strprep(Dest, "$");
+                break;
+              case 8:
+                strprep(Dest, "@");
+                break;
+              case 2:
+                strprep(Dest, "%");
+                break;
+            }
             break;
           case ConstModeC:
-            strprep(Dest, "0x");
+            switch (Radix)
+            {
+              case 16:
+                strprep(Dest, "0x");
+                break;
+              case 8:
+                strprep(Dest, "0");
+                break;
+            }
             break;
           case ConstModeWeird :
-            strprep(Dest, "x'");
-            strcat(Dest, "'");
+            switch (Radix)
+            {
+              case 16:
+                strprep(Dest, "x'");
+                strcat(Dest, "'");
+                break;
+            }
             break;
         }
       break;
     case TempFloat:
-      strmaxcpy(Dest, FloatString(t->Contents.Float), DestLen);
+      FloatString(Dest, DestLen, t->Contents.Float);
       break;
     case TempString:
       snstrlenprint(Dest, DestLen, t->Contents.Ascii.Contents, t->Contents.Ascii.Length);
@@ -602,10 +630,10 @@ void NewPage(ShortInt Level, Boolean WithFF)
     ChkIO(ErrNum_ListWrError);
   }
 
-  sprintf(Header, " AS V%s%s%s",
-          Version,
-          getmessage(Num_HeadingFileNameLab),
-          NamePart(SourceFile));
+  as_snprintf(Header, sizeof(Header), " AS V%s%s%s",
+              Version,
+              getmessage(Num_HeadingFileNameLab),
+              NamePart(SourceFile));
   if ((strcmp(CurrFileName, "INTERNAL"))
    && (strcmp(NamePart(CurrFileName), NamePart(SourceFile))))
   {
@@ -617,17 +645,17 @@ void NewPage(ShortInt Level, Boolean WithFF)
 
   for (z = ChapDepth; z >= 0; z--)
   {
-    sprintf(s, IntegerFormat, PageCounter[z]);
+    as_snprintf(s, sizeof(s), IntegerFormat, PageCounter[z]);
     strmaxcat(Header, s, STRINGSIZE);
     if (z != 0)
       strmaxcat(Header, ".", STRINGSIZE);
   }
 
   strmaxcat(Header, " - ", STRINGSIZE);
-  NLS_CurrDateString(s);
+  NLS_CurrDateString(s, sizeof(s));
   strmaxcat(Header, s, STRINGSIZE);
   strmaxcat(Header, " ", STRINGSIZE);
-  NLS_CurrTimeString(False, s);
+  NLS_CurrTimeString(False, s, sizeof(s));
   strmaxcat(Header, s, STRINGSIZE);
 
   if (PageWidth != 0)
@@ -668,7 +696,7 @@ void NewPage(ShortInt Level, Boolean WithFF)
 /*--------------------------------------------------------------------------*/
 /* eine Zeile ins Listing schieben */
 
-void WrLstLine(char *Line)
+void WrLstLine(const char *Line)
 {
   int LLength;
   char bbuf[2500];
@@ -736,12 +764,17 @@ void WrLstLine(char *Line)
 
 void SetListLineVal(TempResult *t)
 {
-  StrSym(t, True, ListLine, STRINGSIZE);
-  strmaxprep(ListLine, "=", STRINGSIZE - 1);
-  if (strlen(ListLine) > 14)
+  *ListLine = '=';
+  StrSym(t, True, ListLine + 1, STRINGSIZE - 1, ListRadixBase);
+  LimitListLine();
+}
+
+void LimitListLine(void)
+{
+  if (strlen(ListLine) + 1 > LISTLINESPACE)
   {
-    ListLine[12] = '\0';
-    strmaxcat(ListLine, "..", STRINGSIZE - 1);
+    ListLine[LISTLINESPACE - 4] = '\0';
+    strmaxcat(ListLine, "..", STRINGSIZE);
   }
 }
 
@@ -955,7 +988,7 @@ void WrErrorString(char *pMessage, char *pAdd, Boolean Warning, Boolean Fatal,
   {
     char Num[20];
 
-    sprintf(Num, ":%d", pLineComp->StartCol + 1);
+    as_snprintf(Num, sizeof(Num), ":%d", pLineComp->StartCol + 1);
     strmaxcat(ErrStr[ErrStrCount], Num, STRINGSIZE);
   }
   if (Warning || !GNUErrors)
@@ -1235,7 +1268,7 @@ void WrXErrorPos(Word Num, const char *pExtendError, const struct sLineComp *pLi
       msgno = Num_ErrMsgMissingLTORG; break;
     case ErrNum_InstructionNotSupported:
       msgno = -1;
-      sprintf(h, getmessage(Num_ErrMsgInstructionNotOnThisCPUSupported), MomCPUIdent);
+      as_snprintf(h, sizeof(h), getmessage(Num_ErrMsgInstructionNotOnThisCPUSupported), MomCPUIdent);
       break;
     case ErrNum_FPUNotEnabled: msgno = Num_ErrMsgFPUNotEnabled; break;
     case ErrNum_PMMUNotEnabled: msgno = Num_ErrMsgPMMUNotEnabled; break;
@@ -1243,7 +1276,7 @@ void WrXErrorPos(Word Num, const char *pExtendError, const struct sLineComp *pLi
     case ErrNum_Z80SyntaxNotEnabled: msgno = Num_ErrMsgZ80SyntaxNotEnabled; break;
     case ErrNum_AddrModeNotSupported:
       msgno = -1;
-      sprintf(h, getmessage(Num_ErrMsgAddrModeNotOnThisCPUSupported), MomCPUIdent);
+      as_snprintf(h, sizeof(h), getmessage(Num_ErrMsgAddrModeNotOnThisCPUSupported), MomCPUIdent);
       break;
     case ErrNum_InvBitPos:
       msgno = Num_ErrMsgInvBitPos; break;
@@ -1419,8 +1452,9 @@ void WrXErrorPos(Word Num, const char *pExtendError, const struct sLineComp *pLi
       msgno = Num_ErrMsgHeapOvfl; break;
     case ErrNum_StackOvfl:
       msgno = Num_ErrMsgStackOvfl; break;
-    default  : msgno = -1;
-               sprintf(h, "%s %d", getmessage(Num_ErrMsgIntError), (int) Num);
+    default:
+      msgno = -1;
+      as_snprintf(h, sizeof(h), "%s %d", getmessage(Num_ErrMsgIntError), (int) Num);
   }
   if (msgno != -1)
     strmaxcpy(h, getmessage(msgno), STRINGSIZE);
@@ -1430,7 +1464,7 @@ void WrXErrorPos(Word Num, const char *pExtendError, const struct sLineComp *pLi
     JmpErrors++;
 
   if (NumericErrors)
-    sprintf(Add, " #%d", (int)Num);
+    as_snprintf(Add, sizeof(Add), " #%d", (int)Num);
   else
     *Add = '\0';
   WrErrorString(h, Add, Num < 1000, Num >= 10000, pExtendError, pLineComp);
@@ -1591,8 +1625,9 @@ void PrintUseList(void)
   for (z = 1; z <= PCMax; z++)
     if (SegChunks[z].Chunks)
     {
-      sprintf(s, "  %s%s%s", getmessage(Num_ListSegListHead1), SegNames[z],
-                             getmessage(Num_ListSegListHead2));
+      as_snprintf(s, sizeof(s), "  %s%s%s",
+                  getmessage(Num_ListSegListHead1), SegNames[z],
+                  getmessage(Num_ListSegListHead2));
       WrLstLine(s);
       strcpy(s, "  ");
       l = strlen(SegNames[z]) + strlen(getmessage(Num_ListSegListHead1)) + strlen(getmessage(Num_ListSegListHead2));
@@ -1834,7 +1869,7 @@ void BookKeeping(void)
 }
 
 /****************************************************************************/
-/* Differenz zwischen zwei Zeiten mit Jahresueberlauf berechnen */
+/* Differenz zwischen zwei Zeiten mit Tagesueberlauf berechnen */
 
 long DTime(long t1, long t2)
 {

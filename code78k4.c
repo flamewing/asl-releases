@@ -151,7 +151,8 @@ static Boolean SetOpSize(ShortInt NewSize)
   {
     char Sizes[30];
 
-    sprintf(Sizes, "%d<->%d", (int)((OpSize + 1) * 8), (int)((NewSize + 1) * 8));
+    as_snprintf(Sizes, sizeof(Sizes), "%d<->%d",
+                (int)((OpSize + 1) * 8), (int)((NewSize + 1) * 8));
     WrXError(ErrNum_ConfOpSizes, Sizes);
     return False;
   }
@@ -3311,12 +3312,12 @@ static void AddInstr(const char *pInstr, InstProc Proc, Word Code, unsigned Size
     AddInstTable(InstTable, pInstr, Code, Proc);
   if (SizeMask & 2)
   {
-    sprintf(Instr, "%sW", pInstr);
+    as_snprintf(Instr, sizeof(Instr), "%sW", pInstr);
     AddInstTable(InstTable, Instr, Code + 1, Proc);
   }
   if (SizeMask & 4)
   {
-    sprintf(Instr, "%sG", pInstr);
+    as_snprintf(Instr, sizeof(Instr), "%sG", pInstr);
     AddInstTable(InstTable, Instr, Code + 2, Proc);
   }
 }

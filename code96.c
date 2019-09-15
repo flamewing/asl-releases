@@ -20,6 +20,7 @@
 #include "intpseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "strutil.h"
 
 #include "code96.h"
 
@@ -1137,7 +1138,7 @@ static void AddSize(char *NName, Word NCode, InstProc Proc, Word SizeMask)
   if (SizeMask & 2)
     AddInstTable(InstTable, NName, 0x0100 | NCode, Proc);
 
-  l = sprintf(SizeName, "%sB", NName);
+  l = as_snprintf(SizeName, sizeof(SizeName), "%sB", NName);
   if (SizeMask & 1)
     AddInstTable(InstTable, SizeName, 0x0000 | NCode, Proc);
 

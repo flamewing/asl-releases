@@ -28,7 +28,11 @@ extern Byte Lo(Word inp);
 
 extern Byte Hi(Word inp);
 
-extern LongWord HiWord(LongWord Src);
+extern unsigned LoWord(LongWord Src);
+
+extern unsigned HiWord(LongWord Src);
+
+extern unsigned long LoDWord(LargeWord Src);
 
 extern Boolean Odd (int inp);
 

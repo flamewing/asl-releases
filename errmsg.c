@@ -10,6 +10,7 @@
 
 #include <string.h>
 #include <stdarg.h>
+#include "strutil.h"
 
 #include "datatypes.h"
 #include "asmdef.h"
@@ -37,24 +38,18 @@ static tErrorNum GetDefaultCPUErrorNum(tErrorNum ThisNum)
 
 Boolean ChkRange(LargeInt Value, LargeInt Min, LargeInt Max)
 {
-  char s1[100], s2[100];
+  char s[100];
 
   if (Value < Min)
   {
-    LargeString(s1, Value);
-    LargeString(s2, Min);
-    strmaxcat(s1, "<", sizeof(s1));
-    strmaxcat(s1, s2, sizeof(s1));
-    WrXError(ErrNum_UnderRange, s1);
+    as_snprintf(s, sizeof(s), "%llld<%llld", Value, Min);
+    WrXError(ErrNum_UnderRange, s);
     return False;
   }
   else if (Value > Max)
   {
-    LargeString(s1, Value);
-    LargeString(s2, Max);
-    strmaxcat(s1, ">", sizeof(s1));
-    strmaxcat(s1, s2, sizeof(s1));
-    WrXError(ErrNum_OverRange, s1);
+    as_snprintf(s, sizeof(s), "%llld>%llld", Value, Max);
+    WrXError(ErrNum_OverRange, s);
     return False;
   }
   else
@@ -78,17 +73,17 @@ Boolean ChkArgCntExtPos(int ThisCnt, int MinCnt, int MaxCnt, const struct sLineC
     char Str[100];
 
     if (MinCnt != MaxCnt)
-      sprintf(Str, getmessage(Num_ErrMsgArgCntFromTo), MinCnt, MaxCnt, ThisCnt);
+      as_snprintf(Str, sizeof(Str), getmessage(Num_ErrMsgArgCntFromTo), MinCnt, MaxCnt, ThisCnt);
     else switch (MinCnt)
     {
       case 0:
-        sprintf(Str, getmessage(Num_ErrMsgArgCntZero), ThisCnt);
+        as_snprintf(Str, sizeof(Str), getmessage(Num_ErrMsgArgCntZero), ThisCnt);
         break;
       case 1:
-        sprintf(Str, getmessage(Num_ErrMsgArgCntOne), ThisCnt);
+        as_snprintf(Str, sizeof(Str), getmessage(Num_ErrMsgArgCntOne), ThisCnt);
         break;
       default:
-        sprintf(Str, getmessage(Num_ErrMsgArgCntMulti), MinCnt, ThisCnt);
+        as_snprintf(Str, sizeof(Str), getmessage(Num_ErrMsgArgCntMulti), MinCnt, ThisCnt);
     }
     if (pComp)
       WrXErrorPos(ErrNum_WrongArgCnt, Str, pComp);
@@ -115,7 +110,7 @@ Boolean ChkArgCntExtEitherOr(int ThisCnt, int EitherCnt, int OrCnt)
   {
     char Str[100];
 
-    sprintf(Str, getmessage(Num_ErrMsgArgCntEitherOr), EitherCnt, OrCnt, ThisCnt);
+    as_snprintf(Str, sizeof(Str), getmessage(Num_ErrMsgArgCntEitherOr), EitherCnt, OrCnt, ThisCnt);
     WrXError(ErrNum_WrongArgCnt, Str);
     return False;
   }
@@ -143,7 +138,7 @@ extern Boolean ChkMinCPUExt(CPUVar MinCPU, tErrorNum ErrorNum)
     {
       char Str[100];
 
-      sprintf(Str, getmessage(Num_ErrMsgMinCPUSupported), pCPUDef->Name);
+      as_snprintf(Str, sizeof(Str), getmessage(Num_ErrMsgMinCPUSupported), pCPUDef->Name);
       WrXError(ErrorNum, Str);
     }
     else
@@ -173,7 +168,7 @@ extern Boolean ChkMaxCPUExt(CPUVar MaxCPU, tErrorNum ErrorNum)
     {
       char Str[100];
 
-      sprintf(Str, getmessage(Num_ErrMsgMaxCPUSupported), pCPUDef->Name);
+      as_snprintf(Str, sizeof(Str), getmessage(Num_ErrMsgMaxCPUSupported), pCPUDef->Name);
       WrXError(ErrorNum, Str);
     }
     else
@@ -205,7 +200,7 @@ extern Boolean ChkRangeCPUExt(CPUVar MinCPU, CPUVar MaxCPU, tErrorNum ErrorNum)
     {
       char Str[100];
 
-      sprintf(Str, getmessage(Num_ErrMsgRangeCPUSupported), pCPUDefMin->Name, pCPUDefMax->Name);
+      as_snprintf(Str, sizeof(Str), getmessage(Num_ErrMsgRangeCPUSupported), pCPUDefMin->Name, pCPUDefMax->Name);
       WrXError(ErrorNum, Str);
     }
     else
@@ -235,7 +230,7 @@ extern Boolean ChkExactCPUExt(CPUVar MatchCPU, tErrorNum ErrorNum)
     {
       char Str[100];
 
-      sprintf(Str, "%s%s%s", getmessage(Num_ErrMsgOnlyCPUSupported1), pCPUDef->Name, getmessage(Num_ErrMsgOnlyCPUSupported2));
+      as_snprintf(Str, sizeof(Str), "%s%s%s", getmessage(Num_ErrMsgOnlyCPUSupported1), pCPUDef->Name, getmessage(Num_ErrMsgOnlyCPUSupported2));
       WrXError(ErrorNum, Str);
     }
     else

@@ -480,16 +480,19 @@ static void DecodeBIT(Word Index)
     switch ((BAdr & 0x3ff) >> 8)
     {
       case 0:
-        sprintf(ListLine, "=R%d.%d", (int)((BAdr >> 4) & 15),
-                (int) (BAdr & 15));
+        as_snprintf(ListLine, STRINGSIZE, "=R%d.%d",
+                    (unsigned)((BAdr >> 4) & 15),
+                    (unsigned) (BAdr & 15));
         break;
       case 1:
-        sprintf(ListLine, "=%x:%x.%d", (int)((BAdr >> 16) & 255),
-                (int)((BAdr & 0x1f8) >> 3), (int)(BAdr & 7));
+        as_snprintf(ListLine, STRINGSIZE, "=%x:%x.%d",
+                    (unsigned)((BAdr >> 16) & 255),
+                    (unsigned)((BAdr & 0x1f8) >> 3), (unsigned)(BAdr & 7));
         break;
       default:
-        sprintf(ListLine, "=S:%x.%d", (int)(((BAdr >> 3) & 0x3f)+0x400),
-                (int)(BAdr & 7));
+        as_snprintf(ListLine, STRINGSIZE, "=S:%x.%d",
+                    (unsigned)(((BAdr >> 3) & 0x3f) + 0x400),
+                    (unsigned)(BAdr & 7));
         break;
     }
   }

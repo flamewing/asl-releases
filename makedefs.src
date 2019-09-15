@@ -47,7 +47,7 @@ DASM_SRCS = das.c dasmdef.c
 DAS_SRCS = version.c endian.c bpemu.c chunks.c trees.c codechunks.c entryaddress.c invaddress.c cpulist.c dynstring.c cmdarg.c ioerrs.c
 
 PLIST_SRCS = plist.c version.c toolutils.c headids.c\
-	     endian.c bpemu.c stringlists.c hex.c strutil.c cmdarg.c ioerrs.c
+	     endian.c bpemu.c stringlists.c strutil.c cmdarg.c ioerrs.c
 
 ALINK_SRCS = alink.c version.c toolutils.c\
              endian.c bpemu.c stringlists.c strutil.c cmdarg.c ioerrs.c
@@ -56,16 +56,18 @@ PBIND_SRCS = pbind.c version.c toolutils.c\
 	     endian.c bpemu.c stringlists.c strutil.c stdhandl.c cmdarg.c ioerrs.c
 
 P2HEX_SRCS = p2hex.c version.c toolutils.c headids.c\
-             endian.c bpemu.c stringlists.c hex.c strutil.c chunks.c cmdarg.c ioerrs.c
+             endian.c bpemu.c stringlists.c strutil.c chunks.c cmdarg.c ioerrs.c
 
 P2BIN_SRCS = p2bin.c version.c toolutils.c\
-             endian.c bpemu.c stringlists.c hex.c strutil.c chunks.c cmdarg.c ioerrs.c
+             endian.c bpemu.c stringlists.c strutil.c chunks.c cmdarg.c ioerrs.c
 
 RESCOMP_SRCS = rescomp.c endian.c strutil.c bpemu.c
 
 TEX2DOC_SRCS = tex2doc.c findhyphen.c asmitree.c strutil.c ushyph.c grhyph.c
 
 TEX2HTML_SRCS = tex2html.c asmitree.c strutil.c
+
+UMLAUT_SRCS = umlaut.c strutil.c
 
 UNUMLAUT_SRCS = unumlaut.c strutil.c
 

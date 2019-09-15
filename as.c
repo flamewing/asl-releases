@@ -147,6 +147,8 @@ static Boolean MasterFile;
 static Boolean WasIF, WasMACRO;
 static unsigned MacroNestLevel = 0;
 
+static unsigned SystemListLen8, SystemListLen16, SystemListLen32;
+
 /*=== Zeilen einlesen ======================================================*/
 
 
@@ -163,11 +165,12 @@ static void NULL_Restorer(PInputTag PInp)
   UNUSED(PInp);
 }
 
-static Boolean NULL_GetPos(PInputTag PInp, char *dest)
+static Boolean NULL_GetPos(PInputTag PInp, char *dest, int DestSize)
 {
   UNUSED(PInp);
 
-  *dest = '\0';
+  if (DestSize)
+    *dest = '\0';
   return False;
 }
 
@@ -236,67 +239,10 @@ static POutputTag GenerateOUTProcessor(SimpProc Processor, tErrorNum OpenErrMsg)
 /*=========================================================================*/
 /* Listing erzeugen */
 
-static void MakeList_Gen2Line(char *pDest, unsigned DestLen, Word EffLen, Word *n)
-{
-  int z, Rest;
-  char Str[20];
-
-  Rest = EffLen - (*n);
-  if (Rest > 8)
-    Rest = 8;
-  if (DontPrint)
-    Rest = 0;
-  for (z = 0; z < (Rest >> 1); z++)
-  {
-    HexString(Str, sizeof(Str), WAsmCode[(*n) >> 1], 4);
-    strmaxcat(pDest, Str, DestLen);
-    strmaxcat(pDest, " ", DestLen);
-    (*n) += 2;
-  }
-  if (Rest & 1)
-  {
-    HexString(Str, sizeof(Str), BAsmCode[*n], 2);
-    strmaxcat(pDest, Str, DestLen);
-    strmaxcat(pDest, "   ", DestLen);
-    (*n)++;
-  }
-  for (z = 1; z <= (8 - Rest) >> 1; z++)
-    strmaxcat(pDest, "     ", DestLen);
-}
-
-static void MakeList_Gen4Line(char *pDest, unsigned DestLen, Word EffLen, Word *n)
-{
-  int z, Rest, wr = 0;
-  char Str[20];
-
-  Rest = EffLen - (*n);
-  if (Rest > 8)
-    Rest = 8;
-  if (DontPrint)
-    Rest = 0;
-  for (z = 0; z < (Rest >> 2); z++)
-  {
-    HexString(Str, sizeof(Str), DAsmCode[(*n) >> 2], 8);
-    strmaxcat(pDest, Str, DestLen);
-    strmaxcat(pDest, " ", DestLen);
-    *n += 4;
-    wr += 9;
-  }
-  for (z = 0; z < (Rest&3); z++)
-  {
-    HexString(Str, sizeof(Str), BAsmCode[(*n)++], 2);
-    strmaxcat(pDest, Str, DestLen);
-    strmaxcat(pDest, " ", DestLen);
-    wr += 3;
-  }
-  strmaxcat(pDest, Blanks(20 - wr), DestLen);
-}
-
 static void MakeList(void)
 {
-  String h, h2, h3, Tmp;
-  Word i, k;
-  Word n, EffLen;
+  String h, h2, Tmp;
+  Word EffLen;
   Boolean ThisDoLst;
 
   EffLen = CodeLen * Granularity();
@@ -321,29 +267,27 @@ static void MakeList(void)
     /* Zeilennummer / Programmzaehleradresse: */
 
     if (IncDepth == 0)
-      strmaxcpy(h2, "   ", sizeof(h));
+      as_snprintf(h, sizeof(h), "   ");
     else
     {
-      sprintf(Tmp, IntegerFormat, IncDepth);
-      as_snprintf(h2, sizeof(h2), "(%s)", Tmp);
+      as_snprintf(Tmp, sizeof(Tmp), IntegerFormat, IncDepth);
+      as_snprintf(h, sizeof(h), "(%s)", Tmp);
     }
     if (ListMask & ListMask_LineNums)
     {
-      sprintf(h3, Integ32Format, CurrLine);
-      as_snprintf(h, sizeof(h), "%5s/", h3);
-      strmaxcat(h2, h, sizeof(h));
+      as_snprintf(h2, sizeof(h2), Integ32Format, CurrLine);
+      as_snprcatf(h, sizeof(h), "%5s/", h2);
     }
-    strmaxcpy(h, h2, sizeof(h));
-    HexBlankString(h2, sizeof(h2), EProgCounter() - CodeLen, 8);
-    strmaxcat(h, h2, sizeof(h));
-    strmaxcat(h, Retracted?" R ":" : ", sizeof(h));
+    as_snprcatf(h, sizeof(h), "%8.*lllu %c ",
+                ListRadixBase, (LargeInt)(EProgCounter() - CodeLen),
+                Retracted? 'R' : ':');
 
     /* Extrawurst in Listing ? */
 
-    if (*ListLine != '\0')
+    if (*ListLine)
     {
       strmaxcat(h, ListLine, sizeof(h));
-      strmaxcat(h, Blanks(20 - strlen(ListLine)), sizeof(h));
+      strmaxcat(h, Blanks(LISTLINESPACE - strlen(ListLine)), sizeof(h));
       strmaxcat(h, OneLine, sizeof(h));
       WrLstLine(h);
       *ListLine = '\0';
@@ -353,79 +297,96 @@ static void MakeList(void)
 
     else
     {
-      switch (ActListGran)
-      {
-        case 4:
-          n = 0;
-          MakeList_Gen4Line(h, sizeof(h), EffLen, &n);
-          strmaxcat(h, OneLine, sizeof(h)); WrLstLine(h);
-          if (!DontPrint)
-          {
-            while (n < EffLen)
-            {
-              strmaxcpy(h, "                    ", sizeof(h));
-              MakeList_Gen4Line(h, sizeof(h), EffLen, &n);
-              WrLstLine(h);
-            }
-          }
-          break;
-        case 2:
-          n = 0;
-          MakeList_Gen2Line(h, sizeof(h), EffLen, &n);
-          strmaxcat(h, OneLine, sizeof(h)); WrLstLine(h);
-          if (!DontPrint)
-          {
-            while (n < EffLen)
-            {
-              strmaxcpy(h, "                    ", sizeof(h));
-              MakeList_Gen2Line(h, sizeof(h), EffLen, &n);
-              WrLstLine(h);
-            }
-          }
-          break;
-        default:
-        {
-          char Str[20];
+      Word Index = 0, CurrListGran, SystemListLen;
+      Boolean First = True;
+      LargeInt ThisWord;
+      int SumLen;
 
-          if ((TurnWords) && (Granularity() != ActListGran))
-            DreheCodes();
-          for (i = 0; i < 6; i++)
-            if ((!DontPrint) && (EffLen > i))
-            {
-              HexString(Str, sizeof(Str), BAsmCode[i], 2);
-              strmaxcat(h, Str, sizeof(h));
-              strmaxcat(h, " ", sizeof(h));
-            }
-            else
-              strmaxcat(h, "   ", sizeof(h));
-          strmaxcat(h, "  ", sizeof(h));
-          strmaxcat(h, OneLine, sizeof(h));
-          WrLstLine(h);
-          if ((EffLen > 6) && (!DontPrint))
-          {
-            EffLen -= 6;
-            n = EffLen / 6;
-            if ((EffLen % 6) == 0)
-              n--;
-            for (i = 0; i <= n; i++)
-            {
-              strmaxcpy(h, "              ", sizeof(h));
-              if (ListMask & ListMask_LineNums)
-                strmaxcat(h, "      ", sizeof(h));
-              for (k = 0; k < 6; k++)
-                if (EffLen > i * 6 + k)
-                {
-                  HexString(Str, sizeof(Str), BAsmCode[i * 6 + k + 6], 2);
-                  strmaxcat(h, Str, sizeof(h));
-                  strmaxcat(h, " ", sizeof(h));
-                }
-               WrLstLine(h);
-            }
-          }
-          if ((TurnWords) && (Granularity() != ActListGran))
-            DreheCodes();
+      /* Not enough code to display even on 16/32 bit word?
+         Then start rightaway dumping bytes */
+
+      if (EffLen < ActListGran)
+      {
+        CurrListGran = 1;
+        SystemListLen = SystemListLen8;
+      }
+      else
+      {
+        CurrListGran = ActListGran;
+        switch (CurrListGran)
+        {
+          case 4:
+            SystemListLen = SystemListLen32;
+            break;
+          case 2:
+            SystemListLen = SystemListLen16;
+            break;
+          default:
+            SystemListLen = SystemListLen8;
         }
       }
+
+      if (TurnWords && (Granularity() != ActListGran) && (1 == ActListGran))
+        DreheCodes();
+        
+      do
+      {
+        /* If not the first code line, prepend blanks to fill up space below line# and address: */
+
+        if (!First)
+          as_snprintf(h, sizeof(h), "%*s", (ListMask & ListMask_LineNums) ? 20 : 14, "");
+
+        SumLen = 0;
+        do
+        {
+          /* We checked initially there is at least one full word,
+             and we check after every word whether there is another
+             full one: */
+
+          if ((Index < EffLen) && !DontPrint)
+          {
+            switch (CurrListGran)
+            {
+              case 4:
+                ThisWord = DAsmCode[Index >> 2];
+                break;
+              case 2:
+                ThisWord = WAsmCode[Index >> 1];
+                break;
+              default:
+                ThisWord = BAsmCode[Index];
+            }
+            as_snprcatf(h, sizeof(h), "%0*.*lllu ", (int)SystemListLen, (int)ListRadixBase, ThisWord);
+          }
+          else
+            as_snprcatf(h, sizeof(h), "%*s", SystemListLen + 1, "");
+
+          /* advance pointers & keep track of # of characters printed */
+
+          Index += CurrListGran;
+          SumLen += SystemListLen + 1;
+
+          /* Less than one full word remaining? Then switch to dumping bytes. */
+
+          if (Index + CurrListGran > EffLen)
+          {
+            CurrListGran = 1;
+            SystemListLen = SystemListLen8;
+          }
+        }
+        while (SumLen + SystemListLen + 1 < LISTLINESPACE);
+
+        /* If first line, pad to max length and append source line */
+
+        if (First)
+          as_snprcatf(h, sizeof(h), "%*s%s", LISTLINESPACE - SumLen, "", OneLine);
+        WrLstLine(h);
+        First = False;
+      }
+      while ((Index < EffLen) && !DontPrint);
+
+      if (TurnWords && (Granularity() != ActListGran) && (1 == ActListGran))
+        DreheCodes();
     }
   }
 }
@@ -520,7 +481,7 @@ static void ComputeMacroStrings(PInputTag Tag)
   /* recompute # of params */
 
   if (Tag->UsesNumArgs)
-    sprintf(Tag->NumArgs, "%d", Tag->ParCnt);
+    as_snprintf(Tag->NumArgs, sizeof(Tag->NumArgs), Integ32Format, Tag->ParCnt);
 
   /* recompute 'all string' parameter */
 
@@ -939,12 +900,12 @@ static void MACRO_Cleanup(PInputTag PInp)
   ClearStringList(&(PInp->Params));
 }
 
-static Boolean MACRO_GetPos(PInputTag PInp, char *dest)
+static Boolean MACRO_GetPos(PInputTag PInp, char *dest, int DestSize)
 {
   String Tmp;
 
-  sprintf(Tmp, LongIntFormat, PInp->LineZ - 1);
-  sprintf(dest, "%s(%s) ", PInp->SpecName.Str, Tmp);
+  as_snprintf(Tmp, sizeof(Tmp), LongIntFormat, PInp->LineZ - 1);
+  as_snprintf(dest, DestSize, "%s(%s) ", PInp->SpecName.Str, Tmp);
   return False;
 }
 
@@ -1010,7 +971,7 @@ static void ExpandMacro(PMacroRec OneMacro)
 
     Tag->NumArgs[0] = '\0';
     if (Tag->UsesNumArgs)
-      sprintf(Tag->NumArgs, "%d", ArgCnt);
+      as_snprintf(Tag->NumArgs, sizeof(Tag->NumArgs), "%d", ArgCnt);
     Tag->AllArgs[0] = '\0';
     if (Tag->UsesAllArgs)
     {
@@ -1268,7 +1229,7 @@ static void IRP_Cleanup(PInputTag PInp)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 /* Posisionsangabe im IRP(C) fuer Fehlermeldungen */
 
-static Boolean IRP_GetPos(PInputTag PInp, char *dest)
+static Boolean IRP_GetPos(PInputTag PInp, char *dest, int DestSize)
 {
   int z, ParZ = PInp->ParZ, LineZ = PInp->LineZ;
   char *IRPType, *IRPVal, tmp[10];
@@ -1298,11 +1259,11 @@ static Boolean IRP_GetPos(PInputTag PInp, char *dest)
   else
   {
     IRPType = "IRPC";
-    sprintf(tmp, "'%c'", PInp->SpecName.Str[ParZ - 1]);
+    as_snprintf(tmp, sizeof(tmp), "'%c'", PInp->SpecName.Str[ParZ - 1]);
     IRPVal = tmp;
   }
 
-  sprintf(dest, "%s:%s(%ld) ", IRPType, IRPVal, (long)LineZ);
+  as_snprintf(dest, DestSize, "%s:%s(%ld) ", IRPType, IRPVal, (long)LineZ);
 
   return False;
 }
@@ -1641,7 +1602,7 @@ static void REPT_Cleanup(PInputTag PInp)
   ClearStringList(&(PInp->Lines));
 }
 
-static Boolean REPT_GetPos(PInputTag PInp, char *dest)
+static Boolean REPT_GetPos(PInputTag PInp, char *dest, int DestSize)
 {
   int z1 = PInp->ParZ, z2 = PInp->LineZ;
 
@@ -1650,7 +1611,7 @@ static Boolean REPT_GetPos(PInputTag PInp, char *dest)
     z2 = PInp->LineCnt;
     z1--;
   }
-  sprintf(dest, "REPT %ld(%ld)", (long)z1, (long)z2);
+  as_snprintf(dest, DestSize, "REPT %ld(%ld)", (long)z1, (long)z2);
   return False;
 }
 
@@ -1836,7 +1797,7 @@ static void WHILE_Cleanup(PInputTag PInp)
   ClearStringList(&(PInp->Lines));
 }
 
-static Boolean WHILE_GetPos(PInputTag PInp, char *dest)
+static Boolean WHILE_GetPos(PInputTag PInp, char *dest, int DestSize)
 {
   int z1 = PInp->ParZ, z2 = PInp->LineZ;
 
@@ -1845,7 +1806,7 @@ static Boolean WHILE_GetPos(PInputTag PInp, char *dest)
     z2 = PInp->LineCnt;
     z1--;
   }
-  sprintf(dest, "WHILE %ld/%ld", (long)z1, (long)z2);
+  as_snprintf(dest, DestSize, "WHILE %ld/%ld", (long)z1, (long)z2);
   return False;
 }
 
@@ -2057,7 +2018,7 @@ static void INCLUDE_Cleanup(PInputTag PInp)
   LineSum += MomLineCounter;
   if ((*LstName != '\0') && (!QuietMode))
   {
-    sprintf(Tmp, LongIntFormat, CurrLine);
+    as_snprintf(Tmp, sizeof(Tmp), LongIntFormat, CurrLine);
     printf("%s(%s)", NamePart(CurrFileName), Tmp);
     printf("%s\n", ClrEol); fflush(stdout);
   }
@@ -2065,13 +2026,13 @@ static void INCLUDE_Cleanup(PInputTag PInp)
     PopInclude();
 }
 
-static Boolean INCLUDE_GetPos(PInputTag PInp, char *dest)
+static Boolean INCLUDE_GetPos(PInputTag PInp, char *dest, int DestSize)
 {
   String Tmp;
   UNUSED(PInp);
 
-  sprintf(Tmp, LongIntFormat, PInp->LineZ);
-  sprintf(dest, GNUErrors ? "%s:%s" : "%s(%s) ", NamePart(PInp->SpecName.Str), Tmp);
+  as_snprintf(Tmp, sizeof(Tmp), LongIntFormat, PInp->LineZ);
+  as_snprintf(dest, DestSize, GNUErrors ? "%s:%s" : "%s(%s) ", NamePart(PInp->SpecName.Str), Tmp);
   return !GNUErrors;
 }
 
@@ -2191,6 +2152,7 @@ char *GetErrorPos(void)
   String ActPos;
   PInputTag RunTag;
   char *ErgPos = as_strdup(""), *tmppos;
+  int l;
   Boolean Last;
 
   /* for GNU error message style: */
@@ -2210,18 +2172,20 @@ char *GetErrorPos(void)
           InnerTag = RunTag;
         else
         {
-          Last = RunTag->GetPos(RunTag, ActPos);
+          Last = RunTag->GetPos(RunTag, ActPos, sizeof(ActPos));
           if (First)
           {
             Msg = getmessage(Num_GNUErrorMsg1);
-            tmppos = (char *) malloc(strlen(Msg) + 1 + strlen(ActPos) + 1);
-            sprintf(tmppos, "%s %s", Msg, ActPos);
+            l = strlen(Msg) + 1 + strlen(ActPos) + 1;
+            tmppos = (char *) malloc(l);
+            as_snprintf(tmppos, l, "%s %s", Msg, ActPos);
           }
           else
           {
             Msg = getmessage(Num_GNUErrorMsgN);
-            tmppos = (char *) malloc(strlen(ErgPos) + 2 + strlen(Msg) + 1 + strlen(ActPos) + 1);
-            sprintf(tmppos, "%s,\n%s %s", ErgPos, Msg, ActPos);
+            l = strlen(ErgPos) + 2 + strlen(Msg) + 1 + strlen(ActPos) + 1;
+            tmppos = (char *) malloc(l);
+            as_snprintf(tmppos, l, "%s,\n%s %s", ErgPos, Msg, ActPos);
           }
           First = False;
           free(ErgPos);
@@ -2233,8 +2197,10 @@ char *GetErrorPos(void)
 
     if (*ErgPos)
     {
-      tmppos = (char *) malloc(strlen(ErgPos) + 3);
-      sprintf(tmppos, "%s:\n", ErgPos);
+      int l = strlen(ErgPos) + 3;
+
+      tmppos = (char *) malloc(l);
+      as_snprintf(tmppos, l, "%s:\n", ErgPos);
       free(ErgPos);
       ErgPos = tmppos;
     }
@@ -2243,9 +2209,12 @@ char *GetErrorPos(void)
 
     if (InnerTag)
     {
-      InnerTag->GetPos(InnerTag, ActPos);
-      tmppos = (char *) malloc(strlen(ErgPos) + strlen(ActPos) + 1);
-      sprintf(tmppos, "%s%s", ErgPos, ActPos);
+      int l;
+
+      InnerTag->GetPos(InnerTag, ActPos, sizeof(ActPos));
+      l = strlen(ErgPos) + strlen(ActPos) + 1;
+      tmppos = (char *) malloc(l);
+      as_snprintf(tmppos, l, "%s%s", ErgPos, ActPos);
       free(ErgPos);
       ErgPos = tmppos;
     }
@@ -2259,7 +2228,7 @@ char *GetErrorPos(void)
 
     for (RunTag = FirstInputTag; RunTag; RunTag = RunTag->Next)
     {
-      Last = RunTag->GetPos(RunTag, ActPos);
+      Last = RunTag->GetPos(RunTag, ActPos, sizeof(ActPos));
       ThisLen = strlen(ActPos);
       tmppos = (char *) malloc(TotLen + ThisLen + 1);
       strcpy(tmppos, ActPos);
@@ -2475,7 +2444,7 @@ static void Produce_Code(void)
     {
       ExpandMacro(OneMacro);
       if ((MacroNestLevel > 1) && (MacroNestLevel < 100))
-        sprintf(ListLine, "%*s(MACRO-%u)", MacroNestLevel - 1, "", MacroNestLevel);
+        as_snprintf(ListLine, STRINGSIZE, "%*s(MACRO-%u)", MacroNestLevel - 1, "", MacroNestLevel);
       else
         strmaxcpy(ListLine, "(MACRO)", STRINGSIZE);
 
@@ -2767,7 +2736,7 @@ static void ProcessFile(String FileName)
 
   dbgentry("ProcessFile");
 
-  sprintf(OneLine, " INCLUDE \"%s\"", FileName);
+  as_snprintf(OneLine, STRINGSIZE, " INCLUDE \"%s\"", FileName);
   MasterFile = False;
   NextIncDepth = IncDepth;
   SplitLine();
@@ -2809,7 +2778,7 @@ static void ProcessFile(String FileName)
       NxtTime = GTime();
       if (((!ListToStdout) || ((ListMask&1) == 0)) && (DTime(ListTime, NxtTime) > 50))
       {
-        sprintf(Num, LongIntFormat, MomLineCounter);
+        as_snprintf(Num, sizeof(Num), LongIntFormat, MomLineCounter);
         Name = NamePart(CurrFileName);
         printf("%s(%s)%s", Name, Num, ClrEol);
         /*for (z = 0; z < strlen(Name) + strlen(Num) + 2; z++) putchar('\b');*/
@@ -2847,50 +2816,24 @@ static char *TWrite_Plur(int n)
   return (n != 1) ? getmessage(Num_ListPlurName) : "";
 }
 
-static void TWrite_RWrite(char *dest, Double r, Byte Stellen)
-{
-  String s;
-  char *pFirst;
-
-  sprintf(s, "%20.*f", Stellen, r);
-
-  for (pFirst = s; *pFirst; pFirst++)
-    if (!isspace(*pFirst))
-      break;
-
-  strcat(dest, pFirst);
-}
-
-static void TWrite(Double DTime, char *dest)
+static void TWrite(long DTime, char *dest, int DestSize)
 {
   int h;
-  String s;
 
   *dest = '\0';
-  h = (int) floor(DTime/3600.0);
+  h = DTime / 360000;
+  DTime %= 360000;
   if (h > 0)
-  {
-    sprintf(s, "%d", h);
-    strcat(dest, s);
-    strcat(dest, getmessage(Num_ListHourName));
-    strcat(dest, TWrite_Plur(h));
-    strcat(dest, ", ");
-    DTime -= 3600.0 * h;
-  }
-  h = (int) floor(DTime/60.0);
+    as_snprcatf(dest, DestSize, "%d%s%s, ", h, getmessage(Num_ListHourName), TWrite_Plur(h));
+
+  h = DTime / 6000;
+  DTime %= 6000;
   if (h > 0)
-  {
-    sprintf(s, "%d", h);
-    strcat(dest, s);
-    strcat(dest, getmessage(Num_ListMinuName));
-    strcat(dest, TWrite_Plur(h));
-    strcat(dest, ", ");
-    DTime -= 60.0 * h;
-  }
-  TWrite_RWrite(dest, DTime, 2);
-  strcat(dest, getmessage(Num_ListSecoName));
-  if (DTime != 1)
-    strcat(dest, getmessage(Num_ListPlurName));
+    as_snprcatf(dest, DestSize, "%d%s%s, ", h, getmessage(Num_ListMinuName), TWrite_Plur(h));
+
+  h = DTime / 100;
+  DTime %= 100;
+  as_snprcatf(dest, DestSize, "%d.%02d%s%s", h, (int)DTime, getmessage(Num_ListSecoName), TWrite_Plur(h));
 }
 
 /*--------------------------------------------------------------------------*/
@@ -2965,7 +2908,7 @@ static void AssembleFile_InitPass(void)
   StrCompMkTemp(&TmpComp, FlagFalseName); EnterIntSymbol(&TmpComp, 0, 0, True);
   StrCompMkTemp(&TmpComp, PiName); EnterFloatSymbol(&TmpComp, 4.0 * atan(1.0), True);
   StrCompMkTemp(&TmpComp, VerName); EnterIntSymbol(&TmpComp, VerNo, 0, True);
-  sprintf(ArchVal, "%s-%s", ARCHPRNAME, ARCHSYSNAME);
+  as_snprintf(ArchVal, sizeof(ArchVal), "%s-%s", ARCHPRNAME, ARCHSYSNAME);
   StrCompMkTemp(&TmpComp, ArchName); EnterStringSymbol(&TmpComp, ArchVal, True);
   StrCompMkTemp(&TmpComp, Has64Name);
 #ifdef HAS64
@@ -2976,8 +2919,8 @@ static void AssembleFile_InitPass(void)
   StrCompMkTemp(&TmpComp, CaseSensName); EnterIntSymbol(&TmpComp, Ord(CaseSensitive), 0, True);
   if (PassNo == 0)
   {
-    NLS_CurrDateString(DateS);
-    NLS_CurrTimeString(False, TimeS);
+    NLS_CurrDateString(DateS, sizeof(DateS));
+    NLS_CurrTimeString(False, TimeS, sizeof(TimeS));
   }
   if (!FindDefSymbol(DateName))
   {
@@ -3057,6 +3000,14 @@ static void AssembleFile_ExitPass(void)
     WrError(ErrNum_MissingEndSect);
   if (StructStack)
     WrXError(ErrNum_OpenStruct, StructStack->Name);
+}
+
+static void AssembleFile_WrSummary(const char *pStr)
+{
+  if (!QuietMode)
+    printf("%s%s\n", pStr, ClrEol);
+  if (ListMode == 2)
+    WrLstLine(pStr);
 }
 
 static void AssembleFile(char *Name)
@@ -3177,7 +3128,7 @@ static void AssembleFile(char *Name)
     AsmSubInit();
     if (!QuietMode)
     {
-      sprintf(Tmp, IntegerFormat, PassNo);
+      as_snprintf(Tmp, sizeof(Tmp), IntegerFormat, PassNo);
       printf("%s%s%s\n", getmessage(Num_InfoMessPass), Tmp, ClrEol);
     }
 
@@ -3389,7 +3340,7 @@ static void AssembleFile(char *Name)
   /* Statistik ausgeben */
 
   StopTime = GTime();
-  TWrite(DTime(StartTime, StopTime)/100.0, s);
+  TWrite(DTime(StartTime, StopTime), s, sizeof(s));
   if (!QuietMode)
     printf("\n%s%s%s\n\n", s, getmessage(Num_InfoMessAssTime), ClrEol);
   if (ListMode == 2)
@@ -3400,69 +3351,54 @@ static void AssembleFile(char *Name)
     WrLstLine("");
   }
 
-  Dec32BlankString(s, LineSum, 7);
-  strmaxcat(s, getmessage((LineSum == 1) ? Num_InfoMessAssLine : Num_InfoMessAssLines), STRINGSIZE);
-  if (!QuietMode)
-    printf("%s%s\n", s, ClrEol);
-  if (ListMode == 2)
-    WrLstLine(s);
+  as_snprintf(s, sizeof(s), "%7" PRILongInt "%s", LineSum,
+              getmessage((LineSum == 1) ? Num_InfoMessAssLine : Num_InfoMessAssLines), STRINGSIZE);
+  AssembleFile_WrSummary(s);
 
   if (LineSum != MacLineSum)
   {
-    Dec32BlankString(s, MacLineSum, 7);
-    strmaxcat(s, getmessage((MacLineSum == 1) ? Num_InfoMessMacAssLine : Num_InfoMessMacAssLines), STRINGSIZE);
-    if (!QuietMode)
-      printf("%s%s\n", s, ClrEol);
-    if (ListMode == 2)
-      WrLstLine(s);
+    as_snprintf(s, sizeof(s), "%7" PRILongInt "%s", MacLineSum,
+                getmessage((MacLineSum == 1) ? Num_InfoMessMacAssLine : Num_InfoMessMacAssLines), STRINGSIZE);
+    AssembleFile_WrSummary(s);
   }
 
-  Dec32BlankString(s, PassNo, 7);
-  strmaxcat(s, getmessage((PassNo == 1) ? Num_InfoMessPassCnt : Num_InfoMessPPassCnt), STRINGSIZE);
-  if (!QuietMode)
-    printf("%s%s\n", s, ClrEol);
-  if (ListMode == 2)
-    WrLstLine(s);
+  as_snprintf(s, sizeof(s), "%7d%s", (int)PassNo,
+              getmessage((PassNo == 1) ? Num_InfoMessPassCnt : Num_InfoMessPPassCnt), STRINGSIZE);
+  AssembleFile_WrSummary(s);
 
   if ((ErrorCount > 0) && (Repass) && (ListMode != 0))
     WrLstLine(getmessage(Num_InfoMessNoPass));
 
 #ifdef __TURBOC__
-  sprintf(s, "%s%s", Dec32BlankString(Tmp, coreleft() >> 10, 7), getmessage(Num_InfoMessRemainMem));
-  if (!QuietMode)
-    printf("%s%s\n", s, ClrEol);
-  if (ListMode == 2)
-    WrLstLine(s);
+  as_snprintf(s, sizeof(s), "%7lu%s", coreleft() >> 10,
+              getmessage(Num_InfoMessRemainMem));
+  AssembleFile_WrSummary(s);
 
-  sprintf(s, "%s%s", Dec32BlankString(Tmp, StackRes(), 7), getmessage(Num_InfoMessRemainStack));
-  if (!QuietMode)
-    printf("%s%s\n", s, ClrEol);
-  if (ListMode == 2)
-    WrLstLine(s);
+  as_snprintf(s, sizeof(s), "%7lu%s", (unsigned long)StackRes(),
+              getmessage(Num_InfoMessRemainStack));
+  AssembleFile_WrSummary(s);
 #endif
 
-  sprintf(s, "%s%s", Dec32BlankString(Tmp, ErrorCount, 7), getmessage(Num_InfoMessErrCnt));
-  if (ErrorCount != 1)
-    strmaxcat(s, getmessage(Num_InfoMessErrPCnt), STRINGSIZE);
-  if (!QuietMode)
-    printf("%s%s\n", s, ClrEol);
-  if (ListMode == 2)
-    WrLstLine(s);
+  as_snprintf(s, sizeof(s), "%7u%s%s", (unsigned)ErrorCount,
+              getmessage(Num_InfoMessErrCnt),
+              (ErrorCount == 1) ? "" : getmessage(Num_InfoMessErrPCnt));
+  AssembleFile_WrSummary(s);
 
-  sprintf(s, "%s%s", Dec32BlankString(Tmp, WarnCount, 7), getmessage(Num_InfoMessWarnCnt));
-  if (WarnCount != 1)
-    strmaxcat(s, getmessage(Num_InfoMessWarnPCnt), STRINGSIZE);
-  if (!QuietMode)
-    printf("%s%s\n", s, ClrEol);
-  if (ListMode == 2)
-    WrLstLine(s);
+  as_snprintf(s, sizeof(s), "%7u%s%s", (unsigned)WarnCount,
+              getmessage(Num_InfoMessWarnCnt),
+              (WarnCount == 1) ? "" : getmessage(Num_InfoMessWarnPCnt));
+  AssembleFile_WrSummary(s);
 
 #ifdef PROFILE_MEMO
-  sprintf(s, "%7.2f%s", ((double)NumMemoSum) / NumMemoCnt, " oppart compares");
-  if (!QuietMode)
-    printf("%s%s\n", s, ClrEol);
-  if (ListMode == 2)
-    WrLstLine(s);
+  {
+    unsigned long Sum = (NumMemoSum * 100) / NumMemoCnt;
+
+    as_snprintf(s, sizeof(s), "%4lu.%02lu%s", Sum / 100, Sum % 100, " Oppart Compares");
+    if (!QuietMode)
+      printf("%s%s\n", s, ClrEol);
+    if (ListMode == 2)
+      WrLstLine(s);
+  }
 #endif
 
   CloseIfOpen(&LstFile);
@@ -3603,6 +3539,25 @@ static CMDResult CMD_ListConsole(Boolean Negate, const char *Arg)
   else if (ListMode == 1)
     ListMode = 0;
   return CMDOK;
+}
+
+static CMDResult CMD_ListRadix(Boolean Negate, const char *Arg)
+{
+  Boolean OK;
+  LargeWord NewListRadixBase;
+
+  UNUSED(Arg);
+
+  if (Negate)
+  {
+    ListRadixBase = 16;
+    return CMDOK;
+  }
+  NewListRadixBase = ConstLongInt(Arg, &OK, 10);
+  if (!OK || (NewListRadixBase < 2) || (NewListRadixBase > 36))
+    return CMDErr;
+  ListRadixBase = NewListRadixBase;
+  return CMDArg;
 }
 
 static CMDResult CMD_ListFile(Boolean Negate, const char *Arg)
@@ -3763,7 +3718,7 @@ static CMDResult CMD_HexLowerCase(Boolean Negate, const char *Arg)
 {
   UNUSED(Arg);
 
-  HexLowerCase = !Negate;
+  HexStartCharacter = Negate ? 'A' : 'a';
   return CMDOK;
 }
 
@@ -4152,6 +4107,7 @@ static CMDRec ASParams[] =
   { "I"             , CMD_MakeIncludeList },
   { "L"             , CMD_ListFile        },
   { "l"             , CMD_ListConsole     },
+  { "LISTRADIX"     , CMD_ListRadix       },
   { "M"             , CMD_MacroOutput     },
   { "MAXERRORS"     , CMD_MaxErrors       },
   { "n"             , CMD_NumericErrors   },
@@ -4428,6 +4384,7 @@ int main(int argc, char **argv)
   GNUErrors = False;
   MaxErrors = 0;
   TreatWarningsAsErrors = False;
+  ListRadixBase = 16;
 
   LineZ = 0;
 
@@ -4452,6 +4409,13 @@ int main(int argc, char **argv)
   CMD_IncludeList(False, STDINCLUDES);
 #endif
   ProcessCMD(ASParams, ASParamCnt, ParUnprocessed, EnvName, ParamError);
+
+  SysString(Dummy, sizeof(Dummy), 0xff, ListRadixBase, 0, HexStartCharacter);
+  SystemListLen8 = strlen(Dummy);
+  SysString(Dummy, sizeof(Dummy), 0xffffu, ListRadixBase, 0, HexStartCharacter);
+  SystemListLen16 = strlen(Dummy);
+  SysString(Dummy, sizeof(Dummy), 0xfffffffful, ListRadixBase, 0, HexStartCharacter);
+  SystemListLen32 = strlen(Dummy);
 
   /* wegen QuietMode dahinter */
 

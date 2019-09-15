@@ -450,10 +450,14 @@ static int GetPostInc(const char *pArg, int ArgLen, ShortInt *pOpSize)
 
   /* <reg>++n, <reg>+:n */
 
-  if ((ArgLen > 4) && (pArg[ArgLen - 3] == '+') && strchr(":+", pArg[ArgLen - 2]) && (pPos = strchr(pSizes, pArg[ArgLen - 1])))
+  if ((ArgLen > 4) && (pArg[ArgLen - 3] == '+') && strchr(":+", pArg[ArgLen - 2]))
   {
-    *pOpSize = pPos - pSizes;
-    return 3;
+    pPos = strchr(pSizes, pArg[ArgLen - 1]);
+    if (pPos)
+    {
+      *pOpSize = pPos - pSizes;
+      return 3;
+    }
   }
   return False;
 }
@@ -464,12 +468,16 @@ static Boolean GetPreDec(const char *pArg, int ArgLen, ShortInt *pOpSize, int *p
 
   /* n--<reg> */
 
-  if ((ArgLen > 4) && (pPos = strchr(pSizes, pArg[0])) && (pArg[1] == '-') && (pArg[2] == '-'))
+  if ((ArgLen > 4) && (pArg[1] == '-') && (pArg[2] == '-'))
   {
-    *pOpSize = pPos - pSizes;
-    *pCutoffLeft = 3;
-    *pCutoffRight = 0;
-    return True;
+    pPos = strchr(pSizes, pArg[0]);
+    if (pPos)
+    {
+      *pOpSize = pPos - pSizes;
+      *pCutoffLeft = 3;
+      *pCutoffRight = 0;
+      return True;
+    }
   }
 
   if ((ArgLen > 2) && (pArg[0] == '-'))
@@ -478,11 +486,15 @@ static Boolean GetPreDec(const char *pArg, int ArgLen, ShortInt *pOpSize, int *p
 
     /* -<reg>:n */
 
-    if ((ArgLen > 4) && (pArg[ArgLen - 2] == ':') && (pPos = strchr(pSizes, pArg[ArgLen - 1])))
+    if ((ArgLen > 4) && (pArg[ArgLen - 2] == ':'))
     {
-      *pOpSize = pPos - pSizes;
-      *pCutoffRight = 2;
-      return True;
+      pPos = strchr(pSizes, pArg[ArgLen - 1]);
+      if (pPos)
+      {
+        *pOpSize = pPos - pSizes;
+        *pCutoffRight = 2;
+        return True;
+      }
     }
 
     /* -<reg> */
@@ -2487,7 +2499,7 @@ static void AddSize(char *NName, Byte NCode, InstProc Proc, Word SizeMask)
   char SizeName[20];
 
   AddInstTable(InstTable, NName, 0xff00 | NCode, Proc);
-  l = sprintf(SizeName, "%sB", NName);
+  l = as_snprintf(SizeName, sizeof(SizeName), "%sB", NName);
   if (SizeMask & 1)
     AddInstTable(InstTable, SizeName, 0x0000 | NCode, Proc);
   if (SizeMask & 2)
@@ -2511,7 +2523,7 @@ static void AddMod(char *NName, Byte NCode)
   int l;
   char SizeName[20];
 
-  l = sprintf(SizeName, "%s1", NName);
+  l = as_snprintf(SizeName, sizeof(SizeName), "%s1", NName);
   AddInstTable(InstTable, SizeName, NCode, DecodeMINC_MDEC);
   SizeName[l - 1] = '2';
   AddInstTable(InstTable, SizeName, NCode | 1, DecodeMINC_MDEC);

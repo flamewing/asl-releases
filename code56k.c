@@ -2701,17 +2701,17 @@ static void AddMix(const char *pName, Word Code, InstProc Proc, unsigned Mask)
 
   if (Mask & 1)
   {
-    sprintf(TmpName, "%sSS", pName);
+    as_snprintf(TmpName, sizeof(TmpName), "%sSS", pName);
     AddInstTable(InstTable, TmpName, Code + 0x0000, Proc);
   }
   if (Mask & 2)
   {
-    sprintf(TmpName, "%sSU", pName);
+    as_snprintf(TmpName, sizeof(TmpName), "%sSU", pName);
     AddInstTable(InstTable, TmpName, Code + 0x0100, Proc);
   }
   if (Mask & 4)
   {
-    sprintf(TmpName, "%sUU", pName);
+    as_snprintf(TmpName, sizeof(TmpName), "%sUU", pName);
     AddInstTable(InstTable, TmpName, Code + 0x0140, Proc);
   }
 }
@@ -2724,7 +2724,7 @@ static void AddCondition(const char *pName, InstProc Proc)
 
   for (z = 0; z < CondCount; z++)
   {
-    sprintf(TmpName, "%s%s", pName, CondNames[z]);
+    as_snprintf(TmpName, sizeof(TmpName), "%s%s", pName, CondNames[z]);
     Code = (z == CondCount - 1) ? 8 : z & 15;
     AddInstTable(InstTable, TmpName, Code, Proc);
   }

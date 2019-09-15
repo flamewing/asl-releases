@@ -222,7 +222,7 @@ void BuildStructName(char *pResult, unsigned ResultLen, const char *pName)
   for (ZStruct = StructStack; ZStruct; ZStruct = ZStruct->Next)
     if (ZStruct->StructRec->DoExt && ZStruct->Name[0])
     {
-      sprintf(tmp2, "%s%c", ZStruct->pBaseName, ZStruct->StructRec->ExtChar);
+      as_snprintf(tmp2, sizeof(tmp2), "%s%c", ZStruct->pBaseName, ZStruct->StructRec->ExtChar);
       strmaxprep(pResult, tmp2, ResultLen);
     }
 }
@@ -242,7 +242,7 @@ void AddStructSymbol(const char *pName, LargeWord Value)
     String tmp, tmp2;
     tStrComp TmpComp;
 
-    sprintf(tmp2, "%s%c", pInnermostNamedStruct->Name, pInnermostNamedStruct->StructRec->ExtChar);
+    as_snprintf(tmp2, sizeof(tmp2), "%s%c", pInnermostNamedStruct->Name, pInnermostNamedStruct->StructRec->ExtChar);
     strmaxcpy(tmp, pName, sizeof(tmp));
     strmaxprep(tmp, tmp2, sizeof(tmp));
     StrCompMkTemp(&TmpComp, tmp);
@@ -363,7 +363,7 @@ static void PrintDef(PTree Tree, void *pData)
   PStructElem Elem;
   TPrintContext *pContext = (TPrintContext*)pData;
   String s;
-  char NumStr[30], NumStr2[30];
+  char NumStr[30];
   UNUSED(pData);
 
   WrLstLine("");
@@ -378,27 +378,22 @@ static void PrintDef(PTree Tree, void *pData)
   WrLstLine(s);
   for (Elem = Node->StructRec->Elems; Elem; Elem = Elem->Next)
   {
-    sprintf(s, "%3" PRILongInt, Elem->Offset);
+    as_snprintf(s, sizeof(s), "%3" PRILongInt, Elem->Offset);
     if (Elem->BitPos >= 0)
     {
       if (Elem->BitWidthM1 >= 0)
-        sprintf(NumStr, ".%d-%d", Elem->BitPos, Elem->BitPos + Elem->BitWidthM1);
+        as_snprintf(NumStr, sizeof(NumStr), ".%d-%d", Elem->BitPos, Elem->BitPos + Elem->BitWidthM1);
       else
-        sprintf(NumStr, ".%d", Elem->BitPos);
+        as_snprintf(NumStr, sizeof(NumStr), ".%d", Elem->BitPos);
     }
     else
       *NumStr = '\0';
-    sprintf(NumStr2, "%-6s", NumStr);
-    strmaxcat(s, NumStr2, STRINGSIZE);
+    as_snprcatf(s, sizeof(s), "%-6s", NumStr);
     if (Elem->OpSize != eSymbolSizeUnknown)
-    {
-      sprintf(NumStr, "(%s)", GetSymbolSizeName(Elem->OpSize));
-      strmaxcat(s, NumStr, STRINGSIZE);
-    }
+      as_snprcatf(s, sizeof(s), "(%s)", GetSymbolSizeName(Elem->OpSize));
     else
       strmaxcat(s, "   ", STRINGSIZE);
-    strmaxcat(s, " ", STRINGSIZE);
-    strmaxcat(s, Elem->pElemName, STRINGSIZE);
+    as_snprcatf(s, sizeof(s), " %s", Elem->pElemName);
     WrLstLine(s);
   }
 }
@@ -417,8 +412,10 @@ void PrintStructList(void)
 
   Context.Sum = 0;
   IterTree((PTree)StructRoot, PrintDef, &Context);
-  sprintf(s, "%" PRILongInt "%s", Context.Sum,
-          getmessage((Context.Sum == 1) ? Num_ListStructSumMsg : Num_ListStructSumsMsg));
+  as_snprintf(s, sizeof(s), "%" PRILongInt "%s",
+              Context.Sum,
+              getmessage((Context.Sum == 1) ? Num_ListStructSumMsg : Num_ListStructSumsMsg));
+  WrLstLine(s);
 }
 
 static void ClearNode(PTree Tree, void *pData)

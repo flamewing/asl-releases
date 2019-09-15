@@ -931,8 +931,7 @@ static void DissectBit_ST7(char *pDest, int DestSize, LargeWord Inp)
 
   DissectBitSymbol(Inp, &Address, &BitPos);
 
-  UNUSED(DestSize);
-  sprintf(pDest, "$%x.%u", Address, BitPos);
+  as_snprintf(pDest, DestSize, "$%x.%u", (unsigned)Address, (unsigned)BitPos);
 }
 
 /*!------------------------------------------------------------------------
@@ -2238,7 +2237,7 @@ static void AddRMW(char *NName, Byte NCode)
   char WName[10];
 
   AddInstTable(InstTable, NName, NCode, DecodeRMW);
-  sprintf(WName, "%sW", NName);
+  as_snprintf(WName, sizeof(WName), "%sW", NName);
   AddInstTable(InstTable, WName, NCode | 0x100, DecodeRMW);
 }
 
@@ -2584,5 +2583,5 @@ void codest7_init(void)
   const tCPUProps *pProp;
 
   for (pProp = CPUProps; pProp->pName; pProp++)
-    (void)AddCPUUser(pProp->pName, SwitchTo_ST7, (void*)pProp);
+    (void)AddCPUUser(pProp->pName, SwitchTo_ST7, (void*)pProp, NULL);
 }

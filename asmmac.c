@@ -468,9 +468,9 @@ void PrintMacroList(void)
     WrLstLine(Context.OneS);
   }
   WrLstLine("");
-  sprintf(Context.OneS, "%7lu%s",
-          (unsigned long)Context.Sum,
-          getmessage((Context.Sum == 1) ? Num_ListMacSumMsg : Num_ListMacSumsMsg));
+  as_snprintf(Context.OneS, sizeof(Context.OneS), "%7lu%s",
+              (unsigned long)Context.Sum,
+              getmessage((Context.Sum == 1) ? Num_ListMacSumMsg : Num_ListMacSumsMsg));
   WrLstLine(Context.OneS);
   WrLstLine("");
 }

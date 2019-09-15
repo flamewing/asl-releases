@@ -1235,7 +1235,7 @@ static void AddAcc(char *NName, Byte NCode)
   char Tmp[30];
 
   AddInstTable(InstTable, NName, NCode, DecodeAcc);
-  sprintf(Tmp, "%sL", NName);
+  as_snprintf(Tmp, sizeof(Tmp), "%sL", NName);
   AddInstTable(InstTable, Tmp, 0x0100 | NCode, DecodeAcc);
 }
 
@@ -1272,7 +1272,7 @@ static void AddMulDiv(char *NName, Word NCode, Byte NAllowed)
     char Tmp[30];
 
     AddInstTable(InstTable, NName, NCode, DecodeMulDiv);
-    sprintf(Tmp, "%sL", NName);
+    as_snprintf(Tmp, sizeof(Tmp), "%sL", NName);
     AddInstTable(InstTable, Tmp, 0x0100 | NCode, DecodeMulDiv);
   }
 }

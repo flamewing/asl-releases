@@ -184,7 +184,7 @@ static void DumpDebugInfo_MAP(void)
       errno = 0; fprintf(MAPFile, "File %s\n", GetFileName(Run->Contents.FileName)); ChkIO(ErrNum_FileWriteError);
     };
     errno = 0;
-    sprintf(Tmp, LongIntFormat, Run->Contents.LineNum);
+    as_snprintf(Tmp, sizeof(Tmp), LongIntFormat, Run->Contents.LineNum);
     HexString(Tmp2, sizeof(Tmp2), Run->Contents.Address, 8);
     fprintf(MAPFile, "%5s:%s ", Tmp, Tmp2);
     ChkIO(ErrNum_FileWriteError);
@@ -315,14 +315,14 @@ static void DumpDebugInfo_NOICE(void)
         if (!HadLines)
         {
           GetAddressRange(ActFile, &Start, &End);
-          sprintf(Tmp1, LargeHIntFormat, Start);
+          as_snprintf(Tmp1, sizeof(Tmp1), "%X", Start);
           errno = 0;
           fprintf(MAPFile, "FILE %s 0x%s\n", GetFileName(Run->Contents.FileName), Tmp1);
           ChkIO(ErrNum_FileWriteError);
         }
         errno = 0;
-        sprintf(Tmp1, LongIntFormat, Run->Contents.LineNum);
-        sprintf(Tmp2, LargeHIntFormat, Run->Contents.Address - Start);
+        as_snprintf(Tmp1, sizeof(Tmp1), LongIntFormat, Run->Contents.LineNum);
+        as_snprintf(Tmp2, sizeof(Tmp2), "%X", Run->Contents.Address - Start);
         fprintf(MAPFile, "LINE %s 0x%s\n", Tmp1, Tmp2);
         ChkIO(ErrNum_FileWriteError);
         HadLines = TRUE;
@@ -331,7 +331,7 @@ static void DumpDebugInfo_NOICE(void)
     }
     if (HadLines)
     {
-      sprintf(Tmp1, LargeHIntFormat, End);
+      as_snprintf(Tmp1, sizeof(Tmp1), "%X", End);
       errno = 0; fprintf(MAPFile, "}FILE 0x%s\n", Tmp1); ChkIO(ErrNum_FileWriteError);
     }
   }

@@ -16,7 +16,6 @@
 #include "endian.h"
 #include "bpemu.h"
 #include "strutil.h"
-#include "hex.h"
 #include "nls.h"
 #include "nlmessages.h"
 #include "p2bin.rsc"
@@ -157,7 +156,7 @@ static void CloseTarget(void)
       for (z = 0; z < Trans; Sum += Buffer[z++]);
     }
     errno = 0;
-    printf("%s%s\n", getmessage(Num_InfoMessChecksum), HexLong(Sum));
+    printf("%s%08lX\n", getmessage(Num_InfoMessChecksum), LoDWord(Sum));
     Buffer[0] = 0x100 - (Sum & 0xff);
 
     /* Some systems require fflush() between read & write operations.  And
@@ -579,14 +578,13 @@ int main(int argc, char **argv)
   endian_init();
   strutil_init();
   bpemu_init();
-  hex_init();
   nlmessages_init("p2bin.msg", *argv, MsgId1, MsgId2);
   ioerrs_init(*argv);
   chunks_init();
   cmdarg_init(*argv);
   toolutils_init(*argv);
 
-  sprintf(Ver, "P2BIN/C V%s", Version);
+  as_snprintf(Ver, sizeof(Ver), "P2BIN/C V%s", Version);
   WrCopyRight(Ver);
 
   InitChunk(&UsedList);
@@ -661,8 +659,8 @@ int main(int argc, char **argv)
       ChkIO(OutName);
       exit(1);
     }
-    printf("%s: 0x%s-", getmessage(Num_InfoMessDeducedRange), HexLong(StartAdr));
-    printf("0x%s\n", HexLong(StopAdr));
+    printf("%s: 0x%08lX-", getmessage(Num_InfoMessDeducedRange), LoDWord(StartAdr));
+    printf("0x%08lX\n", LoDWord(StopAdr));
   }
 
   OpenTarget();

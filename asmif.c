@@ -233,7 +233,7 @@ static void CodeENDIF(void)
     IfAsm = FirstIfSave->SaveIfAsm;
     NewSave = FirstIfSave;
     FirstIfSave = NewSave->Next;
-    sprintf(ListLine, "[%u]", (unsigned)NewSave->StartLine);
+    as_snprintf(ListLine, STRINGSIZE, "[%u]", (unsigned)NewSave->StartLine);
     free(NewSave);
   }
 
@@ -375,7 +375,7 @@ static void CodeENDCASE(void)
       if (!FirstIfSave->CaseFound) WrError(ErrNum_NoCaseHit);
       NewSave = FirstIfSave;
       FirstIfSave = NewSave->Next;
-      sprintf(ListLine, "[%u]", (unsigned)NewSave->StartLine);
+      as_snprintf(ListLine, STRINGSIZE, "[%u]", (unsigned)NewSave->StartLine);
       free(NewSave);
     }
   }

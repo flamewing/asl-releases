@@ -1348,16 +1348,16 @@ static void AddReg2(char *NName1, char *NName2, LongWord NCode, Byte NMask, Bool
   AddSReg2(pSrcName, NCode, NMask);
   if (WithOE)
   {
-    sprintf(NName, "%sO", pSrcName);
+    as_snprintf(NName, sizeof(NName), "%sO", pSrcName);
     AddSReg2(NName, NCode | 0x400, NMask);
   }
   if (WithFL)
   {
-    sprintf(NName, "%s.", pSrcName);
+    as_snprintf(NName, sizeof(NName), "%s.", pSrcName);
     AddSReg2(NName, NCode | 0x001, NMask);
     if (WithOE)
     {
-      sprintf(NName, "%sO.", pSrcName);
+      as_snprintf(NName, sizeof(NName), "%sO.", pSrcName);
       AddSReg2(NName, NCode | 0x401, NMask);
     }
   }
@@ -1389,7 +1389,7 @@ static void AddFReg2(const char *NName1, const char *NName2, LongWord NCode, Byt
   {
     String NName;
 
-    sprintf(NName, "%s.", pSrcName);
+    as_snprintf(NName, sizeof(NName), "%s.", pSrcName);
     AddSFReg2(NName, NCode | 0x001, NMask);
   }
 }
@@ -1419,16 +1419,16 @@ static void AddReg2Swap(char *NName1, char *NName2, LongWord NCode, Byte NMask, 
   AddSReg2Swap(pSrcName, NCode, NMask);
   if (WithOE)
   {
-    sprintf(NName, "%sO", pSrcName);
+    as_snprintf(NName, sizeof(NName), "%sO", pSrcName);
     AddSReg2Swap(NName, NCode | 0x400, NMask);
   }
   if (WithFL)
   {
-    sprintf(NName, "%s.", pSrcName);
+    as_snprintf(NName, sizeof(NName), "%s.", pSrcName);
     AddSReg2Swap(NName, NCode | 0x001, NMask);
     if (WithOE)
     {
-      sprintf(NName, "%sO.", pSrcName);
+      as_snprintf(NName, sizeof(NName), "%sO.", pSrcName);
       AddSReg2Swap(NName, NCode | 0x401, NMask);
     }
   }
@@ -1458,18 +1458,18 @@ static void AddReg3(char *NName1, char *NName2, LongWord NCode, Byte NMask, Bool
   AddSReg3(pSrcName, NCode, NMask);
   if (WithOE)
   {
-    sprintf(NName, "%sO", pSrcName);
+    as_snprintf(NName, sizeof(NName), "%sO", pSrcName);
     AddSReg3(NName, NCode | 0x400, NMask);
     NName[strlen(NName) - 1] = '\0';
   }
   if (WithFL)
   {
-    sprintf(NName, "%s.", pSrcName);
+    as_snprintf(NName, sizeof(NName), "%s.", pSrcName);
     AddSReg3(NName, NCode | 0x001, NMask);
     NName[strlen(NName) - 1] = '\0';
     if (WithOE)
     {
-      sprintf(NName, "%sO.", pSrcName);
+      as_snprintf(NName, sizeof(NName), "%sO.", pSrcName);
       AddSReg3(NName, NCode | 0x401, NMask);
     }
   }
@@ -1499,7 +1499,7 @@ static void AddFReg3(char *NName1, char *NName2, LongWord NCode, Byte NMask, Boo
   AddSFReg3(pSrcName, NCode, NMask);
   if (WithFL)
   {
-    sprintf(NName, "%s.", pSrcName);
+    as_snprintf(NName, sizeof(NName), "%s.", pSrcName);
     AddSFReg3(NName, NCode | 0x001, NMask);
   }
 }
@@ -1520,7 +1520,7 @@ static void AddReg3Swap(char *NName1, char *NName2, LongWord NCode, Byte NMask, 
   AddSReg3Swap(pSrcName, NCode, NMask);
   if (WithFL)
   {
-    sprintf(NName, "%s.", pSrcName); 
+    as_snprintf(NName, sizeof(NName), "%s.", pSrcName); 
     AddSReg3Swap(NName, NCode | 0x001, NMask);
   }
 }
@@ -1549,7 +1549,7 @@ static void AddFReg4(char *NName1, char *NName2, LongWord NCode, Byte NMask, Boo
   AddSFReg4(pSrcName, NCode, NMask);
   if (WithFL)
   {
-    sprintf(NName, "%s.", pSrcName);
+    as_snprintf(NName, sizeof(NName), "%s.", pSrcName);
     AddSFReg4(NName, NCode | 0x001, NMask);
   }
 }
@@ -1588,7 +1588,7 @@ static void AddReg2Imm(char *NName1, char *NName2, LongWord NCode, Byte NMask, B
   AddSReg2Imm(pSrcName, NCode, NMask);
   if (WithFL)
   {
-    sprintf(NName, "%s.", pSrcName);
+    as_snprintf(NName, sizeof(NName), "%s.", pSrcName);
     AddSReg2Imm(NName, NCode | 0x001, NMask);
   }
 }
@@ -1614,7 +1614,7 @@ static void AddPoint(char *pName, Word Code, InstProc Proc)
   char PointName[30];
 
   AddInstTable(InstTable, pName, Code, Proc);
-  sprintf(PointName, "%s.", pName);
+  as_snprintf(PointName, sizeof(PointName), "%s.", pName);
   AddInstTable(InstTable, PointName, Code | 0x8000, Proc);
 }
 

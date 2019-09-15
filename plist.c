@@ -13,7 +13,6 @@
 
 #include "version.h"
 #include "endian.h"
-#include "hex.h"
 #include "bpemu.h"
 #include "stringlists.h"
 #include "cmdarg.h"
@@ -51,14 +50,13 @@ int main(int argc, char **argv)
   NLS_Initialize();
 
   endian_init();
-  hex_init();
   bpemu_init();
   strutil_init();
   nlmessages_init("plist.msg", *argv, MsgId1, MsgId2); ioerrs_init(*argv);
   cmdarg_init(*argv);
   toolutils_init(*argv);
 
-  sprintf(Ver,"PLIST/C V%s",Version);
+  as_snprintf(Ver, sizeof(Ver), "PLIST/C V%s", Version);
   WrCopyRight(Ver);
 
   if (ParamCount == 0)
@@ -129,7 +127,7 @@ int main(int argc, char **argv)
       if (!Read4(ProgFile, &StartAdr))
         ChkIO(ProgName);
       errno = 0;
-      printf("%s%s\n", getmessage(Num_MessEntryPoint), HexLong(StartAdr));
+      printf("%s%08lX\n", getmessage(Num_MessEntryPoint), LoDWord(StartAdr));
       ChkIO(OutName);
     }
 
@@ -142,17 +140,17 @@ int main(int argc, char **argv)
 
       RelocInfo = ReadRelocInfo(ProgFile);
       for (z = 0,  PEntry = RelocInfo->RelocEntries; z < RelocInfo->RelocCount; z++, PEntry++)
-        printf("%s  %s        %3d:%d(%c)     %c%s\n",
+        printf("%s  %08lX        %3d:%d(%c)     %c%s\n",
                getmessage(Num_MessRelocInfo),
-               HexLong(PEntry->Addr), RelocBitCnt(PEntry->Type) >> 3,
+               LoDWord(PEntry->Addr), RelocBitCnt(PEntry->Type) >> 3,
                RelocBitCnt(PEntry->Type) & 7,
                (PEntry->Type & RelocFlagBig) ? 'B' : 'L',
                (PEntry->Type & RelocFlagSUB) ? '-' : '+', PEntry->Name);
 
       for (z = 0,  PExp = RelocInfo->ExportEntries; z < RelocInfo->ExportCount; z++, PExp++)
-        printf("%s  %s          %c          %s\n",
+        printf("%s  %08lX          %c          %s\n",
                getmessage(Num_MessExportInfo),
-               HexLong(PExp->Value), 
+               LoDWord(PExp->Value), 
                (PExp->Flags & RelFlag_Relative) ? 'R' : ' ',
                PExp->Name);
 
@@ -177,17 +175,17 @@ int main(int argc, char **argv)
 
       if (!Read4(ProgFile, &StartAdr))
         ChkIO(ProgName);
-      errno = 0; printf("%s          ", HexLong(StartAdr)); ChkIO(OutName);
+      errno = 0; printf("%08lX          ", LoDWord(StartAdr)); ChkIO(OutName);
 
       if (!Read2(ProgFile, &Len))
         ChkIO(ProgName);
-      errno = 0; printf("%s       ", HexWord(Len));  ChkIO(OutName);
+      errno = 0; printf("%04X       ", LoWord(Len));  ChkIO(OutName);
 
       if (Len != 0)
         StartAdr += (Len / Gran) - 1;
       else
         StartAdr--;
-      errno = 0; printf("%s\n", HexLong(StartAdr));  ChkIO(OutName);
+      errno = 0; printf("%08lX\n", LoDWord(StartAdr));  ChkIO(OutName);
 
       Sums[Segment] += Len;
 

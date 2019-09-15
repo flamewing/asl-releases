@@ -6,12 +6,6 @@
 /*                                                                           */
 /* Verwaltung der Code-Datei                                                 */
 /*                                                                           */
-/* Historie: 18. 5.1996 Grundsteinlegung                                     */
-/*           19. 1.2000 Patchlistenverarbeitung begonnen                     */
-/*           18. 6.2000 moved code buffer to heap                            */
-/*           26. 6.2000 added export list                                    */
-/*            4. 7.2000 only write data records in extended format           */
-/*                                                                           */
 /*****************************************************************************/
 
 #include "stdinc.h"
@@ -22,6 +16,7 @@
 #include "chunks.h"
 #include "asmdef.h"
 #include "errmsg.h"
+#include "strutil.h"
 #include "asmsub.h"
 #include "asmpars.h"
 #include "intconsts.h"
@@ -240,7 +235,8 @@ void NewRecord(LargeWord NStart)
 
   if ((RelSegs) && (strcmp(CurrFileName, "INTERNAL")))
   {
-    sprintf(SectSymbolName, "__%s_%d", NamePart(CurrFileName), (int)(SectSymbolCounter++));
+    as_snprintf(SectSymbolName, sizeof(SectSymbolName), "__%s_%d",
+                NamePart(CurrFileName), (int)(SectSymbolCounter++));
     AddExport(SectSymbolName, ProgCounter());
   }
 #endif
@@ -274,7 +270,7 @@ void CloseFile(void)
   String h;
   LongWord Adr;
 
-  sprintf(h, "AS %s/%s-%s", Version, ARCHPRNAME, ARCHSYSNAME);
+  as_snprintf(h, sizeof(h), "AS %s/%s-%s", Version, ARCHPRNAME, ARCHSYSNAME);
 
   NewRecord(PCs[ActPC]);
   fseek(PrgFile, RecPos, SEEK_SET);

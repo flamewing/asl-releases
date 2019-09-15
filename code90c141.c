@@ -1259,7 +1259,7 @@ static void AddW(char *Name, Word Code, InstProc Proc)
   char Str[20];
 
   AddInstTable(InstTable, Name, Code, Proc);
-  sprintf(Str, "%sW", Name);
+  as_snprintf(Str, sizeof(Str), "%sW", Name);
   AddInstTable(InstTable, Str, Code | 0x100, Proc);
 }
 
