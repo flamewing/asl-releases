@@ -1,3 +1,7 @@
+2019-09-25 [1.42 Bld 150]
+
+- Addition    : Add a couple of ST7 types
+
 2019-09-15 [1.42 Bld 149]
 
 - Bugfix      : built-in function abs() works again

@@ -98,11 +98,12 @@ E2PGM		bit	EEPCR,0		;  Programming Control
 ; Serial Communications Interface
 
 		include	"sci.inc"
+		__defsci $0050,5
 
 ;----------------------------------------------------------------------------
 ; Analog/Digital Converter
 
-		include	"adc.inc"
+		include	"adc8.inc"
 
 		restore
 		endif			; __reg72311inc

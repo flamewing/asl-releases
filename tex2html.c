@@ -17,6 +17,10 @@
 #include <string.h>
 #include "strutil.h"
 
+#ifdef __MSDOS__
+# include <dir.h>
+#endif
+
 /*--------------------------------------------------------------------------*/
 
 #define TOKLEN 350
@@ -2738,7 +2742,8 @@ static void TeXInclude(Word Index)
 
   assert_token("{");
   collect_token(Token, "}");
-  if (!(infiles[IncludeNest] = fopen(Token, "r")))
+  infiles[IncludeNest] = fopen(Token, "r");
+  if (!infiles[IncludeNest])
   {
     as_snprintf(Msg, sizeof(Msg), "file %s not found", Token);
     error(Msg);
@@ -2862,7 +2867,8 @@ int main(int argc, char **argv)
   /* set up inclusion stack */
 
   IncludeNest = 0;
-  if (!(*infiles = fopen(argv[1], "r")))
+  *infiles = fopen(argv[1], "r");
+  if (!*infiles)
   {
     perror(argv[1]);
     exit(3);
@@ -3001,12 +3007,14 @@ int main(int argc, char **argv)
   /* open help files */
 
   strcpy(TocName, argv[1]);
-  if ((p = strrchr(TocName, '.')))
+  p = strrchr(TocName, '.');
+  if (p)
     *p = '\0';
   strcat(TocName, ".htoc");
 
   strcpy(AuxFile, argv[1]);
-  if ((p = strrchr(AuxFile, '.')))
+  p = strrchr(AuxFile, '.');
+  if (p)
     *p = '\0';
   strcat(AuxFile, ".haux");
   ReadAuxFile(AuxFile);
@@ -3034,7 +3042,7 @@ int main(int argc, char **argv)
 #if (defined _WIN32) && (!defined __CYGWIN32__)
     mkdir(Line);
 #elif (defined __MSDOS__)
-    mkdir(Line, 055);
+    mkdir(Line);
 #else
     mkdir(Line, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
 #endif

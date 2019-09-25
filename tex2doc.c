@@ -2510,7 +2510,8 @@ static void TeXInclude(Word Index)
 
   assert_token("{");
   collect_token(Token, "}");
-  if (!(infiles[IncludeNest] = fopen(Token, "r")))
+  infiles[IncludeNest] = fopen(Token, "r");
+  if (!infiles[IncludeNest])
   {
     as_snprintf(Msg, sizeof(Msg), "file %s not found", Token);
     error(Msg);
@@ -2581,7 +2582,8 @@ int main(int argc, char **argv)
   TeXTable = CreateInstTable(301);
 
   IncludeNest = 0;
-  if (!(*infiles = fopen(argv[1], "r")))
+  *infiles = fopen(argv[1], "r");
+  if (!*infiles)
   {
     perror(argv[1]);
     exit(3);
@@ -2591,10 +2593,14 @@ int main(int argc, char **argv)
   infilename = argv[1];
   if (!strcmp(argv[2], "-"))
     outfile = stdout;
-  else if (!(outfile = fopen(argv[2], "w")))
+  else
   {
-    perror(argv[2]);
-    exit(3);
+    outfile = fopen(argv[2], "w");
+    if (!outfile)
+    {
+      perror(argv[2]);
+      exit(3);
+    }
   }
 
   AddInstTable(TeXTable, "\\", 0, TeXFlushLine);
@@ -2718,12 +2724,14 @@ int main(int argc, char **argv)
   SetLang(False);
 
   strcpy(TocName, argv[1]);
-  if ((p = strrchr(TocName, '.')))
+  p = strrchr(TocName, '.');
+  if (p)
     *p = '\0';
   strcat(TocName, ".dtoc");
 
   strcpy(AuxFile, argv[1]);
-  if ((p = strrchr(AuxFile, '.')))
+  p = strrchr(AuxFile, '.');
+  if (p)
     *p = '\0';
   strcat(AuxFile, ".daux");
   ReadAuxFile(AuxFile);

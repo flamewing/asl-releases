@@ -78,7 +78,7 @@ WDGA		bit	WDGCR,7		; Activation bit
 ;----------------------------------------------------------------------------
 ; Analog/Digital Converter
 
-		include	"adc.inc"
+		include	"adc8.inc"
 
 		restore
 		endif			; __reg72251inc

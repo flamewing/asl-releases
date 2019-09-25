@@ -73,6 +73,7 @@ RESET_vect	label	$fffe		; RESET Vector
 ; SPI
 
 		include	"spi2.inc"
+		__defspi $0021
 
 ;----------------------------------------------------------------------------
 ; ITC
@@ -160,12 +161,8 @@ BC		bfield	MCCBCR,0,2	;  Beep control
 ;----------------------------------------------------------------------------
 ; Serial Communications Interface
 
-		include	"sci.inc"
-SCI_PE		bit	SCISR,0		;  Parity error
-SCID		bit	SCICR1,5	;  Disabled for low power consumption
-PCE		bit	SCICR1,2	;  Parity control enable
-PS		bit	SCICR1,1	;  Parity selection
-PIE		bit	SCICR1,0	;  Parity interrupt enable
+		include	"sci2.inc"
+		__defsci2 $0050,5
 
 ;----------------------------------------------------------------------------
 ; CAN
@@ -253,37 +250,14 @@ CAN_MLR1	label	CAN_P7		; [Page 4] Mask Low Register 1
 ;----------------------------------------------------------------------------
 ; Analog/Digital Converter
 
-ADCCSR		label	$0070		; Control/Status Register
-EOC		bit	ADCCSR,7	;  End of Conversion
-SPEED		bit	ADCCSR,6	;  ADC clock selection
-ADON		bit	ADCCSR,5	;  A/D converter On
-CH3		bit	ADCCSR,3	;  Channel Selection
-CH2		bit	ADCCSR,2	;  Channel Selection
-CH1		bit	ADCCSR,1
-CH0		bit	ADCCSR,0
-ADCDRH		label	$0071		; Data Register high
-ADCDRL		label	$0072		; Data Register low
+		include	"adc10.inc"
+		__defadc10 $0070
 
 ;----------------------------------------------------------------------------
 ; PWM ART
 
-PWMDCR3		label	$0073		; PWM AR Timer Duty Cycle Register 3
-PWMDCR2		label	$0074		; PWM AR Timer Duty Cycle Register 2
-PWMDCR1		label	$0075		; PWM AR Timer Duty Cycle Register 1
-PWMDCR0		label	$0076		; PWM AR Timer Duty Cycle Register 0
-PWMCR		label	$0077		; PWM AR Timer Control Register
-ARTCSR		label	$0078		; Auto-Reload Timer Control/Status Register
-EXCL		bit	ARTCSR,7	;  External Clock
-CC		bfield	ARTCSR,4,3	;  Counter Clock Control
-TCE		bit	ARTCSR,3	;  Timer Counter Enable
-FCRL		bit	ARTCSR,2	;  Force Counter Re-Load
-PWM_OIE		bit	ARTCSR,1	;  Overflow Interrupt Enable
-OVF		bit	ARTCSR,0	;  Overflow Flag
-ARTCAR		label	$0079		; Auto-Reload Timer Counter Access Register
-ARTARR		label	$007a		; Auto-Reload Timer Auto-Reload Register
-ARTICCSR	label	$007b		; AR Timer Input Capture Control/Status Register
-ARTICR1		label	$007c		; AR Timer Input Capture Register 1
-ARTICR2		label	$007d		; AR Timer Input Capture Register 2
+		include	"pwm_art.inc"
+		__defpwmart $0073
 
 		restore
 		endif			; __reg72521inc
