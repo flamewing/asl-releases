@@ -152,7 +152,7 @@ static void DecodeAccReg(Word Code)
   Byte Erg;
 
   if (!ChkArgCnt(1, 2));
-  else if ((ArgCnt == 2) && (strcasecmp(ArgStr[1].Str, "A"))) WrError(ErrNum_InvAddrMode);
+  else if ((ArgCnt == 2) && (as_strcasecmp(ArgStr[1].Str, "A"))) WrError(ErrNum_InvAddrMode);
   else if (!DecodeReg(ArgStr[ArgCnt].Str, &Erg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[ArgCnt]);
   else
   {

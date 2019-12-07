@@ -280,7 +280,7 @@ static void DecodeAdr(int ArgStartIdx, int ArgEndIdx)
     return;
   }
 
-  if ((AdrArgCnt >= 1) && (AdrArgCnt <= 2) && (!strcasecmp(pEndArg->Str, "--W")))
+  if ((AdrArgCnt >= 1) && (AdrArgCnt <= 2) && (!as_strcasecmp(pEndArg->Str, "--W")))
   {
     if ((AdrArgCnt == 2) && !IsZeroOrEmpty(pStartArg)) WrError(ErrNum_InvAddrMode);
     else if (ChkMinCPUExt(CPU6309, ErrNum_AddrModeNotSupported))
@@ -328,7 +328,7 @@ static void DecodeAdr(int ArgStartIdx, int ArgEndIdx)
     }
   }
 
-  if ((AdrArgCnt >= 1) && (AdrArgCnt <= 2) && (!strcasecmp(pEndArg->Str, "W++")))
+  if ((AdrArgCnt >= 1) && (AdrArgCnt <= 2) && (!as_strcasecmp(pEndArg->Str, "W++")))
   {
     if ((AdrArgCnt == 2) && !IsZeroOrEmpty(pStartArg)) WrError(ErrNum_InvAddrMode);
     else if (ChkMinCPUExt(CPU6309, ErrNum_AddrModeNotSupported))
@@ -358,28 +358,28 @@ static void DecodeAdr(int ArgStartIdx, int ArgEndIdx)
 
     /* mit Index */
 
-    if (!strcasecmp(pStartArg->Str, "A"))
+    if (!as_strcasecmp(pStartArg->Str, "A"))
     {
       AdrCnt = 1;
       AdrVals[0] += 0x86;
       AdrMode = ModInd;
       return;
     }
-    if (!strcasecmp(pStartArg->Str, "B"))
+    if (!as_strcasecmp(pStartArg->Str, "B"))
     {
       AdrCnt = 1;
       AdrVals[0] += 0x85;
       AdrMode = ModInd;
       return;
     }
-    if (!strcasecmp(pStartArg->Str, "D"))
+    if (!as_strcasecmp(pStartArg->Str, "D"))
     {
       AdrCnt = 1;
       AdrVals[0] += 0x8b;
       AdrMode = ModInd;
       return;
     }
-    if ((!strcasecmp(pStartArg->Str, "E")) && (MomCPU >= CPU6309))
+    if ((!as_strcasecmp(pStartArg->Str, "E")) && (MomCPU >= CPU6309))
     {
       if (EReg != 0) WrError(ErrNum_InvAddrMode);
       else
@@ -390,7 +390,7 @@ static void DecodeAdr(int ArgStartIdx, int ArgEndIdx)
       }
       return;
     }
-    if ((!strcasecmp(pStartArg->Str, "F")) && (MomCPU >= CPU6309))
+    if ((!as_strcasecmp(pStartArg->Str, "F")) && (MomCPU >= CPU6309))
     {
       if (EReg != 0) WrError(ErrNum_InvAddrMode);
       else
@@ -401,7 +401,7 @@ static void DecodeAdr(int ArgStartIdx, int ArgEndIdx)
       }
       return;
     }
-    if ((!strcasecmp(pStartArg->Str, "W")) && (MomCPU >= CPU6309))
+    if ((!as_strcasecmp(pStartArg->Str, "W")) && (MomCPU >= CPU6309))
     {
       if (EReg != 0) WrError(ErrNum_InvAddrMode);
       else
@@ -480,7 +480,7 @@ static void DecodeAdr(int ArgStartIdx, int ArgEndIdx)
     }
   }
 
-  if ((AdrArgCnt <= 2) && (AdrArgCnt >= 1) && (MomCPU >= CPU6309) && (!strcasecmp(pEndArg->Str, "W")))
+  if ((AdrArgCnt <= 2) && (AdrArgCnt >= 1) && (MomCPU >= CPU6309) && (!as_strcasecmp(pEndArg->Str, "W")))
   {
     AdrVals[0] = 0x8f + Ord(IndFlag);
 
@@ -522,7 +522,7 @@ static void DecodeAdr(int ArgStartIdx, int ArgEndIdx)
 
   /* PC-relativ ? */
 
-  if ((AdrArgCnt == 2) && ((!strcasecmp(pEndArg->Str, "PCR")) || (!strcasecmp(pEndArg->Str, "PC"))))
+  if ((AdrArgCnt == 2) && ((!as_strcasecmp(pEndArg->Str, "PCR")) || (!as_strcasecmp(pEndArg->Str, "PC"))))
   {
     AdrVals[0] = Ord(IndFlag) << 4;
     Offset = ChkZero(pStartArg->Str, &ZeroMode);
@@ -713,20 +713,19 @@ static void DecodeSWI(Word Code)
   }
   else if (ChkArgCnt(1, 1))
   {
-    if (!strcasecmp(ArgStr[1].Str, "2"))
+    Boolean OK;
+    Byte Num;
+
+    FirstPassUnknown = False;
+    Num = EvalStrIntExpression(&ArgStr[1], UInt2, &OK);
+    if (OK && FirstPassUnknown && (Num < 2))
+      Num = 2;
+    if (OK && ChkRange(Num, 2, 3))
     {
-      BAsmCode[0] = 0x10;
+      BAsmCode[0] = 0x10 | (Num & 1);
       BAsmCode[1] = 0x3f;
       CodeLen = 2;
     }
-    else if (!strcasecmp(ArgStr[1].Str, "3"))
-    {
-      BAsmCode[0] = 0x11;
-      BAsmCode[1] = 0x3f;
-      CodeLen = 2;
-    }
-    else
-      WrError(ErrNum_InvOpType);
   }
 }
 
@@ -1083,7 +1082,7 @@ static void DecodeStack(Word Index)
   for (z2 = 1; z2 <= ArgCnt; z2++)
     if (OK)
     {
-      if (!strcasecmp(ArgStr[z2].Str, "W"))
+      if (!as_strcasecmp(ArgStr[z2].Str, "W"))
       {
         if (!ChkMinCPU(CPU6309))
           OK = False;
@@ -1098,14 +1097,14 @@ static void DecodeStack(Word Index)
       else
       {
         for (z3 = 0; z3 < StackRegCnt; z3++)
-          if (!strcasecmp(ArgStr[z2].Str, StackRegNames[z3]))
+          if (!as_strcasecmp(ArgStr[z2].Str, StackRegNames[z3]))
           {
             BAsmCode[1] |= StackRegMasks[z3];
             break;
           }
         if (z3 >= StackRegCnt)
         {
-          if (!strcasecmp(ArgStr[z2].Str, "ALL"))
+          if (!as_strcasecmp(ArgStr[z2].Str, "ALL"))
             BAsmCode[1] = 0xff;
           else if (*ArgStr[z2].Str != '#') OK = False;
           else

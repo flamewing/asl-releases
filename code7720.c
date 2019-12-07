@@ -70,7 +70,7 @@ static Boolean DecodeReg(char *Asc, LongWord *Code, TReg *Regs, int Cnt)
   int z;
 
   for (z = 0; z < Cnt; z++)
-    if (!strcasecmp(Asc, Regs[z].Name))
+    if (!as_strcasecmp(Asc, Regs[z].Name))
       break;
 
   if (z < Cnt) *Code = Regs[z].Code;
@@ -139,14 +139,10 @@ static void DecodeDATA_7720(Word Index)
           if (OK)
           {
             if (ActPC == SegCode)
-              DAsmCode[CodeLen++] = t.Contents.Int;
+              DAsmCode[CodeLen++] = t.Contents.Int & MaxV;
             else
               WAsmCode[CodeLen++] = t.Contents.Int;
           }
-          break;
-        case TempFloat:
-          WrError(ErrNum_InvOpType);
-          OK = False;
           break;
         case TempString:
         {
@@ -173,6 +169,9 @@ static void DecodeDATA_7720(Word Index)
             CodeLen++;
           break;
         }
+        case TempFloat:
+          WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[z]);
+          /* fall-through */
         default:
           OK = False;
       }
@@ -215,7 +214,7 @@ static void DecodeALU2(Word Code)
   else if (!DecodeReg(ArgStr[2].Str, &Src, ALUSrcRegs, ALUSrcRegCnt)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
   else
   {
-    if ((strlen(ArgStr[1].Str) == 4) && (!strncasecmp(ArgStr[1].Str, "ACC", 3)))
+    if ((strlen(ArgStr[1].Str) == 4) && (!as_strncasecmp(ArgStr[1].Str, "ACC", 3)))
     {
       ch = mytoupper(ArgStr[1].Str[3]);
       if ((ch>='A') && (ch<='B'))
@@ -238,7 +237,7 @@ static void DecodeALU1(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    if ((strlen(ArgStr[1].Str) == 4) && (!strncasecmp(ArgStr[1].Str, "ACC", 3)))
+    if ((strlen(ArgStr[1].Str) == 4) && (!as_strncasecmp(ArgStr[1].Str, "ACC", 3)))
     {
       ch = mytoupper(ArgStr[1].Str[3]);
       if ((ch >= 'A') && (ch <= 'B'))

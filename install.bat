@@ -21,6 +21,8 @@ md %2\s12z\vca
 for %%i in (include\s12z\vca\*.inc) do unumlaut %%i %2\s12z\vca\
 md %2\coldfire
 for %%i in (include\coldfire\*.inc) do unumlaut %%i %2\coldfire\
+md %2\st6
+for %%i in (include\st6\*.inc) do unumlaut %%i %2\st6\
 md %2\st7
 for %%i in (include\st7\*.inc) do unumlaut %%i %2\st7\
 md %2\stm8

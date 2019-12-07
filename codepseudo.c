@@ -43,24 +43,29 @@
  * Result:      TRUE if indirect
  *****************************************************************************/
    
-Boolean IsIndirect(char *Asc)
+Boolean IsIndirectGen(const char *Asc, const char *pBeginEnd)
 {
   int z,Level,l;
 
   if (((l = strlen(Asc)) <= 2)
-   || (Asc[0] != '(')
-   || (Asc[l - 1] != ')'))
+   || (Asc[0] != pBeginEnd[0])
+   || (Asc[l - 1] != pBeginEnd[1]))
     return False;
 
   Level = 0;
   for (z = 1; z <= l - 2; z++)
   {
-    if (Asc[z] == '(') Level++;
-    if (Asc[z] == ')') Level--;
+    if (Asc[z] == pBeginEnd[0]) Level++;
+    if (Asc[z] == pBeginEnd[1]) Level--;
     if (Level < 0) return False;
   }
 
   return True;
+}
+
+Boolean IsIndirect(const char *Asc)
+{
+  return IsIndirectGen(Asc, "()");
 }
 
 /*****************************************************************************

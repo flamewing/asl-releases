@@ -79,9 +79,9 @@ static Boolean DecodeReg(char *Asc, Word *Erg, Word Mask)
   if (FindRegDef(Asc, &s))
     Asc = s;
 
-  if (!strcasecmp(Asc, "SP"))
+  if (!as_strcasecmp(Asc, "SP"))
     *Erg = 0;
-  else if (!strcasecmp(Asc, "LR"))
+  else if (!as_strcasecmp(Asc, "LR"))
     *Erg = 15;
   else if (mytoupper(*Asc) != 'R')
     return False;
@@ -164,7 +164,7 @@ static Boolean DecodeCReg(char *Asc, Word *Erg)
   int z;
 
   for (z = 0; z < CRegCnt; z++)
-    if (!strcasecmp(Asc,CRegs[z].Name))
+    if (!as_strcasecmp(Asc,CRegs[z].Name))
     {
       *Erg = CRegs[z].Code;
       return True;
@@ -451,7 +451,7 @@ static void DecodeLdSt(Word Index)
 
   if (*AttrPart.Str && (Lo(Index) != 0xff)) WrError(ErrNum_UseLessAttr);
   else if (!ChkArgCnt(2, 2));
-  else if (OpSize > eSymbolSize32Bit) WrError(ErrNum_InvOpsize);
+  else if (OpSize > eSymbolSize32Bit) WrError(ErrNum_InvOpSize);
   else
   {
     if (Lo(Index) != 0xff) OpSize = Lo(Index);

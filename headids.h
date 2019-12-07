@@ -26,7 +26,7 @@ typedef enum
   eHexFormatTiDSK,
   eHexFormatAtmel,
   eHexFormatMico8,
-  eHexFormatC,
+  eHexFormatC
 } tHexFormat;
 
 typedef struct

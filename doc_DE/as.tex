@@ -163,14 +163,14 @@ Zu erreichen bin ich folgenderma"sen:
 \end{itemize}
 Wer mir pers"onlich Fragen stellen will (und in der N"ahe von Aachen
 wohnt), kann dies mit hoher Wahrscheinlichkeit donnerstags von 20.00
-bis 21.00 Uhr im Computerclub an der RWTH Aachen (Eilfschornsteinstra"se 16,
-Keller Philosophengeb"aude R"uckseite).
+bis 21.00 Uhr im Computerclub an der RWTH Aachen (Elisabethstra"se 16,
+erster Stock, rechter Flur).
 \par
 Von Telefonanrufen bitte ich abzusehen.  Erstens, weil sich die
 komplizierten Zusammenh"ange am Telefon nur "au"serst schwer er"orten
 lassen, und zweitens ist die Telekom schon reich genug...
 \par
-Die neueste Version von AS (DOS, DPMI, OS/2, C) findet sich auf folgendem
+Die neueste Version von AS (DPMI, Win32, C) findet sich auf folgendem
 Server:
 \begin{verbatim}
  http://john.ccac.rwth-aachen.de:8000/as
@@ -283,6 +283,7 @@ folgende Prozessorfamilien implementiert:
 \item{Fujitsu F$^2$MC16L}
 \item{OKI OLMS-40}
 \item{OKI OLMS-50}
+\item{Panafacom MN1610/MN1613}
 \item{Symbios Logic SYM53C8xx (ja, die kann man programmieren!)}
 \item{Intersil CDP1802/1804/1805(A)}
 \item{XMOS XS1}
@@ -293,10 +294,6 @@ in Arbeit / Planung / "Uberlegung :
 \item{Analog Devices ADSP21xx}
 \item{SGS-Thomson ST20}
 \item{Texas Instruments TMS320C8x}
-\end{itemize}
-Noch gesucht werden Unterlagen f"ur:
-\begin{itemize}
-\item{die ganze Palette der OKI-Controller}
 \end{itemize}
 ungeliebt, aber {\it doch} vorhanden :
 \begin{itemize}
@@ -401,28 +398,6 @@ ausgeliefert, d.h. man mu"s sich mittels eines Compilers selbst die
 Binaries erzeugen.  Dies ist aber (f"ur mich) der eindeutig einfachere
 Weg, als ein Dutzend Binaries f"ur Maschinen vorzukompilieren, auf die ich
 auch nicht immer Zugriff habe...
-
-Wer die bisherige \marginpar{{\em ???}} Aufz"ahlung liest, wird
-feststellen, da"s das meistverkaufte Betriebssystem der Welt aus Redmont
-in dieser Aufz"ahlung fehlt.  Wer mich pers"onlich kennt, wei"s, da"s ich
-Windows (egal, ob 3.X, 95 oder NT) {\em nicht} f"ur das Ei des Kolumbus
-halte.  Kurzgesagt, ich bin ein ,,Windows-Hasser''.  Auch wenn eine gro"se
-Zahl an Leuten diese Einstellung f"ur "uberholt bis l"acherlich erachten
-und mir jetzt vorhalten, ich w"urde hier einem gro"sen Teil potentieller
-Anwender AS vorenthalten, so werden sie sich doch damit abfinden m"ussen:
-Ich treibe die Entwicklung an AS prim"ar weiter, weil sie mir {\em Spa"s}
-macht; AS ist ein nicht-kommerzielles Projekt und ich nehme mir deswegen
-die Freiheit, nicht auf potentielle Marktanteile zu schielen.  Ich suche
-mir die Plattformen aus, auf denen das Programmieren {\em mir} Spa"s
-macht, und Programmieren unter Windows macht mir definitiv keinen Spa"s!
-Ich habe "ubrigens durchaus schon einmal Windows-Programme schreiben
-m"ussen, es ist also nicht so, da"s ich hier ohne Erfahrung etwas
-daherreden w"urde.  Sofern irgendjemand AS in diese Richtung portieren
-will, werde ich mich ihm nicht in den Weg stellen, "uber die Sourcen
-hinaus hat er aber nicht viel Hilfe von mir zu erwarten (und mu"s sich
-selber mit den Anfragen der Qualit"at herumschlagen, warum AS denn jetzt
-nicht mehr l"auft, nachdem man den Brummi-CAD 18.53-Eintrag in der
-Registry von Gro"s- in Kleinbuchstaben ge"andert hat...).
 
 %%===========================================================================
 
@@ -601,6 +576,7 @@ REGHC12.INC       & Registeradressen 68HC12 \\
 REGM16C.INC       & Registeradressen Mitsubishi M16C \\
 REGMSP.INC        & Registeradressen TI MSP430 \\
 REGS12Z.INC       & Register- \& Bitadressen S12Z-Familie \\
+REGST6.INC        & Register- \& Makrodefinitionen ST6 (aktuell)\\
 REGST7.INC        & Register- \& Makrodefinitionen ST7 \\
 REGSTM8.INC       & Register- \& Makrodefinitionen STM8 \\
 REGST9.INC        & Register- \& Makrodefinitionen ST9 \\
@@ -621,9 +597,8 @@ STDDEF56K.INC     & Registeradressen DSP56000 \\
 STDDEF5X.INC      & Peripherieadressen TMS320C5x \\
 STDDEF60.INC      & Befehlsmakros \& Registeradressen \\
                   & PowerPC \\
-STDDEF62.INC      & Registeradressen \& Makros ST6 \\
+STDDEF62.INC      & Registeradressen \& Makros ST6 (veraltet)\\
 STDDEF75.INC      & Registeradressen 75K0 \\
-STDDEF87.INC      & Register- \& Speicheradressen TLCS-870 \\
 \hline
 \end{tabular}\end{center}
 \caption{Standardumfang einer Bin"ardistribution - Teil 2
@@ -638,6 +613,7 @@ Datei             & Funktion \\
 \hline
 {\bf Verzeichnis INCLUDE} & \\
 \hline
+STDDEF87.INC      & Register- \& Speicheradressen TLCS-870 \\
 STDDEF90.INC      & Register- \& Speicheradressen TLCS-90 \\
 STDDEF96.INC      & Register- \& Speicheradressen TLCS-900 \\
 STDDEFXA.INC      & SFR-\& Bitadressen Philips XA \\
@@ -652,7 +628,10 @@ COLDFIRE\/*.INC   & Register- \& Bitadressen ColdFire-Familie \\
 S12Z\/*.INC       & Register- \& Bitadressen S12Z-Familie \\
                   & (nicht direkt benutzen, REGS12Z.INC \\
                   & inkludieren) \\
-ST7\/*.INC        & Register- \& Bitadressen S78-Familie \\
+ST6\/*.INC        & Register- \& Bitadressen ST6-Familie \\
+                  & (nicht direkt benutzen, REGST6.INC \\
+                  & inkludieren) \\
+ST7\/*.INC        & Register- \& Bitadressen ST7-Familie \\
                   & (nicht direkt benutzen, REGST7.INC \\
                   & inkludieren) \\
 STM8\/*.INC       & Register- \& Bitadressen STM8-Familie \\
@@ -3537,12 +3516,15 @@ Der SX20 steckt in einem kleineren Geh"ause, weshalb der Port C
 fehlt.
 %%-----------
 \begin{quote}
-av) ST6210/ST6215 $\rightarrow$ ST6220/ST6225
+av) ST6200, ST6201, ST6203, ST6208, ST6209,\\
+    ST6210, ST6215, ST6218, ST6220, ST6225,\\
+    ST6228, ST6230, ST6232, ST6235, ST6240,\\
+    ST6242, ST6245, ST6246, ST6252, ST6253,\\
+    ST6255, ST6260, ST6262, ST6263, ST6265,\\
+    ST6280, ST6285
 \end{quote}
-Die einzige Unterscheidung, die AS zwischen den beiden Paaren vornimmt, ist
-der bei den ersten beiden kleinere Adre"sraum (2K anstelle 4K).  Die
-Feinunterscheidung dient zur automatischen Unterscheidung in der Quelldatei,
-welche Hardware jeweils vorhanden ist (analog zum 8051/52/515).
+Die einzelnen ST6-Varianten differieren in der Menge der
+On-Chip-Peripherie und dem eingebauten Speicher.
 %%-----------
 \begin{quote}
 aw) ST7 \\
@@ -3852,6 +3834,13 @@ cd) MSM5054, MSM5055, MSM5056, MSM6051, MSM6052
 \end{quote}
 Gleiches wie bei der OLMS-40-Familie: Unterschiede im
 Befehlssatz sowie im internen Programm- und Datenspeicher.
+%%-----------
+\begin{quote}
+ce) MN1610[ALT] $\rightarrow$ MN1613[ALT]
+\end{quote}
+Zus"atzlich zu den Funktionen seines Vorg"angers bietet der
+MN1613 einen gr"o"seren Adre"sraum, eine Floating-Point-Einheit
+sowie eine ganze Reihe neuer Befehle.
 %%-----------
 \begin{quote}
 ce) 1802 $\rightarrow$ 1804, 1805, 1806 $\rightarrow$ 1804A, 1805A
@@ -4587,7 +4576,7 @@ festgelegt werden.  Der Default ist 0.
 \subsubsection{ST6}
 \label{ST6Assume}
 
-Die Mikrokontroller der ST62-Reihe sind in der Lage, einen Teil (64 Byte)
+Die Mikrokontroller der ST6-Reihe sind in der Lage, einen Teil (64 Byte)
 des Codebereiches in den Datenbereich einzublenden, z.B. um Konstanten aus
 dem ROM zu laden.  Dies bedeutet aber auch, da"s zu einem Zeitpunkt immer
 nur ein Teil des ROMs adressiert werden kann.  Welcher Teil dies ist, wird
@@ -4607,6 +4596,24 @@ Anstelle eines Symbols kann auch schlicht \tty{NOTHING} angegeben
 werden, z.B. wenn das Bank-Register tempor"ar als Speicherzelle benutzt
 wird.  Dieser Wert ist auch die Voreinstellung.
 
+Der Programmz"ahler dieser Mikrokontroller ist lediglich 12 Bit breit.  Das
+bedeutet f"ur Varianten mit mehr als 4 KByte Programmspeicher, da"s man sich
+eine Art von Banking einfallen lassen mu"ste.  Dazu werden Adre"sraum und
+Programmspeicher in 2 KByte-Seite eingeteilt.  Seite 1 des Adre"sraumes
+greift immer auf Seite 1 des Programmspeichers zu.  "Uber das bei diesen
+Varianten vorhandene \tty{PRPR}-Register kann der Programmierer bestimmen,
+welche Seite des Programmspeichers "uber die Adressen 000h bis 7ffh
+zugegriffen wird.  AS betrachtet den Adre"sraum in erster N"aherung als
+linear und von der Gr"o"se des Programmspeichers.  Erfolgt ein Sprung von
+Seite 1 aus auf eine Adresse au"serhalb dieser Seite, wird gepr"uft, ob deren
+Adresse mit dem aktuell angenommenen Wert des \tty{PRPR}-Registers identisch
+ist.  Erfolgt ein Sprung von einer anderen Seite aus auf eine Adresse au"serhalb
+Seite 1, wird gepr"uft, ob die Zieladresse innerhalb der gleichen Seite
+liegt.  {\bf WICHTIG}: Da der Programmz"ahler nur 12 Bit breit ist, ist
+es nicht m"oglich, ohne einen Umweg "uber Seite 1 von einer Seite in eine
+andere zu springen - Mit einem Umsetzen des \tty{PRPR}-Registers au"serhalb
+von Seite 1 w"urde man sich seinen eigenen Code unter den F"u"sen wegziehen.
+
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 \subsubsection{ST9}
@@ -4622,7 +4629,7 @@ dieser Annahme ist 0.
 
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-\subsubsection{$\mu$PD78(C)10}
+\subsubsection{uPD78(C)1x}
 
 Diese Prozessoren besitzen ein Register (V), mit dessen Hilfe die
 ,,Zeropage'', d.h. die Lage der mit nur einem Byte adressierbaren
@@ -4637,53 +4644,6 @@ Inhalt des V-Registers mitteilt.  Wird ein Befehl mit Kurzadressierung
 benutzt, so wird "uberpr"uft, ob die obere H"alfte des Adre"sausdrucks
 mit dem angenommenen Inhalt "ubereinstimmt.  Stimmt sie nicht, so erfolgt
 eine Warnung.
-
-Architektur und Befehlssatz dieser Prozessoren sind grob an den
-Intel 8080/8085 angelehnt - das gilt auch f"ur die Mnemonics.  Die
-Adressierungsart (direkt, indirekt, immediate) ist mit in das
-Mnemonic verpackt, und 16-Bit-Register (BC, DE, HL) werden wie
-beim 8080 mit einem Buchstaben abgek"urzt.  Da NEC in der
-Erkl"arung der einzelnen Adressierungsarten aber auch immer
-wieder die ausgeschriebenen Registernamen benutzt und auch mal
-Klammern benutzt, um indirekte Adressierung anzudeuten und mal
-nicht, habe ich mich entschlossen, neben den 'offiziellen'
-Notationen aus dem NEC-Manual auch einige alternative Notationen
-zuzulassen.  Einige nicht-NEC-Tools wie z.B. Disassembler
-scheinen auch solche Notationen zu benutzen:
-
-\begin{itemize}
-\item{Anstelle \tty{B} darf auch \tty{BC}, \tty{(B)} oder
-      \tty{(BC)} geschrieben werden.}
-\item{Anstelle \tty{D} darf auch \tty{DE}, \tty{(D)} oder
-      \tty{(DE)} geschrieben werden.}
-\item{Anstelle \tty{H} darf auch \tty{HL}, \tty{(H)} oder
-      \tty{(HL)} geschrieben werden.}
-\item{Anstelle \tty{D+} darf auch \tty{DE+}, \tty{(D+)},
-      \tty{(DE+)} oder \tty{(DE)+} geschrieben werden.}
-\item{Anstelle \tty{H+} darf auch \tty{HL+}, \tty{(H+)},
-      \tty{(HL+)} oder \tty{(HL)+} geschrieben werden.}
-\item{Anstelle \tty{D-} darf auch \tty{DE-}, \tty{(D-)},
-      \tty{(DE-)} oder \tty{(DE)-} geschrieben werden.}
-\item{Anstelle \tty{H-} darf auch \tty{HL-}, \tty{(H-)},
-      \tty{(HL-)} oder \tty{(HL)-} geschrieben werden.}
-\item{Anstelle \tty{D++} darf auch \tty{DE++}, \tty{(D++)},
-      \tty{(DE++)} oder \tty{(DE)++} geschrieben werden.}
-\item{Anstelle \tty{H++} darf auch \tty{HL++}, \tty{(H++)},
-      \tty{(HL++)} oder \tty{(HL)++} geschrieben werden.}
-\item{Anstelle \tty{D--} darf auch \tty{DE--}, \tty{(D--)},
-      \tty{(DE--)} oder \tty{(DE)--} geschrieben werden.}
-\item{Anstelle \tty{H--} darf auch \tty{HL--}, \tty{(H--)},
-      \tty{(HL--)} oder \tty{(HL)--} geschrieben werden.}
-\item{Anstelle \tty{H+A} darf auch \tty{HL+A}, \tty{A+H},
-      \tty{A+HL}, \tty{(H+A)}, \tty{(HL+A)}, \tty{(A+H)}
-      oder \tty{(A+HL)} geschrieben werden.}
-\item{Anstelle \tty{H+B} darf auch \tty{HL+B}, \tty{B+H},
-      \tty{B+HL}, \tty{(H+B)}, \tty{(HL+B)}, \tty{(B+H)}
-      oder \tty{(B+HL)} geschrieben werden.}
-\item{Anstelle \tty{H+EA} darf auch \tty{HL+EA}, \tty{EA+H},
-      \tty{EA+HL}, \tty{(H+EA)}, \tty{(HL+EA)}, \tty{(EA+H)}
-      oder \tty{(EA+HL)} geschrieben werden.}
-\end{itemize}
 
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
@@ -4799,6 +4759,20 @@ innerhalb der durch DTB gegebenen 64K-Bank mit 8-Bit-Adressen erreicht
 werden kann.  Der Default f"ur DPR ist 1, zusammen mit dem Default f"ur
 DTB ergibt dies also eine Default-Seite bei 0001xxh.
 
+%%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+\subsubsection{MN1613}
+
+Beim MN1613 wurde eine Architektur mit 16-Bit-Adressen nachtr"aglich erweitert,
+Dies wird durch einen Satz vier Bit breiter ,,Segment-Register'' (CSBR, SSBR, TSR0
+und TSR1) erreicht, deren Wert (um 14 Bit nach links geschoben) zu den 16-Bit-
+Adressen hinzuaddiert wird.  Ein Proze"s kann auf diese Weise immer ein 64 KWorte
+gro"ses Fenster im 256 KWorte gro"sen Adre"sraum adressieren.  Der Assembler
+benutzt die per \tty{ASSUME} mitgeteilten Werte, um zu warnen, wenn eine absolute
+Adresse innerhalb des 256K-Adre"sraums mit den aktuellen Werten nicht adressierbar
+ist, und rechnet ansonsten den korrekten 16-bittigen Offset aus.  Bei indirekter
+Adressierung ist so eine Pr"ufung (naturgem"a"s) nicht m"oglich.
+
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{EMULATED}
@@ -4868,6 +4842,28 @@ Bedeutung haben, kann man nicht zu 100\% im 'Z80-Stil' programmieren.
 Wo die Grenzen dieser Betriebsart liegen, kann man im Detail im
 Abschnitt \ref{8080Spec} nachlesen.
 
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\subsection{EXPECT und ENDEXPECT}
+\ttindex{EXPECT}
+\ttindex{ENDEXPECT}
+
+Mit diesen beiden Befehlen rahmt man ein St"uck Quellcode ein, in dem ein
+oder mehrere Fehler {\em erwartet} werden.  Treten die "uber ihre Nummern
+(siehe Kapitel \ref{ChapErrMess}) identifizierten Fehler oder Warnungen auf, werden
+sie unterdr"uckt, und die Assemblierung l"auft ohne Fehler durch - nat"urlich
+ohne an dieser Stelle Code zu erzeugen.  Erwartete, aber nicht aufgetretene
+Fehler oder Warnungen l"osen ihrerseits jedoch eine Fehlermeldung von
+\tty{ENDEXPECT} aus.  Der Haupt-Anwendungszweck dieser Befehle findet sich
+in den Selbst-Tests im tests/-Unterverzeichnis.  Z.B. kann man so testen,
+ob Wertebereiche korrekt gepr"uft werden:
+\begin{verbatim}
+       cpu      68000
+       expect   1320     ; immediate-Shift nur 1..8
+       lsl.l    #10,d0
+       endexpect
+\end{verbatim}
+
 %%---------------------------------------------------------------------------
 
 \section{Datendefinitionen}
@@ -4886,7 +4882,7 @@ von Parametern angegeben werden, die der Reihe nach abgearbeitet werden.
 \subsection{DC[.size]}
 \ttindex{DC}
 
-{\em G"ultigkeit: 680x0, M*Core, 68xx, H8, SH7000, DSP56xxx, XA, ST7/STM8}
+{\em G"ultigkeit: 680x0, M*Core, 68xx, H8, SH7000, DSP56xxx, XA, ST7/STM8, MN161x}
 
 Dieser Befehl legt eine oder mehrere Konstanten des beim durch
 das Attribut bestimmten Typs im Speicher ab.  Die Attribute entsprechen
@@ -4939,7 +4935,7 @@ Konstanten in einer Anweisung gemischt werden.
 \subsection{DS[.size]}
 \ttindex{DS}
 
-{\em G"ultigkeit: 680x0, M*Core, 68xx, H8, SH7x00, DSP56xxx, XA, ST7/STM8}
+{\em G"ultigkeit: 680x0, M*Core, 68xx, H8, SH7x00, DSP56xxx, XA, ST7/STM8, MN161x}
 
 Mit diesem Befehl l"a"st sich zum einen Speicherplatz f"ur die angegebene
 Zahl im Attribut beschriebener Zahlen reservieren.  So reserviert
@@ -9796,13 +9792,60 @@ nur Labels stehen d"urfen!
 
 %%---------------------------------------------------------------------------
 
-\section{78(C)1x}
+\section{uPD78(C)1x}
 \label{78C1xSpec}
 
 F"ur relative, unbedingte Spr"unge gibt es den \tty{JR}-Befehl (Sprungdistanz
 -32...+31, 1 Byte) sowie den \tty{JRE}-Befehl (Sprungdistanz -256...+255, 2
 Bytes).  AS kennt weiterhin den Pseudobefehl \tty{J}, der automatisch den
 k"urzestm"oglichen Befehl benutzt.
+
+Architektur und Befehlssatz dieser Prozessoren sind grob an den
+Intel 8080/8085 angelehnt - das gilt auch f"ur die Mnemonics.  Die
+Adressierungsart (direkt, indirekt, immediate) ist mit in das
+Mnemonic verpackt, und 16-Bit-Register (BC, DE, HL) werden wie
+beim 8080 mit einem Buchstaben abgek"urzt.  Da NEC in der
+Erkl"arung der einzelnen Adressierungsarten aber immer mal
+wieder die ausgeschriebenen Registernamen benutzt, und auch mal
+und mal nicht Klammern benutzt, um indirekte Adressierung anzudeuten,
+habe ich mich entschlossen, neben den 'offiziellen'
+Notationen aus dem NEC-Manual auch einige alternative Notationen
+zuzulassen.  Einige nicht-NEC-Tools wie z.B. Disassembler
+scheinen solche Notationen ebenfalls zu benutzen:
+
+\begin{itemize}
+\item{Anstelle \tty{B} darf auch \tty{BC}, \tty{(B)} oder
+      \tty{(BC)} geschrieben werden.}
+\item{Anstelle \tty{D} darf auch \tty{DE}, \tty{(D)} oder
+      \tty{(DE)} geschrieben werden.}
+\item{Anstelle \tty{H} darf auch \tty{HL}, \tty{(H)} oder
+      \tty{(HL)} geschrieben werden.}
+\item{Anstelle \tty{D+} darf auch \tty{DE+}, \tty{(D+)},
+      \tty{(DE+)} oder \tty{(DE)+} geschrieben werden.}
+\item{Anstelle \tty{H+} darf auch \tty{HL+}, \tty{(H+)},
+      \tty{(HL+)} oder \tty{(HL)+} geschrieben werden.}
+\item{Anstelle \tty{D-} darf auch \tty{DE-}, \tty{(D-)},
+      \tty{(DE-)} oder \tty{(DE)-} geschrieben werden.}
+\item{Anstelle \tty{H-} darf auch \tty{HL-}, \tty{(H-)},
+      \tty{(HL-)} oder \tty{(HL)-} geschrieben werden.}
+\item{Anstelle \tty{D++} darf auch \tty{DE++}, \tty{(D++)},
+      \tty{(DE++)} oder \tty{(DE)++} geschrieben werden.}
+\item{Anstelle \tty{H++} darf auch \tty{HL++}, \tty{(H++)},
+      \tty{(HL++)} oder \tty{(HL)++} geschrieben werden.}
+\item{Anstelle \tty{D--} darf auch \tty{DE--}, \tty{(D--)},
+      \tty{(DE--)} oder \tty{(DE)--} geschrieben werden.}
+\item{Anstelle \tty{H--} darf auch \tty{HL--}, \tty{(H--)},
+      \tty{(HL--)} oder \tty{(HL)--} geschrieben werden.}
+\item{Anstelle \tty{H+A} darf auch \tty{HL+A}, \tty{A+H},
+      \tty{A+HL}, \tty{(H+A)}, \tty{(HL+A)}, \tty{(A+H)}
+      oder \tty{(A+HL)} geschrieben werden.}
+\item{Anstelle \tty{H+B} darf auch \tty{HL+B}, \tty{B+H},
+      \tty{B+HL}, \tty{(H+B)}, \tty{(HL+B)}, \tty{(B+H)}
+      oder \tty{(B+HL)} geschrieben werden.}
+\item{Anstelle \tty{H+EA} darf auch \tty{HL+EA}, \tty{EA+H},
+      \tty{EA+HL}, \tty{(H+EA)}, \tty{(HL+EA)}, \tty{(EA+H)}
+      oder \tty{(EA+HL)} geschrieben werden.}
+\end{itemize}
 
 %%---------------------------------------------------------------------------
 
@@ -9923,6 +9966,19 @@ Segmentpr"afix und Prozessorbefehl eingestreute Pseudoanweisung l"oscht
 den Merker also {\em nicht}.  Dies gilt auch f"ur Pseudobefehle zur
 Datenablage oder Ver"anderung des Programmz"ahlers - aber wer macht so
 etwas schon ;-)
+
+%%---------------------------------------------------------------------------
+
+\section{MN161x}
+
+F"ur dieses Target gilt die Besonderheit, da"s man zwischen zwei
+Code-Generatoren w"ahlen kann: Einer wurde freundlicherweise von Haruo Asano
+geschrieben und ist "uber die CPU-Namen \tty{MN1610} bzw. \tty{MN1613}
+erreichbar; der andere wurde von mir erstellt und ist "uber die Namen
+\tty{MN1610ALT} bzw. \tty{MN1613ALT} aktivierbar.  Wer den erweiterten
+Adre"sraum von 256 KWorten des MN1613 verwenden will, oder mit dem
+Gleitkommaformat des MN1613 experimentieren will, mu"s das \tty{ALT}-
+Target verwenden.
 
 %%===========================================================================
 
@@ -11004,21 +11060,61 @@ Angaben:
                 durch einen \tty{BYTE}, \tty{WORD}, usw. \tty{PTR}-Pr"afix
 	        festlegen.}
                {keines}
-\errentry{1135}{Ung"ultiger Operandentyp}
+\errentry{1133}{Ganzzahl oder String erwartet, aber Gleitkommazahl erhalten}
                {Fehler}
-               {Ein Ausdruck hat einen an dieser Stelle nicht
-                zul"assigen Typ (Integer/Gleitkomma/String).}
-               {Die an dieser Stelle zul"assigen Datentypen}
+               {An dieser Stelle kann keine Gleitkommazahl als Argument
+                verwendet werden.}
+               {das fehlerhafte Argument}
+\errentry{1134}{Ganzzahl erwartet, aber Gleitkommazahl erhalten}
+               {Fehler}
+               {An dieser Stelle kann keine Gleitkommazahl als Argument
+                verwendet werden.}
+               {das fehlerhafte Argument}
+\errentry{1136}{Gleitkommazahl erwartet, aber String erhalten}
+               {Fehler}
+               {An dieser Stelle kann kein String als Argument
+                verwendet werden.}
+               {das fehlerhafte Argument}
 \errentry{1137}{Operandentyp-Diskrepanz}
                {Fehler}
                {Die beiden Argumente eines Operanden haben nicht
                 den gleichen Datentyp (Integer/Gleitkomma/String).}
                {keines}
-\errentry{1140}{Zuviele Argumente}
+\errentry{1138}{String erwartet, aber Ganzzahl erhalten}
+               {Fehler}
+               {An dieser Stelle kann keine Ganzzahl als Argument
+                verwendet werden.}
+               {das fehlerhafte Argument}
+\errentry{1139}{String erwartet, aber Gleitkommazahl erhalten}
+               {Fehler}
+               {An dieser Stelle kann keine Gleitkommazahl als Argument
+                verwendet werden.}
+               {das fehlerhafte Argument}
+\errentry{1140}{zu viele Argumente}
                {Fehler}
                {Einem Befehl wurden mehr als die unter AS
                 zul"assigen 20 Parameter "ubergeben.}
                {keines}
+\errentry{1141}{Ganzzahl erwartet, aber String erhalten}
+               {Fehler}
+               {An dieser Stelle kann kein String als Argument
+                verwendet werden.}
+               {das fehlerhafte Argument}
+\errentry{1142}{Ganz- oder Gleitkommazahl erwartet, aber String erhalten}
+               {Fehler}
+               {An dieser Stelle kann kein String als Argument
+                verwendet werden.}
+               {das fehlerhafte Argument}
+\errentry{1143}{String erwartet}
+               {Fehler}
+               {An dieser Stelle kann nur ein (in einfachen Hochkommas
+                eingeschlossener) String als Argument verwendet werden.}
+               {das fehlerhafte Argument}
+\errentry{1144}{Ganzzahl erwartet}
+               {Fehler}
+               {An dieser Stelle kann nur eine ganze Zahlals Argument
+                verwendet werden.}
+               {das fehlerhafte Argument}
 \errentry{1200}{Unbekannter Befehl}
                {Fehler}
                {Der benutzte Befehl ist weder ein Pseudobefehl
@@ -11041,13 +11137,18 @@ Angaben:
                {Der angegebene Integer-Wert unterschreitet
                 den zul"assigen Bereich.}
                {aktueller Wert und zul"assiges Minimum
-	        (manchmal, ich stelle das gerade um...)}
+	        (manchmal, ich stelle das seit Jahren um...)}
 \errentry{1320}{Bereichs"uberschreitung}
                {Fehler}
                {Der angegebene Integer-Wert "uberschreitet
                 den zul"assigen Bereich.}
                {aktueller Wert und zul"assiges Maximum
-	        (manchmal,ich stelle das gerade um...)}
+	        (manchmal, ich stelle das seit Jahren um...)}
+\errentry{1322}{keine Zweierpotenz}
+               {Fehler}
+               {Hier sind nur Zweierpotenzen (1,2,4,8...)
+                als Wert erlaubt}
+               {der fragliche Wert}
 \errentry{1325}{Adresse nicht ausgerichtet}
                {Fehler}
                {Die angegebene direkte Speicheradresse
@@ -12278,8 +12379,8 @@ Andreas Wassatsch, John Weinrich.
 mit ihren ASM68K demonstrierten, wie man es \bb{nicht} machen sollte und
 mich damit indirekt dazu angeregt haben, etwas besseres zu schreiben!
 \par
-So ganz allein habe ich AS nicht verzapft.  AS enth"alt die
-OverXMS-Routinen von Wilbert van Leijen, um die Overlay-Module ins
+So ganz allein habe ich AS nicht verzapft.  Die DOS-Version von AS enthielt
+die OverXMS-Routinen von Wilbert van Leijen, um die Overlay-Module ins
 Extended Memory verlagern zu k"onnen.  Eine wirklich feine Sache,
 einfach und problemlos anzuwenden!
 \par
@@ -12287,7 +12388,8 @@ Die TMS320C2x/5x-Codegeneratoren sowie die Datei \tty{STDDEF2x.INC}
 stammen von Thomas Sailer, ETH Z"urich.  Erstaunlich, an einem Wochenende
 hat er es geschafft, durch meinen Code durchzusteigen und den neuen
 Generator zu implementieren.  Entweder waren das reichliche Nachtschichten
-oder ich werde langsam alt...
+oder ich werde langsam alt...gleiches Lob geb"uhrt Haruo Asano f"ur den
+MN1610/MN1613-Codegenerator.
 
 %%===========================================================================
 

@@ -64,7 +64,7 @@ enum
   ModSrt = 3,
   ModTny = 4,
   ModIX = 5,
-  ModX = 6,
+  ModX = 6
 };
 
 #define MModImm (1 << ModImm)
@@ -122,7 +122,7 @@ static void DecodeAdr(Byte Start, Byte Stop, Word Mask)
 
   if (Stop - Start == 1)
   {
-    if (*(ArgStr[Start].Str) == 0 && (!strcasecmp(ArgStr[Stop].Str, "X")))
+    if (*(ArgStr[Start].Str) == 0 && (!as_strcasecmp(ArgStr[Stop].Str, "X")))
     {
       AdrMode = ModIX;
     }
@@ -137,13 +137,13 @@ static void DecodeAdr(Byte Start, Byte Stop, Word Mask)
   {
     /* X-indirekt */
 
-    if (!strcasecmp(ArgStr[Start].Str, "X"))
+    if (!as_strcasecmp(ArgStr[Start].Str, "X"))
     {
       AdrMode = ModX;
       goto chk;
     }
 
-    if (!strcasecmp(ArgStr[Start].Str, "D[X]"))
+    if (!as_strcasecmp(ArgStr[Start].Str, "D[X]"))
     {
       AdrMode = ModIX;
       goto chk;
@@ -403,7 +403,7 @@ static void DecodeCBEQ(Word Index)
   }
   else if (ArgCnt == 3)
   {
-    if ((*(ArgStr[1].Str) != 0) || (strcasecmp(ArgStr[2].Str, "X"))) WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+    if ((*(ArgStr[1].Str) != 0) || (as_strcasecmp(ArgStr[2].Str, "X"))) WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
     else
     {
       BAsmCode[0] = 0x31; BAsmCode[1] = 0x0e;
@@ -664,8 +664,8 @@ static void DecodeBx(Word Index)
 
   if (ChkArgCnt(2, 2))
   {
-    if (!strcasecmp(ArgStr[2].Str, "D[X]")) BAsmCode[1] = 0x0e;
-    else if  (!strcasecmp(ArgStr[2].Str, "X")) BAsmCode[1] = 0x0f;  
+    if (!as_strcasecmp(ArgStr[2].Str, "D[X]")) BAsmCode[1] = 0x0e;
+    else if  (!as_strcasecmp(ArgStr[2].Str, "X")) BAsmCode[1] = 0x0f;  
     else BAsmCode[1] = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
 
     if (OK)
@@ -687,9 +687,9 @@ static void DecodeBRx(Word Index)
 
   if (ChkArgCnt(3, 3))
   {
-    if (!strcasecmp(ArgStr[2].Str, "D[X]"))
+    if (!as_strcasecmp(ArgStr[2].Str, "D[X]"))
       BAsmCode[1] = 0x0e;
-    else if (!strcasecmp(ArgStr[2].Str, "X"))
+    else if (!as_strcasecmp(ArgStr[2].Str, "X"))
       BAsmCode[1] = 0x0f;  
     else
       BAsmCode[1] = EvalStrIntExpression(&ArgStr[2], Int8, &OK);

@@ -76,34 +76,34 @@ static void DecodeAdr(const tStrComp *pArg, unsigned Mask)
 
   /* Register ? */
 
-  if (!strcasecmp(pArg->Str, "A"))
+  if (!as_strcasecmp(pArg->Str, "A"))
    AdrMode = ModAcc;
 
-  else if (!strcasecmp(pArg->Str, "SP"))
+  else if (!as_strcasecmp(pArg->Str, "SP"))
   {
     AdrMode = ModReg16; 
     AdrPart = 1;
   }
 
-  else if (!strcasecmp(pArg->Str, "IX"))
+  else if (!as_strcasecmp(pArg->Str, "IX"))
   {
     AdrMode = ModReg16;
     AdrPart = 2;
   }
 
-  else if (!strcasecmp(pArg->Str, "EP"))
+  else if (!as_strcasecmp(pArg->Str, "EP"))
   {
     AdrMode = ModReg16;
     AdrPart = 3;
   }
 
-  else if (!strcasecmp(pArg->Str, "T"))
+  else if (!as_strcasecmp(pArg->Str, "T"))
     AdrMode = ModT;
 
-  else if (!strcasecmp(pArg->Str, "PC"))
+  else if (!as_strcasecmp(pArg->Str, "PC"))
     AdrMode = ModPC;
 
-  else if (!strcasecmp(pArg->Str, "PS"))
+  else if (!as_strcasecmp(pArg->Str, "PS"))
     AdrMode = ModPS;
 
   else if ((strlen(pArg->Str) == 2) && (mytoupper(*pArg->Str) == 'R') && (pArg->Str[1]>= '0') && (pArg->Str[1] <= '7'))
@@ -143,19 +143,19 @@ static void DecodeAdr(const tStrComp *pArg, unsigned Mask)
 
   /* indirekt ? */
 
-  else if (!strcasecmp(pArg->Str, "@EP"))
+  else if (!as_strcasecmp(pArg->Str, "@EP"))
   {
     AdrMode = ModIEP;
     AdrPart = 7;
   }
 
-  else if (!strcasecmp(pArg->Str, "@A"))
+  else if (!as_strcasecmp(pArg->Str, "@A"))
   {
     AdrMode = ModIA;
     AdrPart = 7;
   }
 
-  else if (!strncasecmp(pArg->Str, "@IX", 3))
+  else if (!as_strncasecmp(pArg->Str, "@IX", 3))
   {
     /***Problem: Offset signed oder unsigned? */
     AdrVals[0] = EvalStrIntExpressionOffs(pArg, 3, SInt8, &OK);

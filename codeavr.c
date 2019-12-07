@@ -47,7 +47,7 @@ typedef enum
   eCoreClassic, /* AT90Sxxxx */
   eCoreTiny, /* ATtiny up to 8KB flash */
   eCoreTiny16K,
-  eCoreMega,
+  eCoreMega
 } tCPUCore;
 
 #define MinCoreMask(c) ((Word)(0xffffu << (c)))
@@ -143,15 +143,15 @@ static Boolean DecodeReg(char *Asc, Word *Erg)
 
 static Boolean DecodeMem(char * Asc, Word *Erg)
 {
-  if (strcasecmp(Asc, "X") == 0) *Erg = 0x1c;
-  else if (strcasecmp(Asc, "X+") == 0) *Erg = 0x1d;
-  else if (strcasecmp(Asc, "-X") == 0) *Erg = 0x1e;
-  else if (strcasecmp(Asc, "Y" ) == 0) *Erg = 0x08;
-  else if (strcasecmp(Asc, "Y+") == 0) *Erg = 0x19;
-  else if (strcasecmp(Asc, "-Y") == 0) *Erg = 0x1a;
-  else if (strcasecmp(Asc, "Z" ) == 0) *Erg = 0x00;
-  else if (strcasecmp(Asc, "Z+") == 0) *Erg = 0x11;
-  else if (strcasecmp(Asc, "-Z") == 0) *Erg = 0x12;
+  if (as_strcasecmp(Asc, "X") == 0) *Erg = 0x1c;
+  else if (as_strcasecmp(Asc, "X+") == 0) *Erg = 0x1d;
+  else if (as_strcasecmp(Asc, "-X") == 0) *Erg = 0x1e;
+  else if (as_strcasecmp(Asc, "Y" ) == 0) *Erg = 0x08;
+  else if (as_strcasecmp(Asc, "Y+") == 0) *Erg = 0x19;
+  else if (as_strcasecmp(Asc, "-Y") == 0) *Erg = 0x1a;
+  else if (as_strcasecmp(Asc, "Z" ) == 0) *Erg = 0x00;
+  else if (as_strcasecmp(Asc, "Z+") == 0) *Erg = 0x11;
+  else if (as_strcasecmp(Asc, "-Z") == 0) *Erg = 0x12;
   else return False;
   return True;
 }
@@ -338,9 +338,6 @@ static void DecodeDATA_AVR(Word Index)
            if (ChkRange(t.Contents.Int, MinV, MaxV))
              PlaceByte(t.Contents.Int, Packing);
            break;
-         case TempFloat:
-           WrError(ErrNum_InvOpType); OK = False;
-           break;
          case TempString:
            for (z2 = 0; z2 < (int)t.Contents.Ascii.Length; z2++)
            {
@@ -348,6 +345,9 @@ static void DecodeDATA_AVR(Word Index)
              PlaceByte(Trans, TRUE);
            }
            break;
+         case TempFloat:
+           WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[z]);
+           /* fall-through */
          default:
            OK = False;
        }

@@ -216,7 +216,7 @@ void opencatalog(PMsgCat Catalog, const char *File, const char *Path, LongInt Ms
         if (Ctrys[z] == CountryCode)
           Gotcha = True;
       if (!Gotcha)
-        Gotcha = !strncasecmp(lcstring, str, strlen(str));
+        Gotcha = !as_strncasecmp(lcstring, str, strlen(str));
     }
   }
   while ((*str != '\0') && (!Gotcha));

@@ -38,7 +38,7 @@ typedef enum
 {
   eForceNone = 0,
   eForceShort = 1,
-  eForceLong = 2,
+  eForceLong = 2
 } tForceSize;
 
 static CPUVar CPU8096, CPU80196, CPU80196N, CPU80296;

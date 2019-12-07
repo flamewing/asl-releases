@@ -1,0 +1,11 @@
++---------------------- Test Application PHASEERR ---------------------------+
+|                                                                            |
+| Phase errors - one of the not-so pleasant issues in a multipass assembler. |
+| Due to new knowledge of symbol values, the coded length of instructions    |
+| may change from pass n to pass n+1, which in turn changes the address of   |
+| labels.  In case of a forward branch, the change may become large enough   |
+| that "phantom" out-of-branch errors are reported.  Thus, the assembler     |
+| will suppress out-of-branch errors if it is known that symbol values       |
+| changed, and another pass is anyway to come.                               |
+|                                                                            |
++----------------------------------------------------------------------------+

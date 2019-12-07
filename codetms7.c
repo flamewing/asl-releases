@@ -76,7 +76,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
 
   AdrType = ModNone; AdrCnt = 0;
 
-  if (!strcasecmp(pArg->Str, "A"))
+  if (!as_strcasecmp(pArg->Str, "A"))
   {
     if (Mask & MModAccA) AdrType = ModAccA;
     else if (Mask & MModReg)
@@ -90,7 +90,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
     ChkAdr(Mask); return;
   }
 
-  if (!strcasecmp(pArg->Str, "B"))
+  if (!as_strcasecmp(pArg->Str, "B"))
   {
     if (Mask & MModAccB) AdrType = ModAccB;
     else if (Mask & MModReg)
@@ -110,7 +110,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
 
     StrCompRefRight(&ImmComp, pArg, 1);
     l = strlen(ImmComp.Str);
-    if ((l >= 3) & (!strcasecmp(ImmComp.Str + l - 3,"(B)")))
+    if ((l >= 3) & (!as_strcasecmp(ImmComp.Str + l - 3,"(B)")))
     {
       char Save;
 
@@ -212,7 +212,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
     if (OK)
     {
       StrCompShorten(&Right, 1);
-      if (!strcasecmp(Right.Str, "B"))
+      if (!as_strcasecmp(Right.Str, "B"))
       {
         AdrVals[0] = Hi(HVal); AdrVals[1] = Lo(HVal); AdrCnt = 2;
         AdrType = ModBRel;
@@ -453,7 +453,7 @@ static void DecodeJmp(Word Index)
 static void DecodeABReg(Word Index)
 {
   if (!ChkArgCnt(Memo("DJNZ") ? 2 : 1, Memo("DJNZ") ? 2 : 1));
-  else if (!strcasecmp(ArgStr[1].Str, "ST"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "ST"))
   {
     if ((Memo("PUSH")) || (Memo("POP")))
     {

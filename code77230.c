@@ -193,7 +193,7 @@ static Boolean DecodeReg(char *Asc, LongWord *Erg, Register *Regs, int Cnt)
   int z;
 
   for (z = 0; z < Cnt; z++)
-    if (!strcasecmp(Asc, Regs[z].Name))
+    if (!as_strcasecmp(Asc, Regs[z].Name))
     {
       *Erg = Regs[z].Code;
       return True;

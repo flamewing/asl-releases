@@ -36,7 +36,7 @@ typedef enum
   ModReg16 = 1,
   ModIReg16 = 2,
   ModAbs = 3,
-  ModImm = 4,
+  ModImm = 4
 } tAdrMode;
 
 #define MModReg8 (1 << ModReg8)
@@ -83,7 +83,7 @@ static Boolean DecodeReg16(char *pAsc, Boolean OnlyZ80Names, Byte *pResult)
   static const char *RegNames[8] = {"B", "D", "H", "SP", "BC", "DE", "HL", "SP"};
 
   for (*pResult = OnlyZ80Names ? 4 : 0; (*pResult) < 8; (*pResult)++)
-    if (!strcasecmp(pAsc, RegNames[*pResult]))
+    if (!as_strcasecmp(pAsc, RegNames[*pResult]))
     {
       *pResult &= 3;
       break;
@@ -101,7 +101,7 @@ static const int ConditionCnt = sizeof(pConditions) / sizeof(*pConditions);
 static Boolean DecodeCondition(const char *pAsc, Byte *pResult)
 {
   for (*pResult = 0; *pResult < ConditionCnt; (*pResult)++)
-    if (!strcasecmp(pAsc, pConditions[*pResult]))
+    if (!as_strcasecmp(pAsc, pConditions[*pResult]))
       return True;
   return False;
 }
@@ -328,7 +328,7 @@ static void DecodeLDAX_STAX(Word Index)
     switch (Reg)
     {
       case 3:                             /* SP */
-        WrError(ErrNum_InvOpType);
+        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
         break;
       case 2:                             /* H --> MOV A,M oder M,A */
         CodeLen = 1;
@@ -349,8 +349,8 @@ static void DecodePUSH_POP(Word Index)
 
   if (ChkArgCnt(1, 1))
   {
-    if ((!strcasecmp(ArgStr[1].Str, "PSW"))
-     || (AllowZ80Syntax && (!strcasecmp(ArgStr[1].Str, "AF"))))
+    if ((!as_strcasecmp(ArgStr[1].Str, "PSW"))
+     || (AllowZ80Syntax && (!as_strcasecmp(ArgStr[1].Str, "AF"))))
     {
       Reg = 3;
       OK = TRUE;
@@ -376,7 +376,7 @@ static void DecodeRST(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(1, 1));
-  else if ((MomCPU >= CPU8085U) && (!strcasecmp(ArgStr[1].Str, "V")))
+  else if ((MomCPU >= CPU8085U) && (!as_strcasecmp(ArgStr[1].Str, "V")))
   {
     CodeLen = 1;
     BAsmCode[0] = 0xcb; 
@@ -784,7 +784,8 @@ static void DecodeSUB(Word Code)
         return;
       case ModReg8:
         if (AdrVals[0] == AccReg)
-          break; /* conditional */
+          break;
+        /* else fall-through */
       default:
         WrError(ErrNum_InvAddrMode);
         return;
@@ -843,7 +844,8 @@ static void DecodeALU8_Z80(Word Code)
         return;
       case ModReg8:
         if (AdrVals[0] == AccReg)
-          break; /* conditional */
+          break;
+        /* else fall-through */
       default:
         WrError(ErrNum_InvAddrMode);
         return;
@@ -911,7 +913,8 @@ static void DecodeCP(Word Code)
         return;
       case ModReg8:
         if (AdrVals[0] == AccReg)
-          break; /* conditional */
+          break;
+        /* else fall-through */
       default:
         WrError(ErrNum_InvAddrMode);
         return;

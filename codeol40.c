@@ -42,7 +42,7 @@ typedef enum
   ModTL = 13,
   ModTH = 14,
   ModPPI = 15,
-  ModNone = 0x7f,
+  ModNone = 0x7f
 } tAdrMode;
 
 #define MModA (1 << ModA)
@@ -102,7 +102,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
     Mask &= ~(MModW);
 
   for (pNot = Notations; pNot->pAsc; pNot++)
-    if (!strcasecmp(pArg->Str, pNot->pAsc))
+    if (!as_strcasecmp(pArg->Str, pNot->pAsc))
     {
       AdrMode = pNot->AdrMode;
       goto AdrFound;
@@ -277,7 +277,7 @@ static void DecodeBit(Word Code)
 {
   if (ArgCnt == 1)
   {
-    if (!strcasecmp(ArgStr[1].Str, "C"))
+    if (!as_strcasecmp(ArgStr[1].Str, "C"))
       BAsmCode[CodeLen++] = Hi(Code);
     else
       WrError(ErrNum_InvAddrMode);

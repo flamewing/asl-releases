@@ -449,7 +449,7 @@ void toolutils_init(const char *ProgPath)
 
 Boolean AddressWildcard(const char *addr)
 {
-  return ((strcmp(addr, "$") == 0) || (strcasecmp(addr, "0x") == 0));
+  return ((strcmp(addr, "$") == 0) || (as_strcasecmp(addr, "0x") == 0));
 }
 
 #ifdef CKMALLOC

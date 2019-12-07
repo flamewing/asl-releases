@@ -21,10 +21,8 @@ void
 #endif
 );
 
-extern Word ErrorCount,WarnCount;
 
-
-extern void AsmSubInit(void);
+extern void AsmSubPassInit(void);
 
 
 extern long GTime(void);
@@ -85,8 +83,6 @@ extern void PrintOneLineMuted(FILE *pFile, const char *pLine,
                               const struct sLineComp *pMuteComponent2);
 extern void PrLineMarker(FILE *pFile, const char *pLine, const char *pPrefix, const char *pTrailer,
                          char Marker, const struct sLineComp *pLineComp);
-extern void GenLineForMarking(char *pDest, unsigned DestSize, const char *pSrc, const char *pPrefix);
-extern void GenLineMarker(char *pDest, unsigned DestSize, char Marker, const struct sLineComp *pLineComp, const char *pPrefix);
 
 extern LargeWord ProgCounter(void);
 
@@ -132,9 +128,6 @@ extern Boolean ChkSymbName(char *sym);
 
 extern Boolean ChkMacSymbName(char *sym);
 
-
-extern void ChkIO(Word ErrNo);
-extern void ChkStrIO(Word ErrNo, const struct sStrComp *pComp);
 
 
 extern void AddIncludeList(char *NewPath);

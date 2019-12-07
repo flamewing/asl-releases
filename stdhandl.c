@@ -40,50 +40,40 @@
 
 TRedirected Redirected;
 
-/* eine Textvariable auf einen der Standardkanaele umbiegen.  Die Reduzierung
-   der Puffergroesse auf fast Null verhindert, dass durch Pufferung evtl. Ausgaben
-   durcheinandergehen. */
-
-static void AssignHandle(FILE **T, Word Num)
+static void AssignHandle(FILE **ppFile, Word Num)
 {
-#ifdef NODUP
   switch (Num)
   {
-    case 0:
-      *T = stdin;
+    case NumStdIn:
+      *ppFile = stdin;
       break;
-    case 1:
-      *T = stdout;
+    case NumStdOut:
+      *ppFile = stdout;
       break;
-    case 2:
-      *T = stderr;
+    case NumStdErr:
+      *ppFile = stderr;
       break;
     default:
-      *T = NULL;
+      *ppFile = NULL;
   }
-#else
-  *T = fdopen(dup(Num), "w");
-#ifndef _WIN32t
-  setbuf(*T, NULL);
-#endif
-#endif
 }
 
 /* Eine Datei unter Beruecksichtigung der Standardkanaele oeffnen */
 
-void RewriteStandard(FILE **T, String Path)
+void OpenWithStandard(FILE **ppFile, String Path)
 {
   if ((strlen(Path) == 2) && (Path[0] == '!') && (Path[1] >= '0') && (Path[1] <= '2'))
-    AssignHandle(T, Path[1] - '0');
+    AssignHandle(ppFile, Path[1] - '0');
   else
-    *T = fopen(Path, "w");
+    *ppFile = fopen(Path, "w");
 }
 
 void CloseIfOpen(FILE **ppFile)
 {
   if (*ppFile)
   {
-    fclose(*ppFile);
+    if ((*ppFile != stdin) && (*ppFile != stdout) && (*ppFile != stderr))
+      fclose(*ppFile);
     *ppFile = NULL;
   }
 }
@@ -125,7 +115,7 @@ void stdhandl_init(void)
     Redirected = RedirToDevice;
 
 #else
-  fstat(fileno(stdout), &stdout_stat);
+  fstat(NumStdOut, &stdout_stat);
   if (S_ISREG(stdout_stat.st_mode))
     Redirected = RedirToFile;
   else if (S_ISFIFO(stdout_stat.st_mode))

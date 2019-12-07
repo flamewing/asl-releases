@@ -51,7 +51,7 @@ typedef enum
   ModSP,
   ModSTBC,
   ModWDM,
-  ModPSW, /* no associated mask, only used for PUSH/POP! */ 
+  ModPSW  /* no associated mask, only used for PUSH/POP! */ 
 } tAdrMode;
 
 typedef enum
@@ -61,7 +61,7 @@ typedef enum
   eBitTypeSAddr2_SFR = 4,
   eBitTypeSAddr1 = 5,
   eBitTypeAbs = 6,
-  eBitTypeMem = 13,
+  eBitTypeMem = 13
 } tBitType;
 
 typedef LongWord tAdrModeMask;
@@ -206,7 +206,7 @@ static ShortInt DecodeReg8(const char *pAsc)
       int z;
 
       for (z = 0; Reg8Names[z]; z++)
-        if (!strcasecmp(pAsc, Reg8Names[z]))
+        if (!as_strcasecmp(pAsc, Reg8Names[z]))
         {
           /* map to 8..11 resp. 10..15 */
           return (z > 4) ? z + 6 : z + 8;
@@ -242,7 +242,7 @@ static ShortInt DecodeReg16(const char *pAsc)
       int z;
 
       for (z = 0; Reg16Names[z]; z++)
-        if (!strcasecmp(Reg16Names[z], pAsc))
+        if (!as_strcasecmp(Reg16Names[z], pAsc))
         {
           Result = ((z >= 2) || Reg_RSS) ? z + 2 : z;
           break;
@@ -269,7 +269,7 @@ static ShortInt DecodeReg24(const char *pAsc)
   int z;
 
   for (z = 0; Reg24Names[z]; z++)
-    if (!strcasecmp(Reg24Names[z], pAsc))
+    if (!as_strcasecmp(Reg24Names[z], pAsc))
       return (z & 3);
 
   return -1;
@@ -400,7 +400,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, tAdrModeMask AdrModeMask, tEncode
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "SP"))
+  if (!as_strcasecmp(pArg->Str, "SP"))
   {
     if (!SetOpSize(2))
       return False;
@@ -408,7 +408,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, tAdrModeMask AdrModeMask, tEncode
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "STBC"))
+  if (!as_strcasecmp(pArg->Str, "STBC"))
   {
     if (!SetOpSize(0))
       return False;
@@ -416,7 +416,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, tAdrModeMask AdrModeMask, tEncode
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "WDM"))
+  if (!as_strcasecmp(pArg->Str, "WDM"))
   {
     if (!SetOpSize(0))
       return False;
@@ -491,7 +491,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, tAdrModeMask AdrModeMask, tEncode
       /* simple expression without displacement? */
 
       for (z = 0; z < sizeof(Modes) / sizeof(*Modes); z++)
-        if (!strcasecmp(Arg.Str, Modes[z]))
+        if (!as_strcasecmp(Arg.Str, Modes[z]))
         {
           pAddress->AdrMode = ModMem;
           pAddress->AdrVal = 0x16;
@@ -510,7 +510,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, tAdrModeMask AdrModeMask, tEncode
       /* decode base register.  SP is not otherwise handled. */
 
       Save = StrCompSplitRef(&Base, &Remainder, &Arg, pSep);
-      if (!strcasecmp(Base.Str, "SP"))
+      if (!as_strcasecmp(Base.Str, "SP"))
         pAddress->AdrVals[0] = 1;
       else
       {
@@ -885,7 +885,7 @@ static LongWord GetAbsVal(const tEncodedAddress *pAddress)
     case ModAbs24:
     case ModAbs20:
       Result |= (((LongWord)pAddress->AdrVals[2]) << 16);
-      /* no break */
+      /* fall-through */
     case ModAbs16:
       Result |= (((LongWord)pAddress->AdrVals[1]) <<  8);
       Result |= (((LongWord)pAddress->AdrVals[0]) <<  0);
@@ -1058,7 +1058,7 @@ static void DecodeBitOpCore2(LongWord BitAddr, Word Code)
       break;
     case eBitTypeSAddr1:
       BAsmCode[CodeLen++] = 0x3c;
-      /* no break */
+      /* fall-through */
     case eBitTypeSAddr2_SFR:
       BAsmCode[CodeLen++] = 0x08;
       BAsmCode[CodeLen++] = Code | ((BitAddr >> 24) & 15);
@@ -1097,9 +1097,9 @@ static void DecodeMOV1(Word Code)
 
   if (!ChkArgCnt(2, 2))
     return;
-  if (!strcasecmp(ArgStr[1].Str, "CY"))
+  if (!as_strcasecmp(ArgStr[1].Str, "CY"))
     DecodeBitOpCore(&ArgStr[2], 0x00);
-  else if (!strcasecmp(ArgStr[2].Str, "CY"))
+  else if (!as_strcasecmp(ArgStr[2].Str, "CY"))
     DecodeBitOpCore(&ArgStr[1], 0x10);
   else
   {
@@ -1112,7 +1112,7 @@ static void DecodeAND1_OR1(Word Code)
 {
   if (!ChkArgCnt(2, 2))
     return;
-  if (strcasecmp(ArgStr[1].Str, "CY"))
+  if (as_strcasecmp(ArgStr[1].Str, "CY"))
   {
     WrError(ErrNum_InvAddrMode);
     return;
@@ -1132,7 +1132,7 @@ static void DecodeXOR1(Word Code)
 {
   if (!ChkArgCnt(2, 2))
     return;
-  if (strcasecmp(ArgStr[1].Str, "CY"))
+  if (as_strcasecmp(ArgStr[1].Str, "CY"))
   {
     WrError(ErrNum_InvAddrMode);
     return;
@@ -1144,7 +1144,7 @@ static void DecodeNOT1(Word Code)
 {
   if (!ChkArgCnt(1, 1))
     return;
-  if (!strcasecmp(ArgStr[1].Str, "CY"))
+  if (!as_strcasecmp(ArgStr[1].Str, "CY"))
     BAsmCode[CodeLen++] = 0x42;
   else
     DecodeBitOpCore(&ArgStr[1], Code);
@@ -1154,7 +1154,7 @@ static void DecodeSET1_CLR1(Word Code)
 {
   if (!ChkArgCnt(1, 1))
     return;
-  if (!strcasecmp(ArgStr[1].Str, "CY"))
+  if (!as_strcasecmp(ArgStr[1].Str, "CY"))
     BAsmCode[CodeLen++] = 0x41 - ((Code >> 4) & 1);
   else
   {
@@ -1166,7 +1166,7 @@ static void DecodeSET1_CLR1(Word Code)
     {
       case eBitTypeSAddr1:
         BAsmCode[CodeLen++] = 0x3c;
-        /* no break */
+        /* fall-through */
       case eBitTypeSAddr2_SFR:
         if (!(BitAddr & Bit27))
         {
@@ -1174,7 +1174,7 @@ static void DecodeSET1_CLR1(Word Code)
           BAsmCode[CodeLen++] = Lo(BitAddr);
           break;
         }
-        /* conditional break, SFR is regularly coded for SET1/CLR1 */
+        /* else fall-through */ /* SFR is regularly coded for SET1/CLR1 */
       default:
         DecodeBitOpCore2(BitAddr, Code);
     }
@@ -1192,12 +1192,12 @@ static void DecodeMOV(Word ForceOpSize)
   if (!ChkArgCnt(2, 2))
     return;
 
-  if (!strcasecmp(ArgStr[1].Str, "CY"))
+  if (!as_strcasecmp(ArgStr[1].Str, "CY"))
   {
     DecodeBitOpCore(&ArgStr[2], 0x00);
     return;
   }
-  else if (!strcasecmp(ArgStr[2].Str, "CY"))
+  else if (!as_strcasecmp(ArgStr[2].Str, "CY"))
   {
     DecodeBitOpCore(&ArgStr[1], 0x10);
     return;
@@ -1380,7 +1380,7 @@ static void DecodeMOV(Word ForceOpSize)
           break;
         case ModShortIndir1_16:
           BAsmCode[CodeLen++] = 0x3c;
-          /* no break! */
+          /* fall-through */
         case ModShortIndir2_16:
           BAsmCode[CodeLen++] = 0x07;
           BAsmCode[CodeLen++] = 0x21;
@@ -1388,7 +1388,7 @@ static void DecodeMOV(Word ForceOpSize)
           break;
         case ModShortIndir1_24:
           BAsmCode[CodeLen++] = 0x3c;
-          /* no break! */
+          /* fall-through */
         case ModShortIndir2_24:
           BAsmCode[CodeLen++] = 0x07;
           BAsmCode[CodeLen++] = 0x31;
@@ -1435,7 +1435,7 @@ static void DecodeMOV(Word ForceOpSize)
           break;
         case ModShortIndir1_24:
           BAsmCode[CodeLen++] = 0x3c;
-          /* no break */
+          /* fall-through */
         case ModShortIndir2_24:
           BAsmCode[CodeLen++] = 0x07;
           BAsmCode[CodeLen++] = 0x32;
@@ -1861,7 +1861,7 @@ static void DecodeXCH(Word ForceOpSize)
             BAsmCode[CodeLen++] = Src.AdrVals[0];
             break;
           }
-          /* conditional break */
+          /* fall-through */
         case ModShort1:
         case ModSFR:
           BAsmCode[CodeLen++] = 0x39;
@@ -1918,7 +1918,7 @@ static void DecodeXCH(Word ForceOpSize)
             BAsmCode[CodeLen++] = Src.AdrVals[0];
             break;
           }
-          /* conditional break */
+          /* fall-through */
         case ModShort1:
         case ModSFR:
           BAsmCode[CodeLen++] = 0x39;
@@ -2178,7 +2178,7 @@ static void DecodeALU(Word Code)
   if (!ChkArgCnt(2, 2))
     return;
 
-  if ((OpSize == -1) && (!strcasecmp(ArgStr[1].Str, "CY")))
+  if ((OpSize == -1) && (!as_strcasecmp(ArgStr[1].Str, "CY")))
   {
     switch (Code)
     {
@@ -2236,7 +2236,7 @@ static void DecodeALU(Word Code)
             BAsmCode[CodeLen++] = Src.AdrVals[0];
             break;
           }
-          /* no/conditional break */
+          /* else fall-through */
         case ModShort1:
         case ModSFR:
           BAsmCode[CodeLen++] = 0x78 | Code;
@@ -2296,7 +2296,7 @@ static void DecodeALU(Word Code)
             BAsmCode[CodeLen++] = Src.AdrVals[0];
             break;
           }
-          /* conditional break */
+          /* else fall-through */
         case ModShort1:
         case ModSFR:
           BAsmCode[CodeLen++] = 0x78 | Code16;
@@ -2713,7 +2713,7 @@ static void DecodeINCDEC(Word Code)
       break;
     case ModShort1:
       BAsmCode[CodeLen++] = 0x3c;
-      /* no break */
+      /* fall-through */
     case ModShort2:
       ExecAssumeByte();
       if (OpSize)
@@ -2819,7 +2819,7 @@ static void DecodePUSH_POP(Word Code)
   for (z = 1; z <= ArgCnt; z++)
   {
     ClearEncodedAddress(&Address);
-    if (!strcasecmp(ArgStr[z].Str, "PSW"))
+    if (!as_strcasecmp(ArgStr[z].Str, "PSW"))
     {
       /* PSW replaces UP in bitmask for PUSHU/POPU */
       if (IsU)
@@ -3141,7 +3141,7 @@ static void DecodeDBNZ(Word Code)
   {
     case ModShort1:
       BAsmCode[CodeLen++] = 0x3c;
-      /* no break */
+      /* fall-through */
     case ModShort2:
       BAsmCode[CodeLen++] = 0x3b;
       BAsmCode[CodeLen++] = Addr.AdrVals[0];
@@ -3208,7 +3208,7 @@ static void DecodeSEL(Word Code)
 
   UNUSED(Code);
 
-  if ((ArgCnt == 2) && (strcasecmp(ArgStr[2].Str, "ALT")))
+  if ((ArgCnt == 2) && (as_strcasecmp(ArgStr[2].Str, "ALT")))
   {
     WrError(ErrNum_InvAddrMode);
     return;
@@ -3470,13 +3470,13 @@ static Boolean IsDef_78K4(void)
 
 static void InternSymbol_78K4(char *pAsc, TempResult *pErg)
 {
-  if ((!strcasecmp(pAsc, "PSWL"))
-   || (!strcasecmp(pAsc, "PSW")))
+  if ((!as_strcasecmp(pAsc, "PSWL"))
+   || (!as_strcasecmp(pAsc, "PSW")))
   {
     pErg->Typ = TempInt;
     pErg->Contents.Int = PSWLAddr;
   }
-  else if (!strcasecmp(pAsc, "PSWH"))
+  else if (!as_strcasecmp(pAsc, "PSWH"))
   {
     pErg->Typ = TempInt;
     pErg->Contents.Int = PSWHAddr;

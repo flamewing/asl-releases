@@ -57,7 +57,7 @@ enum
   ModImm = 4,
   ModImmExt = 5,
   ModDisp20 = ModDisp16,
-  ModAbs20 = ModAbs,
+  ModAbs20 = ModAbs
 };
 
 #define MModDisp8 (1 << ModDisp8)
@@ -196,17 +196,17 @@ static void DecodeAdr(int Start, int Stop, Boolean LongAdr, Byte Mask)
   if (Stop == 2)
   {
     AdrPart = 0xff;
-    if (!strcasecmp(ArgStr[Start + 1].Str, "X"))
+    if (!as_strcasecmp(ArgStr[Start + 1].Str, "X"))
       AdrPart = 0x00;
-    else if (!strcasecmp(ArgStr[Start + 1].Str, "Y"))
+    else if (!as_strcasecmp(ArgStr[Start + 1].Str, "Y"))
       AdrPart = 0x10;
-    else if (!strcasecmp(ArgStr[Start + 1].Str, "Z"))
+    else if (!as_strcasecmp(ArgStr[Start + 1].Str, "Z"))
       AdrPart = 0x20;
     else
       WrStrErrorPos(ErrNum_InvReg, &ArgStr[Start + 1]);
     if (AdrPart != 0xff)
     {
-      if (!strcasecmp(ArgStr[Start].Str, "E"))
+      if (!as_strcasecmp(ArgStr[Start].Str, "E"))
         AdrMode = ModDispE;
       else
       {
@@ -555,7 +555,7 @@ static void DecodeMov(Word Index)
     }
   }
   else if (!ChkArgCnt(3, 3));
-  else if (!strcasecmp(ArgStr[2].Str, "X"))
+  else if (!as_strcasecmp(ArgStr[2].Str, "X"))
   {
     BAsmCode[1] = EvalStrIntExpression(&ArgStr[1], SInt8, &OK);
     if (OK)
@@ -569,7 +569,7 @@ static void DecodeMov(Word Index)
       }
     }
   }
-  else if (!strcasecmp(ArgStr[3].Str, "X"))
+  else if (!as_strcasecmp(ArgStr[3].Str, "X"))
   {
     BAsmCode[3] = EvalStrIntExpression(&ArgStr[2], SInt8, &OK);
     if (OK)

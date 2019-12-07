@@ -145,7 +145,7 @@ static Boolean IsRReg(const char *Asc, Byte *Erg)
    if (FindRegDef(Asc, &pAlias))
      Asc = pAlias;
 
-   if ((strlen(Asc) < 3) || (strncasecmp(Asc, "RR", 2) != 0)) return False;
+   if ((strlen(Asc) < 3) || (as_strncasecmp(Asc, "RR", 2) != 0)) return False;
    else
    {
      *Erg = ConstLongInt(Asc + 2, &Err, 10);
@@ -271,7 +271,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask, Boolean Is16)
      tStrComp Comp;
 
      StrCompRefRight(&Comp, pArg, 1);
-     if ((strlen(Comp.Str) >= 6) && (!strncasecmp(Comp.Str, ".RR", 3)) && (IsIndirect(Comp.Str + 3)))
+     if ((strlen(Comp.Str) >= 6) && (!as_strncasecmp(Comp.Str, ".RR", 3)) && (IsIndirect(Comp.Str + 3)))
      {
        AdrVal = EvalStrIntExpressionOffs(&Comp, 3, Int8, &OK);
        if (OK)

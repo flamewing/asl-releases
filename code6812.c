@@ -73,7 +73,7 @@ enum
   ModIdx2 = 5,
   ModDIdx = 6,
   ModIIdx2 = 7,
-  ModExtPg = 8,
+  ModExtPg = 8
 };
 
 #define MModImm (1 << ModImm)
@@ -412,7 +412,7 @@ static void DecodeAdr(int Start, int Stop, Word Mask)
       if (!p) WrError(ErrNum_InvAddrMode);
       else if (!DecodeBaseReg(p + 1, AdrVals))
         WrXError(ErrNum_InvReg, p + 1);
-      else if (!strcasecmp(ArgStr[Start].Str, "D"))
+      else if (!as_strcasecmp(ArgStr[Start].Str, "D"))
       {
         AdrVals[0] = (AdrVals[0] << 3) | 0xe7;
         AdrCnt = 1;

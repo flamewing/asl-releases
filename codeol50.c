@@ -32,7 +32,7 @@ typedef enum
   ModAP = 1,
   ModAX = 2,
   ModImm = 3,
-  ModNone = 0x7f,
+  ModNone = 0x7f
 } tAdrMode;
 
 typedef struct
@@ -135,7 +135,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, Word Mask)
 
   AdrMode = ModNone;
 
-  if (!strcasecmp(pArg->Str, "ACC"))
+  if (!as_strcasecmp(pArg->Str, "ACC"))
   {
     AdrMode = ModACC;
     goto AdrFound;
@@ -348,9 +348,11 @@ static void DecodeAPAX(Word Index)
       case ModAP:
         WAsmCode[0] = pOrder->APCode | AdrVal;
         CodeLen = 1;
+        break;
       case ModAX:
         WAsmCode[0] = pOrder->AXCode | AdrVal;
         CodeLen = 1;
+        break;
       default:
         break;
     }
@@ -531,12 +533,12 @@ static void DecodeONOFF(Word Index)
 
   if (!ChkArgCnt(1, 1));
   else if (ChkExactCPUMask(pOrder->CPUMask, CPU5054) < 0);
-  else if (!strcasecmp(ArgStr[1].Str, "OFF"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "OFF"))
   {
     WAsmCode[0] = pOrder->Code | (2 << pOrder->Shift);
     CodeLen = 1;
   }
-  else if (!strcasecmp(ArgStr[1].Str, "ON"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "ON"))
   {
     WAsmCode[0] = pOrder->Code | (3 << pOrder->Shift);
     CodeLen = 1;
@@ -679,11 +681,11 @@ static void DecodeMem(Word Index)
       }
       else
       {
-        if (!strcasecmp(ArgStr[2].Str, "Z"))
+        if (!as_strcasecmp(ArgStr[2].Str, "Z"))
           WAsmCode[0] |= 0x0040;
-        else if (!strcasecmp(ArgStr[2].Str, "N"))
+        else if (!as_strcasecmp(ArgStr[2].Str, "N"))
           WAsmCode[0] |= 0x0080;
-        else if (!strcasecmp(ArgStr[2].Str, "L"))
+        else if (!as_strcasecmp(ArgStr[2].Str, "L"))
           WAsmCode[0] |= 0x0200;
         else
         {
@@ -692,7 +694,7 @@ static void DecodeMem(Word Index)
         }
         if (ArgCnt < 3)
           CodeLen = 1;
-        else if (strcasecmp(ArgStr[3].Str, "L"))
+        else if (as_strcasecmp(ArgStr[3].Str, "L"))
         {
           WrError(ErrNum_InvAddrMode);
           return;

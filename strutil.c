@@ -38,17 +38,18 @@ const char *Blanks(int cnt)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     SysString(char *pDest, int DestSize, LargeWord i, int System, int Stellen, char StartCharacter)
+ * \fn     SysString(char *pDest, int DestSize, LargeWord i, int System, int Stellen, Boolean ForceLeadZero, char StartCharacter)
  * \brief  convert number to string in given number system, leading zeros
  * \param  pDest where to write
  * \param  DestSize size of dest buffer
  * \param  i number to convert
  * \param  Stellen minimum length of output
+ * \param  ForceLeadZero prepend zero if first character is no number
  * \param  System number system
  * \param  StartCharacter 'a' or 'A' for hex digits
  * ------------------------------------------------------------------------ */
 
-int SysString(char *pDest, int DestSize, LargeWord i, int System, int Stellen, char StartCharacter)
+int SysString(char *pDest, int DestSize, LargeWord i, int System, int Stellen, Boolean ForceLeadZero, char StartCharacter)
 {
   int Len = 0, Cnt;
   LargeWord digit;
@@ -79,6 +80,12 @@ int SysString(char *pDest, int DestSize, LargeWord i, int System, int Stellen, c
   }
   while ((Cnt > 0) || (i != 0));
 
+  if (ForceLeadZero && !isdigit(*ptr) && (ptr > pDest))
+  {
+    *(--ptr) = '0';
+    Len++;
+  }
+
   if (ptr != pDest)
     strmov(pDest, ptr);
   return Len;
@@ -107,7 +114,7 @@ char *as_strdup(const char *s)
 typedef struct
 {
   enum { eNotSet, eSet, eFinished } ArgState[3];
-  Boolean InFormat, LeadZero, Signed, LeftAlign, AddPlus;
+  Boolean InFormat, LeadZero, Signed, LeftAlign, AddPlus, ForceLeadZero;
   int Arg[3], CurrArg, IntSize;
 } tFormatContext;
 
@@ -123,7 +130,8 @@ static void ResetFormatContext(tFormatContext *pContext)
   pContext->CurrArg = 0;
   pContext->IntSize = 0;
   pContext->InFormat =
-  pContext->LeadZero = 
+  pContext->LeadZero =
+  pContext->ForceLeadZero =
   pContext->Signed =
   pContext->LeftAlign =
   pContext->AddPlus = False;
@@ -258,8 +266,11 @@ int as_vsnprcatf(char *pDest, int DestSize, const char *pFormat, va_list ap)
             FormatContext.LeftAlign = True;
           break;
         case '+':
-           FormatContext.AddPlus = True;
-           break;
+          FormatContext.AddPlus = True;
+          break;
+        case '~':
+          FormatContext.ForceLeadZero = True;
+          break;
         case '*':
           FormatContext.Arg[FormatContext.CurrArg] = va_arg(ap, int);
           FormatContext.ArgState[FormatContext.CurrArg] = eFinished;
@@ -359,7 +370,7 @@ int as_vsnprcatf(char *pDest, int DestSize, const char *pFormat, va_list ap)
           Cnt = (pStr - Str)
               + SysString(pStr, sizeof(Str) - (pStr - Str), IntArg,
                           FormatContext.Arg[1] ? FormatContext.Arg[1] : 10,
-                          NumPadZeros, HexStartCharacter);
+                          NumPadZeros, FormatContext.ForceLeadZero, HexStartCharacter);
           if (Cnt > (int)sizeof(Str))
             Cnt = sizeof(Str);
           Result += Append(&pDest, &DestSize, Str, Cnt, &FormatContext);
@@ -429,30 +440,29 @@ int as_snprcatf(char *pDest, int DestSize, const char *pFormat, ...)
   return Result;
 }
 
-#ifdef NEEDS_CASECMP
-int strcasecmp(const char *src1, const char *src2)
+int as_strcasecmp(const char *src1, const char *src2)
 {
   if (!src1)
     src1 = "";
   if (!src2)
     src2 = "";
-  while (toupper(*src1) == toupper(*src2))
+  while (tolower(*src1) == tolower(*src2))
   {
     if ((!*src1) && (!*src2))
       return 0;
     src1++;
     src2++;
   }
-  return ((int) toupper(*src1)) - ((int) toupper(*src2));
+  return ((int) tolower(*src1)) - ((int) tolower(*src2));
 }	
 
-int strncasecmp(const char *src1, const char *src2, size_t len)
+int as_strncasecmp(const char *src1, const char *src2, size_t len)
 {
   if (!src1)
     src1 = "";
   if (!src2)
     src2 = "";
-  while (toupper(*src1) == toupper(*src2))
+  while (tolower(*src1) == tolower(*src2))
   {
     if (--len == 0)
       return 0;
@@ -461,9 +471,8 @@ int strncasecmp(const char *src1, const char *src2, size_t len)
     src1++;
     src2++;
   }
-  return ((int) toupper(*src1)) - ((int) toupper(*src2));
+  return ((int) tolower(*src1)) - ((int) tolower(*src2));
 }	
-#endif
 
 #ifdef NEEDS_STRSTR
 char *strstr(const char *haystack, const char *needle)
@@ -1065,6 +1074,18 @@ char *ParenthPos(char *pHaystack, char Needle)
     }
   }
   return NULL;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     TabCompressed(char in)
+ * \brief  replace TABs with spaces for error display
+ * \param  in character to compress
+ * \return compressed result
+ * ------------------------------------------------------------------------ */
+
+char TabCompressed(char in)
+{
+  return (in == '\t') ? ' ' : (myisprint(in) ? in : '*');
 }
 
 /*--------------------------------------------------------------------------*/

@@ -105,6 +105,7 @@ static TFamilyDescr Descrs[] =
   { "SYM53C8xx"    , 0x0025, eHexFormatIntel   },
   { "F2MC8"        , 0x0015, eHexFormatIntel   },
   { "F2MC16"       , 0x0016, eHexFormatIntel   },
+  { "MN161x"       , 0x0036, eHexFormatIntel   },
   { "OLMS-40"      , 0x004e, eHexFormatIntel   },
   { "OLMS-50"      , 0x004d, eHexFormatIntel   },
   { "1802"         , 0x0038, eHexFormatIntel   },

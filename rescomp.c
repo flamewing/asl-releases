@@ -160,7 +160,7 @@ static void GetLine(char *Dest)
   PIncList OneFile;
 
   ReadLn(SrcFile, Dest);
-  if (!strncasecmp(Dest, "INCLUDE", 7))
+  if (!as_strncasecmp(Dest, "INCLUDE", 7))
   {
     OneFile = (PIncList) malloc(sizeof(TIncList));
     OneFile->Next = IncList; OneFile->Contents = SrcFile;
@@ -256,7 +256,7 @@ static void Process_DEFAULT(char *Line)
   if (!CatCount) SynError("DEFAULT before LANGS");
   KillPrefBlanks(Line); KillPostBlanks(Line);
   for (z = MsgCats; z < MsgCats + CatCount; z++)
-    if (!strcasecmp(z->CtryName,Line))
+    if (!as_strcasecmp(z->CtryName,Line))
       break;
   if (z >= MsgCats + CatCount)
     SynError("unknown country name in DEFAULT");
@@ -373,9 +373,9 @@ int main(int argc, char **argv)
     {
       for (p = Line; ((!isspace((unsigned int) *p)) && (*p)); p++);
       Save = *p; *p = '\0'; strmaxcpy(Cmd, Line, 1024); *p = Save; strmov(Line, p);
-      if (!strcasecmp(Cmd, "LANGS")) Process_LANGS(Line);
-      else if (!strcasecmp(Cmd, "DEFAULT")) Process_DEFAULT(Line);
-      else if (!strcasecmp(Cmd, "MESSAGE")) Process_MESSAGE(Line);
+      if (!as_strcasecmp(Cmd, "LANGS")) Process_LANGS(Line);
+      else if (!as_strcasecmp(Cmd, "DEFAULT")) Process_DEFAULT(Line);
+      else if (!as_strcasecmp(Cmd, "MESSAGE")) Process_MESSAGE(Line);
     }
   }
 

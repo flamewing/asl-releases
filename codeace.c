@@ -100,10 +100,10 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
 
   /* Register ? */
 
-  if (!strcasecmp(pArg->Str, "A"))
+  if (!as_strcasecmp(pArg->Str, "A"))
    AdrMode = ModAcc;
 
-  else if (!strcasecmp(pArg->Str, "X"))
+  else if (!as_strcasecmp(pArg->Str, "X"))
    AdrMode = ModX;
 
   /* immediate ? */
@@ -137,7 +137,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
           StrCompSplitRef(&Arg, &Remainder, &Arg, p);
         KillPrefBlanksStrComp(&Arg);
         KillPostBlanksStrComp(&Arg);
-        if (!strcasecmp(Arg.Str, "X"))
+        if (!as_strcasecmp(Arg.Str, "X"))
           if (XOcc)
           {
             WrError(ErrNum_InvAddrMode); break;

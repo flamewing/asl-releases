@@ -52,7 +52,7 @@ enum
   ModDir16 = 10,
   ModAcc = 11,
   ModBit51 = 12,
-  ModBit251 = 13,
+  ModBit251 = 13
 };
 
 #define MModReg (1 << ModReg)
@@ -127,14 +127,14 @@ static Boolean DecodeReg(const char *pAsc, Byte *Erg, Byte *Size)
     pAsc = pRepl;
   alen = strlen(pAsc);
 
-  if (!strcasecmp(pAsc, "DPX"))
+  if (!as_strcasecmp(pAsc, "DPX"))
   {
     *Erg = 14;
     *Size = 2;
     return True;
   }
 
-  if (!strcasecmp(pAsc, "SPX"))
+  if (!as_strcasecmp(pAsc, "SPX"))
   {
     *Erg = 15;
     *Size = 2;
@@ -226,7 +226,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
   if (!*pArg->Str)
      return;
 
-  if (!strcasecmp(pArg->Str, "A"))
+  if (!as_strcasecmp(pArg->Str, "A"))
   {
     if (!(Mask & MModAcc))
     {
@@ -407,7 +407,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
     }
     else
     {
-      if (!strcasecmp(SegComp.Str, "S"))
+      if (!as_strcasecmp(SegComp.Str, "S"))
         SegType = -2;
       else
       {
@@ -495,7 +495,7 @@ chk:
 
 static void DissectBit_251(char *pDest, int DestSize, LargeWord Inp)
 {
-  as_snprintf(pDest, DestSize, "=%02.*u%s.%u",
+  as_snprintf(pDest, DestSize, "=%~02.*u%s.%u",
               ListRadixBase, (unsigned)(Inp & 0xff), GetIntelSuffix(ListRadixBase),
               (unsigned)(Inp >> 24));
 }
@@ -630,7 +630,7 @@ static void PutCode(Word Opcode)
 
 static Boolean IsCarry(const char *pArg)
 {
-  return (!strcasecmp(pArg, "C")) || (!strcasecmp(pArg, "CY"));
+  return (!as_strcasecmp(pArg, "C")) || (!as_strcasecmp(pArg, "CY"));
 }
 
 /*-------------------------------------------------------------------------*/
@@ -661,7 +661,7 @@ static void DecodeMOV(Word Index)
         break;
     }
   }
-  else if ((!strcasecmp(ArgStr[2].Str, "C")) || (!strcasecmp(ArgStr[2].Str, "CY")))
+  else if ((!as_strcasecmp(ArgStr[2].Str, "C")) || (!as_strcasecmp(ArgStr[2].Str, "CY")))
   {
     switch (DecodeBitAdr(&ArgStr[1], &AdrLong, True))
     {
@@ -678,7 +678,7 @@ static void DecodeMOV(Word Index)
         break;
     }
   }
-  else if (!strcasecmp(ArgStr[1].Str, "DPTR"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "DPTR"))
   {
     SetOpSize((MomCPU == CPU80C390) ? 3 : 1);
     DecodeAdr(&ArgStr[2], MModImm);
@@ -1175,9 +1175,9 @@ static void DecodeMOVC(Word Index)
     switch (AdrMode)
     {
       case ModAcc:
-        if (!strcasecmp(ArgStr[2].Str, "@A+DPTR"))
+        if (!as_strcasecmp(ArgStr[2].Str, "@A+DPTR"))
           PutCode(0x93);
-        else if (!strcasecmp(ArgStr[2].Str, "@A+PC"))
+        else if (!as_strcasecmp(ArgStr[2].Str, "@A+PC"))
           PutCode(0x83);
         else
           WrError(ErrNum_InvAddrMode);
@@ -1261,14 +1261,14 @@ static void DecodeMOVX(Word Index)
   if (ChkArgCnt(2, 2))
   {
     z = 0;
-    if ((!strcasecmp(ArgStr[2].Str, "A")) || ((MomCPU >= CPU80251) && (!strcasecmp(ArgStr[2].Str, "R11"))))
+    if ((!as_strcasecmp(ArgStr[2].Str, "A")) || ((MomCPU >= CPU80251) && (!as_strcasecmp(ArgStr[2].Str, "R11"))))
     {
       z = 0x10;
       strcpy(ArgStr[2].Str, ArgStr[1].Str);
       strmaxcpy(ArgStr[1].Str, "A", STRINGSIZE);
     }
-    if ((strcasecmp(ArgStr[1].Str, "A")) && ((MomCPU < CPU80251) || (!strcasecmp(ArgStr[2].Str, "R11")))) WrError(ErrNum_InvAddrMode);
-    else if (!strcasecmp(ArgStr[2].Str, "@DPTR"))
+    if ((as_strcasecmp(ArgStr[1].Str, "A")) && ((MomCPU < CPU80251) || (!as_strcasecmp(ArgStr[2].Str, "R11")))) WrError(ErrNum_InvAddrMode);
+    else if (!as_strcasecmp(ArgStr[2].Str, "@DPTR"))
       PutCode(0xe0 + z);
     else
     {
@@ -1566,7 +1566,7 @@ static void DecodeJMP(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "@A+DPTR"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "@A+DPTR"))
     PutCode(0x73);
   else if (*ArgStr[1].Str == '@')
   {
@@ -2058,7 +2058,7 @@ static void DecodeINCDEC(Word Index)
       else
         OK = False;
       if (!OK) WrError(ErrNum_OverRange);
-      else if (!strcasecmp(ArgStr[1].Str, "DPTR"))
+      else if (!as_strcasecmp(ArgStr[1].Str, "DPTR"))
       {
         if (Index == 1) WrError(ErrNum_InvAddrMode);
         else if (HReg != 0) WrError(ErrNum_OverRange);
@@ -2124,7 +2124,7 @@ static void DecodeMULDIV(Word Index)
   if (!ChkArgCnt(1, 2));
   else if (ArgCnt == 1)
   {
-    if (strcasecmp(ArgStr[1].Str, "AB")) WrError(ErrNum_InvAddrMode);
+    if (as_strcasecmp(ArgStr[1].Str, "AB")) WrError(ErrNum_InvAddrMode);
     else
       PutCode(0x84 + z);
   }
@@ -2162,7 +2162,7 @@ static void DecodeBits(Word Index)
 
   z = Index << 4;
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "A"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "A"))
   {
     if (Memo("SETB")) WrError(ErrNum_InvAddrMode);
     else
@@ -2343,12 +2343,12 @@ static void DecodeSFR(Word Index)
         }
         if (MakeUseList)
           if (AddChunk(SegChunks + SegBData, BitStart, 8, False)) WrError(ErrNum_Overlap);
-        as_snprintf(ListLine, STRINGSIZE, "=%02.*u%s-%02.*u%s",
+        as_snprintf(ListLine, STRINGSIZE, "=%~02.*u%s-%~02.*u%s",
                     ListRadixBase, (unsigned)BitStart, GetIntelSuffix(ListRadixBase),
                     ListRadixBase, (unsigned)BitStart + 7, GetIntelSuffix(ListRadixBase));
       }
       else
-        as_snprintf(ListLine, STRINGSIZE, "=%02.*u%s",
+        as_snprintf(ListLine, STRINGSIZE, "=%~02.*u%s",
                     ListRadixBase, (unsigned)AdrByte, GetIntelSuffix(ListRadixBase));
       LimitListLine();
       PopLocHandle();
@@ -2380,7 +2380,7 @@ static void DecodeBIT(Word Index)
       PushLocHandle(-1);
       EnterIntSymbol(&LabPart, AdrLong, SegBData, False);
       PopLocHandle();
-      as_snprintf(ListLine, STRINGSIZE, "=%02.*u%s",
+      as_snprintf(ListLine, STRINGSIZE, "=%~02.*u%s",
                   ListRadixBase, (unsigned)AdrLong, GetIntelSuffix(ListRadixBase));
       LimitListLine();
     }

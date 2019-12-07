@@ -109,7 +109,9 @@
 
         jp      .+6
         jp      .-20
-        jp      .+1
+	expect	60
+         jp      .+1
+	endexpect
 
         drsz    r12
         drsz    r8

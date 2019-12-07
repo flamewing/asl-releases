@@ -1,4 +1,5 @@
 	cpu	melps740
+	page	0
 
 	adc	#$12
 	adc	$12
@@ -281,3 +282,21 @@
 
         rmb3    $12
         smb5    $12
+
+	byt	0
+	byt	255
+	byt	-128
+	byt	'a'
+	expect	1320
+	byt	'ab'
+	endexpect
+	byt	"a"
+	byt	"ab"
+
+	adr	0
+	adr	65535
+	adr	-32768
+	adr	'a'
+	adr	'ab'
+	adr	"a"
+	adr	"ab"

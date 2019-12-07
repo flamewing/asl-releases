@@ -129,7 +129,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, int Mask)
 
   /* aux registers */
 
-  if ((strlen(pArg->Str) == 3) && (!strncasecmp(pArg->Str, "AR", 2)) && (pArg->Str[2] >= '0') && (pArg->Str[2] <= '7'))
+  if ((strlen(pArg->Str) == 3) && (!as_strncasecmp(pArg->Str, "AR", 2)) && (pArg->Str[2] >= '0') && (pArg->Str[2] <= '7'))
   {
     AdrMode = ModAReg;
     *AdrVals = pArg->Str[2] - '0';
@@ -314,7 +314,7 @@ static Boolean DecodeCondition(int StartIndex, Word *Result, int *errindex, Bool
   for (z = StartIndex; z <= ArgCnt; z++)
   {
     for (z2 = 0; z2 < ConditionCnt; z2++)
-      if (!strcasecmp(ArgStr[z].Str, Conditions[z2].Name))
+      if (!as_strcasecmp(ArgStr[z].Str, Conditions[z2].Name))
         break;
     if (z2 >= ConditionCnt)
     {
@@ -463,7 +463,7 @@ static void DecodeADDSUB(Word Index)
 
           /* distinguish variants of shift specification: */
 
-          if (!strcasecmp(ArgStr[2].Str, "ASM"))
+          if (!as_strcasecmp(ArgStr[2].Str, "ASM"))
           {
             WAsmCode[0] = 0xf480 | Index | (SrcAcc << 9) | (*AdrVals << 8);
             CodeLen = 1;
@@ -498,7 +498,7 @@ static void DecodeADDSUB(Word Index)
 
         /* special shift value ? */
 
-        else if (!strcasecmp(ArgStr[2].Str, "TS"))
+        else if (!as_strcasecmp(ArgStr[2].Str, "TS"))
           Shift = 255;
 
         /* shift address operand ? */
@@ -1153,7 +1153,7 @@ static void DecodeMac(Word Index)
 
   if (!ChkArgCnt(1, ArgCntMax));
   else if (ThisPar) WrError(ErrNum_ParNotPossible);
-  else if (!strcasecmp(ArgStr[1].Str, "T"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "T"))
   {
     if (!ChkArgCnt(1, 3));
     else if (DecodeAdr(&ArgStr[ArgCnt], MModAcc))
@@ -1171,7 +1171,7 @@ static void DecodeMac(Word Index)
   else if (!ChkArgCnt(1, 2));
   else
   {
-    if ((ArgCnt == 2) && (strcasecmp(ArgStr[2].Str, "B"))) WrError(ErrNum_InvAddrMode);
+    if ((ArgCnt == 2) && (as_strcasecmp(ArgStr[2].Str, "B"))) WrError(ErrNum_InvAddrMode);
     else if (DecodeAdr(&ArgStr[1], MModMem))
     {
       WAsmCode[0] = (POrder->Code & 0xff00) | (*AdrVals);
@@ -1275,7 +1275,7 @@ static void DecodeMASAR(Word Index)
 
   if (!ChkArgCnt(2, 3));
   else if (ThisPar) WrError(ErrNum_ParNotPossible);
-  else if (strcasecmp(ArgStr[1].Str, "T")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "T")) WrError(ErrNum_InvAddrMode);
   else if (DecodeAdr(&ArgStr[ArgCnt], MModAcc))
   {
     WAsmCode[0] = (*AdrVals << 8);
@@ -1454,7 +1454,7 @@ static void DecodeCMPR(Word Index)
   {
     OK = False;
     for (z = 0; z < 4; z++)
-      if (!strcasecmp(ArgStr[1].Str, ShortConds[z]))
+      if (!as_strcasecmp(ArgStr[1].Str, ShortConds[z]))
       {
         OK = True;
         break;
@@ -1728,7 +1728,7 @@ static void DecodeLD(Word Index)
 
   if (!ChkArgCnt(2, 3));
 
-  else if (!strcasecmp(ArgStr[ArgCnt].Str, "T"))
+  else if (!as_strcasecmp(ArgStr[ArgCnt].Str, "T"))
   {
     if (!ChkArgCnt(2, 2));
     else if (DecodeAdr(&ArgStr[1], MModMem))
@@ -1758,7 +1758,7 @@ static void DecodeLD(Word Index)
     }
   }
   
-  else if (!strcasecmp(ArgStr[ArgCnt].Str, "DP"))
+  else if (!as_strcasecmp(ArgStr[ArgCnt].Str, "DP"))
   {
     if (!ChkArgCnt(2, 2));
     else if (ThisPar) WrError(ErrNum_ParNotPossible);
@@ -1782,7 +1782,7 @@ static void DecodeLD(Word Index)
     }
   }
 
-  else if (!strcasecmp(ArgStr[ArgCnt].Str, "ARP"))
+  else if (!as_strcasecmp(ArgStr[ArgCnt].Str, "ARP"))
   {
     if (!ChkArgCnt(2, 2));
     else if (ThisPar) WrError(ErrNum_ParNotPossible);
@@ -1797,7 +1797,7 @@ static void DecodeLD(Word Index)
     }
   }
 
-  else if (!strcasecmp(ArgStr[2].Str, "ASM"))
+  else if (!as_strcasecmp(ArgStr[2].Str, "ASM"))
   {
     if (ThisPar) WrError(ErrNum_ParNotPossible);
     else
@@ -1841,7 +1841,7 @@ static void DecodeLD(Word Index)
     *WAsmCode = *AdrVals << 8;
     if (ArgCnt == 3)
     {
-      if (!strcasecmp(ArgStr[2].Str, "TS"))
+      if (!as_strcasecmp(ArgStr[2].Str, "TS"))
       {
         Shift = 0xff;
         OK = True;
@@ -2081,9 +2081,9 @@ static void DecodeST(Word Index)
       1[WAsmCode] = 1[AdrVals];
     CodeLen = 1 + AdrCnt;
     OpSize = SInt16;
-    if (!strcasecmp(ArgStr[1].Str, "T"))
+    if (!as_strcasecmp(ArgStr[1].Str, "T"))
       *WAsmCode |= 0x8c00;
-    else if (!strcasecmp(ArgStr[1].Str, "TRN"))
+    else if (!as_strcasecmp(ArgStr[1].Str, "TRN"))
       *WAsmCode |= 0x8d00;
     else
     {
@@ -2126,7 +2126,7 @@ static void DecodeSTLH(Word Index)
     OK = True; 
     if (ArgCnt == 2)
       Shift = 0;
-    else if (!strcasecmp(ArgStr[2].Str, "ASM"))
+    else if (!as_strcasecmp(ArgStr[2].Str, "ASM"))
       Shift = 0xff;
     else
       Shift = EvalStrIntExpression(&ArgStr[2], SInt5, &OK);

@@ -64,7 +64,7 @@ static Boolean DecodeRegList(const char *pNames[], const char *pArg, LongWord *p
   }
 
   for (*pResult = 0; pNames[*pResult]; (*pResult)++)
-    if (!strcasecmp(pArg, pNames[*pResult]))
+    if (!as_strcasecmp(pArg, pNames[*pResult]))
       return True;
 
   WrXError(pNames == pFNames ? 1360 : 1445, pArg);

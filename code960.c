@@ -123,7 +123,7 @@ static Boolean DecodeIReg(char *Asc, LongWord *Erg)
   char *end;
 
   for (z = 0; z < SpecRegCnt; z++)
-   if (!strcasecmp(Asc, SpecRegs[z].Name))
+   if (!as_strcasecmp(Asc, SpecRegs[z].Name))
    {
      *Erg = SpecRegs[z].Code;
      return True;
@@ -163,7 +163,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, Byte Mask, OpType Type, LongWord 
       return ChkAdr(ModReg, Mask, Erg, Mode);
   }
 
-  if (!strncasecmp(pArg->Str, "FP", 2))
+  if (!as_strncasecmp(pArg->Str, "FP", 2))
   {
     *Erg = strtol(pArg->Str + 2, &end, 10);
     if ((*end == '\0') && (*Erg <= 3))
@@ -268,7 +268,7 @@ static int DecodeMem(const tStrComp *pArg, LongWord *Erg, LongWord *Ext)
         if (p < Arg.Str) return AddrError(ErrNum_BrackErr);
         StrCompShorten(&Arg, 1);
         StrCompSplitRef(&Arg, &RegArg, &Arg, p);
-        if (!strcasecmp(RegArg.Str, "IP"))
+        if (!as_strcasecmp(RegArg.Str, "IP"))
           Base = IPREG;
         else if (!DecodeIReg(RegArg.Str, &Base)) return AddrPosError(ErrNum_InvReg, &RegArg);
         break;

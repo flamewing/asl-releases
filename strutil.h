@@ -19,9 +19,9 @@ extern char HexStartCharacter;
 
 extern const char *Blanks(int cnt);
 
-#define HexString(pDest, DestSize, i, Stellen) SysString(pDest, DestSize, i, 16, Stellen, HexStartCharacter)
+#define HexString(pDest, DestSize, i, Stellen) SysString(pDest, DestSize, i, 16, Stellen, False, HexStartCharacter)
 
-extern int SysString(char *pDest, int DestSize, LargeWord i, int System, int Stellen, char StartCharacter);
+extern int SysString(char *pDest, int DestSize, LargeWord i, int System, int Stellen, Boolean ForceLeadZero, char StartCharacter);
 
 extern char *as_strdup(const char *s);
 
@@ -30,10 +30,8 @@ extern int as_snprcatf(char *pDest, int DestSize, const char *pFormat, ...);
 extern int as_vsnprintf(char *pDest, int DestSize, const char *pFormat, va_list ap);
 extern int as_snprintf(char *pDest, int DestSize, const char *pFormat, ...);
 
-#ifdef NEEDS_CASECMP
-extern int strcasecmp(const char *src1, const char *src2);
-extern int strncasecmp(const char *src1, const char *src2, size_t maxlen);
-#endif
+extern int as_strcasecmp(const char *src1, const char *src2);
+extern int as_strncasecmp(const char *src1, const char *src2, size_t maxlen);
 
 #ifdef NEEDS_STRSTR
 extern char *strstr(const char *haystack, const char *needle);
@@ -71,6 +69,8 @@ extern int CopyNoBlanks(char *pDest, const char *pSrc, int MaxLen);
 extern int KillPrefBlanks(char *s);
 
 extern int KillPostBlanks(char *s);
+
+extern char TabCompressed(char in);
 
 extern int strqcmp(const char *s1, const char *s2);
   

@@ -46,7 +46,7 @@ static void FuncCHARFROMSTR(TempResult *pResult, const TempResult *pArgs, unsign
   UNUSED(ArgCnt);
 
   pResult->Typ = TempInt;
-  pResult->Contents.Int = ((pArgs[1].Contents.Int >= 0) && (pArgs[1].Contents.Int < pArgs[0].Contents.Ascii.Length)) ? pArgs[0].Contents.Ascii.Contents[pArgs[1].Contents.Int] : -1;
+  pResult->Contents.Int = ((pArgs[1].Contents.Int >= 0) && ((unsigned)pArgs[1].Contents.Int < pArgs[0].Contents.Ascii.Length)) ? pArgs[0].Contents.Ascii.Contents[pArgs[1].Contents.Int] : -1;
 }
 
 static void FuncEXPRTYPE(TempResult *pResult, const TempResult *pArgs, unsigned ArgCnt)

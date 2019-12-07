@@ -69,7 +69,7 @@ typedef enum
   eModY,              /* Y */
   eModYL,             /* YL (STM8 only) */
   eModYH,             /* YH (STM8 only) */
-  eModS,              /* SP */
+  eModS               /* SP */
   /* bit mask is full, 32 modes! */
 } tAdrMode;
 
@@ -109,7 +109,7 @@ typedef enum
 typedef enum
 {
   eCoreST7,
-  eCoreSTM8,
+  eCoreSTM8
 } tCPUCore;
 
 typedef struct
@@ -153,10 +153,13 @@ static void FillAdrVals(tAdrVals *pAdrVals, LongWord Value, tSymbolSize Size)
   {
     case eSymbolSize24Bit:
       pAdrVals->Vals[pAdrVals->Cnt++] = (Value >> 16) & 255;
+      /* fall-through */
     case eSymbolSize16Bit:
       pAdrVals->Vals[pAdrVals->Cnt++] = (Value >> 8) & 255;
+      /* fall-through */
     case eSymbolSize8Bit:
       pAdrVals->Vals[pAdrVals->Cnt++] = Value & 255;
+      /* fall-through */
     default:
       break;
   }
@@ -542,46 +545,46 @@ static Boolean DecodeRegCore(const tStrComp *pArg, tAdrMode *pResult)
 {
   *pResult = eModNone;
 
-  if (!strcasecmp(pArg->Str, "A"))
+  if (!as_strcasecmp(pArg->Str, "A"))
   {
     *pResult = eModA;
     return True;
   }
 
-  if (!strcasecmp(pArg->Str, "X"))
+  if (!as_strcasecmp(pArg->Str, "X"))
   {
     *pResult = eModX;
     return True;
   }
-  if (!strcasecmp(pArg->Str, "XL"))
+  if (!as_strcasecmp(pArg->Str, "XL"))
   {
     *pResult = eModXL;
     return True;
   }
-  if (!strcasecmp(pArg->Str, "XH"))
+  if (!as_strcasecmp(pArg->Str, "XH"))
   {
     *pResult = eModXH;
     return True;
   }
 
-  if (!strcasecmp(pArg->Str, "Y"))
+  if (!as_strcasecmp(pArg->Str, "Y"))
   {
     *pResult = eModY;
     return True;
   }
-  if (!strcasecmp(pArg->Str, "YL"))
+  if (!as_strcasecmp(pArg->Str, "YL"))
   {
     *pResult = eModYL;
     return True;
   }
-  if (!strcasecmp(pArg->Str, "YH"))
+  if (!as_strcasecmp(pArg->Str, "YH"))
   {
     *pResult = eModYH;
     return True;
   }
 
-  if ((!strcasecmp(pArg->Str, "S"))
-   || ((pCurrCPUProps->Core == eCoreSTM8) && !strcasecmp(pArg->Str, "SP")))
+  if ((!as_strcasecmp(pArg->Str, "S"))
+   || ((pCurrCPUProps->Core == eCoreSTM8) && !as_strcasecmp(pArg->Str, "SP")))
   {
     *pResult = eModS;
     return True;
@@ -688,8 +691,8 @@ static Boolean DecodeAdr(const tStrComp *pArg, LongWord Mask, Boolean IsCode, tA
     if (!p)
     {
       pAdrVals->Part = 0xf;
-      if (!strcasecmp(Comp.Str, "X")) pAdrVals->Mode = eModIX;
-      else if (!strcasecmp(Comp.Str, "Y"))
+      if (!as_strcasecmp(Comp.Str, "X")) pAdrVals->Mode = eModIX;
+      else if (!as_strcasecmp(Comp.Str, "Y"))
       {
         pAdrVals->Mode = eModIY;
         AddPrefix(0x90);
@@ -700,22 +703,22 @@ static Boolean DecodeAdr(const tStrComp *pArg, LongWord Mask, Boolean IsCode, tA
 
     StrCompSplitRef(&Left, &Right, &Comp, p);
 
-    if (!strcasecmp(Left.Str, "X"))
+    if (!as_strcasecmp(Left.Str, "X"))
       Left = Right;
-    else if (!strcasecmp(Right.Str, "X"));
-    else if (!strcasecmp(Left.Str, "Y"))
+    else if (!as_strcasecmp(Right.Str, "X"));
+    else if (!as_strcasecmp(Left.Str, "Y"))
     {
       Left = Right;
       YReg = True;
     }
-    else if (!strcasecmp(Right.Str, "Y"))
+    else if (!as_strcasecmp(Right.Str, "Y"))
       YReg = True;
-    else if (!strcasecmp(Left.Str, "SP"))
+    else if (!as_strcasecmp(Left.Str, "SP"))
     {
       Left = Right;
       SPReg = True;
     }
-    else if (!strcasecmp(Right.Str, "SP"))
+    else if (!as_strcasecmp(Right.Str, "SP"))
       SPReg = True;
     else
     {
@@ -1546,7 +1549,7 @@ static void DecodePUSH_POP(Word Code)
       if (Lo(Code))
         Mask |= MModImm;
     }
-    if (!strcasecmp(ArgStr[1].Str, "CC"))
+    if (!as_strcasecmp(ArgStr[1].Str, "CC"))
     {
       BAsmCode[PrefixCnt] = 0x86 + Lo(Code);
       CodeLen = PrefixCnt + 1;

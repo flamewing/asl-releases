@@ -1,4 +1,4 @@
-        cpu     st6225
+        cpu     st6218
 
         nop
         ret
@@ -75,8 +75,45 @@
         dec     (x)
         dec     (y)
 
+vbit	bit	3,v
+membit	bit	5,12h
+
         set     3,v
+	set	vbit
         res     5,12h
+	res	membit
 
         jrs     3,v,pc
+	jrs	vbit,pc
         jrr     5,12h,pc+1
+	jrr	membit,pc+1
+
+	; if we are on page 0, we may jump anywhere in page 0 (dynamic) or 1 (static)
+
+	assume	prpr:0
+	jp	123h
+	call	123h
+	jp	923h
+	call	923h
+	expect	110
+	 jp	1123h
+	endexpect
+	expect	110
+	 call	1123h
+	endexpect
+
+	; similar for page 2.  Note PRPR *MUST* be 2, otherwise we could not
+        ; execute from this address:
+
+	org	1000h
+	assume	prpr:2
+	jp	1123h
+	call	1123h
+	jp	923h
+	call	923h
+	expect	110
+	 jp	123h
+	endexpect
+	expect	110
+	 call	123h
+	endexpect

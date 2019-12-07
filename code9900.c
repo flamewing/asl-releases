@@ -406,10 +406,6 @@ static void DecodeBYTE(Word Code)
           else
             PutByte(t.Contents.Int);
           break;
-        case TempFloat:
-          WrError(ErrNum_InvOpType);
-          OK = False;
-          break;
         case TempString:
           if (SetMaxCodeLen(t.Contents.Ascii.Length + CodeLen))
           {
@@ -424,9 +420,11 @@ static void DecodeBYTE(Word Code)
             for (p = t.Contents.Ascii.Contents; p < pEnd; PutByte(*(p++)));
           }
           break;
+        case TempFloat:
+          WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[z]);
+          /* fall-through */
         default:
           OK = False;
-          break;
       }
       z++;
     }

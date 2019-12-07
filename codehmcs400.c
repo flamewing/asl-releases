@@ -46,7 +46,7 @@ enum
   ModImm = 10,
   ModDir = 11,
   ModMR = 12,
-  ModNone = 0x7f,
+  ModNone = 0x7f
 };
 
 #define MModA (1 << ModA)
@@ -70,62 +70,62 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
   Boolean OK;
   int l;
 
-  if (!strcasecmp(pArg->Str, "A"))
+  if (!as_strcasecmp(pArg->Str, "A"))
   {
     AdrMode = ModA;
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "B"))
+  if (!as_strcasecmp(pArg->Str, "B"))
   {
     AdrMode = ModB;
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "X"))
+  if (!as_strcasecmp(pArg->Str, "X"))
   {
     AdrMode = ModX;
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "Y"))
+  if (!as_strcasecmp(pArg->Str, "Y"))
   {
     AdrMode = ModY;
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "W"))
+  if (!as_strcasecmp(pArg->Str, "W"))
   {
     AdrMode = ModW;
     OpSizeType = UInt2;
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "M"))
+  if (!as_strcasecmp(pArg->Str, "M"))
   {
     AdrMode = ModM;
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "M+"))
+  if (!as_strcasecmp(pArg->Str, "M+"))
   {
     AdrMode = ModMInc;
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "M-"))
+  if (!as_strcasecmp(pArg->Str, "M-"))
   {
     AdrMode = ModMDec;
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "SPX"))
+  if (!as_strcasecmp(pArg->Str, "SPX"))
   {
     AdrMode = ModSPX;
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "SPY"))
+  if (!as_strcasecmp(pArg->Str, "SPY"))
   {
     AdrMode = ModSPY;
     goto AdrFound;
@@ -656,9 +656,9 @@ static void DecodeCP(Word Code)
   if (!ChkArgCnt(3, 3))
     return;
 
-  if (!strcasecmp(ArgStr[1].Str, "NE"))
+  if (!as_strcasecmp(ArgStr[1].Str, "NE"))
     IsLE = False;
-  else if (!strcasecmp(ArgStr[1].Str, "LE"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "LE"))
     IsLE = True;
   else
   {
@@ -756,7 +756,7 @@ static void DecodeBit(Word Code)
 {
   if (ArgCnt == 1)
   {
-    if (!strcasecmp(ArgStr[1].Str, "CA"))
+    if (!as_strcasecmp(ArgStr[1].Str, "CA"))
       WAsmCode[CodeLen++] = Hi(Code);
     else
       WrError(ErrNum_InvAddrMode);

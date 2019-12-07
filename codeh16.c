@@ -50,7 +50,7 @@ typedef enum
   eAdrModeIdxScale = 7,
   eAdrModePCIdxScale = 8,
   eAdrModePCRel = 9,
-  eAdrModeDoubleIndir = 10,
+  eAdrModeDoubleIndir = 10
 } tAdrMode;
 
 #define MModeReg (1 << eAdrModeReg)
@@ -73,7 +73,7 @@ typedef enum
   eFormatQ,
   eFormatR,
   eFormatRQ,
-  eFormatF, /* no source-side format; used for MOV->MOVF conversion */
+  eFormatF  /* no source-side format; used for MOV->MOVF conversion */
 } tFormat;
 
 typedef struct
@@ -160,7 +160,7 @@ static tFormat DecodeFormat(unsigned FormatMask)
 
   FormatMask >>= 1;
   for (Result = 0; pFormats[Result]; Result++, FormatMask >>= 1)
-    if ((FormatMask & 1) && !strcasecmp(FormatPart.Str, pFormats[Result]))
+    if ((FormatMask & 1) && !as_strcasecmp(FormatPart.Str, pFormats[Result]))
       return Result + 1;
   return eFormatNone;
 }
@@ -306,7 +306,7 @@ static Boolean SplitOpSize(tStrComp *pArg, tSymbolSize *pSize)
   for (z = 0; z < sizeof(Suffixes) / sizeof(*Suffixes); z++)
   {
     l2 = strlen(Suffixes[z]);
-    if ((l > l2) && !strcasecmp(pArg->Str + l - l2, Suffixes[z]))
+    if ((l > l2) && !as_strcasecmp(pArg->Str + l - l2, Suffixes[z]))
     {
       StrCompShorten(pArg, l2);
       *pSize = z / 2;
@@ -333,7 +333,7 @@ static char SplitScale(tStrComp *pArg, Byte *pScale)
 
   if (l >= 2)
     for (z = 0; z < sizeof(ScaleSuffixes) / sizeof(*ScaleSuffixes); z++)
-      if (!strcasecmp(pArg->Str + l - 2, ScaleSuffixes[z]))
+      if (!as_strcasecmp(pArg->Str + l - 2, ScaleSuffixes[z]))
       {
         StrCompShorten(pArg, 2);
         *pScale = z;
@@ -368,7 +368,7 @@ static Boolean DecodeReg(const char *pArg, Byte *pResult, Byte *pPrefix)
 {
   Boolean OK;
 
-  if (!strcasecmp(pArg, "SP"))
+  if (!as_strcasecmp(pArg, "SP"))
   {
     *pResult = 15;
     *pPrefix = 0x00;
@@ -529,7 +529,7 @@ static Boolean DecodeCReg(const tStrComp *pArg, Byte *pResult)
   const tCReg *pReg;
 
   for (pReg = CRegs; pReg->pName; pReg++)
-    if (!strcasecmp(pArg->Str, pReg->pName))
+    if (!as_strcasecmp(pArg->Str, pReg->pName))
     {
       if ((pReg->Code & 0x80) && !CheckSup(pArg))
         return False;
@@ -831,7 +831,7 @@ static Boolean ClassComp(tStrComp *pArg, tAdrComps *pComps)
   KillPrefBlanksStrCompRef(pArg);
   KillPostBlanksStrComp(pArg);
 
-  if (!strcasecmp(pArg->Str, "PC"))
+  if (!as_strcasecmp(pArg->Str, "PC"))
   {
     if (pComps->BaseReg == NOREG)
     {
@@ -1040,8 +1040,8 @@ static Boolean DecodeAdr(tStrComp *pArg, unsigned Mask, tAdrVals *pAdrVals, Long
 
   while (True)
   {
-    if (!strncasecmp(pArg->Str, "<CRn>", 5)
-     || !strncasecmp(pArg->Str, "<PRn>", 5))
+    if (!as_strncasecmp(pArg->Str, "<CRn>", 5)
+     || !as_strncasecmp(pArg->Str, "<PRn>", 5))
     {
       AppendAdrVals(pAdrVals, (toupper(pArg->Str[1]) == 'C') ? PREFIX_CRn : PREFIX_PRn);
       StrCompIncRefLeft(pArg, 5);
@@ -1417,7 +1417,7 @@ static Byte EvalBitPosition(const tStrComp *pBitArg, Boolean *pOK, tSymbolSize O
     case eSymbolSize32Bit:
       return EvalStrIntExpressionOffs(pBitArg, Offset, UInt5, pOK);
     default:
-      WrError(ErrNum_InvOpsize);
+      WrError(ErrNum_InvOpSize);
       *pOK = False;
       return 0;
   }

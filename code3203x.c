@@ -151,7 +151,7 @@ static Boolean DecodeReg(const char *Asc, Byte *Erg)
   }
 
   for (*Erg = 0; CxxRegs[*Erg]; (*Erg)++)
-    if (!strcasecmp(CxxRegs[*Erg], Asc))
+    if (!as_strcasecmp(CxxRegs[*Erg], Asc))
     {
       *Erg += CxxRegStart;
       return True;
@@ -163,7 +163,7 @@ static Boolean DecodeReg(const char *Asc, Byte *Erg)
 static Boolean DecodeExpReg(const char *Asc, Byte *Erg)
 {
   for (*Erg = 0; ExpRegs[*Erg]; (*Erg)++)
-    if (!strcasecmp(ExpRegs[*Erg], Asc))
+    if (!as_strcasecmp(ExpRegs[*Erg], Asc))
       return True;
 
   return False;
@@ -242,9 +242,9 @@ static void DecodeAdr(const tStrComp *pArg, Byte Erl, Boolean ImmFloat)
       }
       StrCompSplitRef(&Arg, &NDisp, &Arg, p);
       StrCompShorten(&NDisp, 1);
-      if (!strcasecmp(NDisp.Str, "IR0"))
+      if (!as_strcasecmp(NDisp.Str, "IR0"))
         Disp = -1;
-      else if (!strcasecmp(NDisp.Str, "IR1"))
+      else if (!as_strcasecmp(NDisp.Str, "IR1"))
         Disp = -2;
       else
       {
@@ -1121,7 +1121,7 @@ static void DecodeLDP(Word Code)
 
   if (!ChkArgCnt(1, 2));
   else if (ThisPar) WrError(ErrNum_ParNotPossible);
-  else if ((ArgCnt == 2) && (strcasecmp(ArgStr[2].Str, "DP"))) WrError(ErrNum_InvAddrMode);
+  else if ((ArgCnt == 2) && (as_strcasecmp(ArgStr[2].Str, "DP"))) WrError(ErrNum_InvAddrMode);
   else
   {
     Boolean OK;

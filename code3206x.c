@@ -98,7 +98,7 @@ enum
   ModNone = -1,
   ModReg = 0,
   ModLReg = 1,
-  ModImm = 2,
+  ModImm = 2
 };
 
 #define MModReg (1 << ModReg)
@@ -331,7 +331,7 @@ static Boolean DecodeCtrlReg(char *Asc, LongWord *Erg, Boolean Write)
   int z;
 
   for (z = 0; z < CtrlCnt; z++)
-    if (!strcasecmp(Asc, CtrlRegs[z].Name))
+    if (!as_strcasecmp(Asc, CtrlRegs[z].Name))
     {
       *Erg = CtrlRegs[z].Code;
       return (Write && CtrlRegs[z].Wr) || ((!Write) && CtrlRegs[z].Rd);
@@ -2458,12 +2458,12 @@ static void DecodeB(Word Code)
     S2Reg = 0;
     WithImm = False;
     Code1 = 0;
-    if (!strcasecmp(ArgStr[1].Str, "IRP"))
+    if (!as_strcasecmp(ArgStr[1].Str, "IRP"))
     {
       Code1 = 0x03;
       S2Reg = 0x06;
     }
-    else if (!strcasecmp(ArgStr[1].Str, "NRP"))
+    else if (!as_strcasecmp(ArgStr[1].Str, "NRP"))
     {
       Code1 = 0x03;
       S2Reg = 0x07;
@@ -2685,7 +2685,7 @@ static void MakeCode_3206X(void)
     if (*AttrPart.Str == '\0') ThisUnit = NoUnit;
     else 
       for (; ThisUnit != LastUnit; ThisUnit++)
-        if (!strcasecmp(AttrPart.Str, UnitNames[ThisUnit]))
+        if (!as_strcasecmp(AttrPart.Str, UnitNames[ThisUnit]))
           break;
     if (ThisUnit == LastUnit)
     {

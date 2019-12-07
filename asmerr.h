@@ -9,31 +9,35 @@
 /* Error Handling Functions                                                  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmerr.h,v 1.2 2016/08/30 09:53:46 alfred Exp $                      */
-/*****************************************************************************
- * $Log: asmerr.h,v $
- * Revision 1.2  2016/08/30 09:53:46  alfred
- * - make string argument const
- *
- * Revision 1.1  2008/01/02 22:32:21  alfred
- * - better heap checking for DOS target
- *
- *****************************************************************************/
 
 #include "datatypes.h"
+#include "errmsg.h"
+
+extern Word ErrorCount, WarnCount;
 
 struct sLineComp;
 struct sStrComp;
-extern void WrErrorString(char *Message, char *Add, Boolean Warning, Boolean Fatal,
+extern void WrErrorString(const char *Message, char *Add, Boolean Warning, Boolean Fatal,
                           const char *pExtendError, const struct sLineComp *pLineComp);
 
-extern void WrError(Word Num);
+extern void WrError(tErrorNum Num);
 
-extern void WrXError(Word Num, const char *pExtError);
+extern void WrXError(tErrorNum Num, const char *pExtError);
 
-extern void WrXErrorPos(Word Num, const char *pExtError, const struct sLineComp *pLineComp);
+extern void WrXErrorPos(tErrorNum Num, const char *pExtError, const struct sLineComp *pLineComp);
 
-extern void WrStrErrorPos(Word Num, const struct sStrComp *pStrComp);
+extern void WrStrErrorPos(tErrorNum Num, const struct sStrComp *pStrComp);
+
+
+extern void CodeEXPECT(Word Code);
+extern void CodeENDEXPECT(Word Code);
+
+
+extern void AsmErrPassInit(void);
+extern void AsmErrPassExit(void);
+
+extern void ChkIO(tErrorNum ErrNo);
+extern void ChkStrIO(tErrorNum ErrNo, const struct sStrComp *pComp);
 
 #endif /* _ASMERR_H */
 

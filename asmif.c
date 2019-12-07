@@ -39,7 +39,6 @@ static LongInt GetIfVal(const tStrComp *pCond)
   {
     Tmp = 1;
     if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
-    else if (!IfOK) WrError(ErrNum_InvOpType);
   }
 
   return Tmp;

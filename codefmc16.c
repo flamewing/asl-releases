@@ -124,31 +124,31 @@ static Boolean DecodeAdr(const tStrComp *pArg, int Mask)
 
   /* 1. Sonderregister: */
 
-  if (!strcasecmp(pArg->Str, "A"))
+  if (!as_strcasecmp(pArg->Str, "A"))
   {
     AdrMode = ModAcc;
     goto found;
   }
 
-  if (!strcasecmp(pArg->Str, "CCR"))
+  if (!as_strcasecmp(pArg->Str, "CCR"))
   {
     AdrMode = ModCCR;
     goto found;
   }
 
-  if (!strcasecmp(pArg->Str, "ILM"))
+  if (!as_strcasecmp(pArg->Str, "ILM"))
   {
     AdrMode = ModILM;
     goto found;
   }
 
-  if (!strcasecmp(pArg->Str, "RP"))
+  if (!as_strcasecmp(pArg->Str, "RP"))
   {
     AdrMode = ModRP;
     goto found;
   }
 
-  if (!strcasecmp(pArg->Str, "SP"))
+  if (!as_strcasecmp(pArg->Str, "SP"))
   {
     AdrMode = ModSP;
     goto found;
@@ -157,7 +157,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, int Mask)
   if (Mask & MModSeg)
   {
     for (Index = 0; Index < sizeof(BankNames) / sizeof(char *); Index++)
-      if (!strcasecmp(pArg->Str, BankNames[Index]))
+      if (!as_strcasecmp(pArg->Str, BankNames[Index]))
       {
         AdrMode = ModSeg;
         AdrPart = Index;
@@ -168,7 +168,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, int Mask)
   if (Mask & MModSpec)
   {
     for (Index = 0; Index < sizeof(SpecNames) / sizeof(char *); Index++)
-      if (strcasecmp(pArg->Str, SpecNames[Index]) == 0)
+      if (as_strcasecmp(pArg->Str, SpecNames[Index]) == 0)
       {
         AdrMode = ModSpec;
         AdrPart = Index;
@@ -261,14 +261,14 @@ static Boolean DecodeAdr(const tStrComp *pArg, int Mask)
 
     /* Akku-indirekt: */
 
-    if (!strcasecmp(Arg.Str, "A"))
+    if (!as_strcasecmp(Arg.Str, "A"))
     {
       AdrMode = ModIAcc;
     }
 
     /* PC-relativ: */
 
-    else if (strncasecmp(Arg.Str, "PC", 2) == 0)
+    else if (as_strncasecmp(Arg.Str, "PC", 2) == 0)
     {
       tStrComp RegComp;
 
@@ -351,7 +351,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, int Mask)
         case '-':
           while (myisspace(*IComp.Str))  /* skip leading spaces         */
             StrCompIncRefLeft(&IComp, 1);
-          if (!strcasecmp(IComp.Str, "+RW7"))  /* base + RW7 as index         */
+          if (!as_strcasecmp(IComp.Str, "+RW7"))  /* base + RW7 as index         */
           {
             if (AdrPart > 1) WrError(ErrNum_InvReg);
             else
@@ -1219,8 +1219,8 @@ static void DecodeMOV(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 2));
-  else if (((!strcasecmp(ArgStr[1].Str, "@AL")) || (!strcasecmp(ArgStr[1].Str, "@A")))
-       && ((!strcasecmp(ArgStr[2].Str, "AH" )) || (!strcasecmp(ArgStr[2].Str, "T" ))))
+  else if (((!as_strcasecmp(ArgStr[1].Str, "@AL")) || (!as_strcasecmp(ArgStr[1].Str, "@A")))
+       && ((!as_strcasecmp(ArgStr[2].Str, "AH" )) || (!as_strcasecmp(ArgStr[2].Str, "T" ))))
   {
     BAsmCode[0] = 0x6f; BAsmCode[1] = 0x15;
     CodeLen = 2;
@@ -1375,20 +1375,20 @@ static void DecodeMOV(Word Index)
         break;
       } /* 1 = ModIO */
       case ModSpec:
-       if (AdrPart == 6) WrError(ErrNum_InvAddrMode);
-       else
-       {
-         BAsmCode[1] = 0x10 + AdrPart;
-         DecodeAdr(&ArgStr[2], MModAcc);
-         switch (AdrMode)
-         {
-           case ModAcc:
-             BAsmCode[0] = 0x6f;
-             CodeLen = 2;
-             break;
-         }
-         break;
-       } /* 1 = ModSpec */
+        if (AdrPart == 6) WrError(ErrNum_InvAddrMode);
+        else
+        {
+          BAsmCode[1] = 0x10 + AdrPart;
+          DecodeAdr(&ArgStr[2], MModAcc);
+          switch (AdrMode)
+          {
+            case ModAcc:
+              BAsmCode[0] = 0x6f;
+              CodeLen = 2;
+              break;
+          } 
+        } /* 1 = ModSpec */
+        break;
       case ModReg:
       {
         BAsmCode[0] = AdrPart;
@@ -1456,9 +1456,9 @@ static void DecodeMOVB(Word Index)
 {
   if (ChkArgCnt(2, 2))
   {
-    if (!strcasecmp(ArgStr[1].Str, "A"))
+    if (!as_strcasecmp(ArgStr[1].Str, "A"))
       Index = 2;
-    else if (!strcasecmp(ArgStr[2].Str, "A"))
+    else if (!as_strcasecmp(ArgStr[2].Str, "A"))
       Index = 1;
     else
       WrError(ErrNum_InvAddrMode);
@@ -1586,8 +1586,8 @@ static void DecodeMOVW(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 2));
-  else if (((!strcasecmp(ArgStr[1].Str, "@AL")) || (!strcasecmp(ArgStr[1].Str, "@A")))
-       && ((!strcasecmp(ArgStr[2].Str, "AH" )) || (!strcasecmp(ArgStr[2].Str, "T" ))))
+  else if (((!as_strcasecmp(ArgStr[1].Str, "@AL")) || (!as_strcasecmp(ArgStr[1].Str, "@A")))
+       && ((!as_strcasecmp(ArgStr[2].Str, "AH" )) || (!as_strcasecmp(ArgStr[2].Str, "T" ))))
   {
     BAsmCode[0] = 0x6f; BAsmCode[1] = 0x1d;
     CodeLen = 2;
@@ -1887,17 +1887,17 @@ static void DecodeStack(Word Index)
   char *p;
 
   if (!ChkArgCnt(1, ArgCntMax));
-  else if ((ArgCnt == 1) && (!strcasecmp(ArgStr[1].Str, "A")))
+  else if ((ArgCnt == 1) && (!as_strcasecmp(ArgStr[1].Str, "A")))
   {
     BAsmCode[0] = Index;
     CodeLen = 1;
   }
-  else if ((ArgCnt == 1) && (!strcasecmp(ArgStr[1].Str, "AH")))
+  else if ((ArgCnt == 1) && (!as_strcasecmp(ArgStr[1].Str, "AH")))
   {
     BAsmCode[0] = Index + 1;
     CodeLen = 1;
   }
-  else if ((ArgCnt == 1) && (!strcasecmp(ArgStr[1].Str, "PS")))
+  else if ((ArgCnt == 1) && (!as_strcasecmp(ArgStr[1].Str, "PS")))
   {
     BAsmCode[0] = Index + 2;
     CodeLen = 1;

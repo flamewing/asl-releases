@@ -234,13 +234,13 @@ static void DecodeAdr(const tStrComp *pArg)
 
   for (RegZ = 0; RegZ < RegCnt; RegZ++)
   {
-    if (!strcasecmp(pArg->Str, Reg16Names[RegZ]))
+    if (!as_strcasecmp(pArg->Str, Reg16Names[RegZ]))
     {
       AdrType = TypeReg16; AdrMode = RegZ;
       ChkOpSize(1);
       return;
     }
-    if (!strcasecmp(pArg->Str, Reg8Names[RegZ]))
+    if (!as_strcasecmp(pArg->Str, Reg8Names[RegZ]))
     {
       AdrType = TypeReg8; AdrMode = RegZ;
       ChkOpSize(0);
@@ -249,7 +249,7 @@ static void DecodeAdr(const tStrComp *pArg)
   }
 
   for (RegZ = 0; RegZ <= SegRegCnt; RegZ++)
-    if (!strcasecmp(pArg->Str, SegRegNames[RegZ]))
+    if (!as_strcasecmp(pArg->Str, SegRegNames[RegZ]))
     {
       AdrType = TypeRegSeg; AdrMode = RegZ;
       ChkOpSize(1);
@@ -258,14 +258,14 @@ static void DecodeAdr(const tStrComp *pArg)
 
   if (FPUAvail)
   {
-    if (!strcasecmp(pArg->Str, "ST"))
+    if (!as_strcasecmp(pArg->Str, "ST"))
     {
       AdrType = TypeFReg; AdrMode = 0;
       ChkOpSize(4);
       return;
     }
 
-    if ((ArgLen > 4) && (!strncasecmp(pArg->Str, "ST(", 3)) && (pArg->Str[ArgLen - 1] == ')'))
+    if ((ArgLen > 4) && (!as_strncasecmp(pArg->Str, "ST(", 3)) && (pArg->Str[ArgLen - 1] == ')'))
     {
       tStrComp Num;
 
@@ -285,35 +285,35 @@ static void DecodeAdr(const tStrComp *pArg)
   IndexBuf = 0; BaseBuf = 0;
   DispAcc = 0; FoundSize = -1;
   Arg = *pArg;
-  if (!strncasecmp(Arg.Str, "WORD PTR", 8))
+  if (!as_strncasecmp(Arg.Str, "WORD PTR", 8))
   {
     StrCompIncRefLeft(&Arg, 8);
     FoundSize = 1;
     IsImm = False;
     KillPrefBlanksStrCompRef(&Arg);
   }
-  else if (!strncasecmp(Arg.Str, "BYTE PTR", 8))
+  else if (!as_strncasecmp(Arg.Str, "BYTE PTR", 8))
   {
     StrCompIncRefLeft(&Arg, 8);
     FoundSize = 0;
     IsImm = False;
     KillPrefBlanksStrCompRef(&Arg);
   }
-  else if (!strncasecmp(Arg.Str, "DWORD PTR", 9))
+  else if (!as_strncasecmp(Arg.Str, "DWORD PTR", 9))
   {
     StrCompIncRefLeft(&Arg, 9);
     FoundSize = 2;
     IsImm = False;
     KillPrefBlanksStrCompRef(&Arg);
   }
-  else if (!strncasecmp(Arg.Str, "QWORD PTR", 9))
+  else if (!as_strncasecmp(Arg.Str, "QWORD PTR", 9))
   {
     StrCompIncRefLeft(&Arg, 9);
     FoundSize = 3;
     IsImm = False;
     KillPrefBlanksStrCompRef(&Arg);
   }
-  else if (!strncasecmp(Arg.Str, "TBYTE PTR", 9))
+  else if (!as_strncasecmp(Arg.Str, "TBYTE PTR", 9))
   {
     StrCompIncRefLeft(&Arg, 9);
     FoundSize = 4;
@@ -327,7 +327,7 @@ static void DecodeAdr(const tStrComp *pArg)
 
     StrCompSplitRef(&Arg, &Remainder, &Arg, Arg.Str + 2);
     for (z = 0; z <= SegRegCnt; z++)
-      if (!strcasecmp(Arg.Str, SegRegNames[z]))
+      if (!as_strcasecmp(Arg.Str, SegRegNames[z]))
       {
         SegBuffer = z;
         AddPrefix(SegRegPrefixes[SegBuffer]);
@@ -397,28 +397,28 @@ static void DecodeAdr(const tStrComp *pArg)
         if (pSep)
           StrCompSplitRef(&IndirArg, &IndirArgRemainder, &IndirArg, pSep);
 
-        if (!strcasecmp(IndirArg.Str, "BX"))
+        if (!as_strcasecmp(IndirArg.Str, "BX"))
         {
           if ((OldNegFlag) || (BaseBuf != 0))
             return;
           else
             BaseBuf = 1;
         }
-        else if (!strcasecmp(IndirArg.Str, "BP"))
+        else if (!as_strcasecmp(IndirArg.Str, "BP"))
         {
           if ((OldNegFlag) || (BaseBuf != 0))
             return;
           else
             BaseBuf = 2;
         }
-        else if (!strcasecmp(IndirArg.Str, "SI"))
+        else if (!as_strcasecmp(IndirArg.Str, "SI"))
         {
           if ((OldNegFlag) || (IndexBuf != 0))
             return;
           else
             IndexBuf = 1;
         }
-        else if (!strcasecmp(IndirArg.Str, "DI"))
+        else if (!as_strcasecmp(IndirArg.Str, "DI"))
         {
           if ((OldNegFlag) || (IndexBuf !=0 ))
             return;
@@ -485,7 +485,7 @@ static void DecodeAdr(const tStrComp *pArg)
           AdrCnt = 2;
           break;
         default:
-          WrError(ErrNum_InvOpsize);
+          WrError(ErrNum_InvOpSize);
           break;
       }
     }
@@ -754,7 +754,7 @@ static void DecodeINOUT(Word Index)
       case TypeReg8:
       case TypeReg16:
         if (AdrMode != 0) WrError(ErrNum_InvAddrMode);
-        else if (!strcasecmp(pPortArg->Str, "DX"))
+        else if (!as_strcasecmp(pPortArg->Str, "DX"))
           BAsmCode[CodeLen++] = 0xec | OpSize | Index;
         else
         {
@@ -1335,13 +1335,13 @@ static void DecodeASSUME(void)
         *ValPart = '\0';
       }
       z2 = 0;
-      while ((z2 <= SegRegCnt) && (strcasecmp(SegPart, SegRegNames[z2])))
+      while ((z2 <= SegRegCnt) && (as_strcasecmp(SegPart, SegRegNames[z2])))
         z2++;
       if (z2 > SegRegCnt) WrXError(ErrNum_UnknownSegReg, SegPart);
       else
       {
         z3 = 0;
-        while ((z3 <= PCMax) && (strcasecmp(ValPart, SegNames[z3])))
+        while ((z3 <= PCMax) && (as_strcasecmp(ValPart, SegNames[z3])))
           z3++;
         if (z3 > PCMax) WrXError(ErrNum_UnknownSegment, ValPart);
         else if ((z3 != SegCode) && (z3 != SegData) && (z3 != SegXData) && (z3 != SegNone)) WrError(ErrNum_InvSegment);
@@ -1413,7 +1413,7 @@ static void DecodeFLD(Word Code)
         if ((OpSize == -1) && (UnknownFlag))
           OpSize = 2;
         if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-        else if (OpSize < 2) WrError(ErrNum_InvOpsize);
+        else if (OpSize < 2) WrError(ErrNum_InvOpSize);
         else
         {
           MoveAdr(2);
@@ -1454,7 +1454,7 @@ static void DecodeFILD(Word Code)
       case TypeMem:
         if ((OpSize  == -1) && (UnknownFlag)) OpSize = 1;
         if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-        else if ((OpSize < 1) || (OpSize > 3)) WrError(ErrNum_InvOpsize);
+        else if ((OpSize < 1) || (OpSize > 3)) WrError(ErrNum_InvOpSize);
         else
         {
           MoveAdr(2);
@@ -1496,7 +1496,7 @@ static void DecodeFBLD(Word Code)
         if ((OpSize == -1) && (UnknownFlag))
           OpSize = 4;
         if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-        else if (OpSize != 4) WrError(ErrNum_InvOpsize);
+        else if (OpSize != 4) WrError(ErrNum_InvOpSize);
         else
         {
           BAsmCode[CodeLen] = 0xdf;
@@ -1531,7 +1531,7 @@ static void DecodeFST_FSTP(Word Code)
         if ((OpSize == -1) && (UnknownFlag))
           OpSize = 2;
         if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-        else if ((OpSize < 2) || ((OpSize == 4) && (Code == 0xd0))) WrError(ErrNum_InvOpsize);
+        else if ((OpSize < 2) || ((OpSize == 4) && (Code == 0xd0))) WrError(ErrNum_InvOpSize);
         else
         {
           MoveAdr(2);
@@ -1543,6 +1543,7 @@ static void DecodeFST_FSTP(Word Code)
               break;
             case 3:
               BAsmCode[CodeLen] = 0xdd;
+              break;
             case 4:
               BAsmCode[CodeLen] = 0xdb;
               BAsmCode[CodeLen + 1] |= 0x20;
@@ -1571,7 +1572,7 @@ static void DecodeFIST_FISTP(Word Code)
       case TypeMem:
         if ((OpSize == -1) && (UnknownFlag)) OpSize = 1;
         if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-        else if ((OpSize < 1) || (OpSize == 4) || ((OpSize == 3) && (Code == 0x10))) WrError(ErrNum_InvOpsize);
+        else if ((OpSize < 1) || (OpSize == 4) || ((OpSize == 3) && (Code == 0x10))) WrError(ErrNum_InvOpSize);
         else
         {
           MoveAdr(2);
@@ -1613,7 +1614,7 @@ static void DecodeFBSTP(Word Code)
         if ((OpSize == -1) && (UnknownFlag))
           OpSize = 1;
         if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-        else if (OpSize != 4) WrError(ErrNum_InvOpsize);
+        else if (OpSize != 4) WrError(ErrNum_InvOpSize);
         else
         {
           BAsmCode[CodeLen] = 0xdf;
@@ -1649,7 +1650,7 @@ static void DecodeFCOM_FCOMP(Word Code)
         if ((OpSize == -1) && (UnknownFlag))
           OpSize = 1;
         if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-        else if ((OpSize != 2) && (OpSize != 3)) WrError(ErrNum_InvOpsize);
+        else if ((OpSize != 2) && (OpSize != 3)) WrError(ErrNum_InvOpSize);
         else
         {
           BAsmCode[CodeLen] = (OpSize == 2) ? 0xd8 : 0xdc;
@@ -1680,7 +1681,7 @@ static void DecodeFICOM_FICOMP(Word Code)
         if ((OpSize == -1) && (UnknownFlag))
           OpSize = 1;
         if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-        else if ((OpSize != 1) && (OpSize != 2)) WrError(ErrNum_InvOpsize);
+        else if ((OpSize != 1) && (OpSize != 2)) WrError(ErrNum_InvOpSize);
         else
         {
           BAsmCode[CodeLen] = (OpSize == 1) ? 0xde  : 0xda;
@@ -1748,7 +1749,7 @@ static void DecodeFADD_FMUL(Word Code)
             case TypeMem:
               if ((OpSize == -1) && (UnknownFlag)) OpSize = 2;
               if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-              else if ((OpSize != 2) && (OpSize != 3)) WrError(ErrNum_InvOpsize);
+              else if ((OpSize != 2) && (OpSize != 3)) WrError(ErrNum_InvOpSize);
               else
               {
                 BAsmCode[CodeLen] = (OpSize == 2) ? 0xd8 : 0xdc;
@@ -1800,7 +1801,7 @@ static void DecodeFIADD_FIMUL(Word Code)
           {
             if ((OpSize == -1) && (UnknownFlag)) OpSize = 1;
             if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-            else if ((OpSize != 1) && (OpSize != 2)) WrError(ErrNum_InvOpsize);
+            else if ((OpSize != 1) && (OpSize != 2)) WrError(ErrNum_InvOpSize);
             else
             {
               BAsmCode[CodeLen] = (OpSize == 1) ? 0xde : 0xda;
@@ -1912,7 +1913,7 @@ static void DecodeFSUB_FSUBR_FDIV_FDIVR(Word Code)
               if ((OpSize == -1) && (UnknownFlag))
                 OpSize = 2;
               if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-              else if ((OpSize != 2) && (OpSize != 3)) WrError(ErrNum_InvOpsize);
+              else if ((OpSize != 2) && (OpSize != 3)) WrError(ErrNum_InvOpSize);
               else
               {
                 BAsmCode[CodeLen] = (OpSize == 2) ? 0xd8 : 0xdc;
@@ -1966,7 +1967,7 @@ static void DecodeFISUB_FISUBR_FIDIV_FIDIVR(Word Code)
               if ((OpSize == -1) && (UnknownFlag))
                 OpSize = 1;
               if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-              else if ((OpSize != 1) && (OpSize != 2)) WrError(ErrNum_InvOpsize);
+              else if ((OpSize != 1) && (OpSize != 2)) WrError(ErrNum_InvOpSize);
               else
               {
                 BAsmCode[CodeLen] = (OpSize == 1) ? 0xde : 0xda;
@@ -2083,7 +2084,7 @@ static void DecodeRept(Word Index)
     int z2;
 
     for (z2 = 0; z2 < StringOrderCnt; z2++)
-      if (!strcasecmp(StringOrders[z2].Name,ArgStr[1].Str))
+      if (!as_strcasecmp(StringOrders[z2].Name,ArgStr[1].Str))
         break;
     if (z2 >= StringOrderCnt) WrError(ErrNum_InvArg);
     else if (ChkMinCPU(StringOrders[z2].MinCPU))
@@ -2240,7 +2241,7 @@ static void DecodeShift(Word Index)
         if (AdrType != TypeMem)
           BAsmCode[CodeLen + 1] += 0xc0;
         MoveAdr(2);
-        if (!strcasecmp(ArgStr[2].Str, "CL"))
+        if (!as_strcasecmp(ArgStr[2].Str, "CL"))
         {
           BAsmCode[CodeLen] += 0xd2;
           CodeLen += 2 + AdrCnt;
@@ -2320,7 +2321,7 @@ static void DecodeBit1(Word Index)
         BAsmCode[CodeLen + 1] = 0x10 + (Index << 1) + OpSize;
         BAsmCode[CodeLen + 2] = AdrMode;
         MoveAdr(3);
-        if (!strcasecmp(ArgStr[2].Str, "CL"))
+        if (!as_strcasecmp(ArgStr[2].Str, "CL"))
           CodeLen += 3 + AdrCnt;
         else
         {

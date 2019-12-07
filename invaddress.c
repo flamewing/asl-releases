@@ -25,7 +25,7 @@ static int MaxSymbolNameLen;
 static void MakeInvSymbolName(char *pDest, unsigned DestSize, LargeWord Num)
 {
   *pDest = 'I';
-  SysString(pDest + 1, DestSize - 1, Num, 16, 8, False);
+  SysString(pDest + 1, DestSize - 1, Num, 16, 8, False, HexStartCharacter);
 }
 
 static Boolean InvSymbolAdder(PTree *ppDest, PTree pNew, void *pData)

@@ -119,7 +119,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, int MinArgCnt, int aux, Boolean M
 
   /* Adressierungsmodus suchen */
 
-  while (pAdrMode->Name && strcasecmp(pAdrMode->Name, pArg->Str))
+  while (pAdrMode->Name && as_strcasecmp(pAdrMode->Name, pArg->Str))
    pAdrMode++;
 
   /* nicht gefunden: dann absolut */
@@ -187,7 +187,7 @@ static Word DecodeCond(int argp)
 
   while (argp <= ArgCnt)
   {
-    for (pCondition = Conditions; pCondition->Name && strcasecmp(pCondition->Name, ArgStr[argp].Str); pCondition++);
+    for (pCondition = Conditions; pCondition->Name && as_strcasecmp(pCondition->Name, ArgStr[argp].Str); pCondition++);
 
     if (!pCondition->Name)
     {
@@ -455,7 +455,7 @@ static void DecodeBLDD(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 3));
-  else if (!strcasecmp(ArgStr[1].Str, "BMAR"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "BMAR"))
   {
     if (ChkMinCPU(CPU32050))
     {
@@ -466,7 +466,7 @@ static void DecodeBLDD(Word Index)
       }
     }
   }
-  else if (!strcasecmp(ArgStr[2].Str, "BMAR"))
+  else if (!as_strcasecmp(ArgStr[2].Str, "BMAR"))
   {
     if (ChkMinCPU(CPU32050))
     {
@@ -505,7 +505,7 @@ static void DecodeBLPD(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 3));
-  else if (!strcasecmp(ArgStr[1].Str, "BMAR"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "BMAR"))
   {
     if (ChkMinCPU(CPU32050)
      && DecodeAdr(&ArgStr[2], 2, 3, False))

@@ -178,7 +178,7 @@ void Preprocess(void)
   if (!IfAsm)
     return;
 
-  if (!strcasecmp(Cmd, "DEFINE"))
+  if (!as_strcasecmp(Cmd, "DEFINE"))
   {
     p = FirstBlank(h);
     if (p)
@@ -188,7 +188,7 @@ void Preprocess(void)
       EnterDefine(Arg, h);
     }
   }
-  else if (!strcasecmp(Cmd, "UNDEF"))
+  else if (!as_strcasecmp(Cmd, "UNDEF"))
     RemoveDefine(h);
   else
     WrXError(ErrNum_InvalidPrepDir, Cmd);

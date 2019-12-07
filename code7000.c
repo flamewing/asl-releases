@@ -47,7 +47,7 @@ enum
   ModGBRBase = 6,
   ModGBRR0 = 7,
   ModPCRel = 8,
-  ModImm = 9,
+  ModImm = 9
 };
 
 #define MModReg (1 << ModReg)
@@ -188,7 +188,7 @@ static Boolean DecodeReg(char *Asc, Word *Erg)
 {
   Boolean Err;
 
-  if (strcasecmp(Asc, "SP") == 0)
+  if (as_strcasecmp(Asc, "SP") == 0)
   {
     *Erg = 15; return True;
   }
@@ -205,19 +205,19 @@ static Boolean DecodeCtrlReg(char *Asc, Word *Erg)
   CPUVar MinCPU = CPU7000;
 
   *Erg = 0xff;
-  if (strcasecmp(Asc, "SR") == 0) *Erg = 0;
-  else if (strcasecmp(Asc, "GBR") == 0) *Erg = 1;
-  else if (strcasecmp(Asc, "VBR") == 0) *Erg = 2;
-  else if (strcasecmp(Asc, "SSR") == 0)
+  if (as_strcasecmp(Asc, "SR") == 0) *Erg = 0;
+  else if (as_strcasecmp(Asc, "GBR") == 0) *Erg = 1;
+  else if (as_strcasecmp(Asc, "VBR") == 0) *Erg = 2;
+  else if (as_strcasecmp(Asc, "SSR") == 0)
   {
     *Erg = 3; MinCPU = CPU7700;
   }
-  else if (strcasecmp(Asc, "SPC") == 0)
+  else if (as_strcasecmp(Asc, "SPC") == 0)
   {
     *Erg = 4; MinCPU = CPU7700;
   }
   else if ((strlen(Asc) == 7) && (mytoupper(*Asc) == 'R')
-      && (strcasecmp(Asc + 2, "_BANK") == 0)
+      && (as_strcasecmp(Asc + 2, "_BANK") == 0)
       && (Asc[1] >= '0') && (Asc[1] <= '7'))
   {
     *Erg = Asc[1]-'0' + 8; MinCPU = CPU7700;
@@ -235,7 +235,7 @@ static Boolean DecodeSReg(char *Asc, Word *Erg)
   Boolean Result = FALSE;
 
   for (z = 0; z < SRegCnt; z++)
-    if (!strcasecmp(Asc, RegDefs[z].Name))
+    if (!as_strcasecmp(Asc, RegDefs[z].Name))
       break;
   if (z < SRegCnt)
   {
@@ -334,7 +334,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask, Boolean Signed)
         pos = QuotPos(Arg.Str, ',');
         if (pos)
           StrCompSplitRef(&Arg, &Remainder, &Arg, pos);
-        if (!strcasecmp(Arg.Str, "PC"))
+        if (!as_strcasecmp(Arg.Str, "PC"))
         {
           if (BaseReg == RegNone)
             BaseReg = RegPC;
@@ -344,7 +344,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask, Boolean Signed)
             OK = False;
           }
         }
-        else if (!strcasecmp(Arg.Str, "GBR"))
+        else if (!as_strcasecmp(Arg.Str, "GBR"))
         {
           if (BaseReg == RegNone)
             BaseReg = RegGBR;
@@ -610,7 +610,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask, Boolean Signed)
 
   /* absolut ueber PC-relativ abwickeln */
 
-  if ((OpSize != eSymbolSize16Bit) && (OpSize != eSymbolSize32Bit)) WrError(ErrNum_InvOpsize);
+  if ((OpSize != eSymbolSize16Bit) && (OpSize != eSymbolSize32Bit)) WrError(ErrNum_InvOpSize);
   else
   {
     FirstPassUnknown = False;
@@ -676,14 +676,14 @@ static void DecodeMOV(Word Code)
   if (OpSize == eSymbolSizeUnknown)
     SetOpSize(eSymbolSize32Bit);
   if (!ChkArgCnt(2, 2));
-  else if (OpSize > eSymbolSize32Bit) WrError(ErrNum_InvOpsize);
+  else if (OpSize > eSymbolSize32Bit) WrError(ErrNum_InvOpSize);
   else if (DecodeReg(ArgStr[1].Str, &HReg))
   {
     DecodeAdr(&ArgStr[2], MModReg | MModIReg | MModPreDec | MModIndReg | MModR0Base | MModGBRBase, True);
     switch (AdrMode)
     {
       case ModReg:
-        if (OpSize != eSymbolSize32Bit) WrError(ErrNum_InvOpsize);
+        if (OpSize != eSymbolSize32Bit) WrError(ErrNum_InvOpSize);
         else
           SetCode(0x6003 + (HReg << 4) + (AdrPart << 8));
         break;
@@ -878,7 +878,7 @@ static void DecodeTAS(Word Code)
   if (OpSize == eSymbolSizeUnknown)
     SetOpSize(eSymbolSize8Bit);
   if (!ChkArgCnt(1, 1));
-  else if (OpSize != eSymbolSize8Bit) WrError(ErrNum_InvOpsize);
+  else if (OpSize != eSymbolSize8Bit) WrError(ErrNum_InvOpSize);
   else
   {
     DecodeAdr(&ArgStr[1], MModIReg, False);
@@ -917,7 +917,7 @@ static void DecodeMulReg(Word Index)
   {
     if (!*AttrPart.Str)
       OpSize = eSymbolSize32Bit;
-    if (OpSize != eSymbolSize32Bit) WrError(ErrNum_InvOpsize);
+    if (OpSize != eSymbolSize32Bit) WrError(ErrNum_InvOpSize);
     else
     {
       DecodeAdr(&ArgStr[1], MModReg, False);
@@ -939,7 +939,7 @@ static void DecodeBW(Word Index)
   if (OpSize == eSymbolSizeUnknown)
     SetOpSize(eSymbolSize16Bit);
   if (!ChkArgCnt(2, 2));
-  else if ((OpSize != eSymbolSize8Bit) && (OpSize != eSymbolSize16Bit)) WrError(ErrNum_InvOpsize);
+  else if ((OpSize != eSymbolSize8Bit) && (OpSize != eSymbolSize16Bit)) WrError(ErrNum_InvOpSize);
   else
   {
     DecodeAdr(&ArgStr[1], MModReg, False);
@@ -960,7 +960,7 @@ static void DecodeMAC(Word Code)
   if (OpSize == eSymbolSizeUnknown)
     SetOpSize(eSymbolSize16Bit);
   if (!ChkArgCnt(2, 2));
-  else if ((OpSize != eSymbolSize16Bit) && (OpSize != eSymbolSize32Bit)) WrError(ErrNum_InvOpsize);
+  else if ((OpSize != eSymbolSize16Bit) && (OpSize != eSymbolSize32Bit)) WrError(ErrNum_InvOpSize);
   else if ((OpSize == eSymbolSize32Bit) && !ChkMinCPU(CPU7600));
   else
   {
@@ -1043,7 +1043,7 @@ static void DecodeLog(Word Code)
     switch (AdrMode)
     {
       case ModReg:
-        if (*AttrPart.Str && (OpSize != eSymbolSize32Bit)) WrError(ErrNum_InvOpsize);
+        if (*AttrPart.Str && (OpSize != eSymbolSize32Bit)) WrError(ErrNum_InvOpSize);
         else
         {
           OpSize = eSymbolSize32Bit;

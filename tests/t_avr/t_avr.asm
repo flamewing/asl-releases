@@ -227,5 +227,36 @@ next:
 
 	wdr
 
+	packing	off
 	data	1,2,3
+	data	0
+	data	255
+	data	-128
+	data	65535
+	data	-32768
+	data	'a'
+	data	'ab'
+	data	"a"
+	data	"ab"
+	data	"abc"
+	data	"abcd"
+
+	packing	on
+	data	1,2,3
+	data	0
+	data	255
+	data	-128
+	expect	1320
+	data	65535
+	endexpect
+	expect	1315
+	data	-32768
+	endexpect
+	data	'a'
+	expect	1320
+	data	'ab'
+	endexpect
+	data	"a"
+	data	"ab"
+	data	"abc"
 	data	"abcd"

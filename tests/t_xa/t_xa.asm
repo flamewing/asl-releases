@@ -588,16 +588,40 @@ d4:     djnz.w	123h,d4
         xor.b   200h,#34h
         xor.w   123h,#1234h
 
-        mov.b   [r5+],[r5+]
-        xch     r4l,r4l
-        pop     r7
-        norm.b  r4l,r4l
-        norm.w  r4,r4h
-        norm.d  r4,r5l
-        mov     [r4+],r4l
-        mov     r4h,[r4+]
-        movc    r4h,[r4+]
-        add     [r4+],r4l
-        add     r4h,[r4+]
-        mov     r5,[r5+]
+	expect	140
+         mov.b   [r5+],[r5+]
+	endexpect
+	expect	140
+         xch     r4l,r4l
+	endexpect
+	expect	140
+         pop     r7
+	endexpect
+	expect	140
+         norm.b  r4l,r4l
+	endexpect
+	expect	140
+         norm.w  r4,r4h
+	endexpect
+	expect	140
+         norm.d  r4,r5l
+	endexpect
+	expect	140
+         mov     [r4+],r4l
+	endexpect
+	expect	140
+         mov     r4h,[r4+]
+	endexpect
+	expect	140
+         movc    r4h,[r4+]
+	endexpect
+	expect	140
+         add     [r4+],r4l
+	endexpect
+	expect	140
+         add     r4h,[r4+]
+	endexpect
+	expect	140
+         mov     r5,[r5+]
+	endexpect
 

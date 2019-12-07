@@ -171,14 +171,14 @@ You can contact me as follows:
 If someone likes to meet me personally to ask questions and lives
 near Aachen (= Aix-la-Chapelle), you will be able to meet me there.
 You can do this most probably on thursdays from 8pm to 9pm at the
-computerclub inside the RWTH Aachen (Eilfschornsteinstrasse 16,
-cellar of philosophers' building, backdoor entry).
+RWTH Aachen Computer Club (Elisabethstrasse 16, first floor, corridor
+on the right).
 
 Please don't call me by phone.  First, complex relations are
 extremely hard to discuss at phone.  Secondly, the telephone
 companies are already rich enough...
 
-The latest version of AS (DOS, DPMI, OS/2, C) is available from
+The latest version of AS (DPMI, Win32, C) is available from
 the following Server:
 \begin{verbatim}
  http://john.ccac.rwth-aachen.de:8000/as
@@ -289,6 +289,7 @@ following processor families have been implemented:
 \item{Fujitsu F$^2$MC16L}
 \item{OKI OLMS-40}
 \item{OKI OLMS-50}
+\item{Panafacom MN1610/MN1613}
 \item{Symbios Logic SYM53C8xx (yes, they are programmable!)}
 \item{Intersil CDP1802/1804/1805(A)}
 \item{XMOS XS1}
@@ -300,12 +301,7 @@ under work / planned / in consideration :
 \item{SGS-Thomson ST20}
 \item{Texas Instruments TMS320C8x}
 \end{itemize}
-I'm currently searching for documentation about the following
-families:
-\begin{itemize}
-\item{the complete set of OKI controllers}
-\end{itemize}
-unloved, but now, however, present :
+Unloved, but now, however, present :
 \begin{itemize}
 \item{Intel 80x86, 80186, Nec V30\&V35 incl. coprocessor 8087}
 \end{itemize}
@@ -400,25 +396,6 @@ is delivered in source code, i.e. one has to create the binaries by
 oneself using a C compiler.  This is by far the simpler way (for me) than
 providing a dozen of precompiled binaries for machines I sometimes only
 have limited access to...
-
-People who have read \marginpar{{\em ???}} this enumeration up to this
-point will notice that world's best-selling operating system coming from
-Redmont is missing in this enumeration.  People who know me personally
-will know that I do not regard Windows to be a pat solution (regardless if
-its 3.X, 95, or NT).  Frankly said, I am a 'windows hater'.  A large
-number of people will now regard this to be somewhere between obsolete and
-ridiculous, and they will tell me that I withhold AS from a large part of
-potential users, but they will have to live with it: I primarily continue
-to improve AS because I have fun doing it; AS is a non-commercial project
-and I therefore take the freedom not to look at potential market shares.  I
-select platforms for me where I have fun programming, and I definitely do
-not have any fun when programming for Windows!  By the way, there was a
-time when I had to write Windows programs so I do not simply jabber
-without having an idea what I am talking about.  If someone wants to port
-AS into this direction, I will not stand in his way, but (s)he should not
-expect anything more from me than providing sources (which is why (s)he
-will have to deal with questions like 'why does AS not work any more after
-I changed the JUNK-CAD 18.53 registry entry from upper to lower case?').
 
 %%===========================================================================
 
@@ -592,6 +569,7 @@ REGHC12.INC       & register addresses 68HC12 \\
 REGM16C.INC       & register addresses Mitsubishi M16C \\
 REGMSP.INC        & register addresses TI MSP430 \\
 REGS12Z.INC       & register and bit addresses S12Z family \\
+REGST6.INC        & register and macro definitions ST6 \\
 REGST7.INC        & register and macro definitions ST7 \\
 REGSTM8.INC       & register and macro definitions STM8 \\
 REGST9.INC        & register and macro definitions ST9 \\
@@ -604,7 +582,6 @@ STDDEF18.INC      & register addresses PIC16C8x \\
 STDDEF2X.INC      & register addresses TMS3202x \\
 STDDEF37.INC      & register and bit addresses TMS370xxx \\
 STDDEF3X.INC      & peripheral addresses TMS320C3x \\
-STDDEF4X.INC      & peripheral addresses TMS320C4x \\
 \hline
 \end{tabular}\end{center}
 \caption{Standard Contents of a Binary Distribution - Part 2
@@ -618,6 +595,7 @@ File              & Function \\
 \hline
 {\bf Directory INCLUDE} & \\
 \hline
+STDDEF4X.INC      & peripheral addresses TMS320C4x \\
 STDDEF47.INC      & instruction macros TLCS-47 \\
 STDDEF51.INC      & definition of SFRs and bits for \\
                   & 8051/8052/80515 \\
@@ -632,11 +610,13 @@ COLDFIRE/\*.INC   & register and bit addresses ColDfire family \\
                   & (do not include directly, use REGCOLD.INC) \\
 S12Z/\*.INC       & register and bit addresses S12Z family \\
                   & (do not include directly, use REGS12Z.INC) \\
+ST6/\*.INC        & register and bit addresses ST6 family \\
+                  & (do not include directly, use REGST6.INC) \\
 ST7/\*.INC        & register and bit addresses ST7 family \\
                   & (do not include directly, use REGST7.INC) \\
 STM8/\*.INC       & register and bit addresses STM8 family \\
                   & (do not include directly, use REGSTM8.INC) \\
-STDDEF62.INC      & register addresses and macros ST6 \\
+STDDEF62.INC      & register addresses and macros ST6 (old)\\
 STDDEF75.INC      & register addresses 75K0 \\
 STDDEF87.INC      & register and memory addresses TLCS-870 \\
 STDDEF90.INC      & register and memory addresses TLCS-90 \\
@@ -646,15 +626,6 @@ STDDEFZ8.INC      & register addresses Z8 family \\
 \hline
 \hline
 {\bf Directory LIB} & \\
-\hline
-\hline
-{\bf Directory MAN} & \\
-\hline
-ASL.1             & quick reference for AS \\
-PLIST.1           & quick reference for PLIST \\
-PBIND.1           & quick reference for PBIND \\
-P2HEX.1           & quick reference for P2HEX \\
-P2BIN.1           & quick reference for P2BIN \\
 \hline
 \end{tabular}\end{center}
 \caption{Standard Contents of a Binary Distribution - Part 3
@@ -675,6 +646,15 @@ the extended memory provided by the extender.
 \begin{center}\begin{tabular}{|l|l|}
 \hline
 File              & Function \\
+\hline
+\hline
+{\bf Directory MAN} & \\
+\hline
+ASL.1             & quick reference for AS \\
+PLIST.1           & quick reference for PLIST \\
+PBIND.1           & quick reference for PBIND \\
+P2HEX.1           & quick reference for P2HEX \\
+P2BIN.1           & quick reference for P2BIN \\
 \hline
 \hline
 {\bf Directory BIN} & \\
@@ -3432,12 +3412,15 @@ au) SX20, SX28
 The SX20 uses a smaller housing and lacks port C.
 %%-----------
 \begin{quote}
-av) ST6210/ST6215$\rightarrow$ST6220/ST6225
+av) ST6200, ST6201, ST6203, ST6208, ST6209,\\
+    ST6210, ST6215, ST6218, ST6220, ST6225,\\
+    ST6228, ST6230, ST6232, ST6235, ST6240,\\
+    ST6242, ST6245, ST6246, ST6252, ST6253,\\
+    ST6255, ST6260, ST6262, ST6263, ST6265,\\
+    ST6280, ST6285
 \end{quote}
-The only distinction AS makes between the two pairs is the smaller
-addressing space (2K instead 4K) of the first ones.  The detailed
-distinction serves to provide an automatic distinction in the source
-file which hardware is available (analog to the 8051/52/515).
+The various ST6 derivates differ in the amount of
+on-chip peripherals and built-in memory.
 %%-----------
 \begin{quote}
 aw) ST7 \\
@@ -3738,6 +3721,13 @@ cd) MSM5054, MSM5055, MSM5056, MSM6051, MSM6052
 \end{quote}
 The as for the OLMS-40 family: differences in instruction
 set and the amount of internal program and data memory.
+%%-----------
+\begin{quote}
+ce) MN1610[ALT] $\rightarrow$ MN1613[ALT]
+\end{quote}
+In addition to its predecessor's features, the MN1613 offers a larger
+address space, a floating point unit and a couple of new machine
+instructions.
 %%-----------
 \begin{quote}
 ce) 1802 $\rightarrow$ 1804, 1805, 1806 $\rightarrow$ 1804A,
@@ -4467,6 +4457,25 @@ It is possible to assign a simple \tty{NOTHING} instead of a value, e.g.
 if the bank register is used temporarily as a memory cell.  This value is
 also the default.
 
+The program counter of these controller only has a width of 12 bits.  This
+means that some sort of banking scheme had to be introduced if a device
+includes more than 4 KBytes of program memory.  The banking scheme splits
+both proram space and program memory in pages of 2 KBytes.  Page one of the
+program space always accesses page one of program memory.  The \tty{PRPR}
+register present on such devices selects which page of program memory is
+accessed via addresses 000h to 7ffh of program space.  As an initial
+approcimation, AS regards program space to be linear and of the size of
+program memory.  If a jump or call from page one is made to code in one
+of the other pages, it checks whether the assumed contents of the \tty{PRPR}
+register match the destination address.  If a jump or call is done from
+one of the other pages to an address outside of page one, it checks whether
+the destination address is within the same page.  {\bf IMPORTANT}: The
+program counter itself is only 12 bits wide.  It is therefore not possible
+to jump from one page to another one, without an intermediate step of
+jumping back to page one.  Changing the \tty{PRPR} register while operating
+outside of page one would result in ''pulling out'' the code from under
+one's feet.
+
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 \subsubsection{ST9}
@@ -4561,7 +4570,7 @@ hand:
 
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-\subsubsection{$\mu$PD78(C)10}
+\subsubsection{uPD78(C)10}
 
 These processors have a register (V) that allows to move the ''zero
 page'', i.e. page of memory that is addressable by just one byte,
@@ -4575,52 +4584,6 @@ via the \tty{ASSUME}-command about the contents of the V register.  If an
 instruction with short addressing is used, it will be checked if the upper
 half of the address expression corresponds to the expected content.  A
 warning will be issued if both do not match.
-
-Architecture and instructon set of these processors are coarsely
-related to the Intel 808/8085 - thi is also true for the
-mnemonics.  The adressing mode (direct, indirect, immediate) is
-packed into the mnemonic, and 16 bit registers (BC, DE, HL) are
-written with just one letter.  However, since NEC itself also
-uses at some places written-out register names and parentheses to
-signify indirect addressing, I decided to support some
-alternative notations next to the 'official' ones.   Some non-NEC
-tools like disassemblers seem to use these notations either:
-
-\begin{itemize}
-\item{It is allowed to use \tty{BC}, \tty{(B)}, or \tty{(BC)}
-      instead of \tty{B}.}
-\item{It is allowed to use \tty{DE}, \tty{(D)}, or \tty{(DE)}
-      instead of \tty{D}.}
-\item{It is allowed to use \tty{HL}, \tty{(H)}, or \tty{(HL)}
-      instead of \tty{H}.}
-\item{It is allowed to use \tty{DE+}, \tty{(D+)}, \tty{(DE+)},
-      or \tty{(DE)+} instead of \tty{D+}.}
-\item{It is allowed to use \tty{HL+}, \tty{(H+)}, \tty{(HL+)},
-      or \tty{(HL)+} instead of \tty{H+}.}
-\item{It is allowed to use \tty{DE-}, \tty{(D-)}, \tty{(DE-)},
-      or \tty{(DE)-} instead of \tty{D-}.}
-\item{It is allowed to use \tty{HL-}, \tty{(H-)}, \tty{(HL-)},
-      or \tty{(HL)-} instead of \tty{H-}.}
-\item{It is allowed to use \tty{DE++}, \tty{(D++)}, \tty{(DE++)},
-      or \tty{(DE)++} instead of \tty{D++}.}
-\item{It is allowed to use \tty{HL++}, \tty{(H++)}, \tty{(HL++)},
-      or \tty{(HL)++} instead of \tty{H++}.}
-\item{It is allowed to use \tty{DE--}, \tty{(D--)}, \tty{(DE--)},
-      or \tty{(DE)--} instead of \tty{D--}.}
-\item{It is allowed to use \tty{HL--}, \tty{(H--)}, \tty{(HL--)},
-      or \tty{(HL)--} instead of \tty{H--}.}
-\item{It is allowed to use \tty{HL+A}, \tty{A+H}, \tty{A+HL},
-      \tty{(H+A)}, \tty{(HL+A)}, \tty{(A+H)}, or \tty{(A+HL)}
-      instead of \tty{H+A}.}
-\item{It is allowed to use \tty{HL+B}, \tty{B+H}, \tty{B+HL},
-      \tty{(H+B)}, \tty{(HL+B)}, \tty{(B+H)}, or \tty{(B+HL)}
-      instead of \tty{H+B}.}
-\item{It is allowed to use \tty{HL+EA}, \tty{EA+H}, \tty{EA+HL},
-      \tty{(H+EA)}, \tty{(HL+EA)}, \tty{(EA+H)}, or \tty{(EA+HL)}
-      instead of \tty{H+EA}.}
-\end{itemize}
-
-
 
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
@@ -4651,8 +4614,22 @@ assumed to be 0, with the exception of 0ffh for PCB.
 
 Furthermore, a DPR register exists that specifies which memory page within
 the 64K bank given by DTB may be reached with 8 bit addresses.  The
-default for DPR is 1, resulting in a default page of 0001xxh when ine
+default for DPR is 1, resulting in a default page of 0001xxh when one
 takes DTB's default into account.
+
+%%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+\subsubsection{MN1613}
+
+The MN1613 is an extension of an architecture with 16 bit addresses.  The
+address extension is done by a set of "segment registers" (CSBR, SSBR, TSR0, and
+TSR1), each of which is four bits wide.  The contents of a segment register,
+left-shifted by 14 bits, is added to the 16 bit addresses.  This way, a process may
+access a memory window of 64 KWords within the address space of 256 KWords. The
+assembler uses segment register values reported via \tty{ASSUME} to warn whether
+an absolute address is outside the window defined by the used segment register.
+If the address is within the window, it will compute the correc t16-bit offset.
+Naturally, this cannot be done when indirect addressing is used.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -4728,6 +4705,30 @@ syntax, it is not possible to program in 'Z80 style' all the
 time.  The limits of this operation mode can be looked up in
 detail in section \ref{8080Spec}.
 
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\subsection{EXPECT and ENDEXPECT}
+\ttindex{EXPECT}
+\ttindex{ENDEXPECT}
+
+This pair of instructions may be used to frame a piece of code that
+is {\em expected} to trigger one or more error or warning messages.
+If the errors or warnings (identified by their numbers, see chapter
+\ref{ChapErrMess}) do occur, they are suppressed and assembly continues
+without any error (naturally, without creating code at the erroneous
+places).  However, if warnings or errors that were expected do not
+occur, \tty{ENDEXPECT} will emit errors about them.  The main usage
+scenario of these instructions are the self tests in the tests/
+subdirectory.  For instance, one may check this way if range
+checking of operands works as expected:
+\begin{verbatim}
+       cpu      68000
+       expect   1320     ; immediate shift only for 1..8
+       lsl.l    #10,d0
+       endexpect
+\end{verbatim}
+
+
 %%---------------------------------------------------------------------------
 
 \section{Data Definitions}
@@ -4746,7 +4747,7 @@ number of parameters which are being processed from left to right.
 \subsection{DC[.Size]}
 \ttindex{DC}
 
-{\em valid for: 680x0, M*Core, 68xx, H8, SH7x00, DSP56xxx, XA, ST7/STM8}
+{\em valid for: 680x0, M*Core, 68xx, H8, SH7x00, DSP56xxx, XA, ST7/STM8, MN161x}
 
 This instruction places one or several constants of the type
 specified by the attribute into memory.  The attributes are the same ones as
@@ -4795,7 +4796,7 @@ constants in a single statement.
 \subsection{DS[.Size]}
 \ttindex{DS}
 
-{\em valid for: 680x0, M*Core, 68xx, H8, SH7x00, DSP56xxx, XA, ST7/STM8}
+{\em valid for: 680x0, M*Core, 68xx, H8, SH7x00, DSP56xxx, XA, ST7/STM8, MN161x}
 
 On the one hand, this instruction enables to reserve memory space for
 the specified count of numbers of the type given by the attribute.
@@ -9589,13 +9590,57 @@ column exclusively for labels!
 
 %%---------------------------------------------------------------------------
 
-\section{78(C)1x}
+\section{uPD78(C)1x}
 \label{78C1xSpec}
 
 For relative, unconditional instructions, there is the \tty{JR} instruction
 branch distance -32...+31, one byte), and the \tty{JRE} instruction (branch
 distance -256...+255, two bytes).  AS furthermore knows the \tty{J} pseudo
 instruction, which automatically selects the shortest possible variant.
+
+Architecture and instructon set of these processors are coarsely
+related to the Intel 8080/8085 - thi is also true for the
+mnemonics.  The adressing mode (direct, indirect, immediate) is
+packed into the mnemonic, and 16 bit registers (BC, DE, HL) are
+written with just one letter.  However, since NEC itself also
+uses at some places written-out register names and parentheses to
+signify indirect addressing, I decided to support some
+alternative notations next to the 'official' ones.   Some non-NEC
+tools like disassemblers seem to use these notations either:
+
+\begin{itemize}
+\item{It is allowed to use \tty{BC}, \tty{(B)}, or \tty{(BC)}
+      instead of \tty{B}.}
+\item{It is allowed to use \tty{DE}, \tty{(D)}, or \tty{(DE)}
+      instead of \tty{D}.}
+\item{It is allowed to use \tty{HL}, \tty{(H)}, or \tty{(HL)}
+      instead of \tty{H}.}
+\item{It is allowed to use \tty{DE+}, \tty{(D+)}, \tty{(DE+)},
+      or \tty{(DE)+} instead of \tty{D+}.}
+\item{It is allowed to use \tty{HL+}, \tty{(H+)}, \tty{(HL+)},
+      or \tty{(HL)+} instead of \tty{H+}.}
+\item{It is allowed to use \tty{DE-}, \tty{(D-)}, \tty{(DE-)},
+      or \tty{(DE)-} instead of \tty{D-}.}
+\item{It is allowed to use \tty{HL-}, \tty{(H-)}, \tty{(HL-)},
+      or \tty{(HL)-} instead of \tty{H-}.}
+\item{It is allowed to use \tty{DE++}, \tty{(D++)}, \tty{(DE++)},
+      or \tty{(DE)++} instead of \tty{D++}.}
+\item{It is allowed to use \tty{HL++}, \tty{(H++)}, \tty{(HL++)},
+      or \tty{(HL)++} instead of \tty{H++}.}
+\item{It is allowed to use \tty{DE--}, \tty{(D--)}, \tty{(DE--)},
+      or \tty{(DE)--} instead of \tty{D--}.}
+\item{It is allowed to use \tty{HL--}, \tty{(H--)}, \tty{(HL--)},
+      or \tty{(HL)--} instead of \tty{H--}.}
+\item{It is allowed to use \tty{HL+A}, \tty{A+H}, \tty{A+HL},
+      \tty{(H+A)}, \tty{(HL+A)}, \tty{(A+H)}, or \tty{(A+HL)}
+      instead of \tty{H+A}.}
+\item{It is allowed to use \tty{HL+B}, \tty{B+H}, \tty{B+HL},
+      \tty{(H+B)}, \tty{(HL+B)}, \tty{(B+H)}, or \tty{(B+HL)}
+      instead of \tty{H+B}.}
+\item{It is allowed to use \tty{HL+EA}, \tty{EA+H}, \tty{EA+HL},
+      \tty{(H+EA)}, \tty{(HL+EA)}, \tty{(EA+H)}, or \tty{(EA+HL)}
+      instead of \tty{H+EA}.}
+\end{itemize}
 
 %%---------------------------------------------------------------------------
 
@@ -9711,6 +9756,18 @@ instruction placed between the prefix and the machine instruction does
 {\em not} reset the toggle.  This is also true for pseudo instructions
 that store data or modify the program counter.  Which doesn't make much
 sense anyway...
+
+%%---------------------------------------------------------------------------
+
+\section{MN161x}
+
+This target is special because there are two different code generators one may
+choose from.  The first one was kindly provided by Haruo Asano and that may be
+reached via the CPU names \tty{MN1610} resp.\tty{MN1613}.  The other one was
+written by me and is activated via the CPU names \tty{MN1610ALT} resp.
+\tty{MN1613ALT}.  If you want to use the MN1613's extended address space of
+256 KWords, or if you want to experiment with the MN1613's floating point
+formant, you have to use the \tty{ALT} target.
 
 %%===========================================================================
 
@@ -10777,20 +10834,52 @@ described by:
                 8086 assembly). You must define it with a \tty{BYTE or WORD}
                 \tty{PTR} prefix.}
                {none}
-\errentry{1135}{invalid operand type}
+\errentry{1133}{expected integer or string, but got floating point number}
                {error}
-               {an expression does not have a correct operand type
-                (integer/\-decimal/\-string)}
-               {the operand type}
+               {A floating point number cannot be used as argument at this place.}
+               {the argument in question}
+\errentry{1134}{expected integer, but got floating point number}
+               {error}
+               {A floating point number cannot be used as argument at this place.}
+               {the argument in question}
+\errentry{1136}{expected floating point number, but got string}
+               {error}
+               {A string cannot be used as argument at this place.}
+               {the argument in question}
 \errentry{1137}{operand type mismatch}
                {Error}
                {The two arguments of an operator are not of same
                 data type (integer/\-float/\-string).}
                {keines}
+\errentry{1138}{expected string, but got integer}
+               {error}
+               {An integer cannot be used as argument at this place.}
+               {the argument in question}
+\errentry{1139}{expected string, but got floating point number}
+               {error}
+               {An floating point number cannot be used as argument at this place.}
+               {the argument in question}
 \errentry{1140}{too many arguments}
                {error}
                {No more than 20 arguments can be given to any instruction}
                {none}
+\errentry{1141}{expected integer, but got string}
+               {error}
+               {A string cannot be used as argument at this place.}
+               {the argument in question}
+\errentry{1142}{expected integer or floating point number, but got string}
+               {error}
+               {A string cannot be used as argument at this place.}
+               {the argument in question}
+\errentry{1143}{expected string}
+               {error}
+               {Only a string (enclosed in single quotes) may be used as
+                argument at this place.}
+               {the argument in question}
+\errentry{1144}{expected integer}
+               {error}
+               {Only an integer number may be used as argument at this place.}
+               {the argument in question}
 \errentry{1200}{unknown instruction}
                {error}
                {An instruction was used that is neither an AS instruction, nor a
@@ -10817,6 +10906,10 @@ described by:
                {An integer word overflowed the allowed range.}
                {the value of the world, and the allowed maximum (in most
                 cases, maybe I will complete this one day...)}
+\errentry{1322}{not a power of two}
+               {error}
+               {only powers of two (1,2,4,8,...) are allowed at this place.}
+               {The value in question}
 \errentry{1325}{address is not properly aligned}
                {error}
                {The given address does not correspond with the size needed
@@ -11924,15 +12017,16 @@ John Weinrich.
 demonstrated with their ASM68K how one should \bb{not} do it and thereby
 indirectly gave me the impulse to write something better!
 
-I did not entirely write AS on my own. AS contains the OverXMS
-routines from Wilbert van Leijen which can move the overlay modules
-into the extended memory.  A really nice library, easy to use without
-problems!
+I did not entirely write AS on my own. The DOS version of AS contained
+the OverXMS routines from Wilbert van Leijen which can move the overlay
+modules into the extended memory.  A really nice library, easy to use
+without problems!
 
 The TMS320C2x/5x code generators and the file \tty{STDDEF2x.INC} come
 from Thomas Sailer, ETH Zurich.  It's surprising, he only needed one
 weekend to understand my coding and to implement the new code generator.
-Either that was a long nightshift or I am slowly getting old...
+Either that was a long nightshift or I am slowly getting old...the same
+praise goes to Haruo Asano for providing the MN1610/MN1613 code generator.
 
 %%===========================================================================
 

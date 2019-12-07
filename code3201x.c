@@ -57,9 +57,9 @@ static ImmOrder *ImmOrders;
 static Word EvalARExpression(const tStrComp *pArg, Boolean *OK)
 {
   *OK = True;
-  if (!strcasecmp(pArg->Str, "AR0"))
+  if (!as_strcasecmp(pArg->Str, "AR0"))
     return 0;
-  if (!strcasecmp(pArg->Str, "AR1"))
+  if (!as_strcasecmp(pArg->Str, "AR1"))
     return 1;
   return EvalStrIntExpression(pArg, UInt1, OK);
 }
@@ -92,7 +92,7 @@ static void DecodeAdr(const tStrComp *pArg, int Aux, Boolean Must1)
   else if (ChkArgCnt(1, Aux - 1))
   {
     h = 0;
-    if ((strlen(pArg->Str) > 3) && (!strncasecmp(pArg->Str, "DAT", 3)))
+    if ((strlen(pArg->Str) > 3) && (!as_strncasecmp(pArg->Str, "DAT", 3)))
     {
       AdrOK = True;
       for (p = pArg->Str + 3; *p != '\0'; p++)
@@ -178,7 +178,7 @@ static void DecodeAdrShift(Word Index)
     {
       if (ArgCnt == 2)
       {
-        if (!strncasecmp(ArgStr[2].Str, "AR", 2))
+        if (!as_strncasecmp(ArgStr[2].Str, "AR", 2))
         {
           HasSh = False;
           Cnt = 2;

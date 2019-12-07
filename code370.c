@@ -45,7 +45,7 @@ enum
   ModRegRel = 8,     /* nn(Rn) */
   ModImm = 9,        /* #nn */
   ModImmBRel = 10,   /* #nnnn(B) */
-  ModImmRegRel = 11, /* #nn(Rm) */
+  ModImmRegRel = 11  /* #nn(Rm) */
 };
 
 #define MModAccA (1 << ModAccA)
@@ -109,7 +109,7 @@ static void DecodeAdrRel(const tStrComp *pArg, Word Mask, Boolean AddrRel)
   AdrType = ModNone;
   AdrCnt = 0;
 
-  if (!strcasecmp(pArg->Str, "A"))
+  if (!as_strcasecmp(pArg->Str, "A"))
   {
     if (Mask & MModAccA)
       AdrType = ModAccA;
@@ -129,7 +129,7 @@ static void DecodeAdrRel(const tStrComp *pArg, Word Mask, Boolean AddrRel)
     goto chk;
   }
 
-  if (!strcasecmp(pArg->Str, "B"))
+  if (!as_strcasecmp(pArg->Str, "B"))
   {
     if (Mask & MModAccB)
       AdrType = ModAccB;
@@ -183,7 +183,7 @@ static void DecodeAdrRel(const tStrComp *pArg, Word Mask, Boolean AddrRel)
       if (OK)
       {
         *p = '(';
-        if (!strcasecmp(p, "(B)"))
+        if (!as_strcasecmp(p, "(B)"))
         {
           AdrVals[0] = Hi(HVal);
           AdrVals[1] = Lo(HVal);
@@ -265,7 +265,7 @@ static void DecodeAdrRel(const tStrComp *pArg, Word Mask, Boolean AddrRel)
     if (OK)
     {
       StrCompShorten (&Right, 1);
-      if (!strcasecmp(Right.Str, "B"))
+      if (!as_strcasecmp(Right.Str, "B"))
       {
         if (AddrRel)
           HVal -= EProgCounter() + 3;
@@ -274,7 +274,7 @@ static void DecodeAdrRel(const tStrComp *pArg, Word Mask, Boolean AddrRel)
         AdrCnt = 2;
         AdrType = ModBRel;
       }
-      else if (!strcasecmp(Right.Str, "SP"))
+      else if (!as_strcasecmp(Right.Str, "SP"))
       {
         if (AddrRel)
           HVal -= EProgCounter() + 3;
@@ -351,7 +351,7 @@ static void DissectBit_370(char *pDest, int DestSize, LargeWord Symbol)
   if (Addr < 2)
     as_snprintf(pDest, DestSize, "%c", HexStartCharacter + Addr);
   else
-    as_snprintf(pDest, DestSize, "%0.*u%s",
+    as_snprintf(pDest, DestSize, "%~0.*u%s",
                 ListRadixBase, (unsigned)Addr, GetIntelSuffix(ListRadixBase));
   as_snprcatf(pDest, DestSize, ".%c", Bit + '0');
 }
@@ -374,7 +374,7 @@ static Boolean DecodeBitExpr(int Start, int Stop, LongWord *pResult)
     if (!OK)
       return OK;
 
-    if ((!strcasecmp(ArgStr[Stop].Str, "A")) || (!strcasecmp(ArgStr[Stop].Str, "B")))
+    if ((!as_strcasecmp(ArgStr[Stop].Str, "A")) || (!as_strcasecmp(ArgStr[Stop].Str, "B")))
     {
       Addr = toupper(*ArgStr[Stop].Str) - 'A';
       OK = True;
@@ -982,7 +982,7 @@ static void DecodeABReg(Word Code)
   Code &= 0xff;
 
   if (!ChkArgCnt(1 + IsDJNZ, 1 + IsDJNZ));
-  else if (!strcasecmp(ArgStr[1].Str, "ST"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "ST"))
   {
     if (IsStack)
     {

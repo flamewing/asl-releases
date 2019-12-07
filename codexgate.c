@@ -360,17 +360,17 @@ static void DecodeTFR(Word Index)
   {
     Boolean OK = True;
 
-    if (!strcasecmp(ArgStr[2].Str, "CCR"))
+    if (!as_strcasecmp(ArgStr[2].Str, "CCR"))
     {
       WAsmCode[0] = 0x00f8;
       RegIdx = 1;
     }
-    else if (!strcasecmp(ArgStr[1].Str, "CCR"))
+    else if (!as_strcasecmp(ArgStr[1].Str, "CCR"))
     {
       WAsmCode[0] = 0x00f9;
       RegIdx = 2;
     }
-    else if (!strcasecmp(ArgStr[2].Str, "PC"))
+    else if (!as_strcasecmp(ArgStr[2].Str, "PC"))
     {
       WAsmCode[0] = 0x00fa;
       RegIdx = 1;

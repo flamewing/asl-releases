@@ -90,7 +90,7 @@ static void DecodeAdr(const tStrComp *pArg)
 
   if (*pArg->Str == '\0') return;
 
-  if (!strcasecmp(pArg->Str, "A"))
+  if (!as_strcasecmp(pArg->Str, "A"))
     AdrMode = ModAcc;
 
   else if (*pArg->Str == '#')
@@ -222,11 +222,11 @@ static Boolean IsIReg3(const char *pAsc)
 static void DecodeADD_ADDC(Word Code)
 {
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1].Str, "A")) WrError(ErrNum_InvOpType);
+  else if (as_strcasecmp(ArgStr[1].Str, "A")) WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
   else
   {
     DecodeAdr(&ArgStr[2]);
-    if ((AdrMode == ModNone) || (AdrMode == ModAcc)) WrError(ErrNum_InvAddrMode);
+    if ((AdrMode == ModNone) || (AdrMode == ModAcc)) WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[2]);
     else
     {
       switch (AdrMode)
@@ -251,10 +251,10 @@ static void DecodeADD_ADDC(Word Code)
 static void DecodeANL_ORL_XRL(Word Code)
 {
   if (!ChkArgCnt(2, 2));
-  else if (!strcasecmp(ArgStr[1].Str, "A"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "A"))
   {
     DecodeAdr(&ArgStr[2]);
-    if ((AdrMode == -1) || (AdrMode == ModAcc)) WrError(ErrNum_InvAddrMode);
+    if ((AdrMode == -1) || (AdrMode == ModAcc)) WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[2]);
     else
     {
       switch (AdrMode)
@@ -274,7 +274,7 @@ static void DecodeANL_ORL_XRL(Word Code)
       }
     }
   }
-  else if ((!strcasecmp(ArgStr[1].Str, "BUS")) || (!strcasecmp(ArgStr[1].Str, "P1")) || (!strcasecmp(ArgStr[1].Str, "P2")))
+  else if ((!as_strcasecmp(ArgStr[1].Str, "BUS")) || (!as_strcasecmp(ArgStr[1].Str, "P1")) || (!as_strcasecmp(ArgStr[1].Str, "P2")))
   {
     if (Code == 0x90) WrError(ErrNum_InvAddrMode);
     else
@@ -292,7 +292,7 @@ static void DecodeANL_ORL_XRL(Word Code)
           BAsmCode[0] += PortNum;
           ChkPx(PortNum);
         }
-        if (!strcasecmp(ArgStr[1].Str, "BUS"))
+        if (!as_strcasecmp(ArgStr[1].Str, "BUS"))
         {
           ChkExt();
           ChkNUPI();
@@ -359,7 +359,7 @@ static void DecodeCLR_CPL(Word Code)
     }
     while ((z < ClrCplCnt) && (CodeLen != 1));
     if (!OK)
-      WrError(ErrNum_InvOpType);
+      WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
     else
       BAsmCode[0] += Code;
   }
@@ -368,7 +368,7 @@ static void DecodeCLR_CPL(Word Code)
 static void DecodeAcc(Word Code)
 {
   if (!ChkArgCnt(1, 1));
-  else if (strcasecmp(ArgStr[1].Str, "A")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "A")) WrError(ErrNum_InvAddrMode);
   else
   {
     CodeLen = 1;
@@ -482,7 +482,7 @@ static void DecodeENT0(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(1, 1));
-  else if (strcasecmp(ArgStr[1].Str, "CLK")) WrError(ErrNum_InvOpType);
+  else if (as_strcasecmp(ArgStr[1].Str, "CLK")) WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
   else
   {
     CodeLen = 1;
@@ -526,8 +526,8 @@ static void DecodeIN(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1].Str, "A")) WrError(ErrNum_InvAddrMode);
-  else if (!strcasecmp(ArgStr[2].Str, "DBB"))
+  else if (as_strcasecmp(ArgStr[1].Str, "A")) WrError(ErrNum_InvAddrMode);
+  else if (!as_strcasecmp(ArgStr[2].Str, "DBB"))
   {
     CodeLen = 1;
     BAsmCode[0] = 0x22;
@@ -557,8 +557,8 @@ static void DecodeINS(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1].Str, "A")) WrError(ErrNum_InvAddrMode);
-  else if (strcasecmp(ArgStr[2].Str, "BUS")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "A")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[2].Str, "BUS")) WrError(ErrNum_InvAddrMode);
   else
   {
     CodeLen = 1;
@@ -573,7 +573,7 @@ static void DecodeJMPP(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(1, 1));
-  else if (strcasecmp(ArgStr[1].Str, "@A")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "@A")) WrError(ErrNum_InvAddrMode);
   else
   {
     CodeLen = 1;
@@ -659,26 +659,26 @@ static void DecodeMOV(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(2, 2));
-  else if (!strcasecmp(ArgStr[1].Str, "A"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "A"))
   {
-    if (!strcasecmp(ArgStr[2].Str, "T"))
+    if (!as_strcasecmp(ArgStr[2].Str, "T"))
     {
       CodeLen = 1;
       BAsmCode[0] = 0x42;
     }
-    else if (!strcasecmp(ArgStr[2].Str, "P1"))
+    else if (!as_strcasecmp(ArgStr[2].Str, "P1"))
     {
       CodeLen = 1;
       BAsmCode[0] = 0x63;
       ChkOKI();
     }
-    else if (!strcasecmp(ArgStr[2].Str, "P2"))
+    else if (!as_strcasecmp(ArgStr[2].Str, "P2"))
     {
       CodeLen = 1;
       BAsmCode[0] = 0x73;
       ChkOKI();
     }
-    else if (!strcasecmp(ArgStr[2].Str, "PSW"))
+    else if (!as_strcasecmp(ArgStr[2].Str, "PSW"))
     {
       CodeLen = 1;
       BAsmCode[0] = 0xc7;
@@ -707,7 +707,7 @@ static void DecodeMOV(Word Code)
        }
     }
   }
-  else if (!strcasecmp(ArgStr[1].Str, "P1"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "P1"))
   {
     if (IsIReg3(ArgStr[2].Str))
     {
@@ -718,20 +718,20 @@ static void DecodeMOV(Word Code)
     else
       WrError(ErrNum_InvAddrMode);
   }
-  else if (!strcasecmp(ArgStr[2].Str, "A"))
+  else if (!as_strcasecmp(ArgStr[2].Str, "A"))
   {
-    if (!strcasecmp(ArgStr[1].Str, "STS"))
+    if (!as_strcasecmp(ArgStr[1].Str, "STS"))
     {
       CodeLen = 1;
       BAsmCode[0] = 0x90;
       ChkUPI();
     }
-    else if (!strcasecmp(ArgStr[1].Str, "T"))
+    else if (!as_strcasecmp(ArgStr[1].Str, "T"))
     {
       CodeLen = 1;
       BAsmCode[0] = 0x62;
     }
-    else if (!strcasecmp(ArgStr[1].Str, "PSW"))
+    else if (!as_strcasecmp(ArgStr[1].Str, "PSW"))
     {
       CodeLen = 1;
       BAsmCode[0] = 0xd7;
@@ -781,7 +781,7 @@ static void DecodeMOV(Word Code)
     }
   }
   else
-    WrError(ErrNum_InvOpType);
+    WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
 }
 
 static void DecodeANLD_ORLD_MOVD(Word Code)
@@ -791,13 +791,13 @@ static void DecodeANLD_ORLD_MOVD(Word Code)
   {
     const char *pArg1 = ArgStr[1].Str, *pArg2 = ArgStr[2].Str;
 
-    if ((Code == 0x3c) && (!strcasecmp(ArgStr[1].Str, "A"))) /* MOVD */
+    if ((Code == 0x3c) && (!as_strcasecmp(ArgStr[1].Str, "A"))) /* MOVD */
     {
       pArg1 = ArgStr[2].Str;
       pArg2 = "A";
       Code = 0x0c;
     }
-    if (strcasecmp(pArg2, "A")) WrError(ErrNum_InvAddrMode);
+    if (as_strcasecmp(pArg2, "A")) WrError(ErrNum_InvAddrMode);
     else if ((strlen(pArg1) != 2) || (mytoupper(*pArg1) != 'P')) WrError(ErrNum_InvAddrMode);
     else if ((pArg1[1] < '4') || (pArg1[1] > '7')) WrError(ErrNum_OverRange);
     else
@@ -816,7 +816,7 @@ static void DecodeANLD_ORLD_MOVD(Word Code)
 static void DecodeMOVP_MOVP3(Word Code)
 {
   if (!ChkArgCnt(2, 2));
-  else if ((strcasecmp(ArgStr[1].Str, "A")) || (strcasecmp(ArgStr[2].Str, "@A"))) WrError(ErrNum_InvAddrMode);
+  else if ((as_strcasecmp(ArgStr[1].Str, "A")) || (as_strcasecmp(ArgStr[2].Str, "@A"))) WrError(ErrNum_InvAddrMode);
   else
   {
     CodeLen = 1;
@@ -830,7 +830,7 @@ static void DecodeMOVP1(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1].Str, "P")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "P")) WrError(ErrNum_InvAddrMode);
   else if (!IsIReg3(ArgStr[2].Str)) WrError(ErrNum_InvAddrMode);
   else
   {
@@ -850,13 +850,13 @@ static void DecodeMOVX(Word Code)
     const tStrComp *pArg1 = &ArgStr[1], *pArg2 = &ArgStr[2];
     Byte Code = 0x80;
 
-    if (!strcasecmp(pArg2->Str, "A"))
+    if (!as_strcasecmp(pArg2->Str, "A"))
     {
       pArg2 = &ArgStr[1];
       pArg1 = &ArgStr[2];
       Code += 0x10;
     }
-    if (strcasecmp(pArg1->Str, "A")) WrError(ErrNum_InvAddrMode);
+    if (as_strcasecmp(pArg1->Str, "A")) WrError(ErrNum_InvAddrMode);
     else
     {
       DecodeAdr(pArg2);
@@ -889,8 +889,8 @@ static void DecodeOUT(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1].Str, "DBB")) WrError(ErrNum_InvAddrMode);
-  else if (strcasecmp(ArgStr[2].Str, "A")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "DBB")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[2].Str, "A")) WrError(ErrNum_InvAddrMode);
   else
   {
     BAsmCode[0] = 0x02;
@@ -908,7 +908,7 @@ static void DecodeOUTL(Word Code)
   else
   {
     NLS_UpString(ArgStr[1].Str);
-    if (strcasecmp(ArgStr[2].Str, "A")) WrError(ErrNum_InvAddrMode);
+    if (as_strcasecmp(ArgStr[2].Str, "A")) WrError(ErrNum_InvAddrMode);
     else if (!strcmp(ArgStr[1].Str, "BUS"))
     {
       CodeLen = 1;
@@ -979,7 +979,7 @@ static void DecodeSTOP(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(1, 1));
-  else if (strcasecmp(ArgStr[1].Str, "TCNT")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "TCNT")) WrError(ErrNum_InvAddrMode);
   else
   {
     CodeLen = 1;
@@ -1019,12 +1019,12 @@ static void DecodeXCH(Word Code)
   {
     const tStrComp *pArg1 = &ArgStr[1], *pArg2 = &ArgStr[2];
 
-    if (!strcasecmp(pArg2->Str, "A"))
+    if (!as_strcasecmp(pArg2->Str, "A"))
     {
       pArg2 = &ArgStr[1];
       pArg1 = &ArgStr[2];
     }
-    if (strcasecmp(pArg1->Str, "A")) WrError(ErrNum_InvAddrMode);
+    if (as_strcasecmp(pArg1->Str, "A")) WrError(ErrNum_InvAddrMode);
     else
     {
       DecodeAdr(pArg2);
@@ -1054,12 +1054,12 @@ static void DecodeXCHD(Word Code)
   {
     const tStrComp *pArg1 = &ArgStr[1], *pArg2 = &ArgStr[2];
 
-    if (!strcasecmp(pArg2->Str, "A"))
+    if (!as_strcasecmp(pArg2->Str, "A"))
     {
       pArg2 = &ArgStr[1];
       pArg1 = &ArgStr[2];
     }
-    if (strcasecmp(pArg1->Str, "A")) WrError(ErrNum_InvAddrMode);
+    if (as_strcasecmp(pArg1->Str, "A")) WrError(ErrNum_InvAddrMode);
     else
     {
       DecodeAdr(pArg2);

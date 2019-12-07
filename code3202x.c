@@ -92,7 +92,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, int MinArgCnt, int aux, Boolean M
   Byte h;
   Boolean AdrOK = False;
 
-  while (pAdrMode->Name && strcasecmp(pAdrMode->Name, pArg->Str))
+  while (pAdrMode->Name && as_strcasecmp(pAdrMode->Name, pArg->Str))
     pAdrMode++;
   if (!pAdrMode->Name)
   {

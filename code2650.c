@@ -50,13 +50,13 @@ static Boolean DecodeCondition(const char *pAsc, Byte *pRes)
 {
   Boolean Result = TRUE;
 
-  if (!strcasecmp(pAsc, "EQ"))
+  if (!as_strcasecmp(pAsc, "EQ"))
     *pRes = 0;
-  else if (!strcasecmp(pAsc, "GT"))
+  else if (!as_strcasecmp(pAsc, "GT"))
     *pRes = 1;
-  else if (!strcasecmp(pAsc, "LT"))
+  else if (!as_strcasecmp(pAsc, "LT"))
     *pRes = 2;
-  else if ((!strcasecmp(pAsc, "ALWAYS")) || (!strcasecmp(pAsc, "UN")))
+  else if ((!as_strcasecmp(pAsc, "ALWAYS")) || (!as_strcasecmp(pAsc, "UN")))
     *pRes = 3;
   else
     Result = FALSE;

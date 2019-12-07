@@ -33,7 +33,7 @@
 #include "asmfnums.h"
 #include "asmdef.h"
 #include "cpulist.h"
-#include "errmsg.h"
+#include "asmerr.h"
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmmac.h"
@@ -132,6 +132,8 @@
 #include "code53c8xx.h"
 #include "codefmc8.h"
 #include "codefmc16.h"
+#include "codemn1610.h"
+#include "codemn2610.h"
 #include "codeol40.h"
 #include "codeol50.h"
 #include "code1802.h"
@@ -654,12 +656,12 @@ Boolean MACRO_Processor(PInputTag PInp, char *erg)
 
 static Boolean ReadMacro_SearchArg(const char *pTest, const char *pComp, Boolean *pErg)
 {
-  if (!strcasecmp(pTest, pComp))
+  if (!as_strcasecmp(pTest, pComp))
   {
     *pErg = True;
     return True;
   }
-  else if ((strlen(pTest) > 2) && (!strncasecmp(pTest, "NO", 2)) && (!strcasecmp(pTest + 2, pComp)))
+  else if ((strlen(pTest) > 2) && (!as_strncasecmp(pTest, "NO", 2)) && (!as_strcasecmp(pTest + 2, pComp)))
   {
     *pErg = False;
     return True;
@@ -682,12 +684,12 @@ static Boolean ReadMacro_SearchSect(char *Test_O, char *Comp, Boolean *Erg, Long
     strmaxcpy(Sect, p + 1, STRINGSIZE);
     *p = '\0';
   }
-  if ((strlen(Test) > 2) && (!strncasecmp(Test, "NO", 2)) && (!strcasecmp(Test + 2, Comp)))
+  if ((strlen(Test) > 2) && (!as_strncasecmp(Test, "NO", 2)) && (!as_strcasecmp(Test + 2, Comp)))
   {
     *Erg = False;
     return True;
   }
-  else if (!strcasecmp(Test, Comp))
+  else if (!as_strcasecmp(Test, Comp))
   {
     tStrComp TmpComp;
 
@@ -2984,6 +2986,7 @@ static void AssembleFile_ExitPass(void)
   SwitchFrom();
   ClearLocStack();
   ClearStacks();
+  AsmErrPassExit();
   for (z = 0; z < PCMax; z++)
     while (pPhaseStacks[z])
     {
@@ -3125,7 +3128,8 @@ static void AssembleFile(char *Name)
     /* Durchlauf initialisieren */
 
     AssembleFile_InitPass();
-    AsmSubInit();
+    AsmSubPassInit();
+    AsmErrPassInit();
     if (!QuietMode)
     {
       as_snprintf(Tmp, sizeof(Tmp), IntegerFormat, PassNo);
@@ -3174,7 +3178,7 @@ static void AssembleFile(char *Name)
 
     /* Listdatei oeffnen */
 
-    RewriteStandard(&LstFile, LstName);
+    OpenWithStandard(&LstFile, LstName);
     if (!LstFile)
       ChkIO(ErrNum_OpeningFile);
     if (!ListToNull)
@@ -3224,7 +3228,7 @@ static void AssembleFile(char *Name)
 
     if ((ErrorCount == 0) && (Repass))
     {
-      fclose(LstFile);
+      CloseIfOpen(&LstFile);
       if (CodeOutput)
         unlink(OutName);
       CleanupRegDefs();
@@ -4315,6 +4319,8 @@ int main(int argc, char **argv)
     code53c8xx_init();
     codef2mc8_init();
     codef2mc16_init();
+    codemn1610_init();
+    codemn2610_init();
     codeolms40_init();
     codeolms50_init();
     code1802_init();
@@ -4410,11 +4416,11 @@ int main(int argc, char **argv)
 #endif
   ProcessCMD(ASParams, ASParamCnt, ParUnprocessed, EnvName, ParamError);
 
-  SysString(Dummy, sizeof(Dummy), 0xff, ListRadixBase, 0, HexStartCharacter);
+  SysString(Dummy, sizeof(Dummy), 0xff, ListRadixBase, 0, False, HexStartCharacter);
   SystemListLen8 = strlen(Dummy);
-  SysString(Dummy, sizeof(Dummy), 0xffffu, ListRadixBase, 0, HexStartCharacter);
+  SysString(Dummy, sizeof(Dummy), 0xffffu, ListRadixBase, 0, False, HexStartCharacter);
   SystemListLen16 = strlen(Dummy);
-  SysString(Dummy, sizeof(Dummy), 0xfffffffful, ListRadixBase, 0, HexStartCharacter);
+  SysString(Dummy, sizeof(Dummy), 0xfffffffful, ListRadixBase, 0, False, HexStartCharacter);
   SystemListLen32 = strlen(Dummy);
 
   /* wegen QuietMode dahinter */

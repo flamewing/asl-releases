@@ -42,7 +42,7 @@ enum
   ModReg16 = 1,
   ModImm = 2,
   ModAbs = 3,
-  ModMem = 4,
+  ModMem = 4
 };
 
 #define MModReg8 (1 << ModReg8)
@@ -101,7 +101,7 @@ static void DecodeAdr(const tStrComp *pArg, Byte Erl)
   }
 
   for (z = 0; z < Reg16Cnt; z++)
-    if (!strcasecmp(pArg->Str, Reg16Names[z]))
+    if (!as_strcasecmp(pArg->Str, Reg16Names[z]))
     {
       AdrType = ModReg16;
       OpSize = 1;
@@ -119,13 +119,13 @@ static void DecodeAdr(const tStrComp *pArg, Byte Erl)
     StrCompRefRight(&Arg, pArg, 1);
     StrCompShorten(&Arg, 1);
 
-    if (!strcasecmp(Arg.Str, "-HL"))
+    if (!as_strcasecmp(Arg.Str, "-HL"))
     {
       AdrType = ModMem;
       AdrMode = 7;
       goto chk;
     }
-    if (!strcasecmp(Arg.Str, "HL+"))
+    if (!as_strcasecmp(Arg.Str, "HL+"))
     {
       AdrType = ModMem;
       AdrMode = 6;
@@ -145,7 +145,7 @@ static void DecodeAdr(const tStrComp *pArg, Byte Erl)
         StrCompSplitRef(&Arg, &Remainder, &Arg, EPos);
 
       for (z = 0; z < AdrRegCnt; z++)
-        if (!strcasecmp(Arg.Str, AdrRegs[z]))
+        if (!as_strcasecmp(Arg.Str, AdrRegs[z]))
           break;
       if (z >= AdrRegCnt)
       {
@@ -324,7 +324,7 @@ static void DecodeLD(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(2, 2));
-  else if (!strcasecmp(ArgStr[1].Str, "SP"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "SP"))
   {
     OpSize=1;
     DecodeAdr(&ArgStr[2], MModImm+MModReg16);
@@ -341,7 +341,7 @@ static void DecodeLD(Word Code)
         break;
     }
   }
-  else if (!strcasecmp(ArgStr[2].Str, "SP"))
+  else if (!as_strcasecmp(ArgStr[2].Str, "SP"))
   {
     DecodeAdr(&ArgStr[1], MModReg16);
     switch (AdrType)
@@ -353,7 +353,7 @@ static void DecodeLD(Word Code)
         break;
     }
   }
-  else if (!strcasecmp(ArgStr[1].Str, "RBS"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "RBS"))
   {
     BAsmCode[1] = EvalStrIntExpression(&ArgStr[2], Int4, &OK);
     if (OK)
@@ -362,7 +362,7 @@ static void DecodeLD(Word Code)
       BAsmCode[0] = 0x0f;
     }
   }
-  else if (!strcasecmp(ArgStr[1].Str, "CF"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "CF"))
   {
     if (!SplitBit(&ArgStr[2], &HReg)) WrError(ErrNum_InvBitPos);
     else
@@ -405,7 +405,7 @@ static void DecodeLD(Word Code)
       }
     }
   }
-  else if (!strcasecmp(ArgStr[2].Str, "CF"))
+  else if (!as_strcasecmp(ArgStr[2].Str, "CF"))
   {
     if (!SplitBit(&ArgStr[1], &HReg)) WrError(ErrNum_InvBitPos);
     else
@@ -738,7 +738,7 @@ static void DecodeCLR(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "CF"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "CF"))
   {
     CodeLen = 1;
     BAsmCode[0] = 0x0c;
@@ -867,7 +867,7 @@ static void DecodeLDW(Word Code)
 static void DecodePUSH_POP(Word Code)
 {
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "PSW"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "PSW"))
   {
     CodeLen = 1;
     BAsmCode[0] = Code;
@@ -889,7 +889,7 @@ static void DecodeTEST_CPL_SET(Word Code)
   Byte HReg;
 
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "CF"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "CF"))
   {
     if (Code == 0xd8) WrError(ErrNum_InvAddrMode);
     else
@@ -973,7 +973,7 @@ static void DecodeALU(Word Code)
   Boolean OK;
 
   if (!ChkArgCnt(2, 2));
-  else if (!strcasecmp(ArgStr[1].Str, "CF"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "CF"))
   {
     if (Code != 5) WrError(ErrNum_InvAddrMode); /* XOR */
     else if (!SplitBit(&ArgStr[2], &HReg)) WrError(ErrNum_InvBitPos);
@@ -1080,7 +1080,7 @@ static void DecodeALU(Word Code)
         }
         break;
       case ModAbs:
-        if (!strcasecmp(ArgStr[2].Str, "(HL)"))
+        if (!as_strcasecmp(ArgStr[2].Str, "(HL)"))
         {
           CodeLen = 3;
           BAsmCode[0] = 0xe0;
@@ -1100,7 +1100,7 @@ static void DecodeALU(Word Code)
         }
         break;
       case ModMem:
-        if (!strcasecmp(ArgStr[2].Str, "(HL)"))
+        if (!as_strcasecmp(ArgStr[2].Str, "(HL)"))
         {
           CodeLen = 2 + AdrCnt;
           BAsmCode[0] = 0xe0 | AdrMode;
@@ -1253,7 +1253,7 @@ static void DecodeDIV(Word Code)
 static void DecodeROLD_RORD(Word Code)
 {
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1].Str, "A")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "A")) WrError(ErrNum_InvAddrMode);
   else
   {
     DecodeAdr(&ArgStr[2], MModAbs | MModMem);

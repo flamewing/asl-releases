@@ -269,7 +269,7 @@ static Boolean DecodeReg8(char *Asc, Byte *Erg)
   int z;
 
   for (z = 0; z < Reg8Cnt; z++)
-    if (!strcasecmp(Asc, Reg8Names[z]))
+    if (!as_strcasecmp(Asc, Reg8Names[z]))
     {
       *Erg = z;
       if (z == 6)
@@ -304,13 +304,13 @@ static void DecodeAdr(const tStrComp *pArg)
 
   /* 0. Sonderregister */
 
-  if (!strcasecmp(pArg->Str, "R"))
+  if (!as_strcasecmp(pArg->Str, "R"))
   {
     AdrMode = ModRef;
     return;
   }
 
-  if (!strcasecmp(pArg->Str, "I"))
+  if (!as_strcasecmp(pArg->Str, "I"))
   {
     AdrMode = ModInt;
     return;
@@ -341,7 +341,8 @@ static void DecodeAdr(const tStrComp *pArg)
           return;
         case 'H':
           if (MomCPU != CPUZ80U)
-            break; /* conditional break, do not allow IXH/IYH on Z380 */
+            break;
+          /* else fall-through */ /* do not allow IXH/IYH on Z380 */
         case 'U':
           AdrMode = ModReg8;
           BAsmCode[PrefixCnt++] = (ix == 'X') ? IXPrefix : IYPrefix;
@@ -353,7 +354,7 @@ static void DecodeAdr(const tStrComp *pArg)
   /* 2. 16-Bit-Register ? */
 
   for (z = 0; z < Reg16Cnt; z++)
-    if (!strcasecmp(pArg->Str, Reg16Names[z]))
+    if (!as_strcasecmp(pArg->Str, Reg16Names[z]))
     {
       AdrMode = ModReg16;
       if (z <= 3)
@@ -371,7 +372,7 @@ static void DecodeAdr(const tStrComp *pArg)
   if ((strlen(pArg->Str) >= 4) && (*pArg->Str == '(') && (pArg->Str[l = strlen(pArg->Str) - 1] == ')'))
   {
     for (z = 0; z < Reg16Cnt; z++)
-      if ((!strncasecmp(pArg->Str + 1, Reg16Names[z], 2)) && (!IsSym(pArg->Str[3])))
+      if ((!as_strncasecmp(pArg->Str + 1, Reg16Names[z], 2)) && (!IsSym(pArg->Str[3])))
       {
         if (z < 3)
         {
@@ -539,8 +540,8 @@ static void AppendAdrVals(void)
 
 static Boolean ParPair(char *Name1, char *Name2)
 {
-  return (((!strcasecmp(ArgStr[1].Str, Name1)) && (!strcasecmp(ArgStr[2].Str, Name2))) ||
-          ((!strcasecmp(ArgStr[1].Str, Name2)) && (!strcasecmp(ArgStr[2].Str, Name1))));
+  return (((!as_strcasecmp(ArgStr[1].Str, Name1)) && (!as_strcasecmp(ArgStr[2].Str, Name2))) ||
+          ((!as_strcasecmp(ArgStr[1].Str, Name2)) && (!as_strcasecmp(ArgStr[2].Str, Name1))));
 }
 
 /*-------------------------------------------------------------------------*/
@@ -551,7 +552,7 @@ static Boolean DecodeCondition(const char *Name, int *Erg)
   int z;
 
   z = 0;
-  while ((z < ConditionCnt) && (strcasecmp(Conditions[z].Name, Name))) z++;
+  while ((z < ConditionCnt) && (as_strcasecmp(Conditions[z].Name, Name))) z++;
   if (z >= ConditionCnt)
   {
     *Erg = 0;
@@ -569,13 +570,13 @@ static Boolean DecodeCondition(const char *Name, int *Erg)
 
 static Boolean DecodeSFR(char *Inp, Byte *Erg)
 {
-  if (!strcasecmp(Inp, "SR"))
+  if (!as_strcasecmp(Inp, "SR"))
     *Erg = 1;
-  else if (!strcasecmp(Inp, "XSR"))
+  else if (!as_strcasecmp(Inp, "XSR"))
     *Erg = 5;
-  else if (!strcasecmp(Inp, "DSR"))
+  else if (!as_strcasecmp(Inp, "DSR"))
     *Erg = 6;
-  else if (!strcasecmp(Inp, "YSR"))
+  else if (!as_strcasecmp(Inp, "YSR"))
     *Erg = 7;
   else
     return False;
@@ -625,7 +626,7 @@ static void DecodeAcc(Word Index)
 
   if (!ChkArgCnt(0, 1));
   else if (!ChkMinCPU(POrder->MinCPU));
-  else if ((ArgCnt) && (strcasecmp(ArgStr[1].Str, "A"))) WrError(ErrNum_InvAddrMode);
+  else if ((ArgCnt) && (as_strcasecmp(ArgStr[1].Str, "A"))) WrError(ErrNum_InvAddrMode);
   else
   {
     if (POrder->Len == 2)
@@ -645,7 +646,7 @@ static void DecodeHL(Word Index)
 
   if (!ChkArgCnt(0, 1));
   else if (!ChkMinCPU(POrder->MinCPU));
-  else if ((ArgCnt) && (strcasecmp(ArgStr[1].Str, "HL"))) WrError(ErrNum_InvAddrMode);
+  else if ((ArgCnt) && (as_strcasecmp(ArgStr[1].Str, "HL"))) WrError(ErrNum_InvAddrMode);
   else
   {
     if (POrder->Len == 2)
@@ -1136,13 +1137,13 @@ static void DecodeLD(Word IsLDW)
         }
         break;
       case ModInt:
-        if (!strcasecmp(ArgStr[2].Str, "A")) /* LD I,A */
+        if (!as_strcasecmp(ArgStr[2].Str, "A")) /* LD I,A */
         {
           CodeLen = 2;
           BAsmCode[0] = 0xed;
           BAsmCode[1] = 0x47;
         }
-        else if (!strcasecmp(ArgStr[2].Str, "HL")) /* LD I,HL */
+        else if (!as_strcasecmp(ArgStr[2].Str, "HL")) /* LD I,HL */
         {
          if (ChkMinCPU(CPUZ380))
          {
@@ -1154,7 +1155,7 @@ static void DecodeLD(Word IsLDW)
         else WrError(ErrNum_InvAddrMode);
         break;
       case ModRef:
-        if (!strcasecmp(ArgStr[2].Str, "A")) /* LD R,A */
+        if (!as_strcasecmp(ArgStr[2].Str, "A")) /* LD R,A */
         {
           CodeLen = 2;
           BAsmCode[0] = 0xed;
@@ -1222,7 +1223,7 @@ static void DecodeALU8(Word Code)
       return;
   }
 
-  if (!strcasecmp(pDestArg->Str, "HL"))
+  if (!as_strcasecmp(pDestArg->Str, "HL"))
   {
     if (Code != 2) WrError(ErrNum_InvAddrMode);
     else
@@ -1241,7 +1242,7 @@ static void DecodeALU8(Word Code)
       }
     }
   }
-  else if (!strcasecmp(pDestArg->Str, "SP"))
+  else if (!as_strcasecmp(pDestArg->Str, "SP"))
   {
     if (Code != 2) WrError(ErrNum_InvAddrMode);
     else
@@ -1260,7 +1261,7 @@ static void DecodeALU8(Word Code)
       }
     }
   }
-  else if (strcasecmp(pDestArg->Str, "A")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(pDestArg->Str, "A")) WrError(ErrNum_InvAddrMode);
   else
   {
     OpSize = 0; DecodeAdr(pSrcArg);
@@ -1290,7 +1291,7 @@ static void DecodeALU16(Word Code)
 {
   if (!ChkArgCnt(1, 2));
   else if (!ChkMinCPU(CPUZ380));
-  else if ((ArgCnt == 2) && (strcasecmp(ArgStr[1].Str, "HL"))) WrError(ErrNum_InvAddrMode);
+  else if ((ArgCnt == 2) && (as_strcasecmp(ArgStr[1].Str, "HL"))) WrError(ErrNum_InvAddrMode);
   else
   {
     OpSize = 1; DecodeAdr(&ArgStr[ArgCnt]);
@@ -1434,7 +1435,7 @@ static void DecodeADDW(Word Index)
 
   if (!ChkArgCnt(1, 2));
   else if (!ChkMinCPU(CPUZ380));
-  else if ((ArgCnt == 2) && (strcasecmp(ArgStr[1].Str, "HL"))) WrError(ErrNum_InvAddrMode);
+  else if ((ArgCnt == 2) && (as_strcasecmp(ArgStr[1].Str, "HL"))) WrError(ErrNum_InvAddrMode);
   else
   {
     OpSize = 1; DecodeAdr(&ArgStr[ArgCnt]);
@@ -1541,7 +1542,7 @@ static void DecodeADCW_SBCW(Word Code)
 {
   if (!ChkArgCnt(1, 2));
   else if (!ChkMinCPU(CPUZ380));
-  else if ((ArgCnt == 2) && (strcasecmp(ArgStr[1].Str, "HL"))) WrError(ErrNum_InvAddrMode);
+  else if ((ArgCnt == 2) && (as_strcasecmp(ArgStr[1].Str, "HL"))) WrError(ErrNum_InvAddrMode);
   else
   {
     OpSize = 1; DecodeAdr(&ArgStr[ArgCnt]);
@@ -1786,7 +1787,7 @@ static void DecodeMULT_DIV(Word Code)
   }
 
   if (!ChkMinCPU(CPUZ380));
-  else if (strcasecmp(pDestArg->Str, "HL")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(pDestArg->Str, "HL")) WrError(ErrNum_InvAddrMode);
   else
   {
     OpSize = 1; DecodeAdr(pSrcArg);
@@ -1900,7 +1901,7 @@ static void DecodeSWAP(Word Index)
 static void DecodePUSH_POP(Word Code)
 {
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "SR"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "SR"))
   {
     if (ChkMinCPU(CPUZ380))
     {
@@ -1911,9 +1912,9 @@ static void DecodePUSH_POP(Word Code)
   }
   else
   {
-    if (!strcasecmp(ArgStr[1].Str, "SP"))
+    if (!as_strcasecmp(ArgStr[1].Str, "SP"))
       strmaxcpy(ArgStr[1].Str, "A", STRINGSIZE);
-    if (!strcasecmp(ArgStr[1].Str, "AF"))
+    if (!as_strcasecmp(ArgStr[1].Str, "AF"))
       strmaxcpy(ArgStr[1].Str, "SP", STRINGSIZE);
     OpSize = 1; MayLW = True;
     DecodeAdr(&ArgStr[1]);
@@ -1947,7 +1948,7 @@ static void DecodeEX(Word Index)
 
   /* work around the parser problem related to the ' character */ 
 
-  if (!strncasecmp(ArgStr[2].Str, "AF\'", 3))
+  if (!as_strncasecmp(ArgStr[2].Str, "AF\'", 3))
     ArgStr[2].Str[3] = '\0';
 
   if (!ChkArgCnt(2, 2));
@@ -2159,7 +2160,7 @@ static void DecodeIN_OUT(Word IsOUT)
   if ((ArgCnt == 1) && (!IsOUT))
   {
     if (!ChkExactCPU(CPUZ80U));
-    else if (strcasecmp(ArgStr[1].Str, "(C)")) WrError(ErrNum_InvAddrMode);
+    else if (as_strcasecmp(ArgStr[1].Str, "(C)")) WrError(ErrNum_InvAddrMode);
     else
     {
       BAsmCode[0] = 0xed;
@@ -2173,7 +2174,7 @@ static void DecodeIN_OUT(Word IsOUT)
     const tStrComp *pPortArg = IsOUT ? &ArgStr[1] : &ArgStr[2],
                    *pRegArg = IsOUT ? &ArgStr[2] : &ArgStr[1];
 
-    if (!strcasecmp(pPortArg->Str, "(C)"))
+    if (!as_strcasecmp(pPortArg->Str, "(C)"))
     {
       OpSize = 0; DecodeAdr(pRegArg);
       switch (AdrMode)
@@ -2209,7 +2210,7 @@ static void DecodeIN_OUT(Word IsOUT)
           if (AdrMode != ModNone) WrError(ErrNum_InvAddrMode);
       }
     }
-    else if (strcasecmp(pRegArg->Str, "A")) WrError(ErrNum_InvAddrMode);
+    else if (as_strcasecmp(pRegArg->Str, "A")) WrError(ErrNum_InvAddrMode);
     else
     {
       Boolean OK;
@@ -2233,7 +2234,7 @@ static void DecodeINW_OUTW(Word IsOUTW)
     const tStrComp *pPortArg = IsOUTW ? &ArgStr[1] : &ArgStr[2],
                    *pRegArg  = IsOUTW ? &ArgStr[2] : &ArgStr[1];
 
-    if (strcasecmp(pPortArg->Str, "(C)")) WrError(ErrNum_InvAddrMode);
+    if (as_strcasecmp(pPortArg->Str, "(C)")) WrError(ErrNum_InvAddrMode);
     else
     {
       OpSize = 1; DecodeAdr(pRegArg);
@@ -2333,8 +2334,8 @@ static void DecodeINA_INAW_OUTA_OUTAW(Word Code)
                    *pPortArg = IsIn ? &ArgStr[2] : &ArgStr[1];
 
     OpSize = Code & 1;
-    if (((OpSize == 0) && (strcasecmp(pRegArg->Str, "A")))
-     || ((OpSize == 1) && (strcasecmp(pRegArg->Str, "HL")))) WrError(ErrNum_InvAddrMode);
+    if (((OpSize == 0) && (as_strcasecmp(pRegArg->Str, "A")))
+     || ((OpSize == 1) && (as_strcasecmp(pRegArg->Str, "HL")))) WrError(ErrNum_InvAddrMode);
     else
     {
       Boolean OK;
@@ -2409,20 +2410,20 @@ static void DecodeJP(Word Code)
 
   if (ArgCnt == 1)
   {
-    if (!strcasecmp(ArgStr[1].Str, "(HL)"))
+    if (!as_strcasecmp(ArgStr[1].Str, "(HL)"))
     {
       CodeLen = 1;
       BAsmCode[0] = 0xe9;
       return;
     }
-    else if (!strcasecmp(ArgStr[1].Str, "(IX)"))
+    else if (!as_strcasecmp(ArgStr[1].Str, "(IX)"))
     {
       CodeLen = 2;
       BAsmCode[0] = IXPrefix;
       BAsmCode[1] = 0xe9;
       return;
     }
-    else if (!strcasecmp(ArgStr[1].Str, "(IY)"))
+    else if (!as_strcasecmp(ArgStr[1].Str, "(IY)"))
     {
       CodeLen = 2;
       BAsmCode[0] = IYPrefix;
@@ -2940,7 +2941,7 @@ static void DecodeDDIR(Word Code)
       {
         NLS_UpString(ArgStr[z].Str);
         OK = ExtendPrefix(&CurrPrefix, ArgStr[z].Str);
-        if (!OK) WrError(ErrNum_InvOpType);
+        if (!OK) WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[z]);
       }
     }
     if (OK)

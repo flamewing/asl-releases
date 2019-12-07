@@ -76,6 +76,4 @@ extern Boolean AddressWildcard(const char *addr);
 
 extern void toolutils_init(const char *ProgPath);
 
-#include "asmerr.h"
-
 #endif /* _TOOLUTILS_H */

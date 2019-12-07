@@ -84,7 +84,7 @@ void DecodeDATA(IntType CodeIntType, IntType DataIntType)
             DAsmCode[CodeLen++] = t.Contents.Int & ValMask;
           break;
         case TempFloat:
-          WrError(ErrNum_InvOpType);
+          WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[z]);
           ValOK = False;
           break;
         case TempString:

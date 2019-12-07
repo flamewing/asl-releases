@@ -33,7 +33,7 @@ enum
   ModReg8  = 1,
   ModImm  = 2 ,
   ModInd  = 3,
-  ModAbs  = 4,
+  ModAbs  = 4
 };
 
 #define MModReg4 (1 << ModReg4)
@@ -201,11 +201,11 @@ static void DecodeAdr(const tStrComp *pArg, Byte Mask)
     tStrComp Arg;
 
     StrCompRefRight(&Arg, pArg, 1);
-    if (!strcasecmp(Arg.Str, "HL")) AdrPart = 1;
-    else if (!strcasecmp(Arg.Str, "HL+")) AdrPart = 2;
-    else if (!strcasecmp(Arg.Str, "HL-")) AdrPart = 3;
-    else if (!strcasecmp(Arg.Str, "DE")) AdrPart = 4;
-    else if (!strcasecmp(Arg.Str, "DL")) AdrPart = 5;
+    if (!as_strcasecmp(Arg.Str, "HL")) AdrPart = 1;
+    else if (!as_strcasecmp(Arg.Str, "HL+")) AdrPart = 2;
+    else if (!as_strcasecmp(Arg.Str, "HL-")) AdrPart = 3;
+    else if (!as_strcasecmp(Arg.Str, "DE")) AdrPart = 4;
+    else if (!as_strcasecmp(Arg.Str, "DL")) AdrPart = 5;
     else
       AdrPart = 0;
     if (AdrPart != 0)
@@ -259,7 +259,7 @@ chk:
 static void DissectBit_75K0(char *pDest, int DestSize, LargeWord Inp)
 {
   if (Hi(Inp))
-    as_snprintf(pDest, DestSize, "%03.*u%s.%c",
+    as_snprintf(pDest, DestSize, "%~03.*u%s.%c",
                 ListRadixBase, (unsigned)(((Inp >> 4) & 0xf00) + Lo(Inp)), GetIntelSuffix(ListRadixBase),
                 '0' + (Hi(Inp) & 3));
   else switch ((Inp >> 6) & 3)
@@ -271,17 +271,17 @@ static void DissectBit_75K0(char *pDest, int DestSize, LargeWord Inp)
                   '0' + ((Inp >> 4) & 3));
       break;
     case 1:
-      as_snprintf(pDest, DestSize, "%03.*u%s.@%c",
+      as_snprintf(pDest, DestSize, "%~03.*u%s.@%c",
                   ListRadixBase, (unsigned)(0xfc0 + ((Inp & 0x0f) << 2)), GetIntelSuffix(ListRadixBase),
                   HexStartCharacter + ('L' - 'A'));
       break;
     case 2:
-      as_snprintf(pDest, DestSize, "%03.*u%s.%c",
+      as_snprintf(pDest, DestSize, "%~03.*u%s.%c",
                   ListRadixBase, (unsigned)(0xfb0 + (Inp & 15)), GetIntelSuffix(ListRadixBase),
                   '0' + ((Inp >> 4) & 3));
       break;
     case 3:
-      as_snprintf(pDest, DestSize, "%03.*u%s.%c",
+      as_snprintf(pDest, DestSize, "%~03.*u%s.%c",
                   ListRadixBase, (unsigned)(0xff0 + (Inp & 15)), GetIntelSuffix(ListRadixBase),
                   '0' + ((Inp >> 4) & 3));
       break;
@@ -307,7 +307,7 @@ static Boolean DecodeBitAddr(const tStrComp *pArg, Word *Erg)
 
   StrCompSplitRef(&AddrPart, &BitPart, pArg, p);
 
-  if (!strcasecmp(BitPart.Str, "@L"))
+  if (!as_strcasecmp(BitPart.Str, "@L"))
   {
     FirstPassUnknown = False;
     Adr = EvalStrIntExpression(&AddrPart, UInt12, &OK);
@@ -330,7 +330,7 @@ static Boolean DecodeBitAddr(const tStrComp *pArg, Word *Erg)
     Num = EvalStrIntExpression(&BitPart, UInt2, &OK);
     if (OK)
     {
-      if (!strncasecmp(AddrPart.Str, "@H", 2))
+      if (!as_strncasecmp(AddrPart.Str, "@H", 2))
       {
         Adr = EvalStrIntExpressionOffs(&AddrPart, 2, UInt4, &OK);
         if (OK)
@@ -688,13 +688,13 @@ static void DecodeMOVT(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1].Str, "XA")) WrError(ErrNum_InvAddrMode);
-  else if (!strcasecmp(ArgStr[2].Str, "@PCDE"))
+  else if (as_strcasecmp(ArgStr[1].Str, "XA")) WrError(ErrNum_InvAddrMode);
+  else if (!as_strcasecmp(ArgStr[2].Str, "@PCDE"))
   {
     PutCode(0xd4);
     CheckCPU(CPU75004);
   }
-  else if (!strcasecmp(ArgStr[2].Str, "@PCXA"))
+  else if (!as_strcasecmp(ArgStr[2].Str, "@PCXA"))
     PutCode(0xd0);
   else
     WrError(ErrNum_InvAddrMode);
@@ -703,7 +703,7 @@ static void DecodeMOVT(Word Code)
 static void DecodePUSH_POP(Word Code)
 {
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "BS"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "BS"))
   {
     PutCode(0x0699 + (Code << 8)); CheckCPU(CPU75004);
   }
@@ -727,7 +727,7 @@ static void DecodeIN_OUT(Word IsIN)
     const tStrComp *pPortArg = IsIN ? &ArgStr[2] : &ArgStr[1],
                    *pRegArg = IsIN ? &ArgStr[1] : &ArgStr[2];
 
-    if (strncasecmp(pPortArg->Str, "PORT", 4)) WrError(ErrNum_InvAddrMode);
+    if (as_strncasecmp(pPortArg->Str, "PORT", 4)) WrError(ErrNum_InvAddrMode);
     else
     {
       Boolean OK;
@@ -800,7 +800,7 @@ static void DecodeADDS(Word Code)
               break;
           }
         }
-        else if (strcasecmp(ArgStr[2].Str, "XA")) WrError(ErrNum_InvAddrMode);
+        else if (as_strcasecmp(ArgStr[2].Str, "XA")) WrError(ErrNum_InvAddrMode);
         else
         {
           PutCode(0xc0aa + (((Word)AdrPart) << 8));
@@ -853,7 +853,7 @@ static void DecodeAri(Word Code)
               break;
           }
         }
-        else if (strcasecmp(ArgStr[2].Str, "XA")) WrError(ErrNum_InvAddrMode);
+        else if (as_strcasecmp(ArgStr[2].Str, "XA")) WrError(ErrNum_InvAddrMode);
         else
         {
           PutCode(0xc0aa + ((Code + 1) << 12) + (((Word)AdrPart) << 8));
@@ -903,7 +903,7 @@ static void DecodeLog(Word Code)
               break;
           }
         }
-        else if (strcasecmp(ArgStr[2].Str, "XA")) WrError(ErrNum_InvAddrMode);
+        else if (as_strcasecmp(ArgStr[2].Str, "XA")) WrError(ErrNum_InvAddrMode);
         else
         {
           PutCode(0x80aa + (((Word)AdrPart) << 8) + ((Code + 1) << 12));
@@ -919,7 +919,7 @@ static void DecodeLog1(Word Code)
   Word BVal;
 
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1].Str, "CY")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "CY")) WrError(ErrNum_InvAddrMode);
   else if (DecodeBitAddr(&ArgStr[2], &BVal))
   {
     if (Hi(BVal) != 0) WrError(ErrNum_InvAddrMode);
@@ -1098,7 +1098,7 @@ static void DecodeSKE(Word Code)
 static void DecodeAcc(Word Code)
 {
   if (!ChkArgCnt(1, 1));
-  else if (strcasecmp(ArgStr[1].Str, "A")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "A")) WrError(ErrNum_InvAddrMode);
   else 
     PutCode(Code);
 }
@@ -1112,9 +1112,9 @@ static void DecodeMOV1(Word Code)
     Boolean OK = True;
     Word BVal;
 
-    if (!strcasecmp(ArgStr[1].Str, "CY"))
+    if (!as_strcasecmp(ArgStr[1].Str, "CY"))
       Code = 0xbd;
-    else if (!strcasecmp(ArgStr[2].Str, "CY"))
+    else if (!as_strcasecmp(ArgStr[2].Str, "CY"))
       Code = 0x9b;
     else OK = False;
     if (!OK) WrError(ErrNum_InvAddrMode);
@@ -1137,7 +1137,7 @@ static void DecodeSET1_CLR1(Word Code)
   Word BVal;
 
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "CY"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "CY"))
     PutCode(0xe6 + Code);
   else if (DecodeBitAddr(&ArgStr[1], &BVal))
   {
@@ -1161,7 +1161,7 @@ static void DecodeSKT_SKF(Word Code)
   Word BVal;
 
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "CY"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "CY"))
   {
     if (Code)
       PutCode(0xd7);
@@ -1190,7 +1190,7 @@ static void DecodeNOT1(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(1, 1));
-  else if (strcasecmp(ArgStr[1].Str, "CY")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "CY")) WrError(ErrNum_InvAddrMode);
   else
     PutCode(0xd6);
 }
@@ -1219,12 +1219,12 @@ static void DecodeBR(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "PCDE"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "PCDE"))
   {
     PutCode(0x0499);
     CheckCPU(CPU75004);
   }
-  else if (!strcasecmp(ArgStr[1].Str, "PCXA"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "PCXA"))
   {
     BAsmCode[0] = 0x99;
     BAsmCode[1] = 0x00;
@@ -1404,7 +1404,7 @@ static void DecodeSEL(Word Code)
 
   BAsmCode[0] = 0x99;
   if (!ChkArgCnt(1, 1));
-  else if (!strncasecmp(ArgStr[1].Str, "RB", 2))
+  else if (!as_strncasecmp(ArgStr[1].Str, "RB", 2))
   {
     BAsmCode[1] = 0x20 + EvalStrIntExpressionOffs(&ArgStr[1], 2, UInt2, &OK);
     if (OK)
@@ -1413,7 +1413,7 @@ static void DecodeSEL(Word Code)
       CheckCPU(CPU75104);
     }
   }
-  else if (!strncasecmp(ArgStr[1].Str, "MB", 2))
+  else if (!as_strncasecmp(ArgStr[1].Str, "MB", 2))
   {
     BAsmCode[1] = 0x10 + EvalStrIntExpressionOffs(&ArgStr[1], 2, UInt4, &OK);
     if (OK)

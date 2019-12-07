@@ -120,17 +120,17 @@ static void GetToken(tStrComp *pSrc, tStrComp *pDest)
 static Boolean DecodePhase(char *Name, LongWord *Result)
 {
   *Result = 8;
-  if (!strcasecmp(Name, "DATA_OUT")) *Result = 0;
-  else if (!strcasecmp(Name, "DATA_IN")) *Result = 1;
-  else if (!strcasecmp(Name, "CMD")) *Result = 2;
-  else if (!strcasecmp(Name, "COMMAND")) *Result = 2;
-  else if (!strcasecmp(Name, "STATUS")) *Result = 3;
-  else if (!strcasecmp(Name, "RES4")) *Result = 4;
-  else if (!strcasecmp(Name, "RES5")) *Result = 5;
-  else if (!strcasecmp(Name, "MSG_OUT")) *Result = 6;
-  else if (!strcasecmp(Name, "MSG_IN")) *Result = 7;
-  else if (!strcasecmp(Name, "MESSAGE_OUT")) *Result = 6;
-  else if (!strcasecmp(Name, "MESSAGE_IN")) *Result = 7;
+  if (!as_strcasecmp(Name, "DATA_OUT")) *Result = 0;
+  else if (!as_strcasecmp(Name, "DATA_IN")) *Result = 1;
+  else if (!as_strcasecmp(Name, "CMD")) *Result = 2;
+  else if (!as_strcasecmp(Name, "COMMAND")) *Result = 2;
+  else if (!as_strcasecmp(Name, "STATUS")) *Result = 3;
+  else if (!as_strcasecmp(Name, "RES4")) *Result = 4;
+  else if (!as_strcasecmp(Name, "RES5")) *Result = 5;
+  else if (!as_strcasecmp(Name, "MSG_OUT")) *Result = 6;
+  else if (!as_strcasecmp(Name, "MSG_IN")) *Result = 7;
+  else if (!as_strcasecmp(Name, "MESSAGE_OUT")) *Result = 6;
+  else if (!as_strcasecmp(Name, "MESSAGE_IN")) *Result = 7;
   return (*Result < 8);
 }
 
@@ -141,7 +141,7 @@ static Boolean DecodeReg(char *Name, LongWord *Result)
   PReg Reg;
 
   for (z = 0, Reg = Regs; z < RegCnt; z++, Reg++)
-    if (!(strcasecmp(Reg->Name, Name)) && (Mask & Reg->Mask))
+    if (!(as_strcasecmp(Reg->Name, Name)) && (Mask & Reg->Mask))
     {
       *Result = Reg->Code;
       return True;
@@ -174,15 +174,15 @@ static Boolean DecodeCond(tStrComp *pSrc, LongWord *Dest)
     return True;
   }
 
-  if (strcasecmp(Tok.Str, "WHEN") == 0)
+  if (as_strcasecmp(Tok.Str, "WHEN") == 0)
     *Dest |= 0x00010000;
-  else if (strcasecmp(Tok.Str, "IF") != 0)
+  else if (as_strcasecmp(Tok.Str, "IF") != 0)
     return Err(1135, Tok.Str);
 
   /* Negierung? */
 
   GetToken(pSrc, &Tok);  
-  if (strcasecmp(Tok.Str, "NOT") == 0)
+  if (as_strcasecmp(Tok.Str, "NOT") == 0)
     GetToken(pSrc, &Tok);
   else
     *Dest |= 0x00080000;
@@ -192,7 +192,7 @@ static Boolean DecodeCond(tStrComp *pSrc, LongWord *Dest)
   PhaseATNUsed = DataUsed = MaskUsed = CarryUsed = False;
   do
   {
-    if (!strcasecmp(Tok.Str, "ATN"))
+    if (!as_strcasecmp(Tok.Str, "ATN"))
     {
       if (PhaseATNUsed)
         return Err(1350, "2 x ATN/Phase");
@@ -212,7 +212,7 @@ static Boolean DecodeCond(tStrComp *pSrc, LongWord *Dest)
       PhaseATNUsed = True;
       *Dest |= 0x00020000 + (Tmp << 24);
     }
-    else if (!strcasecmp(Tok.Str, "CARRY"))
+    else if (!as_strcasecmp(Tok.Str, "CARRY"))
     {
       if (CarryUsed)
         return Err(1350, "2 x Carry");
@@ -221,7 +221,7 @@ static Boolean DecodeCond(tStrComp *pSrc, LongWord *Dest)
       CarryUsed = True;
       *Dest |= 0x00200000;
     }
-    else if (!strcasecmp(Tok.Str, "MASK"))
+    else if (!as_strcasecmp(Tok.Str, "MASK"))
     {
       if (CarryUsed)
         return Err(1350, "Carry + Data");
@@ -251,7 +251,7 @@ static Boolean DecodeCond(tStrComp *pSrc, LongWord *Dest)
     GetToken(pSrc, &Tok);
     if (*Tok.Str != '\0') 
     {
-      if (strcasecmp(Tok.Str, "AND"))
+      if (as_strcasecmp(Tok.Str, "AND"))
         return Err(1350, Tok.Str);
       GetToken(pSrc, &Tok);
     }
@@ -270,7 +270,7 @@ static CompType DecodeComp(const tStrComp *pInp, LongWord *Outp)
 {
   Boolean OK;
 
-  if (!strcasecmp(pInp->Str, "SFBR"))
+  if (!as_strcasecmp(pInp->Str, "SFBR"))
     return SFBR;
   else if (DecodeReg(pInp->Str, Outp))
     return REGISTER;
@@ -331,7 +331,7 @@ static void DecodeJmps(Word Index)
     else
     {
       l = strlen(ArgStr[1].Str);
-      if ((!strncasecmp(ArgStr[1].Str, "REL(", 4)) && (ArgStr[1].Str[l - 1] == ')'))
+      if ((!as_strncasecmp(ArgStr[1].Str, "REL(", 4)) && (ArgStr[1].Str[l - 1] == ')'))
       {
         if (*OpPart.Str == 'I') 
         {
@@ -377,9 +377,9 @@ static void DecodeCHMOV(Word Index)
    && ChkArgCnt(2, 3))
   {
     GetToken(&ArgStr[ArgCnt], &Token);
-    if (!strcasecmp(Token.Str, "WITH"))
+    if (!as_strcasecmp(Token.Str, "WITH"))
       DAsmCode[0] = 0x08000000;
-    else if (!strcasecmp(Token.Str, "WHEN"))
+    else if (!as_strcasecmp(Token.Str, "WHEN"))
       DAsmCode[0] = 0x00000000;
     else
     {
@@ -396,7 +396,7 @@ static void DecodeCHMOV(Word Index)
       if (ArgCnt == 2)
       {
         GetToken(&ArgStr[1], &Token);
-        if (strcasecmp(Token.Str, "FROM")) WrError(ErrNum_InvAddrMode);
+        if (as_strcasecmp(Token.Str, "FROM")) WrError(ErrNum_InvAddrMode);
         else
         {
           pAdrArg = &ArgStr[1];
@@ -410,7 +410,7 @@ static void DecodeCHMOV(Word Index)
         if (OK)
         {
           DAsmCode[0] |= Phase;
-          if (!strncasecmp(ArgStr[2].Str,"PTR", 3))
+          if (!as_strncasecmp(ArgStr[2].Str,"PTR", 3))
           {
             StrCompCutLeft(&ArgStr[2], 4);
             DAsmCode[0] |= 0x20000000;
@@ -449,13 +449,13 @@ static void DecodeFlags(Word Index)
     while ((OK) && (*ArgStr[1].Str != '\0'))
     {
       GetToken(&ArgStr[1], &Token);
-      if (!strcasecmp(Token.Str, "ACK"))
+      if (!as_strcasecmp(Token.Str, "ACK"))
         DAsmCode[0] |= 0x00000040;
-      else if (!strcasecmp(Token.Str, "ATN"))
+      else if (!as_strcasecmp(Token.Str, "ATN"))
         DAsmCode[0] |= 0x00000008;
-      else if (!strcasecmp(Token.Str, "TARGET"))
+      else if (!as_strcasecmp(Token.Str, "TARGET"))
         DAsmCode[0] |= 0x00000200;
-      else if (!strcasecmp(Token.Str, "CARRY"))
+      else if (!as_strcasecmp(Token.Str, "CARRY"))
         DAsmCode[0] |= 0x00000400;
       else
       {
@@ -465,7 +465,7 @@ static void DecodeFlags(Word Index)
       if (OK && (*ArgStr[1].Str != '\0'))
       {
         GetToken(&ArgStr[1], &Token);
-        if (strcasecmp(Token.Str, "AND"))
+        if (as_strcasecmp(Token.Str, "AND"))
         {
           OK = False;
           WrStrErrorPos(ErrNum_InvAddrMode, &Token);
@@ -495,7 +495,7 @@ static void DecodeRegTrans(Word Index)
     {
       int l = strlen(ArgStr[3].Str);
       DAsmCode[0] = 0xe0000000 + (((LongInt) Index) << 24) + (Reg << 16) + Cnt;
-      if ((!strncasecmp(ArgStr[3].Str, "DSAREL(", 7))
+      if ((!as_strncasecmp(ArgStr[3].Str, "DSAREL(", 7))
        && (ArgStr[3].Str[l - 1] == ')'))
       {
         ArgStr[3].Str[--l] = '\0';
@@ -540,7 +540,7 @@ static void DecodeMOVE(Word Index)
       GetToken(&ArgStr[1], &Parts[PartCnt++]);
     }
     while ((*ArgStr[1].Str != '\0') && (PartCnt < MAXPARTS));
-    if ((PartCnt > 1) && (!strcasecmp(Parts[PartCnt - 1].Str, "CARRY")) && (!strcasecmp(Parts[PartCnt - 1].Str, "TO")))
+    if ((PartCnt > 1) && (!as_strcasecmp(Parts[PartCnt - 1].Str, "CARRY")) && (!as_strcasecmp(Parts[PartCnt - 1].Str, "TO")))
     {
       WithCarry = True;
       PartCnt -= 2;
@@ -552,7 +552,7 @@ static void DecodeMOVE(Word Index)
     if (PartCnt == 3)
     {
       if (WithCarry) WrError(ErrNum_InvAddrMode);
-      else if (!strcasecmp(Parts[1].Str, "TO")) /* MOVE */
+      else if (!as_strcasecmp(Parts[1].Str, "TO")) /* MOVE */
       {
         switch (DecodeComp(&Parts[0], &ImmVal))
         {
@@ -561,6 +561,7 @@ static void DecodeMOVE(Word Index)
             {
               case SFBR:
                 ImmVal = 8;
+                /* fall-through */
               case REGISTER: /* --> 0x00 OR SFBR to reg */
                 DAsmCode[0] += 0x2a000000 + (ImmVal << 16);
                 CodeLen = 8;
@@ -594,6 +595,7 @@ static void DecodeMOVE(Word Index)
             {
               case SFBR:
                 DReg = 8;
+                /* fall-through */
               case REGISTER: /* --> imm to reg */
                 DAsmCode[0] += 0x38000000 + (DReg << 16) + (ImmVal << 8);
                 CodeLen = 8;
@@ -607,7 +609,7 @@ static void DecodeMOVE(Word Index)
             break;
         }
       } /* ... TO ... */
-      else if ((!strcasecmp(Parts[1].Str, "SHL")) || (!strcasecmp(Parts[1].Str, "SHR")))
+      else if ((!as_strcasecmp(Parts[1].Str, "SHL")) || (!as_strcasecmp(Parts[1].Str, "SHR")))
       {
         AriOp = 1 + (Ord(mytoupper(Parts[1].Str[2]) == 'R') << 2);
         switch (DecodeComp(&Parts[0], &DReg))
@@ -617,6 +619,7 @@ static void DecodeMOVE(Word Index)
              {
                case SFBR:
                  DReg = 8;
+                 /* fall-through */
                case REGISTER:
                  DAsmCode[0] += 0x28000000 + (AriOp << 24) + (DReg << 16);
                  CodeLen = 8;
@@ -652,17 +655,17 @@ static void DecodeMOVE(Word Index)
     } /* PartCnt == 3 */
     else if (PartCnt == 5)
     {
-      if (strcasecmp(Parts[3].Str, "TO")) WrError(ErrNum_InvAddrMode);
+      if (as_strcasecmp(Parts[3].Str, "TO")) WrError(ErrNum_InvAddrMode);
       else
       {
-        if ((!strcasecmp(Parts[1].Str, "XOR"))
-         || (!strcasecmp(Parts[1].Str, "^")))
+        if ((!as_strcasecmp(Parts[1].Str, "XOR"))
+         || (!as_strcasecmp(Parts[1].Str, "^")))
           AriOp = 3;
-        else if ((!strcasecmp(Parts[1].Str, "OR"))
-              || (!strcasecmp(Parts[1].Str, "|")))
+        else if ((!as_strcasecmp(Parts[1].Str, "OR"))
+              || (!as_strcasecmp(Parts[1].Str, "|")))
           AriOp = 2;
-        else if ((!strcasecmp(Parts[1].Str, "AND"))
-              || (!strcasecmp(Parts[1].Str, "&")))
+        else if ((!as_strcasecmp(Parts[1].Str, "AND"))
+              || (!as_strcasecmp(Parts[1].Str, "&")))
           AriOp = 4;
         else if (!strcmp(Parts[1].Str, "+"))
           AriOp = 6;
@@ -682,6 +685,7 @@ static void DecodeMOVE(Word Index)
                   {
                     case SFBR:
                       ImmVal = 8;
+                      /* fall-through */
                     case REGISTER:
                       if (ChkExactCPUMask(BigCPUMask, CPU53C810) >= 0)
                       {
@@ -698,6 +702,7 @@ static void DecodeMOVE(Word Index)
                   {
                     case SFBR:
                       DReg = 8;
+                      /* fall-through */
                     case REGISTER:
                       DAsmCode[0] |= 0x28000000 + (DReg << 16) + (ImmVal << 8);
                       CodeLen = 8;
@@ -773,7 +778,7 @@ static void DecodeMOVE(Word Index)
   else if (ArgCnt == 2)
   {
     GetToken(&ArgStr[1], &Token);
-    if (strcasecmp(Token.Str, "FROM")) WrError(ErrNum_InvAddrMode);
+    if (as_strcasecmp(Token.Str, "FROM")) WrError(ErrNum_InvAddrMode);
     else
     {
       DAsmCode[0] = 0x00000000;
@@ -782,9 +787,9 @@ static void DecodeMOVE(Word Index)
       {
         GetToken(&ArgStr[2], &Token);
         OK = True;
-        if (!strcasecmp(Token.Str, "WHEN"))
+        if (!as_strcasecmp(Token.Str, "WHEN"))
           DAsmCode[0] |= 0x08000000;
-        else if (strcasecmp(Token.Str, "WITH"))
+        else if (as_strcasecmp(Token.Str, "WITH"))
           OK = False;
         if (!OK) WrError(ErrNum_InvAddrMode);
         else
@@ -803,10 +808,10 @@ static void DecodeMOVE(Word Index)
   }
   else if (ArgCnt == 3)
   {
-    if (!strncasecmp(ArgStr[1].Str, "MEMORY", 6))
+    if (!as_strncasecmp(ArgStr[1].Str, "MEMORY", 6))
     {
       StrCompCutLeft(&ArgStr[1], 7);
-      if (!strncasecmp(ArgStr[1].Str, "NO FLUSH", 8))
+      if (!as_strncasecmp(ArgStr[1].Str, "NO FLUSH", 8))
       {
         DAsmCode[0] = 0xc1000000;
         StrCompCutLeft(&ArgStr[1], 9);
@@ -830,8 +835,8 @@ static void DecodeMOVE(Word Index)
       {
         GetToken(&ArgStr[3], &Token);
         OK = True;
-        if (!strcasecmp(Token.Str, "WHEN")) DAsmCode[0] |= 0x08000000;
-        else if (strcasecmp(Token.Str, "WITH")) OK = False;
+        if (!as_strcasecmp(Token.Str, "WHEN")) DAsmCode[0] |= 0x08000000;
+        else if (as_strcasecmp(Token.Str, "WITH")) OK = False;
         if (!OK) WrError(ErrNum_InvAddrMode);
         else
         {
@@ -841,7 +846,7 @@ static void DecodeMOVE(Word Index)
           else
           { 
             DAsmCode[0] |= ImmVal << 24;
-            if (!strncasecmp(ArgStr[2].Str, "PTR", 3))
+            if (!as_strncasecmp(ArgStr[2].Str, "PTR", 3))
             {
               StrCompCutLeft(&ArgStr[2], 4);
               DAsmCode[0] |= 0x20000000;
@@ -865,7 +870,7 @@ static void DecodeSELECT(Word MayATN)
   {
     DAsmCode[0] = 0x40000000;
     OK = True;
-    if (!strncasecmp(ArgStr[1].Str, "ATN ", 4))
+    if (!as_strncasecmp(ArgStr[1].Str, "ATN ", 4))
     {
       strmov(ArgStr[1].Str, ArgStr[1].Str + 4);
       ArgStr[1].Pos.StartCol += 4;
@@ -879,7 +884,7 @@ static void DecodeSELECT(Word MayATN)
     if (!OK) WrError(ErrNum_InvAddrMode);
     else
     {
-      if (!strncasecmp(ArgStr[1].Str, "FROM ", 5))
+      if (!as_strncasecmp(ArgStr[1].Str, "FROM ", 5))
       {
         strmov(ArgStr[1].Str, ArgStr[1].Str + 5);
         ArgStr[1].Pos.StartCol += 5;
@@ -892,7 +897,7 @@ static void DecodeSELECT(Word MayATN)
       if (OK)
       {
         l = strlen(ArgStr[2].Str);
-        if ((!strncasecmp(ArgStr[2].Str, "REL(", 4)) && (ArgStr[2].Str[l - 1] == ')'))
+        if ((!as_strncasecmp(ArgStr[2].Str, "REL(", 4)) && (ArgStr[2].Str[l - 1] == ')'))
         {
           DAsmCode[0] |= 0x04000000;
           ArgStr[2].Str[l - 1] = '\0';
@@ -924,7 +929,7 @@ static void DecodeWAIT(Word Index)
   {
     GetToken(&ArgStr[1], &Token);
     KillPrefBlanksStrComp(&ArgStr[1]);
-    if (!strcasecmp(Token.Str, "DISCONNECT"))
+    if (!as_strcasecmp(Token.Str, "DISCONNECT"))
     {
       if (*ArgStr[1].Str != '\0') WrError(ErrNum_InvAddrMode);
       else
@@ -934,9 +939,9 @@ static void DecodeWAIT(Word Index)
         CodeLen = 8;
       }
     }
-    else if ((!strcasecmp(Token.Str, "RESELECT")) || (!strcasecmp(Token.Str, "SELECT")))
+    else if ((!as_strcasecmp(Token.Str, "RESELECT")) || (!as_strcasecmp(Token.Str, "SELECT")))
     {
-      if ((!strncasecmp(ArgStr[1].Str, "REL(", 4)) && (ArgStr[1].Str[strlen(ArgStr[1].Str) - 1] == ')'))
+      if ((!as_strncasecmp(ArgStr[1].Str, "REL(", 4)) && (ArgStr[1].Str[strlen(ArgStr[1].Str) - 1] == ')'))
       {
         StrCompShorten(&ArgStr[1], 1);
         DAsmCode[0] = 0x54000000;

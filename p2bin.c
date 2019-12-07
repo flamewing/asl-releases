@@ -498,6 +498,7 @@ static CMDResult CMD_StartHeader(Boolean Negate, const char *Arg)
     {
       case 'B':
         Sgn = -1;
+        /* fall-through */
       case 'L':
         Arg++;
     }

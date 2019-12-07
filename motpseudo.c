@@ -16,6 +16,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <math.h>
+#include <assert.h>
 
 #include "bpemu.h"
 #include "endian.h"
@@ -156,7 +157,7 @@ static void DecodeBYT(Word Index)
             break;
 
           case TempFloat:
-            WrStrErrorPos(ErrNum_InvOpType, &Arg);
+            WrStrErrorPos(ErrNum_StringOrIntButFloat, &Arg);
             OK = False;
             break;
 
@@ -290,8 +291,8 @@ static void DecodeADR(Word Index)
             TranslateString(Res.Contents.Ascii.Contents, Res.Contents.Ascii.Length);
             break;
           case TempFloat:
-            WrError(ErrNum_InvOpType);
-            /* no break */
+            WrStrErrorPos(ErrNum_StringOrIntButFloat, &Arg);
+            /* fall-through */
           default:
             Res.Typ = TempNone;
             Cnt = 0;
@@ -595,10 +596,11 @@ static void EnterQWord(LargeWord q)
     BAsmCode[CodeLen + 2] = (q >> 40) & 0xff;
     BAsmCode[CodeLen + 3] = (q >> 32) & 0xff;
 #else
+    /* TempResult is LargeInt, so sign-extend */
     BAsmCode[CodeLen    ] =
     BAsmCode[CodeLen + 1] =
     BAsmCode[CodeLen + 2] =
-    BAsmCode[CodeLen + 3] = 0;
+    BAsmCode[CodeLen + 3] = (q & 0x80000000ul) ? 0xff : 0x00;
 #endif
     BAsmCode[CodeLen + 4] = (q >> 24) & 0xff;
     BAsmCode[CodeLen + 5] = (q >> 16) & 0xff;
@@ -611,8 +613,9 @@ static void EnterQWord(LargeWord q)
     WAsmCode[(CodeLen >> 1)    ] = (q >> 48) & 0xffff;
     WAsmCode[(CodeLen >> 1) + 1] = (q >> 32) & 0xffff;
 #else
+    /* TempResult is LargeInt, so sign-extend */
     WAsmCode[(CodeLen >> 1)    ] =
-    WAsmCode[(CodeLen >> 1) + 1] = 0;
+    WAsmCode[(CodeLen >> 1) + 1] = (q & 0x80000000ul) ? 0xffff : 0x00;
 #endif
     WAsmCode[(CodeLen >> 1) + 2] = (q >> 16) & 0xffff;
     WAsmCode[(CodeLen >> 1) + 3] = (q      ) & 0xffff;
@@ -883,7 +886,7 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
                 }
                 else
                 {
-                  WrError(ErrNum_InvOpType);
+                  WrStrErrorPos(ErrNum_StringOrIntButFloat, pArg);
                   OK = False;
                 }
               }
@@ -905,7 +908,7 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
             case TempFloat:
               if ((!ConvertFloat) || (!EnterFloat))
               {
-                WrError(ErrNum_InvOpType);
+                WrStrErrorPos(ErrNum_StringOrIntButFloat, pArg);
                 OK = False;
               }
               else if (!FloatRangeCheck(t.Contents.Float, FloatTypeEnum))
@@ -951,7 +954,7 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
                 }
                 else
                 {
-                  WrError(ErrNum_InvOpType);
+                  WrError(ErrNum_FloatButString);
                   OK = False;
                 }
               }
@@ -968,8 +971,7 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
               OK = False;
               break;
             default:
-              WrError(ErrNum_InvOpType);
-              OK = False;
+              assert(0);
           }
 
         }

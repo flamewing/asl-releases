@@ -60,7 +60,7 @@ enum
   ModIndY16 = 17,
   ModIndY24 = 18,
   ModIdxS8 =  19,
-  ModIndS8 =  20,
+  ModIndS8 =  20
 };
 
 #define MModImm      (1l << ModImm)
@@ -277,7 +277,7 @@ static void DecodeAdr(Integer Start, LongWord Mask)
 
       /* I.2.ii indirekt mit Vorindizierung */
 
-      else if (!strcasecmp(HArg[1].Str, "X"))
+      else if (!as_strcasecmp(HArg[1].Str, "X"))
       {
         CodeDisp(&HArg[0], ModIndX8, Mask);
         goto chk;
@@ -307,7 +307,7 @@ static void DecodeAdr(Integer Start, LongWord Mask)
 
     if (IsIndirect(ArgStr[Start].Str))
     {
-      if (strcasecmp(ArgStr[Start + 1].Str, "Y")) WrError(ErrNum_InvAddrMode);
+      if (as_strcasecmp(ArgStr[Start + 1].Str, "Y")) WrError(ErrNum_InvAddrMode);
       else
       {
         HCnt = SplitArg(&ArgStr[Start], HArg);
@@ -322,7 +322,7 @@ static void DecodeAdr(Integer Start, LongWord Mask)
 
         /* II.1.ii. (d,S),Y */
 
-        else if (!strcasecmp(HArg[1].Str, "S"))
+        else if (!as_strcasecmp(HArg[1].Str, "S"))
         {
           AdrVals[0] = EvalStrIntExpression(&HArg[0], Int8, &OK);
           if (OK)
@@ -344,7 +344,7 @@ static void DecodeAdr(Integer Start, LongWord Mask)
     {
       /* II.2.i. d,X */
 
-      if (!strcasecmp(ArgStr[Start + 1].Str, "X"))
+      if (!as_strcasecmp(ArgStr[Start + 1].Str, "X"))
       {
         CodeDisp(&ArgStr[Start], ModIdxX8, Mask);
         goto chk;
@@ -352,7 +352,7 @@ static void DecodeAdr(Integer Start, LongWord Mask)
 
       /* II.2.ii. d,Y */
 
-      else if (!strcasecmp(ArgStr[Start + 1].Str, "Y"))
+      else if (!as_strcasecmp(ArgStr[Start + 1].Str, "Y"))
       {
         CodeDisp(&ArgStr[Start], ModIdxY8, Mask);
         goto chk;
@@ -360,7 +360,7 @@ static void DecodeAdr(Integer Start, LongWord Mask)
 
       /* II.2.iii. d,S */
 
-      else if (!strcasecmp(ArgStr[Start + 1].Str, "S"))
+      else if (!as_strcasecmp(ArgStr[Start + 1].Str, "S"))
       {
         AdrVals[0] = EvalStrIntExpression(&ArgStr[Start], Int8, &OK);
         if (OK)
@@ -494,9 +494,9 @@ static void DecodeAcc(Word Code)
   if (ChkArgCnt(1, 3))
   {
     WordSize = (Reg_M == 0);
-    if (!strcasecmp(ArgStr[1].Str, "A"))
+    if (!as_strcasecmp(ArgStr[1].Str, "A"))
       Start = 2;
-    else if (!strcasecmp(ArgStr[1].Str, "B"))
+    else if (!as_strcasecmp(ArgStr[1].Str, "B"))
     {
       Start = 2;
       BAsmCode[0] = PrefAccB;
@@ -580,9 +580,9 @@ static void DecodeEXTS_EXTZ(Word Code)
   {
     BAsmCode[1] = Code;
     BAsmCode[0] = 0;
-    if (!strcasecmp(ArgStr[1].Str, "A"))
+    if (!as_strcasecmp(ArgStr[1].Str, "A"))
       BAsmCode[0] = 0x89;
-    else if (!strcasecmp(ArgStr[1].Str, "B"))
+    else if (!as_strcasecmp(ArgStr[1].Str, "B"))
       BAsmCode[0] = 0x42;
     else WrError(ErrNum_InvAddrMode);
     if (BAsmCode[0] != 0)
@@ -592,12 +592,12 @@ static void DecodeEXTS_EXTZ(Word Code)
 
 static void DecodeRMW(Word Code)
 {
-  if ((ArgCnt == 0) || ((ArgCnt == 1) && (!strcasecmp(ArgStr[1].Str, "A"))))
+  if ((ArgCnt == 0) || ((ArgCnt == 1) && (!as_strcasecmp(ArgStr[1].Str, "A"))))
   {
     CodeLen = 1;
     BAsmCode[0] = Hi(Code);
   }
-  else if ((ArgCnt == 1) && (!strcasecmp(ArgStr[1].Str, "B")))
+  else if ((ArgCnt == 1) && (!as_strcasecmp(ArgStr[1].Str, "B")))
   {
     CodeLen = 2;
     BAsmCode[0] = PrefAccB;
@@ -637,13 +637,13 @@ static void DecodeASR(Word Code)
   UNUSED(Code);
 
   if (!ChkMinCPU(CPUM7750));
-  else if ((ArgCnt == 0) || ((ArgCnt == 1) && (!strcasecmp(ArgStr[1].Str, "A"))))
+  else if ((ArgCnt == 0) || ((ArgCnt == 1) && (!as_strcasecmp(ArgStr[1].Str, "A"))))
   {
     BAsmCode[0] = 0x89;
     BAsmCode[1] = 0x08;
     CodeLen = 2;
   }
-  else if ((ArgCnt == 1) && (!strcasecmp(ArgStr[1].Str, "B")))
+  else if ((ArgCnt == 1) && (!as_strcasecmp(ArgStr[1].Str, "B")))
   {
     BAsmCode[0] = 0x42;
     BAsmCode[1] = 0x08;
@@ -1122,7 +1122,7 @@ static void DecodePSH_PUL(Word Code)
       else
       {
         Start = 0;
-        while ((Start < PushRegCnt) && (strcasecmp(PushRegNames[Start], ArgStr[z].Str)))
+        while ((Start < PushRegCnt) && (as_strcasecmp(PushRegNames[Start], ArgStr[z].Str)))
           Start++;
         OK = (Start < PushRegCnt);
         if (OK)

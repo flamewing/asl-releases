@@ -15,6 +15,7 @@
 #include "stdinc.h"
 #include <ctype.h>
 #include <string.h>
+#include <assert.h>
 #include <math.h>
 
 #include "bpemu.h"
@@ -141,7 +142,7 @@ static Boolean LayoutByte(const tStrComp *pExpr, Word *pCnt, Boolean BigEndian)
       }
       break;
     case TempFloat: 
-      WrError(ErrNum_InvOpType);
+      WrStrErrorPos(ErrNum_StringOrIntButFloat, pExpr);
       break;
     case TempString:
       TranslateString(t.Contents.Ascii.Contents, t.Contents.Ascii.Length);
@@ -212,7 +213,7 @@ static Boolean LayoutWord(const tStrComp *pExpr, Word *pCnt, Boolean BigEndian)
       }
       break;
     case TempFloat:
-      WrError(ErrNum_InvOpType);
+      WrStrErrorPos(ErrNum_StringOrIntButFloat, pExpr);
       break;
     case TempString:
       TranslateString(t.Contents.Ascii.Contents, t.Contents.Ascii.Length);
@@ -314,7 +315,7 @@ static Boolean LayoutDoubleWord(const tStrComp *pExpr, Word *pCnt, Boolean BigEn
       }
       break;
     case TempAll:
-      WrError(ErrNum_InvOpType);
+      assert(0);
   }
 
   if (Result)
@@ -348,10 +349,11 @@ static void PutQWord(LargeWord l, Boolean BigEndian)
     BAsmCode[CodeLen + 1] = (l >> 48) & 0xff;
     BAsmCode[CodeLen + 0] = (l >> 56) & 0xff;
 #else
+    /* TempResult is TempInt, so sign-extend */
     BAsmCode[CodeLen + 3] =
     BAsmCode[CodeLen + 2] =
     BAsmCode[CodeLen + 1] =
-    BAsmCode[CodeLen    ] = 0;
+    BAsmCode[CodeLen    ] = (l & 0x80000000ul) ? 0xff : 0x00;
 #endif
   }
   else
@@ -366,10 +368,11 @@ static void PutQWord(LargeWord l, Boolean BigEndian)
     BAsmCode[CodeLen + 6] = (l >> 48) & 0xff;
     BAsmCode[CodeLen + 7] = (l >> 56) & 0xff;
 #else
+    /* TempResult is TempInt, so sign-extend */
     BAsmCode[CodeLen + 4] =
     BAsmCode[CodeLen + 5] =
     BAsmCode[CodeLen + 6] =
-    BAsmCode[CodeLen + 7] = 0;
+    BAsmCode[CodeLen + 7] = (l & 0x80000000ul) ? 0xff : 0x00;
 #endif
   }
   CodeLen += 8;
@@ -418,8 +421,7 @@ static Boolean LayoutQuadWord(const tStrComp *pExpr, Word *pCnt, Boolean BigEndi
       }
       break;
     case TempAll:
-      WrError(ErrNum_InvOpType);
-      return Result;
+      assert(0);
   }
 
   if (Result)
@@ -458,7 +460,7 @@ static Boolean LayoutTenBytes(const tStrComp *pExpr, Word *pCnt, Boolean BigEndi
     case TempInt:
       erg.Contents.Float = erg.Contents.Int;
       erg.Typ = TempFloat;
-      /* no break! */
+      /* fall-through */
     case TempFloat:
       Double_2_ieee10(erg.Contents.Float, BAsmCode + CodeLen, False);
       *pCnt = 10;
@@ -482,8 +484,7 @@ static Boolean LayoutTenBytes(const tStrComp *pExpr, Word *pCnt, Boolean BigEndi
       }
       break;
     case TempAll:
-      WrError(ErrNum_InvOpType);
-      return Result;
+      assert(0);
   }
 
   if (Result)
@@ -559,7 +560,7 @@ static Boolean DecodeIntelPseudo_LayoutMult(const tStrComp *pArg, Word *Cnt,
     {
       if ((!LastValid)
       &&  (!DecodeIntelPseudo_ValidSymChar(pRun[3]))
-      &&  (!strncasecmp(pRun, "DUP", 3)))
+      &&  (!as_strncasecmp(pRun, "DUP", 3)))
       {
         pDupFnd = pRun;
         break;

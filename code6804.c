@@ -38,7 +38,7 @@ enum
   ModNone = -1,
   ModInd = 0,
   ModDir = 1,
-  ModImm = 2,
+  ModImm = 2
 };
 
 #define MModInd (1 << ModInd)
@@ -60,13 +60,13 @@ static void DecodeAdr(const tStrComp *pArg, Boolean MayImm)
 
   AdrMode = ModNone;
 
-  if (!strcasecmp(pArg->Str, "(X)"))
+  if (!as_strcasecmp(pArg->Str, "(X)"))
   {
     AdrMode = ModInd;
     AdrVal = 0x00;
     goto chk;
   }
-  if (!strcasecmp(pArg->Str, "(Y)"))
+  if (!as_strcasecmp(pArg->Str, "(Y)"))
   {
     AdrMode = ModInd;
     AdrVal = 0x10;

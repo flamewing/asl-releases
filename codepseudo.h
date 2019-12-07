@@ -36,7 +36,8 @@ struct _ASSUMERec;
   
 extern int FindInst(void *Field, int Size, int Count);
 
-extern Boolean IsIndirect(char *Asc);
+extern Boolean IsIndirectGen(const char *Asc, const char *pBeginEnd);
+extern Boolean IsIndirect(const char *Asc);
 
 extern void CodeEquate(ShortInt DestSeg, LargeInt Min, LargeInt Max);
 

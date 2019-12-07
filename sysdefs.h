@@ -220,7 +220,6 @@
 #define OPENWRMODE "w"
 #define OPENUPMODE "r+"
 #define IEEEFLOAT
-#define NEEDS_CASECMP
 typedef signed char Integ8;
 typedef unsigned char Card8;
 typedef signed short Integ16;
@@ -279,7 +278,6 @@ typedef unsigned long long Card64;
 #define OPENWRMODE "w"
 #define OPENUPMODE "r+"
 #define IEEEFLOAT
-#define NEEDS_CASECMP
 #define NEEDS_STRSTR
 typedef char Integ8;
 typedef unsigned char Card8;
@@ -703,7 +701,6 @@ typedef unsigned long long Card64;
 #define OPENUPMODE "r+"
 #define VAXFLOAT
 #define NEEDS_STRDUP
-#define NEEDS_CASECMP
 #define BKOKEN_SPRINTF
 typedef signed char Integ8;
 typedef unsigned char Card8;
@@ -1048,7 +1045,6 @@ typedef unsigned long long Card64;
 #define DRSEP ':'
 #define SDRSEP ":"
 #define NULLDEV "NUL"
-#define NEEDS_CASECMP
 typedef signed char Integ8;
 typedef unsigned char Card8;
 typedef signed short Integ16;
@@ -1081,7 +1077,6 @@ well, not really a UNIX... */
 #define DRSEP ':'
 #define SDRSEP ":"
 #define NULLDEV "NUL"
-#define NEEDS_CASECMP
 typedef signed char Integ8;
 typedef unsigned char Card8;
 typedef signed short Integ16;
@@ -1128,7 +1123,6 @@ typedef unsigned int Card32;
 #define DRSEP ':'
 #define SDRSEP ":"
 #define NULLDEV "NUL"
-#define NEEDS_CASECMP
 typedef signed char Integ8;
 typedef unsigned char Card8;
 typedef signed short Integ16;
@@ -1164,6 +1158,13 @@ typedef unsigned long Card32;
    'long long' for 64-bit integers, but I currently cannot verify this. */
 
 #if defined(__linux__) || defined(__FreeBSD__) || defined(__APPLE__)
+
+/* no long long data type if C89 is used */
+
+#if (defined __STDC__) && (!defined __STDC_VERSION__)
+# define NOLONGLONG
+#endif
+
 #ifdef __linux__
 #define ARCHSYSNAME "unknown-linux"
 #elif defined __FreeBSD__
@@ -1208,6 +1209,13 @@ typedef unsigned long long Card64;
    'long long' for 64-bit integers, but I currently cannot verify this. */
 
 #if defined(__linux__) || defined(__FreeBSD__) || defined(__APPLE__)
+
+/* no long long data type if C89 is used */
+
+#if (defined __STDC__) && (!defined __STDC_VERSION__)
+# define NOLONGLONG
+#endif
+
 #ifdef __linux__
 #define ARCHSYSNAME "unknown-linux"
 #elif defined __FreeBSD__
@@ -1228,9 +1236,11 @@ typedef unsigned short Card16;
 typedef signed int Integ32;
 #define PRIInteg32 "d"
 typedef unsigned int Card32;
+#ifndef NOLONGLONG
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
 #define HAS64
+#endif
 #define LOCALE_NLS
 #endif
 

@@ -35,7 +35,7 @@ enum
   ModAbs = 5,
   ModIReg = 6,
   ModIndex = 7,
-  ModDisp = 8,
+  ModDisp = 8
 };
 
 #define MModReg8 (1 << ModReg8)
@@ -78,7 +78,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
   /* Register */
 
   for (z = 0; z < 8; z++)
-    if (!strcasecmp(pArg->Str, RegNames[z]))
+    if (!as_strcasecmp(pArg->Str, RegNames[z]))
     {
       AdrMode = ModReg8;
       AdrPart = z;
@@ -148,23 +148,23 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
     StrCompRefRight(&Arg, pArg, 1);
     StrCompShorten(&Arg, 1);
 
-    if ((!strcasecmp(Arg.Str, "DE")) || (!strcasecmp(Arg.Str, "RP2")))
+    if ((!as_strcasecmp(Arg.Str, "DE")) || (!as_strcasecmp(Arg.Str, "RP2")))
     {
       AdrMode = ModIReg;
       AdrPart = 0;
     }
-    else if ((!strncasecmp(Arg.Str, "HL", 2)) && (!strncasecmp(Arg.Str, "RP3", 3))) WrStrErrorPos(ErrNum_InvReg, &Arg);
+    else if ((!as_strncasecmp(Arg.Str, "HL", 2)) && (!as_strncasecmp(Arg.Str, "RP3", 3))) WrStrErrorPos(ErrNum_InvReg, &Arg);
     else
     {
       StrCompIncRefLeft(&Arg, 2);
       if (*Arg.Str == '3')
         StrCompIncRefLeft(&Arg, 1);
-      if ((!strcasecmp(Arg.Str, "+B")) || (!strcasecmp(Arg.Str, "+R3")))
+      if ((!as_strcasecmp(Arg.Str, "+B")) || (!as_strcasecmp(Arg.Str, "+R3")))
       {
         AdrMode = ModIndex;
         AdrPart = 1;
       }
-      else if ((!strcasecmp(Arg.Str, "+C")) || (!strcasecmp(Arg.Str, "+R2")))
+      else if ((!as_strcasecmp(Arg.Str, "+C")) || (!as_strcasecmp(Arg.Str, "+R2")))
       {
         AdrMode = ModIndex;
         AdrPart = 0;
@@ -487,7 +487,7 @@ static void DecodeXCH(Word Index)
 
   if (ChkArgCnt(2, 2))
   {
-    Boolean Swap = (!strcasecmp(ArgStr[2].Str, "A")) || (!strcasecmp(ArgStr[2].Str, "RP1"));
+    Boolean Swap = (!as_strcasecmp(ArgStr[2].Str, "A")) || (!as_strcasecmp(ArgStr[2].Str, "RP1"));
     tStrComp *pArg1 = Swap ? &ArgStr[2] : &ArgStr[1],
              *pArg2 = Swap ? &ArgStr[1] : &ArgStr[2];
 
@@ -693,7 +693,7 @@ static void DecodeXCHW(Word Index)
 static void DecodeStack(Word Index)
 {
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "PSW"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "PSW"))
   {
     BAsmCode[0] = 0x22 + Index;
     CodeLen = 1;
@@ -938,12 +938,12 @@ static void DecodeMOV1(Word Index)
 
   if (ChkArgCnt(2, 2))
   {
-    Boolean Swap = !strcasecmp(ArgStr[2].Str, "CY");
+    Boolean Swap = !as_strcasecmp(ArgStr[2].Str, "CY");
     tStrComp *pArg1 = Swap ? &ArgStr[2] : &ArgStr[1],
              *pArg2 = Swap ? &ArgStr[1] : &ArgStr[2];
     int z = Swap ? 1 : 4;
 
-    if (strcasecmp(pArg1->Str, "CY")) WrError(ErrNum_InvAddrMode);
+    if (as_strcasecmp(pArg1->Str, "CY")) WrError(ErrNum_InvAddrMode);
     else if (DecodeBitAdr(pArg2, &HReg))
     {
       BAsmCode[0] = 0x61 + (Ord((HReg & 0x88) != 0x88) << 4);
@@ -959,7 +959,7 @@ static void DecodeBit2(Word Index)
   Byte HReg;
  
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1].Str, "CY")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "CY")) WrError(ErrNum_InvAddrMode);
   else if (DecodeBitAdr(&ArgStr[2], &HReg))
   {
     BAsmCode[0] = 0x61 + (Ord((HReg & 0x88) != 0x88) << 4);
@@ -974,7 +974,7 @@ static void DecodeSETCLR1(Word Index)
   Byte HReg;
  
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "CY"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "CY"))
   {
     BAsmCode[0] = 0x20 + Index;
     CodeLen = 1;
@@ -1002,7 +1002,7 @@ static void DecodeNOT1(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(1, 1));
-  else if (strcasecmp(ArgStr[1].Str, "CY")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "CY")) WrError(ErrNum_InvAddrMode);
   else
   {
     BAsmCode[0] = 0x01;
@@ -1085,7 +1085,7 @@ static void DecodeBR(Word Index)
   UNUSED(Index);  
 
   if (!ChkArgCnt(1, 1));
-  else if ((!strcasecmp(ArgStr[1].Str, "AX")) || (!strcasecmp(ArgStr[1].Str, "RP0")))
+  else if ((!as_strcasecmp(ArgStr[1].Str, "AX")) || (!as_strcasecmp(ArgStr[1].Str, "RP0")))
   {
     BAsmCode[0] = 0x31;
     BAsmCode[1] = 0x98;
@@ -1246,7 +1246,7 @@ static void DecodeSEL(Word Index)
   UNUSED(Index);
 
   if (ArgCnt != 1) WrError(ErrNum_InvAddrMode);
-  else if ((strlen(ArgStr[1].Str) != 3) || (strncasecmp(ArgStr[1].Str, "RB", 2) != 0)) WrError(ErrNum_InvAddrMode);
+  else if ((strlen(ArgStr[1].Str) != 3) || (as_strncasecmp(ArgStr[1].Str, "RB", 2) != 0)) WrError(ErrNum_InvAddrMode);
   else
   {
     HReg = ArgStr[1].Str[2] - '0';

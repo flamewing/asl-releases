@@ -35,14 +35,14 @@ typedef enum
   AdrModeReg = 0,
   AdrModeAReg = 1,
   AdrModeImm = 2,
-  AdrModeMemReg = 3,
+  AdrModeMemReg = 3
 } tAdrMode;
 
 typedef enum
 {
   eIndirModeNone,
   eIndirModePar,
-  eIndirModeSquare,
+  eIndirModeSquare
 } tIndirMode;
 
 typedef enum
@@ -51,7 +51,7 @@ typedef enum
   eIncModePreInc,
   eIncModePostInc,
   eIncModePreDec,
-  eIncModePostDec,
+  eIncModePostDec
 } tIncMode;
 
 #define MModeReg (1 << AdrModeReg)
@@ -122,7 +122,7 @@ static Boolean DecodeAdrRegStr(const char *pArg, Byte *pRes)
   unsigned z;
 
   for (z = 0; z < 4; z++)
-    if (!strcasecmp(pArg, Regs[z]))
+    if (!as_strcasecmp(pArg, Regs[z]))
     {
       *pRes = z;
       return True;
@@ -157,17 +157,17 @@ static Boolean DecodeGenRegArg(int ArgNum, Byte *pRes)
     *pRes += 8;
     return True;
   }
-  else if (!strcasecmp(ArgStr[ArgNum].Str, "CCH"))
+  else if (!as_strcasecmp(ArgStr[ArgNum].Str, "CCH"))
   {
     *pRes = 12;
     return True;
   }
-  else if (!strcasecmp(ArgStr[ArgNum].Str, "CCL"))
+  else if (!as_strcasecmp(ArgStr[ArgNum].Str, "CCL"))
   {
     *pRes = 13;
     return True;
   }
-  else if (!strcasecmp(ArgStr[ArgNum].Str, "CCW"))
+  else if (!as_strcasecmp(ArgStr[ArgNum].Str, "CCW"))
   {
     *pRes = 14;
     return True;
@@ -639,7 +639,7 @@ static Boolean IsImmediate(const tAdrVals *pVals, ShortInt OpSize, Byte *pImmVal
           *pImmVal = 0xff;
         return True;
       }
-      /* conditional break */
+      /* else fall-through */
     default:
       *pImmVal = 0;
       return False;
@@ -671,7 +671,7 @@ static Boolean IsReg(const tAdrVals *pVals, Byte *pReg)
         *pReg = pVals->Arg & 7;
         return True;
       }
-      /* conditional break */
+      /* else fall-through */
     default:
       *pReg = 0;
       return False;
@@ -810,7 +810,7 @@ static Byte EvalBitPosition(const tStrComp *pBitArg, Boolean *pOK, ShortInt OpSi
     case eSymbolSize32Bit:
       return EvalStrIntExpression(pBitArg, UInt5, pOK);
     default:
-      WrError(ErrNum_InvOpsize);
+      WrError(ErrNum_InvOpSize);
       *pOK = False;
       return 0;
   }
@@ -983,7 +983,7 @@ static Boolean DissectBitSymbol(LongWord BitSymbol, Word *pAddress, Byte *pBitPo
       break;
     case 3:
       *pOpSize = eSymbolSize24Bit;
-      /* no break */
+      /* fall-through */
     case eSymbolSize32Bit:
       *pAddress = (BitSymbol >> 5) & 0xfff;
       *pBitPos = BitSymbol & 31;
@@ -1114,7 +1114,7 @@ static Boolean DecodeBranchCore(int ArgIndex)
       }
       break;
     default:
-      WrStrErrorPos(ErrNum_InvOpsize, &AttrPart);
+      WrStrErrorPos(ErrNum_InvOpSize, &AttrPart);
       return False;
   }
   return True;
@@ -1313,7 +1313,7 @@ static void DecodeShift(Word Code)
     }
     else if (!SizeCode2(OpSize, &SizeCode))
     {
-      WrError(ErrNum_InvOpsize);
+      WrError(ErrNum_InvOpSize);
       return;
     }
 
@@ -1449,7 +1449,7 @@ static void DecodeBit(Word Code)
       /* TODO: warn if ImmWidth != 1 */
       if (!SizeCode2(OpSize, &SizeCode) || (SizeCode == 2))
       {
-        WrError(ErrNum_InvOpsize);
+        WrError(ErrNum_InvOpSize);
         return;
       }
       ImmediatePos = True;
@@ -1482,7 +1482,7 @@ static void DecodeBit(Word Code)
 
     else if (!SizeCode2(OpSize, &SizeCode) || (SizeCode == 2))
     {
-      WrError(ErrNum_InvOpsize);
+      WrError(ErrNum_InvOpSize);
       return;
     }
 
@@ -1606,7 +1606,7 @@ static void DecodeBitField(Word Code)
             break;
           case AdrModeMemReg:
             if (OpSize == eSymbolSizeUnknown) WrError(ErrNum_UndefOpSizes);
-            else if (!SizeCode2(OpSize, &SizeCode)) WrError(ErrNum_InvOpsize);
+            else if (!SizeCode2(OpSize, &SizeCode)) WrError(ErrNum_InvOpSize);
             else
             {
               BAsmCode[CodeLen++] = 0x1b;
@@ -1632,7 +1632,7 @@ static void DecodeBitField(Word Code)
         {
           case AdrModeReg:
             if (OpSize  == eSymbolSizeUnknown) WrError(ErrNum_UndefOpSizes);
-            else if (!SizeCode2(OpSize, &SizeCode)) WrError(ErrNum_InvOpsize);
+            else if (!SizeCode2(OpSize, &SizeCode)) WrError(ErrNum_InvOpSize);
             else
             {
               BAsmCode[CodeLen++] = 0x1b;
@@ -1703,7 +1703,7 @@ static void DecodeCLR(Word Code)
         Byte SizeCode;
 
         if (OpSize == eSymbolSizeUnknown) WrError(ErrNum_UndefOpSizes);
-        else if (!SizeCode2(OpSize, &SizeCode)) WrError(ErrNum_InvOpsize);
+        else if (!SizeCode2(OpSize, &SizeCode)) WrError(ErrNum_InvOpSize);
         else
         {
           BAsmCode[CodeLen++] = 0xbc | SizeCode;
@@ -1741,7 +1741,7 @@ static void DecodeCOM_NEG(Word Code)
   }
   if (!SizeCode2(OpSize, &SizeCode) || (OpSize == eSymbolSize24Bit))
   {
-    WrError(ErrNum_InvOpsize);
+    WrError(ErrNum_InvOpSize);
     return;
   }
   PutCode(Code | SizeCode);
@@ -1775,7 +1775,7 @@ static void DecodeDBcc(Word Code)
   }
   if (!SizeCode2(OpSize, &SizeCode))
   {
-    WrError(ErrNum_InvOpsize);
+    WrError(ErrNum_InvOpSize);
     return;
   }
   switch (AdrVals.Mode)
@@ -2165,7 +2165,7 @@ static void DecodeMOV(Word Code)
 
     if (!SizeCode2(OpSize, &SizeCode))
     {
-      WrError(ErrNum_InvOpsize);
+      WrError(ErrNum_InvOpSize);
       return;
     }
 
@@ -2201,15 +2201,15 @@ static void DecodePSH_PUL(Word Code)
     return;
   for (z = 1; z <= ArgCnt; z++)
   {
-    if (!strcasecmp(ArgStr[z].Str, "ALL"))
+    if (!as_strcasecmp(ArgStr[z].Str, "ALL"))
       ThisRegMask = 0x3f3f;
-    else if (!strcasecmp(ArgStr[z].Str, "ALL16b"))
+    else if (!as_strcasecmp(ArgStr[z].Str, "ALL16b"))
       ThisRegMask = 0x3003;
     else if (DecodeRegStr(ArgStr[z].Str, &Reg))
       ThisRegMask = RegMasks[Reg];
-    else if (!strcasecmp(ArgStr[z].Str, "CCH"))
+    else if (!as_strcasecmp(ArgStr[z].Str, "CCH"))
       ThisRegMask = 0x0020;
-    else if (!strcasecmp(ArgStr[z].Str, "CCL"))
+    else if (!as_strcasecmp(ArgStr[z].Str, "CCL"))
       ThisRegMask = 0x0010;
     else if (DecodeAdrRegStr(ArgStr[z].Str, &Reg) && (Reg < 2))
       ThisRegMask = 0x0200 >> Reg;
@@ -2253,7 +2253,7 @@ static void DecodeROL_ROR(Word Code)
     }
     if (!SizeCode2(OpSize, &SizeCode))
     {
-      WrError(ErrNum_InvOpsize);
+      WrError(ErrNum_InvOpSize);
       return;
     }
     PutCode(Code | SizeCode);
@@ -2297,7 +2297,7 @@ static void DecodeTBcc(Word Code)
       }
       if (!SizeCode2(OpSize, &SizeCode))
       {
-        WrError(ErrNum_InvOpsize);
+        WrError(ErrNum_InvOpSize);
         return;
       }
       PutCode(Code | 0x000c | SizeCode);
@@ -2339,6 +2339,7 @@ static void DecodeTRAP(Word Code)
       case 9:
         if ((AdrVals.Vals[0] & 0x0f) >= 2)
           break;
+        /* else fall-through */
       default:
       warn:
         WrError(ErrNum_TrapValidInstruction);
@@ -2378,7 +2379,7 @@ static void DecodeDEFBIT(Word Code)
       OpSize = eSymbolSize8Bit;
     if (OpSize > eSymbolSize32Bit)
     {
-      WrError(ErrNum_InvOpsize);
+      WrError(ErrNum_InvOpSize);
       return;
     }
 
@@ -2428,7 +2429,7 @@ static void DecodeDEFBITFIELD(Word Code)
       OpSize = eSymbolSize8Bit;
     if ((OpSize > eSymbolSize32Bit) && (OpSize != eSymbolSize24Bit))
     {
-      WrError(ErrNum_InvOpsize);
+      WrError(ErrNum_InvOpSize);
       return;
     }
 

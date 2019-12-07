@@ -225,7 +225,7 @@ Message ErrMsgOnlyImmAddr
  "nur immediate-Adressierung erlaubt"
  "addressing mode must be immediate"
 
-Message ErrMsgInvOpsize
+Message ErrMsgInvOpSize
  "unpassende Operandengr&ouml;&szlig;e"
  "invalid operand size"
 
@@ -237,17 +237,49 @@ Message ErrMsgUndefOpSizes
  "undefinierte Operandengr&ouml;&szlig;e"
  "undefined operand size"
 
-Message ErrMsgInvOpType
- "unpassender Operandentyp"
- "invalid operand type"
+Message ErrMsgStringOrIntButFloat
+ "Ganzzahl oder String erwartet, aber Gleitkommazahl erhalten"
+ "expected integer or string, but got floating point number"
+
+Message ErrMsgIntButFloat
+ "Ganzzahl erwartet, aber Gleitkommazahl erhalten"
+ "expected integer, but got floating point number"
+
+Message ErrMsgFloatButString
+ "Gleitkommazahl erwartet, aber String erhalten"
+ "expected floating point number, but got string"
 
 Message ErrMsgOpTypeMismatch
  "Operandentyp-Diskrepanz"
  "operand type mismatch"
 
+Message ErrMsgStringButInt
+ "String erwartet, aber Ganzzahl erhalten"
+ "expected string, but got integer"
+
+Message ErrMsgStringButFloat
+ "String erwartet, aber Gleitkommazahl erhalten"
+ "expected string, but got floating point number"
+
 Message ErrMsgTooManyArgs
- "zuviele Argumente"
+ "zu viele Argumente"
  "too many arguments"
+
+Message ErrMsgIntButString
+ "Ganzzahl erwartet, aber String erhalten"
+ "expected integer, but got string"
+
+Message ErrMsgIntOrFloatButString
+ "Ganz- oder Gleitkommazahl erwartet, aber String erhalten"
+ "expected integer or floating point number, but got string"
+
+Message ErrMsgExpectString
+ "String erwartet"
+ "expected string"
+
+Message ErrMsgExpectInt
+ "Ganzzahl erwartet"
+ "expected integer"
 
 Message ErrMsgUnknownInstruction
  "unbekannter Befehl"
@@ -268,6 +300,10 @@ Message ErrMsgUnderRange
 Message ErrMsgOverRange
  "Bereichs&uuml;berschreitung"
  "range overflow"
+
+Message ErrMsgNotPwr2
+ "keine Zweierpotenz"
+ "not a power of two"
 
 Message ErrMsgNotAligned
  "Adresse nicht ausgerichtet"
@@ -316,6 +352,10 @@ Message ErrMsgDistIsOdd
 Message ErrMsgInvShiftArg
  "ung&uuml;ltiges Schiebeargument"
  "invalid argument for shifting"
+
+Message ErrMsgOnly1
+ "nur Eins als Argument erlaubt"
+ "operand must be one"
 
 Message ErrMsgRange18
  "nur Bereich 1..8 erlaubt"
@@ -753,6 +793,22 @@ Message ErrMsgInvalidPrepDir
  "unbekannte Pr&auml;prozessoranweisung"
  "unknown preprocessing directive"
 
+Message ErrMsgExpectedError
+ "erwarteter Fehler nicht eingetreten"
+ "expected error did not occur"
+
+Message ErrMsgNoNestExpect
+ "Verschachtelung von EXPECT/ENDEXPECT nicht erlaubt"
+ "nesting of EXPECT/ENDEXPECT not allowed"
+
+Message ErrMsgMissingENDEXPECT
+ "fehlendes ENDEXPECT"
+ "missing ENDEXPECT"
+
+Message ErrMsgMissingEXPECT
+ "ENDEXPECT ohne EXPECT"
+ "ENDEXPECT without EXPECT"
+
 Message ErrMsgInternalError
  "interner Fehler"
  "internal error"
@@ -821,14 +877,6 @@ Message ErrMsgUnexportable
  "Symbol nicht exportierbar"
  "cannot export this symbol"
 
-Message ErrMsgExpected
- "erwartete"
- "expected"
-
-Message ErrMsgButGot
- "aber erhielt"
- "but got"
-
 Message ErrMsgArgCntZero
  "erwarte kein Argument, erhielt %d"
  "expected no argument but got %d"
@@ -880,18 +928,6 @@ Message ErrMsgOnlyCPUSupportedOr
 Message ErrMsgOnlyCPUSupported2
  " unterst&uuml;tzt"
  ""
-
-Message OpTypeInt
- "Integer"
- "integer"
-
-Message OpTypeFloat
- "Float"
- "float"
-
-Message OpTypeString
- "String"
- "string"
 
 ;----------------------------------------------------------------------------
 ; Strings in Listingkopfzeile

@@ -117,12 +117,25 @@ the source file's extension with '.map', '.obj', or '.noi' respectively.
 Output errors and their location in the source code in a format similar
 to the GNU C compiler, thus making it easier to integrate AS into
 environments designed for this format.  Note that in contrast to the
-standard format used by AS, locations inside are not reported!
+standard format used by AS, locations inside macros are not reported!
+.TP
+.B -maxerrors <num>
+
+Force AS to terminate assembly after the given number of errors occured.
+.TP
+.B -werror
+
+Force AS to treat warnings as errors.
 .TP
 .B -h
 
 Force AS to print all hexadecimal constants with lowercase letters, rather
 than with uppercase letters A..F which is the default.
+.TP
+.B -listradix <2..36>
+Set the number system to be used in the listing.  By default, all integer
+values are printed in hex, but an arbitrary base between 2 and 36 may be
+used via this switch.
 .TP
 .B -i <path[:path...]>
 Add new entries to the list of paths that are searched for include files.
@@ -265,7 +278,12 @@ Suppress output of warnings.
 Turn on extended error reporting.  With extended error reporting, several
 error and warning messages will also print the item that created the message,
 e.g. the name of an unknown instruction.  When this option is given twice, 
-the erroneous source line is additinally printed.
+the erroneous source line is additionally printed.
+.TP
+.B -warnranges
+
+Only warn about integer constants exceedings the given data type's range, instead
+of issuing an error.
 
 .SH PRESETTING PARAMETERS
 

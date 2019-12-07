@@ -727,7 +727,7 @@ static void CodeCHARSET(Word Index)
                     CharTransTable[Start + z] = t.Contents.Ascii.Contents[z];
                 break;
               case TempFloat:
-                WrError(ErrNum_InvOpType);
+                WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[2]);
                 break;
               default:
                 break;
@@ -749,7 +749,7 @@ static void CodeCHARSET(Word Index)
         }
         break;
       case TempFloat:
-        WrError(ErrNum_InvOpType);
+        WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[1]);
         break;
       default:
         break;
@@ -934,12 +934,12 @@ static void CodeMACEXP(Word Index)
     InitLstMacroExpMod(&LstMacroExpMod);
     forallargs (pArg, True)
     {
-      if (!strcasecmp(pArg->Str, "ON")) LstMacroExpMod.SetAll = True;
-      else if (!strcasecmp(pArg->Str, "OFF")) LstMacroExpMod.ClrAll = True;
-      else if (!strcasecmp(pArg->Str, "NOIF")) LstMacroExpMod.ANDMask |= eLstMacroExpIf;
-      else if (!strcasecmp(pArg->Str, "NOMACRO")) LstMacroExpMod.ANDMask |= eLstMacroExpMacro;
-      else if (!strcasecmp(pArg->Str, "IF")) LstMacroExpMod.ORMask |= eLstMacroExpIf;
-      else if (!strcasecmp(pArg->Str, "MACRO")) LstMacroExpMod.ORMask |= eLstMacroExpMacro;
+      if (!as_strcasecmp(pArg->Str, "ON")) LstMacroExpMod.SetAll = True;
+      else if (!as_strcasecmp(pArg->Str, "OFF")) LstMacroExpMod.ClrAll = True;
+      else if (!as_strcasecmp(pArg->Str, "NOIF")) LstMacroExpMod.ANDMask |= eLstMacroExpIf;
+      else if (!as_strcasecmp(pArg->Str, "NOMACRO")) LstMacroExpMod.ANDMask |= eLstMacroExpMacro;
+      else if (!as_strcasecmp(pArg->Str, "IF")) LstMacroExpMod.ORMask |= eLstMacroExpIf;
+      else if (!as_strcasecmp(pArg->Str, "MACRO")) LstMacroExpMod.ORMask |= eLstMacroExpMacro;
       else
         OK = False;
       if (!OK)
@@ -1072,7 +1072,7 @@ static void CodeRADIX(Word Index)
   if (ChkArgCnt(1, 1))
   {
     tmp = ConstLongInt(ArgStr[1].Str, &OK, 10);
-    if (!OK) WrError(ErrNum_InvOpType);
+    if (!OK) WrError(ErrNum_ExpectInt);
     else if (ChkRange(tmp, 2, 36))
     {
       if (Index == 1)
@@ -1166,7 +1166,7 @@ static void CodeASSUME(Word Index)
       if (!OK) WrStrErrorPos(ErrNum_InvRegName, &RegPart);
       else
       {
-        if (!strcasecmp(ValPart.Str, "NOTHING"))
+        if (!as_strcasecmp(ValPart.Str, "NOTHING"))
         {
           if (pASSUMERecs[z2].NothingVal == -1) WrError(ErrNum_InvAddrMode);
           else
@@ -1547,13 +1547,13 @@ static void CodeSTRUCT(Word IsUnion)
   forallargs (pArg, True)
     if (OK)
     {
-      if (!strcasecmp(pArg->Str, "EXTNAMES"))
+      if (!as_strcasecmp(pArg->Str, "EXTNAMES"))
         DoExt = True;
-      else if (!strcasecmp(pArg->Str, "NOEXTNAMES"))
+      else if (!as_strcasecmp(pArg->Str, "NOEXTNAMES"))
         DoExt = False;
-      else if (!strcasecmp(pArg->Str, "DOTS"))
+      else if (!as_strcasecmp(pArg->Str, "DOTS"))
         ExtChar = '.';
-      else if (!strcasecmp(pArg->Str, "NODOTS"))
+      else if (!as_strcasecmp(pArg->Str, "NODOTS"))
         ExtChar = '_';
       else
       {
@@ -1710,7 +1710,7 @@ static void CodeEXTERN(Word Index)
       {
         *Split = '\0';
         for (Type = SegNone + 1; Type <= PCMax; Type++)
-          if (!strcasecmp(Split + 1, SegNames[Type]))
+          if (!as_strcasecmp(Split + 1, SegNames[Type]))
             break;
       }
       if (Type > PCMax) WrXError(ErrNum_UnknownSegment, Split + 1);
@@ -1820,8 +1820,8 @@ static void DecodeONOFF(Word Index)
     NLS_UpString(ArgStr[1].Str);
     if (*AttrPart.Str != '\0') WrError(ErrNum_UseLessAttr);
     {
-      Boolean IsON = !strcasecmp(ArgStr[1].Str, "ON");
-      if ((!IsON) && (strcasecmp(ArgStr[1].Str, "OFF"))) WrStrErrorPos(ErrNum_OnlyOnOff, &ArgStr[1]);
+      Boolean IsON = !as_strcasecmp(ArgStr[1].Str, "ON");
+      if ((!IsON) && (as_strcasecmp(ArgStr[1].Str, "OFF"))) WrStrErrorPos(ErrNum_OnlyOnOff, &ArgStr[1]);
       else
         SetFlag(Tab->FlagAddr, Tab->FlagName, IsON);
     }
@@ -1871,6 +1871,7 @@ static const PseudoOrder Pseudos[] =
   {"CPU",        CodeCPU        , 0 },
   {"DEPHASE",    CodeDEPHASE    , 0 },
   {"END",        CodeEND        , 0 },
+  {"ENDEXPECT",  CodeENDEXPECT  , 0 },
   {"ENDS",       CodeENDSTRUCT  , 0 },
   {"ENDSECTION", CodeENDSECTION , 0 },
   {"ENDSTRUC",   CodeENDSTRUCT  , 0 },
@@ -1880,6 +1881,7 @@ static const PseudoOrder Pseudos[] =
   {"ENUMCONF",   CodeENUMCONF   , 0 },
   {"EQU",        CodeSETEQU     , 0 },
   {"ERROR",      CodeERROR      , 0 },
+  {"EXPECT",     CodeEXPECT     , 0 },
   {"EXPORT_SYM", CodeEXPORT     , 0 },
   {"EXTERN_SYM", CodeEXTERN     , 0 },
   {"FATAL",      CodeFATAL      , 0 },

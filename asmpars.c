@@ -11,6 +11,7 @@
 #include "stdinc.h"
 #include <string.h>
 #include <ctype.h>
+#include <assert.h>
 
 #include "endian.h"
 #include "bpemu.h"
@@ -320,7 +321,7 @@ static Boolean ProcessBk(char **Start, char *Erg)
     case 'X':
       System = 16;
       (*Start)++;
-      /* no break */
+      /* fall-through */
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
       if (System == 0)
@@ -645,7 +646,7 @@ Boolean IdentifySection(const tStrComp *pName, LongInt *Erg)
     return True;
   }
   else if (((strlen(ExpName) == 6) || (strlen(ExpName) == 7))
-       && (!strncasecmp(ExpName, "PARENT", 6))
+       && (!as_strncasecmp(ExpName, "PARENT", 6))
        && ((strlen(ExpName) == 6) || ((ExpName[6] >= '0') && (ExpName[6] <= '9'))))
   {
     Depth = (strlen(ExpName) == 6) ? 1 : ExpName[6] - AscOfs;
@@ -814,7 +815,7 @@ static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
     {
       case '-':
         NegFlag = True;
-        /* explicitly no break */
+        /* fall-through */
       case '+':
         pExpr++;
         break;
@@ -939,6 +940,7 @@ static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
         }
         break;
       case ConstModeWeird:
+        if (isdigit(*pExpr)) break;
         if ((l < 3) || (pExpr[1] != '\'') || (pExpr[l - 1] != '\''))
           return -1;
         switch (mytoupper(*pExpr))
@@ -1130,7 +1132,7 @@ static void ConstStringVal(const tStrComp *pExpr, TempResult *pDest, Boolean *pR
       switch (t.Typ)
       {
         case TempInt:
-          TLen = SysString(Str, sizeof(Str), t.Contents.Int, OutRadixBase, 0, HexStartCharacter);
+          TLen = SysString(Str, sizeof(Str), t.Contents.Int, OutRadixBase, 0, False, HexStartCharacter);
           pStr = Str;
           break;
         case TempFloat:
@@ -1191,6 +1193,63 @@ const char *Name, TempType SearchType
 
 #define LEAVE goto func_exit
 
+static tErrorNum DeduceExpectTypeErrMsgMask(unsigned Mask, TempType ActType)
+{
+  switch (ActType)
+  {
+    case TempInt:
+      switch (Mask)
+      {
+        case (1 << TempString):
+          return ErrNum_StringButInt;
+        /* int is convertible to float, so combinations are impossbile: */
+        case (1 << TempFloat):
+        case (1 << TempFloat) | (1 << TempString):
+        default:
+          assert(0);
+      }
+    case TempFloat:
+      switch (Mask)
+      {
+        case (1 << TempInt):
+          return ErrNum_IntButFloat;
+        case (1 << TempString):
+          return ErrNum_StringButFloat;
+        case (1 << TempInt) | (1 << TempString):
+          return ErrNum_StringOrIntButFloat;
+        default:
+          assert(0);
+      }
+    case TempString:
+      switch (Mask)
+      {
+        case (1 << TempInt):
+          return ErrNum_IntButString;
+        case (1 << TempFloat):
+          return ErrNum_FloatButString;
+        case (1 << TempInt) | (1 << TempFloat):
+          return ErrNum_IntOrFloatButString;
+        default:
+          assert(0);
+      }
+    default:
+      assert(0);
+  }
+}
+
+static tErrorNum DeduceExpectTypeErrMsgOp(const Operator *pOp, TempType ActType)
+{
+  unsigned Mask = 0;
+
+  if (pOp->MayInt)
+    Mask |= 1 << TempInt;
+  if (pOp->MayFloat)
+    Mask |= 1 << TempFloat;
+  if (pOp->MayString)
+    Mask |= 1 << TempString;
+  return DeduceExpectTypeErrMsgMask(Mask, ActType);
+}
+
 void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
 {
   const Operator *pOp;
@@ -1240,7 +1299,7 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
 
   /* Programmzaehler ? */
 
-  if ((PCSymbol) && (!strcasecmp(CopyComp.Str, PCSymbol)))
+  if ((PCSymbol) && (!as_strcasecmp(CopyComp.Str, PCSymbol)))
   {
     pErg->Typ = TempInt;
     pErg->Contents.Int = EProgCounter();
@@ -1457,7 +1516,7 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
         {
           if (!pOp->MayFloat)
           {
-            WrStrErrorPos(ErrNum_InvOpType, &InArgs[1]);
+            WrStrErrorPos(DeduceExpectTypeErrMsgOp(pOp, InVals[1].Typ), &InArgs[1]);
             LEAVE;
           }
           else
@@ -1470,14 +1529,14 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
       case TempFloat:
         if (!pOp->MayFloat)
         {
-          WrStrErrorPos(ErrNum_InvOpType, &InArgs[1]);
+          WrStrErrorPos(DeduceExpectTypeErrMsgOp(pOp, InVals[1].Typ), &InArgs[1]);
           LEAVE;
         }
         break;
       case TempString:
         if (!pOp->MayString)
         {
-          WrStrErrorPos(ErrNum_InvOpType, &InArgs[1]);
+          WrStrErrorPos(DeduceExpectTypeErrMsgOp(pOp, InVals[1].Typ), &InArgs[1]);
           LEAVE;
         }
         break;
@@ -1584,7 +1643,7 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
       unsigned IdxAssume;
 
       for (IdxAssume = 0; IdxAssume < ASSUMERecCnt; IdxAssume++)
-        if (!strcasecmp(FArg.Str, pASSUMERecs[IdxAssume].Name))
+        if (!as_strcasecmp(FArg.Str, pASSUMERecs[IdxAssume].Name))
         {
           pErg->Typ = TempInt;
           pErg->Contents.Int = *(pASSUMERecs[IdxAssume].Dest);
@@ -1652,7 +1711,7 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
         TempResultToFloat(&InVals[z1]);
       if (!(pFunction->ArgTypes[z1] & (1 << InVals[z1].Typ)))
       {
-        WrStrErrorPos(ErrNum_InvOpType, &InArgs[z1]);
+        WrStrErrorPos(DeduceExpectTypeErrMsgMask(pFunction->ArgTypes[z1], InVals[z1].Typ), &InArgs[z1]);
         LEAVE;
       }
     }
@@ -1671,35 +1730,35 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
 
   /* interne Symbole ? */
 
-  if (!strcasecmp(CopyComp.Str, "MOMFILE"))
+  if (!as_strcasecmp(CopyComp.Str, "MOMFILE"))
   {
     pErg->Typ = TempString;
     CString2DynString(&pErg->Contents.Ascii, CurrFileName);
     LEAVE;
   }
 
-  if (!strcasecmp(CopyComp.Str, "MOMLINE"))
+  if (!as_strcasecmp(CopyComp.Str, "MOMLINE"))
   {
     pErg->Typ = TempInt;
     pErg->Contents.Int = CurrLine;
     LEAVE;
   }
 
-  if (!strcasecmp(CopyComp.Str, "MOMPASS"))
+  if (!as_strcasecmp(CopyComp.Str, "MOMPASS"))
   {
     pErg->Typ = TempInt;
     pErg->Contents.Int = PassNo;
     LEAVE;
   }
 
-  if (!strcasecmp(CopyComp.Str, "MOMSECTION"))
+  if (!as_strcasecmp(CopyComp.Str, "MOMSECTION"))
   {
     pErg->Typ = TempString;
     CString2DynString(&pErg->Contents.Ascii, GetSectionName(MomSectionHandle));
     LEAVE;
   }
 
-  if (!strcasecmp(CopyComp.Str, "MOMSEGMENT"))
+  if (!as_strcasecmp(CopyComp.Str, "MOMSEGMENT"))
   {
     pErg->Typ = TempString;
     CString2DynString(&pErg->Contents.Ascii, SegNames[ActPC]);
@@ -1724,11 +1783,6 @@ void EvalExpression(const char *pExpr, TempResult *pErg)
   StrCompMkTemp(&Expr, (char*)pExpr);
   EvalStrExpression(&Expr, pErg);
 }
-
-static const int TypeNums[] =
-{
-  0, Num_OpTypeInt, Num_OpTypeFloat, 0, Num_OpTypeString, 0, 0, 0
-};
 
 LargeInt EvalStrIntExpressionWithFlags(const tStrComp *pComp, IntType Type, Boolean *pResult, tSymbolFlags *pFlags)
 {
@@ -1773,16 +1827,10 @@ LargeInt EvalStrIntExpressionWithFlags(const tStrComp *pComp, IntType Type, Bool
         break;
       }
     }
+    /* else fall-through */
     default:
       if (t.Typ != TempNone)
-      {
-        char Msg[50];
-
-        as_snprintf(Msg, sizeof(Msg), "%s %s %s %s",
-                    getmessage(Num_ErrMsgExpected), getmessage(Num_OpTypeInt),
-                    getmessage(Num_ErrMsgButGot), getmessage(TypeNums[t.Typ]));
-        WrStrErrorPos(ErrNum_InvOpType, pComp);
-      }
+        WrStrErrorPos(DeduceExpectTypeErrMsgMask((1 << TempInt) | (1 << TempString), t.Typ), pComp);
       FreeRelocs(&LastRelocs);
       return -1;
   }
@@ -1845,12 +1893,7 @@ Double EvalStrFloatExpression(const tStrComp *pExpr, FloatType Type, Boolean *pR
       break;
     case TempString:
     {
-      char Msg[50];
- 
-      as_snprintf(Msg, sizeof(Msg), "%s %s %s %s",
-                  getmessage(Num_ErrMsgExpected), getmessage(Num_OpTypeFloat),
-                  getmessage(Num_ErrMsgButGot), getmessage(Num_OpTypeString));
-      WrStrErrorPos(ErrNum_InvOpType, pExpr);
+      WrStrErrorPos(ErrNum_FloatButString, pExpr);
       return -1;
     }
     default:
@@ -1884,12 +1927,13 @@ void EvalStrStringExpression(const tStrComp *pExpr, Boolean *pResult, char *pEva
     *pEvalResult = '\0';
     if (t.Typ != TempNone)
     {
-      char Msg[50];
-
-      as_snprintf(Msg, sizeof(Msg), "%s %s %s %s",
-                  getmessage(Num_ErrMsgExpected), getmessage(Num_OpTypeString),
-                  getmessage(Num_ErrMsgButGot), getmessage(TypeNums[t.Typ]));
-      WrXError(ErrNum_InvOpType, Msg);
+      if (FirstPassUnknown)
+      {
+        *pEvalResult = '\0';
+        *pResult = True;
+      }
+      else
+        WrStrErrorPos(DeduceExpectTypeErrMsgMask(1 << TempString, t.Typ), pExpr);
     }
   }
   else
@@ -1902,7 +1946,7 @@ void EvalStrStringExpression(const tStrComp *pExpr, Boolean *pResult, char *pEva
 
 /*!------------------------------------------------------------------------
  * \fn     GetIntelSuffix(unsigned Radix)
- * \brief  return Intel-stylw suffix letter fitting to number system
+ * \brief  return Intel-style suffix letter fitting to number system
  * \param  Radix req'd number system
  * \return * to suffix string (may be empty)
  * ------------------------------------------------------------------------ */
@@ -2613,7 +2657,7 @@ void LookupSymbol(const struct sStrComp *pComp, TempResult *pValue, Boolean Want
       TypeFlag |= (1 << pEntry->SymType);
     if ((pEntry->SymSize != -1) && (SizeFlag == -1))
       SizeFlag = pEntry->SymSize;
-    if (pEntry->Defined)
+    if (!pEntry->Defined)
     {
       if (Repass)
         SymbolQuestionable = True;

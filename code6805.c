@@ -63,7 +63,7 @@ enum
   ModIx = 5,
   ModSP2 = 6,
   ModSP1 = 7,
-  ModIxP = 8,
+  ModIxP = 8
 };
 
 #define MModImm (1 << ModImm)
@@ -130,12 +130,12 @@ static void DecodeAdr(Byte Start, Byte Stop, Word Mask)
 
   if (Stop - Start == 1)
   {
-    if (!strcasecmp(ArgStr[Stop].Str, "X"))
+    if (!as_strcasecmp(ArgStr[Stop].Str, "X"))
     {
       tmode1 = ModIx1;
       tmode2 = ModIx2;
     }
-    else if (!strcasecmp(ArgStr[Stop].Str,"SP"))
+    else if (!as_strcasecmp(ArgStr[Stop].Str,"SP"))
     {
       tmode1 = ModSP1;
       tmode2 = ModSP2;
@@ -187,7 +187,7 @@ static void DecodeAdr(Byte Start, Byte Stop, Word Mask)
   {
     /* Postinkrement */
 
-    if (!strcasecmp(ArgStr[Start].Str, "X+"))
+    if (!as_strcasecmp(ArgStr[Start].Str, "X+"))
     {
       AdrMode = ModIxP;
       goto chk;
@@ -195,7 +195,7 @@ static void DecodeAdr(Byte Start, Byte Stop, Word Mask)
 
     /* X-indirekt */
 
-    if (!strcasecmp(ArgStr[Start].Str, "X"))
+    if (!as_strcasecmp(ArgStr[Start].Str, "X"))
     {
       WrError(ErrNum_ConvIndX);
       AdrMode = ModIx;
@@ -435,8 +435,8 @@ static void DecodeCBEQ(Word Index)
   else if (ArgCnt == 3)
   {
     OK = True;
-    if (!strcasecmp(ArgStr[2].Str, "X+")) Disp = 3;
-    else if (!strcasecmp(ArgStr[2].Str,"SP"))
+    if (!as_strcasecmp(ArgStr[2].Str, "X+")) Disp = 3;
+    else if (!as_strcasecmp(ArgStr[2].Str,"SP"))
     {
       BAsmCode[0] = 0x9e;
       Disp = 4;

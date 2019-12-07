@@ -167,7 +167,8 @@ static void DecodeDC(Word Code)
             PutByte(CharTransTable[((usint) *p) & 0xff]);
           break;
         case TempFloat:
-          WrError(ErrNum_InvOpType);
+          WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[z]);
+          /* fall-through */
         default:
           OK = False;
       }

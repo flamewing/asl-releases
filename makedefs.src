@@ -24,7 +24,7 @@ CODE_SRCS = codepseudo.c intpseudo.c motpseudo.c tipseudo.c natpseudo.c fourpseu
             codescmp.c code807x.c codecop4.c codecop8.c codesc14xxx.c \
             codeace.c codef8.c \
             code53c8xx.c \
-            codefmc8.c codefmc16.c \
+            codefmc8.c codefmc16.c codemn1610.c codemn2610.c \
             codeol40.c codeol50.c \
             code1802.c \
             codevector.c \
@@ -37,7 +37,7 @@ ST_SRCS = strutil.c stdhandl.c stringlists.c strcomp.c
 
 NLS_SRCS = nls.c nlmessages.c
 
-ASM_SRCS = as.c asmdef.c asmsub.c lstmacroexp.c asmpars.c asmmac.c asmstructs.c asmcode.c asmdebug.c asmif.c \
+ASM_SRCS = as.c asmdef.c asmsub.c asmerr.c lstmacroexp.c asmpars.c asmmac.c asmstructs.c asmcode.c asmdebug.c asmif.c \
            asmfnums.c asmrelocs.c tempresult.c operator.c function.c asminclist.c symbolsize.c asmitree.c asmallg.c
 
 AS_SRCS = version.c endian.c bpemu.c chunks.c cpulist.c errmsg.c trees.c dynstring.c cmdarg.c ioerrs.c headids.c

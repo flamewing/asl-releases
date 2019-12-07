@@ -164,7 +164,7 @@ static Boolean DecodeCondition(const char *pAsc, Word *pResult)
   const tCondition *pCond;
 
   for (pCond = Conditions; pCond->pName; pCond++)
-    if (!strcasecmp(pAsc, pCond->pName))
+    if (!as_strcasecmp(pAsc, pCond->pName))
     {
       *pResult = pCond->Code;
       return True;
@@ -236,7 +236,7 @@ static Boolean DecodeArgXIOCmd(unsigned Index, Word *pResult)
   if (isalpha(ArgStr[Index].Str[0]))
   {
     for (pRun = XIO; pRun->pName; pRun++)
-      if (!strcasecmp(ArgStr[Index].Str, pRun->pName))
+      if (!as_strcasecmp(ArgStr[Index].Str, pRun->pName))
       {
         *pResult = pRun->Code;
         return True;

@@ -82,7 +82,7 @@ static Boolean GetReg16(char *Asc, Byte *AdrPart)
   static char *Reg16Names[4] = { "PC", "SP", "P2", "P3" };
 
   for (z = 0; z < 4; z++)
-    if (!strcasecmp(Asc, Reg16Names[z]))
+    if (!as_strcasecmp(Asc, Reg16Names[z]))
     {
       *AdrPart = z;
       return True;
@@ -106,35 +106,35 @@ static void DecodeAdr(int Index, Byte Mask, LongInt PCDelta)
 
   /* accumulator ? */
 
-  if (!strcasecmp(ArgStr[Index].Str, "A"))
+  if (!as_strcasecmp(ArgStr[Index].Str, "A"))
   {
     if (SetOpSize(0))
       AdrMode = ModAcc;
     goto AdrFound;
   }
 
-  if (!strcasecmp(ArgStr[Index].Str, "EA"))
+  if (!as_strcasecmp(ArgStr[Index].Str, "EA"))
   {
     if (SetOpSize(1))
       AdrMode = ModAcc;
     goto AdrFound;
   }
 
-  if (!strcasecmp(ArgStr[Index].Str, "E"))
+  if (!as_strcasecmp(ArgStr[Index].Str, "E"))
   {
     if (SetOpSize(0))
       AdrMode = ModE;
     goto AdrFound;
   }
 
-  if (!strcasecmp(ArgStr[Index].Str, "S"))
+  if (!as_strcasecmp(ArgStr[Index].Str, "S"))
   {
     if (SetOpSize(0))
       AdrMode = ModS;
     goto AdrFound;
   }
 
-  if (!strcasecmp(ArgStr[Index].Str, "T"))
+  if (!as_strcasecmp(ArgStr[Index].Str, "T"))
   {
     if (SetOpSize(1))
       AdrMode = ModT;

@@ -6,7 +6,9 @@
 	retfie
 	return
 	sleep
-	option
+	expect	130
+	 option
+	endexpect
 
 	addlw	1
 	andlw	100
@@ -47,7 +49,9 @@
 	clrf	20
 	movwf	33
 
-	tris	6
+	expect	130
+	 tris	 6
+	endexpect
 
 	call	$200
 	goto	$300

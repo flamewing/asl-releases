@@ -147,7 +147,7 @@ void SetStructElemSize(PStructRec pStructRec, const char *pElemName, ShortInt Si
 
   for (pRun = pStructRec->Elems; pRun; pRun = pRun->Next)
   {
-    Match = CaseSensitive ? strcmp(pElemName, pRun->pElemName) : strcasecmp(pElemName, pRun->pElemName);
+    Match = CaseSensitive ? strcmp(pElemName, pRun->pElemName) : as_strcasecmp(pElemName, pRun->pElemName);
     if (!Match)
     {
       pRun->OpSize = Size;

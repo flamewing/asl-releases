@@ -70,9 +70,9 @@ static void DecodeAri(Word Code)
         CodeLen = 1;
         WAsmCode[0] += DefaultDir << 5;
       }
-      else if (!strcasecmp(ArgStr[2].Str, "W"))
+      else if (!as_strcasecmp(ArgStr[2].Str, "W"))
         CodeLen = 1;
-      else if (!strcasecmp(ArgStr[2].Str, "F"))
+      else if (!as_strcasecmp(ArgStr[2].Str, "F"))
       {
         CodeLen = 1;
         WAsmCode[0] += 0x20;

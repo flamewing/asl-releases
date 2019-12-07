@@ -130,7 +130,7 @@ static ShortInt DecodeReg16(char *pAsc)
     int z;
 
     for (z = 0; z < 4; z++)
-      if (!strcasecmp(Reg16Names[z], pAsc))
+      if (!as_strcasecmp(Reg16Names[z], pAsc))
       {
         Result = z;
         break;
@@ -196,14 +196,14 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "PSW"))
+  if (!as_strcasecmp(pArg->Str, "PSW"))
   {
     AdrMode = ModPSW;
     SetOpSize(0);
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "STBC"))
+  if (!as_strcasecmp(pArg->Str, "STBC"))
   {
     AdrMode = ModSTBC;
     SetOpSize(0);
@@ -219,7 +219,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "SP"))
+  if (!as_strcasecmp(pArg->Str, "SP"))
   {
     AdrMode = ModSP;
     SetOpSize(1); 
@@ -270,7 +270,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
       /* simple expression without displacement? */
 
       for (z = 0; z < sizeof(Modes) / sizeof(*Modes); z++)
-        if (!strcasecmp(Arg.Str, Modes[z]))
+        if (!as_strcasecmp(Arg.Str, Modes[z]))
         {
           AdrMode = ModMem; AdrVal = 0x16;
           AdrVals[0] = z % (sizeof(Modes) / sizeof(*Modes) / 2); 
@@ -288,7 +288,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
       /* decode base register.  SP is not otherwise handled. */
 
       Save = StrCompSplitRef(&Base, &Remainder, &Arg, pSep);
-      if (!strcasecmp(Base.Str, "SP"))
+      if (!as_strcasecmp(Base.Str, "SP"))
         AdrVals[0] = 1;
       else 
       {
@@ -347,7 +347,8 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
           {
             AdrVals[0] = (tmp - 2) << 1;
             break; 
-          }    
+          }
+          /* else fall-through */
         default:
           WrStrErrorPos(ErrNum_InvReg, &Reg);
           goto AdrFound;
@@ -1337,7 +1338,7 @@ static void DecodeSEL(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(1, 1));
-  else if (strncasecmp(ArgStr[1].Str, "RB", 2)) WrError(ErrNum_InvAddrMode);
+  else if (as_strncasecmp(ArgStr[1].Str, "RB", 2)) WrError(ErrNum_InvAddrMode);
   else
   {
     Bank = EvalStrIntExpressionOffs(&ArgStr[1], 2, UInt2, &OK);
@@ -1369,9 +1370,9 @@ static void DecodeMOV1(Word Index)
 
   if (ChkArgCnt(2, 2))
   {
-    if (!strcasecmp(ArgStr[1].Str, "CY"))
+    if (!as_strcasecmp(ArgStr[1].Str, "CY"))
       ArgPos = 2;
-    else if (!strcasecmp(ArgStr[2].Str, "CY"))
+    else if (!as_strcasecmp(ArgStr[2].Str, "CY"))
       ArgPos = 1;
     else
     {
@@ -1393,7 +1394,7 @@ static void DecodeANDOR1(Word Index)
   LongWord Bit;
 
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1].Str, "CY")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "CY")) WrError(ErrNum_InvAddrMode);
   else
   {
     tStrComp *pArg = &ArgStr[2], BitArg;
@@ -1421,7 +1422,7 @@ static void DecodeXOR1(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1].Str, "CY")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "CY")) WrError(ErrNum_InvAddrMode);
   else
   {
     if (DecodeBitAdr(&ArgStr[2], &Bit))
@@ -1441,7 +1442,7 @@ static void DecodeBit1(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "CY"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "CY"))
   {
     *pCode++ = 0x40 | (9 - (Index >> 4));
   }

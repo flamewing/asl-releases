@@ -84,7 +84,7 @@ enum
   ModIndex = 6,
   ModModDec = 7,
   ModModInc = 8,
-  ModDisp = 9,
+  ModDisp = 9
 };
 
 #define MModImm (1 << ModImm)
@@ -165,7 +165,7 @@ static Boolean DecodeReg(char *Asc, LongInt *Erg)
   Word z;
 
   for (z = 0; z < RegCount; z++)
-    if (!strcasecmp(Asc, RegNames[z]))
+    if (!as_strcasecmp(Asc, RegNames[z]))
     {
       *Erg = z + 4;
       return True;
@@ -233,7 +233,7 @@ static Boolean DecodeLReg(char *Asc, LongInt *Erg)
   Word z;
 
   for (z = 0; z < RegCount; z++)
-    if (!strcasecmp(Asc, RegNames[z]))
+    if (!as_strcasecmp(Asc, RegNames[z]))
     {
       *Erg = z;
       return True;
@@ -253,7 +253,7 @@ static Boolean DecodeXYABReg(char *Asc, LongInt *Erg)
   Word z;
 
   for (z = 0; z < RegCount; z++)
-    if (!strcasecmp(Asc, RegNames[z]))
+    if (!as_strcasecmp(Asc, RegNames[z]))
     {
       *Erg = z;
       return True;
@@ -273,7 +273,7 @@ static Boolean DecodeXYAB0Reg(char *Asc, LongInt *Erg)
   Word z;
 
   for (z = 0; z < RegCount; z++)
-    if (!strcasecmp(Asc, RegNames[z]))
+    if (!as_strcasecmp(Asc, RegNames[z]))
     {
       *Erg = z + 2;
       return True;
@@ -293,7 +293,7 @@ static Boolean DecodeXYAB1Reg(char *Asc, LongInt *Erg)
   Word z;
 
   for (z = 0; z < RegCount; z++)
-    if (!strcasecmp(Asc, RegNames[z]))
+    if (!as_strcasecmp(Asc, RegNames[z]))
     {
       *Erg = z + 2;
       return True;
@@ -314,7 +314,7 @@ static Boolean DecodePCReg(char *Asc, LongInt *Erg)
   Word z;
 
   for (z = 0; z < RegCount; z++)
-    if (!strcasecmp(Asc, RegNames[z]))
+    if (!as_strcasecmp(Asc, RegNames[z]))
     {
       (*Erg) = z;
       return True;
@@ -332,17 +332,17 @@ static Boolean DecodeAddReg(char *Asc, LongInt *Erg)
     return True;
   }
   /* >=56300 ? */
-  if (!strcasecmp(Asc, "EP"))
+  if (!as_strcasecmp(Asc, "EP"))
   {
     *Erg = 0x0a;
     return True;
   }
-  if (!strcasecmp(Asc, "VBA"))
+  if (!as_strcasecmp(Asc, "VBA"))
   {
     *Erg = 0x10;
     return True;
   }
-  if (!strcasecmp(Asc, "SC"))
+  if (!as_strcasecmp(Asc, "SC"))
   {
     *Erg = 0x11;
     return True;
@@ -384,13 +384,13 @@ static Boolean DecodeControlReg(char *Asc, LongInt *Erg)
 {
   Boolean Result = True;
 
-  if (!strcasecmp(Asc, "MR"))
+  if (!as_strcasecmp(Asc, "MR"))
     *Erg = 0;
-  else if (!strcasecmp(Asc, "CCR"))
+  else if (!as_strcasecmp(Asc, "CCR"))
     *Erg = 1;
-  else if ((!strcasecmp(Asc, "OMR")) || (!strcasecmp(Asc, "COM")))
+  else if ((!as_strcasecmp(Asc, "OMR")) || (!as_strcasecmp(Asc, "COM")))
     *Erg = 2;
-  else if ((!strcasecmp(Asc, "EOM")) && (MomCPU >= CPU56000))
+  else if ((!as_strcasecmp(Asc, "EOM")) && (MomCPU >= CPU56000))
     *Erg = 3;
   else
     Result = False;
@@ -672,7 +672,7 @@ static Boolean DecodeCondition(char *Asc, Word *Erg)
   Boolean Result;
 
   (*Erg) = 0;
-  while ((*Erg < CondCount) && (strcasecmp(CondNames[*Erg], Asc)))
+  while ((*Erg < CondCount) && (as_strcasecmp(CondNames[*Erg], Asc)))
     (*Erg)++;
   if (*Erg == CondCount - 1)
     *Erg = 8;
@@ -696,10 +696,10 @@ static Boolean DecodeMOVE_1(int Start)
   Boolean Result = False;
   Byte SegMask;
 
-  if (!strncasecmp(ArgStr[Start].Str, "IF", 2))
+  if (!as_strncasecmp(ArgStr[Start].Str, "IF", 2))
   {
     l = strlen(ArgStr[Start].Str);
-    if (!strcasecmp(ArgStr[Start].Str + l - 2, ".U"))
+    if (!as_strcasecmp(ArgStr[Start].Str + l - 2, ".U"))
     {
       RegErg = 0x1000;
       l -= 2;
@@ -902,7 +902,7 @@ static Boolean DecodeMOVE_2(int Start)
 
   /* 1. Spezialfall X auf rechter Seite ? */
 
-  if (!strcasecmp(Left2Comp.Str, "X0"))
+  if (!as_strcasecmp(Left2Comp.Str, "X0"))
   {
     if (!DecodeALUReg(Right2Comp.Str, &RegErg, False, False, True)) WrError(ErrNum_InvAddrMode);
     else if (strcmp(Left1Comp.Str, Right2Comp.Str)) WrError(ErrNum_InvAddrMode);
@@ -922,7 +922,7 @@ static Boolean DecodeMOVE_2(int Start)
 
   /* 2. Spezialfall Y auf linker Seite ? */
 
-  if (!strcasecmp(Left1Comp.Str, "Y0"))
+  if (!as_strcasecmp(Left1Comp.Str, "Y0"))
   {
     if (!DecodeALUReg(Right1Comp.Str, &RegErg, False, False, True)) WrError(ErrNum_InvAddrMode);
     else if (strcmp(Left2Comp.Str, Right1Comp.Str)) WrError(ErrNum_InvAddrMode);
@@ -1078,8 +1078,11 @@ static Boolean DecodePseudo(void)
             }
             if (BCount != 2) CodeLen++;
             break;
+          case TempFloat:
+            WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[z]);
+            /* fall-through */
           default:
-            WrError(ErrNum_InvOpType); OK = False;
+            OK = False;
         }
       }
       if (!OK) CodeLen = 0;
@@ -1147,7 +1150,7 @@ static void DecodePar(Word Index)
           h = Reg1 << 3;
         break;
       case ParFixAB:
-        if (strcasecmp(ArgStr[1].Str, "A,B")) SetError(ErrNum_InvRegPair);
+        if (as_strcasecmp(ArgStr[1].Str, "A,B")) SetError(ErrNum_InvRegPair);
         else
           h = 0;
         break;
@@ -1270,9 +1273,9 @@ static void DecodePar(Word Index)
         }
         break;
       case ParABBA:
-        if  (!strcasecmp(ArgStr[1].Str, "B,A"))
+        if  (!as_strcasecmp(ArgStr[1].Str, "B,A"))
           h = 0;
-        else if (!strcasecmp(ArgStr[1].Str, "A,B"))
+        else if (!as_strcasecmp(ArgStr[1].Str, "A,B"))
           h = 8;
         else
           SetXError(ErrNum_InvRegPair, &ArgStr[1]);
@@ -1406,6 +1409,7 @@ static void DecodeImmMac(Word Code)
     {
       case '-':
         h = 4;
+        /* fall-through */
       case '+':
         StrCompRefRight(&LeftArg, &LeftComp, 1);
     }
@@ -2556,7 +2560,7 @@ static void DecodeDO_DOR(Word Code)
       if (OK)
       {
         ChkSpace(SegCode);
-        if (!strcasecmp(LeftComp.Str, "FOREVER"))
+        if (!as_strcasecmp(LeftComp.Str, "FOREVER"))
         {
           if (ChkMinCPU(CPU56300))
           {

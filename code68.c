@@ -52,7 +52,7 @@ enum
   ModDir  = 1,
   ModExt  = 2,
   ModInd  = 3,
-  ModImm  = 4,
+  ModImm  = 4
 };
 
 #define MModAcc (1 << ModAcc)
@@ -203,12 +203,12 @@ static void DecodeAdr(int StartInd, int StopInd, Byte Erl)
   {
     /* Akkumulatoren ? */
 
-    if (!strcasecmp(pStartArg->Str, "A"))
+    if (!as_strcasecmp(pStartArg->Str, "A"))
     {
       if (MModAcc & Erl)
         AdrMode = ModAcc;
     }
-    else if (!strcasecmp(pStartArg->Str, "B"))
+    else if (!as_strcasecmp(pStartArg->Str, "B"))
     {
       if (MModAcc & Erl)
       {
@@ -308,8 +308,8 @@ static void DecodeAdr(int StartInd, int StopInd, Byte Erl)
 
   else if (StartInd + 1 == StopInd)
   {
-    Boolean IsX = !strcasecmp(ArgStr[StopInd].Str, "X"),
-            IsY = !strcasecmp(ArgStr[StopInd].Str, "Y");
+    Boolean IsX = !as_strcasecmp(ArgStr[StopInd].Str, "X"),
+            IsY = !as_strcasecmp(ArgStr[StopInd].Str, "Y");
 
     /* indiziert ? */
 

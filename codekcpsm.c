@@ -394,7 +394,7 @@ static void DecodeENABLE_DISABLE(Word Code)
   if (ChkArgCnt(1, 1))
   {
     NLS_UpString(ArgStr[1].Str);      
-    if (!strcasecmp(ArgStr[1].Str, "INTERRUPT"))
+    if (!as_strcasecmp(ArgStr[1].Str, "INTERRUPT"))
     {
       WAsmCode[0] = Code;
       CodeLen = 1;

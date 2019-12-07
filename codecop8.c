@@ -75,7 +75,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
    /* indirekt/Akku */
 
   for (z = ModAcc; z <= ModXDec; z++)
-    if (!strcasecmp(pArg->Str, ModStrings[z]))
+    if (!as_strcasecmp(pArg->Str, ModStrings[z]))
     {
       AdrMode = z;
       goto chk;
@@ -242,7 +242,7 @@ static void DecodeX(Word Code)
   {
     tStrComp *pAccArg, *pMemArg;
 
-    if (strcasecmp(ArgStr[1].Str, "A"))
+    if (as_strcasecmp(ArgStr[1].Str, "A"))
     {
       pAccArg = &ArgStr[2];
       pMemArg = &ArgStr[1];

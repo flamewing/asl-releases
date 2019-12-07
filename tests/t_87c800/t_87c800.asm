@@ -134,8 +134,12 @@ targ2:
 	xch	(12h),c
 	xch	d,(hl)
 	xch	(de),e
-	xch	l,(hl+)
-	xch	(hl+),h
+	expect	140
+	 xch	 l,(hl+)
+	endexpect
+	expect	140
+	 xch	 (hl+),h
+	endexpect
 	xch	a,(-hl)
 	xch	(-hl),w
 	xch	b,(hl+5)
@@ -167,7 +171,9 @@ targ2:
 	ld	d,(hl)
 	ld	c,(de)
 	ld	b,(-hl)
-	ld	h,(hl+)
+	expect	140
+	 ld	 h,(hl+)
+	endexpect
 	ld	c,(hl-122)
 	ld	w,(hl+c)
 	ld      d,(a+pc)

@@ -139,13 +139,13 @@ static void pseudo_store(tcallback callback)
     }
 
     EvalStrExpression(pArg, &t);
-    switch(t.Typ)
+    switch (t.Typ)
     {
       case TempInt:
         callback(&ok, &adr, t.Contents.Int);
         break;
       case TempFloat:
-        WrError(ErrNum_InvOpType);
+        WrStrErrorPos(ErrNum_StringOrIntButFloat, pArg);
         return;
       case TempString:
       {
@@ -153,11 +153,10 @@ static void pseudo_store(tcallback callback)
                     *cend = cp + t.Contents.Ascii.Length;
 
         while (cp < cend)
-          callback(&ok, &adr, CharTransTable[((usint)*cp++)&0xff]);
+          callback(&ok, &adr, CharTransTable[((usint)*cp++) & 0xff]);
         break;
       }
       default:
-        WrError(ErrNum_InvOpType);
         ok = False;
         break;
     }

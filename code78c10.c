@@ -70,8 +70,8 @@ static Boolean Decode_r(char *Asc, ShortInt *Erg)
 
 static Boolean Decode_r1(char *Asc, ShortInt *Erg)
 {
-  if (!strcasecmp(Asc, "EAL")) *Erg = 1;
-  else if (!strcasecmp(Asc, "EAH")) *Erg = 0;
+  if (!as_strcasecmp(Asc, "EAL")) *Erg = 1;
+  else if (!as_strcasecmp(Asc, "EAH")) *Erg = 0;
   else
   {
     if (!Decode_r(Asc, Erg)) return False;
@@ -102,7 +102,7 @@ static Boolean Decode_rp2(char *Asc, ShortInt *Erg)
   };
 
   for (*Erg = 0; Regs[*Erg].Name; (*Erg)++)
-    if (!strcasecmp(Asc, Regs[*Erg].Name))
+    if (!as_strcasecmp(Asc, Regs[*Erg].Name))
     {
       *Erg = Regs[*Erg].Code;
       return True;
@@ -118,7 +118,7 @@ static Boolean Decode_rp(char *Asc, ShortInt *Erg)
 
 static Boolean Decode_rp1(char *Asc, ShortInt *Erg)
 {
-  if (!strcasecmp(Asc, "V")) *Erg = 0;
+  if (!as_strcasecmp(Asc, "V")) *Erg = 0;
   else
   {
     if (!Decode_rp2(Asc, Erg)) return False;
@@ -149,7 +149,7 @@ static Boolean DecodeAdrMode(char *pAsc, const tAdrMode pModes[],
   {
     if (*pWasIndirect && !pModes[z].MayIndirect)
       continue;
-    if (!strcasecmp(pAsc, pModes[z].pName))
+    if (!as_strcasecmp(pAsc, pModes[z].pName))
     {
       *pErg = pModes[z].Code;
       return True;
@@ -268,7 +268,7 @@ static Boolean Decode_f(char *Asc, ShortInt *Erg)
   static char *Flags[FlagCnt] = {"CY", "HC", "Z"};
 
   for (*Erg = 0; *Erg < FlagCnt; (*Erg)++)
-   if (!strcasecmp(Flags[*Erg], Asc)) break;
+   if (!as_strcasecmp(Flags[*Erg], Asc)) break;
   *Erg += 2; return (*Erg <= 4);
 }
 
@@ -277,7 +277,7 @@ static Boolean Decode_sr0(char *Asc, ShortInt *Erg)
   int z;
 
   for (z = 0; z < SRegCnt; z++)
-   if (!strcasecmp(Asc, SRegs[z].Name)) break;
+   if (!as_strcasecmp(Asc, SRegs[z].Name)) break;
   if ((z == SRegCnt-1) && (MomCPU == CPU7810))
   {
     WrError(ErrNum_InvCtrlReg); return False;
@@ -309,16 +309,16 @@ static Boolean Decode_sr2(char *Asc, ShortInt *Erg)
 
 static Boolean Decode_sr3(char *Asc, ShortInt *Erg)
 {
-  if (!strcasecmp(Asc, "ETM0")) *Erg = 0;
-  else if (!strcasecmp(Asc, "ETM1")) *Erg = 1;
+  if (!as_strcasecmp(Asc, "ETM0")) *Erg = 0;
+  else if (!as_strcasecmp(Asc, "ETM1")) *Erg = 1;
   else return False;
   return True;
 }
 
 static Boolean Decode_sr4(char *Asc, ShortInt *Erg)
 {
-  if (!strcasecmp(Asc, "ECNT")) *Erg = 0;
-  else if (!strcasecmp(Asc, "ECPT")) *Erg = 1;
+  if (!as_strcasecmp(Asc, "ECNT")) *Erg = 0;
+  else if (!as_strcasecmp(Asc, "ECPT")) *Erg = 1;
   else return False;
   return True;
 }
@@ -335,7 +335,7 @@ static Boolean Decode_irf(char *Asc, ShortInt *Erg)
             {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 16, 17, 18, 19, 20};
 
   for (*Erg = 0; *Erg < FlagCnt; (*Erg)++)
-   if (!strcasecmp(FlagNames[*Erg], Asc)) break;
+   if (!as_strcasecmp(FlagNames[*Erg], Asc)) break;
   if (*Erg >= FlagCnt) return False;
   *Erg = FlagCodes[*Erg];
   return True;
@@ -381,7 +381,7 @@ static void DecodeMOV(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(2, 2));
-  else if (!strcasecmp(ArgStr[1].Str, "A"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "A"))
   {
     if (Decode_sr1(ArgStr[2].Str, &HReg))
     {
@@ -407,7 +407,7 @@ static void DecodeMOV(Word Code)
       }
     }
   }
-  else if (!strcasecmp(ArgStr[2].Str, "A"))
+  else if (!as_strcasecmp(ArgStr[2].Str, "A"))
   {
     if (Decode_sr(ArgStr[1].Str, &HReg))
     {
@@ -600,11 +600,11 @@ static void DecodeDMOV(Word Code)
 
   if (ChkArgCnt(2, 2))
   {
-    Boolean Swap = strcasecmp(ArgStr[1].Str, "EA") || False;
+    Boolean Swap = as_strcasecmp(ArgStr[1].Str, "EA") || False;
     char *pArg1 = Swap ? ArgStr[2].Str : ArgStr[1].Str,
          *pArg2 = Swap ? ArgStr[1].Str : ArgStr[2].Str;
 
-    if (strcasecmp(pArg1, "EA")) WrError(ErrNum_InvAddrMode);
+    if (as_strcasecmp(pArg1, "EA")) WrError(ErrNum_InvAddrMode);
     else if (Decode_rp3(pArg2, &HReg))
     {
       CodeLen = 1;
@@ -636,7 +636,7 @@ static void DecodeALUImm(Word Code)
     HVal8 = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
     if (OK)
     {
-      if (!strcasecmp(ArgStr[1].Str, "A"))
+      if (!as_strcasecmp(ArgStr[1].Str, "A"))
       {
         CodeLen = 2;
         BAsmCode[0] = 0x06 + ((Code & 14) << 3) + (Code & 1);
@@ -667,11 +667,11 @@ static void DecodeALUReg(Word Code)
 
   if (ChkArgCnt(2, 2))
   {
-    Boolean NoSwap = !strcasecmp(ArgStr[1].Str, "A");
+    Boolean NoSwap = !as_strcasecmp(ArgStr[1].Str, "A");
     char *pArg1 = NoSwap ? ArgStr[1].Str : ArgStr[2].Str,
          *pArg2 = NoSwap ? ArgStr[2].Str : ArgStr[1].Str;
 
-    if (strcasecmp(pArg1, "A")) WrError(ErrNum_InvAddrMode);
+    if (as_strcasecmp(pArg1, "A")) WrError(ErrNum_InvAddrMode);
     else if (!Decode_r(pArg2, &HReg)) WrError(ErrNum_InvAddrMode);
     else
     {
@@ -714,7 +714,7 @@ static void DecodeALUEA(Word Code)
   ShortInt HReg;
 
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1].Str, "EA")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "EA")) WrError(ErrNum_InvAddrMode);
   else if (!Decode_rp3(ArgStr[2].Str, &HReg)) WrError(ErrNum_InvAddrMode);
   else
   {
@@ -789,7 +789,7 @@ static void DecodeWork(Word Code)
 static void DecodeEA(Word Code)
 {
   if (!ChkArgCnt(1, 1));
-  else if (strcasecmp(ArgStr[1].Str, "EA")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "EA")) WrError(ErrNum_InvAddrMode);
   else
   {
     CodeLen = 2;
@@ -804,7 +804,7 @@ static void DecodeDCX_INX(Word Code)
   ShortInt HReg;
 
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "EA"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "EA"))
   {
     CodeLen = 1;
     BAsmCode[0] = 0xa8 + Code;
@@ -823,7 +823,7 @@ static void DecodeEADD_ESUB(Word Code)
   ShortInt HReg;
 
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1].Str, "EA")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "EA")) WrError(ErrNum_InvAddrMode);
   else if (!Decode_r2(ArgStr[2].Str, &HReg)) WrError(ErrNum_InvAddrMode);
   else
   {

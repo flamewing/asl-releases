@@ -231,6 +231,21 @@ target:
 	; Datenablage
 
 	dw 12345678h
+	dw 4294967295
+	dw -10000
+	dw -2147483648
+	dw 'A'
+	dw 'AB'
+	dw 'ABC'
+	dw 'ABCD'
+	dw "a"
+	dw "ab"
+	dw "abc"
+	dw "abcd"
+	dw "abcde"
+	dw "abcdef"
+	dw "abcdefg"
+	dw "abcdefgh"
 	dw 32.0,-32.0
 	dw 1.0,-1.0
 ;	dw 3.6e-46		; these do not work on machines that

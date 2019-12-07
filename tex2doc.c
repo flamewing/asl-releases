@@ -2537,7 +2537,7 @@ static void TeXDocumentStyle(Word Index)
     while (strcmp(Token, "]"));
     assert_token("{");
     ReadToken(Token);
-    if (!strcasecmp(Token,  "article"))
+    if (!as_strcasecmp(Token,  "article"))
     {
       AddInstTable(TeXTable, "section", 0, TeXNewSection);
       AddInstTable(TeXTable, "subsection", 1, TeXNewSection);

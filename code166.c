@@ -92,14 +92,14 @@ enum
   ModIndex = 5,
   ModAbs = 6,
   ModMReg = 7,
-  ModLAbs = 8,
+  ModLAbs = 8
 };
 
 typedef enum
 {
   eForceNone = 0,
   eForceShort = 1,
-  eForceLong = 2,
+  eForceLong = 2
 } tForceSize;
 
 #define MModReg (1 << ModReg)

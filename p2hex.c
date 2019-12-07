@@ -66,7 +66,7 @@ enum
   eIntelOccured = (1 << 1),
   eMOSOccured = (1 << 2),
   eDSKOccured = (1 << 3),
-  eMico8Occured = (1 << 4),
+  eMico8Occured = (1 << 4)
 };
 static Byte MaxMoto, MaxIntel;
 
@@ -240,7 +240,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
           break;
         case eHexFormatTiDSK:
           ValidSegs = (1 << SegCode) | (1 << SegData);
-          /* no break!!! */
+          /* fall-through */
         default:
           MaxAdr = 0xffff;
       }

@@ -41,7 +41,7 @@ typedef enum
   eModeRegDisp = 1,
   eModeIReg = 2,
   eModeIRegAutoInc = 3,
-  eModeNone = 0xff,
+  eModeNone = 0xff
 } tMode;
 
 #define MModeReg (1 << eModeReg)
@@ -54,7 +54,7 @@ typedef enum
 typedef enum
 {
   eExtModeNo = 0,
-  eExtModeYes = 1,
+  eExtModeYes = 1
 } tExtMode;
 
 typedef enum
@@ -63,7 +63,7 @@ typedef enum
   eOpSizeW = 1,
   eOpSizeA = 2,
   eOpSizeCnt,
-  eOpSizeDefault = eOpSizeW,
+  eOpSizeDefault = eOpSizeW
 } tOpSize;
 
 #define RegPC 0
@@ -119,15 +119,15 @@ static Boolean DecodeReg(const char *Asc, Word *pErg)
 
   if (FindRegDef(Asc, &s)) Asc = s;
 
-  if (!strcasecmp(Asc, "PC"))
+  if (!as_strcasecmp(Asc, "PC"))
   {
     *pErg = 0; return True;
   }
-  else if (!strcasecmp(Asc,"SP"))
+  else if (!as_strcasecmp(Asc,"SP"))
   {
     *pErg = 1; return True;
   }
-  else if (!strcasecmp(Asc, "SR"))
+  else if (!as_strcasecmp(Asc, "SR"))
   {
     *pErg = 2; return True;
   }
@@ -475,7 +475,7 @@ static void DecodeFixed(Word Code)
 {
   if (!ChkArgCnt(0, 0));
   else if (*AttrPart.Str) WrError(ErrNum_UseLessAttr);
-  else if (OpSize != eOpSizeDefault) WrError(ErrNum_InvOpsize);
+  else if (OpSize != eOpSizeDefault) WrError(ErrNum_InvOpSize);
   else
   {
     if (Odd(EProgCounter())) WrError(ErrNum_AddrNotAligned);
@@ -488,7 +488,7 @@ static void DecodeTwoOp(Word Code)
   tAdrParts SrcParts, DestParts;
 
   if (!ChkArgCnt(2, 2));
-  else if (OpSize > eOpSizeW) WrError(ErrNum_InvOpsize);
+  else if (OpSize > eOpSizeW) WrError(ErrNum_InvOpSize);
   else
   {
     PCDist = 2;
@@ -540,7 +540,7 @@ static void DecodeEmulOneToTwo(Word Code)
 
   if (OpSize > eOpSizeW)
   {
-    WrError(ErrNum_InvOpsize);
+    WrError(ErrNum_InvOpSize);
     return;
   }
 
@@ -749,8 +749,8 @@ static void DecodeOneOp(Word Index)
   const OneOpOrder *pOrder = OneOpOrders + Index;
 
   if (!ChkArgCnt(1, 1));
-  else if (OpSize > eOpSizeW) WrError(ErrNum_InvOpsize);
-  else if ((OpSize == eOpSizeB) && (!pOrder->MayByte)) WrError(ErrNum_InvOpsize);
+  else if (OpSize > eOpSizeW) WrError(ErrNum_InvOpSize);
+  else if ((OpSize == eOpSizeB) && (!pOrder->MayByte)) WrError(ErrNum_InvOpSize);
   else
   {
     tAdrParts AdrParts;
@@ -771,7 +771,7 @@ static void DecodeOneOpX(Word Index)
   const OneOpOrder *pOrder = OneOpOrders + Index;
 
   if (!ChkArgCnt(1, 1));
-  else if ((OpSize == eOpSizeB) && (!pOrder->MayByte)) WrError(ErrNum_InvOpsize);
+  else if ((OpSize == eOpSizeB) && (!pOrder->MayByte)) WrError(ErrNum_InvOpSize);
   else
   {
     tAdrParts AdrParts;
@@ -959,14 +959,14 @@ static void DecodeADDA_SUBA_CMPA(Word Code)
       CodeLen = 2;
     }
     else
-      WrError(ErrNum_InvOpsize);
+      WrError(ErrNum_InvOpSize);
   }
 }
 
 static void DecodeRxM(Word Code)
 {
   if (!ChkArgCnt(2, 2));
-  else if (OpSize == eOpSizeB) WrError(ErrNum_InvOpsize);
+  else if (OpSize == eOpSizeB) WrError(ErrNum_InvOpSize);
   else if (!DecodeReg(ArgStr[2].Str, &WAsmCode[0])) WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
   else if (ArgStr[1].Str[0] != '#') WrError(ErrNum_OnlyImmAddr);
   else
@@ -1033,7 +1033,7 @@ static void DecodeCALLA(Word Code)
 static void DecodePUSHM_POPM(Word Code)
 {
   if (!ChkArgCnt(2, 2));
-  else if (OpSize == 0) WrError(ErrNum_InvOpsize);
+  else if (OpSize == 0) WrError(ErrNum_InvOpSize);
   else if (!DecodeReg(ArgStr[2].Str, &WAsmCode[0])) WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
   else if (ArgStr[1].Str[0] != '#') WrError(ErrNum_OnlyImmAddr);
   else
@@ -1062,7 +1062,7 @@ static void DecodeJmp(Word Code)
   Boolean OK;
 
   if (!ChkArgCnt(1, 1));
-  else if (OpSize != eOpSizeDefault) WrError(ErrNum_InvOpsize);
+  else if (OpSize != eOpSizeDefault) WrError(ErrNum_InvOpSize);
   {
     AdrInt = EvalStrIntExpression(&ArgStr[1], UInt16, &OK) - (EProgCounter() + 2);
     if (OK)
@@ -1106,9 +1106,6 @@ static void DecodeBYTE(Word Index)
           }
           else PutByte(t.Contents.Int);
           break;
-        case TempFloat:
-          WrError(ErrNum_InvOpType); OK = False;
-          break;
         case TempString:
         {
           unsigned l = t.Contents.Ascii.Length;
@@ -1126,8 +1123,12 @@ static void DecodeBYTE(Word Index)
           }
           break;
         }
+        case TempFloat:
+          WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[z]);
+          /* fall-through */
         default: 
-          OK = False; break;
+          OK = False;
+          break;
       }
       z++;
     }
@@ -1439,8 +1440,8 @@ static void MakeCode_MSP(void)
       {
         OpSize = eOpSizeA;
         break;
-        /* conditional break */
       }
+      /* else fall-through */
     default:
       WrStrErrorPos(ErrNum_UndefAttr, &AttrPart);
       return;

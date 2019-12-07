@@ -76,7 +76,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, Boolean MayInc, Byte PCDisp, Byte
         StrCompIncRefLeft(&Left, 1);
         *Arg += 4;
       }
-      if (!strcasecmp(Left.Str, "E"))
+      if (!as_strcasecmp(Left.Str, "E"))
         BAsmCode[1] = 0x80;
       else if (*Arg == 0)
       {

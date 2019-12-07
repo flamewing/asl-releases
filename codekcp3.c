@@ -85,7 +85,7 @@ static Boolean IsCond(int OtherArgCnt, LongWord *pErg)
   }
 
   for (*pErg = 0; *pErg < (sizeof(Conds) / sizeof(*Conds)); (*pErg)++)
-    if (!strcasecmp(Conds[*pErg], ArgStr[1].Str))
+    if (!as_strcasecmp(Conds[*pErg], ArgStr[1].Str))
     {
       *pErg |= 4;
       return True;
@@ -219,12 +219,12 @@ static void DecodeReti(Word Index)
 
   if (ChkArgCnt(1, 1))
   {
-    if (!strcasecmp(ArgStr[1].Str, "DISABLE"))
+    if (!as_strcasecmp(ArgStr[1].Str, "DISABLE"))
     {
       DAsmCode[0] = 0x38000;
       CodeLen = 1;
     }
-    else if (!strcasecmp(ArgStr[1].Str, "ENABLE"))
+    else if (!as_strcasecmp(ArgStr[1].Str, "ENABLE"))
     {
       DAsmCode[0] = 0x38001;
       CodeLen = 1;
@@ -238,7 +238,7 @@ static void DecodeInt(Word Index)
 {
   if (ChkArgCnt(1, 1))
   {
-    if (strcasecmp(ArgStr[1].Str, "INTERRUPT")) WrError(ErrNum_InvAddrMode);
+    if (as_strcasecmp(ArgStr[1].Str, "INTERRUPT")) WrError(ErrNum_InvAddrMode);
     else
     {
       DAsmCode[0] = 0x3c000 | Index;

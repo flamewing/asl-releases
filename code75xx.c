@@ -126,18 +126,18 @@ static void DecodeImm3(Word Index)
 static void DecodePR(Word Index)
 {
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "HL-"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "HL-"))
     PutCode(Index | 0x10);
-  else if (!strcasecmp(ArgStr[1].Str, "HL+"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "HL+"))
     PutCode(Index | 0x11);
-  else if (!strcasecmp(ArgStr[1].Str, "HL"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "HL"))
     PutCode(Index | 0x12);
-  else if ((MomCPU == CPU7508) && (!strcasecmp(ArgStr[1].Str, "DL")))
+  else if ((MomCPU == CPU7508) && (!as_strcasecmp(ArgStr[1].Str, "DL")))
     PutCode(Index | 0x00);
-  else if ((MomCPU == CPU7508) && (!strcasecmp(ArgStr[1].Str, "DE")))
+  else if ((MomCPU == CPU7508) && (!as_strcasecmp(ArgStr[1].Str, "DE")))
     PutCode(Index | 0x01);
   else
-    WrStrErrorPos(ErrNum_InvOpType, &ArgStr[1]);
+    WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
 }
 
 static void DecodeDataMem(Word Index)

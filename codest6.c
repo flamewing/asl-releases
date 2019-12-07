@@ -17,6 +17,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmitree.h"
+#include "asmstructs.h"
 #include "codepseudo.h"
 #include "motpseudo.h"
 #include "codevars.h"
@@ -37,15 +38,21 @@ static Byte AdrMode;
 static ShortInt AdrType;
 static Byte AdrVal;
 
-static LongInt WinAssume;
+static LongInt WinAssume, PRPRVal;
 
-static CPUVar CPUST6210, CPUST6215, CPUST6220, CPUST6225;
-
-#define ASSUME62Count 1
-static ASSUMERec ASSUME62s[ASSUME62Count] =
+typedef struct
 {
-  {"ROMBASE", &WinAssume, 0, 0x3f, 0x40, NULL}
+  const char *pName;
+  IntType CodeAdrInt;
+} tCPUProps;
+
+#define ASSUMEST6Count 2
+static ASSUMERec ASSUMEST6s[ASSUMEST6Count] =
+{
+  { "PRPR",    &PRPRVal  , 0, 0x03, 0x04, NULL },
+  { "ROMBASE", &WinAssume, 0, 0x3f, 0x40, NULL },
 };
+static const tCPUProps *pCurrCPUProps;
 
 /*---------------------------------------------------------------------------------*/
 /* Helper Functions */
@@ -57,39 +64,25 @@ static void ResetAdr(void)
 
 static void DecodeAdr(const tStrComp *pArg, Byte Mask)
 {
-#define RegCnt 5
-  static char *RegNames[RegCnt + 1] = {"A", "V", "W", "X", "Y"};
-  static Byte RegCodes[RegCnt + 1] = {0xff, 0x82, 0x83, 0x80, 0x81};
-
   Boolean OK;
-  int z;
   Integer AdrInt;
 
   ResetAdr();
 
-  if ((!strcasecmp(pArg->Str, "A")) && (Mask & MModAcc))
+  if ((!as_strcasecmp(pArg->Str, "A")) && (Mask & MModAcc))
   {
     AdrType = ModAcc;
     goto chk;
   }
 
-  for (z = 0; z < RegCnt; z++)
-    if (!strcasecmp(pArg->Str, RegNames[z]))
-    {
-      AdrType = ModDir;
-      AdrCnt = 1;
-      AdrVal = RegCodes[z];
-      goto chk;
-    }
-
-  if (!strcasecmp(pArg->Str, "(X)"))
+  if (!as_strcasecmp(pArg->Str, "(X)"))
   {
     AdrType = ModInd;
     AdrMode = 0;
     goto chk;
   }
 
-  if (!strcasecmp(pArg->Str, "(Y)"))
+  if (!as_strcasecmp(pArg->Str, "(Y)"))
   {
     AdrType = ModInd;
     AdrMode = 1;
@@ -110,7 +103,7 @@ static void DecodeAdr(const tStrComp *pArg, Byte Mask)
     else
     {
       if (FirstPassUnknown) AdrInt = Lo(AdrInt);
-      if (AdrInt>0xff) WrError(ErrNum_OverRange);
+      if (AdrInt > 0xff) WrError(ErrNum_OverRange);
       else
       {
         AdrType = ModDir;
@@ -135,6 +128,167 @@ static Boolean IsReg(Byte Adr)
 static Byte MirrBit(Byte inp)
 {
   return (((inp & 1) << 2) + (inp & 2) + ((inp & 4) >> 2));
+}
+
+/*--------------------------------------------------------------------------*/
+/* Bit Symbol Handling */
+
+/*
+ * Compact representation of bits in symbol table:
+ * bits 0..2: bit position
+ * bits 3...10: register address in DATA/SFR space
+ */
+
+/*!------------------------------------------------------------------------
+ * \fn     EvalBitPosition(const tStrComp *pArg, Boolean *pOK)
+ * \brief  evaluate bit position
+ * \param  bit position argument (with or without #)
+ * \param  pOK parsing OK?
+ * \return numeric bit position
+ * ------------------------------------------------------------------------ */
+
+static LongWord EvalBitPosition(const tStrComp *pArg, Boolean *pOK)
+{
+  return EvalStrIntExpressionOffs(pArg, !!(*pArg->Str == '#'), UInt3, pOK);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     AssembleBitSymbol(Byte BitPos, Word Address)
+ * \brief  build the compact internal representation of a bit symbol
+ * \param  BitPos bit position in word
+ * \param  Address register address
+ * \return compact representation
+ * ------------------------------------------------------------------------ */
+
+static LongWord AssembleBitSymbol(Byte BitPos, Word Address)
+{
+  return (BitPos & 7)
+       | (((LongWord)Address & 0xff) << 3);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeBitArg2(LongWord *pResult, const tStrComp *pRegArg, const tStrComp *pBitArg)
+ * \brief  encode a bit symbol, address & bit position separated
+ * \param  pResult resulting encoded bit
+ * \param  pRegArg register argument
+ * \param  pBitArg bit argument
+ * \return True if success
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeBitArg2(LongWord *pResult, const tStrComp *pRegArg, const tStrComp *pBitArg)
+{
+  Boolean OK;
+  LongWord Addr;
+  Byte BitPos;
+
+  BitPos = EvalBitPosition(pBitArg, &OK);
+  if (!OK)
+    return False;
+
+  Addr = EvalStrIntExpression(pRegArg, UInt8, &OK);
+  if (!OK)
+    return False;
+
+  *pResult = AssembleBitSymbol(BitPos, Addr);
+
+  return True;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeBitArg(LongWord *pResult, int Start, int Stop)
+ * \brief  encode a bit symbol from instruction argument(s)
+ * \param  pResult resulting encoded bit
+ * \param  Start first argument
+ * \param  Stop last argument
+ * \return True if success
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeBitArg(LongWord *pResult, int Start, int Stop)
+{
+  *pResult = 0;
+
+  /* Just one argument -> parse as bit argument */
+
+  if (Start == Stop)
+  {
+    Boolean OK;
+
+    *pResult = EvalStrIntExpression(&ArgStr[Start], UInt11, &OK);
+    if (OK)
+      ChkSpace(SegBData);
+    return OK;
+  }
+
+  /* register & bit position are given as separate arguments */
+
+  else if (Stop == Start + 1)
+    return DecodeBitArg2(pResult, &ArgStr[Stop], &ArgStr[Start]);
+
+  /* other # of arguments not allowed */
+
+  else
+  {
+    WrError(ErrNum_WrongArgCnt);
+    return False;
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectBitSymbol(LongWord BitSymbol, Word *pAddress, Byte *pBitPos)
+ * \brief  transform compact represenation of bit (field) symbol into components
+ * \param  BitSymbol compact storage
+ * \param  pAddress (I/O) register address
+ * \param  pBitPos (start) bit position
+ * \return constant True
+ * ------------------------------------------------------------------------ */
+
+static Boolean DissectBitSymbol(LongWord BitSymbol, Word *pAddress, Byte *pBitPos)
+{
+  *pAddress = (BitSymbol >> 3) & 0xffff;
+  *pBitPos = BitSymbol & 7;
+  return True;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectBit_ST6(char *pDest, int DestSize, LargeWord Inp)
+ * \brief  dissect compact storage of bit (field) into readable form for listing
+ * \param  pDest destination for ASCII representation
+ * \param  DestSize destination buffer size
+ * \param  Inp compact storage
+ * ------------------------------------------------------------------------ */
+
+static void DissectBit_ST6(char *pDest, int DestSize, LargeWord Inp)
+{
+  Byte BitPos;
+  Word Address;
+
+  DissectBitSymbol(Inp, &Address, &BitPos);
+
+  as_snprintf(pDest, DestSize, "=%02.*u%s.%u",
+              ListRadixBase, (unsigned)Address, GetIntelSuffix(ListRadixBase),
+              (unsigned)BitPos);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     ExpandST6Bit(const tStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
+ * \brief  expands bit definition when a structure is instantiated
+ * \param  pVarName desired symbol name
+ * \param  pStructElem element definition
+ * \param  Base base address of instantiated structure
+ * ------------------------------------------------------------------------ */
+
+static void ExpandST6Bit(const tStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
+{
+  LongWord Address = Base + pStructElem->Offset;
+
+  if (!ChkRange(Address, 0, 0xff)
+   || !ChkRange(pStructElem->BitPos, 0, 7))
+    return;
+
+  PushLocHandle(-1);
+  EnterIntSymbol(pVarName, AssembleBitSymbol(pStructElem->BitPos, Address), SegBData, False);
+  PopLocHandle();
+  /* TODO: MakeUseList? */
 }
 
 /*---------------------------------------------------------------------------------*/
@@ -263,16 +417,31 @@ static void DecodeJP_CALL(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    Integer AdrInt = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
+    Word AdrInt;
+
+    FirstPassUnknown = False;
+    AdrInt = EvalStrIntExpression(&ArgStr[1], pCurrCPUProps->CodeAdrInt, &OK);
     if (OK)
     {
-      if ((AdrInt < 0) || (AdrInt > 0xfff)) WrError(ErrNum_AdrOverflow);
-      else
+      Word DestPage = AdrInt >> 11;
+
+      /* CPU program space's page 1 (800h...0fffh) always accesses ROM space page 1.
+         CPU program space's page 0 (000h...7ffh) accesses 2K ROM space pages as defined by PRPR. */
+         
+      if (!FirstPassUnknown && (DestPage != 1))
       {
-        CodeLen = 2;
-        BAsmCode[0] = Code + ((AdrInt & 0x00f) << 4);
-        BAsmCode[1] = AdrInt >> 4;
+        Word SrcPage = EProgCounter() >> 11;
+
+        /* Jump from page 1 is allowed to page defined by PRPR.
+           Jump from any other page is only allowed back to page 1 or within same page. */
+
+        if (DestPage != ((SrcPage == 1) ? PRPRVal : SrcPage)) WrError(ErrNum_InAccPage);
+          
+        AdrInt &= 0x7ff;
       }
+      CodeLen = 2;
+      BAsmCode[0] = Code + ((AdrInt & 0x00f) << 4);
+      BAsmCode[1] = AdrInt >> 4;
     }
   }
 }
@@ -387,50 +556,44 @@ static void DecodeINC_DEC(Word Code)
 
 static void DecodeSET_RES(Word Code)
 {
-  if (ChkArgCnt(2, 2))
-  {
-    Boolean OK;
+  LongWord PackedAddr;
 
-    BAsmCode[0] = MirrBit(EvalStrIntExpression(&ArgStr[1], UInt3, &OK));
-    if (OK)
-    {
-      DecodeAdr(&ArgStr[2], MModDir);
-      if (AdrType != ModNone)
-      {
-        CodeLen = 2;
-        BAsmCode[0] = (BAsmCode[0] << 5)+ Code;
-        BAsmCode[1] = AdrVal;
-      }
-    }
+  if (ChkArgCnt(1, 2)
+   && DecodeBitArg(&PackedAddr, 1, ArgCnt))
+  {
+    Word RegAddr;
+    Byte BitPos;
+
+    DissectBitSymbol(PackedAddr, &RegAddr, &BitPos);
+    BAsmCode[0] = (MirrBit(BitPos) << 5) | Code;
+    BAsmCode[1] = RegAddr;
+    CodeLen = 2;
   }
 }
 
 static void DecodeJRR_JRS(Word Code)
 {
-  if (ChkArgCnt(3, 3))
-  {
-    Boolean OK;
+  LongWord PackedAddr;
 
-    BAsmCode[0] = MirrBit(EvalStrIntExpression(&ArgStr[1], UInt3, &OK));
+  if (ChkArgCnt(2, 3)
+   && DecodeBitArg(&PackedAddr, 1, ArgCnt - 1))
+  {
+    Word RegAddr;
+    Byte BitPos;
+    Boolean OK;
+    Integer AdrInt;
+
+    DissectBitSymbol(PackedAddr, &RegAddr, &BitPos);
+    BAsmCode[0] = (MirrBit(BitPos) << 5) | Code;
+    BAsmCode[1] = RegAddr;
+    AdrInt = EvalStrIntExpression(&ArgStr[ArgCnt], UInt16, &OK) - (EProgCounter() + 3);
     if (OK)
     {
-      BAsmCode[0] = (BAsmCode[0] << 5) + Code;
-      DecodeAdr(&ArgStr[2], MModDir);
-      if (AdrType != ModNone)
+      if ((!SymbolQuestionable) && ((AdrInt > 127) || (AdrInt < -128))) WrError(ErrNum_JmpDistTooBig);
+      else
       {
-        Integer AdrInt;
-
-        BAsmCode[1] = AdrVal;
-        AdrInt = EvalStrIntExpression(&ArgStr[3], UInt16, &OK) - (EProgCounter() + 3);
-        if (OK)
-        {
-          if ((!SymbolQuestionable) && ((AdrInt > 127) || (AdrInt < -128))) WrError(ErrNum_JmpDistTooBig);
-          else
-          {
-            CodeLen = 3;
-            BAsmCode[2] = Lo(AdrInt);
-          }
-        }
+        CodeLen = 3;
+        BAsmCode[2] = Lo(AdrInt);
       }
     }
   }
@@ -499,6 +662,51 @@ static void DecodeBLOCK(Word Code)
   DecodeMotoPseudo(False);
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     DecodeBIT(Word Code)
+ * \brief  decode BIT instruction
+ * ------------------------------------------------------------------------ */
+
+static void DecodeBIT(Word Code)
+{
+  LongWord BitSpec;
+
+  UNUSED(Code);
+
+  /* if in structure definition, add special element to structure */
+
+  if (ActPC == StructSeg)
+  {
+    Boolean OK;
+    Byte BitPos;
+    PStructElem pElement;
+
+    if (!ChkArgCnt(2, 2))
+      return;
+    BitPos = EvalBitPosition(&ArgStr[2], &OK);
+    if (!OK)
+      return;
+    pElement = CreateStructElem(LabPart.Str);
+    pElement->pRefElemName = as_strdup(ArgStr[1].Str);
+    pElement->OpSize = eSymbolSize8Bit;
+    pElement->BitPos = BitPos;
+    pElement->ExpandFnc = ExpandST6Bit;
+    AddStructElem(pInnermostNamedStruct->StructRec, pElement);
+  }
+  else
+  {
+    if (DecodeBitArg(&BitSpec, 1, ArgCnt))
+    {
+      *ListLine = '=';
+      DissectBit_ST6(ListLine + 1, STRINGSIZE - 3, BitSpec);
+      PushLocHandle(-1);
+      EnterIntSymbol(&LabPart, BitSpec, SegBData, False);
+      PopLocHandle();
+      /* TODO: MakeUseList? */
+    }
+  }
+}
+
 /*---------------------------------------------------------------------------------*/
 /* code table handling */
 
@@ -543,6 +751,7 @@ static void InitFields(void)
   AddInstTable(InstTable, "BYTE", 0, DecodeBYTE);
   AddInstTable(InstTable, "WORD", 0, DecodeWORD);
   AddInstTable(InstTable, "BLOCK", 0, DecodeBLOCK);
+  AddInstTable(InstTable, "BIT", 0, DecodeBIT);
 
   AddFixed("NOP" , 0x04);
   AddFixed("RET" , 0xcd);
@@ -570,9 +779,12 @@ static void DeinitFields(void)
   DestroyInstTable(InstTable);
 }
 
-/*---------------------------------------------------------------------------------*/
+/*!------------------------------------------------------------------------
+ * \fn     MakeCode_ST6(void)
+ * \brief  entry point to decode machine instructions
+ * ------------------------------------------------------------------------ */
 
-static void MakeCode_ST62(void)
+static void MakeCode_ST6(void)
 {
   CodeLen = 0; DontPrint = False;
 
@@ -584,52 +796,143 @@ static void MakeCode_ST62(void)
     WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
-static void InitCode_ST62(void)
+/*!------------------------------------------------------------------------
+ * \fn     InitCode_ST6(void)
+ * \brief  per-pass initializations for ST6
+ * ------------------------------------------------------------------------ */
+
+static void InitCode_ST6(void)
 {
   WinAssume = 0x40;
+  PRPRVal = 0;
 }
 
-static Boolean IsDef_ST62(void)
+/*!------------------------------------------------------------------------
+ * \fn     IsDef_ST6(void)
+ * \brief  does instruction consume label field?
+ * \return true if to be consumed
+ * ------------------------------------------------------------------------ */
+
+static Boolean IsDef_ST6(void)
 {
-  return (Memo("SFR"));
+  return Memo("SFR") || Memo("BIT");
 }
 
-static void SwitchFrom_ST62(void)
+/*!------------------------------------------------------------------------
+ * \fn     SwitchFrom_ST6(void)
+ * \brief  cleanup after switching away from target
+ * ------------------------------------------------------------------------ */
+
+static void SwitchFrom_ST6(void)
 {
   DeinitFields();
 }
 
-static Boolean ChkMoreOneArg(void)
+static Boolean TrueFnc(void)
 {
-  return (ArgCnt > 1);
+  return True;
 }
 
-static void SwitchTo_ST62(void)
+/*!------------------------------------------------------------------------
+ * \fn     InternSymbol_ST6(char *pArg, TempResult *pErg)
+ * \brief  check for built-in symbols
+ * \param  pAsc ASCII repr. of symbol
+ * \param  pErg result buffer
+ * ------------------------------------------------------------------------ */
+
+static void InternSymbol_ST6(char *pArg, TempResult *pErg)
 {
-  TurnWords = False; ConstMode = ConstModeIntel; SetIsOccupiedFnc = ChkMoreOneArg;
+  int z;
+#define RegCnt 5
+  static const char *RegNames[RegCnt + 1] = {"A", "V", "W", "X", "Y"};
+  static Byte RegCodes[RegCnt + 1] = {0xff, 0x82, 0x83, 0x80, 0x81};
+
+  for (z = 0; z < RegCnt; z++)
+    if (!as_strcasecmp(pArg, RegNames[z]))
+    {
+      pErg->Typ = TempInt;
+      pErg->Contents.Int = RegCodes[z];
+      TypeFlag |= (1 << SegData);
+    }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     SwitchTo_ST6(void)
+ * \brief  switch to target
+ * ------------------------------------------------------------------------ */
+
+static void SwitchTo_ST6(void *pUser)
+{
+  int ASSUMEOffset;
+
+  pCurrCPUProps = (const tCPUProps*)pUser;
+  TurnWords = False; ConstMode = ConstModeIntel; SetIsOccupiedFnc = TrueFnc;
 
   PCSymbol = "PC"; HeaderID = 0x78; NOPCode = 0x04;
   DivideChars = ","; HasAttrs = False;
 
   ValidSegs = (1 << SegCode) | (1 << SegData);
   Grans[SegCode] = 1; ListGrans[SegCode] = 1; SegInits[SegCode] = 0;
-  SegLimits[SegCode] = (MomCPU < CPUST6220) ? 0xfff : 0x7ff;
+  SegLimits[SegCode] = IntTypeDefs[pCurrCPUProps->CodeAdrInt].Max;
   Grans[SegData] = 1; ListGrans[SegData] = 1; SegInits[SegData] = 0;
   SegLimits[SegData] = 0xff;
 
-  pASSUMERecs = ASSUME62s;
-  ASSUMERecCnt = ASSUME62Count;
+  ASSUMEOffset = (SegLimits[SegCode] > 0xfff) ? 0 : 1;
+  pASSUMERecs = ASSUMEST6s + ASSUMEOffset;
+  ASSUMERecCnt = ASSUMEST6Count - ASSUMEOffset;
 
-  MakeCode = MakeCode_ST62; IsDef = IsDef_ST62;
-  SwitchFrom = SwitchFrom_ST62; InitFields();
+  MakeCode = MakeCode_ST6;
+  IsDef = IsDef_ST6;
+  SwitchFrom = SwitchFrom_ST6;
+  DissectBit = DissectBit_ST6;
+  InternSymbol = InternSymbol_ST6;
+
+  InitFields();
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     codest6_init(void)
+ * \brief  register ST6 target
+ * ------------------------------------------------------------------------ */
+
+static const tCPUProps CPUProps[] =
+{
+  { "ST6200", UInt12 },
+  { "ST6201", UInt12 },
+  { "ST6203", UInt12 },
+  { "ST6208", UInt12 },
+  { "ST6209", UInt12 },
+  { "ST6210", UInt12 },
+  { "ST6215", UInt12 },
+  { "ST6218", UInt13 },
+  { "ST6220", UInt12 },
+  { "ST6225", UInt12 },
+  { "ST6228", UInt13 },
+  { "ST6230", UInt13 },
+  { "ST6232", UInt13 },
+  { "ST6235", UInt13 },
+  { "ST6240", UInt13 },
+  { "ST6242", UInt13 },
+  { "ST6245", UInt12 },
+  { "ST6246", UInt12 },
+  { "ST6252", UInt12 },
+  { "ST6253", UInt12 },
+  { "ST6255", UInt12 },
+  { "ST6260", UInt12 },
+  { "ST6262", UInt12 },
+  { "ST6263", UInt12 },
+  { "ST6265", UInt12 },
+  { "ST6280", UInt13 },
+  { "ST6285", UInt13 },
+  { NULL    , 0      },
+};
 
 void codest6_init(void)
 {
-  CPUST6210 = AddCPU("ST6210", SwitchTo_ST62);
-  CPUST6215 = AddCPU("ST6215", SwitchTo_ST62);
-  CPUST6220 = AddCPU("ST6220", SwitchTo_ST62);
-  CPUST6225 = AddCPU("ST6225", SwitchTo_ST62);
+  const tCPUProps *pProp;
 
-  AddInitPassProc(InitCode_ST62);
+  for (pProp = CPUProps; pProp->pName; pProp++)
+    (void)AddCPUUser(pProp->pName, SwitchTo_ST6, (void*)pProp, NULL);
+
+  AddInitPassProc(InitCode_ST6);
 }

@@ -45,7 +45,7 @@ enum
   ModNone  =13,   /* */
   ModInd8  =14,   /* (aa) */
   ModIndSPY=15,   /* (aa,SP),Y (65CE02-specific) */
-  ModSpec = 16,   /* \aabb */
+  ModSpec = 16    /* \aabb */
 };
 
 typedef struct
@@ -250,7 +250,7 @@ static void DecodeAdr(tAdrResult *pResult, const NormOrder *pOrder)
   {
     /* 1. Akkuadressierung */
 
-    if (!strcasecmp(ArgStr[1].Str, "A"))
+    if (!as_strcasecmp(ArgStr[1].Str, "A"))
     {
       pResult->AdrCnt = 0;
       pResult->ErgMode = ModAcc;
@@ -295,7 +295,7 @@ static void DecodeAdr(tAdrResult *pResult, const NormOrder *pOrder)
 
     /* 4. X-inner-indirekt ? */
 
-    else if ((strlen(ArgStr[1].Str) >= 5) && (!strcasecmp(ArgStr[1].Str + strlen(ArgStr[1].Str) - 3, ",X)")))
+    else if ((strlen(ArgStr[1].Str) >= 5) && (!as_strcasecmp(ArgStr[1].Str + strlen(ArgStr[1].Str) - 3, ",X)")))
     {
       if (*ArgStr[1].Str != '(') WrError(ErrNum_InvAddrMode);
       else
@@ -402,7 +402,7 @@ static void DecodeAdr(tAdrResult *pResult, const NormOrder *pOrder)
 
     /* 7. stack-relative (65CE02-specific) ? */
 
-    if (Indir1 && !strcasecmp(ArgStr[2].Str, "Y") && (!strcasecmp(ArgStr[1].Str + strlen(ArgStr[1].Str) - 4, ",SP)")))
+    if (Indir1 && !as_strcasecmp(ArgStr[2].Str, "Y") && (!as_strcasecmp(ArgStr[1].Str + strlen(ArgStr[1].Str) - 4, ",SP)")))
     {
       if (*ArgStr[1].Str != '(') WrError(ErrNum_InvAddrMode);
       else
@@ -423,9 +423,9 @@ static void DecodeAdr(tAdrResult *pResult, const NormOrder *pOrder)
     /* 8. X,Y,Z-outer-indirekt ? */
 
     else if (Indir1
-          && (!strcasecmp(ArgStr[2].Str, "X")
-           || !strcasecmp(ArgStr[2].Str, "Y")
-           || !strcasecmp(ArgStr[2].Str, "Z")))
+          && (!as_strcasecmp(ArgStr[2].Str, "X")
+           || !as_strcasecmp(ArgStr[2].Str, "Y")
+           || !as_strcasecmp(ArgStr[2].Str, "Z")))
     {
       int Mode = toupper(ArgStr[2].Str[0]) - 'X';
       tStrComp AddrArg;
@@ -454,9 +454,9 @@ static void DecodeAdr(tAdrResult *pResult, const NormOrder *pOrder)
         if (ValOK)
         {
           pResult->AdrCnt = 1;
-          if (!strcasecmp(ArgStr[2].Str, "X"))
+          if (!as_strcasecmp(ArgStr[2].Str, "X"))
             pResult->ErgMode = ModZIX;
-          else if (!strcasecmp(ArgStr[2].Str, "Y"))
+          else if (!as_strcasecmp(ArgStr[2].Str, "Y"))
             pResult->ErgMode = ModZIY;
           else
             WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
@@ -470,16 +470,16 @@ static void DecodeAdr(tAdrResult *pResult, const NormOrder *pOrder)
           pResult->AdrCnt = 2;
           pResult->AdrVals[0] = Lo(AdrWord);
           pResult->AdrVals[1] = Hi(AdrWord);
-          if (!strcasecmp(ArgStr[2].Str, "X"))
+          if (!as_strcasecmp(ArgStr[2].Str, "X"))
             pResult->ErgMode = ModIX;
-          else if (!strcasecmp(ArgStr[2].Str, "Y"))
+          else if (!as_strcasecmp(ArgStr[2].Str, "Y"))
             pResult->ErgMode = ModIY;
           else
             WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
           if (pResult->ErgMode != -1)
           {
             if (IsBasePage(pResult->AdrVals[1]) && (ZeroMode == 0))
-              ChkZeroMode(pResult, pOrder, (!strcasecmp(ArgStr[2].Str, "X")) ? ModZIX : ModZIY);
+              ChkZeroMode(pResult, pOrder, (!as_strcasecmp(ArgStr[2].Str, "X")) ? ModZIX : ModZIY);
           }
         }
       }
@@ -535,7 +535,7 @@ static void DecodeSEB_CLB(Word Code)
     if (ValOK)
     {
       BAsmCode[0] = Code + (BitNo << 5);
-      if (!strcasecmp(ArgStr[2].Str, "A"))
+      if (!as_strcasecmp(ArgStr[2].Str, "A"))
         CodeLen = 1;
       else
       {
@@ -563,7 +563,7 @@ static void DecodeBBC_BBS(Word Code)
     if (ValOK)
     {
       BAsmCode[0] = (BAsmCode[0] << 5) + Code;
-      b = (strcasecmp(ArgStr[2].Str, "A") != 0);
+      b = (as_strcasecmp(ArgStr[2].Str, "A") != 0);
       if (!b)
         ValOK = True;
       else
@@ -599,20 +599,27 @@ static void DecodeBBR_BBS(Word Code)
   if (ChkArgCnt(2, 2)
    && (ChkExactCPUMask(M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_HUC6280, CPU6502) >= 0))
   {
-    BAsmCode[1] = EvalStrIntExpression(&ArgStr[1], UInt8, &ValOK);
-    if (ValOK)
-    {
-      Integer AdrInt;
+    Byte ForceSize;
+    unsigned Offset = ChkZero(&ArgStr[1], &ForceSize);
 
-      BAsmCode[0] = Code;
-      AdrInt = EvalStrIntExpression(&ArgStr[2], UInt16, &ValOK) - (EProgCounter() + 3);
+    if (ForceSize == 1) WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
+    else
+    {
+      BAsmCode[1] = EvalStrIntExpressionOffs(&ArgStr[1], Offset, UInt8, &ValOK);
       if (ValOK)
       {
-        if (((AdrInt > 127) || (AdrInt < -128)) && (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
-        else
+        Integer AdrInt;
+
+        BAsmCode[0] = Code;
+        AdrInt = EvalStrIntExpression(&ArgStr[2], UInt16, &ValOK) - (EProgCounter() + 3);
+        if (ValOK)
         {
-          CodeLen = 3;
-          BAsmCode[2] = AdrInt & 0xff;
+          if (((AdrInt > 127) || (AdrInt < -128)) && (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
+          else
+          {
+            CodeLen = 3;
+            BAsmCode[2] = AdrInt & 0xff;
+          }
         }
       }
     }
@@ -625,13 +632,20 @@ static void DecodeRMB_SMB(Word Code)
   if (ChkArgCnt(1, 1)
    && (ChkExactCPUMask(M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_HUC6280, CPU6502) >= 0))
   {
-    Boolean ValOK;
+    Byte ForceSize;
+    unsigned Offset = ChkZero(&ArgStr[1], &ForceSize);
 
-    BAsmCode[1] = EvalStrIntExpression(&ArgStr[1], UInt8, &ValOK);
-    if (ValOK)
+    if (ForceSize == 1) WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
+    else
     {
-      BAsmCode[0] = Code;
-      CodeLen = 2;
+      Boolean ValOK;
+
+      BAsmCode[1] = EvalStrIntExpressionOffs(&ArgStr[1], Offset, UInt8, &ValOK);
+      if (ValOK)
+      {
+        BAsmCode[0] = Code;
+        CodeLen = 2;
+      }
     }
   }
   ChkFlags();
@@ -1121,11 +1135,11 @@ static void InitFields(void)
   /* (n),X */ MkMask(                                                     M_65C19                                   , 0xb1),
   /* (n),Y */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0xb1),
   /* (n),Z */ MkMask(                              M_65CE02                                                         , 0xb2),
-  /* (n16) */ MkMask(                                                                            M_HUC6280          , 0xb2),
+  /* (n16) */     -1,
   /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xa9),
   /* ACC   */     -1,
   /* NON   */     -1,
-  /* (n8)  */ MkMask(M_6502 | M_65SC02 | M_65C02            | M_W65C02S | M_65C19 | M_MELPS740             | M_6502U, Is65C19 ? 0xa1 : 0xb2),
+  /* (n8)  */ MkMask(         M_65SC02 | M_65C02            | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, Is65C19 ? 0xa1 : 0xb2),
   /*(n,SP),y*/MkMask(                              M_65CE02                                                         , 0xe2),
   /* spec  */     -1);
   AddNorm("LDX",
@@ -1193,11 +1207,11 @@ static void InitFields(void)
   /* (n),X */ MkMask(                                                     M_65C19                                   , 0x91),
   /* (n),Y */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0x91),
   /* (n),Z */ MkMask(                              M_65CE02                                                         , 0x92),
-  /* (n16) */ MkMask(                                                                            M_HUC6280          , 0x92),
+  /* (n16) */     -1,
   /* imm   */     -1,
   /* ACC   */     -1,
   /* NON   */     -1,
-  /* (n8)  */ MkMask(         M_65SC02 | M_65C02            | M_W65C02S | M_65C19                                   , Is65C19 ? 0x81 : 0x92),
+  /* (n8)  */ MkMask(         M_65SC02 | M_65C02            | M_W65C02S | M_65C19              | M_HUC6280          , Is65C19 ? 0x81 : 0x92),
   /*(n,SP),y*/MkMask(                              M_65CE02                                                         , 0x82),
   /* spec  */     -1);
   AddNorm("ST0",
@@ -1319,11 +1333,11 @@ static void InitFields(void)
   /* (n),X */ MkMask(                                                     M_65C19                                   , 0x71),
   /* (n),Y */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0x71),
   /* (n),Z */ MkMask(                              M_65CE02                                                         , 0x72),
-  /* (n16) */ MkMask(                                                                            M_HUC6280          , 0x72),
+  /* (n16) */     -1,
   /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x69),
   /* ACC   */     -1,
   /* NON   */     -1,
-  /* (n8)  */ MkMask(         M_65SC02 | M_65C02            | M_W65C02S | M_65C19                                   , Is65C19 ? 0x61 : 0x72),
+  /* (n8)  */ MkMask(         M_65SC02 | M_65C02            | M_W65C02S | M_65C19              | M_HUC6280          , Is65C19 ? 0x61 : 0x72),
   /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("ADD",
@@ -1355,11 +1369,11 @@ static void InitFields(void)
   /* (n),X */ MkMask(                                                     M_65C19                                   , 0xf1),
   /* (n),Y */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0xf1),
   /* (n),Z */ MkMask(                              M_65CE02                                                         , 0xf2),
-  /* (n16) */ MkMask(                                                                            M_HUC6280          , 0xf2),
+  /* (n16) */     -1,
   /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xe9),
   /* ACC   */     -1,
   /* NON   */     -1,
-  /* (n8)  */ MkMask(         M_65SC02 | M_65C02            | M_W65C02S | M_65C19                                   , Is65C19 ? 0xe1 : 0xf2),
+  /* (n8)  */ MkMask(         M_65SC02 | M_65C02            | M_W65C02S | M_65C19              | M_HUC6280          , Is65C19 ? 0xe1 : 0xf2),
   /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("MUL",
@@ -1409,11 +1423,11 @@ static void InitFields(void)
   /* (n),X */ MkMask(                                                     M_65C19                                   , 0x31),
   /* (n),Y */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0x31),
   /* (n),Z */ MkMask(                              M_65CE02                                                         , 0x32),
-  /* (n16) */ MkMask(                                                                            M_HUC6280          , 0x32),
+  /* (n16) */     -1,
   /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x29),
   /* ACC   */     -1,
   /* NON   */     -1,
-  /* (n8)  */ MkMask(         M_65SC02 | M_65C02            | M_W65C02S | M_65C19                                   , Is65C19 ? 0x21 : 0x32),
+  /* (n8)  */ MkMask(         M_65SC02 | M_65C02            | M_W65C02S | M_65C19              | M_HUC6280          , Is65C19 ? 0x21 : 0x32),
   /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("ORA",
@@ -1427,11 +1441,11 @@ static void InitFields(void)
   /* (n),X */ MkMask(                                                     M_65C19                                   , 0x11),
   /* (n),Y */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0x11),
   /* (n),Z */ MkMask(                              M_65CE02                                                         , 0x12),
-  /* (n16) */ MkMask(                                                                            M_HUC6280          , 0x12),
+  /* (n16) */     -1,
   /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x09),
   /* ACC   */     -1,
   /* NON   */     -1,
-  /* (n8)  */ MkMask(         M_65SC02 | M_65C02            | M_W65C02S | M_65C19                                   , Is65C19 ? 0x01 : 0x12),
+  /* (n8)  */ MkMask(         M_65SC02 | M_65C02            | M_W65C02S | M_65C19              | M_HUC6280          , Is65C19 ? 0x01 : 0x12),
   /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("EOR",
@@ -1445,11 +1459,11 @@ static void InitFields(void)
   /* (n),X */ MkMask(                                                     M_65C19                                   , 0x51),
   /* (n),Y */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0x51),
   /* (n),Z */ MkMask(                              M_65CE02                                                         , 0x52),
-  /* (n16) */ MkMask(                                                                            M_HUC6280          , 0x52),
+  /* (n16) */     -1,
   /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x49),
   /* ACC   */     -1,
   /* NON   */     -1,
-  /* (n8)  */ MkMask(         M_65SC02 | M_65C02            | M_W65C02S | M_65C19                                   , Is65C19 ? 0x41 : 0x52),
+  /* (n8)  */ MkMask(         M_65SC02 | M_65C02            | M_W65C02S | M_65C19              | M_HUC6280          , Is65C19 ? 0x41 : 0x52),
   /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("COM",
@@ -1805,11 +1819,11 @@ static void InitFields(void)
   /* (n),X */ MkMask(                                                     M_65C19                                   , 0xd1),
   /* (n),Y */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S           | M_MELPS740 | M_HUC6280 | M_6502U, 0xd1),
   /* (n),Z */ MkMask(                              M_65CE02                                                         , 0xd2),
-  /* (n16) */ MkMask(                                                                            M_HUC6280          , 0xd2),
+  /* (n16) */     -1,
   /* imm   */ MkMask(M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0xc9),
   /* ACC   */     -1,
   /* NON   */     -1,
-  /* (n8)  */ MkMask(         M_65SC02 | M_65C02            | M_W65C02S | M_65C19                                   , Is65C19 ? 0xc1 : 0xd2),
+  /* (n8)  */ MkMask(         M_65SC02 | M_65C02            | M_W65C02S | M_65C19              | M_HUC6280          , Is65C19 ? 0xc1 : 0xd2),
   /*(n,SP),y*/    -1,
   /* spec  */     -1);
   AddNorm("CPX",

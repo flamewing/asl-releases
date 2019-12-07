@@ -10,7 +10,7 @@ typedef enum
   eLstMacroExpRest = 1,
   eLstMacroExpIf = 2,
   eLstMacroExpMacro = 4,
-  eLstMacroExpAll = eLstMacroExpRest | eLstMacroExpIf | eLstMacroExpMacro,
+  eLstMacroExpAll = eLstMacroExpRest | eLstMacroExpIf | eLstMacroExpMacro
 } tLstMacroExp;
 
 typedef struct

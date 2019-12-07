@@ -1,3 +1,5 @@
+	page	0
+
 	cpu	320c26
 
 	conf	2
@@ -211,3 +213,83 @@ alladdr	macro	instr
 	norm	*ar0+
 	norm	*br0+
 	norm	*
+
+	data	'a'
+	data	'ab'
+	expect	1320
+	data	'abc'
+	endexpect
+	data	0
+	data	65535
+	data	-32768
+	data	"a"
+	data	"ab"
+	data	"abc"
+	data	"abcd"
+
+	byte	'a'
+	expect	1320
+	byte	'ab'
+	endexpect
+	expect	1320
+	byte	'abc'
+	endexpect
+	byte	0
+	byte	255
+	byte	-128
+	byte	"a"
+	byte	"ab"
+	byte	"abc"
+	byte	"abcd"
+
+	word	'a'
+	word	'ab'
+	expect	1320
+	word	'abc'
+	endexpect
+	word	0
+	word	65535
+	word	-32768
+	word	"a"
+	word	"ab"
+	word	"abc"
+	word	"abcd"
+
+	long	'a'
+	long	'ab'
+	long	'abc'
+	long	'abcd'
+	long	0
+	long	4294967296
+	long	-2147483648
+	long	"a"
+	long	"ab"
+	long	"abc"
+	long	"abcd"
+	long	"abcde"
+
+	string	'a'
+	expect	1320
+	string	'ab'
+	endexpect
+	string	0
+	string	255
+	string	-128
+	string	"a"
+	string	"ab"
+	string	"abc"
+	string	"abcd"
+	string	"abcde"
+
+	rstring	'a'
+	expect	1320
+	rstring	'ab'
+	endexpect
+	rstring	0
+	rstring	255
+	rstring	-128
+	rstring	"a"
+	rstring	"ab"
+	rstring	"abc"
+	rstring	"abcd"
+	rstring	"abcde"

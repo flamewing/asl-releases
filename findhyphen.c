@@ -218,7 +218,7 @@ void DoHyphens(char *word, int **posis, int *posicnt)
   PHyphenException Ex;
 
   for (Ex = FirstException; Ex; Ex = Ex->next)
-    if (!strcasecmp(Ex->word, word))
+    if (!as_strcasecmp(Ex->word, word))
     {
       if (Ex->poscnt)
       {
