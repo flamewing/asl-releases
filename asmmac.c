@@ -432,6 +432,12 @@ static void PrintMacroList_PNode(PTree Tree, void *pData)
     strmaxcat(h, GetSectionName(Node->Tree.Attribute), STRINGSIZE);
     strmaxcat(h, "]", STRINGSIZE);
   }
+  if (Node->Contents->LstMacroExpMod.Count)
+  {
+    strmaxcat(h, "{", STRINGSIZE);
+    DumpLstMacroExpMod(&Node->Contents->LstMacroExpMod, h + strlen(h), sizeof(h) - strlen(h));
+    strmaxcat(h, "}", STRINGSIZE);
+  }
   strmaxcat(pContext->OneS, h, STRINGSIZE);
   if (strlen(h) < 37)
     strmaxcat(pContext->OneS, Blanks(37 - strlen(h)), STRINGSIZE);

@@ -25,7 +25,6 @@
 #include "asmitree.h"
 #include "codevars.h"
 #include "nlmessages.h"
-#include "intconsts.h"
 #include "as.rsc"
 
 /*---------------------------------------------------------------------------*/
@@ -2950,7 +2949,7 @@ static void SwitchTo_3206X(void)
 
   ValidSegs = 1 << SegCode;
   Grans[SegCode] = 1; ListGrans[SegCode] = 4; SegInits[SegCode] = 0;
-  SegLimits[SegCode] = INTCONST_ffffffff;
+  SegLimits[SegCode] = (LargeWord)IntTypeDefs[UInt32].Max;
 
   MakeCode = MakeCode_3206X;
   IsDef = IsDef_3206X;

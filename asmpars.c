@@ -36,56 +36,60 @@
 
 #define LOCSYMSIGHT 3       /* max. sight for nameless temporary symbols */
 
+/* Mask, Min 6 Max are computed at initialization */
+
 tIntTypeDef IntTypeDefs[IntTypeCnt] =
 {
-  { 0x00000001l,          0l,          1l }, /* UInt1 */
-  { 0x00000003l,          0l,          3l }, /* UInt2 */
-  { 0x00000007l,          0l,          7l }, /* UInt3 */
-  { 0x00000007l,         -8l,          7l }, /* SInt4 */
-  { 0x0000000fl,          0l,         15l }, /* UInt4 */
-  { 0x0000000fl,         -8l,         15l }, /* Int4 */
-  { 0x0000000fl,        -16l,         15l }, /* SInt5 */
-  { 0x0000001fl,          0l,         31l }, /* UInt5 */
-  { 0x0000001fl,        -16l,         31l }, /* Int5 */
-  { 0x0000001fl,        -32l,         31l }, /* SInt6 */
-  { 0x0000003fl,          0l,         63l }, /* UInt6 */
-  { 0x0000003fl,        -64l,         63l }, /* SInt7 */
-  { 0x0000007fl,          0l,        127l }, /* UInt7 */
-  { 0x0000007fl,       -128l,        127l }, /* SInt8 */
-  { 0x000000ffl,          0l,        255l }, /* UInt8 */
-  { 0x000000ffl,       -128l,        255l }, /* Int8 */
-  { 0x000000ffl,       -256l,        255l }, /* SInt9 */
-  { 0x000001ffl,          0l,        511l }, /* UInt9 */
-  { 0x000003ffl,          0l,       1023l }, /* UInt10 */
-  { 0x000003ffl,       -512l,       1023l }, /* Int10 */
-  { 0x000007ffl,          0l,       2047l }, /* UInt11 */
-  { 0x00000fffl,          0l,       4095l }, /* UInt12 */
-  { 0x00000fffl,      -2047l,       4095l }, /* Int12 */
-  { 0x00001fffl,          0l,       8191l }, /* UInt13 */
-  { 0x00003fffl,          0l,      16383l }, /* UInt14 */
-  { 0x00003fffl,      -8192l,      16383l }, /* Int14 */
-  { 0x00003fffl,     -16384l,      32767l }, /* SInt15 */
-  { 0x00007fffl,          0l,      32767l }, /* UInt15 */
-  { 0x00007fffl,     -32768l,      32767l }, /* SInt16 */
-  { 0x0000ffffl,          0l,      65535l }, /* UInt16 */
-  { 0x0000ffffl,     -32768l,      65535l }, /* Int16 */
-  { 0x0001ffffl,          0l,     131071l }, /* UInt17 */
-  { 0x0003ffffl,          0l,     262143l }, /* UInt18 */
-  { 0x0007ffffl,          0l,     524287l }, /* UInt19 */
-  { 0x0007ffffl,    -524288l,     524287l }, /* SInt20 */
-  { 0x000fffffl,          0l,    1048575l }, /* UInt20 */
-  { 0x000fffffl,    -524288l,    1048575l }, /* Int20 */
-  { 0x001fffffl,          0l,    2097151l }, /* UInt21 */
-  { 0x003fffffl,          0l,    4194303l }, /* UInt22 */
-  { 0x007fffffl,          0l,    8388608l }, /* UInt23 */
-  { 0x007fffffl,   -8388608l,    8388607l }, /* SInt24 */
-  { 0x00ffffffl,          0l,   16777215l }, /* UInt24 */
-  { 0x00ffffffl,   -8388608l,   16777215l }, /* Int24 */
-  { 0xffffffffl, -2147483647l, 2147483647l }, /* SInt32 */
-  { 0xffffffffl,          0l, 4294967295ul }, /* UInt32 */
-  { 0xffffffffl, -2147483647l, 4294967295ul }, /* Int32 */
+  { 0x0001, 0, 0, 0 }, /* UInt1 */
+  { 0x0002, 0, 0, 0 }, /* UInt2 */
+  { 0x0003, 0, 0, 0 }, /* UInt3 */
+  { 0x8004, 0, 0, 0 }, /* SInt4 */
+  { 0x0004, 0, 0, 0 }, /* UInt4 */
+  { 0xc004, 0, 0, 0 }, /* Int4 */
+  { 0x8005, 0, 0, 0 }, /* SInt5 */
+  { 0x0005, 0, 0, 0 }, /* UInt5 */
+  { 0xc005, 0, 0, 0 }, /* Int5 */
+  { 0x8006, 0, 0, 0 }, /* SInt6 */
+  { 0x0006, 0, 0, 0 }, /* UInt6 */
+  { 0x8007, 0, 0, 0 }, /* SInt7 */
+  { 0x0007, 0, 0, 0 }, /* UInt7 */
+  { 0x8008, 0, 0, 0 }, /* SInt8 */
+  { 0x0008, 0, 0, 0 }, /* UInt8 */
+  { 0xc008, 0, 0, 0 }, /* Int8 */
+  { 0x8009, 0, 0, 0 }, /* SInt9 */
+  { 0x0009, 0, 0, 0 }, /* UInt9 */
+  { 0x000a, 0, 0, 0 }, /* UInt10 */
+  { 0xc00a, 0, 0, 0 }, /* Int10 */
+  { 0x000b, 0, 0, 0 }, /* UInt11 */
+  { 0x000c, 0, 0, 0 }, /* UInt12 */
+  { 0xc00c, 0, 0, 0 }, /* Int12 */
+  { 0x000d, 0, 0, 0 }, /* UInt13 */
+  { 0x000e, 0, 0, 0 }, /* UInt14 */
+  { 0xc00e, 0, 0, 0 }, /* Int14 */
+  { 0x800f, 0, 0, 0 }, /* SInt15 */
+  { 0x000f, 0, 0, 0 }, /* UInt15 */
+  { 0x8010, 0, 0, 0 }, /* SInt16 */
+  { 0x0010, 0, 0, 0 }, /* UInt16 */
+  { 0xc010, 0, 0, 0 }, /* Int16 */
+  { 0x0011, 0, 0, 0 }, /* UInt17 */
+  { 0x0012, 0, 0, 0 }, /* UInt18 */
+  { 0x0013, 0, 0, 0 }, /* UInt19 */
+  { 0x8014, 0, 0, 0 }, /* SInt20 */
+  { 0x0014, 0, 0, 0 }, /* UInt20 */
+  { 0xc014, 0, 0, 0 }, /* Int20 */
+  { 0x0015, 0, 0, 0 }, /* UInt21 */
+  { 0x0016, 0, 0, 0 }, /* UInt22 */
+  { 0x0017, 0, 0, 0 }, /* UInt23 */
+  { 0x8018, 0, 0, 0 }, /* SInt24 */
+  { 0x0018, 0, 0, 0 }, /* UInt24 */
+  { 0xc018, 0, 0, 0 }, /* Int24 */
+  { 0x8020, 0, 0, 0 }, /* SInt32 */
+  { 0x0020, 0, 0, 0 }, /* UInt32 */
+  { 0xc020, 0, 0, 0 }, /* Int32 */
 #ifdef HAS64
-  { 0xffffffffffffffffll, -9223372036854775807ll, 9223372036854775807ll }, /* Int64 */
+  { 0x8040, 0, 0, 0 }, /* SInt64 */
+  { 0x0040, 0, 0, 0 }, /* UInt64 */
+  { 0xc040, 0, 0, 0 }, /* Int64 */
 #endif
 };
 
@@ -196,6 +200,7 @@ static PLocHandle FirstLocHandle;
 static PSymbolStack FirstStack;
 static PCToken MomSection;
 static char *LastGlobSymbol;
+static PFunction FirstFunction;	        /* Liste definierter Funktionen */
 
 void AsmParsInit(void)
 {
@@ -206,6 +211,7 @@ void AsmParsInit(void)
   FirstLocHandle = NULL;
   FirstStack = NULL;
   FirstRegDef = NULL;
+  FirstFunction = NULL;
   DoRefs = True;
   RadixBase = 10;
   OutRadixBase = 16;
@@ -618,15 +624,12 @@ static Boolean ChkTmp3(char *Name, Boolean Define)
 
 static Boolean ChkTmp(char *Name, Boolean Define)
 {
-  Boolean Result = FALSE;
+  Boolean IsTmp1, IsTmp2, IsTmp3;
 
-  if (ChkTmp1(Name, Define))
-    Result = TRUE;
-  if (ChkTmp2(Name, Name, Define))
-    Result = TRUE;
-  if (ChkTmp3(Name, Define))
-    Result = TRUE;
-  return Result;
+  IsTmp1 = ChkTmp1(Name, Define);
+  IsTmp2 = ChkTmp2(Name, Name, Define);
+  IsTmp3 = ChkTmp3(Name, Define && !IsTmp2);
+  return IsTmp1 || IsTmp2 || IsTmp3;
 }
 
 Boolean IdentifySection(const tStrComp *pName, LongInt *Erg)
@@ -3348,40 +3351,6 @@ void SetFlag(Boolean *Flag, const char *Name, Boolean Wert)
   EnterIntSymbol(&TmpComp, *Flag ? 1 : 0, 0, True);
 }
 
-void SetLstMacroExp(tLstMacroExp NewLstMacroExp)
-{
-  tStrComp TmpComp;
-  
-  LstMacroExp = NewLstMacroExp;
-  StrCompMkTemp(&TmpComp, LstMacroExpName); EnterIntSymbol(&TmpComp, NewLstMacroExp, 0, True);
-  if (LstMacroExp == eLstMacroExpAll)
-    strcpy(ListLine, "ALL");
-  else if (LstMacroExp == eLstMacroExpNone)
-    strcpy(ListLine, "NONE");
-  else
-  {
-    strcpy(ListLine, "=");;
-    if (LstMacroExp & eLstMacroExpMacro)
-    {
-      if (*ListLine != '=')
-        strmaxcat(ListLine, "+", STRINGSIZE - 1);
-      strmaxcat(ListLine, "MACRO", STRINGSIZE - 1);
-    }
-    if (LstMacroExp & eLstMacroExpIf)
-    {
-      if (*ListLine != '=')
-        strmaxcat(ListLine, "+", STRINGSIZE - 1);
-      strmaxcat(ListLine, "IF", STRINGSIZE - 1);
-    }
-    if (LstMacroExp & eLstMacroExpRest)
-    {
-      if (*ListLine != '=')
-        strmaxcat(ListLine, "+", STRINGSIZE - 1);
-      strmaxcat(ListLine, "REST", STRINGSIZE - 1);
-    }
-  }
-}
-
 void AddDefSymbol(char *Name, TempResult *Value)
 {
   PDefSymbol Neu;
@@ -4090,15 +4059,39 @@ void PrintCodepages(void)
 
 void asmpars_init(void)
 {
+  tIntTypeDef *pCurr;
+
   serr = (char*)malloc(sizeof(char) * STRINGSIZE);
   snum = (char*)malloc(sizeof(char) * STRINGSIZE);
   FirstDefSymbol = NULL;
   FirstFunction = NULL;
   BalanceTrees = False;
-  IntTypeDefs[(int)Int32].Min--;
-  IntTypeDefs[(int)SInt32].Min--;
-#ifdef HAS64
-  IntTypeDefs[(int)Int64].Min--;
-#endif
+
+  for (pCurr = IntTypeDefs; pCurr < IntTypeDefs + (sizeof(IntTypeDefs) / sizeof(*IntTypeDefs)); pCurr++)
+  {
+    unsigned SignType = Hi(pCurr->SignAndWidth);
+    unsigned Bits, Cnt;
+
+    Bits = Lo(pCurr->SignAndWidth) - ((SignType == 0x80) ? 1 : 0);
+    for (Cnt = 0, pCurr->Mask = 0; Cnt < Bits; Cnt++)
+      pCurr->Mask = (pCurr->Mask << 1) | 1;
+
+    pCurr->Max = (LargeInt)pCurr->Mask;
+
+    switch (SignType & 0xc0)
+    {
+      case 0x80:
+        pCurr->Min = -pCurr->Max - 1;
+        break;
+      case 0xc0:
+        pCurr->Min = (LargeInt)(pCurr->Mask / 2);
+        pCurr->Min = -pCurr->Min - 1;
+        break;
+      default:
+        pCurr->Min = 0;
+        break;
+    }
+  }
+
   LastGlobSymbol = (char*)malloc(sizeof(char) * STRINGSIZE);
 }

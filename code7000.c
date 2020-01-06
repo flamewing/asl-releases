@@ -23,7 +23,6 @@
 #include "codepseudo.h"
 #include "motpseudo.h"
 #include "codevars.h"
-#include "intconsts.h"
 #include "errmsg.h"
 
 #include "code7000.h"
@@ -1552,7 +1551,7 @@ static void SwitchTo_7000(void)
 
   ValidSegs = 1 << SegCode;
   Grans[SegCode] = 1; ListGrans[SegCode] = 2; SegInits[SegCode] = 0;
-  SegLimits[SegCode] = INTCONST_ffffffff;
+  SegLimits[SegCode] = (LargeWord)IntTypeDefs[UInt32].Max;
 
   MakeCode = MakeCode_7000;
   IsDef = IsDef_7000;

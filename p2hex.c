@@ -23,7 +23,6 @@
 #include "chunks.h"
 #include "stringlists.h"
 #include "cmdarg.h"
-#include "intconsts.h"
 
 #include "toolutils.h"
 #include "headids.h"
@@ -168,7 +167,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
   Byte Buffer[MaxLineLen];
   Word *WBuffer = (Word *) Buffer;
   LongWord ErgStart,
-           ErgStop = INTCONST_ffffffff,
+           ErgStop = 0xfffffffful,
            IntOffset = 0, MaxAdr;
   LongInt NextPos;
   Word ErgLen = 0, ChkSum = 0, RecCnt, Gran, HSeg;
@@ -227,22 +226,22 @@ static void ProcessFile(const char *FileName, LongWord Offset)
         case eHexFormatMotoS:
         case eHexFormatIntel32:
         case eHexFormatC:
-          MaxAdr = INTCONST_ffffffff;
+          MaxAdr = 0xfffffffful;
           break;
         case eHexFormatIntel16:
-          MaxAdr = 0xffff0 + 0xffff;
+          MaxAdr = 0xffff0ul + 0xffffu;
           break;
         case eHexFormatAtmel:
           MaxAdr = (1 << (AVRLen << 3)) - 1;
           break;
         case eHexFormatMico8:
-          MaxAdr = INTCONST_ffffffff;
+          MaxAdr = 0xfffffffful;
           break;
         case eHexFormatTiDSK:
           ValidSegs = (1 << SegCode) | (1 << SegData);
           /* fall-through */
         default:
-          MaxAdr = 0xffff;
+          MaxAdr = 0xffffu;
       }
 
       if (!Read4(SrcFile, &InpStart))
@@ -337,7 +336,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
           case eHexFormatIntel16:
             FormatOccured |= eIntelOccured;
             IntOffset = (ErgStart * Gran);
-            IntOffset &= INTCONST_fffffff0;
+            IntOffset -= IntOffset & 0x0f;
             HSeg = IntOffset >> 4;
             ChkSum = 4 + Lo(HSeg) + Hi(HSeg);
             IntOffset /= Gran;
@@ -348,7 +347,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
           case eHexFormatIntel32:
             FormatOccured |= eIntelOccured;
             IntOffset = (ErgStart * Gran);
-            IntOffset &= INTCONST_ffffff00;
+            IntOffset -= IntOffset & 0xff;
             HSeg = IntOffset >> 16;
             ChkSum = 6 + Lo(HSeg) + Hi(HSeg);
             IntOffset /= Gran;
@@ -1197,7 +1196,7 @@ int main(int argc, char **argv)
   if (StartAuto || StopAuto)
   {
     if (StartAuto)
-      StartAdr = INTCONST_ffffffff;
+      StartAdr = 0xfffffffful;
     if (StopAuto)
       StopAdr = 0;
     if (ProcessedEmpty(ParUnprocessed))

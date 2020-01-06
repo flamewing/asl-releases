@@ -20,12 +20,6 @@
 #include "cpulist.h"
 #include "tempresult.h"
 
-typedef Word tSymbolFlags;
-enum
-{
-  NextLabelFlag_AfterBSR = 1 << 0
-};
-
 struct sRelocEntry;
 
 typedef struct
@@ -101,12 +95,6 @@ typedef enum
 #define ListMask_Codepages        (1 << 7)
 #define ListMask_StructList       (1 << 8)
 
-#ifdef HAS64
-#define MaxLargeInt 0x7fffffffffffffffll
-#else
-#define MaxLargeInt 0x7fffffffl
-#endif
-
 extern char SrcSuffix[],IncSuffix[],PrgSuffix[],LstSuffix[],
             MacSuffix[],PreSuffix[],LogSuffix[],MapSuffix[],
             OBJSuffix[];
@@ -118,7 +106,6 @@ extern char SrcSuffix[],IncSuffix[],PrgSuffix[],LstSuffix[],
 #define PackingName      "PACKING"    /* gepackte Ablage an */
 #define MaximumName      "INMAXMODE"  /* CPU im Maximum-Modus */
 #define FPUAvailName     "HASFPU"     /* FPU-Befehle erlaubt */
-#define LstMacroExpName  "MACEXP"     /* expandierte Makros anzeigen */
 #define ListOnName       "LISTON"     /* Listing an/aus */
 #define RelaxedName      "RELAXED"    /* alle Zahlenschreibweisen zugelassen */
 #define SrcModeName      "INSRCMODE"  /* CPU im Quellcode-kompatiblen Modus */
@@ -185,13 +172,6 @@ typedef enum
   ConstModeWeird      /* Hex [xh]'xxxx', Oct o'xxxx', Bin b'xxxx' */
 } TConstMode;
 
-typedef struct _TFunction
-{
-  struct _TFunction *Next;
-  Byte ArguCnt;
-  StringPtr Name, Definition;
-} TFunction, *PFunction;
-
 typedef struct _TTransTable
 {
   struct _TTransTable *Next;
@@ -206,7 +186,8 @@ typedef struct _TSaveState
   Integer SavePC;
   Byte SaveListOn;
   tLstMacroExp SaveLstMacroExp;
-  tLstMacroExpMod SaveLstMacroExpOverride;
+  tLstMacroExpMod SaveLstMacroExpModDefault,
+                  SaveLstMacroExpModOverride;
   PTransTable SaveTransTable;
   Integer SaveEnumSegment;
   LongInt SaveEnumCurrentValue, SaveEnumIncrement;
@@ -395,8 +376,7 @@ extern Word PageCounter[ChapMax+1];
 extern Byte ChapDepth;
 extern StringPtr ListLine;
 extern Byte PageLength, PageWidth;
-extern tLstMacroExp LstMacroExp;
-extern tLstMacroExpMod LstMacroExpOverride;
+extern tLstMacroExpMod LstMacroExpModOverride, LstMacroExpModDefault;
 extern Boolean DottedStructs;
 extern StringPtr PrtInitString;
 extern StringPtr PrtExitString;
@@ -408,8 +388,6 @@ extern Boolean SuppWarns;
 
 #define CharTransTable CurrTransTable->Table
 extern PTransTable TransTables, CurrTransTable;
-
-extern PFunction FirstFunction;
 
 extern PDefinement FirstDefine;
 

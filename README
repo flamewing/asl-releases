@@ -51,10 +51,6 @@ the original BP version:
   This should hurt only programs that explicitly exploit overflow
   and sign effects on 32-bit-versions of AS.
 
-- String variables must not contain NUL characters.  This is due to 
-  the fact that C uses the NUL character as an end-of-string marker,
-  and is probably the hardest thing to resolve :-(
-
 ~ most UNIX systems name their own assembler already 'as', so I had
   to modify the name to 'asl'.  The additional letter is to the honor
   of a person that did quite a lot to spread the UNIX philosophy ;-)

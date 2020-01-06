@@ -734,26 +734,26 @@ static void ProcessMACROArgs(Boolean CtrlArg, const tStrComp *pArg, void *pUser)
     else if (ReadMacro_SearchArg(pArg->Str, "GLOBALSYMBOLS", &pContext->GlobalSymbols));
     else if (ReadMacro_SearchArg(pArg->Str, "EXPAND", &DoMacExp))
     {
-      if (DoMacExp)
-        pContext->LstMacroExpMod.SetAll = True;
-      else
-        pContext->LstMacroExpMod.ClrAll = True;
+      if (!AddLstMacroExpMod(&pContext->LstMacroExpMod, DoMacExp, eLstMacroExpAll))
+        WrStrErrorPos(ErrNum_TooManyMacExpMod, pArg);
       ExpandPList(pContext->PList, pArg->Str, CtrlArg);
     }
     else if (ReadMacro_SearchArg(pArg->Str, "EXPIF", &DoMacExp))
     {
-      if (DoMacExp)
-        pContext->LstMacroExpMod.ORMask |= eLstMacroExpIf;
-      else
-        pContext->LstMacroExpMod.ANDMask |= eLstMacroExpIf;
+      if (!AddLstMacroExpMod(&pContext->LstMacroExpMod, DoMacExp, eLstMacroExpIf))
+        WrStrErrorPos(ErrNum_TooManyMacExpMod, pArg);
       ExpandPList(pContext->PList, pArg->Str, CtrlArg);
     }
     else if (ReadMacro_SearchArg(pArg->Str, "EXPMACRO", &DoMacExp))
     {
-      if (DoMacExp)
-        pContext->LstMacroExpMod.ORMask |= eLstMacroExpMacro;
-      else
-        pContext->LstMacroExpMod.ANDMask |= eLstMacroExpMacro;
+      if (!AddLstMacroExpMod(&pContext->LstMacroExpMod, DoMacExp, eLstMacroExpMacro))
+        WrStrErrorPos(ErrNum_TooManyMacExpMod, pArg);
+      ExpandPList(pContext->PList, pArg->Str, CtrlArg);
+    }
+    else if (ReadMacro_SearchArg(pArg->Str, "EXPREST", &DoMacExp))
+    {
+      if (!AddLstMacroExpMod(&pContext->LstMacroExpMod, DoMacExp, eLstMacroExpRest))
+        WrStrErrorPos(ErrNum_TooManyMacExpMod, pArg);
       ExpandPList(pContext->PList, pArg->Str, CtrlArg);
     }
     else if (ReadMacro_SearchArg(pArg->Str, "INTLABEL", &pContext->DoIntLabel))
@@ -827,15 +827,21 @@ static void ReadMacro(void)
 
   /* check arguments, sort out control directives */
 
-  InitLstMacroExpMod(&Context.LstMacroExpMod);
-  Context.LstMacroExpMod.ORMask = LstMacroExp;
-  Context.LstMacroExpMod.ANDMask = eLstMacroExpAll & ~LstMacroExp;
+  Context.LstMacroExpMod = LstMacroExpModDefault;
   Context.DoPublic = False;
   Context.DoIntLabel = False;
   Context.GlobalSymbols = False;
   *Context.PList = '\0';
   Context.ParamCount = 0;
   ProcessMacroArgs(ProcessMACROArgs, &Context);
+
+  /* contradicting macro expansion? */
+
+  if (!ChkLstMacroExpMod(&Context.LstMacroExpMod))
+  {
+    WrError(ErrNum_ConflictingMacExpMod);
+    Context.ErrFlag = True;
+  }
 
   /* Abbruch bei Fehler */
 
@@ -1093,7 +1099,7 @@ static void ExpandMacro(PMacroRec OneMacro)
       /* override has higher prio, so apply as second */
 
       NextDoLst = ApplyLstMacroExpMod(DoLst, &OneMacro->LstMacroExpMod);
-      NextDoLst = ApplyLstMacroExpMod(NextDoLst, &LstMacroExpOverride);
+      NextDoLst = ApplyLstMacroExpMod(NextDoLst, &LstMacroExpModOverride);
       Tag->Next = FirstInputTag;
       FirstInputTag = Tag;
       MacroNestLevel++;
@@ -1308,8 +1314,8 @@ static void IRP_OutProcessor(void)
     Tmp->Tag->IsEmpty = !Tmp->Tag->Lines;
     if (IfAsm)
     {
-      NextDoLst = DoLst & LstMacroExp;
-      NextDoLst = ApplyLstMacroExpMod(NextDoLst, &LstMacroExpOverride);
+      NextDoLst = ApplyLstMacroExpMod(DoLst, &LstMacroExpModDefault);
+      NextDoLst = ApplyLstMacroExpMod(NextDoLst, &LstMacroExpModOverride);
       Tmp->Tag->Next = FirstInputTag;
       FirstInputTag = Tmp->Tag;
     }
@@ -1689,8 +1695,8 @@ static void REPT_OutProcessor(void)
     Tmp->Tag->IsEmpty = !Tmp->Tag->Lines;
     if ((IfAsm) && (Tmp->Tag->ParCnt > 0))
     {
-      NextDoLst = DoLst & LstMacroExp;
-      NextDoLst = ApplyLstMacroExpMod(NextDoLst, &LstMacroExpOverride);
+      NextDoLst = ApplyLstMacroExpMod(DoLst, &LstMacroExpModDefault);
+      NextDoLst = ApplyLstMacroExpMod(NextDoLst, &LstMacroExpModOverride);
       Tmp->Tag->Next = FirstInputTag;
       FirstInputTag = Tmp->Tag;
     }
@@ -1910,8 +1916,8 @@ static void WHILE_OutProcessor(void)
     OK = (OK && (!FirstPassUnknown) && (Erg != 0));
     if ((IfAsm) && (OK))
     {
-      NextDoLst = DoLst & LstMacroExp;
-      NextDoLst = ApplyLstMacroExpMod(NextDoLst, &LstMacroExpOverride);
+      NextDoLst = ApplyLstMacroExpMod(DoLst, &LstMacroExpModDefault);
+      NextDoLst = ApplyLstMacroExpMod(NextDoLst, &LstMacroExpModOverride);
       Tmp->Tag->Next = FirstInputTag;
       FirstInputTag = Tmp->Tag;
     }
@@ -2316,7 +2322,7 @@ void HandleLabel(const tStrComp *pName, LargeWord Value)
     EnterRelSymbol(pName, Value, ActPC, False);
   else
     EnterIntSymbolWithFlags(pName, Value, ActPC, False,
-                            Value == AfterBSRAddr ? NextLabelFlag_AfterBSR : 0);
+                            Value == AfterBSRAddr ? eSymbolFlag_NextLabelAfterBSR : eSymbolFlag_None);
 }
 
 static void Produce_Code(void)
@@ -2590,7 +2596,7 @@ static void SplitLine(void)
       LabPart.Pos.Len = strmemcpy(LabPart.Str, STRINGSIZE, pRun, pPos - pRun);
       pRun = pPos + 1;
     }
-    if (LabPart.Str[LabPart.Pos.Len - 1] == ':') /* needed? */
+    if ((LabPart.Pos.Len > 0) && (LabPart.Str[LabPart.Pos.Len - 1] == ':')) /* needed? */
       LabPart.Str[--LabPart.Pos.Len] = '\0';
   }
   else
@@ -2951,7 +2957,8 @@ static void AssembleFile_InitPass(void)
   SetFlag(&DoBranchExt, BranchExtName, False);
   StrCompMkTemp(&TmpComp, ListOnName); EnterIntSymbol(&TmpComp, ListOn = 1, SegNone, True);
   SetLstMacroExp(eLstMacroExpAll);
-  InitLstMacroExpMod(&LstMacroExpOverride);
+  InitLstMacroExpMod(&LstMacroExpModOverride);
+  InitLstMacroExpMod(&LstMacroExpModDefault);
   SetFlag(&RelaxedMode, RelaxedName, False);
   StrCompMkTemp(&TmpComp, NestMaxName); EnterIntSymbol(&TmpComp, NestMax = DEF_NESTMAX, SegNone, True);
   CopyDefSymbols();

@@ -4,7 +4,7 @@
 
 CC = gcc
 LD = gcc
-CFLAGS = -g -O3 -march=k8 -fomit-frame-pointer -Wall
+CFLAGS = -g -O3 -fomit-frame-pointer -Wall
 LDFLAGS =
 
 TARG_OBJEXTENSION = .o

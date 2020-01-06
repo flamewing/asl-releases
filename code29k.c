@@ -24,7 +24,6 @@
 #include "codepseudo.h" 
 #include "intpseudo.h"
 #include "codevars.h"
-#include "intconsts.h"
 #include "errmsg.h"
 
 #include "code29k.h"
@@ -953,7 +952,7 @@ static void SwitchTo_29K(void)
 
   ValidSegs = 1 << SegCode;
   Grans[SegCode] = 1; ListGrans[SegCode] = 4; SegInits[SegCode] = 0;
-  SegLimits[SegCode] = INTCONST_ffffffff;
+  SegLimits[SegCode] = (LargeWord)IntTypeDefs[UInt32].Max;
 
   MakeCode = MakeCode_29K;
   IsDef = IsDef_29K;

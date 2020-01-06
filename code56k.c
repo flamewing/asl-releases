@@ -21,7 +21,6 @@
 #include "asmitree.h"
 #include "codepseudo.h"
 #include "codevars.h"
-#include "intconsts.h"
 
 #include "code56k.h"
 
@@ -773,7 +772,7 @@ static Boolean DecodeMOVE_1(int Start)
             CodeLen = 2;
           }
         }
-        else if ((!ForceImmLong) && (AdrType == ModImm) && ((AdrVal & INTCONST_ffffff00) == 0))
+        else if (!ForceImmLong && (AdrType == ModImm) && RangeCheck(AdrVal, UInt8))
         {
           Result = True;
           DAsmCode[0] = 0x200000 + (RegErg << 16) + ((AdrVal & 0xff) << 8);

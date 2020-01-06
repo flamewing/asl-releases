@@ -24,7 +24,6 @@
 #include "codepseudo.h"
 #include "intpseudo.h"
 #include "codevars.h"
-#include "intconsts.h"
 
 #define ModNone      (-1)
 #define ModReg       0
@@ -3105,7 +3104,7 @@ static void SwitchTo_M16(void)
   Grans[SegCode] = 1;
   ListGrans[SegCode] = 2;
   SegInits[SegCode] = 0;
-  SegLimits[SegCode] = INTCONST_ffffffff;
+  SegLimits[SegCode] = (LargeWord)IntTypeDefs[UInt32].Max;
 
   MakeCode = MakeCode_M16;
   IsDef = IsDef_M16;

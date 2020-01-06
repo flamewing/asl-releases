@@ -10,7 +10,6 @@ set ASCMD=
 ..\..\bincmp %1.bin %1.ori
 if errorlevel 1 goto errcond
 echo Test %1 succeeded!
-set SUMPASS=%SUMPASS%!
 echo %1 : OK >> ..\..\testlog
 :goon
 echo +---------------------------------------------------------------+
@@ -40,11 +39,9 @@ del bincmp.obj
 echo executing self tests...
 echo ================================================================= >..\testlog
 echo Summaric results: >> ..\testlog
-set SUMPASS=
 set SUMFAIL=
 rem This is 4DOS syntax; /D might work for other DOS/Windows versions
 for /A:D %%T in (t_*) do call testall %T%
-echo successes: %SUMPASS% >> ..\testlog
 echo failures: %SUMFAIL% >> ..\testlog
 type ..\testlog
 exit /B 0

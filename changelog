@@ -1,3 +1,11 @@
+2020-01-06 [1.42 Bld 152]
+
+- Bugfix      : eliminate redundant error messages on 6502
+- Change/Fix  : rework handling of listing macro expansion modifiers
+- Bugfix      : correct operand order for shift instructions on MIL STD 1750
+- Bugfix      : escape again spaces in MAP file output
+- Bugfix      : handle case of empty label with : marker
+
 2019-12-07 [1.42 Bld 151]
 
 - Addition    : Add MN161x as target

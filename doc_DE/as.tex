@@ -5512,6 +5512,11 @@ sind.  Es sind folgende Steuerparameter definiert:
       Verwendung diese Makros darin definierte Makros angezeigt werden
       sollen.  Default ist der durch den Pseudobefehl
       \tty{MACEXP\_DFT} festgelegte Wert.}
+\item{\tty{EXPREST/NOEXPREST} : legen fest, ob bei der sp"ateren
+      Verwendung Code-Zeilen angezeigt werden sollen, die weder
+      Makro-Definitionen, bedingte Assemblierung noch durch bedingte
+      Assemblierung ausgeschlossene Zeilen sind. Default ist der durch den
+      Pseudobefehl \tty{MACEXP\_DFT} festgelegte Wert.}
 \item{\tty{PUBLIC[:Sektionsname]} : ordnet das Makro nicht der
       aktuellen, sondern einer ihr "ubergeordneten Sektion zu.
       Auf diese Weise kann eine Sektion Makros f"ur die ,,Au"senwelt''
@@ -5770,6 +5775,56 @@ srl     macro   op,n      ; Schieben um n Stellen
         endm
 \end{verbatim}
 Fortan hat der \tty{SRL}-Befehl einen weiteren Parameter...
+
+\subsubsection{Expansion im Listing}
+
+Wird ein Makro im Quellcode aufgerufen, wird der durch dieses Makro definierte
+Quellcode, inklusiver eingesetzter Parameter, an dieser Stelle im Listing
+expandiert.  Das kann das Listing stark aufbl"ahen und schwerer lesbar
+machen.  Es ist daher m"oglich, diese Expansion ganz oder teilweise zu
+unterdr"ucken.  Generell teilt AS die in einem Makrorumpf enthaltenen
+Quelltext-Zeilen in drei Klassen ein:
+\begin{itemize}
+\item{Darin enthaltene Makrodefinitionen, d.h. das Makro wird benutzt, um
+      seinerseits weitere Makros zu definieren, oder es enth"alt \tty{REPT/
+      IRP/IRPC/WHILE}-Bl"ocke.}
+\item{Befehle zur bedingten Assemblierung plus Zeilen, die aufgrund
+      solcher Anweisungen {\it nicht} assembliert werden.  Da bedingte
+      Assemblierung von Makro-Parametern abh"angig sein darf, kann diese
+      Untermenge ebenfalls davon abh"angen.}
+\item{Alle restlichen Zeilen, die nicht unter die beiden ersten Klassen
+      fallen.}
+\end{itemize}
+F"ur jedes Makro kann einzeln festgelegt werden, welche Teile im Listing
+auftauchen oder nicht auftauchen sollen.  Vorgabewert bei der Definition
+eines Makros ist dabei die zuletzt mit dem Befehl \tty{MACEXP\_DFT}
+(\ref{MACEXPDFT}) vorgegebene Menge.  Wird bei der Definition eines
+Makros eine der Direktiven \tty{EXPAND/NOEXPAND}, \tty{EXPIF/NOEXPIF},
+\tty{EXPMACRO/NOEXPMACRO} oder \tty{EXPREST/NOEXPREST} gegeben, so wirken
+diese {\it zus"atzlich} und mit h"oherer Priorit"at.  Ist z.B. die Expansion
+global komplett ausgeschaltet (\tty{MACEXP\_DFT OFF}), so bewirkt das
+Hinzuf"ugen von \tty{EXPREST}, da"s bei der Benutzung dieses Makro nur
+die Zeilen im Listing angezeigt werden, die nach Auswertung bedingter
+Assemblierung verblieben sind und auch keine Makrodefinition selber sind.
+
+Daraus ergibt sich, da"s eine "Anderung der Untermenge per \tty{MACEXP\_DFT}
+keine Auswirkungen mehr auf Makros hat, die {\it vor} dieser Anweisung
+{\it definiert} wurden.  Im Listing f"uhrt der Abschnitt mit definierten Makros
+f"ur jedes Makro auf, welche Direktiven in der Summe f"ur dieses Makro
+gelten.  Die in geschweiften Klammern aufgef"uhrte Liste ist dabei soweit
+gek"urzt, da"s f"ur jede Klasse nur die letztg"ultige Direktive aufgef"uhrt
+wird.  Ein per \tty{MACEXP\_DFT} gegebenes \tty{NOIF} taucht dort also
+nicht mehr auf, falls speziell f"ur dieses Makro die Direktive \tty{EXPIF}
+gegeben wurde.
+
+In Einzelf"allen kann es sinnvoll sein, die f"ur ein Makro definierten
+Expansionsregeln zu "ubersteuern, egal ob diese per \tty{MACEXP\_DFT} oder
+Direktiven gesetzt wurden.  Dazu dient der Befehl \tty{MACEXP\_OVR}
+(\ref{MACEXPOVR}), der auf in der Folge {\it expandierte} Makros wirkt.  Auch
+bei diesem Befehl gilt, da"s damit gegebene Direktiven zus"atzlich zu
+denen in einem Makro hinterlegten und mit h"oherer Priorit"at wirken.  Ein
+\tty{MACEXP\_OVR} ohne jegliche Argumente schaltet so einen ''Override''
+wieder ab.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -6425,6 +6480,8 @@ um sozusagen ein neues Hauptkapitel zu beginnen.
 \ttindex{MACEXP}
 \ttindex{MACEXP\_DFT}
 \ttindex{MACEXP\_OVR}
+\label{MACEXPDFT}
+\label{MACEXPOVR}
 
 Ist ein Makro einmal ausgestestet und 'fertig', m"ochte man es bei
 Benutzung vielleicht gar nicht mehr im Listing sehen.  Wie im
@@ -6445,6 +6502,9 @@ welche Teile ihres Rumpfes expandiert werden sollen:
       \tty{WHILE} und \tty{IRP(C)}) k"onnen "uber die Argumente
       \tty{MACRO} bzw. \tty{NOMACRO} ein- und
       ausgeblendet werden.}
+\item{Mit den Argumenten \tty{REST} bzw. \tty{NOREST} k"onnen die
+      Zeilen ein- und ausgeblendet werden, die nicht in die ersten
+      beiden Klassen fallen.}
 \end{itemize}
 Default ist \tty{ON}, d.h. im folgenden definierte Makros werden
 komplett expandiert, au"ser nat"urlich bei den einzelnen Makros wurde
@@ -11781,6 +11841,10 @@ Angaben:
                {Ein \tty{MACEXP\_DFT/OVR} gegebenes Argument konnte nicht
                 interpretiert werden.}
                {das unbekannte Argument}
+\errentry{2105}{zu viele Makro-Expansions-Argumente}
+               {Fehler}
+               {Die Anzahl der Argument zur Makro-Expansion hat ihre Maximalzahl "uberschritten}
+               {das Argument, das zu viel ist}
 \errentry{2110}{widerspr"uchliche Angaben zur Makro-Expansion}
                {Fehler}
                {Eine Angabe zur Makroexpansion und ihr genaues

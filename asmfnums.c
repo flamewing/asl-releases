@@ -21,15 +21,9 @@
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
-#include "intconsts.h"
+#include "asmpars.h"
 
 #include "asmfnums.h"
-
-#ifdef HAS64
-#define ADRMAX INTCONST_9223372036854775807
-#else
-#define ADRMAX INTCONST_4294967295
-#endif
 
 typedef struct sToken
 {
@@ -85,8 +79,8 @@ void AddFile(char *FName)
   Neu = (PToken) malloc(sizeof(TToken));
   Neu->Next = NULL;
   Neu->Name = as_strdup(FName);
-  Neu->FirstAddr = ADRMAX;
-  Neu->LastAddr = 0;
+  Neu->FirstAddr = IntTypeDefs[LargeWordType].Max;
+  Neu->LastAddr  = IntTypeDefs[LargeWordType].Min;
   if (!FirstFile)
     FirstFile = Neu;
   else
@@ -144,13 +138,13 @@ void GetAddressRange(int File, LargeWord *Start, LargeWord *End)
 
   if (!Lauf)
   {
-    *Start = ADRMAX;
-    *End = 0;
+    *Start = IntTypeDefs[LargeWordType].Max;
+    *End   = IntTypeDefs[LargeWordType].Min;
   }
   else
   {
     *Start = Lauf->FirstAddr;
-    *End = Lauf->LastAddr;
+    *End   = Lauf->LastAddr;
   }
 }
 
@@ -160,8 +154,8 @@ void ResetAddressRanges(void)
 
   for (Run = FirstFile; Run; Run = Run->Next)
   {
-    Run->FirstAddr = ADRMAX;
-    Run->LastAddr = 0;
+    Run->FirstAddr = IntTypeDefs[LargeWordType].Max;
+    Run->LastAddr  = IntTypeDefs[LargeWordType].Min;
   }
 }
 

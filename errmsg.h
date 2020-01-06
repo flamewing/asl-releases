@@ -207,6 +207,7 @@ typedef enum
   ErrNum_STRUCTEndedByENDUNION = 2080,
   ErrNum_AddrOnDifferentPage = 2090,
   ErrNum_UnknownMacExpMod = 2100,
+  ErrNum_TooManyMacExpMod = 2105,
   ErrNum_ConflictingMacExpMod = 2110,
   ErrNum_InvalidPrepDir = 2120,
   ErrNum_ExpectedError = 2130,

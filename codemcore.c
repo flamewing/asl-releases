@@ -24,7 +24,6 @@
 #include "motpseudo.h"
 #include "asmitree.h"
 #include "codevars.h"
-#include "intconsts.h"
 #include "errmsg.h"
 
 #include "codemcore.h"
@@ -818,7 +817,7 @@ static void SwitchTo_MCORE(void)
 
    ValidSegs = (1 << SegCode);
    Grans[SegCode] = 1; ListGrans[SegCode] = 2; SegInits[SegCode] = 0;
-   SegLimits[SegCode] = INTCONST_ffffffff;
+   SegLimits[SegCode] = (LargeWord)IntTypeDefs[UInt32].Max;
 
    MakeCode = MakeCode_MCORE; IsDef = IsDef_MCORE;
 

@@ -41,13 +41,20 @@ typedef enum
   SInt24   , UInt24  , Int24   ,
   SInt32   , UInt32  , Int32   ,
 #ifdef HAS64
-  Int64   ,
+  SInt64   , UInt64  , Int64   ,
 #endif
   IntTypeCnt
 } IntType;
 
+#ifdef HAS64
+#define LargeWordType UInt64
+#else
+#define LargeWordType UInt32
+#endif
+
 typedef struct
 {
+  Word SignAndWidth;
   LargeWord Mask;
   LargeInt Min, Max;
 } tIntTypeDef;
@@ -61,6 +68,19 @@ typedef enum
   FloatCo,
   FloatTypeCnt
 } FloatType;
+
+typedef enum
+{
+  eSymbolFlag_None = 0,
+  eSymbolFlag_NextLabelAfterBSR = 1 << 0
+} tSymbolFlags;
+
+typedef struct _TFunction
+{
+  struct _TFunction *Next;
+  Byte ArguCnt;
+  StringPtr Name, Definition;
+} TFunction, *PFunction;
 
 struct sStrComp;
 struct sRelocEntry;
@@ -206,9 +226,6 @@ extern void ClearSectionList(void);
 
 
 extern void SetFlag(Boolean *Flag, const char *Name, Boolean Wert);
-
-extern void SetLstMacroExp(tLstMacroExp NewMacroExp);
-
 
 extern LongInt GetLocHandle(void);
 

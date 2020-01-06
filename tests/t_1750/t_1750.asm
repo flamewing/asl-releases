@@ -44,10 +44,10 @@
 	dl	r3,80,r4
 	dst	r4,90
 	dst	r4,100,r5
-	dsll	5,r7
-	dsrl	6,r8
-	dsra	7,r9
-	dslc	8,r10
+	dsll	r7,5
+	dsrl	r8,6
+	dsra	r9,7
+	dslc	r10,8
 	dslr	r5,r6
 	dsar	r6,r7
 	dscr	r7,r8
@@ -224,10 +224,10 @@
 	sr	r11,r12
 	s	r6,770
 	s	r6,780,r7
-        sll	5,r7
-        srl	6,r8
-        sra	7,r9
-        slc	8,r10
+	sll	r7,5
+	srl	r8,6
+	sra	r9,7
+	slc	r10,8
 	slr	r12,r13
 	sar	r13,r14
 	scr	r14,r15
@@ -354,4 +354,3 @@
 ;	extended	1.06910588403688e-50	; 2^-38 * 2^-128 (denorm)= 0000 00 00 0002
 ;	extended	5.34552942018440e-51	; 2^-39 * 2^-128 (denorm)= 0000 00 00 0001
 ;	extended	2.6727647100922e-51	; 2^-40 * 2^-128 (uflo)  = 0000 00 00 0000
-	

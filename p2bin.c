@@ -24,7 +24,6 @@
 #include "stringlists.h"
 #include "cmdarg.h"
 #include "toolutils.h"
-#include "intconsts.h"
 
 #define BinSuffix ".bin"
 
@@ -644,7 +643,7 @@ int main(int argc, char **argv)
   if ((StartAuto) || (StopAuto))
   {
     if (StartAuto)
-      StartAdr = INTCONST_ffffffff;
+      StartAdr = 0xfffffffful;
     if (StopAuto)
       StopAdr = 0;
     if (ProcessedEmpty(ParUnprocessed))

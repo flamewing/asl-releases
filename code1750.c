@@ -270,9 +270,9 @@ static void DecodeRImm(Word Code)
   Word N, Rb;
   Boolean OK;
 
-  if (ChkArgCnt(2, 2) && DecodeArgReg(2, &Rb))
+  if (ChkArgCnt(2, 2) && DecodeArgReg(1, &Rb))
   {
-    N = EvalStrIntExpression(&ArgStr[1], UInt4, &OK);
+    N = EvalStrIntExpression(&ArgStr[2], UInt4, &OK);
     if (OK)
       PutCode(Code | (N << 4) | Rb);
   }
@@ -568,8 +568,8 @@ static void DecodeFLOAT(Word Extended)
       ShiftMantRight(Field);
     }
 
-    /* if exponent to small to represent, shift down mantissa
-       until exponent large enough, or mantissa is all-zeroes */
+    /* If exponent is too small to represent, shift down mantissa
+       until exponent is large enough, or mantissa is all-zeroes: */
 
     while (Exponent < 1023 - 128)
     {
@@ -621,12 +621,12 @@ static void DecodeFLOAT(Word Extended)
       Field[2] ^= 0xff;
       Field[1] ^= 0x1f;
       if (!(++Field[7]))
-      if (!(++Field[6]))
-      if (!(++Field[5]))
-      if (!(++Field[4]))
-      if (!(++Field[3]))
-      if (!(++Field[2]))
-      Field[1] = (Field[1] + 1) & 0x1f;
+        if (!(++Field[6]))
+          if (!(++Field[5]))
+            if (!(++Field[4]))
+              if (!(++Field[3]))
+                if (!(++Field[2]))
+                  Field[1] = (Field[1] + 1) & 0x1f;
     }
 
     /* assemble mantissa */
@@ -951,4 +951,5 @@ static void SwitchTo_1750(void)
 void code1750_init(void)
 {
   CPU1750 = AddCPU("1750", SwitchTo_1750);
+  AddCopyright("MIL-STD 1750 Generator also (C) 2019 Oliver Kellogg");
 }

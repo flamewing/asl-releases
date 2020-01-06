@@ -798,8 +798,7 @@ static void DecodeNorm(Word Index)
   tAdrResult AdrResult;
 
   DecodeAdr(&AdrResult, pOrder);
-  if (AdrResult.ErgMode == -1) WrError(ErrNum_InvAddrMode);
-  else
+  if (AdrResult.ErgMode != -1)
   {
     if (pOrder->Codes[AdrResult.ErgMode] == -1)
     {

@@ -23,7 +23,6 @@
 #include "motpseudo.h"
 #include "asmitree.h"
 #include "codevars.h"
-#include "intconsts.h"
 #include "errmsg.h"
 
 #include "code68k.h"
@@ -3658,7 +3657,7 @@ static void DecodeBcc(Word CondCode)
            16 bit displacement to avoid oscillating back and forth between
            8 and 16 bits: */
 
-        else if ((Flags & NextLabelFlag_AfterBSR) && (HVal == 2) && IsBSR)
+        else if ((Flags & eSymbolFlag_NextLabelAfterBSR) && (HVal == 2) && IsBSR)
           OpSize = eSymbolSize32Bit;
         else
           OpSize = eSymbolSizeFloat32Bit;
@@ -5977,7 +5976,7 @@ static void SwitchTo_68K(void *pUser)
   Grans[SegCode] = 1;
   ListGrans[SegCode] = 2;
   SegInits[SegCode] = 0;
-  SegLimits[SegCode] = INTCONST_ffffffff;
+  SegLimits[SegCode] = (LargeWord)IntTypeDefs[UInt32].Max;
 
   pCurrCPUProps = (const tCPUProps*)pUser;
 

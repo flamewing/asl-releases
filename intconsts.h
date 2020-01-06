@@ -5,11 +5,7 @@
 #ifdef __STDC__
 
 #define INTCONST_ff000000 0xff000000u
-#define INTCONST_00ff0000 0x00ff0000u
 #define INTCONST_ffff0000 0xffff0000u
-#define INTCONST_ffffff00 0xffffff00u
-#define INTCONST_0000ff00 0x0000ff00u
-#define INTCONST_000000ff 0x000000ffu
 #define INTCONST_ffffff00 0xffffff00u
 #define INTCONST_fffffff0 0xfffffff0u
 #define INTCONST_fffffffe 0xfffffffeu
@@ -23,11 +19,8 @@
 #else /* !__STDC__ */
 
 #define INTCONST_ff000000 0xff000000
-#define INTCONST_00ff0000 0x00ff0000
 #define INTCONST_ffff0000 0xffff0000
 #define INTCONST_ffffff00 0xffffff00
-#define INTCONST_0000ff00 0x0000ff00
-#define INTCONST_000000ff 0x000000ff
 #define INTCONST_ffffff00 0xffffff00
 #define INTCONST_fffffff0 0xfffffff0
 #define INTCONST_fffffffe 0xfffffffe

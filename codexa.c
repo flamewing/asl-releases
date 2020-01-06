@@ -24,15 +24,12 @@
 #include "intpseudo.h"
 #include "motpseudo.h"
 #include "codevars.h"
-#include "intconsts.h"
 #include "errmsg.h"
 
 #include "codexa.h"
 
 /*-------------------------------------------------------------------------*/
 /* Definitionen */
-
-#define Even32Mask INTCONST_fffffffe
 
 #define ModNone (-1)
 #define ModReg 0
@@ -456,6 +453,55 @@ static void ChkBitPage(LongInt Adr)
   if ((Adr >> 16) != Reg_DS) WrError(ErrNum_InAccPage);
 }
 
+static LongWord MkEven24(LongWord Inp)
+{
+  return Inp & 0xfffffeul;
+}
+
+static LongWord GetBranchDest(const tStrComp *pComp, Boolean *pOK)
+{
+  LongWord Result;
+
+  FirstPassUnknown = False;
+  Result = EvalStrIntExpression(pComp, UInt24, pOK);
+  if (*pOK)
+  {
+    if (FirstPassUnknown) Result = MkEven24(Result);
+    ChkSpace(SegCode);
+    if (Result & 1)
+    {
+      WrStrErrorPos(ErrNum_NotAligned, pComp);
+      *pOK = False;
+    }
+  }
+  return Result;
+}
+
+static Boolean ChkShortEvenDist(LongInt *pDist)
+{
+  if (!SymbolQuestionable && ((*pDist > 254) || (*pDist < -256)))
+    return False;
+  else
+  {
+    *pDist >>= 1;
+    return True;
+  }
+}
+
+static Boolean ChkLongEvenDist(LongInt *pDist, const tStrComp *pComp)
+{
+  if (!SymbolQuestionable && ((*pDist > 65534) || (*pDist < -65536)))
+  {
+    WrStrErrorPos(ErrNum_JmpDistTooBig, pComp);
+    return False;
+  }
+  else
+  {
+    *pDist >>= 1;
+    return True;
+  }
+}
+
 /*-------------------------------------------------------------------------*/
 /* Befehlsdekoder */
 
@@ -760,50 +806,44 @@ static void DecodeRel(Word Index)
 {
   InvOrder *Op = RelOrders + Index;
   Boolean OK;
-  LongInt SaveLong, AdrLong;
+  LongWord Dest;
+  LongInt Dist;
 
   if (!ChkArgCnt(1, 1));
   else if (*AttrPart.Str) WrError(ErrNum_UseLessAttr);
   else
   {
-    FirstPassUnknown = True;
-    AdrLong = SaveLong = EvalStrIntExpression(&ArgStr[1], UInt24, &OK);
+    Dest = GetBranchDest(&ArgStr[1], &OK);
     if (OK)
     {
-      ChkSpace(SegCode);
-      if (FirstPassUnknown) AdrLong &= Even32Mask;
-      AdrLong -= (EProgCounter() + CodeLen + 2) & 0xfffffe;
-      if (AdrLong & 1) WrError(ErrNum_NotAligned);
-      else if ((SymbolQuestionable) || ((AdrLong <= 254) && (AdrLong >= -256)))
+      Dist = Dest - MkEven24(EProgCounter() + CodeLen + 2);
+      if (ChkShortEvenDist(&Dist))
       {
         BAsmCode[CodeLen++] = Op->Code;
-        BAsmCode[CodeLen++] = (AdrLong >> 1) & 0xff;
+        BAsmCode[CodeLen++] = Dist & 0xff;
       }
-      else if (!DoBranchExt) WrError(ErrNum_JmpDistTooBig);
+      else if (!DoBranchExt) WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[1]);
       else if (Op->Inversion == 255)  /* BR */
       {
-        AdrLong = SaveLong - ((EProgCounter() + CodeLen + 3) & 0xfffffe);
-        if ((!SymbolQuestionable) && ((AdrLong > 65534) || (AdrLong < -65536))) WrError(ErrNum_JmpDistTooBig);
-        else if (AdrLong & 1) WrError(ErrNum_NotAligned);
-        else
+        Dist = Dest - MkEven24(EProgCounter() + CodeLen + 3);
+        if (ChkLongEvenDist(&Dist, &ArgStr[1]))
         {
-          AdrLong >>= 1;
+          Dist >>= 1;
           BAsmCode[CodeLen++] = 0xd5;
-          BAsmCode[CodeLen++] = (AdrLong >> 8) & 0xff;
-          BAsmCode[CodeLen++] = AdrLong & 0xff;
+          BAsmCode[CodeLen++] = (Dist >> 8) & 0xff;
+          BAsmCode[CodeLen++] = Dist        & 0xff;
         }
       }
       else
       {
-        AdrLong = SaveLong - ((EProgCounter() + CodeLen + 5) & 0xfffffe);
-        if ((AdrLong > 65534) || (AdrLong < -65536)) WrError(ErrNum_JmpDistTooBig);
-        else
+        Dist = Dest - MkEven24(EProgCounter() + CodeLen + 5);
+        if (ChkLongEvenDist(&Dist, &ArgStr[1]))
         {
           BAsmCode[CodeLen++] = RelOrders[Op->Inversion].Code;
           BAsmCode[CodeLen++] = 2;
           BAsmCode[CodeLen++] = 0xd5;
-          BAsmCode[CodeLen++] = (AdrLong >> 9) & 0xff;
-          BAsmCode[CodeLen++] = (AdrLong >> 1) & 0xff;
+          BAsmCode[CodeLen++] = (Dist >> 8) & 0xff;
+          BAsmCode[CodeLen++] = Dist        & 0xff;
           if (Odd(EProgCounter() + CodeLen)) BAsmCode[CodeLen++] = 0;
         }
       }
@@ -813,7 +853,8 @@ static void DecodeRel(Word Index)
 
 static void DecodeJBit(Word Index)
 {
-  LongInt BitAdr, AdrLong, SaveLong, odd;
+  LongInt BitAdr, Dist, odd;
+  LongWord Dest;
   Boolean OK;
   InvOrder *Op = JBitOrders + Index;
 
@@ -821,27 +862,23 @@ static void DecodeJBit(Word Index)
   else if (*AttrPart.Str) WrError(ErrNum_UseLessAttr);
   else if (DecodeBitAddr(&ArgStr[1], &BitAdr))
   {
-    FirstPassUnknown = False;
-    AdrLong = SaveLong = EvalStrIntExpression(&ArgStr[2], UInt24, &OK);
+    Dest = GetBranchDest(&ArgStr[2], &OK);
     if (OK)
     {
-      if (FirstPassUnknown) AdrLong &= Even32Mask;
-      AdrLong -= (EProgCounter() + CodeLen + 4) & 0xfffffe;
-      if (AdrLong & 1) WrError(ErrNum_NotAligned);
-      else if ((SymbolQuestionable) || ((AdrLong <= 254) && (AdrLong >= -256)))
+      Dist = Dest - MkEven24(EProgCounter() + CodeLen + 4);
+      if (ChkShortEvenDist(&Dist))
       {
         BAsmCode[CodeLen++] = 0x97;
         BAsmCode[CodeLen++] = Op->Code + Hi(BitAdr);
         BAsmCode[CodeLen++] = Lo(BitAdr);
-        BAsmCode[CodeLen++] = (AdrLong >> 1) & 0xff;
+        BAsmCode[CodeLen++] = Dist & 0xff;
       }
-      else if (!DoBranchExt) WrError(ErrNum_JmpDistTooBig);
+      else if (!DoBranchExt) WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[2]);
       else if (Op->Inversion == 255)
       {
         odd = EProgCounter() & 1;
-        AdrLong = SaveLong - ((EProgCounter() + CodeLen + 9 + odd) & 0xfffffe);
-        if ((AdrLong > 65534) || (AdrLong < -65536)) WrError(ErrNum_JmpDistTooBig);
-        else                 
+        Dist = Dest - MkEven24(EProgCounter() + CodeLen + 9 + odd);
+        if (ChkLongEvenDist(&Dist, &ArgStr[2]))
         {
           BAsmCode[CodeLen++] = 0x97;
           BAsmCode[CodeLen++] = Op->Code + Hi(BitAdr);
@@ -851,24 +888,23 @@ static void DecodeJBit(Word Index)
           BAsmCode[CodeLen++] = 2 + odd;
           if (odd) BAsmCode[CodeLen++] = 0;
           BAsmCode[CodeLen++] = 0xd5;
-          BAsmCode[CodeLen++] = (AdrLong >> 9) & 0xff;
-          BAsmCode[CodeLen++] = (AdrLong >> 1) & 0xff;
+          BAsmCode[CodeLen++] = (Dist >> 8) & 0xff;
+          BAsmCode[CodeLen++] = Dist        & 0xff;
           BAsmCode[CodeLen++] = 0;
         }
       }
       else
       {
-        AdrLong = SaveLong - ((EProgCounter() + CodeLen + 7) & 0xfffffe);
-        if ((AdrLong > 65534) || (AdrLong < -65536)) WrError(ErrNum_JmpDistTooBig);  
-        else
+        Dist = Dest - MkEven24(EProgCounter() + CodeLen + 7);
+        if (ChkLongEvenDist(&Dist, &ArgStr[2]))
         {
           BAsmCode[CodeLen++] = 0x97;
           BAsmCode[CodeLen++] = JBitOrders[Op->Inversion].Code + Hi(BitAdr);
           BAsmCode[CodeLen++] = Lo(BitAdr);
           BAsmCode[CodeLen++] = 2;
           BAsmCode[CodeLen++] = 0xd5;
-          BAsmCode[CodeLen++] = (AdrLong >> 9) & 0xff;
-          BAsmCode[CodeLen++] = (AdrLong >> 1) & 0xff;
+          BAsmCode[CodeLen++] = (Dist >> 8) & 0xff;
+          BAsmCode[CodeLen++] = Dist        & 0xff;
           if (Odd(EProgCounter() + CodeLen)) BAsmCode[CodeLen++] = 0;
         }
       }
@@ -1465,8 +1501,6 @@ static void DecodeTRAP(Word Index)
 
 static void DecodeCALL(Word Index)
 {
-  LongInt AdrLong;
-  Boolean OK;
   UNUSED(Index);
 
   if (!ChkArgCnt(1, 1));
@@ -1486,21 +1520,17 @@ static void DecodeCALL(Word Index)
   }
   else
   {
-    FirstPassUnknown = False;
-    AdrLong = EvalStrIntExpression(&ArgStr[1], UInt24, &OK);
+    Boolean OK;
+    LongWord Dest = GetBranchDest(&ArgStr[1], &OK);
     if (OK)
     {
-      ChkSpace(SegCode);
-      if (FirstPassUnknown) AdrLong &= Even32Mask;
-      AdrLong -= (EProgCounter() + CodeLen + 3) & 0xfffffe;
-      if ((!SymbolQuestionable) && ((AdrLong > 65534) || (AdrLong < -65536))) WrError(ErrNum_JmpDistTooBig);
-      else if (AdrLong & 1) WrError(ErrNum_NotAligned);
-      else
+      LongInt Dist = Dest - MkEven24(EProgCounter() + CodeLen + 3);
+
+      if (ChkLongEvenDist(&Dist, &ArgStr[1]))
       {
-        AdrLong >>= 1;
         BAsmCode[CodeLen++] = 0xc5;
-        BAsmCode[CodeLen++] = (AdrLong >> 8) & 0xff;
-        BAsmCode[CodeLen++] = AdrLong & 0xff;
+        BAsmCode[CodeLen++] = (Dist >> 8) & 0xff;
+        BAsmCode[CodeLen++] = Dist & 0xff;
       }
     }
   }
@@ -1508,9 +1538,6 @@ static void DecodeCALL(Word Index)
 
 static void DecodeJMP(Word Index)
 {
-  LongInt AdrLong;
-  Boolean OK;
-
   UNUSED(Index);
 
   if (!ChkArgCnt(1, 1));
@@ -1555,21 +1582,18 @@ static void DecodeJMP(Word Index)
   }
   else
   {
-    FirstPassUnknown = False;
-    AdrLong = EvalStrIntExpression(&ArgStr[1], UInt24, &OK);
+    Boolean OK;
+    LongWord Dest = GetBranchDest(&ArgStr[1], &OK);
+
     if (OK)
     {
-      ChkSpace(SegCode);
-      if (FirstPassUnknown) AdrLong &= Even32Mask;
-      AdrLong -= ((EProgCounter() + CodeLen + 3) & 0xfffffe);
-      if ((!SymbolQuestionable) && ((AdrLong > 65534) || (AdrLong < -65536))) WrError(ErrNum_JmpDistTooBig);
-      else if (AdrLong & 1) WrError(ErrNum_NotAligned);
-      else
+      LongInt Dist = Dest - MkEven24(EProgCounter() + CodeLen + 3);
+
+      if (ChkLongEvenDist(&Dist, &ArgStr[1]))
       {
-        AdrLong >>= 1;
         BAsmCode[CodeLen++] = 0xd5;
-        BAsmCode[CodeLen++] = (AdrLong >> 8) & 0xff;
-        BAsmCode[CodeLen++] = AdrLong & 0xff;
+        BAsmCode[CodeLen++] = (Dist >> 8) & 0xff;
+        BAsmCode[CodeLen++] = Dist & 0xff;
       }
     }
   }
@@ -1577,19 +1601,17 @@ static void DecodeJMP(Word Index)
 
 static void DecodeCJNE(Word Index)
 {
-  LongInt AdrLong, SaveLong, odd;
-  Boolean OK;
   Byte HReg;
   UNUSED(Index);
 
   if (ChkArgCnt(3, 3))
   {
-    FirstPassUnknown = False;
-    AdrLong = SaveLong = EvalStrIntExpression(&ArgStr[3], UInt24, &OK);
-    if (FirstPassUnknown) AdrLong &= 0xfffffe;
+    Boolean OK;
+    LongWord Dest = GetBranchDest(&ArgStr[3], &OK);
+
     if (OK)
     {
-      ChkSpace(SegCode); OK = False; HReg = 0;
+      OK = False; HReg = 0;
       DecodeAdr(&ArgStr[1], MModMem);
       if (AdrMode == ModMem)
       {
@@ -1644,27 +1666,29 @@ static void DecodeCJNE(Word Index)
       }
       if (OK)
       {
-        AdrLong -= (EProgCounter() + CodeLen) & 0xfffffe; OK = False;
-        if (AdrLong & 1) WrError(ErrNum_NotAligned);
-        else if ((SymbolQuestionable) || ((AdrLong <= 254) && (AdrLong >= -256)))
+        LongInt Dist = Dest - MkEven24(EProgCounter() + CodeLen);
+
+        OK = False;
+        if (ChkShortEvenDist(&Dist))
         {
-          BAsmCode[HReg] = (AdrLong >> 1) & 0xff; OK = True;
+          BAsmCode[HReg] = Dist & 0xff;
+          OK = True;
         }
-        else if (!DoBranchExt) WrError(ErrNum_JmpDistTooBig);
+        else if (!DoBranchExt) WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[3]);
         else
         {
-          odd = (EProgCounter() + CodeLen) & 1;
-          AdrLong = SaveLong - ((EProgCounter() + CodeLen + 5 + odd) & 0xfffffe);
-          if ((AdrLong < -65536) || (AdrLong > 65534)) WrError(ErrNum_JmpDistTooBig);
-          else
+          LongWord odd = (EProgCounter() + CodeLen) & 1;
+
+          Dist = Dest - MkEven24(EProgCounter() + CodeLen + 5 + odd);
+          if (ChkLongEvenDist(&Dist, &ArgStr[3]))
           {
             BAsmCode[HReg] = 1 + odd;
             BAsmCode[CodeLen++] = 0xfe;
             BAsmCode[CodeLen++] = 2 + odd;
             if (odd) BAsmCode[CodeLen++] = 0;
             BAsmCode[CodeLen++] = 0xd5;
-            BAsmCode[CodeLen++] = (AdrLong >> 9) & 0xff;
-            BAsmCode[CodeLen++] = (AdrLong >> 1) & 0xff;
+            BAsmCode[CodeLen++] = (Dist >> 8) & 0xff;
+            BAsmCode[CodeLen++] = Dist        & 0xff;
             BAsmCode[CodeLen++] = 0;
             OK = True;
           }
@@ -1678,21 +1702,19 @@ static void DecodeCJNE(Word Index)
 
 static void DecodeDJNZ(Word Index)
 {
-  LongInt AdrLong, SaveLong, odd;
-  Boolean OK;
   Byte HReg;
   UNUSED(Index);
 
   if (ChkArgCnt(2, 2))
   {
-    FirstPassUnknown = False;
-    SaveLong = AdrLong = EvalStrIntExpression(&ArgStr[2], UInt24, &OK);
-    if (FirstPassUnknown) AdrLong &= 0xfffffe;
+    Boolean OK;
+    LongInt Dest = GetBranchDest(&ArgStr[2], &OK);
+
     if (OK)
     {
-      ChkSpace(SegCode); HReg = 0;
+      HReg = 0;
       DecodeAdr(&ArgStr[1], MModMem);
-      OK=False; DecodeAdr(&ArgStr[1], MModMem);
+      OK = False; DecodeAdr(&ArgStr[1], MModMem);
       if (AdrMode == ModMem)
         switch (MemPart)
         {
@@ -1723,28 +1745,29 @@ static void DecodeDJNZ(Word Index)
         }
       if (OK)
       {
-        AdrLong -= (EProgCounter() + CodeLen) & 0xfffffe; OK = False;
-        if (AdrLong & 1) WrError(ErrNum_NotAligned);
-        else if ((SymbolQuestionable) || ((AdrLong <= 254) && (AdrLong >= -256)))
+        LongInt Dist = Dest - MkEven24(EProgCounter() + CodeLen);
+
+        OK = False;
+        if (ChkShortEvenDist(&Dist))
         {
-          BAsmCode[HReg] = (AdrLong >> 1) & 0xff;
+          BAsmCode[HReg] = Dist & 0xff;
           OK = True;
         }
-        else if (!DoBranchExt) WrError(ErrNum_JmpDistTooBig);
+        else if (!DoBranchExt) WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[2]);
         else
         {
-          odd = (EProgCounter() + CodeLen) & 1;
-          AdrLong = SaveLong - ((EProgCounter() + CodeLen + 5 + odd) & 0xfffffe);
-          if ((AdrLong < -65536) || (AdrLong > 65534)) WrError(ErrNum_JmpDistTooBig);
-          else
+          LongWord odd = (EProgCounter() + CodeLen) & 1;
+
+          Dist = Dest - MkEven24(EProgCounter() + CodeLen + 5 + odd);
+          if (ChkLongEvenDist(&Dist, &ArgStr[2]))
           {
             BAsmCode[HReg] = 1 + odd;
             BAsmCode[CodeLen++] = 0xfe;
             BAsmCode[CodeLen++] = 2 + odd;
             if (odd) BAsmCode[CodeLen++] = 0;
             BAsmCode[CodeLen++] = 0xd5;
-            BAsmCode[CodeLen++] = (AdrLong >> 9) & 0xff;
-            BAsmCode[CodeLen++] = (AdrLong >> 1) & 0xff;
+            BAsmCode[CodeLen++] = (Dist >> 8) & 0xff;
+            BAsmCode[CodeLen++] = Dist        & 0xff;
             BAsmCode[CodeLen++] = 0;
             OK = True;
           }
@@ -1765,19 +1788,13 @@ static void DecodeFCALLJMP(Word Index)
   else if (*AttrPart.Str) WrError(ErrNum_UseLessAttr);
   else
   {
-    FirstPassUnknown = False;
-    AdrLong = EvalStrIntExpression(&ArgStr[1], UInt24, &OK);
-    if (FirstPassUnknown) AdrLong &= 0xfffffe;
+    AdrLong = GetBranchDest(&ArgStr[1], &OK);
     if (OK)
     {
-      if (AdrLong & 1) WrError(ErrNum_NotAligned);
-      else
-      {
-        BAsmCode[CodeLen++] = 0xc4 | (Index << 4);
-        BAsmCode[CodeLen++] = (AdrLong >> 8) & 0xff;
-        BAsmCode[CodeLen++] = AdrLong & 0xff;
-        BAsmCode[CodeLen++] = (AdrLong >> 16) & 0xff;
-      }
+      BAsmCode[CodeLen++] = 0xc4 | (Index << 4);
+      BAsmCode[CodeLen++] = (AdrLong >> 8) & 0xff;
+      BAsmCode[CodeLen++] = AdrLong & 0xff;
+      BAsmCode[CodeLen++] = (AdrLong >> 16) & 0xff;
     }
   }
 }

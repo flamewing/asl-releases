@@ -19,7 +19,6 @@
 #include "headids.h"
 #include "strutil.h"
 #include "codevars.h"
-#include "intconsts.h"
 #include "intpseudo.h"
 #include "errmsg.h"
 
@@ -1122,7 +1121,7 @@ static void SwitchTo_53c8xx(void)
 
   ValidSegs = (1 << SegCode);
   Grans[SegCode ] = 1; ListGrans[SegCode ] = 4; SegInits[SegCode ] = 0;
-  SegLimits[SegCode] = INTCONST_ffffffff;
+  SegLimits[SegCode] = (LargeWord)IntTypeDefs[UInt32].Max;
 
   MakeCode = MakeCode_53c8xx;
   IsDef = IsDef_53c8xx;

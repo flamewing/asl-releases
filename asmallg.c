@@ -868,8 +868,9 @@ static void CodeSAVE(Word Index)
     Neu->SaveCPU = MomCPU;
     Neu->SavePC = ActPC;
     Neu->SaveListOn = ListOn;
-    Neu->SaveLstMacroExp = LstMacroExp;
-    Neu->SaveLstMacroExpOverride = LstMacroExpOverride;
+    Neu->SaveLstMacroExp = GetLstMacroExp();
+    Neu->SaveLstMacroExpModDefault = LstMacroExpModDefault;
+    Neu->SaveLstMacroExpModOverride = LstMacroExpModOverride;
     Neu->SaveTransTable = CurrTransTable;
     Neu->SaveEnumSegment = EnumSegment;
     Neu->SaveEnumIncrement = EnumIncrement;
@@ -900,7 +901,8 @@ static void CodeRESTORE(Word Index)
       SetCPU(Old->SaveCPU, False);
     StrCompMkTemp(&TmpComp, ListOnName); EnterIntSymbol(&TmpComp, ListOn = Old->SaveListOn, 0, True);
     SetLstMacroExp(Old->SaveLstMacroExp);
-    LstMacroExpOverride = Old->SaveLstMacroExpOverride;
+    LstMacroExpModDefault = Old->SaveLstMacroExpModDefault;
+    LstMacroExpModOverride = Old->SaveLstMacroExpModOverride;
     CurrTransTable = Old->SaveTransTable;
     free(Old);
   }
@@ -929,22 +931,55 @@ static void CodeMACEXP(Word Index)
   {
     tStrComp *pArg;
     tLstMacroExpMod LstMacroExpMod;
+    tLstMacroExp Mod;
+    Boolean Set;
     Boolean OK = True;
 
     InitLstMacroExpMod(&LstMacroExpMod);
     forallargs (pArg, True)
     {
-      if (!as_strcasecmp(pArg->Str, "ON")) LstMacroExpMod.SetAll = True;
-      else if (!as_strcasecmp(pArg->Str, "OFF")) LstMacroExpMod.ClrAll = True;
-      else if (!as_strcasecmp(pArg->Str, "NOIF")) LstMacroExpMod.ANDMask |= eLstMacroExpIf;
-      else if (!as_strcasecmp(pArg->Str, "NOMACRO")) LstMacroExpMod.ANDMask |= eLstMacroExpMacro;
-      else if (!as_strcasecmp(pArg->Str, "IF")) LstMacroExpMod.ORMask |= eLstMacroExpIf;
-      else if (!as_strcasecmp(pArg->Str, "MACRO")) LstMacroExpMod.ORMask |= eLstMacroExpMacro;
+      if (!as_strcasecmp(pArg->Str, "ON"))
+      {
+        Mod = eLstMacroExpAll; Set = True;
+      }
+      else if (!as_strcasecmp(pArg->Str, "OFF"))
+      {
+        Mod = eLstMacroExpAll; Set = False;
+      }
+      else if (!as_strcasecmp(pArg->Str, "NOIF"))
+      {
+        Mod= eLstMacroExpIf; Set = False;
+      }
+      else if (!as_strcasecmp(pArg->Str, "NOMACRO"))
+      {
+        Mod = eLstMacroExpMacro; Set = False;
+      }
+      else if (!as_strcasecmp(pArg->Str, "NOREST"))
+      {
+        Mod = eLstMacroExpRest; Set = False;
+      }
+      else if (!as_strcasecmp(pArg->Str, "IF"))
+      {
+        Mod = eLstMacroExpIf; Set = True;
+      }
+      else if (!as_strcasecmp(pArg->Str, "MACRO"))
+      {
+        Mod = eLstMacroExpMacro; Set = True;
+      }
+      else if (!as_strcasecmp(pArg->Str, "REST"))
+      {
+        Mod = eLstMacroExpRest; Set = True;
+      }
       else
         OK = False;
       if (!OK)
       {
-        WrStrErrorPos(ErrNum_UnknownMacExpMod, pArg);
+        WrStrErrorPos(ErrNum_TooManyMacExpMod, pArg);
+        break;
+      }
+      else if (!AddLstMacroExpMod(&LstMacroExpMod, Set, Mod))
+      {
+        WrStrErrorPos(ErrNum_TooManyArgs, pArg);
         break;
       }
     }
@@ -952,9 +987,13 @@ static void CodeMACEXP(Word Index)
     {
       if (!ChkLstMacroExpMod(&LstMacroExpMod)) WrError(ErrNum_ConflictingMacExpMod);
       else if (Index) /* Override */
-        LstMacroExpOverride = LstMacroExpMod;
+        LstMacroExpModOverride = LstMacroExpMod;
       else
-        SetLstMacroExp(ApplyLstMacroExpMod(LstMacroExp, &LstMacroExpMod));
+      {
+        /* keep LstMacroExp and LstMacroExpModDefault in sync! */
+        LstMacroExpModDefault = LstMacroExpMod;
+        SetLstMacroExp(ApplyLstMacroExpMod(eLstMacroExpAll, &LstMacroExpModDefault));
+      }
     }
   }
 }

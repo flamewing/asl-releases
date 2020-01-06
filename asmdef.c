@@ -190,8 +190,8 @@ Word PageCounter[ChapMax + 1];          /* hierarchische Seitenzaehler */
 Byte ChapDepth;                         /* momentane Kapitelverschachtelung */
 StringPtr ListLine;                     /* alternative Ausgabe vor Listing fuer EQU */
 Byte PageLength, PageWidth;             /* Seitenlaenge/breite in Zeilen/Spalten */
-tLstMacroExp LstMacroExp;               /* Makroexpansionen auflisten */
-tLstMacroExpMod LstMacroExpOverride;    /* Override macro expansion ? */
+tLstMacroExpMod LstMacroExpModOverride, /* Override macro expansion ? */
+                LstMacroExpModDefault;
 Boolean DottedStructs;                  /* structure elements with dots */
 StringPtr PrtInitString;                /* Druckerinitialisierungsstring */
 StringPtr PrtExitString;                /* Druckerdeinitialisierungsstring */
@@ -218,8 +218,6 @@ Boolean SuppWarns;
 
 PTransTable TransTables,                /* Liste mit Codepages */
             CurrTransTable;             /* aktuelle Codepage */
-
-PFunction FirstFunction;	        /* Liste definierter Funktionen */
 
 PDefinement FirstDefine;                /* Liste von Praeprozessor-Defines */
 
@@ -250,7 +248,6 @@ void AsmDefInit(void)
   CurrFileName[0] = '\0';
   MomLineCounter = 0;
 
-  FirstFunction = NULL;
   FirstDefine = NULL;
   FirstSaveState = NULL;
 }

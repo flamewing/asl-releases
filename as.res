@@ -785,6 +785,10 @@ Message ErrMsgUnknownMacExpMod
  "unbekanntes Makro-Expansions-Argument"
  "unknown macro expansion argument"
 
+Message ErrMsgTooManyMacExpMod
+ "zu viele Makro-Expansions-Argumente"
+ "too many macro expansion arguments"
+
 Message ErrMsgConflictingMacExpMod
  "widerspr&uuml;chliche Angaben zur Makro-Expansion"
  "contradicting macro expansion specifications"

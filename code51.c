@@ -25,7 +25,6 @@
 #include "asmitree.h"
 #include "codevars.h"
 #include "fileformat.h"
-#include "intconsts.h"
 #include "errmsg.h"
 
 #include "code51.h"
@@ -558,11 +557,13 @@ static ShortInt DecodeBitAdr(tStrComp *pArg, LongInt *Erg, Boolean MayShorten)
   {
     if (!pPos)
     {
+      static const LongWord ValidBits = 0x070000fful;
+
       FirstPassUnknown = False;
       *Erg = EvalStrIntExpression(pArg, Int32, &OK);
       if (FirstPassUnknown)
-        (*Erg) &= 0x070000ff;
-      if (((*Erg) & INTCONST_f8ffff00) != 0)
+        *Erg &= ValidBits;
+      if (*Erg & ~ValidBits)
       {
         WrError(ErrNum_InvBitPos);
         OK = False;

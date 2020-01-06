@@ -920,6 +920,13 @@ typedef unsigned long long Card64;
    principally, a normal 32-bit *NIX */
 
 #ifdef __linux__
+
+/* no long long data type if C89 is used */
+
+#if (defined __STDC__) && (!defined __STDC_VERSION__)
+# define NOLONGLONG
+#endif
+
 #define ARCHSYSNAME "unknown-linux"
 #define DEFSMADE
 #define OPENRDMODE "r"
@@ -934,9 +941,11 @@ typedef unsigned short Card16;
 typedef signed int Integ32;
 #define PRIInteg32 "d"
 typedef unsigned int Card32;
+#ifndef NOLONGLONG
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
 #define HAS64
+#endif /* !NOLONGLONG */
 #define LOCALE_NLS
 #endif
 
@@ -1143,60 +1152,9 @@ typedef unsigned long Card32;
 
 
 /*===========================================================================*/
-/* AMD opteron/athlon64/k8 platforms */
-
-#if (defined __k8__) && (!defined __x86_64)
-
-#define ARCHPRNAME "k8"
-
-/*---------------------------------------------------------------------------*/
-/* x86-64 with Linux and GCC:
-   amd64 with FreeBSD and GCC:
-   x86-64 with OSX and GCC:
-   
-   principally, a normal *NIX.  We might use 'long' instead of
-   'long long' for 64-bit integers, but I currently cannot verify this. */
-
-#if defined(__linux__) || defined(__FreeBSD__) || defined(__APPLE__)
-
-/* no long long data type if C89 is used */
-
-#if (defined __STDC__) && (!defined __STDC_VERSION__)
-# define NOLONGLONG
-#endif
-
-#ifdef __linux__
-#define ARCHSYSNAME "unknown-linux"
-#elif defined __FreeBSD__
-#define ARCHSYSNAME "unknown-freebsd"
-#else
-#define ARCHSYSNAME "apple-osx"
-#endif
-#define DEFSMADE
-#define OPENRDMODE "r"
-#define OPENWRMODE "w"
-#define OPENUPMODE "r+"
-#define IEEEFLOAT
-typedef signed char Integ8;
-typedef unsigned char Card8;
-typedef signed short Integ16;
-typedef unsigned short Card16;
-#define HAS16
-typedef signed int Integ32;
-#define PRIInteg32 "d"
-typedef unsigned int Card32;
-typedef signed long long Integ64;
-typedef unsigned long long Card64;
-#define HAS64
-#define LOCALE_NLS
-#endif
-
-#endif /* __k8__ */
-
-/*===========================================================================*/
 /* Intel x86_64 platforms */
 
-#if (defined __x86_64) || (defined __x86_64__)
+#if  (defined __k8__) || (defined __x86_64) || (defined __x86_64__)
 
 #define ARCHPRNAME "x86_64"
 
@@ -1223,6 +1181,7 @@ typedef unsigned long long Card64;
 #else
 #define ARCHSYSNAME "apple-osx"
 #endif
+
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -1236,11 +1195,9 @@ typedef unsigned short Card16;
 typedef signed int Integ32;
 #define PRIInteg32 "d"
 typedef unsigned int Card32;
-#ifndef NOLONGLONG
-typedef signed long long Integ64;
-typedef unsigned long long Card64;
+typedef signed long Integ64;
+typedef unsigned long Card64;
 #define HAS64
-#endif
 #define LOCALE_NLS
 #endif
 

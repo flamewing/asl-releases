@@ -23,7 +23,6 @@
 #include "codevars.h"
 #include "intpseudo.h"
 #include "headids.h"
-#include "intconsts.h"
 #include "errmsg.h"
 
 #include "code960.h"
@@ -813,7 +812,7 @@ static void SwitchTo_960(void)
   Grans[SegCode] = 1;
   ListGrans[SegCode] = 4;
   SegInits[SegCode] = 0;
-  SegLimits[SegCode] = INTCONST_ffffffff;
+  SegLimits[SegCode] = (LargeWord)IntTypeDefs[UInt32].Max;
 
   MakeCode = MakeCode_960;
   IsDef = IsDef_960;

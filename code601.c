@@ -22,7 +22,6 @@
 #include "intpseudo.h"
 #include "codevars.h"
 #include "headids.h"
-#include "intconsts.h"
 #include "errmsg.h"
 
 #include "code601.h"
@@ -2049,7 +2048,7 @@ static void SwitchTo_601(void)
 
   ValidSegs = (1 << SegCode);
   Grans[SegCode] = 1; ListGrans[SegCode] = 4; SegInits[SegCode] = 0;
-  SegLimits[SegCode] = INTCONST_ffffffff;
+  SegLimits[SegCode] = (LargeWord)IntTypeDefs[UInt32].Max;
 
   MakeCode = MakeCode_601;
   IsDef = IsDef_601;

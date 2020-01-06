@@ -5344,6 +5344,10 @@ defined:
       the macro's body shall be written to the listing when the macro
       is expanded.  The default is the value set by the pseudo instruction
       \tty{MACEXP\_DFT}.}
+\item{\tty{EXPREST/NOEXPREST} : rule whether a macro body's lines
+      not fitting into the first two categories shall be written to the
+      listing when the macro is expanded. The default is the value set by
+      the pseudo instruction \tty{MACEXP\_DFT}.}
 \item{\tty{PUBLIC[:section name]}: assigns the macro to a parent section
       instead of the current section.  A section can make macros
       accessible for the outer code this way.  If the section
@@ -5587,6 +5591,48 @@ srl     macro   op,n            ; shift by n places
         endm
 \end{verbatim}
 From now on, the \tty{SRL} instruction has an additional parameter...
+
+\subsubsection{Macro Expansion in the Listing}
+
+If a macro is being called, the macro's body is included in the assembly
+listing, after arguemnts have been expanded.  This can significantly increase
+the listing's size and make it hard to read.  It is therefore possible to
+suppress this expansion totally or in parts.  Fundamentally, AS divides
+the source lines contained in a macro's body into three classes:
+\begin{itemize}
+\item{Macro definitions, i.e. the macro is used to define another macro,
+      or it contains \tty{REPT/IRP/IRPC/WHILE} blocks.}
+\item{Instructions for conditional assembly plus any source lines that have
+      {\it not} been assembled due to conditional assembly.  Since conditional
+      assembly may depend on macro arguments, this subset may also vary.}
+\item{All remaining sourc elines that do not fall under the first two
+      categories.}
+\end{itemize}
+Which parts occur in the listing may be defined individually for every macro.
+When defining a macro, the default is the set defined by the most recent
+\tty{MACEXP\_DFT} instruction (\ref{MACEXPDFT}).  If one of the \tty{EXPAND/NOEXPAND},
+\tty{EXPIF/NOEXPIF} \tty{EXPMACRO/NOEXPMACRO}, or \tty{EXPREST/NOEXPREST}
+directives is used in the macro's definition, they act {\em additionally},
+but with higher preference.  For instance, if expansion had been disabled
+completely (\tty{MACEXP\_DFT OFF}), adding the directive \tty{EXPREST} has the
+effect that when using this macro, only lines are written to the listing
+that remain after conditional assembly and are no macro definitions themselves.
+
+In consequence, changing the set via \tty{MACEXP\_DFT} has no effect on macros
+that have been {\it defined before} this statement.  The listing's section shows
+for defined macros the effective set of expansion directives.  The list given
+in curly braces is shorted so that it only conatins the last (and therefore
+valid) directive for a certain class of source lines.  A \tty{NOIF} given
+via \tty{MACEXP\_DFT} will therefore not show up if the directive \tty{EXPIF}
+had been given specifically for this macro.
+
+There might be cases where it is useful to override the expansion rules for
+a certain macro, regardless whether they were given by \tty{MACEXP\_DFT} or
+individual directives.  The statement \tty{MACEXP\_OVR} (\ref{MACEXPOVR})
+exists for such cases.  It only has an effects on macros subsequently being
+{\it expanded}.  Once again, directives given by this instruction are regarded
+in addition to a macro's rules, and they do with higher priority.  A \tty{MACEXP\_OVR}
+without any arguments disables such an override.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -6242,6 +6288,8 @@ done to start a new 'main chapter'.
 \ttindex{MACEXP}
 \ttindex{MACEXP\_DFT}
 \ttindex{MACEXP\_OVR}
+\label{MACEXPDFT}
+\label{MACEXPOVR}
 
 Once a macro is tested and 'done', one might not want to see it
 in the listing when it is used.  As described in the section about
@@ -6263,6 +6311,9 @@ be expanded upon invocation of the macro:
       and \tty{IRP(C)}) may be excluded from or included in the
       expanded parts via the arguments \tty{MACRO} resp.
       \tty{NOMACRO}.}
+\item{All other lines not fitting into the first two categories
+      may be excluded from or included in the expanded parts via
+      the arguments \tty{REST} resp. \tty{NOREST}.}
 \end{itemize}
 The default is \tty{ON}, i.e. defined macros will be expanded
 completely, of course unless specific expansion arguments were given
@@ -11499,6 +11550,10 @@ described by:
                {An argument to \tty{MACEXP} could not be
                 interpreted.}
                {the unknown argument}
+\errentry{2105}{too many macro expansion arguments}
+               {error}
+               {The number macro expansion arguments exceeds the allowed limit.}
+               {the argument that busted the limit}
 \errentry{2110}{contradicting macro expansion specifications}
                {error}
                {A specification about macro expansion and its

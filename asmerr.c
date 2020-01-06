@@ -546,6 +546,8 @@ static const char *ErrorNum2String(tErrorNum Num, char *Buf, int BufSize)
       msgno = Num_ErrMsgAddrOnDifferentPage; break;
     case ErrNum_UnknownMacExpMod:
       msgno = Num_ErrMsgUnknownMacExpMod; break;
+    case ErrNum_TooManyMacExpMod:
+      msgno = Num_ErrMsgTooManyMacExpMod; break;
     case ErrNum_ConflictingMacExpMod:
       msgno = Num_ErrMsgConflictingMacExpMod; break;
     case ErrNum_InvalidPrepDir:

@@ -28,7 +28,6 @@
 #include "asmdef.h"
 #include "asmpars.h"
 #include "asmdebug.h"
-#include "intconsts.h"
 #include "as.h"
 
 #include "asmsub.h"
@@ -935,7 +934,7 @@ void PrintChunk(ChunkList *NChunk, DissectBitProc Dissect, int ItemsPerLine)
     /* niedrigsten Start finden, der ueberhalb des letzten Endes liegt */
 
     Found = False;
-    FMin = INTCONST_ffffffff;
+    FMin = IntTypeDefs[LargeWordType].Max;
     for (z = 0; z < NChunk->RealLen; z++)
       if (NChunk->Chunks[z].Start >= NewMin)
         if (FMin > NChunk->Chunks[z].Start)

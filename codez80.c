@@ -24,7 +24,6 @@
 #include "codepseudo.h" 
 #include "intpseudo.h"
 #include "codevars.h"
-#include "intconsts.h"
 #include "errmsg.h"
 
 #include "codez80.h"
@@ -54,6 +53,15 @@ typedef enum
   Pref_IN_LW,Pref_IB_LW,Pref_IW_LW,Pref_IW_N
 } PrefType;
 
+typedef enum
+{
+  ePrefixNone,
+  ePrefixW,   /* word processing */
+  ePrefixLW,  /* long word processing */
+  ePrefixIB,  /* one byte more in argument */
+  ePrefixIW   /* one word more in argument */
+} tOpPrefix;
+
 
 #define ExtFlagName    "INEXTMODE"       /* Flag-Symbolnamen */
 #define LWordFlagName  "INLWORDMODE"
@@ -76,10 +84,6 @@ typedef enum
 
 #define IXPrefix 0xdd
 #define IYPrefix 0xfd
-
-#define U32Mask INTCONST_ffffffff
-#define U16Mask INTCONST_ffff0000
-#define U8Mask  INTCONST_ff000000
 
 /*-------------------------------------------------------------------------*/
 
@@ -109,7 +113,18 @@ static PrefType CurrPrefix,       /* mom. explizit erzeugter Praefix */
 /*--------------------------------------------------------------------------*/
 /* Praefix dazuaddieren */
 
-static Boolean ExtendPrefix(PrefType *Dest, char *AddArg)
+static tOpPrefix DecodePrefix(const char *pArg)
+{
+  const char *pPrefNames[] = { "W", "LW", "IB", "IW", NULL };
+  tOpPrefix Result;
+
+  for (Result = ePrefixW; pPrefNames[Result - 1]; Result++)
+    if (!as_strcasecmp(pArg, pPrefNames[Result - 1]))
+      return Result;
+  return ePrefixNone;
+}
+
+static Boolean ExtendPrefix(PrefType *Dest, tOpPrefix AddPrefix)
 {
   Byte SPart,IPart;
 
@@ -145,16 +160,19 @@ static Boolean ExtendPrefix(PrefType *Dest, char *AddArg)
       SPart = 0;
   }
 
-  if (!strcmp(AddArg, "W"))         /* Wortverarbeitung */
-    SPart = 1;
-  else if (!strcmp(AddArg, "LW"))   /* Langwortverarbeitung */
-    SPart = 2;
-  else if (!strcmp(AddArg, "IB"))   /* ein Byte im Argument mehr */
-    IPart = 1;
-  else if (!strcmp(AddArg, "IW"))   /* ein Wort im Argument mehr */
-    IPart = 2;
-  else
-    return False;
+  switch (AddPrefix)
+  {
+    case ePrefixW:
+      SPart = 1; break;
+    case ePrefixLW:
+      SPart = 2; break;
+    case ePrefixIB:
+      IPart = 1; break;
+    case ePrefixIW:
+      IPart = 2; break;
+    default:
+      return False;
+  }
 
   switch ((IPart << 4) | SPart)
   {
@@ -205,13 +223,13 @@ static void GetPrefixCode(PrefType inp, Byte *b1 ,Byte *b2)
 /*--------------------------------------------------------------------------*/
 /* DD-Praefix addieren, nur EINMAL pro Instruktion benutzen! */
 
-static void ChangeDDPrefix(char *Add)
+static void ChangeDDPrefix(tOpPrefix Prefix)
 {
   PrefType ActPrefix;
   int z;
 
   ActPrefix = LastPrefix;
-  if (ExtendPrefix(&ActPrefix, Add))
+  if (ExtendPrefix(&ActPrefix, Prefix))
     if (LastPrefix != ActPrefix)
     {
       if (LastPrefix != Pref_IN_N) RetractWords(2);
@@ -420,11 +438,11 @@ static void DecodeAdr(const tStrComp *pArg)
             {
               AdrVals[AdrCnt++] = (AdrLong >> 8) & 0xff;
               if ((AdrLong >= -0x8000l) && (AdrLong <= 0x7fffl))
-                ChangeDDPrefix("IB");
+                ChangeDDPrefix(ePrefixIB);
               else
               {
                 AdrVals[AdrCnt++] = (AdrLong >> 16) & 0xff;
-                ChangeDDPrefix("IW");
+                ChangeDDPrefix(ePrefixIW);
               }
             }
           }
@@ -437,24 +455,24 @@ static void DecodeAdr(const tStrComp *pArg)
 
   if (IsIndirect(pArg->Str))
   {
-    AdrLong = EvalAbsAdrExpression(pArg, &OK);
+    LongWord Addr = EvalAbsAdrExpression(pArg, &OK);
     if (OK)
     {
       ChkSpace(SegCode);
       AdrMode = ModAbs;
-      AdrVals[0] = AdrLong & 0xff;
-      AdrVals[1] = (AdrLong >> 8) & 0xff;
+      AdrVals[0] = Addr & 0xff;
+      AdrVals[1] = (Addr >> 8) & 0xff;
       AdrCnt = 2;
-      if ((AdrLong & U16Mask) == 0);
+      if (Addr <= 0xfffful);
       else
       {
-        AdrVals[AdrCnt++] = ((AdrLong >> 16) & 0xff);
-        if ((AdrLong & U8Mask) == 0)
-          ChangeDDPrefix("IB");
+        AdrVals[AdrCnt++] = ((Addr >> 16) & 0xff);
+        if (Addr <= 0xfffffful)
+          ChangeDDPrefix(ePrefixIB);
         else
         {
-          AdrVals[AdrCnt++] = ((AdrLong >> 24) & 0xff);
-          ChangeDDPrefix("IW");
+          AdrVals[AdrCnt++] = ((Addr >> 24) & 0xff);
+          ChangeDDPrefix(ePrefixIW);
         }
       }
     }
@@ -479,23 +497,23 @@ static void DecodeAdr(const tStrComp *pArg)
     case 1:
       if (InLongMode())
       {
-        AdrLong = EvalStrIntExpression(pArg, Int32, &OK);
+        LongWord ImmVal = EvalStrIntExpression(pArg, Int32, &OK);
         if (OK)
         {
-          AdrVals[0] = Lo(AdrLong);
-          AdrVals[1] = Hi(AdrLong);
+          AdrVals[0] = Lo(ImmVal);
+          AdrVals[1] = Hi(ImmVal);
           AdrMode = ModImm;
           AdrCnt = 2;
-          if ((AdrLong & U16Mask) == 0);
+          if (ImmVal <= 0xfffful);
           else
           {
-            AdrVals[AdrCnt++] = (AdrLong >> 16) & 0xff;
-            if ((AdrLong & U8Mask) == 0)
-              ChangeDDPrefix("IB");
+            AdrVals[AdrCnt++] = (ImmVal >> 16) & 0xff;
+            if (ImmVal <= 0xfffffful)
+              ChangeDDPrefix(ePrefixIB);
             else
             {
-              AdrVals[AdrCnt++] = (AdrLong >> 24) & 0xff;
-              ChangeDDPrefix("IW");
+              AdrVals[AdrCnt++] = (ImmVal >> 24) & 0xff;
+              ChangeDDPrefix(ePrefixIW);
             }
           }
         }
@@ -588,15 +606,17 @@ static Boolean DecodeSFR(char *Inp, Byte *Erg)
 
 static LargeWord CodeEnd(void)
 {
-  if (ExtFlag) return U32Mask;
-  else if (MomCPU == CPUZ180) return 0x7ffffl;
-  else return 0xffff;
+  IntType Type;
+
+  if (ExtFlag) Type = UInt32;
+  else if (MomCPU == CPUZ180) Type = UInt19;
+  else Type = UInt16;
+  return (LargeWord)IntTypeDefs[Type].Max;
 }
 
 static LargeWord PortEnd(void)
 {
-  if (ExtFlag) return U32Mask;
-  else return 0xff;
+  return (LargeWord)IntTypeDefs[ExtFlag ? UInt32 : UInt16].Max;
 }
 
 /*==========================================================================*/
@@ -2344,18 +2364,18 @@ static void DecodeINA_INAW_OUTA_OUTAW(Word Code)
       if (OK)
       {
         ChkSpace(SegIO);
-        if (AdrLong > 0xffffff)
-          ChangeDDPrefix("IW");
-        else if (AdrLong > 0xffff)
-          ChangeDDPrefix("IB");
+        if (AdrLong > 0xfffffful)
+          ChangeDDPrefix(ePrefixIW);
+        else if (AdrLong > 0xfffful)
+          ChangeDDPrefix(ePrefixIB);
         CodeLen = PrefixCnt;
         BAsmCode[CodeLen++] = 0xed + (OpSize << 4);
         BAsmCode[CodeLen++] = 0xd3 + IsIn;
         BAsmCode[CodeLen++] = AdrLong & 0xff;
         BAsmCode[CodeLen++] = (AdrLong >> 8) & 0xff;
-        if (AdrLong > 0xffff)
+        if (AdrLong > 0xfffful)
           BAsmCode[CodeLen++] = (AdrLong >> 16) & 0xff;
-        if (AdrLong > 0xffffff)
+        if (AdrLong > 0xfffffful)
           BAsmCode[CodeLen++] = (AdrLong >> 24) & 0xff;
       }
     }
@@ -2456,16 +2476,16 @@ static void DecodeJP(Word Code)
     AdrLong = EvalAbsAdrExpression(&ArgStr[ArgCnt], &OK);
     if (OK)
     {
-      if ((AdrLong & U16Mask) == 0)
+      if (AdrLong <= 0xfffful)
       {
         BAsmCode[0] = 0xc2 + Cond;
         BAsmCode[1] = Lo(AdrLong);
         BAsmCode[2] = Hi(AdrLong);
         CodeLen = 3;
       }
-      else if ((AdrLong & U8Mask)==0)
+      else if (AdrLong <= 0xfffffful)
       {
-        ChangeDDPrefix("IB");
+        ChangeDDPrefix(ePrefixIB);
         CodeLen = 4 + PrefixCnt;
         BAsmCode[PrefixCnt] = 0xc2 + Cond;
         BAsmCode[PrefixCnt + 1] = Lo(AdrLong);
@@ -2474,7 +2494,7 @@ static void DecodeJP(Word Code)
       }
       else
       {
-        ChangeDDPrefix("IW");
+        ChangeDDPrefix(ePrefixIW);
         CodeLen = 5 + PrefixCnt;
         BAsmCode[PrefixCnt] = 0xc2 + Cond;
         BAsmCode[PrefixCnt + 1] = Lo(AdrLong);
@@ -2518,16 +2538,16 @@ static void DecodeCALL(Word Code)
     AdrLong = EvalAbsAdrExpression(&ArgStr[ArgCnt], &OK);
     if (OK)
     {
-      if ((AdrLong & U16Mask) == 0)
+      if (AdrLong <= 0xfffful)
       {
         CodeLen = 3;
         BAsmCode[0] = 0xc4 + Condition;
         BAsmCode[1] = Lo(AdrLong);
         BAsmCode[2] = Hi(AdrLong);
       }
-      else if ((AdrLong & U8Mask) == 0)
+      else if (AdrLong <= 0xfffffful)
       {
-        ChangeDDPrefix("IB");
+        ChangeDDPrefix(ePrefixIB);
         CodeLen = PrefixCnt;
         BAsmCode[CodeLen++] = 0xc4 + Condition;
         BAsmCode[CodeLen++] = Lo(AdrLong);
@@ -2536,7 +2556,7 @@ static void DecodeCALL(Word Code)
       }
       else
       {
-        ChangeDDPrefix("IW");
+        ChangeDDPrefix(ePrefixIW);
         CodeLen = PrefixCnt;
         BAsmCode[CodeLen++] = 0xc4 + Condition;
         BAsmCode[CodeLen++] = Lo(AdrLong);
@@ -2939,8 +2959,7 @@ static void DecodeDDIR(Word Code)
     {
       if (OK)
       {
-        NLS_UpString(ArgStr[z].Str);
-        OK = ExtendPrefix(&CurrPrefix, ArgStr[z].Str);
+        OK = ExtendPrefix(&CurrPrefix, DecodePrefix(ArgStr[z].Str));
         if (!OK) WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[z]);
       }
     }

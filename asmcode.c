@@ -19,7 +19,6 @@
 #include "strutil.h"
 #include "asmsub.h"
 #include "asmpars.h"
-#include "intconsts.h"
 #include "asmrelocs.h"
 
 #define CodeBufferSize 512
@@ -60,10 +59,15 @@ void DreheCodes(void)
     case 4:
       for (z = 0; z < l >> 2; z++)
       {
-        DAsmCode[z] = ((DAsmCode[z] & INTCONST_ff000000) >> 24)
-                    + ((DAsmCode[z] & INTCONST_00ff0000) >> 8)
-                    + ((DAsmCode[z] & INTCONST_0000ff00) << 8)
-		    + ((DAsmCode[z] & INTCONST_000000ff) << 24);
+        LongWord Dest;
+        int z2;
+
+        for (z2 = 0, Dest = 0; z2 < 4; z2++)
+        {
+          Dest = (Dest << 8) | (DAsmCode[z] & 0xff);
+          DAsmCode[z] >>= 8;
+        }
+        DAsmCode[z] = Dest;
       }
       break;
   }
