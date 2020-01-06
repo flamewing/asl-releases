@@ -431,36 +431,36 @@ DSE_UART0	cffield		DSCR_UART,0,2
 MBAR_INTC0	equ		MBAR+$48000
 MBAR_INTC1	equ		MBAR+$4c000
 MBAR_INTC	equ		MBAR+$54000
-		include		"coldfire/52xxintc.inc"
+		include		"52xxintc.inc"
 
 ;----------------------------------------------------------------------------
 ; Edge Port Module
 
 MBAR_EPORT	equ		MBAR+$94000
-		include		"coldfire/52xxeport.inc"
+		include		"52xxeport.inc"
 
 ;----------------------------------------------------------------------------
 ; Enhanced DMA Controller
 
 MBAR_EDMA	equ		MBAR+$44000
-		include		"coldfire/52xxedma.inc"
+		include		"52xxedma.inc"
 
 ;----------------------------------------------------------------------------
 ; FlexBus
 
 MBAR_FBUS	equ		MBAR+$8000
-		include		"coldfire/52xxfbus.inc"
+		include		"52xxfbus.inc"
 
 ;----------------------------------------------------------------------------
 ; SDRAM Controller
 
 MBAR_SDRAM	equ		MBAR+$b8000
-		include		"coldfire/52xxdram.inc"
+		include		"52xxdram.inc"
 
 ;----------------------------------------------------------------------------
 ; USB On-the-Go
 
-		include		"coldfire/52xxusb.inc"
+		include		"52xxusb.inc"
 MBAR_OTG	equ		MBAR+$b0000
 		__defusb	"",MBAR_OTG
 
@@ -468,7 +468,7 @@ MBAR_OTG	equ		MBAR+$b0000
 ; LCD Controller
 
 MBAR_LCDC	equ		$ac000
-		include		"coldfire/52xxlcdc.inc"
+		include		"52xxlcdc.inc"
 
 ;----------------------------------------------------------------------------
 ; Touchscreen Controller
@@ -527,7 +527,7 @@ CLKD		cffield		ASP_CLKDIV,0,7	;  ASP clock divider.
 ; FlexCAN
 
 MBAR_CAN	equ		MBAR+$20000
-		include		"coldfire/52xxcan.inc"
+		include		"52xxcan.inc"
 
 __N		set		0
 		rept	16
@@ -542,19 +542,19 @@ __N		set		__N+1
 ; Pulse-Width Modulation Module
 
 MBAR_PWM	equ		MBAR+$90000
-		include		"coldfire/52xxpwm.inc"
+		include		"52xxpwm.inc"
 
 ;----------------------------------------------------------------------------
 ; Synchronous Serial Interface
 
 MBAR_SSI	equ		MBAR+$bc000
-		include		"coldfire/52xxssi.inc"
+		include		"52xxssi.inc"
 
 ;----------------------------------------------------------------------------
 ; Real Time Clock
 
 MBAR_RTC	equ		MBAR+$3c000
-		include		"coldfire/52xxrtc.inc"
+		include		"52xxrtc.inc"
 
 RTC_GOCU	equ		MBAR_RTC+$034	; RTC General Oscillator Clock Upper (32b)
 CNT_UPPER	cffield		RTC_GOCU,0,16	;  Upper word of RTC_GOC[31:0]
@@ -564,14 +564,14 @@ CNT_LOWER	cffield		RTC_GOCL,0,16	;  Lower word of RTC_GOC[31:0]
 ;----------------------------------------------------------------------------
 ; Programmable Interrupt Timer
 
-		include		"coldfire/52xxpit.inc"
+		include		"52xxpit.inc"
 		__defpit	"0",MBAR+$80000
 		__defpit	"1",MBAR+$84000
 
 ;----------------------------------------------------------------------------
 ; DMA Timer
 
-		include		"coldfire/52xxdtim.inc"
+		include		"52xxdtim.inc"
 		__defdtim	"0",MBAR+$70000
 		__defdtim	"1",MBAR+$74000
 		__defdtim	"2",MBAR+$78000
@@ -674,7 +674,7 @@ RXDATA		cffield		DSPI_RXFR{"\{__NS}"},0,16  ;  Receive data.
 ;----------------------------------------------------------------------------
 ; UARTs
 
-		include		"coldfire/52xxuart.inc"
+		include		"52xxuart.inc"
 		__defuart	"0",MBAR+$60000
 		__defuart	"1",MBAR+$64000
 		__defuart	"2",MBAR+$68000
@@ -683,7 +683,7 @@ RXDATA		cffield		DSPI_RXFR{"\{__NS}"},0,16  ;  Receive data.
 ; I2C
 
 MBAR_I2C	equ		MBAR+$58000
-		include		"coldfire/52xxi2c.inc"
+		include		"52xxi2c.inc"
 
 ;----------------------------------------------------------------------------
 

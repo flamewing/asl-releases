@@ -133,14 +133,14 @@ TIFR		port	0x38		; Timer Interrupt Status Register
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
-		include	"avr/wdm21.inc"
+		include	"wdm21.inc"
 
 WDCE		avrbit	WDTCR,4		; Watchdog Change Enable
 
 ;----------------------------------------------------------------------------
 ; Analog Comparator
 
-		include "avr/acm.inc"
+		include "acm.inc"
 
 ;----------------------------------------------------------------------------
 ; A/D Converter

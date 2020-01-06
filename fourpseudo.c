@@ -1,17 +1,12 @@
 /* intpseudo.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Pseudo Instructions used by some 4 bit devices                            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: fourpseudo.c,v 1.1 2016/10/07 19:40:42 alfred Exp $                 */
-/***************************************************************************** 
- * $Log: fourpseudo.c,v $
- * Revision 1.1  2016/10/07 19:40:42  alfred
- * - add missing files
- *
- *****************************************************************************/
 
 /*****************************************************************************
  * Includes
@@ -76,7 +71,7 @@ void DecodeDATA(IntType CodeIntType, IntType DataIntType)
       switch (t.Typ)
       {
         case TempInt:
-          if (!RangeCheck(t.Contents.Int, ValIntType))
+          if (!SymbolQuestionable && !RangeCheck(t.Contents.Int, ValIntType))
           {
             WrError(ErrNum_OverRange);
             ValOK = False;
@@ -89,7 +84,7 @@ void DecodeDATA(IntType CodeIntType, IntType DataIntType)
             DAsmCode[CodeLen++] = t.Contents.Int & ValMask;
           break;
         case TempFloat:
-          WrError(ErrNum_InvOpType);
+          WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[z]);
           ValOK = False;
           break;
         case TempString:

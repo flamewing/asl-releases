@@ -2,6 +2,8 @@
 #define _CODEPSEUDO_H
 /* codepseudo.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Haeufiger benutzte Pseudo-Befehle                                         */
@@ -34,7 +36,8 @@ struct _ASSUMERec;
   
 extern int FindInst(void *Field, int Size, int Count);
 
-extern Boolean IsIndirect(char *Asc);
+extern Boolean IsIndirectGen(const char *Asc, const char *pBeginEnd);
+extern Boolean IsIndirect(const char *Asc);
 
 extern void CodeEquate(ShortInt DestSeg, LargeInt Min, LargeInt Max);
 

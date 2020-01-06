@@ -1,55 +1,12 @@
 /* codeh8_3.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator H8/300(L/H)                                                 */
 /*                                                                           */
-/* Historie: 22.11.1996 Grundsteinlegung                                     */
-/*           15.10.1998 TRAPA nachgetragen                                   */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: codeh8_3.c,v 1.13 2017/06/07 19:42:56 alfred Exp $                    */
-/*****************************************************************************
- * $Log: codeh8_3.c,v $
- * Revision 1.13  2017/06/07 19:42:56  alfred
- * - remove superfluous double PADDING registration
- *
- * Revision 1.12  2015/09/20 10:37:35  alfred
- * - silence some GCC warnings
- *
- * Revision 1.11  2014/12/07 19:14:01  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.10  2014/12/05 11:15:28  alfred
- * - eliminate AND/OR/NOT
- *
- * Revision 1.9  2014/12/05 08:53:45  alfred
- * - eliminate remaining BEGIN/END
- *
- * Revision 1.8  2014/06/16 19:23:18  alfred
- * - adapt to current style
- *
- * Revision 1.7  2011-08-01 19:56:08  alfred
- * - add attribute type to error message
- *
- * Revision 1.6  2010/08/27 14:52:42  alfred
- * - some more overlapping strcpy() cleanups
- *
- * Revision 1.5  2010/04/17 13:14:23  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.4  2007/11/24 22:48:06  alfred
- * - some NetBSD changes
- *
- * Revision 1.3  2005/09/08 17:31:05  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 12:04:47  alfred
- * - relocated DecodeMot(16)Pseudo into separate module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -151,7 +108,7 @@ static Boolean DecodeReg(char *Asc, Byte *Erg, ShortInt *Size)
 {
   int l = strlen(Asc);
 
-  if (!strcasecmp(Asc, "SP"))
+  if (!as_strcasecmp(Asc, "SP"))
   {
     *Erg = 7;
     *Size = (Maximum) ? 2 : 1;
@@ -383,7 +340,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
         }
         break;
       default:
-        WrError(ErrNum_InvOpsize);
+        WrError(ErrNum_InvOpSize);
     }
     goto chk;
   }
@@ -505,7 +462,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
         switch (MomSize)
         {
           case Size8:
-            WrError(ErrNum_InvOpsize);
+            WrError(ErrNum_InvOpSize);
             break;
           case Size16:
             if (ChkRange(DispAcc, -32768, 32767))
@@ -593,7 +550,7 @@ static void DecodeEEPMOV(Word Code)
 
   if (OpSize == eSymbolSizeUnknown)
     OpSize = Ord(!CPU16);
-  if (OpSize > eSymbolSize16Bit) WrError(ErrNum_InvOpsize);
+  if (OpSize > eSymbolSize16Bit) WrError(ErrNum_InvOpSize);
   else if (!ChkArgCnt(0, 0));
   else if ((OpSize == eSymbolSize16Bit) && !ChkCPU32(ErrNum_AddrModeNotSupported));
   else
@@ -964,7 +921,7 @@ static void DecodeMOVTPE_MOVFPE(Word CodeTPE)
     DecodeAdr(pRegArg, MModReg);
     if (AdrMode != ModNone)
     {
-      if (OpSize != eSymbolSize8Bit) WrError(ErrNum_InvOpsize);
+      if (OpSize != eSymbolSize8Bit) WrError(ErrNum_InvOpSize);
       else
       {
         Byte HReg = AdrPart;
@@ -987,7 +944,7 @@ static void DecodePUSH_POP(Word Code)
     DecodeAdr(&ArgStr[1], MModReg);
     if (AdrMode != ModNone)
     {
-      if (OpSize == eSymbolSize8Bit) WrError(ErrNum_InvOpsize);
+      if (OpSize == eSymbolSize8Bit) WrError(ErrNum_InvOpSize);
       else if ((OpSize != eSymbolSize32Bit) || ChkCPU32(ErrNum_AddrModeNotSupported))
       {
         if (OpSize == eSymbolSize32Bit)
@@ -1006,7 +963,7 @@ static void DecodeLDC_STC(Word CodeIsSTC)
     tStrComp *pRegArg = CodeIsSTC ? &ArgStr[1] : &ArgStr[2],
              *pMemArg = CodeIsSTC ? &ArgStr[2] : &ArgStr[1];
 
-    if (strcasecmp(pRegArg->Str, "CCR")) WrError(ErrNum_InvAddrMode);
+    if (as_strcasecmp(pRegArg->Str, "CCR")) WrError(ErrNum_InvAddrMode);
     else
     {
        SetOpSize(eSymbolSize8Bit);
@@ -1245,7 +1202,7 @@ static void DecodeLogicBit(Word Code)
 {
   SetOpSize(eSymbolSize8Bit);
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[2].Str, "CCR")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[2].Str, "CCR")) WrError(ErrNum_InvAddrMode);
   else
   {
     DecodeAdr(&ArgStr[1], MModImm);
@@ -1264,7 +1221,7 @@ static void DecodeADDX_SUBX(Word IsSUBX)
     DecodeAdr(&ArgStr[2], MModReg);
     if (AdrMode != ModNone)
     {
-      if (OpSize != eSymbolSize8Bit) WrError(ErrNum_InvOpsize);
+      if (OpSize != eSymbolSize8Bit) WrError(ErrNum_InvOpSize);
       else
       {
         Byte HReg = AdrPart;
@@ -1292,7 +1249,7 @@ static void DecodeADDS_SUBS(Word IsSUBS)
     DecodeAdr(&ArgStr[2], MModReg);
     if (AdrMode != ModNone)
     {
-      if (((CPU16) && (OpSize != eSymbolSize16Bit)) || ((!CPU16) && (OpSize != eSymbolSize32Bit))) WrError(ErrNum_InvOpsize);
+      if (((CPU16) && (OpSize != eSymbolSize16Bit)) || ((!CPU16) && (OpSize != eSymbolSize32Bit))) WrError(ErrNum_InvOpSize);
       else
       {
         Byte HReg = AdrPart;
@@ -1326,7 +1283,7 @@ static void DecodeMul(Word Code)
     DecodeAdr(&ArgStr[2], MModReg);
     if (AdrMode != ModNone)
     {
-      if (OpSize == eSymbolSize8Bit) WrError(ErrNum_InvOpsize);
+      if (OpSize == eSymbolSize8Bit) WrError(ErrNum_InvOpSize);
       else if ((OpSize != eSymbolSize32Bit) || ChkCPU32(ErrNum_AddrModeNotSupported))
       {
         Byte HReg = AdrPart;
@@ -1369,7 +1326,7 @@ static void DecodeBit1(Word Code)
         DecodeAdr(&ArgStr[2], MModReg | MModIReg | MModAbs8);
         if (AdrMode != ModNone)
         {
-          if (OpSize > eSymbolSize8Bit) WrError(ErrNum_InvOpsize);
+          if (OpSize > eSymbolSize8Bit) WrError(ErrNum_InvOpSize);
           else
           {
             switch (AdrMode)
@@ -1421,7 +1378,7 @@ static void DecodeBit2(Word Code)
       if (!OK) WrError(ErrNum_InvAddrMode);
       if ((OK) && (HSize != 0))
       {
-        WrError(ErrNum_InvOpsize);
+        WrError(ErrNum_InvOpSize);
         OK = False;
       }
     }
@@ -1430,7 +1387,7 @@ static void DecodeBit2(Word Code)
       DecodeAdr(&ArgStr[2], MModReg | MModIReg | MModAbs8);
       if (AdrMode != ModNone)
       {
-        if (OpSize > eSymbolSize8Bit) WrError(ErrNum_InvOpsize);
+        if (OpSize > eSymbolSize8Bit) WrError(ErrNum_InvOpSize);
         else
         {
           switch (AdrMode)
@@ -1582,7 +1539,7 @@ static void DecodeEXTS_EXTU(Word IsEXTS)
     DecodeAdr(&ArgStr[1], MModReg);
     if (AdrMode != ModNone)
     {
-      if ((OpSize != eSymbolSize16Bit) && (OpSize != 2)) WrError(ErrNum_InvOpsize);
+      if ((OpSize != eSymbolSize16Bit) && (OpSize != 2)) WrError(ErrNum_InvOpSize);
       else
       {
         CodeLen = 2;
@@ -1608,7 +1565,7 @@ static void DecodeDAA_DAS(Word Code)
     DecodeAdr(&ArgStr[1], MModReg);
     if (AdrMode != ModNone)
     {
-      if (OpSize != eSymbolSize8Bit) WrError(ErrNum_InvOpsize);
+      if (OpSize != eSymbolSize8Bit) WrError(ErrNum_InvOpSize);
       else
       {
         CodeLen = 2;
@@ -1621,7 +1578,7 @@ static void DecodeDAA_DAS(Word Code)
 static void DecodeCond(Word Code)
 {
   if (!ChkArgCnt(1, 1));
-  else if ((OpSize != eSymbolSizeUnknown) && (OpSize != eSymbolSizeFloat32Bit) && (OpSize != eSymbolSize32Bit)) WrError(ErrNum_InvOpsize);
+  else if ((OpSize != eSymbolSizeUnknown) && (OpSize != eSymbolSizeFloat32Bit) && (OpSize != eSymbolSize32Bit)) WrError(ErrNum_InvOpSize);
   else
   {
     Boolean OK;
@@ -1697,7 +1654,7 @@ static void DecodeBSR(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(1, 1));
-  else if ((OpSize != eSymbolSizeUnknown) && (OpSize != eSymbolSizeFloat32Bit) && (OpSize != eSymbolSize32Bit)) WrError(ErrNum_InvOpsize);
+  else if ((OpSize != eSymbolSizeUnknown) && (OpSize != eSymbolSizeFloat32Bit) && (OpSize != eSymbolSize32Bit)) WrError(ErrNum_InvOpSize);
   else
   {
     Boolean OK;
@@ -1922,7 +1879,6 @@ static void SwitchTo_H8_3(void)
 {
   TurnWords = True;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   PCSymbol = "*";
   HeaderID = 0x68;

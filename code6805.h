@@ -2,6 +2,8 @@
 #define _CODE6805_H
 /* code6805.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator 68(HC)05/08                                                 */

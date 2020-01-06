@@ -2,17 +2,15 @@
 #define _ASMSUB_H
 /* asmsub.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Unterfunktionen, vermischtes                                              */
 /*                                                                           */
-/* Historie:  4. 5. 1996  Grundsteinlegung                                   */
-/* Historie: 13. 8.1997 KillBlanks-Funktionen nach stringutil.c geschoben    */
-/*           17. 8.1998 Unterfunktion zur Buchhaltung Adressbereiche         */
-/*           18. 4.1999 Ausgabeliste Sharefiles                              */
-/*           13. 2.2000 Ausgabeliste Listing                                 */
-/*                                                                           */
 /*****************************************************************************/
+
+#define LISTLINESPACE 20
 
 struct sLineComp;
 struct sStrComp;
@@ -23,10 +21,8 @@ void
 #endif
 );
 
-extern Word ErrorCount,WarnCount;
 
-
-extern void AsmSubInit(void);
+extern void AsmSubPassInit(void);
 
 
 extern long GTime(void);
@@ -67,26 +63,26 @@ extern char *NamePart(char *Name);
 extern char *PathPart(char *Name);
 
 
-extern char *FloatString(Double f);
+extern void FloatString(char *pDest, int DestSize, Double f);
 
-extern void StrSym(TempResult *t, Boolean WithSystem, char *Dest, int DestLen);
+extern void StrSym(TempResult *t, Boolean WithSystem, char *Dest, int DestLen, unsigned Radix);
 
 
 extern void ResetPageCounter(void);
 
 extern void NewPage(ShortInt Level, Boolean WithFF);
 
-extern void WrLstLine(char *Line);
+extern void WrLstLine(const char *Line);
 
 extern void SetListLineVal(TempResult *t);
+
+extern void LimitListLine(void);
 
 extern void PrintOneLineMuted(FILE *pFile, const char *pLine,
                               const struct sLineComp *pMuteComponent,
                               const struct sLineComp *pMuteComponent2);
 extern void PrLineMarker(FILE *pFile, const char *pLine, const char *pPrefix, const char *pTrailer,
                          char Marker, const struct sLineComp *pLineComp);
-extern void GenLineForMarking(char *pDest, unsigned DestSize, const char *pSrc, const char *pPrefix);
-extern void GenLineMarker(char *pDest, unsigned DestSize, char Marker, const struct sLineComp *pLineComp, const char *pPrefix);
 
 extern LargeWord ProgCounter(void);
 
@@ -132,9 +128,6 @@ extern Boolean ChkSymbName(char *sym);
 
 extern Boolean ChkMacSymbName(char *sym);
 
-
-extern void ChkIO(Word ErrNo);
-extern void ChkStrIO(Word ErrNo, const struct sStrComp *pComp);
 
 
 extern void AddIncludeList(char *NewPath);

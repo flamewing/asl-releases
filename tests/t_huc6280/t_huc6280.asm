@@ -7,7 +7,7 @@
 	adc	$4567
 	adc	$4567,x
 	adc	$4567,y
-	adc	($4567)
+	adc	($45)
 	adc	($45,x)
 	adc	($45),y
 
@@ -17,7 +17,7 @@
 	and	$4567
 	and	$4567,x
 	and	$4567,y
-	and	($4567)
+	and	($45)
 	and	($45,x)
 	and	($45),y
 
@@ -94,7 +94,7 @@
 	cmp	$4567
 	cmp	$4567,x
 	cmp	$4567,y
-	cmp	($4567)
+	cmp	($45)
 	cmp	($45,x)
 	cmp	($45),y
 
@@ -125,7 +125,7 @@
 	eor	$4567
 	eor	$4567,x
 	eor	$4567,y
-	eor	($4567)
+	eor	($45)
 	eor	($45,x)
 	eor	($45),y
 
@@ -152,7 +152,7 @@
 	lda	$4567
 	lda	$4567,x
 	lda	$4567,y
-	lda	($4567)
+	lda	($45)
 	lda	($45,x)
 	lda	($45),y
 
@@ -183,7 +183,7 @@
 	ora	$4567
 	ora	$4567,x
 	ora	$4567,y
-	ora	($4567)
+	ora	($45)
 	ora	($45,x)
 	ora	($45),y
 
@@ -240,7 +240,7 @@
 	sbc	$4567
 	sbc	$4567,x
 	sbc	$4567,y
-	sbc	($4567)
+	sbc	($45)
 	sbc	($45,x)
 	sbc	($45),y
 
@@ -270,7 +270,7 @@
 	sta	$4567
 	sta	$4567,x
 	sta	$4567,y
-	sta	($4567)
+	sta	($45)
 	sta	($45,x)
 	sta	($45),y
 

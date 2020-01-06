@@ -1,23 +1,12 @@
 /* codeol40.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator OKI OLMS-40-Familie                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeol40.c,v 1.3 2016/11/24 22:43:12 alfred Exp $
- *****************************************************************************
- * $Log: codeol40.c,v $
- * Revision 1.3  2016/11/24 22:43:12  alfred
- * - correct comments about file name
- *
- * Revision 1.2  2016/11/01 13:43:31  alfred
- * - add OLMS-40 meta instructions
- *
- * Revision 1.1  2016/11/01 11:48:05  alfred
- * - add support for OKI OLMS-40
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -53,7 +42,7 @@ typedef enum
   ModTL = 13,
   ModTH = 14,
   ModPPI = 15,
-  ModNone = 0x7f,
+  ModNone = 0x7f
 } tAdrMode;
 
 #define MModA (1 << ModA)
@@ -113,7 +102,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
     Mask &= ~(MModW);
 
   for (pNot = Notations; pNot->pAsc; pNot++)
-    if (!strcasecmp(pArg->Str, pNot->pAsc))
+    if (!as_strcasecmp(pArg->Str, pNot->pAsc))
     {
       AdrMode = pNot->AdrMode;
       goto AdrFound;
@@ -288,7 +277,7 @@ static void DecodeBit(Word Code)
 {
   if (ArgCnt == 1)
   {
-    if (!strcasecmp(ArgStr[1].Str, "C"))
+    if (!as_strcasecmp(ArgStr[1].Str, "C"))
       BAsmCode[CodeLen++] = Hi(Code);
     else
       WrError(ErrNum_InvAddrMode);
@@ -615,7 +604,6 @@ static void SwitchTo_OLMS40(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = pDescr->Id;

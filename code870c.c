@@ -1,39 +1,12 @@
 /* code870c.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
-/* Codegenerator TLCS-870                                                    */
+/* Codegenerator TLCS-870/C                                                  */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code870c.c,v 1.8 2015/10/23 08:43:12 alfred Exp $                  */
-/*****************************************************************************
- * $Log: code870c.c,v $
- * Revision 1.8  2015/10/23 08:43:12  alfred
- * - display name of unimplemented instruction
- *
- * Revision 1.7  2014/11/23 17:53:46  alfred
- * - add J pseudo instruction
- * - correct P and M conditions
- *
- * Revision 1.6  2014/11/23 17:05:54  alfred
- * *** empty log message ***
- *
- * Revision 1.5  2014/11/22 11:47:36  alfred
- * - first complete TLCS-870/C target
- *
- * Revision 1.4  2014/11/21 22:11:37  alfred
- * - up to LD CF
- *
- * Revision 1.3  2014/11/19 22:55:01  alfred
- * - CMP works, possibly other ALU ops
- *
- * Revision 1.2  2014/11/18 18:33:28  alfred
- * - got up to before XCH
- *
- * Revision 1.1  2014/11/17 23:51:32  alfred
- * - begun with TLCS-870/C
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -69,7 +42,7 @@ enum
   ModReg8 = 0,
   ModReg16 = 1,
   ModImm = 2,
-  ModMem = 3,
+  ModMem = 3
 };
 
 #define MModReg8 (1 << ModReg8)
@@ -120,7 +93,7 @@ static Boolean DecodeRegDisp(tStrComp *pArg, Byte *pRegFlag, LongInt *pDispAcc, 
       StrCompSplitRef(pArg, &Remainder, pArg, EPos);
 
     for (z = 0; z < AdrRegCnt; z++)
-      if (!strcasecmp(pArg->Str, AdrRegs[z]))
+      if (!as_strcasecmp(pArg->Str, AdrRegs[z]))
         break;
     if (z >= AdrRegCnt)
     {
@@ -177,7 +150,7 @@ static void DecodeAdr(const tStrComp *pArg, Byte Erl, Boolean IsDest)
   }
 
   for (z = 0; z < Reg16Cnt; z++)
-    if (!strcasecmp(pArg->Str, Reg16Names[z]))
+    if (!as_strcasecmp(pArg->Str, Reg16Names[z]))
     {
       AdrType = ModReg16;
       OpSize = 1;
@@ -192,19 +165,19 @@ static void DecodeAdr(const tStrComp *pArg, Byte Erl, Boolean IsDest)
     StrCompRefRight(&Arg, pArg, 1);
     StrCompShorten(&Arg, 1);
 
-    if ((!strcasecmp(Arg.Str, "+SP")) && (!IsDest))
+    if ((!as_strcasecmp(Arg.Str, "+SP")) && (!IsDest))
     {
       AdrType = ModMem;
       AdrMode = 0xe6;
       goto chk;
     }
-    if ((!strcasecmp(Arg.Str, "SP-")) && (IsDest))
+    if ((!as_strcasecmp(Arg.Str, "SP-")) && (IsDest))
     {
       AdrType = ModMem;
       AdrMode = 0xe6;
       goto chk;
     }
-    if ((!strcasecmp(Arg.Str, "PC+A")) && (!IsDest))
+    if ((!as_strcasecmp(Arg.Str, "PC+A")) && (!IsDest))
     {
       AdrType = ModMem;
       AdrMode = 0x4f;
@@ -355,7 +328,7 @@ static Boolean DecodeSPDisp(const tStrComp *pArg, Byte *pDisp, Boolean *pDispNeg
 
   if (IsIndirect(pArg->Str))
     return False;
-  if (strncasecmp(pArg->Str, "SP", 2))
+  if (as_strncasecmp(pArg->Str, "SP", 2))
     return False;
   if (strlen(pArg->Str) < 3)
     return False;
@@ -439,7 +412,7 @@ static void DecodeLD(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(2, 2));
-  else if (!strcasecmp(ArgStr[1].Str, "PSW"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "PSW"))
   {
     BAsmCode[2] = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
     if (OK)
@@ -449,7 +422,7 @@ static void DecodeLD(Word Code)
       CodeLen = 3;
     }
   }
-  else if (!strcasecmp(ArgStr[1].Str, "RBS"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "RBS"))
   {
     BAsmCode[1] = EvalStrIntExpression(&ArgStr[2], UInt1, &OK) << 1;
     if (OK)
@@ -458,12 +431,12 @@ static void DecodeLD(Word Code)
       CodeLen = 2;
     }
   }
-  else if ((!strcasecmp(ArgStr[1].Str, "SP")) && (DecodeSPDisp(&ArgStr[2], BAsmCode + 1, &NegFlag)))
+  else if ((!as_strcasecmp(ArgStr[1].Str, "SP")) && (DecodeSPDisp(&ArgStr[2], BAsmCode + 1, &NegFlag)))
   {
     BAsmCode[0] = NegFlag ? 0x3f : 0x37;
     CodeLen = 2;
   }
-  else if (!strcasecmp(ArgStr[1].Str, "CF"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "CF"))
   {
     if (!SplitBit(&ArgStr[2], &Bit)) WrError(ErrNum_InvBitPos);
     else
@@ -497,7 +470,7 @@ static void DecodeLD(Word Code)
       }
     }
   }
-  else if (!strcasecmp(ArgStr[2].Str, "CF"))
+  else if (!as_strcasecmp(ArgStr[2].Str, "CF"))
   {
     if (!SplitBit(&ArgStr[1], &Bit)) WrError(ErrNum_InvBitPos);
     else
@@ -702,7 +675,7 @@ static void DecodeLDW(Word Code)
 static void DecodePUSH_POP(Word Code)
 {
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "PSW"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "PSW"))
   {
     CodeLen = 2;
     BAsmCode[0] = 0xe8;
@@ -797,7 +770,7 @@ static void DecodeALU(Word Code)
   Byte HReg, HLen;
 
   if (!ChkArgCnt(2, 2));
-  else if (!strcasecmp(ArgStr[1].Str, "CF"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "CF"))
   {
     Byte Bit;
 
@@ -1015,7 +988,7 @@ static void DecodeNEG(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1].Str, "CS")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "CS")) WrError(ErrNum_InvAddrMode);
   else
   {
     DecodeAdr(&ArgStr[2], MModReg16, False);
@@ -1031,7 +1004,7 @@ static void DecodeNEG(Word Code)
 static void DecodeROLD_RORD(Word Code)
 {
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1].Str, "A")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "A")) WrError(ErrNum_InvAddrMode);
   else
   {
     DecodeAdr(&ArgStr[2], MModMem, False);
@@ -1048,7 +1021,7 @@ static void DecodeTEST_CPL_SET_CLR(Word Code)
   Byte Bit;
 
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "CF"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "CF"))
   {
     switch (Lo(Code))
     {
@@ -1429,6 +1402,11 @@ static void SwitchFrom_870C(void)
   DeinitFields();
 }
 
+static Boolean TrueFnc(void)
+{
+  return True;
+}
+
 static void SwitchTo_870C(void)
 {
   PFamilyDescr FoundDescr;
@@ -1437,7 +1415,7 @@ static void SwitchTo_870C(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = True;
+  SetIsOccupiedFnc = TrueFnc;
 
   PCSymbol = "$";
   HeaderID = FoundDescr->Id;

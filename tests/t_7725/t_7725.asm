@@ -159,7 +159,12 @@ lab:
 	op	mov	@a,non
 		rpdec
 
+	data	0
 	data	1,2,3
+	data	16777215
+	data	-10000
+	data	-8388608
+	data	'ABC'
 	data	"a"
 	data	"ab"
 	data	"abc"

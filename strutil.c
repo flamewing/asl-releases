@@ -1,77 +1,22 @@
 /* strutil.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* haeufig benoetigte String-Funktionen                                      */
 /*                                                                           */
-/* Historie:  5. 5.1996 Grundsteinlegung                                     */
-/*           13. 8.1997 KillBlanks-Funktionen aus asmsub.c heruebergenommen  */
-/*           29. 8.1998 sprintf-Emulation                                    */
-/*           17. 4.1999 strcasecmp gegen Nullzeiger geschuetzt               */
-/*           30. 5.1999 ConstLongInt akzeptiert auch 0x fuer Hex-Zahlen      */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: strutil.c,v 1.17 2017/06/16 19:03:19 alfred Exp $                     */
-/*****************************************************************************
- * $Log: strutil.c,v $
- * Revision 1.17  2017/06/16 19:03:19  alfred
- * - remove superfluous 0x from output
- *
- * Revision 1.16  2016/03/25 19:05:57  alfred
- * - allow Intel hex notation for addresses passed to tools
- *
- * Revision 1.15  2014/12/14 17:58:47  alfred
- * - remove static variables in strutil.c
- *
- * Revision 1.14  2014/12/07 19:14:02  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.13  2014/12/03 19:01:00  alfred
- * - remove static return value
- *
- * Revision 1.12  2014/12/03 18:54:53  alfred
- * - rework to current style
- *
- * Revision 1.11  2013/12/18 22:21:54  alfred
- * - regard \ escaping for quotes
- *
- * Revision 1.10  2013/08/07 19:44:38  alfred
- * - add test for overlong lines
- *
- * Revision 1.9  2013/08/05 20:10:10  alfred
- * - handle overlong lines
- *
- * Revision 1.8  2012-08-19 09:39:02  alfred
- * - handle cases where strcpy is a macro
- *
- * Revision 1.7  2010/04/17 13:14:24  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.6  2008/11/23 10:39:17  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.5  2007/11/24 22:48:08  alfred
- * - some NetBSD changes
- *
- * Revision 1.4  2005/10/02 10:00:46  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.3  2004/05/30 20:54:26  alfred
- * - added CopyNoBlanks()
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include "strutil.h"
 #undef strlen   /* VORSICHT, Rekursion!!! */
-#ifdef BROKEN_SPRINTF
-#undef sprintf
-#endif
 
-Boolean HexLowerCase;	    /* Hex-Konstanten mit Kleinbuchstaben */
+char HexStartCharacter;	    /* characters to use for 10,11,...35 */
 
 /*--------------------------------------------------------------------------*/
 /* eine bestimmte Anzahl Leerzeichen liefern */
@@ -92,46 +37,19 @@ const char *Blanks(int cnt)
   return BlkStr + (BlkStrLen - cnt);
 }
 
-/****************************************************************************/
-/* eine Integerzahl in eine Hexstring umsetzen. Weitere vordere Stellen als */
-/* Nullen */
+/*!------------------------------------------------------------------------
+ * \fn     SysString(char *pDest, int DestSize, LargeWord i, int System, int Stellen, Boolean ForceLeadZero, char StartCharacter)
+ * \brief  convert number to string in given number system, leading zeros
+ * \param  pDest where to write
+ * \param  DestSize size of dest buffer
+ * \param  i number to convert
+ * \param  Stellen minimum length of output
+ * \param  ForceLeadZero prepend zero if first character is no number
+ * \param  System number system
+ * \param  StartCharacter 'a' or 'A' for hex digits
+ * ------------------------------------------------------------------------ */
 
-int HexString2(char *pDest, int DestSize, LargeWord i, Byte Stellen, Boolean LowerCase)
-{
-  int Cnt, Len = 0;
-  LargeWord digit;
-  char *ptr;
-
-  if (DestSize < 1)
-    return 0;
-
-  if (Stellen > DestSize - 1)
-    Stellen = DestSize - 1;
-
-  ptr = pDest + DestSize - 1;
-  *ptr = '\0';
-  Cnt = Stellen;
-  do
-  {
-    digit = i & 15;
-    if (digit < 10)
-      *(--ptr) = digit + '0';
-    else if (LowerCase)
-      *(--ptr) = digit - 10 + 'a';
-    else
-      *(--ptr) = digit - 10 + 'A';
-    i = i >> 4;
-    Cnt--;
-    Len++;
-  }
-  while ((Cnt > 0) || (i != 0));
-  if (ptr != pDest)
-    strmov(pDest, ptr);
-
-  return Len;
-}
-
-int SysString(char *pDest, int DestSize, LargeWord i, LargeWord System, int Stellen)
+int SysString(char *pDest, int DestSize, LargeWord i, int System, int Stellen, Boolean ForceLeadZero, char StartCharacter)
 {
   int Len = 0, Cnt;
   LargeWord digit;
@@ -148,69 +66,30 @@ int SysString(char *pDest, int DestSize, LargeWord i, LargeWord System, int Stel
   Cnt = Stellen;
   do
   {
+    if (ptr <= pDest)
+      break;
+
     digit = i % System;
     if (digit < 10)
       *(--ptr) = digit + '0';
-    else if (HexLowerCase)
-      *(--ptr) = digit - 10 + 'a';
     else
-      *(--ptr) = digit - 10 + 'A';
+      *(--ptr) = digit - 10 + StartCharacter;
     i /= System;
     Cnt--;
     Len++;
   }
   while ((Cnt > 0) || (i != 0));
 
+  if (ForceLeadZero && !isdigit(*ptr) && (ptr > pDest))
+  {
+    *(--ptr) = '0';
+    Len++;
+  }
+
   if (ptr != pDest)
     strmov(pDest, ptr);
   return Len;
 }
-
-/*--------------------------------------------------------------------------*/
-/* dito, nur vorne Leerzeichen */
-
-void HexBlankString(char *pDest, unsigned DestSize, LargeWord i, Byte Stellen)
-{
-  unsigned DestLen;
-
-  DestLen = HexString(pDest, DestSize, i, 0);
-  if (DestLen < Stellen)
-    strmaxprep(pDest, Blanks(Stellen - DestLen), DestSize);
-}
-
-/*---------------------------------------------------------------------------*/
-/* Da manche Systeme (SunOS) Probleme mit der Ausgabe extra langer Ints
-   haben, machen wir das jetzt zu Fuss :-( */
-
-char *LargeString(char *pDest, LargeInt i)
-{
-  Boolean SignFlag = False;
-  String tmp;
-  char *p, *p2;
-
-  if (i < 0)
-  {
-    i = -i;
-    SignFlag = True;
-  }
-
-  p = tmp;
-  do
-  {
-    *(p++) = '0' + (i % 10);
-    i /= 10;
-  }
-  while (i > 0);
-
-  p2 = pDest;
-  if (SignFlag)
-    *(p2++) = '-';
-  while (p > tmp)
-    *(p2++) = (*(--p));
-  *p2 = '\0';
-  return pDest;
-}
-
 
 /*---------------------------------------------------------------------------*/
 /* strdup() is not part of ANSI C89 */
@@ -229,31 +108,361 @@ char *as_strdup(const char *s)
     strcpy(ptr, s);
   return ptr;
 }
+/*---------------------------------------------------------------------------*/
+/* ...so is snprintf... */
 
-#ifdef NEEDS_CASECMP
-int strcasecmp(const char *src1, const char *src2)
+typedef struct
+{
+  enum { eNotSet, eSet, eFinished } ArgState[3];
+  Boolean InFormat, LeadZero, Signed, LeftAlign, AddPlus, ForceLeadZero;
+  int Arg[3], CurrArg, IntSize;
+} tFormatContext;
+
+static void ResetFormatContext(tFormatContext *pContext)
+{
+  int z;
+
+  for (z = 0; z < 3; z++)
+  {
+    pContext->Arg[z] = 0;
+    pContext->ArgState[z] = eNotSet;
+  }
+  pContext->CurrArg = 0;
+  pContext->IntSize = 0;
+  pContext->InFormat =
+  pContext->LeadZero =
+  pContext->ForceLeadZero =
+  pContext->Signed =
+  pContext->LeftAlign =
+  pContext->AddPlus = False;
+}
+
+static int AppendPad(char **ppDest, int *pDestSize, char Src, int Cnt)
+{
+  int AddCnt = Cnt;
+
+  if (AddCnt + 1 > *pDestSize)
+    AddCnt = *pDestSize - 1;
+  memset(*ppDest, Src, AddCnt);
+  *ppDest += AddCnt;
+  *pDestSize -= AddCnt;
+  return Cnt;
+}
+
+#if 0
+static int FloatConvert(char *pDest, int DestSize, double Src, int Digits, Boolean TruncateTrailingZeros, char FormatType)
+{
+  int DecPt;
+  int Sign, Result = 0;
+  char *pBuf, *pEnd, *pRun;
+
+  (void)FormatType;
+
+  if (DestSize < Digits + 6)
+  {
+    *pDest = '\0';
+    return Result;
+  }
+
+  if (Digits < 0)
+    Digits = 6;
+
+  pBuf = ecvt(Src, Digits + 1, &DecPt, &Sign);
+  puts(pBuf);
+  pEnd = pBuf + strlen(pBuf) - 1;
+  if (TruncateTrailingZeros)
+  {
+    for (; pEnd > pBuf + 1; pEnd--)
+      if (*pEnd != '0')
+        break;
+  }
+
+  pRun = pDest;
+  if (Sign)
+    *pRun++ = '-';
+  *pRun++ = *pBuf;
+  *pRun++ = '.';
+  memcpy(pRun, pBuf + 1, pEnd - pBuf); pRun += pEnd - pBuf;
+  *pRun = '\0';
+  Result = pRun - pDest;
+  Result += as_snprintf(pRun, DestSize - Result, "e%+02d", DecPt - 1);
+  return Result;
+}
+#else
+static int FloatConvert(char *pDest, int DestSize, double Src, int Digits, Boolean TruncateTrailingZeros, char FormatType)
+{
+  char Format[10];
+
+  (void)DestSize;
+  (void)TruncateTrailingZeros;
+  strcpy(Format, "%0.*e");
+  Format[4] = (HexStartCharacter == 'a') ? FormatType : toupper(FormatType);
+  sprintf(pDest, Format, Digits, Src);
+  return strlen(pDest);
+}
+#endif
+
+static int Append(char **ppDest, int *pDestSize, const char *pSrc, int Cnt, tFormatContext *pFormatContext)
+{
+  int AddCnt = Cnt, PadLen, Result = 0;
+
+  PadLen = pFormatContext->Arg[0] - Cnt;
+  if (PadLen < 0)
+    PadLen = 0;
+
+  if ((PadLen > 0) && !pFormatContext->LeftAlign)
+    Result += AppendPad(ppDest, pDestSize, ' ', PadLen);
+
+  if (AddCnt + 1 > *pDestSize)
+    AddCnt = *pDestSize - 1;
+  if (AddCnt > 0)
+    memcpy(*ppDest, pSrc, AddCnt);
+  *ppDest += AddCnt;
+  *pDestSize -= AddCnt;
+
+  if ((PadLen > 0) && pFormatContext->LeftAlign)
+    Result += AppendPad(ppDest, pDestSize, ' ', PadLen);
+
+  if (pFormatContext->InFormat)
+    ResetFormatContext(pFormatContext);
+
+  return Result + Cnt;
+}
+
+int as_vsnprcatf(char *pDest, int DestSize, const char *pFormat, va_list ap)
+{
+  const char *pFormatStart = pFormat;
+  int Result = 0, OrigLen = strlen(pDest);
+  tFormatContext FormatContext;
+  LargeInt IntArg;
+
+  if (DestSize == (int)sizeof(char*))
+  {
+    fprintf(stderr, "pointer size passed to as_vsnprcatf\n");
+    exit(2);
+  }
+
+  DestSize -= OrigLen;
+  if (DestSize < 0)
+    DestSize = 0;
+  pDest += OrigLen;
+
+  ResetFormatContext(&FormatContext);
+  for (; *pFormat; pFormat++)
+    if (FormatContext.InFormat)
+      switch (*pFormat)
+      {
+        case '0': case '1': case '2': case '3': case '4':
+        case '5': case '6': case '7': case '8': case '9':
+        {
+          if (!FormatContext.CurrArg && !FormatContext.ArgState[FormatContext.CurrArg] && (*pFormat == '0'))
+            FormatContext.LeadZero = True;
+          FormatContext.Arg[FormatContext.CurrArg] = (FormatContext.Arg[FormatContext.CurrArg] * 10) + (*pFormat - '0');
+          FormatContext.ArgState[FormatContext.CurrArg] = eSet;
+          break;
+        }
+        case '-':
+          if (!FormatContext.CurrArg && !FormatContext.ArgState[FormatContext.CurrArg])
+            FormatContext.LeftAlign = True;
+          break;
+        case '+':
+          FormatContext.AddPlus = True;
+          break;
+        case '~':
+          FormatContext.ForceLeadZero = True;
+          break;
+        case '*':
+          FormatContext.Arg[FormatContext.CurrArg] = va_arg(ap, int);
+          FormatContext.ArgState[FormatContext.CurrArg] = eFinished;
+          break;
+        case '.':
+          if (FormatContext.CurrArg < 3)
+            FormatContext.CurrArg++;
+          break;
+        case 'c':
+        {
+          char ch = va_arg(ap, int);
+
+          Result += Append(&pDest, &DestSize, &ch, 1, &FormatContext);
+          break;
+        }
+        case '%':
+          Result += Append(&pDest, &DestSize, "%", 1, &FormatContext);
+          break;
+        case 'l':
+        {
+          FormatContext.IntSize++;
+          FormatContext.CurrArg = 2;
+          break;
+        }
+        case 'd':
+        {
+          if (FormatContext.IntSize >= 3)
+            IntArg = va_arg(ap, LargeInt);
+          else
+#ifndef NOLONGLONG
+          if (FormatContext.IntSize >= 2)
+            IntArg = va_arg(ap, long long);
+          else
+#endif
+          if (FormatContext.IntSize >= 1)
+            IntArg = va_arg(ap, long);
+          else
+            IntArg = va_arg(ap, int);
+          FormatContext.Arg[1] = 10;
+          FormatContext.Signed = True;
+          goto IntCommon;
+        }
+        case 'u':
+        {
+          if (FormatContext.IntSize >= 3)
+            IntArg = va_arg(ap, LargeWord);
+          else
+#ifndef NOLONGLONG
+          if (FormatContext.IntSize >= 2)
+            IntArg = va_arg(ap, unsigned long long);
+          else
+#endif
+          if (FormatContext.IntSize >= 1)
+            IntArg = va_arg(ap, unsigned long);
+          else
+            IntArg = va_arg(ap, unsigned);
+          goto IntCommon;
+        }
+        case 'x':
+        {
+          if (FormatContext.IntSize >= 3)
+            IntArg = va_arg(ap, LargeWord);
+          else
+#ifndef NOLONGLONG
+          if (FormatContext.IntSize >= 2)
+            IntArg = va_arg(ap, unsigned long long);
+          else
+#endif
+          if (FormatContext.IntSize)
+            IntArg = va_arg(ap, unsigned long);
+          else
+            IntArg = va_arg(ap, unsigned);
+          FormatContext.Arg[1] = 16;
+          goto IntCommon;
+        }
+        IntCommon:
+        {
+          char Str[100], *pStr = Str;
+          int Cnt;
+          int NumPadZeros = 0;
+
+          if (FormatContext.Signed)
+          {
+            if (IntArg < 0)
+            {
+              *pStr++ = '-';
+              IntArg = 0 - IntArg;
+            }
+            else if (FormatContext.AddPlus)
+              *pStr++ = '+';
+          }
+          if (FormatContext.LeadZero)
+          {
+            NumPadZeros = FormatContext.Arg[0];
+            FormatContext.Arg[0] = 0;
+          }
+          Cnt = (pStr - Str)
+              + SysString(pStr, sizeof(Str) - (pStr - Str), IntArg,
+                          FormatContext.Arg[1] ? FormatContext.Arg[1] : 10,
+                          NumPadZeros, FormatContext.ForceLeadZero, HexStartCharacter);
+          if (Cnt > (int)sizeof(Str))
+            Cnt = sizeof(Str);
+          Result += Append(&pDest, &DestSize, Str, Cnt, &FormatContext);
+          break;
+        }
+        case 'e':
+        case 'f':
+        case 'g':
+        {
+          char Str[100];
+          int Cnt;
+
+          Cnt = FloatConvert(Str, sizeof(Str), va_arg(ap, double), FormatContext.Arg[1], False, *pFormat);
+          if (Cnt > (int)sizeof(Str))
+            Cnt = sizeof(Str);
+          Result += Append(&pDest, &DestSize, Str, Cnt, &FormatContext);
+          break;
+        }
+        case 's':
+        {
+          const char *pStr = va_arg(ap, char*);
+
+          Result += Append(&pDest, &DestSize, pStr, strlen(pStr), &FormatContext);
+          break;
+        }
+        default:
+          fprintf(stderr, "invalid format: '%c' in '%s'\n", *pFormat, pFormatStart);
+          exit(255);
+      }
+    else if (*pFormat == '%')
+      FormatContext.InFormat = True;
+    else
+      Result += Append(&pDest, &DestSize, pFormat, 1, &FormatContext);
+  if (DestSize > 0)
+    *pDest++ = '\0';
+  return Result;
+}
+
+int as_vsnprintf(char *pDest, int DestSize, const char *pFormat, va_list ap)
+{
+  if (DestSize > 0)
+    *pDest = '\0';
+  return as_vsnprcatf(pDest, DestSize, pFormat, ap);
+}
+
+int as_snprintf(char *pDest, int DestSize, const char *pFormat, ...)
+{
+  va_list ap;
+  int Result;
+
+  va_start(ap, pFormat);
+  if (DestSize > 0)
+    *pDest = '\0';
+  Result = as_vsnprcatf(pDest, DestSize, pFormat, ap);
+  va_end(ap);
+  return Result;
+}
+
+int as_snprcatf(char *pDest, int DestSize, const char *pFormat, ...)
+{
+  va_list ap;
+  int Result;
+
+  va_start(ap, pFormat);
+  Result = as_vsnprcatf(pDest, DestSize, pFormat, ap);
+  va_end(ap);
+  return Result;
+}
+
+int as_strcasecmp(const char *src1, const char *src2)
 {
   if (!src1)
     src1 = "";
   if (!src2)
     src2 = "";
-  while (toupper(*src1) == toupper(*src2))
+  while (tolower(*src1) == tolower(*src2))
   {
     if ((!*src1) && (!*src2))
       return 0;
     src1++;
     src2++;
   }
-  return ((int) toupper(*src1)) - ((int) toupper(*src2));
+  return ((int) tolower(*src1)) - ((int) tolower(*src2));
 }	
 
-int strncasecmp(const char *src1, const char *src2, size_t len)
+int as_strncasecmp(const char *src1, const char *src2, size_t len)
 {
   if (!src1)
     src1 = "";
   if (!src2)
     src2 = "";
-  while (toupper(*src1) == toupper(*src2))
+  while (tolower(*src1) == tolower(*src2))
   {
     if (--len == 0)
       return 0;
@@ -262,9 +471,8 @@ int strncasecmp(const char *src1, const char *src2, size_t len)
     src1++;
     src2++;
   }
-  return ((int) toupper(*src1)) - ((int) toupper(*src2));
+  return ((int) tolower(*src1)) - ((int) tolower(*src2));
 }	
-#endif
 
 #ifdef NEEDS_STRSTR
 char *strstr(const char *haystack, const char *needle)
@@ -280,48 +488,23 @@ char *strstr(const char *haystack, const char *needle)
 }
 #endif
 
-#ifdef BROKEN_SPRINTF
-#include <varargs.h>
+/*!------------------------------------------------------------------------
+ * \fn     strrmultchr(const char *haystack, const char *needles)
+ * \brief  find the last occurence of either character in string
+ * \param  haystack string to search in
+ * \param  needles characters to search for
+ * \return last occurence or NULL
+ * ------------------------------------------------------------------------ */
 
-int mysprintf(va_alist) va_dcl
+char *strrmultchr(const char *haystack, const char *needles)
 {
-  va_list pvar;
-  char *form, *dest, *run;
+  const char *pPos;
 
-  va_start(pvar);
-  dest = va_arg(pvar, char*);
-  form = va_arg(pvar, char*);
-  vsprintf(dest, form, pvar);
-  va_end(pvar);
-
-  for (run = dest; *run != '\0'; run++);
-  return run - dest;
+  for (pPos = haystack + strlen(haystack) - 1; pPos >= haystack; pPos--)
+    if (strchr(needles, *pPos))
+      return (char*)pPos;
+  return NULL;
 }
-#endif
-
-#if 0
-#include <stdarg.h>
-
-/* Some s(n)printf implementations do not NUL-terminate the string.
-   Furthermore, snprintf() returns the number of characters it
-   *would* have written if it had had enough space... */
-
-int my_snprintf(char *pDest, size_t DestSize, const char *pFmt, ...)
-{
-  va_list ap;
-
-  va_start(ap, pFmt);
-  vsnprintf(pDest, DestSize, pFmt, ap);
-  va_end(ap);
-  if (DestSize > 0)
-  {
-    pDest[DestSize - 1] = '\0';
-    return strlen(pDest);
-  }
-  else
-    return 0;
-}
-#endif
 
 /*---------------------------------------------------------------------------*/
 /* das originale strncpy plaettet alle ueberstehenden Zeichen mit Nullen */
@@ -439,12 +622,14 @@ unsigned snstrlenprint(char *pDest, unsigned DestLen,
   for (pRun = pStr, pEnd = pStr + StrLen; pRun < pEnd; pRun++)
     if ((*pRun == '\\') || (*pRun == '"') || (!isprint(*pRun)))
     {
+      int cnt;
+
       if (DestLen < 5)
         break;
-      sprintf(pDest, "\\%03d", *pRun);
-      pDest += 4;
-      DestLen -= 4;
-      Result += 4;
+      cnt = as_snprintf(pDest, DestLen, "\\%03d", *pRun);
+      pDest += cnt;
+      DestLen -= cnt;
+      Result += cnt;
     }
     else
     {
@@ -891,9 +1076,21 @@ char *ParenthPos(char *pHaystack, char Needle)
   return NULL;
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     TabCompressed(char in)
+ * \brief  replace TABs with spaces for error display
+ * \param  in character to compress
+ * \return compressed result
+ * ------------------------------------------------------------------------ */
+
+char TabCompressed(char in)
+{
+  return (in == '\t') ? ' ' : (myisprint(in) ? in : '*');
+}
+
 /*--------------------------------------------------------------------------*/
 
 void strutil_init(void)
 {
-  HexLowerCase = False;
+  HexStartCharacter = 'A';
 }

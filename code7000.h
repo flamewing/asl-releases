@@ -2,6 +2,8 @@
 #define _CODE7000_H
 /* code7000.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator SH7x00                                                      */

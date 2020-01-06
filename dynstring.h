@@ -2,6 +2,8 @@
 #define _DYNSTRING_H
 /* dynstring.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Port                                                                   */
 /*                                                                           */
 /* Dynamic String Handling                                                   */

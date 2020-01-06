@@ -1,32 +1,12 @@
 /* tipseudo.c */
 /*****************************************************************************/
-/* AS-Portierung                                                             */
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
 /*                                                                           */
-/* Haeufiger benutzte Texas Instruments Pseudo-Befehle                       */
+/* AS                                                                        */
+/*                                                                           */
+/* Commonly Used TI-Style Pseudo Instructionso-Befehle                       */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: tipseudo.c,v 1.6 2016/09/29 16:43:37 alfred Exp $                    */
-/***************************************************************************** 
- * $Log: tipseudo.c,v $
- * Revision 1.6  2016/09/29 16:43:37  alfred
- * - introduce common DecodeDATA/DecodeRES functions
- *
- * Revision 1.5  2016/08/24 12:13:19  alfred
- * - begun with 320C4x support
- *
- * Revision 1.4  2014/11/03 17:36:12  alfred
- * - relocate IsDef() for common TI pseudo instructions
- *
- * Revision 1.3  2008/11/23 10:39:17  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.2  2004/05/29 14:57:56  alfred
- * - added missing include statements
- *
- * Revision 1.1  2004/05/29 12:18:06  alfred
- * - relocated DecodeTIPseudo() to separate module
- *
- *****************************************************************************/
 
 /*****************************************************************************
  * Includes
@@ -56,7 +36,7 @@ static void define_untyped_label(void)
   if (LabPart.Str[0])
   {
     PushLocHandle(-1);
-    EnterIntSymbol(LabPart.Str, EProgCounter(), SegNone, False);
+    EnterIntSymbol(&LabPart, EProgCounter(), SegNone, False);
     PopLocHandle();
   }
 }
@@ -159,13 +139,13 @@ static void pseudo_store(tcallback callback)
     }
 
     EvalStrExpression(pArg, &t);
-    switch(t.Typ)
+    switch (t.Typ)
     {
       case TempInt:
         callback(&ok, &adr, t.Contents.Int);
         break;
       case TempFloat:
-        WrError(ErrNum_InvOpType);
+        WrStrErrorPos(ErrNum_StringOrIntButFloat, pArg);
         return;
       case TempString:
       {
@@ -173,11 +153,10 @@ static void pseudo_store(tcallback callback)
                     *cend = cp + t.Contents.Ascii.Length;
 
         while (cp < cend)
-          callback(&ok, &adr, CharTransTable[((usint)*cp++)&0xff]);
+          callback(&ok, &adr, CharTransTable[((usint)*cp++) & 0xff]);
         break;
       }
       default:
-        WrError(ErrNum_InvOpType);
         ok = False;
         break;
     }
@@ -189,7 +168,7 @@ static void pseudo_store(tcallback callback)
 
 static void wr_code_byte(Boolean *ok, int *adr, LongInt val)
 {
-  if ((val < -128) || (val > 0xff))
+  if (!FirstPassUnknown && !SymbolQuestionable && !RangeCheck(val, Int8))
   {
     WrError(ErrNum_OverRange);
     *ok = False;
@@ -201,7 +180,7 @@ static void wr_code_byte(Boolean *ok, int *adr, LongInt val)
 
 static void wr_code_word(Boolean *ok, int *adr, LongInt val)
 {
-  if ((val < -32768) || (val > 0xffff))
+  if (!FirstPassUnknown && !SymbolQuestionable && !RangeCheck(val, Int16))
   {
     WrError(ErrNum_OverRange);
     *ok = False;
@@ -222,7 +201,7 @@ static void wr_code_long(Boolean *ok, int *adr, LongInt val)
 
 static void wr_code_byte_hilo(Boolean *ok, int *adr, LongInt val)
 {
-  if ((val < -128) || (val > 0xff))
+  if (!FirstPassUnknown && !SymbolQuestionable && !RangeCheck(val, Int8))
   {
     WrError(ErrNum_OverRange);
     *ok = False;
@@ -237,7 +216,7 @@ static void wr_code_byte_hilo(Boolean *ok, int *adr, LongInt val)
 
 static void wr_code_byte_lohi(Boolean *ok, int *adr, LongInt val)
 {
-  if ((val < -128) || (val > 0xff))
+  if (!FirstPassUnknown && !SymbolQuestionable && !RangeCheck(val, Int8))
   {
     WrError(ErrNum_OverRange);
     *ok = False;

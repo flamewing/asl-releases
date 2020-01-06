@@ -63,8 +63,8 @@ DWDR		port	0x31		; debugWire Data Register
 ;----------------------------------------------------------------------------
 ; EEPROM/Program Memory Access
 
-		include	"avr/eem2.inc"
-		include	"avr/spmcsr37.inc"
+		include	"eem2.inc"
+		include	"spmcsr37.inc"
 
 EEPM0		avrbit	EECR,4		; EEPROM Programming Mode
 EEPM1		avrbit	EECR,5
@@ -239,33 +239,33 @@ EXCLK		avrbit	ASSR,6		; Enable External Clock Input
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
-		include	"avr/wdme.inc"
+		include	"wdme.inc"
 
 ;----------------------------------------------------------------------------
 ; USART
 
 __USART0_SPI__	equ	1
-		include	"avr/usartc0.inc"
+		include	"usartc0.inc"
 
 ;----------------------------------------------------------------------------
 ; SPI
 
-		include	"avr/spim02c.inc"
+		include	"spim02c.inc"
 
 ;----------------------------------------------------------------------------
 ; TWI
 
-		include	"avr/twimb8.inc"
+		include	"twimb8.inc"
 
 ;----------------------------------------------------------------------------
 ; A/D Converter
 
-		include	"avr/adcm78.inc"
+		include	"adcm78.inc"
 
 ;----------------------------------------------------------------------------
 ; Analog Comparator
 
-		include "avr/acm30.inc"
+		include "acm30.inc"
 
 		restore			; re-enable listing
 

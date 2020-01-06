@@ -30,5 +30,11 @@ next_l: nop
 	; in this case a branch to the next instruction can be
 	; replaced with a NOP.  Will throw a warning however...
 
-	bra.s	next_b
+	if	mompass=3
+ 	 expect 60
+	endif
+	 bra.s	 next_b
+	if	mompass=3
+	 endexpect
+	endif
 next_b: nop

@@ -1,13 +1,10 @@
 /* endian.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Little/Big-Endian-Routinen                                                */
-/*                                                                           */
-/* Historie: 30. 5.1996 Grundsteinlegung                                     */
-/*            6. 7.1997 Dec32BlankString dazu                                */
-/*            1. 6.2000 added LargeHIntFormat                                */
-/*            7. 7.2000 added memory read/write functions                    */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -469,17 +466,6 @@ static void AssignFormats(void)
   LargeIntFormat = AssignSingle(sizeof(LargeInt));
   LargeHIntFormat = AssignHSingle(sizeof(LargeInt));
 }
-
-char *Dec32BlankString(char *Dest, LongInt number, int Stellen)
-{
-  char Format[10];
-
-  sprintf(Format, "%%%d%s", Stellen, LongIntFormat + 1);
-  sprintf(Dest, Format, number);
-
-  return Dest;
-}
-
 
 void endian_init(void)
 {

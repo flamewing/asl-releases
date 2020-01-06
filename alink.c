@@ -1,5 +1,7 @@
 /* alink.c */
 /****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                    */
+/*                                                                          */
 /* AS-Portierung                                                            */
 /*                                                                          */
 /* Linking of AS Code Files                                                 */
@@ -180,8 +182,8 @@ static void ReadSymbols(int Index)
 
   /* open this file - we're only reading */
 
-  strmaxcpy(SrcName, ParamStr[Index], 255);
-  DelSuffix(SrcName); AddSuffix(SrcName, getmessage(Num_Suffix));
+  strmaxcpy(SrcName, ParamStr[Index], STRINGSIZE);
+  DelSuffix(SrcName); AddSuffix(SrcName, STRINGSIZE, getmessage(Num_Suffix));
   if (Verbose >= 2)
     printf("%s '%s'...\n", getmessage(Num_InfoMsgGetSyms), SrcName);
   f = fopen(SrcName, OPENRDMODE);
@@ -302,8 +304,8 @@ static void ProcessFile(int Index)
 
   /* open this file - we're only reading */
 
-  strmaxcpy(SrcName, ParamStr[Index], 255);
-  DelSuffix(SrcName); AddSuffix(SrcName, getmessage(Num_Suffix));
+  strmaxcpy(SrcName, ParamStr[Index], STRINGSIZE);
+  DelSuffix(SrcName); AddSuffix(SrcName, STRINGSIZE, getmessage(Num_Suffix));
   if (Verbose >= 2)
     printf("%s '%s'...", getmessage(Num_InfoMsgOpenSrc), SrcName);
   else if (Verbose >= 1)
@@ -501,7 +503,7 @@ int main(int argc, char **argv)
   cmdarg_init(*argv);
   toolutils_init(*argv);
 
-  sprintf(Ver,"ALINK/C V%s",Version);
+  as_snprintf(Ver, sizeof(Ver), "ALINK/C V%s", Version);
   WrCopyRight(Ver);
 
   /* no commandline arguments -->print help */
@@ -546,9 +548,9 @@ int main(int argc, char **argv)
   for (z = ParamCount; z > 0; z--)
     if (ParUnprocessed[z])
       break;
-  strmaxcpy(TargName, ParamStr[z], 255);
+  strmaxcpy(TargName, ParamStr[z], STRINGSIZE);
   DelSuffix(TargName);
-  AddSuffix(TargName, getmessage(Num_Suffix));
+  AddSuffix(TargName, STRINGSIZE, getmessage(Num_Suffix));
   ParUnprocessed[z] = False;
 
   /* walk over source file(s): */
@@ -622,7 +624,7 @@ int main(int argc, char **argv)
   LHeader = FileHeaderEnd;
   if (fwrite(&LHeader, 1, 1, TargFile) != 1)
     ChkIO(TargName);
-  sprintf(Ver,"ALINK %s/%s-%s", Version, ARCHPRNAME, ARCHSYSNAME);
+  as_snprintf( Ver, sizeof(Ver), "ALINK %s/%s-%s", Version, ARCHPRNAME, ARCHSYSNAME);
   if (fwrite(Ver, 1, strlen(Ver), TargFile) != strlen(Ver))
     ChkIO(TargName);
 

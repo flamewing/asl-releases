@@ -1,68 +1,12 @@
 /* motpseudo.c */
 /*****************************************************************************/
-/* AS-Portierung                                                             */
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
 /*                                                                           */
-/* Haeufiger benutzte Motorola-Pseudo-Befehle                                */
+/* AS                                                                        */
+/*                                                                           */
+/* Commonly Used Motorola-Style Pseudo Instructions                          */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: motpseudo.c,v 1.18 2015/10/18 17:26:25 alfred Exp $                   */
-/*****************************************************************************
- * $Log: motpseudo.c,v $
- * Revision 1.18  2015/10/18 17:26:25  alfred
- * - allow ? as argument to some BYT/FCB/ADR/FDB
- *
- * Revision 1.17  2014/12/04 13:33:57  alfred
- * - compilable again
- *
- * Revision 1.16  2014/12/04 13:27:19  alfred
- * - rework to current style
- *
- * Revision 1.15  2014/11/16 13:15:08  alfred
- * - remove some superfluous semicolons
- *
- * Revision 1.14  2013/12/21 19:46:51  alfred
- * - dynamically resize code buffer
- *
- * Revision 1.13  2010/08/27 14:52:42  alfred
- * - some more overlapping strcpy() cleanups
- *
- * Revision 1.12  2010/04/17 13:14:24  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.11  2010/03/14 11:40:19  alfred
- * silence compiler warning
- *
- * Revision 1.10  2010/03/14 11:33:21  alfred
- * - allow 64-bit ints halfway on DOS
- *
- * Revision 1.9  2010/03/14 11:04:57  alfred
- * - ADR/RMB accepts string arguments
- *
- * Revision 1.8  2010/03/07 11:16:53  alfred
- * - allow DC.(float) on string operands
- *
- * Revision 1.7  2010/03/07 10:45:22  alfred
- * - generalization of Motorola disposal instructions
- *
- * Revision 1.6  2008/11/23 10:39:17  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.5  2006/06/15 21:17:10  alfred
- * - must patch NUL at correct place
- *
- * Revision 1.4  2005/09/30 09:15:58  alfred
- * - correct Motorola 8-bit pseudo ops on word-wise CPUs
- *
- * Revision 1.3  2004/09/20 18:44:37  alfred
- * - formatting cleanups
- *
- * Revision 1.2  2004/05/29 14:57:56  alfred
- * - added missing include statements
- *
- * Revision 1.1  2004/05/29 12:04:48  alfred
- * - relocated DecodeMot(16)Pseudo into separate module
- *
- *****************************************************************************/
 
 /*****************************************************************************
  * Includes
@@ -72,6 +16,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <math.h>
+#include <assert.h>
 
 #include "bpemu.h"
 #include "endian.h"
@@ -187,11 +132,12 @@ static void DecodeBYT(Word Index)
 
         SpaceFlag = 0;
 
+        FirstPassUnknown = False;
         EvalStrExpression(&Arg, &t);
         switch (t.Typ)
         {
           case TempInt:
-            if (!RangeCheck(t.Contents.Int, Int8))
+            if (!FirstPassUnknown && !SymbolQuestionable && !RangeCheck(t.Contents.Int, Int8))
             {
               WrStrErrorPos(ErrNum_OverRange, &Arg);
               OK = False;
@@ -211,7 +157,7 @@ static void DecodeBYT(Word Index)
             break;
 
           case TempFloat:
-            WrError(ErrNum_InvOpType);
+            WrStrErrorPos(ErrNum_StringOrIntButFloat, &Arg);
             OK = False;
             break;
 
@@ -253,7 +199,7 @@ static void DecodeBYT(Word Index)
       if (SpaceFlag == 1)
         DontPrint = True;
       if (*LabPart.Str)
-        SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize8Bit);
+        SetSymbolOrStructElemSize(&LabPart, eSymbolSize8Bit);
     }
   }
 }
@@ -333,7 +279,7 @@ static void DecodeADR(Word Index)
           case TempInt:
             if (FirstPassUnknown)
               Res.Contents.Int &= 0xffff;
-            if (!RangeCheck(Res.Contents.Int, Int16))
+            if (!SymbolQuestionable && !RangeCheck(Res.Contents.Int, Int16))
             {
               WrError(ErrNum_OverRange);
               Res.Typ = TempNone;
@@ -345,8 +291,8 @@ static void DecodeADR(Word Index)
             TranslateString(Res.Contents.Ascii.Contents, Res.Contents.Ascii.Length);
             break;
           case TempFloat:
-            WrError(ErrNum_InvOpType);
-            /* no break */
+            WrStrErrorPos(ErrNum_StringOrIntButFloat, &Arg);
+            /* fall-through */
           default:
             Res.Typ = TempNone;
             Cnt = 0;
@@ -392,7 +338,7 @@ static void DecodeADR(Word Index)
       if (SpaceFlag)
         DontPrint = True;
       if (*LabPart.Str)
-        SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize16Bit);
+        SetSymbolOrStructElemSize(&LabPart, eSymbolSize16Bit);
     }
   }
 }
@@ -445,7 +391,7 @@ static void DecodeFCC(Word Index)
     if (!OK)
       CodeLen = 0;
     else if (*LabPart.Str)
-      SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize8Bit);
+      SetSymbolOrStructElemSize(&LabPart, eSymbolSize8Bit);
   }
 }
 
@@ -469,7 +415,7 @@ static void DecodeDFS(Word Index)
         WrError(ErrNum_NullResMem);
       BookKeeping();
       if (*LabPart.Str)
-        SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize8Bit);
+        SetSymbolOrStructElemSize(&LabPart, eSymbolSize8Bit);
     }
   }
 }
@@ -517,8 +463,8 @@ void ConvertMotoFloatDec(Double F, Byte *pDest, Boolean NeedsBig)
 
   /* convert to ASCII, split mantissa & exponent */
 
-  sprintf(s, "%0.16e", F);
-  pSplit = strchr(s, 'e');
+  as_snprintf(s, sizeof(s), "%0.16e", F);
+  pSplit = strchr(s, HexStartCharacter + ('e' - 'a'));
   if (!pSplit)
   {
     strcpy(Man, s);
@@ -650,10 +596,11 @@ static void EnterQWord(LargeWord q)
     BAsmCode[CodeLen + 2] = (q >> 40) & 0xff;
     BAsmCode[CodeLen + 3] = (q >> 32) & 0xff;
 #else
+    /* TempResult is LargeInt, so sign-extend */
     BAsmCode[CodeLen    ] =
     BAsmCode[CodeLen + 1] =
     BAsmCode[CodeLen + 2] =
-    BAsmCode[CodeLen + 3] = 0;
+    BAsmCode[CodeLen + 3] = (q & 0x80000000ul) ? 0xff : 0x00;
 #endif
     BAsmCode[CodeLen + 4] = (q >> 24) & 0xff;
     BAsmCode[CodeLen + 5] = (q >> 16) & 0xff;
@@ -666,8 +613,9 @@ static void EnterQWord(LargeWord q)
     WAsmCode[(CodeLen >> 1)    ] = (q >> 48) & 0xffff;
     WAsmCode[(CodeLen >> 1) + 1] = (q >> 32) & 0xffff;
 #else
+    /* TempResult is LargeInt, so sign-extend */
     WAsmCode[(CodeLen >> 1)    ] =
-    WAsmCode[(CodeLen >> 1) + 1] = 0;
+    WAsmCode[(CodeLen >> 1) + 1] = (q & 0x80000000ul) ? 0xffff : 0x00;
 #endif
     WAsmCode[(CodeLen >> 1) + 2] = (q >> 16) & 0xffff;
     WAsmCode[(CodeLen >> 1) + 3] = (q      ) & 0xffff;
@@ -938,11 +886,11 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
                 }
                 else
                 {
-                  WrError(ErrNum_InvOpType);
+                  WrStrErrorPos(ErrNum_StringOrIntButFloat, pArg);
                   OK = False;
                 }
               }
-              else if ((!FirstPassUnknown) && (!RangeCheck(t.Contents.Int, IntTypeEnum)))
+              else if (!FirstPassUnknown && !SymbolQuestionable && !RangeCheck(t.Contents.Int, IntTypeEnum))
               {
                 WrError(ErrNum_OverRange);
                 OK = False;
@@ -960,7 +908,7 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
             case TempFloat:
               if ((!ConvertFloat) || (!EnterFloat))
               {
-                WrError(ErrNum_InvOpType);
+                WrStrErrorPos(ErrNum_StringOrIntButFloat, pArg);
                 OK = False;
               }
               else if (!FloatRangeCheck(t.Contents.Float, FloatTypeEnum))
@@ -1006,7 +954,7 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
                 }
                 else
                 {
-                  WrError(ErrNum_InvOpType);
+                  WrError(ErrNum_FloatButString);
                   OK = False;
                 }
               }
@@ -1023,8 +971,7 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
               OK = False;
               break;
             default:
-              WrError(ErrNum_InvOpType);
-              OK = False;
+              assert(0);
           }
 
         }
@@ -1052,7 +999,7 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
       }
     }
     if (*LabPart.Str)
-      SetSymbolOrStructElemSize(LabPart.Str, OpSize);
+      SetSymbolOrStructElemSize(&LabPart, OpSize);
     return True;
   }
 
@@ -1098,23 +1045,14 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
       }
     }
     if (*LabPart.Str)
-      SetSymbolOrStructElemSize(LabPart.Str, OpSize);
+      SetSymbolOrStructElemSize(&LabPart, OpSize);
     return True;
   }
 
   return False;
 }
 
-/*!------------------------------------------------------------------------
- * \fn     DecodeMoto16AttrSize(char SizeSpec, ShortInt *pResult, Boolean Allow24)
- * \brief  decode Motorola-style operand size character
- * \param  SizeSpec size specifier character
- * \param  pResult returns result size
- * \param  Allow24 allow 'p' as specifier for 24 Bits (S12Z-specific)
- * \return True if decoded
- * ------------------------------------------------------------------------ */
-
-Boolean DecodeMoto16AttrSize(char SizeSpec, ShortInt *pResult, Boolean Allow24)
+static Boolean DecodeMoto16AttrSizeCore(char SizeSpec, ShortInt *pResult, Boolean Allow24)
 {
   switch (mytoupper(SizeSpec))
   {
@@ -1128,8 +1066,37 @@ Boolean DecodeMoto16AttrSize(char SizeSpec, ShortInt *pResult, Boolean Allow24)
     case 'P': *pResult = Allow24 ? eSymbolSize24Bit : eSymbolSizeFloatDec96Bit; break;
     case '\0': break;
     default:
-      WrError(ErrNum_UndefAttr);
       return False;
+  }
+  return True;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeMoto16AttrSize(char SizeSpec, ShortInt *pResult, Boolean Allow24)
+ * \brief  decode Motorola-style operand size character
+ * \param  SizeSpec size specifier character
+ * \param  pResult returns result size
+ * \param  Allow24 allow 'p' as specifier for 24 Bits (S12Z-specific)
+ * \return True if decoded
+ * ------------------------------------------------------------------------ */
+
+Boolean DecodeMoto16AttrSize(char SizeSpec, ShortInt *pResult, Boolean Allow24)
+{
+  if (!DecodeMoto16AttrSizeCore(SizeSpec, pResult, Allow24))
+  {
+    WrError(ErrNum_UndefAttr);
+    return False;
+  }
+  return True;
+}
+
+Boolean DecodeMoto16AttrSizeStr(const struct sStrComp *pSizeSpec, ShortInt *pResult, Boolean Allow24)
+{
+  if ((strlen(pSizeSpec->Str) > 1)
+   || !DecodeMoto16AttrSizeCore(*pSizeSpec->Str, pResult, Allow24))
+  {
+    WrStrErrorPos(ErrNum_UndefAttr, pSizeSpec);
+    return False;
   }
   return True;
 }

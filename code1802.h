@@ -2,6 +2,8 @@
 #define _CODE1802_H
 /* code1802.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS                                                                        */
 /*                                                                           */
 /* Code Generator for Intersil 1802                                          */

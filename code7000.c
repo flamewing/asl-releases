@@ -1,55 +1,12 @@
 /* code7000.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator SH7x00                                                      */
 /*                                                                           */
-/* Historie: 25.12.1996 Grundsteinlegung                                     */
-/*           12. 4.1998 SH7700-Erweiterungen                                 */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code7000.c,v 1.13 2014/12/14 17:58:47 alfred Exp $                    */
-/*****************************************************************************
- * $Log: code7000.c,v $
- * Revision 1.13  2014/12/14 17:58:47  alfred
- * - remove static variables in strutil.c
- *
- * Revision 1.12  2014/12/07 19:14:00  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.11  2014/12/05 11:58:16  alfred
- * - collapse STDC queries into one file
- *
- * Revision 1.10  2014/11/05 15:47:15  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.9  2014/09/09 17:00:33  alfred
- * - rework to current style
- *
- * Revision 1.8  2014/05/29 10:59:05  alfred
- * - some const cleanups
- *
- * Revision 1.7  2010/04/17 13:14:22  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.6  2007/11/24 22:48:05  alfred
- * - some NetBSD changes
- *
- * Revision 1.5  2006/12/19 17:50:18  alfred
- * - eliminate static local variable
- *
- * Revision 1.4  2005/10/02 10:00:45  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.3  2005/09/08 17:31:04  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 12:04:47  alfred
- * - relocated DecodeMot(16)Pseudo into separate module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -90,7 +47,7 @@ enum
   ModGBRBase = 6,
   ModGBRR0 = 7,
   ModPCRel = 8,
-  ModImm = 9,
+  ModImm = 9
 };
 
 #define MModReg (1 << ModReg)
@@ -191,28 +148,16 @@ static void ChkDelayed(void)
 /*-------------------------------------------------------------------------*/
 /* Adressparsing */
 
-static char *LiteralName(PLiteral Lit, char *Result)
+static char *LiteralName(PLiteral Lit, char *Result, int ResultSize)
 {
-  String Tmp;
-  char PassStr[10];
-
+  as_snprintf(Result, ResultSize, "LITERAL_");
   if (Lit->IsForward)
-  {
-    strcpy(Tmp, "F_");
-    HexString(Tmp + 2, sizeof(Tmp) - 2, Lit->FCount, 8);
-  }
+    as_snprcatf(Result, ResultSize, "F_%08lllx", (LargeWord)Lit->FCount);
   else if (Lit->Is32)
-  {
-    strcpy(Tmp, "L_");
-    HexString(Tmp + 2, sizeof(Tmp) - 2, Lit->Value, 8);
-  }
+    as_snprcatf(Result, ResultSize, "L_%08lllx", (LargeWord)Lit->Value);
   else
-  {
-    strcpy(Tmp, "W_");
-    HexString(Tmp + 2, sizeof(Tmp) - 2, Lit->Value, 4);
-  }
-  HexString(PassStr, sizeof(PassStr), Lit->PassNo, 0);
-  sprintf(Result, "LITERAL_%s_%s", Tmp, PassStr);
+    as_snprcatf(Result, ResultSize, "W_%04x", (unsigned)Lit->Value);
+  as_snprcatf(Result, ResultSize, "_%x", (unsigned)Lit->PassNo);
   return Result;
 }
 /*
@@ -225,7 +170,7 @@ static void PrintLiterals(void)
   Lauf = FirstLiteral;
   while (Lauf)
   {
-    LiteralName(Lauf, Name);
+    LiteralName(Lauf, Name, sizeof(Name));
     WrLstLine(Name); Lauf = Lauf->Next;
   }
 }
@@ -243,7 +188,7 @@ static Boolean DecodeReg(char *Asc, Word *Erg)
 {
   Boolean Err;
 
-  if (strcasecmp(Asc, "SP") == 0)
+  if (as_strcasecmp(Asc, "SP") == 0)
   {
     *Erg = 15; return True;
   }
@@ -260,19 +205,19 @@ static Boolean DecodeCtrlReg(char *Asc, Word *Erg)
   CPUVar MinCPU = CPU7000;
 
   *Erg = 0xff;
-  if (strcasecmp(Asc, "SR") == 0) *Erg = 0;
-  else if (strcasecmp(Asc, "GBR") == 0) *Erg = 1;
-  else if (strcasecmp(Asc, "VBR") == 0) *Erg = 2;
-  else if (strcasecmp(Asc, "SSR") == 0)
+  if (as_strcasecmp(Asc, "SR") == 0) *Erg = 0;
+  else if (as_strcasecmp(Asc, "GBR") == 0) *Erg = 1;
+  else if (as_strcasecmp(Asc, "VBR") == 0) *Erg = 2;
+  else if (as_strcasecmp(Asc, "SSR") == 0)
   {
     *Erg = 3; MinCPU = CPU7700;
   }
-  else if (strcasecmp(Asc, "SPC") == 0)
+  else if (as_strcasecmp(Asc, "SPC") == 0)
   {
     *Erg = 4; MinCPU = CPU7700;
   }
   else if ((strlen(Asc) == 7) && (mytoupper(*Asc) == 'R')
-      && (strcasecmp(Asc + 2, "_BANK") == 0)
+      && (as_strcasecmp(Asc + 2, "_BANK") == 0)
       && (Asc[1] >= '0') && (Asc[1] <= '7'))
   {
     *Erg = Asc[1]-'0' + 8; MinCPU = CPU7700;
@@ -290,7 +235,7 @@ static Boolean DecodeSReg(char *Asc, Word *Erg)
   Boolean Result = FALSE;
 
   for (z = 0; z < SRegCnt; z++)
-    if (!strcasecmp(Asc, RegDefs[z].Name))
+    if (!as_strcasecmp(Asc, RegDefs[z].Name))
       break;
   if (z < SRegCnt)
   {
@@ -389,7 +334,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask, Boolean Signed)
         pos = QuotPos(Arg.Str, ',');
         if (pos)
           StrCompSplitRef(&Arg, &Remainder, &Arg, pos);
-        if (!strcasecmp(Arg.Str, "PC"))
+        if (!as_strcasecmp(Arg.Str, "PC"))
         {
           if (BaseReg == RegNone)
             BaseReg = RegPC;
@@ -399,7 +344,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask, Boolean Signed)
             OK = False;
           }
         }
-        else if (!strcasecmp(Arg.Str, "GBR"))
+        else if (!as_strcasecmp(Arg.Str, "GBR"))
         {
           if (BaseReg == RegNone)
             BaseReg = RegGBR;
@@ -611,9 +556,13 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask, Boolean Signed)
           Lauf->DefSection = MomSectionHandle;
           do
           {
-            LiteralName(Lauf, Name);
-            sprintf(LComp.Str, "%s%s", Name, AdrStr);
-            LDef = IsSymbolDefined(LStr);
+            tStrComp LStrComp;
+            
+            as_snprintf(LComp.Str, STRINGSIZE, "%s%s", 
+                        LiteralName(Lauf, Name, sizeof(Name)),
+                        AdrStr);
+            StrCompMkTemp(&LStrComp, LStr);
+            LDef = IsSymbolDefined(&LStrComp);
             if (LDef)
               Lauf->PassNo++;
           }
@@ -627,8 +576,9 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask, Boolean Signed)
         /* Distanz abfragen - im naechsten Pass... */
 
         FirstPassUnknown = False;
-        LiteralName(Lauf, Name);
-        sprintf(LComp.Str, "%s%s", Name, AdrStr);
+        as_snprintf(LComp.Str, STRINGSIZE, "%s%s",
+                    LiteralName(Lauf, Name, sizeof(Name)),
+                    AdrStr);
         DispAcc = EvalStrIntExpression(&LComp, Int32, &OK) + p;
         if (OK)
         {
@@ -660,7 +610,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask, Boolean Signed)
 
   /* absolut ueber PC-relativ abwickeln */
 
-  if ((OpSize != eSymbolSize16Bit) && (OpSize != eSymbolSize32Bit)) WrError(ErrNum_InvOpsize);
+  if ((OpSize != eSymbolSize16Bit) && (OpSize != eSymbolSize32Bit)) WrError(ErrNum_InvOpSize);
   else
   {
     FirstPassUnknown = False;
@@ -726,14 +676,14 @@ static void DecodeMOV(Word Code)
   if (OpSize == eSymbolSizeUnknown)
     SetOpSize(eSymbolSize32Bit);
   if (!ChkArgCnt(2, 2));
-  else if (OpSize > eSymbolSize32Bit) WrError(ErrNum_InvOpsize);
+  else if (OpSize > eSymbolSize32Bit) WrError(ErrNum_InvOpSize);
   else if (DecodeReg(ArgStr[1].Str, &HReg))
   {
     DecodeAdr(&ArgStr[2], MModReg | MModIReg | MModPreDec | MModIndReg | MModR0Base | MModGBRBase, True);
     switch (AdrMode)
     {
       case ModReg:
-        if (OpSize != eSymbolSize32Bit) WrError(ErrNum_InvOpsize);
+        if (OpSize != eSymbolSize32Bit) WrError(ErrNum_InvOpSize);
         else
           SetCode(0x6003 + (HReg << 4) + (AdrPart << 8));
         break;
@@ -928,7 +878,7 @@ static void DecodeTAS(Word Code)
   if (OpSize == eSymbolSizeUnknown)
     SetOpSize(eSymbolSize8Bit);
   if (!ChkArgCnt(1, 1));
-  else if (OpSize != eSymbolSize8Bit) WrError(ErrNum_InvOpsize);
+  else if (OpSize != eSymbolSize8Bit) WrError(ErrNum_InvOpSize);
   else
   {
     DecodeAdr(&ArgStr[1], MModIReg, False);
@@ -967,7 +917,7 @@ static void DecodeMulReg(Word Index)
   {
     if (!*AttrPart.Str)
       OpSize = eSymbolSize32Bit;
-    if (OpSize != eSymbolSize32Bit) WrError(ErrNum_InvOpsize);
+    if (OpSize != eSymbolSize32Bit) WrError(ErrNum_InvOpSize);
     else
     {
       DecodeAdr(&ArgStr[1], MModReg, False);
@@ -989,7 +939,7 @@ static void DecodeBW(Word Index)
   if (OpSize == eSymbolSizeUnknown)
     SetOpSize(eSymbolSize16Bit);
   if (!ChkArgCnt(2, 2));
-  else if ((OpSize != eSymbolSize8Bit) && (OpSize != eSymbolSize16Bit)) WrError(ErrNum_InvOpsize);
+  else if ((OpSize != eSymbolSize8Bit) && (OpSize != eSymbolSize16Bit)) WrError(ErrNum_InvOpSize);
   else
   {
     DecodeAdr(&ArgStr[1], MModReg, False);
@@ -1010,7 +960,7 @@ static void DecodeMAC(Word Code)
   if (OpSize == eSymbolSizeUnknown)
     SetOpSize(eSymbolSize16Bit);
   if (!ChkArgCnt(2, 2));
-  else if ((OpSize != eSymbolSize16Bit) && (OpSize != eSymbolSize32Bit)) WrError(ErrNum_InvOpsize);
+  else if ((OpSize != eSymbolSize16Bit) && (OpSize != eSymbolSize32Bit)) WrError(ErrNum_InvOpSize);
   else if ((OpSize == eSymbolSize32Bit) && !ChkMinCPU(CPU7600));
   else
   {
@@ -1093,7 +1043,7 @@ static void DecodeLog(Word Code)
     switch (AdrMode)
     {
       case ModReg:
-        if (*AttrPart.Str && (OpSize != eSymbolSize32Bit)) WrError(ErrNum_InvOpsize);
+        if (*AttrPart.Str && (OpSize != eSymbolSize32Bit)) WrError(ErrNum_InvOpSize);
         else
         {
           OpSize = eSymbolSize32Bit;
@@ -1240,6 +1190,7 @@ static void LTORG_16(void)
 {
   PLiteral Lauf;
   String Name;
+  tStrComp TmpComp;
 
   Lauf = FirstLiteral;
   while (Lauf)
@@ -1247,8 +1198,9 @@ static void LTORG_16(void)
     if ((!Lauf->Is32) && (Lauf->DefSection == MomSectionHandle))
     {
       WAsmCode[CodeLen >> 1] = Lauf->Value;
-      LiteralName(Lauf, Name);
-      EnterIntSymbol(Name, EProgCounter() + CodeLen, SegCode, False);
+      LiteralName(Lauf, Name, sizeof(Name));
+      StrCompMkTemp(&TmpComp, Name);
+      EnterIntSymbol(&TmpComp, EProgCounter() + CodeLen, SegCode, False);
       Lauf->PassNo = (-1);
       CodeLen += 2;
     }
@@ -1260,7 +1212,8 @@ static void LTORG_32(void)
 {
   PLiteral Lauf, EqLauf;
   String Name;
-
+  tStrComp TmpComp;
+  
   Lauf = FirstLiteral;
   while (Lauf)
   {
@@ -1272,8 +1225,9 @@ static void LTORG_32(void)
       }
       WAsmCode[CodeLen >> 1] = (Lauf->Value >> 16);
       WAsmCode[(CodeLen >> 1) + 1] = (Lauf->Value & 0xffff);
-      LiteralName(Lauf, Name);
-      EnterIntSymbol(Name, EProgCounter() + CodeLen, SegCode, False);
+      LiteralName(Lauf, Name, sizeof(Name));
+      StrCompMkTemp(&TmpComp, Name);
+      EnterIntSymbol(&TmpComp, EProgCounter() + CodeLen, SegCode, False);
       Lauf->PassNo = -1;
       if (CompLiterals)
       {
@@ -1284,8 +1238,9 @@ static void LTORG_32(void)
            && (EqLauf->DefSection == MomSectionHandle)
            && (EqLauf->Value == Lauf->Value))
           {
-            LiteralName(EqLauf, Name);
-            EnterIntSymbol(Name, EProgCounter() + CodeLen, SegCode, False);
+            LiteralName(EqLauf, Name, sizeof(Name));
+            StrCompMkTemp(&TmpComp, Name);
+            EnterIntSymbol(&TmpComp, EProgCounter() + CodeLen, SegCode, False);
             EqLauf->PassNo = -1;
           }
           EqLauf = EqLauf->Next;
@@ -1587,7 +1542,6 @@ static void SwitchTo_7000(void)
 {
   TurnWords = True;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   PCSymbol = "*";
   HeaderID = 0x6c;

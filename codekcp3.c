@@ -1,38 +1,12 @@
 /* codekcp3.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
-/* Codegenerator xilinx kcpsm3                                               */
+/* Codegenerator Xilinx kcpsm3                                               */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codekcp3.c,v 1.7 2014/06/16 20:05:10 alfred Exp $                   */
-/*****************************************************************************
- * $Log: codekcp3.c,v $
- * Revision 1.7  2014/06/16 20:05:10  alfred
- * - minor cleanups
- *
- * Revision 1.6  2007/11/24 22:48:07  alfred
- * - some NetBSD changes
- *
- * Revision 1.5  2005/10/02 10:22:58  alfred
- * - KCPSM(3) registers are literals
- *
- * Revision 1.4  2005/10/02 10:00:45  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.3  2005/09/30 12:53:49  alfred
- * - correct include statements
- *
- * Revision 1.2  2005/09/08 16:53:43  alfred
- * - use common PInstTable
- *
- * Revision 1.1  2005/03/21 19:48:16  alfred
- * - shortened name to 8+3 (again...)
- *
- * Revision 1.1  2005/02/19 18:05:59  alfred
- * - use shorter name for 8+3 filesystems, correct bugs
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <stdio.h>
@@ -111,7 +85,7 @@ static Boolean IsCond(int OtherArgCnt, LongWord *pErg)
   }
 
   for (*pErg = 0; *pErg < (sizeof(Conds) / sizeof(*Conds)); (*pErg)++)
-    if (!strcasecmp(Conds[*pErg], ArgStr[1].Str))
+    if (!as_strcasecmp(Conds[*pErg], ArgStr[1].Str))
     {
       *pErg |= 4;
       return True;
@@ -163,7 +137,7 @@ static void DecodeConstant(Word Index)
       t.Typ = TempInt;
       SetListLineVal(&t);
       PushLocHandle(-1); 
-      EnterIntSymbol(ArgStr[1].Str, t.Contents.Int, SegNone, False);
+      EnterIntSymbol(&ArgStr[1], t.Contents.Int, SegNone, False);
       PopLocHandle();
     }
   }
@@ -245,12 +219,12 @@ static void DecodeReti(Word Index)
 
   if (ChkArgCnt(1, 1))
   {
-    if (!strcasecmp(ArgStr[1].Str, "DISABLE"))
+    if (!as_strcasecmp(ArgStr[1].Str, "DISABLE"))
     {
       DAsmCode[0] = 0x38000;
       CodeLen = 1;
     }
-    else if (!strcasecmp(ArgStr[1].Str, "ENABLE"))
+    else if (!as_strcasecmp(ArgStr[1].Str, "ENABLE"))
     {
       DAsmCode[0] = 0x38001;
       CodeLen = 1;
@@ -264,7 +238,7 @@ static void DecodeInt(Word Index)
 {
   if (ChkArgCnt(1, 1))
   {
-    if (strcasecmp(ArgStr[1].Str, "INTERRUPT")) WrError(ErrNum_InvAddrMode);
+    if (as_strcasecmp(ArgStr[1].Str, "INTERRUPT")) WrError(ErrNum_InvAddrMode);
     else
     {
       DAsmCode[0] = 0x3c000 | Index;
@@ -454,7 +428,7 @@ static void SwitchTo_KCPSM3(void)
 
    FoundDescr = FindFamilyByName("KCPSM3");
 
-   TurnWords = True; ConstMode = ConstModeIntel; SetIsOccupied = False;
+   TurnWords = True; ConstMode = ConstModeIntel;
 
    PCSymbol = "$"; HeaderID = FoundDescr->Id;
 

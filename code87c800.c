@@ -1,46 +1,12 @@
 /* code87c800.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator TLCS-870                                                    */
 /*                                                                           */
-/* Historie: 29.12.1996 Grundsteinlegung                                     */
-/*            2. 1.1999 ChkPC umgebaut                                       */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code87c800.c,v 1.10 2014/12/07 19:14:00 alfred Exp $                  */
-/*****************************************************************************
- * $Log: code87c800.c,v $
- * Revision 1.10  2014/12/07 19:14:00  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.9  2014/11/22 11:45:58  alfred
- * - correct some formatting errors
- * - correct handling of JR
- *
- * Revision 1.8  2014/11/17 23:51:32  alfred
- * - begun with TLCS-870/C
- *
- * Revision 1.7  2014/11/17 21:25:22  alfred
- * - some remaining cleanups
- *
- * Revision 1.6  2014/07/13 22:10:58  alfred
- * - reworked to current style
- *
- * Revision 1.5  2010/04/17 13:14:22  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.4  2007/11/24 22:48:05  alfred
- * - some NetBSD changes
- *
- * Revision 1.3  2005/09/08 17:31:04  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 11:33:02  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -76,7 +42,7 @@ enum
   ModReg16 = 1,
   ModImm = 2,
   ModAbs = 3,
-  ModMem = 4,
+  ModMem = 4
 };
 
 #define MModReg8 (1 << ModReg8)
@@ -135,7 +101,7 @@ static void DecodeAdr(const tStrComp *pArg, Byte Erl)
   }
 
   for (z = 0; z < Reg16Cnt; z++)
-    if (!strcasecmp(pArg->Str, Reg16Names[z]))
+    if (!as_strcasecmp(pArg->Str, Reg16Names[z]))
     {
       AdrType = ModReg16;
       OpSize = 1;
@@ -153,13 +119,13 @@ static void DecodeAdr(const tStrComp *pArg, Byte Erl)
     StrCompRefRight(&Arg, pArg, 1);
     StrCompShorten(&Arg, 1);
 
-    if (!strcasecmp(Arg.Str, "-HL"))
+    if (!as_strcasecmp(Arg.Str, "-HL"))
     {
       AdrType = ModMem;
       AdrMode = 7;
       goto chk;
     }
-    if (!strcasecmp(Arg.Str, "HL+"))
+    if (!as_strcasecmp(Arg.Str, "HL+"))
     {
       AdrType = ModMem;
       AdrMode = 6;
@@ -179,7 +145,7 @@ static void DecodeAdr(const tStrComp *pArg, Byte Erl)
         StrCompSplitRef(&Arg, &Remainder, &Arg, EPos);
 
       for (z = 0; z < AdrRegCnt; z++)
-        if (!strcasecmp(Arg.Str, AdrRegs[z]))
+        if (!as_strcasecmp(Arg.Str, AdrRegs[z]))
           break;
       if (z >= AdrRegCnt)
       {
@@ -358,7 +324,7 @@ static void DecodeLD(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(2, 2));
-  else if (!strcasecmp(ArgStr[1].Str, "SP"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "SP"))
   {
     OpSize=1;
     DecodeAdr(&ArgStr[2], MModImm+MModReg16);
@@ -375,7 +341,7 @@ static void DecodeLD(Word Code)
         break;
     }
   }
-  else if (!strcasecmp(ArgStr[2].Str, "SP"))
+  else if (!as_strcasecmp(ArgStr[2].Str, "SP"))
   {
     DecodeAdr(&ArgStr[1], MModReg16);
     switch (AdrType)
@@ -387,7 +353,7 @@ static void DecodeLD(Word Code)
         break;
     }
   }
-  else if (!strcasecmp(ArgStr[1].Str, "RBS"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "RBS"))
   {
     BAsmCode[1] = EvalStrIntExpression(&ArgStr[2], Int4, &OK);
     if (OK)
@@ -396,7 +362,7 @@ static void DecodeLD(Word Code)
       BAsmCode[0] = 0x0f;
     }
   }
-  else if (!strcasecmp(ArgStr[1].Str, "CF"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "CF"))
   {
     if (!SplitBit(&ArgStr[2], &HReg)) WrError(ErrNum_InvBitPos);
     else
@@ -439,7 +405,7 @@ static void DecodeLD(Word Code)
       }
     }
   }
-  else if (!strcasecmp(ArgStr[2].Str, "CF"))
+  else if (!as_strcasecmp(ArgStr[2].Str, "CF"))
   {
     if (!SplitBit(&ArgStr[1], &HReg)) WrError(ErrNum_InvBitPos);
     else
@@ -772,7 +738,7 @@ static void DecodeCLR(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "CF"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "CF"))
   {
     CodeLen = 1;
     BAsmCode[0] = 0x0c;
@@ -901,7 +867,7 @@ static void DecodeLDW(Word Code)
 static void DecodePUSH_POP(Word Code)
 {
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "PSW"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "PSW"))
   {
     CodeLen = 1;
     BAsmCode[0] = Code;
@@ -923,7 +889,7 @@ static void DecodeTEST_CPL_SET(Word Code)
   Byte HReg;
 
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "CF"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "CF"))
   {
     if (Code == 0xd8) WrError(ErrNum_InvAddrMode);
     else
@@ -1007,7 +973,7 @@ static void DecodeALU(Word Code)
   Boolean OK;
 
   if (!ChkArgCnt(2, 2));
-  else if (!strcasecmp(ArgStr[1].Str, "CF"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "CF"))
   {
     if (Code != 5) WrError(ErrNum_InvAddrMode); /* XOR */
     else if (!SplitBit(&ArgStr[2], &HReg)) WrError(ErrNum_InvBitPos);
@@ -1114,7 +1080,7 @@ static void DecodeALU(Word Code)
         }
         break;
       case ModAbs:
-        if (!strcasecmp(ArgStr[2].Str, "(HL)"))
+        if (!as_strcasecmp(ArgStr[2].Str, "(HL)"))
         {
           CodeLen = 3;
           BAsmCode[0] = 0xe0;
@@ -1134,7 +1100,7 @@ static void DecodeALU(Word Code)
         }
         break;
       case ModMem:
-        if (!strcasecmp(ArgStr[2].Str, "(HL)"))
+        if (!as_strcasecmp(ArgStr[2].Str, "(HL)"))
         {
           CodeLen = 2 + AdrCnt;
           BAsmCode[0] = 0xe0 | AdrMode;
@@ -1287,7 +1253,7 @@ static void DecodeDIV(Word Code)
 static void DecodeROLD_RORD(Word Code)
 {
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1].Str, "A")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "A")) WrError(ErrNum_InvAddrMode);
   else
   {
     DecodeAdr(&ArgStr[2], MModAbs | MModMem);
@@ -1556,11 +1522,16 @@ static void SwitchFrom_87C800(void)
   DeinitFields();
 }
 
+static Boolean TrueFnc(void)
+{
+  return True;
+}
+
 static void SwitchTo_87C800(void)
 {
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = True;
+  SetIsOccupiedFnc = TrueFnc;
 
   PCSymbol = "$";
   HeaderID = 0x54;

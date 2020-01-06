@@ -1,44 +1,12 @@
 /* code78c10.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator NEC uPD78(C)1x                                              */
 /*                                                                           */
-/* Historie: 29.12.1996 Grundsteinlegung                                     */
-/*            2. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*           24.10.2000 fixed some errors (MOV A<>mem/DCRW/ETMM/PUSH V/POP V)*/
-/*           25.10.2000 accesses wrong argument for mov nnn,a                */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code78c10.c,v 1.9 2016/10/22 17:54:20 alfred Exp $                   */
-/*****************************************************************************
- * $Log: code78c10.c,v $
- * Revision 1.9  2016/10/22 17:54:20  alfred
- * - add some alternate notations for 78C1x indirect addressing
- *
- * Revision 1.8  2014/11/05 15:47:15  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.7  2014/08/17 20:02:44  alfred
- * - rework to current style
- *
- * Revision 1.6  2014/03/08 21:06:36  alfred
- * - rework ASSUME framework
- *
- * Revision 1.5  2007/11/26 19:28:34  alfred
- * - change SKINT -> SKNIT
- *
- * Revision 1.4  2007/11/24 22:48:05  alfred
- * - some NetBSD changes
- *
- * Revision 1.3  2005/09/08 17:31:04  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 11:33:01  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -102,8 +70,8 @@ static Boolean Decode_r(char *Asc, ShortInt *Erg)
 
 static Boolean Decode_r1(char *Asc, ShortInt *Erg)
 {
-  if (!strcasecmp(Asc, "EAL")) *Erg = 1;
-  else if (!strcasecmp(Asc, "EAH")) *Erg = 0;
+  if (!as_strcasecmp(Asc, "EAL")) *Erg = 1;
+  else if (!as_strcasecmp(Asc, "EAH")) *Erg = 0;
   else
   {
     if (!Decode_r(Asc, Erg)) return False;
@@ -134,7 +102,7 @@ static Boolean Decode_rp2(char *Asc, ShortInt *Erg)
   };
 
   for (*Erg = 0; Regs[*Erg].Name; (*Erg)++)
-    if (!strcasecmp(Asc, Regs[*Erg].Name))
+    if (!as_strcasecmp(Asc, Regs[*Erg].Name))
     {
       *Erg = Regs[*Erg].Code;
       return True;
@@ -150,7 +118,7 @@ static Boolean Decode_rp(char *Asc, ShortInt *Erg)
 
 static Boolean Decode_rp1(char *Asc, ShortInt *Erg)
 {
-  if (!strcasecmp(Asc, "V")) *Erg = 0;
+  if (!as_strcasecmp(Asc, "V")) *Erg = 0;
   else
   {
     if (!Decode_rp2(Asc, Erg)) return False;
@@ -181,7 +149,7 @@ static Boolean DecodeAdrMode(char *pAsc, const tAdrMode pModes[],
   {
     if (*pWasIndirect && !pModes[z].MayIndirect)
       continue;
-    if (!strcasecmp(pAsc, pModes[z].pName))
+    if (!as_strcasecmp(pAsc, pModes[z].pName))
     {
       *pErg = pModes[z].Code;
       return True;
@@ -300,7 +268,7 @@ static Boolean Decode_f(char *Asc, ShortInt *Erg)
   static char *Flags[FlagCnt] = {"CY", "HC", "Z"};
 
   for (*Erg = 0; *Erg < FlagCnt; (*Erg)++)
-   if (!strcasecmp(Flags[*Erg], Asc)) break;
+   if (!as_strcasecmp(Flags[*Erg], Asc)) break;
   *Erg += 2; return (*Erg <= 4);
 }
 
@@ -309,7 +277,7 @@ static Boolean Decode_sr0(char *Asc, ShortInt *Erg)
   int z;
 
   for (z = 0; z < SRegCnt; z++)
-   if (!strcasecmp(Asc, SRegs[z].Name)) break;
+   if (!as_strcasecmp(Asc, SRegs[z].Name)) break;
   if ((z == SRegCnt-1) && (MomCPU == CPU7810))
   {
     WrError(ErrNum_InvCtrlReg); return False;
@@ -341,16 +309,16 @@ static Boolean Decode_sr2(char *Asc, ShortInt *Erg)
 
 static Boolean Decode_sr3(char *Asc, ShortInt *Erg)
 {
-  if (!strcasecmp(Asc, "ETM0")) *Erg = 0;
-  else if (!strcasecmp(Asc, "ETM1")) *Erg = 1;
+  if (!as_strcasecmp(Asc, "ETM0")) *Erg = 0;
+  else if (!as_strcasecmp(Asc, "ETM1")) *Erg = 1;
   else return False;
   return True;
 }
 
 static Boolean Decode_sr4(char *Asc, ShortInt *Erg)
 {
-  if (!strcasecmp(Asc, "ECNT")) *Erg = 0;
-  else if (!strcasecmp(Asc, "ECPT")) *Erg = 1;
+  if (!as_strcasecmp(Asc, "ECNT")) *Erg = 0;
+  else if (!as_strcasecmp(Asc, "ECPT")) *Erg = 1;
   else return False;
   return True;
 }
@@ -367,7 +335,7 @@ static Boolean Decode_irf(char *Asc, ShortInt *Erg)
             {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 16, 17, 18, 19, 20};
 
   for (*Erg = 0; *Erg < FlagCnt; (*Erg)++)
-   if (!strcasecmp(FlagNames[*Erg], Asc)) break;
+   if (!as_strcasecmp(FlagNames[*Erg], Asc)) break;
   if (*Erg >= FlagCnt) return False;
   *Erg = FlagCodes[*Erg];
   return True;
@@ -413,7 +381,7 @@ static void DecodeMOV(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(2, 2));
-  else if (!strcasecmp(ArgStr[1].Str, "A"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "A"))
   {
     if (Decode_sr1(ArgStr[2].Str, &HReg))
     {
@@ -439,7 +407,7 @@ static void DecodeMOV(Word Code)
       }
     }
   }
-  else if (!strcasecmp(ArgStr[2].Str, "A"))
+  else if (!as_strcasecmp(ArgStr[2].Str, "A"))
   {
     if (Decode_sr(ArgStr[1].Str, &HReg))
     {
@@ -632,11 +600,11 @@ static void DecodeDMOV(Word Code)
 
   if (ChkArgCnt(2, 2))
   {
-    Boolean Swap = strcasecmp(ArgStr[1].Str, "EA") || False;
+    Boolean Swap = as_strcasecmp(ArgStr[1].Str, "EA") || False;
     char *pArg1 = Swap ? ArgStr[2].Str : ArgStr[1].Str,
          *pArg2 = Swap ? ArgStr[1].Str : ArgStr[2].Str;
 
-    if (strcasecmp(pArg1, "EA")) WrError(ErrNum_InvAddrMode);
+    if (as_strcasecmp(pArg1, "EA")) WrError(ErrNum_InvAddrMode);
     else if (Decode_rp3(pArg2, &HReg))
     {
       CodeLen = 1;
@@ -668,7 +636,7 @@ static void DecodeALUImm(Word Code)
     HVal8 = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
     if (OK)
     {
-      if (!strcasecmp(ArgStr[1].Str, "A"))
+      if (!as_strcasecmp(ArgStr[1].Str, "A"))
       {
         CodeLen = 2;
         BAsmCode[0] = 0x06 + ((Code & 14) << 3) + (Code & 1);
@@ -699,11 +667,11 @@ static void DecodeALUReg(Word Code)
 
   if (ChkArgCnt(2, 2))
   {
-    Boolean NoSwap = !strcasecmp(ArgStr[1].Str, "A");
+    Boolean NoSwap = !as_strcasecmp(ArgStr[1].Str, "A");
     char *pArg1 = NoSwap ? ArgStr[1].Str : ArgStr[2].Str,
          *pArg2 = NoSwap ? ArgStr[2].Str : ArgStr[1].Str;
 
-    if (strcasecmp(pArg1, "A")) WrError(ErrNum_InvAddrMode);
+    if (as_strcasecmp(pArg1, "A")) WrError(ErrNum_InvAddrMode);
     else if (!Decode_r(pArg2, &HReg)) WrError(ErrNum_InvAddrMode);
     else
     {
@@ -746,7 +714,7 @@ static void DecodeALUEA(Word Code)
   ShortInt HReg;
 
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1].Str, "EA")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "EA")) WrError(ErrNum_InvAddrMode);
   else if (!Decode_rp3(ArgStr[2].Str, &HReg)) WrError(ErrNum_InvAddrMode);
   else
   {
@@ -821,7 +789,7 @@ static void DecodeWork(Word Code)
 static void DecodeEA(Word Code)
 {
   if (!ChkArgCnt(1, 1));
-  else if (strcasecmp(ArgStr[1].Str, "EA")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "EA")) WrError(ErrNum_InvAddrMode);
   else
   {
     CodeLen = 2;
@@ -836,7 +804,7 @@ static void DecodeDCX_INX(Word Code)
   ShortInt HReg;
 
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "EA"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "EA"))
   {
     CodeLen = 1;
     BAsmCode[0] = 0xa8 + Code;
@@ -855,7 +823,7 @@ static void DecodeEADD_ESUB(Word Code)
   ShortInt HReg;
 
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1].Str, "EA")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "EA")) WrError(ErrNum_InvAddrMode);
   else if (!Decode_r2(ArgStr[2].Str, &HReg)) WrError(ErrNum_InvAddrMode);
   else
   {
@@ -865,37 +833,41 @@ static void DecodeEADD_ESUB(Word Code)
   }
 }
 
-static void DecodeJR_JRE(Word IsJRE)
+static void DecodeJ_JR_JRE(Word Type)
 {
-  if (ChkArgCnt(1, 1))
-  {
-    Boolean OK;
-    Integer AdrInt;
+  Boolean OK;
+  Integer AdrInt;
 
-    AdrInt = EvalStrIntExpression(&ArgStr[1], Int16, &OK) - (EProgCounter() + 1 + IsJRE);
-    if (OK)
-    {
-      if (!IsJRE)
-      {
-        if ((!SymbolQuestionable) && ((AdrInt < -32) || (AdrInt > 31))) WrError(ErrNum_JmpDistTooBig);
-        else
-        {
-          CodeLen = 1;
-          BAsmCode[0] = 0xc0 + (AdrInt & 0x3f);
-        }
-      }
+  if (!ChkArgCnt(1, 1))
+    return;
+
+  AdrInt = EvalStrIntExpression(&ArgStr[1], Int16, &OK) - (EProgCounter() + 1);
+  if (!OK)
+    return;
+
+  if (!Type) /* generic J */
+    Type = RangeCheck(AdrInt, SInt6) ? 1 : 2;
+
+  switch (Type)
+  {
+    case 1: /* JR */
+      if (!SymbolQuestionable && !RangeCheck(AdrInt, SInt6)) WrError(ErrNum_JmpDistTooBig);
       else
       {
-        if ((!SymbolQuestionable) && ((AdrInt < -256) || (AdrInt > 255))) WrError(ErrNum_JmpDistTooBig);
-        else
-        {
-          if ((AdrInt >= -32) && (AdrInt <= 31)) WrError(ErrNum_ShortJumpPossible);
-          CodeLen = 2;
-          BAsmCode[0] = 0x4e + (Hi(AdrInt) & 1);
-          BAsmCode[1] = Lo(AdrInt);
-        }
+        CodeLen = 1;
+        BAsmCode[0] = 0xc0 + (AdrInt & 0x3f);
       }
-    }
+      break;
+    case 2:
+      AdrInt--; /* JRE is 2 bytes long */
+      if (!SymbolQuestionable && !RangeCheck(AdrInt, SInt9)) WrError(ErrNum_JmpDistTooBig);
+      else
+      {
+        CodeLen = 2;
+        BAsmCode[0] = 0x4e + (Hi(AdrInt) & 1);
+        BAsmCode[1] = Lo(AdrInt);
+      }
+      break;
   }
 }
 
@@ -1015,11 +987,11 @@ static void AddALU(Byte NCode, char *NNameI, char *NNameReg, char *NNameEA)
   AddInstTable(InstTable, NNameI, NCode, DecodeALUImm);
   AddInstTable(InstTable, NNameReg, NCode, DecodeALUReg);
   AddInstTable(InstTable, NNameEA, NCode, DecodeALUEA);
-  sprintf(Name, "%sW", NNameReg);
+  as_snprintf(Name, sizeof(Name), "%sW", NNameReg);
   AddInstTable(InstTable, Name, NCode, DecodeALURegW);
-  sprintf(Name, "%sX", NNameReg);
+  as_snprintf(Name, sizeof(Name), "%sX", NNameReg);
   AddInstTable(InstTable, Name, NCode, DecodeALURegX);
-  sprintf(Name, "%sW", NNameI);
+  as_snprintf(Name, sizeof(Name), "%sW", NNameI);
   AddInstTable(InstTable, Name, NCode, DecodeALUImmW);
 }
 
@@ -1064,8 +1036,9 @@ static void InitFields(void)
   AddInstTable(InstTable, "INX", 0, DecodeDCX_INX);
   AddInstTable(InstTable, "EADD", 0x40, DecodeEADD_ESUB);
   AddInstTable(InstTable, "ESUB", 0x60, DecodeEADD_ESUB);
-  AddInstTable(InstTable, "JR", 0, DecodeJR_JRE);
-  AddInstTable(InstTable, "JRE", 1, DecodeJR_JRE);
+  AddInstTable(InstTable, "JR", 1, DecodeJ_JR_JRE);
+  AddInstTable(InstTable, "JRE", 2, DecodeJ_JR_JRE);
+  AddInstTable(InstTable, "J", 0, DecodeJ_JR_JRE);
   AddInstTable(InstTable, "CALF", 0, DecodeCALF);
   AddInstTable(InstTable, "CALT", 0, DecodeCALT);
   AddInstTable(InstTable, "BIT", 0, DecodeBIT);
@@ -1180,7 +1153,7 @@ static void SwitchFrom_78C10(void)
 
 static void SwitchTo_78C10(void)
 {
-  TurnWords = False; ConstMode = ConstModeIntel; SetIsOccupied = False;
+  TurnWords = False; ConstMode = ConstModeIntel;
 
   PCSymbol = "$"; HeaderID = 0x7a; NOPCode = 0x00;
   DivideChars = ","; HasAttrs = False;

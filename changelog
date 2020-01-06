@@ -1,3 +1,62 @@
+2019-12-07 [1.42 Bld 151]
+
+- Addition    : Add MN161x as target
+- Addition    : allow explicit address size specification on BBC/BBR/RMB/SMB for 65C02++
+- Bugfix      : LDA (nn) was accidentally allowed for 6502
+- Bugfix      : Change addressing mode from (nnnn) to (nn) for HuC6280
+- Addition    : Add more devices and bit symbols for ST6
+
+2019-09-25 [1.42 Bld 150]
+
+- Addition    : Add a couple of ST7 types
+
+2019-09-15 [1.42 Bld 149]
+
+- Bugfix      : built-in function abs() works again
+- Change      : ORG to same address no longer starts a new record
+                in output file
+- Addition    : new command line switch '-listradix' to set number
+                system in listing
+
+2019-07-20 [1.42 Bld 148]
+
+- Addition    : Add P2HEX output format "C arrays".
+- Addition    : Add a couple of ST7/STM8 types
+
+2019-06-09 [1.42 Bld 147]
+
+- Addition    : Make include file search strategy more C-like:
+                primarily search in the directory of the file
+                that contains the INCLUDE statement, not the
+                current directory the assembler was called from.
+- Change      : Allow forward references in "\{...}" expressions
+- Change      : Allow SET as both pseudo and machine instruction
+                if it can be differentiated by argument count.
+- Addition    : Add STM8 target
+
+2019-04-20 [1.42 Bld 146]
+
+- Addition    : Added J as generic relative jump for 78C1x
+- Bugfix      : correct index underflow access on Z80 for some cases
+- Bugfix      : Allow spaces between function name and argument(s)
+- Bugfix      : Correct file closing/cleanup
+
+2019-03-09 [1.42 Bld 145]
+
+- Bugfix      : correct argument count check for STRUCT
+- Addition    : Added Hitachi H16 target
+- Addition    : allow displacement/address length override on TLCS-900
+- Bugfix      : regard phase errors in data disposition instructions
+- Addition    : add Commodore/CSG 65CE02 target
+
+2019-02-15 [1.42 Bld 144]
+
+- Bugfix      : correct/augment addressing modes for TLCS-900
+
+2019-02-08 [1.42 Bld 143]
+
+- Bugfix      : correct ColdFire MAC/EMAC syntax 
+
 2019-02-02 [1.42 Bld 142]
 
 - Addition    : Added Parallax SX20/28 target

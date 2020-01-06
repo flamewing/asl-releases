@@ -2,6 +2,8 @@
 #define _NLS_H
 /* nls.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Abhandlung landesspezifischer Unterschiede                                */
@@ -39,15 +41,15 @@ extern void NLS_Initialize(void);
 
 extern Word NLS_GetCountryCode(void);
 
-extern void NLS_DateString(Word Year, Word Month, Word Day, char *Dest);
+extern void NLS_DateString(Word Year, Word Month, Word Day, char *Dest, int DestSize);
 
-extern void NLS_CurrDateString(char *Dest);
+extern void NLS_CurrDateString(char *Dest, int DestSize);
 
-extern void NLS_TimeString(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest);
+extern void NLS_TimeString(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest, int DestSize);
 
-extern void NLS_CurrTimeString(Boolean Use100, char *Dest);
+extern void NLS_CurrTimeString(Boolean Use100, char *Dest, int DestSize);
 
-extern void NLS_CurrencyString(double inp, char *erg);
+extern void NLS_CurrencyString(double inp, char *erg, int DestSize);
 
 extern char Upcase(char inp);
 

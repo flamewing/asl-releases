@@ -34,7 +34,7 @@ PORF		avrbit	MCUSR,0		; Power-on Reset Occured
 ;----------------------------------------------------------------------------
 ; EEPROM
 
-		include	"avr/ee90.inc"
+		include	"ee90.inc"
 
 EEMWE		avrbit	EECR,2		; EEPROM Master Write Enable
 EERIE		avrbit	EECR,3		; EEPROM Interrupt Enable
@@ -147,23 +147,23 @@ TCR2UB		avrbit	ASSR,0		; Timer/Counter Control Register2 Update Busy
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
-		include	"avr/wdm21.inc"
+		include	"wdm21.inc"
 WDTOE		avrbit	WDTCR,4		; Turn-Off Enable
 
 ;----------------------------------------------------------------------------
 ; UART
 
-		include	"avr/uart90.inc"
+		include	"uart90.inc"
 
 ;----------------------------------------------------------------------------
 ; SPI
 
-		include	"avr/spi90.inc"
+		include	"spi90.inc"
 
 ;----------------------------------------------------------------------------
 ; Analog Comparator
 
-		include "avr/ac90.inc"
+		include "ac90.inc"
 
 ;----------------------------------------------------------------------------
 ; A/D Converter

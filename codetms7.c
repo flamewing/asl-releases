@@ -1,38 +1,12 @@
 /* codetms7.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator TMS7000-Familie                                             */
 /*                                                                           */
-/* Historie: 26. 2.1997 Grundsteinlegung                                     */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: codetms7.c,v 1.8 2014/12/05 11:15:29 alfred Exp $                    */
-/*****************************************************************************
- * $Log: codetms7.c,v $
- * Revision 1.8  2014/12/05 11:15:29  alfred
- * - eliminate AND/OR/NOT
- *
- * Revision 1.7  2014/12/01 18:29:40  alfred
- * - replace Nil -> NULL
- *
- * Revision 1.6  2009/02/08 12:49:20  alfred
- * - correct DINT coding, rework to new style & instruction hash table
- *
- * Revision 1.5  2007/11/24 22:48:07  alfred
- * - some NetBSD changes
- *
- * Revision 1.4  2005/10/02 10:00:46  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.3  2005/09/08 17:31:05  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 11:33:04  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -102,7 +76,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
 
   AdrType = ModNone; AdrCnt = 0;
 
-  if (!strcasecmp(pArg->Str, "A"))
+  if (!as_strcasecmp(pArg->Str, "A"))
   {
     if (Mask & MModAccA) AdrType = ModAccA;
     else if (Mask & MModReg)
@@ -116,7 +90,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
     ChkAdr(Mask); return;
   }
 
-  if (!strcasecmp(pArg->Str, "B"))
+  if (!as_strcasecmp(pArg->Str, "B"))
   {
     if (Mask & MModAccB) AdrType = ModAccB;
     else if (Mask & MModReg)
@@ -136,7 +110,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
 
     StrCompRefRight(&ImmComp, pArg, 1);
     l = strlen(ImmComp.Str);
-    if ((l >= 3) & (!strcasecmp(ImmComp.Str + l - 3,"(B)")))
+    if ((l >= 3) & (!as_strcasecmp(ImmComp.Str + l - 3,"(B)")))
     {
       char Save;
 
@@ -238,7 +212,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
     if (OK)
     {
       StrCompShorten(&Right, 1);
-      if (!strcasecmp(Right.Str, "B"))
+      if (!as_strcasecmp(Right.Str, "B"))
       {
         AdrVals[0] = Hi(HVal); AdrVals[1] = Lo(HVal); AdrCnt = 2;
         AdrType = ModBRel;
@@ -479,7 +453,7 @@ static void DecodeJmp(Word Index)
 static void DecodeABReg(Word Index)
 {
   if (!ChkArgCnt(Memo("DJNZ") ? 2 : 1, Memo("DJNZ") ? 2 : 1));
-  else if (!strcasecmp(ArgStr[1].Str, "ST"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "ST"))
   {
     if ((Memo("PUSH")) || (Memo("POP")))
     {
@@ -1017,7 +991,7 @@ static void InternSymbol_TMS7(char *pAsc, TempResult *pErg)
   if ((strlen(pAsc) < 2) || ((mytoupper(*pAsc) != 'R') && (mytoupper(*pAsc) != 'P')))
     return;
 
-  strmaxcpy(h, pAsc + 1, 255);
+  strmaxcpy(h, pAsc + 1, STRINGSIZE);
   if ((*h == '0') && (strlen(h) > 1))
     *h = '$';
   pErg->Contents.Int = ConstLongInt(h, &Err, 10);
@@ -1036,7 +1010,7 @@ static void SwitchFrom_TMS7(void)
 
 static void SwitchTo_TMS7(void)
 {
-  TurnWords = False; ConstMode = ConstModeIntel; SetIsOccupied = False;
+  TurnWords = False; ConstMode = ConstModeIntel;
 
   PCSymbol = "$"; HeaderID = 0x73; NOPCode = 0x00;
   DivideChars = ","; HasAttrs = False;

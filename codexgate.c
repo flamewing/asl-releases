@@ -1,31 +1,12 @@
 /* codexgate.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator XGATE-Kern                                                  */
+/*                                                                           */
 /*****************************************************************************/
-/* $Id: codexgate.c,v 1.6 2010/04/17 13:14:24 alfred Exp $                   */
-/*****************************************************************************
- * $Log: codexgate.c,v $
- * Revision 1.6  2010/04/17 13:14:24  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.5  2007/11/24 22:48:08  alfred
- * - some NetBSD changes
- *
- * Revision 1.4  2007/06/28 20:27:31  alfred
- * - silence some warnings on recent GNU C versions
- *
- * Revision 1.3  2006/08/05 18:06:43  alfred
- * - silence some compiler warnings
- *
- * Revision 1.2  2005/09/12 18:35:21  alfred
- * - add load/store
- *
- * Revision 1.1  2005/09/11 18:10:51  alfred
- * - added XGATE
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -379,17 +360,17 @@ static void DecodeTFR(Word Index)
   {
     Boolean OK = True;
 
-    if (!strcasecmp(ArgStr[2].Str, "CCR"))
+    if (!as_strcasecmp(ArgStr[2].Str, "CCR"))
     {
       WAsmCode[0] = 0x00f8;
       RegIdx = 1;
     }
-    else if (!strcasecmp(ArgStr[1].Str, "CCR"))
+    else if (!as_strcasecmp(ArgStr[1].Str, "CCR"))
     {
       WAsmCode[0] = 0x00f9;
       RegIdx = 2;
     }
-    else if (!strcasecmp(ArgStr[2].Str, "PC"))
+    else if (!as_strcasecmp(ArgStr[2].Str, "PC"))
     {
       WAsmCode[0] = 0x00fa;
       RegIdx = 1;
@@ -678,7 +659,7 @@ static void SwitchTo_XGATE(void)
 {
   PFamilyDescr pDescr;
 
-  TurnWords = True; ConstMode = ConstModeMoto; SetIsOccupied = False;
+  TurnWords = True; ConstMode = ConstModeMoto;
 
   pDescr = FindFamilyByName("XGATE");
   PCSymbol = "*"; HeaderID = pDescr->Id; NOPCode = 0x0100;

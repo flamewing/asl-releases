@@ -1,114 +1,12 @@
 /* codemsp.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator MSP430                                                      */
 /*                                                                           */
-/* Historie:                                                                 */
-/*             18. 8.1998 BookKeeping-Aufruf bei BSS                         */
-/*              2. 1.1998 ChkPC umgestellt                                   */
-/*              9. 3.2000 'ambiguous else'-Warnungen beseitigt               */
-/*             2001-11-16 Endianness must be LSB first                       */
-/*             2002-01-27 allow immediate addressing for one-op instrs(doj)  */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: codemsp.c,v 1.26 2017/06/28 17:02:40 alfred Exp $                     */
-/***************************************************************************** 
- * $Log: codemsp.c,v $
- * Revision 1.26  2017/06/28 17:02:40  alfred
- * - correct MSP430 source operand conversion 0(Rn) -> @Rn
- *
- * Revision 1.25  2017/06/07 19:12:43  alfred
- * - remove double JNZ instruction
- *
- * Revision 1.24  2017/05/31 19:13:14  alfred
- * - MSP430(X): forgot to set PCDist for some instructions
- * - MSP430(X): also set upper 4 bits of displacement for emulated instruction
- * - correct commented code in t_msp430x
- *
- * Revision 1.23  2017/05/15 19:18:36  alfred
- * - correct encoding of TSTA
- *
- * Revision 1.22  2017/05/01 12:39:41  alfred
- * - complete 430X target
- *
- * Revision 1.21  2017/05/01 09:50:32  alfred
- * - correct CALLA range checking
- *
- * Revision 1.20  2017/04/21 20:00:46  alfred
- * - handle rtpc/rptz prefixes
- * - allow > operator to force long immediate
- *
- * Revision 1.19  2017/04/15 13:18:22  alfred
- * - implement emulated MSP instructions no longer via macros
- *
- * Revision 1.18  2017/04/14 10:01:57  alfred
- * - better handling of constant -1 depending on operand size
- *
- * Revision 1.17  2017/04/14 09:56:45  alfred
- * - add the new MSP430X instructions without prefix
- *
- * Revision 1.16  2017/04/03 19:40:47  alfred
- * - extend addresses for MSP430X address decoding
- *
- * Revision 1.15  2017/04/03 18:51:49  alfred
- * - extend/fix MSP430(X) operand sizes
- *
- * Revision 1.14  2017/04/03 18:10:47  alfred
- * - first reworks and cleanups for MSP430X
- *
- * Revision 1.13  2014/12/07 19:14:01  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.12  2014/12/05 11:15:28  alfred
- * - eliminate AND/OR/NOT
- *
- * Revision 1.11  2013/12/21 19:46:51  alfred
- * - dynamically resize code buffer
- *
- * Revision 1.10  2012-05-26 13:49:19  alfred
- * - MSP additions, make implicit macro parameters always case-insensitive
- *
- * Revision 1.9  2010/12/05 23:18:57  alfred
- * - improve erro arguments
- *
- * Revision 1.8  2008/11/23 10:39:17  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.7  2007/12/31 12:56:27  alfred
- * - rework to hash table
- *
- * Revision 1.6  2007/11/24 22:48:07  alfred
- * - some NetBSD changes
- *
- * Revision 1.5  2005/10/30 13:23:28  alfred
- * - warn about odd program counters
- *
- * Revision 1.4  2005/10/02 10:00:46  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.3  2005/09/30 08:31:48  alfred
- * - correct byte disposition for big-endian machines
- *
- * Revision 1.2  2005/09/08 17:31:05  alfred
- * - add missing include
- *
- * Revision 1.1  2003/11/06 02:49:23  alfred
- * - recreated
- *
- * Revision 1.5  2003/05/02 21:23:12  alfred
- * - strlen() updates
- *
- * Revision 1.4  2002/08/14 18:43:49  alfred
- * - warn null allocation, remove some warnings
- *
- * Revision 1.3  2002/07/27 17:44:50  alfred
- * - one more TempAll fix
- *
- * Revision 1.2  2002/07/14 18:39:59  alfred
- * - fixed TempAll-related warnings
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -143,7 +41,7 @@ typedef enum
   eModeRegDisp = 1,
   eModeIReg = 2,
   eModeIRegAutoInc = 3,
-  eModeNone = 0xff,
+  eModeNone = 0xff
 } tMode;
 
 #define MModeReg (1 << eModeReg)
@@ -156,7 +54,7 @@ typedef enum
 typedef enum
 {
   eExtModeNo = 0,
-  eExtModeYes = 1,
+  eExtModeYes = 1
 } tExtMode;
 
 typedef enum
@@ -165,7 +63,7 @@ typedef enum
   eOpSizeW = 1,
   eOpSizeA = 2,
   eOpSizeCnt,
-  eOpSizeDefault = eOpSizeW,
+  eOpSizeDefault = eOpSizeW
 } tOpSize;
 
 #define RegPC 0
@@ -221,15 +119,15 @@ static Boolean DecodeReg(const char *Asc, Word *pErg)
 
   if (FindRegDef(Asc, &s)) Asc = s;
 
-  if (!strcasecmp(Asc, "PC"))
+  if (!as_strcasecmp(Asc, "PC"))
   {
     *pErg = 0; return True;
   }
-  else if (!strcasecmp(Asc,"SP"))
+  else if (!as_strcasecmp(Asc,"SP"))
   {
     *pErg = 1; return True;
   }
-  else if (!strcasecmp(Asc, "SR"))
+  else if (!as_strcasecmp(Asc, "SR"))
   {
     *pErg = 2; return True;
   }
@@ -577,7 +475,7 @@ static void DecodeFixed(Word Code)
 {
   if (!ChkArgCnt(0, 0));
   else if (*AttrPart.Str) WrError(ErrNum_UseLessAttr);
-  else if (OpSize != eOpSizeDefault) WrError(ErrNum_InvOpsize);
+  else if (OpSize != eOpSizeDefault) WrError(ErrNum_InvOpSize);
   else
   {
     if (Odd(EProgCounter())) WrError(ErrNum_AddrNotAligned);
@@ -590,7 +488,7 @@ static void DecodeTwoOp(Word Code)
   tAdrParts SrcParts, DestParts;
 
   if (!ChkArgCnt(2, 2));
-  else if (OpSize > eOpSizeW) WrError(ErrNum_InvOpsize);
+  else if (OpSize > eOpSizeW) WrError(ErrNum_InvOpSize);
   else
   {
     PCDist = 2;
@@ -642,7 +540,7 @@ static void DecodeEmulOneToTwo(Word Code)
 
   if (OpSize > eOpSizeW)
   {
-    WrError(ErrNum_InvOpsize);
+    WrError(ErrNum_InvOpSize);
     return;
   }
 
@@ -851,8 +749,8 @@ static void DecodeOneOp(Word Index)
   const OneOpOrder *pOrder = OneOpOrders + Index;
 
   if (!ChkArgCnt(1, 1));
-  else if (OpSize > eOpSizeW) WrError(ErrNum_InvOpsize);
-  else if ((OpSize == eOpSizeB) && (!pOrder->MayByte)) WrError(ErrNum_InvOpsize);
+  else if (OpSize > eOpSizeW) WrError(ErrNum_InvOpSize);
+  else if ((OpSize == eOpSizeB) && (!pOrder->MayByte)) WrError(ErrNum_InvOpSize);
   else
   {
     tAdrParts AdrParts;
@@ -873,7 +771,7 @@ static void DecodeOneOpX(Word Index)
   const OneOpOrder *pOrder = OneOpOrders + Index;
 
   if (!ChkArgCnt(1, 1));
-  else if ((OpSize == eOpSizeB) && (!pOrder->MayByte)) WrError(ErrNum_InvOpsize);
+  else if ((OpSize == eOpSizeB) && (!pOrder->MayByte)) WrError(ErrNum_InvOpSize);
   else
   {
     tAdrParts AdrParts;
@@ -1061,14 +959,14 @@ static void DecodeADDA_SUBA_CMPA(Word Code)
       CodeLen = 2;
     }
     else
-      WrError(ErrNum_InvOpsize);
+      WrError(ErrNum_InvOpSize);
   }
 }
 
 static void DecodeRxM(Word Code)
 {
   if (!ChkArgCnt(2, 2));
-  else if (OpSize == eOpSizeB) WrError(ErrNum_InvOpsize);
+  else if (OpSize == eOpSizeB) WrError(ErrNum_InvOpSize);
   else if (!DecodeReg(ArgStr[2].Str, &WAsmCode[0])) WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
   else if (ArgStr[1].Str[0] != '#') WrError(ErrNum_OnlyImmAddr);
   else
@@ -1135,7 +1033,7 @@ static void DecodeCALLA(Word Code)
 static void DecodePUSHM_POPM(Word Code)
 {
   if (!ChkArgCnt(2, 2));
-  else if (OpSize == 0) WrError(ErrNum_InvOpsize);
+  else if (OpSize == 0) WrError(ErrNum_InvOpSize);
   else if (!DecodeReg(ArgStr[2].Str, &WAsmCode[0])) WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
   else if (ArgStr[1].Str[0] != '#') WrError(ErrNum_OnlyImmAddr);
   else
@@ -1164,7 +1062,7 @@ static void DecodeJmp(Word Code)
   Boolean OK;
 
   if (!ChkArgCnt(1, 1));
-  else if (OpSize != eOpSizeDefault) WrError(ErrNum_InvOpsize);
+  else if (OpSize != eOpSizeDefault) WrError(ErrNum_InvOpSize);
   {
     AdrInt = EvalStrIntExpression(&ArgStr[1], UInt16, &OK) - (EProgCounter() + 2);
     if (OK)
@@ -1208,9 +1106,6 @@ static void DecodeBYTE(Word Index)
           }
           else PutByte(t.Contents.Int);
           break;
-        case TempFloat:
-          WrError(ErrNum_InvOpType); OK = False;
-          break;
         case TempString:
         {
           unsigned l = t.Contents.Ascii.Length;
@@ -1228,8 +1123,12 @@ static void DecodeBYTE(Word Index)
           }
           break;
         }
+        case TempFloat:
+          WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[z]);
+          /* fall-through */
         default: 
-          OK = False; break;
+          OK = False;
+          break;
       }
       z++;
     }
@@ -1371,7 +1270,7 @@ static void AddTwoOp(char *NName, Word NCode)
   {
     char XName[20];
 
-    sprintf(XName, "%sX", NName);
+    as_snprintf(XName, sizeof(XName), "%sX", NName);
     AddInstTable(InstTable, XName, NCode, DecodeTwoOpX);
   }
 }
@@ -1396,7 +1295,7 @@ static void AddOneOp(char *NName, Boolean NMay, Boolean AllowX, Word NCode)
   {
     char XName[20];
 
-    sprintf(XName, "%sX", NName);
+    as_snprintf(XName, sizeof(XName), "%sX", NName);
     AddInstTable(InstTable, XName, InstrZ, DecodeOneOpX);
   }
   InstrZ++;
@@ -1541,8 +1440,8 @@ static void MakeCode_MSP(void)
       {
         OpSize = eOpSizeA;
         break;
-        /* conditional break */
       }
+      /* else fall-through */
     default:
       WrStrErrorPos(ErrNum_UndefAttr, &AttrPart);
       return;
@@ -1567,7 +1466,7 @@ static void SwitchFrom_MSP(void)
 
 static void SwitchTo_MSP(void)
 {
-  TurnWords = False; ConstMode = ConstModeIntel; SetIsOccupied = False;
+  TurnWords = False; ConstMode = ConstModeIntel;
 
   PCSymbol = "$"; HeaderID = 0x4a; NOPCode = 0x4303; /* = MOV #0,#0 */
   DivideChars = ","; HasAttrs = True; AttrChars = ".";

@@ -1,47 +1,12 @@
 /* code6816.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegeneratormodul CPU16                                                  */
 /*                                                                           */
-/* Historie: 15.10.1996 Grundsteinlegung                                     */
-/*            2. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
-/*           30. 8.2000 added Moto16 Pseudos                                 */
-/*            1. 7.2001 forgot to set AttrChars                              */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code6816.c,v 1.10 2014/12/05 11:15:28 alfred Exp $                    */
-/*****************************************************************************
- * $Log: code6816.c,v $
- * Revision 1.10  2014/12/05 11:15:28  alfred
- * - eliminate AND/OR/NOT
- *
- * Revision 1.9  2014/11/14 13:01:43  alfred
- * - rework to current style
- *
- * Revision 1.8  2014/11/05 15:47:14  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.7  2014/03/08 21:06:36  alfred
- * - rework ASSUME framework
- *
- * Revision 1.6  2007/11/24 22:48:05  alfred
- * - some NetBSD changes
- *
- * Revision 1.5  2006/07/23 12:58:16  alfred
- * - completed rework
- *
- * Revision 1.4  2006/07/22 20:33:16  alfred
- * - begun reworking to new style
- *
- * Revision 1.3  2005/09/08 17:31:04  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 12:04:46  alfred
- * - relocated DecodeMot(16)Pseudo into separate module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -92,7 +57,7 @@ enum
   ModImm = 4,
   ModImmExt = 5,
   ModDisp20 = ModDisp16,
-  ModAbs20 = ModAbs,
+  ModAbs20 = ModAbs
 };
 
 #define MModDisp8 (1 << ModDisp8)
@@ -166,7 +131,7 @@ static void DecodeAdr(int Start, int Stop, Boolean LongAdr, Byte Mask)
   {
     char Str[100];
 
-    sprintf(Str, getmessage(Num_ErrMsgAddrArgCnt), 1, 2, Stop - Start + 1);
+    as_snprintf(Str, sizeof(Str), getmessage(Num_ErrMsgAddrArgCnt), 1, 2, Stop - Start + 1);
     WrXError(ErrNum_WrongArgCnt, Str);
     return;
   }
@@ -231,17 +196,17 @@ static void DecodeAdr(int Start, int Stop, Boolean LongAdr, Byte Mask)
   if (Stop == 2)
   {
     AdrPart = 0xff;
-    if (!strcasecmp(ArgStr[Start + 1].Str, "X"))
+    if (!as_strcasecmp(ArgStr[Start + 1].Str, "X"))
       AdrPart = 0x00;
-    else if (!strcasecmp(ArgStr[Start + 1].Str, "Y"))
+    else if (!as_strcasecmp(ArgStr[Start + 1].Str, "Y"))
       AdrPart = 0x10;
-    else if (!strcasecmp(ArgStr[Start + 1].Str, "Z"))
+    else if (!as_strcasecmp(ArgStr[Start + 1].Str, "Z"))
       AdrPart = 0x20;
     else
       WrStrErrorPos(ErrNum_InvReg, &ArgStr[Start + 1]);
     if (AdrPart != 0xff)
     {
-      if (!strcasecmp(ArgStr[Start].Str, "E"))
+      if (!as_strcasecmp(ArgStr[Start].Str, "E"))
         AdrMode = ModDispE;
       else
       {
@@ -590,7 +555,7 @@ static void DecodeMov(Word Index)
     }
   }
   else if (!ChkArgCnt(3, 3));
-  else if (!strcasecmp(ArgStr[2].Str, "X"))
+  else if (!as_strcasecmp(ArgStr[2].Str, "X"))
   {
     BAsmCode[1] = EvalStrIntExpression(&ArgStr[1], SInt8, &OK);
     if (OK)
@@ -604,7 +569,7 @@ static void DecodeMov(Word Index)
       }
     }
   }
-  else if (!strcasecmp(ArgStr[3].Str, "X"))
+  else if (!as_strcasecmp(ArgStr[3].Str, "X"))
   {
     BAsmCode[3] = EvalStrIntExpression(&ArgStr[2], SInt8, &OK);
     if (OK)
@@ -1153,7 +1118,6 @@ static void SwitchTo_6816(void)
 
   TurnWords = False;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   PCSymbol = "*";
   HeaderID = 0x65;

@@ -1,12 +1,10 @@
 /* code8x30x.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator Signetics 8X30x                                             */
-/*                                                                           */
-/* Historie: 25. 6.1997 Grundsteinlegung                                     */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -44,25 +42,25 @@ static Boolean DecodeReg(const tStrComp *pArg, Word *Erg, ShortInt *ErgLen)
 
   *ErgLen = -1;
 
-  if (!strcasecmp(pArg->Str, "AUX"))
+  if (!as_strcasecmp(pArg->Str, "AUX"))
   {
     *Erg = 0;
     return True;
   }
 
-  if (!strcasecmp(pArg->Str, "OVF"))
+  if (!as_strcasecmp(pArg->Str, "OVF"))
   {
     *Erg = 8;
     return True;
   }
 
-  if (!strcasecmp(pArg->Str, "IVL"))
+  if (!as_strcasecmp(pArg->Str, "IVL"))
   {
     *Erg = 7;
     return True;
   }
 
-  if (!strcasecmp(pArg->Str, "IVR"))
+  if (!as_strcasecmp(pArg->Str, "IVR"))
   {
     *Erg = 15;
     return True;
@@ -92,7 +90,7 @@ static Boolean DecodeReg(const tStrComp *pArg, Word *Erg, ShortInt *ErgLen)
     }
   }
 
-  if ((Len == 4) && (strncasecmp(pArg->Str + 1, "IV", 2) == 0) && (pArg->Str[3] >= '0') && (pArg->Str[3] <= '7'))
+  if ((Len == 4) && (as_strncasecmp(pArg->Str + 1, "IV", 2) == 0) && (pArg->Str[3] >= '0') && (pArg->Str[3] <= '7'))
   {
     if (mytoupper(*pArg->Str) == 'L')
     {
@@ -518,7 +516,7 @@ static void DecodeLIV_RIV(Word Code)
        if (GetLen(&ArgStr[3], &Len))
        {
          PushLocHandle(-1);
-         EnterIntSymbol(LabPart.Str, Code | (Adr << 16) | (Ofs << 8) | (Len & 7), SegNone, False);
+         EnterIntSymbol(&LabPart, Code | (Adr << 16) | (Ofs << 8) | (Len & 7), SegNone, False);
          PopLocHandle();
        }
     }
@@ -587,7 +585,6 @@ static void SwitchTo_8x30X(void)
 {
   TurnWords = False;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   PCSymbol = "*";
   HeaderID = 0x3a;

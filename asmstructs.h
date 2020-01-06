@@ -2,6 +2,8 @@
 #define _ASMSTRUCTS_H
 /* asmstructs.h  */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* functions for structure handling                                          */
@@ -44,8 +46,9 @@
  *****************************************************************************/
    
 struct sStructElem;
+struct sStrComp;
 
-typedef void (*tStructElemExpandFnc)(const char *pVarName, const struct sStructElem *pStructElem, LargeWord Base);
+typedef void (*tStructElemExpandFnc)(const struct sStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base);
 
 typedef struct sStructElem
 {

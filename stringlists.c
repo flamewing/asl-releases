@@ -1,5 +1,7 @@
 /* stringlists.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Implementation von String-Listen                                          */
@@ -132,7 +134,7 @@ char *GetAndCutStringList(StringList *List)
   {
     Hilf = (*List);
     *List = (*List)->Next;
-    strmaxcpy(Result, Hilf->Content, 255);
+    strmaxcpy(Result, Hilf->Content, STRINGSIZE);
     free(Hilf->Content);
     free(Hilf);
   }

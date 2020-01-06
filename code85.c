@@ -1,54 +1,12 @@
 /* code85.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator 8080/8085                                                   */
 /*                                                                           */
-/* Historie: 24.10.1996 Grundsteinlegung                                     */
-/*            2. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code85.c,v 1.11 2017/06/07 19:41:00 alfred Exp $                      */
-/***************************************************************************** 
- * $Log: code85.c,v $
- * Revision 1.11  2017/06/07 19:41:00  alfred
- * - add missing ClearONOFF()
- *
- * Revision 1.10  2016/11/24 22:42:26  alfred
- * - silence warning
- *
- * Revision 1.9  2016/10/07 20:39:07  alfred
- * - add Z80SYNTAX instruction
- *
- * Revision 1.8  2016/10/07 19:35:29  alfred
- * - first version of Z80 syntax ibn 8080/8085 target
- *
- * Revision 1.7  2016/04/26 14:13:50  alfred
- * - complain about wrong register names for PUSH/POP
- *
- * Revision 1.6  2014/12/07 19:14:00  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.5  2014/08/10 13:27:53  alfred
- * - rework to current style
- *
- * Revision 1.4  2007/11/24 22:48:05  alfred
- * - some NetBSD changes
- *
- * Revision 1.3  2005/09/08 16:53:42  alfred
- * - use common PInstTable
- *
- * Revision 1.2  2004/05/29 11:33:01  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- * Revision 1.1  2003/11/06 02:49:22  alfred
- * - recreated
- *
- * Revision 1.2  2002/11/09 13:27:12  alfred
- * - added hash table search, added undocumented 8085 instructions
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -78,7 +36,7 @@ typedef enum
   ModReg16 = 1,
   ModIReg16 = 2,
   ModAbs = 3,
-  ModImm = 4,
+  ModImm = 4
 } tAdrMode;
 
 #define MModReg8 (1 << ModReg8)
@@ -125,7 +83,7 @@ static Boolean DecodeReg16(char *pAsc, Boolean OnlyZ80Names, Byte *pResult)
   static const char *RegNames[8] = {"B", "D", "H", "SP", "BC", "DE", "HL", "SP"};
 
   for (*pResult = OnlyZ80Names ? 4 : 0; (*pResult) < 8; (*pResult)++)
-    if (!strcasecmp(pAsc, RegNames[*pResult]))
+    if (!as_strcasecmp(pAsc, RegNames[*pResult]))
     {
       *pResult &= 3;
       break;
@@ -143,7 +101,7 @@ static const int ConditionCnt = sizeof(pConditions) / sizeof(*pConditions);
 static Boolean DecodeCondition(const char *pAsc, Byte *pResult)
 {
   for (*pResult = 0; *pResult < ConditionCnt; (*pResult)++)
-    if (!strcasecmp(pAsc, pConditions[*pResult]))
+    if (!as_strcasecmp(pAsc, pConditions[*pResult]))
       return True;
   return False;
 }
@@ -370,7 +328,7 @@ static void DecodeLDAX_STAX(Word Index)
     switch (Reg)
     {
       case 3:                             /* SP */
-        WrError(ErrNum_InvOpType);
+        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
         break;
       case 2:                             /* H --> MOV A,M oder M,A */
         CodeLen = 1;
@@ -391,8 +349,8 @@ static void DecodePUSH_POP(Word Index)
 
   if (ChkArgCnt(1, 1))
   {
-    if ((!strcasecmp(ArgStr[1].Str, "PSW"))
-     || (AllowZ80Syntax && (!strcasecmp(ArgStr[1].Str, "AF"))))
+    if ((!as_strcasecmp(ArgStr[1].Str, "PSW"))
+     || (AllowZ80Syntax && (!as_strcasecmp(ArgStr[1].Str, "AF"))))
     {
       Reg = 3;
       OK = TRUE;
@@ -418,7 +376,7 @@ static void DecodeRST(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(1, 1));
-  else if ((MomCPU >= CPU8085U) && (!strcasecmp(ArgStr[1].Str, "V")))
+  else if ((MomCPU >= CPU8085U) && (!as_strcasecmp(ArgStr[1].Str, "V")))
   {
     CodeLen = 1;
     BAsmCode[0] = 0xcb; 
@@ -826,7 +784,8 @@ static void DecodeSUB(Word Code)
         return;
       case ModReg8:
         if (AdrVals[0] == AccReg)
-          break; /* conditional */
+          break;
+        /* else fall-through */
       default:
         WrError(ErrNum_InvAddrMode);
         return;
@@ -885,7 +844,8 @@ static void DecodeALU8_Z80(Word Code)
         return;
       case ModReg8:
         if (AdrVals[0] == AccReg)
-          break; /* conditional */
+          break;
+        /* else fall-through */
       default:
         WrError(ErrNum_InvAddrMode);
         return;
@@ -953,7 +913,8 @@ static void DecodeCP(Word Code)
         return;
       case ModReg8:
         if (AdrVals[0] == AccReg)
-          break; /* conditional */
+          break;
+        /* else fall-through */
       default:
         WrError(ErrNum_InvAddrMode);
         return;
@@ -1268,7 +1229,6 @@ static void SwitchTo_85(void)
 {
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = 0x41;

@@ -1,62 +1,12 @@
 /* code56k.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* AS-Codegeneratormodul fuer die DSP56K-Familie                             */
 /*                                                                           */
-/* Historie: 10. 6.1996 Grundsteinlegung                                     */
-/*            7. 6.1998 563xx-Erweiterungen fertiggestellt                   */
-/*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
-/*           18. 8.1998 BookKeeping-Aufruf bei RES                           */
-/*            2. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 1.2000 PC-relativ geht relativ zur Instruktion selber und   */
-/*                      nicht zur INstruktion selber!                        */
-/*                      ShortMode wird bei absoluter Adressierung gemerkt    */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code56k.c,v 1.11 2016/09/12 18:20:21 alfred Exp $                     */
-/*****************************************************************************
- * $Log: code56k.c,v $
- * Revision 1.11  2016/09/12 18:20:21  alfred
- * - use memmove() for overlapping copy
- *
- * Revision 1.10  2016/08/17 21:26:46  alfred
- * - fix some errors and warnings detected by clang
- *
- * Revision 1.9  2014/12/07 19:13:59  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.8  2014/12/05 11:58:15  alfred
- * - collapse STDC queries into one file
- *
- * Revision 1.7  2014/11/10 15:25:26  alfred
- * - rework to current style
- *
- * Revision 1.6  2010/04/17 13:14:20  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.5  2008/12/14 20:22:03  alfred
- * - allow forcing of long addresses
- *
- * Revision 1.4  2008/11/23 10:39:16  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.3  2007/11/24 22:48:04  alfred
- * - some NetBSD changes
- *
- * Revision 1.2  2005/09/08 17:31:03  alfred
- * - add missing include
- *
- * Revision 1.1  2003/11/06 02:49:20  alfred
- * - recreated
- *
- * Revision 1.3  2003/05/02 21:23:10  alfred
- * - strlen() updates
- *
- * Revision 1.2  2002/08/14 18:43:48  alfred
- * - warn null allocation, remove some warnings
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -134,7 +84,7 @@ enum
   ModIndex = 6,
   ModModDec = 7,
   ModModInc = 8,
-  ModDisp = 9,
+  ModDisp = 9
 };
 
 #define MModImm (1 << ModImm)
@@ -215,7 +165,7 @@ static Boolean DecodeReg(char *Asc, LongInt *Erg)
   Word z;
 
   for (z = 0; z < RegCount; z++)
-    if (!strcasecmp(Asc, RegNames[z]))
+    if (!as_strcasecmp(Asc, RegNames[z]))
     {
       *Erg = z + 4;
       return True;
@@ -283,7 +233,7 @@ static Boolean DecodeLReg(char *Asc, LongInt *Erg)
   Word z;
 
   for (z = 0; z < RegCount; z++)
-    if (!strcasecmp(Asc, RegNames[z]))
+    if (!as_strcasecmp(Asc, RegNames[z]))
     {
       *Erg = z;
       return True;
@@ -303,7 +253,7 @@ static Boolean DecodeXYABReg(char *Asc, LongInt *Erg)
   Word z;
 
   for (z = 0; z < RegCount; z++)
-    if (!strcasecmp(Asc, RegNames[z]))
+    if (!as_strcasecmp(Asc, RegNames[z]))
     {
       *Erg = z;
       return True;
@@ -323,7 +273,7 @@ static Boolean DecodeXYAB0Reg(char *Asc, LongInt *Erg)
   Word z;
 
   for (z = 0; z < RegCount; z++)
-    if (!strcasecmp(Asc, RegNames[z]))
+    if (!as_strcasecmp(Asc, RegNames[z]))
     {
       *Erg = z + 2;
       return True;
@@ -343,7 +293,7 @@ static Boolean DecodeXYAB1Reg(char *Asc, LongInt *Erg)
   Word z;
 
   for (z = 0; z < RegCount; z++)
-    if (!strcasecmp(Asc, RegNames[z]))
+    if (!as_strcasecmp(Asc, RegNames[z]))
     {
       *Erg = z + 2;
       return True;
@@ -364,7 +314,7 @@ static Boolean DecodePCReg(char *Asc, LongInt *Erg)
   Word z;
 
   for (z = 0; z < RegCount; z++)
-    if (!strcasecmp(Asc, RegNames[z]))
+    if (!as_strcasecmp(Asc, RegNames[z]))
     {
       (*Erg) = z;
       return True;
@@ -382,17 +332,17 @@ static Boolean DecodeAddReg(char *Asc, LongInt *Erg)
     return True;
   }
   /* >=56300 ? */
-  if (!strcasecmp(Asc, "EP"))
+  if (!as_strcasecmp(Asc, "EP"))
   {
     *Erg = 0x0a;
     return True;
   }
-  if (!strcasecmp(Asc, "VBA"))
+  if (!as_strcasecmp(Asc, "VBA"))
   {
     *Erg = 0x10;
     return True;
   }
-  if (!strcasecmp(Asc, "SC"))
+  if (!as_strcasecmp(Asc, "SC"))
   {
     *Erg = 0x11;
     return True;
@@ -434,13 +384,13 @@ static Boolean DecodeControlReg(char *Asc, LongInt *Erg)
 {
   Boolean Result = True;
 
-  if (!strcasecmp(Asc, "MR"))
+  if (!as_strcasecmp(Asc, "MR"))
     *Erg = 0;
-  else if (!strcasecmp(Asc, "CCR"))
+  else if (!as_strcasecmp(Asc, "CCR"))
     *Erg = 1;
-  else if ((!strcasecmp(Asc, "OMR")) || (!strcasecmp(Asc, "COM")))
+  else if ((!as_strcasecmp(Asc, "OMR")) || (!as_strcasecmp(Asc, "COM")))
     *Erg = 2;
-  else if ((!strcasecmp(Asc, "EOM")) && (MomCPU >= CPU56000))
+  else if ((!as_strcasecmp(Asc, "EOM")) && (MomCPU >= CPU56000))
     *Erg = 3;
   else
     Result = False;
@@ -722,7 +672,7 @@ static Boolean DecodeCondition(char *Asc, Word *Erg)
   Boolean Result;
 
   (*Erg) = 0;
-  while ((*Erg < CondCount) && (strcasecmp(CondNames[*Erg], Asc)))
+  while ((*Erg < CondCount) && (as_strcasecmp(CondNames[*Erg], Asc)))
     (*Erg)++;
   if (*Erg == CondCount - 1)
     *Erg = 8;
@@ -746,10 +696,10 @@ static Boolean DecodeMOVE_1(int Start)
   Boolean Result = False;
   Byte SegMask;
 
-  if (!strncasecmp(ArgStr[Start].Str, "IF", 2))
+  if (!as_strncasecmp(ArgStr[Start].Str, "IF", 2))
   {
     l = strlen(ArgStr[Start].Str);
-    if (!strcasecmp(ArgStr[Start].Str + l - 2, ".U"))
+    if (!as_strcasecmp(ArgStr[Start].Str + l - 2, ".U"))
     {
       RegErg = 0x1000;
       l -= 2;
@@ -952,7 +902,7 @@ static Boolean DecodeMOVE_2(int Start)
 
   /* 1. Spezialfall X auf rechter Seite ? */
 
-  if (!strcasecmp(Left2Comp.Str, "X0"))
+  if (!as_strcasecmp(Left2Comp.Str, "X0"))
   {
     if (!DecodeALUReg(Right2Comp.Str, &RegErg, False, False, True)) WrError(ErrNum_InvAddrMode);
     else if (strcmp(Left1Comp.Str, Right2Comp.Str)) WrError(ErrNum_InvAddrMode);
@@ -972,7 +922,7 @@ static Boolean DecodeMOVE_2(int Start)
 
   /* 2. Spezialfall Y auf linker Seite ? */
 
-  if (!strcasecmp(Left1Comp.Str, "Y0"))
+  if (!as_strcasecmp(Left1Comp.Str, "Y0"))
   {
     if (!DecodeALUReg(Right1Comp.Str, &RegErg, False, False, True)) WrError(ErrNum_InvAddrMode);
     else if (strcmp(Left2Comp.Str, Right1Comp.Str)) WrError(ErrNum_InvAddrMode);
@@ -1128,8 +1078,11 @@ static Boolean DecodePseudo(void)
             }
             if (BCount != 2) CodeLen++;
             break;
+          case TempFloat:
+            WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[z]);
+            /* fall-through */
           default:
-            WrError(ErrNum_InvOpType); OK = False;
+            OK = False;
         }
       }
       if (!OK) CodeLen = 0;
@@ -1197,7 +1150,7 @@ static void DecodePar(Word Index)
           h = Reg1 << 3;
         break;
       case ParFixAB:
-        if (strcasecmp(ArgStr[1].Str, "A,B")) SetError(ErrNum_InvRegPair);
+        if (as_strcasecmp(ArgStr[1].Str, "A,B")) SetError(ErrNum_InvRegPair);
         else
           h = 0;
         break;
@@ -1320,9 +1273,9 @@ static void DecodePar(Word Index)
         }
         break;
       case ParABBA:
-        if  (!strcasecmp(ArgStr[1].Str, "B,A"))
+        if  (!as_strcasecmp(ArgStr[1].Str, "B,A"))
           h = 0;
-        else if (!strcasecmp(ArgStr[1].Str, "A,B"))
+        else if (!as_strcasecmp(ArgStr[1].Str, "A,B"))
           h = 8;
         else
           SetXError(ErrNum_InvRegPair, &ArgStr[1]);
@@ -1456,6 +1409,7 @@ static void DecodeImmMac(Word Code)
     {
       case '-':
         h = 4;
+        /* fall-through */
       case '+':
         StrCompRefRight(&LeftArg, &LeftComp, 1);
     }
@@ -2606,7 +2560,7 @@ static void DecodeDO_DOR(Word Code)
       if (OK)
       {
         ChkSpace(SegCode);
-        if (!strcasecmp(LeftComp.Str, "FOREVER"))
+        if (!as_strcasecmp(LeftComp.Str, "FOREVER"))
         {
           if (ChkMinCPU(CPU56300))
           {
@@ -2751,17 +2705,17 @@ static void AddMix(const char *pName, Word Code, InstProc Proc, unsigned Mask)
 
   if (Mask & 1)
   {
-    sprintf(TmpName, "%sSS", pName);
+    as_snprintf(TmpName, sizeof(TmpName), "%sSS", pName);
     AddInstTable(InstTable, TmpName, Code + 0x0000, Proc);
   }
   if (Mask & 2)
   {
-    sprintf(TmpName, "%sSU", pName);
+    as_snprintf(TmpName, sizeof(TmpName), "%sSU", pName);
     AddInstTable(InstTable, TmpName, Code + 0x0100, Proc);
   }
   if (Mask & 4)
   {
-    sprintf(TmpName, "%sUU", pName);
+    as_snprintf(TmpName, sizeof(TmpName), "%sUU", pName);
     AddInstTable(InstTable, TmpName, Code + 0x0140, Proc);
   }
 }
@@ -2774,7 +2728,7 @@ static void AddCondition(const char *pName, InstProc Proc)
 
   for (z = 0; z < CondCount; z++)
   {
-    sprintf(TmpName, "%s%s", pName, CondNames[z]);
+    as_snprintf(TmpName, sizeof(TmpName), "%s%s", pName, CondNames[z]);
     Code = (z == CondCount - 1) ? 8 : z & 15;
     AddInstTable(InstTable, TmpName, Code, Proc);
   }
@@ -2959,7 +2913,6 @@ static void SwitchTo_56K(void)
 {
   TurnWords = True;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   PCSymbol = "*";
   HeaderID = 0x09;

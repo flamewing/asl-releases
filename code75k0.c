@@ -1,54 +1,12 @@
 /* code75k0.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator NEC 75K0                                                    */
 /*                                                                           */
-/* Historie: 31.12.1996 Grundsteinlegung                                     */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code75k0.c,v 1.13 2016/08/17 21:26:46 alfred Exp $                    */
-/*****************************************************************************
- * $Log: code75k0.c,v $
- * Revision 1.13  2016/08/17 21:26:46  alfred
- * - fix some errors and warnings detected by clang
- *
- * Revision 1.12  2014/12/14 17:58:47  alfred
- * - remove static variables in strutil.c
- *
- * Revision 1.11  2014/11/16 13:15:07  alfred
- * - remove some superfluous semicolons
- *
- * Revision 1.10  2014/11/05 15:47:15  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.9  2014/09/21 12:21:45  alfred
- * - compilable with Borland C again
- *
- * Revision 1.8  2014/09/09 17:07:26  alfred
- * - remove static string
- *
- * Revision 1.7  2014/09/08 20:36:21  alfred
- * - rework to current style
- *
- * Revision 1.6  2014/03/08 21:06:36  alfred
- * - rework ASSUME framework
- *
- * Revision 1.5  2010/04/17 13:14:22  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.4  2005/10/02 10:00:45  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.3  2005/09/08 17:31:04  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 11:33:01  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -75,7 +33,7 @@ enum
   ModReg8  = 1,
   ModImm  = 2 ,
   ModInd  = 3,
-  ModAbs  = 4,
+  ModAbs  = 4
 };
 
 #define MModReg4 (1 << ModReg4)
@@ -243,11 +201,11 @@ static void DecodeAdr(const tStrComp *pArg, Byte Mask)
     tStrComp Arg;
 
     StrCompRefRight(&Arg, pArg, 1);
-    if (!strcasecmp(Arg.Str, "HL")) AdrPart = 1;
-    else if (!strcasecmp(Arg.Str, "HL+")) AdrPart = 2;
-    else if (!strcasecmp(Arg.Str, "HL-")) AdrPart = 3;
-    else if (!strcasecmp(Arg.Str, "DE")) AdrPart = 4;
-    else if (!strcasecmp(Arg.Str, "DL")) AdrPart = 5;
+    if (!as_strcasecmp(Arg.Str, "HL")) AdrPart = 1;
+    else if (!as_strcasecmp(Arg.Str, "HL+")) AdrPart = 2;
+    else if (!as_strcasecmp(Arg.Str, "HL-")) AdrPart = 3;
+    else if (!as_strcasecmp(Arg.Str, "DE")) AdrPart = 4;
+    else if (!as_strcasecmp(Arg.Str, "DL")) AdrPart = 5;
     else
       AdrPart = 0;
     if (AdrPart != 0)
@@ -281,7 +239,56 @@ chk:
   }
 }
 
-static Boolean DecodeBitAddr(const tStrComp *pArg, Word *Erg, char *pBName)
+/* Bit argument coding:
+
+   aaaa01bbaaaaaaaa -> aaaaaaaaaaaa.bb
+           11bbxxxx -> 0ffxh.bb
+           10bbxxxx -> 0fbxh.bb
+           00bbxxxx -> @h+x.bb
+           0100xxxx -> 0fc0h+(x*4).@l
+ */
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectBit_75K0(char *pDest, int DestSize, LargeWord Inp)
+ * \brief  dissect compact storage of bit (field) into readable form for listing
+ * \param  pDest destination for ASCII representation
+ * \param  DestSize destination buffer size
+ * \param  Inp compact storage
+ * ------------------------------------------------------------------------ */
+
+static void DissectBit_75K0(char *pDest, int DestSize, LargeWord Inp)
+{
+  if (Hi(Inp))
+    as_snprintf(pDest, DestSize, "%~03.*u%s.%c",
+                ListRadixBase, (unsigned)(((Inp >> 4) & 0xf00) + Lo(Inp)), GetIntelSuffix(ListRadixBase),
+                '0' + (Hi(Inp) & 3));
+  else switch ((Inp >> 6) & 3)
+  {
+    case 0:
+      as_snprintf(pDest, DestSize, "@%c+%0.*u%s.%c",
+                  HexStartCharacter + ('H' - 'A'),
+                  ListRadixBase, (unsigned)(Inp & 0x0f), GetIntelSuffix(ListRadixBase),
+                  '0' + ((Inp >> 4) & 3));
+      break;
+    case 1:
+      as_snprintf(pDest, DestSize, "%~03.*u%s.@%c",
+                  ListRadixBase, (unsigned)(0xfc0 + ((Inp & 0x0f) << 2)), GetIntelSuffix(ListRadixBase),
+                  HexStartCharacter + ('L' - 'A'));
+      break;
+    case 2:
+      as_snprintf(pDest, DestSize, "%~03.*u%s.%c",
+                  ListRadixBase, (unsigned)(0xfb0 + (Inp & 15)), GetIntelSuffix(ListRadixBase),
+                  '0' + ((Inp >> 4) & 3));
+      break;
+    case 3:
+      as_snprintf(pDest, DestSize, "%~03.*u%s.%c",
+                  ListRadixBase, (unsigned)(0xff0 + (Inp & 15)), GetIntelSuffix(ListRadixBase),
+                  '0' + ((Inp >> 4) & 3));
+      break;
+  }
+}
+
+static Boolean DecodeBitAddr(const tStrComp *pArg, Word *Erg)
 {
   char *p;
   int Num;
@@ -300,7 +307,7 @@ static Boolean DecodeBitAddr(const tStrComp *pArg, Word *Erg, char *pBName)
 
   StrCompSplitRef(&AddrPart, &BitPart, pArg, p);
 
-  if (!strcasecmp(BitPart.Str, "@L"))
+  if (!as_strcasecmp(BitPart.Str, "@L"))
   {
     FirstPassUnknown = False;
     Adr = EvalStrIntExpression(&AddrPart, UInt12, &OK);
@@ -314,11 +321,6 @@ static Boolean DecodeBitAddr(const tStrComp *pArg, Word *Erg, char *pBName)
       else if (ChkMinCPUExt(CPU75004, ErrNum_AddrModeNotSupported))
       {
         *Erg = 0x40 + ((Adr & 0x3c) >> 2);
-        if (pBName)
-        {
-          HexString(pBName, STRINGSIZE, Adr, 3);
-          strmaxcat(pBName, "H.@L", STRINGSIZE);
-        }
         return True;
       }
     }
@@ -328,7 +330,7 @@ static Boolean DecodeBitAddr(const tStrComp *pArg, Word *Erg, char *pBName)
     Num = EvalStrIntExpression(&BitPart, UInt2, &OK);
     if (OK)
     {
-      if (!strncasecmp(AddrPart.Str, "@H", 2))
+      if (!as_strncasecmp(AddrPart.Str, "@H", 2))
       {
         Adr = EvalStrIntExpressionOffs(&AddrPart, 2, UInt4, &OK);
         if (OK)
@@ -336,13 +338,6 @@ static Boolean DecodeBitAddr(const tStrComp *pArg, Word *Erg, char *pBName)
           if (ChkMinCPUExt(CPU75004, ErrNum_AddrModeNotSupported))
           {
             *Erg = (Num << 4) + Adr;
-            if (pBName)
-            {
-              char Str[30];
-
-              HexString(Str, sizeof(Str), Adr,  1);
-              sprintf(pBName, "@H%s.%c", Str, Num + '0');
-            }
             return True;
           }
         }
@@ -362,13 +357,6 @@ static Boolean DecodeBitAddr(const tStrComp *pArg, Word *Erg, char *pBName)
             *Erg = 0xc0 + (Num << 4) + (Adr & 15);
           else
             *Erg = 0x400 + (((Word)Num) << 8) + Lo(Adr) + (Hi(Adr) << 12);
-          if (pBName)
-          {
-            char Str[30];
-
-            HexString(Str, sizeof(Str), Adr, 3);
-            sprintf(pBName, "%sH.%c", Str, '0' + Num);
-          }
           return True;
         }
       }
@@ -383,7 +371,7 @@ static Boolean DecodeIntName(char *Asc, Byte *Erg)
   Byte LPart;
   String Asc_N;
 
-  strmaxcpy(Asc_N, Asc, 255);
+  strmaxcpy(Asc_N, Asc, STRINGSIZE);
   NLS_UpString(Asc_N);
   Asc = Asc_N;
 
@@ -700,13 +688,13 @@ static void DecodeMOVT(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1].Str, "XA")) WrError(ErrNum_InvAddrMode);
-  else if (!strcasecmp(ArgStr[2].Str, "@PCDE"))
+  else if (as_strcasecmp(ArgStr[1].Str, "XA")) WrError(ErrNum_InvAddrMode);
+  else if (!as_strcasecmp(ArgStr[2].Str, "@PCDE"))
   {
     PutCode(0xd4);
     CheckCPU(CPU75004);
   }
-  else if (!strcasecmp(ArgStr[2].Str, "@PCXA"))
+  else if (!as_strcasecmp(ArgStr[2].Str, "@PCXA"))
     PutCode(0xd0);
   else
     WrError(ErrNum_InvAddrMode);
@@ -715,7 +703,7 @@ static void DecodeMOVT(Word Code)
 static void DecodePUSH_POP(Word Code)
 {
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "BS"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "BS"))
   {
     PutCode(0x0699 + (Code << 8)); CheckCPU(CPU75004);
   }
@@ -739,7 +727,7 @@ static void DecodeIN_OUT(Word IsIN)
     const tStrComp *pPortArg = IsIN ? &ArgStr[2] : &ArgStr[1],
                    *pRegArg = IsIN ? &ArgStr[1] : &ArgStr[2];
 
-    if (strncasecmp(pPortArg->Str, "PORT", 4)) WrError(ErrNum_InvAddrMode);
+    if (as_strncasecmp(pPortArg->Str, "PORT", 4)) WrError(ErrNum_InvAddrMode);
     else
     {
       Boolean OK;
@@ -812,7 +800,7 @@ static void DecodeADDS(Word Code)
               break;
           }
         }
-        else if (strcasecmp(ArgStr[2].Str, "XA")) WrError(ErrNum_InvAddrMode);
+        else if (as_strcasecmp(ArgStr[2].Str, "XA")) WrError(ErrNum_InvAddrMode);
         else
         {
           PutCode(0xc0aa + (((Word)AdrPart) << 8));
@@ -865,7 +853,7 @@ static void DecodeAri(Word Code)
               break;
           }
         }
-        else if (strcasecmp(ArgStr[2].Str, "XA")) WrError(ErrNum_InvAddrMode);
+        else if (as_strcasecmp(ArgStr[2].Str, "XA")) WrError(ErrNum_InvAddrMode);
         else
         {
           PutCode(0xc0aa + ((Code + 1) << 12) + (((Word)AdrPart) << 8));
@@ -915,7 +903,7 @@ static void DecodeLog(Word Code)
               break;
           }
         }
-        else if (strcasecmp(ArgStr[2].Str, "XA")) WrError(ErrNum_InvAddrMode);
+        else if (as_strcasecmp(ArgStr[2].Str, "XA")) WrError(ErrNum_InvAddrMode);
         else
         {
           PutCode(0x80aa + (((Word)AdrPart) << 8) + ((Code + 1) << 12));
@@ -931,8 +919,8 @@ static void DecodeLog1(Word Code)
   Word BVal;
 
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1].Str, "CY")) WrError(ErrNum_InvAddrMode);
-  else if (DecodeBitAddr(&ArgStr[2], &BVal, NULL))
+  else if (as_strcasecmp(ArgStr[1].Str, "CY")) WrError(ErrNum_InvAddrMode);
+  else if (DecodeBitAddr(&ArgStr[2], &BVal))
   {
     if (Hi(BVal) != 0) WrError(ErrNum_InvAddrMode);
     else
@@ -1110,7 +1098,7 @@ static void DecodeSKE(Word Code)
 static void DecodeAcc(Word Code)
 {
   if (!ChkArgCnt(1, 1));
-  else if (strcasecmp(ArgStr[1].Str, "A")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "A")) WrError(ErrNum_InvAddrMode);
   else 
     PutCode(Code);
 }
@@ -1124,13 +1112,13 @@ static void DecodeMOV1(Word Code)
     Boolean OK = True;
     Word BVal;
 
-    if (!strcasecmp(ArgStr[1].Str, "CY"))
+    if (!as_strcasecmp(ArgStr[1].Str, "CY"))
       Code = 0xbd;
-    else if (!strcasecmp(ArgStr[2].Str, "CY"))
+    else if (!as_strcasecmp(ArgStr[2].Str, "CY"))
       Code = 0x9b;
     else OK = False;
     if (!OK) WrError(ErrNum_InvAddrMode);
-    else if (DecodeBitAddr(&ArgStr[((Code >> 2) & 3) - 1], &BVal, NULL))
+    else if (DecodeBitAddr(&ArgStr[((Code >> 2) & 3) - 1], &BVal))
     {
       if (Hi(BVal) != 0) WrError(ErrNum_InvAddrMode);
       else
@@ -1149,9 +1137,9 @@ static void DecodeSET1_CLR1(Word Code)
   Word BVal;
 
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "CY"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "CY"))
     PutCode(0xe6 + Code);
-  else if (DecodeBitAddr(&ArgStr[1], &BVal, NULL))
+  else if (DecodeBitAddr(&ArgStr[1], &BVal))
   {
     if (Hi(BVal) != 0)
     {
@@ -1173,14 +1161,14 @@ static void DecodeSKT_SKF(Word Code)
   Word BVal;
 
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "CY"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "CY"))
   {
     if (Code)
       PutCode(0xd7);
     else
       WrError(ErrNum_InvAddrMode);
   }
-  else if (DecodeBitAddr(&ArgStr[1], &BVal, NULL))
+  else if (DecodeBitAddr(&ArgStr[1], &BVal))
   {
     if (Hi(BVal) != 0)
     {
@@ -1202,7 +1190,7 @@ static void DecodeNOT1(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(1, 1));
-  else if (strcasecmp(ArgStr[1].Str, "CY")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "CY")) WrError(ErrNum_InvAddrMode);
   else
     PutCode(0xd6);
 }
@@ -1214,7 +1202,7 @@ static void DecodeSKTCLR(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(1, 1));
-  else if (DecodeBitAddr(&ArgStr[1], &BVal, NULL))
+  else if (DecodeBitAddr(&ArgStr[1], &BVal))
   {
     if (Hi(BVal) != 0) WrError(ErrNum_InvAddrMode);
     else
@@ -1231,12 +1219,12 @@ static void DecodeBR(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "PCDE"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "PCDE"))
   {
     PutCode(0x0499);
     CheckCPU(CPU75004);
   }
-  else if (!strcasecmp(ArgStr[1].Str, "PCXA"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "PCXA"))
   {
     BAsmCode[0] = 0x99;
     BAsmCode[1] = 0x00;
@@ -1416,7 +1404,7 @@ static void DecodeSEL(Word Code)
 
   BAsmCode[0] = 0x99;
   if (!ChkArgCnt(1, 1));
-  else if (!strncasecmp(ArgStr[1].Str, "RB", 2))
+  else if (!as_strncasecmp(ArgStr[1].Str, "RB", 2))
   {
     BAsmCode[1] = 0x20 + EvalStrIntExpressionOffs(&ArgStr[1], 2, UInt2, &OK);
     if (OK)
@@ -1425,7 +1413,7 @@ static void DecodeSEL(Word Code)
       CheckCPU(CPU75104);
     }
   }
-  else if (!strncasecmp(ArgStr[1].Str, "MB", 2))
+  else if (!as_strncasecmp(ArgStr[1].Str, "MB", 2))
   {
     BAsmCode[1] = 0x10 + EvalStrIntExpressionOffs(&ArgStr[1], 2, UInt4, &OK);
     if (OK)
@@ -1448,19 +1436,19 @@ static void DecodeSFR(Word Code)
 static void DecodeBIT(Word Code)
 {
   Word BErg;
-  String BName;
 
   UNUSED(Code);
 
   if (ChkArgCnt(1, 1))
   {
     FirstPassUnknown = False;
-    if (DecodeBitAddr(&ArgStr[1], &BErg, BName))
+    if (DecodeBitAddr(&ArgStr[1], &BErg))
       if (!FirstPassUnknown)
       {
         PushLocHandle(-1);
-        EnterIntSymbol(LabPart.Str, BErg, SegNone, False);
-        sprintf(ListLine, "=%s", BName);
+        EnterIntSymbol(&LabPart, BErg, SegBData, False);
+        *ListLine = '=';
+        DissectBit_75K0(ListLine + 1,  STRINGSIZE- 1, BErg);
         PopLocHandle();
       }
   }
@@ -1590,7 +1578,7 @@ static ASSUMERec ASSUME75s[] =
 
 static void SwitchTo_75K0(void)
 {
-  TurnWords = False; ConstMode = ConstModeIntel; SetIsOccupied = False;
+  TurnWords = False; ConstMode = ConstModeIntel;
 
   PCSymbol = "PC"; HeaderID = 0x7b; NOPCode = 0x60;
   DivideChars = ","; HasAttrs = False;
@@ -1605,6 +1593,7 @@ static void SwitchTo_75K0(void)
 
   MakeCode = MakeCode_75K0; IsDef = IsDef_75K0;
   SwitchFrom = SwitchFrom_75K0; InitFields();
+  DissectBit = DissectBit_75K0;
   SegLimits[SegCode] = ROMEnd;
 }
 

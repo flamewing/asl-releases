@@ -19,7 +19,7 @@ RAMSTART	equ	0x100,data
 RAMEND		equ	0x2ff,data
 FLASHEND	label	0x3fff
 
-		include	"avr/regmxu2.inc"
+		include	"regmxu2.inc"
 
 		restore			; re-enable listing
 

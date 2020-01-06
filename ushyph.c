@@ -5,9 +5,6 @@
 /* Trennungsmuster (US-)englisch                                             */
 /* abgeleitet von 'ushyphen.tex' aus TeX                                     */
 /*                                                                           */
-/* Historie: 16. 2.1998 Konvertierung                                        */
-/*            2. 7.1998 für MSDOS auskommentiert                             */
-/*                                                                           */
 /*****************************************************************************/
 
 #include <stdio.h>

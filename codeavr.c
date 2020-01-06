@@ -1,18 +1,10 @@
 /* codeavr.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator Atmel AVR                                                   */
-/*                                                                           */
-/* Historie: 26.12.1996 Grundsteinlegung                                     */
-/*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
-/*           18. 8.1998 BookKeeping-Aufruf bei RES                           */
-/*           15.10.1998 LDD/STD mit <reg>+<symbol> ging nicht                */
-/*            2. 5.1999 JMP/CALL momentan bei keinem Mitglied erlaubt        */
-/*                      WRAPMODE eingebaut                                   */
-/*           19.11.1999 Default-Hexmodus ist jetzt C                         */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*            7. 5.2000 Packing hinzugefuegt                                 */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -55,7 +47,7 @@ typedef enum
   eCoreClassic, /* AT90Sxxxx */
   eCoreTiny, /* ATtiny up to 8KB flash */
   eCoreTiny16K,
-  eCoreMega,
+  eCoreMega
 } tCPUCore;
 
 #define MinCoreMask(c) ((Word)(0xffffu << (c)))
@@ -118,13 +110,12 @@ static void DissectBit_AVR(char *pDest, int DestSize, LargeWord Inp)
 {
   LongWord BitSpec = Inp;
 
-  UNUSED(DestSize);
-  sprintf(pDest, "0x%0*x(%c).%d",
-          (BitSpec & BitFlag_IO) ? 2 : 3,
-          (BitSpec >> 3) & 0xffff,
-          (BitSpec & BitFlag_Data) ? SegShorts[SegData]
+  as_snprintf(pDest, DestSize, "0x%0*x(%c).%d",
+              (BitSpec & BitFlag_IO) ? 2 : 3,
+              (unsigned)((BitSpec >> 3) & 0xffff),
+              (BitSpec & BitFlag_Data) ? SegShorts[SegData]
                                    : ((BitSpec & BitFlag_IO) ? SegShorts[SegIO] : SegShorts[SegNone]),
-          BitSpec & 7);
+              (int)(BitSpec & 7));
 }
 
 /*---------------------------------------------------------------------------*/
@@ -152,15 +143,15 @@ static Boolean DecodeReg(char *Asc, Word *Erg)
 
 static Boolean DecodeMem(char * Asc, Word *Erg)
 {
-  if (strcasecmp(Asc, "X") == 0) *Erg = 0x1c;
-  else if (strcasecmp(Asc, "X+") == 0) *Erg = 0x1d;
-  else if (strcasecmp(Asc, "-X") == 0) *Erg = 0x1e;
-  else if (strcasecmp(Asc, "Y" ) == 0) *Erg = 0x08;
-  else if (strcasecmp(Asc, "Y+") == 0) *Erg = 0x19;
-  else if (strcasecmp(Asc, "-Y") == 0) *Erg = 0x1a;
-  else if (strcasecmp(Asc, "Z" ) == 0) *Erg = 0x00;
-  else if (strcasecmp(Asc, "Z+") == 0) *Erg = 0x11;
-  else if (strcasecmp(Asc, "-Z") == 0) *Erg = 0x12;
+  if (as_strcasecmp(Asc, "X") == 0) *Erg = 0x1c;
+  else if (as_strcasecmp(Asc, "X+") == 0) *Erg = 0x1d;
+  else if (as_strcasecmp(Asc, "-X") == 0) *Erg = 0x1e;
+  else if (as_strcasecmp(Asc, "Y" ) == 0) *Erg = 0x08;
+  else if (as_strcasecmp(Asc, "Y+") == 0) *Erg = 0x19;
+  else if (as_strcasecmp(Asc, "-Y") == 0) *Erg = 0x1a;
+  else if (as_strcasecmp(Asc, "Z" ) == 0) *Erg = 0x00;
+  else if (as_strcasecmp(Asc, "Z+") == 0) *Erg = 0x11;
+  else if (as_strcasecmp(Asc, "-Z") == 0) *Erg = 0x12;
   else return False;
   return True;
 }
@@ -347,9 +338,6 @@ static void DecodeDATA_AVR(Word Index)
            if (ChkRange(t.Contents.Int, MinV, MaxV))
              PlaceByte(t.Contents.Int, Packing);
            break;
-         case TempFloat:
-           WrError(ErrNum_InvOpType); OK = False;
-           break;
          case TempString:
            for (z2 = 0; z2 < (int)t.Contents.Ascii.Length; z2++)
            {
@@ -357,6 +345,9 @@ static void DecodeDATA_AVR(Word Index)
              PlaceByte(Trans, TRUE);
            }
            break;
+         case TempFloat:
+           WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[z]);
+           /* fall-through */
          default:
            OK = False;
        }
@@ -850,7 +841,7 @@ static void DecodeBIT(Word Code)
     *ListLine = '=';
     DissectBit_AVR(ListLine + 1, STRINGSIZE - 3, BitSpec);
     PushLocHandle(-1);
-    EnterIntSymbol(LabPart.Str, BitSpec, SegBData, False);
+    EnterIntSymbol(&LabPart, BitSpec, SegBData, False);
     PopLocHandle();
     if (MakeUseList)
     {
@@ -1063,11 +1054,16 @@ static void SwitchFrom_AVR(void)
   ClearONOFF();
 }
 
+static Boolean ChkZeroArg(void)
+{
+  return (0 == ArgCnt);
+}
+
 static void SwitchTo_AVR(void *pUser)
 {
   TurnWords = False;
   ConstMode = ConstModeC;
-  SetIsOccupied = True;
+  SetIsOccupiedFnc = ChkZeroArg;
 
   PCSymbol = "*";
   HeaderID = 0x3b;
@@ -1228,7 +1224,7 @@ void codeavr_init(void)
   const tCPUProps *pProp;
 
   for (pProp = CPUProps; pProp->pName; pProp++)
-    (void)AddCPUUser(pProp->pName, SwitchTo_AVR, (void*)pProp);
+    (void)AddCPUUser(pProp->pName, SwitchTo_AVR, (void*)pProp, NULL);
 
    AddInitPassProc(InitCode_AVR);
 }

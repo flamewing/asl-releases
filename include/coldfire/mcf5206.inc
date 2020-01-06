@@ -163,7 +163,7 @@ RD		cfbit		DCCR{n},0	;  Read Enable
 ;----------------------------------------------------------------------------
 ; UART
 
-		include		"coldfire/52xxuart.inc"
+		include		"52xxuart.inc"
 		__defuart       "1",MBAR+$140
 		__defuart	"2",MBAR+$180 
 
@@ -193,7 +193,7 @@ MBDR		equ		MBAR+$1F0	; Data I/O Register
 ;----------------------------------------------------------------------------
 ; Timers
 
-		include		"coldfire/52xxtmr.inc"
+		include		"52xxtmr.inc"
 		__deftimer	"1",MBAR+$100
 		__deftimer	"2",MBAR+$120
 

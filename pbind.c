@@ -1,15 +1,10 @@
 /* pbind.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Bearbeitung von AS-P-Dateien                                              */
-/*                                                                           */
-/* Historie:  1. 6.1996 Grundsteinlegung                                     */
-/*            9. 1.2000 plattformabhaengige Formatstrings benutzen           */
-/*           24. 3.2000 added symbolic string for byte message               */
-/*            4. 7.2000 renamed ParProcessed to ParUnprocessed               */
-/*           30. 5.2001 move copy buffer to heap to avoid stack overflows on */
-/*                      DOS platforms                                        */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -170,7 +165,7 @@ int main(int argc, char **argv)
   NLS_Initialize();
   endian_init();
 
-  sprintf(Ver, "BIND/C V%s", Version);
+  as_snprintf(Ver, sizeof(Ver), "BIND/C V%s", Version);
   WrCopyRight(Ver);
 
   stdhandl_init();
@@ -206,8 +201,8 @@ int main(int argc, char **argv)
   }
   else
   {
-    strmaxcpy(TargName, ParamStr[z], 255); ParUnprocessed[z] = False;
-    AddSuffix(TargName, getmessage(Num_Suffix));
+    strmaxcpy(TargName, ParamStr[z], STRINGSIZE); ParUnprocessed[z] = False;
+    AddSuffix(TargName, STRINGSIZE, getmessage(Num_Suffix));
   }
 
   OpenTarget();

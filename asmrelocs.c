@@ -1,5 +1,7 @@
 /* asmrelocs.c */
 /****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                    */
+/*                                                                          */
 /* AS-Portierung                                                            */
 /*                                                                          */
 /* Verwaltung von Relokationslisten                                         */
@@ -48,7 +50,7 @@ PRelocEntry MergeRelocs(PRelocEntry *list1, PRelocEntry *list2, Boolean Add)
     PRun2 = *list2;
     PPrev = NULL;
     while (PRun2)
-      if ((!strcasecmp(PRun1->Ref, PRun2->Ref)) && ((PRun1->Add != PRun2->Add) != Add))
+      if ((!as_strcasecmp(PRun1->Ref, PRun2->Ref)) && ((PRun1->Add != PRun2->Add) != Add))
       {
         /* gefunden -> beide weg */
 

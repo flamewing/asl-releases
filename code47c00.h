@@ -2,6 +2,8 @@
 #define _CODE47C00_H
 /* code47c00.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator Toshiba TLCS-47(0(A))                                       */

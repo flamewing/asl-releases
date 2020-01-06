@@ -1,57 +1,12 @@
 /* code601.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator PowerPC-Familie                                             */
 /*                                                                           */
-/* Historie: 17.10.1996 Grundsteinlegung                                     */
-/*           30. 8.1998 Umstellung auf 32-Bit-Zugriffe                       */
-/*                      Header-ID per Abfrage                                */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.1999 MMU-Instruktionen                                    */
-/*           10. 3.1999 PPC403-MMU-Befehle                                   */
-/*           28. 3.1999 PPC403GB auf GC korrigiert (erst der hat eine MMU)   */
-/*            8. 9.1999 REG-Befehl nachgeruestet                             */
-/*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code601.c,v 1.12 2016/09/12 18:13:00 alfred Exp $                     */
-/*****************************************************************************
- * $Log: code601.c,v $
- * Revision 1.12  2016/09/12 18:13:00  alfred
- * - correct some errors found by valgrind
- *
- * Revision 1.11  2016/09/12 18:05:30  alfred
- * - correct some memory leaks
- *
- * Revision 1.10  2014/12/05 11:58:15  alfred
- * - collapse STDC queries into one file
- *
- * Revision 1.9  2014/11/12 09:57:17  alfred
- * - rework to current style
- *
- * Revision 1.8  2014/11/05 15:47:14  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.7  2014/06/09 12:48:07  alfred
- * - add missing parentheses
- *
- * Revision 1.6  2012-01-14 13:04:13  alfred
- * - merged in MPC821 support
- *
- * Revision 1.5  2007/11/24 22:48:04  alfred
- * - some NetBSD changes
- *
- * Revision 1.4  2005/10/02 10:00:45  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.3  2005/09/08 17:31:03  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 11:33:01  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -1337,7 +1292,7 @@ static void DecodeREG(Word Code)
 
 /*-------------------------------------------------------------------------*/
 
-static void AddFixed(char *NName1, char *NName2, LongInt NCode, Byte NMask)
+static void AddFixed(char *NName1, char *NName2, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= FixedOrderCount) exit(255);
   FixedOrders[InstrZ].Code = NCode;
@@ -1345,7 +1300,7 @@ static void AddFixed(char *NName1, char *NName2, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, MomCPU == CPU6000 ? NName2 : NName1, InstrZ++, DecodeFixed);
 }
 
-static void AddReg1(char *NName1, char *NName2, LongInt NCode, Byte NMask)
+static void AddReg1(char *NName1, char *NName2, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= Reg1OrderCount) exit(255);
   Reg1Orders[InstrZ].Code = NCode;
@@ -1353,7 +1308,7 @@ static void AddReg1(char *NName1, char *NName2, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, MomCPU == CPU6000 ? NName2 : NName1, InstrZ++, DecodeReg1);
 }
 
-static void AddCReg1(char *NName1, char *NName2, LongInt NCode, Byte NMask)
+static void AddCReg1(char *NName1, char *NName2, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= CReg1OrderCount) exit(255);
   CReg1Orders[InstrZ].Code = NCode;
@@ -1361,7 +1316,7 @@ static void AddCReg1(char *NName1, char *NName2, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, MomCPU == CPU6000 ? NName2 : NName1, InstrZ++, DecodeCReg1);
 }
 
-static void AddCBit1(char *NName1, char *NName2, LongInt NCode, Byte NMask)
+static void AddCBit1(char *NName1, char *NName2, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= CBit1OrderCount) exit(255);
   CBit1Orders[InstrZ].Code = NCode;
@@ -1369,7 +1324,7 @@ static void AddCBit1(char *NName1, char *NName2, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, MomCPU == CPU6000 ? NName2 : NName1, InstrZ++, DecodeCBit1);
 }
 
-static void AddFReg1(char *NName1, char *NName2, LongInt NCode, Byte NMask)
+static void AddFReg1(char *NName1, char *NName2, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= FReg1OrderCount) exit(255);
   FReg1Orders[InstrZ].Code = NCode;
@@ -1377,7 +1332,7 @@ static void AddFReg1(char *NName1, char *NName2, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, MomCPU == CPU6000 ? NName2 : NName1, InstrZ++, DecodeFReg1);
 }
 
-static void AddSReg2(char *NName, LongInt NCode, Byte NMask)
+static void AddSReg2(char *NName, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= Reg2OrderCount) exit(255);
   Reg2Orders[InstrZ].Code = NCode;
@@ -1385,7 +1340,7 @@ static void AddSReg2(char *NName, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, NName, InstrZ++, DecodeReg2);
 }
 
-static void AddReg2(char *NName1, char *NName2, LongInt NCode, Byte NMask, Boolean WithOE, Boolean WithFL)
+static void AddReg2(char *NName1, char *NName2, LongWord NCode, Byte NMask, Boolean WithOE, Boolean WithFL)
 {
   String NName;
   char *pSrcName = (MomCPU == CPU6000) ? NName2 : NName1;
@@ -1393,16 +1348,16 @@ static void AddReg2(char *NName1, char *NName2, LongInt NCode, Byte NMask, Boole
   AddSReg2(pSrcName, NCode, NMask);
   if (WithOE)
   {
-    sprintf(NName, "%sO", pSrcName);
+    as_snprintf(NName, sizeof(NName), "%sO", pSrcName);
     AddSReg2(NName, NCode | 0x400, NMask);
   }
   if (WithFL)
   {
-    sprintf(NName, "%s.", pSrcName);
+    as_snprintf(NName, sizeof(NName), "%s.", pSrcName);
     AddSReg2(NName, NCode | 0x001, NMask);
     if (WithOE)
     {
-      sprintf(NName, "%sO.", pSrcName);
+      as_snprintf(NName, sizeof(NName), "%sO.", pSrcName);
       AddSReg2(NName, NCode | 0x401, NMask);
     }
   }
@@ -1416,7 +1371,7 @@ static void AddCReg2(char *NName1, char *NName2, LongWord NCode, Byte NMask)
   AddInstTable(InstTable, (MomCPU == CPU6000) ? NName2 : NName1, InstrZ++, DecodeCReg2);
 }
 
-static void AddSFReg2(const char *NName, LongInt NCode, Byte NMask)
+static void AddSFReg2(const char *NName, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= FReg2OrderCount) exit(255);
   if (!NName) exit(255);
@@ -1425,7 +1380,7 @@ static void AddSFReg2(const char *NName, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, NName, InstrZ++, DecodeFReg2);
 }
 
-static void AddFReg2(const char *NName1, const char *NName2, LongInt NCode, Byte NMask, Boolean WithFL)
+static void AddFReg2(const char *NName1, const char *NName2, LongWord NCode, Byte NMask, Boolean WithFL)
 {
   const char *pSrcName = (MomCPU == CPU6000) ? NName2 : NName1;
 
@@ -1434,12 +1389,12 @@ static void AddFReg2(const char *NName1, const char *NName2, LongInt NCode, Byte
   {
     String NName;
 
-    sprintf(NName, "%s.", pSrcName);
+    as_snprintf(NName, sizeof(NName), "%s.", pSrcName);
     AddSFReg2(NName, NCode | 0x001, NMask);
   }
 }
 
-static void AddReg2B(char *NName1, char *NName2, LongInt NCode, Byte NMask)
+static void AddReg2B(char *NName1, char *NName2, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= Reg2BOrderCount) exit(255);
   Reg2BOrders[InstrZ].Code = NCode;
@@ -1447,7 +1402,7 @@ static void AddReg2B(char *NName1, char *NName2, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, (MomCPU == CPU6000) ? NName2 : NName1, InstrZ++, DecodeReg2B);
 }
 
-static void AddSReg2Swap(char *NName, LongInt NCode, Byte NMask)
+static void AddSReg2Swap(char *NName, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= Reg2SwapOrderCount) exit(255);
   if (!NName) exit(255);
@@ -1456,7 +1411,7 @@ static void AddSReg2Swap(char *NName, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, NName, InstrZ++, DecodeReg2Swap);
 }
 
-static void AddReg2Swap(char *NName1, char *NName2, LongInt NCode, Byte NMask, Boolean WithOE, Boolean WithFL)
+static void AddReg2Swap(char *NName1, char *NName2, LongWord NCode, Byte NMask, Boolean WithOE, Boolean WithFL)
 {
   String NName;
   char *pSrcName = (MomCPU == CPU6000) ? NName2 : NName1;
@@ -1464,22 +1419,22 @@ static void AddReg2Swap(char *NName1, char *NName2, LongInt NCode, Byte NMask, B
   AddSReg2Swap(pSrcName, NCode, NMask);
   if (WithOE)
   {
-    sprintf(NName, "%sO", pSrcName);
+    as_snprintf(NName, sizeof(NName), "%sO", pSrcName);
     AddSReg2Swap(NName, NCode | 0x400, NMask);
   }
   if (WithFL)
   {
-    sprintf(NName, "%s.", pSrcName);
+    as_snprintf(NName, sizeof(NName), "%s.", pSrcName);
     AddSReg2Swap(NName, NCode | 0x001, NMask);
     if (WithOE)
     {
-      sprintf(NName, "%sO.", pSrcName);
+      as_snprintf(NName, sizeof(NName), "%sO.", pSrcName);
       AddSReg2Swap(NName, NCode | 0x401, NMask);
     }
   }
 }
 
-static void AddNoDest(char *NName1, char *NName2, LongInt NCode, Byte NMask)
+static void AddNoDest(char *NName1, char *NName2, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= NoDestOrderCount) exit(255);
   NoDestOrders[InstrZ].Code = NCode;
@@ -1487,7 +1442,7 @@ static void AddNoDest(char *NName1, char *NName2, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, (MomCPU == CPU6000) ? NName2 : NName1, InstrZ++, DecodeNoDest);
 }
 
-static void AddSReg3(char *NName, LongInt NCode, Byte NMask)
+static void AddSReg3(char *NName, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= Reg3OrderCount) exit(255);
   Reg3Orders[InstrZ].Code = NCode;
@@ -1495,7 +1450,7 @@ static void AddSReg3(char *NName, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, NName, InstrZ++, DecodeReg3);
 }
 
-static void AddReg3(char *NName1, char *NName2, LongInt NCode, Byte NMask, Boolean WithOE, Boolean WithFL)
+static void AddReg3(char *NName1, char *NName2, LongWord NCode, Byte NMask, Boolean WithOE, Boolean WithFL)
 {
   String NName;
   char *pSrcName = (MomCPU == CPU6000) ? NName2 : NName1;
@@ -1503,18 +1458,18 @@ static void AddReg3(char *NName1, char *NName2, LongInt NCode, Byte NMask, Boole
   AddSReg3(pSrcName, NCode, NMask);
   if (WithOE)
   {
-    sprintf(NName, "%sO", pSrcName);
+    as_snprintf(NName, sizeof(NName), "%sO", pSrcName);
     AddSReg3(NName, NCode | 0x400, NMask);
     NName[strlen(NName) - 1] = '\0';
   }
   if (WithFL)
   {
-    sprintf(NName, "%s.", pSrcName);
+    as_snprintf(NName, sizeof(NName), "%s.", pSrcName);
     AddSReg3(NName, NCode | 0x001, NMask);
     NName[strlen(NName) - 1] = '\0';
     if (WithOE)
     {
-      sprintf(NName, "%sO.", pSrcName);
+      as_snprintf(NName, sizeof(NName), "%sO.", pSrcName);
       AddSReg3(NName, NCode | 0x401, NMask);
     }
   }
@@ -1528,7 +1483,7 @@ static void AddCReg3(char *NName, LongWord NCode, CPUVar NMask)
   AddInstTable(InstTable, NName, InstrZ++, DecodeCReg3);
 }
 
-static void AddSFReg3(char *NName, LongInt NCode, Byte NMask)
+static void AddSFReg3(char *NName, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= FReg3OrderCount) exit(255);
   FReg3Orders[InstrZ].Code = NCode;
@@ -1536,7 +1491,7 @@ static void AddSFReg3(char *NName, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, NName, InstrZ++, DecodeFReg3);
 }
 
-static void AddFReg3(char *NName1, char *NName2, LongInt NCode, Byte NMask, Boolean WithFL)
+static void AddFReg3(char *NName1, char *NName2, LongWord NCode, Byte NMask, Boolean WithFL)
 {
   String NName;
   char *pSrcName = (MomCPU == CPU6000) ? NName2 : NName1;
@@ -1544,12 +1499,12 @@ static void AddFReg3(char *NName1, char *NName2, LongInt NCode, Byte NMask, Bool
   AddSFReg3(pSrcName, NCode, NMask);
   if (WithFL)
   {
-    sprintf(NName, "%s.", pSrcName);
+    as_snprintf(NName, sizeof(NName), "%s.", pSrcName);
     AddSFReg3(NName, NCode | 0x001, NMask);
   }
 }
 
-static void AddSReg3Swap(char *NName, LongInt NCode, Byte NMask)
+static void AddSReg3Swap(char *NName, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= Reg3SwapOrderCount) exit(255);
   Reg3SwapOrders[InstrZ].Code = NCode;
@@ -1557,7 +1512,7 @@ static void AddSReg3Swap(char *NName, LongInt NCode, Byte NMask)
   AddInstTable(InstTable, NName, InstrZ++, DecodeReg3Swap);
 }
 
-static void AddReg3Swap(char *NName1, char *NName2, LongInt NCode, Byte NMask, Boolean WithFL)
+static void AddReg3Swap(char *NName1, char *NName2, LongWord NCode, Byte NMask, Boolean WithFL)
 {
   String NName;
   char *pSrcName = (MomCPU == CPU6000) ? NName2 : NName1;
@@ -1565,7 +1520,7 @@ static void AddReg3Swap(char *NName1, char *NName2, LongInt NCode, Byte NMask, B
   AddSReg3Swap(pSrcName, NCode, NMask);
   if (WithFL)
   {
-    sprintf(NName, "%s.", pSrcName); 
+    as_snprintf(NName, sizeof(NName), "%s.", pSrcName); 
     AddSReg3Swap(NName, NCode | 0x001, NMask);
   }
 }
@@ -1594,7 +1549,7 @@ static void AddFReg4(char *NName1, char *NName2, LongWord NCode, Byte NMask, Boo
   AddSFReg4(pSrcName, NCode, NMask);
   if (WithFL)
   {
-    sprintf(NName, "%s.", pSrcName);
+    as_snprintf(NName, sizeof(NName), "%s.", pSrcName);
     AddSFReg4(NName, NCode | 0x001, NMask);
   }
 }
@@ -1633,7 +1588,7 @@ static void AddReg2Imm(char *NName1, char *NName2, LongWord NCode, Byte NMask, B
   AddSReg2Imm(pSrcName, NCode, NMask);
   if (WithFL)
   {
-    sprintf(NName, "%s.", pSrcName);
+    as_snprintf(NName, sizeof(NName), "%s.", pSrcName);
     AddSReg2Imm(NName, NCode | 0x001, NMask);
   }
 }
@@ -1659,7 +1614,7 @@ static void AddPoint(char *pName, Word Code, InstProc Proc)
   char PointName[30];
 
   AddInstTable(InstTable, pName, Code, Proc);
-  sprintf(PointName, "%s.", pName);
+  as_snprintf(PointName, sizeof(PointName), "%s.", pName);
   AddInstTable(InstTable, PointName, Code | 0x8000, Proc);
 }
 
@@ -2081,7 +2036,6 @@ static void SwitchTo_601(void)
 
   TurnWords = True;
   ConstMode = ConstModeC;
-  SetIsOccupied = False;
 
   FoundDscr = FindFamilyByName("MPC601");
   if (!FoundDscr)

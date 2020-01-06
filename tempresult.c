@@ -1,5 +1,7 @@
 /* tempresult.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* internal holder for int/float/string                                      */
@@ -49,15 +51,10 @@ int TempResultToPlainString(char *pDest, const TempResult *pResult, unsigned Des
   switch (pResult->Typ)
   {
     case TempInt:
-    {
-      String s;
-
-      LargeString(s, pResult->Contents.Int);
-      sprintf(pDest, "%s", s);
+      as_snprintf(pDest, DestSize, "%llld", pResult->Contents.Int);
       break;
-    }
     case TempFloat:
-      sprintf(pDest, "%0.16e", pResult->Contents.Float);
+      as_snprintf(pDest, DestSize, "%0.16e", pResult->Contents.Float);
       KillBlanks(pDest);
       break;
     case TempString:

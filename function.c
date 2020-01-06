@@ -1,5 +1,7 @@
 /* function.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* internal holder for int/float/string                                      */
@@ -44,7 +46,7 @@ static void FuncCHARFROMSTR(TempResult *pResult, const TempResult *pArgs, unsign
   UNUSED(ArgCnt);
 
   pResult->Typ = TempInt;
-  pResult->Contents.Int = ((pArgs[1].Contents.Int >= 0) && (pArgs[1].Contents.Int < pArgs[0].Contents.Ascii.Length)) ? pArgs[0].Contents.Ascii.Contents[pArgs[1].Contents.Int] : -1;
+  pResult->Contents.Int = ((pArgs[1].Contents.Int >= 0) && ((unsigned)pArgs[1].Contents.Int < pArgs[0].Contents.Ascii.Length)) ? pArgs[0].Contents.Ascii.Contents[pArgs[1].Contents.Int] : -1;
 }
 
 static void FuncEXPRTYPE(TempResult *pResult, const TempResult *pArgs, unsigned ArgCnt)
@@ -218,21 +220,11 @@ static void FuncABS(TempResult *pResult, const TempResult *pArgs, unsigned ArgCn
   {
     case TempInt:
       pResult->Typ = TempInt;
-      if (pArgs[0].Contents.Int < 0)
-        pResult->Contents.Int = -1;
-      else if (pArgs[0].Contents.Int > 0)
-        pResult->Contents.Int = 1;
-      else
-        pResult->Contents.Int = 0;
+      pResult->Contents.Int = (pArgs[0].Contents.Int  < 0) ? -pArgs[0].Contents.Int : pArgs[0].Contents.Int;
       break;
     case TempFloat:
       pResult->Typ = TempFloat;
-      if (pArgs[0].Contents.Float < 0)
-        pResult->Contents.Int = -1;
-      else if (pArgs[0].Contents.Float > 0)
-        pResult->Contents.Int = 1;
-      else
-        pResult->Contents.Int = 0;
+      pResult->Contents.Float = fabs(pArgs[0].Contents.Float);
       break;
     default:
       pResult->Typ = TempNone;

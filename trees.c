@@ -1,23 +1,12 @@
 /* trees.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Tree management                                                           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: trees.c,v 1.2 2014/12/05 08:53:45 alfred Exp $                       */
-/***************************************************************************** 
- * $Log: trees.c,v $
- * Revision 1.2  2014/12/05 08:53:45  alfred
- * - eliminate remaining BEGIN/END
- *
- * Revision 1.1  2003/11/06 02:49:25  alfred
- * - recreated
- *
- * Revision 1.1  2002/11/10 15:08:34  alfred
- * - use tree functions
- *
- *****************************************************************************/
            
 #include "stdinc.h"
 #include <string.h>

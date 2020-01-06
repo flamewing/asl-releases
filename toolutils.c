@@ -1,20 +1,10 @@
 /* toolutils.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Unterroutinen fuer die AS-Tools                                           */
-/*                                                                           */
-/* Historie: 31. 5.1996 Grundsteinlegung                                     */
-/*           27.10.1997 Routinen aus P2... heruebergenommen                  */
-/*           27. 3.1999 Granularitaet SC144xx                                */
-/*           30. 5.1999 Adresswildcard-Funktion                              */
-/*           22. 1.2000 Funktion zum Lesen von RelocInfos                    */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*           26. 6.2000 added reading of export entries                      */
-/*            2. 7.2000 updated copyright year                               */
-/*            4. 7.2000 ReadRecordHeader transports record type              */
-/*           14. 1.2001 silenced warnings about unused parameters            */
-/*           30. 9.2001 added workaround for CygWin file pointer bug         */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -68,17 +58,17 @@ void DelSuffix(char *Name)
     *Part = '\0';
 }
 
-void AddSuffix(char *s, char *Suff)
+void AddSuffix(char *pName, unsigned NameSize, char *Suff)
 {
   char *p, *z, *Part;
 
   p = NULL;
-  for (z = s; *z != '\0'; z++)
+  for (z = pName; *z != '\0'; z++)
     if (*z == '\\')
       p = z;
-  Part = (p != NULL) ? p : s;
+  Part = (p != NULL) ? p : pName;
   if (strchr(Part, '.') == NULL)
-    strmaxcat(s, Suff, 255);
+    strmaxcat(pName, Suff, NameSize);
 }
 
 void FormatError(const char *Name, const char *Detail)
@@ -359,7 +349,7 @@ CMDResult CMD_FilterList(Boolean Negate, const char *Arg)
 
   if (*Arg == '\0')
     return CMDErr;
-  strmaxcpy(Copy, Arg, 255);
+  strmaxcpy(Copy, Arg, STRINGSIZE);
 
   do
   {
@@ -459,7 +449,7 @@ void toolutils_init(const char *ProgPath)
 
 Boolean AddressWildcard(const char *addr)
 {
-  return ((strcmp(addr, "$") == 0) || (strcasecmp(addr, "0x") == 0));
+  return ((strcmp(addr, "$") == 0) || (as_strcasecmp(addr, "0x") == 0));
 }
 
 #ifdef CKMALLOC

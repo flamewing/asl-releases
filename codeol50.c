@@ -1,35 +1,12 @@
-/* codeol40.c */
+/* codeol50.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
-/* Codegenerator OKI OLMS-40-Familie                                         */
+/* Codegenerator OKI OLMS-50-Familie                                         */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codeol50.c,v 1.5 2017/01/08 10:27:37 alfred Exp $
- *****************************************************************************
- * $Log: codeol50.c,v $
- * Revision 1.5  2017/01/08 10:27:37  alfred
- * - add MSM6052
- *
- * Revision 1.4  2016/11/27 20:36:28  alfred
- * - add MSM6051
- *
- * Revision 1.3  2016/11/26 11:24:22  alfred
- * - add MSM5056
- *
- * Revision 1.2  2016/11/26 10:21:50  alfred
- * - add MSM5055
- *
- * Revision 1.1  2016/11/25 18:12:13  alfred
- * - first version to support OLMS-50
- *
- * Revision 1.2  2016/11/01 13:43:31  alfred
- * - add OLMS-40 meta instructions
- *
- * Revision 1.1  2016/11/01 11:48:05  alfred
- * - add support for OKI OLMS-40
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -55,7 +32,7 @@ typedef enum
   ModAP = 1,
   ModAX = 2,
   ModImm = 3,
-  ModNone = 0x7f,
+  ModNone = 0x7f
 } tAdrMode;
 
 typedef struct
@@ -158,7 +135,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, Word Mask)
 
   AdrMode = ModNone;
 
-  if (!strcasecmp(pArg->Str, "ACC"))
+  if (!as_strcasecmp(pArg->Str, "ACC"))
   {
     AdrMode = ModACC;
     goto AdrFound;
@@ -371,9 +348,11 @@ static void DecodeAPAX(Word Index)
       case ModAP:
         WAsmCode[0] = pOrder->APCode | AdrVal;
         CodeLen = 1;
+        break;
       case ModAX:
         WAsmCode[0] = pOrder->AXCode | AdrVal;
         CodeLen = 1;
+        break;
       default:
         break;
     }
@@ -554,12 +533,12 @@ static void DecodeONOFF(Word Index)
 
   if (!ChkArgCnt(1, 1));
   else if (ChkExactCPUMask(pOrder->CPUMask, CPU5054) < 0);
-  else if (!strcasecmp(ArgStr[1].Str, "OFF"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "OFF"))
   {
     WAsmCode[0] = pOrder->Code | (2 << pOrder->Shift);
     CodeLen = 1;
   }
-  else if (!strcasecmp(ArgStr[1].Str, "ON"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "ON"))
   {
     WAsmCode[0] = pOrder->Code | (3 << pOrder->Shift);
     CodeLen = 1;
@@ -702,11 +681,11 @@ static void DecodeMem(Word Index)
       }
       else
       {
-        if (!strcasecmp(ArgStr[2].Str, "Z"))
+        if (!as_strcasecmp(ArgStr[2].Str, "Z"))
           WAsmCode[0] |= 0x0040;
-        else if (!strcasecmp(ArgStr[2].Str, "N"))
+        else if (!as_strcasecmp(ArgStr[2].Str, "N"))
           WAsmCode[0] |= 0x0080;
-        else if (!strcasecmp(ArgStr[2].Str, "L"))
+        else if (!as_strcasecmp(ArgStr[2].Str, "L"))
           WAsmCode[0] |= 0x0200;
         else
         {
@@ -715,7 +694,7 @@ static void DecodeMem(Word Index)
         }
         if (ArgCnt < 3)
           CodeLen = 1;
-        else if (strcasecmp(ArgStr[3].Str, "L"))
+        else if (as_strcasecmp(ArgStr[3].Str, "L"))
         {
           WrError(ErrNum_InvAddrMode);
           return;
@@ -924,9 +903,9 @@ static void InitFields(void)
   AddAP("S2RATE"  , 0x34d0, M_6051);
   for (N = 0; N < 16; N++)
   {
-    sprintf(Op, "ADC%d", N);
+    as_snprintf(Op, sizeof(Op), "ADC%d", N);
     AddAP(Op, 0x3000 | (N << 4), M_6051);
-    sprintf(Op, "SBC%d", N);
+    as_snprintf(Op, sizeof(Op), "SBC%d", N);
     AddAP(Op, 0x3200 | (N << 4), M_6051);
   }
 
@@ -1055,7 +1034,6 @@ static void SwitchTo_OLMS50(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
   SwitchIsOccupied = True;
   PageIsOccupied = True;
 

@@ -4,91 +4,6 @@
 ;*                                                                           *
 ;* String-Definitionen fuer AS                                               *
 ;*                                                                           *
-;* Historie:  4. 5.1996 Grundsteinlegung                                     *
-;*           19. 1.1997 Kommandozeilenoption U                               *
-;*           21. 1.1997 Warnung nicht bitadressierbare Speicherstelle        *
-;*           22. 1.1997 Fehler;Warnungen fuer Stacks                         *
-;*            1. 2.1997 Warnung wegen NUL-Zeichen                            *
-;*           29. 3.1997 Kommandozeilenoption g                               *
-;*           30. 5.1997 Warnung wg. inkorrektem Listing                      *
-;*           12. 7.1997 Kommandozeilenoption Y                               *
-;*            5. 8.1997 Meldungen fuer Strukturen                            *
-;*            7. 9.1997 Warnung Bereichsueberschreitung                      *
-;*           24. 9.1997 Kopfzeile Registerdefinitionsliste                   *
-;*           19.10.1997 Warnung neg. DUP-Anzahl                              *
-;*           26. 6.1998 Fehlermeldung Codepage nicht gefunden                *
-;*           27. 6.1998 Meldungen fuer Codepage-Liste                        *
-;*           18. 4.1999 Kommandozeilenoptionen cpu, shareout                 *
-;*            2. 5.1999 'order' --> 'instruction'                            *
-;*           13. 7.1999 Fehlermeldungen fuer extern-Symbole                  *
-;*           13. 2.2000 Kommandozeilenoption olist                           *
-;*            1. 6.2000 changed error message 1850                           *
-;*           21. 7.2001 not repeatable error message                         *
-;*           2001-10-03 warning implicit X-conversion                        *
-;*           2001-10-17 error conflicting conditions                         *
-;*           2001-10-21 GNU error messages                                   *
-;*                                                                           *
-;*****************************************************************************
-;* $Id: as.res,v 1.8 2017/04/02 11:10:36 alfred Exp $                        *
-;*****************************************************************************
-;* $Log: as.res,v $
-;* Revision 1.8  2017/04/02 11:10:36  alfred
-;* - allow more fine-grained macro expansion in listing
-;*
-;* Revision 1.7  2016/11/25 18:12:12  alfred
-;* - first version to support OLMS-50
-;*
-;* Revision 1.6  2015/10/23 08:43:33  alfred
-;* - beef up & fix structure handling
-;*
-;* Revision 1.5  2014/11/23 17:06:32  alfred
-;* - add error #2060 (unimplemented)
-;*
-;* Revision 1.4  2014/09/14 13:22:33  alfred
-;* - ass keyword arguments
-;*
-;* Revision 1.3  2011-10-20 14:00:40  alfred
-;* - SRP handling more graceful on Z8
-;*
-;* Revision 1.2  2008/08/10 11:57:47  alfred
-;* - handle truncated bit numbers for 68K
-;*
-;* Revision 1.1  2003/11/06 02:53:05  alfred
-;* - recreated
-;*
-;* Revision 1.12  2003/10/04 15:38:46  alfred
-;* - differentiate constant/variable messages
-;*
-;* Revision 1.11  2003/10/04 14:00:39  alfred
-;* - complain about empty arguments
-;*
-;* Revision 1.10  2002/11/20 20:25:05  alfred
-;* - added unions
-;*
-;* Revision 1.9  2002/11/16 20:52:18  alfred
-;* - added ErrMsgStructNameMissing
-;*
-;* Revision 1.8  2002/11/11 21:13:02  alfred
-;* - messages fro struct list
-;*
-;* Revision 1.7  2002/11/04 19:04:26  alfred
-;* - prevent modification of constants with SET
-;*
-;* Revision 1.6  2002/10/28 19:39:10  alfred
-;* - clarified -g options
-;*
-;* Revision 1.5  2002/08/14 18:43:47  alfred
-;* - warn null allocation, remove some warnings
-;*
-;* Revision 1.4  2002/05/13 18:17:13  alfred
-;* - added error 2010/2020
-;*
-;* Revision 1.3  2002/05/12 20:56:28  alfred
-;* - added 3206x error messages
-;*
-;* Revision 1.2  2002/03/10 11:55:42  alfred
-;* - state which operand type was expected/got
-;*
 ;*****************************************************************************
 
 Include header.res
@@ -310,7 +225,7 @@ Message ErrMsgOnlyImmAddr
  "nur immediate-Adressierung erlaubt"
  "addressing mode must be immediate"
 
-Message ErrMsgInvOpsize
+Message ErrMsgInvOpSize
  "unpassende Operandengr&ouml;&szlig;e"
  "invalid operand size"
 
@@ -322,13 +237,49 @@ Message ErrMsgUndefOpSizes
  "undefinierte Operandengr&ouml;&szlig;e"
  "undefined operand size"
 
-Message ErrMsgInvOpType
- "unpassender Operandentyp"
- "invalid operand type"
+Message ErrMsgStringOrIntButFloat
+ "Ganzzahl oder String erwartet, aber Gleitkommazahl erhalten"
+ "expected integer or string, but got floating point number"
+
+Message ErrMsgIntButFloat
+ "Ganzzahl erwartet, aber Gleitkommazahl erhalten"
+ "expected integer, but got floating point number"
+
+Message ErrMsgFloatButString
+ "Gleitkommazahl erwartet, aber String erhalten"
+ "expected floating point number, but got string"
+
+Message ErrMsgOpTypeMismatch
+ "Operandentyp-Diskrepanz"
+ "operand type mismatch"
+
+Message ErrMsgStringButInt
+ "String erwartet, aber Ganzzahl erhalten"
+ "expected string, but got integer"
+
+Message ErrMsgStringButFloat
+ "String erwartet, aber Gleitkommazahl erhalten"
+ "expected string, but got floating point number"
 
 Message ErrMsgTooManyArgs
- "zuviele Argumente"
+ "zu viele Argumente"
  "too many arguments"
+
+Message ErrMsgIntButString
+ "Ganzzahl erwartet, aber String erhalten"
+ "expected integer, but got string"
+
+Message ErrMsgIntOrFloatButString
+ "Ganz- oder Gleitkommazahl erwartet, aber String erhalten"
+ "expected integer or floating point number, but got string"
+
+Message ErrMsgExpectString
+ "String erwartet"
+ "expected string"
+
+Message ErrMsgExpectInt
+ "Ganzzahl erwartet"
+ "expected integer"
 
 Message ErrMsgUnknownInstruction
  "unbekannter Befehl"
@@ -349,6 +300,10 @@ Message ErrMsgUnderRange
 Message ErrMsgOverRange
  "Bereichs&uuml;berschreitung"
  "range overflow"
+
+Message ErrMsgNotPwr2
+ "keine Zweierpotenz"
+ "not a power of two"
 
 Message ErrMsgNotAligned
  "Adresse nicht ausgerichtet"
@@ -398,6 +353,10 @@ Message ErrMsgInvShiftArg
  "ung&uuml;ltiges Schiebeargument"
  "invalid argument for shifting"
 
+Message ErrMsgOnly1
+ "nur Eins als Argument erlaubt"
+ "operand must be one"
+
 Message ErrMsgRange18
  "nur Bereich 1..8 erlaubt"
  "operand must be in range 1..8"
@@ -429,6 +388,10 @@ Message ErrMsgInvReg
 Message ErrMsgDoubleReg
  "Register mehr als einmal gelistet"
  "register(s) listed more than once"
+
+Message ErrMsgRegBankMismatch
+ "Register-Bank-Diskrepanz"
+ "register bank mismatch"
 
 Message ErrMsgNoSaveFrame
  "RESTORE ohne SAVE"
@@ -678,6 +641,10 @@ Message ErrMsgTargOnDiffPage
  "Sprungziel nicht auf gleicher Seite"
  "jump target not on same page"
 
+Message ErrMsgTargOnDiffSection
+ "Sprungziel nicht in gleicher Sektion"
+ "jump target not in same section"
+
 Message ErrMsgCodeOverflow
  "Code&uuml;berlauf"
  "code overflow"
@@ -826,6 +793,22 @@ Message ErrMsgInvalidPrepDir
  "unbekannte Pr&auml;prozessoranweisung"
  "unknown preprocessing directive"
 
+Message ErrMsgExpectedError
+ "erwarteter Fehler nicht eingetreten"
+ "expected error did not occur"
+
+Message ErrMsgNoNestExpect
+ "Verschachtelung von EXPECT/ENDEXPECT nicht erlaubt"
+ "nesting of EXPECT/ENDEXPECT not allowed"
+
+Message ErrMsgMissingENDEXPECT
+ "fehlendes ENDEXPECT"
+ "missing ENDEXPECT"
+
+Message ErrMsgMissingEXPECT
+ "ENDEXPECT ohne EXPECT"
+ "ENDEXPECT without EXPECT"
+
 Message ErrMsgInternalError
  "interner Fehler"
  "internal error"
@@ -894,14 +877,6 @@ Message ErrMsgUnexportable
  "Symbol nicht exportierbar"
  "cannot export this symbol"
 
-Message ErrMsgExpected
- "erwartete"
- "expected"
-
-Message ErrMsgButGot
- "aber erhielt"
- "but got"
-
 Message ErrMsgArgCntZero
  "erwarte kein Argument, erhielt %d"
  "expected no argument but got %d"
@@ -954,47 +929,35 @@ Message ErrMsgOnlyCPUSupported2
  " unterst&uuml;tzt"
  ""
 
-Message OpTypeInt
- "Integer"
- "integer"
-
-Message OpTypeFloat
- "Float"
- "float"
-
-Message OpTypeString
- "String"
- "string"
-
 ;----------------------------------------------------------------------------
 ; Strings in Listingkopfzeile
 
 Message HeadingFileNameLab
  " - Quelle "
- " - source file "
+ " - Source File "
 
 Message HeadingPageLab
  " - Seite "
- " - page "
+ " - Page "
 
 ;----------------------------------------------------------------------------
 ; Strings in Listing
 
 Message ListSymListHead1
  "  Symboltabelle (*=unbenutzt):"
- "  symbol table (* = unused):"
+ "  Symbol Table (* = unused):"
 
 Message ListSymListHead2
  "  ----------------------------"
- "  ------------------------"
+ "  --------------------------"
 
 Message ListSymSumMsg
  " Symbol"
- " symbol"
+ " Symbol"
 
 Message ListSymSumsMsg
  " Symbole"
- " symbols"
+ " Symbols"
 
 Message ListUSymSumMsg
  " unbenutztes Symbol"
@@ -1006,7 +969,7 @@ Message ListUSymSumsMsg
 
 Message ListRegDefListHead1
  "  Registerdefinitionen (*=unbenutzt):"
- "  register definitions (*=unused):"
+ "  Register Definitions (*=unused):"
 
 Message ListRegDefListHead2
  "  -----------------------------------"
@@ -1030,7 +993,7 @@ Message ListRegDefUSumsMsg
 
 Message ListCodepageListHead1
  "  Zeichentabellen:"
- "  codepages:"
+ "  Code Pages:"
 
 Message ListCodepageListHead2
  "  ----------------"
@@ -1054,7 +1017,7 @@ Message ListCodepageSumsMsg
 
 Message ListMacListHead1
  "  definierte Makros:"
- "  defined macros:"
+ "  Defined Macros:"
 
 Message ListMacListHead2
  "  ------------------"
@@ -1070,7 +1033,7 @@ Message ListMacSumsMsg
 
 Message ListStructListHead1
  "  definierte Strukturen/Unions:"
- "  defined structures/unions:"
+ "  Defined Structures/Unions:"
 
 Message ListStructListHead2
  "  -----------------------------"
@@ -1086,7 +1049,7 @@ Message ListStructSumsMsg
 
 Message ListFuncListHead1
  "  definierte Funktionen:"
- "  defined functions:"
+ "  Defined Functions:"
 
 Message ListFuncListHead2
  "  ----------------------"
@@ -1102,7 +1065,7 @@ Message ListDefListHead2
 
 Message ListSegListHead1
  "in "
- "space used in "
+ "Space Used in "
 
 Message ListSegListHead2
  " belegte Bereiche:"
@@ -1110,7 +1073,7 @@ Message ListSegListHead2
 
 Message ListCrossListHead1
  "  Querverweisliste:"
- "  cross reference list:"
+ "  Cross Reference List:"
 
 Message ListCrossListHead2
  "  -----------------"
@@ -1118,7 +1081,7 @@ Message ListCrossListHead2
 
 Message ListSectionListHead1
  "  Sektionen:"
- "  sections:"
+ "  Sections:"
 
 Message ListSectionListHead2
  "  ----------"
@@ -1126,7 +1089,7 @@ Message ListSectionListHead2
 
 Message ListIncludeListHead1
  "  Include-Verschachtelung:"
- "  nested include files:"
+ "  Nested Include Files:"
 
 Message ListIncludeListHead2
  "  ------------------------"
@@ -1161,7 +1124,7 @@ Message ListSecoName
 
 Message InfoMessAssembling
  "Assembliere "
- "assembling "
+ "Assembling "
 
 Message InfoMessPass
  "PASS "
@@ -1196,8 +1159,8 @@ Message InfoMessPPassCnt
  " passes"
 
 Message InfoMessNoPass
- "        zus&auml;tzliche erforderliche Durchl&auml;ufe wegen Fehlern nicht\n        durchgef&uuml;hrt, Listing m&ouml;glicherweise inkorrekt"
- "        additional necessary passes not started due to\n        errors, listing possibly incorrect"
+ "        zus&auml;tzliche erforderliche Durchl&auml;ufe wegen Fehlern nicht\n        durchgef&uuml;hrt, Listing m&ouml;glicherweise inkorrekt."
+ "        Additional necessary passes not started due to\n        errors, listing possibly incorrect."
 
 Message InfoMessMacAssLine
  " Zeile inkl. Makroexpansionen"
@@ -1233,19 +1196,19 @@ Message InfoMessRemainStack
 
 Message InfoMessNFilesFound
  ": keine Datei(en) zu assemblieren!"
- ": no file(s) to assemble!"
+ ": No file(s) to assemble!"
 
 Message InfoMessMacroAss
  "Makroassembler "
- "macro assembler "
+ "Macro Assembler "
 
 Message InfoMessVar
  "Version"
- "version"
+ "Version"
 
 Message InfoMessHead1
  "Aufruf : "
- "calling convention : "
+ "Calling Convention : "
 
 Message InfoMessHead2
  " [Optionen] [Datei] [Optionen] ..."
@@ -1257,15 +1220,15 @@ Message KeyWaitMsg
 
 Message ErrMsgInvParam
  "ung&uuml;ltige Option: "
- "invalid option: "
+ "Invalid option: "
 
 Message ErrMsgInvEnvParam
  "ung&uuml;ltige Environment-Option: "
- "invalid environment option: "
+ "Invalid environment option: "
 
 Message InvMsgSource
  "Quelldatei?"
- "source file?"
+ "Source file?"
 
 Message InfoMessHelp
  "--------\n" \
@@ -1282,6 +1245,7 @@ Message InfoMessHelp
  "-cpu <Name> : Zielprozessor setzen\n" \
  "-alias <neu>=<alt> : Prozessor-Alias definieren\n" \
  "-l : Listing auf Konsole              -L : Listing auf Datei\n" \
+ "-listradix <2...36>: Zahlensystem im Listing\n" \
  "-i <Pfad>[:Pfad]... : Pfadliste f&uuml;r Includedateien\n" \
  "-D <Symbol>[,Symbol]... : Symbole vordefinieren\n" \
  "-gnuerrors: Fehlermeldungen im GNU-Format\n" \
@@ -1320,6 +1284,7 @@ Message InfoMessHelp
  "-cpu <name> : set target processor\n" \
  "-alias <new>=<old> : define processor alias\n" \
  "-l : listing to console               -L : listing to file\n" \
+ "-listradix <2...36>: number system in listing\n" \
  "-i <path>[;path]... : list of paths for include files\n" \
  "-D <symbol>[,symbol]... : predefine symbols\n" \
  "-gnuerrors: error messages in GNU format\n" \

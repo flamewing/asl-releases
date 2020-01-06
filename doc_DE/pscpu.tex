@@ -109,6 +109,11 @@ SUPMODE \\
 DATA       \> RES         \> SFR \\
 \end{tabbing}}
 
+\subsubsection{Hitachi H16}
+{\tt\begin{tabbing}
+\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
+BIT        \> DC[.$<$size$>$]    \> DS[.$<$size$>$]   \> SUPMODE \\
+\end{tabbing}}
 
 \subsubsection{65xx/MELPS-740}
 {\tt\begin{tabbing}
@@ -339,11 +344,11 @@ BIT        \> DATA        \> SFR         \> ZERO \\
 \subsubsection{SGS-Thomson ST6}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
-ASCII      \> ASCIZ       \> ASSUME      \> BYTE        \> BLOCK \\
-SFR        \> WORD \\
+ASCII      \> ASCIZ       \> ASSUME      \> BIT  \>  BYTE \\
+BLOCK      \> SFR         \> WORD \\
 \end{tabbing}}
 
-\subsubsection{SGS-Thomson ST7}
+\subsubsection{SGS-Thomson ST7/STM8}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
 DC[.$<$size$>$] \> DS[.$<$size$>$]   \> PADDING \\
@@ -564,11 +569,10 @@ DATA       \> RES         \> SFR \\
 DATA       \> RES         \> SFR \\
 \end{tabbing}}
 
-\subsubsection{Mitsubishi M16C}
+\subsubsection{Panafacom MN161x}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
-DB         \> DD          \> DQ          \> DS          \> DT \\
-DW \\
+DC         \> DS \\
 \end{tabbing}}
 
 \subsubsection{XMOS XS1}

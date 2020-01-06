@@ -1,47 +1,12 @@
 /* intpseudo.c */
 /*****************************************************************************/
-/* AS-Portierung                                                             */
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
 /*                                                                           */
-/* Haeufiger benutzte Intel-Pseudo-Befehle                                   */
+/* AS                                                                        */
+/*                                                                           */
+/* Commonly Used Intel-Style Pseudo Instructions                             */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: intpseudo.c,v 1.11 2014/12/07 19:14:02 alfred Exp $                   */
-/***************************************************************************** 
- * $Log: intpseudo.c,v $
- * Revision 1.11  2014/12/07 19:14:02  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.10  2014/12/05 11:09:11  alfred
- * - eliminate Nil
- *
- * Revision 1.9  2013/12/21 19:46:51  alfred
- * - dynamically resize code buffer
- *
- * Revision 1.8  2010/03/14 10:45:15  alfred
- * - allow string arguments for DW/DD/DQ/DT
- *
- * Revision 1.7  2008/11/23 10:39:17  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.6  2007/11/24 22:48:08  alfred
- * - some NetBSD changes
- *
- * Revision 1.5  2005/11/04 19:38:00  alfred
- * - ignore case on DUP search
- *
- * Revision 1.4  2004/05/31 12:47:28  alfred
- * - use CopyNoBlanks()
- *
- * Revision 1.3  2004/05/29 14:57:56  alfred
- * - added missing include statements
- *
- * Revision 1.2  2004/05/29 12:04:48  alfred
- * - relocated DecodeMot(16)Pseudo into separate module
- *
- * Revision 1.1  2004/05/29 11:33:04  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 /*****************************************************************************
  * Includes
@@ -50,6 +15,7 @@
 #include "stdinc.h"
 #include <ctype.h>
 #include <string.h>
+#include <assert.h>
 #include <math.h>
 
 #include "bpemu.h"
@@ -167,7 +133,7 @@ static Boolean LayoutByte(const tStrComp *pExpr, Word *pCnt, Boolean BigEndian)
   {
     case TempInt:
       if (FirstPassUnknown) t.Contents.Int &= 0xff;
-      if (!RangeCheck(t.Contents.Int, Int8)) WrError(ErrNum_OverRange);
+      if (!SymbolQuestionable && !RangeCheck(t.Contents.Int, Int8)) WrError(ErrNum_OverRange);
       else
       {
         BAsmCode[CodeLen++] = t.Contents.Int;
@@ -176,7 +142,7 @@ static Boolean LayoutByte(const tStrComp *pExpr, Word *pCnt, Boolean BigEndian)
       }
       break;
     case TempFloat: 
-      WrError(ErrNum_InvOpType);
+      WrStrErrorPos(ErrNum_StringOrIntButFloat, pExpr);
       break;
     case TempString:
       TranslateString(t.Contents.Ascii.Contents, t.Contents.Ascii.Length);
@@ -238,7 +204,7 @@ static Boolean LayoutWord(const tStrComp *pExpr, Word *pCnt, Boolean BigEndian)
     case TempInt:
       if (FirstPassUnknown)
         t.Contents.Int &= 0xffff;
-      if (!RangeCheck(t.Contents.Int, Int16)) WrError(ErrNum_OverRange);
+      if (!SymbolQuestionable && !RangeCheck(t.Contents.Int, Int16)) WrError(ErrNum_OverRange);
       else
       {
         PutWord(t.Contents.Int, BigEndian);
@@ -247,7 +213,7 @@ static Boolean LayoutWord(const tStrComp *pExpr, Word *pCnt, Boolean BigEndian)
       }
       break;
     case TempFloat:
-      WrError(ErrNum_InvOpType);
+      WrStrErrorPos(ErrNum_StringOrIntButFloat, pExpr);
       break;
     case TempString:
       TranslateString(t.Contents.Ascii.Contents, t.Contents.Ascii.Length);
@@ -307,6 +273,7 @@ static Boolean LayoutDoubleWord(const tStrComp *pExpr, Word *pCnt, Boolean BigEn
      in output buffer, so we only need to check again in case of
      a string argument: */
 
+  FirstPassUnknown = False;
   EvalStrExpression(pExpr, &erg);
   Result = False;
   switch (erg.Typ)
@@ -314,7 +281,9 @@ static Boolean LayoutDoubleWord(const tStrComp *pExpr, Word *pCnt, Boolean BigEn
     case TempNone:
       break;
     case TempInt:
-      if (!RangeCheck(erg.Contents.Int, Int32)) WrError(ErrNum_OverRange);
+      if (FirstPassUnknown)
+        erg.Contents.Int &= 0xfffffffful;
+      if (!SymbolQuestionable && !RangeCheck(erg.Contents.Int, Int32)) WrError(ErrNum_OverRange);
       else
       {
         PutDWord(erg.Contents.Int, BigEndian);
@@ -346,7 +315,7 @@ static Boolean LayoutDoubleWord(const tStrComp *pExpr, Word *pCnt, Boolean BigEn
       }
       break;
     case TempAll:
-      WrError(ErrNum_InvOpType);
+      assert(0);
   }
 
   if (Result)
@@ -380,10 +349,11 @@ static void PutQWord(LargeWord l, Boolean BigEndian)
     BAsmCode[CodeLen + 1] = (l >> 48) & 0xff;
     BAsmCode[CodeLen + 0] = (l >> 56) & 0xff;
 #else
+    /* TempResult is TempInt, so sign-extend */
     BAsmCode[CodeLen + 3] =
     BAsmCode[CodeLen + 2] =
     BAsmCode[CodeLen + 1] =
-    BAsmCode[CodeLen    ] = 0;
+    BAsmCode[CodeLen    ] = (l & 0x80000000ul) ? 0xff : 0x00;
 #endif
   }
   else
@@ -398,10 +368,11 @@ static void PutQWord(LargeWord l, Boolean BigEndian)
     BAsmCode[CodeLen + 6] = (l >> 48) & 0xff;
     BAsmCode[CodeLen + 7] = (l >> 56) & 0xff;
 #else
+    /* TempResult is TempInt, so sign-extend */
     BAsmCode[CodeLen + 4] =
     BAsmCode[CodeLen + 5] =
     BAsmCode[CodeLen + 6] =
-    BAsmCode[CodeLen + 7] = 0;
+    BAsmCode[CodeLen + 7] = (l & 0x80000000ul) ? 0xff : 0x00;
 #endif
   }
   CodeLen += 8;
@@ -450,8 +421,7 @@ static Boolean LayoutQuadWord(const tStrComp *pExpr, Word *pCnt, Boolean BigEndi
       }
       break;
     case TempAll:
-      WrError(ErrNum_InvOpType);
-      return Result;
+      assert(0);
   }
 
   if (Result)
@@ -490,7 +460,7 @@ static Boolean LayoutTenBytes(const tStrComp *pExpr, Word *pCnt, Boolean BigEndi
     case TempInt:
       erg.Contents.Float = erg.Contents.Int;
       erg.Typ = TempFloat;
-      /* no break! */
+      /* fall-through */
     case TempFloat:
       Double_2_ieee10(erg.Contents.Float, BAsmCode + CodeLen, False);
       *pCnt = 10;
@@ -514,8 +484,7 @@ static Boolean LayoutTenBytes(const tStrComp *pExpr, Word *pCnt, Boolean BigEndi
       }
       break;
     case TempAll:
-      WrError(ErrNum_InvOpType);
-      return Result;
+      assert(0);
   }
 
   if (Result)
@@ -591,7 +560,7 @@ static Boolean DecodeIntelPseudo_LayoutMult(const tStrComp *pArg, Word *Cnt,
     {
       if ((!LastValid)
       &&  (!DecodeIntelPseudo_ValidSymChar(pRun[3]))
-      &&  (!strncasecmp(pRun, "DUP", 3)))
+      &&  (!as_strncasecmp(pRun, "DUP", 3)))
       {
         pDupFnd = pRun;
         break;
@@ -721,27 +690,27 @@ Boolean DecodeIntelPseudo(Boolean Turn)
       case 'B':
         LayoutFunc = LayoutByte;
         if (*LabPart.Str)
-          SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize8Bit);
+          SetSymbolOrStructElemSize(&LabPart, eSymbolSize8Bit);
         break;
       case 'W':
         LayoutFunc = LayoutWord;
         if (*LabPart.Str)
-          SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize16Bit);
+          SetSymbolOrStructElemSize(&LabPart, eSymbolSize16Bit);
         break;
       case 'D':
         LayoutFunc = LayoutDoubleWord;
         if (*LabPart.Str)
-          SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize32Bit);
+          SetSymbolOrStructElemSize(&LabPart, eSymbolSize32Bit);
         break;
       case 'Q':
         LayoutFunc = LayoutQuadWord;
         if (*LabPart.Str)
-          SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize64Bit);
+          SetSymbolOrStructElemSize(&LabPart, eSymbolSize64Bit);
         break;
       case 'T':
         LayoutFunc = LayoutTenBytes;
         if (*LabPart.Str)
-          SetSymbolOrStructElemSize(LabPart.Str, eSymbolSize80Bit);
+          SetSymbolOrStructElemSize(&LabPart, eSymbolSize80Bit);
         break;
     }
 

@@ -1,5 +1,7 @@
 /* codef8.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Code Generator Fairchild F8                                               */
@@ -43,7 +45,7 @@ static Boolean DecodeReg(const tStrComp *pArg, Byte *pResult)
   Boolean OK;
 
   for (z = 0; pRegNames[z]; z++)
-    if (!strcasecmp(pRegNames[z], pArg->Str))
+    if (!as_strcasecmp(pRegNames[z], pArg->Str))
     {
       *pResult = z + 9;
       return True;
@@ -71,7 +73,7 @@ static Boolean DecodeAux(const char *pArg, Byte *pResult)
 
 static Boolean ArgPair(const char *pArg1, const char *pArg2)
 {
-  return !strcasecmp(ArgStr[1].Str, pArg1) && !strcasecmp(ArgStr[2].Str, pArg2);
+  return !as_strcasecmp(ArgStr[1].Str, pArg1) && !as_strcasecmp(ArgStr[2].Str, pArg2);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -214,13 +216,13 @@ static void DecodeLR(Word Code)
   if (!ChkArgCnt(2,2))
     return;
 
-  if (!strcasecmp(ArgStr[1].Str, "A"))
+  if (!as_strcasecmp(ArgStr[1].Str, "A"))
   {
     if (DecodeAux(ArgStr[2].Str, &BAsmCode[0]))
     {
       CodeLen = 1;
     }
-    else if (!strcasecmp(ArgStr[2].Str, "IS"))
+    else if (!as_strcasecmp(ArgStr[2].Str, "IS"))
     {
       BAsmCode[0] = 0x0a;
       CodeLen = 1;
@@ -231,14 +233,14 @@ static void DecodeLR(Word Code)
       CodeLen = 1;
     }
   }
-  else if (!strcasecmp(ArgStr[2].Str, "A"))
+  else if (!as_strcasecmp(ArgStr[2].Str, "A"))
   {
     if (DecodeAux(ArgStr[1].Str, &BAsmCode[0]))
     {
       BAsmCode[0] |= 4;
       CodeLen = 1;
     }
-    else if (!strcasecmp(ArgStr[1].Str, "IS"))
+    else if (!as_strcasecmp(ArgStr[1].Str, "IS"))
       BAsmCode[CodeLen++] = 0x0b;
     else if (DecodeReg(&ArgStr[1], &BAsmCode[0]))
     {
@@ -458,7 +460,6 @@ static void SwitchTo_F8(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   Descr = FindFamilyByName("F8");
   PCSymbol = "$";

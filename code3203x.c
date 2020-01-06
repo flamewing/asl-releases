@@ -1,98 +1,12 @@
 /* code3203x.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
-/* Codegenerator TMS320C3x-Familie                                           */               
-/*                                                                           */
-/* Historie: 12.12.1996 Grundsteinlegung                                     */               
-/*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
-/*           18. 8.1998 BookKeeping-Aufruf in RES                            */
-/*            3. 1.1998 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
+/* Codegenerator TMS320C3x/C4x-Familie                                       */               
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code3203x.c,v 1.23 2017/06/07 19:38:43 alfred Exp $                       */
-/***************************************************************************** 
- * $Log: code3203x.c,v $
- * Revision 1.23  2017/06/07 19:38:43  alfred
- * - do not double-generate CALL and LAJ
- *
- * Revision 1.22  2016/10/21 20:05:56  alfred
- * - fix some bugs detected by pedantic GCC
- *
- * Revision 1.21  2016/09/12 17:31:41  alfred
- * - corrections for 16-bit compiler
- *
- * Revision 1.20  2016/08/27 07:31:51  alfred
- * - remove debug printf
- *
- * Revision 1.19  2016/08/27 07:12:25  alfred
- * - code format 0x76 now reflects C3x and C4x code
- *
- * Revision 1.18  2016/08/26 18:57:11  alfred
- * - add parallel versions of TOIEEE/FROMIEEE
- *
- * Revision 1.17  2016/08/26 18:43:13  alfred
- * - add new non-parallel C4x instructions
- *
- * Revision 1.16  2016/08/26 09:10:19  alfred
- * - add MPYSHI and MPYUHI
- *
- * Revision 1.15  2016/08/26 08:45:19  alfred
- * - regard different register names on C4x
- *
- * Revision 1.14  2016/08/25 21:45:50  alfred
- * - implement type 2 3-op generic format for C4x
- *
- * Revision 1.13  2016/08/25 20:56:22  alfred
- * - SrcxMode/Part designators consistent to syntax in TI manual (src2,src1,dst)
- *
- * Revision 1.12  2016/08/25 20:43:03  alfred
- * - C4x will be realized as extension of C3x target
- *
- * Revision 1.11  2016/08/24 12:13:19  alfred
- * - begun with 320C4x support
- *
- * Revision 1.10  2014/11/16 13:15:06  alfred
- * - remove some superfluous semicolons
- *
- * Revision 1.9  2014/11/05 15:47:14  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.8  2014/11/02 14:43:30  alfred
- * - rework to current style
- *
- * Revision 1.7  2014/03/08 21:06:35  alfred
- * - rework ASSUME framework
- *
- * Revision 1.6  2010/04/17 13:14:19  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.5  2008/11/23 10:39:16  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.4  2007/11/24 22:48:03  alfred
- * - some NetBSD changes
- *
- * Revision 1.3  2005/10/02 10:00:44  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.2  2005/09/08 17:31:03  alfred
- * - add missing include
- *
- * Revision 1.1  2003/11/06 02:49:19  alfred
- * - recreated
- *
- * Revision 1.4  2003/05/02 21:23:09  alfred
- * - strlen() updates
- *
- * Revision 1.3  2002/08/14 18:17:35  alfred
- * - warn about NULL allocation
- *
- * Revision 1.2  2002/07/14 18:39:58  alfred
- * - fixed TempAll-related warnings
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -237,7 +151,7 @@ static Boolean DecodeReg(const char *Asc, Byte *Erg)
   }
 
   for (*Erg = 0; CxxRegs[*Erg]; (*Erg)++)
-    if (!strcasecmp(CxxRegs[*Erg], Asc))
+    if (!as_strcasecmp(CxxRegs[*Erg], Asc))
     {
       *Erg += CxxRegStart;
       return True;
@@ -249,7 +163,7 @@ static Boolean DecodeReg(const char *Asc, Byte *Erg)
 static Boolean DecodeExpReg(const char *Asc, Byte *Erg)
 {
   for (*Erg = 0; ExpRegs[*Erg]; (*Erg)++)
-    if (!strcasecmp(ExpRegs[*Erg], Asc))
+    if (!as_strcasecmp(ExpRegs[*Erg], Asc))
       return True;
 
   return False;
@@ -328,9 +242,9 @@ static void DecodeAdr(const tStrComp *pArg, Byte Erl, Boolean ImmFloat)
       }
       StrCompSplitRef(&Arg, &NDisp, &Arg, p);
       StrCompShorten(&NDisp, 1);
-      if (!strcasecmp(NDisp.Str, "IR0"))
+      if (!as_strcasecmp(NDisp.Str, "IR0"))
         Disp = -1;
-      else if (!strcasecmp(NDisp.Str, "IR1"))
+      else if (!as_strcasecmp(NDisp.Str, "IR1"))
         Disp = -2;
       else
       {
@@ -892,7 +806,7 @@ static void DecodeGen(Word Index)
     for (ARIndex = 0; ARIndex < 8; ARIndex++)
       if (ARs & PrevARs & (1l << ARIndex))
       {
-        sprintf(Form, "AR%d", ARIndex);
+        as_snprintf(Form, sizeof(Form), "AR%d", (int)ARIndex);
         WrXError(ErrNum_DoubleAdrRegUse, Form);
       }
 
@@ -1207,7 +1121,7 @@ static void DecodeLDP(Word Code)
 
   if (!ChkArgCnt(1, 2));
   else if (ThisPar) WrError(ErrNum_ParNotPossible);
-  else if ((ArgCnt == 2) && (strcasecmp(ArgStr[2].Str, "DP"))) WrError(ErrNum_InvAddrMode);
+  else if ((ArgCnt == 2) && (as_strcasecmp(ArgStr[2].Str, "DP"))) WrError(ErrNum_InvAddrMode);
   else
   {
     Boolean OK;
@@ -1571,39 +1485,39 @@ static void AddCondition(char *NName, Byte NCode)
 
   if (*NName)
   {
-    sprintf(InstName, "LDI%s", NName);
+    as_snprintf(InstName, sizeof(InstName), "LDI%s", NName);
     AddInstTable(InstTable, InstName, 0x5000 | NCode, DecodeLDIcc_LDFcc);
-    sprintf(InstName, "LDF%s", NName);
+    as_snprintf(InstName, sizeof(InstName), "LDF%s", NName);
     AddInstTable(InstTable, InstName, 0x4000 | NCode, DecodeLDIcc_LDFcc);
   }
-  sprintf(InstName, "B%s", NName);
+  as_snprintf(InstName, sizeof(InstName), "B%s", NName);
   AddInstTable(InstTable, InstName, 0x0000 | NCode, DecodeBcc);
-  sprintf(InstName, "B%sD", NName);
+  as_snprintf(InstName, sizeof(InstName), "B%sD", NName);
   AddInstTable(InstTable, InstName, 0x0100 | NCode, DecodeBcc);
-  sprintf(InstName, "B%sAF", NName);
+  as_snprintf(InstName, sizeof(InstName), "B%sAF", NName);
   AddInstTable(InstTable, InstName, 0x0580 | NCode, DecodeBcc);
-  sprintf(InstName, "B%sAT", NName);
+  as_snprintf(InstName, sizeof(InstName), "B%sAT", NName);
   AddInstTable(InstTable, InstName, 0x0380 | NCode, DecodeBcc);
   if (*NName)
   {
-    sprintf(InstName, "LAJ%s", NName);
+    as_snprintf(InstName, sizeof(InstName), "LAJ%s", NName);
     AddInstTable(InstTable, InstName, 0x4180 | NCode, DecodeBcc);
-    sprintf(InstName, "CALL%s", NName);
+    as_snprintf(InstName, sizeof(InstName), "CALL%s", NName);
     AddInstTable(InstTable, InstName, NCode, DecodeCALLcc);
   }
-  sprintf(InstName, "DB%s", NName);
+  as_snprintf(InstName, sizeof(InstName), "DB%s", NName);
   AddInstTable(InstTable, InstName, NCode, DecodeDBcc);
-  sprintf(InstName, "DB%sD", NName);
+  as_snprintf(InstName, sizeof(InstName), "DB%sD", NName);
   AddInstTable(InstTable, InstName, 0x100 | NCode, DecodeDBcc);
-  sprintf(InstName, "RETI%s", NName);
+  as_snprintf(InstName, sizeof(InstName), "RETI%s", NName);
   AddInstTable(InstTable, InstName, NCode, DecodeRETIcc_RETScc);
-  sprintf(InstName, "RETI%sD", NName);
+  as_snprintf(InstName, sizeof(InstName), "RETI%sD", NName);
   AddInstTable(InstTable, InstName, 0x100 | NCode, DecodeRETIcc_RETScc);
-  sprintf(InstName, "RETS%s", NName);
+  as_snprintf(InstName, sizeof(InstName), "RETS%s", NName);
   AddInstTable(InstTable, InstName, 0x400 | NCode, DecodeRETIcc_RETScc);
-  sprintf(InstName, "TRAP%s", NName);
+  as_snprintf(InstName, sizeof(InstName), "TRAP%s", NName);
   AddInstTable(InstTable, InstName, NCode, DecodeTRAPcc);
-  sprintf(InstName, "LAT%s", NName);
+  as_snprintf(InstName, sizeof(InstName), "LAT%s", NName);
   AddInstTable(InstTable, InstName, 0x80 | NCode, DecodeTRAPcc);
 }
 
@@ -1636,7 +1550,7 @@ static void AddGen(char *NName, CPUVar NMin, Boolean NMay1, Boolean NMay3,
 
   if (InstrZ >= GenOrderCount) exit(255);
 
-  sprintf(NName3, "%s3", NName);
+  as_snprintf(NName3, sizeof(NName3), "%s3", NName);
 
   GenOrders[InstrZ].ParIndex =
   GenOrders[InstrZ].ParIndex3 = ParOrderCount;
@@ -1951,7 +1865,6 @@ static void SwitchTo_3203X(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = pDescr->Id;

@@ -1,49 +1,12 @@
 /* code96.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator MCS/96-Familie                                              */
 /*                                                                           */
-/* Historie: 10.11.1996                                                      */
-/*           16. 3.1997 80196N/80296                                         */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code96.c,v 1.8 2014/11/05 15:47:15 alfred Exp $                      *
- ***************************************************************************** 
- * $Log: code96.c,v $
- * Revision 1.8  2014/11/05 15:47:15  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.7  2014/07/12 20:27:42  alfred
- * - rework to current style
- *
- * Revision 1.6  2014/03/08 21:06:36  alfred
- * - rework ASSUME framework
- *
- * Revision 1.5  2008/08/18 21:22:15  alfred
- * - fixed EPTS/DPTS coding
- *
- * Revision 1.4  2008/08/17 11:01:17  alfred
- * - correct BMOVI coding
- *
- * Revision 1.3  2005/09/08 17:31:04  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 11:33:02  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- * Revision 1.1  2003/11/06 02:49:22  alfred
- * - recreated
- *
- * Revision 1.3  2003/08/16 17:23:33  alfred
- * - took back fix
- *
- * Revision 1.2  2003/08/16 17:01:55  alfred
- * - fix condition
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -57,6 +20,7 @@
 #include "intpseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "strutil.h"
 
 #include "code96.h"
 
@@ -74,7 +38,7 @@ typedef enum
 {
   eForceNone = 0,
   eForceShort = 1,
-  eForceLong = 2,
+  eForceLong = 2
 } tForceSize;
 
 static CPUVar CPU8096, CPU80196, CPU80196N, CPU80296;
@@ -1174,7 +1138,7 @@ static void AddSize(char *NName, Word NCode, InstProc Proc, Word SizeMask)
   if (SizeMask & 2)
     AddInstTable(InstTable, NName, 0x0100 | NCode, Proc);
 
-  l = sprintf(SizeName, "%sB", NName);
+  l = as_snprintf(SizeName, sizeof(SizeName), "%sB", NName);
   if (SizeMask & 1)
     AddInstTable(InstTable, SizeName, 0x0000 | NCode, Proc);
 
@@ -1392,7 +1356,6 @@ static void SwitchTo_96(void)
 {
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = 0x39;

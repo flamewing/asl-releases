@@ -2,15 +2,9 @@
 #define _TOOLUTILS_H
 /* toolutils.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
-/*                                                                           */
-/* Unterroutinen fuer die AS-Tools                                           */
-/*                                                                           */
-/* Historie: 31. 5.1996 Grundsteinlegung                                     */
-/*           30. 5.1999 Adresswildcard-Funktion                              */
-/*           22. 1.2000 Funktion zum Lesen von RelocInfos                    */
-/*           26. 6.2000 added exports                                        */
-/*            4. 7.2000 ReadRecordHeader transports record type              */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -47,7 +41,7 @@ extern void WrCopyRight(const char *Msg);
 
 extern void DelSuffix(char *Name);
 
-extern void AddSuffix(char *Name, char *Suff);
+extern void AddSuffix(char *Name, unsigned NameSize, char *Suff);
 
 extern void FormatError(const char *Name, const char *Detail);
 
@@ -81,7 +75,5 @@ extern Boolean AddressWildcard(const char *addr);
 
 
 extern void toolutils_init(const char *ProgPath);
-
-#include "asmerr.h"
 
 #endif /* _TOOLUTILS_H */

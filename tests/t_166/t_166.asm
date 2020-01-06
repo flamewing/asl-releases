@@ -172,17 +172,23 @@ targ2:  jb      r5.2,targ2
 
 	mov	dpp0,#4
 	assume	dpp0:4
-	mov	r0,12345h    	; DPP0 noch nicht ver„nert
+	expect	200
+	 mov	 r0,12345h    	; DPP0 noch nicht veraenert
+	endexpect
 	mov	r0,12345h    	; ab hier wieder gut
 	mov	dpp0,#0
 	assume	dpp0:0
 
 	mov	cp,0fc00h
-	mov	r5,r3           ; gleich doppelt
+	expect	200,200
+	 mov	 r5,r3           ; gleich doppelt
+	endexpect
 	movb	r3,r1
 
 	mov	sp,0fd00h	; SP noch in der Pipe
-	pop	r4
+	expect	200
+	 pop	 r4
+	endexpect
 	ret
 
 ;-------------------------------
@@ -223,10 +229,13 @@ sbit	bit	0ff00h.4
 	extpr	#4,#1
 	extp	#4,#1
 	mov	r0,12345h
-	mov	r0,12345h
+	expect	110
+	 mov	 r0,12345h
+	endexpect
 
 	extsr	#1,#1
 	exts	#1,#1
 	mov	r0,12345h
-	mov	r0,12345h
-
+	expect	110
+	 mov	 r0,12345h
+	endexpect

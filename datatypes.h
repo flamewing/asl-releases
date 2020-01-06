@@ -2,6 +2,8 @@
 #define _DATATYPES_H
 /* datatypes.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Port                                                                   */
 /*                                                                           */
 /* define some handy types & constants                                       */
@@ -49,7 +51,9 @@ typedef float Single;
 
 typedef Byte Boolean; 
 
-#define STRINGSIZE 256
+#ifndef STRINGSIZE
+# define STRINGSIZE 256
+#endif
 #define SHORTSTRINGSIZE 65
 
 typedef char String[STRINGSIZE];

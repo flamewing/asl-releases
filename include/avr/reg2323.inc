@@ -33,7 +33,7 @@ EXTRF		avrbit	MCUSR,1		; Externel Reset Flag
 ;----------------------------------------------------------------------------
 ; EEPROM
 
-		include	"avr/ee90.inc"
+		include	"ee90.inc"
 
 EEMWE		avrbit	EECR,2		; Multiple Write Emable
 
@@ -79,7 +79,7 @@ TIFR		port	0x38		; Timer Interrupt Status Register
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
-		include	"avr/wdm21.inc"
+		include	"wdm21.inc"
 
 WDTOE		avrbit	WDTCR,3		; Watchdog Turn-Off Enable
 

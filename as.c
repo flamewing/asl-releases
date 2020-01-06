@@ -1,351 +1,12 @@
 /* as.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Hauptmodul                                                                */
 /*                                                                           */
-/* Historie:  4. 5.1996 Grundsteinlegung                                     */
-/*           24. 6.1998 Zeichenuebersetzungstabellen                         */
-/*           30. 6.1998 Ausgabe in MacPro-File auch wenn Zeile nur aus       */
-/*                      Kommentar oder Label besteht                         */
-/*           18. 7.1998 IRPC-Statement                                       */
-/*           24. 7.1998 Debug-Modus NoICE                                    */
-/*           25. 7.1998 Formate glattgezogen                                 */
-/*           16. 8.1998 Datei-Adressbereiche zuruecksetzen                   */
-/*           17. 8.1998 InMacroFlag nach asmdef verschoben                   */
-/*           19. 8.1998 BranchExt-Initialisierung                            */
-/*           25. 8.1998 i960-Initialisierung                                 */
-/*           28. 8.1998 32-Bit-Listen gehen auch korrekt mit                 */
-/*                      Codelaengen != 4*n um                                */
-/*           30. 8.1998 uPD7720-Initialisierung                              */
-/*                      Einrueckung fuer 'R' in Retracted-Zeilen im Listing  */
-/*                      war nicht korrekt                                    */
-/*           13. 9.1998 uPD77230-Initialisierung                             */
-/*           30. 9.1998 SYM53C8xx-Initialisierung                            */
-/*            3.12.1998 8008-Initialisierung                                 */
-/*            9. 1.1999 PCs erst nach Schreiben des Codes hochzaehlen        */
-/*                      ChkPC mit Adresse als Parameter                      */
-/*           30. 1.1999 Formate maschinenunabhaengig gemacht                 */
-/*           12. 2.1999 Compilerwarnungen beseitigt                          */
-/*           25. 3.1999 SC14xxx-Initialisierung                              */
-/*           17. 4.1999 CPU per Kommandozeile setzen                         */
-/*           18. 4.1999 Ausgabeliste Sharefiles                              */
-/*            4. 7.1999 F2MC8-Initialisierung                                */
-/*            8. 8.1999 Externliste immer am  Ende einer Zeile loeschen      */
-/*           14. 8.1999 Initialisierung ACE                                  */
-/*            5.11.1999 ExtendErrors, 2. Stufe                               */
-/*           19.11.1999 F2MC16-Initialisierung                               */
-/*            4.12.1999 IRP/REPT-Zeilenangabe in Klammern                    */
-/*            9. 1.2000 Zeilenzaehler mit plattformabhaengigem Formatstring  */
-/*           13. 2.2000 Ausgabename fuer Listing setzen                      */
-/*            8. 3.2000 'ambigious else'-Warnungen beseitigt                 */
-/*           20. 5.2000 added ArgCName, expansion of macro argument count    */
-/*           21. 5.2000 added TmpSymCounter initialization                   */
-/*            1. 6.2000 REPT/WHILE/IRP(C) not expanded without IfAsm         */
-/*                      added maximum nesting level for macros               */
-/*           24.12.2000 added -noicemask option                              */
-/*           14. 1.2001 silenced warnings about unused parameters            */
-/*                      set 'segment used' flag once code is generated       */
-/*           27. 1.2001 added 1802 initialization                            */
-/*           24. 3.2001 correctly handle predefined symbols when operating   */
-/*                      in case-sensitive mode                               */
-/*            9. 6.2001 moved initialization of DoPadding before CPU-specific*/
-/*                      initialization, to allow CPU-specific override       */
-/*           2001-07-07 added intiialization of C54x generator               */
-/*           2001-10-20 GNU error style possible                             */
-/*           2001-12-31 added IntLabel directive                             */
-/*           2002-01-26 changed end behaviour of while statement             */
-/*           2002-03-03 use FromFile, LineRun fields in input tag            */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: as.c,v 1.72 2017/06/16 19:06:08 alfred Exp $                         */
-/*****************************************************************************
- * $Log: as.c,v $
- * Revision 1.72  2017/06/16 19:06:08  alfred
- * - correct some overlapping strcpy() uses
- *
- * Revision 1.71  2017/04/02 11:10:36  alfred
- * - allow more fine-grained macro expansion in listing
- *
- * Revision 1.70  2017/02/26 16:20:46  alfred
- * - silence compiler warnings about unused function results
- *
- * Revision 1.69  2016/11/25 18:12:12  alfred
- * - first version to support OLMS-50
- *
- * Revision 1.68  2016/11/01 11:48:04  alfred
- * - add support for OKI OLMS-40
- *
- * Revision 1.67  2016/10/09 19:55:52  alfred
- * - first version of MIL STD 1750 support
- *
- * Revision 1.66  2016/09/30 19:37:17  alfred
- * - renamed HMCS40x to HMCS400
- *
- * Revision 1.65  2016/09/25 20:31:20  alfred
- * - add HMCS4x target
- *
- * Revision 1.64  2016/08/30 13:48:22  alfred
- * - yet another TC9331 speciality in the parser...
- *
- * Revision 1.63  2016/08/30 10:08:17  alfred
- * - regard empty OpPart with arguments
- *
- * Revision 1.62  2016/08/29 21:10:43  alfred
- * - begun with TC9331
- *
- * Revision 1.61  2016/08/29 17:07:04  alfred
- * - if last argument was empty, trailing blanks on second-last argument were not removed
- *
- * Revision 1.60  2016/08/26 19:03:56  alfred
- * - remove separate C4x decoder (was folded into C3x)
- *
- * Revision 1.59  2016/08/25 20:43:02  alfred
- * - C4x will be realized as extension of C3x target
- *
- * Revision 1.58  2016/08/24 12:13:18  alfred
- * - begun with 320C4x support
- *
- * Revision 1.57  2016/08/10 21:06:22  alfred
- * - begun with 78K3 support
- *
- * Revision 1.56  2016/06/23 15:57:21  alfred
- * - correct code output in respect to structure expansion
- *
- * Revision 1.55  2015/10/25 20:06:11  alfred
- * - regard new END... struction/union instructions
- *
- * Revision 1.54  2015/10/23 08:43:33  alfred
- * - beef up & fix structure handling
- *
- * Revision 1.53  2015/10/18 20:08:52  alfred
- * - when expanding structure, also regard sub-structures
- *
- * Revision 1.52  2015/10/18 19:02:15  alfred
- * - first reork/fix of nested structure handling
- *
- * Revision 1.51  2015/08/28 17:22:26  alfred
- * - add special handling for labels following BSR
- *
- * Revision 1.50  2015/08/05 18:28:05  alfred
- * - correct initial construction of ALLARGS, compute ALLARGS/NUMARGS only if needed
- *
- * Revision 1.49  2015/08/03 18:25:37  alfred
- * - add excess macro arguments to argument list for usage with SHIFT
- *
- * Revision 1.48  2015/04/20 18:40:29  alfred
- * - add TMS1000 support (no docs yet)
- *
- * Revision 1.47  2015/01/04 20:33:42  alfred
- * - avoid double build in parallel make
- * - begun with disassembler
- *
- * Revision 1.46  2014/12/14 17:58:46  alfred
- * - remove static variables in strutil.c
- *
- * Revision 1.45  2014/12/02 13:33:19  alfred
- * - do not use strncpy()
- *
- * Revision 1.44  2014/11/23 18:52:36  alfred
- * - use common allocator for OUTProcessor
- *
- * Revision 1.43  2014/11/23 18:27:09  alfred
- * - remove trailing blanks
- *
- * Revision 1.42  2014/11/17 23:51:31  alfred
- * - begun with TLCS-870/C
- *
- * Revision 1.41  2014/11/17 21:20:24  alfred
- * - rework to current style
- *
- * Revision 1.40  2014/11/16 18:52:07  alfred
- * - first step of rework
- *
- * Revision 1.39  2014/11/06 11:22:01  alfred
- * - replace hook chain for ClearUp, document new mechanism
- *
- * Revision 1.38  2014/11/05 15:47:13  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.37  2014/11/05 09:19:39  alfred
- * - remove static string
- *
- * Revision 1.36  2014/10/26 20:52:32  alfred
- * - cleanup tag only right before destruction because contents may be needed for GetPos()
- *
- * Revision 1.35  2014/10/26 20:43:11  alfred
- * - correct usage of parameter counter in IRP get position function
- *
- * Revision 1.34  2014/10/06 17:54:56  alfred
- * - display filename if include failed
- * - some valgrind workaraounds
- *
- * Revision 1.33  2014/09/21 13:15:16  alfred
- * - assure structure is initialized
- *
- * Revision 1.32  2014/09/14 13:22:32  alfred
- * - ass keyword arguments
- *
- * Revision 1.31  2014/06/15 09:17:08  alfred
- * - optional Memo profiling
- *
- * Revision 1.30  2014/05/29 10:59:05  alfred
- * - some const cleanups
- *
- * Revision 1.29  2013/12/21 19:46:50  alfred
- * - dynamically resize code buffer
- *
- * Revision 1.28  2013/12/17 18:54:17  alfred
- * - correct local symbol handle processing in IRPC
- *
- * Revision 1.27  2013-03-09 16:15:07  alfred
- * - add NEC 75xx
- *
- * Revision 1.26  2013-03-09 07:54:38  alfred
- * - add GLOBALSYMBOLS option
- *
- * Revision 1.25  2012-07-22 11:51:45  alfred
- * - begun with XCore target
- *
- * Revision 1.24  2012-05-26 13:49:19  alfred
- * - MSP additions, make implicit macro parameters always case-insensitive
- *
- * Revision 1.23  2012-01-14 14:34:58  alfred
- * - add some platforms
- *
- * Revision 1.22  2010/04/17 13:14:18  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.21  2010/02/27 14:17:26  alfred
- * - correct increment/decrement of macro nesting level
- *
- * Revision 1.20  2009/06/07 09:32:25  alfred
- * - add named temporary symbols
- *
- * Revision 1.19  2009/05/10 10:48:45  alfred
- * - display macro nesting in listing
- *
- * Revision 1.18  2008/04/13 20:23:46  alfred
- * - add Atari Vecor Processor target
- *
- * Revision 1.17  2007/11/24 22:48:02  alfred
- * - some NetBSD changes
- *
- * Revision 1.16  2007/04/30 10:19:19  alfred
- * - make default nesting level consistent
- *
- * Revision 1.15  2006/12/19 17:26:00  alfred
- * - allow full list mask range
- *
- * Revision 1.14  2006/10/10 10:41:12  alfred
- * - allocate FileMask dynamically
- *
- * Revision 1.13  2006/07/08 10:32:55  alfred
- * - added RS08
- *
- * Revision 1.12  2006/06/15 21:15:24  alfred
- * - cleanups in listing output
- *
- * Revision 1.11  2006/04/06 20:26:53  alfred
- * - add COP4
- *
- * Revision 1.10  2005/12/09 14:48:06  alfred
- * - added 2650
- *
- * Revision 1.9  2005/10/02 10:00:43  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.8  2005/09/11 18:10:50  alfred
- * - added XGATE
- *
- * Revision 1.7  2005/07/30 13:57:02  alfred
- * - add LatticeMico8
- *
- * Revision 1.6  2005/03/21 19:48:16  alfred
- * - shortened name to 8+3 (again...)
- *
- * Revision 1.5  2005/02/19 18:05:59  alfred
- * - use shorter name for 8+3 filesystems, correct bugs
- *
- * Revision 1.4  2005/02/19 14:10:14  alfred
- * - added KCPSM3
- *
- * Revision 1.3  2004/10/03 12:52:31  alfred
- * - MinGW adaptions
- *
- * Revision 1.2  2004/05/29 12:28:13  alfred
- * - remove unneccessary dummy fcn
- *
- * Revision 1.1  2003/11/06 02:49:18  alfred
- * - recreated
- *
- * Revision 1.24  2003/10/12 19:28:52  alfred
- * - created 78K/2
- *
- * Revision 1.23  2003/10/04 15:38:46  alfred
- * - differentiate constant/variable messages
- *
- * Revision 1.22  2003/05/02 21:23:08  alfred
- * - strlen() updates
- *
- * Revision 1.21  2003/03/29 18:45:50  alfred
- * - allow source file spec in key files
- *
- * Revision 1.20  2003/03/26 20:31:51  alfred
- * - some Win32 path fixes
- *
- * Revision 1.19  2003/03/16 18:53:42  alfred
- * - created 807x
- *
- * Revision 1.18  2003/03/09 10:28:27  alfred
- * - added KCPSM
- *
- * Revision 1.17  2003/02/02 13:00:05  alfred
- * - use ReadLnCont()
- *
- * Revision 1.16  2003/01/29 21:25:41  alfred
- * - do not convert IRP args when in case-sensitive mode
- *
- * Revision 1.15  2002/11/20 20:25:04  alfred
- * - added unions
- *
- * Revision 1.14  2002/11/16 20:53:11  alfred
- * - additions for structures
- *
- * Revision 1.13  2002/11/15 23:30:53  alfred
- * - relocated EnterLebel
- *
- * Revision 1.12  2002/11/11 21:56:57  alfred
- * - store/display struct elements
- *
- * Revision 1.11  2002/11/11 21:13:54  alfred
- * - basic structure handling
- *
- * Revision 1.10  2002/11/11 19:24:57  alfred
- * - new module for structs
- *
- * Revision 1.9  2002/11/10 16:27:32  alfred
- * - use free fcns for macros
- *
- * Revision 1.8  2002/11/04 19:19:37  alfred
- * - use struct separation character
- *
- * Revision 1.7  2002/10/07 20:25:01  alfred
- * - added '/' nameless temporary symbols
- *
- * Revision 1.6  2002/09/30 17:12:20  alfred
- * - added nameless symbol counter intialization
- *
- * Revision 1.5  2002/05/19 13:45:32  alfred
- * - clear section usage before starting new pass
- *
- * Revision 1.4  2002/05/01 15:35:46  alfred
- * - removed umlaut
- *
- * Revision 1.3  2002/03/10 10:47:20  alfred
- * - add CVS log
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -372,7 +33,7 @@
 #include "asmfnums.h"
 #include "asmdef.h"
 #include "cpulist.h"
-#include "errmsg.h"
+#include "asmerr.h"
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmmac.h"
@@ -401,6 +62,7 @@
 #include "codeh8_5.h"
 #include "code7000.h"
 #include "code65.h"
+#include "codeh16.h"
 #include "code7700.h"
 #include "codehmcs400.h"
 #include "code4500.h"
@@ -470,6 +132,8 @@
 #include "code53c8xx.h"
 #include "codefmc8.h"
 #include "codefmc16.h"
+#include "codemn1610.h"
+#include "codemn2610.h"
 #include "codeol40.h"
 #include "codeol50.h"
 #include "code1802.h"
@@ -484,6 +148,8 @@ static Boolean GlobErrFlag;
 static Boolean MasterFile;
 static Boolean WasIF, WasMACRO;
 static unsigned MacroNestLevel = 0;
+
+static unsigned SystemListLen8, SystemListLen16, SystemListLen32;
 
 /*=== Zeilen einlesen ======================================================*/
 
@@ -501,11 +167,12 @@ static void NULL_Restorer(PInputTag PInp)
   UNUSED(PInp);
 }
 
-static Boolean NULL_GetPos(PInputTag PInp, char *dest)
+static Boolean NULL_GetPos(PInputTag PInp, char *dest, int DestSize)
 {
   UNUSED(PInp);
 
-  *dest = '\0';
+  if (DestSize)
+    *dest = '\0';
   return False;
 }
 
@@ -574,67 +241,10 @@ static POutputTag GenerateOUTProcessor(SimpProc Processor, tErrorNum OpenErrMsg)
 /*=========================================================================*/
 /* Listing erzeugen */
 
-static void MakeList_Gen2Line(char *h, Word EffLen, Word *n)
-{
-  int z, Rest;
-  char Str[20];
-
-  Rest = EffLen - (*n);
-  if (Rest > 8)
-    Rest = 8;
-  if (DontPrint)
-    Rest = 0;
-  for (z = 0; z < (Rest >> 1); z++)
-  {
-    HexString(Str, sizeof(Str), WAsmCode[(*n) >> 1], 4);
-    strmaxcat(h, Str, 255);
-    strmaxcat(h, " ", 255);
-    (*n) += 2;
-  }
-  if (Rest & 1)
-  {
-    HexString(Str, sizeof(Str), BAsmCode[*n], 2);
-    strmaxcat(h, Str, 255);
-    strmaxcat(h, "   ", 255);
-    (*n)++;
-  }
-  for (z = 1; z <= (8 - Rest) >> 1; z++)
-    strmaxcat(h, "     ", 255);
-}
-
-static void MakeList_Gen4Line(char *h, Word EffLen, Word *n)
-{
-  int z, Rest, wr = 0;
-  char Str[20];
-
-  Rest = EffLen - (*n);
-  if (Rest > 8)
-    Rest = 8;
-  if (DontPrint)
-    Rest = 0;
-  for (z = 0; z < (Rest >> 2); z++)
-  {
-    HexString(Str, sizeof(Str), DAsmCode[(*n) >> 2], 8);
-    strmaxcat(h, Str, 255);
-    strmaxcat(h, " ", 255);
-    *n += 4;
-    wr += 9;
-  }
-  for (z = 0; z < (Rest&3); z++)
-  {
-    HexString(Str, sizeof(Str), BAsmCode[(*n)++], 2);
-    strmaxcat(h, Str, 255);
-    strmaxcat(h, " ", 255);
-    wr += 3;
-  }
-  strmaxcat(h, Blanks(20 - wr), 255);
-}
-
 static void MakeList(void)
 {
-  String h, h2, h3, Tmp;
-  Word i, k;
-  Word n, EffLen;
+  String h, h2, Tmp;
+  Word EffLen;
   Boolean ThisDoLst;
 
   EffLen = CodeLen * Granularity();
@@ -659,30 +269,28 @@ static void MakeList(void)
     /* Zeilennummer / Programmzaehleradresse: */
 
     if (IncDepth == 0)
-      strmaxcpy(h2, "   ", 255);
+      as_snprintf(h, sizeof(h), "   ");
     else
     {
-      sprintf(Tmp, IntegerFormat, IncDepth);
-      sprintf(h2, "(%s)", Tmp);
+      as_snprintf(Tmp, sizeof(Tmp), IntegerFormat, IncDepth);
+      as_snprintf(h, sizeof(h), "(%s)", Tmp);
     }
     if (ListMask & ListMask_LineNums)
     {
-      sprintf(h3, Integ32Format, CurrLine);
-      sprintf(h, "%5s/", h3);
-      strmaxcat(h2, h, 255);
+      as_snprintf(h2, sizeof(h2), Integ32Format, CurrLine);
+      as_snprcatf(h, sizeof(h), "%5s/", h2);
     }
-    strmaxcpy(h, h2, 255);
-    HexBlankString(h2, sizeof(h2), EProgCounter() - CodeLen, 8);
-    strmaxcat(h, h2, 255);
-    strmaxcat(h, Retracted?" R ":" : ", 255);
+    as_snprcatf(h, sizeof(h), "%8.*lllu %c ",
+                ListRadixBase, (LargeInt)(EProgCounter() - CodeLen),
+                Retracted? 'R' : ':');
 
     /* Extrawurst in Listing ? */
 
-    if (*ListLine != '\0')
+    if (*ListLine)
     {
-      strmaxcat(h, ListLine, 255);
-      strmaxcat(h, Blanks(20 - strlen(ListLine)), 255);
-      strmaxcat(h, OneLine, 255);
+      strmaxcat(h, ListLine, sizeof(h));
+      strmaxcat(h, Blanks(LISTLINESPACE - strlen(ListLine)), sizeof(h));
+      strmaxcat(h, OneLine, sizeof(h));
       WrLstLine(h);
       *ListLine = '\0';
     }
@@ -691,79 +299,96 @@ static void MakeList(void)
 
     else
     {
-      switch (ActListGran)
-      {
-        case 4:
-          n = 0;
-          MakeList_Gen4Line(h, EffLen, &n);
-          strmaxcat(h, OneLine, 255); WrLstLine(h);
-          if (!DontPrint)
-          {
-            while (n < EffLen)
-            {
-              strmaxcpy(h, "                    ", 255);
-              MakeList_Gen4Line(h, EffLen, &n);
-              WrLstLine(h);
-            }
-          }
-          break;
-        case 2:
-          n = 0;
-          MakeList_Gen2Line(h, EffLen, &n);
-          strmaxcat(h, OneLine, 255); WrLstLine(h);
-          if (!DontPrint)
-          {
-            while (n < EffLen)
-            {
-              strmaxcpy(h, "                    ", 255);
-              MakeList_Gen2Line(h, EffLen, &n);
-              WrLstLine(h);
-            }
-          }
-          break;
-        default:
-        {
-          char Str[20];
+      Word Index = 0, CurrListGran, SystemListLen;
+      Boolean First = True;
+      LargeInt ThisWord;
+      int SumLen;
 
-          if ((TurnWords) && (Granularity() != ActListGran))
-            DreheCodes();
-          for (i = 0; i < 6; i++)
-            if ((!DontPrint) && (EffLen > i))
-            {
-              HexString(Str, sizeof(Str), BAsmCode[i], 2);
-              strmaxcat(h, Str, 255);
-              strmaxcat(h, " ", 255);
-            }
-            else
-              strmaxcat(h, "   ", 255);
-          strmaxcat(h, "  ", 255);
-          strmaxcat(h, OneLine, 255);
-          WrLstLine(h);
-          if ((EffLen > 6) && (!DontPrint))
-          {
-            EffLen -= 6;
-            n = EffLen / 6;
-            if ((EffLen % 6) == 0)
-              n--;
-            for (i = 0; i <= n; i++)
-            {
-              strmaxcpy(h, "              ", 255);
-              if (ListMask & ListMask_LineNums)
-                strmaxcat(h, "      ", 255);
-              for (k = 0; k < 6; k++)
-                if (EffLen > i * 6 + k)
-                {
-                  HexString(Str, sizeof(Str), BAsmCode[i * 6 + k + 6], 2);
-                  strmaxcat(h, Str, 255);
-                  strmaxcat(h, " ", 255);
-                }
-               WrLstLine(h);
-            }
-          }
-          if ((TurnWords) && (Granularity() != ActListGran))
-            DreheCodes();
+      /* Not enough code to display even on 16/32 bit word?
+         Then start rightaway dumping bytes */
+
+      if (EffLen < ActListGran)
+      {
+        CurrListGran = 1;
+        SystemListLen = SystemListLen8;
+      }
+      else
+      {
+        CurrListGran = ActListGran;
+        switch (CurrListGran)
+        {
+          case 4:
+            SystemListLen = SystemListLen32;
+            break;
+          case 2:
+            SystemListLen = SystemListLen16;
+            break;
+          default:
+            SystemListLen = SystemListLen8;
         }
       }
+
+      if (TurnWords && (Granularity() != ActListGran) && (1 == ActListGran))
+        DreheCodes();
+        
+      do
+      {
+        /* If not the first code line, prepend blanks to fill up space below line# and address: */
+
+        if (!First)
+          as_snprintf(h, sizeof(h), "%*s", (ListMask & ListMask_LineNums) ? 20 : 14, "");
+
+        SumLen = 0;
+        do
+        {
+          /* We checked initially there is at least one full word,
+             and we check after every word whether there is another
+             full one: */
+
+          if ((Index < EffLen) && !DontPrint)
+          {
+            switch (CurrListGran)
+            {
+              case 4:
+                ThisWord = DAsmCode[Index >> 2];
+                break;
+              case 2:
+                ThisWord = WAsmCode[Index >> 1];
+                break;
+              default:
+                ThisWord = BAsmCode[Index];
+            }
+            as_snprcatf(h, sizeof(h), "%0*.*lllu ", (int)SystemListLen, (int)ListRadixBase, ThisWord);
+          }
+          else
+            as_snprcatf(h, sizeof(h), "%*s", SystemListLen + 1, "");
+
+          /* advance pointers & keep track of # of characters printed */
+
+          Index += CurrListGran;
+          SumLen += SystemListLen + 1;
+
+          /* Less than one full word remaining? Then switch to dumping bytes. */
+
+          if (Index + CurrListGran > EffLen)
+          {
+            CurrListGran = 1;
+            SystemListLen = SystemListLen8;
+          }
+        }
+        while (SumLen + SystemListLen + 1 < LISTLINESPACE);
+
+        /* If first line, pad to max length and append source line */
+
+        if (First)
+          as_snprcatf(h, sizeof(h), "%*s%s", LISTLINESPACE - SumLen, "", OneLine);
+        WrLstLine(h);
+        First = False;
+      }
+      while ((Index < EffLen) && !DontPrint);
+
+      if (TurnWords && (Granularity() != ActListGran) && (1 == ActListGran))
+        DreheCodes();
     }
   }
 }
@@ -858,7 +483,7 @@ static void ComputeMacroStrings(PInputTag Tag)
   /* recompute # of params */
 
   if (Tag->UsesNumArgs)
-    sprintf(Tag->NumArgs, "%d", Tag->ParCnt);
+    as_snprintf(Tag->NumArgs, sizeof(Tag->NumArgs), Integ32Format, Tag->ParCnt);
 
   /* recompute 'all string' parameter */
 
@@ -869,8 +494,8 @@ static void ComputeMacroStrings(PInputTag Tag)
     while (Lauf)
     {
       if (Tag->AllArgs[0] != '\0')
-        strmaxcat(Tag->AllArgs, ",", 255);
-      strmaxcat(Tag->AllArgs, Lauf->Content, 255);
+        strmaxcat(Tag->AllArgs, ",", STRINGSIZE);
+      strmaxcat(Tag->AllArgs, Lauf->Content, STRINGSIZE);
       Lauf = Lauf->Next;
     }
   }
@@ -896,7 +521,7 @@ static void MACRO_OutProcessor(void)
   {
     errno = 0;
     fprintf(MacroFile, "%s\n", OneLine);
-    ChkIO(10004);
+    ChkIO(ErrNum_FileWriteError);
   }
 
   /* check for additional nested macros resp. end of definition */
@@ -910,7 +535,7 @@ static void MACRO_OutProcessor(void)
 
   if (FirstOutputTag->NestLevel != -1)
   {
-    strmaxcpy(s, OneLine, 255);
+    strmaxcpy(s, OneLine, STRINGSIZE);
     KillCtrl(s);
 
     /* compress into tokens */
@@ -1031,12 +656,12 @@ Boolean MACRO_Processor(PInputTag PInp, char *erg)
 
 static Boolean ReadMacro_SearchArg(const char *pTest, const char *pComp, Boolean *pErg)
 {
-  if (!strcasecmp(pTest, pComp))
+  if (!as_strcasecmp(pTest, pComp))
   {
     *pErg = True;
     return True;
   }
-  else if ((strlen(pTest) > 2) && (!strncasecmp(pTest, "NO", 2)) && (!strcasecmp(pTest + 2, pComp)))
+  else if ((strlen(pTest) > 2) && (!as_strncasecmp(pTest, "NO", 2)) && (!as_strcasecmp(pTest + 2, pComp)))
   {
     *pErg = False;
     return True;
@@ -1050,24 +675,27 @@ static Boolean ReadMacro_SearchSect(char *Test_O, char *Comp, Boolean *Erg, Long
   char *p;
   String Test, Sect;
 
-  strmaxcpy(Test, Test_O, 255); KillBlanks(Test);
+  strmaxcpy(Test, Test_O, STRINGSIZE); KillBlanks(Test);
   p = strchr(Test, ':');
   if (!p)
     *Sect = '\0';
   else
   {
-    strmaxcpy(Sect, p + 1, 255);
+    strmaxcpy(Sect, p + 1, STRINGSIZE);
     *p = '\0';
   }
-  if ((strlen(Test) > 2) && (!strncasecmp(Test, "NO", 2)) && (!strcasecmp(Test + 2, Comp)))
+  if ((strlen(Test) > 2) && (!as_strncasecmp(Test, "NO", 2)) && (!as_strcasecmp(Test + 2, Comp)))
   {
     *Erg = False;
     return True;
   }
-  else if (!strcasecmp(Test, Comp))
+  else if (!as_strcasecmp(Test, Comp))
   {
+    tStrComp TmpComp;
+
     *Erg = True;
-    return (IdentifySection(Sect, Section));
+    StrCompMkTemp(&TmpComp, Sect);
+    return (IdentifySection(&TmpComp, Section));
   }
   else
     return False;
@@ -1086,12 +714,12 @@ typedef struct
 static void ExpandPList(String PList, const char *pArg, Boolean CtrlArg)
 {
   if (!*PList)
-    strmaxcat(PList, ",", 255);
+    strmaxcat(PList, ",", STRINGSIZE);
   if (CtrlArg)
-    strmaxcat(PList, "{", 255);
-  strmaxcat(PList, pArg, 255);
+    strmaxcat(PList, "{", STRINGSIZE);
+  strmaxcat(PList, pArg, STRINGSIZE);
   if (CtrlArg)
-    strmaxcat(PList, "}", 255);
+    strmaxcat(PList, "}", STRINGSIZE);
 }
 
 static void ProcessMACROArgs(Boolean CtrlArg, const tStrComp *pArg, void *pUser)
@@ -1172,6 +800,7 @@ static void ReadMacro(void)
   PMacroRec OneMacro;
   tReadMacroContext Context;
   LongInt HSect;
+  String MacroName;
 
   WasMACRO = True;
 
@@ -1183,9 +812,9 @@ static void ReadMacro(void)
 
   if (PassNo != 1)
     Context.ErrFlag = True;
-  else if (!ExpandSymbol(LabPart.Str))
+  else if (!ExpandStrSymbol(MacroName, sizeof(MacroName), &LabPart))
     Context.ErrFlag = True;
-  else if (!ChkSymbName(LabPart.Str))
+  else if (!ChkSymbName(MacroName))
   {
     WrXError(ErrNum_InvSymName, LabPart.Str);
     Context.ErrFlag = True;
@@ -1223,13 +852,13 @@ static void ReadMacro(void)
 
   if (Context.pOutputTag->DoGlobCopy)
   {
-    strmaxcpy(Context.pOutputTag->GName, LabPart.Str, 255);
+    strmaxcpy(Context.pOutputTag->GName, MacroName, STRINGSIZE);
     RunSection = SectionStack;
     HSect = MomSectionHandle;
     while ((HSect != Context.pOutputTag->GlobSect) && (RunSection != NULL))
     {
-      strmaxprep(Context.pOutputTag->GName, "_", 255);
-      strmaxprep(Context.pOutputTag->GName, GetSectionName(HSect), 255);
+      strmaxprep(Context.pOutputTag->GName, "_", STRINGSIZE);
+      strmaxprep(Context.pOutputTag->GName, GetSectionName(HSect), STRINGSIZE);
       HSect = RunSection->Handle;
       RunSection = RunSection->Next;
     }
@@ -1249,13 +878,13 @@ static void ReadMacro(void)
   {
     errno = 0;
     fprintf(MacroFile, "%s MACRO %s\n",
-            Context.pOutputTag->DoGlobCopy ? Context.pOutputTag->GName : LabPart.Str,
+            Context.pOutputTag->DoGlobCopy ? Context.pOutputTag->GName : MacroName,
             Context.PList);
-    ChkIO(10004);
+    ChkIO(ErrNum_FileWriteError);
   }
 
   OneMacro->UseCounter = 0;
-  OneMacro->Name = as_strdup(LabPart.Str);
+  OneMacro->Name = as_strdup(MacroName);
   OneMacro->ParamCount = Context.ParamCount;
   OneMacro->FirstLine = NULL;
   OneMacro->LstMacroExpMod = Context.LstMacroExpMod;
@@ -1273,12 +902,12 @@ static void MACRO_Cleanup(PInputTag PInp)
   ClearStringList(&(PInp->Params));
 }
 
-static Boolean MACRO_GetPos(PInputTag PInp, char *dest)
+static Boolean MACRO_GetPos(PInputTag PInp, char *dest, int DestSize)
 {
   String Tmp;
 
-  sprintf(Tmp, LongIntFormat, PInp->LineZ - 1);
-  sprintf(dest, "%s(%s) ", PInp->SpecName.Str, Tmp);
+  as_snprintf(Tmp, sizeof(Tmp), LongIntFormat, PInp->LineZ - 1);
+  as_snprintf(dest, DestSize, "%s(%s) ", PInp->SpecName.Str, Tmp);
   return False;
 }
 
@@ -1333,10 +962,10 @@ static void ExpandMacro(PMacroRec OneMacro)
     Tag->GlobalSymbols = OneMacro->GlobalSymbols;
     Tag->UsesNumArgs = OneMacro->UsesNumArgs;
     Tag->UsesAllArgs = OneMacro->UsesAllArgs;
-    strmaxcpy(Tag->SpecName.Str, OneMacro->Name, 255);
-    strmaxcpy(Tag->SaveAttr, AttrPart.Str, 255);
+    strmaxcpy(Tag->SpecName.Str, OneMacro->Name, STRINGSIZE);
+    strmaxcpy(Tag->SaveAttr, AttrPart.Str, STRINGSIZE);
     if (OneMacro->LocIntLabel)
-      strmaxcpy(Tag->SaveLabel, LabPart.Str, 255);
+      strmaxcpy(Tag->SaveLabel, LabPart.Str, STRINGSIZE);
     Tag->IsMacro   = True;
 
     /* 2. Store special parameters - in the original form.
@@ -1344,14 +973,14 @@ static void ExpandMacro(PMacroRec OneMacro)
 
     Tag->NumArgs[0] = '\0';
     if (Tag->UsesNumArgs)
-      sprintf(Tag->NumArgs, "%d", ArgCnt);
+      as_snprintf(Tag->NumArgs, sizeof(Tag->NumArgs), "%d", ArgCnt);
     Tag->AllArgs[0] = '\0';
     if (Tag->UsesAllArgs)
     {
       for (z1 = 1; z1 <= ArgCnt; z1++)
       {
-        if (z1 != 1) strmaxcat(Tag->AllArgs, ",", 255);
-        strmaxcat(Tag->AllArgs, ArgStr[z1].Str, 255);
+        if (z1 != 1) strmaxcat(Tag->AllArgs, ",", STRINGSIZE);
+        strmaxcat(Tag->AllArgs, ArgStr[z1].Str, STRINGSIZE);
       }
     }
     Tag->ParCnt = OneMacro->ParamCount;
@@ -1592,7 +1221,7 @@ static void IRP_Cleanup(PInputTag PInp)
   if (PInp->Processor == IRP_Processor)
   {
     for (Lauf = PInp->Params; Lauf->Next; Lauf = Lauf->Next);
-    strmaxcpy(PInp->SaveAttr, Lauf->Content, 255);
+    strmaxcpy(PInp->SaveAttr, Lauf->Content, STRINGSIZE);
   }
 
   ClearStringList(&(PInp->Lines));
@@ -1602,7 +1231,7 @@ static void IRP_Cleanup(PInputTag PInp)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 /* Posisionsangabe im IRP(C) fuer Fehlermeldungen */
 
-static Boolean IRP_GetPos(PInputTag PInp, char *dest)
+static Boolean IRP_GetPos(PInputTag PInp, char *dest, int DestSize)
 {
   int z, ParZ = PInp->ParZ, LineZ = PInp->LineZ;
   char *IRPType, *IRPVal, tmp[10];
@@ -1632,11 +1261,11 @@ static Boolean IRP_GetPos(PInputTag PInp, char *dest)
   else
   {
     IRPType = "IRPC";
-    sprintf(tmp, "'%c'", PInp->SpecName.Str[ParZ - 1]);
+    as_snprintf(tmp, sizeof(tmp), "'%c'", PInp->SpecName.Str[ParZ - 1]);
     IRPVal = tmp;
   }
 
-  sprintf(dest, "%s:%s(%ld) ", IRPType, IRPVal, (long)LineZ);
+  as_snprintf(dest, DestSize, "%s:%s(%ld) ", IRPType, IRPVal, (long)LineZ);
 
   return False;
 }
@@ -1664,7 +1293,7 @@ static void IRP_OutProcessor(void)
 
   if (FirstOutputTag->NestLevel > -1)
   {
-    strmaxcpy(s, OneLine, 255); KillCtrl(s);
+    strmaxcpy(s, OneLine, STRINGSIZE); KillCtrl(s);
     CompressLine(GetStringListFirst(FirstOutputTag->ParamNames, &Dummy), 1, s, sizeof(s), CaseSensitive);
     AddStringListLast(&(FirstOutputTag->Tag->Lines), s);
     FirstOutputTag->Tag->LineCnt++;
@@ -1975,7 +1604,7 @@ static void REPT_Cleanup(PInputTag PInp)
   ClearStringList(&(PInp->Lines));
 }
 
-static Boolean REPT_GetPos(PInputTag PInp, char *dest)
+static Boolean REPT_GetPos(PInputTag PInp, char *dest, int DestSize)
 {
   int z1 = PInp->ParZ, z2 = PInp->LineZ;
 
@@ -1984,7 +1613,7 @@ static Boolean REPT_GetPos(PInputTag PInp, char *dest)
     z2 = PInp->LineCnt;
     z1--;
   }
-  sprintf(dest, "REPT %ld(%ld)", (long)z1, (long)z2);
+  as_snprintf(dest, DestSize, "REPT %ld(%ld)", (long)z1, (long)z2);
   return False;
 }
 
@@ -2170,7 +1799,7 @@ static void WHILE_Cleanup(PInputTag PInp)
   ClearStringList(&(PInp->Lines));
 }
 
-static Boolean WHILE_GetPos(PInputTag PInp, char *dest)
+static Boolean WHILE_GetPos(PInputTag PInp, char *dest, int DestSize)
 {
   int z1 = PInp->ParZ, z2 = PInp->LineZ;
 
@@ -2179,7 +1808,7 @@ static Boolean WHILE_GetPos(PInputTag PInp, char *dest)
     z2 = PInp->LineCnt;
     z1--;
   }
-  sprintf(dest, "WHILE %ld/%ld", (long)z1, (long)z2);
+  as_snprintf(dest, DestSize, "WHILE %ld/%ld", (long)z1, (long)z2);
   return False;
 }
 
@@ -2391,7 +2020,7 @@ static void INCLUDE_Cleanup(PInputTag PInp)
   LineSum += MomLineCounter;
   if ((*LstName != '\0') && (!QuietMode))
   {
-    sprintf(Tmp, LongIntFormat, CurrLine);
+    as_snprintf(Tmp, sizeof(Tmp), LongIntFormat, CurrLine);
     printf("%s(%s)", NamePart(CurrFileName), Tmp);
     printf("%s\n", ClrEol); fflush(stdout);
   }
@@ -2399,13 +2028,13 @@ static void INCLUDE_Cleanup(PInputTag PInp)
     PopInclude();
 }
 
-static Boolean INCLUDE_GetPos(PInputTag PInp, char *dest)
+static Boolean INCLUDE_GetPos(PInputTag PInp, char *dest, int DestSize)
 {
   String Tmp;
   UNUSED(PInp);
 
-  sprintf(Tmp, LongIntFormat, PInp->LineZ);
-  sprintf(dest, GNUErrors ? "%s:%s" : "%s(%s) ", NamePart(PInp->SpecName.Str), Tmp);
+  as_snprintf(Tmp, sizeof(Tmp), LongIntFormat, PInp->LineZ);
+  as_snprintf(dest, DestSize, GNUErrors ? "%s:%s" : "%s(%s) ", NamePart(PInp->SpecName.Str), Tmp);
   return !GNUErrors;
 }
 
@@ -2420,8 +2049,8 @@ Boolean INCLUDE_Processor(PInputTag PInp, char *Erg)
     *Erg = '\0';
   else
   {
-    Count = ReadLnCont(PInp->Datei, Erg, 256);
-    /**ChkIO(10003);**/
+    Count = ReadLnCont(PInp->Datei, Erg, STRINGSIZE);
+    /**ChkIO(ErrNum_FileReadError);**/
   }
   PInp->LineZ = CurrLine = (MomLineCounter += Count);
   if (feof(PInp->Datei))
@@ -2433,13 +2062,14 @@ Boolean INCLUDE_Processor(PInputTag PInp, char *Erg)
 static void INCLUDE_Restorer(PInputTag PInp)
 {
   MomLineCounter = PInp->StartLine;
-  strmaxcpy(CurrFileName, PInp->SaveAttr, 255);
+  strmaxcpy(CurrFileName, PInp->SaveAttr, STRINGSIZE);
   IncDepth--;
 }
 
 static void ExpandINCLUDE(Boolean SearchPath)
 {
-  String FileName;
+  tStrComp FNameArg;
+  String FNameArgStr;
   PInputTag Tag;
 
   if (!IfAsm)
@@ -2448,17 +2078,9 @@ static void ExpandINCLUDE(Boolean SearchPath)
   if (!ChkArgCnt(1, 1))
     return;
 
-  strmaxcpy(FileName, (*ArgStr[1].Str == '"') ? (ArgStr[1].Str + 1) : ArgStr[1].Str, 255);
-  if ((*FileName) && (FileName[strlen(FileName) - 1] == '"'))
-    FileName[strlen(FileName) - 1] = '\0';
-  AddSuffix(FileName, IncSuffix); strmaxcpy(ArgStr[1].Str, FileName, 255);
-  if (SearchPath)
-  {
-    strmaxcpy(FileName, FExpand(FSearch(FileName, IncludeList)), 255);
-    if ((*FileName) && (FileName[strlen(FileName) - 1] == '/'))
-      strmaxcat(FileName, ArgStr[1].Str, 255);
-  }
-
+  StrCompMkTemp(&FNameArg, FNameArgStr);
+  INCLUDE_SearchCore(&FNameArg, &ArgStr[1], SearchPath);
+  
   /* Tag erzeugen */
 
   Tag = GenerateProcessor();
@@ -2471,24 +2093,24 @@ static void ExpandINCLUDE(Boolean SearchPath)
   /* Sicherung alter Daten */
 
   Tag->StartLine = MomLineCounter;
-  strmaxcpy(Tag->SpecName.Str, FileName, 255);
+  strmaxcpy(Tag->SpecName.Str, FNameArg.Str, STRINGSIZE);
   LineCompReset(&Tag->SpecName.Pos);
-  strmaxcpy(Tag->SaveAttr, CurrFileName, 255);
+  strmaxcpy(Tag->SaveAttr, CurrFileName, STRINGSIZE);
 
   /* Datei oeffnen */
 
 #ifdef __CYGWIN32__
-  DeCygwinPath(FileName);
+  DeCygwinPath(FNameArg.Str);
 #endif
-  Tag->Datei = fopen(FileName, "r");
-  if (!Tag->Datei) ChkStrIO(10001, &ArgStr[1]);
+  Tag->Datei = fopen(FNameArg.Str, "r");
+  if (!Tag->Datei) ChkStrIO(ErrNum_OpeningFile, &ArgStr[1]);
   setvbuf(Tag->Datei, Tag->Buffer, _IOFBF, BufferArraySize);
 
   /* neu besetzen */
 
-  strmaxcpy(CurrFileName, FileName, 255); Tag->LineZ = MomLineCounter = 0;
-  NextIncDepth++; AddFile(FileName);
-  PushInclude(FileName);
+  strmaxcpy(CurrFileName, FNameArg.Str, STRINGSIZE); Tag->LineZ = MomLineCounter = 0;
+  NextIncDepth++; AddFile(FNameArg.Str);
+  PushInclude(FNameArg.Str);
 
   /* einhaengen */
 
@@ -2532,6 +2154,7 @@ char *GetErrorPos(void)
   String ActPos;
   PInputTag RunTag;
   char *ErgPos = as_strdup(""), *tmppos;
+  int l;
   Boolean Last;
 
   /* for GNU error message style: */
@@ -2551,18 +2174,20 @@ char *GetErrorPos(void)
           InnerTag = RunTag;
         else
         {
-          Last = RunTag->GetPos(RunTag, ActPos);
+          Last = RunTag->GetPos(RunTag, ActPos, sizeof(ActPos));
           if (First)
           {
             Msg = getmessage(Num_GNUErrorMsg1);
-            tmppos = (char *) malloc(strlen(Msg) + 1 + strlen(ActPos) + 1);
-            sprintf(tmppos, "%s %s", Msg, ActPos);
+            l = strlen(Msg) + 1 + strlen(ActPos) + 1;
+            tmppos = (char *) malloc(l);
+            as_snprintf(tmppos, l, "%s %s", Msg, ActPos);
           }
           else
           {
             Msg = getmessage(Num_GNUErrorMsgN);
-            tmppos = (char *) malloc(strlen(ErgPos) + 2 + strlen(Msg) + 1 + strlen(ActPos) + 1);
-            sprintf(tmppos, "%s,\n%s %s", ErgPos, Msg, ActPos);
+            l = strlen(ErgPos) + 2 + strlen(Msg) + 1 + strlen(ActPos) + 1;
+            tmppos = (char *) malloc(l);
+            as_snprintf(tmppos, l, "%s,\n%s %s", ErgPos, Msg, ActPos);
           }
           First = False;
           free(ErgPos);
@@ -2574,8 +2199,10 @@ char *GetErrorPos(void)
 
     if (*ErgPos)
     {
-      tmppos = (char *) malloc(strlen(ErgPos) + 3);
-      sprintf(tmppos, "%s:\n", ErgPos);
+      int l = strlen(ErgPos) + 3;
+
+      tmppos = (char *) malloc(l);
+      as_snprintf(tmppos, l, "%s:\n", ErgPos);
       free(ErgPos);
       ErgPos = tmppos;
     }
@@ -2584,9 +2211,12 @@ char *GetErrorPos(void)
 
     if (InnerTag)
     {
-      InnerTag->GetPos(InnerTag, ActPos);
-      tmppos = (char *) malloc(strlen(ErgPos) + strlen(ActPos) + 1);
-      sprintf(tmppos, "%s%s", ErgPos, ActPos);
+      int l;
+
+      InnerTag->GetPos(InnerTag, ActPos, sizeof(ActPos));
+      l = strlen(ErgPos) + strlen(ActPos) + 1;
+      tmppos = (char *) malloc(l);
+      as_snprintf(tmppos, l, "%s%s", ErgPos, ActPos);
       free(ErgPos);
       ErgPos = tmppos;
     }
@@ -2600,7 +2230,7 @@ char *GetErrorPos(void)
 
     for (RunTag = FirstInputTag; RunTag; RunTag = RunTag->Next)
     {
-      Last = RunTag->GetPos(RunTag, ActPos);
+      Last = RunTag->GetPos(RunTag, ActPos, sizeof(ActPos));
       ThisLen = strlen(ActPos);
       tmppos = (char *) malloc(TotLen + ThisLen + 1);
       strcpy(tmppos, ActPos);
@@ -2655,11 +2285,11 @@ Boolean HasLabel(void)
     case 'L':
       return (!Memo("LABEL"));
     case 'S':
-      return ((!Memo("SET")) || (SetIsOccupied)) && (!(Memo("STRUCT") || Memo("STRUC")));
+      return (!Memo("SET") || SetIsOccupied()) && (!(Memo("STRUCT") || Memo("STRUC")));
     case 'E':
       if (Memo("EQU") || Memo("ENDSTRUCT") || Memo("ENDS") || Memo("ENDSTRUC") || Memo("ENDUNION"))
         return False;
-      return !(Memo("EVAL") && SetIsOccupied);
+      return !Memo("EVAL");
     case 'U':
       return (!Memo("UNION"));
     default:
@@ -2667,25 +2297,25 @@ Boolean HasLabel(void)
   }
 }
 
-void HandleLabel(const char *Name, LargeWord Value)
+void HandleLabel(const tStrComp *pName, LargeWord Value)
 {
   /* structure element ? */
 
   if (pInnermostNamedStruct)
   {
-    PStructElem pElement = CreateStructElem(Name);
+    PStructElem pElement = CreateStructElem(pName->Str);
 
     pElement->Offset = Value;
     AddStructElem(pInnermostNamedStruct->StructRec, pElement);
-    AddStructSymbol(Name, Value);
+    AddStructSymbol(pName->Str, Value);
   }
 
   /* normal label */
 
   else if (RelSegs)
-    EnterRelSymbol(Name, Value, ActPC, False);
+    EnterRelSymbol(pName, Value, ActPC, False);
   else
-    EnterIntSymbolWithFlags(Name, Value, ActPC, False,
+    EnterIntSymbolWithFlags(pName, Value, ActPC, False,
                             Value == AfterBSRAddr ? NextLabelFlag_AfterBSR : 0);
 }
 
@@ -2704,14 +2334,15 @@ static void Produce_Code(void)
   if (*OpPart.Str == '!')
   {
     SearchMacros = False;
-    strmov(OpPart.Str, OpPart.Str + 1);
+    StrCompCutLeft(&OpPart, 1);
+    strcpy(pLOpPart, OpPart.Str);
   }
   else
   {
     SearchMacros = True;
-    ExpandSymbol(OpPart.Str);
+    ExpandStrSymbol(pLOpPart, STRINGSIZE, &OpPart);
+    strcpy(OpPart.Str, pLOpPart);
   }
-  strcpy(LOpPart, OpPart.Str);
   NLS_UpString(OpPart.Str);
 
   /* Prozessor eingehaengt ? */
@@ -2728,7 +2359,7 @@ static void Produce_Code(void)
   if (IsMacro)
     WasMACRO = True;
   if (!IsMacro)
-    IsStruct = FoundStruct(&OneStruct, LOpPart);
+    IsStruct = FoundStruct(&OneStruct, pLOpPart);
 
   /* no longer at an address right after a BSR? */
 
@@ -2740,7 +2371,7 @@ static void Produce_Code(void)
   if ((IfAsm) && ((!IsMacro) || (!OneMacro->LocIntLabel)))
   {
     if (HasLabel())
-      HandleLabel(LabPart.Str, EProgCounter());
+      HandleLabel(&LabPart, EProgCounter());
   }
 
   Found = False;
@@ -2815,9 +2446,9 @@ static void Produce_Code(void)
     {
       ExpandMacro(OneMacro);
       if ((MacroNestLevel > 1) && (MacroNestLevel < 100))
-        sprintf(ListLine, "%*s(MACRO-%u)", MacroNestLevel - 1, "", MacroNestLevel);
+        as_snprintf(ListLine, STRINGSIZE, "%*s(MACRO-%u)", MacroNestLevel - 1, "", MacroNestLevel);
       else
-        strmaxcpy(ListLine, "(MACRO)", 255);
+        strmaxcpy(ListLine, "(MACRO)", STRINGSIZE);
 
       /* Macro call itself must not appear in expanded output.  However, a label
          in the same line that is not consumed by the macro must.  In this case,
@@ -2845,7 +2476,7 @@ static void Produce_Code(void)
       if (IsStruct)
       {
         ExpandStruct(OneStruct);
-        strmaxcpy(ListLine, OneStruct->IsUnion ? "(UNION)" : "(STRUCT)", 255);
+        strmaxcpy(ListLine, OneStruct->IsUnion ? "(UNION)" : "(STRUCT)", STRINGSIZE);
       }
       else if (!CodeGlobalPseudo())
         MakeCode();
@@ -2853,7 +2484,7 @@ static void Produce_Code(void)
       {
         errno = 0;
         fprintf(MacProFile, "%s\n", OneLine);
-        ChkIO(10002);
+        ChkIO(ErrNum_ListWrError);
       }
     }
 
@@ -3107,7 +2738,7 @@ static void ProcessFile(String FileName)
 
   dbgentry("ProcessFile");
 
-  sprintf(OneLine, " INCLUDE \"%s\"", FileName);
+  as_snprintf(OneLine, STRINGSIZE, " INCLUDE \"%s\"", FileName);
   MasterFile = False;
   NextIncDepth = IncDepth;
   SplitLine();
@@ -3149,7 +2780,7 @@ static void ProcessFile(String FileName)
       NxtTime = GTime();
       if (((!ListToStdout) || ((ListMask&1) == 0)) && (DTime(ListTime, NxtTime) > 50))
       {
-        sprintf(Num, LongIntFormat, MomLineCounter);
+        as_snprintf(Num, sizeof(Num), LongIntFormat, MomLineCounter);
         Name = NamePart(CurrFileName);
         printf("%s(%s)%s", Name, Num, ClrEol);
         /*for (z = 0; z < strlen(Name) + strlen(Num) + 2; z++) putchar('\b');*/
@@ -3187,50 +2818,24 @@ static char *TWrite_Plur(int n)
   return (n != 1) ? getmessage(Num_ListPlurName) : "";
 }
 
-static void TWrite_RWrite(char *dest, Double r, Byte Stellen)
-{
-  String s;
-  char *pFirst;
-
-  sprintf(s, "%20.*f", Stellen, r);
-
-  for (pFirst = s; *pFirst; pFirst++)
-    if (!isspace(*pFirst))
-      break;
-
-  strcat(dest, pFirst);
-}
-
-static void TWrite(Double DTime, char *dest)
+static void TWrite(long DTime, char *dest, int DestSize)
 {
   int h;
-  String s;
 
   *dest = '\0';
-  h = (int) floor(DTime/3600.0);
+  h = DTime / 360000;
+  DTime %= 360000;
   if (h > 0)
-  {
-    sprintf(s, "%d", h);
-    strcat(dest, s);
-    strcat(dest, getmessage(Num_ListHourName));
-    strcat(dest, TWrite_Plur(h));
-    strcat(dest, ", ");
-    DTime -= 3600.0 * h;
-  }
-  h = (int) floor(DTime/60.0);
+    as_snprcatf(dest, DestSize, "%d%s%s, ", h, getmessage(Num_ListHourName), TWrite_Plur(h));
+
+  h = DTime / 6000;
+  DTime %= 6000;
   if (h > 0)
-  {
-    sprintf(s, "%d", h);
-    strcat(dest, s);
-    strcat(dest, getmessage(Num_ListMinuName));
-    strcat(dest, TWrite_Plur(h));
-    strcat(dest, ", ");
-    DTime -= 60.0 * h;
-  }
-  TWrite_RWrite(dest, DTime, 2);
-  strcat(dest, getmessage(Num_ListSecoName));
-  if (DTime != 1)
-    strcat(dest, getmessage(Num_ListPlurName));
+    as_snprcatf(dest, DestSize, "%d%s%s, ", h, getmessage(Num_ListMinuName), TWrite_Plur(h));
+
+  h = DTime / 100;
+  DTime %= 100;
+  as_snprcatf(dest, DestSize, "%d.%02d%s%s", h, (int)DTime, getmessage(Num_ListSecoName), TWrite_Plur(h));
 }
 
 /*--------------------------------------------------------------------------*/
@@ -3240,6 +2845,7 @@ static void AssembleFile_InitPass(void)
   static char DateS[31], TimeS[31];
   int z;
   String ArchVal;
+  tStrComp TmpComp;
 
   dbgentry("AssembleFile_InitPass");
 
@@ -3288,7 +2894,7 @@ static void AssembleFile_InitPass(void)
   EnumIncrement = 1;
   EnumCurrentValue = 0;
 
-  strmaxcpy(CurrFileName, "INTERNAL", 255);
+  strmaxcpy(CurrFileName, "INTERNAL", STRINGSIZE);
   AddFile(CurrFileName);
   CurrLine = 0;
 
@@ -3300,27 +2906,34 @@ static void AssembleFile_InitPass(void)
   ResetSymbolDefines();
   ResetMacroDefines();
   ResetStructDefines();
-  EnterIntSymbol(FlagTrueName, 1, 0, True);
-  EnterIntSymbol(FlagFalseName, 0, 0, True);
-  EnterFloatSymbol(PiName, 4.0 * atan(1.0), True);
-  EnterIntSymbol(VerName, VerNo, 0, True);
-  sprintf(ArchVal, "%s-%s", ARCHPRNAME, ARCHSYSNAME);
-  EnterStringSymbol(ArchName, ArchVal, True);
+  StrCompMkTemp(&TmpComp, FlagTrueName); EnterIntSymbol(&TmpComp, 1, 0, True);
+  StrCompMkTemp(&TmpComp, FlagFalseName); EnterIntSymbol(&TmpComp, 0, 0, True);
+  StrCompMkTemp(&TmpComp, PiName); EnterFloatSymbol(&TmpComp, 4.0 * atan(1.0), True);
+  StrCompMkTemp(&TmpComp, VerName); EnterIntSymbol(&TmpComp, VerNo, 0, True);
+  as_snprintf(ArchVal, sizeof(ArchVal), "%s-%s", ARCHPRNAME, ARCHSYSNAME);
+  StrCompMkTemp(&TmpComp, ArchName); EnterStringSymbol(&TmpComp, ArchVal, True);
+  StrCompMkTemp(&TmpComp, Has64Name);
 #ifdef HAS64
-  EnterIntSymbol(Has64Name, 1, 0, True);
+  EnterIntSymbol(&TmpComp, 1, 0, True);
 #else
-  EnterIntSymbol(Has64Name, 0, 0, True);
+  EnterIntSymbol(&TmpComp, 0, 0, True);
 #endif
-  EnterIntSymbol(CaseSensName, Ord(CaseSensitive), 0, True);
+  StrCompMkTemp(&TmpComp, CaseSensName); EnterIntSymbol(&TmpComp, Ord(CaseSensitive), 0, True);
   if (PassNo == 0)
   {
-    NLS_CurrDateString(DateS);
-    NLS_CurrTimeString(False, TimeS);
+    NLS_CurrDateString(DateS, sizeof(DateS));
+    NLS_CurrTimeString(False, TimeS, sizeof(TimeS));
   }
   if (!FindDefSymbol(DateName))
-    EnterStringSymbol(DateName, DateS, True);
+  {
+    StrCompMkTemp(&TmpComp, DateName);
+    EnterStringSymbol(&TmpComp, DateS, True);
+  }
   if (!FindDefSymbol(TimeName))
-    EnterStringSymbol(TimeName, TimeS, True);
+  {
+    StrCompMkTemp(&TmpComp, TimeName);
+    EnterStringSymbol(&TmpComp, TimeS, True);
+  }
 
   SetFlag(&DoPadding, DoPaddingName, True);
 
@@ -3336,11 +2949,11 @@ static void AssembleFile_InitPass(void)
   SetFlag(&FPUAvail, FPUAvailName, False);
   SetFlag(&Maximum, MaximumName, False);
   SetFlag(&DoBranchExt, BranchExtName, False);
-  EnterIntSymbol(ListOnName, ListOn = 1, SegNone, True);
+  StrCompMkTemp(&TmpComp, ListOnName); EnterIntSymbol(&TmpComp, ListOn = 1, SegNone, True);
   SetLstMacroExp(eLstMacroExpAll);
   InitLstMacroExpMod(&LstMacroExpOverride);
   SetFlag(&RelaxedMode, RelaxedName, False);
-  EnterIntSymbol(NestMaxName, NestMax = DEF_NESTMAX, SegNone, True);
+  StrCompMkTemp(&TmpComp, NestMaxName); EnterIntSymbol(&TmpComp, NestMax = DEF_NESTMAX, SegNone, True);
   CopyDefSymbols();
 
   /* initialize counter for temp symbols here after implicit symbols
@@ -3373,6 +2986,7 @@ static void AssembleFile_ExitPass(void)
   SwitchFrom();
   ClearLocStack();
   ClearStacks();
+  AsmErrPassExit();
   for (z = 0; z < PCMax; z++)
     while (pPhaseStacks[z])
     {
@@ -3391,13 +3005,21 @@ static void AssembleFile_ExitPass(void)
     WrXError(ErrNum_OpenStruct, StructStack->Name);
 }
 
+static void AssembleFile_WrSummary(const char *pStr)
+{
+  if (!QuietMode)
+    printf("%s%s\n", pStr, ClrEol);
+  if (ListMode == 2)
+    WrLstLine(pStr);
+}
+
 static void AssembleFile(char *Name)
 {
   String s, Tmp;
 
   dbgentry("AssembleFile");
 
-  strmaxcpy(SourceFile, Name, 255);
+  strmaxcpy(SourceFile, Name, STRINGSIZE);
   if (MakeDebug)
     fprintf(Debug, "File %s\n", SourceFile);
 
@@ -3411,17 +3033,17 @@ static void AssembleFile(char *Name)
 
   /* Kommandozeilenoptionen verarbeiten */
 
-  strmaxcpy(OutName, GetFromOutList(), 255);
+  strmaxcpy(OutName, GetFromOutList(), STRINGSIZE);
   if (OutName[0] == '\0')
   {
-    strmaxcpy(OutName, SourceFile, 255);
+    strmaxcpy(OutName, SourceFile, STRINGSIZE);
     KillSuffix(OutName);
     AddSuffix(OutName, PrgSuffix);
   }
 
   if (*ErrorPath == '\0')
   {
-    strmaxcpy(ErrorName, SourceFile, 255);
+    strmaxcpy(ErrorName, SourceFile, STRINGSIZE);
     KillSuffix(ErrorName);
     AddSuffix(ErrorName, LogSuffix);
     unlink(ErrorName);
@@ -3430,16 +3052,16 @@ static void AssembleFile(char *Name)
   switch (ListMode)
   {
     case 0:
-      strmaxcpy(LstName, NULLDEV, 255);
+      strmaxcpy(LstName, NULLDEV, STRINGSIZE);
       break;
     case 1:
-      strmaxcpy(LstName, "!1", 255);
+      strmaxcpy(LstName, "!1", STRINGSIZE);
       break;
     case 2:
-      strmaxcpy(LstName, GetFromListOutList(), 255);
+      strmaxcpy(LstName, GetFromListOutList(), STRINGSIZE);
       if (*LstName == '\0')
       {
-        strmaxcpy(LstName, SourceFile, 255);
+        strmaxcpy(LstName, SourceFile, STRINGSIZE);
         KillSuffix(LstName);
         AddSuffix(LstName, LstSuffix);
       }
@@ -3450,10 +3072,10 @@ static void AssembleFile(char *Name)
 
   if (ShareMode != 0)
   {
-    strmaxcpy(ShareName, GetFromShareOutList(), 255);
+    strmaxcpy(ShareName, GetFromShareOutList(), STRINGSIZE);
     if (*ShareName == '\0')
     {
-      strmaxcpy(ShareName, SourceFile, 255);
+      strmaxcpy(ShareName, SourceFile, STRINGSIZE);
       KillSuffix(ShareName);
       switch (ShareMode)
       {
@@ -3472,14 +3094,14 @@ static void AssembleFile(char *Name)
 
   if (MacProOutput)
   {
-    strmaxcpy(MacProName, SourceFile, 255);
+    strmaxcpy(MacProName, SourceFile, STRINGSIZE);
     KillSuffix(MacProName);
     AddSuffix(MacProName, PreSuffix);
   }
 
   if (MacroOutput)
   {
-    strmaxcpy(MacroName, SourceFile, 255);
+    strmaxcpy(MacroName, SourceFile, STRINGSIZE);
     KillSuffix(MacroName);
     AddSuffix(MacroName, MacSuffix);
   }
@@ -3506,10 +3128,11 @@ static void AssembleFile(char *Name)
     /* Durchlauf initialisieren */
 
     AssembleFile_InitPass();
-    AsmSubInit();
+    AsmSubPassInit();
+    AsmErrPassInit();
     if (!QuietMode)
     {
-      sprintf(Tmp, IntegerFormat, PassNo);
+      as_snprintf(Tmp, sizeof(Tmp), IntegerFormat, PassNo);
       printf("%s%s%s\n", getmessage(Num_InfoMessPass), Tmp, ClrEol);
     }
 
@@ -3522,7 +3145,7 @@ static void AssembleFile(char *Name)
     {
       ShareFile = fopen(ShareName, "w");
       if (!ShareFile)
-        ChkIO(10001);
+        ChkIO(ErrNum_OpeningFile);
       errno = 0;
       switch (ShareMode)
       {
@@ -3536,33 +3159,33 @@ static void AssembleFile(char *Name)
           fprintf(ShareFile, "; %s-Includefile f%sr Assembler-Programm\n", SourceFile, CH_ue);
           break;
       }
-      ChkIO(10002);
+      ChkIO(ErrNum_ListWrError);
     }
 
     if (MacProOutput)
     {
       MacProFile = fopen(MacProName, "w");
       if (!MacProFile)
-        ChkIO(10001);
+        ChkIO(ErrNum_OpeningFile);
     }
 
     if ((MacroOutput) && (PassNo == 1))
     {
       MacroFile = fopen(MacroName, "w");
       if (!MacroFile)
-        ChkIO(10001);
+        ChkIO(ErrNum_OpeningFile);
     }
 
     /* Listdatei oeffnen */
 
-    RewriteStandard(&LstFile, LstName);
+    OpenWithStandard(&LstFile, LstName);
     if (!LstFile)
-      ChkIO(10001);
+      ChkIO(ErrNum_OpeningFile);
     if (!ListToNull)
     {
       errno = 0;
       fprintf(LstFile, "%s", PrtInitString);
-      ChkIO(10002);
+      ChkIO(ErrNum_ListWrError);
     }
     if ((ListMask & 1) != 0)
       NewPage(0, False);
@@ -3592,20 +3215,20 @@ static void AssembleFile(char *Name)
           fprintf(ShareFile, "; Ende Includefile f%sr Assembler-Programm\n", CH_ue);
           break;
       }
-      ChkIO(10002);
-      fclose(ShareFile);
+      ChkIO(ErrNum_ListWrError);
+      CloseIfOpen(&ShareFile);
     }
 
     if (MacProOutput)
-      fclose(MacProFile);
-    if ((MacroOutput) && (PassNo == 1))
-      fclose(MacroFile);
+      CloseIfOpen(&MacProFile);
+    if (MacroOutput && (PassNo == 1))
+      CloseIfOpen(&MacroFile);
 
     /* evtl. fuer naechsten Durchlauf aufraeumen */
 
     if ((ErrorCount == 0) && (Repass))
     {
-      fclose(LstFile);
+      CloseIfOpen(&LstFile);
       if (CodeOutput)
         unlink(OutName);
       CleanupRegDefs();
@@ -3699,7 +3322,7 @@ static void AssembleFile(char *Name)
     {
       errno = 0;
       fprintf(LstFile, "%s", PrtExitString);
-      ChkIO(10002);
+      ChkIO(ErrNum_ListWrError);
     }
   }
 
@@ -3713,94 +3336,76 @@ static void AssembleFile(char *Name)
 
   ClearIncludeList();
 
-  if ((*ErrorPath == '\0') && (IsErrorOpen))
-  {
-    fclose(ErrorFile);
-    IsErrorOpen = False;
-  }
+  if (!*ErrorPath)
+    CloseIfOpen(&ErrorFile);
 
   ClearUp();
 
   /* Statistik ausgeben */
 
   StopTime = GTime();
-  TWrite(DTime(StartTime, StopTime)/100.0, s);
+  TWrite(DTime(StartTime, StopTime), s, sizeof(s));
   if (!QuietMode)
     printf("\n%s%s%s\n\n", s, getmessage(Num_InfoMessAssTime), ClrEol);
   if (ListMode == 2)
   {
     WrLstLine("");
-    strmaxcat(s, getmessage(Num_InfoMessAssTime), 255);
+    strmaxcat(s, getmessage(Num_InfoMessAssTime), STRINGSIZE);
     WrLstLine(s);
     WrLstLine("");
   }
 
-  Dec32BlankString(s, LineSum, 7);
-  strmaxcat(s, getmessage((LineSum == 1) ? Num_InfoMessAssLine : Num_InfoMessAssLines), 255);
-  if (!QuietMode)
-    printf("%s%s\n", s, ClrEol);
-  if (ListMode == 2)
-    WrLstLine(s);
+  as_snprintf(s, sizeof(s), "%7" PRILongInt "%s", LineSum,
+              getmessage((LineSum == 1) ? Num_InfoMessAssLine : Num_InfoMessAssLines), STRINGSIZE);
+  AssembleFile_WrSummary(s);
 
   if (LineSum != MacLineSum)
   {
-    Dec32BlankString(s, MacLineSum, 7);
-    strmaxcat(s, getmessage((MacLineSum == 1) ? Num_InfoMessMacAssLine : Num_InfoMessMacAssLines), 255);
-    if (!QuietMode)
-      printf("%s%s\n", s, ClrEol);
-    if (ListMode == 2)
-      WrLstLine(s);
+    as_snprintf(s, sizeof(s), "%7" PRILongInt "%s", MacLineSum,
+                getmessage((MacLineSum == 1) ? Num_InfoMessMacAssLine : Num_InfoMessMacAssLines), STRINGSIZE);
+    AssembleFile_WrSummary(s);
   }
 
-  Dec32BlankString(s, PassNo, 7);
-  strmaxcat(s, getmessage((PassNo == 1) ? Num_InfoMessPassCnt : Num_InfoMessPPassCnt), 255);
-  if (!QuietMode)
-    printf("%s%s\n", s, ClrEol);
-  if (ListMode == 2)
-    WrLstLine(s);
+  as_snprintf(s, sizeof(s), "%7d%s", (int)PassNo,
+              getmessage((PassNo == 1) ? Num_InfoMessPassCnt : Num_InfoMessPPassCnt), STRINGSIZE);
+  AssembleFile_WrSummary(s);
 
   if ((ErrorCount > 0) && (Repass) && (ListMode != 0))
     WrLstLine(getmessage(Num_InfoMessNoPass));
 
 #ifdef __TURBOC__
-  sprintf(s, "%s%s", Dec32BlankString(Tmp, coreleft() >> 10, 7), getmessage(Num_InfoMessRemainMem));
-  if (!QuietMode)
-    printf("%s%s\n", s, ClrEol);
-  if (ListMode == 2)
-    WrLstLine(s);
+  as_snprintf(s, sizeof(s), "%7lu%s", coreleft() >> 10,
+              getmessage(Num_InfoMessRemainMem));
+  AssembleFile_WrSummary(s);
 
-  sprintf(s, "%s%s", Dec32BlankString(Tmp, StackRes(), 7), getmessage(Num_InfoMessRemainStack));
-  if (!QuietMode)
-    printf("%s%s\n", s, ClrEol);
-  if (ListMode == 2)
-    WrLstLine(s);
+  as_snprintf(s, sizeof(s), "%7lu%s", (unsigned long)StackRes(),
+              getmessage(Num_InfoMessRemainStack));
+  AssembleFile_WrSummary(s);
 #endif
 
-  sprintf(s, "%s%s", Dec32BlankString(Tmp, ErrorCount, 7), getmessage(Num_InfoMessErrCnt));
-  if (ErrorCount != 1)
-    strmaxcat(s, getmessage(Num_InfoMessErrPCnt), 255);
-  if (!QuietMode)
-    printf("%s%s\n", s, ClrEol);
-  if (ListMode == 2)
-    WrLstLine(s);
+  as_snprintf(s, sizeof(s), "%7u%s%s", (unsigned)ErrorCount,
+              getmessage(Num_InfoMessErrCnt),
+              (ErrorCount == 1) ? "" : getmessage(Num_InfoMessErrPCnt));
+  AssembleFile_WrSummary(s);
 
-  sprintf(s, "%s%s", Dec32BlankString(Tmp, WarnCount, 7), getmessage(Num_InfoMessWarnCnt));
-  if (WarnCount != 1)
-    strmaxcat(s, getmessage(Num_InfoMessWarnPCnt), 255);
-  if (!QuietMode)
-    printf("%s%s\n", s, ClrEol);
-  if (ListMode == 2)
-    WrLstLine(s);
+  as_snprintf(s, sizeof(s), "%7u%s%s", (unsigned)WarnCount,
+              getmessage(Num_InfoMessWarnCnt),
+              (WarnCount == 1) ? "" : getmessage(Num_InfoMessWarnPCnt));
+  AssembleFile_WrSummary(s);
 
 #ifdef PROFILE_MEMO
-  sprintf(s, "%7.2f%s", ((double)NumMemoSum) / NumMemoCnt, " oppart compares");
-  if (!QuietMode)
-    printf("%s%s\n", s, ClrEol);
-  if (ListMode == 2)
-    WrLstLine(s);
+  {
+    unsigned long Sum = (NumMemoSum * 100) / NumMemoCnt;
+
+    as_snprintf(s, sizeof(s), "%4lu.%02lu%s", Sum / 100, Sum % 100, " Oppart Compares");
+    if (!QuietMode)
+      printf("%s%s\n", s, ClrEol);
+    if (ListMode == 2)
+      WrLstLine(s);
+  }
 #endif
 
-  fclose(LstFile);
+  CloseIfOpen(&LstFile);
 
   /* verstecktes */
 
@@ -3867,7 +3472,7 @@ static CMDResult CMD_DebugMode(Boolean Negate, const char *pArg)
 {
   String Arg;
 
-  strmaxcpy(Arg, pArg, 255);
+  strmaxcpy(Arg, pArg, STRINGSIZE);
   UpString(Arg);
 
   if (Negate)
@@ -3940,6 +3545,25 @@ static CMDResult CMD_ListConsole(Boolean Negate, const char *Arg)
   return CMDOK;
 }
 
+static CMDResult CMD_ListRadix(Boolean Negate, const char *Arg)
+{
+  Boolean OK;
+  LargeWord NewListRadixBase;
+
+  UNUSED(Arg);
+
+  if (Negate)
+  {
+    ListRadixBase = 16;
+    return CMDOK;
+  }
+  NewListRadixBase = ConstLongInt(Arg, &OK, 10);
+  if (!OK || (NewListRadixBase < 2) || (NewListRadixBase > 36))
+    return CMDErr;
+  ListRadixBase = NewListRadixBase;
+  return CMDArg;
+}
+
 static CMDResult CMD_ListFile(Boolean Negate, const char *Arg)
 {
   UNUSED(Arg);
@@ -4001,12 +3625,12 @@ static CMDResult CMD_MakeDebug(Boolean Negate, const char *Arg)
     errno = 0;
     Debug = fopen("as.deb", "w");
     if (!Debug)
-      ChkIO(10002);
+      ChkIO(ErrNum_ListWrError);
   }
   else if (MakeDebug)
   {
     MakeDebug = False;
-    fclose(Debug);
+    CloseIfOpen(&Debug);
   }
   return CMDOK;
 }
@@ -4098,7 +3722,7 @@ static CMDResult CMD_HexLowerCase(Boolean Negate, const char *Arg)
 {
   UNUSED(Arg);
 
-  HexLowerCase = !Negate;
+  HexStartCharacter = Negate ? 'A' : 'a';
   return CMDOK;
 }
 
@@ -4142,19 +3766,19 @@ static CMDResult CMD_IncludeList(Boolean Negate, const char *Arg)
   if (*Arg == '\0') return CMDErr;
   else
   {
-    strmaxcpy(Copy, Arg, 255);
+    strmaxcpy(Copy, Arg, STRINGSIZE);
     do
     {
       p = strrchr(Copy, DIRSEP);
       if (!p)
       {
-        strmaxcpy(part, Copy, 255);
+        strmaxcpy(part, Copy, STRINGSIZE);
         *Copy = '\0';
       }
       else
       {
         *p = '\0';
-        strmaxcpy(part, p + 1, 255);
+        strmaxcpy(part, p + 1, STRINGSIZE);
       }
       if (Negate)
         RemoveIncludeList(part);
@@ -4195,19 +3819,19 @@ static CMDResult CMD_DefSymbol(Boolean Negate, const char *Arg)
   if (Arg[0] == '\0')
     return CMDErr;
 
-  strmaxcpy(Copy, Arg, 255);
+  strmaxcpy(Copy, Arg, STRINGSIZE);
   do
   {
     p = QuotPos(Copy, ',');
     if (!p)
     {
-      strmaxcpy(Part, Copy, 255);
+      strmaxcpy(Part, Copy, STRINGSIZE);
       Copy[0] = '\0';
     }
     else
     {
       *p = '\0';
-      strmaxcpy(Part, Copy, 255);
+      strmaxcpy(Part, Copy, STRINGSIZE);
       strmov(Copy, p + 1);
     }
    if (!CaseSensitive)
@@ -4215,13 +3839,13 @@ static CMDResult CMD_DefSymbol(Boolean Negate, const char *Arg)
    p = QuotPos(Part, '=');
    if (!p)
    {
-     strmaxcpy(Name, Part, 255);
+     strmaxcpy(Name, Part, STRINGSIZE);
      Part[0] = '\0';
    }
    else
    {
      *p = '\0';
-     strmaxcpy(Name, Part, 255);
+     strmaxcpy(Name, Part, STRINGSIZE);
      strmov(Part, p + 1);
    }
    if (!ChkSymbName(Name))
@@ -4262,7 +3886,7 @@ static CMDResult CMD_ErrorPath(Boolean Negate, const char *Arg)
   }
   else
   {
-    strmaxcpy(ErrorPath, Arg, 255);
+    strmaxcpy(ErrorPath, Arg, STRINGSIZE);
     return CMDArg;
   }
 }
@@ -4368,9 +3992,9 @@ static CMDResult CMD_CPUAlias(Boolean Negate, const char *Arg)
     else
     {
       *p = '\0';
-      strmaxcpy(s1, Arg, 255);
+      strmaxcpy(s1, Arg, STRINGSIZE);
       UpString(s1);
-      strmaxcpy(s2, p + 1, 255);
+      strmaxcpy(s2, p + 1, STRINGSIZE);
       UpString(s2);
       *p = '=';
       if (!(CMD_CPUAlias_ChkCPUName(s1) && CMD_CPUAlias_ChkCPUName(s2)))
@@ -4487,6 +4111,7 @@ static CMDRec ASParams[] =
   { "I"             , CMD_MakeIncludeList },
   { "L"             , CMD_ListFile        },
   { "l"             , CMD_ListConsole     },
+  { "LISTRADIX"     , CMD_ListRadix       },
   { "M"             , CMD_MacroOutput     },
   { "MAXERRORS"     , CMD_MaxErrors       },
   { "n"             , CMD_NumericErrors   },
@@ -4520,7 +4145,7 @@ extern void on_exit(void (*procp)(int status, caddr_t arg),caddr_t arg);
 static void GlobExitProc(int status, caddr_t arg)
 {
   if (MakeDebug)
-    fclose(Debug);
+    CloseIfOpen(&Debug);
 }
 
 #else
@@ -4528,7 +4153,7 @@ static void GlobExitProc(int status, caddr_t arg)
 static void GlobExitProc(void)
 {
   if (MakeDebug)
-    fclose(Debug);
+    CloseIfOpen(&Debug);
 }
 
 #endif
@@ -4624,6 +4249,7 @@ int main(int argc, char **argv)
     codeh8_5_init();
     code7000_init();
     code65_init();
+    codeh16_init();
     code7700_init();
     codehmcs400_init();
     code4500_init();
@@ -4693,6 +4319,8 @@ int main(int argc, char **argv)
     code53c8xx_init();
     codef2mc8_init();
     codef2mc16_init();
+    codemn1610_init();
+    codemn2610_init();
     codeolms40_init();
     codeolms50_init();
     code1802_init();
@@ -4716,7 +4344,7 @@ int main(int argc, char **argv)
   {
     case NoRedir:
       Env = getenv("USEANSI");
-      strmaxcpy(Dummy, Env ? Env : "Y", 255);
+      strmaxcpy(Dummy, Env ? Env : "Y", STRINGSIZE);
       if (mytoupper(Dummy[0]) == 'N')
       {
       }
@@ -4762,6 +4390,7 @@ int main(int argc, char **argv)
   GNUErrors = False;
   MaxErrors = 0;
   TreatWarningsAsErrors = False;
+  ListRadixBase = 16;
 
   LineZ = 0;
 
@@ -4787,6 +4416,13 @@ int main(int argc, char **argv)
 #endif
   ProcessCMD(ASParams, ASParamCnt, ParUnprocessed, EnvName, ParamError);
 
+  SysString(Dummy, sizeof(Dummy), 0xff, ListRadixBase, 0, False, HexStartCharacter);
+  SystemListLen8 = strlen(Dummy);
+  SysString(Dummy, sizeof(Dummy), 0xffffu, ListRadixBase, 0, False, HexStartCharacter);
+  SystemListLen16 = strlen(Dummy);
+  SysString(Dummy, sizeof(Dummy), 0xfffffffful, ListRadixBase, 0, False, HexStartCharacter);
+  SystemListLen32 = strlen(Dummy);
+
   /* wegen QuietMode dahinter */
 
   WrHead();
@@ -4797,13 +4433,12 @@ int main(int argc, char **argv)
     strcpy(ErrorName, ErrorPath);
     unlink(ErrorName);
   }
-  IsErrorOpen = False;
 
   if (StringListEmpty(FileArgList))
   {
     printf("%s [%s] ", getmessage(Num_InvMsgSource), SrcSuffix);
     fflush(stdout);
-    if (!fgets(FileMask, 255, stdin))
+    if (!fgets(FileMask, STRINGSIZE, stdin))
       return 0;
     if ((*FileMask) && (FileMask[strlen(FileMask) - 1] == '\n'))
       FileMask[strlen(FileMask) - 1] = '\0';
@@ -4817,17 +4452,14 @@ int main(int argc, char **argv)
     pFile = GetStringListFirst(FileArgList, &Lauf);
     while ((pFile) && (*pFile))
     {
-      strmaxcpy(FileMask, pFile, 255);
+      strmaxcpy(FileMask, pFile, STRINGSIZE);
       AssembleGroup();
       pFile = GetStringListNext(&Lauf);
     }
   }
 
-  if ((ErrorPath[0] != '\0') && (IsErrorOpen))
-  {
-    fclose(ErrorFile);
-    IsErrorOpen = False;
-  }
+  if (*ErrorPath)
+    CloseIfOpen(&ErrorFile);
 
   ClearCPUList();
 

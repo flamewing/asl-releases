@@ -1,65 +1,12 @@
 /* asmstructs.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* structure handling                                                        */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: asmstructs.c,v 1.12 2016/09/22 15:36:15 alfred Exp $                 */
-/*****************************************************************************
- * $Log: asmstructs.c,v $
- * Revision 1.12  2016/09/22 15:36:15  alfred
- * - use platform-dependent format string for LongInt
- *
- * Revision 1.11  2016/09/12 19:46:56  alfred
- * - initialize some elements in constructor
- *
- * Revision 1.10  2015/10/28 17:54:33  alfred
- * - allow substructures of same name in different structures
- *
- * Revision 1.9  2015/10/23 08:43:33  alfred
- * - beef up & fix structure handling
- *
- * Revision 1.8  2015/10/18 20:08:52  alfred
- * - when expanding structure, also regard sub-structures
- *
- * Revision 1.7  2015/10/18 19:02:16  alfred
- * - first reork/fix of nested structure handling
- *
- * Revision 1.6  2014/12/07 19:13:59  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.5  2014/12/05 11:09:10  alfred
- * - eliminate Nil
- *
- * Revision 1.4  2013-02-14 21:05:31  alfred
- * - add missing bookkeeping for expanded structs
- *
- * Revision 1.3  2004/01/17 16:18:38  alfred
- * - fix some more GCC 3.3 quarrel
- *
- * Revision 1.2  2004/01/17 16:12:50  alfred
- * - some quirks for GCC 3.3
- *
- * Revision 1.1  2003/11/06 02:49:19  alfred
- * - recreated
- *
- * Revision 1.6  2002/11/20 20:25:04  alfred
- * - added unions
- *
- * Revision 1.5  2002/11/16 20:50:02  alfred
- * - added expansion routine
- *
- * Revision 1.4  2002/11/15 23:30:31  alfred
- * - added search routine
- *
- * Revision 1.3  2002/11/11 21:56:57  alfred
- * - store/display struct elements
- *
- * Revision 1.2  2002/11/11 21:12:32  alfred
- * - first working edition
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -70,6 +17,7 @@
 
 #include "trees.h"
 #include "errmsg.h"
+#include "symbolsize.h"
 
 #include "as.h"
 #include "asmdef.h"
@@ -135,7 +83,7 @@ void DestroyStructRec(PStructRec StructRec)
  * \return * to element or NULL if allocation failed
  * ------------------------------------------------------------------------ */
 
-void ExpandStructStd(const char *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
+void ExpandStructStd(const tStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
 {
   HandleLabel(pVarName, Base + pStructElem->Offset);
 }
@@ -199,7 +147,7 @@ void SetStructElemSize(PStructRec pStructRec, const char *pElemName, ShortInt Si
 
   for (pRun = pStructRec->Elems; pRun; pRun = pRun->Next)
   {
-    Match = CaseSensitive ? strcmp(pElemName, pRun->pElemName) : strcasecmp(pElemName, pRun->pElemName);
+    Match = CaseSensitive ? strcmp(pElemName, pRun->pElemName) : as_strcasecmp(pElemName, pRun->pElemName);
     if (!Match)
     {
       pRun->OpSize = Size;
@@ -274,7 +222,7 @@ void BuildStructName(char *pResult, unsigned ResultLen, const char *pName)
   for (ZStruct = StructStack; ZStruct; ZStruct = ZStruct->Next)
     if (ZStruct->StructRec->DoExt && ZStruct->Name[0])
     {
-      sprintf(tmp2, "%s%c", ZStruct->pBaseName, ZStruct->StructRec->ExtChar);
+      as_snprintf(tmp2, sizeof(tmp2), "%s%c", ZStruct->pBaseName, ZStruct->StructRec->ExtChar);
       strmaxprep(pResult, tmp2, ResultLen);
     }
 }
@@ -292,11 +240,13 @@ void AddStructSymbol(const char *pName, LargeWord Value)
 
   {
     String tmp, tmp2;
+    tStrComp TmpComp;
 
-    sprintf(tmp2, "%s%c", pInnermostNamedStruct->Name, pInnermostNamedStruct->StructRec->ExtChar);
+    as_snprintf(tmp2, sizeof(tmp2), "%s%c", pInnermostNamedStruct->Name, pInnermostNamedStruct->StructRec->ExtChar);
     strmaxcpy(tmp, pName, sizeof(tmp));
     strmaxprep(tmp, tmp2, sizeof(tmp));
-    EnterIntSymbol(tmp, Value, SegNone, False);
+    StrCompMkTemp(&TmpComp, tmp);
+    EnterIntSymbol(&TmpComp, Value, SegNone, False);
   }
 }
 
@@ -372,7 +322,7 @@ Boolean FoundStruct(PStructRec *Erg, const char *pName)
   PSaveSection Lauf;
   String Part;
 
-  strmaxcpy(Part, pName, 255);
+  strmaxcpy(Part, pName, STRINGSIZE);
   if (!CaseSensitive)
     NLS_UpString(Part);
 
@@ -413,42 +363,37 @@ static void PrintDef(PTree Tree, void *pData)
   PStructElem Elem;
   TPrintContext *pContext = (TPrintContext*)pData;
   String s;
-  char NumStr[30], NumStr2[30];
+  char NumStr[30];
   UNUSED(pData);
 
   WrLstLine("");
   pContext->Sum++;
-  strmaxcpy(s, Node->Tree.Name, 255);
+  strmaxcpy(s, Node->Tree.Name, STRINGSIZE);
   if (Node->Tree.Attribute != -1)
   {
-    strmaxcat(s, "[", 255);
-    strmaxcat(s, GetSectionName(Node->Tree.Attribute), 255);
-    strmaxcat(s, "]", 255);
+    strmaxcat(s, "[", STRINGSIZE);
+    strmaxcat(s, GetSectionName(Node->Tree.Attribute), STRINGSIZE);
+    strmaxcat(s, "]", STRINGSIZE);
   }
   WrLstLine(s);
   for (Elem = Node->StructRec->Elems; Elem; Elem = Elem->Next)
   {
-    sprintf(s, "%3" PRILongInt, Elem->Offset);
+    as_snprintf(s, sizeof(s), "%3" PRILongInt, Elem->Offset);
     if (Elem->BitPos >= 0)
     {
       if (Elem->BitWidthM1 >= 0)
-        sprintf(NumStr, ".%d-%d", Elem->BitPos, Elem->BitPos + Elem->BitWidthM1);
+        as_snprintf(NumStr, sizeof(NumStr), ".%d-%d", Elem->BitPos, Elem->BitPos + Elem->BitWidthM1);
       else
-        sprintf(NumStr, ".%d", Elem->BitPos);
+        as_snprintf(NumStr, sizeof(NumStr), ".%d", Elem->BitPos);
     }
     else
       *NumStr = '\0';
-    sprintf(NumStr2, "%-6s", NumStr);
-    strmaxcat(s, NumStr2, STRINGSIZE);
+    as_snprcatf(s, sizeof(s), "%-6s", NumStr);
     if (Elem->OpSize != eSymbolSizeUnknown)
-    {
-      sprintf(NumStr, "(%d)", Elem->OpSize);
-      strmaxcat(s, NumStr, STRINGSIZE);
-    }
+      as_snprcatf(s, sizeof(s), "(%s)", GetSymbolSizeName(Elem->OpSize));
     else
       strmaxcat(s, "   ", STRINGSIZE);
-    strmaxcat(s, " ", STRINGSIZE);
-    strmaxcat(s, Elem->pElemName, STRINGSIZE);
+    as_snprcatf(s, sizeof(s), " %s", Elem->pElemName);
     WrLstLine(s);
   }
 }
@@ -467,8 +412,10 @@ void PrintStructList(void)
 
   Context.Sum = 0;
   IterTree((PTree)StructRoot, PrintDef, &Context);
-  sprintf(s, "%" PRILongInt "%s", Context.Sum,
-          getmessage((Context.Sum == 1) ? Num_ListStructSumMsg : Num_ListStructSumsMsg));
+  as_snprintf(s, sizeof(s), "%" PRILongInt "%s",
+              Context.Sum,
+              getmessage((Context.Sum == 1) ? Num_ListStructSumMsg : Num_ListStructSumsMsg));
+  WrLstLine(s);
 }
 
 static void ClearNode(PTree Tree, void *pData)
@@ -492,6 +439,7 @@ static void ExpandStruct_One(PStructRec StructRec, char *pVarPrefix, char *pStru
 {
   PStructElem StructElem;
   int VarLen, RemVarLen, StructLen, RemStructLen;
+  tStrComp TmpComp;
 
   VarLen = strlen(pVarPrefix);
   pVarPrefix[VarLen] = StructRec->ExtChar;
@@ -506,7 +454,8 @@ static void ExpandStruct_One(PStructRec StructRec, char *pVarPrefix, char *pStru
     for (StructElem = StructRec->Elems; StructElem; StructElem = StructElem->Next)
     {
       strmaxcpy(pVarPrefix + VarLen + 1, StructElem->pElemName, RemVarLen);
-      StructElem->ExpandFnc(pVarPrefix, StructElem, Base);
+      StrCompMkTemp(&TmpComp, pVarPrefix);
+      StructElem->ExpandFnc(&TmpComp, StructElem, Base);
       if (StructElem->IsStruct)
       {
         TStructRec *pSubStruct;
@@ -531,8 +480,8 @@ void ExpandStruct(PStructRec StructRec)
     String CompVarName, CompStructName;
 
     strmaxcpy(CompVarName, LabPart.Str, sizeof(CompVarName));
-    strmaxcpy(CompStructName, LOpPart, sizeof(CompStructName));
-    ExpandStruct_One(StructRec, LabPart.Str, LOpPart, EProgCounter());
+    strmaxcpy(CompStructName, pLOpPart, sizeof(CompStructName));
+    ExpandStruct_One(StructRec, LabPart.Str, pLOpPart, EProgCounter());
     CodeLen = StructRec->TotLen;
     BookKeeping();
     DontPrint = True;

@@ -20,11 +20,11 @@
 stddef90inc     equ     1
 
                 if      (MOMCPU<>9486657)
-		 fatal  "Falscher Prozessortyp eingestellt: nur 90C141 erlaubt"
+		 fatal  "Wrong processor type set: only 90C141 allowed"
                 endif
 
                 if      MOMPASS=1
-                 message "TLCS-90-Adreﬂdefinitionen"
+                 message "TLCS-90 Address Definitions"
                  message "(C) 1993 Alfred Arnold"
                 endif
 

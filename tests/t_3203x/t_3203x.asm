@@ -256,9 +256,13 @@ targ:		br	targ
 		ldfz	1.27578125e+01,r4
 
 		ldi	*ar5,r6
-		||ldi	*ar5++,r6
+		expect	140,210
+		 ||ldi	 *ar5++,r6
+		endexpect
 
-		addf3	*ar5++,*ar5++,r3
+		expect	210
+		 addf3	 *ar5++,*ar5++,r3
+		endexpect
 
 		single	 1.79750e+02
 		single	-6.281250e+01
@@ -269,3 +273,14 @@ targ:		br	targ
 		bss	20h
 		word	20,55,'ABCD'
 		data	12345h,-1.2345e6,"Hello world"
+		data	0
+		data	4294967295
+		data	-2147483648
+		data	'a'
+		data	'ab'
+		data	'abc'
+		data	'abcd'
+		data	"a"
+		data	"ab"
+		data	"abc"
+		data	"abcd"

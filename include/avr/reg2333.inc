@@ -19,7 +19,7 @@ RAMSTART	equ	0x60,data
 RAMEND		equ	0xdf,data
 FLASHEND	label	0x7ff
 
-		include	"avr/regxx33.inc"
+		include	"regxx33.inc"
 
 		restore
 

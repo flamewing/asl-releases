@@ -1,31 +1,12 @@
 /* codefmc8.c */ 
 /****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS, C-Version                                                            */
 /*                                                                          */
 /* Codegenerator fuer Fujitsu-F2MC8L-Prozessoren                            */
 /*                                                                          */
-/* Historie:   4. 7.1999 Grundsteinlegung                                   */
-/*            29. 7.1999 doppelte Variable entfernt                         */
-/*             9. 3.2000 'ambiguous else'-Warnungen beseitigt               */
-/*           14. 1.2001 silenced warnings about unused parameters           */
-/*                                                                          */
 /****************************************************************************/
-/* $Id: codefmc8.c,v 1.5 2014/06/19 10:07:04 alfred Exp $                   */
-/****************************************************************************
- * $Log: codefmc8.c,v $
- * Revision 1.5  2014/06/19 10:07:04  alfred
- * - rework to current style
- *
- * Revision 1.4  2007/11/24 22:48:06  alfred
- * - some NetBSD changes
- *
- * Revision 1.3  2005/09/08 16:53:43  alfred
- * - use common PInstTable
- *
- * Revision 1.2  2004/05/29 11:33:03  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- ****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -95,34 +76,34 @@ static void DecodeAdr(const tStrComp *pArg, unsigned Mask)
 
   /* Register ? */
 
-  if (!strcasecmp(pArg->Str, "A"))
+  if (!as_strcasecmp(pArg->Str, "A"))
    AdrMode = ModAcc;
 
-  else if (!strcasecmp(pArg->Str, "SP"))
+  else if (!as_strcasecmp(pArg->Str, "SP"))
   {
     AdrMode = ModReg16; 
     AdrPart = 1;
   }
 
-  else if (!strcasecmp(pArg->Str, "IX"))
+  else if (!as_strcasecmp(pArg->Str, "IX"))
   {
     AdrMode = ModReg16;
     AdrPart = 2;
   }
 
-  else if (!strcasecmp(pArg->Str, "EP"))
+  else if (!as_strcasecmp(pArg->Str, "EP"))
   {
     AdrMode = ModReg16;
     AdrPart = 3;
   }
 
-  else if (!strcasecmp(pArg->Str, "T"))
+  else if (!as_strcasecmp(pArg->Str, "T"))
     AdrMode = ModT;
 
-  else if (!strcasecmp(pArg->Str, "PC"))
+  else if (!as_strcasecmp(pArg->Str, "PC"))
     AdrMode = ModPC;
 
-  else if (!strcasecmp(pArg->Str, "PS"))
+  else if (!as_strcasecmp(pArg->Str, "PS"))
     AdrMode = ModPS;
 
   else if ((strlen(pArg->Str) == 2) && (mytoupper(*pArg->Str) == 'R') && (pArg->Str[1]>= '0') && (pArg->Str[1] <= '7'))
@@ -162,19 +143,19 @@ static void DecodeAdr(const tStrComp *pArg, unsigned Mask)
 
   /* indirekt ? */
 
-  else if (!strcasecmp(pArg->Str, "@EP"))
+  else if (!as_strcasecmp(pArg->Str, "@EP"))
   {
     AdrMode = ModIEP;
     AdrPart = 7;
   }
 
-  else if (!strcasecmp(pArg->Str, "@A"))
+  else if (!as_strcasecmp(pArg->Str, "@A"))
   {
     AdrMode = ModIA;
     AdrPart = 7;
   }
 
-  else if (!strncasecmp(pArg->Str, "@IX", 3))
+  else if (!as_strncasecmp(pArg->Str, "@IX", 3))
   {
     /***Problem: Offset signed oder unsigned? */
     AdrVals[0] = EvalStrIntExpressionOffs(pArg, 3, SInt8, &OK);
@@ -991,7 +972,6 @@ static void SwitchTo_F2MC8(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = FoundDescr->Id;

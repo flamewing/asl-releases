@@ -82,8 +82,8 @@ BGCR0		avrbit	BGCRR,0
 ;----------------------------------------------------------------------------
 ; EEPROM/Program Memory Access
 
-		include	"avr/eem2.inc"
-		include	"avr/spmcsr37.inc"
+		include	"eem2.inc"
+		include	"spmcsr37.inc"
 
 EEPM0		avrbit	EECR,4		; EEPROM Programming Mode
 EEPM1		avrbit	EECR,5
@@ -218,12 +218,12 @@ TIFR1		port	0x16		; Timer/Counter 1 Interrupt Status Register
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
-		include	"avr/wdme.inc"
+		include	"wdme.inc"
 
 ;----------------------------------------------------------------------------
 ; TWI
 
-		include	"avr/twimb8.inc"
+		include	"twimb8.inc"
 
 TWBCSR		sfr	0xbe		; TWI Bus Control and Status Register
 TWBCIF		avrbit	TWBCSR,7	; TWI Bus Connect/Disconnect Interrupt Flag

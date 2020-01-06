@@ -1,4 +1,4 @@
-		ifndef	__regt1024inc
+r		ifndef	__regt1024inc
 __regt1024inc	equ	1
                 save
                 listing off   ; kein Listing ueber diesen File

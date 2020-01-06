@@ -210,22 +210,22 @@ TSM		avrbit	GTCCR,7		; Timer/Counter Synchronization Mode
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
-		include	"avr/wdme.inc"
+		include	"wdme.inc"
 
 ;----------------------------------------------------------------------------
 ; Analog Comparator
 
-		include "avr/acm30.inc"
+		include "acm30.inc"
 
 ;----------------------------------------------------------------------------
 ; A/D Converter
 
-		include	"avr/adcm78.inc"
+		include	"adcm78.inc"
 
 ;----------------------------------------------------------------------------
 ; TWI
 
-		include	"avr/twimb8.inc"
+		include	"twimb8.inc"
 
 TWHSR		sfr	0xbe		; TWI High Speed Register
 TWHS		avrbit	TWHSR,0		; TWI High Speed Enable
@@ -233,7 +233,7 @@ TWHS		avrbit	TWHSR,0		; TWI High Speed Enable
 ;----------------------------------------------------------------------------
 ; SPI
 
-		include	"avr/spim2c.inc"
+		include	"spim2c.inc"
 
 		restore			; re-enable listing
 

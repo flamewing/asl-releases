@@ -1,49 +1,12 @@
 /* tex2doc.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Konverter TeX-->ASCII-DOC                                                 */
 /*                                                                           */
-/* Historie: 9. 2.1998 Grundsteinlegung                                      */
-/*          20. 6.1998 Zentrierung                                           */
-/*          11. 7.1998 weitere Landessonderzeichen                           */
-/*          13. 7.1998 Cedilla                                               */
-/*          12. 9.1998 input-Statement                                       */
-/*          12. 1.1999 andere Kapitelherarchie fuer article                  */
-/*           14. 1.2001 silenced warnings about unused parameters            */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: tex2doc.c,v 1.8 2017/02/26 16:20:47 alfred Exp $                    */
-/*****************************************************************************
- * $Log: tex2doc.c,v $
- * Revision 1.8  2017/02/26 16:20:47  alfred
- * - silence compiler warnings about unused function results
- *
- * Revision 1.7  2014/12/05 08:06:29  alfred
- * - silence const warnings
- *
- * Revision 1.6  2014/12/03 16:05:44  alfred
- * - rework to current style
- *
- * Revision 1.5  2014/12/02 18:48:20  alfred
- * - partially reworked
- *
- * Revision 1.4  2014/03/08 21:06:00  alfred
- * - regard \*
- *
- * Revision 1.3  2010/12/12 14:31:41  alfred
- * - use strmov()
- *
- * Revision 1.2  2010/08/27 14:52:43  alfred
- * - some more overlapping strcpy() cleanups
- *
- * Revision 1.1  2003/11/06 02:49:25  alfred
- * - recreated
- *
- * Revision 1.3  2003/08/16 17:53:48  alfred
- * - updated to digest 2e header
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include "asmitree.h"
@@ -203,7 +166,8 @@ static void SetLang(Boolean IsGerman)
     return;
 
   DestroyTree();
-  if ((GermanMode = IsGerman))
+  GermanMode = IsGerman;
+  if (GermanMode)
   {
     TableName = "Tabelle";
     BiblioName = "Literaturverzeichnis";
@@ -247,7 +211,7 @@ static void AddLabel(char *Name, char *Value)
   {
     if (strcmp(Run->Value, Value))
     {
-      sprintf(err, "value of label '%s' has changed", Name);
+      as_snprintf(err, sizeof(err), "value of label '%s' has changed", Name);
       warning(err);
       DoRepass = True;
       free(Run->Value);
@@ -281,7 +245,7 @@ static void AddCite(char *Name, char *Value)
   {
     if (strcmp(Run->Value, Value))
     {
-      sprintf(err, "value of citation '%s' has changed", Name);
+      as_snprintf(err, sizeof(err), "value of citation '%s' has changed", Name);
       warning(err);
       DoRepass = True;
       free(Run->Value);
@@ -312,7 +276,7 @@ static void GetLabel(char *Name, char *Dest)
 
   if (!Run)
   {
-    sprintf(err, "undefined label '%s'", Name);
+    as_snprintf(err, sizeof(err), "undefined label '%s'", Name);
     warning(err); DoRepass = True;
   }
   strcpy(Dest, (!Run) ? "???" : Run->Value);
@@ -329,7 +293,7 @@ static void GetCite(char *Name, char *Dest)
 
   if (!Run)
   {
-    sprintf(err, "undefined citation '%s'", Name);
+    as_snprintf(err, sizeof(err), "undefined citation '%s'", Name);
     warning(err);
     DoRepass = True;
   }
@@ -600,7 +564,7 @@ static void assert_token(char *ref)
   ReadToken(token);
   if (strcmp(ref, token))
   {
-    sprintf(token, "\"%s\" expected", ref);
+    as_snprintf(token, sizeof(token), "\"%s\" expected", ref);
     error(token);
   }
 }
@@ -1067,29 +1031,28 @@ static void DoAddNormal(const char *Part, char *Sep)
   }
 }
 
-static void GetTableName(char *Dest)
+static void GetTableName(char *Dest, int DestSize)
 {
   if (InAppendix)
-    sprintf(Dest, "%c.%d", Chapters[0] + 'A', TableNum);
+    as_snprintf(Dest, DestSize, "%c.%d", Chapters[0] + 'A', TableNum);
   else
-    sprintf(Dest, "%d.%d", Chapters[0], TableNum);
+    as_snprintf(Dest, DestSize, "%d.%d", Chapters[0], TableNum);
 }
 
-static char *GetSectionName(char *Dest)
+static void GetSectionName(char *Dest, int DestSize)
 {
-  char *run = Dest;
   int z;
 
+  *Dest = '\0';
   for (z = 0; z <= 2; z++)
   {
     if ((z > 0) && (Chapters[z] == 0))
       break;
     if ((InAppendix) && (z == 0))
-      run += sprintf(run, "%c.", Chapters[z] + 'A');
+      as_snprcatf(Dest, DestSize, "%c.", Chapters[z] + 'A');
     else
-      run += sprintf(run, "%d.", Chapters[z]);
+      as_snprcatf(Dest, DestSize, "%d.", Chapters[z]);
   }
-  return run;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1249,21 +1212,21 @@ static void TeXNewSection(Word Level)
 static void EndSectionHeading(void)
 {
   int Level = LastLevel, z;
-  char Line[TOKLEN], Title[TOKLEN], *run;
+  char Line[TOKLEN], Title[TOKLEN];
   PTocSave NewTocSave, RunToc;
 
   strcpy(Title, OutLineBuffer);
   *OutLineBuffer = '\0';
 
-  run = Line;
+  *Line = '\0';
   if (Level < 3)
   {
-    run = GetSectionName(run);
-    run += sprintf(run, " ");
+    GetSectionName(Line, sizeof(Line));
+    as_snprcatf(Line, sizeof(Line), " ");
     if ((Level == 2) && (((strlen(Line) + strlen(Title))&1) == 0))
-      run += sprintf(run, " ");
+      as_snprcatf(Line, sizeof(Line), " ");
   }
-  sprintf(run, "%s", Title);
+  as_snprcatf(Line, sizeof(Line), "%s", Title);
 
   fprintf(outfile, "        %s\n        ", Line);
   for (z = 0; z < (int)strlen(Line); z++)
@@ -1288,10 +1251,8 @@ static void EndSectionHeading(void)
   {
     NewTocSave = (PTocSave) malloc(sizeof(TTocSave));
     NewTocSave->Next = NULL;
-    run = Line;
-    run = GetSectionName(run);
-    run += sprintf(run, " ");
-    sprintf(run, "%s", Title);
+    GetSectionName(Line, sizeof(Line));
+    as_snprcatf(Line, sizeof(Line), " %s", Title);
     NewTocSave->TocName = (char *) malloc(6 + Level + strlen(Line));
     strcpy(NewTocSave->TocName, Blanks(5 + Level));
     strcat(NewTocSave->TocName, Line);
@@ -1534,7 +1495,7 @@ static void TeXItem(Word Index)
       break;
     case EnvEnumerate:
       LeftMargin = ActLeftMargin - 4;
-      sprintf(NumString, "%3d ", ++EnumCounter);
+      as_snprintf(NumString, sizeof(NumString), "%3d ", ++EnumCounter);
       AddLine(NumString, "");
       break;
     case EnvDescription:
@@ -1544,7 +1505,7 @@ static void TeXItem(Word Index)
       {
         collect_token(Acc, "]");
         LeftMargin = ActLeftMargin - 4;
-        sprintf(NumString, "%3s ", Acc);
+        as_snprintf(NumString, sizeof(NumString), "%3s ", Acc);
         AddLine(NumString, "");
       }
       break;
@@ -1569,10 +1530,10 @@ static void TeXBibItem(Word Index)
   ++BibCounter;
 
   LeftMargin = ActLeftMargin - BibIndent - 3;
-  sprintf(Format, "[%%%dd] ", BibIndent);
-  sprintf(NumString, Format, BibCounter);
+  as_snprintf(Format, sizeof(Format), "[%%%dd] ", BibIndent);
+  as_snprintf(NumString, sizeof(NumString), Format, BibCounter);
   AddLine(NumString, "");
-  sprintf(NumString, "%d", BibCounter);
+  as_snprintf(NumString, sizeof(NumString), "%d", BibCounter);
   AddCite(Name, NumString);
   ReadToken(Token);
   *SepString = '\0';
@@ -1806,7 +1767,7 @@ static void TeXAddCaption(Word Index)
   SaveEnv(EnvCaption);
   AddLine(TableName, "");
   cnt = strlen(TableName);
-  GetTableName(tmp);
+  GetTableName(tmp, sizeof(tmp));
   strcat(tmp, ": ");
   AddLine(tmp, " ");
   cnt += 1 + strlen(tmp);
@@ -2056,10 +2017,10 @@ static void TeXWriteLabel(Word Index)
   collect_token(Name, "}");
 
   if (CurrEnv == EnvCaption)
-    GetTableName(Value);
+    GetTableName(Value, sizeof(Value));
   else
   {
-    GetSectionName(Value);
+    GetSectionName(Value, sizeof(Value));
     if ((*Value) && (Value[strlen(Value) - 1] == '.'))
       Value[strlen(Value) - 1] = '\0';
   }
@@ -2086,7 +2047,7 @@ static void TeXWriteCitation(Word Index)
   assert_token("{");
   collect_token(Name, "}");
   GetCite(Name, Value);
-  sprintf(Name, "[%s]", Value);
+  as_snprintf(Name, sizeof(Name), "[%s]", Value);
   DoAddNormal(Name, BackSepString);
 }
 
@@ -2549,9 +2510,10 @@ static void TeXInclude(Word Index)
 
   assert_token("{");
   collect_token(Token, "}");
-  if (!(infiles[IncludeNest] = fopen(Token, "r")))
+  infiles[IncludeNest] = fopen(Token, "r");
+  if (!infiles[IncludeNest])
   {
-    sprintf(Msg, "file %s not found", Token);
+    as_snprintf(Msg, sizeof(Msg), "file %s not found", Token);
     error(Msg);
   }
   else
@@ -2575,7 +2537,7 @@ static void TeXDocumentStyle(Word Index)
     while (strcmp(Token, "]"));
     assert_token("{");
     ReadToken(Token);
-    if (!strcasecmp(Token,  "article"))
+    if (!as_strcasecmp(Token,  "article"))
     {
       AddInstTable(TeXTable, "section", 0, TeXNewSection);
       AddInstTable(TeXTable, "subsection", 1, TeXNewSection);
@@ -2620,7 +2582,8 @@ int main(int argc, char **argv)
   TeXTable = CreateInstTable(301);
 
   IncludeNest = 0;
-  if (!(*infiles = fopen(argv[1], "r")))
+  *infiles = fopen(argv[1], "r");
+  if (!*infiles)
   {
     perror(argv[1]);
     exit(3);
@@ -2630,10 +2593,14 @@ int main(int argc, char **argv)
   infilename = argv[1];
   if (!strcmp(argv[2], "-"))
     outfile = stdout;
-  else if (!(outfile = fopen(argv[2], "w")))
+  else
   {
-    perror(argv[2]);
-    exit(3);
+    outfile = fopen(argv[2], "w");
+    if (!outfile)
+    {
+      perror(argv[2]);
+      exit(3);
+    }
   }
 
   AddInstTable(TeXTable, "\\", 0, TeXFlushLine);
@@ -2757,12 +2724,14 @@ int main(int argc, char **argv)
   SetLang(False);
 
   strcpy(TocName, argv[1]);
-  if ((p = strrchr(TocName, '.')))
+  p = strrchr(TocName, '.');
+  if (p)
     *p = '\0';
   strcat(TocName, ".dtoc");
 
   strcpy(AuxFile, argv[1]);
-  if ((p = strrchr(AuxFile, '.')))
+  p = strrchr(AuxFile, '.');
+  if (p)
     *p = '\0';
   strcat(AuxFile, ".daux");
   ReadAuxFile(AuxFile);
@@ -2781,13 +2750,14 @@ int main(int argc, char **argv)
       else if (!LookupInstTable(TeXTable, Line))
         if (!TeXNLSSpec(Line))
         {
-          sprintf(Comp, "unknown TeX command %s", Line);
+          as_snprintf(Comp, sizeof(Comp), "unknown TeX command %s", Line);
           warning(Comp);
         }
     }
     else if (!strcmp(Line, "$"))
     {
-      if ((InMathMode = (!InMathMode)))
+      InMathMode = !InMathMode;
+      if (InMathMode)
       {
         strcpy(BackSepString, SepString);
         ReadToken(Line);

@@ -2,6 +2,8 @@
 #define _FUNCTION_H
 /* function.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* internal holder for int/float/string                                      */

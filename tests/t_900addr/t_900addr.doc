@@ -1,0 +1,7 @@
++-----------------------  Test Application 900ADDR ---------------------------+
+|                                                                             |
+|  This test case plays a bit with the (poorly documented) TLCS-900 feature   |
+|  that the the increment/decrement amount for pre-decrement and post         |
+|  increment may be overridden from the default given by the operand size.    |
+|                                                                             |
++-----------------------------------------------------------------------------+

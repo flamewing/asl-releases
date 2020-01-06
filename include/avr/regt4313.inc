@@ -19,7 +19,7 @@ RAMSTART	equ	0x60,data	; start address SRAM
 RAMEND		equ     0x15f,data	; end address SRAM
 FLASHEND	label   4095		; end address Flash
 
-		include "avr/regtx313.inc"
+		include "regtx313.inc"
 
 		restore
 

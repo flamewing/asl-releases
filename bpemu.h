@@ -2,6 +2,8 @@
 #define _BPEMU_H
 /* bpemu.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Emulation einiger Borland-Pascal-Funktionen                               */                      
@@ -18,7 +20,7 @@ char *Name
 
 extern char *FExpand(char *Src);
 
-extern char *FSearch(const char *File, char *Path);
+extern int FSearch(char *pDest, unsigned DestSize, const char *FileToSearch, const char *pCurrFileName, const char *SearchPath);
 
 extern long FileSize(FILE *file);
 
@@ -26,7 +28,11 @@ extern Byte Lo(Word inp);
 
 extern Byte Hi(Word inp);
 
-extern LongWord HiWord(LongWord Src);
+extern unsigned LoWord(LongWord Src);
+
+extern unsigned HiWord(LongWord Src);
+
+extern unsigned long LoDWord(LargeWord Src);
 
 extern Boolean Odd (int inp);
 

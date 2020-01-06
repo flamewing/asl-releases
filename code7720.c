@@ -1,60 +1,12 @@
 /* code7720.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* Makroassembler AS                                                         */
 /*                                                                           */
 /* Codegenerator NEC uPD772x                                                 */
 /*                                                                           */
-/* Historie: 30. 8.1998 Grundsteinlegung                                     */
-/*           31. 8.1998 RET-Anweisung                                        */
-/*            2. 9.1998 Verallgemeinerung auf 77C25                          */
-/*            5. 9.1998 Pseudo-Anweisungen                                   */
-/*           11. 9.1998 ROMData-Segment angelegt                             */
-/*           24. 9.1998 Korrekturen fuer DOS-Compiler                        */
-/*            2. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*           14. 1.2001 silenced warnings about unused parameters            */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code7720.c,v 1.9 2016/09/29 16:43:37 alfred Exp $                    */
-/***************************************************************************** 
- * $Log: code7720.c,v $
- * Revision 1.9  2016/09/29 16:43:37  alfred
- * - introduce common DecodeDATA/DecodeRES functions
- *
- * Revision 1.8  2014/12/07 19:14:00  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.7  2014/08/25 20:20:15  alfred
- * - rework to current style
- *
- * Revision 1.6  2010/04/17 13:14:22  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.5  2008/11/23 10:39:17  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.4  2007/11/24 22:48:05  alfred
- * - some NetBSD changes
- *
- * Revision 1.3  2005/09/08 16:53:42  alfred
- * - use common PInstTable
- *
- * Revision 1.2  2005/05/21 16:35:05  alfred
- * - removed variables available globally
- *
- * Revision 1.1  2003/11/06 02:49:21  alfred
- * - recreated
- *
- * Revision 1.4  2003/05/02 21:23:11  alfred
- * - strlen() updates
- *
- * Revision 1.3  2002/08/14 18:43:48  alfred
- * - warn null allocation, remove some warnings
- *
- * Revision 1.2  2002/07/14 18:39:58  alfred
- * - fixed TempAll-related warnings
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -118,7 +70,7 @@ static Boolean DecodeReg(char *Asc, LongWord *Code, TReg *Regs, int Cnt)
   int z;
 
   for (z = 0; z < Cnt; z++)
-    if (!strcasecmp(Asc, Regs[z].Name))
+    if (!as_strcasecmp(Asc, Regs[z].Name))
       break;
 
   if (z < Cnt) *Code = Regs[z].Code;
@@ -187,14 +139,10 @@ static void DecodeDATA_7720(Word Index)
           if (OK)
           {
             if (ActPC == SegCode)
-              DAsmCode[CodeLen++] = t.Contents.Int;
+              DAsmCode[CodeLen++] = t.Contents.Int & MaxV;
             else
               WAsmCode[CodeLen++] = t.Contents.Int;
           }
-          break;
-        case TempFloat:
-          WrError(ErrNum_InvOpType);
-          OK = False;
           break;
         case TempString:
         {
@@ -221,6 +169,9 @@ static void DecodeDATA_7720(Word Index)
             CodeLen++;
           break;
         }
+        case TempFloat:
+          WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[z]);
+          /* fall-through */
         default:
           OK = False;
       }
@@ -263,7 +214,7 @@ static void DecodeALU2(Word Code)
   else if (!DecodeReg(ArgStr[2].Str, &Src, ALUSrcRegs, ALUSrcRegCnt)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
   else
   {
-    if ((strlen(ArgStr[1].Str) == 4) && (!strncasecmp(ArgStr[1].Str, "ACC", 3)))
+    if ((strlen(ArgStr[1].Str) == 4) && (!as_strncasecmp(ArgStr[1].Str, "ACC", 3)))
     {
       ch = mytoupper(ArgStr[1].Str[3]);
       if ((ch>='A') && (ch<='B'))
@@ -286,7 +237,7 @@ static void DecodeALU1(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    if ((strlen(ArgStr[1].Str) == 4) && (!strncasecmp(ArgStr[1].Str, "ACC", 3)))
+    if ((strlen(ArgStr[1].Str) == 4) && (!as_strncasecmp(ArgStr[1].Str, "ACC", 3)))
     {
       ch = mytoupper(ArgStr[1].Str[3]);
       if ((ch >= 'A') && (ch <= 'B'))
@@ -609,7 +560,6 @@ static void SwitchTo_7720(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   if (MomCPU == CPU7725)
   {

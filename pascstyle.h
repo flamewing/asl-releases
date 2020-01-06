@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
 #ifndef _PASCSTYLE_H
 #define _PASCSTYLE_H
 

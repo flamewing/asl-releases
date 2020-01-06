@@ -1,42 +1,12 @@
 /* code370.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator 370-Familie                                                 */
 /*                                                                           */
-/* Historie: 10.12.1996 Grundsteinlegung                                     */
-/*            2. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code370.c,v 1.9 2014/12/14 17:58:46 alfred Exp $                     */
-/*****************************************************************************
- * $Log: code370.c,v $
- * Revision 1.9  2014/12/14 17:58:46  alfred
- * - remove static variables in strutil.c
- *
- * Revision 1.8  2014/12/07 19:13:59  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.7  2014/11/05 17:51:13  alfred
- * - reworked to current style
- *
- * Revision 1.6  2010/04/17 13:14:20  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.5  2007/11/24 22:48:03  alfred
- * - some NetBSD changes
- *
- * Revision 1.4  2005/10/02 10:00:44  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.3  2005/09/08 17:31:03  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 11:33:00  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -48,7 +18,7 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
-#include "asmitree.h"  
+#include "asmitree.h"
 #include "intpseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
@@ -56,7 +26,7 @@
 #include "code370.h"
 
 typedef struct
-{ 
+{
   char *Name;
   Word Code;
 } FixedOrder;
@@ -75,7 +45,7 @@ enum
   ModRegRel = 8,     /* nn(Rn) */
   ModImm = 9,        /* #nn */
   ModImmBRel = 10,   /* #nnnn(B) */
-  ModImmRegRel = 11, /* #nn(Rm) */
+  ModImmRegRel = 11  /* #nn(Rm) */
 };
 
 #define MModAccA (1 << ModAccA)
@@ -118,7 +88,7 @@ static char *HasDisp(char *Asc)
       if (Lev != -1)
         p--;
     }
-    if (p < Asc) 
+    if (p < Asc)
     {
       WrXError(ErrNum_BrackErr, Asc);
       return NULL;
@@ -139,7 +109,7 @@ static void DecodeAdrRel(const tStrComp *pArg, Word Mask, Boolean AddrRel)
   AdrType = ModNone;
   AdrCnt = 0;
 
-  if (!strcasecmp(pArg->Str, "A"))
+  if (!as_strcasecmp(pArg->Str, "A"))
   {
     if (Mask & MModAccA)
       AdrType = ModAccA;
@@ -159,7 +129,7 @@ static void DecodeAdrRel(const tStrComp *pArg, Word Mask, Boolean AddrRel)
     goto chk;
   }
 
-  if (!strcasecmp(pArg->Str, "B"))
+  if (!as_strcasecmp(pArg->Str, "B"))
   {
     if (Mask & MModAccB)
       AdrType = ModAccB;
@@ -213,7 +183,7 @@ static void DecodeAdrRel(const tStrComp *pArg, Word Mask, Boolean AddrRel)
       if (OK)
       {
         *p = '(';
-        if (!strcasecmp(p, "(B)"))
+        if (!as_strcasecmp(p, "(B)"))
         {
           AdrVals[0] = Hi(HVal);
           AdrVals[1] = Lo(HVal);
@@ -234,8 +204,8 @@ static void DecodeAdrRel(const tStrComp *pArg, Word Mask, Boolean AddrRel)
               AdrCnt = 2;
               AdrType = ModImmRegRel;
             }
-          }  
-        } 
+          }
+        }
       }
     }
     goto chk;
@@ -295,7 +265,7 @@ static void DecodeAdrRel(const tStrComp *pArg, Word Mask, Boolean AddrRel)
     if (OK)
     {
       StrCompShorten (&Right, 1);
-      if (!strcasecmp(Right.Str, "B"))
+      if (!as_strcasecmp(Right.Str, "B"))
       {
         if (AddrRel)
           HVal -= EProgCounter() + 3;
@@ -304,7 +274,7 @@ static void DecodeAdrRel(const tStrComp *pArg, Word Mask, Boolean AddrRel)
         AdrCnt = 2;
         AdrType = ModBRel;
       }
-      else if (!strcasecmp(Right.Str, "SP"))
+      else if (!as_strcasecmp(Right.Str, "SP"))
       {
         if (AddrRel)
           HVal -= EProgCounter() + 3;
@@ -365,6 +335,70 @@ static void PutCode(Word Code)
   }
 }
 
+static void DissectBitValue(LargeWord Symbol, Word *pAddr, Byte *pBit)
+{
+  *pAddr = Symbol & 0xffff;
+  *pBit = (Symbol >> 16) & 7;
+}
+
+static void DissectBit_370(char *pDest, int DestSize, LargeWord Symbol)
+{
+  Word Addr;
+  Byte Bit;
+
+  DissectBitValue(Symbol, &Addr, &Bit);
+
+  if (Addr < 2)
+    as_snprintf(pDest, DestSize, "%c", HexStartCharacter + Addr);
+  else
+    as_snprintf(pDest, DestSize, "%~0.*u%s",
+                ListRadixBase, (unsigned)Addr, GetIntelSuffix(ListRadixBase));
+  as_snprcatf(pDest, DestSize, ".%c", Bit + '0');
+}
+
+static Boolean DecodeBitExpr(int Start, int Stop, LongWord *pResult)
+{
+  Boolean OK;
+
+  if (Start == Stop)
+  {
+    *pResult = EvalStrIntExpression(&ArgStr[Start], UInt19, &OK);
+    return OK;
+  }
+  else
+  {
+    Byte Bit;
+    Word Addr;
+
+    Bit = EvalStrIntExpression(&ArgStr[Start], UInt3, &OK);
+    if (!OK)
+      return OK;
+
+    if ((!as_strcasecmp(ArgStr[Stop].Str, "A")) || (!as_strcasecmp(ArgStr[Stop].Str, "B")))
+    {
+      Addr = toupper(*ArgStr[Stop].Str) - 'A';
+      OK = True;
+    }
+    else
+    {
+      FirstPassUnknown = False;
+      Addr = EvalStrIntExpression(&ArgStr[Stop], UInt16, &OK);
+      if (!OK)
+        return OK;
+      if (FirstPassUnknown)
+        Addr &= 0xff;
+      if (Addr & 0xef00) /* 00h...0ffh, 1000h...10ffh allowed */
+      {
+        WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[Stop]);
+        return False;
+      }
+    }
+
+    *pResult = (((LongWord)Bit) << 16) + Addr;
+    return True;
+  }
+}
+
 /****************************************************************************/
 
 static void DecodeFixed(Word Code)
@@ -375,36 +409,17 @@ static void DecodeFixed(Word Code)
 
 static void DecodeDBIT(Word Code)
 {
-  Boolean OK;
-  Byte Bit;
-  Word Adr;
+  LongWord Value;
 
   UNUSED(Code);
 
-  if (ChkArgCnt(2, 2))
+  if (ChkArgCnt(1, 2) && DecodeBitExpr(1, ArgCnt, &Value))
   {
-    FirstPassUnknown = False;
-    Bit = EvalStrIntExpression(&ArgStr[1], UInt3, &OK);
-    if ((OK) && (!FirstPassUnknown))
-    {
-      if ((!strcasecmp(ArgStr[2].Str, "A")) || (!strcasecmp(ArgStr[2].Str, "B")))
-      {
-        Adr = (*ArgStr[2].Str) - 'A';
-        OK = True;
-      }
-      else
-        Adr = EvalStrIntExpression(&ArgStr[2], Int16, &OK);
-      if ((OK) && (!FirstPassUnknown))
-      {
-        char Str[30];
-
-        PushLocHandle(-1);
-        EnterIntSymbol(LabPart.Str, (((LongInt)Bit) << 16) + Adr, SegNone, False);
-        HexString(Str, sizeof(Str), Adr, 0);
-        sprintf(ListLine, "=%s:%c", Str, Bit + '0');
-        PopLocHandle();
-      }
-    }
+    PushLocHandle(-1);
+    EnterIntSymbol(&LabPart, Value, SegBData, False);
+    *ListLine = '=';
+    DissectBit_370(ListLine + 1, STRINGSIZE - 1, Value);
+    PopLocHandle();
   }
 }
 
@@ -967,7 +982,7 @@ static void DecodeABReg(Word Code)
   Code &= 0xff;
 
   if (!ChkArgCnt(1 + IsDJNZ, 1 + IsDJNZ));
-  else if (!strcasecmp(ArgStr[1].Str, "ST"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "ST"))
   {
     if (IsStack)
     {
@@ -1017,49 +1032,47 @@ static void DecodeABReg(Word Code)
 static void DecodeBit(Word Code)
 {
   int Rela = Hi(Code);
+  LongWord BitExpr;
 
   Code &= 0xff;
 
-  if (ChkArgCnt(1 + Rela, 1 + Rela))
+  if (ChkArgCnt(1 + Rela, 2 + Rela)
+   && DecodeBitExpr(1, ArgCnt - Rela, &BitExpr))
   {
     Boolean OK;
-    LongInt Bit;
+    Word Addr;
+    Byte Bit;
 
-    FirstPassUnknown = False;
-    Bit = EvalStrIntExpression(&ArgStr[1], Int32, &OK);
-    if (OK)
+    DissectBitValue(BitExpr, &Addr, &Bit);
+
+    BAsmCode[1] = 1 << Bit;
+    BAsmCode[2] = Lo(Addr);
+    switch (Hi(Addr))
     {
-      if (FirstPassUnknown)
-        Bit &= 0x000710ff;
-      BAsmCode[1] = 1 << ((Bit >> 16) & 7);
-      BAsmCode[2] = Lo(Bit);
-      switch (Hi(Bit))
-      {
-        case 0:
-          BAsmCode[0] = 0x70 + Code;
-          CodeLen = 3;
-          break;
-        case 16:
-          BAsmCode[0] = 0xa0 + Code;
-          CodeLen = 3;
-          break;
-        default:
-          WrError(ErrNum_InvAddrMode);
-      }
-      if ((CodeLen != 0) && (Rela))
-      {
-        Integer AdrInt = EvalStrIntExpression(&ArgStr[2], Int16, &OK) - (EProgCounter() + CodeLen + 1);
+      case 0x00:
+        BAsmCode[0] = 0x70 + Code;
+        CodeLen = 3;
+        break;
+      case 0x10:
+        BAsmCode[0] = 0xa0 + Code;
+        CodeLen = 3;
+        break;
+      default:
+        WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[ArgCnt - 1]);
+    }
+    if ((CodeLen != 0) && Rela)
+    {
+      Integer AdrInt = EvalStrIntExpression(&ArgStr[ArgCnt], Int16, &OK) - (EProgCounter() + CodeLen + 1);
 
-        if (!OK)
-          CodeLen = 0;
-        else if ((!FirstPassUnknown) && ((AdrInt > 127) || (AdrInt < -128)))
-        {
-          WrError(ErrNum_JmpDistTooBig);
-          CodeLen = 0;
-        }
-        else
-          BAsmCode[CodeLen++] = AdrInt & 0xff;
+      if (!OK)
+        CodeLen = 0;
+      else if ((!FirstPassUnknown) && ((AdrInt > 127) || (AdrInt < -128)))
+      {
+        WrError(ErrNum_JmpDistTooBig);
+        CodeLen = 0;
       }
+      else
+        BAsmCode[CodeLen++] = AdrInt & 0xff;
     }
   }
 }
@@ -1306,7 +1319,6 @@ static void SwitchTo_370(void)
 {
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = 0x49;
@@ -1324,6 +1336,7 @@ static void SwitchTo_370(void)
   IsDef = IsDef_370;
   SwitchFrom = SwitchFrom_370;
   InternSymbol = InternSymbol_370;
+  DissectBit = DissectBit_370;
 
   InitFields();
 }

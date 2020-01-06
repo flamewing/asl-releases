@@ -56,8 +56,8 @@ CLKPCE		avrbit	CLKPR,7
 ;----------------------------------------------------------------------------
 ; EEPROM/Program Memory Access
 
-		include	"avr/eem.inc"
-		include	"avr/spm.inc"
+		include	"eem.inc"
+		include	"spm.inc"
 
 ;----------------------------------------------------------------------------
 ; JTAG
@@ -257,7 +257,7 @@ AS2		avrbit	ASSR,3		; Asynchronous Timer/Counter 2
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
-		include	"avr/wdm21.inc"
+		include	"wdm21.inc"
 WDCE		avrbit	WDTCR,4		; Change Enable
 
 ;----------------------------------------------------------------------------
@@ -336,12 +336,12 @@ UBRR1L		port	0x00		; UART1 Baud Rate Register LSB
 ;----------------------------------------------------------------------------
 ; SPI
 
-		include	"avr/spim.inc"
+		include	"spim.inc"
 
 ;----------------------------------------------------------------------------
 ; Analog Comparator
 
-		include "avr/acm.inc"
+		include "acm.inc"
 
 		restore			; re-enable listing
 

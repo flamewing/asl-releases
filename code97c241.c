@@ -1,51 +1,12 @@
 /* code97c241.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator TLCS-9000                                                   */
 /*                                                                           */
-/* Historie:                                                                 */
-/*            2. 1.1999 ChkPC umgebaut                                       */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code97c241.c,v 1.12 2016/07/01 17:43:50 alfred Exp $                  */
-/*****************************************************************************
- * $Log: code97c241.c,v $
- * Revision 1.12  2016/07/01 17:43:50  alfred
- * - allow enforcement of prefix for TLCS-9000
- *
- * Revision 1.11  2015/09/20 10:37:36  alfred
- * - silence some GCC warnings
- *
- * Revision 1.10  2014/12/07 19:14:00  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.9  2014/12/01 18:29:39  alfred
- * - replace Nil -> NULL
- *
- * Revision 1.8  2014/06/28 20:35:30  alfred
- * - rework to current style
- *
- * Revision 1.7  2010/04/17 13:14:23  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.6  2007/11/24 22:48:06  alfred
- * - some NetBSD changes
- *
- * Revision 1.5  2006/06/15 20:48:36  alfred
- * - correct function call
- *
- * Revision 1.4  2005/10/02 10:00:45  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.3  2005/09/08 17:31:04  alfred
- * - add missing include
- *
- * Revision 1.2  2004/05/29 11:33:02  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 
@@ -202,14 +163,14 @@ static Boolean DecodeReg(char *Asc, Byte *Result)
 
 static Boolean DecodeSpecReg(char *Asc, Byte *Result)
 {
-  if (!strcasecmp(Asc, "SP")) *Result = 0x8c;
-  else if (!strcasecmp(Asc, "ISP")) *Result = 0x81;
-  else if (!strcasecmp(Asc, "ESP")) *Result = 0x83;
-  else if (!strcasecmp(Asc, "PBP")) *Result = 0x05;
-  else if (!strcasecmp(Asc, "CBP")) *Result = 0x07;
-  else if (!strcasecmp(Asc, "PSW")) *Result = 0x89;
-  else if (!strcasecmp(Asc, "IMC")) *Result = 0x0b;
-  else if (!strcasecmp(Asc, "CC"))  *Result = 0x0e;
+  if (!as_strcasecmp(Asc, "SP")) *Result = 0x8c;
+  else if (!as_strcasecmp(Asc, "ISP")) *Result = 0x81;
+  else if (!as_strcasecmp(Asc, "ESP")) *Result = 0x83;
+  else if (!as_strcasecmp(Asc, "PBP")) *Result = 0x05;
+  else if (!as_strcasecmp(Asc, "CBP")) *Result = 0x07;
+  else if (!as_strcasecmp(Asc, "PSW")) *Result = 0x89;
+  else if (!as_strcasecmp(Asc, "IMC")) *Result = 0x0b;
+  else if (!as_strcasecmp(Asc, "CC"))  *Result = 0x0e;
   else return False;
   return True;
 }
@@ -394,7 +355,7 @@ static void DecodeAdr(const tStrComp *pArg, Byte PrefInd, Boolean MayImm, Boolea
 
       /* I.4.d. Sonderregister */
 
-      else if ((!strcasecmp(Arg.Str, "PC")) || (!strcasecmp(Arg.Str, "SP")))
+      else if ((!as_strcasecmp(Arg.Str, "PC")) || (!as_strcasecmp(Arg.Str, "SP")))
       {
         if ((BaseReg != FreeReg) && (IndReg == FreeReg))
         {
@@ -407,8 +368,8 @@ static void DecodeAdr(const tStrComp *pArg, Byte PrefInd, Boolean MayImm, Boolea
           WrError(ErrNum_InvAddrMode);
           return;
         }
-//#warning here
-        BaseReg = strcasecmp(Arg.Str, "SP") ? PCReg : SPReg;
+/*#warning here*/
+        BaseReg = as_strcasecmp(Arg.Str, "SP") ? PCReg : SPReg;
       }
 
       /* I.4.e. Displacement */
@@ -829,7 +790,7 @@ static Boolean DecodeCondition(const char *pAsc, Word *pCondition)
   int z;
 
   for (z = 0; z < ConditionCount; z++)
-    if (!strcasecmp(pAsc, Conditions[z]))
+    if (!as_strcasecmp(pAsc, Conditions[z]))
     {
       *pCondition = z;
       return True;
@@ -872,14 +833,14 @@ static void DecodeRMW(Word Index)
     if ((!IsIndirect(ArgStr[1].Str)) && (pOrder->Mask & 0x20))
     {
       StrCompReset(&ArgStr[2]);
-      sprintf(ArgStr[2].Str, "(%s)", ArgStr[1].Str);
+      as_snprintf(ArgStr[2].Str, STRINGSIZE, "(%s)", ArgStr[1].Str);
       pArg = &ArgStr[2];
     }
     DecodeAdr(pArg, 0, !(pOrder->Mask & 0x10), !(pOrder->Mask & 0x20));
     if (AdrOK)
     {
       if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-      else if (!(pOrder->Mask & (1 << OpSize))) WrError(ErrNum_InvOpsize);
+      else if (!(pOrder->Mask & (1 << OpSize))) WrError(ErrNum_InvOpSize);
       else
       {
         WAsmCode[0] = (((Word)OpSize + 1) << 14) + (((Word)pOrder->Code) << 8) + AdrMode;
@@ -1119,7 +1080,7 @@ static void DecodeTrinom(Word Code)
   {
     if (Code >= 2)
       OpSize--;
-    if (OpSize < 0) WrError(ErrNum_InvOpsize);
+    if (OpSize < 0) WrError(ErrNum_InvOpSize);
     else
     {
       DecodeAdr(&ArgStr[3], 0, True, True);
@@ -1157,7 +1118,7 @@ static void DecodeRLM_RRM(Word Code)
 
   if (!ChkArgCnt(3, 3));
   else if (!DecodeReg(ArgStr[2].Str, &Reg)) WrError(ErrNum_InvAddrMode);
-  else if ((Reg >> 6) != 1) WrError(ErrNum_InvOpsize);
+  else if ((Reg >> 6) != 1) WrError(ErrNum_InvOpSize);
   else
   {
     Reg &= 0x3f;
@@ -1407,7 +1368,7 @@ static void DecodeBField(Word Code)
              *pArg2 = (Code == 2) ? &ArgStr[1] : &ArgStr[2];
 
     if (!DecodeReg(pArg1->Str, &Reg)) WrError(ErrNum_InvAddrMode);
-    else if ((Reg >> 6) != 1) WrError(ErrNum_InvOpsize);
+    else if ((Reg >> 6) != 1) WrError(ErrNum_InvOpSize);
     else
     {
       Reg &= 0x3f;
@@ -1548,7 +1509,7 @@ static void DecodeGAHalf(Word Code)
     DecodeAdr(&ArgStr[1], 1, False, True);
     if (AdrOK)
     {
-      if (OpSize == 0) WrError(ErrNum_InvOpsize);
+      if (OpSize == 0) WrError(ErrNum_InvOpSize);
       else
       {
         if (OpSize != -1)
@@ -1557,7 +1518,7 @@ static void DecodeGAHalf(Word Code)
         DecodeAdr(&ArgStr[2], 0, True, True);
         if (AdrOK)
         {
-          if (OpSize == 2) WrError(ErrNum_InvOpsize);
+          if (OpSize == 2) WrError(ErrNum_InvOpSize);
           else if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
           else
           {
@@ -1794,7 +1755,7 @@ static void DecodeCHK_CHKS(Word IsSigned)
     DecodeAdr(&ArgStr[2], 1, False, True);
     if (AdrOK)
     {
-      if ((OpSize != 1) && (OpSize != 2)) WrError(ErrNum_InvOpsize);
+      if ((OpSize != 1) && (OpSize != 2)) WrError(ErrNum_InvOpSize);
       else if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
       else
       {
@@ -1861,7 +1822,7 @@ static void DecodeString(Word Code)
 
   if (!ChkArgCnt(3, 3));
   else if (!DecodeReg(ArgStr[3].Str, &Reg)) WrError(ErrNum_InvAddrMode);
-  else if ((Reg >> 6) != 1) WrError(ErrNum_InvOpsize);
+  else if ((Reg >> 6) != 1) WrError(ErrNum_InvOpSize);
   else
   {
     Reg &= 0x3f;
@@ -2075,7 +2036,7 @@ static void DecodeDJNZ(Word Code)
     DecodeAdr(&ArgStr[1], 0, False, True);
     if (AdrOK)
     {
-      if ((OpSize != 1) && (OpSize != 2)) WrError(ErrNum_InvOpsize);
+      if ((OpSize != 1) && (OpSize != 2)) WrError(ErrNum_InvOpSize);
       else
       {
         LongInt AdrInt;
@@ -2113,7 +2074,7 @@ static void DecodeDJNZC(Word Code)
       DecodeAdr(&ArgStr[1], 0, False, True);
       if (AdrOK)
       {
-        if ((OpSize != 1) && (OpSize != 2)) WrError(ErrNum_InvOpsize);
+        if ((OpSize != 1) && (OpSize != 2)) WrError(ErrNum_InvOpSize);
         else
         {
           Boolean OK, ForcePrefix = False;
@@ -2196,7 +2157,7 @@ static void DecodeLDA(Word Code)
       DecodeAdr(&ArgStr[1], 1, False, True);
       if (AdrOK)
       {
-        if ((OpSize != 1) && (OpSize != 2)) WrError(ErrNum_InvOpsize);
+        if ((OpSize != 1) && (OpSize != 2)) WrError(ErrNum_InvOpSize);
         else
         {
           WAsmCode[0] += ((Word)OpSize) << 14;
@@ -2491,7 +2452,6 @@ static void SwitchTo_97C241(void)
 {
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = 0x56;

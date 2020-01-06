@@ -1,42 +1,12 @@
 /* p2bin.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Umwandlung von AS-Codefiles in Binaerfiles                                */
 /*                                                                           */
-/* Historie:  3. 6.1996 Grundsteinlegung                                     */
-/*           30. 5.1999 0x statt $ erlaubt                                   */
-/*            9. 1.2000 plattformabhaengige Formatstrings benutzen           */
-/*           24. 3.2000 added symbolic string for byte message               */
-/*            4. 8.2000 renamed ParProcessed to ParUnprocessed               */
-/*           14. 1.2001 silenced warnings about unused parameters            */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: p2bin.c,v 1.10 2014/12/05 11:58:16 alfred Exp $                      */
-/*****************************************************************************
- * $Log: p2bin.c,v $
- * Revision 1.10  2014/12/05 11:58:16  alfred
- * - collapse STDC queries into one file
- *
- * Revision 1.9  2014/12/04 14:29:41  alfred
- * - rework to current style
- *
- * Revision 1.8  2014/05/29 10:59:05  alfred
- * - some const cleanups
- *
- * Revision 1.7  2010/02/27 13:09:07  alfred
- * - assure file pointer is set correctly after fflush()
- *
- * Revision 1.6  2009/04/13 07:55:57  alfred
- * - silence Borland C++ warnings
- *
- * Revision 1.5  2007/11/24 22:48:08  alfred
- * - some NetBSD changes
- *
- * Revision 1.4  2006/12/09 18:27:30  alfred
- * - add warning about empty output
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -46,7 +16,6 @@
 #include "endian.h"
 #include "bpemu.h"
 #include "strutil.h"
-#include "hex.h"
 #include "nls.h"
 #include "nlmessages.h"
 #include "p2bin.rsc"
@@ -187,7 +156,7 @@ static void CloseTarget(void)
       for (z = 0; z < Trans; Sum += Buffer[z++]);
     }
     errno = 0;
-    printf("%s%s\n", getmessage(Num_InfoMessChecksum), HexLong(Sum));
+    printf("%s%08lX\n", getmessage(Num_InfoMessChecksum), LoDWord(Sum));
     Buffer[0] = 0x100 - (Sum & 0xff);
 
     /* Some systems require fflush() between read & write operations.  And
@@ -307,7 +276,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
             LongWord Addr;
 
             ResLen = 0;
-            for (Addr = 0; Addr < (LongInt)TransLen; Addr++)
+            for (Addr = 0; Addr < (LongWord)TransLen; Addr++)
               if (((ErgStart * Gran + Addr) & ANDMask) == ANDEq)
                 Buffer[ResLen++] = Buffer[Addr];
           }
@@ -353,11 +322,11 @@ static void ProcessGroup(char *GroupName_O, ProcessProc Processor)
   String Ext, GroupName;
 
   CurrProcessor = Processor;
-  strmaxcpy(GroupName, GroupName_O, 255);
-  strmaxcpy(Ext, GroupName, 255);
+  strmaxcpy(GroupName, GroupName_O, STRINGSIZE);
+  strmaxcpy(Ext, GroupName, STRINGSIZE);
   if (!RemoveOffset(GroupName, &CurrOffset))
     ParamError(False, Ext);
-  AddSuffix(GroupName, getmessage(Num_Suffix));
+  AddSuffix(GroupName, STRINGSIZE, getmessage(Num_Suffix));
 
   if (!DirScan(GroupName, Callback))
     fprintf(stderr, "%s%s%s\n", getmessage(Num_ErrMsgNullMaskA), GroupName, getmessage(Num_ErrMsgNullMaskB));
@@ -493,7 +462,7 @@ static CMDResult CMD_ByteMode(Boolean Negate, const char *pArg)
   {
     String Arg;
 
-    strmaxcpy(Arg, pArg, 255);
+    strmaxcpy(Arg, pArg, STRINGSIZE);
     NLS_UpString(Arg);
     ANDEq = 0xff;
     for (z = 0; z < ByteModeCnt; z++)
@@ -529,6 +498,7 @@ static CMDResult CMD_StartHeader(Boolean Negate, const char *Arg)
     {
       case 'B':
         Sgn = -1;
+        /* fall-through */
       case 'L':
         Arg++;
     }
@@ -609,14 +579,13 @@ int main(int argc, char **argv)
   endian_init();
   strutil_init();
   bpemu_init();
-  hex_init();
   nlmessages_init("p2bin.msg", *argv, MsgId1, MsgId2);
   ioerrs_init(*argv);
   chunks_init();
   cmdarg_init(*argv);
   toolutils_init(*argv);
 
-  sprintf(Ver, "P2BIN/C V%s", Version);
+  as_snprintf(Ver, sizeof(Ver), "P2BIN/C V%s", Version);
   WrCopyRight(Ver);
 
   InitChunk(&UsedList);
@@ -660,16 +629,16 @@ int main(int argc, char **argv)
   z = ParamCount;
   while ((z > 0) && (!ParUnprocessed[z]))
     z--;
-  strmaxcpy(TargName, ParamStr[z], 255);
+  strmaxcpy(TargName, ParamStr[z], STRINGSIZE);
   if (!RemoveOffset(TargName, &Dummy))
     ParamError(False, ParamStr[z]);
   ParUnprocessed[z] = False;
   if (ProcessedEmpty(ParUnprocessed))
   {
-    strmaxcpy(SrcName, ParamStr[z], 255);
+    strmaxcpy(SrcName, ParamStr[z], STRINGSIZE);
     DelSuffix(TargName);
   }
-  AddSuffix(TargName, BinSuffix);
+  AddSuffix(TargName, STRINGSIZE, BinSuffix);
 
   MaxGran = 1;
   if ((StartAuto) || (StopAuto))
@@ -691,8 +660,8 @@ int main(int argc, char **argv)
       ChkIO(OutName);
       exit(1);
     }
-    printf("%s: 0x%s-", getmessage(Num_InfoMessDeducedRange), HexLong(StartAdr));
-    printf("0x%s\n", HexLong(StopAdr));
+    printf("%s: 0x%08lX-", getmessage(Num_InfoMessDeducedRange), LoDWord(StartAdr));
+    printf("0x%08lX\n", LoDWord(StopAdr));
   }
 
   OpenTarget();

@@ -119,14 +119,14 @@ FOC1A		avrbit	SFIOR,2		; Timer/Counter 1 Force Output Compare Match A
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
-		include	"avr/wdm21.inc"
+		include	"wdm21.inc"
 
 WDTOE		avrbit	WDTCR,4		; Enable Time-Out Interrupt
 
 ;----------------------------------------------------------------------------
 ; Analog Comparator
 
-		include	"avr/ac90.inc"
+		include	"ac90.inc"
 
 ACBG		avrbit	ACSR,6		; Enable Band Gap
 

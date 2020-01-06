@@ -86,12 +86,12 @@ DWDR		port	0x31		; debugWire Data Register
 ;----------------------------------------------------------------------------
 ; EEPROM/Program Memory Access
 
-		include	"avr/eem2.inc"
+		include	"eem2.inc"
 
 EEPM0		avrbit	EECR,4		; EEPROM Programming Mode
 EEPM1		avrbit	EECR,5
 
-		include	"avr/spmcsr37.inc"
+		include	"spmcsr37.inc"
 		
 SIGRD		avrbit	SPMCSR,5	; Signature Read
 
@@ -273,7 +273,7 @@ TSM		avrbit	GTCCR,7		; Timer/Counter Synchronization Mode
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
-		include	"avr/wdme.inc"
+		include	"wdme.inc"
 		
 WDTCKD		sfr	0x62		; Watchdog Timer Clock Divider Register
 WCLKD0		avrbit	WDTCKD,0	; Watchdog Timer Clock Divider
@@ -328,12 +328,12 @@ UBRR1L		sfr	0xcd		; Baud Rate Register Low
 ;----------------------------------------------------------------------------
 ; SPI
 
-		include "avr/spim2c.inc"
+		include "spim2c.inc"
 
 ;----------------------------------------------------------------------------
 ; Analog Comparator
 
-		include "avr/acm30.inc"
+		include "acm30.inc"
 
 AIN6D		avrbit	DIDR1,6		; Disable Digital Input on AIN6
 AIN5D		avrbit	DIDR1,5		; Disable Digital Input on AIN5
@@ -349,7 +349,7 @@ CMUX2		avrbit	ACMUX,2
 ;----------------------------------------------------------------------------
 ; USB
 
-		include	"avr/usbm.inc"
+		include	"usbm.inc"
 
 UPOE		sfr	0xfb		; USB Software Output Enable Register
 DMI		avrbit	UPOE,0		; D- Input Value

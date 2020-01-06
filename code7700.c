@@ -1,54 +1,12 @@
 /* code7700.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* AS-Codegeneratormodul MELPS-7700                                          */
 /*                                                                           */
-/* Historie:  5.11.1996 Grundsteinlegung                                     */
-/*            2. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambigious else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code7700.c,v 1.13 2014/11/16 13:15:07 alfred Exp $                    */
-/*****************************************************************************
- * $Log: code7700.c,v $
- * Revision 1.13  2014/11/16 13:15:07  alfred
- * - remove some superfluous semicolons
- *
- * Revision 1.12  2014/11/05 15:47:15  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.11  2014/09/14 09:36:59  alfred
- * - add missing compiler warning silencing
- *
- * Revision 1.10  2014/08/31 13:14:12  alfred
- * - do not use snprintf
- *
- * Revision 1.9  2014/08/31 13:00:46  alfred
- * - rework to current style
- *
- * Revision 1.8  2014/08/11 21:11:54  alfred
- * - various 65816 fixes
- *
- * Revision 1.7  2014/03/08 21:06:36  alfred
- * - rework ASSUME framework
- *
- * Revision 1.6  2010/08/27 14:52:42  alfred
- * - some more overlapping strcpy() cleanups
- *
- * Revision 1.5  2010/04/17 13:14:22  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.4  2005/09/08 17:31:04  alfred
- * - add missing include
- *
- * Revision 1.3  2004/05/29 12:04:47  alfred
- * - relocated DecodeMot(16)Pseudo into separate module
- *
- * Revision 1.2  2004/05/29 11:33:01  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -102,7 +60,7 @@ enum
   ModIndY16 = 17,
   ModIndY24 = 18,
   ModIdxS8 =  19,
-  ModIndS8 =  20,
+  ModIndS8 =  20
 };
 
 #define MModImm      (1l << ModImm)
@@ -319,7 +277,7 @@ static void DecodeAdr(Integer Start, LongWord Mask)
 
       /* I.2.ii indirekt mit Vorindizierung */
 
-      else if (!strcasecmp(HArg[1].Str, "X"))
+      else if (!as_strcasecmp(HArg[1].Str, "X"))
       {
         CodeDisp(&HArg[0], ModIndX8, Mask);
         goto chk;
@@ -349,7 +307,7 @@ static void DecodeAdr(Integer Start, LongWord Mask)
 
     if (IsIndirect(ArgStr[Start].Str))
     {
-      if (strcasecmp(ArgStr[Start + 1].Str, "Y")) WrError(ErrNum_InvAddrMode);
+      if (as_strcasecmp(ArgStr[Start + 1].Str, "Y")) WrError(ErrNum_InvAddrMode);
       else
       {
         HCnt = SplitArg(&ArgStr[Start], HArg);
@@ -364,7 +322,7 @@ static void DecodeAdr(Integer Start, LongWord Mask)
 
         /* II.1.ii. (d,S),Y */
 
-        else if (!strcasecmp(HArg[1].Str, "S"))
+        else if (!as_strcasecmp(HArg[1].Str, "S"))
         {
           AdrVals[0] = EvalStrIntExpression(&HArg[0], Int8, &OK);
           if (OK)
@@ -386,7 +344,7 @@ static void DecodeAdr(Integer Start, LongWord Mask)
     {
       /* II.2.i. d,X */
 
-      if (!strcasecmp(ArgStr[Start + 1].Str, "X"))
+      if (!as_strcasecmp(ArgStr[Start + 1].Str, "X"))
       {
         CodeDisp(&ArgStr[Start], ModIdxX8, Mask);
         goto chk;
@@ -394,7 +352,7 @@ static void DecodeAdr(Integer Start, LongWord Mask)
 
       /* II.2.ii. d,Y */
 
-      else if (!strcasecmp(ArgStr[Start + 1].Str, "Y"))
+      else if (!as_strcasecmp(ArgStr[Start + 1].Str, "Y"))
       {
         CodeDisp(&ArgStr[Start], ModIdxY8, Mask);
         goto chk;
@@ -402,7 +360,7 @@ static void DecodeAdr(Integer Start, LongWord Mask)
 
       /* II.2.iii. d,S */
 
-      else if (!strcasecmp(ArgStr[Start + 1].Str, "S"))
+      else if (!as_strcasecmp(ArgStr[Start + 1].Str, "S"))
       {
         AdrVals[0] = EvalStrIntExpression(&ArgStr[Start], Int8, &OK);
         if (OK)
@@ -536,9 +494,9 @@ static void DecodeAcc(Word Code)
   if (ChkArgCnt(1, 3))
   {
     WordSize = (Reg_M == 0);
-    if (!strcasecmp(ArgStr[1].Str, "A"))
+    if (!as_strcasecmp(ArgStr[1].Str, "A"))
       Start = 2;
-    else if (!strcasecmp(ArgStr[1].Str, "B"))
+    else if (!as_strcasecmp(ArgStr[1].Str, "B"))
     {
       Start = 2;
       BAsmCode[0] = PrefAccB;
@@ -614,7 +572,7 @@ static void DecodeEXTS_EXTZ(Word Code)
   if (ArgCnt == 0)
   {
     IncArgCnt();
-    strmaxcpy(ArgStr[ArgCnt].Str, "A", 255);
+    strmaxcpy(ArgStr[ArgCnt].Str, "A", STRINGSIZE);
   }
 
   if (ChkArgCnt(1, 1)
@@ -622,9 +580,9 @@ static void DecodeEXTS_EXTZ(Word Code)
   {
     BAsmCode[1] = Code;
     BAsmCode[0] = 0;
-    if (!strcasecmp(ArgStr[1].Str, "A"))
+    if (!as_strcasecmp(ArgStr[1].Str, "A"))
       BAsmCode[0] = 0x89;
-    else if (!strcasecmp(ArgStr[1].Str, "B"))
+    else if (!as_strcasecmp(ArgStr[1].Str, "B"))
       BAsmCode[0] = 0x42;
     else WrError(ErrNum_InvAddrMode);
     if (BAsmCode[0] != 0)
@@ -634,12 +592,12 @@ static void DecodeEXTS_EXTZ(Word Code)
 
 static void DecodeRMW(Word Code)
 {
-  if ((ArgCnt == 0) || ((ArgCnt == 1) && (!strcasecmp(ArgStr[1].Str, "A"))))
+  if ((ArgCnt == 0) || ((ArgCnt == 1) && (!as_strcasecmp(ArgStr[1].Str, "A"))))
   {
     CodeLen = 1;
     BAsmCode[0] = Hi(Code);
   }
-  else if ((ArgCnt == 1) && (!strcasecmp(ArgStr[1].Str, "B")))
+  else if ((ArgCnt == 1) && (!as_strcasecmp(ArgStr[1].Str, "B")))
   {
     CodeLen = 2;
     BAsmCode[0] = PrefAccB;
@@ -679,13 +637,13 @@ static void DecodeASR(Word Code)
   UNUSED(Code);
 
   if (!ChkMinCPU(CPUM7750));
-  else if ((ArgCnt == 0) || ((ArgCnt == 1) && (!strcasecmp(ArgStr[1].Str, "A"))))
+  else if ((ArgCnt == 0) || ((ArgCnt == 1) && (!as_strcasecmp(ArgStr[1].Str, "A"))))
   {
     BAsmCode[0] = 0x89;
     BAsmCode[1] = 0x08;
     CodeLen = 2;
   }
-  else if ((ArgCnt == 1) && (!strcasecmp(ArgStr[1].Str, "B")))
+  else if ((ArgCnt == 1) && (!as_strcasecmp(ArgStr[1].Str, "B")))
   {
     BAsmCode[0] = 0x42;
     BAsmCode[1] = 0x08;
@@ -1164,7 +1122,7 @@ static void DecodePSH_PUL(Word Code)
       else
       {
         Start = 0;
-        while ((Start < PushRegCnt) && (strcasecmp(PushRegNames[Start], ArgStr[z].Str)))
+        while ((Start < PushRegCnt) && (as_strcasecmp(PushRegNames[Start], ArgStr[z].Str)))
           Start++;
         OK = (Start < PushRegCnt);
         if (OK)
@@ -1277,7 +1235,7 @@ static void AddAcc(char *NName, Byte NCode)
   char Tmp[30];
 
   AddInstTable(InstTable, NName, NCode, DecodeAcc);
-  sprintf(Tmp, "%sL", NName);
+  as_snprintf(Tmp, sizeof(Tmp), "%sL", NName);
   AddInstTable(InstTable, Tmp, 0x0100 | NCode, DecodeAcc);
 }
 
@@ -1314,7 +1272,7 @@ static void AddMulDiv(char *NName, Word NCode, Byte NAllowed)
     char Tmp[30];
 
     AddInstTable(InstTable, NName, NCode, DecodeMulDiv);
-    sprintf(Tmp, "%sL", NName);
+    as_snprintf(Tmp, sizeof(Tmp), "%sL", NName);
     AddInstTable(InstTable, Tmp, 0x0100 | NCode, DecodeMulDiv);
   }
 }
@@ -1489,7 +1447,7 @@ static void SwitchFrom_7700(void)
 
 static void SwitchTo_7700(void)
 {
-  TurnWords = False; ConstMode = ConstModeMoto; SetIsOccupied = False;
+  TurnWords = False; ConstMode = ConstModeMoto;
 
   PCSymbol = "*"; HeaderID = 0x19; NOPCode = 0xea;
   DivideChars = ","; HasAttrs = False;

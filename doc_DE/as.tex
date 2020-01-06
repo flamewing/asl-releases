@@ -46,7 +46,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand Januar 2019}
+{\large Stand Juli 2019}
 \end{raggedright}
 
 \clearpage
@@ -163,14 +163,14 @@ Zu erreichen bin ich folgenderma"sen:
 \end{itemize}
 Wer mir pers"onlich Fragen stellen will (und in der N"ahe von Aachen
 wohnt), kann dies mit hoher Wahrscheinlichkeit donnerstags von 20.00
-bis 21.00 Uhr im Computerclub an der RWTH Aachen (Eilfschornsteinstra"se 16,
-Keller Philosophengeb"aude R"uckseite).
+bis 21.00 Uhr im Computerclub an der RWTH Aachen (Elisabethstra"se 16,
+erster Stock, rechter Flur).
 \par
 Von Telefonanrufen bitte ich abzusehen.  Erstens, weil sich die
 komplizierten Zusammenh"ange am Telefon nur "au"serst schwer er"orten
 lassen, und zweitens ist die Telekom schon reich genug...
 \par
-Die neueste Version von AS (DOS, DPMI, OS/2, C) findet sich auf folgendem
+Die neueste Version von AS (DPMI, Win32, C) findet sich auf folgendem
 Server:
 \begin{verbatim}
  http://john.ccac.rwth-aachen.de:8000/as
@@ -212,7 +212,8 @@ folgende Prozessorfamilien implementiert:
 \item{Hitachi H8/500}
 \item{Hitachi SH7000/7600/7700}
 \item{Hitachi HMCS400}
-\item{Rockwell 6502, 65(S)C02, WDC W65C02S, Rockwell 65C19 und
+\item{Hitachi H16}
+\item{Rockwell 6502, 65(S)C02, Commodore 65CE02, WDC W65C02S, Rockwell 65C19 und
       Hudson HuC6280}
 \item{CMD 65816}
 \item{Mitsubishi MELPS-740}
@@ -248,7 +249,7 @@ folgende Prozessorfamilien implementiert:
 \item{Microchip PIC17C42}
 \item{Parallax SX20/SX28}
 \item{SGS-Thomson ST6}
-\item{SGS-Thomson ST7}
+\item{SGS-Thomson ST7/STM8}
 \item{SGS-Thomson ST9}
 \item{SGS-Thomson 6804}
 \item{Texas Instruments TMS32010/32015}
@@ -282,6 +283,7 @@ folgende Prozessorfamilien implementiert:
 \item{Fujitsu F$^2$MC16L}
 \item{OKI OLMS-40}
 \item{OKI OLMS-50}
+\item{Panafacom MN1610/MN1613}
 \item{Symbios Logic SYM53C8xx (ja, die kann man programmieren!)}
 \item{Intersil CDP1802/1804/1805(A)}
 \item{XMOS XS1}
@@ -292,10 +294,6 @@ in Arbeit / Planung / "Uberlegung :
 \item{Analog Devices ADSP21xx}
 \item{SGS-Thomson ST20}
 \item{Texas Instruments TMS320C8x}
-\end{itemize}
-Noch gesucht werden Unterlagen f"ur:
-\begin{itemize}
-\item{die ganze Palette der OKI-Controller}
 \end{itemize}
 ungeliebt, aber {\it doch} vorhanden :
 \begin{itemize}
@@ -400,28 +398,6 @@ ausgeliefert, d.h. man mu"s sich mittels eines Compilers selbst die
 Binaries erzeugen.  Dies ist aber (f"ur mich) der eindeutig einfachere
 Weg, als ein Dutzend Binaries f"ur Maschinen vorzukompilieren, auf die ich
 auch nicht immer Zugriff habe...
-
-Wer die bisherige \marginpar{{\em ???}} Aufz"ahlung liest, wird
-feststellen, da"s das meistverkaufte Betriebssystem der Welt aus Redmont
-in dieser Aufz"ahlung fehlt.  Wer mich pers"onlich kennt, wei"s, da"s ich
-Windows (egal, ob 3.X, 95 oder NT) {\em nicht} f"ur das Ei des Kolumbus
-halte.  Kurzgesagt, ich bin ein ,,Windows-Hasser''.  Auch wenn eine gro"se
-Zahl an Leuten diese Einstellung f"ur "uberholt bis l"acherlich erachten
-und mir jetzt vorhalten, ich w"urde hier einem gro"sen Teil potentieller
-Anwender AS vorenthalten, so werden sie sich doch damit abfinden m"ussen:
-Ich treibe die Entwicklung an AS prim"ar weiter, weil sie mir {\em Spa"s}
-macht; AS ist ein nicht-kommerzielles Projekt und ich nehme mir deswegen
-die Freiheit, nicht auf potentielle Marktanteile zu schielen.  Ich suche
-mir die Plattformen aus, auf denen das Programmieren {\em mir} Spa"s
-macht, und Programmieren unter Windows macht mir definitiv keinen Spa"s!
-Ich habe "ubrigens durchaus schon einmal Windows-Programme schreiben
-m"ussen, es ist also nicht so, da"s ich hier ohne Erfahrung etwas
-daherreden w"urde.  Sofern irgendjemand AS in diese Richtung portieren
-will, werde ich mich ihm nicht in den Weg stellen, "uber die Sourcen
-hinaus hat er aber nicht viel Hilfe von mir zu erwarten (und mu"s sich
-selber mit den Anfragen der Qualit"at herumschlagen, warum AS denn jetzt
-nicht mehr l"auft, nachdem man den Brummi-CAD 18.53-Eintrag in der
-Registry von Gro"s- in Kleinbuchstaben ge"andert hat...).
 
 %%===========================================================================
 
@@ -595,10 +571,14 @@ REGCOLD.INC       & Registeradressen ColdFire \\
 REGCOP8.INC       & Registeradressen COP8 \\
 REGF8.INC         & Register- \& Speicheradressen F8 \\
 REGGP32.INC       & Registeradressen 68HC908GP32 \\
+REGH16.INC        & Registeradressen H16 \\
 REGHC12.INC       & Registeradressen 68HC12 \\
 REGM16C.INC       & Registeradressen Mitsubishi M16C \\
 REGMSP.INC        & Registeradressen TI MSP430 \\
 REGS12Z.INC       & Register- \& Bitadressen S12Z-Familie \\
+REGST6.INC        & Register- \& Makrodefinitionen ST6 (aktuell)\\
+REGST7.INC        & Register- \& Makrodefinitionen ST7 \\
+REGSTM8.INC       & Register- \& Makrodefinitionen STM8 \\
 REGST9.INC        & Register- \& Makrodefinitionen ST9 \\
 REGZ380.INC       & Registeradressen Z380 \\
 STDDEF04.INC      & Registeradressen 6804 \\
@@ -617,13 +597,8 @@ STDDEF56K.INC     & Registeradressen DSP56000 \\
 STDDEF5X.INC      & Peripherieadressen TMS320C5x \\
 STDDEF60.INC      & Befehlsmakros \& Registeradressen \\
                   & PowerPC \\
-STDDEF62.INC      & Registeradressen \& Makros ST6 \\
+STDDEF62.INC      & Registeradressen \& Makros ST6 (veraltet)\\
 STDDEF75.INC      & Registeradressen 75K0 \\
-STDDEF87.INC      & Register- \& Speicheradressen TLCS-870 \\
-STDDEF90.INC      & Register- \& Speicheradressen TLCS-90 \\
-STDDEF96.INC      & Register- \& Speicheradressen TLCS-900 \\
-STDDEFXA.INC      & SFR-\& Bitadressen Philips XA \\
-STDDEFZ8.INC      & Registeradressen Z8-Familie \\
 \hline
 \end{tabular}\end{center}
 \caption{Standardumfang einer Bin"ardistribution - Teil 2
@@ -638,15 +613,29 @@ Datei             & Funktion \\
 \hline
 {\bf Verzeichnis INCLUDE} & \\
 \hline
+STDDEF87.INC      & Register- \& Speicheradressen TLCS-870 \\
+STDDEF90.INC      & Register- \& Speicheradressen TLCS-90 \\
+STDDEF96.INC      & Register- \& Speicheradressen TLCS-900 \\
+STDDEFXA.INC      & SFR-\& Bitadressen Philips XA \\
+STDDEFZ8.INC      & Registeradressen Z8-Familie \\
 REGSX20.INC       & Register- \& Bitadressen Parallax SX20/28 \\
 AVR/\*.INC        & Register- \& Bitadressen AVR-Familie \\
                   & (nicht direkt benutzen, REGAVR.INC \\
                   & inkludieren) \\
+COLDFIRE\/*.INC   & Register- \& Bitadressen ColdFire-Familie \\
+                  & (nicht direkt benutzen, REGCOLD.INC \\
+                  & inkludieren) \\
 S12Z\/*.INC       & Register- \& Bitadressen S12Z-Familie \\
                   & (nicht direkt benutzen, REGS12Z.INC \\
                   & inkludieren) \\
-COLDFIRE\/*.INC   & Register- \& Bitadressen ColdFire-Familie \\
-                  & (nicht direkt benutzen, REGCOLD.INC \\
+ST6\/*.INC        & Register- \& Bitadressen ST6-Familie \\
+                  & (nicht direkt benutzen, REGST6.INC \\
+                  & inkludieren) \\
+ST7\/*.INC        & Register- \& Bitadressen ST7-Familie \\
+                  & (nicht direkt benutzen, REGST7.INC \\
+                  & inkludieren) \\
+STM8\/*.INC       & Register- \& Bitadressen STM8-Familie \\
+                  & (nicht direkt benutzen, REGSTM8.INC \\
                   & inkludieren) \\
 \hline
 \hline
@@ -892,6 +881,10 @@ Momentan sind folgende Schalter definiert:
 \item{\tty{OLIST}: mit einem zus"atzlichen Argument legt einen anderen
       Pfad bzw. Namen f"ur die Listdatei fest.  Falls mehrere Dateien
       assembliert werden, kann diese Option auch mehrfach gegeben werden.}
+\item{\tty{LISTRADIX}: Defaultm"a"sig erfolgen alle Zahlenausgaben im Listing
+      (Adressen, erzeugter Code, Symboltabelle) im Hexadezimalsystem.  Mit
+      diesem Schalter kann ein beliebiges anderes Zahlensystem im Bereich
+      2 bis 36 angegeben werden, z.B. '-listradix 8' f"ur oktale Ausgaben.}
 \item{\tty{o}:Bestimmt einen neuen Namen f"ur die von AS zu erzeugende
       Code-Datei.  Wird diese Option mehrfach verwendet, so werden
       die angegebenen Namen nacheinander den zu assemblierenden
@@ -2399,7 +2392,9 @@ IntZwei   EQU   2
 FloatZwei EQU   2.0
 \end{verbatim}
 Einige Prozessoren besitzen leider bereits selber einen \tty{SET}-Befehl.
-Bei diesen mu"s \tty{EVAL} anstelle von \tty{SET} verwendet werden.
+Bei diesen mu"s \tty{EVAL} anstelle von \tty{SET} verwendet werden, falls
+sich der Maschinenbefehl nicht durch die andere Anzahl der Argumente 
+erkennen l"a"st.
 \par
 Anstelle von \tty{EQU} darf auch einfach ein Gleichheitszeichen geschrieben
 werden, analog kann man anstelle von \tty{SET} bzw. \tty{EVAL}
@@ -2502,7 +2497,7 @@ erzeugt aber ein Symbol mit korrekten Attributen.
 \subsection{BIT}
 \ttindex{BIT}
 
-{\em G"ultigkeit: MCS-(2)51, XA, 80C166, 75K0, ST9, AVR, S12Z, SX20/28}
+{\em G"ultigkeit: MCS-(2)51, XA, 80C166, 75K0, ST9, AVR, S12Z, SX20/28, H16}
 
 \tty{BIT} dient dazu, ein einzelnes Bit einer Speicherstelle mit einem
 symbolischen Namen gleichzusetzen.  Da die Art und Weise, wie
@@ -2551,6 +2546,10 @@ invbit  BIT     r6.!3
 \end{verbatim}
 N"aheres zum \tty{BIT}-Befehl beim ST9 findet sich bei den
 prozessorspezifischen Hinweisen.
+
+Im Falle des H16 sind die Argumente f"ur Speicheradresse und Bitposition
+vertauscht.  Dies wurde getan, um die Syntax zur Definition von Bit identisch
+zu den Maschinenbefehlen zu machen, die einzelne Bits manipulieren.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3139,14 +3138,18 @@ Der 12X-Kern bietet eine Reihe neuer Befehle, bzw. bestehende Befehle
 wurden um neue Adressierungsarten erg"anzt.
 %%-----------
 \begin{quote}
-i) S912ZVC19F0MKH, S912ZVC19F0MLF, S912ZVCA19F0MKH,\\
-   S912ZVCA19F0MLF, S912ZVCA19F0WKH, S912ZVH128F2CLQ,\\
-   S912ZVH128F2CLL, S912ZVH64F2CLQ,  S912ZVHY64F1CLQ,\\
-   S912ZVHY32F1CLQ, S912ZVHY64F1CLL, S912ZVHY32F1CLL,\\
-   S912ZVHL64F1CLQ, S912ZVHL32F1CLQ, S912ZVHL64F1CLL,\\
-   S912ZVHL32F1CLL, S912ZVFP64F1CLQ, S912ZVFP64F1CLL,\\
-   S912ZVH128F2VLQ, S912ZVH128F2VLL, S912ZVH64F2VLQ,\\
-   S912ZVHY64F1VLQ, S912ZVHY32F1VLQ, S912ZVHY64F1VL,\\
+i) S912ZVC19F0MKH, S912ZVC19F0MLF,\\
+   S912ZVCA19F0MKH, S912ZVCA19F0MLF,\\
+   S912ZVCA19F0WKH, S912ZVH128F2CLQ,\\
+   S912ZVH128F2CLL, S912ZVH64F2CLQ,\\
+   S912ZVHY64F1CLQ, S912ZVHY32F1CLQ,\\
+   S912ZVHY64F1CLL, S912ZVHY32F1CLL,\\
+   S912ZVHL64F1CLQ, S912ZVHL32F1CLQ,\\
+   S912ZVHL64F1CLL, S912ZVHL32F1CLL,\\
+   S912ZVFP64F1CLQ, S912ZVFP64F1CLL,\\
+   S912ZVH128F2VLQ, S912ZVH128F2VLL,\\
+   S912ZVH64F2VLQ, S912ZVHY64F1VLQ,\\
+   S912ZVHY32F1VLQ, S912ZVHY64F1VL,\\
    S912ZVHY32F1VLL, S912ZVHL64F1VLQ 
 \end{quote}
 Alle Derivate beinhalten den gleichen Prozessorkern und den
@@ -3192,15 +3195,22 @@ Diese drei Varianten der HMCS400-Serie unterscheiden sich in der
 Gr"o"se des internen ROM- und RAM-Speichers.
 %%-----------
 \begin{quote}
-o) 6502 $\rightarrow$ 65(S)C02 $\rightarrow$ W65C02S / 65C19 / MELPS740
-/ HUC6280 / 6502UNDOC
+o) HD641016
+\end{quote}
+Dies ist aktuell das einzige Target mit H16-Kern.
+%%-----------
+\begin{quote}
+p) 6502 $\rightarrow$ 65(S)C02 $\rightarrow$ 65CE02 / W65C02S /
+   65C19 / MELPS740 / HUC6280 / 6502UNDOC
 \end{quote}
 Die CMOS-Version definiert einige zus"atzliche Befehle, au"serdem sind
 bei einigen Befehlen Adressierungsarten hinzugekommen, die beim 6502
 nicht m"oglich waren.  Der W65SC02 erg"anzt den
 65C02-Befehlssatz um zwei Befehle, mit denen die Low-Power-Modi
 der CPU feiner eingestellt werden k"onnen.  Dem 65SC02 fehlen die
-Bitmanipulationsbefehle des 65C02.
+Bitmanipulationsbefehle des 65C02.  Der 65CE02 erg"anzt Sprungbefehle
+mit 16-Bit-Displacement, ein Z-Register, einen 16-bittigen Stack-Pointer,
+eine Reihe neuer Befehle und eine programmierbare Base-Page.
 
 Der 65C19 ist {\em nicht} bin"ar aufw"artskompatibel zum
 originalen 6502!  Einige Adressierungsarten wurden durch andere
@@ -3228,7 +3238,7 @@ AS unterst"utzten Varianten sind im Kapitel mit den prozessorspezifischen
 Hinweisen beschrieben.
 %%-----------
 \begin{quote}
-p) MELPS7700, 65816
+q) MELPS7700, 65816
 \end{quote}
 Neben einer ,,16-Bit-Version'' des 6502-Befehlssatzes bieten diese
 Prozessoren einige Befehlserweiterungen.  Diese sind aber gr"o"serenteils
@@ -3237,11 +3247,7 @@ bzw. MELPS-740) orientieren.  Z.T.~werden auch andere Mnemonics f"ur
 gleiche Befehle verwendet.
 %%-----------
 \begin{quote}
-q) MELPS4500
-\end{quote}
-%%-----------
-\begin{quote}
-r) M16
+r) MELPS4500
 \end{quote}
 %%-----------
 \begin{quote}
@@ -3249,20 +3255,24 @@ s) M16
 \end{quote}
 %%-----------
 \begin{quote}
-t) 4004 $\rightarrow$ 4040
+t) M16
+\end{quote}
+%%-----------
+\begin{quote}
+u) 4004 $\rightarrow$ 4040
 \end{quote}
 Der 4040 besitzt gegen"uber seinem Vorg"anger ein gutes Dutzend
 zus"atzlicher Maschineninstruktionen.
 %%-----------
 \begin{quote}
-u) 4008 $\rightarrow$ 8008NEW
+v) 4008 $\rightarrow$ 8008NEW
 \end{quote}
 Intel hat 1975 die Mnemonics des umdefiniert, die zweite Variante spiegelt
 diesen neuen Befehlssatz wieder.  Eine gleichzeitige Unterst"utzung beider
 Varianten war nicht m"oglich, da teilweise "Uberschneidungen vorliegen.
 %%-----------
 \begin{quote}
-v) 8021, 8022, 8039, (MSM)80C39, 8048, (MSM)80C48, 8041, 8042, 80C382
+w) 8021, 8022, 8039, (MSM)80C39, 8048, (MSM)80C48, 8041, 8042, 80C382
 \end{quote}
 Bei den ROM-losen Versionen 8039 und 80C39 sind die Befehle verboten,
 die den BUS (Port 0) ansprechen.  Der 8021 und 8022 sind Sonderversionen
@@ -3286,7 +3296,7 @@ beschneiden.
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-w) \> 87C750 $\rightarrow$ 8051, 8052, 80C320, 80C501, 80C502, \\
+x) \> 87C750 $\rightarrow$ 8051, 8052, 80C320, 80C501, 80C502, \\
    \> 80C504, 80515, and 80517 \\
    \> $\rightarrow$ 80C390 \\
    \> $\rightarrow$ 80C251
@@ -3308,7 +3318,7 @@ Semiconductor hat den Befehlssatz und die Architektur nur so weit
 ver"andert, wie es f"ur die 16 MByte gro"sen Adre"sr"aume notwendig war.
 %%-----------
 \begin{quote}
-x) 8096 $\rightarrow$ 80196 $\rightarrow$ 80196N $\rightarrow$ 80296
+y) 8096 $\rightarrow$ 80196 $\rightarrow$ 80196N $\rightarrow$ 80296
 \end{quote}
 Neben einem anderen Satz von SFRs (die "ubrigens von Unterversion zu
 Unterversion stark differieren) kennt der 80196 eine Reihe von
@@ -3322,7 +3332,7 @@ Peripheral Transaction Server} (PTS) und verliert damit wieder zwei
 Maschinenbefehle.
 %%-----------
 \begin{quote}
-y) 8080 $\rightarrow$ 8085 $\rightarrow$ 8085UNDOC
+z) 8080 $\rightarrow$ 8085 $\rightarrow$ 8085UNDOC
 \end{quote}
 Der 8085 kennt zus"atzlich die Befehle \tty{RIM} und \tty{SIM} zum Steuern der
 Interruptmaske und der zwei I/O-Pins.  Der Typ {\tt 8085UNDOC} schaltet
@@ -3330,31 +3340,31 @@ zus"atzliche, nicht von Intel dokumentierte Befehle ein.  Diese Befehle
 sind in Abschnitt \ref{8085Spec} dokumentiert.
 %%-----------
 \begin{quote}
-z) 8086 $\rightarrow$ 80186 $\rightarrow$ V30 $\rightarrow$ V35
+aa) 8086 $\rightarrow$ 80186 $\rightarrow$ V30 $\rightarrow$ V35
 \end{quote}
 Hier kommen wieder nur neue Befehle dazu.  Die entsprechenden 8-Bitter sind
 wegen ihrer Befehlskompatibilit"at nicht aufgef"uhrt, f"ur ein 8088-System
 ist also z.B. 8086 anzugeben.
 %%-----------
 \begin{quote}
-aa) 80960
+ab) 80960
 \end{quote}
 %%-----------
 \begin{quote}
-ab) 8X300 $\rightarrow$ 8X305
+ac) 8X300 $\rightarrow$ 8X305
 \end{quote}
 Der 8X305 besitzt eine Reihe zus"atzlicher Arbeitsregister, die dem
 8X300 fehlen und kann mit diesen auch zus"atzliche Operationen ausf"uhren,
 wie das direkte Schreiben von 8-Bit-Werten auf Peripherieadressen.
 %%-----------
 \begin{quote}
-ac) XAG1, XAG2, XAG3
+ad) XAG1, XAG2, XAG3
 \end{quote}
 Diese Prozessoren unterscheiden sich nur in der Gr"o"se des eingebauten
 ROMs, die in \tty{STDDEFXA.INC} definiert ist.
 %%-----------
 \begin{quote}
-ad) AT90S1200, AT90S2313, AT90S2323, AT90S233, AT90S2343,\\
+ae) AT90S1200, AT90S2313, AT90S2323, AT90S233, AT90S2343,\\
     AT90S4414, AT90S4433, AT90S4434, AT90S8515,\\
     AT90C8534, AT90S8535, ATTINY4, ATTINY5, ATTINY9,\\
     ATTINY10, ATTINY11, ATTINY12, ATTINY13, ATTINY13A,\\
@@ -3387,7 +3397,7 @@ Vergleich zu den AT90...-Vorg"angern auch neue Maschinenbefehle
 mit, den ATtinys fehlen wiederum die Multiplikationsbefehle.
 %%-----------
 \begin{quote}
-ae) AM29245 $\rightarrow$ AM29243 $\rightarrow$ AM29240 $\rightarrow$ AM29000
+af) AM29245 $\rightarrow$ AM29243 $\rightarrow$ AM29240 $\rightarrow$ AM29000
 \end{quote}
 Je weiter man sich in der Liste nach rechts bewegt, desto weniger
 Befehle m"ussen in Software emuliert werden.  W"ahrend z.B. der 29245
@@ -3396,7 +3406,7 @@ beiden Vertretern in der Mitte nur die Gleitkommabefehle.  Der 29000
 dient dabei als ,,generischer'' Typ, der alle Befehle in Hardware versteht.
 %%-----------
 \begin{quote}
-af) 80C166 $\longrightarrow$ 80C167,80C165,80C163
+ag) 80C166 $\longrightarrow$ 80C167,80C165,80C163
 \end{quote}
 80C167 und 80C165/163 haben anstelle 256 Kbyte max. 16 Mbyte Adre"sraum,
 au"serdem kennen sie einige zus"atzliche Befehle f"ur erweiterte
@@ -3405,7 +3415,7 @@ unterscheiden sich diese Prozessoren der ,,zweiten Generation'' nur in der
 eingebauten Peripherie.
 %%-----------
 \begin{quote}
-ag) Z80 $\rightarrow$ Z80UNDOC $\rightarrow$ Z180 $\rightarrow$ Z380
+ah) Z80 $\rightarrow$ Z80UNDOC $\rightarrow$ Z180 $\rightarrow$ Z380
 \end{quote}
 W"ahrend f"ur den Z180 nur die zus"atzlichen Befehle definiert sind
 (d.h. die Z180-MMU findet noch keine Ber"ucksichtigung), besitzt der
@@ -3419,7 +3429,7 @@ k"onnen.  Eine Liste mit den zus"atzlichen Befehlen findet sich im
 Kapitel mit den prozessorspezifischen Hinweisen.
 %%-----------
 \begin{quote}
-ah) Z8601, Z8604, Z8608, Z8630, Z8631 $\rightarrow$ eZ8
+ai) Z8601, Z8604, Z8608, Z8630, Z8631 $\rightarrow$ eZ8
 \end{quote}
 Die Varianten mit Z8-Kern unterscheiden sich nur in
 Speicherausbau und Peripherie, d.h. die Wahl hat auf den
@@ -3428,7 +3438,7 @@ jedoch der eZ8, mit einem stark erweiterten Befehlssatz, der auch
 nur auf Quellebene weitestgehens aufw"arts-kompatibel ist.
 %%-----------
 \begin{quote}
-ai) KCPSM, KCPSM3
+aj) KCPSM, KCPSM3
 \end{quote}
 Bei beiden Prozessorkernen handelt es sich um keine eigenst"andigen
 Bausteine, sondern Logik-Kerne f"ur Gate-Arrays der Firma Xilinx.  Die
@@ -3437,7 +3447,7 @@ Instruktionen.  Es ist zu beachten, da"s sie nicht bin"ar
 aufw"artskompatibel ist!
 %%-----------
 \begin{quote}
-aj) MICO8\_05, MICO8\_V3, MICO8\_V31
+ak) MICO8\_05, MICO8\_V3, MICO8\_V31
 \end{quote}
 Leider hat Lattice die Maschinencodes des Mico8 mehrfach ge"andert, so
 da"s verschiedene Targets notwendig wurden, um auch alte Designs weiter
@@ -3446,18 +3456,18 @@ im 2005er-Manual beschrieben wurde, die beiden anderen die Versionen 3.0
 bzw. 3.1.
 %%-----------
 \begin{quote}
-ak) 96C141, 93C141
+al) 96C141, 93C141
 \end{quote}
 Diese beiden Prozessoren repr"asentieren die beiden Varianten der
 Prozessorfamilie: TLCS-900 und TLCS-900L.  Die Unterschiede dieser beiden
 Varianten werden in Abschnitt \ref{TLCS900Spec} genauer beleuchtet.
 %%-----------
 \begin{quote}
-al) 90C141
+am) 90C141
 \end{quote}
 %%-----------
 \begin{quote}
-am) 87C00, 87C20, 87C40, 87C70
+an) 87C00, 87C20, 87C40, 87C70
 \end{quote}
 Die Prozessoren der TLCS-870-Reihe haben zwar den identischen CPU-Kern, je
 nach Variante aber eine unterschiedliche Peripherieausstattung.  Zum
@@ -3467,58 +3477,118 @@ m"ogliche Unterscheidung, um automatisch den korrekten Symbolsatz
 bereitzustellen.
 %%-----------
 \begin{quote}
-an) 47C00 $\rightarrow$ 470C00 $\rightarrow$ 470AC00
+ao) 47C00 $\rightarrow$ 470C00 $\rightarrow$ 470AC00
 \end{quote}
 Diese drei Varianten der TLCS-47-Familie haben unterschiedlich gro"se
 RAM-und ROM-Adre"sbereiche, wodurch jeweils einige Befehle zur
 Bankumschaltung hinzukommen oder wegfallen.
 %%-----------
 \begin{quote}
-ao) 97C241
+ap) 97C241
 \end{quote}
 %%-----------
 \begin{quote}
-ap) TC9331
+aq) TC9331
 \end{quote}
 %%-----------
 \begin{quote}
-aq) 16C54 $\rightarrow$ 16C55 $\rightarrow$ 16C56 $\rightarrow$ 16C57
+ar) 16C54 $\rightarrow$ 16C55 $\rightarrow$ 16C56 $\rightarrow$ 16C57
 \end{quote}
 Diese Prozessoren unterscheiden sich durch den verf"ugbaren
 Adre"sraum im Programmspeicher, d.h. durch die Adresse, ab der
 der AS "Uberl"aufe anmeckert.
 %%-----------
 \begin{quote}
-ar) 16C64, 16C84
+as) 16C64, 16C84
 \end{quote}
 Analog zur MCS-51-Familie findet hier keine Unterscheidung im
 Codegenerator statt, die unterschiedlichen Nummern dienen lediglich
 der Einblendung der korrekten SFRs in STDDEF18.INC.
 %%-----------
 \begin{quote}
-as) 17C42
+at) 17C42
 \end{quote}
 %%-----------
 \begin{quote}
-at) SX20, SX28
+au) SX20, SX28
 \end{quote}
 Der SX20 steckt in einem kleineren Geh"ause, weshalb der Port C
 fehlt.
 %%-----------
 \begin{quote}
-au) ST6210/ST6215 $\rightarrow$ ST6220/ST6225
+av) ST6200, ST6201, ST6203, ST6208, ST6209,\\
+    ST6210, ST6215, ST6218, ST6220, ST6225,\\
+    ST6228, ST6230, ST6232, ST6235, ST6240,\\
+    ST6242, ST6245, ST6246, ST6252, ST6253,\\
+    ST6255, ST6260, ST6262, ST6263, ST6265,\\
+    ST6280, ST6285
 \end{quote}
-Die einzige Unterscheidung, die AS zwischen den beiden Paaren vornimmt, ist
-der bei den ersten beiden kleinere Adre"sraum (2K anstelle 4K).  Die
-Feinunterscheidung dient zur automatischen Unterscheidung in der Quelldatei,
-welche Hardware jeweils vorhanden ist (analog zum 8051/52/515).
+Die einzelnen ST6-Varianten differieren in der Menge der
+On-Chip-Peripherie und dem eingebauten Speicher.
 %%-----------
 \begin{quote}
-av) ST7
+aw) ST7 \\
+    ST72251G1, ST72251G2, ST72311J2, ST72311J4, \\
+    ST72321BR6, ST72321BR7, ST72321BR9, ST72325S4, \\
+    ST72325S6, ST72325J7, ST72325R9, ST72324J6, \\
+    ST72324K6, ST72324J4, ST72324K4, ST72324J2, \\
+    ST72324JK21, ST72325S4, ST72325J7, ST72325R9, \\
+    ST72521BR6, ST72521BM9, ST7232AK1, ST7232AK2, \\
+    ST7232AJ1, ST7232AJ2, ST72361AR4, ST72361AR6, \\
+    ST72361AR7, ST72361AR9, ST7FOXK1, ST7FOXK2, \\
+    ST7LITES2Y0, ST7LITES5Y0, ST7LITE02Y0, \\
+    ST7LITE05Y0, ST7LITE09Y0 \\
+    ST7LITE10F1, ST7LITE15F1, ST7LITE19F1, \\
+    ST7LITE10BF0, ST7LITE15BF0, ST7LITE15BF1, \\
+    ST7LITE19BF0, ST7LITE19BF1, \\
+    ST7LITE20F2, ST7LITE25F2, ST7LITE29F2, \\
+    ST7LITE30F2, ST7LITE35F2, ST7LITE39F2, \\
+    ST7LITE49K2, \\
+    ST7MC1K2, ST7MC1K4, ST7MC2N6, ST7MC2S4, \\
+    ST7MC2S6, ST7MC2S7, ST7MC2S9, ST7MC2R6, \\
+    ST7MC2R7, ST7MC2R9, ST7MC2M9, \\
+    STM8 \\
+    STM8S001J3, STM8S003F3, STM8S003K3, STM8S005C6,\\
+    STM8S005K6, STM8S007C8, STM8S103F2, STM8S103F3,\\
+    STM8S103K3, STM8S105C4, STM8S105C6, STM8S105K4,\\
+    STM8S105K6, STM8S105S4, STM8S105S6, STM8S207MB,\\
+    STM8S207M8, STM8S207RB, STM8S207R8, STM8S207R6,\\
+    STM8S207CB, STM8S207C8, STM8S207C6, STM8S207SB,\\
+    STM8S207S8, STM8S207S6, STM8S207K8, STM8S207K6,\\
+    STM8S208MB, STM8S208RB, STM8S208R8, STM8S208R6,\\
+    STM8S208CB, STM8S208C8, STM8S208C6, STM8S208SB,\\
+    STM8S208S8, STM8S208S6, STM8S903K3, STM8S903F3,\\
+    STM8L050J3, STM8L051F3, STM8L052C6, STM8L052R8,\\
+    STM8L001J3, STM8L101F1, STM8L101F2, STM8L101G2,\\
+    STM8L101F3, STM8L101G3, STM8L101K3, STM8L151C2,\\
+    STM8L151K2, STM8L151G2, STM8L151F2, STM8L151C3,\\
+    STM8L151K3, STM8L151G3, STM8L151F3, STM8L151C4,\\
+    STM8L151C6, STM8L151K4, STM8L151K6, STM8L151G4,\\
+    STM8L151G6, STM8L152C4, STM8L152C6, STM8L152K4,\\
+    STM8L152K6, STM8L151R6, STM8L151C8, STM8L151M8,\\
+    STM8L151R8, STM8L152R6, STM8L152C8, STM8L152K8,\\
+    STM8L152M8, STM8L152R8, STM8L162M8, STM8L162R8,\\
+    STM8AF6366, STM8AF6388, STM8AF6213, STM8AF6223,\\
+    STM8AF6226, STM8AF6246, STM8AF6248, STM8AF6266,\\
+    STM8AF6268, STM8AF6269, STM8AF6286, STM8AF6288,\\
+    STM8AF6289, STM8AF628A, STM8AF62A6, STM8AF62A8,\\
+    STM8AF62A9, STM8AF62AA, STM8AF5268, STM8AF5269,\\
+    STM8AF5286, STM8AF5288, STM8AF5289, STM8AF528A,\\
+    STM8AF52A6, STM8AF52A8, STM8AF52A9, STM8AF52AA,\\
+    STM8AL3136, STM8AL3138, STM8AL3146, STM8AL3148,\\
+    STM8AL3166, STM8AL3168, STM8AL3L46, STM8AL3L48,\\
+    STM8AL3L66, STM8AL3L68, STM8AL3188, STM8AL3189,\\
+    STM8AL318A, STM8AL3L88, STM8AL3L89, STM8AL3L8A,\\
+    STM8TL52F4, STM8TL52G4, STM8TL53C4, STM8TL53F4,\\
+    STM8TL53G4
 \end{quote}
+Der STM8-Kern erweitert den Adre"raum auf bis zu 16 MByte und f"uhrt
+eine ganze Reihe neuer Befehle ein.  Obwohl viele Befehle den
+gleichen Maschinencode wie beim ST7 haben, ist er nicht bin"ar
+aufw"artskompatibel.
 %%-----------
 \begin{quote}
-aw) ST9020, ST9030, ST9040, ST9050
+ax) ST9020, ST9030, ST9040, ST9050
 \end{quote}
 Diese 4 Namen vetreten die vier ,,Unterfamilien'' der ST9-Familie, die
 sich durch eine unterschiedliche Ausstattung mit On-Chip-Peripherie
@@ -3527,11 +3597,11 @@ Unterscheidung wieder nur im Includefile mit den Peripherieadressen zum
 Zuge kommt.
 %%-----------
 \begin{quote}
-ax) 6804
+ay) 6804
 \end{quote}
 %%-----------
 \begin{quote}
-ay) 32010 $\rightarrow$ 32015
+az) 32010 $\rightarrow$ 32015
 \end{quote}
 Der TMS32010 besitzt nur 144 Byte internes RAM, weshalb AS Adressen im
 Datensegment auf eben diesen Bereich begrenzt.  F"ur den 32015 gilt diese
@@ -3539,13 +3609,13 @@ Beschr"ankung nicht, es kann der volle Bereich von 0--255 angesprochen
 werden.
 %%-----------
 \begin{quote}
-az) 320C25 $\rightarrow$ 320C26 $\rightarrow$ 320C28
+ba) 320C25 $\rightarrow$ 320C26 $\rightarrow$ 320C28
 \end{quote}
 Diese Prozessoren unterscheiden sich nur leicht in der
 On-Chip-Peripherie sowie den Konfigurationsbefehlen.
 %%-----------
 \begin{quote}
-ba) 320C30, 320C31 $\rightarrow$ 320C40, 320C44
+bb) 320C30, 320C31 $\rightarrow$ 320C40, 320C44
 \end{quote}
 Der 320C31 ist eine etwas ,,abgespeckte'' Version des 320C30 mit dem
 gleichen Befehlssatz, jedoch weniger Peripherie.  In STDDEF3X.INC
@@ -3556,7 +3626,7 @@ der C44 eine abgespeckte Version des C40, mit weniger Peripherie
 und kleinerem Adre"raum.
 %%-----------
 \begin{quote}
-bb) 320C203 $\rightarrow$ 320C50, 320C51, 320C53
+bc) 320C203 $\rightarrow$ 320C50, 320C51, 320C53
 \end{quote}
 Ersterer ist der generelle Repr"asentant f"ur die
 C20x-Signalprozessorfamilie, die eine Untermenge des C5x-Befehlssatzes
@@ -3564,18 +3634,18 @@ implementieren.  Die Unterscheidung zwischen den verschiedenen
 C5x-Prozessoren wird von AS momentan nicht ausgenutzt.
 %%-----------
 \begin{quote}
-bc) 320C541
+bd) 320C541
 \end{quote}
 Dies ist momentan der Pepr"asentant f"ur die TMS320C54x-Familie...
 %%-----------
 \begin{quote}
-bd) TMS9900
+be) TMS9900
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-be) \> TMS70C00, TMS70C20, TMS70C40, \\
+bf) \> TMS70C00, TMS70C20, TMS70C40, \\
     \> TMS70CT20, TMS70CT40, \\
     \> TMS70C02, TMS70C42, TMS70C82, \\
     \> TMS70C08, TMS70C48 \\
@@ -3590,21 +3660,21 @@ interne RAM-Menge, unterscheiden sich also nur in der Menge
 eingebauten ROMs.
 %%-----------
 \begin{quote}
-bf) 370C010, 370C020, 370C030, 370C040 und 370C050
+bg) 370C010, 370C020, 370C030, 370C040 und 370C050
 \end{quote}
 Analog zur MCS-51-Familie werden die unterschiedlichen Typen nur
 zur Unterscheidung der Peripherie in STDDEF37.INC genutzt, der
 Befehlssatz ist identisch.
 %%-----------
 \begin{quote}
-bg) MSP430 $\rightarrow$ MSP430X
+bh) MSP430 $\rightarrow$ MSP430X
 Die X-Variante des CPU-Kerns erweitert den Adre"sraum von 64
 KiByte auf 1 MiByte und erweitert den Befehlssatz, um
 Instrutionen mehrfach ausf"uhren zu k"onnen.
 \end{quote}
 %%-----------
 \begin{quote}
-bh) TMS1000, TMS1100, TMS1200, TMS1300
+bi) TMS1000, TMS1100, TMS1200, TMS1300
 \end{quote}
 F"ur TMS1000 und TMS1200 sind jeweils 1 KByte ROM und 64 Nibbles
 RAM vorgesehen, f"ur TMS1100 und TMS1300 jeweils das doppelte.  Des
@@ -3613,18 +3683,18 @@ Dewfault-Befehlssatz vorgesehen (AS kennt nur die Default-
 Befehlss"atze!).
 %%-----------
 \begin{quote}
-bi) SC/MP
+bj) SC/MP
 \end{quote}
 %%-----------
 \begin{quote}
-bj) 8070
+bk) 8070
 \end{quote}
 Dieser Prozessor repr"asentiert die gesamte 807x-Familie (die mindestens
 aus den 8070, 8072 und 8073 besteht), der jedoch ein einheitlicher
 CPU-Kern gemeinsam ist.
 %%-----------
 \begin{quote}
-bk) COP87L84
+bl) COP87L84
 \end{quote}
 Dies ist das momentan einzige unterst"utzte Mitglied der COP8-Familie
 von National Semiconductor.  Mir ist bekannt, da"s die Familie
@@ -3633,7 +3703,7 @@ Befehlssatz existieren, die nach Bedarf hinzukommen werden.  Es ist eben
 ein Anfang, und die Dokumentation von National ist ziemlich umfangreich...
 %%-----------
 \begin{quote}
-bl) COP410 $\rightarrow$ COP420 $\rightarrow$ COP440 $\rightarrow$ COP444
+bm) COP410 $\rightarrow$ COP420 $\rightarrow$ COP440 $\rightarrow$ COP444
 Die COP42x-Derivate bieten einige weitere Befehle, des weiteren wurden
 Befehlen in ihrem Wertebereich erweitert.
 \end{quote}
@@ -3641,7 +3711,7 @@ Befehlen in ihrem Wertebereich erweitert.
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bm) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
+bn) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
     \> SC14420, SC14421, SC14422, SC14424 \\
 \end{tabbing}
 \end{quote}
@@ -3651,11 +3721,11 @@ unterst"utzt werden und deren Architektur im Laufe der Zeit optimiert
 wurde.
 %%-----------
 \begin{quote}
-bn) ACE1101, ACE1202
+bo) ACE1101, ACE1202
 \end{quote}
 %%-----------
 \begin{quote}
-bo) MK3870, MK3872, MK3873, MK3874, MK3875, MK3876, \\
+bp) MK3870, MK3872, MK3873, MK3874, MK3875, MK3876, \\
     MK38C70
 \end{quote}
 Der Befehlssatz aller F8-Varianten ist identisch, mit Ausnahme
@@ -3666,14 +3736,14 @@ und in der eingebauten Peripherie (mit serieller Schnittstelle
 oder ohne).
 %%-----------
 \begin{quote}
-bp) 7810 $\rightarrow$ 78C10
+bq) 7810 $\rightarrow$ 78C10
 \end{quote}
 Die NMOS-Version besitzt keinen STOP-Modus; der entspechende Befehl sowie
 das ZCM-Register fehlen demzufolge.  \bb{VORSICHT!} NMOS- und CMOS-Version
 differieren zum Teil in den Reset-Werten einiger Register!
 %%-----------
 \begin{quote}
-bq) 7566 $\leftrightarrow$ 7508
+br) 7566 $\leftrightarrow$ 7508
 \end{quote}
 Es existieren in der $\mu$PD75xx-Familie zwei verschiedene
 CPU-Kerne: Der 7566 repr"asentiert den 'instruction set B', der
@@ -3685,7 +3755,7 @@ sind nicht 100\%-ig bin"arkompatibel!
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-br) \> 75402, \\
+bs) \> 75402, \\
     \> 75004, 75006, 75008, \\
     \> 75268, \\
     \> 75304, 75306, 75308, 75312, 75316, \\
@@ -3701,41 +3771,41 @@ unterscheiden sich einmal durch ihre on-chip-Peripherie und
 zum anderen durch die M"achtigkeit des Befehlssatzes.
 %%-----------
 \begin{quote}
-bs) 78070
+bt) 78070
 \end{quote}
 Dies ist das einzige, mir momentan vertraute Mitglied der
 78K0-Familie von NEC.  Es gelten "ahnliche Aussagen wie zur
 COP8-Familie!
 %%-----------
 \begin{quote}
-bt) 78214
+bu) 78214
 \end{quote}
 Dies ist momentan der Repr"asentant der 78K2-Familie von NEC.
 %%-----------
 \begin{quote}
-bu) 78310
+bv) 78310
 \end{quote}
 Dies ist momentan der Repr"asentant der 78K3-Familie von NEC.
 %%-----------
 \begin{quote}
-bv) 784026
+bw) 784026
 \end{quote}
 Dies ist momentan der Repr"asentant der 78K4-Familie von NEC.
 %%-----------
 \begin{quote}
-bw) 7720 $\rightarrow$ 7725
+bx) 7720 $\rightarrow$ 7725
 \end{quote}
 Der $\mu$PD7725 bietet im Vergleich zu seinem Vorg"anger gr"o"sere
 Adre"sr"aume und einige zus"atzliche Befehle. {\bf VORSICHT!}  Die
 Prozessoren sind nicht zueinander bin"arkompatibel!
 %%-----------
 \begin{quote}
-bx) 77230
+by) 77230
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
-by) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
+bz) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
     \> SYM53C875, SYM53C895
 \end{tabbing}
 \end{quote}
@@ -3744,29 +3814,36 @@ einige Befehlsvarianten nicht, au"serdem unterscheiden sie sich in ihrem
 Satz interner Register.
 %%-----------
 \begin{quote}
-bz) MB89190
+ca) MB89190
 \end{quote}
 Dieser Prozessortyp repr"asentiert die F$^{2}$MC8L-Serie von Fujitsu...
 %%-----------
 \begin{quote}
-ca) MB9500
+cb) MB9500
 \end{quote}
 ...so wie dieser es momentan f"ur die 16-Bit-Varianten von Fujitsu tut!
 %%-----------
 \begin{quote}
-cb) MSM5840, MSM5842, MSM58421, MSM58422, MSM5847
+cc) MSM5840, MSM5842, MSM58421, MSM58422, MSM5847
 \end{quote}
 Diese Varianten der OLMS-40-Familie unterscheiden sich im
 Befehlssatz sowie im internen Programm- und Datenspeicher.
 %%-----------
 \begin{quote}
-cc) MSM5054, MSM5055, MSM5056, MSM6051, MSM6052
+cd) MSM5054, MSM5055, MSM5056, MSM6051, MSM6052
 \end{quote}
 Gleiches wie bei der OLMS-40-Familie: Unterschiede im
 Befehlssatz sowie im internen Programm- und Datenspeicher.
 %%-----------
 \begin{quote}
-cd) 1802 $\rightarrow$ 1804, 1805, 1806 $\rightarrow$ 1804A, 1805A
+ce) MN1610[ALT] $\rightarrow$ MN1613[ALT]
+\end{quote}
+Zus"atzlich zu den Funktionen seines Vorg"angers bietet der
+MN1613 einen gr"o"seren Adre"sraum, eine Floating-Point-Einheit
+sowie eine ganze Reihe neuer Befehle.
+%%-----------
+\begin{quote}
+ce) 1802 $\rightarrow$ 1804, 1805, 1806 $\rightarrow$ 1804A, 1805A
 1806A
 \end{quote}
 1804, 1805 und 1806 haben gegen"uber dem 'Original' 1802 einen leicht
@@ -3776,12 +3853,12 @@ Timer.  Die A-Versionen erweitern den Befehlssatz um \tty{DSAV},
 BCD-Format.
 %%-----------
 \begin{quote}
-ce) XS1
+cf) XS1
 \end{quote}
 Dieser Typ repr"asentiert die XCore-''Familie''.
 %%-----------
 \begin{quote}
-cf) 1750
+cg) 1750
 \end{quote}
 MIL STD 1750 ist ein Standard, also gibt es auch nur eine
 (Standard-)Variante...
@@ -3902,7 +3979,8 @@ diese Einstellung vor!  \tty{FULLPMMU} mu"s also auf jeden Fall nach dem
 \subsection{PADDING}
 \ttindex{PADDING}
 
-{\em G"ultigkeit: 680x0, 68xx, M*Core, XA, H8, SH7000, TMS9900, MSP430(X), ST7}
+{\em G"ultigkeit: 680x0, 68xx, M*Core, XA, H8, SH7000, TMS9900,\\
+     MSP430(X), ST7/STM8}
 
 Prozessoren der 680x0-Familie stehen ungeraden Adressen ziemlich
 kritisch gegen"uber: Befehle d"urfen nicht auf einer ungeraden Adresse
@@ -4232,6 +4310,19 @@ Architekturen mit Ausnahme des 8086.
 
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
+\subsubsection{65CE02}
+
+Der 65CE02 besitzt ein Register 'B', mit dem die 'Base-Page' festgelegt wird.
+Im Gegensatz zum 'einfachen' 6502 l"a"st sich damit die Speicherseite, die
+mit kurzen (8-bittigen) Adressen ansprechbar ist, frei im 64K-Adre'sraum hin-
+und herschieben.  Nach einem Reset steht dieses Register auf Null, der 65CE02
+verh"alt sich also wie sein Vorbild.  Dies ist auch die Default-Annahme des
+Assemblers.  Mittels eines \tty{ASSUME B:xx} kann man ihm den aktuellen Wert
+mitteilen, und f"ur Adressen in dieser Seite werden dann automatisch kurze
+Adressierungsarten benutzt.
+
+%%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
 \subsubsection{6809}
 
 Im Gegensatz zu seinen ,,Vorg"angern'' wie 6800 und 6502 kann beim
@@ -4485,7 +4576,7 @@ festgelegt werden.  Der Default ist 0.
 \subsubsection{ST6}
 \label{ST6Assume}
 
-Die Mikrokontroller der ST62-Reihe sind in der Lage, einen Teil (64 Byte)
+Die Mikrokontroller der ST6-Reihe sind in der Lage, einen Teil (64 Byte)
 des Codebereiches in den Datenbereich einzublenden, z.B. um Konstanten aus
 dem ROM zu laden.  Dies bedeutet aber auch, da"s zu einem Zeitpunkt immer
 nur ein Teil des ROMs adressiert werden kann.  Welcher Teil dies ist, wird
@@ -4505,6 +4596,24 @@ Anstelle eines Symbols kann auch schlicht \tty{NOTHING} angegeben
 werden, z.B. wenn das Bank-Register tempor"ar als Speicherzelle benutzt
 wird.  Dieser Wert ist auch die Voreinstellung.
 
+Der Programmz"ahler dieser Mikrokontroller ist lediglich 12 Bit breit.  Das
+bedeutet f"ur Varianten mit mehr als 4 KByte Programmspeicher, da"s man sich
+eine Art von Banking einfallen lassen mu"ste.  Dazu werden Adre"sraum und
+Programmspeicher in 2 KByte-Seite eingeteilt.  Seite 1 des Adre"sraumes
+greift immer auf Seite 1 des Programmspeichers zu.  "Uber das bei diesen
+Varianten vorhandene \tty{PRPR}-Register kann der Programmierer bestimmen,
+welche Seite des Programmspeichers "uber die Adressen 000h bis 7ffh
+zugegriffen wird.  AS betrachtet den Adre"sraum in erster N"aherung als
+linear und von der Gr"o"se des Programmspeichers.  Erfolgt ein Sprung von
+Seite 1 aus auf eine Adresse au"serhalb dieser Seite, wird gepr"uft, ob deren
+Adresse mit dem aktuell angenommenen Wert des \tty{PRPR}-Registers identisch
+ist.  Erfolgt ein Sprung von einer anderen Seite aus auf eine Adresse au"serhalb
+Seite 1, wird gepr"uft, ob die Zieladresse innerhalb der gleichen Seite
+liegt.  {\bf WICHTIG}: Da der Programmz"ahler nur 12 Bit breit ist, ist
+es nicht m"oglich, ohne einen Umweg "uber Seite 1 von einer Seite in eine
+andere zu springen - Mit einem Umsetzen des \tty{PRPR}-Registers au"serhalb
+von Seite 1 w"urde man sich seinen eigenen Code unter den F"u"sen wegziehen.
+
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 \subsubsection{ST9}
@@ -4520,7 +4629,7 @@ dieser Annahme ist 0.
 
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-\subsubsection{$\mu$PD78(C)10}
+\subsubsection{uPD78(C)1x}
 
 Diese Prozessoren besitzen ein Register (V), mit dessen Hilfe die
 ,,Zeropage'', d.h. die Lage der mit nur einem Byte adressierbaren
@@ -4535,53 +4644,6 @@ Inhalt des V-Registers mitteilt.  Wird ein Befehl mit Kurzadressierung
 benutzt, so wird "uberpr"uft, ob die obere H"alfte des Adre"sausdrucks
 mit dem angenommenen Inhalt "ubereinstimmt.  Stimmt sie nicht, so erfolgt
 eine Warnung.
-
-Architektur und Befehlssatz dieser Prozessoren sind grob an den
-Intel 8080/8085 angelehnt - das gilt auch f"ur die Mnemonics.  Die
-Adressierungsart (direkt, indirekt, immediate) ist mit in das
-Mnemonic verpackt, und 16-Bit-Register (BC, DE, HL) werden wie
-beim 8080 mit einem Buchstaben abgek"urzt.  Da NEC in der
-Erkl"arung der einzelnen Adressierungsarten aber auch immer
-wieder die ausgeschriebenen Registernamen benutzt und auch mal
-Klammern benutzt, um indirekte Adressierung anzudeuten und mal
-nicht, habe ich mich entschlossen, neben den 'offiziellen'
-Notationen aus dem NEC-Manual auch einige alternative Notationen
-zuzulassen.  Einige nicht-NEC-Tools wie z.B. Disassembler
-scheinen auch solche Notationen zu benutzen:
-
-\begin{itemize}
-\item{Anstelle \tty{B} darf auch \tty{BC}, \tty{(B)} oder
-      \tty{(BC)} geschrieben werden.}
-\item{Anstelle \tty{D} darf auch \tty{DE}, \tty{(D)} oder
-      \tty{(DE)} geschrieben werden.}
-\item{Anstelle \tty{H} darf auch \tty{HL}, \tty{(H)} oder
-      \tty{(HL)} geschrieben werden.}
-\item{Anstelle \tty{D+} darf auch \tty{DE+}, \tty{(D+)},
-      \tty{(DE+)} oder \tty{(DE)+} geschrieben werden.}
-\item{Anstelle \tty{H+} darf auch \tty{HL+}, \tty{(H+)},
-      \tty{(HL+)} oder \tty{(HL)+} geschrieben werden.}
-\item{Anstelle \tty{D-} darf auch \tty{DE-}, \tty{(D-)},
-      \tty{(DE-)} oder \tty{(DE)-} geschrieben werden.}
-\item{Anstelle \tty{H-} darf auch \tty{HL-}, \tty{(H-)},
-      \tty{(HL-)} oder \tty{(HL)-} geschrieben werden.}
-\item{Anstelle \tty{D++} darf auch \tty{DE++}, \tty{(D++)},
-      \tty{(DE++)} oder \tty{(DE)++} geschrieben werden.}
-\item{Anstelle \tty{H++} darf auch \tty{HL++}, \tty{(H++)},
-      \tty{(HL++)} oder \tty{(HL)++} geschrieben werden.}
-\item{Anstelle \tty{D--} darf auch \tty{DE--}, \tty{(D--)},
-      \tty{(DE--)} oder \tty{(DE)--} geschrieben werden.}
-\item{Anstelle \tty{H--} darf auch \tty{HL--}, \tty{(H--)},
-      \tty{(HL--)} oder \tty{(HL)--} geschrieben werden.}
-\item{Anstelle \tty{H+A} darf auch \tty{HL+A}, \tty{A+H},
-      \tty{A+HL}, \tty{(H+A)}, \tty{(HL+A)}, \tty{(A+H)}
-      oder \tty{(A+HL)} geschrieben werden.}
-\item{Anstelle \tty{H+B} darf auch \tty{HL+B}, \tty{B+H},
-      \tty{B+HL}, \tty{(H+B)}, \tty{(HL+B)}, \tty{(B+H)}
-      oder \tty{(B+HL)} geschrieben werden.}
-\item{Anstelle \tty{H+EA} darf auch \tty{HL+EA}, \tty{EA+H},
-      \tty{EA+HL}, \tty{(H+EA)}, \tty{(HL+EA)}, \tty{(EA+H)}
-      oder \tty{(EA+HL)} geschrieben werden.}
-\end{itemize}
 
 %%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
@@ -4697,6 +4759,20 @@ innerhalb der durch DTB gegebenen 64K-Bank mit 8-Bit-Adressen erreicht
 werden kann.  Der Default f"ur DPR ist 1, zusammen mit dem Default f"ur
 DTB ergibt dies also eine Default-Seite bei 0001xxh.
 
+%%. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+\subsubsection{MN1613}
+
+Beim MN1613 wurde eine Architektur mit 16-Bit-Adressen nachtr"aglich erweitert,
+Dies wird durch einen Satz vier Bit breiter ,,Segment-Register'' (CSBR, SSBR, TSR0
+und TSR1) erreicht, deren Wert (um 14 Bit nach links geschoben) zu den 16-Bit-
+Adressen hinzuaddiert wird.  Ein Proze"s kann auf diese Weise immer ein 64 KWorte
+gro"ses Fenster im 256 KWorte gro"sen Adre"sraum adressieren.  Der Assembler
+benutzt die per \tty{ASSUME} mitgeteilten Werte, um zu warnen, wenn eine absolute
+Adresse innerhalb des 256K-Adre"sraums mit den aktuellen Werten nicht adressierbar
+ist, und rechnet ansonsten den korrekten 16-bittigen Offset aus.  Bei indirekter
+Adressierung ist so eine Pr"ufung (naturgem"a"s) nicht m"oglich.
+
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{EMULATED}
@@ -4766,6 +4842,28 @@ Bedeutung haben, kann man nicht zu 100\% im 'Z80-Stil' programmieren.
 Wo die Grenzen dieser Betriebsart liegen, kann man im Detail im
 Abschnitt \ref{8080Spec} nachlesen.
 
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\subsection{EXPECT und ENDEXPECT}
+\ttindex{EXPECT}
+\ttindex{ENDEXPECT}
+
+Mit diesen beiden Befehlen rahmt man ein St"uck Quellcode ein, in dem ein
+oder mehrere Fehler {\em erwartet} werden.  Treten die "uber ihre Nummern
+(siehe Kapitel \ref{ChapErrMess}) identifizierten Fehler oder Warnungen auf, werden
+sie unterdr"uckt, und die Assemblierung l"auft ohne Fehler durch - nat"urlich
+ohne an dieser Stelle Code zu erzeugen.  Erwartete, aber nicht aufgetretene
+Fehler oder Warnungen l"osen ihrerseits jedoch eine Fehlermeldung von
+\tty{ENDEXPECT} aus.  Der Haupt-Anwendungszweck dieser Befehle findet sich
+in den Selbst-Tests im tests/-Unterverzeichnis.  Z.B. kann man so testen,
+ob Wertebereiche korrekt gepr"uft werden:
+\begin{verbatim}
+       cpu      68000
+       expect   1320     ; immediate-Shift nur 1..8
+       lsl.l    #10,d0
+       endexpect
+\end{verbatim}
+
 %%---------------------------------------------------------------------------
 
 \section{Datendefinitionen}
@@ -4784,7 +4882,7 @@ von Parametern angegeben werden, die der Reihe nach abgearbeitet werden.
 \subsection{DC[.size]}
 \ttindex{DC}
 
-{\em G"ultigkeit: 680x0, M*Core, 68xx, H8, SH7000, DSP56xxx, XA, ST7}
+{\em G"ultigkeit: 680x0, M*Core, 68xx, H8, SH7000, DSP56xxx, XA, ST7/STM8, MN161x}
 
 Dieser Befehl legt eine oder mehrere Konstanten des beim durch
 das Attribut bestimmten Typs im Speicher ab.  Die Attribute entsprechen
@@ -4837,7 +4935,7 @@ Konstanten in einer Anweisung gemischt werden.
 \subsection{DS[.size]}
 \ttindex{DS}
 
-{\em G"ultigkeit: 680x0, M*Core, 68xx, H8, SH7x00, DSP56xxx, XA, ST7}
+{\em G"ultigkeit: 680x0, M*Core, 68xx, H8, SH7x00, DSP56xxx, XA, ST7/STM8, MN161x}
 
 Mit diesem Befehl l"a"st sich zum einen Speicherplatz f"ur die angegebene
 Zahl im Attribut beschriebener Zahlen reservieren.  So reserviert
@@ -5165,8 +5263,7 @@ wenn AS das Argument als Gleitkommazahl erkennt).
 {\em G"ultigkeit: PIC}
 
 Dieser Befehl legt einen durch den Parameter spezifizierte
-Zahl von Nullworten (=NOPs) im Speicher ab. Es k"onnen maximal
-512 Nullen mit einem Befehl abgelegt werden.
+Zahl von Nullworten (=NOPs) im Speicher ab.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -5178,8 +5275,7 @@ Zahl von Nullworten (=NOPs) im Speicher ab. Es k"onnen maximal
 Mit diesen Befehlen kann ein gr"o"serer Block von Speicher (dessen L"ange
 in Bytes bzw. Worten der erste Parameter angibt) mit einer Byte- bzw.
 Wortkonstanten gef"ullt werden, die durch den zweiten Parameter angegeben
-wird.  Die Maximalgr"o"se des Blocks betr"agt 1024 Elemente f"ur
-\tty{FB} bzw. 512 Elemente f"ur \tty{FW}.
+wird.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -6892,12 +6988,16 @@ zu erzeugen.
 Falls der angegebene Dateiname keine Endung hat, wird er automatisch
 um die Endung \tty{INC} erweitert.
 \par
-Mit der Kommandozeilenoption
+Der Assembler versucht als erstes, die angegebene Datei in den Verzeichnis
+zu finden, in dem sich auch die Quelldatei befindet, die das \tty{INCLUDE}-Statement
+enth"alt - ein eventuell in der Dateiangabe enthaltener Pfad ist also relativ
+zu deren Pfad, und nicht zu dem Verzeichnis, von dem aus man den Assembler
+aufgerufen hat.  Mit der Kommandozeilenoption
 \begin{verbatim}
    -i <Pfadliste>
 \end{verbatim}
 l"a"st sich eine Liste von Verzeichnissen angeben, in denen automatisch
-zus"atzlich nach der Includedatei gesucht werden soll.  Wird die Datei
+zus"atzlich nach der Include-Datei gesucht werden soll.  Wird die Datei
 nicht gefunden, so ist dies ein \ii{fataler} Fehler, d.h. der Assembler
 bricht sofort ab.
 \par
@@ -7458,6 +7558,53 @@ Operand                 & Typen \\
 \caption{Operandentypen f"ur Meta-Befehle HMCS400}
 \label{TabHMCS400MetaOps}
 \end{table*}
+
+%%---------------------------------------------------------------------------
+
+\section{H16}
+
+Der Befehlssatz des H16-Kerns verdient mit Recht den Namen ,,CISC'': komplexe
+Adressierungsarten, sehr variable Instruktionsl"angen, und f"ur viele
+Befehle mit g"angigen Operanden gibt es Kurzschreibweisen.  So gibt
+es f"ur diverse Befehle mehrere ,,Formate'', je nachdem welchen Typ Quell-
+und Zieloperand haben.  Die generelle Regel ist, da"s AS immer
+das k"urzestm"ogliche Format benutzt, es sei denn, es wurde explizit
+angegeben:
+\begin{verbatim}
+       mov.l     r4,r7     ; benutzt R-Format
+       mov.l     #4,r7     ; benutzt RQ-Format
+       mov.l     #4,@r7    ; benutzt Q-Format
+       mov.l     @r4,@r7   ; benutzt G-Format
+       mov:q.l   #4,r7     ; Q- statt RQ-Format erzwungen 
+       mov:g.l   #4,r7     ; G- statt RQ-Format erzwungen 
+\end{verbatim}
+F"ur Immediate-Argumente wird die ,,nat"urliche'' Operandenl"ange
+benutzt, also z.B. 2 Bytes f"ur 16 Bits.  K"urzere oder l"angere
+Argumente lassen sich durch eine angeh"angte Operandengr"o"se
+(.b, .w, .l oder :8, :16, :32) erzwingen.  Bei Displacements oder
+absoluten Adressen gilt jedoch, da"s ohne explizite L"angenangabe
+immer die k"urzestm"ogliche Schreibweise benutzt wird.  Das schlie"st
+ein, da"s bei absoluten Adressen die oberen acht Adre"sbits vom
+Prozessor nicht herausgegeben werden: eine Adresse \$ffff80 kann also
+mit einem Byte (\$80) kodiert werden.
+
+Des weiteren kennt AS das ''Akkumulator-Bit'', d.h. bei Instruktionen
+mit zwei beliebigen Operanden kann der zweite Operand weggelassen
+werden, falls das Ziel Register Null ist.  Dieses Verhalten kann
+nicht "ubersteuert werden.
+
+Des weiteren werden folgende Optimierungen durchgef"uhrt:
+\begin{itemize}
+\item{\tty{MOV R0,<ea>} wird zu \tty{MOVF <ea>} optimiert, sofern
+      \tty{<ea>} kein PC-relativer Ausdruck ist und sich die L"ange
+      des Displacements "andern w"urde.  Diese Optimierung kann durch
+      eine explizite Formatangabe unterdr"uckt werden.}
+\item{\tty{SUB} existiert nicht im Q-Format, kann aber durch ein
+      \tty{ADD:Q} mit negiertem immediate-Argument ersetzt werden,
+      falls das Argument zu \tty{SUB} im Bereich -127...+128 liegt.
+      Auch diese Optimierung kann durch eine explizite Formatangabe
+      unterdr"uckt werden.}
+\end{itemize}
 
 %%---------------------------------------------------------------------------
 
@@ -8680,6 +8827,14 @@ auch immer in dieser Form verwendet werden; hier mu"s bestehender Z80-Code
 also auf jeden Fall angepa"st werden (neben der Tatsache, da"s es gar keinen
 I/O-Adre"sraum mehr gibt und alle I/O-Register memory-mapped sind...).
 \par
+Absolute Adressen sowie Displacements k"onnen in unterschiedlichen L"angen
+kodiert werden.  AS wird ohne explizite Angaben immer versuchen, die
+k"urzestm"ogliche Schreibweise zu verwenden; dies schlie"st ein, da"s ein
+Displacement von Null "uberhaupt nicht im Code erscheint und aus einen
+\verb!(XIX+0)! einfach ein \verb!(XIX)! wird.  Ist eine bestimmte L"ange
+erw"unscht, so kann sie durch Anh"angen eines passenden Suffixes (:8, :16,
+:24) an das Displacement bzw. die Adresse erreicht werden.
+\par
 Die von Toshiba gew"ahlte Syntax f"ur Registernamen ist in der Hinsicht
 etwas ungl"ucklich, als da"s zur Anwahl der vorherigen Registerbank ein
 Hochkomma (') benutzt wird.
@@ -9637,6 +9792,63 @@ nur Labels stehen d"urfen!
 
 %%---------------------------------------------------------------------------
 
+\section{uPD78(C)1x}
+\label{78C1xSpec}
+
+F"ur relative, unbedingte Spr"unge gibt es den \tty{JR}-Befehl (Sprungdistanz
+-32...+31, 1 Byte) sowie den \tty{JRE}-Befehl (Sprungdistanz -256...+255, 2
+Bytes).  AS kennt weiterhin den Pseudobefehl \tty{J}, der automatisch den
+k"urzestm"oglichen Befehl benutzt.
+
+Architektur und Befehlssatz dieser Prozessoren sind grob an den
+Intel 8080/8085 angelehnt - das gilt auch f"ur die Mnemonics.  Die
+Adressierungsart (direkt, indirekt, immediate) ist mit in das
+Mnemonic verpackt, und 16-Bit-Register (BC, DE, HL) werden wie
+beim 8080 mit einem Buchstaben abgek"urzt.  Da NEC in der
+Erkl"arung der einzelnen Adressierungsarten aber immer mal
+wieder die ausgeschriebenen Registernamen benutzt, und auch mal
+und mal nicht Klammern benutzt, um indirekte Adressierung anzudeuten,
+habe ich mich entschlossen, neben den 'offiziellen'
+Notationen aus dem NEC-Manual auch einige alternative Notationen
+zuzulassen.  Einige nicht-NEC-Tools wie z.B. Disassembler
+scheinen solche Notationen ebenfalls zu benutzen:
+
+\begin{itemize}
+\item{Anstelle \tty{B} darf auch \tty{BC}, \tty{(B)} oder
+      \tty{(BC)} geschrieben werden.}
+\item{Anstelle \tty{D} darf auch \tty{DE}, \tty{(D)} oder
+      \tty{(DE)} geschrieben werden.}
+\item{Anstelle \tty{H} darf auch \tty{HL}, \tty{(H)} oder
+      \tty{(HL)} geschrieben werden.}
+\item{Anstelle \tty{D+} darf auch \tty{DE+}, \tty{(D+)},
+      \tty{(DE+)} oder \tty{(DE)+} geschrieben werden.}
+\item{Anstelle \tty{H+} darf auch \tty{HL+}, \tty{(H+)},
+      \tty{(HL+)} oder \tty{(HL)+} geschrieben werden.}
+\item{Anstelle \tty{D-} darf auch \tty{DE-}, \tty{(D-)},
+      \tty{(DE-)} oder \tty{(DE)-} geschrieben werden.}
+\item{Anstelle \tty{H-} darf auch \tty{HL-}, \tty{(H-)},
+      \tty{(HL-)} oder \tty{(HL)-} geschrieben werden.}
+\item{Anstelle \tty{D++} darf auch \tty{DE++}, \tty{(D++)},
+      \tty{(DE++)} oder \tty{(DE)++} geschrieben werden.}
+\item{Anstelle \tty{H++} darf auch \tty{HL++}, \tty{(H++)},
+      \tty{(HL++)} oder \tty{(HL)++} geschrieben werden.}
+\item{Anstelle \tty{D--} darf auch \tty{DE--}, \tty{(D--)},
+      \tty{(DE--)} oder \tty{(DE)--} geschrieben werden.}
+\item{Anstelle \tty{H--} darf auch \tty{HL--}, \tty{(H--)},
+      \tty{(HL--)} oder \tty{(HL)--} geschrieben werden.}
+\item{Anstelle \tty{H+A} darf auch \tty{HL+A}, \tty{A+H},
+      \tty{A+HL}, \tty{(H+A)}, \tty{(HL+A)}, \tty{(A+H)}
+      oder \tty{(A+HL)} geschrieben werden.}
+\item{Anstelle \tty{H+B} darf auch \tty{HL+B}, \tty{B+H},
+      \tty{B+HL}, \tty{(H+B)}, \tty{(HL+B)}, \tty{(B+H)}
+      oder \tty{(B+HL)} geschrieben werden.}
+\item{Anstelle \tty{H+EA} darf auch \tty{HL+EA}, \tty{EA+H},
+      \tty{EA+HL}, \tty{(H+EA)}, \tty{(HL+EA)}, \tty{(EA+H)}
+      oder \tty{(EA+HL)} geschrieben werden.}
+\end{itemize}
+
+%%---------------------------------------------------------------------------
+
 \section{75K0}
 \label{75K0Spec}
 
@@ -9754,6 +9966,19 @@ Segmentpr"afix und Prozessorbefehl eingestreute Pseudoanweisung l"oscht
 den Merker also {\em nicht}.  Dies gilt auch f"ur Pseudobefehle zur
 Datenablage oder Ver"anderung des Programmz"ahlers - aber wer macht so
 etwas schon ;-)
+
+%%---------------------------------------------------------------------------
+
+\section{MN161x}
+
+F"ur dieses Target gilt die Besonderheit, da"s man zwischen zwei
+Code-Generatoren w"ahlen kann: Einer wurde freundlicherweise von Haruo Asano
+geschrieben und ist "uber die CPU-Namen \tty{MN1610} bzw. \tty{MN1613}
+erreichbar; der andere wurde von mir erstellt und ist "uber die Namen
+\tty{MN1610ALT} bzw. \tty{MN1613ALT} aktivierbar.  Wer den erweiterten
+Adre"sraum von 256 KWorten des MN1613 verwenden will, oder mit dem
+Gleitkommaformat des MN1613 experimentieren will, mu"s das \tty{ALT}-
+Target verwenden.
 
 %%===========================================================================
 
@@ -10168,7 +10393,7 @@ bzgl. Dateinamen.  Im Gegensatz zu BIND wird die Zieldatei aber als
 Hexfile ausgegeben, d.h. als eine Folge von Zeilen, die den Code als
 ASCII-Hexzahlen enthalten.
 \par
-P2HEX kennt 8 verschiedene Zielformate, die "uber den
+P2HEX kennt neun verschiedene Zielformate, die "uber den
 Kommandozeilenparameter \bb{F} ausgew"ahlt werden k"onnen:
 \begin{itemize}
 \item{Motorola S-Record (\tty{-F Moto})}
@@ -10180,6 +10405,7 @@ Kommandozeilenparameter \bb{F} ausgew"ahlt werden k"onnen:
 \item{Texas Instruments DSK (\tty{-F DSK})}
 \item{Atmel AVR Generic (\tty{-F Atmel}, siehe \cite{AVRObj})}
 \item{Lattice Mico8 prom\_init (\tty{-F Mico8})}
+\item{C-Arrays, zum Inkludieren in C(++)-Quelldateien (\tty{-F C})}
 \end{itemize}
 Wird kein Zielformat explizit angegeben, so w"ahlt P2HEX anhand des
 Prozessortyps automatisch eines aus, und zwar S-Records f"ur Motorola-
@@ -10241,10 +10467,34 @@ Programm bekannt ist, kann man ihn mit der Option
 \end{verbatim}
 unterdr"ucken.
 \par
+Das C-Format f"allt insofern aus dem Rahmen, als da"s es immer explizit 
+ausgew"ahlt werden mu"s.  Die Ausgabedatei stellt im Prinzip ein vollst"andiges
+St"uck C- oder C++-Code dar, das die Daten als eine Liste von C-Arrays
+enth"alt.  Neben den eigentlichen Daten wird noch eine Liste von Deskriptoren
+geschrieben, die Start, L"ange und Ende der Datenbl"ocke 
+beschreiben.  Was diese Deskriptoren enthalten, kann mit der Option
+\begin{verbatim}
+ -cformat <Format>
+\end{verbatim}
+bestimmt werden.  Jeder Buchstabe in \verb!Format! legt ein Element des
+Deskriptors fest:
+\begin{itemize}
+\item{Ein \verb!d! oder \verb!D! definiert einen Zeiger auf die Daten.
+      "Uber den Gro"s- oder Kleinbuchstaben wird festgelegt, ob die Hex-
+      Konstanten Gro"s- oder Kleinbuchstaben verwenden sollen.}
+\item{Ein \verb!s! oder \verb!S! definiert die Startadresse der Daten,
+      wahlweise vom Typ {\em unsigned} oder {\em unsigned long}.}
+\item{Ein \verb!l! oder \verb!L! definiert die L"ange der Daten,
+      wahlweise vom Typ {\em unsigned} oder {\em unsigned long}.}
+\item{Ein \verb!e! oder \verb!E! definiert die Endadresse der Daten,
+      d.h. die letzte von den Daten benutzte Adresse,
+      wahlweise vom Typ {\em unsigned} oder {\em unsigned long}.}
+\end{itemize}
+\par
 Finden sich Code-Records verschiedener Prozessoren in einer Quelldatei,
 so erscheinen die verschiedenen Hexformate auch gemischt in der Zieldatei
 --- es empfiehlt sich also dringend, von der Filterfunktion Gebrauch zu
-machen.
+machen, oder ein fixes Format "uber die \verb!-F!-Option festzulegen.
 \par
 Neben dem Codetypenfilter kennt P2HEX noch ein Adre"sfilter, das n"utzlich
 ist, falls der Code auf mehrere EPROMs verteilt werden mu"s:
@@ -10810,16 +11060,61 @@ Angaben:
                 durch einen \tty{BYTE}, \tty{WORD}, usw. \tty{PTR}-Pr"afix
 	        festlegen.}
                {keines}
-\errentry{1135}{Ung"ultiger Operandentyp}
+\errentry{1133}{Ganzzahl oder String erwartet, aber Gleitkommazahl erhalten}
                {Fehler}
-               {Ein Ausdruck hat einen an dieser Stelle nicht
-                zul"assigen Typ (Integer/Gleitkomma/String).}
-               {Die an dieser Stelle zul"assigen Datentypen}
-\errentry{1140}{Zuviele Argumente}
+               {An dieser Stelle kann keine Gleitkommazahl als Argument
+                verwendet werden.}
+               {das fehlerhafte Argument}
+\errentry{1134}{Ganzzahl erwartet, aber Gleitkommazahl erhalten}
+               {Fehler}
+               {An dieser Stelle kann keine Gleitkommazahl als Argument
+                verwendet werden.}
+               {das fehlerhafte Argument}
+\errentry{1136}{Gleitkommazahl erwartet, aber String erhalten}
+               {Fehler}
+               {An dieser Stelle kann kein String als Argument
+                verwendet werden.}
+               {das fehlerhafte Argument}
+\errentry{1137}{Operandentyp-Diskrepanz}
+               {Fehler}
+               {Die beiden Argumente eines Operanden haben nicht
+                den gleichen Datentyp (Integer/Gleitkomma/String).}
+               {keines}
+\errentry{1138}{String erwartet, aber Ganzzahl erhalten}
+               {Fehler}
+               {An dieser Stelle kann keine Ganzzahl als Argument
+                verwendet werden.}
+               {das fehlerhafte Argument}
+\errentry{1139}{String erwartet, aber Gleitkommazahl erhalten}
+               {Fehler}
+               {An dieser Stelle kann keine Gleitkommazahl als Argument
+                verwendet werden.}
+               {das fehlerhafte Argument}
+\errentry{1140}{zu viele Argumente}
                {Fehler}
                {Einem Befehl wurden mehr als die unter AS
                 zul"assigen 20 Parameter "ubergeben.}
                {keines}
+\errentry{1141}{Ganzzahl erwartet, aber String erhalten}
+               {Fehler}
+               {An dieser Stelle kann kein String als Argument
+                verwendet werden.}
+               {das fehlerhafte Argument}
+\errentry{1142}{Ganz- oder Gleitkommazahl erwartet, aber String erhalten}
+               {Fehler}
+               {An dieser Stelle kann kein String als Argument
+                verwendet werden.}
+               {das fehlerhafte Argument}
+\errentry{1143}{String erwartet}
+               {Fehler}
+               {An dieser Stelle kann nur ein (in einfachen Hochkommas
+                eingeschlossener) String als Argument verwendet werden.}
+               {das fehlerhafte Argument}
+\errentry{1144}{Ganzzahl erwartet}
+               {Fehler}
+               {An dieser Stelle kann nur eine ganze Zahlals Argument
+                verwendet werden.}
+               {das fehlerhafte Argument}
 \errentry{1200}{Unbekannter Befehl}
                {Fehler}
                {Der benutzte Befehl ist weder ein Pseudobefehl
@@ -10842,13 +11137,18 @@ Angaben:
                {Der angegebene Integer-Wert unterschreitet
                 den zul"assigen Bereich.}
                {aktueller Wert und zul"assiges Minimum
-	        (manchmal, ich stelle das gerade um...)}
+	        (manchmal, ich stelle das seit Jahren um...)}
 \errentry{1320}{Bereichs"uberschreitung}
                {Fehler}
                {Der angegebene Integer-Wert "uberschreitet
                 den zul"assigen Bereich.}
                {aktueller Wert und zul"assiges Maximum
-	        (manchmal,ich stelle das gerade um...)}
+	        (manchmal, ich stelle das seit Jahren um...)}
+\errentry{1322}{keine Zweierpotenz}
+               {Fehler}
+               {Hier sind nur Zweierpotenzen (1,2,4,8...)
+                als Wert erlaubt}
+               {der fragliche Wert}
 \errentry{1325}{Adresse nicht ausgerichtet}
                {Fehler}
                {Die angegebene direkte Speicheradresse
@@ -10956,6 +11256,11 @@ Angaben:
                {Ein Register taucht in der Liste der zu sichernden bzw.
                 wiederherzustellenden Register mehrfach auf.}
                {keines}
+\errentry{1447}{Register-Bank-Diskrepanz}
+               {Fehler}
+               {In einem Adre"sausdruck werden Register aus unterschiedlichen
+                B"anken verwendet.}
+               {das fragliche Register}
 \errentry{1450}{RESTORE ohne SAVE}
                {Fehler}
                {Es wurde ein \tty{RESTORE}-Befehl gefunden, obwohl
@@ -11282,6 +11587,11 @@ Angaben:
                {Fehler}
                {Sprungbefehl und Sprungziel m"ussen bei diesem
                 Befehl auf der gleichen Seite liegen.}
+               {keines}
+\errentry{1911}{Sprungziel nicht in gleicher Sektion}
+               {Fehler}
+               {Sprungbefehl und Sprungziel m"ussen bei diesem
+                Befehl in der gleichen (64K-)Sektion liegen.}
                {keines}
 \errentry{1920}{Code"uberlauf}
                {Fehler}
@@ -12069,8 +12379,8 @@ Andreas Wassatsch, John Weinrich.
 mit ihren ASM68K demonstrierten, wie man es \bb{nicht} machen sollte und
 mich damit indirekt dazu angeregt haben, etwas besseres zu schreiben!
 \par
-So ganz allein habe ich AS nicht verzapft.  AS enth"alt die
-OverXMS-Routinen von Wilbert van Leijen, um die Overlay-Module ins
+So ganz allein habe ich AS nicht verzapft.  Die DOS-Version von AS enthielt
+die OverXMS-Routinen von Wilbert van Leijen, um die Overlay-Module ins
 Extended Memory verlagern zu k"onnen.  Eine wirklich feine Sache,
 einfach und problemlos anzuwenden!
 \par
@@ -12078,7 +12388,8 @@ Die TMS320C2x/5x-Codegeneratoren sowie die Datei \tty{STDDEF2x.INC}
 stammen von Thomas Sailer, ETH Z"urich.  Erstaunlich, an einem Wochenende
 hat er es geschafft, durch meinen Code durchzusteigen und den neuen
 Generator zu implementieren.  Entweder waren das reichliche Nachtschichten
-oder ich werde langsam alt...
+oder ich werde langsam alt...gleiches Lob geb"uhrt Haruo Asano f"ur den
+MN1610/MN1613-Codegenerator.
 
 %%===========================================================================
 
@@ -13356,10 +13667,11 @@ Dazu m"ussen im Umschalter einige globale Variablen besetzt werden:
       sollte und eines der Elemente von \tty{ListGrans} ungleich eins ist,
       sollte dieses Flag auf True gesetzt werden, um korrekte Code-Dateien
       zu erhalten.}
-\item{\tty{SetIsOccupied} : Einige Prozessoren verwenden \tty{SET} als
-      Maschinenbefehl.  Ist diese Variable gesetzt, so gibt AS \tty{SET}
-      -Befehle an den Codegenerator weiter und verwendet stattdessen
-      \tty{EVAL}.}
+\item{\tty{SetIsOccupiedFnc} : Einige Prozessoren verwenden \tty{SET} als
+      Maschinenbefehl.  Ist dieser Callback gesetzt, so kann der Codegenerator
+      dar"uber melden, da"s \tty{SET} nicht als Pseudo-Befehl interpretiert
+      werden soll.  Der R"uckgabewert kann konstant \tty{True} sein, die
+      Entscheidung kann aber auch z.B. anhand der Anzahl der Argumente fallen.}
 \item{\tty{HeaderID} : Dieses Byte enth"alt die Kennung, mit der in der Codedatei
       die Prozessorfamilie gekennzeichnet wird (siehe Abschnitt
       \ref{SectCodeFormat}).  Um Zweideutigkeiten zu vermeiden,

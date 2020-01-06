@@ -1,61 +1,18 @@
 /* plist.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Anzeige des Inhalts einer Code-Datei                                      */
 /*                                                                           */
-/* Historie: 31. 5.1996 Grundsteinlegung                                     */
-/*           29. 8.1998 Tabellen auf HeadIds umgestellt                      */
-/*                      main-lokale Variablen dorthin verschoben             */
-/*           11. 9.1998 ROMDATA-Segment hinzugenommen                        */
-/*           15. 8.1999 Einrueckung der Endadresse korrigiert                */
-/*           21. 1.2000 Auflisten externe Referenzen                         */
-/*           26. 6.2000 list exports                                         */
-/*           30. 5.2001 move copy buffer to heap to avoid stack overflows on */
-/*                      DOS platforms                                        */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: plist.c,v 1.8 2017/02/26 16:20:46 alfred Exp $                       */
-/*****************************************************************************
- * $Log: plist.c,v $
- * Revision 1.8  2017/02/26 16:20:46  alfred
- * - silence compiler warnings about unused function results
- *
- * Revision 1.7  2014/12/07 19:14:02  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.6  2014/12/05 11:15:29  alfred
- * - eliminate AND/OR/NOT
- *
- * Revision 1.5  2014/12/05 11:09:11  alfred
- * - eliminate Nil
- *
- * Revision 1.4  2014/12/05 08:28:38  alfred
- * - rework to current style
- *
- * Revision 1.3  2014/05/29 10:59:06  alfred
- * - some const cleanups
- *
- * Revision 1.2  2012-09-02 16:55:23  alfred
- * - silence compiler warning about non-literal printf() format strinf
- *
- * Revision 1.1  2003/11/06 02:49:24  alfred
- * - recreated
- *
- * Revision 1.3  2003/03/29 18:45:51  alfred
- * - allow source file spec in key files
- *
- * Revision 1.2  2002/03/31 22:59:01  alfred
- * - added CVS header
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
 
 #include "version.h"
 #include "endian.h"
-#include "hex.h"
 #include "bpemu.h"
 #include "stringlists.h"
 #include "cmdarg.h"
@@ -93,26 +50,25 @@ int main(int argc, char **argv)
   NLS_Initialize();
 
   endian_init();
-  hex_init();
   bpemu_init();
   strutil_init();
   nlmessages_init("plist.msg", *argv, MsgId1, MsgId2); ioerrs_init(*argv);
   cmdarg_init(*argv);
   toolutils_init(*argv);
 
-  sprintf(Ver,"PLIST/C V%s",Version);
+  as_snprintf(Ver, sizeof(Ver), "PLIST/C V%s", Version);
   WrCopyRight(Ver);
 
   if (ParamCount == 0)
   {
     errno = 0;
     printf("%s", getmessage(Num_MessFileRequest));
-    if (!fgets(ProgName, 255, stdin))
+    if (!fgets(ProgName, STRINGSIZE, stdin))
       return 0;
     ChkIO(OutName);
   }
   else if (ParamCount == 1)
-    strmaxcpy(ProgName, ParamStr[1], 255);
+    strmaxcpy(ProgName, ParamStr[1], STRINGSIZE);
   else
   {
     errno = 0;
@@ -127,7 +83,7 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  AddSuffix(ProgName, getmessage(Num_Suffix));
+  AddSuffix(ProgName, STRINGSIZE, getmessage(Num_Suffix));
 
   ProgFile = fopen(ProgName, OPENRDMODE);
   if (!ProgFile)
@@ -171,7 +127,7 @@ int main(int argc, char **argv)
       if (!Read4(ProgFile, &StartAdr))
         ChkIO(ProgName);
       errno = 0;
-      printf("%s%s\n", getmessage(Num_MessEntryPoint), HexLong(StartAdr));
+      printf("%s%08lX\n", getmessage(Num_MessEntryPoint), LoDWord(StartAdr));
       ChkIO(OutName);
     }
 
@@ -184,17 +140,17 @@ int main(int argc, char **argv)
 
       RelocInfo = ReadRelocInfo(ProgFile);
       for (z = 0,  PEntry = RelocInfo->RelocEntries; z < RelocInfo->RelocCount; z++, PEntry++)
-        printf("%s  %s        %3d:%d(%c)     %c%s\n",
+        printf("%s  %08lX        %3d:%d(%c)     %c%s\n",
                getmessage(Num_MessRelocInfo),
-               HexLong(PEntry->Addr), RelocBitCnt(PEntry->Type) >> 3,
+               LoDWord(PEntry->Addr), RelocBitCnt(PEntry->Type) >> 3,
                RelocBitCnt(PEntry->Type) & 7,
                (PEntry->Type & RelocFlagBig) ? 'B' : 'L',
                (PEntry->Type & RelocFlagSUB) ? '-' : '+', PEntry->Name);
 
       for (z = 0,  PExp = RelocInfo->ExportEntries; z < RelocInfo->ExportCount; z++, PExp++)
-        printf("%s  %s          %c          %s\n",
+        printf("%s  %08lX          %c          %s\n",
                getmessage(Num_MessExportInfo),
-               HexLong(PExp->Value), 
+               LoDWord(PExp->Value), 
                (PExp->Flags & RelFlag_Relative) ? 'R' : ' ',
                PExp->Name);
 
@@ -219,17 +175,17 @@ int main(int argc, char **argv)
 
       if (!Read4(ProgFile, &StartAdr))
         ChkIO(ProgName);
-      errno = 0; printf("%s          ", HexLong(StartAdr)); ChkIO(OutName);
+      errno = 0; printf("%08lX          ", LoDWord(StartAdr)); ChkIO(OutName);
 
       if (!Read2(ProgFile, &Len))
         ChkIO(ProgName);
-      errno = 0; printf("%s       ", HexWord(Len));  ChkIO(OutName);
+      errno = 0; printf("%04X       ", LoWord(Len));  ChkIO(OutName);
 
       if (Len != 0)
         StartAdr += (Len / Gran) - 1;
       else
         StartAdr--;
-      errno = 0; printf("%s\n", HexLong(StartAdr));  ChkIO(OutName);
+      errno = 0; printf("%08lX\n", LoDWord(StartAdr));  ChkIO(OutName);
 
       Sums[Segment] += Len;
 

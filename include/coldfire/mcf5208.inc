@@ -373,49 +373,49 @@ __N		set		__n+1
 ; Edge Port Module
 
 MBAR_EPORT	equ		MBAR+$88000
-		include		"coldfire/52xxeport.inc"
+		include		"52xxeport.inc"
 
 ;----------------------------------------------------------------------------
 ; Enhanced Direct Memory Access
 
 MBAR_EDMA	equ		MBAR+$44000
-		include		"coldfire/52xxedma.inc"
+		include		"52xxedma.inc"
                 
 ;----------------------------------------------------------------------------
 ; FlexBus
 
 MBAR_FBUS	equ		MBAR+$8000
-		include		"coldfire/52xxfbus.inc"
+		include		"52xxfbus.inc"
 
 ;----------------------------------------------------------------------------
 ; SDRAM Controller
 
 MBAR_SDRAM	equ		MBAR+$a8000
-		include		"coldfire/52xxdram.inc"
+		include		"52xxdram.inc"
 
 ;----------------------------------------------------------------------------
 ; Fast Ethernet Controller
 
 MBAR_FEC	equ		MBAR+$30000
-		include		"coldfire/52xxfec.inc"
+		include		"52xxfec.inc"
 
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
 MBAR_WDT	equ		MBAR+$8c000
-		include		"coldfire/52xxwdt.inc"
+		include		"52xxwdt.inc"
 
 ;----------------------------------------------------------------------------
 ; Programmable Interrupt Timer
 
-		include		"coldfire/52xxpit.inc"
+		include		"52xxpit.inc"
 		__defpit	"1",MBAR+$80000
 		__defpit	"2",MBAR+$84000
 
 ;----------------------------------------------------------------------------
 ; DMA Timer
 
-		include		"coldfire/52xxdtim.inc"
+		include		"52xxdtim.inc"
 		__defdtim	"0",MBAR+$70000
 		__defdtim	"1",MBAR+$74000
 		__defdtim	"2",MBAR+$78000
@@ -425,12 +425,12 @@ MBAR_WDT	equ		MBAR+$8c000
 ; Queued Serial Peripheral Interface
 
 MBAR_QSPI	equ		MBAR+$5c000
-		include		"coldfire/52xxqspi.inc"
+		include		"52xxqspi.inc"
 
 ;----------------------------------------------------------------------------
 ; UARTs
 
-		include		"coldfire/52xxuart.inc"
+		include		"52xxuart.inc"
 		__defuart	"0",MBAR+$60000
 		__defuart	"1",MBAR+$64000
 		__defuart	"2",MBAR+$68000
@@ -439,7 +439,7 @@ MBAR_QSPI	equ		MBAR+$5c000
 ; I2C
 
 MBAR_I2C	equ		MBAR+$58000
-		include		"coldfire/52xxi2c.inc"
+		include		"52xxi2c.inc"
 
 ;----------------------------------------------------------------------------
 

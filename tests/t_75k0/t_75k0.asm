@@ -183,7 +183,9 @@ bit4	bit	0430h.3
 bit5    bit     @h+5+3.2
 
 	set1	bit1
-        clr1    bit4
+	expect	110
+         clr1    bit4
+	endexpect
         sel     mb4
         set1	mbe
         assume  mbs:4,mbe:1

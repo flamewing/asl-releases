@@ -2,6 +2,8 @@
 #define _IOERRS_H
 /* ioerrs.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Abliefern der I/O-Fehlermeldungen                                         */

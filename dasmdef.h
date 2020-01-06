@@ -1,8 +1,9 @@
 #ifndef _DASMDEF_H
 #define _DASMDEF_H
-
 /* dasmdef.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* DAS common variables                                                      */

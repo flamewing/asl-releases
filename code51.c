@@ -1,80 +1,12 @@
 /* code51.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator fuer MCS-51/252 Prozessoren                                 */
 /*                                                                           */
-/* Historie:  5. 6.1996 Grundsteinlegung                                     */
-/*            9. 8.1998 kurze 8051-Bitadressen wurden im 80251-Sourcemodus   */
-/*                      immer lang gemacht                                   */
-/*           24. 8.1998 Kodierung fuer MOV dir8,Rm war falsch (Fehler im     */
-/*                      Manual!)                                             */
-/*            2. 1.1998 ChkPC-Routine entfernt                               */
-/*           19. 1.1999 Angefangen, Relocs zu uebertragen                    */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*           30.10.2000 started adding immediate relocs                      */
-/*            7. 1.2001 silenced warnings about unused parameters            */
-/*           2002-01-23 symbols defined with BIT must not be macro-local     */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code51.c,v 1.15 2016/01/30 17:15:01 alfred Exp $                     */
-/*****************************************************************************
- * $Log: code51.c,v $
- * Revision 1.15  2016/01/30 17:15:01  alfred
- * - allow register symbols on MCS-(2)51
- *
- * Revision 1.14  2014/12/14 17:58:47  alfred
- * - remove static variables in strutil.c
- *
- * Revision 1.13  2014/12/07 19:13:59  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.12  2014/12/05 11:58:15  alfred
- * - collapse STDC queries into one file
- *
- * Revision 1.11  2014/12/01 18:29:39  alfred
- * - replace Nil -> NULL
- *
- * Revision 1.10  2014/11/16 13:15:07  alfred
- * - remove some superfluous semicolons
- *
- * Revision 1.9  2014/11/08 17:47:31  alfred
- * - adapt to new style
- *
- * Revision 1.8  2014/11/05 15:47:14  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.7  2010/04/17 13:14:20  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.6  2007/11/24 22:48:04  alfred
- * - some NetBSD changes
- *
- * Revision 1.5  2006/02/27 20:21:17  alfred
- * - correct bit range for RAM bit areas
- *
- * Revision 1.4  2005/10/02 10:00:44  alfred
- * - ConstLongInt gets default base, correct length check on KCPSM3 registers
- *
- * Revision 1.3  2005/09/08 16:53:41  alfred
- * - use common PInstTable
- *
- * Revision 1.2  2004/05/29 11:33:00  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- * Revision 1.1  2003/11/06 02:49:20  alfred
- * - recreated
- *
- * Revision 1.4  2003/06/22 13:14:43  alfred
- * - added 80251T
- *
- * Revision 1.3  2002/05/31 19:19:17  alfred
- * - added DS80C390 instruction variations
- *
- * Revision 1.2  2002/03/10 11:55:12  alfred
- * - do not issue futher error messages after failed address evaluation
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -120,7 +52,7 @@ enum
   ModDir16 = 10,
   ModAcc = 11,
   ModBit51 = 12,
-  ModBit251 = 13,
+  ModBit251 = 13
 };
 
 #define MModReg (1 << ModReg)
@@ -195,14 +127,14 @@ static Boolean DecodeReg(const char *pAsc, Byte *Erg, Byte *Size)
     pAsc = pRepl;
   alen = strlen(pAsc);
 
-  if (!strcasecmp(pAsc, "DPX"))
+  if (!as_strcasecmp(pAsc, "DPX"))
   {
     *Erg = 14;
     *Size = 2;
     return True;
   }
 
-  if (!strcasecmp(pAsc, "SPX"))
+  if (!as_strcasecmp(pAsc, "SPX"))
   {
     *Erg = 15;
     *Size = 2;
@@ -294,7 +226,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
   if (!*pArg->Str)
      return;
 
-  if (!strcasecmp(pArg->Str, "A"))
+  if (!as_strcasecmp(pArg->Str, "A"))
   {
     if (!(Mask & MModAcc))
     {
@@ -475,7 +407,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
     }
     else
     {
-      if (!strcasecmp(SegComp.Str, "S"))
+      if (!as_strcasecmp(SegComp.Str, "S"))
         SegType = -2;
       else
       {
@@ -559,6 +491,13 @@ chk:
     AdrCnt = 0;
     AdrMode = ModNone;
   }
+}
+
+static void DissectBit_251(char *pDest, int DestSize, LargeWord Inp)
+{
+  as_snprintf(pDest, DestSize, "=%~02.*u%s.%u",
+              ListRadixBase, (unsigned)(Inp & 0xff), GetIntelSuffix(ListRadixBase),
+              (unsigned)(Inp >> 24));
 }
 
 static ShortInt DecodeBitAdr(tStrComp *pArg, LongInt *Erg, Boolean MayShorten)
@@ -691,7 +630,7 @@ static void PutCode(Word Opcode)
 
 static Boolean IsCarry(const char *pArg)
 {
-  return (!strcasecmp(pArg, "C")) || (!strcasecmp(pArg, "CY"));
+  return (!as_strcasecmp(pArg, "C")) || (!as_strcasecmp(pArg, "CY"));
 }
 
 /*-------------------------------------------------------------------------*/
@@ -722,7 +661,7 @@ static void DecodeMOV(Word Index)
         break;
     }
   }
-  else if ((!strcasecmp(ArgStr[2].Str, "C")) || (!strcasecmp(ArgStr[2].Str, "CY")))
+  else if ((!as_strcasecmp(ArgStr[2].Str, "C")) || (!as_strcasecmp(ArgStr[2].Str, "CY")))
   {
     switch (DecodeBitAdr(&ArgStr[1], &AdrLong, True))
     {
@@ -739,7 +678,7 @@ static void DecodeMOV(Word Index)
         break;
     }
   }
-  else if (!strcasecmp(ArgStr[1].Str, "DPTR"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "DPTR"))
   {
     SetOpSize((MomCPU == CPU80C390) ? 3 : 1);
     DecodeAdr(&ArgStr[2], MModImm);
@@ -1236,9 +1175,9 @@ static void DecodeMOVC(Word Index)
     switch (AdrMode)
     {
       case ModAcc:
-        if (!strcasecmp(ArgStr[2].Str, "@A+DPTR"))
+        if (!as_strcasecmp(ArgStr[2].Str, "@A+DPTR"))
           PutCode(0x93);
-        else if (!strcasecmp(ArgStr[2].Str, "@A+PC"))
+        else if (!as_strcasecmp(ArgStr[2].Str, "@A+PC"))
           PutCode(0x83);
         else
           WrError(ErrNum_InvAddrMode);
@@ -1322,14 +1261,14 @@ static void DecodeMOVX(Word Index)
   if (ChkArgCnt(2, 2))
   {
     z = 0;
-    if ((!strcasecmp(ArgStr[2].Str, "A")) || ((MomCPU >= CPU80251) && (!strcasecmp(ArgStr[2].Str, "R11"))))
+    if ((!as_strcasecmp(ArgStr[2].Str, "A")) || ((MomCPU >= CPU80251) && (!as_strcasecmp(ArgStr[2].Str, "R11"))))
     {
       z = 0x10;
       strcpy(ArgStr[2].Str, ArgStr[1].Str);
-      strmaxcpy(ArgStr[1].Str, "A", 255);
+      strmaxcpy(ArgStr[1].Str, "A", STRINGSIZE);
     }
-    if ((strcasecmp(ArgStr[1].Str, "A")) && ((MomCPU < CPU80251) || (!strcasecmp(ArgStr[2].Str, "R11")))) WrError(ErrNum_InvAddrMode);
-    else if (!strcasecmp(ArgStr[2].Str, "@DPTR"))
+    if ((as_strcasecmp(ArgStr[1].Str, "A")) && ((MomCPU < CPU80251) || (!as_strcasecmp(ArgStr[2].Str, "R11")))) WrError(ErrNum_InvAddrMode);
+    else if (!as_strcasecmp(ArgStr[2].Str, "@DPTR"))
       PutCode(0xe0 + z);
     else
     {
@@ -1627,7 +1566,7 @@ static void DecodeJMP(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "@A+DPTR"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "@A+DPTR"))
     PutCode(0x73);
   else if (*ArgStr[1].Str == '@')
   {
@@ -2119,7 +2058,7 @@ static void DecodeINCDEC(Word Index)
       else
         OK = False;
       if (!OK) WrError(ErrNum_OverRange);
-      else if (!strcasecmp(ArgStr[1].Str, "DPTR"))
+      else if (!as_strcasecmp(ArgStr[1].Str, "DPTR"))
       {
         if (Index == 1) WrError(ErrNum_InvAddrMode);
         else if (HReg != 0) WrError(ErrNum_OverRange);
@@ -2185,7 +2124,7 @@ static void DecodeMULDIV(Word Index)
   if (!ChkArgCnt(1, 2));
   else if (ArgCnt == 1)
   {
-    if (strcasecmp(ArgStr[1].Str, "AB")) WrError(ErrNum_InvAddrMode);
+    if (as_strcasecmp(ArgStr[1].Str, "AB")) WrError(ErrNum_InvAddrMode);
     else
       PutCode(0x84 + z);
   }
@@ -2223,7 +2162,7 @@ static void DecodeBits(Word Index)
 
   z = Index << 4;
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "A"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "A"))
   {
     if (Memo("SETB")) WrError(ErrNum_InvAddrMode);
     else
@@ -2382,7 +2321,7 @@ static void DecodeSFR(Word Index)
     {
       PushLocHandle(-1);
       DSeg = (MomCPU >= CPU80251) ? SegIO : SegData;
-      EnterIntSymbol(LabPart.Str, AdrByte, DSeg, False);
+      EnterIntSymbol(&LabPart, AdrByte, DSeg, False);
       if (MakeUseList)
       {
         if (AddChunk(SegChunks + DSeg, AdrByte, 1, False))
@@ -2404,10 +2343,14 @@ static void DecodeSFR(Word Index)
         }
         if (MakeUseList)
           if (AddChunk(SegChunks + SegBData, BitStart, 8, False)) WrError(ErrNum_Overlap);
-        sprintf(ListLine, "=%02XH-%02XH", BitStart, BitStart + 7);
+        as_snprintf(ListLine, STRINGSIZE, "=%~02.*u%s-%~02.*u%s",
+                    ListRadixBase, (unsigned)BitStart, GetIntelSuffix(ListRadixBase),
+                    ListRadixBase, (unsigned)BitStart + 7, GetIntelSuffix(ListRadixBase));
       }
       else
-        sprintf(ListLine, "=%02XH", AdrByte);
+        as_snprintf(ListLine, STRINGSIZE, "=%~02.*u%s",
+                    ListRadixBase, (unsigned)AdrByte, GetIntelSuffix(ListRadixBase));
+      LimitListLine();
       PopLocHandle();
     }
   }
@@ -2423,27 +2366,23 @@ static void DecodeBIT(Word Index)
   {
     if (DecodeBitAdr(&ArgStr[1], &AdrLong, False) == ModBit251)
     {
-      char ByteStr[20], BitStr[10];
-
       PushLocHandle(-1);
-      EnterIntSymbol(LabPart.Str, AdrLong, SegNone, False);
+      EnterIntSymbol(&LabPart, AdrLong, SegBData, False);
       PopLocHandle();
-      HexString(ByteStr, sizeof(ByteStr), AdrLong & 0xff, 2);
-      HexString(BitStr, sizeof(BitStr), AdrLong >> 24, 1);
-      sprintf(ListLine, "=%sH.%s", ByteStr, BitStr);
+      DissectBit_251(ListLine, STRINGSIZE, AdrLong);
+      LimitListLine();
     }
   }
   else
   {
     if (DecodeBitAdr(&ArgStr[1], &AdrLong, False) == ModBit51)
     {
-      char ByteStr[20];
-
       PushLocHandle(-1);
-      EnterIntSymbol(LabPart.Str, AdrLong, SegBData, False);
+      EnterIntSymbol(&LabPart, AdrLong, SegBData, False);
       PopLocHandle();
-      HexString(ByteStr, sizeof(ByteStr), AdrLong, 2);
-      sprintf(ListLine, "=%s", ByteStr);
+      as_snprintf(ListLine, STRINGSIZE, "=%~02.*u%s",
+                  ListRadixBase, (unsigned)AdrLong, GetIntelSuffix(ListRadixBase));
+      LimitListLine();
     }
   }
 }
@@ -2657,7 +2596,6 @@ static void SwitchTo_51(void)
 {
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = 0x31;
@@ -2674,6 +2612,7 @@ static void SwitchTo_51(void)
     SegLimits[SegCode ] = 0xffffffl;
     Grans[SegIO   ] = 1; ListGrans[SegIO   ] = 1; SegInits[SegIO   ] = 0;
     SegLimits[SegIO   ] = 0x1ff;
+    DissectBit = DissectBit_251;
   }
 
   /* rest of the pack... */

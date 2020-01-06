@@ -2,6 +2,8 @@
 #define _CODE75XX_H
 /* code75xx.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator NEC 75xx                                                    */

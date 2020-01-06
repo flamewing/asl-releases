@@ -1,5 +1,7 @@
 /* cpulist.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Port                                                                   */
 /*                                                                           */
 /* Manages CPU List                                                          */
@@ -20,7 +22,7 @@ static int MaxNameLen = 0;
 /****************************************************************************/
 /* neuen Prozessor definieren */
 
-CPUVar AddCPUUser(const char *NewName, tCPUSwitchUserProc Switcher, void *pUserData)
+CPUVar AddCPUUser(const char *NewName, tCPUSwitchUserProc Switcher, void *pUserData, tCPUFreeUserDataProc Freeer)
 {
   tpCPUDef Lauf, Neu;
   char *p;
@@ -32,6 +34,7 @@ CPUVar AddCPUUser(const char *NewName, tCPUSwitchUserProc Switcher, void *pUserD
   for (p = Neu->Name; *p != '\0'; p++)
     *p = mytoupper(*p);
   Neu->SwitchProc = Switcher;
+  Neu->FreeProc = Freeer;
   Neu->pUserData = pUserData;
   Neu->Next = NULL;
   Neu->Number = Neu->Orig = CPUCnt;
@@ -53,14 +56,27 @@ CPUVar AddCPUUser(const char *NewName, tCPUSwitchUserProc Switcher, void *pUserD
   return CPUCnt++;
 }
 
+typedef struct
+{
+  tCPUSwitchProc Switcher;
+} tNoUserData;
+
 static void SwitchNoUserProc(void *pUserData)
 {
-  ((tCPUSwitchProc)pUserData)();
+  ((tNoUserData*)pUserData)->Switcher();
+}
+
+static void FreeNoUserProc(void *pUserData)
+{
+  free(pUserData);
 }
 
 CPUVar AddCPU(const char *NewName, tCPUSwitchProc Switcher)
 {
-  return AddCPUUser(NewName, SwitchNoUserProc, Switcher);
+  tNoUserData *pData = (tNoUserData*)malloc(sizeof(*pData));
+  
+  pData->Switcher = Switcher;
+  return AddCPUUser(NewName, SwitchNoUserProc, pData, FreeNoUserProc);
 }
 
 Boolean AddCPUAlias(char *OrigName, char *AliasName)
@@ -100,7 +116,7 @@ typedef struct
 {
   int cnt, perline;
   tCPUSwitchUserProc Proc;
-  void *pUserData;
+  tCPUSwitchProc NoUserProc;
   tPrintNextCPUProc NxtProc;
 } tPrintContext;
 
@@ -112,12 +128,19 @@ static void PrintIterator(const tCPUDef *pCPUDef, void *pUser)
 
   if (pCPUDef->Number == pCPUDef->Orig)
   {
-    Boolean Unequal = (pCPUDef->SwitchProc != pContext->Proc)
-                   || (pCPUDef->SwitchProc == SwitchNoUserProc && (pContext->pUserData != pCPUDef->pUserData));
+    tCPUSwitchProc ThisNoUserProc = (pCPUDef->SwitchProc == SwitchNoUserProc) ? ((tNoUserData*)pCPUDef->pUserData)->Switcher : NULL;
+    Boolean Unequal;
+
+    if (pCPUDef->SwitchProc != pContext->Proc)
+      Unequal = True;
+    else if (pCPUDef->SwitchProc == SwitchNoUserProc)
+      Unequal = (pContext->NoUserProc != ThisNoUserProc);
+    else
+      Unequal = False;
     if (Unequal || (pContext->cnt == pContext->perline))
     {
       pContext->Proc = pCPUDef->SwitchProc;
-      pContext->pUserData = pCPUDef->pUserData;
+      pContext->NoUserProc = ThisNoUserProc;
       printf("\n");
       pContext->NxtProc();
       pContext->cnt = 0;
@@ -132,10 +155,10 @@ void PrintCPUList(tPrintNextCPUProc NxtProc)
   tPrintContext Context;
 
   Context.Proc = NULL;
-  Context.pUserData = NULL;
+  Context.NoUserProc = NULL;
   Context.cnt = 0;
   Context.NxtProc = NxtProc;
-  Context.perline = 80 / MaxNameLen;
+  Context.perline = 79 / (MaxNameLen + 1);
   IterateCPUList(PrintIterator, &Context);
   printf("\n");
   NxtProc();
@@ -150,6 +173,8 @@ void ClearCPUList(void)
     Save = FirstCPUDef;
     FirstCPUDef = Save->Next;
     free(Save->Name);
+    if (Save->FreeProc)
+      Save->FreeProc(Save->pUserData);
     free(Save);
   }
 }

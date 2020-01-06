@@ -4,27 +4,6 @@
 ;*                                                                           *
 ;* String-Definitionen fuer P2HEX                                            *
 ;*                                                                           *
-;* Historie:  1. 6.1996 Grundsteinlegung                                     *
-;*           26.10.1997 kill-Option                                          *
-;*            6. 7.1999 Minimalparameter Motorola S-Records                  *
-;*           24.10.1999 Parameter Relokation                                 *
-;*           16.11.1999 Atmel-Format                                         *
-;*           24. 3.2000 added byte messages                                  *
-;*           25. 3.2001 added avrlen parameter                               *
-;*                                                                           *
-;*****************************************************************************
-;* $Id: p2hex.res,v 1.4 2017/02/26 16:35:16 alfred Exp $                      
-/*****************************************************************************
-;* $Log: p2hex.res,v $
-;* Revision 1.4  2017/02/26 16:35:16  alfred
-;* - support Mico8 hex format
-;*
-;* Revision 1.3  2017/02/20 21:14:08  alfred
-;* - correct typo
-;*
-;* Revision 1.2  2006/12/09 18:27:30  alfred
-;* - add warning about empty output
-;*
 ;*****************************************************************************/ 
 
 Include header.res
@@ -73,7 +52,7 @@ Message InfoMessHelp
  "          -F <Default|Moto|\n" \
  "              Intel|MOS|Tek|\n" \
  "              Intel16|DSK|\n" \
- "              Intel32|Atmel|Mico8>: Zielformat\n" \
+ "              Intel32|Atmel|Mico8|C>: Zielformat\n" \
  "          +5                : S5-Records unterdr&uuml;cken\n" \
  "          -s                : S-Record-Gruppen einzeln terminieren\n" \
  "          -M <1|2|3>        : Minimallaenge Adressen S-Records\n" \
@@ -93,7 +72,7 @@ Message InfoMessHelp
  "         -F <Default|Moto|\n" \
  "             Intel|MOS|Tek|\n" \
  "             Intel16|DSK|\n" \
- "             Intel32|Atmel|Mico8>: target format\n" \
+ "             Intel32|Atmel|Mico8|C>: target format\n" \
  "         +5                : suppress S5-records\n" \
  "         -s                : separate terminators for S-record groups\n" \
  "         -M <1|2|3>        : minimum length of S records addresses\n" \

@@ -1,5 +1,7 @@
 /* invaddress.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* Disassembler                                                              */
 /*                                                                           */
 /* inverse symbol storage                                                    */
@@ -23,13 +25,14 @@ static int MaxSymbolNameLen;
 static void MakeInvSymbolName(char *pDest, unsigned DestSize, LargeWord Num)
 {
   *pDest = 'I';
-  HexString2(pDest + 1, DestSize - 1, Num, 8, False);
+  SysString(pDest + 1, DestSize - 1, Num, 16, 8, False, HexStartCharacter);
 }
 
 static Boolean InvSymbolAdder(PTree *ppDest, PTree pNew, void *pData)
 {
   /*tInvSymbol *pNewInvSymbol = (tInvSymbol*)pNew, *pNode;*/
   UNUSED(pData);
+  UNUSED(pNew);
 
   /* added to an empty leaf ? */
 

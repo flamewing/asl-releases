@@ -1,57 +1,12 @@
 /* code78k0.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator 78K0-Familie                                                */
 /*                                                                           */
-/* Historie:  1.12.1996 Grundsteinlegung                                     */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code78k0.c,v 1.12 2014/12/07 19:14:00 alfred Exp $                          *
- ***************************************************************************** 
- * $Log: code78k0.c,v $
- * Revision 1.12  2014/12/07 19:14:00  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.11  2014/12/01 18:29:39  alfred
- * - replace Nil -> NULL
- *
- * Revision 1.10  2014/08/17 11:42:35  alfred
- * - reformat to current style
- *
- * Revision 1.9  2014/08/11 21:12:25  alfred
- * - first reworks
- *
- * Revision 1.8  2014/03/08 09:47:43  alfred
- * - fix DBNZ
- *
- * Revision 1.7  2010/08/27 14:52:42  alfred
- * - some more overlapping strcpy() cleanups
- *
- * Revision 1.6  2010/04/17 13:14:22  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.5  2007/11/24 22:48:05  alfred
- * - some NetBSD changes
- *
- * Revision 1.4  2006/12/09 18:01:34  alfred
- * - correct some coding errors
- *
- * Revision 1.3  2005/09/08 16:53:42  alfred
- * - use common PInstTable
- *
- * Revision 1.2  2004/05/29 11:33:01  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- * Revision 1.1  2003/11/06 02:49:21  alfred
- * - recreated
- *
- * Revision 1.2  2003/10/08 20:57:52  alfred
- * - transformed to hash table
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -80,7 +35,7 @@ enum
   ModAbs = 5,
   ModIReg = 6,
   ModIndex = 7,
-  ModDisp = 8,
+  ModDisp = 8
 };
 
 #define MModReg8 (1 << ModReg8)
@@ -123,7 +78,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
   /* Register */
 
   for (z = 0; z < 8; z++)
-    if (!strcasecmp(pArg->Str, RegNames[z]))
+    if (!as_strcasecmp(pArg->Str, RegNames[z]))
     {
       AdrMode = ModReg8;
       AdrPart = z;
@@ -193,23 +148,23 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
     StrCompRefRight(&Arg, pArg, 1);
     StrCompShorten(&Arg, 1);
 
-    if ((!strcasecmp(Arg.Str, "DE")) || (!strcasecmp(Arg.Str, "RP2")))
+    if ((!as_strcasecmp(Arg.Str, "DE")) || (!as_strcasecmp(Arg.Str, "RP2")))
     {
       AdrMode = ModIReg;
       AdrPart = 0;
     }
-    else if ((!strncasecmp(Arg.Str, "HL", 2)) && (!strncasecmp(Arg.Str, "RP3", 3))) WrStrErrorPos(ErrNum_InvReg, &Arg);
+    else if ((!as_strncasecmp(Arg.Str, "HL", 2)) && (!as_strncasecmp(Arg.Str, "RP3", 3))) WrStrErrorPos(ErrNum_InvReg, &Arg);
     else
     {
       StrCompIncRefLeft(&Arg, 2);
       if (*Arg.Str == '3')
         StrCompIncRefLeft(&Arg, 1);
-      if ((!strcasecmp(Arg.Str, "+B")) || (!strcasecmp(Arg.Str, "+R3")))
+      if ((!as_strcasecmp(Arg.Str, "+B")) || (!as_strcasecmp(Arg.Str, "+R3")))
       {
         AdrMode = ModIndex;
         AdrPart = 1;
       }
-      else if ((!strcasecmp(Arg.Str, "+C")) || (!strcasecmp(Arg.Str, "+R2")))
+      else if ((!as_strcasecmp(Arg.Str, "+C")) || (!as_strcasecmp(Arg.Str, "+R2")))
       {
         AdrMode = ModIndex;
         AdrPart = 0;
@@ -532,7 +487,7 @@ static void DecodeXCH(Word Index)
 
   if (ChkArgCnt(2, 2))
   {
-    Boolean Swap = (!strcasecmp(ArgStr[2].Str, "A")) || (!strcasecmp(ArgStr[2].Str, "RP1"));
+    Boolean Swap = (!as_strcasecmp(ArgStr[2].Str, "A")) || (!as_strcasecmp(ArgStr[2].Str, "RP1"));
     tStrComp *pArg1 = Swap ? &ArgStr[2] : &ArgStr[1],
              *pArg2 = Swap ? &ArgStr[1] : &ArgStr[2];
 
@@ -738,7 +693,7 @@ static void DecodeXCHW(Word Index)
 static void DecodeStack(Word Index)
 {
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "PSW"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "PSW"))
   {
     BAsmCode[0] = 0x22 + Index;
     CodeLen = 1;
@@ -983,12 +938,12 @@ static void DecodeMOV1(Word Index)
 
   if (ChkArgCnt(2, 2))
   {
-    Boolean Swap = !strcasecmp(ArgStr[2].Str, "CY");
+    Boolean Swap = !as_strcasecmp(ArgStr[2].Str, "CY");
     tStrComp *pArg1 = Swap ? &ArgStr[2] : &ArgStr[1],
              *pArg2 = Swap ? &ArgStr[1] : &ArgStr[2];
     int z = Swap ? 1 : 4;
 
-    if (strcasecmp(pArg1->Str, "CY")) WrError(ErrNum_InvAddrMode);
+    if (as_strcasecmp(pArg1->Str, "CY")) WrError(ErrNum_InvAddrMode);
     else if (DecodeBitAdr(pArg2, &HReg))
     {
       BAsmCode[0] = 0x61 + (Ord((HReg & 0x88) != 0x88) << 4);
@@ -1004,7 +959,7 @@ static void DecodeBit2(Word Index)
   Byte HReg;
  
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1].Str, "CY")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "CY")) WrError(ErrNum_InvAddrMode);
   else if (DecodeBitAdr(&ArgStr[2], &HReg))
   {
     BAsmCode[0] = 0x61 + (Ord((HReg & 0x88) != 0x88) << 4);
@@ -1019,7 +974,7 @@ static void DecodeSETCLR1(Word Index)
   Byte HReg;
  
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "CY"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "CY"))
   {
     BAsmCode[0] = 0x20 + Index;
     CodeLen = 1;
@@ -1047,7 +1002,7 @@ static void DecodeNOT1(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(1, 1));
-  else if (strcasecmp(ArgStr[1].Str, "CY")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "CY")) WrError(ErrNum_InvAddrMode);
   else
   {
     BAsmCode[0] = 0x01;
@@ -1130,7 +1085,7 @@ static void DecodeBR(Word Index)
   UNUSED(Index);  
 
   if (!ChkArgCnt(1, 1));
-  else if ((!strcasecmp(ArgStr[1].Str, "AX")) || (!strcasecmp(ArgStr[1].Str, "RP0")))
+  else if ((!as_strcasecmp(ArgStr[1].Str, "AX")) || (!as_strcasecmp(ArgStr[1].Str, "RP0")))
   {
     BAsmCode[0] = 0x31;
     BAsmCode[1] = 0x98;
@@ -1291,7 +1246,7 @@ static void DecodeSEL(Word Index)
   UNUSED(Index);
 
   if (ArgCnt != 1) WrError(ErrNum_InvAddrMode);
-  else if ((strlen(ArgStr[1].Str) != 3) || (strncasecmp(ArgStr[1].Str, "RB", 2) != 0)) WrError(ErrNum_InvAddrMode);
+  else if ((strlen(ArgStr[1].Str) != 3) || (as_strncasecmp(ArgStr[1].Str, "RB", 2) != 0)) WrError(ErrNum_InvAddrMode);
   else
   {
     HReg = ArgStr[1].Str[2] - '0';
@@ -1437,7 +1392,6 @@ static void SwitchTo_78K0(void)
 {
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "PC";
   HeaderID = 0x7c;

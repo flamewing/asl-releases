@@ -229,8 +229,15 @@
 		tne	y1,a
 
 		dc	"Hallo"
+		dc	'1'
+		dc	'12'
 		dc	'123'
+		dc	"1"
+		dc	"12"
+		dc	"123"
 		dc	$123456
+		dc	16777215
+		dc	-8388608
 		dc	"Dies ist ein Test, Leute" 0
 
 		segment	xdata

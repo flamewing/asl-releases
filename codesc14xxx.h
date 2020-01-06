@@ -2,6 +2,8 @@
 #define _CODESC14XXX_H
 /* codesc14xxx.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator SC14xxx                                                     */

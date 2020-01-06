@@ -1,5 +1,8 @@
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+
 #include "stdinc.h"
 
+#include <string.h>
 #include "strutil.h"
 
 #include "chardefs.h"
@@ -73,7 +76,7 @@ int main(int argc, char **argv)
 
   if (argc<2)
   {
-    fprintf(stderr, "usage: %s <file> [destfile]\n", argv[0]);
+    fprintf(stderr, "usage: %s <file> [destfile|destdir/]\n", argv[0]);
     exit(1);
   }
 
@@ -97,10 +100,24 @@ int main(int argc, char **argv)
   {
     fprintf(stderr, "error opening %s for reading\n", argv[1]); exit(2);
   }
-  dest = fopen((argc == 2) ? TMPNAME : argv[2], OPENWRMODE);
+  if (argc < 3)
+    strcpy(cmdline, TMPNAME);
+  else
+  {
+    int l = strlen(argv[2]);
+
+    if (strchr("/\\", argv[2][l - 1]))
+    {
+      const char *p = strrchr(argv[1], argv[2][l - 1]);
+      as_snprintf(cmdline, sizeof(cmdline), "%s%s", argv[2], p ? p + 1 : argv[1]);
+    }
+    else
+      strcpy(cmdline, argv[2]);
+  }
+  dest = fopen(cmdline, OPENWRMODE);
   if (dest == NULL)
   {
-    fprintf(stderr, "error opening %s for writing\n", TMPNAME); exit(2);
+    fprintf(stderr, "error opening %s for writing\n", cmdline); exit(2);
   }
   charcnt = metacnt = crcnt = 0;
   while (!feof(src))
@@ -132,9 +149,9 @@ int main(int argc, char **argv)
   if (argc == 2)
   {
 #if defined (__MSDOS__) || defined(__EMX__)
-    sprintf(cmdline, "copy %s %s", TMPNAME, argv[1]);
+    as_snprintf(cmdline, sizeof(cmdline), "copy %s %s", TMPNAME, argv[1]);
 #else
-    snprintf(cmdline, sizeof(cmdline), "cp %s %s", TMPNAME, argv[1]);
+    as_snprintf(cmdline, sizeof(cmdline), "cp %s %s", TMPNAME, argv[1]);
 #endif
     doexec(cmdline);
     unlink(TMPNAME);

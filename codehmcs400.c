@@ -1,38 +1,12 @@
 /* codehmcs400.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator Hitachi HMCS400-Familie                                     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codehmcs400.c,v 1.4 2016/10/03 15:15:07 alfred Exp $
- *****************************************************************************
- * $Log: codehmcs400.c,v $
- * Revision 1.4  2016/10/03 15:15:07  alfred
- * - set end address for CODE segment
- *
- * Revision 1.3  2016/10/03 14:50:27  alfred
- * - correct instruction (AMEMD -> ANEMD)
- *
- * Revision 1.2  2016/09/30 21:09:05  alfred
- * - add SFR for HMCS400
- *
- * Revision 1.1  2016/09/30 19:37:17  alfred
- * - renamed HMCS40x to HMCS400
- *
- * Revision 1.4  2016/09/29 17:00:35  alfred
- * - add DATA/RES to HMCS400
- *
- * Revision 1.3  2016/09/28 20:55:27  alfred
- * - more instruction aliases for HMCS40x
- *
- * Revision 1.2  2016/09/26 18:59:09  alfred
- * - add alternative syntax for most HMCS40x instructions
- *
- * Revision 1.1  2016/09/25 20:31:21  alfred
- * - add HMCS4x target
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -72,7 +46,7 @@ enum
   ModImm = 10,
   ModDir = 11,
   ModMR = 12,
-  ModNone = 0x7f,
+  ModNone = 0x7f
 };
 
 #define MModA (1 << ModA)
@@ -96,62 +70,62 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
   Boolean OK;
   int l;
 
-  if (!strcasecmp(pArg->Str, "A"))
+  if (!as_strcasecmp(pArg->Str, "A"))
   {
     AdrMode = ModA;
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "B"))
+  if (!as_strcasecmp(pArg->Str, "B"))
   {
     AdrMode = ModB;
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "X"))
+  if (!as_strcasecmp(pArg->Str, "X"))
   {
     AdrMode = ModX;
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "Y"))
+  if (!as_strcasecmp(pArg->Str, "Y"))
   {
     AdrMode = ModY;
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "W"))
+  if (!as_strcasecmp(pArg->Str, "W"))
   {
     AdrMode = ModW;
     OpSizeType = UInt2;
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "M"))
+  if (!as_strcasecmp(pArg->Str, "M"))
   {
     AdrMode = ModM;
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "M+"))
+  if (!as_strcasecmp(pArg->Str, "M+"))
   {
     AdrMode = ModMInc;
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "M-"))
+  if (!as_strcasecmp(pArg->Str, "M-"))
   {
     AdrMode = ModMDec;
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "SPX"))
+  if (!as_strcasecmp(pArg->Str, "SPX"))
   {
     AdrMode = ModSPX;
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "SPY"))
+  if (!as_strcasecmp(pArg->Str, "SPY"))
   {
     AdrMode = ModSPY;
     goto AdrFound;
@@ -682,9 +656,9 @@ static void DecodeCP(Word Code)
   if (!ChkArgCnt(3, 3))
     return;
 
-  if (!strcasecmp(ArgStr[1].Str, "NE"))
+  if (!as_strcasecmp(ArgStr[1].Str, "NE"))
     IsLE = False;
-  else if (!strcasecmp(ArgStr[1].Str, "LE"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "LE"))
     IsLE = True;
   else
   {
@@ -782,7 +756,7 @@ static void DecodeBit(Word Code)
 {
   if (ArgCnt == 1)
   {
-    if (!strcasecmp(ArgStr[1].Str, "CA"))
+    if (!as_strcasecmp(ArgStr[1].Str, "CA"))
       WAsmCode[CodeLen++] = Hi(Code);
     else
       WrError(ErrNum_InvAddrMode);
@@ -949,7 +923,7 @@ static void AddX(const char *pOpPart, Word Code, InstProc Proc)
   char OpPart[30];
 
   AddInstTable(InstTable, pOpPart, Code, Proc);
-  sprintf(OpPart, "%sX", pOpPart);
+  as_snprintf(OpPart, sizeof(OpPart), "%sX", pOpPart);
   AddInstTable(InstTable, OpPart, Code | 1, Proc);
 }
 
@@ -958,11 +932,11 @@ static void AddXY(const char *pOpPart, Word Code, InstProc Proc)
   char OpPart[30];
 
   AddInstTable(InstTable, pOpPart, Code, Proc);
-  sprintf(OpPart, "%sX", pOpPart);
+  as_snprintf(OpPart, sizeof(OpPart), "%sX", pOpPart);
   AddInstTable(InstTable, OpPart, Code | 1, Proc);
-  sprintf(OpPart, "%sY", pOpPart);
+  as_snprintf(OpPart, sizeof(OpPart), "%sY", pOpPart);
   AddInstTable(InstTable, OpPart, Code | 2, Proc);
-  sprintf(OpPart, "%sXY", pOpPart);
+  as_snprintf(OpPart, sizeof(OpPart), "%sXY", pOpPart);
   AddInstTable(InstTable, OpPart, Code | 3, Proc);
 }
 
@@ -1134,7 +1108,6 @@ static void SwitchTo_HMCS400(void)
 
   TurnWords = False;
   ConstMode = ConstModeMoto;
-  SetIsOccupied = False;
 
   PCSymbol = "*";
   HeaderID = pDescr->Id;

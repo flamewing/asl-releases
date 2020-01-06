@@ -83,31 +83,51 @@
 
 		assume	fsr:$10
 		mov	w,$13
-		mov	w,$33
+		expect	110
+		 mov	 w,$33
+		endexpect
 
 		assume	fsr:$30
-		mov	w,$13
+		expect	110
+		 mov	 w,$13
+		endexpect
 		mov	w,$33
 
 		assume	status:$00
 		jmp	$056
-		jmp	$256
-		jmp	$456
-		jmp	$656
+		expect	110
+		 jmp	 $256
+		endexpect
+		expect	110
+		 jmp	 $456
+		endexpect
+		expect	110
+		 jmp	 $656
+		endexpect
 
 		assume	status:$40
-		jmp	$056
-		jmp	$256
+		expect	110
+		 jmp	 $056
+		endexpect
+		expect	110
+		 jmp	 $256
+		endexpect
 		jmp	$456
-		jmp	$656
+		expect	110
+		 jmp	 $656
+		endexpect
 
 mybit		bit	$12.3
 mybit1		bit	$32.3
 		assume	fsr:$10
 		setb	mybit
-		setb	mybit1
+		expect	110
+		 setb	 mybit1
+		endexpect
 		assume	fsr:$30
-		setb	mybit
+		expect	110
+		 setb	 mybit
+		endexpect
 		setb	mybit1
 
 		; emulated instructions

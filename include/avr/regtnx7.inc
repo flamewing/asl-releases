@@ -238,7 +238,7 @@ TSM		avrbit	GTCCR,7		; Timer/Counter Synchronization Mode
 ;----------------------------------------------------------------------------
 ; Watchdog Timer
 
-		include	"avr/wdme.inc"
+		include	"wdme.inc"
 
 ;----------------------------------------------------------------------------
 ; Analog Comparator
@@ -262,7 +262,7 @@ AIN0D		avrbit	DIDR0,6		; Disable Digital Input on AIN1
 ;----------------------------------------------------------------------------
 ; A/D Converter
 
-		include	"avr/adcm78.inc"
+		include	"adcm78.inc"
 
 MUX4		avrbit	ADMUX,4
 
@@ -281,12 +281,12 @@ AREFEN		avrbit	AMISCR,2	; External Voltage Reference Input Enable
 ;----------------------------------------------------------------------------
 ; SPI
 
-		include	"avr/spim2c.inc"
+		include	"spim2c.inc"
 
 ;----------------------------------------------------------------------------
 ; USI
 
-		include "avr/usimb8.inc"
+		include "usimb8.inc"
 
 USIBR		sfr	0xbb		; USI Buffer Register
 

@@ -1,12 +1,14 @@
 #ifndef _ERRMSG_H
 #define _ERRMSG_H
 /* errmsg.h */
-/*****************************************************************************
- * Cross Assembler
- *
- * Error message definition & associated checking
- *
- *****************************************************************************/
+/*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
+/* Cross Assembler                                                           */
+/*                                                                           */
+/* Error message definition & associated checking                            */
+/*                                                                           */
+/*****************************************************************************/
 
 #include "cpulist.h"
 #include "datatypes.h"
@@ -61,12 +63,21 @@ typedef enum
   ErrNum_CannotSplitArg = 1112,
   ErrNum_WrongOptCnt = 1115,
   ErrNum_OnlyImmAddr = 1120,
-  ErrNum_InvOpsize = 1130,
+  ErrNum_InvOpSize = 1130,
   ErrNum_ConfOpSizes = 1131,
   ErrNum_UndefOpSizes = 1132,
-  ErrNum_InvOpSize = 1130,
-  ErrNum_InvOpType = 1135,
+  ErrNum_StringOrIntButFloat = 1133,
+  ErrNum_IntButFloat = 1134,
+  /* ErrNum_InvOpType = 1135, */
+  ErrNum_FloatButString = 1136,
+  ErrNum_OpTypeMismatch = 1137,
+  ErrNum_StringButInt = 1138,
+  ErrNum_StringButFloat = 1139,
   ErrNum_TooManyArgs = 1140,
+  ErrNum_IntButString = 1141,
+  ErrNum_IntOrFloatButString = 1142,
+  ErrNum_ExpectString = 1143,
+  ErrNum_ExpectInt = 1144,
   ErrNum_NoRelocs = 1150,
   ErrNum_UnresRelocs = 1155,
   ErrNum_Unexportable = 1156,
@@ -75,6 +86,7 @@ typedef enum
   ErrNum_DivByZero = 1310,
   ErrNum_UnderRange = 1315,
   ErrNum_OverRange = 1320,
+  ErrNum_NotPwr2 = 1322,
   ErrNum_NotAligned = 1325,
   ErrNum_DistTooBig = 1330,
   ErrNum_InAccReg = 1335,
@@ -88,6 +100,7 @@ typedef enum
   ErrNum_DistIsOdd = 1375,
   ErrNum_InvShiftArg = 1380,
   ErrNum_Range18 = 1390,
+  ErrNum_Only1 = 1391,
   ErrNum_ShiftCntTooBig = 1400,
   ErrNum_InvRegList = 1410,
   ErrNum_InvCmpMode = 1420,
@@ -95,6 +108,7 @@ typedef enum
   ErrNum_InvCtrlReg = 1440,
   ErrNum_InvReg = 1445,
   ErrNum_DoubleReg = 1446,
+  ErrNum_RegBankMismatch = 1447,
   ErrNum_NoSaveFrame = 1450,
   ErrNum_NoRestoreFrame = 1460,
   ErrNum_UnknownMacArg = 1465,
@@ -157,6 +171,7 @@ typedef enum
   ErrNum_NotOnThisAddress = 1900,
   ErrNum_NotFromThisAddress = 1905,
   ErrNum_TargOnDiffPage = 1910,
+  ErrNum_TargOnDiffSection = 1911,
   ErrNum_CodeOverflow = 1920,
   ErrNum_AdrOverflow = 1925,
   ErrNum_MixDBDS = 1930,
@@ -194,13 +209,17 @@ typedef enum
   ErrNum_UnknownMacExpMod = 2100,
   ErrNum_ConflictingMacExpMod = 2110,
   ErrNum_InvalidPrepDir = 2120,
+  ErrNum_ExpectedError = 2130,
+  ErrNum_NoNestExpect = 2140,
+  ErrNum_MissingENDEXPECT = 2150,
+  ErrNum_MissingEXPECT = 2160,
   ErrNum_InternalError = 10000,
   ErrNum_OpeningFile = 10001,
   ErrNum_ListWrError = 10002,
   ErrNum_FileReadError = 10003,
   ErrNum_FileWriteError = 10004,
   ErrNum_HeapOvfl = 10006,
-  ErrNum_StackOvfl = 10007,
+  ErrNum_StackOvfl = 10007
 } tErrorNum;
 
 struct sLineComp;

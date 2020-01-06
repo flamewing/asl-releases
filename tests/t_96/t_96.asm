@@ -152,11 +152,15 @@ targ:
 		notb	al
 
 		scall	targ
-		lcall	targ
+		expect	20
+		 lcall	 targ
+		endexpect
 		call	targ
 
 		sjmp	targ
-		ljmp	targ
+		expect	20
+		 ljmp	 targ
+		endexpect
 		br	targ
 		br	[dx]
 

@@ -1,5 +1,7 @@
 /* code1750.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Code Generator MIL-STD-1750                                               */
@@ -10,19 +12,6 @@
 /* a** up to finally do it.  But maybe someone still reads it...             */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code1750.c,v 1.3 2016/10/22 15:54:59 alfred Exp $
- *****************************************************************************
- * $Log: code1750.c,v $
- * Revision 1.3  2016/10/22 15:54:59  alfred
- * - add DATA command to 1750
- *
- * Revision 1.2  2016/10/16 10:00:04  alfred
- * - add fload/extended support
- *
- * Revision 1.1  2016/10/09 19:55:52  alfred
- * - first version of MIL STD 1750 support
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -175,7 +164,7 @@ static Boolean DecodeCondition(const char *pAsc, Word *pResult)
   const tCondition *pCond;
 
   for (pCond = Conditions; pCond->pName; pCond++)
-    if (!strcasecmp(pAsc, pCond->pName))
+    if (!as_strcasecmp(pAsc, pCond->pName))
     {
       *pResult = pCond->Code;
       return True;
@@ -247,7 +236,7 @@ static Boolean DecodeArgXIOCmd(unsigned Index, Word *pResult)
   if (isalpha(ArgStr[Index].Str[0]))
   {
     for (pRun = XIO; pRun->pName; pRun++)
-      if (!strcasecmp(ArgStr[Index].Str, pRun->pName))
+      if (!as_strcasecmp(ArgStr[Index].Str, pRun->pName))
       {
         *pResult = pRun->Code;
         return True;
@@ -941,7 +930,6 @@ static void SwitchTo_1750(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = pDescr->Id;

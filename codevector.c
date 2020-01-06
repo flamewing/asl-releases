@@ -1,17 +1,12 @@
 /* codevector.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator Atari Asteroids Vector Processor                            */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codevector.c,v 1.1 2008/04/13 20:23:46 alfred Exp $                  */
-/*****************************************************************************
- * $Log: codevector.c,v $
- * Revision 1.1  2008/04/13 20:23:46  alfred
- * - add Atari Vecor Processor target
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <stdio.h>
@@ -282,7 +277,7 @@ static void SwitchTo_Vector(void)
 
   FoundDescr = FindFamilyByName("ATARI_VECTOR");
 
-  TurnWords = False; ConstMode = ConstModeMoto; SetIsOccupied = False;
+  TurnWords = False; ConstMode = ConstModeMoto;
 
   PCSymbol = "$"; HeaderID = FoundDescr->Id;
 

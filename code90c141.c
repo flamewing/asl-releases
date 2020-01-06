@@ -1,37 +1,12 @@
 /* code90c141.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator Toshiba TLCS-90                                             */
 /*                                                                           */
-/* Historie: 30.10.1996 Grundsteinlegung                                     */
-/*            2. 1.1999 ChkPC umgebaut                                       */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code90c141.c,v 1.5 2014/07/13 14:27:45 alfred Exp $                  */
-/*****************************************************************************
- * $Log: code90c141.c,v $
- * Revision 1.5  2014/07/13 14:27:45  alfred
- * - rework to current style
- *
- * Revision 1.4  2010/04/17 13:14:23  alfred
- * - address overlapping strcpy()
- *
- * Revision 1.3  2006/08/05 12:05:37  alfred
- * - regard spaces in indexed expressions
- *
- * Revision 1.2  2004/05/29 11:33:02  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- * Revision 1.1  2003/11/06 02:49:22  alfred
- * - recreated
- *
- * Revision 1.2  2002/10/20 09:22:26  alfred
- * - work around the parser problem related to the ' character
- *
- * Revision 1.7  2002/10/07 20:25:01  alfred
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -72,7 +47,7 @@ enum
   ModIdxReg = 4,
   ModDir = 5,
   ModMem = 6,
-  ModImm = 7,
+  ModImm = 7
 };
 
 #define MModReg8   (1 << ModReg8)
@@ -130,7 +105,7 @@ static void DecodeAdr(const tStrComp *pArg, Byte Erl)
   /* 1. 8-Bit-Register */
 
   for (z = 0; z < Reg8Cnt; z++)
-    if (!strcasecmp(pArg->Str, Reg8Names[z]))
+    if (!as_strcasecmp(pArg->Str, Reg8Names[z]))
     {
       AdrType = ModReg8;
       AdrMode = z;
@@ -143,7 +118,7 @@ static void DecodeAdr(const tStrComp *pArg, Byte Erl)
   if (Erl & MModIReg16)
   {
     for (z = 0; z < IReg16Cnt; z++)
-      if (!strcasecmp(pArg->Str, IReg16Names[z]))
+      if (!as_strcasecmp(pArg->Str, IReg16Names[z]))
       {
         AdrType = ModIReg16;
         AdrMode = z;
@@ -155,7 +130,7 @@ static void DecodeAdr(const tStrComp *pArg, Byte Erl)
   /* 3. 16-Bit-Register, normal */
 
   for (z = 0; z < Reg16Cnt; z++)
-   if (!strcasecmp(pArg->Str, Reg16Names[z]))
+   if (!as_strcasecmp(pArg->Str, Reg16Names[z]))
    {
      AdrType = ModReg16;
      AdrMode = z;
@@ -189,7 +164,7 @@ static void DecodeAdr(const tStrComp *pArg, Byte Erl)
       KillPostBlanksStrComp(&Arg);
       fnd = False;
 
-      if (!strcasecmp(Arg.Str, "A"))
+      if (!as_strcasecmp(Arg.Str, "A"))
       {
         fnd = True;
         ok = ((!NegFlag) && (!(OccFlag & 1)));
@@ -203,7 +178,7 @@ static void DecodeAdr(const tStrComp *pArg, Byte Erl)
       {
         for (z = 0; z < Reg16Cnt; z++)
         {
-          if (!strcasecmp(Arg.Str, Reg16Names[z]))
+          if (!as_strcasecmp(Arg.Str, Reg16Names[z]))
           {
             fnd = True;
             BaseReg = z;
@@ -296,7 +271,7 @@ static void DecodeAdr(const tStrComp *pArg, Byte Erl)
     switch (OpSize)
     {
       case -1:
-        WrError(ErrNum_InvOpsize);
+        WrError(ErrNum_InvOpSize);
         break;
       case 0:
         AdrVals[0] = EvalStrIntExpression(pArg, Int8, &ok);
@@ -332,8 +307,8 @@ chk:
 
 static Boolean ArgPair(char *Arg1, char *Arg2)
 {
-  return  (((!strcasecmp(ArgStr[1].Str, Arg1)) && (!strcasecmp(ArgStr[2].Str, Arg2)))
-        || ((!strcasecmp(ArgStr[1].Str, Arg2)) && (!strcasecmp(ArgStr[2].Str, Arg1))));
+  return  (((!as_strcasecmp(ArgStr[1].Str, Arg1)) && (!as_strcasecmp(ArgStr[2].Str, Arg2)))
+        || ((!as_strcasecmp(ArgStr[1].Str, Arg2)) && (!as_strcasecmp(ArgStr[2].Str, Arg1))));
 }
 
 static unsigned DecodeCondition(char *pCondStr)
@@ -470,7 +445,7 @@ static void DecodeBit(Word Code)
 static void DecodeAcc(Word Code)
 {
   if (!ChkArgCnt(1, 1));
-  else if (strcasecmp(ArgStr[1].Str, "A")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "A")) WrError(ErrNum_InvAddrMode);
   else
   {
     CodeLen = 1;
@@ -851,7 +826,7 @@ static void DecodePUSH_POP(Word Code)
 {
   if (ChkArgCnt(1, 1))
   {
-    if (!strcasecmp(ArgStr[1].Str, "AF"))
+    if (!as_strcasecmp(ArgStr[1].Str, "AF"))
     {
       CodeLen = 1;
       BAsmCode[0] = 0x56 | Code;
@@ -913,7 +888,7 @@ static void DecodeLDAR(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1].Str, "HL")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "HL")) WrError(ErrNum_InvAddrMode);
   else
   {
     Boolean OK;
@@ -936,7 +911,7 @@ static void DecodeEX(Word Code)
 
   /* work around the parser problem related to the ' character */
 
-  if (!strncasecmp(ArgStr[2].Str, "AF\'", 3))
+  if (!as_strncasecmp(ArgStr[2].Str, "AF\'", 3))
     ArgStr[2].Str[3] = '\0';
 
   if (!ChkArgCnt(2, 2));
@@ -1081,7 +1056,7 @@ static void DecodeINCX_DECX(Word Code)
 static void DecodeMUL_DIV(Word Code)
 {
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1].Str, "HL")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "HL")) WrError(ErrNum_InvAddrMode);
   else
   {
     OpSize = 0;
@@ -1284,7 +1259,7 @@ static void AddW(char *Name, Word Code, InstProc Proc)
   char Str[20];
 
   AddInstTable(InstTable, Name, Code, Proc);
-  sprintf(Str, "%sW", Name);
+  as_snprintf(Str, sizeof(Str), "%sW", Name);
   AddInstTable(InstTable, Str, Code | 0x100, Proc);
 }
 
@@ -1443,11 +1418,16 @@ static void SwitchFrom_90C141(void)
   DeinitFields();
 }
 
+static Boolean ChkMoreOneArg(void)
+{
+  return (ArgCnt > 1);
+}
+
 static void SwitchTo_90C141(void)
 {
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = True;
+  SetIsOccupiedFnc = ChkMoreOneArg;
 
   PCSymbol = "$";
   HeaderID = 0x53;

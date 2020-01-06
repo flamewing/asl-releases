@@ -1,96 +1,12 @@
 /* code78k2.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator 78K2-Familie                                                */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: code78k2.c,v 1.22 2016/08/14 20:00:23 alfred Exp $
- *****************************************************************************
- * $Log: code78k2.c,v $
- * Revision 1.22  2016/08/14 20:00:23  alfred
- * - correct formatting
- *
- * Revision 1.21  2016/08/12 18:20:40  alfred
- * - correct usage of & operator
- * - rename PRn -> RPn
- *
- * Revision 1.20  2016/08/10 19:22:33  alfred
- * - correct usage of toupper()
- *
- * Revision 1.19  2014/12/07 19:14:00  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.18  2014/11/05 15:47:15  alfred
- * - replace InitPass callchain with registry
- *
- * Revision 1.17  2014/08/17 10:37:39  alfred
- * - some minor cleanups
- *
- * Revision 1.16  2014/03/08 21:06:36  alfred
- * - rework ASSUME framework
- *
- * Revision 1.15  2007/11/24 22:48:05  alfred
- * - some NetBSD changes
- *
- * Revision 1.14  2006/10/10 10:42:08  alfred
- * - add missing 78K2 instructions (fix by Patrik Stroemdahl)
- *
- * Revision 1.13  2005/12/26 16:15:13  alfred
- * - silence warning
- *
- * Revision 1.12  2005/09/08 16:53:42  alfred
- * - use common PInstTable
- *
- * Revision 1.11  2004/05/29 12:04:47  alfred
- * - relocated DecodeMot(16)Pseudo into separate module
- *
- * Revision 1.10  2003/12/07 14:01:16  alfred
- * - added missing static defs
- *
- * Revision 1.9  2003/11/15 18:49:31  alfred
- * - added page registers
- *
- * Revision 1.8  2003/11/07 23:04:39  alfred
- * - added bit ops
- *
- * Revision 1.7  2003/11/06 14:14:15  alfred
- * - added SEL
- *
- * Revision 1.6  2003/11/06 14:09:43  alfred
- * - added DBNZ
- *
- * Revision 1.5  2003/11/06 13:57:58  alfred
- * - added conditional branches
- *
- * Revision 1.1  2003/11/06 02:49:21  alfred
- * - recreated
- *
- * Revision 1.11  2003/11/04 17:46:17  alfred
- * - SP-related stuff
- *
- * Revision 1.9  2003/11/03 22:32:57  alfred
- * - added Alu16 ops
- *
- * Revision 1.6  2003/11/02 20:50:42  alfred
- * - added XCH
- *
- * Revision 1.5  2003/11/02 15:55:30  alfred
- * - finshed MOV
- *
- * Revision 1.4  2003/11/01 23:16:18  alfred
- * - wrote indexed mode
- *
- * Revision 1.3  2003/11/01 23:00:12  alfred
- * - wrote inner displacement mode
- *
- * Revision 1.2  2003/10/19 20:56:13  alfred
- * - begun with address parser
- *
- * Revision 1.1  2003/10/12 19:28:53  alfred
- * - created 78K/2
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -214,7 +130,7 @@ static ShortInt DecodeReg16(char *pAsc)
     int z;
 
     for (z = 0; z < 4; z++)
-      if (!strcasecmp(Reg16Names[z], pAsc))
+      if (!as_strcasecmp(Reg16Names[z], pAsc))
       {
         Result = z;
         break;
@@ -280,14 +196,14 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "PSW"))
+  if (!as_strcasecmp(pArg->Str, "PSW"))
   {
     AdrMode = ModPSW;
     SetOpSize(0);
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "STBC"))
+  if (!as_strcasecmp(pArg->Str, "STBC"))
   {
     AdrMode = ModSTBC;
     SetOpSize(0);
@@ -303,7 +219,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
     goto AdrFound;
   }
 
-  if (!strcasecmp(pArg->Str, "SP"))
+  if (!as_strcasecmp(pArg->Str, "SP"))
   {
     AdrMode = ModSP;
     SetOpSize(1); 
@@ -354,7 +270,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
       /* simple expression without displacement? */
 
       for (z = 0; z < sizeof(Modes) / sizeof(*Modes); z++)
-        if (!strcasecmp(Arg.Str, Modes[z]))
+        if (!as_strcasecmp(Arg.Str, Modes[z]))
         {
           AdrMode = ModMem; AdrVal = 0x16;
           AdrVals[0] = z % (sizeof(Modes) / sizeof(*Modes) / 2); 
@@ -372,7 +288,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
       /* decode base register.  SP is not otherwise handled. */
 
       Save = StrCompSplitRef(&Base, &Remainder, &Arg, pSep);
-      if (!strcasecmp(Base.Str, "SP"))
+      if (!as_strcasecmp(Base.Str, "SP"))
         AdrVals[0] = 1;
       else 
       {
@@ -431,7 +347,8 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
           {
             AdrVals[0] = (tmp - 2) << 1;
             break; 
-          }    
+          }
+          /* else fall-through */
         default:
           WrStrErrorPos(ErrNum_InvReg, &Reg);
           goto AdrFound;
@@ -1421,7 +1338,7 @@ static void DecodeSEL(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(1, 1));
-  else if (strncasecmp(ArgStr[1].Str, "RB", 2)) WrError(ErrNum_InvAddrMode);
+  else if (as_strncasecmp(ArgStr[1].Str, "RB", 2)) WrError(ErrNum_InvAddrMode);
   else
   {
     Bank = EvalStrIntExpressionOffs(&ArgStr[1], 2, UInt2, &OK);
@@ -1441,7 +1358,7 @@ static void DecodeBIT(Word Index)
 
   if (!ChkArgCnt(1, 1));
   else if (DecodeBitAdr(&ArgStr[1], &Result))
-    EnterIntSymbol(LabPart.Str, Result, SegNone, False);
+    EnterIntSymbol(&LabPart, Result, SegNone, False);
 }
 
 static void DecodeMOV1(Word Index)
@@ -1453,9 +1370,9 @@ static void DecodeMOV1(Word Index)
 
   if (ChkArgCnt(2, 2))
   {
-    if (!strcasecmp(ArgStr[1].Str, "CY"))
+    if (!as_strcasecmp(ArgStr[1].Str, "CY"))
       ArgPos = 2;
-    else if (!strcasecmp(ArgStr[2].Str, "CY"))
+    else if (!as_strcasecmp(ArgStr[2].Str, "CY"))
       ArgPos = 1;
     else
     {
@@ -1477,7 +1394,7 @@ static void DecodeANDOR1(Word Index)
   LongWord Bit;
 
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1].Str, "CY")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "CY")) WrError(ErrNum_InvAddrMode);
   else
   {
     tStrComp *pArg = &ArgStr[2], BitArg;
@@ -1505,7 +1422,7 @@ static void DecodeXOR1(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 2));
-  else if (strcasecmp(ArgStr[1].Str, "CY")) WrError(ErrNum_InvAddrMode);
+  else if (as_strcasecmp(ArgStr[1].Str, "CY")) WrError(ErrNum_InvAddrMode);
   else
   {
     if (DecodeBitAdr(&ArgStr[2], &Bit))
@@ -1525,7 +1442,7 @@ static void DecodeBit1(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(1, 1));
-  else if (!strcasecmp(ArgStr[1].Str, "CY"))
+  else if (!as_strcasecmp(ArgStr[1].Str, "CY"))
   {
     *pCode++ = 0x40 | (9 - (Index >> 4));
   }
@@ -1745,7 +1662,6 @@ static void SwitchTo_78K2(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "PC";
   HeaderID = pDescr->Id;

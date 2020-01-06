@@ -1,41 +1,12 @@
 /* code3201x.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator TMS3201x-Familie                                            */
 /*                                                                           */
-/* Historie: 28.11.1996 Grundsteinlegung                                     */
-/*            7. 7.1998 Fix Zugriffe auf CharTransTable wg. signed chars     */
-/*           18. 8.1992 BookKeeping-Aufruf in RES                            */
-/*            2. 1.1999 ChkPC-Anpassung                                      */
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: code3201x.c,v 1.6 2016/09/29 16:43:36 alfred Exp $                          */
-/*****************************************************************************
- * $Log: code3201x.c,v $
- * Revision 1.6  2016/09/29 16:43:36  alfred
- * - introduce common DecodeDATA/DecodeRES functions
- *
- * Revision 1.5  2014/12/07 19:13:59  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.4  2014/10/06 18:53:05  alfred
- * - rework to current style
- *
- * Revision 1.3  2008/11/23 10:39:16  alfred
- * - allow strings with NUL characters
- *
- * Revision 1.2  2005/09/08 17:31:03  alfred
- * - add missing include
- *
- * Revision 1.1  2003/11/06 02:49:19  alfred
- * - recreated
- *
- * Revision 1.2  2002/08/14 18:43:48  alfred
- * - warn null allocation, remove some warnings
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -86,9 +57,9 @@ static ImmOrder *ImmOrders;
 static Word EvalARExpression(const tStrComp *pArg, Boolean *OK)
 {
   *OK = True;
-  if (!strcasecmp(pArg->Str, "AR0"))
+  if (!as_strcasecmp(pArg->Str, "AR0"))
     return 0;
-  if (!strcasecmp(pArg->Str, "AR1"))
+  if (!as_strcasecmp(pArg->Str, "AR1"))
     return 1;
   return EvalStrIntExpression(pArg, UInt1, OK);
 }
@@ -121,7 +92,7 @@ static void DecodeAdr(const tStrComp *pArg, int Aux, Boolean Must1)
   else if (ChkArgCnt(1, Aux - 1))
   {
     h = 0;
-    if ((strlen(pArg->Str) > 3) && (!strncasecmp(pArg->Str, "DAT", 3)))
+    if ((strlen(pArg->Str) > 3) && (!as_strncasecmp(pArg->Str, "DAT", 3)))
     {
       AdrOK = True;
       for (p = pArg->Str + 3; *p != '\0'; p++)
@@ -207,7 +178,7 @@ static void DecodeAdrShift(Word Index)
     {
       if (ArgCnt == 2)
       {
-        if (!strncasecmp(ArgStr[2].Str, "AR", 2))
+        if (!as_strncasecmp(ArgStr[2].Str, "AR", 2))
         {
           HasSh = False;
           Cnt = 2;
@@ -501,7 +472,6 @@ static void SwitchTo_3201X(void)
 {
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = 0x74;

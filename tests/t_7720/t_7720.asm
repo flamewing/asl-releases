@@ -139,3 +139,17 @@ lab:
 		rpnop
 	op	mov	@a,non
 		rpdec
+
+	data	0
+	data	8388607
+	data	-10000
+	data	-4194304
+	data	'ABC'
+	data	"a"
+	data	"ab"
+	data	"abc"
+	data	"abcd"
+	data	"abcde"
+	data	"abcdef"
+	data	"abcdefg"
+	data	"abcdefgh"

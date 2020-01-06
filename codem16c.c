@@ -1,67 +1,12 @@
 /* codem16c.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator M16C                                                        */
 /*                                                                           */
-/* Historie: 17.12.1996 Grundsteinlegung                                     */
-/*           21. 9.1998 Kodierungsfehler: mov.b:s #0,...->dests vergessen    */
-/*                                        mov.x:s #imm,reg->OpSize invertiert*/
-/*                                        sub.x:q #imm4,...->falscher Opcode */
-/*            3. 1.1999 ChkPC-Anpassung                                      */
-/*   {RMS}    6. 2.1999 Fixed remaining code generation errors - M16C is now */
-/*                      100% correct, validated against reference assemblers */
-/*                      and official Mitsubishi documentation.               */
-/*                      Search for RMS: tags to see changes                  */
-/*   {RMS}    8. 2.1999 Fixed ChkPC SegLimit typo [M16s have 20 bits]        */
-/*   {RMS}   10. 2.1999 Accomodate JMP.S crossing 64k boundary bug in M16C   */
-/*   {RMS}    2. 4.1999 Made the JMP.S promotion fix CPU-dependent, and made */
-/*                      repairs to the JMP.S handling for forward label refs */
-/*                      so they now work. [JMP.S symbol] now works.          */
-/*   {RMS}   13.12.1999 One MORE fix to JMP[.S] - this time for something    */
-/*                      silly, and probably not that common.  But it caused  */
-/*                      a very annoying bug all the same: infinite phase     */
-/*                      errors causing an infinite number of passes! Oops. :)*/
-/*            9. 3.2000 'ambiguous else'-Warnungen beseitigt                 */
-/*                                                                           */
 /*****************************************************************************/
-/* $Id: codem16c.c,v 1.12 2014/12/07 19:14:01 alfred Exp $                    */
-/*****************************************************************************
- * $Log: codem16c.c,v $
- * Revision 1.12  2014/12/07 19:14:01  alfred
- * - silence a couple of Borland C related warnings and errors
- *
- * Revision 1.11  2014/12/05 11:15:28  alfred
- * - eliminate AND/OR/NOT
- *
- * Revision 1.10  2014/12/05 08:53:45  alfred
- * - eliminate remaining BEGIN/END
- *
- * Revision 1.9  2014/06/13 20:58:48  alfred
- * - adapt to current style
- *
- * Revision 1.8  2010/04/11 11:38:43  alfred
- * - correct SHA coding
- *
- * Revision 1.7  2010/04/04 08:31:16  alfred
- * - correct some coding details
- *
- * Revision 1.6  2010/03/27 14:21:04  alfred
- * - correct address range check
- *
- * Revision 1.5  2007/11/24 22:48:07  alfred
- * - some NetBSD changes
- *
- * Revision 1.4  2005/09/30 12:53:49  alfred
- * - correct include statements
- *
- * Revision 1.3  2005/09/08 17:06:29  alfred
- * - dynamically allocate string
- *
- * Revision 1.2  2004/05/29 11:33:03  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <string.h>
@@ -179,14 +124,14 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
 
   /* Datenregister 32 Bit */
 
-  if (!strcasecmp(pArg->Str, "R2R0"))
+  if (!as_strcasecmp(pArg->Str, "R2R0"))
   {
     AdrType = ModReg32;
     AdrMode = 0;
     SetOpSize(2);
     goto chk;
   }
-  if (!strcasecmp(pArg->Str, "R3R1"))
+  if (!as_strcasecmp(pArg->Str, "R3R1"))
   {
     AdrType = ModReg32;
     AdrMode = 1;
@@ -207,7 +152,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
 
   /* Adressregister 32 Bit */
 
-  if (!strcasecmp(pArg->Str, "A1A0"))
+  if (!as_strcasecmp(pArg->Str, "A1A0"))
   {
     AdrType = ModAReg32;
     SetOpSize(2);
@@ -221,7 +166,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
   {
     StrCompSplitCopy(&DispPart, &RegPart, pArg, p);
     StrCompShorten(&RegPart, 1);
-    if ((!strcasecmp(RegPart.Str, "A0")) || (!strcasecmp(RegPart.Str, "A1")))
+    if ((!as_strcasecmp(RegPart.Str, "A0")) || (!as_strcasecmp(RegPart.Str, "A1")))
     {
       DispAcc = EvalStrIntExpression(&DispPart, (Mask & MModDisp20)  ? Int20 : Int16, &OK);
       if (OK)
@@ -246,7 +191,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
           AdrCnt = 2;
           AdrMode = RegPart.Str[1] - '0' + 12;
         }
-        else if (strcasecmp(RegPart.Str, "A0")) WrError(ErrNum_InvAddrMode);
+        else if (as_strcasecmp(RegPart.Str, "A0")) WrError(ErrNum_InvAddrMode);
         else
         {
           AdrType = ModDisp20;
@@ -258,7 +203,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
         }
       }
     }
-    else if (!strcasecmp(RegPart.Str, "SB"))
+    else if (!as_strcasecmp(RegPart.Str, "SB"))
     {
       DispAcc = EvalStrIntExpression(&DispPart, Int16, &OK);
       if (OK)
@@ -280,7 +225,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
         }
       }
     }
-    else if (!strcasecmp(RegPart.Str, "FB"))
+    else if (!as_strcasecmp(RegPart.Str, "FB"))
     {
       DispAcc = EvalStrIntExpression(&DispPart, SInt8, &OK);
       if (OK)
@@ -291,7 +236,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
         AdrMode = 11;
       }
     }
-    else if (!strcasecmp(RegPart.Str, "SP"))
+    else if (!as_strcasecmp(RegPart.Str, "SP"))
     {
       DispAcc = EvalStrIntExpression(&DispPart, SInt8, &OK);
       if (OK)
@@ -301,7 +246,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
         AdrCnt = 1;
       }
     }
-    else if (!strcasecmp(RegPart.Str, "A1A0"))
+    else if (!as_strcasecmp(RegPart.Str, "A1A0"))
     {
       DispAcc = EvalStrIntExpression(&DispPart, SInt8, &OK);
       if (OK)
@@ -375,9 +320,9 @@ chk:
 
 static Boolean DecodeReg(char *Asc, Byte *Erg)
 {
-  if (!strcasecmp(Asc, "FB"))
+  if (!as_strcasecmp(Asc, "FB"))
     *Erg = 7;
-  else if (!strcasecmp(Asc, "SB"))
+  else if (!as_strcasecmp(Asc, "SB"))
     *Erg = 6;
   else if ((strlen(Asc) == 2)
         && (mytoupper(*Asc) == 'A')
@@ -394,13 +339,13 @@ static Boolean DecodeReg(char *Asc, Byte *Erg)
 
 static Boolean DecodeCReg(char *Asc, Byte *Erg)
 {
-  if (!strcasecmp(Asc, "INTBL")) *Erg = 1;
-  else if (!strcasecmp(Asc, "INTBH")) *Erg = 2;
-  else if (!strcasecmp(Asc, "FLG")) *Erg = 3;
-  else if (!strcasecmp(Asc, "ISP")) *Erg = 4;
-  else if (!strcasecmp(Asc, "SP")) *Erg = 5;
-  else if (!strcasecmp(Asc, "SB")) *Erg = 6;
-  else if (!strcasecmp(Asc, "FB")) *Erg = 7;
+  if (!as_strcasecmp(Asc, "INTBL")) *Erg = 1;
+  else if (!as_strcasecmp(Asc, "INTBH")) *Erg = 2;
+  else if (!as_strcasecmp(Asc, "FLG")) *Erg = 3;
+  else if (!as_strcasecmp(Asc, "ISP")) *Erg = 4;
+  else if (!as_strcasecmp(Asc, "SP")) *Erg = 5;
+  else if (!as_strcasecmp(Asc, "SB")) *Erg = 6;
+  else if (!as_strcasecmp(Asc, "FB")) *Erg = 7;
   else
   {
     WrXError(ErrNum_InvCtrlReg, Asc);
@@ -522,7 +467,7 @@ static Boolean DecodeBitAdr(Boolean MayShort)
     WrError(ErrNum_InvBitPos);             /* RMS 08: Notify user there's a problem with the offset */
     return False;
   }
-  else if (!strcasecmp(RegPart.Str, "SB"))
+  else if (!as_strcasecmp(RegPart.Str, "SB"))
   {
     DecodeDisp(&DispPart, UInt13, UInt16, &DispAcc, &OK);
     if (OK)
@@ -551,7 +496,7 @@ static Boolean DecodeBitAdr(Boolean MayShort)
     WrError(ErrNum_InvBitPos);             /* RMS 08: Notify user there's a problem with the offset */
     return False;
   }
-  else if (!strcasecmp(RegPart.Str, "FB"))
+  else if (!as_strcasecmp(RegPart.Str, "FB"))
   {
     DecodeDisp(&DispPart, SInt5, SInt8, &DispAcc, &OK);
     if (OK)
@@ -663,7 +608,7 @@ static void DecodeString(Word Code)
 {
   if (OpSize == -1) OpSize = 1;
   if (!ChkArgCnt(0, 0));
-  else if ((OpSize != 0) && (OpSize != 1)) WrError(ErrNum_InvOpsize);
+  else if ((OpSize != 0) && (OpSize != 1)) WrError(ErrNum_InvOpSize);
   else if (strcmp(Format," ")) WrError(ErrNum_InvFormat);
   else if (!Hi(Code))
   {
@@ -696,7 +641,7 @@ static void DecodeMOV(Word Code)
       if (AdrType != ModNone)
       {
         if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-        else if ((OpSize != 0) && (OpSize != 1)) WrError(ErrNum_InvOpsize);
+        else if ((OpSize != 0) && (OpSize != 1)) WrError(ErrNum_InvOpSize);
         else
         {
           if (FormatCode == 0)
@@ -755,7 +700,7 @@ static void DecodeMOV(Word Code)
                 }
                 else if (IsShort(AdrMode2, &SMode))
                 {
-                  if (OpSize != 0) WrError(ErrNum_InvOpsize);
+                  if (OpSize != 0) WrError(ErrNum_InvOpSize);
                   else
                   {
                     BAsmCode[0] = 0xc0 + SMode;
@@ -820,7 +765,7 @@ static void DecodeMOV(Word Code)
               }
               break;
             case 4:
-              if (OpSize != 0) WrError(ErrNum_InvOpsize);
+              if (OpSize != 0) WrError(ErrNum_InvOpSize);
               else if (AdrType != ModImm) WrError(ErrNum_InvAddrMode);
               else if (!IsShort(AdrMode2, &SMode)) WrError(ErrNum_InvAddrMode);
               else
@@ -851,7 +796,7 @@ static void DecodeLDC_STC(Word IsSTC)
     const tStrComp *pRegArg = IsSTC ? &ArgStr[1] : &ArgStr[2],
                    *pMemArg = IsSTC ? &ArgStr[2] : &ArgStr[1];
 
-    if (!strcasecmp(pRegArg->Str, "PC"))
+    if (!as_strcasecmp(pRegArg->Str, "PC"))
     {
       if (!IsSTC) WrError(ErrNum_InvAddrMode);
       else
@@ -929,7 +874,7 @@ static void DecodeLDE_STE(Word IsLDE)
     if (AdrType != ModNone)
     {
       if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-      else if (OpSize > 1) WrError(ErrNum_InvOpsize);
+      else if (OpSize > 1) WrError(ErrNum_InvOpSize);
       else
       {
         CopyAdr();
@@ -987,13 +932,13 @@ static void DecodeDir(Word Code)
   Boolean OK;
   Integer Num1;
 
-  if (OpSize > 0) WrError(ErrNum_InvOpsize);
+  if (OpSize > 0) WrError(ErrNum_InvOpSize);
   else if (ChkArgCnt(2, 2)
         && CheckFormat("G"))
   {
     OK = True; Num1 = 0;
-    if (!strcasecmp(ArgStr[2].Str, "R0L"));
-    else if (!strcasecmp(ArgStr[1].Str, "R0L")) Num1 = 1;
+    if (!as_strcasecmp(ArgStr[2].Str, "R0L"));
+    else if (!as_strcasecmp(ArgStr[1].Str, "R0L")) Num1 = 1;
     else OK = False;
     if (!OK) WrError(ErrNum_InvAddrMode);
     else
@@ -1023,7 +968,7 @@ static void DecodePUSH_POP(Word IsPOP)
     if (AdrType != ModNone)
     {
       if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-      else if (OpSize > 1) WrError(ErrNum_InvOpsize);
+      else if (OpSize > 1) WrError(ErrNum_InvOpSize);
       else
       {
         if (FormatCode == 0)
@@ -1153,7 +1098,7 @@ static void DecodeXCHG(Word Code)
       if (AdrType != ModNone)
       {
         if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-        else if (OpSize > 1) WrError(ErrNum_InvOpsize);
+        else if (OpSize > 1) WrError(ErrNum_InvOpSize);
         else if (AdrMode2 < 4)
         {
           BAsmCode[0] = 0x7a + OpSize;
@@ -1249,7 +1194,7 @@ static void DecodeADD(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(2, 2));
-  else if (!strcasecmp(ArgStr[2].Str, "SP"))
+  else if (!as_strcasecmp(ArgStr[2].Str, "SP"))
   {
     if (OpSize == -1) OpSize = 1;
     if (CheckFormat("GQ"))
@@ -1258,7 +1203,7 @@ static void DecodeADD(Word Code)
       if (AdrType != ModNone)
       {
         if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-        else if (OpSize > 1) WrError(ErrNum_InvOpsize);
+        else if (OpSize > 1) WrError(ErrNum_InvOpSize);
         else
         {
           AdrLong = ImmVal();
@@ -1298,7 +1243,7 @@ static void DecodeADD(Word Code)
       if (AdrType != ModNone)
       {
         if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-        else if ((OpSize != 0) && (OpSize != 1)) WrError(ErrNum_InvOpsize);
+        else if ((OpSize != 0) && (OpSize != 1)) WrError(ErrNum_InvOpSize);
         else
         {
           if (FormatCode == 0)
@@ -1341,7 +1286,7 @@ static void DecodeADD(Word Code)
               }
               break;
             case 3:
-              if (OpSize != 0) WrError(ErrNum_InvOpsize);
+              if (OpSize != 0) WrError(ErrNum_InvOpSize);
               else if (!IsShort(AdrMode2, &SMode)) WrError(ErrNum_InvAddrMode);
               else if (AdrType == ModImm)
               {
@@ -1385,7 +1330,7 @@ static void DecodeCMP(Word Code)
       if (AdrType != ModNone)
       {
         if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-        else if ((OpSize != 0) && (OpSize != 1)) WrError(ErrNum_InvOpsize);
+        else if ((OpSize != 0) && (OpSize != 1)) WrError(ErrNum_InvOpSize);
         else
         {
           if (FormatCode == 0)
@@ -1429,7 +1374,7 @@ static void DecodeCMP(Word Code)
               }
               break; 
             case 3:
-              if (OpSize != 0) WrError(ErrNum_InvOpsize);
+              if (OpSize != 0) WrError(ErrNum_InvOpSize);
               else if (!IsShort(AdrMode2, &SMode)) WrError(ErrNum_InvAddrMode);
               else if (AdrType == ModImm)
               {
@@ -1473,7 +1418,7 @@ static void DecodeSUB(Word Code)
       if (AdrType != ModNone)
       {
         if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-        else if ((OpSize != 0) && (OpSize != 1)) WrError(ErrNum_InvOpsize);
+        else if ((OpSize != 0) && (OpSize != 1)) WrError(ErrNum_InvOpSize);
         else
         {
           if (FormatCode == 0)
@@ -1516,7 +1461,7 @@ static void DecodeSUB(Word Code)
               }
               break;
             case 3:
-              if (OpSize != 0) WrError(ErrNum_InvOpsize);
+              if (OpSize != 0) WrError(ErrNum_InvOpSize);
               else if (!IsShort(AdrMode2, &SMode)) WrError(ErrNum_InvAddrMode);
               else if (AdrType == ModImm)
               {
@@ -1551,7 +1496,7 @@ static void DecodeGen1(Word Code)
     if (AdrType != ModNone)
     {
       if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-      else if ((OpSize != 0) && (OpSize != 1)) WrError(ErrNum_InvOpsize);
+      else if ((OpSize != 0) && (OpSize != 1)) WrError(ErrNum_InvOpSize);
       else
       {
         BAsmCode[0] = Hi(Code) + OpSize;
@@ -1578,7 +1523,7 @@ static void DecodeGen2(Word Index)
       if (AdrType != ModNone)
       {
         if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-        else if ((OpSize != 0) && (OpSize != 1)) WrError(ErrNum_InvOpsize);
+        else if ((OpSize != 0) && (OpSize != 1)) WrError(ErrNum_InvOpSize);
         else if ((*OpPart.Str == 'M') && ((AdrMode2 == 3) || (AdrMode2 == 5) || (AdrMode2 - OpSize == 1))) WrError(ErrNum_InvAddrMode);
         else
           CodeGen(pOrder->Code1, pOrder->Code2, pOrder->Code3);
@@ -1604,7 +1549,7 @@ static void DecodeINC_DEC(Word IsDEC)
         CodeLen = 1;
       }
       else if (!IsShort(AdrMode, &SMode)) WrError(ErrNum_InvAddrMode);
-      else if (OpSize != 0) WrError(ErrNum_InvOpsize);
+      else if (OpSize != 0) WrError(ErrNum_InvOpSize);
       else
       {
         BAsmCode[0] = 0xa0 + (IsDEC << 3) + SMode;
@@ -1626,7 +1571,7 @@ static void DecodeDiv(Word Index)
     if (AdrType != ModNone)
     {
       if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-      else if ((OpSize != 0) && (OpSize != 1)) WrError(ErrNum_InvOpsize);
+      else if ((OpSize != 0) && (OpSize != 1)) WrError(ErrNum_InvOpSize);
       else if (AdrType == ModImm)
       {
         BAsmCode[0] = 0x7c + OpSize;
@@ -1710,7 +1655,7 @@ static void DecodeEXTS(Word Code)
           CodeLen = 2;
         }
       }
-      else WrError(ErrNum_InvOpsize);
+      else WrError(ErrNum_InvOpSize);
     }
   }
 }
@@ -1728,7 +1673,7 @@ static void DecodeNOT(Word Code)
     if (AdrType != ModNone)
     {
       if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-      else if (OpSize > 1) WrError(ErrNum_InvOpsize);
+      else if (OpSize > 1) WrError(ErrNum_InvOpSize);
       else
       {
         if (FormatCode == 0)
@@ -1747,7 +1692,7 @@ static void DecodeNOT(Word Code)
             CodeLen = 2 + AdrCnt;
             break;
           case 2:
-            if (OpSize != 0) WrError(ErrNum_InvOpsize);
+            if (OpSize != 0) WrError(ErrNum_InvOpSize);
             else if (!IsShort(AdrMode, &SMode)) WrError(ErrNum_InvAddrMode);
             else
             {
@@ -1777,7 +1722,7 @@ static void DecodeAND_OR(Word IsOR)
       if (AdrType != ModNone)
       {
         if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-        else if (OpSize > 1) WrError(ErrNum_InvOpsize);
+        else if (OpSize > 1) WrError(ErrNum_InvOpSize);
         else
         {
           if (FormatCode == 0)
@@ -1803,7 +1748,7 @@ static void DecodeAND_OR(Word IsOR)
               CodeGen(0x90 + (IsOR << 3), 0x76, 0x20 + (IsOR << 4));
               break;
             case 2:
-              if (OpSize != 0) WrError(ErrNum_InvOpsize);
+              if (OpSize != 0) WrError(ErrNum_InvOpSize);
               else if (AdrType == ModImm)
               if (!IsShort(AdrMode2, &SMode)) WrError(ErrNum_InvAddrMode);
               else
@@ -1843,7 +1788,7 @@ static void DecodeROT(Word Code)
     if (AdrType != ModNone)
     {
       if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-      else if (OpSize > 1) WrError(ErrNum_InvOpsize);
+      else if (OpSize > 1) WrError(ErrNum_InvOpSize);
       else
       {
         OpSize2 = OpSize;
@@ -1891,7 +1836,7 @@ static void DecodeSHA_SHL(Word IsSHA)
     if (AdrType != ModNone)
     {
       if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-      else if ((OpSize > 2) || ((OpSize == 2) && (AdrType == ModGen))) WrError(ErrNum_InvOpsize);
+      else if ((OpSize > 2) || ((OpSize == 2) && (AdrType == ModGen))) WrError(ErrNum_InvOpSize);
       else
       {
         CopyAdr(); OpSize2 = OpSize; OpSize = 0;
@@ -2096,7 +2041,7 @@ static void DecodeJMP(Word Code)
         CodeLen = 4;
         break;
       default:
-        WrError(ErrNum_InvOpsize);
+        WrError(ErrNum_InvOpSize);
     }
   }
 }
@@ -2135,7 +2080,7 @@ static void DecodeJSR(Word Code)
         CodeLen = 4;
         break;
       default:
-        WrError(ErrNum_InvOpsize);
+        WrError(ErrNum_InvOpSize);
     }
   }
 }
@@ -2162,7 +2107,7 @@ static void DecodeJMPI_JSRI(Word Code)
     if (AdrType != ModNone)
     {
       if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-      else if ((OpSize != 1) && (OpSize != 2)) WrError(ErrNum_InvOpsize);
+      else if ((OpSize != 1) && (OpSize != 2)) WrError(ErrNum_InvOpSize);
       else
       {
         BAsmCode[0] = 0x7d;
@@ -2207,7 +2152,7 @@ static void DecodeADJNZ_SBJNZ(Word IsSBJNZ)
       ShortInt OpSize2;
 
       if (OpSize == -1) WrError(ErrNum_UndefOpSizes);
-      else if (OpSize > 1) WrError(ErrNum_InvOpsize);
+      else if (OpSize > 1) WrError(ErrNum_InvOpSize);
       else
       {
         Integer Num1;
@@ -2268,7 +2213,7 @@ static void DecodeINT(Word Code)
 
 static void DecodeBM(Word Code)
 {
-  if ((ArgCnt == 1) && (!strcasecmp(ArgStr[1].Str, "C")))
+  if ((ArgCnt == 1) && (!as_strcasecmp(ArgStr[1].Str, "C")))
   {
     BAsmCode[0] = 0x7d;
     BAsmCode[1] = 0xd0 + Code;
@@ -2647,7 +2592,6 @@ static void SwitchTo_M16C(void)
 {
   TurnWords = True;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = 0x14;

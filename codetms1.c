@@ -1,20 +1,12 @@
 /* codetms1.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Codegenerator TMS1000-Familie                                             */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: codetms1.c,v 1.2 2017/06/07 19:07:20 alfred Exp $                    */
-/*****************************************************************************
- * $Log: codetms1.c,v $
- * Revision 1.2  2017/06/07 19:07:20  alfred
- * - remove double instruction DMAN
- *
- * Revision 1.1  2015/04/20 18:40:29  alfred
- * - add TMS1000 support (no docs yet)
- *
- *****************************************************************************/
 
 #include "stdinc.h"
 #include <ctype.h>
@@ -293,7 +285,6 @@ static void SwitchTo_TMS1(void)
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
-  SetIsOccupied = False;
 
   PCSymbol = "$";
   HeaderID = pFoundDescr->Id;

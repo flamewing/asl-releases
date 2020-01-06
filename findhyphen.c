@@ -1,5 +1,7 @@
 /* findhyphen.c */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Zerlegung von Worten in Silben gemaess dem TeX-Algorithmus                */
@@ -216,7 +218,7 @@ void DoHyphens(char *word, int **posis, int *posicnt)
   PHyphenException Ex;
 
   for (Ex = FirstException; Ex; Ex = Ex->next)
-    if (!strcasecmp(Ex->word, word))
+    if (!as_strcasecmp(Ex->word, word))
     {
       if (Ex->poscnt)
       {

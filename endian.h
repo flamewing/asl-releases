@@ -2,6 +2,8 @@
 #define _MYENDIAN_H
 /* endian.h */
 /*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
 /* Little/Big-Endian-Routinen                                                */
@@ -87,9 +89,6 @@ extern void MWrite8L(Byte *Buffer, QuadWord Value);
 
 extern void MWrite8B(Byte *Buffer, QuadWord Value);
 #endif
-
-extern char *Dec32BlankString(char *Dest, LongInt number, int Stellen);
-
 
 extern void endian_init(void);
 #endif /* _MYENDIAN_H */

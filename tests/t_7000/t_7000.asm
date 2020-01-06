@@ -92,12 +92,24 @@
 	bt	targ
 targ:	bf	targ
 	bt/s	targ
-        bf/s	targ
-	bra	targ
-	braf	r2
-	bsr	targ
-	jmp	@r5
-	jsr	@r10
+	expect	200
+         bf/s	 targ
+	endexpect
+	expect	200
+ 	 bra	 targ
+	endexpect
+	expect	200
+	 braf	 r2
+	endexpect
+	expect	200
+	 bsr	 targ
+	endexpect
+	expect	200
+	 jmp	 @r5
+	endexpect
+	expect	200
+	 jsr	 @r10
+	endexpect
 
 	ldc	r5,sr
 	ldc	r10,gbr

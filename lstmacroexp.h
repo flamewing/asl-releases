@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
 #ifndef LSTMACROEXP_H
 #define LSTMACROEXP_H
 
@@ -9,7 +10,7 @@ typedef enum
   eLstMacroExpRest = 1,
   eLstMacroExpIf = 2,
   eLstMacroExpMacro = 4,
-  eLstMacroExpAll = eLstMacroExpRest | eLstMacroExpIf | eLstMacroExpMacro,
+  eLstMacroExpAll = eLstMacroExpRest | eLstMacroExpIf | eLstMacroExpMacro
 } tLstMacroExp;
 
 typedef struct
