@@ -10,6 +10,8 @@
 
 #include "stdinc.h"
 
+#include "strutil.h"
+
 #include "entryaddress.h"
 
 typedef struct sEntryAddress
@@ -87,10 +89,14 @@ LargeWord GetEntryAddress(Boolean UsePreferredAddress, LargeWord PreferredAddres
 void PrintEntryAddress(FILE *pFile)
 {
   tEntryAddress *pRun;
+  String Str;
 
   fprintf(pFile, "(");
   for (pRun = pFirstEntryAddress; pRun; pRun = pRun->pNext)
-    fprintf(pFile, " %llx", pRun->Address);
+  {
+    as_snprintf(Str, sizeof Str, " %lllx", pRun->Address);
+    fprintf(pFile, "%s\n", Str);
+  }
   fprintf(pFile, ")\n");
 }
 

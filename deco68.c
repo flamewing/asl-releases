@@ -30,7 +30,7 @@ typedef enum
   eIndexed,
   eExtended,
   eImmediate,
-  eRelative,
+  eRelative
 } tAddrType;
 
 typedef struct
@@ -369,7 +369,7 @@ static void Disassemble_68(LargeWord Address, tDisassInfo *pInfo, Boolean AsData
   {
     case eImplicit:
       pInfo->CodeLen = 1;
-      snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "%s", pOpcode->Memo);
+      as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "%s", pOpcode->Memo);
       break;
     case eDirect:
       if (!RetrieveData(Address + 1, Data, 1))
@@ -377,7 +377,7 @@ static void Disassemble_68(LargeWord Address, tDisassInfo *pInfo, Boolean AsData
       pInfo->CodeLen = 2;
       OpAddr = Data[0];
       pOp = MakeSymbolic(OpAddr, 1, NULL, NumBuf, sizeof(NumBuf));
-      snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "%s\t%s", pOpcode->Memo, pOp);
+      as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "%s\t%s", pOpcode->Memo, pOp);
       break; 
     case eIndexed:
       if (!RetrieveData(Address + 1, Data, 1))
@@ -385,7 +385,7 @@ static void Disassemble_68(LargeWord Address, tDisassInfo *pInfo, Boolean AsData
       pInfo->CodeLen = 2;
       OpAddr = Data[0];
       pOp = MakeSymbolic(OpAddr, 1, NULL, NumBuf, sizeof(NumBuf));
-      snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "%s\t%s,x", pOpcode->Memo, pOp);
+      as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "%s\t%s,x", pOpcode->Memo, pOp);
       if (!pOpcode->NextAddresses)
         pInfo->pRemark = "indirect jump, investigate here";
       if ((pOpcode->NextAddresses == 1) && (!strcmp(pOpcode->Memo, "jsr")))
@@ -401,7 +401,7 @@ static void Disassemble_68(LargeWord Address, tDisassInfo *pInfo, Boolean AsData
       else
         pSymbolPrefix = NULL;
       pOp = MakeSymbolic(OpAddr, 2, pSymbolPrefix, NumBuf, sizeof(NumBuf));
-      snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "%s\t%s", pOpcode->Memo, pOp);
+      as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "%s\t%s", pOpcode->Memo, pOp);
       break; 
     case eImmediate:
       if (!RetrieveData(Address + 1, Data, pOpcode->OpSize + 1))
@@ -409,7 +409,7 @@ static void Disassemble_68(LargeWord Address, tDisassInfo *pInfo, Boolean AsData
       pInfo->CodeLen = 2 + pOpcode->OpSize;
       OpAddr = pOpcode->OpSize ? (((Word)Data[0]) << 8) | Data[1] : Data[0];
       pOp = MakeSymbolic(OpAddr, pOpcode->OpSize + 1, NULL, NumBuf, sizeof(NumBuf));
-      snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "%s\t#%s", pOpcode->Memo, pOp);
+      as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "%s\t#%s", pOpcode->Memo, pOp);
       break; 
     case eRelative:
       if (!RetrieveData(Address + 1, Data, 1))
@@ -420,7 +420,7 @@ static void Disassemble_68(LargeWord Address, tDisassInfo *pInfo, Boolean AsData
         Dist -= 256;
       OpAddr = (Address + 2 + Dist) & 0xffff;
       pOp = MakeSymbolic(OpAddr, 2, strcmp(pOpcode->Memo, "bsr") ? "lab_" : "sub_", NumBuf, sizeof(NumBuf));
-      snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "%s\t%s", pOpcode->Memo, pOp);
+      as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "%s\t%s", pOpcode->Memo, pOp);
       break;
     default:
       if (DataSize < 0)
@@ -436,13 +436,13 @@ static void Disassemble_68(LargeWord Address, tDisassInfo *pInfo, Boolean AsData
         case 2:
           OpAddr = (((Word)Opcode) << 8) | Data[0];
           pOp = MakeSymbolic(OpAddr, 2, NULL, NumBuf, sizeof(NumBuf));
-          snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "adr\t%s", pOp);
+          as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "adr\t%s", pOp);
           pInfo->CodeLen = 2;
           break;
         default:
           pInfo->CodeLen = 1;
           HexString(NumBuf, sizeof(NumBuf), Opcode, 2);
-          snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "byt\t$%s", NumBuf);
+          as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "byt\t$%s", NumBuf);
       }
   }
 

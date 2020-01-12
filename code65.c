@@ -72,7 +72,7 @@ typedef struct
   Byte AdrVals[2];
 } tAdrResult;
 
-#define FixedOrderCount 78
+#define FixedOrderCount 77
 #define NormOrderCount 71
 #define CondOrderCount 11
 
@@ -511,9 +511,7 @@ static void DecodeFixed(Word Index)
   {
     CodeLen = 1;
     BAsmCode[0] = pOrder->Code;
-    if (Memo("BRK"))
-      BAsmCode[CodeLen++] = NOPCode;
-    else if (MomCPU == CPUM740)
+    if (MomCPU == CPUM740)
     {
       if (Memo("PLP"))
         BAsmCode[CodeLen++] = NOPCode;
@@ -522,6 +520,33 @@ static void DecodeFixed(Word Index)
     }
   }
   ChkFlags();
+}
+
+/* All right, guys, this really makes tool developers' lives difficult: you can't
+   seem to agree on whether BRK is a single or two byte instruction.  Always adding
+   a NOP is obviously not what suits the majority of people, so I'll change it to
+   an optional argument.  I hope this ends the discussion about BRK.  No, wait, it
+   *will* end discussion because I will not answer any further requests about this
+   instruction... */
+
+static void DecodeBRK(Word Index)
+{
+  UNUSED(Index);
+
+  if (ChkArgCnt(0, 1))
+  {
+    BAsmCode[0] = 0x00;
+    if (ArgCnt > 0)
+    {
+      Boolean OK;
+
+      BAsmCode[1] = EvalStrIntExpressionOffs(&ArgStr[1], !!(*ArgStr[1].Str == '#'), Int8, &OK);
+      if (OK)
+        CodeLen = 2;
+    }
+    else
+      CodeLen = 1;
+  }
 }
 
 static void DecodeSEB_CLB(Word Code)
@@ -1006,6 +1031,7 @@ static void InitFields(void)
   AddInstTable(InstTable, "BAR", 0xe2, DecodeBAR_BAS);
   AddInstTable(InstTable, "BAS", 0xf2, DecodeBAR_BAS);
   AddInstTable(InstTable, "STI", 0, DecodeSTI);
+  AddInstTable(InstTable, "BRK", 0, DecodeBRK);
   for (Bit = 0; Bit < 8; Bit++)
   {
     as_snprintf(Name, sizeof(Name), "BBR%d", Bit);
@@ -1058,7 +1084,6 @@ static void InitFields(void)
   AddFixed("PLY",          M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19              | M_HUC6280          , 0x7a);
   AddFixed("PHZ",                               M_65CE02                                                         , 0xdb);
   AddFixed("PLZ",                               M_65CE02                                                         , 0xfb);
-  AddFixed("BRK", M_6502 | M_65SC02 | M_65C02 | M_65CE02 | M_W65C02S | M_65C19 | M_MELPS740 | M_HUC6280 | M_6502U, 0x00);
   AddFixed("STP",                                          M_W65C02S |           M_MELPS740                      , Is740 ? 0x42 : 0xdb);
   AddFixed("WAI",                                          M_W65C02S                                             , 0xcb);
   AddFixed("SLW",                                                                M_MELPS740                      , 0xc2);

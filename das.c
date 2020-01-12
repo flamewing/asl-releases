@@ -75,6 +75,7 @@ static void DumpIterator(const OneChunk *pChunk, Boolean IsData, void *pUser)
 static void DumpChunks(const ChunkList *NChunk, FILE *pDestFile)
 {
   tDumpIteratorData Data;
+  String Str;
 
   UNUSED(NChunk);
 
@@ -82,7 +83,8 @@ static void DumpChunks(const ChunkList *NChunk, FILE *pDestFile)
   Data.Sum = 0;
   fprintf(pDestFile, "\t\t; disassembled area:\n");
   IterateChunks(DumpIterator, &Data);
-  fprintf(pDestFile, "\t\t; %llu/%llu bytes disassembled\n", Data.Sum, GetCodeChunksStored(&CodeChunks));
+  as_snprintf(Str, sizeof(Str), "\t\t; %lllu/%lllu bytes disassembled", Data.Sum, GetCodeChunksStored(&CodeChunks));
+  fprintf(pDestFile, "%s\n", Str);
 }
 
 static int tabbedstrlen(const char *s)
@@ -185,7 +187,7 @@ static CMDResult CMD_EntryAddress(Boolean Negate, const char *pArg)
 {
   LargeWord Address;
   char *pName = NULL;
-  String Arg;
+  String Arg, Str;
   Boolean OK;
 
   if (Negate || !*pArg)
@@ -238,9 +240,9 @@ static CMDResult CMD_EntryAddress(Boolean Negate, const char *pArg)
 
       if (pEndianess && *pEndianess)
       {
-        if (!strcasecmp(pEndianess, "MSB"))
+        if (!as_strcasecmp(pEndianess, "MSB"))
           VectorMSB = True;
-        else if (!strcasecmp(pEndianess, "LSB"))
+        else if (!as_strcasecmp(pEndianess, "LSB"))
           VectorMSB = False;
         else
           return ArgError(Num_ErrMsgInvalidEndinaness, pEndianess);
@@ -257,7 +259,8 @@ static CMDResult CMD_EntryAddress(Boolean Negate, const char *pArg)
         Address <<= 8;
         Address |= VectorMSB ? Vector[z] : Vector[AddrLen - 1 - z];
       }
-      printf("indirect address @ %llx -> 0x%llx\n", VectorAddress, Address);
+      as_snprintf(Str, sizeof Str, "indirect address @ %lllx -> 0x%lllx", VectorAddress, Address);
+      printf("%s\n", Str);
       AddChunk(&UsedDataChunks, VectorAddress, AddrLen, True);
 
       if (pName && *pName)
@@ -356,12 +359,16 @@ static void NxtLine(void)
   if (++LineZ == 23)
   {
     LineZ = 0;
-//    if (Redirected != NoRedir)
-//      return;
+#if 0
+    if (Redirected != NoRedir)
+      return;
+#endif
     printf("%s", getmessage(Num_KeyWaitMsg));
     fflush(stdout);
     while (getchar() != '\n');
-//    printf("%s%s", CursUp, ClrEol);
+#if 0
+    printf("%s%s", CursUp, ClrEol);
+#endif
   }
 }
 

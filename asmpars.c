@@ -1209,7 +1209,7 @@ static tErrorNum DeduceExpectTypeErrMsgMask(unsigned Mask, TempType ActType)
         case (1 << TempFloat):
         case (1 << TempFloat) | (1 << TempString):
         default:
-          assert(0);
+          return ErrNum_InternalError;
       }
     case TempFloat:
       switch (Mask)
@@ -1221,7 +1221,7 @@ static tErrorNum DeduceExpectTypeErrMsgMask(unsigned Mask, TempType ActType)
         case (1 << TempInt) | (1 << TempString):
           return ErrNum_StringOrIntButFloat;
         default:
-          assert(0);
+          return ErrNum_InternalError;
       }
     case TempString:
       switch (Mask)
@@ -1233,10 +1233,10 @@ static tErrorNum DeduceExpectTypeErrMsgMask(unsigned Mask, TempType ActType)
         case (1 << TempInt) | (1 << TempFloat):
           return ErrNum_IntOrFloatButString;
         default:
-          assert(0);
+          return ErrNum_InternalError;
       }
     default:
-      assert(0);
+      return ErrNum_InternalError;
   }
 }
 

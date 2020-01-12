@@ -1,3 +1,10 @@
+2020-01-12 [1.42 Bld 153]
+
+- Bugfix      : Corrections for 6309 PC-relative addressing
+                when opcode is longer than one byte
+- Change      : change handling of 6502 BRK instruction
+- Bugfix      : allow some more addressing modes for 6309
+
 2020-01-06 [1.42 Bld 152]
 
 - Bugfix      : eliminate redundant error messages on 6502

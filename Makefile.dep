@@ -250,7 +250,7 @@ dynstring.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h dyn
 
 endian.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h endian.h
 
-entryaddress.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h entryaddress.h
+entryaddress.o: stdinc.h pascstyle.h datatypes.h sysdefs.h chardefs.h strutil.h entryaddress.h
 
 errmsg.o: strutil.h datatypes.h sysdefs.h asmdef.h chunks.h fileformat.h dynstring.h strcomp.h lstmacroexp.h cpulist.h tempresult.h asmpars.h symbolsize.h asmsub.h asmerr.h errmsg.h nlmessages.h as.rsc
 

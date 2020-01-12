@@ -169,7 +169,7 @@ static Boolean IsZeroOrEmpty(const tStrComp *pArg)
   return OK && !Value;
 }
 
-static void DecodeAdr(int ArgStartIdx, int ArgEndIdx)
+static void DecodeAdr(int ArgStartIdx, int ArgEndIdx, unsigned OpcodeLen)
 {
   tStrComp *pStartArg, *pEndArg, IndirComps[2];
   String temp;
@@ -381,35 +381,23 @@ static void DecodeAdr(int ArgStartIdx, int ArgEndIdx)
     }
     if ((!as_strcasecmp(pStartArg->Str, "E")) && (MomCPU >= CPU6309))
     {
-      if (EReg != 0) WrError(ErrNum_InvAddrMode);
-      else
-      {
-        AdrCnt = 1;
-        AdrVals[0] += 0x87;
-        AdrMode = ModInd;
-      }
+      AdrCnt = 1;
+      AdrVals[0] += 0x87;
+      AdrMode = ModInd;
       return;
     }
     if ((!as_strcasecmp(pStartArg->Str, "F")) && (MomCPU >= CPU6309))
     {
-      if (EReg != 0) WrError(ErrNum_InvAddrMode);
-      else
-      {
-        AdrCnt = 1;
-        AdrVals[0] += 0x8a;
-        AdrMode = ModInd;
-      }
+      AdrCnt = 1;
+      AdrVals[0] += 0x8a;
+      AdrMode = ModInd;
       return;
     }
     if ((!as_strcasecmp(pStartArg->Str, "W")) && (MomCPU >= CPU6309))
     {
-      if (EReg != 0) WrError(ErrNum_InvAddrMode);
-      else
-      {
-        AdrCnt = 1;
-        AdrVals[0] += 0x8e;
-        AdrMode = ModInd;
-      }
+      AdrCnt = 1;
+      AdrVals[0] += 0x8e;
+      AdrMode = ModInd;
       return;
     }
 
@@ -529,7 +517,7 @@ static void DecodeAdr(int ArgStartIdx, int ArgEndIdx)
     AdrInt = EvalStrIntExpressionOffs(pStartArg, Offset, Int16, &OK);
     if (OK)
     {
-      AdrInt -= EProgCounter() + 3 + Ord(ExtFlag);
+      AdrInt -= EProgCounter() + 2 + OpcodeLen + Ord(ExtFlag);
 
       if (ZeroMode == 3) WrError(ErrNum_InvAddrMode);
 
@@ -786,7 +774,7 @@ static void DecodeALU(Word Index)
    && ChkMinCPU(pOrder->MinCPU))
   {
     OpSize = pOrder->Op16;
-    DecodeAdr(1, ArgCnt);
+    DecodeAdr(1, ArgCnt, 1 + !!Hi(pOrder->Code));
     if (AdrMode != ModNone)
     {
       if ((!pOrder->MayImm) && (AdrMode == ModImm)) WrError(ErrNum_InvAddrMode);
@@ -810,7 +798,7 @@ static void DecodeLDQ(Word Index)
    && ChkMinCPU(CPU6309))
   {
     OpSize = eSymbolSize32Bit;
-    DecodeAdr(1, ArgCnt);
+    DecodeAdr(1, ArgCnt, 2);
     if (AdrMode == ModImm)
     {
       BAsmCode[0] = 0xcd;
@@ -836,7 +824,7 @@ static void DecodeRMW(Word Index)
   if (ChkArgCnt(1, 2)
    && ChkMinCPU(pOrder->MinCPU))
   {
-    DecodeAdr(1, ArgCnt);
+    DecodeAdr(1, ArgCnt, 1);
     if (AdrMode != ModNone)
     {
       if (AdrMode == ModImm) WrError(ErrNum_InvAddrMode);
@@ -927,7 +915,7 @@ static void DecodeImm(Word Index)
     BAsmCode[1] = EvalStrIntExpressionOffs(&ArgStr[1], 1, Int8, &OK);
     if (OK)
     {
-      DecodeAdr(2, ArgCnt);
+      DecodeAdr(2, ArgCnt, 2);
       if (AdrMode == ModImm) WrError(ErrNum_InvAddrMode);
       else
       {
@@ -962,7 +950,7 @@ static void DecodeBit(Word Code)
     else if ((BAsmCode[2] < 8) || (BAsmCode[2] > 11)) WrError(ErrNum_InvRegName);
     else
     {
-      DecodeAdr(2, 2);
+      DecodeAdr(2, 2, 3);
       if (AdrMode != ModDir) WrError(ErrNum_InvAddrMode);
       else
       {
@@ -992,10 +980,8 @@ static void DecodeTFR_TFM_EXG(Word Code)
     if ((Inc1 != 0) || (Inc2 != 0))
     {
       if (Memo("EXG")) WrError(ErrNum_InvAddrMode);
-      else if (!CodeCPUReg(ArgStr[1].Str, BAsmCode + 3)) WrError(ErrNum_InvRegName);
-      else if (!CodeCPUReg(ArgStr[2].Str, BAsmCode + 2)) WrError(ErrNum_InvRegName);
-      else if ((BAsmCode[2] < 1) || (BAsmCode[2] > 4)) WrError(ErrNum_InvRegName);
-      else if ((BAsmCode[3] < 1) || (BAsmCode[3] > 4)) WrError(ErrNum_InvRegName);
+      else if (!CodeCPUReg(ArgStr[1].Str, BAsmCode + 3) || (BAsmCode[3] > 4)) WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+      else if (!CodeCPUReg(ArgStr[2].Str, BAsmCode + 2) || (BAsmCode[2] > 4)) WrStrErrorPos(ErrNum_InvRegName, &ArgStr[2]);
       else
       {
         BAsmCode[0] = 0x11;
@@ -1052,7 +1038,7 @@ static void DecodeLEA(Word Index)
 
   if (ChkArgCnt(1, 2))
   {
-    DecodeAdr(1, ArgCnt);
+    DecodeAdr(1, ArgCnt, 1);
     if (AdrMode != ModNone)
     {
       if (AdrMode != ModInd) WrError(ErrNum_InvAddrMode);

@@ -1006,6 +1006,13 @@ typedef unsigned long long Card64;
    well, not really a UNIX... */
 
 #ifdef _WIN32
+
+/* no long long data type if C89 is used */
+
+#if (defined __STDC__) && (!defined __STDC_VERSION__)
+# define NOLONGLONG
+#endif
+
 #define ARCHSYSNAME "unknown-win32"
 #define DEFSMADE
 #define OPENRDMODE "rb"
@@ -1028,9 +1035,11 @@ typedef unsigned short Card16;
 typedef signed int Integ32;
 #define PRIInteg32 "d"
 typedef unsigned int Card32;
+#ifndef NOLONGLONG
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
-#define HAS64
+# define HAS64
+#endif
 #define NO_NLS
 #endif
 
