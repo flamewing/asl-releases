@@ -1,3 +1,8 @@
+2020-01-24 [1.42 Bld 154]
+
+- Addition    : differentiate TMS9900 and Model 990 computer regarding
+                privileged mode, add TMS9995, TMS99105 and TMS9940
+
 2020-01-12 [1.42 Bld 153]
 
 - Bugfix      : Corrections for 6309 PC-relative addressing

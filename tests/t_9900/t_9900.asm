@@ -1,6 +1,6 @@
         cpu     tms9900
         page    0
-	supmode on
+	supmode off			; TMS9900 has no privileged mode, instructions shall not generate warnings
 
         a       r5,r3
 
@@ -47,9 +47,6 @@
         mpy	@1234h,wr4
         div	@200(wr4),wr6
         xop	@2345h,wr5
-
-        mpys	wr5
-        divs	*wr9+
 
         b	@1234h
         bl	*wr5
@@ -102,9 +99,7 @@ lab:	jlt	lab
         limi	2345h
 
         stst	wr2
-        lst	wr4
         stwp	wr6
-        lwp	wr8
 
         rtwp
         idle
@@ -196,7 +191,6 @@ prt	equ	r3
         li	7,5
         limi	3
         lwpi	12h
-        lmf	r5,0
         mov	7,7
         mov	@ones,9
         movb	@temp,3
@@ -218,5 +212,97 @@ prt	equ	r3
         srl	0,3
         src	2,7
         xop	*4,wr4
+
+	cpu	tms9995
+
+        mpys	wr5
+        divs	*wr9+
+        lst	wr4
+        lwp	wr8
+
+	cpu	tms9940
+
+	irp	instr,rset,lrex,ckon,ckof	; deleted on TMS9940
+	expect	1500
+	instr
+	endexpect
+	endm
+
+	liim	2			; new on TMS9940
+	dca	*wr5
+        dcs	*wr7+
+
+	cpu	tms99105
+
+	; these instructions are privileged on 99xxx (and TI990 computer):
+
+	irp	instr,idle,rset,ckon,ckof,lrex
+	expect	50
+	instr
+	endexpect
+	endm
+	expect	50
+	limi	1234h
+	endexpect
+
+	bind	@1234h(wr9)
+	evad	*wr4
+
+	blsk	wr5,1234h
+
+	am	@1234h(wr13),@2345h(wr5)
+	sm	@1234h(wr13),@2345h(wr5)
+
+	slam	@1234h(wr13),10
+	sram	*wr13,11
+
+	tmb	*wr2,wr0
+	tcmb	@1234h(wr13),10
+	tsmb	@1234h(wr13),10
+
+	cpu	tms99110
+
+	; only on TI990 & TMS99110
+
+	expect	50	
+        lmf	r5,0
+	endexpect
+	expect	50
         lds	@bits
+	endexpect
+	expect	50
         ldd	@bits
+	endexpect
+
+	mm	@1234h(wr13),@2345h(wr5)
+	cr	@1234h(wr13),@2345h(wr5)
+	cer
+	cre
+	negr
+	cri
+	ar	@1234h(wr9)
+	sr	*wr10
+	mr	@1234h(wr9)
+	dr	*wr10
+	lr	@1234h(wr9)
+	str	*wr10
+	cir	@1234h(wr9)
+
+	; leave out some values that may be subject of rounding errors:
+
+	single	0.0		; 0000 0000 = 0.0000 * 16^(-64)
+	single	1.0		; 4110 0000 = 1/16 * 16^1
+	single	2.0		; 4120 0000 = 1/8 * 16^1
+	single	4.0		; 4140 0000 = 1/4 * 16^1
+	single	8.0		; 4180 0000 = 1/2 * 16^1
+	single	16.0		; 4210 0000 = 1/16 * 16^2
+	single	24.0		; 4218 0000 = 3/16 * 16^2
+	single	42.0		; 422A 0000 = 21/8 * 16^2
+	single	0.125		; 4020 0000 = 1/8 * 16^0
+	single	0.0078125	; 3F20 0000 = 1/8 * 16^-1
+	single	1000.0		; 433E 8000 = 0.24414062 * 16^3
+	single	-1000.0		; C33E 8000 = -0.24414062 * 16^3
+        single  -118.625        ; C276 A000 = -0.463... * 16^1
+;	single	0.1		; 4019 999A = 0.1 * 16^0
+;	single	7.23700528E75	; 7FFF FFFf (almost maximum)
+;	single	5.397605346934E-79	; 0010 0000 or 000F FFFF (smallest non-denormal number)

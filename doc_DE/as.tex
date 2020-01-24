@@ -258,7 +258,7 @@ folgende Prozessorfamilien implementiert:
 \item{Texas Instruments TMS320C20x/TMS320C5x}
 \item{Texas Instruments TMS320C54x}
 \item{Texas Instruments TMS320C6x}
-\item{Texas Instruments TMS9900}
+\item{Texas Instruments TMS99xx/TMS99xxx}
 \item{Texas Instruments TMS7000}
 \item{Texas Instruments TMS1000}
 \item{Texas Instruments TMS370xxx}
@@ -3639,8 +3639,15 @@ bd) 320C541
 Dies ist momentan der Pepr"asentant f"ur die TMS320C54x-Familie...
 %%-----------
 \begin{quote}
-be) TMS9900
+be) TI990, TMS9900, TMS9940, TMS9995, TMS99105
 \end{quote}
+TI's Model 990 Computer besitzt ein Flag, um im privilegierten Modus
+zu arbeiten.  Einige Instruktionen k"onnen nur in diesem Modus
+ausgef"uhrt werden und f"uhren im nicht-privilegierten Modus zu einer
+Exception.  Der TMS99xx haben keinen solchen Modus, die fraglichen
+Instruktionen werden immer ausgef"uhrt.  TMS9995 und TMS99105 f"ugen dem
+TMS9900 Befehlssatz ein paar Instruktionen hinzu, w"ahrend der
+TMS9940 einige entfernt und daf"ur andere hinzuf"ugt.
 %%-----------
 \begin{quote}
 \begin{tabbing}
@@ -5172,8 +5179,6 @@ Speicherzelle hineinpassen, werden im Falle von \tty{EXTENDED} immer derer
 2 pro Wert belegt.  Im ersten Wort finden sich die oberen 8 Bit (der
 Exponent), der Rest (Vorzeichen und Mantisse) in zweiten Wort.
 
-
-
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{FLOAT und DOUBLE}
@@ -5187,6 +5192,17 @@ niederwertigste Byte jeweils auf der ersten Speicherstelle
 abgelegt.  Ein eventuell vor dem Befehl stehendes Label wird
 wieder als untypisiert gespeichert (der Sinn dieser Ma"snahme
 ist in den prozessorspezifischen Hinweisen erl"autert).
+
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\subsection{SINGLE und DOUBLE}
+\ttindex{SINGLE}\ttindex{DOUBLE}
+
+{\em G"ultigkeit: TMS99xxx}
+
+Mit diesen Befehlen k"onnen 32- bzw. 64-Bit-Gleitkommazahlen
+im prozessoreigenen Format im Speicher abgelegt werden.  Das
+Format entspricht dem IBM/360-Gleitkommaformat.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

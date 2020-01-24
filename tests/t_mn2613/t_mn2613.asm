@@ -264,5 +264,6 @@
 	dc	0.0078125	; 3F20 0000 = 1/8 * 16^-1
 	dc	1000.0		; 433E 8000 = 0.24414062 * 16^3
 	dc	-1000.0		; C33E 8000 = -0.24414062 * 16^3
-;	dc	7.237005E75	; 7FFF FFFE (almost maximum)
-;	dc	5.39761E-79	; 0010 0000 (smallest non-denormal number)
+;	dc	0.1		; 4019 999A = 0.1 * 16^0
+;	dc	7.237005E75	; 7FFF FFFf (almost maximum)
+;	dc	5.39761E-79	; 0010 0000 or 000F FFFF (smallest non-denormal number)

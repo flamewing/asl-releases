@@ -957,11 +957,11 @@ Message ListSymListHead2
 
 Message ListSymSumMsg
  " Symbol"
- " Symbol"
+ " symbol"
 
 Message ListSymSumsMsg
  " Symbole"
- " Symbols"
+ " symbols"
 
 Message ListUSymSumMsg
  " unbenutztes Symbol"

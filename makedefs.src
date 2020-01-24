@@ -1,4 +1,4 @@
-CODE_SRCS = codepseudo.c intpseudo.c motpseudo.c tipseudo.c natpseudo.c fourpseudo.c codevars.c \
+CODE_SRCS = codepseudo.c intpseudo.c motpseudo.c tipseudo.c natpseudo.c fourpseudo.c ibmfloat.c codevars.c \
   	    code68k.c \
             code56k.c \
   	    code601.c \

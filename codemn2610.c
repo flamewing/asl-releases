@@ -24,6 +24,7 @@
 #include "headids.h"
 #include "errmsg.h"
 #include "codepseudo.h"
+#include "ibmfloat.h"
 
 #include "codemn2610.h"
 
@@ -488,99 +489,6 @@ static Boolean DecodeIReg(tStrComp *pStrArg, Word *pResult, Word Mask, Word Allo
 error:
   WrStrErrorPos(ErrNum_InvAddrMode, pStrArg);
   return False;
-}
-
-/*!------------------------------------------------------------------------
- * \fn     Double2MN1613(Word *pDest, double Src)
- * \brief  convert floating point number to MN1613's format
- * \param  pDest where to write result (2 words)
- * \param  Src floating point number to store
- * \return True if conversion was successful
- * ------------------------------------------------------------------------ */
-
-#define DBG_FLOAT 0
-
-static Boolean Double2MN1613(Word *pDest, double Src)
-{
-  Byte Buf[8];
-  Word Sign;
-  Integer Exponent;
-  LongWord Mantissa;
-
-  /* get into byte array, MSB first */
-
-#if DBG_FLOAT
-  fprintf(stderr, "(0) %lf\n", Src);
-#endif
-  Double_2_ieee8(Src, Buf, True);
-
-  /* (1) Dissect IEEE number */
-
-  /* (1a) Sign is MSB of first byte: */
-
-  Sign = !!(Buf[0] & 0x80);
-
-  /* (1b) Exponent is stored in the following 11 bits, with a bias of 1023:  */
-
-  Exponent = (Buf[0] & 0x7f);
-  Exponent = (Exponent << 4) | ((Buf[1] >> 4) & 15);
-  Exponent -= 1023;
-
-  /* (1c) Extract 28 bits of mantissa, if not denormal, make leading one explicit: */
-
-  Mantissa = Buf[1] & 15;
-  Mantissa = (Mantissa << 8) | Buf[2];
-  Mantissa = (Mantissa << 8) | Buf[3];
-  Mantissa = (Mantissa << 8) | Buf[4];
-  if (Exponent != -1023)
-    Mantissa |= 0x10000000ul;
-#if DBG_FLOAT
-  fprintf(stderr, "(1) %2d * 0x%08x * 2^%d\n", Sign ? -1 : 1, Mantissa, Exponent);
-#endif
-
-  /* (2) Convert IEEE 2^n exponent to multiple of four since MN1613 exponent is to the base of 16: */
-
-  while ((Mantissa & 0x10000000ul) || (Exponent & 3))
-  {
-    Mantissa >>= 1;
-    Exponent++;
-  }
-#if DBG_FLOAT
-  fprintf(stderr, "(2) %2d * 0x%08x * 2^%d\n", Sign ? -1 : 1, Mantissa, Exponent);
-#endif
-  Exponent /= 4;
-#if DBG_FLOAT
-  fprintf(stderr, "(3) %2d * 0x%08x * 16^%d\n", Sign ? -1 : 1, Mantissa, Exponent);
-#endif
-
-  /* (3a) Overrange? */
-
-  if (Exponent > 63)
-  {
-    WrError(ErrNum_OverRange);
-    return False;
-  }
-  else
-  {
-    /* (3b) number that is to small may degenerate to 0: */
-
-    while ((Exponent < -64) && Mantissa)
-    {
-      Exponent++; Mantissa >>= 4;
-    }
-    if (Exponent < -64)
-      Exponent = -64;
-
-    /* (3c) add bias to exponent */
-
-    Exponent += 64;
-
-    /* (3d) store result */
-
-    pDest[0] = (Sign << 15) | ((Exponent << 8) & 0x7f00) | ((Mantissa >> 20) & 0xff);
-    pDest[1] = (Mantissa >> 4) & 0xffff;
-    return True;
-  }
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1102,9 +1010,14 @@ static void DecodeSKIP(Word Code)
   }
 }
 
+void IncMaxCodeLen(unsigned NumWords)
+{
+  SetMaxCodeLen((CodeLen + NumWords) * 2);
+}
+
 static void AppendWord(Word Data)
 {
-  SetMaxCodeLen((CodeLen * 2) + 2);
+  IncMaxCodeLen(1);
   WAsmCode[CodeLen++] = Data;
 }
 
@@ -1156,7 +1069,8 @@ static void DecodeDC(Word Code)
          }
          case TempFloat:
          {
-           if (Double2MN1613(&WAsmCode[CodeLen], t.Contents.Float))
+           IncMaxCodeLen(2);
+           if (Double2IBMFloat(&WAsmCode[CodeLen], t.Contents.Float, False))
              CodeLen += 2;
            else
              OK = False;

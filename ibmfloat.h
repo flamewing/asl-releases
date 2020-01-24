@@ -1,34 +1,24 @@
-/* version.c */
+#ifndef _IBMLFLOAT_H
+#define _IBMLFLOAT_H
+/* ibmfloat.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
 /*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
-/* Lagert die Versionsnummer                                                 */
+/* IBM Floating Point Format                                                 */
 /*                                                                           */
 /*****************************************************************************/
 
+/*****************************************************************************
+ * Includes
+ *****************************************************************************/
+
 #include "stdinc.h"
-#include <string.h>
+#include <math.h>
 
-char *Version = "1.42 Beta [Bld 154]";
-char *DebVersion = "1.42bld154-1";
-LongInt VerNo = 0x142f;
+#include "ibmfloat.h"
 
-char *InfoMessCopyright = "(C) 1992,2020 Alfred Arnold";
+Boolean Double2IBMFloat(Word *pDest, double Src, Boolean ToDouble);
 
-LongInt Magic = 0x12372c46;
-
-void version_init(void)
-{
-  unsigned int z;
-  char *CMess = InfoMessCopyright;
-  LongWord XORVal;
-
-  for (z = 0; z < strlen(CMess); z++)
-  {
-    XORVal = CMess[z];
-    XORVal = XORVal << (((z + 1) % 4) * 8);
-    Magic = Magic ^ XORVal;
-  }
-}
+#endif /* _IBMLFLOAT_H */

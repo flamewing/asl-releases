@@ -264,7 +264,7 @@ following processor families have been implemented:
 \item{Texas Instruments TMS320C20x/TMS320C5x}
 \item{Texas Instruments TMS320C54x}
 \item{Texas Instruments TMS320C6x}
-\item{Texas Instruments TMS9900}
+\item{Texas Instruments TMS99xx/99xxx}
 \item{Texas Instruments TMS7000}
 \item{Texas Instruments TMS1000}
 \item{Texas Instruments TMS370xxx}
@@ -3531,8 +3531,14 @@ bd) 320C541
 This one at the moment represents the TMS320C54x family...
 %%-----------
 \begin{quote}
-be) TMS9900
+be) TI990, TMS9900, TMS9940, TMS9995, TMS99105
 \end{quote}
+TI's Model 990 computer has a flag to operate in privileged mode.  Some
+instructions may only be executed in this mode and result in an exception if
+used in non-privileged mode. The TMS99xx do not have such a mode, the
+instructions in question are always executed.  The TMS9995 and TMS99105 add a few
+instructions to the TMS9900's instruction set, while the TMS9940 deletes
+a few and adds different ones.
 %%-----------
 \begin{quote}
 \begin{tabbing}
@@ -5036,6 +5042,17 @@ when in 320C2(0)x/5x mode the assembler assumes that all labels on the
 left side of an instruction have no type, i.e. they belong to no
 address space.  This behaviour is explained in the processor-specific
 hints.
+
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\subsection{SINGLE and DOUBLE}
+\ttindex{SINGLE}\ttindex{DOUBLE}
+
+{\em valid for: TMS99xxx}
+
+These two commands store floating-point constants in memory using the
+processor's floating point format, which is equal to the IBM/360
+floating point format.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
