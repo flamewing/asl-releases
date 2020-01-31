@@ -5772,7 +5772,7 @@ static void InitFields(void)
 
   FixedOrders = (FixedOrder *) malloc(sizeof(FixedOrder) * FixedOrderCnt); InstrZ = 0;
   AddFixed("NOP"    , 0x4e71, False, (1 << e68KGen1a) | (1 << e68KGen1b) | (1 << e68KGen2) | (1 << e68KGen3) | (1 << eCPU32) | (1 << eColdfire));
-  AddFixed("RESET"  , 0x4e70, False, (1 << e68KGen1a) | (1 << e68KGen1b) | (1 << e68KGen2) | (1 << e68KGen3) | (1 << eCPU32));
+  AddFixed("RESET"  , 0x4e70, True,  (1 << e68KGen1a) | (1 << e68KGen1b) | (1 << e68KGen2) | (1 << e68KGen3) | (1 << eCPU32));
   AddFixed("ILLEGAL", 0x4afc, False, (1 << e68KGen1a) | (1 << e68KGen1b) | (1 << e68KGen2) | (1 << e68KGen3) | (1 << eCPU32) | (1 << eColdfire));
   AddFixed("TRAPV"  , 0x4e76, False, (1 << e68KGen1a) | (1 << e68KGen1b) | (1 << e68KGen2) | (1 << e68KGen3) | (1 << eCPU32));
   AddFixed("RTE"    , 0x4e73, True , (1 << e68KGen1a) | (1 << e68KGen1b) | (1 << e68KGen2) | (1 << e68KGen3) | (1 << eCPU32) | (1 << eColdfire));
@@ -6144,7 +6144,7 @@ static const tCtReg CtRegs_MCF51[] =
 static const tCPUProps CPUProps[] =
 {
   /* 68881/68882 may be attached memory-mapped and emulated on pre-68020 devices */
-  { "68008",    0x000ffffful, e68KGen1a, eCfISA_None  , eFlagExtFPU, { NULL } },
+  { "68008",    0x000ffffful, e68KGen1a, eCfISA_None  , eFlagExtFPU | eFlagLogCCR, { NULL } },
   { "68000",    0x00fffffful, e68KGen1a, eCfISA_None  , eFlagExtFPU | eFlagLogCCR, { NULL } },
   { "68010",    0x00fffffful, e68KGen1b, eCfISA_None  , eFlagExtFPU | eFlagLogCCR, { CtRegs_1040 } },
   { "68012",    0x7ffffffful, e68KGen1b, eCfISA_None  , eFlagExtFPU | eFlagLogCCR, { CtRegs_1040 } },

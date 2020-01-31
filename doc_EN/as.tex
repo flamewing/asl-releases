@@ -65,7 +65,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition July 2019}
+{\large Edition January 2020}
 \end{raggedright}
 
 \clearpage
@@ -3531,14 +3531,14 @@ bd) 320C541
 This one at the moment represents the TMS320C54x family...
 %%-----------
 \begin{quote}
-be) TI990, TMS9900, TMS9940, TMS9995, TMS99105
+be) TI990/4, TI990/10, TI990/12 \\
+    TMS9900, TMS9940, TMS9995, TMS99105, TMS99110
 \end{quote}
-TI's Model 990 computer has a flag to operate in privileged mode.  Some
-instructions may only be executed in this mode and result in an exception if
-used in non-privileged mode. The TMS99xx do not have such a mode, the
-instructions in question are always executed.  The TMS9995 and TMS99105 add a few
-instructions to the TMS9900's instruction set, while the TMS9940 deletes
-a few and adds different ones.
+The TMS99xx/99xxx processors are basically single chip implementations
+of the TI990 minicomputers.  Some TI990 models are even based on such
+a processor instead of a discrete CPU.  The individual models differ in their
+instruction set (the TI990/12 has the largest one) and the presence of a
+privileged mode.
 %%-----------
 \begin{quote}
 \begin{tabbing}
@@ -4636,6 +4636,20 @@ assembler uses segment register values reported via \tty{ASSUME} to warn whether
 an absolute address is outside the window defined by the used segment register.
 If the address is within the window, it will compute the correc t16-bit offset.
 Naturally, this cannot be done when indirect addressing is used.
+
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\subsection{CKPT}
+\ttindex{CKPT}
+
+{\em valid for: TI990/12}
+
+Type 12 instructions require a {\em checkpoint register} for execution.  This
+register may either be specified explicitly as fourth argument, or a default for
+all following code may be given via this instruction.  If neither a \tty{CKPT}
+instruction nor an explicit checkpoint register was used, an error
+is reported.  The default of no default register may be restored by using
+{\tt NOTHING} as argument to \tty{CKPT}.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -11577,6 +11591,35 @@ described by:
                 precise opposite may not be used in the same
                 \tty{MACEXP} instruction.}
                {none}
+\errentry{2130}{erwarteter Fehler nicht eingetreten}
+               {error}
+               {An error or warning announced via {\tt EXPECT} did not occur in the
+                instruction block terminated via {\tt ENDEXPECT}.}
+               {The error that was expected}
+\errentry{2140}{nesting of EXPECT/ENDEXPECT not allowed}
+               {error}
+               {Code blocks framed via {\tt EXPECT/ENDEXPECT} must not contain
+                nested {\tt EXPECT/ENDEXPECT} blocks.}
+               {none}
+\errentry{2150}{missing ENDEXPECT}
+               {error}
+               {An instruction block opened via {\tt EXPECT} was not closed via
+                {\tt ENDEXPECT}.}
+               {none}
+\errentry{2160}{ENDEXPECT without EXPECT}
+               {error}
+               {There is no matching previous {\tt EXPECT} to an {\tt ENDEXPECT}.}
+               {none}
+\errentry{2170}{no default checkpoint register defined}
+               {error}
+               {No checkpoint register was specified for a type 12 instruction
+                and no default checkpoint register had previously been defined
+                via the {\tt CKPT} statement.}
+               {none}
+\errentry{2180}{invalid bit field}
+               {error}
+               {the bit field does not conform to the required syntax {\tt (start,count)} syntax.}
+               {the argument in question}
 \errentry{10001}{error in opening file}
                {fatal}
                {An error was detected while trying to open a file for input.}

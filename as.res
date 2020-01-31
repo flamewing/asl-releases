@@ -813,6 +813,14 @@ Message ErrMsgMissingEXPECT
  "ENDEXPECT ohne EXPECT"
  "ENDEXPECT without EXPECT"
 
+Message ErrMsgNoDefCkptReg
+ "kein Default-Checkpoint-Register definiert"
+ "no default checkpoint register defined"
+
+Message ErrMsgInvBitField
+ "ung&uuml;tiges Bitfeld"
+ "invalid bit field"
+
 Message ErrMsgInternalError
  "interner Fehler"
  "internal error"

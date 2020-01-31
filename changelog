@@ -1,3 +1,9 @@
+2020-01-31 [1.42 Bld 155]
+
+- Addition    : Add TI990/12
+- Bugfix      : 68xxx RESET instruction should be privileged
+- Bugfix      : ANDI/ORI with CCR should be available on 68008 as well
+
 2020-01-24 [1.42 Bld 154]
 
 - Addition    : differentiate TMS9900 and Model 990 computer regarding

@@ -46,7 +46,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand Juli 2019}
+{\large Stand Januar 2020}
 \end{raggedright}
 
 \clearpage
@@ -3639,15 +3639,14 @@ bd) 320C541
 Dies ist momentan der Pepr"asentant f"ur die TMS320C54x-Familie...
 %%-----------
 \begin{quote}
-be) TI990, TMS9900, TMS9940, TMS9995, TMS99105
+be) TI990/4, TI990/10, TI990/12 \\
+    TMS9900, TMS9940, TMS9995, TMS99105, TMS99110
 \end{quote}
-TI's Model 990 Computer besitzt ein Flag, um im privilegierten Modus
-zu arbeiten.  Einige Instruktionen k"onnen nur in diesem Modus
-ausgef"uhrt werden und f"uhren im nicht-privilegierten Modus zu einer
-Exception.  Der TMS99xx haben keinen solchen Modus, die fraglichen
-Instruktionen werden immer ausgef"uhrt.  TMS9995 und TMS99105 f"ugen dem
-TMS9900 Befehlssatz ein paar Instruktionen hinzu, w"ahrend der
-TMS9940 einige entfernt und daf"ur andere hinzuf"ugt.
+Die TMS99xx/99xxx-Prozessoren sind im Prinzip Single-Chip-Implementierungen
+der TI990-Minicomputer, einige TI990-Modelle basieren auch auf einem solchen
+Prozessor anstatt einer diskret aufgebauten CPU.  Die einzelnen Modelle
+unterscheiden sich im Befehlssatz (der TI990/12 hat den gr"o"sten), und
+dem Vorhandensein eines privilegierten Modus.
 %%-----------
 \begin{quote}
 \begin{tabbing}
@@ -4779,6 +4778,21 @@ benutzt die per \tty{ASSUME} mitgeteilten Werte, um zu warnen, wenn eine absolut
 Adresse innerhalb des 256K-Adre"sraums mit den aktuellen Werten nicht adressierbar
 ist, und rechnet ansonsten den korrekten 16-bittigen Offset aus.  Bei indirekter
 Adressierung ist so eine Pr"ufung (naturgem"a"s) nicht m"oglich.
+
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\subsection{CKPT}
+\ttindex{CKPT}
+
+{\em G"ultigkeit: TI990/12}
+
+Typ 12-Instruktionen erfordern f"ur ihre Ausf"uhrung ein sogenanntes {\em Checkpoint
+Register}.  Dieses Register kann entweder explizit als viertes Argument angegeben
+werden, oder es wird mit dieser Anweisung ein Default f"ur allen folgenden Code
+festgelegt.  Wenn weder eine \tty{CKPT}-Anweisung noch ein explizites Register
+angegeben wurde, wird eine Fehlermeldung ausgegeben. Der Default von keinem
+Default-Register kann wiederhergestellt werden, indem man die \tty{CKPT}-Anweisung
+mit {\tt NOTHING} als Argument aufruft.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -11867,6 +11881,34 @@ Angaben:
                 Gegenteil d"urfen nicht gleichzeitig als Argument
                 von \tty{MACEXP\_DFT/OVR} verwendet werden.}
                {keines}
+\errentry{2130}{erwarteter Fehler nicht eingetreten}
+               {Fehler}
+               {Ein per {\tt EXPECT} angek"undigter Fehler oder Warnung ist
+                in dem durch {\tt ENDEXPECT} abgeschlossenen Block nicht aufgetreten.}
+               {Der erwartete Fehler}
+\errentry{2140}{Verschachtelung von EXPECT/ENDEXPECT nicht erlaubt}
+               {Fehler}
+               {Durch {\tt EXPECT/ENDEXPECT} eingerahmte Bl"ocke d"urfen keine
+                geschachtelten {\tt EXPECT/ENDEXPECT}-Bl"ocke enthalten.}
+               {keines}
+\errentry{2150}{fehlendes ENDEXPECT}
+               {Fehler}
+               {Ein per {\tt EXPECT} ge"offneter Block wurde nicht per
+                {\tt ENDEXPECT} abgeschlossen.}
+               {keines}
+\errentry{2160}{ENDEXPECT ohne EXPECT}
+               {Fehler}
+               {Zu einem {\tt ENDEXPECT} gibt es kein vorhergehendes {\tt EXPECT}.}
+               {keines}
+\errentry{2170}{kein Default-Checkpoint-Register definiert}
+               {Fehler}
+               {Bei einer Typ-12-Instruktion wurde kein Checkpoint-Register angegeben
+                und es wurde auch keines "uber die {\tt CKPT}-Anweisung vorher definiert.}
+               {keines}
+\errentry{2180}{ung"ultiges Bitfeld}
+               {Fehler}
+               {Das Bitfeld entspricht nicht der erwarteten {\tt (start,count)}-Syntax.}
+               {das fragliche Argument}
 \errentry{10001}{Fehler bein "Offnen der Datei}
                {fatal}
                {Beim Versuch, eine Datei zu "offnen, ist ein

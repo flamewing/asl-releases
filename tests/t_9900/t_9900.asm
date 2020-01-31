@@ -288,6 +288,97 @@ prt	equ	r3
 	str	*wr10
 	cir	@1234h(wr9)
 
+	; only on TI990/12
+
+	cpu	ti990/12
+
+	; Type 11 instructions have a byte count as third argument.
+        ; The TMS99xxx only implements AM and SM of those, with the
+        ; additional restriction that the byte count is limited to 4,
+        ; i.e. operand size is fixed to 32 bits.  This is also the
+	; default for TI990/12 if the third argument is omitted:
+
+	am	*WR7,@1234h(wr9),4
+	am	*WR7,@1234h(wr9)
+	sm	*WR7,@1234h(wr9),8
+	nrm	*WR8,@1234h(wr10),7
+	rto	*WR9,@1234h(wr11),6
+	lto	*WR10,@1234h(wr12),5
+	cnto	*WR11,@1234h(wr13),4
+	bdc	*WR12,@1234h(wr14),3
+	dbc	*WR13,@1234h(wr15),2
+	swpm	*WR14,@1234h(wr1),1
+	xorm	*WR15,@1234h(wr2),wr0
+	orm	*WR1,@1234h(wr3),15
+	andm	*WR2,@1234h(wr4),14
+
+	emd
+	eint
+	dint
+	cdi
+	negd
+	cde
+	ced
+	xit
+
+	ad	*wr9
+	cid	wr5
+	dd	*wr12+
+	ld	@1234h
+	md	@1234h(wr12)
+	sd	wr12
+	std	@1234h(wr12)
+
+	expect	2170
+	crc	@1234h(wr12),@5678(wr13)
+	endexpect
+	crc	@1234h(wr12),@5678h(wr13),,wr15
+	ckpt	wr15
+	crc	@1234h(wr12),@5678h(wr13),,
+	crc	@1234h(wr12),@5678h(wr13),wr0
+	crc	@1234h(wr12),@5678h(wr13),12
+	cs	@1234h(wr12),@5678h(wr13),12
+	movs	@1234h(wr12),@5678h(wr13),12
+	mvsk	@1234h(wr12),@5678h(wr13),12
+	mvsr	@1234h(wr12),@5678h(wr13),12
+	pops	@1234h(wr12),@5678h(wr13),12
+	pshs	@1234h(wr12),@5678h(wr13),12
+	seqb	@1234h(wr12),@5678h(wr13),12
+	sneb	@1234h(wr12),@5678h(wr13),12
+	ts	@1234h(wr12),@5678h(wr13),12
+	ckpt	nothing
+	expect	2170
+	crc	@1234h(wr12),@5678(wr13)
+	endexpect
+
+	expect	2180,2180
+	iof	@1234h,1
+	iof	@1234h,(1)
+	endexpect
+	iof	@1234h,(1,8)
+
+	insf	@0aa55h,@3366h,(1,8)
+	xv	@0aa55h,@3366h,(1,8)
+	xf	@0aa55h,@3366h,(1,8)
+
+	arj	dest,,wr3
+	arj	dest,wr3
+	arj	dest,1,wr3
+	arj	dest,8,wr3
+	srj	dest,8,wr3
+dest:
+
+	stpc	r4
+	lim	r5
+	lcs	r6
+
+	mova	@1234h(wr12),*wr4
+
+	slsl	eq,@1234h,@5678h
+	slsp	ne,@1234h,@5678h
+
+	ep	@1234h,@5678h,6,10
+
 	; leave out some values that may be subject of rounding errors:
 
 	single	0.0		; 0000 0000 = 0.0000 * 16^(-64)

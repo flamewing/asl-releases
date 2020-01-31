@@ -11,7 +11,6 @@
 /*
  * TODO:
  *
- * - implement remaining TI990/12 instructions
  * - add remaining TI990/xx machines
  * - regard machines with more than 64K of memory
  *
@@ -38,11 +37,19 @@
 
 #include "code9900.h"
 
-#define TwoExtOrderCnt 4
-#define SingOrderCnt 27
+#define Type11OrderCnt 12
+#define Type11aOrderCnt 2
+#define Type12OrderCnt 10
+#define Type15OrderCnt 1
+#define Type16OrderCnt 3
+#define Type17OrderCnt 2
+#define Type20OrderCnt 2
+#define SingOrderCnt 34
 #define ImmOrderCnt 6
-#define FixedOrderCnt 10
-#define RegOrderCnt 4
+#define FixedOrderCnt 18
+#define RegOrderCnt 7
+
+#define CKPT_NOTHING 16
 
 enum
 {
@@ -71,17 +78,12 @@ typedef struct
   Byte Flags;
 } tOrder;
 
-typedef struct
-{
-  Word Code1, Code2;
-  Byte Flags;
-} tExtOrder;
-
 static const tCPUProps *pCurrCPUProps;
-static tOrder *SingOrders, *ImmOrders, *FixedOrders, *RegOrders;
-static tExtOrder *TwoExtOrders;
+static tOrder *SingOrders, *ImmOrders, *FixedOrders, *RegOrders,
+              *Type11Orders, *Type11aOrders, *Type12Orders, *Type15Orders,
+              *Type16Orders, *Type17Orders, *Type20Orders;
 static Boolean IsWord;
-static Word AdrVal, AdrPart;
+static Word AdrVal, AdrPart, DefCkpt;
 
 /*-------------------------------------------------------------------------*/
 /* Adressparser */
@@ -202,6 +204,31 @@ static Boolean DecodeAdr(const tStrComp *pArg)
   }
 }
 
+static Boolean DecodeBitField(tStrComp *pArg, Word *pResult)
+{
+  tStrComp Arg, Start, Count;
+  Boolean OK1, OK2;
+  char *pSep;
+
+  if (!IsIndirect(pArg->Str))
+  {
+    WrStrErrorPos(ErrNum_InvBitField, pArg);
+    return False;
+  }
+  StrCompRefRight(&Arg, pArg, 1);
+  StrCompShorten(&Arg, 1);
+  pSep = strchr(Arg.Str, ',');
+  if (!pSep)
+  {
+    WrStrErrorPos(ErrNum_InvBitField, pArg);
+    return False;
+  }
+  StrCompSplitRef(&Start, &Count, &Arg, pSep);
+  *pResult = EvalStrIntExpression(&Count, UInt4, &OK1)
+           | (EvalStrIntExpression(&Start, UInt4, &OK2) << 12);
+  return OK1 && OK2;
+}
+
 static void PutByte(Byte Value)
 {
   if ((CodeLen & 1) && (!BigEndian))
@@ -214,6 +241,43 @@ static void PutByte(Byte Value)
     BAsmCode[CodeLen] = Value;
   }
   CodeLen++;
+}
+
+static Boolean EvalDist(const tStrComp *pArg, Word *pResult, Word InstrLen)
+{
+  Boolean OK;
+  Integer AdrInt;
+
+  AdrInt = EvalStrIntExpressionOffs(pArg, !!(*pArg->Str == '@'), UInt16, &OK) - (EProgCounter() + InstrLen);
+  if (OK && !SymbolQuestionable && Odd(AdrInt))
+  {
+    WrStrErrorPos(ErrNum_DistIsOdd, pArg);
+    OK = False;
+  }
+  if (OK && !SymbolQuestionable && ((AdrInt < -256) || (AdrInt > 254)))
+  {
+    WrStrErrorPos(ErrNum_JmpDistTooBig, pArg);
+    OK = False;
+  }
+  if (OK)
+    *pResult = (AdrInt / 2) & 0xff;
+  return OK;
+}
+
+static Boolean DecodeCond(const tStrComp *pArg, Word *pResult)
+{
+  const char *pConds[] =
+    { "EQ", "NE", "HE", "L", "GE", "LT", "LE", "H", "LTE", "GT", NULL },
+  **pRun;
+  
+  for (pRun = pConds; *pRun; pRun++)
+    if (!as_strcasecmp(pArg->Str, *pRun))
+    {
+      *pResult = pRun - pConds;
+      return True;
+    }
+  WrStrErrorPos(ErrNum_UndefCond, pArg);
+  return False;
 }
 
 /*-------------------------------------------------------------------------*/
@@ -267,17 +331,52 @@ static void DecodeTwo(Word Code)
   }
 }
 
-static void DecodeTwoExt(Word Index)
+static void DecodeType11(Word Index)
 {
-  const tExtOrder *pOrder = &TwoExtOrders[Index];
+  const tOrder *pOrder = &Type11Orders[Index];
+  Word AdrCnt1;
+
+  if (ChkArgCnt(2, (pCurrCPUProps->CoreFlags & eCore990_12) ? 3 : 2)
+   && CheckCore(pOrder->Flags & eCoreAll)
+   && DecodeAdr(&ArgStr[1]))
+  {
+    Word Count;
+    Boolean OK;
+
+    if (ArgCnt == 3)
+      Count = EvalStrIntExpression(&ArgStr[3], UInt4, &OK);
+    else
+    {
+      Count = 4;
+      OK = True;
+    }
+    if (OK)
+    {
+      WAsmCode[0] = pOrder->Code;
+      WAsmCode[1] = (Count << 12) | AdrPart;
+      WAsmCode[2] = AdrVal;
+      AdrCnt1 = AdrCnt;
+      if (DecodeAdr(&ArgStr[2]))
+      {
+        WAsmCode[1] |= AdrPart << 6;
+        WAsmCode[2 + AdrCnt1] = AdrVal;
+        CodeLen = (2 + AdrCnt1 + AdrCnt) << 1;
+      }
+    }
+  }
+}
+
+static void DecodeType11a(Word Index)
+{
+  const tOrder *pOrder = &Type11aOrders[Index];
   Word AdrCnt1;
 
   if (ChkArgCnt(2, 2)
    && CheckCore(pOrder->Flags & eCoreAll)
    && DecodeAdr(&ArgStr[1]))
   {
-    WAsmCode[0] = pOrder->Code1;
-    WAsmCode[1] = pOrder->Code2 | AdrPart;
+    WAsmCode[0] = pOrder->Code;
+    WAsmCode[1] = AdrPart;
     WAsmCode[2] = AdrVal;
     AdrCnt1 = AdrCnt;
     if (DecodeAdr(&ArgStr[2]))
@@ -287,6 +386,58 @@ static void DecodeTwoExt(Word Index)
       CodeLen = (2 + AdrCnt1 + AdrCnt) << 1;
     }
   }
+}
+
+static void DecodeType12(Word Index)
+{
+  const tOrder *pOrder = &Type12Orders[Index];
+  Word AdrCnt1, Count, Ckpt;
+  Boolean OK;
+
+  if (!ChkArgCnt(2, 4)
+   || !CheckCore(pOrder->Flags & eCoreAll)
+   || !DecodeAdr(&ArgStr[1]))
+    return;
+  WAsmCode[0] = pOrder->Code;
+  WAsmCode[1] =  AdrPart;
+  WAsmCode[2] = AdrVal;
+  AdrCnt1 = AdrCnt;
+
+  if (!DecodeAdr(&ArgStr[2]))
+    return;
+  WAsmCode[1] |= AdrPart << 6;
+  WAsmCode[2 + AdrCnt1] = AdrVal;
+
+  if ((ArgCnt < 3) || !*ArgStr[3].Str)
+  {
+    Count = 0;
+    OK = True;
+  }
+  else
+    Count = EvalStrIntExpression(&ArgStr[3], UInt4, &OK);
+  if (!OK)
+    return;
+  WAsmCode[1] |= Count << 12;
+
+  if ((ArgCnt < 4) || !*ArgStr[4].Str)
+  {
+    if (DefCkpt >= 16)
+    {
+      WrError(ErrNum_NoDefCkptReg);
+      OK = False;
+    }
+    else
+    {
+      Ckpt = DefCkpt;
+      OK = True;
+    }
+  }
+  else
+    OK = DecodeReg(&ArgStr[4], &Ckpt);
+  if (!OK)
+    return;
+  WAsmCode[0] |= Ckpt;
+  CodeLen = (2 + AdrCnt1 + AdrCnt) << 1;
 }
 
 static void DecodeOne(Word Code)
@@ -302,6 +453,144 @@ static void DecodeOne(Word Code)
     {
       WAsmCode[0] += (HPart << 6) + (Code << 10);
       CodeLen = (1 + AdrCnt) << 1;
+    }
+  }
+}
+
+static void DecodeType15(Word Index)
+{
+  const tOrder *pOrder = &Type15Orders[Index];
+  Word BitField;
+
+  if (ChkArgCnt(2, 2)
+   && CheckCore(pOrder->Flags & eCoreAll)
+   && DecodeAdr(&ArgStr[1])
+   && DecodeBitField(&ArgStr[2], &BitField))
+  {
+    WAsmCode[0] = pOrder->Code | (BitField & 0x000f);
+    WAsmCode[1] = (BitField & 0xf000) | AdrPart;
+    WAsmCode[2] = AdrVal;
+    CodeLen = (2 + AdrCnt) << 1;
+  }
+}
+
+static void DecodeType16(Word Index)
+{
+  const tOrder *pOrder = &Type16Orders[Index];
+  Word BitField;
+
+  if (ChkArgCnt(3, 3)
+   && CheckCore(pOrder->Flags & eCoreAll)
+   && DecodeAdr(&ArgStr[1])
+   && DecodeBitField(&ArgStr[3], &BitField))
+  {
+    Word AdrCnt1 = AdrCnt;
+    
+    WAsmCode[0] = pOrder->Code | (BitField & 0x000f);
+    WAsmCode[1] = (BitField & 0xf000) | AdrPart;
+    WAsmCode[2] = AdrVal;
+    if (DecodeAdr(&ArgStr[2]))
+    {
+      WAsmCode[1] |= (AdrPart << 6);
+      WAsmCode[2 + AdrCnt1] = AdrVal;
+      CodeLen = (2 + AdrCnt + AdrCnt1) << 1;
+    }
+  }
+}
+
+static void DecodeMOVA(Word Code)
+{
+  if (ChkArgCnt(2, 2)
+   && CheckCore(eCore990_12)
+   && DecodeAdr(&ArgStr[1]))
+  {
+    Word AdrCnt1 = AdrCnt;
+    
+    WAsmCode[0] = Code;
+    WAsmCode[1] = AdrPart;
+    WAsmCode[2] = AdrVal;
+    if (DecodeAdr(&ArgStr[2]))
+    {
+      WAsmCode[1] |= (AdrPart << 6);
+      WAsmCode[2 + AdrCnt1] = AdrVal;
+      CodeLen = (2 + AdrCnt + AdrCnt1) << 1;
+    }
+  }
+}
+
+static void DecodeType20(Word Index)
+{
+  const tOrder *pOrder = &Type20Orders[Index];
+  Word Condition;
+  
+  if (ChkArgCnt(3, 3)
+   && CheckCore(pOrder->Flags & eCoreAll)
+   && DecodeCond(&ArgStr[1], &Condition)
+   && DecodeAdr(&ArgStr[2]))
+  {
+    Word AdrCnt1 = AdrCnt;
+    
+    WAsmCode[0] = pOrder->Code;
+    WAsmCode[1] = AdrPart | (Condition << 12);
+    WAsmCode[2] = AdrVal;
+    if (DecodeAdr(&ArgStr[3]))
+    {
+      WAsmCode[1] |= (AdrPart << 6);
+      WAsmCode[2 + AdrCnt1] = AdrVal;
+      CodeLen = (2 + AdrCnt + AdrCnt1) << 1;
+    }
+  }
+}
+
+static void DecodeType17(Word Index)
+{
+  const tOrder *pOrder = &Type17Orders[Index];
+  Word Reg;
+
+  if (ChkArgCnt(2, 3)
+   && DecodeReg(&ArgStr[ArgCnt], &Reg))
+  {
+    Word Delta, Dist;
+    Boolean OK;
+    
+    if ((ArgCnt == 3) && *ArgStr[2].Str)
+      Delta = EvalStrIntExpression(&ArgStr[2], UInt4, &OK);
+    else
+    {
+      Delta = 1;
+      OK = True;
+    }
+    if (OK && EvalDist(&ArgStr[1], &Dist, 4))
+    {
+      WAsmCode[0] = pOrder->Code;
+      WAsmCode[1] = (Dist & 0xff) | (Reg << 8) | (Delta << 12);
+      CodeLen = 4;
+    }
+  }
+}
+
+static void DecodeEP(Word Code)
+{
+  if (ChkArgCnt(4, 4)
+   && CheckCore(eCore990_12)
+   && DecodeAdr(&ArgStr[1]))
+  {
+    Word AdrCnt1 = AdrCnt, SrcCount, DestCount;
+    Boolean DestOK, SrcOK;
+
+    WAsmCode[0] = Code;
+    WAsmCode[1] = AdrPart;
+    WAsmCode[2] = AdrVal;
+
+    SrcCount = EvalStrIntExpression(&ArgStr[3], UInt4, &SrcOK);
+    DestCount = EvalStrIntExpression(&ArgStr[4], UInt4, &DestOK);
+
+    if (SrcOK && DestOK && DecodeAdr(&ArgStr[2]))
+    {
+      WAsmCode[0] |= DestCount;
+      WAsmCode[1] |= (AdrPart << 6) | (SrcCount << 12);
+      WAsmCode[2 + AdrCnt1] = AdrVal;
+      CodeLen = (2 + AdrCnt + AdrCnt1) << 1;
     }
   }
 }
@@ -476,22 +765,13 @@ static void DecodeBit(Word Code)
 
 static void DecodeJmp(Word Code)
 {
-  if (ChkArgCnt(1, 1))
-  {
-    Boolean OK;
-    Integer AdrInt;
+  Word Dist;
 
-    AdrInt = EvalStrIntExpression(&ArgStr[1], UInt16, &OK) - (EProgCounter() + 2);
-    if (OK)
-    {
-      if (Odd(AdrInt)) WrError(ErrNum_DistIsOdd);
-      else if ((!SymbolQuestionable) && ((AdrInt < -256) || (AdrInt > 254))) WrError(ErrNum_JmpDistTooBig);
-      else
-      {
-        WAsmCode[0] = ((AdrInt >> 1) & 0xff) | Code;
-        CodeLen = 2;
-      }
-    }
+  if (ChkArgCnt(1, 1)
+   && EvalDist(&ArgStr[1], &Dist, 2))
+  {
+    WAsmCode[0] = Code | Dist;
+    CodeLen = 2;
   }
 }
 
@@ -681,6 +961,23 @@ static void DecodeBSS(Word Code)
   }
 }
 
+static void DecodeCKPT(Word Code)
+{
+  UNUSED(Code);
+
+  if (ChkArgCnt(1, 1)
+   && CheckCore(eCore990_12))
+  {
+    Word NewDefCkpt;
+
+    if (!as_strcasecmp(ArgStr[1].Str, "NOTHING"))
+      DefCkpt = CKPT_NOTHING;
+    else
+      if (DecodeReg(&ArgStr[1], &NewDefCkpt))
+        DefCkpt = NewDefCkpt;
+  }
+}
+
 /*-------------------------------------------------------------------------*/
 /* dynamische Belegung/Freigabe Codetabellen */
 
@@ -751,14 +1048,67 @@ static void AddFixed(char *NName, Word NCode, Word Flags)
   AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
-static void AddTwoExt(char *NName, Word NCode1, Word NCode2, Word Flags)
+static void AddType11(char *NName, Word NCode, Word Flags)
 {
-  if (InstrZ >= TwoExtOrderCnt)
+  if (InstrZ >= Type11OrderCnt)
     exit(42);
-  TwoExtOrders[InstrZ].Code1 = NCode1;
-  TwoExtOrders[InstrZ].Code2 = NCode2;
-  TwoExtOrders[InstrZ].Flags = Flags;
-  AddInstTable(InstTable, NName, InstrZ++, DecodeTwoExt);
+  Type11Orders[InstrZ].Code = NCode;
+  Type11Orders[InstrZ].Flags = Flags;
+  AddInstTable(InstTable, NName, InstrZ++, DecodeType11);
+}
+
+static void AddType11a(char *NName, Word NCode, Word Flags)
+{
+  if (InstrZ >= Type11aOrderCnt)
+    exit(42);
+  Type11aOrders[InstrZ].Code = NCode;
+  Type11aOrders[InstrZ].Flags = Flags;
+  AddInstTable(InstTable, NName, InstrZ++, DecodeType11a);
+}
+
+static void AddType12(char *NName, Word NCode, Word Flags)
+{
+  if (InstrZ >= Type12OrderCnt)
+    exit(42);
+  Type12Orders[InstrZ].Code = NCode;
+  Type12Orders[InstrZ].Flags = Flags;
+  AddInstTable(InstTable, NName, InstrZ++, DecodeType12);
+}
+
+static void AddType15(char *NName, Word NCode, Word Flags)
+{
+  if (InstrZ >= Type15OrderCnt)
+    exit(42);
+  Type15Orders[InstrZ].Code = NCode;
+  Type15Orders[InstrZ].Flags = Flags;
+  AddInstTable(InstTable, NName, InstrZ++, DecodeType15);
+}
+
+static void AddType16(char *NName, Word NCode, Word Flags)
+{
+  if (InstrZ >= Type16OrderCnt)
+    exit(42);
+  Type16Orders[InstrZ].Code = NCode;
+  Type16Orders[InstrZ].Flags = Flags;
+  AddInstTable(InstTable, NName, InstrZ++, DecodeType16);
+}
+
+static void AddType17(char *NName, Word NCode, Word Flags)
+{
+  if (InstrZ >= Type17OrderCnt)
+    exit(42);
+  Type17Orders[InstrZ].Code = NCode;
+  Type17Orders[InstrZ].Flags = Flags;
+  AddInstTable(InstTable, NName, InstrZ++, DecodeType17);
+}
+
+static void AddType20(char *NName, Word NCode, Word Flags)
+{
+  if (InstrZ >= Type20OrderCnt)
+    exit(42);
+  Type20Orders[InstrZ].Code = NCode;
+  Type20Orders[InstrZ].Flags = Flags;
+  AddInstTable(InstTable, NName, InstrZ++, DecodeType20);
 }
 
 static void InitFields(void)
@@ -776,6 +1126,7 @@ static void InitFields(void)
   AddInstTable(InstTable, "SINGLE", 4, DecodeFLOAT);
   AddInstTable(InstTable, "DOUBLE", 8, DecodeFLOAT);
   AddInstTable(InstTable, "BSS", 0, DecodeBSS);
+  AddInstTable(InstTable, "CKPT", 0, DecodeCKPT);
 
   AddTwo("A"   , "AB"   , 5); AddTwo("C"   , "CB"   , 4); AddTwo("S"   , "SB"   , 3);
   AddTwo("SOC" , "SOCB" , 7); AddTwo("SZC" , "SZCB" , 2); AddTwo("MOV" , "MOVB" , 6);
@@ -811,7 +1162,6 @@ static void InitFields(void)
   AddSing("STR" , 0x0dc0, eCore990_12 | eCore99110);
   AddSing("CIR" , 0x0c80, eCore990_12 | eCore99110);
   AddSing("EVAD", 0x0100, eCore99105 | eCore99110);
-#if 0
   AddSing("AD"  , 0x0e40, eCore990_12);
   AddSing("CID" , 0x0e80, eCore990_12);
   AddSing("SD"  , 0x0ec0, eCore990_12);
@@ -819,7 +1169,6 @@ static void InitFields(void)
   AddSing("DD"  , 0x0f40, eCore990_12);
   AddSing("LD"  , 0x0f80, eCore990_12);
   AddSing("STD" , 0x0fc0, eCore990_12);
-#endif
 
   AddSBit("SBO" , 0x1d); AddSBit("SBZ", 0x1e); AddSBit("TB" , 0x1f);
 
@@ -840,32 +1189,35 @@ static void InitFields(void)
   AddImm("ORI" , 0x026, eCoreAll);
   AddImm("BLSK", 0x00b, eCore990_12 | eCore99105 | eCore99110);
 
-  TwoExtOrders = (tExtOrder*)malloc(sizeof(*TwoExtOrders) * TwoExtOrderCnt); InstrZ = 0;
-  AddTwoExt("AM"  , 0x002a, (pCurrCPUProps->CoreFlags & eCore990_12) ? 0x0000 : 0x4000, eCore990_12 | eCore99105 | eCore99110);
-  AddTwoExt("SM"  , 0x0029, (pCurrCPUProps->CoreFlags & eCore990_12) ? 0x0000 : 0x4000, eCore990_12 | eCore99105 | eCore99110);
-  AddTwoExt("CR"  , 0x0301, 0x0000, eCore99110);
-  AddTwoExt("MM"  , 0x0302, 0x0000, eCore99110);
-#if 0
-  AddTwoExt("NRM" , 0x0c08, 0x0000, eCore990_12);
-  AddTwoExt("RTO" , 0x001e, 0x0000, eCore990_12);
-  AddTwoExt("LTO" , 0x001f, 0x0000, eCore990_12);
-  AddTwoExt("CNTO", 0x0020, 0x0000, eCore990_12);
-  AddTwoExt("BDC" , 0x0023, 0x0000, eCore990_12);
-  AddTwoExt("DBC" , 0x0024, 0x0000, eCore990_12);
-  AddTwoExt("SWPM", 0x0025, 0x0000, eCore990_12);
-  AddTwoExt("XORM", 0x0026, 0x0000, eCore990_12);
-  AddTwoExt("ORM" , 0x0027, 0x0000, eCore990_12);
-  AddTwoExt("ANDM", 0x0028, 0x0000, eCore990_12);
-#endif
+  Type11Orders = (tOrder*)malloc(sizeof(*Type11Orders) * Type11OrderCnt); InstrZ = 0;
+  AddType11("AM"  , 0x002a, eCore990_12 | eCore99105 | eCore99110);
+  AddType11("SM"  , 0x0029, eCore990_12 | eCore99105 | eCore99110);
+  AddType11("NRM" , 0x0c08, eCore990_12);
+  AddType11("RTO" , 0x001e, eCore990_12);
+  AddType11("LTO" , 0x001f, eCore990_12);
+  AddType11("CNTO", 0x0020, eCore990_12);
+  AddType11("BDC" , 0x0023, eCore990_12);
+  AddType11("DBC" , 0x0024, eCore990_12);
+  AddType11("SWPM", 0x0025, eCore990_12);
+  AddType11("XORM", 0x0026, eCore990_12);
+  AddType11("ORM" , 0x0027, eCore990_12);
+  AddType11("ANDM", 0x0028, eCore990_12);
+
+  Type11aOrders = (tOrder*)malloc(sizeof(*Type11aOrders) * Type11aOrderCnt); InstrZ = 0;
+  AddType11a("CR"  , 0x0301, eCore99110);
+  AddType11a("MM"  , 0x0302, eCore99110);
 
   AddInstTable(InstTable, "SLAM", 0x001d, DecodeSLAM_SRAM);
   AddInstTable(InstTable, "SRAM", 0x001c, DecodeSLAM_SRAM);
 
   RegOrders = (tOrder*)malloc(sizeof(*RegOrders) * RegOrderCnt); InstrZ = 0;
   AddReg("STST", 0x02c, eCoreAll);
-  AddReg("LST" , 0x008, eCore9995 | eCore99105 | eCore99110);
+  AddReg("LST" , 0x008, eCore9995 | eCore99105 | eCore99110 | eCore990_12);
   AddReg("STWP", 0x02a, eCoreAll);
-  AddReg("LWP" , 0x009, eCore9995 | eCore99105 | eCore99110);
+  AddReg("LWP" , 0x009, eCore9995 | eCore99105 | eCore99110 | eCore990_12);
+  AddReg("STPC", 0x003, eCore990_12);
+  AddReg("LIM" , 0x007, eCore990_12);
+  AddReg("LCS" , 0x00a, eCore990_12);
 
   AddBit("TMB" , 0x0c09);
   AddBit("TCMB", 0x0c0a);
@@ -882,7 +1234,6 @@ static void InitFields(void)
   AddFixed("CRE" , 0x0c04, eCore990_12 | eCore99110);
   AddFixed("NEGR", 0x0c02, eCore990_12 | eCore99110);
   AddFixed("CRI" , 0x0c00, eCore990_12 | eCore99110);
-#if 0
   AddFixed("EMD" , 0x002d, eCore990_12);
   AddFixed("EINT", 0x002e, eCore990_12);
   AddFixed("DINT", 0x002f, eCore990_12);
@@ -891,42 +1242,38 @@ static void InitFields(void)
   AddFixed("CDE" , 0x0c05, eCore990_12);
   AddFixed("CED" , 0x0c07, eCore990_12);
   AddFixed("XIT" , 0x0c0e, eCore990_12);
-#endif
 
-#if 0
-  AddType12("SNEB",, eCore990_12);
-  AddType12("CRC" ,, eCore990_12);
-  AddType12("TS"  ,, eCore990_12);
-  AddType12("CS"  ,, eCore990_12);
-  AddType12("SEQB",, eCore990_12);
-  AddType12("MOVS",, eCore990_12);
-  AddType12("MVSR",, eCore990_12);
-  AddType12("MVSK",, eCore990_12);
-  AddType12("POPS",, eCore990_12);
-  AddType12("PSHS",, eCore990_12);
+  Type12Orders = (tOrder*)malloc(sizeof(*Type12Orders) * Type12OrderCnt); InstrZ = 0;
+  AddType12("SNEB", 0x0e10, eCore990_12);
+  AddType12("CRC" , 0x0e20, eCore990_12);
+  AddType12("TS"  , 0x0e30, eCore990_12);
+  AddType12("CS"  , 0x0040, eCore990_12);
+  AddType12("SEQB", 0x0050, eCore990_12);
+  AddType12("MOVS", 0x0060, eCore990_12);
+  AddType12("MVSR", 0x00c0, eCore990_12);
+  AddType12("MVSK", 0x00d0, eCore990_12);
+  AddType12("POPS", 0x00e0, eCore990_12);
+  AddType12("PSHS", 0x00f0, eCore990_12);
 
-  AddType15("IOF" ,, eCore990_12);
+  Type15Orders = (tOrder*)malloc(sizeof(*Type15Orders) * Type15OrderCnt); InstrZ = 0;
+  AddType15("IOF" , 0x0e00, eCore990_12);
 
-  AddType16("INSF",, eCore990_12);
-  AddType16("XV"  ,, eCore990_12);
-  AddType16("XF"  ,, eCore990_12);
+  Type16Orders = (tOrder*)malloc(sizeof(*Type16Orders) * Type16OrderCnt); InstrZ = 0;
+  AddType16("INSF", 0x0c10, eCore990_12);
+  AddType16("XV"  , 0x0c30, eCore990_12);
+  AddType16("XF"  , 0x0c20, eCore990_12);
 
-  AddType17("SRJ" ,, eCore990_12);
-  AddType17("ARJ" ,, eCore990_12);
+  Type17Orders = (tOrder*)malloc(sizeof(*Type17Orders) * Type17OrderCnt); InstrZ = 0;
+  AddType17("SRJ" , 0x0c0c, eCore990_12);
+  AddType17("ARJ" , 0x0c0d, eCore990_12);
 
-  AddType18("STPC",, eCore990_12);
-  AddType18("LIM" ,, eCore990_12);
-  AddType18("LST" ,, eCore990_12);
-  AddType18("LWP" ,, eCore990_12);
-  AddType18("LCS" ,, eCore990_12);
+  AddInstTable(InstTable, "MOVA", 0x002b, DecodeMOVA);
 
-  AddType19("MOVA",, eCore990_12);
+  Type20Orders = (tOrder*)malloc(sizeof(*Type20Orders) * Type20OrderCnt); InstrZ = 0;
+  AddType20("SLSL", 0x0021, eCore990_12);
+  AddType20("SLSP", 0x0020, eCore990_12);
 
-  AddType20("SLSL",, eCore990_12);
-  AddType20("SLSP",, eCore990_12);
-
-  AddType21("EP"  ,, eCore990_12);
-#endif
+  AddInstTable(InstTable, "EP" , 0x03f0, DecodeEP);
 
   AddInstTable(InstTable, "LIIM", 0x2c80, DecodeLIIM);
 }
@@ -938,7 +1285,13 @@ static void DeinitFields(void)
   free(ImmOrders);
   free(FixedOrders);
   free(RegOrders);
-  free(TwoExtOrders);
+  free(Type11Orders);
+  free(Type11aOrders);
+  free(Type12Orders);
+  free(Type15Orders);
+  free(Type16Orders);
+  free(Type17Orders);
+  free(Type20Orders);
 }
 
 /*-------------------------------------------------------------------------*/
@@ -1013,13 +1366,16 @@ static void SwitchTo_9900(void *pUser)
   InitFields();
 }
 
+static void InitCode_TI990(void)
+{
+  DefCkpt = CKPT_NOTHING; /* CKPT NOTHING */
+}
+
 static const tCPUProps CPUProps[] =
 {
   { "TI990/4"  , eCore9900                      },
   { "TI990/10" , eCore990_10 | eCoreFlagSupMode },
-#if 0
   { "TI990/12" , eCore990_12 | eCoreFlagSupMode },
-#endif
   { "TMS9900"  , eCore9900                      },
   { "TMS9940"  , eCore9940                      },
   { "TMS9995"  , eCore9995                      },
@@ -1034,4 +1390,6 @@ void code9900_init(void)
 
   for (pProp = CPUProps; pProp->pName; pProp++)
     (void)AddCPUUser(pProp->pName, SwitchTo_9900, (void*)pProp, NULL);
+
+  AddInitPassProc(InitCode_TI990);
 }
