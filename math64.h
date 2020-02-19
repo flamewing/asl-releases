@@ -1,34 +1,29 @@
-/* version.c */
+#ifndef _MATH64_H
+#define _MATH64_H
+/* math64.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
 /*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
-/* Lagert die Versionsnummer                                                 */
+/* 64 bit arithmetic for platforms not having a 64 bit integer               */
 /*                                                                           */
 /*****************************************************************************/
 
-#include "stdinc.h"
-#include <string.h>
+#include "datatypes.h"
 
-char *Version = "1.42 Beta [Bld 156]";
-char *DebVersion = "1.42bld156-1";
-LongInt VerNo = 0x142f;
-
-char *InfoMessCopyright = "(C) 1992,2020 Alfred Arnold";
-
-LongInt Magic = 0x12372c46;
-
-void version_init(void)
+typedef struct
 {
-  unsigned int z;
-  char *CMess = InfoMessCopyright;
-  LongWord XORVal;
+  LongWord low;
+  LongWord high;
+} t64;
 
-  for (z = 0; z < strlen(CMess); z++)
-  {
-    XORVal = CMess[z];
-    XORVal = XORVal << (((z + 1) % 4) * 8);
-    Magic = Magic ^ XORVal;
-  }
-}
+extern void add64(t64 *pRes, const t64 *pA, const t64 *pB);
+
+extern void sub64(t64 *pRes, const t64 *pA, const t64 *pB);
+
+extern void mul64(t64 *pRes, const t64 *pA, const t64 *pB);
+
+extern void div64(t64 *pRes, const t64 *pA, const t64 *pB);
+
+#endif /* _MATH64_H */

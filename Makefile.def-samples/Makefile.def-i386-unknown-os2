@@ -2,19 +2,26 @@
 # choose your compiler (must be ANSI-compliant!) and linker command, plus
 # any additionally needed flags
 
+OBJDIR =
 CC = gcc
-LD = gcc
 CFLAGS = -O3 -m486 -fomit-frame-pointer -g -Wall
-LDFLAGS =
 #            ^^^^^
 #            |||||
 # adapt this to your target cpu (386/486 or higher)
+HOST_OBJEXTENSION = .o
+LD = gcc
+LDFLAGS =
+HOST_EXEXTENSION = .exe
 
-TARG_OBJEXTENSION = .o
-TARG_EXEXTENSION = .exe 
+# no cross build
 
-HOST_OBJEXTENSION = $(TARG_OBJEXTENSION)
-HOST_EXEXTENSION = $(TARG_EXEXTENSION)
+TARG_OBJDIR = $(OBJDIR)
+TARG_CC = $(CC)
+TARG_CFLAGS = $(CFLAGS)
+TARG_OBJEXTENSION = $(HOST_OBJEXTENSION)
+TARG_LD = $(LD)
+TARG_LDFLAGS = $(LDFLAGS)
+TARG_EXEXTENSION = $(HOST_EXEXTENSION)
 
 # -------------------------------------------------------------------------
 # directories where binaries, includes, and manpages should go during
@@ -33,8 +40,3 @@ DOCDIR = /usr/local/doc/asl
 # CHARSET = CHARSET_ASCII7
 # CHARSET = CHARSET_IBM437
 CHARSET = CHARSET_IBM850
-
-# -------------------------------------------------------------------------
-# OS/2 special...
-
-EXEXTENSION = .exe

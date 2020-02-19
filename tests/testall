@@ -15,8 +15,8 @@ for t in $SUBDIRS; do
  {
   cat $t.doc
   # valgrind --leak-check=yes  ...
-  ../../asl `cat asflags` -Werror -i ../../include $t.asm | tee $t.log
-  ../../p2bin -k -l 0 -r 0x-0x $t
+  ${RUNCMD} ../../${OBJDIR}asl `cat asflags` -Werror -i ../../include $t.asm | tee $t.log
+  ${RUNCMD} ../../${OBJDIR}p2bin -k -l 0 -r 0x-0x $t
   echo +---------------------------------------------------------------+
   if cmp $t.ori $t.bin; then
    echo "Test $t succeeded!"

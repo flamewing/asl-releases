@@ -222,7 +222,13 @@ static void DecideAbsolute(LongInt Value, ShortInt Size, Boolean Unknown, Word M
       AdrVals[0] = Value & 0xff; AdrCnt = 1;
       break;
     case eSymbolSize16Bit:
-      Base = (Maximum) ? ((LongInt)AbsBank) << 16 : 0;
+      if (Maximum)
+      {
+        Base = AbsBank;
+        Base <<= 16;
+      }
+      else
+        Base = 0;
       if (Unknown) Value = (Value & 0xffff) | Base;
       if ((Value >> 16) != (Base >> 16)) WrError(ErrNum_InAccPage);
       AdrMode = ModAbs16; AdrByte = 0x15;

@@ -30,11 +30,24 @@ if [ "${BINPATH}" != "" ]; then
  ${MKDIRHIER} ${BINPATH}
  chmod 755 ${BINPATH}
  for i in asl plist alink pbind p2hex p2bin; do
-  echo ${BINPATH}/$i
-  strip $i
-  cp $i ${BINPATH}
-  chmod 755 ${BINPATH}/$i
+  echo ${BINPATH}/$i${TARG_EXEXTENSION}
+  strip ${TARG_OBJDIR}$i${TARG_EXEXTENSION}
+  cp ${TARG_OBJDIR}$i${TARG_EXEXTENSION} ${BINPATH}
+  chmod 755 ${BINPATH}/$i${TARG_EXEXTENSION}
  done
+ if test "${TARG_EXEXTENSION}" = ".exe"; then
+  mv ${BINPATH}/asl${TARG_EXEXTENSION} ${BINPATH}/asw${TARG_EXEXTENSION}
+ fi
+fi
+
+if test "${TARG_EXEXTENSION}" = ".exe"; then
+  if test "${OBJDIR}" = ""; then
+    CPINC=./unumlaut
+  else
+    CPINC=${OBJDIR}unumlaut
+  fi
+else
+  CPINC=cp
 fi
 
 if [ "${INCPATH}" != "" ]; then
@@ -46,7 +59,7 @@ if [ "${INCPATH}" != "" ]; then
   for file in include/${path}/*.inc; do
    base=`basename ${file}`
    echo ${INCPATH}/${path}/${base}
-   cp ${file} ${INCPATH}/${path}
+   ${CPINC} ${file} ${INCPATH}/${path}/
    chmod 644 ${INCPATH}/${path}/$base
   done
  done
@@ -67,7 +80,7 @@ if [ "${LIBPATH}" != "" ]; then
  chmod 755 ${LIBPATH}
  for i in *.msg; do
   echo ${LIBPATH}/$i
-  cp $i ${LIBPATH}
+  cp ${TARG_OBJDIR}$i ${LIBPATH}
   chmod 644 ${LIBPATH}/$i
  done
 fi
@@ -78,32 +91,34 @@ if [ "${DOCPATH}" != "" ]; then
  for i in DE EN; do
   if [ -f doc_$i/as.html ]; then
     echo ${DOCPATH}/as-$i.doc
-    cp doc_$i/as.doc ${DOCPATH}/as-$i.doc
+    cp doc_$i/as.doc ${DOCPATH}/as_$i.doc
   fi
   echo ${DOCPATH}/as-$i.tex
-  cp doc_$i/as.tex ${DOCPATH}/as-$i.tex
+  cp doc_$i/as.tex ${DOCPATH}/as_$i.tex
   if [ -f doc_$i/as.html ]; then
    echo ${DOCPATH}/as-$i.html
-   cp doc_$i/as.html ${DOCPATH}/as-$i.html
+   cp doc_$i/as.html ${DOCPATH}/as_$i.html
   fi
   if [ -f doc_$i/as.dvi ]; then
    echo ${DOCPATH}/as-$i.dvi
-   cp doc_$i/as.dvi ${DOCPATH}/as-$i.dvi
+   cp doc_$i/as.dvi ${DOCPATH}/as_$i.dvi
   fi
   if [ -f doc_$i/as.ps ]; then
    echo ${DOCPATH}/as-$i.ps
-   cp doc_$i/as.ps ${DOCPATH}/as-$i.ps
+   cp doc_$i/as.ps ${DOCPATH}/as_$i.ps
   fi
   if [ -f doc_$i/as.pdf ]; then
    echo ${DOCPATH}/as-$i.pdf
-   cp doc_$i/as.pdf ${DOCPATH}/as-$i.pdf
+   cp doc_$i/as.pdf ${DOCPATH}/as_$i.pdf
   fi
-  chmod 644 ${DOCPATH}/as-$i.*
+  chmod 644 ${DOCPATH}/as_$i.*
  done
- cp doc_DE/taborg*.tex ${DOCPATH}
+ cp doc_COM/taborg*.tex ${DOCPATH}
  chmod 644 ${DOCPATH}/taborg*.tex
- cp doc_DE/ps*.tex ${DOCPATH}
+ cp doc_COM/ps*.tex ${DOCPATH}
  chmod 644 ${DOCPATH}/ps*.tex
+ cp doc_COM/biblio.tex ${DOCPATH}
+ chmod 644 ${DOCPATH}/biblio.tex
  cp COPYING ${DOCPATH}
  chmod 644 ${DOCPATH}/COPYING
 fi

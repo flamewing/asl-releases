@@ -1,41 +1,42 @@
 include Makefile.def
 
 CURRDIR=.\\
-
-include makedefs.src
-
-include objdefs.unix
+RM=del
+NULL=
+OBLANK=$(NULL) $(NULL)
 
 include makedefs.files
 
-ALLFLAGS = $(CFLAGS) -D$(CHARSET) -DSTDINCLUDES=\"$(INCDIR)\" -DLIBDIR=\"$(LIBDIR)\"
+ALLFLAGS = $(CFLAGS) -D$(CHARSET) -DINCDIR=\"$(INCDIR)\" -DLIBDIR=\"$(LIBDIR)\"
 
 #---------------------------------------------------------------------------
-# primary targets
+# Primary Pargets
 
-all: $(ALLTARGETS)
+binaries: $(ALLTARGETS)
 
-docs: $(TEX2DOCTARGET) $(TEX2HTMLTARGET)
-	cd doc_DE & $(MAKE) TEX2DOC=..\$(TEX2DOCTARGET) TEX2HTML=..\$(TEX2HTMLTARGET) RM=del
-	cd doc_EN & $(MAKE) TEX2DOC=..\$(TEX2DOCTARGET) TEX2HTML=..\$(TEX2HTMLTARGET) RM=del
+all: binaries docs
+
+include makedefs.src
+
+docs: docs_DE docs_EN
 
 $(ASLTARGET): $(AS_OBJECTS) $(ASM_OBJECTS) $(ST_OBJECTS) $(CODE_OBJECTS) $(NLS_OBJECTS)
-	$(LD) -o $(ASLTARGET) $(ASM_OBJECTS) $(AS_OBJECTS) $(ST_OBJECTS) $(CODE_OBJECTS) $(NLS_OBJECTS) -lm $(LDFLAGS)
+	$(TARG_LD) -o $(ASLTARGET) $(ASM_OBJECTS) $(AS_OBJECTS) $(ST_OBJECTS) $(CODE_OBJECTS) $(NLS_OBJECTS) -lm $(TARG_LDFLAGS)
 
 $(PLISTTARGET): $(PLIST_OBJECTS) $(NLS_OBJECTS)
-	$(LD) -o $(PLISTTARGET) $(PLIST_OBJECTS) $(NLS_OBJECTS) -lm $(LDFLAGS)
+	$(TARG_LD) -o $(PLISTTARGET) $(PLIST_OBJECTS) $(NLS_OBJECTS) -lm $(TARG_LDFLAGS)
 
 $(ALINKTARGET): $(ALINK_OBJECTS) $(NLS_OBJECTS)
-	$(LD) -o $(ALINKTARGET) $(ALINK_OBJECTS) $(NLS_OBJECTS) -lm $(LDFLAGS)
+	$(TARG_LD) -o $(ALINKTARGET) $(ALINK_OBJECTS) $(NLS_OBJECTS) -lm $(TARG_LDFLAGS)
 
 $(PBINDTARGET): $(PBIND_OBJECTS) $(NLS_OBJECTS)
-	$(LD) -o $(PBINDTARGET) $(PBIND_OBJECTS) $(NLS_OBJECTS) -lm $(LDFLAGS)
+	$(TARG_LD) -o $(PBINDTARGET) $(PBIND_OBJECTS) $(NLS_OBJECTS) -lm $(TARG_LDFLAGS)
 
 $(P2HEXTARGET): $(P2HEX_OBJECTS) $(NLS_OBJECTS)
-	$(LD) -o $(P2HEXTARGET) $(P2HEX_OBJECTS) $(NLS_OBJECTS) -lm $(LDFLAGS)
+	$(TARG_LD) -o $(P2HEXTARGET) $(P2HEX_OBJECTS) $(NLS_OBJECTS) -lm $(TARG_LDFLAGS)
 
 $(P2BINTARGET): $(P2BIN_OBJECTS) $(NLS_OBJECTS)
-	$(LD) -o $(P2BINTARGET) $(P2BIN_OBJECTS) $(NLS_OBJECTS) -lm $(LDFLAGS)
+	$(TARG_LD) -o $(P2BINTARGET) $(P2BIN_OBJECTS) $(NLS_OBJECTS) -lm $(TARG_LDFLAGS)
 
 $(RESCOMPTARGET): $(RESCOMP_OBJECTS)
 	$(LD) -o $(RESCOMPTARGET) $(RESCOMP_OBJECTS) $(LDFLAGS)
@@ -52,45 +53,58 @@ $(UMLAUTTARGET): $(UMLAUT_OBJECTS)
 $(UNUMLAUTTARGET): $(UNUMLAUT_OBJECTS)
 	$(LD) -o $(UNUMLAUTTARGET) $(UNUMLAUT_OBJECTS) $(LDFLAGS)
 
+check_targ_cc:
+
 #---------------------------------------------------------------------------
 # special rules for objects dependant on string resource files
 
 include makedefs.str
 
-#---------------------------------------------------------------------------
-# supplementary targets
+binaries: $(ALLMSGTARGETS)
 
-test: $(ALLTARGETS)
+#---------------------------------------------------------------------------
+# Documentation
+
+INCFILES = doc_COM\\taborg*.tex doc_COM\\tabids*.tex doc_COM\\pscpu.tex doc_COM\\pscomm.tex doc_COM\\biblio.tex
+
+DOC_DE_DIR=doc_DE\\
+include $(DOC_DE_DIR)makedefs.dok
+DOC_EN_DIR=doc_EN\\
+include $(DOC_EN_DIR)makedefs.dok
+
+#---------------------------------------------------------------------------
+# Supplementary Targets
+
+test: binaries
 	cd tests & copy t_secdrive\wd1003at.inc t_secdrive\lowlevel.inc & .\testall
 
-install: $(ALLTARGETS)
+install: all
 	.\install $(BINDIR) $(INCDIR) $(MANDIR) $(LIBDIR) $(DOCDIR)
 
-clean:
-	-del $(ALLTARGETS)
-	-del $(TEX2DOCTARGET)
-	-del $(TEX2HTMLTARGET)
-	-del $(RESCOMPTARGET)
-        -del *$(HOST_OBJEXTENSION) 
-	-del *$(TARG_OBJEXTENSION)
-	-del *.p
-	-del tests/testlog
-	-del testlog
-	-del *.rsc
-	cd doc_DE & $(MAKE) RM=del clean
-	cd doc_EN & $(MAKE) RM=del clean
+clean: clean_doc_DE clean_doc_EN
+	-$(RM) $(ALLTARGETS)
+	-$(RM) $(TEX2DOCTARGET)
+	-$(RM) $(TEX2HTMLTARGET)
+	-$(RM) $(RESCOMPTARGET)
+        -$(RM) $(OBJDIR)*$(HOST_OBJEXTENSION)
+	-$(RM) $(TARG_OBJDIR)*$(TARG_OBJEXTENSION)
+	-$(RM) $(TARG_OBJDIR)*.msg
+	-$(RM) *.p
+	-$(RM) tests/testlog
+	-$(RM) testlog
+	-$(RM) *.rsc
 
 #---------------------------------------------------------------------------
-# create distributions
+# Create Distributions
 
-bindist: $(UNUMLAUTTARGET)
+bindist: $(UNUMLAUTTARGET) all
 	mkdir as & cmd /cinstall as\bin as\include as\man as\lib as\doc
 	cd as & zip -9 -r ..\as2$(VERSION) *
-	-del as\bin\* /n
-	-del as\include\* /n
-	-del as\man\* /n
-	-del as\lib /n
-	-del as\doc\* /n
+	-$(RM) as\bin\* /n
+	-$(RM) as\include\* /n
+	-$(RM) as\man\* /n
+	-$(RM) as\lib /n
+	-$(RM) as\doc\* /n
 	-rmdir as\bin
 	-rmdir as\include
 	-rmdir as\man

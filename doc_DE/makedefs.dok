@@ -1,0 +1,45 @@
+docs_DE: docs_DE_notex $(DOC_DE_DIR)as.ps $(DOC_DE_DIR)as.pdf
+
+docs_DE_notex: $(DOC_DE_DIR)as.doc $(DOC_DE_DIR)as.html
+
+$(DOC_DE_DIR)as.ps: $(DOC_DE_DIR)as.dvi
+	dvips $(DOC_DE_DIR)as -o $(DOC_DE_DIR)as.ps
+
+$(DOC_DE_DIR)as.pdf: $(DOC_DE_DIR)as.tex $(INCFILES)
+	pdflatex -aux-directory=$(DOC_DE_DIR) -output-directory=$(DOC_DE_DIR) $(DOC_DE_DIR)as
+	pdflatex -aux-directory=$(DOC_DE_DIR) -output-directory=$(DOC_DE_DIR) $(DOC_DE_DIR)as
+	makeindex $(DOC_DE_DIR)as
+	pdflatex -aux-directory=$(DOC_DE_DIR) -output-directory=$(DOC_DE_DIR) $(DOC_DE_DIR)as
+
+$(DOC_DE_DIR)as.dvi: $(DOC_DE_DIR)as.tex $(INCFILES)
+	latex  -aux-directory=$(DOC_DE_DIR) -output-directory=$(DOC_DE_DIR) $(DOC_DE_DIR)as
+	latex  -aux-directory=$(DOC_DE_DIR) -output-directory=$(DOC_DE_DIR) $(DOC_DE_DIR)as
+	makeindex $(DOC_DE_DIR)as
+	latex  -aux-directory=$(DOC_DE_DIR) -output-directory=$(DOC_DE_DIR) $(DOC_DE_DIR)as
+
+$(DOC_DE_DIR)as.doc: $(DOC_DE_DIR)as.tex  $(INCFILES) $(TEX2DOCTARGET)
+	$(CURRDIR)$(TEX2DOCTARGET) $(DOC_DE_DIR)as.tex $(DOC_DE_DIR)as.doc
+	$(CURRDIR)$(TEX2DOCTARGET) $(DOC_DE_DIR)as.tex $(DOC_DE_DIR)as.doc
+
+$(DOC_DE_DIR)as.html: $(DOC_DE_DIR)as.tex  $(INCFILES) $(TEX2HTMLTARGET)
+	$(CURRDIR)$(TEX2HTMLTARGET) $(DOC_DE_DIR)as.tex $(DOC_DE_DIR)as.html
+	$(CURRDIR)$(TEX2HTMLTARGET) $(DOC_DE_DIR)as.tex $(DOC_DE_DIR)as.html
+
+clean_doc_DE:
+	$(RM) $(DOC_DE_DIR)as.dvi
+	$(RM) $(DOC_DE_DIR)as.ps
+	$(RM) $(DOC_DE_DIR)as.pdf
+	$(RM) $(DOC_DE_DIR)as.i*
+	$(RM) $(DOC_DE_DIR)*log
+	$(RM) $(DOC_DE_DIR)as.aux
+	$(RM) $(DOC_DE_DIR)as.out
+	$(RM) $(DOC_DE_DIR)as.toc
+	$(RM) $(DOC_DE_DIR)*~
+	$(RM) $(DOC_DE_DIR)DEADJOE
+	$(RM) $(DOC_DE_DIR)as.doc
+	$(RM) $(DOC_DE_DIR)as.dtoc
+	$(RM) $(DOC_DE_DIR)as.daux
+	$(RM) $(DOC_DE_DIR)as.html
+	$(RM) $(DOC_DE_DIR)as.htoc
+	$(RM) $(DOC_DE_DIR)as.haux
+	$(RM) $(DOC_DE_DIR)commpseudo.tex cpupseudo.tex

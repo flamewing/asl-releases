@@ -112,6 +112,7 @@ static FILE *infiles[50], *outfile;
 static char *infilename;
 static char TocName[200];
 static int CurrLine = 0, CurrColumn;
+static char SrcDir[TOKLEN + 1];
 
 #define CHAPMAX 6
 static int Chapters[CHAPMAX];
@@ -141,6 +142,25 @@ static PInstTable TeXTable;
 
 void ChkStack(void)
 {
+}
+
+static void SetSrcDir(const char *pSrcFile)
+{
+  const char *pSep = strchr(pSrcFile, PATHSEP);
+  if (!pSep)
+    *SrcDir = '\0';
+  else
+  {
+    size_t l = pSep + 1 - pSrcFile;
+
+    if (l >= sizeof(SrcDir))
+    {
+      fprintf(stderr, "%s: path too long\n", pSrcFile);
+      exit(3);
+    }
+    memcpy(SrcDir, pSrcFile, l);
+    SrcDir[l] = '\0';
+  }
 }
 
 static void error(char *Msg)
@@ -2505,11 +2525,12 @@ static void TeXDoSpec(void)
 
 static void TeXInclude(Word Index)
 {
-  char Token[TOKLEN], Msg[TOKLEN];
+  char Token[2 * TOKLEN + 1], Msg[2 * TOKLEN + 1];
   UNUSED(Index);
 
   assert_token("{");
-  collect_token(Token, "}");
+  strcpy(Token, SrcDir);
+  collect_token(Token + strlen(Token), "}");
   infiles[IncludeNest] = fopen(Token, "r");
   if (!infiles[IncludeNest])
   {
@@ -2590,6 +2611,7 @@ int main(int argc, char **argv)
   }
   else
     IncludeNest++;
+  SetSrcDir(argv[1]);
   infilename = argv[1];
   if (!strcmp(argv[2], "-"))
     outfile = stdout;

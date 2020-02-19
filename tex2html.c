@@ -133,6 +133,7 @@ static int TabStops[TABMAX], TabStopCnt, CurrTabStop;
 static Boolean InAppendix, InMathMode, DoRepass, InListItem;
 static TTable ThisTable;
 static int CurrRow, CurrCol;
+static char SrcDir[TOKLEN + 1];
 static Boolean GermanMode;
 
 static int Structured;
@@ -155,6 +156,25 @@ static PInstTable TeXTable;
 
 void ChkStack(void)
 {
+}
+
+static void SetSrcDir(const char *pSrcFile)
+{
+  const char *pSep = strchr(pSrcFile, PATHSEP);
+  if (!pSep)
+    *SrcDir = '\0';
+  else
+  {
+    size_t l = pSep + 1 - pSrcFile;
+
+    if (l >= sizeof(SrcDir))
+    {
+      fprintf(stderr, "%s: path too long\n", pSrcFile);
+      exit(3);
+    }
+    memcpy(SrcDir, pSrcFile, l);
+    SrcDir[l] = '\0';
+  }
 }
 
 static void error(char *Msg)
@@ -2737,11 +2757,12 @@ static void TeXDoSpec(void)
 
 static void TeXInclude(Word Index)
 {
-  char Token[TOKLEN], Msg[TOKLEN];
+  char Token[2 * TOKLEN + 1], Msg[2 * TOKLEN + 1];
   UNUSED(Index);
 
   assert_token("{");
-  collect_token(Token, "}");
+  strcpy(Token, SrcDir);
+  collect_token(Token + strlen(Token), "}");
   infiles[IncludeNest] = fopen(Token, "r");
   if (!infiles[IncludeNest])
   {
@@ -2875,6 +2896,7 @@ int main(int argc, char **argv)
   }
   else
     IncludeNest++;
+  SetSrcDir(argv[1]);
 
   /* set up hash table */
 

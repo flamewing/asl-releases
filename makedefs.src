@@ -1,74 +1,861 @@
-CODE_SRCS = codepseudo.c intpseudo.c motpseudo.c tipseudo.c natpseudo.c fourpseudo.c ibmfloat.c codevars.c \
-  	    code68k.c \
-            code56k.c \
-  	    code601.c \
-	    codemcore.c \
-            codexgate.c \
-  	    code68.c code6805.c code6809.c code6812.c codes12z.c code6816.c code68rs08.c \
-  	    codeh8_3.c codeh8_5.c code7000.c \
-  	    code65.c codeh16.c code7700.c codehmcs400.c code4500.c codem16.c codem16c.c \
-            code4004.c code8008.c code48.c code51.c code96.c code85.c code86.c code960.c \
-  	    code8x30x.c code2650.c codexa.c \
-  	    codeavr.c \
-  	    code29k.c \
-  	    code166.c \
-  	    codez80.c codez8.c \
-            codekcpsm.c codekcp3.c \
-            codemic8.c \
-            code96c141.c code90c141.c code87c800.c code870c.c code47c00.c code97c241.c code9331.c\
-  	    code16c5x.c code16c8x.c code17c4x.c codesx20.c \
-  	    codest6.c codest7.c codest9.c code6804.c \
-            code3201x.c code3202x.c code3203x.c code3205x.c code3254x.c code3206x.c \
-            code9900.c codetms7.c code370.c codemsp.c codetms1.c \
-  	    code78c10.c code75xx.c code75k0.c code78k0.c code78k2.c code78k3.c code78k4.c code7720.c code77230.c \
-            codescmp.c code807x.c codecop4.c codecop8.c codesc14xxx.c \
-            codeace.c codef8.c \
-            code53c8xx.c \
-            codefmc8.c codefmc16.c codemn1610.c codemn2610.c \
-            codeol40.c codeol50.c \
-            code1802.c \
-            codevector.c \
-	    codexcore.c \
-            code1750.c
+CODE_OBJECTS = \
+ $(TARG_OBJDIR)codepseudo$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)intpseudo$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)motpseudo$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)tipseudo$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)natpseudo$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)fourpseudo$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)ibmfloat$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codevars$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code68k$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code56k$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code601$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codemcore$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codexgate$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code68$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code6805$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code6809$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code6812$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codes12z$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code6816$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code68rs08$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codeh8_3$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codeh8_5$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code7000$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code65$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codeh16$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code7700$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codehmcs400$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code4500$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codem16$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codem16c$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code4004$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code8008$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code48$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code51$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code96$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code85$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code86$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code960$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code8x30x$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code2650$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codexa$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codeavr$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code29k$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code166$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codez80$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codez8$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codekcpsm$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codekcp3$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codemic8$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code96c141$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code90c141$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code87c800$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code870c$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code47c00$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code97c241$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code9331$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code16c5x$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code16c8x$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code17c4x$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codesx20$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codest6$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codest7$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codest9$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code6804$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code3201x$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code3202x$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code3203x$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code3205x$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code3254x$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code3206x$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code9900$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codetms7$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code370$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codemsp$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codetms1$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code78c10$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code75xx$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code75k0$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code78k0$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code78k2$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code78k3$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code78k4$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code7720$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code77230$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codescmp$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code807x$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codecop4$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codecop8$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codesc14xxx$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codeace$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codef8$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code53c8xx$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codefmc8$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codefmc16$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codemn1610$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codemn2610$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codeol40$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codeol50$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code1802$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codevector$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codexcore$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)code1750$(TARG_OBJEXTENSION)
 
-DECODE_SRCS = deco68.c deco87c800.c
+$(TARG_OBJDIR)codeobjs.dep: $(MKDEPENDTARGET)
+	$(CURRDIR)$(MKDEPENDTARGET) -r -c $(TARG_OBJEXTENSION) -o$(OBLANK)$@ $(CODE_OBJECTS)
 
-ST_SRCS = strutil.c stdhandl.c stringlists.c strcomp.c
 
-NLS_SRCS = nls.c nlmessages.c
 
-ASM_SRCS = as.c asmdef.c asmsub.c asmerr.c lstmacroexp.c asmpars.c asmmac.c asmstructs.c asmcode.c asmdebug.c asmif.c \
-           asmfnums.c asmrelocs.c tempresult.c operator.c function.c asminclist.c symbolsize.c asmitree.c asmallg.c
+DECODE_OBJECTS = deco68$(TARG_OBJEXTENSION) deco87c800$(TARG_OBJEXTENSION)
 
-AS_SRCS = version.c endian.c bpemu.c chunks.c cpulist.c errmsg.c trees.c dynstring.c cmdarg.c ioerrs.c headids.c
 
-DASM_SRCS = das.c dasmdef.c
 
-DAS_SRCS = version.c endian.c bpemu.c chunks.c trees.c codechunks.c entryaddress.c invaddress.c cpulist.c dynstring.c cmdarg.c ioerrs.c
+ST_OBJECTS = \
+ $(TARG_OBJDIR)strutil$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)stdhandl$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)stringlists$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)strcomp$(TARG_OBJEXTENSION)
 
-PLIST_SRCS = plist.c version.c toolutils.c headids.c\
-	     endian.c bpemu.c stringlists.c strutil.c cmdarg.c ioerrs.c
+$(TARG_OBJDIR)stobjs.dep: $(MKDEPENDTARGET)
+	$(CURRDIR)$(MKDEPENDTARGET) -r -c $(TARG_OBJEXTENSION) -o$(OBLANK)$@ $(ST_OBJECTS)
 
-ALINK_SRCS = alink.c version.c toolutils.c\
-             endian.c bpemu.c stringlists.c strutil.c cmdarg.c ioerrs.c
 
-PBIND_SRCS = pbind.c version.c toolutils.c\
-	     endian.c bpemu.c stringlists.c strutil.c stdhandl.c cmdarg.c ioerrs.c
 
-P2HEX_SRCS = p2hex.c version.c toolutils.c headids.c\
-             endian.c bpemu.c stringlists.c strutil.c chunks.c cmdarg.c ioerrs.c
+NLS_OBJECTS = \
+ $(TARG_OBJDIR)nls$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)nlmessages$(TARG_OBJEXTENSION)
 
-P2BIN_SRCS = p2bin.c version.c toolutils.c\
-             endian.c bpemu.c stringlists.c strutil.c chunks.c cmdarg.c ioerrs.c
+$(TARG_OBJDIR)nlsobjs.dep: $(MKDEPENDTARGET)
+	$(CURRDIR)$(MKDEPENDTARGET) -r -c $(TARG_OBJEXTENSION) -o$(OBLANK)$@ $(NLS_OBJECTS)
 
-RESCOMP_SRCS = rescomp.c endian.c strutil.c bpemu.c
 
-TEX2DOC_SRCS = tex2doc.c findhyphen.c asmitree.c strutil.c ushyph.c grhyph.c
 
-TEX2HTML_SRCS = tex2html.c asmitree.c strutil.c
+ASM_OBJECTS = \
+ $(TARG_OBJDIR)as$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)asmdef$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)asmsub$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)asmerr$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)lstmacroexp$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)asmpars$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)asmmac$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)asmstructs$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)asmcode$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)asmdebug$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)asmif$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)asmfnums$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)asmrelocs$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)tempresult$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)operator$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)function$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)asminclist$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)symbolsize$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)asmitree$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)asmallg$(TARG_OBJEXTENSION)
 
-UMLAUT_SRCS = umlaut.c strutil.c
+$(TARG_OBJDIR)asmobjs.dep: $(MKDEPENDTARGET)
+	$(CURRDIR)$(MKDEPENDTARGET) -r -c $(TARG_OBJEXTENSION) -o$(OBLANK)$@ $(ASM_OBJECTS)
 
-UNUMLAUT_SRCS = unumlaut.c strutil.c
 
-MKDEPEND_SRCS = mkdepend.c stringlists.c strutil.c
+
+AS_OBJECTS = \
+ $(TARG_OBJDIR)version$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)endian$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)bpemu$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)math64$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)chunks$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)cpulist$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)errmsg$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)trees$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)dynstring$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)cmdarg$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)ioerrs$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)headids$(TARG_OBJEXTENSION)
+
+$(TARG_OBJDIR)asobjs.dep: $(MKDEPENDTARGET)
+	$(CURRDIR)$(MKDEPENDTARGET) -r -c $(TARG_OBJEXTENSION) -o$(OBLANK)$@ $(AS_OBJECTS)
+
+
+
+DASM_OBJECTS = \
+ $(TARG_OBJDIR)das$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)dasmdef$(TARG_OBJEXTENSION)
+
+$(TARG_OBJDIR)dasmobjs.dep: $(MKDEPENDTARGET)
+	$(CURRDIR)$(MKDEPENDTARGET) -r -c $(TARG_OBJEXTENSION) -o$(OBLANK)$@ $(DASM_OBJECTS)
+
+
+
+DAS_OBJECTS = \
+ $(TARG_OBJDIR)version$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)endian$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)bpemu$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)chunks$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)trees$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)codechunks$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)entryaddress$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)invaddress$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)cpulist$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)dynstring$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)cmdarg$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)ioerrs$(TARG_OBJEXTENSION)
+
+$(TARG_OBJDIR)dasobjs.dep: $(MKDEPENDTARGET)
+	$(CURRDIR)$(MKDEPENDTARGET) -r -c $(TARG_OBJEXTENSION) -o$(OBLANK)$@ $(DAS_OBJECTS)
+
+
+
+PLIST_OBJECTS = \
+ $(TARG_OBJDIR)plist$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)version$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)toolutils$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)headids$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)endian$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)bpemu$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)stringlists$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)strutil$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)cmdarg$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)ioerrs$(TARG_OBJEXTENSION)
+
+$(TARG_OBJDIR)plisobjs.dep: $(MKDEPENDTARGET)
+	$(CURRDIR)$(MKDEPENDTARGET) -r -c $(TARG_OBJEXTENSION) -o$(OBLANK)$@ $(PLIST_OBJECTS)
+
+
+
+ALINK_OBJECTS = \
+ $(TARG_OBJDIR)alink$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)version$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)toolutils$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)endian$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)bpemu$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)stringlists$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)strutil$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)cmdarg$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)ioerrs$(TARG_OBJEXTENSION)
+
+$(TARG_OBJDIR)alinobjs.dep: $(MKDEPENDTARGET)
+	$(CURRDIR)$(MKDEPENDTARGET) -r -c $(TARG_OBJEXTENSION) -o$(OBLANK)$@ $(ALINK_OBJECTS)
+
+
+
+PBIND_OBJECTS = \
+ $(TARG_OBJDIR)pbind$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)version$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)toolutils$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)endian$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)bpemu$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)stringlists$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)strutil$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)stdhandl$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)cmdarg$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)ioerrs$(TARG_OBJEXTENSION)
+
+$(TARG_OBJDIR)pbinobjs.dep: $(MKDEPENDTARGET)
+	$(CURRDIR)$(MKDEPENDTARGET) -r -c $(TARG_OBJEXTENSION) -o$(OBLANK)$@ $(PBIND_OBJECTS)
+
+
+
+P2HEX_OBJECTS = \
+ $(TARG_OBJDIR)p2hex$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)version$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)toolutils$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)headids$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)endian$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)bpemu$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)stringlists$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)strutil$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)chunks$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)cmdarg$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)ioerrs$(TARG_OBJEXTENSION)
+
+$(TARG_OBJDIR)p2hxobjs.dep: $(MKDEPENDTARGET)
+	$(CURRDIR)$(MKDEPENDTARGET) -r -c $(TARG_OBJEXTENSION) -o$(OBLANK)$@ $(P2HEX_OBJECTS)
+
+
+
+P2BIN_OBJECTS = \
+ $(TARG_OBJDIR)p2bin$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)version$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)toolutils$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)endian$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)bpemu$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)stringlists$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)strutil$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)chunks$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)cmdarg$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)ioerrs$(TARG_OBJEXTENSION)
+
+$(TARG_OBJDIR)p2bnobjs.dep: $(MKDEPENDTARGET)
+	$(CURRDIR)$(MKDEPENDTARGET) -r -c $(TARG_OBJEXTENSION) -o$(OBLANK)$@ $(P2BIN_OBJECTS)
+
+
+
+RESCOMP_OBJECTS = \
+ $(OBJDIR)rescomp$(HOST_OBJEXTENSION) \
+ $(OBJDIR)h_endian$(HOST_OBJEXTENSION) \
+ $(OBJDIR)h_strutil$(HOST_OBJEXTENSION) \
+ $(OBJDIR)h_bpemu$(HOST_OBJEXTENSION)
+
+$(OBJDIR)rescobjs.dep: $(MKDEPENDTARGET)
+	$(CURRDIR)$(MKDEPENDTARGET) -r -c $(HOST_OBJEXTENSION) -o$(OBLANK)$@ $(RESCOMP_OBJECTS)
+
+
+
+TEX2DOC_OBJECTS = \
+ $(OBJDIR)tex2doc$(HOST_OBJEXTENSION) \
+ $(OBJDIR)findhyphen$(HOST_OBJEXTENSION) \
+ $(OBJDIR)h_asmitree$(HOST_OBJEXTENSION) \
+ $(OBJDIR)h_strutil$(HOST_OBJEXTENSION) \
+ $(OBJDIR)ushyph$(HOST_OBJEXTENSION) \
+ $(OBJDIR)grhyph$(HOST_OBJEXTENSION)
+
+$(OBJDIR)tx2dobjs.dep: $(MKDEPENDTARGET)
+	$(CURRDIR)$(MKDEPENDTARGET) -r -c $(HOST_OBJEXTENSION) -o$(OBLANK)$@ $(TEX2DOC_OBJECTS)
+
+
+
+TEX2HTML_OBJECTS = \
+ $(OBJDIR)tex2html$(HOST_OBJEXTENSION) \
+ $(OBJDIR)h_asmitree$(HOST_OBJEXTENSION) \
+ $(OBJDIR)h_strutil$(HOST_OBJEXTENSION)
+
+$(OBJDIR)tx2hobjs.dep: $(MKDEPENDTARGET)
+	$(CURRDIR)$(MKDEPENDTARGET) -r -c $(HOST_OBJEXTENSION) -o$(OBLANK)$@ $(TEX2HTML_OBJECTS)
+
+
+
+UMLAUT_OBJECTS = \
+ $(OBJDIR)umlaut$(HOST_OBJEXTENSION) \
+ $(OBJDIR)h_strutil$(HOST_OBJEXTENSION)
+
+$(OBJDIR)umlobjs.dep: $(MKDEPENDTARGET)
+	$(CURRDIR)$(MKDEPENDTARGET) -r -c $(HOST_OBJEXTENSION) -o$(OBLANK)$@ $(UMLAUT_OBJECTS)
+
+
+
+UNUMLAUT_OBJECTS = \
+ $(OBJDIR)unumlaut$(HOST_OBJEXTENSION) \
+ $(OBJDIR)h_strutil$(HOST_OBJEXTENSION)
+
+$(OBJDIR)uumlobjs.dep: $(MKDEPENDTARGET)
+	$(CURRDIR)$(MKDEPENDTARGET) -r -c $(HOST_OBJEXTENSION) -o$(OBLANK)$@ $(UNUMLAUT_OBJECTS)
+
+
+
+MKDEPEND_OBJECTS = \
+ $(OBJDIR)mkdepend$(HOST_OBJEXTENSION) \
+ $(OBJDIR)h_stringlists$(HOST_OBJEXTENSION) \
+ $(OBJDIR)h_strutil$(HOST_OBJEXTENSION)
+
+# no dependencies for mkdepend itself (would result in circular dependency)
+#$(OBJDIR)mkdpobjs.dep: $(MKDEPENDTARGET)
+#	$(CURRDIR)$(MKDEPENDTARGET) -r -c $(HOST_OBJEXTENSION) -o$(OBLANK)$@ $(MKDEPEND_OBJECTS)
+
+
+
+# A 'standard' make does not support out-of-source builds for inference rules.  So we have to roll out everything:
+
+$(TARG_OBJDIR)codepseudo$(TARG_OBJEXTENSION) : codepseudo.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codepseudo.c
+
+$(TARG_OBJDIR)intpseudo$(TARG_OBJEXTENSION) : intpseudo.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c intpseudo.c
+
+$(TARG_OBJDIR)motpseudo$(TARG_OBJEXTENSION) : motpseudo.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c motpseudo.c
+
+$(TARG_OBJDIR)tipseudo$(TARG_OBJEXTENSION) : tipseudo.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c tipseudo.c
+
+$(TARG_OBJDIR)natpseudo$(TARG_OBJEXTENSION) : natpseudo.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c natpseudo.c
+
+$(TARG_OBJDIR)fourpseudo$(TARG_OBJEXTENSION) : fourpseudo.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c fourpseudo.c
+
+$(TARG_OBJDIR)ibmfloat$(TARG_OBJEXTENSION) : ibmfloat.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c ibmfloat.c
+
+$(TARG_OBJDIR)codevars$(TARG_OBJEXTENSION) : codevars.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codevars.c
+
+$(TARG_OBJDIR)code68k$(TARG_OBJEXTENSION) : code68k.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code68k.c
+
+$(TARG_OBJDIR)code56k$(TARG_OBJEXTENSION) : code56k.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code56k.c
+
+$(TARG_OBJDIR)code601$(TARG_OBJEXTENSION) : code601.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code601.c
+
+$(TARG_OBJDIR)codemcore$(TARG_OBJEXTENSION) : codemcore.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codemcore.c
+
+$(TARG_OBJDIR)codexgate$(TARG_OBJEXTENSION) : codexgate.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codexgate.c
+
+$(TARG_OBJDIR)code68$(TARG_OBJEXTENSION) : code68.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code68.c
+
+$(TARG_OBJDIR)code6805$(TARG_OBJEXTENSION) : code6805.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code6805.c
+
+$(TARG_OBJDIR)code6809$(TARG_OBJEXTENSION) : code6809.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code6809.c
+
+$(TARG_OBJDIR)code6812$(TARG_OBJEXTENSION) : code6812.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code6812.c
+
+$(TARG_OBJDIR)codes12z$(TARG_OBJEXTENSION) : codes12z.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codes12z.c
+
+$(TARG_OBJDIR)code6816$(TARG_OBJEXTENSION) : code6816.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code6816.c
+
+$(TARG_OBJDIR)code68rs08$(TARG_OBJEXTENSION) : code68rs08.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code68rs08.c
+
+$(TARG_OBJDIR)codeh8_3$(TARG_OBJEXTENSION) : codeh8_3.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codeh8_3.c
+
+$(TARG_OBJDIR)codeh8_5$(TARG_OBJEXTENSION) : codeh8_5.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codeh8_5.c
+
+$(TARG_OBJDIR)code7000$(TARG_OBJEXTENSION) : code7000.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code7000.c
+
+$(TARG_OBJDIR)code65$(TARG_OBJEXTENSION) : code65.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code65.c
+
+$(TARG_OBJDIR)codeh16$(TARG_OBJEXTENSION) : codeh16.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codeh16.c
+
+$(TARG_OBJDIR)code7700$(TARG_OBJEXTENSION) : code7700.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code7700.c
+
+$(TARG_OBJDIR)codehmcs400$(TARG_OBJEXTENSION) : codehmcs400.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codehmcs400.c
+
+$(TARG_OBJDIR)code4500$(TARG_OBJEXTENSION) : code4500.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code4500.c
+
+$(TARG_OBJDIR)codem16$(TARG_OBJEXTENSION) : codem16.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codem16.c
+
+$(TARG_OBJDIR)codem16c$(TARG_OBJEXTENSION) : codem16c.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codem16c.c
+
+$(TARG_OBJDIR)code4004$(TARG_OBJEXTENSION) : code4004.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code4004.c
+
+$(TARG_OBJDIR)code8008$(TARG_OBJEXTENSION) : code8008.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code8008.c
+
+$(TARG_OBJDIR)code48$(TARG_OBJEXTENSION) : code48.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code48.c
+
+$(TARG_OBJDIR)code51$(TARG_OBJEXTENSION) : code51.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code51.c
+
+$(TARG_OBJDIR)code96$(TARG_OBJEXTENSION) : code96.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code96.c
+
+$(TARG_OBJDIR)code85$(TARG_OBJEXTENSION) : code85.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code85.c
+
+$(TARG_OBJDIR)code86$(TARG_OBJEXTENSION) : code86.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code86.c
+
+$(TARG_OBJDIR)code960$(TARG_OBJEXTENSION) : code960.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code960.c
+
+$(TARG_OBJDIR)code8x30x$(TARG_OBJEXTENSION) : code8x30x.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code8x30x.c
+
+$(TARG_OBJDIR)code2650$(TARG_OBJEXTENSION) : code2650.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code2650.c
+
+$(TARG_OBJDIR)codexa$(TARG_OBJEXTENSION) : codexa.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codexa.c
+
+$(TARG_OBJDIR)codeavr$(TARG_OBJEXTENSION) : codeavr.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codeavr.c
+
+$(TARG_OBJDIR)code29k$(TARG_OBJEXTENSION) : code29k.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code29k.c
+
+$(TARG_OBJDIR)code166$(TARG_OBJEXTENSION) : code166.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code166.c
+
+$(TARG_OBJDIR)codez80$(TARG_OBJEXTENSION) : codez80.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codez80.c
+
+$(TARG_OBJDIR)codez8$(TARG_OBJEXTENSION) : codez8.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codez8.c
+
+$(TARG_OBJDIR)codekcpsm$(TARG_OBJEXTENSION) : codekcpsm.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codekcpsm.c
+
+$(TARG_OBJDIR)codekcp3$(TARG_OBJEXTENSION) : codekcp3.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codekcp3.c
+
+$(TARG_OBJDIR)codemic8$(TARG_OBJEXTENSION) : codemic8.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codemic8.c
+
+$(TARG_OBJDIR)code96c141$(TARG_OBJEXTENSION) : code96c141.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code96c141.c
+
+$(TARG_OBJDIR)code90c141$(TARG_OBJEXTENSION) : code90c141.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code90c141.c
+
+$(TARG_OBJDIR)code87c800$(TARG_OBJEXTENSION) : code87c800.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code87c800.c
+
+$(TARG_OBJDIR)code870c$(TARG_OBJEXTENSION) : code870c.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code870c.c
+
+$(TARG_OBJDIR)code47c00$(TARG_OBJEXTENSION) : code47c00.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code47c00.c
+
+$(TARG_OBJDIR)code97c241$(TARG_OBJEXTENSION) : code97c241.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code97c241.c
+
+$(TARG_OBJDIR)code9331$(TARG_OBJEXTENSION) : code9331.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code9331.c
+
+$(TARG_OBJDIR)code16c5x$(TARG_OBJEXTENSION) : code16c5x.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code16c5x.c
+
+$(TARG_OBJDIR)code16c8x$(TARG_OBJEXTENSION) : code16c8x.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code16c8x.c
+
+$(TARG_OBJDIR)code17c4x$(TARG_OBJEXTENSION) : code17c4x.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code17c4x.c
+
+$(TARG_OBJDIR)codesx20$(TARG_OBJEXTENSION) : codesx20.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codesx20.c
+
+$(TARG_OBJDIR)codest6$(TARG_OBJEXTENSION) : codest6.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codest6.c
+
+$(TARG_OBJDIR)codest7$(TARG_OBJEXTENSION) : codest7.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codest7.c
+
+$(TARG_OBJDIR)codest9$(TARG_OBJEXTENSION) : codest9.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codest9.c
+
+$(TARG_OBJDIR)code6804$(TARG_OBJEXTENSION) : code6804.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code6804.c
+
+$(TARG_OBJDIR)code3201x$(TARG_OBJEXTENSION) : code3201x.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code3201x.c
+
+$(TARG_OBJDIR)code3202x$(TARG_OBJEXTENSION) : code3202x.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code3202x.c
+
+$(TARG_OBJDIR)code3203x$(TARG_OBJEXTENSION) : code3203x.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code3203x.c
+
+$(TARG_OBJDIR)code3205x$(TARG_OBJEXTENSION) : code3205x.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code3205x.c
+
+$(TARG_OBJDIR)code3254x$(TARG_OBJEXTENSION) : code3254x.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code3254x.c
+
+$(TARG_OBJDIR)code3206x$(TARG_OBJEXTENSION) : code3206x.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code3206x.c
+
+$(TARG_OBJDIR)code9900$(TARG_OBJEXTENSION) : code9900.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code9900.c
+
+$(TARG_OBJDIR)codetms7$(TARG_OBJEXTENSION) : codetms7.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codetms7.c
+
+$(TARG_OBJDIR)code370$(TARG_OBJEXTENSION) : code370.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code370.c
+
+$(TARG_OBJDIR)codemsp$(TARG_OBJEXTENSION) : codemsp.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codemsp.c
+
+$(TARG_OBJDIR)codetms1$(TARG_OBJEXTENSION) : codetms1.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codetms1.c
+
+$(TARG_OBJDIR)code78c10$(TARG_OBJEXTENSION) : code78c10.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code78c10.c
+
+$(TARG_OBJDIR)code75xx$(TARG_OBJEXTENSION) : code75xx.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code75xx.c
+
+$(TARG_OBJDIR)code75k0$(TARG_OBJEXTENSION) : code75k0.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code75k0.c
+
+$(TARG_OBJDIR)code78k0$(TARG_OBJEXTENSION) : code78k0.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code78k0.c
+
+$(TARG_OBJDIR)code78k2$(TARG_OBJEXTENSION) : code78k2.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code78k2.c
+
+$(TARG_OBJDIR)code78k3$(TARG_OBJEXTENSION) : code78k3.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code78k3.c
+
+$(TARG_OBJDIR)code78k4$(TARG_OBJEXTENSION) : code78k4.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code78k4.c
+
+$(TARG_OBJDIR)code7720$(TARG_OBJEXTENSION) : code7720.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code7720.c
+
+$(TARG_OBJDIR)code77230$(TARG_OBJEXTENSION) : code77230.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code77230.c
+
+$(TARG_OBJDIR)codescmp$(TARG_OBJEXTENSION) : codescmp.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codescmp.c
+
+$(TARG_OBJDIR)code807x$(TARG_OBJEXTENSION) : code807x.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code807x.c
+
+$(TARG_OBJDIR)codecop4$(TARG_OBJEXTENSION) : codecop4.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codecop4.c
+
+$(TARG_OBJDIR)codecop8$(TARG_OBJEXTENSION) : codecop8.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codecop8.c
+
+$(TARG_OBJDIR)codesc14xxx$(TARG_OBJEXTENSION) : codesc14xxx.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codesc14xxx.c
+
+$(TARG_OBJDIR)codeace$(TARG_OBJEXTENSION) : codeace.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codeace.c
+
+$(TARG_OBJDIR)codef8$(TARG_OBJEXTENSION) : codef8.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codef8.c
+
+$(TARG_OBJDIR)code53c8xx$(TARG_OBJEXTENSION) : code53c8xx.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code53c8xx.c
+
+$(TARG_OBJDIR)codefmc8$(TARG_OBJEXTENSION) : codefmc8.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codefmc8.c
+
+$(TARG_OBJDIR)codefmc16$(TARG_OBJEXTENSION) : codefmc16.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codefmc16.c
+
+$(TARG_OBJDIR)codemn1610$(TARG_OBJEXTENSION) : codemn1610.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codemn1610.c
+
+$(TARG_OBJDIR)codemn2610$(TARG_OBJEXTENSION) : codemn2610.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codemn2610.c
+
+$(TARG_OBJDIR)codeol40$(TARG_OBJEXTENSION) : codeol40.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codeol40.c
+
+$(TARG_OBJDIR)codeol50$(TARG_OBJEXTENSION) : codeol50.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codeol50.c
+
+$(TARG_OBJDIR)code1802$(TARG_OBJEXTENSION) : code1802.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code1802.c
+
+$(TARG_OBJDIR)codevector$(TARG_OBJEXTENSION) : codevector.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codevector.c
+
+$(TARG_OBJDIR)codexcore$(TARG_OBJEXTENSION) : codexcore.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codexcore.c
+
+$(TARG_OBJDIR)code1750$(TARG_OBJEXTENSION) : code1750.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c code1750.c
+
+
+
+$(TARG_OBJDIR)as$(TARG_OBJEXTENSION) : as.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c as.c
+
+$(TARG_OBJDIR)asmdef$(TARG_OBJEXTENSION) : asmdef.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c asmdef.c
+
+$(TARG_OBJDIR)asmsub$(TARG_OBJEXTENSION) : asmsub.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c asmsub.c
+
+$(TARG_OBJDIR)asmerr$(TARG_OBJEXTENSION) : asmerr.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c asmerr.c
+
+$(TARG_OBJDIR)lstmacroexp$(TARG_OBJEXTENSION) : lstmacroexp.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c lstmacroexp.c
+
+$(TARG_OBJDIR)asmpars$(TARG_OBJEXTENSION) : asmpars.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c asmpars.c
+
+$(TARG_OBJDIR)asmmac$(TARG_OBJEXTENSION) : asmmac.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c asmmac.c
+
+$(TARG_OBJDIR)asmstructs$(TARG_OBJEXTENSION) : asmstructs.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c asmstructs.c
+
+$(TARG_OBJDIR)asmcode$(TARG_OBJEXTENSION) : asmcode.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c asmcode.c
+
+$(TARG_OBJDIR)asmdebug$(TARG_OBJEXTENSION) : asmdebug.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c asmdebug.c
+
+$(TARG_OBJDIR)asmif$(TARG_OBJEXTENSION) : asmif.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c asmif.c
+
+$(TARG_OBJDIR)asmfnums$(TARG_OBJEXTENSION) : asmfnums.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c asmfnums.c
+
+$(TARG_OBJDIR)asmrelocs$(TARG_OBJEXTENSION) : asmrelocs.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c asmrelocs.c
+
+$(TARG_OBJDIR)tempresult$(TARG_OBJEXTENSION) : tempresult.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c tempresult.c
+
+$(TARG_OBJDIR)operator$(TARG_OBJEXTENSION) : operator.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c operator.c
+
+$(TARG_OBJDIR)function$(TARG_OBJEXTENSION) : function.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c function.c
+
+$(TARG_OBJDIR)asminclist$(TARG_OBJEXTENSION) : asminclist.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c asminclist.c
+
+$(TARG_OBJDIR)symbolsize$(TARG_OBJEXTENSION) : symbolsize.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c symbolsize.c
+
+$(TARG_OBJDIR)asmitree$(TARG_OBJEXTENSION) : asmitree.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c asmitree.c
+
+$(TARG_OBJDIR)asmallg$(TARG_OBJEXTENSION) : asmallg.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c asmallg.c
+
+
+$(TARG_OBJDIR)version$(TARG_OBJEXTENSION) : version.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c version.c
+
+$(TARG_OBJDIR)endian$(TARG_OBJEXTENSION) : endian.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c endian.c
+
+$(TARG_OBJDIR)bpemu$(TARG_OBJEXTENSION) : bpemu.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c bpemu.c
+
+$(TARG_OBJDIR)math64$(TARG_OBJEXTENSION) : math64.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c math64.c
+
+$(TARG_OBJDIR)chunks$(TARG_OBJEXTENSION) : chunks.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c chunks.c
+
+$(TARG_OBJDIR)cpulist$(TARG_OBJEXTENSION) : cpulist.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c cpulist.c
+
+$(TARG_OBJDIR)errmsg$(TARG_OBJEXTENSION) : errmsg.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c errmsg.c
+
+$(TARG_OBJDIR)trees$(TARG_OBJEXTENSION) : trees.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c trees.c
+
+$(TARG_OBJDIR)dynstring$(TARG_OBJEXTENSION) : dynstring.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c dynstring.c
+
+$(TARG_OBJDIR)cmdarg$(TARG_OBJEXTENSION) : cmdarg.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c cmdarg.c
+
+$(TARG_OBJDIR)ioerrs$(TARG_OBJEXTENSION) : ioerrs.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c ioerrs.c
+
+$(TARG_OBJDIR)headids$(TARG_OBJEXTENSION) : headids.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c headids.c
+
+
+
+$(TARG_OBJDIR)das$(TARG_OBJEXTENSION) : das.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c das.c
+
+$(TARG_OBJDIR)dasmdef$(TARG_OBJEXTENSION) : dasmdef.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c dasmdef.c
+
+$(TARG_OBJDIR)codechunks$(TARG_OBJEXTENSION) : codechunks.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codechunks.c
+
+$(TARG_OBJDIR)entryaddress$(TARG_OBJEXTENSION) : entryaddress.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c entryaddress.c
+
+$(TARG_OBJDIR)invaddress$(TARG_OBJEXTENSION) : invaddress.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c invaddress.c
+
+
+
+
+$(TARG_OBJDIR)stdhandl$(TARG_OBJEXTENSION) : stdhandl.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c stdhandl.c
+
+$(TARG_OBJDIR)strcomp$(TARG_OBJEXTENSION) : strcomp.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c strcomp.c
+
+$(TARG_OBJDIR)plist$(TARG_OBJEXTENSION) : plist.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c plist.c
+
+$(TARG_OBJDIR)alink$(TARG_OBJEXTENSION) : alink.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c alink.c
+
+$(TARG_OBJDIR)pbind$(TARG_OBJEXTENSION) : pbind.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c pbind.c
+
+$(TARG_OBJDIR)p2hex$(TARG_OBJEXTENSION) : p2hex.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c p2hex.c
+
+$(TARG_OBJDIR)p2bin$(TARG_OBJEXTENSION) : p2bin.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c p2bin.c
+
+$(TARG_OBJDIR)toolutils$(TARG_OBJEXTENSION) : toolutils.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c toolutils.c
+
+$(TARG_OBJDIR)stringlists$(TARG_OBJEXTENSION) : stringlists.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c stringlists.c
+
+$(TARG_OBJDIR)strutil$(TARG_OBJEXTENSION) : strutil.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c strutil.c
+
+$(TARG_OBJDIR)nls$(TARG_OBJEXTENSION) : nls.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c nls.c
+
+$(TARG_OBJDIR)nlmessages$(TARG_OBJEXTENSION) : nlmessages.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c nlmessages.c
+
+
+
+$(OBJDIR)rescomp$(HOST_OBJEXTENSION) : rescomp.c
+	$(CC) $(ALLFLAGS) -o$(OBLANK)$@ -c rescomp.c
+
+$(OBJDIR)h_endian$(HOST_OBJEXTENSION) : endian.c
+	$(CC) $(ALLFLAGS) -o$(OBLANK)$@ -c endian.c
+
+$(OBJDIR)h_strutil$(HOST_OBJEXTENSION) : strutil.c
+	$(CC) $(ALLFLAGS) -o$(OBLANK)$@ -c strutil.c
+
+$(OBJDIR)h_bpemu$(HOST_OBJEXTENSION) : bpemu.c
+	$(CC) $(ALLFLAGS) -o$(OBLANK)$@ -c bpemu.c
+
+$(OBJDIR)mkdepend$(HOST_OBJEXTENSION) : mkdepend.c
+	$(CC) $(ALLFLAGS) -o$(OBLANK)$@ -c mkdepend.c
+
+$(OBJDIR)h_stringlists$(HOST_OBJEXTENSION) : stringlists.c
+	$(CC) $(ALLFLAGS) -o$(OBLANK)$@ -c stringlists.c
+
+$(OBJDIR)ushyph$(HOST_OBJEXTENSION) : ushyph.c
+	$(CC) $(ALLFLAGS) -o$(OBLANK)$@ -c ushyph.c
+
+$(OBJDIR)grhyph$(HOST_OBJEXTENSION) : grhyph.c
+	$(CC) $(ALLFLAGS) -o$(OBLANK)$@ -c grhyph.c
+
+$(OBJDIR)findhyphen$(HOST_OBJEXTENSION) : findhyphen.c
+	$(CC) $(ALLFLAGS) -o$(OBLANK)$@ -c findhyphen.c
+
+$(OBJDIR)tex2doc$(HOST_OBJEXTENSION) : tex2doc.c
+	$(CC) $(ALLFLAGS) -o$(OBLANK)$@ -c tex2doc.c
+
+$(OBJDIR)tex2html$(HOST_OBJEXTENSION) : tex2html.c
+	$(CC) $(ALLFLAGS) -o$(OBLANK)$@ -c tex2html.c
+
+$(OBJDIR)h_asmitree$(HOST_OBJEXTENSION) : asmitree.c
+	$(CC) $(ALLFLAGS) -o$(OBLANK)$@ -c asmitree.c
+
+$(OBJDIR)umlaut$(HOST_OBJEXTENSION) : umlaut.c
+	$(CC) $(ALLFLAGS) -o$(OBLANK)$@ -c umlaut.c
+
+$(OBJDIR)unumlaut$(HOST_OBJEXTENSION) : unumlaut.c
+	$(CC) $(ALLFLAGS) -o$(OBLANK)$@ -c unumlaut.c

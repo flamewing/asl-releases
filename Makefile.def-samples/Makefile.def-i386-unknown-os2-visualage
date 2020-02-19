@@ -2,18 +2,25 @@
 # choose your compiler (must be ANSI-compliant!) and linker command, plus
 # any additionally needed flags
 
+OBJDIR =
 CC = vicc
-LD = vlink
 OBJOPT = "/Fo"
 CFLAGS =
+HOST_OBJEXTENSION = .obj
+LD = vlink
 OUTOPT = "/O:"
 LDFLAGS = /PM:VIO
+HOST_EXEXTENSION = .exe
 
-TARG_OBJEXTENSION = .obj
-TARG_EXEXTENSION = .exe
+# no cross build
 
-HOST_OBJEXTENSION = $(TARG_OBJEXTENSION)
-HOST_EXEXTENSION = $(TARG_EXEXTENSION)
+TARG_OBJDIR = $(OBJDIR)
+TARG_CC = $(CC)
+TARG_CFLAGS = $(CFLAGS)
+TARG_OBJEXTENSION = $(HOST_OBJEXTENSION)
+TARG_LD = $(LD)
+TARG_LDFLAGS = $(LDFLAGS)
+TARG_EXEXTENSION = $(HOST_EXEXTENSION)
 
 # -------------------------------------------------------------------------
 # directories where binaries, includes, and manpages should go during
@@ -30,8 +37,3 @@ MANDIR = .
 # CHARSET = CHARSET_ASCII7   
 # CHARSET = CHARSET_IBM437
 CHARSET = CHARSET_IBM850
-
-# -------------------------------------------------------------------------
-# OS/2 special...
-
-EXEXTENSION = .exe

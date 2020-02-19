@@ -1330,9 +1330,9 @@ long GTime(void)
 /* distribution by Gunnar Wallmann */
 
 #include <sys/time.h>
+#include "math64.h"
 
 /*time from 1 Jan 1601 to 1 Jan 1970 in 100ns units */
-#define _W32_FT_OFFSET (116444736000000000LL)
 
 typedef struct _FILETIME
 {
@@ -1346,17 +1346,29 @@ long GTime(void)
 {
   union
   {
+#ifndef NOLONGLONG
     long long ns100; /*time since 1 Jan 1601 in 100ns units */
+#endif
     FILETIME ft;
   } _now;
 
   GetSystemTimeAsFileTime(&(_now.ft));
-  return
-      (_now.ns100 - _W32_FT_OFFSET) / 100000LL
-#if 0
-      + ((_now.ns100 / 10) % 1000000LL) / 10000
+#ifdef NOLONGLONG
+  {
+    static const t64 offs = { 0xd53e8000, 0x019db1de },
+                     div = { 100000, 0 };
+    t64 acc;
+
+    acc.low = _now.ft.dwLowDateTime;
+    acc.high = _now.ft.dwHighDateTime;
+    sub64(&acc, &acc, &offs);
+    div64(&acc, &acc, &div);
+    return acc.low;
+  }
+#else
+# define _W32_FT_OFFSET (116444736000000000LL)
+  return (_now.ns100 - _W32_FT_OFFSET) / 100000LL;
 #endif
-      ;
 }
 
 #else

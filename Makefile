@@ -1,47 +1,49 @@
 include Makefile.def
 
 CURRDIR=./
+RM=rm -f
+NULL=
+OBLANK=$(NULL) $(NULL)
+
 DATE=`date +"%d%m%Y"`
 
-include makedefs.src
-
-include objdefs.unix
+ALLFLAGS = $(CFLAGS) -D$(CHARSET) -DINCDIR=\"$(INCDIR)\" -DLIBDIR=\"$(LIBDIR)\"
 
 include makedefs.files
 
-ALLFLAGS = $(CFLAGS) -D$(CHARSET) -DSTDINCLUDES=\"$(INCDIR)\" -DLIBDIR=\"$(LIBDIR)\"
-
 #---------------------------------------------------------------------------
-# primary targets
+# Primary Targets
 
 binaries: $(ALLTARGETS)
 
+binaries-das: $(DASLTARGET) $(DASMSGTARGETS)
+
 all: binaries docs
 
-docs: $(TEX2DOCTARGET) $(TEX2HTMLTARGET)
-	cd doc_DE; $(MAKE) TEX2DOC=../$(TEX2DOCTARGET) TEX2HTML=../$(TEX2HTMLTARGET) RM="rm -f"
-	cd doc_EN; $(MAKE) TEX2DOC=../$(TEX2DOCTARGET) TEX2HTML=../$(TEX2HTMLTARGET) RM="rm -f"
+include makedefs.src
+
+docs: docs_DE docs_EN
 
 $(ASLTARGET): $(ASM_OBJECTS) $(AS_OBJECTS) $(ST_OBJECTS) $(CODE_OBJECTS) $(NLS_OBJECTS)
-	$(LD) -o $(ASLTARGET) $(ASM_OBJECTS) $(AS_OBJECTS) $(ST_OBJECTS) $(CODE_OBJECTS) $(NLS_OBJECTS) -lm $(LDFLAGS)
+	$(TARG_LD) -o $(ASLTARGET) $(ASM_OBJECTS) $(AS_OBJECTS) $(ST_OBJECTS) $(CODE_OBJECTS) $(NLS_OBJECTS) -lm $(TARG_LDFLAGS)
 
 $(DASLTARGET): $(DASM_OBJECTS) $(DAS_OBJECTS) $(ST_OBJECTS) $(DECODE_OBJECTS)  $(NLS_OBJECTS)
-	$(LD) -o $(DASLTARGET) $(DASM_OBJECTS) $(DAS_OBJECTS) $(ST_OBJECTS)  $(DECODE_OBJECTS) $(NLS_OBJECTS)
+	$(TARG_LD) -o $(DASLTARGET) $(DASM_OBJECTS) $(DAS_OBJECTS) $(ST_OBJECTS)  $(DECODE_OBJECTS) $(NLS_OBJECTS) $(TARG_LDFLAGS)
 
 $(PLISTTARGET): $(PLIST_OBJECTS) $(NLS_OBJECTS)
-	$(LD) -o $(PLISTTARGET) $(PLIST_OBJECTS) $(NLS_OBJECTS) -lm $(LDFLAGS)
+	$(TARG_LD) -o $(PLISTTARGET) $(PLIST_OBJECTS) $(NLS_OBJECTS) -lm $(TARG_LDFLAGS)
 
 $(ALINKTARGET): $(ALINK_OBJECTS) $(NLS_OBJECTS)
-	$(LD) -o $(ALINKTARGET) $(ALINK_OBJECTS) $(NLS_OBJECTS) -lm $(LDFLAGS)
+	$(TARG_LD) -o $(ALINKTARGET) $(ALINK_OBJECTS) $(NLS_OBJECTS) -lm $(TARG_LDFLAGS)
 
 $(PBINDTARGET): $(PBIND_OBJECTS) $(NLS_OBJECTS)
-	$(LD) -o $(PBINDTARGET) $(PBIND_OBJECTS) $(NLS_OBJECTS) -lm $(LDFLAGS)
+	$(TARG_LD) -o $(PBINDTARGET) $(PBIND_OBJECTS) $(NLS_OBJECTS) -lm $(TARG_LDFLAGS)
 
 $(P2HEXTARGET): $(P2HEX_OBJECTS) $(NLS_OBJECTS)
-	$(LD) -o $(P2HEXTARGET) $(P2HEX_OBJECTS) $(NLS_OBJECTS) -lm $(LDFLAGS)
+	$(TARG_LD) -o $(P2HEXTARGET) $(P2HEX_OBJECTS) $(NLS_OBJECTS) -lm $(TARG_LDFLAGS)
 
 $(P2BINTARGET): $(P2BIN_OBJECTS) $(NLS_OBJECTS)
-	$(LD) -o $(P2BINTARGET) $(P2BIN_OBJECTS) $(NLS_OBJECTS) -lm $(LDFLAGS)
+	$(TARG_LD) -o $(P2BINTARGET) $(P2BIN_OBJECTS) $(NLS_OBJECTS) -lm $(TARG_LDFLAGS)
 
 $(RESCOMPTARGET): $(RESCOMP_OBJECTS)
 	$(LD) -o $(RESCOMPTARGET) $(RESCOMP_OBJECTS) $(LDFLAGS)
@@ -61,48 +63,86 @@ $(UNUMLAUTTARGET): $(UNUMLAUT_OBJECTS)
 $(MKDEPENDTARGET): $(MKDEPEND_OBJECTS)
 	$(LD) -o $(MKDEPENDTARGET) $(MKDEPEND_OBJECTS) $(LDFLAGS)
 
+check_targ_cc:
+	@if test "$(TARG_CC)" = ""; then echo "TARG_CC is not set - please review Makefile.def"; exit 1; fi; exit 0
+
 #---------------------------------------------------------------------------
 # special rules for objects dependant on string resource files
 
 include makedefs.str
 
-include Makefile.dep
+binaries: $(ALLMSGTARGETS)
 
-Makefile.dep depend: $(MKDEPENDTARGET)
-	$(CURRDIR)$(MKDEPENDTARGET) -o Makefile.dep *.c
+include $(TARG_OBJDIR)codeobjs.dep
+include $(TARG_OBJDIR)asmobjs.dep
+include $(TARG_OBJDIR)asobjs.dep
+include $(TARG_OBJDIR)dasmobjs.dep
+include $(TARG_OBJDIR)dasobjs.dep
+include $(TARG_OBJDIR)nlsobjs.dep
+include $(TARG_OBJDIR)stobjs.dep
+include $(TARG_OBJDIR)plisobjs.dep
+include $(TARG_OBJDIR)alinobjs.dep
+include $(TARG_OBJDIR)pbinobjs.dep
+include $(TARG_OBJDIR)p2hxobjs.dep
+include $(TARG_OBJDIR)p2bnobjs.dep
+include $(OBJDIR)rescobjs.dep
+include $(OBJDIR)tx2dobjs.dep
+include $(OBJDIR)tx2hobjs.dep
+include $(OBJDIR)umlobjs.dep
+include $(OBJDIR)uumlobjs.dep
 
 #---------------------------------------------------------------------------
-# supplementary targets
+# Documentation
 
-test: $(ALLTARGETS)
-	cd tests; ./testall "$(TESTDIRS)"
+INCFILES = doc_COM/taborg*.tex doc_COM/tabids*.tex doc_COM/pscpu.tex doc_COM/pscomm.tex doc_COM/biblio.tex
 
-install: $(ALLTARGETS)
-	PREFIX=$(PREFIX) ./install.sh $(BINDIR) $(INCDIR) $(MANDIR) $(LIBDIR) $(DOCDIR)
-
-clean:
-	rm -f $(ALLTARGETS) $(RESCOMPTARGET) $(TEX2DOCTARGET) $(TEX2HTMLTARGET) *$(HOST_OBJEXTENSION) *$(TARG_OBJEXTENSION) *.p *.rsc tests/testlog testlog
-	cd doc_DE; $(MAKE) RM="rm -f" clean
-	cd doc_EN; $(MAKE) RM="rm -f" clean
+DOC_DE_DIR=doc_DE/
+include $(DOC_DE_DIR)makedefs.dok
+DOC_EN_DIR=doc_EN/
+include $(DOC_EN_DIR)makedefs.dok
 
 #---------------------------------------------------------------------------
-# create distributions
+# Supplementary Targets
 
-distrib: unjunk Makefile.dep
+test: binaries
+	cd tests; OBJDIR=$(TARG_OBJDIR) RUNCMD=$(TARG_RUNCMD) ./testall "$(TESTDIRS)"
+
+install: all
+	PREFIX=$(PREFIX) OBJDIR=$(TARG_OBJDIR) ./install.sh $(BINDIR) $(INCDIR) $(MANDIR) $(LIBDIR) $(DOCDIR)
+
+clean: clean_doc_DE clean_doc_EN
+	if test "$(HOST_OBJEXTENSION)" != ""; then $(RM) *$(HOST_OBJEXTENSION) $(OBJDIR)*$(HOST_OBJEXTENSION); fi
+	if test "$(TARG_OBJEXTENSION)" != ""; then $(RM) *$(TARG_OBJEXTENSION) $(TARG_OBJDIR)*$(TARG_OBJEXTENSION); fi
+	$(RM) $(ALLTARGETS) $(HOSTTARGETS) $(OBJDIR)*.dep $(TARG_OBJDIR)*.dep *.p $(TARG_OBJDIR)*.msg *.rsc tests/testlog testlog
+
+#---------------------------------------------------------------------------
+# Create Distributions
+
+distrib: unjunk
 	mkdir ../asl-$(VERSION)
-	tar cf - $(DISTARCHFILES) Makefile.dep | (cd ../asl-$(VERSION); tar xvf -)
+	tar cf - $(DISTARCHFILES) | (cd ../asl-$(VERSION); tar xvf -)
 	cd ..; tar cvf asl-$(VERSION).tar asl-$(VERSION)
 	mv ../asl-$(VERSION).tar ./
 	rm -rf ../asl-$(VERSION)
 	gzip -9 -f asl-$(VERSION).tar
 
-bindist:
+distdir: all $(UNUMLAUTTARGET)
+	@if test "$(VERSION)" = ""; then echo "VERSION is not set - please specify VERSION=... as argument"; exit 1; fi; exit 0
 	mkdir asl-$(VERSION)
 	chmod 755 asl-$(VERSION)
-	./install.sh asl-$(VERSION)/bin asl-$(VERSION)/include asl-$(VERSION)/man asl-$(VERSION)/lib asl-$(VERSION)/doc
+	OBJDIR=$(OBJDIR) TARG_OBJDIR=$(TARG_OBJDIR) TARG_EXEXTENSION=$(TARG_EXEXTENSION) ./install.sh asl-$(VERSION)/bin asl-$(VERSION)/include asl-$(VERSION)/man asl-$(VERSION)/lib asl-$(VERSION)/doc
+
+bindist-tgz: distdir
 	tar cvf asl-$(VERSION)-bin.tar asl-$(VERSION)
 	rm -rf asl-$(VERSION)
 	gzip -9 -f asl-$(VERSION)-bin.tar 
+
+bindist-zip: distdir
+	mv asl-$(VERSION)/lib/*.msg asl-$(VERSION)/bin/
+	mv asl-$(VERSION)/man/man1/* asl-$(VERSION)/man/
+	rmdir asl-$(VERSION)/man/man1/
+	cd asl-$(VERSION) && zip -9 -r ../asl-$(VERSION)-bin.zip .
+	rm -rf asl-$(VERSION)
 
 win32-bindist: $(UNUMLAUTTARGET)
 	rm -rf as
@@ -176,21 +216,17 @@ asport.tar.gz: $(ARCHFILES)
 asport.zip: $(ARCHFILES)
 	zip -9 -r asport $(ARCHFILES)
 
-unjunk:
-	rm -f `find . -name "testlog" -print` \
+unjunk: clean_doc_DE clean_doc_EN
+	$(RM) `find . -name "testlog" -print` \
 	   `find . -name "*~" -print` \
 	   `find . -name "core" -print` \
 	   `find . -name "*.core" -print` \
 	   `find . -name "*.lst" -print` \
 	   `find . -name "lst" -print` \
 	   `find . -name "*.noi" -print`
-	cd doc_DE; $(MAKE) clean RM="rm -f"
-	cd doc_EN; $(MAKE) clean RM="rm -f"
 
 #---------------------------------------------------------------------------
 
-.SUFFIXES: .c .asm
-.c$(TARG_OBJEXTENSION):
-	$(CC) $(ALLFLAGS) -c $*.c
+.SUFFIXES: .asm
 .asm.p:
 	./asl -L -q $*.asm

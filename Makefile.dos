@@ -1,31 +1,26 @@
 !include Makefile.def
 
 CURRDIR=.\\
+RM=del
+OBLANK=
 
-!include makedefs.src
-
-!include objdefs.dos
+ALLFLAGS = $(CFLAGS) -D$(CHARSET) -DINCDIR="$(INCDIR)" -DLIBDIR="$(LIBDIR)"
 
 !include makedefs.files
 
-ALLFLAGS = $(CFLAGS) -D$(CHARSET) -DSTDINCLUDES="$(INCDIR)" -DLIBDIR="$(LIBDIR)"
-
 #---------------------------------------------------------------------------
-# primary targets
+# Primary Targets
 
 binaries: $(ALLTARGETS)
 
 all: binaries docs
 
-docs: $(TEX2DOCTARGET) $(TEX2HTMLTARGET)
-	cd doc_DE
-	$(MAKE) TEX2DOC=..\$(TEX2DOCTARGET) TEX2HTML=..\$(TEX2HTMLTARGET) RM=del
-	cd ..\doc_EN
-	$(MAKE) TEX2DOC=..\$(TEX2DOCTARGET) TEX2HTML=..\$(TEX2HTMLTARGET) RM=del
-	cd ..
+!include makedefs.src
+
+docs: docs_DE_notex docs_EN_notex
 
 $(ASLTARGET): $(AS_OBJECTS) $(ASM_OBJECTS) $(ST_OBJECTS) $(CODE_OBJECTS) $(NLS_OBJECTS)
-        $(LD) @&&!
+        $(TARG_LD) @&&!
 -ml $(OVR1FLAG) -e$(ASLTARGET)
 $(AS_OBJECTS) $(ASM_OBJECTS)
 $(ST_OBJECTS) $(NLS_OBJECTS)
@@ -33,32 +28,32 @@ $(OVR2FLAG) $(CODE_OBJECTS)
 !
 
 $(PLISTTARGET): $(PLIST_OBJECTS) $(NLS_OBJECTS)
-        $(LD) @&&!
+        $(TARG_LD) @&&!
 -ml -e$(PLISTTARGET)
 $(PLIST_OBJECTS) $(NLS_OBJECTS)
 !
 
 $(ALINKTARGET): $(ALINK_OBJECTS) $(NLS_OBJECTS)
-        $(LD) @&&!
+        $(TARG_LD) @&&!
 -ml -e$(ALINKTARGET)
 $(ALINK_OBJECTS) $(NLS_OBJECTS)
 !
 
 $(PBINDTARGET): $(PBIND_OBJECTS) $(NLS_OBJECTS)
-        $(LD) @&&!
+        $(TARG_LD) @&&!
 -ml -e$(PBINDTARGET)
 $(PBIND_OBJECTS) $(NLS_OBJECTS)
 !
 
 $(P2HEXTARGET): $(P2HEX_OBJECTS) $(NLS_OBJECTS)
-        $(LD) @&&!
+        $(TARG_LD) @&&!
 -ml -e$(P2HEXTARGET)
 $(P2HEX_OBJECTS)
 $(NLS_OBJECTS)
 !
 
 $(P2BINTARGET): $(P2BIN_OBJECTS) $(NLS_OBJECTS)
-        $(LD) @&&!
+        $(TARG_LD) @&&!
 -ml -e$(P2BINTARGET)
 $(P2BIN_OBJECTS) $(NLS_OBJECTS)
 !
@@ -78,10 +73,15 @@ $(UMLAUTTARGET): $(UMLAUT_OBJECTS)
 $(UNUMLAUTTARGET): $(UNUMLAUT_OBJECTS)
 	$(LD) -ml -e$(UNUMLAUTTARGET) $(UNUMLAUT_OBJECTS) $(LDFLAGS)
 
+check_targ_cc:
+	echo "" > check_targ_cc
+
 #---------------------------------------------------------------------------
 # special rules for objects dependant on string resource files
 
 !include makedefs.str
+
+binaries: $(ALLMSGTARGETS)
 
 #---------------------------------------------------------------------------
 # no make depend, some minimal dependencies to get all built
@@ -89,37 +89,43 @@ $(UNUMLAUTTARGET): $(UNUMLAUT_OBJECTS)
 !include rscdeps
 
 #---------------------------------------------------------------------------
-# supplementary targets
+# Documentation
 
-test: $(ALLTARGETS)
+INCFILES = doc_COM\\taborg*.tex doc_COM\\tabids*.tex doc_COM\\pscpu.tex doc_COM\\pscomm.tex doc_COM\\biblio.tex
+
+DOC_DE_DIR=doc_DE\\
+!include $(DOC_DE_DIR)makedefs.dok
+DOC_EN_DIR=doc_EN\\
+!include $(DOC_EN_DIR)makedefs.dok
+
+#---------------------------------------------------------------------------
+# Supplementary Targets
+
+test: binaries
 	cd tests
 	copy t_secdri\wd1003at.inc t_secdri\lowlevel.inc
 	testall
 	cd ..
 
-install: $(ALLTARGETS) $(UNUMLAUTTARGET)
+install: all $(UNUMLAUTTARGET)
 	install $(BINDIR) $(INCDIR) $(MANDIR) $(LIBDIR) $(DOCDIR)
 
-clean:
-	del $(ALLTARGETS)
-	del $(TEX2DOCTARGET)
-	del $(TEX2HTMLTARGET)
-	del $(RESCOMPTARGET)
-	del *$(HOST_OBJEXTENSION)
-	del *$(TARG_OBJEXTENSION)
-	del *.p
-	del testlog
-	del *.rsc
-	cd doc_DE
-	$(MAKE) RM=del clean
-	cd ..\doc_EN
-	$(MAKE) RM=del clean
-	cd ..
+clean: clean_doc_DE clean_doc_EN
+	$(RM) $(ALLTARGETS)
+	$(RM) $(TEX2DOCTARGET)
+	$(RM) $(TEX2HTMLTARGET)
+	$(RM) $(RESCOMPTARGET)
+	$(RM) $(OBJDIR)*$(HOST_OBJEXTENSION)
+	$(RM) $(TARG_OBJDIR)*$(TARG_OBJEXTENSION)
+        $(RM) $(TARG_OBJDIR)*.msg
+	$(RM) *.p
+	$(RM) testlog
+	$(RM) *.rsc
 
 #---------------------------------------------------------------------------
 # create distributions
 
-bindist: $(UNUMLAUTTARGET)
+bindist: $(UNUMLAUTTARGET) all
 	mkdir as
 	install as\bin as\include as\man as\lib as\doc
 	cd as
@@ -132,6 +138,4 @@ bindist: $(UNUMLAUTTARGET)
 
 #---------------------------------------------------------------------------
 
-.SUFFIXES: .c
-.c$(TARG_OBJEXTENSION):
-	$(CC) $(ALLFLAGS) -c $*.c
+.SUFFIXES:

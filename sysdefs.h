@@ -1168,12 +1168,9 @@ typedef unsigned long Card32;
 #define ARCHPRNAME "x86_64"
 
 /*---------------------------------------------------------------------------*/
-/* x86-64 with Linux and GCC:
-   amd64 with FreeBSD and GCC:
-   x86-64 with OSX and GCC:
+/* x86-64/amd64 with Linux/FreeBSD, OSX and GCC:
    
-   principally, a normal *NIX.  We might use 'long' instead of
-   'long long' for 64-bit integers, but I currently cannot verify this. */
+   Principally, a normal *NIX. */
 
 #if defined(__linux__) || defined(__FreeBSD__) || defined(__APPLE__)
 
@@ -1208,9 +1205,56 @@ typedef signed long Integ64;
 typedef unsigned long Card64;
 #define HAS64
 #define LOCALE_NLS
+
+#endif /* __linux__ || __FreeBSD__ || __APPLE__ */
+
+/*---------------------------------------------------------------------------*/
+/* Intel i386 with WIN32 and MinGW:
+
+   Well, not really a UNIX...note that in contrast to Unix-like systems,
+   the size of 'long' remains 32 bit.  One still has to use 'long long' to
+   get 64 bits. */
+
+#ifdef _WIN32
+
+/* no long long data type if C89 is used */
+
+#if (defined __STDC__) && (!defined __STDC_VERSION__)
+# define NOLONGLONG
 #endif
 
-#endif /* __x86_64 */
+#define ARCHSYSNAME "unknown-win64"
+#define DEFSMADE
+#define OPENRDMODE "rb"
+#define OPENWRMODE "wb"
+#define OPENUPMODE "rb+"
+#define IEEEFLOAT
+#define SLASHARGS
+#define PATHSEP '\\'
+#define SPATHSEP "\\"
+#define DIRSEP ';'
+#define SDIRSEP ";"
+#define DRSEP ':'
+#define SDRSEP ":"
+#define NULLDEV "NUL"
+typedef signed char Integ8;
+typedef unsigned char Card8;
+typedef signed short Integ16;
+typedef unsigned short Card16;
+#define HAS16
+typedef signed int Integ32;
+#define PRIInteg32 "d"
+typedef unsigned int Card32;
+#ifndef NOLONGLONG
+typedef signed long long Integ64;
+typedef unsigned long long Card64;
+# define HAS64
+#endif
+#define NO_NLS
+
+#endif /* _WIN32 */
+
+#endif /* __k8__ || __x86_64 || __x86_64__ */
 
 /*===========================================================================*/
 /* ARM platform */

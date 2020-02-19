@@ -5,22 +5,23 @@
 # NOTE: The egcs version shipped with Cygwin B20 seems to have trouble with
 #       optimization level 3, don't use it :-/
 
+OBJDIR =
 CC = gcc
-LD = gcc
 CFLAGS = -O2 -mcpu=i486 -Wall -Wno-parentheses -Wno-sign-compare
+HOST_OBJEXTENSION = .o
+LD = gcc
 LDFLAGS =
+HOST_EXEXTENSION = .exe
 
-TARG_OBJEXTENSION = .o
-TARG_EXEXTENSION = .exe
+# no cross build
 
-HOST_OBJEXTENSION = $(TARG_OBJEXTENSION)
-HOST_EXEXTENSION = $(TARG_EXEXTENSION)
-
-# -------------------------------------------------------------------------
-# directories where binaries, includes, and manpages should go during
-# installation
-
-EXEXTENSION=.exe
+TARG_OBJDIR = $(OBJDIR)
+TARG_CC = $(CC)
+TARG_CFLAGS = $(CFLAGS)
+TARG_OBJEXTENSION = $(HOST_OBJEXTENSION)
+TARG_LD = $(LD)
+TARG_LDFLAGS = $(LDFLAGS)
+TARG_EXEXTENSION = $(HOST_EXEXTENSION)
 
 BINDIR = /usr/local/bin
 INCDIR = /usr/local/include/asl

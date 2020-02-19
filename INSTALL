@@ -35,18 +35,46 @@ scheme with an autoconf-style configuration, but for now we will have to
 live with it.  A good starting point for a gcc-based, 'normal' Unix system
 is the file 'Makefile.def.tmpl'.  The settings to make include:
 
-- CC, LD, CFLAGS, LDFLAGS:  The compiler and linker you want to use (nice
-  if you have more than just 'cc' on your machine), plus flags that should
-  be passed to them. like optimization settings and libraries needed for
-  linking.
+- A couple of helper tools are created during the build process.  To build
+  them, the following variables must be set:
+
+  - CC: The C compiler used to compile sources into objects
+  - CFLAGS: Any additional flags to be passed to the compiler.  This may
+    include optimization level or warning/error verbosity.
+  - OBJDIR: If you like having objects and executables in a separate
+    directory, specify it via this variable.  A trailing slash is required,
+    e.g. you have to write 'obj/' instead of 'obj'.
+  - HOST_OBJEXTENSION: the file extension used for object files.  On a
+    Unix-like system, this is typically '.o', but non-Unix systems may use
+    other extensions like '.obj'.
+  - LD: The linker used to create executables form objects.  On a Unix
+    system, this is the same as $(CC).
+  - LDFLAGS: Any libraries or flags possibly needed for the linker.
+  - HOST_EXEXTENSION: the file extension used for executables.  On a Unix
+    system, this variable is typically left empty.  Other systems may
+    require a settling like '.exe'.
+
+- There is another set of these variables: TARG_OBJDIR, TARG_CC, TARG_CFLAGS,
+  TARG_OBJEXTENSION, TARG_LD, TARG_LDFLAGS, TARG_EXEXTENSION.  They are used
+  to build the actual assembler and tool binaries.  The distinction is needed
+  because cross-builds are supported, i.e. you are on system X and want to
+  build binaries for system Y.  In case you do not want to cross-build, you
+  may set them to the same values as the 'host-related' variables.  The file
+  Makefile.def.tmpl demonstrates how to do this.
+
+- There is another variable TARG_RUNCMD.  If you are cross-building and there
+  is a way to run the built binaries on the host system (like an emulator),
+  define it here as a command prefix.  For instance, if you have built Windows
+  binaries on a Linux system, set TARG_RUNCMD to 'wine' and you will be able
+  to run the 'make test' target.
 
 - BINDIR, INCDIR, MANDIR, LIBDIR, DOCDIR: directiories where AS should be
   placed after compilation.
 
 - CHARSET: character encoding for non ASCII national special characters.
   If your system is absolutely 8-bit-unclean, the ASCII7 setting is a good
-  idea.  Most modern Unix systems default to ISO8859-1, and the IBM437
-  resp. IBM850 settings are only needed for DOS and OS/2 platforms.
+  idea.  Most modern Unix systems default to UTF-8, older to ISO8859-1, and
+  the IBM437 resp. IBM850 settings are only needed for DOS and OS/2 platforms.
 
 Step (3):
 
@@ -77,7 +105,7 @@ Step (4):
 Type 'make test' and the freshly compiled AS will be run on a couple of
 test programs.  For each program, the output is compared to a reference
 binary included in the distribution.  The binary output has to match
-*exactly*, i.e. ther must not be any difference.  Any failed test reported
+*exactly*, i.e. there must not be any difference.  Any failed test reported
 by the script has to be investigated, even if it happens for a target
 platform you never intend to use!
 

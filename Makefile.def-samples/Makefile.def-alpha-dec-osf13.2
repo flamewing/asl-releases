@@ -1,18 +1,27 @@
 # -------------------------------------------------------------------------
 # choose your compiler (must be ANSI-compliant!) and linker command, plus
 # any additionally needed flags
-         
+
+OBJDIR =         
 CC = cc
-LD = cc -non_shared -om
 CFLAGS = -std1 -O4 -Olimit 3000 -tune ev5 -fast
 #                               ^^^^^^^^^
 #                               |||||||||
 #         adapt this to your target cpu (ev4 or ev5)
+HOST_OBJEXTENSION = .o
+LD = cc -non_shared -om
+LCFLAGS =
+HOST_EXEXTENSION =
 
+# no cross build
 
-TARG_OBJEXTENSION = .o
-
-HOST_OBJEXTENSION = $(TARG_OBJEXTENSION)
+TARG_OBJDIR = $(OBJDIR)
+TARG_CC = $(CC)
+TARG_CFLAGS = $(CFLAGS)
+TARG_OBJEXTENSION = $(HOST_OBJEXTENSION)
+TARG_LD = $(LD)
+TARG_LDFLAGS = $(LDFLAGS)
+TARG_EXEXTENSION = $(HOST_EXEXTENSION)
 
 # -------------------------------------------------------------------------
 # directories where binaries, includes, and manpages should go during

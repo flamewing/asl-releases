@@ -325,25 +325,57 @@ int main(int argc, char **argv)
   PMsgCat z;
   TMsgCat TmpCat;
   PMsgList List;
-  int c;
+  int c, argz, nextidx, curridx;
   time_t stamp;
   LongInt Id1, Id2;
   LongInt RunPos, StrPos;
+  const char *pSrcName = NULL, *pHFileName = NULL, *pMsgFileName = NULL;
 
   endian_init(); strutil_init();
 
-  if ((argc<3) || (argc>4))
+  curridx = 0;
+  nextidx = -1;
+  for (argz = 1; argz < argc; argz++)
   {
-    fprintf(stderr, "usage: %s <input resource file> <output msg file> [header file]\n", *argv);
+    if (!strcmp(argv[argz], "-h"))
+      nextidx = 2;
+    else if (!strcmp(argv[argz], "-m"))
+      nextidx = 1;
+    else
+    {
+      int thisidx;
+
+      if (nextidx >= 0)
+      {
+        thisidx = nextidx;
+        nextidx = -1;
+      }
+      else
+        thisidx = curridx++;
+      switch (thisidx)
+      {
+        case 0:
+          pSrcName = argv[argz]; break;
+        case 1:
+          pMsgFileName = argv[argz]; break;
+        case 2:
+          pHFileName = argv[argz]; break;
+      }
+    }
+  }
+
+  if (!pSrcName)
+  {
+    fprintf(stderr, "usage: %s <input resource file> <[-m] output msg file> [[-h ]header file]\n", *argv);
     exit(1);
   }
 
-  SrcFile = fopenchk(argv[1], 2, "r");
+  SrcFile = fopenchk(pSrcName, 2, "r");
 
-  if (argc == 4)
+  if (pHFileName)
   {
-    HFile = fopenchk(argv[3], 3, "w");
-    IncSym = as_strdup(argv[3]);
+    HFile = fopenchk(pHFileName, 3, "w");
+    IncSym = as_strdup(pHFileName);
     for (p = IncSym; *p; p++)
      if (isalpha(((unsigned int) *p) & 0xff))
        *p = mytoupper(*p);
@@ -386,58 +418,61 @@ int main(int argc, char **argv)
     fclose(HFile);
   }
 
-  MsgFile = fopenchk(argv[2], 4, OPENWRMODE);
-
-  /* Magic-String */
-
-  fwritechk(argv[2], 5, IdentString, 1, strlen(IdentString), MsgFile);
-  Write4(MsgFile, &Id1); Write4(MsgFile, &Id2);
-
-  /* Default nach vorne */
-
-  if (DefCat > 0)
+  if (pMsgFileName)
   {
-    TmpCat = MsgCats[0]; MsgCats[0] = MsgCats[DefCat]; MsgCats[DefCat] = TmpCat;
-  }
+    MsgFile = fopenchk(pMsgFileName, 4, OPENWRMODE);
 
-  /* Startadressen String-Kataloge berechnen */
+    /* Magic-String */
 
-  RunPos = ftell(MsgFile) + 1;
-  for (z = MsgCats; z < MsgCats + CatCount; z++)
-    RunPos += (z->HeadLength = strlen(z->CtryName) + 1 + 4 + 4 + (4 * z->CtryCodeCnt) + 4);
-  for (z = MsgCats; z < MsgCats + CatCount; z++)
-  {
-    z->FilePos = RunPos; RunPos += z->TotLength + (4 * MsgCounter);
-  }
+    fwritechk(pMsgFileName, 5, IdentString, 1, strlen(IdentString), MsgFile);
+    Write4(MsgFile, &Id1); Write4(MsgFile, &Id2);
 
-  /* Country-Records schreiben */
+    /* Default nach vorne */
 
-  for (z = MsgCats; z < MsgCats + CatCount; z++)
-  {
-    fwritechk(argv[2], 5, z->CtryName, 1, strlen(z->CtryName) + 1, MsgFile);
-    Write4(MsgFile, &(z->TotLength));
-    Write4(MsgFile, &(z->CtryCodeCnt));
-    for (c = 0; c < z->CtryCodeCnt; c++) Write4(MsgFile, z->CtryCodes + c);
-    Write4(MsgFile, &(z->FilePos));
-  }
-  Save = '\0'; fwritechk(argv[2], 5, &Save, 1, 1, MsgFile);
-
-  /* Stringtabellen schreiben */
-
-  for (z = MsgCats; z < MsgCats + CatCount; z++)
-  {
-    for (List = z->Messages; List; List = List->Next)
+    if (DefCat > 0)
     {
-      StrPos = z->FilePos + (4 * MsgCounter) + List->Position;
-      Write4(MsgFile, &StrPos);
+      TmpCat = MsgCats[0]; MsgCats[0] = MsgCats[DefCat]; MsgCats[DefCat] = TmpCat;
     }
-    for (List = z->Messages; List; List = List->Next)
-      fwritechk(argv[2], 5, List->Contents, 1, strlen(List->Contents) + 1, MsgFile);
+
+    /* Startadressen String-Kataloge berechnen */
+
+    RunPos = ftell(MsgFile) + 1;
+    for (z = MsgCats; z < MsgCats + CatCount; z++)
+      RunPos += (z->HeadLength = strlen(z->CtryName) + 1 + 4 + 4 + (4 * z->CtryCodeCnt) + 4);
+    for (z = MsgCats; z < MsgCats + CatCount; z++)
+    {
+      z->FilePos = RunPos; RunPos += z->TotLength + (4 * MsgCounter);
+    }
+
+    /* Country-Records schreiben */
+
+    for (z = MsgCats; z < MsgCats + CatCount; z++)
+    {
+      fwritechk(pMsgFileName, 5, z->CtryName, 1, strlen(z->CtryName) + 1, MsgFile);
+      Write4(MsgFile, &(z->TotLength));
+      Write4(MsgFile, &(z->CtryCodeCnt));
+      for (c = 0; c < z->CtryCodeCnt; c++) Write4(MsgFile, z->CtryCodes + c);
+      Write4(MsgFile, &(z->FilePos));
+    }
+    Save = '\0'; fwritechk(pMsgFileName, 5, &Save, 1, 1, MsgFile);
+
+    /* Stringtabellen schreiben */
+
+    for (z = MsgCats; z < MsgCats + CatCount; z++)
+    {
+      for (List = z->Messages; List; List = List->Next)
+      {
+        StrPos = z->FilePos + (4 * MsgCounter) + List->Position;
+        Write4(MsgFile, &StrPos);
+      }
+      for (List = z->Messages; List; List = List->Next)
+        fwritechk(pMsgFileName, 5, List->Contents, 1, strlen(List->Contents) + 1, MsgFile);
+    }
+
+    /* faeaedisch... */
+
+    fclose(MsgFile);
   }
-
-  /* faeaedisch... */
-
-  fclose(MsgFile);
 
   return 0;
 }

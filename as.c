@@ -4418,8 +4418,8 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-#if defined(STDINCLUDES)
-  CMD_IncludeList(False, STDINCLUDES);
+#if defined(INCDIR)
+  CMD_IncludeList(False, INCDIR);
 #endif
   ProcessCMD(ASParams, ASParamCnt, ParUnprocessed, EnvName, ParamError);
 

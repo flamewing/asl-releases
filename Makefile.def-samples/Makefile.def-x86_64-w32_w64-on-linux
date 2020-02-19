@@ -1,0 +1,73 @@
+# -------------------------------------------------------------------------
+# choose your compiler (must be ANSI-compliant!) and linker command, plus
+# any additionally needed flags
+
+# ...for host-side build tools:
+
+OBJDIR =
+CC = gcc
+CFLAGS = -g -O3 -fomit-frame-pointer -Wall -Wextra -Werror
+#CFLAGS = $(CFLAGS) -ansi -std=c89 -pedantic
+HOST_OBJEXTENSION = .o
+LDFLAGS =
+LD = $(CC)
+HOST_EXEXTENSION =
+
+# ...for the actual build targets.  This is the simple case for no cross-build:
+
+#TARG_OBJDIR = x86_64-linux/
+#TARG_CC = $(CC)
+#TARG_CFLAGS = $(CFLAGS)
+#TARG_OBJEXTENSION = $(HOST_OBJEXTENSION)
+#TARG_LD = $(LD)
+#TARG_LDFLAGS = $(LDFLAGS)
+#TARG_EXEXTENSION = $(HOST_EXEXTENSION)
+
+# build 32 bit Linux binary on 64 bit system
+
+#TARG_OBJDIR = i686-linux/
+#TARG_CC = gcc -m32
+#TARG_CFLAGS = $(CFLAGS)
+#TARG_OBJEXTENSION = .o
+#TARG_LD = $(TARG_CC)
+#TARG_LDFLAGS = $(LDFLAGS)
+#TARG_EXEXTENSION =
+
+# cross Build with MinGW32
+
+TARG_OBJDIR = i686-w32/
+TARG_CC = i686-w64-mingw32-gcc
+TARG_CFLAGS = $(CFLAGS)
+TARG_OBJEXTENSION = .o
+TARG_LD = $(TARG_CC)
+TARG_LDFLAGS = $(LDFLAGS)
+TARG_EXEXTENSION = .exe
+TARG_RUNCMD = wine
+
+# cross Build with MinGW64
+
+#TARG_OBJDIR = x86_64-w64/
+#TARG_CC = x86_64-w64-mingw32-gcc
+#TARG_CFLAGS = $(CFLAGS)
+#TARG_OBJEXTENSION = .o
+#TARG_LD = $(TARG_CC)
+#TARG_LDFLAGS = $(LDFLAGS)
+#TARG_EXEXTENSION = .exe
+#TARG_RUNCMD = wine
+
+# -------------------------------------------------------------------------
+# directories where binaries, includes, and manpages should go during
+# installation
+
+BINDIR = /usr/local/bin
+INCDIR = /usr/local/include/asl
+MANDIR = /usr/local/man
+LIBDIR = /usr/local/lib/asl
+DOCDIR = /usr/local/doc/asl
+
+# -------------------------------------------------------------------------
+# character encoding to use (choose one of them)
+
+# CHARSET = CHARSET_ASCII7
+# CHARSET = CHARSET_IBM437
+CHARSET = CHARSET_ISO8859_1

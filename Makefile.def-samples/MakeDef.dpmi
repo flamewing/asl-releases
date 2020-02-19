@@ -2,16 +2,23 @@
 # choose your compiler (must be ANSI-compliant!) and linker command, plus
 # any additionally needed flags
 
+OBJDIR =
 CC = bcc
-LD = bcc -WX
 CFLAGS =-WX -ml -Oe -k- -Z -d -dc
+HOST_OBJEXTENSION = .obj
+LD = bcc -WX
+LDFLAGS =
+HOST_EXEXTENSION = .exe 
 
+# no cross build
 
-TARG_OBJEXTENSION = .obj
-TARG_EXEXTENSION = .exe 
-
-HOST_OBJEXTENSION = $(TARG_OBJEXTENSION)
-HOST_EXEXTENSION = $(TARG_EXEXTENSION)
+TARG_OBJDIR = $(OBJDIR)
+TARG_CC = $(CC)
+TARG_CFLAGS = $(CFLAGS)
+TARG_OBJEXTENSION = $(HOST_OBJEXTENSION)
+TARG_LD = $(LD)
+TARG_LDFLAGS = $(LDFLAGS)
+TARG_EXEXTENSION = $(HOST_EXEXTENSION)
 
 # -------------------------------------------------------------------------
 # directories where binaries, includes, and manpages should go during
@@ -31,7 +38,3 @@ DOCDIR = c:\as\doc
 CHARSET = CHARSET_IBM437
 # CHARSET = CHARSET_IBM850
 
-# -------------------------------------------------------------------------
-# DOS special...
-
-EXEXTENSION=.exe
