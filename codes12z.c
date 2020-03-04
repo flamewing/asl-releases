@@ -743,7 +743,7 @@ static Boolean DecodeImmBitField(tStrComp *pArg, Word *pResult)
  */
 
 /*!------------------------------------------------------------------------
- * \fn     AssembleBitfieldSymbol(Byte BitPos, Byte LengthM1, ShortInt OpSize, Word Address)
+ * \fn     AssembleBitfieldSymbol(Byte BitPos, Byte Width, ShortInt OpSize, Word Address)
  * \brief  build the compact internal representation of a bit field symbol
  * \param  BitPos bit position in word
  * \param  Width width of bit field

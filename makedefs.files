@@ -6,6 +6,7 @@ BASEARCHFILES = *.c *.h man/*.1 \
             include/s12z/*.inc include/s12z/vh/*.inc include/s12z/vca/*.inc include/s12z/vc/*.inc \
             include/coldfire/*.inc \
             include/st6/*.inc include/st7/*.inc include/stm8/*.inc include/stm8/stm8s/*.inc include/stm8/stm8l/*.inc include/stm8/stm8af/*.inc include/stm8/stm8al/*.inc include/stm8/stm8t/*.inc \
+            include/z8/*.inc \
             Makefile.def-samples/ \
             doc_DE/makedefs.dok doc_DE/*.tex doc_EN/makedefs.dok doc_EN/*.tex doc_COM/*.tex \
             tests/testall tests/testall.bat tests/testall.cmd tests/warnlog.DE tests/warnlog.EN \

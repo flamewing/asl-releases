@@ -1,3 +1,7 @@
+2020-03-04 [1.42 Bld 157]
+
+- Addition    : Add Zilog Super8 as target
+
 2020-02-19 [1.42 Bld 156]
 
 - Change      : rework build system to allow cross-builds

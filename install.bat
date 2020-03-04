@@ -37,6 +37,8 @@ md %2\stm8\stm8al
 for %%i in (include\stm8\stm8al\*.inc) do unumlaut %%i %2\stm8\stm8al\
 md %2\stm8\stm8t
 for %%i in (include\stm8\stm8t\*.inc) do unumlaut %%i %2\stm8\stm8t\
+md %2\z8
+for %%i in (include\z8\*.inc) do unumlaut %%i %2\z8\
 
 md %3
 for %%i in (man\*.1) do copy %%i %3

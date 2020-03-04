@@ -1,0 +1,6 @@
++------------------------ Test Application S8Forth --------------------------+
+|                                                                            |
+| This is a (synthetic) test of the Zilog Super8 instruction set, taken from |
+| the Super8 Forth documentation                                             |
+|                                                                            |
++----------------------------------------------------------------------------+

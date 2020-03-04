@@ -56,6 +56,7 @@ static TFamilyDescr Descrs[] =
   { "80C166/167"   , 0x004c, eHexFormatIntel16 },
   { "Zx80"         , 0x0051, eHexFormatIntel   },
   { "Z8"           , 0x0079, eHexFormatIntel   },
+  { "Super8"       , 0x0035, eHexFormatIntel   },
   { "eZ8"          , 0x0059, eHexFormatIntel   },
   { "KCPSM"        , 0x006b, eHexFormatIntel   },
   { "KCPSM3"       , 0x005b, eHexFormatIntel   },

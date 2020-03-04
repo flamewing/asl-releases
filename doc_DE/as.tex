@@ -46,7 +46,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand Januar 2020}
+{\large Stand M"arz 2020}
 \end{raggedright}
 
 \clearpage
@@ -235,7 +235,7 @@ folgende Prozessorfamilien implementiert:
 \item{AMD 29K}
 \item{Siemens 80C166/167}
 \item{Zilog Z80, Z180, Z380}
-\item{Zilog Z8, eZ8}
+\item{Zilog Z8, Super8, eZ8}
 \item{Xilinx KCPSM/KCPSM3 ('PicoBlaze')}
 \item{LatticeMico8}
 \item{Toshiba TLCS-900(L)}
@@ -617,7 +617,8 @@ STDDEF87.INC      & Register- \& Speicheradressen TLCS-870 \\
 STDDEF90.INC      & Register- \& Speicheradressen TLCS-90 \\
 STDDEF96.INC      & Register- \& Speicheradressen TLCS-900 \\
 STDDEFXA.INC      & SFR-\& Bitadressen Philips XA \\
-STDDEFZ8.INC      & Registeradressen Z8-Familie \\
+STDDEFZ8.INC      & Registeradressen Z8-Familie (alt)\\
+REGZ8.INC         & Registeradressen Z8-Familie (neu)\\
 REGSX20.INC       & Register- \& Bitadressen Parallax SX20/28 \\
 AVR/\*.INC        & Register- \& Bitadressen AVR-Familie \\
                   & (nicht direkt benutzen, REGAVR.INC \\
@@ -636,6 +637,9 @@ ST7\/*.INC        & Register- \& Bitadressen ST7-Familie \\
                   & inkludieren) \\
 STM8\/*.INC       & Register- \& Bitadressen STM8-Familie \\
                   & (nicht direkt benutzen, REGSTM8.INC \\
+                  & inkludieren) \\
+Z8\/*.INC         & Register- \& Bitadressen Z8-Familie \\
+                  & (nicht direkt benutzen, REGZ8.INC \\
                   & inkludieren) \\
 \hline
 \hline
@@ -2576,7 +2580,7 @@ und \tty{JBIT} genutzt werden.
 \subsection{DEFBIT}
 \ttindex{DEFBIT}
 
-{\em G"ultigkeit: S12Z}
+\subsubsection{S12Z}
 
 Der Prozessorkern der S12Z-Familie verf"ugt "uber Befehle, mit denen
 sich einzelne Bits in Register oder Speicherzellen manipulieren
@@ -2616,6 +2620,28 @@ flag     defbit    reg,4
 data     mystruct
 
          bset      data.flag  ; entspricht bset.w $100,#4
+\end{verbatim}
+
+\subsubsection{Super8}
+
+Im Gegensatz zum ''klassischen'' Z8 verf"ugt der Super8-Kern "uber
+Befehle, mit denen sich Bits in allgemeinen oder Arbeitsregistern
+bearbeiten lassen.  Dabei ist jedoch zu beachten, da"s einige davon
+nur auf Bits arbeiten, die Teil eines der 16 Arbeitsregister sind.
+Mit der \tty{DEFBIT}-Anweisung lassen sich Bits beider Sorten
+definieren:
+\begin{verbatim}
+workbit	defbit	r3,#4
+slow	defbit	emt,#6
+\end{verbatim}
+Derart definierte Bits lassen sich dann bei den Befehlen wie ein
+P"archen aus Register und Bitposition einsetzen:
+\begin{verbatim}
+	ldb	r3,emt,#6
+	ldb	r3,slo		; gleich bedeutend
+
+	bitc	r3,#4
+	bitc	workbit		; gleich bedeutend
 \end{verbatim}
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3429,13 +3455,17 @@ k"onnen.  Eine Liste mit den zus"atzlichen Befehlen findet sich im
 Kapitel mit den prozessorspezifischen Hinweisen.
 %%-----------
 \begin{quote}
-ai) Z8601, Z8604, Z8608, Z8630, Z8631 $\rightarrow$ eZ8
+ai) Z8601, Z8603, z86C03, z86E03, Z8604, Z86C06, Z86E06, \\
+    Z86C08, Z86C30, Z86C31, Z86C32 Z86C40 \\
+    $\rightarrow$ Z88C0000, Z88C0020 \\
+    $\rightarrow$ eZ8
 \end{quote}
 Die Varianten mit Z8-Kern unterscheiden sich nur in
 Speicherausbau und Peripherie, d.h. die Wahl hat auf den
-unterst"utzten Befehlssatz keinen Effekt.  Deutlich anders ist
-jedoch der eZ8, mit einem stark erweiterten Befehlssatz, der auch
-nur auf Quellebene weitestgehens aufw"arts-kompatibel ist.
+unterst"utzten Befehlssatz keinen Effekt.  Deutlich anders sind
+jedoch die Super8- und eZ8-Varianten, jeweils mit (in unterschiedliche
+Richtungen) stark erweiterten Befehlss"atzen, die auch auf Quellcode-Ebene
+nur g"o"stenteils aufw"arts-kompatibel sind.
 %%-----------
 \begin{quote}
 aj) KCPSM, KCPSM3
@@ -8834,17 +8864,19 @@ ist.
 
 %%---------------------------------------------------------------------------
 
-\section{Z8 und eZ8}
+\section{Z8, Super8 und eZ8}
 \label{Z8Spec}
 
 Der Prozessorkern der Z8-Mikrokontroller beinhaltet keine eigenen
 Register.  Stattdessen kann ein 16er-Block des internen Adre"raums
 aus RAM und I/O-Registern als 'Arbeitsregister' benutzt werden, die
 mit 4-Bit-Adressen angesprochen werden k"onnen.  Welcher 16er-Block
-als Arbeitsregister benutzt werden soll, wird mit dem RP-Register
-festgelegt: Bits 4 bis 7 von RP definieren den 'Offset', der auf die
-4-Bit-Arbeitsregisteradresse addiert wird, um eine 8-Bit-Adresse zu
-erhalten.
+als Arbeitsregister benutzt werden soll, wird mit den RP-Registern
+festgelegt: Bits 4 bis 7 von RP definieren beim klassischen Z8 den
+'Offset', der auf die 4-Bit-Arbeitsregisteradresse addiert wird,
+um eine 8-Bit-Adresse zu erhalten.  Beim Super8-Kern existieren
+zwei RP-Register (RP0 und RP1), die es erlauben, obere und untere
+H"alfte der Arbeitsregister an getrennte Stellen zu legen.
 
 "Ublicherweise werden die Arbeitsregister in der Assemblersyntax als
 Register R0...R15 angesprochen, man kann diese Arbeitsregister aber
@@ -8866,6 +8898,12 @@ op2     equ     041h
 
         ld      op1,op2		; entspricht ld r0,r1
 \end{verbatim}
+Es ist auch auf dem Super8 m"oglich, RP als Argument von \tty{ASSUME}
+anzugeben, obwohl dieser kein RP-Register hat (nur RP0 und RP1).  In
+diesem Fall werden die angenommen Werte von RP0 und RP1 auf $wert$ bzw.
+$wert+8$ gesetzt, analog zum \tty{SRP} Maschinenbefehl auf dem Super8-
+Kern.
+
 Im Gegensatz zum Original Zilog-Assembler ist es nicht erforderlich,
 eine 'Arbeitsregisteradressierung' explizit durch ein vorangestelltes
 Ausrufezeichen anzufordern, wobei AS diese Syntax nichtsdestotrotz

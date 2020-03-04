@@ -65,7 +65,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition January 2020}
+{\large Edition March 2020}
 \end{raggedright}
 
 \clearpage
@@ -241,7 +241,7 @@ following processor families have been implemented:
 \item{AMD 29K}
 \item{Siemens 80C166/167}
 \item{Zilog Z80, Z180, Z380}
-\item{Zilog Z8, eZ8}
+\item{Zilog Z8, Super8, eZ8}
 \item{Xilinx KCPSM/KCPSM3 ('PicoBlaze')}
 \item{LatticeMico8}
 \item{Toshiba TLCS-900(L)}
@@ -622,7 +622,10 @@ STDDEF87.INC      & register and memory addresses TLCS-870 \\
 STDDEF90.INC      & register and memory addresses TLCS-90 \\
 STDDEF96.INC      & register and memory addresses TLCS-900 \\
 STDDEFXA.INC      & SFR and bit addresses Philips XA \\
-STDDEFZ8.INC      & register addresses Z8 family \\
+STDDEFZ8.INC      & register addresses Z8 family (old) \\
+REGZ8.INC         & register addresses Z8 family (new) \\
+Z8/\*.INC         & register and bit addresses Z8 family \\
+                  & (do not include directly, use REGZ8.INC) \\
 \hline
 \hline
 {\bf Directory LIB} & \\
@@ -2493,7 +2496,7 @@ JBIT0}, and \tty{JBIT}.
 \subsection{DEFBIT}
 \ttindex{DEFBIT}
 
-{\em valid for: S12Z}
+\subsubsection{S12Z}
 
 The S12Z family's processor core provides instructions to manipulate
 individual bits in registers or memory cells.  To conveniently
@@ -2530,6 +2533,26 @@ flag     defbit    reg,4
 data     mystruct
 
          bset      data.flag  ; same as bset.w $100,#4
+\end{verbatim}
+
+\subsubsection{Super8}
+
+Opposed to the 'classic' Z8, the Super8 core supports instructions to operate
+on bits in working or general registers.  ONe however has to to regard that
+some of them can only operate on bits in one of the 16 working registers.
+The \tty{DEFBIT} instruction allows to define bits of either type:
+\begin{verbatim}
+workbit defbit  r3,#4
+slow    defbit  emt,#6
+\end{verbatim}
+Bits that have been defined this way may be used just like a argument duple of
+register and bit position:
+\begin{verbatim}
+        ldb     r3,emt,#6
+        ldb     r3,slo          ; same result
+
+        bitc    r3,#4
+        bitc    workbit         ; same result
 \end{verbatim}
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3329,13 +3352,17 @@ with the additional instructions can be found in the chapter
 with processor specific hints.
 %%-----------
 \begin{quote}
-ai) Z8601, Z8604, Z8608, Z8630, Z8631 $\rightarrow$ eZ8
+ai) Z8601, Z8603, z86C03, z86E03, Z8604, Z86C06, Z86E06, \\
+    Z86C08, Z86C30, Z86C31, Z86C32 Z86C40 \\
+    $\rightarrow$ Z88C0000, Z88C0020 \\
+    $\rightarrow$ eZ8
 \end{quote}
 The variants with Z8 core only differ in internal memory size and
 on-chip peripherals, i.e. the choice does not have an effect on the
-supported instruction set.  This is substantially different with the eZ8,
-which brings along a strongly extended instruction set that is in wide
-parts only source-level compatible.
+supported instruction set.  Super8 and eZ8 are substantially different,
+each with an instruction set that was vastly extended (into different
+directions), and they are not fully upward-compatible on source code
+level as well.
 %%-----------
 \begin{quote}
 aj) KCPSM
@@ -8655,16 +8682,19 @@ replaced, which is signified with an \tty{R} in the listing.
 
 %%---------------------------------------------------------------------------
 
-\section{Z8 and eZ8}
+\section{Z8, Super8, and eZ8}
 \label{Z8Spec}
 
-The CPU core contained in the Z8 microcontrollers does not contain
-any specific registers.  Instead, a block of 16 consecutive cells of
-the internal address space (contains RAM and I/O registers) may be
-used as 'work registers' and be addressed with 4-bit addresses. The
-RP register defines which memory block is used as work registers:
-bits 4 to 7 of RP define the 'offset' that is added to every 4-bit
-work register address to get a complete 8-bit address.
+The CPU core contained in the Z8 microcontrollers does not
+contain any specific registers.  Instead, a block of 16
+consecutive cells of the internal address space (contains RAM and
+I/O registers) may be used as 'work registers' and be addressed
+with 4-bit addresses.  The RP registers define which memory block
+is used as work registers: on a classic Z8, bits 4 to 7 of RP
+define the 'offset' that is added to a 4-bit work register
+address to get a complete 8-bit address.  The Super8 core
+features two register pointers (RP0 and RP1), which allow mapping
+the lower and upper half of work registers to separate places.
 
 Usually, one refers to work registers as R0..R15 in assembly
 statements.  It is however also posssible to regard work registers as
@@ -8684,6 +8714,12 @@ op2     equ     041h
 
         ld      op1,op2         ; equal to ld r0,r1
 \end{verbatim}
+Note that though the Super8 does not have an RP register (only
+RP0 and RP1), RP as argument to \tty{ASSUME} is still allowed -
+it will set the assumed values of RP0 and RP1 to $value$ resp.
+$value+8$, as the \tty{SRP} machine instruction does on the Super
+8 core.
+
 Opposed to the original Zilog assembler, it is not necessary to
 explicitly specify 'work register addressing' with a prefixed
 exclamation mark.  AS however also understands this syntax - a
