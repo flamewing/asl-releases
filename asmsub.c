@@ -35,7 +35,7 @@
 
 #ifdef __TURBOC__
 #ifdef __DPMI16__
-#define STKSIZE 38912
+#define STKSIZE 37888
 #else
 #define STKSIZE 49152
 #endif
@@ -1546,11 +1546,11 @@ void asmsub_init(void)
   ValidSymChar[(unsigned int) '_'] = VALID_S1 | VALID_SN;
 #if (defined CHARSET_IBM437) || (defined CHARSET_IBM850)
   for (z = 128; z <= 165; z++)
-    ValidSymChar[z] = VALID_S1 | VALID_SN;
-  ValidSymChar[225] = VALID_S1 | VALID_SN;
+    ValidSymChar[z] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
+  ValidSymChar[225] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
 #elif defined CHARSET_ISO8859_1
   for (z = 192; z <= 255; z++)
-    ValidSymChar[z] = VALID_S1 | VALID_SN;
+    ValidSymChar[z] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
 #elif (defined CHARSET_ASCII7) || (defined CHARSET_UTF8)
 #else
 #error Oops, unkown charset - you will have to add some work here...

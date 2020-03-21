@@ -604,6 +604,7 @@ void WrErrorString(const char *pMessage, char *pAdd, Boolean Warning, Boolean Fa
   int l;
   const char *pLeadIn = GNUErrors ? "" : "> > > ";
   FILE *pErrFile;
+  Boolean ErrorsWrittenToListing = False;
 
   if (TreatWarningsAsErrors && Warning && !Fatal)
     Warning = False;
@@ -656,16 +657,17 @@ void WrErrorString(const char *pMessage, char *pAdd, Boolean Warning, Boolean Fa
     }
   }
 
-  if ((strcmp(LstName, "/dev/null")) && (!Fatal))
+  if (strcmp(LstName, "/dev/null") && !Fatal)
   {
     for (z = 0; z <= ErrStrCount; z++)
       WrLstLine(ErrStr[z]);
+    ErrorsWrittenToListing = True;
   }
 
   if (!ErrorFile)
     OpenWithStandard(&ErrorFile, ErrorName);
   pErrFile = ErrorFile ? ErrorFile : stdout;
-  if (strcmp(LstName, "!1") || !ListOn)
+  if (strcmp(LstName, "!1") || !ListOn || !ErrorsWrittenToListing)
   {
     for (z = 0; z <= ErrStrCount; z++)
       fprintf(pErrFile, "%s%s\n", ErrStr[z], ClrEol);
@@ -797,7 +799,7 @@ void ChkStrIO(tErrorNum ErrNo, const struct sStrComp *pComp)
   strmaxcpy(s, pComp->Str, STRINGSIZE);
   strmaxcat(s, ": ", STRINGSIZE);
   strmaxcat(s, GetErrorMsg(io), STRINGSIZE);
-  WrStrErrorPos(ErrNo, pComp);
+  WrXErrorPos(ErrNo, s, &pComp->Pos);
 }
 
 /*!------------------------------------------------------------------------

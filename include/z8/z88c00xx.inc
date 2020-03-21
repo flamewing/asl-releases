@@ -92,7 +92,8 @@ P2BIP		sfr	0fdh		; Port 2/3 B Interrupt Pending (Bank 0)
 ; Interrupt Vectors
 
 		enumconf 2,code
-		enum	 IRQ0_vect=0	; External Interrupt Request 0, used by...
+		enum	 RESET_vect=0	; Reset Entry
+		nextenum IRQ0_vect	; External Interrupt Request 0, used by...
 P22_vect	label	IRQ0_vect	;  EXTERNAL INTERRUPT (P22)
 P23_vect	label	IRQ0_vect	;  EXTERNAL INTERRUPT (P23)
 		nextenum IRQ1_vect	; External Interrupt Request 1, used by...

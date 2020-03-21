@@ -48,7 +48,8 @@ PAR_EN		__z8bit	P3M,7		;  Parity Enable
 ; Interrupt Vectors
 
 		enumconf 2,code
-		enum	 IRQ0_vect=0	; External Interrupt Request 0
+		enum	 RESET_vect=0	; Reset Entry
+		nextenum IRQ0_vect	; External Interrupt Request 0
 		nextenum IRQ1_vect	; External Interrupt Request 1
 		nextenum IRQ2_vect	; External Interrupt Request 2
 		nextenum IRQ3_vect	; External Interrupt Request 3, shared with...
