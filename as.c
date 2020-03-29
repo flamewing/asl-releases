@@ -40,6 +40,8 @@
 #include "asmstructs.h"
 #include "asmif.h"
 #include "asmcode.h"
+#include "asmlist.h"
+#include "asmlabel.h"
 #include "asmdebug.h"
 #include "asmrelocs.h"
 #include "asmallg.h"
@@ -146,10 +148,7 @@ static char *FileMask;
 static long StartTime, StopTime;
 static Boolean GlobErrFlag;
 static Boolean MasterFile;
-static Boolean WasIF, WasMACRO;
 static unsigned MacroNestLevel = 0;
-
-static unsigned SystemListLen8, SystemListLen16, SystemListLen32;
 
 /*=== Zeilen einlesen ======================================================*/
 
@@ -236,161 +235,6 @@ static POutputTag GenerateOUTProcessor(SimpProc Processor, tErrorNum OpenErrMsg)
   POut->OpenErrMsg = OpenErrMsg;
 
   return POut;
-}
-
-/*=========================================================================*/
-/* Listing erzeugen */
-
-static void MakeList(void)
-{
-  String h, h2, Tmp;
-  Word EffLen;
-  Boolean ThisDoLst;
-
-  EffLen = CodeLen * Granularity();
-
-#if 0
-  fprintf(stderr, "[%s] WasIF %u WasMACRO %u DoLst %u\n", OpPart.Str, WasIF, WasMACRO, DoLst);
-#endif
-  if (WasIF)
-    ThisDoLst = !!(DoLst & eLstMacroExpIf);
-  else if (WasMACRO)
-    ThisDoLst = !!(DoLst & eLstMacroExpMacro);
-  else
-  {
-    if (!IfAsm && (!(DoLst & eLstMacroExpIf)))
-      ThisDoLst = False;
-    else
-      ThisDoLst = !!(DoLst & eLstMacroExpRest);
-  }
-
-  if ((!ListToNull) && (ThisDoLst) && ((ListMask & 1) != 0) && (!IFListMask()))
-  {
-    /* Zeilennummer / Programmzaehleradresse: */
-
-    if (IncDepth == 0)
-      as_snprintf(h, sizeof(h), "   ");
-    else
-    {
-      as_snprintf(Tmp, sizeof(Tmp), IntegerFormat, IncDepth);
-      as_snprintf(h, sizeof(h), "(%s)", Tmp);
-    }
-    if (ListMask & ListMask_LineNums)
-    {
-      as_snprintf(h2, sizeof(h2), Integ32Format, CurrLine);
-      as_snprcatf(h, sizeof(h), "%5s/", h2);
-    }
-    as_snprcatf(h, sizeof(h), "%8.*lllu %c ",
-                ListRadixBase, (LargeInt)(EProgCounter() - CodeLen),
-                Retracted? 'R' : ':');
-
-    /* Extrawurst in Listing ? */
-
-    if (*ListLine)
-    {
-      strmaxcat(h, ListLine, sizeof(h));
-      strmaxcat(h, Blanks(LISTLINESPACE - strlen(ListLine)), sizeof(h));
-      strmaxcat(h, OneLine, sizeof(h));
-      WrLstLine(h);
-      *ListLine = '\0';
-    }
-
-    /* Code ausgeben */
-
-    else
-    {
-      Word Index = 0, CurrListGran, SystemListLen;
-      Boolean First = True;
-      LargeInt ThisWord;
-      int SumLen;
-
-      /* Not enough code to display even on 16/32 bit word?
-         Then start rightaway dumping bytes */
-
-      if (EffLen < ActListGran)
-      {
-        CurrListGran = 1;
-        SystemListLen = SystemListLen8;
-      }
-      else
-      {
-        CurrListGran = ActListGran;
-        switch (CurrListGran)
-        {
-          case 4:
-            SystemListLen = SystemListLen32;
-            break;
-          case 2:
-            SystemListLen = SystemListLen16;
-            break;
-          default:
-            SystemListLen = SystemListLen8;
-        }
-      }
-
-      if (TurnWords && (Granularity() != ActListGran) && (1 == ActListGran))
-        DreheCodes();
-        
-      do
-      {
-        /* If not the first code line, prepend blanks to fill up space below line# and address: */
-
-        if (!First)
-          as_snprintf(h, sizeof(h), "%*s", (ListMask & ListMask_LineNums) ? 20 : 14, "");
-
-        SumLen = 0;
-        do
-        {
-          /* We checked initially there is at least one full word,
-             and we check after every word whether there is another
-             full one: */
-
-          if ((Index < EffLen) && !DontPrint)
-          {
-            switch (CurrListGran)
-            {
-              case 4:
-                ThisWord = DAsmCode[Index >> 2];
-                break;
-              case 2:
-                ThisWord = WAsmCode[Index >> 1];
-                break;
-              default:
-                ThisWord = BAsmCode[Index];
-            }
-            as_snprcatf(h, sizeof(h), "%0*.*lllu ", (int)SystemListLen, (int)ListRadixBase, ThisWord);
-          }
-          else
-            as_snprcatf(h, sizeof(h), "%*s", SystemListLen + 1, "");
-
-          /* advance pointers & keep track of # of characters printed */
-
-          Index += CurrListGran;
-          SumLen += SystemListLen + 1;
-
-          /* Less than one full word remaining? Then switch to dumping bytes. */
-
-          if (Index + CurrListGran > EffLen)
-          {
-            CurrListGran = 1;
-            SystemListLen = SystemListLen8;
-          }
-        }
-        while (SumLen + SystemListLen + 1 < LISTLINESPACE);
-
-        /* If first line, pad to max length and append source line */
-
-        if (First)
-          as_snprcatf(h, sizeof(h), "%*s%s", LISTLINESPACE - SumLen, "", OneLine);
-        WrLstLine(h);
-        First = False;
-      }
-      while ((Index < EffLen) && !DontPrint);
-
-      if (TurnWords && (Granularity() != ActListGran) && (1 == ActListGran))
-        DreheCodes();
-    }
-  }
 }
 
 /*=========================================================================*/
@@ -2271,63 +2115,59 @@ static Boolean InputEnd(void)
 
 /*--- aus der zerlegten Zeile Code erzeugen --------------------------------*/
 
-Boolean HasLabel(void)
+void WriteCode(void)
 {
-  if (!*LabPart.Str)
-    return False;
-  if (IsDef())
-    return False;
+  unsigned z;
 
-  switch (*OpPart.Str)
+  for (z = 0; z < StopfZahl; z++)
   {
-    case '=':
-      return (!Memo("="));
-    case ':':
-      return (!Memo(":="));
-    case 'M':
-      return (!Memo("MACRO"));
-    case 'F':
-      return (!Memo("FUNCTION"));
-    case 'L':
-      return (!Memo("LABEL"));
-    case 'S':
-      return (!Memo("SET") || SetIsOccupied()) && (!(Memo("STRUCT") || Memo("STRUC")));
-    case 'E':
-      if (Memo("EQU") || Memo("ENDSTRUCT") || Memo("ENDS") || Memo("ENDSTRUC") || Memo("ENDUNION"))
-        return False;
-      return !Memo("EVAL");
-    case 'U':
-      return (!Memo("UNION"));
-    default:
-      return True;
-  }
-}
-
-void HandleLabel(const tStrComp *pName, LargeWord Value)
-{
-  /* structure element ? */
-
-  if (pInnermostNamedStruct)
-  {
-    PStructElem pElement = CreateStructElem(pName->Str);
-
-    pElement->Offset = Value;
-    AddStructElem(pInnermostNamedStruct->StructRec, pElement);
-    AddStructSymbol(pName->Str, Value);
+    switch (ActListGran)
+    {
+      case 4:
+        DAsmCode[CodeLen >> 2] = NOPCode;
+        break;
+      case 2:
+        WAsmCode[CodeLen >> 1] = NOPCode;
+        break;
+      case 1:
+        BAsmCode[CodeLen] = NOPCode;
+        break;
+    }
+    CodeLen += ActListGran/Granularity();
   }
 
-  /* normal label */
-
-  else if (RelSegs)
-    EnterRelSymbol(pName, Value, ActPC, False);
+  if ((ActPC != StructSeg) && (!ChkPC(PCs[ActPC] + CodeLen - 1)) && (CodeLen != 0))
+    WrError(ErrNum_AdrOverflow);
   else
-    EnterIntSymbolWithFlags(pName, Value, ActPC, False,
-                            Value == AfterBSRAddr ? eSymbolFlag_NextLabelAfterBSR : eSymbolFlag_None);
+  {
+    LargeWord NewPC = PCs[ActPC] + CodeLen;
+
+    if ((!DontPrint) && (ActPC != StructSeg) && (CodeLen > 0))
+      BookKeeping();
+    if (ActPC == StructSeg)
+    {
+      if ((CodeLen != 0) && (!DontPrint)) WrError(ErrNum_NotInStruct);
+      if (StructStack->StructRec->IsUnion)
+      {
+        BumpStructLength(StructStack->StructRec, CodeLen);
+        CodeLen = 0;
+        NewPC = 0;
+      }
+    }
+    else if (CodeOutput)
+    {
+      PCsUsed[ActPC] = True;
+      if (DontPrint)
+        NewRecord(PCs[ActPC] + CodeLen);
+      else
+        WriteBytes();
+    }
+    PCs[ActPC] = NewPC;
+  }
 }
 
 static void Produce_Code(void)
 {
-  Byte z;
   PMacroRec OneMacro;
   PStructRec OneStruct;
   Boolean SearchMacros, Found, IsMacro = False, IsStruct = False;
@@ -2376,8 +2216,8 @@ static void Produce_Code(void)
 
   if ((IfAsm) && ((!IsMacro) || (!OneMacro->LocIntLabel)))
   {
-    if (HasLabel())
-      HandleLabel(&LabPart, EProgCounter());
+    if (LabelPresent())
+      LabelHandle(&LabPart, EProgCounter());
   }
 
   Found = False;
@@ -2494,57 +2334,18 @@ static void Produce_Code(void)
       }
     }
 
-    for (z = 0; z < StopfZahl; z++)
-    {
-      switch (ActListGran)
-      {
-        case 4:
-          DAsmCode[CodeLen >> 2] = NOPCode;
-          break;
-        case 2:
-          WAsmCode[CodeLen >> 1] = NOPCode;
-          break;
-        case 1:
-          BAsmCode[CodeLen] = NOPCode;
-          break;
-      }
-      CodeLen += ActListGran/Granularity();
-    }
-
 #ifdef PROFILE_MEMO
     NumMemoSum += NumMemo;
     NumMemoCnt++;
 #endif
 
-    if ((ActPC != StructSeg) && (!ChkPC(PCs[ActPC] + CodeLen - 1)) && (CodeLen != 0))
-      WrError(ErrNum_AdrOverflow);
-    else
-    {
-      LargeWord NewPC = PCs[ActPC] + CodeLen;
-
-      if ((!DontPrint) && (ActPC != StructSeg) && (CodeLen > 0))
-        BookKeeping();
-      if (ActPC == StructSeg)
-      {
-        if ((CodeLen != 0) && (!DontPrint)) WrError(ErrNum_NotInStruct);
-        if (StructStack->StructRec->IsUnion)
-        {
-          BumpStructLength(StructStack->StructRec, CodeLen);
-          CodeLen = 0;
-          NewPC = 0;
-        }
-      }
-      else if (CodeOutput)
-      {
-        PCsUsed[ActPC] = True;
-        if (DontPrint)
-          NewRecord(PCs[ActPC] + CodeLen);
-        else
-          WriteBytes();
-      }
-      PCs[ActPC] = NewPC;
-    }
+    WriteCode();
   }
+
+  /* reset memory about previous label if it is a non-empty instruction */
+
+  if (*OpPart.Str)
+    LabelReset();
 
   /* dies ueberprueft implizit, ob von der letzten Eval...-Operation noch
      externe Referenzen liegengeblieben sind. */
@@ -2730,8 +2531,6 @@ static void SplitLine(void)
       pRun = (pDivPos < pEnd) ? pDivPos + 1 : pEnd;
     }
   }
-
-  Produce_Code();
 }
 
 /*------------------------------------------------------------------------*/
@@ -2748,6 +2547,7 @@ static void ProcessFile(String FileName)
   MasterFile = False;
   NextIncDepth = IncDepth;
   SplitLine();
+  Produce_Code();
   IncDepth = NextIncDepth;
 
   ListTime = GTime();
@@ -2773,9 +2573,12 @@ static void ProcessFile(String FileName)
     if (*Run == '#')
       Preprocess();
     else
+    {
       SplitLine();
+      Produce_Code();
+    }
 
-    MakeList();
+    MakeList(OneLine);
     DoLst = NextDoLst;
     IncDepth = NextIncDepth;
 
@@ -2872,6 +2675,7 @@ static void AssembleFile_InitPass(void)
     pPhaseStacks[z] = NULL;
 
   InitPass();
+  AsmLabelPassInit();
 
   ActPC = SegCode;
   PCs[ActPC] = 0;
@@ -4242,6 +4046,7 @@ int main(int argc, char **argv)
     asmstruct_init();
     asmif_init();
     asmcode_init();
+    asmlabel_init();
     asmdebug_init();
 
     codeallg_init();
@@ -4429,16 +4234,13 @@ int main(int argc, char **argv)
 #endif
   ProcessCMD(ASParams, ASParamCnt, ParUnprocessed, EnvName, ParamError);
 
-  SysString(Dummy, sizeof(Dummy), 0xff, ListRadixBase, 0, False, HexStartCharacter);
-  SystemListLen8 = strlen(Dummy);
-  SysString(Dummy, sizeof(Dummy), 0xffffu, ListRadixBase, 0, False, HexStartCharacter);
-  SystemListLen16 = strlen(Dummy);
-  SysString(Dummy, sizeof(Dummy), 0xfffffffful, ListRadixBase, 0, False, HexStartCharacter);
-  SystemListLen32 = strlen(Dummy);
-
   /* wegen QuietMode dahinter */
 
   WrHead();
+
+  /* ListRadixBase must have been set */
+
+  asmlist_init();
 
   GlobErrFlag = False;
   if (ErrorPath[0] != '\0')

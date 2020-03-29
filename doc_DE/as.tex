@@ -4027,22 +4027,55 @@ diese Einstellung vor!  \tty{FULLPMMU} mu"s also auf jeden Fall nach dem
 {\em G"ultigkeit: 680x0, 68xx, M*Core, XA, H8, SH7000, TMS9900,\\
      MSP430(X), ST7/STM8}
 
-Prozessoren der 680x0-Familie stehen ungeraden Adressen ziemlich
-kritisch gegen"uber: Befehle d"urfen nicht auf einer ungeraden Adresse
-beginnen, und Datenzugriffe sind mit ungeraden Adressen bis zum
-68010 nur byteorientiert erlaubt.  Die H8-Familie setzt bei Zugriffen
-auf ungerade Adressen das unterste Adre"sbit einfach ganz auf Null,
-die 500er ,,bedanken'' sich wiederum mit einer Exception...
-AS bem"uht sich daher, mit \tty{DC} oder \tty{DS} angelegte Datenstrukturen
-immer mit einer geraden Bytezahl abzulegen.  Das bedeutet bei den Befehlen
-\tty{DS.B} und \tty{DC.B} aber unter Umst"anden, da"s ein F"ullbyte
-eingef"ugt werden mu"s.  Dieses Verhalten kann man mit dem
-\tty{PADDING}-Befehl ein- und ausschalten.  Als Argument
-ist analog zu den vorherigen Befehlen \tty{ON} oder \tty{OFF} erlaubt, und
-die augenblickliche Einstellung kann aus dem gleichnamigen Symbol
-ausgelesen werden. Defaultm"a"sig ist \tty{PADDING} nur f"ur die
-680x0-Familie eingeschaltet, f"ur alle anderen werden erst nach Umschaltung
-Padding-Bytes eingef"ugt!
+Diverse Prozessorfamilien verlangen, da"s Objekte von mehr als einem
+Byte L"ange auf einer geraden Adresse liegen m"ussen.  Neben Datenobjekten
+schlie"st dies auch Instruktionsworte selber ein - auf einem 68000
+l"osen Wortzugriffe auf eine ungerade Adresse zum Beispiel eine
+Exception aus, andere Prozessoren wie die H8-Familie setzen das
+unterste Adre"sbit bei einem Wortzugriff einfach hart auf Null.
+
+Mit dem \tty{PADDING}-Befehl kann man einen Mechanismus aktivieren,
+mit dem der Assembler versucht, solches 'Misalignment' nach M"oglichkeit
+zu verhindern.  Steht die Situation an, da"s ein Instruktionswort,
+oder auch z.B. mit \tty{DC} angelegte Daten von 16 Bit oder mehr auf
+einer ungeraden Adresse landen w"urden, dann wird automatisch ein F"ullbyte
+davor eingef"ugt.  Im Listing wird dieses F"ullbyte in einer separaten
+Zeile mit dem Hinweis
+\begin{verbatim}
+<padding>
+\end{verbatim}
+ausgewiesen.
+
+Steht in der Quellzeile ein Label, so verweist dieses Label weiterhin
+auf den von dieser Zeile erzeugten Code, also auf die Adresse unmittelbar
+nach dem F"ullbyte.  Das gleiche gilt auch f"ur ein Label in einer
+separaten Zeile unmittelbar davor, sofern diese Zeile {\em alleine} das
+Label und selber keine Anweisung enth"alt.  Im folgenden Beispiel:
+\begin{verbatim}
+       padding  on
+       org      $1000
+
+       dc.b     1
+adr1:  nop
+
+       dc.b     1
+adr2: 
+       nop
+
+       dc.b     1
+adr3:  equ      *
+       nop
+\end{verbatim}
+w"urden die Labels \tty{adr1} und \tty{adr2} die (durch ein F"ullbyte
+auf einen geraden Wert aufgerundete) Adresse der jeweiligen \tty{NOP}-
+Instruktion beinhalten, \tty{adr3} w"urde jedoch auf das F"ullbyte {\em vor}
+der dritten \tty{NOP}-Instruktion zeigen.
+
+Als Argument zu \tty{PADDING} ist analog zu den vorherigen Befehlen
+\tty{ON} oder \tty{OFF} erlaubt, und die augenblickliche Einstellung
+kann aus dem gleichnamigen Symbol ausgelesen werden. Defaultm"a"sig
+ist \tty{PADDING} nur f"ur die 680x0-Familie eingeschaltet, f"ur alle
+anderen werden erst nach Umschaltung Padding-Bytes eingef"ugt.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

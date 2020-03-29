@@ -23,6 +23,7 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "asmlabel.h"
 #include "asmstructs.h"
 #include "errmsg.h"
 
@@ -85,7 +86,7 @@ void DestroyStructRec(PStructRec StructRec)
 
 void ExpandStructStd(const tStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
 {
-  HandleLabel(pVarName, Base + pStructElem->Offset);
+  LabelHandle(pVarName, Base + pStructElem->Offset);
 }
 
 PStructElem CreateStructElem(const char *pElemName)

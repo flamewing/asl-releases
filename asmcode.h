@@ -14,8 +14,7 @@
 /*                                                                           */
 /*****************************************************************************/
 
-extern Word LenSoFar;
-extern LongInt RecPos, SectSymbolCounter;
+extern LongInt SectSymbolCounter;
 
 extern PPatchEntry PatchList, PatchLast;
 extern PExportEntry ExportList, ExportLast;
@@ -32,5 +31,8 @@ extern void WriteBytes(void);
 
 extern void RetractWords(Word Cnt);
  
+extern void InsertPadding(unsigned NumBytes, Boolean OnlyReserve);
+
 extern void asmcode_init(void);
+
 #endif /* _ASMCODE_H */

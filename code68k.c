@@ -20,6 +20,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmallg.h"
+#include "asmcode.h"
 #include "motpseudo.h"
 #include "asmitree.h"
 #include "codevars.h"
@@ -5583,8 +5584,6 @@ static void DecodeSTR(Word Index)
     PutByte(l - 2);
     for (z = 1; z < l - 1; z++)
       PutByte(CharTransTable[((usint) ArgStr[1].Str[z]) & 0xff]);
-    if ((Odd(CodeLen)) && (DoPadding))
-      PutByte(0);
   }
 }
 
@@ -5937,7 +5936,13 @@ static void MakeCode_68K(void)
 
   /* Befehlszaehler ungerade ? */
 
-  if (Odd(EProgCounter())) WrError(ErrNum_AddrNotAligned);
+  if (Odd(EProgCounter()))
+  {
+    if (DoPadding)
+      InsertPadding(1, False);
+    else
+      WrError(ErrNum_AddrNotAligned);
+  }
 
   if (!LookupInstTable(InstTable, OpPart.Str))
     WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);

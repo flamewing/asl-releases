@@ -1,0 +1,9 @@
++---------------------  Test Application PADDING ----------------------------+
+|                                                                            |
+| This test plays a bit with the new implementation of the PADDING option.   |
+| A padding bit is no longer always inserted to make code length even, it is |
+| inserted right when it is needed to put an instruction or (long) word data |
+| on an even address.  This has some interesting implications for labels,    |
+| which are demonstrated in this file.                                       |
+|                                                                            |
++----------------------------------------------------------------------------+

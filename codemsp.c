@@ -21,6 +21,7 @@
 #include "errmsg.h"
 #include "asmdef.h"
 #include "asmsub.h"
+#include "asmcode.h"
 #include "asmpars.h"
 #include "asmallg.h"
 #include "asmitree.h"  
@@ -1134,7 +1135,6 @@ static void DecodeBYTE(Word Index)
     }
     while ((z <= ArgCnt) && (OK));
     if (!OK) CodeLen = 0;
-    else if ((Odd(CodeLen)) && (DoPadding)) PutByte(0);
   }
 }
 
@@ -1178,7 +1178,6 @@ static void DecodeBSS(Word Index)
     if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
     else if (OK)
     {
-      if ((Odd(HVal16)) && (DoPadding)) HVal16++;
       if (!HVal16) WrError(ErrNum_NullResMem);
       DontPrint = True; CodeLen = HVal16;
       BookKeeping();
@@ -1399,9 +1398,7 @@ static void InitFields(void)
   AddJmp("JEQ" , 0x2400); AddJmp("JLO" , 0x2800);
   AddJmp("JHS" , 0x2c00);
 
-  AddInstTable(InstTable, "BYTE", 0, DecodeBYTE);
   AddInstTable(InstTable, "WORD", 0, DecodeWORD);
-  AddInstTable(InstTable, "BSS" , 0, DecodeBSS);
 
   AddInstTable(InstTable, "REG", 0, DecodeRegDef);
 }
@@ -1419,11 +1416,11 @@ static void MakeCode_MSP(void)
 {
   CodeLen = 0; DontPrint = False; PCDist = 0;
 
-  /* zu ignorierendes */
+  /* to be ignored: */
 
   if (Memo("")) return;
 
-  /* Attribut bearbeiten */
+  /* process attribute */
 
   if (!*AttrPart.Str) OpSize = eOpSizeDefault;
   else if (strlen(AttrPart.Str) > 1) WrStrErrorPos(ErrNum_UndefAttr, &AttrPart);
@@ -1447,7 +1444,30 @@ static void MakeCode_MSP(void)
       return;
   }
 
-  /* alles aus der Tabelle */
+  /* insns not requiring word alignment */
+
+  if (Memo("BYTE"))
+  {
+    DecodeBYTE(0);
+    return;
+  }
+  if (Memo("BSS"))
+  {
+    DecodeBSS(0);
+    return;
+  }
+
+  /* For all other (pseudo) instructions, optionally pad to even */
+
+  if (Odd(EProgCounter()))
+  {
+    if (DoPadding)
+      InsertPadding(1, False);
+    else
+      WrError(ErrNum_AddrNotAligned);
+  }
+
+  /* all the rest from table */
  
   if (!LookupInstTable(InstTable, OpPart.Str))
     WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);

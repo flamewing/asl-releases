@@ -3911,19 +3911,50 @@ instruction!
 
 {\em valid for: 680x0, 68xx, M*Core, XA, H8, SH7000, MSP430(X), TMS9900, ST7/STM8}
 
-Processors of the 680x0 family are quite critical regarding odd addresses:
-instructions must not start on an odd address, and data accesses to odd
-addresses are only allowed bytewise up to the 68010.  The H8/300 family
-simply resets the lowest address bit to zero when accessing odd addresses,
-the 500 in contrast 'thanks' with an exception...  AS therefore tries to
-round up data structures built with \tty{DC} or \tty{DS} to an even number
-of bytes.  This however means for \tty{DC.B} and \tty{DS.B} that a padding
-byte may have to be added.  This behaviour can be turned on and off via
-the \tty{PADDING} instruction.  Similar to the previous instructions, the
-argument may be either \tty{ON} or \tty{OFF}, and the current setting may
-be read from a symbol with the same name.  \tty{PADDING} is by default only
-enabled for the 680x0 family, it has to be turned on explicitly for all
-other families!
+Various processor families have a requirement that objects of more than
+one byte length must be located on a n even address.  Aside from data
+objects, this may also include instruction words.  For instance, word
+accesses to an odd address result in an exception on a 68000, while other
+processors like the H8 force the lowest address bit to zero.
+
+The \tty{PADDING} instruction allows to activate a mechanism that tries to
+avoid such misalignments.  If the situation arises that an instruction
+word, or a data object of 16 bits or more (created e.g. via \tty{DC}) would
+be stored on an odd address, a padding byte is automatically inserted before.
+Such a padding byte is displayed in the listing in a separate line that
+contains the remark
+\begin{verbatim}
+<padding>
+\end{verbatim}
+If the source line also contained a label, the label still points to the
+address of the code or data object, i.e. right behind the pad byte.  The same
+is true for a label in a source line immediately before, as long as this
+line {\em} only holds the label and no other instruction.  So, in the
+follwing example:
+\begin{verbatim}
+       padding  on
+       org      $1000
+
+       dc.b     1
+adr1:  nop
+
+       dc.b     1
+adr2: 
+       nop
+
+       dc.b     1
+adr3:  equ      *
+       nop
+\end{verbatim}
+the labels \tty{adr1} and \tty{adr2} hold the addresses of the respective
+\tty{NOP} instructions, which were made even by inserting a pad byte.
+\tty{adr3} in contrast holds the address of the pad byte preceding the
+third \tty{NOP}.
+
+Similar to the previous instructions, the argument to \tty{PADDING} may be
+either \tty{ON} or \tty{OFF}, and the current setting may be read from a
+symbol with the same name.  \tty{PADDING} is by default only enabled for
+the 680x0 family, it has to be turned on explicitly for all other families.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

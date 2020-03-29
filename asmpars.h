@@ -84,6 +84,7 @@ typedef struct _TFunction
 
 struct sStrComp;
 struct sRelocEntry;
+struct sSymbolEntry;
 
 extern tIntTypeDef IntTypeDefs[IntTypeCnt];
 extern Boolean FirstPassUnknown;
@@ -118,13 +119,15 @@ extern Boolean IdentifySection(const struct sStrComp *pName, LongInt *Erg);
 
 extern Boolean ExpandStrSymbol(char *pDest, unsigned DestSize, const tStrComp *pSrc);
 
-extern void EnterIntSymbolWithFlags(const struct sStrComp *pName, LargeInt Wert, Byte Typ, Boolean MayChange, tSymbolFlags Flags);
+extern void ChangeSymbol(struct sSymbolEntry *pEntry, LargeInt Value);
+
+extern struct sSymbolEntry *EnterIntSymbolWithFlags(const struct sStrComp *pName, LargeInt Wert, Byte Typ, Boolean MayChange, tSymbolFlags Flags);
 
 #define EnterIntSymbol(pName, Wert, Typ, MayChange) EnterIntSymbolWithFlags(pName, Wert, Typ, MayChange, 0)
 
 extern void EnterExtSymbol(const struct sStrComp *pName, LargeInt Wert, Byte Typ, Boolean MayChange);
 
-extern void EnterRelSymbol(const struct sStrComp *pName, LargeInt Wert, Byte Typ, Boolean MayChange);
+extern struct sSymbolEntry *EnterRelSymbol(const struct sStrComp *pName, LargeInt Wert, Byte Typ, Boolean MayChange);
 
 extern void EnterFloatSymbol(const struct sStrComp *pName, Double Wert, Boolean MayChange);
 

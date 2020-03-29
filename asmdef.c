@@ -226,6 +226,7 @@ PSaveState FirstSaveState;              /* gesicherte Zustaende */
 Boolean MakeDebug;                      /* Debugginghilfe */
 FILE *Debug;
 
+Boolean WasIF, WasMACRO;
 
 void AsmDefInit(void)
 {

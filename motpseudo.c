@@ -26,6 +26,7 @@
 #include "asmpars.h"
 #include "asmitree.h"
 #include "asmallg.h"
+#include "asmcode.h"
 #include "errmsg.h"
 
 #include "motpseudo.h"
@@ -743,12 +744,14 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
   TempResult t;
   Boolean OK, ValOK;
   ShortInt SpaceFlag;
+  Boolean PadBeforeStart;
 
   UNUSED(Turn);
 
   if (OpSize < 0)
     OpSize = 1;
 
+  PadBeforeStart = Odd(EProgCounter()) && DoPadding && (OpSize != eSymbolSize8Bit);
   switch (OpSize)
   {
     case eSymbolSize8Bit:
@@ -857,6 +860,12 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
           }
           else
           {
+            if (PadBeforeStart)
+            {
+              InsertPadding(1, True);
+              PadBeforeStart = False;
+            }
+
             SpaceFlag = 1;
             CodeLen += (Rep * WSize);
           }
@@ -869,6 +878,12 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
         else
         {
           SpaceFlag = 0;
+
+          if (PadBeforeStart)
+          {
+            InsertPadding(1, False);
+            PadBeforeStart = False;
+          }
 
           FirstPassUnknown = False;
           EvalStrExpression(&Arg, &t);
@@ -984,19 +999,7 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
       /* just space reservation ? */
 
       else if (SpaceFlag == 1)
-      {
         DontPrint = True;
-        if ((DoPadding) && (CodeLen & 1))
-          CodeLen++;
-      }
-
-      /* otherwise, we actually disposed values */
-
-      else
-      {
-        if (DoPadding && (CodeLen & 1))
-          EnterByte(0);
-      }
     }
     if (*LabPart.Str)
       SetSymbolOrStructElemSize(&LabPart, OpSize);
@@ -1007,8 +1010,6 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
   {
     if (ChkArgCnt(1, 1))
     {
-      LongWord NumPad = 0;
-
       FirstPassUnknown = False;
       HVal = EvalStrIntExpression(&ArgStr[1], Int32, &ValOK);
       if (FirstPassUnknown)
@@ -1017,12 +1018,13 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
       {
         Boolean OddSize = (eSymbolSize8Bit == OpSize) || (eSymbolSize24Bit == OpSize);
 
-        DontPrint = True;
-        if (OddSize)
+        if (PadBeforeStart)
         {
-          if ((HVal & 1) && (DoPadding))
-            NumPad++;
+          InsertPadding(1, True);
+          PadBeforeStart = False;
         }
+
+        DontPrint = True;
 
         /* value of 0 means aligning the PC.  Doesn't make sense for bytes and 24 bit values */
 
@@ -1039,7 +1041,7 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
           }
         }
         else
-          CodeLen = HVal * WSize + NumPad;
+          CodeLen = HVal * WSize;
         if (DontPrint)
           BookKeeping();
       }

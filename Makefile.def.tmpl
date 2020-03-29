@@ -5,8 +5,8 @@
 # ...for host-side build tools:
 
 OBJDIR =
-CC = gcc
-CFLAGS = -O3 -fomit-frame-pointer -Wall
+CC = cc
+CFLAGS = -O3
 HOST_OBJEXTENSION = .o
 LD = $(CC)
 LDFLAGS =
@@ -35,7 +35,7 @@ DOCDIR = /usr/local/doc/asl
 # -------------------------------------------------------------------------
 # character encoding to use (choose one of them)
 
-# CHARSET = CHARSET_ASCII7
+CHARSET = CHARSET_ASCII7
 # CHARSET = CHARSET_IBM437
 # CHARSET = CHARSET_UTF8
-CHARSET = CHARSET_ISO8859_1
+# CHARSET = CHARSET_ISO8859_1

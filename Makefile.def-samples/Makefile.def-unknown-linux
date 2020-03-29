@@ -4,7 +4,7 @@
 
 OBJDIR =
 CC = gcc
-CFLAGS = -g -O3 -march=athlon64 -fomit-frame-pointer -Wall
+CFLAGS = -g -O3 -fomit-frame-pointer -Wall
 HOST_OBJEXTENSION = .o
 LD = $(CC)
 LDFLAGS =

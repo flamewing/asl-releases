@@ -28,6 +28,7 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "asmcode.h"
 #include "asmallg.h"
 #include "asmitree.h"
 #include "codepseudo.h"
@@ -877,8 +878,6 @@ static void DecodeBYTE(Word Code)
     while ((z <= ArgCnt) && (OK));
     if (!OK)
       CodeLen = 0;
-    else if ((Odd(CodeLen)) && (DoPadding))
-      PutByte(0);
   }
 }
 
@@ -951,8 +950,6 @@ static void DecodeBSS(Word Code)
     if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
     else if (OK)
     {
-      if ((DoPadding) && (Odd(HVal16)))
-        HVal16++;
       if (!HVal16) WrError(ErrNum_NullResMem);
       DontPrint = True;
       CodeLen = HVal16;
@@ -1121,11 +1118,9 @@ static void InitFields(void)
   AddInstTable(InstTable, "DIVS", 0x0180, DecodeMPYS_DIVS);
   AddInstTable(InstTable, "LWPI", 0x02e0, DecodeLWPI_LIMI);
   AddInstTable(InstTable, "LIMI", 0x8300, DecodeLWPI_LIMI);
-  AddInstTable(InstTable, "BYTE", 0, DecodeBYTE);
   AddInstTable(InstTable, "WORD", 0, DecodeWORD);
   AddInstTable(InstTable, "SINGLE", 4, DecodeFLOAT);
   AddInstTable(InstTable, "DOUBLE", 8, DecodeFLOAT);
-  AddInstTable(InstTable, "BSS", 0, DecodeBSS);
   AddInstTable(InstTable, "CKPT", 0, DecodeCKPT);
 
   AddTwo("A"   , "AB"   , 5); AddTwo("C"   , "CB"   , 4); AddTwo("S"   , "SB"   , 3);
@@ -1302,9 +1297,32 @@ static void MakeCode_9900(void)
   DontPrint = False;
   IsWord = False;
 
-  /* zu ignorierendes */
+  /* to be ignored */
 
   if (Memo("")) return;
+
+  /* may be aligned arbitrarily */
+
+  if (Memo("BYTE"))
+  {
+    DecodeBYTE(0);
+    return;
+  }
+  if (Memo("BSS"))
+  {
+    DecodeBSS(0);
+    return;
+  }
+
+  /* For all other (pseudo) instructions, optionally pad to even */
+
+  if (Odd(EProgCounter()))
+  {
+    if (DoPadding)
+      InsertPadding(1, False);
+    else
+      WrError(ErrNum_AddrNotAligned);
+  }
 
   if (!LookupInstTable(InstTable, OpPart.Str))
     WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);

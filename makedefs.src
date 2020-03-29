@@ -141,6 +141,8 @@ ASM_OBJECTS = \
  $(TARG_OBJDIR)asmmac$(TARG_OBJEXTENSION) \
  $(TARG_OBJDIR)asmstructs$(TARG_OBJEXTENSION) \
  $(TARG_OBJDIR)asmcode$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)asmlist$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)asmlabel$(TARG_OBJEXTENSION) \
  $(TARG_OBJDIR)asmdebug$(TARG_OBJEXTENSION) \
  $(TARG_OBJDIR)asmif$(TARG_OBJEXTENSION) \
  $(TARG_OBJDIR)asmfnums$(TARG_OBJEXTENSION) \
@@ -689,6 +691,12 @@ $(TARG_OBJDIR)asmstructs$(TARG_OBJEXTENSION) : asmstructs.c
 
 $(TARG_OBJDIR)asmcode$(TARG_OBJEXTENSION) : asmcode.c
 	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c asmcode.c
+
+$(TARG_OBJDIR)asmlist$(TARG_OBJEXTENSION) : asmlist.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c asmlist.c
+
+$(TARG_OBJDIR)asmlabel$(TARG_OBJEXTENSION) : asmlabel.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c asmlabel.c
 
 $(TARG_OBJDIR)asmdebug$(TARG_OBJEXTENSION) : asmdebug.c
 	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c asmdebug.c

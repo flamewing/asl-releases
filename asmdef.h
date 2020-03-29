@@ -396,6 +396,7 @@ extern PSaveState FirstSaveState;
 extern Boolean MakeDebug;
 extern FILE *Debug;
 
+extern Boolean WasIF, WasMACRO;
 
 extern void AsmDefInit(void);
 

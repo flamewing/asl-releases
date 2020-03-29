@@ -2212,6 +2212,19 @@ void PrintSymTree(char *Name)
 }
 
 /*!------------------------------------------------------------------------
+ * \fn     ChangeSymbol(PSymbolEntry pEntry, LargeInt Value)
+ * \brief  change value of symbol in symbol table (use with caution)
+ * \param  pEntry symbol entry to modify
+ * \param  Value new (integer)value
+ * ------------------------------------------------------------------------ */
+
+void ChangeSymbol(PSymbolEntry pEntry, LargeInt Value)
+{
+  pEntry->SymWert.Typ = TempInt;
+  pEntry->SymWert.Contents.IWert = Value;
+}
+
+/*!------------------------------------------------------------------------
  * \fn     EnterIntSymbolWithFlags(const tStrComp *pName, LargeInt Wert, Byte Typ, Boolean MayChange, tSymbolFlags Flags)
  * \brief  add integer symbol to symbol table
  * \param  pName unexpanded name
@@ -2219,6 +2232,7 @@ void PrintSymTree(char *Name)
  * \param  Typ symbol type
  * \param  MayChange constant or variable?
  * \param  Flags additional flags
+ * \return * to newly created entry in tree
  * ------------------------------------------------------------------------ */
 
 PSymbolEntry CreateSymbolEntry(const tStrComp *pName, LongInt *pDestHandle)
@@ -2241,13 +2255,13 @@ PSymbolEntry CreateSymbolEntry(const tStrComp *pName, LongInt *pDestHandle)
   return pNeu;
 }
 
-void EnterIntSymbolWithFlags(const tStrComp *pName, LargeInt Wert, Byte Typ, Boolean MayChange, tSymbolFlags Flags)
+PSymbolEntry EnterIntSymbolWithFlags(const tStrComp *pName, LargeInt Wert, Byte Typ, Boolean MayChange, tSymbolFlags Flags)
 {
   LongInt DestHandle;
   PSymbolEntry pNeu = CreateSymbolEntry(pName, &DestHandle);
 
   if (!pNeu)
-    return;
+    return NULL;
 
   pNeu->SymWert.Typ = TempInt;
   pNeu->SymWert.Contents.IWert = Wert;
@@ -2265,6 +2279,7 @@ void EnterIntSymbolWithFlags(const tStrComp *pName, LargeInt Wert, Byte Typ, Boo
   }
   else
     EnterLocSymbol(pNeu);
+  return pNeu;
 }
 
 /*!------------------------------------------------------------------------
@@ -2311,15 +2326,16 @@ void EnterExtSymbol(const tStrComp *pName, LargeInt Wert, Byte Typ, Boolean MayC
  * \param  Wert symbol value
  * \param  Typ symbol type
  * \param  MayChange variable or constant?
+ * \return * to created entry in tree
  * ------------------------------------------------------------------------ */
 
-void EnterRelSymbol(const tStrComp *pName, LargeInt Wert, Byte Typ, Boolean MayChange)
+PSymbolEntry EnterRelSymbol(const tStrComp *pName, LargeInt Wert, Byte Typ, Boolean MayChange)
 {
   LongInt DestHandle;
   PSymbolEntry pNeu = CreateSymbolEntry(pName, &DestHandle);
 
   if (!pNeu)
-    return;
+    return NULL;
 
   pNeu->SymWert.Typ = TempInt;
   pNeu->SymWert.Contents.IWert = Wert;
@@ -2339,6 +2355,7 @@ void EnterRelSymbol(const tStrComp *pName, LargeInt Wert, Byte Typ, Boolean MayC
   }
   else
     EnterLocSymbol(pNeu);
+  return pNeu;
 }
 
 /*!------------------------------------------------------------------------

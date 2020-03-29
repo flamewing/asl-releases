@@ -14,12 +14,17 @@
 #include "version.h"
 #include "endian.h"
 #include "chunks.h"
+#include "as.h"
 #include "asmdef.h"
 #include "errmsg.h"
 #include "strutil.h"
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmrelocs.h"
+#include "asmlist.h"
+#include "asmlabel.h"
+
+#include "asmcode.h"
 
 #define CodeBufferSize 512
 
@@ -357,6 +362,34 @@ void RetractWords(Word Cnt)
   LenSoFar -= ErgLen;
 
   Retracted = True;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     InsertPadding(unsigned NumBytes, Boolean OnlyReserve)
+ * \brief  insert padding bytes into code
+ * \param  NumBytes # of bytes to add
+ * \param  OnlyReserve write code or only reserve?
+ * ------------------------------------------------------------------------ */
+
+void InsertPadding(unsigned NumBytes, Boolean OnlyReserve)
+{
+  Boolean SaveDontPrint = DontPrint;
+  LargeWord OldValue = EProgCounter();
+
+  /* write/reserve code */
+
+  SetMaxCodeLen(NumBytes);
+  DontPrint = OnlyReserve;
+  memset(BAsmCode, 0, CodeLen = NumBytes);
+  WriteCode();
+  MakeList("<padding>");
+
+  /* fix up possible label value so it points to the actual code */
+
+  LabelModify(OldValue, EProgCounter());
+
+  CodeLen = 0;
+  DontPrint = SaveDontPrint;
 }
 
 void asmcode_init(void)

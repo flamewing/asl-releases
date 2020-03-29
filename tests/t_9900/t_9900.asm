@@ -111,10 +111,12 @@ lab:	jlt	lab
         padding on
 
         byte    1,2,3,4,5
+	word	1,2,3,4,5	; inserts pad byte before
         byte    "Hello World"
-        byte    1,2,3,4,5,6
+        byte    1,2,3,4,5,6	; no pad needed, byte-oriented insn
+	word	1,2,3,4,5	; two odd lengths add up to even length -> no padding needed
         byte    "Hello World!"
-        word    1,2,3,4,5
+        word    1,2,3,4,5	; even number of bytes on previous insn -> no padding needed
 
         padding off
 
