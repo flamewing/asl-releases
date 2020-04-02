@@ -1,85 +1,80 @@
+		ifndef   bitfuncsinc    ; avoid multiple inclusion
+bitfuncsinc     equ      1
+
                 save
-                listing off   ; kein Listing über diesen File
+                listing off   ; no listing over this file
 
 ;****************************************************************************
 ;*                                                                          *
-;*   AS 1.39 - Datei BITFUNCS.INC                                           *
+;*   AS 1.42 - File BITFUNCS.INC                                            *
 ;*   								            *
-;*   Sinn : enthält Funktionen zur Bitmanipulation                          *
-;* 									    *
-;*   letzte Änderungen : 30. 5.1993                                         *
-;*                       11. 9.1993 Meldung nur im 1.Pass                   *
+;*   Contains Functions For Bit Manipulation                                *
 ;*									    *
 ;****************************************************************************
 
-		ifndef   bitfuncsinc    ; verhindert Mehrfacheinbindung
-
-bitfuncsinc     equ      1
-
 		if	 mompass=1
-		 message "Standardbitfunktionen (C) 1993 Alfred Arnold"
+		 message "Standard Bit Manipulation Functions (C) 1993 Alfred Arnold"
 		endif
 
 ;----------------------------------------------------------------------------
-; erstmal einige Unterfunktionen:
+; some sub-functions for a start:
 
-; liefert eine Maske in der ab 'start' 'bits' Bit gesetzt sind, z.B. zum
-; Ausmaskieren einzelner Bits:
+; delivers a mask with 'bits' bits set, starting at position 'start', used for
+; masking individual bits:
 
 mask            function start,bits,((1<<bits)-1)<<start
 
-; das gleiche invers zum Löschen von Bitgruppen:
+; the same in inverted form to clear bit groups:
 
 invmask         function start,bits,~mask(start,bits)
 
-; liefert die Bits 'start' bis 'start'+'bits'-1 aus 'x':
+; delivers the bits from 'start' to 'start'+'bits'-1 from 'x':
 
 cutout          function x,start,bits,x&mask(start,bits)
 
 ;----------------------------------------------------------------------------
-; einige häufig gebrauchte Sondermasken:
+; some commonly used bit masks:
 
-; oberes Byte eines 16-Bit-Wortes:
+; upper byte of a 16 bit word:
 
 hi              function x,(x>>8)&255
 
-; dito unteres Byte:
+; the same for the lower byte:
 
 lo              function x,x&255
 
-; obere Hälfte aus einem 32-Bit-Wort:
+; upper half of a 32 bit word:
 
 hiword          function x,(x>>16)&65535
 
-; dito untere Hälfte:
+; the same for the lower half:
 
 loword          function x,x&65535
 
-; Boolean-Funktionen, ob eine Zahl gerade oder ungerade ist:
+; boolean functions, whether a number is odd or even::
 
 odd             function x,(x&1)=1
 even            function x,(x&1)=0
 
-; liefert Bit 'n' aus 'x':
+; delivers bit 'n' from 'x':
 
 getbit          function x,n,(x>>n)&1
 
 ;----------------------------------------------------------------------------
-; Schiebefunktionen:
+; Shift Functions:
 
-; Schieben eines 'size'-Bit-Wortes um 'n' Stellen nach links oder rechts:
+; Shift a word of 'size' bits by 'n' positions to the left or right:
 
 shln            function x,size,n,(x<<n)&mask(0,size)
 shrn            function x,size,n,(x>>n)&mask(0,size-n)
 
-; Rotation eines 'size'-Bit-Wortes um 'n' Stellen nach links oder rechts;
-; der erste Term läßt die restlichen Bits unverändert und kann bei Bedarf
-; gelöscht werden:
+; Rotate a word of 'size' bits by 'n' positions to the left or right;
+; the first sub-term leaves the remaining bits unchanged and may be deleted if undesired:
 
 rotln           function x,size,n,cutout(x,size,32-size)|shln(x,size,n)|shrn(x,size,size-n)
 rotrn           function x,size,n,cutout(x,size,32-size)|shrn(x,size,n)|shln(x,size,size-n)
 
-                endif
+                restore                 ; allow listing again
 
-                restore                 ; wieder erlauben
+                endif			; bitfuncsinc
 

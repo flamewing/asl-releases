@@ -1,3 +1,9 @@
+2020-04-02 [1.42 Bld 160]
+
+- Bugfix      : change handling of 65816 BRK instruction, similar to 6502
+- Bugfix      : correct PER instruction on 65816
+- Change      : start reworking include files to English comments
+
 2020-03-29 [1.42 Bld 159]
 
 - Change      : change the strategy PADDING uses

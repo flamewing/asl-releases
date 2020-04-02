@@ -101,6 +101,7 @@ targ:
 	org	*+$100
 	bra	targ
 	per	targ
+	per	#-30
 
 	accmode	8
 	idxmode	8
@@ -353,4 +354,7 @@ targ3:
         divs     $12,s
         divs     ($12,s),y
 
-
+	; plain break (one byte)
+	brk
+	; break with extra NOP to compensate PC increment by 2 if not corrected by break handler
+	brk	$ea

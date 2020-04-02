@@ -395,15 +395,25 @@ static Boolean CPUMatch(Byte Mask)
 
 /*---------------------------------------------------------------------------*/
 
+/* see my rant about BRK in code65.c */
+
 static void DecodeBRK(Word Code)
 {
   UNUSED(Code);
 
-  if (ChkArgCnt(0, 0))
+  if (ChkArgCnt(0, 1))
   {
-    CodeLen = 2;
     BAsmCode[0] = 0x00;
-    BAsmCode[1] = NOPCode;
+    if (ArgCnt > 0)
+    {
+      Boolean OK;
+
+      BAsmCode[1] = EvalStrIntExpressionOffs(&ArgStr[1], !!(*ArgStr[1].Str == '#'), Int8, &OK);
+      if (OK)
+        CodeLen = 2;
+    }
+    else
+      CodeLen = 1;
   }
 }
 
@@ -1175,22 +1185,16 @@ static void DecodePER(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    char *pArg1 = ArgStr[1].Str;
-    Boolean OK, Rel = True;
+    Boolean OK, Rel = !(*ArgStr[1].Str == '#');
 
-    if (*pArg1 == '#')
-    {
-      pArg1++;
-      Rel = False;
-    }
     BAsmCode[0] = 0x62;
     if (Rel)
     {
-      LongInt AdrLong = EvalStrIntExpression(&ArgStr[1], UInt24, &OK) - (EProgCounter() + 2);
+      LongInt AdrLong = EvalStrIntExpression(&ArgStr[1], UInt24, &OK) - (EProgCounter() + 3);
 
       if (OK)
       {
-        if ((AdrLong < -32768) || (AdrLong > 32767)) WrError(ErrNum_JmpDistTooBig);
+        if (((AdrLong < -32768) || (AdrLong > 32767)) && !SymbolQuestionable) WrError(ErrNum_JmpDistTooBig);
         else
         {
           CodeLen = 3;
@@ -1201,7 +1205,7 @@ static void DecodePER(Word Code)
     }
     else
     {
-      Word AdrWord = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
+      Word AdrWord = EvalStrIntExpressionOffs(&ArgStr[1], 1, Int16, &OK);
 
       if (OK)
       {

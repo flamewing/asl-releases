@@ -1,35 +1,27 @@
+                ifndef  emulmspinc      ; avoid multiple inclusion
+emulmspinc       equ     1
+
                 save
-                listing off   ; kein Listing über diesen File
+                listing off		; no listing over this file
 
 ;****************************************************************************
 ;*                                                                          *
-;*   AS 1.41 - Datei EMULMSP.INC                                            *
+;*   AS 1.42 - File EMULMSP.INC                                             *
 ;*   					 			            *
 ;*   Purpose : contains emulated MSP430 instructions (obsolete)             *
 ;* 									    *
 ;****************************************************************************
-;* $Id: emulmsp.inc,v 1.1 2017/04/15 13:18:22 alfred Exp $                    
-;****************************************************************************
-;* $Log: emulmsp.inc,v $
-;* Revision 1.1  2017/04/15 13:18:22  alfred
-;* - implement emulated MSP instructions no longer via macros
-;*
-;****************************************************************************
-
-                ifndef  emulmspinc      ; verhindert Mehrfacheinbindung
-
-emulmspinc       equ     1
 
                 if      (MOMCPUNAME<>"MSP430")&&(MOMCPUNAME<>"MSP430X")
-                 fatal  "Falscher Prozessortyp eingestellt: nur MSP430 erlaubt!"
+                 fatal  "Wrong target selected: only MSP430(X) allowed."
 		endif
 
                 if      MOMPASS=1
-                 message "MSP430-Befehlsdefinitionen (C) 1996/2007 Alfred Arnold, Jose Da Silva"
+                 message "MSP430 Instruction Definitions (C) 1996/2007 Alfred Arnold, Jose Da Silva"
 		endif
 
 ;----------------------------------------------------------------------------
-; Arithmetik
+; Arithmetic Instructions
 
 adc             macro   op
                 addc.attribute #0,op
@@ -60,7 +52,7 @@ sbc             macro   op
                 endm
 
 ;----------------------------------------------------------------------------
-; Logik
+; Logic Instructions
 
 inv             macro   op
                 xor.attribute #-1,op
@@ -75,7 +67,7 @@ rlc             macro   op
                 endm
 
 ;----------------------------------------------------------------------------
-; Daten bewegen ;-)
+; Data Transfer
 
 clr             macro   op
                 mov.attribute #0,op
@@ -114,7 +106,7 @@ tst             macro   op
                 endm
 
 ;----------------------------------------------------------------------------
-; Sprungbefehle
+; Branching and Jumping
 
 br              macro   op
                 mov     op,pc
@@ -129,7 +121,7 @@ eint            macro
                 endm
 
 nop             macro
-                .word   04303h         ; den symbolischen Befehl würde AS zurückweisen
+                .word   04303h         ; AS would reject the symbolic instruction
                 endm
 
 ret             macro
@@ -148,5 +140,6 @@ jeq		macro	label
 		jz	label
 		endm
 
-		endif			; von IFDEF...
-		restore			; wieder erlauben
+		restore			; re-allow listing
+		
+		endif			; emulmspinc

@@ -559,7 +559,7 @@ INTFRQ5		avrbit	UPCFG2X,5
 INTFRQ6		avrbit	UPCFG2X,6
 INTFRQ7		avrbit	UPCFG2X,7
 
-UPIENX		sfr	0xae		; USB Pipe Interrupt Enaböe
+UPIENX		sfr	0xae		; USB Pipe Interrupt Enable
 RXINE		avrbit	UPIENX,0	; IN Data received Interrupt Enable
 RXSTALLE	avrbit	UPIENX,1	; STALL Received Interrupt Enable
 TXOUTE		avrbit	UPIENX,2	; OUT Bank ready Interrupt Enable
