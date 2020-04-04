@@ -64,20 +64,23 @@ static Byte RegVal(const char *pInp, int l)
   }
 }
 
-static Boolean DecodeReg(char *pAsc, Byte *pErg)
+static Boolean DecodeRegCore(const char *pAsc, Byte *pErg, int l)
 {
-  char *s;
-  int l;
-
-  if (FindRegDef(pAsc, &s))
-    pAsc = s;
-
-  l = strlen(pAsc);
   if ((l < 2) || (l > 3) || (mytoupper(*pAsc) != 'R'))
     return False;
 
   *pErg = RegVal(pAsc + 1, l - 1);
   return (*pErg != 0xff);
+}
+
+static Boolean DecodeReg(const char *pAsc, Byte *pErg)
+{
+  char *s;
+
+  if (FindRegDef(pAsc, &s))
+    pAsc = s;
+
+  return DecodeRegCore(pAsc, pErg, strlen(pAsc));
 }
 
 static Boolean DecodeRReg(char *pAsc, Byte *pErg)
@@ -90,6 +93,16 @@ static Boolean DecodeRReg(char *pAsc, Byte *pErg)
     pAsc = s;
 
   l = strlen(pAsc);
+
+  /* syntax RnP (n even): */
+
+  if ((l >= 3) && (l <= 4)
+   && (mytoupper(pAsc[l -1]) == 'P')
+   && DecodeRegCore(pAsc, pErg, l - 1))
+    return !Odd(*pErg);
+
+  /* syntax RnRn+1 */
+
   if ((l < 4) || (l > 6) || (mytoupper(*pAsc) != 'R'))
     return False;
 
@@ -217,15 +230,14 @@ static void DecodeISZ(Word Index)
 
 static void DecodeJCN(Word Index)
 {
-  Word AdrInt;
-  Boolean OK;
-  char *pCond;
-
   UNUSED(Index);
 
   if (ChkArgCnt(2, 2))
   {
-    BAsmCode[0] = 0x10;
+    Boolean OK = True;
+    char *pCond;
+
+    BAsmCode[0] = 0;
     for (pCond = ArgStr[1].Str; *pCond; pCond++)
       switch (mytoupper(*pCond))
       {
@@ -233,17 +245,22 @@ static void DecodeJCN(Word Index)
         case 'C': BAsmCode[0] |= 2; break;
         case 'T': BAsmCode[0] |= 1; break;
         case 'N': BAsmCode[0] |= 8; break;
-        default: BAsmCode[0] = 0xff;
+        default: OK = False;
       }
-    if (BAsmCode[0] == 0xff) WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
-    else
+    if (!OK)
+      BAsmCode[0] = EvalStrIntExpression(&ArgStr[1], UInt4, &OK);
+
+    if (OK)
     {
+      Word AdrInt;
+
       AdrInt = EvalStrIntExpression(&ArgStr[2], UInt12, &OK);
       if (OK)
       {
         if ((!SymbolQuestionable) && (Hi(EProgCounter() + 2) != Hi(AdrInt))) WrError(ErrNum_JmpDistTooBig);
         else
         {
+          BAsmCode[0] |= 0x10;
           BAsmCode[1] = Lo(AdrInt);
           CodeLen = 2;
         }

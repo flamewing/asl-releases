@@ -1,47 +1,40 @@
-                save
-                listing off   ; kein Listing über diesen File
-
-;****************************************************************************
-;*                                                                          *
-;*   AS 1.40 - Datei STDDEF60.INC                                           *
-;*   								            *
-;*   Sinn : enthält Makrodefinitionen für den PowerPC                       *
-;* 									    *
-;*   letzte Änderungen : 29. 5.1994                                         *
-;*                       26.12.1994 PPC403-Erweiterungen                    *
-;*                       28.12.1994 MPC505-Erweiterungen                    *
-;*                       10. 3.1999 PPC403G[BC]-Erweiterungen               *
-;*                       28. 3.1999 Korrektur: MMU erst ab PPC403GC         *
-;*                                                                          *
-;****************************************************************************
-
-                ifndef  stddef60inc     ; verhindert Mehrfacheinbindung
-
+                ifndef  stddef60inc     ; avoid multiple inclusion
 stddef60inc     equ     1
 
+                save
+                listing off		; kein Listing über diesen File
+
+;****************************************************************************
+;*                                                                          *
+;*   AS 1.42 - STDDEF60.INC                                                 *
+;*   								            *
+;*   Contains Macro Definitions for PowerPC                                 *
+;* 									    *
+;****************************************************************************
+
                 if      MOMPASS=1
-                 message "PowerPC-Makro-Definitionen (C) 1994,2012 Alfred Arnold"
+                 message "PowerPC Macro Definitions (C) 1994,2012 Alfred Arnold"
                  switch  MOMCPUNAME
                  case    "RS6000"
-                  message "Zielsystem RS6000"
+                  message "Target System RS6000"
                  case    "MPC601"
-                  message "Zielsystem MPC601"
+                  message "Target System MPC601"
                  case    "MPC505"
-                  message "Zielsystem MPC505"
+                  message "Target System MPC505"
                  case    "PPC403"
-                  message "Zielsystem PPC403"
+                  message "Target System PPC403"
                  case    "PPC403GC"
-                  message "Zielsystem PPC403GC"
+                  message "Target System PPC403GC"
                  case    "MPC821"
-                  message "Zielsystem MPC821"
+                  message "Target System MPC821"
                  elsecase
-                  fatal  "Falscher Prozessortyp eingestellt: nur MPC601, MPC505, PPC403[GC], MPC821 oder RS6000 erlaubt!"
+                  fatal  "Wrong target selected: only MPC601, MPC505, PPC403[GC], MPC821 or RS6000 allowed"
                  endcase
 		endif
 
 		
 ;============================================================================
-; Device-Control-Register
+; Device Control Register
 
 __defdcr        macro   NAME,val,{NoExpand}
 NAME            equ     val
@@ -54,9 +47,9 @@ mf{"NAME"}      macro      reg
 		endm
 
                 if      (MOMCPU=0x403)||(MOMCPU=0x403c)
-                 __defdcr BEAR,0x90     ; Adresse Busfehler
-                 __defdcr BESR,0x91     ; Syndrom Busfehler
-                 __defdcr BR0,0x80      ; Bank-Register 0..7
+                 __defdcr BEAR,0x90     ; Bus Error Address
+                 __defdcr BESR,0x91     ; Bus Error Syndrome
+                 __defdcr BR0,0x80      ; Bank Registers 0..7
                  __defdcr BR1,0x81
                  __defdcr BR2,0x82
                  __defdcr BR3,0x83
@@ -64,31 +57,31 @@ mf{"NAME"}      macro      reg
                  __defdcr BR5,0x85
                  __defdcr BR6,0x86
                  __defdcr BR7,0x87
-                 __defdcr DMACC0,0xc4   ; DMA Kettenzähler (?)
-                 __defdcr DMACR0,0xc0   ; DMA Steuerregister Kanal 0..3
+                 __defdcr DMACC0,0xc4   ; DMA Chain Counter
+                 __defdcr DMACR0,0xc0   ; DMA Control Register Channel 0..3
                  __defdcr DMACR1,0xc8
                  __defdcr DMACR2,0xd0
                  __defdcr DMACR3,0xd8
-                 __defdcr DMACT0,0xc1   ; DMA Zählregister Kanal 0..3
+                 __defdcr DMACT0,0xc1   ; DMA Count Register Channel 0..3
                  __defdcr DMACT1,0xc9
                  __defdcr DMACT2,0xd1
                  __defdcr DMACT3,0xd9
-                 __defdcr DMADA0,0xc2   ; DMA Zieladresse Kanal 0..3
+                 __defdcr DMADA0,0xc2   ; DMA Target Address Channel 0..3
                  __defdcr DMADA1,0xca
                  __defdcr DMADA2,0xd2
                  __defdcr DMADA3,0xda
-                 __defdcr DMASA0,0xc3   ; DMA Quelladresse Kanal 0..3
+                 __defdcr DMASA0,0xc3   ; DMA Source Address Channel 0..3
                  __defdcr DMASA1,0xcb
                  __defdcr DMASA2,0xd3
                  __defdcr DMASA3,0xdb
-                 __defdcr DMASR,0xe0    ; DMA Statusregister
-                 __defdcr EXISR,0x40    ; Anzeige externer Interrupts
-                 __defdcr EXIER,0x42    ; Freigabe externer Interrupts
-                 __defdcr IOCR,0xa0     ; I/O-Konfiguration
+                 __defdcr DMASR,0xe0    ; DMA Status Register
+                 __defdcr EXISR,0x40    ; External Interrupt Status Register
+                 __defdcr EXIER,0x42    ; External Interrupt Enable Register
+                 __defdcr IOCR,0xa0     ; I/O Configuration
                 endif
 
 ;============================================================================
-; Special-Purpose-Register
+; Special Purpose Registers
 
 __defspr        macro   NAME,val,{NoExpand}
 NAME            equ     val
@@ -101,76 +94,76 @@ mf{"NAME"}      macro      reg
 		endm
 
                 __defspr XER,0x001      ; Integer Exception Register
-                __defspr LR,0x008       ; Rücksprungadresse
+                __defspr LR,0x008       ; Link Register
                 __defspr CTR,0x009      ; Zählregister
-                __defspr SRR0,0x01a     ; Save/Restore-Register
+                __defspr SRR0,0x01a     ; Save/Restore Register
                 __defspr SRR1,0x01b
-                __defspr SPRG0,0x110    ; Special Purpose-Register
+                __defspr SPRG0,0x110    ; Special Purpose Register
                 __defspr SPRG1,0x111
                 __defspr SPRG2,0x112
                 __defspr SPRG3,0x113
                 switch MOMCPU
                 case 0x403,0x403c
-                 __defspr DAC1,0x3f6    ; Datenadresse Vergleichsregister
+                 __defspr DAC1,0x3f6    ; Data Address Compare Register
                  __defspr DAC2,0x3f7
-                 __defspr DBCR,0x3f2    ; Debug-Steuerregister
-                 __defspr DBSR,0x3f0    ; Debug-Statusregister
-                 __defspr DCCR,0x3fa    ; Steuerung Daten-Cache
-                 __defspr DEAR,0x3d5    ; Exception-Adresse Datenzugriff
-                 __defspr ESR,0x3d4     ; Exception-Syndrom Datenzugriff
-                 __defspr EVPR,0x3d6    ; Exception-Vektor-Präfix
-                 __defspr IAC1,0x3f4    ; Codeadresse Vergleichsregister
+                 __defspr DBCR,0x3f2    ; Debug Control Register
+                 __defspr DBSR,0x3f0    ; Debug Status Register
+                 __defspr DCCR,0x3fa    ; Data Cache Control Register
+                 __defspr DEAR,0x3d5    ; Data Exception Addresse Register
+                 __defspr ESR,0x3d4     ; Exception Syndrome Datea Access
+                 __defspr EVPR,0x3d6    ; Exception Vector Prefix
+                 __defspr IAC1,0x3f4    ; Code Address Compare Register
                  __defspr IAC2,0x3f5
-                 __defspr ICCR,0x3fb    ; Steuerung Code-Cache
-                 __defspr PBL1,0x3fc    ; Untergrenzen
+                 __defspr ICCR,0x3fb    ; Instruction Cache Control Register
+                 __defspr PBL1,0x3fc    ; Lower Bounds
                  __defspr PBL2,0x3fe
-                 __defspr PBU1,0x3fd    ; Obergrenzen
+                 __defspr PBU1,0x3fd    ; Upper Bounds
                  __defspr PBU2,0x3ff
                  __defspr PIT,0x3db     ; Timer
-                 __defspr PVR,0x11f     ; Prozessorversion
-                 __defspr SRR2,0x3de    ; Save/Restore-Register
+                 __defspr PVR,0x11f     ; Processor Version
+                 __defspr SRR2,0x3de    ; Save Restore Registers
                  __defspr SRR3,0x3df
-                 __defspr TBHI,0x3dc    ; Zeitbasis
+                 __defspr TBHI,0x3dc    ; Time Base
                  __defspr TBLO,0x3dd
-                 __defspr TCR,0x3da     ; Timer Steuerregister
-                 __defspr TSR,0x3d8     ; Timer Statusregister
+                 __defspr TCR,0x3da     ; Timer Control Register
+                 __defspr TSR,0x3d8     ; Timer Status Register
                  __defspr SGR,0x3b9     ; ????
                 case 0x505
-                 __defspr TBL,268       ; Zeitbasis
+                 __defspr TBL,268       ; Time Base
                  __defspr TBU,269
-                 __defspr DSISR,18      ; zeigt Grund von Alignment-Exceptions an
-                 __defspr DAR,19        ; Fehlerhafte Datenadresse nach Exception
-                 __defspr DEC,22        ; zählt mit 1 MHz
-                 __defspr EIE,80        ; Freigabe externer Interrupts
-                 __defspr EID,81        ; Sperre externer Interrupts
-                 __defspr NRE,82        ; Non-recoverable Exception
-                 __defspr TBL_S,284     ; nochmal Zeitbasis ?!
+                 __defspr DSISR,18      ; Reason for Alignment Exceptions
+                 __defspr DAR,19        ; Erroneous Data Address after Exception
+                 __defspr DEC,22        ; counts @ 1 MHz
+                 __defspr EIE,80        ; External Interrupt Enable
+                 __defspr EID,81        ; External Interrupt Disable
+                 __defspr NRE,82        ; Non Recoverable Exception
+                 __defspr TBL_S,284     ; another Time Base ?!
                  __defspr TBU_S,285
-                 __defspr PVR,287       ; Prozessorversion
-                 __defspr ICCST,560     ; Steuerung & Status Instruktionscache
-                 __defspr ICADR,561     ; Instruktionscache Adreßregister
-                 __defspr ICDAT,562     ; Instruktionscache Datenregister
-                 __defspr FPECR,1022    ; Gleitkommaexception
-                 __defspr CMPA,144      ; Vergleicherwert A..D
+                 __defspr PVR,287       ; Processor Version
+                 __defspr ICCST,560     ; Instruction Cache Control & Status
+                 __defspr ICADR,561     ; Instruktion Cache Address Register
+                 __defspr ICDAT,562     ; Instruktion Cache Data Register
+                 __defspr FPECR,1022    ; Floating Point Exception
+                 __defspr CMPA,144      ; Comparison Value A..D
                  __defspr CMPB,145
                  __defspr CMPC,146
                  __defspr CMPD,147
-                 __defspr ECR,148       ; Grund der Debug-Exception
-                 __defspr DER,149       ; Freigabe Debug-Features
-                 __defspr COUNTA,150    ; Breakpoint Zähler
+                 __defspr ECR,148       ; Debug Exception Cause
+                 __defspr DER,149       ; Debug Enable Register
+                 __defspr COUNTA,150    ; Breakpoint Counter
                  __defspr COUNTB,151
-                 __defspr CMPE,152      ; Vergleicherwert E..H
+                 __defspr CMPE,152      ; Comparison Value  E..H
                  __defspr CMPF,153
                  __defspr CMPG,154
                  __defspr CMPH,155
-                 __defspr LCTRL1,156    ; Debug-Steuerung Vergleicher L-Bus
+                 __defspr LCTRL1,156    ; Debug Control Comparator L Bus
                  __defspr LCTRL2,157
-                 __defspr ICTRL,158     ; Debug-Steuerung I-Bus
-                 __defspr BAR,159       ; Breakpoint-Adresse
-                 __defspr DPDR,630      ; Development-Port Daten
-                 __defspr DPIR,631      ;     "        "   Instruktionen
+                 __defspr ICTRL,158     ; Debug Control I-Bus
+                 __defspr BAR,159       ; Breakpoint Address
+                 __defspr DPDR,630      ; Development Port Data
+                 __defspr DPIR,631      ;     "        "   Instructions
                 case 0x601
-                 __defspr RTCU,0x004    ; Zähler
+                 __defspr RTCU,0x004    ; Counter
                  __defspr RTCL,0x005
                  __defspr DEC,0x006
                  __defspr DSISR,0x012
@@ -192,45 +185,45 @@ mf{"NAME"}      macro      reg
                  __defspr HID5,0x3f5
                  __defspr HID15,0x3ff
                 case 0x6000
-                 __defspr MQ,0x000      ; obere Hälfte Divident/Produkt
+                 __defspr MQ,0x000      ; Upper Half Divident/Product
                 case 0x821
-                 __defspr EIE,80        ; Freigabe externer Interrupts
-                 __defspr EID,81        ; Sperre externer Interrupts
-                 __defspr NRI,82        ; Non-recoverable Exception
+                 __defspr EIE,80        ; External Interrupts Enable
+                 __defspr EID,81        ; External Interrupts Disable
+                 __defspr NRI,82        ; Non Recoverable Exception
                  __defspr NRE,82        ; (alias)
-                 __defspr CMPA,144      ; Vergleicherwert A..D
+                 __defspr CMPA,144      ; Comparison Value A..D
                  __defspr CMPB,145
                  __defspr CMPC,146
                  __defspr CMPD,147
-                 __defspr ICR,148       ; Grund der Debug-Exception
+                 __defspr ICR,148       ; Debug Exception Cause
                  __defspr ECR,148       ; (alias)
-                 __defspr DER,149       ; Freigabe Debug-Features
-                 __defspr COUNTA,150    ; Breakpoint Zaehler
+                 __defspr DER,149       ; Debug Feature Enable
+                 __defspr COUNTA,150    ; Breakpoint Counter
                  __defspr COUNTB,151
-                 __defspr CMPE,152      ; Vergleicherwert E..H
+                 __defspr CMPE,152      ; Comparison Value E..H
                  __defspr CMPF,153
                  __defspr CMPG,154
                  __defspr CMPH,155
-                 __defspr LCTRL1,156    ; Debug-Steuerung Vergleicher L-Bus
+                 __defspr LCTRL1,156    ; Debug Control Comparator L-Bus
                  __defspr LCTRL2,157
-                 __defspr ICTRL,158     ; Debug-Steuerung I-Bus
-                 __defspr BAR,159       ; Breakpoint-Adresse
-                 __defspr DPDR,630      ; Development-Port Daten
-                 __defspr DPIR,631      ;     "        "   Instruktionen
+                 __defspr ICTRL,158     ; Debug Control I-Bus
+                 __defspr BAR,159       ; Breakpoint Address
+                 __defspr DPDR,630      ; Development Port Data
+                 __defspr DPIR,631      ;     "        "   Instructions
                  __defspr IMMR,638
-                 __defspr IC_CST,560    ; Steuerung & Status Instruktionscache
+                 __defspr IC_CST,560    ; Instruktion Cache Control & Status Control & Status
                  __defspr ICCST,560     ; (alias)
                  __defspr ICCSR,560     ; (alias)
-                 __defspr IC_ADR,561    ; Instruktionscache Adressregister
+                 __defspr IC_ADR,561    ; Instruktion Cache Control & Status Address Register
                  __defspr ICADR,561     ; (alias)
-                 __defspr IC_DAT,562    ; Instruktionscache Datenregister
+                 __defspr IC_DAT,562    ; Instruktion Cache Control & Status Data Register
                  __defspr ICDAT,562     ; (alias)
-                 __defspr DC_CST,568    ; Steuerung & Status Datencache
+                 __defspr DC_CST,568    ; Steuerung & Status Data Cache
                  __defspr DCCST,568     ; (alias)
                  __defspr DCCSR,568     ; (alias)
-                 __defspr DC_ADR,569    ; Datencache Adressregister
+                 __defspr DC_ADR,569    ; Data Cache Address Register
                  __defspr DCADR,569     ; (alias)
-                 __defspr DC_DAT,570    ; Datencache Datenregister
+                 __defspr DC_DAT,570    ; Data Cache Data Register
                  __defspr DCDAT,570     ; (alias)
                  __defspr MI_CTR,784
                  __defspr MICTR,784
@@ -280,17 +273,17 @@ mf{"NAME"}      macro      reg
                 endif
 
 ;============================================================================
-; serieller Port PPC403:
+; Serial Port PPC403:
 
                 if      (MOMCPU=0x403)||(MOMCPU=0x403c)
-spls             equ     0x40000000     ; Leitungsstatus
-sphs             equ     0x40000002     ; Status Handshake-Leitungen
-brdh             equ     0x40000004     ; Baudratenteiler
+spls             equ     0x40000000     ; Line State
+sphs             equ     0x40000002     ; State of Handshake Lines
+brdh             equ     0x40000004     ; Baud Raten Divider
 brdl             equ     0x40000005
-spctl            equ     0x40000006     ; Steuerregister
-sprc             equ     0x40000007     ; Kommandoregister Empfänger
-sptc             equ     0x40000008     ; Kommandoregister Sender
-sprb             equ     0x40000009     ; Sende/Empfangspuffer
+spctl            equ     0x40000006     ; Control Register
+sprc             equ     0x40000007     ; Command Register Receiver
+sptc             equ     0x40000008     ; Command Register Transmitter
+sprb             equ     0x40000009     ; Transmit/Receive Buffer
 sptb             equ     sprb
                 endif
 
@@ -299,49 +292,49 @@ sptb             equ     sprb
 ; erinnert irgendwie an die vom 6833x...
 
                 if      MOMCPU=0x505
-siumcr           equ     0x8007fc00     ; Basissteuerregister
+siumcr           equ     0x8007fc00     ; Base Control Register
 siutest1         equ     0x8007fc04
-memmap           equ     0x8007fc20     ; Speicherlayout
-specaddr         equ     0x8007fc24     ; erlauben Sperren spekulativer
-specmask         equ     0x8007fc28     ; Ladevorgänge
+memmap           equ     0x8007fc20     ; Memory Layout
+specaddr         equ     0x8007fc24     ; Allow/Block Speculative Loads
+specmask         equ     0x8007fc28
 termstat         equ     0x8007fc2c
-picsr            equ     0x8007fc40     ; Steuerung periodische Interrupts
-pit              equ     0x8007fc44     ; Zählwert periodischer Interrupt-Timer
-bmcr             equ     0x8007fc48     ; Steuerung Bus-Monitor
-rsr              equ     0x8007fc4c     ; Reset-Status
-sccr             equ     0x8007fc50     ; Steuerung Systemtakt
-sccsr            equ     0x8007fc54     ; Status Systemtakt
+picsr            equ     0x8007fc40     ; Periodic Interrupts Control
+pit              equ     0x8007fc44     ; Periodic Interrupt Timer Count Value
+bmcr             equ     0x8007fc48     ; Bus Monitor Control
+rsr              equ     0x8007fc4c     ; Reset Status
+sccr             equ     0x8007fc50     ; System Clock Control
+sccsr            equ     0x8007fc54     ; System Clock Status
 portbase         equ     0x8007fc60
-ddrm             equ     portbase+0x00  ; Datenrichtungsregister Port M
-pmpar            equ     portbase+0x04  ; Pinzuordnung Port M
-portm            equ     portbase+0x08  ; Datenregister Port M
-papar            equ     portbase+0x24  ; Pinzuordnung Port A+B
+ddrm             equ     portbase+0x00  ; Data Direction Register Port M
+pmpar            equ     portbase+0x04  ; Pin Assignment Port M
+portm            equ     portbase+0x08  ; Data Register Port M
+papar            equ     portbase+0x24  ; Pin Assignment Port A+B
 pbpar            equ     papar
-porta            equ     portbase+0x28  ; Datenregister Port A+B
+porta            equ     portbase+0x28  ; Data Register Port A+B
 portb            equ     porta
-ddri             equ     portbase+0x38  ; Datenrichtungsregister Port I..L
+ddri             equ     portbase+0x38  ; Data Direction Register Port I..L
 ddrj             equ     ddri
 ddrk             equ     ddri
 ddrl             equ     ddri
-pipar            equ     portbase+0x38  ; Pinzuordnung Port I..L
+pipar            equ     portbase+0x38  ; Pin Assignment Port I..L
 pjpar            equ     pipar
 pkpar            equ     pipar
 plpar            equ     pipar
-porti            equ     portbase+0x40  ; Datenregister Port I..L
+porti            equ     portbase+0x40  ; Data Register Port I..L
 portj            equ     porti
 portk            equ     porti
 portl            equ     porti
 csbase           equ     0x8007fd00
-csbtbar          equ     csbase+0xf8    ; Basisadresse Boot-EPROM
+csbtbar          equ     csbase+0xf8    ; Base Address Boot EPROM
 csbtsbbar        equ     csbase+0xf0
-csbar1           equ     csbase+0xe0    ; Basisadressen /CS1../CS5
+csbar1           equ     csbase+0xe0    ; Base Addresses /CS1../CS5
 csbar2           equ     csbase+0xd8
 csbar3           equ     csbase+0xd0
 csbar4           equ     csbase+0xc8
 csbar5           equ     csbase+0xc0
-csbtor           equ     csbase+0xfc    ; Optionen Boot-EPROM
+csbtor           equ     csbase+0xfc    ; Boot EPROM Options
 csbtsbor         equ     csbase+0xf4
-csor0            equ     csbase+0xec    ; Optionen /CS1../CS11
+csor0            equ     csbase+0xec    ; Options /CS1../CS11
 csor1            equ     csbase+0xe4
 csor2            equ     csbase+0xdc
 csor3            equ     csbase+0xd4
@@ -356,11 +349,11 @@ csor11           equ     csbase+0x94
                 endif
 
 ;----------------------------------------------------------------------------
-; Peripheral Control Unit MPC505:
+; Peripheral Control Unit MPC505
 
                 if      MOMCPU=0x505
 pcubase          equ     0x8007ef80
-pcumcr           equ     pcubase+0x00   ; Basiskonfiguration
+pcumcr           equ     pcubase+0x00   ; Base Configuration
 tstmsra          equ     pcubase+0x10
 tstmsrb          equ     tstmsra
 tstcntrab        equ     pcubase+0x14
@@ -368,27 +361,27 @@ tstreps          equ     tstcntrab
 tstcreg1         equ     pcubase+0x18
 tstcreg2         equ     tstcreg1
 tstdreg          equ     pcubase+0x1c
-irqpend          equ     pcubase+0x20   ; auszuführende Interrupts
-irqand           equ     pcubase+0x24   ; freigegebene&auszuführende Interrupts
-irqenable        equ     pcubase+0x28   ; freigegebene Interrupts
-pitqil           equ     pcubase+0x2c   ; Interruptebene PortQ/PIT
-swsr             equ     pcubase+0x40   ; Reload Watchdog auslösen
-swcr             equ     pcubase+0x44   ; Steuerung Watchdog
+irqpend          equ     pcubase+0x20   ; Pending Interrupts
+irqand           equ     pcubase+0x24   ; Enabled & Pending Interrupts
+irqenable        equ     pcubase+0x28   ; Enabled Interrupts
+pitqil           equ     pcubase+0x2c   ; Interrupt Level PortQ/PIT
+swsr             equ     pcubase+0x40   ; Trigger Reload Watchdog
+swcr             equ     pcubase+0x44   ; Watchdog Control
 swtc             equ     swcr
 swr              equ     pcubase+0x48
-pqedgdat         equ     pcubase+0x50   ; Flankenauswahl PortQ
-pqpar            equ     pcubase+0x54   ; Pinzuordnung PortQ
+pqedgdat         equ     pcubase+0x50   ; Edge Selection PortQ
+pqpar            equ     pcubase+0x54   ; Pin Assignment PortQ
                 endif
 
 ;----------------------------------------------------------------------------
-; SRAM-Modul MPC505:
+; SRAM Module MPC505
 
                 if      MOMCPU=0x505
 srammcr          equ     0x8007f00      ; Basiskonfiguration SRAM
                 endif
 
 ;============================================================================
-; SUBI geht sowohl mit 2 als auch 3 Argumenten
+; SUBI may have two or three arguments
 
 subi            macro   dest,src,VAL
                 if      "VAL"=""
@@ -399,7 +392,7 @@ subi            macro   dest,src,VAL
                 endm
 
 ;----------------------------------------------------------------------------
-; Vergleiche
+; Comparisons
 
 cmpw            macro   cr,REG1,REG2
                 if      "REG2"=""
@@ -434,7 +427,7 @@ cmplwi          macro   cr,REG1,IMM
                 endm
 
 ;----------------------------------------------------------------------------
-; erweiterte Befehle Bedingungsregister
+; Extended Instructions Condition Code Register
 
 crset           macro   bx
                 creqv   bx,bx,bx
@@ -449,7 +442,7 @@ crmove          macro   bx,by
                 endm
 
 ;----------------------------------------------------------------------------
-; erweiterte Befehle Logik
+; Extended Logic Instructions
 
 not             macro   dest,SRC
                 if      "SRC"=""
@@ -480,7 +473,7 @@ nop             macro
                 endm
 
 ;----------------------------------------------------------------------------
-; vereinfachte Einschiebebefehle
+; Simplified Shift-In Instructions
 
 inslwi          macro   ra,rs,n,b
                 rlwimi  ra,rs,32-b,b,b+n-1
@@ -532,7 +525,7 @@ rotlw.          macro   ra,rs,rb
                 endm
 
 ;----------------------------------------------------------------------------
-; vereinfachte Sprünge
+; Simplified Jumps
 
 __defjmp1       macro   NAME,m1,m2,{NoExpand}
 {"NAME"}        macro   adr
@@ -726,7 +719,7 @@ __deftrap       macro   NAME,mask,{NoExpand}
                 __deftrap twnl,12
 
 ;-------------------------------------------------------------------------
-; MMU-Makros PPC403G[BC]
+; MMU Macros PPC403G[BC]
 
 		if (MOMCPU=0x403c)||(MOMCPU=0x403c)
 
@@ -750,7 +743,6 @@ tlbwelo		macro	rt,ra
 
 ;=========================================================================
 
-                endif
+                restore                 ; allow listing again
 
-                restore                 ; Listing wieder erlauben
-
+                endif			; stddef60inc

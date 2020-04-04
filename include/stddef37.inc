@@ -1,279 +1,274 @@
+		ifndef  stddef37inc     ; verhindert Mehrfacheinbindung
+stddef37inc     equ     1
+
 		save
-                listing off   ; kein Listing über diesen File
+                listing off   ; no listing over this file
 
 ;****************************************************************************
 ;*                                                                          *
-;*   AS 1.40 - Datei STDDEF37.INC                                           *
+;*   AS 1.42 - File STDDEF37.INC                                            *
 ;*   								            *
-;*   Sinn : enthält SFR- und Bitdefinitionen für die TMS370-Prozessoren     *
-;* 									    *
-;*   letzte Änderungen : 12. 5.1993                                         *
+;*   Contains SFR and Bit Definitions for TMS370 Processors                 *
 ;*									    *
 ;****************************************************************************
 
-		ifndef  stddef37inc     ; verhindert Mehrfacheinbindung
-
-stddef37inc     equ     1
-
                 if      (MOMCPU<>57720848)&&(MOMCPU<>57720864)&&(MOMCPU<>57720880)&&(MOMCPU<>57720896)&&(MOMCPU<>57720912)
-		 fatal  "Falscher Prozessortyp eingestellt: nur 370C010, 370C020, 370C030, 370C040 oder 370C050 erlaubt!"
+		 fatal  "wrong target selected: only 370C010, 370C020, 370C030, 370C040 oder 370C050 supported"
 		endif
 
 
                 if      MOMPASS=1
-		 message "TMS370-Register-Definitionen (C) 1994 Alfred Arnold"
-		 message "binde \{MOMCPU}-SFRs ein"
+		 message "TMS370 Register Definitions (C) 1994 Alfred Arnold"
+		 message "including \{MOMCPU} Registers"
 		endif
 
-; Das mit diesen langen Namen ist ja wohl nicht ernst gemeint ???
-
 ;----------------------------------------------------------------------------
-; Systemsteuerung
+; System Control
 
 sccr0		equ	p010
-cold_start	dbit	7,sccr0	; Kaltstart ?
-osc_power	dbit	6,sccr0	; Stromaufnahme Oszillator reduzieren
-pf_auto_wait	dbit	5,sccr0 ; Wartezyklen für externe Peripherie
-osc_flt_flag	dbit	4,sccr0 ; Fehler in Oszillatorschaltung ?
-mc_pin_wpo	dbit	3,sccr0 ; Spannung an MC hoch genug ?
-mc_pin_data	dbit	2,sccr0	; Zustand des MC-Anschlusses
-up_uc_mode	dbit	0,sccr0	; Mikroprozessor/Mikrokontroller-Modus
+cold_start	dbit	7,sccr0	; Cold Start
+osc_power	dbit	6,sccr0	; Reduce Oscillator Power Consumption
+pf_auto_wait	dbit	5,sccr0 ; External Peripherals Wait States
+osc_flt_flag	dbit	4,sccr0 ; Oscillator Fault
+mc_pin_wpo	dbit	3,sccr0 ; Voltage on MC high enough
+mc_pin_data	dbit	2,sccr0	; MC Pin State
+up_uc_mode	dbit	0,sccr0	; Micro Processor or Micro Controller Mode
 
 sccr1		equ	p011
-auto_wait_disable dbit	4,sccr1	; Wartezyklen für externen Speicher
-memory_disable	dbit	2,sccr1	; int. ROM abschalten
+auto_wait_disable dbit	4,sccr1	; External Memory Wait States
+memory_disable	dbit	2,sccr1	; Disable Internal ROM
 
 sccr2		equ	p012
-halt_standby	dbit	7,sccr2 ; Halt oder /Standby-Modus
-pwrdwn_idle	dbit	6,sccr2 ; /Idle oder Halt/Standby-Modus
-bus_stest	dbit	4,sccr2	; Bus-Selbsttest ??
-cpu_stest	dbit	3,sccr2 ; Prozessor-Selbsttest ??
-int1_nmi	dbit	1,sccr2	; Interrupt 1 maskierbar/nicht maskierbar
-privilege_disable dbit	0,sccr2	; privilegierten Modus verlassen
+halt_standby	dbit	7,sccr2 ; Halt or /Standby Mode
+pwrdwn_idle	dbit	6,sccr2 ; /Idle or Halt/Standby Mode
+bus_stest	dbit	4,sccr2	; Bus Self Test
+cpu_stest	dbit	3,sccr2 ; Processor Self Test
+int1_nmi	dbit	1,sccr2	; Interrupt 1 Maskable or not
+privilege_disable dbit	0,sccr2	; Leave Privileged Mode
 
 ;----------------------------------------------------------------------------
-; digitaler IO
+; Digital IO
 
 aport1		equ	p020
 aport2		equ	p021
-adata		equ	p022	; Port A Datenregister
-adir		equ	p023	; Port A Datenrichtungsregister
+adata		equ	p022	; Port A Data Register
+adir		equ	p023	; Port A Data Direction Register
 
                 if      (MOMCPU=370C020h)||(MOMCPU>370C030h)
 bport1		 equ	p024
 bport2		 equ	p025
-bdata		 equ	p026	; Port B Datenregister
-bdir		 equ	p027	; Port B Datenrichtungsregister
+bdata		 equ	p026	; Port B Data Register
+bdir		 equ	p027	; Port B Data Direction Register
 		endif
 
                 if      (MOMCPU=370C020h)||(MOMCPU=370C050h)
 cport1		 equ	p028
 cport2		 equ	p029
-cdata		 equ	p02a	; Port C Datenregister
-cdir		 equ	p02b	; Port C Datenrichtungsregister
+cdata		 equ	p02a	; Port C Data Register
+cdir		 equ	p02b	; Port C Data Direction Register
 		endif
 
 dport1		equ	p02c
 dport2		equ	p02d
-ddata		equ	p02e	; Port D Datenregister
-ddir		equ	p02f	; Port D Datenrichtungsregister
+ddata		equ	p02e	; Port D Data Register
+ddir		equ	p02f	; Port D Data Direction Register
 
 ;----------------------------------------------------------------------------
 ; Interrupts
 
 int1		equ	p017
-int1_enable	dbit	0,int1	; Freigabe externer Interrupt 1
-int1_priority	dbit	1,int1	; Priorität externer Interrupt 1
-int1_polarity	dbit	2,int1	; Polarität externer Interrupt 1
-int1_pin_data	dbit	6,int1	; Zustand Interrupt 1-Pin
-int1_flag	dbit	7,int1	; externer Interrupt 1 aufgetreten
+int1_enable	dbit	0,int1	; External Interrupt 1 Enable
+int1_priority	dbit	1,int1	; External Interrupt 1 Priority
+int1_polarity	dbit	2,int1	; External Interrupt 1 Polarity
+int1_pin_data	dbit	6,int1	; External Interrupt 1 Pin State
+int1_flag	dbit	7,int1	; External Interrupt 1 Flag
 
 int2		equ	p018
-int2_enable	dbit	0,int2	; Freigabe externer Interrupt 2
-int2_priority	dbit	1,int2	; Priorität externer Interrupt 2
-int2_polarity	dbit	2,int2	; Polarität externer Interrupt 2
-int2_data_out	dbit	3,int2	; Ausgabewert Interrupt 2-Pin
-int2_data_dir	dbit	4,int2	; Datenrichtung Interrupt 2-Pin
-int2_pin_data	dbit	6,int2	; Zustand Interrupt 2-Pin
-int2_flag	dbit	7,int2	; externer Interrupt 2 aufgetreten
+int2_enable	dbit	0,int2	; External Interrupt 2 Enable
+int2_priority	dbit	1,int2	; External Interrupt 2 Priority
+int2_polarity	dbit	2,int2	; External Interrupt 2 Polarity
+int2_data_out	dbit	3,int2	; External Interrupt 2 Pin Output Value
+int2_data_dir	dbit	4,int2	; External Interrupt 2 Pin Data Direction
+int2_pin_data	dbit	6,int2	; External Interrupt 2 Pin State
+int2_flag	dbit	7,int2	; External Interrupt 2 Flag
 
 int3		equ	p019
-int3_enable	dbit	0,int3	; Freigabe externer Interrupt 3
-int3_priority	dbit	1,int3	; Priorität externer Interrupt 3
-int3_polarity	dbit	2,int3	; Polarität externer Interrupt 3
-int3_data_out	dbit	3,int3	; Ausgabewert Interrupt 3-Pin
-int3_data_dir	dbit	4,int3	; Datenrichtung Interrupt 3-Pin
-int3_pin_data	dbit	6,int3	; Zustand Interrupt 3-Pin
-int3_flag	dbit	7,int3	; externer Interrupt 3 aufgetreten
+int3_enable	dbit	0,int3	; External Interrupt 3 Enable
+int3_priority	dbit	1,int3	; External Interrupt 3 Priority
+int3_polarity	dbit	2,int3	; External Interrupt 3 Polarity
+int3_data_out	dbit	3,int3	; External Interrupt 3 Pin Output Value
+int3_data_dir	dbit	4,int3	; External Interrupt 3 Pin Data Direction
+int3_pin_data	dbit	6,int3	; External Interrupt 3 Pin State
+int3_flag	dbit	7,int3	; External Interrupt 3 Flag
 
 ;----------------------------------------------------------------------------
 ; (E)EPROM
 
 deectl		equ	p01a
-ee_busy		dbit	7,deectl ; EEPROM nicht zugreifbar
-ap		dbit	2,deectl ; Blockprogrammierung freigeben
-w1w0		dbit	1,deectl ; Einsen oder Nullen programmieren ?
-ee_exe		dbit	0,deectl ; Vorgang ausführen
+ee_busy		dbit	7,deectl ; EEPROM Busy
+ap		dbit	2,deectl ; Enable Block Programming
+w1w0		dbit	1,deectl ; Program Ones or Zeros?
+ee_exe		dbit	0,deectl ; Execute Transaction
 
 epctl0		equ	p01c
-ep0_busy	dbit	7,epctl0 ; EPROM Teil 1 nicht zugreifbar
-ep0_vpps	dbit	6,epctl0 ; Brennspannung freigeben
-ep0_w0		dbit	1,epctl0 ; Schreiben von Nullen freigeben
-ep0_exe		dbit	0,epctl0 ; Schreibvorgang ausführen
+ep0_busy	dbit	7,epctl0 ; EPROM Part 1 Busy
+ep0_vpps	dbit	6,epctl0 ; Enable Programming Voltage
+ep0_w0		dbit	1,epctl0 ; Enable Writing Zeros
+ep0_exe		dbit	0,epctl0 ; Execute Write Transaction
 
 epctl1		equ	p01e
-ep1_busy	dbit	7,epctl1 ; EPROM Teil 2 nicht zugreifbar
-ep1_vpps	dbit	6,epctl1 ; Brennspannung freigeben
-ep1_w0		dbit	1,epctl1 ; Schreiben von Nullen freigeben
-ep1_exe		dbit	0,epctl1 ; Schreibvorgang ausführen
+ep1_busy	dbit	7,epctl1 ; EPROM Part 2 Busy
+ep1_vpps	dbit	6,epctl1 ; Enable Programming Voltage
+ep1_w0		dbit	1,epctl1 ; Enable Writing Zeros
+ep1_exe		dbit	0,epctl1 ; Execute Write Transaction
 
 ;----------------------------------------------------------------------------
 ; Timer 1
 
-t1ctl1		equ	p049	; steuern auch Watchdog
+t1ctl1		equ	p049	; Controls also the Watchdog
 t1ctl2		equ	p04a
 
                 if      MOMCPU<>370C030h
-t1cntrh		 equ	p040	; Zählerregister
+t1cntrh		 equ	p040	; Count Register
 t1cntrl		 equ	p041
 
-t1ch		 equ	p042	; Vergleichsregister
+t1ch		 equ	p042	; Compare Register
 t1cl		 equ	p043
 
-t1cch		 equ	p044	; Vergleichs/Fangregister
+t1cch		 equ	p044	; Compare/Capture Register
 t1ccl		 equ	p045
 
-t1_input_select0 dbit	0,t1ctl1 ; Taktquelle
+t1_input_select0 dbit	0,t1ctl1 ; Clock Source
 t1_input_select1 dbit	1,t1ctl1
 t1_input_select2 dbit	2,t1ctl1
 
-t1_sw_reset	 dbit	0,t1ctl2 ; Zähler zurücksetzen
-t1_ovrfl_int_flag dbit	3,t1ctl2 ; Overflow aufgetreten ?
-t1_ovrfl_int_ena dbit	4,t1ctl2 ; Overflow-Interrupts freigeben
+t1_sw_reset	 dbit	0,t1ctl2 ; Reset Counter
+t1_ovrfl_int_flag dbit	3,t1ctl2 ; Overflow Flag
+t1_ovrfl_int_ena dbit	4,t1ctl2 ; Enable Overflow Interrupt
 
 t1ctl3		 equ	p04b
-t1c1_int_ena	 dbit	0,t1ctl3 ; Interrupts Vergleichsregister freigeben
-t1c2_int_ena	 dbit	1,t1ctl3 ; Interrupts Vergleichs(/Fang)register freigeben
-t1edge_int_ena	 dbit	2,t1ctl3 ; Interrupts bei Flanke an T1IC/CR freigeben
-t1c1_int_flag	 dbit	5,t1ctl3 ; Interrupt durch Vergleichsregister ?
-t1c2_int_flag	 dbit	6,t1ctl3 ; Interrupt durch Vergleichs(/Fang)register ?
-t1edge_int_flag	 dbit	7,t1ctl3 ; Interrupt durch Flanke an T1IC/CR ?
+t1c1_int_ena	 dbit	0,t1ctl3 ; Compare Register Interrupt Enable
+t1c2_int_ena	 dbit	1,t1ctl3 ; Capture/Compare Register Interrupt Enable
+t1edge_int_ena	 dbit	2,t1ctl3 ; Edge on T1IC/CR Interrupt Enable
+t1c1_int_flag	 dbit	5,t1ctl3 ; Compare Register Interrupt Flag
+t1c2_int_flag	 dbit	6,t1ctl3 ; Capture/Compare Register Interrupt Flag
+t1edge_int_flag	 dbit	7,t1ctl3 ; Edge on T1IC/CR Interrupt Flag
 
 t1ctl4		 equ	p04c
-t1edge_det_ena	 dbit	0,t1ctl4 ; Flankendetektor an T1IC/CR freigeben
-t1cr_rst_ena	 dbit	1,t1ctl4 ; externen Reset freigeben
-t1edge_polarity	 dbit	2,t1ctl4 ; Flankenwahl T1IC/CR
-t1cr_out_ena	 dbit	3,t1ctl4 ; Umschaltung PWM durch T1IC/CR freigeben
-t1c1_rst_ena     dbit   4,t1ctl4 ; Rücksetzen durch Vergleicher freigeben
-t1c2_out_ena	 dbit	5,t1ctl4 ; Umschaltung PWM durch Vergleichs(/Fang)register freigeben
-t1c1_out_ena	 dbit	6,t1ctl4 ; Umschaltung PWM durch Vergleichsregister freigeben
-t1_mode		 dbit	7,t1ctl4 ; Modus Timer 1
+t1edge_det_ena	 dbit	0,t1ctl4 ; T1IC/CR Edge Detector Enable
+t1cr_rst_ena	 dbit	1,t1ctl4 ; External Reset Enable
+t1edge_polarity	 dbit	2,t1ctl4 ; T1IC/CR Edge Selection
+t1cr_out_ena	 dbit	3,t1ctl4 ; T1IC/CR PWM Toggle Enable
+t1c1_rst_ena     dbit   4,t1ctl4 ; Comparator Reset Enable
+t1c2_out_ena	 dbit	5,t1ctl4 ; Capture/Compare Register PWM Toggle Enable
+t1c1_out_ena	 dbit	6,t1ctl4 ; Compare Register PWM Toggle Enable
+t1_mode		 dbit	7,t1ctl4 ; Timer 1 Mode
 
 t1pc1		 equ	p04d
-t1evt_data_dir	 dbit	0,t1pc1	; Timer 1 Event-Pin Datenrichtung
-t1evt_function	 dbit	1,t1pc1	; Timer 1 Event-Pin Funktionsumschaltung
-t1evt_data_out	 dbit	2,t1pc1 ; Timer 1 Event-Pin Datenausgang
-t1evt_data_in	 dbit	3,t1pc1 ; Timer 1 Event-Pin Dateneingang
+t1evt_data_dir	 dbit	0,t1pc1	; Timer 1 Event Pin Data Direction
+t1evt_function	 dbit	1,t1pc1	; Timer 1 Event Pin Function Selection
+t1evt_data_out	 dbit	2,t1pc1 ; Timer 1 Event Pin Data Output
+t1evt_data_in	 dbit	3,t1pc1 ; Timer 1 Event Pin Data Input
 
 t1pc2		 equ	p04e
-t1iccr_data_dir	 dbit	0,t1pc2 ; T1IC/CR-Pin Datenrichtung
-t1iccr_function	 dbit	1,t1pc2 ; T1IC/CR-Pin Funktionsumschaltung
-t1iccr_data_out	 dbit	2,t1pc2 ; T1IC/CR-Pin Datenausgang
-t1iccr_data_in	 dbit	3,t1pc2 ; T1IC/CR-Pin Dateneingang
-t1pwm_data_dir	 dbit	4,t1pc2 ; T1PWM-Pin Datenrichtung
-t1pwm_function	 dbit	5,t1pc2 ; T1PWM-Pin Funktionsumschaltung
-t1pwm_data_out	 dbit	2,t1pc2 ; T1PWM-Pin Datenausgang
-t1pwm_data_in	 dbit	7,t1pc2 ; T1PWM-Pin Dateneingang
+t1iccr_data_dir	 dbit	0,t1pc2 ; T1IC/CR Pin Data Direction
+t1iccr_function	 dbit	1,t1pc2 ; T1IC/CR Pin Function Selection
+t1iccr_data_out	 dbit	2,t1pc2 ; T1IC/CR Pin Data Output
+t1iccr_data_in	 dbit	3,t1pc2 ; T1IC/CR Pin Data Input
+t1pwm_data_dir	 dbit	4,t1pc2 ; T1PWM Pin Data Direction
+t1pwm_function	 dbit	5,t1pc2 ; T1PWM Pin Function Selection
+t1pwm_data_out	 dbit	2,t1pc2 ; T1PWM Pin Data Output
+t1pwm_data_in	 dbit	7,t1pc2 ; T1PWM Pin Data Input
 
 t1pri		 equ	p04f
-t1_priority	 dbit	6,t1pri ; Priorität Interrupts Timer 1
-t1_stest	 dbit	7,t1pri ; Selbsttest Timer 1
+t1_priority	 dbit	6,t1pri ; Timer 1 Interrupt Priority
+t1_stest	 dbit	7,t1pri ; Timer 1 Self Test
 		endif
 
 ;----------------------------------------------------------------------------
 ; Timer 2
 
                 if MOMCPU>370C030H
-t2cntrh		 equ	p060	; Zählerregister
+t2cntrh		 equ	p060	; Count Register
 t2cntrl		 equ	p061
 
-t2ch		 equ	p062	; Vergleichsregister
+t2ch		 equ	p062	; Compare Register
 t2cl		 equ	p063
 
-t2cch		 equ	p064	; Vergleichs/Fangregister
+t2cch		 equ	p064	; Capture/Compare Register
 t2ccl		 equ	p065
 
-t2ich		 equ	p066	; Fangregister
+t2ich		 equ	p066	; Capture Register
 t2icl		 equ	p067
 
 t2ctl1		 equ	p06a
-t2_sw_reset	 dbit	0,t2ctl1 ; Zähler zurücksetzen
-t2_input_select0 dbit	1,t2ctl1 ; Taktquelle
+t2_sw_reset	 dbit	0,t2ctl1 ; Reset Counter
+t2_input_select0 dbit	1,t2ctl1 ; Clock Source
 t2_input_select1 dbit	2,t2ctl1
-t2_ovrfl_int_flag dbit	3,t2ctl1 ; Overflow aufgetreten ?
-t2_ovrfl_int_ena dbit	4,t2ctl1 ; Overflow-Interrupts freigeben
+t2_ovrfl_int_flag dbit	3,t2ctl1 ; Overflow Interrupt Flag
+t2_ovrfl_int_ena dbit	4,t2ctl1 ; Overflow Interrupt Enable
 
 t2ctl2		 equ	p06b
-t2c1_int_ena	 dbit	0,t2ctl2 ; Interrupts Vergleichsregister freigeben
-t2c2_int_ena	 dbit	1,t2ctl2 ; Interrupts Vergleichs(/Fang)register freigeben
-t2edge1_int_ena	 dbit	2,t2ctl2 ; Interrupts bei Flanke an T2IC1/CR freigeben
-t2c1_int_flag	 dbit	5,t2ctl2 ; Interrupt durch Vergleichsregister ?
-t2c2_int_flag	 dbit	6,t2ctl2 ; Interrupt durch Vergleichs(/Fang)register ?
-t2edge1_int_flag dbit	7,t2ctl2 ; Interrupt durch Flanke an T2IC1/CR ?
+t2c1_int_ena	 dbit	0,t2ctl2 ; Compare Register Interrupt Enable
+t2c2_int_ena	 dbit	1,t2ctl2 ; Capture/Compare Register Interrupt Enable
+t2edge1_int_ena	 dbit	2,t2ctl2 ; Edge on T2IC1/CR Interrupt Enable
+t2c1_int_flag	 dbit	5,t2ctl2 ; Compare Register Interrupt Flag
+t2c2_int_flag	 dbit	6,t2ctl2 ; Capture/Compare Register Interrupt Flag
+t2edge1_int_flag dbit	7,t2ctl2 ; Edge on T2IC1/CR Interrupt Flag
 
 t2ctl3		 equ	p06c
-t2edge1_det_ena	 dbit	0,t2ctl3 ; Flankendetektor an T2IC1/CR freigeben
-t2edge1_rst_ena	 dbit	1,t2ctl3 ; externen Reset freigeben
-t2edge2_det_ena	 dbit	1,t2ctl3 ; Flankendetektor an T2IC2/CR freigeben
-t2edge1_polarity dbit	2,t2ctl3 ; Flankenwahl T2IC1/CR
-t2edge1_out_ena	 dbit	3,t2ctl3 ; Umschaltung PWM durch T2IC1/CR freigeben
-t2edge2_polarity dbit	3,t2ctl3 ; Flankenwahl T2IC2/CR
-t2c1_rst_ena	 dbit	4,t2ctl3 ; Rücksetzen durch Vergleicher freigeben
-t2c2_out_ena	 dbit	5,t2ctl3 ; Umschaltung PWM durch Vergleichs(/Fang)register freigeben
-t2c1_out_ena	 dbit	6,t2ctl3 ; Umschaltung PWM durch Vergleichsregister freigeben
-t2_mode		 dbit	7,t2ctl3 ; Modus Timer 2
+t2edge1_det_ena	 dbit	0,t2ctl3 ; T2IC1/CR Edge Detector Enable
+t2edge1_rst_ena	 dbit	1,t2ctl3 ; External Reset Enable
+t2edge2_det_ena	 dbit	1,t2ctl3 ; T2IC2/CR Edge Detector Enable
+t2edge1_polarity dbit	2,t2ctl3 ; T2IC1/CR Edge Selection
+t2edge1_out_ena	 dbit	3,t2ctl3 ; T2IC1/CR PWM Toggle Enable
+t2edge2_polarity dbit	3,t2ctl3 ; T2IC2/CR Edge Selection
+t2c1_rst_ena	 dbit	4,t2ctl3 ; Comparator Reset Enable
+t2c2_out_ena	 dbit	5,t2ctl3 ; Capture/Compare Register PWM Toggle Enable
+t2c1_out_ena	 dbit	6,t2ctl3 ; Capture Register PWM Toggle Enable
+t2_mode		 dbit	7,t2ctl3 ; Timer 2 Mode
 
 t2pc1		 equ	p06d
-t2evt_data_dir	 dbit	0,t2pc1	; Timer 2 Event-Pin Datenrichtung
-t2evt_function	 dbit	1,t2pc1	; Timer 2 Event-Pin Funktionsumschaltung
-t2evt_data_out	 dbit	2,t2pc1 ; Timer 2 Event-Pin Datenausgang
-t2evt_data_in	 dbit	3,t2pc1 ; Timer 2 Event-Pin Dateneingang
+t2evt_data_dir	 dbit	0,t2pc1	; Timer 2 Event Pin Data Direction
+t2evt_function	 dbit	1,t2pc1	; Timer 2 Event Pin Function Selection
+t2evt_data_out	 dbit	2,t2pc1 ; Timer 2 Event Pin Data Output
+t2evt_data_in	 dbit	3,t2pc1 ; Timer 2 Event Pin Data Input
 
 t2pc2		 equ	p06e
-t2ic1cr_data_dir dbit	0,t1pc2 ; T2IC1/CR-Pin Datenrichtung
-t2ic1cr_function dbit	1,t1pc2 ; T2IC1/CR-Pin Funktionsumschaltung
-t2ic1cr_data_out dbit	2,t1pc2 ; T2IC1/CR-Pin Datenausgang
-t2ic1cr_data_in	 dbit	3,t1pc2 ; T2IC1/CR-Pin Dateneingang
-t2ic2cr_data_dir dbit	4,t1pc2 ; T2IC2/CR-Pin Datenrichtung
-t2ic2cr_function dbit	5,t1pc2 ; T2IC2/CR-Pin Funktionsumschaltung
-t2ic2cr_data_out dbit	6,t1pc2 ; T2IC2/CR-Pin Datenausgang
-t2ic2cr_data_in	 dbit	7,t1pc2 ; T2IC2/CR-Pin Dateneingang
-t2pwm_data_dir	 dbit	4,t1pc2 ; T2PWM-Pin Datenrichtung
-t2pwm_function	 dbit	5,t1pc2 ; T2PWM-Pin Funktionsumschaltung
-t2pwm_data_out	 dbit	6,t1pc2 ; T2PWM-Pin Datenausgang
-t2pwm_data_in	 dbit	7,t1pc2 ; T2PWM-Pin Dateneingang
+t2ic1cr_data_dir dbit	0,t1pc2 ; T2IC1/CR Pin Data Direction
+t2ic1cr_function dbit	1,t1pc2 ; T2IC1/CR Pin Function Selection
+t2ic1cr_data_out dbit	2,t1pc2 ; T2IC1/CR Pin Data Output
+t2ic1cr_data_in	 dbit	3,t1pc2 ; T2IC1/CR Pin Data Input
+t2ic2cr_data_dir dbit	4,t1pc2 ; T2IC2/CR Pin Data Direction
+t2ic2cr_function dbit	5,t1pc2 ; T2IC2/CR Pin Function Selection
+t2ic2cr_data_out dbit	6,t1pc2 ; T2IC2/CR Pin Data Output
+t2ic2cr_data_in	 dbit	7,t1pc2 ; T2IC2/CR Pin Data Input
+t2pwm_data_dir	 dbit	4,t1pc2 ; T2PWM Pin Data Direction
+t2pwm_function	 dbit	5,t1pc2 ; T2PWM Pin Function Selection
+t2pwm_data_out	 dbit	6,t1pc2 ; T2PWM Pin Data Output
+t2pwm_data_in	 dbit	7,t1pc2 ; T2PWM Pin Data Input
 
 t2pri		 equ	p06f
-t2_priority	 dbit	6,t2pri ; Priorität Interrupts Timer 2
-t2_stest	 dbit	7,t2pri ; Selbsttest Timer 2
+t2_priority	 dbit	6,t2pri ; Timer 2 Interrupt Priority
+t2_stest	 dbit	7,t2pri ; Timer 2 Self Test
 		endif
 
 ;----------------------------------------------------------------------------
 ; Watchdog
 
                 if      MOMCPU<>370C030h
-wdcntrh          equ    p046    ; Zählregister
+wdcntrh          equ    p046    ; Count Register
 wdcntrl          equ    p047
 
-wdrst            equ    p048    ; Rücksetz-Schlüsselregister
+wdrst            equ    p048    ; Reset Key Register
 
-wd_input_select0 dbit	4,t1ctl1 ; Taktquelle
+wd_input_select0 dbit	4,t1ctl1 ; Clock Source
 wd_input_select1 dbit	5,t1ctl1
 wd_input_select2 dbit	6,t1ctl1
-wd_ovrfl_tap_sel dbit	7,t1ctl1 ; 15- oder 16-bittig zählen
-wd_ovrfl_int_flag dbit	5,t1ctl2 ; Watchdog-Reset aufgetreten ?
-wd_ovrfl_int_ena dbit	6,t1ctl2 ; Watchdog-Interrupts freigeben
-wd_ovrfl_rst_ena dbit   7,t1ctl2 ; Watchdog-Resets freigeben
+wd_ovrfl_tap_sel dbit	7,t1ctl1 ; Count Tith 15 or 16 Bits
+wd_ovrfl_int_flag dbit	5,t1ctl2 ; Watchdog Reset Flag
+wd_ovrfl_int_ena dbit	6,t1ctl2 ; Watchdog Interrupt Enable
+wd_ovrfl_rst_ena dbit   7,t1ctl2 ; Watchdog Reset Enable
                 endif
 
 ;----------------------------------------------------------------------------
@@ -281,65 +276,65 @@ wd_ovrfl_rst_ena dbit   7,t1ctl2 ; Watchdog-Resets freigeben
 
                 if (MOMCPU=370C020h)||(MOMCPU>370C030h)
 sciccr		 equ	p050
-sci_char0	 dbit	0,sciccr ; Zeichenlänge
+sci_char0	 dbit	0,sciccr ; Character Length
 sci_char1	 dbit	1,sciccr
 sci_char2	 dbit	2,sciccr
-address_idle_wup dbit	3,sciccr ; Multiprozessormodus
-async_iosync	 dbit	4,sciccr ; Betriebsart: synchron/asynchron
-parity_enable	 dbit	5,sciccr ; mit/ohne Parität
-even_odd_parity	 dbit	6,sciccr ; gerade/ungerade Parität
-stop_bits	 dbit	7,sciccr ; Anzahl Stopbits
+address_idle_wup dbit	3,sciccr ; Multi Processor Mode
+async_iosync	 dbit	4,sciccr ; Synchronous/Asynchronous Mode
+parity_enable	 dbit	5,sciccr ; Parity Enable
+even_odd_parity	 dbit	6,sciccr ; Even or Odd Parity
+stop_bits	 dbit	7,sciccr ; Number of Stopbits
 
 scictl		 equ	p051
-rxena		 dbit	0,scictl ; Empfängerfreigabe
-txena		 dbit	1,scictl ; Senderfreigabe
-sleep		 dbit	2,scictl ; Sleep-Modus SCI
-txwake		 dbit	3,scictl ; Sender aufwecken
-clock		 dbit   4,scictl ; interner/externer Takt SCI
-sci_sw_reset	 dbit	5,scictl ; Software-Reset
+rxena		 dbit	0,scictl ; Receiver Enable
+txena		 dbit	1,scictl ; Transmitter Enable
+sleep		 dbit	2,scictl ; SCI Sleep Mode
+txwake		 dbit	3,scictl ; Transmitter Wake
+clock		 dbit   4,scictl ; SCI Internal or External Clock
+sci_sw_reset	 dbit	5,scictl ; Software Reset
 
-baud_msb	 equ	p052	 ; Baudratengenerator
+baud_msb	 equ	p052	 ; Baud Rate Generator
 baud_lsb	 equ	p053
 
 txctl		 equ	p054
-sci_tx_int_ena	 dbit	0,txctl	 ; Interrupts durch Sender freigeben
-tx_empty	 dbit	6,txctl  ; Sender komplett leer ?
-txrdy		 dbit	7,txctl  ; neues Datum kann geschrieben werden
+sci_tx_int_ena	 dbit	0,txctl	 ; Transmitter Interrupt Enable
+tx_empty	 dbit	6,txctl  ; Transmitter Entirely Empty
+txrdy		 dbit	7,txctl  ; Transmitter Redy to Accept Character
 
 rxctl		 equ	p055
-sci_rx_int_ena	 dbit	0,rxctl	 ; Interrupts durch Empfänger freigeben
-rxwake		 dbit	1,rxctl	 ; Ist Empfänger aufgeweckt worden ?
-sci_pe		 dbit	2,rxctl	 ; Paritätsfehler ?
-sci_oe		 dbit	3,rxctl	 ; Überlauffehler ?
-sci_fe		 dbit	4,rxctl	 ; kein korrektes Stopbit ?
-brkdt		 dbit	5,rxctl	 ; Break aufgetreten ?
-rxrdy		 dbit	6,rxctl	 ; Zeichen empfangen ?
-rx_error	 dbit	7,rxctl	 ; Empfangsfehler aufgetreten ?
+sci_rx_int_ena	 dbit	0,rxctl	 ; Receiver Interrupt Enable
+rxwake		 dbit	1,rxctl	 ; Receiver Woken Up
+sci_pe		 dbit	2,rxctl	 ; Parity Error
+sci_oe		 dbit	3,rxctl	 ; Overflow Error
+sci_fe		 dbit	4,rxctl	 ; Framing Error
+brkdt		 dbit	5,rxctl	 ; Break Detected
+rxrdy		 dbit	6,rxctl	 ; Character Detected
+rx_error	 dbit	7,rxctl	 ; Receive Error
 
-rxbuf		 equ	p057	 ; Datenregister
+rxbuf		 equ	p057	 ; Data Register
 txbuf		 equ	p059
 
 scipc1		 equ	p05d
-sciclk_data_dir	 dbit	0,scipc1 ; SCICLK-Pin Datenrichtung
-sciclk_function	 dbit	1,scipc1 ; SCICLK-Pin Funktionsumschaltung
-sciclk_data_out	 dbit	2,scipc1 ; SCICLK-Pin Datenausgang
-sciclk_data_in	 dbit	3,scipc1 ; SCICLK-Pin Dateneingang
+sciclk_data_dir	 dbit	0,scipc1 ; SCICLK Pin Data Direction
+sciclk_function	 dbit	1,scipc1 ; SCICLK Pin Function Select
+sciclk_data_out	 dbit	2,scipc1 ; SCICLK Pin Data Output
+sciclk_data_in	 dbit	3,scipc1 ; SCICLK Pin Data Input
 
 scipc2		 equ	p05e
-scirxd_data_dir	 dbit	0,scipc2 ; SCIRXD-Pin Datenrichtung
-scirxd_function	 dbit	1,scipc2 ; SCIRXD-Pin Funktionsumschaltung
-scirxd_data_out	 dbit	2,scipc2 ; SCIRXD-Pin Datenausgang
-scirxd_data_in	 dbit	3,scipc2 ; SCIRXD-Pin Dateneingang
-scitxd_data_dir	 dbit	4,scipc2 ; SCITXD-Pin Datenrichtung
-scitxd_function	 dbit	5,scipc2 ; SCITXD-Pin Funktionsumschaltung
-scitxd_data_out	 dbit	6,scipc2 ; SCITXD-Pin Datenausgang
-scitxd_data_in	 dbit	7,scipc2 ; SCITXD-Pin Dateneingang
+scirxd_data_dir	 dbit	0,scipc2 ; SCIRXD-Pin Data Direction
+scirxd_function	 dbit	1,scipc2 ; SCIRXD-Pin Function Select
+scirxd_data_out	 dbit	2,scipc2 ; SCIRXD-Pin Data Output
+scirxd_data_in	 dbit	3,scipc2 ; SCIRXD-Pin Data Input
+scitxd_data_dir	 dbit	4,scipc2 ; SCITXD-Pin Data Direction
+scitxd_function	 dbit	5,scipc2 ; SCITXD-Pin Function Select
+scitxd_data_out	 dbit	6,scipc2 ; SCITXD-Pin Data Output
+scitxd_data_in	 dbit	7,scipc2 ; SCITXD-Pin Data Input
 
 scipri		 equ	p05f
-sci_espen	 dbit	4,scipri ; SCI emulator suspend ?!
-scirx_priority	 dbit	5,scipri ; SCI Empfangsinterrupt Priorität
-scitx_priority	 dbit	6,scipri ; SCI Sendeinterrupt Priorität
-sci_test	 dbit	7,scipri ; SCI Selbsttest
+sci_espen	 dbit	4,scipri ; SCI Emulator Suspend
+scirx_priority	 dbit	5,scipri ; SCI Receiver Interrupt Priority
+scitx_priority	 dbit	6,scipri ; SCI Transmitter Interrupt Priority
+sci_test	 dbit	7,scipri ; SCI Self Test
 		endif
 
 ;----------------------------------------------------------------------------
@@ -347,74 +342,74 @@ sci_test	 dbit	7,scipri ; SCI Selbsttest
 
                 if (MOMCPU<370C030h)||(MOMCPU=370C050h)
 spiccr           equ    p030
-spi_char0        dbit   0,spiccr ; Zeichenlänge
+spi_char0        dbit   0,spiccr ; Character Length
 spi_char1        dbit   1,spiccr
 spi_char2        dbit   2,spiccr
-spi_bit_rate0    dbit   3,spiccr ; Bitrate
+spi_bit_rate0    dbit   3,spiccr ; Bit Rate
 spi_bit_rate1    dbit   4,spiccr
 spi_bit_rate2    dbit   5,spiccr
-clock_polarity   dbit   6,spiccr ; Polarität Taktsignal
-spi_sw_reset     dbit   7,spiccr ; Software-Reset
+clock_polarity   dbit   6,spiccr ; Clock Polarity
+spi_sw_reset     dbit   7,spiccr ; Software Reset
 
 spictl           equ    p031
-spi_int_ena      dbit   0,spictl ; Interrupt-Freigabe
-talk             dbit   1,spictl ; Slave/Master-Senderfreigabe
-master_slave     dbit   2,spictl ; Slave/Master-Umschaltung
-spi_int_flag     dbit   6,spictl ; Interrupt aufgetreten ?
-receiver_overrun dbit   7,spictl ; EMpfängerüberlauf ?
+spi_int_ena      dbit   0,spictl ; Interrupt Freigabe
+talk             dbit   1,spictl ; Slave/Master Transmitter Enable
+master_slave     dbit   2,spictl ; Slave/Master Select
+spi_int_flag     dbit   6,spictl ; Interrupt Flag
+receiver_overrun dbit   7,spictl ; Receiver Overflow
 
-spibuf           equ    p037     ; Empfängerpuffer
-spidat           equ    p039     ; Senderegister
+spibuf           equ    p037     ; Receive Buffer
+spidat           equ    p039     ; Transmit Register
 
 spipc1           equ    p03d
-spiclk_data_dir  dbit   0,spipc1 ; SPICLK-Pin Datenrichtung
-spiclk_function  dbit   1,spipc1 ; SPICLK-Pin Funktionsumschaltung
-spiclk_data_out  dbit   2,spipc1 ; SPICLK-Pin Datenausgang
-spiclk_data_in   dbit   3,spipc1 ; SPICLK-Pin Dateneingang
+spiclk_data_dir  dbit   0,spipc1 ; SPICLK Pin Data Direction
+spiclk_function  dbit   1,spipc1 ; SPICLK Pin Function Select
+spiclk_data_out  dbit   2,spipc1 ; SPICLK Pin Data Output
+spiclk_data_in   dbit   3,spipc1 ; SPICLK Pin Data Input
 
 spipc2           equ    p03e
-spisomi_data_dir dbit   0,spipc2 ; SPISOMI-Pin Datenrichtung
-spisomi_function dbit   1,spipc2 ; SPISOMI-Pin Funktionsumschaltung
-spisomi_data_out dbit   2,spipc2 ; SPISOMI-Pin Datenausgang
-spisomi_data_in  dbit   3,spipc2 ; SPISOMI-Pin Dateneingang
-spimosi_data_dir dbit   4,spipc2 ; SPIMOSI-Pin Datenrichtung
-spimosi_function dbit   5,spipc2 ; SPIMOSI-Pin Funktionsumschaltung
-spimosi_data_out dbit   6,spipc2 ; SPIMOSI-Pin Datenausgang
-spimosi_data_in  dbit   7,spipc2 ; SPIMOSI-Pin Dateneingang
+spisomi_data_dir dbit   0,spipc2 ; SPISOMI Pin Data Direction
+spisomi_function dbit   1,spipc2 ; SPISOMI Pin Function Select
+spisomi_data_out dbit   2,spipc2 ; SPISOMI Pin Data Output
+spisomi_data_in  dbit   3,spipc2 ; SPISOMI Pin Data Input
+spimosi_data_dir dbit   4,spipc2 ; SPIMOSI Pin Data Direction
+spimosi_function dbit   5,spipc2 ; SPIMOSI Pin Function Select
+spimosi_data_out dbit   6,spipc2 ; SPIMOSI Pin Data Output
+spimosi_data_in  dbit   7,spipc2 ; SPIMOSI Pin Data Input
 
 spipri           equ    p03f
-spi_espen        dbit   5,spipri ; Emulator unterdrücken ?!
-spi_priority     dbit   6,spipri ; Interrupt-Priorität
-spi_stest        dbit   7,spipri ; Selbsttest
+spi_espen        dbit   5,spipri ; Suppress Emulator
+spi_priority     dbit   6,spipri ; Interrupt Priority
+spi_stest        dbit   7,spipri ; Self Test
                 endif
 
 ;----------------------------------------------------------------------------
-; A/D-Wandler
+; A/D Converter
 
                 if      MOMCPU>370C030h
 adctl            equ    p070
-ad_input_select0 dbit   0,adctl  ; Kanalauswahl
+ad_input_select0 dbit   0,adctl  ; Channel Selection
 ad_input_select1 dbit   1,adctl
 ad_input_select2 dbit   2,adctl
-ref_volt_select0 dbit   3,adctl  ; Auswahl Referenzspannung
+ref_volt_select0 dbit   3,adctl  ; Reference Voltage Selection
 ref_volt_select1 dbit   4,adctl
 ref_volt_select2 dbit   5,adctl
-sample_start     dbit   6,adctl  ; Sample-Phase beginnen (wird autom. gelöscht)
-convert_start    dbit   7,adctl  ; Wandlungs-Phase beginnen
+sample_start     dbit   6,adctl  ; Start Sample Phase (auto-clear)
+convert_start    dbit   7,adctl  ; Start Conversion Phase
 
 adstat           equ    p071
-ad_int_ena       dbit   0,adstat ; Interrupt-Freigabe
-ad_int_flag      dbit   1,adstat ; Interrupt aufgetreten ?
-ad_ready         dbit   2,adstat ; AD-Wandler bereit ?
+ad_int_ena       dbit   0,adstat ; Interrupt Enable
+ad_int_flag      dbit   1,adstat ; Interrupt Flag
+ad_ready         dbit   2,adstat ; AD Converter Ready?
 
-addata           equ    p072     ; Wandlungsergebnis
-adin             equ    p07d     ; digitale Eingangsdaten, wenn nicht analog genutzt
-adena            equ    p07e     ; Analogeingänge freischalten
+addata           equ    p072     ; Conversion Result
+adin             equ    p07d     ; Digital Input Data if Unused as Analog Inputs
+adena            equ    p07e     ; Enable Analog Inputs
 
 adpri            equ    p07f
-ad_espen         dbit   5,adpri  ; Emulator unterdrücken ?!
-ad_priority      dbit   6,adpri  ; Interrupt-Priorität
-ad_stest         dbit   7,adpri  ; Selbsttest
+ad_espen         dbit   5,adpri  ; Suppress Emulator
+ad_priority      dbit   6,adpri  ; Interrupt Priority
+ad_stest         dbit   7,adpri  ; Self Test
                 endif
 
 ;----------------------------------------------------------------------------
@@ -422,31 +417,31 @@ ad_stest         dbit   7,adpri  ; Selbsttest
 
                 if      MOMCPU=370C030h
 pact_scr         equ    p040
-pact_prescale_select0 dbit 0,pact_scr   ; Vorteilerauswahl
+pact_prescale_select0 dbit 0,pact_scr   ; Prescaler Selection
 pact_prescale_select1 dbit 1,pact_scr
 pact_prescale_select2 dbit 2,pact_scr
 pact_prescale_select3 dbit 3,pact_scr
-fast_mode_select dbit   4,pact_scr      ; Vorteiler durch 8 aus
-cmd_def_area_ena dbit   5,pact_scr      ; Zugriff auf Dual-Port-RAM freigeben
-deftim_ovrfl_int_flag dbit 6,pact_scr   ; Timerüberlauf aufgetreten ?
-deftim_ovrfl_int_ena  dbit 7,pact_scr   ; Interrupts bei Timerüberlauf freigeben
+fast_mode_select dbit   4,pact_scr      ; Disable Prescaler-by-8
+cmd_def_area_ena dbit   5,pact_scr      ; Enable Dual-Port-RAM Access
+deftim_ovrfl_int_flag dbit 6,pact_scr   ; Timer Overflow Interrupt Flag
+deftim_ovrfl_int_ena  dbit 7,pact_scr   ; Timer Overflow Interrupt Enable
 
 cdstart          equ    p041
-cmd_def_area2    dbit   2,cdstart       ; Startadresse Kommando/Definitionsbereich
+cmd_def_area2    dbit   2,cdstart       ; Command/Definition Area Start Address
 cmd_def_area3    dbit   3,cdstart
 cmd_def_area4    dbit   4,cdstart
 cmd_def_area5    dbit   5,cdstart
-cmd_def_area_int_ena dbit 7,cdstart     ; Interrupts aus dem Bereich freigeben
+cmd_def_area_int_ena dbit 7,cdstart     ; Enable Interrupts
 
 cdend            equ    p042
-cmd_def_area_end2 dbit  2,cdend         ; Endadresse Kommando/Definitionsbereich
+cmd_def_area_end2 dbit  2,cdend         ; Command/Definition Area End Address
 cmd_def_area_end3 dbit  3,cdend
 cmd_def_area_end4 dbit  4,cdend
 cmd_def_area_end5 dbit  5,cdend
 cmd_def_area_end6 dbit  6,cdend
 
 bufptr           equ    p043
-buffer_pointer1  dbit   1,bufptr        ; Adresse Pufferzeiger
+buffer_pointer1  dbit   1,bufptr        ; Buffer Pointer Address
 buffer_pointer2  dbit   2,bufptr
 buffer_pointer3  dbit   3,bufptr
 buffer_pointer4  dbit   4,bufptr
@@ -454,74 +449,73 @@ buffer_pointer5  dbit   5,bufptr
 
 scictlp          equ    p045
 sci_sw_reset      dbit  0,scictlp       ; Software Reset
-sci_tx_int_ena    dbit  2,scictlp       ; Sendeinterrupts freigeben
-sci_rx_int_ena    dbit  3,scictlp       ; Empfängerinterrupts freigeben
-pact_fe           dbit  4,scictlp       ; Rahmenfehler ?
-pact_parity       dbit  5,scictlp       ; Paritätsfehler ?
-pact_txrdy        dbit  6,scictlp       ; Sender leer ?
-pact_rxrdy        dbit  7,scictlp       ; Empfangspuffer voll ?
+sci_tx_int_ena    dbit  2,scictlp       ; Transmit Interrupt Enable
+sci_rx_int_ena    dbit  3,scictlp       ; Receive Interrupt Enable
+pact_fe           dbit  4,scictlp       ; Framing Error
+pact_parity       dbit  5,scictlp       ; Parity Error
+pact_txrdy        dbit  6,scictlp       ; Transmitter Empty
+pact_rxrdy        dbit  7,scictlp       ; Receive Buffer Full
 
-rxbufp           equ    p046            ; Mini-SCI Empfangspuffer
-txbufp           equ    p047            ; Mini-SCI Sendepuffer
+rxbufp           equ    p046            ; Mini-SCI Receive Buffer
+txbufp           equ    p047            ; Mini-SCI Transmit Buffer
 
-opstate          equ    p048            ; Status Ausgabepins
-cdflags          equ    p049            ; Interrupts durch Kommandos 0..7 aufgetreten ?
+opstate          equ    p048            ; Output Pin State
+cdflags          equ    p049            ; Command 0..7 Interrupt Flags
 
 cpctl1           equ    p04a
-cp1_capt_falling_edge dbit 0,cpctl1     ; Fangen bei fallender Flanke an CP1
-cp1_capt_rising_edge dbit 1,cpctl1      ; Fangen bei steigender Flanke an CP1
-cp1_int_flag     dbit   2,cpctl1        ; Flanke an CP1 aufgetreten ?
-cp1_int_ena      dbit   3,cpctl1        ; Interrupts durch CP1 freigeben
-cp2_capt_falling_edge dbit 4,cpctl1     ; Fangen bei fallender Flanke an CP2
-cp2_capt_rising_edge dbit 5,cpctl1      ; Fangen bei steigender Flanke an CP2
-cp2_int_flag     dbit   6,cpctl1        ; Flanke an CP2 aufgetreten ?
-cp2_int_ena      dbit   7,cpctl1        ; Interrupts durch CP2 freigeben
+cp1_capt_falling_edge dbit 0,cpctl1     ; CP1 Falling Edge Capture
+cp1_capt_rising_edge dbit 1,cpctl1      ; CP1 Rising Edge Capture
+cp1_int_flag     dbit   2,cpctl1        ; CP1 Edge Occured
+cp1_int_ena      dbit   3,cpctl1        ; CP1 Interrupt Enable
+cp2_capt_falling_edge dbit 4,cpctl1     ; CP2 Falling Edge Capture
+cp2_capt_rising_edge dbit 5,cpctl1      ; CP2 Rising Edge Capture
+cp2_int_flag     dbit   6,cpctl1        ; CP2 Edge Occured
+cp2_int_ena      dbit   7,cpctl1        ; CP2 Interrupt Enable
 
 cpctl2           equ    p04b
-cp3_capt_falling_edge dbit 0,cpctl2     ; Fangen bei fallender Flanke an CP3
-cp3_capt_rising_edge dbit 1,cpctl2      ; Fangen bei steigender Flanke an CP3
-cp3_int_flag     dbit   2,cpctl2        ; Flanke an CP3 aufgetreten ?
-cp3_int_ena      dbit   3,cpctl2        ; Interrupts durch CP3 freigeben
-cp4_capt_falling_edge dbit 4,cpctl2     ; Fangen bei fallender Flanke an CP4
-cp4_capt_rising_edge dbit 5,cpctl2      ; Fangen bei steigender Flanke an CP4
-cp4_int_flag     dbit   6,cpctl2        ; Flanke an CP4 aufgetreten ?
-cp4_int_ena      dbit   7,cpctl2        ; Interrupts durch CP4 freigeben
+cp3_capt_falling_edge dbit 0,cpctl2     ; CP3 Falling Edge Capture
+cp3_capt_rising_edge dbit 1,cpctl2      ; CP3 Rising Edge Capture
+cp3_int_flag     dbit   2,cpctl2        ; CP3 Edge Occured
+cp3_int_ena      dbit   3,cpctl2        ; CP3 Interrupt Enable
+cp4_capt_falling_edge dbit 4,cpctl2     ; CP4 Falling Edge Capture
+cp4_capt_rising_edge dbit 5,cpctl2      ; CP4 Rising Edge Capture
+cp4_int_flag     dbit   6,cpctl2        ; CP4 Edge Occured
+cp4_int_ena      dbit   7,cpctl2        ; CP4 Interrupt Enable
 
 cpctl3           equ    p04c
-cp5_capt_falling_edge dbit 0,cpctl3     ; Fangen bei fallender Flanke an CP5
-cp5_capt_rising_edge dbit 1,cpctl3      ; Fangen bei steigender Flanke an CP5
-cp5_int_flag     dbit   2,cpctl3        ; Flanke an CP5 aufgetreten ?
-cp5_int_ena      dbit   3,cpctl3        ; Interrupts durch CP5 freigeben
-cp6_capt_falling_edge dbit 4,cpctl3     ; Fangen bei fallender Flanke an CP6
-cp6_capt_rising_edge dbit 5,cpctl3      ; Fangen bei steigender Flanke an CP6
-cp6_int_flag     dbit   6,cpctl3        ; Flanke an CP6 aufgetreten ?
-cp6_int_ena      dbit   7,cpctl3        ; Interrupts durch CP6 freigeben
+cp5_capt_falling_edge dbit 0,cpctl3     ; CP5 Falling Edge Capture
+cp5_capt_rising_edge dbit 1,cpctl3      ; CP5 Rising Edge Capture
+cp5_int_flag     dbit   2,cpctl3        ; CP5 Edge Occured
+cp5_int_ena      dbit   3,cpctl3        ; CP5 Interrupt Enable
+cp6_capt_falling_edge dbit 4,cpctl3     ; CP6 Falling Edge Capture
+cp6_capt_rising_edge dbit 5,cpctl3      ; CP6 Rising Edge Capture
+cp6_int_flag     dbit   6,cpctl3        ; CP6 Edge Occured
+cp6_int_ena      dbit   7,cpctl3        ; CP6 Interrupt Enable
 
 cppre            equ    p04d
-op_set_clr_select dbit  0,cppre         ; Ausgabepins per Sofware löschen/setzen?
-event_counter_sw_reset dbit 1,cppre     ; Ereigniszähler zurücksetzen
-cp6_event_only   dbit   2,cppre         ; CP6 nur für Ereigniszähler
-input_capt_prescale_select0 dbit 3,cppre; Vorteiler für CP3..CP6
+op_set_clr_select dbit  0,cppre         ; Set/Reset Output Pins in Software
+event_counter_sw_reset dbit 1,cppre     ; Reset Event Counter
+cp6_event_only   dbit   2,cppre         ; CP6 only for Event Counter
+input_capt_prescale_select0 dbit 3,cppre; CP3..CP6 Prescaler
 input_capt_prescale_select1 dbit 4,cppre
 input_capt_prescale_select2 dbit 5,cppre
-buffer_half_full_int_flag dbit 6,cppre  ; Interrupts, daß Puffer halb/ganz voll ?
-buffer_half_full_int_ena dbit 7,cppre   ; obige Interrupts freischalten
+buffer_half_full_int_flag dbit 6,cppre  ; Buffer Half/Full Interrupt Flag
+buffer_half_full_int_ena dbit 7,cppre   ; Buffer Half/Full Interrupt Enable
 
 wdrst            equ    p04e
 
 pactpri          equ    p04f
-wd_prescale_select0 dbit 0,pactpri      ; Vorteiler Watchdog
+wd_prescale_select0 dbit 0,pactpri      ; Watchdog Prescaler
 wd_prescale_select1 dbit 1,pactpri
-pact_mode_select dbit 2,pactpri         ; PACT in Modus A oder B
-pact_group_3_priority dbit 3,pactpri    ; Prioritäten der Interruptgruppen
+pact_mode_select dbit 2,pactpri         ; PACT Mode A/B Select
+pact_group_3_priority dbit 3,pactpri    ; Interrupt Groups Priority
 pact_group_2_priority dbit 4,pactpri
 pact_group_1_priority dbit 5,pactpri
-pact_stest       dbit   7,pactpri       ; Selbsttest
+pact_stest       dbit   7,pactpri       ; Self Test
                 endif
 
 ;----------------------------------------------------------------------------
 
-		endif
+		restore                 ; re-allow listing
 
-		restore                 ; wieder erlauben
-
+		endif			; stddef37inc
